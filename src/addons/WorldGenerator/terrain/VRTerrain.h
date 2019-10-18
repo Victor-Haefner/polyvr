@@ -43,12 +43,15 @@ class VRTerrain : public VRGeometry, public VRWorldModule {
         Vec2f texelSize = Vec2f(0.01,0.01); // shader parameter
         float resolution = 1; // shader parameter
         float heightScale = 1; // shader parameter
-        double grid = 64;
+        double grid = 512;
+        //double grid = 64;
         VRTexturePtr heigthsTex;
         VRMaterialPtr mat;
         shared_ptr<vector<float>> physicsHeightBuffer;
 
         map<string, VREmbankmentPtr> embankments;
+        vector<Vec3d> edgePoints;
+        vector<vector<Vec3d>> meshTer;
 
         boost::recursive_mutex& mtx(); // physics
 
@@ -70,6 +73,8 @@ class VRTerrain : public VRGeometry, public VRWorldModule {
         Boundingbox getBoundingBox();
 
         void setParameters( Vec2d size, double resolution, double heightScale, float w = 0, float aT = 1e-4, Color3f aC = Color3f(0.7,0.9,1));
+        void setEdgepoints(vector<Vec3d> in);
+        void setMeshTer(vector<vector<Vec3d>> in);
         void setWaterLevel(float w);
         void setAtmosphericEffect(float thickness, Color3f color);
         void setHeightScale(float s);

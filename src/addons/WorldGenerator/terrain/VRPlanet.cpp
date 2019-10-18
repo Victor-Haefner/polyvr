@@ -33,8 +33,18 @@ double VRPlanet::toDeg(double rad) { return 180*rad/pi; }
 void VRPlanet::localize(double north, double east) {
     originCoords = Vec2d(north, east);
     auto p = fromLatLongPose(north, east);
+    auto newUp = p->pos();
+    newUp.normalize();
+    auto localOrigin = p->pos();
     p->invert();
     origin->setPose(p);
+    auto dirOrigin = origin->getDir();
+    dirOrigin.normalize();
+    auto upOrigin = origin->getUp();
+    upOrigin.normalize();
+
+
+    //auto ma2 = fromLatLongPose(north, east)->multRight(fromLatLongPose(p));
 
     lod->hide(); // TODO: work around due to problems with intersection action!!
 
@@ -42,13 +52,56 @@ void VRPlanet::localize(double north, double east) {
         auto sector = s.second;
         addChild(sector);
         sector->setIdentity();
+
+        Vec2d plI = sector->getPlanetCoords() + Vec2d(1,1)*sectorSize*0.5;
+        auto pSector = fromLatLongPose(plI[0], plI[1]);
+        //Vec3d pSector = fromLatLongPosition(plI[0], plI[1]);
+        //Vec3d transition = fromLatLongPosition(plI[0], plI[1]) - localOrigin;
+        //Vec3d nSector = pSector;
+        //nSector.normalize();
+        //cout << nSector << " - " << transition << " -dO: "  << dirOrigin<< " -uO " << upOrigin << endl;
+        auto vecNorth = fromLatLongNorth(plI[0], plI[1]);
+        vecNorth.normalize();
+        auto x = vecNorth.dot(Vec3d(1,0,0));
+        auto z = vecNorth.dot(Vec3d(0,0,-1));
+        auto l = x+z;
+        x /=l;
+        z /=l;
+        float tet = atan2(z,x);
+
+        auto vecNorm = fromLatLongNormal(plI[0], plI[1]);
+        vecNorm.normalize();
+        auto y1 = vecNorm.dot(Vec3d(0,1,0));
+        float phi = acos(y1/1.0);
+
+        auto ma = p;
+        auto ma2 = fromLatLongPose(plI[0], plI[1]);
+        auto ma3 = ma2->multRight(p);
+
+        auto newP1 = pSector->multRight(p);
+        auto newP = p->multRight(pSector);
+        //auto tranP = transition->multRight(p);
+        sector->setPose(newP);
+        //sector->rotateWorld(-tet-1.57079632679, Vec3d(0,1,0));
+        //sector->rotateWorld(-phi, Vec3d(1,0,0));
+        //sector->translate(tranP);
+        //sector->rotate(b,Vec3d(0,0,0),Vec3d(0,0,0));
+        //auto normalSector = fromLatLongNormal(plI[0], plI[1]);
+        //auto northSector = fromLatLongNorth(plI[0], plI[1]);
+        cout << " SecNormal: " << newP->pos() << " " << newP->dir()<< " " << newP->up()<< endl;
+        cout << " plI: " << plI <<  endl;
+        cout << " newP: " << newP <<  endl;
+        //cout << " SecNorth: " << fromLatLongNorth(plI[], plI[1]) << endl;
+        //cout << "VRPlanet::localize p " << p << " pSector: " << pSector << " localOrigin: " << localOrigin << endl;
+
+        /*
         Vec2d size = sector->getTerrain()->getSize();
         Vec2d p = sector->getPlanetCoords() + Vec2d(1,1)*sectorSize*0.5; // sector mid point
         float X = p[0]-east;
         float Y = north - p[1];
         cout << "VRPlanet::localize p " << p << " P " << Vec2f(north, east) << " XY " << Vec2d(X, Y) << endl;
         //cout << "VRPlanet::localize " << Y << " " << p[0]*sectorSize << " " << north << endl;
-        sector->translate(Vec3d(X*size[0]/sectorSize, 0, Y*size[1]/sectorSize));
+        sector->translate(Vec3d(X*size[0]/sectorSize, 0, Y*size[1]/sectorSize));*/
     }
 
     /*auto s = getSector(north, east);
@@ -196,7 +249,7 @@ void VRPlanet::setParameters( double r, string t, bool l, double s ) {
     sectorSize = s;
     rebuild();
     setupMaterial(t, l);
-} // TODO: rebuild breaks the pins
+}
 
 void VRPlanet::setLayermode( string mode ) {
     if (mode == "full") layermode = 0;
@@ -208,10 +261,82 @@ VRWorldGeneratorPtr VRPlanet::addSector( double north, double east ) {
     auto sid = toSID(north, east);
     sectors[sid] = generator;
     anchor->addChild(generator);
-    generator->setPlanet(ptr(), Vec2d(east, north));
+    generator->setPlanet(ptr(), Vec2d(north, east));
     generator->setPose( fromLatLongPose(north+0.5*sectorSize, east+0.5*sectorSize) );
 
     Vec2d size = fromLatLongSize(north, east, north+sectorSize, east+sectorSize);
+    vector<Vec3d> vecPos;
+    auto ppp = fromLatLongPosition(north+0.5*sectorSize, east+0.5*sectorSize);
+    vecPos.push_back(fromLatLongPosition(north, east)-ppp);
+    vecPos.push_back(fromLatLongPosition(north+sectorSize, east)-ppp);
+    vecPos.push_back(fromLatLongPosition(north+sectorSize, east+sectorSize)-ppp);
+    vecPos.push_back(fromLatLongPosition(north, east+sectorSize)-ppp);
+    generator->getTerrain()->setEdgepoints( vecPos );
+
+    addPin("MID MID",north + 0.5*sectorSize, east + 0.5*sectorSize);
+    addPin("MID ONE",north + sectorSize, east + 0.5*sectorSize);
+    addPin("MID TWO",north + 0.5*sectorSize, east + sectorSize);
+    addPin("MID THR",north + 0.5*sectorSize, east);
+    addPin("MID FR",north, east + 0.5*sectorSize);
+    auto poss = fromLatLongPosition(north,east);
+
+    auto grid = 5000;
+    Vec2i gridN = Vec2i(round(size[0]*1.0/grid-0.5), round(size[1]*1.0/grid-0.5));
+    if (gridN[0] < 1) gridN[0] = 1;
+    if (gridN[1] < 1) gridN[1] = 1;
+    vector<vector<Vec3d>> completeMesh;
+
+    auto metaGeoSector = VRAnalyticGeometry::create("SectorMetaData");
+    metaGeoSector->setLabelParams(0.02, true, true, Color4f(0.5,0.1,0,1), Color4f(1,1,0.5,1));
+
+    ppp = fromLatLongPosition(north+0.5*sectorSize,east+0.5*sectorSize);
+    for (int x = 0; x <= gridN[0]; x++) {
+        vector<Vec3d> row;
+        for (int y = 0; y <= gridN[1]; y++){
+            Vec3d pVertexGlobal = fromLatLongPosition(north+x*sectorSize/gridN[0], east+y*sectorSize/gridN[1]);
+            Vec3d nChunk = ppp - origin->getFrom();
+            nChunk.normalize();
+            Vec3d nVertexGlobal = pVertexGlobal - origin->getFrom();
+            nVertexGlobal.normalize();
+            static int IDID = 700; IDID++;
+            //metaGeo->setVector(IDID, Vec3d(pVertexGlobal), Vec3d(nVertexGlobal)*10000, Color3f(0,1,0.5), "", false);
+
+
+            Vec3d pVertexLocal = pVertexGlobal - ppp;
+            Vec3d nVertexLocal = Vec3d(0,1,0);
+            metaGeoSector->setVector(IDID, Vec3d(pVertexLocal), Vec3d(nVertexLocal)*100, Color3f(1,0,0.5), "", false);
+
+            /*
+            auto n = north+0.5*sectorSize;
+            auto e = east+0.5*sectorSize;
+            Vec3d p1 = fromLatLongPosition(north+x*sectorSize/gridN[0], east+y*sectorSize/gridN[1]);
+            Vec3d p2 = ppp;
+            Vec3d d = p1-p2;
+            auto dirEast = fromLatLongEast(n, e);
+            auto dirNorth = fromLatLongNorth(n, e);
+            double u = d.dot( dirEast );
+            double v = d.dot( dirNorth );
+*/
+            //auto planetPos = fromLatLongPose(north+x*sectorSize/gridN[0], east+y*sectorSize/gridN[1])->pos();
+            row.push_back(pVertexLocal);
+            //row.push_back( Vec3d(u, 0, v) );
+/*
+            Vec3d no2 = fromLatLongNormal(north+x*sectorSize/gridN[0], east+y*sectorSize/gridN[1]);
+            //Vec3d n2 = Vec3d(0,1,0);
+            Vec3d p = fromLatLongPosition(north+x*sectorSize/gridN[0], east+y*sectorSize/gridN[1]);
+            Vec3d p3 = fromLatLongPosition(north+x*sectorSize/gridN[0], east+y*sectorSize/gridN[1]) - ppp;
+
+            static int IDID = 700; IDID++;//metaGeo->getNewID(); // TODO
+            auto nma = toString(IDID);
+            metaGeo->setVector(IDID, Vec3d(p), Vec3d(no2)*10000, Color3f(0,1,0.5), "", false);
+            metaGeoSector->setVector(IDID, Vec3d(p2), Vec3d(no2)*10000, Color3f(1,0,0.5), "", false);*/
+        }
+        completeMesh.push_back(row);
+    }
+
+    generator->getTerrain()->setMeshTer(completeMesh);
+    generator->addChild(metaGeoSector);
+
     generator->getTerrain()->setParameters( size, 2, 1);
     return generator;
 }
@@ -220,6 +345,17 @@ VRWorldGeneratorPtr VRPlanet::getSector( double north, double east ) {
     auto sid = toSID(north, east);
     if (sectors.count(sid)) return sectors[sid];
     return 0;
+}
+
+void VRPlanet::updateVisSectors(double north, double east){
+    return;
+    auto pos00 = fromLatLongPose(north+0.5*sectorSize, east+0.5*sectorSize);
+    auto pos0 = fromLatLongPose(north, east)->pos();
+    auto pos1 = fromLatLongPose(north+sectorSize, east)->pos();
+    auto pos2 = fromLatLongPose(north, east+sectorSize)->pos();
+    auto pos3 = fromLatLongPose(north+sectorSize, east+sectorSize)->pos();
+    //cout << "  POSITIONS: " << toString(pos00)  << " ------ " << toString(pos0) << " -- " << toString(pos1) << " -- " << toString(pos2) << " -- " << toString(pos3) << endl;
+    return;
 }
 
 vector<VRWorldGeneratorPtr> VRPlanet::getSectors() {

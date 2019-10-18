@@ -42,6 +42,7 @@ class VRPlanet : public VRTransform {
         VRWorldGeneratorPtr addSector( double north, double east );
         VRWorldGeneratorPtr getSector( double north, double east );
         vector<VRWorldGeneratorPtr> getSectors();
+        void updateVisSectors(double north, double east);
         int addPin( string label, double north, double east, double length = 10000 );
         void remPin( int pin );
 

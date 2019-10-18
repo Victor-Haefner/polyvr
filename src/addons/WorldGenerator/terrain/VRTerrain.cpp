@@ -146,6 +146,8 @@ void VRTerrain::setParameters( Vec2d s, double r, double h, float w, float aT, C
     setupGeo();
 }
 
+void VRTerrain::setEdgepoints(vector<Vec3d> in){ edgePoints = in; }
+void VRTerrain::setMeshTer(vector<vector<Vec3d>> in){ meshTer = in; }
 void VRTerrain::setWaterLevel(float w) { mat->setShaderParameter("waterLevel", w); }
 void VRTerrain::setAtmosphericEffect(float thickness, Color3f color) { mat->setShaderParameter("atmoColor", color); mat->setShaderParameter("atmoThickness", thickness); }
 void VRTerrain::setHeightScale(float s) { heightScale = s; mat->setShaderParameter("heightScale", s); }
@@ -195,26 +197,81 @@ void VRTerrain::setupGeo() {
     auto texSize = heigthsTex->getSize();
     Vec2d texel = Vec2d( 1.0/texSize[0], 1.0/texSize[1] );
 	Vec2d tcChunk = Vec2d((1.0-texel[0])/gridN[0], (1.0-texel[1])/gridN[1]);
-
+    cout << toString(gridN) << "-- "  << toString(size) << "-- "  << toString(texel) << "-- "  << toString(tcChunk) << "-- "  << toString(texSize) << endl;
 	VRGeoData geo;
-    for (int i =0; i < gridN[0]; i++) {
-		double px1 = -size[0]*0.5 + i*gridS[0];
-		double px2 = px1 + gridS[0];
-		double tcx1 = texel[0]*0.5 + i*tcChunk[0];
-		double tcx2 = tcx1 + tcChunk[0];
+	if (edgePoints.size() == 4){
+        geo.pushVert(edgePoints[0], Vec3d(0,1,0), Vec2d(0.5,0.5));
+        geo.pushVert(edgePoints[1], Vec3d(0,1,0), Vec2d(0.5,0.5));
+        geo.pushVert(edgePoints[2], Vec3d(0,1,0), Vec2d(0.5,0.5));
+        geo.pushVert(edgePoints[3], Vec3d(0,1,0), Vec2d(0.5,0.5));
+        geo.pushQuad();
+        /*
+        for (int i =0; i < gridN[0]; i++) {
+            double px1 = -size[0]*0.5 + i*gridS[0];
+            double px2 = px1 + gridS[0];
+            double tcx1 = texel[0]*0.5 + i*tcChunk[0];
+            double tcx2 = tcx1 + tcChunk[0];
 
-		for (int j =0; j < gridN[1]; j++) {
-			double py1 = -size[1]*0.5 + j*gridS[1];
-			double py2 = py1 + gridS[1];
-			double tcy1 = texel[1]*0.5 + j*tcChunk[1];
-			double tcy2 = tcy1 + tcChunk[1];
+            for (int j =0; j < gridN[1]; j++) {
+                double py1 = -size[1]*0.5 + j*gridS[1];
+                double py2 = py1 + gridS[1];
+                double tcy1 = texel[1]*0.5 + j*tcChunk[1];
+                double tcy2 = tcy1 + tcChunk[1];
+                geo.pushVert(Vec3d(px1,0,py1), Vec3d(0,1,0), Vec2d(tcx1,tcy1));
+                geo.pushVert(Vec3d(px1,0,py2), Vec3d(0,1,0), Vec2d(tcx1,tcy2));
+                geo.pushVert(Vec3d(px2,0,py2), Vec3d(0,1,0), Vec2d(tcx2,tcy2));
+                geo.pushVert(Vec3d(px2,0,py1), Vec3d(0,1,0), Vec2d(tcx2,tcy1));
+                geo.pushQuad();
+                //cout << toString(px1) << "|" << toString(py1) << " ## " << toString(px2) << "|" << toString(py2) << endl;
+                //if (tx1 < 0.01) cout << toString(px1) << "|" << toString(py1) << endl;
+            }
+        }*/
+        //auto texSize = heigthsTex->getSize();
+        //texel = Vec2d( 1.0/texSize[0], 1.0/texSize[1] );
+        /*
+        tcChunk = Vec2d((1.0-texel[0])/(meshTer.size()-1), (1.0-texel[1])/(meshTer[0].size()-1));
+        for (size_t a=0; a < meshTer.size()-1; a++) {
+            double tcx1 = -size[0] + a*tcChunk[0];
+            double tcx2 = tcx1 + tcChunk[0];
+            for (size_t b=0; b < meshTer[a].size()-1; b++){
+                //cout << meshTer[a][b] ;
+                double tcy1 = -size[1] + b*tcChunk[1];
+                double tcy2 = tcy1 + tcChunk[1];
+                //geo.pushVert(meshTer[a][b], Vec3d(0,1,0), Vec2d(tcx1,tcy1));
+                //geo.pushVert(meshTer[a][b+1], Vec3d(0,1,0), Vec2d(tcx1,tcy2));
+                //geo.pushVert(meshTer[a+1][b+1], Vec3d(0,1,0), Vec2d(tcx2,tcy2));
+                //geo.pushVert(meshTer[a+1][b], Vec3d(0,1,0), Vec2d(tcx2,tcy1));
+                auto n = (meshTer[a][b+1]-meshTer[a][b]).cross(meshTer[a+1][b+1]-meshTer[a][b]);
+                geo.pushVert(meshTer[a][b], Vec3d(0,1,0), Color3f(1,0,0));
+                geo.pushVert(meshTer[a][b+1], Vec3d(0,1,0), Color3f(1,0,0));
+                geo.pushVert(meshTer[a+1][b+1], Vec3d(0,1,0), Color3f(1,0,0));
+                geo.pushVert(meshTer[a+1][b], Vec3d(0,1,0), Color3f(1,0,0));
+                geo.pushQuad();
+            }
+            //cout << endl;
+        }*/
 
-			geo.pushVert(Vec3d(px1,0,py1), Vec3d(0,1,0), Vec2d(tcx1,tcy1));
-			geo.pushVert(Vec3d(px1,0,py2), Vec3d(0,1,0), Vec2d(tcx1,tcy2));
-			geo.pushVert(Vec3d(px2,0,py2), Vec3d(0,1,0), Vec2d(tcx2,tcy2));
-			geo.pushVert(Vec3d(px2,0,py1), Vec3d(0,1,0), Vec2d(tcx2,tcy1));
-			geo.pushQuad();
-		}
+	} else {
+        for (int i =0; i < gridN[0]; i++) {
+            double px1 = -size[0]*0.5 + i*gridS[0];
+            double px2 = px1 + gridS[0];
+            double tcx1 = texel[0]*0.5 + i*tcChunk[0];
+            double tcx2 = tcx1 + tcChunk[0];
+
+            for (int j =0; j < gridN[1]; j++) {
+                double py1 = -size[1]*0.5 + j*gridS[1];
+                double py2 = py1 + gridS[1];
+                double tcy1 = texel[1]*0.5 + j*tcChunk[1];
+                double tcy2 = tcy1 + tcChunk[1];
+                geo.pushVert(Vec3d(px1,0,py1), Vec3d(0,1,0), Vec2d(tcx1,tcy1));
+                geo.pushVert(Vec3d(px1,0,py2), Vec3d(0,1,0), Vec2d(tcx1,tcy2));
+                geo.pushVert(Vec3d(px2,0,py2), Vec3d(0,1,0), Vec2d(tcx2,tcy2));
+                geo.pushVert(Vec3d(px2,0,py1), Vec3d(0,1,0), Vec2d(tcx2,tcy1));
+                geo.pushQuad();
+                //cout << toString(px1) << "|" << toString(py1) << " ## " << toString(px2) << "|" << toString(py2) << endl;
+                //if (tx1 < 0.01) cout << toString(px1) << "|" << toString(py1) << endl;
+            }
+        }
 	}
 
 	geo.apply(ptr());
@@ -672,8 +729,8 @@ void applyBlinnPhong() {
 	vec4  diffuse = gl_LightSource[0].diffuse * NdotL * color;
 	float NdotHV = max(dot( norm, normalize(gl_LightSource[0].halfVector.xyz)),0.0);
 	vec4  specular = 0.25*gl_LightSource[0].specular * pow( NdotHV, gl_FrontMaterial.shininess );
-	//gl_FragColor = ambient + diffuse + specular;
-    gl_FragColor = mix(diffuse + specular, vec4(0.7,0.9,1,1), clamp(1e-4*length(pos.xyz), 0.0, 1.0)); // atmospheric effects
+	gl_FragColor = ambient + diffuse + specular; //AGRAJAG
+    //gl_FragColor = mix(diffuse + specular, vec4(0.7,0.9,1,1), clamp(1e-4*length(pos.xyz), 0.0, 1.0)); // atmospheric effects
 	gl_FragColor[3] = 1.0;
 	//gl_FragColor = vec4(diffuse.rgb, 1);
 }
@@ -892,6 +949,7 @@ void main() {
     vec3 b = mix(tcPosition[3], tcPosition[2], u);
     vec3 tePosition = mix(a, b, v);
     height = heightScale * texture2D(texture, gl_TexCoord[0].xy)[channel];
+    height = 0; //AGRAJAG
     tePosition.y = height;
     pos = gl_ModelViewProjectionMatrix * vec4(tePosition, 1);
     vertex = gl_ModelViewMatrix * vec4(tePosition, 1);
