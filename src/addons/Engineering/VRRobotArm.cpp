@@ -137,13 +137,9 @@ void VRRobotArm::calcReverseKinematics(Vec3d pos, Vec3d dir, Vec3d up) {
     ageo->setVector(6, pJ2 - e1*sA, e1*2*sA, Color3f(1,1,0.5), "");
 
     // beams
-    ageo->setVector(7, Vec3d(0,0,0), pJ0, Color3f(1,1,1), "l0");
+    ageo->setVector(7, Vec3d(), pJ0, Color3f(1,1,1), "l0");
     ageo->setVector(8, pJ0, pJ1-pJ0, Color3f(1,1,1), "r1");
     ageo->setVector(9, pJ1, pJ2-pJ1, Color3f(1,1,1), "r2");
-
-    //ageo->setVector(0, pos, e1*0.1, Color3f(0,1,1), "e1");
-    //ageo->setVector(2, pos, av*0.1, Color3f(1,0,0), "av");
-    //ageo->setVector(1, Vec3d(0,0.6,0), e0*0.1, Color3f(1,1,0), "e0");
 }
 
 void VRRobotArm::showAnalytics(bool b) { showModel = b; ageo->setVisible(b); }
