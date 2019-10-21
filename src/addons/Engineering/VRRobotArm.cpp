@@ -17,7 +17,7 @@ VRRobotArm::VRRobotArm() {
     robotPath = Path::create();
     anim = VRAnimation::create("animOnPath");
     ageo = VRAnalyticGeometry::create();
-    ageo->setLabelParams(0.03);
+    ageo->setLabelParams(0.05, 1, 1, Color4f(1,1,1,1), Color4f(1,1,1,0));
     ageo->hide("SHADOW");
 
     animPtr = VRFunction<float>::create("animOnPath", boost::bind(&VRRobotArm::animOnPath, this, _1 ) );
@@ -52,6 +52,42 @@ void VRRobotArm::applyAngles() {
 
 float clamp(float f) { return f<-1 ? -1 : f>1 ? 1 : f; }
 
+/*
+
+Analytic Kinematics Model
+
+Bodies:
+- body 0 -> upper base, rotates (Y) above the lower base
+- body 1 -> first beam
+- body 2 -> elbow part
+- body 3 -> second beam,
+- body 4 -> tool interface, last robot part without tool
+- body 5 -> tool base
+- body 6 -> tool finger 1
+- body 7 -> tool finger 2
+
+Angles:
+- a[0] -> angle between lower and upper base parts, main Y rotation of the robot
+- a[1] -> angle between upper base and first beam
+- a[2] -> angle between first beam and elbow part
+- a[3] -> angle between elbow part and second beam
+- a[4] -> angle between second beam and tool interface
+
+Lengths:
+- l[0] -> height of robot base
+- l[1] -> distance between joint A, B
+- l[2] -> distance between joint B, C
+- l[3] -> padding of end effector
+
+Computation Parameters:
+- L -> length from robot base joint to end effector
+- r1/r2 -> lengths 1/2, see above
+- b, a, f -> angles
+- e0, e1 -> elbow/wrist joint axis directions
+
+*/
+
+// TODO: accept world coordinates and convert to robot coordinates
 void VRRobotArm::calcReverseKinematics(Vec3d pos, Vec3d dir, Vec3d up) {
     pos -= dir* lengths[3];
 
@@ -81,13 +117,35 @@ void VRRobotArm::calcReverseKinematics(Vec3d pos, Vec3d dir, Vec3d up) {
     angles[3] = det < 0 ? -acos(e) : acos(e);
     angles[4] = acos( av.dot(dir) );
 
-    // vector visualization
+
+    // vector visualization ---------------------------------------------------------
     if (!showModel) return;
-    ageo->setVector(0, pos, dir*0.1, Color3f(0,1,0), "dir");
-    ageo->setVector(4, pos, up*0.1, Color3f(0,0,1), "up");
-    ageo->setVector(1, Vec3d(0,0.6,0), e0*0.1, Color3f(1,1,0), "e0");
-    ageo->setVector(2, pos, av*0.1, Color3f(1,0,0), "av");
-    ageo->setVector(3, pos, e1*0.1, Color3f(0,1,1), "e1");
+    float sA = 0.05;
+    Vec3d p = pos; // TODO: compute real EE position
+    p[1] += lengths[0];
+    Vec3d pJ0 = Vec3d(0,lengths[0],0); // base joint
+    Vec3d pJ1 = pJ0 + Vec3d(cos(a)*sin(f), sin(a), cos(a)*cos(f)) * lengths[1]; // elbow joint
+    Vec3d pJ2 = p; // wrist joint
+
+    // EE
+    ageo->setVector(0, Vec3d(), p, Color3f(0.6,0.8,1), "");
+    ageo->setVector(1, p, dir*0.1, Color3f(0,0,1), "");
+    ageo->setVector(2, p, up*0.1, Color3f(1,0,0), "");
+
+    // rot axis
+    ageo->setVector(3, pJ0 - Vec3d(0,sA,0), Vec3d(0,2*sA,0), Color3f(1,1,0.5), "");
+    ageo->setVector(4, pJ0 - e0*sA, e0*2*sA, Color3f(1,1,0.5), "");
+    ageo->setVector(5, pJ1 - e0*sA, e0*2*sA, Color3f(1,1,0.5), "");
+    ageo->setVector(6, pJ2 - e1*sA, e1*2*sA, Color3f(1,1,0.5), "");
+
+    // beams
+    ageo->setVector(7, Vec3d(0,0,0), pJ0, Color3f(1,1,1), "l0");
+    ageo->setVector(8, pJ0, pJ1-pJ0, Color3f(1,1,1), "r1");
+    ageo->setVector(9, pJ1, pJ2-pJ1, Color3f(1,1,1), "r2");
+
+    //ageo->setVector(0, pos, e1*0.1, Color3f(0,1,1), "e1");
+    //ageo->setVector(2, pos, av*0.1, Color3f(1,0,0), "av");
+    //ageo->setVector(1, Vec3d(0,0.6,0), e0*0.1, Color3f(1,1,0), "e0");
 }
 
 void VRRobotArm::showAnalytics(bool b) { showModel = b; ageo->setVisible(b); }
