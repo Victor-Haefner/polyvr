@@ -9,6 +9,7 @@ using namespace OSG;
 simpleVRPyType(RobotArm, New_ptr);
 
 PyMethodDef VRPyRobotArm::methods[] = {
+    {"showAnalytics", PyWrap(RobotArm, showAnalytics, "Shows a visualization of the analytic model", void, bool ) },
     {"setParts", PyWrap(RobotArm, setParts, "Set robot parts", void, vector<VRTransformPtr> ) },
     {"setAngleOffsets", PyWrap(RobotArm, setAngleOffsets, "Set angle offset for each part", void, vector<float> ) },
     {"setAngleDirections", PyWrap(RobotArm, setAngleDirections, "Set angles rotation direction - setAngleDirections([1/-1])", void, vector<int> ) },

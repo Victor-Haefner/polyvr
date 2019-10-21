@@ -32,6 +32,7 @@ class VRRobotArm {
         int N = 5;
         float grab = 0;
         float pathPos = 0;
+        bool showModel = false;
 
         vector<VRTransformPtr> parts;
         vector<float> angles;
@@ -50,6 +51,7 @@ class VRRobotArm {
         ~VRRobotArm();
 
         static shared_ptr<VRRobotArm> create();
+        void showAnalytics(bool b);
 
         void setParts(vector<VRTransformPtr> parts);
         void setAngleOffsets(vector<float> offsets);
