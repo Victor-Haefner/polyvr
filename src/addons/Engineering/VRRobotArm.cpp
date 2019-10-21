@@ -121,16 +121,14 @@ void VRRobotArm::calcReverseKinematics(Vec3d pos, Vec3d dir, Vec3d up) {
     // vector visualization ---------------------------------------------------------
     if (!showModel) return;
     float sA = 0.05;
-    Vec3d p = pos; // TODO: compute real EE position
-    p[1] += lengths[0];
     Vec3d pJ0 = Vec3d(0,lengths[0],0); // base joint
     Vec3d pJ1 = pJ0 + Vec3d(cos(a)*sin(f), sin(a), cos(a)*cos(f)) * lengths[1]; // elbow joint
-    Vec3d pJ2 = p; // wrist joint
+    Vec3d pJ2 = pJ1 - Vec3d(cos(a+b)*sin(f), sin(a+b), cos(a+b)*cos(f)) * lengths[2]; // wrist joint
 
     // EE
-    ageo->setVector(0, Vec3d(), p, Color3f(0.6,0.8,1), "");
-    ageo->setVector(1, p, dir*0.1, Color3f(0,0,1), "");
-    ageo->setVector(2, p, up*0.1, Color3f(1,0,0), "");
+    ageo->setVector(0, Vec3d(), pJ2, Color3f(0.6,0.8,1), "");
+    ageo->setVector(1, pJ2, dir*0.1, Color3f(0,0,1), "");
+    ageo->setVector(2, pJ2, up*0.1, Color3f(1,0,0), "");
 
     // rot axis
     ageo->setVector(3, pJ0 - Vec3d(0,sA,0), Vec3d(0,2*sA,0), Color3f(1,1,0.5), "");
