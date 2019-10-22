@@ -16,8 +16,8 @@ class VRProcessEngine {
         struct Message {
             VRProcessNodePtr messageNode;
             string message;
-            string sender;
             string receiver;
+            string sender;
 
             Message(string m, string s, string r, VRProcessNodePtr node) : message(m), sender(s), receiver(r), messageNode(node) {}
 

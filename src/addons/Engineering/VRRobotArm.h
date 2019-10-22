@@ -33,6 +33,7 @@ class VRRobotArm {
         float grab = 0;
         float pathPos = 0;
         bool showModel = false;
+        string type = "kuka";
 
         vector<VRTransformPtr> parts;
         vector<float> angles;
@@ -42,15 +43,17 @@ class VRRobotArm {
         vector<int> axis;
 
         void applyAngles();
-        void calcReverseKinematics(Vec3d pos, Vec3d dir, Vec3d up);
+        void calcReverseKinematics(PosePtr p);
+        void calcReverseKinematicsKuka(PosePtr p);
+        void calcReverseKinematicsAubo(PosePtr p);
         void animOnPath(float t);
         void addJob(job j);
 
     public:
-        VRRobotArm();
+        VRRobotArm(string type);
         ~VRRobotArm();
 
-        static shared_ptr<VRRobotArm> create();
+        static shared_ptr<VRRobotArm> create(string type);
         void showAnalytics(bool b);
 
         void setParts(vector<VRTransformPtr> parts);

@@ -11,7 +11,7 @@ using namespace OSG;
 
 template<> string typeName(const VRRobotArm& m) { return "RobotArm"; }
 
-VRRobotArm::VRRobotArm() {
+VRRobotArm::VRRobotArm(string type) : type(type) {
     angles.resize(N,0);
     animPath = Path::create();
     robotPath = Path::create();
@@ -26,7 +26,7 @@ VRRobotArm::VRRobotArm() {
 
 VRRobotArm::~VRRobotArm() {}
 
-shared_ptr<VRRobotArm> VRRobotArm::create() { return shared_ptr<VRRobotArm>(new VRRobotArm()); }
+shared_ptr<VRRobotArm> VRRobotArm::create(string type) { return shared_ptr<VRRobotArm>(new VRRobotArm(type)); }
 
 void VRRobotArm::setParts(vector<VRTransformPtr> parts) {
     this->parts = parts;
@@ -88,7 +88,73 @@ Computation Parameters:
 */
 
 // TODO: accept world coordinates and convert to robot coordinates
-void VRRobotArm::calcReverseKinematics(Vec3d pos, Vec3d dir, Vec3d up) {
+void VRRobotArm::calcReverseKinematics(PosePtr p) {
+    if (type == "kuka") calcReverseKinematicsKuka(p);
+    else if (type == "aubo") calcReverseKinematicsAubo(p);
+    else calcReverseKinematicsKuka(p); // default
+}
+
+void VRRobotArm::calcReverseKinematicsKuka(PosePtr p) {
+    Vec3d pos = p->pos();
+    Vec3d dir = p->dir();
+    Vec3d up  = p->up();
+    pos -= dir* lengths[3];
+
+    pos[1] -= lengths[0];
+    float r1 = lengths[1];
+    float r2 = lengths[2];
+    float L = pos.length();
+    float b = acos( clamp( (L*L-r1*r1-r2*r2)/(-2*r1*r2) ) );
+    angles[2] = -b + Pi;
+
+    float a = asin( clamp( r2*sin(b)/L ) ) + asin( clamp( pos[1]/L ) );
+	angles[1] = a - Pi*0.5;
+	//angles[1] = a;
+
+    float f = pos[2] > 0 ? atan(pos[0]/pos[2]) : Pi - atan(-pos[0]/pos[2]);
+    angles[0] = f;
+
+    // end effector
+    float e = a+b; // counter angle
+    Vec3d e0 = Vec3d(cos(-f),0,sin(-f));
+    Vec3d av = Vec3d(-cos(e)*sin(f), -sin(e), -cos(e)*cos(f));
+    Vec3d e1 = dir.cross(av);
+    e1.normalize();
+
+    float det = av.dot( e1.cross(e0) );
+    e = min( max(-e1.dot(e0), -1.0), 1.0);
+    angles[3] = det < 0 ? -acos(e) : acos(e);
+    angles[4] = acos( av.dot(dir) );
+
+
+    // vector visualization ---------------------------------------------------------
+    if (!showModel) return;
+    float sA = 0.05;
+    Vec3d pJ0 = Vec3d(0,lengths[0],0); // base joint
+    Vec3d pJ1 = pJ0 + Vec3d(cos(a)*sin(f), sin(a), cos(a)*cos(f)) * lengths[1]; // elbow joint
+    Vec3d pJ2 = pJ1 - Vec3d(cos(a+b)*sin(f), sin(a+b), cos(a+b)*cos(f)) * lengths[2]; // wrist joint
+
+    // EE
+    ageo->setVector(0, Vec3d(), pJ2, Color3f(0.6,0.8,1), "");
+    ageo->setVector(1, pJ2, dir*0.1, Color3f(0,0,1), "");
+    ageo->setVector(2, pJ2, up*0.1, Color3f(1,0,0), "");
+
+    // rot axis
+    ageo->setVector(3, pJ0 - Vec3d(0,sA,0), Vec3d(0,2*sA,0), Color3f(1,1,0.5), "");
+    ageo->setVector(4, pJ0 - e0*sA, e0*2*sA, Color3f(1,1,0.5), "");
+    ageo->setVector(5, pJ1 - e0*sA, e0*2*sA, Color3f(1,1,0.5), "");
+    ageo->setVector(6, pJ2 - e1*sA, e1*2*sA, Color3f(1,1,0.5), "");
+
+    // beams
+    ageo->setVector(7, Vec3d(), pJ0, Color3f(1,1,1), "l0");
+    ageo->setVector(8, pJ0, pJ1-pJ0, Color3f(1,1,1), "r1");
+    ageo->setVector(9, pJ1, pJ2-pJ1, Color3f(1,1,1), "r2");
+}
+
+void VRRobotArm::calcReverseKinematicsAubo(PosePtr p) {
+    Vec3d pos = p->pos();
+    Vec3d dir = p->dir();
+    Vec3d up  = p->up();
     pos -= dir* lengths[3];
 
     pos[1] -= lengths[0];
@@ -154,7 +220,7 @@ void VRRobotArm::animOnPath(float t) {
     if (t >= job.t1 && job.loop) { anim->start(0); return; }
 
     auto pose = job.p->getPose(t);
-    calcReverseKinematics(pose->pos(), pose->dir(), pose->up());
+    calcReverseKinematics(pose);
     applyAngles();
 
     // endeffector

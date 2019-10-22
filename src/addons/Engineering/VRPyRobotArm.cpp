@@ -6,7 +6,7 @@
 
 using namespace OSG;
 
-simpleVRPyType(RobotArm, New_ptr);
+simpleVRPyType(RobotArm, New_named_ptr);
 
 PyMethodDef VRPyRobotArm::methods[] = {
     {"showAnalytics", PyWrap(RobotArm, showAnalytics, "Shows a visualization of the analytic model", void, bool ) },
