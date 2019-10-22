@@ -39,10 +39,9 @@ class VRPlanet : public VRTransform {
 
         void setParameters( double radius, string texture, bool isLit, double sectorSize = 0.1 );
         void setLayermode( string mode );
-        VRWorldGeneratorPtr addSector( double north, double east );
+        VRWorldGeneratorPtr addSector( double north, double east, bool local = false );
         VRWorldGeneratorPtr getSector( double north, double east );
         vector<VRWorldGeneratorPtr> getSectors();
-        void updateVisSectors(double north, double east);
         int addPin( string label, double north, double east, double length = 10000 );
         void remPin( int pin );
 
