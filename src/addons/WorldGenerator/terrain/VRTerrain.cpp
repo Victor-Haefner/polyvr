@@ -224,10 +224,10 @@ void VRTerrain::setupGeo() {
                     double tcy2 = tcy1 + tcChunk[1];
                     //auto n = (meshTer[nN-j][i+1]-meshTer[nN-j][i]).cross(meshTer[nN-(j+1)][i+1]-meshTer[nN-j][i]);
                     auto n = Vec3d(0,1,0);
-                    geo.pushVert(meshTer[(j+1)][i], n, Vec2d(tcx1,tcy1));
-                    geo.pushVert(meshTer[(j+1)][i+1], n, Vec2d(tcx1,tcy2));
-                    geo.pushVert(meshTer[j][i+1], n, Vec2d(tcx2,tcy2));
-                    geo.pushVert(meshTer[j][i], n, Vec2d(tcx2,tcy1));/*
+                    geo.pushVert(meshTer[j][i], n, Vec2d(tcx1,tcy1));
+                    geo.pushVert(meshTer[(j+1)][i], n, Vec2d(tcx1,tcy2));
+                    geo.pushVert(meshTer[(j+1)][i+1], n, Vec2d(tcx2,tcy2));
+                    geo.pushVert(meshTer[j][i+1], n, Vec2d(tcx2,tcy1));/*
                     auto n = (meshTer[i][j+1]-meshTer[i][j]).cross(meshTer[i+1][j+1]-meshTer[i][j]);
                     geo.pushVert(meshTer[i][j], n, Vec2d(tcx1,tcy1));
                     geo.pushVert(meshTer[i][j+1], n, Vec2d(tcx1,tcy2));
