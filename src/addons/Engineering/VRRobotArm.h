@@ -26,6 +26,7 @@ class VRRobotArm {
         VRAnimCbPtr animPtr;
         PathPtr animPath = 0;
         PathPtr robotPath = 0;
+        PosePtr lastPose = 0;
 
         list<job> job_queue;
 
@@ -42,10 +43,13 @@ class VRRobotArm {
         vector<float> lengths;
         vector<int> axis;
 
-        void applyAngles();
-        void calcReverseKinematics(PosePtr p);
+        PosePtr getKukaPose();
+        PosePtr getAuboPose();
         void calcReverseKinematicsKuka(PosePtr p);
         void calcReverseKinematicsAubo(PosePtr p);
+
+        void applyAngles();
+        void calcReverseKinematics(PosePtr p);
         void animOnPath(float t);
         void addJob(job j);
 
