@@ -147,7 +147,7 @@ void VRTerrain::setParameters( Vec2d s, double r, double h, float w, float aT, C
 }
 
 void VRTerrain::setLocalized(bool in){ localMesh = in; }
-void VRTerrain::setMeshTer(vector<vector<Vec3d>> in){ meshTer = in; }
+void VRTerrain::setMeshTer(vector<vector<vector<Vec3d>>> in){ meshTer = in; }
 void VRTerrain::setWaterLevel(float w) { mat->setShaderParameter("waterLevel", w); }
 void VRTerrain::setAtmosphericEffect(float thickness, Color3f color) { mat->setShaderParameter("atmoColor", color); mat->setShaderParameter("atmoThickness", thickness); }
 void VRTerrain::setHeightScale(float s) { heightScale = s; mat->setShaderParameter("heightScale", s); }
@@ -205,11 +205,11 @@ void VRTerrain::setupGeo() {
             int t1 = 0;
             int t2 = 0;
 
-            texel = Vec2d( 1.0/(meshTer[0].size()-1), 1.0/(meshTer.size()-1) );
+            //texel = Vec2d( 1.0/(meshTer[0].size()-1), 1.0/(meshTer.size()-1) );
             tcChunk = Vec2d((1.0-texel[0])/(meshTer[0].size()-1), (1.0-texel[1])/(meshTer.size()-1));
 
-            cout << "n,e TEX: " << gridN[1] << " -- " << gridN[0] << endl;
-            cout << "n,e Mes: " << meshTer.size() << " -- " << meshTer[0].size() << endl;
+            //cout << "n,e TEX: " << gridN[1] << " -- " << gridN[0] << endl;
+            //cout << "n,e Mes: " << meshTer.size() << " -- " << meshTer[0].size() << endl;
             auto nN = meshTer.size()+1;
             auto nE = meshTer[0].size();
             for (int i =0; i < meshTer[0].size()-1; i++) {
@@ -223,11 +223,11 @@ void VRTerrain::setupGeo() {
                     double tcy1 = texel[1]*0.5 + j*tcChunk[1];
                     double tcy2 = tcy1 + tcChunk[1];
                     //auto n = (meshTer[nN-j][i+1]-meshTer[nN-j][i]).cross(meshTer[nN-(j+1)][i+1]-meshTer[nN-j][i]);
-                    auto n = Vec3d(0,1,0);
-                    geo.pushVert(meshTer[j][i], n, Vec2d(tcx1,tcy1));
-                    geo.pushVert(meshTer[(j+1)][i], n, Vec2d(tcx1,tcy2));
-                    geo.pushVert(meshTer[(j+1)][i+1], n, Vec2d(tcx2,tcy2));
-                    geo.pushVert(meshTer[j][i+1], n, Vec2d(tcx2,tcy1));/*
+                    //auto n = Vec3d(0,1,0);
+                    geo.pushVert(meshTer[j][i][0], meshTer[j][i][1], Vec2d(tcx1,tcy1));
+                    geo.pushVert(meshTer[j+1][i][0], meshTer[j+1][i][1], Vec2d(tcx1,tcy2));
+                    geo.pushVert(meshTer[j+1][i+1][0], meshTer[j+1][i+1][1], Vec2d(tcx2,tcy2));
+                    geo.pushVert(meshTer[j][i+1][0], meshTer[j][i+1][1], Vec2d(tcx2,tcy1));/*
                     auto n = (meshTer[i][j+1]-meshTer[i][j]).cross(meshTer[i+1][j+1]-meshTer[i][j]);
                     geo.pushVert(meshTer[i][j], n, Vec2d(tcx1,tcy1));
                     geo.pushVert(meshTer[i][j+1], n, Vec2d(tcx1,tcy2));
@@ -242,13 +242,18 @@ void VRTerrain::setupGeo() {
         }
 	} else {
         VRGeoData geo;
+        int old1 = 0;
+        int old2 = 0;
         for (int i =0; i < gridN[0]; i++) {
+            old1++;
+            old2 = 0;
             double px1 = -size[0]*0.5 + i*gridS[0];
             double px2 = px1 + gridS[0];
             double tcx1 = texel[0]*0.5 + i*tcChunk[0];
             double tcx2 = tcx1 + tcChunk[0];
 
             for (int j =0; j < gridN[1]; j++) {
+                old2++;
                 double py1 = -size[1]*0.5 + j*gridS[1];
                 double py2 = py1 + gridS[1];
                 double tcy1 = texel[1]*0.5 + j*tcChunk[1];
@@ -262,6 +267,7 @@ void VRTerrain::setupGeo() {
                 //if (tx1 < 0.01) cout << toString(px1) << "|" << toString(py1) << endl;
             }
         }
+        cout << "n,e OLD: " << old2 << " -- " << old1 << endl;
         geo.apply(ptr());
 	}
 	setType(GL_PATCHES);
