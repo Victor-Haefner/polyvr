@@ -202,16 +202,15 @@ void VRRobotArm::calcReverseKinematicsAubo(PosePtr p) {
     Vec3d pJ2 = pJ1 - Vec3d(cos(a+b)*sin(f), sin(a+b), cos(a+b)*cos(f)) * lengths[2]; // wrist joint (P3)
 
     // TODO: works only for a quarter of the angles!
-    auto getAngle = [](Vec3d u, Vec3d v) {
+    auto getAngle = [](Vec3d u, Vec3d v, Vec3d w) {
         float a = u.enclosedAngle(v);
         Vec3d d = u.cross(v);
-        Vec3d x = u.cross(Vec3d(0,1,0));
-        float w = x.dot(d);
-        return a*boost::math::sign(w);
+        float k = w.dot(d);
+        return a*boost::math::sign(k);
     };
 
-    angles[3] = getAngle(P1-P2, pJ1-pJ2) - Pi*0.5;
-    angles[4] = getAngle(dir, (P3-P2).cross(P1-P2)) - Pi;
+    angles[3] = getAngle(P1-P2, pJ1-pJ2, P3-P2) - Pi*0.5;
+    angles[4] = getAngle(dir, P3-P2, P2-P1) - Pi*0.5;
 
 
     // analytics visualization ---------------------------------------------------------
