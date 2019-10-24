@@ -169,8 +169,10 @@ PyObject* VRSceneGlobals::getRoot(VRSceneGlobals* self) {
 
 PyObject* VRSceneGlobals::importScene(VRSceneGlobals* self, PyObject *args) {
     const char* path = "";
-    if (! PyArg_ParseTuple(args, "s", &path)) return NULL;
-    auto res = VRSceneLoader::get()->importScene( path?path:"" );
+    const char* key = "";
+    int offLights = 0;
+    if (! PyArg_ParseTuple(args, "s|si", &path, &key, &offLights)) return NULL;
+    auto res = VRSceneLoader::get()->importScene( path?path:"", key?key:"", offLights );
     if (res) return VRPyTypeCaster::cast(res);
     else Py_RETURN_NONE;
 }
