@@ -58,7 +58,7 @@ void VRRobotArm::applyAngles() {
 }
 
 void VRRobotArm::update() { // update robot joint angles
-    double daMax = 0.02;
+    double daMax = 0.01;
     bool m = false;
 
     for (int i=0; i<N; i++) {
@@ -68,12 +68,14 @@ void VRRobotArm::update() { // update robot joint angles
         while (da >  Pi) da -= 2*Pi;
         while (da < -Pi) da += 2*Pi;
         if (abs(da) > 1e-4) m = true;
-        angles[i] += da;//clamp( da, -daMax, daMax );
+        angles[i] += clamp( da, -daMax, daMax );
     }
 
     if (m) applyAngles();
     moving = m;
 }
+
+bool VRRobotArm::isMoving() { return anim->isActive() || moving; }
 
 /*
 
@@ -280,7 +282,7 @@ void VRRobotArm::animOnPath(float t) {
 
     t += job.t0;
     if (t >= job.t1 && !job.loop) { job_queue.pop_front(); anim->start(0); return; }
-    if (t >= job.t1 && job.loop) { anim->start(0); moving = true; return; }
+    if (t >= job.t1 && job.loop) { anim->start(0); return; }
 
     auto pose = job.p->getPose(t);
     calcReverseKinematics(pose);
@@ -288,7 +290,7 @@ void VRRobotArm::animOnPath(float t) {
 
 void VRRobotArm::addJob(job j) {
     job_queue.push_back(j);
-    if (!anim->isActive()) { anim->start(0); moving = true; }
+    if (!anim->isActive()) anim->start(0);
 }
 
 void VRRobotArm::move() {}
@@ -375,6 +377,4 @@ void VRRobotArm::toggleGrab() { setGrab(1-grab); }
 
 void VRRobotArm::setPath(PathPtr p) { robotPath = p; }
 PathPtr VRRobotArm::getPath() { return robotPath; }
-
-bool VRRobotArm::isMoving() { return anim->isActive(); /*moving;*/ }
 
