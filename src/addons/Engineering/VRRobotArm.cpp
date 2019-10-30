@@ -51,13 +51,15 @@ double clamp(double f, double a = -1, double b = 1) { return f<a ? a : f>b ? b :
 void VRRobotArm::applyAngles() {
     for (int i=0; i<N; i++) {
         Vec3d euler;
-        euler[axis[i]] = angle_directions[i]*angle_targets[i] + angle_offsets[i]*Pi;
-        //euler[axis[i]] = angles[i];
+        euler[axis[i]] = angles[i];
         parts[i]->setEuler(euler);
     }
 }
 
 void VRRobotArm::update() { // update robot joint angles
+    for (int i=0; i<N; i++) {
+        angles[i]= angle_directions[i]*angle_targets[i] + angle_offsets[i]*Pi;
+    }
     return;
 
     double daMax = 0.02;
