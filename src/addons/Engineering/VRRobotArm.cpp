@@ -71,8 +71,8 @@ void VRRobotArm::update() { // update robot joint angles
         angles[i] += da;//clamp( da, -daMax, daMax );
     }
 
-    //if (m) applyAngles();
-    //moving = m;
+    if (m) applyAngles();
+    moving = m;
 }
 
 /*
@@ -115,7 +115,7 @@ void VRRobotArm::calcReverseKinematics(PosePtr p) {
     if (type == "kuka") calcReverseKinematicsKuka(p);
     else if (type == "aubo") calcReverseKinematicsAubo(p);
     else calcReverseKinematicsKuka(p); // default
-    applyAngles();
+    //applyAngles();
     lastPose = p;
 }
 
