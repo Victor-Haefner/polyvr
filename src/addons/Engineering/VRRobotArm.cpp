@@ -2,6 +2,7 @@
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/math/path.h"
 #include "core/objects/VRAnimation.h"
+#include "core/scene/VRScene.h"
 #include "core/utils/VRFunction.h"
 #include "core/utils/toString.h"
 #include "core/tools/VRAnalyticGeometry.h"
@@ -15,6 +16,7 @@ template<> string typeName(const VRRobotArm& m) { return "RobotArm"; }
 VRRobotArm::VRRobotArm(string type) : type(type) {
     lastPose = Pose::create();
     angles.resize(N,0);
+    angle_targets.resize(N,0);
     animPath = Path::create();
     robotPath = Path::create();
     anim = VRAnimation::create("animOnPath");
@@ -24,6 +26,9 @@ VRRobotArm::VRRobotArm(string type) : type(type) {
 
     animPtr = VRFunction<float>::create("animOnPath", boost::bind(&VRRobotArm::animOnPath, this, _1 ) );
     anim->setUnownedCallback(animPtr);
+
+    updatePtr = VRUpdateCb::create("run engines", boost::bind(&VRRobotArm::update, this) );
+    VRScene::getCurrent()->addUpdateFkt(updatePtr, 999);
 }
 
 VRRobotArm::~VRRobotArm() {}
@@ -41,18 +46,35 @@ void VRRobotArm::setAxis(vector<int> axis) { this->axis = axis; }
 void VRRobotArm::setLengths(vector<float> lengths) { this->lengths = lengths; }
 vector<float> VRRobotArm::getAngles() { return angles; }
 
+double clamp(double f, double a = -1, double b = 1) { return f<a ? a : f>b ? b : f; }
+
 void VRRobotArm::applyAngles() {
-    //cout << "applyAngles";
     for (int i=0; i<N; i++) {
         Vec3d euler;
-        euler[axis[i]] = angle_directions[i]*angles[i] + angle_offsets[i]*Pi;
-        //cout << " " << euler[axis[i]];
+        euler[axis[i]] = angle_directions[i]*angle_targets[i] + angle_offsets[i]*Pi;
+        //euler[axis[i]] = angles[i];
         parts[i]->setEuler(euler);
     }
-    //cout << endl;
 }
 
-float clamp(float f) { return f<-1 ? -1 : f>1 ? 1 : f; }
+void VRRobotArm::update() { // update robot joint angles
+    return;
+
+    double daMax = 0.02;
+    bool m = false;
+
+    for (int i=0; i<N; i++) {
+        double a = angle_directions[i]*angle_targets[i] + angle_offsets[i]*Pi;
+        double da = a - angles[i];
+        //while (da >  Pi) da -= 2*Pi;
+        //while (da < -Pi) da += 2*Pi;
+        if (abs(da) > 1e-4) m = true;
+        angles[i] += da;//clamp( da, -daMax, daMax );
+    }
+
+    if (m) applyAngles();
+    moving = m;
+}
 
 /*
 
@@ -84,7 +106,7 @@ Lengths:
 Computation Parameters:
 - L -> length from robot base joint to end effector
 - r1/r2 -> lengths 1/2, see above
-- b, a, f -> angles
+- b, a, f -> angle_targets
 - e0, e1 -> elbow/wrist joint axis directions
 
 */
@@ -94,6 +116,7 @@ void VRRobotArm::calcReverseKinematics(PosePtr p) {
     if (type == "kuka") calcReverseKinematicsKuka(p);
     else if (type == "aubo") calcReverseKinematicsAubo(p);
     else calcReverseKinematicsKuka(p); // default
+    applyAngles();
     lastPose = p;
 }
 
@@ -108,14 +131,14 @@ void VRRobotArm::calcReverseKinematicsKuka(PosePtr p) {
     float r2 = lengths[2];
     float L = pos.length();
     float b = acos( clamp( (L*L-r1*r1-r2*r2)/(-2*r1*r2) ) );
-    angles[2] = -b + Pi;
+    angle_targets[2] = -b + Pi;
 
     float a = asin( clamp( r2*sin(b)/L ) ) + asin( clamp( pos[1]/L ) );
-	angles[1] = a - Pi*0.5;
-	//angles[1] = a;
+	angle_targets[1] = a - Pi*0.5;
+	//angle_targets[1] = a;
 
     float f = pos[2] > 0 ? atan(pos[0]/pos[2]) : Pi - atan(-pos[0]/pos[2]);
-    angles[0] = f;
+    angle_targets[0] = f;
 
     // end effector
     float e = a+b; // counter angle
@@ -126,8 +149,8 @@ void VRRobotArm::calcReverseKinematicsKuka(PosePtr p) {
 
     float det = av.dot( e1.cross(e0) );
     e = min( max(-e1.dot(e0), -1.0), 1.0);
-    angles[3] = det < 0 ? -acos(e) : acos(e);
-    angles[4] = acos( av.dot(dir) );
+    angle_targets[3] = det < 0 ? -acos(e) : acos(e);
+    angle_targets[4] = acos( av.dot(dir) );
 
 
     // analytics visualization ---------------------------------------------------------
@@ -184,14 +207,14 @@ void VRRobotArm::calcReverseKinematicsAubo(PosePtr p) {
     float r2 = lengths[2];
     float L = pos.length();
     float b = acos( clamp( (L*L-r1*r1-r2*r2)/(-2*r1*r2) ) );
-    angles[2] = -b + Pi;
+    angle_targets[2] = -b + Pi;
 
     float a = asin( clamp( r2*sin(b)/L ) ) + asin( clamp( pos[1]/L ) );
-	angles[1] = a - Pi*0.5;
-	//angles[1] = a;
+	angle_targets[1] = a - Pi*0.5;
+	//angle_targets[1] = a;
 
     float f = pos[2] > 0 ? atan(pos[0]/pos[2]) : Pi - atan(-pos[0]/pos[2]);
-    angles[0] = f;
+    angle_targets[0] = f;
 
     Vec3d e0 = Vec3d(cos(-f),0,sin(-f));
 
@@ -209,8 +232,8 @@ void VRRobotArm::calcReverseKinematicsAubo(PosePtr p) {
         return a*boost::math::sign(k);
     };
 
-    angles[3] = getAngle(P1-P2, pJ1-pJ2, P3-P2) - Pi*0.5;
-    angles[4] = getAngle(dir, P3-P2, P2-P1) - Pi*0.5;
+    angle_targets[3] = getAngle(P1-P2, pJ1-pJ2, P3-P2) - Pi*0.5;
+    angle_targets[4] = getAngle(dir, P3-P2, P2-P1) - Pi*0.5;
 
 
     // analytics visualization ---------------------------------------------------------
@@ -258,19 +281,15 @@ void VRRobotArm::animOnPath(float t) {
 
     t += job.t0;
     if (t >= job.t1 && !job.loop) { job_queue.pop_front(); anim->start(0); return; }
-    if (t >= job.t1 && job.loop) { anim->start(0); return; }
+    if (t >= job.t1 && job.loop) { anim->start(0); moving = true; return; }
 
     auto pose = job.p->getPose(t);
     calcReverseKinematics(pose);
-    applyAngles();
-
-    // endeffector
-    parts[6]->setWorldOrientation(-pose->dir(), pose->up());
 }
 
 void VRRobotArm::addJob(job j) {
     job_queue.push_back(j);
-    if (!anim->isActive()) anim->start(0);
+    if (!anim->isActive()) { anim->start(0); moving = true; }
 }
 
 void VRRobotArm::move() {}
@@ -281,8 +300,7 @@ void VRRobotArm::stop() {
 }
 
 void VRRobotArm::setAngles(vector<float> angles) {
-    this->angles = angles;
-    applyAngles(); // TODO: animate from current pose
+    this->angle_targets = angles;
 }
 
 PosePtr VRRobotArm::getKukaPose() {
@@ -359,4 +377,5 @@ void VRRobotArm::toggleGrab() { setGrab(1-grab); }
 void VRRobotArm::setPath(PathPtr p) { robotPath = p; }
 PathPtr VRRobotArm::getPath() { return robotPath; }
 
-bool VRRobotArm::isMoving(){return anim->isActive(); }
+bool VRRobotArm::isMoving() { return anim->isActive(); /*moving;*/ }
+

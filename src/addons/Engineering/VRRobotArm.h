@@ -24,6 +24,7 @@ class VRRobotArm {
         VRAnalyticGeometryPtr ageo = 0;
         VRAnimationPtr anim = 0;
         VRAnimCbPtr animPtr;
+        VRUpdateCbPtr updatePtr;
         PathPtr animPath = 0;
         PathPtr robotPath = 0;
         PosePtr lastPose = 0;
@@ -34,10 +35,12 @@ class VRRobotArm {
         float grab = 0;
         float pathPos = 0;
         bool showModel = false;
+        bool moving = false;
         string type = "kuka";
 
         vector<VRTransformPtr> parts;
         vector<float> angles;
+        vector<float> angle_targets;
         vector<float> angle_offsets;
         vector<int> angle_directions;
         vector<float> lengths;
@@ -48,6 +51,7 @@ class VRRobotArm {
         void calcReverseKinematicsKuka(PosePtr p);
         void calcReverseKinematicsAubo(PosePtr p);
 
+        void update();
         void applyAngles();
         void calcReverseKinematics(PosePtr p);
         void animOnPath(float t);
