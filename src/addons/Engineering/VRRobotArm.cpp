@@ -5,6 +5,7 @@
 #include "core/scene/VRScene.h"
 #include "core/utils/VRFunction.h"
 #include "core/utils/toString.h"
+#include "core/utils/isNan.h"
 #include "core/tools/VRAnalyticGeometry.h"
 #include <boost/bind.hpp>
 #include <OpenSG/OSGQuaternion.h>
@@ -57,25 +58,21 @@ void VRRobotArm::applyAngles() {
 }
 
 void VRRobotArm::update() { // update robot joint angles
-    for (int i=0; i<N; i++) {
-        angles[i]= angle_directions[i]*angle_targets[i] + angle_offsets[i]*Pi;
-    }
-    return;
-
     double daMax = 0.02;
     bool m = false;
 
     for (int i=0; i<N; i++) {
         double a = angle_directions[i]*angle_targets[i] + angle_offsets[i]*Pi;
         double da = a - angles[i];
-        //while (da >  Pi) da -= 2*Pi;
-        //while (da < -Pi) da += 2*Pi;
+        if (isNan(da)) continue;
+        while (da >  Pi) da -= 2*Pi;
+        while (da < -Pi) da += 2*Pi;
         if (abs(da) > 1e-4) m = true;
         angles[i] += da;//clamp( da, -daMax, daMax );
     }
 
-    if (m) applyAngles();
-    moving = m;
+    //if (m) applyAngles();
+    //moving = m;
 }
 
 /*
