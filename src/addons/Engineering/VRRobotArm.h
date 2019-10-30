@@ -36,6 +36,7 @@ class VRRobotArm {
         float pathPos = 0;
         bool showModel = false;
         bool moving = false;
+        float maxSpeed = 0.01;
         string type = "kuka";
 
         vector<VRTransformPtr> parts;
@@ -69,6 +70,7 @@ class VRRobotArm {
         void setAngleDirections(vector<int> directions);
         void setAxis(vector<int> axis);
         void setLengths(vector<float> lengths);
+        void setMaxSpeed(float s);
 
         vector<float> getAngles();
         PosePtr getPose();
@@ -85,7 +87,7 @@ class VRRobotArm {
 
         void setPath(PathPtr p);
         PathPtr getPath();
-        void moveOnPath(float t0, float t1, bool loop = false);
+        void moveOnPath(float t0, float t1, bool loop = false, float durationMultiplier = 1);
 };
 
 typedef shared_ptr<VRRobotArm> VRRobotArmPtr;

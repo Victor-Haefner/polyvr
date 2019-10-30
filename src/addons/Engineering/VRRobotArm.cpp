@@ -58,7 +58,6 @@ void VRRobotArm::applyAngles() {
 }
 
 void VRRobotArm::update() { // update robot joint angles
-    double daMax = 0.01;
     bool m = false;
 
     for (int i=0; i<N; i++) {
@@ -68,7 +67,7 @@ void VRRobotArm::update() { // update robot joint angles
         while (da >  Pi) da -= 2*Pi;
         while (da < -Pi) da += 2*Pi;
         if (abs(da) > 1e-4) m = true;
-        angles[i] += clamp( da, -daMax, daMax );
+        angles[i] += clamp( da, -maxSpeed, maxSpeed );
     }
 
     if (m) applyAngles();
@@ -300,9 +299,8 @@ void VRRobotArm::stop() {
     anim->stop();
 }
 
-void VRRobotArm::setAngles(vector<float> angles) {
-    this->angle_targets = angles;
-}
+void VRRobotArm::setAngles(vector<float> angles) { this->angle_targets = angles; }
+void VRRobotArm::setMaxSpeed(float s) { maxSpeed = s; }
 
 PosePtr VRRobotArm::getKukaPose() {
     if (parts.size() < 7) return 0;
@@ -357,6 +355,7 @@ void VRRobotArm::moveTo(PosePtr p2) {
     animPath->addPoint( *p2 );
     animPath->compute(2);
 
+    //addJob( job(animPath, 0, 1, 2*animPath->getLength()) ); // TODO
     addJob( job(animPath) );
 }
 
@@ -368,9 +367,9 @@ void VRRobotArm::setGrab(float g) {
     grab = g;
 }
 
-void VRRobotArm::moveOnPath(float t0, float t1, bool loop) {
+void VRRobotArm::moveOnPath(float t0, float t1, bool loop, float durationMultiplier) {
     moveTo( robotPath->getPose(t0) );
-    addJob( job(robotPath, t0, t1, robotPath->size(), loop) );
+    addJob( job(robotPath, t0, t1, 2*robotPath->getLength() * durationMultiplier, loop) );
 }
 
 void VRRobotArm::toggleGrab() { setGrab(1-grab); }
