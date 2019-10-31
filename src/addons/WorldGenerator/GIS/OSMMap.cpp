@@ -72,8 +72,7 @@ OSMSAXHandler::OSMSAXHandler() {
 }
 
 void OSMSAXHandler::writeLine(string line) {
-    if (numerator < 30) cout << line << endl;
-
+    //if (numerator < 30) cout << line << endl;
     std::ofstream ofs;
     ofs.open (newfilepath, std::ofstream::out | std::ofstream::app);
     ofs << line << std::endl;
@@ -116,7 +115,8 @@ void OSMSAXHandler::startElement(const XMLCh* const name, AttributeList& attribu
             if (test0AsString == "id") lvl1Open = true;
             auto test1 = XMLString::transcode(attributes.getValue(index));
             std::string test1AsString(test1);
-            res+="'"+test1AsString+"' ";
+            res+="'"+test1AsString+"'";
+            if ( i < attributeLength - 1) res+=" ";
             index++;
             counter++;
         }
@@ -129,8 +129,9 @@ void OSMSAXHandler::startElement(const XMLCh* const name, AttributeList& attribu
         writeLine(buffer);
     } else {
         if ( currentDepth == 1 && currentDepth == lastDepth && !lvl1Closer ) {
-            //buffer += "/>";
-            //writeLine(buffer);
+            buffer += " />";
+            writeLine(buffer);
+            ///IMPLEMENT WHITELIST HERE
         }
     }
 
@@ -138,7 +139,6 @@ void OSMSAXHandler::startElement(const XMLCh* const name, AttributeList& attribu
         buffer = "<";
         buffer += msgAsString;
         buffer += readAttributes();
-        buffer += ">";
         //version
         //upload
     }
@@ -220,9 +220,12 @@ void OSMSAXHandler::endElement(const XMLCh* const name) {
             writeLine(buffer);
             ///IMPLEMENT WHITELIST HERE
         }
+        if ( currentDepth == lastDepth ) {
+            lvl1Closer = false;
+        }
     } else
     if ( currentDepth == 2 ) {
-        buffer += "/>";
+        buffer += " />";
         writeLine(buffer);
     } else
     if ( currentDepth > 2 ) {
