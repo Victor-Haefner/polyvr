@@ -30,6 +30,7 @@ template<> bool toValue(PyObject* o, VRWorldGenerator::VRUserGenCbPtr& v) {
 }
 
 simpleVRPyType(WorldGenerator, New_ptr );
+//simpleVRPyType(OSMMap, New_ptr );
 simpleVRPyType(RoadBase, 0);
 simpleVRPyType(Road, New_ptr);
 simpleVRPyType(RoadIntersection, New_ptr);
@@ -54,6 +55,7 @@ PyMethodDef VRPyWorldGenerator::methods[] = {
     {"getMaterial", PyWrap( WorldGenerator, getMaterial, "Get a material by name", VRMaterialPtr, string ) },
     {"getMiscArea", PyWrap( WorldGenerator, getMiscArea, "Get the Geometry of a misc area by Entity", VRGeometryPtr, VREntityPtr ) },
     {"addOSMMap", PyWrapOpt( WorldGenerator, addOSMMap, "Add an OpenStreetMap map", "-1|-1|-1", void, string, double, double, double ) },
+    {"readOSMMap", PyWrap( WorldGenerator, readOSMMap, "Read OpenStreetMap map without adding", void, string ) },
     {"reloadOSMMap", PyWrapOpt( WorldGenerator, reloadOSMMap, "Reload OSM data", "-1|-1|-1", void, double, double, double ) },
     {"clear", PyWrap( WorldGenerator, clear, "Clear everything", void ) },
     {"getStats", PyWrap( WorldGenerator, getStats, "Return stats as string", string ) },
@@ -63,6 +65,12 @@ PyMethodDef VRPyWorldGenerator::methods[] = {
     {"setUserCallback", PyWrap( WorldGenerator, setUserCallback, "Setup user callback", void, VRWorldGenerator::VRUserGenCbPtr ) },
     {NULL}  /* Sentinel */
 };
+/*
+PyMethodDef VRPyOSMMap::methods[] = {
+    //{"OSMMap", PyWrap( OSMMap, OSMMap, "Read new osm map, dom/sax", void, string, bool ) },
+    {"readStreamFile", PyWrap( OSMMap, readStreamFile, "reads OSM file via stream", void, string ) },
+    {NULL}  /* Sentinel *//*
+};*/
 
 PyMethodDef VRPyRoadBase::methods[] = {
     {"addLane", PyWrapOpt( RoadBase, addLane, "Add a lane", "0", VREntityPtr, int, float, bool ) },

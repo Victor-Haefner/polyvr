@@ -198,6 +198,10 @@ void VRWorldGenerator::addOSMMap(string path, double subN, double subE, double s
     processOSMMap(subN, subE, subSize);
 }
 
+void VRWorldGenerator::readOSMMap(string path){
+    osmMap = OSMMap::parseMap(path);
+}
+
 void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
     struct Node {
         OSMNodePtr n;
