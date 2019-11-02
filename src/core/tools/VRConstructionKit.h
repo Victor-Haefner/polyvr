@@ -21,6 +21,7 @@ class VRConstructionKit {
         VRSnappingEnginePtr snapping;
         VRSelectorPtr selector;
         VRObjectPtr root;
+        shared_ptr< VRFunction<VRSnappingEngine::EventSnap*> > onSnap;
         bool doConstruction = true;
 
         map<int, VRGeometryPtr> anchors;

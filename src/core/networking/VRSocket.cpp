@@ -303,7 +303,6 @@ static void server_answer_to_connection_m(struct mg_connection *conn, int ev, vo
 
 
 VRSocket::VRSocket(string name) {
-    tcp_fkt = 0;
     http_fkt = 0;
     socketID = 0;
     run = false;
@@ -345,7 +344,7 @@ void VRSocket::answerWebSocket(int id, string msg) {
 }
 
 void VRSocket::trigger() {
-    if (tcp_fkt) (*tcp_fkt)(tcp_msg);
+    if (auto f = tcp_fkt.lock()) (*f)(tcp_msg);
     if (http_fkt) (*http_fkt)(http_args);
 }
 
@@ -557,7 +556,7 @@ void VRSocket::update() {
 
     sig->setName("on_" + name + "_" + type);
 
-    if (type == "tcpip receive") if (tcp_fkt) initServer(TCP, port);
+    if (type == "tcpip receive") if (tcp_fkt.lock()) initServer(TCP, port);
     if (type == "http receive") if (http_serv && http_fkt) http_serv->initServer(http_fkt, port);
 }
 
@@ -570,12 +569,12 @@ bool VRSocket::isClient() {
 
 void VRSocket::setName(string n) { name = n; update(); }
 void VRSocket::setType(string t) { type = t; update(); }
-void VRSocket::setTCPCallback(VRTCP_cb* cb) { tcp_fkt = cb; update(); }
+void VRSocket::setTCPCallback(VRMessageCbPtr cb) { tcp_fkt = cb; update(); }
 void VRSocket::setHTTPCallback(VRHTTP_cb* cb) { http_fkt = cb; update(); }
 void VRSocket::setIP(string s) { IP = s; }
 void VRSocket::setSignal(string s) { signal = s; update(); }
 void VRSocket::setPort(int i) { port = i; update(); }
-void VRSocket::unsetCallbacks() { tcp_fkt = 0; http_fkt = 0; update(); }
+void VRSocket::unsetCallbacks() { tcp_fkt.reset(); http_fkt = 0; update(); }
 void VRSocket::addHTTPPage(string path, string page) { if (http_serv) http_serv->addPage(path, page); }
 void VRSocket::remHTTPPage(string path) { if (http_serv) http_serv->remPage(path); }
 void VRSocket::addHTTPCallback(string path, VRServerCbPtr cb) { if (http_serv) http_serv->addCallback(path, cb); }

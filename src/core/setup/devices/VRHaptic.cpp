@@ -30,8 +30,8 @@ VRHaptic::VRHaptic() : VRDevice("haptic") {
     //timestepWatchdog = VRUpdateCb::create( "Haptic Timestep Watchdog", boost::bind(&VRHaptic::updateHapticTimestep, this, editBeacon()) );
     //VRSceneManager::get()->addUpdateFkt(timestepWatchdog);
 
-    auto fkt = new VRFunction<VRDeviceWeakPtr>( "Haptic on scene changed", boost::bind(&VRHaptic::on_scene_changed, this, _1) );
-    VRSceneManager::get()->getSignal_on_scene_load()->add(fkt);
+    onSceneChange = VRDeviceCb::create( "Haptic on scene changed", boost::bind(&VRHaptic::on_scene_changed, this, _1) );
+    VRSceneManager::get()->getSignal_on_scene_load()->add(onSceneChange);
 
     store("h_type", &type);
     store("h_ip", &IP);

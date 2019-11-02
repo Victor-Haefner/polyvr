@@ -19,8 +19,8 @@ VRConstructionKit::VRConstructionKit() {
     snapping = VRSnappingEngine::create();
     selector = VRSelector::create();
 
-    auto fkt = new VRFunction<VRSnappingEngine::EventSnap*>("on_snap_callback", boost::bind(&VRConstructionKit::on_snap, this, _1));
-    snapping->getSignalSnap()->add(fkt);
+    onSnap = VRFunction<VRSnappingEngine::EventSnap*>::create("on_snap_callback", boost::bind(&VRConstructionKit::on_snap, this, _1));
+    snapping->getSignalSnap()->add(onSnap);
 }
 
 VRConstructionKit::~VRConstructionKit() {}
