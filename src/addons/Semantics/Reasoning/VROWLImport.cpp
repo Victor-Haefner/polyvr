@@ -84,6 +84,7 @@ void VROWLImport::clear() {
     datproperties.clear();
     objproperties.clear();
     annproperties.clear();
+    labels.clear();
     onto.reset();
 
     annproperties["label"] = VRProperty::create("label");
@@ -147,7 +148,7 @@ bool VROWLImport::ProcessSubject(RDFStatement& statement, vector<RDFStatement>& 
     string& predicate = statement.predicate;
     string& object = statement.object;
 
-    //printState(statement, "hasEndState");
+    printState(statement, "range");
 
     auto stackStatement = [&]() -> RDFStatement& {
         auto s = statement;
@@ -294,6 +295,11 @@ bool VROWLImport::ProcessSubject(RDFStatement& statement, vector<RDFStatement>& 
         if (object == "Variable") { variables[subject] = Variable::create(onto, {subject}); return 0; }
     }
 
+    if (predicate == "label") {
+        if (auto c = getConcept(subject)) { labels[c->getBaseName()] = object; c->setName( object ); return 0; }
+        if (auto p = getProperty(subject)) { labels[p->getBaseName()] = object; p->setName( object ); return 0; }
+    }
+
     if (type == "") { // resolve the subject type of the statement
         if (getConcept(subject)) statement.type = "concept";
         if (entities.count(subject)) statement.type = "entity";
@@ -343,7 +349,10 @@ bool VROWLImport::ProcessSubject(RDFStatement& statement, vector<RDFStatement>& 
     }
 
     if (type == "oprop" && objproperties.count(subject)) {
-        if (predicate == "range") { objproperties[subject]->setType(object); return 0; }
+        if (predicate == "range") {
+            if (labels.count(object)) object = labels[object]; // resolve label
+            objproperties[subject]->setType(object); return 0;
+        }
         if (predicate == "domain") if (auto c = getConcept(object)) { c->addProperty( objproperties[subject] ); return 0; }
     }
 

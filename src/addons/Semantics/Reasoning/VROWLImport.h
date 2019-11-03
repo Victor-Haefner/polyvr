@@ -68,6 +68,7 @@ class VROWLImport {
         map<string, bool> predicate_blacklist;
         map<string, bool> type_blacklist;
         map<string, bool> list_types;
+        map<string, string> labels;
 
         map<string, vector<RDFStatement> > subjects;
         map<string, map<string, string> > objects;
