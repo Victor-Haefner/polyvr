@@ -37,10 +37,16 @@ string canonical(string path) { return boost::filesystem::canonical(path).string
 bool isFile(string path) { return boost::filesystem::is_regular_file(path); }
 bool isFolder(string path) { return boost::filesystem::is_directory(path); }
 
-string getFileName(string path) {
+string getFileName(string path, bool withExtension) {
+    string fname;
     size_t sp = path.rfind('/');
-    if (sp == string::npos) return path;
-    return path.substr(sp+1, path.size());
+    if (sp == string::npos) fname = path;
+    else fname = path.substr(sp+1, path.size());
+    if (!withExtension) {
+        sp = fname.rfind('.');
+        if (sp != string::npos) fname = fname.substr(0, sp);
+    }
+    return fname;
 }
 
 string getFolderName(string path) {

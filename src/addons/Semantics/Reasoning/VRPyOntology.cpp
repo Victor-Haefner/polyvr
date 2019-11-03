@@ -83,6 +83,7 @@ PyMethodDef VRPyEntity::methods[] = {
 // --------------------- Ontology --------------------
 
 typedef map<int, vector<VRConceptPtr>> parentChildMap;
+typedef map<string, VROntologyPtr> ontoMap;
 
 PyMethodDef VRPyOntology::methods[] = {
     {"open", PyWrap(Ontology, openOWL, "Open OWL file", void, string) },
@@ -102,8 +103,10 @@ PyMethodDef VRPyOntology::methods[] = {
     {"merge", PyWrap(Ontology, merge, "Merge in another ontology - merge( ontology )", void, VROntologyPtr ) },
     {"copy", PyWrap(Ontology, copy, "Copy the ontology - ontology copy()", VROntologyPtr ) },
     {"addModule", PyWrap(Ontology, addModule, "Add module from library", void, string) },
+    {"loadModule", PyWrap(Ontology, loadModule, "Add module from file", void, string) },
     {"process", PyWrapOpt(Ontology, process, "Process a query - process( str query )", "0", vector<VREntityPtr>, string, bool ) },
     {"getChildrenMap", PyWrap(Ontology, getChildrenMap, "Get the parent child mapping", parentChildMap ) },
+    {"getModules", PyWrap(Ontology, getModules, "Get attached modules", ontoMap  ) },
     {NULL}  /* Sentinel */
 };
 

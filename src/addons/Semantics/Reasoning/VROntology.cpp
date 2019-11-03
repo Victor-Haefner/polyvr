@@ -176,9 +176,6 @@ void VROntology::renameEntity(VREntityPtr e, string s) {
     e->setName(s);
 }
 
-//void VROntology::import(VROntologyPtr o) { dependencies[o->getName()] = o; }
-void VROntology::import(VROntologyPtr o) { merge(o); }
-
 void VROntology::merge(VROntologyPtr o) { // Todo: check it well!
     for (auto c : o->rules) rules[c.first] = c.second;
     for (auto b : o->builtins) builtins[b.first] = b.second;
@@ -294,11 +291,37 @@ void VROntology::saveOWL(string path) {
     exporter.write(shared_from_this(), path);
 }
 
-void VROntology::addModule(string mod) {
-    auto mgr = VRScene::getCurrent()->getSemanticManager();
-    auto onto = mgr->getOntology(mod);
+void VROntology::addModule(VROntologyPtr onto) {
+    string mod = onto->getBaseName();
     if (!onto) { cout << "VROntology::addModule Error: Ontology " << mod << " not found" << endl; return; }
     merge(onto);
+    modules[mod] = onto;
+
+    function<void (VROntologyPtr)> regMods = [&](VROntologyPtr o) {
+        if (!o) return;
+        for (auto s : o->getModules()) {
+            modules[s.first] = s.second;
+            regMods(s.second);
+        }
+    };
+    regMods(onto);
+}
+
+void VROntology::addModule(string mod) {
+    auto mgr = VRScene::getCurrent()->getSemanticManager();
+    addModule( mgr->getOntology(mod) );
+}
+
+void VROntology::loadModule(string path) {
+    if (!exists(path)) WARN("WARNING in VROntology::openOWL, " + path + " not found!");
+    auto mgr = VRScene::getCurrent()->getSemanticManager();
+    addModule( mgr->loadOntology(path) );
+}
+
+map<string, VROntologyPtr> VROntology::getModules() {
+    map<string, VROntologyPtr> res;
+    for (auto o : modules) if (auto O = o.second.lock()) res[o.first] = O;
+    return res;
 }
 
 void VROntology::setFlag(string f) { flag = f; }

@@ -2,6 +2,7 @@
 #include "addons/Semantics/Reasoning/VROntology.h"
 //#include "addons/Semantics/Reasoning/VROntologyLibrary.cpp"
 #include "core/utils/VRStorage_template.h"
+#include "core/utils/system/VRSystem.h"
 
 #include <iostream>
 
@@ -22,7 +23,7 @@ VRSemanticManager::~VRSemanticManager() {}
 VRSemanticManagerPtr VRSemanticManager::create() { return VRSemanticManagerPtr(new VRSemanticManager()); }
 
 VROntologyPtr VRSemanticManager::addOntology(string name) { ontologies[name] = VROntology::create(name); return ontologies[name];}
-VROntologyPtr VRSemanticManager::loadOntology(string path) { auto o = addOntology(path); o->openOWL(path); return o; }
+VROntologyPtr VRSemanticManager::loadOntology(string path) { auto o = addOntology(getFileName(path, false)); o->openOWL(path); return o; }
 VROntologyPtr VRSemanticManager::getOntology(string name) { return ontologies.count(name) ? ontologies[name] : 0; }
 void VRSemanticManager::remOntology(VROntologyPtr o) { if (ontologies.count(o->getName())) ontologies.erase(o->getName()); }
 
