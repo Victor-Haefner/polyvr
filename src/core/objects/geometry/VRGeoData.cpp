@@ -279,6 +279,42 @@ int VRGeoData::getDataSize(int type) {
     return 0;
 }
 
+template<class T, typename P> string propToString(P p) {
+    if (!p) return "";
+    stringstream ss;
+    ss << "[";
+    for (int i=0; i<p->size(); i++) {
+        if (i > 0) ss << ", ";
+        T t = T(p->getValue(i));
+        ss << toString(t);
+    }
+    ss << "]";
+    return ss.str();
+}
+
+template<> string toString(const GeoUInt8PropertyMTRecPtr& p) { return propToString<UInt8>(p); }
+template<> string toString(const GeoUInt32PropertyMTRecPtr& p) { return propToString<UInt32>(p); }
+template<> string toString(const GeoPnt3fPropertyMTRecPtr& p) { return propToString<Pnt3d>(p); }
+template<> string toString(const GeoVec2fPropertyMTRecPtr& p) { return propToString<Vec2d>(p); }
+template<> string toString(const GeoVec3fPropertyMTRecPtr& p) { return propToString<Vec3d>(p); }
+template<> string toString(const GeoVec4fPropertyMTRecPtr& p) { return propToString<Vec4d>(p); }
+
+string VRGeoData::getDataAsString(int type) {
+    if (type == 0) return toString(data->types);
+    if (type == 1) return toString(data->lengths);
+    if (type == 2) return toString(data->indices);
+    if (type == 3) return toString(data->pos);
+    if (type == 4) return toString(data->norms);
+    if (type == 5) return toString(data->cols3);
+    if (type == 6) return toString(data->cols4);
+    if (type == 7) return toString(data->texs);
+    if (type == 8) return toString(data->texs2);
+    if (type == 9) return toString(data->indicesNormals);
+    if (type == 10) return toString(data->indicesColors);
+    if (type == 11) return toString(data->indicesTexCoords);
+    return "";
+}
+
 int VRGeoData::pushVert(Pnt3d p) { data->pos->addValue(p); return data->pos->size()-1; }
 int VRGeoData::pushVert(Pnt3d p, Vec3d n) { data->norms->addValue(n); return pushVert(p); }
 int VRGeoData::pushVert(Pnt3d p, Vec3d n, Color3f c) { data->cols3->addValue(c); return pushVert(p,n); }

@@ -473,6 +473,7 @@ VRProcessNodePtr VRProcess::addState(string name, int sID) {
 }
 
 void VRProcess::setInitialState(VRProcessNodePtr state) {
+    if (!state) return;
     int sID = state->subject;
     auto diag = behaviorDiagrams[sID];
     if (!diag) cout << "VRProcess::setInitialState: No Behavior for subject " << getSubjects()[sID]->getLabel() << " found." << endl;

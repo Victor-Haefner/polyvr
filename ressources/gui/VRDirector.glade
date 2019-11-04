@@ -1162,6 +1162,8 @@ cave allocated</property>
       <column type="gchararray"/>
       <!-- column-name N -->
       <column type="gint"/>
+      <!-- column-name index -->
+      <column type="gint"/>
     </columns>
   </object>
   <object class="GtkImage" id="image17">
