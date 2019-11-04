@@ -45,12 +45,14 @@ class OSMSAXHandler : public HandlerBase {
         string newfilepath = "../data/osm/test2.osm";
         string lastParent;
         string buffer = "";
+        vector<string> element;
         bool lvl1Open = false;
         bool lvl1Closer = false;
         bool lvl1Closed = true;
         map<string, string> whitelist;
 
         void writeLine(string line);
+        void handleElement();
 
     public:
         OSMSAXHandler();
@@ -71,11 +73,21 @@ OSMSAXParser::OSMSAXParser() {
 OSMSAXHandler::OSMSAXHandler() {
 }
 
+void OSMSAXHandler::handleElement(){
+    ///IMPLEMENT WHITELIST HERE
+    for (auto each : element) {
+        cout << each << endl;
+    }
+    element.clear();
+    numerator++;
+}
+
 void OSMSAXHandler::writeLine(string line) {
     //if (numerator < 30) cout << line << endl;
     std::ofstream ofs;
     ofs.open (newfilepath, std::ofstream::out | std::ofstream::app);
     ofs << line << std::endl;
+    element.push_back(line);
     ofs.close();
 }
 
@@ -101,9 +113,6 @@ void OSMSAXHandler::startElement(const XMLCh* const name, AttributeList& attribu
     char* message = XMLString::transcode(name);
     std::string msgAsString(message);
     int attributeLength = attributes.getLength();
-    //cout << value << endl;
-    //if ( currentDepth == 1 ) cout << "I saw element: " << message << endl; // " at level: " << currentDepth << endl;
-    //if(name.equals("employee")){ }
 
     auto readAttributes = [&](){
         XMLSize_t index = 0;
@@ -131,7 +140,7 @@ void OSMSAXHandler::startElement(const XMLCh* const name, AttributeList& attribu
         if ( currentDepth == 1 && currentDepth == lastDepth && !lvl1Closer ) {
             buffer += " />";
             writeLine(buffer);
-            ///IMPLEMENT WHITELIST HERE
+            handleElement()
         }
     }
 
@@ -139,8 +148,6 @@ void OSMSAXHandler::startElement(const XMLCh* const name, AttributeList& attribu
         buffer = "<";
         buffer += msgAsString;
         buffer += readAttributes();
-        //version
-        //upload
     }
     if ( currentDepth == 1 ) {
         //if ( attributeLength > 0 ) lvl1NeedsClose = true;
@@ -195,17 +202,11 @@ void OSMSAXHandler::startElement(const XMLCh* const name, AttributeList& attribu
 
     //auto test0 = XMLString::transcode(attributes.getValue(index));
     //cout << " " << test0;
-    numerator++;
     XMLString::release(&message);
 }
 
 void OSMSAXHandler::endElement(const XMLCh* const name) {
     char* message = XMLString::transcode(name);
-    //cout << "I end element: "<< message << endl;
-    /*for (auto each : attributes) {
-        cout << XMLString::(each.getValue()) << endl;
-    }*/
-    //numerator++;
     std::string msgAsString(message);
 
     if ( currentDepth == 0 ) {
@@ -218,7 +219,7 @@ void OSMSAXHandler::endElement(const XMLCh* const name) {
             buffer +=">";
             lvl1Closer = true;
             writeLine(buffer);
-            ///IMPLEMENT WHITELIST HERE
+            handleElement();
         }
         if ( currentDepth == lastDepth ) {
             lvl1Closer = false;
@@ -232,7 +233,7 @@ void OSMSAXHandler::endElement(const XMLCh* const name) {
         cout << "OSMSAXHandler::startElement unknown found: " << msgAsString << endl;
         cout << "   at level: " << currentDepth << endl;
     }
-    //cout << buffer << endl;
+
     lastDepth = currentDepth;
     currentDepth--;
     XMLString::release(&message);
