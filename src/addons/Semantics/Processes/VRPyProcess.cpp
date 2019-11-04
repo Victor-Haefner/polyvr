@@ -56,6 +56,7 @@ PyMethodDef VRPyProcessDiagram::methods[] = {
 };
 
 PyMethodDef VRPyProcessLayout::methods[] = {
+    {"setParameters", PyWrap(ProcessLayout, setParameters, "Set layout parameters - (height, scale)", void, float, float ) },
     {"getSIDPathtool", PyWrap(ProcessLayout, getSIDPathtool, "Access path tool", VRPathtoolPtr ) },
     {"getSBDPathtool", PyWrap(ProcessLayout, getSBDPathtool, "Access path tool", VRPathtoolPtr, int ) },
     {"setProcess", PyWrap(ProcessLayout, setProcess, "Set process - setProcess( process )", void, VRProcessPtr ) },

@@ -36,12 +36,20 @@ VRProcessLayoutPtr VRProcessLayout::create(string name) {
     return l;
 }
 
+void VRProcessLayout::setParameters(float h, float s) {
+    height = h;
+    layoutScale = s;
+    toolSID->setArrowSize(layoutScale);
+    for (tSBD : toolSBDs) tSBD.second->setArrowSize(layoutScale);
+}
+
 void VRProcessLayout::init() {
     toolSID = VRPathtool::create();
     toolSID->setPersistency(0);
     auto g = VRGeometry::create("sdf");
     g->setPrimitive("Box 0.00001 0.00001 0.00001 1 1 1");
     toolSID->setHandleGeometry(g);
+    toolSID->setArrowSize(layoutScale);
     addChild(toolSID);
 }
 
@@ -78,7 +86,7 @@ int wrapString(string& s, int width) {
     return N;
 }
 
-Vec4i pushRectVerts(VRGeoData& geo, float x0, float x1, float y0, float y1, Vec3d n, Vec3d u, float d) {
+Vec4i pushRectVerts(VRGeoData& geo, float x0, float x1, float y0, float y1, Vec3d n, Vec3d u, float d, float scale) {
     Matrix4d m;
     MatrixLookAt(m, Pnt3d(0,0,0), n, u);
 
@@ -87,18 +95,16 @@ Vec4i pushRectVerts(VRGeoData& geo, float x0, float x1, float y0, float y1, Vec3
     Pnt3d p3(x1,y1,0); m.mult(p3,p3);
     Pnt3d p4(x0,y1,0); m.mult(p4,p4);
 
-    float s = 0.005;
-
-    int A = geo.pushVert((p1 - n*d)*s, n, Vec2d(0,0));
-    int B = geo.pushVert((p2 - n*d)*s, n, Vec2d(1,0));
-    int C = geo.pushVert((p3 - n*d)*s, n, Vec2d(1,1));
-    int D = geo.pushVert((p4 - n*d)*s, n, Vec2d(0,1));
+    int A = geo.pushVert((p1 - n*d)*scale, n, Vec2d(0,0));
+    int B = geo.pushVert((p2 - n*d)*scale, n, Vec2d(1,0));
+    int C = geo.pushVert((p3 - n*d)*scale, n, Vec2d(1,1));
+    int D = geo.pushVert((p4 - n*d)*scale, n, Vec2d(0,1));
     return Vec4i(A,B,C,D);
 }
 
-void pushLabelFace(VRGeoData& geo, int N, float s, float h1, float h2, Vec3d n, Vec3d u) {
-    auto q1 = pushRectVerts(geo, -s, s, -h1, h1, n, u, s);
-    auto q2 = pushRectVerts(geo, -s + 0.5, -s + 0.5 + N, -h2, h2, n, u, s);
+void pushLabelFace(VRGeoData& geo, int N, float s, float h1, float h2, Vec3d n, Vec3d u, float scale) {
+    auto q1 = pushRectVerts(geo, -s, s, -h1, h1, n, u, s, scale);
+    auto q2 = pushRectVerts(geo, -s + 0.5, -s + 0.5 + N, -h2, h2, n, u, s, scale);
 
     geo.pushQuad(q1[0],q2[0],q2[1],q1[1]);
     geo.pushQuad(q1[1],q2[1],q2[2],q1[2]);
@@ -107,34 +113,34 @@ void pushLabelFace(VRGeoData& geo, int N, float s, float h1, float h2, Vec3d n, 
     geo.pushQuad(q2[0],q2[3],q2[2],q2[1]); // inner quad for label
 }
 
-void pushSubjectBox(VRGeoData& geo, int N, float h) {
+void pushSubjectBox(VRGeoData& geo, int N, float h, float scale) {
     float s = 0.5 * N + 0.5;
-    pushLabelFace(geo, N,s,s,h, Vec3d(0,-1,0), Vec3d(0,0,1));
-    pushLabelFace(geo, N,s,s,h, Vec3d(0,1,0), Vec3d(0,0,1));
-    pushLabelFace(geo, N,s,s,h, Vec3d(1,0,0), Vec3d(0,1,0));
-    pushLabelFace(geo, N,s,s,h, Vec3d(-1,0,0), Vec3d(0,1,0));
-    pushLabelFace(geo, N,s,s,h, Vec3d(0,0,1), Vec3d(0,1,0));
-    pushLabelFace(geo, N,s,s,h, Vec3d(0,0,-1), Vec3d(0,1,0));
+    pushLabelFace(geo, N,s,s,h, Vec3d(0,-1,0), Vec3d(0,0,1), scale);
+    pushLabelFace(geo, N,s,s,h, Vec3d(0,1,0), Vec3d(0,0,1), scale);
+    pushLabelFace(geo, N,s,s,h, Vec3d(1,0,0), Vec3d(0,1,0), scale);
+    pushLabelFace(geo, N,s,s,h, Vec3d(-1,0,0), Vec3d(0,1,0), scale);
+    pushLabelFace(geo, N,s,s,h, Vec3d(0,0,1), Vec3d(0,1,0), scale);
+    pushLabelFace(geo, N,s,s,h, Vec3d(0,0,-1), Vec3d(0,1,0), scale);
 }
 
-void pushActionBox(VRGeoData& geo, int N, float h) {
+void pushActionBox(VRGeoData& geo, int N, float h, float scale) {
     float s = 0.5 * N + 0.5;
-    pushLabelFace(geo, N,s,s,h, Vec3d(0,-1,0), Vec3d(0,0,1));
-    pushLabelFace(geo, N,s,s,h, Vec3d(0,1,0), Vec3d(0,0,1));
-    pushLabelFace(geo, N,s,s,h, Vec3d(1,0,0), Vec3d(0,1,0));
-    pushLabelFace(geo, N,s,s,h, Vec3d(-1,0,0), Vec3d(0,1,0));
-    pushLabelFace(geo, N,s,s,h, Vec3d(0,0,1), Vec3d(0,1,0));
-    pushLabelFace(geo, N,s,s,h, Vec3d(0,0,-1), Vec3d(0,1,0));
+    pushLabelFace(geo, N,s,s,h, Vec3d(0,-1,0), Vec3d(0,0,1), scale);
+    pushLabelFace(geo, N,s,s,h, Vec3d(0,1,0), Vec3d(0,0,1), scale);
+    pushLabelFace(geo, N,s,s,h, Vec3d(1,0,0), Vec3d(0,1,0), scale);
+    pushLabelFace(geo, N,s,s,h, Vec3d(-1,0,0), Vec3d(0,1,0), scale);
+    pushLabelFace(geo, N,s,s,h, Vec3d(0,0,1), Vec3d(0,1,0), scale);
+    pushLabelFace(geo, N,s,s,h, Vec3d(0,0,-1), Vec3d(0,1,0), scale);
 }
 
-void pushMsgBox(VRGeoData& geo, int N, float h) {
+void pushMsgBox(VRGeoData& geo, int N, float h, float scale) {
     float s = 0.5 * N + 0.5;
-    Vec4i q1 = pushRectVerts(geo, -s, s, -h, h, Vec3d(0,-1,0), Vec3d(0,0,1), h);
-    Vec4i q2 = pushRectVerts(geo, -s, s, -h, h, Vec3d(0,1,0), Vec3d(0,0,1), h);
-    Vec4i q3 = pushRectVerts(geo, -s, s, -h, h, Vec3d(0,0,-1), Vec3d(0,1,0), h);
-    Vec4i q4 = pushRectVerts(geo, -s, s, -h, h, Vec3d(0,0,1), Vec3d(0,1,0), h);
-    Vec4i q5 = pushRectVerts(geo, -h, h, -h, h, Vec3d(1,0,0), Vec3d(0,1,0), s);
-    Vec4i q6 = pushRectVerts(geo, -h, h, -h, h, Vec3d(-1,0,0), Vec3d(0,1,0), s);
+    Vec4i q1 = pushRectVerts(geo, -s, s, -h, h, Vec3d(0,-1,0), Vec3d(0,0,1), h, scale);
+    Vec4i q2 = pushRectVerts(geo, -s, s, -h, h, Vec3d(0,1,0), Vec3d(0,0,1), h, scale);
+    Vec4i q3 = pushRectVerts(geo, -s, s, -h, h, Vec3d(0,0,-1), Vec3d(0,1,0), h, scale);
+    Vec4i q4 = pushRectVerts(geo, -s, s, -h, h, Vec3d(0,0,1), Vec3d(0,1,0), h, scale);
+    Vec4i q5 = pushRectVerts(geo, -h, h, -h, h, Vec3d(1,0,0), Vec3d(0,1,0), s, scale);
+    Vec4i q6 = pushRectVerts(geo, -h, h, -h, h, Vec3d(-1,0,0), Vec3d(0,1,0), s, scale);
     geo.pushQuad(q1[0],q1[3],q1[2],q1[1]);
     geo.pushQuad(q2[0],q2[3],q2[2],q2[1]);
     geo.pushQuad(q3[0],q3[3],q3[2],q3[1]);
@@ -163,9 +169,9 @@ VRGeometryPtr VRProcessLayout::newWidget(VRProcessNodePtr n, float height) {
     //mat->enableTransparency(0);
     VRGeoData geo;
 
-    if (n->type == SUBJECT) pushSubjectBox(geo, wrapN, lineN*height*0.5);
-    if (n->type == STATE) pushActionBox(geo, wrapN, lineN*height*0.5);
-    if (n->type == MESSAGE || n->type == TRANSITION) pushMsgBox(geo, wrapN, lineN*height*0.5);
+    if (n->type == SUBJECT) pushSubjectBox(geo, wrapN, lineN*height*0.5,layoutScale);
+    if (n->type == STATE) pushActionBox(geo, wrapN, lineN*height*0.5, layoutScale);
+    if (n->type == MESSAGE || n->type == TRANSITION) pushMsgBox(geo, wrapN, lineN*height*0.5, layoutScale);
 
     auto w = geo.asGeometry("ProcessElement");
     if (n->type == SUBJECT) w->addTag("subject");
@@ -199,6 +205,7 @@ void VRProcessLayout::setProcess(VRProcessPtr p) {
     for (auto subject : p->getSubjects()) {
         if (!p->getBehaviorDiagram(subject->getID())) return;
         VRPathtoolPtr toolSBD = VRPathtool::create();
+        toolSBD->setArrowSize(layoutScale);
         toolSBD->setHandleGeometry(g);
         toolSBD->setPersistency(0);
         toolSBDs[subject->getID()] = toolSBD;
@@ -270,7 +277,7 @@ void VRProcessLayout::setupLabel(VRProcessNodePtr message, VRPathtoolPtr ptool, 
 void VRProcessLayout::buildSID() {
     auto subjects = process->getSubjects();
 	for (uint i=0; i < subjects.size(); i++) {
-        appendToHandle(Vec3d(0,0,i*25), subjects[i], toolSID);
+        appendToHandle(Vec3d(0,0,i*25*layoutScale), subjects[i], toolSID);
 	}
 
 	for (auto message : process->getMessages()) {
@@ -287,7 +294,7 @@ void VRProcessLayout::buildSBDs() {
         auto actions = process->getSubjectStates(sID);
 
         for (uint j=0; j < actions.size(); j++) {
-            appendToHandle(Vec3d((j+1)*40,0,i*25), actions[j], toolSBD);
+            appendToHandle(Vec3d((j+1)*40*layoutScale,0,i*25*layoutScale), actions[j], toolSBD);
         }
 
         for (auto transition : process->getTransitions(sID)) {

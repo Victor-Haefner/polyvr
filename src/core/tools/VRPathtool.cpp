@@ -259,6 +259,7 @@ void VRPathtool::connect(int i1, int i2, Vec3d n1, Vec3d n2, bool handles, bool 
 VRMaterialPtr VRPathtool::getArrowMaterial() { return amat; }
 
 void VRPathtool::setArrowSize(float s) {
+    arrowScale = s;
     for (auto e : pathToEntry) {
         if (auto a = e.second->arrow.lock()) a->setScale(Vec3d(s,s,s));
     }
@@ -286,7 +287,9 @@ void VRPathtool::setGraphEdge(Graph::edge& e, bool handles, bool doArrow, Vec3d 
     if (doArrow) {
         auto a = arrowTemplate->duplicate();
         addChild(a);
-        en->arrow = dynamic_pointer_cast<VRGeometry>(a);
+        auto ag = dynamic_pointer_cast<VRGeometry>(a);
+        ag->setScale(Vec3d(arrowScale, arrowScale, arrowScale));
+        en->arrow = ag;
     }
 }
 
