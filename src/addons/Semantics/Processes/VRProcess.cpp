@@ -44,6 +44,15 @@ void VRProcessNode::update(Graph::node& n, bool changed) { // called when graph 
     }
 }
 
+Vec3d VRProcessNode::getPosition(Vec3d p, float scale) {
+    if (entity) {
+        // width, height, X, Y, page aspect ratio
+        vector<float> data = entity->getAllValues<float>("hasVisualisationDataProperty");
+        if (data.size() > 4) p = Vec3d(data[2]*data[4],0,data[3])*scale/data[1];
+    }
+    return p;
+}
+
 VREntityPtr VRProcessNode::getEntity() { return entity; }
 int VRProcessNode::getID() { return ID; }
 string VRProcessNode::getLabel() { return label; }
@@ -293,7 +302,7 @@ void VRProcess::update() {
         if (auto l = subject->get("hasModelComponentLabel") ) label = l->value;
         //if subject->get("InterfaceSubject")...
         //add Multisubject
-        int nID = addSubject(label)->ID;
+        int nID = addSubject(label, subject)->ID;
         if (auto ID = subject->get("hasModelComponentID") ) nodes[ID->value] = nID;
         //cout << " VRProcess::update subject: " << label << endl;
     }
@@ -334,7 +343,7 @@ void VRProcess::update() {
                 auto msgs = query(q_message);
                 if (msgs.size()) {
                     if (auto l = msgs[0]->get("hasModelComponentLabel") ) {
-                        auto messageNode = addMessage(l->value, nodes[sender.first], nodes[receiver.first]);
+                        auto messageNode = addMessage(l->value, nodes[sender.first], nodes[receiver.first], 0, msgs[0]);
                         messageEntityToNode[msgs[0]] = messageNode;
                     }
                 }
@@ -363,7 +372,7 @@ void VRProcess::update() {
         for (auto state : query(q_States)) {
             string label;
             if (auto l = state->get("hasModelComponentLabel") ) label = l->value;
-            int nID = addState(label, sID)->ID;
+            int nID = addState(label, sID, state)->ID;
             if (auto ID = state->get("hasModelComponentID") ) nodes[ID->value] = nID;
         }
 
@@ -441,33 +450,36 @@ void VRProcess::remNode(VRProcessNodePtr n) {
     }
 }
 
-VRProcessNodePtr VRProcess::addSubject(string name) {
+VRProcessNodePtr VRProcess::addSubject(string name, VREntityPtr e) {
     if (!interactionDiagram) interactionDiagram = VRProcessDiagram::create();
     auto sID = interactionDiagram->addNode();
     auto s = VRProcessNode::create(name, SUBJECT, sID, sID);
+    s->entity = e;
     interactionDiagram->processnodes[sID] = s;
     auto behaviorDiagram = VRProcessDiagram::create();
     behaviorDiagrams[sID] = behaviorDiagram;
     return s;
 }
 
-VRProcessNodePtr VRProcess::addMessage(string name, int i, int j, VRProcessDiagramPtr diag) {
+VRProcessNodePtr VRProcess::addMessage(string name, int i, int j, VRProcessDiagramPtr diag, VREntityPtr e) {
     if (!diag) diag = interactionDiagram;
     if (!diag) return 0;
     auto mID = diag->addNode();
     auto m = VRProcessNode::create(name, MESSAGE, mID, i);
+    m->entity = e;
     diag->processnodes[mID] = m;
     diag->connect(i, mID, Graph::HIERARCHY);
     diag->connect(mID, j, Graph::DEPENDENCY);
     return m;
 }
 
-VRProcessNodePtr VRProcess::addState(string name, int sID) {
+VRProcessNodePtr VRProcess::addState(string name, int sID, VREntityPtr e) {
     if (!behaviorDiagrams.count(sID)) return 0;
     auto diag = behaviorDiagrams[sID];
     //if (!diag) return 0;
     auto nID = diag->addNode();
     auto s = VRProcessNode::create(name, STATE, nID, sID);
+    s->entity = e;
     diag->processnodes[nID] = s;
     return s;
 }

@@ -20,7 +20,7 @@ class VRProcessLayout : public VRTransform {
         map<int, VRObjectWeakPtr> elements;
         map<VRObject*, int> elementIDs;
         float height = 2;
-        float layoutScale = 0.1; // 0.005
+        float layoutScale = 1; // 0.005
         bool updatePaused = false;
         Color3f colorState = Color3f(1,0.9,0.8);
         Color3f colorActiveState = Color3f(1,0.51,0.22);

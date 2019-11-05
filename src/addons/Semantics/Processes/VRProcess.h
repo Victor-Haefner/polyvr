@@ -47,6 +47,7 @@ struct VRProcessNode : VRName {
     string getLabel();
     VREntityPtr getEntity();
     int getSubjectID();
+    Vec3d getPosition(Vec3d p, float scale = 1);
 };
 
 struct VRProcessDiagram : public Graph {
@@ -110,9 +111,9 @@ class VRProcess : public std::enable_shared_from_this<VRProcess>, public VRName 
         VRProcessNodePtr getStateMessage(VRProcessNodePtr state);
         VRProcessNodePtr getTransitionMessage(VRProcessNodePtr transition);
 
-        VRProcessNodePtr addSubject(string name);
-        VRProcessNodePtr addMessage(string name, int i, int j, VRProcessDiagramPtr diag = 0);
-        VRProcessNodePtr addState(string name, int sID);
+        VRProcessNodePtr addSubject(string name, VREntityPtr e = 0);
+        VRProcessNodePtr addMessage(string name, int i, int j, VRProcessDiagramPtr diag = 0, VREntityPtr e = 0);
+        VRProcessNodePtr addState(string name, int sID, VREntityPtr e = 0);
         VRProcessNodePtr addTransition(string name, int sID, int i, int j, VRProcessDiagramPtr d = 0);
         void setInitialState(VRProcessNodePtr state);
 

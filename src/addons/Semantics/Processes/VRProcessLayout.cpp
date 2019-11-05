@@ -1,5 +1,6 @@
 #include "VRProcessLayout.h"
 #include "VRProcess.h"
+#include "addons/Semantics/Reasoning/VREntity.h"
 #include "core/math/kinematics/VRConstraint.h"
 #include "core/objects/geometry/sprite/VRSprite.h"
 #include "core/objects/material/VRMaterial.h"
@@ -277,13 +278,17 @@ void VRProcessLayout::setupLabel(VRProcessNodePtr message, VRPathtoolPtr ptool, 
 void VRProcessLayout::buildSID() {
     auto subjects = process->getSubjects();
 	for (uint i=0; i < subjects.size(); i++) {
-        appendToHandle(Vec3d(0,0,i*25*layoutScale), subjects[i], toolSID);
+        auto s = subjects[i];
+        Vec3d pos = s->getPosition( Vec3d(0,0,i*25*layoutScale), 20*layoutScale);
+        appendToHandle(pos, s, toolSID);
 	}
 
 	for (auto message : process->getMessages()) {
         auto subjects = process->getMessageSubjects( message->getID() );
         setupLabel(message, toolSID, subjects);
 	}
+
+	toolSID->update();
 }
 
 void VRProcessLayout::buildSBDs() {
@@ -294,13 +299,17 @@ void VRProcessLayout::buildSBDs() {
         auto actions = process->getSubjectStates(sID);
 
         for (uint j=0; j < actions.size(); j++) {
-            appendToHandle(Vec3d((j+1)*40*layoutScale,0,i*25*layoutScale), actions[j], toolSBD);
+            auto a = actions[j];
+            Vec3d pos = a->getPosition( Vec3d((j+1)*40*layoutScale,0,i*25*layoutScale), 20*layoutScale);
+            appendToHandle(pos, a, toolSBD);
         }
 
         for (auto transition : process->getTransitions(sID)) {
             auto actions = process->getTransitionStates(sID, transition->getID());
             setupLabel(transition, toolSBD, actions);
         }
+
+        toolSBD->update();
 	}
 }
 

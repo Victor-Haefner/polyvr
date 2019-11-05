@@ -65,6 +65,7 @@ PyMethodDef VRPyEntity::methods[] = {
     {"getSGObject", PyWrap(Entity, getSGObject, "Get linked entity", VRObjectPtr) },
     {"toString", PyWrap(Entity, toString, "Return the entity as string", string ) },
     {"getConcept", PyWrap(Entity, getConcept, "Return the concept", VRConceptPtr ) },
+    {"getConcepts", PyWrap(Entity, getConcepts, "Return all concepts", vector<VRConceptPtr> ) },
     {"getProperties", PyCastWrapOpt(Entity, getAll, "Return all properties or the properties of a certain type", "", vector<VRPropertyPtr>, string ) },
     {"set", PyWrapOpt(Entity, set, "Set a property, prop, value, pos = 0", "0", void, string, string, int ) },
     {"add", PyWrap(Entity, add, "Add a property, prop, value", void, string, string ) },

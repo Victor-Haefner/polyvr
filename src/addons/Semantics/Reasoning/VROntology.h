@@ -27,6 +27,7 @@ struct VROntology : public std::enable_shared_from_this<VROntology>, public VRNa
     map<int, VREntityPtr> entities;
     map<string, VREntityPtr> entitiesByName;
     map<string, VRConceptWeakPtr> concepts;
+    map<string, VRPropertyPtr> properties;
     map<int, VROntologyRulePtr> rules;
     map<string, VROntologyWeakPtr> dependencies;
     map<string, VRCallbackStrWrapperPtr> builtins;
@@ -49,6 +50,7 @@ struct VROntology : public std::enable_shared_from_this<VROntology>, public VRNa
 
     void addConcept(VRConceptPtr c);
     void addEntity(VREntityPtr& e);
+    void addProperty(VRPropertyPtr p);
     void remConcept(VRConceptPtr c);
     void remEntity(VREntityPtr e);
     void remEntity(string name);
@@ -71,6 +73,7 @@ struct VROntology : public std::enable_shared_from_this<VROntology>, public VRNa
     VRConceptPtr getConcept(string name);
     VREntityPtr getEntity(int ID);
     VREntityPtr getEntity(string instance);
+    VRPropertyPtr getProperty(string prop);
     vector<VREntityPtr> getEntities(string concept);
     vector<VROntologyRulePtr> getRules();
 

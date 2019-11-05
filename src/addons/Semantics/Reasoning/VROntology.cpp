@@ -100,6 +100,11 @@ VRConceptPtr VROntology::getConcept(string name) {
     return p;
 }
 
+VRPropertyPtr VROntology::getProperty(string prop) {
+    if (properties.count(prop)) return properties[prop];
+    return 0;
+}
+
 vector<VRConceptPtr> VROntology::getConcepts() {
     vector<VRConceptPtr> res;
     for (auto c : concepts) res.push_back(c.second.lock());
@@ -135,6 +140,11 @@ void VROntology::addConcept(VRConceptPtr c) {
     if (c == thing) return;
     concepts[c->getName()] = c;
     if (!c->hasParent()) thing->append(c);
+}
+
+void VROntology::addProperty(VRPropertyPtr p) {
+    if (properties.count(p->getName())) { WARN("WARNING in VROntology::addProperty, " + p->getName() + " known, skipping!"); return;  }
+    properties[p->getName()] = p;
 }
 
 void VROntology::remConcept(VRConceptPtr c) {
