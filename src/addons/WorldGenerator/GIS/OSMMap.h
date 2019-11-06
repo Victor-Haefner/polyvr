@@ -61,6 +61,7 @@ struct OSMRelation : OSMBase {
 class OSMMap {
     private:
         string filepath;
+        string newfilepath;
         BoundingboxPtr bounds;
         map<string, OSMWayPtr> ways;
         map<string, OSMNodePtr> nodes;
@@ -74,8 +75,8 @@ class OSMMap {
         void readRelation(xmlpp::Element* element, map<string, bool>& invalidIDs);
 
         void readFile(string path);
-        int readStreamFile(string path);
-        int readStreamFile(string path, map<string, string> whitelist);
+        int readFileStreaming(string path);
+        int readFileStreaming(string path, map<string, string> whitelist);
 
     public:
         OSMMap(string filepath);
@@ -83,7 +84,7 @@ class OSMMap {
         OSMMap(string filepath, bool stream, map<string, string> whitelist);
         static OSMMapPtr loadMap(string filepath);
         static OSMMapPtr parseMap(string filepath);
-        static OSMMapPtr shrinkMap(string filepath, map<string, string> whitelist);
+        static OSMMapPtr shrinkMap(string filepath, string newfilepath, map<string, string> whitelist);
 
         void clear();
         void reload();
