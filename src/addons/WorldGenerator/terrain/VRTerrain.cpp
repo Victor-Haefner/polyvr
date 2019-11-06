@@ -237,7 +237,7 @@ void VRTerrain::setupGeo() {
                 }
                 //cout << endl;
             }
-            cout << "n,e STE: " << t2 << " -- " << t1 << endl;
+            //cout << "n,e STE: " << t2 << " -- " << t1 << endl;
             geo.apply(ptr());
         }
 	} else {
@@ -267,7 +267,7 @@ void VRTerrain::setupGeo() {
                 //if (tx1 < 0.01) cout << toString(px1) << "|" << toString(py1) << endl;
             }
         }
-        cout << "n,e OLD: " << old2 << " -- " << old1 << endl;
+        //cout << "n,e OLD: " << old2 << " -- " << old1 << endl;
         geo.apply(ptr());
 	}
 	setType(GL_PATCHES);
