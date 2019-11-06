@@ -15,7 +15,8 @@ using namespace std;
 
 OSG_BEGIN_NAMESPACE;
 
-class OSMSAXHandler;
+class OSMSAXHandlerCP; //copy paste
+class OSMSAXHandlerBM; //build map
 
 class OSMSAXParser;
 
@@ -76,15 +77,16 @@ class OSMMap {
 
         void readFile(string path);
         int readFileStreaming(string path);
-        int readFileStreaming(string path, map<string, string> whitelist);
+        int copyFileStreaming(string path);
+        int readFileStreaming(string path, vector<pair<string, string>> whitelist);
 
     public:
         OSMMap(string filepath);
         OSMMap(string filepath, bool stream);
-        OSMMap(string filepath, bool stream, map<string, string> whitelist);
+        OSMMap(string filepath, bool stream, vector<pair<string, string>> whitelist);
         static OSMMapPtr loadMap(string filepath);
         static OSMMapPtr parseMap(string filepath);
-        static OSMMapPtr shrinkMap(string filepath, string newfilepath, map<string, string> whitelist);
+        static OSMMapPtr shrinkMap(string filepath, string newfilepath, vector<pair<string, string>> whitelist);
 
         void clear();
         void reload();
