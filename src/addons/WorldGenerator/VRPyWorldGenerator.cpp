@@ -30,7 +30,7 @@ template<> bool toValue(PyObject* o, VRWorldGenerator::VRUserGenCbPtr& v) {
 }
 
 simpleVRPyType(WorldGenerator, New_ptr );
-//simpleVRPyType(OSMMap, New_ptr );
+simplePyType(OSMMap, New_ptr);
 simpleVRPyType(RoadBase, 0);
 simpleVRPyType(Road, New_ptr);
 simpleVRPyType(RoadIntersection, New_ptr);
@@ -65,12 +65,19 @@ PyMethodDef VRPyWorldGenerator::methods[] = {
     {"setUserCallback", PyWrap( WorldGenerator, setUserCallback, "Setup user callback", void, VRWorldGenerator::VRUserGenCbPtr ) },
     {NULL}  /* Sentinel */
 };
-/*
+
 PyMethodDef VRPyOSMMap::methods[] = {
-    //{"OSMMap", PyWrap( OSMMap, OSMMap, "Read new osm map, dom/sax", void, string, bool ) },
-    {"readStreamFile", PyWrap( OSMMap, readStreamFile, "reads OSM file via stream", void, string ) },
-    {NULL}  /* Sentinel *//*
-};*/
+    //{"OSMMap", PyWrap2( OSMMap, OSMMap, "create OSM map object", void, string ) },
+    {"test", PyWrap2( OSMMap, test, "test", void, string ) },
+    {"test2", PyWrap2( OSMMap, test2, "test2", string, string ) },
+    {"readFile", PyWrap2( OSMMap, readFile, "readFile ", void, string ) },
+    {"filterFileStreaming", PyWrap2( OSMMap, filterFileStreaming, "filter OSM file with whitelist via stream - input path, output path, save temp file ", void, string ) },
+    {"readFileStreaming", PyWrap2( OSMMap, readFileStreaming, "reads OSM file via stream, builds map ", int, string ) },
+    //{"readFileStreaming", PyWrap( OSMMap, readFileStreaming, "reads OSM file via stream, builds map", int, string ) },
+    //{"readFileStreaming", PyWrap( OSMMap, readFileStreaming, "reads OSM file via stream, builds map", int, string ) },
+    //{"copyFileStreaming", PyWrap( OSMMap, copyFileStreaming, "filter OSM file with whitelist via stream - input path, output path, save temp file", int, string, string, bool ) },
+    {NULL}  /* Sentinel */
+};
 
 PyMethodDef VRPyRoadBase::methods[] = {
     {"addLane", PyWrapOpt( RoadBase, addLane, "Add a lane", "0", VREntityPtr, int, float, bool ) },

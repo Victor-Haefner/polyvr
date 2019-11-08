@@ -9,7 +9,7 @@ ptrFwd( VRWorldGenerator );
 ptrFwd( VRTerrain );
 ptrFwd( VREmbankment );
 ptrFwd( VRPlanet );
-ptrFwd( VROSMMap );
+//ptrFwd( OSMMap );
 ptrFwd( VRPlantMaterial );
 ptrFwd( VRAsphalt );
 ptrFwd( VRRoadBase );

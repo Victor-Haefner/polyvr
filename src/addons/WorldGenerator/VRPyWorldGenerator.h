@@ -15,7 +15,7 @@ struct VRPyWorldGenerator : VRPyBaseT<OSG::VRWorldGenerator> {
     static PyMethodDef methods[];
 };
 
-struct VRPyOSMMap : VRPyBaseT<OSG::VROSMMap> {
+struct VRPyOSMMap : VRPyBaseT<OSG::OSMMap> {
     static PyMethodDef methods[];
 };
 

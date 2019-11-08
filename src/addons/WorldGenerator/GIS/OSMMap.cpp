@@ -24,6 +24,8 @@
 using namespace xercesc;
 using namespace OSG;
 
+//template<> string typeName(const OSMMap& t) { return "OSMMap"; }
+template<> string typeName(const OSMMap& o) { return "OSMMap"; }
 
 OSG_BEGIN_NAMESPACE;
  class OSMSAXParser : public SAXParser {
@@ -63,7 +65,7 @@ class OSMSAXHandlerCP : public HandlerBase {
         map<string, string> tagsInfo;
         vector<string> refsForWays;
         vector<string> nodesForRelations;
-        map<string, string> waysForRelations;
+        vector<string> waysForRelations;
         map<string, bool> neededNodes;
         bool writeToFile = true;
         bool sndPass = false;
@@ -120,7 +122,11 @@ class OSMSAXHandlerBM : public HandlerBase {
         map<string, string> tagsInfo;
         vector<string> refsForWays;
         vector<string> nodesForRelations;
-        map<string, string> waysForRelations;
+        vector<string> waysForRelations;
+
+        map<string, OSMNodePtr> nodes;
+        map<string, OSMWayPtr> ways;
+        map<string, OSMRelationPtr> relations;
 
         void handleElement();
 
@@ -133,6 +139,10 @@ class OSMSAXHandlerBM : public HandlerBase {
         void endElement(const XMLCh* const);
         void endDocument();
         void fatalError(const SAXParseException&);
+
+        map<string, OSMNodePtr> getNodes();
+        map<string, OSMWayPtr> getWays();
+        map<string, OSMRelationPtr> getRelations();
 
         long getNumerator();
         long getNodeCounter();
@@ -202,7 +212,9 @@ void OSMSAXHandlerCP::handleElement(){
     };
 
     //bounds
-    if ( currentType == -2 ) {}
+    if ( currentType == -2 ) {
+        force = true;
+    }
 
     //nodes
     if ( currentType == 0 ) {
@@ -377,21 +389,31 @@ void OSMSAXHandlerCP::startElement(const XMLCh* const name, AttributeList& attri
     if ( currentDepth > 0 && currentDepth > lastDepth && lastDepth > 0 ) {
         buffer += ">";
         writeLine(buffer);
-    } else {
-        if ( currentDepth == 1 && currentDepth == lastDepth && !lvl1Closer ) {
+    } else
+    if ( currentDepth == 1 && currentDepth == lastDepth && !lvl1Closer ) {
+        buffer += " />";
+        writeLine(buffer);
+        handleElement(); ///END OF ELEMENT
+    } else
+    if ( currentDepth == 1 && currentDepth > lastDepth && lastDepth == 0 ) {
+        if ( currentType == -2 ) {
             buffer += " />";
             writeLine(buffer);
             handleElement(); ///END OF ELEMENT
         }
     }
 
+
     if ( currentDepth == 0 ) {
-        currentType = -2; //OSM
+        if ( msgAsString == "osm" )currentType = -3; //OSM
         buffer = "<";
         buffer += msgAsString;
         buffer += readAttributes();
         buffer += ">";
         writeLineToFile(buffer);
+        miscAtts.clear();
+        tagsInfo.clear();
+        element.clear();
     }
     if ( currentDepth == 1 ) {
         if ( counter>0 ) {
@@ -414,6 +436,7 @@ void OSMSAXHandlerCP::startElement(const XMLCh* const name, AttributeList& attri
         //cout << "OSMSAXHandlerCP::startElement unknown found: " << msgAsString << endl;
         //cout << "   at level: " << currentDepth << endl;
     }
+    lastDepth = currentDepth;
 
     XMLString::release(&message);
 }
@@ -435,6 +458,9 @@ void OSMSAXHandlerCP::endElement(const XMLCh* const name) {
             handleElement(); ///END OF ELEMENT
         }
         if ( currentDepth == lastDepth ) {
+            lvl1Closer = false;
+        }
+        if ( lastDepth == 0 && currentType == 1 ){
             lvl1Closer = false;
         }
     } else
@@ -493,16 +519,28 @@ void OSMSAXHandlerBM::handleElement(){
 
     //nodes
     if ( currentType == 0 ) {
+        double lat = atof(miscAtts["lat"].c_str());
+        double lon = atof(miscAtts["lon"].c_str());
+        OSMNodePtr node = OSMNodePtr( new OSMNode(currentID, lat, lon) );
+        node->tags = tagsInfo;
+        nodes[node->id] = node;
         nodeCounter++;
     }
 
     //ways
     if ( currentType == 1 ) {
+        OSMWayPtr way = OSMWayPtr( new OSMWay(currentID) );
+        way->nodes = refsForWays;
+        ways[way->id] = way;
         wayCounter++;
     }
 
     //relations
     if ( currentType == 2 ) {
+        OSMRelationPtr rel = OSMRelationPtr( new OSMRelation(currentID) );
+        rel->nodes = nodesForRelations;
+        rel->ways = waysForRelations;
+        relations[rel->id] = rel;
         relCounter++;
     }
     miscAtts.clear();
@@ -514,6 +552,10 @@ void OSMSAXHandlerBM::handleElement(){
     element.clear();
     numerator++;
 }
+
+map<string, OSMNodePtr> OSMSAXHandlerBM::getNodes() { return nodes; }
+map<string, OSMWayPtr> OSMSAXHandlerBM::getWays()  { return ways; }
+map<string, OSMRelationPtr> OSMSAXHandlerBM::getRelations() { return relations; }
 
 long OSMSAXHandlerBM::getNumerator() { return numerator; }
 long OSMSAXHandlerBM::getNodeCounter() { return nodeCounter; }
@@ -571,6 +613,7 @@ void OSMSAXHandlerBM::startElement(const XMLCh* const name, AttributeList& attri
         if ( msgAsString == "tag" ) tagsInfo[tmpKey] = tmpVal;
         if ( msgAsString == "member" ) {
             if (tmpType == "node") nodesForRelations.push_back(tmpRef);
+            if (tmpType == "way") waysForRelations.push_back(tmpRef);
         }
         return;
     };
@@ -584,7 +627,7 @@ void OSMSAXHandlerBM::startElement(const XMLCh* const name, AttributeList& attri
     }
 
     if ( currentDepth == 0 ) {
-        currentType = -2; //OSM
+        currentType = -3; //OSM
     }
     if ( currentDepth == 1 ) {
         if ( counter>0 ) {
@@ -601,6 +644,7 @@ void OSMSAXHandlerBM::startElement(const XMLCh* const name, AttributeList& attri
         //cout << "OSMSAXHandlerBM::startElement unknown found: " << msgAsString << endl;
         //cout << "   at level: " << currentDepth << endl;
     }
+    lastDepth = currentDepth;
 
     XMLString::release(&message);
 }
@@ -727,6 +771,17 @@ OSMMap::OSMMap(string filepath) {
     readFile(filepath);
 }
 
+OSMMap::OSMMap() {
+}
+
+OSMMapPtr OSMMap::create() {
+    return OSMMapPtr( new OSMMap() );
+}
+
+OSMMapPtr OSMMap::create(string filepath) {
+    return OSMMapPtr( new OSMMap(filepath) );
+}
+
 OSMMap::OSMMap(string filepath, bool stream) {
     if (stream) readFileStreaming(filepath);
     else readFile(filepath);
@@ -735,6 +790,20 @@ OSMMap::OSMMap(string filepath, bool stream) {
 OSMMap::OSMMap(string filepath, bool stream, vector<pair<string, string>> whitelist) {
     readFileStreaming(filepath, whitelist);
 }
+
+
+void OSMMap::test(string s) {
+    cout << "testing OSM binding" << endl;
+}
+
+string OSMMap::test2(string s) {
+    string res = "";
+    cout << "testing OSM binding 2" << endl;
+    res += s;
+    res += " back";
+    return res;
+}
+
 
 void OSMMap::clear() {
     bounds->clear();
@@ -798,8 +867,6 @@ void OSMMap::readFile(string path) {
 }
 
 int OSMMap::readFileStreaming(string path) {
-    copyFileStreaming(path); //AGRAJAG
-
     filepath = path;
     try {
         XMLPlatformUtils::Initialize();
@@ -826,6 +893,9 @@ int OSMMap::readFileStreaming(string path) {
         VRTimer t; t.start();
         cout << "OSMMap::readFileStreaming - " << filepath << endl;
         parser->parse(path.c_str());
+        nodes = docHandler->getNodes();
+        ways = docHandler->getWays();
+        relations = docHandler->getRelations();
         auto t2 = t.stop()/1000;
         cout << "OSMMap::readFileStreaming - secs needed: " << t2 << endl;
         cout << "OSMMap::readFileStreaming - elements read: " << docHandler->getNumerator() << endl;
@@ -878,7 +948,6 @@ int OSMMap::copyFileStreaming(string path) {
     whitelist.push_back(pair<string, string>("admin_level","5"));
     whitelist.push_back(pair<string, string>("admin_level","6"));
     whitelist.push_back(pair<string, string>("highway","motorway"));
-    whitelist.push_back(pair<string, string>("highway","secondary"));
     whitelist.push_back(pair<string, string>("railway","rail"));
     whitelist.push_back(pair<string, string>("place","city"));
 
@@ -894,10 +963,30 @@ int OSMMap::copyFileStreaming(string path) {
 
     docHandler->setWhitelist(whitelist);
 
+    auto genPath = [&](string in){
+        string osm = "";
+        string res = "";
+        for (int i = 0; i < 4; i++){
+            osm = filepath.at(filepath.length()-1-i) + osm;
+        }
+
+        if (osm != ".osm") {
+            res+="newOSM.osm";
+            return res;
+        }
+        for (int i = 0; i < filepath.length()-4; i++) {
+            res += filepath.at(i);
+        }
+        res += in;
+        res += ".osm";
+        return res;
+    };
+
+    string tempPath = genPath("_temp");
     try {
         VRTimer t; t.start();
         cout << "OSMMap::copyFileStreaming 1st Pass - " << filepath << endl;
-        docHandler->setNewPath("../data/osm/outputOne.osm");
+        docHandler->setNewPath(tempPath);
         parser->parse(path.c_str());
         auto t2 = t.stop()/1000;
         cout << "OSMMap::copyFileStreaming 1st Pass - secs needed: " << t2 << endl;
@@ -927,10 +1016,9 @@ int OSMMap::copyFileStreaming(string path) {
     try {
         VRTimer t; t.start();
         docHandler->setPass(true);
-        docHandler->setNewPath("../data/osm/outputTwo.osm");
+        docHandler->setNewPath(genPath("_filtered"));
         cout << "OSMMap::copyFileStreaming 2nd Pass - " << filepath << endl;
-        string testpath = "../data/osm/outputOne.osm";
-        parser->parse(testpath.c_str());
+        parser->parse(tempPath.c_str());
         auto t2 = t.stop()/1000;
         cout << "OSMMap::copyFileStreaming 2nd Pass - secs needed: " << t2 << endl;
         cout << "OSMMap::copyFileStreaming 2nd Pass - elements read: " << docHandler->getNumerator() << ", elements written: " << docHandler->getNumeratorWritten() << endl;
@@ -961,6 +1049,9 @@ int OSMMap::copyFileStreaming(string path) {
     return 0;
 }
 
+void OSMMap::filterFileStreaming(string path) {
+    copyFileStreaming(path);
+}
 
 template <class Key, class Value>
 unsigned long mapSize(const map<Key,Value> &map){
