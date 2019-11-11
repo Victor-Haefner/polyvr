@@ -63,7 +63,6 @@ struct OSMRelation : OSMBase {
 class OSMMap {
     private:
         string filepath;
-        string newfilepath;
         BoundingboxPtr bounds;
         map<string, OSMWayPtr> ways;
         map<string, OSMNodePtr> nodes;
@@ -94,9 +93,6 @@ class OSMMap {
 
         void clear();
         void reload();
-
-        void test(string s);
-        string test2(vector<vector<string>> s);
 
         map<string, OSMWayPtr> getWays();
         map<string, OSMNodePtr> getNodes();

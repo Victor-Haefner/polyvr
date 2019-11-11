@@ -67,15 +67,9 @@ PyMethodDef VRPyWorldGenerator::methods[] = {
 };
 
 PyMethodDef VRPyOSMMap::methods[] = {
-    //{"OSMMap", PyWrap2( OSMMap, OSMMap, "create OSM map object", void, string ) },
-    {"test", PyWrap2( OSMMap, test, "test", void, string ) },
-    {"test2", PyWrap2( OSMMap, test2, "test2", string, vector<vector<string>> ) },
     {"readFile", PyWrap2( OSMMap, readFile, "readFile ", void, string ) },
     {"filterFileStreaming", PyWrap2( OSMMap, filterFileStreaming, "filter OSM file with whitelist via stream - input path, output path, save temp file", void, string, vector<vector<string>> ) },
     {"readFileStreaming", PyWrap2( OSMMap, readFileStreaming, "reads OSM file via stream, builds map ", int, string ) },
-    //{"readFileStreaming", PyWrap( OSMMap, readFileStreaming, "reads OSM file via stream, builds map", int, string ) },
-    //{"readFileStreaming", PyWrap( OSMMap, readFileStreaming, "reads OSM file via stream, builds map", int, string ) },
-    //{"copyFileStreaming", PyWrap( OSMMap, copyFileStreaming, "filter OSM file with whitelist via stream - input path, output path, save temp file", int, string, string, bool ) },
     {NULL}  /* Sentinel */
 };
 

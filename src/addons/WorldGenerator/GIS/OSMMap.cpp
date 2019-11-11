@@ -787,25 +787,6 @@ OSMMap::OSMMap(string filepath, bool stream) {
     else readFile(filepath);
 }
 
-void OSMMap::test(string s) {
-    cout << "testing OSM binding" << endl;
-}
-
-string OSMMap::test2(vector<vector<string>> s) {
-    string res = "";
-    cout << "testing OSM binding 2" << endl;
-    for (auto each : s){
-        for (string eachS : each) {
-            cout << eachS << endl;
-            res += " ";
-            res += eachS;
-        }
-    }
-    res += " back";
-    return res;
-}
-
-
 void OSMMap::clear() {
     bounds->clear();
     ways.clear();
@@ -824,6 +805,7 @@ bool OSMMap::isValid(xmlpp::Element* e) {
 
 void OSMMap::readFile(string path) {
     filepath = path;
+    VRTimer t; t.start();
     bounds = Boundingbox::create();
 
     xmlpp::DomParser parser;
@@ -863,12 +845,15 @@ void OSMMap::readFile(string path) {
         }
     }
 
+    auto t2 = t.stop()/1000.0;
     cout << "OSMMap::readFile path " << path << endl;
     cout << "  loaded " << ways.size() << " ways, " << nodes.size() << " nodes and " << relations.size() << " relations" << endl;
+    cout << "  secs needed: " << t2 << endl;
 }
 
 int OSMMap::readFileStreaming(string path) {
     filepath = path;
+    VRTimer t; t.start();
     try {
         XMLPlatformUtils::Initialize();
     }
@@ -891,14 +876,11 @@ int OSMMap::readFileStreaming(string path) {
     parser->setErrorHandler(errHandler);
 
     try {
-        VRTimer t; t.start();
         cout << "OSMMap::readFileStreaming - " << filepath << endl;
         parser->parse(path.c_str());
         nodes = docHandler->getNodes();
         ways = docHandler->getWays();
         relations = docHandler->getRelations();
-        auto t2 = t.stop()/1000;
-        cout << "OSMMap::readFileStreaming - secs needed: " << t2 << endl;
         cout << "OSMMap::readFileStreaming - elements read: " << docHandler->getNumerator() << endl;
         cout << "OSMMap::readFileStreaming - nodes: " << docHandler->getNodeCounter() << ", ways: " << docHandler->getWayCounter() <<  ", relations: " << docHandler->getRelationCounter() << endl;
     }
@@ -923,6 +905,8 @@ int OSMMap::readFileStreaming(string path) {
 
     delete parser;
     delete docHandler;
+    auto t2 = t.stop()/1000.0;
+    cout << "OSMMap::readFileStreaming - secs needed: " << t2 << endl;
     return 0;
 }
 
