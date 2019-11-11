@@ -76,29 +76,27 @@ class OSMMap {
         void readBounds(xmlpp::Element* element);
         void readRelation(xmlpp::Element* element, map<string, bool>& invalidIDs);
 
-        int copyFileStreaming(string path);
-        int readFileStreaming(string path, vector<pair<string, string>> whitelist);
+        int filterFileStreaming(string path, vector<pair<string, string>> whitelist);
 
     public:
         OSMMap();
         OSMMap(string filepath);
         OSMMap(string filepath, bool stream);
-        OSMMap(string filepath, bool stream, vector<pair<string, string>> whitelist);
+
         static OSMMapPtr create();
         static OSMMapPtr create(string filepath);
         static OSMMapPtr loadMap(string filepath);
         static OSMMapPtr parseMap(string filepath);
-        static OSMMapPtr shrinkMap(string filepath, string newfilepath, vector<pair<string, string>> whitelist);
 
         void readFile(string path);
         int readFileStreaming(string path);
-        void filterFileStreaming(string path);
+        void filterFileStreaming(string path, vector<vector<string>> wl);
 
         void clear();
         void reload();
 
         void test(string s);
-        string test2(string s);
+        string test2(vector<vector<string>> s);
 
         map<string, OSMWayPtr> getWays();
         map<string, OSMNodePtr> getNodes();

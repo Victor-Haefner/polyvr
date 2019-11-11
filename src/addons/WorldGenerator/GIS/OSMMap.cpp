@@ -787,19 +787,20 @@ OSMMap::OSMMap(string filepath, bool stream) {
     else readFile(filepath);
 }
 
-OSMMap::OSMMap(string filepath, bool stream, vector<pair<string, string>> whitelist) {
-    readFileStreaming(filepath, whitelist);
-}
-
-
 void OSMMap::test(string s) {
     cout << "testing OSM binding" << endl;
 }
 
-string OSMMap::test2(string s) {
+string OSMMap::test2(vector<vector<string>> s) {
     string res = "";
     cout << "testing OSM binding 2" << endl;
-    res += s;
+    for (auto each : s){
+        for (string eachS : each) {
+            cout << eachS << endl;
+            res += " ";
+            res += eachS;
+        }
+    }
     res += " back";
     return res;
 }
@@ -925,11 +926,7 @@ int OSMMap::readFileStreaming(string path) {
     return 0;
 }
 
-int OSMMap::readFileStreaming(string path, vector<pair<string, string>> whitelist) {
-    return 0;
-}
-
-int OSMMap::copyFileStreaming(string path) {
+int OSMMap::filterFileStreaming(string path, vector<pair<string, string>> whitelist) {
     filepath = path;
     try {
         XMLPlatformUtils::Initialize();
@@ -941,15 +938,6 @@ int OSMMap::copyFileStreaming(string path) {
         XMLString::release(&message);
         return 1;
     }
-
-    vector<pair<string, string>> whitelist;
-    whitelist.push_back(pair<string, string>("admin_level","2"));
-    whitelist.push_back(pair<string, string>("admin_level","4"));
-    whitelist.push_back(pair<string, string>("admin_level","5"));
-    whitelist.push_back(pair<string, string>("admin_level","6"));
-    whitelist.push_back(pair<string, string>("highway","motorway"));
-    whitelist.push_back(pair<string, string>("railway","rail"));
-    whitelist.push_back(pair<string, string>("place","city"));
 
     OSMSAXParser* parser = new OSMSAXParser();
     //parser->setDoValidation(true);
@@ -1049,8 +1037,21 @@ int OSMMap::copyFileStreaming(string path) {
     return 0;
 }
 
-void OSMMap::filterFileStreaming(string path) {
-    copyFileStreaming(path);
+void OSMMap::filterFileStreaming(string path, vector<vector<string>> wl) {
+    vector<pair<string, string>> whitelist;
+    for (auto each : wl){
+        whitelist.push_back(pair<string, string>(each[0],each[1]));
+    }
+    /*
+    vector<pair<string, string>> whitelist;
+    whitelist.push_back(pair<string, string>("admin_level","2"));
+    whitelist.push_back(pair<string, string>("admin_level","4"));
+    whitelist.push_back(pair<string, string>("admin_level","5"));
+    whitelist.push_back(pair<string, string>("admin_level","6"));
+    whitelist.push_back(pair<string, string>("highway","motorway"));
+    whitelist.push_back(pair<string, string>("railway","rail"));
+    whitelist.push_back(pair<string, string>("place","city"));*/
+    filterFileStreaming(path, whitelist);
 }
 
 template <class Key, class Value>
@@ -1091,9 +1092,6 @@ double OSMMap::getMemoryConsumption() {
 
 OSMMapPtr OSMMap::loadMap(string filepath) { return OSMMapPtr( new OSMMap(filepath) ); }
 OSMMapPtr OSMMap::parseMap(string filepath) { return OSMMapPtr( new OSMMap(filepath, true) ); }
-OSMMapPtr OSMMap::shrinkMap(string filepath, string newfilepath, vector<pair<string, string>> whitelist) {
-    return OSMMapPtr( new OSMMap(filepath, true, whitelist) );
-}
 
 map<string, OSMWayPtr> OSMMap::getWays() { return ways; }
 map<string, OSMNodePtr> OSMMap::getNodes() { return nodes; }
