@@ -16,7 +16,7 @@ template<> string typeName(const VRSignal& t) { return "Signal"; }
 VRSignal_base::VRSignal_base() {}
 VRSignal_base::~VRSignal_base() {}
 
-void VRSignal_base::clear() { callbacks.clear(); callbacksPtr.clear(); }
+void VRSignal_base::clear() { callbacksPtr.clear(); }
 
 void VRSignal_base::setUpdate(bool b) { _doUpdate = b; }
 bool VRSignal_base::doUpdate() { return _doUpdate; }
@@ -34,14 +34,7 @@ VRSignal::~VRSignal() {}
 
 VRSignalPtr VRSignal::create(VRDevicePtr dev) { return VRSignalPtr( new VRSignal(dev) ); }
 
-void VRSignal::add(VRFunction_base* fkt) { callbacks.push_back(fkt); }
 void VRSignal::add(VRBaseCbWeakPtr fkt) { callbacksPtr.push_back(fkt); }
-
-void VRSignal::sub(VRFunction_base* fkt) {
-    if (callbacks.size() == 0) return;
-    auto pos = find(callbacks.begin(), callbacks.end(), fkt);
-    if (pos != callbacks.end()) callbacks.erase(pos);
-}
 
 void VRSignal::sub(VRBaseCbWeakPtr fkt) {
     if (callbacksPtr.size() == 0) return;

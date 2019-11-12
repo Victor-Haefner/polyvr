@@ -947,6 +947,7 @@ void VRTransform::applyTransformation(PosePtr po) {
     if (!po) po = getPose();
     Matrix4d m0 = po->asMatrix();
     map<GeoVectorPropertyMTRecPtr, bool> applied;
+    map<VRTransform*, Matrix4d> matrices;
 
     auto applyMatrix = [&](OSGGeometryPtr mesh, Matrix4d& m) {
         auto pos = mesh->geo->getPositions();
@@ -973,7 +974,11 @@ void VRTransform::applyTransformation(PosePtr po) {
         return m;
     };
 
-    for (auto obj : getChildren(true, "", true)) {
+    auto objects = getChildren(true, "", true);
+    //for (auto obj : objects)
+    //    if (auto trans = dynamic_pointer_cast<VRTransform>(obj)) matrices[trans.get()] = trans->getWorldMatrix();
+
+    for (auto obj : objects) {
         auto geo = dynamic_pointer_cast<VRGeometry>(obj);
         if (!geo) continue;
         auto mesh = geo->getMesh();
@@ -981,6 +986,7 @@ void VRTransform::applyTransformation(PosePtr po) {
         if (!mesh->geo) continue;
         auto pos = mesh->geo->getPositions();
         if (!pos) continue;
+
         if (applied.count(pos)) continue;
         applied[pos] = true;
         auto m = computeNewMatrix(geo);
@@ -988,6 +994,8 @@ void VRTransform::applyTransformation(PosePtr po) {
     }
 
     setIdentity();
+    //for (auto obj : objects)
+    //    if (auto trans = dynamic_pointer_cast<VRTransform>(obj)) trans->setWorldMatrix(matrices[trans.get()]);
 }
 
 Vec3d VRTransform::getConstraintAngleWith(VRTransformPtr t, bool rotationOrPosition) {

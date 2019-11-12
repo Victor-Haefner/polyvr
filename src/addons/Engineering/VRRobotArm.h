@@ -24,38 +24,53 @@ class VRRobotArm {
         VRAnalyticGeometryPtr ageo = 0;
         VRAnimationPtr anim = 0;
         VRAnimCbPtr animPtr;
+        VRUpdateCbPtr updatePtr;
         PathPtr animPath = 0;
         PathPtr robotPath = 0;
+        PosePtr lastPose = 0;
 
         list<job> job_queue;
 
         int N = 5;
         float grab = 0;
         float pathPos = 0;
+        bool showModel = false;
+        bool moving = false;
+        float maxSpeed = 0.01;
+        string type = "kuka";
 
         vector<VRTransformPtr> parts;
         vector<float> angles;
+        vector<float> angle_targets;
         vector<float> angle_offsets;
         vector<int> angle_directions;
         vector<float> lengths;
         vector<int> axis;
 
+        PosePtr getKukaPose();
+        PosePtr getAuboPose();
+        void calcReverseKinematicsKuka(PosePtr p);
+        void calcReverseKinematicsAubo(PosePtr p);
+
+        void update();
         void applyAngles();
-        void calcReverseKinematics(Vec3d pos, Vec3d dir, Vec3d up);
+        void calcReverseKinematics(PosePtr p);
         void animOnPath(float t);
         void addJob(job j);
 
     public:
-        VRRobotArm();
+        VRRobotArm(string type);
         ~VRRobotArm();
 
-        static shared_ptr<VRRobotArm> create();
+        static shared_ptr<VRRobotArm> create(string type);
+        void showAnalytics(bool b);
 
         void setParts(vector<VRTransformPtr> parts);
         void setAngleOffsets(vector<float> offsets);
         void setAngleDirections(vector<int> directions);
         void setAxis(vector<int> axis);
         void setLengths(vector<float> lengths);
+        void setMaxSpeed(float s);
 
         vector<float> getAngles();
         PosePtr getPose();
@@ -72,7 +87,7 @@ class VRRobotArm {
 
         void setPath(PathPtr p);
         PathPtr getPath();
-        void moveOnPath(float t0, float t1, bool loop = false);
+        void moveOnPath(float t0, float t1, bool loop = false, float durationMultiplier = 1);
 };
 
 typedef shared_ptr<VRRobotArm> VRRobotArmPtr;

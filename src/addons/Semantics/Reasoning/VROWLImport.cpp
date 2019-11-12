@@ -52,7 +52,6 @@ string VROWLImport::RDFStatement::toString() {
 VROWLImport::VROWLImport() {
     predicate_blacklist["imports"] = 1;
     predicate_blacklist["implements"] = 1;
-    predicate_blacklist["subPropertyOf"] = 1;
     predicate_blacklist["versionInfo"] = 1;
     predicate_blacklist["inverseOf"] = 1;
     predicate_blacklist["disjointWith"] = 1;
@@ -84,6 +83,7 @@ void VROWLImport::clear() {
     datproperties.clear();
     objproperties.clear();
     annproperties.clear();
+    labels.clear();
     onto.reset();
 
     annproperties["label"] = VRProperty::create("label");
@@ -147,7 +147,7 @@ bool VROWLImport::ProcessSubject(RDFStatement& statement, vector<RDFStatement>& 
     string& predicate = statement.predicate;
     string& object = statement.object;
 
-    //printState(statement, "hasEndState");
+    //printState(statement, "hasRelative2D_PosX");
 
     auto stackStatement = [&]() -> RDFStatement& {
         auto s = statement;
@@ -294,6 +294,11 @@ bool VROWLImport::ProcessSubject(RDFStatement& statement, vector<RDFStatement>& 
         if (object == "Variable") { variables[subject] = Variable::create(onto, {subject}); return 0; }
     }
 
+    if (predicate == "label") {
+        if (auto c = getConcept(subject)) { labels[c->getBaseName()] = object; c->setName( object ); return 0; }
+        if (auto p = getProperty(subject)) { labels[p->getBaseName()] = object; p->setName( object ); return 0; }
+    }
+
     if (type == "") { // resolve the subject type of the statement
         if (getConcept(subject)) statement.type = "concept";
         if (entities.count(subject)) statement.type = "entity";
@@ -332,29 +337,44 @@ bool VROWLImport::ProcessSubject(RDFStatement& statement, vector<RDFStatement>& 
             }
         }
 
-        // entity(subject) has a property(predicate) with value(object)
-        //auto pv = entities[subject]->getValues(predicate);
-        //if (pv.size()) { pv[0]->setValue( object ); return 0; }
-        auto p = entities[subject]->getProperty(predicate, false);
+        function<VRPropertyPtr (string)> getEntityProperty = [&](string pName) {
+            VRPropertyPtr p = entities[subject]->getProperty(pName, false);
+            if (!p) {
+                auto prop = getProperty(pName);
+                if (prop) {
+                    for (string parent : prop->parents) if (VRPropertyPtr p2 = getEntityProperty(parent)) return p2;
+                }
+            }
+            return p;
+        };
+
+        auto p = getEntityProperty(predicate); // TODO: meh, property name is lost??
         if (p) {
-            //if (p->type == "") cout << "Warning: data property " << predicate << " has no data type!\n";
-            entities[subject]->add(predicate, object); return 0;
+            entities[subject]->add(p->getName(), object);
+            //p->setName(predicate);
+            return 0;
         }
     }
 
     if (type == "oprop" && objproperties.count(subject)) {
-        if (predicate == "range") { objproperties[subject]->setType(object); return 0; }
+        if (predicate == "range") {
+            if (labels.count(object)) object = labels[object]; // resolve label
+            objproperties[subject]->setType(object); return 0;
+        }
         if (predicate == "domain") if (auto c = getConcept(object)) { c->addProperty( objproperties[subject] ); return 0; }
+        if (predicate == "subPropertyOf") { objproperties[subject]->parents.push_back(object); return 0; }
     }
 
     if (type == "dprop" && datproperties.count(subject)) {
         if (predicate == "range") { datproperties[subject]->setType(object); return 0; }
         if (predicate == "domain") if (auto c = getConcept(object)) { c->addProperty( datproperties[subject] ); return 0; }
+        if (predicate == "subPropertyOf") { datproperties[subject]->parents.push_back(object); return 0; }
     }
 
     if (type == "aprop" && annproperties.count(subject)) {
         if (predicate == "range") { annproperties[subject]->setType(object); return 0; }
         if (predicate == "domain") if (auto c = getConcept(object)) { c->addAnnotation( annproperties[subject] ); return 0; }
+        if (predicate == "subPropertyOf") { annproperties[subject]->parents.push_back(object); return 0; }
     }
 
     // local properties
@@ -381,7 +401,7 @@ VRPropertyPtr VROWLImport::getProperty(string prop) {
     if (datproperties.count(prop)) return datproperties[prop];
     if (objproperties.count(prop)) return objproperties[prop];
     if (annproperties.count(prop)) return annproperties[prop];
-    //if (auto p = onto->getProperty(prop)) return p;
+    if (auto p = onto->getProperty(prop)) return p;
     return VRPropertyPtr();
 };
 
@@ -437,6 +457,9 @@ void VROWLImport::AgglomerateData() {
     for (auto c : concepts) onto->addConcept(c.second);
     cout << " VROWLImport::AgglomerateData add " << entities.size() << " entities to ontology" << endl;
     for (auto e : entities) onto->addEntity(e.second);
+    for (auto e : datproperties) onto->addProperty(e.second);
+    for (auto e : objproperties) onto->addProperty(e.second);
+    for (auto e : annproperties) onto->addProperty(e.second);
     //for (auto e : entities) if (e.second->is_a("MessageSpecification")) cout << "  " << e.second->toString() << endl;
 }
 
@@ -447,7 +470,7 @@ void processTriple(void* mgr, raptor_statement* rs) {
 
 void VROWLImport::processTriple(raptor_statement* rs) {
     auto s = RDFStatement(rs);
-    //if (s.predicate == "hasModelComponentLabel") cout << "RDF statement: " << s.toString() << endl;
+    //if (s.predicate == "hasRelative2D_PosX") cout << "RDF statement: " << s.toString() << endl;
     subjects[s.subject].push_back(s);
     objects[s.subject][s.object] = s.predicate;
 }

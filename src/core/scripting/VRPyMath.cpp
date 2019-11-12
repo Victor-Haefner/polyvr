@@ -74,6 +74,7 @@ PyNumberMethods VRPyVec2f::nMethods = {
 
 PyMethodDef VRPyVec2f::methods[] = {
     {"normalize", (PyCFunction)VRPyVec2f::normalize, METH_NOARGS, "Normalize the vector - normalize()" },
+    {"normalized", (PyCFunction)VRPyVec2f::normalized, METH_NOARGS, "Return normalized vector - normalized()" },
     {"length", (PyCFunction)VRPyVec2f::length, METH_NOARGS, "Compute the length - float length()" },
     {"dot", (PyCFunction)VRPyVec2f::dot, METH_VARARGS, "Compute the dot product - float dot( Vec3 )" },
     {"cross", (PyCFunction)VRPyVec2f::cross, METH_VARARGS, "Compute the cross product - Vec3 cross( Vec3 )" },
@@ -109,8 +110,13 @@ PyObject* VRPyVec2f::Print(PyObject* self) {
 
 PyObject* VRPyVec2f::normalize(VRPyVec2f* self) {
     self->v.normalize();
-    //Py_RETURN_TRUE;
     return (PyObject*) toPyVec3f(self->v);
+}
+
+PyObject* VRPyVec2f::normalized(VRPyVec2f* self) {
+    auto v = self->v;
+    v.normalize();
+    return (PyObject*) toPyVec3f(v);
 }
 
 PyObject* VRPyVec2f::asList(VRPyVec2f* self) {
@@ -283,6 +289,7 @@ PyNumberMethods VRPyVec3f::nMethods = {
 
 PyMethodDef VRPyVec3f::methods[] = {
     {"normalize", (PyCFunction)VRPyVec3f::normalize, METH_NOARGS, "Normalize the vector - normalize()" },
+    {"normalized", (PyCFunction)VRPyVec3f::normalized, METH_NOARGS, "Return normalized vector - normalized()" },
     {"length", (PyCFunction)VRPyVec3f::length, METH_NOARGS, "Compute the length - float length()" },
     {"dot", (PyCFunction)VRPyVec3f::dot, METH_VARARGS, "Compute the dot product - float dot( Vec3 )" },
     {"cross", (PyCFunction)VRPyVec3f::cross, METH_VARARGS, "Compute the cross product - Vec3 cross( Vec3 )" },
@@ -321,8 +328,13 @@ PyObject* VRPyVec3f::Print(PyObject* self) {
 
 PyObject* VRPyVec3f::normalize(VRPyVec3f* self) {
     self->v.normalize();
-    //Py_RETURN_TRUE;
     return (PyObject*) toPyVec3f(self->v);
+}
+
+PyObject* VRPyVec3f::normalized(VRPyVec3f* self) {
+    auto v = self->v;
+    v.normalize();
+    return (PyObject*) toPyVec3f(v);
 }
 
 PyObject* VRPyVec3f::asList(VRPyVec3f* self) {

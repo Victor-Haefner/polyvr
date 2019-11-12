@@ -1131,7 +1131,10 @@ void VRScenegraphInterface::handle(string msg) {
                     materials[objID]->ignoreMeshColors(true);
                 }
                 //materials[obj].setSpecular([r*s,g*s,b*s])
-                //materials[obj].setTransparency(1-mat[7])
+
+                // TODO: very prone to artifacts!
+                //if (matData.size() > 7 && matData[7] > 0) materials[objID]->setTransparency(1-matData[7]);
+                //if (matData.size() > 10 && matData[10] > 0.5) materials[objID]->enableTransparency();
             }
 		}
 

@@ -27,10 +27,11 @@ struct VROntology : public std::enable_shared_from_this<VROntology>, public VRNa
     map<int, VREntityPtr> entities;
     map<string, VREntityPtr> entitiesByName;
     map<string, VRConceptWeakPtr> concepts;
+    map<string, VRPropertyPtr> properties;
     map<int, VROntologyRulePtr> rules;
     map<string, VROntologyWeakPtr> dependencies;
     map<string, VRCallbackStrWrapperPtr> builtins;
-
+    map<string, VROntologyWeakPtr> modules;
     map<string, VRConceptPtr> recentConcepts; // performance optimization
 
     VROntology(string name);
@@ -39,13 +40,17 @@ struct VROntology : public std::enable_shared_from_this<VROntology>, public VRNa
 
     void setup(VRStorageContextPtr context);
 
-    void import(VROntologyPtr o);
     void merge(VROntologyPtr o);
     VROntologyPtr copy();
+    void addModule(VROntologyPtr onto);
+    void addModule(string mod);
+    void loadModule(string path);
+    map<string, VROntologyPtr> getModules();
     map<int, vector<VRConceptPtr>> getChildrenMap();
 
     void addConcept(VRConceptPtr c);
     void addEntity(VREntityPtr& e);
+    void addProperty(VRPropertyPtr p);
     void remConcept(VRConceptPtr c);
     void remEntity(VREntityPtr e);
     void remEntity(string name);
@@ -68,13 +73,12 @@ struct VROntology : public std::enable_shared_from_this<VROntology>, public VRNa
     VRConceptPtr getConcept(string name);
     VREntityPtr getEntity(int ID);
     VREntityPtr getEntity(string instance);
+    VRPropertyPtr getProperty(string prop);
     vector<VREntityPtr> getEntities(string concept);
-
     vector<VROntologyRulePtr> getRules();
 
     void openOWL(string path);
     void saveOWL(string path);
-    void addModule(string mod);
     string toString();
 
     void setFlag(string f);

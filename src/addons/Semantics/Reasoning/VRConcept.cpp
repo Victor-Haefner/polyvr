@@ -177,7 +177,7 @@ string VRConcept::toString(string indent) {
     for (auto p : getParents()) res += p->getName() + " ";
     res += "\n";
     for (auto a : annotations) res += indent+a.second->toString();
-    for (auto p : getProperties()) res += indent+p->toString();
+    for (auto p : getProperties(false)) res += indent+p->toString();
     //for (auto c : children) res += c.second->toString(indent+"  ");
     return res;
 }
@@ -187,7 +187,7 @@ string VRConcept::toString(map<int, vector<VRConceptPtr>>& cMap, string indent) 
     for (auto p : getParents()) res += p->getName() + " ";
     res += "\n";
     for (auto a : annotations) res += indent+a.second->toString();
-    for (auto p : getProperties()) res += indent+p->toString();
+    for (auto p : getProperties(false)) res += indent+p->toString();
     for (auto c : cMap[ID]) res += c->toString(cMap, indent+"  ");
     return res;
 }

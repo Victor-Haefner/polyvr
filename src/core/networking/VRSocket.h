@@ -17,7 +17,6 @@ class HTTPServer;
 //struct HTTP_args;
 
 typedef VRFunction<void*> VRHTTP_cb;
-typedef VRFunction<string> VRTCP_cb;
 
 struct HTTP_args {
     HTTPServer* serv = 0;
@@ -54,7 +53,7 @@ class VRSocket : public VRName {
         int threadID;
         bool run;
         unsigned int socketID;
-        VRTCP_cb* tcp_fkt;
+        VRMessageCbWeakPtr tcp_fkt;
         VRHTTP_cb* http_fkt;
         HTTPServer* http_serv;
 
@@ -79,7 +78,7 @@ class VRSocket : public VRName {
         void setName(string s);
         void setType(string s);
         void setIP(string s);
-        void setTCPCallback(VRTCP_cb* cb);
+        void setTCPCallback(VRMessageCbPtr cb);
         void setHTTPCallback(VRHTTP_cb* cb);
         void unsetCallbacks();
         void setSignal(string s);

@@ -34,10 +34,10 @@ PyMethodDef VRPyProcess::methods[] = {
     {"getStateTransitions", PyWrap(Process, getStateTransitions, "Return action transitions - [ProcessNode] getActionTransitions(subject, action)", vector<VRProcessNodePtr>, int, int ) },
     //{"getTransitionStates", PyWrap(Process, getTransitionStates, "Return actions connected by a given transition - [ProcessNode] getTransitionActions(subject, transition)", vector<VRProcessNodePtr>, int, int ) },
     {"getStateMessage", PyWrap(Process, getStateMessage, "Returns the Message of a send/receive state - [ProcessNode] getStateMessage(state)", VRProcessNodePtr, VRProcessNodePtr ) },
-    {"addSubject", PyWrap(Process, addSubject, "Add a new subject - ProcessNode addSubject( name )", VRProcessNodePtr, string ) },
-    {"addState", PyWrap(Process, addState, "Add a new state to subject, by subject ID", VRProcessNodePtr, string, int ) },
+    {"addSubject", PyWrapOpt(Process, addSubject, "Add a new subject - ProcessNode addSubject( name )", "0", VRProcessNodePtr, string, VREntityPtr ) },
+    {"addState", PyWrapOpt(Process, addState, "Add a new state to subject, by subject ID", "0", VRProcessNodePtr, string, int, VREntityPtr ) },
     {"setInitialState", PyWrap(Process, setInitialState, "Set a state to initial state.", void, VRProcessNodePtr ) },
-    {"addMessage", PyWrapOpt(Process, addMessage, "Add a new message between subjects or actions i and j - ProcessNode addMessage( name, int i, int j )", "0", VRProcessNodePtr, string, int, int, VRProcessDiagramPtr ) },
+    {"addMessage", PyWrapOpt(Process, addMessage, "Add a new message between subjects or actions i and j - ProcessNode addMessage( name, int i, int j )", "0|0", VRProcessNodePtr, string, int, int, VRProcessDiagramPtr, VREntityPtr ) },
     {"addTransition", PyWrapOpt(Process, addTransition, "Add a new transition between actions i and j - ProcessNode addTransition( name, subject, int i, int j )", "0", VRProcessNodePtr, string, int, int, int, VRProcessDiagramPtr ) },
    {NULL}  /* Sentinel */
 };
@@ -56,6 +56,7 @@ PyMethodDef VRPyProcessDiagram::methods[] = {
 };
 
 PyMethodDef VRPyProcessLayout::methods[] = {
+    {"setParameters", PyWrap(ProcessLayout, setParameters, "Set layout parameters - (height, scale)", void, float, float ) },
     {"getSIDPathtool", PyWrap(ProcessLayout, getSIDPathtool, "Access path tool", VRPathtoolPtr ) },
     {"getSBDPathtool", PyWrap(ProcessLayout, getSBDPathtool, "Access path tool", VRPathtoolPtr, int ) },
     {"setProcess", PyWrap(ProcessLayout, setProcess, "Set process - setProcess( process )", void, VRProcessPtr ) },

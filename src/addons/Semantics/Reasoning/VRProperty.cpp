@@ -33,7 +33,9 @@ void VRProperty::setValue(string value) {
 
 string VRProperty::toString() {
     string res;
-    res += " prop "+name+" = "+value+" ("+type+")\n";
+    res += " prop "+name+" = "+value+" ("+type+")";
+    for (auto p : parents) res += " -> " + p;
+    res += "\n"; // <- why?
     return res;
 }
 

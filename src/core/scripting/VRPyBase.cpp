@@ -287,6 +287,7 @@ int VRPyBase::toOSGConst(string s) {
 int VRPyBase::toGLConst(string s) {
     if (s == "GL_FILL") return GL_FILL;
     if (s == "GL_BACK") return GL_BACK;
+    if (s == "GL_LINE") return GL_LINE;
     if (s == "GL_NONE") return GL_NONE;
     if (s == "GL_NEVER") return GL_NEVER;
     if (s == "GL_ALWAYS") return GL_ALWAYS;

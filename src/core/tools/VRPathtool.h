@@ -107,6 +107,7 @@ class VRPathtool : public VRObject {
 
         bool showBControlPoints = false;
         bool showBHulls = false;
+        float arrowScale = 1;
 
         map<Path*, entryPtr> pathToEntry;
         map<VRGeometry*, vector<entryPtr> > handleToEntries; // map handle geometries to the entries

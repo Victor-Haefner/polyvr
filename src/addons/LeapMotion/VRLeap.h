@@ -39,6 +39,7 @@ class VRLeap : public VRDevice {
         int numPens;
         VRObjectPtr dndRoot;
         bool doDnD = false;
+        VRDeviceCbPtr dndCb;
 
         VRAnalyticGeometryPtr ageo;
 
