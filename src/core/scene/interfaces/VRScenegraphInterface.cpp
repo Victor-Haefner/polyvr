@@ -1135,8 +1135,14 @@ void VRScenegraphInterface::handle(string msg) {
 
                 // TODO: very prone to artifacts!
                 if (handleTransparency) {
-                    if (matData.size() > 7 && matData[7] > 0) materials[objID]->setTransparency(1-matData[7]);
-                    if (matData.size() > 10 && matData[10] > 0.5) materials[objID]->enableTransparency();
+                    if (matData.size() > 7 && matData[7] > 0) {
+                        cout << "VRScenegraphInterface::handle alpha " << 1-matData[7] << " of " << objID << endl;
+                        materials[objID]->setTransparency(1-matData[7]);
+                    }
+                    if (matData.size() > 10 && matData[10] > 0.5) {
+                        cout << "VRScenegraphInterface::handle enableTransparency " << matData[10] << " of " << objID << endl;
+                        materials[objID]->enableTransparency();
+                    }
                 }
             }
 		}
