@@ -29,6 +29,7 @@ VRScenegraphInterface::~VRScenegraphInterface() {}
 VRScenegraphInterfacePtr VRScenegraphInterface::ptr() { return static_pointer_cast<VRScenegraphInterface>( shared_from_this() ); }
 VRScenegraphInterfacePtr VRScenegraphInterface::create(string name)  { return VRScenegraphInterfacePtr( new VRScenegraphInterface(name) ); }
 
+void VRScenegraphInterface::enableTransparency(bool b) { handleTransparency = b; }
 
 void VRScenegraphInterface::clear() {
     clearChildren();
@@ -1133,8 +1134,10 @@ void VRScenegraphInterface::handle(string msg) {
                 //materials[obj].setSpecular([r*s,g*s,b*s])
 
                 // TODO: very prone to artifacts!
-                //if (matData.size() > 7 && matData[7] > 0) materials[objID]->setTransparency(1-matData[7]);
-                //if (matData.size() > 10 && matData[10] > 0.5) materials[objID]->enableTransparency();
+                if (handleTransparency) {
+                    if (matData.size() > 7 && matData[7] > 0) materials[objID]->setTransparency(1-matData[7]);
+                    if (matData.size() > 10 && matData[10] > 0.5) materials[objID]->enableTransparency();
+                }
             }
 		}
 

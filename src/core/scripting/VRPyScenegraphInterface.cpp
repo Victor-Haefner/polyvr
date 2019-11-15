@@ -14,5 +14,6 @@ PyMethodDef VRPyScenegraphInterface::methods[] = {
     {"addCallback", PyWrap(ScenegraphInterface, addCallback, "Add handler callback", void, VRMessageCbPtr) },
     {"getObject", PyWrap(ScenegraphInterface, getObject, "Returns object", VRObjectPtr, string) },
     {"getObjectID", PyWrap(ScenegraphInterface, getObjectID, "Returns object ID", string, VRObjectPtr) },
+    {"enableTransparency", PyWrap(ScenegraphInterface, enableTransparency, "Toggle transparent materials", void, bool) },
     {NULL}  /* Sentinel */
 };

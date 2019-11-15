@@ -22,6 +22,7 @@ class VRNetworkSlave : public VRName {
         string display = ":0.0";
         string connection_type = "Multicast";
         int port = 3000;
+        int startupDelay = 10;
         bool fullscreen = true;
         bool active_stereo = false;
         bool autostart = false;
@@ -35,7 +36,7 @@ class VRNetworkSlave : public VRName {
         void setup(VRStorageContextPtr context);
 
         void setNode(VRNetworkNodePtr n);
-        void set(string ct, bool fs, bool as, bool au, string a, int p);
+        void set(string ct, bool fs, bool as, bool au, string a, int p, int d);
 
         void start();
         void stop();
@@ -49,12 +50,13 @@ class VRNetworkSlave : public VRName {
         bool getActiveStereo();
         bool getAutostart();
         int getPort();
+        int getStartupDelay();
 
+        void setDisplay(string a);
         void setConnectionType(string ct);
         void setFullscreen(bool b);
         void setActiveStereo(bool b);
         void setAutostart(bool b);
-        void setDisplay(string a);
 
         string getConnectionIdentifier();
 };
