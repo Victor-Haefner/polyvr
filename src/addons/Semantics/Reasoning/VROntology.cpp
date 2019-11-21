@@ -100,6 +100,11 @@ VRConceptPtr VROntology::getConcept(string name) {
     return p;
 }
 
+VRPropertyPtr VROntology::getProperty(string prop) {
+    if (properties.count(prop)) return properties[prop];
+    return 0;
+}
+
 vector<VRConceptPtr> VROntology::getConcepts() {
     vector<VRConceptPtr> res;
     for (auto c : concepts) res.push_back(c.second.lock());
@@ -135,6 +140,11 @@ void VROntology::addConcept(VRConceptPtr c) {
     if (c == thing) return;
     concepts[c->getName()] = c;
     if (!c->hasParent()) thing->append(c);
+}
+
+void VROntology::addProperty(VRPropertyPtr p) {
+    if (properties.count(p->getName())) { WARN("WARNING in VROntology::addProperty, " + p->getName() + " known, skipping!"); return;  }
+    properties[p->getName()] = p;
 }
 
 void VROntology::remConcept(VRConceptPtr c) {
@@ -175,9 +185,6 @@ void VROntology::renameEntity(VREntityPtr e, string s) {
     if (!entities.count(e->ID)) return;
     e->setName(s);
 }
-
-//void VROntology::import(VROntologyPtr o) { dependencies[o->getName()] = o; }
-void VROntology::import(VROntologyPtr o) { merge(o); }
 
 void VROntology::merge(VROntologyPtr o) { // Todo: check it well!
     for (auto c : o->rules) rules[c.first] = c.second;
@@ -294,11 +301,37 @@ void VROntology::saveOWL(string path) {
     exporter.write(shared_from_this(), path);
 }
 
-void VROntology::addModule(string mod) {
-    auto mgr = VRScene::getCurrent()->getSemanticManager();
-    auto onto = mgr->getOntology(mod);
+void VROntology::addModule(VROntologyPtr onto) {
+    string mod = onto->getBaseName();
     if (!onto) { cout << "VROntology::addModule Error: Ontology " << mod << " not found" << endl; return; }
     merge(onto);
+    modules[mod] = onto;
+
+    function<void (VROntologyPtr)> regMods = [&](VROntologyPtr o) {
+        if (!o) return;
+        for (auto s : o->getModules()) {
+            modules[s.first] = s.second;
+            regMods(s.second);
+        }
+    };
+    regMods(onto);
+}
+
+void VROntology::addModule(string mod) {
+    auto mgr = VRScene::getCurrent()->getSemanticManager();
+    addModule( mgr->getOntology(mod) );
+}
+
+void VROntology::loadModule(string path) {
+    if (!exists(path)) WARN("WARNING in VROntology::openOWL, " + path + " not found!");
+    auto mgr = VRScene::getCurrent()->getSemanticManager();
+    addModule( mgr->loadOntology(path) );
+}
+
+map<string, VROntologyPtr> VROntology::getModules() {
+    map<string, VROntologyPtr> res;
+    for (auto o : modules) if (auto O = o.second.lock()) res[o.first] = O;
+    return res;
 }
 
 void VROntology::setFlag(string f) { flag = f; }

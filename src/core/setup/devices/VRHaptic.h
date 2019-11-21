@@ -18,6 +18,7 @@ class VRHaptic : public VRDevice {
         string type = "Virtuose 6D35-45";
         VRUpdateCbPtr updateFktPre;
         VRUpdateCbPtr updateFktPost;
+        VRDeviceCbPtr onSceneChange;
         Vec3i button_states;
         VRUpdateCbPtr timestepWatchdog;
         VRUpdateCbPtr updatePtr;

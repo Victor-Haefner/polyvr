@@ -36,7 +36,7 @@ OSG_BEGIN_NAMESPACE;
 
 PyMethodDef VRSceneGlobals::methods[] = {
 	{"exit", (PyCFunction)VRSceneGlobals::exit, METH_NOARGS, "Terminate application" },
-	{"loadGeometry", (PyCFunction)VRSceneGlobals::loadGeometry, METH_VARARGS|METH_KEYWORDS, "Loads a file and returns an object - obj loadGeometry(str path, bool cached = True, str preset = 'OSG', bool threaded = 0, str parent = None, str options = None)"
+	{"loadGeometry", (PyCFunction)VRSceneGlobals::loadGeometry, METH_VARARGS|METH_KEYWORDS, "Loads a file and returns an object - obj loadGeometry(str path, bool cached = True, str preset = 'OSG', bool threaded = 0, str parent = None, str options = None, bool useBinaryCache = False)"
                                                                                              "\n\tpreset can be: 'OSG', 'COLLADA', 'SOLIDWORKS-VRML2' or 'PVR'"
                                                                                              "\n\toptions can be: 'explorer' (currently only for STEP files)" },
 	{"exportGeometry", (PyCFunction)VRSceneGlobals::exportGeometry, METH_VARARGS, "Export a part of the scene - exportGeometry( object, path )" },
@@ -169,8 +169,10 @@ PyObject* VRSceneGlobals::getRoot(VRSceneGlobals* self) {
 
 PyObject* VRSceneGlobals::importScene(VRSceneGlobals* self, PyObject *args) {
     const char* path = "";
-    if (! PyArg_ParseTuple(args, "s", &path)) return NULL;
-    auto res = VRSceneLoader::get()->importScene( path?path:"" );
+    const char* key = "";
+    int offLights = 0;
+    if (! PyArg_ParseTuple(args, "s|si", &path, &key, &offLights)) return NULL;
+    auto res = VRSceneLoader::get()->importScene( path?path:"", key?key:"", offLights );
     if (res) return VRPyTypeCaster::cast(res);
     else Py_RETURN_NONE;
 }

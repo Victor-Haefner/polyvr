@@ -46,6 +46,7 @@ class VRGeoData {
         int getNIndices();
         string getDataName(int type);
         int getDataSize(int type);
+        string getDataAsString(int type);
 
         int pushVert(Pnt3d p);
         int pushVert(Pnt3d p, Vec3d n);

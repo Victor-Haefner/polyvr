@@ -19,6 +19,7 @@ void VROWLExport::write(VROntologyPtr o, string path) {
     string dp_ns = "http://www.w3.org/2001/XMLSchema#";
 
     map<string, VRPropertyPtr> properties;
+    map<string, xmlpp::Element*> propertyNodes;
     for (auto c : o->getConcepts()) {
         for (auto p : c->getProperties()) {
             properties[p->getName()] = p;
@@ -63,8 +64,7 @@ void VROWLExport::write(VROntologyPtr o, string path) {
             a->set_attribute("rdf:about", ontology_ns + prop.first);
             auto r = a->add_child("rdfs:range");
             r->set_attribute("rdf:resource", pns + prop.second->type);
-            auto d = a->add_child("rdfs:domain");
-            //a->set_attribute("rdf:domain", ontology_ns + a->getType());
+            propertyNodes[prop.first] = a;
         }
     };
 
@@ -72,11 +72,16 @@ void VROWLExport::write(VROntologyPtr o, string path) {
         for (auto concept : o->getConcepts()) {
             if (concept->getName() == "Thing") continue;
             auto a = root->add_child("owl:Class");
-            a->set_attribute("rdf:about", ontology_ns + concept->getName());
-            for (auto cp : concept->getParents()) {
+            a->set_attribute("rdf:about", ontology_ns + concept->getName());    // concept name
+            for (auto cp : concept->getParents()) {                             // concept parents
                 if (cp->getName() == "Thing") continue;
                 auto p = a->add_child("rdfs:subClassOf");
                 p->set_attribute("rdf:resource", ontology_ns + cp->getName());
+            }
+
+            for (auto p : concept->getProperties(false)) {
+                auto d = propertyNodes[p->getName()]->add_child("rdfs:domain");
+                d->set_attribute("rdf:resource", ontology_ns + concept->getName());
             }
         }
     };
@@ -89,6 +94,17 @@ void VROWLExport::write(VROntologyPtr o, string path) {
         for (auto entity : o->entitiesByName) {
             auto e = root->add_child("owl:NamedIndividual");
             e->set_attribute("rdf:about", ontology_ns + entity.first);
+            auto t = e->add_child("rdf:type");
+            t->set_attribute("rdf:resource", ontology_ns + entity.second->getConcept()->getName());
+            for (auto prop : entity.second->getAll()) {
+                auto p = e->add_child(prop->getName());
+                if (isDataProperty(prop->type)) {
+                    p->add_child_text(prop->getValue());
+                    p->set_attribute("rdf:datatype", dp_ns + prop->getType());
+                } else {
+                    p->set_attribute("rdf:resource", ontology_ns + prop->getValue());
+                }
+            }
         }
     };
 

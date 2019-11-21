@@ -12,6 +12,7 @@ OSG_BEGIN_NAMESPACE;
 struct VRProperty : public VROntoID, public VRName {
     string type;
     string value;
+    vector<string> parents;
 
     VRProperty(string name, string type = "");
     static VRPropertyPtr create(string name = "none", string type = "");

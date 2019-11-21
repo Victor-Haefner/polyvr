@@ -13,7 +13,6 @@ using namespace std;
 
 class VRSignal_base : public VRName {
     protected:
-        vector<VRFunction_base*> callbacks;
         vector<VRBaseCbWeakPtr> callbacksPtr;
         VRUpdateCbPtr trig_fkt = 0;
         bool _doUpdate = false;
@@ -41,9 +40,7 @@ class VRSignal : public VRSignal_base {
 
         static VRSignalPtr create(VRDevicePtr dev = 0);
 
-        void add(VRFunction_base* fkt);
         void add(VRBaseCbWeakPtr fkt);
-        void sub(VRFunction_base* fkt);
         void sub(VRBaseCbWeakPtr fkt);
         template<typename Event> void trigger(Event* event = 0);
         template<typename Event> void triggerPtr(std::shared_ptr<Event> event = 0);

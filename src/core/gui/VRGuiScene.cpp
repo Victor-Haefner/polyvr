@@ -168,6 +168,33 @@ void VRGuiScene::setMaterial(VRMaterialPtr mat) {
     }
 }
 
+class GeoModelColumns : public Gtk::TreeModelColumnRecord {
+    public:
+        GeoModelColumns() { add(datatype); add(length); add(index); }
+
+        Gtk::TreeModelColumn<string> datatype;
+        Gtk::TreeModelColumn<int> length;
+        Gtk::TreeModelColumn<int> index;
+};
+
+void VRGuiScene::on_geo_menu_print() {
+    if(!selected_itr) return;
+
+    auto tview = Glib::RefPtr<Gtk::TreeView>::cast_static(VRGuiBuilder()->get_object("treeview9"));
+    Gtk::TreeModel::iterator iter = tview->get_selection()->get_selected();
+    if(!iter) return;
+
+    GeoModelColumns cols;
+    Gtk::TreeModel::Row row = *iter;
+    string name = row[cols.datatype];
+    int index = row[cols.index];
+
+    VRGeometryPtr geo = dynamic_pointer_cast<VRGeometry>(getSelected());
+    VRGeoData data(geo);
+    string msg = data.getDataAsString(index);
+    VRGuiManager::get()->getConsole( "Console" )->write( geo->getName() + " " + name + ": " + msg + "\n" );
+}
+
 void VRGuiScene::setGeometry(VRGeometryPtr g) {
     setExpanderSensitivity("expander11", true);
     setExpanderSensitivity("expander14", true);
@@ -202,10 +229,11 @@ void VRGuiScene::setGeometry(VRGeometryPtr g) {
             break;
     }
 
-    auto appendGeoData = [](Glib::RefPtr<Gtk::ListStore>& store, string name, int N) {
+    auto appendGeoData = [](Glib::RefPtr<Gtk::ListStore>& store, string name, int N, int I) {
         Gtk::ListStore::Row row = *store->append();
         gtk_list_store_set (store->gobj(), row.gobj(), 0, name.c_str(), -1);
         gtk_list_store_set (store->gobj(), row.gobj(), 1, N, -1);
+        gtk_list_store_set (store->gobj(), row.gobj(), 2, I, -1);
     };
 
     VRGeoData data(g);
@@ -213,7 +241,7 @@ void VRGuiScene::setGeometry(VRGeometryPtr g) {
     store->clear();
     for (int i=0; i<=8; i++) {
         int N = data.getDataSize(i);
-        if (N) appendGeoData(store, data.getDataName(i), N);
+        if (N) appendGeoData(store, data.getDataName(i), N, i);
     }
 }
 
@@ -1300,7 +1328,6 @@ void VRGuiScene::initCallbacks() {
     cbutton->signal_toggled().connect( sigc::mem_fun(*this, &VRGuiScene::setMaterial_lit) );
 }
 
-
 // TODO: remove groups
 VRGuiScene::VRGuiScene() { // TODO: reduce callbacks with templated functions
     dragDest.reset();
@@ -1396,6 +1423,11 @@ VRGuiScene::VRGuiScene() { // TODO: reduce callbacks with templated functions
     setColorChooser("light_diff", sigc::mem_fun(*this, &VRGuiScene::setLight_diff_color));
     setColorChooser("light_amb", sigc::mem_fun(*this, &VRGuiScene::setLight_amb_color));
     setColorChooser("light_spec", sigc::mem_fun(*this, &VRGuiScene::setLight_spec_color));
+
+    auto tree_view9 = Glib::RefPtr<Gtk::TreeView>::cast_static(VRGuiBuilder()->get_object("treeview9"));
+    menu = new VRGuiContextMenu("GeoMenu");
+    menu->connectWidget("GeoMenu", tree_view9);
+    menu->appendItem("GeoMenu", "Print", sigc::mem_fun(*this, &VRGuiScene::on_geo_menu_print));
 
     updateObjectForms();
 }

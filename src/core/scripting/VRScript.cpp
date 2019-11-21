@@ -182,8 +182,8 @@ VRScript::VRScript(string _name) {
     ns->setSeparator('_');
     setName(_name);
     cbfkt_sys = VRUpdateCb::create(_name + "_ScriptCallback_sys", boost::bind(&VRScript::execute, this));
-    cbfkt_dev = new VRFunction<VRDeviceWeakPtr>(_name + "_ScriptCallback_dev", boost::bind(&VRScript::execute_dev, this, _1));
-    cbfkt_soc = new VRFunction<string>(_name + "_ScriptCallback_soc", boost::bind(&VRScript::execute_soc, this, _1));
+    cbfkt_dev = VRDeviceCb::create(_name + "_ScriptCallback_dev", boost::bind(&VRScript::execute_dev, this, _1));
+    cbfkt_soc = VRMessageCb::create(_name + "_ScriptCallback_soc", boost::bind(&VRScript::execute_soc, this, _1));
 
     setOverrideCallbacks(true);
     store("type", &type);

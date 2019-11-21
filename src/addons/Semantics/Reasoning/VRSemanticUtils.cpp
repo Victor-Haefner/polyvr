@@ -17,6 +17,7 @@ string Evaluation::toString() {
     if (state == ASSUMPTION) return "assumption";
     if (state == INVALID) return "invalid";
     if (state == VALID) return "valid";
+    return "invalid";
 }
 
 Variable::Variable() {;}

@@ -65,7 +65,7 @@ void VROntology::setupLibrary() {
     //mathOnto->addBuiltin("crossing", &Path::isCrossing); // TODO: the Path class has to be linked to the Path concept
     // TODO: quaternion rotation rule to change direction
 
-    objectOnto->import(mathOnto);
+    objectOnto->addModule(mathOnto);
     objectOnto->addConcept("Object");
     objectOnto->getConcept("Object")->addProperty("position", "Position");
     objectOnto->getConcept("Object")->addProperty("orientation", "Orientation");
@@ -84,13 +84,13 @@ void VROntology::setupLibrary() {
     elecDevOnto->addConcept("ElectricalDevice");
     elecDevOnto->getConcept("ElectricalDevice")->addProperty("powered", "bool");
 
-    machineOnto->import(objectOnto);
-    machineOnto->import(elecDevOnto);
+    machineOnto->addModule(objectOnto);
+    machineOnto->addModule(elecDevOnto);
     machineOnto->addConcept("Machine", "Object ElectricalDevice");
     machineOnto->getConcept("Machine")->addProperty("running", "bool");
 
-    processingOnto->import(featureOnto);
-    processingOnto->import(actionOnto);
+    processingOnto->addModule(featureOnto);
+    processingOnto->addModule(actionOnto);
     processingOnto->addConcept("Processing", "Action");
     processingOnto->getConcept("Processing")->addProperty("result", "Feature");
     processingOnto->getConcept("Processing")->addProperty("state", "int");
@@ -99,21 +99,21 @@ void VROntology::setupLibrary() {
     // if processing done, then result is done and skill is unset
     processingOnto->addRule("is(s.result.state,1):Processing(s);is(s.state,1)", "Processing");
 
-    prodMachineOnto->import(machineOnto);
-    prodMachineOnto->import(processingOnto);
+    prodMachineOnto->addModule(machineOnto);
+    prodMachineOnto->addModule(processingOnto);
     prodMachineOnto->addConcept("Productionmachine","Machine");
     prodMachineOnto->getConcept("Productionmachine")->addProperty("processing", "Processing");
 
-    boreholeOnto->import(mathOnto);
-    boreholeOnto->import(featureOnto);
+    boreholeOnto->addModule(mathOnto);
+    boreholeOnto->addModule(featureOnto);
     boreholeOnto->addConcept("Borehole", "Feature");
     boreholeOnto->getConcept("Borehole")->addProperty("radius", "float");
     boreholeOnto->getConcept("Borehole")->addProperty("direction", "Direction");
     boreholeOnto->getConcept("Borehole")->addProperty("position", "Position");
     boreholeOnto->getConcept("Borehole")->addProperty("depth", "float");
 
-    drillingOnto->import(boreholeOnto);
-    drillingOnto->import(processingOnto);
+    drillingOnto->addModule(boreholeOnto);
+    drillingOnto->addModule(processingOnto);
     drillingOnto->addConcept("Drilling", "Processing");
     drillingOnto->getConcept("Drilling")->addProperty("volume", "Box");
     drillingOnto->getConcept("Drilling")->addProperty("position", "Position");
@@ -121,27 +121,27 @@ void VROntology::setupLibrary() {
     drillingOnto->getConcept("Drilling")->addProperty("speed", "float");
     //drillingOnto->addRule("b(Drilling).state=set & inside(b.result.position,b.volume) & b.result.direction=b.direction ? b.state=done");
 
-    productOnto->import(featureOnto);
-    productOnto->import(objectOnto);
+    productOnto->addModule(featureOnto);
+    productOnto->addModule(objectOnto);
     productOnto->addConcept("Product", "Object");
     productOnto->getConcept("Product")->addProperty("feature", "Feature");
     productOnto->getConcept("Product")->addProperty("body", "Volume");
 
-    productionOnto->import(productOnto);
-    productionOnto->import(prodMachineOnto);
-    productionOnto->import(processOnto);
+    productionOnto->addModule(productOnto);
+    productionOnto->addModule(prodMachineOnto);
+    productionOnto->addModule(processOnto);
     productionOnto->addConcept("Production");
     productionOnto->getConcept("Production")->addProperty("machine", "Machine");
     productionOnto->getConcept("Production")->addProperty("job", "Product");
     productionOnto->getConcept("Production")->addProperty("process", "Process");
 
-    drillOnto->import(prodMachineOnto);
-    drillOnto->import(processingOnto);
-    drillOnto->import(drillingOnto);
+    drillOnto->addModule(prodMachineOnto);
+    drillOnto->addModule(processingOnto);
+    drillOnto->addModule(drillingOnto);
     drillOnto->addConcept("Drill", "Productionmachine");
 
-    manipOnto->import(objectOnto);
-    manipOnto->import(actionOnto);
+    manipOnto->addModule(objectOnto);
+    manipOnto->addModule(actionOnto);
     manipOnto->addConcept("Manipulation", "Action");
     manipOnto->addConcept("Grab", "Manipulation");
     manipOnto->addConcept("Translation", "Manipulation");
@@ -156,8 +156,8 @@ void VROntology::setupLibrary() {
     //manipOnto->addRule("g(Grab).state=set ? g.state=done");
     //manipOnto->addRule("r(Rotation).state=set ? r.state=done");
 
-    robotOnto->import(manipOnto);
-    robotOnto->import(machineOnto);
+    robotOnto->addModule(manipOnto);
+    robotOnto->addModule(machineOnto);
     robotOnto->addConcept("Robot", "Machine");
     robotOnto->getConcept("Robot")->addProperty("skill", "Manipulation");
 

@@ -88,8 +88,8 @@ class VRScript : public std::enable_shared_from_this<VRScript>, public VRName {
         PyObject* getPyObj(argPtr a);
 
         VRUpdateCbPtr cbfkt_sys;
-        VRFunction<VRDeviceWeakPtr>* cbfkt_dev;
-        VRFunction<string>* cbfkt_soc;
+        VRDeviceCbPtr cbfkt_dev;
+        VRMessageCbPtr cbfkt_soc;
 
         argPtr getArg(string name);
         trigPtr getTrig(string name);

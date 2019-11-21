@@ -375,7 +375,7 @@ void VRLeap::clearSignals() {
     newSignal( 1, 1)->add( addDrag( getBeacon(6) ) ); // 7
 
     // TODO: maybe use the drag and drop signals?
-    auto dndCb = new VRFunction<VRDeviceWeakPtr>("leapDnD", boost::bind(&VRLeap::leapDnD, this, _1));
+    dndCb = VRFunction<VRDeviceWeakPtr>::create("leapDnD", boost::bind(&VRLeap::leapDnD, this, _1));
     newSignal(0, 1)->add(dndCb);
     newSignal(1, 1)->add(dndCb);
     newSignal(0, 0)->add(dndCb);
