@@ -132,7 +132,6 @@ void VRWorldGenerator::init() {
         mat->setFragmentShader(dfp, name+"DFS", true);
         addMaterial(name, mat);
     };
-
     lodTree = VRLodTree::create(name, 5);
     addChild(lodTree);
 
@@ -199,7 +198,7 @@ void VRWorldGenerator::addOSMMap(string path, double subN, double subE, double s
 }
 
 void VRWorldGenerator::readOSMMap(string path){
-    osmMap = OSMMap::parseMap(path);
+    osmMap = OSMMap::loadMap(path);
 }
 
 void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {

@@ -768,7 +768,13 @@ OSMRelation::OSMRelation(xmlpp::Element* el, map<string, bool>& invalidIDs) : OS
 }
 
 OSMMap::OSMMap(string filepath) {
-    readFile(filepath);
+    auto getFileSize = [&](string filename) {
+        struct stat stat_buf;
+        int rc = stat(filename.c_str(), &stat_buf);
+        return rc == 0 ? stat_buf.st_size : -1;
+    };
+    if ( getFileSize(filepath) < 10000000 ) readFile(filepath); //10Mb
+    else readFileStreaming(filepath);
 }
 
 OSMMap::OSMMap() {
@@ -780,11 +786,6 @@ OSMMapPtr OSMMap::create() {
 
 OSMMapPtr OSMMap::create(string filepath) {
     return OSMMapPtr( new OSMMap(filepath) );
-}
-
-OSMMap::OSMMap(string filepath, bool stream) {
-    if (stream) readFileStreaming(filepath);
-    else readFile(filepath);
 }
 
 void OSMMap::clear() {
@@ -1075,7 +1076,6 @@ double OSMMap::getMemoryConsumption() {
 }
 
 OSMMapPtr OSMMap::loadMap(string filepath) { return OSMMapPtr( new OSMMap(filepath) ); }
-OSMMapPtr OSMMap::parseMap(string filepath) { return OSMMapPtr( new OSMMap(filepath, true) ); }
 
 map<string, OSMWayPtr> OSMMap::getWays() { return ways; }
 map<string, OSMNodePtr> OSMMap::getNodes() { return nodes; }

@@ -271,6 +271,13 @@ VRWorldGeneratorPtr VRPlanet::addSector( double north, double east, bool local )
     return generator;
 }
 
+OSMMapPtr VRPlanet::addOSMMap( string path ) {
+    if (osmMaps.count(path)) return osmMaps[path];
+    OSMMapPtr oMap = OSMMap::loadMap(path);
+    osmMaps[path] = oMap;
+    return oMap;
+}
+
 VRWorldGeneratorPtr VRPlanet::getSector( double north, double east ) {
     auto sid = toSID(north, east);
     if (sectors.count(sid)) return sectors[sid];

@@ -80,7 +80,6 @@ class OSMMap {
     public:
         OSMMap();
         OSMMap(string filepath);
-        OSMMap(string filepath, bool stream);
 
         static OSMMapPtr create();
         static OSMMapPtr create(string filepath);
