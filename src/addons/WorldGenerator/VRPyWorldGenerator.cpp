@@ -55,6 +55,7 @@ PyMethodDef VRPyWorldGenerator::methods[] = {
     {"getMaterial", PyWrap( WorldGenerator, getMaterial, "Get a material by name", VRMaterialPtr, string ) },
     {"getMiscArea", PyWrap( WorldGenerator, getMiscArea, "Get the Geometry of a misc area by Entity", VRGeometryPtr, VREntityPtr ) },
     {"addOSMMap", PyWrapOpt( WorldGenerator, addOSMMap, "Add an OpenStreetMap map", "-1|-1|-1", void, string, double, double, double ) },
+    {"setupLODTerrain", PyWrapOpt( WorldGenerator, setupLODTerrain, "Sets up LOD for terrain", "", void, string, string ) },
     {"readOSMMap", PyWrap( WorldGenerator, readOSMMap, "Read OpenStreetMap map without adding", void, string ) },
     {"reloadOSMMap", PyWrapOpt( WorldGenerator, reloadOSMMap, "Reload OSM data", "-1|-1|-1", void, double, double, double ) },
     {"clear", PyWrap( WorldGenerator, clear, "Clear everything", void ) },

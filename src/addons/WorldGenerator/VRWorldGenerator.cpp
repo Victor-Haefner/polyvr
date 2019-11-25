@@ -20,6 +20,8 @@
 #include "core/math/path.h"
 #include "core/math/triangulator.h"
 #include "addons/Semantics/Reasoning/VROntology.h"
+#include "core/scene/import/GIS/VRGDAL.h"
+#include "core/objects/material/VRTexture.h"
 
 #define GLSL(shader) #shader
 
@@ -70,7 +72,7 @@ void VRWorldGenerator::updatePhysics(Boundingbox box) {
 
 void VRWorldGenerator::setOntology(VROntologyPtr o) {
     ontology = o;
-    terrain->setWorld( ptr() );
+    for (auto terrain:terrains) terrain->setWorld( ptr() );
     roads->setWorld( ptr() );
     nature->setWorld( ptr() );
     district->setWorld( ptr() );
@@ -79,7 +81,7 @@ void VRWorldGenerator::setOntology(VROntologyPtr o) {
 void VRWorldGenerator::setPlanet(VRPlanetPtr p, Vec2d c) {
     coords = c;
     planet = p;
-    terrain->setWorld( ptr() );
+    for (auto terrain:terrains) terrain->setWorld( ptr() );
     roads->setWorld( ptr() );
     nature->setWorld( ptr() );
     district->setWorld( ptr() );
@@ -89,7 +91,7 @@ VROntologyPtr VRWorldGenerator::getOntology() { return ontology; }
 VRRoadNetworkPtr VRWorldGenerator::getRoadNetwork() { return roads; }
 VRTrafficSignsPtr VRWorldGenerator::getTrafficSigns() { return trafficSigns; }
 VRObjectManagerPtr VRWorldGenerator::getAssetManager() { return assets; }
-VRTerrainPtr VRWorldGenerator::getTerrain() { return terrain; }
+VRTerrainPtr VRWorldGenerator::getTerrain() { return terrains[0]; }
 VRNaturePtr VRWorldGenerator::getNature() { return nature; }
 VRPlanetPtr VRWorldGenerator::getPlanet() { return planet; }
 VRDistrictPtr VRWorldGenerator::getDistrict() { return district; }
@@ -141,9 +143,11 @@ void VRWorldGenerator::init() {
     addMat("phong", 0);
     addMat("phongTex", 2);
 
-    terrain = VRTerrain::create();
+    setupLOD(1);
+    auto terrain = VRTerrain::create();
+    terrains.push_back(terrain);
     terrain->setWorld( ptr() );
-    addChild(terrain);
+    lodLevels[0]->addChild(terrain);
 
     roads = VRRoadNetwork::create();
     roads->setWorld( ptr() );
@@ -182,9 +186,11 @@ void VRWorldGenerator::initMinimum() {
     addMat("phong", 0);
     addMat("phongTex", 2);
 
-    terrain = VRTerrain::create();
+    setupLOD(1);
+    auto terrain = VRTerrain::create();
+    terrains.push_back(terrain);
     terrain->setWorld( ptr() );
-    addChild(terrain);
+    lodLevels[1]->addChild(terrain);
 
     assets = VRObjectManager::create();
     addChild(assets);
@@ -199,6 +205,99 @@ void VRWorldGenerator::addOSMMap(string path, double subN, double subE, double s
 
 void VRWorldGenerator::readOSMMap(string path){
     osmMap = OSMMap::loadMap(path);
+}
+
+void VRWorldGenerator::addTerrainsToLOD(){
+    cout << "VRWorldGenerator::addTerrainsToLOD" << endl;
+    auto nLevel = lodLevels.size();
+    cout << lodLevels.size() << endl;
+    cout << terrains.size() << endl;
+    for (int i = 1; i < nLevel; i++) {
+        lodLevels[i]->addChild(terrains[i-1]);
+        cout << "  added CHild to lodLevel " << lodLevels[i]->getName() << " " << i << endl;
+    }
+}
+
+void VRWorldGenerator::setTerrainSize( Vec2d in ) { terrainSize = in; }
+
+void VRWorldGenerator::setupLODTerrain(string pathMap, string pathPaint) {
+    cout << "VRWorldGenerator::setupLODTerrain" << endl;
+    auto tex = loadGeoRasterData(pathMap);
+    auto texSizeN = tex->getSize();
+    cout << " texSizeN: " << texSizeN << endl;
+    int nLevel = 4;
+    setupLOD(nLevel);
+    ///TODO: angular resolution human eye: 1 arcminute, approximately 0.02° or 0.0003 radians,[1] which corresponds to 0.3 m at a 1 km distance., https://en.wikipedia.org/wiki/Naked_eye
+    auto resizeTexes = [&]() {
+        ///TODOS:
+        // - check if resized textures exist
+        // - resize heighmap, painmap
+        // - save new resized map at path
+    };
+
+    auto addTerrain = [&](double fac) {
+        auto terrain = VRTerrain::create("terrain"+toString(fac));
+        //terrain->setParameters (terrainSize, 2, 1);
+        terrain->setParameters (terrainSize, 2/fac, 1);
+        VRTexturePtr texSc;
+        texSc = tex;
+        if (fac != 1.0) {
+            //Vec3i nSize = texSize*fac;
+            //texSc->resize(nSize, Vec3i(0,0,0));
+        }
+        terrain->setMap( texSc, 3 );
+        terrain->paintHeights( pathPaint, pathPaint );
+        terrain->setWorld( ptr() );
+        terrain->setLODFactor(fac);
+        terrains.push_back(terrain);
+    };
+    addTerrain(1.0);
+    addTerrain(0.1);
+    addTerrain(0.05);
+    return;
+
+    for (int i = 1; i < lodLevels.size(); i++) {
+        auto fac = lodFactors[i];
+        addTerrain(fac);
+    }
+}
+
+vector<VRTerrainPtr> VRWorldGenerator::getTerrains(){
+    return terrains;
+}
+
+void VRWorldGenerator::setupLOD(int layers){
+    lodLevels.clear();
+    lodFactors.clear();
+    for (auto tt:terrains) tt->destroy();
+    terrains.clear();
+    if (lod) lod->destroy();
+    lod = VRLod::create("wgenLod");
+    auto addLod = [&](string name, double d, double fac) {
+        auto obj = VRObject::create(name);
+        lodLevels.push_back(obj);
+        lodFactors.push_back(fac);
+        lod->addChild(obj);
+        lod->addDistance(d);
+    };
+    auto anchor = VRObject::create("wgenAnchor");
+    lodLevels.push_back(anchor);
+    lodFactors.push_back(1.0);
+    lod->addChild(anchor);
+    ///TODO: make layer distance dependent of planet scale and radius
+    if ( layers == 1 ) { addLod( "wgenlvl0", 10000000.0, 1.0 ); }
+    if ( layers > 1 ) {
+        addLod( "wgenlvl0", 10.0, 1.0 );
+        addLod( "wgenlvl1", 5000.0, 0.5 );
+        addLod( "wgenlvl2", 20000.0, 0.05);
+    }
+    addChild(lod);
+}
+
+void VRWorldGenerator::setLODTerrainParameters(float heightScale) {
+    for (auto each : terrains){
+        each->setHeightScale(heightScale);
+    }
 }
 
 void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
@@ -239,9 +338,9 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
 
         auto addPnt = [&](Vec3d p, Vec3d d) {
             //d.normalize(); // TODO: necessary because of projectTangent, can be optimized!
-            if (terrain) {
-                p = terrain->elevatePoint(p,p[1]);
-                terrain->projectTangent(d, p);
+            if (terrains.size() == 1) {
+                p = terrains[0]->elevatePoint(p,p[1]);
+                terrains[0]->projectTangent(d, p);
             } else d.normalize();
             path->addPoint( Pose( p, d ) );
         };
@@ -276,9 +375,9 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
         }
 
         auto addPnt = [&](Vec3d p, Vec3d d) {
-            if (terrain) {
-                p = terrain->elevatePoint(p);
-                terrain->projectTangent(d, p);
+            if (terrains.size() == 1) {
+                p = terrains[0]->elevatePoint(p);
+                terrains[0]->projectTangent(d, p);
             }
             //d[1] = 0;
             d.normalize();
@@ -341,7 +440,7 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
         auto getString = [&](string tag, string def) { return way->hasTag(tag) ? way->tags[tag] : def; };
 
         auto addPathData = [&](VREntityPtr node, Vec3d pos, Vec3d norm) {
-            if (terrain) terrain->projectTangent(norm, pos);
+            if (terrains.size() == 1) terrains[0]->projectTangent(norm, pos);
             else norm.normalize();
             nodes.push_back(node);
             norms.push_back(norm);
@@ -444,7 +543,7 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
             auto p2 = wayToPath(w2, 8);
             auto p3 = embSlopePath(w1, 8);
             auto p4 = embSlopePath(w2, 8);
-            terrain->addEmbankment(rel->id, p1, p2, p3, p4);
+            terrains[0]->addEmbankment(rel->id, p1, p2, p3, p4);
         }
     }
 
@@ -530,7 +629,7 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
                     auto poly = wayToPolygon(way);
                     if (poly->size() == 0) continue;
                     for (auto p : poly->gridSplit(5)) {
-                        if (terrain) terrain->elevatePolygon(p, 0.03, false);
+                        if (terrains.size()) terrains[0]->elevatePolygon(p, 0.03, false);
                         Triangulator tri;
                         tri.add(*p);
                         patch->merge( tri.compute() );
@@ -556,7 +655,7 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
             auto poly = wayToPolygon(way);
             if (poly->size() == 0) continue;
             for (auto p : poly->gridSplit(5)) {
-                if (terrain) terrain->elevatePolygon(p, 0.03, false);
+                if (terrains.size() == 1) terrains[0]->elevatePolygon(p, 0.03, false);
                 Triangulator tri;
                 tri.add(*p);
                 patch->merge( tri.compute() );
@@ -591,7 +690,7 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
 
         Vec3d dir = getDir(node);
         bool hasDir = node->tags.count("direction");
-        if (terrain) pos = terrain->elevatePoint(pos);
+        if (terrains.size() == 1) pos = terrains[0]->elevatePoint(pos);
         bool addToOnto = false;
         bool added = false;
         for (auto tag : node->tags) {
@@ -722,7 +821,7 @@ void VRWorldGenerator::clear() {
     roads->clear();
     district->clear();
     assets->clear(false);
-    terrain->clear();
+    for (auto terrain:terrains) terrain->clear();
     nature->clear();
     miscAreaByEnt.clear();
 }

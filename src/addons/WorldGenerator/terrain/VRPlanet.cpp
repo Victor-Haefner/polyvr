@@ -31,6 +31,7 @@ double VRPlanet::toRad(double deg) { return pi*deg/180; }
 double VRPlanet::toDeg(double rad) { return 180*rad/pi; }
 
 void VRPlanet::localize(double north, double east) {
+    cout << "VRPlanet::localize" << endl;
     originCoords = Vec2d(north, east);
     auto p = fromLatLongPose(north, east);
     auto localOrigin = p->pos();
@@ -53,45 +54,53 @@ void VRPlanet::localize(double north, double east) {
 
         Vec2d plI = sector->getPlanetCoords() + Vec2d(1,1)*sectorSize*0.5;
         auto pSector = fromLatLongPose(plI[0], plI[1]);
-
         auto newP = p->multRight(pSector);
         sector->setPose(newP);
         auto newPinv = newP;
         newPinv->invert();
 
-        Vec2d size = sector->getTerrain()->getSize();
-        auto grid = sector->getTerrain()->getGrid();
-        Vec2i gridN = Vec2i(round(size[0]*1.0/grid-0.5), round(size[1]*1.0/grid-0.5));
-        if (gridN[0] < 1) gridN[0] = 1;
-        if (gridN[1] < 1) gridN[1] = 1;
 
-        vector<vector<vector<Vec3d>>> completeMesh;
+        //auto rootNode = VRObject::create("RootNode");
 
-        int t1 = 0;
-        int t2 = 0;
-        for (int i =0; i <= gridN[1]; i++) {
-            vector<vector<Vec3d>> row;
-            t1++;
-            t2 = 0;
-            for (int j =0; j <= gridN[0]; j++) {
-                t2++;
-                vector<Vec3d> posNorm;
-                //Vertex conversion from global to local patch coordinates
-                auto poseVertexGlobal = fromLatLongPose(sector->getPlanetCoords()[0]+sectorSize*(1.0-double(i)/double(gridN[1])), sector->getPlanetCoords()[1]+j*sectorSize/gridN[0]);
-                auto poseVertexOrigin = p->multRight(poseVertexGlobal);
-                auto poseVertexLocalInPatch = newPinv->multRight(poseVertexOrigin);
-                auto posVertexLocalInPatch = poseVertexLocalInPatch->pos();
-                auto upVertexLocalInPatch = poseVertexLocalInPatch->up();
-                posNorm.push_back(posVertexLocalInPatch);
-                posNorm.push_back(upVertexLocalInPatch);
-                row.push_back(posNorm);
+        for (auto terrain:sector->getTerrains()){
+            auto grid = terrain->getGrid();
+            auto fac = terrain->getLODFactor();
+            auto size = terrain->getSize();
+            terrain->setLocalized(true);
+            Vec2i gridN = Vec2i(round(size[0]*1.0/grid-0.5), round(size[1]*1.0/grid-0.5));
+            cout << " terrain " << grid << " " << size << endl;
+            if (gridN[0] < 1) gridN[0] = 1;
+            if (gridN[1] < 1) gridN[1] = 1;
+            vector<vector<vector<Vec3d>>> completeMesh;
+
+            int t1 = 0;
+            int t2 = 0;
+            for (int i =0; i <= gridN[1]; i++) {
+                vector<vector<Vec3d>> row;
+                t1++;
+                t2 = 0;
+                for (int j =0; j <= gridN[0]; j++) {
+                    t2++;
+                    vector<Vec3d> posNorm;
+                    //Vertex conversion from global to local patch coordinates
+                    auto poseVertexGlobal = fromLatLongPose(sector->getPlanetCoords()[0]+sectorSize*(1.0-double(i)/double(gridN[1])), sector->getPlanetCoords()[1]+j*sectorSize/gridN[0]);
+                    auto poseVertexOrigin = p->multRight(poseVertexGlobal);
+                    auto poseVertexLocalInPatch = newPinv->multRight(poseVertexOrigin);
+                    auto posVertexLocalInPatch = poseVertexLocalInPatch->pos();
+                    auto upVertexLocalInPatch = poseVertexLocalInPatch->up();
+                    posNorm.push_back(posVertexLocalInPatch);
+                    posNorm.push_back(upVertexLocalInPatch);
+                    row.push_back(posNorm);
+                }
+                completeMesh.push_back(row);
             }
-            completeMesh.push_back(row);
+            cout << "n,e ___: " << t1 << " -- " << t2 << " " << grid << " " << size << endl;
+            terrain->setMeshTer(completeMesh);
+            terrain->setupGeo();
+            //rootNode->addChild(terrain);
         }
-        //cout << "n,e ___: " << t1 << " -- " << t2 << endl;
-        sector->getTerrain()->setMeshTer(completeMesh);
-        sector->getTerrain()->setupGeo();
-
+        //sector->addChild(rootNode);
+        sector->addTerrainsToLOD();
         //cout << " SecNorth: " << fromLatLongNorth(plI[], plI[1]) << endl;
         //cout << "VRPlanet::localize p " << p << " pSector: " << pSector << " localOrigin: " << localOrigin << endl;
 
@@ -266,8 +275,11 @@ VRWorldGeneratorPtr VRPlanet::addSector( double north, double east, bool local )
     generator->setPose( fromLatLongPose(north+0.5*sectorSize, east+0.5*sectorSize) );
 
     Vec2d size = fromLatLongSize(north, east, north+sectorSize, east+sectorSize);
-    generator->getTerrain()->setLocalized(local);
-    generator->getTerrain()->setParameters( size, 2, 1);
+    for (auto ter:generator->getTerrains()) {
+        ter->setLocalized(local);
+        ter->setParameters( size, 2, 1);
+    }
+    generator->setTerrainSize( size );
     return generator;
 }
 

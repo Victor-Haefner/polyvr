@@ -147,6 +147,8 @@ void VRTerrain::setParameters( Vec2d s, double r, double h, float w, float aT, C
 }
 
 void VRTerrain::setLocalized(bool in){ localMesh = in; }
+void VRTerrain::setLODFactor(double in){ LODfac = in; }
+double VRTerrain::getLODFactor(){ return LODfac; }
 void VRTerrain::setMeshTer(vector<vector<vector<Vec3d>>> in){ meshTer = in; }
 void VRTerrain::setWaterLevel(float w) { mat->setShaderParameter("waterLevel", w); }
 void VRTerrain::setAtmosphericEffect(float thickness, Color3f color) { mat->setShaderParameter("atmoColor", color); mat->setShaderParameter("atmoThickness", thickness); }
@@ -194,6 +196,7 @@ void VRTerrain::setupGeo() {
     gridS[0] /= gridN[0];
     gridS[1] /= gridN[1];
 
+    if (!heigthsTex) { cout << "VRTerrain::setupGeo -- no heigthsTex loaded" << endl; return; }
     auto texSize = heigthsTex->getSize();
     Vec2d texel = Vec2d( 1.0/texSize[0], 1.0/texSize[1] );
 	Vec2d tcChunk = Vec2d((1.0-texel[0])/gridN[0], (1.0-texel[1])/gridN[1]);

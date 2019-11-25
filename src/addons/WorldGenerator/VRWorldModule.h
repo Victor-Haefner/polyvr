@@ -16,6 +16,7 @@ class VRWorldModule {
     protected:
         VRWorldGeneratorWeakPtr world;
         VRPlanetWeakPtr planet;
+        vector<VRTerrainPtr> terrains;
         VRTerrainWeakPtr terrain;
         VROntologyWeakPtr ontology;
         VRRoadNetworkWeakPtr roads;
