@@ -59,16 +59,13 @@ void VRPlanet::localize(double north, double east) {
         auto newPinv = newP;
         newPinv->invert();
 
-
-        //auto rootNode = VRObject::create("RootNode");
-
         for (auto terrain:sector->getTerrains()){
             auto grid = terrain->getGrid();
             auto fac = terrain->getLODFactor();
             auto size = terrain->getSize();
             terrain->setLocalized(true);
             Vec2i gridN = Vec2i(round(size[0]*1.0/grid-0.5), round(size[1]*1.0/grid-0.5));
-            cout << " terrain " << grid << " " << size << endl;
+            //cout << " terrain " << grid << " " << size << endl;
             if (gridN[0] < 1) gridN[0] = 1;
             if (gridN[1] < 1) gridN[1] = 1;
             vector<vector<vector<Vec3d>>> completeMesh;
@@ -97,9 +94,7 @@ void VRPlanet::localize(double north, double east) {
             cout << "n,e ___: " << t1 << " -- " << t2 << " " << grid << " " << size << endl;
             terrain->setMeshTer(completeMesh);
             terrain->setupGeo();
-            //rootNode->addChild(terrain);
         }
-        //sector->addChild(rootNode);
         sector->addTerrainsToLOD();
         //cout << " SecNorth: " << fromLatLongNorth(plI[], plI[1]) << endl;
         //cout << "VRPlanet::localize p " << p << " pSector: " << pSector << " localOrigin: " << localOrigin << endl;
