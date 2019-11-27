@@ -30,6 +30,7 @@ template<> bool toValue(PyObject* o, VRWorldGenerator::VRUserGenCbPtr& v) {
 }
 
 simpleVRPyType(WorldGenerator, New_ptr );
+simplePyType(OSMMap, New_ptr);
 simpleVRPyType(RoadBase, 0);
 simpleVRPyType(Road, New_ptr);
 simpleVRPyType(RoadIntersection, New_ptr);
@@ -54,6 +55,8 @@ PyMethodDef VRPyWorldGenerator::methods[] = {
     {"getMaterial", PyWrap( WorldGenerator, getMaterial, "Get a material by name", VRMaterialPtr, string ) },
     {"getMiscArea", PyWrap( WorldGenerator, getMiscArea, "Get the Geometry of a misc area by Entity", VRGeometryPtr, VREntityPtr ) },
     {"addOSMMap", PyWrapOpt( WorldGenerator, addOSMMap, "Add an OpenStreetMap map", "-1|-1|-1", void, string, double, double, double ) },
+    {"setupLODTerrain", PyWrapOpt( WorldGenerator, setupLODTerrain, "Sets up LOD for terrain", "|1.0", void, string, string, float ) },
+    {"readOSMMap", PyWrap( WorldGenerator, readOSMMap, "Read OpenStreetMap map without adding", void, string ) },
     {"reloadOSMMap", PyWrapOpt( WorldGenerator, reloadOSMMap, "Reload OSM data", "-1|-1|-1", void, double, double, double ) },
     {"clear", PyWrap( WorldGenerator, clear, "Clear everything", void ) },
     {"getStats", PyWrap( WorldGenerator, getStats, "Return stats as string", string ) },
@@ -61,6 +64,13 @@ PyMethodDef VRPyWorldGenerator::methods[] = {
     {"updatePhysics", PyWrap( WorldGenerator, updatePhysics, "Update physicalized region", void, Boundingbox ) },
     {"getPhysicsSystem", PyWrap( WorldGenerator, getPhysicsSystem, "Return dynamic collision manager", VRSpatialCollisionManagerPtr ) },
     {"setUserCallback", PyWrap( WorldGenerator, setUserCallback, "Setup user callback", void, VRWorldGenerator::VRUserGenCbPtr ) },
+    {NULL}  /* Sentinel */
+};
+
+PyMethodDef VRPyOSMMap::methods[] = {
+    {"readFile", PyWrap2( OSMMap, readFile, "readFile ", void, string ) },
+    {"filterFileStreaming", PyWrap2( OSMMap, filterFileStreaming, "filter OSM file with whitelist via stream - input path, output path, save temp file", void, string, vector<vector<string>> ) },
+    {"readFileStreaming", PyWrap2( OSMMap, readFileStreaming, "reads OSM file via stream, builds map ", int, string ) },
     {NULL}  /* Sentinel */
 };
 

@@ -142,6 +142,9 @@ string VRTrafficSigns::getOSMTag(Vec2i ID) {
 void VRTrafficSigns::loadTextures(){
     string path = "world/assets/roadsigns/";
     if (!exists(path)) path = "../world/assets/roadsigns/";
+    if (!exists(path)) { //TODO: create Emtpy Pixel
+        return;
+    }
     string texPath = path;
     megaTex = VRTextureMosaic::create();
     auto seedTex = VRTexture::create();

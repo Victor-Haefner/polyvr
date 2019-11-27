@@ -10,6 +10,7 @@ void VRWorldModule::setWorld(VRWorldGeneratorPtr w) {
     world = w;
     planet = w->getPlanet();
     terrain = w->getTerrain();
+    terrains = w->getTerrains();
     ontology = w->getOntology();
     roads = w->getRoadNetwork();
     lodTree = w->getLodTree();

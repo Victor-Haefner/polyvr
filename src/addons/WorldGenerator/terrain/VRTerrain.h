@@ -41,20 +41,25 @@ class VRTerrain : public VRGeometry, public VRWorldModule {
 
         Vec2d size = Vec2d(100,100);
         Vec2f texelSize = Vec2f(0.01,0.01); // shader parameter
+        //Vec3i texSize = Vec3d(1,1,1);
         float resolution = 1; // shader parameter
         float heightScale = 1; // shader parameter
         double grid = 64;
+        double LODfac = 1.0;
+        bool localMesh = true;
         VRTexturePtr heigthsTex;
         VRMaterialPtr mat;
         shared_ptr<vector<float>> physicsHeightBuffer;
 
         map<string, VREmbankmentPtr> embankments;
+        vector<Vec3d> edgePoints;
+        vector<vector<vector<Vec3d>>> meshTer;
 
         boost::recursive_mutex& mtx(); // physics
 
         void setHeightTexture(VRTexturePtr t);
         void updateTexelSize();
-        void setupGeo();
+        //void setupGeo();
         void setupMat();
 
         void btPhysicalize();
@@ -70,6 +75,8 @@ class VRTerrain : public VRGeometry, public VRWorldModule {
         Boundingbox getBoundingBox();
 
         void setParameters( Vec2d size, double resolution, double heightScale, float w = 0, float aT = 1e-4, Color3f aC = Color3f(0.7,0.9,1));
+        void setLocalized(bool in);
+        void setMeshTer(vector<vector<vector<Vec3d>>> in);
         void setWaterLevel(float w);
         void setAtmosphericEffect(float thickness, Color3f color);
         void setHeightScale(float s);
@@ -78,6 +85,10 @@ class VRTerrain : public VRGeometry, public VRWorldModule {
         VRTexturePtr getMap();
         Vec2f getTexelSize();
         Vec2d getSize();
+        double getGrid();
+        void setupGeo();
+        void setLODFactor(double in);
+        double getLODFactor();
 
         Vec2d toUVSpace(Vec2d uv);
         Vec2d fromUVSpace(Vec2d uv);

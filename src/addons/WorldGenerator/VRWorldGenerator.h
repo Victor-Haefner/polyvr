@@ -23,13 +23,25 @@ class VRWorldGenerator : public VRTransform {
         ptrRFctFwd( VRUserGen, OsmEntity, bool );
 
     private:
+        /*
+        struct lodLvl {
+            double scFac = 1.0;
+            int depth = 0;
+            VRObjectPtr obj;
+            vector<VRObjectPtr> children;
+        };*/
+
         VRLodTreePtr lodTree;
         VRSpatialCollisionManagerPtr collisionShape;
         VROntologyPtr ontology;
         VRPlanetPtr planet;
         VRObjectManagerPtr assets;
         VRNaturePtr nature;
-        VRTerrainPtr terrain;
+        VRLodPtr lod;
+        vector<VRObjectPtr> lodLevels;
+        vector<double> lodFactors;
+        vector<VRTerrainPtr> terrains;
+        Vec2d terrainSize = Vec2d(100,100);
         map<string, VRMaterialPtr> materials;
         map<VREntityPtr, VRGeometryPtr> miscAreaByEnt;
         VRRoadNetworkPtr roads;
@@ -41,12 +53,14 @@ class VRWorldGenerator : public VRTransform {
 
         void processOSMMap(double subN = -1, double subE = -1, double subSize = -1);
         void init();
+        void initMinimum();
 
     public:
         VRWorldGenerator();
         ~VRWorldGenerator();
 
         static VRWorldGeneratorPtr create();
+        static VRWorldGeneratorPtr create(int meta);
         VRWorldGeneratorPtr ptr();
 
         void setOntology(VROntologyPtr ontology);
@@ -54,9 +68,16 @@ class VRWorldGenerator : public VRTransform {
         void addAsset( string name, VRTransformPtr geo );
         void addMaterial( string name, VRMaterialPtr mat );
         void addOSMMap(string path, double subN = -1, double subE = -1, double subSize = -1);
+        void readOSMMap(string path);
         void reloadOSMMap(double subN = -1, double subE = -1, double subSize = -1);
         void clear();
 
+        //getLODTerrain();
+        void setupLOD(int layers);
+        void setupLODTerrain(string pathMap, string pathPaint = "", float scale = 1.0);
+        void addTerrainsToLOD();
+        void setLODTerrainParameters(float heightScale);
+        void setTerrainSize( Vec2d in );
         VRLodTreePtr getLodTree();
         VROntologyPtr getOntology();
         VRPlanetPtr getPlanet();
@@ -66,12 +87,14 @@ class VRWorldGenerator : public VRTransform {
         VRObjectManagerPtr getAssetManager();
         VRNaturePtr getNature();
         VRTerrainPtr getTerrain();
+        vector<VRTerrainPtr> getTerrains();
         VRDistrictPtr getDistrict();
         VRMaterialPtr getMaterial(string name);
         VRGeometryPtr getMiscArea(VREntityPtr mEnt);
 
         void setupPhysics();
         void updatePhysics(Boundingbox box);
+        void setupTerrain(string path);
         VRSpatialCollisionManagerPtr getPhysicsSystem();
 
         void setUserCallback(VRUserGenCbPtr cb);

@@ -9,10 +9,17 @@
 #include <vector>
 #include <OpenSG/OSGConfig.h>
 
+#include "core/objects/object/VRObjectT.h"
+
 namespace xmlpp { class Element; }
 using namespace std;
 
 OSG_BEGIN_NAMESPACE;
+
+class OSMSAXHandlerCP; //copy paste
+class OSMSAXHandlerBM; //build map
+
+class OSMSAXParser;
 
 struct OSMBase {
     string id;
@@ -68,11 +75,20 @@ class OSMMap {
         void readBounds(xmlpp::Element* element);
         void readRelation(xmlpp::Element* element, map<string, bool>& invalidIDs);
 
-        void readFile(string path);
+        int filterFileStreaming(string path, vector<pair<string, string>> whitelist);
 
     public:
+        OSMMap();
         OSMMap(string filepath);
+
+        static OSMMapPtr create();
+        static OSMMapPtr create(string filepath);
         static OSMMapPtr loadMap(string filepath);
+        static OSMMapPtr parseMap(string filepath);
+
+        void readFile(string path);
+        int readFileStreaming(string path);
+        void filterFileStreaming(string path, vector<vector<string>> wl);
 
         void clear();
         void reload();
