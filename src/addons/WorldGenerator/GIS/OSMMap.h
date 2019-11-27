@@ -41,6 +41,7 @@ struct OSMNode : OSMBase {
     OSMNode(string id, double lat, double lon);
     OSMNode(xmlpp::Element* e);
     string toString();
+    Vec2d getPosition();
 };
 
 struct OSMWay : OSMBase {
@@ -61,6 +62,8 @@ struct OSMRelation : OSMBase {
     OSMRelation(string id);
     OSMRelation(xmlpp::Element* e, map<string, bool>& invalidIDs);
     string toString();
+    vector<string> getWays();
+    vector<string> getNodes();
 };
 
 class OSMMap {

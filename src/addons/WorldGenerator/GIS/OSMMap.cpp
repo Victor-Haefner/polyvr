@@ -26,6 +26,7 @@ using namespace OSG;
 
 //template<> string typeName(const OSMMap& t) { return "OSMMap"; }
 template<> string typeName(const OSMMap& o) { return "OSMMap"; }
+template<> string typeName(const OSMRelation& o) { return "OSMRelation"; }
 template<> string typeName(const OSMWay& o) { return "OSMWay"; }
 template<> string typeName(const OSMNode& o) { return "OSMNode"; }
 template<> string typeName(const OSMBase& o) { return "OSMBase"; }
@@ -720,6 +721,8 @@ string OSMNode::toString() {
     return res;
 }
 
+Vec2d OSMNode::getPosition() { return Vec2d(lat, lon); }
+
 string OSMWay::toString() {
     string res = OSMBase::toString() + " nodes:";
     for (auto n : nodes) res += " " + n;
@@ -733,6 +736,9 @@ string OSMRelation::toString() {
     string res = OSMBase::toString();
     return res;
 }
+
+vector<string> OSMRelation::getNodes() { return nodes; }
+vector<string> OSMRelation::getWays() { return ways; }
 
 bool OSMBase::hasTag(const string& t) {
     return tags.count(t) > 0;

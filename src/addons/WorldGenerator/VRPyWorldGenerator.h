@@ -47,6 +47,10 @@ struct VRPyOSMMap : VRPyBaseT<OSG::OSMMap> {
     static PyMethodDef methods[];
 };
 
+struct VRPyOSMRelation : VRPyBaseT<OSG::OSMRelation> {
+    static PyMethodDef methods[];
+};
+
 struct VRPyOSMWay : VRPyBaseT<OSG::OSMWay> {
     static PyMethodDef methods[];
 };
