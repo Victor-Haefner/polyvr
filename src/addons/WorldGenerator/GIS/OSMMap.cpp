@@ -531,6 +531,7 @@ void OSMSAXHandlerBM::handleElement(){
     if ( currentType == 1 ) {
         OSMWayPtr way = OSMWayPtr( new OSMWay(currentID) );
         way->nodes = refsForWays;
+        way->tags = tagsInfo;
         ways[way->id] = way;
         wayCounter++;
     }
@@ -540,6 +541,7 @@ void OSMSAXHandlerBM::handleElement(){
         OSMRelationPtr rel = OSMRelationPtr( new OSMRelation(currentID) );
         rel->nodes = nodesForRelations;
         rel->ways = waysForRelations;
+        rel->tags = tagsInfo;
         relations[rel->id] = rel;
         relCounter++;
     }
