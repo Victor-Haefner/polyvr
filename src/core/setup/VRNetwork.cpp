@@ -80,7 +80,11 @@ VRNetworkSlavePtr VRNetworkNode::add(string name) {
 
 void VRNetworkNode::initSlaves() {
     bool hasAutostart = false;
-    for (auto s : getData()) if (s->getAutostart()) hasAutostart = true;
+    int startupDelay = 0;
+    for (auto s : getData()) {
+        if (s->getAutostart()) hasAutostart = true;
+        startupDelay = max(s->getStartupDelay(), startupDelay);
+    }
     if (hasAutostart) stopSlaves();
 
     for (auto s : getData()) {
@@ -89,7 +93,7 @@ void VRNetworkNode::initSlaves() {
             s->start();
         }
     }
-    if (hasAutostart) sleep(10);
+    if (hasAutostart) sleep(startupDelay);
 }
 
 void VRNetwork::stopSlaves() {
@@ -145,6 +149,7 @@ VRNetworkSlave::VRNetworkSlave(string name) {
     store("display", &display);
     store("autostart", &autostart);
     store("port", &port);
+    store("startupDelay", &startupDelay);
 }
 
 VRNetworkSlave::~VRNetworkSlave() {}
@@ -178,13 +183,14 @@ void VRNetworkSlave::stop() {
 
 void VRNetworkSlave::setNode(VRNetworkNodePtr n) { node = n; }
 
-void VRNetworkSlave::set(string ct, bool fs, bool as, bool au, string a, int p) {
+void VRNetworkSlave::set(string ct, bool fs, bool as, bool au, string a, int p, int d) {
     connection_type = ct;
     fullscreen = fs;
     active_stereo = as;
     autostart = au;
     display = a;
     port = p;
+    startupDelay = d;
     update();
 }
 
@@ -199,6 +205,7 @@ bool VRNetworkSlave::getFullscreen() { return fullscreen; }
 bool VRNetworkSlave::getActiveStereo() { return active_stereo; }
 bool VRNetworkSlave::getAutostart() { return autostart; }
 int VRNetworkSlave::getPort() { return port; }
+int VRNetworkSlave::getStartupDelay() { return startupDelay; }
 
 void VRNetworkSlave::setDisplay(string a) { display = a; update(); }
 void VRNetworkSlave::setConnectionType(string b) { connection_type = b; update(); }

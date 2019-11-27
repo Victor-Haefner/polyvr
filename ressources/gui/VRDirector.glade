@@ -1166,6 +1166,11 @@ cave allocated</property>
       <column type="gint"/>
     </columns>
   </object>
+  <object class="GtkImage" id="image16">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-add</property>
+  </object>
   <object class="GtkImage" id="image17">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
@@ -1215,11 +1220,6 @@ cave allocated</property>
     <property name="visible">True</property>
     <property name="can_focus">False</property>
     <property name="stock">gtk-remove</property>
-  </object>
-  <object class="GtkImage" id="image16">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="stock">gtk-add</property>
   </object>
   <object class="GtkImage" id="image2">
     <property name="visible">True</property>
@@ -1546,6 +1546,16 @@ cave allocated</property>
       <column type="gchararray"/>
     </columns>
   </object>
+  <object class="GtkListStore" id="prof_fkts">
+    <columns>
+      <!-- column-name fkt -->
+      <column type="gchararray"/>
+      <!-- column-name time -->
+      <column type="guint"/>
+      <!-- column-name color -->
+      <column type="gchararray"/>
+    </columns>
+  </object>
   <object class="GtkTreeStore" id="onto_list">
     <columns>
       <!-- column-name onto -->
@@ -1571,16 +1581,6 @@ cave allocated</property>
       <!-- column-name param -->
       <column type="gchararray"/>
       <!-- column-name value -->
-      <column type="gchararray"/>
-    </columns>
-  </object>
-  <object class="GtkListStore" id="prof_fkts">
-    <columns>
-      <!-- column-name fkt -->
-      <column type="gchararray"/>
-      <!-- column-name time -->
-      <column type="guint"/>
-      <!-- column-name color -->
       <column type="gchararray"/>
     </columns>
   </object>
@@ -2169,6 +2169,10 @@ cave allocated</property>
                   </packing>
                 </child>
               </object>
+              <packing>
+                <property name="x_options">GTK_FILL</property>
+                <property name="y_options">GTK_FILL</property>
+              </packing>
             </child>
             <child>
               <object class="GtkLabel" id="label13">
@@ -2661,6 +2665,12 @@ cave allocated</property>
                                     <child>
                                       <placeholder/>
                                     </child>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
                                   </object>
                                 </child>
                               </object>
@@ -2691,6 +2701,12 @@ cave allocated</property>
                                     <property name="visible">True</property>
                                     <property name="can_focus">False</property>
                                     <property name="n_columns">2</property>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
                                     <child>
                                       <placeholder/>
                                     </child>
@@ -6333,19 +6349,6 @@ cave allocated</property>
                                           </packing>
                                         </child>
                                         <child>
-                                          <object class="GtkFixed" id="fixed59">
-                                            <property name="visible">True</property>
-                                            <property name="can_focus">False</property>
-                                          </object>
-                                          <packing>
-                                            <property name="left_attach">2</property>
-                                            <property name="right_attach">3</property>
-                                            <property name="top_attach">4</property>
-                                            <property name="bottom_attach">5</property>
-                                            <property name="x_options">GTK_FILL</property>
-                                          </packing>
-                                        </child>
-                                        <child>
                                           <object class="GtkCheckButton" id="checkbutton42">
                                             <property name="label" translatable="yes">autostart</property>
                                             <property name="visible">True</property>
@@ -6478,6 +6481,7 @@ cave allocated</property>
                                             </child>
                                             <child>
                                               <object class="GtkEntry" id="entry22">
+                                                <property name="width_request">50</property>
                                                 <property name="visible">True</property>
                                                 <property name="can_focus">True</property>
                                                 <property name="invisible_char">•</property>
@@ -6498,6 +6502,50 @@ cave allocated</property>
                                             <property name="right_attach">3</property>
                                             <property name="top_attach">2</property>
                                             <property name="bottom_attach">3</property>
+                                            <property name="x_options">GTK_FILL</property>
+                                            <property name="y_options">GTK_FILL</property>
+                                          </packing>
+                                        </child>
+                                        <child>
+                                          <object class="GtkHBox" id="hbox22">
+                                            <property name="visible">True</property>
+                                            <property name="can_focus">False</property>
+                                            <child>
+                                              <object class="GtkLabel" id="label173">
+                                                <property name="visible">True</property>
+                                                <property name="can_focus">False</property>
+                                                <property name="label" translatable="yes">startup delay: </property>
+                                              </object>
+                                              <packing>
+                                                <property name="expand">False</property>
+                                                <property name="fill">True</property>
+                                                <property name="position">0</property>
+                                              </packing>
+                                            </child>
+                                            <child>
+                                              <object class="GtkEntry" id="entry37">
+                                                <property name="width_request">50</property>
+                                                <property name="visible">True</property>
+                                                <property name="can_focus">True</property>
+                                                <property name="invisible_char">•</property>
+                                                <property name="invisible_char_set">True</property>
+                                                <property name="primary_icon_activatable">False</property>
+                                                <property name="secondary_icon_activatable">False</property>
+                                                <property name="primary_icon_sensitive">True</property>
+                                                <property name="secondary_icon_sensitive">True</property>
+                                              </object>
+                                              <packing>
+                                                <property name="expand">False</property>
+                                                <property name="fill">True</property>
+                                                <property name="position">1</property>
+                                              </packing>
+                                            </child>
+                                          </object>
+                                          <packing>
+                                            <property name="left_attach">2</property>
+                                            <property name="right_attach">3</property>
+                                            <property name="top_attach">4</property>
+                                            <property name="bottom_attach">5</property>
                                             <property name="x_options">GTK_FILL</property>
                                             <property name="y_options">GTK_FILL</property>
                                           </packing>

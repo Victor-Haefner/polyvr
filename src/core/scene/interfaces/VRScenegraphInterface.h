@@ -30,6 +30,7 @@ class VRScenegraphInterface : public VRObject {
     private:
         int port = 5555;
         int clientID = 0;
+        bool handleTransparency = 0;
 
         VRSocketPtr socket;
         VRFunction<void*>* cb = 0;
@@ -61,6 +62,8 @@ class VRScenegraphInterface : public VRObject {
 
         VRObjectPtr getObject(string name);
         string getObjectID(VRObjectPtr obj);
+
+        void enableTransparency(bool b);
 
         void loadStream(string path);
 };

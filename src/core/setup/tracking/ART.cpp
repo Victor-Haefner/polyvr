@@ -167,7 +167,7 @@ void ART::updateT( weak_ptr<VRThread>  t) {
 
     if (dtrack->receive()) scan();
     else {
-        if(dtrack->timeout())       cout << "--- ART: timeout while waiting for udp data" << endl;
+        //if(dtrack->timeout())       cout << "--- ART: timeout while waiting for udp data" << endl;
         if(dtrack->udperror())      cout << "--- ART: error while receiving udp data" << endl;
         if(dtrack->parseerror())    cout << "--- ART: error while parsing udp data" << endl;
     }

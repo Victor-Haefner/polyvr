@@ -26,6 +26,9 @@ using namespace OSG;
 
 //template<> string typeName(const OSMMap& t) { return "OSMMap"; }
 template<> string typeName(const OSMMap& o) { return "OSMMap"; }
+template<> string typeName(const OSMWay& o) { return "OSMWay"; }
+template<> string typeName(const OSMNode& o) { return "OSMNode"; }
+template<> string typeName(const OSMBase& o) { return "OSMBase"; }
 
 OSG_BEGIN_NAMESPACE;
  class OSMSAXParser : public SAXParser {
@@ -706,7 +709,7 @@ OSMBase::OSMBase(xmlpp::Element* el) {
 }
 
 string OSMBase::toString() {
-    string res;
+    string res = "tags:";
     for (auto t : tags) res += " " + t.first + ":" + t.second;
     return res;
 }
@@ -723,6 +726,9 @@ string OSMWay::toString() {
     return res;
 }
 
+VRPolygon OSMWay::getPolygon() { return polygon; }
+vector<string> OSMWay::getNodes() { return nodes; }
+
 string OSMRelation::toString() {
     string res = OSMBase::toString();
     return res;
@@ -731,6 +737,8 @@ string OSMRelation::toString() {
 bool OSMBase::hasTag(const string& t) {
     return tags.count(t) > 0;
 }
+
+map<string, string> OSMBase::getTags() { return tags; }
 
 OSMNode::OSMNode(xmlpp::Element* el) : OSMBase(el) {
     toValue(el->get_attribute_value("lat"), lat);

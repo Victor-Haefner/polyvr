@@ -207,6 +207,8 @@ void VRWorldGenerator::readOSMMap(string path){
     osmMap = OSMMap::loadMap(path);
 }
 
+OSMMapPtr VRWorldGenerator::getOSMMap() { return osmMap; }
+
 void VRWorldGenerator::addTerrainsToLOD(){
     cout << "VRWorldGenerator::addTerrainsToLOD" << endl;
     auto nLevel = lodLevels.size();
@@ -304,6 +306,8 @@ void VRWorldGenerator::setLODTerrainParameters(float heightScale) {
 }
 
 void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
+    if (!ontology) { cout << "Warning: no ontology found! ..skipping processOSMMap" << endl; return; }
+
     struct Node {
         OSMNodePtr n;
         VREntityPtr e;

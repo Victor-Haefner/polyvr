@@ -41,7 +41,7 @@ void VRProcessLayout::setParameters(float h, float s) {
     height = h;
     layoutScale = s;
     toolSID->setArrowSize(layoutScale);
-    for (tSBD : toolSBDs) tSBD.second->setArrowSize(layoutScale);
+    for (auto tSBD : toolSBDs) tSBD.second->setArrowSize(layoutScale);
 }
 
 void VRProcessLayout::init() {
