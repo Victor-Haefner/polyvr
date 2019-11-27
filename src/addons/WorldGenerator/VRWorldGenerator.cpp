@@ -212,8 +212,9 @@ OSMMapPtr VRWorldGenerator::getOSMMap() { return osmMap; }
 void VRWorldGenerator::addTerrainsToLOD(){
     cout << "VRWorldGenerator::addTerrainsToLOD" << endl;
     auto nLevel = lodLevels.size();
-    for (int i = 1; i < nLevel; i++) {
-        lodLevels[i]->addChild(terrains[i-1]);
+    auto nTerrains = terrains.size();
+    for (int i = 0; i < nTerrains; i++) {
+        lodLevels[i]->addChild(terrains[i]);
         //cout << "  added Child to lodLevel " << lodLevels[i]->getName() << " " << i << endl;
     }
 }
@@ -260,7 +261,7 @@ void VRWorldGenerator::setupLODTerrain(string pathMap, string pathPaint, float s
     addTerrain(0.05);
     return;
 
-    for (int i = 1; i < lodLevels.size(); i++) {
+    for (int i = 0; i < lodLevels.size(); i++) {
         auto fac = lodFactors[i];
         addTerrain(fac);
     }
@@ -284,17 +285,17 @@ void VRWorldGenerator::setupLOD(int layers){
         lod->addChild(obj);
         lod->addDistance(d);
     };
-    auto anchor = VRObject::create("wgenAnchor");
-    lodLevels.push_back(anchor);
-    lodFactors.push_back(1.0);
-    lod->addChild(anchor);
     ///TODO: make layer distance dependent of planet scale and radius
     if ( layers == 1 ) { addLod( "wgenlvl0", 10000000.0, 1.0 ); }
     if ( layers > 1 ) {
-        addLod( "wgenlvl0", 10.0, 1.0 );
-        addLod( "wgenlvl1", 5000.0, 0.5 );
-        addLod( "wgenlvl2", 20000.0, 0.05);
+        addLod( "wgenlvl0", 5000.0, 1.0 );
+        addLod( "wgenlvl1", 15000.0, 0.5 );
+        addLod( "wgenlvl2", 30000.0, 0.05);
     }
+    auto anchor = VRObject::create("wgenAnchor");
+    lodLevels.push_back(anchor);
+    lodFactors.push_back(-1);
+    lod->addChild(anchor);
     addChild(lod);
 }
 
