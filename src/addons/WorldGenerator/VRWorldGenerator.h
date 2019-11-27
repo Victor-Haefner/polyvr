@@ -74,7 +74,7 @@ class VRWorldGenerator : public VRTransform {
 
         //getLODTerrain();
         void setupLOD(int layers);
-        void setupLODTerrain(string pathMap, string pathPaint = "");
+        void setupLODTerrain(string pathMap, string pathPaint = "", float scale = 1.0);
         void addTerrainsToLOD();
         void setLODTerrainParameters(float heightScale);
         void setTerrainSize( Vec2d in );

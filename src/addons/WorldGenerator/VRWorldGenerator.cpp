@@ -210,41 +210,43 @@ void VRWorldGenerator::readOSMMap(string path){
 void VRWorldGenerator::addTerrainsToLOD(){
     cout << "VRWorldGenerator::addTerrainsToLOD" << endl;
     auto nLevel = lodLevels.size();
-    cout << lodLevels.size() << endl;
-    cout << terrains.size() << endl;
     for (int i = 1; i < nLevel; i++) {
         lodLevels[i]->addChild(terrains[i-1]);
-        cout << "  added CHild to lodLevel " << lodLevels[i]->getName() << " " << i << endl;
+        //cout << "  added Child to lodLevel " << lodLevels[i]->getName() << " " << i << endl;
     }
 }
 
 void VRWorldGenerator::setTerrainSize( Vec2d in ) { terrainSize = in; }
 
-void VRWorldGenerator::setupLODTerrain(string pathMap, string pathPaint) {
+void VRWorldGenerator::setupLODTerrain(string pathMap, string pathPaint, float scale ) {
     cout << "VRWorldGenerator::setupLODTerrain" << endl;
     auto tex = loadGeoRasterData(pathMap);
-    auto texSizeN = tex->getSize();
-    cout << " texSizeN: " << texSizeN << endl;
+    Vec3i texSizeN = tex->getSize();
+    //cout << " texSizeN: " << texSizeN << endl;
     int nLevel = 4;
     setupLOD(nLevel);
     ///TODO: angular resolution human eye: 1 arcminute, approximately 0.02° or 0.0003 radians,[1] which corresponds to 0.3 m at a 1 km distance., https://en.wikipedia.org/wiki/Naked_eye
     auto resizeTexes = [&]() {
         ///TODOS:
         // - check if resized textures exist
-        // - resize heighmap, painmap
+        // - resize heightmap, paintmap
         // - save new resized map at path
     };
 
     auto addTerrain = [&](double fac) {
         auto terrain = VRTerrain::create("terrain"+toString(fac));
-        //terrain->setParameters (terrainSize, 2, 1);
+        fac*=0.8;
         terrain->setParameters (terrainSize, 2/fac, 1);
         VRTexturePtr texSc;
-        texSc = tex;
+        texSc = tex;/*
         if (fac != 1.0) {
-            //Vec3i nSize = texSize*fac;
-            //texSc->resize(nSize, Vec3i(0,0,0));
-        }
+            int a = int(float(texSizeN[0])*fac);
+            int b = int(float(texSizeN[1])*fac);
+            int c = 1;
+            Vec3i nSize = Vec3i(a,b,c);
+            texSc->resize(nSize, Vec3i(0,0,0));
+            cout << nSize << " " << texSc->getSize() << endl;
+        }*/
         terrain->setMap( texSc, 3 );
         terrain->paintHeights( pathPaint, pathPaint );
         terrain->setWorld( ptr() );
@@ -252,7 +254,7 @@ void VRWorldGenerator::setupLODTerrain(string pathMap, string pathPaint) {
         terrains.push_back(terrain);
     };
     addTerrain(1.0);
-    addTerrain(0.1);
+    addTerrain(0.5);
     addTerrain(0.05);
     return;
 
