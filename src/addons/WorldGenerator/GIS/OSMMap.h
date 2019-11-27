@@ -29,6 +29,7 @@ struct OSMBase {
     OSMBase(xmlpp::Element* e);
     virtual string toString();
 
+    map<string, string> getTags();
     bool hasTag(const string& t);
 };
 
@@ -49,6 +50,8 @@ struct OSMWay : OSMBase {
     OSMWay(string id);
     OSMWay(xmlpp::Element* e, map<string, bool>& invalidIDs);
     string toString();
+    VRPolygon getPolygon();
+    vector<string> getNodes();
 };
 
 struct OSMRelation : OSMBase {

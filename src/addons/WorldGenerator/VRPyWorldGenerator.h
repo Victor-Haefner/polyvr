@@ -15,10 +15,6 @@ struct VRPyWorldGenerator : VRPyBaseT<OSG::VRWorldGenerator> {
     static PyMethodDef methods[];
 };
 
-struct VRPyOSMMap : VRPyBaseT<OSG::OSMMap> {
-    static PyMethodDef methods[];
-};
-
 struct VRPyRoadBase : VRPyBaseT<OSG::VRRoadBase> {
     static PyMethodDef methods[];
 };
@@ -44,6 +40,22 @@ struct VRPyRoadNetwork : VRPyBaseT<OSG::VRRoadNetwork> {
 };
 
 struct VRPyDistrict : VRPyBaseT<OSG::VRDistrict> {
+    static PyMethodDef methods[];
+};
+
+struct VRPyOSMMap : VRPyBaseT<OSG::OSMMap> {
+    static PyMethodDef methods[];
+};
+
+struct VRPyOSMWay : VRPyBaseT<OSG::OSMWay> {
+    static PyMethodDef methods[];
+};
+
+struct VRPyOSMNode : VRPyBaseT<OSG::OSMNode> {
+    static PyMethodDef methods[];
+};
+
+struct VRPyOSMBase : VRPyBaseT<OSG::OSMBase> {
     static PyMethodDef methods[];
 };
 
