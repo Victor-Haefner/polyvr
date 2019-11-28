@@ -1161,6 +1161,65 @@ OSMWayPtr OSMMap::getWay(string id) { return ways[id]; }
 OSMRelationPtr OSMMap::getRelation(string id) { return relations[id]; }
 void OSMMap::reload() { clear(); readFile(filepath); }
 
+OSMMapPtr OSMMap::subArea(double latMin, double latMax, double lonMin, double lonMax) {
+    auto map = OSMMap::create();
+
+    map->bounds = Boundingbox::create();
+    map->bounds->update(Vec3d(lonMin,latMin,0));
+    map->bounds->update(Vec3d(lonMax,latMax,0));
+
+    vector<string> validNodes;
+    for (auto n : nodes) {
+        if (!n.second) continue;
+        bool isOutside = bool(n.second->lat < latMin || n.second->lat > latMax || n.second->lon < lonMin || n.second->lon > lonMax);
+        if (!isOutside) {
+            map->nodes[n.first] = n.second;
+            validNodes.push_back(n.first);
+        }
+    }
+
+    auto isValidNode = [&](string nID) {
+        return bool(find(validNodes.begin(), validNodes.end(), nID) != validNodes.end());
+    };
+
+    auto isValidWay = [&](OSMWayPtr w) {
+        if (!w) return false;
+        for (auto n : w->nodes) if (isValidNode(n)) return true;
+        return false;
+    };
+
+    auto isValidRelation = [&](OSMRelationPtr r) {
+        if (!r) return false;
+        for (auto n : r->nodes) if (isValidNode(n)) return true;
+        for (auto w : r->ways) if (isValidWay( getWay(w) )) return true;
+        return false;
+    };
+
+    for (auto w : ways) {
+        if (isValidWay(w.second)) {
+            auto w2 = OSMWayPtr(new OSMWay(w.first));
+            *w2 = *w.second;
+            w2->nodes.clear();
+            for (auto n : w.second->nodes) if(isValidNode(n)) w2->nodes.push_back(n);
+            map->ways[w.first] = w2;
+        }
+    }
+
+    for (auto r : relations) {
+        if (isValidRelation(r.second)) {
+            auto r2 = OSMRelationPtr(new OSMRelation(r.first));
+            *r2 = *r.second;
+            r2->nodes.clear();
+            for (auto n : r.second->nodes) if(isValidNode(n)) r2->nodes.push_back(n);
+            r2->ways.clear();
+            for (auto w : r.second->ways) if(isValidWay(getWay(w))) r2->ways.push_back(w);
+            map->relations[r.first] = r2;
+        }
+    }
+
+    return map;
+}
+
 vector<OSMWayPtr> OSMMap::splitWay(OSMWayPtr way, int segN) {
     vector<OSMWayPtr> res;
     int segL = way->nodes.size()/segN;

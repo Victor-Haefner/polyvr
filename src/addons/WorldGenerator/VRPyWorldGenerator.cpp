@@ -86,6 +86,7 @@ PyMethodDef VRPyOSMMap::methods[] = {
     {"getNodes", PyWrap2( OSMMap, getNodes, "Access OSM nodes", osmNodeMap ) },
     {"getWay", PyWrap2( OSMMap, getWay, "Access OSM way", OSMWayPtr, string ) },
     {"getNode", PyWrap2( OSMMap, getNode, "Access OSM node", OSMNodePtr, string ) },
+    {"subArea", PyWrap2( OSMMap, subArea, "Return map of subarea (latMin, latMax, lonMin, lonMax)", OSMMapPtr, double, double, double, double ) },
     {NULL}  /* Sentinel */
 };
 

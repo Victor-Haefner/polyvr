@@ -103,6 +103,7 @@ class OSMMap {
         int readFileStreaming(string path);
         void filterFileStreaming(string path, vector<vector<string>> wl);
 
+        OSMMapPtr subArea(double latMin, double latMax, double lonMin, double lonMax);
         void clear();
         void reload();
 
