@@ -78,6 +78,7 @@ typedef map<string, string> osmTagMap;
 
 PyMethodDef VRPyOSMMap::methods[] = {
     {"readFile", PyWrap2( OSMMap, readFile, "readFile ", void, string ) },
+    {"writeFile", PyWrap2( OSMMap, writeFile, "writeFile ", void, string ) },
     {"filterFileStreaming", PyWrap2( OSMMap, filterFileStreaming, "filter OSM file with whitelist via stream - input path, output path, save temp file", void, string, vector<vector<string>> ) },
     {"readFileStreaming", PyWrap2( OSMMap, readFileStreaming, "reads OSM file via stream, builds map ", int, string ) },
     {"getRelations", PyWrap2( OSMMap, getRelations, "Access OSM relations", osmRelationMap ) },

@@ -28,6 +28,7 @@ struct OSMBase {
     OSMBase(string id);
     OSMBase(xmlpp::Element* e);
     virtual string toString();
+    void writeTo(xmlpp::Element* e);
 
     map<string, string> getTags();
     bool hasTag(const string& t);
@@ -42,6 +43,7 @@ struct OSMNode : OSMBase {
     OSMNode(xmlpp::Element* e);
     string toString();
     Vec2d getPosition();
+    void writeTo(xmlpp::Element* e);
 };
 
 struct OSMWay : OSMBase {
@@ -53,6 +55,7 @@ struct OSMWay : OSMBase {
     string toString();
     VRPolygon getPolygon();
     vector<string> getNodes();
+    void writeTo(xmlpp::Element* e);
 };
 
 struct OSMRelation : OSMBase {
@@ -64,6 +67,7 @@ struct OSMRelation : OSMBase {
     string toString();
     vector<string> getWays();
     vector<string> getNodes();
+    void writeTo(xmlpp::Element* e);
 };
 
 class OSMMap {
@@ -76,10 +80,12 @@ class OSMMap {
         map<string, bool> invalidElements;
 
         bool isValid(xmlpp::Element* e);
+
+        void readBounds(xmlpp::Element* element);
         void readNode(xmlpp::Element* element);
         void readWay(xmlpp::Element* element, map<string, bool>& invalidIDs);
-        void readBounds(xmlpp::Element* element);
         void readRelation(xmlpp::Element* element, map<string, bool>& invalidIDs);
+        void writeBounds(xmlpp::Element* parent);
 
         int filterFileStreaming(string path, vector<pair<string, string>> whitelist);
 
@@ -93,6 +99,7 @@ class OSMMap {
         static OSMMapPtr parseMap(string filepath);
 
         void readFile(string path);
+        void writeFile(string path);
         int readFileStreaming(string path);
         void filterFileStreaming(string path, vector<vector<string>> wl);
 

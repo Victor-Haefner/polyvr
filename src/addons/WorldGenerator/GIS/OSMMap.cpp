@@ -783,6 +783,51 @@ OSMRelation::OSMRelation(xmlpp::Element* el, map<string, bool>& invalidIDs) : OS
     }
 }
 
+void OSMBase::writeTo(xmlpp::Element* e) {
+    e->set_attribute("id", ::toString(id));
+    e->set_attribute("visible", "true");
+    e->set_attribute("version", "1"); // TODO
+    e->set_attribute("timestamp", "2019-09-20T17:59:17Z"); // TODO
+    //e->set_attribute("changeset", ""); // TODO
+
+    for (auto tag : tags) {
+        auto et = e->add_child("tag");
+        et->set_attribute("k", tag.first);
+        et->set_attribute("v", tag.second);
+    }
+}
+
+void OSMNode::writeTo(xmlpp::Element* e) {
+    OSMBase::writeTo(e);
+    e->set_attribute("lat", ::toString(lat));
+    e->set_attribute("lon", ::toString(lon));
+}
+
+void OSMWay::writeTo(xmlpp::Element* e) {
+    OSMBase::writeTo(e);
+
+    for (auto node : nodes) {
+        auto em = e->add_child("nd");
+        em->set_attribute("ref", node);
+    }
+}
+
+void OSMRelation::writeTo(xmlpp::Element* e) {
+    OSMBase::writeTo(e);
+
+    for (auto node : nodes) {
+        auto em = e->add_child("member");
+        em->set_attribute("type", "node");
+        em->set_attribute("ref", node);
+    }
+
+    for (auto way : ways) {
+        auto em = e->add_child("member");
+        em->set_attribute("type", "way");
+        em->set_attribute("ref", way);
+    }
+}
+
 OSMMap::OSMMap(string filepath) {
     auto getFileSize = [&](string filename) {
         struct stat stat_buf;
@@ -866,6 +911,21 @@ void OSMMap::readFile(string path) {
     cout << "OSMMap::readFile path " << path << endl;
     cout << "  loaded " << ways.size() << " ways, " << nodes.size() << " nodes and " << relations.size() << " relations" << endl;
     cout << "  secs needed: " << t2 << endl;
+}
+
+void OSMMap::writeFile(string path) {
+    xmlpp::Document doc;
+
+    auto root = doc.create_root_node("osm");
+    root->set_attribute("version", "0.6");
+    root->set_attribute("upload", "false");
+    root->set_attribute("generator", "PolyVR");
+
+    writeBounds(root);
+    for (auto node : nodes) if (node.second) node.second->writeTo( root->add_child("node") );
+    for (auto way : ways) if (way.second) way.second->writeTo( root->add_child("way") );
+    for (auto rel : relations) if (rel.second) rel.second->writeTo( root->add_child("relation") );
+    doc.write_to_file_formatted(path);
 }
 
 int OSMMap::readFileStreaming(string path) {
@@ -1132,6 +1192,22 @@ vector<OSMWayPtr> OSMMap::splitWay(OSMWayPtr way, int segN) {
     return res;
 }
 
+void OSMMap::readBounds(xmlpp::Element* element) {
+    Vec3d min(toFloat( element->get_attribute_value("minlon") ), toFloat( element->get_attribute_value("minlat") ), 0 );
+    Vec3d max(toFloat( element->get_attribute_value("maxlon") ), toFloat( element->get_attribute_value("maxlat") ), 0 );
+    bounds->clear();
+    bounds->update(min);
+    bounds->update(max);
+}
+
+void OSMMap::writeBounds(xmlpp::Element* parent) {
+    auto element = parent->add_child("bounds");
+    element->set_attribute("minlon", ::toString( bounds->min()[0]) );
+    element->set_attribute("minlat", ::toString( bounds->min()[1]) );
+    element->set_attribute("maxlon", ::toString( bounds->max()[0]) );
+    element->set_attribute("maxlat", ::toString( bounds->max()[1]) );
+}
+
 void OSMMap::readNode(xmlpp::Element* element) {
     OSMNodePtr node = OSMNodePtr( new OSMNode(element) );
     nodes[node->id] = node;
@@ -1145,12 +1221,4 @@ void OSMMap::readWay(xmlpp::Element* element, map<string, bool>& invalidIDs) {
 void OSMMap::readRelation(xmlpp::Element* element, map<string, bool>& invalidIDs) {
     OSMRelationPtr rel = OSMRelationPtr( new OSMRelation(element, invalidIDs) );
     relations[rel->id] = rel;
-}
-
-void OSMMap::readBounds(xmlpp::Element* element) {
-    Vec3d min(toFloat( element->get_attribute_value("minlon") ), toFloat( element->get_attribute_value("minlat") ), 0 );
-    Vec3d max(toFloat( element->get_attribute_value("maxlon") ), toFloat( element->get_attribute_value("maxlat") ), 0 );
-    bounds->clear();
-    bounds->update(min);
-    bounds->update(max);
 }
