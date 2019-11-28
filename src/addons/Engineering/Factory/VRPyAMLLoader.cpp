@@ -3,9 +3,11 @@
 #include "core/scripting/VRPyTypeCaster.h"
 
 using namespace OSG;
-simpleVRPyType(AMLLoader, New_toZero);
+
+simpleVRPyType(AMLLoader, New_ptr);
 
 PyMethodDef VRPyAMLLoader::methods[] = {
-    {"load", PyWrap( AMLLoader, load, "Load AML file" , VRObjectPtr, string ) },
+    {"read", PyWrap( AMLLoader, read, "Read AML from file" , void, string ) },
+    {"write", PyWrap( AMLLoader, write, "Write AML to file" , void, string ) },
     {NULL}  /* Sentinel */
 };
