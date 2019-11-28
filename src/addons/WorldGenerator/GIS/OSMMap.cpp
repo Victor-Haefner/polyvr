@@ -26,6 +26,7 @@ using namespace OSG;
 
 //template<> string typeName(const OSMMap& t) { return "OSMMap"; }
 template<> string typeName(const OSMMap& o) { return "OSMMap"; }
+template<> string typeName(const OSMRelation& o) { return "OSMRelation"; }
 template<> string typeName(const OSMWay& o) { return "OSMWay"; }
 template<> string typeName(const OSMNode& o) { return "OSMNode"; }
 template<> string typeName(const OSMBase& o) { return "OSMBase"; }
@@ -724,6 +725,8 @@ string OSMNode::toString() {
     return res;
 }
 
+Vec2d OSMNode::getPosition() { return Vec2d(lat, lon); }
+
 string OSMWay::toString() {
     string res = OSMBase::toString() + " nodes:";
     for (auto n : nodes) res += " " + n;
@@ -737,6 +740,9 @@ string OSMRelation::toString() {
     string res = OSMBase::toString();
     return res;
 }
+
+vector<string> OSMRelation::getNodes() { return nodes; }
+vector<string> OSMRelation::getWays() { return ways; }
 
 bool OSMBase::hasTag(const string& t) {
     return tags.count(t) > 0;
@@ -778,6 +784,51 @@ OSMRelation::OSMRelation(xmlpp::Element* el, map<string, bool>& invalidIDs) : OS
             }
             cout << " OSMRelation::OSMRelation, unhandled element: " << e->get_name() << endl;
         }
+    }
+}
+
+void OSMBase::writeTo(xmlpp::Element* e) {
+    e->set_attribute("id", ::toString(id));
+    e->set_attribute("visible", "true");
+    e->set_attribute("version", "1"); // TODO
+    e->set_attribute("timestamp", "2019-09-20T17:59:17Z"); // TODO
+    //e->set_attribute("changeset", ""); // TODO
+
+    for (auto tag : tags) {
+        auto et = e->add_child("tag");
+        et->set_attribute("k", tag.first);
+        et->set_attribute("v", tag.second);
+    }
+}
+
+void OSMNode::writeTo(xmlpp::Element* e) {
+    OSMBase::writeTo(e);
+    e->set_attribute("lat", ::toString(lat));
+    e->set_attribute("lon", ::toString(lon));
+}
+
+void OSMWay::writeTo(xmlpp::Element* e) {
+    OSMBase::writeTo(e);
+
+    for (auto node : nodes) {
+        auto em = e->add_child("nd");
+        em->set_attribute("ref", node);
+    }
+}
+
+void OSMRelation::writeTo(xmlpp::Element* e) {
+    OSMBase::writeTo(e);
+
+    for (auto node : nodes) {
+        auto em = e->add_child("member");
+        em->set_attribute("type", "node");
+        em->set_attribute("ref", node);
+    }
+
+    for (auto way : ways) {
+        auto em = e->add_child("member");
+        em->set_attribute("type", "way");
+        em->set_attribute("ref", way);
     }
 }
 
@@ -864,6 +915,21 @@ void OSMMap::readFile(string path) {
     cout << "OSMMap::readFile path " << path << endl;
     cout << "  loaded " << ways.size() << " ways, " << nodes.size() << " nodes and " << relations.size() << " relations" << endl;
     cout << "  secs needed: " << t2 << endl;
+}
+
+void OSMMap::writeFile(string path) {
+    xmlpp::Document doc;
+
+    auto root = doc.create_root_node("osm");
+    root->set_attribute("version", "0.6");
+    root->set_attribute("upload", "false");
+    root->set_attribute("generator", "PolyVR");
+
+    writeBounds(root);
+    for (auto node : nodes) if (node.second) node.second->writeTo( root->add_child("node") );
+    for (auto way : ways) if (way.second) way.second->writeTo( root->add_child("way") );
+    for (auto rel : relations) if (rel.second) rel.second->writeTo( root->add_child("relation") );
+    doc.write_to_file_formatted(path);
 }
 
 int OSMMap::readFileStreaming(string path) {
@@ -1103,6 +1169,65 @@ OSMWayPtr OSMMap::getWay(string id) { return ways[id]; }
 OSMRelationPtr OSMMap::getRelation(string id) { return relations[id]; }
 void OSMMap::reload() { clear(); readFile(filepath); }
 
+OSMMapPtr OSMMap::subArea(double latMin, double latMax, double lonMin, double lonMax) {
+    auto map = OSMMap::create();
+
+    map->bounds = Boundingbox::create();
+    map->bounds->update(Vec3d(lonMin,latMin,0));
+    map->bounds->update(Vec3d(lonMax,latMax,0));
+
+    vector<string> validNodes;
+    for (auto n : nodes) {
+        if (!n.second) continue;
+        bool isOutside = bool(n.second->lat < latMin || n.second->lat > latMax || n.second->lon < lonMin || n.second->lon > lonMax);
+        if (!isOutside) {
+            map->nodes[n.first] = n.second;
+            validNodes.push_back(n.first);
+        }
+    }
+
+    auto isValidNode = [&](string nID) {
+        return bool(find(validNodes.begin(), validNodes.end(), nID) != validNodes.end());
+    };
+
+    auto isValidWay = [&](OSMWayPtr w) {
+        if (!w) return false;
+        for (auto n : w->nodes) if (isValidNode(n)) return true;
+        return false;
+    };
+
+    auto isValidRelation = [&](OSMRelationPtr r) {
+        if (!r) return false;
+        for (auto n : r->nodes) if (isValidNode(n)) return true;
+        for (auto w : r->ways) if (isValidWay( getWay(w) )) return true;
+        return false;
+    };
+
+    for (auto w : ways) {
+        if (isValidWay(w.second)) {
+            auto w2 = OSMWayPtr(new OSMWay(w.first));
+            *w2 = *w.second;
+            w2->nodes.clear();
+            for (auto n : w.second->nodes) if(isValidNode(n)) w2->nodes.push_back(n);
+            map->ways[w.first] = w2;
+        }
+    }
+
+    for (auto r : relations) {
+        if (isValidRelation(r.second)) {
+            auto r2 = OSMRelationPtr(new OSMRelation(r.first));
+            *r2 = *r.second;
+            r2->nodes.clear();
+            for (auto n : r.second->nodes) if(isValidNode(n)) r2->nodes.push_back(n);
+            r2->ways.clear();
+            for (auto w : r.second->ways) if(isValidWay(getWay(w))) r2->ways.push_back(w);
+            map->relations[r.first] = r2;
+        }
+    }
+
+    return map;
+}
+
 vector<OSMWayPtr> OSMMap::splitWay(OSMWayPtr way, int segN) {
     vector<OSMWayPtr> res;
     int segL = way->nodes.size()/segN;
@@ -1134,6 +1259,22 @@ vector<OSMWayPtr> OSMMap::splitWay(OSMWayPtr way, int segN) {
     return res;
 }
 
+void OSMMap::readBounds(xmlpp::Element* element) {
+    Vec3d min(toFloat( element->get_attribute_value("minlon") ), toFloat( element->get_attribute_value("minlat") ), 0 );
+    Vec3d max(toFloat( element->get_attribute_value("maxlon") ), toFloat( element->get_attribute_value("maxlat") ), 0 );
+    bounds->clear();
+    bounds->update(min);
+    bounds->update(max);
+}
+
+void OSMMap::writeBounds(xmlpp::Element* parent) {
+    auto element = parent->add_child("bounds");
+    element->set_attribute("minlon", ::toString( bounds->min()[0]) );
+    element->set_attribute("minlat", ::toString( bounds->min()[1]) );
+    element->set_attribute("maxlon", ::toString( bounds->max()[0]) );
+    element->set_attribute("maxlat", ::toString( bounds->max()[1]) );
+}
+
 void OSMMap::readNode(xmlpp::Element* element) {
     OSMNodePtr node = OSMNodePtr( new OSMNode(element) );
     nodes[node->id] = node;
@@ -1147,12 +1288,4 @@ void OSMMap::readWay(xmlpp::Element* element, map<string, bool>& invalidIDs) {
 void OSMMap::readRelation(xmlpp::Element* element, map<string, bool>& invalidIDs) {
     OSMRelationPtr rel = OSMRelationPtr( new OSMRelation(element, invalidIDs) );
     relations[rel->id] = rel;
-}
-
-void OSMMap::readBounds(xmlpp::Element* element) {
-    Vec3d min(toFloat( element->get_attribute_value("minlon") ), toFloat( element->get_attribute_value("minlat") ), 0 );
-    Vec3d max(toFloat( element->get_attribute_value("maxlon") ), toFloat( element->get_attribute_value("maxlat") ), 0 );
-    bounds->clear();
-    bounds->update(min);
-    bounds->update(max);
 }

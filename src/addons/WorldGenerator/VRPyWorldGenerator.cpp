@@ -39,6 +39,7 @@ simpleVRPyType(Asphalt, New_ptr);
 simpleVRPyType(TrafficSigns, New_ptr);
 
 simplePyType(OSMMap, New_ptr);
+simplePyType(OSMRelation, 0);
 simplePyType(OSMWay, 0);
 simplePyType(OSMNode, 0);
 simplePyType(OSMBase, 0);
@@ -70,18 +71,29 @@ PyMethodDef VRPyWorldGenerator::methods[] = {
     {NULL}  /* Sentinel */
 };
 
+typedef map<string, OSMRelationPtr> osmRelationMap;
 typedef map<string, OSMWayPtr> osmWayMap;
 typedef map<string, OSMNodePtr> osmNodeMap;
 typedef map<string, string> osmTagMap;
 
 PyMethodDef VRPyOSMMap::methods[] = {
     {"readFile", PyWrap2( OSMMap, readFile, "readFile ", void, string ) },
+    {"writeFile", PyWrap2( OSMMap, writeFile, "writeFile ", void, string ) },
     {"filterFileStreaming", PyWrap2( OSMMap, filterFileStreaming, "filter OSM file with whitelist via stream - input path, output path, save temp file", void, string, vector<vector<string>> ) },
     {"readFileStreaming", PyWrap2( OSMMap, readFileStreaming, "reads OSM file via stream, builds map ", int, string ) },
+    {"getRelations", PyWrap2( OSMMap, getRelations, "Access OSM relations", osmRelationMap ) },
     {"getWays", PyWrap2( OSMMap, getWays, "Access OSM ways", osmWayMap ) },
     {"getNodes", PyWrap2( OSMMap, getNodes, "Access OSM nodes", osmNodeMap ) },
     {"getWay", PyWrap2( OSMMap, getWay, "Access OSM way", OSMWayPtr, string ) },
     {"getNode", PyWrap2( OSMMap, getNode, "Access OSM node", OSMNodePtr, string ) },
+    {"subArea", PyWrap2( OSMMap, subArea, "Return map of subarea (latMin, latMax, lonMin, lonMax)", OSMMapPtr, double, double, double, double ) },
+    {NULL}  /* Sentinel */
+};
+
+PyMethodDef VRPyOSMRelation::methods[] = {
+    {"toString", PyWrap2( OSMRelation, toString, "As string", string ) },
+    {"getNodes", PyWrap2( OSMRelation, getNodes, "Access nodes", vector<string> ) },
+    {"getWays", PyWrap2( OSMRelation, getWays, "Access ways", vector<string> ) },
     {NULL}  /* Sentinel */
 };
 
@@ -94,6 +106,7 @@ PyMethodDef VRPyOSMWay::methods[] = {
 
 PyMethodDef VRPyOSMNode::methods[] = {
     {"toString", PyWrap2( OSMNode, toString, "As string", string ) },
+    {"getPosition", PyWrap2( OSMNode, getPosition, "Access position", Vec2d ) },
     {NULL}  /* Sentinel */
 };
 
