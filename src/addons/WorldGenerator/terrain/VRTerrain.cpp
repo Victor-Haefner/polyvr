@@ -513,7 +513,6 @@ double VRTerrain::getHeight(Vec2d p, bool useEmbankments) {
             }
         }
     }
-    if (h < 0) cout << " H " << h << " " << Vec4d(h00, h10, h01, h11) << " " << Vec2d(u,v) << " " << endl;
     return h;
 }
 
