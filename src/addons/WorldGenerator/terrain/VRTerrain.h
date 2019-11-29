@@ -100,6 +100,7 @@ class VRTerrain : public VRGeometry, public VRWorldModule {
         void projectOSM();
 
         double getHeight( Vec2d p, bool useEmbankments = true );
+        Vec3d getNormal( Vec3d p );
         Vec3d elevatePoint( Vec3d p, float offset = 0, bool useEmbankments = true );
         void elevatePose( PosePtr p, float offset = 0 );
         void elevatePolygon( VRPolygonPtr p, float offset = 0, bool useEmbankments = true );
