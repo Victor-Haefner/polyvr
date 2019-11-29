@@ -745,6 +745,7 @@ bool OSMBase::hasTag(const string& t) {
 }
 
 map<string, string> OSMBase::getTags() { return tags; }
+string OSMBase::getID() { return id; }
 
 OSMNode::OSMNode(xmlpp::Element* el) : OSMBase(el) {
     toValue(el->get_attribute_value("lat"), lat);
