@@ -262,6 +262,10 @@ Color4f VRTexture::getPixel(int i) {
     int pbN = getPixelByteN();
     auto f = img->getDataType();
     auto data = img->getData();
+    auto s = getSize();
+    size_t S = s[0]*s[1]*s[2];
+    bool valid = bool(i >= 0 && i < S);
+    if (!valid) return Color4f();
 
     if (N == 1) {
         float* f = (float*)data;

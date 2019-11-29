@@ -16,7 +16,7 @@ PyMethodDef VRPyTerrain::methods[] = {
     {"physicalize", PyWrap(Terrain, physicalize, "Physicalize terrain", void, bool ) },
     {"projectOSM", PyWrap(Terrain, projectOSM, "Load an OSM file and project surface types onto terrain, OSM path, N, E", void ) },
     {"paintHeights", PyWrap(Terrain, paintHeights, "Simple function to paint by heights using a texture", void, string, string ) },
-    {"getHeight", PyCastWrap(Terrain, getHeight, "Get height at point", float, Vec2d ) },
+    {"getHeight", PyWrapOpt(Terrain, getHeight, "Get height at point (local space)", "1", double, Vec2d, bool ) },
     {"probeHeight", PyWrap(Terrain, probeHeight, "Probe height at point, for debugging", vector<Vec3d>, Vec2d ) },
     {"elevatePoint", PyCastWrap(Terrain, elevatePoint, "Elevate a point", Vec3d, Vec3d, float ) },
     {"elevatePose", PyWrapOpt(Terrain, elevatePose, "Elevate a pose", "0", void, PosePtr, float ) },

@@ -477,7 +477,7 @@ bool VRTerrain::applyIntersectionAction(Action* action) {
     return true;
 }
 
-double VRTerrain::getHeight(const Vec2d& p, bool useEmbankments) {
+double VRTerrain::getHeight(Vec2d p, bool useEmbankments) {
     int W = heigthsTex->getSize()[0]-1;
     int H = heigthsTex->getSize()[1]-1;
 
@@ -513,6 +513,7 @@ double VRTerrain::getHeight(const Vec2d& p, bool useEmbankments) {
             }
         }
     }
+    if (h < 0) cout << " H " << h << " " << Vec4d(h00, h10, h01, h11) << " " << Vec2d(u,v) << " " << endl;
     return h;
 }
 

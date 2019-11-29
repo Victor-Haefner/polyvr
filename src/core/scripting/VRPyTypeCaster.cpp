@@ -65,6 +65,7 @@ template<> PyObject* VRPyTypeCaster::cast(const short& s) { return PyInt_FromLon
 template<> PyObject* VRPyTypeCaster::cast(const char& i) { return PyInt_FromLong(i); }
 template<> PyObject* VRPyTypeCaster::cast(const size_t& i) { return PyInt_FromLong(i); }
 template<> PyObject* VRPyTypeCaster::cast(const unsigned char& i) { return PyInt_FromLong(i); }
+template<> PyObject* VRPyTypeCaster::cast(const double& d) { return PyFloat_FromDouble(d); }
 template<> PyObject* VRPyTypeCaster::cast(const float& f) { return PyFloat_FromDouble(f); }
 template<> PyObject* VRPyTypeCaster::cast(const string& s) { return PyString_FromString(s.c_str()); }
 template<> PyObject* VRPyTypeCaster::cast(const bool& b) { if (b) Py_RETURN_TRUE; else Py_RETURN_FALSE; }
