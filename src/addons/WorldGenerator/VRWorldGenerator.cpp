@@ -17,6 +17,7 @@
 #include "core/scene/VRObjectManager.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRFunction.h"
+#include "core/utils/zipper/filesystem.h"
 #include "core/math/path.h"
 #include "core/math/triangulator.h"
 #include "addons/Semantics/Reasoning/VROntology.h"
@@ -143,7 +144,7 @@ void VRWorldGenerator::init() {
     addMat("phong", 0);
     addMat("phongTex", 2);
 
-    setupLOD(1);
+    setupLOD(4);
     auto terrain = VRTerrain::create();
     terrains.push_back(terrain);
     terrain->setWorld( ptr() );
@@ -151,11 +152,11 @@ void VRWorldGenerator::init() {
 
     roads = VRRoadNetwork::create();
     roads->setWorld( ptr() );
-    addChild(roads);
+    lodLevels[0]->addChild(roads);
 
     trafficSigns = VRTrafficSigns::create();
     trafficSigns->setWorld( ptr() );
-    addChild(trafficSigns);
+    lodLevels[0]->addChild(trafficSigns);
 
     assets = VRObjectManager::create();
     addChild(assets);
@@ -186,7 +187,7 @@ void VRWorldGenerator::initMinimum() {
     addMat("phong", 0);
     addMat("phongTex", 2);
 
-    setupLOD(1);
+    setupLOD(4);
     auto terrain = VRTerrain::create();
     terrains.push_back(terrain);
     terrain->setWorld( ptr() );
@@ -226,22 +227,56 @@ void VRWorldGenerator::setupLODTerrain(string pathMap, string pathPaint, float s
     auto tex = loadGeoRasterData(pathMap);
     Vec3i texSizeN = tex->getSize();
     //cout << " texSizeN: " << texSizeN << endl;
-    int nLevel = 4;
-    setupLOD(nLevel);
+    //int nLevel = 4;
+    //setupLOD(nLevel);
+    for (auto tt:terrains) tt->destroy();
+    terrains.clear();
     ///TODO: angular resolution human eye: 1 arcminute, approximately 0.02° or 0.0003 radians,[1] which corresponds to 0.3 m at a 1 km distance., https://en.wikipedia.org/wiki/Naked_eye
-    auto resizeTexes = [&]() {
-        ///TODOS:
-        // - check if resized textures exist
-        // - resize heightmap, paintmap
-        // - save new resized map at path
+
+    auto genPath = [&](string filepath, string in){
+        string typ = "";
+        string res = "";
+        for (int i = 0; i < 4; i++) typ = filepath.at(filepath.length()-1-i) + typ;
+        if (typ != ".hgt") return res+"newFile.hgt";
+        for (int i = 0; i < filepath.length()-4; i++) res += filepath.at(i);
+        return res + in + ".hgt";
     };
 
-    auto addTerrain = [&](double fac) {
+    VRTexturePtr tex1;
+    VRTexturePtr tex2;
+
+    string pathMap1 = genPath(pathMap, "_05");
+    string pathMap2 = genPath(pathMap, "_025");
+
+    cout << " newPathes: " << pathMap1 << endl;
+    cout << " newPathes: " << pathMap2 << endl;
+    if (FILESYSTEM::exist(pathMap1)) {
+        //inTex = loadGeoRasterData(pathMap1);
+    } else {
+        cout << " creating new downsized texture lvl1" << endl;
+        tex1 = loadGeoRasterData(pathMap);
+        tex1->downsize();
+        //tex1->write(path);
+    }
+    if (FILESYSTEM::exist(pathMap2)) {
+        //inTex = loadGeoRasterData(pathMap2);
+    } else {
+        cout << " creating new downsized texture lvl2" << endl;
+        tex2 = loadGeoRasterData(pathMap);
+        tex2->downsize();
+        tex2->downsize();
+        //inTex->write(path);
+    }
+
+    auto addTerrain = [&](double fac, int a) {
         auto terrain = VRTerrain::create("terrain"+toString(fac));
         fac*=0.8;
         terrain->setParameters (terrainSize, 2/fac, 1);
         VRTexturePtr texSc;
-        texSc = tex;/*
+        texSc = tex;
+        if (a == 1) { texSc = tex1; cout << " t1" << endl; }
+        if (a == 2) { texSc = tex2; cout << " t2" << endl; }
+        /*
         if (fac != 1.0) {
             int a = int(float(texSizeN[0])*fac);
             int b = int(float(texSizeN[1])*fac);
@@ -256,14 +291,14 @@ void VRWorldGenerator::setupLODTerrain(string pathMap, string pathPaint, float s
         terrain->setLODFactor(fac);
         terrains.push_back(terrain);
     };
-    addTerrain(1.0);
-    addTerrain(0.5);
-    addTerrain(0.05);
+    addTerrain(1.0, 0);
+    addTerrain(0.5, 1);
+    addTerrain(0.05, 2);
     return;
 
     for (int i = 0; i < lodLevels.size(); i++) {
         auto fac = lodFactors[i];
-        addTerrain(fac);
+        addTerrain(fac, i);
     }
 }
 
