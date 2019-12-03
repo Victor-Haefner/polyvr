@@ -274,8 +274,8 @@ void VRWorldGenerator::setupLODTerrain(string pathMap, string pathPaint, float s
         terrain->setParameters (terrainSize, 2/fac, 1);
         VRTexturePtr texSc;
         texSc = tex;
-        if (a == 1) { texSc = tex1; cout << " t1" << endl; }
-        if (a == 2) { texSc = tex2; cout << " t2" << endl; }
+        if (a == 1) { texSc = tex1; }
+        if (a == 2) { texSc = tex2; }
         /*
         if (fac != 1.0) {
             int a = int(float(texSizeN[0])*fac);
