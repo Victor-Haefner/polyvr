@@ -316,49 +316,41 @@ void VRTexture::downsize() {
     if (!img) return;
     int N = getChannels();
     Vec3i s = getSize();
+    s[0] = int(0.5*s[0]);
+    s[1] = int(0.5*s[1]);
+    s[2] = int(0.5*s[2]);
+    if (s[0] == 0) s[0] = 1;
+    if (s[1] == 0) s[1] = 1;
+    if (s[2] == 0) s[2] = 1;
+        //cout << " tex size " << s << endl;
+    nimg->set(img->getPixelFormat(), s[0], s[1], s[2],
+              img->getMipMapCount(), img->getFrameCount(), img->getFrameDelay(),
+              0, img->getDataType(), true, img->getSideCount());
+
     if ( N == 1 ) {
-        s[0] = int(0.5*s[0]);
-        s[1] = int(0.5*s[1]);
-        s[2] = int(0.5*s[2]);
-        if (s[0] == 0) s[0] = 1;
-        if (s[1] == 0) s[1] = 1;
-        if (s[2] == 0) {
-            s[2] = 1;
-            //cout << " tex size " << s << endl;
-            nimg->set(img->getPixelFormat(), s[0], s[1], s[2],
-                      img->getMipMapCount(), img->getFrameCount(), img->getFrameDelay(),
-                      0, img->getDataType(), true, img->getSideCount());
+        auto data = nimg->editData();
+        int N = getChannels();
+        int w = s[0];
+        int h = s[1];
 
-            auto data = nimg->editData();
-            int Bpp1 = getPixelByteSize();
-            int N = getChannels();
-            int w = s[0];
-            int h = s[1];
+        for (int z = 0; z < s[2]; z++) {
+            for (int y = 0; y < s[1]; y++) {
+                for (int x = 0; x < s[0]; x++) {
+                    Color4f p1 = getPixel(Vec3i(2*x,2*y,2*z));
+                    Color4f p2 = getPixel(Vec3i(2*x+1,2*y,2*z));
+                    Color4f p3 = getPixel(Vec3i(2*x,2*y+1,2*z));
+                    Color4f p4 = getPixel(Vec3i(2*x+1,2*y+1,2*z));
+                    Color4f p5 = getPixel(Vec3i(2*x,2*y,2*z+1));
+                    Color4f p6 = getPixel(Vec3i(2*x+1,2*y,2*z+1));
+                    Color4f p7 = getPixel(Vec3i(2*x,2*y+1,2*z+1));
+                    Color4f p8 = getPixel(Vec3i(2*x+1,2*y+1,2*z+1));
+                    Color4f newC = Color4f((p1+p2+p3+p4+p5+p6+p7+p8)*0.125);
 
-            if (N == 1) {
-            }
-            for (int z = 0; z < s[2]; z++) {
-                for (int y = 0; y < s[1]; y++) {
-                    for (int x = 0; x < s[0]; x++) {
-                        //Color4f p1 = getPixel(Vec3i(2*x,2*y,z));
-                        //Vec3i v0 = Vec3i(2*x,2*y,z);
-                        Color4f p1 = getPixel(Vec3i(2*x,2*y,z));
-                        //Vec3i v1 = Vec3i(2*x+1,2*y,z);
-                        Color4f p2 = getPixel(Vec3i(2*x+1,2*y,z));
-                        //Vec3i v2 = Vec3i(2*x,2*y+1,z);
-                        Color4f p3 = getPixel(Vec3i(2*x,2*y+1,z));
-                        //Vec3i v3 = Vec3i(2*x+1,2*y+1,z);
-                        Color4f p4 = getPixel(Vec3i(2*x+1,2*y+1,z));
-                        Color4f newC = Color4f((p1+p2+p3+p4)*0.25);
-                        //Color4f newC = Color4f(0,0,0,1);
-
-                        int i = x + y*w + z*w*h;
-                        if (i >= s[0]*s[1]*s[2]) cout << "AAAAAAAAAA " << i << "/" << s[0]*s[1]*s[2] << "   s: " << s << endl;
-                        else {
-                            float* f = (float*)data;
-                            f[i] = newC[0];
-                        }
-                        //if (x == 0 && y == 0) cout << newC << endl;
+                    int i = x + y*w + z*w*h;
+                    if (i >= s[0]*s[1]*s[2]) cout << "AAAAAAAAAA " << i << "/" << s[0]*s[1]*s[2] << "   s: " << s << endl;
+                    else {
+                        float* f = (float*)data;
+                        f[i] = newC[0];
                     }
                 }
             }

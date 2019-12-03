@@ -251,21 +251,23 @@ void VRWorldGenerator::setupLODTerrain(string pathMap, string pathPaint, float s
     cout << " newPathes: " << pathMap1 << endl;
     cout << " newPathes: " << pathMap2 << endl;
     if (FILESYSTEM::exist(pathMap1)) {
-        //inTex = loadGeoRasterData(pathMap1);
+        tex1 = VRTexture::create();
+        tex1->read(pathMap1);
     } else {
         cout << " creating new downsized texture lvl1" << endl;
         tex1 = loadGeoRasterData(pathMap);
         tex1->downsize();
-        //tex1->write(path);
+        //tex1->write(pathMap1);
     }
     if (FILESYSTEM::exist(pathMap2)) {
-        //inTex = loadGeoRasterData(pathMap2);
+        tex2 = VRTexture::create();
+        tex2->read(pathMap2);
     } else {
         cout << " creating new downsized texture lvl2" << endl;
         tex2 = loadGeoRasterData(pathMap);
         tex2->downsize();
         tex2->downsize();
-        //inTex->write(path);
+        //tex2->write(pathMap2);
     }
 
     auto addTerrain = [&](double fac, int a) {
