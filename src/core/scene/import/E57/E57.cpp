@@ -5,10 +5,12 @@
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/geometry/VRGeoData.h"
 #include "core/objects/material/VRMaterial.h"
+#include "core/objects/VRPointCloud.h"
 #include "core/objects/VRLod.h"
 #include "core/math/boundingbox.h"
 #include "core/math/Octree.h"
 #include "core/utils/VRProgress.h"
+#include "core/objects/VRPointCloud.h"
 
 using namespace e57;
 using namespace std;
@@ -78,15 +80,13 @@ VRTransformPtr OSG::fancyyE57import(string path) {
         unsigned int gotCount = 0;
         CompressedVectorReader reader = points.reader(destBuffers);
 
-        auto mat = VRMaterial::create("pcmat");
-        mat->setPointSize(10);
-        mat->setLit(0);
+        auto pointcloud = VRPointCloud::create("pointcloud");
+        pointcloud->setupMaterial(0, 10);
 
         cout << "fill octree" << endl;
         int Nd = 30;
         int Nc = 0;
         size_t Np = 0;
-        auto octree = Octree::create(10);
         do {
             gotCount = reader.read();
             if (Nc+gotCount<Nd) Nc += gotCount;
@@ -95,7 +95,7 @@ VRTransformPtr OSG::fancyyE57import(string path) {
                 if (Nc >= Nd) {
                     Vec3d p = Vec3d(x[j], y[j], z[j]);
                     Color3f col(r[j]/255.0, g[j]/255.0, b[j]/255.0);
-                    octree->add(p, new Color3f(col), -1, true, 1e5);
+                    pointcloud->getOctree()->add(p, new Color3f(col), -1, true, 1e5);
                     Nc = 0;
                     Np++;
                 }
@@ -103,70 +103,10 @@ VRTransformPtr OSG::fancyyE57import(string path) {
             progress->update( gotCount );
             //if (progress->get() > 0.2) break;
         } while(gotCount);
-        //system->addChild(octree->getVisualization());
 
-        cout << "\nsetup lods for " << double(Np)/1e6 << " M points" << endl;
-        for (auto leaf : octree->getAllLeafs()) {
-            Vec3d c = leaf->getCenter();
+        pointcloud->setupLODs();
+        system->addChild(pointcloud);
 
-            auto geo1 = VRGeometry::create("lvl1");
-            auto geo2 = VRGeometry::create("lvl2");
-            auto geo3 = VRGeometry::create("lvl3");
-            geo1->setFrom(c);
-            geo2->setFrom(c);
-            geo3->setFrom(c);
-
-            auto l = VRLod::create("chunk");
-            l->setCenter(c);
-            l->addDistance(4.5);
-            l->addDistance(7);
-            l->addChild( geo1 );
-            l->addChild( geo2 );
-            l->addChild( geo3 );
-
-            system->addChild(l);
-
-            VRGeoData chunk1;
-            VRGeoData chunk2;
-            VRGeoData chunk3;
-
-            if (leaf->dataSize() > 1e5) cout << "leafsize: " << leaf->dataSize() << endl;
-
-            for (int i = 0; i < leaf->dataSize(); i++) {
-                void* d = leaf->getData(i);
-                Vec3d p = leaf->getPoint(i);
-                Color3f col = *((Color3f*)d);
-                chunk1.pushVert(p - c, Vec3d(0,1,0), col);
-                chunk1.pushPoint();
-            }
-
-            for (int i = 0; i < leaf->dataSize(); i+=20) {
-                void* d = leaf->getData(i);
-                Vec3d p = leaf->getPoint(i);
-                Color3f col = *((Color3f*)d);
-                chunk2.pushVert(p - c, Vec3d(0,1,0), col);
-                chunk2.pushPoint();
-            }
-
-            for (int i = 0; i < leaf->dataSize(); i+=200) {
-                void* d = leaf->getData(i);
-                Vec3d p = leaf->getPoint(i);
-                Color3f col = *((Color3f*)d);
-                chunk3.pushVert(p - c, Vec3d(0,1,0), col);
-                chunk3.pushPoint();
-            }
-
-            if (chunk1.size() > 0) chunk1.apply( geo1 );
-            if (chunk2.size() > 0) chunk2.apply( geo2 );
-            if (chunk3.size() > 0) chunk3.apply( geo3 );
-            geo1->setMaterial(mat);
-            geo2->setMaterial(mat);
-            geo3->setMaterial(mat);
-
-            leaf->delContent<Color3f>();
-        }
-
-        //octree->delContent<Color3f>();
         reader.close();
     }
 

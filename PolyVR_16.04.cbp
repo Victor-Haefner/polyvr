@@ -745,6 +745,8 @@
 		<Unit filename="src/core/objects/VRLodTree.cpp" />
 		<Unit filename="src/core/objects/VRLodTree.h" />
 		<Unit filename="src/core/objects/VRObjectFwd.h" />
+		<Unit filename="src/core/objects/VRPointCloud.cpp" />
+		<Unit filename="src/core/objects/VRPointCloud.h" />
 		<Unit filename="src/core/objects/VRShadowEngine.cpp" />
 		<Unit filename="src/core/objects/VRShadowEngine.h" />
 		<Unit filename="src/core/objects/VRShadowEngineBase.cpp" />

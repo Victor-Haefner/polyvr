@@ -34,6 +34,7 @@ ptrFwd(VRStage);
 ptrFwd(VRSky);
 ptrFwd(VRRain);
 ptrFwd(VRRainCarWindshield);//temp
+ptrFwd(VRPointCloud);
 
 // other
 ptrFwd(VRBackground);
