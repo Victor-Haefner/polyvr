@@ -21,12 +21,7 @@ void OSG::loadE57(string path, VRTransformPtr res, map<string, string> importOpt
     cout << "load e57 pointcloud " << path << endl;
     res->setName(path);
 
-    bool lit = false;
-    int pointSize = 1;
     float downsampling = 1;
-
-    if (importOptions.count("lit")) lit = toInt(importOptions["lit"]);
-    if (importOptions.count("pointSize")) pointSize = toInt(importOptions["pointSize"]);
     if (importOptions.count("downsampling")) downsampling = toFloat(importOptions["downsampling"]);
 
     try {
@@ -86,15 +81,7 @@ void OSG::loadE57(string path, VRTransformPtr res, map<string, string> importOpt
             CompressedVectorReader reader = points.reader(destBuffers);
 
             auto pointcloud = VRPointCloud::create("pointcloud");
-            pointcloud->setupMaterial(lit, pointSize);
-
-            for (auto l : {"lod1", "lod2", "lod3", "lod4", "lod5"}) {
-                if (importOptions.count(l)) {
-                    Vec2d lod;
-                    toValue(importOptions[l], lod);
-                    pointcloud->addLevel(lod[0], lod[1]);
-                }
-            }
+            pointcloud->applySettings(importOptions);
 
             cout << "fill octree" << endl;
             int Nskip = round(1.0/downsampling);
@@ -133,19 +120,33 @@ void OSG::loadXYZ(string path, VRTransformPtr res, map<string, string> importOpt
     cout << "load xyz pointcloud " << path << endl;
     res->setName(path);
 
+    float downsampling = 1;
+    if (importOptions.count("downsampling")) downsampling = toFloat(importOptions["downsampling"]);
+
     try {
+        auto pointcloud = VRPointCloud::create("pointcloud");
+        pointcloud->applySettings(importOptions);
 
         VRGeoData data;
         vector<float> vertex = vector<float>(6);
         int i=0;
+        int Nskip = round(1.0/downsampling);
+        int Nskipped = 0;
 
         ifstream file(path);
         while (file >> vertex[i]) {
             i++;
             if (i >= 6) {
                 i = 0;
-                data.pushVert(Pnt3d(vertex[0], vertex[1], vertex[2]), Vec3d(0,1,0), Color3f(vertex[3]/255.0, vertex[4]/255.0, vertex[5]/255.0));
-                data.pushPoint();
+                Nskipped++;
+                if (Nskipped >= Nskip) {
+                    //data.pushVert(Pnt3d(vertex[0], vertex[1], vertex[2]), Vec3d(0,1,0), Color3f(vertex[3]/255.0, vertex[4]/255.0, vertex[5]/255.0));
+                    //data.pushPoint();
+                    Vec3d pos = Vec3d(vertex[0], vertex[1], vertex[2]);
+                    Color3f col(vertex[3]/255.0, vertex[4]/255.0, vertex[5]/255.0);
+                    pointcloud->getOctree()->add(pos, new Color3f(col), -1, true, 1e5);
+                    Nskipped = 0;
+                }
             }
         }
 
@@ -154,6 +155,9 @@ void OSG::loadXYZ(string path, VRTransformPtr res, map<string, string> importOpt
             auto geo = data.asGeometry("points");
             res->addChild(geo);
         }
+
+        pointcloud->setupLODs();
+        res->addChild(pointcloud);
     }
     catch (std::exception& ex) { cerr << "Got an std::exception, what=" << ex.what() << endl; return; }
     catch (...) { cerr << "Got an unknown exception" << endl; return; }

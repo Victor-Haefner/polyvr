@@ -18,6 +18,7 @@ class VRPointCloud : public VRTransform {
         ~VRPointCloud();
 
         static VRPointCloudPtr create(string name);
+        void applySettings(map<string, string> options);
 
         void addLevel(float distance, int downsampling);
         void setupLODs();

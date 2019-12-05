@@ -26,6 +26,22 @@ void VRPointCloud::setupMaterial(bool lit, int pointsize) {
 VRMaterialPtr VRPointCloud::getMaterial() { return mat; }
 OctreePtr VRPointCloud::getOctree() { return octree; }
 
+void VRPointCloud::applySettings(map<string, string> options) {
+    bool lit = 0;
+    int pointSize = 1;
+    if (options.count("lit")) lit = toInt(options["lit"]);
+    if (options.count("pointSize")) pointSize = toInt(options["pointSize"]);
+    setupMaterial(lit, pointSize);
+
+    for (auto l : {"lod1", "lod2", "lod3", "lod4", "lod5"}) {
+        if (options.count(l)) {
+            Vec2d lod;
+            toValue(options[l], lod);
+            addLevel(lod[0], lod[1]);
+        }
+    }
+}
+
 void VRPointCloud::addLevel(float distance, int downsampling) {
     levels++;
     downsamplingRate.push_back(downsampling);
