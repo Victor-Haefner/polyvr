@@ -4,6 +4,7 @@
 #include "core/objects/geometry/VRGeoData.h"
 #include "core/objects/VRLod.h"
 #include "core/math/Octree.h"
+#include "core/utils/toString.h"
 
 using namespace OSG;
 using namespace std;
@@ -26,63 +27,34 @@ VRMaterialPtr VRPointCloud::getMaterial() { return mat; }
 OctreePtr VRPointCloud::getOctree() { return octree; }
 
 void VRPointCloud::setupLODs() {
-    //cout << "\nsetup lods for " << double(Np)/1e6 << " M points" << endl;
+    int levels = 3;
+    vector<int> downsamplingRate = {1,20,200};
+    vector<float> lodDistances = {4.5,7};
+
     for (auto leaf : octree->getAllLeafs()) {
-        Vec3d c = leaf->getCenter();
+        Vec3d center = leaf->getCenter();
 
-        auto geo1 = VRGeometry::create("lvl1");
-        auto geo2 = VRGeometry::create("lvl2");
-        auto geo3 = VRGeometry::create("lvl3");
-        geo1->setFrom(c);
-        geo2->setFrom(c);
-        geo3->setFrom(c);
+        auto lod = VRLod::create("chunk");
+        lod->setCenter(center);
+        addChild(lod);
 
-        auto l = VRLod::create("chunk");
-        l->setCenter(c);
-        l->addDistance(4.5);
-        l->addDistance(7);
-        l->addChild( geo1 );
-        l->addChild( geo2 );
-        l->addChild( geo3 );
+        for (int lvl=0; lvl<levels; lvl++) {
+            auto geo = VRGeometry::create("lvl"+toString(lvl+1));
+            geo->setMaterial(mat);
+            geo->setFrom(center);
+            lod->addChild(geo);
+            if (lvl > 0) lod->addDistance(lodDistances[lvl-1]);
 
-        addChild(l);
-
-        VRGeoData chunk1;
-        VRGeoData chunk2;
-        VRGeoData chunk3;
-
-        if (leaf->dataSize() > 1e5) cout << "leafsize: " << leaf->dataSize() << endl;
-
-        for (int i = 0; i < leaf->dataSize(); i++) {
-            void* d = leaf->getData(i);
-            Vec3d p = leaf->getPoint(i);
-            Color3f col = *((Color3f*)d);
-            chunk1.pushVert(p - c, Vec3d(0,1,0), col);
-            chunk1.pushPoint();
+            VRGeoData chunk;
+            for (int i = 0; i < leaf->dataSize(); i+=downsamplingRate[lvl]) {
+                void* data = leaf->getData(i);
+                Vec3d pos = leaf->getPoint(i);
+                Color3f col = *((Color3f*)data);
+                chunk.pushVert(pos - center, Vec3d(0,1,0), col);
+                chunk.pushPoint();
+            }
+            if (chunk.size() > 0) chunk.apply( geo );
         }
-
-        for (int i = 0; i < leaf->dataSize(); i+=20) {
-            void* d = leaf->getData(i);
-            Vec3d p = leaf->getPoint(i);
-            Color3f col = *((Color3f*)d);
-            chunk2.pushVert(p - c, Vec3d(0,1,0), col);
-            chunk2.pushPoint();
-        }
-
-        for (int i = 0; i < leaf->dataSize(); i+=200) {
-            void* d = leaf->getData(i);
-            Vec3d p = leaf->getPoint(i);
-            Color3f col = *((Color3f*)d);
-            chunk3.pushVert(p - c, Vec3d(0,1,0), col);
-            chunk3.pushPoint();
-        }
-
-        if (chunk1.size() > 0) chunk1.apply( geo1 );
-        if (chunk2.size() > 0) chunk2.apply( geo2 );
-        if (chunk3.size() > 0) chunk3.apply( geo3 );
-        geo1->setMaterial(mat);
-        geo2->setMaterial(mat);
-        geo3->setMaterial(mat);
 
         leaf->delContent<Color3f>();
     }
