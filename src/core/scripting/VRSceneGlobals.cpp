@@ -34,11 +34,22 @@
 
 OSG_BEGIN_NAMESPACE;
 
+string loadGeometryDoc =
+"Loads a file and returns an object"
+"\n\n\tobj loadGeometry(path, cached = True, preset = 'OSG', threaded = 0, parent = None, options = None, useBinaryCache = False)"
+"\n\n\tpreset can be: 'OSG', 'PVR', 'COLLADA', 'SOLIDWORKS-VRML2'"
+"\n\n\toptions example for pointclouds:"
+"\n\t\topts = {}"
+"\n\t\topts['lit'] = 0"
+"\n\t\topts['downsampling'] = 0.1"
+"\n\t\topts['pointSize'] = 5"
+"\n\t\topts['lod1'] = [5, 20]"
+"\n\t\topts['lod2'] = [10, 200]"
+;
+
 PyMethodDef VRSceneGlobals::methods[] = {
 	{"exit", (PyCFunction)VRSceneGlobals::exit, METH_NOARGS, "Terminate application" },
-	{"loadGeometry", (PyCFunction)VRSceneGlobals::loadGeometry, METH_VARARGS|METH_KEYWORDS, "Loads a file and returns an object - obj loadGeometry(str path, bool cached = True, str preset = 'OSG', bool threaded = 0, str parent = None, str options = None, bool useBinaryCache = False)"
-                                                                                             "\n\tpreset can be: 'OSG', 'COLLADA', 'SOLIDWORKS-VRML2' or 'PVR'"
-                                                                                             "\n\toptions can be: 'explorer' (currently only for STEP files)" },
+	{"loadGeometry", (PyCFunction)VRSceneGlobals::loadGeometry, METH_VARARGS|METH_KEYWORDS, loadGeometryDoc.c_str() },
 	{"exportGeometry", (PyCFunction)VRSceneGlobals::exportGeometry, METH_VARARGS, "Export a part of the scene - exportGeometry( object, path )" },
 	{"getLoadGeometryProgress", (PyCFunction)VRSceneGlobals::getLoadGeometryProgress, METH_VARARGS, "Return the progress object for geometry loading - getLoadGeometryProgress()" },
 	{"stackCall", (PyCFunction)VRSceneGlobals::stackCall, METH_VARARGS, "Schedules a call to a python function - stackCall( function, delay, [args] )" },
