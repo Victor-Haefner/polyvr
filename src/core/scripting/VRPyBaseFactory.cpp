@@ -90,6 +90,21 @@ template<> bool toValue(PyObject* o, std::shared_ptr<VRFunction<void>>& v) {
     return 1;
 }
 
+template<> bool toValue(PyObject* o, map<string, string>& m) {
+    if (!PyDict_Check(o)) return 0;
+    PyObject* keys = PyDict_Keys(o);
+    for (int i=0; i<VRPyBase::pySize(keys); i++) {
+        string t, u;
+        PyObject* k = PyList_GetItem(keys, i);
+        PyObject* f = PyDict_GetItem(o, k);
+        if (!PyString_Check(f)) f = PyObject_Repr(f);
+        if (!toValue(k, t)) return 0;
+        if (!toValue(f, u)) return 0;
+        m[t] = u;
+    }
+    return 1;
+}
+
 
 
 

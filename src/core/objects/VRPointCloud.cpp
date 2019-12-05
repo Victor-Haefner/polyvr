@@ -26,11 +26,13 @@ void VRPointCloud::setupMaterial(bool lit, int pointsize) {
 VRMaterialPtr VRPointCloud::getMaterial() { return mat; }
 OctreePtr VRPointCloud::getOctree() { return octree; }
 
-void VRPointCloud::setupLODs() {
-    int levels = 3;
-    vector<int> downsamplingRate = {1,20,200};
-    vector<float> lodDistances = {4.5,7};
+void VRPointCloud::addLevel(float distance, int downsampling) {
+    levels++;
+    downsamplingRate.push_back(downsampling);
+    lodDistances.push_back(distance);
+}
 
+void VRPointCloud::setupLODs() {
     for (auto leaf : octree->getAllLeafs()) {
         Vec3d center = leaf->getCenter();
 

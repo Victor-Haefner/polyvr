@@ -102,7 +102,7 @@ void testSync(int t) {
 
 /// --------------------------------------------------
 
-VRTransformPtr VRImport::load(string path, VRObjectPtr parent, bool reload, string preset, bool thread, string options, bool useBinaryCache) {
+VRTransformPtr VRImport::load(string path, VRObjectPtr parent, bool reload, string preset, bool thread, map<string, string> options, bool useBinaryCache) {
     cout << "VRImport::load " << path << " " << preset << endl;
     if (ihr_flag) if (fileSize(path) > 3e7) return 0;
     setlocale(LC_ALL, "C");
@@ -134,7 +134,7 @@ VRTransformPtr VRImport::load(string path, VRObjectPtr parent, bool reload, stri
     }
 }
 
-VRImport::LoadJob::LoadJob(string p, string pr, VRTransformPtr r, VRProgressPtr pg, string opt, bool ubc) {
+VRImport::LoadJob::LoadJob(string p, string pr, VRTransformPtr r, VRProgressPtr pg, map<string, string> opt, bool ubc) {
     path = p;
     res = r;
     progress = pg;
@@ -157,23 +157,23 @@ void VRImport::LoadJob::load(VRThreadWeakPtr tw) {
         int Ncr0 = clist->getNumCreated();
         int Nch0 = clist->getNumChanged();
         cout << "load " << path << " ext: " << ext << " preset: " << preset << ", until now created: " << Ncr0 << ", changed: " << Nch0 << endl;
-        if (ext == ".e57") { loadE57(path, res); }
-        if (ext == ".xyz") { loadXYZ(path, res); }
-        if (ext == ".ply") { loadPly(path, res); }
+        if (ext == ".e57") { loadE57(path, res, options); return; }
+        if (ext == ".xyz") { loadXYZ(path, res, options); return; }
+        if (ext == ".ply") { loadPly(path, res); return; }
         //if (ext == ".step" || ext == ".stp" || ext == ".STEP" || ext == ".STP") { VRSTEP step; step.load(path, res, options); }
 #ifdef WITH_STEP
-        if (ext == ".step" || ext == ".stp" || ext == ".STEP" || ext == ".STP") { loadSTEPCascade(path, res); }
+        if (ext == ".step" || ext == ".stp" || ext == ".STEP" || ext == ".STP") { loadSTEPCascade(path, res); return; }
 #endif
         if (ext == ".wrl" && preset == "SOLIDWORKS-VRML2") { VRFactory f; if (f.loadVRML(path, progress, res, thread)); else preset = "OSG"; }
         if (ext == ".wrl" && preset == "PVR") { loadVRML(path, res, progress, thread); }
-        if (ext == ".vtk") { loadVtk(path, res); }
-        if (ext == ".shp") { loadSHP(path, res); }
-        if (ext == ".pdf") { loadPDF(path, res); }
-        if (ext == ".tiff" || ext == ".tif") { loadTIFF(path, res); }
-        if (ext == ".hgt") { loadTIFF(path, res); }
-        if (ext == ".dxf") { loadDXF(path, res); }
+        if (ext == ".vtk") { loadVtk(path, res); return; }
+        if (ext == ".shp") { loadSHP(path, res); return; }
+        if (ext == ".pdf") { loadPDF(path, res); return; }
+        if (ext == ".tiff" || ext == ".tif") { loadTIFF(path, res); return; }
+        if (ext == ".hgt") { loadTIFF(path, res); return; }
+        if (ext == ".dxf") { loadDXF(path, res); return; }
 #ifndef NO_IFC
-        if (ext == ".ifc") { loadIFC(path, res); }
+        if (ext == ".ifc") { loadIFC(path, res); return; }
 #endif
         if (preset == "OSG" || preset == "COLLADA") osgLoad(path, res);
         if (preset == "COLLADA") loadCollada(path, res);
