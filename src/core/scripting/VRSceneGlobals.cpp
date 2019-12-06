@@ -38,7 +38,7 @@ string loadGeometryDoc =
 "Loads a file and returns an object"
 "\n\n\tobj loadGeometry(path, cached = True, preset = 'OSG', threaded = 0, parent = None, options = None, useBinaryCache = False)"
 "\n\n\tpreset can be: 'OSG', 'PVR', 'COLLADA', 'SOLIDWORKS-VRML2'"
-"\n\n\toptions example for pointclouds:"
+"\n\n\toptions example for pointclouds (.e57, .xyz):"
 "\n\t\topts = {}"
 "\n\t\topts['lit'] = 0"
 "\n\t\topts['downsampling'] = 0.1"
@@ -189,7 +189,7 @@ PyObject* VRSceneGlobals::importScene(VRSceneGlobals* self, PyObject *args) {
 
 PyObject* VRSceneGlobals::loadGeometry(VRSceneGlobals* self, PyObject *args, PyObject *kwargs) {
     const char* path = "";
-    int ignoreCache = 0;
+    int cached = 0;
     int threaded = 0;
     int useBinaryCache = 0;
     const char* preset = "OSG";
@@ -198,13 +198,13 @@ PyObject* VRSceneGlobals::loadGeometry(VRSceneGlobals* self, PyObject *args, PyO
 
     const char* kwlist[] = {"path", "cached", "preset", "threaded", "parent", "options", "useBinaryCache", NULL};
     string format = "s|isisOi:loadGeometry";
-    if (! PyArg_ParseTupleAndKeywords(args, kwargs, format.c_str(), (char**)kwlist, &path, &ignoreCache, &preset, &threaded, &parent, &opt, &useBinaryCache)) return NULL;
+    if (! PyArg_ParseTupleAndKeywords(args, kwargs, format.c_str(), (char**)kwlist, &path, &cached, &preset, &threaded, &parent, &opt, &useBinaryCache)) return NULL;
 
     VRObjectPtr prnt = VRScene::getCurrent()->getRoot()->find( parent );
     map<string, string> options;
     if (opt) toValue(opt, options);
 
-    VRTransformPtr obj = VRImport::get()->load( path, prnt, !ignoreCache, preset, threaded, options, useBinaryCache);
+    VRTransformPtr obj = VRImport::get()->load( path, prnt, cached, preset, threaded, options, useBinaryCache);
     if (obj == 0) {
         VRGuiManager::get()->getConsole("Errors")->write( "Warning: " + string(path) + " not loaded!\n");
         Py_RETURN_NONE;

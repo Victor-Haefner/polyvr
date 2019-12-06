@@ -102,14 +102,13 @@ void testSync(int t) {
 
 /// --------------------------------------------------
 
-VRTransformPtr VRImport::load(string path, VRObjectPtr parent, bool reload, string preset, bool thread, map<string, string> options, bool useBinaryCache) {
+VRTransformPtr VRImport::load(string path, VRObjectPtr parent, bool useCache, string preset, bool thread, map<string, string> options, bool useBinaryCache) {
     cout << "VRImport::load " << path << " " << preset << endl;
     if (ihr_flag) if (fileSize(path) > 3e7) return 0;
     setlocale(LC_ALL, "C");
 
     // check cache
-    reload = reload ? true : (cache.count(path) == 0);
-    if (!reload) {
+    if (useCache && cache.count(path)) {
         auto res = cache[path].retrieve(parent);
         cout << "load " << path << " : " << res << " from cache\n";
         return res;
@@ -120,26 +119,31 @@ VRTransformPtr VRImport::load(string path, VRObjectPtr parent, bool reload, stri
 
     VRTransformPtr res = VRTransform::create("proxy");
     if (!thread) {
-        LoadJob job(path, preset, res, progress, options, useBinaryCache);
+        LoadJob job(path, preset, res, progress, options, useCache, useBinaryCache);
         job.load(VRThreadWeakPtr());
-        return cache[path].retrieve(parent);
+        if (useCache) return cache[path].retrieve(parent);
+        else return res;
     } else {
-        fillCache(path, res);
-        auto r = cache[path].retrieve(parent);
-        auto job = new LoadJob(path, preset, r, progress, options, useBinaryCache); // TODO: fix memory leak!
+        if (useCache) {
+            fillCache(path, res);
+            res = cache[path].retrieve(parent);
+        }
+
+        auto job = new LoadJob(path, preset, res, progress, options, useCache, useBinaryCache); // TODO: fix memory leak!
         job->loadCb = VRFunction< VRThreadWeakPtr >::create( "geo load", boost::bind(&LoadJob::load, job, _1) );
         auto t = VRScene::getCurrent()->initThread(job->loadCb, "geo load thread", false, 1);
         //testSync(t);
-        return r;
+        return res;
     }
 }
 
-VRImport::LoadJob::LoadJob(string p, string pr, VRTransformPtr r, VRProgressPtr pg, map<string, string> opt, bool ubc) {
+VRImport::LoadJob::LoadJob(string p, string pr, VRTransformPtr r, VRProgressPtr pg, map<string, string> opt, bool uc, bool ubc) {
     path = p;
     res = r;
     progress = pg;
     preset = pr;
     options = opt;
+    useCache = uc;
     useBinaryCache = ubc;
 }
 
@@ -188,7 +192,7 @@ void VRImport::LoadJob::load(VRThreadWeakPtr tw) {
         loadedFromCache = true;
     } else loadSwitch();
 
-    if (!t) VRImport::get()->fillCache(path, res);
+    if (!t && useCache) VRImport::get()->fillCache(path, res);
     if (t) t->syncToMain();
 
     if (useBinaryCache && !loadedFromCache && res->getChild(0)) {

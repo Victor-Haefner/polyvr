@@ -19,12 +19,13 @@ class VRImport {
             string path;
             string preset;
             map<string, string> options;
+            bool useCache = false;
             bool useBinaryCache = false;
             VRProgressPtr progress;
             VRTransformPtr res;
             VRThreadCbPtr loadCb;
 
-            LoadJob(string p, string preset, VRTransformPtr r, VRProgressPtr pg, map<string, string> opt, bool useBinaryCache);
+            LoadJob(string p, string preset, VRTransformPtr r, VRProgressPtr pg, map<string, string> opt, bool useCache, bool useBinaryCache);
 
             void load(VRThreadWeakPtr t);
         };
@@ -57,7 +58,7 @@ class VRImport {
     public:
         static VRImport* get();
 
-        VRTransformPtr load(string path, VRObjectPtr parent = 0, bool reload = false, string preset = "OSG", bool thread = false, map<string, string> options = map<string, string>(), bool useBinaryCache = false);
+        VRTransformPtr load(string path, VRObjectPtr parent = 0, bool useCache = true, string preset = "OSG", bool thread = false, map<string, string> options = map<string, string>(), bool useBinaryCache = false);
         VRGeometryPtr loadGeometry(string path, string name, string preset = "OSG", bool thread = false);
 
         VRProgressPtr getProgressObject();
