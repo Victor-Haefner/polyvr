@@ -1001,6 +1001,8 @@
 		<Unit filename="src/core/scripting/VRPyPath.h" />
 		<Unit filename="src/core/scripting/VRPyPathtool.cpp" />
 		<Unit filename="src/core/scripting/VRPyPathtool.h" />
+		<Unit filename="src/core/scripting/VRPyPointCloud.cpp" />
+		<Unit filename="src/core/scripting/VRPyPointCloud.h" />
 		<Unit filename="src/core/scripting/VRPyPolygon.cpp" />
 		<Unit filename="src/core/scripting/VRPyPolygon.h" />
 		<Unit filename="src/core/scripting/VRPyPolygonSelection.cpp" />

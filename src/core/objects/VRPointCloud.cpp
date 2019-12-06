@@ -9,9 +9,12 @@
 using namespace OSG;
 using namespace std;
 
+template<> string typeName(const VRPointCloud& t) { return "PointCloud"; }
+
 VRPointCloud::VRPointCloud(string name) : VRTransform(name) {
     octree = Octree::create(10);
     mat = VRMaterial::create("pcmat");
+    type = "PointCloud";
 }
 
 VRPointCloud::~VRPointCloud() {}

@@ -15,6 +15,7 @@
 #include "VRPyTextureRenderer.h"
 #include "VRPyWaypoint.h"
 #include "VRPyGeoPrimitive.h"
+#include "VRPyPointCloud.h"
 #include "VRPyJointTool.h"
 #include "VRPyBaseT.h"
 #include "VRPyMath.h"
@@ -52,6 +53,7 @@ template<> PyObject* VRPyTypeCaster::cast(const VRObjectPtr& obj) {
     else if (type == "JointTool") return VRPyJointTool::fromSharedPtr( static_pointer_cast<VRJointTool>(obj) );
     else if (type == "Handle") return VRPyBaseT<VRGeometry>::fromSharedPtr( static_pointer_cast<VRGeometry>(obj) ); // TODO
     else if (type == "GeoPrimitive") return VRPyGeoPrimitive::fromSharedPtr( static_pointer_cast<VRGeoPrimitive>(obj) );
+    else if (type == "PointCloud") return VRPyPointCloud::fromSharedPtr( static_pointer_cast<VRPointCloud>(obj) );
     cout << "\nERROR in VRPyTypeCaster::cast object: " << type << " not handled!\n";
 
     return VRPyObject::fromSharedPtr(obj);

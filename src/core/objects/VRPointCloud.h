@@ -14,10 +14,10 @@ class VRPointCloud : public VRTransform {
         vector<float> lodDistances;
 
     public:
-        VRPointCloud(string name);
+        VRPointCloud(string name = "pointcloud");
         ~VRPointCloud();
 
-        static VRPointCloudPtr create(string name);
+        static VRPointCloudPtr create(string name = "pointcloud");
         void applySettings(map<string, string> options);
 
         void addLevel(float distance, int downsampling);

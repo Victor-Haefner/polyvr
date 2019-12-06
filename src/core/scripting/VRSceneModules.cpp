@@ -68,6 +68,7 @@
 #include "VRPyScenegraphInterface.h"
 #include "VRPyOPCUA.h"
 #include "VRPyCodeCompletion.h"
+#include "VRPyPointCloud.h"
 #ifndef NO_ENCRYPTION
 #include "VRPyEncryption.h"
 #endif
@@ -128,6 +129,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyLodLeaf>("LodLeaf", pModVR, VRPyTransform::typeRef);
     sm->registerModule<VRPyLodTree>("LodTree", pModVR, VRPyObject::typeRef);
     sm->registerModule<VRPySprite>("Sprite", pModVR, VRPyGeometry::typeRef);
+    sm->registerModule<VRPyPointCloud>("PointCloud", pModVR, VRPyTransform::typeRef);
     sm->registerModule<VRPySound>("Sound", pModVR);
     sm->registerModule<VRPySoundManager>("SoundManager", pModVR);
     sm->registerModule<VRPySocket>("Socket", pModVR);
