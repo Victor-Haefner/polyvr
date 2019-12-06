@@ -95,6 +95,7 @@ void OSG::loadE57(string path, VRTransformPtr res, map<string, string> importOpt
                     if (Nskipped >= Nskip) {
                         Vec3d pos = Vec3d(x[j], y[j], z[j]);
                         Color3f col(r[j]/255.0, g[j]/255.0, b[j]/255.0);
+
                         pointcloud->getOctree()->add(pos, new Color3f(col), -1, true, 1e5);
                         Nskipped = 0;
                     }

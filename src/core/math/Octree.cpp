@@ -139,6 +139,7 @@ vector<OctreeNode*> OctreeNode::getChildren() {
 }
 
 bool OctreeNode::isLeaf() {
+    //return points.size() > 0;
     if ( resolution < size ) return false;
     for (int i=0; i<8; i++) if (children[i]) return false;
     return true;
@@ -201,6 +202,7 @@ OctreeNode* OctreeNode::getParent() { return parent; }
 OctreeNode* OctreeNode::getRoot() { auto o = this; while(o->parent) o = o->parent; return o; }
 
 float OctreeNode::getSize() { return size; }
+float OctreeNode::getResolution() { return resolution; }
 
 // sphere center, box center, sphere radius, box size
 bool sphere_box_intersect(Vec3d Ps, Vec3d Pb, float Rs, float Sb)  {

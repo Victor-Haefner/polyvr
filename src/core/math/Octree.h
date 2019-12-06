@@ -36,6 +36,7 @@ class OctreeNode {
         vector<OctreeNode*> getAncestry();
         void set(OctreeNode* node, Vec3d p, void* data);
         float getSize();
+        float getResolution();
         Vec3d getCenter();
         Vec3d getLocalCenter();
 
