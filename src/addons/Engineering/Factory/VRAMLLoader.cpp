@@ -36,6 +36,11 @@ vector<xmlpp::Element*> getChildren(xmlpp::Element* e, string name) {
     return res;
 }
 
+string getText(xmlpp::Element* e) {
+    auto txt = e->get_child_text();
+    return txt ? txt->get_content() : "";
+}
+
 void VRAMLLoader::read(string path) {
     string ns = "{http://www.dke.de/CAEX}";
 
@@ -59,109 +64,107 @@ void VRAMLLoader::read(string path) {
         double clear = 10;
         string mid = mach->get_attribute_value("ID");
         string mname = mach->get_attribute_value("Name");
+
+        for (auto attr : getChildren(hierarchy, "Attribute")) {
+            string n = attr->get_attribute_value("Name");
+            if (n == "position") {
+                for (auto val : getChildren(attr, "Attribute")) {
+                    string vn = val->get_attribute_value("Name");
+                    auto vf = getChild(val, "Value");
+                    if (!vf) break; // Attribute "Value" missing: Keep default value.
+                    else if (vn == "x") x = toFloat(getText(vf));
+                    else if (vn == "y") y = toFloat(getText(vf));
+                    else if (vn == "z") z = toFloat(getText(vf));
+                }
+            }
+
+            else if (n == "orientation") {
+                for (auto vec : getChildren(attr, "Attribute")) {
+                    string vn = vec->get_attribute_value("Name");
+                    if (vn == "direction_vector") {
+                        for (auto val : getChildren(vec, "Attribute")) {
+                            string vnn = val->get_attribute_value("Name");
+                            auto vf = getChild(val, "Value");
+                            if (!vf) break; // Attribute "Value" missing: Keep default value.
+                            else if (vnn == "dx") dx = toFloat(getText(vf));
+                            else if (vnn == "dy") dy = toFloat(getText(vf));
+                            else if (vnn == "dz") dz = toFloat(getText(vf));
+                        }
+                    }
+                    if (vn == "up_vector") {
+                        for (auto val : getChildren(vec, "Attribute")) {
+                            string vnn = val->get_attribute_value("Name");
+                            auto vf = getChild(val, "Value");
+                            if (!vf) break; // Attribute "Value" missing: Keep default value.
+                            else if (vnn == "ux") ux = toFloat(getText(vf));
+                            else if (vnn == "uy") uy = toFloat(getText(vf));
+                            else if (vnn == "uz") uz = toFloat(getText(vf));
+                        }
+                    }
+                }
+            }
+
+            else if (n == "model") {
+                auto vf = getChild(attr, "Value");
+                if (vf) path = getText(vf);
+            }
+
+            else if (n == "type") {
+                auto vf = getChild(attr, "Value");
+                if (vf) typ = getText(vf);
+            }
+
+            else if (n == "clearance") {
+                auto vf = getChild(attr, "Value");
+                if (vf) clear = toFloat(getText(vf));
+            }
+
+            else if (n == "size") {
+                for (auto val : getChildren(attr, "Attribute")) {
+                    string vn = val->get_attribute_value("Name");
+                    auto vf = getChild(val, "Value");
+                    if (!vf) break; // Attribute "Value" missing: Keep default value.
+                    else if (vn == "length") length = toFloat(getText(vf));
+                    else if (vn == "height") height = toFloat(getText(vf));
+                    else if (vn == "width") width = toFloat(getText(vf));
+                }
+            }
+
+            else if (n == "workspace") {
+                for (auto vec : getChildren(attr, "Attribute")) {
+                    string vn = vec->get_attribute_value("Name");
+                    if (vn == "position") {
+                        for (auto val : getChildren(vec, "Attribute")) {
+                            string vnn = val->get_attribute_value("Name");
+                            auto vf = getChild(val, "Value");
+                            if (!vf) break; // Attribute "Value" missing: Keep default value.
+                            else if (vnn == "x") wSpace[0][0] = toFloat(getText(vf));
+                            else if (vnn == "y") wSpace[0][1] = toFloat(getText(vf));
+                            else if (vnn == "z") wSpace[0][2] = toFloat(getText(vf));
+                        }
+                    }
+                    if (vn == "size") {
+                        for (auto val : getChildren(vec, "Attribute")) {
+                            string vnn = val->get_attribute_value("Name");
+                            auto vf = getChild(val, "Value");
+                            if (!vf) break; // Attribute "Value" missing: Keep default value.
+                            else if (vnn == "length") wSpace[1][0] = toFloat(getText(vf));
+                            else if (vnn == "height") wSpace[1][1] = toFloat(getText(vf));
+                            else if (vnn == "width") wSpace[1][2] = toFloat(getText(vf));
+                        }
+                    }
+                }
+            }
+        }
+
+        if (typ == "G") {
+            ;
+        }
     }
 
     /*
 
 		for mach in internalElements:
-
-			x = y = z = length = width = height = 0
-			dx = dy = dz = ux = uy = uz = 0
-			mspeed = 1
-			wSpace = [[0,0,0],[0,0,0]] #[[position],[size]]
-			path = ''
-			typ = 'M'
-			clear = 10
-			mid = mach.get('ID')
-			mname = mach.get('Name')
-
-			#Get basic information about the entities
-			attributes = mach.findall(ns + 'Attribute')
-			for attr in attributes:
-				n = attr.get('Name')
-
-				if n == 'position':
-					#The attribute contains 3 sub-attributes
-					values = attr.findall(ns + 'Attribute')
-					for val in values:
-						vn = val.get('Name')
-						vf = val.find(ns + 'Value')
-						if vf is None: break #Attribute "Value" missing: Keep default value.
-						elif vn == 'x': x = float(vf.text)
-						elif vn == 'y': y = float(vf.text)
-						elif vn == 'z': z = float(vf.text)
-
-				elif n == 'orientation':
-					vecs = attr.findall(ns + 'Attribute')
-					for vec in vecs:
-						vn = vec.get('Name')
-						if vn == 'direction_vector':
-							values = vec.findall(ns + 'Attribute')
-							for val in values:
-								vnn = val.get('Name')
-								vf = val.find(ns + 'Value')
-								if vf is None: break
-								elif vnn == 'dx': dy = float(vf.text)
-								elif vnn == 'dy': dx = float(vf.text)
-								elif vnn == 'dz': dz = float(vf.text)
-
-						elif vn == 'up_vector':
-							values = vec.findall(ns + 'Attribute')
-							for val in values:
-								vnn = val.get('Name')
-								vf = val.find(ns + 'Value')
-								if vf is None: break
-								elif vnn == 'ux': ux = float(vf.text)
-								elif vnn == 'uy': uy = float(vf.text)
-								elif vnn == 'uz': uz = float(vf.text)
-
-				elif n == 'model':
-					vf = attr.find(ns + 'Value')
-					if vf is not None and vf.text is not None:
-						path = vf.text
-
-				elif n == 'type':
-					vf = attr.find(ns + 'Value')
-					if vf is not None and vf.text is not None:
-						typ = vf.text
-
-				elif n == 'clearance':
-					vf = attr.find(ns + 'Value')
-					if vf is not None and vf.text is not None:
-						clear = float(vf.text)
-
-				elif n == 'size':
-					values = attr.findall(ns + 'Attribute')
-					for val in values:
-						vn = val.get('Name')
-						vf = val.find(ns + 'Value')
-						if vf is None: break
-						elif vn == 'length': length = float(vf.text)
-						elif vn == 'height': height = float(vf.text)
-						elif vn == 'width': width = float(vf.text)
-
-				elif n == 'workspace':
-					values = attr.findall(ns + 'Attribute')
-					for val in values:
-						vn = val.get('Name')
-						if vn == 'position':
-							subvalues = val.findall(ns + 'Attribute')
-							for sval in subvalues:
-								vnn = sval.get('Name')
-								vff = sval.find(ns + 'Value')
-								if vff is None: continue
-								elif vnn == 'x': wSpace[0][0] = float(vff.text)
-								elif vnn == 'y': wSpace[0][1] = float(vff.text)
-								elif vnn == 'z': wSpace[0][2] = float(vff.text)
-						elif vn == 'size':
-							subvalues = val.findall(ns + 'Attribute')
-							for sval in subvalues:
-								vnn = sval.get('Name')
-								vff = sval.find(ns + 'Value')
-								if vff is None: continue
-								elif vnn == 'length': wSpace[1][0] = float(vff.text)
-								elif vnn == 'height': wSpace[1][1] = float(vff.text)
-								elif vnn == 'width': wSpace[1][2] = float(vff.text)
 
 			if typ == 'G':
 				VR.setground(length, width)
