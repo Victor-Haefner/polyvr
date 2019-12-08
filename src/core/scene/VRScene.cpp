@@ -328,7 +328,6 @@ void VRScene::importScene(xmlpp::Element* e, string path) {
     if (e == 0) return;
     auto oldScripts = getScripts();
     VRScriptManager::loadChildFrom(e);
-    VRScriptManager::update();
 
     vector<string> newScripts;
     for (auto s : getScripts()) if (!oldScripts.count(s.first)) newScripts.push_back(s.first);
@@ -338,6 +337,7 @@ void VRScene::importScene(xmlpp::Element* e, string path) {
     } else newScripts = importedScripts[path];
 
     for (auto s : newScripts) getScript(s)->setPersistency(0);
+    for (auto s : newScripts) updateScript(s, getScript(s)->getCore());
     for (auto s : newScripts) if (getScript(s)->hasTrigger("on_scene_import")) getScript(s)->execute();
     VRGuiManager::get()->broadcast("scriptlist_changed");
 

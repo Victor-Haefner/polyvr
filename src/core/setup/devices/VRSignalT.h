@@ -8,7 +8,8 @@ OSG_BEGIN_NAMESPACE;
 template<typename Event>
 void VRSignal::trigger(Event* event) {
     if (!event) event = (Event*)this->event;
-    for (auto c : callbacksPtr) {
+    auto callbacks = callbacksPtr; // make copy to avoid corruption while iterating!
+    for (auto c : callbacks) {
         if (auto spc = c.lock()) {
             //( (VRFunction<Event*>*)spc.get() )(event);
             auto cb = (VRFunction<Event*>*)spc.get();
@@ -20,7 +21,8 @@ void VRSignal::trigger(Event* event) {
 template<typename Event>
 void VRSignal::triggerPtr(shared_ptr<Event> event) {
     if (!event && this->event) event = ((Event*)this->event)->ptr();
-    for (auto c : callbacksPtr) {
+    auto callbacks = callbacksPtr; // make copy to avoid corruption while iterating!
+    for (auto c : callbacks) {
         if (auto spc = c.lock()) {
             //( (VRFunction<Event*>*)spc.get() )(event);
             auto cb = (VRFunction< weak_ptr<Event> >*)spc.get();

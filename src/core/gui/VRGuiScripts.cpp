@@ -386,8 +386,8 @@ void VRGuiScripts::on_select_script() { // selected a script
     setCombobox("combobox24", getListStorePos("liststore7", script->getServer()));
     setCombobox("combobox10", getListStorePos("liststore10", script->getGroup()));
 
-    // update editor content && script head
-    editor->setCore(script->getHead() + script->getCore());
+    // update editor content
+    editor->setCore(script->getScript());
     //adjustment->set_value(pages[script.get()].line);
 
     // update arguments liststore
