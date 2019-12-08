@@ -210,7 +210,7 @@ VRObjectPtr VRSceneLoader::importScene(string path, string encryptionKey, bool o
     auto rootNode = VRObject::create("sceneProxy");
     rootNode->load(root);
     rootNode->setPersistency(0);
-    scene->importScene(sceneN);
+    scene->importScene(sceneN, path);
     scene->getRoot()->addChild(rootNode);
 
     if (offLights) {

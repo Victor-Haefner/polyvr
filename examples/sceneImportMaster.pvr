@@ -23,7 +23,7 @@
 	VR.scene1 = VR.Object('scene1', 'light')
 
 	scene1 = VR.importScene('sceneImportSlave1.pvr')
-	#scene2 = VR.importScene('sceneImportSlave2.pvr')
+	scene2 = VR.importScene('sceneImportSlave2.pvr')
 	
 	VR.scene1.addChild(scene1)
 </core>

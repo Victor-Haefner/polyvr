@@ -310,13 +310,35 @@ void VRScene::loadScene(xmlpp::Element* e) {
     queueJob(loadingTimeCb, 0, 2);
 }
 
-void VRScene::importScene(xmlpp::Element* e) {
+/**
+
+TODO:
+
+- when calling VR.importScene(..)
+    - execute on_import triggered scripts
+- when calling VR.importScene(..) repeatedly
+    - destroy old imported scene
+    - reload scripts
+- on_import trigger
+    - loading scripts does not override if key present..
+    - execute each time importScene is called!
+*/
+
+void VRScene::importScene(xmlpp::Element* e, string path) {
     if (e == 0) return;
     auto oldScripts = getScripts();
     VRScriptManager::loadChildFrom(e);
     VRScriptManager::update();
-    VRScriptManager::triggerOnImport();
-    for (auto s : getScripts()) if (!oldScripts.count(s.first)) s.second->setPersistency(0);
+
+    vector<string> newScripts;
+    for (auto s : getScripts()) if (!oldScripts.count(s.first)) newScripts.push_back(s.first);
+    if (!importedScripts.count(path)) {
+        importedScripts[path] = vector<string>();
+        for (auto s : newScripts) importedScripts[path].push_back(s);
+    } else newScripts = importedScripts[path];
+
+    for (auto s : newScripts) getScript(s)->setPersistency(0);
+    for (auto s : newScripts) if (getScript(s)->hasTrigger("on_scene_import")) getScript(s)->execute();
     VRGuiManager::get()->broadcast("scriptlist_changed");
 
     /*VRName::load(e);

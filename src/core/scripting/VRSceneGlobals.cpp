@@ -182,9 +182,11 @@ PyObject* VRSceneGlobals::importScene(VRSceneGlobals* self, PyObject *args) {
     const char* key = "";
     int offLights = 0;
     if (! PyArg_ParseTuple(args, "s|si", &path, &key, &offLights)) return NULL;
-    auto res = VRSceneLoader::get()->importScene( path?path:"", key?key:"", offLights );
+    string Path = path?path:"";
+    auto res = VRSceneLoader::get()->importScene( Path, key?key:"", offLights );
     if (res) return VRPyTypeCaster::cast(res);
-    else Py_RETURN_NONE;
+    else { VRPyBase::setErr("Import scene, path '"+Path+"' not found!"); return NULL; }
+    //else Py_RETURN_NONE;
 }
 
 PyObject* VRSceneGlobals::loadGeometry(VRSceneGlobals* self, PyObject *args, PyObject *kwargs) {
@@ -205,10 +207,7 @@ PyObject* VRSceneGlobals::loadGeometry(VRSceneGlobals* self, PyObject *args, PyO
     if (opt) toValue(opt, options);
 
     VRTransformPtr obj = VRImport::get()->load( path, prnt, cached, preset, threaded, options, useBinaryCache);
-    if (obj == 0) {
-        VRGuiManager::get()->getConsole("Errors")->write( "Warning: " + string(path) + " not loaded!\n");
-        Py_RETURN_NONE;
-    }
+    if (obj == 0) { VRPyBase::setErr("Error: " + string(path) + " not loaded!"); return NULL; }
     obj->setPersistency(0);
     return VRPyTypeCaster::cast(obj);
 }

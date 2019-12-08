@@ -370,7 +370,7 @@ void VRScriptManager::triggerOnLoad() {
     for (auto script : scripts) if (script.second->hasTrigger("on_scene_load")) script.second->queueExecution();
 }
 
-void VRScriptManager::triggerOnImport() {
+void VRScriptManager::triggerOnImport() { // deprecated
     for (auto script : scripts) {
         if (script.second->hasTrigger("on_scene_import")) {
             script.second->execute();

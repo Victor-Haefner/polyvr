@@ -18,7 +18,7 @@ using namespace std;
 class VRScript;
 
 class VRScriptManager : public VRStorage, public VRPyBase {
-    private:
+    protected:
         PyObject* pGlobal;
         PyObject* pLocal;
         PyObject* pModBase;
@@ -28,12 +28,11 @@ class VRScriptManager : public VRStorage, public VRPyBase {
         map<string, map<string, PyTypeObject*> > moduleTypes;
         map<string, VRScriptPtr> scripts;
         map<string, VRSignalPtr> triggers;
+        map<string, vector<string>> importedScripts;
         PyThreadState* pyThreadState = 0;
 
         void test();
         void initPyModules();
-
-    protected:
         void update();
 
     public:
