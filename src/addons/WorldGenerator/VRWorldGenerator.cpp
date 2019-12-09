@@ -83,9 +83,9 @@ void VRWorldGenerator::setPlanet(VRPlanetPtr p, Vec2d c) {
     coords = c;
     planet = p;
     for (auto terrain:terrains) terrain->setWorld( ptr() );
-    roads->setWorld( ptr() );
-    nature->setWorld( ptr() );
-    district->setWorld( ptr() );
+    if (metaLVL == 0) roads->setWorld( ptr() );
+    if (metaLVL == 0) nature->setWorld( ptr() );
+    if (metaLVL == 0) district->setWorld( ptr() );
 }
 
 VROntologyPtr VRWorldGenerator::getOntology() { return ontology; }
@@ -124,6 +124,7 @@ VRGeometryPtr VRWorldGenerator::getMiscArea(VREntityPtr mEnt){
 }
 
 void VRWorldGenerator::init() {
+    metaLVL = 0;
     auto addMat = [&](string name, int texDim) {
         auto mat = VRMaterial::create(name);
         mat->setDefaultVertexShader();
@@ -172,6 +173,7 @@ void VRWorldGenerator::init() {
 }
 
 void VRWorldGenerator::initMinimum() {
+    metaLVL = 1;
     auto addMat = [&](string name, int texDim) {
         auto mat = VRMaterial::create(name);
         mat->setDefaultVertexShader();

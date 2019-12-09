@@ -50,6 +50,7 @@ class VRWorldGenerator : public VRTransform {
         OSMMapPtr osmMap;
         Vec2d coords;
         VRUserGenCbPtr userCbPtr;
+        int metaLVL = 0;
 
         void processOSMMap(double subN = -1, double subE = -1, double subSize = -1);
         void init();
