@@ -284,6 +284,10 @@ void VRRobotArm::animOnPath(float t) {
     if (t >= job.t1 && job.loop) { anim->start(0); return; }
 
     auto pose = job.p->getPose(t);
+    if (job.po) {
+        auto poseO = job.po->getPose(t);
+        pose->set(pose->pos(), poseO->dir(), poseO->up());
+    }
     calcReverseKinematics(pose);
 }
 
@@ -369,11 +373,12 @@ void VRRobotArm::setGrab(float g) {
 
 void VRRobotArm::moveOnPath(float t0, float t1, bool loop, float durationMultiplier) {
     moveTo( robotPath->getPose(t0) );
-    addJob( job(robotPath, t0, t1, 2*robotPath->getLength() * durationMultiplier, loop) );
+    addJob( job(robotPath, orientationPath, t0, t1, 2*robotPath->getLength() * durationMultiplier, loop) );
 }
 
 void VRRobotArm::toggleGrab() { setGrab(1-grab); }
 
-void VRRobotArm::setPath(PathPtr p) { robotPath = p; }
+void VRRobotArm::setPath(PathPtr p, PathPtr po) { robotPath = p; orientationPath = po; }
 PathPtr VRRobotArm::getPath() { return robotPath; }
+PathPtr VRRobotArm::getOrientationPath() { return orientationPath; }
 

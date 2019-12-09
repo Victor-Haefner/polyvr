@@ -23,9 +23,10 @@ PyMethodDef VRPyRobotArm::methods[] = {
     {"getAngles", PyWrap(RobotArm, getAngles, "Get joint angles - getAngles()", vector<float> ) },
     //{"getForwardKinematics", PyWrap(RobotArm, getForwardKinematics, "Get end effector pose from angles - p,d,u getForwardKinematics( angles )") },
     //{"getBackwardKinematics", PyWrap(RobotArm, getBackwardKinematics, "Get angles from end effector pose - angles getBackwardKinematics( p,d,u )") },
-    {"setPath", PyWrap(RobotArm, setPath, "Set robot path - setPath()", void, PathPtr ) },
-    {"getPath", PyWrap(RobotArm, getPath, "Get robot path - getPath()", PathPtr ) },
+    {"setPath", PyWrapOpt(RobotArm, setPath, "Set robot path(s) - second path is optinal and overrides orientation", "0", void, PathPtr, PathPtr ) },
+    {"getPath", PyWrap(RobotArm, getPath, "Get robot path", PathPtr ) },
+    {"getOrientationPath", PyWrap(RobotArm, getOrientationPath, "Get robot orientation path", PathPtr ) },
     {"moveOnPath", PyWrapOpt(RobotArm, moveOnPath, "Move robot on internal path - moveOnPath(t0, t1, doLoop, durationMultiplier)", "0|1", void, float, float, bool, float) },
-    {"isMoving", PyWrap(RobotArm, isMoving, "Get animation status - isMoving()", bool) },
+    {"isMoving", PyWrap(RobotArm, isMoving, "Get animation status", bool) },
     {NULL}  /* Sentinel */
 };

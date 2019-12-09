@@ -894,12 +894,13 @@ void VRTransform::setup(VRStorageContextPtr context) {
     setAt(_at);
 }
 
-void setFromPath(VRTransformWeakPtr trp, PathPtr p, bool redirect, float t) {
+void setFromPath(VRTransformWeakPtr trp, PathPtr p, PathPtr po, bool redirect, float t) {
     auto tr = trp.lock();
     if (!tr) return;
-    tr->setFrom( p->getPosition(t) );
-    if (!redirect) return;
+    if (p) tr->setFrom( p->getPosition(t) );
+    if (!redirect && !po) return;
 
+    if (po) p = po;
     Vec3d d,u;
     p->getOrientation(t, d, u);
     tr->setDir( d );
@@ -915,8 +916,8 @@ vector<VRAnimationPtr> VRTransform::getAnimations() {
     return res;
 }
 
-VRAnimationPtr VRTransform::animate(PathPtr p, float time, float offset, bool redirect, bool loop) {
-    pathAnimPtr = VRAnimCb::create("TransAnim", boost::bind(setFromPath, VRTransformWeakPtr(ptr()), p, redirect, _1));
+VRAnimationPtr VRTransform::animate(PathPtr p, float time, float offset, bool redirect, bool loop, PathPtr po) {
+    pathAnimPtr = VRAnimCb::create("TransAnim", boost::bind(setFromPath, VRTransformWeakPtr(ptr()), p, po, redirect, _1));
     animCBs.push_back(pathAnimPtr);
     auto a = VRScene::getCurrent()->addAnimation<float>(time, offset, pathAnimPtr, 0.f, 1.f, loop);addAnimation(a);
     return a;
