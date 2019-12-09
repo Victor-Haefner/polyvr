@@ -162,19 +162,20 @@ void loadTIFF(string path, VRTransformPtr res) {
     res->addChild( g );
 }
 
-VRTexturePtr loadGeoRasterData(string path) {
+VRTexturePtr loadGeoRasterData(string path, bool shout) {
     GDALAllRegister();
     GDALDataset* poDS = (GDALDataset *) GDALOpen( path.c_str(), GA_ReadOnly );
     if( poDS == NULL ) { printf( "Open failed.\n" ); return 0; }
 
     // general information
     double adfGeoTransform[6];
-    printf( "Driver: %s/%s\n", poDS->GetDriver()->GetDescription(), poDS->GetDriver()->GetMetadataItem( GDAL_DMD_LONGNAME ) );
-    printf( "Size is %dx%dx%d\n", poDS->GetRasterXSize(), poDS->GetRasterYSize(), poDS->GetRasterCount() );
-    if( poDS->GetProjectionRef()  != NULL ) printf( "Projection is `%s'\n", poDS->GetProjectionRef() );
+    if (shout) printf( "Driver: %s/%s\n", poDS->GetDriver()->GetDescription(), poDS->GetDriver()->GetMetadataItem( GDAL_DMD_LONGNAME ) );
+    if (shout) printf( "Size is %dx%dx%d\n", poDS->GetRasterXSize(), poDS->GetRasterYSize(), poDS->GetRasterCount() );
+    if( poDS->GetProjectionRef()  != NULL ) { if (shout) printf( "Projection is `%s'\n", poDS->GetProjectionRef() ); }
     if( poDS->GetGeoTransform( adfGeoTransform ) == CE_None ) {
-        printf( "Origin = (%.6f,%.6f)\n", adfGeoTransform[0], adfGeoTransform[3] );
-        printf( "Pixel Size = (%.6f,%.6f)\n", adfGeoTransform[1], adfGeoTransform[5] );
+        if (!shout) printf( "loadGeoRasterData Origin = (%.6f,%.6f)\n", adfGeoTransform[0], adfGeoTransform[3] );
+        if (shout) printf( "Origin = (%.6f,%.6f)\n", adfGeoTransform[0], adfGeoTransform[3] );
+        if (shout) printf( "Pixel Size = (%.6f,%.6f)\n", adfGeoTransform[1], adfGeoTransform[5] );
     }
 
     // get first block
@@ -209,6 +210,62 @@ VRTexturePtr loadGeoRasterData(string path) {
     auto img = t->getImage();
     img->set( Image::OSG_A_PF, sizeX, sizeY, 1, 1, 1, 0, (const uint8_t*)&data[0], Image::OSG_FLOAT32_IMAGEDATA, true, 1);
     return t;
+}
+
+void writeGeoRasterData(string path, VRTexturePtr tex, double geoTransform[6], string params[3]) {
+    const char *pszFormat = "GTiff";
+    GDALDriver *poDriver;
+    poDriver = GetGDALDriverManager()->GetDriverByName(pszFormat);
+    if( poDriver == NULL )
+        return;
+    Vec3i texSize = tex->getSize();
+    int sizeX = texSize[0];
+    int sizeY = texSize[1];
+    cout << "writeGeoRasterData at " << path << " - X: "  << sizeX << " Y: " << sizeY << endl;
+    double originLat = geoTransform[0];
+    double originLon = geoTransform[3];
+    GDALDataset *poDstDS;
+    char **papszOptions = NULL;
+    poDstDS = poDriver->Create( path.c_str(), sizeX, sizeY, 1, GDT_Float32,
+                                papszOptions );
+    OGRSpatialReference oSRS;
+    char *pszSRS_WKT = NULL;
+    GDALRasterBand *poBand;
+    poDstDS->SetGeoTransform( geoTransform );
+    //TODO: CHANGE UTM and GeogCSM
+    oSRS.SetUTM( 11, TRUE );
+    oSRS.SetWellKnownGeogCS( "WGS84" );
+    oSRS.exportToWkt( &pszSRS_WKT );
+    poDstDS->SetProjection( pszSRS_WKT );
+    CPLFree( pszSRS_WKT );
+    poBand = poDstDS->GetRasterBand(1);
+
+    float *yRow = (float*) CPLMalloc(sizeof(float)*sizeY);
+    for (int y = 0; y < sizeY; y++){
+        for (int x = 0; x < sizeX; x++) {
+            Vec3i pI(x,y,0);
+            auto fC = tex->getPixel(pI)[0];
+            yRow[x] = fC;
+        }
+        poBand->RasterIO( GF_Write, 0, y, sizeX, 1, yRow, sizeX, 1, GDT_Float32, 0, 0 );
+    }
+    /* Once we're done, close properly the dataset */
+    CPLFree(yRow);
+    GDALClose( (GDALDatasetH) poDstDS );
+}
+
+vector<double> getGeoTransform(string path) {
+    vector<double> res(6,0);
+    double adfGeoTransform[6];
+    GDALAllRegister();
+    GDALDataset* poDS = (GDALDataset *) GDALOpen( path.c_str(), GA_ReadOnly );
+    if( poDS == NULL ) { printf( "Open failed.\n" ); return res; }
+
+    // general information
+    if( poDS->GetGeoTransform( adfGeoTransform ) == CE_None ) {}
+    for (int i = 0; i < 6; i++) res[i] = adfGeoTransform[i];
+    GDALClose(poDS);
+    return res;
 }
 
 OSG_END_NAMESPACE;

@@ -224,7 +224,7 @@ void VRWorldGenerator::setTerrainSize( Vec2d in ) { terrainSize = in; }
 
 void VRWorldGenerator::setupLODTerrain(string pathMap, string pathPaint, float scale ) {
     cout << "VRWorldGenerator::setupLODTerrain" << endl;
-    auto tex = loadGeoRasterData(pathMap);
+    auto tex = loadGeoRasterData(pathMap, false);
     Vec3i texSizeN = tex->getSize();
     //cout << " texSizeN: " << texSizeN << endl;
     //int nLevel = 4;
@@ -237,37 +237,45 @@ void VRWorldGenerator::setupLODTerrain(string pathMap, string pathPaint, float s
         string typ = "";
         string res = "";
         for (int i = 0; i < 4; i++) typ = filepath.at(filepath.length()-1-i) + typ;
-        if (typ != ".hgt") return res+"newFile.hgt";
+        if (typ != ".hgt") return in+"newFile.hgt";
         for (int i = 0; i < filepath.length()-4; i++) res += filepath.at(i);
         return res + in + ".hgt";
     };
 
     VRTexturePtr tex1;
     VRTexturePtr tex2;
+    double geoTransform[6];
+    vector<double> gTr;
 
-    string pathMap1 = genPath(pathMap, "_05");
-    string pathMap2 = genPath(pathMap, "_025");
+    string pathMap1 = genPath(pathMap, "_1");
+    string pathMap2 = genPath(pathMap, "_2");
 
-    cout << " newPathes: " << pathMap1 << endl;
-    cout << " newPathes: " << pathMap2 << endl;
+    //cout << " newPathes: " << pathMap1 << endl;
+    //cout << " newPathes: " << pathMap2 << endl;
     if (FILESYSTEM::exist(pathMap1)) {
-        tex1 = VRTexture::create();
-        tex1->read(pathMap1);
+        tex1 = loadGeoRasterData(pathMap1, false);
     } else {
-        cout << " creating new downsized texture lvl1" << endl;
-        tex1 = loadGeoRasterData(pathMap);
+        cout << "VRWorldGenerator::setupLODTerrain creating new downsized texture lvl1 at " << pathMap1 << endl;
+        tex1 = loadGeoRasterData(pathMap, false);
         tex1->downsize();
-        //tex1->write(pathMap1);
+        string params[3];
+        gTr = getGeoTransform(pathMap);
+        for (int i = 0; i < 6; i++) geoTransform[i] = gTr[i];
+        geoTransform[1] *= 2;
+        writeGeoRasterData(pathMap1, tex1, geoTransform, params);
     }
     if (FILESYSTEM::exist(pathMap2)) {
-        tex2 = VRTexture::create();
-        tex2->read(pathMap2);
+        tex2 = loadGeoRasterData(pathMap2, false);
     } else {
-        cout << " creating new downsized texture lvl2" << endl;
-        tex2 = loadGeoRasterData(pathMap);
+        cout << "VRWorldGenerator::setupLODTerrain creating new downsized texture lvl2 at " << pathMap2 << endl;
+        tex2 = loadGeoRasterData(pathMap, false);
         tex2->downsize();
         tex2->downsize();
-        //tex2->write(pathMap2);
+        string params2[3];
+        gTr = getGeoTransform(pathMap);
+        for (int i = 0; i < 6; i++) geoTransform[i] = gTr[i];
+        geoTransform[1] *= 4;
+        writeGeoRasterData(pathMap2, tex2, geoTransform, params2);
     }
 
     auto addTerrain = [&](double fac, int a) {
