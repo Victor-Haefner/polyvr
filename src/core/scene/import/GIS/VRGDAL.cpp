@@ -212,6 +212,60 @@ VRTexturePtr loadGeoRasterData(string path, bool shout) {
     return t;
 }
 
+void divideTiffIntoChunks(string pathIn, string pathOut, double minLat, double maxLat, double minLon, double maxLon, double res) {
+    cout << " gdal - " << pathIn << pathOut << endl;
+    GDALAllRegister();
+    GDALDataset* poDS = (GDALDataset *) GDALOpen( pathIn.c_str(), GA_ReadOnly );
+    if( poDS == NULL ) { printf( "Open failed.\n" ); return; }
+
+    // general information
+    double adfGeoTransform[6];
+    printf( "Driver: %s/%s\n", poDS->GetDriver()->GetDescription(), poDS->GetDriver()->GetMetadataItem( GDAL_DMD_LONGNAME ) );
+    printf( "Size is %dx%dx%d\n", poDS->GetRasterXSize(), poDS->GetRasterYSize(), poDS->GetRasterCount() );
+    if( poDS->GetProjectionRef()  != NULL ) { printf( "Projection is `%s'\n", poDS->GetProjectionRef() ); }
+    if( poDS->GetGeoTransform( adfGeoTransform ) == CE_None ) {
+        printf( "Origin = (%.6f,%.6f)\n", adfGeoTransform[0], adfGeoTransform[3] );
+        printf( "Pixel Size = (%.6f,%.6f)\n", adfGeoTransform[1], adfGeoTransform[5] );
+    }
+
+    cout << " bandCount: " << poDS->GetRasterCount() << endl;
+    cout << " bandCount: " << poDS->GetRasterCount() << endl;
+    return;
+    // get first block
+    auto getBand = [&](int i) {
+        int nBlockXSize, nBlockYSize;
+        int bGotMin, bGotMax;
+        double adfMinMax[2];
+        GDALRasterBand* poBand = poDS->GetRasterBand( i );
+        poBand->GetBlockSize( &nBlockXSize, &nBlockYSize );
+        adfMinMax[0] = poBand->GetMinimum( &bGotMin );
+        adfMinMax[1] = poBand->GetMaximum( &bGotMax );
+        if( ! (bGotMin && bGotMax) ) GDALComputeRasterMinMax((GDALRasterBandH)poBand, TRUE, adfMinMax);
+        return poBand;
+    };
+
+    vector<float> data;
+    for (int i=1; i<=poDS->GetRasterCount(); i++) {
+        auto band = getBand(i);
+        int nXSize = band->GetXSize();
+        int nYSize = band->GetYSize();
+        //vector<float> line(nXSize*nYSize);
+        //band->RasterIO( GF_Read, 0, (i-1)*nYSize, nXSize, nYSize, &line[0], nXSize, nYSize, GDT_Float32, 0, 0 );
+        //data.insert(data.end(), line.begin(), line.end());
+    }
+
+    /*
+    int sizeX = poDS->GetRasterXSize();
+    int sizeY = poDS->GetRasterYSize();
+    GDALClose(poDS);
+
+    auto t = VRTexture::create();
+    t->setInternalFormat(GL_ALPHA32F_ARB); // important for unclamped float
+    auto img = t->getImage();
+    img->set( Image::OSG_A_PF, sizeX, sizeY, 1, 1, 1, 0, (const uint8_t*)&data[0], Image::OSG_FLOAT32_IMAGEDATA, true, 1);
+    return t;*/
+}
+
 void writeGeoRasterData(string path, VRTexturePtr tex, double geoTransform[6], string params[3]) {
     const char *pszFormat = "GTiff";
     GDALDriver *poDriver;
