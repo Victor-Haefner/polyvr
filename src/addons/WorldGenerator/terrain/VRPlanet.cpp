@@ -118,7 +118,7 @@ void VRPlanet::localize(double north, double east) {
 }
 
 void VRPlanet::divideTIFF(string pathIn, string pathOut, double minLat, double maxLat, double minLon, double maxLon, double res) {
-    cout << "hello " << pathIn << " - " << pathOut << endl;
+    //cout << "hello " << pathIn << " - " << pathOut << endl;
     divideTiffIntoChunks(pathIn, pathOut, minLat, maxLat, minLon, maxLon, res);
 }
 

@@ -1,5 +1,6 @@
 #include "VRGDAL.h"
 
+#include <math.h>
 #include <iostream>
 #include <gdal/gdal.h>
 #include <gdal/gdal_priv.h>
@@ -213,23 +214,93 @@ VRTexturePtr loadGeoRasterData(string path, bool shout) {
 }
 
 void divideTiffIntoChunks(string pathIn, string pathOut, double minLat, double maxLat, double minLon, double maxLon, double res) {
-    cout << " gdal - " << pathIn << pathOut << endl;
+    //cout << " gdal - " << pathIn << pathOut << endl;
     GDALAllRegister();
     GDALDataset* poDS = (GDALDataset *) GDALOpen( pathIn.c_str(), GA_ReadOnly );
     if( poDS == NULL ) { printf( "Open failed.\n" ); return; }
 
     // general information
     double adfGeoTransform[6];
-    printf( "Driver: %s/%s\n", poDS->GetDriver()->GetDescription(), poDS->GetDriver()->GetMetadataItem( GDAL_DMD_LONGNAME ) );
-    printf( "Size is %dx%dx%d\n", poDS->GetRasterXSize(), poDS->GetRasterYSize(), poDS->GetRasterCount() );
-    if( poDS->GetProjectionRef()  != NULL ) { printf( "Projection is `%s'\n", poDS->GetProjectionRef() ); }
-    if( poDS->GetGeoTransform( adfGeoTransform ) == CE_None ) {
-        printf( "Origin = (%.6f,%.6f)\n", adfGeoTransform[0], adfGeoTransform[3] );
-        printf( "Pixel Size = (%.6f,%.6f)\n", adfGeoTransform[1], adfGeoTransform[5] );
-    }
+    //printf( "Driver: %s/%s\n", poDS->GetDriver()->GetDescription(), poDS->GetDriver()->GetMetadataItem( GDAL_DMD_LONGNAME ) );
+    //printf( "Size is %dx%dx%d\n", poDS->GetRasterXSize(), poDS->GetRasterYSize(), poDS->GetRasterCount() );
+    //if( poDS->GetProjectionRef()  != NULL ) { printf( "Projection is `%s'\n", poDS->GetProjectionRef() ); }
+    if( poDS->GetGeoTransform( adfGeoTransform ) == CE_None ) {  }
 
     cout << " bandCount: " << poDS->GetRasterCount() << endl;
-    cout << " bandCount: " << poDS->GetRasterCount() << endl;
+
+    ///https://wiki.openstreetmap.org/wiki/Mercator
+    auto DEG2RAD = [&](double a) { return (a) / (180 / M_PI); };
+    auto RAD2DEG = [&](double a) { return (a) * (180 / M_PI); };
+    auto EARTH_RADIUS = 6378137;
+
+    /* The following functions take their parameter and return their result in degrees */
+
+    auto y2lat_d = [&](double y)   { return RAD2DEG( atan(exp( DEG2RAD(y) )) * 2 - M_PI/2 ); };
+    auto x2lon_d = [&](double x)   { return x; };
+
+    auto lat2y_d = [&](double lat) { return RAD2DEG( log(tan( DEG2RAD(lat) / 2 +  M_PI/4 )) ); };
+    auto lon2x_d = [&](double lon) { return lon; };
+
+    /* The following functions take their parameter in something close to meters, along the equator, and return their result in degrees */
+
+    auto y2lat_m = [&](double y)   { return RAD2DEG(2 * atan(exp( y/EARTH_RADIUS)) - M_PI/2); };
+    auto x2lon_m = [&](double x)   { return RAD2DEG(              x/EARTH_RADIUS           ); };
+
+    /* The following functions take their parameter in degrees, and return their result in something close to meters, along the equator */
+
+    auto lat2y_m = [&](double lat) { return log(tan( DEG2RAD(lat) / 2 + M_PI/4 )) * EARTH_RADIUS; };
+    auto lon2x_m = [&](double lon) { return          DEG2RAD(lon)                 * EARTH_RADIUS; };
+
+    double xEnd = adfGeoTransform[0] + poDS->GetRasterXSize()*adfGeoTransform[1];
+    double yEnd = adfGeoTransform[3] + poDS->GetRasterYSize()*adfGeoTransform[5];
+    double latBeg = y2lat_m(adfGeoTransform[3]);
+    double lonBeg = x2lon_m(adfGeoTransform[0]);
+    double latEnd = y2lat_m(yEnd);
+    double lonEnd = x2lon_m(xEnd);
+
+    cout << "minLat " << minLat << " maxLat " << maxLat << " minLon " << minLon << " maxLon " << maxLon << " res " << res << endl;
+    cout << "LatO " << latBeg << " LonO " << lonBeg << endl;
+    cout << "Lat1 " << latEnd << " Lon1 " << lonEnd << endl;
+
+    double xA = lon2x_m(minLon);
+    double yA = lat2y_m(minLat);
+    double xB = lon2x_m(maxLon);
+    double yB = lat2y_m(maxLat);
+
+    vector<double> bordersX;
+    vector<double> bordersY;
+
+    double currentY = maxLat;
+    double currentX = minLon;
+    while (currentX <= maxLon) {
+        bordersX.push_back(currentX);
+        currentX += res;
+    }
+    while (currentY >= minLat) {
+        bordersY.push_back(currentY);
+        currentY -= res;
+    }
+
+    for (int yy = 0; yy < bordersY.size()-1; yy++){
+        for (int xx = 0; xx < bordersX.size()-1; xx++) {
+            if ( bordersY[yy] < latBeg  && bordersX[xx] > lonBeg && bordersY[yy+1] > latEnd  && bordersX[xx+1] < lonEnd ) {cout << " within bounds " << xx << "-" << yy << " | " << bordersY[yy] << " " << bordersX[xx] << " | " << bordersY[yy+1] << " " << bordersX[xx+1] << endl;}
+            else { cout << " out of bounds " << xx << "-" << yy << " | " << bordersY[yy] << " " << bordersX[xx] << " | " << bordersY[yy+1] << " " << bordersX[xx+1] << endl; }
+        }
+    }
+
+    cout << "asdf xA " << xA << " yA " << yA << " xB " << xB << " yB " << yB << endl;
+
+    //cout << "LatYend " << yEnd << " LonXend " << xEnd << endl;
+    cout << "Sy " << y2lat_m(adfGeoTransform[5]) << " Sx " << x2lon_m(adfGeoTransform[1]) << endl;
+    /*
+    adfGeoTransform[0]
+    adfGeoTransform[3]
+    minLat
+    maxLat
+    minLon
+    maxLon
+    res*/
+
     return;
     // get first block
     auto getBand = [&](int i) {
