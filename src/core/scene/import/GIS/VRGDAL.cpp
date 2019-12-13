@@ -221,8 +221,8 @@ void divideTiffIntoChunks(string pathIn, string pathOut, double minLat, double m
 
     // general information
     double adfGeoTransform[6];
-    //printf( "Driver: %s/%s\n", poDS->GetDriver()->GetDescription(), poDS->GetDriver()->GetMetadataItem( GDAL_DMD_LONGNAME ) );
-    //printf( "Size is %dx%dx%d\n", poDS->GetRasterXSize(), poDS->GetRasterYSize(), poDS->GetRasterCount() );
+    printf( "Driver: %s/%s\n", poDS->GetDriver()->GetDescription(), poDS->GetDriver()->GetMetadataItem( GDAL_DMD_LONGNAME ) );
+    printf( "Size is %dx%dx%d\n", poDS->GetRasterXSize(), poDS->GetRasterYSize(), poDS->GetRasterCount() );
     //if( poDS->GetProjectionRef()  != NULL ) { printf( "Projection is `%s'\n", poDS->GetProjectionRef() ); }
     if( poDS->GetGeoTransform( adfGeoTransform ) == CE_None ) {  }
 
@@ -234,7 +234,6 @@ void divideTiffIntoChunks(string pathIn, string pathOut, double minLat, double m
     auto EARTH_RADIUS = 6378137;
 
     /* The following functions take their parameter and return their result in degrees */
-
     auto y2lat_d = [&](double y)   { return RAD2DEG( atan(exp( DEG2RAD(y) )) * 2 - M_PI/2 ); };
     auto x2lon_d = [&](double x)   { return x; };
 
@@ -242,12 +241,10 @@ void divideTiffIntoChunks(string pathIn, string pathOut, double minLat, double m
     auto lon2x_d = [&](double lon) { return lon; };
 
     /* The following functions take their parameter in something close to meters, along the equator, and return their result in degrees */
-
     auto y2lat_m = [&](double y)   { return RAD2DEG(2 * atan(exp( y/EARTH_RADIUS)) - M_PI/2); };
     auto x2lon_m = [&](double x)   { return RAD2DEG(              x/EARTH_RADIUS           ); };
 
     /* The following functions take their parameter in degrees, and return their result in something close to meters, along the equator */
-
     auto lat2y_m = [&](double lat) { return log(tan( DEG2RAD(lat) / 2 + M_PI/4 )) * EARTH_RADIUS; };
     auto lon2x_m = [&](double lon) { return          DEG2RAD(lon)                 * EARTH_RADIUS; };
 
@@ -281,28 +278,6 @@ void divideTiffIntoChunks(string pathIn, string pathOut, double minLat, double m
         currentY -= res;
     }
 
-    for (int yy = 0; yy < bordersY.size()-1; yy++){
-        for (int xx = 0; xx < bordersX.size()-1; xx++) {
-            if ( bordersY[yy] < latBeg  && bordersX[xx] > lonBeg && bordersY[yy+1] > latEnd  && bordersX[xx+1] < lonEnd ) {cout << " within bounds " << xx << "-" << yy << " | " << bordersY[yy] << " " << bordersX[xx] << " | " << bordersY[yy+1] << " " << bordersX[xx+1] << endl;}
-            else { cout << " out of bounds " << xx << "-" << yy << " | " << bordersY[yy] << " " << bordersX[xx] << " | " << bordersY[yy+1] << " " << bordersX[xx+1] << endl; }
-        }
-    }
-
-    cout << "asdf xA " << xA << " yA " << yA << " xB " << xB << " yB " << yB << endl;
-
-    //cout << "LatYend " << yEnd << " LonXend " << xEnd << endl;
-    cout << "Sy " << y2lat_m(adfGeoTransform[5]) << " Sx " << x2lon_m(adfGeoTransform[1]) << endl;
-    /*
-    adfGeoTransform[0]
-    adfGeoTransform[3]
-    minLat
-    maxLat
-    minLon
-    maxLon
-    res*/
-
-    return;
-    // get first block
     auto getBand = [&](int i) {
         int nBlockXSize, nBlockYSize;
         int bGotMin, bGotMax;
@@ -315,15 +290,64 @@ void divideTiffIntoChunks(string pathIn, string pathOut, double minLat, double m
         return poBand;
     };
 
-    vector<float> data;
-    for (int i=1; i<=poDS->GetRasterCount(); i++) {
-        auto band = getBand(i);
-        int nXSize = band->GetXSize();
-        int nYSize = band->GetYSize();
-        //vector<float> line(nXSize*nYSize);
-        //band->RasterIO( GF_Read, 0, (i-1)*nYSize, nXSize, nYSize, &line[0], nXSize, nYSize, GDT_Float32, 0, 0 );
-        //data.insert(data.end(), line.begin(), line.end());
+    cout << "input xA " << xA << " yA " << yA << " xB " << xB << " yB " << yB << endl;
+    cout << "file  xA " << adfGeoTransform[0] << " yA " << adfGeoTransform[3] << " xB " << xEnd << " yB " << yEnd << endl;
+
+    //cout << "LatYend " << yEnd << " LonXend " << xEnd << endl;
+    cout << "Sy " << y2lat_m(adfGeoTransform[5]) << " Sx " << x2lon_m(adfGeoTransform[1]) << endl;
+
+    for (int yy = 0; yy < bordersY.size()-1; yy++){
+        for (int xx = 0; xx < bordersX.size()-1; xx++) {
+            if ( bordersY[yy] < latBeg  && bordersX[xx] > lonBeg && bordersY[yy+1] > latEnd  && bordersX[xx+1] < lonEnd ) {
+                cout << " within bounds " << xx << "-" << yy << " | " << bordersY[yy] << " " << bordersX[xx] << " | " << bordersY[yy+1] << " " << bordersX[xx+1] << endl;
+                double xxA = lon2x_m(bordersX[xx]);
+                double xxB = lon2x_m(bordersX[xx+1]);
+                double yyA = lat2y_m(bordersY[yy]);
+                double yyB = lat2y_m(bordersY[yy+1]);
+                cout << "  borders  " << xxA << " " << xxB << " " << yyA << " " << yyB << endl;
+
+                int xpA = (int)((xxA-adfGeoTransform[0])/adfGeoTransform[1]);
+                int xpB = (int)((xxB-adfGeoTransform[0])/adfGeoTransform[1]);
+                int ypA = (int)((yyA-adfGeoTransform[3])/adfGeoTransform[5]);
+                int ypB = (int)((yyB-adfGeoTransform[3])/adfGeoTransform[5]);
+                cout << "  borders  " << xpA << " " << xpB << " " << ypA << " " << ypB << endl;
+
+                int sizeX = xpB-xpA;
+                int sizeY = ypB-xpA;
+
+                vector<uint8_t> data;
+                for (int i=1; i<=poDS->GetRasterCount(); i++) {
+                    auto band = getBand(i);
+                    cout << band->GetRasterDataType() << endl;
+                    vector<uint8_t> line(sizeX*sizeY);
+                    band->RasterIO( GF_Read, xpA, ypA, sizeX, sizeY, &line[0], sizeX, sizeY, GDT_Byte, 0, 0 );
+                    data.insert(data.end(), line.begin(), line.end());
+                }
+
+
+                cout << " a" << endl;
+                auto t = VRTexture::create();
+                t->setInternalFormat(GL_ALPHA32F_ARB); // important for unclamped float
+                auto img = t->getImage();
+                img->set( Image::OSG_A_PF, sizeX, sizeY, 1, 1, 1, 0, (const uint8_t*)&data[0], Image::OSG_FLOAT32_IMAGEDATA, true, 1);
+                cout << " b" << endl;
+            }
+            else { /*cout << " out of bounds " << xx << "-" << yy << " | " << bordersY[yy] << " " << bordersX[xx] << " | " << bordersY[yy+1] << " " << bordersX[xx+1] << endl;*/ }
+        }
     }
+    /*
+    adfGeoTransform[0]
+    adfGeoTransform[3]
+    minLat
+    maxLat
+    minLon
+    maxLon
+    res*/
+    GDALClose(poDS);
+
+    return;
+    // get first block
+
 
     /*
     int sizeX = poDS->GetRasterXSize();
