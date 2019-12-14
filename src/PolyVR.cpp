@@ -15,7 +15,6 @@
 #include "core/scene/sound/VRSoundManager.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/setup/VRSetup.h"
-#include "addons/CEF/CEF.h"
 
 #include <OpenSG/OSGPrimeMaterial.h>
 #include <OpenSG/OSGNameAttachment.h>
