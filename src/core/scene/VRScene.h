@@ -28,7 +28,9 @@ class VRVisualLayer;
 class VRScene : public VRObjectGroupManager,
                 public VRCameraManager,
                 public VRAnimationManager,
+#ifndef WITHOUT_BULLET
                 public VRPhysicsManager,
+#endif
                 public VRCallbackManager,
                 public VRThreadManager,
                 public VRScriptManager,

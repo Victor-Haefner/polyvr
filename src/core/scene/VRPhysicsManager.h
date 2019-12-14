@@ -1,4 +1,4 @@
-#ifndef VRPHYSICSMANAGER_H_INCLUDED
+#if !defined(VRPHYSICSMANAGER_H_INCLUDED) && !defined(WITHOUT_BULLET)
 #define VRPHYSICSMANAGER_H_INCLUDED
 
 #include <LinearMath/btAlignedObjectArray.h>

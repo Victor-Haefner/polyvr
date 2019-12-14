@@ -1,3 +1,13 @@
+
+
+#define GL_GLEXT_PROTOTYPES
+#define EGL_EGLEXT_PROTOTYPES
+
+#include <OpenSG/OSGGL.h>
+#include <OpenSG/OSGGLUT.h>
+#include <OpenSG/OSGPrimeMaterial.h>
+#include <OpenSG/OSGNameAttachment.h>
+
 #include "PolyVR.h"
 
 #include "core/scene/VRSceneManager.h"
@@ -5,7 +15,9 @@
 #include "core/setup/VRSetupManager.h"
 #include "core/utils/VRInternalMonitor.h"
 #include "core/utils/coreDumpHandler.h"
+#ifndef WITHOUT_GTK
 #include "core/gui/VRGuiManager.h"
+#endif
 #include "core/networking/VRMainInterface.h"
 #include "core/networking/VRSharedMemory.h"
 #include "core/utils/VROptions.h"
@@ -15,11 +27,6 @@
 #include "core/scene/sound/VRSoundManager.h"
 #include "core/objects/object/VRObject.h"
 #include "core/setup/VRSetup.h"
-
-#include <OpenSG/OSGPrimeMaterial.h>
-#include <OpenSG/OSGNameAttachment.h>
-#include <OpenSG/OSGGL.h>
-#include <OpenSG/OSGGLUT.h>
 
 #ifndef _WIN32
 #include <unistd.h>
@@ -154,7 +161,9 @@ void PolyVR::start(bool runit) {
     scene_mgr = VRSceneManager::create();
     interface = shared_ptr<VRMainInterface>(VRMainInterface::get());
     monitor = shared_ptr<VRInternalMonitor>(VRInternalMonitor::get());
+#ifndef WITHOUT_GTK
     gui_mgr = shared_ptr<VRGuiManager>(VRGuiManager::get());
+#endif
     loader = shared_ptr<VRSceneLoader>(VRSceneLoader::get());
 
     //string app = options->getOption<string>("application");
@@ -168,7 +177,9 @@ void PolyVR::startTestScene(OSGObjectPtr n) {
     cout << "start test scene " << n << endl;
     VRSceneManager::get()->newScene("test");
     VRScene::getCurrent()->getRoot()->find("light")->addChild(n);
+#ifndef WITHOUT_GTK
     VRGuiManager::get()->wakeWindow();
+#endif
     run();
 }
 
