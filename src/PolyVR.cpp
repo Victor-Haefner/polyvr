@@ -13,13 +13,13 @@
 #include "core/utils/system/VRSystem.h"
 #include "core/scene/VRSceneLoader.h"
 #include "core/scene/sound/VRSoundManager.h"
-#include "core/objects/material/VRMaterial.h"
+#include "core/objects/object/VRObject.h"
 #include "core/setup/VRSetup.h"
 
 #include <OpenSG/OSGPrimeMaterial.h>
 #include <OpenSG/OSGNameAttachment.h>
-#include <OpenSG/OSGNode.h>
-#include <GL/glut.h>
+#include <OpenSG/OSGGL.h>
+#include <OpenSG/OSGGLUT.h>
 
 #ifndef _WIN32
 #include <unistd.h>
