@@ -83,22 +83,22 @@ void VRDeviceManager::resetDeviceDynNodes(VRObjectPtr root) {
     }
 }
 
-void VRDeviceManager::save(xmlpp::Element* node) {
-    xmlpp::Element* dn;
+void VRDeviceManager::save(XMLElementPtr node) {
+    XMLElementPtr dn;
     for (auto d : devices) {
         dn = node->add_child("Device");
         d.second->save(dn);
     }
 }
 
-void VRDeviceManager::load(xmlpp::Element* node) {
+void VRDeviceManager::load(XMLElementPtr node) {
     cout << "Load devices:";
     xmlpp::Node::NodeList nl = node->get_children();
     xmlpp::Node::NodeList::iterator itr;
     for (itr = nl.begin(); itr != nl.end(); itr++) {
         xmlpp::Node* n = *itr;
 
-        xmlpp::Element* el = dynamic_cast<xmlpp::Element*>(n);
+        XMLElementPtr el = dynamic_cast<XMLElementPtr>(n);
         if (!el) continue;
 
         string type = el->get_attribute("type")->get_value();

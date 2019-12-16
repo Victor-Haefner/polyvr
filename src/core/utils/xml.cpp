@@ -1,6 +1,9 @@
 #include "xml.h"
 
+#include <iostream>
 #include <libxml/tree.h>
+#include <libxml/encoding.h>
+#include <libxml/xmlwriter.h>
 
 
 XMLElement::XMLElement(_xmlNode* node) : node(node) {}
@@ -11,41 +14,110 @@ XMLElementPtr XMLElement::create(_xmlNode* node) { return XMLElementPtr( new XML
 string XMLElement::getName() { return string((const char*)node->name); }
 string XMLElement::getNameSpace() { return string((const char*)node->ns); }
 
+string XMLElement::getText() { return string((const char*)xmlNodeGetContent( node->children ) ); }
+
+string XMLElement::getAttribute(string name) {
+    xmlAttr* attribute = node->properties;
+    while(attribute) {
+        xmlChar* aname = xmlNodeListGetString(node->doc, attribute->children, 0);
+        xmlChar* value = xmlNodeListGetString(node->doc, attribute->children, 1);
+        string ans((const char*)aname);
+        string vas((const char*)value);
+        xmlFree(aname);
+        xmlFree(value);
+        if (ans == name) return vas;
+        attribute = attribute->next;
+    }
+    return "";
+}
+
+bool XMLElement::hasAttribute(string name) {
+    xmlAttr* attribute = node->properties;
+    while(attribute) {
+        xmlChar* aname = xmlNodeListGetString(node->doc, attribute->children, 0);
+        string ans((const char*)aname);
+        xmlFree(aname);
+        if (ans == name) return true;
+        attribute = attribute->next;
+    }
+    return false;
+}
+
+void XMLElement::setAttribute(string name, string value) {
+    xmlSetProp(node, (xmlChar*)name.c_str(), (xmlChar*)value.c_str());
+}
+
 _xmlNode* getNextNode(_xmlNode* cur) {
     while ( cur && xmlIsBlankNode(cur) ) cur = cur->next;
     return cur;
 }
 
-vector<XMLElementPtr> XMLElement::getChildren() {
+vector<XMLElementPtr> XMLElement::getChildren(string name) {
     vector<XMLElementPtr> res;
     auto cnode = getNextNode( node->xmlChildrenNode );
     while (cnode) {
+        if (name != "" && name != string((const char*)cnode->name)) continue;
         res.push_back(XMLElement::create(cnode));
         cnode = getNextNode( cnode->next );
     }
     return res;
 }
 
+XMLElementPtr XMLElement::getChild(string name) {
+    auto cnode = getNextNode( node->xmlChildrenNode );
+    while (cnode) {
+        if (name == string((const char*)cnode->name)) return XMLElement::create(cnode);
+        cnode = getNextNode( cnode->next );
+    }
+    return 0;
+}
+
+XMLElementPtr XMLElement::addChild(string name) {
+    auto child = xmlNewNode(NULL, (xmlChar*)name.c_str());
+    xmlAddChild(node, child);
+    return XMLElement::create(child);
+}
+
+void XMLElement::setText(string text) {
+    auto child = xmlNewText((xmlChar*)text.c_str());
+    xmlAddChild(node, child);
+}
+
+
 
 XML::XML() {}
-XML::~XML() {}
+XML::~XML() {
+    if (doc) xmlFreeDoc(doc);
+}
 
 XMLPtr XML::create() { return XMLPtr( new XML() ); }
 
 void XML::read(string path) {
-    xmlDocPtr doc = xmlParseFile(path.c_str());
+    if (doc) xmlFreeDoc(doc);
+    doc = xmlParseFile(path.c_str());
     xmlNodePtr xmlRoot = xmlDocGetRootElement(doc);
     root = XMLElement::create(xmlRoot);
-
-    xmlFreeDoc(doc);
 }
 
 void XML::write(string path) { // TODO
-    ;
+    xmlTextWriterPtr writer = xmlNewTextWriterFilename(path.c_str(), 0);
 }
 
 XMLElementPtr XML::getRoot() { return root; }
 
+XMLElementPtr XML::newRoot(string name, string ns_uri, string ns_prefix) {
+    if (doc) xmlFreeDoc(doc);
+    doc = xmlNewDoc(NULL);
+    auto ns = xmlNewNs(NULL, (xmlChar*)ns_uri.c_str(), (xmlChar*)ns_prefix.c_str());
+    auto rnode = xmlNewNode(ns, (xmlChar*)name.c_str());
+    root = XMLElement::create( rnode );
+    return root;
+}
+
+void XML::printTree(XMLElementPtr e, string D) {
+    cout << D << e->getName() << endl;
+    for (auto c : e->getChildren()) printTree(c, D + " ");
+}
 
 
 

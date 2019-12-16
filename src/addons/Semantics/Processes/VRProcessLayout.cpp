@@ -5,6 +5,7 @@
 #include "core/objects/geometry/sprite/VRSprite.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/geometry/VRGeoData.h"
+#include "core/utils/xml.h"
 #include "core/utils/toString.h"
 #include "core/utils/system/VRSystem.h"
 #include "core/tools/VRText.h"
@@ -14,9 +15,6 @@
 #include <algorithm>
 #include <OpenSG/OSGMatrixUtility.h>
 #include <boost/bind.hpp>
-
-#include <libxml++/libxml++.h>
-#include <libxml++/nodes/element.h>
 
 using namespace OSG;
 
@@ -435,8 +433,8 @@ void VRProcessLayout::updatePathtools(){
 void VRProcessLayout::storeLayout(string path) {
     if (path == "") path = ".process_layout.plt";
 
-    xmlpp::Document doc;
-    XMLElementPtr root = doc.create_root_node("ProjectsList", "", "VRP"); // name, ns_uri, ns_prefix
+    XML xml;
+    auto root = xml.newRoot("ProjectsList", "", "VRP"); // name, ns_uri, ns_prefix
 
     auto storeHandles = [&](VRPathtoolPtr tool) {
         for (auto handle : tool->getHandles()) {
@@ -448,7 +446,7 @@ void VRProcessLayout::storeLayout(string path) {
     storeHandles(toolSID);
     for (auto tool : toolSBDs) storeHandles(tool.second);
 
-    doc.write_to_file_formatted(path);
+    xml.write(path);
 }
 
 void VRProcessLayout::loadLayout(string path) {

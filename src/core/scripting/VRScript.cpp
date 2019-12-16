@@ -631,20 +631,20 @@ void VRScript::remArgument(string name) {
 void VRScript::setGroup(string g) { group = g; }
 string VRScript::getGroup() { return group; }
 
-void VRScript::save(xmlpp::Element* e) {
-    xmlpp::Element* ec = e->add_child("core");
+void VRScript::save(XMLElementPtr e) {
+    XMLElementPtr ec = e->add_child("core");
     ec->set_child_text("\n"+core+"\n");
 
     for (auto a : args) {
         if (a->trig) continue;
-        xmlpp::Element* ea = e->add_child("arg");
+        XMLElementPtr ea = e->add_child("arg");
         ea->set_attribute("type", a->type);
         ea->set_attribute("value", a->val);
         a->save(ea);
     }
 
     for (auto t : trigs) {
-        xmlpp::Element* ea = e->add_child("trig");
+        XMLElementPtr ea = e->add_child("trig");
         ea->set_attribute("type", t->trigger);
         ea->set_attribute("dev", t->dev);
         ea->set_attribute("state", t->state);
@@ -654,7 +654,7 @@ void VRScript::save(xmlpp::Element* e) {
     }
 }
 
-void VRScript::load(xmlpp::Element* e) {
+void VRScript::load(XMLElementPtr e) {
     clean();
     VRName::load(e);
     if (e->get_attribute("core")) core = e->get_attribute("core")->get_value();
@@ -663,7 +663,7 @@ void VRScript::load(xmlpp::Element* e) {
     if (e->get_attribute("group")) group = e->get_attribute("group")->get_value();
 
     for (xmlpp::Node* n : e->get_children() ) {
-        xmlpp::Element* el = dynamic_cast<xmlpp::Element*>(n);
+        XMLElementPtr el = dynamic_cast<XMLElementPtr>(n);
         if (!el) continue;
 
         string name = el->get_name();

@@ -698,10 +698,10 @@ OSMNode::OSMNode(string id, double lat, double lon) : OSMBase(id), lat(lat), lon
 OSMWay::OSMWay(string id) : OSMBase(id) {}
 OSMRelation::OSMRelation(string id) : OSMBase(id) {}
 
-OSMBase::OSMBase(xmlpp::Element* el) {
+OSMBase::OSMBase(XMLElementPtr el) {
     id = el->get_attribute_value("id");
     for(xmlpp::Node* n : el->get_children()) { // read node tags
-        if (auto e = dynamic_cast<xmlpp::Element*>(n)) {
+        if (auto e = dynamic_cast<XMLElementPtr>(n)) {
             if (e->get_name() == "tag") {
                 tags[e->get_attribute_value("k")] = e->get_attribute_value("v");
             }
@@ -747,14 +747,14 @@ bool OSMBase::hasTag(const string& t) {
 map<string, string> OSMBase::getTags() { return tags; }
 string OSMBase::getID() { return id; }
 
-OSMNode::OSMNode(xmlpp::Element* el) : OSMBase(el) {
+OSMNode::OSMNode(XMLElementPtr el) : OSMBase(el) {
     toValue(el->get_attribute_value("lat"), lat);
     toValue(el->get_attribute_value("lon"), lon);
 }
 
-OSMWay::OSMWay(xmlpp::Element* el, map<string, bool>& invalidIDs) : OSMBase(el) {
+OSMWay::OSMWay(XMLElementPtr el, map<string, bool>& invalidIDs) : OSMBase(el) {
     for(xmlpp::Node* n : el->get_children()) {
-        if (auto e = dynamic_cast<xmlpp::Element*>(n)) {
+        if (auto e = dynamic_cast<XMLElementPtr>(n)) {
             if (e->get_name() == "tag") continue;
             if (e->get_name() == "nd") {
                 string nID = e->get_attribute_value("ref");
@@ -767,9 +767,9 @@ OSMWay::OSMWay(xmlpp::Element* el, map<string, bool>& invalidIDs) : OSMBase(el) 
     }
 }
 
-OSMRelation::OSMRelation(xmlpp::Element* el, map<string, bool>& invalidIDs) : OSMBase(el) {
+OSMRelation::OSMRelation(XMLElementPtr el, map<string, bool>& invalidIDs) : OSMBase(el) {
     for(xmlpp::Node* n : el->get_children()) {
-        if (auto e = dynamic_cast<xmlpp::Element*>(n)) {
+        if (auto e = dynamic_cast<XMLElementPtr>(n)) {
             if (e->get_name() == "tag") continue;
             if (e->get_name() == "member") {
                 string type = e->get_attribute_value("type");
@@ -784,7 +784,7 @@ OSMRelation::OSMRelation(xmlpp::Element* el, map<string, bool>& invalidIDs) : OS
     }
 }
 
-void OSMBase::writeTo(xmlpp::Element* e) {
+void OSMBase::writeTo(XMLElementPtr e) {
     e->set_attribute("id", ::toString(id));
     e->set_attribute("visible", "true");
     e->set_attribute("version", "1"); // TODO
@@ -798,13 +798,13 @@ void OSMBase::writeTo(xmlpp::Element* e) {
     }
 }
 
-void OSMNode::writeTo(xmlpp::Element* e) {
+void OSMNode::writeTo(XMLElementPtr e) {
     OSMBase::writeTo(e);
     e->set_attribute("lat", ::toString(lat));
     e->set_attribute("lon", ::toString(lon));
 }
 
-void OSMWay::writeTo(xmlpp::Element* e) {
+void OSMWay::writeTo(XMLElementPtr e) {
     OSMBase::writeTo(e);
 
     for (auto node : nodes) {
@@ -813,7 +813,7 @@ void OSMWay::writeTo(xmlpp::Element* e) {
     }
 }
 
-void OSMRelation::writeTo(xmlpp::Element* e) {
+void OSMRelation::writeTo(XMLElementPtr e) {
     OSMBase::writeTo(e);
 
     for (auto node : nodes) {
@@ -856,7 +856,7 @@ void OSMMap::clear() {
     nodes.clear();
 }
 
-bool OSMMap::isValid(xmlpp::Element* e) {
+bool OSMMap::isValid(XMLElementPtr e) {
     if (e->get_attribute("action")) {
         if (e->get_attribute_value("action") == "delete") {
             invalidElements[e->get_attribute_value("id")] = true;
@@ -877,7 +877,7 @@ void OSMMap::readFile(string path) {
 
     auto data = parser.get_document()->get_root_node()->get_children();
     for (auto enode : data) {
-        if (auto element = dynamic_cast<xmlpp::Element*>(enode)) {
+        if (auto element = dynamic_cast<XMLElementPtr>(enode)) {
             if (!isValid(element)) continue;
             if (element->get_name() == "node") { readNode(element); continue; }
             if (element->get_name() == "bounds") { readBounds(element); continue; }
@@ -885,14 +885,14 @@ void OSMMap::readFile(string path) {
         }
     }
     for (auto enode : data) {
-        if (auto element = dynamic_cast<xmlpp::Element*>(enode)) {
+        if (auto element = dynamic_cast<XMLElementPtr>(enode)) {
             if (!isValid(element)) continue;
             if (element->get_name() == "way") { readWay(element, invalidElements); continue; }
             //cout << " OSMMap::readFile, unhandled element: " << element->get_name() << endl;
         }
     }
     for (auto enode : data) {
-        if (auto element = dynamic_cast<xmlpp::Element*>(enode)) {
+        if (auto element = dynamic_cast<XMLElementPtr>(enode)) {
             if (!isValid(element)) continue;
             if (element->get_name() == "relation") { readRelation(element, invalidElements); continue; }
             //cout << " OSMMap::readFile, unhandled element: " << element->get_name() << endl;
@@ -1252,7 +1252,7 @@ vector<OSMWayPtr> OSMMap::splitWay(OSMWayPtr way, int segN) {
     return res;
 }
 
-void OSMMap::readBounds(xmlpp::Element* element) {
+void OSMMap::readBounds(XMLElementPtr element) {
     Vec3d min(toFloat( element->get_attribute_value("minlon") ), toFloat( element->get_attribute_value("minlat") ), 0 );
     Vec3d max(toFloat( element->get_attribute_value("maxlon") ), toFloat( element->get_attribute_value("maxlat") ), 0 );
     bounds->clear();
@@ -1260,7 +1260,7 @@ void OSMMap::readBounds(xmlpp::Element* element) {
     bounds->update(max);
 }
 
-void OSMMap::writeBounds(xmlpp::Element* parent) {
+void OSMMap::writeBounds(XMLElementPtr parent) {
     auto element = parent->add_child("bounds");
     element->set_attribute("minlon", ::toString( bounds->min()[0]) );
     element->set_attribute("minlat", ::toString( bounds->min()[1]) );
@@ -1268,17 +1268,17 @@ void OSMMap::writeBounds(xmlpp::Element* parent) {
     element->set_attribute("maxlat", ::toString( bounds->max()[1]) );
 }
 
-void OSMMap::readNode(xmlpp::Element* element) {
+void OSMMap::readNode(XMLElementPtr element) {
     OSMNodePtr node = OSMNodePtr( new OSMNode(element) );
     nodes[node->id] = node;
 }
 
-void OSMMap::readWay(xmlpp::Element* element, map<string, bool>& invalidIDs) {
+void OSMMap::readWay(XMLElementPtr element, map<string, bool>& invalidIDs) {
     OSMWayPtr way = OSMWayPtr( new OSMWay(element, invalidIDs) );
     ways[way->id] = way;
 }
 
-void OSMMap::readRelation(xmlpp::Element* element, map<string, bool>& invalidIDs) {
+void OSMMap::readRelation(XMLElementPtr element, map<string, bool>& invalidIDs) {
     OSMRelationPtr rel = OSMRelationPtr( new OSMRelation(element, invalidIDs) );
     relations[rel->id] = rel;
 }

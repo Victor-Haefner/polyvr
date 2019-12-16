@@ -14,40 +14,16 @@ VRAMLLoader::~VRAMLLoader() {}
 
 VRAMLLoaderPtr VRAMLLoader::create()  { return VRAMLLoaderPtr(new VRAMLLoader()); }
 
-void traverseXML(XMLElementPtr e, string D = "") {
-    cout << D << e->getName() << endl;
-    for (auto c : e->getChildren()) traverseXML(c, D + " ");
-}
-
-XMLElementPtr getChild(XMLElementPtr e, string name) {
-    return dynamic_cast<XMLElementPtr>( e->get_first_child( name ) );
-}
-
-vector<XMLElementPtr> getChildren(XMLElementPtr e, string name) {
-    vector<XMLElementPtr> res;
-    for (auto n : e->get_children(name)) {
-        auto e = dynamic_cast<XMLElementPtr>( n );
-        if (e) res.push_back(e);
-    }
-    return res;
-}
-
-string getText(XMLElementPtr e) {
-    auto txt = e->get_child_text();
-    return txt ? txt->get_content() : "";
-}
-
 void VRAMLLoader::read(string path) {
     string ns = "{http://www.dke.de/CAEX}";
 
-    xmlpp::DomParser parser;
-    try { parser.parse_file(path); }
-    catch(const exception& ex) { cout << "VRAMLLoader::read Error: " << ex.what() << endl; return; }
+    XML xml;
+    xml.read(path);
 
-    auto root = parser.get_document()->get_root_node();
-    auto hierarchy = getChild(root, "InstanceHierarchy");
+    auto root = xml.getRoot();
+    auto hierarchy = root->getChild("InstanceHierarchy");
 
-    for (auto mach : getChildren(hierarchy, "InternalElement")) {
+    for (auto mach : hierarchy->getChildren("InternalElement")) {
         double x, y, z, length, width, height;
         double dx, dy, dz, ux, uy, uz;
         x = y = z = length = width = height = 0;
@@ -58,95 +34,95 @@ void VRAMLLoader::read(string path) {
         string path;
         string typ = "M";
         double clear = 10;
-        string mid = mach->get_attribute_value("ID");
-        string mname = mach->get_attribute_value("Name");
+        string mid = mach->getAttribute("ID");
+        string mname = mach->getAttribute("Name");
 
-        for (auto attr : getChildren(hierarchy, "Attribute")) {
-            string n = attr->get_attribute_value("Name");
+        for (auto attr : hierarchy->getChildren("Attribute")) {
+            string n = attr->getAttribute("Name");
             if (n == "position") {
-                for (auto val : getChildren(attr, "Attribute")) {
-                    string vn = val->get_attribute_value("Name");
-                    auto vf = getChild(val, "Value");
+                for (auto val : attr->getChildren("Attribute")) {
+                    string vn = val->getAttribute("Name");
+                    auto vf = val->getChild("Value");
                     if (!vf) break; // Attribute "Value" missing: Keep default value.
-                    else if (vn == "x") x = toFloat(getText(vf));
-                    else if (vn == "y") y = toFloat(getText(vf));
-                    else if (vn == "z") z = toFloat(getText(vf));
+                    else if (vn == "x") x = toFloat(vf->getText());
+                    else if (vn == "y") y = toFloat(vf->getText());
+                    else if (vn == "z") z = toFloat(vf->getText());
                 }
             }
 
             else if (n == "orientation") {
-                for (auto vec : getChildren(attr, "Attribute")) {
-                    string vn = vec->get_attribute_value("Name");
+                for (auto vec : attr->getChildren("Attribute")) {
+                    string vn = vec->getAttribute("Name");
                     if (vn == "direction_vector") {
-                        for (auto val : getChildren(vec, "Attribute")) {
-                            string vnn = val->get_attribute_value("Name");
-                            auto vf = getChild(val, "Value");
+                        for (auto val : vec->getChildren("Attribute")) {
+                            string vnn = val->getAttribute("Name");
+                            auto vf = val->getChild("Value");
                             if (!vf) break; // Attribute "Value" missing: Keep default value.
-                            else if (vnn == "dx") dx = toFloat(getText(vf));
-                            else if (vnn == "dy") dy = toFloat(getText(vf));
-                            else if (vnn == "dz") dz = toFloat(getText(vf));
+                            else if (vnn == "dx") dx = toFloat(vf->getText());
+                            else if (vnn == "dy") dy = toFloat(vf->getText());
+                            else if (vnn == "dz") dz = toFloat(vf->getText());
                         }
                     }
                     if (vn == "up_vector") {
-                        for (auto val : getChildren(vec, "Attribute")) {
-                            string vnn = val->get_attribute_value("Name");
-                            auto vf = getChild(val, "Value");
+                        for (auto val : vec->getChildren("Attribute")) {
+                            string vnn = val->getAttribute("Name");
+                            auto vf = val->getChild("Value");
                             if (!vf) break; // Attribute "Value" missing: Keep default value.
-                            else if (vnn == "ux") ux = toFloat(getText(vf));
-                            else if (vnn == "uy") uy = toFloat(getText(vf));
-                            else if (vnn == "uz") uz = toFloat(getText(vf));
+                            else if (vnn == "ux") ux = toFloat(vf->getText());
+                            else if (vnn == "uy") uy = toFloat(vf->getText());
+                            else if (vnn == "uz") uz = toFloat(vf->getText());
                         }
                     }
                 }
             }
 
             else if (n == "model") {
-                auto vf = getChild(attr, "Value");
-                if (vf) path = getText(vf);
+                auto vf = attr->getChild("Value");
+                if (vf) path = vf->getText();
             }
 
             else if (n == "type") {
-                auto vf = getChild(attr, "Value");
-                if (vf) typ = getText(vf);
+                auto vf = attr->getChild("Value");
+                if (vf) typ = vf->getText();
             }
 
             else if (n == "clearance") {
-                auto vf = getChild(attr, "Value");
-                if (vf) clear = toFloat(getText(vf));
+                auto vf = attr->getChild("Value");
+                if (vf) clear = toFloat(vf->getText());
             }
 
             else if (n == "size") {
-                for (auto val : getChildren(attr, "Attribute")) {
-                    string vn = val->get_attribute_value("Name");
-                    auto vf = getChild(val, "Value");
+                for (auto val : attr->getChildren("Attribute")) {
+                    string vn = val->getAttribute("Name");
+                    auto vf = val->getChild("Value");
                     if (!vf) break; // Attribute "Value" missing: Keep default value.
-                    else if (vn == "length") length = toFloat(getText(vf));
-                    else if (vn == "height") height = toFloat(getText(vf));
-                    else if (vn == "width") width = toFloat(getText(vf));
+                    else if (vn == "length") length = toFloat(vf->getText());
+                    else if (vn == "height") height = toFloat(vf->getText());
+                    else if (vn == "width") width = toFloat(vf->getText());
                 }
             }
 
             else if (n == "workspace") {
-                for (auto vec : getChildren(attr, "Attribute")) {
-                    string vn = vec->get_attribute_value("Name");
+                for (auto vec : attr->getChildren("Attribute")) {
+                    string vn = vec->getAttribute("Name");
                     if (vn == "position") {
-                        for (auto val : getChildren(vec, "Attribute")) {
-                            string vnn = val->get_attribute_value("Name");
-                            auto vf = getChild(val, "Value");
+                        for (auto val : vec->getChildren("Attribute")) {
+                            string vnn = val->getAttribute("Name");
+                            auto vf = val->getChild("Value");
                             if (!vf) break; // Attribute "Value" missing: Keep default value.
-                            else if (vnn == "x") wSpace[0][0] = toFloat(getText(vf));
-                            else if (vnn == "y") wSpace[0][1] = toFloat(getText(vf));
-                            else if (vnn == "z") wSpace[0][2] = toFloat(getText(vf));
+                            else if (vnn == "x") wSpace[0][0] = toFloat(vf->getText());
+                            else if (vnn == "y") wSpace[0][1] = toFloat(vf->getText());
+                            else if (vnn == "z") wSpace[0][2] = toFloat(vf->getText());
                         }
                     }
                     if (vn == "size") {
-                        for (auto val : getChildren(vec, "Attribute")) {
-                            string vnn = val->get_attribute_value("Name");
-                            auto vf = getChild(val, "Value");
+                        for (auto val : vec->getChildren("Attribute")) {
+                            string vnn = val->getAttribute("Name");
+                            auto vf = val->getChild("Value");
                             if (!vf) break; // Attribute "Value" missing: Keep default value.
-                            else if (vnn == "length") wSpace[1][0] = toFloat(getText(vf));
-                            else if (vnn == "height") wSpace[1][1] = toFloat(getText(vf));
-                            else if (vnn == "width") wSpace[1][2] = toFloat(getText(vf));
+                            else if (vnn == "length") wSpace[1][0] = toFloat(vf->getText());
+                            else if (vnn == "height") wSpace[1][1] = toFloat(vf->getText());
+                            else if (vnn == "width") wSpace[1][2] = toFloat(vf->getText());
                         }
                     }
                 }

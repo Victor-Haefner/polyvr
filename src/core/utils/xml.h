@@ -6,6 +6,7 @@
 
 using namespace std;
 
+struct _xmlDoc;
 struct _xmlNode;
 
 class XMLElement {
@@ -20,11 +21,22 @@ class XMLElement {
 
         string getName();
         string getNameSpace();
-        vector<XMLElementPtr> getChildren();
+
+        string getText();
+        void setText(string text);
+
+        string getAttribute(string name);
+        bool hasAttribute(string name);
+        void setAttribute(string name, string value);
+
+        vector<XMLElementPtr> getChildren(string name = "");
+        XMLElementPtr getChild(string name);
+        XMLElementPtr addChild(string name);
 };
 
 class XML {
     private:
+        _xmlDoc* doc = 0;
         XMLElementPtr root = 0;
 
     public:
@@ -37,6 +49,8 @@ class XML {
         void write(string path);
 
         XMLElementPtr getRoot();
+        XMLElementPtr newRoot(string name, string ns_uri, string ns_prefix);
+        void printTree(XMLElementPtr e, string D = "");
 };
 
 #endif // XML_H_INCLUDED

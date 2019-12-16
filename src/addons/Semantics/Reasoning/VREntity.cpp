@@ -272,13 +272,13 @@ bool VREntity::is_a(const string& concept) {
 
 void VREntity::save(XMLElementPtr e, int p) {
     VRStorage::save(e,p);
-    e = e->add_child("properties");
+    e = e->addChild("properties");
     for (auto p : properties) {
-        auto e2 = e->add_child(p.first);
+        auto e2 = e->addChild(p.first);
         for (auto sp : p.second) {
-            auto e3 = e2->add_child(sp.second->getName());
-            e3->set_attribute("value", sp.second->value);
-            e3->set_attribute("type", sp.second->type);
+            auto e3 = e2->addChild(sp.second->getName());
+            e3->setAttribute("value", sp.second->value);
+            e3->setAttribute("type", sp.second->type);
         }
     }
 }
@@ -288,10 +288,10 @@ void VREntity::load(XMLElementPtr e) {
     e = getChild(e, "properties");
     for (auto el : getChildren(e)) {
         for (auto el2 : getChildren(el)) {
-            string n = el2->get_name();
+            string n = el2->getName();
             auto p = VRProperty::create(n,"");
-            if (el2->get_attribute("value")) p->setValue( el2->get_attribute("value")->get_value() );
-            if (el2->get_attribute("type")) p->setType( el2->get_attribute("type")->get_value() );
+            if (el2->hasAttribute("value")) p->setValue( el2->getAttribute("value") );
+            if (el2->hasAttribute("type")) p->setType( el2->getAttribute("type") );
             int i = properties[n].size();
             properties[n][i] = p;
         }

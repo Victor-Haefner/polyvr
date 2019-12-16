@@ -238,18 +238,18 @@ void VRGuiScripts::on_import_clicked() {
     VRGuiFile::open("Import", Gtk::FILE_CHOOSER_ACTION_OPEN, "Import script");
 }
 
-xmlpp::Element* getXMLChild(xmlpp::Element* e, string name) {
+XMLElementPtr getXMLChild(XMLElementPtr e, string name) {
     for (auto n : e->get_children()) {
-        xmlpp::Element* el = dynamic_cast<xmlpp::Element*>(n);
+        XMLElementPtr el = dynamic_cast<XMLElementPtr>(n);
         if (!el) continue;
         if (el->get_name() == name) return el;
     } return 0;
 }
 
-vector<xmlpp::Element*> getXMLChildren(xmlpp::Element* e) {
-    vector<xmlpp::Element*> res;
+vector<XMLElementPtr> getXMLChildren(XMLElementPtr e) {
+    vector<XMLElementPtr> res;
     for (auto n : e->get_children()) {
-        xmlpp::Element* el = dynamic_cast<xmlpp::Element*>(n);
+        XMLElementPtr el = dynamic_cast<XMLElementPtr>(n);
         if (!el) continue;
         res.push_back(el);
     }
@@ -268,8 +268,8 @@ void VRGuiScripts::on_diag_import_select() {
     catch(exception& e) { return; }
 
     xmlpp::Node* n = parser.get_document()->get_root_node();
-    xmlpp::Element* scene = dynamic_cast<xmlpp::Element*>(n);
-    vector<xmlpp::Element*> scripts = getXMLChildren( getXMLChild(scene, "Scripts") );
+    XMLElementPtr scene = dynamic_cast<XMLElementPtr>(n);
+    vector<XMLElementPtr> scripts = getXMLChildren( getXMLChild(scene, "Scripts") );
 
     ListStore::Row row;
     for (auto script : scripts) {

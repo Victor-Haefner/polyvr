@@ -46,7 +46,7 @@ void VRStorage::regStorageSetupFkt(VRStorageCbPtr u) { f_setup.push_back(u); }
 void VRStorage::regStorageSetupAfterFkt(VRUpdateCbPtr u) { f_setup_after.push_back(u); }
 void VRStorage::setStorageType(string t) { type = t; }
 
-void VRStorage::load_strstr_map_cb(map<string, string>* m, string tag, xmlpp::Element* e) {
+void VRStorage::load_strstr_map_cb(map<string, string>* m, string tag, XMLElementPtr e) {
     e = getChild(e, tag);
     if (!e) return;
     for (auto el : getChildren(e)) {
@@ -57,7 +57,7 @@ void VRStorage::load_strstr_map_cb(map<string, string>* m, string tag, xmlpp::El
     }
 }
 
-void VRStorage::save_strstr_map_cb(map<string, string>* m, string tag, xmlpp::Element* e) {
+void VRStorage::save_strstr_map_cb(map<string, string>* m, string tag, XMLElementPtr e) {
     if (m->size() == 0) return;
     e = e->add_child(tag);
     for (auto t : *m) {
@@ -75,13 +75,13 @@ void VRStorage::storeMap(string tag, map<string, string>& m) {
 
 void VRStorage::setOverrideCallbacks(bool b) { overrideCallbacks = b; }
 
-void VRStorage::save(xmlpp::Element* e, int p) {
+void VRStorage::save(XMLElementPtr e, int p) {
     if (e == 0) return;
     if (persistency <= p) return;
     for (auto s : storage) (*s.second.f2)(e);
 }
 
-xmlpp::Element* VRStorage::saveUnder(xmlpp::Element* e, int p, string t) {
+XMLElementPtr VRStorage::saveUnder(XMLElementPtr e, int p, string t) {
     string tag = type;
     if (t != "") tag = t;
     if (e == 0) return 0;
@@ -92,7 +92,7 @@ xmlpp::Element* VRStorage::saveUnder(xmlpp::Element* e, int p, string t) {
     return e;
 }
 
-void VRStorage::load(xmlpp::Element* e, VRStorageContextPtr context) {
+void VRStorage::load(XMLElementPtr e, VRStorageContextPtr context) {
     if (e == 0) return;
     for (auto f : f_setup_before) (*f)(context);
     for (auto s : storage) (*s.second.f1)(e);
@@ -101,7 +101,7 @@ void VRStorage::load(xmlpp::Element* e, VRStorageContextPtr context) {
     f_setup_after.clear();
 }
 
-xmlpp::Element* VRStorage::loadChildFrom(xmlpp::Element* e, string t, VRStorageContextPtr context) {
+XMLElementPtr VRStorage::loadChildFrom(XMLElementPtr e, string t, VRStorageContextPtr context) {
     string tag = type;
     if (t != "") tag = t;
     e = getChild(e, tag);
@@ -109,18 +109,18 @@ xmlpp::Element* VRStorage::loadChildFrom(xmlpp::Element* e, string t, VRStorageC
     return e;
 }
 
-xmlpp::Element* VRStorage::loadChildIFrom(xmlpp::Element* e, int i, VRStorageContextPtr context) {
+XMLElementPtr VRStorage::loadChildIFrom(XMLElementPtr e, int i, VRStorageContextPtr context) {
     e = getChildI(e, i);
     load( e, context );
     return e;
 }
 
-int VRStorage::getPersistency(xmlpp::Element* e) {
+int VRStorage::getPersistency(XMLElementPtr e) {
     if (!e->get_attribute("persistency")) return 0;
     return toInt( e->get_attribute("persistency")->get_value() );
 }
 
-VRStoragePtr VRStorage::createFromStore(xmlpp::Element* e, bool verbose) {
+VRStoragePtr VRStorage::createFromStore(XMLElementPtr e, bool verbose) {
     if (!e->get_attribute("type")) {
         if (verbose) cout << "VRStorage::createFromStore WARNING: element " << e->get_name() << " has no attribute type\n";
         return 0;
@@ -138,21 +138,21 @@ VRStoragePtr VRStorage::createFromStore(xmlpp::Element* e, bool verbose) {
     return res;
 }
 
-xmlpp::Element* VRStorage::getChild(xmlpp::Element* e, string c) {
+XMLElementPtr VRStorage::getChild(XMLElementPtr e, string c) {
     if (e == 0) return 0;
     for (auto n : e->get_children()) {
-        xmlpp::Element* el = dynamic_cast<xmlpp::Element*>(n);
+        XMLElementPtr el = dynamic_cast<XMLElementPtr>(n);
         if (!el) continue;
         if (el->get_name() == c) return el;
     }
     return 0;
 }
 
-xmlpp::Element* VRStorage::getChildI(xmlpp::Element* e, int i) {
+XMLElementPtr VRStorage::getChildI(XMLElementPtr e, int i) {
     if (e == 0) return 0;
     int k=0;
     for (auto n : e->get_children()) {
-        xmlpp::Element* el = dynamic_cast<xmlpp::Element*>(n);
+        XMLElementPtr el = dynamic_cast<XMLElementPtr>(n);
         if (!el) continue;
         if (k == i) return el;
         k++;
@@ -160,11 +160,11 @@ xmlpp::Element* VRStorage::getChildI(xmlpp::Element* e, int i) {
     return 0;
 }
 
-vector<xmlpp::Element*> VRStorage::getChildren(xmlpp::Element* e) {
-    vector<xmlpp::Element*> res;
+vector<XMLElementPtr> VRStorage::getChildren(XMLElementPtr e) {
+    vector<XMLElementPtr> res;
     if (!e) return res;
     for (auto n : e->get_children()) {
-        xmlpp::Element* el = dynamic_cast<xmlpp::Element*>(n);
+        XMLElementPtr el = dynamic_cast<XMLElementPtr>(n);
         if (!el) continue;
         res.push_back(el);
     }
@@ -172,7 +172,7 @@ vector<xmlpp::Element*> VRStorage::getChildren(xmlpp::Element* e) {
 }
 
 namespace OSG {
-int getID(xmlpp::Element* el) {
+int getID(XMLElementPtr el) {
     if (!el->get_attribute("ID")) return -1;
     string _ID = el->get_attribute("ID")->get_value();
     int ID;
@@ -183,7 +183,7 @@ int getID(xmlpp::Element* el) {
 
 bool VRStorage::saveToFile(string path, bool createDirs) {
     xmlpp::Document doc;
-    xmlpp::Element* root = doc.create_root_node("ProjectsList", "", "VRP"); // name, ns_uri, ns_prefix
+    XMLElementPtr root = doc.create_root_node("ProjectsList", "", "VRP"); // name, ns_uri, ns_prefix
     save(root);
     doc.write_to_file_formatted(path);
     return true;
@@ -196,7 +196,7 @@ bool VRStorage::loadFromFile(string path, VRStorageContextPtr context) {
     xmlpp::DomParser parser;
     parser.set_validate(false);
     parser.parse_file(path.c_str());
-    xmlpp::Element* root = dynamic_cast<xmlpp::Element*>(parser.get_document()->get_root_node());
+    XMLElementPtr root = dynamic_cast<XMLElementPtr>(parser.get_document()->get_root_node());
     load(root, context);
     return true;
 }

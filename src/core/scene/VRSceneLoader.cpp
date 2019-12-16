@@ -75,7 +75,7 @@ VRSceneLoader* VRSceneLoader::get() {
     return s;
 }
 
-void VRSceneLoader::saveScene(string file, xmlpp::Element* guiN, string encryptionKey) {
+void VRSceneLoader::saveScene(string file, XMLElementPtr guiN, string encryptionKey) {
     if (encryptionKey != "" && file[file.size()-1] == 'r') file[file.size()-1] = 'c';
 
     if (exists(file)) file = canonical(file);
@@ -84,8 +84,8 @@ void VRSceneLoader::saveScene(string file, xmlpp::Element* guiN, string encrypti
     if (scene == 0) return;
 
     xmlpp::Document doc;
-    xmlpp::Element* sceneN = doc.create_root_node("Scene", "", "VRF"); //name, ns_uri, ns_prefix
-    xmlpp::Element* objectsN = sceneN->add_child("Objects");
+    XMLElementPtr sceneN = doc.create_root_node("Scene", "", "VRF"); //name, ns_uri, ns_prefix
+    XMLElementPtr objectsN = sceneN->add_child("Objects");
     if (guiN) sceneN->import_node(guiN, true);
 
     // save scenegraph
@@ -108,14 +108,14 @@ void VRSceneLoader::saveScene(string file, xmlpp::Element* guiN, string encrypti
 #endif
 }
 
-xmlpp::Element* VRSceneLoader_getElementChild_(xmlpp::Element* e, string name) {
+XMLElementPtr VRSceneLoader_getElementChild_(XMLElementPtr e, string name) {
     if (e == 0) return 0;
     xmlpp::Node::NodeList nl = e->get_children();
     xmlpp::Node::NodeList::iterator itr;
     for (itr = nl.begin(); itr != nl.end(); itr++) {
         xmlpp::Node* n = *itr;
 
-        xmlpp::Element* el = dynamic_cast<xmlpp::Element*>(n);
+        XMLElementPtr el = dynamic_cast<XMLElementPtr>(n);
         if (!el) continue;
 
         if (el->get_name() == name) return el;
@@ -123,14 +123,14 @@ xmlpp::Element* VRSceneLoader_getElementChild_(xmlpp::Element* e, string name) {
     return 0;
 }
 
-xmlpp::Element* VRSceneLoader_getElementChild_(xmlpp::Element* e, int i) {
+XMLElementPtr VRSceneLoader_getElementChild_(XMLElementPtr e, int i) {
     if (e == 0) return 0;
     xmlpp::Node::NodeList nl = e->get_children();
     xmlpp::Node::NodeList::iterator itr;
     int j = 0;
     for (itr = nl.begin(); itr != nl.end(); itr++) {
         xmlpp::Node* n = *itr;
-        xmlpp::Element* el = dynamic_cast<xmlpp::Element*>(n);
+        XMLElementPtr el = dynamic_cast<XMLElementPtr>(n);
         if (!el) continue;
 
         if (i == j) return el;
@@ -166,9 +166,9 @@ void VRSceneLoader::loadScene(string path, string encryptionKey) {
 #endif
 
     xmlpp::Node* n = parser.get_document()->get_root_node();
-    xmlpp::Element* sceneN = dynamic_cast<xmlpp::Element*>(n);
-    xmlpp::Element* objectsN = VRSceneLoader_getElementChild_(sceneN, "Objects");
-    xmlpp::Element* root = VRSceneLoader_getElementChild_(objectsN, 0);
+    XMLElementPtr sceneN = dynamic_cast<XMLElementPtr>(n);
+    XMLElementPtr objectsN = VRSceneLoader_getElementChild_(sceneN, "Objects");
+    XMLElementPtr root = VRSceneLoader_getElementChild_(objectsN, 0);
 
     auto scene = VRScene::getCurrent();
     scene->getRoot()->load(root);
@@ -202,9 +202,9 @@ VRObjectPtr VRSceneLoader::importScene(string path, string encryptionKey, bool o
 #endif
 
     xmlpp::Node* n = parser.get_document()->get_root_node();
-    xmlpp::Element* sceneN = dynamic_cast<xmlpp::Element*>(n);
-    xmlpp::Element* objectsN = VRSceneLoader_getElementChild_(sceneN, "Objects");
-    xmlpp::Element* root = VRSceneLoader_getElementChild_(objectsN, 0);
+    XMLElementPtr sceneN = dynamic_cast<XMLElementPtr>(n);
+    XMLElementPtr objectsN = VRSceneLoader_getElementChild_(sceneN, "Objects");
+    XMLElementPtr root = VRSceneLoader_getElementChild_(objectsN, 0);
 
     auto scene = VRScene::getCurrent();
     auto rootNode = VRObject::create("sceneProxy");

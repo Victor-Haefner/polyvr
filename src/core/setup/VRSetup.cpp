@@ -131,7 +131,7 @@ void VRSetup::updateTracking() {
 VRNetworkPtr VRSetup::getNetwork() { return network; }
 
 //parser callback for the xml scene import
-void VRSetup::parseSetup(xmlpp::Element* setup) {
+void VRSetup::parseSetup(XMLElementPtr setup) {
     ;
 }
 
@@ -181,9 +181,9 @@ VRTransformPtr VRSetup::getTracker(string t) {
     return 0;
 }
 
-xmlpp::Element* VRSetup::getElementChild(xmlpp::Element* e, string name) {
+XMLElementPtr VRSetup::getElementChild(XMLElementPtr e, string name) {
     for (auto n : e->get_children()) {
-        xmlpp::Element* el = dynamic_cast<xmlpp::Element*>(n);
+        XMLElementPtr el = dynamic_cast<XMLElementPtr>(n);
         if (!el) continue;
         if (el->get_name() == name) return el;
     }
@@ -227,13 +227,13 @@ void VRSetup::setDisplaysOffset(Vec3d o) {
 
 void VRSetup::save(string file) {
     xmlpp::Document doc;
-    xmlpp::Element* setupN = doc.create_root_node("Setup", "", "VRF"); //name, ns_uri, ns_prefix
-    xmlpp::Element* displayN = setupN->add_child("Displays");
-    xmlpp::Element* deviceN = setupN->add_child("Devices");
-    xmlpp::Element* trackingARTN = setupN->add_child("TrackingART");
-    xmlpp::Element* trackingVRPNN = setupN->add_child("TrackingVRPN");
-    xmlpp::Element* networkN = setupN->add_child("Network");
-    xmlpp::Element* scriptN = setupN->add_child("Scripts");
+    XMLElementPtr setupN = doc.create_root_node("Setup", "", "VRF"); //name, ns_uri, ns_prefix
+    XMLElementPtr displayN = setupN->add_child("Displays");
+    XMLElementPtr deviceN = setupN->add_child("Devices");
+    XMLElementPtr trackingARTN = setupN->add_child("TrackingART");
+    XMLElementPtr trackingVRPNN = setupN->add_child("TrackingVRPN");
+    XMLElementPtr networkN = setupN->add_child("Network");
+    XMLElementPtr scriptN = setupN->add_child("Scripts");
 
     VRWindowManager::save(displayN);
     VRDeviceManager::save(deviceN);
@@ -258,13 +258,13 @@ void VRSetup::load(string file) {
     parser.parse_file(file.c_str());
 
     xmlpp::Node* n = parser.get_document()->get_root_node();
-    xmlpp::Element* setupN = dynamic_cast<xmlpp::Element*>(n);
-    xmlpp::Element* displayN = getElementChild(setupN, "Displays");
-    xmlpp::Element* deviceN = getElementChild(setupN, "Devices");
-    xmlpp::Element* trackingARTN = getElementChild(setupN, "TrackingART");
-    xmlpp::Element* trackingVRPNN = getElementChild(setupN, "TrackingVRPN");
-    xmlpp::Element* networkN = getElementChild(setupN, "Network");
-    xmlpp::Element* scriptN = getElementChild(setupN, "Scripts");
+    XMLElementPtr setupN = dynamic_cast<XMLElementPtr>(n);
+    XMLElementPtr displayN = getElementChild(setupN, "Displays");
+    XMLElementPtr deviceN = getElementChild(setupN, "Devices");
+    XMLElementPtr trackingARTN = getElementChild(setupN, "TrackingART");
+    XMLElementPtr trackingVRPNN = getElementChild(setupN, "TrackingVRPN");
+    XMLElementPtr networkN = getElementChild(setupN, "Network");
+    XMLElementPtr scriptN = getElementChild(setupN, "Scripts");
 
     if (trackingARTN) ART::load(trackingARTN);
     if (trackingVRPNN) VRPN::load(trackingVRPNN);

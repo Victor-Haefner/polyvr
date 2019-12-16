@@ -40,8 +40,8 @@ class VRDeviceManager {
         void resetDeviceDynNodes(VRObjectPtr ancestor);
         void updateDevices();
 
-        void save(xmlpp::Element* node);
-        void load(xmlpp::Element* node);
+        void save(XMLElementPtr node);
+        void load(XMLElementPtr node);
 };
 
 OSG_END_NAMESPACE;
