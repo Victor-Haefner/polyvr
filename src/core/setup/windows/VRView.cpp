@@ -577,7 +577,7 @@ VRTexturePtr VRView::grab() {
     return img;*/
 }
 
-void VRView::save(xmlpp::Element* node) {
+void VRView::save(XMLElementPtr node) {
     node->set_attribute("stereo", toString(stereo).c_str());
     node->set_attribute("active_stereo", toString(active_stereo).c_str());
     node->set_attribute("projection", toString(projection).c_str());
@@ -599,7 +599,7 @@ void VRView::save(xmlpp::Element* node) {
     else node->set_attribute("user", user_name);
 }
 
-void VRView::load(xmlpp::Element* node) {
+void VRView::load(XMLElementPtr node) {
     stereo = toValue<bool>(node->get_attribute("stereo")->get_value());
     active_stereo = toValue<bool>(node->get_attribute("active_stereo")->get_value());
     projection = toValue<bool>(node->get_attribute("projection")->get_value());

@@ -1,8 +1,8 @@
 #include "VRAMLLoader.h"
 #include "core/utils/toString.h"
+#include "core/utils/xml.h"
 
 #include <iostream>
-#include <libxml++/libxml++.h>
 #include <OpenSG/OSGVector.h>
 
 using namespace OSG;
@@ -14,29 +14,25 @@ VRAMLLoader::~VRAMLLoader() {}
 
 VRAMLLoaderPtr VRAMLLoader::create()  { return VRAMLLoaderPtr(new VRAMLLoader()); }
 
-void traverseXML(xmlpp::Element* e, string D = "") {
-    cout << D << e->get_name() << endl;
-    for (auto enode : e->get_children()) {
-        auto element = dynamic_cast<xmlpp::Element*>(enode);
-        if (!element) continue;
-        traverseXML(element, D + " ");
-    }
+void traverseXML(XMLElementPtr e, string D = "") {
+    cout << D << e->getName() << endl;
+    for (auto c : e->getChildren()) traverseXML(c, D + " ");
 }
 
-xmlpp::Element* getChild(xmlpp::Element* e, string name) {
-    return dynamic_cast<xmlpp::Element*>( e->get_first_child( name ) );
+XMLElementPtr getChild(XMLElementPtr e, string name) {
+    return dynamic_cast<XMLElementPtr>( e->get_first_child( name ) );
 }
 
-vector<xmlpp::Element*> getChildren(xmlpp::Element* e, string name) {
-    vector<xmlpp::Element*> res;
+vector<XMLElementPtr> getChildren(XMLElementPtr e, string name) {
+    vector<XMLElementPtr> res;
     for (auto n : e->get_children(name)) {
-        auto e = dynamic_cast<xmlpp::Element*>( n );
+        auto e = dynamic_cast<XMLElementPtr>( n );
         if (e) res.push_back(e);
     }
     return res;
 }
 
-string getText(xmlpp::Element* e) {
+string getText(XMLElementPtr e) {
     auto txt = e->get_child_text();
     return txt ? txt->get_content() : "";
 }

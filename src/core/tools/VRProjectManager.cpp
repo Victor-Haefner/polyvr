@@ -57,7 +57,7 @@ void VRProjectManager::save(string path) {
     cout << "VRProjectManager::save " << path << " (" << toString(vault_reload.size()) << " + " << toString(vault_rebuild.size()) << " objects)" << endl;
 
     xmlpp::Document doc;
-    xmlpp::Element* root = doc.create_root_node("Project", "", "VRP"); // name, ns_uri, ns_prefix
+    XMLElementPtr root = doc.create_root_node("Project", "", "VRP"); // name, ns_uri, ns_prefix
     storage.save(root);
 
     for (auto v : vault_reload) v->saveUnder(root, persistencyLvl);
@@ -76,13 +76,13 @@ void VRProjectManager::load(string path) {
     xmlpp::DomParser parser;
     parser.set_validate(false);
     parser.parse_file(path.c_str());
-    xmlpp::Element* root = dynamic_cast<xmlpp::Element*>(parser.get_document()->get_root_node());
+    XMLElementPtr root = dynamic_cast<XMLElementPtr>(parser.get_document()->get_root_node());
     storage.load(root);
 
     vault_rebuild.clear();
     uint i=0;
     for (auto n : root->get_children()) {
-        xmlpp::Element* e = dynamic_cast<xmlpp::Element*>(n);
+        XMLElementPtr e = dynamic_cast<XMLElementPtr>(n);
         if (!e) continue;
 
         VRStoragePtr s;

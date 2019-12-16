@@ -162,13 +162,13 @@ string VRMultiWindow::getStateString() {
     return "invalid state";
 }
 
-void VRMultiWindow::save(xmlpp::Element* node) {
+void VRMultiWindow::save(XMLElementPtr node) {
     VRWindow::save(node);
     node->set_attribute("Nx", toString(Nx));
     node->set_attribute("Ny", toString(Ny));
     node->set_attribute("ConnType", connection_type);
 
-    xmlpp::Element* sn;
+    XMLElementPtr sn;
     for (uint i=0; i<servers.size(); i++) {
         string s = servers[i];
         sn = node->add_child("Server");
@@ -176,7 +176,7 @@ void VRMultiWindow::save(xmlpp::Element* node) {
     }
 }
 
-void VRMultiWindow::load(xmlpp::Element* node) {
+void VRMultiWindow::load(XMLElementPtr node) {
     VRWindow::load(node);
     Nx = toInt( node->get_attribute("Nx")->get_value() );
     Ny = toInt( node->get_attribute("Ny")->get_value() );
@@ -187,7 +187,7 @@ void VRMultiWindow::load(xmlpp::Element* node) {
     for (itr = nl.begin(); itr != nl.end(); itr++) {
         xmlpp::Node* n = *itr;
 
-        xmlpp::Element* el = dynamic_cast<xmlpp::Element*>(n);
+        XMLElementPtr el = dynamic_cast<XMLElementPtr>(n);
         if (!el) continue;
 
         string name = el->get_name();

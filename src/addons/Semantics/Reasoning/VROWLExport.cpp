@@ -13,13 +13,13 @@ VROWLExport::VROWLExport() {}
 
 void VROWLExport::write(VROntologyPtr o, string path) {
     xmlpp::Document doc;
-    xmlpp::Element* root = doc.create_root_node("rdf:RDF", "", "rdf"); // name, ns_uri, ns_prefix
+    XMLElementPtr root = doc.create_root_node("rdf:RDF", "", "rdf"); // name, ns_uri, ns_prefix
 
     string ontology_ns = "http://www.semanticweb.org/ontologies/2012/9/"+o->getName()+".owl#";
     string dp_ns = "http://www.w3.org/2001/XMLSchema#";
 
     map<string, VRPropertyPtr> properties;
-    map<string, xmlpp::Element*> propertyNodes;
+    map<string, XMLElementPtr> propertyNodes;
     for (auto c : o->getConcepts()) {
         for (auto p : c->getProperties()) {
             properties[p->getName()] = p;

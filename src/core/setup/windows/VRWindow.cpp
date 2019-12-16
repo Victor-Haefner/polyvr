@@ -130,7 +130,7 @@ VRMultiTouchPtr VRWindow::getMultitouch() { return multitouch; }
 void VRWindow::setKeyboard(VRKeyboardPtr k) { keyboard = k; }
 VRKeyboardPtr VRWindow::getKeyboard() { return keyboard; }
 
-void VRWindow::save(xmlpp::Element* node) {
+void VRWindow::save(XMLElementPtr node) {
     node->set_attribute("active", toString(active).c_str());
     node->set_attribute("type", toString(type).c_str());
     node->set_attribute("width", toString(width).c_str());
@@ -142,7 +142,7 @@ void VRWindow::save(xmlpp::Element* node) {
     if (keyboard) node->set_attribute("keyboard", keyboard->getName().c_str());
     else node->set_attribute("keyboard", "None");
 
-    xmlpp::Element* vn;
+    XMLElementPtr vn;
     for (auto wv : views) {
         if (auto v = wv.lock()) {
             vn = node->add_child("View");
@@ -151,7 +151,7 @@ void VRWindow::save(xmlpp::Element* node) {
     }
 }
 
-void VRWindow::load(xmlpp::Element* node) {
+void VRWindow::load(XMLElementPtr node) {
     active = toValue<bool>( node->get_attribute("active")->get_value() );
     type = toInt( node->get_attribute("type")->get_value() );
     width = toInt( node->get_attribute("width")->get_value() );
@@ -159,7 +159,7 @@ void VRWindow::load(xmlpp::Element* node) {
     name = node->get_attribute("name")->get_value();
 
     for (xmlpp::Node* n : node->get_children()) {
-        xmlpp::Element* el = dynamic_cast<xmlpp::Element*>(n);
+        XMLElementPtr el = dynamic_cast<XMLElementPtr>(n);
         if (!el) continue;
 
         if (el->get_name() != "View") continue;

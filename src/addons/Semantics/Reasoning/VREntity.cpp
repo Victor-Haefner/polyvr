@@ -270,7 +270,7 @@ bool VREntity::is_a(const string& concept) {
     return false;
 }
 
-void VREntity::save(xmlpp::Element* e, int p) {
+void VREntity::save(XMLElementPtr e, int p) {
     VRStorage::save(e,p);
     e = e->add_child("properties");
     for (auto p : properties) {
@@ -283,7 +283,7 @@ void VREntity::save(xmlpp::Element* e, int p) {
     }
 }
 
-void VREntity::load(xmlpp::Element* e) {
+void VREntity::load(XMLElementPtr e) {
     VRStorage::load(e);
     e = getChild(e, "properties");
     for (auto el : getChildren(e)) {

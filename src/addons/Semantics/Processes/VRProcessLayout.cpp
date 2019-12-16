@@ -436,7 +436,7 @@ void VRProcessLayout::storeLayout(string path) {
     if (path == "") path = ".process_layout.plt";
 
     xmlpp::Document doc;
-    xmlpp::Element* root = doc.create_root_node("ProjectsList", "", "VRP"); // name, ns_uri, ns_prefix
+    XMLElementPtr root = doc.create_root_node("ProjectsList", "", "VRP"); // name, ns_uri, ns_prefix
 
     auto storeHandles = [&](VRPathtoolPtr tool) {
         for (auto handle : tool->getHandles()) {
@@ -460,7 +460,7 @@ void VRProcessLayout::loadLayout(string path) {
     xmlpp::DomParser parser;
     parser.set_validate(false);
     parser.parse_file(path.c_str());
-    xmlpp::Element* root = dynamic_cast<xmlpp::Element*>(parser.get_document()->get_root_node());
+    XMLElementPtr root = dynamic_cast<XMLElementPtr>(parser.get_document()->get_root_node());
 
     int i = 0;
     auto loadHandles = [&](VRPathtoolPtr tool) {

@@ -9,25 +9,25 @@ OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 template<typename T>
-void VRStorage::load_cb(T* t, string tag, xmlpp::Element* e) {
+void VRStorage::load_cb(T* t, string tag, XMLElementPtr e) {
     if (e->get_attribute(tag) == 0) return;
     toValue( e->get_attribute(tag)->get_value(), *t);
 }
 
 template<typename T>
-void VRStorage::save_cb(T* t, string tag, xmlpp::Element* e) {
+void VRStorage::save_cb(T* t, string tag, XMLElementPtr e) {
     e->set_attribute(tag, toString(*t));
 }
 
 template<typename T>
-void VRStorage::save_on_cb(T* t, string tag, xmlpp::Element* e) {
+void VRStorage::save_on_cb(T* t, string tag, XMLElementPtr e) {
     auto sp = t->lock();
     if (sp == 0) return;
     e->set_attribute(tag, sp->getName());
 }
 
 template<typename T>
-void VRStorage::save_str_map_cb(map<string, T*>* mt, string tag, bool under, xmlpp::Element* e) {
+void VRStorage::save_str_map_cb(map<string, T*>* mt, string tag, bool under, XMLElementPtr e) {
     if (mt->size() == 0) return;
     if (under) e = e->add_child(tag);
     for (auto t : *mt) {
@@ -37,7 +37,7 @@ void VRStorage::save_str_map_cb(map<string, T*>* mt, string tag, bool under, xml
 }
 
 template<typename T>
-void VRStorage::save_str_objmap_cb(map<string, std::shared_ptr<T> >* mt, string tag, bool under, xmlpp::Element* e) {
+void VRStorage::save_str_objmap_cb(map<string, std::shared_ptr<T> >* mt, string tag, bool under, XMLElementPtr e) {
     if (mt->size() == 0) return;
     if (under) e = e->add_child(tag);
     for (auto t : *mt) {
@@ -47,7 +47,7 @@ void VRStorage::save_str_objmap_cb(map<string, std::shared_ptr<T> >* mt, string 
 }
 
 template<typename T>
-void VRStorage::save_int_map_cb(map<int, T*>* mt, string tag, bool under, xmlpp::Element* e) {
+void VRStorage::save_int_map_cb(map<int, T*>* mt, string tag, bool under, XMLElementPtr e) {
     if (mt->size() == 0) return;
     if (under) e = e->add_child(tag);
     for (auto t : *mt) {
@@ -57,7 +57,7 @@ void VRStorage::save_int_map_cb(map<int, T*>* mt, string tag, bool under, xmlpp:
 }
 
 template<typename T>
-void VRStorage::save_int_map2_cb(map<int, T>* mt, string tag, bool under, xmlpp::Element* e) {
+void VRStorage::save_int_map2_cb(map<int, T>* mt, string tag, bool under, XMLElementPtr e) {
     if (mt->size() == 0) return;
     if (under) e = e->add_child(tag);
     for (auto t : *mt) {
@@ -70,7 +70,7 @@ void VRStorage::save_int_map2_cb(map<int, T>* mt, string tag, bool under, xmlpp:
 }
 
 template<typename T>
-void VRStorage::save_int_objmap_cb(map<int, std::shared_ptr<T> >* mt, string tag, bool under, xmlpp::Element* e) {
+void VRStorage::save_int_objmap_cb(map<int, std::shared_ptr<T> >* mt, string tag, bool under, XMLElementPtr e) {
     if (mt->size() == 0) return;
     if (under) e = e->add_child(tag);
     for (auto t : *mt) {
@@ -80,7 +80,7 @@ void VRStorage::save_int_objmap_cb(map<int, std::shared_ptr<T> >* mt, string tag
 }
 
 template<typename T>
-void VRStorage::save_int_objumap_cb(unordered_map<int, std::shared_ptr<T> >* mt, string tag, bool under, xmlpp::Element* e) {
+void VRStorage::save_int_objumap_cb(unordered_map<int, std::shared_ptr<T> >* mt, string tag, bool under, XMLElementPtr e) {
     if (mt->size() == 0) return;
     if (under) e = e->add_child(tag);
     for (auto t : *mt) {
@@ -89,10 +89,10 @@ void VRStorage::save_int_objumap_cb(unordered_map<int, std::shared_ptr<T> >* mt,
     }
 }
 
-int getID(xmlpp::Element* el);
+int getID(XMLElementPtr el);
 
 template<typename T>
-void VRStorage::load_int_objmap_cb(map<int, std::shared_ptr<T> >* mt, string tag, bool under, xmlpp::Element* e) {
+void VRStorage::load_int_objmap_cb(map<int, std::shared_ptr<T> >* mt, string tag, bool under, XMLElementPtr e) {
     if (under) e = getChild(e, tag);
     if (!e) return;
     for (auto el : getChildren(e)) {
@@ -107,7 +107,7 @@ void VRStorage::load_int_objmap_cb(map<int, std::shared_ptr<T> >* mt, string tag
 }
 
 template<typename T>
-void VRStorage::load_int_objumap_cb(unordered_map<int, std::shared_ptr<T> >* mt, string tag, bool under, xmlpp::Element* e) {
+void VRStorage::load_int_objumap_cb(unordered_map<int, std::shared_ptr<T> >* mt, string tag, bool under, XMLElementPtr e) {
     if (under) e = getChild(e, tag);
     if (!e) return;
     for (auto el : getChildren(e)) {
@@ -122,7 +122,7 @@ void VRStorage::load_int_objumap_cb(unordered_map<int, std::shared_ptr<T> >* mt,
 }
 
 template<typename T>
-void VRStorage::load_str_objmap_cb(map<string, std::shared_ptr<T> >* mt, string tag, bool under, xmlpp::Element* e) {
+void VRStorage::load_str_objmap_cb(map<string, std::shared_ptr<T> >* mt, string tag, bool under, XMLElementPtr e) {
     if (under) e = getChild(e, tag);
     if (!e) return;
     for (auto el : getChildren(e)) {
@@ -137,7 +137,7 @@ void VRStorage::load_str_objmap_cb(map<string, std::shared_ptr<T> >* mt, string 
 }
 
 template<typename T>
-void VRStorage::load_str_objumap_cb(unordered_map<string, std::shared_ptr<T> >* mt, string tag, bool under, xmlpp::Element* e) {
+void VRStorage::load_str_objumap_cb(unordered_map<string, std::shared_ptr<T> >* mt, string tag, bool under, XMLElementPtr e) {
     if (under) e = getChild(e, tag);
     if (!e) return;
     for (auto el : getChildren(e)) {
@@ -152,7 +152,7 @@ void VRStorage::load_str_objumap_cb(unordered_map<string, std::shared_ptr<T> >* 
 }
 
 template<typename T>
-void VRStorage::load_str_map_cb(map<string, T*>* mt, string tag, bool under, xmlpp::Element* e) {
+void VRStorage::load_str_map_cb(map<string, T*>* mt, string tag, bool under, XMLElementPtr e) {
     if (under) e = getChild(e, tag);
     if (!e) return;
     for (auto el : getChildren(e)) {
@@ -168,7 +168,7 @@ void VRStorage::load_str_map_cb(map<string, T*>* mt, string tag, bool under, xml
 }
 
 template<typename T>
-void VRStorage::load_int_map_cb(map<int, T*>* mt, string tag, bool under, xmlpp::Element* e) {
+void VRStorage::load_int_map_cb(map<int, T*>* mt, string tag, bool under, XMLElementPtr e) {
     if (under) e = getChild(e, tag);
     if (!e) return;
     for (auto el : getChildren(e)) {
@@ -182,7 +182,7 @@ void VRStorage::load_int_map_cb(map<int, T*>* mt, string tag, bool under, xmlpp:
 }
 
 template<typename T>
-void VRStorage::load_int_map2_cb(map<int, T>* mt, string tag, bool under, xmlpp::Element* e) {
+void VRStorage::load_int_map2_cb(map<int, T>* mt, string tag, bool under, XMLElementPtr e) {
     if (under) e = getChild(e, tag);
     if (!e) return;
     for (auto el : getChildren(e)) {
@@ -196,13 +196,13 @@ void VRStorage::load_int_map2_cb(map<int, T>* mt, string tag, bool under, xmlpp:
 }
 
 template<typename T>
-void VRStorage::save_obj_vec_cb(vector<std::shared_ptr<T> >* v, string tag, bool under, xmlpp::Element* e) {
+void VRStorage::save_obj_vec_cb(vector<std::shared_ptr<T> >* v, string tag, bool under, XMLElementPtr e) {
     if (under) e = e->add_child(tag);
     for (auto t : *v) t->saveUnder(e);
 }
 
 template<typename T>
-void VRStorage::load_obj_vec_cb(vector<std::shared_ptr<T> >* v, string tag, bool under, xmlpp::Element* e) {
+void VRStorage::load_obj_vec_cb(vector<std::shared_ptr<T> >* v, string tag, bool under, XMLElementPtr e) {
     if (e == 0) return;
     if (under) e = getChild(e, tag);
     if (e == 0) return;
@@ -224,7 +224,7 @@ void VRStorage::load_obj_vec_cb(vector<std::shared_ptr<T> >* v, string tag, bool
 }
 
 template<typename T>
-void VRStorage::save_vec_cb(vector<T>* v, string tag, xmlpp::Element* e) {
+void VRStorage::save_vec_cb(vector<T>* v, string tag, XMLElementPtr e) {
     e = e->add_child(tag);
     for (auto t : *v) {
         auto e2 = e->add_child("e");
@@ -233,7 +233,7 @@ void VRStorage::save_vec_cb(vector<T>* v, string tag, xmlpp::Element* e) {
 }
 
 template<typename T>
-void VRStorage::save_vec_on_cb(vector<T>* v, string tag, xmlpp::Element* e) {
+void VRStorage::save_vec_on_cb(vector<T>* v, string tag, XMLElementPtr e) {
     e = e->add_child(tag);
     for (auto t : *v) {
         auto sp = t.lock();
@@ -244,7 +244,7 @@ void VRStorage::save_vec_on_cb(vector<T>* v, string tag, xmlpp::Element* e) {
 }
 
 template<typename T>
-void VRStorage::load_vec_cb(vector<T>* v, string tag, xmlpp::Element* e) {
+void VRStorage::load_vec_cb(vector<T>* v, string tag, XMLElementPtr e) {
     if (e == 0) return;
     e = getChild(e, tag);
     if (e == 0) return;
@@ -258,13 +258,13 @@ void VRStorage::load_vec_cb(vector<T>* v, string tag, xmlpp::Element* e) {
 }
 
 template<typename T>
-void VRStorage::save_vec_vec_cb(vector<vector<T>>* v, string tag, xmlpp::Element* e) {
+void VRStorage::save_vec_vec_cb(vector<vector<T>>* v, string tag, XMLElementPtr e) {
     e = e->add_child(tag);
     for (auto t : *v) save_vec_cb(&t, tag, e);
 }
 
 template<typename T>
-void VRStorage::load_vec_vec_cb(vector<vector<T>>* v, string tag, xmlpp::Element* e) {
+void VRStorage::load_vec_vec_cb(vector<vector<T>>* v, string tag, XMLElementPtr e) {
     if (e == 0) return;
     e = getChild(e, tag);
     if (e == 0) return;
@@ -282,12 +282,12 @@ void VRStorage::load_vec_vec_cb(vector<vector<T>>* v, string tag, xmlpp::Element
 }
 
 template<typename T>
-void VRStorage::save_obj_cb(std::shared_ptr<T>* v, string tag, xmlpp::Element* e) {
+void VRStorage::save_obj_cb(std::shared_ptr<T>* v, string tag, XMLElementPtr e) {
     if (*v) (*v)->saveUnder(e, 0, tag);
 }
 
 template<typename T>
-void VRStorage::load_obj_cb(std::shared_ptr<T>* v, string tag, xmlpp::Element* e) {
+void VRStorage::load_obj_cb(std::shared_ptr<T>* v, string tag, XMLElementPtr e) {
     e = getChild(e, tag);
     if (!e) return;
     if (!*v) *v = T::create();

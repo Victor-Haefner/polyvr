@@ -184,8 +184,8 @@ class VRView : public std::enable_shared_from_this<VRView> {
         void setFotoMode(bool b);
         VRTexturePtr grab();
 
-        void save(xmlpp::Element* node);
-        void load(xmlpp::Element* node);
+        void save(XMLElementPtr node);
+        void load(XMLElementPtr node);
 };
 
 OSG_END_NAMESPACE;

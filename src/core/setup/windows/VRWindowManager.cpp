@@ -290,19 +290,19 @@ VRWindowPtr VRWindowManager::getWindow(string name) {
     else return windows[name];
 }
 
-void VRWindowManager::save(xmlpp::Element* node) {
+void VRWindowManager::save(XMLElementPtr node) {
     map<string, VRWindowPtr>::iterator itr;
-    xmlpp::Element* wn;
+    XMLElementPtr wn;
     for (itr = windows.begin(); itr != windows.end(); itr++) {
         wn = node->add_child("Window");
         itr->second->save(wn);
     }
 }
 
-void VRWindowManager::load(xmlpp::Element* node) {
+void VRWindowManager::load(XMLElementPtr node) {
     cout << "start loading windows\n";
     for (auto n : node->get_children()) {
-        xmlpp::Element* el = dynamic_cast<xmlpp::Element*>(n);
+        XMLElementPtr el = dynamic_cast<XMLElementPtr>(n);
         if (!el) continue;
 
         string type = el->get_attribute("type")->get_value();

@@ -51,8 +51,8 @@ class VRWindowManager {
 
         VRGtkWindowPtr getEditorWindow();
 
-        void save(xmlpp::Element* node);
-        void load(xmlpp::Element* node);
+        void save(XMLElementPtr node);
+        void load(XMLElementPtr node);
 
         static bool doRenderSync;
 };
