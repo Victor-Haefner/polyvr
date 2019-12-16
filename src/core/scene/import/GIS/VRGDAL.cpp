@@ -226,6 +226,7 @@ void divideTiffIntoChunks(string pathIn, string pathOut, double minLat, double m
     //if( poDS->GetProjectionRef()  != NULL ) { printf( "Projection is `%s'\n", poDS->GetProjectionRef() ); }
     if( poDS->GetGeoTransform( adfGeoTransform ) == CE_None ) {  }
 
+    cout << " filepath: " << pathIn << endl;
     cout << " bandCount: " << poDS->GetRasterCount() << endl;
 
     ///https://wiki.openstreetmap.org/wiki/Mercator
@@ -248,13 +249,24 @@ void divideTiffIntoChunks(string pathIn, string pathOut, double minLat, double m
     auto lat2y_m = [&](double lat) { return log(tan( DEG2RAD(lat) / 2 + M_PI/4 )) * EARTH_RADIUS; };
     auto lon2x_m = [&](double lon) { return          DEG2RAD(lon)                 * EARTH_RADIUS; };
 
+    double xBeg = adfGeoTransform[0];
+    double yBeg = adfGeoTransform[3];
     double xEnd = adfGeoTransform[0] + poDS->GetRasterXSize()*adfGeoTransform[1];
     double yEnd = adfGeoTransform[3] + poDS->GetRasterYSize()*adfGeoTransform[5];
-    double latBeg = y2lat_m(adfGeoTransform[3]);
-    double lonBeg = x2lon_m(adfGeoTransform[0]);
+    double latBeg = y2lat_m(yBeg);
+    double lonBeg = x2lon_m(xBeg);
     double latEnd = y2lat_m(yEnd);
     double lonEnd = x2lon_m(xEnd);
 
+    Vec2d upperLeft = Vec2d(xBeg,yBeg);
+    Vec2d lowerLeft = Vec2d(xBeg,yEnd);
+    Vec2d upperRight = Vec2d(xEnd,yBeg);
+    Vec2d lowerRight = Vec2d(xEnd,yEnd);
+
+    cout << "upperLeft " << upperLeft << endl;
+    cout << "lowerLeft " << lowerLeft << endl;
+    cout << "upperRight " << upperRight << endl;
+    cout << "lowerRight " << lowerRight << endl;
     cout << "minLat " << minLat << " maxLat " << maxLat << " minLon " << minLon << " maxLon " << maxLon << " res " << res << endl;
     cout << "LatO " << latBeg << " LonO " << lonBeg << endl;
     cout << "Lat1 " << latEnd << " Lon1 " << lonEnd << endl;
@@ -304,61 +316,42 @@ void divideTiffIntoChunks(string pathIn, string pathOut, double minLat, double m
                 double xxB = lon2x_m(bordersX[xx+1]);
                 double yyA = lat2y_m(bordersY[yy]);
                 double yyB = lat2y_m(bordersY[yy+1]);
-                cout << "  borders  " << xxA << " " << xxB << " " << yyA << " " << yyB << endl;
+                cout << "  borders  " << xxA << " " << yyA << " " << xxB << " " << yyB << endl;
 
                 int xpA = (int)((xxA-adfGeoTransform[0])/adfGeoTransform[1]);
                 int xpB = (int)((xxB-adfGeoTransform[0])/adfGeoTransform[1]);
                 int ypA = (int)((yyA-adfGeoTransform[3])/adfGeoTransform[5]);
                 int ypB = (int)((yyB-adfGeoTransform[3])/adfGeoTransform[5]);
-                cout << "  borders  " << xpA << " " << xpB << " " << ypA << " " << ypB << endl;
+                cout << "  borders  " << xpA << " " << ypA << " " << xpB << " " << ypB << endl;
 
                 int sizeX = xpB-xpA;
-                int sizeY = ypB-xpA;
+                int sizeY = ypB-ypA;
 
-                vector<uint8_t> data;
-                for (int i=1; i<=poDS->GetRasterCount(); i++) {
-                    auto band = getBand(i);
-                    cout << band->GetRasterDataType() << endl;
-                    vector<uint8_t> line(sizeX*sizeY);
-                    band->RasterIO( GF_Read, xpA, ypA, sizeX, sizeY, &line[0], sizeX, sizeY, GDT_Byte, 0, 0 );
-                    data.insert(data.end(), line.begin(), line.end());
+                cout << " size " << sizeX << " " << sizeY << " " << sizeX*sizeY << endl;
+                string savePath = "N"+to_string(bordersY[yy+1])+"E"+to_string(bordersX[xx])+"S"+to_string(res)+".tif";
+                string savePath2 = "N"+to_string(bordersY[yy+1])+"E"+to_string(bordersX[xx])+"S"+to_string(res)+".png";
+                vector<char> data;
+
+                for (int y = 0; y < sizeY; y++) {
+                    for (int x = 0; x < sizeX; x++) {
+                        vector<char> pix(3);
+                        poDS->GetRasterBand(1)->RasterIO( GF_Read, xpA+x, ypA+y, 1, 1, &pix[0], 1, 1, GDT_Byte, 0, 0 );
+                        poDS->GetRasterBand(2)->RasterIO( GF_Read, xpA+x, ypA+y, 1, 1, &pix[1], 1, 1, GDT_Byte, 0, 0 );
+                        poDS->GetRasterBand(3)->RasterIO( GF_Read, xpA+x, ypA+y, 1, 1, &pix[2], 1, 1, GDT_Byte, 0, 0 );
+                        data.insert(data.end(), pix.begin(), pix.end());
+                    }
                 }
 
-
-                cout << " a" << endl;
                 auto t = VRTexture::create();
-                t->setInternalFormat(GL_ALPHA32F_ARB); // important for unclamped float
+                t->setInternalFormat(GL_RGB8UI);
                 auto img = t->getImage();
-                img->set( Image::OSG_A_PF, sizeX, sizeY, 1, 1, 1, 0, (const uint8_t*)&data[0], Image::OSG_FLOAT32_IMAGEDATA, true, 1);
-                cout << " b" << endl;
+                img->set( Image::OSG_RGB_PF, sizeX, sizeY, 1, 1, 1, 0, (const unsigned char*)&data[0], Image::OSG_UINT8_IMAGEDATA, true, 1);
+                t->write(savePath2);
             }
             else { /*cout << " out of bounds " << xx << "-" << yy << " | " << bordersY[yy] << " " << bordersX[xx] << " | " << bordersY[yy+1] << " " << bordersX[xx+1] << endl;*/ }
         }
     }
-    /*
-    adfGeoTransform[0]
-    adfGeoTransform[3]
-    minLat
-    maxLat
-    minLon
-    maxLon
-    res*/
     GDALClose(poDS);
-
-    return;
-    // get first block
-
-
-    /*
-    int sizeX = poDS->GetRasterXSize();
-    int sizeY = poDS->GetRasterYSize();
-    GDALClose(poDS);
-
-    auto t = VRTexture::create();
-    t->setInternalFormat(GL_ALPHA32F_ARB); // important for unclamped float
-    auto img = t->getImage();
-    img->set( Image::OSG_A_PF, sizeX, sizeY, 1, 1, 1, 0, (const uint8_t*)&data[0], Image::OSG_FLOAT32_IMAGEDATA, true, 1);
-    return t;*/
 }
 
 void writeGeoRasterData(string path, VRTexturePtr tex, double geoTransform[6], string params[3]) {

@@ -82,6 +82,7 @@ class VRTerrain : public VRGeometry, public VRWorldModule {
         void setHeightScale(float s);
         void setMap( VRTexturePtr tex, int channel = 3 );
         void loadMap( string path, int channel = 3 );
+        void setImage( string path, int channel = 3 );
         VRTexturePtr getMap();
         Vec2f getTexelSize();
         Vec2d getSize();
