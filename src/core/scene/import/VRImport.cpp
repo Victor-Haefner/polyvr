@@ -188,6 +188,7 @@ void VRImport::LoadJob::load(VRThreadWeakPtr tw) {
     bool loadedFromCache = false;
     if (useBinaryCache && exists(osbPath)) {
         // TODO: create descriptive hash of file, load hash and compare
+        cout << "load from binary cache" << endl;
         osgLoad(osbPath, res);
         loadedFromCache = true;
     } else loadSwitch();
@@ -277,12 +278,14 @@ VRObjectPtr VRImport::OSGConstruct(NodeMTRecPtr n, VRObjectPtr parent, string na
         auto osgGeo = dynamic_cast<Geometry*>(n->getCore());
         if (!osgGeo->getPositions()) return 0;
         if (osgGeo->getPositions()->size() == 0) return 0;
-        tmp_g = VRGeometry::create(name);
         if (geoTrans) {
+            tmp_g = VRGeometry::create(geoTransName); // more consistent with storing and loading to/from osb!
             tmp_g->addAttachment("collada_name", geoTransName);
             tmp_g->setMatrix(toMatrix4d(dynamic_cast<Transform*>(geoTrans)->getMatrix()));
             geoTrans = 0;
             geoTransName = "";
+        } else {
+            tmp_g = VRGeometry::create(name);
         }
 
         VRGeometry::Reference ref;
