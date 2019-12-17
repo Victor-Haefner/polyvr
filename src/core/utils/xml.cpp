@@ -1,4 +1,5 @@
 #include "xml.h"
+#include "toString.h"
 
 #include <iostream>
 #include <libxml/tree.h>
@@ -10,8 +11,11 @@ XMLElement::~XMLElement() {}
 XMLElementPtr XMLElement::create(_xmlNode* node) { return XMLElementPtr( new XMLElement(node) ); }
 
 void XMLElement::print() {
-    cout << "xml node: '" << getName() << "', ns: '" << getNameSpace() << "', data: " << getText();
-    for (auto a : getAttributes()) cout << ", " << a.first << ":" << a.second;
+    if (!node) cout << "invalid xml node!";
+    else {
+        cout << "xml node: '" << getName() << "', ns: '" << getNameSpace() << "', data: " << getText();
+        for (auto a : getAttributes()) cout << ", " << a.first << ":" << a.second;
+    }
     cout << endl;
 }
 
@@ -54,6 +58,7 @@ bool XMLElement::hasAttribute(string name) {
 
 map<string,string> XMLElement::getAttributes() {
     map<string,string> res;
+    if (!node) return res;
     xmlAttr* attribute = node->properties;
     while(attribute) {
         xmlChar* value = xmlNodeListGetString(node->doc, attribute->children, 1);
@@ -152,17 +157,59 @@ void XML::parse(string data, bool validate) {
     root = XMLElement::create(xmlRoot);
 }
 
+string getXMLError() {
+    auto error = xmlGetLastError();
+    if (!error || error->code == XML_ERR_OK) return ""; // No error
+
+    string str;
+
+    if (error->file && *error->file != '\0') { str += "File "; str += error->file; }
+
+    if (error->line > 0) {
+        str += (str.empty() ? "Line " : ", line ") + toString(error->line);
+        if (error->int2 > 0) str += ", column " + toString(error->int2);
+    }
+
+    const bool two_lines = !str.empty();
+    if (two_lines) str += ' ';
+
+    switch (error->level) {
+        case XML_ERR_WARNING:
+            str += "(warning):";
+            break;
+        case XML_ERR_ERROR:
+            str += "(error):";
+            break;
+        case XML_ERR_FATAL:
+            str += "(fatal):";
+            break;
+        default:
+            str += "():";
+            break;
+    }
+
+    str += two_lines ? '\n' : ' ';
+    if (error->message && *error->message != '\0') str += error->message;
+    else str += "Error code " + toString(error->code);
+    if (*str.rbegin() != '\n') str += '\n';
+    return str;
+}
+
 void XML::write(string path) {
-    //xmlSaveFormatFile(path.c_str(), doc, 1);
+    auto r = xmlDocGetRootElement(doc);
+    if (!r) { cout << "XML::write failed, no root: " << path << endl; return; }
     xmlKeepBlanksDefault(0);
-    xmlSaveFormatFileEnc(path.c_str(), doc, "ISO-8859-1", 1);
+    xmlIndentTreeOutput = 1;
+    xmlResetLastError();
+    const int result = xmlSaveFormatFileEnc(path.c_str(), doc, "UTF-8", 1);
+    if (result == -1) cout << "XML::write error: " << getXMLError() << endl;
 }
 
 string XML::toString() {
     xmlKeepBlanksDefault(0);
     xmlBuffer* buffer = xmlBufferCreate();
     xmlOutputBuffer* outputBuffer = xmlOutputBufferCreateBuffer( buffer, NULL );
-    xmlSaveFormatFileTo(outputBuffer, doc, "ISO-8859-1", 1);
+    xmlSaveFormatFileTo(outputBuffer, doc, "UTF-8", 1);
     string str( (char*) buffer->content, buffer->use );
     xmlBufferFree( buffer );
     return str;
@@ -176,6 +223,7 @@ XMLElementPtr XML::newRoot(string name, string ns_uri, string ns_prefix) {
     auto ns = xmlNewNs(NULL, (xmlChar*)ns_uri.c_str(), (xmlChar*)ns_prefix.c_str());
     auto rnode = xmlNewNode(ns, (xmlChar*)name.c_str());
     root = XMLElement::create( rnode );
+    xmlDocSetRootElement(doc, rnode);
     return root;
 }
 
