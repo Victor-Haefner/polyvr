@@ -227,7 +227,7 @@ void divideTiffIntoChunks(string pathIn, string pathOut, double minLat, double m
     if( poDS->GetGeoTransform( adfGeoTransform ) == CE_None ) {  }
 
     cout << " filepath: " << pathIn << endl;
-    cout << " bandCount: " << poDS->GetRasterCount() << endl;
+    //cout << " bandCount: " << poDS->GetRasterCount() << endl;
 
     ///https://wiki.openstreetmap.org/wiki/Mercator
     auto DEG2RAD = [&](double a) { return (a) / (180 / M_PI); };
@@ -262,7 +262,7 @@ void divideTiffIntoChunks(string pathIn, string pathOut, double minLat, double m
     Vec2d lowerLeft = Vec2d(xBeg,yEnd);
     Vec2d upperRight = Vec2d(xEnd,yBeg);
     Vec2d lowerRight = Vec2d(xEnd,yEnd);
-
+    /*
     cout << "upperLeft " << upperLeft << endl;
     cout << "lowerLeft " << lowerLeft << endl;
     cout << "upperRight " << upperRight << endl;
@@ -270,6 +270,7 @@ void divideTiffIntoChunks(string pathIn, string pathOut, double minLat, double m
     cout << "minLat " << minLat << " maxLat " << maxLat << " minLon " << minLon << " maxLon " << maxLon << " res " << res << endl;
     cout << "LatO " << latBeg << " LonO " << lonBeg << endl;
     cout << "Lat1 " << latEnd << " Lon1 " << lonEnd << endl;
+    */
 
     double xA = lon2x_m(minLon);
     double yA = lat2y_m(minLat);
@@ -302,32 +303,32 @@ void divideTiffIntoChunks(string pathIn, string pathOut, double minLat, double m
         return poBand;
     };
 
+    /*
     cout << "input xA " << xA << " yA " << yA << " xB " << xB << " yB " << yB << endl;
     cout << "file  xA " << adfGeoTransform[0] << " yA " << adfGeoTransform[3] << " xB " << xEnd << " yB " << yEnd << endl;
-
-    //cout << "LatYend " << yEnd << " LonXend " << xEnd << endl;
     cout << "Sy " << y2lat_m(adfGeoTransform[5]) << " Sx " << x2lon_m(adfGeoTransform[1]) << endl;
+    */
 
     for (int yy = 0; yy < bordersY.size()-1; yy++){
         for (int xx = 0; xx < bordersX.size()-1; xx++) {
             if ( bordersY[yy] < latBeg  && bordersX[xx] > lonBeg && bordersY[yy+1] > latEnd  && bordersX[xx+1] < lonEnd ) {
-                cout << " within bounds " << xx << "-" << yy << " | " << bordersY[yy] << " " << bordersX[xx] << " | " << bordersY[yy+1] << " " << bordersX[xx+1] << endl;
+                //cout << " within bounds " << xx << "-" << yy << " | " << bordersY[yy] << " " << bordersX[xx] << " | " << bordersY[yy+1] << " " << bordersX[xx+1] << endl;
                 double xxA = lon2x_m(bordersX[xx]);
                 double xxB = lon2x_m(bordersX[xx+1]);
                 double yyA = lat2y_m(bordersY[yy]);
                 double yyB = lat2y_m(bordersY[yy+1]);
-                cout << "  borders  " << xxA << " " << yyA << " " << xxB << " " << yyB << endl;
+                //cout << "  borders  " << xxA << " " << yyA << " " << xxB << " " << yyB << endl;
 
                 int xpA = (int)((xxA-adfGeoTransform[0])/adfGeoTransform[1]);
                 int xpB = (int)((xxB-adfGeoTransform[0])/adfGeoTransform[1]);
                 int ypA = (int)((yyA-adfGeoTransform[3])/adfGeoTransform[5]);
                 int ypB = (int)((yyB-adfGeoTransform[3])/adfGeoTransform[5]);
-                cout << "  borders  " << xpA << " " << ypA << " " << xpB << " " << ypB << endl;
+                //cout << "  borders  " << xpA << " " << ypA << " " << xpB << " " << ypB << endl;
 
                 int sizeX = xpB-xpA;
                 int sizeY = ypB-ypA;
 
-                cout << " size " << sizeX << " " << sizeY << " " << sizeX*sizeY << endl;
+                //cout << " size " << sizeX << " " << sizeY << " " << sizeX*sizeY << endl;
                 string savePath = "N"+to_string(bordersY[yy+1])+"E"+to_string(bordersX[xx])+"S"+to_string(res)+".tif";
                 string savePath2 = "N"+to_string(bordersY[yy+1])+"E"+to_string(bordersX[xx])+"S"+to_string(res)+".png";
                 vector<char> data;
