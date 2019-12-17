@@ -1,5 +1,6 @@
 #include "VRGDAL.h"
 
+#include <math.h>
 #include <iostream>
 #include <gdal/gdal.h>
 #include <gdal/gdal_priv.h>
@@ -162,19 +163,20 @@ void loadTIFF(string path, VRTransformPtr res) {
     res->addChild( g );
 }
 
-VRTexturePtr loadGeoRasterData(string path) {
+VRTexturePtr loadGeoRasterData(string path, bool shout) {
     GDALAllRegister();
     GDALDataset* poDS = (GDALDataset *) GDALOpen( path.c_str(), GA_ReadOnly );
     if( poDS == NULL ) { printf( "Open failed.\n" ); return 0; }
 
     // general information
     double adfGeoTransform[6];
-    printf( "Driver: %s/%s\n", poDS->GetDriver()->GetDescription(), poDS->GetDriver()->GetMetadataItem( GDAL_DMD_LONGNAME ) );
-    printf( "Size is %dx%dx%d\n", poDS->GetRasterXSize(), poDS->GetRasterYSize(), poDS->GetRasterCount() );
-    if( poDS->GetProjectionRef()  != NULL ) printf( "Projection is `%s'\n", poDS->GetProjectionRef() );
+    if (shout) printf( "Driver: %s/%s\n", poDS->GetDriver()->GetDescription(), poDS->GetDriver()->GetMetadataItem( GDAL_DMD_LONGNAME ) );
+    if (shout) printf( "Size is %dx%dx%d\n", poDS->GetRasterXSize(), poDS->GetRasterYSize(), poDS->GetRasterCount() );
+    if( poDS->GetProjectionRef()  != NULL ) { if (shout) printf( "Projection is `%s'\n", poDS->GetProjectionRef() ); }
     if( poDS->GetGeoTransform( adfGeoTransform ) == CE_None ) {
-        printf( "Origin = (%.6f,%.6f)\n", adfGeoTransform[0], adfGeoTransform[3] );
-        printf( "Pixel Size = (%.6f,%.6f)\n", adfGeoTransform[1], adfGeoTransform[5] );
+        if (!shout) printf( "loadGeoRasterData Origin = (%.6f,%.6f)\n", adfGeoTransform[0], adfGeoTransform[3] );
+        if (shout) printf( "Origin = (%.6f,%.6f)\n", adfGeoTransform[0], adfGeoTransform[3] );
+        if (shout) printf( "Pixel Size = (%.6f,%.6f)\n", adfGeoTransform[1], adfGeoTransform[5] );
     }
 
     // get first block
@@ -209,6 +211,203 @@ VRTexturePtr loadGeoRasterData(string path) {
     auto img = t->getImage();
     img->set( Image::OSG_A_PF, sizeX, sizeY, 1, 1, 1, 0, (const uint8_t*)&data[0], Image::OSG_FLOAT32_IMAGEDATA, true, 1);
     return t;
+}
+
+void divideTiffIntoChunks(string pathIn, string pathOut, double minLat, double maxLat, double minLon, double maxLon, double res) {
+    //cout << " gdal - " << pathIn << pathOut << endl;
+    GDALAllRegister();
+    GDALDataset* poDS = (GDALDataset *) GDALOpen( pathIn.c_str(), GA_ReadOnly );
+    if( poDS == NULL ) { printf( "Open failed.\n" ); return; }
+
+    // general information
+    double adfGeoTransform[6];
+    printf( "Driver: %s/%s\n", poDS->GetDriver()->GetDescription(), poDS->GetDriver()->GetMetadataItem( GDAL_DMD_LONGNAME ) );
+    printf( "Size is %dx%dx%d\n", poDS->GetRasterXSize(), poDS->GetRasterYSize(), poDS->GetRasterCount() );
+    //if( poDS->GetProjectionRef()  != NULL ) { printf( "Projection is `%s'\n", poDS->GetProjectionRef() ); }
+    if( poDS->GetGeoTransform( adfGeoTransform ) == CE_None ) {  }
+
+    cout << " filepath: " << pathIn << endl;
+    cout << " bandCount: " << poDS->GetRasterCount() << endl;
+
+    ///https://wiki.openstreetmap.org/wiki/Mercator
+    auto DEG2RAD = [&](double a) { return (a) / (180 / M_PI); };
+    auto RAD2DEG = [&](double a) { return (a) * (180 / M_PI); };
+    auto EARTH_RADIUS = 6378137;
+
+    /* The following functions take their parameter and return their result in degrees */
+    auto y2lat_d = [&](double y)   { return RAD2DEG( atan(exp( DEG2RAD(y) )) * 2 - M_PI/2 ); };
+    auto x2lon_d = [&](double x)   { return x; };
+
+    auto lat2y_d = [&](double lat) { return RAD2DEG( log(tan( DEG2RAD(lat) / 2 +  M_PI/4 )) ); };
+    auto lon2x_d = [&](double lon) { return lon; };
+
+    /* The following functions take their parameter in something close to meters, along the equator, and return their result in degrees */
+    auto y2lat_m = [&](double y)   { return RAD2DEG(2 * atan(exp( y/EARTH_RADIUS)) - M_PI/2); };
+    auto x2lon_m = [&](double x)   { return RAD2DEG(              x/EARTH_RADIUS           ); };
+
+    /* The following functions take their parameter in degrees, and return their result in something close to meters, along the equator */
+    auto lat2y_m = [&](double lat) { return log(tan( DEG2RAD(lat) / 2 + M_PI/4 )) * EARTH_RADIUS; };
+    auto lon2x_m = [&](double lon) { return          DEG2RAD(lon)                 * EARTH_RADIUS; };
+
+    double xBeg = adfGeoTransform[0];
+    double yBeg = adfGeoTransform[3];
+    double xEnd = adfGeoTransform[0] + poDS->GetRasterXSize()*adfGeoTransform[1];
+    double yEnd = adfGeoTransform[3] + poDS->GetRasterYSize()*adfGeoTransform[5];
+    double latBeg = y2lat_m(yBeg);
+    double lonBeg = x2lon_m(xBeg);
+    double latEnd = y2lat_m(yEnd);
+    double lonEnd = x2lon_m(xEnd);
+
+    Vec2d upperLeft = Vec2d(xBeg,yBeg);
+    Vec2d lowerLeft = Vec2d(xBeg,yEnd);
+    Vec2d upperRight = Vec2d(xEnd,yBeg);
+    Vec2d lowerRight = Vec2d(xEnd,yEnd);
+
+    cout << "upperLeft " << upperLeft << endl;
+    cout << "lowerLeft " << lowerLeft << endl;
+    cout << "upperRight " << upperRight << endl;
+    cout << "lowerRight " << lowerRight << endl;
+    cout << "minLat " << minLat << " maxLat " << maxLat << " minLon " << minLon << " maxLon " << maxLon << " res " << res << endl;
+    cout << "LatO " << latBeg << " LonO " << lonBeg << endl;
+    cout << "Lat1 " << latEnd << " Lon1 " << lonEnd << endl;
+
+    double xA = lon2x_m(minLon);
+    double yA = lat2y_m(minLat);
+    double xB = lon2x_m(maxLon);
+    double yB = lat2y_m(maxLat);
+
+    vector<double> bordersX;
+    vector<double> bordersY;
+
+    double currentY = maxLat;
+    double currentX = minLon;
+    while (currentX <= maxLon) {
+        bordersX.push_back(currentX);
+        currentX += res;
+    }
+    while (currentY >= minLat) {
+        bordersY.push_back(currentY);
+        currentY -= res;
+    }
+
+    auto getBand = [&](int i) {
+        int nBlockXSize, nBlockYSize;
+        int bGotMin, bGotMax;
+        double adfMinMax[2];
+        GDALRasterBand* poBand = poDS->GetRasterBand( i );
+        poBand->GetBlockSize( &nBlockXSize, &nBlockYSize );
+        adfMinMax[0] = poBand->GetMinimum( &bGotMin );
+        adfMinMax[1] = poBand->GetMaximum( &bGotMax );
+        if( ! (bGotMin && bGotMax) ) GDALComputeRasterMinMax((GDALRasterBandH)poBand, TRUE, adfMinMax);
+        return poBand;
+    };
+
+    cout << "input xA " << xA << " yA " << yA << " xB " << xB << " yB " << yB << endl;
+    cout << "file  xA " << adfGeoTransform[0] << " yA " << adfGeoTransform[3] << " xB " << xEnd << " yB " << yEnd << endl;
+
+    //cout << "LatYend " << yEnd << " LonXend " << xEnd << endl;
+    cout << "Sy " << y2lat_m(adfGeoTransform[5]) << " Sx " << x2lon_m(adfGeoTransform[1]) << endl;
+
+    for (int yy = 0; yy < bordersY.size()-1; yy++){
+        for (int xx = 0; xx < bordersX.size()-1; xx++) {
+            if ( bordersY[yy] < latBeg  && bordersX[xx] > lonBeg && bordersY[yy+1] > latEnd  && bordersX[xx+1] < lonEnd ) {
+                cout << " within bounds " << xx << "-" << yy << " | " << bordersY[yy] << " " << bordersX[xx] << " | " << bordersY[yy+1] << " " << bordersX[xx+1] << endl;
+                double xxA = lon2x_m(bordersX[xx]);
+                double xxB = lon2x_m(bordersX[xx+1]);
+                double yyA = lat2y_m(bordersY[yy]);
+                double yyB = lat2y_m(bordersY[yy+1]);
+                cout << "  borders  " << xxA << " " << yyA << " " << xxB << " " << yyB << endl;
+
+                int xpA = (int)((xxA-adfGeoTransform[0])/adfGeoTransform[1]);
+                int xpB = (int)((xxB-adfGeoTransform[0])/adfGeoTransform[1]);
+                int ypA = (int)((yyA-adfGeoTransform[3])/adfGeoTransform[5]);
+                int ypB = (int)((yyB-adfGeoTransform[3])/adfGeoTransform[5]);
+                cout << "  borders  " << xpA << " " << ypA << " " << xpB << " " << ypB << endl;
+
+                int sizeX = xpB-xpA;
+                int sizeY = ypB-ypA;
+
+                cout << " size " << sizeX << " " << sizeY << " " << sizeX*sizeY << endl;
+                string savePath = "N"+to_string(bordersY[yy+1])+"E"+to_string(bordersX[xx])+"S"+to_string(res)+".tif";
+                string savePath2 = "N"+to_string(bordersY[yy+1])+"E"+to_string(bordersX[xx])+"S"+to_string(res)+".png";
+                vector<char> data;
+
+                for (int y = 0; y < sizeY; y++) {
+                    for (int x = 0; x < sizeX; x++) {
+                        vector<char> pix(3);
+                        poDS->GetRasterBand(1)->RasterIO( GF_Read, xpA+x, ypA+y, 1, 1, &pix[0], 1, 1, GDT_Byte, 0, 0 );
+                        poDS->GetRasterBand(2)->RasterIO( GF_Read, xpA+x, ypA+y, 1, 1, &pix[1], 1, 1, GDT_Byte, 0, 0 );
+                        poDS->GetRasterBand(3)->RasterIO( GF_Read, xpA+x, ypA+y, 1, 1, &pix[2], 1, 1, GDT_Byte, 0, 0 );
+                        data.insert(data.end(), pix.begin(), pix.end());
+                    }
+                }
+
+                auto t = VRTexture::create();
+                t->setInternalFormat(GL_RGB8UI);
+                auto img = t->getImage();
+                img->set( Image::OSG_RGB_PF, sizeX, sizeY, 1, 1, 1, 0, (const unsigned char*)&data[0], Image::OSG_UINT8_IMAGEDATA, true, 1);
+                t->write(savePath2);
+            }
+            else { /*cout << " out of bounds " << xx << "-" << yy << " | " << bordersY[yy] << " " << bordersX[xx] << " | " << bordersY[yy+1] << " " << bordersX[xx+1] << endl;*/ }
+        }
+    }
+    GDALClose(poDS);
+}
+
+void writeGeoRasterData(string path, VRTexturePtr tex, double geoTransform[6], string params[3]) {
+    const char *pszFormat = "GTiff";
+    GDALDriver *poDriver;
+    poDriver = GetGDALDriverManager()->GetDriverByName(pszFormat);
+    if( poDriver == NULL )
+        return;
+    Vec3i texSize = tex->getSize();
+    int sizeX = texSize[0];
+    int sizeY = texSize[1];
+    cout << "writeGeoRasterData at " << path << " - X: "  << sizeX << " Y: " << sizeY << endl;
+    double originLat = geoTransform[0];
+    double originLon = geoTransform[3];
+    GDALDataset *poDstDS;
+    char **papszOptions = NULL;
+    poDstDS = poDriver->Create( path.c_str(), sizeX, sizeY, 1, GDT_Float32,
+                                papszOptions );
+    OGRSpatialReference oSRS;
+    char *pszSRS_WKT = NULL;
+    GDALRasterBand *poBand;
+    poDstDS->SetGeoTransform( geoTransform );
+    //TODO: CHANGE UTM and GeogCSM
+    oSRS.SetUTM( 11, TRUE );
+    oSRS.SetWellKnownGeogCS( "WGS84" );
+    oSRS.exportToWkt( &pszSRS_WKT );
+    poDstDS->SetProjection( pszSRS_WKT );
+    CPLFree( pszSRS_WKT );
+    poBand = poDstDS->GetRasterBand(1);
+
+    float *yRow = (float*) CPLMalloc(sizeof(float)*sizeY);
+    for (int y = 0; y < sizeY; y++){
+        for (int x = 0; x < sizeX; x++) {
+            Vec3i pI(x,y,0);
+            auto fC = tex->getPixel(pI)[0];
+            yRow[x] = fC;
+        }
+        poBand->RasterIO( GF_Write, 0, y, sizeX, 1, yRow, sizeX, 1, GDT_Float32, 0, 0 );
+    }
+    /* Once we're done, close properly the dataset */
+    CPLFree(yRow);
+    GDALClose( (GDALDatasetH) poDstDS );
+}
+
+vector<double> getGeoTransform(string path) {
+    vector<double> res(6,0);
+    double adfGeoTransform[6];
+    GDALAllRegister();
+    GDALDataset* poDS = (GDALDataset *) GDALOpen( path.c_str(), GA_ReadOnly );
+    if( poDS == NULL ) { printf( "Open failed.\n" ); return res; }
+
+    // general information
+    if( poDS->GetGeoTransform( adfGeoTransform ) == CE_None ) {}
+    for (int i = 0; i < 6; i++) res[i] = adfGeoTransform[i];
+    GDALClose(poDS);
+    return res;
 }
 
 OSG_END_NAMESPACE;

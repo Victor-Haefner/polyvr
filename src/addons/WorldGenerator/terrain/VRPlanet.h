@@ -62,6 +62,8 @@ class VRPlanet : public VRTransform {
         VRMaterialPtr getMaterial();
         void setupMaterial(string texture, bool isLit);
         void setLit(bool b);
+
+        void divideTIFF(string pathIn, string pathOut, double minLat, double maxLat, double minLon, double maxLon, double res);
 };
 
 OSG_END_NAMESPACE;

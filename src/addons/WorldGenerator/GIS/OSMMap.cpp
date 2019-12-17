@@ -162,6 +162,7 @@ OSMSAXParser::OSMSAXParser() {
 OSMSAXHandlerCP::OSMSAXHandlerCP() {
 }
 
+//CP = Copy & Paste, used for filtering OSM
 void OSMSAXHandlerCP::init(){
     numerator = 0;
     numeratorWritten = 0;
@@ -274,6 +275,7 @@ void OSMSAXHandlerCP::handleElement(){
 
     element.clear();
     numerator++;
+    std::cout << "\r" << std::setw (40) << numerator << " elements";
 }
 
 void OSMSAXHandlerCP::writeLine(string line) {
@@ -494,6 +496,7 @@ void OSMSAXHandlerCP::fatalError(const SAXParseException& exception) {
 OSMSAXHandlerBM::OSMSAXHandlerBM() {
 }
 
+//BM = Build Map, used for reading and making the file structures of OSM
 void OSMSAXHandlerBM::init(){
     numerator = 0;
     nodeCounter = 0;
@@ -557,6 +560,7 @@ void OSMSAXHandlerBM::handleElement(){
 
     element.clear();
     numerator++;
+    std::cout << "\r" << std::setw (40) << numerator << " elements";
 }
 
 map<string, OSMNodePtr> OSMSAXHandlerBM::getNodes() { return nodes; }
@@ -955,10 +959,12 @@ int OSMMap::readFileStreaming(string path) {
 
     try {
         cout << "OSMMap::readFileStreaming - " << filepath << endl;
+        std::cout << std::setw (40) << "0 elements";
         parser->parse(path.c_str());
         nodes = docHandler->getNodes();
         ways = docHandler->getWays();
         relations = docHandler->getRelations();
+        cout << "\r";
         cout << "OSMMap::readFileStreaming - elements read: " << docHandler->getNumerator() << endl;
         cout << "OSMMap::readFileStreaming - nodes: " << docHandler->getNodeCounter() << ", ways: " << docHandler->getWayCounter() <<  ", relations: " << docHandler->getRelationCounter() << endl;
     }
@@ -1036,9 +1042,11 @@ int OSMMap::filterFileStreaming(string path, vector<pair<string, string>> whitel
     try {
         VRTimer t; t.start();
         cout << "OSMMap::copyFileStreaming 1st Pass - " << filepath << endl;
+        std::cout << std::setw (40) << "0 elements";
         docHandler->setNewPath(tempPath);
         parser->parse(path.c_str());
         auto t2 = t.stop()/1000;
+        cout << "\r";
         cout << "OSMMap::copyFileStreaming 1st Pass - secs needed: " << t2 << endl;
         cout << "OSMMap::copyFileStreaming 1st Pass - elements read: " << docHandler->getNumerator() << ", elements written: " << docHandler->getNumeratorWritten() << endl;
         cout << "OSMMap::copyFileStreaming 1st Pass - read: nodes: " << docHandler->getNodeRawCounter() << ", ways: " << docHandler->getWayRawCounter() <<  ", relations: " << docHandler->getRelationRawCounter() << endl;

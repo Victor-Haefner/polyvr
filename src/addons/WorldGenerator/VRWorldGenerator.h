@@ -50,6 +50,7 @@ class VRWorldGenerator : public VRTransform {
         OSMMapPtr osmMap;
         Vec2d coords;
         VRUserGenCbPtr userCbPtr;
+        int metaLVL = 0;
 
         void processOSMMap(double subN = -1, double subE = -1, double subSize = -1);
         void init();
@@ -75,7 +76,7 @@ class VRWorldGenerator : public VRTransform {
 
         //getLODTerrain();
         void setupLOD(int layers);
-        void setupLODTerrain(string pathMap, string pathPaint = "", float scale = 1.0);
+        void setupLODTerrain(string pathMap, string pathPaint = "", float scale = 1.0, bool cache = true);
         void addTerrainsToLOD();
         void setLODTerrainParameters(float heightScale);
         void setTerrainSize( Vec2d in );
