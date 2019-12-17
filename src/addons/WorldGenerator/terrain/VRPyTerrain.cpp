@@ -39,6 +39,6 @@ PyMethodDef VRPyPlanet::methods[] = {
     {"fromLatLongPosition", PyWrapOpt(Planet, fromLatLongPosition, "Get Position on planet based on lat and long", "0", Vec3d, double, double, bool) },
     {"fromPosLatLong", PyWrapOpt(Planet, fromPosLatLong, "Convert space position to lat and long", "0", Vec2d, Pnt3d, bool) },
     {"localize", PyWrap(Planet, localize, "Center the planet origin on a sector", void, double, double) },
-    {"divideTIFF", PyWrap(Planet, divideTIFF, "loads sat images as tiff, dividing into chunks - string pathIn, string pathOut, double minLat, double maxLat, double minLon, double maxLon, double res", void, string, string, double, double, double, double, double) },
+    {"divideTIFF", PyWrap(Planet, divideTIFF, "loads sat images as .tif, dividing into .png chunks - string pathIn, string pathOut, double minLat, double maxLat, double minLon, double maxLon, double res \n        pathOut only placeholder right now, new files are saved in project directory", void, string, string, double, double, double, double, double) },
     {NULL}  /* Sentinel */
 };

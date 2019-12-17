@@ -224,13 +224,12 @@ void VRWorldGenerator::addTerrainsToLOD(){
 
 void VRWorldGenerator::setTerrainSize( Vec2d in ) { terrainSize = in; }
 
-void VRWorldGenerator::setupLODTerrain(string pathMap, string pathPaint, float scale ) {
+void VRWorldGenerator::setupLODTerrain(string pathMap, string pathPaint, float scale, bool cache ) {
     cout << "VRWorldGenerator::setupLODTerrain" << endl;
     auto tex = loadGeoRasterData(pathMap, false);
     Vec3i texSizeN = tex->getSize();
     //cout << " texSizeN: " << texSizeN << endl;
-    //int nLevel = 4;
-    //setupLOD(nLevel);
+
     for (auto tt:terrains) tt->destroy();
     terrains.clear();
     ///TODO: angular resolution human eye: 1 arcminute, approximately 0.02° or 0.0003 radians,[1] which corresponds to 0.3 m at a 1 km distance., https://en.wikipedia.org/wiki/Naked_eye
@@ -257,7 +256,7 @@ void VRWorldGenerator::setupLODTerrain(string pathMap, string pathPaint, float s
 
     //cout << " newPathes: " << pathMap1 << endl;
     //cout << " newPathes: " << pathMap2 << endl;
-    if (FILESYSTEM::exist(pathMap1)) {
+    if ( FILESYSTEM::exist(pathMap1) && cache ) {
         tex1 = loadGeoRasterData(pathMap1, false);
     } else {
         cout << "VRWorldGenerator::setupLODTerrain creating new downsized texture lvl1 at " << pathMap1 << endl;
@@ -269,7 +268,7 @@ void VRWorldGenerator::setupLODTerrain(string pathMap, string pathPaint, float s
         geoTransform[1] *= 2;
         writeGeoRasterData(pathMap1, tex1, geoTransform, params);
     }
-    if (FILESYSTEM::exist(pathMap2)) {
+    if ( FILESYSTEM::exist(pathMap2) && cache ) {
         tex2 = loadGeoRasterData(pathMap2, false);
     } else {
         cout << "VRWorldGenerator::setupLODTerrain creating new downsized texture lvl2 at " << pathMap2 << endl;
@@ -282,15 +281,15 @@ void VRWorldGenerator::setupLODTerrain(string pathMap, string pathPaint, float s
         geoTransform[1] *= 4;
         writeGeoRasterData(pathMap2, tex2, geoTransform, params2);
     }
-    if (FILESYSTEM::exist(pathPaint1)) {
-    } else {
+    if ( !FILESYSTEM::exist(pathPaint1) || !cache ) {
+        cout << "VRWorldGenerator::setupLODTerrain creating new downsized sat texture lvl1 at " << pathPaint1 << endl;
         VRTexturePtr dsSatImg1 = VRTexture::create();
         dsSatImg1->read(pathPaint);
         dsSatImg1->downsize();
         dsSatImg1->write(pathPaint1);
     }
-    if (FILESYSTEM::exist(pathPaint2)) {
-    } else {
+    if ( !FILESYSTEM::exist(pathPaint2) || !cache ) {
+        cout << "VRWorldGenerator::setupLODTerrain creating new downsized sat texture lvl2 at " << pathPaint2 << endl;
         VRTexturePtr dsSatImg2 = VRTexture::create();
         dsSatImg2->read(pathPaint);
         dsSatImg2->downsize();
@@ -302,37 +301,21 @@ void VRWorldGenerator::setupLODTerrain(string pathMap, string pathPaint, float s
         auto terrain = VRTerrain::create("terrain"+toString(fac));
         fac*=0.8;
         terrain->setParameters (terrainSize, 2/fac, 1);
-        VRTexturePtr texSc;
-        texSc = tex;
-        if (a == 1) { texSc = tex1; }
-        if (a == 2) { texSc = tex2; }
-        /*
-        if (fac != 1.0) {
-            int a = int(float(texSizeN[0])*fac);
-            int b = int(float(texSizeN[1])*fac);
-            int c = 1;
-            Vec3i nSize = Vec3i(a,b,c);
-            texSc->resize(nSize, Vec3i(0,0,0));
-            cout << nSize << " " << texSc->getSize() << endl;
-        }*/
+        VRTexturePtr texSc = tex;
+        string satImg = pathPaint;
+        if (a == 1) { texSc = tex1; satImg = pathPaint1; }
+        if (a == 2) { texSc = tex2; satImg = pathPaint2; }
+        if ( !FILESYSTEM::exist(pathPaint2) ) satImg = pathPaint;
         terrain->setMap( texSc, 3 );
-        //terrain->paintHeights( pathPaint, pathPaint );
-        if (a == 0) terrain->setImage( pathPaint );
-        if (a == 1) terrain->setImage( pathPaint1 );
-        if (a == 2) terrain->setImage( pathPaint2 );
+        terrain->paintHeights( satImg );
         terrain->setWorld( ptr() );
         terrain->setLODFactor(fac);
         terrains.push_back(terrain);
     };
+
     addTerrain(1.0, 0);
     addTerrain(0.5, 1);
     addTerrain(0.05, 2);
-    return;
-
-    for (int i = 0; i < lodLevels.size(); i++) {
-        auto fac = lodFactors[i];
-        addTerrain(fac, i);
-    }
 }
 
 vector<VRTerrainPtr> VRWorldGenerator::getTerrains(){

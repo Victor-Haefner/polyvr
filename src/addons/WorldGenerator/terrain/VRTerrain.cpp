@@ -664,7 +664,7 @@ void VRTerrain::paintHeights(string woods, string gravel) {
     mat->clearTransparency();
 }
 
-void VRTerrain::setImage(string path, int channel) {
+void VRTerrain::paintHeights(string path) {
     mat->setTexture(path, 0, 3);
     mat->setShaderParameter("texPic", 3);
     mat->setShaderParameter("doHeightTextures", 2);
