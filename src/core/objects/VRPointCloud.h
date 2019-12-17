@@ -10,6 +10,7 @@ class VRPointCloud : public VRTransform {
         VRMaterialPtr mat;
         OctreePtr octree;
         int levels = 1;
+        bool keepOctree = 0;
         vector<int> downsamplingRate = {1};
         vector<float> lodDistances;
 

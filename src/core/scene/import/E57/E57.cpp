@@ -122,7 +122,9 @@ void OSG::loadXYZ(string path, VRTransformPtr res, map<string, string> importOpt
     res->setName(path);
 
     float downsampling = 1;
+    bool swapYZ = 0;
     if (importOptions.count("downsampling")) downsampling = toFloat(importOptions["downsampling"]);
+    if (importOptions.count("swapYZ")) swapYZ = toInt(importOptions["swapYZ"]);
 
     try {
         auto pointcloud = VRPointCloud::create("pointcloud");
@@ -143,7 +145,9 @@ void OSG::loadXYZ(string path, VRTransformPtr res, map<string, string> importOpt
                 if (Nskipped >= Nskip) {
                     //data.pushVert(Pnt3d(vertex[0], vertex[1], vertex[2]), Vec3d(0,1,0), Color3f(vertex[3]/255.0, vertex[4]/255.0, vertex[5]/255.0));
                     //data.pushPoint();
-                    Vec3d pos = Vec3d(vertex[0], vertex[1], vertex[2]);
+                    Vec3d pos;
+                    if (swapYZ) pos = Vec3d(vertex[0], vertex[2], -vertex[1]);
+                    else pos = Vec3d(vertex[0], vertex[1], vertex[2]);
                     Color3f col(vertex[3]/255.0, vertex[4]/255.0, vertex[5]/255.0);
                     pointcloud->getOctree()->add(pos, new Color3f(col), -1, true, 1e5);
                     Nskipped = 0;
