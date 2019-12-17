@@ -111,6 +111,7 @@ PyMethodDef VRPyOSMNode::methods[] = {
 };
 
 PyMethodDef VRPyOSMBase::methods[] = {
+    {"getID", PyWrap2( OSMBase, getID, "Access ID", string ) },
     {"getTags", PyWrap2( OSMBase, getTags, "Access tags", osmTagMap ) },
     {"toString", PyWrap2( OSMBase, toString, "As string", string ) },
     {NULL}  /* Sentinel */

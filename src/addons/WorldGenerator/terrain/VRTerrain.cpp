@@ -477,7 +477,7 @@ bool VRTerrain::applyIntersectionAction(Action* action) {
     return true;
 }
 
-double VRTerrain::getHeight(const Vec2d& p, bool useEmbankments) {
+double VRTerrain::getHeight(Vec2d p, bool useEmbankments) {
     int W = heigthsTex->getSize()[0]-1;
     int H = heigthsTex->getSize()[1]-1;
 
@@ -543,11 +543,22 @@ void VRTerrain::elevatePolygon(VRPolygonPtr poly, float offset, bool useEmbankme
 
 void VRTerrain::projectTangent( Vec3d& t, Vec3d p) {
     t[1] = 0;
-    t.normalize(); // TODO: to optimize!
-    float h1 = getHeight(Vec2d(p[0]-t[0]*0.5, p[2]-t[2]*0.5));
-    float h2 = getHeight(Vec2d(p[0]+t[0]*0.5, p[2]+t[2]*0.5));
+    t.normalize();
+    t *= resolution;
+    float h1 = getHeight(Vec2d(p[0]-t[0], p[2]-t[2]));
+    float h2 = getHeight(Vec2d(p[0]+t[0], p[2]+t[2]));
     t[1] = h2-h1;
     t.normalize();
+}
+
+Vec3d VRTerrain::getNormal( Vec3d p ) { // TODO!!
+    Vec3d ex(1,0,0);
+    Vec3d ez(0,0,1);
+    projectTangent(ex, p);
+    projectTangent(ez, p);
+    Vec3d n = ez.cross(ex);
+    n.normalize();
+    return n;
 }
 
 void VRTerrain::loadMap( string path, int channel ) {

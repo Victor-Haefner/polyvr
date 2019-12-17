@@ -19,15 +19,23 @@
       <core>
 	import VR
 
-	if hasattr(VR, 'scene1'): VR.scene1.destroy()
-	VR.scene1 = VR.Object('scene1', 'light')
+	if hasattr(VR, 'scene'): VR.scene.destroy()
+	VR.scene = VR.Object('scene', 'light')
 
-	scene1 = VR.importScene('sceneImportSlave1.pvr')
-	#scene2 = VR.importScene('sceneImportSlave2.pvr')
+	VR.importScene('sceneImportSlave1.pvr')
+	#VR.importScene('sceneImportSlave2.pvr')
 	
-	VR.scene1.addChild(scene1)
 </core>
       <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="0" persistency="666"/>
+    </Script>
+    <Script base_name="onKey" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+
+	print 'trigger init'
+	VR.init()
+</core>
+      <trig type="on_device" dev="keyboard" state="Pressed" param="" key="32" base_name="trigger" name_space="__global__" name_suffix="2" persistency="666"/>
     </Script>
   </Scripts>
   <Sockets persistency="666"/>

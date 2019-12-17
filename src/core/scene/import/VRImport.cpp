@@ -102,14 +102,13 @@ void testSync(int t) {
 
 /// --------------------------------------------------
 
-VRTransformPtr VRImport::load(string path, VRObjectPtr parent, bool reload, string preset, bool thread, string options, bool useBinaryCache) {
+VRTransformPtr VRImport::load(string path, VRObjectPtr parent, bool useCache, string preset, bool thread, map<string, string> options, bool useBinaryCache) {
     cout << "VRImport::load " << path << " " << preset << endl;
     if (ihr_flag) if (fileSize(path) > 3e7) return 0;
     setlocale(LC_ALL, "C");
 
     // check cache
-    reload = reload ? true : (cache.count(path) == 0);
-    if (!reload) {
+    if (useCache && cache.count(path)) {
         auto res = cache[path].retrieve(parent);
         cout << "load " << path << " : " << res << " from cache\n";
         return res;
@@ -120,26 +119,31 @@ VRTransformPtr VRImport::load(string path, VRObjectPtr parent, bool reload, stri
 
     VRTransformPtr res = VRTransform::create("proxy");
     if (!thread) {
-        LoadJob job(path, preset, res, progress, options, useBinaryCache);
+        LoadJob job(path, preset, res, progress, options, useCache, useBinaryCache);
         job.load(VRThreadWeakPtr());
-        return cache[path].retrieve(parent);
+        if (useCache) return cache[path].retrieve(parent);
+        else return res;
     } else {
-        fillCache(path, res);
-        auto r = cache[path].retrieve(parent);
-        auto job = new LoadJob(path, preset, r, progress, options, useBinaryCache); // TODO: fix memory leak!
+        if (useCache) {
+            fillCache(path, res);
+            res = cache[path].retrieve(parent);
+        }
+
+        auto job = new LoadJob(path, preset, res, progress, options, useCache, useBinaryCache); // TODO: fix memory leak!
         job->loadCb = VRFunction< VRThreadWeakPtr >::create( "geo load", boost::bind(&LoadJob::load, job, _1) );
         auto t = VRScene::getCurrent()->initThread(job->loadCb, "geo load thread", false, 1);
         //testSync(t);
-        return r;
+        return res;
     }
 }
 
-VRImport::LoadJob::LoadJob(string p, string pr, VRTransformPtr r, VRProgressPtr pg, string opt, bool ubc) {
+VRImport::LoadJob::LoadJob(string p, string pr, VRTransformPtr r, VRProgressPtr pg, map<string, string> opt, bool uc, bool ubc) {
     path = p;
     res = r;
     progress = pg;
     preset = pr;
     options = opt;
+    useCache = uc;
     useBinaryCache = ubc;
 }
 
@@ -157,23 +161,23 @@ void VRImport::LoadJob::load(VRThreadWeakPtr tw) {
         int Ncr0 = clist->getNumCreated();
         int Nch0 = clist->getNumChanged();
         cout << "load " << path << " ext: " << ext << " preset: " << preset << ", until now created: " << Ncr0 << ", changed: " << Nch0 << endl;
-        if (ext == ".e57") { loadE57(path, res); }
-        if (ext == ".xyz") { loadXYZ(path, res); }
-        if (ext == ".ply") { loadPly(path, res); }
+        if (ext == ".e57") { loadE57(path, res, options); return; }
+        if (ext == ".xyz") { loadXYZ(path, res, options); return; }
+        if (ext == ".ply") { loadPly(path, res); return; }
         //if (ext == ".step" || ext == ".stp" || ext == ".STEP" || ext == ".STP") { VRSTEP step; step.load(path, res, options); }
 #ifdef WITH_STEP
-        if (ext == ".step" || ext == ".stp" || ext == ".STEP" || ext == ".STP") { loadSTEPCascade(path, res); }
+        if (ext == ".step" || ext == ".stp" || ext == ".STEP" || ext == ".STP") { loadSTEPCascade(path, res); return; }
 #endif
         if (ext == ".wrl" && preset == "SOLIDWORKS-VRML2") { VRFactory f; if (f.loadVRML(path, progress, res, thread)); else preset = "OSG"; }
         if (ext == ".wrl" && preset == "PVR") { loadVRML(path, res, progress, thread); }
-        if (ext == ".vtk") { loadVtk(path, res); }
-        if (ext == ".shp") { loadSHP(path, res); }
-        if (ext == ".pdf") { loadPDF(path, res); }
-        if (ext == ".tiff" || ext == ".tif") { loadTIFF(path, res); }
-        if (ext == ".hgt") { loadTIFF(path, res); }
-        if (ext == ".dxf") { loadDXF(path, res); }
+        if (ext == ".vtk") { loadVtk(path, res); return; }
+        if (ext == ".shp") { loadSHP(path, res); return; }
+        if (ext == ".pdf") { loadPDF(path, res); return; }
+        if (ext == ".tiff" || ext == ".tif") { loadTIFF(path, res); return; }
+        if (ext == ".hgt") { loadTIFF(path, res); return; }
+        if (ext == ".dxf") { loadDXF(path, res); return; }
 #ifndef NO_IFC
-        if (ext == ".ifc") { loadIFC(path, res); }
+        if (ext == ".ifc") { loadIFC(path, res); return; }
 #endif
         if (preset == "OSG" || preset == "COLLADA") osgLoad(path, res);
         if (preset == "COLLADA") loadCollada(path, res);
@@ -184,11 +188,12 @@ void VRImport::LoadJob::load(VRThreadWeakPtr tw) {
     bool loadedFromCache = false;
     if (useBinaryCache && exists(osbPath)) {
         // TODO: create descriptive hash of file, load hash and compare
+        cout << "load from binary cache" << endl;
         osgLoad(osbPath, res);
         loadedFromCache = true;
     } else loadSwitch();
 
-    if (!t) VRImport::get()->fillCache(path, res);
+    if (!t && useCache) VRImport::get()->fillCache(path, res);
     if (t) t->syncToMain();
 
     if (useBinaryCache && !loadedFromCache && res->getChild(0)) {
@@ -273,12 +278,14 @@ VRObjectPtr VRImport::OSGConstruct(NodeMTRecPtr n, VRObjectPtr parent, string na
         auto osgGeo = dynamic_cast<Geometry*>(n->getCore());
         if (!osgGeo->getPositions()) return 0;
         if (osgGeo->getPositions()->size() == 0) return 0;
-        tmp_g = VRGeometry::create(name);
         if (geoTrans) {
+            tmp_g = VRGeometry::create(geoTransName); // more consistent with storing and loading to/from osb!
             tmp_g->addAttachment("collada_name", geoTransName);
             tmp_g->setMatrix(toMatrix4d(dynamic_cast<Transform*>(geoTrans)->getMatrix()));
             geoTrans = 0;
             geoTransName = "";
+        } else {
+            tmp_g = VRGeometry::create(name);
         }
 
         VRGeometry::Reference ref;

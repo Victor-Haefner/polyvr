@@ -1,486 +1,438 @@
 #include "VRAMLLoader.h"
-
-#include <iostream>
-
-#include <boost/foreach.hpp>
-#include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/xml_parser.hpp>
-
-#include <OpenSG/OSGSceneFileHandler.h>
-#include <OpenSG/OSGGeoProperties.h>
-#include <OpenSG/OSGGeometry.h>
-
-#include "core/objects/object/VRObject.h"
-#include "core/objects/geometry/VRGeometry.h"
-#include "core/objects/geometry/OSGGeometry.h"
-#include "core/objects/material/VRMaterial.h"
-
-#include "core/objects/geometry/VRPhysics.h"
 #include "core/utils/toString.h"
 
-
-#define AI_MAX_NUMBER_OF_TEXTURECOORDS   0x8
-
+#include <iostream>
+#include <libxml++/libxml++.h>
+#include <OpenSG/OSGVector.h>
 
 using namespace OSG;
-using namespace boost;
-using namespace boost::property_tree;
 
-template<> string typeName(const VRAMLLoader& o) { return "AMLLoader"; }
+template<> string typeName(const VRAMLLoader& t) { return "VRAMLLoader"; }
 
-string directory;
+VRAMLLoader::VRAMLLoader() {}
+VRAMLLoader::~VRAMLLoader() {}
 
-VRAMLLoader::VRAMLLoader() {
-    ;
+VRAMLLoaderPtr VRAMLLoader::create()  { return VRAMLLoaderPtr(new VRAMLLoader()); }
+
+void traverseXML(xmlpp::Element* e, string D = "") {
+    cout << D << e->get_name() << endl;
+    for (auto enode : e->get_children()) {
+        auto element = dynamic_cast<xmlpp::Element*>(enode);
+        if (!element) continue;
+        traverseXML(element, D + " ");
+    }
 }
 
-
-VRAMLLoader* VRAMLLoader::get() {
-    static VRAMLLoader* l = new VRAMLLoader();
-    return l;
+xmlpp::Element* getChild(xmlpp::Element* e, string name) {
+    return dynamic_cast<xmlpp::Element*>( e->get_first_child( name ) );
 }
 
-
-struct Geo {
-    GeoVectorPropertyRecPtr tc1 = 0;
-    GeoVectorPropertyRecPtr tc2 = 0;
-    GeoVectorPropertyRecPtr tc3 = 0;
-    GeoVectorPropertyRecPtr tc4 = 0;
-    GeoVectorPropertyRecPtr tc5 = 0;
-    GeoVectorPropertyRecPtr tc6 = 0;
-    GeoVectorPropertyRecPtr tc7 = 0;
-
-    GeoVectorPropertyRecPtr pos = 0;
-    GeoVectorPropertyRecPtr norms = 0;
-    GeoVectorPropertyRecPtr cols = 0;
-    GeoIntegralPropertyRefPtr inds_p = 0;
-    GeoIntegralPropertyRefPtr inds_n = 0;
-    GeoIntegralPropertyRefPtr inds_c = 0;
-    GeoIntegralPropertyRefPtr types = 0;
-    GeoIntegralPropertyRefPtr lengths = 0;
-    VRGeometryPtr geo = 0;
-    VRMaterialPtr mat = 0;
-
-    Geo(string name) {
-        geo = VRGeometry::create(name);
-        mat = VRMaterial::create(name);
-
-        tc1 = GeoPnt3fProperty::create();
-        tc2 = GeoPnt3fProperty::create();
-        tc3 = GeoPnt3fProperty::create();
-        tc4 = GeoPnt3fProperty::create();
-        tc5 = GeoPnt3fProperty::create();
-        tc6 = GeoPnt3fProperty::create();
-        tc7 = GeoPnt3fProperty::create();
-
-        pos = GeoPnt3fProperty::create();
-        norms = GeoVec3fProperty::create();
-        cols = GeoVec3fProperty::create();
-        inds_p = GeoUInt32Property::create();
-        inds_n = GeoUInt32Property::create();
-        inds_c = GeoUInt32Property::create();
-        types = GeoUInt32Property::create();
-        lengths = GeoUInt32Property::create();
+vector<xmlpp::Element*> getChildren(xmlpp::Element* e, string name) {
+    vector<xmlpp::Element*> res;
+    for (auto n : e->get_children(name)) {
+        auto e = dynamic_cast<xmlpp::Element*>( n );
+        if (e) res.push_back(e);
     }
+    return res;
+}
 
-    void finish() {
-        geo->setTypes(types);
-        geo->setLengths(lengths);
-        geo->setPositions(pos);
-        geo->setNormals(norms);
-        geo->setColors(cols);
-        geo->getMesh()->geo->setIndex(inds_p, Geometry::PositionsIndex);
-        geo->getMesh()->geo->setIndex(inds_c, Geometry::ColorsIndex);
-        geo->getMesh()->geo->setIndex(inds_n, Geometry::NormalsIndex);
-        geo->setTexCoords(tc1, 0);
-        geo->setTexCoords(tc2, 1);
-        geo->setTexCoords(tc3, 2);
-        geo->setTexCoords(tc4, 3);
-        geo->setTexCoords(tc5, 4);
-        geo->setTexCoords(tc6, 5);
-        geo->setTexCoords(tc7, 6);
-        geo->setMaterial(mat);
-    }
-};
+string getText(xmlpp::Element* e) {
+    auto txt = e->get_child_text();
+    return txt ? txt->get_content() : "";
+}
 
-void VRAMLLoader::buildMesh(string path, Matrix4f m) {
+void VRAMLLoader::read(string path) {
+    string ns = "{http://www.dke.de/CAEX}";
 
+    xmlpp::DomParser parser;
+    try { parser.parse_file(path); }
+    catch(const exception& ex) { cout << "VRAMLLoader::read Error: " << ex.what() << endl; return; }
 
-cout << "Building Mesh" << endl;
-    /*Assimp::Importer importer;
+    auto root = parser.get_document()->get_root_node();
+    auto hierarchy = getChild(root, "InstanceHierarchy");
 
-    const aiScene* scene = importer.ReadFile( path,
-        aiProcess_CalcTangentSpace       |
-        aiProcess_Triangulate            |
-        aiProcess_JoinIdenticalVertices  |
-        aiProcess_SortByPType);
+    for (auto mach : getChildren(hierarchy, "InternalElement")) {
+        double x, y, z, length, width, height;
+        double dx, dy, dz, ux, uy, uz;
+        x = y = z = length = width = height = 0;
+        dx = dy = dz = ux = uy = uz = 0;
 
-  if( !scene)
-  {
-    cout<< "Error !" << importer.GetErrorString()<< endl;;
+        double mspeed = 1;
+        vector<Vec3d> wSpace(2); //[[position],[size]]
+        string path;
+        string typ = "M";
+        double clear = 10;
+        string mid = mach->get_attribute_value("ID");
+        string mname = mach->get_attribute_value("Name");
 
-  }
+        for (auto attr : getChildren(hierarchy, "Attribute")) {
+            string n = attr->get_attribute_value("Name");
+            if (n == "position") {
+                for (auto val : getChildren(attr, "Attribute")) {
+                    string vn = val->get_attribute_value("Name");
+                    auto vf = getChild(val, "Value");
+                    if (!vf) break; // Attribute "Value" missing: Keep default value.
+                    else if (vn == "x") x = toFloat(getText(vf));
+                    else if (vn == "y") y = toFloat(getText(vf));
+                    else if (vn == "z") z = toFloat(getText(vf));
+                }
+            }
 
-    for( int i =0; i < scene->mNumMeshes; i++)
-    {
+            else if (n == "orientation") {
+                for (auto vec : getChildren(attr, "Attribute")) {
+                    string vn = vec->get_attribute_value("Name");
+                    if (vn == "direction_vector") {
+                        for (auto val : getChildren(vec, "Attribute")) {
+                            string vnn = val->get_attribute_value("Name");
+                            auto vf = getChild(val, "Value");
+                            if (!vf) break; // Attribute "Value" missing: Keep default value.
+                            else if (vnn == "dx") dx = toFloat(getText(vf));
+                            else if (vnn == "dy") dy = toFloat(getText(vf));
+                            else if (vnn == "dz") dz = toFloat(getText(vf));
+                        }
+                    }
+                    if (vn == "up_vector") {
+                        for (auto val : getChildren(vec, "Attribute")) {
+                            string vnn = val->get_attribute_value("Name");
+                            auto vf = getChild(val, "Value");
+                            if (!vf) break; // Attribute "Value" missing: Keep default value.
+                            else if (vnn == "ux") ux = toFloat(getText(vf));
+                            else if (vnn == "uy") uy = toFloat(getText(vf));
+                            else if (vnn == "uz") uz = toFloat(getText(vf));
+                        }
+                    }
+                }
+            }
 
-    aiMesh* mesh = scene->mMeshes[i];
+            else if (n == "model") {
+                auto vf = getChild(attr, "Value");
+                if (vf) path = getText(vf);
+            }
 
-   // cout << mesh->mNumBones << endl;
-    Geo geo("text");
-    int vertexNumber = 0;
-    int facesNumber = 0;
-    int currentIndsPos = 0;
+            else if (n == "type") {
+                auto vf = getChild(attr, "Value");
+                if (vf) typ = getText(vf);
+            }
 
-   for(int j = 0; j < mesh->mNumVertices; j++)
-        {
-            float x = mesh->mVertices[j].x;
-            float y = mesh->mVertices[j].y;
-            float z = mesh->mVertices[j].z;
-           // cout << x << " " << y << " " << z << " " << endl;
-            geo.pos->addValue(Vec3d(x,y,z));
-            vertexNumber += 1;
-        }
+            else if (n == "clearance") {
+                auto vf = getChild(attr, "Value");
+                if (vf) clear = toFloat(getText(vf));
+            }
 
-        //define geo.norms
-        float x = mesh->mNormals->x;
-        float y = mesh->mNormals->y;
-        float z = mesh->mNormals->z;
-        geo.norms->addValue(Vec3d(x,y,z));
+            else if (n == "size") {
+                for (auto val : getChildren(attr, "Attribute")) {
+                    string vn = val->get_attribute_value("Name");
+                    auto vf = getChild(val, "Value");
+                    if (!vf) break; // Attribute "Value" missing: Keep default value.
+                    else if (vn == "length") length = toFloat(getText(vf));
+                    else if (vn == "height") height = toFloat(getText(vf));
+                    else if (vn == "width") width = toFloat(getText(vf));
+                }
+            }
 
-        //define geo.inds_n and geo.inds_p
-        for(int j = 0; j < mesh->mNumFaces; j++)
-        {
-            const struct aiFace* face = &mesh->mFaces[j];
-
-
-            for(int k = 0; k < face->mNumIndices; k++)
-            {
-                geo.inds_p->addValue(face->mIndices[k]);
-                geo.inds_n->addValue(i);
+            else if (n == "workspace") {
+                for (auto vec : getChildren(attr, "Attribute")) {
+                    string vn = vec->get_attribute_value("Name");
+                    if (vn == "position") {
+                        for (auto val : getChildren(vec, "Attribute")) {
+                            string vnn = val->get_attribute_value("Name");
+                            auto vf = getChild(val, "Value");
+                            if (!vf) break; // Attribute "Value" missing: Keep default value.
+                            else if (vnn == "x") wSpace[0][0] = toFloat(getText(vf));
+                            else if (vnn == "y") wSpace[0][1] = toFloat(getText(vf));
+                            else if (vnn == "z") wSpace[0][2] = toFloat(getText(vf));
+                        }
+                    }
+                    if (vn == "size") {
+                        for (auto val : getChildren(vec, "Attribute")) {
+                            string vnn = val->get_attribute_value("Name");
+                            auto vf = getChild(val, "Value");
+                            if (!vf) break; // Attribute "Value" missing: Keep default value.
+                            else if (vnn == "length") wSpace[1][0] = toFloat(getText(vf));
+                            else if (vnn == "height") wSpace[1][1] = toFloat(getText(vf));
+                            else if (vnn == "width") wSpace[1][2] = toFloat(getText(vf));
+                        }
+                    }
+                }
             }
         }
 
-        facesNumber += mesh->mNumFaces;
-
-        //create TextCoords method
-        for (int i=0; i<vertexNumber; i++) { // per vertex
-            //geo.cols->addValue(Vec4d(0,0,1,1));
-            geo.tc1->addValue(Vec2d(0,0));
-        }
-
-        geo.types->addValue(GL_TRIANGLES);
-        geo.lengths->addValue(3*facesNumber);
-
-        aiColor3D diffuse (0.f,0.f,0.f);
-        aiColor3D specular (0.f,0.f,0.f);
-        aiColor3D ambient (0.f,0.f,0.f);
-        aiColor3D emissive (0.f,0.f,0.f);
-        float shininess (0.f);
-
-        int matIndex = mesh->mMaterialIndex;
-        aiMaterial* mat = scene->mMaterials[matIndex];
-
-        mat->Get(AI_MATKEY_COLOR_DIFFUSE,diffuse);
-        mat->Get(AI_MATKEY_COLOR_SPECULAR,specular);
-        mat->Get(AI_MATKEY_COLOR_AMBIENT,ambient);
-        mat->Get(AI_MATKEY_COLOR_EMISSIVE,emissive);
-        mat->Get(AI_MATKEY_SHININESS,shininess);
-
-        geo.mat->setDiffuse(Color3f(diffuse.r,diffuse.g,diffuse.b));
-        geo.mat->setAmbient(Vec3d(ambient.r, ambient.g, ambient.b));
-        geo.mat->setSpecular(Vec3d(specular.r, specular.g, specular.b));
-        geo.mat->setTransparency(1);
-        geo.mat->setShininess(shininess);
-        geo.mat->setEmission(Vec3d(emissive.r,emissive.g,emissive.b));
-
-        geo.finish();
-
-
-
-        //m.setScale(0.001,0.001,0.001);
-
-        for (int i = 0; i < 4; i++)
-        {
-               cout << m[i][0] << " "
-               << m[i][1] << " "
-               << m[i][2] << " "
-               << m[i][3] << endl;
-
-        }
-
-        geo.geo->setMatrix(m);
-        root->addChild(geo.geo);
-    }*/
-
-}
-int meshNumber = 0;
-void VRAMLLoader::print(boost::property_tree::ptree const& pt, Matrix4f m)
-{
-    string nextMesh;
-
-    using boost::property_tree::ptree;
-    ptree::const_iterator end = pt.end();
-    for (ptree::const_iterator it = pt.begin(); it != end; ++it) {
-
-        if(it->first=="matrix")
-        {
-            string s (it->second.get_value<std::string>());
-            string str2(" ");
-           string::size_type sz;
-
-            Matrix4f tempMatrix;
-           for(int i = 0; i < 4; i++)
-           {
-               for(int j = 0; j < 4; j++)
-               {
-                   if(j == 3 && i==2)
-                   {
-                        size_t number = s.find(str2);
-                    if(number <= s.length())
-                    {
-                        string variable (s.begin(), s.begin() + number);
-
-                        string temp (s.begin()+number+1, s.end());
-                        s = temp;
-                       tempMatrix[i][j] = stof(variable);
-                       //cout << stof(variable) << endl;
-                    }
-                    else
-                    {
-                        string variable (s.begin(), s.end());
-
-                        tempMatrix[i][j] = stof(variable);
-                        //cout << stof(variable) << endl;
-                    }
-                   }
-                   else
-                   {
-                    size_t number = s.find(str2);
-                    if(number <= s.length())
-                    {
-                        string variable (s.begin(), s.begin() + number);
-
-                        string temp (s.begin()+number+1, s.end());
-                        s = temp;
-                       tempMatrix[i][j] = stof(variable);
-                       //cout << stof(variable) << endl;
-                    }
-                    else
-                    {
-                        string variable (s.begin(), s.end());
-
-                        tempMatrix[i][j] = stof(variable);
-                        //cout << stof(variable) << endl;
-                    }
-                   }
-
-               }
-               //cout << m[i][0] << " " << m[i][1] << " " << m[i][2] << " " << m[i][3] << endl;
-           }
-            Matrix4f temp2;
-                    for(int z = 0; z < 4; z++)
-                    {
-                        for(int k = 0; k < 4; k++)
-                        {
-                            temp2[z][k] = m[z][0]*tempMatrix[0][k]
-                                + m[z][1]*tempMatrix[1][k]
-                                + m[z][2]*tempMatrix[2][k]
-                                + m[z][3]*tempMatrix[3][k];
-                        }
-                    }
-
-            m = temp2;
-
-        }
-
-       if(it->first=="url")
-        {
-            string str(it->second.get_value<std::string>());
-            string str2("#");
-            size_t found = str.find(str2);
-            string s7b (str.begin(), str.begin()+found);
-            nextMesh = s7b;
-            cout << directory  <<  "/" <<  nextMesh << endl;
-            loadProducts(directory + "/" + nextMesh, m);
-
-        }
-        else
-        {
-         print(it->second,m);
+        if (typ == "G") {
+            ;
         }
     }
 
-}
-void VRAMLLoader::loadProducts(string path, Matrix4f m)
-{
-    /*Assimp::Importer importer;
+    /*
 
-    const aiScene* scene = importer.ReadFile( path,
-        aiProcess_CalcTangentSpace       |
-        aiProcess_Triangulate            |
-        aiProcess_JoinIdenticalVertices  |
-        aiProcess_SortByPType);
+		for mach in internalElements:
 
-  if( !scene)
-  {
-    cout<< "Error !" << importer.GetErrorString()<< endl;;
+			if typ == 'G':
+				VR.setground(length, width)
+				continue #Entity is the ground, nothing more to do. Take next entity.
 
-  }
-    int numberMesh = 0;
+			xmlProcesses = mach.findall(ns + 'InternalElement')
+			processes = []
+			for proc in xmlProcesses:
+				procSpeed = 0
+				doConsume = True
+				n = proc.get('Name')
+				procID = proc.get('ID')
+				attributes = proc.findall(ns + 'Attribute')
+				for attr in attributes:
+					vn = attr.get('Name')
+					if vn == 'speed':
+						vf = attr.find(ns + 'Value')
+						if vf is not None and vf.text is not None:
+							procSpeed = float(vf.text)
+					if vn == 'consume':
+						vf = attr.find(ns + 'Value')
+						if vf is not None and vf.text is not None:
+							doConsume = bool(int(vf.text))
+
+				p = VR.Machine.Process(None, n, procID, procSpeed, doConsume)
+				processes.append(p)
+
+				#Get a processes interfaces
+				#externalInterfaces contains XML-elements of the current entities interfaces
+				#interfaces contains Interface-elements that has been translated from its corresponding XML-element
+				#allInterfaces contains all Interface-elements of all entities for future use (Build graph with InternalLinks)
+				externalInterfaces = []
+				if typ != 'R' and typ != 'O': #Ressources, Obstacles arent allowed to have interfaces.
+					externalInterfaces = proc.findall(ns + 'ExternalInterface')
+				interfaces = []
+				for inter in externalInterfaces:
+					iname = inter.get('Name')
+					iid = inter.get('ID')
+					idir = ''
+					ix = iy = iz = 0
+					ispeed = 0
+					iblocking = True
+					imodel = ''
+					itransport = None
+
+					attributes = inter.findall(ns + 'Attribute')
+					for attr in attributes:
+						n = attr.get('Name')
+						if n == 'direction':
+							idir = attr.find(ns + 'Value').text
+
+						elif n == 'position':
+							values = attr.findall(ns + 'Attribute')
+							for val in values:
+								vn = val.get('Name')
+								vf = val.find(ns + 'Value')
+								if vf is None: break
+								elif vn == 'x': ix = float(vf.text)
+								elif vn == 'y': iy = float(vf.text)
+								elif vn == 'z': iz = float(vf.text)
+
+						elif n == 'speed':
+							vf  = attr.find(ns + 'Value')
+							if vf is not None and vf.text is not None:
+								ispeed = float(vf.text)
+
+						elif n == 'model':
+							vf = attr.find(ns + 'Value')
+							if vf is not None:
+								imodel = vf.text
+
+						elif n == 'blocking':
+							iblockingText = attr.find(ns + 'Value').text
+							if iblockingText == 'False': iblocking = False
+
+						elif n == 'transportation':
+							vf = attr.find(ns + 'Value')
+							if vf is not None:
+								itransport = vf.text
 
 
-    using boost::property_tree::ptree;
-    ptree pt;
-    read_xml(path, pt);
-    bool product = true;
+					i = VR.Interface(iid, idir, iname, p, pPos=[ix,iy,iz], pModel=imodel, pBlock=iblocking, pSpeed=ispeed, pTrans=itransport)
+					p.addInterface(i)
+					interfaces.append(i)
 
-     BOOST_FOREACH( const ptree::value_type &v, pt.get_child("COLLADA")) {
-        if(v.first=="library_geometries")
-        {
-           product = false;
-           break;
-        }
-    }
+				#Get all links of the current entity
+				allLinks.extend(proc.findall(ns + 'InternalLink'))
+				allInterfaces.extend(interfaces)
 
-    if(product)
-    {
-        print(pt.get_child("COLLADA").get_child("library_nodes").get_child("node"),m);
-    }
-    else
-    {
-        m.transpose();
-        buildMesh(path,m);
-    }*/
+			#Create entity
+			m = None
+			userSet = False
+			if x != 0 or z != 0: userSet = True
+
+			if typ == 'M' or typ == 'RS' or typ == 'RD' or typ == 'BasicRobot':
+				if typ == 'BasicRobot':
+					m = VR.BasicRobot(pID=mid, pPath=path, pName=mname, pPos=[x,y,z],
+									pUser=userSet, pSize=[length, height, width],
+									pClear=clear, pDirVec=[dx,dy,dz], pUpVec=[ux,uy,uz],
+									pType=typ, pSpace=wSpace)
+				else:
+					m = VR.Machine(pID=mid, pPath=path, pName=mname, pPos=[x,y,z],
+									pUser=userSet, pSize=[length, height, width],
+									pClear=clear, pDirVec=[dx,dy,dz], pUpVec=[ux,uy,uz],
+									pType=typ, pSpace=wSpace)
+				for mp in processes:
+					m.addProcess(mp)
+					mp.setParent(m)
+
+			elif typ == 'O': m = VR.Obstacle(pID=mid, pPath=path, pName=mname,
+											pPos=[x,y,z], pUser=userSet, pSize=[length, height, width],
+											pDirVec=[dx,dy,dz], pUpVec=[ux,uy,uz])
+
+			elif typ == 'R': m = VR.Ressource(pID=mid, pPath=path, pPos=[x,y,z],
+											pSize=[length, height, width],
+											pDirVec=[dx,dy,dz], pUpVec=[ux,uy,uz])
+
+			else:
+				VR.console.printLoadFailure('INVALID_TYPE', mname, typ)
+				continue
+			VR.console.printLoadSuccess('LOAD_GEO', self.loadPath, mname, typ, mid, str([x,y,z]), path)
+
+		#######################################################
+
+		#Build graph of interfaces
+		#Each interface is a node
+		#Each link is a directed edge between an output-interface and an input-interface
+		for link in allLinks:
+			partnerAID = link.get('RefPartnerSideA')
+			partnerBID = link.get('RefPartnerSideB')
+			a = VR.model.findID(partnerAID, allInterfaces)
+			b = VR.model.findID(partnerBID, allInterfaces)
+			if a is None:
+				VR.console.printLoadFailure('INTERFACE_NOT_FOUND', partnerAID)
+				continue
+			if b is None:
+				VR.console.printLoadFailure('INTERFACE_NOT_FOUND', partnerBID)
+				continue
+			if a.direction == b.direction:
+				VR.console.printLoadFailure('INVALID_LINK', a.direction, b.direction, partnerAID, partnerBID)
+				continue
+			a.destination = b
+			b.destination = a
+			if a.parent is not None and b.parent is not None:
+				aname = a.parent.parent.name + ':' + a.parent.name
+				bname = b.parent.parent.name + ':' + b.parent.name
+				VR.console.printLoadSuccess('LOAD_LINK', aname, a.direction, bname, b.direction)
+    */
+
 
 }
 
-VRObjectPtr VRAMLLoader::load(string path) {
-    VRObjectPtr root = VRObject::create("aml_root");
-
-    /**
-    Assimp::Importer importer;
-
-    const aiScene* scene = importer.ReadFile( path,
-        aiProcess_CalcTangentSpace       |
-        aiProcess_Triangulate            |
-        aiProcess_JoinIdenticalVertices  |
-        aiProcess_SortByPType);
-
-  if( !scene)
-  {
-    cout<< "Error !" << importer.GetErrorString()<< endl;;
-
-  }
-    for(int i = 0; i < 4; i++)
-    {
-
-
-    cout << scene->mRootNode->mTransformation[i][0] << " "
-    << scene->mRootNode->mTransformation[i][1] << " "
-    << scene->mRootNode->mTransformation[i][2] << " "
-    << scene->mRootNode->mTransformation[i][3] << endl;
-    }
-
-    cout << scene->mRootNode->mNumChildren << endl;
-    cout << scene->mRootNode->mName.data << endl;
-
-    cout << scene->mRootNode->mChildren[0]->mName.data << endl;
-    cout << scene->mRootNode->mChildren[0]->mNumChildren << endl;
-
-    cout << scene->mRootNode->mChildren[0]->mChildren[0]->mName.data << endl;
-    cout << scene->mRootNode->mChildren[0]->mChildren[0]->mNumChildren << endl;
-
-    cout << scene->mRootNode->mChildren[0]->mChildren[0]->mChildren[0]->mName.data << endl;
-    cout << scene->mRootNode->mChildren[0]->mChildren[0]->mChildren[0]->mNumChildren << endl;
-
-    for(int j = 0; j < 4; j++)
-         {
-            cout << scene->mRootNode->mChildren[0]->mChildren[0]->mChildren[0]->mParent->mTransformation[j][0] << " "
-            << scene->mRootNode->mChildren[0]->mChildren[0]->mChildren[0]->mParent->mTransformation[j][1]  << " "
-            << scene->mRootNode->mChildren[0]->mChildren[0]->mChildren[0]->mParent->mTransformation[j][2]  << " "
-            << scene->mRootNode->mChildren[0]->mChildren[0]->mChildren[0]->mParent->mTransformation[j][3]  << " "<< endl;
-         }
-
-    for(int j = 0; j < 4; j++)
-         {
-            cout << scene->mRootNode->mChildren[0]->mChildren[0]->mChildren[0]->mTransformation[j][0] << " "
-            << scene->mRootNode->mChildren[0]->mChildren[0]->mChildren[0]->mTransformation[j][1]  << " "
-            << scene->mRootNode->mChildren[0]->mChildren[0]->mChildren[0]->mTransformation[j][2]  << " "
-            << scene->mRootNode->mChildren[0]->mChildren[0]->mChildren[0]->mTransformation[j][3]  << " "<< endl;
-         }
-
-
-    cout << scene->mMeshes[0]->mNumFaces << endl;
-    cout << scene->mMeshes[0]->mFaces[1].mNumIndices << endl;
-    cout << scene->mMeshes[0]->mNumAnimMeshes << endl;
-    cout << scene->mMeshes[0]->mNumVertices << endl;
-    for(int k = 0; k < 4; k++)
-    {
-
-        cout << scene->mMeshes[0]->mBones[k]->mName.data << endl;
-         cout << scene->mMeshes[0]->mBones[k]->mNumWeights << endl;
-         for (int o = 0; o < scene->mMeshes[0]->mBones[k]->mNumWeights; o++)
-
-         for(int j = 0; j < 4; j++)
-         {
-            cout << scene->mMeshes[0]->mBones[k]->mOffsetMatrix[j][0]  << " "
-            << scene->mMeshes[0]->mBones[k]->mOffsetMatrix[j][1]  << " "
-            << scene->mMeshes[0]->mBones[k]->mOffsetMatrix[j][2]  << " "
-            << scene->mMeshes[0]->mBones[k]->mOffsetMatrix[j][3]  << " "<< endl;
-         }
-    }
-    **/
-    const size_t last_slash_idx = path.rfind('/');
-
-    if (std::string::npos != last_slash_idx)
-    {
-        directory = path.substr(0, last_slash_idx);
-    }
-    //cout << directory << endl;
-    using boost::property_tree::ptree;
-    ptree pt;
-    read_xml(path, pt);
-
-    /**
-    BOOST_FOREACH( const ptree::value_type &v, pt.get_child("COLLADA")) {
-        if(v.first=="instance_node")
-        {
-            cout<< "Tame sme" << endl;
-
-        }
-
-    }
-
-    **/
-           // buildMesh(path);
-            //buildMesh(directory + '/');
-           //print(pt.get_child("COLLADA").get_child("library_nodes"));
-           Matrix4f m {
-
-            0.001f,0,0,0,
-            0,0.001f,0,0,
-            0,0,0.001f,0,
-            0,0,0,0.001f
-
-        };
-            loadProducts(path,m);
+void VRAMLLoader::write(string path) {
 
 
 
+	/*
+	def saveData(self):
+		import VR
+		import xml.etree.ElementTree as ET
+		import xml.dom.minidom
+		from itertools import chain
 
+		#CAEX-File-Header, inherited from AMLEditor
+		root = ET.Element('CAEXFile')
+		root.attrib['FileName'] = self.fileName + self.extension + self.fileExtension
+		root.attrib['xmlns:xsi'] = 'http://www.w3.org/2001/XMLSchema-instance'
+		root.attrib['xmlns'] = 'http://www.dke.de/CAEX'
+		root.attrib['xsi:schemaLocation'] = 'http://www.dke.de/CAEX CAEX_ClassModel_V.3.0.xsd'
 
+		instanceHierarchy = ET.SubElement(root, 'InstanceHierarchy')
+		instanceHierarchy.attrib['Name'] = 'InstanceHierarchy'
 
-    /**
-    // ------------ PHYSICS -----------------
-    auto phys = geo.geo->getPhysics();
-    phys->setDynamic(true);
-    phys->setShape("Convex");
-    phys->setPhysicalized(true);
-    **/
+		def newAttribute(parent, valName, valString, valType='Attribute'):
+			"""Creates new sub-xml-element "Attribute" and a sub-sub-xml-element "Value".
+				<Attribute Name="valName"><Value>valString</Value></Attribute>"""
+			subel = ET.SubElement(parent, valType)
+			subel.attrib['Name'] = valName
+			if valString != '':
+				val = ET.SubElement(subel, 'Value')
+				val.text = valString
+			return subel
 
+		def newMultiAttribute(parent, multiName, valNames, vals):
+			"""Creates new sub-xml-element with multiple sub-sub-xml-elements
+				given by (valNames, vals)."""
+			attr = newAttribute(parent, multiName, '')
+			for n, s in zip(valNames, vals):
+				newAttribute(attr, n, str(s))
 
-    return root;
+		def newInterface(parent, inter):
+			intel = ET.SubElement(parent, 'ExternalInterface')
+			intel.attrib['Name'] = inter.name
+			intel.attrib['ID'] = inter.id
+			newAttribute(intel, 'direction', inter.direction)
+			newMultiAttribute(intel, 'position', ['x','y','z'], inter.getPosition())
+			if inter.direction == 'in':
+				newAttribute(intel, 'blocking', str(inter.blocking))
+			elif inter.direction == 'out':
+				newAttribute(intel, 'speed', str(inter.speed))
+				newAttribute(intel, 'model', inter.model)
+
+		def newLink(parent, inter):
+			if inter is None or inter.destination is None: return
+			linkel = ET.SubElement(parent, 'InternalLink')
+			linkel.attrib['RefPartnerSideA'] = inter.id
+			linkel.attrib['RefPartnerSideB'] = inter.destination.id
+			linkel.attrib['Name'] = inter.name + '-' + inter.destination.name
+
+		#Ground
+		xmlg = ET.SubElement(instanceHierarchy, 'InternalElement')
+		xmlg.attrib['Name'] = 'Ground'
+		newAttribute(xmlg, 'type', 'G')
+		newMultiAttribute(xmlg, 'position', ['x','y','z'], [VR.groundPrim[0], 0, VR.groundPrim[1]])
+		newMultiAttribute(xmlg, 'size', ['length', 'width', 'height'], [VR.groundPrim[2], VR.groundPrim[3], VR.getSetting('groundHeight')])
+
+		#Entities
+		for m in chain(VR.machines, VR.obstacles):
+			#Entity header
+			xmlel = ET.SubElement(instanceHierarchy, 'InternalElement')
+			xmlel.attrib['Name'] = m.name
+			xmlel.attrib['ID'] = m.id
+
+			#Basic Attributes valid for all entitites
+			newAttribute(xmlel, 'type', m.typ)
+			newMultiAttribute(xmlel, 'position', ['x','y','z'], m.getPosition())
+			newMultiAttribute(xmlel, 'size', ['length','height','width'], m.getPrimSize())
+
+			dirVec = m.getDir()
+			upVec = m.getUp()
+			dirVec = [round(dirVec[0], 3), round(dirVec[1], 3), round(dirVec[2]), 3]
+			upVec = [round(upVec[0], 3), round(upVec[1], 3), round(upVec[2]), 3]
+			ori = newAttribute(xmlel, 'orientation', '')
+			newMultiAttribute(ori, 'direction_vector', ['dx','dy','dz'], dirVec)
+			newMultiAttribute(ori, 'up_vector', ['ux','uy','uz'], upVec)
+			newAttribute(xmlel, 'model', m.path)
+
+			#Machine-specific attributes
+			if m.typ == 'O' or m.typ == 'R': continue
+
+			newAttribute(xmlel, 'clearance', str(m.clearance))
+			#workspace
+			ws = newAttribute(xmlel, 'workspace', '')
+			newMultiAttribute(ws, 'position', ['x', 'y', 'z'], m.wBoxPrims[0])
+			newMultiAttribute(ws, 'size', ['length', 'height', 'width'], m.wBoxPrims[1])
+
+			#Processes
+			for p in m.procs:
+				xmlp = newAttribute(xmlel, p.name, '', 'InternalElement')
+				newAttribute(xmlp, 'speed', str(p.speed))
+
+				#Interfaces
+				for i in chain(p.inputs, p.outputs):
+					newInterface(xmlp, i)
+
+				#Links
+				for l in p.outputs:
+					newLink(xmlp, l)
+
+		#Write file, minidom is used for proper indentation
+		etstring = ET.tostring(root)
+		dom = xml.dom.minidom.parseString(etstring)
+		finalXML = dom.toprettyxml()
+		saveFile = open(self.savePath, 'w')
+		saveFile.write(finalXML)
+		VR.console.printSaveSuccess(self.savePath)
+		*/
 
 }
+
 

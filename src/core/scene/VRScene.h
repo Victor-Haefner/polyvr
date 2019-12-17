@@ -28,7 +28,9 @@ class VRVisualLayer;
 class VRScene : public VRObjectGroupManager,
                 public VRCameraManager,
                 public VRAnimationManager,
+#ifndef WITHOUT_BULLET
                 public VRPhysicsManager,
+#endif
                 public VRCallbackManager,
                 public VRThreadManager,
                 public VRScriptManager,
@@ -102,7 +104,7 @@ class VRScene : public VRObjectGroupManager,
 
         void saveScene(xmlpp::Element* e);
         void loadScene(xmlpp::Element* e);
-        void importScene(xmlpp::Element* e);
+        void importScene(xmlpp::Element* e, string path);
 };
 
 typedef std::shared_ptr<VRScene> VRScenePtr;

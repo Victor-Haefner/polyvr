@@ -740,6 +740,8 @@
 		<Unit filename="src/core/objects/VRLodTree.cpp" />
 		<Unit filename="src/core/objects/VRLodTree.h" />
 		<Unit filename="src/core/objects/VRObjectFwd.h" />
+		<Unit filename="src/core/objects/VRPointCloud.cpp" />
+		<Unit filename="src/core/objects/VRPointCloud.h" />
 		<Unit filename="src/core/objects/VRShadowEngine.cpp" />
 		<Unit filename="src/core/objects/VRShadowEngine.h" />
 		<Unit filename="src/core/objects/VRShadowEngineBase.cpp" />
@@ -999,6 +1001,8 @@
 		<Unit filename="src/core/scripting/VRPyPath.h" />
 		<Unit filename="src/core/scripting/VRPyPathtool.cpp" />
 		<Unit filename="src/core/scripting/VRPyPathtool.h" />
+		<Unit filename="src/core/scripting/VRPyPointCloud.cpp" />
+		<Unit filename="src/core/scripting/VRPyPointCloud.h" />
 		<Unit filename="src/core/scripting/VRPyPolygon.cpp" />
 		<Unit filename="src/core/scripting/VRPyPolygon.h" />
 		<Unit filename="src/core/scripting/VRPyPolygonSelection.cpp" />
@@ -1222,6 +1226,8 @@
 		<Unit filename="src/core/utils/toString.cpp" />
 		<Unit filename="src/core/utils/toString.h" />
 		<Unit filename="src/core/utils/toStringBis.h" />
+		<Unit filename="src/core/utils/xml.cpp" />
+		<Unit filename="src/core/utils/xml.h" />
 		<Unit filename="src/core/utils/zipper/defs.h" />
 		<Unit filename="src/core/utils/zipper/filesystem.cpp" />
 		<Unit filename="src/core/utils/zipper/filesystem.h" />

@@ -113,10 +113,14 @@ void VRGuiScripts::setGroupListRow(Gtk::TreeIter itr, group& g) {
 
 void VRGuiScripts::setScriptListRow(Gtk::TreeIter itr, VRScriptPtr script, bool onlyTime) {
     if (script == 0) return;
-    string fg = "#000000";
-    string bg = "#FFFFFF";
+    string color = "#000000";
+    string background = "#FFFFFF";
     string tfg = "#000000";
     string tbg = "#FFFFFF";
+
+    if (script->getPersistency() == 0) { // imported script
+        color = "#0000FF";
+    }
 
     int trig_lvl = 0;
     for (auto trig : script->getTriggers()) {
@@ -174,8 +178,8 @@ void VRGuiScripts::setScriptListRow(Gtk::TreeIter itr, VRScriptPtr script, bool 
                         -1);
     else gtk_tree_store_set (store->gobj(), row.gobj(),
                         0, script->getName().c_str(),
-                        1, fg.c_str(),
-                        2, bg.c_str(),
+                        1, color.c_str(),
+                        2, background.c_str(),
                         3, time.c_str(),
                         4, tfg.c_str(),
                         5, tbg.c_str(),
@@ -382,8 +386,8 @@ void VRGuiScripts::on_select_script() { // selected a script
     setCombobox("combobox24", getListStorePos("liststore7", script->getServer()));
     setCombobox("combobox10", getListStorePos("liststore10", script->getGroup()));
 
-    // update editor content && script head
-    editor->setCore(script->getHead() + script->getCore());
+    // update editor content
+    editor->setCore(script->getScript());
     //adjustment->set_value(pages[script.get()].line);
 
     // update arguments liststore

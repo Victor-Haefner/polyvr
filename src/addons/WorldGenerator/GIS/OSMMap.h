@@ -31,6 +31,7 @@ struct OSMBase {
     void writeTo(xmlpp::Element* e);
 
     map<string, string> getTags();
+    string getID();
     bool hasTag(const string& t);
 };
 

@@ -8,6 +8,9 @@
 #include "VRFwdDeclTemplate.h"
 
 
+ptrFwd(XMLElement);
+ptrFwd(XML);
+
 ptrTemplateFwd(VRCallbackWrapper, VRCallbackStrWrapper, std::string);
 ptrTemplateFwd(VRCallbackWrapper, VRCallbackPyWrapper, PyObject*);
 

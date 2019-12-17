@@ -580,10 +580,11 @@ PyObject* VRPyTSDF::New(PyTypeObject *type, PyObject *args, PyObject *kwds) {
 
 
 typedef OctreeNode* onPtr;
-template<> PyObject* VRPyTypeCaster::cast(const onPtr& n) { return VRPyOctreeNode::fromPtr(n); }
+template<> PyObject* VRPyTypeCaster::cast(const onPtr& n) { if (n) return VRPyOctreeNode::fromPtr(n); Py_RETURN_NONE; }
 
 PyMethodDef VRPyOctree::methods[] = {
     {"add", PyWrapOpt2( Octree, add, "Add to tree - will leak memory!", "0|-1|1|-1", OctreeNode*, Vec3d, void*, int, bool, int ) },
+    {"get", PyWrapOpt2( Octree, get, "Get leaf node at position", "1", OctreeNode*, Vec3d, bool ) },
     {"getVisualization", PyWrapOpt2( Octree, getVisualization, "Get tree visual", "0", VRGeometryPtr, bool ) },
     {"getAllLeafs", PyWrap2( Octree, getAllLeafs, "Get all leafs", vector<OctreeNode*> ) },
     {NULL}  /* Sentinel */
@@ -599,7 +600,15 @@ PyObject* VRPyOctree::New(PyTypeObject *type, PyObject *args, PyObject *kwds) {
 }
 
 PyMethodDef VRPyOctreeNode::methods[] = {
-    {"getData", PyWrap2( OctreeNode, getData, "Get leaf data", vector<void*> ) },
+    {"getData", PyWrap2( OctreeNode, getData, "Get node data", vector<void*> ) },
+    {"getPoints", PyWrap2( OctreeNode, getPoints, "Get node points", vector<Vec3d> ) },
+    {"getChildren", PyWrap2( OctreeNode, getChildren, "Get node children", vector<OctreeNode*> ) },
+    {"getCenter", PyWrap2( OctreeNode, getCenter, "Get node center", Vec3d ) },
+    {"getLocalCenter", PyWrap2( OctreeNode, getLocalCenter, "Get node local center", Vec3d ) },
+    {"getSize", PyWrap2( OctreeNode, getSize, "Get node size", float ) },
+    {"getResolution", PyWrap2( OctreeNode, getResolution, "Get node resolution", float ) },
+    {"getParent", PyWrap2( OctreeNode, getParent, "Get node parent", OctreeNode* ) },
+    {"getRoot", PyWrap2( OctreeNode, getRoot, "Get node root", OctreeNode* ) },
     {NULL}  /* Sentinel */
 };
 

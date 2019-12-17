@@ -97,7 +97,7 @@ PyMethodDef VRPyTransform::methods[] = {
     {"getTorque", PyWrap(Transform, getTorque, "get the total torque put on this transform during this frame", Vec3d ) },
     {"setPhysicsActivationMode", PyWrap(Transform, setPhysicsActivationMode, "Set the physics activation mode of the physics object (normal:1 , no deactivation:4, stay deactivated: 5)", void, int ) },
     {"setPhysicalizeTree", PyWrap(Transform, setPhysicalizeTree, "Set to physicalize whole tree or just current node - setPhysicalizeTree( bool b )", void, bool ) },
-    {"animate", PyWrapOpt(Transform, animate, "Animate object along a path, duration [s], offset [s], doOrient, doLoop) )", "1|0", VRAnimationPtr, PathPtr, float, float, bool, bool ) },
+    {"animate", PyWrapOpt(Transform, animate, "Animate object along a path, duration [s], offset [s], doOrient, doLoop) )", "1|0|0", VRAnimationPtr, PathPtr, float, float, bool, bool, PathPtr ) },
     {"getAnimations", PyWrap(Transform, getAnimations, "Return all animations associated to the object", vector<VRAnimationPtr> ) },
     {"stopAnimation", PyWrap(Transform, stopAnimation, "Stop any running animation of this object", void ) },
     {"setGravity", PyWrap(Transform, setGravity, "set Gravity (Vector) of given physicalized object", void, Vec3d ) },

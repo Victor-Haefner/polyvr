@@ -61,51 +61,67 @@ OctreeNode* OctreeNode::get(Vec3d p, bool checkPosition) {
     return this;
 }
 
-OctreeNode* OctreeNode::add(Vec3d p, void* d, int targetLevel, bool checkPosition, int partitionLimit) {
-    Vec3d rp = p - center;
-    int currentLevel = level;
+// checkPosition avoids parent/child cycles due to float error
+// partitionLimit sets a max amount of data points, tree is subdivided if necessary!
 
-    if ( !inBox(p, center, size) && checkPosition ) { // not in node
-        //cout << " OctreeNode::add " << p << " not in node " << currentLevel << " " << targetLevel << endl;
-        if (parent == 0) { // no parent, create it
-            //cout << "  OctreeNode::add parent" << endl;
-            parent = new OctreeNode(tree.lock(), resolution, 2*size, currentLevel+1);
-            Vec3d c = center + lvljumpCenter(size*0.5, rp);
-            parent->center = c;
-            int o = parent->getOctant(center);
-            parent->children[o] = this;
-            tree.lock()->updateRoot();
+OctreeNode* OctreeNode::add(Vec3d pos, void* dat, int targetLevel, bool checkPosition, int partitionLimit) {
+    Vec3d rpos = pos - center;
+
+    auto createParent = [&]() {
+        parent = new OctreeNode(tree.lock(), resolution, 2*size, level+1);
+        parent->center = center + lvljumpCenter(size*0.5, rpos);
+        int o = parent->getOctant(center);
+        parent->children[o] = this;
+        tree.lock()->updateRoot();
+    };
+
+    auto createChild = [&](int octant) {
+        children[octant] = new OctreeNode(tree.lock(), resolution, size*0.5, level-1);
+        Vec3d c = center + lvljumpCenter(size*0.25, rpos);
+        children[octant]->center = c;
+        children[octant]->parent = this;
+    };
+
+    auto reachedTargetLevel = [&]() {
+        if (size <= resolution) return true;
+        if (level == targetLevel && targetLevel != -1) return true;
+        return false;
+    };
+
+    auto reachedPartitionLimit = [&]() {
+        if (partitionLimit == 0) return false;
+        if (points.size() <= partitionLimit) return false;
+        if (level == targetLevel && targetLevel != -1) return false;
+        return true;
+    };
+
+
+
+    if (checkPosition) {
+        if ( !inBox(pos, center, size) ) { // not in node
+            if (!parent) createParent();
+            return parent->add(pos, dat, targetLevel, true, partitionLimit); // go a level up
         }
-        return parent->add(p, d, targetLevel, true, partitionLimit); // go a level up
     }
 
-    if (size > resolution && (currentLevel != targetLevel || targetLevel == -1)) {
-        //cout << " OctreeNode::add " << p << " below " << currentLevel << " " << targetLevel << endl;
-        int o = getOctant(p);
-        if (children[o] == 0) {
-            children[o] = new OctreeNode(tree.lock(), resolution, size*0.5, currentLevel-1);
-            Vec3d c = center + lvljumpCenter(size*0.25, rp);
-            children[o]->center = c;
-            children[o]->parent = this;
-        }
-        return children[o]->add(p, d, targetLevel, false, partitionLimit);
+    if (!reachedTargetLevel()) {
+        int o = getOctant(pos);
+        if (!children[o]) createChild(o);
+        return children[o]->add(pos, dat, targetLevel, false, partitionLimit);
     }
 
-    //cout << "  OctreeNode::add " << p << " here! " << currentLevel << " " << targetLevel << endl;
-    data.push_back(d);
-    points.push_back(p);
-
-    if (partitionLimit > 0 && points.size() > partitionLimit && (currentLevel != targetLevel || targetLevel == -1)) {
+    if (reachedPartitionLimit()) {
         while (size <= resolution) resolution *= 0.5;
         for (int i=0; i<points.size(); i++) {
-            add(points[i], data[i], targetLevel, checkPosition, partitionLimit);
+            add(points[i], data[i], targetLevel, false, partitionLimit);
         }
         data.clear();
         points.clear();
+        return add(pos, dat, targetLevel, false, partitionLimit);
     }
 
-    if (partitionLimit > 0 && points.size() > partitionLimit) cout << "AAAAAAAA " << currentLevel << "   " << targetLevel << endl;
-
+    data.push_back(dat);
+    points.push_back(pos);
     return this;
 }
 
@@ -123,6 +139,7 @@ vector<OctreeNode*> OctreeNode::getChildren() {
 }
 
 bool OctreeNode::isLeaf() {
+    //return points.size() > 0;
     if ( resolution < size ) return false;
     for (int i=0; i<8; i++) if (children[i]) return false;
     return true;
@@ -185,6 +202,7 @@ OctreeNode* OctreeNode::getParent() { return parent; }
 OctreeNode* OctreeNode::getRoot() { auto o = this; while(o->parent) o = o->parent; return o; }
 
 float OctreeNode::getSize() { return size; }
+float OctreeNode::getResolution() { return resolution; }
 
 // sphere center, box center, sphere radius, box size
 bool sphere_box_intersect(Vec3d Ps, Vec3d Pb, float Rs, float Sb)  {
