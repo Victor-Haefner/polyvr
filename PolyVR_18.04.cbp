@@ -1226,6 +1226,8 @@
 		<Unit filename="src/core/utils/toString.cpp" />
 		<Unit filename="src/core/utils/toString.h" />
 		<Unit filename="src/core/utils/toStringBis.h" />
+		<Unit filename="src/core/utils/xml.cpp" />
+		<Unit filename="src/core/utils/xml.h" />
 		<Unit filename="src/core/utils/zipper/defs.h" />
 		<Unit filename="src/core/utils/zipper/filesystem.cpp" />
 		<Unit filename="src/core/utils/zipper/filesystem.h" />
