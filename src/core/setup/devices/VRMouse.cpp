@@ -250,11 +250,11 @@ void VRMouse::setViewport(VRViewPtr view) { this->view = view; }
 
 Line VRMouse::getRay() { return ray; }
 
-void VRMouse::save(xmlpp::Element* e) {
+void VRMouse::save(XMLElementPtr e) {
     VRDevice::save(e);
 }
 
-void VRMouse::load(xmlpp::Element* e) {
+void VRMouse::load(XMLElementPtr e) {
     VRDevice::load(e);
 }
 

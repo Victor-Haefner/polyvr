@@ -14,7 +14,6 @@
 #include <curl/curl.h> // TODO: windows port
 #endif
 #include <stdint.h>
-#include <libxml++/nodes/element.h>
 #include <boost/bind.hpp>
 
 using namespace OSG;

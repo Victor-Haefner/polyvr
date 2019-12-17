@@ -2,7 +2,7 @@
 #include "core/utils/toString.h"
 #include "core/math/boundingbox.h"
 #include "core/utils/VRTimer.h"
-#include <libxml++/libxml++.h>
+#include "core/utils/xml.h"
 
 // The XML parser headers
 #include <xercesc/sax2/SAX2XMLReader.hpp>
@@ -702,14 +702,10 @@ OSMNode::OSMNode(string id, double lat, double lon) : OSMBase(id), lat(lat), lon
 OSMWay::OSMWay(string id) : OSMBase(id) {}
 OSMRelation::OSMRelation(string id) : OSMBase(id) {}
 
-OSMBase::OSMBase(xmlpp::Element* el) {
-    id = el->get_attribute_value("id");
-    for(xmlpp::Node* n : el->get_children()) { // read node tags
-        if (auto e = dynamic_cast<xmlpp::Element*>(n)) {
-            if (e->get_name() == "tag") {
-                tags[e->get_attribute_value("k")] = e->get_attribute_value("v");
-            }
-        }
+OSMBase::OSMBase(XMLElementPtr el) {
+    id = el->getAttribute("id");
+    for(auto e : el->getChildren()) { // read node tags
+        if (e->getName() == "tag") tags[e->getAttribute("k")] = e->getAttribute("v");
     }
 }
 
@@ -751,85 +747,81 @@ bool OSMBase::hasTag(const string& t) {
 map<string, string> OSMBase::getTags() { return tags; }
 string OSMBase::getID() { return id; }
 
-OSMNode::OSMNode(xmlpp::Element* el) : OSMBase(el) {
-    toValue(el->get_attribute_value("lat"), lat);
-    toValue(el->get_attribute_value("lon"), lon);
+OSMNode::OSMNode(XMLElementPtr el) : OSMBase(el) {
+    toValue(el->getAttribute("lat"), lat);
+    toValue(el->getAttribute("lon"), lon);
 }
 
-OSMWay::OSMWay(xmlpp::Element* el, map<string, bool>& invalidIDs) : OSMBase(el) {
-    for(xmlpp::Node* n : el->get_children()) {
-        if (auto e = dynamic_cast<xmlpp::Element*>(n)) {
-            if (e->get_name() == "tag") continue;
-            if (e->get_name() == "nd") {
-                string nID = e->get_attribute_value("ref");
-                if (invalidIDs.count(nID)) continue;
-                nodes.push_back(nID);
-                continue;
-            }
-            cout << " OSMWay::OSMWay, unhandled element: " << e->get_name() << endl;
+OSMWay::OSMWay(XMLElementPtr el, map<string, bool>& invalidIDs) : OSMBase(el) {
+    for(auto e : el->getChildren()) {
+        if (e->getName() == "tag") continue;
+        if (e->getName() == "nd") {
+            string nID = e->getAttribute("ref");
+            if (invalidIDs.count(nID)) continue;
+            nodes.push_back(nID);
+            continue;
         }
+        cout << " OSMWay::OSMWay, unhandled element: " << e->getName() << endl;
     }
 }
 
-OSMRelation::OSMRelation(xmlpp::Element* el, map<string, bool>& invalidIDs) : OSMBase(el) {
-    for(xmlpp::Node* n : el->get_children()) {
-        if (auto e = dynamic_cast<xmlpp::Element*>(n)) {
-            if (e->get_name() == "tag") continue;
-            if (e->get_name() == "member") {
-                string type = e->get_attribute_value("type");
-                string eID = e->get_attribute_value("ref");
-                if (invalidIDs.count(eID)) continue;
-                if (type == "way") ways.push_back(eID);
-                if (type == "node") nodes.push_back(eID);
-                continue;
-            }
-            cout << " OSMRelation::OSMRelation, unhandled element: " << e->get_name() << endl;
+OSMRelation::OSMRelation(XMLElementPtr el, map<string, bool>& invalidIDs) : OSMBase(el) {
+    for(auto e : el->getChildren()) {
+        if (e->getName() == "tag") continue;
+        if (e->getName() == "member") {
+            string type = e->getAttribute("type");
+            string eID = e->getAttribute("ref");
+            if (invalidIDs.count(eID)) continue;
+            if (type == "way") ways.push_back(eID);
+            if (type == "node") nodes.push_back(eID);
+            continue;
         }
+        cout << " OSMRelation::OSMRelation, unhandled element: " << e->getName() << endl;
     }
 }
 
-void OSMBase::writeTo(xmlpp::Element* e) {
-    e->set_attribute("id", ::toString(id));
-    e->set_attribute("visible", "true");
-    e->set_attribute("version", "1"); // TODO
-    e->set_attribute("timestamp", "2019-09-20T17:59:17Z"); // TODO
-    //e->set_attribute("changeset", ""); // TODO
+void OSMBase::writeTo(XMLElementPtr e) {
+    e->setAttribute("id", ::toString(id));
+    e->setAttribute("visible", "true");
+    e->setAttribute("version", "1"); // TODO
+    e->setAttribute("timestamp", "2019-09-20T17:59:17Z"); // TODO
+    //e->setAttribute("changeset", ""); // TODO
 
     for (auto tag : tags) {
-        auto et = e->add_child("tag");
-        et->set_attribute("k", tag.first);
-        et->set_attribute("v", tag.second);
+        auto et = e->addChild("tag");
+        et->setAttribute("k", tag.first);
+        et->setAttribute("v", tag.second);
     }
 }
 
-void OSMNode::writeTo(xmlpp::Element* e) {
+void OSMNode::writeTo(XMLElementPtr e) {
     OSMBase::writeTo(e);
-    e->set_attribute("lat", ::toString(lat));
-    e->set_attribute("lon", ::toString(lon));
+    e->setAttribute("lat", ::toString(lat));
+    e->setAttribute("lon", ::toString(lon));
 }
 
-void OSMWay::writeTo(xmlpp::Element* e) {
+void OSMWay::writeTo(XMLElementPtr e) {
     OSMBase::writeTo(e);
 
     for (auto node : nodes) {
-        auto em = e->add_child("nd");
-        em->set_attribute("ref", node);
+        auto em = e->addChild("nd");
+        em->setAttribute("ref", node);
     }
 }
 
-void OSMRelation::writeTo(xmlpp::Element* e) {
+void OSMRelation::writeTo(XMLElementPtr e) {
     OSMBase::writeTo(e);
 
     for (auto node : nodes) {
-        auto em = e->add_child("member");
-        em->set_attribute("type", "node");
-        em->set_attribute("ref", node);
+        auto em = e->addChild("member");
+        em->setAttribute("type", "node");
+        em->setAttribute("ref", node);
     }
 
     for (auto way : ways) {
-        auto em = e->add_child("member");
-        em->set_attribute("type", "way");
-        em->set_attribute("ref", way);
+        auto em = e->addChild("member");
+        em->setAttribute("type", "way");
+        em->setAttribute("ref", way);
     }
 }
 
@@ -860,10 +852,10 @@ void OSMMap::clear() {
     nodes.clear();
 }
 
-bool OSMMap::isValid(xmlpp::Element* e) {
-    if (e->get_attribute("action")) {
-        if (e->get_attribute_value("action") == "delete") {
-            invalidElements[e->get_attribute_value("id")] = true;
+bool OSMMap::isValid(XMLElementPtr e) {
+    if (e->hasAttribute("action")) {
+        if (e->getAttribute("action") == "delete") {
+            invalidElements[e->getAttribute("id")] = true;
             return false;
         }
     }
@@ -875,32 +867,25 @@ void OSMMap::readFile(string path) {
     VRTimer t; t.start();
     bounds = Boundingbox::create();
 
-    xmlpp::DomParser parser;
-    try { parser.parse_file(filepath); }
-    catch(const exception& ex) { cout << "OSMMap Error: " << ex.what() << endl; return; }
+    XML xml;
+    xml.read(filepath);
 
-    auto data = parser.get_document()->get_root_node()->get_children();
-    for (auto enode : data) {
-        if (auto element = dynamic_cast<xmlpp::Element*>(enode)) {
-            if (!isValid(element)) continue;
-            if (element->get_name() == "node") { readNode(element); continue; }
-            if (element->get_name() == "bounds") { readBounds(element); continue; }
-            //cout << " OSMMap::readFile, unhandled element: " << element->get_name() << endl;
-        }
+    auto data = xml.getRoot()->getChildren();
+    for (auto element : data) {
+        if (!isValid(element)) continue;
+        if (element->getName() == "node") { readNode(element); continue; }
+        if (element->getName() == "bounds") { readBounds(element); continue; }
+        //cout << " OSMMap::readFile, unhandled element: " << element->getName() << endl;
     }
-    for (auto enode : data) {
-        if (auto element = dynamic_cast<xmlpp::Element*>(enode)) {
-            if (!isValid(element)) continue;
-            if (element->get_name() == "way") { readWay(element, invalidElements); continue; }
-            //cout << " OSMMap::readFile, unhandled element: " << element->get_name() << endl;
-        }
+    for (auto element : data) {
+        if (!isValid(element)) continue;
+        if (element->getName() == "way") { readWay(element, invalidElements); continue; }
+        //cout << " OSMMap::readFile, unhandled element: " << element->getName() << endl;
     }
-    for (auto enode : data) {
-        if (auto element = dynamic_cast<xmlpp::Element*>(enode)) {
-            if (!isValid(element)) continue;
-            if (element->get_name() == "relation") { readRelation(element, invalidElements); continue; }
-            //cout << " OSMMap::readFile, unhandled element: " << element->get_name() << endl;
-        }
+    for (auto element : data) {
+        if (!isValid(element)) continue;
+        if (element->getName() == "relation") { readRelation(element, invalidElements); continue; }
+        //cout << " OSMMap::readFile, unhandled element: " << element->getName() << endl;
     }
 
     for (auto way : ways) {
@@ -919,18 +904,18 @@ void OSMMap::readFile(string path) {
 }
 
 void OSMMap::writeFile(string path) {
-    xmlpp::Document doc;
+    XML xml;
 
-    auto root = doc.create_root_node("osm");
-    root->set_attribute("version", "0.6");
-    root->set_attribute("upload", "false");
-    root->set_attribute("generator", "PolyVR");
+    auto root = xml.newRoot("osm", "", "");
+    root->setAttribute("version", "0.6");
+    root->setAttribute("upload", "false");
+    root->setAttribute("generator", "PolyVR");
 
     writeBounds(root);
-    for (auto node : nodes) if (node.second) node.second->writeTo( root->add_child("node") );
-    for (auto way : ways) if (way.second) way.second->writeTo( root->add_child("way") );
-    for (auto rel : relations) if (rel.second) rel.second->writeTo( root->add_child("relation") );
-    doc.write_to_file_formatted(path);
+    for (auto node : nodes) if (node.second) node.second->writeTo( root->addChild("node") );
+    for (auto way : ways) if (way.second) way.second->writeTo( root->addChild("way") );
+    for (auto rel : relations) if (rel.second) rel.second->writeTo( root->addChild("relation") );
+    xml.write(path);
 }
 
 int OSMMap::readFileStreaming(string path) {
@@ -1260,33 +1245,33 @@ vector<OSMWayPtr> OSMMap::splitWay(OSMWayPtr way, int segN) {
     return res;
 }
 
-void OSMMap::readBounds(xmlpp::Element* element) {
-    Vec3d min(toFloat( element->get_attribute_value("minlon") ), toFloat( element->get_attribute_value("minlat") ), 0 );
-    Vec3d max(toFloat( element->get_attribute_value("maxlon") ), toFloat( element->get_attribute_value("maxlat") ), 0 );
+void OSMMap::readBounds(XMLElementPtr element) {
+    Vec3d min(toFloat( element->getAttribute("minlon") ), toFloat( element->getAttribute("minlat") ), 0 );
+    Vec3d max(toFloat( element->getAttribute("maxlon") ), toFloat( element->getAttribute("maxlat") ), 0 );
     bounds->clear();
     bounds->update(min);
     bounds->update(max);
 }
 
-void OSMMap::writeBounds(xmlpp::Element* parent) {
-    auto element = parent->add_child("bounds");
-    element->set_attribute("minlon", ::toString( bounds->min()[0]) );
-    element->set_attribute("minlat", ::toString( bounds->min()[1]) );
-    element->set_attribute("maxlon", ::toString( bounds->max()[0]) );
-    element->set_attribute("maxlat", ::toString( bounds->max()[1]) );
+void OSMMap::writeBounds(XMLElementPtr parent) {
+    auto element = parent->addChild("bounds");
+    element->setAttribute("minlon", ::toString( bounds->min()[0]) );
+    element->setAttribute("minlat", ::toString( bounds->min()[1]) );
+    element->setAttribute("maxlon", ::toString( bounds->max()[0]) );
+    element->setAttribute("maxlat", ::toString( bounds->max()[1]) );
 }
 
-void OSMMap::readNode(xmlpp::Element* element) {
+void OSMMap::readNode(XMLElementPtr element) {
     OSMNodePtr node = OSMNodePtr( new OSMNode(element) );
     nodes[node->id] = node;
 }
 
-void OSMMap::readWay(xmlpp::Element* element, map<string, bool>& invalidIDs) {
+void OSMMap::readWay(XMLElementPtr element, map<string, bool>& invalidIDs) {
     OSMWayPtr way = OSMWayPtr( new OSMWay(element, invalidIDs) );
     ways[way->id] = way;
 }
 
-void OSMMap::readRelation(xmlpp::Element* element, map<string, bool>& invalidIDs) {
+void OSMMap::readRelation(XMLElementPtr element, map<string, bool>& invalidIDs) {
     OSMRelationPtr rel = OSMRelationPtr( new OSMRelation(element, invalidIDs) );
     relations[rel->id] = rel;
 }

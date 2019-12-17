@@ -35,7 +35,6 @@
 			<Add option="-fPIC" />
 			<Add option="`pkg-config gtk+-2.0 --cflags`" />
 			<Add option="`pkg-config gmodule-2.0 --cflags`" />
-			<Add option="`pkg-config --cflags libxml++-2.6`" />
 			<Add option="`pkg-config gtkmm-2.4 --cflags`" />
 			<Add option="`pkg-config gtkglext-1.0 --cflags`" />
 			<Add option="`pkg-config python --cflags`" />
@@ -148,7 +147,6 @@
 			<Add option="`pkg-config icu-i18n --libs`" />
 			<Add option="-lcef" />
 			<Add option="-lcef_dll_wrapper" />
-			<Add option="`pkg-config --libs libxml++-2.6`" />
 			<Add option="`pkg-config gtk+-2.0 --libs`" />
 			<Add option="`pkg-config gmodule-2.0 --libs`" />
 			<Add option="`pkg-config bullet --libs`" />
@@ -263,6 +261,7 @@
 			<Add option="-lopcuaserver" />
 			<Add option="-lopcuaprotocol" />
 			<Add option="-lopcuacore" />
+			<Add option="-lxml2" />
 			<Add option="-Wl,-rpath=/usr/lib/x86_64-linux-gnu:/usr/lib/OCE" />
 			<Add directory="/usr/lib/virtuose" />
 			<Add directory="/usr/lib/opensg" />

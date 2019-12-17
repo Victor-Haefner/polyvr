@@ -2,11 +2,11 @@
 #include <vector>
 #include <sstream>
 #include <map>
+#include <list>
 #include <iostream>
 #include "toString.h"
 #include "VRStorage_template.h"
 #include "VRFunction.h"
-#include <libxml++/nodes/element.h>
 
 using namespace OSG;
 

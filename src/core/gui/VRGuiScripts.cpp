@@ -9,6 +9,7 @@
 #include "core/scripting/VRScript.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRTimer.h"
+#include "core/utils/xml.h"
 #include <gtkmm/liststore.h>
 #include <gtkmm/treeview.h>
 #include <gtkmm/textbuffer.h>
@@ -24,8 +25,6 @@
 #include <gtkmm/builder.h>
 #include <gtkmm/filechooser.h>
 #include <gtk/gtktextview.h>
-#include <libxml++/nodes/element.h>
-#include <libxml++/libxml++.h>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -238,46 +237,25 @@ void VRGuiScripts::on_import_clicked() {
     VRGuiFile::open("Import", Gtk::FILE_CHOOSER_ACTION_OPEN, "Import script");
 }
 
-xmlpp::Element* getXMLChild(xmlpp::Element* e, string name) {
-    for (auto n : e->get_children()) {
-        xmlpp::Element* el = dynamic_cast<xmlpp::Element*>(n);
-        if (!el) continue;
-        if (el->get_name() == name) return el;
-    } return 0;
-}
-
-vector<xmlpp::Element*> getXMLChildren(xmlpp::Element* e) {
-    vector<xmlpp::Element*> res;
-    for (auto n : e->get_children()) {
-        xmlpp::Element* el = dynamic_cast<xmlpp::Element*>(n);
-        if (!el) continue;
-        res.push_back(el);
-    }
-    return res;
-}
-
 void VRGuiScripts::on_diag_import_select() {
     import_liststore1->clear();
     import_scripts.clear();
     string path = VRGuiFile::getPath();
     if (path == "") return;
 
-    xmlpp::DomParser parser;
-    parser.set_validate(false);
-    try { parser.parse_file(path.c_str()); }
-    catch(exception& e) { return; }
+    XML xml;
+    xml.read(path, false);
 
-    xmlpp::Node* n = parser.get_document()->get_root_node();
-    xmlpp::Element* scene = dynamic_cast<xmlpp::Element*>(n);
-    vector<xmlpp::Element*> scripts = getXMLChildren( getXMLChild(scene, "Scripts") );
+    XMLElementPtr scene = xml.getRoot();
+    vector<XMLElementPtr> scripts = scene->getChild("Scripts")->getChildren();
 
     ListStore::Row row;
     for (auto script : scripts) {
-        string name = script->get_name();
-        if (script->get_attribute("base_name")) {
-            string suffix = script->get_attribute("name_suffix")->get_value();
+        string name = script->getName();
+        if (script->hasAttribute("base_name")) {
+            string suffix = script->getAttribute("name_suffix");
             if (suffix == "0") suffix = "";
-            name = script->get_attribute("base_name")->get_value() + suffix;
+            name = script->getAttribute("base_name") + suffix;
         }
 
         VRScriptPtr s = VRScript::create(name);
