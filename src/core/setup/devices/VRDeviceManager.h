@@ -7,6 +7,7 @@
 #include <string>
 #include "core/objects/VRObjectFwd.h"
 #include "core/utils/VRDeviceFwd.h"
+#include "core/utils/VRUtilsFwd.h"
 
 namespace xmlpp{ class Element; }
 

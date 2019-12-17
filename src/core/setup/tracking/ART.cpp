@@ -5,7 +5,6 @@
 #include "core/scene/VRScene.h"
 #include "core/scene/VRSceneManager.h"
 #include "core/utils/toString.h"
-#include <libxml++/nodes/element.h>
 #include "DTrack.h"
 #include "core/setup/devices/VRFlystick.h"
 #include "core/utils/VRFunction.h"

@@ -455,10 +455,9 @@ void VRProcessLayout::loadLayout(string path) {
 
     if (!exists(path)) return;
 
-    xmlpp::DomParser parser;
-    parser.set_validate(false);
-    parser.parse_file(path.c_str());
-    XMLElementPtr root = dynamic_cast<XMLElementPtr>(parser.get_document()->get_root_node());
+    XML xml;
+    xml.read(path, false);
+    XMLElementPtr root = xml.getRoot();
 
     int i = 0;
     auto loadHandles = [&](VRPathtoolPtr tool) {

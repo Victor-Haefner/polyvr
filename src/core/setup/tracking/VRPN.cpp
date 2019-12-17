@@ -9,7 +9,6 @@
 #include "core/utils/VRFunction.h"
 #include "core/utils/VRStorage_template.h"
 
-#include <libxml++/nodes/element.h>
 #include <vrpn/vrpn_Tracker.h>
 #include <vrpn/vrpn_Button.h>
 #include <vrpn/vrpn_Analog.h>

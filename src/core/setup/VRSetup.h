@@ -47,8 +47,6 @@ class VRSetup : public VRViewManager, public VRWindowManager, public VRDeviceMan
         void parseSetup(XMLElementPtr setup);
         void processOptions();
 
-        XMLElementPtr getElementChild(XMLElementPtr e, string name);
-
     public:
         VRSetup(string name);
         ~VRSetup();

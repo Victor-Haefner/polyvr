@@ -285,9 +285,9 @@ void VREntity::save(XMLElementPtr e, int p) {
 
 void VREntity::load(XMLElementPtr e) {
     VRStorage::load(e);
-    e = getChild(e, "properties");
-    for (auto el : getChildren(e)) {
-        for (auto el2 : getChildren(el)) {
+    e = e->getChild("properties");
+    for (auto el : e->getChildren()) {
+        for (auto el2 : el->getChildren()) {
             string n = el2->getName();
             auto p = VRProperty::create(n,"");
             if (el2->hasAttribute("value")) p->setValue( el2->getAttribute("value") );

@@ -7,8 +7,7 @@
 #include <vector>
 
 #include "core/objects/VRObjectFwd.h"
-
-namespace xmlpp{ class Element; }
+#include "core/utils/VRUtilsFwd.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;

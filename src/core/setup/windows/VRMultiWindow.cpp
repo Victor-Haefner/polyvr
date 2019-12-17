@@ -4,10 +4,10 @@
 #include <OpenSG/OSGFieldContainerFactory.h>
 #include <OpenSG/OSGNameAttachment.h>
 #include "core/utils/toString.h"
-#include <libxml++/nodes/element.h>
 #include "core/scene/VRSceneManager.h"
 #include "core/utils/VRFunction.h"
 #include "core/utils/VRProfiler.h"
+#include "core/utils/xml.h"
 
 
 #include <OpenSG/OSGChangeList.h>
@@ -164,37 +164,29 @@ string VRMultiWindow::getStateString() {
 
 void VRMultiWindow::save(XMLElementPtr node) {
     VRWindow::save(node);
-    node->set_attribute("Nx", toString(Nx));
-    node->set_attribute("Ny", toString(Ny));
-    node->set_attribute("ConnType", connection_type);
+    node->setAttribute("Nx", toString(Nx));
+    node->setAttribute("Ny", toString(Ny));
+    node->setAttribute("ConnType", connection_type);
 
     XMLElementPtr sn;
     for (uint i=0; i<servers.size(); i++) {
         string s = servers[i];
-        sn = node->add_child("Server");
-        sn->set_attribute("Address", s);
+        sn = node->addChild("Server");
+        sn->setAttribute("Address", s);
     }
 }
 
 void VRMultiWindow::load(XMLElementPtr node) {
     VRWindow::load(node);
-    Nx = toInt( node->get_attribute("Nx")->get_value() );
-    Ny = toInt( node->get_attribute("Ny")->get_value() );
-    if (node->get_attribute("ConnType")) connection_type = node->get_attribute("ConnType")->get_value();
+    Nx = toInt( node->getAttribute("Nx") );
+    Ny = toInt( node->getAttribute("Ny") );
+    if (node->hasAttribute("ConnType")) connection_type = node->getAttribute("ConnType");
 
-    xmlpp::Node::NodeList nl = node->get_children();
-    xmlpp::Node::NodeList::iterator itr;
-    for (itr = nl.begin(); itr != nl.end(); itr++) {
-        xmlpp::Node* n = *itr;
-
-        XMLElementPtr el = dynamic_cast<XMLElementPtr>(n);
+    for (auto el : node->getChildren()) {
         if (!el) continue;
-
-        string name = el->get_name();
+        string name = el->getName();
         if (name != "Server") continue;
-
-        string addr = el->get_attribute("Address")->get_value();
-
+        string addr = el->getAttribute("Address");
         addServer(addr);
     }
 

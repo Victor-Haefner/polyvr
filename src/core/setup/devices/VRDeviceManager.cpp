@@ -2,8 +2,8 @@
 #include "core/scene/VRSceneManager.h"
 #include "core/setup/VRSetupManager.h"
 #include "core/setup/VRSetup.h"
+#include "core/utils/xml.h"
 #include "core/objects/VRTransform.h"
-#include <libxml++/nodes/element.h>
 
 #include "VRDevice.h"
 #include "VRMouse.h"
@@ -84,24 +84,18 @@ void VRDeviceManager::resetDeviceDynNodes(VRObjectPtr root) {
 }
 
 void VRDeviceManager::save(XMLElementPtr node) {
-    XMLElementPtr dn;
     for (auto d : devices) {
-        dn = node->add_child("Device");
+        XMLElementPtr dn = node->addChild("Device");
         d.second->save(dn);
     }
 }
 
 void VRDeviceManager::load(XMLElementPtr node) {
     cout << "Load devices:";
-    xmlpp::Node::NodeList nl = node->get_children();
-    xmlpp::Node::NodeList::iterator itr;
-    for (itr = nl.begin(); itr != nl.end(); itr++) {
-        xmlpp::Node* n = *itr;
-
-        XMLElementPtr el = dynamic_cast<XMLElementPtr>(n);
+    for (auto el : node->getChildren()) {
         if (!el) continue;
 
-        string type = el->get_attribute("type")->get_value();
+        string type = el->getAttribute("type");
         VRDevicePtr dev = 0;
         cout << " " << type;
 

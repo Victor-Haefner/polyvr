@@ -1,6 +1,5 @@
 #include "VRGeometry.h"
 #include "VRGeoData.h"
-#include <libxml++/nodes/element.h>
 #include <sstream>
 
 #include <OpenSG/OSGSimpleMaterial.h>

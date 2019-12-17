@@ -21,7 +21,6 @@
 #include "core/utils/toString.h"
 #include "core/utils/VRProgress.h"
 #include "core/utils/system/VRSystem.h"
-#include <libxml++/nodes/element.h>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;

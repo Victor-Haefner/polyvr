@@ -9,7 +9,7 @@
 #include "core/utils/VRFunction.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRProfiler.h"
-#include <libxml++/nodes/element.h>
+#include "core/utils/xml.h"
 
 using namespace OSG;
 
@@ -131,46 +131,43 @@ void VRWindow::setKeyboard(VRKeyboardPtr k) { keyboard = k; }
 VRKeyboardPtr VRWindow::getKeyboard() { return keyboard; }
 
 void VRWindow::save(XMLElementPtr node) {
-    node->set_attribute("active", toString(active).c_str());
-    node->set_attribute("type", toString(type).c_str());
-    node->set_attribute("width", toString(width).c_str());
-    node->set_attribute("height", toString(height).c_str());
-    node->set_attribute("name", getName().c_str());
-    if (mouse) node->set_attribute("mouse", mouse->getName().c_str());
-    else if (multitouch) node->set_attribute("mouse", multitouch->getName().c_str());
-    else node->set_attribute("mouse", "None");
-    if (keyboard) node->set_attribute("keyboard", keyboard->getName().c_str());
-    else node->set_attribute("keyboard", "None");
+    node->setAttribute("active", toString(active).c_str());
+    node->setAttribute("type", toString(type).c_str());
+    node->setAttribute("width", toString(width).c_str());
+    node->setAttribute("height", toString(height).c_str());
+    node->setAttribute("name", getName().c_str());
+    if (mouse) node->setAttribute("mouse", mouse->getName().c_str());
+    else if (multitouch) node->setAttribute("mouse", multitouch->getName().c_str());
+    else node->setAttribute("mouse", "None");
+    if (keyboard) node->setAttribute("keyboard", keyboard->getName().c_str());
+    else node->setAttribute("keyboard", "None");
 
     XMLElementPtr vn;
     for (auto wv : views) {
         if (auto v = wv.lock()) {
-            vn = node->add_child("View");
+            vn = node->addChild("View");
             v->save(vn);
         }
     }
 }
 
 void VRWindow::load(XMLElementPtr node) {
-    active = toValue<bool>( node->get_attribute("active")->get_value() );
-    type = toInt( node->get_attribute("type")->get_value() );
-    width = toInt( node->get_attribute("width")->get_value() );
-    height = toInt( node->get_attribute("height")->get_value() );
-    name = node->get_attribute("name")->get_value();
+    active = toValue<bool>( node->getAttribute("active") );
+    type = toInt( node->getAttribute("type") );
+    width = toInt( node->getAttribute("width") );
+    height = toInt( node->getAttribute("height") );
+    name = node->getAttribute("name");
 
-    for (xmlpp::Node* n : node->get_children()) {
-        XMLElementPtr el = dynamic_cast<XMLElementPtr>(n);
+    for (auto el : node->getChildren()) {
         if (!el) continue;
-
-        if (el->get_name() != "View") continue;
-
+        if (el->getName() != "View") continue;
         int i = VRSetup::getCurrent()->addView(name);
         VRViewPtr v = VRSetup::getCurrent()->getView(i);
         addView(v);
         v->load(el);
     }
 
-    string _mouse = node->get_attribute("mouse")->get_value();
+    string _mouse = node->getAttribute("mouse");
     if (_mouse != "None") {
         auto dev = VRSetup::getCurrent()->getDevice(_mouse);
         mouse = dynamic_pointer_cast<VRMouse>( dev );
@@ -179,8 +176,8 @@ void VRWindow::load(XMLElementPtr node) {
         if (multitouch) multitouch->setWindow(ptr());
     }
 
-    if (node->get_attribute("keyboard") != 0) {
-        string _keyboard = node->get_attribute("keyboard")->get_value();
+    if (node->hasAttribute("keyboard") != 0) {
+        string _keyboard = node->getAttribute("keyboard");
         if (_keyboard != "None") {
             keyboard = dynamic_pointer_cast<VRKeyboard>( VRSetup::getCurrent()->getDevice(_keyboard) );
         }

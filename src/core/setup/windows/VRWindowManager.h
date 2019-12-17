@@ -4,6 +4,7 @@
 #include <OpenSG/OSGRenderAction.h>
 #include "core/setup/VRSetupFwd.h"
 #include "core/utils/VRChangeList.h"
+#include "core/utils/VRUtilsFwd.h"
 
 namespace xmlpp{ class Element; }
 namespace Gtk{ class Window; }

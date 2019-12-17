@@ -2,8 +2,6 @@
 
 #include <iostream>
 #include <libxml/tree.h>
-#include <libxml/encoding.h>
-#include <libxml/xmlwriter.h>
 
 
 XMLElement::XMLElement(_xmlNode* node) : node(node) {}
@@ -11,36 +9,61 @@ XMLElement::~XMLElement() {}
 
 XMLElementPtr XMLElement::create(_xmlNode* node) { return XMLElementPtr( new XMLElement(node) ); }
 
-string XMLElement::getName() { return string((const char*)node->name); }
-string XMLElement::getNameSpace() { return string((const char*)node->ns); }
+void XMLElement::print() {
+    cout << "xml node: '" << getName() << "', ns: '" << getNameSpace() << "', data: " << getText();
+    for (auto a : getAttributes()) cout << ", " << a.first << ":" << a.second;
+    cout << endl;
+}
 
-string XMLElement::getText() { return string((const char*)xmlNodeGetContent( node->children ) ); }
+string XMLElement::getName() {
+    if (!node || ! node->name) return "";
+    return string((const char*)node->name);
+}
+
+string XMLElement::getNameSpace() {
+    if (!node || ! node->ns) return "";
+    return string((const char*)node->ns);
+}
+
+string XMLElement::getText() {
+    if (!hasText()) return "";
+    auto txt = xmlNodeGetContent( node->children );
+    auto res = string((const char*)txt);
+    xmlFree(txt);
+    return res;
+}
+
+bool XMLElement::hasText() {
+    if (!node || !node->children) return false;
+    auto txt = xmlNodeGetContent( node->children );
+    if (!txt) return false;
+    return true;
+}
 
 string XMLElement::getAttribute(string name) {
-    xmlAttr* attribute = node->properties;
-    while(attribute) {
-        xmlChar* aname = xmlNodeListGetString(node->doc, attribute->children, 0);
-        xmlChar* value = xmlNodeListGetString(node->doc, attribute->children, 1);
-        string ans((const char*)aname);
-        string vas((const char*)value);
-        xmlFree(aname);
-        xmlFree(value);
-        if (ans == name) return vas;
-        attribute = attribute->next;
-    }
-    return "";
+    auto a = xmlGetProp(node, (xmlChar*)name.c_str());
+    string v = a ? string((const char*)a) : "";
+    if (a) xmlFree(a);
+    return v;
 }
 
 bool XMLElement::hasAttribute(string name) {
+    auto a = xmlHasProp(node, (xmlChar*)name.c_str());
+    return a != 0;
+}
+
+map<string,string> XMLElement::getAttributes() {
+    map<string,string> res;
     xmlAttr* attribute = node->properties;
     while(attribute) {
-        xmlChar* aname = xmlNodeListGetString(node->doc, attribute->children, 0);
-        string ans((const char*)aname);
-        xmlFree(aname);
-        if (ans == name) return true;
+        xmlChar* value = xmlNodeListGetString(node->doc, attribute->children, 1);
+        string ans((const char*)attribute->name);
+        string vas((const char*)value);
+        res[ans] = vas;
+        xmlFree(value);
         attribute = attribute->next;
     }
-    return false;
+    return res;
 }
 
 void XMLElement::setAttribute(string name, string value) {
@@ -56,6 +79,7 @@ vector<XMLElementPtr> XMLElement::getChildren(string name) {
     vector<XMLElementPtr> res;
     auto cnode = getNextNode( node->xmlChildrenNode );
     while (cnode) {
+        if (cnode->type != XML_ELEMENT_NODE) continue;
         if (name != "" && name != string((const char*)cnode->name)) continue;
         res.push_back(XMLElement::create(cnode));
         cnode = getNextNode( cnode->next );
@@ -66,8 +90,21 @@ vector<XMLElementPtr> XMLElement::getChildren(string name) {
 XMLElementPtr XMLElement::getChild(string name) {
     auto cnode = getNextNode( node->xmlChildrenNode );
     while (cnode) {
+        if (cnode->type != XML_ELEMENT_NODE) continue;
         if (name == string((const char*)cnode->name)) return XMLElement::create(cnode);
         cnode = getNextNode( cnode->next );
+    }
+    return 0;
+}
+
+XMLElementPtr XMLElement::getChild(int i) {
+    int k = 0;
+    auto cnode = getNextNode( node->xmlChildrenNode );
+    while (cnode) {
+        if (cnode->type != XML_ELEMENT_NODE) continue;
+        if (k == i) return XMLElement::create(cnode);
+        cnode = getNextNode( cnode->next );
+        k++;
     }
     return 0;
 }
@@ -83,6 +120,13 @@ void XMLElement::setText(string text) {
     xmlAddChild(node, child);
 }
 
+void XMLElement::importNode(XMLElementPtr e, bool recursive, XML& xml) {
+    if (!node) return;
+    auto inode = xmlDocCopyNode(e->node, xml.doc, recursive);
+    xmlAddChild(node, inode);
+}
+
+
 
 
 XML::XML() {}
@@ -92,15 +136,36 @@ XML::~XML() {
 
 XMLPtr XML::create() { return XMLPtr( new XML() ); }
 
-void XML::read(string path) {
+void XML::read(string path, bool validate) {
     if (doc) xmlFreeDoc(doc);
+    // parser.set_validate(false); // TODO!
     doc = xmlParseFile(path.c_str());
     xmlNodePtr xmlRoot = xmlDocGetRootElement(doc);
     root = XMLElement::create(xmlRoot);
 }
 
-void XML::write(string path) { // TODO
-    xmlTextWriterPtr writer = xmlNewTextWriterFilename(path.c_str(), 0);
+void XML::parse(string data, bool validate) {
+    if (doc) xmlFreeDoc(doc);
+    // parser.set_validate(false); // TODO!
+    doc = xmlParseMemory(data.c_str(), data.size());
+    xmlNodePtr xmlRoot = xmlDocGetRootElement(doc);
+    root = XMLElement::create(xmlRoot);
+}
+
+void XML::write(string path) {
+    //xmlSaveFormatFile(path.c_str(), doc, 1);
+    xmlKeepBlanksDefault(0);
+    xmlSaveFormatFileEnc(path.c_str(), doc, "ISO-8859-1", 1);
+}
+
+string XML::toString() {
+    xmlKeepBlanksDefault(0);
+    xmlBuffer* buffer = xmlBufferCreate();
+    xmlOutputBuffer* outputBuffer = xmlOutputBufferCreateBuffer( buffer, NULL );
+    xmlSaveFormatFileTo(outputBuffer, doc, "ISO-8859-1", 1);
+    string str( (char*) buffer->content, buffer->use );
+    xmlBufferFree( buffer );
+    return str;
 }
 
 XMLElementPtr XML::getRoot() { return root; }
@@ -121,44 +186,4 @@ void XML::printTree(XMLElementPtr e, string D) {
 
 
 
-/**
 
-src/addons/Engineering/Factory/VRAMLLoader.cpp      5|#include <libxml++/libxml++.h>|
-src/addons/Semantics/Processes/VRProcessLayout.cpp  18|#include <libxml++/libxml++.h>|
-src/addons/Semantics/Processes/VRProcessLayout.cpp  19|#include <libxml++/nodes/element.h>|
-src/addons/Semantics/Reasoning/VROWLExport.cpp      5|#include <libxml++/libxml++.h>|
-src/addons/Semantics/Reasoning/VROWLExport.cpp      6|#include <libxml++/nodes/element.h>|
-src/addons/WorldGenerator/GIS/OSMMap.cpp            5|#include <libxml++/libxml++.h>|
-src/core/gui/VRGuiScripts.cpp                       27|#include <libxml++/nodes/element.h>|
-src/core/gui/VRGuiScripts.cpp                       28|#include <libxml++/libxml++.h>|
-src/core/networking/VRSocket.cpp                    17|#include <libxml++/nodes/element.h>|
-src/core/objects/VRCamera.cpp                       16|#include <libxml++/nodes/element.h>|
-src/core/objects/VRGroup.cpp                        3|#include <libxml++/nodes/element.h>|
-src/core/objects/VRLightBeacon.cpp                  10|#include <libxml++/nodes/element.h>|
-src/core/objects/VRLod.cpp                          7|#include <libxml++/nodes/element.h>|
-src/core/objects/geometry/VRGeometry.cpp            3|#include <libxml++/nodes/element.h>|
-src/core/objects/material/VRMaterial.cpp            45|#include <libxml++/nodes/element.h>|
-src/core/scene/VRScene.cpp                          24|#include <libxml++/nodes/element.h>|
-src/core/scene/VRSceneLoader.cpp                    23|#include <libxml++/libxml++.h>|
-src/core/scene/VRSceneLoader.cpp                    24|#include <libxml++/nodes/element.h>|
-src/core/scripting/VRScript.cpp                     25|#include <libxml++/nodes/element.h>|
-src/core/scripting/VRScript.cpp                     26|#include <libxml++/nodes/textnode.h>|
-src/core/setup/VRSetup.cpp                          20|#include <libxml++/libxml++.h>|
-src/core/setup/VRSetup.cpp                          21|#include <libxml++/nodes/element.h>|
-src/core/setup/devices/VRDevice.cpp                 6|#include <libxml++/nodes/element.h>|
-src/core/setup/devices/VRDeviceManager.cpp          6|#include <libxml++/nodes/element.h>|
-src/core/setup/tracking/ART.cpp                     8|#include <libxml++/nodes/element.h>|
-src/core/setup/tracking/VRPN.cpp                    12|#include <libxml++/nodes/element.h>|
-src/core/setup/windows/VRMultiWindow.cpp            7|#include <libxml++/nodes/element.h>|
-src/core/setup/windows/VRView.cpp                   4|#include <libxml++/nodes/element.h>|
-src/core/setup/windows/VRWindow.cpp                 12|#include <libxml++/nodes/element.h>|
-src/core/setup/windows/VRWindowManager.cpp          5|#include <libxml++/nodes/element.h>|
-src/core/tools/VRProjectManager.cpp                 6|#include <libxml++/libxml++.h>|
-src/core/tools/VRProjectManager.cpp                 7|#include <libxml++/nodes/element.h>|
-src/core/utils/VRName.cpp                           9|#include <libxml++/nodes/element.h>|
-src/core/utils/VRStorage.cpp                        6|#include <libxml++/libxml++.h>|
-src/core/utils/VRStorage.cpp                        7|#include <libxml++/nodes/element.h>|
-src/core/utils/VRStorage_template.h                 4|#include <libxml++/nodes/element.h>|
-
-
-*/
