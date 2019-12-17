@@ -5,15 +5,15 @@
 #include "core/utils/xml.h"
 
 // The XML parser headers
-#include <xercesc/sax2/SAX2XMLReader.hpp>
+/*#include <xercesc/sax2/SAX2XMLReader.hpp>
 #include <xercesc/sax2/XMLReaderFactory.hpp>
 #include <xercesc/sax2/DefaultHandler.hpp>
 #include <xercesc/sax/HandlerBase.hpp>
 #include <xercesc/sax2/Attributes.hpp>
 #include <xercesc/parsers/SAXParser.hpp>
-#include <xercesc/util/XMLString.hpp>
-#include <iostream>
+#include <xercesc/util/XMLString.hpp>*/
 
+#include <iostream>
 #include <fstream>
 
 /* FILE FORMAT INFOS:
@@ -21,7 +21,7 @@
     http://wiki.openstreetmap.org/wiki/Map_Features
 */
 
-using namespace xercesc;
+//using namespace xercesc;
 using namespace OSG;
 
 //template<> string typeName(const OSMMap& t) { return "OSMMap"; }
@@ -32,15 +32,8 @@ template<> string typeName(const OSMNode& o) { return "OSMNode"; }
 template<> string typeName(const OSMBase& o) { return "OSMBase"; }
 
 OSG_BEGIN_NAMESPACE;
- class OSMSAXParser : public SAXParser {
-    private:
-        //OSMSAXHandlerCP* handler;
 
-    public:
-        OSMSAXParser();
-};
-
-class OSMSAXHandlerCP : public HandlerBase {
+class OSMSAXHandlerCP : public XMLStreamHandler {
     private:
         long numerator;
         long numeratorWritten;
@@ -84,10 +77,9 @@ class OSMSAXHandlerCP : public HandlerBase {
     public:
         OSMSAXHandlerCP();
         void startDocument();
-        void startElement(const XMLCh* const, AttributeList&);
-        void endElement(const XMLCh* const);
+        void startElement(const string& name, const map<string, string>& attributes);
+        void endElement(const string& name);
         void endDocument();
-        void fatalError(const SAXParseException&);
 
         long getNumerator();
         long getNumeratorWritten();
@@ -104,7 +96,7 @@ class OSMSAXHandlerCP : public HandlerBase {
         map<string,bool> getNeededNodes();
 };
 
-class OSMSAXHandlerBM : public HandlerBase {
+class OSMSAXHandlerBM : public XMLStreamHandler {
     private:
         long numerator;
         long numeratorWritten;
@@ -139,10 +131,9 @@ class OSMSAXHandlerBM : public HandlerBase {
     public:
         OSMSAXHandlerBM();
         void startDocument();
-        void startElement(const XMLCh* const, AttributeList&);
-        void endElement(const XMLCh* const);
+        void startElement(const string& name, const map<string, string>& attributes);
+        void endElement(const string& name);
         void endDocument();
-        void fatalError(const SAXParseException&);
 
         map<string, OSMNodePtr> getNodes();
         map<string, OSMWayPtr> getWays();
@@ -154,10 +145,6 @@ class OSMSAXHandlerBM : public HandlerBase {
         long getRelationCounter();
 };
 OSG_END_NAMESPACE;
-
-OSMSAXParser::OSMSAXParser() {
-    //cout << "OSMSAXParser::OSMSAXParser" << endl;
-}
 
 OSMSAXHandlerCP::OSMSAXHandlerCP() {
 }
@@ -326,12 +313,9 @@ void OSMSAXHandlerCP::endDocument(){
     //cout << "OSMSAXHandlerCP::endDocument with " << numerator << " elements" << endl;
 }
 
-void OSMSAXHandlerCP::startElement(const XMLCh* const name, AttributeList& attributes) {
+void OSMSAXHandlerCP::startElement(const string& name, const map<string, string>& attributes) {
     currentDepth++;
     counter = 0;
-    char* message = XMLString::transcode(name);
-    std::string msgAsString(message);
-    int attributeLength = attributes.getLength();
 
     auto convertString = [&](string str) {
         string res = "";
@@ -346,46 +330,40 @@ void OSMSAXHandlerCP::startElement(const XMLCh* const name, AttributeList& attri
         return res;
     };
 
-    auto readAttributes = [&](){
-        XMLSize_t index = 0;
+    auto readAttributes = [&]() {
         string res = " ";
         string tmpKey = ""; //Tag
         string tmpVal = ""; //Tag
         string tmpType = ""; //Relation
         string tmpRef = ""; //Relation
         string tmpRole = ""; //Relation
-        for (int i = 0; i < attributeLength; i++) {
-            auto key = XMLString::transcode(attributes.getName(index));
-            std::string keyAsString(key);
-            string keyXML = convertString(keyAsString);
-            res+=keyXML+"=";
-            auto val = XMLString::transcode(attributes.getValue(index));
-            std::string valAsString(val);
-            string valXML = convertString(valAsString);
-            res+="'"+valXML+"'";
+        for (auto attr : attributes) {
+            string key = attr.first;
+            string val = attr.second;
+            string keyXML = convertString(key);
+            string valXML = convertString(val);
+            res += keyXML+"='"+valXML+"' ";
 
-            if (keyAsString == "id") {
-                currentID = valAsString;
+            if (key == "id") {
+                currentID = val;
                 lvl1Open = true;
             }
-            if ( currentDepth == 1 ) miscAtts[keyAsString] = valAsString;
-            if ( msgAsString == "tag" ) {
-                if ( keyAsString == "k" ) { tmpKey = valAsString; }
-                if ( keyAsString == "v" ) { tmpVal = valAsString; }
+            if ( currentDepth == 1 ) miscAtts[key] = val;
+            if ( name == "tag" ) {
+                if ( key == "k" ) { tmpKey = val; }
+                if ( key == "v" ) { tmpVal = val; }
             }
-            if ( msgAsString == "member" ) {
-                if ( keyAsString == "type" ) { tmpType = valAsString; }
-                if ( keyAsString == "ref" ) { tmpRef = valAsString; }
-                if ( keyAsString == "role" ) { tmpRole = valAsString; }
+            if ( name == "member" ) {
+                if ( key == "type" ) { tmpType = val; }
+                if ( key == "ref" ) { tmpRef = val; }
+                if ( key == "role" ) { tmpRole = val; }
             }
-            if ( msgAsString == "nd" ) { refsForWays.push_back(valAsString); }
-
-            if ( i < attributeLength - 1) res+=" ";
-            index++;
+            if ( name == "nd" ) { refsForWays.push_back(val); }
             counter++;
         }
-        if ( msgAsString == "tag" ) tagsInfo[tmpKey] = tmpVal;
-        if ( msgAsString == "member" ) {
+        res.pop_back(); // remove trailing blank
+        if ( name == "tag" ) tagsInfo[tmpKey] = tmpVal;
+        if ( name == "member" ) {
             if (tmpType == "node") nodesForRelations.push_back(tmpRef);
         }
         return res;
@@ -411,9 +389,9 @@ void OSMSAXHandlerCP::startElement(const XMLCh* const name, AttributeList& attri
 
 
     if ( currentDepth == 0 ) {
-        if ( msgAsString == "osm" )currentType = -3; //OSM
+        if ( name == "osm" )currentType = -3; //OSM
         buffer = "<";
-        buffer += msgAsString;
+        buffer += name;
         buffer += readAttributes();
         buffer += ">";
         writeLineToFile(buffer);
@@ -424,18 +402,18 @@ void OSMSAXHandlerCP::startElement(const XMLCh* const name, AttributeList& attri
     if ( currentDepth == 1 ) {
         if ( counter>0 ) {
             buffer = "  <";
-            buffer += msgAsString;
+            buffer += name;
             buffer+= atts;
-            if ( msgAsString == "bounds" ) currentType = -2; else //nodes
-            if ( msgAsString == "node" ) currentType = 0; else //nodes
-            if ( msgAsString == "way" ) currentType = 1; else //ways
-            if ( msgAsString == "relation" ) currentType = 2; else //relations
+            if ( name == "bounds" ) currentType = -2; else //nodes
+            if ( name == "node" ) currentType = 0; else //nodes
+            if ( name == "way" ) currentType = 1; else //ways
+            if ( name == "relation" ) currentType = 2; else //relations
             currentType = -1; //unknown
         }
     } else
     if ( currentDepth == 2 ) {
         buffer = "    <";
-        buffer += msgAsString;
+        buffer += name;
         buffer+= readAttributes();
     } else
     if ( currentDepth > 2 ) {
@@ -443,21 +421,16 @@ void OSMSAXHandlerCP::startElement(const XMLCh* const name, AttributeList& attri
         //cout << "   at level: " << currentDepth << endl;
     }
     lastDepth = currentDepth;
-
-    XMLString::release(&message);
 }
 
-void OSMSAXHandlerCP::endElement(const XMLCh* const name) {
-    char* message = XMLString::transcode(name);
-    std::string msgAsString(message);
-
+void OSMSAXHandlerCP::endElement(const string& name) {
     if ( currentDepth == 0 ) {
         //cout << buffer << endl;
     }
     if ( currentDepth == 1 ) {
         if ( currentDepth < lastDepth  ) {
             buffer = "  </";
-            buffer += msgAsString;
+            buffer += name;
             buffer +=">";
             lvl1Closer = true;
             writeLine(buffer);
@@ -475,21 +448,12 @@ void OSMSAXHandlerCP::endElement(const XMLCh* const name) {
         writeLine(buffer);
     } else
     if ( currentDepth > 2 ) {
-        cout << "OSMSAXHandlerCP::startElement unknown found: " << msgAsString << endl;
+        cout << "OSMSAXHandlerCP::startElement unknown found: " << name << endl;
         cout << "   at level: " << currentDepth << endl;
     }
 
     lastDepth = currentDepth;
     currentDepth--;
-    XMLString::release(&message);
-}
-
-void OSMSAXHandlerCP::fatalError(const SAXParseException& exception) {
-    char* message = XMLString::transcode(exception.getMessage());
-    cout << "Fatal Error: " << message
-         << " at line: " << exception.getLineNumber()
-         << endl;
-    XMLString::release(&message);
 }
 
 
@@ -581,47 +545,39 @@ void OSMSAXHandlerBM::endDocument(){
     //cout << "OSMSAXHandlerBM::endDocument with " << numerator << " elements" << endl;
 }
 
-void OSMSAXHandlerBM::startElement(const XMLCh* const name, AttributeList& attributes) {
+void OSMSAXHandlerBM::startElement(const string& name, const map<string, string>& attributes) {
     currentDepth++;
     counter = 0;
-    char* message = XMLString::transcode(name);
-    std::string msgAsString(message);
-    int attributeLength = attributes.getLength();
 
-    auto readAttributes = [&](){
-        XMLSize_t index = 0;
+    auto readAttributes = [&]() {
         string tmpKey = ""; //Tag
         string tmpVal = ""; //Tag
         string tmpType = ""; //Relation
         string tmpRef = ""; //Relation
         string tmpRole = ""; //Relation
-        for (int i = 0; i < attributeLength; i++) {
-            auto key = XMLString::transcode(attributes.getName(index));
-            std::string keyAsString(key);
-            auto val = XMLString::transcode(attributes.getValue(index));
-            std::string valAsString(val);
+        for (auto attr : attributes) {
+            string key = attr.first;
+            string val = attr.second;
 
-            if (keyAsString == "id") {
-                currentID = valAsString;
+            if (key == "id") {
+                currentID = val;
                 lvl1Open = true;
             }
-            if ( currentDepth == 1 ) miscAtts[keyAsString] = valAsString;
-            if ( msgAsString == "tag" ) {
-                if ( keyAsString == "k" ) { tmpKey = valAsString; }
-                if ( keyAsString == "v" ) { tmpVal = valAsString; }
+            if ( currentDepth == 1 ) miscAtts[key] = val;
+            if ( name == "tag" ) {
+                if ( key == "k" ) { tmpKey = val; }
+                if ( key == "v" ) { tmpVal = val; }
             }
-            if ( msgAsString == "member" ) {
-                if ( keyAsString == "type" ) { tmpType = valAsString; }
-                if ( keyAsString == "ref" ) { tmpRef = valAsString; }
-                if ( keyAsString == "role" ) { tmpRole = valAsString; }
+            if ( name == "member" ) {
+                if ( key == "type" ) { tmpType = val; }
+                if ( key == "ref" ) { tmpRef = val; }
+                if ( key == "role" ) { tmpRole = val; }
             }
-            if ( msgAsString == "nd" ) { refsForWays.push_back(valAsString); }
-
-            index++;
+            if ( name == "nd" ) { refsForWays.push_back(val); }
             counter++;
         }
-        if ( msgAsString == "tag" ) tagsInfo[tmpKey] = tmpVal;
-        if ( msgAsString == "member" ) {
+        if ( name == "tag" ) tagsInfo[tmpKey] = tmpVal;
+        if ( name == "member" ) {
             if (tmpType == "node") nodesForRelations.push_back(tmpRef);
             if (tmpType == "way") waysForRelations.push_back(tmpRef);
         }
@@ -641,10 +597,10 @@ void OSMSAXHandlerBM::startElement(const XMLCh* const name, AttributeList& attri
     }
     if ( currentDepth == 1 ) {
         if ( counter>0 ) {
-            if ( msgAsString == "bounds" ) currentType = -2; else //nodes
-            if ( msgAsString == "node" ) currentType = 0; else //nodes
-            if ( msgAsString == "way" ) currentType = 1; else //ways
-            if ( msgAsString == "relation" ) currentType = 2; else //relations
+            if ( name == "bounds" ) currentType = -2; else //nodes
+            if ( name == "node" ) currentType = 0; else //nodes
+            if ( name == "way" ) currentType = 1; else //ways
+            if ( name == "relation" ) currentType = 2; else //relations
             currentType = -1; //unknown
         }
     } else
@@ -655,14 +611,9 @@ void OSMSAXHandlerBM::startElement(const XMLCh* const name, AttributeList& attri
         //cout << "   at level: " << currentDepth << endl;
     }
     lastDepth = currentDepth;
-
-    XMLString::release(&message);
 }
 
-void OSMSAXHandlerBM::endElement(const XMLCh* const name) {
-    char* message = XMLString::transcode(name);
-    std::string msgAsString(message);
-
+void OSMSAXHandlerBM::endElement(const string& name) {
     if ( currentDepth == 0 ) {
         //cout << buffer << endl;
     }
@@ -678,23 +629,13 @@ void OSMSAXHandlerBM::endElement(const XMLCh* const name) {
     if ( currentDepth == 2 ) {
     } else
     if ( currentDepth > 2 ) {
-        cout << "OSMSAXHandlerBM::startElement unknown found: " << msgAsString << endl;
+        cout << "OSMSAXHandlerBM::startElement unknown found: " << name << endl;
         cout << "   at level: " << currentDepth << endl;
     }
 
     lastDepth = currentDepth;
     currentDepth--;
-    XMLString::release(&message);
 }
-
-void OSMSAXHandlerBM::fatalError(const SAXParseException& exception) {
-    char* message = XMLString::transcode(exception.getMessage());
-    cout << "Fatal Error: " << message
-         << " at line: " << exception.getLineNumber()
-         << endl;
-    XMLString::release(&message);
-}
-
 
 
 OSMBase::OSMBase(string id) : id(id) {}
@@ -921,58 +862,20 @@ void OSMMap::writeFile(string path) {
 int OSMMap::readFileStreaming(string path) {
     filepath = path;
     VRTimer t; t.start();
-    try {
-        XMLPlatformUtils::Initialize();
-    }
-    catch (const XMLException& toCatch) {
-        char* message = XMLString::transcode(toCatch.getMessage());
-        cout << "Error during initialization! :\n"
-             << message << "\n";
-        XMLString::release(&message);
-        return 1;
-    }
 
-    OSMSAXParser* parser = new OSMSAXParser();
-    //parser->setDoValidation(true);
-    parser->setDoNamespaces(true);    // optional
-
-    //DocumentHandler* docHandler = new OSMSAXHandlerCP();
+    XML xml;
     OSMSAXHandlerBM* docHandler = new OSMSAXHandlerBM();
-    ErrorHandler* errHandler = (ErrorHandler*) docHandler;
-    parser->setDocumentHandler(docHandler);
-    parser->setErrorHandler(errHandler);
 
-    try {
-        cout << "OSMMap::readFileStreaming - " << filepath << endl;
-        std::cout << std::setw (40) << "0 elements";
-        parser->parse(path.c_str());
-        nodes = docHandler->getNodes();
-        ways = docHandler->getWays();
-        relations = docHandler->getRelations();
-        cout << "\r";
-        cout << "OSMMap::readFileStreaming - elements read: " << docHandler->getNumerator() << endl;
-        cout << "OSMMap::readFileStreaming - nodes: " << docHandler->getNodeCounter() << ", ways: " << docHandler->getWayCounter() <<  ", relations: " << docHandler->getRelationCounter() << endl;
-    }
-    catch (const XMLException& toCatch) {
-        char* message = XMLString::transcode(toCatch.getMessage());
-        cout << "OSMMap::readFileStreaming Exception message is: \n"
-             << message << "\n";
-        XMLString::release(&message);
-        return -1;
-    }
-    catch (const SAXParseException& toCatch) {
-        char* message = XMLString::transcode(toCatch.getMessage());
-        cout << "OSMMap::readFileStreaming Exception message is: \n"
-             << message << "\n";
-        XMLString::release(&message);
-        return -1;
-    }
-    catch (...) {
-        cout << "OSMMap::readFileStreaming Unexpected Exception \n" ;
-        return -1;
-    }
+    cout << "OSMMap::readFileStreaming - " << filepath << endl;
+    std::cout << std::setw (40) << "0 elements";
+    xml.stream(path, docHandler);
+    nodes = docHandler->getNodes();
+    ways = docHandler->getWays();
+    relations = docHandler->getRelations();
+    cout << "\r";
+    cout << "OSMMap::readFileStreaming - elements read: " << docHandler->getNumerator() << endl;
+    cout << "OSMMap::readFileStreaming - nodes: " << docHandler->getNodeCounter() << ", ways: " << docHandler->getWayCounter() <<  ", relations: " << docHandler->getRelationCounter() << endl;
 
-    delete parser;
     delete docHandler;
     auto t2 = t.stop()/1000.0;
     cout << "OSMMap::readFileStreaming - secs needed: " << t2 << endl;
@@ -981,27 +884,11 @@ int OSMMap::readFileStreaming(string path) {
 
 int OSMMap::filterFileStreaming(string path, vector<pair<string, string>> whitelist) {
     filepath = path;
-    try {
-        XMLPlatformUtils::Initialize();
-    }
-    catch (const XMLException& toCatch) {
-        char* message = XMLString::transcode(toCatch.getMessage());
-        cout << "Error during initialization! :\n"
-             << message << "\n";
-        XMLString::release(&message);
-        return 1;
-    }
 
-    OSMSAXParser* parser = new OSMSAXParser();
-    //parser->setDoValidation(true);
-    parser->setDoNamespaces(true);    // optional
+    XML xml;
 
     //DocumentHandler* docHandler = new OSMSAXHandlerCP();
     OSMSAXHandlerCP* docHandler = new OSMSAXHandlerCP();
-    ErrorHandler* errHandler = (ErrorHandler*) docHandler;
-    parser->setDocumentHandler(docHandler);
-    parser->setErrorHandler(errHandler);
-
     docHandler->setWhitelist(whitelist);
 
     auto genPath = [&](string in){
@@ -1024,70 +911,29 @@ int OSMMap::filterFileStreaming(string path, vector<pair<string, string>> whitel
     };
 
     string tempPath = genPath("_temp");
-    try {
-        VRTimer t; t.start();
-        cout << "OSMMap::copyFileStreaming 1st Pass - " << filepath << endl;
-        std::cout << std::setw (40) << "0 elements";
-        docHandler->setNewPath(tempPath);
-        parser->parse(path.c_str());
-        auto t2 = t.stop()/1000;
-        cout << "\r";
-        cout << "OSMMap::copyFileStreaming 1st Pass - secs needed: " << t2 << endl;
-        cout << "OSMMap::copyFileStreaming 1st Pass - elements read: " << docHandler->getNumerator() << ", elements written: " << docHandler->getNumeratorWritten() << endl;
-        cout << "OSMMap::copyFileStreaming 1st Pass - read: nodes: " << docHandler->getNodeRawCounter() << ", ways: " << docHandler->getWayRawCounter() <<  ", relations: " << docHandler->getRelationRawCounter() << endl;
-        cout << "OSMMap::copyFileStreaming 1st Pass - writ: nodes: " << docHandler->getNodeCounter() << ", ways: " << docHandler->getWayCounter() <<  ", relations: " << docHandler->getRelationCounter() << endl;
-    }
-    catch (const XMLException& toCatch) {
-        char* message = XMLString::transcode(toCatch.getMessage());
-        cout << "OSMMap::copyFileStreaming 1st Pass Exception message is: \n"
-             << message << "\n";
-        XMLString::release(&message);
-        return -1;
-    }
-    catch (const SAXParseException& toCatch) {
-        char* message = XMLString::transcode(toCatch.getMessage());
-        cout << "OSMMap::copyFileStreaming 1st Pass Exception message is: \n"
-             << message << "\n";
-        XMLString::release(&message);
-        return -1;
-    }
-    catch (...) {
-        cout << "OSMMap::copyFileStreaming 1st Pass Unexpected Exception \n" ;
-        return -1;
-    }
+    VRTimer t; t.start();
+    cout << "OSMMap::copyFileStreaming 1st Pass - " << filepath << endl;
+    std::cout << std::setw (40) << "0 elements";
+    docHandler->setNewPath(tempPath);
+    xml.stream(path, docHandler);
+    auto t2 = t.stop()/1000;
+    cout << "\r";
+    cout << "OSMMap::copyFileStreaming 1st Pass - secs needed: " << t2 << endl;
+    cout << "OSMMap::copyFileStreaming 1st Pass - elements read: " << docHandler->getNumerator() << ", elements written: " << docHandler->getNumeratorWritten() << endl;
+    cout << "OSMMap::copyFileStreaming 1st Pass - read: nodes: " << docHandler->getNodeRawCounter() << ", ways: " << docHandler->getWayRawCounter() <<  ", relations: " << docHandler->getRelationRawCounter() << endl;
+    cout << "OSMMap::copyFileStreaming 1st Pass - writ: nodes: " << docHandler->getNodeCounter() << ", ways: " << docHandler->getWayCounter() <<  ", relations: " << docHandler->getRelationCounter() << endl;
 
-    try {
-        VRTimer t; t.start();
-        docHandler->setPass(true);
-        docHandler->setNewPath(genPath("_filtered"));
-        cout << "OSMMap::copyFileStreaming 2nd Pass - " << filepath << endl;
-        parser->parse(tempPath.c_str());
-        auto t2 = t.stop()/1000;
-        cout << "OSMMap::copyFileStreaming 2nd Pass - secs needed: " << t2 << endl;
-        cout << "OSMMap::copyFileStreaming 2nd Pass - elements read: " << docHandler->getNumerator() << ", elements written: " << docHandler->getNumeratorWritten() << endl;
-        cout << "OSMMap::copyFileStreaming 2nd Pass - read: nodes: " << docHandler->getNodeRawCounter() << ", ways: " << docHandler->getWayRawCounter() <<  ", relations: " << docHandler->getRelationRawCounter() << endl;
-        cout << "OSMMap::copyFileStreaming 2nd Pass - writ: nodes: " << docHandler->getNodeCounter() << ", ways: " << docHandler->getWayCounter() <<  ", relations: " << docHandler->getRelationCounter() << endl;
-    }
-    catch (const XMLException& toCatch) {
-        char* message = XMLString::transcode(toCatch.getMessage());
-        cout << "OSMMap::copyFileStreaming 2nd Pass Exception message is: \n"
-             << message << "\n";
-        XMLString::release(&message);
-        return -1;
-    }
-    catch (const SAXParseException& toCatch) {
-        char* message = XMLString::transcode(toCatch.getMessage());
-        cout << "OSMMap::copyFileStreaming 2nd Pass Exception message is: \n"
-             << message << "\n";
-        XMLString::release(&message);
-        return -1;
-    }
-    catch (...) {
-        cout << "OSMMap::copyFileStreaming 2nd Pass Unexpected Exception \n" ;
-        return -1;
-    }
+    t.start();
+    docHandler->setPass(true);
+    docHandler->setNewPath(genPath("_filtered"));
+    cout << "OSMMap::copyFileStreaming 2nd Pass - " << filepath << endl;
+    xml.stream(tempPath, docHandler);
+    auto t3 = t.stop()/1000;
+    cout << "OSMMap::copyFileStreaming 2nd Pass - secs needed: " << t3 << endl;
+    cout << "OSMMap::copyFileStreaming 2nd Pass - elements read: " << docHandler->getNumerator() << ", elements written: " << docHandler->getNumeratorWritten() << endl;
+    cout << "OSMMap::copyFileStreaming 2nd Pass - read: nodes: " << docHandler->getNodeRawCounter() << ", ways: " << docHandler->getWayRawCounter() <<  ", relations: " << docHandler->getRelationRawCounter() << endl;
+    cout << "OSMMap::copyFileStreaming 2nd Pass - writ: nodes: " << docHandler->getNodeCounter() << ", ways: " << docHandler->getWayCounter() <<  ", relations: " << docHandler->getRelationCounter() << endl;
 
-    delete parser;
     delete docHandler;
     return 0;
 }

@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <libxml/tree.h>
+#include <libxml/parser.h>
 
 
 XMLElement::XMLElement(_xmlNode* node) : node(node) {}
@@ -157,6 +158,23 @@ void XML::parse(string data, bool validate) {
     root = XMLElement::create(xmlRoot);
 }
 
+XMLElementPtr XML::getRoot() { return root; }
+
+XMLElementPtr XML::newRoot(string name, string ns_uri, string ns_prefix) {
+    if (doc) xmlFreeDoc(doc);
+    doc = xmlNewDoc(NULL);
+    auto ns = xmlNewNs(NULL, (xmlChar*)ns_uri.c_str(), (xmlChar*)ns_prefix.c_str());
+    auto rnode = xmlNewNode(ns, (xmlChar*)name.c_str());
+    root = XMLElement::create( rnode );
+    xmlDocSetRootElement(doc, rnode);
+    return root;
+}
+
+void XML::printTree(XMLElementPtr e, string D) {
+    cout << D << e->getName() << endl;
+    for (auto c : e->getChildren()) printTree(c, D + " ");
+}
+
 string getXMLError() {
     auto error = xmlGetLastError();
     if (!error || error->code == XML_ERR_OK) return ""; // No error
@@ -215,22 +233,76 @@ string XML::toString() {
     return str;
 }
 
-XMLElementPtr XML::getRoot() { return root; }
 
-XMLElementPtr XML::newRoot(string name, string ns_uri, string ns_prefix) {
-    if (doc) xmlFreeDoc(doc);
-    doc = xmlNewDoc(NULL);
-    auto ns = xmlNewNs(NULL, (xmlChar*)ns_uri.c_str(), (xmlChar*)ns_prefix.c_str());
-    auto rnode = xmlNewNode(ns, (xmlChar*)name.c_str());
-    root = XMLElement::create( rnode );
-    xmlDocSetRootElement(doc, rnode);
-    return root;
+// SAX parser
+
+XMLStreamHandler::XMLStreamHandler() {}
+XMLStreamHandler::~XMLStreamHandler() {}
+
+void startDocument(void* user_data) {
+    auto handler = (XMLStreamHandler*)user_data;
+    handler->startDocument();
 }
 
-void XML::printTree(XMLElementPtr e, string D) {
-    cout << D << e->getName() << endl;
-    for (auto c : e->getChildren()) printTree(c, D + " ");
+void endDocument(void* user_data) {
+    auto handler = (XMLStreamHandler*)user_data;
+    handler->endDocument();
 }
+
+void startElement(void* user_data, const xmlChar* name, const xmlChar** attrs) {
+    auto handler = (XMLStreamHandler*)user_data;
+    string n = string((const char*)name);
+    map<string, string> attribs;
+    while(attrs) {
+        string key = string((const char*)(*attrs));
+        attrs++;
+        string val = string((const char*)(*attrs));
+        attrs++;
+
+        attribs[key] = val;
+    }
+    handler->startElement(n, attribs);
+}
+
+void endElement(void* user_data, const xmlChar* name) {
+    auto handler = (XMLStreamHandler*)user_data;
+    string n = string((const char*)name);
+    handler->endElement(n);
+}
+
+static xmlSAXHandler xmlHandler {
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    startDocument,
+    endDocument,
+    startElement,
+    endElement,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+};
+
+void XML::stream(string path, XMLStreamHandler* handler) {
+    xmlSAXUserParseFile( &xmlHandler, handler, path.c_str() );
+}
+
+
+
 
 
 

@@ -42,6 +42,18 @@ class XMLElement {
         void print();
 };
 
+class XMLStreamHandler {
+    private:
+    public:
+        XMLStreamHandler();
+        virtual ~XMLStreamHandler();
+
+        virtual void startDocument() = 0;
+        virtual void endDocument() = 0;
+        virtual void startElement(const string& name, const map<string, string>& attributes) = 0;
+        virtual void endElement(const string& name) = 0;
+};
+
 class XML {
     private:
         _xmlDoc* doc = 0;
@@ -55,6 +67,7 @@ class XML {
 
         void read(string path, bool validate = true);
         void parse(string data, bool validate = true);
+        void stream(string path, XMLStreamHandler* handler);
         void write(string path);
         string toString();
 
