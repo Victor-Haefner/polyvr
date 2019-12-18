@@ -4,15 +4,6 @@
 #include "core/utils/VRTimer.h"
 #include "core/utils/xml.h"
 
-// The XML parser headers
-/*#include <xercesc/sax2/SAX2XMLReader.hpp>
-#include <xercesc/sax2/XMLReaderFactory.hpp>
-#include <xercesc/sax2/DefaultHandler.hpp>
-#include <xercesc/sax/HandlerBase.hpp>
-#include <xercesc/sax2/Attributes.hpp>
-#include <xercesc/parsers/SAXParser.hpp>
-#include <xercesc/util/XMLString.hpp>*/
-
 #include <iostream>
 #include <fstream>
 
@@ -21,7 +12,6 @@
     http://wiki.openstreetmap.org/wiki/Map_Features
 */
 
-//using namespace xercesc;
 using namespace OSG;
 
 //template<> string typeName(const OSMMap& t) { return "OSMMap"; }

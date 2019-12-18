@@ -42,16 +42,42 @@ class XMLElement {
         void print();
 };
 
+// attrib: key=val
+//    key: uri:name
+struct XMLAttribute {
+    string key;
+    string val;
+
+    string uri();
+    string name();
+    string qname();
+};
+
+class XMLInputStream {
+    private:
+    public:
+        XMLInputStream();
+        virtual ~XMLInputStream();
+
+        virtual size_t readBytes(char* const toFill, const size_t maxToRead) = 0;
+};
+
 class XMLStreamHandler {
     private:
     public:
         XMLStreamHandler();
         virtual ~XMLStreamHandler();
 
-        virtual void startDocument() = 0;
-        virtual void endDocument() = 0;
-        virtual void startElement(const string& name, const map<string, string>& attributes) = 0;
-        virtual void endElement(const string& name) = 0;
+        virtual void startDocument();
+        virtual void endDocument();
+        virtual void startElement(const string& uri, const string& name, const string& qname, const map<string, XMLAttribute>& attributes);
+        virtual void endElement(const string& uri, const string& name, const string& qname);
+        virtual void characters(const string& chars);
+        virtual void processingInstruction(const string& target, const string& data);
+        virtual void warning(const string& chars);
+        virtual void error(const string& chars);
+        virtual void fatalError(const string& chars);
+        virtual void onException(exception& e);
 };
 
 class XML {
@@ -68,6 +94,8 @@ class XML {
         void read(string path, bool validate = true);
         void parse(string data, bool validate = true);
         void stream(string path, XMLStreamHandler* handler);
+        void stream(XMLInputStream* input, XMLStreamHandler* handler);
+
         void write(string path);
         string toString();
 
