@@ -104,6 +104,7 @@ class VRGeometry : public VRTransform {
         void updateNormals(bool face = false);
         void flipNormals();
         void convertToTrianglePatches();
+        void convertToTriangles();
 
         int getLastMeshChange();
 

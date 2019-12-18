@@ -1125,4 +1125,20 @@ void VRGeometry::convertToTrianglePatches() {
 	setPatchVertices(3);
 }
 
+void VRGeometry::convertToTriangles() {
+    if (!meshSet) return;
+
+    TriangleIterator it(mesh->geo);
+    VRGeoData data;
+
+	for (int i=0; !it.isAtEnd(); ++it, i++) {
+        data.pushVert(Pnt3d(it.getPosition(0)), Vec3d(it.getNormal(0)), Vec2d(it.getTexCoords(0,0)));
+        data.pushVert(Pnt3d(it.getPosition(1)), Vec3d(it.getNormal(1)), Vec2d(it.getTexCoords(0,1)));
+        data.pushVert(Pnt3d(it.getPosition(2)), Vec3d(it.getNormal(2)), Vec2d(it.getTexCoords(0,2)));
+        data.pushTri();
+	}
+
+	data.apply(ptr());
+}
+
 OSG_END_NAMESPACE;
