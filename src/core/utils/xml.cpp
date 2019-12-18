@@ -239,6 +239,11 @@ string XML::toString() {
 XMLStreamHandler::XMLStreamHandler() {}
 XMLStreamHandler::~XMLStreamHandler() {}
 
+string toString(const xmlChar* s) {
+    if (!s) return "";
+    return string((const char*)s);
+}
+
 void startDocument(void* user_data) {
     auto handler = (XMLStreamHandler*)user_data;
     handler->startDocument();
@@ -251,54 +256,79 @@ void endDocument(void* user_data) {
 
 void startElement(void* user_data, const xmlChar* name, const xmlChar** attrs) {
     auto handler = (XMLStreamHandler*)user_data;
-    string n = string((const char*)name);
+    string n = toString(name);
     map<string, string> attribs;
-    while(attrs) {
-        string key = string((const char*)(*attrs));
-        attrs++;
-        string val = string((const char*)(*attrs));
-        attrs++;
 
+    while (attrs != 0 && attrs[0] != 0) {
+        string key = toString(attrs[0]);
+        string val = toString(attrs[1]);
         attribs[key] = val;
+        attrs = &attrs[2];
     }
+
     handler->startElement(n, attribs);
 }
 
 void endElement(void* user_data, const xmlChar* name) {
     auto handler = (XMLStreamHandler*)user_data;
-    string n = string((const char*)name);
+    string n = toString(name);
     handler->endElement(n);
 }
 
+void internalSubset(void * ctx, const xmlChar * name, const xmlChar * ExternalID, const xmlChar * SystemID) {}
+int isStandalone(void * ctx) { return 1; }
+int hasInternalSubset(void * ctx) { return 0; }
+int hasExternalSubset(void * ctx) { return 0; }
+xmlParserInputPtr resolveEntity(void * ctx, const xmlChar * publicId, const xmlChar * systemId) { return 0; }
+xmlEntityPtr getEntity(void * ctx, const xmlChar * name) { return 0; }
+void entityDecl(void * ctx, const xmlChar * name, int type, const xmlChar * publicId, const xmlChar * systemId, xmlChar * content) {}
+void notationDecl(void * ctx, const xmlChar * name, const xmlChar * publicId, const xmlChar * systemId) {}
+void attributeDecl(void * ctx, const xmlChar * elem, const xmlChar * fullname, int type, int def, const xmlChar * defaultValue, xmlEnumerationPtr tree) {}
+void elementDecl(void * ctx, const xmlChar * name, int type, xmlElementContentPtr content) {}
+void unparsedEntityDecl(void * ctx, const xmlChar * name, const xmlChar * publicId, const xmlChar * systemId, const xmlChar * notationName) {}
+void setDocumentLocator(void * ctx, xmlSAXLocatorPtr loc) {}
+void reference(void * ctx, const xmlChar * name) {}
+void characters(void * ctx, const xmlChar * ch, int len) {}
+void ignorableWhitespace(void * ctx, const xmlChar * ch, int len) {}
+void processingInstruction(void * ctx, const xmlChar * target, const xmlChar * data) {}
+void comment(void * ctx, const xmlChar * value) {}
+void warning(void * ctx, const char * msg, ...) {}
+void error(void * ctx, const char * msg, ...) {}
+void fatalError(void * ctx, const char * msg, ...) {}
+
 static xmlSAXHandler xmlHandler {
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
+    internalSubset,
+    isStandalone,
+    hasInternalSubset,
+    hasExternalSubset,
+    resolveEntity,
+    getEntity,
+    entityDecl,
+    notationDecl,
+    attributeDecl,
+    elementDecl,
+    unparsedEntityDecl,
+    setDocumentLocator,
     startDocument,
     endDocument,
     startElement,
     endElement,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
+    reference,
+    characters,
+    ignorableWhitespace,
+    processingInstruction,
+    comment,
+    warning,
+    error,
+    fatalError,
 };
 
 void XML::stream(string path, XMLStreamHandler* handler) {
-    xmlSAXUserParseFile( &xmlHandler, handler, path.c_str() );
+    try {
+        xmlSAXUserParseFile( &xmlHandler, handler, path.c_str() );
+    } catch(exception& e) {
+        cout << "meh, streaming '" << path << "' failed with: " << e.what() << endl;
+    }
 }
 
 
