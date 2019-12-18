@@ -258,11 +258,11 @@ void divideTiffIntoChunks(string pathIn, string pathOut, double minLat, double m
     double latEnd = y2lat_m(yEnd);
     double lonEnd = x2lon_m(xEnd);
 
+    /*
     Vec2d upperLeft = Vec2d(xBeg,yBeg);
     Vec2d lowerLeft = Vec2d(xBeg,yEnd);
     Vec2d upperRight = Vec2d(xEnd,yBeg);
     Vec2d lowerRight = Vec2d(xEnd,yEnd);
-    /*
     cout << "upperLeft " << upperLeft << endl;
     cout << "lowerLeft " << lowerLeft << endl;
     cout << "upperRight " << upperRight << endl;
@@ -272,16 +272,12 @@ void divideTiffIntoChunks(string pathIn, string pathOut, double minLat, double m
     cout << "Lat1 " << latEnd << " Lon1 " << lonEnd << endl;
     */
 
-    double xA = lon2x_m(minLon);
-    double yA = lat2y_m(minLat);
-    double xB = lon2x_m(maxLon);
-    double yB = lat2y_m(maxLat);
-
     vector<double> bordersX;
     vector<double> bordersY;
 
-    double currentY = maxLat;
+    //double currentY = maxLat;
     double currentX = minLon;
+    double currentY = maxLat;
     while (currentX <= maxLon) {
         bordersX.push_back(currentX);
         currentX += res;
@@ -290,18 +286,6 @@ void divideTiffIntoChunks(string pathIn, string pathOut, double minLat, double m
         bordersY.push_back(currentY);
         currentY -= res;
     }
-
-    auto getBand = [&](int i) {
-        int nBlockXSize, nBlockYSize;
-        int bGotMin, bGotMax;
-        double adfMinMax[2];
-        GDALRasterBand* poBand = poDS->GetRasterBand( i );
-        poBand->GetBlockSize( &nBlockXSize, &nBlockYSize );
-        adfMinMax[0] = poBand->GetMinimum( &bGotMin );
-        adfMinMax[1] = poBand->GetMaximum( &bGotMax );
-        if( ! (bGotMin && bGotMax) ) GDALComputeRasterMinMax((GDALRasterBandH)poBand, TRUE, adfMinMax);
-        return poBand;
-    };
 
     /*
     cout << "input xA " << xA << " yA " << yA << " xB " << xB << " yB " << yB << endl;
@@ -312,7 +296,7 @@ void divideTiffIntoChunks(string pathIn, string pathOut, double minLat, double m
     for (int yy = 0; yy < bordersY.size()-1; yy++){
         for (int xx = 0; xx < bordersX.size()-1; xx++) {
             if ( bordersY[yy] < latBeg  && bordersX[xx] > lonBeg && bordersY[yy+1] > latEnd  && bordersX[xx+1] < lonEnd ) {
-                //cout << " within bounds " << xx << "-" << yy << " | " << bordersY[yy] << " " << bordersX[xx] << " | " << bordersY[yy+1] << " " << bordersX[xx+1] << endl;
+                cout << " within bounds " << xx << "-" << yy << " | " << bordersY[yy] << " " << bordersX[xx] << " | " << bordersY[yy+1] << " " << bordersX[xx+1] << endl;
                 double xxA = lon2x_m(bordersX[xx]);
                 double xxB = lon2x_m(bordersX[xx+1]);
                 double yyA = lat2y_m(bordersY[yy]);
@@ -336,9 +320,9 @@ void divideTiffIntoChunks(string pathIn, string pathOut, double minLat, double m
                 for (int y = 0; y < sizeY; y++) {
                     for (int x = 0; x < sizeX; x++) {
                         vector<char> pix(3);
-                        poDS->GetRasterBand(1)->RasterIO( GF_Read, xpA+x, ypA+y, 1, 1, &pix[0], 1, 1, GDT_Byte, 0, 0 );
-                        poDS->GetRasterBand(2)->RasterIO( GF_Read, xpA+x, ypA+y, 1, 1, &pix[1], 1, 1, GDT_Byte, 0, 0 );
-                        poDS->GetRasterBand(3)->RasterIO( GF_Read, xpA+x, ypA+y, 1, 1, &pix[2], 1, 1, GDT_Byte, 0, 0 );
+                        poDS->GetRasterBand(1)->RasterIO( GF_Read, xpA+x, ypB-y, 1, 1, &pix[0], 1, 1, GDT_Byte, 0, 0 );
+                        poDS->GetRasterBand(2)->RasterIO( GF_Read, xpA+x, ypB-y, 1, 1, &pix[1], 1, 1, GDT_Byte, 0, 0 );
+                        poDS->GetRasterBand(3)->RasterIO( GF_Read, xpA+x, ypB-y, 1, 1, &pix[2], 1, 1, GDT_Byte, 0, 0 );
                         data.insert(data.end(), pix.begin(), pix.end());
                     }
                 }

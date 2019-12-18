@@ -278,7 +278,7 @@ bool VRGtkWindow::on_expose(GdkEventExpose* event) {
     return true;
 }
 
-void VRGtkWindow::save(xmlpp::Element* node) { VRWindow::save(node); }
-void VRGtkWindow::load(xmlpp::Element* node) { VRWindow::load(node); }
+void VRGtkWindow::save(XMLElementPtr node) { VRWindow::save(node); }
+void VRGtkWindow::load(XMLElementPtr node) { VRWindow::load(node); }
 
 OSG_END_NAMESPACE;

@@ -799,6 +799,7 @@ void main( void ) {
             if (height < waterLevel) color = vec4(0.2,0.4,1,1);
             else color = mix(cG, cW, min(cW3.r*0.1*max(height,0),1));
         } else {
+            tc.y = 1-tc.y;
             color = texture(texPic, tc);
         }
 	}
@@ -894,6 +895,7 @@ void main( void ) {
             else color = mix(cG, cW, min(cW3.r*0.1*max(height,0),1));
             color = mix(color, vec4(atmoColor,1), clamp(atmoThickness*length(pos.xyz), 0.0, 0.9)); // atmospheric effects
         } else {
+            tc.y = 1-tc.y;
             color = texture(texPic, tc);
         }
 	}

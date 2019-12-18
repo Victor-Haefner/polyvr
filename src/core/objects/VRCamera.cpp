@@ -13,7 +13,6 @@
 #include <OpenSG/OSGMultiPassMaterial.h>
 #include <OpenSG/OSGPerspectiveCamera.h>
 #include <OpenSG/OSGOrthographicCamera.h>
-#include <libxml++/nodes/element.h>
 
 using namespace OSG;
 

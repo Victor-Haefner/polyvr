@@ -7,6 +7,7 @@
 #include <string>
 #include "core/objects/VRObjectFwd.h"
 #include "core/utils/VRDeviceFwd.h"
+#include "core/utils/VRUtilsFwd.h"
 
 namespace xmlpp{ class Element; }
 
@@ -40,8 +41,8 @@ class VRDeviceManager {
         void resetDeviceDynNodes(VRObjectPtr ancestor);
         void updateDevices();
 
-        void save(xmlpp::Element* node);
-        void load(xmlpp::Element* node);
+        void save(XMLElementPtr node);
+        void load(XMLElementPtr node);
 };
 
 OSG_END_NAMESPACE;
