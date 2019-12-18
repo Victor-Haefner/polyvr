@@ -14,11 +14,12 @@ class VRRobotArm {
     private:
         struct job {
             PathPtr p = 0;
+            PathPtr po = 0;
             float t0 = 0;
             float t1 = 1;
             bool loop = false;
             float d = 1;
-            job(PathPtr p, float t0 = 0, float t1 = 1, float d = 1, bool loop = false) : p(p), t0(t0), t1(t1), loop(loop), d(d) {;}
+            job(PathPtr p, PathPtr po = 0, float t0 = 0, float t1 = 1, float d = 1, bool loop = false) : p(p), po(po), t0(t0), t1(t1), loop(loop), d(d) {;}
         };
 
         VRAnalyticGeometryPtr ageo = 0;
@@ -27,6 +28,7 @@ class VRRobotArm {
         VRUpdateCbPtr updatePtr;
         PathPtr animPath = 0;
         PathPtr robotPath = 0;
+        PathPtr orientationPath = 0;
         PosePtr lastPose = 0;
 
         list<job> job_queue;
@@ -85,8 +87,9 @@ class VRRobotArm {
         void setGrab(float g);
         void toggleGrab();
 
-        void setPath(PathPtr p);
+        void setPath(PathPtr p, PathPtr po = 0);
         PathPtr getPath();
+        PathPtr getOrientationPath();
         void moveOnPath(float t0, float t1, bool loop = false, float durationMultiplier = 1);
 };
 

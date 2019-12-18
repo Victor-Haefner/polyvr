@@ -7,7 +7,6 @@
 #include <OpenSG/OSGMultiPassMaterial.h>
 #include <OpenSG/OSGSimpleMaterial.h>
 #include <OpenSG/OSGSimpleGeometry.h>        // Methods to create simple geos.
-#include <libxml++/nodes/element.h>
 
 using namespace OSG;
 

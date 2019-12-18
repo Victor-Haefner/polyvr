@@ -477,7 +477,7 @@ bool VRTerrain::applyIntersectionAction(Action* action) {
     return true;
 }
 
-double VRTerrain::getHeight(const Vec2d& p, bool useEmbankments) {
+double VRTerrain::getHeight(Vec2d p, bool useEmbankments) {
     int W = heigthsTex->getSize()[0]-1;
     int H = heigthsTex->getSize()[1]-1;
 
@@ -543,11 +543,22 @@ void VRTerrain::elevatePolygon(VRPolygonPtr poly, float offset, bool useEmbankme
 
 void VRTerrain::projectTangent( Vec3d& t, Vec3d p) {
     t[1] = 0;
-    t.normalize(); // TODO: to optimize!
-    float h1 = getHeight(Vec2d(p[0]-t[0]*0.5, p[2]-t[2]*0.5));
-    float h2 = getHeight(Vec2d(p[0]+t[0]*0.5, p[2]+t[2]*0.5));
+    t.normalize();
+    t *= resolution;
+    float h1 = getHeight(Vec2d(p[0]-t[0], p[2]-t[2]));
+    float h2 = getHeight(Vec2d(p[0]+t[0], p[2]+t[2]));
     t[1] = h2-h1;
     t.normalize();
+}
+
+Vec3d VRTerrain::getNormal( Vec3d p ) { // TODO!!
+    Vec3d ex(1,0,0);
+    Vec3d ez(0,0,1);
+    projectTangent(ex, p);
+    projectTangent(ez, p);
+    Vec3d n = ez.cross(ex);
+    n.normalize();
+    return n;
 }
 
 void VRTerrain::loadMap( string path, int channel ) {
@@ -664,6 +675,13 @@ void VRTerrain::paintHeights(string woods, string gravel) {
     mat->clearTransparency();
 }
 
+void VRTerrain::paintHeights(string path) {
+    mat->setTexture(path, 0, 3);
+    mat->setShaderParameter("texPic", 3);
+    mat->setShaderParameter("doHeightTextures", 2);
+    mat->clearTransparency();
+}
+
 void VRTerrain::addEmbankment(string ID, PathPtr p1, PathPtr p2, PathPtr p3, PathPtr p4) {
     auto e = VREmbankment::create(p1, p2, p3, p4);
     auto m = VRMaterial::get("embankment");
@@ -699,6 +717,7 @@ GLSL(
 uniform sampler2D tex;
 uniform sampler2D texWoods;
 uniform sampler2D texGravel;
+uniform sampler2D texPic;
 const ivec3 off = ivec3(-1,0,1);
 const vec3 light = vec3(-1,-1,-0.5);
 uniform vec2 texelSize;
@@ -763,21 +782,25 @@ void main( void ) {
 
 	if (doHeightTextures == 0) color = vec4(getColor(),1.0);
 	else {
-        vec4 cW1 = texture(texWoods, tc*1077);
-        vec4 cW2 = texture(texWoods, tc*107);
-        vec4 cW3 = texture(texWoods, tc*17);
-        vec4 cW4 = texture(texWoods, tc);
-        vec4 cW = mix(cW1,mix(cW2,mix(cW3,cW4,0.5),0.5),0.5);
-        //applyBumpMap(cW3);
+        if (doHeightTextures == 1) {
+            vec4 cW1 = texture(texWoods, tc*1077);
+            vec4 cW2 = texture(texWoods, tc*107);
+            vec4 cW3 = texture(texWoods, tc*17);
+            vec4 cW4 = texture(texWoods, tc);
+            vec4 cW = mix(cW1,mix(cW2,mix(cW3,cW4,0.5),0.5),0.5);
+            //applyBumpMap(cW3);
 
-        vec4 cG0 = texture(texGravel, tc*10777);
-        vec4 cG1 = texture(texGravel, tc*1077);
-        vec4 cG2 = texture(texGravel, tc*107);
-        vec4 cG3 = texture(texGravel, tc*17);
-        vec4 cG4 = texture(texGravel, tc);
-        vec4 cG = mix(cG0,mix(cG1,mix(cG2,mix(cG3,cG4,0.5),0.5),0.5),0.5);
-        if (height < waterLevel) color = vec4(0.2,0.4,1,1);
-        else color = mix(cG, cW, min(cW3.r*0.1*max(height,0),1));
+            vec4 cG0 = texture(texGravel, tc*10777);
+            vec4 cG1 = texture(texGravel, tc*1077);
+            vec4 cG2 = texture(texGravel, tc*107);
+            vec4 cG3 = texture(texGravel, tc*17);
+            vec4 cG4 = texture(texGravel, tc);
+            vec4 cG = mix(cG0,mix(cG1,mix(cG2,mix(cG3,cG4,0.5),0.5),0.5),0.5);
+            if (height < waterLevel) color = vec4(0.2,0.4,1,1);
+            else color = mix(cG, cW, min(cW3.r*0.1*max(height,0),1));
+        } else {
+            color = texture(texPic, tc);
+        }
 	}
 
 	applyBlinnPhong();
@@ -791,6 +814,7 @@ GLSL(
 uniform sampler2D tex;
 uniform sampler2D texWoods;
 uniform sampler2D texGravel;
+uniform sampler2D texPic;
 const ivec3 off = ivec3(-1,0,1);
 const vec3 light = vec3(-1,-1,-0.5);
 uniform vec2 texelSize;
@@ -852,23 +876,26 @@ void main( void ) {
 
 	if (doHeightTextures == 0) color = vec4(getColor(),1.0);
 	else {
-        vec4 cW1 = texture(texWoods, tc*1077);
-        vec4 cW2 = texture(texWoods, tc*107);
-        vec4 cW3 = texture(texWoods, tc*17);
-        vec4 cW4 = texture(texWoods, tc);
-        vec4 cW = mix(cW1,mix(cW2,mix(cW3,cW4,0.5),0.5),0.5);
-        //applyBumpMap(cW3);
+        if ( doHeightTextures == 1 ) {
+            vec4 cW1 = texture(texWoods, tc*1077);
+            vec4 cW2 = texture(texWoods, tc*107);
+            vec4 cW3 = texture(texWoods, tc*17);
+            vec4 cW4 = texture(texWoods, tc);
+            vec4 cW = mix(cW1,mix(cW2,mix(cW3,cW4,0.5),0.5),0.5);
+            //applyBumpMap(cW3);
 
-        vec4 cG0 = texture(texGravel, tc*10777);
-        vec4 cG1 = texture(texGravel, tc*1077);
-        vec4 cG2 = texture(texGravel, tc*107);
-        vec4 cG3 = texture(texGravel, tc*17);
-        vec4 cG4 = texture(texGravel, tc);
-        vec4 cG = mix(cG0,mix(cG1,mix(cG2,mix(cG3,cG4,0.5),0.5),0.5),0.5);
-
-        if (height < waterLevel) color = vec4(0.2,0.4,1,1);
-        else color = mix(cG, cW, min(cW3.r*0.1*max(height,0),1));
-        color = mix(color, vec4(atmoColor,1), clamp(atmoThickness*length(pos.xyz), 0.0, 0.9)); // atmospheric effects
+            vec4 cG0 = texture(texGravel, tc*10777);
+            vec4 cG1 = texture(texGravel, tc*1077);
+            vec4 cG2 = texture(texGravel, tc*107);
+            vec4 cG3 = texture(texGravel, tc*17);
+            vec4 cG4 = texture(texGravel, tc);
+            vec4 cG = mix(cG0,mix(cG1,mix(cG2,mix(cG3,cG4,0.5),0.5),0.5),0.5);
+            if (height < waterLevel) color = vec4(0.2,0.4,1,1);
+            else color = mix(cG, cW, min(cW3.r*0.1*max(height,0),1));
+            color = mix(color, vec4(atmoColor,1), clamp(atmoThickness*length(pos.xyz), 0.0, 0.9)); // atmospheric effects
+        } else {
+            color = texture(texPic, tc);
+        }
 	}
 
 	//norm = normalize( gl_NormalMatrix * norm );

@@ -48,8 +48,8 @@ class VRMouse : public VRDevice {
 
         void setCursor(string c);
 
-        void save(xmlpp::Element* e);
-        void load(xmlpp::Element* e);
+        void save(XMLElementPtr e);
+        void load(XMLElementPtr e);
 };
 
 OSG_END_NAMESPACE;

@@ -262,6 +262,10 @@ Color4f VRTexture::getPixel(int i) {
     int pbN = getPixelByteN();
     auto f = img->getDataType();
     auto data = img->getData();
+    auto s = getSize();
+    size_t S = s[0]*s[1]*s[2];
+    bool valid = bool(i >= 0 && i < S);
+    if (!valid) return Color4f();
 
     if (N == 1) {
         float* f = (float*)data;
@@ -309,5 +313,74 @@ float VRTexture::getAspectRatio() {
     return float(img->getWidth()) / img->getHeight();
 }
 
+void VRTexture::downsize() {
+    //auto des = VRTexture::create(img);
+
+    ImageMTRecPtr nimg = Image::create();
+    if (!img) return;
+    int N = getChannels();
+    Vec3i s = getSize();
+    s[0] = int(0.5*s[0]);
+    s[1] = int(0.5*s[1]);
+    s[2] = int(0.5*s[2]);
+    if (s[0] == 0) s[0] = 1;
+    if (s[1] == 0) s[1] = 1;
+    if (s[2] == 0) s[2] = 1;
+        //cout << " tex size " << s << endl;
+    nimg->set(img->getPixelFormat(), s[0], s[1], s[2],
+              img->getMipMapCount(), img->getFrameCount(), img->getFrameDelay(),
+              0, img->getDataType(), true, img->getSideCount());
+
+    if ( N == 1 || N == 3 ) {
+        auto f = img->getDataType();
+        auto data = nimg->editData();
+        int N = getChannels();
+        int w = s[0];
+        int h = s[1];
+        for (int z = 0; z < s[2]; z++) {
+            for (int y = 0; y < s[1]; y++) {
+                for (int x = 0; x < s[0]; x++) {
+                    Color4f p1 = getPixel(Vec3i(2*x,2*y,2*z));
+                    Color4f p2 = getPixel(Vec3i(2*x+1,2*y,2*z));
+                    Color4f p3 = getPixel(Vec3i(2*x,2*y+1,2*z));
+                    Color4f p4 = getPixel(Vec3i(2*x+1,2*y+1,2*z));
+                    Color4f p5 = getPixel(Vec3i(2*x,2*y,2*z+1));
+                    Color4f p6 = getPixel(Vec3i(2*x+1,2*y,2*z+1));
+                    Color4f p7 = getPixel(Vec3i(2*x,2*y+1,2*z+1));
+                    Color4f p8 = getPixel(Vec3i(2*x+1,2*y+1,2*z+1));
+                    Color4f newC = Color4f((p1+p2+p3+p4+p5+p6+p7+p8)*0.125);
+                    int i = N*(x + y*w + z*w*h);
+
+                    if ( N == 1 ) {
+                        if (f == Image::OSG_FLOAT32_IMAGEDATA) {
+                            if (i >= s[0]*s[1]*s[2]) cout << "AAAAAAAAAA " << i << "/" << s[0]*s[1]*s[2] << "   s: " << s << endl;
+                            else {
+                                float* f = (float*)data;
+                                f[i] = newC[0];
+                            }
+                        }
+                    }
+
+                    if ( N == 3 ) {
+                        if (f == Image::OSG_UINT8_IMAGEDATA) {
+                            if ( i >= N*(s[0]*s[1]*s[2]) ) cout << "AAAAAAAAAA " << i << "/" << N*(s[0]*s[1]*s[2]) << "   s: " << s << endl;
+                            else {
+                                newC *= 256.0;
+                                //if (x == 0) cout << newC << endl;
+                                char* f = (char*)data;
+                                f[i] = newC[0];
+                                f[i+1] = newC[1];
+                                f[i+2] = newC[2];
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        img = nimg;
+    }
+    if ( N == 2 ) { }
+    if ( N == 4 ) { }
+}
 
 

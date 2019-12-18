@@ -37,7 +37,6 @@
 			<Add option="-fPIC" />
 			<Add option="`pkg-config gtk+-2.0 --cflags`" />
 			<Add option="`pkg-config gmodule-2.0 --cflags`" />
-			<Add option="`pkg-config --cflags libxml++-2.6`" />
 			<Add option="`pkg-config gtkmm-2.4 --cflags`" />
 			<Add option="`pkg-config gtkglext-1.0 --cflags`" />
 			<Add option="`pkg-config python --cflags`" />
@@ -148,7 +147,6 @@
 			<Add option="`pkg-config icu-i18n --libs`" />
 			<Add option="-lcef" />
 			<Add option="-lcef_dll_wrapper" />
-			<Add option="`pkg-config --libs libxml++-2.6`" />
 			<Add option="`pkg-config gtk+-2.0 --libs`" />
 			<Add option="`pkg-config gmodule-2.0 --libs`" />
 			<Add option="`pkg-config bullet --libs`" />
@@ -273,6 +271,7 @@
 			<Add option="-lcrypto++" />
 			<Add option="-lssl" />
 			<Add option="-lcrypto" />
+			<Add option="-lxml2" />
 			<Add option="-Wl,-rpath=/usr/lib/x86_64-linux-gnu:/usr/lib/OCE" />
 			<Add directory="/usr/lib/virtuose" />
 			<Add directory="/usr/lib/opensg" />
@@ -745,6 +744,8 @@
 		<Unit filename="src/core/objects/VRLodTree.cpp" />
 		<Unit filename="src/core/objects/VRLodTree.h" />
 		<Unit filename="src/core/objects/VRObjectFwd.h" />
+		<Unit filename="src/core/objects/VRPointCloud.cpp" />
+		<Unit filename="src/core/objects/VRPointCloud.h" />
 		<Unit filename="src/core/objects/VRShadowEngine.cpp" />
 		<Unit filename="src/core/objects/VRShadowEngine.h" />
 		<Unit filename="src/core/objects/VRShadowEngineBase.cpp" />
@@ -1004,6 +1005,8 @@
 		<Unit filename="src/core/scripting/VRPyPath.h" />
 		<Unit filename="src/core/scripting/VRPyPathtool.cpp" />
 		<Unit filename="src/core/scripting/VRPyPathtool.h" />
+		<Unit filename="src/core/scripting/VRPyPointCloud.cpp" />
+		<Unit filename="src/core/scripting/VRPyPointCloud.h" />
 		<Unit filename="src/core/scripting/VRPyPolygon.cpp" />
 		<Unit filename="src/core/scripting/VRPyPolygon.h" />
 		<Unit filename="src/core/scripting/VRPyPolygonSelection.cpp" />
@@ -1228,6 +1231,8 @@
 		<Unit filename="src/core/utils/toString.cpp" />
 		<Unit filename="src/core/utils/toString.h" />
 		<Unit filename="src/core/utils/toStringBis.h" />
+		<Unit filename="src/core/utils/xml.cpp" />
+		<Unit filename="src/core/utils/xml.h" />
 		<Unit filename="src/core/utils/zipper/defs.h" />
 		<Unit filename="src/core/utils/zipper/filesystem.cpp" />
 		<Unit filename="src/core/utils/zipper/filesystem.h" />

@@ -58,7 +58,7 @@ PyMethodDef VRPyWorldGenerator::methods[] = {
     {"getMaterial", PyWrap( WorldGenerator, getMaterial, "Get a material by name", VRMaterialPtr, string ) },
     {"getMiscArea", PyWrap( WorldGenerator, getMiscArea, "Get the Geometry of a misc area by Entity", VRGeometryPtr, VREntityPtr ) },
     {"addOSMMap", PyWrapOpt( WorldGenerator, addOSMMap, "Add an OpenStreetMap map: path to OSM map, opt: double subN, double subE, double subSize, -1|-1|-1", "-1|-1|-1", void, string, double, double, double ) },
-    {"setupLODTerrain", PyWrapOpt( WorldGenerator, setupLODTerrain, "Sets up LOD for terrain: path to heightmap, path to texture (opt, default = ""), scale (opt, default = 1.0)", "|1.0", void, string, string, float ) },
+    {"setupLODTerrain", PyWrapOpt( WorldGenerator, setupLODTerrain, "Sets up LOD for terrain: path to heightmap, path to texture (opt, default = ""), scale (opt, default = 1.0), cache (opt, default = True)", "|1.0|1", void, string, string, float, bool ) },
     {"readOSMMap", PyWrap( WorldGenerator, readOSMMap, "Read OpenStreetMap map without adding", void, string ) },
     {"getOSMMap", PyWrap( WorldGenerator, getOSMMap, "Access OSM map", OSMMapPtr ) },
     {"reloadOSMMap", PyWrapOpt( WorldGenerator, reloadOSMMap, "Reload OSM data", "-1|-1|-1", void, double, double, double ) },
@@ -78,6 +78,7 @@ typedef map<string, string> osmTagMap;
 
 PyMethodDef VRPyOSMMap::methods[] = {
     {"readFile", PyWrap2( OSMMap, readFile, "readFile ", void, string ) },
+    {"writeFile", PyWrap2( OSMMap, writeFile, "writeFile ", void, string ) },
     {"filterFileStreaming", PyWrap2( OSMMap, filterFileStreaming, "filter OSM file with whitelist via stream - input path, output path, save temp file", void, string, vector<vector<string>> ) },
     {"readFileStreaming", PyWrap2( OSMMap, readFileStreaming, "reads OSM file via stream, builds map ", int, string ) },
     {"getRelations", PyWrap2( OSMMap, getRelations, "Access OSM relations", osmRelationMap ) },
@@ -85,6 +86,7 @@ PyMethodDef VRPyOSMMap::methods[] = {
     {"getNodes", PyWrap2( OSMMap, getNodes, "Access OSM nodes", osmNodeMap ) },
     {"getWay", PyWrap2( OSMMap, getWay, "Access OSM way", OSMWayPtr, string ) },
     {"getNode", PyWrap2( OSMMap, getNode, "Access OSM node", OSMNodePtr, string ) },
+    {"subArea", PyWrap2( OSMMap, subArea, "Return map of subarea (latMin, latMax, lonMin, lonMax)", OSMMapPtr, double, double, double, double ) },
     {NULL}  /* Sentinel */
 };
 
@@ -109,6 +111,7 @@ PyMethodDef VRPyOSMNode::methods[] = {
 };
 
 PyMethodDef VRPyOSMBase::methods[] = {
+    {"getID", PyWrap2( OSMBase, getID, "Access ID", string ) },
     {"getTags", PyWrap2( OSMBase, getTags, "Access tags", osmTagMap ) },
     {"toString", PyWrap2( OSMBase, toString, "As string", string ) },
     {NULL}  /* Sentinel */

@@ -1,7 +1,7 @@
 #ifndef VRLOGGER_H_INCLUDED
 #define VRLOGGER_H_INCLUDED
 
-#include <string.h>
+#include <string>
 #include <map>
 
 using namespace std;

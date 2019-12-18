@@ -99,7 +99,8 @@ class VRTerrain : public VRGeometry, public VRWorldModule {
 
         void projectOSM();
 
-        double getHeight( const Vec2d& p, bool useEmbankments = true );
+        double getHeight( Vec2d p, bool useEmbankments = true );
+        Vec3d getNormal( Vec3d p );
         Vec3d elevatePoint( Vec3d p, float offset = 0, bool useEmbankments = true );
         void elevatePose( PosePtr p, float offset = 0 );
         void elevatePolygon( VRPolygonPtr p, float offset = 0, bool useEmbankments = true );
@@ -109,6 +110,7 @@ class VRTerrain : public VRGeometry, public VRWorldModule {
 
         void flatten(vector<Vec2d> perimeter, float h);
         void paintHeights(string woods, string gravel);
+        void paintHeights( string path );
         void addEmbankment(string ID, PathPtr p1, PathPtr p2, PathPtr p3, PathPtr p4);
 
         vector<Vec3d> probeHeight( Vec2d p);

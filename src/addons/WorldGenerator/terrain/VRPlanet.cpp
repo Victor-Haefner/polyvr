@@ -7,6 +7,7 @@
 #include "core/tools/VRAnalyticGeometry.h"
 #include "core/math/pose.h"
 #include "core/utils/toString.h"
+#include "core/scene/import/GIS/VRGDAL.h"
 
 #define GLSL(shader) #shader
 
@@ -114,6 +115,11 @@ void VRPlanet::localize(double north, double east) {
         s->setIdentity();
         addChild(s);
     } else cout << "Warning: VRPlanet::localize, no sector found at location " << Vec2d(north, east) << " !\n";*/
+}
+
+void VRPlanet::divideTIFF(string pathIn, string pathOut, double minLat, double maxLat, double minLon, double maxLon, double res) {
+    //cout << "hello " << pathIn << " - " << pathOut << endl;
+    divideTiffIntoChunks(pathIn, pathOut, minLat, maxLat, minLon, maxLon, res);
 }
 
 Vec2i VRPlanet::toSID(double north, double east) {

@@ -1,4 +1,4 @@
-#ifndef VRENCRYPTION_H_INCLUDED
+#if !defined(VRENCRYPTION_H_INCLUDED) && !defined(WITHOUT_CRYPTOPP)
 #define VRENCRYPTION_H_INCLUDED
 
 #include <iostream>

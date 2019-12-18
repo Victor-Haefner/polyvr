@@ -2,12 +2,15 @@
 #include <stdlib.h>
 #include <iostream>
 #include <boost/filesystem.hpp>
+#ifndef WITHOUT_EXECINFO
 #include <execinfo.h>
+#endif
 #include <stdio.h>
 #include <unistd.h>
 #include <chrono>
 
 void printBacktrace() {
+#ifndef WITHOUT_EXECINFO
     void *buffer[100];
     char **strings;
 
@@ -19,6 +22,7 @@ void printBacktrace() {
         for (int j = 0; j < nptrs; j++) printf("%s\n", strings[j]);
         free(strings);
     }
+#endif
 }
 
 bool exists(string path) { return boost::filesystem::exists(path); }
@@ -80,11 +84,12 @@ bool compileCodeblocksProject(string path) {
     return systemCall(cmd) == 0;
 }
 
-
-chrono::time_point<chrono::system_clock, chrono::nanoseconds> globalStartTime;
+typedef chrono::time_point<chrono::high_resolution_clock, chrono::nanoseconds> timePoint;
+timePoint globalStartTime;
 
 void initTime() {
-    globalStartTime = chrono::high_resolution_clock::now();
+    timePoint tp = chrono::high_resolution_clock::now();
+    globalStartTime = tp;
 }
 
 long long getTime() {

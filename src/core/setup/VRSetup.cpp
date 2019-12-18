@@ -10,6 +10,7 @@
 #include "core/utils/VROptions.h"
 #include "core/utils/VRVisualLayer.h"
 #include "core/utils/VRProgress.h"
+#include "core/utils/xml.h"
 #include "core/networking/VRPing.h"
 #include "core/setup/tracking/Vive.h"
 #include "core/objects/VRTransform.h"
@@ -17,8 +18,6 @@
 #include "core/objects/object/VRObjectT.h"
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/scripting/VRScript.h"
-#include <libxml++/libxml++.h>
-#include <libxml++/nodes/element.h>
 
 #include <OpenSG/OSGWindow.h>
 #include <OpenSG/OSGViewport.h>
@@ -131,16 +130,15 @@ void VRSetup::updateTracking() {
 VRNetworkPtr VRSetup::getNetwork() { return network; }
 
 //parser callback for the xml scene import
-void VRSetup::parseSetup(xmlpp::Element* setup) {
+void VRSetup::parseSetup(XMLElementPtr setup) {
     ;
 }
 
 void VRSetup::processOptions() {
     cfgfile = VROptions::get()->getOption<string>("setupCfg");
-
-    static xmlpp::DomParser parser;
-    parser.parse_file(cfgfile);
-    parseSetup(parser.get_document()->get_root_node());
+    static XML xml;
+    xml.read(cfgfile);
+    parseSetup(xml.getRoot());
 }
 
 void VRSetup::setScene(VRScenePtr scene) {
@@ -181,15 +179,6 @@ VRTransformPtr VRSetup::getTracker(string t) {
     return 0;
 }
 
-xmlpp::Element* VRSetup::getElementChild(xmlpp::Element* e, string name) {
-    for (auto n : e->get_children()) {
-        xmlpp::Element* el = dynamic_cast<xmlpp::Element*>(n);
-        if (!el) continue;
-        if (el->get_name() == name) return el;
-    }
-    return 0;
-}
-
 void VRSetup::printOSG() {
     std::function<void(Node*, string)> printOSGNode = [&](Node* node, string indent) {
         string name = OSG::getName(node) ? OSG::getName(node) : "Unnamed";
@@ -226,59 +215,57 @@ void VRSetup::setDisplaysOffset(Vec3d o) {
 }
 
 void VRSetup::save(string file) {
-    xmlpp::Document doc;
-    xmlpp::Element* setupN = doc.create_root_node("Setup", "", "VRF"); //name, ns_uri, ns_prefix
-    xmlpp::Element* displayN = setupN->add_child("Displays");
-    xmlpp::Element* deviceN = setupN->add_child("Devices");
-    xmlpp::Element* trackingARTN = setupN->add_child("TrackingART");
-    xmlpp::Element* trackingVRPNN = setupN->add_child("TrackingVRPN");
-    xmlpp::Element* networkN = setupN->add_child("Network");
-    xmlpp::Element* scriptN = setupN->add_child("Scripts");
+    XML xml;
+    XMLElementPtr setupN = xml.newRoot("Setup", "", "VRF"); //name, ns_uri, ns_prefix
+    XMLElementPtr displayN = setupN->addChild("Displays");
+    XMLElementPtr deviceN = setupN->addChild("Devices");
+    XMLElementPtr trackingARTN = setupN->addChild("TrackingART");
+    XMLElementPtr trackingVRPNN = setupN->addChild("TrackingVRPN");
+    XMLElementPtr networkN = setupN->addChild("Network");
+    XMLElementPtr scriptN = setupN->addChild("Scripts");
 
     VRWindowManager::save(displayN);
     VRDeviceManager::save(deviceN);
     ART::save(trackingARTN);
     VRPN::save(trackingVRPNN);
     network->save(networkN);
-    displayN->set_attribute("globalOffset", toString(globalOffset).c_str());
+    displayN->setAttribute("globalOffset", toString(globalOffset).c_str());
     for (auto s : scripts) {
         auto e = s.second->saveUnder(scriptN);
         s.second->save(e);
     }
 
     if (file == "") file = path;
-    if (file != "") doc.write_to_file_formatted(file);
+    if (file != "") xml.write(file);
 }
 
 void VRSetup::load(string file) {
     cout << " load setup " << file << endl;
     path = file;
-    xmlpp::DomParser parser;
-    parser.set_validate(false);
-    parser.parse_file(file.c_str());
+    XML xml;
+    xml.read(file, false);
 
-    xmlpp::Node* n = parser.get_document()->get_root_node();
-    xmlpp::Element* setupN = dynamic_cast<xmlpp::Element*>(n);
-    xmlpp::Element* displayN = getElementChild(setupN, "Displays");
-    xmlpp::Element* deviceN = getElementChild(setupN, "Devices");
-    xmlpp::Element* trackingARTN = getElementChild(setupN, "TrackingART");
-    xmlpp::Element* trackingVRPNN = getElementChild(setupN, "TrackingVRPN");
-    xmlpp::Element* networkN = getElementChild(setupN, "Network");
-    xmlpp::Element* scriptN = getElementChild(setupN, "Scripts");
+    XMLElementPtr setupN = xml.getRoot();
+    XMLElementPtr displayN = setupN->getChild("Displays");
+    XMLElementPtr deviceN = setupN->getChild("Devices");
+    XMLElementPtr trackingARTN = setupN->getChild("TrackingART");
+    XMLElementPtr trackingVRPNN = setupN->getChild("TrackingVRPN");
+    XMLElementPtr networkN = setupN->getChild("Network");
+    XMLElementPtr scriptN = setupN->getChild("Scripts");
 
     if (trackingARTN) ART::load(trackingARTN);
     if (trackingVRPNN) VRPN::load(trackingVRPNN);
     if (deviceN) VRDeviceManager::load(deviceN);
     if (displayN) VRWindowManager::load(displayN);
     if (networkN) network->load(networkN);
-    for (auto el : getChildren(scriptN)) {
+    for (auto el : scriptN->getChildren()) {
         auto s = VRScript::create("tmp");
         s->load(el);
         scripts[s->getName()] = s;
     }
 
-    if (displayN && displayN->get_attribute("globalOffset")) {
-        toValue( displayN->get_attribute("globalOffset")->get_value(), globalOffset );
+    if (displayN && displayN->hasAttribute("globalOffset")) {
+        toValue( displayN->getAttribute("globalOffset"), globalOffset );
         setDisplaysOffset(globalOffset);
     }
 }

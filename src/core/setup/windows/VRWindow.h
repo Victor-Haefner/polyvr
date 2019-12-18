@@ -78,8 +78,8 @@ class VRWindow : public std::enable_shared_from_this<VRWindow>, public VRName {
         virtual void sync(bool fromThread = false);
         virtual void render(bool fromThread = false);
         virtual void clear(Color3f c);
-        virtual void save(xmlpp::Element* node);
-        virtual void load(xmlpp::Element* node);
+        virtual void save(XMLElementPtr node);
+        virtual void load(XMLElementPtr node);
 };
 
 OSG_END_NAMESPACE;

@@ -83,8 +83,8 @@ struct VREntity : public VROntoID, public VRName {
 
     bool is_a(const string& concept);
     string toString();
-    void save(xmlpp::Element* e, int p);
-    void load(xmlpp::Element* e);
+    void save(XMLElementPtr e, int p);
+    void load(XMLElementPtr e);
 };
 
 OSG_END_NAMESPACE;

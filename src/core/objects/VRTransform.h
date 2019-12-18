@@ -180,7 +180,7 @@ class VRTransform : public VRObject {
         map<string, VRAnimationPtr> animations;
         void addAnimation(VRAnimationPtr animation);
         vector<VRAnimationPtr> getAnimations();
-        VRAnimationPtr animate(PathPtr p, float time, float offset, bool redirect = true, bool loop = false);
+        VRAnimationPtr animate(PathPtr p, float time, float offset, bool redirect = true, bool loop = false, PathPtr po = 0);
         void stopAnimation();
 
         void printPos(); // Print the position of the object in local && world coords

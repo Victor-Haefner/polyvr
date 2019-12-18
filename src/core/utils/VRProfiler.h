@@ -32,7 +32,7 @@ class VRProfiler {
         int ID = 0;
         int history = 100;
         bool active = true;
-        map<ulong, int> threadIDs;
+        map<unsigned long, int> threadIDs;
 
         boost::mutex mutex;
 

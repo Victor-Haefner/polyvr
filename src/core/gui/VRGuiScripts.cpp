@@ -9,6 +9,7 @@
 #include "core/scripting/VRScript.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRTimer.h"
+#include "core/utils/xml.h"
 #include <gtkmm/liststore.h>
 #include <gtkmm/treeview.h>
 #include <gtkmm/textbuffer.h>
@@ -24,8 +25,6 @@
 #include <gtkmm/builder.h>
 #include <gtkmm/filechooser.h>
 #include <gtk/gtktextview.h>
-#include <libxml++/nodes/element.h>
-#include <libxml++/libxml++.h>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -113,10 +112,14 @@ void VRGuiScripts::setGroupListRow(Gtk::TreeIter itr, group& g) {
 
 void VRGuiScripts::setScriptListRow(Gtk::TreeIter itr, VRScriptPtr script, bool onlyTime) {
     if (script == 0) return;
-    string fg = "#000000";
-    string bg = "#FFFFFF";
+    string color = "#000000";
+    string background = "#FFFFFF";
     string tfg = "#000000";
     string tbg = "#FFFFFF";
+
+    if (script->getPersistency() == 0) { // imported script
+        color = "#0000FF";
+    }
 
     int trig_lvl = 0;
     for (auto trig : script->getTriggers()) {
@@ -174,8 +177,8 @@ void VRGuiScripts::setScriptListRow(Gtk::TreeIter itr, VRScriptPtr script, bool 
                         -1);
     else gtk_tree_store_set (store->gobj(), row.gobj(),
                         0, script->getName().c_str(),
-                        1, fg.c_str(),
-                        2, bg.c_str(),
+                        1, color.c_str(),
+                        2, background.c_str(),
                         3, time.c_str(),
                         4, tfg.c_str(),
                         5, tbg.c_str(),
@@ -234,46 +237,25 @@ void VRGuiScripts::on_import_clicked() {
     VRGuiFile::open("Import", Gtk::FILE_CHOOSER_ACTION_OPEN, "Import script");
 }
 
-xmlpp::Element* getXMLChild(xmlpp::Element* e, string name) {
-    for (auto n : e->get_children()) {
-        xmlpp::Element* el = dynamic_cast<xmlpp::Element*>(n);
-        if (!el) continue;
-        if (el->get_name() == name) return el;
-    } return 0;
-}
-
-vector<xmlpp::Element*> getXMLChildren(xmlpp::Element* e) {
-    vector<xmlpp::Element*> res;
-    for (auto n : e->get_children()) {
-        xmlpp::Element* el = dynamic_cast<xmlpp::Element*>(n);
-        if (!el) continue;
-        res.push_back(el);
-    }
-    return res;
-}
-
 void VRGuiScripts::on_diag_import_select() {
     import_liststore1->clear();
     import_scripts.clear();
     string path = VRGuiFile::getPath();
     if (path == "") return;
 
-    xmlpp::DomParser parser;
-    parser.set_validate(false);
-    try { parser.parse_file(path.c_str()); }
-    catch(exception& e) { return; }
+    XML xml;
+    xml.read(path, false);
 
-    xmlpp::Node* n = parser.get_document()->get_root_node();
-    xmlpp::Element* scene = dynamic_cast<xmlpp::Element*>(n);
-    vector<xmlpp::Element*> scripts = getXMLChildren( getXMLChild(scene, "Scripts") );
+    XMLElementPtr scene = xml.getRoot();
+    vector<XMLElementPtr> scripts = scene->getChild("Scripts")->getChildren();
 
     ListStore::Row row;
     for (auto script : scripts) {
-        string name = script->get_name();
-        if (script->get_attribute("base_name")) {
-            string suffix = script->get_attribute("name_suffix")->get_value();
+        string name = script->getName();
+        if (script->hasAttribute("base_name")) {
+            string suffix = script->getAttribute("name_suffix");
             if (suffix == "0") suffix = "";
-            name = script->get_attribute("base_name")->get_value() + suffix;
+            name = script->getAttribute("base_name") + suffix;
         }
 
         VRScriptPtr s = VRScript::create(name);
@@ -382,8 +364,8 @@ void VRGuiScripts::on_select_script() { // selected a script
     setCombobox("combobox24", getListStorePos("liststore7", script->getServer()));
     setCombobox("combobox10", getListStorePos("liststore10", script->getGroup()));
 
-    // update editor content && script head
-    editor->setCore(script->getHead() + script->getCore());
+    // update editor content
+    editor->setCore(script->getScript());
     //adjustment->set_value(pages[script.get()].line);
 
     // update arguments liststore

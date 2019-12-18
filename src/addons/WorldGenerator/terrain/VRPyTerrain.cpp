@@ -16,7 +16,8 @@ PyMethodDef VRPyTerrain::methods[] = {
     {"physicalize", PyWrap(Terrain, physicalize, "Physicalize terrain", void, bool ) },
     {"projectOSM", PyWrap(Terrain, projectOSM, "Load an OSM file and project surface types onto terrain, OSM path, N, E", void ) },
     {"paintHeights", PyWrap(Terrain, paintHeights, "Simple function to paint by heights using a texture", void, string, string ) },
-    {"getHeight", PyCastWrap(Terrain, getHeight, "Get height at point", float, Vec2d ) },
+    {"getHeight", PyWrapOpt(Terrain, getHeight, "Get height at point (local space)", "1", double, Vec2d, bool ) },
+    {"getNormal", PyWrap(Terrain, getNormal, "Get normal at point (local space)", Vec3d, Vec3d ) },
     {"probeHeight", PyWrap(Terrain, probeHeight, "Probe height at point, for debugging", vector<Vec3d>, Vec2d ) },
     {"elevatePoint", PyCastWrap(Terrain, elevatePoint, "Elevate a point", Vec3d, Vec3d, float ) },
     {"elevatePose", PyWrapOpt(Terrain, elevatePose, "Elevate a pose", "0", void, PosePtr, float ) },
@@ -39,5 +40,6 @@ PyMethodDef VRPyPlanet::methods[] = {
     {"fromLatLongPosition", PyWrapOpt(Planet, fromLatLongPosition, "Get Position on planet based on lat and long", "0", Vec3d, double, double, bool) },
     {"fromPosLatLong", PyWrapOpt(Planet, fromPosLatLong, "Convert space position to lat and long", "0", Vec2d, Pnt3d, bool) },
     {"localize", PyWrap(Planet, localize, "Center the planet origin on a sector", void, double, double) },
+    {"divideTIFF", PyWrap(Planet, divideTIFF, "loads sat images as .tif, dividing into .png chunks - string pathIn, string pathOut, double minLat, double maxLat, double minLon, double maxLon, double res \n        pathOut only placeholder right now, new files are saved in project directory", void, string, string, double, double, double, double, double) },
     {NULL}  /* Sentinel */
 };

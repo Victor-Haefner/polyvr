@@ -52,8 +52,8 @@ class VRProtocol : public VRName {
         void changeCallback(string name, string callback) ;
         void changeSignal(string name, string signal);
 
-        void save(xmlpp::Element* e);
-        void load(xmlpp::Element* e);
+        void save(XMLElementPtr e);
+        void load(XMLElementPtr e);
 };
 
 OSG_END_NAMESPACE;

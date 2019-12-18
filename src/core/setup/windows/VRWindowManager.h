@@ -4,6 +4,7 @@
 #include <OpenSG/OSGRenderAction.h>
 #include "core/setup/VRSetupFwd.h"
 #include "core/utils/VRChangeList.h"
+#include "core/utils/VRUtilsFwd.h"
 
 namespace xmlpp{ class Element; }
 namespace Gtk{ class Window; }
@@ -51,8 +52,8 @@ class VRWindowManager {
 
         VRGtkWindowPtr getEditorWindow();
 
-        void save(xmlpp::Element* node);
-        void load(xmlpp::Element* node);
+        void save(XMLElementPtr node);
+        void load(XMLElementPtr node);
 
         static bool doRenderSync;
 };

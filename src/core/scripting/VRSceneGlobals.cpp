@@ -34,11 +34,22 @@
 
 OSG_BEGIN_NAMESPACE;
 
+string loadGeometryDoc =
+"Loads a file and returns an object"
+"\n\n\tobj loadGeometry(path, cached = True, preset = 'OSG', threaded = 0, parent = None, options = None, useBinaryCache = False)"
+"\n\n\tpreset can be: 'OSG', 'PVR', 'COLLADA', 'SOLIDWORKS-VRML2'"
+"\n\n\toptions example for pointclouds (.e57, .xyz):"
+"\n\t\topts = {}"
+"\n\t\topts['lit'] = 0"
+"\n\t\topts['downsampling'] = 0.1"
+"\n\t\topts['pointSize'] = 5"
+"\n\t\topts['lod1'] = [5, 20]"
+"\n\t\topts['lod2'] = [10, 200]"
+;
+
 PyMethodDef VRSceneGlobals::methods[] = {
 	{"exit", (PyCFunction)VRSceneGlobals::exit, METH_NOARGS, "Terminate application" },
-	{"loadGeometry", (PyCFunction)VRSceneGlobals::loadGeometry, METH_VARARGS|METH_KEYWORDS, "Loads a file and returns an object - obj loadGeometry(str path, bool cached = True, str preset = 'OSG', bool threaded = 0, str parent = None, str options = None, bool useBinaryCache = False)"
-                                                                                             "\n\tpreset can be: 'OSG', 'COLLADA', 'SOLIDWORKS-VRML2' or 'PVR'"
-                                                                                             "\n\toptions can be: 'explorer' (currently only for STEP files)" },
+	{"loadGeometry", (PyCFunction)VRSceneGlobals::loadGeometry, METH_VARARGS|METH_KEYWORDS, loadGeometryDoc.c_str() },
 	{"exportGeometry", (PyCFunction)VRSceneGlobals::exportGeometry, METH_VARARGS, "Export a part of the scene - exportGeometry( object, path )" },
 	{"getLoadGeometryProgress", (PyCFunction)VRSceneGlobals::getLoadGeometryProgress, METH_VARARGS, "Return the progress object for geometry loading - getLoadGeometryProgress()" },
 	{"stackCall", (PyCFunction)VRSceneGlobals::stackCall, METH_VARARGS, "Schedules a call to a python function - stackCall( function, delay, [args] )" },
@@ -64,7 +75,6 @@ PyMethodDef VRSceneGlobals::methods[] = {
 	{"getSoundManager", (PyCFunction)VRSceneGlobals::getSoundManager, METH_NOARGS, "Get sound manager module" },
 	{"getFrame", (PyCFunction)VRSceneGlobals::getFrame, METH_NOARGS, "Get current frame number" },
 	{"getScript", (PyCFunction)VRSceneGlobals::getScript, METH_VARARGS, "Get python script by name" },
-	{"fancyE57import", (PyCFunction)VRSceneGlobals::fancyE57import, METH_VARARGS, "Test import for huge e57 pointclouds" },
 	{"importScene", (PyCFunction)VRSceneGlobals::importScene, METH_VARARGS, "Import scene" },
     {NULL}  /* Sentinel */
 };
@@ -172,56 +182,32 @@ PyObject* VRSceneGlobals::importScene(VRSceneGlobals* self, PyObject *args) {
     const char* key = "";
     int offLights = 0;
     if (! PyArg_ParseTuple(args, "s|si", &path, &key, &offLights)) return NULL;
-    auto res = VRSceneLoader::get()->importScene( path?path:"", key?key:"", offLights );
+    string Path = path?path:"";
+    auto res = VRSceneLoader::get()->importScene( Path, key?key:"", offLights );
     if (res) return VRPyTypeCaster::cast(res);
-    else Py_RETURN_NONE;
+    else { VRPyBase::setErr("Import scene, path '"+Path+"' not found!"); return NULL; }
+    //else Py_RETURN_NONE;
 }
 
 PyObject* VRSceneGlobals::loadGeometry(VRSceneGlobals* self, PyObject *args, PyObject *kwargs) {
     const char* path = "";
-    int ignoreCache = 0;
+    int cached = 0;
     int threaded = 0;
     int useBinaryCache = 0;
     const char* preset = "OSG";
     const char* parent = "";
-    const char* options = "";
+    PyObject* opt = 0;
 
     const char* kwlist[] = {"path", "cached", "preset", "threaded", "parent", "options", "useBinaryCache", NULL};
-    string format = "s|isissi:loadGeometry";
-    if (! PyArg_ParseTupleAndKeywords(args, kwargs, format.c_str(), (char**)kwlist, &path, &ignoreCache, &preset, &threaded, &parent, &options, &useBinaryCache)) return NULL;
+    string format = "s|isisOi:loadGeometry";
+    if (! PyArg_ParseTupleAndKeywords(args, kwargs, format.c_str(), (char**)kwlist, &path, &cached, &preset, &threaded, &parent, &opt, &useBinaryCache)) return NULL;
 
     VRObjectPtr prnt = VRScene::getCurrent()->getRoot()->find( parent );
+    map<string, string> options;
+    if (opt) toValue(opt, options);
 
-    VRTransformPtr obj = VRImport::get()->load( path, prnt, !ignoreCache, preset, threaded, options, useBinaryCache);
-    if (obj == 0) {
-        VRGuiManager::get()->getConsole("Errors")->write( "Warning: " + string(path) + " not loaded!\n");
-        Py_RETURN_NONE;
-    }
-    obj->setPersistency(0);
-    return VRPyTypeCaster::cast(obj);
-}
-
-PyObject* VRSceneGlobals::fancyE57import(VRSceneGlobals* self, PyObject *args, PyObject *kwargs) {
-    const char* path = "";
-    int ignoreCache = 0;
-    int threaded = 0;
-    int useBinaryCache = 0;
-    const char* preset = "OSG";
-    const char* parent = "";
-    const char* options = "";
-
-    const char* kwlist[] = {"path", "cached", "preset", "threaded", "parent", "options", "useBinaryCache", NULL};
-    string format = "s|isissi:fancyE57import";
-    if (! PyArg_ParseTupleAndKeywords(args, kwargs, format.c_str(), (char**)kwlist, &path, &ignoreCache, &preset, &threaded, &parent, &options, &useBinaryCache)) return NULL;
-
-    VRObjectPtr prnt = VRScene::getCurrent()->getRoot()->find( parent );
-
-    VRTransformPtr obj = OSG::fancyyE57import(path);
-
-    if (obj == 0) {
-        VRGuiManager::get()->getConsole("Errors")->write( "Warning: " + string(path) + " not loaded!\n");
-        Py_RETURN_NONE;
-    }
+    VRTransformPtr obj = VRImport::get()->load( path, prnt, cached, preset, threaded, options, useBinaryCache);
+    if (obj == 0) { VRPyBase::setErr("Error: " + string(path) + " not loaded!"); return NULL; }
     obj->setPersistency(0);
     return VRPyTypeCaster::cast(obj);
 }
