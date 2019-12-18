@@ -26,9 +26,9 @@ struct OSMBase {
     map<string, string> tags;
 
     OSMBase(string id);
-    OSMBase(xmlpp::Element* e);
+    OSMBase(XMLElementPtr e);
     virtual string toString();
-    void writeTo(xmlpp::Element* e);
+    void writeTo(XMLElementPtr e);
 
     map<string, string> getTags();
     string getID();
@@ -41,10 +41,10 @@ struct OSMNode : OSMBase {
     vector<string> ways;
 
     OSMNode(string id, double lat, double lon);
-    OSMNode(xmlpp::Element* e);
+    OSMNode(XMLElementPtr e);
     string toString();
     Vec2d getPosition();
-    void writeTo(xmlpp::Element* e);
+    void writeTo(XMLElementPtr e);
 };
 
 struct OSMWay : OSMBase {
@@ -52,11 +52,11 @@ struct OSMWay : OSMBase {
     VRPolygon polygon;
 
     OSMWay(string id);
-    OSMWay(xmlpp::Element* e, map<string, bool>& invalidIDs);
+    OSMWay(XMLElementPtr e, map<string, bool>& invalidIDs);
     string toString();
     VRPolygon getPolygon();
     vector<string> getNodes();
-    void writeTo(xmlpp::Element* e);
+    void writeTo(XMLElementPtr e);
 };
 
 struct OSMRelation : OSMBase {
@@ -64,11 +64,11 @@ struct OSMRelation : OSMBase {
     vector<string> nodes;
 
     OSMRelation(string id);
-    OSMRelation(xmlpp::Element* e, map<string, bool>& invalidIDs);
+    OSMRelation(XMLElementPtr e, map<string, bool>& invalidIDs);
     string toString();
     vector<string> getWays();
     vector<string> getNodes();
-    void writeTo(xmlpp::Element* e);
+    void writeTo(XMLElementPtr e);
 };
 
 class OSMMap {
@@ -80,13 +80,13 @@ class OSMMap {
         map<string, OSMRelationPtr> relations;
         map<string, bool> invalidElements;
 
-        bool isValid(xmlpp::Element* e);
+        bool isValid(XMLElementPtr e);
 
-        void readBounds(xmlpp::Element* element);
-        void readNode(xmlpp::Element* element);
-        void readWay(xmlpp::Element* element, map<string, bool>& invalidIDs);
-        void readRelation(xmlpp::Element* element, map<string, bool>& invalidIDs);
-        void writeBounds(xmlpp::Element* parent);
+        void readBounds(XMLElementPtr element);
+        void readNode(XMLElementPtr element);
+        void readWay(XMLElementPtr element, map<string, bool>& invalidIDs);
+        void readRelation(XMLElementPtr element, map<string, bool>& invalidIDs);
+        void writeBounds(XMLElementPtr parent);
 
         int filterFileStreaming(string path, vector<pair<string, string>> whitelist);
 

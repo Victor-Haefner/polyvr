@@ -1,6 +1,5 @@
 #include "VRGroup.h"
 #include "core/utils/toString.h"
-#include <libxml++/nodes/element.h>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;

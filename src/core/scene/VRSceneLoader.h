@@ -7,8 +7,7 @@
 #include <vector>
 
 #include "core/objects/VRObjectFwd.h"
-
-namespace xmlpp{ class Element; }
+#include "core/utils/VRUtilsFwd.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -28,19 +27,19 @@ class VRSceneLoader {
         map<string, string> attr;
         vector<string> fileFilter;
 
-        typedef map<xmlpp::Element*, map<string, string> > children_attribs;
+        typedef map<XMLElementPtr, map<string, string> > children_attribs;
 
         void optimizeGraph(VRObjectPtr obj);
         VRSceneLoader();
 
         //parser callback for the xml scene import
-        void parseScene(xmlpp::Element* node, xmlpp::Element* xmlparent, VRObjectPtr parent = 0);
+        void parseScene(XMLElementPtr node, XMLElementPtr xmlparent, VRObjectPtr parent = 0);
 
     public:
         static VRSceneLoader* get();
         ~VRSceneLoader();
 
-        void saveScene(string file, xmlpp::Element* guiN = 0, string encryption = "");
+        void saveScene(string file, XMLElementPtr guiN = 0, string encryption = "");
         void loadScene(string file, string encryptionKey = "");
         VRObjectPtr importScene(string file, string encryptionKey = "", bool offLights = false);
 };

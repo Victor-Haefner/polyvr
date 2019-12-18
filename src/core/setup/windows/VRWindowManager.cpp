@@ -2,7 +2,6 @@
 #include "core/setup/devices/VRMouse.h"
 #include "core/setup/devices/VRKeyboard.h"
 #include "core/gui/VRGuiUtils.h"
-#include <libxml++/nodes/element.h>
 #include <gtkmm/builder.h>
 #include <gtkmm/main.h>
 #include <gtkmm/window.h>
@@ -18,6 +17,7 @@
 #include "core/utils/VRFunction.h"
 #include "core/utils/VRGlobals.h"
 #include "core/utils/VRProfiler.h"
+#include "core/utils/xml.h"
 
 #include <OpenSG/OSGGLUT.h>
 #include <OpenSG/OSGGLUTWindow.h>
@@ -290,23 +290,22 @@ VRWindowPtr VRWindowManager::getWindow(string name) {
     else return windows[name];
 }
 
-void VRWindowManager::save(xmlpp::Element* node) {
-    map<string, VRWindowPtr>::iterator itr;
-    xmlpp::Element* wn;
-    for (itr = windows.begin(); itr != windows.end(); itr++) {
-        wn = node->add_child("Window");
-        itr->second->save(wn);
+void VRWindowManager::save(XMLElementPtr node) {
+    for (auto window : windows) {
+        XMLElementPtr wn = node->addChild("Window");
+        window.second->save(wn);
     }
 }
 
-void VRWindowManager::load(xmlpp::Element* node) {
+void VRWindowManager::load(XMLElementPtr node) {
     cout << "start loading windows\n";
-    for (auto n : node->get_children()) {
-        xmlpp::Element* el = dynamic_cast<xmlpp::Element*>(n);
+    for (auto el : node->getChildren()) {
         if (!el) continue;
 
-        string type = el->get_attribute("type")->get_value();
-        string name = el->get_attribute("name")->get_value();
+        string type = el->getAttribute("type");
+        string name = el->getAttribute("name");
+        cout << " VRWindowManager::load '" << type << "'  '" << name << "'" << endl;
+        el->print();
 
         if (type == "0") {
             VRWindowPtr win = addMultiWindow(name);

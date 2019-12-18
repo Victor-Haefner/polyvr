@@ -53,20 +53,20 @@ void VRNetworkManager::update() {
     ;
 }
 
-/*void VRNetworkManager::saveNetworkSockets(xmlpp::Element* e) {
+/*void VRNetworkManager::saveNetworkSockets(XMLElementPtr e) {
     map<string, VRSocket*>::iterator itr;
     for (itr = sockets.begin(); itr != sockets.end(); itr++) {
-        xmlpp::Element* ei = e->add_child(itr->second->getName());
+        XMLElementPtr ei = e->add_child(itr->second->getName());
         itr->second->save(ei);
     }
 }*/
 
-/*void VRNetworkManager::loadNetworkSockets(xmlpp::Element* e) {
+/*void VRNetworkManager::loadNetworkSockets(XMLElementPtr e) {
     xmlpp::Node::NodeList nl = e->get_children();
     xmlpp::Node::NodeList::iterator itr;
     for (itr = nl.begin(); itr != nl.end(); itr++) {
         xmlpp::Node* n = *itr;
-        xmlpp::Element* el = dynamic_cast<xmlpp::Element*>(n);
+        XMLElementPtr el = dynamic_cast<XMLElementPtr>(n);
         if (!el) continue;
 
         string name = newSocket();

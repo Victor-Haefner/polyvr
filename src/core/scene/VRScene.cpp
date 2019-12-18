@@ -21,7 +21,6 @@
 #include "core/utils/toString.h"
 #include "core/utils/VRProgress.h"
 #include "core/utils/system/VRSystem.h"
-#include <libxml++/nodes/element.h>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -253,7 +252,7 @@ void mkPath(string path) {
     }
 }
 
-void VRScene::saveScene(xmlpp::Element* e) {
+void VRScene::saveScene(XMLElementPtr e) {
     if (e == 0) return;
     VRName::save(e);
     VRCameraManager::saveUnder(e);
@@ -273,7 +272,7 @@ void VRScene::saveScene(xmlpp::Element* e) {
     stats.close();
 }
 
-void VRScene::loadScene(xmlpp::Element* e) {
+void VRScene::loadScene(XMLElementPtr e) {
     if (e == 0) return;
 
     string d = getWorkdir() + "/.local_"+getFileName()+"/stats";
@@ -324,7 +323,7 @@ TODO:
     - execute each time importScene is called!
 */
 
-void VRScene::importScene(xmlpp::Element* e, string path) {
+void VRScene::importScene(XMLElementPtr e, string path) {
     if (e == 0) return;
     auto oldScripts = getScripts();
     VRScriptManager::loadChildFrom(e);
