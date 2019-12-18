@@ -258,11 +258,11 @@ void divideTiffIntoChunks(string pathIn, string pathOut, double minLat, double m
     double latEnd = y2lat_m(yEnd);
     double lonEnd = x2lon_m(xEnd);
 
+    /*
     Vec2d upperLeft = Vec2d(xBeg,yBeg);
     Vec2d lowerLeft = Vec2d(xBeg,yEnd);
     Vec2d upperRight = Vec2d(xEnd,yBeg);
     Vec2d lowerRight = Vec2d(xEnd,yEnd);
-    /*
     cout << "upperLeft " << upperLeft << endl;
     cout << "lowerLeft " << lowerLeft << endl;
     cout << "upperRight " << upperRight << endl;
@@ -271,11 +271,6 @@ void divideTiffIntoChunks(string pathIn, string pathOut, double minLat, double m
     cout << "LatO " << latBeg << " LonO " << lonBeg << endl;
     cout << "Lat1 " << latEnd << " Lon1 " << lonEnd << endl;
     */
-
-    double xA = lon2x_m(minLon);
-    double yA = lat2y_m(maxLat);
-    double xB = lon2x_m(maxLon);
-    double yB = lat2y_m(minLat);
 
     vector<double> bordersX;
     vector<double> bordersY;
@@ -291,18 +286,6 @@ void divideTiffIntoChunks(string pathIn, string pathOut, double minLat, double m
         bordersY.push_back(currentY);
         currentY -= res;
     }
-
-    auto getBand = [&](int i) {
-        int nBlockXSize, nBlockYSize;
-        int bGotMin, bGotMax;
-        double adfMinMax[2];
-        GDALRasterBand* poBand = poDS->GetRasterBand( i );
-        poBand->GetBlockSize( &nBlockXSize, &nBlockYSize );
-        adfMinMax[0] = poBand->GetMinimum( &bGotMin );
-        adfMinMax[1] = poBand->GetMaximum( &bGotMax );
-        if( ! (bGotMin && bGotMax) ) GDALComputeRasterMinMax((GDALRasterBandH)poBand, TRUE, adfMinMax);
-        return poBand;
-    };
 
     /*
     cout << "input xA " << xA << " yA " << yA << " xB " << xB << " yB " << yB << endl;
