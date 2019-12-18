@@ -1,7 +1,6 @@
 #include "VRView.h"
 #include <OpenSG/OSGRenderAction.h>
 #include <OpenSG/OSGImageForeground.h>
-#include <libxml++/nodes/element.h>
 #include <OpenSG/OSGSimpleGeometry.h>
 #include <OpenSG/OSGMultiPassMaterial.h>
 
@@ -9,6 +8,7 @@
 #include "core/utils/VRRate.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRGlobals.h"
+#include "core/utils/xml.h"
 #include "core/tools/VRText.h"
 #include "core/setup/VRSetup.h"
 #include "core/gui/VRGuiUtils.h"
@@ -577,48 +577,48 @@ VRTexturePtr VRView::grab() {
     return img;*/
 }
 
-void VRView::save(xmlpp::Element* node) {
-    node->set_attribute("stereo", toString(stereo).c_str());
-    node->set_attribute("active_stereo", toString(active_stereo).c_str());
-    node->set_attribute("projection", toString(projection).c_str());
-    node->set_attribute("eye_inverted", toString(eyeinverted).c_str());
-    node->set_attribute("eye_separation", toString(eyeSeparation).c_str());
-    node->set_attribute("position", toString(position).c_str());
-    node->set_attribute("center", toString(proj_center).c_str());
-    node->set_attribute("normal", toString(proj_normal).c_str());
-    node->set_attribute("user_pos", toString(proj_user).c_str());
-    node->set_attribute("up", toString(proj_up).c_str());
-    node->set_attribute("size", toString(proj_size).c_str());
-    node->set_attribute("shear", toString(proj_shear).c_str());
-    node->set_attribute("warp", toString(proj_warp).c_str());
-    node->set_attribute("vsize", toString(window_size).c_str());
-    node->set_attribute("mirror", toString(mirror).c_str());
-    node->set_attribute("mirrorPos", toString(mirrorPos).c_str());
-    node->set_attribute("mirrorNorm", toString(mirrorNorm).c_str());
-    if (user) node->set_attribute("user", user->getName());
-    else node->set_attribute("user", user_name);
+void VRView::save(XMLElementPtr node) {
+    node->setAttribute("stereo", toString(stereo).c_str());
+    node->setAttribute("active_stereo", toString(active_stereo).c_str());
+    node->setAttribute("projection", toString(projection).c_str());
+    node->setAttribute("eye_inverted", toString(eyeinverted).c_str());
+    node->setAttribute("eye_separation", toString(eyeSeparation).c_str());
+    node->setAttribute("position", toString(position).c_str());
+    node->setAttribute("center", toString(proj_center).c_str());
+    node->setAttribute("normal", toString(proj_normal).c_str());
+    node->setAttribute("user_pos", toString(proj_user).c_str());
+    node->setAttribute("up", toString(proj_up).c_str());
+    node->setAttribute("size", toString(proj_size).c_str());
+    node->setAttribute("shear", toString(proj_shear).c_str());
+    node->setAttribute("warp", toString(proj_warp).c_str());
+    node->setAttribute("vsize", toString(window_size).c_str());
+    node->setAttribute("mirror", toString(mirror).c_str());
+    node->setAttribute("mirrorPos", toString(mirrorPos).c_str());
+    node->setAttribute("mirrorNorm", toString(mirrorNorm).c_str());
+    if (user) node->setAttribute("user", user->getName());
+    else node->setAttribute("user", user_name);
 }
 
-void VRView::load(xmlpp::Element* node) {
-    stereo = toValue<bool>(node->get_attribute("stereo")->get_value());
-    active_stereo = toValue<bool>(node->get_attribute("active_stereo")->get_value());
-    projection = toValue<bool>(node->get_attribute("projection")->get_value());
-    eyeinverted = toValue<bool>(node->get_attribute("eye_inverted")->get_value());
-    eyeSeparation = toFloat(node->get_attribute("eye_separation")->get_value());
-    position = toValue<Vec4d>(node->get_attribute("position")->get_value());
-    proj_center = toValue<Vec3d>(node->get_attribute("center")->get_value());
-    proj_normal = toValue<Vec3d>(node->get_attribute("normal")->get_value());
-    if (node->get_attribute("user_pos")) proj_user = toValue<Vec3d>(node->get_attribute("user_pos")->get_value());
-    proj_up = toValue<Vec3d>(node->get_attribute("up")->get_value());
-    proj_size = toValue<Vec2d>(node->get_attribute("size")->get_value());
-    if (node->get_attribute("shear")) proj_shear = toValue<Vec2d>(node->get_attribute("shear")->get_value());
-    if (node->get_attribute("warp")) proj_warp = toValue<Vec2d>(node->get_attribute("warp")->get_value());
-    if (node->get_attribute("vsize")) window_size = toValue<Vec2i>(node->get_attribute("vsize")->get_value());
-    if (node->get_attribute("mirror")) mirror = toValue<bool>(node->get_attribute("mirror")->get_value());
-    if (node->get_attribute("mirrorPos")) mirrorPos = toValue<Vec3d>(node->get_attribute("mirrorPos")->get_value());
-    if (node->get_attribute("mirrorNorm")) mirrorNorm = toValue<Vec3d>(node->get_attribute("mirrorNorm")->get_value());
-    if (node->get_attribute("user")) {
-        user_name = node->get_attribute("user")->get_value();
+void VRView::load(XMLElementPtr node) {
+    stereo = toValue<bool>(node->getAttribute("stereo"));
+    active_stereo = toValue<bool>(node->getAttribute("active_stereo"));
+    projection = toValue<bool>(node->getAttribute("projection"));
+    eyeinverted = toValue<bool>(node->getAttribute("eye_inverted"));
+    eyeSeparation = toFloat(node->getAttribute("eye_separation"));
+    position = toValue<Vec4d>(node->getAttribute("position"));
+    proj_center = toValue<Vec3d>(node->getAttribute("center"));
+    proj_normal = toValue<Vec3d>(node->getAttribute("normal"));
+    if (node->hasAttribute("user_pos")) proj_user = toValue<Vec3d>(node->getAttribute("user_pos"));
+    proj_up = toValue<Vec3d>(node->getAttribute("up"));
+    proj_size = toValue<Vec2d>(node->getAttribute("size"));
+    if (node->hasAttribute("shear")) proj_shear = toValue<Vec2d>(node->getAttribute("shear"));
+    if (node->hasAttribute("warp")) proj_warp = toValue<Vec2d>(node->getAttribute("warp"));
+    if (node->hasAttribute("vsize")) window_size = toValue<Vec2i>(node->getAttribute("vsize"));
+    if (node->hasAttribute("mirror")) mirror = toValue<bool>(node->getAttribute("mirror"));
+    if (node->hasAttribute("mirrorPos")) mirrorPos = toValue<Vec3d>(node->getAttribute("mirrorPos"));
+    if (node->hasAttribute("mirrorNorm")) mirrorNorm = toValue<Vec3d>(node->getAttribute("mirrorNorm"));
+    if (node->hasAttribute("user")) {
+        user_name = node->getAttribute("user");
         user = VRSetup::getCurrent()->getTracker(user_name);
     }
 

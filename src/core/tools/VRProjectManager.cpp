@@ -3,8 +3,6 @@
 #include "core/utils/VRStorage.h"
 #include "core/utils/VRStorage_template.h"
 #include "core/utils/system/VRSystem.h"
-#include <libxml++/libxml++.h>
-#include <libxml++/nodes/element.h>
 #include <iostream>
 #include <algorithm>
 
@@ -56,13 +54,13 @@ void VRProjectManager::save(string path) {
     if (exists(path)) path = canonical(path);
     cout << "VRProjectManager::save " << path << " (" << toString(vault_reload.size()) << " + " << toString(vault_rebuild.size()) << " objects)" << endl;
 
-    xmlpp::Document doc;
-    xmlpp::Element* root = doc.create_root_node("Project", "", "VRP"); // name, ns_uri, ns_prefix
+    XML xml;
+    XMLElementPtr root = xml.newRoot("Project", "", "VRP"); // name, ns_uri, ns_prefix
     storage.save(root);
 
     for (auto v : vault_reload) v->saveUnder(root, persistencyLvl);
     for (auto v : vault_rebuild) v->saveUnder(root, persistencyLvl);
-    doc.write_to_file_formatted(path);
+    xml.write(path);
 }
 
 void VRProjectManager::load(string path) {
@@ -73,21 +71,19 @@ void VRProjectManager::load(string path) {
     } else return;
     cout << "VRProjectManager::load " << path << endl;
 
-    xmlpp::DomParser parser;
-    parser.set_validate(false);
-    parser.parse_file(path.c_str());
-    xmlpp::Element* root = dynamic_cast<xmlpp::Element*>(parser.get_document()->get_root_node());
+    XML xml;
+    xml.read(path, false);
+    XMLElementPtr root = xml.getRoot();
     storage.load(root);
 
     vault_rebuild.clear();
     uint i=0;
-    for (auto n : root->get_children()) {
-        xmlpp::Element* e = dynamic_cast<xmlpp::Element*>(n);
+    for (auto e : root->getChildren()) {
         if (!e) continue;
 
         VRStoragePtr s;
         string mode = "RELOAD";
-        if (e->get_attribute("pmMode")) mode = e->get_attribute("pmMode")->get_value();
+        if (e->hasAttribute("pmMode")) mode = e->getAttribute("pmMode");
         if (mode == "RELOAD") { if (i < vault_reload.size()) s = vault_reload[i]; i++; }
         if (mode == "REBUILD") { s = VRStorage::createFromStore(e); vault_rebuild.push_back(s); }
         if (!s) { cout << "VRProjectManager::load Warning! element unhandled"; continue; }

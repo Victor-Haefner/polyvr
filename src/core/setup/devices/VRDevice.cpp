@@ -3,7 +3,6 @@
 #include "core/utils/toString.h"
 #include "core/utils/VRFunction.h"
 #include "core/scene/VRSceneManager.h"
-#include <libxml++/nodes/element.h>
 #include <boost/bind.hpp>
 
 template<> string typeName(const OSG::VRDevice& t) { return "Device"; }

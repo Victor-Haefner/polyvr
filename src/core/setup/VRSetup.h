@@ -44,10 +44,8 @@ class VRSetup : public VRViewManager, public VRWindowManager, public VRDeviceMan
         map<string, VRScriptPtr> scripts;
 
         void showStats(bool b);
-        void parseSetup(xmlpp::Element* setup);
+        void parseSetup(XMLElementPtr setup);
         void processOptions();
-
-        xmlpp::Element* getElementChild(xmlpp::Element* e, string name);
 
     public:
         VRSetup(string name);

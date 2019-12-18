@@ -20,10 +20,9 @@
 #include "addons/LeapMotion/VRPyLeap.h"
 #include "core/utils/VRTimer.h"
 #include "core/utils/toString.h"
+#include "core/utils/xml.h"
 #include "core/setup/VRSetup.h"
 #include "core/objects/material/VRMaterial.h"
-#include <libxml++/nodes/element.h>
-#include <libxml++/nodes/textnode.h>
 #include <frameobject.h>
 #include <pyerrors.h>
 
@@ -631,54 +630,53 @@ void VRScript::remArgument(string name) {
 void VRScript::setGroup(string g) { group = g; }
 string VRScript::getGroup() { return group; }
 
-void VRScript::save(xmlpp::Element* e) {
-    xmlpp::Element* ec = e->add_child("core");
-    ec->set_child_text("\n"+core+"\n");
+void VRScript::save(XMLElementPtr e) {
+    XMLElementPtr ec = e->addChild("core");
+    ec->setText("\n"+core+"\n");
 
     for (auto a : args) {
         if (a->trig) continue;
-        xmlpp::Element* ea = e->add_child("arg");
-        ea->set_attribute("type", a->type);
-        ea->set_attribute("value", a->val);
+        XMLElementPtr ea = e->addChild("arg");
+        ea->setAttribute("type", a->type);
+        ea->setAttribute("value", a->val);
         a->save(ea);
     }
 
     for (auto t : trigs) {
-        xmlpp::Element* ea = e->add_child("trig");
-        ea->set_attribute("type", t->trigger);
-        ea->set_attribute("dev", t->dev);
-        ea->set_attribute("state", t->state);
-        ea->set_attribute("param", t->param);
-        ea->set_attribute("key", toString(t->key));
+        XMLElementPtr ea = e->addChild("trig");
+        ea->setAttribute("type", t->trigger);
+        ea->setAttribute("dev", t->dev);
+        ea->setAttribute("state", t->state);
+        ea->setAttribute("param", t->param);
+        ea->setAttribute("key", toString(t->key));
         t->save(ea);
     }
 }
 
-void VRScript::load(xmlpp::Element* e) {
+void VRScript::load(XMLElementPtr e) {
     clean();
     VRName::load(e);
-    if (e->get_attribute("core")) core = e->get_attribute("core")->get_value();
-    if (e->get_attribute("type")) type = e->get_attribute("type")->get_value();
-    if (e->get_attribute("server")) server = e->get_attribute("server")->get_value();
-    if (e->get_attribute("group")) group = e->get_attribute("group")->get_value();
+    if (e->hasAttribute("core")) core = e->getAttribute("core");
+    if (e->hasAttribute("type")) type = e->getAttribute("type");
+    if (e->hasAttribute("server")) server = e->getAttribute("server");
+    if (e->hasAttribute("group")) group = e->getAttribute("group");
 
-    for (xmlpp::Node* n : e->get_children() ) {
-        xmlpp::Element* el = dynamic_cast<xmlpp::Element*>(n);
+    for (auto el : e->getChildren() ) {
         if (!el) continue;
 
-        string name = el->get_name();
+        string name = el->getName();
 
         if (name == "core") {
-            if (el->has_child_text()) {
-                core = el->get_child_text()->get_content();
+            if (el->hasText()) {
+                core = el->getText();
                 core = core.substr(1,core.size()-2);
             }
         }
 
         if (name == "arg") {
             argPtr a = addArgument();
-            a->type = el->get_attribute("type")->get_value();
-            a->val  = el->get_attribute("value")->get_value();
+            a->type = el->getAttribute("type");
+            a->val  = el->getAttribute("value");
             string oname = a->getName();
             a->load(el);
             changeArgName(oname, a->getName());
@@ -686,12 +684,12 @@ void VRScript::load(xmlpp::Element* e) {
 
         if (name == "trig") {
             trigPtr t = trig::create();
-            t->trigger = el->get_attribute("type")->get_value();
-            t->dev = el->get_attribute("dev")->get_value();
+            t->trigger = el->getAttribute("type");
+            t->dev = el->getAttribute("dev");
             if (t->dev == "mobile") t->dev = "server1"; // Temp fix for old scenes after changing default server name!
-            t->state = el->get_attribute("state")->get_value();
-            t->param = el->get_attribute("param")->get_value();
-            t->key = toInt( el->get_attribute("key")->get_value() );
+            t->state = el->getAttribute("state");
+            t->param = el->getAttribute("param");
+            t->key = toInt( el->getAttribute("key") );
             t->load(el);
             trigs.push_back(t);
 

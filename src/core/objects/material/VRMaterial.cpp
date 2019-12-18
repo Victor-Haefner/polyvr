@@ -42,7 +42,6 @@
 #include <OpenSG/OSGMaterialChunk.h>
 #include <OpenSG/OSGCubeTextureObjChunk.h>
 
-#include <libxml++/nodes/element.h>
 #include <GL/glext.h>
 #include <GL/glx.h>
 

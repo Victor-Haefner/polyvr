@@ -110,6 +110,7 @@ class VRTerrain : public VRGeometry, public VRWorldModule {
 
         void flatten(vector<Vec2d> perimeter, float h);
         void paintHeights(string woods, string gravel);
+        void paintHeights( string path );
         void addEmbankment(string ID, PathPtr p1, PathPtr p2, PathPtr p3, PathPtr p4);
 
         vector<Vec3d> probeHeight( Vec2d p);

@@ -160,8 +160,8 @@ class VRScript : public std::enable_shared_from_this<VRScript>, public VRName {
         void setGroup(string g);
         string getGroup();
 
-        void save(xmlpp::Element* e);
-        void load(xmlpp::Element* e);
+        void save(XMLElementPtr e);
+        void load(XMLElementPtr e);
 };
 
 OSG_END_NAMESPACE;
