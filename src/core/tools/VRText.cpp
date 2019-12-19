@@ -98,6 +98,7 @@ VRTexturePtr VRText::createBmp (string text, string font, Color4f fg, Color4f bg
     cairo_translate(cr, padding, padding);
     pango_cairo_update_layout (cr, layout);
     pango_cairo_show_layout (cr, layout);
+    pango_layout_get_pixel_size(layout, &layoutWidth, &layoutHeight);
 
     cairo_set_source_rgba(cr, bg[0],bg[1],bg[2],bg[3]);
     cairo_rectangle(cr, 0, 0, texWidth, padding-1); cairo_fill(cr);

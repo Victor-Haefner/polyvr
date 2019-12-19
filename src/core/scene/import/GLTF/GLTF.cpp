@@ -1057,14 +1057,6 @@ class GLTFLoader : public GLTFUtils {
             return true;
         }
 
-        string getVersion(ifstream& file) {
-            file.seekg(0, ios_base::beg);
-            string line;
-            getline(file, line);
-            file.seekg(0, ios_base::beg);
-            return line;
-        }
-
         size_t getFileSize(ifstream& file) {
             file.seekg(0, ios_base::end);
             size_t fileSize = file.tellg();
@@ -1231,10 +1223,12 @@ class GLTFLoader : public GLTFUtils {
             bool ret = false;
 
             if ( ext.compare("glb") == 0 ) {
+                cout << "try loading bin glb file at " << path << endl;
                 ret = loader.LoadBinaryFromFile(&model, &err, &warn, path.c_str()); // for binary glTF(.glb)
             }
 
             if ( ext.compare("gltf") == 0 ) {
+                cout << "try loading ASCII gltf file at " << path << endl;
                 ret = loader.LoadASCIIFromFile(&model, &err, &warn, path.c_str());
             }
 
@@ -1250,13 +1244,9 @@ class GLTFLoader : public GLTFUtils {
               printf("Failed to parse glTF\n");
               //return -1;
             }
-
+            debugDump(&model);
             progress->finish();
             return;
-
-            string versionStr = getVersion(file);
-            if (versionStr == "GLTF V1.0 ascii") version = 1;
-            else version = 2;
 
             gltfschema = GLTFSchema(version);
             ctx = Context();
@@ -1274,6 +1264,25 @@ class GLTFLoader : public GLTFUtils {
 
             progress->finish();
             delete tree;
+        }
+
+        void debugDump(tinygltf::Model *model){
+            cout << "This glTF model has:\n"
+                << model->accessors.size() << " accessors\n"
+                << model->animations.size() << " animations\n"
+                << model->buffers.size() << " buffers\n"
+                << model->bufferViews.size() << " bufferViews\n"
+                << model->materials.size() << " materials\n"
+                << model->meshes.size() << " meshes\n"
+                << model->nodes.size() << " nodes\n"
+                << model->textures.size() << " textures\n"
+                << model->images.size() << " images\n"
+                << model->skins.size() << " skins\n"
+                << model->samplers.size() << " samplers\n"
+                << model->cameras.size() << " cameras\n"
+                << model->scenes.size() << " scenes\n"
+                << model->lights.size() << " lights\n"
+                << endl;
         }
 };
 

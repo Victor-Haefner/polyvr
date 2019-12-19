@@ -2,6 +2,7 @@
 
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/material/VRMaterialT.h"
+#include "core/objects/material/VRTexture.h"
 #include "core/objects/geometry/VRGeoData.h"
 #include "core/tools/VRText.h"
 #include "core/utils/toString.h"
@@ -11,7 +12,6 @@
 using namespace OSG;
 
 template<> string typeName(const VRAnnotationEngine& t) { return "AnnotationEngine"; }
-
 
 VRAnnotationEngine::VRAnnotationEngine(string name) : VRGeometry(name) {
     fg = Color4f(0,0,0,1);
@@ -113,8 +113,18 @@ void VRAnnotationEngine::setScreensize(bool b) { mat->setShaderParameter("screen
 void VRAnnotationEngine::updateTexture() {
     string txt;
     for (int i=32; i<128; i++) txt += char(i);
+    //txt += "äüöß€";
+    int padding = 3;
     auto img = VRText::get()->create(txt, "MONO 20", 20, fg, bg);
+    float tW = img->getSize()[0];
+    float lW = VRText::get()->layoutWidth;
+    float tp = padding / tW;
+    float a = lW/tW;
+    float cSize = (1.0-2*tp) / txt.size() * a;
     mat->setTexture(img);
+    mat->setShaderParameter("texPadding", Real32(tp));
+    mat->setShaderParameter("charTexSize", Real32(cSize));
+    img->write("annChars.png");
 }
 
 string VRAnnotationEngine::vp =
@@ -178,6 +188,8 @@ layout (triangle_strip, max_vertices=60) out;
 uniform float doBillboard;
 uniform float screen_size;
 uniform float size;
+uniform float texPadding;
+uniform float charTexSize;
 uniform vec2 OSGViewportSize;
 in vec4 vertex[];
 in vec3 normal[];
@@ -241,9 +253,9 @@ void emitQuad(in float offset, in vec4 tc) {
 }
 
 void emitChar(in int d, in float p) {
-    float padding = 0.001;
-    float f = 0.00832; //0.00833
-    d -= 32;
+    float padding = texPadding; // 0.001 texture padding
+    float f = charTexSize; // 0.00832 character texture size
+    d -= 32; // ascii offset
     if (d >= 0) emitQuad(p, vec4(padding+d*f, padding+d*f+f, 0, 1));
 }
 
