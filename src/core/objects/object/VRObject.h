@@ -94,7 +94,7 @@ class VRObject : public std::enable_shared_from_this<VRObject>, public VRName, p
         void setTravMask(int i);
         int getTravMask();
         void setVolume(const Boundingbox& box);
-        void setVolumeCheck(bool b, bool recursive = false);
+        virtual void setVolumeCheck(bool b, bool recursive = false);
         void setSiblingPosition(int i);
 
         virtual void addChild(VRObjectPtr child, bool osg = true, int place = -1);

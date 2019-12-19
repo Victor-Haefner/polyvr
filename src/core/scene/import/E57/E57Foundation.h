@@ -42,29 +42,17 @@
 #include <string>
 #include <iostream>
 #include <float.h>
-#include <boost/shared_ptr.hpp>
-#include <boost/weak_ptr.hpp>
-#include <boost/enable_shared_from_this.hpp>
-#include <boost/cstdint.hpp>    // for int8_t, int16_t, int32_t, etc...
+#include <memory>
 
+using namespace std;
 
 #ifndef DOXYGEN  // Doxygen is not handling namespaces well in @includelineno commands, so disable
 namespace e57 {
 #endif
 
-// Use Boost type names for signed/unsigned integers in various witdths
-using boost::int8_t;
-using boost::uint8_t;
-using boost::int16_t;
-using boost::uint16_t;
-using boost::int32_t;
-using boost::uint32_t;
-using boost::int64_t;
-using boost::uint64_t;
-
 // Shorthand for unicode string
 //! @brief UTF-8 encodeded Unicode string
-typedef std::string ustring;
+typedef string ustring;
 
 //! @brief Identifiers for types of E57 elements
 enum NodeType {
@@ -96,7 +84,7 @@ enum MemoryRepresentation {
     E57_BOOL     = 8,  //!< C++ boolean type
     E57_REAL32   = 9,  //!< C++ float type
     E57_REAL64   = 10, //!< C++ double type
-    E57_USTRING  = 11  //!< Unicode UTF-8 std::string
+    E57_USTRING  = 11  //!< Unicode UTF-8 string
 };
 
 //! @brief The major version number of the Foundation API
@@ -158,13 +146,13 @@ class ImageFile;
 #ifdef E57_INTERNAL_IMPLEMENTATION_ENABLE
 #  define E57_OBJECT_IMPLEMENTATION(T)                              \
 public:                                                             \
-    boost::shared_ptr<T##Impl> impl() const {return(impl_);};       \
+    shared_ptr<T##Impl> impl() const {return(impl_);};       \
 protected:                                                          \
-    boost::shared_ptr<T##Impl> impl_;
+    shared_ptr<T##Impl> impl_;
 #else
 #  define E57_OBJECT_IMPLEMENTATION(T)                              \
 protected:                                                          \
-    boost::shared_ptr<T##Impl> impl_;
+    shared_ptr<T##Impl> impl_;
 #endif
 //! @endcond
 
@@ -191,14 +179,14 @@ public:
     ustring     elementName() const;
     ImageFile   destImageFile() const;
     bool        isAttached() const;
-    void        dump(int indent = 0, std::ostream& os = std::cout) const;
+    void        dump(int indent = 0, ostream& os = cout) const;
     void        checkInvariant(bool doRecurse = true, bool doDowncast=true);
     bool        operator==(Node n2) const;
     bool        operator!=(Node n2) const;
 
 //! \cond documentNonPublic   The following isn't part of the API, and isn't documented.
 #ifdef E57_INTERNAL_IMPLEMENTATION_ENABLE
-    explicit    Node(boost::shared_ptr<NodeImpl>);  // internal use only
+    explicit    Node(shared_ptr<NodeImpl>);  // internal use only
 #endif
 private:   //=================
                 Node();                 // No default constructor is defined for Node
@@ -232,7 +220,7 @@ public:
     bool        isAttached() const;
 
     // Diagnostic functions:
-    void        dump(int indent = 0, std::ostream& os = std::cout) const;
+    void        dump(int indent = 0, ostream& os = cout) const;
     void        checkInvariant(bool doRecurse = true, bool doUpcast=true);
 
 //! \cond documentNonPublic   The following isn't part of the API, and isn't documented.
@@ -241,8 +229,8 @@ private:   //=================
 protected: //=================
     friend class ImageFile;
 
-                StructureNode(boost::shared_ptr<StructureNodeImpl> ni);    // internal use only
-                StructureNode(boost::weak_ptr<ImageFileImpl> fileParent);  // internal use only
+                StructureNode(shared_ptr<StructureNodeImpl> ni);    // internal use only
+                StructureNode(weak_ptr<ImageFileImpl> fileParent);  // internal use only
 
     E57_OBJECT_IMPLEMENTATION(StructureNode)  // Internal implementation details, not part of API, must be last in object
 //! \endcond
@@ -274,7 +262,7 @@ public:
     bool        isAttached() const;
 
     // Diagnostic functions:
-    void        dump(int indent = 0, std::ostream& os = std::cout) const;
+    void        dump(int indent = 0, ostream& os = cout) const;
     void        checkInvariant(bool doRecurse = true, bool doUpcast=true);
 
 //! \cond documentNonPublic   The following isn't part of the API, and isn't documented.
@@ -283,7 +271,7 @@ private:   //=================
 protected: //=================
     friend class CompressedVectorNode;
 
-                VectorNode(boost::shared_ptr<VectorNodeImpl> ni);  // internal use only
+                VectorNode(shared_ptr<VectorNodeImpl> ni);  // internal use only
 
     E57_OBJECT_IMPLEMENTATION(VectorNode)  // Internal implementation details, not part of API, must be last in object
 //! \endcond
@@ -311,7 +299,7 @@ public:
                      bool doConversion = false, bool doScaling = false, size_t stride = sizeof(float));
     SourceDestBuffer(ImageFile destImageFile, const ustring pathName, double* b,   const size_t capacity,
                      bool doConversion = false, bool doScaling = false, size_t stride = sizeof(double));
-    SourceDestBuffer(ImageFile destImageFile, const ustring pathName, std::vector<ustring>* b);
+    SourceDestBuffer(ImageFile destImageFile, const ustring pathName, vector<ustring>* b);
 
     ustring         pathName() const;
     enum MemoryRepresentation  memoryRepresentation() const;
@@ -321,7 +309,7 @@ public:
     size_t          stride() const;
 
     // Diagnostic functions:
-    void            dump(int indent = 0, std::ostream& os = std::cout) const;
+    void            dump(int indent = 0, ostream& os = cout) const;
     void            checkInvariant(bool doRecurse = true);
 
 //! \cond documentNonPublic   The following isn't part of the API, and isn't documented.
@@ -337,13 +325,13 @@ protected: //=================
 class CompressedVectorReader {
 public:
     unsigned    read();
-    unsigned    read(std::vector<SourceDestBuffer>& dbufs);
+    unsigned    read(vector<SourceDestBuffer>& dbufs);
     void        seek(int64_t recordNumber); // !!! not implemented yet
     void        close();
     bool        isOpen();
     CompressedVectorNode compressedVectorNode() const;
 
-    void        dump(int indent = 0, std::ostream& os = std::cout) const;
+    void        dump(int indent = 0, ostream& os = cout) const;
     void        checkInvariant(bool doRecurse = true);
 
 //! \cond documentNonPublic   The following isn't part of the API, and isn't documented.
@@ -352,7 +340,7 @@ private:   //=================
 protected: //=================
     friend class CompressedVectorNode;
 
-                CompressedVectorReader(boost::shared_ptr<CompressedVectorReaderImpl> ni);
+                CompressedVectorReader(shared_ptr<CompressedVectorReaderImpl> ni);
 
     E57_OBJECT_IMPLEMENTATION(CompressedVectorReader)  // Internal implementation details, not part of API, must be last in object
 //! \endcond
@@ -361,12 +349,12 @@ protected: //=================
 class CompressedVectorWriter {
 public:
     void        write(const size_t requestedRecordCount);
-    void        write(std::vector<SourceDestBuffer>& sbufs, const size_t requestedRecordCount);
+    void        write(vector<SourceDestBuffer>& sbufs, const size_t requestedRecordCount);
     void        close();
     bool        isOpen();
     CompressedVectorNode compressedVectorNode() const;
 
-    void        dump(int indent = 0, std::ostream& os = std::cout) const;
+    void        dump(int indent = 0, ostream& os = cout) const;
     void        checkInvariant(bool doRecurse = true);
 
 //! \cond documentNonPublic   The following isn't part of the API, and isn't documented.
@@ -375,7 +363,7 @@ private:   //=================
 protected: //=================
     friend class CompressedVectorNode;
 
-                CompressedVectorWriter(boost::shared_ptr<CompressedVectorWriterImpl> ni);
+                CompressedVectorWriter(shared_ptr<CompressedVectorWriterImpl> ni);
 
     E57_OBJECT_IMPLEMENTATION(CompressedVectorWriter)  // Internal implementation details, not part of API, must be last in object
 //! \endcond
@@ -390,8 +378,8 @@ public:
     VectorNode  codecs() const;
 
     // Iterators
-    CompressedVectorWriter writer(std::vector<SourceDestBuffer>& sbufs);
-    CompressedVectorReader reader(const std::vector<SourceDestBuffer>& dbufs);
+    CompressedVectorWriter writer(vector<SourceDestBuffer>& sbufs);
+    CompressedVectorReader reader(const vector<SourceDestBuffer>& dbufs);
 
     // Up/Down cast conversion
                 operator Node() const;
@@ -406,7 +394,7 @@ public:
     bool        isAttached() const;
 
     // Diagnostic functions:
-    void        dump(int indent = 0, std::ostream& os = std::cout) const;
+    void        dump(int indent = 0, ostream& os = cout) const;
     void        checkInvariant(bool doRecurse = true, bool doUpcast=true);
 
 //! \cond documentNonPublic   The following isn't part of the API, and isn't documented.
@@ -417,7 +405,7 @@ protected: //=================
     friend class CompressedVectorWriter;
     friend class E57XmlParser;
 
-                CompressedVectorNode(boost::shared_ptr<CompressedVectorNodeImpl> ni);  // internal use only
+                CompressedVectorNode(shared_ptr<CompressedVectorNodeImpl> ni);  // internal use only
 
     E57_OBJECT_IMPLEMENTATION(CompressedVectorNode)  // Internal implementation details, not part of API, must be last in object
 //! \endcond
@@ -444,7 +432,7 @@ public:
     bool        isAttached() const;
 
     // Diagnostic functions:
-    void        dump(int indent = 0, std::ostream& os = std::cout) const;
+    void        dump(int indent = 0, ostream& os = cout) const;
     void        checkInvariant(bool doRecurse = true, bool doUpcast=true);
 
 //! \cond documentNonPublic   The following isn't part of the API, and isn't documented.
@@ -452,7 +440,7 @@ private:   //=================
                 IntegerNode();                 // No default constructor is defined for IntegerNode
 protected: //=================
 
-                IntegerNode(boost::shared_ptr<IntegerNodeImpl> ni);  // internal use only
+                IntegerNode(shared_ptr<IntegerNodeImpl> ni);  // internal use only
 
     E57_OBJECT_IMPLEMENTATION(IntegerNode)  // Internal implementation details, not part of API, must be last in object
 //! \endcond
@@ -491,7 +479,7 @@ public:
     bool        isAttached() const;
 
     // Diagnostic functions:
-    void        dump(int indent = 0, std::ostream& os = std::cout) const;
+    void        dump(int indent = 0, ostream& os = cout) const;
     void        checkInvariant(bool doRecurse = true, bool doUpcast=true);
 
 //! \cond documentNonPublic   The following isn't part of the API, and isn't documented.
@@ -499,7 +487,7 @@ private:   //=================
                 ScaledIntegerNode();                 // No default constructor is defined for ScaledIntegerNode
 protected: //=================
 
-                ScaledIntegerNode(boost::shared_ptr<ScaledIntegerNodeImpl> ni);  // internal use only
+                ScaledIntegerNode(shared_ptr<ScaledIntegerNodeImpl> ni);  // internal use only
 
     E57_OBJECT_IMPLEMENTATION(ScaledIntegerNode)  // Internal implementation details, not part of API, must be last in object
 //! \endcond
@@ -528,7 +516,7 @@ public:
     bool        isAttached() const;
 
     // Diagnostic functions:
-    void        dump(int indent = 0, std::ostream& os = std::cout) const;
+    void        dump(int indent = 0, ostream& os = cout) const;
     void        checkInvariant(bool doRecurse = true, bool doUpcast=true);
 
 //! \cond documentNonPublic   The following isn't part of the API, and isn't documented.
@@ -536,7 +524,7 @@ private:   //=================
                 FloatNode();                 // No default constructor is defined for FloatNode
 protected: //=================
 
-                FloatNode(boost::shared_ptr<FloatNodeImpl> ni);  // internal use only
+                FloatNode(shared_ptr<FloatNodeImpl> ni);  // internal use only
 
     E57_OBJECT_IMPLEMENTATION(FloatNode)  // Internal implementation details, not part of API, must be last in object
 //! \endcond
@@ -562,7 +550,7 @@ public:
     bool        isAttached() const;
 
     // Diagnostic functions:
-    void        dump(int indent = 0, std::ostream& os = std::cout) const;
+    void        dump(int indent = 0, ostream& os = cout) const;
     void        checkInvariant(bool doRecurse = true, bool doUpcast=true);
 
 //! \cond documentNonPublic   The following isn't part of the API, and isn't documented.
@@ -570,7 +558,7 @@ private:   //=================
                 StringNode();                 // No default constructor is defined for StringNode
 protected: //=================
     friend class StringNodeImpl;
-                StringNode(boost::shared_ptr<StringNodeImpl> ni);  // internal use only
+                StringNode(shared_ptr<StringNodeImpl> ni);  // internal use only
 
     E57_OBJECT_IMPLEMENTATION(StringNode)  // Internal implementation details, not part of API, must be last in object
 //! \endcond
@@ -597,7 +585,7 @@ public:
     bool        isAttached() const;
 
     // Diagnostic functions:
-    void        dump(int indent = 0, std::ostream& os = std::cout) const;
+    void        dump(int indent = 0, ostream& os = cout) const;
     void        checkInvariant(bool doRecurse = true, bool doUpcast=true);
 
 //! \cond documentNonPublic   The following isn't part of the API, and isn't documented.
@@ -606,7 +594,7 @@ private:   //=================
 protected: //=================
     friend class E57XmlParser;
 
-                BlobNode(boost::shared_ptr<BlobNodeImpl> ni);       // internal use only
+                BlobNode(shared_ptr<BlobNodeImpl> ni);       // internal use only
 
                 // Internal use only, create blob already in a file
                 BlobNode(ImageFile destImageFile, int64_t fileOffset, int64_t length);
@@ -640,7 +628,7 @@ public:
     void            elementNameParse(const ustring& elementName, ustring& prefix, ustring& localPart) const;
 
     // Diagnostic functions:
-    void            dump(int indent = 0, std::ostream& os = std::cout) const;
+    void            dump(int indent = 0, ostream& os = cout) const;
     void            checkInvariant(bool doRecurse = true);
     bool            operator==(ImageFile imf2) const;
     bool            operator!=(ImageFile imf2) const;
@@ -661,7 +649,7 @@ protected: //=================
     friend class StringNode;
     friend class BlobNode;
 
-                    ImageFile(boost::shared_ptr<ImageFileImpl> imfi);  // internal use only
+                    ImageFile(shared_ptr<ImageFileImpl> imfi);  // internal use only
 
     E57_OBJECT_IMPLEMENTATION(ImageFile)  // Internal implementation details, not part of API, must be last in object
 //! \endcond
@@ -728,9 +716,9 @@ enum ErrorCode {
      */
 };
 
-class E57Exception : public std::exception {
+class E57Exception : public exception {
 public:
-    virtual void        report(const char* reportingFileName=NULL, int reportingLineNumber=0, const char* reportingFunctionName=NULL, std::ostream& os = std::cout) const;
+    virtual void        report(const char* reportingFileName=NULL, int reportingLineNumber=0, const char* reportingFunctionName=NULL, ostream& os = cout) const;
     virtual ErrorCode   errorCode() const;
     virtual ustring     context() const;
     virtual const char* what() const throw();
