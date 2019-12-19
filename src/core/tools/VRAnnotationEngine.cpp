@@ -113,14 +113,14 @@ void VRAnnotationEngine::setScreensize(bool b) { mat->setShaderParameter("screen
 void VRAnnotationEngine::updateTexture() {
     string txt;
     for (int i=32; i<128; i++) txt += char(i);
-    //txt += "äüöß€";
+    txt += "ÄÜÖäüöß€";
     int padding = 3;
     auto img = VRText::get()->create(txt, "MONO 20", 20, fg, bg);
     float tW = img->getSize()[0];
     float lW = VRText::get()->layoutWidth;
     float tp = padding / tW;
     float a = lW/tW;
-    float cSize = (1.0-2*tp) / txt.size() * a;
+    float cSize = (1.0-2*tp) / VRText::countGraphemes(txt) * a;
     mat->setTexture(img);
     mat->setShaderParameter("texPadding", Real32(tp));
     mat->setShaderParameter("charTexSize", Real32(cSize));
