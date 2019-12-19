@@ -1245,6 +1245,7 @@ class GLTFLoader : public GLTFUtils {
               //return -1;
             }
             debugDump(&model);
+            debugModel(&model);
             progress->finish();
             return;
 
@@ -1283,6 +1284,32 @@ class GLTFLoader : public GLTFUtils {
                 << model->scenes.size() << " scenes\n"
                 << model->lights.size() << " lights\n"
                 << endl;
+        }
+
+        void debugModel(tinygltf::Model *model){
+            auto allMeshes = model->meshes;
+            for (auto mesh : allMeshes) {
+                auto allPrims = mesh.primitives;
+                for (auto primitive : allPrims) {
+                    const tinygltf::Accessor& accessor = model->accessors[primitive.attributes["POSITION"]];
+                    const tinygltf::BufferView& bufferView = model->bufferViews[accessor.bufferView];
+
+                    // cast to float type read only. Use accessor and bufview byte offsets to determine where position data
+                    // is located in the buffer.
+                    const tinygltf::Buffer& buffer = model->buffers[bufferView.buffer];
+                    // bufferView byteoffset + accessor byteoffset tells you where the actual position data is within the buffer. From there
+                    // you should already know how the data needs to be interpreted.
+                    const float* positions = reinterpret_cast<const float*>(&buffer.data[bufferView.byteOffset + accessor.byteOffset]);
+                    // From here, you choose what you wish to do with this position data. In this case, we  will display it out.
+                    for (size_t i = 0; i < accessor.count; ++i) {
+                              // Positions are Vec3 components, so for each vec3 stride, offset for x, y, and z.
+                               std::cout << "(" << positions[i * 3 + 0] << ", "// x
+                                                << positions[i * 3 + 1] << ", "// y
+                                                << positions[i * 3 + 2] << ")" // z
+                                                << "\n";
+                    }
+                }
+            }
         }
 };
 
