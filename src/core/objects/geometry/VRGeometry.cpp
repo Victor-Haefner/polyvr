@@ -69,6 +69,22 @@ VRObjectPtr VRGeometry::copy(vector<VRObjectPtr> children) {
     return geo;
 }
 
+void applyVolumeCheck2(NodeMTRecPtr n, bool b) {
+    if (!n) return;
+    BoxVolume &vol = n->editVolume(false);
+    vol.setInfinite(!b);
+    vol.setStatic(!b);
+    vol.setValid(!b);
+}
+
+// applies also to mesh node if present
+void VRGeometry::setVolumeCheck(bool b, bool recursive) {
+    if (!getNode()) return;
+    applyVolumeCheck2(getNode()->node, b);
+    if (mesh_node) applyVolumeCheck2(mesh_node->node, b);
+    if (recursive) VRObject::setVolumeCheck(b,recursive);
+}
+
 class geoIntersectionProxy : public Geometry {
     public:
         bool intersectVolume(IntersectAction* ia) {

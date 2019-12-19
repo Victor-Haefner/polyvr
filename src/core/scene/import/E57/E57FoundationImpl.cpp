@@ -92,12 +92,47 @@ using std::auto_ptr;
 using std::min;
 using std::max;
 
-//using namespace boost;
-using boost::weak_ptr;
-using boost::shared_ptr;
-using boost::dynamic_pointer_cast;
+//#include <xercesc/util/TransService.hpp>
 
-#include <xercesc/util/TransService.hpp>
+#include "core/utils/xml.h"
+
+#define XMLCh uint16_t
+#define XMLSize_t size_t
+#define XMLFilePos uint64_t
+typedef unsigned char XMLByte;
+
+const XMLCh chNull                  = 0x00;
+
+const XMLCh chLatin_C               = 0x43;
+const XMLCh chLatin_H               = 0x48;
+const XMLCh chLatin_O               = 0x4F;
+
+const XMLCh chLatin_a               = 0x61;
+//const XMLCh chLatin_b               = 0x62;
+const XMLCh chLatin_c               = 0x63;
+const XMLCh chLatin_d               = 0x64;
+const XMLCh chLatin_e               = 0x65;
+const XMLCh chLatin_f               = 0x66;
+const XMLCh chLatin_g               = 0x67;
+const XMLCh chLatin_h               = 0x68;
+const XMLCh chLatin_i               = 0x69;
+//const XMLCh chLatin_j               = 0x6A;
+//const XMLCh chLatin_k               = 0x6B;
+const XMLCh chLatin_l               = 0x6C;
+const XMLCh chLatin_m               = 0x6D;
+const XMLCh chLatin_n               = 0x6E;
+const XMLCh chLatin_o               = 0x6F;
+const XMLCh chLatin_p               = 0x70;
+//const XMLCh chLatin_q               = 0x71;
+const XMLCh chLatin_r               = 0x72;
+const XMLCh chLatin_s               = 0x73;
+const XMLCh chLatin_t               = 0x74;
+const XMLCh chLatin_u               = 0x75;
+//const XMLCh chLatin_v               = 0x76;
+const XMLCh chLatin_w               = 0x77;
+const XMLCh chLatin_x               = 0x78;
+const XMLCh chLatin_y               = 0x79;
+//const XMLCh chLatin_z               = 0x7A;
 
 namespace {
 
@@ -239,14 +274,14 @@ bool NodeImpl::isRoot()
     return(parent_.expired());
 };
 
-boost::shared_ptr<NodeImpl> NodeImpl::parent()
+shared_ptr<NodeImpl> NodeImpl::parent()
 {
     checkImageFileOpen(__FILE__, __LINE__, __FUNCTION__);
     if (isRoot()) {
         /// If is root, then has self as parent (by convention)
         return(shared_from_this());
     } else {
-        boost::shared_ptr<NodeImpl> myParent(parent_);
+        shared_ptr<NodeImpl> myParent(parent_);
         return(myParent);
     }
 }
@@ -383,7 +418,7 @@ bool NodeImpl::isTypeConstrained()
     return(false);
 }
 
-boost::shared_ptr<NodeImpl> NodeImpl::get(const ustring& pathName)
+shared_ptr<NodeImpl> NodeImpl::get(const ustring& pathName)
 {
     /// This is common virtual function for terminal E57 element types: Integer, ScaledInteger, Float, Blob.
     /// The non-terminal types override this virtual function.
@@ -451,7 +486,7 @@ void NodeImpl::set(const ustring& pathName, shared_ptr<NodeImpl> ni, bool autoPa
     root->set(pathName, ni, autoPathCreate);
 }
 
-void NodeImpl::set(const std::vector<ustring>& /*fields*/, unsigned /*level*/, boost::shared_ptr<NodeImpl> /*ni*/, bool /*autoPathCreate*/)
+void NodeImpl::set(const std::vector<ustring>& /*fields*/, unsigned /*level*/, shared_ptr<NodeImpl> /*ni*/, bool /*autoPathCreate*/)
 {
     /// If get here, then tried to call set(fields...) on NodeImpl that wasn't a StructureNodeImpl, so that's an error
     throw E57_EXCEPTION1(E57_ERROR_BAD_PATH_NAME); //???
@@ -621,7 +656,7 @@ int64_t StructureNodeImpl::childCount()
 shared_ptr<NodeImpl> StructureNodeImpl::get(int64_t index)
 {
     checkImageFileOpen(__FILE__, __LINE__, __FUNCTION__);
-		if (index < 0 || index >= static_cast<boost::int64_t>(children_.size())) {	// %%% Possible truncation on platforms where size_t = uint64
+		if (index < 0 || index >= static_cast<int64_t>(children_.size())) {	// %%% Possible truncation on platforms where size_t = uint64
         throw E57_EXCEPTION2(E57_ERROR_CHILD_INDEX_OUT_OF_BOUNDS,
                              "this->pathName=" + this->pathName()
                              + " index=" + toString(index)
@@ -829,7 +864,7 @@ void StructureNodeImpl::checkLeavesInSet(const std::set<ustring>& pathNames, sha
 }
 
 //??? use visitor?
-void StructureNodeImpl::writeXml(boost::shared_ptr<ImageFileImpl> imf, CheckedFile& cf, int indent, const char* forcedFieldName)
+void StructureNodeImpl::writeXml(shared_ptr<ImageFileImpl> imf, CheckedFile& cf, int indent, const char* forcedFieldName)
 {
     /// don't checkImageFileOpen
 
@@ -954,7 +989,7 @@ void VectorNodeImpl::set(int64_t index64, shared_ptr<NodeImpl> ni)
     StructureNodeImpl::set(index64, ni);
 }
 
-void VectorNodeImpl::writeXml(boost::shared_ptr<ImageFileImpl> imf, CheckedFile& cf, int indent, const char* forcedFieldName)
+void VectorNodeImpl::writeXml(shared_ptr<ImageFileImpl> imf, CheckedFile& cf, int indent, const char* forcedFieldName)
 {
     /// don't checkImageFileOpen
 
@@ -1980,7 +2015,7 @@ void CompressedVectorNodeImpl::checkLeavesInSet(const std::set<ustring>& /*pathN
     throw E57_EXCEPTION2(E57_ERROR_INTERNAL, "this->pathName=" + this->pathName());
 }
 
-void CompressedVectorNodeImpl::writeXml(boost::shared_ptr<ImageFileImpl> imf, CheckedFile& cf, int indent, const char* forcedFieldName)
+void CompressedVectorNodeImpl::writeXml(shared_ptr<ImageFileImpl> imf, CheckedFile& cf, int indent, const char* forcedFieldName)
 {
     // don't checkImageFileOpen
 
@@ -2201,7 +2236,7 @@ void IntegerNodeImpl::checkLeavesInSet(const std::set<ustring>& pathNames, share
         throw E57_EXCEPTION2(E57_ERROR_NO_BUFFER_FOR_ELEMENT, "this->pathName=" + this->pathName());
 }
 
-void IntegerNodeImpl::writeXml(boost::shared_ptr<ImageFileImpl> /*imf???*/, CheckedFile& cf, int indent, const char* forcedFieldName)
+void IntegerNodeImpl::writeXml(shared_ptr<ImageFileImpl> /*imf???*/, CheckedFile& cf, int indent, const char* forcedFieldName)
 {
     // don't checkImageFileOpen
 
@@ -2382,7 +2417,7 @@ void ScaledIntegerNodeImpl::checkLeavesInSet(const std::set<ustring>& pathNames,
         throw E57_EXCEPTION2(E57_ERROR_NO_BUFFER_FOR_ELEMENT, "this->pathName=" + this->pathName());
 }
 
-void ScaledIntegerNodeImpl::writeXml(boost::shared_ptr<ImageFileImpl> /*imf*/, CheckedFile& cf, int indent, const char* forcedFieldName)
+void ScaledIntegerNodeImpl::writeXml(shared_ptr<ImageFileImpl> /*imf*/, CheckedFile& cf, int indent, const char* forcedFieldName)
 {
     // don't checkImageFileOpen
 
@@ -2533,7 +2568,7 @@ void FloatNodeImpl::checkLeavesInSet(const std::set<ustring>& pathNames, shared_
         throw E57_EXCEPTION2(E57_ERROR_NO_BUFFER_FOR_ELEMENT, "this->pathName=" + this->pathName());
 }
 
-void FloatNodeImpl::writeXml(boost::shared_ptr<ImageFileImpl> /*imf*/, CheckedFile& cf, int indent, const char* forcedFieldName)
+void FloatNodeImpl::writeXml(shared_ptr<ImageFileImpl> /*imf*/, CheckedFile& cf, int indent, const char* forcedFieldName)
 {
     // don't checkImageFileOpen
 
@@ -2653,7 +2688,7 @@ void StringNodeImpl::checkLeavesInSet(const std::set<ustring>& pathNames, shared
         throw E57_EXCEPTION2(E57_ERROR_NO_BUFFER_FOR_ELEMENT, "this->pathName=" + this->pathName());
 }
 
-void StringNodeImpl::writeXml(boost::shared_ptr<ImageFileImpl> /*imf*/, CheckedFile& cf, int indent, const char* forcedFieldName)
+void StringNodeImpl::writeXml(shared_ptr<ImageFileImpl> /*imf*/, CheckedFile& cf, int indent, const char* forcedFieldName)
 {
     // don't checkImageFileOpen
 
@@ -2853,7 +2888,7 @@ void BlobNodeImpl::checkLeavesInSet(const std::set<ustring>& pathNames, shared_p
         throw E57_EXCEPTION2(E57_ERROR_NO_BUFFER_FOR_ELEMENT, "this->pathName=" + this->pathName());
 }
 
-void BlobNodeImpl::writeXml(boost::shared_ptr<ImageFileImpl> /*imf*/, CheckedFile& cf, int indent, const char* forcedFieldName)
+void BlobNodeImpl::writeXml(shared_ptr<ImageFileImpl> /*imf*/, CheckedFile& cf, int indent, const char* forcedFieldName)
 {
     // don't checkImageFileOpen
 
@@ -2894,85 +2929,73 @@ void BlobNodeImpl::dump(int indent, ostream& os)
 ///================================================================
 ///================================================================
 
-#include <xercesc/sax/InputSource.hpp>
-#include <xercesc/util/BinInputStream.hpp>
+//#include <xercesc/sax/InputSource.hpp>
+//#include <xercesc/util/BinInputStream.hpp>
 
 /// Make shorthand for Xerces namespace???
-XERCES_CPP_NAMESPACE_USE
+//XERCES_CPP_NAMESPACE_USE
 
-class E57FileInputStream : public BinInputStream
-{
-public :
-                            E57FileInputStream(CheckedFile* cf, uint64_t logicalStart, uint64_t logicalLength);
-    virtual                 ~E57FileInputStream() {};
-    virtual XMLFilePos      curPos() const {return(logicalPosition_);};
-    virtual XMLSize_t       readBytes(XMLByte* const toFill, const XMLSize_t maxToRead);
-    virtual const XMLCh*    getContentType() const {return(0);};
+class E57FileInputStream : public XMLInputStream {
+    private :
+        ///  Unimplemented constructors and operators
+        E57FileInputStream(const E57FileInputStream&);
+        E57FileInputStream& operator=(const E57FileInputStream&);
 
-private :
-    ///  Unimplemented constructors and operators
-    E57FileInputStream(const E57FileInputStream&);
-    E57FileInputStream& operator=(const E57FileInputStream&);
+        //??? lifetime of cf_ must be longer than this object!
+        CheckedFile*    cf_;
+        uint64_t        logicalStart_;
+        uint64_t        logicalLength_;
+        uint64_t        logicalPosition_;
 
-    //??? lifetime of cf_ must be longer than this object!
-    CheckedFile*    cf_;
-    uint64_t        logicalStart_;
-    uint64_t        logicalLength_;
-    uint64_t        logicalPosition_;
+    public :
+        E57FileInputStream(CheckedFile* cf, uint64_t logicalStart, uint64_t logicalLength);
+        ~E57FileInputStream() {};
+
+        XMLFilePos curPos() const { return(logicalPosition_); };
+        //const XMLCh* getContentType() const { return(0); };
+        size_t readBytes(char* const toFill, const size_t maxToRead);
 };
 
 E57FileInputStream::E57FileInputStream(CheckedFile* cf, uint64_t logicalStart, uint64_t logicalLength)
-: cf_(cf),
-  logicalStart_(logicalStart),
-  logicalLength_(logicalLength),
-  logicalPosition_(logicalStart)
-{
-}
+: cf_(cf), logicalStart_(logicalStart), logicalLength_(logicalLength), logicalPosition_(logicalStart) {}
 
-XMLSize_t E57FileInputStream::readBytes(       XMLByte* const  toFill
-                                       , const XMLSize_t       maxToRead)
-{
-    if (logicalPosition_ > logicalStart_ + logicalLength_)
-        return(0);
+size_t E57FileInputStream::readBytes(char* const toFill, const size_t maxToRead) {
+    if (logicalPosition_ > logicalStart_ + logicalLength_) return 0;
 
     int64_t available = logicalStart_ + logicalLength_ - logicalPosition_;
-    if (available <= 0)
-        return(0);
+    if (available <= 0) return 0;
 
     /// size_t and XMLSize_t should be compatible, should get compiler warning here if not
     size_t maxToRead_size = maxToRead;
 
     /// Be careful if size_t is smaller than int64_t
     size_t available_size;
-    if (sizeof(size_t) >= sizeof(int64_t))
-        /// size_t is at least as big as int64_t
-        available_size = static_cast<size_t>(available);
+    if (sizeof(size_t) >= sizeof(int64_t)) available_size = static_cast<size_t>(available); /// size_t is at least as big as int64_t
     else {
         /// size_t is smaller than int64_t, Calc max that size_t can hold
         const int64_t size_max = std::numeric_limits<size_t>::max();
 
         /// read smaller of size_max, available
         ///??? redo
-        if (size_max < available)
-            available_size = static_cast<size_t>(size_max);
-        else
-            available_size = static_cast<size_t>(available);
+        if (size_max < available)   available_size = static_cast<size_t>(size_max);
+        else                        available_size = static_cast<size_t>(available);
     }
 
     size_t readCount = min(maxToRead_size, available_size);
 
     cf_->seek(logicalPosition_);
-    cf_->read(reinterpret_cast<char*>(toFill), readCount);  //??? cast ok?
+    cf_->read(toFill, readCount);
     logicalPosition_ += readCount;
     return(readCount);
 }
 
 ///================================================================
-class E57FileInputSource : public InputSource {
+/*class E57FileInputSource //: public InputSource
+{
 public :
     E57FileInputSource(CheckedFile* cf, uint64_t logicalStart, uint64_t logicalLength);
     ~E57FileInputSource(){};
-    BinInputStream* makeStream() const;
+    //BinInputStream* makeStream() const;
 
 private :
     ///  Unimplemented constructors and operators
@@ -2997,7 +3020,7 @@ E57FileInputSource::E57FileInputSource(CheckedFile* cf, uint64_t logicalStart, u
 BinInputStream* E57FileInputSource::makeStream() const
 {
     return new E57FileInputStream(cf_, logicalStart_, logicalLength_);
-}
+}*/
 
 ///============================================================================================================
 ///============================================================================================================
@@ -3006,32 +3029,31 @@ BinInputStream* E57FileInputSource::makeStream() const
 
 namespace e57 {
 
-class E57XmlParser : public DefaultHandler
+class E57XmlParser : public XMLStreamHandler
 {
 public:
-    E57XmlParser(boost::shared_ptr<ImageFileImpl> imf);
+    E57XmlParser(shared_ptr<ImageFileImpl> imf);
     ~E57XmlParser();
 
     /// SAX interface
     void startDocument();
     void endDocument();
-    void startElement(const XMLCh* const uri, const XMLCh* const localname, const XMLCh* const qname, const Attributes& attributes);
-    void endElement( const XMLCh* const uri,
-                     const XMLCh* const localname,
-                     const XMLCh* const qname);
-    void characters(const XMLCh* const chars, const XMLSize_t length);
-    void processingInstruction(const XMLCh* const target, const XMLCh* const data);
+    void startElement(const string& uri, const string& localname, const string& qname, const map<string, XMLAttribute>& attributes);
+    void endElement( const string& uri, const string& localname, const string& qname);
+    void characters(const string& chars);
+    void processingInstruction(const string& target, const string& data);
 
     /// SAX error interface
-    void warning(const SAXParseException& exc);
-    void error(const SAXParseException& exc);
-    void fatalError(const SAXParseException& exc);
-private:
-    ustring toUString(const XMLCh* const xml_str);
-    ustring lookupAttribute(const Attributes& attributes, const XMLCh* attribute_name);
-    bool    isAttributeDefined(const Attributes& attributes, const XMLCh* attribute_name);
+    void warning(const string& chars);
+    void error(const string& chars);
+    void fatalError(const string& chars);
+    void onException(exception& e);
 
-    boost::shared_ptr<ImageFileImpl> imf_;   /// Image file we are reading
+private:
+    ustring lookupAttribute(const map<string, XMLAttribute>& attributes, const XMLCh* attribute_name);
+    bool    isAttributeDefined(const map<string, XMLAttribute>& attributes, const XMLCh* attribute_name);
+
+    shared_ptr<ImageFileImpl> imf_;   /// Image file we are reading
 
     struct ParseInfo {
         /// All the fields need to remember while parsing the XML
@@ -3100,7 +3122,7 @@ void E57XmlParser::ParseInfo::dump(int indent, ostream& os)
 
 } /// end namespace e57
 
-E57XmlParser::E57XmlParser(boost::shared_ptr<ImageFileImpl> imf)
+E57XmlParser::E57XmlParser(shared_ptr<ImageFileImpl> imf)
 : imf_(imf)
 {
 }
@@ -3126,23 +3148,19 @@ void E57XmlParser::endDocument()
 }
 
 
-void E57XmlParser::startElement(const   XMLCh* const    uri,
-                                const   XMLCh* const    localName,
-                                const   XMLCh* const    qName,
-                                const   Attributes&     attributes)
+void E57XmlParser::startElement(const string& uri, const string& localName, const string& qName, const map<string,XMLAttribute>& attributes)
 {
 #ifdef E57_MAX_VERBOSE
     cout << "startElement" << endl;
-    cout << space(2) << "URI:       " << toUString(uri) << endl;
-    cout << space(2) << "localName: " << toUString(localName) << endl;
-    cout << space(2) << "qName:     " << toUString(qName) << endl;
+    cout << space(2) << "URI:       " << uri << endl;
+    cout << space(2) << "localName: " << localName << endl;
+    cout << space(2) << "qName:     " << qName << endl;
 
-    for (size_t i = 0; i < attributes.getLength(); i++) {
-        cout << space(2) << "Attribute[" << i << "]" << endl;
-        cout << space(4) << "URI:       " << toUString(attributes.getURI(i)) << endl;
-        cout << space(4) << "localName: " << toUString(attributes.getLocalName(i)) << endl;
-        cout << space(4) << "qName:     " << toUString(attributes.getQName(i)) << endl;
-        cout << space(4) << "value:     " << toUString(attributes.getValue(i)) << endl;
+    for (auto attrib : attributes) {
+        cout << space(4) << "URI:       " << attrib.second.uri() << endl;
+        cout << space(4) << "localName: " << attrib.second.name() << endl;
+        cout << space(4) << "qName:     " << attrib.second.key << endl;
+        cout << space(4) << "value:     " << attrib.second.val << endl;
     }
 #endif
     /// Get Type attribute
@@ -3258,9 +3276,9 @@ void E57XmlParser::startElement(const   XMLCh* const    uri,
 				throw E57_EXCEPTION2(E57_ERROR_BAD_XML_FORMAT,
 									 "precisionString=" + precision_str
 									 + " fileName=" + imf_->fileName()
-									 + " uri=" + toUString(uri)
-									 + " localName=" + toUString(localName)
-									 + " qName=" + toUString(qName));
+									 + " uri=" + toString(uri)
+									 + " localName=" + toString(localName)
+									 + " qName=" + toString(qName));
 			}
 		} else {
             /// Not defined defined in XML, so defaults to double
@@ -3336,26 +3354,27 @@ void E57XmlParser::startElement(const   XMLCh* const    uri,
         pi.nodeType = E57_STRUCTURE;
 
         /// Read name space decls, if e57Root element
-        if (toUString(localName) == "e57Root") {
+        if (toString(localName) == "e57Root") {
             /// Search attributes for namespace declarations (only allowed in E57Root structure)
             bool gotDefault = false;
-            for (size_t i = 0; i < attributes.getLength(); i++) {
+            for (auto a : attributes) {
+                auto& attrib = a.second;
                 /// Check if declaring the default namespace
-                if (toUString(attributes.getQName(i)) == "xmlns") {
+                if (attrib.qname() == "xmlns") {
 #ifdef E57_VERBOSE
-                    cout << "declared default namespace, URI=" << toUString(attributes.getValue(i)) << endl;
+                    cout << "declared default namespace, URI=" << attrib.val << endl;
 #endif
-                    imf_->extensionsAdd("", toUString(attributes.getValue(i)));
+                    imf_->extensionsAdd("", attrib.val);
                     gotDefault = true;
                 }
 
                 /// Check if declaring a namespace
-                if (toUString(attributes.getURI(i)) == "http://www.w3.org/2000/xmlns/") {
+                if (toString(attrib.uri()) == "http://www.w3.org/2000/xmlns/") {
 #ifdef E57_VERBOSE
-                    cout << "declared extension, prefix=" << toUString(attributes.getLocalName(i))
-                         << " URI=" << toUString(attributes.getValue(i)) << endl;
+                    cout << "declared extension, prefix=" << attrib.name()
+                         << " URI=" << attrib.val << endl;
 #endif
-                    imf_->extensionsAdd(toUString(attributes.getLocalName(i)), toUString(attributes.getValue(i)));
+                    imf_->extensionsAdd(attrib.name(), attrib.val);
                 }
             }
 
@@ -3363,9 +3382,9 @@ void E57XmlParser::startElement(const   XMLCh* const    uri,
             if (!gotDefault) {
                 throw E57_EXCEPTION2(E57_ERROR_BAD_XML_FORMAT,
                                      "fileName=" + imf_->fileName()
-                                     + " uri=" + toUString(uri)
-                                     + " localName=" + toUString(localName)
-                                     + " qName=" + toUString(qName));
+                                     + " uri=" + toString(uri)
+                                     + " localName=" + toString(localName)
+                                     + " qName=" + toString(qName));
             }
         }
 
@@ -3374,7 +3393,7 @@ void E57XmlParser::startElement(const   XMLCh* const    uri,
         pi.container_ni = s_ni;
 
         /// After have Structure, check again if E57Root, if so mark attached so all children will be attached when added
-        if (toUString(localName) == "e57Root")
+        if (toString(localName) == "e57Root")
             s_ni->setAttachedRecursive();
 
         /// Push info so far onto stack
@@ -3402,9 +3421,9 @@ void E57XmlParser::startElement(const   XMLCh* const    uri,
                 throw E57_EXCEPTION2(E57_ERROR_BAD_XML_FORMAT,
                                      "allowHeterogeneousChildren=" + toString(i64)
                                      + "fileName=" + imf_->fileName()
-                                     + " uri=" + toUString(uri)
-                                     + " localName=" + toUString(localName)
-                                     + " qName=" + toUString(qName));
+                                     + " uri=" + toString(uri)
+                                     + " localName=" + toString(localName)
+                                     + " qName=" + toString(qName));
             }
         } else {
             /// Not defined defined in XML, so defaults to false
@@ -3455,18 +3474,16 @@ void E57XmlParser::startElement(const   XMLCh* const    uri,
         throw E57_EXCEPTION2(E57_ERROR_BAD_XML_FORMAT,
                              "nodeType=" + node_type
                              + " fileName=" + imf_->fileName()
-                             + " uri=" + toUString(uri)
-                             + " localName=" + toUString(localName)
-                             + " qName=" + toUString(qName));
+                             + " uri=" + toString(uri)
+                             + " localName=" + toString(localName)
+                             + " qName=" + toString(qName));
     }
 #ifdef E57_MAX_VERBOSE
     pi.dump(4);
 #endif
 }
 
-void E57XmlParser::endElement(const XMLCh* const uri,
-                              const XMLCh* const localName,
-                              const XMLCh* const qName)
+void E57XmlParser::endElement(const string& uri, const string& localName, const string& qName)
 {
 #ifdef E57_MAX_VERBOSE
     cout << "endElement" << endl;
@@ -3544,9 +3561,9 @@ void E57XmlParser::endElement(const XMLCh* const uri,
             throw E57_EXCEPTION2(E57_ERROR_INTERNAL,
                                  "nodeType=" + toString(pi.nodeType)
                                  + " fileName=" + imf_->fileName()
-                                 + " uri=" + toUString(uri)
-                                 + " localName=" + toUString(localName)
-                                 + " qName=" + toUString(qName));
+                                 + " uri=" + toString(uri)
+                                 + " localName=" + toString(localName)
+                                 + " qName=" + toString(qName));
     }
 #ifdef E57_MAX_VERBOSE
     current_ni->dump(4);
@@ -3559,9 +3576,9 @@ void E57XmlParser::endElement(const XMLCh* const uri,
             throw E57_EXCEPTION2(E57_ERROR_BAD_XML_FORMAT,
                                  "currentType=" + toString(current_ni->type())
                                  + " fileName=" + imf_->fileName()
-                                 + " uri=" + toUString(uri)
-                                 + " localName=" + toUString(localName)
-                                 + " qName=" + toUString(qName));
+                                 + " uri=" + toString(uri)
+                                 + " localName=" + toString(localName)
+                                 + " qName=" + toString(qName));
         }
         imf_->root_ = dynamic_pointer_cast<StructureNodeImpl>(current_ni);
         return;
@@ -3572,9 +3589,9 @@ void E57XmlParser::endElement(const XMLCh* const uri,
     if (!parent_ni) {
         throw E57_EXCEPTION2(E57_ERROR_BAD_XML_FORMAT,
                              "fileName=" + imf_->fileName()
-                             + " uri=" + toUString(uri)
-                             + " localName=" + toUString(localName)
-                             + " qName=" + toUString(qName));
+                             + " uri=" + toString(uri)
+                             + " localName=" + toString(localName)
+                             + " qName=" + toString(qName));
     }
 
     /// Add current node into parent at top of stack
@@ -3583,7 +3600,7 @@ void E57XmlParser::endElement(const XMLCh* const uri,
             shared_ptr<StructureNodeImpl> struct_ni = dynamic_pointer_cast<StructureNodeImpl>(parent_ni);
 
             /// Add named child to structure
-            struct_ni->set(toUString(qName), current_ni);
+            struct_ni->set(toString(qName), current_ni);
             } break;
         case E57_VECTOR: {
             shared_ptr<VectorNodeImpl> vector_ni = dynamic_pointer_cast<VectorNodeImpl>(parent_ni);
@@ -3593,7 +3610,7 @@ void E57XmlParser::endElement(const XMLCh* const uri,
             } break;
         case E57_COMPRESSED_VECTOR: {
             shared_ptr<CompressedVectorNodeImpl> cv_ni = dynamic_pointer_cast<CompressedVectorNodeImpl>(parent_ni);
-            ustring uQName = toUString(qName);
+            ustring uQName = toString(qName);
 
             /// n can be either prototype or codecs
             if (uQName == "prototype")
@@ -3603,9 +3620,9 @@ void E57XmlParser::endElement(const XMLCh* const uri,
                     throw E57_EXCEPTION2(E57_ERROR_BAD_XML_FORMAT,
                                          "currentType=" + toString(current_ni->type())
                                          + " fileName=" + imf_->fileName()
-                                         + " uri=" + toUString(uri)
-                                         + " localName=" + toUString(localName)
-                                         + " qName=" + toUString(qName));
+                                         + " uri=" + toString(uri)
+                                         + " localName=" + toString(localName)
+                                         + " qName=" + toString(qName));
                 }
                 shared_ptr<VectorNodeImpl> vi = dynamic_pointer_cast<VectorNodeImpl>(current_ni);
 
@@ -3614,9 +3631,9 @@ void E57XmlParser::endElement(const XMLCh* const uri,
                     throw E57_EXCEPTION2(E57_ERROR_BAD_XML_FORMAT,
                                          "currentType=" + toString(current_ni->type())
                                          + " fileName=" + imf_->fileName()
-                                         + " uri=" + toUString(uri)
-                                         + " localName=" + toUString(localName)
-                                         + " qName=" + toUString(qName));
+                                         + " uri=" + toString(uri)
+                                         + " localName=" + toString(localName)
+                                         + " qName=" + toString(qName));
                 }
 
                 cv_ni->setCodecs(vi);
@@ -3624,9 +3641,9 @@ void E57XmlParser::endElement(const XMLCh* const uri,
                 /// Found unknown XML child element of CompressedVector, not prototype or codecs
                 throw E57_EXCEPTION2(E57_ERROR_BAD_XML_FORMAT,
                                      + "fileName=" + imf_->fileName()
-                                     + " uri=" + toUString(uri)
-                                     + " localName=" + toUString(localName)
-                                     + " qName=" + toUString(qName));
+                                     + " uri=" + toString(uri)
+                                     + " localName=" + toString(localName)
+                                     + " qName=" + toString(qName));
             }
         } break;
         default:
@@ -3634,15 +3651,15 @@ void E57XmlParser::endElement(const XMLCh* const uri,
             throw E57_EXCEPTION2(E57_ERROR_BAD_XML_FORMAT,
                                  "parentType=" + toString(parent_ni->type())
                                  + " fileName=" + imf_->fileName()
-                                 + " uri=" + toUString(uri)
-                                 + " localName=" + toUString(localName)
-                                 + " qName=" + toUString(qName));
+                                 + " uri=" + toString(uri)
+                                 + " localName=" + toString(localName)
+                                 + " qName=" + toString(qName));
     }
 }
 
 
-void E57XmlParser::processingInstruction(const XMLCh* const /*target*/,
-                                         const XMLCh* const /*data*/)
+void E57XmlParser::processingInstruction(const string& /*target*/,
+                                         const string& /*data*/)
 {
 #ifdef E57_MAX_VERBOSE
     cout << "processingInstruction" << endl;
@@ -3650,83 +3667,82 @@ void E57XmlParser::processingInstruction(const XMLCh* const /*target*/,
 }
 
 
-void E57XmlParser::characters(const   XMLCh* const chars,
-                              const   XMLSize_t    length)
+void E57XmlParser::characters(const string& chars)
 {
+    /// Get active element
+    if (stack_.size() <= 0) return;
+    ParseInfo& pi = stack_.top();
 //??? use length to make ustring
 #ifdef E57_MAX_VERBOSE
-    cout << "characters, chars=\"" << toUString(chars) << "\" length=" << length << endl;
+    cout << "characters, chars=\"" << chars << "\" length=" << chars.size() << ", nodeType: " << pi.nodeType << endl;
 #endif
-    /// Get active element
-    ParseInfo& pi = stack_.top();
 
     /// Check if child text is allowed for current E57 element type
     switch (pi.nodeType) {
         case E57_STRUCTURE:
         case E57_VECTOR:
         case E57_COMPRESSED_VECTOR:
-        case E57_BLOB: {
-            /// If characters aren't whitespace, have an error, else ignore
-            ustring s = toUString(chars);
-            if (s.find_first_not_of(" \t\n\r") != string::npos)
-                throw E57_EXCEPTION2(E57_ERROR_BAD_XML_FORMAT, "chars=" + toUString(chars));
-            } break;
+        case E57_BLOB:
+            {
+                /// If characters aren't whitespace, have an error, else ignore
+                ustring s = toString(chars);
+                if (s.find_first_not_of(" \t\n\r") != string::npos)
+                    throw E57_EXCEPTION2(E57_ERROR_BAD_XML_FORMAT, "chars=" + chars);
+            }
+            break;
         default:
             /// Append to any previous characters
-            pi.childText += toUString(chars);
+            pi.childText += toString(chars);
     }
 }
 
-void E57XmlParser::error(const SAXParseException& ex)
+void E57XmlParser::error(const string& ex)
 {
-    throw E57_EXCEPTION2(E57_ERROR_XML_PARSER,
-                         "systemId=" + ustring(XMLString::transcode(ex.getSystemId()))
-                         + " xmlLine=" + toString(ex.getLineNumber())
-                         + " xmlColumn=" + toString(ex.getColumnNumber())
-                         + " parserMessage=" + ustring(XMLString::transcode(ex.getMessage())));
+    cout << " ---- E57XmlParser::error: " << ex << endl;
 }
 
-void E57XmlParser::fatalError(const SAXParseException& ex)
+void E57XmlParser::fatalError(const string& ex)
 {
-    throw E57_EXCEPTION2(E57_ERROR_XML_PARSER,
-                         "systemId=" + ustring(XMLString::transcode(ex.getSystemId()))
-                         + " xmlLine=" + toString(ex.getLineNumber())
-                         + " xmlColumn=" + toString(ex.getColumnNumber())
-                         + " parserMessage=" + ustring(XMLString::transcode(ex.getMessage())));
+    cout << " ---- E57XmlParser::fatalError: " << ex << endl;
 }
 
-void E57XmlParser::warning(const SAXParseException& ex)
+void E57XmlParser::warning(const string& ex)
 {
-    /// Don't take any action on warning from parser, just report
-    cerr << "**** XML parser warning: " << ustring(XMLString::transcode(ex.getMessage())) << endl;
-    cerr << "  Debug info:" << endl;
-    cerr << "    systemId=" << XMLString::transcode(ex.getSystemId()) << endl;
-    cerr << ",   xmlLine="     << ex.getLineNumber() << endl;
-    cerr << ",   xmlColumn="   << ex.getColumnNumber() << endl;
+    cout << " ---- E57XmlParser::warning: " << ex << endl;
 }
 
-ustring E57XmlParser::toUString(const XMLCh* const xml_str)
-{
-    ustring u_str;
-    if (xml_str && *xml_str) {
-        TranscodeToStr UTF8Transcoder(xml_str, "UTF-8");
-        u_str  = ustring(reinterpret_cast<const char*>(UTF8Transcoder.str()));
+void E57XmlParser::onException(exception& e) {
+    string msg = e.what();
+    E57Exception* ex = dynamic_cast<E57Exception*>(&e);
+    if (ex) {
+        msg  = "\n context: " + string(ex->context());
+        msg += "\n file: " + string(ex->sourceFileName());
+        msg += "\n function: " + string(ex->sourceFunctionName());
+        msg += "\n line: " + toString(ex->sourceLineNumber());
     }
-    return(u_str);
+    cout << "\n ---- E57XmlParser::onException: " << msg << endl;
 }
 
-ustring E57XmlParser::lookupAttribute(const Attributes& attributes, const XMLCh* attribute_name)
-{
-    XMLSize_t attr_index;
-    if (!attributes.getIndex(attribute_name, attr_index))
-        throw E57_EXCEPTION2(E57_ERROR_BAD_XML_FORMAT, "attributeName=" + toUString(attribute_name));
-    return(toUString(attributes.getValue(attr_index)));
+string arrToString(const XMLCh* arr) {
+    string s;
+    while(arr && arr[0]) {
+        s += arr[0];
+        arr = &arr[1];
+    }
+    return s;
 }
 
-bool E57XmlParser::isAttributeDefined(const Attributes& attributes, const XMLCh* attribute_name)
+ustring E57XmlParser::lookupAttribute(const map<string, XMLAttribute>& attributes, const XMLCh* attribute_name)
 {
-    XMLSize_t attr_index;
-    return(attributes.getIndex(attribute_name, attr_index));
+    string key = arrToString(attribute_name);
+    auto a = attributes.find(key);
+    if (a != attributes.end()) return a->second.val;
+    else return "";
+}
+
+bool E57XmlParser::isAttributeDefined(const map<string, XMLAttribute>& attributes, const XMLCh* attribute_name)
+{
+    return attributes.count( arrToString(attribute_name) );
 }
 
 //=============================================================================
@@ -3772,6 +3788,8 @@ void ImageFileImpl::construct2(const ustring& fileName, const ustring& mode, con
         throw E57_EXCEPTION2(E57_ERROR_BAD_API_ARGUMENT, "mode=" + ustring(mode));
 
     /// If mode is read, do it
+    XML xml;
+
     file_ = NULL;
     if (!isWriter_) {
         try { //??? should one try block cover whole function?
@@ -3797,54 +3815,18 @@ void ImageFileImpl::construct2(const ustring& fileName, const ustring& mode, con
             throw;  // rethrow
         }
 
-        SAX2XMLReader* xmlReader = NULL;
 
-        // Initialize the XML4C2 system
-        try {
-             XMLPlatformUtils::Initialize();
-        } catch (const XMLException& ex) {
-            /// Turn parser exception into E57Exception
-             throw E57_EXCEPTION2(E57_ERROR_XML_PARSER_INIT, "parserMessage=" + ustring(XMLString::transcode(ex.getMessage())));
-        }
+        /// Create parser state, attach its event handers to the SAX2 reader
+        E57XmlParser parser(imf);
 
-        xmlReader = XMLReaderFactory::createXMLReader(); //??? auto_ptr?
+        /// Create input source (XML section of E57 file turned into a stream).
+        //E57FileInputSource xmlSection(file_, xmlLogicalOffset_, xmlLogicalLength_);
+        E57FileInputStream iStream(file_, xmlLogicalOffset_, xmlLogicalLength_);
 
-        //??? check these are right
-        xmlReader->setFeature(XMLUni::fgSAX2CoreValidation,        true);
-        xmlReader->setFeature(XMLUni::fgXercesDynamic,             true);
-        xmlReader->setFeature(XMLUni::fgSAX2CoreNameSpaces,        true);
-        xmlReader->setFeature(XMLUni::fgXercesSchema,              true);
-        xmlReader->setFeature(XMLUni::fgXercesSchemaFullChecking,  true);
-        xmlReader->setFeature(XMLUni::fgSAX2CoreNameSpacePrefixes, true);
+        unusedLogicalStart_ = sizeof(E57FileHeader);	//Added by SC
 
-        try {
-            /// Create parser state, attach its event handers to the SAX2 reader
-            E57XmlParser parser(imf);
-            xmlReader->setContentHandler(&parser);
-            xmlReader->setErrorHandler(&parser);
-
-            /// Create input source (XML section of E57 file turned into a stream).
-            E57FileInputSource xmlSection(file_, xmlLogicalOffset_, xmlLogicalLength_);
-
-			unusedLogicalStart_ = sizeof(E57FileHeader);	//Added by SC
-
-            /// Do the parse, building up the node tree
-            xmlReader->parse(xmlSection);
-
-        } catch (...) {
-            if (xmlReader != NULL) {
-                delete xmlReader;
-                xmlReader = NULL;
-            }
-            if (file_ != NULL) {
-                delete file_;
-                file_ = NULL;
-            }
-            throw;  // rethrow
-        }
-        delete xmlReader;
-
-		XMLPlatformUtils::Terminate();	//Added by SC
+        /// Do the parse, building up the node tree
+        xml.stream(&iStream, &parser);
 
     } else { /// open for writing (start empty)
         try {
@@ -4876,7 +4858,10 @@ void CheckedFile::unlink()
     }
 
     /// Try to unlink the file, don't report a failure
-    /*int result =*/ ::_unlink(fileName_.c_str()); //??? unicode support here
+#ifdef E57_MAX_VERBOSE
+    int result =
+#endif
+    ::_unlink(fileName_.c_str()); //??? unicode support here
 #ifdef E57_MAX_VERBOSE
     if (result < 0)
         cout << "::unlink() failed, result=" << result << endl;
@@ -5747,7 +5732,7 @@ bool CompressedVectorWriterImpl::isOpen()
     return(isOpen_);
 }
 
-boost::shared_ptr<CompressedVectorNodeImpl> CompressedVectorWriterImpl::compressedVectorNode()
+shared_ptr<CompressedVectorNodeImpl> CompressedVectorWriterImpl::compressedVectorNode()
 {
     return(cVector_);
 }
@@ -5851,7 +5836,10 @@ void CompressedVectorWriterImpl::write(const size_t requestedRecordCount)
         float totalBitsPerRecord = 0;  // an estimate of future performance
         for (unsigned i=0; i < bytestreams_.size(); i++)
             totalBitsPerRecord += bytestreams_.at(i)->bitsPerRecord();
-        /*float totalBytesPerRecord =*/ max(totalBitsPerRecord/8, 0.1F); //??? trust
+#ifdef E57_MAX_VERBOSE
+        float totalBytesPerRecord =
+#endif
+        max(totalBitsPerRecord/8, 0.1F); //??? trust
 
 #ifdef E57_MAX_VERBOSE
         cout << "  totalBytesPerRecord=" << totalBytesPerRecord << endl; //???
@@ -5960,7 +5948,7 @@ uint64_t CompressedVectorWriterImpl::packetWrite()
     /// Use temp buf in object (is 64KBytes long) instead of allocating each time here
     char* packet = reinterpret_cast<char*>(&dataPacket_);
 #ifdef E57_MAX_VERBOSE
-    cout << "  packet=" << (unsigned)packet << endl; //???
+    cout << "  packet=" << (long)packet << endl; //???
 #endif
 
     /// To be safe, clear header part of packet
@@ -5969,7 +5957,7 @@ uint64_t CompressedVectorWriterImpl::packetWrite()
     /// Write bytestreamBufferLength[bytestreamCount] after header, in dataPacket_
     uint16_t* bsbLength = reinterpret_cast<uint16_t*>(&packet[sizeof(DataPacketHeader)]);
 #ifdef E57_MAX_VERBOSE
-    cout << "  bsbLength=" << (unsigned)bsbLength << endl; //???
+    cout << "  bsbLength=" << (long)bsbLength << endl; //???
 #endif
     for (unsigned i=0; i < bytestreams_.size(); i++) {
         bsbLength[i] = static_cast<uint16_t>(count.at(i));		// %%% Truncation
@@ -5981,7 +5969,7 @@ uint64_t CompressedVectorWriterImpl::packetWrite()
     /// Get pointer to end of data so far
     char* p = reinterpret_cast<char*>(&bsbLength[bytestreams_.size()]);
 #ifdef E57_MAX_VERBOSE
-    cout << "  after bsbLength, p=" << (unsigned)p << endl; //???
+    cout << "  after bsbLength, p=" << (long)p << endl; //???
 #endif
 
     /// Write contents of each bytestream in dataPacket_
@@ -6033,7 +6021,7 @@ uint64_t CompressedVectorWriterImpl::packetWrite()
     dataPacket_.packetType = E57_DATA_PACKET;
     dataPacket_.packetFlags = 0;
     dataPacket_.packetLogicalLengthMinus1 = static_cast<uint16_t>(packetLength-1);		    // %%% Truncation
-    dataPacket_.bytestreamCount = static_cast<boost::uint16_t>(bytestreams_.size());		// %%% Truncation
+    dataPacket_.bytestreamCount = static_cast<uint16_t>(bytestreams_.size());		// %%% Truncation
 
     /// Double check that data packet is well formed
     dataPacket_.verify(packetLength);
@@ -6359,7 +6347,9 @@ unsigned CompressedVectorReaderImpl::read()
 uint64_t CompressedVectorReaderImpl::earliestPacketNeededForInput()
 {
     uint64_t earliestPacketLogicalOffset = E57_UINT64_MAX;
-    //unsigned earliestChannel = 0;
+#ifdef E57_MAX_VERBOSE
+    unsigned earliestChannel = 0;
+#endif
     for (unsigned i = 0; i < channels_.size(); i++) {
         DecodeChannel* chan = &channels_[i];
 
@@ -6369,7 +6359,9 @@ uint64_t CompressedVectorReaderImpl::earliestPacketNeededForInput()
             /// Check if earliest so far
             if (chan->currentPacketLogicalOffset < earliestPacketLogicalOffset) {
                 earliestPacketLogicalOffset = chan->currentPacketLogicalOffset;
-                //earliestChannel = i;
+#ifdef E57_MAX_VERBOSE
+                earliestChannel = i;
+#endif
             }
         }
     }
@@ -6539,7 +6531,7 @@ bool CompressedVectorReaderImpl::isOpen()
     return(isOpen_);
 }
 
-boost::shared_ptr<CompressedVectorNodeImpl> CompressedVectorReaderImpl::compressedVectorNode()
+shared_ptr<CompressedVectorNodeImpl> CompressedVectorReaderImpl::compressedVectorNode()
 {
     return(cVector_);
 }
@@ -6784,7 +6776,7 @@ size_t BitpackEncoder::outputAvailable()
 void BitpackEncoder::outputRead(char* dest, const size_t byteCount)
 {
 #ifdef E57_MAX_VERBOSE
-    cout << "BitpackEncoder::outputRead() called, dest=" << (unsigned)dest << " byteCount="<< byteCount << endl; //???
+    cout << "BitpackEncoder::outputRead() called, dest=" << (long)dest << " byteCount="<< byteCount << endl; //???
 #endif
 
     /// Check we have enough bytes in queue
@@ -7276,7 +7268,7 @@ void BitpackDecoder::destBufferSetNew(vector<SourceDestBuffer>& dbufs)
 size_t BitpackDecoder::inputProcess(const char* source, const size_t availableByteCount)
 {
 #ifdef E57_MAX_VERBOSE
-    cout << "BitpackDecoder::inputprocess() called, source=" << (unsigned)source << " availableByteCount="<< availableByteCount << endl;
+    cout << "BitpackDecoder::inputprocess() called, source=" << (long)source << " availableByteCount="<< availableByteCount << endl;
 #endif
     size_t bytesUnsaved = availableByteCount;
     size_t bitsEaten = 0;
@@ -7403,7 +7395,7 @@ BitpackFloatDecoder::BitpackFloatDecoder(unsigned bytestreamNumber, SourceDestBu
 size_t BitpackFloatDecoder::inputProcessAligned(const char* inbuf, const size_t firstBit, const size_t endBit)
 {
 #ifdef E57_MAX_VERBOSE
-    cout << "BitpackFloatDecoder::inputProcessAligned() called, inbuf=" << (unsigned)inbuf << " firstBit=" << firstBit << " endBit=" << endBit << endl;
+    cout << "BitpackFloatDecoder::inputProcessAligned() called, inbuf=" << (long)inbuf << " firstBit=" << firstBit << " endBit=" << endBit << endl;
 #endif
     /// Read from inbuf, decode, store in destBuffer
     /// Repeat until have filled destBuffer, or completed all records
@@ -7507,7 +7499,7 @@ BitpackStringDecoder::BitpackStringDecoder(unsigned bytestreamNumber, SourceDest
 size_t BitpackStringDecoder::inputProcessAligned(const char* inbuf, const size_t firstBit, const size_t endBit)
 {
 #ifdef E57_MAX_VERBOSE
-    cout << "BitpackStringDecoder::inputProcessAligned() called, inbuf=" << (unsigned)inbuf << " firstBit=" << firstBit << " endBit=" << endBit << endl;
+    cout << "BitpackStringDecoder::inputProcessAligned() called, inbuf=" << (long)inbuf << " firstBit=" << firstBit << " endBit=" << endBit << endl;
 #endif
     /// Read from inbuf, decode, store in destBuffer
     /// Repeat until have filled destBuffer, or completed all records
@@ -7665,7 +7657,7 @@ void ConstantIntegerDecoder::destBufferSetNew(vector<SourceDestBuffer>& dbufs)
 size_t ConstantIntegerDecoder::inputProcess(const char* source, const size_t availableByteCount)
 {
 #ifdef E57_MAX_VERBOSE
-    cout << "ConstantIntegerDecoder::inputprocess() called, source=" << (unsigned)source << " availableByteCount=" << availableByteCount << endl;
+    cout << "ConstantIntegerDecoder::inputprocess() called, source=" << (long)source << " availableByteCount=" << availableByteCount << endl;
 #endif
 
     /// We don't need any input bytes to produce output, so ignore source and availableByteCount.
@@ -8332,7 +8324,7 @@ template <typename RegisterT>
 size_t BitpackIntegerDecoder<RegisterT>::inputProcessAligned(const char* inbuf, const size_t firstBit, const size_t endBit)
 {
 #ifdef E57_MAX_VERBOSE
-    cout << "BitpackIntegerDecoder::inputProcessAligned() called, inbuf=" << (unsigned)inbuf << " firstBit=" << firstBit << " endBit=" << endBit << endl;
+    cout << "BitpackIntegerDecoder::inputProcessAligned() called, inbuf=" << (long)inbuf << " firstBit=" << firstBit << " endBit=" << endBit << endl;
 #endif
 
     /// Read from inbuf, decode, store in destBuffer
