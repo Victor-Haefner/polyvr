@@ -156,6 +156,7 @@ void VRRenderStudio::init(VRObjectPtr root) {
     initMarker( stages["marker"]->getMaterial() );
 
     stages["calibration"]->getTop()->setVolumeCheck(false, true);
+    stages["marker"]->getTop()->setVolumeCheck(false, true);
 
     if (root) setScene(root);
     update();
