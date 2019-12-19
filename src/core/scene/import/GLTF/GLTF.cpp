@@ -9,6 +9,8 @@
 #include "core/objects/VRLightBeacon.h"
 #include "core/objects/VRCamera.h"
 
+#include "core/scene/VRScene.h"
+
 #include <string>
 #include <iostream>
 #include <fstream>
@@ -1287,29 +1289,97 @@ class GLTFLoader : public GLTFUtils {
         }
 
         void debugModel(tinygltf::Model *model){
+            cout << "trying to read from model" << endl;
             auto allMeshes = model->meshes;
+            cout << "Meshes " << allMeshes.size() << endl;
+            long n = 0;
+
+            VRGeoData gdata = VRGeoData();
+            VRGeometryPtr VRgeo = VRGeometry::create("test");
+            auto scene = VRScene::getCurrent();
+            scene->getRoot()->addChild(VRgeo);
+            VRgeo->setPersistency(0);
+            vector<Vec3d> positionVecs;
+            vector<Vec3d> normalVecs;
+
             for (auto mesh : allMeshes) {
                 auto allPrims = mesh.primitives;
+                cout << "Primitives " << allPrims.size() << endl;
                 for (auto primitive : allPrims) {
-                    const tinygltf::Accessor& accessor = model->accessors[primitive.attributes["POSITION"]];
-                    const tinygltf::BufferView& bufferView = model->bufferViews[accessor.bufferView];
+                    string atts = "";
+                    const tinygltf::Accessor& accessorP = model->accessors[primitive.attributes["POSITION"]];
+                    const tinygltf::Accessor& accessorN = model->accessors[primitive.attributes["NORMAL"]];
+                    const tinygltf::Accessor& accessorColor = model->accessors[primitive.attributes["COLOR_0"]];
+                    const tinygltf::Accessor& accessorTexUV = model->accessors[primitive.attributes["TEXCOORD_0"]];
+                    for (auto att : primitive.attributes) atts += att.first + " ";
+                    cout << atts << endl;
+                    const tinygltf::BufferView& bufferViewP = model->bufferViews[accessorP.bufferView];
+                    const tinygltf::BufferView& bufferViewN = model->bufferViews[accessorN.bufferView];
+                    const tinygltf::BufferView& bufferViewCO = model->bufferViews[accessorColor.bufferView];
+                    const tinygltf::BufferView& bufferViewUV = model->bufferViews[accessorTexUV.bufferView];
 
                     // cast to float type read only. Use accessor and bufview byte offsets to determine where position data
                     // is located in the buffer.
-                    const tinygltf::Buffer& buffer = model->buffers[bufferView.buffer];
+                    const tinygltf::Buffer& bufferP = model->buffers[bufferViewP.buffer];
+                    const tinygltf::Buffer& bufferN = model->buffers[bufferViewN.buffer];
+                    const tinygltf::Buffer& bufferCO = model->buffers[bufferViewCO.buffer];
+                    const tinygltf::Buffer& bufferUV = model->buffers[bufferViewUV.buffer];
                     // bufferView byteoffset + accessor byteoffset tells you where the actual position data is within the buffer. From there
                     // you should already know how the data needs to be interpreted.
-                    const float* positions = reinterpret_cast<const float*>(&buffer.data[bufferView.byteOffset + accessor.byteOffset]);
+                    const float* positions = reinterpret_cast<const float*>(&bufferP.data[bufferViewP.byteOffset + accessorP.byteOffset]);
+                    const float* normals   = reinterpret_cast<const float*>(&bufferN.data[bufferViewN.byteOffset + accessorN.byteOffset]);
+                    const float* colors   = reinterpret_cast<const float*>(&bufferCO.data[bufferViewCO.byteOffset + accessorColor.byteOffset]);
+                    const float* UVs   = reinterpret_cast<const float*>(&bufferUV.data[bufferViewUV.byteOffset + accessorTexUV.byteOffset]);
                     // From here, you choose what you wish to do with this position data. In this case, we  will display it out.
-                    for (size_t i = 0; i < accessor.count; ++i) {
+
+                    cout << "ColorBufferLength " << accessorColor.count << endl;
+                    cout << "ColorBuffer Type  " << accessorColor.type << endl;
+                    cout << "TexUVBufferLength " << accessorTexUV.count << endl;
+                    for (size_t i = 0; i < accessorP.count; ++i) {
                               // Positions are Vec3 components, so for each vec3 stride, offset for x, y, and z.
-                               std::cout << "(" << positions[i * 3 + 0] << ", "// x
+                              Vec3d pos = Vec3d( positions[i * 3 + 0], positions[i * 3 + 1], positions[i * 3 + 2] );
+                              Vec3d nor = Vec3d( normals  [i * 3 + 0], normals  [i * 3 + 1], normals  [i * 3 + 2] );
+                              gdata.pushVert(pos);
+                              gdata.pushNorm(nor);
+                              //if (accessorColor.type == 4){ auto cl = Color4f( colors[i * 4 + 0], colors[i * 4 + 1], colors[i * 4 + 2], colors[i * 4 + 2] ); gdata.pushColor(cl); }
+                              //if (accessorColor.type == 4){ auto cl = Color4f( 212.0/255.0,175.0/255.0,55.0/255.0, 1 ); gdata.pushColor(cl); }
+                              if (accessorColor.type == 4){ auto cl = Color4f( 212.0/255.0,175.0/255.0,55.0/255.0, 0.8 ); gdata.pushColor(cl); }
+                              n ++;
+                              //positionVecs.push_back(pos);
+                              //normalVecs.push_back(nor);
+                              //cout << nor << endl;
+
+                               /*std::cout << "(" << positions[i * 3 + 0] << ", "// x
                                                 << positions[i * 3 + 1] << ", "// y
                                                 << positions[i * 3 + 2] << ")" // z
-                                                << "\n";
+                                                << "\n";*/
+                    }
+                    if (primitive.mode == 4) {
+                        //DEFAULT TRIS
+                        const tinygltf::Accessor& accessorIndices = model->accessors[primitive.indices];
+                        const tinygltf::BufferView& bufferViewIndices = model->bufferViews[accessorIndices.bufferView];
+                        const tinygltf::Buffer& bufferInd = model->buffers[bufferViewIndices.buffer];
+                        const int* indices   = reinterpret_cast<const int*>(&bufferInd.data[bufferViewIndices.byteOffset + accessorIndices.byteOffset]);
+                        for (size_t i = 0; i < accessorIndices.count/3; ++i) {
+                            gdata.pushTri(indices[i*3+0],indices[i*3+1],indices[i*3+2]);
+                        }
                     }
                 }
+
+                /*if (normalIndex.size()) { // different normal indices, same primitives!
+                    for (int i : normalIndex) if (i >= 0) geo.pushNormalIndex(i);
+                } else {} // nothing to do */
+                //geo.apply(g);
+                //if (!doNormals) g->updateNormals(false);
             }
+
+            //for (auto p : positionVecs) { gdata.pushVert(p); }
+            //for (auto n : normalVecs) gdata.pushNorm(n);
+            //for ()
+            //auto geo = gdata.asGeometry("arrow");
+            gdata.apply(VRgeo);
+            cout << "read " << n << " vertices" << endl;
+            cout << "Felix kann jetzt auch triangles lul" << endl;
         }
 };
 
