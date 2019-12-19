@@ -30,6 +30,7 @@ class VRText {
         VRTexturePtr create(string text, string font, int res, Color4f fg, Color4f bg);
 
         static size_t countGraphemes(string txt);
+        static vector<string> splitGraphemes(string txt);
 };
 
 
