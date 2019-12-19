@@ -40,7 +40,7 @@ void VRText::analyzeText() {
 
     stringstream ss(text);
     for (string line; getline(ss, line); ) {
-        maxLineLength = max(maxLineLength, line.size());
+        maxLineLength = max(maxLineLength, countGraphemes(line));
         Nlines++;
     }
 }
@@ -93,11 +93,20 @@ VRTexturePtr VRText::createBmp (string text, string font, Color4f fg, Color4f bg
     cairo_rectangle(cr, 0, 0, texWidth, texHeight);
     cairo_fill(cr);
 
+    // test
+    /*cairo_set_source_rgba(cr, 1,0,0,1);
+    cairo_rectangle(cr, 0, 0, texWidth, texHeight);
+    cairo_fill(cr);
+    cairo_set_source_rgba(cr, 0,1,0,1);
+    cairo_rectangle(cr, padding, padding, texWidth-2*padding, texHeight-2*padding);
+    cairo_fill(cr);*/
+
     //text
     cairo_set_source_rgba (cr, fg[0],fg[1],fg[2],fg[3]);
     cairo_translate(cr, padding, padding);
     pango_cairo_update_layout (cr, layout);
     pango_cairo_show_layout (cr, layout);
+    pango_layout_get_pixel_size(layout, &layoutWidth, &layoutHeight);
 
     cairo_set_source_rgba(cr, bg[0],bg[1],bg[2],bg[3]);
     cairo_rectangle(cr, 0, 0, texWidth, padding-1); cairo_fill(cr);
@@ -115,4 +124,59 @@ VRTexturePtr VRText::createBmp (string text, string font, Color4f fg, Color4f bg
     cairo_surface_destroy (surface);
     return tex;
 }
+
+#include <unicode/utypes.h>
+#include <unicode/ubrk.h>
+#include <unicode/utext.h>
+
+struct UTextDeleter { void operator()(UText* ptr) { utext_close(ptr); } };
+struct UBreakIteratorDeleter { void operator()(UBreakIterator* ptr) { ubrk_close(ptr); } };
+using PUText = std::unique_ptr<UText, UTextDeleter>;
+using PUBreakIterator = std::unique_ptr<UBreakIterator, UBreakIteratorDeleter>;
+
+void checkStatus(const UErrorCode status) {
+    if (U_FAILURE(status)) cout << u_errorName(status) << endl;
+}
+
+size_t VRText::countGraphemes(string txt) {
+    UErrorCode status = U_ZERO_ERROR;
+    PUText text(utext_openUTF8(nullptr, txt.data(), txt.length(), &status));
+    checkStatus(status);
+
+    PUBreakIterator it(ubrk_open(UBRK_CHARACTER, "en_us", nullptr, 0, &status));
+    checkStatus(status);
+    ubrk_setUText(it.get(), text.get(), &status);
+    checkStatus(status);
+    size_t charCount = 0;
+    while (ubrk_next(it.get()) != UBRK_DONE) charCount++;
+    return charCount;
+}
+
+vector<string> VRText::splitGraphemes(string txt) {
+    UErrorCode status = U_ZERO_ERROR;
+    PUText text(utext_openUTF8(nullptr, txt.data(), txt.length(), &status));
+    checkStatus(status);
+
+    PUBreakIterator it(ubrk_open(UBRK_CHARACTER, "en_us", nullptr, 0, &status));
+    checkStatus(status);
+    ubrk_setUText(it.get(), text.get(), &status);
+    checkStatus(status);
+    vector<string> res;
+    while (true) {
+        UBreakIterator* IT = it.get();
+        int i = ubrk_current(IT);
+        if (ubrk_next(it.get()) == UBRK_DONE) break;
+        UText* t = text.get();
+        UChar32 c = utext_char32At(t, i);
+        icu::UnicodeString uni_str(c);
+        std::string str;
+        uni_str.toUTF8String(str);
+        res.push_back(str);
+    }
+    return res;
+}
+
+
+
+
 

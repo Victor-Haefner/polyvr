@@ -862,6 +862,12 @@
 		<Unit filename="src/core/scene/import/E57/time_conversion.h" />
 		<Unit filename="src/core/scene/import/GIS/VRGDAL.cpp" />
 		<Unit filename="src/core/scene/import/GIS/VRGDAL.h" />
+		<Unit filename="src/core/scene/import/GLTF/GLTF.cpp" />
+		<Unit filename="src/core/scene/import/GLTF/GLTF.h" />
+		<Unit filename="src/core/scene/import/GLTF/json.hpp" />
+		<Unit filename="src/core/scene/import/GLTF/stb_image.h" />
+		<Unit filename="src/core/scene/import/GLTF/stb_image_write.h" />
+		<Unit filename="src/core/scene/import/GLTF/tiny_gltf.h" />
 		<Unit filename="src/core/scene/import/STEP/VRBRepBound.cpp" />
 		<Unit filename="src/core/scene/import/STEP/VRBRepBound.h" />
 		<Unit filename="src/core/scene/import/STEP/VRBRepEdge.cpp" />
