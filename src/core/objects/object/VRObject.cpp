@@ -123,7 +123,7 @@ void applyVolumeCheckRecursive(NodeMTRecPtr n, bool b) {
 
 void VRObject::setVolumeCheck(bool b, bool recursive) {
     if (!getNode()) return;
-    applyVolumeCheck(n, b);
+    applyVolumeCheck(getNode()->node, b);
     if (recursive) applyVolumeCheckRecursive(getNode()->node, b);
 }
 

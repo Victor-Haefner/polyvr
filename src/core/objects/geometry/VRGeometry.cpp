@@ -80,7 +80,7 @@ void applyVolumeCheck2(NodeMTRecPtr n, bool b) {
 // applies also to mesh node if present
 void VRGeometry::setVolumeCheck(bool b, bool recursive) {
     if (!getNode()) return;
-    applyVolumeCheck2(n, b);
+    applyVolumeCheck2(getNode()->node, b);
     if (mesh_node) applyVolumeCheck2(mesh_node->node, b);
     if (recursive) VRObject::setVolumeCheck(b,recursive);
 }
