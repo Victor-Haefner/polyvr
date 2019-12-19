@@ -252,7 +252,6 @@
 			<Add option="-lraptor2" />
 			<Add option="-lgomp" />
 			<Add option="-llapacke" />
-			<Add option="-lxerces-c" />
 			<Add option="-lHACD" />
 			<Add option="-lssh2" />
 			<Add option="-lfftw3" />

@@ -65,6 +65,7 @@ class VRGeometry : public VRTransform {
         Reference getReference();
         void makeUnique();
         void setMeshVisibility(bool b);
+        void setVolumeCheck(bool b, bool recursive = false);
 
         virtual bool applyIntersectionAction(Action* ia);
         virtual void setPrimitive(string parameters);

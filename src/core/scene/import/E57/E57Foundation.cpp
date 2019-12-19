@@ -191,12 +191,6 @@ DEALINGS IN THE SOFTWARE.
 #include "E57FoundationImpl.h"
 using namespace e57;
 //using namespace std;
-using std::endl;
-
-//using namespace boost;
-using boost::shared_ptr;
-using boost::weak_ptr;
-using boost::dynamic_pointer_cast;
 
 //=====================================================================================
 /*================*/ /*!
@@ -219,7 +213,7 @@ It is OK (but wasteful) to include the E57Foundation.h header twice in the same 
 The <tt>using namespace e57;</tt> directive must follow the inclusion of the E57Foundation.h header file.
 The entire API is declared in the "e57" namespace to eliminate the risk that in a large application a class name conflicts with an existing type.
 All preprocessor macros defined in E57Foundation.h (which cannot be in a namespace) begin with the prefix @c "E57", so there is low risk of name clashes.
-For convenience, the @c using directive on <b>source line 7</b> allows all names in the @c std namespace to be used without qualification (e.g. @c cout instead of @c std::cout).
+For convenience, the @c using directive on <b>source line 7</b> allows all names in the @c std namespace to be used without qualification (e.g. @c cout instead of @c cout).
 
 In the @c main function there are two @c try blocks, the first creates a new file on disk, and the second reads the file back.
 The @c try block is used because the API reports errors by throwing c++ exceptions rather than returning an error code from each function (see E57Exception for more details).
@@ -1773,12 +1767,12 @@ The output format may change from version to version.
 @see     ImageFileDump.cpp example
 */ /*================*/
 #ifdef E57_DEBUG
-void Node::dump(int indent, std::ostream& os) const
+void Node::dump(int indent, ostream& os) const
 {
     impl_->dump(indent, os);
 }
 #else
-void Node::dump(int indent, std::ostream& os) const
+void Node::dump(int indent, ostream& os) const
 {}
 #endif
 
@@ -2016,12 +2010,12 @@ void StructureNode::set(const ustring& pathName, Node n)
 //! @brief   Diagnostic function to print internal state of object to output stream in an indented format.
 //! @copydetails Node::dump()
 #ifdef E57_DEBUG
-void StructureNode::dump(int indent, std::ostream& os) const
+void StructureNode::dump(int indent, ostream& os) const
 {
     impl_->dump(indent, os);
 }
 #else
-void StructureNode::dump(int indent, std::ostream& os) const
+void StructureNode::dump(int indent, ostream& os) const
 {}
 #endif
 
@@ -2060,7 +2054,7 @@ StructureNode::StructureNode(const Node& n)
 }
 
 //! @cond documentNonPublic   The following isn't part of the API, and isn't documented.
-StructureNode::StructureNode(boost::weak_ptr<ImageFileImpl> fileParent)
+StructureNode::StructureNode(weak_ptr<ImageFileImpl> fileParent)
 : impl_(new StructureNodeImpl(fileParent))
 {}
 
@@ -2290,12 +2284,12 @@ void VectorNode::append(Node n)
 //! @brief   Diagnostic function to print internal state of object to output stream in an indented format.
 //! @copydetails Node::dump()
 #ifdef E57_DEBUG
-void VectorNode::dump(int indent, std::ostream& os) const
+void VectorNode::dump(int indent, ostream& os) const
 {
     impl_->dump(indent, os);
 }
 #else
-void VectorNode::dump(int indent, std::ostream& os) const
+void VectorNode::dump(int indent, ostream& os) const
 {}
 #endif
 
@@ -2401,7 +2395,7 @@ The @a capacity must match the capacity of all other SourceDestBuffers that will
 @throw   ::E57_ERROR_BAD_BUFFER
 @throw   ::E57_ERROR_IMAGEFILE_NOT_OPEN
 @throw   ::E57_ERROR_INTERNAL           All objects in undocumented state
-@see     SourceDestBufferNumericCreate.cpp example, SourceDestVufferStringCreate.cpp example, ImageFile::reader, ImageFile::writer, CompressedVectorReader::read(std::vector<SourceDestBuffer>&), CompressedVectorWriter::write(std::vector<SourceDestBuffer>&)
+@see     SourceDestBufferNumericCreate.cpp example, SourceDestVufferStringCreate.cpp example, ImageFile::reader, ImageFile::writer, CompressedVectorReader::read(vector<SourceDestBuffer>&), CompressedVectorWriter::write(vector<SourceDestBuffer>&)
 */ /*================*/
 SourceDestBuffer::SourceDestBuffer(ImageFile destImageFile, const ustring pathName, int8_t* b, const size_t capacity, bool doConversion, bool doScaling, size_t stride)
 : impl_(new SourceDestBufferImpl(destImageFile.impl(), pathName, b, capacity, doConversion, doScaling, stride))
@@ -2508,7 +2502,7 @@ The API user is responsible for ensuring that the lifetime of the @a b vector ex
 @throw   ::E57_ERROR_INTERNAL           All objects in undocumented state
 @see     SourceDestBufferStringCreate.cpp example, SourceDestBufferNumericCreate.cpp example, SourceDestBuffer::doConversion for discussion on representations compatible with string SourceDestBuffers.
 */ /*================*/
-SourceDestBuffer::SourceDestBuffer(ImageFile destImageFile, const ustring pathName, std::vector<ustring>* b)
+SourceDestBuffer::SourceDestBuffer(ImageFile destImageFile, const ustring pathName, vector<ustring>* b)
 : impl_(new SourceDestBufferImpl(destImageFile.impl(), pathName, b))
 {
     CHECK_THIS_INVARIANCE()
@@ -2519,7 +2513,7 @@ SourceDestBuffer::SourceDestBuffer(ImageFile destImageFile, const ustring pathNa
 @details
 The prototype of a CompressedVectorNode describes the fields that are in each record.
 This function returns the path name of the node in the prototype tree that this SourceDestBuffer will write/read.
-The correctness of this path name is checked when this SourceDestBuffer is associated with a CompressedVectorNode (either in CompressedVectorNode::writer, CompressedVectorWriter::write(std::vector<SourceDestBuffer>&, unsigned), CompressedVectorNode::reader, CompressedVectorReader::read(std::vector<SourceDestBuffer>&)).
+The correctness of this path name is checked when this SourceDestBuffer is associated with a CompressedVectorNode (either in CompressedVectorNode::writer, CompressedVectorWriter::write(vector<SourceDestBuffer>&, unsigned), CompressedVectorNode::reader, CompressedVectorReader::read(vector<SourceDestBuffer>&)).
 
 @post    No visible state is modified.
 @return  Path name in prototype that this SourceDestBuffer will transfer data to/from.
@@ -2641,12 +2635,12 @@ size_t SourceDestBuffer::stride() const
 //! @brief   Diagnostic function to print internal state of object to output stream in an indented format.
 //! @copydetails Node::dump()
 #ifdef E57_DEBUG
-void SourceDestBuffer::dump(int indent, std::ostream& os) const
+void SourceDestBuffer::dump(int indent, ostream& os) const
 {
     impl_->dump(indent, os);
 }
 #else
-void SourceDestBuffer::dump(int indent, std::ostream& os) const
+void SourceDestBuffer::dump(int indent, ostream& os) const
 {}
 #endif
 
@@ -2692,7 +2686,7 @@ CompressedVectorReader::CompressedVectorReader(shared_ptr<CompressedVectorReader
 /*================*/ /*!
 @brief   Request transfer of blocks of data from CompressedVectorNode into previously designated destination buffers.
 @details
-The SourceDestBuffers used are previously designated either in CompressedVectorNode::reader where this object was created, or in the last call to CompressedVectorReader::read(std::vector<SourceDestBuffer>&) where new buffers were designated.
+The SourceDestBuffers used are previously designated either in CompressedVectorNode::reader where this object was created, or in the last call to CompressedVectorReader::read(vector<SourceDestBuffer>&) where new buffers were designated.
 The function will always return the full number of records requested (the capacity of the SourceDestBuffers) unless it has reached the end of the CompressedVectorNode, in which case it will return less than the capacity of the SourceDestBuffers.
 Partial reads will store the records at the beginning of the SourceDestBuffers.
 It is not an error to call this function after all records in the CompressedVectorNode have been read (the function returns 0).
@@ -2719,7 +2713,7 @@ The E57 Foundation Implementation cannot detect that a memory buffer been destro
 @throw   ::E57_ERROR_READ_FAILED        This CompressedVectorReader, associated ImageFile in undocumented state
 @throw   ::E57_ERROR_BAD_CHECKSUM       This CompressedVectorReader, associated ImageFile in undocumented state
 @throw   ::E57_ERROR_INTERNAL           All objects in undocumented state
-@see     SourceDestBufferNumericCreate.cpp example, CompressedVectorReader::read(std::vector<SourceDestBuffer>&), CompressedVectorNode::reader, SourceDestBuffer, CompressedVectorReader::read(std::vector<SourceDestBuffer>&)
+@see     SourceDestBufferNumericCreate.cpp example, CompressedVectorReader::read(vector<SourceDestBuffer>&), CompressedVectorNode::reader, SourceDestBuffer, CompressedVectorReader::read(vector<SourceDestBuffer>&)
 */ /*================*/
 unsigned CompressedVectorReader::read()
 {
@@ -2767,7 +2761,7 @@ The E57 Foundation Implementation cannot detect that a memory buffer been destro
 @throw   ::E57_ERROR_INTERNAL           All objects in undocumented state
 @see     SourceDestBufferNumericCreate.cpp example, CompressedVectorReader::read(), CompressedVectorNode::reader, SourceDestBuffer
 */ /*================*/
-unsigned CompressedVectorReader::read(std::vector<SourceDestBuffer>& dbufs)
+unsigned CompressedVectorReader::read(vector<SourceDestBuffer>& dbufs)
 {
     CHECK_INVARIANCE_RETURN(unsigned, impl_->read(dbufs));
 }
@@ -2847,12 +2841,12 @@ CompressedVectorNode CompressedVectorReader::compressedVectorNode() const
 //! @brief   Diagnostic function to print internal state of object to output stream in an indented format.
 //! @copydetails Node::dump()
 #ifdef E57_DEBUG
-void CompressedVectorReader::dump(int indent, std::ostream& os) const
+void CompressedVectorReader::dump(int indent, ostream& os) const
 {
     impl_->dump(indent, os);
 }
 #else
-void CompressedVectorReader::dump(int indent, std::ostream& os) const
+void CompressedVectorReader::dump(int indent, ostream& os) const
 {}
 #endif
 
@@ -2899,7 +2893,7 @@ CompressedVectorWriter::CompressedVectorWriter(shared_ptr<CompressedVectorWriter
 @brief   Request transfer of blocks of data to CompressedVectorNode from previously designated source buffers.
 @param   [in] recordCount   Number of records to write.
 @details
-The SourceDestBuffers used are previously designated either in CompressedVectorNode::writer where this object was created, or in the last call to CompressedVectorWriter::write(std::vector<SourceDestBuffer>&, unsigned) where new buffers were designated.
+The SourceDestBuffers used are previously designated either in CompressedVectorNode::writer where this object was created, or in the last call to CompressedVectorWriter::write(vector<SourceDestBuffer>&, unsigned) where new buffers were designated.
 
 If a conversion or bounds error occurs during the transfer, the CompressedVectorWriter is left in an undocumented state (it can't be used any further), and all previously written records are deleted from the associated CompressedVectorNode which will then have zero children.
 If a file I/O or checksum error occurs during the transfer, both this CompressedVectorWriter and the associated ImageFile are left in an undocumented state (they can't be used any further).
@@ -2926,7 +2920,7 @@ If CompressedVectorWriter::close is not called before the CompressedVectorWriter
 @throw   ::E57_ERROR_WRITE_FAILED       This CompressedVectorWriter, associated ImageFile in undocumented state
 @throw   ::E57_ERROR_BAD_CHECKSUM       This CompressedVectorWriter, associated ImageFile in undocumented state
 @throw   ::E57_ERROR_INTERNAL           All objects in undocumented state
-@see     SourceDestBufferNumericCreate.cpp example, CompressedVectorWriter::write(std::vector<SourceDestBuffer>&,unsigned), CompressedVectorNode::writer, CompressedVectorWriter::close, SourceDestBuffer, E57Exception
+@see     SourceDestBufferNumericCreate.cpp example, CompressedVectorWriter::write(vector<SourceDestBuffer>&,unsigned), CompressedVectorNode::writer, CompressedVectorWriter::close, SourceDestBuffer, E57Exception
 */ /*================*/
 void CompressedVectorWriter::write(const size_t recordCount)
 {
@@ -2975,7 +2969,7 @@ If a file I/O or checksum error occurs during the transfer, both this Compressed
 @throw   ::E57_ERROR_INTERNAL           All objects in undocumented state
 @see     SourceDestBufferNumericCreate.cpp example, CompressedVectorWriter::write(unsigned), CompressedVectorNode::writer, CompressedVectorWriter::close, SourceDestBuffer, E57Exception
 */ /*================*/
-void CompressedVectorWriter::write(std::vector<SourceDestBuffer>& sbufs, const size_t recordCount)
+void CompressedVectorWriter::write(vector<SourceDestBuffer>& sbufs, const size_t recordCount)
 {
     CHECK_THIS_INVARIANCE()
     impl_->write(sbufs, recordCount);
@@ -3036,12 +3030,12 @@ CompressedVectorNode CompressedVectorWriter::compressedVectorNode() const
 //! @brief   Diagnostic function to print internal state of object to output stream in an indented format.
 //! @copydetails Node::dump()
 #ifdef E57_DEBUG
-void CompressedVectorWriter::dump(int indent, std::ostream& os) const
+void CompressedVectorWriter::dump(int indent, ostream& os) const
 {
     impl_->dump(indent, os);
 }
 #else
-void CompressedVectorWriter::dump(int indent, std::ostream& os) const
+void CompressedVectorWriter::dump(int indent, ostream& os) const
 {}
 #endif
 
@@ -3223,12 +3217,12 @@ VectorNode CompressedVectorNode::codecs() const
 //! @brief   Diagnostic function to print internal state of object to output stream in an indented format.
 //! @copydetails Node::dump()
 #ifdef E57_DEBUG
-void CompressedVectorNode::dump(int indent, std::ostream& os) const
+void CompressedVectorNode::dump(int indent, ostream& os) const
 {
     impl_->dump(indent, os);
 }
 #else
-void CompressedVectorNode::dump(int indent, std::ostream& os) const
+void CompressedVectorNode::dump(int indent, ostream& os) const
 {}
 #endif
 
@@ -3276,7 +3270,7 @@ CompressedVectorNode::CompressedVectorNode(shared_ptr<CompressedVectorNodeImpl> 
 @brief   Create an iterator object for writing a series of blocks of data to a CompressedVectorNode.
 @param   [in] sbufs         Vector of memory buffers that will hold data to be written to a CompressedVectorNode.
 @details
-See CompressedVectorWriter::write(std::vector<SourceDestBuffer>&, unsigned) for discussion about restrictions on @a sbufs.
+See CompressedVectorWriter::write(vector<SourceDestBuffer>&, unsigned) for discussion about restrictions on @a sbufs.
 
 The pathNames in the @a sbufs must match one-to-one with the terminal nodes (i.e. nodes that can have no children: IntegerNode, ScaledIntegerNode, FloatNode, StringNode) in this CompressedVectorNode's prototype.
 It is an error for two SourceDestBuffers in @a dbufs to identify the same terminal node in the prototype.
@@ -3305,7 +3299,7 @@ It is an error to call this function if the CompressedVectorNode already has any
 @throw   ::E57_ERROR_INTERNAL           All objects in undocumented state
 @see     SourceDestBufferFunctions.cpp example, CompressedVectorWriter, SourceDestBuffer, CompressedVectorNode::CompressedVectorNode, CompressedVectorNode::prototype
 */ /*================*/
-CompressedVectorWriter CompressedVectorNode::writer(std::vector<SourceDestBuffer>& sbufs)
+CompressedVectorWriter CompressedVectorNode::writer(vector<SourceDestBuffer>& sbufs)
 {
     CHECK_INVARIANCE_RETURN(CompressedVectorWriter, CompressedVectorWriter(impl_->writer(sbufs)));
 }
@@ -3334,7 +3328,7 @@ It is not an error to create a CompressedVectorReader for an empty CompressedVec
 @throw   ::E57_ERROR_INTERNAL           All objects in undocumented state
 @see     SourceDestBufferFunctions.cpp example, CompressedVectorReader, SourceDestBuffer, CompressedVectorNode::CompressedVectorNode, CompressedVectorNode::prototype
 */ /*================*/
-CompressedVectorReader CompressedVectorNode::reader(const std::vector<SourceDestBuffer>& dbufs)
+CompressedVectorReader CompressedVectorNode::reader(const vector<SourceDestBuffer>& dbufs)
 {
     CHECK_INVARIANCE_RETURN(CompressedVectorReader, CompressedVectorReader(impl_->reader(dbufs)));
 }
@@ -3488,12 +3482,12 @@ int64_t IntegerNode::maximum() const
 //! @brief   Diagnostic function to print internal state of object to output stream in an indented format.
 //! @copydetails Node::dump()
 #ifdef E57_DEBUG
-void IntegerNode::dump(int indent, std::ostream& os) const
+void IntegerNode::dump(int indent, ostream& os) const
 {
     impl_->dump(indent, os);
 }
 #else
-void IntegerNode::dump(int indent, std::ostream& os) const
+void IntegerNode::dump(int indent, ostream& os) const
 {}
 #endif
 
@@ -3794,12 +3788,12 @@ double  ScaledIntegerNode::offset() const
 //! @brief   Diagnostic function to print internal state of object to output stream in an indented format.
 //! @copydetails Node::dump()
 #ifdef E57_DEBUG
-void ScaledIntegerNode::dump(int indent, std::ostream& os) const
+void ScaledIntegerNode::dump(int indent, ostream& os) const
 {
     impl_->dump(indent, os);
 }
 #else
-void ScaledIntegerNode::dump(int indent, std::ostream& os) const
+void ScaledIntegerNode::dump(int indent, ostream& os) const
 {}
 #endif
 
@@ -4028,12 +4022,12 @@ double FloatNode::maximum() const
 //! @brief   Diagnostic function to print internal state of object to output stream in an indented format.
 //! @copydetails Node::dump()
 #ifdef E57_DEBUG
-void FloatNode::dump(int indent, std::ostream& os) const
+void FloatNode::dump(int indent, ostream& os) const
 {
     impl_->dump(indent, os);
 }
 #else
-void FloatNode::dump(int indent, std::ostream& os) const
+void FloatNode::dump(int indent, ostream& os) const
 {}
 #endif
 
@@ -4187,12 +4181,12 @@ ustring StringNode::value() const
 //! @brief   Diagnostic function to print internal state of object to output stream in an indented format.
 //! @copydetails Node::dump()
 #ifdef E57_DEBUG
-void StringNode::dump(int indent, std::ostream& os) const
+void StringNode::dump(int indent, ostream& os) const
 {
     impl_->dump(indent, os);
 }
 #else
-void StringNode::dump(int indent, std::ostream& os) const
+void StringNode::dump(int indent, ostream& os) const
 {}
 #endif
 
@@ -4439,12 +4433,12 @@ void BlobNode::write(uint8_t* buf, int64_t start, size_t count)
 //! @brief   Diagnostic function to print internal state of object to output stream in an indented format.
 //! @copydetails Node::dump()
 #ifdef E57_DEBUG
-void BlobNode::dump(int indent, std::ostream& os) const
+void BlobNode::dump(int indent, ostream& os) const
 {
     impl_->dump(indent, os);
 }
 #else
-void BlobNode::dump(int indent, std::ostream& os) const
+void BlobNode::dump(int indent, ostream& os) const
 {}
 #endif
 
@@ -4925,12 +4919,12 @@ void ImageFile::elementNameParse(const ustring& elementName, ustring& prefix, us
 @copydetails Node::dump()
 */ /*================*/
 #ifdef E57_DEBUG
-void ImageFile::dump(int indent, std::ostream& os) const
+void ImageFile::dump(int indent, ostream& os) const
 {
     impl_->dump(indent, os);
 }
 #else
-void ImageFile::dump(int indent, std::ostream& os) const
+void ImageFile::dump(int indent, ostream& os) const
 {}
 #endif
 
@@ -4974,8 +4968,8 @@ The error information is communicated from the location in the E57 Foundation Im
 The state of E57Exception object has one mandatory field, the errorCode, and several optional fields that can be set depending on the debug level of the E57 Foundation Implementation.
 There are three optional fields that encode the location in the source code of the E57 Foundation Implementation where the error was detected: @c sourceFileName, @c sourceFunctionName, and @c sourceLineNumber.
 Another optional field is the @c context string that is human (or at least programmer) readable, which can capture some variable values that might be useful in debugging.
-The E57Exception class is derived from std::exception.
-So applications that only catch std::exceptions will detect E57Exceptions (but with no information about the origin of the error).
+The E57Exception class is derived from exception.
+So applications that only catch exceptions will detect E57Exceptions (but with no information about the origin of the error).
 
 Many other APIs use error codes (defined integer constants) returned from the API functions to communicate success or failure of the requested command.
 In contrast, the E57 Foundation API uses the C++ exception mechanism to communicate failure (success is communicated by the return of the function without exception).
@@ -5006,7 +5000,7 @@ So the right to throw E57_ERROR_INTERNAL is reserved for every API function (exc
 
 It is strongly recommended that catch statements in user code that call API functions catch E57Exception by reference (i.e. <tt>catch (E57Exception& ex)</tt> and, if necessary, rethrow using the syntax that throws the currently active exception (i.e. <tt>throw;</tt>).
 
-Exceptions other that E57Exception may be thrown by calls to API functions (e.g. std::bad_alloc).
+Exceptions other that E57Exception may be thrown by calls to API functions (e.g. bad_alloc).
 Production code will likely have catch handlers for these exceptions as well.
 
 @see     HelloWorld.cpp example
@@ -5036,7 +5030,7 @@ The amount of information printed to output stream may depend on whether the E57
 @throw   No E57Exceptions.
 @see     E57ExceptionFunctions.cpp example, ErrorCode, HelloWorld.cpp example
 */ /*================*/
-void E57Exception::report(const char* reportingFileName, int reportingLineNumber, const char* reportingFunctionName, std::ostream& os) const
+void E57Exception::report(const char* reportingFileName, int reportingLineNumber, const char* reportingFunctionName, ostream& os) const
 {
     os << "**** Got an e57 exception: " << E57Utilities().errorCodeToString(errorCode()) << endl;
 #ifdef E57_DEBUG
