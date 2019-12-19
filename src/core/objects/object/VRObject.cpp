@@ -104,27 +104,27 @@ void VRObject::detach() {
     parent.reset();
 }
 
-void allowCullingRecursive(NodeMTRecPtr n, bool b) {
+void applyVolumeCheck(NodeMTRecPtr n, bool b) {
     if (!n) return;
-
     BoxVolume &vol = n->editVolume(false);
     vol.setInfinite(!b);
     vol.setStatic(!b);
     vol.setValid(!b);
+}
+
+void applyVolumeCheckRecursive(NodeMTRecPtr n, bool b) {
+    if (!n) return;
+    applyVolumeCheck(n, b);
 
     for (uint i=0; i<n->getNChildren(); i++) {
-        allowCullingRecursive(n->getChild(i), b);
+        applyVolumeCheckRecursive(n->getChild(i), b);
     }
 }
 
 void VRObject::setVolumeCheck(bool b, bool recursive) {
     if (!getNode()) return;
-    BoxVolume &vol = getNode()->node->editVolume(b);
-    vol.setInfinite(!b);
-    vol.setStatic(!b);
-    vol.setValid(!b);
-
-    if (recursive) allowCullingRecursive(getNode()->node, b);
+    applyVolumeCheck(getNode()->node, b);
+    if (recursive) applyVolumeCheckRecursive(getNode()->node, b);
 }
 
 void VRObject::setVolume(const Boundingbox& box) {

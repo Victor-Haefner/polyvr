@@ -236,43 +236,118 @@ string XML::toString() {
 
 // SAX parser
 
+string XMLAttribute::uri()  {
+    auto s = splitString(key, ':');
+    if (s.size() == 2) return s[0];
+    return "";
+}
+
+string XMLAttribute::name() {
+    auto s = splitString(key, ':');
+    if (s.size() == 2) return s[1];
+    return key;
+}
+
+string XMLAttribute::qname() { return key; }
+
 XMLStreamHandler::XMLStreamHandler() {}
 XMLStreamHandler::~XMLStreamHandler() {}
+
+void XMLStreamHandler::startDocument() {}
+void XMLStreamHandler::endDocument() {}
+void XMLStreamHandler::startElement(const string& uri, const string& name, const string& qname, const map<string, XMLAttribute>& attributes) {}
+void XMLStreamHandler::endElement(const string& uri, const string& name, const string& qname) {}
+void XMLStreamHandler::characters(const string& chars) {}
+void XMLStreamHandler::processingInstruction(const string& target, const string& data) {}
+
+void XMLStreamHandler::warning(const string& chars) {}
+void XMLStreamHandler::error(const string& chars) {}
+void XMLStreamHandler::fatalError(const string& chars) {}
+void XMLStreamHandler::onException(exception& e) {}
 
 string toString(const xmlChar* s) {
     if (!s) return "";
     return string((const char*)s);
 }
 
-void startDocument(void* user_data) {
-    auto handler = (XMLStreamHandler*)user_data;
+string toString(const char* s) {
+    if (!s) return "";
+    return string(s);
+}
+
+void startDocument(void* ctx) {
+    auto handler = (XMLStreamHandler*)ctx;
     handler->startDocument();
 }
 
-void endDocument(void* user_data) {
-    auto handler = (XMLStreamHandler*)user_data;
+void endDocument(void* ctx) {
+    auto handler = (XMLStreamHandler*)ctx;
     handler->endDocument();
 }
 
-void startElement(void* user_data, const xmlChar* name, const xmlChar** attrs) {
-    auto handler = (XMLStreamHandler*)user_data;
-    string n = toString(name);
-    map<string, string> attribs;
+void startElement(void* ctx, const xmlChar* name, const xmlChar** attrs) {
+    auto handler = (XMLStreamHandler*)ctx;
+    map<string, XMLAttribute> attribs;
 
     while (attrs != 0 && attrs[0] != 0) {
-        string key = toString(attrs[0]);
-        string val = toString(attrs[1]);
-        attribs[key] = val;
+        XMLAttribute attrib;
+        attrib.key = toString(attrs[0]);
+        attrib.val = toString(attrs[1]);
+        attribs[attrib.key] = attrib;
         attrs = &attrs[2];
     }
 
-    handler->startElement(n, attribs);
+    string n = toString(name);
+    handler->startElement("", n, n, attribs); // TODO: uri and qname?
 }
 
-void endElement(void* user_data, const xmlChar* name) {
-    auto handler = (XMLStreamHandler*)user_data;
+void endElement(void* ctx, const xmlChar* name) {
+    auto handler = (XMLStreamHandler*)ctx;
     string n = toString(name);
-    handler->endElement(n);
+    handler->endElement("", n, n); // TODO: uri?
+}
+
+void characters(void* ctx, const xmlChar* ch, int len) {
+    auto handler = (XMLStreamHandler*)ctx;
+    if (len > 0) handler->characters(string((const char*)ch, len));
+}
+
+void processingInstruction(void* ctx, const xmlChar* target, const xmlChar * data) {
+    auto handler = (XMLStreamHandler*)ctx;
+    handler->processingInstruction(toString(target), toString(data));
+}
+
+void warning(void* ctx, const char* msg, ...) {
+    auto handler = (XMLStreamHandler*)ctx;
+
+    va_list args;
+    va_start(args, msg);
+    char buffer[256];
+    vsprintf(buffer, msg, args);
+    handler->warning(string(buffer));
+    va_end(args);
+}
+
+void error(void* ctx, const char* msg, ... ) {
+    auto handler = (XMLStreamHandler*)ctx;
+
+    va_list args;
+    va_start(args, msg);
+    char buffer[256];
+    vsprintf(buffer, msg, args);
+    handler->error(string(buffer));
+    va_end(args);
+}
+
+void fatalError(void* ctx, const char* msg, ...) {
+    auto handler = (XMLStreamHandler*)ctx;
+
+    va_list args;
+    va_start(args, msg);
+    char buffer[256];
+    vsprintf(buffer, msg, args);
+    handler->fatalError(string(buffer));
+    va_end(args);
 }
 
 void internalSubset(void * ctx, const xmlChar * name, const xmlChar * ExternalID, const xmlChar * SystemID) {}
@@ -288,13 +363,8 @@ void elementDecl(void * ctx, const xmlChar * name, int type, xmlElementContentPt
 void unparsedEntityDecl(void * ctx, const xmlChar * name, const xmlChar * publicId, const xmlChar * systemId, const xmlChar * notationName) {}
 void setDocumentLocator(void * ctx, xmlSAXLocatorPtr loc) {}
 void reference(void * ctx, const xmlChar * name) {}
-void characters(void * ctx, const xmlChar * ch, int len) {}
 void ignorableWhitespace(void * ctx, const xmlChar * ch, int len) {}
-void processingInstruction(void * ctx, const xmlChar * target, const xmlChar * data) {}
 void comment(void * ctx, const xmlChar * value) {}
-void warning(void * ctx, const char * msg, ...) {}
-void error(void * ctx, const char * msg, ...) {}
-void fatalError(void * ctx, const char * msg, ...) {}
 
 static xmlSAXHandler xmlHandler {
     internalSubset,
@@ -327,8 +397,68 @@ void XML::stream(string path, XMLStreamHandler* handler) {
     try {
         xmlSAXUserParseFile( &xmlHandler, handler, path.c_str() );
     } catch(exception& e) {
-        cout << "meh, streaming '" << path << "' failed with: " << e.what() << endl;
+        cout << "XML::stream '" << path << "' failed with: " << e.what() << endl;
     }
+
+    xmlCleanupParser();
+}
+
+XMLInputStream::XMLInputStream() {}
+XMLInputStream::~XMLInputStream() {}
+
+int getLastBracket(char* buffer, int bsize) {
+    for (int i=0; i<bsize; i++) if (buffer[bsize-1-i] == '>') return bsize-i;
+    return 0;
+}
+
+int inputPush(xmlParserCtxtPtr ctxt, xmlParserInputPtr value) {
+    if (ctxt->inputNr >= ctxt->inputMax) {
+        ctxt->inputMax *= 2;
+        ctxt->inputTab = (xmlParserInputPtr *) xmlRealloc(ctxt->inputTab, ctxt->inputMax* sizeof(ctxt->inputTab[0]));
+    }
+    ctxt->inputTab[ctxt->inputNr] = value;
+    ctxt->input = value;
+    return (ctxt->inputNr++);
+}
+
+xmlParserCtxtPtr xmlCreateStreamParserCtxt(xmlParserInputBufferPtr input) {
+    xmlParserCtxtPtr ctxt = xmlNewParserCtxt();
+    xmlParserInputPtr inputStream = xmlNewIOInputStream(ctxt, input, XML_CHAR_ENCODING_NONE);
+    inputStream->filename = NULL;
+    inputPush(ctxt, inputStream);
+    return ctxt;
+}
+
+int onStreamRead(void* ctx, char* buffer, int len) {
+    auto input = (XMLInputStream*)ctx;
+    int res = input->readBytes(buffer, len);
+    return res;
+}
+
+int onStreamClose(void* ctx) {
+    cout << "stream closed!" << endl;
+    return 0;
+}
+
+void XML::stream(XMLInputStream* input, XMLStreamHandler* handler) {
+    xmlHandler.initialized = XML_SAX2_MAGIC;  // so we do this to force parsing as SAX2.
+    xmlParserInputBufferPtr inputBuffer = xmlParserInputBufferCreateIO(onStreamRead, onStreamClose, input, XML_CHAR_ENCODING_NONE);
+
+    try {
+        xmlParserCtxtPtr ctxt = xmlCreateStreamParserCtxt(inputBuffer);
+        ctxt->sax = &xmlHandler;
+        ctxt->userData = handler;
+        xmlParseDocument(ctxt);
+        if (ctxt->myDoc != NULL) xmlFreeDoc(ctxt->myDoc);
+        ctxt->sax = NULL;
+        ctxt->myDoc = NULL;
+        xmlFreeParserCtxt(ctxt);
+    } catch(exception& e) {
+        cout << "XML::stream input failed with: " << e.what() << endl;
+        handler->onException(e);
+    }
+
+    xmlCleanupParser();
 }
 
 
