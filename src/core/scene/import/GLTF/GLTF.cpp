@@ -1247,7 +1247,7 @@ class GLTFLoader : public GLTFUtils {
               //return -1;
             }
             debugDump(&model);
-            debugModel(&model);
+            //debugModel(&model);
             progress->finish();
             return;
 
