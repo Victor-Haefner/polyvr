@@ -8,7 +8,7 @@ OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 class VRText {
-    private:
+    public:
         string text;
         size_t Nlines = 0;
         size_t maxLineLength = 0;
@@ -17,6 +17,8 @@ class VRText {
         int padding = 3;
         int texWidth = 1;
         int texHeight = 1;
+        int layoutWidth = 0;
+        int layoutHeight = 0;
 
         void analyzeText();
         void computeTexParams();
@@ -26,6 +28,9 @@ class VRText {
     public:
         static VRText* get();
         VRTexturePtr create(string text, string font, int res, Color4f fg, Color4f bg);
+
+        static size_t countGraphemes(string txt);
+        static vector<string> splitGraphemes(string txt);
 };
 
 

@@ -40,7 +40,7 @@ void VRText::analyzeText() {
 
     stringstream ss(text);
     for (string line; getline(ss, line); ) {
-        maxLineLength = max(maxLineLength, line.size());
+        maxLineLength = max(maxLineLength, countGraphemes(line));
         Nlines++;
     }
 }
@@ -85,6 +85,7 @@ VRTexturePtr VRText::createBmp (string text, string font, Color4f fg, Color4f bg
     //Pango Description
     PangoFontDescription* desc = pango_font_description_from_string (font.c_str());
     pango_layout_set_font_description (layout, desc);
+    pango_layout_get_pixel_size(layout, &layoutWidth, &layoutHeight);
     pango_font_description_free (desc);
 
     //hier wird gemalt!
@@ -115,4 +116,59 @@ VRTexturePtr VRText::createBmp (string text, string font, Color4f fg, Color4f bg
     cairo_surface_destroy (surface);
     return tex;
 }
+
+#include <unicode/utypes.h>
+#include <unicode/ubrk.h>
+#include <unicode/utext.h>
+
+struct UTextDeleter { void operator()(UText* ptr) { utext_close(ptr); } };
+struct UBreakIteratorDeleter { void operator()(UBreakIterator* ptr) { ubrk_close(ptr); } };
+using PUText = std::unique_ptr<UText, UTextDeleter>;
+using PUBreakIterator = std::unique_ptr<UBreakIterator, UBreakIteratorDeleter>;
+
+void checkStatus(const UErrorCode status) {
+    if (U_FAILURE(status)) cout << u_errorName(status) << endl;
+}
+
+size_t VRText::countGraphemes(string txt) {
+    UErrorCode status = U_ZERO_ERROR;
+    PUText text(utext_openUTF8(nullptr, txt.data(), txt.length(), &status));
+    checkStatus(status);
+
+    PUBreakIterator it(ubrk_open(UBRK_CHARACTER, "en_us", nullptr, 0, &status));
+    checkStatus(status);
+    ubrk_setUText(it.get(), text.get(), &status);
+    checkStatus(status);
+    size_t charCount = 0;
+    while (ubrk_next(it.get()) != UBRK_DONE) charCount++;
+    return charCount;
+}
+
+vector<string> VRText::splitGraphemes(string txt) {
+    UErrorCode status = U_ZERO_ERROR;
+    PUText text(utext_openUTF8(nullptr, txt.data(), txt.length(), &status));
+    checkStatus(status);
+
+    PUBreakIterator it(ubrk_open(UBRK_CHARACTER, "en_us", nullptr, 0, &status));
+    checkStatus(status);
+    ubrk_setUText(it.get(), text.get(), &status);
+    checkStatus(status);
+    vector<string> res;
+    while (true) {
+        UBreakIterator* IT = it.get();
+        int i = ubrk_current(IT);
+        if (ubrk_next(it.get()) == UBRK_DONE) break;
+        UText* t = text.get();
+        UChar32 c = utext_char32At(t, i);
+        icu::UnicodeString uni_str(c);
+        std::string str;
+        uni_str.toUTF8String(str);
+        res.push_back(str);
+    }
+    return res;
+}
+
+
+
+
 

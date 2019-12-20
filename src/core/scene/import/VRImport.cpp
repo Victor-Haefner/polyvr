@@ -9,6 +9,7 @@
 #include "STEP/VRSTEP.h"
 #include "E57/E57.h"
 #include "GIS/VRGDAL.h"
+#include "GLTF/GLTF.h"
 #include "addons/Engineering/Factory/VRFactory.h"
 
 #include <OpenSG/OSGSceneFileHandler.h>
@@ -176,6 +177,7 @@ void VRImport::LoadJob::load(VRThreadWeakPtr tw) {
         if (ext == ".tiff" || ext == ".tif") { loadTIFF(path, res); return; }
         if (ext == ".hgt") { loadTIFF(path, res); return; }
         if (ext == ".dxf") { loadDXF(path, res); return; }
+        if (ext == ".gltf" || ext == ".glb") { loadGLTF(path, res, progress, thread); return; }
 #ifndef NO_IFC
         if (ext == ".ifc") { loadIFC(path, res); return; }
 #endif

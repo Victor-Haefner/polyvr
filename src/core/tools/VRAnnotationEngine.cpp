@@ -2,6 +2,7 @@
 
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/material/VRMaterialT.h"
+#include "core/objects/material/VRTexture.h"
 #include "core/objects/geometry/VRGeoData.h"
 #include "core/tools/VRText.h"
 #include "core/utils/toString.h"
@@ -11,7 +12,6 @@
 using namespace OSG;
 
 template<> string typeName(const VRAnnotationEngine& t) { return "AnnotationEngine"; }
-
 
 VRAnnotationEngine::VRAnnotationEngine(string name) : VRGeometry(name) {
     fg = Color4f(0,0,0,1);
@@ -73,25 +73,30 @@ int VRAnnotationEngine::add(Vec3d p, string s) {
     return i;
 }
 
-void VRAnnotationEngine::set(int i0, Vec3d p0, string str) {
-    auto strings = splitString(str, '\n');
+void VRAnnotationEngine::set(int i0, Vec3d p0, string txt) {
+    auto strings = splitString(txt, '\n');
     for (int y = 0; y<strings.size(); y++) {
-        string s = strings[y];
+        string str = strings[y];
+        //cout << "VRAnnotationEngine::set str " << str << endl;
         Vec3d p = p0;
         p[1] -= y*size;
         int i = i0+y;
         if (i < 0) return;
         while (i >= (int)labels.size()) labels.push_back(Label());
-        int N = ceil(str.size()/3.0); // number of points, 3 chars per point
+        int Ngraphemes = VRText::countGraphemes(str);
+        int N = ceil(Ngraphemes/3.0); // number of points, 3 chars per point
         auto& l = labels[i];
 
         resize(l,p,N + 4); // plus 4 bounding points
 
+        auto graphemes = VRText::splitGraphemes(str);
         for (int j=0; j<N; j++) {
             char c[] = {0,0,0};
             for (int k = 0; k<3; k++) {
-                uint si = j*3+k;
-                if (si < s.size()) c[k] = s[si];
+                if (j*3+k < graphemes.size()) {
+                    string grapheme = graphemes[j*3+k];
+                    c[k] = characterIDs[grapheme];
+                }
             }
             float f = c[0] + c[1]*256 + c[2]*256*256;
             int k = l.entries[j];
@@ -101,8 +106,8 @@ void VRAnnotationEngine::set(int i0, Vec3d p0, string str) {
         // bounding points to avoid word clipping
         data->setVert(l.entries[N], p+Vec3d(-0.25*size, -0.5*size, 0), Vec3d(0,0,-1));
         data->setVert(l.entries[N+1], p+Vec3d(-0.25*size,  0.5*size, 0), Vec3d(0,0,-1));
-        data->setVert(l.entries[N+2], p+Vec3d((s.size()-0.25)*size, -0.5*size, 0), Vec3d(0,0,-1));
-        data->setVert(l.entries[N+3], p+Vec3d((s.size()-0.25)*size,  0.5*size, 0), Vec3d(0,0,-1));
+        data->setVert(l.entries[N+2], p+Vec3d((Ngraphemes-0.25)*size, -0.5*size, 0), Vec3d(0,0,-1));
+        data->setVert(l.entries[N+3], p+Vec3d((Ngraphemes-0.25)*size,  0.5*size, 0), Vec3d(0,0,-1));
     }
 }
 
@@ -112,9 +117,25 @@ void VRAnnotationEngine::setScreensize(bool b) { mat->setShaderParameter("screen
 
 void VRAnnotationEngine::updateTexture() {
     string txt;
-    for (int i=32; i<128; i++) txt += char(i);
+    for (int i=32; i<127; i++) txt += char(i);
+    txt += "ÄÜÖäüöß€";
+    int cN = VRText::countGraphemes(txt);
+    int padding = 3;
     auto img = VRText::get()->create(txt, "MONO 20", 20, fg, bg);
+    float tW = img->getSize()[0];
+    float lW = VRText::get()->layoutWidth;
+    float tp = padding / tW;
+    float cSize = lW/tW / cN;
     mat->setTexture(img);
+    mat->setShaderParameter("texPadding", Real32(tp)); // tested
+    mat->setShaderParameter("charTexSize", Real32(cSize));
+    img->write("annChars.png");
+
+    int i=1; // 0 is used for invalid/no char
+    for (auto c : VRText::splitGraphemes(txt)) {
+        characterIDs[c] = i;
+        i++;
+    }
 }
 
 string VRAnnotationEngine::vp =
@@ -145,8 +166,8 @@ uniform sampler2D texture;
 varying vec2 texCoord;
 
 void main( void ) {
-  //gl_FragColor = vec4(texCoord.x,texCoord.y,0.0,1.0);
-  gl_FragColor = texture2D(texture, texCoord);
+    //gl_FragColor = vec4(texCoord.x,texCoord.y,0.0,1.0);
+    gl_FragColor = texture2D(texture, texCoord);
 }
 );
 
@@ -178,6 +199,8 @@ layout (triangle_strip, max_vertices=60) out;
 uniform float doBillboard;
 uniform float screen_size;
 uniform float size;
+uniform float texPadding;
+uniform float charTexSize;
 uniform vec2 OSGViewportSize;
 in vec4 vertex[];
 in vec3 normal[];
@@ -187,64 +210,64 @@ out vec4 geomPos;
 out vec3 geomNorm;
 
 void emitVertex(in vec4 p, in vec2 tc, in vec4 v) {
- gl_Position = p;
- texCoord = tc;
- geomPos = v;
- geomNorm = vec3(0,0,1);
- EmitVertex();
+    gl_Position = p;
+    texCoord = tc;
+    geomPos = v;
+    geomNorm = vec3(0,0,1);
+    EmitVertex();
 }
 
 void emitQuad(in float offset, in vec4 tc) {
- float sx = 0.5*size;
- float sy = size;
- float ox = 2*sx*offset;
- vec4 p1;
- vec4 p2;
- vec4 p3;
- vec4 p4;
- vec4 v1;
- vec4 v2;
- vec4 v3;
- vec4 v4;
- vec4 p = gl_PositionIn[0];
+    float sx = 0.5*size;
+    float sy = size;
+    float ox = 2*sx*offset;
+    vec4 p1;
+    vec4 p2;
+    vec4 p3;
+    vec4 p4;
+    vec4 v1;
+    vec4 v2;
+    vec4 v3;
+    vec4 v4;
+    vec4 p = gl_PositionIn[0];
 
- if (screen_size > 0.5) {
-    p.xyz = p.xyz/p.w;
-    p.w = 1;
- }
+    if (screen_size > 0.5) {
+        p.xyz = p.xyz/p.w;
+        p.w = 1;
+    }
 
- if (doBillboard < 0.5) {
-  p1 = p+MVP[0]*vec4(-sx+ox,-sy,0,0);
-  p2 = p+MVP[0]*vec4(-sx+ox, sy,0,0);
-  p3 = p+MVP[0]*vec4( sx+ox, sy,0,0);
-  p4 = p+MVP[0]*vec4( sx+ox,-sy,0,0);
- } else {
-  float a = OSGViewportSize.y/OSGViewportSize.x;
-  p1 = p+vec4(-sx*a+ox*a,-sy,0,0);
-  p2 = p+vec4(-sx*a+ox*a, sy,0,0);
-  p3 = p+vec4( sx*a+ox*a, sy,0,0);
-  p4 = p+vec4( sx*a+ox*a,-sy,0,0);
-  v1 = vertex[0]+vec4(-sx*a+ox*a,-sy,0,0);
-  v2 = vertex[0]+vec4(-sx*a+ox*a, sy,0,0);
-  v3 = vertex[0]+vec4( sx*a+ox*a, sy,0,0);
-  v4 = vertex[0]+vec4( sx*a+ox*a,-sy,0,0);
- }
+    if (doBillboard < 0.5) {
+        p1 = p+MVP[0]*vec4(-sx+ox,-sy,0,0);
+        p2 = p+MVP[0]*vec4(-sx+ox, sy,0,0);
+        p3 = p+MVP[0]*vec4( sx+ox, sy,0,0);
+        p4 = p+MVP[0]*vec4( sx+ox,-sy,0,0);
+    } else {
+        float a = OSGViewportSize.y/OSGViewportSize.x;
+        p1 = p+vec4(-sx*a+ox*a,-sy,0,0);
+        p2 = p+vec4(-sx*a+ox*a, sy,0,0);
+        p3 = p+vec4( sx*a+ox*a, sy,0,0);
+        p4 = p+vec4( sx*a+ox*a,-sy,0,0);
+        v1 = vertex[0]+vec4(-sx*a+ox*a,-sy,0,0);
+        v2 = vertex[0]+vec4(-sx*a+ox*a, sy,0,0);
+        v3 = vertex[0]+vec4( sx*a+ox*a, sy,0,0);
+        v4 = vertex[0]+vec4( sx*a+ox*a,-sy,0,0);
+    }
 
- emitVertex(p1, vec2(tc[0], tc[2]), v1);
- emitVertex(p2, vec2(tc[0], tc[3]), v2);
- emitVertex(p3, vec2(tc[1], tc[3]), v3);
- EndPrimitive();
- emitVertex(p1, vec2(tc[0], tc[2]), v1);
- emitVertex(p3, vec2(tc[1], tc[3]), v3);
- emitVertex(p4, vec2(tc[1], tc[2]), v4);
- EndPrimitive();
+    emitVertex(p1, vec2(tc[0], tc[2]), v1);
+    emitVertex(p2, vec2(tc[0], tc[3]), v2);
+    emitVertex(p3, vec2(tc[1], tc[3]), v3);
+    EndPrimitive();
+    emitVertex(p1, vec2(tc[0], tc[2]), v1);
+    emitVertex(p3, vec2(tc[1], tc[3]), v3);
+    emitVertex(p4, vec2(tc[1], tc[2]), v4);
+    EndPrimitive();
 }
 
 void emitChar(in int d, in float p) {
-    float padding = 0.001;
-    float f = 0.00832; //0.00833
-    d -= 32;
-    if (d >= 0) emitQuad(p, vec4(padding+d*f, padding+d*f+f, 0, 1));
+    float padding = texPadding; // 0.001 texture padding
+    float f = charTexSize; // 0.00832 character texture size
+    d -= 1; // offset
+    if (d >= 0) emitQuad(p, vec4(padding+d*f, padding+(d+1)*f, 0, 1));
 }
 
 void emitString(in float str, in float offset) {
