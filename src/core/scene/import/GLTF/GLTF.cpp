@@ -1296,12 +1296,50 @@ class GLTFLoader : public GLTFUtils {
 
             VRGeoData gdata = VRGeoData();
             VRGeometryPtr VRgeo = VRGeometry::create("test");
+            auto mat = VRgeo->getMaterial();
             auto scene = VRScene::getCurrent();
             scene->getRoot()->addChild(VRgeo);
             VRgeo->setPersistency(0);
             vector<Vec3d> positionVecs;
             vector<Vec3d> normalVecs;
+            //Load texture data
+            vector<VRTexturePtr> texes;
+            bool first = true;
+            for (const auto &gltfTexture : model->textures) {
 
+                VRTexturePtr tex;
+
+                //Get texture data layout information
+                const auto &image = model->images[gltfTexture.source];
+                int components = image.component;
+                int width = image.width;
+                int height = image.height;
+                int bits = image.bits;
+                cout << " components " << components << " width " << width << " height " << height << " bits " << bits  << endl;
+
+                //Check if texture is used as part of material, if so, tag the texture with the usage enum
+                /*const auto usageIt = textureUsedFor.find(gltfTexture.source);
+                if (usageIt != textureUsedFor.end()) {
+                  loadedTexture.use = (*usageIt).second;
+                }*/
+
+                //Load bytes into texture array
+
+               //const auto size = components * width * height * sizeof(unsigned char);
+                //char* data = new unsigned char[size];
+                //memcpy(tex->img, image.image.data(), size);*/
+                if (first) {
+                    const auto size = components * width * height * sizeof(unsigned char);
+                    char* data = new char[size];
+                    memcpy(data, image.image.data(), size);
+                    Vec3i dims = Vec3i(width, height, 1);
+                    mat->setTexture(data, components, dims, bits == 32);
+                    first = false;
+                }
+
+                //Add texture to usable textures
+                //texes.push_back(tex);
+            }
             for (auto mesh : allMeshes) {
                 auto allPrims = mesh.primitives;
                 cout << "Primitives " << allPrims.size() << endl;
@@ -1339,11 +1377,13 @@ class GLTFLoader : public GLTFUtils {
                               // Positions are Vec3 components, so for each vec3 stride, offset for x, y, and z.
                               Vec3d pos = Vec3d( positions[i * 3 + 0], positions[i * 3 + 1], positions[i * 3 + 2] );
                               Vec3d nor = Vec3d( normals  [i * 3 + 0], normals  [i * 3 + 1], normals  [i * 3 + 2] );
+                              Vec2d UV = Vec2d( UVs[i*2 + 0], UVs[i*2 + 1] );
                               gdata.pushVert(pos);
                               gdata.pushNorm(nor);
-                              //if (accessorColor.type == 4){ auto cl = Color4f( colors[i * 4 + 0], colors[i * 4 + 1], colors[i * 4 + 2], colors[i * 4 + 2] ); gdata.pushColor(cl); }
+                              gdata.pushTexCoord(UV);
+                              if (accessorColor.type == 4){ auto cl = Color4f( colors[i * 4 + 0], colors[i * 4 + 1], colors[i * 4 + 2], colors[i * 4 + 2] ); gdata.pushColor(cl); }
                               //if (accessorColor.type == 4){ auto cl = Color4f( 212.0/255.0,175.0/255.0,55.0/255.0, 1 ); gdata.pushColor(cl); }
-                              if (accessorColor.type == 4){ auto cl = Color4f( 212.0/255.0,175.0/255.0,55.0/255.0, 0.8 ); gdata.pushColor(cl); }
+                              //if (accessorColor.type == 4){ auto cl = Color4f( 212.0/255.0,175.0/255.0,55.0/255.0, 0.8 ); gdata.pushColor(cl); }
                               n ++;
                               //positionVecs.push_back(pos);
                               //normalVecs.push_back(nor);
