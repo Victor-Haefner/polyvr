@@ -14,6 +14,9 @@ add_definitions( -DGLUT_Xmu_LIBRARY=1 )
 add_definitions( -DCMAKE_TOOLCHAIN_FILE=../emsdk/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake )
 add_definitions( -DCMAKE_MODULE_PATH=../emsdk/upstream/emscripten/cmake/Modules )
 
+add_definitions( -D__USE_MISC=1 )
+
+
 function(FIND_ZLIB)
 	if(CMAKE_SYSTEM_NAME STREQUAL "Emscripten")
 		set(ZLIB_INCLUDE_DIR "~/.emscripten_ports/zlib/zlib-version_1")
@@ -82,6 +85,7 @@ function(SETUP_VARS)
 		add_definitions( -DWITHOUT_GTK )
 		add_definitions( -DWITHOUT_EXECINFO )
 		add_definitions( -DWITHOUT_CRYPTOPP )
+		add_definitions( -DWITHOUT_VRPN )
 	endif()
 endfunction()
 
