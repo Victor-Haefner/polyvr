@@ -3,7 +3,9 @@
 #include "core/math/path.h"
 #include "core/math/polygon.h"
 #include "core/objects/material/VRMaterial.h"
+#ifndef WITHOUT_BULLET
 #include "core/objects/geometry/VRPhysics.h"
+#endif
 #include "core/utils/toString.h"
 
 #include <OpenSG/OSGMatrixUtility.h>
@@ -232,10 +234,12 @@ vector<Vec3d> VRStroke::getProfile() { return profile; }
 PathPtr VRStroke::getPath() { return paths[0]; }
 
 void VRStroke::convertToRope() {
+#ifndef WITHOUT_BULLET
     getPhysics()->setDynamic(true);
     getPhysics()->setShape("Rope");
     getPhysics()->setSoft(true);
     getPhysics()->setPhysicalized(true);
+#endif
 }
 
 OSG_END_NAMESPACE;

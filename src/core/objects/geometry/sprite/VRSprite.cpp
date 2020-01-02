@@ -4,12 +4,16 @@
 #include "core/tools/VRText.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/geometry/OSGGeometry.h"
+#ifndef WITHOUT_BULLET
 #include "core/objects/geometry/VRPhysics.h"
+#endif
 #include "core/objects/geometry/VRGeoData.h"
 #include "core/tools/VRAnnotationEngine.h"
 #include "core/tools/VRGeoPrimitive.h"
 #include "core/setup/VRSetup.h"
+#ifndef WITHOUT_CEF
 #include "addons/CEF/CEF.h"
+#endif
 #include <OpenSG/OSGNameAttachment.h>
 #include <OpenSG/OSGSimpleGeometry.h>
 #include <OpenSG/OSGGeoProperties.h>
@@ -58,7 +62,8 @@ VRTexturePtr VRSprite::setText(string l, float res, Color4f c1, Color4f c2, stri
     return tex;
 }
 
-void VRSprite::webOpen(string path, int res, float ratio){
+void VRSprite::webOpen(string path, int res, float ratio) {
+#ifndef WITHOUT_CEF
     VRMaterialPtr mat = VRMaterial::get(getName()+"web");
     setMaterial(mat);
     mat->setLit(false);
@@ -77,6 +82,7 @@ void VRSprite::webOpen(string path, int res, float ratio){
     if (keyboard) web->addKeyboard(keyboard);
     web->setResolution(res);
     web->setAspectRatio(ratio);
+#endif
 }
 
 void VRSprite::setTexture(string path) {
@@ -110,9 +116,11 @@ void VRSprite::showResizeTool(bool b, float size, bool doAnnotations) {
 }
 
 void VRSprite::convertToCloth() {
+#ifndef WITHOUT_BULLET
     getPhysics()->setDynamic(true);
     getPhysics()->setShape("Cloth");
     getPhysics()->setSoft(true);
     getPhysics()->setPhysicalized(true);
+#endif
 }
 

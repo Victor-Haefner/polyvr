@@ -3,6 +3,12 @@
 
 #include <OpenSG/OSGSField.h>
 #include <OpenSG/OSGColor.h>
+#include <OpenSG/OSGGLEXT.h> // for GL_MODULATE
+
+#ifdef __EMSCRIPTEN__
+#define GL_CLAMP GL_CLAMP_TO_EDGE
+#define GL_SPHERE_MAP 0x2402
+#endif
 
 #include "core/objects/object/VRObject.h"
 #include "core/objects/VRObjectFwd.h"

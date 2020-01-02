@@ -7,6 +7,11 @@
 #include <sstream>
 #include "core/utils/VRFunctionFwd.h"
 
+// define types here, for example for webassembly
+typedef unsigned long int ulong;
+typedef unsigned short int ushort;
+typedef unsigned int uint;
+
 using namespace std;
 
 vector<string> splitString(const string& s, char c = ' ');

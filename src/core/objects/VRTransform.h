@@ -1,6 +1,7 @@
 #ifndef VR3DENTITY_H_INCLUDED
 #define VR3DENTITY_H_INCLUDED
 
+#include <vector>
 #include <OpenSG/OSGMatrix.h>
 #include <OpenSG/OSGLine.h>
 
@@ -195,17 +196,19 @@ class VRTransform : public VRObject {
         void detachJoint(VRTransformPtr a);
         Vec3d getConstraintAngleWith(VRTransformPtr t, bool rotationOrPosition);
 
+        virtual void updateChange();
+        void setup(VRStorageContextPtr context);
+
+#ifndef WITHOUT_BULLET
         VRPhysics* getPhysics();
         void resolvePhysics();
         void updateFromBullet();
-        void setConvexDecompositionParameters(float cw, float vw, float nc, float nv, float c, bool aedp, bool andp, bool afp);
-
+        void updatePhysics();
         vector<VRCollision> getCollisions();
 
         void setNoBltFlag();
         void setBltOverrideFlag();
-        virtual void updateChange();
-        void setup(VRStorageContextPtr context);
+        void setConvexDecompositionParameters(float cw, float vw, float nc, float nv, float c, bool aedp, bool andp, bool afp);
 
         void physicalize(bool b, bool dynamic, string shape, float param = 0);
         void setPhysicalizeTree(bool b);
@@ -232,7 +235,7 @@ class VRTransform : public VRObject {
 
         Vec3d getForce();
         Vec3d getTorque();
-        void updatePhysics();
+#endif
 };
 
 Matrix4f toMatrix4f(Matrix4d);

@@ -1,7 +1,9 @@
 #include "VRMaterial.h"
 #include "OSGMaterial.h"
+#ifndef WITHOUT_GTK
 #include "core/gui/VRGuiManager.h"
 #include "core/gui/VRGuiConsole.h"
+#endif
 #include "core/objects/VRTransform.h"
 #include "core/objects/object/OSGCore.h"
 #include "core/objects/OSGObject.h"
@@ -41,9 +43,7 @@
 #include <OpenSG/OSGDepthChunk.h>
 #include <OpenSG/OSGMaterialChunk.h>
 #include <OpenSG/OSGCubeTextureObjChunk.h>
-
-#include <GL/glext.h>
-#include <GL/glx.h>
+#include <OpenSG/OSGGL.h>
 
 using namespace OSG;
 
@@ -762,14 +762,20 @@ void VRMaterial::setClipPlane(bool active, Vec4d equation, VRTransformPtr beacon
 }
 
 void VRMaterial::setWireFrame(bool b) {
+#ifndef OSG_OGL_ES2
     if (b) setFrontBackModes(GL_LINE, GL_LINE);
     else setFrontBackModes(GL_FILL, GL_FILL);
+#endif
 }
 
 bool VRMaterial::isWireFrame() {
+#ifndef OSG_OGL_ES2
     auto md = mats[activePass];
     if (md->polygonChunk == 0) return false;
     return bool(md->polygonChunk->getFrontMode() == GL_LINE && md->polygonChunk->getBackMode() == GL_LINE);
+#else
+    return false;
+#endif
 }
 
 void VRMaterial::setVideo(string vid_path) {
@@ -977,8 +983,11 @@ ShaderProgramMTRecPtr VRMaterial::getShaderProgram() { return mats[activePass]->
 
 // type: GL_VERTEX_SHADER, GL_FRAGMENT_SHADER, ...
 void VRMaterial::checkShader(int type, string shader, string name) {
+#ifndef WASM
+#ifndef WITHOUT_GTK
     auto gm = VRGuiManager::get(false);
     if (!gm) return;
+#endif
     auto errC = gm->getConsole("Errors");
     if (!errC) return;
 
@@ -1004,6 +1013,7 @@ void VRMaterial::checkShader(int type, string shader, string name) {
         errC->write( string(compiler_log));
         free(compiler_log);
     }
+#endif
 }
 
 void VRMaterial::forceShaderUpdate() {

@@ -1000,7 +1000,7 @@ void VRGeometry::showGeometricData(string type, bool b) {
         }
 
         geo->setPositions(pos);
-        geo->setType(GL_LINE);
+        geo->setType(GL_LINES);
         geo->setColors(cols);
         geo->setIndices(inds);
     }
