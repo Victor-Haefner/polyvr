@@ -90,20 +90,24 @@ void VRWebSocket::processFrame(string frameData) {
     for (auto& sc : stringCallbacks) {
         sc(frameData);
     }
+#ifndef WITHOUT_JSONCPP
     for (auto& jc : jsonCallbacks) {
         Json::Value root;
         reader.parse(frameData, root);
         jc(root);
     }
+#endif
 }
 
 void VRWebSocket::registerStringCallback(function<void(string)> func) {
     stringCallbacks.push_back(func);
 }
 
+#ifndef WITHOUT_JSONCPP
 void VRWebSocket::registerJsonCallback(function<void(Json::Value)> func) {
     jsonCallbacks.push_back(func);
 }
+#endif
 
 void VRWebSocket::eventHandler(struct mg_connection* nc, int ev, void* ev_data) {
 

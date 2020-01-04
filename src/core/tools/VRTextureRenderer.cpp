@@ -1,3 +1,6 @@
+#include <OpenSG/OSGGLUT.h>
+#include <OpenSG/OSGGLUTWindow.h>
+
 #include "VRTextureRenderer.h"
 #include "core/objects/OSGObject.h"
 #include "core/objects/object/OSGCore.h"
@@ -26,8 +29,6 @@
 #include <OpenSG/OSGSimpleGeometry.h>
 #include <OpenSG/OSGSimpleTexturedMaterial.h>
 
-#include <OpenSG/OSGGLUT.h>
-#include <OpenSG/OSGGLUTWindow.h>
 #include <OpenSG/OSGPassiveWindow.h>
 #include <OpenSG/OSGViewport.h>
 #include <OpenSG/OSGFBOViewport.h>

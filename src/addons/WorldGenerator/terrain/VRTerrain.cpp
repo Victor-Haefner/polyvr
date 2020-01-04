@@ -1,11 +1,9 @@
 #include "VRTerrain.h"
-#include "VRTerrainPhysicsShape.h"
 #include "VRPlanet.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/material/VRMaterialT.h"
 #include "core/objects/material/VRTexture.h"
 #include "core/objects/material/VRTextureGenerator.h"
-#include "core/objects/geometry/VRPhysics.h"
 #include "core/objects/geometry/VRGeoData.h"
 #include "core/objects/geometry/OSGGeometry.h"
 #include "core/utils/VRFunction.h"
@@ -21,7 +19,12 @@
 #include <OpenSG/OSGIntersectAction.h>
 #include <OpenSG/OSGGeoProperties.h>
 #include <OpenSG/OSGGeometry.h>
+
+#ifndef WITHOUT_BULLET
+#include "core/objects/geometry/VRPhysics.h"
+#include "VRTerrainPhysicsShape.h"
 #include <BulletCollision/CollisionShapes/btHeightfieldTerrainShape.h>
+#endif
 
 typedef boost::recursive_mutex::scoped_lock PLock;
 
@@ -337,18 +340,22 @@ void VRTerrain::btPhysicalize() {
             if (Hmax < h) Hmax = h;
         }
     }
-
+#ifndef WITHOUT_BULLET
     auto shape = new btHeightfieldTerrainShape(dim[0], dim[1], &(*physicsHeightBuffer)[0], 1, -Hmax, Hmax, 1, PHY_FLOAT, false);
     shape->setLocalScaling(btVector3(texelSize[0],1,texelSize[1]));
     getPhysics()->setCustomShape( shape );
+#endif
 }
 
 void VRTerrain::vrPhysicalize() {
+#ifndef WITHOUT_BULLET
     auto shape = new VRTerrainPhysicsShape( ptr(), resolution );
     getPhysics()->setCustomShape( shape );
+#endif
 }
 
 void VRTerrain::physicalize(bool b) {
+#ifndef WITHOUT_BULLET
     if (!heigthsTex) return;
     if (!b) { getPhysics()->setPhysicalized(false); return; }
 
@@ -356,6 +363,7 @@ void VRTerrain::physicalize(bool b) {
     vrPhysicalize();
     getPhysics()->setFriction(0.8);
     getPhysics()->setPhysicalized(true);
+#endif
 }
 
 Boundingbox VRTerrain::getBoundingBox() {
@@ -394,9 +402,12 @@ void VRTerrain::setSimpleNoise() {
 }
 
 boost::recursive_mutex& VRTerrain::mtx() {
+#ifndef WITHOUT_BULLET
     auto scene = VRScene::getCurrent();
     if (scene) return scene->physicsMutex();
-    else {
+    else
+#endif
+    {
         static boost::recursive_mutex m;
         return m;
     };

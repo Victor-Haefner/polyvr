@@ -828,7 +828,8 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
                     auto cam = assets->copy("Camera", Pose::create(pos, dir), false);
                     lodTree->addObject(cam, cam->getWorldPosition(), 3, false);
                     cam->setDir(dir);
-                    collisionShape->addQuad(0.1, 2, Pose(pos, dir), cam->getID());
+                    Pose p(pos, dir);
+                    collisionShape->addQuad(0.1, 2, p, cam->getID());
                 }
             }
 
@@ -839,7 +840,8 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
                     if (lamp) {
                         lodTree->addObject(lamp, lamp->getWorldPosition(), 3, false);
                         lamp->setDir(-dir);
-                        collisionShape->addQuad(0.1, 2, Pose(pos, -dir), lamp->getID());
+                        Pose p(pos, -dir);
+                        collisionShape->addQuad(0.1, 2, p, lamp->getID());
                     }
                 }
                 if (tag.second == "traffic_signals") {

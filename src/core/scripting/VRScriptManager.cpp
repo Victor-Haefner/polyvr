@@ -1,8 +1,10 @@
 #include "VRScriptManager.h"
 #include "core/utils/VRStorage_template.h"
 #include "core/utils/VROptions.h"
+#ifndef WITHOUT_GTK
 #include "core/gui/VRGuiManager.h"
 #include "core/gui/VRGuiConsole.h"
+#endif
 #include "VRScript.h"
 #include "VRSceneModules.h"
 #include "VRSceneGlobals.h"
@@ -162,14 +164,22 @@ static PyObject* modErr = 0;
 static PyObject* writeOut(PyObject *self, PyObject *args) {
     const char *what;
     if (!PyArg_ParseTuple(args, "s", &what)) return NULL;
+#ifndef WITHOUT_GTK
     VRGuiManager::get()->getConsole(pyOutConsole)->write(what);
+#else
+    cout << " PYOUT: " << what << endl;
+#endif
     return Py_BuildValue("");
 }
 
 static PyObject* writeErr(PyObject *self, PyObject *args) {
     const char *what;
     if (!PyArg_ParseTuple(args, "s", &what)) return NULL;
+#ifndef WITHOUT_GTK
     VRGuiManager::get()->getConsole(pyErrConsole)->write(what);
+#else
+    cout << " PYERR: " << what << endl;
+#endif
     return Py_BuildValue("");
 }
 

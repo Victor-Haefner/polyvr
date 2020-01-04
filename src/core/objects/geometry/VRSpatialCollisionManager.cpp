@@ -120,7 +120,7 @@ void VRSpatialCollisionManager::add(VRObjectPtr o, int objID) {
     }
 }
 
-void VRSpatialCollisionManager::addQuad(float width, float height, const Pose& p, int objID) {
+void VRSpatialCollisionManager::addQuad(float width, float height, Pose& p, int objID) {
     Vec3d pos = p.pos() + p.up()*height*0.5;
     VRGeoData data; data.pushQuad();
     data.pushQuad(pos, p.dir(), p.up(), Vec2d(width, height), true);

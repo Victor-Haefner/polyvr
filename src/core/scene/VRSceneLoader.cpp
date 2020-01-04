@@ -21,8 +21,6 @@
 #include "core/objects/VRLod.h"
 #include "addons/construction/building/VROpening.h"
 
-#include <GL/glut.h>
-
 #include <OpenSG/OSGGeometry.h>
 #include <OpenSG/OSGSimpleMaterial.h>
 #include <OpenSG/OSGPointLight.h>
@@ -95,7 +93,7 @@ void VRSceneLoader::saveScene(string file, XMLElementPtr guiN, string encryption
 
     // write to file
     if (encryptionKey == "") xml.write(file);
-#ifndef NO_ENCRYPTION
+#ifndef WITHOUT_CRYPTOPP
     else {
         VREncryptionPtr e = VREncryption::create();
         string data = xml.toString();
@@ -144,7 +142,7 @@ void VRSceneLoader::loadScene(string path, string encryptionKey) {
     if (!exists(path)) return;
 
     if (encryptionKey== "")  xml.read(path, false);
-#ifndef NO_ENCRYPTION
+#ifndef WITHOUT_CRYPTOPP
     else {
         auto e = VREncryption::create();
         ifstream f(path, ios::binary);
@@ -174,7 +172,7 @@ VRObjectPtr VRSceneLoader::importScene(string path, string encryptionKey, bool o
     if (!exists(path)) return 0;
 
     if (encryptionKey== "")  xml.read(path, false);
-#ifndef NO_ENCRYPTION
+#ifndef WITHOUT_CRYPTOPP
     else {
         auto e = VREncryption::create();
         ifstream f(path, ios::binary);

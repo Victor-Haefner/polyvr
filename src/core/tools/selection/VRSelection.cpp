@@ -11,8 +11,10 @@ install liblapacke-dev
 sudo apt-get install liblapacke-dev
 */
 
+#ifndef WITHOUT_LAPACKE_BLAS
 #include <lapacke.h>
 #define dgeev LAPACKE_dgeev_work
+#endif
 
 using namespace OSG;
 
@@ -207,6 +209,7 @@ Matrix4d VRSelection::computeCovMatrix() {
     return res;
 }
 
+#ifndef WITHOUT_LAPACKE_BLAS
 Matrix4d VRSelection::computeEigenvectors(Matrix4d m) {
     int n = 3, lda = 3, ldvl = 3, ldvr = 3, info, lwork;
     double wkopt;
@@ -247,6 +250,7 @@ Pose VRSelection::computePCA() {
     res.set(Vec3d(ev[3]), Vec3d(ev[0]), Vec3d(ev[2]));
     return res;
 }
+#endif
 
 void VRSelection::selectPlane(Pose p, float threshold) {
     Vec3d N = p.up();

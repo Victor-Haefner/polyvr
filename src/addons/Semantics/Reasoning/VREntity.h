@@ -51,14 +51,14 @@ struct VREntity : public VROntoID, public VRName {
     string asVectorString();
 
     VRPropertyPtr get(const string& prop, int i = 0);
-    vector<VRPropertyPtr> getAll(const string& prop = "");
+    vector<VRPropertyPtr> getAll(string prop = "");
     vector<VRPropertyPtr> getVector(const string& prop, int i = 0);
     vector< vector<VRPropertyPtr> > getAllVector(const string& prop);
 
-    VRPropertyValue getStringValue(const string& prop, int i = 0);
-    vector<VRPropertyValue> getAllStringValues(const string& prop = "");
-    vector<VRPropertyValue> getStringVector(const string& prop, int i = 0);
-    vector< vector<VRPropertyValue> > getAllStringVector(const string& prop);
+    VRPropertyValue getStringValue(string prop, int i = 0);
+    vector<VRPropertyValue> getAllStringValues(string prop = "");
+    vector<VRPropertyValue> getStringVector(string prop, int i = 0);
+    vector< vector<VRPropertyValue> > getAllStringVector(string prop);
 
     template<class T> T getValue(const string& prop, T t, int i = 0) {
         auto P = get(prop, i);
@@ -81,7 +81,7 @@ struct VREntity : public VROntoID, public VRName {
     Vec3d getVec3(const string& prop, int i = 0);
     vector< Vec3d > getAllVec3(const string& prop);
 
-    bool is_a(const string& concept);
+    bool is_a(string concept);
     string toString();
     void save(XMLElementPtr e, int p);
     void load(XMLElementPtr e);

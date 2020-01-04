@@ -1,9 +1,6 @@
 #include "VRPyStroke.h"
 #include "VRPyPath.h"
-#include "VRPyGeometry.h"
 #include "VRPyBaseT.h"
-#include "core/objects/geometry/VRPhysics.h"
-#include "core/objects/material/VRMaterial.h"
 
 using namespace OSG;
 

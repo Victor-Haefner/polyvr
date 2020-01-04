@@ -19,7 +19,7 @@ PyMethodDef VRPyTerrain::methods[] = {
     {"getHeight", PyWrapOpt(Terrain, getHeight, "Get height at point (local space)", "1", double, Vec2d, bool ) },
     {"getNormal", PyWrap(Terrain, getNormal, "Get normal at point (local space)", Vec3d, Vec3d ) },
     {"probeHeight", PyWrap(Terrain, probeHeight, "Probe height at point, for debugging", vector<Vec3d>, Vec2d ) },
-    {"elevatePoint", PyCastWrap(Terrain, elevatePoint, "Elevate a point", Vec3d, Vec3d, float ) },
+    {"elevatePoint", PyWrapOpt(Terrain, elevatePoint, "Elevate a point", "0|1", Vec3d, Vec3d, float, bool ) },
     {"elevatePose", PyWrapOpt(Terrain, elevatePose, "Elevate a pose", "0", void, PosePtr, float ) },
     {"elevateObject", PyWrapOpt(Terrain, elevateObject, "Elevate an Object onto the terrain", "0", void, VRTransformPtr, float ) },
     {"flatten", PyWrap(Terrain, flatten, "Flatten the area inside a perimeter", void, vector<Vec2d>, float ) },

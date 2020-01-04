@@ -43,7 +43,10 @@
 #include <OpenSG/OSGDepthChunk.h>
 #include <OpenSG/OSGMaterialChunk.h>
 #include <OpenSG/OSGCubeTextureObjChunk.h>
-#include <OpenSG/OSGGL.h>
+#include <OpenSG/OSGGLEXT.h>
+#ifndef WASM
+#include <GL/glx.h>
+#endif
 
 using namespace OSG;
 

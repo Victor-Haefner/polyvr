@@ -27,7 +27,7 @@ class VRSpatialCollisionManager : public VRGeometry {
         static VRSpatialCollisionManagerPtr create(float resolution);
 
         void add(VRObjectPtr o, int objID);
-        void addQuad(float width, float height, const Pose& p, int objID);
+        void addQuad(float width, float height, Pose& p, int objID);
         void localize(Boundingbox box);
 
         void setCollisionCallback(VRCollisionCbPtr cb);

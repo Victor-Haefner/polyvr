@@ -1,8 +1,12 @@
 #include "VRPyDevice.h"
 #include "VRPyMobile.h"
 #include "VRPyMouse.h"
+#ifndef WITHOUT_MTOUCH
 #include "VRPyMultiTouch.h"
+#endif
+#ifndef WITHOUT_BULLET
 #include "VRPyHaptic.h"
+#endif
 #include "addons/LeapMotion/VRPyLeap.h"
 #include "VRPyTransform.h"
 #include "VRPyGeometry.h"
@@ -65,10 +69,14 @@ PyMethodDef VRPyDevice::methods[] = {
 PyObject* VRPyDevice::fromSharedPtr(VRDevicePtr dev) {
     string type = dev->getType();
     if (type == "mouse") return VRPyMouse::fromSharedPtr( static_pointer_cast<VRMouse>(dev) );
+#ifndef WITHOUT_MTOUCH
     else if (type == "multitouch") return VRPyMultiTouch::fromSharedPtr( static_pointer_cast<VRMultiTouch>(dev) );
+#endif
     else if (type == "leap") return VRPyLeap::fromSharedPtr( static_pointer_cast<VRLeap>(dev) );
     else if (type == "server") return VRPyServer::fromSharedPtr( static_pointer_cast<VRServer>(dev) );
+#ifndef WITHOUT_BULLET
     else if (type == "haptic") return VRPyHaptic::fromSharedPtr( static_pointer_cast<VRHaptic>(dev) );
+#endif
     else if (type == "keyboard") return VRPyBaseT<VRDevice>::fromSharedPtr( dev );
     else if (type == "flystick") return VRPyBaseT<VRDevice>::fromSharedPtr( dev );
     cout << "\nERROR in VRPyTypeCaster::cast device: " << type << " not handled!\n";

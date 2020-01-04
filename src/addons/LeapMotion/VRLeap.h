@@ -59,9 +59,10 @@ class VRLeap : public VRDevice {
         vector<HandPtr> hands;
         float dragThreshold = 0.05; // 0.5
         float dropThreshold = 0.03; // 0.3
-
+#ifndef WITHOUT_JSONCPP
         void newFrame(Json::Value json);
         void updateHandFromJson(Json::Value& handData, Json::Value& pointableData, HandPtr hand);
+#endif
         void updateSceneData(vector<HandPtr> hands);
         VRTransformPtr getBeaconChild(int i);
         PosePtr computeCalibPose(vector<PenPtr>& pens);

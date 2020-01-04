@@ -61,11 +61,13 @@ VRLeap::VRLeap() : VRDevice("leap") {
             getBeacon(i)->switchParent(getBeacon(6));
     }
 
+#ifndef WITHOUT_JSONCPP
     auto cb = [&](Json::Value msg) {
         newFrame(msg);
     };
 
     webSocket.registerJsonCallback(cb);
+#endif
 
     store("host", &host);
     store("port", &port);
@@ -119,6 +121,7 @@ void VRLeap::registerFrameCallback(function<void(VRLeapFramePtr)> func) {
 void VRLeap::clearFrameCallbacks() { frameCallbacks.clear(); }
 
 
+#ifndef WITHOUT_JSONCPP
 void VRLeap::updateHandFromJson(Json::Value& handData, Json::Value& pointableData, HandPtr hand) {
 
         auto pos = handData["palmPosition"];
@@ -170,6 +173,7 @@ void VRLeap::updateHandFromJson(Json::Value& handData, Json::Value& pointableDat
             hand->extended[type] = pointable["extended"].asBool();
         }
 }
+#endif
 
 VRTransformPtr VRLeap::getBeaconChild(int i) {
     boost::recursive_mutex::scoped_lock lock(mutex);
@@ -219,6 +223,7 @@ void VRLeap::updateSceneData(vector<HandPtr> hands) {
     }
 }
 
+#ifndef WITHOUT_JSONCPP
 void VRLeap::newFrame(Json::Value json) {
 
     // json format: https://developer.leapmotion.com/documentation/v2/cpp/supplements/Leap_JSON.html?proglang=cpp
@@ -297,7 +302,7 @@ void VRLeap::newFrame(Json::Value json) {
 
     for (auto& cb : frameCallbacks) cb(frame);
 }
-
+#endif
 PosePtr VRLeap::computeCalibPose(vector<PenPtr>& pens) {
     PosePtr result = Pose::create();
     if (pens.size() != 2) { return result; }

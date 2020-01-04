@@ -3,9 +3,13 @@
 #include "core/gui/VRGuiManager.h"
 #include "core/setup/devices/VRFlystick.h"
 #include "core/setup/devices/VRMouse.h"
+#ifndef WITHOUT_MTOUCH
 #include "core/setup/devices/VRMultiTouch.h"
+#endif
 #include "core/setup/devices/VRKeyboard.h"
+#ifndef WITHOUT_BULLET
 #include "core/setup/devices/VRHaptic.h"
+#endif
 #include "core/setup/devices/VRServer.h"
 #include "VRSceneManager.h"
 #include "VRSemanticManager.h"
@@ -36,9 +40,11 @@ VRScene::VRScene() {
 
     //scene update functions
     addUpdateFkt(updateAnimationsFkt);
+#ifndef WITHOUT_BULLET
     addUpdateFkt(updatePhysObjectsFkt);
-
     physicsThreadID = initThread(updatePhysicsFkt, "physics", true, 0);
+#endif
+
     loadingTimeCb = VRUpdateCb::create("loadingTimeCb", boost::bind(&VRScene::recLoadingTime, this));
 
     initDevices();
@@ -162,7 +168,6 @@ void VRScene::setActiveCamera(string camname) {
     if (cam == 0) return;
 
     VRMousePtr mouse = dynamic_pointer_cast<VRMouse>( setup->getDevice("mouse") );
-    VRMultiTouchPtr multitouch = dynamic_pointer_cast<VRMultiTouch>( setup->getDevice("multitouch") );
     VRFlystickPtr flystick = dynamic_pointer_cast<VRFlystick>( setup->getDevice("flystick") );
     VRDevicePtr razer = setup->getDevice("vrpn_device");
     VRServerPtr server1 = dynamic_pointer_cast<VRServer>( setup->getDevice("server1") );
@@ -172,10 +177,13 @@ void VRScene::setActiveCamera(string camname) {
         mouse->setCamera(cam);
     }
 
+#ifndef WITHOUT_MTOUCH
+    VRMultiTouchPtr multitouch = dynamic_pointer_cast<VRMultiTouch>( setup->getDevice("multitouch") );
     if (multitouch) {
         multitouch->setTarget(cam);
         multitouch->setCamera(cam);
     }
+#endif
 
     if (flystick) flystick->setTarget(cam);
     if (razer) razer->setTarget(cam);
@@ -234,21 +242,12 @@ void VRScene::recLoadingTime() {
 
 VRProgressPtr VRScene::getLoadingProgress() { return loadingProgress; }
 
-bool exists(string p) {
-    struct stat st;
-    return (stat(p.c_str(),&st) == 0);
-}
-
-void mkDir(string path) {
-    if (!exists(path)) mkdir(path.c_str(), ACCESSPERMS);
-}
-
 void mkPath(string path) {
     auto dirs = splitString(path, '/');
     path = "";
     for (uint i=1; i<dirs.size(); i++) {
         path += "/"+dirs[i];
-        mkDir(path);
+        makedir(path);
     }
 }
 

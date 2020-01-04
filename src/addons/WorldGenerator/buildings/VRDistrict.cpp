@@ -6,10 +6,12 @@
 #include "addons/Semantics/Reasoning/VROntology.h"
 #include "core/objects/material/VRShader.h"
 #include "core/objects/material/VRMaterial.h"
-#include "core/objects/geometry/VRPhysics.h"
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/geometry/VRGeoData.h"
+#ifndef WITHOUT_BULLET
+#include "core/objects/geometry/VRPhysics.h"
 #include "core/objects/geometry/VRSpatialCollisionManager.h"
+#endif
 #include "core/utils/toString.h"
 #include "core/utils/system/VRSystem.h"
 #include "core/math/triangulator.h"
@@ -137,9 +139,10 @@ void VRDistrict::addBuilding( VRPolygonPtr p, int stories, string housenumber, s
             perimeter->add("nodes", nodeEntry->getName());
         }
     }
-
+#ifndef WITHOUT_BULLET
     auto geo = b->getCollisionShape();
     if (auto w = world.lock()) w->getPhysicsSystem()->add(geo, getID());
+#endif
 }
 
 void VRDistrict::computeGeometry() {

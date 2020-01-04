@@ -15,8 +15,6 @@
 #include <OpenSG/OSGGeoProperties.h>
 #include <OpenSG/OSGGeometry.h>
 
-#include <GL/gl.h>
-
 using namespace OSG;
 using namespace boost::filesystem;
 

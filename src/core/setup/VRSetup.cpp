@@ -5,7 +5,9 @@
 #include "windows/VRView.h"
 #include "core/scene/VRSceneManager.h"
 #include "core/scene/VRScene.h"
+#ifndef WITHOUT_GTK
 #include "core/setup/windows/VRGtkWindow.h"
+#endif
 #include "core/utils/toString.h"
 #include "core/utils/VROptions.h"
 #include "core/utils/VRVisualLayer.h"
@@ -62,8 +64,10 @@ VRSetupPtr VRSetup::create(string name) { return VRSetupPtr(new VRSetup(name)); 
 VRSetupPtr VRSetup::getCurrent() { return VRSetupManager::get()->getCurrent(); }
 
 void VRSetup::showStats(bool b) {
+#ifndef WITHOUT_GTK
     auto w = getEditorWindow();
     for (auto v : w->getViews()) v->showStats(b);
+#endif
 }
 
 VRScriptPtr VRSetup::addScript(string name) { auto s = VRScript::create(name); scripts[s->getName()] = s; return s; }

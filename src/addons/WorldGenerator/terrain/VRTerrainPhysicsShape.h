@@ -12,7 +12,7 @@
 using namespace std;
 OSG_BEGIN_NAMESPACE;
 
-ATTRIBUTE_ALIGNED16(class)  VRTerrainPhysicsShape : public btConcaveShape {
+ATTRIBUTE_ALIGNED16(class) VRTerrainPhysicsShape : public btConcaveShape {
     protected:
         VRTerrainPtr terrain;
         float resolution = 0;

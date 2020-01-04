@@ -9,8 +9,10 @@
 #include "core/objects/object/VRObject.h"
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/geometry/VRGeoData.h"
+#ifndef WITHOUT_BULLET
 #include "core/objects/geometry/VRPhysics.h"
 #include "core/objects/geometry/VRSpatialCollisionManager.h"
+#endif
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/material/VRTexture.h"
 #include "core/objects/material/VRTextureGenerator.h"
@@ -613,8 +615,10 @@ void VRNature::addCollisionModels() {
         data.pushQuad(p->pos()+Vec3d(0,1,0), p->dir(), p->up(), Vec2d(0.3, 2), true);
     }
 
+#ifndef WITHOUT_BULLET
     auto geo = data.asGeometry("natureCollisionMesh");
 	if (auto w = world.lock()) w->getPhysicsSystem()->add(geo, trees->getID());
+#endif
 }
 
 /**

@@ -501,7 +501,7 @@ void VRTransform::setTransform(Vec3d from, Vec3d dir, Vec3d up) {
 }
 
 void VRTransform::setPose(PosePtr p) { if (p) setPose2(*p); }
-void VRTransform::setPose2(const Pose& p) { setTransform(p.pos(), p.dir(), p.up()); setScale(p.scale()); }
+void VRTransform::setPose2(Pose& p) { setTransform(p.pos(), p.dir(), p.up()); setScale(p.scale()); }
 PosePtr VRTransform::getPose() { return Pose::create(_from, _dir, _up, _scale); }
 PosePtr VRTransform::getWorldPose() { return Pose::create( getWorldMatrix() ); }
 void VRTransform::setWorldPose(PosePtr p) { setWorldMatrix(p->asMatrix()); }

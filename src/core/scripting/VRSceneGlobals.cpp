@@ -18,19 +18,21 @@
 #include "core/scene/VRAnimationManagerT.h"
 #include "core/scene/import/VRImport.h"
 #include "core/scene/import/VRExport.h"
-#include "core/gui/VRGuiManager.h"
-#include "core/gui/VRGuiConsole.h"
-#include "core/gui/VRGuiFile.h"
+#include "core/scene/import/E57/E57.h"
 #include "core/objects/VRTransform.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/utils/VRTests.h"
 #include "PolyVR.h"
 
-#include "core/scene/import/E57/E57.h"
-
 #include <boost/bind.hpp>
+
+#ifndef WITHOUT_GTK
+#include "core/gui/VRGuiManager.h"
+#include "core/gui/VRGuiConsole.h"
+#include "core/gui/VRGuiFile.h"
 #include <sigc++/adaptors/bind.h>
 #include <gtkmm/filechooser.h>
+#endif
 
 OSG_BEGIN_NAMESPACE;
 
@@ -114,8 +116,10 @@ PyObject* VRSceneGlobals::getSceneMaterials(VRSceneGlobals* self) {
 }
 
 PyObject* VRSceneGlobals::setPhysicsActive(VRSceneGlobals* self, PyObject *args) {
+#ifndef WITHOUT_BULLET
     auto scene = VRScene::getCurrent();
     if (scene) (dynamic_pointer_cast<VRPhysicsManager>(scene))->setPhysicsActive( parseBool(args) );
+#endif
     Py_RETURN_TRUE;
 }
 
@@ -292,15 +296,18 @@ PyObject* VRSceneGlobals::stackCall(VRSceneGlobals* self, PyObject *args) {
 }
 
 void on_py_file_diag_cb(PyObject* pyFkt) {
+#ifndef WITHOUT_GTK
     string res = VRGuiFile::getRelativePath_toWorkdir();
     PyObject *pArgs = PyTuple_New(3);
     PyTuple_SetItem( pArgs, 0, PyString_FromString(res.c_str()) );
     PyTuple_SetItem( pArgs, 1, PyFloat_FromDouble( VRGuiFile::getScale() ) );
     PyTuple_SetItem( pArgs, 2, PyString_FromString( VRGuiFile::getPreset().c_str() ) );
     execCall( pyFkt, pArgs, 0 );
+#endif
 }
 
 PyObject* VRSceneGlobals::openFileDialog(VRSceneGlobals* self, PyObject *args) {
+#ifndef WITHOUT_GTK
     PyObject *cb, *mode, *title, *default_path, *filter;
     if (! PyArg_ParseTuple(args, "OOOOO", &cb, &mode, &title, &default_path, &filter)) return NULL;
     Py_IncRef(cb);
@@ -315,19 +322,23 @@ PyObject* VRSceneGlobals::openFileDialog(VRSceneGlobals* self, PyObject *args) {
     if (m == "Save" || m == "New" || m == "Create") action = Gtk::FILE_CHOOSER_ACTION_SAVE;
     else VRGuiFile::setGeoLoadWidget();
     VRGuiFile::open( m, action, PyString_AsString(title) );
-
+#endif
     Py_RETURN_TRUE;
 }
 
 PyObject* VRSceneGlobals::updateGui(VRSceneGlobals* self) {
+#ifndef WITHOUT_GTK
     VRGuiManager::get()->updateGtk();
+#endif
     Py_RETURN_TRUE;
 }
 
 PyObject* VRSceneGlobals::render(VRSceneGlobals* self) {
     VRSceneManager::get()->updateScene();
     VRSetup::getCurrent()->updateWindows();
+#ifndef WITHOUT_GTK
     VRGuiManager::get()->updateGtk();
+#endif
     Py_RETURN_TRUE;
 }
 
