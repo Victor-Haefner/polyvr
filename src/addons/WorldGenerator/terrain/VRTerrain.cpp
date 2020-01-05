@@ -573,9 +573,11 @@ Vec3d VRTerrain::getNormal( Vec3d p ) { // TODO!!
 }
 
 void VRTerrain::loadMap( string path, int channel ) {
+#ifndef WITHOUT_GDAL
     cout << "   ----------- VRTerrain::loadMap " << path << " " << channel << endl ;
     auto tex = loadGeoRasterData(path);
     setMap(tex, channel);
+#endif
 }
 
 void VRTerrain::flatten(vector<Vec2d> perimeter, float h) {

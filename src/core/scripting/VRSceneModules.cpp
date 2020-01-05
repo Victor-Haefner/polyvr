@@ -9,7 +9,10 @@
 #include "VRPyAnimation.h"
 #include "VRPySocket.h"
 #include "VRPySprite.h"
+#ifndef WITHOUT_AV
 #include "VRPySound.h"
+#include "VRPyRecorder.h"
+#endif
 #include "VRPyDevice.h"
 #include "VRPyIntersection.h"
 #include "VRPyPose.h"
@@ -34,7 +37,6 @@
 #include "VRPyCamera.h"
 #include "VRPyLod.h"
 #include "VRPyKinematics.h"
-#include "VRPyRecorder.h"
 #include "VRPyPathtool.h"
 #include "VRPyConstructionKit.h"
 #include "VRPySnappingEngine.h"
@@ -44,7 +46,9 @@
 #include "VRPySelection.h"
 #include "VRPyPatchSelection.h"
 #include "VRPyPolygonSelection.h"
+#ifndef WITHOUT_BULLET
 #include "VRPySpatialCollisionManager.h"
+#endif
 #include "VRPyMenu.h"
 #include "VRPyClipPlane.h"
 #include "VRPyListMath.h"
@@ -90,7 +94,9 @@
 #include "addons/WorldGenerator/nature/VRPyNature.h"
 #include "addons/WorldGenerator/terrain/VRPyTerrain.h"
 #include "addons/WorldGenerator/weather/VRPyWeather.h"
+#ifndef WITHOUT_CGAL
 #include "addons/Engineering/CSG/VRPyCSG.h"
+#endif
 #include "addons/RealWorld/VRPyRealWorld.h"
 #include "addons/SimViDekont/VRPySimViDekont.h"
 #include "addons/Semantics/Reasoning/VRPyOntology.h"
@@ -125,22 +131,29 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyObject>("Object", pModVR, VRPyName::typeRef);
     sm->registerModule<VRPyTransform>("Transform", pModVR, VRPyObject::typeRef);
     sm->registerModule<VRPyGeometry>("Geometry", pModVR, VRPyTransform::typeRef);
+#ifndef WITHOUT_BULLET
     sm->registerModule<VRPySpatialCollisionManager>("SpatialCollisionManager", pModVR, VRPyGeometry::typeRef);
+#endif
     sm->registerModule<VRPyMaterial>("Material", pModVR, VRPyObject::typeRef);
     sm->registerModule<VRPyTextureGenerator>("TextureGenerator", pModVR);
     sm->registerModule<VRPyImage>("Image", pModVR);
     sm->registerModule<VRPyLight>("Light", pModVR, VRPyObject::typeRef);
     sm->registerModule<VRPyLightBeacon>("LightBeacon", pModVR, VRPyTransform::typeRef);
     sm->registerModule<VRPyCamera>("Camera", pModVR, VRPyTransform::typeRef);
+#ifndef WITHOUT_BULLET
     sm->registerModule<VRPyKinematics>("Kinematics", pModVR);
+#endif
     sm->registerModule<VRPyFABRIK>("FABRIK", pModVR);
     sm->registerModule<VRPyLod>("Lod", pModVR, VRPyObject::typeRef);
     sm->registerModule<VRPyLodLeaf>("LodLeaf", pModVR, VRPyTransform::typeRef);
     sm->registerModule<VRPyLodTree>("LodTree", pModVR, VRPyObject::typeRef);
     sm->registerModule<VRPySprite>("Sprite", pModVR, VRPyGeometry::typeRef);
     sm->registerModule<VRPyPointCloud>("PointCloud", pModVR, VRPyTransform::typeRef);
+#ifndef WITHOUT_AV
     sm->registerModule<VRPySound>("Sound", pModVR);
     sm->registerModule<VRPySoundManager>("SoundManager", pModVR);
+    sm->registerModule<VRPyRecorder>("Recorder", pModVR);
+#endif
     sm->registerModule<VRPySocket>("Socket", pModVR);
     sm->registerModule<VRPyStroke>("Stroke", pModVR, VRPyGeometry::typeRef);
     sm->registerModule<VRPyConstraint>("Constraint", pModVR);
@@ -161,7 +174,6 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyBoundingbox>("Boundingbox", pModVR);
     sm->registerModule<VRPyPolygon>("Polygon", pModVR);
     sm->registerModule<VRPyTriangulator>("Triangulator", pModVR);
-    sm->registerModule<VRPyRecorder>("Recorder", pModVR);
     sm->registerModule<VRPyProjectManager>("ProjectManager", pModVR, VRPyObject::typeRef);
     sm->registerModule<VRPyHandle>("Handle", pModVR, VRPyGeometry::typeRef);
     sm->registerModule<VRPyGeoPrimitive>("GeoPrimitive", pModVR, VRPyTransform::typeRef);
@@ -228,7 +240,9 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyLeap>("Leap", pModVR, VRPyDevice::typeRef);
     sm->registerModule<VRPyLeapFrame>("LeapFrame", pModVR);
 
+#ifndef WITHOUT_CGAL
 	sm->registerModule<VRPyCSG>("CSGGeometry", pModVR, VRPyGeometry::typeRef);
+#endif
 	sm->registerModule<VRPyRealWorld>("RealWorld", pModVR, VRPyObject::typeRef);
 	sm->registerModule<VRPySimViDekont>("SimViDekont", pModVR);
 

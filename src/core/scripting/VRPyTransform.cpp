@@ -18,7 +18,6 @@ using namespace OSG;
 
 #ifndef WITHOUT_BULLET
 simpleVRPyType(Collision, 0);
-simpleVRPyType(Transform, New_VRObjects_ptr);
 
 template<> PyObject* VRPyTypeCaster::cast(const VRCollision& e) { return VRPyCollision::fromObject(e); }
 
@@ -34,6 +33,8 @@ PyMethodDef VRPyCollision::methods[] = {
     {NULL}  /* Sentinel */
 };
 #endif
+
+simpleVRPyType(Transform, New_VRObjects_ptr);
 
 PyMethodDef VRPyTransform::methods[] = {
     {"setIdentity", PyWrap(Transform, setIdentity, "Reset transformation to identity", void ) },

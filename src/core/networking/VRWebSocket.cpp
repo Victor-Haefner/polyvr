@@ -1,15 +1,17 @@
 #include <core/utils/VRFunction.h>
 #include <core/scene/VRScene.h>
+#include <functional>
 #include "core/scene/VRSceneManager.h"
 #include "VRWebSocket.h"
 
 OSG_BEGIN_NAMESPACE
 using namespace std;
+using namespace std::placeholders;
 
 
 VRWebSocket::VRWebSocket(string name) : VRName() {
     setName(name);
-    threadFkt = VRThreadCb::create("webSocketPollThread", boost::bind(&VRWebSocket::poll, this, _1));
+    threadFkt = VRThreadCb::create("webSocketPollThread", bind(&VRWebSocket::poll, this, _1));
 }
 
 VRWebSocket::~VRWebSocket() {

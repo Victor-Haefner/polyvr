@@ -1,7 +1,9 @@
 #include "VROntology.h"
 #include "VRReasoner.h"
 #include "VRProperty.h"
+#ifndef WITHOUT_RAPTOR
 #include "VROWLImport.h"
+#endif
 #include "VROWLExport.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRStorage_template.h"
@@ -298,9 +300,11 @@ string VROntology::toString() {
 }
 
 void VROntology::openOWL(string path) {
+#ifndef WITHOUT_RAPTOR
     if (!exists(path)) WARN("WARNING in VROntology::openOWL, " + path + " not found!");
     VROWLImport importer;
     importer.read(shared_from_this(), path);
+#endif
 }
 
 void VROntology::saveOWL(string path) {

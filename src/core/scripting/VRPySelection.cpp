@@ -23,7 +23,9 @@ PyMethodDef VRPySelection::methods[] = {
 
 PyObject* VRPySelection::computePCA(VRPySelection* self) {
     if (!self->valid()) return NULL;
+#ifndef WITHOUT_LAPACKE_BLAS
     return VRPyPose::fromObject( self->objPtr->computePCA() );
+#endif
 }
 
 PyObject* VRPySelection::selectPlane(VRPySelection* self, PyObject* args) {

@@ -65,8 +65,10 @@ struct VRTextureRenderer::Data {
     RenderActionRefPtr ract;
     WindowMTRecPtr     win;
     ViewportMTRecPtr   view;
+#ifndef WITHOUT_DEFERRED_RENDERING
     VRDefShadingPtr deferredStage;
     VRObjectPtr deferredStageRoot;
+#endif
 };
 OSG_END_NAMESPACE;
 
@@ -154,10 +156,12 @@ VRTextureRenderer::VRTextureRenderer(string name) : VRObject(name) {
     setCore(OSGCore::create(data->stage), "TextureRenderer");
 
     // for deferred rendering
+#ifndef WITHOUT_DEFERRED_RENDERING
     data->deferredStageRoot = VRObject::create("TextureRendererDeferredRoot");
     data->deferredStage = VRDefShading::create();
     data->deferredStage->initDeferredShading(data->deferredStageRoot);
     data->deferredStage->setDeferredShading(true);
+#endif
 
     updateBackground();
 }
@@ -183,7 +187,9 @@ void VRTextureRenderer::setBackground(Color3f c, float a) {
     bg->setColor(c);
     mat->enableTransparency();
     data->stage->setBackground( bg );
+#ifndef WITHOUT_DEFERRED_RENDERING
     if (data->deferredStage) data->deferredStage->setBackground( bg );
+#endif
     auto scene = VRScene::getCurrent();
     if (auto sky = scene->getSky()) remLink(sky);
 }
@@ -192,7 +198,9 @@ void VRTextureRenderer::updateBackground() {
     auto scene = VRScene::getCurrent();
 
     data->stage->setBackground( scene->getBackground() );
+#ifndef WITHOUT_DEFERRED_RENDERING
     if (data->deferredStage) data->deferredStage->setBackground( scene->getBackground() );
+#endif
 
     if (auto sky = scene->getSky()) addLink(sky);
 }
@@ -212,7 +220,9 @@ void VRTextureRenderer::setup(VRCameraPtr c, int width, int height, bool alpha) 
         data->fboDTexImg->set(Image::OSG_RGB_PF, data->fboWidth, data->fboHeight);
     }
     data->stage->setCamera(cam->getCam()->cam);
+#ifndef WITHOUT_DEFERRED_RENDERING
     if (data->deferredStage) data->deferredStage->setDSCamera( cam->getCam() );
+#endif
 }
 
 VRMaterialPtr VRTextureRenderer::getMaterial() { return mat; }
@@ -264,6 +274,7 @@ VRTexturePtr VRTextureRenderer::renderOnce(CHANNEL c) {
 
     if (!data->ract) {
         data->ract = RenderAction::create();
+#ifndef WITHOUT_DEFERRED_RENDERING
         if (deferred) {
             GLUTWindowRecPtr gwin = GLUTWindow::create();
             glutInitWindowSize(data->fboWidth, data->fboHeight);
@@ -285,7 +296,9 @@ VRTexturePtr VRTextureRenderer::renderOnce(CHANNEL c) {
             for (auto child : getChildren()) data->deferredStageRoot->addChild(child);
             clearLinks();
             data->view->setBackground(data->deferredStage->getOSGStage()->getBackground());
-        } else {
+        } else
+#endif
+        {
             data->win = PassiveWindow::create();
             data->view = Viewport::create();
             data->view->setRoot(getNode()->node);

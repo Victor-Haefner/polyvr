@@ -2,7 +2,6 @@
 
 #include <OpenSG/OSGConfig.h>
 #include <core/utils/VRName.h>
-#include <boost/thread/thread.hpp>
 #include "mongoose/mongoose.h"
 #ifndef WITHOUT_JSONCPP
 #include <jsoncpp/json/json.h>

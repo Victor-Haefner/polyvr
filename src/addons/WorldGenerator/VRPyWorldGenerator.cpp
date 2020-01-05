@@ -66,7 +66,9 @@ PyMethodDef VRPyWorldGenerator::methods[] = {
     {"getStats", PyWrap( WorldGenerator, getStats, "Return stats as string", string ) },
     {"setupPhysics", PyWrap( WorldGenerator, setupPhysics, "Process collision shapes", void ) },
     {"updatePhysics", PyWrap( WorldGenerator, updatePhysics, "Update physicalized region", void, Boundingbox ) },
+#ifndef WITHOUT_BULLET
     {"getPhysicsSystem", PyWrap( WorldGenerator, getPhysicsSystem, "Return dynamic collision manager", VRSpatialCollisionManagerPtr ) },
+#endif
     {"setUserCallback", PyWrap( WorldGenerator, setUserCallback, "Setup user callback", void, VRWorldGenerator::VRUserGenCbPtr ) },
     {NULL}  /* Sentinel */
 };

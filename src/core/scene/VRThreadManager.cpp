@@ -2,7 +2,7 @@
 #include "core/utils/VRFunction.h"
 #include "core/utils/system/VRSystem.h"
 
-#include <boost/thread/thread.hpp>
+#include <thread>
 #include <OpenSG/OSGChangeList.h>
 #include <OpenSG/OSGThread.h>
 #include <OpenSG/OSGThreadManager.h>
@@ -29,9 +29,9 @@ VRThreadManager::~VRThreadManager() {
 VRThread::VRThread() {}
 VRThread::~VRThread() {
     control_flag = false;
-    if (boost_t) {
-        boost_t->interrupt();
-        delete boost_t;
+    if (std_thread) {
+        std_thread->join();
+        delete std_thread;
     }
 }
 
@@ -93,7 +93,7 @@ void VRThreadManager::stopAllThreads() {
         for (auto t : threads) {
             //cout << "wait for " << t.second->name << " ID " << t.second->ID << " c " << count << endl;
             if (t.second->status == 2) {
-                if (t.second->boost_t) { t.second->boost_t->interrupt(); delete t.second->boost_t; t.second->boost_t = 0; }
+                if (t.second->std_thread) { t.second->std_thread->join(); delete t.second->std_thread; t.second->std_thread = 0; }
                 threads.erase(t.first); break;
             }
         }
@@ -117,7 +117,7 @@ void VRThreadManager::stopThread(int id, int tries) {
         osgSleep(10);
     }
 
-    if (t->boost_t) { t->boost_t->interrupt(); delete t->boost_t; t->boost_t = 0; }
+    if (t->std_thread) { t->std_thread->join(); delete t->std_thread; t->std_thread = 0; }
     threads.erase(id);
 }
 
@@ -149,7 +149,7 @@ int VRThreadManager::initThread(VRThreadCbPtr f, string name, bool loop, int asp
     t->selfSyncBarrier = Barrier::create();
     t->mainSyncBarrier = Barrier::create();
     t->initCl = ChangeList::create();
-    t->boost_t = new boost::thread(boost::bind(&VRThreadManager::runLoop, this, t));
+    t->std_thread = new thread(bind(&VRThreadManager::runLoop, this, t));
     threads[id] = t;
 
     id++;
@@ -163,13 +163,13 @@ VRThreadPtr VRThreadManager::getThread(int id) {
 
 void VRThreadManager::waitThread(int id) {
     if (threads.count(id) == 0) return;
-    threads[id]->boost_t->join();
+    threads[id]->std_thread->join();
 }
 
 void VRThreadManager::killThread(int id) {
     if (threads.count(id) == 0) return;
     cout << "\nKILL THREAD " << id << endl;
-    if (threads[id]->boost_t) { threads[id]->boost_t->interrupt(); delete threads[id]->boost_t; threads[id]->boost_t = 0; }
+    if (threads[id]->std_thread) { threads[id]->std_thread->join(); delete threads[id]->std_thread; threads[id]->std_thread = 0; }
     threads.erase(id);
 }
 

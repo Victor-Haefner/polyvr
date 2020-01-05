@@ -24,8 +24,8 @@ extern "C" {
 #include <AL/alext.h>
 #endif
 
-#include <boost/thread/thread.hpp>
-//#include <boost/thread.hpp>
+#include <thread>
+#include <boost/thread/mutex.hpp>
 
 using namespace OSG;
 
@@ -80,13 +80,13 @@ struct VRSoundContext {
 namespace OSG {
 struct VRSoundChannel {
     bool running = true;
-    boost::thread* thread = 0;
+    std::thread* thread = 0;
     VRSoundContext* context = 0;
     boost::mutex mutex;
     map<int, VRSoundPtr> current;
 
     VRSoundChannel() {
-        thread = new boost::thread(boost::bind(&VRSoundChannel::soundThread, this));
+        thread = new std::thread(bind(&VRSoundChannel::soundThread, this));
     }
 
     ~VRSoundChannel() {
@@ -190,7 +190,7 @@ struct VRSoundQueue {
     VRUpdateCbPtr callback;
 
     VRSoundQueue(vector<VRSoundPtr> sounds) : sounds(sounds) {
-        callback = VRUpdateCb::create("sound queue", boost::bind(&VRSoundQueue::next, *this));
+        callback = VRUpdateCb::create("sound queue", bind(&VRSoundQueue::next, *this));
         for (auto sound : sounds) sound->setCallback( callback );
     }
 

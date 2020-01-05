@@ -7,8 +7,6 @@
 #include "VRSoundFwd.h"
 #include "core/utils/VRFunctionFwd.h"
 
-namespace boost { class thread; }
-
 using namespace std;
 OSG_BEGIN_NAMESPACE;
 

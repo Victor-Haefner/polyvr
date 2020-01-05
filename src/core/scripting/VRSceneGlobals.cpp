@@ -11,7 +11,9 @@
 #include "VRPyTypeCaster.h"
 #include "VRPyProgress.h"
 #include "VRPySky.h"
+#ifndef WITHOUT_AV
 #include "VRPySound.h"
+#endif
 #include "VRPyMaterial.h"
 #include "VRPyCodeCompletion.h"
 
@@ -97,7 +99,9 @@ PyObject* VRSceneGlobals::getFrame(VRSceneGlobals* self) {
 }
 
 PyObject* VRSceneGlobals::getSoundManager(VRSceneGlobals* self) {
+#ifndef WITHOUT_AV
     return VRPySoundManager::fromSharedPtr( VRSoundManager::get() );
+#endif
 }
 
 PyObject* VRSceneGlobals::getSky(VRSceneGlobals* self) {

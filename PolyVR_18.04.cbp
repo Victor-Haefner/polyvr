@@ -210,7 +210,6 @@
 			<Add option="-lXmu" />
 			<Add option="-lXi" />
 			<Add option="-lboost_system" />
-			<Add option="-lboost_thread" />
 			<Add option="-lboost_program_options" />
 			<Add option="-lboost_serialization" />
 			<Add option="-lboost_filesystem" />

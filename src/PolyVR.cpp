@@ -24,7 +24,9 @@
 #include "core/utils/VRGlobals.h"
 #include "core/utils/system/VRSystem.h"
 #include "core/scene/VRSceneLoader.h"
+#ifndef WITHOUT_AV
 #include "core/scene/sound/VRSoundManager.h"
+#endif
 #include "core/objects/object/VRObject.h"
 #include "core/setup/VRSetup.h"
 
@@ -156,7 +158,9 @@ void PolyVR::start(bool runit) {
     else glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE | GLUT_STENCIL);
 
     cout << "Init Modules\n";
+#ifndef WITHOUT_AV
     sound_mgr = VRSoundManager::get();
+#endif
     setup_mgr = VRSetupManager::create();
     scene_mgr = VRSceneManager::create();
     interface = shared_ptr<VRMainInterface>(VRMainInterface::get());

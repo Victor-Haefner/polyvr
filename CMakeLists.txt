@@ -1,5 +1,7 @@
 cmake_minimum_required (VERSION 3.0)
 
+#set( CMAKE_VERBOSE_MAKEFILE on )
+
 project(PolyVR)
 
 message( "Configuring for system name / version: " ${CMAKE_SYSTEM_NAME} " / " ${CMAKE_SYSTEM_VERSION} )
@@ -55,6 +57,7 @@ function(FIND_PYTHON)
 		set(PYTHON_INCLUDE_DIR "../include/Python")
 		set(PYTHON_LIBRARY_DIR "../lib")
 		set(PYTHON_LIBRARIES "-lpython2.7")
+		set(LINKER_FLAGS "${LINKER_FLAGS} ${PYTHON_LIBRARIES}" PARENT_SCOPE)
 	endif()
 	include_directories(${PYTHON_INCLUDE_DIR})
 endfunction()
@@ -98,6 +101,10 @@ function(SETUP_VARS)
 		add_definitions( -DWITHOUT_NUMPY )
 		add_definitions( -DWITHOUT_SSH )
 		add_definitions( -DWITHOUT_RAPTOR )
+		add_definitions( -DWITHOUT_QRENCODE )
+		add_definitions( -DWITHOUT_COLLADA )
+		add_definitions( -DWITHOUT_GDAL )
+		add_definitions( -DWITHOUT_DEFERRED_RENDERING )
 	endif()
 endfunction()
 
@@ -119,7 +126,7 @@ include_directories(src)
 add_executable(polyvr src/main.cpp)
 target_sources(polyvr PRIVATE src/PolyVR.cpp)
 
-if(FALSE) # ok
+if(TRUE) # ok
 #target_sources(polyvr PRIVATE src/core/math/PCA.cpp) # needs lapacke/blas
 target_sources(polyvr PRIVATE src/core/math/VRStateMachine.cpp)
 target_sources(polyvr PRIVATE src/core/math/coordinates.cpp)
@@ -145,7 +152,7 @@ target_sources(polyvr PRIVATE src/core/math/graph.cpp)
 target_sources(polyvr PRIVATE src/core/navigation/VRNavigator.cpp)
 endif()
 
-if(FALSE) # ok
+if(TRUE) # ok
 target_sources(polyvr PRIVATE src/core/networking/mongoose/mongoose.c)
 target_sources(polyvr PRIVATE src/core/networking/VRSharedMemory.cpp)
 target_sources(polyvr PRIVATE src/core/networking/VRWebSocket.cpp)
@@ -160,7 +167,7 @@ target_sources(polyvr PRIVATE src/core/networking/VRSceneSync.cpp)
 target_sources(polyvr PRIVATE src/core/networking/VRPing.cpp)
 endif()
 
-if(FALSE) # ok
+if(TRUE) # ok
 target_sources(polyvr PRIVATE src/core/scene/VRObjectGroupManager.cpp)
 target_sources(polyvr PRIVATE src/core/scene/VRThreadManager.cpp)
 target_sources(polyvr PRIVATE src/core/scene/VRScene.cpp)
@@ -197,7 +204,7 @@ target_sources(polyvr PRIVATE src/core/scene/rendering/VRRenderStudio.cpp)
 target_sources(polyvr PRIVATE src/core/scene/rendering/VRFog.cpp)
 target_sources(polyvr PRIVATE src/core/scene/rendering/VRDeferredRenderStage.cpp)
 target_sources(polyvr PRIVATE src/core/scene/rendering/VRSSAO.cpp)
-target_sources(polyvr PRIVATE src/core/scene/rendering/VRDefShading.cpp)
+#target_sources(polyvr PRIVATE src/core/scene/rendering/VRDefShading.cpp) # needs compiling def shading in OSG
 target_sources(polyvr PRIVATE src/core/scene/rendering/VRFXAA.cpp)
 target_sources(polyvr PRIVATE src/core/scene/rendering/VRRenderManager.cpp)
 target_sources(polyvr PRIVATE src/core/scene/rendering/VRHMDDistortion.cpp)
@@ -214,7 +221,7 @@ target_sources(polyvr PRIVATE src/core/scene/VRSceneManager.cpp)
 #target_sources(polyvr PRIVATE src/core/scene/sound/VRSoundManager.cpp) # needs libav
 endif()
 
-if(FALSE) # ok
+if(TRUE) # ok
 target_sources(polyvr PRIVATE src/core/scripting/VRPySelection.cpp)
 target_sources(polyvr PRIVATE src/core/scripting/VRPyConstructionKit.cpp)
 target_sources(polyvr PRIVATE src/core/scripting/VRPyGraph.cpp)
@@ -240,7 +247,7 @@ target_sources(polyvr PRIVATE src/core/scripting/VRPyJointTool.cpp)
 target_sources(polyvr PRIVATE src/core/scripting/VRPyObjectManager.cpp)
 target_sources(polyvr PRIVATE src/core/scripting/VRPyColorChooser.cpp)
 target_sources(polyvr PRIVATE src/core/scripting/VRPyPath.cpp)
-target_sources(polyvr PRIVATE src/core/scripting/VRPySound.cpp)
+#target_sources(polyvr PRIVATE src/core/scripting/VRPySound.cpp) # needs libav
 target_sources(polyvr PRIVATE src/core/scripting/VRPyNetworking.cpp)
 target_sources(polyvr PRIVATE src/core/scripting/VRPySprite.cpp)
 target_sources(polyvr PRIVATE src/core/scripting/VRPySky.cpp)
@@ -253,7 +260,7 @@ target_sources(polyvr PRIVATE src/core/scripting/VRPyMaterial.cpp)
 target_sources(polyvr PRIVATE src/core/scripting/VRPyNavPreset.cpp)
 target_sources(polyvr PRIVATE src/core/scripting/VRPyGeometry.cpp)
 target_sources(polyvr PRIVATE src/core/scripting/VRPyTextureRenderer.cpp)
-target_sources(polyvr PRIVATE src/core/scripting/VRPyRecorder.cpp)
+#target_sources(polyvr PRIVATE src/core/scripting/VRPyRecorder.cpp) # needs AV
 target_sources(polyvr PRIVATE src/core/scripting/VRPyLight.cpp)
 target_sources(polyvr PRIVATE src/core/scripting/VRPyAnnotationEngine.cpp)
 target_sources(polyvr PRIVATE src/core/scripting/VRPyStateMachine.cpp)
@@ -292,7 +299,7 @@ target_sources(polyvr PRIVATE src/core/scripting/VRPyKinematics.cpp)
 target_sources(polyvr PRIVATE src/core/scripting/VRPyIntersection.cpp)
 endif()
 
-if(FALSE) # ok
+if(TRUE) # ok
 target_sources(polyvr PRIVATE src/core/setup/windows/VRWindow.cpp)
 target_sources(polyvr PRIVATE src/core/setup/windows/VRView.cpp)
 #target_sources(polyvr PRIVATE src/core/setup/windows/VRGtkWindow.cpp) # needs GTK
@@ -319,13 +326,13 @@ target_sources(polyvr PRIVATE src/core/setup/devices/VRMouse.cpp)
 #target_sources(polyvr PRIVATE src/core/setup/devices/VRHaptic.cpp)
 target_sources(polyvr PRIVATE src/core/setup/devices/VRSignal.cpp)
 #target_sources(polyvr PRIVATE src/core/setup/devices/virtuose/main.cpp)
-#target_sources(polyvr PRIVATE src/core/setup/devices/VRFlystick.cpp)
+target_sources(polyvr PRIVATE src/core/setup/devices/VRFlystick.cpp)
 target_sources(polyvr PRIVATE src/core/setup/devices/VRServer.cpp)
 target_sources(polyvr PRIVATE src/core/setup/devices/VRDevice.cpp)
 target_sources(polyvr PRIVATE src/core/setup/devices/VRDeviceManager.cpp)
 endif()
 
-if(FALSE) # ok
+if(TRUE) # ok
 target_sources(polyvr PRIVATE src/core/tools/VRProjectManager.cpp)
 target_sources(polyvr PRIVATE src/core/tools/VRWaypoint.cpp)
 target_sources(polyvr PRIVATE src/core/tools/VRMesure.cpp)
@@ -350,7 +357,7 @@ target_sources(polyvr PRIVATE src/core/tools/VRUndoManager.cpp)
 target_sources(polyvr PRIVATE src/core/tools/VRAnalyticGeometry.cpp)
 endif()
 
-if(FALSE) # ok
+if(TRUE) # ok
 target_sources(polyvr PRIVATE src/core/objects/geometry/sprite/VRSprite.cpp)
 target_sources(polyvr PRIVATE src/core/objects/geometry/sprite/VRSpriteResizeTool.cpp)
 target_sources(polyvr PRIVATE src/core/objects/geometry/OSGGeometry.cpp)
@@ -365,7 +372,7 @@ target_sources(polyvr PRIVATE src/core/objects/geometry/VRSky.cpp)
 target_sources(polyvr PRIVATE src/core/objects/geometry/VRStroke.cpp)
 endif()
 
-if(FALSE) # ok
+if(TRUE) # ok
 target_sources(polyvr PRIVATE src/core/objects/material/OSGMaterial.cpp)
 target_sources(polyvr PRIVATE src/core/objects/material/VRBricks.cpp)
 target_sources(polyvr PRIVATE src/core/objects/material/VRMaterial.cpp)
@@ -378,7 +385,7 @@ target_sources(polyvr PRIVATE src/core/objects/material/VRTextureMosaic.cpp)
 #target_sources(polyvr PRIVATE src/core/objects/material/VRVideo.cpp) # needs libav
 endif()
 
-if(FALSE) # ok
+if(TRUE) # ok
 target_sources(polyvr PRIVATE src/core/objects/object/OSGCore.cpp)
 target_sources(polyvr PRIVATE src/core/objects/object/VRAttachment.cpp)
 target_sources(polyvr PRIVATE src/core/objects/object/VRObject.cpp)
@@ -399,7 +406,7 @@ target_sources(polyvr PRIVATE src/core/objects/VRStage.cpp)
 target_sources(polyvr PRIVATE src/core/objects/VRTransform.cpp)
 endif()
 
-if(FALSE) # ok
+if(TRUE) # ok
 target_sources(polyvr PRIVATE src/core/utils/system/VRSystem.cpp)
 target_sources(polyvr PRIVATE src/core/utils/zipper/minizip/ioapi.c)
 target_sources(polyvr PRIVATE src/core/utils/zipper/minizip/ioapi_buf.c)
@@ -436,7 +443,7 @@ target_sources(polyvr PRIVATE src/core/utils/VRVisualLayer.cpp)
 target_sources(polyvr PRIVATE src/core/utils/xml.cpp)
 endif()
 
-if(TRUE)
+if(TRUE) # ok
 #target_sources(polyvr PRIVATE src/addons/CEF/VRPyWebCam.cpp)
 #target_sources(polyvr PRIVATE src/addons/CEF/VRPyCEF.cpp)
 #target_sources(polyvr PRIVATE src/addons/CEF/CEF.cpp)
@@ -450,7 +457,7 @@ if(TRUE)
 #target_sources(polyvr PRIVATE src/addons/RealWorld/Vec2Helper.cpp)
 #target_sources(polyvr PRIVATE src/addons/RealWorld/MapManager.cpp)
 #target_sources(polyvr PRIVATE src/addons/RealWorld/MapCoordinator.cpp)
-#target_sources(polyvr PRIVATE src/addons/RealWorld/VRPyRealWorld.cpp)
+target_sources(polyvr PRIVATE src/addons/RealWorld/VRPyRealWorld.cpp)
 #target_sources(polyvr PRIVATE src/addons/RealWorld/Elevation.cpp)
 #target_sources(polyvr PRIVATE src/addons/RealWorld/Assets/StreetLamp.cpp)
 #target_sources(polyvr PRIVATE src/addons/RealWorld/Assets/Asset.cpp)

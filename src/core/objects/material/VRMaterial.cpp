@@ -712,8 +712,10 @@ void VRMaterial::setTextureType(string type, int unit) {
 }
 
 void VRMaterial::setQRCode(string s, Vec3d fg, Vec3d bg, int offset) {
+#ifndef WITHOUT_QRENCODE
     createQRCode(s, ptr(), fg, bg, offset);
     setTextureParams(GL_NEAREST_MIPMAP_NEAREST, GL_NEAREST, -1, -1, -1);
+#endif
 }
 
 void VRMaterial::setZOffset(float factor, float bias) {

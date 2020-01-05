@@ -1,6 +1,8 @@
 #include "VRBlinds.h"
 
+#ifndef WITHOUT_AV
 #include "core/scene/sound/VRSoundManager.h"
+#endif
 #include "core/scene/VRAnimationManagerT.h"
 #include "core/math/pose.h"
 #include "core/objects/geometry/VRGeometry.h"
@@ -53,7 +55,9 @@ void VRBlinds::open() {
     state = OPEN;
 
     scene->addAnimation<float>(3, 0, fkt, float(0.0), float(1.0), false);
+#ifndef WITHOUT_AV
     VRSoundManager::get()->setupSound(sound);
+#endif
 }
 
 void VRBlinds::close() {
@@ -61,7 +65,9 @@ void VRBlinds::close() {
     state = CLOSE;
 
     scene->addAnimation<float>(3, 0, fkt, float(1.0), float(0.0), false);
+#ifndef WITHOUT_AV
     VRSoundManager::get()->setupSound(sound);
+#endif
 }
 
 void VRBlinds::toggle(VRDeviceWeakPtr d) {
