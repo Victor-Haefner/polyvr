@@ -248,7 +248,7 @@ target_sources(polyvr PRIVATE src/core/scripting/VRPyObjectManager.cpp)
 target_sources(polyvr PRIVATE src/core/scripting/VRPyColorChooser.cpp)
 target_sources(polyvr PRIVATE src/core/scripting/VRPyPath.cpp)
 #target_sources(polyvr PRIVATE src/core/scripting/VRPySound.cpp) # needs libav
-target_sources(polyvr PRIVATE src/core/scripting/VRPyNetworking.cpp)
+#target_sources(polyvr PRIVATE src/core/scripting/VRPyNetworking.cpp) # needs ioctl
 target_sources(polyvr PRIVATE src/core/scripting/VRPySprite.cpp)
 target_sources(polyvr PRIVATE src/core/scripting/VRPySky.cpp)
 target_sources(polyvr PRIVATE src/core/scripting/VRPyPolygonSelection.cpp)
