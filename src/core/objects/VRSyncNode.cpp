@@ -24,7 +24,7 @@ template<> string typeName(const VRSyncNode& o) { return "SyncNode"; }
 
 VRSyncNode::VRSyncNode(string name) : VRTransform(name) {
     type = "SyncNode";
-//    lightGeo = 0;
+    lightGeo = 0;
 //
 //    GeometryMTRecPtr lightGeo_ = makeSphereGeo(2,0.1);
 //    lightGeo_->setMaterial(getLightGeoMat()->getMaterial()->mat);
@@ -32,7 +32,7 @@ VRSyncNode::VRSyncNode(string name) : VRTransform(name) {
 //    lightGeo = OSGObject::create( makeNodeFor(lightGeo_) );
 //    lightGeo->node->setTravMask(0);
 //    addChild(lightGeo);
-
+//
 //    storeObjName("light", &light, &light_name);
 }
 
