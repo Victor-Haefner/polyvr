@@ -86,7 +86,7 @@ int VRKinematics::addCustomJoint(int nID1, int nID2, PosePtr d1, PosePtr d2, vec
 {
     if (!(dofs.size() == minRange.size() || dofs.size() == maxRange.size())) return -1;
     VRConstraintPtr c = VRConstraint::create();
-    for (int i = 0; i < dofs.size(); i++) c->setMinMax(dofs[i], minRange[i], maxRange[i]);
+    for (uint i = 0; i < dofs.size(); i++) c->setMinMax(dofs[i], minRange[i], maxRange[i]);
     c->setReferenceA(d1);
     c->setReferenceB(d2);
     return addJoint(nID1, nID2, c);

@@ -85,10 +85,16 @@ bool VRPing::start(std::string address, int timeout) {
     int max_attempts = 1;
     std::string command = "ping -c " + toString(max_attempts) + " " + address + " 2>&1";
 
-    FILE *in;
+    FILE* in;
     char buff[512];
     if (!(in = popen(command.c_str(), "r"))) return false;
     while (fgets(buff, sizeof(buff), in)!=NULL) ;
     int code =  pclose(in);
     return (code == 0);
 }
+
+// define popen, not just for here, but also for python API
+#ifdef WASM
+FILE *popen(const char *command, const char *type) { return 0; }
+#endif
+

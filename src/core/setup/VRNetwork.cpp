@@ -1,8 +1,12 @@
 #include "VRNetwork.h"
 #include "core/utils/VRManager.cpp"
 #include "core/networking/VRPing.h"
+#ifndef WITHOUT_SSH
 #include "core/networking/VRSSH.h"
+#endif
+#ifndef WITHOUT_GTK
 #include "core/gui/VRGuiUtils.h"
+#endif
 
 #include "core/scene/VRSceneManager.h"
 #include "core/utils/system/VRSystem.h"
@@ -62,6 +66,7 @@ void VRNetworkNode::set(string a, string u, string p) {
 }
 
 void VRNetworkNode::distributeKey() {
+#ifndef WITHOUT_SSH
     if (stat_node != "ok") return;
     auto ssh = VRSSHSession::open(address, user);
     if (!ssh->hasLocalKey()) ssh->createLocalKey();
@@ -70,6 +75,7 @@ void VRNetworkNode::distributeKey() {
     stat_ssh_key = ssh->getKeyStat();
     ssh.reset();
     update();
+#endif
 }
 
 VRNetworkSlavePtr VRNetworkNode::add(string name) {
@@ -113,6 +119,7 @@ bool VRNetworkNode::hasFile(string path) {
 }
 
 void VRNetworkNode::update() {
+#ifndef WITHOUT_SSH
     stat_node = "ok";
     stat_ssh = "";
     stat_ssh_key = "";
@@ -131,12 +138,17 @@ void VRNetworkNode::update() {
     bool b2 = hasFile(slavePath + "/src/cluster/stop");
     if (b1 && b2) stat_path = "ok";
     else stat_path = "not found";
+#endif
 }
 
 string VRNetworkNode::execCmd(string cmd, bool read) {
+#ifndef WITHOUT_SSH
     if (stat_node != "ok" || stat_ssh != "ok") return "";
     auto ssh = VRSSHSession::open(address, user);
     return ssh->exec_cmd(cmd, read);
+#else
+    return "";
+#endif
 }
 
 VRNetworkSlave::VRNetworkSlave(string name) {

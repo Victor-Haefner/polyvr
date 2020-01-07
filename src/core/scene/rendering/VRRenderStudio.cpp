@@ -13,7 +13,9 @@
 #include "core/objects/object/OSGCore.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/VRCamera.h"
+#ifndef WITHOUT_DEFERRED_RENDERING
 #include "VRDefShading.h"
+#endif
 #include "VRSSAO.h"
 #include "VRHMDDistortion.h"
 #include "VRFXAA.h"
@@ -103,8 +105,12 @@ void VRRenderStudio::setStageShader(string name, string VPpath, string FPpath, b
 }
 
 int VRRenderStudio::addStageBuffer(string name, int pformat, int ptype) {
+#ifndef WITHOUT_DEFERRED_RENDERING
     if (!stages.count(name)) return 0;
     return stages[name]->getRendering()->addBuffer(pformat, ptype);
+#else
+    return 0;
+#endif
 }
 
 void VRRenderStudio::setStageParameter(string name, string var, int val) {
@@ -150,8 +156,10 @@ void VRRenderStudio::init(VRObjectPtr root) {
 
     hmdd->initHMDD( stages["hmdd"]->getMaterial() );
     fxaa->initFXAA( stages["fxaa"]->getMaterial() );
+#ifndef WITHOUT_DEFERRED_RENDERING
     stages["hmdd"]->getMaterial()->setTexture( stages["shading"]->getRendering()->getTarget(), 0 );
     stages["fxaa"]->getMaterial()->setTexture( stages["shading"]->getRendering()->getTarget(), 0 );
+#endif
     initCalib( stages["calibration"]->getMaterial() );
     initMarker( stages["marker"]->getMaterial() );
 
@@ -171,12 +179,14 @@ void VRRenderStudio::update() {
     stages["ssao"]->setActive(do_ssao, do_ssao);
     if (ssao) ssao->setSSAOparams(ssao_radius, ssao_kernel, ssao_noise);
 
+#ifndef WITHOUT_DEFERRED_RENDERING
     for (auto m : VRMaterial::materials) {
         if (auto mat = m.second.lock()) mat->setDeferred(deferredRendering);
     }
 
     // update shader code
     for (auto s : stages) if (auto r = s.second->getRendering()) r->reload();
+#endif
     if (do_hmdd && hmdd) hmdd->reload();
     if (do_fxaa && fxaa) fxaa->reload();
 
@@ -195,7 +205,9 @@ void VRRenderStudio::reset() {
 }
 
 void VRRenderStudio::reloadStageShaders() {
+#ifndef WITHOUT_DEFERRED_RENDERING
     for (auto s : stages) if (auto r = s.second->getRendering()) r->reload();
+#endif
 }
 
 void VRRenderStudio::initDSProxy(VRMaterialPtr mat) {
@@ -233,23 +245,29 @@ void VRRenderStudio::addLight(VRLightPtr l) {
 VRLightPtr VRRenderStudio::getLight(int ID) { return light_map.count(ID) ? light_map[ID].lock() : 0; }
 
 void VRRenderStudio::updateLight(VRLightPtr l) {
+#ifndef WITHOUT_DEFERRED_RENDERING
     auto defShading = stages["shading"]->getRendering();
     if (defShading) defShading->updateLight(l);
+#endif
 }
 
 void VRRenderStudio::subLight(int ID) {
     if (light_map.count(ID)) light_map.erase(ID);
+#ifndef WITHOUT_DEFERRED_RENDERING
     auto defShading = stages["shading"]->getRendering();
     if (defShading) defShading->subLight(ID);
+#endif
 }
 
 void VRRenderStudio::clearLights() {
+#ifndef WITHOUT_DEFERRED_RENDERING
     auto defShading = stages["shading"]->getRendering();
     for (auto li : light_map) {
         if (auto l = li.second.lock()) {
             if (defShading) defShading->subLight(l->getID());
         }
     }
+#endif
     light_map.clear();
 }
 
@@ -322,8 +340,10 @@ bool VRRenderStudio::getFXAA() { return do_fxaa; }
 bool VRRenderStudio::getDefferedShading() { return deferredRendering; }
 
 void VRRenderStudio::setDeferredChannel(int c) {
+#ifndef WITHOUT_DEFERRED_RENDERING
     auto defShading = stages["shading"]->getRendering();
     if (defShading) defShading->setDeferredChannel(c);
+#endif
 }
 
 void VRRenderStudio::setDefferedShading(bool b) { deferredRendering = b; update(); }

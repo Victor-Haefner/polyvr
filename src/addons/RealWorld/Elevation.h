@@ -5,10 +5,9 @@
 #include <fstream>
 #include <map>
 
+#ifndef WITHOUT_JSONCPP
 #include <jsoncpp/json/json.h>
-#include <curl/curl.h>
-#include <sys/stat.h>
-
+#endif
 #include <OpenSG/OSGVector.h>
 
 OSG_BEGIN_NAMESPACE;
@@ -16,11 +15,15 @@ using namespace std;
 
 class Elevation {
     private:
+#ifndef WITHOUT_JSONCPP
         Json::Value event;
+#endif
         const int n = 10;
         const float stepSize = 0.0011;
         const int precision = 2;
+#ifndef WITHOUT_JSONCPP
         std::map<string, Json::Value> elevations;
+#endif
         std::map<Vec2d, float> exactElevations;
 
     public:
@@ -38,13 +41,17 @@ class Elevation {
         /** create json-file with latitude, longitude && elevation data **/
         void createElevationFile(string id, string latlons[]);
 
+#ifndef WITHOUT_JSONCPP
         Json::Value interpolateElevationJson(Json::Value rb);
+#endif
 
         /** get String with Json Data for lat- lon pair && their elevation && distance **/
         string getMapQuestElevations(string latlons);
 
         /** return Json that only contains lat, lon && elevation data **/
+#ifndef WITHOUT_JSONCPP
         Json::Value getBetterJson(string readBuffer[], Json::Value event);
+#endif
 
         string getLatLonName(float lat, float lon);
 

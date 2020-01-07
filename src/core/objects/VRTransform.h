@@ -114,7 +114,7 @@ class VRTransform : public VRObject {
         void setOrientation(Vec3d dir, Vec3d up);
         void setEuler(Vec3d euler);
         void setTransform(Vec3d p, Vec3d d = Vec3d(0,0,-1), Vec3d u = Vec3d(0,1,0));
-        void setPose2(const Pose& p);
+        void setPose2(Pose& p);
         void setPose(PosePtr p);
         virtual void setMatrix(Matrix4d m);
         void setMatrixTo(Matrix4d m, VRObjectPtr o);

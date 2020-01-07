@@ -7,12 +7,21 @@
 
 #include "VRDevice.h"
 #include "VRMouse.h"
-#include "VRMultiTouch.h"
 #include "VRKeyboard.h"
-#include "VRFlystick.h"
-#include "VRHaptic.h"
 #include "VRServer.h"
 #include "addons/LeapMotion/VRLeap.h"
+
+#ifndef WITHOUT_ART
+#include "VRFlystick.h"
+#endif
+
+#ifndef WITHOUT_BULLET
+#include "VRHaptic.h"
+#endif
+
+#ifndef WITHOUT_MTOUCH
+#include "VRMultiTouch.h"
+#endif
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -105,11 +114,13 @@ void VRDeviceManager::load(XMLElementPtr node) {
             dev = m;
         }
 
+#ifndef WITHOUT_MTOUCH
         if (type == "multitouch") {
             VRMultiTouchPtr m = VRMultiTouch::create();
             m->load(el);
             dev = m;
         }
+#endif
 
         if (type == "leap") {
             VRLeapPtr m = VRLeap::create();
@@ -123,11 +134,13 @@ void VRDeviceManager::load(XMLElementPtr node) {
             dev = k;
         }
 
+#ifndef WITHOUT_BULLET
         if (type == "haptic") {
             VRHapticPtr h = VRHaptic::create();
             h->load(el);
             dev = h;
         }
+#endif
 
         if (type == "server") {
             VRServerPtr m = VRServer::create(5500);

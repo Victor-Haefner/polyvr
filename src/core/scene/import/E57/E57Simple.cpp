@@ -794,7 +794,7 @@ DEALINGS IN THE SOFTWARE.
 #  else
 #    error "no supported compiler defined"
 #  endif
-#elif defined(LINUX)
+#elif defined(LINUX) || defined(WASM)
 #  define _LARGEFILE64_SOURCE
 #  define __LARGE64_FILES
 #  include <sys/types.h>

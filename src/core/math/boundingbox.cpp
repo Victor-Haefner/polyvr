@@ -186,5 +186,19 @@ VRGeometryPtr Boundingbox::asGeometry() {
     return res;
 }
 
+// python proxies
+bool Boundingbox::py_empty() { return empty(); }
+void Boundingbox::py_update(Vec3d v) { update(v); }
+void Boundingbox::py_updateFromPoints(vector<Vec3d> v) { updateFromPoints(v); }
+Vec3d Boundingbox::py_min() { return min(); }
+Vec3d Boundingbox::py_max() { return max(); }
+Vec3d Boundingbox::py_center() { return center(); }
+Vec3d Boundingbox::py_size() { return size(); }
+float Boundingbox::py_radius() { return radius(); }
+float Boundingbox::py_volume() { return volume(); }
+void Boundingbox::py_setCenter(Vec3d t) { setCenter(t); }
+void Boundingbox::py_move(Vec3d t) { move(t); }
+bool Boundingbox::py_isInside(Vec3d p) { return isInside(p); }
+void Boundingbox::py_clamp(Vec3d p) { clamp(p); }
 
 

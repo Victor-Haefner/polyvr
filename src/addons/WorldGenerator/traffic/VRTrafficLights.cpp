@@ -104,7 +104,7 @@ void VRTrafficLights::addTrafficLight(VRTrafficLightPtr light) {
     };
 
     for (auto& group : lights) {
-        int offset = group.first;
+        //int offset = group.first;
         for (auto& l : group.second) {
             if (!opposite(l, light)) continue;
             group.second.push_back(light);
@@ -143,10 +143,13 @@ void VRTrafficLights::update() { // TODO, use time instead of counter!
     int t = deltaT;
     if (t > 120) lastT = thisT;
 
+    /*auto allOn = [&](VRTrafficLightPtr& l) { l->setState("111"); };
+    auto allOff = [&](VRTrafficLightPtr& l) { l->setState("000"); };
+
     auto orangeBlinking = [&](VRTrafficLightPtr& l) {
         if (t%6 < 3) l->setState("010");
         if (t%6 >= 3) l->setState("000");
-    };
+    };*/
 
     auto mainCycle = [&](VRTrafficLightPtr& l, int offset) {
         int a = (t+offset)%60;
@@ -154,13 +157,6 @@ void VRTrafficLights::update() { // TODO, use time instead of counter!
         if (a == 30) l->setState("110");
         if (a == 34) l->setState("001");
         if (a == 56) l->setState("010");
-    };
-
-    auto allOn = [&](VRTrafficLightPtr& l) {
-        l->setState("111");
-    };
-    auto allOff = [&](VRTrafficLightPtr& l) {
-        l->setState("000");
     };
 
     for (auto& group : lights) {

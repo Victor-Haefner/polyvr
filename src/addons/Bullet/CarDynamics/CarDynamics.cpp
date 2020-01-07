@@ -323,7 +323,7 @@ float VRCarDynamics::computeEngineBreak(float gearRatio, float coupling ) {
 
 void VRCarDynamics::updateEngineRPM( float gearRPM, float deltaRPM, float throttleImpactOnRPM, float breakImpactOnRPM, float engineFriction, float coupling ) {
     float slidingFactor = 0.0;
-    for (int each = 0; each < wheels.size(); each ++) {
+    for (uint each = 0; each < wheels.size(); each ++) {
         btWheelInfo& wheelInf =  vehicle->getWheelInfo(each);
         auto skidInf = float(wheelInf.m_skidInfo);
         slidingFactor += skidInf;
@@ -447,7 +447,7 @@ void VRCarDynamics::update(float t, float b, float s, float c, int g) {
 }
 
 void VRCarDynamics::updateWheel(int w, float t, float b, float s, float c, int g) {
-    if (w < 0 || w >= wheels.size()) return;
+    if (w < 0 || w >= (int)wheels.size()) return;
     auto wheel = wheels[w];
     if (!wheel) return;
     wheel->throttle = clamp(t, 0, 1);
@@ -482,7 +482,7 @@ void VRCarDynamics::setParameter(float mass, float enginePower, float breakPower
 	engine->minRpm = 800;
 	engine->maxRpm = 6000;
 
-    float maxTorqueRPM = engine->minRpm+(engine->maxRpm-engine->minRpm)*0.70;
+    //float maxTorqueRPM = engine->minRpm+(engine->maxRpm-engine->minRpm)*0.70;
     if (!engine->torqueCurve) engine->torqueCurve = Path::create();
     engine->torqueCurve->clear();
     engine->torqueCurve->addPoint( Pose(Vec3d(engine->stallRpm,0.8,0), Vec3d(1,0,0)));

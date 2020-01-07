@@ -77,7 +77,7 @@ void OSG::loadE57(string path, VRTransformPtr res, map<string, string> importOpt
                 destBuffers.push_back(SourceDestBuffer(imf, "colorBlue", b, N, true));
             }
 
-            unsigned int gotCount = 0;
+            int gotCount = 0;
             CompressedVectorReader reader = points.reader(destBuffers);
 
             auto pointcloud = VRPointCloud::create("pointcloud");
@@ -87,10 +87,10 @@ void OSG::loadE57(string path, VRTransformPtr res, map<string, string> importOpt
             int Nskip = round(1.0/downsampling);
             int Nskipped = 0;
             do {
-                gotCount = reader.read();
+                gotCount = (int)reader.read();
 
                 if (Nskipped+gotCount < Nskip) Nskipped += gotCount;
-                else for (unsigned j=0; j < gotCount; j++) {
+                else for (int j=0; j < gotCount; j++) {
                     Nskipped++;
                     if (Nskipped >= Nskip) {
                         Vec3d pos = Vec3d(x[j], y[j], z[j]);

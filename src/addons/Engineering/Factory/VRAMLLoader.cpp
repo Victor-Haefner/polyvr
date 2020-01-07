@@ -29,7 +29,7 @@ void VRAMLLoader::read(string path) {
         x = y = z = length = width = height = 0;
         dx = dy = dz = ux = uy = uz = 0;
 
-        double mspeed = 1;
+        //double mspeed = 1;
         vector<Vec3d> wSpace(2); //[[position],[size]]
         string path;
         string typ = "M";

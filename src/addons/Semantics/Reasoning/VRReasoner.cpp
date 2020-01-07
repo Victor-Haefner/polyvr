@@ -7,8 +7,10 @@
 #include <list>
 #include "core/utils/toString.h"
 #include "core/utils/VRCallbackWrapper.h"
+#ifndef WITHOUT_GTK
 #include "core/gui/VRGuiManager.h"
 #include "core/gui/VRGuiConsole.h"
+#endif
 
 using namespace OSG;
 
@@ -58,7 +60,9 @@ bool VRReasoner::startswith(string s, string subs) {
 
 void VRReasoner::print(const string& s) {
     if (verbConsole) cout << pre << s << endl;
+#ifndef WITHOUT_GTK
     if (verbGui) VRGuiManager::get()->getConsole( "Reasoning" )->write( s+"\n" );
+#endif
 }
 
 void VRReasoner::print(const string& s, COLOR c) {
@@ -72,6 +76,7 @@ void VRReasoner::print(const string& s, COLOR c) {
         cout << pre << s << colEnd << endl;
     }
 
+#ifndef WITHOUT_GTK
     if (verbGui) {
         switch(c) {
             case BLUE: VRGuiManager::get()->getConsole( "Reasoning" )->write( s+"\n", "blue" ); break;
@@ -80,6 +85,7 @@ void VRReasoner::print(const string& s, COLOR c) {
             case YELLOW: VRGuiManager::get()->getConsole( "Reasoning" )->write( s+"\n", "yellow" ); break;
         }
     }
+#endif
 }
 
 bool VRReasoner::findRule(VRStatementPtr statement, VRSemanticContextPtr context) {
@@ -222,7 +228,7 @@ bool VRReasoner::has(VRStatementPtr statement, VRSemanticContextPtr context) { /
 bool VRReasoner::apply(VRStatementPtr statement, Query query, VRSemanticContextPtr context) {
     print("Apply statement " + ::toString((void*)statement.get()) + "  " + statement->toString(), GREEN);
 
-    auto clearAssumptions = [&]() {
+    /*auto clearAssumptions = [&]() {
         vector<string> toDelete;
         for (auto v : context->vars) {
             for (auto e : v.second->entities) {
@@ -235,11 +241,11 @@ bool VRReasoner::apply(VRStatementPtr statement, Query query, VRSemanticContextP
             context->onto->remEntity( context->onto->getEntity(v) );
             //context.vars.erase(v);
         }
-    };
+    };*/
 
     auto aggr = [](vector<string> v) {
         string r;
-        for (int i=0; i<v.size(); i++) {
+        for (uint i=0; i<v.size(); i++) {
             if (i > 0) r += ", ";
             r += v[i];
         }
@@ -336,7 +342,7 @@ bool VRReasoner::apply(VRStatementPtr statement, Query query, VRSemanticContextP
                 auto ents2 = right.var->getEntities(Evaluation::VALID);
 
                 if (ents1.size() == ents2.size()) {
-                    for (int i=0; i<ents1.size(); i++) applySet(ents1[i], ents2[i]);
+                    for (uint i=0; i<ents1.size(); i++) applySet(ents1[i], ents2[i]);
                 } else {
                     for (auto eL : ents1) {
                         for (auto eR : ents2) applySet(eL, eR);
@@ -397,7 +403,7 @@ bool VRReasoner::apply(VRStatementPtr statement, Query query, VRSemanticContextP
                 continue; // ewntity has no evaluation
             }
             auto& eval = v->evaluations[e.first];
-            bool valid = (eval.state == Evaluation::VALID || addAssumtions && eval.state != Evaluation::INVALID);
+            bool valid = (eval.state == Evaluation::VALID || (addAssumtions && eval.state != Evaluation::INVALID));
             print("    entity " + e.second->toString() + " evaluation: " + ::toString(valid), BLUE);
             if (valid) {
                 print("    add valid entity: " + e.second->toString(), GREEN);

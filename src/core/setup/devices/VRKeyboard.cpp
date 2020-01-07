@@ -1,8 +1,10 @@
 #include "VRKeyboard.h"
 
-#include <GL/glut.h>
-#include <OpenSG/OSGBaseInitFunctions.h>
+//#include <GL/glut.h>
+//#include <OpenSG/OSGBaseInitFunctions.h>
+#ifndef WITHOUT_GTK
 #include <gdk/gdkevents.h>
+#endif
 
 using namespace OSG;
 
@@ -20,6 +22,8 @@ VRKeyboardPtr VRKeyboard::create() {
 
 VRKeyboardPtr VRKeyboard::ptr() { return static_pointer_cast<VRKeyboard>( shared_from_this() ); }
 
+#ifndef WITHOUT_GTK
 void VRKeyboard::setGtkEvent(_GdkEventKey* event) { gdk_event = event; }
 _GdkEventKey* VRKeyboard::getGtkEvent() { return gdk_event; }
+#endif
 

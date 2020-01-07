@@ -50,8 +50,10 @@ class VRSelection {
 
         Vec3d computeCentroid();
         Matrix4d computeCovMatrix();
+#ifndef WITHOUT_LAPACKE_BLAS
         Matrix4d computeEigenvectors(Matrix4d m);
         Pose computePCA();
+#endif
 
         void selectPlane(Pose plane, float threshold);
 };

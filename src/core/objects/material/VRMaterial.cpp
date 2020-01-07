@@ -43,7 +43,10 @@
 #include <OpenSG/OSGDepthChunk.h>
 #include <OpenSG/OSGMaterialChunk.h>
 #include <OpenSG/OSGCubeTextureObjChunk.h>
-#include <OpenSG/OSGGL.h>
+#include <OpenSG/OSGGLEXT.h>
+#ifndef WASM
+#include <GL/glx.h>
+#endif
 
 using namespace OSG;
 
@@ -709,8 +712,10 @@ void VRMaterial::setTextureType(string type, int unit) {
 }
 
 void VRMaterial::setQRCode(string s, Vec3d fg, Vec3d bg, int offset) {
+#ifndef WITHOUT_QRENCODE
     createQRCode(s, ptr(), fg, bg, offset);
     setTextureParams(GL_NEAREST_MIPMAP_NEAREST, GL_NEAREST, -1, -1, -1);
+#endif
 }
 
 void VRMaterial::setZOffset(float factor, float bias) {
@@ -911,7 +916,7 @@ void VRMaterial::setSpecular(Color3f c) { mats[activePass]->colChunk->setSpecula
 void VRMaterial::setAmbient(Color3f c) { mats[activePass]->colChunk->setAmbient(toColor4f(c)); }
 void VRMaterial::setEmission(Color3f c) { mats[activePass]->colChunk->setEmission(toColor4f(c)); }
 void VRMaterial::setShininess(float c) { mats[activePass]->colChunk->setShininess(c); }
-void VRMaterial::setLit(bool b) { if (activePass >= 0 && activePass < mats.size() && mats[activePass]->colChunk) mats[activePass]->colChunk->setLit(b); updateDeferredShader(); }
+void VRMaterial::setLit(bool b) { if (activePass >= 0 && activePass < (int)mats.size() && mats[activePass]->colChunk) mats[activePass]->colChunk->setLit(b); updateDeferredShader(); }
 
 Color3f VRMaterial::getDiffuse() { return toColor3f( mats[activePass]->colChunk->getDiffuse() ); }
 Color3f VRMaterial::getSpecular() { return toColor3f( mats[activePass]->colChunk->getSpecular() ); }
@@ -1164,7 +1169,7 @@ string VRMaterial::diffPass(VRMaterialPtr m, int pass) {
     auto& p1 = mats[pass];
     auto& p2 = m->mats[pass];
 
-    auto either = [](bool a, bool b) { return (a && !b || !a && b); };
+    auto either = [](bool a, bool b) { return ((a && !b) || (!a && b)); };
 
     if (either(p1->mat, p2->mat)) res += "\ndiff on mat|"+toString(bool(p1->mat))+"|"+toString(bool(p2->mat));
     if (either(p1->colChunk, p2->colChunk)) res += "\ndiff on colChunk|"+toString(bool(p1->colChunk))+"|"+toString(bool(p2->colChunk));
@@ -1209,7 +1214,7 @@ string VRMaterial::diff(VRMaterialPtr m) {
     string res;
     if (mats.size() != m->mats.size()) res += "\nN passes|"+toString(mats.size())+"|"+toString(m->mats.size());
     else {
-        for (int i=0; i<mats.size(); i++) res += diffPass(m, i);
+        for (uint i=0; i<mats.size(); i++) res += diffPass(m, i);
     }
     return res;
 }

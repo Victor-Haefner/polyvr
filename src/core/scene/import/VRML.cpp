@@ -35,7 +35,7 @@ struct VRMLSchema {
 
     void addNodeRef(string node, vector<string> fields, vector<string> types, vector<string> defaults) {
         nodeRefs[node] = NodeRef();
-        for (int i=0; i<fields.size(); i++) {
+        for (uint i=0; i<fields.size(); i++) {
             nodeRefs[node].fieldRefs[fields[i]] = FieldRef();
             nodeRefs[node].fieldRefs[fields[i]].type = types[i];
             nodeRefs[node].fieldRefs[fields[i]].def  = defaults[i];
@@ -548,7 +548,7 @@ struct VRMLNode : VRMLUtils {
     }
 
     void handleAsciiText(map<string, string> data) {
-        float spacing = getSFFloat(data, "spacing", 1);
+        //float spacing = getSFFloat(data, "spacing", 1);
         string justification = "LEFT"; // SFEnum
         vector<string> text({string()}); // MFString
         vector<float> width({0}); // MFFloat
@@ -653,8 +653,8 @@ struct VRMLNode : VRMLUtils {
         Color3f color = getSFColor(data, "color", Color3f(1,1,1));
         Vec3d location = getSFVec3f(data, "location", Vec3d(0,0,1));
         Vec3d direction = getSFVec3f(data, "direction", Vec3d(0,0,-1));
-        float dropOffRate = getSFFloat(data, "dropOffRate", 1); // TODO
-        float cutOffAngle = getSFFloat(data, "cutOffAngle", 1);
+        //float dropOffRate = getSFFloat(data, "dropOffRate", 1); // TODO
+        //float cutOffAngle = getSFFloat(data, "cutOffAngle", 1);
 
         VRLightPtr light = dynamic_pointer_cast<VRLight>(obj);
         if (!light) { cout << "WARNING in VRML handleSpotLight, cast failed" << endl; return; }
@@ -669,7 +669,7 @@ struct VRMLNode : VRMLUtils {
     void handlePerspectiveCamera(map<string, string> data) {
         Vec3d position = getSFVec3f(data, "position", Vec3d(0,0,1));
         Vec4d orientation = getSFRotation(data, "orientation", Vec4d(0,0,1,0));
-        float focalDistance = getSFFloat(data, "focalDistance", 5);
+        //float focalDistance = getSFFloat(data, "focalDistance", 5);
         float heightAngle = getSFFloat(data, "heightAngle", 0.785398);
 
         VRCameraPtr c = dynamic_pointer_cast<VRCamera>(obj);
@@ -750,7 +750,7 @@ struct VRMLNode : VRMLUtils {
         vector<float> shininess = getMultiField<float>(data, "shininess", {0.2});
         vector<float> transparency = getMultiField<float>(data, "transparency", {0});
         auto m = VRMaterial::create("material");
-        for (int i=0; i<diffuseColor.size(); i++) {
+        for (uint i=0; i<diffuseColor.size(); i++) {
             if (i > 0) m->addPass();
             m->setAmbient( ambientColor[i] );
             m->setDiffuse( diffuseColor[i] );
@@ -932,14 +932,14 @@ struct VRML2Node : VRMLNode {
                 bool normalPerVertex = getBool(params["normalPerVertex"]);
                 bool doNormals = false;
                 bool doColors = false;
-                bool doTexCoords = false;
+                //bool doTexCoords = false;
 
                 for (auto c : children) {
                     if (c->type == "Link") { if (references.count(c->name)) c = references[c->name]; }
                     if (c->type == "Coordinate") for (auto p : c->positions) geo.pushVert(p);
                     if (c->type == "Normal") { for (auto n : c->normals) geo.pushNorm(n); doNormals = true; }
                     if (c->type == "Color") { for (auto col : c->colors) geo.pushColor(col); doColors = true; }
-                    if (c->type == "TextureCoordinate") { for (auto t : c->texCoords) geo.pushTexCoord(t); doTexCoords = true; }
+                    if (c->type == "TextureCoordinate") { for (auto t : c->texCoords) geo.pushTexCoord(t); /*doTexCoords = true;*/ }
                 }
 
 
@@ -960,7 +960,7 @@ struct VRML2Node : VRMLNode {
                 if (doNormals) { // TODO, there may be negative values??
                     if (!normalPerVertex) {
                         if (normalIndex.size()) { // different normal indices, one index per face
-                            for (int i = 0; i<normalIndex.size(); i++) {
+                            for (uint i = 0; i<normalIndex.size(); i++) {
                                 int ID = normalIndex[i];
                                 int N = geo.getFaceSize(i);
                                 for (int j=0; j<N; j++) if (ID >= 0) geo.pushNormalIndex(ID);
@@ -981,7 +981,7 @@ struct VRML2Node : VRMLNode {
                 if (doColors) {
                     if (!colorPerVertex) {
                         if (colorIndex.size()) { // different color indices, one index per face
-                            for (int i = 0; i<colorIndex.size(); i++) {
+                            for (uint i = 0; i<colorIndex.size(); i++) {
                                 int ID = colorIndex[i];
                                 int N = geo.getFaceSize(i);
                                 for (int j=0; j<N; j++) geo.pushColorIndex(ID);
@@ -1132,7 +1132,7 @@ class VRMLLoader : public VRMLUtils {
                 if (ctx.nextNodeDEF) { ctx.nextNodeName = token; return; }
                 if (ctx.nextNodeUSE) {
                     if (!references.count(token)) cout << "WARNING in VRML handle token, no reference named " << token << " found!" << endl;
-                    auto refNode = references[token];
+                    //auto refNode = references[token];
                     ctx.currentNode->newChild("Link", token);
                     ctx.nextNodeUSE = false;
                     return;

@@ -1,5 +1,10 @@
 #include "Elevation.h"
 
+#ifndef WITHOUT_CURL
+#include <curl/curl.h>
+#endif
+#include <sys/stat.h>
+
 using namespace OSG;
 
 Elevation::Elevation() {}
@@ -68,7 +73,7 @@ void Elevation::readElevationFile(string id){
     if ( !parsingSuccessful )
     {
         // report to the user the failure && their locations in the document.
-        std::cout  << reader.getFormatedErrorMessages() << "\n";
+        std::cout  << reader.getFormattedErrorMessages() << "\n";
         return;
     }else{
         elevations[id] = root;
@@ -151,7 +156,7 @@ Json::Value Elevation::getBetterJson(string readBuffer[], Json::Value event){
         if ( !parsingSuccessful )
         {
             // report to the user the failure && their locations in the document.
-            cout  << reader.getFormatedErrorMessages() << "\n";
+            cout  << reader.getFormattedErrorMessages() << "\n";
             return "";
         }
 

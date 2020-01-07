@@ -20,13 +20,17 @@
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/geometry/OSGGeometry.h"
 #include "core/objects/geometry/VRStroke.h"
+#ifndef WITHOUT_BULLET
 #include "core/objects/geometry/VRPhysics.h"
 #include "core/objects/geometry/VRSpatialCollisionManager.h"
+#endif
 #include "core/objects/VRLodTree.h"
 #include "core/tools/VRAnalyticGeometry.h"
 #include "core/objects/material/VRTextureGenerator.h"
 #include "core/objects/material/VRTexture.h"
+#ifndef WITHOUT_PANGO_CAIRO
 #include "core/tools/VRText.h"
+#endif
 #include "core/utils/toString.h"
 #include "core/utils/VRTimer.h"
 #include "core/utils/VRFunction.h"
@@ -330,8 +334,8 @@ void VRRoadNetwork::computeLanePaths( VREntityPtr road ) {
     }
 
 	if (lanesD1.size()>1) {
-        for (int i = 0; i<lanesD1[0].size();i++) {
-            for (int j = 1; j<lanesD1.size();j++) {
+        for (uint i = 0; i<lanesD1[0].size();i++) {
+            for (uint j = 1; j<lanesD1.size();j++) {
                 ///checking minimum length for lane relations
                 if (graph->getEdgeLength(lanesD1[j][i]) < 10) continue;
                 if (graph->getEdgeLength(lanesD1[j-1][i]) < 10) continue;
@@ -341,8 +345,8 @@ void VRRoadNetwork::computeLanePaths( VREntityPtr road ) {
         }
 	}
     if (lanesD2.size()>1) {
-        for (int i = 0; i<lanesD2[0].size();i++) {
-            for (int j = 1; j<lanesD2.size();j++) {
+        for (uint i = 0; i<lanesD2[0].size();i++) {
+            for (uint j = 1; j<lanesD2.size();j++) {
                 ///checking minimum length for lane relations
                 if (graph->getEdgeLength(lanesD2[j][i]) < 10) continue;
                 if (graph->getEdgeLength(lanesD2[j-1][i]) < 10) continue;
@@ -367,10 +371,12 @@ void VRRoadNetwork::addFence( PathPtr path, float height ) {
 	fences->merge(fence);
 
 	// physics
+#ifndef WITHOUT_BULLET
 	auto shape = VRStroke::create("shape");
 	shape->setPaths({path});
 	shape->strokeProfile({Vec3d(0,0,0), Vec3d(0,height,0)}, false, true, false);
 	if (auto w = world.lock()) w->getPhysicsSystem()->add(shape, fences->getID());
+#endif
 }
 
 void VRRoadNetwork::addGuardRail( PathPtr path, float height ) {
@@ -380,7 +386,7 @@ void VRRoadNetwork::addGuardRail( PathPtr path, float height ) {
 	float poleWidth = 0.2;
 
 	vector<PosePtr> poles;
-	auto addPole = [&](const Pose& p) {
+	auto addPole = [&](Pose& p) {
 	    Vec3d pos = p.pos();
 	    Vec3d n = p.dir();
 		pos[1] += height*0.5-0.11;
@@ -427,10 +433,12 @@ void VRRoadNetwork::addGuardRail( PathPtr path, float height ) {
     guardRailPoles->setMaterial( w->getMaterial("guardrail") );
 
 	// physics
+#ifndef WITHOUT_BULLET
 	auto shape = VRStroke::create("shape");
 	shape->setPaths({path});
 	shape->strokeProfile({Vec3d(0,0,0), Vec3d(0,height,0)}, false, true, false);
 	if (auto w = world.lock()) w->getPhysicsSystem()->add(shape, guardRails->getID());
+#endif
 }
 
 void VRRoadNetwork::addKirb( VRPolygonPtr perimeter, float h ) {
@@ -470,10 +478,12 @@ void VRRoadNetwork::addKirb( VRPolygonPtr perimeter, float h ) {
     kirbs->merge(kirb);
 
 	// physics
+#ifndef WITHOUT_BULLET
 	auto shape = VRStroke::create("shape");
 	shape->addPath(path);
 	shape->strokeProfile({Vec3d(-0.1, h, 0), Vec3d(-0.1, 0, 0)}, false, true, false);
 	if (auto w = world.lock()) w->getPhysicsSystem()->add(shape, kirbs->getID());
+#endif
 }
 
 void VRRoadNetwork::physicalizeAssets(Boundingbox volume) {
@@ -521,9 +531,11 @@ void VRRoadNetwork::computeSigns() {
                 auto surface = dynamic_pointer_cast<VRGeometry>( sign->findAll("Sign")[3] );
                 surface->makeUnique();
                 replaceChar(type, ' ', '\n');
-                auto tex = VRText::get()->create(type, "MONO 20", 20, Color4f(0,0,0,1), Color4f(1,1,1,1));
                 auto m = VRMaterial::create("sign");
+#ifndef WITHOUT_PANGO_CAIRO
+                auto tex = VRText::get()->create(type, "MONO 20", 20, Color4f(0,0,0,1), Color4f(1,1,1,1));
                 m->setTexture(tex);
+#endif
                 surface->setMaterial(m);
             }
         }
@@ -583,7 +595,9 @@ void VRRoadNetwork::computeSigns() {
                 roadEnt->add("markings", mL->getName());
             }
         }
+#ifndef WITHOUT_BULLET
         if (auto w = world.lock()) w->getPhysicsSystem()->addQuad(0.15, 2, *sign->getPose(), sign->getID());
+#endif
     }
 }
 
@@ -823,7 +837,9 @@ void VRRoadNetwork::computeSurfaces() {
         auto roadGeo = road->createGeometry();
         if (!roadGeo) return;
         roadsGeo->merge(roadGeo);
+#ifndef WITHOUT_BULLET
         if (auto w = world.lock()) w->getPhysicsSystem()->add(roadGeo, roadGeo->getID());
+#endif
     };
 
     for (auto way : ways) computeRoadSurface(way);
@@ -833,7 +849,9 @@ void VRRoadNetwork::computeSurfaces() {
         if (!iGeo) continue;
         //iGeo->setMaterial( asphalt );
         roadsGeo->merge(iGeo);
+#ifndef WITHOUT_BULLET
         if (auto w = world.lock()) w->getPhysicsSystem()->add(iGeo, iGeo->getID());
+#endif
     }
 
     auto stoneMat = VRMaterial::create("stone");

@@ -76,16 +76,16 @@ void Expression::TreeNode::addChild(TreeNode* child) {
 }
 
 Expression::TreeNode* Expression::TreeNode::getChild(int i) {
-    if (i >= 0 && i < children.size()) return children[i];
+    if (i >= 0 && i < (int)children.size()) return children[i];
     return 0;
 }
 
 Expression::TreeNode* Expression::TreeNode::getSibling(int offset) {
     if (!parent) return 0;
     auto siblings = parent->children;
-    for (int i=0; i<siblings.size(); i++) {
+    for (uint i=0; i<siblings.size(); i++) {
         if (siblings[i] == this) {
-            int k = i+offset;
+            uint k = i+offset;
             if (k >= 0 && k < siblings.size()) return siblings[k];
         }
     }

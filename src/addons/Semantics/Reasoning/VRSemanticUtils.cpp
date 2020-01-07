@@ -36,7 +36,7 @@ string Variable::toString() {
 
 string Variable::valToString() {
     string r;
-    for (int i=0; i<value.size(); i++) {
+    for (uint i=0; i<value.size(); i++) {
         if (i > 0) r += ", ";
         r += value[i];
     }
@@ -424,7 +424,7 @@ vector<string> Term::computeMathExpression(VRSemanticContextPtr context) {
                 if (e.second->is_a("Vector")) {
                     auto props = e.second->getAll();
                     vector<string> vec(props.size());
-                    for (int i=0; i<props.size(); i++) vec[i] = props[i]->value;
+                    for (uint i=0; i<props.size(); i++) vec[i] = props[i]->value;
                     values.push_back( "["+vec[0]+","+vec[1]+","+vec[2]+"]" );
                 } else {
                     auto vals = p.getValue(e.second);
@@ -445,14 +445,14 @@ vector<string> Term::computeMathExpression(VRSemanticContextPtr context) {
     vector<int> config(N, 0);
 
     auto setConfig = [&]() { // set a value configuration, compute and push result
-        for (int i=0; i<valuesMap.size(); i++) {
+        for (uint i=0; i<valuesMap.size(); i++) {
             leafs[i]->setValue( valuesMap[i][config[i]] );
         }
         res.push_back( me.compute() );
     };
 
     function<void(int)> aggregate = [&](int k) {
-        for (int i=0; i<valuesMap[k].size(); i++) {
+        for (uint i=0; i<valuesMap[k].size(); i++) {
             config[k] = i;
             if (k == N-1) setConfig();
             else aggregate(k+1);

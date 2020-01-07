@@ -1,19 +1,28 @@
 #include "VROntology.h"
 #include "VRReasoner.h"
 #include "VRProperty.h"
+#ifndef WITHOUT_RAPTOR
 #include "VROWLImport.h"
+#endif
 #include "VROWLExport.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRStorage_template.h"
 #include "core/utils/system/VRSystem.h"
 #include "core/scene/VRScene.h"
 #include "core/scene/VRSemanticManager.h"
+#ifndef WITHOUT_GTK
 #include "core/gui/VRGuiManager.h"
 #include "core/gui/VRGuiConsole.h"
+#endif
 #include <iostream>
 
+#ifndef WITHOUT_GTK
 #define WARN(x) \
 VRGuiManager::get()->getConsole( "Errors" )->write( x+"\n" );
+#else
+#define WARN(x) \
+std::cout << x << std::endl;
+#endif
 
 using namespace OSG;
 
@@ -291,9 +300,11 @@ string VROntology::toString() {
 }
 
 void VROntology::openOWL(string path) {
+#ifndef WITHOUT_RAPTOR
     if (!exists(path)) WARN("WARNING in VROntology::openOWL, " + path + " not found!");
     VROWLImport importer;
     importer.read(shared_from_this(), path);
+#endif
 }
 
 void VROntology::saveOWL(string path) {

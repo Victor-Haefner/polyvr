@@ -17,7 +17,9 @@ VRClipPlane::VRClipPlane(string name) : VRGeometry(name) {
     setMaterial(m);
 
     //m->setWireFrame(true);
+#ifndef OSG_OGL_ES2
     m->setFrontBackModes(GL_LINE, GL_FILL);
+#endif
     m->setLit(false);
     m->setDiffuse(Color3f(1,1,1));
     m->setLineWidth(3);

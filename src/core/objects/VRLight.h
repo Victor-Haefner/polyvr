@@ -10,11 +10,13 @@ OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 class Light; OSG_GEN_CONTAINERPTR(Light);
+class VRLightBeacon;
+#ifndef OSG_OGL_ES2
 class VRShadowEngine; OSG_GEN_CONTAINERPTR(VRShadowEngine);
 class SimpleShadowMapEngine; OSG_GEN_CONTAINERPTR(SimpleShadowMapEngine);
 class ShaderShadowMapEngine; OSG_GEN_CONTAINERPTR(ShaderShadowMapEngine);
 class TrapezoidalShadowMapEngine; OSG_GEN_CONTAINERPTR(TrapezoidalShadowMapEngine);
-class VRLightBeacon;
+#endif
 
 class VRLight : public VRObject {
     protected:
@@ -23,10 +25,12 @@ class VRLight : public VRObject {
         OSGCorePtr s_light;
         OSGCorePtr ph_light;
         VRLightBeaconWeakPtr beacon;
+#ifndef OSG_OGL_ES2
         SimpleShadowMapEngineRefPtr ssme;
         ShaderShadowMapEngineRefPtr gsme;
         TrapezoidalShadowMapEngineRefPtr ptsme;
         TrapezoidalShadowMapEngineRefPtr stsme;
+#endif
 
         string lightType = "point";
         string beacon_name;

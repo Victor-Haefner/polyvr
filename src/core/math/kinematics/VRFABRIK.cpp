@@ -36,7 +36,7 @@ void FABRIK::addChain(string name, vector<int> joints) {
     Chain c;
     c.name = name;
     c.joints = joints;
-    for (int i=0; i<joints.size()-1; i++) {
+    for (uint i=0; i+1<joints.size(); i++) {
         auto p1 = this->joints[joints[i  ]].p->pos();
         auto p2 = this->joints[joints[i+1]].p->pos();
         c.distances.push_back((p2-p1).length());
@@ -46,11 +46,11 @@ void FABRIK::addChain(string name, vector<int> joints) {
         return (find(v.begin(), v.end(), i) != v.end());
     };
 
-    for (int i=0; i<joints.size(); i++) {
+    for (uint i=0; i<joints.size(); i++) {
         auto& in = this->joints[joints[i]].in;
         auto& out = this->joints[joints[i]].out;
         if (i > 0 && has(in, joints[i-1]) == 0) in.push_back(joints[i-1]);
-        if (i < joints.size()-1 && has(out, joints[i+1]) == 0) out.push_back(joints[i+1]);
+        if (i+1 < joints.size() && has(out, joints[i+1]) == 0) out.push_back(joints[i+1]);
     }
     chains[name] = c;
     updateExecutionQueue();
@@ -87,7 +87,7 @@ Vec3d FABRIK::moveToDistance(int j1, int j2, float d, bool constrained) {
         Vec3d cD =-J2.p->dir();cD.normalize();
         float y = D.dot(cU);
         float x = D.dot(cX);
-        float h = D.dot(cD);
+        //float h = D.dot(cD);
 
         float a = atan2(y,x);
         if (a < 0) a += 2*Pi;

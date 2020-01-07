@@ -161,7 +161,7 @@ vector< vector<VRPropertyPtr> > VREntity::getAllVector(const string& prop) { // 
     return res;
 }
 
-vector<VRPropertyPtr> VREntity::getAll(const string& name) {
+vector<VRPropertyPtr> VREntity::getAll(string name) {
     vector<VRPropertyPtr> res;
     if (name != "" && properties.count(name)) {
         for (auto k : properties[name]) res.push_back(k.second);
@@ -177,23 +177,23 @@ VRPropertyPtr VREntity::get(const string& prop, int i) {
     return props[i];
 }
 
-VRPropertyValue VREntity::getStringValue(const string& prop, int i) {
+VRPropertyValue VREntity::getStringValue(string prop, int i) {
     return VRPropertyValue(get(prop, i), ontology.lock());
 }
 
-vector<VRPropertyValue> VREntity::getAllStringValues(const string& prop) {
+vector<VRPropertyValue> VREntity::getAllStringValues(string prop) {
     vector<VRPropertyValue> res;
     for (auto p : getAll(prop)) res.push_back( VRPropertyValue(p, ontology.lock()) );
     return res;
 }
 
-vector<VRPropertyValue> VREntity::getStringVector(const string& prop, int i) {
+vector<VRPropertyValue> VREntity::getStringVector(string prop, int i) {
     vector<VRPropertyValue> res;
     for (auto p : getVector(prop, i)) res.push_back( VRPropertyValue(p, ontology.lock()) );
     return res;
 }
 
-vector< vector<VRPropertyValue> > VREntity::getAllStringVector(const string& prop) {
+vector< vector<VRPropertyValue> > VREntity::getAllStringVector(string prop) {
     vector< vector<VRPropertyValue> > res;
     for (auto pv : getAllVector(prop)) {
         vector<VRPropertyValue> r;
@@ -261,7 +261,7 @@ string VREntity::toString() {
     return data;
 }
 
-bool VREntity::is_a(const string& concept) {
+bool VREntity::is_a(string concept) {
     for (auto cw : concepts) {
         if (auto c = cw.lock()) {
             if (c->is_a(concept)) return true;

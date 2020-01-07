@@ -9,7 +9,10 @@
 #include "VRPyAnimation.h"
 #include "VRPySocket.h"
 #include "VRPySprite.h"
+#ifndef WITHOUT_AV
 #include "VRPySound.h"
+#include "VRPyRecorder.h"
+#endif
 #include "VRPyDevice.h"
 #include "VRPyIntersection.h"
 #include "VRPyPose.h"
@@ -18,15 +21,15 @@
 #include "VRPyGraph.h"
 #include "VRPyPolygon.h"
 #include "VRPyBoundingbox.h"
+#ifndef WITHOUT_GLU_TESS
 #include "VRPyTriangulator.h"
+#endif
 #include "VRPyStroke.h"
 #include "VRPyColorChooser.h"
 #include "VRPyTextureRenderer.h"
 #include "VRPyTextureMosaic.h"
 #include "VRPyConstraint.h"
-#include "VRPyHaptic.h"
 #include "VRPyMouse.h"
-#include "VRPyMultiTouch.h"
 #include "VRPyMobile.h"
 #include "VRPyBaseT.h"
 #include "VRPyMaterial.h"
@@ -36,7 +39,6 @@
 #include "VRPyCamera.h"
 #include "VRPyLod.h"
 #include "VRPyKinematics.h"
-#include "VRPyRecorder.h"
 #include "VRPyPathtool.h"
 #include "VRPyConstructionKit.h"
 #include "VRPySnappingEngine.h"
@@ -46,7 +48,9 @@
 #include "VRPySelection.h"
 #include "VRPyPatchSelection.h"
 #include "VRPyPolygonSelection.h"
+#ifndef WITHOUT_BULLET
 #include "VRPySpatialCollisionManager.h"
+#endif
 #include "VRPyMenu.h"
 #include "VRPyClipPlane.h"
 #include "VRPyListMath.h"
@@ -69,25 +73,17 @@
 #include "VRPyOPCUA.h"
 #include "VRPyCodeCompletion.h"
 #include "VRPyPointCloud.h"
-#ifndef NO_ENCRYPTION
-#include "VRPyEncryption.h"
-#endif
 
 #include "addons/Character/VRPyCharacter.h"
 #include "addons/Algorithms/VRPyGraphLayout.h"
 #include "addons/Algorithms/VRPyPathFinding.h"
 #include "addons/CaveKeeper/VRPyCaveKeeper.h"
-#include "addons/Bullet/Particles/VRPyParticles.h"
-#include "addons/Bullet/Fluids/VRPyFluids.h"
-#include "addons/Bullet/CarDynamics/VRPyCarDynamics.h"
 #include "addons/Engineering/Factory/VRPyFactory.h"
 #include "addons/Engineering/Factory/VRPyLogistics.h"
 #include "addons/Engineering/Factory/VRPyProduction.h"
 #include "addons/Engineering/Factory/VRPyAMLLoader.h"
 #include "addons/Engineering/Mechanics/VRPyMechanism.h"
 #include "addons/Engineering/VRPyNumberingEngine.h"
-#include "addons/CEF/VRPyCEF.h"
-#include "addons/CEF/VRPyWebCam.h"
 #include "addons/Semantics/Segmentation/VRPySegmentation.h"
 #include "addons/Semantics/Segmentation/VRPyAdjacencyGraph.h"
 #include "addons/Semantics/Processes/VRPyProcess.h"
@@ -100,13 +96,37 @@
 #include "addons/WorldGenerator/nature/VRPyNature.h"
 #include "addons/WorldGenerator/terrain/VRPyTerrain.h"
 #include "addons/WorldGenerator/weather/VRPyWeather.h"
-#include "addons/WorldGenerator/traffic/VRPyTrafficSimulation.h"
+#ifndef WITHOUT_CGAL
 #include "addons/Engineering/CSG/VRPyCSG.h"
+#endif
+#ifndef WASM
 #include "addons/RealWorld/VRPyRealWorld.h"
+#endif
 #include "addons/SimViDekont/VRPySimViDekont.h"
 #include "addons/Semantics/Reasoning/VRPyOntology.h"
 #include "addons/LeapMotion/VRPyHandGeo.h"
 #include "addons/LeapMotion/VRPyLeap.h"
+
+#ifndef WITHOUT_MTOUCH
+#include "VRPyMultiTouch.h"
+#endif
+
+#ifndef WITHOUT_BULLET
+#include "VRPyHaptic.h"
+#include "addons/Bullet/Particles/VRPyParticles.h"
+#include "addons/Bullet/Fluids/VRPyFluids.h"
+#include "addons/Bullet/CarDynamics/VRPyCarDynamics.h"
+#include "addons/WorldGenerator/traffic/VRPyTrafficSimulation.h"
+#endif
+
+#ifndef WITHOUT_CEF
+#include "addons/CEF/VRPyCEF.h"
+#include "addons/CEF/VRPyWebCam.h"
+#endif
+
+#ifndef WITHOUT_CRYPTOPP
+#include "VRPyEncryption.h"
+#endif
 
 using namespace OSG;
 
@@ -114,47 +134,54 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyName>("Named", pModVR, VRPyStorage::typeRef);
     sm->registerModule<VRPyObject>("Object", pModVR, VRPyName::typeRef);
     sm->registerModule<VRPyTransform>("Transform", pModVR, VRPyObject::typeRef);
-    sm->registerModule<VRPyCollision>("Collision", pModVR);
     sm->registerModule<VRPyGeometry>("Geometry", pModVR, VRPyTransform::typeRef);
+#ifndef WITHOUT_BULLET
     sm->registerModule<VRPySpatialCollisionManager>("SpatialCollisionManager", pModVR, VRPyGeometry::typeRef);
+#endif
     sm->registerModule<VRPyMaterial>("Material", pModVR, VRPyObject::typeRef);
     sm->registerModule<VRPyTextureGenerator>("TextureGenerator", pModVR);
     sm->registerModule<VRPyImage>("Image", pModVR);
     sm->registerModule<VRPyLight>("Light", pModVR, VRPyObject::typeRef);
     sm->registerModule<VRPyLightBeacon>("LightBeacon", pModVR, VRPyTransform::typeRef);
     sm->registerModule<VRPyCamera>("Camera", pModVR, VRPyTransform::typeRef);
+#ifndef WITHOUT_BULLET
     sm->registerModule<VRPyKinematics>("Kinematics", pModVR);
+#endif
     sm->registerModule<VRPyFABRIK>("FABRIK", pModVR);
     sm->registerModule<VRPyLod>("Lod", pModVR, VRPyObject::typeRef);
     sm->registerModule<VRPyLodLeaf>("LodLeaf", pModVR, VRPyTransform::typeRef);
     sm->registerModule<VRPyLodTree>("LodTree", pModVR, VRPyObject::typeRef);
     sm->registerModule<VRPySprite>("Sprite", pModVR, VRPyGeometry::typeRef);
     sm->registerModule<VRPyPointCloud>("PointCloud", pModVR, VRPyTransform::typeRef);
+#ifndef WITHOUT_AV
     sm->registerModule<VRPySound>("Sound", pModVR);
     sm->registerModule<VRPySoundManager>("SoundManager", pModVR);
+    sm->registerModule<VRPyRecorder>("Recorder", pModVR);
+#endif
     sm->registerModule<VRPySocket>("Socket", pModVR);
     sm->registerModule<VRPyStroke>("Stroke", pModVR, VRPyGeometry::typeRef);
     sm->registerModule<VRPyConstraint>("Constraint", pModVR);
     sm->registerModule<VRPyDevice>("Device", pModVR, VRPyName::typeRef);
     sm->registerModule<VRPyIntersection>("Intersection", pModVR);
-    sm->registerModule<VRPyHaptic>("Haptic", pModVR, VRPyDevice::typeRef);
     sm->registerModule<VRPyServer>("Mobile", pModVR, VRPyDevice::typeRef);
     sm->registerModule<VRPyMouse>("Mouse", pModVR, VRPyDevice::typeRef);
-    sm->registerModule<VRPyMultiTouch>("MultiTouch", pModVR, VRPyDevice::typeRef);
     sm->registerModule<VRPyServer>("Server", pModVR, VRPyDevice::typeRef);
     sm->registerModule<VRPyAnimation>("Animation", pModVR);
     sm->registerModule<VRPyPose>("Pose", pModVR);
     sm->registerModule<VRPyPath>("Path", pModVR);
     sm->registerModule<VRPyGraph>("Graph", pModVR);
     sm->registerModule<VRPyStateMachine>("StateMachine", pModVR);
+#ifndef WASM
     sm->registerModule<VRPyHDLC>("HDLC", pModVR);
+#endif
     sm->registerModule<VRPyState>("State", pModVR);
     sm->registerModule<VRPyGraphLayout>("GraphLayout", pModVR);
     sm->registerModule<VRPyPathFinding>("PathFinding", pModVR);
     sm->registerModule<VRPyBoundingbox>("Boundingbox", pModVR);
     sm->registerModule<VRPyPolygon>("Polygon", pModVR);
+#ifndef WITHOUT_GLU_TESS
     sm->registerModule<VRPyTriangulator>("Triangulator", pModVR);
-    sm->registerModule<VRPyRecorder>("Recorder", pModVR);
+#endif
     sm->registerModule<VRPyProjectManager>("ProjectManager", pModVR, VRPyObject::typeRef);
     sm->registerModule<VRPyHandle>("Handle", pModVR, VRPyGeometry::typeRef);
     sm->registerModule<VRPyGeoPrimitive>("GeoPrimitive", pModVR, VRPyTransform::typeRef);
@@ -174,14 +201,6 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyRenderStudio>("RenderStudio", pModVR);
     sm->registerModule<VRPySky>("Sky", pModVR, VRPyGeometry::typeRef);
     sm->registerModule<VRPyScenegraphInterface>("ScenegraphInterface", pModVR, VRPyObject::typeRef);
-#ifdef WITH_OPCUA
-    sm->registerModule<VRPyOPCUA>("OPCUA", pModVR);
-    sm->registerModule<VRPyOPCUANode>("OPCUANode", pModVR);
-#endif
-
-#ifndef NO_ENCRYPTION
-    sm->registerModule<VRPyEncryption>("Encryption", pModVR);
-#endif
     sm->registerModule<VRPyProgress>("Progress", pModVR);
     sm->registerModule<VRPyUndoManager>("UndoManager", pModVR);
     sm->registerModule<VRPyObjectManager>("ObjectManager", pModVR, VRPyObject::typeRef);
@@ -194,14 +213,6 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
 	sm->registerModule<VRPyTextureRenderer>("TextureRenderer", pModVR, VRPyObject::typeRef);
 	sm->registerModule<VRPyTextureMosaic>("TextureMosaic", pModVR, VRPyImage::typeRef);
     sm->registerModule<VRPyCaveKeeper>("CaveKeeper", pModVR);
-    sm->registerModule<VRPyParticles>("Particles", pModVR, VRPyGeometry::typeRef);
-    sm->registerModule<VRPyFluids>("Fluids", pModVR, VRPyParticles::typeRef);
-    sm->registerModule<VRPyMetaBalls>("MetaBalls", pModVR, VRPyObject::typeRef);
-    sm->registerModule<VRPyCarDynamics>("CarDynamics", pModVR, VRPyObject::typeRef);
-    sm->registerModule<VRPyCarSound>("CarSound", pModVR);
-    sm->registerModule<VRPyDriver>("Driver", pModVR);
-    sm->registerModule<VRPyCEF>("CEF", pModVR);
-    sm->registerModule<VRPyWebCam>("Webcam", pModVR, VRPySprite::typeRef);
     sm->registerModule<VRPySegmentation>("Segmentation", pModVR);
     sm->registerModule<VRPyAdjacencyGraph>("AdjacencyGraph", pModVR);
     sm->registerModule<VRPyMechanism>("Mechanism", pModVR, VRPyObject::typeRef);
@@ -237,9 +248,12 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyLeap>("Leap", pModVR, VRPyDevice::typeRef);
     sm->registerModule<VRPyLeapFrame>("LeapFrame", pModVR);
 
+#ifndef WITHOUT_CGAL
 	sm->registerModule<VRPyCSG>("CSGGeometry", pModVR, VRPyGeometry::typeRef);
+#endif
+#ifndef WASM
 	sm->registerModule<VRPyRealWorld>("RealWorld", pModVR, VRPyObject::typeRef);
-	sm->registerModule<VRPyTrafficSimulation>("TrafficSimulation", pModVR, VRPyObject::typeRef);
+#endif
 	sm->registerModule<VRPySimViDekont>("SimViDekont", pModVR);
 
     PyObject* pModMath = sm->newModule("Math", VRSceneGlobals::methods, "VR math module");
@@ -251,7 +265,9 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyTSDF>("TSDF", pModVR, 0, "Math");
     sm->registerModule<VRPyOctree>("Octree", pModVR, 0, "Math");
     sm->registerModule<VRPyOctreeNode>("OctreeNode", pModVR, 0, "Math");
+#ifndef WITHOUT_LAPACKE_BLAS
     sm->registerModule<VRPyPCA>("PCA", pModVR, 0, "Math");
+#endif
     sm->registerModule<VRPyPatch>("Patch", pModVR, 0, "Math");
 
     PyObject* pModSetup = sm->newModule("Setup", VRSceneGlobals::methods, "VR setup module");
@@ -285,6 +301,36 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyFactory>("Factory", pModFactory, 0, "Factory");
     sm->registerModule<VRPyProduction>("Production", pModFactory, 0, "Factory");
     sm->registerModule<VRPyAMLLoader>("AMLLoader", pModFactory, 0, "Factory");
+
+#ifndef WITHOUT_BULLET
+    sm->registerModule<VRPyCollision>("Collision", pModVR);
+    sm->registerModule<VRPyHaptic>("Haptic", pModVR, VRPyDevice::typeRef);
+    sm->registerModule<VRPyParticles>("Particles", pModVR, VRPyGeometry::typeRef);
+    sm->registerModule<VRPyFluids>("Fluids", pModVR, VRPyParticles::typeRef);
+    sm->registerModule<VRPyMetaBalls>("MetaBalls", pModVR, VRPyObject::typeRef);
+    sm->registerModule<VRPyCarDynamics>("CarDynamics", pModVR, VRPyObject::typeRef);
+    sm->registerModule<VRPyCarSound>("CarSound", pModVR);
+    sm->registerModule<VRPyDriver>("Driver", pModVR);
+    sm->registerModule<VRPyTrafficSimulation>("TrafficSimulation", pModVR, VRPyObject::typeRef);
+#endif
+
+#ifdef WITH_OPCUA
+    sm->registerModule<VRPyOPCUA>("OPCUA", pModVR);
+    sm->registerModule<VRPyOPCUANode>("OPCUANode", pModVR);
+#endif
+
+#ifndef WITHOUT_CRYPTOPP
+    sm->registerModule<VRPyEncryption>("Encryption", pModVR);
+#endif
+
+#ifndef WITHOUT_MTOUCH
+    sm->registerModule<VRPyMultiTouch>("MultiTouch", pModVR, VRPyDevice::typeRef);
+#endif
+
+#ifndef WITHOUT_CEF
+    sm->registerModule<VRPyCEF>("CEF", pModVR);
+    sm->registerModule<VRPyWebCam>("Webcam", pModVR, VRPySprite::typeRef);
+#endif
 }
 
 

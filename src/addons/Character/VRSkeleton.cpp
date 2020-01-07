@@ -3,7 +3,9 @@
 #include "core/utils/VRFunction.h"
 #include "core/math/graph.h"
 #include "core/math/Eigendecomposition.h"
+#ifndef WITHOUT_LAPACKE_BLAS
 #include "core/math/SingularValueDecomposition.h"
+#endif
 #include "core/math/equation.h"
 #include "core/objects/geometry/VRGeoData.h"
 #include "core/objects/material/VRMaterial.h"
@@ -184,7 +186,7 @@ void VRSkeleton::updateGeometry() {
     Color3f col3(1.0,0.8,0.5);
 
     for (auto& c : ChainDataMap) {
-        for (int i=0; i<c.second.joints.size(); i++) {
+        for (uint i=0; i<c.second.joints.size(); i++) {
             int jID = c.second.joints[i];
             //if (joints[jID].name != "waist") continue;
             //if (c.second.name != "handLeft") continue;
@@ -288,7 +290,7 @@ void VRSkeleton::updateJointPositions() {
     //cout << "VRSkeleton::updateJointPositions" << endl;
     for (auto& j : joints) {
         auto& bone1 = bones[j.second.bone1];
-        auto& bone2 = bones[j.second.bone2];
+        //auto& bone2 = bones[j.second.bone2];
         j.second.pos = bone1.pose.transform( j.second.constraint->getReferenceA()->pos() );
     }
 };
@@ -668,7 +670,7 @@ void VRSkeleton::resolveSystem(string bone) {
                 rotateJoints(chain.joints[cID0], m.first, R, chain);
             }
 
-            if (cID2 < chain.joints.size()) {
+            if (cID2 < (int)chain.joints.size()) {
                 Vec3d pOld2 = getOldJointPos(chain.joints[cID2]);
                 auto R = getRotation(m.first, chain.joints[cID2], pOld1, pOld2);
                 rotateJoints(m.first, chain.joints[cID2], R, chain);
@@ -716,7 +718,7 @@ vector<int> VRSkeleton::getBonesChain(string endEffector) {
 vector<int> VRSkeleton::getJointsChain(vector<int>& chainedBones) {
     //cout << "VRSkeleton::getJointsChain:" << endl;
     vector<int> chainedJoints;
-    for (int i=1; i<chainedBones.size(); i++) {
+    for (uint i=1; i<chainedBones.size(); i++) {
         int nID1 = chainedBones[i-1];
         int nID2 = chainedBones[i];
         int eID = armature->getEdgeID(nID1, nID2);
@@ -736,14 +738,14 @@ void VRSkeleton::setupChains() {
         ChainDataMap[e.first].joints = getJointsChain(ChainDataMap[e.first].chainedBones);
         ChainDataMap[e.first].name = e.first;
 
-        for (int i=1; i<ChainDataMap[e.first].joints.size(); i++) {
+        for (uint i=1; i<ChainDataMap[e.first].joints.size(); i++) {
             int jID1 = ChainDataMap[e.first].joints[i-1];
             int jID2 = ChainDataMap[e.first].joints[i];
             float d = (jointPos(jID1) - jointPos(jID2)).length();
             ChainDataMap[e.first].distances.push_back( d );
         }
 
-        for (int i=0; i<ChainDataMap[e.first].joints.size(); i++) {
+        for (uint i=0; i<ChainDataMap[e.first].joints.size(); i++) {
             int jID = ChainDataMap[e.first].joints[i];
             auto& joint = joints[jID];
             joint.chains.push_back(e.first);
@@ -854,7 +856,7 @@ class KabschAlgorithm {
 
         void setSimpleMatches() {
             matches.clear();
-            for (int i=0; i<points1.size(); i++) {
+            for (uint i=0; i<points1.size(); i++) {
                 matches.push_back(Vec2i(i,i));
             }
         }
@@ -877,6 +879,7 @@ class KabschAlgorithm {
                 }
             }
 
+#ifndef WITHOUT_LAPACKE_BLAS
             SingularValueDecomposition svd(H, verbose);
 
             U = svd.U;
@@ -905,6 +908,7 @@ class KabschAlgorithm {
             }
             T.multLeft(U);
             T.mult(Vt);
+#endif
 
             // compute translation
 
@@ -966,7 +970,7 @@ class KabschAlgorithm {
             Rr.getValueAsAxisRad(ax,f);
             cout << " Rt: " << Rt << "\n Rr: " << ax << "  " << f << endl;
 
-            for (int i=0; i<p1.size(); i++) {
+            for (uint i=0; i<p1.size(); i++) {
                 Pnt3d p;
                 R.mult(Pnt3d(p1[i]),p);
                 cout << " D " << Vec3d(p-p2[i]).length() << " PP " << p2[i] << " / " << p << endl;
