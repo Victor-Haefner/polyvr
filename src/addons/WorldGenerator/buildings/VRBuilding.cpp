@@ -221,7 +221,7 @@ void VRBuilding::computeGeometry(VRGeometryPtr walls, VRGeometryPtr roofs, VRDis
 
 
     int N = 4;
-    float _N = 1./N;
+    //float _N = 1./N;
     int ri = N*float(roofType) / RAND_MAX;
     Vec4d rUV = district->getChunkUV("roofs", ri);
 
@@ -246,8 +246,8 @@ void VRBuilding::computeGeometry(VRGeometryPtr walls, VRGeometryPtr roofs, VRDis
             Vec2d p2 = roofTop.getPoint(i);
             Vec3d P1 = Vec3d(p1[0], ground+height, p1[1]);
             Vec3d P2 = Vec3d(p2[0], ground+height+H, p2[1]);
-            int i1 = data.pushVert(P1, Vec3d(0,1,0));
-            int i2 = data.pushVert(P2, Vec3d(0,1,0));
+            data.pushVert(P1, Vec3d(0,1,0));
+            data.pushVert(P2, Vec3d(0,1,0));
         }
         int I = data.size();
         for (int i=0; i<Nr; i++) {

@@ -11,7 +11,7 @@ VRIES::~VRIES() {}
 
 void VRIES::parseLabels(vector<string>& lines, int& i) {
     while (true) {
-        if (i >= lines.size()) break;
+        if (i >= (int)lines.size()) break;
         string line = lines[i];
         i++;
 
@@ -46,7 +46,7 @@ void VRIES::parseParameters(vector<string>& lines, int& i) {
 
 void VRIES::parseData(vector<string>& lines, int& i) {
     string data;
-    for (; i<lines.size(); i++) data += lines[i] + " ";
+    for (; i<(int)lines.size(); i++) data += lines[i] + " ";
     int N = NvAngles*NhAngles;
     //float S = lScale*ballastFactor*photometricFactor;
     float S = 1.0;
@@ -112,7 +112,7 @@ void VRIES::resample() {
             for (int h = 1; h<NhAngles; h++) {
                 if (va >= vAngles[v-1] && va <= vAngles[v]) {
                     if (ha >= hAngles[h-1] && ha <= hAngles[h]) {
-                        int k = h*NvAngles + v;
+                        //int k = h*NvAngles + v;
                         float u = (va-vAngles[v-1])/(vAngles[v]-vAngles[v-1]);
                         float w = (ha-hAngles[h-1])/(hAngles[h]-hAngles[h-1]);
                         return trilinearInterpolation(v-1, h-1, u, w);
@@ -182,7 +182,7 @@ bool VRIES::startswith(const string& a, const string& b) {
 
 float VRIES::getMinDelta(vector<float>& v) {
     float d = 1e6;
-    for (int i=1; i<v.size(); i++) {
+    for (uint i=1; i<v.size(); i++) {
         float D = v[i] - v[i-1];
         if (D<d && D > 1e-6) d = D;
     }

@@ -195,7 +195,7 @@ struct VRSoundQueue {
     }
 
     static void next(VRSoundQueue& q) {
-        if (q.current >= q.sounds.size()) return;
+        if (q.current >= (int)q.sounds.size()) return;
         q.sounds[q.current]->play();
         q.current++;
     }

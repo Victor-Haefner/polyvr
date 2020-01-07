@@ -163,7 +163,7 @@ vector<VRCollision> VRPhysics::getCollisions() {
             if (partID >= mesh.size()) return res;
 
             int Ni = mesh[partID].m_numTriangles;
-            int Nv = mesh[partID].m_numVertices;
+            //int Nv = mesh[partID].m_numVertices;
             if (triangleID >= Ni) {
                 cout << "VRPhysics::getCollisions, WARNING: triangleID " << triangleID << " to big! (" << Ni << ") N mesh: " << mesh.size() << endl;
                 return res;

@@ -180,7 +180,7 @@ int VRObject::getTravMask() {
 }
 
 VRObjectPtr VRObject::getLink(int i) {
-    if (i < 0 || i >= links.size()) return 0;
+    if (i < 0 || i >= (int)links.size()) return 0;
     return links[i].second.lock();
 }
 
@@ -522,7 +522,7 @@ BoundingboxPtr VRObject::getWorldBoundingbox() {
         if (!geo) continue;
         Matrix4d M = geo->getWorldMatrix();
         auto pos = geo->getMesh()->geo->getPositions();
-        for (int i=0; i<pos->size(); i++) {
+        for (uint i=0; i<pos->size(); i++) {
             Pnt3d p = Pnt3d( pos->getValue<Pnt3f>(i) );
             M.mult(p,p);
             b->update(Vec3d(p));

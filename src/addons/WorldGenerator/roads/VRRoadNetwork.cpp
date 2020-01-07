@@ -332,8 +332,8 @@ void VRRoadNetwork::computeLanePaths( VREntityPtr road ) {
     }
 
 	if (lanesD1.size()>1) {
-        for (int i = 0; i<lanesD1[0].size();i++) {
-            for (int j = 1; j<lanesD1.size();j++) {
+        for (uint i = 0; i<lanesD1[0].size();i++) {
+            for (uint j = 1; j<lanesD1.size();j++) {
                 ///checking minimum length for lane relations
                 if (graph->getEdgeLength(lanesD1[j][i]) < 10) continue;
                 if (graph->getEdgeLength(lanesD1[j-1][i]) < 10) continue;
@@ -343,8 +343,8 @@ void VRRoadNetwork::computeLanePaths( VREntityPtr road ) {
         }
 	}
     if (lanesD2.size()>1) {
-        for (int i = 0; i<lanesD2[0].size();i++) {
-            for (int j = 1; j<lanesD2.size();j++) {
+        for (uint i = 0; i<lanesD2[0].size();i++) {
+            for (uint j = 1; j<lanesD2.size();j++) {
                 ///checking minimum length for lane relations
                 if (graph->getEdgeLength(lanesD2[j][i]) < 10) continue;
                 if (graph->getEdgeLength(lanesD2[j-1][i]) < 10) continue;

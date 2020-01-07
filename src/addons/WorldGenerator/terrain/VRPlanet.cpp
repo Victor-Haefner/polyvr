@@ -62,7 +62,7 @@ void VRPlanet::localize(double north, double east) {
 
         for (auto terrain:sector->getTerrains()){
             auto grid = terrain->getGrid();
-            auto fac = terrain->getLODFactor();
+            //auto fac = terrain->getLODFactor();
             auto size = terrain->getSize();
             terrain->setLocalized(true);
             Vec2i gridN = Vec2i(round(size[0]*1.0/grid-0.5), round(size[1]*1.0/grid-0.5));

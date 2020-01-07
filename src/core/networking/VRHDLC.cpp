@@ -108,7 +108,7 @@ vector<unsigned char> VRSerial::read() {
 
 void VRSerial::write(vector<unsigned char> data) {
     string s = asString(data);
-    ::write (fd, s.c_str(), s.size());
+    size_t r = ::write (fd, s.c_str(), s.size());
 }
 
 bool VRSerial::good() {
@@ -174,7 +174,6 @@ void VRHDLC::handleData() {
 }
 
 bool VRHDLC::handle(unsigned char c) {
-    auto orig = c;
     if (verbose) cout << "B " << serialState << " " << serialData.size() << " " << std::hex << c;
     if (c == 0x7E) { // 126
         if (serialState == "undefined") { serialState = "start"; serialData.clear(); }
@@ -228,7 +227,8 @@ bool VRHDLC::readData() {
     if (input.size() > 0) lastInput = time(0);
 
     if (pausingDurationR != 0) {
-        if ( time(0) - pausingTimeR <= pausingDurationR) {
+        int delta = time(0) - pausingTimeR;
+        if ( delta <= pausingDurationR) {
             buffer.clear();
             return false;
         }
@@ -252,7 +252,8 @@ void VRHDLC::sendData(vector<unsigned char> data, bool doWait) {
     if (!serial) return;
 
     if (pausingDurationS != 0) {
-        if ( time(0) - pausingTimeS <= pausingDurationS) return;
+        int delta = time(0) - pausingTimeS;
+        if ( delta <= pausingDurationS) return;
         pausingDurationS = 0;
     }
 

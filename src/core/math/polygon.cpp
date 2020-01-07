@@ -157,7 +157,7 @@ void VRPolygon::removeDoubles(float d) {
     float d2 = d*d;
 
     auto process = [&]() {
-        for (int i=1; i<points.size(); i++) {
+        for (uint i=1; i<points.size(); i++) {
             auto p1 = points[i-1];
             auto p2 = points[i];
             if ((p2-p1).squareLength() < d2) { remPoint(i); return true; }

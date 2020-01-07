@@ -216,14 +216,14 @@ void VRTerrain::setupGeo() {
 
             //cout << "n,e TEX: " << gridN[1] << " -- " << gridN[0] << endl;
             //cout << "n,e Mes: " << meshTer.size() << " -- " << meshTer[0].size() << endl;
-            auto nN = meshTer.size()+1;
-            auto nE = meshTer[0].size();
-            for (int i =0; i < meshTer[0].size()-1; i++) {
+            //auto nN = meshTer.size()+1;
+            //auto nE = meshTer[0].size();
+            for (uint i=0; i+1 < meshTer[0].size(); i++) {
                 t1++;
                 t2 = 0;
                 double tcx1 = texel[0]*0.5 + i*tcChunk[0];
                 double tcx2 = tcx1 + tcChunk[0];
-                for (int j =0; j < meshTer.size()-1; j++) {
+                for (uint j =0; j+1 < meshTer.size(); j++) {
                     t2++;
                     //cout << meshTer[a][b] ;
                     double tcy1 = texel[1]*0.5 + j*tcChunk[1];

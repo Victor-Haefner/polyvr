@@ -13,35 +13,35 @@ using namespace std;
 class ZipEntry;
 
 class Unzipper {
-  public:
-    Unzipper(istream& buffer);
-    Unzipper(vector<unsigned char>& buffer);
-    Unzipper(const string& zipname);
-    Unzipper(const string& zipname, const string& password);
+    private:
+        istream& m_ibuffer;
+        vector<unsigned char>& m_vecbuffer;
+        string zipname;
+        bool m_usingMemoryVector;
+        bool m_usingStream;
+        bool m_open;
+        string password;
 
-    ~Unzipper(void);
+        struct Impl;
+        Impl* m_impl;
 
-    vector<ZipEntry> entries();
+    public:
+        Unzipper(istream& buffer);
+        Unzipper(vector<unsigned char>& buffer);
+        Unzipper(const string& zipname);
+        Unzipper(const string& zipname, const string& password);
 
-    bool extract(const string& destination, const map<string, string>& alternativeNames);
-    bool extract(const string& destination=string());
-    bool extractEntry(const string& name, const string& destination = string());
-    bool extractEntryToStream(const string& name, ostream& stream);
-    bool extractEntryToMemory(const string& name, vector<unsigned char>& vec);
+        ~Unzipper(void);
 
-    void close();
+        vector<ZipEntry> entries();
 
-  private:
-    string password;
-    string zipname;
-    istream& m_ibuffer;
-    vector<unsigned char>& m_vecbuffer;
-    bool m_usingMemoryVector;
-    bool m_usingStream;
-    bool m_open;
+        bool extract(const string& destination, const map<string, string>& alternativeNames);
+        bool extract(const string& destination=string());
+        bool extractEntry(const string& name, const string& destination = string());
+        bool extractEntryToStream(const string& name, ostream& stream);
+        bool extractEntryToMemory(const string& name, vector<unsigned char>& vec);
 
-    struct Impl;
-    Impl* m_impl;
+        void close();
 };
 
 

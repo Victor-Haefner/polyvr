@@ -75,7 +75,8 @@ int VRAnnotationEngine::add(Vec3d p, string s) {
 
 void VRAnnotationEngine::set(int i0, Vec3d p0, string txt) {
     auto strings = splitString(txt, '\n');
-    for (int y = 0; y<strings.size(); y++) {
+    int Nlines = strings.size();
+    for (int y = 0; y<Nlines; y++) {
         string str = strings[y];
         //cout << "VRAnnotationEngine::set str " << str << endl;
         Vec3d p = p0;
@@ -93,7 +94,7 @@ void VRAnnotationEngine::set(int i0, Vec3d p0, string txt) {
         for (int j=0; j<N; j++) {
             char c[] = {0,0,0};
             for (int k = 0; k<3; k++) {
-                if (j*3+k < graphemes.size()) {
+                if (j*3+k < (int)graphemes.size()) {
                     string grapheme = graphemes[j*3+k];
                     c[k] = characterIDs[grapheme];
                 }

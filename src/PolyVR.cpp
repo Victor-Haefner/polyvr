@@ -1,5 +1,3 @@
-
-
 #define GL_GLEXT_PROTOTYPES
 #define EGL_EGLEXT_PROTOTYPES
 
@@ -43,13 +41,14 @@ void printFieldContainer(int maxID = -1) {
     for (int i=0;i<N;++i) {
         FieldContainer* fc = FieldContainerFactory::the()->getContainer(i);
         if(fc == 0) continue;
-        if(fc->getId() <= 358) continue; // stuff created in osgInit()
-        if(fc->getId() > maxID && maxID > 0) break; // stop
+        int fcID = fc->getId();
+        if(fcID <= 358) continue; // stuff created in osgInit()
+        if(fcID > maxID && maxID > 0) break; // stop
 
         // skip prototypes
         if(fc->getType().getPrototype() == 0 || fc->getType().getPrototype() == fc  ) continue;
 
-        //cout << "\nFC id: " << fc->getId() << flush;
+        //cout << "\nFC id: " << fcID << flush;
 
         AttachmentContainer* ac = dynamic_cast<AttachmentContainer*>(fc);
         if (ac == 0) {
@@ -62,8 +61,8 @@ void printFieldContainer(int maxID = -1) {
         }
 
         const Char8* name = getName(ac);
-        if (name != 0) printf("Detected living FC %s (%s) %p refcount %d ID %d\n", fc->getTypeName(), name, fc, fc->getRefCount(), fc->getId());
-        else printf( "Detected living FC %s (no name) %p refcount %d ID %d\n", fc->getTypeName(), fc, fc->getRefCount(), fc->getId() );
+        if (name != 0) printf("Detected living FC %s (%s) %p refcount %d ID %d\n", fc->getTypeName(), name, fc, fc->getRefCount(), fcID);
+        else printf( "Detected living FC %s (no name) %p refcount %d ID %d\n", fc->getTypeName(), fc, fc->getRefCount(), fcID );
     }
 }
 

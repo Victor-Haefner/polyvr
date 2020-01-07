@@ -153,7 +153,7 @@ void VRScenegraphInterface::buildKinematics(vector<string> m) {
 	float MaximumVariation = 0, MinimumVariation = 0;
 	PosePtr newC;
 
-	for (int i = 0; i< m.size(); i++) {
+	for (uint i = 0; i< m.size(); i++) {
 		if (m[i] == "Type") Type = m[i+1];
 		else if (m[i] == "Alignment") Alignment = m[i+1];
 		else if (m[i] == "Can be flipped") CanBeFlipped = m[i+1];
@@ -412,9 +412,9 @@ void VRScenegraphInterface::buildKinematics(vector<string> m) {
 		}
 	};
 
-	auto toDeg = [&](float a) {
+	/*auto toDeg = [&](float a) {
 		return a*180/3.14159265359;
-	};
+	};*/
 
 	auto findMinMax = [&](float Min, float Max, PosePtr C) {
 		Vec3d z = C->dir();

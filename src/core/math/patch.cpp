@@ -374,7 +374,7 @@ void Patch::calcBezTrianglePlane(bezVRPolygon<3>& q) {
 
     int iter = 0;
     for (int i=0;i<q.N;i++) {
-        if (iter >= Pos->size()) { cout << "AA " << iter << endl; break; }
+        if (iter >= (int)Pos->size()) { cout << "AA " << iter << endl; break; }
         //cout << "Ti " << T[0][i] << ",    " << T[1][i] << ",    " << T[2][i] << endl;
 
         for (int k=0; k<3 && i>0;k++) {
@@ -399,8 +399,8 @@ void Patch::calcBezTrianglePlane(bezVRPolygon<3>& q) {
 
         Pos->setValue(Bu[0], iter);
         iter++;
-        for (int j=1;j<q.N-i;j++) {
-            if (iter >= Pos->size()) { cout << "BB " << iter << endl; break; }
+        for (int j=1; j+i<q.N; j++) {
+            if (iter >= (int)Pos->size()) { cout << "BB " << iter << endl; break; }
             Pnt3f p0 = Pos->getValue(iter);
             Pos->setValue(Vec3d(Pos->getValue(iter-1))+DELu[0], iter);
             //cout << " B " << p0 << " -> " << Pos->getValue(iter) << "   " << DELu[0] << endl;

@@ -415,8 +415,8 @@ Vec3d Path::interp(vector<Vec3d>& vec, float t, int i, int j) {
     float x = tN-ti;
     if (ti >= N) return vec[i+N];
 
-    if (i+ti < 0 || i+ti >= vec.size()) return Vec3d();
-    if (i+ti+1 < 0 || i+ti+1 >= vec.size()) return Vec3d();
+    if (i+ti < 0 || i+ti >= (int)vec.size()) return Vec3d();
+    if (i+ti+1 < 0 || i+ti+1 >= (int)vec.size()) return Vec3d();
 
     //cout << "i j ti x v[ti+i] v[ti+i+1]" << i << " " << j << " " << ti << " " << x << " " << vec[i+ti] << " " << vec[i+ti+1] << endl;
     return vec[i+ti]*(1-x) + vec[i+ti+1]*x;

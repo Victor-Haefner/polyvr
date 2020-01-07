@@ -216,9 +216,9 @@ OSMMapPtr VRWorldGenerator::getOSMMap() { return osmMap; }
 
 void VRWorldGenerator::addTerrainsToLOD(){
     cout << "VRWorldGenerator::addTerrainsToLOD" << endl;
-    auto nLevel = lodLevels.size();
+    //auto nLevel = lodLevels.size();
     auto nTerrains = terrains.size();
-    for (int i = 0; i < nTerrains; i++) {
+    for (uint i = 0; i < nTerrains; i++) {
         lodLevels[i]->addChild(terrains[i]);
         //cout << "  added Child to lodLevel " << lodLevels[i]->getName() << " " << i << endl;
     }
@@ -242,7 +242,7 @@ void VRWorldGenerator::setupLODTerrain(string pathMap, string pathPaint, float s
         string res = "";
         for (int i = 0; i < 4; i++) typ = filepath.at(filepath.length()-1-i) + typ;
         if (typ != type) return in+"newFile"+type;
-        for (int i = 0; i < filepath.length()-4; i++) res += filepath.at(i);
+        for (uint i = 0; i < filepath.length()-4; i++) res += filepath.at(i);
         return res + in + type;
     };
 
@@ -753,7 +753,7 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
         Vec3d dir = getDir(node);
         bool hasDir = node->tags.count("direction");
         if (terrains.size() == 1) pos = terrains[0]->elevatePoint(pos);
-        bool addToOnto = false;
+        //bool addToOnto = false;
         bool added = false;
         for (auto tag : node->tags) {
             if (added) continue;

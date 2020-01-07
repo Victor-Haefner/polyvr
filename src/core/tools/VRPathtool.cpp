@@ -131,9 +131,9 @@ void VRPathtool::setupBefore(VRStorageContextPtr context) {
 }
 
 void VRPathtool::setup(VRStorageContextPtr context) {
-    bool onlyReload = false;
+    /*bool onlyReload = false;
     if (context) onlyReload = context->onlyReload;
-    //if (!onlyReload)
+    if (!onlyReload)*/
     setGraph(graph, false);
 }
 
@@ -801,7 +801,7 @@ void VRPathtool::updateBezierVisuals() {
                 auto cPs = path->getControlPoints();
                 auto Ps = path->getPoints();
                 if ((Ps.size()-1)*2 != cPs.size()) continue;
-                for (int i=0; i<Ps.size()-1; i++) {
+                for (uint i=0; i<Ps.size()-1; i++) {
                     int p1 = data.pushVert(Ps[i].pos());
                     int p2 = data.pushVert(cPs[i*2]);
                     int p3 = data.pushVert(cPs[i*2+1]);

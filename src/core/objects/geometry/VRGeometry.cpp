@@ -429,7 +429,7 @@ void VRGeometry::updateNormals(bool face) {
 void VRGeometry::flipNormals() {
     if (!mesh || !mesh->geo) return;
     GeoVectorPropertyMTRecPtr normals = mesh->geo->getNormals();
-    for (int i=0; i<normals->size(); i++) {
+    for (uint i=0; i<normals->size(); i++) {
         Vec3f n = normals->getValue<Vec3f>(i);
         normals->setValue(-n, i);
     }

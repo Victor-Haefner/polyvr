@@ -144,7 +144,7 @@ Vec3d VRSelection::computeCentroid() {
             }
         } else {
             N += pos->size();
-            for (int i = 0; i< pos->size(); i++) {
+            for (uint i = 0; i< pos->size(); i++) {
                 auto p = Vec3d(pos->getValue<Pnt3f>(i));
                 res += p;
             }
@@ -179,7 +179,7 @@ Matrix4d VRSelection::computeCovMatrix() {
             }
         } else {
             N += pos->size();
-            for (int i = 0; i< pos->size(); i++) {
+            for (uint i = 0; i< pos->size(); i++) {
                 auto pg = Vec3d(pos->getValue<Pnt3f>(i));
                 Vec3d p = pg - center;
                 res[0][0] += p[0]*p[0];

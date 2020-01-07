@@ -369,7 +369,7 @@ void VRProcessLayout::setElementName(int ID, string name) {
 
     int wrapN = 12;
     if (n->type == MESSAGE) wrapN = 22;
-    int lineN = wrapString(name, wrapN);
+    /*int lineN =*/ wrapString(name, wrapN);
 
     auto txt = VRText::get()->create(name, "MONO 20", 20, fg, bg);
     auto mat = VRMaterial::create("ProcessElement");

@@ -61,7 +61,7 @@ VRDistrictPtr VRDistrict::ptr() { return dynamic_pointer_cast<VRDistrict>(shared
 
 Vec4d VRDistrict::getChunkUV(string type, int i) {
     if (!chunkIDs.count(type)) return Vec4d();
-    if (i >= chunkIDs[type].size() || i < 0) return Vec4d();
+    if (i >= (int)chunkIDs[type].size() || i < 0) return Vec4d();
     return texture->getChunkUV( chunkIDs[type][i] );
 }
 

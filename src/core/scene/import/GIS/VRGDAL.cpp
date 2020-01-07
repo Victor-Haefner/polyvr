@@ -235,11 +235,11 @@ void divideTiffIntoChunks(string pathIn, string pathOut, double minLat, double m
     auto EARTH_RADIUS = 6378137;
 
     /* The following functions take their parameter and return their result in degrees */
-    auto y2lat_d = [&](double y)   { return RAD2DEG( atan(exp( DEG2RAD(y) )) * 2 - M_PI/2 ); };
-    auto x2lon_d = [&](double x)   { return x; };
+    //auto y2lat_d = [&](double y)   { return RAD2DEG( atan(exp( DEG2RAD(y) )) * 2 - M_PI/2 ); };
+    //auto x2lon_d = [&](double x)   { return x; };
 
-    auto lat2y_d = [&](double lat) { return RAD2DEG( log(tan( DEG2RAD(lat) / 2 +  M_PI/4 )) ); };
-    auto lon2x_d = [&](double lon) { return lon; };
+    //auto lat2y_d = [&](double lat) { return RAD2DEG( log(tan( DEG2RAD(lat) / 2 +  M_PI/4 )) ); };
+    //auto lon2x_d = [&](double lon) { return lon; };
 
     /* The following functions take their parameter in something close to meters, along the equator, and return their result in degrees */
     auto y2lat_m = [&](double y)   { return RAD2DEG(2 * atan(exp( y/EARTH_RADIUS)) - M_PI/2); };
@@ -293,8 +293,8 @@ void divideTiffIntoChunks(string pathIn, string pathOut, double minLat, double m
     cout << "Sy " << y2lat_m(adfGeoTransform[5]) << " Sx " << x2lon_m(adfGeoTransform[1]) << endl;
     */
 
-    for (int yy = 0; yy < bordersY.size()-1; yy++){
-        for (int xx = 0; xx < bordersX.size()-1; xx++) {
+    for (uint yy = 0; yy < bordersY.size()-1; yy++){
+        for (uint xx = 0; xx < bordersX.size()-1; xx++) {
             if ( bordersY[yy] < latBeg  && bordersX[xx] > lonBeg && bordersY[yy+1] > latEnd  && bordersX[xx+1] < lonEnd ) {
                 cout << " within bounds " << xx << "-" << yy << " | " << bordersY[yy] << " " << bordersX[xx] << " | " << bordersY[yy+1] << " " << bordersX[xx+1] << endl;
                 double xxA = lon2x_m(bordersX[xx]);
@@ -349,8 +349,8 @@ void writeGeoRasterData(string path, VRTexturePtr tex, double geoTransform[6], s
     int sizeX = texSize[0];
     int sizeY = texSize[1];
     cout << "writeGeoRasterData at " << path << " - X: "  << sizeX << " Y: " << sizeY << endl;
-    double originLat = geoTransform[0];
-    double originLon = geoTransform[3];
+    //double originLat = geoTransform[0];
+    //double originLon = geoTransform[3];
     GDALDataset *poDstDS;
     char **papszOptions = NULL;
     poDstDS = poDriver->Create( path.c_str(), sizeX, sizeY, 1, GDT_Float32,
