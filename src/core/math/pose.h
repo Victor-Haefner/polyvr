@@ -31,11 +31,11 @@ class Pose {
         void makeUpOrthogonal();
         void makeDirOrthogonal();
 
-        Vec3d pos() const;
-        Vec3d dir() const;
-        Vec3d up() const;
-        Vec3d x() const;
-        Vec3d scale() const;
+        Vec3d pos();
+        Vec3d dir();
+        Vec3d up();
+        Vec3d x();
+        Vec3d scale();
 
         Matrix4d asMatrix() const;
         void invert();

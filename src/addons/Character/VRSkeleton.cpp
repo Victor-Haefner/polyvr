@@ -3,7 +3,9 @@
 #include "core/utils/VRFunction.h"
 #include "core/math/graph.h"
 #include "core/math/Eigendecomposition.h"
+#ifndef WITHOUT_LAPACKE_BLAS
 #include "core/math/SingularValueDecomposition.h"
+#endif
 #include "core/math/equation.h"
 #include "core/objects/geometry/VRGeoData.h"
 #include "core/objects/material/VRMaterial.h"
@@ -877,6 +879,7 @@ class KabschAlgorithm {
                 }
             }
 
+#ifndef WITHOUT_LAPACKE_BLAS
             SingularValueDecomposition svd(H, verbose);
 
             U = svd.U;
@@ -905,6 +908,7 @@ class KabschAlgorithm {
             }
             T.multLeft(U);
             T.mult(Vt);
+#endif
 
             // compute translation
 

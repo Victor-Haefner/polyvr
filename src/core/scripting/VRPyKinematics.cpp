@@ -6,8 +6,9 @@
 #include "VRPyMath.h"
 
 using namespace OSG;
+
+#ifndef WITHOUT_BULLET
 simpleVRPyType(Kinematics, New_ptr);
-simplePyType(FABRIK, New_ptr);
 
 PyMethodDef VRPyKinematics::methods[] = {
     {"addJoint", PyWrap( Kinematics, addJoint, "add joint - setGraph(graph)", int, int, int, VRConstraintPtr ) },
@@ -22,6 +23,9 @@ PyMethodDef VRPyKinematics::methods[] = {
     {"clear", PyWrap( Kinematics, clear, "Set graph - setGraph(graph)4", void) },
     {NULL}  /* Sentinel */
 };
+#endif
+
+simplePyType(FABRIK, New_ptr);
 
 PyMethodDef VRPyFABRIK::methods[] = {
     {"addJoint", PyWrap2( FABRIK, addJoint, "Add joint, ID, pose, in, out", void, int, PosePtr ) },

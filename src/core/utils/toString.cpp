@@ -145,7 +145,8 @@ template<> string toString(const PosePtr& po) {
 }
 
 template<> string toString(const Pose& po) {
-    return toString(po.pos()) + " " + toString(po.dir()) + " " + toString(po.up());
+    Pose* p = (Pose*)&po;
+    return toString(p->pos()) + " " + toString(p->dir()) + " " + toString(p->up());
 }
 
 template<> string toString(const Boundingbox& b) {

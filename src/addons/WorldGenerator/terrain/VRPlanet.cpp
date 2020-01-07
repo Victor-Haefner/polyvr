@@ -119,7 +119,9 @@ void VRPlanet::localize(double north, double east) {
 
 void VRPlanet::divideTIFF(string pathIn, string pathOut, double minLat, double maxLat, double minLon, double maxLon, double res) {
     //cout << "hello " << pathIn << " - " << pathOut << endl;
+#ifndef WITHOUT_GDAL
     divideTiffIntoChunks(pathIn, pathOut, minLat, maxLat, minLon, maxLon, res);
+#endif
 }
 
 Vec2i VRPlanet::toSID(double north, double east) {

@@ -33,9 +33,11 @@ struct VRGeoData::Data {
             channels[ GeoVec4fProperty::create()->getType().getId() ] = 4;
             channels[ GeoColor3fProperty::create()->getType().getId() ] = 3;
             channels[ GeoColor4fProperty::create()->getType().getId() ] = 4;
+#ifndef WASM
             channels[ GeoVec2dProperty::create()->getType().getId() ] = 2;
             channels[ GeoVec3dProperty::create()->getType().getId() ] = 3;
             channels[ GeoVec4dProperty::create()->getType().getId() ] = 4;
+#endif
         }
 
         int type = v->getType().getId();

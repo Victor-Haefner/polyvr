@@ -1,5 +1,7 @@
 #include "VRImport.h"
+#ifndef WITHOUT_COLLADA
 #include "VRCOLLADA.h"
+#endif
 #include "VRPLY.h"
 #include "VRVTK.h"
 #include "VRDXF.h"
@@ -182,7 +184,9 @@ void VRImport::LoadJob::load(VRThreadWeakPtr tw) {
         if (ext == ".ifc") { loadIFC(path, res); return; }
 #endif
         if (preset == "OSG" || preset == "COLLADA") osgLoad(path, res);
+#ifndef WITHOUT_COLLADA
         if (preset == "COLLADA") loadCollada(path, res);
+#endif
         cout << " additional created: " << clist->getNumCreated()-Ncr0 << ", changed: " << clist->getNumChanged()-Nch0 << endl;
     };
 

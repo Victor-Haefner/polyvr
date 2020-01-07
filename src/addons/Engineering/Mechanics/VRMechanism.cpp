@@ -1,13 +1,15 @@
 #include "VRMechanism.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/geometry/VRPrimitive.h"
-#include "core/objects/geometry/VRPhysics.h"
 #include "core/objects/geometry/VRGeoData.h"
 #include "core/math/boundingbox.h"
 #include "core/utils/VRGlobals.h"
 #include "core/utils/toString.h"
 #include "core/utils/isNan.h"
 #include "core/tools/VRAnalyticGeometry.h"
+#ifndef WITHOUT_BULLET
+#include "core/objects/geometry/VRPhysics.h"
+#endif
 
 #include <OpenSG/OSGGeoProperties.h>
 #include <OpenSG/OSGGeometry.h>
@@ -300,20 +302,23 @@ void MGear::move() {
 
     float a = change.dx/gear()->radius();
     change.a = a;
-
+#ifndef WITHOUT_BULLET
     if (trans->getPhysics()->isPhysicalized()) {
         trans->getPhysics()->setDynamic(false, true);
         resetPhysics = true;
     }
+#endif
 
     //cout << "MGear::move " << a << " / " << rAxis << " " << trans->getName() << endl;
     //trans->rotate(a, rAxis);
     trans->rotateWorld(a, rAxis);
 
+#ifndef WITHOUT_BULLET
     if (trans->getPhysics()->isPhysicalized()) {
         trans->setBltOverrideFlag();
         trans->updatePhysics();
     }
+#endif
 }
 
 void MPart::computeChange() {
@@ -616,12 +621,14 @@ void VRMechanism::update() {
     //cout << "\nVRMechanism::update" << endl;
 
     vector<MPart*> changed_parts;
+#ifndef WITHOUT_BULLET
     for (auto& part : parts) {
         if (part->resetPhysics) {
             part->trans->getPhysics()->setDynamic(true, true);
             part->resetPhysics = false;
         }
     }
+#endif
 
     //for (auto& part : parts) part->change = MChange();
     for (auto& part : parts) if (part->changed()) changed_parts.push_back(part);

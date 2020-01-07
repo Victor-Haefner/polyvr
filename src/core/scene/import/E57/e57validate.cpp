@@ -66,7 +66,7 @@
 
 
 ================================================================*/
-#if defined(_MSC_VER)
+#if defined(_MSC_VER) || defined(WASM)
 #   include <unordered_map>
 #else
 #   include <tr1/unordered_map>
@@ -694,7 +694,11 @@ public:
     void        dump(int indent = 0, std::ostream& os = std::cout);
 //================
 private:
+#ifdef WASM
+    typedef std::unordered_map<int64_t, LineGroup> GroupsMap;
+#else
     typedef std::tr1::unordered_map<int64_t, LineGroup> GroupsMap;
+#endif
 
     bool        isDefined_;
     bool        isByRow_;

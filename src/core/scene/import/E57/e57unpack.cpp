@@ -26,8 +26,8 @@ using e57::E57Utilities;
 using e57::ustring;
 using e57::SourceDestBuffer;
 using e57::CompressedVectorReader;
-using e57::int64_t;
-using e57::uint64_t;
+//using e57::int64_t;
+//using e57::uint64_t;
 
 #include <iostream>
 using std::cout;
@@ -41,12 +41,13 @@ using std::exception;
 #include <stdexcept>
 using std::runtime_error;
 
-#if defined(_MSC_VER)
+#if defined(_MSC_VER) || defined(WASM)
 #   include <memory>
+using std::shared_ptr;
 #else
 #   include <tr1/memory>
-#endif
 using std::tr1::shared_ptr;
+#endif
 
 #include <string>
 using std::string;
@@ -287,7 +288,7 @@ main(
                         }
                     }
 
-                    ofstream inf(
+                    boost::filesystem::ofstream inf(
                         dst/path_from_guid(StringNode(scan.get("guid")).value()+".inf")
                     );
                     inf << "pointrecord: " << pointrecord << endl;
@@ -296,7 +297,7 @@ main(
 
                     CompressedVectorReader rd(points.reader(sdb));
                     path csvname(path_from_guid(StringNode(scan.get("guid")).value()+".csv"));
-                    ofstream ocsv(dst/csvname);
+                    boost::filesystem::ofstream ocsv(dst/csvname);
                     ostream& out(ocsv); // needed to fix ambiguity for << operator on msvc
                     cout << "unpacking: " << dst/csvname << " ... ";
                     unsigned count;

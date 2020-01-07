@@ -19,7 +19,10 @@
 
 using namespace OSG;
 
-template<> string typeName(const VRObject& o) { return o.getType(); }
+template<> string typeName(const VRObject& o) {
+    VRObject* O = (VRObject*)&o;
+    return O->getType();
+}
 
 VRObject::VRObject(string _name) {
     static int _ID = 0;
@@ -127,7 +130,7 @@ void VRObject::setVolumeCheck(bool b, bool recursive) {
     if (recursive) applyVolumeCheckRecursive(getNode()->node, b);
 }
 
-void VRObject::setVolume(const Boundingbox& box) {
+void VRObject::setVolume(Boundingbox box) {
     BoxVolume &vol = getNode()->node->editVolume(false);
     vol.setBounds(Vec3f(box.min()), Vec3f(box.max()));
     vol.setStatic(true);
@@ -151,7 +154,7 @@ VRObjectPtr VRObject::copy(vector<VRObjectPtr> children) {
 }
 
 int VRObject::getID() { return ID; }
-string VRObject::getType() const { return type; }
+string VRObject::getType() { return type; }
 void VRObject::addTag(string name) { addAttachment(name, 0); }
 bool VRObject::hasTag(string name) { return attachments.count(name); }
 void VRObject::remTag(string name) { attachments.erase(name); }

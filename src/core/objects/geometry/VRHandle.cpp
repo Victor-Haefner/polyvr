@@ -64,15 +64,15 @@ void VRHandle::setSize(float size) {
     setPrimitive("Box "+s+" "+s+" "+s+" 1 1 1");
 }
 
-bool lock = false;
+bool lockHandle = false; // TODO: remove global lock
 
 void VRHandle::updateHandle(bool sceneUpdate) {
     if (!paramCb) return;
     VRGeometryPtr p =  dynamic_pointer_cast<VRGeometry>(getDragParent());
     if (!p) return;
 
-    if (lock) return;
-    lock = true; // WARNING! do not return after this line!
+    if (lockHandle) return;
+    lockHandle = true; // WARNING! do not return after this line!
 
     PosePtr pi = p->getPoseTo(ptr());
     Vec3d d = pi->pos() - origin->pos();
@@ -88,28 +88,28 @@ void VRHandle::updateHandle(bool sceneUpdate) {
         }
     }
 
-    lock = false;
+    lockHandle = false;
 }
 
 void VRHandle::drag(VRTransformPtr new_parent, VRIntersection i) {
-    lock = true;
+    lockHandle = true;
     VRTransform::drag(new_parent, i);
     auto scene = VRScene::getCurrent();
     scene->addUpdateFkt( updateCb );
-    lock = false;
+    lockHandle = false;
 }
 
 void VRHandle::drop() {
-    lock = true;
+    lockHandle = true;
     VRTransform::drop();
     auto scene = VRScene::getCurrent();
     scene->dropUpdateFkt( updateCb );
-    lock = false;
+    lockHandle = false;
 }
 
 void VRHandle::setMatrix(Matrix4d m) { // for undo/redo, PROBLEM: called by the constraint non stop
     VRTransform::setMatrix(m);
-    if (lock) return;
+    if (lockHandle) return;
     //printBacktrace();
     if (isUndoing()) updateHandle(); // problem: called non stop :(
 }

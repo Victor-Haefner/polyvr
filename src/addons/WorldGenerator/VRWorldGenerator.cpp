@@ -21,7 +21,9 @@
 #include "core/math/path.h"
 #include "core/math/triangulator.h"
 #include "addons/Semantics/Reasoning/VROntology.h"
+#ifndef WITHOUT_GDAL
 #include "core/scene/import/GIS/VRGDAL.h"
+#endif
 #include "core/objects/material/VRTexture.h"
 
 #define GLSL(shader) #shader
@@ -225,6 +227,7 @@ void VRWorldGenerator::addTerrainsToLOD(){
 void VRWorldGenerator::setTerrainSize( Vec2d in ) { terrainSize = in; }
 
 void VRWorldGenerator::setupLODTerrain(string pathMap, string pathPaint, float scale, bool cache ) {
+#ifndef WITHOUT_GDAL
     cout << "VRWorldGenerator::setupLODTerrain" << endl;
     auto tex = loadGeoRasterData(pathMap, false);
     Vec3i texSizeN = tex->getSize();
@@ -316,6 +319,7 @@ void VRWorldGenerator::setupLODTerrain(string pathMap, string pathPaint, float s
     addTerrain(1.0, 0);
     addTerrain(0.5, 1);
     addTerrain(0.05, 2);
+#endif
 }
 
 vector<VRTerrainPtr> VRWorldGenerator::getTerrains(){
@@ -828,7 +832,8 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
                     auto cam = assets->copy("Camera", Pose::create(pos, dir), false);
                     lodTree->addObject(cam, cam->getWorldPosition(), 3, false);
                     cam->setDir(dir);
-                    collisionShape->addQuad(0.1, 2, Pose(pos, dir), cam->getID());
+                    Pose p(pos, dir);
+                    collisionShape->addQuad(0.1, 2, p, cam->getID());
                 }
             }
 
@@ -839,7 +844,8 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
                     if (lamp) {
                         lodTree->addObject(lamp, lamp->getWorldPosition(), 3, false);
                         lamp->setDir(-dir);
-                        collisionShape->addQuad(0.1, 2, Pose(pos, -dir), lamp->getID());
+                        Pose p(pos, -dir);
+                        collisionShape->addQuad(0.1, 2, p, lamp->getID());
                     }
                 }
                 if (tag.second == "traffic_signals") {

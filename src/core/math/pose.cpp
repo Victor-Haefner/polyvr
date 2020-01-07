@@ -71,11 +71,11 @@ void Pose::setDir(Vec3d d) { data[1] = d; }
 void Pose::setUp(Vec3d u) { data[2] = u; }
 void Pose::setScale(Vec3d s) { data.resize(4); data[3] = s; }
 
-Vec3d Pose::pos() const { return data.size() > 0 ? data[0] : Vec3d(); }
-Vec3d Pose::dir() const { return data.size() > 1 ? data[1] : Vec3d(); }
-Vec3d Pose::up() const { return data.size() > 2 ? data[2] : Vec3d(); }
-Vec3d Pose::x() const { return data.size() > 2 ? data[1].cross(data[2]) : Vec3d(); } // vector to the right
-Vec3d Pose::scale() const { return data.size() > 3 ? data[3] : Vec3d(1,1,1); }
+Vec3d Pose::pos() { return data.size() > 0 ? data[0] : Vec3d(); }
+Vec3d Pose::dir() { return data.size() > 1 ? data[1] : Vec3d(); }
+Vec3d Pose::up() { return data.size() > 2 ? data[2] : Vec3d(); }
+Vec3d Pose::x() { return data.size() > 2 ? data[1].cross(data[2]) : Vec3d(); } // vector to the right
+Vec3d Pose::scale() { return data.size() > 3 ? data[3] : Vec3d(1,1,1); }
 
 Matrix4d Pose::asMatrix() const {
     Matrix4d m;

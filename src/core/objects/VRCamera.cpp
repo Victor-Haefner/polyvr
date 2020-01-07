@@ -6,7 +6,9 @@
 #include "core/objects/material/OSGMaterial.h"
 #include "core/objects/OSGObject.h"
 #include "core/scene/VRScene.h"
+#ifndef WITHOUT_GTK
 #include "core/gui/VRGuiManager.h"
+#endif
 #include <OpenSG/OSGTransform.h>
 #include <OpenSG/OSGSimpleMaterial.h>
 #include <OpenSG/OSGSimpleGeometry.h>
@@ -68,7 +70,9 @@ VRCamera::VRCamera(string name) : VRTransform(name) {
 }
 
 VRCamera::~VRCamera() {
+#ifndef WITHOUT_GTK
     if (registred) VRGuiManager::broadcast("camera_added");
+#endif
 }
 
 VRCameraPtr VRCamera::ptr() { return static_pointer_cast<VRCamera>( shared_from_this() ); }
@@ -78,7 +82,9 @@ VRCameraPtr VRCamera::create(string name, bool reg) {
     p->addChild(p->vrSetup);
     p->registred = reg;
     getAll().push_back( p );
+#ifndef WITHOUT_GTK
     VRGuiManager::broadcast("camera_added");
+#endif
     if (reg) VRScene::getCurrent()->setMActiveCamera(p->getName());
     return p;
 }
@@ -164,7 +170,9 @@ void VRCamera::setup(bool reg, VRStorageContextPtr context) {
 void VRCamera::activate() {
     auto scene = VRScene::getCurrent();
     if (scene) scene->setActiveCamera(getName());
+#ifndef WITHOUT_GTK
     VRGuiManager::broadcast("camera_changed");
+#endif
 }
 
 void VRCamera::showCamGeo(bool b) {

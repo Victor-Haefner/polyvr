@@ -7,8 +7,10 @@
 #include <list>
 #include "core/utils/toString.h"
 #include "core/utils/VRCallbackWrapper.h"
+#ifndef WITHOUT_GTK
 #include "core/gui/VRGuiManager.h"
 #include "core/gui/VRGuiConsole.h"
+#endif
 
 using namespace OSG;
 
@@ -58,7 +60,9 @@ bool VRReasoner::startswith(string s, string subs) {
 
 void VRReasoner::print(const string& s) {
     if (verbConsole) cout << pre << s << endl;
+#ifndef WITHOUT_GTK
     if (verbGui) VRGuiManager::get()->getConsole( "Reasoning" )->write( s+"\n" );
+#endif
 }
 
 void VRReasoner::print(const string& s, COLOR c) {
@@ -72,6 +76,7 @@ void VRReasoner::print(const string& s, COLOR c) {
         cout << pre << s << colEnd << endl;
     }
 
+#ifndef WITHOUT_GTK
     if (verbGui) {
         switch(c) {
             case BLUE: VRGuiManager::get()->getConsole( "Reasoning" )->write( s+"\n", "blue" ); break;
@@ -80,6 +85,7 @@ void VRReasoner::print(const string& s, COLOR c) {
             case YELLOW: VRGuiManager::get()->getConsole( "Reasoning" )->write( s+"\n", "yellow" ); break;
         }
     }
+#endif
 }
 
 bool VRReasoner::findRule(VRStatementPtr statement, VRSemanticContextPtr context) {

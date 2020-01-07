@@ -1,9 +1,6 @@
 #include "VRPyConstraint.h"
 #include "VRPyTransform.h"
 #include "VRPyBaseT.h"
-#include "core/objects/geometry/VRPhysics.h"
-
-#include <OpenSG/OSGQuaternion.h>
 
 using namespace OSG;
 

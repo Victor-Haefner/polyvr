@@ -4,6 +4,7 @@
 #include <deque>
 #include <list>
 
+#ifndef WITHOUT_CGAL
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Polygon_2.h>
 #include <CGAL/partition_2.h>
@@ -14,6 +15,7 @@ typedef CGAL::Partition_traits_2<Kernel> CGALTraits;
 typedef CGALTraits::Point_2 CGALPoint;
 typedef CGALTraits::Polygon_2 CGALPolygon;
 typedef std::list<CGALPolygon> CGALPolyList;
+#endif
 
 using namespace OSG;
 
@@ -24,6 +26,7 @@ template<> int toValue(stringstream& ss, VRPolygon& box) {
     return 0;
 }
 
+#ifndef WITHOUT_CGAL
 CGALPolygon toCGALVRPolygon(VRPolygon p) {
     vector<CGALPoint> pnts;
     for (auto v : p.get()) pnts.push_back(CGALPoint(v[0], v[1]));
@@ -40,6 +43,7 @@ VRPolygon fromCGALPolygon(CGALPolygon cp) {
     }
     return p;
 }
+#endif
 
 VRPolygon::VRPolygon() {}
 
@@ -698,14 +702,17 @@ VRPolygon VRPolygon::getConvexHull() { // graham scan algorithm TODO: TOO FUCKIN
     std::istream_iterator< Point_2 >  in_start( std::cin );
     std::istream_iterator< Point_2 >  in_end;
     std::ostream_iterator< Point_2 >  out( std::cout, "\n" );*/
+
+    VRPolygon res;
+#ifndef WITHOUT_CGAL
     vector<Kernel::Point_2> pIn; for (auto p : points) pIn.push_back(Kernel::Point_2(p[0],p[1]));
     vector<Kernel::Point_2> pOut; for (auto p : points) pOut.push_back(Kernel::Point_2());
     auto pOutEnd = CGAL::ch_graham_andrew( pIn.begin(), pIn.end(), pOut.begin() );
-    VRPolygon res;
     for (auto pItr = pOut.begin(); pItr != pOutEnd; pItr++) {
         auto p = *pItr;
         res.addPoint(Vec2d(p[0],p[2]));
     }
+#endif
     return res;
 }
 
@@ -741,6 +748,7 @@ vector< VRPolygon > VRPolygon::getConvexDecomposition() {
         return res;
     }
 
+#ifndef WITHOUT_CGAL
     CGALPolygon cgalpoly;
     if (!isCCW()) reverseOrder();
     cgalpoly = toCGALVRPolygon(*this);
@@ -748,6 +756,7 @@ vector< VRPolygon > VRPolygon::getConvexDecomposition() {
     CGALTraits traits;
     CGAL::optimal_convex_partition_2(cgalpoly.vertices_begin(), cgalpoly.vertices_end(), std::back_inserter(partitions), traits);
     for (auto p : partitions) res.push_back( fromCGALPolygon(p) );
+#endif
 
     return res;
 }

@@ -48,7 +48,7 @@
 #  else
 #    error "no supported compiler defined"
 #  endif
-#elif defined(LINUX)
+#elif defined(LINUX) || defined(WASM)
 #  define _LARGEFILE64_SOURCE
 #  define __LARGE64_FILES
 #  include <sys/types.h>
@@ -4694,7 +4694,7 @@ uint64_t CheckedFile::lseek64(int64_t offset, int whence)
 #  else
 #    error "no supported compiler defined"
 #  endif
-#elif defined(LINUX)
+#elif defined(LINUX) || defined(WASM)
     int64_t result = ::lseek64(fd_, offset, whence);
 #else
 #  error "no supported OS platform defined"

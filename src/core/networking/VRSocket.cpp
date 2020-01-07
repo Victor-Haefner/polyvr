@@ -10,7 +10,7 @@
 #include "core/utils/system/VRSystem.h"
 
 #include <algorithm>
-#ifndef WIN32
+#ifndef WITHOUT_CURL
 #include <curl/curl.h> // TODO: windows port
 #endif
 #include <stdint.h>
@@ -363,7 +363,8 @@ size_t httpwritefkt( char *ptr, size_t size, size_t nmemb, void *userdata) {
 }
 }
 
-void VRSocket::sendHTTPGet(string uri) {
+void VRSocket::sendHTTPGet(string uri) { // TODO: use mongoose instead of curl?
+#ifndef WITHOUT_CURL
     auto curl = curl_easy_init();
     //curl_easy_setopt(curl, CURLOPT_GET, 1);
     curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1);
@@ -371,6 +372,7 @@ void VRSocket::sendHTTPGet(string uri) {
     auto res = curl_easy_perform(curl);
     if(res != CURLE_OK) fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
     curl_easy_cleanup(curl);
+#endif
 }
 
 /*void VRSocket::sendMessage(string msg) {

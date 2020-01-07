@@ -5,7 +5,9 @@
 #include "core/objects/OSGObject.h"
 #include "core/objects/geometry/OSGGeometry.h"
 #include "core/objects/geometry/VRGeometry.h"
+#ifndef WITHOUT_BULLET
 #include "core/setup/devices/VRHaptic.h"
+#endif
 #include "core/utils/toString.h"
 
 #include <map>
@@ -38,6 +40,7 @@ void listActiveMaterials() {
     }
 }
 
+#ifndef WITHOUT_VRPN
 #include <vrpn/vrpn_Tracker.h>
 class myTracker : public vrpn_Tracker_Remote {
     public:
@@ -64,6 +67,7 @@ void vrpn_server() {
     auto setup = VRSetup::getCurrent();
     if (setup) setup->startVRPNTestServer();
 }
+#endif
 
 #include <OpenSG/OSGDrawableStatsAttachment.h>
 
@@ -103,8 +107,12 @@ void VRRunTest(string test) {
     cout << "run test " << test << endl;
 
     if (test == "listActiveMaterials") listActiveMaterials();
+#ifndef WITHOUT_VRPN
     if (test == "vrpn_client") vrpn_client();
     if (test == "vrpn_server") vrpn_server();
+#endif
+#ifndef WITHOUT_BULLET
     if (test == "haptic1") VRHaptic::runTest1();
+#endif
     if (startsWith(test, "debugFields")) debugFields( subString(test, 12, test.size()-12) );
 }

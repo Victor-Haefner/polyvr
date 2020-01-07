@@ -7,15 +7,17 @@
 #include "VRPyTypeCaster.h"
 #include "VRPyMath.h"
 #include "VRPyBaseT.h"
-#include "core/objects/geometry/VRPhysics.h"
 #include "core/objects/VRAnimation.h"
 #include "core/math/kinematics/VRConstraint.h"
 #include "core/setup/devices/VRIntersect.h"
+#ifndef WITHOUT_BULLET
+#include "core/objects/geometry/VRPhysics.h"
+#endif
 
 using namespace OSG;
 
+#ifndef WITHOUT_BULLET
 simpleVRPyType(Collision, 0);
-simpleVRPyType(Transform, New_VRObjects_ptr);
 
 template<> PyObject* VRPyTypeCaster::cast(const VRCollision& e) { return VRPyCollision::fromObject(e); }
 
@@ -30,6 +32,9 @@ PyMethodDef VRPyCollision::methods[] = {
     {"getTriangle2", PyWrap(Collision, getTriangle2, "Get the second collision triangle", vector<Vec4d>) },
     {NULL}  /* Sentinel */
 };
+#endif
+
+simpleVRPyType(Transform, New_VRObjects_ptr);
 
 PyMethodDef VRPyTransform::methods[] = {
     {"setIdentity", PyWrap(Transform, setIdentity, "Reset transformation to identity", void ) },
@@ -76,11 +81,28 @@ PyMethodDef VRPyTransform::methods[] = {
     //{"setRotationConstraints", PyWrap(Transform, setRotationConstraints, "Constraint the object's rotation - setRotationConstraints(xi, yi, zi)", void ) },
     {"setConstraint", PyWrap(Transform, setConstraint, "Set the constraints object - setConstraint( constraint )", void, VRConstraintPtr ) },
     {"getConstraint", PyWrap(Transform, getConstraint, "Get the constraints object - constraint getConstraint()", VRConstraintPtr ) },
+    {"attach", PyWrapOpt(Transform, attach, "Attach another object using a joint constraint and a spring constraint", "0", void, VRTransformPtr, VRConstraintPtr, VRConstraintPtr ) },
+    {"detachJoint", PyWrap(Transform, detachJoint, "Remove all joints to given transform created by 'attach'", void, VRTransformPtr ) },
+    {"animate", PyWrapOpt(Transform, animate, "Animate object along a path, duration [s], offset [s], doOrient, doLoop) )", "1|0|0", VRAnimationPtr, PathPtr, float, float, bool, bool, PathPtr ) },
+    {"getAnimations", PyWrap(Transform, getAnimations, "Return all animations associated to the object", vector<VRAnimationPtr> ) },
+    {"stopAnimation", PyWrap(Transform, stopAnimation, "Stop any running animation of this object", void ) },
+    {"getConstraintAngleWith", PyWrap(Transform, getConstraintAngleWith, "return the relative rotation Angles/position diffs to the given transform (0:rotation, 1:position)", Vec3d, VRTransformPtr, bool ) },
+    {"applyChange", PyWrap(Transform, updateChange, "Apply all changes", void ) },
+    {"drag", PyWrapOpt(Transform, drag, "Drag this object by new parent", "", void, VRTransformPtr, VRIntersection ) },
+    {"drop", PyWrap(Transform, drop, "Drop this object, if held, to old parent", void ) },
+    {"rebaseDrag", PyWrap( Transform, rebaseDrag, "Rebase drag, use instead of switchParent", void, VRObjectPtr ) },
+    {"isDragged", PyWrap( Transform, isDragged, "Check if transform is beeing dragged", bool ) },
+    {"castRay", PyWrap(Transform, intersect, "Cast a ray and return the intersection with given subtree", VRIntersection, VRObjectPtr, Vec3d ) },
+    {"getDragParent", PyWrap(Transform, getDragParent, "Get the parent before the drag started", VRObjectPtr ) },
+    {"lastChanged", PyWrap(Transform, getLastChange, "Return the frame when the last change occured", uint ) },
+    {"changedSince", PyWrapOpt(Transform, changedSince2, "Check if change occured since frame, flag includes frame", "1", bool, uint, bool ) },
+    {"setWorldDir", PyWrap(Transform, setWorldDir, "Set the direction in world coordinates", void, Vec3d ) },
+    {"setWorldUp", PyWrap(Transform, setWorldUp, "Set the up vector in world coordinates", void, Vec3d ) },
+    {"applyTransformation", PyWrap(Transform, applyTransformation, "Apply a transformation to the mesh - applyTransformation( pose )", void, PosePtr ) },
+#ifndef WITHOUT_BULLET
     {"physicalize", PyWrapOpt(Transform, physicalize, "physicalize subtree - physicalize( bool physicalized , bool dynamic , str shape, float shape param )\n\tshape can be: ['Box', 'Sphere', 'Convex', 'Concave', 'ConvexDecomposed']", "0", void, bool, bool, string, float ) },
     {"setConvexDecompositionParameters", PyWrap(Transform, setConvexDecompositionParameters, "Set parameters for the convex decomposition, set before physicalize: compacityWeight (0.1), volumeWeight (0.0), NClusters (2), NVerticesPerCH (100), concavity (100), addExtraDistPoints (false), addNeighboursDistPoints (false), addFacesPoints (false) ", void, float, float, float, float, float, bool, bool, bool ) },
     {"setGhost", PyWrap(Transform, setGhost, "Set the physics object to be a ghost object", void, bool ) },
-    {"attach", PyWrapOpt(Transform, attach, "Attach another object using a joint constraint and a spring constraint", "0", void, VRTransformPtr, VRConstraintPtr, VRConstraintPtr ) },
-    {"detachJoint", PyWrap(Transform, detachJoint, "Remove all joints to given transform created by 'attach'", void, VRTransformPtr ) },
     {"setMass", PyWrap(Transform, setMass, "Set the mass of the physics object", void, float ) },
     {"setCollisionMargin", PyWrap(Transform, setCollisionMargin, "Set the collision margin of the physics object", void, float ) },
     {"setCollisionGroup", PyWrap(Transform, setCollisionGroup, "Set the collision groups of the physics object, can be from 0 to 8", void, vector<int> ) },
@@ -97,28 +119,13 @@ PyMethodDef VRPyTransform::methods[] = {
     {"getTorque", PyWrap(Transform, getTorque, "get the total torque put on this transform during this frame", Vec3d ) },
     {"setPhysicsActivationMode", PyWrap(Transform, setPhysicsActivationMode, "Set the physics activation mode of the physics object (normal:1 , no deactivation:4, stay deactivated: 5)", void, int ) },
     {"setPhysicalizeTree", PyWrap(Transform, setPhysicalizeTree, "Set to physicalize whole tree or just current node - setPhysicalizeTree( bool b )", void, bool ) },
-    {"animate", PyWrapOpt(Transform, animate, "Animate object along a path, duration [s], offset [s], doOrient, doLoop) )", "1|0|0", VRAnimationPtr, PathPtr, float, float, bool, bool, PathPtr ) },
-    {"getAnimations", PyWrap(Transform, getAnimations, "Return all animations associated to the object", vector<VRAnimationPtr> ) },
-    {"stopAnimation", PyWrap(Transform, stopAnimation, "Stop any running animation of this object", void ) },
     {"setGravity", PyWrap(Transform, setGravity, "set Gravity (Vector) of given physicalized object", void, Vec3d ) },
-    {"getConstraintAngleWith", PyWrap(Transform, getConstraintAngleWith, "return the relative rotation Angles/position diffs to the given transform (0:rotation, 1:position)", Vec3d, VRTransformPtr, bool ) },
     {"setDamping", PyWrap(Transform, setDamping, "sets the damping of this object. 1st param is the linear, 2nd the angular damping", void, float, float ) },
-    {"applyChange", PyWrap(Transform, updateChange, "Apply all changes", void ) },
     {"setCenterOfMass", PyWrap(Transform, setCenterOfMass, "Set a custom physics center of mass offset", void, Vec3d ) },
     {"getCenterOfMass", PyWrap(Transform, getCenterOfMass, "get physics center of mass offset", Vec3d ) },
-    {"drag", PyWrapOpt(Transform, drag, "Drag this object by new parent", "", void, VRTransformPtr, VRIntersection ) },
-    {"drop", PyWrap(Transform, drop, "Drop this object, if held, to old parent", void ) },
-    {"rebaseDrag", PyWrap( Transform, rebaseDrag, "Rebase drag, use instead of switchParent", void, VRObjectPtr ) },
-    {"isDragged", PyWrap( Transform, isDragged, "Check if transform is beeing dragged", bool ) },
-    {"castRay", PyWrap(Transform, intersect, "Cast a ray and return the intersection with given subtree", VRIntersection, VRObjectPtr, Vec3d ) },
-    {"getDragParent", PyWrap(Transform, getDragParent, "Get the parent before the drag started", VRObjectPtr ) },
-    {"lastChanged", PyWrap(Transform, getLastChange, "Return the frame when the last change occured", uint ) },
-    {"changedSince", PyWrapOpt(Transform, changedSince2, "Check if change occured since frame, flag includes frame", "1", bool, uint, bool ) },
-    {"setWorldDir", PyWrap(Transform, setWorldDir, "Set the direction in world coordinates", void, Vec3d ) },
-    {"setWorldUp", PyWrap(Transform, setWorldUp, "Set the up vector in world coordinates", void, Vec3d ) },
-    {"applyTransformation", PyWrap(Transform, applyTransformation, "Apply a transformation to the mesh - applyTransformation( pose )", void, PosePtr ) },
     {"getPhysicsDynamic", PyWrap(Transform, getPhysicsDynamic, "get if dynamic physics object", bool ) },
     {"setPhysicsDynamic", PyWrap(Transform, setPhysicsDynamic, "set if dynamic physics object", void, bool ) },
+#endif
     {NULL}  /* Sentinel */
 };
 

@@ -3,6 +3,8 @@
 #include "core/objects/geometry/VRGeometry.h"
 #include "VRLeap.h"
 
+#include <boost/thread/mutex.hpp>
+
 OSG_BEGIN_NAMESPACE ;
 
 

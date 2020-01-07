@@ -1,5 +1,7 @@
 #include "VRWindow.h"
+#ifndef WITHOUT_MTOUCH
 #include "core/setup/devices/VRMultiTouch.h"
+#endif
 #include "core/setup/devices/VRMouse.h"
 #include "core/setup/devices/VRKeyboard.h"
 #include "core/scene/VRSceneManager.h"
@@ -137,7 +139,9 @@ void VRWindow::save(XMLElementPtr node) {
     node->setAttribute("height", toString(height).c_str());
     node->setAttribute("name", getName().c_str());
     if (mouse) node->setAttribute("mouse", mouse->getName().c_str());
+#ifndef WITHOUT_MTOUCH
     else if (multitouch) node->setAttribute("mouse", multitouch->getName().c_str());
+#endif
     else node->setAttribute("mouse", "None");
     if (keyboard) node->setAttribute("keyboard", keyboard->getName().c_str());
     else node->setAttribute("keyboard", "None");
@@ -171,9 +175,11 @@ void VRWindow::load(XMLElementPtr node) {
     if (_mouse != "None") {
         auto dev = VRSetup::getCurrent()->getDevice(_mouse);
         mouse = dynamic_pointer_cast<VRMouse>( dev );
-        multitouch = dynamic_pointer_cast<VRMultiTouch>(dev);
         if (views.size() > 0 && mouse) if (auto v = views[0].lock()) mouse->setViewport(v);
+#ifndef WITHOUT_MTOUCH
+        multitouch = dynamic_pointer_cast<VRMultiTouch>(dev);
         if (multitouch) multitouch->setWindow(ptr());
+#endif
     }
 
     if (node->hasAttribute("keyboard") != 0) {

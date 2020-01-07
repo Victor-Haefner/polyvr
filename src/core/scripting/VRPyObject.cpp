@@ -70,7 +70,7 @@ PyMethodDef VRPyObject::methods[] = {
     {"show", PyWrapOpt(Object, show, "Show object", "", void, string) },
     {"isVisible", PyWrapOpt(Object, isVisible, "Return if object is visible", "|0", bool, string, bool) },
     {"setVisible", PyWrapOpt(Object, setVisible, "Set the visibility of the object, flag changes behaviour, for example 'SHADOW'", "", void, bool, string) },
-    {"getType", PyCastWrap(Object, getType, "Return the object type string (such as \"Geometry\")", string) },
+    {"getType", PyWrap(Object, getType, "Return the object type string (such as \"Geometry\")", string) },
     {"getID", PyWrap(Object, getID, "Return the object internal ID", int) },
     {"duplicate", PyWrapOpt(Object, duplicate, "Duplicate object, bool anchored (False), bool withSubTree (True)", "0|1", VRObjectPtr, bool, bool) },
     {"getChild", PyWrap(Object, getChild, "Return child object with index i", VRObjectPtr, int) },
@@ -103,7 +103,7 @@ PyMethodDef VRPyObject::methods[] = {
     {"getChildIndex", PyWrap(Object, getChildIndex, "Return the child index of this object - int getChildIndex()", int) },
     {"getBoundingbox", PyWrap(Object, getBoundingbox, "get Boundingbox", BoundingboxPtr) },
     {"getWorldBoundingbox", PyWrap(Object, getWorldBoundingbox, "get world Boundingbox", BoundingboxPtr) },
-    {"setVolume", PyCastWrap(Object, setVolume, "Set the scenegraph volume to boundingbox", void, Boundingbox) },
+    {"setVolume", PyWrap(Object, setVolume, "Set the scenegraph volume to boundingbox", void, Boundingbox) },
     {"getPoseTo", PyWrap(Object, getPoseTo, "Get the transformation from this object to another, returns a pose", PosePtr, VRObjectPtr ) },
     {"exportToFile", PyWrap(Object, exportToFile, "Export subtree to file", void, string) },
     {NULL}  /* Sentinel */

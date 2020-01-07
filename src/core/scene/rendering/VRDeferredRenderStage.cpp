@@ -2,7 +2,9 @@
 #include "core/objects/object/VRObject.h"
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/material/VRMaterial.h"
+#ifndef WITHOUT_DEFERRED_RENDERING
 #include "VRDefShading.h"
+#endif
 
 using namespace OSG;
 
@@ -30,17 +32,23 @@ VRMaterialPtr VRDeferredRenderStage::setupRenderLayer(string name) {
 }
 
 void VRDeferredRenderStage::initDeferred() {
+#ifndef WITHOUT_DEFERRED_RENDERING
     defRendering = shared_ptr<VRDefShading>( new VRDefShading() );
     defRendering->initDeferredShading(root);
     defRendering->setDeferredShading(false);
+#endif
 }
 
 void VRDeferredRenderStage::setCamera(OSGCameraPtr cam) {
+#ifndef WITHOUT_DEFERRED_RENDERING
     if (auto r = getRendering()) r->setDSCamera(cam);
+#endif
 }
 
 void VRDeferredRenderStage::addLight(VRLightPtr l) {
+#ifndef WITHOUT_DEFERRED_RENDERING
     if (auto r = getRendering()) r->addDSLight(l);
+#endif
 }
 
 VRObjectPtr VRDeferredRenderStage::getTop() { return layer; }
@@ -51,7 +59,9 @@ shared_ptr<VRDefShading> VRDeferredRenderStage::getRendering() { return defRende
 //shared_ptr<VRDefShading> VRDeferredRenderStage::getRendering() { if (!defRendering) initDeferred(); return defRendering; }
 
 void VRDeferredRenderStage::setActive(bool da, bool la) {
+#ifndef WITHOUT_DEFERRED_RENDERING
     if (defRendering) defRendering->setDeferredShading(da);
+#endif
     layer->setMeshVisibility(la);
 }
 

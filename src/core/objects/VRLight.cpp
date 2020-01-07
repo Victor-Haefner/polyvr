@@ -17,9 +17,11 @@
 #include <OpenSG/OSGPointLight.h>
 #include <OpenSG/OSGDirectionalLight.h>
 #include <OpenSG/OSGSpotLight.h>
+#ifndef OSG_OGL_ES2
 #include <OpenSG/OSGSimpleShadowMapEngine.h>
 #include <OpenSG/OSGShaderShadowMapEngine.h>
 #include <OpenSG/OSGTrapezoidalShadowMapEngine.h>
+#endif
 #include <OpenSG/OSGBoxVolume.h>
 
 using namespace OSG;
@@ -200,6 +202,7 @@ void VRLight::setDeferred(bool b) {
 }
 
 void VRLight::setupShadowEngines() {
+#ifndef OSG_OGL_ES2
     ssme = SimpleShadowMapEngine::create();
     gsme = ShaderShadowMapEngine::create();
     ptsme = TrapezoidalShadowMapEngine::create();
@@ -232,6 +235,7 @@ void VRLight::setupShadowEngines() {
     stsme->setOffsetFactor( 4.5f);
     stsme->setOffsetBias  (16.f );
     stsme->setForceTextureUnit(3);
+#endif
 }
 
 bool VRLight::getShadows() { return shadows; }
@@ -243,6 +247,7 @@ void VRLight::toggleShadows(bool b) { // TODO: optimize this
 }
 
 void VRLight::setShadows(bool b) {
+#ifndef OSG_OGL_ES2
     if (!ssme) setupShadowEngines();
     shadows = b;
 
@@ -268,9 +273,11 @@ void VRLight::setShadows(bool b) {
     }
 
     updateDeferredLight();
+#endif
 }
 
 void VRLight::setShadowNearFar(Vec2d nf) {
+#ifndef OSG_OGL_ES2
     shadowNearFar = nf;
     //if (ssme) ssme->setShadowNear(nf[0]);
     //if (ssme) ssme->setShadowFar(nf[1]);
@@ -280,14 +287,17 @@ void VRLight::setShadowNearFar(Vec2d nf) {
     if (ptsme) ptsme->setShadowFar(nf[1]);
     if (stsme) stsme->setShadowNear(nf[0]);
     if (stsme) stsme->setShadowFar(nf[1]);
+#endif
 }
 
 void VRLight::setShadowVolume(Boundingbox b) {
     shadowVolume = b;
+#ifndef OSG_OGL_ES2
     BoxVolume box(Pnt3f(b.min()), Pnt3f(b.max()));
 #ifdef WITH_SHADOW_VOLUME
     cout << "VRLight::setShadowVolume " << b.volume() << endl;
     if (gsme) gsme->setShadowVolume(box);
+#endif
 #endif
 }
 
@@ -297,11 +307,13 @@ Boundingbox VRLight::getShadowVolume() {
 
 void VRLight::setShadowColor(Color4f c) {
     shadowColor = c;
+#ifndef OSG_OGL_ES2
     if (ssme) ssme->setShadowColor(c);
     //if (gsme) gsme->setShadowColor(c);
     //if (ptsme) ptsme->setShadowColor(c);
     //if (stsme) stsme->setShadowColor(c);
     updateDeferredLight();
+#endif
 }
 
 void VRLight::setOn(bool b) {
@@ -328,6 +340,7 @@ void VRLight::setAttenuation(Vec3d a) {
 Vec3d VRLight::getAttenuation() { return attenuation; }
 
 void VRLight::setShadowMapRes(int t) {
+#ifndef OSG_OGL_ES2
     shadowMapRes = t;
     if (ssme) ssme->setWidth (t);
     if (ssme) ssme->setHeight(t);
@@ -337,6 +350,7 @@ void VRLight::setShadowMapRes(int t) {
     if (ptsme) ptsme->setHeight(t);
     if (stsme) stsme->setWidth (t);
     if (stsme) stsme->setHeight(t);
+#endif
 }
 
 int VRLight::getShadowMapRes() { return shadowMapRes; }

@@ -5,8 +5,10 @@
 #include "core/utils/VRFunction.h"
 #include "VRSoundManager.h"
 
+#ifndef WITHOUT_GTK
 #include "core/gui/VRGuiManager.h"
 #include "core/gui/VRGuiConsole.h"
+#endif
 
 extern "C" {
 #include <libavresample/avresample.h>

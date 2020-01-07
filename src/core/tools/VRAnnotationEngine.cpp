@@ -117,26 +117,23 @@ void VRAnnotationEngine::setScreensize(bool b) { mat->setShaderParameter("screen
 
 void VRAnnotationEngine::updateTexture() {
     string txt;
-    for (int i=32; i<128; i++) txt += char(i);
+    for (int i=32; i<127; i++) txt += char(i);
     txt += "ÄÜÖäüöß€";
-    //txt = "abcxyz";
     int cN = VRText::countGraphemes(txt);
     int padding = 3;
     auto img = VRText::get()->create(txt, "MONO 20", 20, fg, bg);
     float tW = img->getSize()[0];
     float lW = VRText::get()->layoutWidth;
     float tp = padding / tW;
-    float a = lW/tW;
-    float cSize = (1.0-2*tp) / cN * a;
+    float cSize = lW/tW / cN;
     mat->setTexture(img);
-    mat->setShaderParameter("texPadding", Real32(tp));
+    mat->setShaderParameter("texPadding", Real32(tp)); // tested
     mat->setShaderParameter("charTexSize", Real32(cSize));
     img->write("annChars.png");
 
-    int i=0;
+    int i=1; // 0 is used for invalid/no char
     for (auto c : VRText::splitGraphemes(txt)) {
         characterIDs[c] = i;
-        //cout << " grapheme " << c << "  " << i << endl;
         i++;
     }
 }
@@ -269,7 +266,7 @@ void emitQuad(in float offset, in vec4 tc) {
 void emitChar(in int d, in float p) {
     float padding = texPadding; // 0.001 texture padding
     float f = charTexSize; // 0.00832 character texture size
-    //d -= 32; // ascii offset
+    d -= 1; // offset
     if (d >= 0) emitQuad(p, vec4(padding+d*f, padding+(d+1)*f, 0, 1));
 }
 

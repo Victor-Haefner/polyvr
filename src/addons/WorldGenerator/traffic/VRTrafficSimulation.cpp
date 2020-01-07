@@ -5,8 +5,10 @@
 #include "../roads/VRRoadIntersection.h"
 #include "../VRWorldGenerator.h"
 #include "../terrain/VRTerrain.h"
+#ifndef WITHOUT_GTK
 #include "core/gui/VRGuiManager.h"
 #include "core/gui/VRGuiConsole.h"
+#endif
 #include "core/utils/toString.h"
 #include "core/utils/VRFunction.h"
 #include "core/utils/VRGlobals.h"
@@ -28,8 +30,13 @@
 #include <boost/bind.hpp>
 #include <thread>
 
+#ifndef WITHOUT_GTK
 #define CPRINT(x) \
 VRGuiManager::get()->getConsole( "Console" )->write( string(x)+"\n" );
+#else
+#define CPRINT(x) \
+cout << string(x) << endl;
+#endif
 
 using namespace OSG;
 

@@ -10,7 +10,11 @@
 
 #include "core/utils/VRFunctionFwd.h"
 
-namespace boost{ class thread; }
+#ifdef WASM
+namespace std{ inline namespace __2{ class thread; }; }
+#else
+namespace std{ class thread; }
+#endif
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -25,7 +29,7 @@ class VRThread {
 
         ThreadRefPtr appThread;
         int ID = -1;
-        boost::thread* boost_t = 0;
+        std::thread* std_thread = 0;
         ExternalThreadRefPtr osg_t = 0;
         BarrierRefPtr mainSyncBarrier;
         BarrierRefPtr selfSyncBarrier;
