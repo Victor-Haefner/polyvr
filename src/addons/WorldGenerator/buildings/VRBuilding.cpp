@@ -5,7 +5,9 @@
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/geometry/OSGGeometry.h"
 #include "core/objects/geometry/VRStroke.h"
+#ifndef WITHOUT_GLU_TESS
 #include "core/math/triangulator.h"
+#endif
 #include "core/math/path.h"
 #include "core/math/pose.h"
 
@@ -230,6 +232,7 @@ void VRBuilding::computeGeometry(VRGeometryPtr walls, VRGeometryPtr roofs, VRDis
     float H = 2.0; // roof height
 
     // roof
+#ifndef WITHOUT_GLU_TESS
     Triangulator t;
     t.add(roofTop);
     auto g = t.compute();
@@ -263,6 +266,7 @@ void VRBuilding::computeGeometry(VRGeometryPtr walls, VRGeometryPtr roofs, VRDis
     g->setPositionalTexCoords2D(0.05,1,Vec2i(0,2));
     g->updateNormals(false);
     roofs->merge(g);
+#endif
 }
 
 

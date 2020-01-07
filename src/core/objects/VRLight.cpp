@@ -3,7 +3,9 @@
 #include "core/utils/VRStorage_template.h"
 #include "core/objects/material/VRTexture.h"
 #include "core/scene/VRScene.h"
+#ifndef WITHOUT_IES
 #include "core/scene/import/VRIES.h"
+#endif
 #include "core/objects/OSGObject.h"
 #include "core/objects/object/OSGCore.h"
 #include "VRLightBeacon.h"
@@ -447,12 +449,14 @@ VRTexturePtr VRLight::getPhotometricMap(bool forVisual) {
 }
 
 void VRLight::loadPhotometricMap(string path) { // ies files
+#ifndef WITHOUT_IES
     if (path == "") return;
     photometricMapPath = path;
     VRIES parser;
     auto tex = parser.read(path);
     setPhotometricMap(tex);
     //cout << parser.toString(false);
+#endif
 }
 
 

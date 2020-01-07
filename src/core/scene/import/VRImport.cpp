@@ -3,9 +3,11 @@
 #include "VRCOLLADA.h"
 #endif
 #include "VRPLY.h"
+#ifndef WASM
 #include "VRVTK.h"
 #include "VRDXF.h"
 #include "VRIFC.h"
+#endif
 #include "VRML.h"
 #include "VRSTEPCascade.h"
 #include "STEP/VRSTEP.h"
@@ -173,16 +175,18 @@ void VRImport::LoadJob::load(VRThreadWeakPtr tw) {
 #endif
         if (ext == ".wrl" && preset == "SOLIDWORKS-VRML2") { VRFactory f; if (f.loadVRML(path, progress, res, thread)); else preset = "OSG"; }
         if (ext == ".wrl" && preset == "PVR") { loadVRML(path, res, progress, thread); }
+#ifndef WASM
         if (ext == ".vtk") { loadVtk(path, res); return; }
-        if (ext == ".shp") { loadSHP(path, res); return; }
         if (ext == ".pdf") { loadPDF(path, res); return; }
+        if (ext == ".shp") { loadSHP(path, res); return; }
         if (ext == ".tiff" || ext == ".tif") { loadTIFF(path, res); return; }
         if (ext == ".hgt") { loadTIFF(path, res); return; }
         if (ext == ".dxf") { loadDXF(path, res); return; }
-        if (ext == ".gltf" || ext == ".glb") { loadGLTF(path, res, progress, thread); return; }
 #ifndef NO_IFC
         if (ext == ".ifc") { loadIFC(path, res); return; }
 #endif
+#endif
+        if (ext == ".gltf" || ext == ".glb") { loadGLTF(path, res, progress, thread); return; }
         if (preset == "OSG" || preset == "COLLADA") osgLoad(path, res);
 #ifndef WITHOUT_COLLADA
         if (preset == "COLLADA") loadCollada(path, res);

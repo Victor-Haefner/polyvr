@@ -21,7 +21,9 @@
 #include "VRPyGraph.h"
 #include "VRPyPolygon.h"
 #include "VRPyBoundingbox.h"
+#ifndef WITHOUT_GLU_TESS
 #include "VRPyTriangulator.h"
+#endif
 #include "VRPyStroke.h"
 #include "VRPyColorChooser.h"
 #include "VRPyTextureRenderer.h"
@@ -97,7 +99,9 @@
 #ifndef WITHOUT_CGAL
 #include "addons/Engineering/CSG/VRPyCSG.h"
 #endif
+#ifndef WASM
 #include "addons/RealWorld/VRPyRealWorld.h"
+#endif
 #include "addons/SimViDekont/VRPySimViDekont.h"
 #include "addons/Semantics/Reasoning/VRPyOntology.h"
 #include "addons/LeapMotion/VRPyHandGeo.h"
@@ -175,7 +179,9 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyPathFinding>("PathFinding", pModVR);
     sm->registerModule<VRPyBoundingbox>("Boundingbox", pModVR);
     sm->registerModule<VRPyPolygon>("Polygon", pModVR);
+#ifndef WITHOUT_GLU_TESS
     sm->registerModule<VRPyTriangulator>("Triangulator", pModVR);
+#endif
     sm->registerModule<VRPyProjectManager>("ProjectManager", pModVR, VRPyObject::typeRef);
     sm->registerModule<VRPyHandle>("Handle", pModVR, VRPyGeometry::typeRef);
     sm->registerModule<VRPyGeoPrimitive>("GeoPrimitive", pModVR, VRPyTransform::typeRef);
@@ -245,7 +251,9 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
 #ifndef WITHOUT_CGAL
 	sm->registerModule<VRPyCSG>("CSGGeometry", pModVR, VRPyGeometry::typeRef);
 #endif
+#ifndef WASM
 	sm->registerModule<VRPyRealWorld>("RealWorld", pModVR, VRPyObject::typeRef);
+#endif
 	sm->registerModule<VRPySimViDekont>("SimViDekont", pModVR);
 
     PyObject* pModMath = sm->newModule("Math", VRSceneGlobals::methods, "VR math module");
@@ -257,7 +265,9 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyTSDF>("TSDF", pModVR, 0, "Math");
     sm->registerModule<VRPyOctree>("Octree", pModVR, 0, "Math");
     sm->registerModule<VRPyOctreeNode>("OctreeNode", pModVR, 0, "Math");
+#ifndef WITHOUT_LAPACKE_BLAS
     sm->registerModule<VRPyPCA>("PCA", pModVR, 0, "Math");
+#endif
     sm->registerModule<VRPyPatch>("Patch", pModVR, 0, "Math");
 
     PyObject* pModSetup = sm->newModule("Setup", VRSceneGlobals::methods, "VR setup module");

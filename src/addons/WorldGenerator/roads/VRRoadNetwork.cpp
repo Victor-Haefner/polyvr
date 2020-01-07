@@ -28,7 +28,9 @@
 #include "core/tools/VRAnalyticGeometry.h"
 #include "core/objects/material/VRTextureGenerator.h"
 #include "core/objects/material/VRTexture.h"
+#ifndef WITHOUT_PANGO_CAIRO
 #include "core/tools/VRText.h"
+#endif
 #include "core/utils/toString.h"
 #include "core/utils/VRTimer.h"
 #include "core/utils/VRFunction.h"
@@ -529,9 +531,11 @@ void VRRoadNetwork::computeSigns() {
                 auto surface = dynamic_pointer_cast<VRGeometry>( sign->findAll("Sign")[3] );
                 surface->makeUnique();
                 replaceChar(type, ' ', '\n');
-                auto tex = VRText::get()->create(type, "MONO 20", 20, Color4f(0,0,0,1), Color4f(1,1,1,1));
                 auto m = VRMaterial::create("sign");
+#ifndef WITHOUT_PANGO_CAIRO
+                auto tex = VRText::get()->create(type, "MONO 20", 20, Color4f(0,0,0,1), Color4f(1,1,1,1));
                 m->setTexture(tex);
+#endif
                 surface->setMaterial(m);
             }
         }

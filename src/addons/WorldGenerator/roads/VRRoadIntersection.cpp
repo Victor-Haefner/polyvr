@@ -6,7 +6,9 @@
 #include "../terrain/VRTerrain.h"
 #include "core/utils/toString.h"
 #include "core/math/polygon.h"
+#ifndef WITHOUT_GLU_TESS
 #include "core/math/triangulator.h"
+#endif
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/VRLodTree.h"
 #include "core/scene/VRObjectManager.h"
@@ -1037,6 +1039,7 @@ void VRRoadIntersection::computePatch() {
 VRGeometryPtr VRRoadIntersection::createGeometry() {
     if (!patch) return 0;
     if (type != DEFAULT) return 0;
+#ifndef WITHOUT_GLU_TESS
     Triangulator tri;
     tri.add( *patch );
     VRGeometryPtr intersection = tri.compute();
@@ -1046,6 +1049,9 @@ VRGeometryPtr VRRoadIntersection::createGeometry() {
     intersection->applyTransformation();
 	setupTexCoords( intersection, entity );
 	return intersection;
+#else
+    return 0;
+#endif
 }
 
 VREntityPtr VRRoadIntersection::getRoadNode(VREntityPtr roadEnt) {

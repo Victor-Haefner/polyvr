@@ -2,7 +2,9 @@
 #include "VRPerlin.h"
 #include "VRBricks.h"
 #include "VRNormalmap.h"
+#ifndef WITHOUT_SHARED_MEMORY
 #include "core/networking/VRSharedMemory.h"
+#endif
 
 #include <OpenSG/OSGImage.h>
 #include <OpenSG/OSGMatrix.h>
@@ -365,6 +367,7 @@ struct tex_params {
 };
 
 VRTexturePtr VRTextureGenerator::readSharedMemory(string segment, string object) {
+#ifndef WITHOUT_SHARED_MEMORY
     VRSharedMemory sm(segment, false);
 
     // add texture example
@@ -387,6 +390,9 @@ VRTexturePtr VRTextureGenerator::readSharedMemory(string segment, string object)
     img->getImage()->set(tparams.pixel_format, vs[0], vs[1], vs[2], 0, 1, 0.0, (const uint8_t*)&vdata[0], tparams.data_type, true, 1);
     img->setInternalFormat( tparams.internal_pixel_format );
     return img;
+#else
+    return 0;
+#endif
 }
 
 void VRTextureGenerator::addSimpleNoise(Vec3i dim, bool doAlpha, Color4f fg, Color4f bg, float amount) {
