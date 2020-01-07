@@ -8,6 +8,11 @@
 #include <OpenSG/OSGSimpleMaterial.h>
 #include <OpenSG/OSGSimpleGeometry.h>        // Methods to create simple geos.
 
+#include <OpenSG/OSGNode.h>
+#include <OpenSG/OSGTransformBase.h>
+
+#include <OpenSG/OSGThreadManager.h>
+
 using namespace OSG;
 
 template<> string typeName(const VRSyncNode& o) { return "SyncNode"; }
@@ -22,9 +27,58 @@ template<> string typeName(const VRSyncNode& o) { return "SyncNode"; }
 //    return mat;
 //}
 
+ThreadRefPtr applicationThread;
+
+//void analyseChangeList() {
+//    cout << "\nchange list: " << applicationThread->getChangeList()->getNumChanged() << endl;
+//    ChangeList* cl = applicationThread->getChangeList();
+//    cout << " -- transform matrix field mask: " << TransformBase::MatrixFieldMask << " node volume field mask: " << Node::VolumeFieldMask << endl;
+//
+//    int j = 0;
+//    for( auto it = cl->begin(); it != cl->end(); ++it) {
+//        ContainerChangeEntry* entry = *it;
+//        const FieldFlags* fieldFlags = entry->pFieldFlags;
+//        BitVector whichField = entry->whichField;
+//
+//        cout << "uiEntryDesc " << j << ": " << entry->uiEntryDesc << ", uiContainerId: " << entry->uiContainerId << endl;
+//
+//        for (int i=0; i<64; i++) {
+//            //int bit = (whichField & ( 1 << i )) >> i;
+//            BitVector one = 1;
+//            BitVector mask = ( one << i );
+//            bool bit = (whichField & mask);
+//            if (bit) cout << " whichField: " << i << " : " << bit << "  mask: " << mask << endl;
+//        }
+//        j++;
+//    }
+//}
+
+void VRSyncNode::printChangeList(){
+    //ChangeList* cl = Thread->getCurrentChangeList();
+    ChangeList* cl = applicationThread->getChangeList();
+    int j = 0;
+    for( auto it = cl->begin(); it != cl->end(); ++it) {
+        ContainerChangeEntry* entry = *it;
+        const FieldFlags* fieldFlags = entry->pFieldFlags;
+        BitVector whichField = entry->whichField;
+
+        cout << "uiEntryDesc " << j << ": " << entry->uiEntryDesc << ", uiContainerId: " << entry->uiContainerId << endl;
+
+        for (int i=0; i<64; i++) {
+            //int bit = (whichField & ( 1 << i )) >> i;
+            BitVector one = 1;
+            BitVector mask = ( one << i );
+            bool bit = (whichField & mask);
+            if (bit) cout << " whichField: " << i << " : " << bit << "  mask: " << mask << endl;
+        }
+        j++;
+    }
+}
+
 VRSyncNode::VRSyncNode(string name) : VRTransform(name) {
     type = "SyncNode";
     lightGeo = 0;
+    applicationThread = dynamic_cast<Thread *>(ThreadManager::getAppThread());
 //
 //    GeometryMTRecPtr lightGeo_ = makeSphereGeo(2,0.1);
 //    lightGeo_->setMaterial(getLightGeoMat()->getMaterial()->mat);
