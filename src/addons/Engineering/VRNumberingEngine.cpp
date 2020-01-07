@@ -3,7 +3,9 @@
 #include "core/objects/geometry/VRGeoData.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/material/VRMaterialT.h"
+#ifndef WITHOUT_PANGO_CAIRO
 #include "core/tools/VRText.h"
+#endif
 #include "core/utils/toString.h"
 
 #define GLSL(shader) #shader
@@ -92,10 +94,12 @@ void VRNumberingEngine::setSize(float f) { mat->setShaderParameter("size", Real3
 void VRNumberingEngine::setBillboard(bool b) { mat->setShaderParameter("doBillboard", Real32(b)); }
 
 void VRNumberingEngine::updateTexture() {
+#ifndef WITHOUT_PANGO_CAIRO
     string txt = "0123456789.";
     //for (auto g : groups) txt += "\n+g.pre+"\n"+g.post;
     auto img = VRText::get()->create(txt, "MONO 20", 20, Color4f(0,0,0,1), Color4f(0,0,0,0) );
     mat->setTexture(img);
+#endif
 }
 
 string VRNumberingEngine::vp =

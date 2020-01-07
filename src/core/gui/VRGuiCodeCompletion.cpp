@@ -68,7 +68,7 @@ string get_word(GtkSourceCompletionContext* context) {
 
 void provPopulate(GtkProvider* provider, GtkSourceCompletionContext* context) {
 	auto setProposals = [&](GList* ret = NULL) { gtk_source_completion_context_add_proposals(context, provider, ret, TRUE); };
-	auto startsWith = [](string s, string sw) { return s.substr(0, sw.size()) == sw; };
+	//auto startsWith = [](string s, string sw) { return s.substr(0, sw.size()) == sw; };
 
 	VRGuiCodeCompletion* data = VRGuiCodeCompletionCast(provider);
 	string word = get_word(context);

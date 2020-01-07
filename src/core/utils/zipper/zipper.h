@@ -10,13 +10,13 @@ using namespace std;
 
 class Zipper {
 	private:
-		string password;
-		string zipname;
 		iostream& m_obuffer;
 		vector<unsigned char>& m_vecbuffer;
 		bool m_usingMemoryVector;
 		bool m_usingStream;
+		string zipname;
 		bool m_open;
+		string password;
 
 		struct Impl;
 		Impl* m_impl;

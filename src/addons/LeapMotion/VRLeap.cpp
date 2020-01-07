@@ -20,7 +20,7 @@ Vec3d VRLeapHistory::add(Vec3d v, float f) { // TODO
     // extend history
     I++;
     if (I >= N) I = 0;
-    if (I >= history.size()) history.push_back( make_pair(f,v) );
+    if (I >= (int)history.size()) history.push_back( make_pair(f,v) );
     else history[I] = make_pair(f,v);
     cout << "  " << I << "  " << history[I].second << endl;
 
@@ -264,7 +264,7 @@ void VRLeap::newFrame(Json::Value json) {
     }
 
     //TODO: Debugging only!
-    if (json["pointables"].size() != numPens) {
+    if ((int)json["pointables"].size() != numPens) {
         std::cout << "Number of recognized pens: " << json["pointables"].size() << ". Previously was: " << numPens << endl;
         numPens = json["pointables"].size();
     }

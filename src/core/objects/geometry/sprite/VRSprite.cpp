@@ -1,7 +1,9 @@
 #include "VRSprite.h"
 
 #include "VRSpriteResizeTool.h"
+#ifndef WITHOUT_PANGO_CAIRO
 #include "core/tools/VRText.h"
+#endif
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/geometry/OSGGeometry.h"
 #ifndef WITHOUT_BULLET
@@ -55,9 +57,12 @@ void VRSprite::updateGeo() { // TODO: plane primitive would be better, but backw
 
 VRTexturePtr VRSprite::setText(string l, float res, Color4f c1, Color4f c2, string font) {
     label = l;
-    auto tex = VRText::get()->create(l, font, 20*res, c1, c2);
     auto m = VRMaterial::create(getName()+"label");
+    VRTexturePtr tex;
+#ifndef WITHOUT_PANGO_CAIRO
+    tex = VRText::get()->create(l, font, 20*res, c1, c2);
     m->setTexture(tex);
+#endif
     setMaterial(m);
     return tex;
 }

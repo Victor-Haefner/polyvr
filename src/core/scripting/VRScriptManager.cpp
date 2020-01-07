@@ -51,7 +51,7 @@ void checkGarbageCollection() { // for diagnostic purposes
     auto garbage = gc_members["garbage"];
     for (int i=0; i<PyList_Size(garbage); i++) {
         PyObject* item = PyList_GetItem(garbage, i);
-
+        cout << "Py garbage: " << item << endl;
     }
 }
 
@@ -226,7 +226,7 @@ void VRScriptManager::initPyModules() {
 
     Py_Initialize();
     char* argv[1];
-    argv[0] = "PolyVR";
+    argv[0] = (char*)"PolyVR";
     PySys_SetArgv(1, argv);
     PyEval_InitThreads();
     VRPyBase::err = PyErr_NewException((char *)"VR.Error", NULL, NULL);

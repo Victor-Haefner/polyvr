@@ -396,7 +396,7 @@ void print_error_text(int offset, char *text) {
 
     char *nl;
     if (offset >= 0) {
-        if (offset > 0 && offset == strlen(text) && text[offset - 1] == '\n') offset--;
+        if (offset > 0 && offset == (int)strlen(text) && text[offset - 1] == '\n') offset--;
         for (;;) {
             nl = strchr(text, '\n');
             if (nl == NULL || nl-text >= offset) break;

@@ -23,7 +23,9 @@
 #include "core/math/pose.h"
 #include "core/math/polygon.h"
 #include "core/math/boundingbox.h"
+#ifndef WITHOUT_GLU_TESS
 #include "core/math/triangulator.h"
+#endif
 #include "core/utils/toString.h"
 #include "core/utils/VRStorage_template.h"
 #include "core/utils/VRTimer.h"
@@ -176,6 +178,7 @@ void VRNature::addScrub(VRPolygonPtr area, bool addGround) {
     area->translate(-median);
     for (auto p : area->getRandomPoints(1.0, -0.1, 0.7)) createRandomBush(median+p);
 
+#ifndef WITHOUT_GLU_TESS
     if (addGround) {
         Triangulator tri;
         tri.add(*area);
@@ -197,6 +200,7 @@ void VRNature::addScrub(VRPolygonPtr area, bool addGround) {
         groundPatches->merge(ground, ground->getPose());
         groundPatches->setPositionalTexCoords(1.0, 0, Vec3i(0,2,1)); // TODO: fix issues in VRGeoData
     }
+#endif
 }
 
 void VRNature::addGrassPatch(VRPolygonPtr Area, bool updateLODs, bool addGround) { // TODO: needs optimizations!
@@ -233,6 +237,7 @@ void VRNature::addGrassPatch(VRPolygonPtr Area, bool updateLODs, bool addGround)
 
         //cout << " VRNature::addGrassPatch " << median << "   " << area->computeArea() << endl;
 
+#ifndef WITHOUT_GLU_TESS
         if (addGround) {
             Triangulator tri;
             tri.add(*area);
@@ -240,6 +245,7 @@ void VRNature::addGrassPatch(VRPolygonPtr Area, bool updateLODs, bool addGround)
             geo->translate(median);
             ground->merge(geo);
         }
+#endif
 
         i++;
     }
@@ -351,7 +357,7 @@ void VRNature::computeLODs2(map<OctreeNode*, VRLodLeafPtr>& leafs) {
         int lvl = leaf->getLevel();
         if (lvl == 0) continue;
         bool doTrees = (trees.count(leaf.get()) >= 0);
-        bool doGrass = (grass.count(leaf.get()) >= 0);
+        //bool doGrass = (grass.count(leaf.get()) >= 0);
 
         Boundingbox bb;
         if (doTrees) for (auto t : trees[leaf.get()]) bb.update( t->getWorldPosition() );
@@ -413,7 +419,7 @@ void VRNature::computeLODs3(map<OctreeNode*, VRLodLeafPtr>& leafs) {
             auto sides = tree.second->getLodMaterials();
             for (auto side : sides) Hmax = max(Hmax, side->getTexture(0)->getSize()[1]);
 
-            for (int i=0; i<sides.size(); i++) {
+            for (uint i=0; i<sides.size(); i++) {
                 mosaic1->add( sides[i]->getTexture(0), Vec2i(512*i,H), Vec2i(i,j) );
                 mosaic2->add( sides[i]->getTexture(1), Vec2i(512*i,H), Vec2i(i,j) );
                 //sides[i]->getTexture(0)->write("test_"+toString(i)+".png");

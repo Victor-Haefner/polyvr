@@ -8,7 +8,9 @@
 #include "core/utils/xml.h"
 #include "core/utils/toString.h"
 #include "core/utils/system/VRSystem.h"
+#ifndef WITHOUT_PANGO_CAIRO
 #include "core/tools/VRText.h"
+#endif
 #include "core/tools/VRPathtool.h"
 #include "core/scene/VRScene.h"
 
@@ -157,9 +159,11 @@ VRGeometryPtr VRProcessLayout::newWidget(VRProcessNodePtr n, float height) {
     string l = n->label;
     int lineN = wrapString(l, wrapN);
 
-    auto txt = VRText::get()->create(l, "MONO 20", 20, fg, bg);
     auto mat = VRMaterial::create("ProcessElement");
+#ifndef WITHOUT_PANGO_CAIRO
+    auto txt = VRText::get()->create(l, "MONO 20", 20, fg, bg);
     mat->setTexture(txt, false);
+#endif
     mat->setTextureParams(GL_LINEAR, GL_LINEAR);
     if (n->type == SUBJECT) mat->setDiffuse( Color3f(0.8,0.9,1) );
     if (n->type == MESSAGE) mat->setDiffuse( Color3f(1,1,0) );
@@ -369,11 +373,13 @@ void VRProcessLayout::setElementName(int ID, string name) {
 
     int wrapN = 12;
     if (n->type == MESSAGE) wrapN = 22;
-    int lineN = wrapString(name, wrapN);
+    /*int lineN =*/ wrapString(name, wrapN);
 
-    auto txt = VRText::get()->create(name, "MONO 20", 20, fg, bg);
     auto mat = VRMaterial::create("ProcessElement");
+#ifndef WITHOUT_PANGO_CAIRO
+    auto txt = VRText::get()->create(name, "MONO 20", 20, fg, bg);
     mat->setTexture(txt, false);
+#endif
     mat->setTextureParams(GL_LINEAR, GL_LINEAR);
 
     e->setMaterial(mat);

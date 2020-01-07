@@ -14,7 +14,9 @@
 #include "core/utils/VRProgress.h"
 #include "core/utils/xml.h"
 #include "core/networking/VRPing.h"
+#ifndef WASM
 #include "core/setup/tracking/Vive.h"
+#endif
 #include "core/objects/VRTransform.h"
 #include "core/objects/VRCamera.h"
 #include "core/objects/object/VRObjectT.h"
@@ -44,7 +46,9 @@ VRSetup::VRSetup(string name) {
     user = 0;
     tracking = "None";
 
+#ifndef WASM
     vive = shared_ptr<Vive>( new Vive() );
+#endif
 
     setup_layer = VRVisualLayer::getLayer("Setup", "setup.png",1);
     stats_layer = VRVisualLayer::getLayer("Statistics", "stats.png",1);
@@ -125,9 +129,15 @@ void VRSetup::setupLESCCAVELights(VRScenePtr scene) {
 }
 
 void VRSetup::updateTracking() {
+#ifndef WITHOUT_ART
     ART::applyEvents();
+#endif
+#ifndef WITHOUT_VRPN
     VRPN::update();
+#endif
+#ifndef WASM
     vive->update();
+#endif
     for (auto view : getViews()) view->updateMirror();
 }
 
@@ -170,15 +180,19 @@ VRTransformPtr VRSetup::getUser() { return user; }
 VRTransformPtr VRSetup::getRoot() { return real_root; }
 
 VRTransformPtr VRSetup::getTracker(string t) {
+#ifndef WITHOUT_ART
     for (int ID : getARTDevices()) {
         ART_devicePtr dev = getARTDevice(ID);
         if (dev->ent && dev->ent->getName() == t) return dev->ent;
     }
+#endif
 
+#ifndef WITHOUT_VRPN
     for (int ID : getVRPNTrackerIDs()) {
         VRPN_devicePtr dev = getVRPNTracker(ID);
         if (dev->getName() == t) return dev->getBeacon();
     }
+#endif
 
     return 0;
 }
@@ -230,8 +244,12 @@ void VRSetup::save(string file) {
 
     VRWindowManager::save(displayN);
     VRDeviceManager::save(deviceN);
+#ifndef WITHOUT_ART
     ART::save(trackingARTN);
+#endif
+#ifndef WITHOUT_VRPN
     VRPN::save(trackingVRPNN);
+#endif
     network->save(networkN);
     displayN->setAttribute("globalOffset", toString(globalOffset).c_str());
     for (auto s : scripts) {
@@ -257,8 +275,12 @@ void VRSetup::load(string file) {
     XMLElementPtr networkN = setupN->getChild("Network");
     XMLElementPtr scriptN = setupN->getChild("Scripts");
 
+#ifndef WITHOUT_ART
     if (trackingARTN) ART::load(trackingARTN);
+#endif
+#ifndef WITHOUT_VRPN
     if (trackingVRPNN) VRPN::load(trackingVRPNN);
+#endif
     if (deviceN) VRDeviceManager::load(deviceN);
     if (displayN) VRWindowManager::load(displayN);
     if (networkN) network->load(networkN);

@@ -374,6 +374,7 @@ GeometryMTRecPtr VRPill::make() {
     };
 
     int R1, R2, RT, RB;
+    R1 = R2 = RT = RB = 0;
     if (doSides || doTop   ) R1 = pushRing(radius, height*0.5, 0);
     if (doSides || doBottom) R2 = pushRing(radius,-height*0.5, 0);
     if (doSides) pushRingInds(R1, R2, 1);

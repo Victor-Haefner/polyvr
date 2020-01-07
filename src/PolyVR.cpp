@@ -1,5 +1,3 @@
-
-
 #define GL_GLEXT_PROTOTYPES
 #define EGL_EGLEXT_PROTOTYPES
 
@@ -19,7 +17,9 @@
 #include "core/gui/VRGuiManager.h"
 #endif
 #include "core/networking/VRMainInterface.h"
+#ifndef WITHOUT_SHARED_MEMORY
 #include "core/networking/VRSharedMemory.h"
+#endif
 #include "core/utils/VROptions.h"
 #include "core/utils/VRGlobals.h"
 #include "core/utils/system/VRSystem.h"
@@ -43,13 +43,14 @@ void printFieldContainer(int maxID = -1) {
     for (int i=0;i<N;++i) {
         FieldContainer* fc = FieldContainerFactory::the()->getContainer(i);
         if(fc == 0) continue;
-        if(fc->getId() <= 358) continue; // stuff created in osgInit()
-        if(fc->getId() > maxID && maxID > 0) break; // stop
+        int fcID = fc->getId();
+        if(fcID <= 358) continue; // stuff created in osgInit()
+        if(fcID > maxID && maxID > 0) break; // stop
 
         // skip prototypes
         if(fc->getType().getPrototype() == 0 || fc->getType().getPrototype() == fc  ) continue;
 
-        //cout << "\nFC id: " << fc->getId() << flush;
+        //cout << "\nFC id: " << fcID << flush;
 
         AttachmentContainer* ac = dynamic_cast<AttachmentContainer*>(fc);
         if (ac == 0) {
@@ -62,8 +63,8 @@ void printFieldContainer(int maxID = -1) {
         }
 
         const Char8* name = getName(ac);
-        if (name != 0) printf("Detected living FC %s (%s) %p refcount %d ID %d\n", fc->getTypeName(), name, fc, fc->getRefCount(), fc->getId());
-        else printf( "Detected living FC %s (no name) %p refcount %d ID %d\n", fc->getTypeName(), fc, fc->getRefCount(), fc->getId() );
+        if (name != 0) printf("Detected living FC %s (%s) %p refcount %d ID %d\n", fc->getTypeName(), name, fc, fc->getRefCount(), fcID);
+        else printf( "Detected living FC %s (no name) %p refcount %d ID %d\n", fc->getTypeName(), fc, fc->getRefCount(), fcID );
     }
 }
 
@@ -77,11 +78,13 @@ PolyVR* PolyVR::get() {
 
 void PolyVR::shutdown() {
     cout << "PolyVR::shutdown" << endl;
+#ifndef WITHOUT_SHARED_MEMORY
     try {
         VRSharedMemory sm("PolyVR_System");
         int* i = sm.addObject<int>("identifier");
         *i = 0;
     } catch(...) {}
+#endif
 
     auto pvr = get();
     pvr->scene_mgr->closeScene();
@@ -126,11 +129,13 @@ void PolyVR::init(int argc, char **argv) {
     cout << "Init OSG\n";
     osgInit(argc,argv);
 
+#ifndef WITHOUT_SHARED_MEMORY
     try {
         VRSharedMemory sm("PolyVR_System");
         int* i = sm.addObject<int>("identifier");
         *i = 1;
     } catch(...) {}
+#endif
 
     PrimeMaterialRecPtr pMat = OSG::getDefaultMaterial();
     OSG::setName(pMat, "default_material");
@@ -239,12 +244,14 @@ void PolyVR::checkProcessesAndSockets() {
     timestamp = createTimeStamp();
     ofstream f("setup/.startup"); f.write(timestamp.c_str(), timestamp.size()); f.close();
 
+#ifndef WITHOUT_SHARED_MEMORY
     // TODO!!
     try {
         VRSharedMemory sm("PolyVR_System");// check for running PolyVR process
         int i = sm.getObject<int>("identifier");
         if (i) cout << "Error: A PolyVR instance is already running!\n";
     } catch(...) {}
+#endif
 }
 
 

@@ -109,8 +109,8 @@ VRTransformPtr VRAvatar::getBeaconRoot() {
 }
 
 // TODO: check if beacon exists before attempt to return
-VRTransformPtr VRAvatar::getBeacon(int i) { if (i>= 0 && i < beacons.size()) return beacons[i].beacon; return 0; }
-VRTransformPtr VRAvatar::editBeacon(int i) { if (i>= 0 && i < beacons.size()) return beacons[i].tmpContainer?beacons[i].tmpContainer:beacons[i].beacon; return 0; }
+VRTransformPtr VRAvatar::getBeacon(int i) { if (i>= 0 && i < (int)beacons.size()) return beacons[i].beacon; return 0; }
+VRTransformPtr VRAvatar::editBeacon(int i) { if (i>= 0 && i < (int)beacons.size()) return beacons[i].tmpContainer?beacons[i].tmpContainer:beacons[i].beacon; return 0; }
 
 void VRAvatar::setBeacon(VRTransformPtr b, int i) {
     beacons[i].beacon = b;

@@ -228,7 +228,7 @@ bool VRReasoner::has(VRStatementPtr statement, VRSemanticContextPtr context) { /
 bool VRReasoner::apply(VRStatementPtr statement, Query query, VRSemanticContextPtr context) {
     print("Apply statement " + ::toString((void*)statement.get()) + "  " + statement->toString(), GREEN);
 
-    auto clearAssumptions = [&]() {
+    /*auto clearAssumptions = [&]() {
         vector<string> toDelete;
         for (auto v : context->vars) {
             for (auto e : v.second->entities) {
@@ -241,11 +241,11 @@ bool VRReasoner::apply(VRStatementPtr statement, Query query, VRSemanticContextP
             context->onto->remEntity( context->onto->getEntity(v) );
             //context.vars.erase(v);
         }
-    };
+    };*/
 
     auto aggr = [](vector<string> v) {
         string r;
-        for (int i=0; i<v.size(); i++) {
+        for (uint i=0; i<v.size(); i++) {
             if (i > 0) r += ", ";
             r += v[i];
         }
@@ -342,7 +342,7 @@ bool VRReasoner::apply(VRStatementPtr statement, Query query, VRSemanticContextP
                 auto ents2 = right.var->getEntities(Evaluation::VALID);
 
                 if (ents1.size() == ents2.size()) {
-                    for (int i=0; i<ents1.size(); i++) applySet(ents1[i], ents2[i]);
+                    for (uint i=0; i<ents1.size(); i++) applySet(ents1[i], ents2[i]);
                 } else {
                     for (auto eL : ents1) {
                         for (auto eR : ents2) applySet(eL, eR);
@@ -403,7 +403,7 @@ bool VRReasoner::apply(VRStatementPtr statement, Query query, VRSemanticContextP
                 continue; // ewntity has no evaluation
             }
             auto& eval = v->evaluations[e.first];
-            bool valid = (eval.state == Evaluation::VALID || addAssumtions && eval.state != Evaluation::INVALID);
+            bool valid = (eval.state == Evaluation::VALID || (addAssumtions && eval.state != Evaluation::INVALID));
             print("    entity " + e.second->toString() + " evaluation: " + ::toString(valid), BLUE);
             if (valid) {
                 print("    add valid entity: " + e.second->toString(), GREEN);

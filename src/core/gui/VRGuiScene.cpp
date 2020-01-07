@@ -1017,7 +1017,7 @@ void VRGuiScene::on_toggle_T_constraint_mode() {
     if(!trigger_cbs) return;
     VRTransformPtr obj = static_pointer_cast<VRTransform>( getSelected() );
 
-    bool plane = getRadioButtonState("radiobutton2");
+    //bool plane = getRadioButtonState("radiobutton2");
     //obj->getConstraint()->setTConstraint( obj->getConstraint()->getTConstraint(), plane? OSG::VRConstraint::PLANE : OSG::VRConstraint::LINE);
 }
 

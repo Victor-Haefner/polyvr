@@ -602,7 +602,7 @@ void VRSound::synthBufferOnChannels(vector<vector<Vec2d>> freqs1, vector<vector<
     vector<short> buffer(buffer_size * num_channels);
 
     // generate synth buffers for every channel and store them for later use
-    for (int channel = 0; channel < num_channels; channel++) {
+    for (uint channel = 0; channel < num_channels; channel++) {
         synth_buffer[channel] = synthBufferForChannel(freqs1[channel], freqs2[channel], channel, duration);
     }
 
@@ -614,7 +614,7 @@ void VRSound::synthBufferOnChannels(vector<vector<Vec2d>> freqs1, vector<vector<
       element 8 is the second frame on the first channel
     */
     for (uint i = 0; i < buffer_size; i++) {
-        for (int channel = 0; channel < num_channels; channel++) {
+        for (uint channel = 0; channel < num_channels; channel++) {
             buffer[num_channels * i + channel] = synth_buffer[channel][i];
         }
     }

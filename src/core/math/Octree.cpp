@@ -90,7 +90,7 @@ OctreeNode* OctreeNode::add(Vec3d pos, void* dat, int targetLevel, bool checkPos
 
     auto reachedPartitionLimit = [&]() {
         if (partitionLimit == 0) return false;
-        if (points.size() <= partitionLimit) return false;
+        if ((int)points.size() <= partitionLimit) return false;
         if (level == targetLevel && targetLevel != -1) return false;
         return true;
     };
@@ -112,7 +112,7 @@ OctreeNode* OctreeNode::add(Vec3d pos, void* dat, int targetLevel, bool checkPos
 
     if (reachedPartitionLimit()) {
         while (size <= resolution) resolution *= 0.5;
-        for (int i=0; i<points.size(); i++) {
+        for (uint i=0; i<points.size(); i++) {
             add(points[i], data[i], targetLevel, false, partitionLimit);
         }
         data.clear();
