@@ -1317,3 +1317,7 @@ void OSG::loadGLTF(string path, VRTransformPtr res, VRProgressPtr p, bool thread
     GLTFLoader gltf(path, res, p, thread);
     gltf.load();
 }
+
+void OSG::writeGLTF(VRObjectPtr res, string path) {
+    ;
+}

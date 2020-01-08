@@ -1,5 +1,6 @@
 #include "VRExport.h"
 #include "VRPLY.h"
+#include "GLTF/GLTF.h"
 //#include "VRCOLLADA.h"
 //#include "VRSTEP.h"
 
@@ -7,6 +8,7 @@
 #include "core/objects/object/VRObject.h"
 #include "core/objects/OSGObject.h"
 #include "core/objects/geometry/VRGeometry.h"
+#include "core/utils/system/VRSystem.h"
 
 using namespace OSG;
 
@@ -16,10 +18,13 @@ VRExport::VRExport() {}
 VRExport* VRExport::get() { static VRExport* s = new VRExport(); return s; }
 
 void VRExport::write(VRObjectPtr obj, string path) {
-    auto geo = dynamic_pointer_cast<VRGeometry>(obj);
+    if (!obj) return;
 
-    auto bp = boost::filesystem::path(path);
-    string ext = bp.extension().string();
-    if (ext == ".ply" && geo) { writePly(geo, path); }
-    SceneFileHandler::the()->write(obj->getNode()->node, path.c_str());
+    string ext = getFileExtension(path);
+    cout << "VRExport::write '" << obj->getName() << "' to '" << path << "', extension: " << ext << endl;
+    if (ext == ".ply") { writePly( dynamic_pointer_cast<VRGeometry>(obj), path); }
+    if (ext == ".gltf") { writeGLTF(obj, path); }
+
+    if (ext == ".wrl" || ext == ".wrz" || ext == ".obj" || ext == ".osb" || ext == ".osg")
+        SceneFileHandler::the()->write(obj->getNode()->node, path.c_str());
 }

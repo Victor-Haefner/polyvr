@@ -54,7 +54,7 @@ string loadGeometryDoc =
 PyMethodDef VRSceneGlobals::methods[] = {
 	{"exit", (PyCFunction)VRSceneGlobals::exit, METH_NOARGS, "Terminate application" },
 	{"loadGeometry", (PyCFunction)VRSceneGlobals::loadGeometry, METH_VARARGS|METH_KEYWORDS, loadGeometryDoc.c_str() },
-	{"exportGeometry", (PyCFunction)VRSceneGlobals::exportGeometry, METH_VARARGS, "Export a part of the scene - exportGeometry( object, path )" },
+	{"exportToFile", (PyCFunction)VRSceneGlobals::exportToFile, METH_VARARGS, "Export a node ( object, path ), supported extensions: [wrl, wrz, obj, osb, osg, ply, gltf]" },
 	{"getLoadGeometryProgress", (PyCFunction)VRSceneGlobals::getLoadGeometryProgress, METH_VARARGS, "Return the progress object for geometry loading - getLoadGeometryProgress()" },
 	{"stackCall", (PyCFunction)VRSceneGlobals::stackCall, METH_VARARGS, "Schedules a call to a python function - stackCall( function, delay, [args] )" },
 	{"openFileDialog", (PyCFunction)VRSceneGlobals::openFileDialog, METH_VARARGS, "Open a file dialog - openFileDialog( onLoad, mode, title, default_path, filter )\n mode : {Save, Load, New, Create}" },
@@ -220,7 +220,7 @@ PyObject* VRSceneGlobals::loadGeometry(VRSceneGlobals* self, PyObject *args, PyO
     return VRPyTypeCaster::cast(obj);
 }
 
-PyObject* VRSceneGlobals::exportGeometry(VRSceneGlobals* self, PyObject *args) {
+PyObject* VRSceneGlobals::exportToFile(VRSceneGlobals* self, PyObject *args) {
     const char* path = "";
     VRPyObject* o;
     if (! PyArg_ParseTuple(args, "Os", &o, &path)) return NULL;
