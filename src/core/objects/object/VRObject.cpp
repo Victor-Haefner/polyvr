@@ -656,6 +656,7 @@ bool VRObject::isVisible(string mode, bool recursive) {
 void VRObject::exportToFile(string path) { // may crash due to strange charachters in object names
     if (!getNode()) return;
     SceneFileHandler::the()->write(getNode()->node, path.c_str());
+    SceneFileHandler::the()->print();
 }
 
 void VRObject::setVisible(bool b, string mode) {
