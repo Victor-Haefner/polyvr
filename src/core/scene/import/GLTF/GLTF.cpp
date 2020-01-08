@@ -1318,6 +1318,76 @@ void OSG::loadGLTF(string path, VRTransformPtr res, VRProgressPtr p, bool thread
     gltf.load();
 }
 
-void OSG::writeGLTF(VRObjectPtr res, string path) {
-    ;
+void constructGLTF(tinygltf::Model& model, VRObjectPtr obj, int pID = -1) {
+    tinygltf::Scene& scene = model.scenes.back();
+
+    // new node
+    int nID = model.nodes.size();
+    model.nodes.push_back(tinygltf::Node());
+    tinygltf::Node& node = model.nodes.back();
+
+    // from object
+    node.name = obj->getName();
+
+    // from transform
+    auto trans = dynamic_pointer_cast<VRTransform>(obj);
+    if (trans) {
+        Matrix4d mat = trans->getMatrix();
+        double* data = mat.getValues();
+        for (int i=0; i<16; i++) node.matrix.push_back(data[i]);
+    }
+
+    // from geometry
+    auto geo = dynamic_pointer_cast<VRGeometry>(trans);
+    if (geo) {
+        int mID = model.meshes.size();
+        model.meshes.push_back(tinygltf::Mesh());
+        tinygltf::Mesh& mesh = model.meshes.back();
+        node.mesh = mID;
+
+        VRGeoData data(geo);
+        for (VRGeoData::Primitive& prim : data) {
+            mesh.primitives.push_back(tinygltf::Primitive());
+            tinygltf::Primitive& primitive = mesh.primitives.back();
+            primitive.mode = prim.type;
+            //primitive.attributes[0] = ...;
+/*
+#define TINYGLTF_MODE_POINTS (0)
+#define TINYGLTF_MODE_LINE (1)
+#define TINYGLTF_MODE_LINE_LOOP (2)
+#define TINYGLTF_MODE_LINE_STRIP (3)
+#define TINYGLTF_MODE_TRIANGLES (4)
+#define TINYGLTF_MODE_TRIANGLE_STRIP (5)
+#define TINYGLTF_MODE_TRIANGLE_FAN (6);
+*/
+        }
+    }
+
+    // scene graph structure
+    if (pID >= 0) {
+        auto& parent = model.nodes[pID];
+        parent.children.push_back(nID);
+    } else scene.nodes.push_back(nID);
+
+    for (auto child : obj->getChildren()) constructGLTF(model, child, nID);
 }
+
+void OSG::writeGLTF(VRObjectPtr obj, string path) {
+    tinygltf::Model model;
+    model.scenes.push_back(tinygltf::Scene());
+    model.defaultScene = 0;
+    model.asset.version = "2.0";
+
+    constructGLTF(model, obj);
+    tinygltf::TinyGLTF writer;
+    writer.WriteGltfSceneToFile(&model, path, true, true, true, false); // last flag is binary
+}
+
+
+
+
+
+
+
+
+
