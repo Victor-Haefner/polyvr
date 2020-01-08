@@ -205,6 +205,7 @@ void VRGeoData::apply(VRGeometryPtr geo, bool check, bool checkIndices) const {
 
 int VRGeoData::size() const { return data->pos->size(); }
 int VRGeoData::sizeNormals() const { return data->norms->size(); }
+int VRGeoData::getNTypes() const { return data->types->size(); }
 
 int VRGeoData::getNFaces() const {
     int N = 0;
@@ -230,6 +231,9 @@ int VRGeoData::getFaceSize(int fID) const {
     return 0;
 }
 
+int VRGeoData::getType(int i) { return int(data->types->size()) > i ? data->types->getValue(i) : 0; }
+int VRGeoData::getLength(int i) { return int(data->lengths->size()) > i ? data->lengths->getValue(i) : 0; }
+int VRGeoData::getIndex(int i) { return int(data->indices->size()) > i ? data->indices->getValue(i) : 0; }
 Pnt3d VRGeoData::getPosition(int i) { return int(data->pos->size()) > i ? Pnt3d(data->pos->getValue(i)) : Pnt3d(); }
 Vec3d VRGeoData::getNormal(int i) { return int(data->norms->size()) > i ? Vec3d(data->norms->getValue(i)) : Vec3d(); }
 Color4f VRGeoData::getColor(int i) {
