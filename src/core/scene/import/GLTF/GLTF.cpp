@@ -5,6 +5,7 @@
 #include "core/objects/geometry/VRGeoData.h"
 #include "core/objects/geometry/sprite/VRSprite.h"
 #include "core/objects/material/VRMaterial.h"
+#include "core/objects/material/VRTexture.h"
 #include "core/objects/VRLight.h"
 #include "core/objects/VRLightBeacon.h"
 #include "core/objects/VRCamera.h"
@@ -76,63 +77,6 @@ struct GLTFSchema {
 
             addNodeRef("Material", {"name","extensions","extras","pbrMetallicRoughness","normalTexture","emissiveTexture", "emissiveFactor", "alphaMode", "alphaCutoff", "doubleSided" }, {"string","","","","","", "MFnumber", "SFstring", "SFnumber", "SFboolean" }, {"","","","","","", "[ 0.0, 0.0, 0.0 ]", "OPAQUE", "0.5", "false"});
             //alphaMode: OPAQUE, MASK, BLEND
-
-            /*
-            addNodeRef("Anchor", {"children", "description", "parameter", "url", "bboxCenter", "bboxSize"}, {"MFNode", "SFString", "MFString", "MFString", "SFVec3f", "SFVec3f"}, {"[]", "", "[]", "[]", "0 0 0", "-1 -1 -1"});
-            addNodeRef("Appearance", {"material", "texture", "textureTransform"}, {"SFNode", "SFNode", "SFNode"}, {"NULL", "NULL", "NULL"});
-            addNodeRef("AudioClip", {"description", "loop", "pitch", "startTime", "stopTime", "url"}, {"SFString", "SFBool", "SFFloat", "SFTime", "SFTime", "MFString"}, {"", "FALSE", "1.0", "0", "0", "[]"});
-            addNodeRef("Background", {"groundAngle", "groundColor", "backUrl", "bottomUrl", "frontUrl", "leftUrl", "rightUrl", "topUrl", "skyAngle", "skyColor"}, {"MFFloat", "MFColor", "MFString", "MFString", "MFString", "MFString", "MFString", "MFString", "MFFloat", "MFColor"}, {"[]", "[]", "[]", "[]", "[]", "[]", "[]", "[]", "[]", "[ 0 0 0 ]"});
-            addNodeRef("Billboard", {"axisOfRotation", "children", "bboxCenter", "bboxSize"}, {"SFVec3f", "MFNode", "SFVec3f", "SFVec3f"}, {"0 1 0", "[]", "0 0 0", "-1 -1 -1"});
-            addNodeRef("Box", {"size"}, {"SFVec3f"}, {"2 2 2"});
-            addNodeRef("Collision", {"children", "collide", "bboxCenter", "bboxSize", "proxy"}, {"MFNode", "SFBool", "SFVec3f", "SFVec3f", "SFNode"}, {"[]", "TRUE", "0 0 0", "-1 -1 -1", "NULL"});
-            addNodeRef("Color", {"color"}, {"MFColor"}, {"[]"});
-            addNodeRef("ColorInterpolator", {"key", "keyValue"}, {"MFFloat", "MFColor"}, {"[]", "[]"});
-            addNodeRef("Cone", {"bottomRadius", "height", "side", "bottom"}, {"SFFloat", "SFFloat", "SFBool", "SFBool"}, {"1", "2", "TRUE", "TRUE"});
-            addNodeRef("Coordinate", {"point"}, {"MFVec3f"}, {"[]"});
-            addNodeRef("CoordinateInterpolator", {"key", "keyValue"}, {"MFFloat", "MFVec3f"}, {"[]", "[]"});
-            addNodeRef("Cylinder", {"bottom", "height", "radius", "side", "top"}, {"SFBool", "SFFloat", "SFFloat", "SFBool", "SFBool"}, {"TRUE", "2", "1", "TRUE", "TRUE"});
-            addNodeRef("CylinderSensor", {"autoOffset", "diskAngle", "enabled", "maxAngle", "minAngle", "offset"}, {"SFBool", "SFFloat", "SFBool", "SFFloat", "SFFloat", "SFFloat"}, {"TRUE", "0.262", "TRUE", "-1", "0", "0"});
-            addNodeRef("DirectionalLight", {"ambientIntensity", "color", "direction", "intensity", "on"}, {"SFFloat", "SFColor", "SFVec3f", "SFFloat", "SFBool"}, {"0", "1 1 1", "0 0 -1", "1", "TRUE"});
-            addNodeRef("ElevationGrid", {"color", "normal", "texCoord", "height", "ccw", "colorPerVertex", "creaseAngle", "normalPerVertex", "solid", "xDimension", "xSpacing", "zDimension", "zSpacing"}, {"SFNode", "SFNode", "SFNode", "MFFloat", "SFBool", "SFBool", "SFFloat", "SFBool", "SFBool", "SFInt32", "SFFloat", "SFInt32", "SFFloat"}, {"NULL", "NULL", "NULL", "[]", "TRUE", "TRUE", "0.0", "TRUE", "TRUE", "0", "0.0", "0", "0.0"});
-            addNodeRef("Extrusion", {"beginCap", "ccw", "convex", "creaseAngle", "crossSection", "endCap", "orientation", "scale", "solid", "spine"}, {"SFBool", "SFBool", "SFBool", "SFFloat", "MFVec2f", "SFBool", "MFRotation", "MFVec2f", "SFBool", "MFVec3f"}, {"TRUE", "TRUE", "TRUE", "0", "[ 1 1, 1 -1, -1 -1, -1 1, 1 1 ]", "TRUE", "0 0 1 0", "1 1", "TRUE", "[ 0 0 0, 0 1 0 ]"});
-            addNodeRef("Fog", {"color", "fogType", "visibilityRange"}, {"SFColor", "SFString", "SFFloat"}, {"1 1 1", "LINEAR", "0"});
-            addNodeRef("FontStyle", {"family", "horizontal", "justify", "language", "leftToRight", "size", "spacing", "style", "topToBottom"}, {"SFString", "SFBool", "MFString", "SFString", "SFBool", "SFFloat", "SFFloat", "SFString", "SFBool"}, {"SERIF", "TRUE", "BEGIN", "", "TRUE", "1.0", "1.0", "PLAIN", "TRUE"});
-            addNodeRef("Group", {"children", "bboxCenter", "bboxSize"}, {"MFNode", "SFVec3f", "SFVec3f"}, {"[]", "0 0 0", "-1 -1 -1"});
-            addNodeRef("ImageTexture", {"url", "repeatS", "repeatT"}, {"MFString", "SFBool", "SFBool"}, {"[]", "TRUE", "TRUE"});
-            addNodeRef("IndexedFaceSet", {"color", "coord", "normal", "texCoord", "ccw", "colorIndex", "colorPerVertex", "convex", "coordIndex", "creaseAngle", "normalIndex", "normalPerVertex", "solid", "texCoordIndex"}, {"SFNode", "SFNode", "SFNode", "SFNode", "SFBool", "MFInt32", "SFBool", "SFBool", "MFInt32", "SFFloat", "MFInt32", "SFBool", "SFBool", "MFInt32"}, {"NULL", "NULL", "NULL", "NULL", "TRUE", "[]", "TRUE", "TRUE", "[]", "0", "[]", "TRUE", "TRUE", "[]"});
-            addNodeRef("IndexedLineSet", {"color", "coord", "colorIndex", "colorPerVertex", "coordIndex"}, {"SFNode", "SFNode", "MFInt32", "SFBool", "MFInt32"}, {"NULL", "NULL", "[]", "TRUE", "[]"});
-            addNodeRef("Inline", {"url", "bboxCenter", "bboxSize"}, {"MFString", "SFVec3f", "SFVec3f"}, {"[]", "0 0 0", "-1 -1 -1"});
-            addNodeRef("LOD", {"level", "center", "range"}, {"MFNode", "SFVec3f", "MFFloat"}, {"[]", "0 0 0", "[]"});
-            addNodeRef("Material", {"ambientIntensity", "diffuseColor", "emissiveColor", "shininess", "specularColor", "transparency"}, {"SFFloat", "SFColor", "SFColor", "SFFloat", "SFColor", "SFFloat"}, {"0.2", "0.8 0.8 0.8", "0 0 0", "0.2", "0 0 0", "0"});
-            addNodeRef("MovieTexture", {"loop", "speed", "startTime", "stopTime", "url", "repeatS", "repeatT"}, {"SFBool", "SFFloat", "SFTime", "SFTime", "MFString", "SFBool", "SFBool"}, {"FALSE", "1", "0", "0", "[]", "TRUE", "TRUE"});
-            addNodeRef("NavigationInfo", {"avatarSize", "headlight", "speed", "type", "visibilityLimit"}, {"MFFloat", "SFBool", "SFFloat", "MFString", "SFFloat"}, {"[ 0.25, 1.6, 0.75 ]", "TRUE", "1.0", "WALK", "0.0"});
-            addNodeRef("Normal", {"vector"}, {"MFVec3f"}, {"[]"});
-            addNodeRef("NormalInterpolator", {"key", "keyValue"}, {"MFFloat", "MFVec3f"}, {"[]", "[]"});
-            addNodeRef("OrientationInterpolator", {"key", "keyValue"}, {"MFFloat", "MFRotation"}, {"[]", "[]"});
-            addNodeRef("PixelTexture", {"image", "repeatS", "repeatT"}, {"SFImage", "SFBool", "SFBool"}, {"0 0 0", "TRUE", "TRUE"});
-            addNodeRef("PlaneSensor", {"autoOffset", "enabled", "maxPosition", "minPosition", "offset"}, {"SFBool", "SFBool", "SFVec2f", "SFVec2f", "SFVec2f"}, {"TRUE", "TRUE", "-1 -1", "0 0", "0 0 0"});
-            addNodeRef("PointLight", {"ambientIntensity", "attenuation", "color", "intensity", "location", "on", "radius"}, {"SFFloat", "SFVec3f", "SFColor", "SFFloat", "SFVec3f", "SFBool", "SFFloat"}, {"0", "1 0 0", "1 1 1", "1", "0 0 0", "TRUE", "100"});
-            addNodeRef("PointSet", {"color", "coord"}, {"SFNode", "SFNode"}, {"NULL", "NULL"});
-            addNodeRef("PositionInterpolator", {"key", "keyValue"}, {"MFFloat", "MFVec3f"}, {"[]", "[]"});
-            addNodeRef("ProximitySensor", {"center", "size", "enabled"}, {"SFVec3f", "SFVec3f", "SFBool"}, {"0 0 0", "0 0 0", "TRUE"});
-            addNodeRef("ScalarInterpolator", {"key", "keyValue"}, {"MFFloat", "MFFloat"}, {"[]", "[]"});
-            addNodeRef("Script", {"url", "directOutput", "mustEvaluate"}, {"MFString", "SFBool", "SFBool"}, {"[]", "FALSE", "FALSE"});
-            addNodeRef("Shape", {"appearance", "geometry"}, {"SFNode", "SFNode"}, {"NULL", "NULL"});
-            addNodeRef("Sound", {"direction", "intensity", "location", "maxBack", "maxFront", "minBack", "minFront", "priority", "source", "spatialize"}, {"SFVec3f", "SFFloat", "SFVec3f", "SFFloat", "SFFloat", "SFFloat", "SFFloat", "SFFloat", "SFNode", "SFBool"}, {"0 0 1", "1", "0 0 0", "10", "10", "1", "1", "0", "NULL", "TRUE"});
-            addNodeRef("Sphere", {"radius"}, {"SFFloat"}, {"1"});
-            addNodeRef("SphereSensor", {"autoOffset", "enabled", "offset"}, {"SFBool", "SFBool", "SFRotation"}, {"TRUE", "TRUE", "0 1 0 0"});
-            addNodeRef("SpotLight", {"ambientIntensity", "attenuation", "beamWidth", "color", "cutOffAngle", "direction", "intensity", "location", "on", "radius"}, {"SFFloat", "SFVec3f", "SFFloat", "SFColor", "SFFloat", "SFVec3f", "SFFloat", "SFVec3f", "SFBool", "SFFloat"}, {"0", "1 0 0", "1.570796", "1 1 1", "0.785398", "0 0 -1", "1", "0 0 0", "TRUE", "100"});
-            addNodeRef("Switch", {"choice", "whichChoice"}, {"MFNode", "SFInt32"}, {"[]", "-1"});
-            addNodeRef("Text", {"string", "fontStyle", "length", "maxExtent"}, {"MFString", "SFNode", "MFFloat", "SFFloat"}, {"[]", "NULL", "[]", "0.0"});
-            addNodeRef("TextureCoordinate", {"point"}, {"MFVec2f"}, {"[]"});
-            addNodeRef("TextureTransform", {"center", "rotation", "scale", "translation"}, {"SFVec2f", "SFFloat", "SFVec2f", "SFVec2f"}, {"0 0", "0", "1 1", "0 0"});
-            addNodeRef("TimeSensor", {"cycleInterval", "enabled", "loop", "startTime", "stopTime"}, {"SFTime", "SFBool", "SFBool", "SFTime", "SFTime"}, {"1", "TRUE", "FALSE", "0", "0"});
-            addNodeRef("TouchSensor", {"enabled"}, {"SFBool"}, {"TRUE"});
-            addNodeRef("Transform", {"center", "children", "rotation", "scale", "scaleOrientation", "translation", "bboxCenter", "bboxSize"}, {"SFVec3f", "MFNode", "SFRotation", "SFVec3f", "SFRotation", "SFVec3f", "SFVec3f", "SFVec3f"}, {"0 0 0", "[]", "0 0 1 0", "1 1 1", "0 0 1 0", "0 0 0", "0 0 0", "-1 -1 -1"});
-            addNodeRef("Viewpoint", {"fieldOfView", "jump", "orientation", "position", "description"}, {"SFFloat", "SFBool", "SFRotation", "SFVec3f", "SFString"}, {"0.785398", "TRUE", "0 0 1 0", "0 0 10", ""});
-            addNodeRef("VisibilitySensor", {"center", "enabled", "size"}, {"SFVec3f", "SFBool", "SFVec3f"}, {"0 0 0", "TRUE", "0 0 0"});
-            addNodeRef("WorldInfo", {"info", "title"}, {"MFString", "SFString"}, {"[]", ""});
-            */
         }
     }
 
@@ -355,6 +299,7 @@ struct GLTFNode : GLTFUtils {
     VRMaterialPtr material;
     Matrix4d pose;
     VRGeoData geoData;
+    int matID = -1;
 
     Vec3d translation = Vec3d(0,0,0);
     Vec4d rotation = Vec4d(0,0,1,0);
@@ -841,7 +786,9 @@ class GLTFLoader : public GLTFUtils {
         map<int, GLTFNode*> nodes;
         map<int, int> nodeToMesh;
         map<int, int> meshToNode;
-        map<int,vector<int>> childrenPerNode;
+        map<int, vector<int>> childrenPerNode;
+        map<int, VRMaterialPtr> materials;
+        map<int, VRTexturePtr> textures;
         size_t sceneID = -1;
         size_t nodeID = -1;
         size_t meshID = -1;
@@ -978,9 +925,9 @@ class GLTFLoader : public GLTFUtils {
             }
 
             if (isTransformationNode(type)) {
-                if (type == "Rotation") thisNode->rotation = rotation;
-                if (type == "Translation") thisNode->translation = translation;
-                if (type == "Scale") thisNode->scale = scale;
+                thisNode->rotation = rotation;
+                thisNode->translation = translation;
+                thisNode->scale = scale;
                 if (type == "Transform") thisNode->pose = pose;
                 else thisNode->handleTransform();
                 //cout << res << endl;
@@ -994,29 +941,37 @@ class GLTFLoader : public GLTFUtils {
             matID++;
             //cout << "Emmissive Tex: " << gltfMaterial.emissiveTexture.index << endl;
             //cout << "Oclusion Tex: " << gltfMaterial.occlusionTexture.index << endl;
+            VRMaterialPtr mat = VRMaterial::create(gltfMaterial.name);
             for (const auto &content : gltfMaterial.values) {
                 if (content.first == "baseColorTexture") {
-                    cout << matID << " " << gltfMaterial.name << " BaseColor Tex: " << gltfMaterial.pbrMetallicRoughness.baseColorTexture.index << endl;
+                    int tID = gltfMaterial.pbrMetallicRoughness.baseColorTexture.index;
+                    //cout << matID << " " << gltfMaterial.name << " BaseColor Tex: " << tID << endl;
+                    mat->setTexture(textures[tID]);
                 }
 
                 if (content.first == "metallicRoughnessTexture") {
-                    cout << matID << " " << gltfMaterial.name << " metallicRoughnessTexture: " << gltfMaterial.pbrMetallicRoughness.metallicRoughnessTexture.index << endl;
+                    int tID = gltfMaterial.pbrMetallicRoughness.metallicRoughnessTexture.index;
+                    cout << matID << " " << gltfMaterial.name << " metallicRoughnessTexture: " << tID << " found but not used"<<endl;
                 }
             }
 
             for (const auto &content : gltfMaterial.additionalValues) {
                 if (content.first == "normalTexture") {
-                    cout << matID << " " << gltfMaterial.name << " Normal Tex: " << gltfMaterial.normalTexture.index << endl;
+                    int tID = gltfMaterial.normalTexture.index;
+                    cout << matID << " " << gltfMaterial.name << " Normal Tex: " << gltfMaterial.normalTexture.index << " found but not used" << endl;
                 }
 
                 if (content.first == "emissiveTexture") {
-                    cout << matID << " " << gltfMaterial.name << " Normal Tex: " << gltfMaterial.emissiveTexture.index << endl;
+                    int tID = gltfMaterial.emissiveTexture.index;
+                    cout << matID << " " << gltfMaterial.name << " Emmissive Tex: " << gltfMaterial.emissiveTexture.index << " found but not used" << endl;
                 }
             }
+            materials[matID] = mat;
         }
 
         void handleTexture(const tinygltf::Texture &gltfTexture){
             texID++;
+            VRTexturePtr img = VRTexture::create();
             //Get texture data layout information
             const auto &image = model.images[gltfTexture.source];
             int components = image.component;
@@ -1025,11 +980,20 @@ class GLTFLoader : public GLTFUtils {
             int bits = image.bits;
             cout << texID << " " << gltfTexture.source << " components " << components << " width " << width << " height " << height << " bits " << bits  << endl;
 
-            //const auto size = components * width * height * sizeof(unsigned char);
-            //char* data = new char[size];
-            //memcpy(data, image.image.data(), size);
-            //Vec3i dims = Vec3i(width, height, 1);
-            //mat->setTexture(data, components, dims, bits == 32);
+            const auto size = components * width * height * bits; //sizeof(unsigned char);
+            char* data = new char[size];
+            memcpy(data, image.image.data(), size);
+            Vec3i dims = Vec3i(width, height, 1);
+
+            int pf = Image::OSG_RGB_PF;
+            if (components == 4) pf = Image::OSG_RGBA_PF;
+            int f = Image::OSG_UINT8_IMAGEDATA;
+            if (bits == 32) f = Image::OSG_FLOAT32_IMAGEDATA;
+            img->getImage()->set( pf, dims[0], dims[1], dims[2], 1, 1, 0, (const UInt8*)data, f);
+            //if (components == 4) setTexture(img, true);
+            //if (components == 3) setTexture(img, false);
+
+            textures[texID] = img;
         }
 
         void handleMesh(const tinygltf::Mesh &gltfMesh){
@@ -1044,9 +1008,10 @@ class GLTFLoader : public GLTFUtils {
 
                 auto nodeID = meshToNode[meshID];
                 auto& node = nodes[nodeID];
-                auto primitive = gltfMesh.primitives[0];
+                tinygltf::Primitive primitive = gltfMesh.primitives[0];
                 long n = 0;
                 VRGeoData gdata = VRGeoData();
+
                 string atts = "";
                 const tinygltf::Accessor& accessorP = model.accessors[primitive.attributes["POSITION"]];
                 const tinygltf::Accessor& accessorN = model.accessors[primitive.attributes["NORMAL"]];
@@ -1099,6 +1064,7 @@ class GLTFLoader : public GLTFUtils {
                     }
                 }
                 node->geoData = gdata;
+                node->matID = primitive.material;
                 //cout << "prim with v " << n << " : " << primitive.mode <<  endl;
             }
 
@@ -1123,9 +1089,9 @@ class GLTFLoader : public GLTFUtils {
         bool parsetinygltf() {
             for (auto each: model.scenes) handleScene(each);
             for (auto each: model.nodes) handleNode(each);
-            for (auto each: model.materials) handleMaterial(each);
-            for (auto each: model.textures) handleTexture(each);
             for (auto each: model.meshes) handleMesh(each);
+            for (auto each: model.textures) handleTexture(each);
+            for (auto each: model.materials) handleMaterial(each);
             handleInterlinks();
             return true;
         }
