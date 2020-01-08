@@ -27,4 +27,6 @@ void VRExport::write(VRObjectPtr obj, string path) {
 
     if (ext == ".wrl" || ext == ".wrz" || ext == ".obj" || ext == ".osb" || ext == ".osg")
         SceneFileHandler::the()->write(obj->getNode()->node, path.c_str());
+
+    //SceneFileHandler::the()->print();
 }
