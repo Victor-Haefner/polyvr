@@ -49,6 +49,10 @@ class VRGeometry : public VRTransform {
         VRGeometry(string name, bool hidden);
         static VRGeometryPtr create(string name, bool hidden);
 
+        vector<(Vec3d, int)> calcLengths(vector<Vec3d> triangle);
+        vector<Vec3d> addPointsOnEdges(int resolution, vector<Vec3d> triangle);
+        vector<(Vec3d, Vec3d)> mapPoints(int resolution, vector<Vec3d> triangle);
+
     public:
         VRGeometry(string name = "0");
         virtual ~VRGeometry();
@@ -106,6 +110,7 @@ class VRGeometry : public VRTransform {
         void flipNormals();
         void convertToTrianglePatches();
         void convertToTriangles();
+        VRPointCloudPtr convertToPointCloud(map<string, string> options);
 
         int getLastMeshChange();
 

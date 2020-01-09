@@ -1157,4 +1157,68 @@ void VRGeometry::convertToTriangles() {
 	data.apply(ptr());
 }
 
+
+
+vector<((Vec3d, Vec3d), int)> VRGeometry::calcLengths(vector<Vec3d> triangle) {
+    mesh->geo->getPositions();
+    return NULL;
+}
+
+
+vector<Vec3d> VRGeometry::addPointsOnEdges(int resolution, vector<Vec3d> triangle) {
+    if !(resolution || triangle) return;
+    auto edgeLengths = calcLengths(triangle);
+    vector<(int, vector<int>)> pntsOnEdges;
+    int i;
+    auto ind = mesh->geo->getIndices()
+
+    if !ind i = 0;
+    else i = max(ind);
+
+    for (auto& edge : edgeLengths)
+
+
+    return NULL;
+}
+
+
+vector<(Vec3d, Vec3d)> VRGeometry::mapPoints(int resolution, vector<Vec3d> triangle) {
+    vector<(Vec3d, Vec3d)> mappedPoints;
+    vector<Vec3d> pntsOnEdges = this.addPointsOnEdges(resolution, triangle);
+
+
+    return NULL;
+}
+
+
+VRPointCloudPtr VRGeometry::convertToPointCloud(map<string, string> options) {
+    auto pointcloud = VRPointCloud::create("pointcloud");
+    //VRTransformPtr res;
+    if (!meshSet) return pointcloud;
+
+    TriangleIterator it(mesh->geo);
+    VRGeoData data;
+    int resolution = 1;
+    if (options.count("resolution")) resolution = toInt(options["resolution"]);
+
+    /*
+
+    Vec3d pos = Vec3d(x[j], y[j], z[j]);
+    Color3f col(r[j]/255.0, g[j]/255.0, b[j]/255.0);
+
+    pointcloud->getOctree()->add(pos, new Color3f(col), -1, true, 1e5);
+
+    pointcloud->setupLODs();
+    res->addChild(pointcloud);
+    if (data.size()) {
+    cout << "  assemble geometry.. " << endl;
+    auto geo = data.asGeometry("points");
+    res->addChild(geo);
+    }
+
+    */
+    pointcloud->applySettings(options);
+    return pointcloud;
+}
+
 OSG_END_NAMESPACE;
