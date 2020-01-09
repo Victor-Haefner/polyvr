@@ -233,7 +233,14 @@ int VRGeoData::getFaceSize(int fID) const {
 
 int VRGeoData::getType(int i) { return int(data->types->size()) > i ? data->types->getValue(i) : 0; }
 int VRGeoData::getLength(int i) { return int(data->lengths->size()) > i ? data->lengths->getValue(i) : 0; }
-int VRGeoData::getIndex(int i) { return int(data->indices->size()) > i ? data->indices->getValue(i) : 0; }
+
+int VRGeoData::getIndex(int i, int v) {
+    if (v == NormalsIndex && data->indicesNormals) return int(data->indicesNormals->size()) > i ? data->indices->getValue(i) : 0;
+    if (v == ColorsIndex && data->indicesColors) return int(data->indicesColors->size()) > i ? data->indices->getValue(i) : 0;
+    if (v == TexCoordsIndex && data->indicesTexCoords) return int(data->indicesTexCoords->size()) > i ? data->indices->getValue(i) : 0;
+    return int(data->indices->size()) > i ? data->indices->getValue(i) : 0;
+}
+
 Pnt3d VRGeoData::getPosition(int i) { return int(data->pos->size()) > i ? Pnt3d(data->pos->getValue(i)) : Pnt3d(); }
 Vec3d VRGeoData::getNormal(int i) { return int(data->norms->size()) > i ? Vec3d(data->norms->getValue(i)) : Vec3d(); }
 Color4f VRGeoData::getColor(int i) {

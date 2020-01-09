@@ -17,6 +17,10 @@
 #include <OpenSG/OSGColor.h>
 #include <OpenSG/OSGQuaternion.h>
 
+//#include "core/objects/geometry/OSGGeometry.h"
+//#include <OpenSG/OSGGeoProperties.h>
+//#include <OpenSG/OSGGeometry.h>
+
 // Define these only in *one* .cc file.
 #define TINYGLTF_IMPLEMENTATION
 #define STB_IMAGE_IMPLEMENTATION
@@ -1328,6 +1332,7 @@ T& addElement(vector<T>& v, int& ID) {
 
 template<typename T, typename G>
 int addBuffer(tinygltf::Model& model, string name, int N, function<G(int)> data) {
+    if (N == 0) return -1;
     int bID;
     tinygltf::Buffer& buf = addElement(model.buffers, bID);
     vector<T> vec;
@@ -1361,7 +1366,7 @@ int addAccessor(tinygltf::Model& model, string name, int viewID, int count, int 
     return aID;
 }
 
-void addPrimitive(tinygltf::Model& model, tinygltf::Mesh& mesh, int length, int offset, map<string, int> bufIDs, map<string, int> accN, int mode) {
+void addPrimitive(tinygltf::Model& model, tinygltf::Mesh& mesh, int length, int offset, map<string, int> bufIDs, map<string, int> accN, int mode, int cID) {
     // buffer views
     int indicesViewID   = addBufferView(model, "indicesView"  , bufIDs["indices"]  , sizeof(int)*offset, sizeof(int)*length, TINYGLTF_TARGET_ELEMENT_ARRAY_BUFFER);
     int positionsViewID = addBufferView(model, "positionsView", bufIDs["positions"], 0, sizeof(Vec3f)*accN["positions"], TINYGLTF_TARGET_ARRAY_BUFFER);
@@ -1376,15 +1381,28 @@ void addPrimitive(tinygltf::Model& model, tinygltf::Mesh& mesh, int length, int 
     tinygltf::Primitive& primitive = addElement(mesh.primitives, primID);
     primitive.indices = indicesAccID;
     primitive.mode = mode;
+    primitive.material = cID;
     primitive.attributes["POSITION"] = positionsAccID;
     primitive.attributes["NORMAL"] = normalsAccID;
+
+    if (bufIDs.count("colors3")) {
+        int colors3ViewID = addBufferView(model, "colors3View", bufIDs["colors3"], 0, sizeof(Vec3f)*accN["colors3"], TINYGLTF_TARGET_ARRAY_BUFFER);
+        int colors3AccID = addAccessor(model, "colors3", colors3ViewID, accN["colors3"], TINYGLTF_TYPE_VEC3, TINYGLTF_COMPONENT_TYPE_FLOAT);
+        primitive.attributes["COLOR_0"] = colors3AccID;
+    }
+
+    if (bufIDs.count("colors4")) {
+        int colors4ViewID = addBufferView(model, "colors4View", bufIDs["colors4"], 0, sizeof(Vec4f)*accN["colors4"], TINYGLTF_TARGET_ARRAY_BUFFER);
+        int colors4AccID = addAccessor(model, "colors4", colors4ViewID, accN["colors4"], TINYGLTF_TYPE_VEC4, TINYGLTF_COMPONENT_TYPE_FLOAT);
+        primitive.attributes["COLOR_0"] = colors4AccID;
+    }
 }
 
 void constructGLTF(tinygltf::Model& model, VRObjectPtr obj, int pID = -1) {
     tinygltf::Scene& scene = model.scenes.back();
 
     // new node
-    int nID, mID;
+    int nID, mID, cID;
     tinygltf::Node& node = addElement(model.nodes, nID);
 
     // from object
@@ -1405,27 +1423,54 @@ void constructGLTF(tinygltf::Model& model, VRObjectPtr obj, int pID = -1) {
     // from geometry
     auto geo = dynamic_pointer_cast<VRGeometry>(trans);
     if (geo) {
+        // material
+        auto mat = geo->getMaterial();
+        tinygltf::Material& material = addElement(model.materials, cID);
+        material.name = mat->getName();
+
+        Color3f d = mat->getDiffuse();
+        //float t = mat->getTransparency();
+        material.pbrMetallicRoughness.baseColorFactor = {d[0],d[1],d[2],1};
+        material.pbrMetallicRoughness.metallicFactor = 0;
+        material.pbrMetallicRoughness.roughnessFactor = 1;
+
+        // mesh
         tinygltf::Mesh& mesh = addElement(model.meshes, mID);
         mesh.name = geo->getName() + "_mesh";
         node.mesh = mID;
 
         VRGeoData data(geo);
-
-        map<string, int> bufIDs, dataN;
-
+        map<string, int> dataN;
         int Ntypes         = data.getDataSize(0);
-        int Nlengths       = data.getDataSize(1);
+        //int Nlengths       = data.getDataSize(1);
         dataN["indices"]   = data.getDataSize(2);
         dataN["positions"] = data.getDataSize(3);
         dataN["normals"]   = data.getDataSize(4);
         dataN["colors3"]   = data.getDataSize(5);
         dataN["colors4"]   = data.getDataSize(6);
         dataN["texcoords"] = data.getDataSize(7);
+        dataN["texcoords2"] = data.getDataSize(8);
+        dataN["indicesNormals"] = data.getDataSize(9);
+        dataN["indicesColors"] = data.getDataSize(10);
+        dataN["indicesTexCoords"] = data.getDataSize(11);
+
+        if (dataN["indicesNormals"] > 0 || dataN["indicesColors"] > 0 || dataN["indicesTexCoords"] > 0) {
+            cout << "constructGLTF failed due to multiindexed node!" << endl;
+            // TODO: break here?
+        }
 
         // buffer
-        bufIDs["indices"]   = addBuffer<int  , int  >(model, "indicesBuffer"  , dataN["indices"]  , bind(&VRGeoData::getIndex   , &data, _1));
+        map<string, int> bufIDs;
+        bufIDs["indices"]   = addBuffer<int  , int  >(model, "indicesBuffer"  , dataN["indices"]  , bind(&VRGeoData::getIndex   , &data, _1, PositionsIndex));
         bufIDs["positions"] = addBuffer<Vec3f, Pnt3d>(model, "positionsBuffer", dataN["positions"], bind(&VRGeoData::getPosition, &data, _1));
         bufIDs["normals"]   = addBuffer<Vec3f, Vec3d>(model, "normalsBuffer"  , dataN["normals"]  , bind(&VRGeoData::getNormal  , &data, _1));
+        if (dataN["colors3"] > 0)
+            bufIDs["colors3"]   = addBuffer<Vec3f, Color3f>(model, "colors3Buffer"  , dataN["colors3"]  , bind(&VRGeoData::getColor3, &data, _1));
+        if (dataN["colors4"] > 0)
+            bufIDs["colors4"]   = addBuffer<Vec4f, Color4f>(model, "colors4Buffer"  , dataN["colors4"]  , bind(&VRGeoData::getColor , &data, _1));
+        if (dataN["colors3"] > 0 || dataN["colors4"] > 0) {
+            material.pbrMetallicRoughness.baseColorFactor = {1,1,1,1};
+        }
 
         map<int, int> typeMap;
         typeMap[GL_POINTS] = TINYGLTF_MODE_POINTS;
@@ -1443,13 +1488,13 @@ void constructGLTF(tinygltf::Model& model, VRObjectPtr obj, int pID = -1) {
             int length = data.getLength(iType);
 
             if (typeMap.count(type)) {
-                addPrimitive(model, mesh, length, offset, bufIDs, dataN, typeMap[type]);
+                addPrimitive(model, mesh, length, offset, bufIDs, dataN, typeMap[type], cID);
                 offset += length;
             } else {
                 if (type == GL_QUADS) {
                     int mode = TINYGLTF_MODE_TRIANGLE_FAN;
                     for (int i = 0; i<length; i+=4) {
-                        addPrimitive(model, mesh, 4, offset, bufIDs, dataN, mode);
+                        addPrimitive(model, mesh, 4, offset, bufIDs, dataN, mode, cID);
                         offset += 4;
                     }
                 }
