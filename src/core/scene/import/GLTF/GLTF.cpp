@@ -1436,15 +1436,6 @@ void constructGLTF(tinygltf::Model& model, VRObjectPtr obj, int pID = -1) {
         typeMap[GL_TRIANGLE_STRIP] = TINYGLTF_MODE_TRIANGLE_STRIP;
         typeMap[GL_TRIANGLE_FAN] = TINYGLTF_MODE_TRIANGLE_FAN;
 
-        map<int, int> typeNVerts;
-        typeNVerts[GL_POINTS] = 1;
-        typeNVerts[GL_LINES] = 2;
-        typeNVerts[GL_LINE_LOOP] = -1;
-        typeNVerts[GL_LINE_STRIP] = -1;
-        typeNVerts[GL_TRIANGLES] = 3;
-        typeNVerts[GL_TRIANGLE_STRIP] = -1;
-        typeNVerts[GL_TRIANGLE_FAN] = -1;
-
         // add types
         int offset = 0;
         for (int iType = 0; iType < Ntypes; iType++) {
@@ -1452,24 +1443,13 @@ void constructGLTF(tinygltf::Model& model, VRObjectPtr obj, int pID = -1) {
             int length = data.getLength(iType);
 
             if (typeMap.count(type)) {
-                map<string, int> accN;
-                accN["indices"]   = length;
-                accN["positions"] = dataN["positions"] ;
-                accN["normals"]   = dataN["normals"] ;
-
-                addPrimitive(model, mesh, length, offset, bufIDs, accN, typeMap[type]);
+                addPrimitive(model, mesh, length, offset, bufIDs, dataN, typeMap[type]);
                 offset += length;
             } else {
                 if (type == GL_QUADS) {
-                    map<string, int> accN;
-                    accN["indices"]   = 4;
-                    accN["positions"] = dataN["positions"] ;
-                    accN["normals"]   = dataN["normals"] ;
-
-                    //int mode = TINYGLTF_MODE_TRIANGLES;
-                    int mode = GL_TRIANGLE_FAN;
+                    int mode = TINYGLTF_MODE_TRIANGLE_FAN;
                     for (int i = 0; i<length; i+=4) {
-                        addPrimitive(model, mesh, 4, offset, bufIDs, accN, mode);
+                        addPrimitive(model, mesh, 4, offset, bufIDs, dataN, mode);
                         offset += 4;
                     }
                 }
