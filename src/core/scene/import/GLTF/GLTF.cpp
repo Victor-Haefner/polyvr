@@ -340,6 +340,7 @@ struct GLTFNode : GLTFUtils {
     void handleRotation() {
         //Vec4d rotation = getSFRotation(data, "rotation", Vec4d(0,0,1,0));
         pose.setRotate( Quaterniond( Vec3d(rotation[0], rotation[1], rotation[2]), rotation[3] ) );
+        //cout << pose << endl;
     }
 
     void handleScale() {
@@ -394,17 +395,6 @@ struct GLTFNNode : GLTFNode{
     Matrix4d applyTransformations(Matrix4d m = Matrix4d()) {
         VRTransformPtr t = dynamic_pointer_cast<VRTransform>(obj);
         if (t) t->setMatrix(pose);
-        m.mult(pose);
-        cout << m << endl;
-        /*
-        if (isGeometryNode(type)) {
-            VRTransformPtr t = dynamic_pointer_cast<VRTransform>(obj);
-            if (t) t->setMatrix(m);
-        } else if(isTransformationNode(type)) {
-            m.mult(pose);
-        } else if(isTransformationResetNode(type)) {
-            m.setIdentity();
-        }*/
 
         for (auto c : children) c->applyTransformations(m);
         return m;
@@ -412,12 +402,11 @@ struct GLTFNNode : GLTFNode{
 
     VRMaterialPtr applyMaterials() {
         if (isGeometryNode(type)) {
-            //applyMaterial();
             VRGeometryPtr g = dynamic_pointer_cast<VRGeometry>(obj);
             if (g) {
                 if (material) {
                     g->setMaterial(material);
-                    cout << "mat set " << matID << " on: " << name << " parent: "<< parent->name << endl;
+                    //cout << "mat set " << matID << " on: " << name << " parent: "<< parent->name << endl;
                 }
             }
         }
@@ -430,7 +419,7 @@ struct GLTFNNode : GLTFNode{
         if (type == "Mesh") {
             VRGeometryPtr g = dynamic_pointer_cast<VRGeometry>(obj);
             if (g) {
-                geoData.apply(g);
+                geoData.apply(g); //TODO: what if more than one primitive per mesh?
             }
         }
 
@@ -681,100 +670,124 @@ class GLTFLoader : public GLTFUtils {
 
         void handleMesh(const tinygltf::Mesh &gltfMesh){
             meshID++;
-            string res = "";
 
-            res += to_string(meshID) + " " + gltfMesh.name;
-
-            if (gltfMesh.primitives.size() == 1) {
-                res += " ONE Primitive";
+            for (tinygltf::Primitive primitive : gltfMesh.primitives) {
+                if (gltfMesh.primitives.size() > 1) continue;
                 //cout << res << endl;
 
                 auto nodeID = meshToNode[meshID];
                 auto& node = nodes[nodeID];
-                tinygltf::Primitive primitive = gltfMesh.primitives[0];
                 long n = 0;
                 VRGeoData gdata = VRGeoData();
 
                 string atts = "";
-                const tinygltf::Accessor& accessorP = model.accessors[primitive.attributes["POSITION"]];
-                const tinygltf::Accessor& accessorN = model.accessors[primitive.attributes["NORMAL"]];
-                const tinygltf::Accessor& accessorColor = model.accessors[primitive.attributes["COLOR_0"]];
-                const tinygltf::Accessor& accessorTexUV = model.accessors[primitive.attributes["TEXCOORD_0"]];
-                const tinygltf::Accessor& accessorTexUV1 = model.accessors[primitive.attributes["TEXCOORD_1"]];
-                for (auto att : primitive.attributes) atts += att.first + " ";
-                const tinygltf::BufferView& bufferViewP = model.bufferViews[accessorP.bufferView];
-                const tinygltf::BufferView& bufferViewN = model.bufferViews[accessorN.bufferView];
-                const tinygltf::BufferView& bufferViewCO = model.bufferViews[accessorColor.bufferView];
-                const tinygltf::BufferView& bufferViewUV = model.bufferViews[accessorTexUV.bufferView];
-
-                // cast to float type read only. Use accessor and bufview byte offsets to determine where position data
-                // is located in the buffer.
-                const tinygltf::Buffer& bufferP = model.buffers[bufferViewP.buffer];
-                const tinygltf::Buffer& bufferN = model.buffers[bufferViewN.buffer];
-                const tinygltf::Buffer& bufferCO = model.buffers[bufferViewCO.buffer];
-                const tinygltf::Buffer& bufferUV = model.buffers[bufferViewUV.buffer];
                 // bufferView byteoffset + accessor byteoffset tells you where the actual position data is within the buffer. From there
                 // you should already know how the data needs to be interpreted.
-                const float* positions = reinterpret_cast<const float*>(&bufferP.data[bufferViewP.byteOffset + accessorP.byteOffset]);
-                const float* normals   = reinterpret_cast<const float*>(&bufferN.data[bufferViewN.byteOffset + accessorN.byteOffset]);
-                const float* colors   = reinterpret_cast<const float*>(&bufferCO.data[bufferViewCO.byteOffset + accessorColor.byteOffset]);
-                const float* UVs   = reinterpret_cast<const float*>(&bufferUV.data[bufferViewUV.byteOffset + accessorTexUV.byteOffset]);
                 // From here, you choose what you wish to do with this position data. In this case, we  will display it out.
 
+                for (auto att : primitive.attributes) atts += att.first + " ";
                 cout << atts << endl;
-                cout << "PositBufferLength " << accessorP.count << " Type  " << accessorP.type << " " << bufferViewP.byteStride << endl;
-                cout << "NormaBufferLength " << accessorN.count << " Type  " << accessorN.type << " " << bufferViewN.byteStride << endl;
-                cout << "ColorBufferLength " << accessorColor.count << " Type  " << accessorColor.type << " " << bufferViewCO.byteStride << endl;
-                cout << "TexUVBufferLength " << accessorTexUV.count << " Type  " << accessorTexUV.type << " " << bufferViewUV.byteStride << endl;
-                cout << "PrimitiveIndecesC " << model.accessors[primitive.indices].count << " MODE: " << primitive.mode << " TRIS: " << model.accessors[primitive.indices].count/3 << endl;
-                for (size_t i = 0; i < accessorP.count; ++i) {
-                    // Positions are Vec3 components, so for each vec3 stride, offset for x, y, and z.
-                    Vec3d pos = Vec3d( positions[i * 3 + 0], positions[i * 3 + 1], positions[i * 3 + 2] );
-                    gdata.pushVert(pos);
-                    //gdata.pushIndex(i);
-                    n ++;
+
+                if (primitive.attributes.count("POSITION")){
+                    const tinygltf::Accessor& accessorP = model.accessors[primitive.attributes["POSITION"]];
+                    const tinygltf::BufferView& bufferViewP = model.bufferViews[accessorP.bufferView];
+                    const tinygltf::Buffer& bufferP = model.buffers[bufferViewP.buffer];
+                    const float* positions = reinterpret_cast<const float*>(&bufferP.data[bufferViewP.byteOffset + accessorP.byteOffset]);
+                    for (size_t i = 0; i < accessorP.count; ++i) {
+                        // Positions are Vec3 components, so for each vec3 stride, offset for x, y, and z.
+                        Vec3d pos = Vec3d( positions[i * 3 + 0], positions[i * 3 + 1], positions[i * 3 + 2] );
+                        gdata.pushVert(pos);
+                        n++;
+                        //gdata.pushIndex(i);
+                    }
+                    //cout << "PositBufferLength " << accessorP.count << " Type  " << accessorP.type << " " << bufferViewP.byteStride << endl;
                 }
-                for (size_t i = 0; i < accessorN.count; ++i) {
-                    Vec3d nor = Vec3d( normals  [i * 3 + 0], normals  [i * 3 + 1], normals  [i * 3 + 2] );
-                    gdata.pushNorm(nor);
-                    //gdata.pushNormalIndex(i);
+
+                if (primitive.attributes.count("NORMAL")) {
+                    const tinygltf::Accessor& accessorN = model.accessors[primitive.attributes["NORMAL"]];
+                    const tinygltf::BufferView& bufferViewN = model.bufferViews[accessorN.bufferView];
+                    const tinygltf::Buffer& bufferN = model.buffers[bufferViewN.buffer];
+                    const float* normals   = reinterpret_cast<const float*>(&bufferN.data[bufferViewN.byteOffset + accessorN.byteOffset]);
+                    for (size_t i = 0; i < accessorN.count; ++i) {
+                        Vec3d nor = Vec3d( normals  [i * 3 + 0], normals  [i * 3 + 1], normals  [i * 3 + 2] );
+                        gdata.pushNorm(nor);
+                        //gdata.pushNormalIndex(i);
+                    }
+                    //cout << "NormaBufferLength " << accessorN.count << " Type  " << accessorN.type << " " << bufferViewN.byteStride << endl;
                 }
-                if (accessorColor.count == accessorP.count){
+
+                if (primitive.attributes.count("COLOR_0")){
+                    const tinygltf::Accessor& accessorColor = model.accessors[primitive.attributes["COLOR_0"]];
+                    const tinygltf::BufferView& bufferViewCO = model.bufferViews[accessorColor.bufferView];
+                    const tinygltf::Buffer& bufferCO = model.buffers[bufferViewCO.buffer];
+                    const float* colors   = reinterpret_cast<const float*>(&bufferCO.data[bufferViewCO.byteOffset + accessorColor.byteOffset]);
                     for (size_t i = 0; i < accessorColor.count; ++i) {
-                        if (accessorColor.type == 3){ auto cl = Color3f( colors[i * 3 + 0], colors[i * 3 + 1], colors[i * 3 + 2] ); gdata.pushColor(cl); /*gdata.pushColorIndex(i);*/ }
-                        if (accessorColor.type == 4){ auto cl = Color4f( colors[i * 4 + 0], colors[i * 4 + 1], colors[i * 4 + 2], colors[i * 4 + 2] ); gdata.pushColor(cl); /*gdata.pushColorIndex(i);*/ }
-                        //if (accessorColor.type == 4){ auto cl = Color4f( 212.0/255.0,175.0/255.0,55.0/255.0, 1 ); gdata.pushColor(cl); }
+                        if (accessorColor.type == 3){ auto cl = Color3f( colors[i * 3 + 0], colors[i * 3 + 1], colors[i * 3 + 2] ); gdata.pushColor(cl); }
+                        if (accessorColor.type == 4){ auto cl = Color4f( colors[i * 4 + 0], colors[i * 4 + 1], colors[i * 4 + 2], colors[i * 4 + 2] ); gdata.pushColor(cl);  }
                     }
+                    //cout << "ColorBufferLength " << accessorColor.count << " Type  " << accessorColor.type << " " << bufferViewCO.byteStride << endl;
                 }
-                if (accessorTexUV.count == accessorP.count) {
-                    for (size_t i = 0; i < accessorTexUV.count; ++i) {
-                        Vec2d UV = Vec2d( UVs[i*2 + 0], UVs[i*2 + 1] );
-                        gdata.pushTexCoord(UV);
-                        //gdata.pushTexCoordIndex(i);
+
+                if (primitive.attributes.count("TEXCOORD_0")) {
+                    const tinygltf::Accessor& accessorTexUV = model.accessors[primitive.attributes["TEXCOORD_0"]];
+                    const tinygltf::BufferView& bufferViewUV = model.bufferViews[accessorTexUV.bufferView];
+                    const tinygltf::Buffer& bufferUV = model.buffers[bufferViewUV.buffer];
+                    if (accessorTexUV.componentType == 5126) {
+                        const float* UVs   = reinterpret_cast<const float*>(&bufferUV.data[bufferViewUV.byteOffset + accessorTexUV.byteOffset]);
+                        for (size_t i = 0; i < accessorTexUV.count; ++i) {
+                            Vec2d UV = Vec2d( UVs[i*2 + 0], UVs[i*2 + 1] );
+                            gdata.pushTexCoord(UV);
+                            //gdata.pushTexCoordIndex(i);
+                        }
                     }
+                    //cout << "TexUVBufferLength " << accessorTexUV.count << " Type  " << accessorTexUV.type << " " << bufferViewUV.byteStride << endl;
+                }
+
+                const tinygltf::Accessor& accessorTexUV1 = model.accessors[primitive.attributes["TEXCOORD_1"]];
+
+                const tinygltf::Accessor& accessorIndices = model.accessors[primitive.indices];
+                const tinygltf::BufferView& bufferViewIndices = model.bufferViews[accessorIndices.bufferView];
+                const tinygltf::Buffer& bufferInd = model.buffers[bufferViewIndices.buffer];
+                cout << "PrimitiveIndecesC " << model.accessors[primitive.indices].count << " MODE: " << primitive.mode << " TRIS: " << model.accessors[primitive.indices].count/3 << endl;
+
+                if (primitive.mode == 0) {
+                //POINTS
+                }
+                if (primitive.mode == 1) {
+                //LINE
+                }
+                if (primitive.mode == 2) {
+                //LINE LOOP
+                }
+                if (primitive.mode == 3) {
+                //LINE STRIP
                 }
                 if (primitive.mode == 4) {
-                    //DEFAULT TRIS
-                    const tinygltf::Accessor& accessorIndices = model.accessors[primitive.indices];
-                    const tinygltf::BufferView& bufferViewIndices = model.bufferViews[accessorIndices.bufferView];
-                    const tinygltf::Buffer& bufferInd = model.buffers[bufferViewIndices.buffer];
-                    const int* indices   = reinterpret_cast<const int*>(&bufferInd.data[bufferViewIndices.byteOffset + accessorIndices.byteOffset]);
-                    for (size_t i = 0; i < accessorIndices.count/3; ++i) {
-                        gdata.pushTri(indices[i*3+0],indices[i*3+1],indices[i*3+2]);
+                //TRIANGLES
+                    if (accessorIndices.componentType == 5122) {
+                        const unsigned short* indices   = reinterpret_cast<const unsigned short*>(&bufferInd.data[bufferViewIndices.byteOffset + accessorIndices.byteOffset]);
+                        for (size_t i = 0; i < accessorIndices.count/3; ++i) gdata.pushTri(indices[i*3+0],indices[i*3+1],indices[i*3+2]);
                     }
+                    if (accessorIndices.componentType == 5123) {
+                        const short* indices   = reinterpret_cast<const short*>(&bufferInd.data[bufferViewIndices.byteOffset + accessorIndices.byteOffset]);
+                        for (size_t i = 0; i < accessorIndices.count/3; ++i) gdata.pushTri(indices[i*3+0],indices[i*3+1],indices[i*3+2]);
+                    }
+                    if (accessorIndices.componentType == 5125) {
+                        const unsigned int* indices   = reinterpret_cast<const unsigned int*>(&bufferInd.data[bufferViewIndices.byteOffset + accessorIndices.byteOffset]);
+                        for (size_t i = 0; i < accessorIndices.count/3; ++i) gdata.pushTri(indices[i*3+0],indices[i*3+1],indices[i*3+2]);
+                    }
+                }
+                if (primitive.mode == 5) {
+                //TRIANGLE STRIP
+                }
+                if (primitive.mode == 6) {
+                //TRAINGEL FAN
                 }
                 node->geoData = gdata;
                 node->matID = primitive.material;
-                node->material = materials[matID];
+                if (materials.count(matID)) node->material = materials[matID];
                 cout << "prim with v " << n << " : " << primitive.mode <<  endl;
             }
-
-            if (gltfMesh.primitives.size() > 1) {
-                res += " primitives: " + gltfMesh.primitives.size();
-            }
-            //for (auto each : gltfMesh.primitives) cout << " " << each.;
-
-            //cout << res << endl;
         }
 
         void connectTree(){
@@ -853,7 +866,7 @@ class GLTFLoader : public GLTFUtils {
             //tree->print();
             tree->buildOSG();
             tree->applyTransformations();
-            tree->applyMaterials();
+            //tree->applyMaterials();
             tree->applyGeometries();
             progress->finish();
             return;
