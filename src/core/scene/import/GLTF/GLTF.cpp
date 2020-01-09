@@ -259,7 +259,7 @@ struct GLTFNode : GLTFUtils {
     vector<int> texCoordIndex;
     VRObjectPtr obj;
     VRMaterialPtr material;
-    Matrix4d pose;
+    Matrix4d pose = Matrix4d();
     VRGeoData geoData;
     int matID = -1;
 
@@ -278,8 +278,6 @@ struct GLTFNode : GLTFUtils {
         c->parent = this;
         children.push_back(c);
     }
-
-    virtual GLTFNode* newChild(string t, string n) = 0;
 
     vector<GLTFNode*> getSiblings() {
         vector<GLTFNode*> res;
@@ -338,9 +336,7 @@ struct GLTFNode : GLTFUtils {
     }
 
     void handleRotation() {
-        //Vec4d rotation = getSFRotation(data, "rotation", Vec4d(0,0,1,0));
         pose.setRotate( Quaterniond( Vec3d(rotation[0], rotation[1], rotation[2]), rotation[3] ) );
-        //cout << pose << endl;
     }
 
     void handleScale() {
@@ -384,13 +380,6 @@ struct GLTFNode : GLTFUtils {
 struct GLTFNNode : GLTFNode{
     GLTFNNode(string type, string name = "Unnamed") : GLTFNode(type, name) { version = 2; }
     ~GLTFNNode() {}
-
-    GLTFNNode* newChild(string t, string n) {
-        //cout << "GLTF2Node::newChild '" << n << "' of type " << t << endl;
-        auto c = new GLTFNNode(t,n);
-        addChild(c);
-        return c;
-    }
 
     Matrix4d applyTransformations(Matrix4d m = Matrix4d()) {
         VRTransformPtr t = dynamic_pointer_cast<VRTransform>(obj);
@@ -556,8 +545,7 @@ class GLTFLoader : public GLTFUtils {
             if (transf[2]) { thisNode->scale = scale; thisNode->handleScale(); }
             if (transf[3]) { thisNode->matTransform = mat4; thisNode->pose = mat4; };
 
-            //if (type == "Untyped") cout << res << " " << type << endl;
-            cout << res << " " << type << endl;
+            //cout << res << " " << type << endl;
         }
 
         void handleMaterial(const tinygltf::Material &gltfMaterial){
@@ -565,16 +553,13 @@ class GLTFLoader : public GLTFUtils {
             //cout << "Emmissive Tex: " << gltfMaterial.emissiveTexture.index << endl;
             //cout << "Oclusion Tex: " << gltfMaterial.occlusionTexture.index << endl;
             VRMaterialPtr mat = VRMaterial::create(gltfMaterial.name);
-            cout << matID <<  " " << gltfMaterial.name << endl;
             bool bsF = false;
             bool mtF = false;
             bool rfF = false;
             bool emF = false;
             for (const auto &content : gltfMaterial.values) {
-                cout << " " << content.first;
                 if (content.first == "baseColorTexture") {
                     int tID = gltfMaterial.pbrMetallicRoughness.baseColorTexture.index;
-                    //cout << matID << " " << gltfMaterial.name << " BaseColor Tex: " << tID << endl;
                     mat->setTexture(textures[tID]);
                     //cout << "  " << matID << " " << gltfMaterial.name << " baseColor: " << tID << " - " << textures[tID]->getSize() << endl;
                 }
@@ -588,10 +573,7 @@ class GLTFLoader : public GLTFUtils {
                 if (content.first == "roughnessFactor") rfF = true;
                 if (content.first == "emissiveFactor") emF = true;
             }
-            cout << endl;
-            cout << " - ";
             for (const auto &content : gltfMaterial.additionalValues) {
-                cout << " " << content.first;
                 if (content.first == "normalTexture") {
                     int tID = gltfMaterial.normalTexture.index;
                     //cout << "  " << matID << " " << gltfMaterial.name << " Normal Tex: " << gltfMaterial.normalTexture.index << " found but not used" << endl;
@@ -602,7 +584,6 @@ class GLTFLoader : public GLTFUtils {
                     //cout << "  " << matID << " " << gltfMaterial.name << " Emmissive Tex: " << gltfMaterial.emissiveTexture.index << " found but not used" << endl;
                 }
             }
-            cout << endl;
 
             if (bsF && mtF && rfF) {
                 if (gltfMaterial.pbrMetallicRoughness.baseColorFactor.size() == 3) {
@@ -617,7 +598,6 @@ class GLTFLoader : public GLTFUtils {
                     mat->setAmbient(diff);
                     mat->setShininess(shiny);
                     mat->ignoreMeshColors(true);
-                    cout << " newMAT - 3 " << baseColor << endl;
                     if (emF) {
                         //gltfMaterial.pbrMetallicRoughness.
                         //mat->setEmission(Color3f c);
@@ -635,7 +615,6 @@ class GLTFLoader : public GLTFUtils {
                     mat->setAmbient( Color3f(diff[0],diff[1],diff[2]) );
                     mat->setShininess(shiny);
                     mat->ignoreMeshColors(true);
-                    cout << " newMAT 4 - doh " << baseColor << " spec " << spec << endl;
                 }
             }
             materials[matID] = mat;
@@ -681,12 +660,8 @@ class GLTFLoader : public GLTFUtils {
                 VRGeoData gdata = VRGeoData();
 
                 string atts = "";
-                // bufferView byteoffset + accessor byteoffset tells you where the actual position data is within the buffer. From there
-                // you should already know how the data needs to be interpreted.
-                // From here, you choose what you wish to do with this position data. In this case, we  will display it out.
-
                 for (auto att : primitive.attributes) atts += att.first + " ";
-                cout << atts << endl;
+                //cout << atts << endl;
 
                 if (primitive.attributes.count("POSITION")){
                     const tinygltf::Accessor& accessorP = model.accessors[primitive.attributes["POSITION"]];
@@ -748,7 +723,7 @@ class GLTFLoader : public GLTFUtils {
                 const tinygltf::Accessor& accessorIndices = model.accessors[primitive.indices];
                 const tinygltf::BufferView& bufferViewIndices = model.bufferViews[accessorIndices.bufferView];
                 const tinygltf::Buffer& bufferInd = model.buffers[bufferViewIndices.buffer];
-                cout << "PrimitiveIndecesC " << model.accessors[primitive.indices].count << " MODE: " << primitive.mode << " TRIS: " << model.accessors[primitive.indices].count/3 << endl;
+                //cout << "PrimitiveIndecesC " << model.accessors[primitive.indices].count << " MODE: " << primitive.mode << " TRIS: " << model.accessors[primitive.indices].count/3 << endl;
 
                 if (primitive.mode == 0) {
                 //POINTS
@@ -786,7 +761,7 @@ class GLTFLoader : public GLTFUtils {
                 node->geoData = gdata;
                 node->matID = primitive.material;
                 if (materials.count(matID)) node->material = materials[matID];
-                cout << "prim with v " << n << " : " << primitive.mode <<  endl;
+                //cout << "prim with v " << n << " : " << primitive.mode <<  endl;
             }
         }
 
@@ -866,7 +841,7 @@ class GLTFLoader : public GLTFUtils {
             //tree->print();
             tree->buildOSG();
             tree->applyTransformations();
-            //tree->applyMaterials();
+            tree->applyMaterials();
             tree->applyGeometries();
             progress->finish();
             return;
