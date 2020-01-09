@@ -1338,12 +1338,12 @@ int addBuffer(tinygltf::Model& model, string name, int N, function<G(int)> data)
     return bID;
 }
 
-int addBufferView(tinygltf::Model& model, string name, int bufID, int byteL, int target) {
+int addBufferView(tinygltf::Model& model, string name, int bufID, int byteO, int byteL, int target) {
     int vID;
     tinygltf::BufferView& view = addElement(model.bufferViews, vID);
     view.name = name;
     view.buffer = bufID;
-    view.byteOffset = 0;
+    view.byteOffset = byteO;
     view.byteLength = byteL;
     view.target = target;
     return vID;
@@ -1359,6 +1359,25 @@ int addAccessor(tinygltf::Model& model, string name, int viewID, int count, int 
     accessor.componentType = ctype;
     accessor.type = type;
     return aID;
+}
+
+void addPrimitive(tinygltf::Model& model, tinygltf::Mesh& mesh, int length, int offset, map<string, int> bufIDs, map<string, int> accN, int mode) {
+    // buffer views
+    int indicesViewID   = addBufferView(model, "indicesView"  , bufIDs["indices"]  , sizeof(int)*offset, sizeof(int)*length, TINYGLTF_TARGET_ELEMENT_ARRAY_BUFFER);
+    int positionsViewID = addBufferView(model, "positionsView", bufIDs["positions"], 0, sizeof(Vec3f)*accN["positions"], TINYGLTF_TARGET_ARRAY_BUFFER);
+    int normalsViewID   = addBufferView(model, "normalsView"  , bufIDs["normals"]  , 0, sizeof(Vec3f)*accN["normals"], TINYGLTF_TARGET_ARRAY_BUFFER);
+
+    // accessors
+    int indicesAccID   = addAccessor(model, "indices"  , indicesViewID  , length, TINYGLTF_TYPE_SCALAR, TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT);
+    int positionsAccID = addAccessor(model, "positions", positionsViewID, accN["positions"], TINYGLTF_TYPE_VEC3  , TINYGLTF_COMPONENT_TYPE_FLOAT);
+    int normalsAccID   = addAccessor(model, "normals"  , normalsViewID  , accN["normals"]  , TINYGLTF_TYPE_VEC3  , TINYGLTF_COMPONENT_TYPE_FLOAT);
+
+    int primID;
+    tinygltf::Primitive& primitive = addElement(mesh.primitives, primID);
+    primitive.indices = indicesAccID;
+    primitive.mode = mode;
+    primitive.attributes["POSITION"] = positionsAccID;
+    primitive.attributes["NORMAL"] = normalsAccID;
 }
 
 void constructGLTF(tinygltf::Model& model, VRObjectPtr obj, int pID = -1) {
@@ -1392,81 +1411,71 @@ void constructGLTF(tinygltf::Model& model, VRObjectPtr obj, int pID = -1) {
 
         VRGeoData data(geo);
 
-        int Ntypes = data.getDataSize(0);
-        int Nlengths = data.getDataSize(1);
-        int Nindices = data.getDataSize(2);
-        int Npositions = data.getDataSize(3);
-        int Nnormals = data.getDataSize(4);
-        int Ncolors3 = data.getDataSize(5);
-        int Ncolors4 = data.getDataSize(6);
-        int Ntexcoords = data.getDataSize(7);
+        map<string, int> bufIDs, dataN;
+
+        int Ntypes         = data.getDataSize(0);
+        int Nlengths       = data.getDataSize(1);
+        dataN["indices"]   = data.getDataSize(2);
+        dataN["positions"] = data.getDataSize(3);
+        dataN["normals"]   = data.getDataSize(4);
+        dataN["colors3"]   = data.getDataSize(5);
+        dataN["colors4"]   = data.getDataSize(6);
+        dataN["texcoords"] = data.getDataSize(7);
 
         // buffer
-        int indicesBufID   = addBuffer<int  , int  >(model, "indicesBuffer"  , Nindices  , bind(&VRGeoData::getIndex   , &data, _1));
-        int positionsBufID = addBuffer<Vec3f, Pnt3d>(model, "positionsBuffer", Npositions, bind(&VRGeoData::getPosition, &data, _1));
-        int normalsBufID   = addBuffer<Vec3f, Vec3d>(model, "normalsBuffer"  , Nnormals  , bind(&VRGeoData::getNormal  , &data, _1));
+        bufIDs["indices"]   = addBuffer<int  , int  >(model, "indicesBuffer"  , dataN["indices"]  , bind(&VRGeoData::getIndex   , &data, _1));
+        bufIDs["positions"] = addBuffer<Vec3f, Pnt3d>(model, "positionsBuffer", dataN["positions"], bind(&VRGeoData::getPosition, &data, _1));
+        bufIDs["normals"]   = addBuffer<Vec3f, Vec3d>(model, "normalsBuffer"  , dataN["normals"]  , bind(&VRGeoData::getNormal  , &data, _1));
 
-        // buffer views
-        int indicesViewID   = addBufferView(model, "indicesView"  , indicesBufID  , sizeof(int  )*3, TINYGLTF_TARGET_ELEMENT_ARRAY_BUFFER);
-        int positionsViewID = addBufferView(model, "positionsView", positionsBufID, sizeof(Vec3f)*3, TINYGLTF_TARGET_ARRAY_BUFFER);
-        int normalsViewID   = addBufferView(model, "normalsView"  , normalsBufID  , sizeof(Vec3f)*3, TINYGLTF_TARGET_ARRAY_BUFFER);
+        map<int, int> typeMap;
+        typeMap[GL_POINTS] = TINYGLTF_MODE_POINTS;
+        typeMap[GL_LINES] = TINYGLTF_MODE_LINE;
+        typeMap[GL_LINE_LOOP] = TINYGLTF_MODE_LINE_LOOP;
+        typeMap[GL_LINE_STRIP] = TINYGLTF_MODE_LINE_STRIP;
+        typeMap[GL_TRIANGLES] = TINYGLTF_MODE_TRIANGLES;
+        typeMap[GL_TRIANGLE_STRIP] = TINYGLTF_MODE_TRIANGLE_STRIP;
+        typeMap[GL_TRIANGLE_FAN] = TINYGLTF_MODE_TRIANGLE_FAN;
 
-        // accessors
-        int indicesAccID   = addAccessor(model, "indices"  , indicesViewID  , Nindices  , TINYGLTF_TYPE_SCALAR, TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT);
-        int positionsAccID = addAccessor(model, "positions", positionsViewID, Npositions, TINYGLTF_TYPE_VEC3  , TINYGLTF_COMPONENT_TYPE_FLOAT);
-        int normalsAccID   = addAccessor(model, "normals"  , normalsViewID  , Nnormals  , TINYGLTF_TYPE_VEC3  , TINYGLTF_COMPONENT_TYPE_FLOAT);
-
-        /*int indicesAccID;
-        tinygltf::Accessor& indices = addElement(model.accessors, indicesAccID);
-        indices.name = "indices";
-        indices.componentType = TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT;
-        indices.type = TINYGLTF_TYPE_SCALAR;
-        indices.count = Nindices;
-        indices.bufferView = indicesViewID;
-        indices.byteOffset = 0;
-
-        int positionsAccID;
-        tinygltf::Accessor& positions = addElement(model.accessors, positionsAccID);
-        positions.name = "positions";
-        positions.componentType = TINYGLTF_COMPONENT_TYPE_FLOAT;
-        positions.type = TINYGLTF_TYPE_VEC3;
-        positions.count = Npositions;
-        positions.bufferView = positionsViewID;
-        positions.byteOffset = 0;
-
-        int normalsAccID;
-        tinygltf::Accessor& normals = addElement(model.accessors, normalsAccID);
-        normals.name = "normals";
-        normals.componentType = TINYGLTF_COMPONENT_TYPE_FLOAT;
-        normals.type = TINYGLTF_TYPE_VEC3;
-        normals.count = Nnormals;
-        normals.bufferView = normalsViewID;
-        normals.byteOffset = 0;*/
+        map<int, int> typeNVerts;
+        typeNVerts[GL_POINTS] = 1;
+        typeNVerts[GL_LINES] = 2;
+        typeNVerts[GL_LINE_LOOP] = -1;
+        typeNVerts[GL_LINE_STRIP] = -1;
+        typeNVerts[GL_TRIANGLES] = 3;
+        typeNVerts[GL_TRIANGLE_STRIP] = -1;
+        typeNVerts[GL_TRIANGLE_FAN] = -1;
 
         // add types
+        int offset = 0;
         for (int iType = 0; iType < Ntypes; iType++) {
             int type = data.getType(iType);
             int length = data.getLength(iType);
 
-            int primID;
-            tinygltf::Primitive& primitive = addElement(mesh.primitives, primID);
-            primitive.mode = TINYGLTF_MODE_TRIANGLES;
-            primitive.indices = indicesAccID;
-            primitive.attributes["POSITION"] = positionsAccID;
-            primitive.attributes["NORMAL"] = normalsAccID;
+            if (typeMap.count(type)) {
+                map<string, int> accN;
+                accN["indices"]   = length;
+                accN["positions"] = dataN["positions"] ;
+                accN["normals"]   = dataN["normals"] ;
+
+                addPrimitive(model, mesh, length, offset, bufIDs, accN, typeMap[type]);
+                offset += length;
+            } else {
+                if (type == GL_QUADS) {
+                    map<string, int> accN;
+                    accN["indices"]   = 4;
+                    accN["positions"] = dataN["positions"] ;
+                    accN["normals"]   = dataN["normals"] ;
+
+                    //int mode = TINYGLTF_MODE_TRIANGLES;
+                    int mode = GL_TRIANGLE_FAN;
+                    for (int i = 0; i<length; i+=4) {
+                        addPrimitive(model, mesh, 4, offset, bufIDs, accN, mode);
+                        offset += 4;
+                    }
+                }
+            }
         }
-
-        /*
-        #define TINYGLTF_MODE_POINTS (0)
-        #define TINYGLTF_MODE_LINE (1)
-        #define TINYGLTF_MODE_LINE_LOOP (2)
-        #define TINYGLTF_MODE_LINE_STRIP (3)
-        #define TINYGLTF_MODE_TRIANGLES (4)
-        #define TINYGLTF_MODE_TRIANGLE_STRIP (5)
-        #define TINYGLTF_MODE_TRIANGLE_FAN (6);
-        */
     }
-
 
     for (auto child : obj->getChildren()) constructGLTF(model, child, nID);
 }
