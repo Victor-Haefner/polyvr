@@ -449,9 +449,11 @@ class GLTFLoader : public GLTFUtils {
         map<string, GLTFNode*> references;
         tinygltf::Model model;
         map<int, GLTFNode*> nodes;
+        map<int, GLTFNode*> scenes;
         map<int, int> nodeToMesh;
         map<int, int> meshToNode;
         map<int, vector<int>> childrenPerNode;
+        map<int, vector<int>> childrenPerScene;
         map<int, VRMaterialPtr> materials;
         map<int, VRTexturePtr> textures;
         size_t sceneID = -1;
@@ -484,8 +486,12 @@ class GLTFLoader : public GLTFUtils {
             string res = "";
 
             res += to_string(sceneID) + " " + gltfScene.name + " nodes: ";
-            for (auto each : gltfScene.nodes) res += " " + each;
-
+            for (auto each : gltfScene.nodes) {
+                GLTFNode* thisNode = new GLTFNNode("Scene",gltfScene.name);
+                scenes[sceneID] = thisNode;
+                for (auto each : gltfScene.nodes) childrenPerScene[sceneID].push_back(each);
+                res += " " + each;
+            }
             //cout << res << endl;
         }
 
@@ -506,10 +512,10 @@ class GLTFLoader : public GLTFUtils {
             vector<bool> transf = {false, false, false, false};
 
             if (gltfNode.mesh > -1) {
-                //res += " mesh: " + to_string(gltfNode.mesh);
+                res += " mesh: " + to_string(gltfNode.mesh);
                 nodeToMesh[nodeID] = gltfNode.mesh;
                 meshToNode[gltfNode.mesh] = nodeID;
-                //res += " -------------------";
+                res += " -------------------";
                 type = "Mesh";
             }
 
@@ -556,13 +562,13 @@ class GLTFLoader : public GLTFUtils {
                 childrenPerNode[nodeID] = children;
             }
 
-            if (transf[0]) { thisNode->translation = translation; thisNode->handleTransform(); }
+            if (transf[0]) { thisNode->translation = translation; thisNode->handleTranslation(); }
             if (transf[1]) { thisNode->rotation = rotation; thisNode->handleRotation(); }
             if (transf[2]) { thisNode->scale = scale; thisNode->handleScale(); }
             if (transf[3]) { thisNode->matTransform = mat4; thisNode->pose = mat4; };
 
             //if (type == "Untyped") cout << res << " " << type << endl;
-            //if (type == "Mesh") cout << res << " " << type << endl;
+            cout << res << " " << type << endl;
         }
 
         void handleMaterial(const tinygltf::Material &gltfMaterial){
@@ -772,12 +778,15 @@ class GLTFLoader : public GLTFUtils {
         }
 
         void connectTree(){
+            for (auto eachPair : scenes){
+                auto ID = eachPair.first;
+                auto& node = eachPair.second;
+                for (auto childID : childrenPerScene[ID]) node->addChild(nodes[childID]);
+            }
             for (auto eachPair : nodes){
                 auto ID = eachPair.first;
                 auto& node = eachPair.second;
-                for (auto childID : childrenPerNode[ID]){
-                    node->addChild(nodes[childID]);
-                }
+                for (auto childID : childrenPerNode[ID]) node->addChild(nodes[childID]);
             }
         }
 
@@ -835,12 +844,11 @@ class GLTFLoader : public GLTFUtils {
             }
             debugDump(&model);
             parsetinygltf();
-
             version = 2;
 
             gltfschema = GLTFSchema(version);
             tree = new GLTFNNode("Root", "Root");
-            tree->addChild(nodes[0]);
+            for (auto each:scenes) tree->addChild(each.second);
             tree->obj = res;
             //tree->print();
             tree->buildOSG();
