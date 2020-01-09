@@ -20,6 +20,10 @@
 #include <OpenSG/OSGColor.h>
 #include <OpenSG/OSGQuaternion.h>
 
+//#include "core/objects/geometry/OSGGeometry.h"
+//#include <OpenSG/OSGGeoProperties.h>
+//#include <OpenSG/OSGGeometry.h>
+
 // Define these only in *one* .cc file.
 #define TINYGLTF_IMPLEMENTATION
 #define STB_IMAGE_IMPLEMENTATION
@@ -28,6 +32,7 @@
 #include "tiny_gltf.h"
 
 using namespace OSG;
+using namespace std::placeholders;
 
 struct GLTFSchema {
     int version = 1;
@@ -876,13 +881,87 @@ void OSG::loadGLTF(string path, VRTransformPtr res, VRProgressPtr p, bool thread
     gltf.load();
 }
 
+template<typename T>
+T& addElement(vector<T>& v, int& ID) {
+    ID = v.size();
+    v.push_back(T());
+    return v.back();
+}
+
+template<typename T, typename G>
+int addBuffer(tinygltf::Model& model, string name, int N, function<G(int)> data) {
+    if (N == 0) return -1;
+    int bID;
+    tinygltf::Buffer& buf = addElement(model.buffers, bID);
+    vector<T> vec;
+    for (int i = 0; i<N; i++) vec.push_back(T(data(i)));
+    buf.name = name;
+    unsigned char* d = (unsigned char*)&vec[0];
+    buf.data = vector<unsigned char>( d, d + sizeof(T)*vec.size() );
+    return bID;
+}
+
+int addBufferView(tinygltf::Model& model, string name, int bufID, int byteO, int byteL, int target) {
+    int vID;
+    tinygltf::BufferView& view = addElement(model.bufferViews, vID);
+    view.name = name;
+    view.buffer = bufID;
+    view.byteOffset = byteO;
+    view.byteLength = byteL;
+    view.target = target;
+    return vID;
+}
+
+int addAccessor(tinygltf::Model& model, string name, int viewID, int count, int type, int ctype) {
+    int aID;
+    tinygltf::Accessor& accessor = addElement(model.accessors, aID);
+    accessor.name = name;
+    accessor.bufferView = viewID;
+    accessor.byteOffset = 0;
+    accessor.count = count;
+    accessor.componentType = ctype;
+    accessor.type = type;
+    return aID;
+}
+
+void addPrimitive(tinygltf::Model& model, tinygltf::Mesh& mesh, int length, int offset, map<string, int> bufIDs, map<string, int> accN, int mode, int cID) {
+    // buffer views
+    int indicesViewID   = addBufferView(model, "indicesView"  , bufIDs["indices"]  , sizeof(int)*offset, sizeof(int)*length, TINYGLTF_TARGET_ELEMENT_ARRAY_BUFFER);
+    int positionsViewID = addBufferView(model, "positionsView", bufIDs["positions"], 0, sizeof(Vec3f)*accN["positions"], TINYGLTF_TARGET_ARRAY_BUFFER);
+    int normalsViewID   = addBufferView(model, "normalsView"  , bufIDs["normals"]  , 0, sizeof(Vec3f)*accN["normals"], TINYGLTF_TARGET_ARRAY_BUFFER);
+
+    // accessors
+    int indicesAccID   = addAccessor(model, "indices"  , indicesViewID  , length, TINYGLTF_TYPE_SCALAR, TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT);
+    int positionsAccID = addAccessor(model, "positions", positionsViewID, accN["positions"], TINYGLTF_TYPE_VEC3  , TINYGLTF_COMPONENT_TYPE_FLOAT);
+    int normalsAccID   = addAccessor(model, "normals"  , normalsViewID  , accN["normals"]  , TINYGLTF_TYPE_VEC3  , TINYGLTF_COMPONENT_TYPE_FLOAT);
+
+    int primID;
+    tinygltf::Primitive& primitive = addElement(mesh.primitives, primID);
+    primitive.indices = indicesAccID;
+    primitive.mode = mode;
+    primitive.material = cID;
+    primitive.attributes["POSITION"] = positionsAccID;
+    primitive.attributes["NORMAL"] = normalsAccID;
+
+    if (bufIDs.count("colors3")) {
+        int colors3ViewID = addBufferView(model, "colors3View", bufIDs["colors3"], 0, sizeof(Vec3f)*accN["colors3"], TINYGLTF_TARGET_ARRAY_BUFFER);
+        int colors3AccID = addAccessor(model, "colors3", colors3ViewID, accN["colors3"], TINYGLTF_TYPE_VEC3, TINYGLTF_COMPONENT_TYPE_FLOAT);
+        primitive.attributes["COLOR_0"] = colors3AccID;
+    }
+
+    if (bufIDs.count("colors4")) {
+        int colors4ViewID = addBufferView(model, "colors4View", bufIDs["colors4"], 0, sizeof(Vec4f)*accN["colors4"], TINYGLTF_TARGET_ARRAY_BUFFER);
+        int colors4AccID = addAccessor(model, "colors4", colors4ViewID, accN["colors4"], TINYGLTF_TYPE_VEC4, TINYGLTF_COMPONENT_TYPE_FLOAT);
+        primitive.attributes["COLOR_0"] = colors4AccID;
+    }
+}
+
 void constructGLTF(tinygltf::Model& model, VRObjectPtr obj, int pID = -1) {
     tinygltf::Scene& scene = model.scenes.back();
 
     // new node
-    int nID = model.nodes.size();
-    model.nodes.push_back(tinygltf::Node());
-    tinygltf::Node& node = model.nodes.back();
+    int nID, mID, cID;
+    tinygltf::Node& node = addElement(model.nodes, nID);
 
     // from object
     node.name = obj->getName();
@@ -896,139 +975,90 @@ void constructGLTF(tinygltf::Model& model, VRObjectPtr obj, int pID = -1) {
     }
 
     // scene graph structure
-    if (pID >= 0) {
-        auto& parent = model.nodes[pID];
-        parent.children.push_back(nID);
-    } else scene.nodes.push_back(nID);
+    if (pID < 0) scene.nodes.push_back(nID); // a root node
+    else model.nodes[pID].children.push_back(nID);
 
     // from geometry
     auto geo = dynamic_pointer_cast<VRGeometry>(trans);
     if (geo) {
-        int mID = model.meshes.size();
-        model.meshes.push_back(tinygltf::Mesh());
-        tinygltf::Mesh& mesh = model.meshes.back();
+        // material
+        auto mat = geo->getMaterial();
+        tinygltf::Material& material = addElement(model.materials, cID);
+        material.name = mat->getName();
+
+        Color3f d = mat->getDiffuse();
+        //float t = mat->getTransparency();
+        material.pbrMetallicRoughness.baseColorFactor = {d[0],d[1],d[2],1};
+        material.pbrMetallicRoughness.metallicFactor = 0;
+        material.pbrMetallicRoughness.roughnessFactor = 1;
+
+        // mesh
+        tinygltf::Mesh& mesh = addElement(model.meshes, mID);
         mesh.name = geo->getName() + "_mesh";
         node.mesh = mID;
 
         VRGeoData data(geo);
+        map<string, int> dataN;
+        int Ntypes         = data.getDataSize(0);
+        //int Nlengths       = data.getDataSize(1);
+        dataN["indices"]   = data.getDataSize(2);
+        dataN["positions"] = data.getDataSize(3);
+        dataN["normals"]   = data.getDataSize(4);
+        dataN["colors3"]   = data.getDataSize(5);
+        dataN["colors4"]   = data.getDataSize(6);
+        dataN["texcoords"] = data.getDataSize(7);
+        dataN["texcoords2"] = data.getDataSize(8);
+        dataN["indicesNormals"] = data.getDataSize(9);
+        dataN["indicesColors"] = data.getDataSize(10);
+        dataN["indicesTexCoords"] = data.getDataSize(11);
 
-        int Ntypes = data.getDataSize(0);
-        int Nlengths = data.getDataSize(1);
-        int Nindices = data.getDataSize(2);
-        int Npositions = data.getDataSize(3);
-        int Nnormals = data.getDataSize(4);
-        int Ncolors3 = data.getDataSize(5);
-        int Ncolors4 = data.getDataSize(6);
-        int Ntexcoords = data.getDataSize(7);
+        if (dataN["indicesNormals"] > 0 || dataN["indicesColors"] > 0 || dataN["indicesTexCoords"] > 0) {
+            cout << "constructGLTF failed due to multiindexed node!" << endl;
+            // TODO: break here?
+        }
 
         // buffer
-        int indicesBufID = model.buffers.size();
-        model.buffers.push_back(tinygltf::Buffer());
-        tinygltf::Buffer& indicesBuffer = model.buffers.back();
-        vector<int> indicesVec;
-        for (int i = 0; i<Nindices; i++) indicesVec.push_back(data.getIndex(i));
-        indicesBuffer.name = "indicesBuffer";
-        unsigned char* dInds = (unsigned char*)&indicesVec[0];
-        indicesBuffer.data = vector<unsigned char>( dInds, dInds + sizeof(int)*indicesVec.size() );
+        map<string, int> bufIDs;
+        bufIDs["indices"]   = addBuffer<int  , int  >(model, "indicesBuffer"  , dataN["indices"]  , bind(&VRGeoData::getIndex   , &data, _1, PositionsIndex));
+        bufIDs["positions"] = addBuffer<Vec3f, Pnt3d>(model, "positionsBuffer", dataN["positions"], bind(&VRGeoData::getPosition, &data, _1));
+        bufIDs["normals"]   = addBuffer<Vec3f, Vec3d>(model, "normalsBuffer"  , dataN["normals"]  , bind(&VRGeoData::getNormal  , &data, _1));
+        if (dataN["colors3"] > 0)
+            bufIDs["colors3"]   = addBuffer<Vec3f, Color3f>(model, "colors3Buffer"  , dataN["colors3"]  , bind(&VRGeoData::getColor3, &data, _1));
+        if (dataN["colors4"] > 0)
+            bufIDs["colors4"]   = addBuffer<Vec4f, Color4f>(model, "colors4Buffer"  , dataN["colors4"]  , bind(&VRGeoData::getColor , &data, _1));
+        if (dataN["colors3"] > 0 || dataN["colors4"] > 0) {
+            material.pbrMetallicRoughness.baseColorFactor = {1,1,1,1};
+        }
 
-        int positionsBufID = model.buffers.size();
-        model.buffers.push_back(tinygltf::Buffer());
-        tinygltf::Buffer& positionsBuffer = model.buffers.back();
-        vector<Vec3f> positionsVec;
-        for (int i = 0; i<Npositions; i++) positionsVec.push_back(Vec3f(data.getPosition(i)));
-        positionsBuffer.name = "positionsBuffer";
-        unsigned char* dPos = (unsigned char*)&positionsVec[0];
-        positionsBuffer.data = vector<unsigned char>( dPos, dPos + sizeof(Vec3f)*positionsVec.size() );
-
-        int normalsBufID = model.buffers.size();
-        model.buffers.push_back(tinygltf::Buffer());
-        tinygltf::Buffer& normalsBuffer = model.buffers.back();
-        vector<Vec3f> normalsVec;
-        for (int i = 0; i<Nnormals; i++) normalsVec.push_back(Vec3f(data.getNormal(i)));
-        normalsBuffer.name = "normalsBuffer";
-        unsigned char* dNorms = (unsigned char*)&normalsVec[0];
-        normalsBuffer.data = vector<unsigned char>( dNorms, dNorms + sizeof(Vec3f)*normalsVec.size() );
-
-        // buffer views
-        int indicesViewID = model.bufferViews.size();
-        model.bufferViews.push_back(tinygltf::BufferView());
-        tinygltf::BufferView& indicesView = model.bufferViews.back();
-        indicesView.buffer = indicesBufID;
-        indicesView.byteOffset = 0;
-        indicesView.byteLength = sizeof(int)*3;
-        indicesView.target = TINYGLTF_TARGET_ELEMENT_ARRAY_BUFFER;
-
-        int positionsViewID = model.bufferViews.size();
-        model.bufferViews.push_back(tinygltf::BufferView());
-        tinygltf::BufferView& positionsView = model.bufferViews.back();
-        positionsView.buffer = positionsBufID;
-        positionsView.byteOffset = 0;
-        positionsView.byteLength = sizeof(Vec3f)*3;
-        positionsView.target = TINYGLTF_TARGET_ARRAY_BUFFER;
-
-        int normalsViewID = model.bufferViews.size();
-        model.bufferViews.push_back(tinygltf::BufferView());
-        tinygltf::BufferView& normalsView = model.bufferViews.back();
-        normalsView.buffer = normalsBufID;
-        normalsView.byteOffset = 0;
-        normalsView.byteLength = sizeof(Vec3f)*3;
-        normalsView.target = TINYGLTF_TARGET_ARRAY_BUFFER;
-
-        // accessors
-        int indicesAccID = model.accessors.size();
-        model.accessors.push_back(tinygltf::Accessor());
-        tinygltf::Accessor& indices = model.accessors.back();
-        indices.name = "indices";
-        indices.componentType = TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT;
-        indices.type = TINYGLTF_TYPE_SCALAR;
-        indices.count = Nindices;
-        indices.bufferView = indicesViewID;
-        indices.byteOffset = 0;
-
-        int positionsAccID = model.accessors.size();
-        model.accessors.push_back(tinygltf::Accessor());
-        tinygltf::Accessor& positions = model.accessors.back();
-        positions.name = "positions";
-        positions.componentType = TINYGLTF_COMPONENT_TYPE_FLOAT;
-        positions.type = TINYGLTF_TYPE_VEC3;
-        positions.count = Npositions;
-        positions.bufferView = positionsViewID;
-        positions.byteOffset = 0;
-
-        int normalsAccID = model.accessors.size();
-        model.accessors.push_back(tinygltf::Accessor());
-        tinygltf::Accessor& normals = model.accessors.back();
-        normals.name = "normals";
-        normals.componentType = TINYGLTF_COMPONENT_TYPE_FLOAT;
-        normals.type = TINYGLTF_TYPE_VEC3;
-        normals.count = Nnormals;
-        normals.bufferView = normalsViewID;
-        normals.byteOffset = 0;
+        map<int, int> typeMap;
+        typeMap[GL_POINTS] = TINYGLTF_MODE_POINTS;
+        typeMap[GL_LINES] = TINYGLTF_MODE_LINE;
+        typeMap[GL_LINE_LOOP] = TINYGLTF_MODE_LINE_LOOP;
+        typeMap[GL_LINE_STRIP] = TINYGLTF_MODE_LINE_STRIP;
+        typeMap[GL_TRIANGLES] = TINYGLTF_MODE_TRIANGLES;
+        typeMap[GL_TRIANGLE_STRIP] = TINYGLTF_MODE_TRIANGLE_STRIP;
+        typeMap[GL_TRIANGLE_FAN] = TINYGLTF_MODE_TRIANGLE_FAN;
 
         // add types
+        int offset = 0;
         for (int iType = 0; iType < Ntypes; iType++) {
             int type = data.getType(iType);
             int length = data.getLength(iType);
 
-            mesh.primitives.push_back(tinygltf::Primitive());
-            tinygltf::Primitive& primitive = mesh.primitives.back();
-            primitive.mode = TINYGLTF_MODE_TRIANGLES;
-            primitive.indices = indicesAccID;
-            primitive.attributes["POSITION"] = positionsAccID;
-            primitive.attributes["NORMAL"] = normalsAccID;
+            if (typeMap.count(type)) {
+                addPrimitive(model, mesh, length, offset, bufIDs, dataN, typeMap[type], cID);
+                offset += length;
+            } else {
+                if (type == GL_QUADS) {
+                    int mode = TINYGLTF_MODE_TRIANGLE_FAN;
+                    for (int i = 0; i<length; i+=4) {
+                        addPrimitive(model, mesh, 4, offset, bufIDs, dataN, mode, cID);
+                        offset += 4;
+                    }
+                }
+            }
         }
-
-        /*
-        #define TINYGLTF_MODE_POINTS (0)
-        #define TINYGLTF_MODE_LINE (1)
-        #define TINYGLTF_MODE_LINE_LOOP (2)
-        #define TINYGLTF_MODE_LINE_STRIP (3)
-        #define TINYGLTF_MODE_TRIANGLES (4)
-        #define TINYGLTF_MODE_TRIANGLE_STRIP (5)
-        #define TINYGLTF_MODE_TRIANGLE_FAN (6);
-        */
     }
-
 
     for (auto child : obj->getChildren()) constructGLTF(model, child, nID);
 }
