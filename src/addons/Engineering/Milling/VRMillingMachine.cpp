@@ -2,7 +2,7 @@
 #include "core/objects/VRTransform.h"
 #include "core/networking/VRSocket.h"
 #include "core/utils/toString.h"
-#ifndef _WIN32
+#ifndef WITHOUT_CURL
 #include <curl/curl.h>
 #endif
 
@@ -88,7 +88,7 @@ size_t httpwritefkt( char *ptr, size_t size, size_t nmemb, void *userdata) {
 }
 
 string VRMillingMachine::post(string cmd, string data) {
-#ifndef _WIN32
+#ifndef WITHOUT_CURL
     if (cmd == "c") cout << "POST " << data << endl;
 
     auto curl = curl_easy_init();

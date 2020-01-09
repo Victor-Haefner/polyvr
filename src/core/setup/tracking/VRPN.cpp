@@ -1,6 +1,8 @@
 #include "VRPN.h"
+#ifndef WITHOUT_GTK
 #include "core/gui/VRGuiManager.h"
 #include "core/gui/VRGuiConsole.h"
+#endif
 #include "core/scene/VRSceneManager.h"
 #include "core/setup/VRSetup.h"
 #include "core/objects/VRTransform.h"

@@ -40,7 +40,7 @@ class Path : public VRStorage {
         static PathPtr create();
 
         void set(PosePtr p1, PosePtr p2, int res);
-        int addPoint( const Pose& p, Color3f c = Color3f() );
+        int addPoint( Pose p, Color3f c = Color3f() );
         int addPoint2( Vec3d p, Vec3d d, Color3f c, Vec3d u );
         void setPoint(int i, const Pose& p, Color3f c = Color3f() );
         Pose& getPoint(int i);

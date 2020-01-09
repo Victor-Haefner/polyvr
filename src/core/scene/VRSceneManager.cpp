@@ -1,26 +1,30 @@
 #include "VRSceneManager.h"
 #include "VRSceneLoader.h"
+#include "VRScene.h"
+#include "VRProjectsList.h"
+
 #include "core/setup/VRSetup.h"
 #include "core/setup/windows/VRWindow.h"
 #include "core/utils/VRRate.h"
 #include "core/utils/VRProfiler.h"
 #include "core/utils/coreDumpHandler.h"
-#include "VRScene.h"
+#include "core/utils/system/VRSystem.h"
+#include "core/utils/VRTimer.h"
+#include "core/utils/VRGlobals.h"
+#include "core/utils/VRFunction.h"
 #include "core/objects/VRCamera.h"
 #include "core/objects/VRLight.h"
 #include "core/objects/VRLightBeacon.h"
+#include "addons/Semantics/Reasoning/VROntology.h"
+
+#ifndef WITHOUT_GTK
 #include "core/gui/VRGuiManager.h"
-#include "core/utils/VRTimer.h"
-#include "core/utils/VRGlobals.h"
 #include "core/gui/VRGuiSignals.h"
 #include "core/gui/VRGuiFile.h"
-#include "core/utils/VRFunction.h"
-#include "addons/Semantics/Reasoning/VROntology.h"
-#include <OpenSG/OSGSceneFileHandler.h>
 #include <gtkmm/main.h>
-#include <GL/glut.h>
-#include "core/utils/system/VRSystem.h"
-#include "core/scene/VRProjectsList.h"
+#endif
+
+#include <OpenSG/OSGSceneFileHandler.h>
 #include <boost/filesystem.hpp>
 #include <time.h>
 
@@ -65,7 +69,11 @@ void VRSceneManager::loadScene(string path, bool write_protected, string encrypt
     newEmptyScene(path);
     VRSceneLoader::get()->loadScene(path, encryptionKey);
     current->setFlag("write_protected", write_protected);
+
+#ifndef WITHOUT_GTK
     VRGuiSignals::get()->getSignal("scene_changed")->triggerPtr<VRDevice>(); // update gui
+#endif
+
     if (auto pEntry = projects->getEntry(path)) {
         pEntry->setTimestamp(toString(time(0)));
         storeFavorites();
@@ -91,7 +99,10 @@ void VRSceneManager::closeScene() {
         w.second->clear(Color3f(0.2,0.2,0.2)); // render last time
     }
     setWorkdir(original_workdir);
+
+#ifndef WITHOUT_GTK
     VRGuiSignals::get()->getSignal("scene_changed")->triggerPtr<VRDevice>(); // update gui
+#endif
 }
 
 void VRSceneManager::setWorkdir(string path) {
@@ -150,7 +161,10 @@ void VRSceneManager::setScene(VRScenePtr scene) {
     VRProfiler::get()->setActive(true);
 
     on_scene_load->triggerPtr<VRDevice>();
+
+#ifndef WITHOUT_GTK
     VRGuiSignals::get()->getSignal("scene_changed")->triggerPtr<VRDevice>(); // update gui
+#endif
 }
 
 void VRSceneManager::storeFavorites() {
@@ -170,6 +184,7 @@ void VRSceneManager::remFavorite(string path) {
 }
 
 void VRSceneManager::searchExercisesAndFavorites() {
+#ifndef WITHOUT_GTK
     projects->clear();
     examples->clear();
 
@@ -203,6 +218,7 @@ void VRSceneManager::searchExercisesAndFavorites() {
     }
 
     projects->loadFromFile("examples/.config");
+#endif
 }
 
 VRProjectsListPtr VRSceneManager::getFavoritePaths() { return projects; }
@@ -231,7 +247,9 @@ void VRSceneManager::update() {
 
     int pID7 = profiler->regStart("frame gtk update");
     VRTimer t1; t1.start();
+#ifndef WITHOUT_GTK
     VRGuiManager::get()->updateGtk(); // update GUI
+#endif
     VRGlobals::GTK1_FRAME_RATE.update(t1);
     VRGlobals::UPDATE_LOOP1.update(timer);
     profiler->regStop(pID7);
@@ -269,7 +287,9 @@ void VRSceneManager::update() {
         VRGlobals::WINDOWS_FRAME_RATE.update(t2);
         VRGlobals::UPDATE_LOOP5.update(timer);
         int pID31 = profiler->regStart("frame gtk update");
+#ifndef WITHOUT_GTK
         VRGuiManager::get()->updateGtk();
+#endif
         profiler->regStop(pID31);
         VRGlobals::UPDATE_LOOP6.update(timer);
     }

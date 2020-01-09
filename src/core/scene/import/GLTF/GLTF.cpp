@@ -25,6 +25,7 @@
 #include "tiny_gltf.h"
 
 using namespace OSG;
+using namespace std::placeholders;
 
 struct GLTFSchema {
     int version = 1;
@@ -42,7 +43,7 @@ struct GLTFSchema {
 
     void addNodeRef(string node, vector<string> fields, vector<string> types, vector<string> defaults) {
         nodeRefs[node] = NodeRef();
-        for (int i=0; i<fields.size(); i++) {
+        for (uint i=0; i<fields.size(); i++) {
             nodeRefs[node].fieldRefs[fields[i]] = FieldRef();
             nodeRefs[node].fieldRefs[fields[i]].type = types[i];
             nodeRefs[node].fieldRefs[fields[i]].def  = defaults[i];
@@ -555,7 +556,7 @@ struct GLTFNode : GLTFUtils {
     }
 
     void handleAsciiText(map<string, string> data) {
-        float spacing = getSFFloat(data, "spacing", 1);
+        //float spacing = getSFFloat(data, "spacing", 1);
         string justification = "LEFT"; // SFEnum
         vector<string> text({string()}); // MFString
         vector<float> width({0}); // MFFloat
@@ -660,8 +661,8 @@ struct GLTFNode : GLTFUtils {
         Color3f color = getSFColor(data, "color", Color3f(1,1,1));
         Vec3d location = getSFVec3f(data, "location", Vec3d(0,0,1));
         Vec3d direction = getSFVec3f(data, "direction", Vec3d(0,0,-1));
-        float dropOffRate = getSFFloat(data, "dropOffRate", 1); // TODO
-        float cutOffAngle = getSFFloat(data, "cutOffAngle", 1);
+        //float dropOffRate = getSFFloat(data, "dropOffRate", 1); // TODO
+        //float cutOffAngle = getSFFloat(data, "cutOffAngle", 1);
 
         VRLightPtr light = dynamic_pointer_cast<VRLight>(obj);
         if (!light) { cout << "WARNING in GLTF handleSpotLight, cast failed" << endl; return; }
@@ -676,7 +677,7 @@ struct GLTFNode : GLTFUtils {
     void handlePerspectiveCamera(map<string, string> data) {
         Vec3d position = getSFVec3f(data, "position", Vec3d(0,0,1));
         Vec4d orientation = getSFRotation(data, "orientation", Vec4d(0,0,1,0));
-        float focalDistance = getSFFloat(data, "focalDistance", 5);
+        //float focalDistance = getSFFloat(data, "focalDistance", 5);
         float heightAngle = getSFFloat(data, "heightAngle", 0.785398);
 
         VRCameraPtr c = dynamic_pointer_cast<VRCamera>(obj);
@@ -757,7 +758,7 @@ struct GLTFNode : GLTFUtils {
         vector<float> shininess = getMultiField<float>(data, "shininess", {0.2});
         vector<float> transparency = getMultiField<float>(data, "transparency", {0});
         auto m = VRMaterial::create("material");
-        for (int i=0; i<diffuseColor.size(); i++) {
+        for (uint i=0; i<diffuseColor.size(); i++) {
             if (i > 0) m->addPass();
             m->setAmbient( ambientColor[i] );
             m->setDiffuse( diffuseColor[i] );
@@ -939,14 +940,14 @@ struct GLTF2Node : GLTFNode {
                 bool normalPerVertex = getBool(params["normalPerVertex"]);
                 bool doNormals = false;
                 bool doColors = false;
-                bool doTexCoords = false;
+                //bool doTexCoords = false;
 
                 for (auto c : children) {
                     if (c->type == "Link") { if (references.count(c->name)) c = references[c->name]; }
                     if (c->type == "Coordinate") for (auto p : c->positions) geo.pushVert(p);
                     if (c->type == "Normal") { for (auto n : c->normals) geo.pushNorm(n); doNormals = true; }
                     if (c->type == "Color") { for (auto col : c->colors) geo.pushColor(col); doColors = true; }
-                    if (c->type == "TextureCoordinate") { for (auto t : c->texCoords) geo.pushTexCoord(t); doTexCoords = true; }
+                    if (c->type == "TextureCoordinate") { for (auto t : c->texCoords) geo.pushTexCoord(t); /*doTexCoords = true;*/ }
                 }
 
 
@@ -967,7 +968,7 @@ struct GLTF2Node : GLTFNode {
                 if (doNormals) { // TODO, there may be negative values??
                     if (!normalPerVertex) {
                         if (normalIndex.size()) { // different normal indices, one index per face
-                            for (int i = 0; i<normalIndex.size(); i++) {
+                            for (uint i = 0; i<normalIndex.size(); i++) {
                                 int ID = normalIndex[i];
                                 int N = geo.getFaceSize(i);
                                 for (int j=0; j<N; j++) if (ID >= 0) geo.pushNormalIndex(ID);
@@ -988,7 +989,7 @@ struct GLTF2Node : GLTFNode {
                 if (doColors) {
                     if (!colorPerVertex) {
                         if (colorIndex.size()) { // different color indices, one index per face
-                            for (int i = 0; i<colorIndex.size(); i++) {
+                            for (uint i = 0; i<colorIndex.size(); i++) {
                                 int ID = colorIndex[i];
                                 int N = geo.getFaceSize(i);
                                 for (int j=0; j<N; j++) geo.pushColorIndex(ID);
@@ -1137,7 +1138,7 @@ class GLTFLoader : public GLTFUtils {
                 if (ctx.nextNodeDEF) { ctx.nextNodeName = token; return; }
                 if (ctx.nextNodeUSE) {
                     if (!references.count(token)) cout << "WARNING in GLTF handle token, no reference named " << token << " found!" << endl;
-                    auto refNode = references[token];
+                    //auto refNode = references[token];
                     ctx.currentNode->newChild("Link", token);
                     ctx.nextNodeUSE = false;
                     return;
@@ -1317,3 +1318,175 @@ void OSG::loadGLTF(string path, VRTransformPtr res, VRProgressPtr p, bool thread
     GLTFLoader gltf(path, res, p, thread);
     gltf.load();
 }
+
+template<typename T>
+T& addElement(vector<T>& v, int& ID) {
+    ID = v.size();
+    v.push_back(T());
+    return v.back();
+}
+
+template<typename T, typename G>
+int addBuffer(tinygltf::Model& model, string name, int N, function<G(int)> data) {
+    int bID;
+    tinygltf::Buffer& buf = addElement(model.buffers, bID);
+    vector<T> vec;
+    for (int i = 0; i<N; i++) vec.push_back(T(data(i)));
+    buf.name = name;
+    unsigned char* d = (unsigned char*)&vec[0];
+    buf.data = vector<unsigned char>( d, d + sizeof(T)*vec.size() );
+    return bID;
+}
+
+int addBufferView(tinygltf::Model& model, string name, int bufID, int byteL, int target) {
+    int vID;
+    tinygltf::BufferView& view = addElement(model.bufferViews, vID);
+    view.name = name;
+    view.buffer = bufID;
+    view.byteOffset = 0;
+    view.byteLength = byteL;
+    view.target = target;
+    return vID;
+}
+
+int addAccessor(tinygltf::Model& model, string name, int viewID, int count, int type, int ctype) {
+    int aID;
+    tinygltf::Accessor& accessor = addElement(model.accessors, aID);
+    accessor.name = name;
+    accessor.bufferView = viewID;
+    accessor.byteOffset = 0;
+    accessor.count = count;
+    accessor.componentType = ctype;
+    accessor.type = type;
+    return aID;
+}
+
+void constructGLTF(tinygltf::Model& model, VRObjectPtr obj, int pID = -1) {
+    tinygltf::Scene& scene = model.scenes.back();
+
+    // new node
+    int nID, mID;
+    tinygltf::Node& node = addElement(model.nodes, nID);
+
+    // from object
+    node.name = obj->getName();
+
+    // from transform
+    auto trans = dynamic_pointer_cast<VRTransform>(obj);
+    if (trans) {
+        Matrix4d mat = trans->getMatrix();
+        double* data = mat.getValues();
+        for (int i=0; i<16; i++) node.matrix.push_back(data[i]);
+    }
+
+    // scene graph structure
+    if (pID < 0) scene.nodes.push_back(nID); // a root node
+    else model.nodes[pID].children.push_back(nID);
+
+    // from geometry
+    auto geo = dynamic_pointer_cast<VRGeometry>(trans);
+    if (geo) {
+        tinygltf::Mesh& mesh = addElement(model.meshes, mID);
+        mesh.name = geo->getName() + "_mesh";
+        node.mesh = mID;
+
+        VRGeoData data(geo);
+
+        int Ntypes = data.getDataSize(0);
+        int Nlengths = data.getDataSize(1);
+        int Nindices = data.getDataSize(2);
+        int Npositions = data.getDataSize(3);
+        int Nnormals = data.getDataSize(4);
+        int Ncolors3 = data.getDataSize(5);
+        int Ncolors4 = data.getDataSize(6);
+        int Ntexcoords = data.getDataSize(7);
+
+        // buffer
+        int indicesBufID   = addBuffer<int  , int  >(model, "indicesBuffer"  , Nindices  , bind(&VRGeoData::getIndex   , &data, _1));
+        int positionsBufID = addBuffer<Vec3f, Pnt3d>(model, "positionsBuffer", Npositions, bind(&VRGeoData::getPosition, &data, _1));
+        int normalsBufID   = addBuffer<Vec3f, Vec3d>(model, "normalsBuffer"  , Nnormals  , bind(&VRGeoData::getNormal  , &data, _1));
+
+        // buffer views
+        int indicesViewID   = addBufferView(model, "indicesView"  , indicesBufID  , sizeof(int  )*3, TINYGLTF_TARGET_ELEMENT_ARRAY_BUFFER);
+        int positionsViewID = addBufferView(model, "positionsView", positionsBufID, sizeof(Vec3f)*3, TINYGLTF_TARGET_ARRAY_BUFFER);
+        int normalsViewID   = addBufferView(model, "normalsView"  , normalsBufID  , sizeof(Vec3f)*3, TINYGLTF_TARGET_ARRAY_BUFFER);
+
+        // accessors
+        int indicesAccID   = addAccessor(model, "indices"  , indicesViewID  , Nindices  , TINYGLTF_TYPE_SCALAR, TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT);
+        int positionsAccID = addAccessor(model, "positions", positionsViewID, Npositions, TINYGLTF_TYPE_VEC3  , TINYGLTF_COMPONENT_TYPE_FLOAT);
+        int normalsAccID   = addAccessor(model, "normals"  , normalsViewID  , Nnormals  , TINYGLTF_TYPE_VEC3  , TINYGLTF_COMPONENT_TYPE_FLOAT);
+
+        /*int indicesAccID;
+        tinygltf::Accessor& indices = addElement(model.accessors, indicesAccID);
+        indices.name = "indices";
+        indices.componentType = TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT;
+        indices.type = TINYGLTF_TYPE_SCALAR;
+        indices.count = Nindices;
+        indices.bufferView = indicesViewID;
+        indices.byteOffset = 0;
+
+        int positionsAccID;
+        tinygltf::Accessor& positions = addElement(model.accessors, positionsAccID);
+        positions.name = "positions";
+        positions.componentType = TINYGLTF_COMPONENT_TYPE_FLOAT;
+        positions.type = TINYGLTF_TYPE_VEC3;
+        positions.count = Npositions;
+        positions.bufferView = positionsViewID;
+        positions.byteOffset = 0;
+
+        int normalsAccID;
+        tinygltf::Accessor& normals = addElement(model.accessors, normalsAccID);
+        normals.name = "normals";
+        normals.componentType = TINYGLTF_COMPONENT_TYPE_FLOAT;
+        normals.type = TINYGLTF_TYPE_VEC3;
+        normals.count = Nnormals;
+        normals.bufferView = normalsViewID;
+        normals.byteOffset = 0;*/
+
+        // add types
+        for (int iType = 0; iType < Ntypes; iType++) {
+            int type = data.getType(iType);
+            int length = data.getLength(iType);
+
+            int primID;
+            tinygltf::Primitive& primitive = addElement(mesh.primitives, primID);
+            primitive.mode = TINYGLTF_MODE_TRIANGLES;
+            primitive.indices = indicesAccID;
+            primitive.attributes["POSITION"] = positionsAccID;
+            primitive.attributes["NORMAL"] = normalsAccID;
+        }
+
+        /*
+        #define TINYGLTF_MODE_POINTS (0)
+        #define TINYGLTF_MODE_LINE (1)
+        #define TINYGLTF_MODE_LINE_LOOP (2)
+        #define TINYGLTF_MODE_LINE_STRIP (3)
+        #define TINYGLTF_MODE_TRIANGLES (4)
+        #define TINYGLTF_MODE_TRIANGLE_STRIP (5)
+        #define TINYGLTF_MODE_TRIANGLE_FAN (6);
+        */
+    }
+
+
+    for (auto child : obj->getChildren()) constructGLTF(model, child, nID);
+}
+
+void OSG::writeGLTF(VRObjectPtr obj, string path) {
+    tinygltf::Model model;
+    model.scenes.push_back(tinygltf::Scene());
+    model.defaultScene = 0;
+    model.asset.version = "2.0";
+
+    constructGLTF(model, obj);
+    tinygltf::TinyGLTF writer;
+    writer.WriteGltfSceneToFile(&model, path, true, true, true, false); // last flag is binary
+}
+
+
+
+
+
+
+
+
+

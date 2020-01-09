@@ -8,12 +8,9 @@
 #include <vector>
 #include <string>
 
-/* no compiling?
-    install the raptor2 ubuntu package for rdfxml parsing
-    sudo apt-get install libraptor2-dev
-*/
-
+#ifndef WITHOUT_RAPTOR
 #include <raptor2/raptor2.h> // http://librdf.org/raptor/api/
+#endif
 
 using namespace std;
 OSG_BEGIN_NAMESPACE;
@@ -29,10 +26,14 @@ class VROWLImport {
             bool RDFsubject = false;
             bool RDFobject = false;
 
+#ifndef WITHOUT_RAPTOR
             RDFStatement(raptor_statement* s);
+#endif
             RDFStatement(string g, string o, string p, string s, string t);
 
+#ifndef WITHOUT_RAPTOR
             string toString(raptor_term* t);
+#endif
             string toString();
         };
 
@@ -107,7 +108,9 @@ class VROWLImport {
         VROWLImport();
 
         void read(VROntologyPtr o, string path);
+#ifndef WITHOUT_RAPTOR
         void processTriple(raptor_statement* rs);
+#endif
 };
 
 OSG_END_NAMESPACE;

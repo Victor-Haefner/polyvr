@@ -185,8 +185,8 @@ Zipper::Zipper(const string& zipname, const string& password)
 }
 
 Zipper::Zipper(iostream& buffer)
-    : m_vecbuffer(*(new vector<unsigned char>())) //not used but using local variable throws exception
-    , m_obuffer(buffer)
+    : m_obuffer(buffer)
+    , m_vecbuffer(*(new vector<unsigned char>())) //not used but using local variable throws exception
     , m_usingMemoryVector(false)
     , m_usingStream(true)
     , m_impl(new Impl(*this))
@@ -198,8 +198,8 @@ Zipper::Zipper(iostream& buffer)
 }
 
 Zipper::Zipper(vector<unsigned char>& buffer)
-    : m_vecbuffer(buffer)
-    , m_obuffer(*(new stringstream())) //not used but using local variable throws exception
+    : m_obuffer(*(new stringstream())) //not used but using local variable throws exception
+    , m_vecbuffer(buffer)
     , m_usingMemoryVector(true)
     , m_usingStream(false)
     , m_impl(new Impl(*this))

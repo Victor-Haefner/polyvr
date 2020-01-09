@@ -10,9 +10,6 @@
 #include <new>
 
 //flags mit  $ pkg-config --cflags pango und $ pkg-config --libs pango :)
-#include <glib.h>
-#include <stdlib.h>
-#include <gmodule.h>
 #include <pango/pango.h>
 #include <pango/pangoft2.h>
 #include <pango/pangocairo.h>

@@ -4,8 +4,10 @@
 #include "VRPyBaseT.h"
 #include <OpenSG/OSGImage.h>
 
+#ifndef WITHOUT_NUMPY
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include <numpy/ndarrayobject.h>
+#endif
 
 using namespace OSG;
 
@@ -67,6 +69,7 @@ bool CheckExtension(string extN) {
 }
 
 PyObject* VRPyImage::New(PyTypeObject *type, PyObject *args, PyObject *kwds) {
+#ifndef WITHOUT_NUMPY
     import_array1(NULL);
     VRTexturePtr img = VRTexture::create();
     if (pySize(args) == 0) return allocPtr( type, img );
@@ -78,9 +81,9 @@ PyObject* VRPyImage::New(PyTypeObject *type, PyObject *args, PyObject *kwds) {
 
     if (pySize(args) == 6) { if (! PyArg_ParseTuple(args, "OiiOOO", &data, &W, &H, &channels, &datatype, &channels2)) return NULL; }
     else if (! PyArg_ParseTuple(args, "OiiOO", &data, &W, &H, &channels, &datatype)) return NULL;
-    if ((PyObject*)data == Py_None) Py_RETURN_TRUE;
-    if ((PyObject*)channels == Py_None) Py_RETURN_TRUE;
-    if ((PyObject*)datatype == Py_None) Py_RETURN_TRUE;
+    if ((PyObject*)data == Py_None) Py_RETURN_NONE;
+    if ((PyObject*)channels == Py_None) Py_RETURN_NONE;
+    if ((PyObject*)datatype == Py_None) Py_RETURN_NONE;
 
     unsigned char* cdata  = (unsigned char*)PyArray_DATA(data);
     int pf = toOSGConst(PyString_AsString((PyObject*)channels));
@@ -94,6 +97,10 @@ PyObject* VRPyImage::New(PyTypeObject *type, PyObject *args, PyObject *kwds) {
     img->getImage()->set(pf, W, H, 1, 1, 1, 0, cdata, dt, true);
     if (channels2) img->setInternalFormat( toOSGConst(PyString_AsString((PyObject*)channels2)) );
     return allocPtr( type, img );
+#else
+    VRTexturePtr img = VRTexture::create();
+    return allocPtr( type, img );
+#endif
 }
 
 PyObject* VRPyImage::getChannels(VRPyImage* self, PyObject *args) {

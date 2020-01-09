@@ -263,7 +263,7 @@ int Path::addPoint2( Vec3d p, Vec3d d, Color3f c, Vec3d u ) {
     return addPoint(Pose(p,d,u), c);
 }
 
-int Path::addPoint( const Pose& p, Color3f c ) {
+int Path::addPoint( Pose p, Color3f c ) {
     points.push_back(p);
     point_colors.push_back(c);
     return size() - 1;
@@ -399,7 +399,8 @@ void Path::close() {
 bool Path::isClosed() { return closed; }
 
 Vec3d Path::interp(vector<Vec3d>& vec, float t, int i, int j) {
-    if (t <= 0) t = 0; if (t >= 1) t = 1; // clamp t
+    if (t <= 0) t = 0;
+    if (t >= 1) t = 1; // clamp t
     if (direction == -1) t = 1-t;
 
     if (j <= 0) j = vec.size()-1;
@@ -414,8 +415,8 @@ Vec3d Path::interp(vector<Vec3d>& vec, float t, int i, int j) {
     float x = tN-ti;
     if (ti >= N) return vec[i+N];
 
-    if (i+ti < 0 || i+ti >= vec.size()) return Vec3d();
-    if (i+ti+1 < 0 || i+ti+1 >= vec.size()) return Vec3d();
+    if (i+ti < 0 || i+ti >= (int)vec.size()) return Vec3d();
+    if (i+ti+1 < 0 || i+ti+1 >= (int)vec.size()) return Vec3d();
 
     //cout << "i j ti x v[ti+i] v[ti+i+1]" << i << " " << j << " " << ti << " " << x << " " << vec[i+ti] << " " << vec[i+ti+1] << endl;
     return vec[i+ti]*(1-x) + vec[i+ti+1]*x;

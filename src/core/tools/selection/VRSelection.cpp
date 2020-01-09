@@ -11,8 +11,10 @@ install liblapacke-dev
 sudo apt-get install liblapacke-dev
 */
 
+#ifndef WITHOUT_LAPACKE_BLAS
 #include <lapacke.h>
 #define dgeev LAPACKE_dgeev_work
+#endif
 
 using namespace OSG;
 
@@ -142,7 +144,7 @@ Vec3d VRSelection::computeCentroid() {
             }
         } else {
             N += pos->size();
-            for (int i = 0; i< pos->size(); i++) {
+            for (uint i = 0; i< pos->size(); i++) {
                 auto p = Vec3d(pos->getValue<Pnt3f>(i));
                 res += p;
             }
@@ -177,7 +179,7 @@ Matrix4d VRSelection::computeCovMatrix() {
             }
         } else {
             N += pos->size();
-            for (int i = 0; i< pos->size(); i++) {
+            for (uint i = 0; i< pos->size(); i++) {
                 auto pg = Vec3d(pos->getValue<Pnt3f>(i));
                 Vec3d p = pg - center;
                 res[0][0] += p[0]*p[0];
@@ -207,6 +209,7 @@ Matrix4d VRSelection::computeCovMatrix() {
     return res;
 }
 
+#ifndef WITHOUT_LAPACKE_BLAS
 Matrix4d VRSelection::computeEigenvectors(Matrix4d m) {
     int n = 3, lda = 3, ldvl = 3, ldvr = 3, info, lwork;
     double wkopt;
@@ -247,6 +250,7 @@ Pose VRSelection::computePCA() {
     res.set(Vec3d(ev[3]), Vec3d(ev[0]), Vec3d(ev[2]));
     return res;
 }
+#endif
 
 void VRSelection::selectPlane(Pose p, float threshold) {
     Vec3d N = p.up();

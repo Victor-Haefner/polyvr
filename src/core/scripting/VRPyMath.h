@@ -5,7 +5,9 @@
 #include "core/math/Expression.h"
 #include "core/math/Tsdf.h"
 #include "core/math/Octree.h"
+#ifndef WITHOUT_LAPACKE_BLAS
 #include "core/math/PCA.h"
+#endif
 #include "core/math/patch.h"
 #include <OpenSG/OSGVector.h>
 #include <OpenSG/OSGMatrix.h>

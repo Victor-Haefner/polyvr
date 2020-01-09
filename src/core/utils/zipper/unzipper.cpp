@@ -404,9 +404,9 @@ struct Unzipper::Impl {
     : m_ibuffer(*(new stringstream())) //not used but using local variable throws exception
     , m_vecbuffer(*(new vector<unsigned char>())) //not used but using local variable throws exception
     , zipname(zipname)
-    , password(password)
     , m_usingMemoryVector(false)
     , m_usingStream(false)
+    , password(password)
     , m_impl(new Impl(*this))
   {
     if (!m_impl->initFile(zipname))

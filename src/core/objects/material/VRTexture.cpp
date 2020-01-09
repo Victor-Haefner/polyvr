@@ -51,7 +51,7 @@ void VRTexture::write(string path, bool doThread) {
 
 void VRTexture::writeImage(ImageMTRecPtr img, string path) {
     //auto format = hasAlpha ? OSG::Image::OSG_RGBA_PF : OSG::Image::OSG_RGB_PF;
-    auto format = img->getPixelFormat();
+    //auto format = img->getPixelFormat();
 
     //OSG::Image::OSG_FLOAT32_IMAGEDATA
     auto dtype = img->getDataType();
@@ -234,11 +234,11 @@ void VRTexture::clampToImage(Vec3i& p) {
 Color4f VRTexture::getPixel(Vec3i p) {
     auto res = Color4f(0,0,0,1);
     if (!img) return res;
-    int N = getChannels();
+    //int N = getChannels();
     int w = img->getWidth();
     int h = img->getHeight();
 
-    auto data = img->getData();
+    //auto data = img->getData();
     clampToImage(p);
     int i = p[0] + p[1]*w + p[2]*w*h;
 
@@ -259,12 +259,12 @@ Color4f VRTexture::getPixel(int i) {
     auto res = Color4f(0,0,0,1);
     if (!img) return res;
     int N = getChannels();
-    int pbN = getPixelByteN();
+    //int pbN = getPixelByteN();
     auto f = img->getDataType();
     auto data = img->getData();
     auto s = getSize();
     size_t S = s[0]*s[1]*s[2];
-    bool valid = bool(i >= 0 && i < S);
+    bool valid = bool(i >= 0 && i < (int)S);
     if (!valid) return Color4f();
 
     if (N == 1) {

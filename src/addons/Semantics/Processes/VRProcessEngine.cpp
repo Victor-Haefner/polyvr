@@ -85,7 +85,7 @@ void VRProcessEngine::Actor::receiveMessage(Message message) {
 
 void VRProcessEngine::Actor::sendMessage(Message* m) {
     cout << "VRProcessEngine::Actor::sendMessage '" << m->message << "' to '" << m->sender << "' inv: " << &inventory << ", actor: " << this << endl;
-    Message* message = new Message(m->message, m->sender, m->receiver, m->messageNode);
+    /*Message* message =*/ new Message(m->message, m->sender, m->receiver, m->messageNode);
 }
 
 void VRProcessEngine::Actor::tryAdvance() {
@@ -93,14 +93,14 @@ void VRProcessEngine::Actor::tryAdvance() {
     checkTransitions();
 }
 
+auto nullTransition = VRProcessEngine::Transition(0,0,0);
 VRProcessEngine::Transition& VRProcessEngine::Actor::getTransition(int tID) {
     for (auto& state : transitions) {
         for (auto& t : state.second) {
             if (t.node->getID() == tID) return t;
         }
     }
-    auto t = Transition(0,0,0);
-    return t;
+    return nullTransition;
 }
 
 // ----------- process engine --------------

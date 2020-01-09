@@ -1,5 +1,7 @@
 #include "VROpening.h"
+#ifndef WITHOUT_AV
 #include "core/scene/sound/VRSoundManager.h"
+#endif
 #include "core/scene/VRAnimationManagerT.h"
 
 OSG_BEGIN_NAMESPACE;
@@ -74,7 +76,9 @@ void VROpening::open() {
 
     if (fkt1) scene->addAnimation<Vec3d>(1, 0, fkt1, Vec3d(0,1,0), Vec3d(-1,0,0), false, false);
     if (fkt2) scene->addAnimation<Vec3d>(1, 0, fkt2, Vec3d(0,1,0), Vec3d(1,0,0), false, false);
+#ifndef WITHOUT_AV
     VRSoundManager::get()->setupSound(sound);
+#endif
 }
 
 void VROpening::close() {
@@ -83,7 +87,9 @@ void VROpening::close() {
 
     if (fkt1) scene->addAnimation<Vec3d>(1, 0, fkt1, Vec3d(-1,0,0), Vec3d(0,1,0), false, false);
     if (fkt2) scene->addAnimation<Vec3d>(1, 0, fkt2, Vec3d(1,0,0), Vec3d(0,1,0), false, false);
+#ifndef WITHOUT_AV
     VRSoundManager::get()->setupSound(sound);
+#endif
 }
 
 void VROpening::toggle(VRDeviceWeakPtr d) {

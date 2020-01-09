@@ -1,11 +1,9 @@
 #include "VRTerrain.h"
-#include "VRTerrainPhysicsShape.h"
 #include "VRPlanet.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/material/VRMaterialT.h"
 #include "core/objects/material/VRTexture.h"
 #include "core/objects/material/VRTextureGenerator.h"
-#include "core/objects/geometry/VRPhysics.h"
 #include "core/objects/geometry/VRGeoData.h"
 #include "core/objects/geometry/OSGGeometry.h"
 #include "core/utils/VRFunction.h"
@@ -21,7 +19,12 @@
 #include <OpenSG/OSGIntersectAction.h>
 #include <OpenSG/OSGGeoProperties.h>
 #include <OpenSG/OSGGeometry.h>
+
+#ifndef WITHOUT_BULLET
+#include "core/objects/geometry/VRPhysics.h"
+#include "VRTerrainPhysicsShape.h"
 #include <BulletCollision/CollisionShapes/btHeightfieldTerrainShape.h>
+#endif
 
 typedef boost::recursive_mutex::scoped_lock PLock;
 
@@ -213,14 +216,14 @@ void VRTerrain::setupGeo() {
 
             //cout << "n,e TEX: " << gridN[1] << " -- " << gridN[0] << endl;
             //cout << "n,e Mes: " << meshTer.size() << " -- " << meshTer[0].size() << endl;
-            auto nN = meshTer.size()+1;
-            auto nE = meshTer[0].size();
-            for (int i =0; i < meshTer[0].size()-1; i++) {
+            //auto nN = meshTer.size()+1;
+            //auto nE = meshTer[0].size();
+            for (uint i=0; i+1 < meshTer[0].size(); i++) {
                 t1++;
                 t2 = 0;
                 double tcx1 = texel[0]*0.5 + i*tcChunk[0];
                 double tcx2 = tcx1 + tcChunk[0];
-                for (int j =0; j < meshTer.size()-1; j++) {
+                for (uint j =0; j+1 < meshTer.size(); j++) {
                     t2++;
                     //cout << meshTer[a][b] ;
                     double tcy1 = texel[1]*0.5 + j*tcChunk[1];
@@ -337,18 +340,22 @@ void VRTerrain::btPhysicalize() {
             if (Hmax < h) Hmax = h;
         }
     }
-
+#ifndef WITHOUT_BULLET
     auto shape = new btHeightfieldTerrainShape(dim[0], dim[1], &(*physicsHeightBuffer)[0], 1, -Hmax, Hmax, 1, PHY_FLOAT, false);
     shape->setLocalScaling(btVector3(texelSize[0],1,texelSize[1]));
     getPhysics()->setCustomShape( shape );
+#endif
 }
 
 void VRTerrain::vrPhysicalize() {
+#ifndef WITHOUT_BULLET
     auto shape = new VRTerrainPhysicsShape( ptr(), resolution );
     getPhysics()->setCustomShape( shape );
+#endif
 }
 
 void VRTerrain::physicalize(bool b) {
+#ifndef WITHOUT_BULLET
     if (!heigthsTex) return;
     if (!b) { getPhysics()->setPhysicalized(false); return; }
 
@@ -356,6 +363,7 @@ void VRTerrain::physicalize(bool b) {
     vrPhysicalize();
     getPhysics()->setFriction(0.8);
     getPhysics()->setPhysicalized(true);
+#endif
 }
 
 Boundingbox VRTerrain::getBoundingBox() {
@@ -394,9 +402,12 @@ void VRTerrain::setSimpleNoise() {
 }
 
 boost::recursive_mutex& VRTerrain::mtx() {
+#ifndef WITHOUT_BULLET
     auto scene = VRScene::getCurrent();
     if (scene) return scene->physicsMutex();
-    else {
+    else
+#endif
+    {
         static boost::recursive_mutex m;
         return m;
     };
@@ -562,9 +573,11 @@ Vec3d VRTerrain::getNormal( Vec3d p ) { // TODO!!
 }
 
 void VRTerrain::loadMap( string path, int channel ) {
+#ifndef WITHOUT_GDAL
     cout << "   ----------- VRTerrain::loadMap " << path << " " << channel << endl ;
     auto tex = loadGeoRasterData(path);
     setMap(tex, channel);
+#endif
 }
 
 void VRTerrain::flatten(vector<Vec2d> perimeter, float h) {

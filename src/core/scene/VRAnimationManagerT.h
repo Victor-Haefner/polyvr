@@ -1,5 +1,4 @@
 #include "VRAnimationManager.h"
-#include <GL/glut.h>
 #include <boost/bind.hpp>
 #include "core/utils/VRFunction.h"
 

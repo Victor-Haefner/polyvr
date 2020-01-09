@@ -4,7 +4,6 @@
 #include <math.h>
 
 #include <stdio.h>
-#include <curl/curl.h>
 #include <iostream>
 #include <fstream>
 

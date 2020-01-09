@@ -20,7 +20,7 @@ Vec3d VRLeapHistory::add(Vec3d v, float f) { // TODO
     // extend history
     I++;
     if (I >= N) I = 0;
-    if (I >= history.size()) history.push_back( make_pair(f,v) );
+    if (I >= (int)history.size()) history.push_back( make_pair(f,v) );
     else history[I] = make_pair(f,v);
     cout << "  " << I << "  " << history[I].second << endl;
 
@@ -61,11 +61,13 @@ VRLeap::VRLeap() : VRDevice("leap") {
             getBeacon(i)->switchParent(getBeacon(6));
     }
 
+#ifndef WITHOUT_JSONCPP
     auto cb = [&](Json::Value msg) {
         newFrame(msg);
     };
 
     webSocket.registerJsonCallback(cb);
+#endif
 
     store("host", &host);
     store("port", &port);
@@ -119,6 +121,7 @@ void VRLeap::registerFrameCallback(function<void(VRLeapFramePtr)> func) {
 void VRLeap::clearFrameCallbacks() { frameCallbacks.clear(); }
 
 
+#ifndef WITHOUT_JSONCPP
 void VRLeap::updateHandFromJson(Json::Value& handData, Json::Value& pointableData, HandPtr hand) {
 
         auto pos = handData["palmPosition"];
@@ -170,6 +173,7 @@ void VRLeap::updateHandFromJson(Json::Value& handData, Json::Value& pointableDat
             hand->extended[type] = pointable["extended"].asBool();
         }
 }
+#endif
 
 VRTransformPtr VRLeap::getBeaconChild(int i) {
     boost::recursive_mutex::scoped_lock lock(mutex);
@@ -219,6 +223,7 @@ void VRLeap::updateSceneData(vector<HandPtr> hands) {
     }
 }
 
+#ifndef WITHOUT_JSONCPP
 void VRLeap::newFrame(Json::Value json) {
 
     // json format: https://developer.leapmotion.com/documentation/v2/cpp/supplements/Leap_JSON.html?proglang=cpp
@@ -259,7 +264,7 @@ void VRLeap::newFrame(Json::Value json) {
     }
 
     //TODO: Debugging only!
-    if (json["pointables"].size() != numPens) {
+    if ((int)json["pointables"].size() != numPens) {
         std::cout << "Number of recognized pens: " << json["pointables"].size() << ". Previously was: " << numPens << endl;
         numPens = json["pointables"].size();
     }
@@ -297,7 +302,7 @@ void VRLeap::newFrame(Json::Value json) {
 
     for (auto& cb : frameCallbacks) cb(frame);
 }
-
+#endif
 PosePtr VRLeap::computeCalibPose(vector<PenPtr>& pens) {
     PosePtr result = Pose::create();
     if (pens.size() != 2) { return result; }

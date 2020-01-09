@@ -1,6 +1,7 @@
+#include <OpenSG/OSGGLUT.h>
+
 #include "VRGlutWindow.h"
 
-#include <OpenSG/OSGGLUT.h>
 #include "../devices/VRMouse.h"
 #include "../devices/VRKeyboard.h"
 

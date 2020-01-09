@@ -1,11 +1,11 @@
+#include <OpenSG/OSGGL.h>
+#include <OpenSG/OSGGLUT.h>
+#include <OpenSG/OSGGLUTWindow.h>
+#include <OpenSG/OSGChangeList.h>
+
 #include "VRWindowManager.h"
 #include "core/setup/devices/VRMouse.h"
 #include "core/setup/devices/VRKeyboard.h"
-#include "core/gui/VRGuiUtils.h"
-#include <gtkmm/builder.h>
-#include <gtkmm/main.h>
-#include <gtkmm/window.h>
-#include <gtkmm/drawingarea.h>
 #include "core/utils/VROptions.h"
 #include "core/utils/VRTimer.h"
 #include "core/objects/object/VRObject.h"
@@ -19,20 +19,26 @@
 #include "core/utils/VRProfiler.h"
 #include "core/utils/xml.h"
 
-#include <OpenSG/OSGGLUT.h>
-#include <OpenSG/OSGGLUTWindow.h>
-#include <OpenSG/OSGChangeList.h>
-
 #include "VRView.h"
 #include "VRGlutWindow.h"
-#include "VRGtkWindow.h"
 #include "VRMultiWindow.h"
 
+#ifndef WITHOUT_GTK
+#include "core/gui/VRGuiUtils.h"
+#include <gtkmm/builder.h>
+#include <gtkmm/main.h>
+#include <gtkmm/window.h>
+#include <gtkmm/drawingarea.h>
+#include "VRGtkWindow.h"
 #include "core/gui/VRGuiManager.h"
 #include "core/gui/VRGuiConsole.h"
-
 #define WARN(x) \
 VRGuiManager::get()->getConsole( "Errors" )->write( x+"\n" );
+#else
+#define WARN(x) \
+cout << x << endl;
+#endif
+
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -124,6 +130,7 @@ VRWindowPtr VRWindowManager::addMultiWindow(string name) {
 }
 
 VRWindowPtr VRWindowManager::addGtkWindow(string name, string glarea) {
+#ifndef WITHOUT_GTK
     cout << " add Gtk window " << name << endl;
     //gdk_error_trap_push();
     //if (gdk_error_trap_pop()) cout << "    ---- AAA1 ------ " << endl;
@@ -137,6 +144,9 @@ VRWindowPtr VRWindowManager::addGtkWindow(string name, string glarea) {
     win->setAction(ract);
     windows[win->getName()] = win;
     return win;
+#else
+    return 0;
+#endif
 }
 
 VRGtkWindowPtr VRWindowManager::getEditorWindow() { return editorWindow; }
@@ -236,7 +246,9 @@ void VRWindowManager::updateWindows() {
         if (!wait()) return false;
         /** let the windows merge the change lists, sync and clear **/
         if (!wait()) return false;
+#ifndef WITHOUT_GTK
         for (auto w : getWindows() ) if (auto win = dynamic_pointer_cast<VRGtkWindow>(w.second)) win->render();
+#endif
         clist->clear();
         return true;
     };

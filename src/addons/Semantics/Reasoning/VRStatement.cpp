@@ -25,9 +25,9 @@ void VRStatement::setup(VRStorageContextPtr context) { // parse statement
     if (s1.size() == 0) return;
     verb = s1[0];
 
-    auto contain = [&](string& s, char c) {
+    /*auto contain = [&](string& s, char c) {
         return bool(s.find(c) != std::string::npos);
-    };
+    };*/
 
     // terms
     if (s1.size() < 2) return;

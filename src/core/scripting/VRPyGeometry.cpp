@@ -15,10 +15,12 @@
 #include "VRPyBoundingbox.h"
 #include "VRPyMath.h"
 
+#ifndef WITHOUT_NUMPY
 #define NO_IMPORT_ARRAY
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include <numpy/ndarraytypes.h>
 #include <numpy/ndarrayobject.h>
+#endif
 
 #include <OpenSG/OSGGeoProperties.h>
 #include <OpenSG/OSGGeometry.h>
@@ -126,14 +128,17 @@ int getListDepth(PyObject* o) {
     string tname;
 	tname = o->ob_type->tp_name;
 	if (tname == "list") if (PyList_Size(o) > 0) return getListDepth(PyList_GetItem(o, 0))+1;
+#ifndef WITHOUT_NUMPY
 	if (tname == "numpy.ndarray") {
         PyArrayObject* a = (PyArrayObject*)o;
         return PyArray_NDIM(a);
 	}
+#endif
 	if (tname == "VR.Math.Vec3") return 1;
 	return 0;
 }
 
+#ifndef WITHOUT_NUMPY
 template<class T, class t>
 void feed2Dnp(PyObject* o, T& vec) { // numpy version
     PyArrayObject* a = (PyArrayObject*)o;
@@ -151,6 +156,7 @@ void feed2Dnp(PyObject* o, T& vec) { // numpy version
         vec->setValue(v, i);
     }
 }
+#endif
 
 template<class T, class t>
 void feed2D(PyObject* o, T& vec) {
@@ -170,6 +176,7 @@ void feed2D_v2(PyObject* o, T& vec) {
     }
 }
 
+#ifndef WITHOUT_NUMPY
 template<class T>
 void feed1Dnp(PyObject* o, T& vec) {
     PyArrayObject* a = (PyArrayObject*)o;
@@ -181,6 +188,7 @@ void feed1Dnp(PyObject* o, T& vec) {
         vec->setValue(*j, i);
     }
 }
+#endif
 
 template<class T>
 void feed1D(PyObject* o, T& vec) {
@@ -194,6 +202,7 @@ void feed1D(PyObject* o, T& vec) {
     }
 }
 
+#ifndef WITHOUT_NUMPY
 template<class T, class t>
 void feed1D3np(PyObject* o, T& vec) {
     PyArrayObject* a = (PyArrayObject*)o;
@@ -209,6 +218,7 @@ void feed1D3np(PyObject* o, T& vec) {
         vec->addValue(tmp);
     }
 }
+#endif
 
 template<class T, class t>
 void feed1D3(PyObject* o, T& vec) {
@@ -304,17 +314,26 @@ PyObject* VRPyGeometry::setPositions(VRPyGeometry* self, PyObject *args) {
     string tname = vec->ob_type->tp_name;
 
     if (ld == 1) {
+#ifndef WITHOUT_NUMPY
         if (tname == "numpy.ndarray") feed1D3np<GeoPnt3fPropertyMTRecPtr, Pnt3d>(vec, pos);
-        else feed1D3<GeoPnt3fPropertyMTRecPtr, Pnt3d>(vec, pos);
+        else
+#endif
+        feed1D3<GeoPnt3fPropertyMTRecPtr, Pnt3d>(vec, pos);
     } else if (ld == 2) {
+#ifndef WITHOUT_NUMPY
         if (tname == "numpy.ndarray") feed2Dnp<GeoPnt3fPropertyMTRecPtr, Pnt3d>(vec, pos);
-        else feed2D<GeoPnt3fPropertyMTRecPtr, Pnt3d>(vec, pos);
+        else
+#endif
+        feed2D<GeoPnt3fPropertyMTRecPtr, Pnt3d>(vec, pos);
     } else if (ld == 3) {
         for(Py_ssize_t i = 0; i < PyList_Size(vec); i++) {
             PyObject* vecList = PyList_GetItem(vec, i);
             string tname = vecList->ob_type->tp_name;
+#ifndef WITHOUT_NUMPY
             if (tname == "numpy.ndarray") feed2Dnp<GeoPnt3fPropertyMTRecPtr, Pnt3d>(vecList, pos);
-            else feed2D<GeoPnt3fPropertyMTRecPtr, Pnt3d>(vecList, pos);
+            else
+#endif
+            feed2D<GeoPnt3fPropertyMTRecPtr, Pnt3d>(vecList, pos);
         }
     } else {
         string e = "VRPyGeometry::setPositions - bad argument, ld is " + toString(ld);
@@ -336,11 +355,17 @@ PyObject* VRPyGeometry::setNormals(VRPyGeometry* self, PyObject *args) {
     int ld = getListDepth(vec);
 
     if (ld == 1) {
+#ifndef WITHOUT_NUMPY
         if (tname == "numpy.ndarray") feed1D3np<GeoVec3fPropertyMTRecPtr, Vec3d>( vec, norms);
-        else feed1D3<GeoVec3fPropertyMTRecPtr, Vec3d>( vec, norms);
+        else
+#endif
+        feed1D3<GeoVec3fPropertyMTRecPtr, Vec3d>( vec, norms);
     } else if (ld == 2) {
+#ifndef WITHOUT_NUMPY
         if (tname == "numpy.ndarray") feed2Dnp<GeoVec3fPropertyMTRecPtr, Vec3d>( vec, norms);
-        else feed2D<GeoVec3fPropertyMTRecPtr, Vec3d>( vec, norms);
+        else
+#endif
+        feed2D<GeoVec3fPropertyMTRecPtr, Vec3d>( vec, norms);
     } else {
         string e = "VRPyGeometry::setNormals - bad argument, ld is " + toString(ld);
         PyErr_SetString(err, e.c_str());
@@ -360,8 +385,11 @@ PyObject* VRPyGeometry::setColors(VRPyGeometry* self, PyObject *args) {
 
     GeoVec4fPropertyMTRecPtr cols = GeoVec4fProperty::create();
     string tname = vec->ob_type->tp_name;
+#ifndef WITHOUT_NUMPY
     if (tname == "numpy.ndarray") feed2Dnp<GeoVec4fPropertyMTRecPtr, Vec4d>( vec, cols);
-    else feed2D<GeoVec4fPropertyMTRecPtr, Color4f>( vec, cols);
+    else
+#endif
+    feed2D<GeoVec4fPropertyMTRecPtr, Color4f>( vec, cols);
 
     geo->setColors(cols, b);
     Py_RETURN_TRUE;
@@ -390,8 +418,11 @@ PyObject* VRPyGeometry::setIndices(VRPyGeometry* self, PyObject *args) {
 
     int ld = getListDepth(vec);
     if (ld == 1) {
+#ifndef WITHOUT_NUMPY
         if (tname == "numpy.ndarray") feed1Dnp<GeoUInt32PropertyMTRecPtr>( vec, inds);
-        else feed1D<GeoUInt32PropertyMTRecPtr>( vec, inds );
+        else
+#endif
+        feed1D<GeoUInt32PropertyMTRecPtr>( vec, inds );
         self->objPtr->setIndices(inds, true);
     } else if (ld == 2) {
         GeoUInt32PropertyMTRecPtr lengths = GeoUInt32Property::create();

@@ -4,7 +4,9 @@
 #include "core/objects/material/VRMaterialT.h"
 #include "core/objects/material/VRTexture.h"
 #include "core/objects/geometry/VRGeoData.h"
+#ifndef WITHOUT_PANGO_CAIRO
 #include "core/tools/VRText.h"
+#endif
 #include "core/utils/toString.h"
 
 #define GLSL(shader) #shader
@@ -74,8 +76,10 @@ int VRAnnotationEngine::add(Vec3d p, string s) {
 }
 
 void VRAnnotationEngine::set(int i0, Vec3d p0, string txt) {
+#ifndef WITHOUT_PANGO_CAIRO
     auto strings = splitString(txt, '\n');
-    for (int y = 0; y<strings.size(); y++) {
+    int Nlines = strings.size();
+    for (int y = 0; y<Nlines; y++) {
         string str = strings[y];
         //cout << "VRAnnotationEngine::set str " << str << endl;
         Vec3d p = p0;
@@ -93,7 +97,7 @@ void VRAnnotationEngine::set(int i0, Vec3d p0, string txt) {
         for (int j=0; j<N; j++) {
             char c[] = {0,0,0};
             for (int k = 0; k<3; k++) {
-                if (j*3+k < graphemes.size()) {
+                if (j*3+k < (int)graphemes.size()) {
                     string grapheme = graphemes[j*3+k];
                     c[k] = characterIDs[grapheme];
                 }
@@ -109,6 +113,7 @@ void VRAnnotationEngine::set(int i0, Vec3d p0, string txt) {
         data->setVert(l.entries[N+2], p+Vec3d((Ngraphemes-0.25)*size, -0.5*size, 0), Vec3d(0,0,-1));
         data->setVert(l.entries[N+3], p+Vec3d((Ngraphemes-0.25)*size,  0.5*size, 0), Vec3d(0,0,-1));
     }
+#endif
 }
 
 void VRAnnotationEngine::setSize(float f) { mat->setShaderParameter("size", Real32(f)); size = f; }
@@ -116,6 +121,7 @@ void VRAnnotationEngine::setBillboard(bool b) { mat->setShaderParameter("doBillb
 void VRAnnotationEngine::setScreensize(bool b) { mat->setShaderParameter("screen_size", Real32(b)); }
 
 void VRAnnotationEngine::updateTexture() {
+#ifndef WITHOUT_PANGO_CAIRO
     string txt;
     for (int i=32; i<127; i++) txt += char(i);
     txt += "ÄÜÖäüöß€";
@@ -136,6 +142,7 @@ void VRAnnotationEngine::updateTexture() {
         characterIDs[c] = i;
         i++;
     }
+#endif
 }
 
 string VRAnnotationEngine::vp =

@@ -61,7 +61,7 @@ class VRObject : public std::enable_shared_from_this<VRObject>, public VRName, p
         VRObjectPtr ptr();
 
         int getID();
-        string getType() const;
+        string getType();
 
         VRObjectPtr getRoot();
         string getPath();
@@ -93,7 +93,7 @@ class VRObject : public std::enable_shared_from_this<VRObject>, public VRName, p
 
         void setTravMask(int i);
         int getTravMask();
-        void setVolume(const Boundingbox& box);
+        void setVolume(Boundingbox box);
         virtual void setVolumeCheck(bool b, bool recursive = false);
         void setSiblingPosition(int i);
 

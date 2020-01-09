@@ -11,7 +11,9 @@
 #include "core/objects/VRTransform.h"
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/geometry/VRGeoData.h"
+#ifndef WITHOUT_BULLET
 #include "core/objects/geometry/VRSpatialCollisionManager.h"
+#endif
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/VRLodTree.h"
 #include "core/scene/VRObjectManager.h"
@@ -19,9 +21,13 @@
 #include "core/utils/VRFunction.h"
 #include "core/utils/zipper/filesystem.h"
 #include "core/math/path.h"
+#ifndef WITHOUT_GLU_TESS
 #include "core/math/triangulator.h"
+#endif
 #include "addons/Semantics/Reasoning/VROntology.h"
+#ifndef WITHOUT_GDAL
 #include "core/scene/import/GIS/VRGDAL.h"
+#endif
 #include "core/objects/material/VRTexture.h"
 
 #define GLSL(shader) #shader
@@ -68,7 +74,9 @@ void VRWorldGenerator::setupPhysics() {
 }
 
 void VRWorldGenerator::updatePhysics(Boundingbox box) {
+#ifndef WITHOUT_BULLET
     collisionShape->localize(box);
+#endif
 }
 
 void VRWorldGenerator::setOntology(VROntologyPtr o) {
@@ -139,8 +147,10 @@ void VRWorldGenerator::init() {
     lodTree = VRLodTree::create(name, 5);
     addChild(lodTree);
 
+#ifndef WITHOUT_BULLET
     collisionShape = VRSpatialCollisionManager::create(12);
     addChild(collisionShape);
+#endif
 
     addMat("phong", 0);
     addMat("phongTex", 2);
@@ -214,9 +224,9 @@ OSMMapPtr VRWorldGenerator::getOSMMap() { return osmMap; }
 
 void VRWorldGenerator::addTerrainsToLOD(){
     cout << "VRWorldGenerator::addTerrainsToLOD" << endl;
-    auto nLevel = lodLevels.size();
+    //auto nLevel = lodLevels.size();
     auto nTerrains = terrains.size();
-    for (int i = 0; i < nTerrains; i++) {
+    for (uint i = 0; i < nTerrains; i++) {
         lodLevels[i]->addChild(terrains[i]);
         //cout << "  added Child to lodLevel " << lodLevels[i]->getName() << " " << i << endl;
     }
@@ -225,6 +235,7 @@ void VRWorldGenerator::addTerrainsToLOD(){
 void VRWorldGenerator::setTerrainSize( Vec2d in ) { terrainSize = in; }
 
 void VRWorldGenerator::setupLODTerrain(string pathMap, string pathPaint, float scale, bool cache ) {
+#ifndef WITHOUT_GDAL
     cout << "VRWorldGenerator::setupLODTerrain" << endl;
     auto tex = loadGeoRasterData(pathMap, false);
     Vec3i texSizeN = tex->getSize();
@@ -239,7 +250,7 @@ void VRWorldGenerator::setupLODTerrain(string pathMap, string pathPaint, float s
         string res = "";
         for (int i = 0; i < 4; i++) typ = filepath.at(filepath.length()-1-i) + typ;
         if (typ != type) return in+"newFile"+type;
-        for (int i = 0; i < filepath.length()-4; i++) res += filepath.at(i);
+        for (uint i = 0; i < filepath.length()-4; i++) res += filepath.at(i);
         return res + in + type;
     };
 
@@ -316,6 +327,7 @@ void VRWorldGenerator::setupLODTerrain(string pathMap, string pathPaint, float s
     addTerrain(1.0, 0);
     addTerrain(0.5, 1);
     addTerrain(0.05, 2);
+#endif
 }
 
 vector<VRTerrainPtr> VRWorldGenerator::getTerrains(){
@@ -688,9 +700,11 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
                     if (poly->size() == 0) continue;
                     for (auto p : poly->gridSplit(5)) {
                         if (terrains.size()) terrains[0]->elevatePolygon(p, 0.03, false);
+#ifndef WITHOUT_GLU_TESS
                         Triangulator tri;
                         tri.add(*p);
                         patch->merge( tri.compute() );
+#endif
                     }
                     patch->setMaterial(roads->getMaterial());
                     patch->setPositionalTexCoords(1.0, 0, Vec3i(0,2,1));
@@ -714,9 +728,11 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
             if (poly->size() == 0) continue;
             for (auto p : poly->gridSplit(5)) {
                 if (terrains.size() == 1) terrains[0]->elevatePolygon(p, 0.03, false);
+#ifndef WITHOUT_GLU_TESS
                 Triangulator tri;
                 tri.add(*p);
                 patch->merge( tri.compute() );
+#endif
             }
             patch->updateNormals();
             VRGeoData nData(patch);
@@ -749,7 +765,7 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
         Vec3d dir = getDir(node);
         bool hasDir = node->tags.count("direction");
         if (terrains.size() == 1) pos = terrains[0]->elevatePoint(pos);
-        bool addToOnto = false;
+        //bool addToOnto = false;
         bool added = false;
         for (auto tag : node->tags) {
             if (added) continue;
@@ -828,7 +844,10 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
                     auto cam = assets->copy("Camera", Pose::create(pos, dir), false);
                     lodTree->addObject(cam, cam->getWorldPosition(), 3, false);
                     cam->setDir(dir);
-                    collisionShape->addQuad(0.1, 2, Pose(pos, dir), cam->getID());
+                    Pose p(pos, dir);
+#ifndef WITHOUT_BULLET
+                    collisionShape->addQuad(0.1, 2, p, cam->getID());
+#endif
                 }
             }
 
@@ -839,7 +858,10 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
                     if (lamp) {
                         lodTree->addObject(lamp, lamp->getWorldPosition(), 3, false);
                         lamp->setDir(-dir);
-                        collisionShape->addQuad(0.1, 2, Pose(pos, -dir), lamp->getID());
+                        Pose p(pos, -dir);
+#ifndef WITHOUT_BULLET
+                        collisionShape->addQuad(0.1, 2, p, lamp->getID());
+#endif
                     }
                 }
                 if (tag.second == "traffic_signals") {

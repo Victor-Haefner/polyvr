@@ -10,7 +10,9 @@
 #include "core/objects/object/VRObject.h"
 #include "core/tools/VRProjectManager.h"
 #include <boost/thread/recursive_mutex.hpp>
+#ifndef WITHOUT_BULLET
 #include "addons/Bullet/CarDynamics/CarDynamics.h"
+#endif
 
 using namespace std;
 OSG_BEGIN_NAMESPACE;

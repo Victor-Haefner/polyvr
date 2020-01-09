@@ -28,8 +28,8 @@ void printBacktrace() {
 bool exists(string path) { return boost::filesystem::exists(path); }
 
 bool makedir(string path) {
-    if (path == "") return true;
     bool res = false;
+    if (path == "") return true;
     try { res = boost::filesystem::create_directory(path); }
     catch(...) { cout << "ERROR: makedir failed when trying to create directory '" + path + "'" << endl; }
     return res;
@@ -53,6 +53,12 @@ string getFileName(string path, bool withExtension) {
     return fname;
 }
 
+string getFileExtension(string path) {
+    size_t sp = path.rfind('.');
+    if (sp == string::npos) return "";
+    return path.substr(sp);
+}
+
 string getFolderName(string path) {
     size_t sp = path.rfind('/');
     if (sp == string::npos) return "";
@@ -64,11 +70,13 @@ vector<string> openFolder(string folder) {
     if ( !exists( folder ) ) return res;
     if ( !isFolder( folder ) ) return res;
 
+#ifndef WASM
     boost::filesystem::directory_iterator End; // default construction yields past-the-end
     for ( boost::filesystem::directory_iterator itr( folder ); itr != End; ++itr ) {
         string name = itr->path().filename().string();
         res.push_back( name );
     }
+#endif
     return res;
 }
 

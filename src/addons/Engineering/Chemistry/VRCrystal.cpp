@@ -32,7 +32,7 @@ CIFdata parseCIFfile(string path) {
     auto parseParameter = [&](const string& line, int offset) {
         string key, value;
         string& current = key;
-        for (int i=offset; i<line.size(); i++) {
+        for (uint i=offset; i<line.size(); i++) {
             auto c = line[i];
             if (c == '\'') continue;
             if (c == ' ' || c == '\t') {
@@ -50,12 +50,12 @@ CIFdata parseCIFfile(string path) {
         bool quoted2 = false;
         string value;
 
-        for (int i=0; i<line.size(); i++) {
+        for (uint i=0; i<line.size(); i++) {
             auto c = line[i];
             if (c == '\'') quoted1 = !quoted1;
             if (c == '"') quoted2 = !quoted2;
             if (!quoted1 && !quoted2 && value != "") {
-                if (c == ' ' || c == '\t' || i == line.size()-1) {
+                if (c == ' ' || c == '\t' || i+1 == line.size()) {
                     currentBlock[blockHead[column]].push_back(value);
                     value = "";
                     continue;

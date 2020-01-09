@@ -141,7 +141,7 @@ vector<VRRoadPtr> VRRoad::splitAtIntersections(VRRoadNetworkPtr network) { // TO
     auto e = getEntity();
     auto path = e->getEntity("path");
     auto nodes = path->getAllEntities("nodes");
-    for (int i=1; i<nodes.size()-1; i++) {
+    for (uint i=1; i+1<nodes.size(); i++) {
         auto node = nodes[i]->getEntity("node");
         int N = node->getAllEntities("paths").size();
         if (N <= 1) continue;
@@ -150,7 +150,7 @@ vector<VRRoadPtr> VRRoad::splitAtIntersections(VRRoadNetworkPtr network) { // TO
         auto npath = path->copy();
         path->clear("nodes");
         npath->clear("nodes");
-        for (int j=0; j<=i; j++) {
+        for (uint j=0; j<=i; j++) {
             path->add("nodes", nodes[j]->getName());
         }
         nodes[i]->set("sign", "1"); // last node of old path
@@ -160,7 +160,7 @@ vector<VRRoadPtr> VRRoad::splitAtIntersections(VRRoadNetworkPtr network) { // TO
         npath->add("nodes", ne->getName());
         ne->set("path", npath->getName());
         ne->getEntity("node")->add("paths", ne->getName());
-        for (int j=i+1; j<nodes.size(); j++) {
+        for (uint j=i+1; j<nodes.size(); j++) {
             npath->add("nodes", nodes[j]->getName());
             nodes[j]->set("path", npath->getName());
         }
@@ -217,7 +217,7 @@ VRGeometryPtr VRRoad::createGeometry() {
                     auto po = path->getPoint(zz);
                     x.normalize();
                     float offsetter = offsetIn*(1.0-(float(zz)/(float(path->size())-1.0))) + offsetOut*(float(zz)/(float(path->size())-1.0));
-                    if (zz>0 && zz<path->getPoints().size()-1) offsetter = 0; //only first node has offsetter
+                    if (zz>0 && zz+1<(int)path->getPoints().size()) offsetter = 0; //only first node has offsetter
                     po.setPos(x*offsetter  + p);
                     path->setPoint(zz,po);
                 };
@@ -286,8 +286,8 @@ void VRRoad::computeMarkings() {
         Vec3d x = point.x();
         x.normalize();
         float offsetter = offsetIn*(1.0-(float(zz)/(float(path->size())-1.0))) + offsetOut*(float(zz)/(float(path->size())-1.0));
-        float offsetterOld = offsetter;
-        if (zz>0 && zz<path->getPoints().size()-1) offsetter = 0; //only first node has offsetter
+        //float offsetterOld = offsetter;
+        if (zz>0 && zz+1<(int)path->getPoints().size()) offsetter = 0; //only first node has offsetter
         float widthSum = -roadWidth*0.5 - offsetter;
         for (int li=0; li<Nlanes; li++) {
             auto lane = lanes[li];

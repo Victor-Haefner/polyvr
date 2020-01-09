@@ -544,7 +544,9 @@ simplePyType(MathExpression, New_named_ptr);
 simplePyType(TSDF, VRPyTSDF::New );
 simplePyType(OctreeNode, 0 );
 simplePyType(Octree, VRPyOctree::New );
+#ifndef WITHOUT_LAPACKE_BLAS
 simplePyType(PCA, New_ptr);
+#endif
 simplePyType(Patch, New_ptr);
 
 PyMethodDef VRPyExpression::methods[] = {
@@ -612,12 +614,14 @@ PyMethodDef VRPyOctreeNode::methods[] = {
     {NULL}  /* Sentinel */
 };
 
+#ifndef WITHOUT_LAPACKE_BLAS
 PyMethodDef VRPyPCA::methods[] = {
     {"add", PyWrap2( PCA, add, "Add point", void, Vec3d ) },
     {"compute", PyWrap2( PCA, compute, "Compute", Pose ) },
     {"size", PyWrap2( PCA, size, "Get amount of points", int ) },
     {NULL}  /* Sentinel */
 };
+#endif
 
 PyMethodDef VRPyPatch::methods[] = {
     {"fromGeometry", PyWrap2( Patch, fromGeometry, "Create patch from Geometry", VRObjectPtr, VRGeometryPtr, int, bool ) },

@@ -11,26 +11,30 @@
 #include "VRPyTypeCaster.h"
 #include "VRPyProgress.h"
 #include "VRPySky.h"
+#ifndef WITHOUT_AV
 #include "VRPySound.h"
+#endif
 #include "VRPyMaterial.h"
 #include "VRPyCodeCompletion.h"
 
 #include "core/scene/VRAnimationManagerT.h"
 #include "core/scene/import/VRImport.h"
 #include "core/scene/import/VRExport.h"
-#include "core/gui/VRGuiManager.h"
-#include "core/gui/VRGuiConsole.h"
-#include "core/gui/VRGuiFile.h"
+#include "core/scene/import/E57/E57.h"
 #include "core/objects/VRTransform.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/utils/VRTests.h"
 #include "PolyVR.h"
 
-#include "core/scene/import/E57/E57.h"
-
 #include <boost/bind.hpp>
+
+#ifndef WITHOUT_GTK
+#include "core/gui/VRGuiManager.h"
+#include "core/gui/VRGuiConsole.h"
+#include "core/gui/VRGuiFile.h"
 #include <sigc++/adaptors/bind.h>
 #include <gtkmm/filechooser.h>
+#endif
 
 OSG_BEGIN_NAMESPACE;
 
@@ -50,7 +54,7 @@ string loadGeometryDoc =
 PyMethodDef VRSceneGlobals::methods[] = {
 	{"exit", (PyCFunction)VRSceneGlobals::exit, METH_NOARGS, "Terminate application" },
 	{"loadGeometry", (PyCFunction)VRSceneGlobals::loadGeometry, METH_VARARGS|METH_KEYWORDS, loadGeometryDoc.c_str() },
-	{"exportGeometry", (PyCFunction)VRSceneGlobals::exportGeometry, METH_VARARGS, "Export a part of the scene - exportGeometry( object, path )" },
+	{"exportToFile", (PyCFunction)VRSceneGlobals::exportToFile, METH_VARARGS, "Export a node ( object, path ), supported extensions: [wrl, wrz, obj, osb, osg, ply, gltf]" },
 	{"getLoadGeometryProgress", (PyCFunction)VRSceneGlobals::getLoadGeometryProgress, METH_VARARGS, "Return the progress object for geometry loading - getLoadGeometryProgress()" },
 	{"stackCall", (PyCFunction)VRSceneGlobals::stackCall, METH_VARARGS, "Schedules a call to a python function - stackCall( function, delay, [args] )" },
 	{"openFileDialog", (PyCFunction)VRSceneGlobals::openFileDialog, METH_VARARGS, "Open a file dialog - openFileDialog( onLoad, mode, title, default_path, filter )\n mode : {Save, Load, New, Create}" },
@@ -95,7 +99,9 @@ PyObject* VRSceneGlobals::getFrame(VRSceneGlobals* self) {
 }
 
 PyObject* VRSceneGlobals::getSoundManager(VRSceneGlobals* self) {
+#ifndef WITHOUT_AV
     return VRPySoundManager::fromSharedPtr( VRSoundManager::get() );
+#endif
 }
 
 PyObject* VRSceneGlobals::getSky(VRSceneGlobals* self) {
@@ -114,8 +120,10 @@ PyObject* VRSceneGlobals::getSceneMaterials(VRSceneGlobals* self) {
 }
 
 PyObject* VRSceneGlobals::setPhysicsActive(VRSceneGlobals* self, PyObject *args) {
+#ifndef WITHOUT_BULLET
     auto scene = VRScene::getCurrent();
     if (scene) (dynamic_pointer_cast<VRPhysicsManager>(scene))->setPhysicsActive( parseBool(args) );
+#endif
     Py_RETURN_TRUE;
 }
 
@@ -212,7 +220,7 @@ PyObject* VRSceneGlobals::loadGeometry(VRSceneGlobals* self, PyObject *args, PyO
     return VRPyTypeCaster::cast(obj);
 }
 
-PyObject* VRSceneGlobals::exportGeometry(VRSceneGlobals* self, PyObject *args) {
+PyObject* VRSceneGlobals::exportToFile(VRSceneGlobals* self, PyObject *args) {
     const char* path = "";
     VRPyObject* o;
     if (! PyArg_ParseTuple(args, "Os", &o, &path)) return NULL;
@@ -292,15 +300,18 @@ PyObject* VRSceneGlobals::stackCall(VRSceneGlobals* self, PyObject *args) {
 }
 
 void on_py_file_diag_cb(PyObject* pyFkt) {
+#ifndef WITHOUT_GTK
     string res = VRGuiFile::getRelativePath_toWorkdir();
     PyObject *pArgs = PyTuple_New(3);
     PyTuple_SetItem( pArgs, 0, PyString_FromString(res.c_str()) );
     PyTuple_SetItem( pArgs, 1, PyFloat_FromDouble( VRGuiFile::getScale() ) );
     PyTuple_SetItem( pArgs, 2, PyString_FromString( VRGuiFile::getPreset().c_str() ) );
     execCall( pyFkt, pArgs, 0 );
+#endif
 }
 
 PyObject* VRSceneGlobals::openFileDialog(VRSceneGlobals* self, PyObject *args) {
+#ifndef WITHOUT_GTK
     PyObject *cb, *mode, *title, *default_path, *filter;
     if (! PyArg_ParseTuple(args, "OOOOO", &cb, &mode, &title, &default_path, &filter)) return NULL;
     Py_IncRef(cb);
@@ -315,19 +326,23 @@ PyObject* VRSceneGlobals::openFileDialog(VRSceneGlobals* self, PyObject *args) {
     if (m == "Save" || m == "New" || m == "Create") action = Gtk::FILE_CHOOSER_ACTION_SAVE;
     else VRGuiFile::setGeoLoadWidget();
     VRGuiFile::open( m, action, PyString_AsString(title) );
-
+#endif
     Py_RETURN_TRUE;
 }
 
 PyObject* VRSceneGlobals::updateGui(VRSceneGlobals* self) {
+#ifndef WITHOUT_GTK
     VRGuiManager::get()->updateGtk();
+#endif
     Py_RETURN_TRUE;
 }
 
 PyObject* VRSceneGlobals::render(VRSceneGlobals* self) {
     VRSceneManager::get()->updateScene();
     VRSetup::getCurrent()->updateWindows();
+#ifndef WITHOUT_GTK
     VRGuiManager::get()->updateGtk();
+#endif
     Py_RETURN_TRUE;
 }
 

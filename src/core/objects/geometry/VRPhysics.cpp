@@ -163,7 +163,7 @@ vector<VRCollision> VRPhysics::getCollisions() {
             if (partID >= mesh.size()) return res;
 
             int Ni = mesh[partID].m_numTriangles;
-            int Nv = mesh[partID].m_numVertices;
+            //int Nv = mesh[partID].m_numVertices;
             if (triangleID >= Ni) {
                 cout << "VRPhysics::getCollisions, WARNING: triangleID " << triangleID << " to big! (" << Ni << ") N mesh: " << mesh.size() << endl;
                 return res;
@@ -358,7 +358,7 @@ void VRPhysics::setDynamic(bool b, bool fast) {
     if (fast && body) {
         PLock lock(VRPhysics_mtx());
         if (!b) {
-            body->setMassProps(0, btVector3());
+            body->setMassProps(0, btVector3(0,0,0));
             body->setCollisionFlags(body->getCollisionFlags() |  btCollisionObject::CF_STATIC_OBJECT);
         } else {
             body->setMassProps(mass, inertia);
@@ -1153,8 +1153,8 @@ void VRPhysics::resetForces() {
     body->setAngularVelocity(btVector3(0,0,0));
     body->setLinearVelocity(btVector3(0,0,0));
     body->clearForces();
-    constantForce = btVector3();
-    constantTorque = btVector3();
+    constantForce = btVector3(0,0,0);
+    constantTorque = btVector3(0,0,0);
 }
 
 void VRPhysics::applyImpulse(OSG::Vec3d i) {

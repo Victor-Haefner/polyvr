@@ -14,10 +14,10 @@ OSG_BEGIN_NAMESPACE;
 class VRProcessEngine {
     public:
         struct Message {
-            VRProcessNodePtr messageNode;
             string message;
-            string receiver;
             string sender;
+            string receiver;
+            VRProcessNodePtr messageNode;
 
             Message(string m, string s, string r, VRProcessNodePtr node) : message(m), sender(s), receiver(r), messageNode(node) {}
 

@@ -78,7 +78,9 @@ void VRSelector::update() {
     auto m = VRMaterial::create("sel");
     m->setLit(false);
     m->setDiffuse(color);
+#ifndef OSG_OGL_ES2
     m->setFrontBackModes(GL_LINE, GL_LINE);
+#endif
     m->setPointSize(width);
     subselection->setMaterial(m);
 
@@ -102,7 +104,9 @@ VRMaterialPtr VRSelector::getMat() {
     mat->setDiffuse(color);
     mat->setLineWidth(width, smooth);
     if (visual == OUTLINE) {
+#ifndef OSG_OGL_ES2
         mat->setFrontBackModes(GL_LINE, GL_LINE);
+#endif
         mat->setLit(false);
         mat->setStencilBuffer(false, 1,-1, GL_NOTEQUAL, GL_KEEP, GL_KEEP, GL_REPLACE);
         mat->ignoreMeshColors(true);

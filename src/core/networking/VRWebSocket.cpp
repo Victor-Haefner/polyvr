@@ -1,15 +1,17 @@
 #include <core/utils/VRFunction.h>
 #include <core/scene/VRScene.h>
+#include <functional>
 #include "core/scene/VRSceneManager.h"
 #include "VRWebSocket.h"
 
 OSG_BEGIN_NAMESPACE
 using namespace std;
+using namespace std::placeholders;
 
 
 VRWebSocket::VRWebSocket(string name) : VRName() {
     setName(name);
-    threadFkt = VRThreadCb::create("webSocketPollThread", boost::bind(&VRWebSocket::poll, this, _1));
+    threadFkt = VRThreadCb::create("webSocketPollThread", bind(&VRWebSocket::poll, this, _1));
 }
 
 VRWebSocket::~VRWebSocket() {
@@ -90,20 +92,24 @@ void VRWebSocket::processFrame(string frameData) {
     for (auto& sc : stringCallbacks) {
         sc(frameData);
     }
+#ifndef WITHOUT_JSONCPP
     for (auto& jc : jsonCallbacks) {
         Json::Value root;
         reader.parse(frameData, root);
         jc(root);
     }
+#endif
 }
 
 void VRWebSocket::registerStringCallback(function<void(string)> func) {
     stringCallbacks.push_back(func);
 }
 
+#ifndef WITHOUT_JSONCPP
 void VRWebSocket::registerJsonCallback(function<void(Json::Value)> func) {
     jsonCallbacks.push_back(func);
 }
+#endif
 
 void VRWebSocket::eventHandler(struct mg_connection* nc, int ev, void* ev_data) {
 

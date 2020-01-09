@@ -24,7 +24,9 @@
 #include "core/objects/object/VRObjectT.h"
 #include "core/objects/OSGObject.h"
 #include "core/tools/selection/VRSelection.h"
+#ifndef WITHOUT_SHARED_MEMORY
 #include "core/networking/VRSharedMemory.h"
+#endif
 #include "VRPrimitive.h"
 #include "OSGGeometry.h"
 
@@ -429,7 +431,7 @@ void VRGeometry::updateNormals(bool face) {
 void VRGeometry::flipNormals() {
     if (!mesh || !mesh->geo) return;
     GeoVectorPropertyMTRecPtr normals = mesh->geo->getNormals();
-    for (int i=0; i<normals->size(); i++) {
+    for (uint i=0; i<normals->size(); i++) {
         Vec3f n = normals->getValue<Vec3f>(i);
         normals->setValue(-n, i);
     }
@@ -1044,6 +1046,7 @@ void VRGeometry::setup(VRStorageContextPtr context) {
 }
 
 void VRGeometry::readSharedMemory(string segment, string object) {
+#ifndef WITHOUT_SHARED_MEMORY
     VRSharedMemory sm(segment, false);
 
     int sm_state = sm.getObject<int>(object+"_state");
@@ -1087,6 +1090,7 @@ void VRGeometry::readSharedMemory(string segment, string object) {
     if (norms->size() == N) setNormals(norms);
     if (cols->size() == N) setColors(cols);
     setIndices(inds);
+#endif
 }
 
 

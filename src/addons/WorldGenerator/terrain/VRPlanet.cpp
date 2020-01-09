@@ -62,7 +62,7 @@ void VRPlanet::localize(double north, double east) {
 
         for (auto terrain:sector->getTerrains()){
             auto grid = terrain->getGrid();
-            auto fac = terrain->getLODFactor();
+            //auto fac = terrain->getLODFactor();
             auto size = terrain->getSize();
             terrain->setLocalized(true);
             Vec2i gridN = Vec2i(round(size[0]*1.0/grid-0.5), round(size[1]*1.0/grid-0.5));
@@ -119,7 +119,9 @@ void VRPlanet::localize(double north, double east) {
 
 void VRPlanet::divideTIFF(string pathIn, string pathOut, double minLat, double maxLat, double minLon, double maxLon, double res) {
     //cout << "hello " << pathIn << " - " << pathOut << endl;
+#ifndef WITHOUT_GDAL
     divideTiffIntoChunks(pathIn, pathOut, minLat, maxLat, minLon, maxLon, res);
+#endif
 }
 
 Vec2i VRPlanet::toSID(double north, double east) {

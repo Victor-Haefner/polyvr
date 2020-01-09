@@ -105,13 +105,13 @@ void VRMultiTouch::setDevice(string devName) {
     connectDevice();
 }
 
-static void print_event(const struct input_event *ev) {
+/*static void print_event(const struct input_event *ev) {
 	static const mstime_t ms = 1000;
 	static int slot;
 	mstime_t evtime = ev->time.tv_usec / ms + ev->time.tv_sec * ms;
 	if (ev->type == EV_ABS && ev->code == ABS_MT_SLOT) slot = ev->value;
 	fprintf(stderr, "%012llx %02d %01d %04x %d\n", evtime, slot, ev->type, ev->code, ev->value);
-}
+}*/
 
 void VRMultiTouch::updateDevice() {
     if (!visual) showVisual(true);

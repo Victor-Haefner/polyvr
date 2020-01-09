@@ -10,6 +10,7 @@ OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 void loadGLTF(string path, VRTransformPtr res, VRProgressPtr p, bool thread = false);
+void writeGLTF(VRObjectPtr obj, string path);
 
 OSG_END_NAMESPACE;
 

@@ -8,11 +8,11 @@ template<> PyObject* VRPyTypeCaster::cast(const Pose& p) { return VRPyPose::from
 simplePyType( Pose, VRPyPose::New );
 
 PyMethodDef VRPyPose::methods[] = {
-    {"pos", PyCastWrap2(Pose, pos, "Get the position", Vec3d ) },
-    {"dir", PyCastWrap2(Pose, dir, "Get the direction", Vec3d ) },
-    {"up", PyCastWrap2(Pose, up, "Get the up vector", Vec3d ) },
-    {"x", PyCastWrap2(Pose, x, "Get the x vector", Vec3d ) },
-    {"scale", PyCastWrap2(Pose, scale, "Get the scale vector", Vec3d ) },
+    {"pos", PyWrap2(Pose, pos, "Get the position", Vec3d ) },
+    {"dir", PyWrap2(Pose, dir, "Get the direction", Vec3d ) },
+    {"up", PyWrap2(Pose, up, "Get the up vector", Vec3d ) },
+    {"x", PyWrap2(Pose, x, "Get the x vector", Vec3d ) },
+    {"scale", PyWrap2(Pose, scale, "Get the scale vector", Vec3d ) },
     {"setPos", PyWrap2(Pose, setPos, "Set the position", void, Vec3d ) },
     {"setDir", PyWrap2(Pose, setDir, "Set the direction", void, Vec3d ) },
     {"setUp", PyWrap2(Pose, setUp, "Set the up vector", void, Vec3d ) },

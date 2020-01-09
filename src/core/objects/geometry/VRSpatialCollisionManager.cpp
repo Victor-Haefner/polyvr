@@ -28,7 +28,7 @@ VRSpatialCollisionManagerPtr VRSpatialCollisionManager::create(float resolution)
 void VRSpatialCollisionManager::checkCollisions() {
     if (!collisionCb) return;
 
-    auto getCollisionTriangle = [&](Vec3d pos, vector<Vec4d>& triangle, int triangleID) {
+    /*auto getCollisionTriangle = [&](Vec3d pos, vector<Vec4d>& triangle, int triangleID) {
         btTriangleMesh* t = getCollisionShape(pos, false);
         if (t) {
             IndexedMeshArray& mesh = t->getIndexedMeshArray();
@@ -47,7 +47,7 @@ void VRSpatialCollisionManager::checkCollisions() {
                 }
             }
         }
-    };
+    };*/
 
     auto collisions = getCollisions();
     Vec3d wp = getWorldPosition();
@@ -91,8 +91,6 @@ void VRSpatialCollisionManager::add(VRObjectPtr o, int objID) {
         return p;
     };
 
-    int N = 0;
-
     for (auto obj : o->getChildrenWithTag("geometry", true, true)) {
         auto geo = dynamic_pointer_cast<VRGeometry>(obj);
         if (!geo) continue;
@@ -120,7 +118,7 @@ void VRSpatialCollisionManager::add(VRObjectPtr o, int objID) {
     }
 }
 
-void VRSpatialCollisionManager::addQuad(float width, float height, const Pose& p, int objID) {
+void VRSpatialCollisionManager::addQuad(float width, float height, Pose& p, int objID) {
     Vec3d pos = p.pos() + p.up()*height*0.5;
     VRGeoData data; data.pushQuad();
     data.pushQuad(pos, p.dir(), p.up(), Vec2d(width, height), true);

@@ -5,7 +5,9 @@
 #include "core/networking/VRNetworkManager.h"
 #include "core/networking/VRSocket.h"
 #include "core/objects/VRTransform.h"
+#ifndef WITHOUT_CEF
 #include "addons/CEF/CEF.h"
+#endif
 #include "core/scene/VRSceneManager.h"
 #include "core/scene/VRScene.h"
 #include "core/utils/VRLogger.h"
@@ -118,5 +120,9 @@ void VRServer::remWebSite(string uri) {
     updateMobilePage();
 }
 
-void VRServer::updateClients(string path) { CEF::reloadScripts(path); }
+void VRServer::updateClients(string path) {
+#ifndef WITHOUT_CEF
+    CEF::reloadScripts(path);
+#endif
+}
 

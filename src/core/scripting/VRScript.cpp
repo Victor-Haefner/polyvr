@@ -1,6 +1,8 @@
 #include "VRScript.h"
+#ifndef WITHOUT_GTK
 #include "core/gui/VRGuiManager.h"
 #include "core/gui/VRGuiConsole.h"
+#endif
 #include <iostream>
 #include <functional>
 #include "core/scene/VRScene.h"
@@ -13,8 +15,12 @@
 #include "core/setup/devices/VRServer.h"
 #include "VRPySocket.h"
 #include "VRPyMouse.h"
+#ifndef WITHOUT_MTOUCH
 #include "VRPyMultiTouch.h"
+#endif
+#ifndef WITHOUT_BULLET
 #include "VRPyHaptic.h"
+#endif
 #include "VRPyMobile.h"
 #include "VRPyBaseT.h"
 #include "addons/LeapMotion/VRPyLeap.h"
@@ -221,8 +227,12 @@ PyObject* VRScript::getPyObj(argPtr a) {
     else if (a->type == "VRPyLodType") return VRPyLod::fromSharedPtr(((VRLod*)a->ptr)->ptr());
     else if (a->type == "VRPyDeviceType") return VRPyDevice::fromSharedPtr(((VRDevice*)a->ptr)->ptr());
     else if (a->type == "VRPyMouseType") return VRPyMouse::fromSharedPtr(((VRMouse*)a->ptr)->ptr());
+#ifndef WITHOUT_MTOUCH
     else if (a->type == "VRPyMultiTouchType") return VRPyMultiTouch::fromSharedPtr(((VRMultiTouch*)a->ptr)->ptr());
+#endif
+#ifndef WITHOUT_BULLET
     else if (a->type == "VRPyHapticType") return VRPyHaptic::fromSharedPtr(((VRHaptic*)a->ptr)->ptr());
+#endif
     else if (a->type == "VRPyServerType") return VRPyServer::fromSharedPtr(((VRServer*)a->ptr)->ptr());
     else if (a->type == "VRPyLeapFrameType") return VRPyLeapFrame::fromSharedPtr(((VRLeapFrame*)a->ptr)->ptr());
     //else if (a->type == "VRPySocketType") return VRPySocket::fromSharedPtr(((VRSocket*)a->ptr)->ptr());
@@ -321,7 +331,9 @@ int VRScript::getHeadSize() { // number of head lines
 
 void VRScript::on_err_link_clicked(errLink link, string s) {
     //VRGuiManager::get()->focusScript(getName(), link.line, link.column);
+#ifndef WITHOUT_GTK
     VRGuiManager::get()->focusScript(link.filename, link.line, link.column);
+#endif
 }
 
 VRScript::errLink::errLink(string f, int l, int c) : filename(f), line(l), column(c) {}
@@ -377,12 +389,14 @@ finally:
 
 void print_error_text(int offset, char *text) {
     auto print = [&]( string m, string style = "", shared_ptr< VRFunction<string> > link = 0 ) {
+#ifndef WITHOUT_GTK
         VRGuiManager::get()->getConsole( "Syntax" )->write( m, style, link );
+#endif
     };
 
     char *nl;
     if (offset >= 0) {
-        if (offset > 0 && offset == strlen(text) && text[offset - 1] == '\n') offset--;
+        if (offset > 0 && offset == (int)strlen(text) && text[offset - 1] == '\n') offset--;
         for (;;) {
             nl = strchr(text, '\n');
             if (nl == NULL || nl-text >= offset) break;
@@ -409,7 +423,9 @@ void print_error_text(int offset, char *text) {
 
 void VRScript::printSyntaxError(PyObject *exception, PyObject *value, PyObject *tb) {
     auto print = [&]( string m, string style = "", shared_ptr< VRFunction<string> > link = 0 ) {
+#ifndef WITHOUT_GTK
         VRGuiManager::get()->getConsole( "Syntax" )->write( m, style, link );
+#endif
     };
 
     int err = 0;
@@ -443,7 +459,9 @@ void VRScript::pyErrPrint(string channel) {
     if (!PyErr_Occurred()) return;
 
     auto print = [&]( string m, string style = "", shared_ptr< VRFunction<string> > link = 0 ) {
+#ifndef WITHOUT_GTK
         VRGuiManager::get()->getConsole( channel )->write( m, style, link );
+#endif
     };
 
     auto getTracebackFrame = [](PyTracebackObject* tb, vector<PyFrameObject*>& frames) {
@@ -459,7 +477,9 @@ void VRScript::pyErrPrint(string channel) {
         return frames;
     };
 
+#ifndef WITHOUT_GTK
     VRGuiManager::get()->getConsole( channel )->addStyle( "redLink", "#ff3311", "#ffffff", false, false, true );
+#endif
 
     struct Line {
         shared_ptr<VRFunction<string>> fkt;

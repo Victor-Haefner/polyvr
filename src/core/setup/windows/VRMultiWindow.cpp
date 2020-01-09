@@ -68,6 +68,7 @@ bool VRMultiWindow::init_win(const std::string &msg, const std::string &server, 
 }
 
 void VRMultiWindow::initialize() {
+#ifndef WASM
     cout << "Initializing MultiWindow\n";
     //cout << " Render MW " << getName() << " state " << getStateString() << endl;
     win = 0; _win = 0; tries = 0; state = CONNECTING;
@@ -86,10 +87,11 @@ void VRMultiWindow::initialize() {
     for (auto wv : views) if (auto v = wv.lock()) v->setWindow(win);
 
     ClusterWindow::ConnectionCB cb = boost::bind(&VRMultiWindow::init_win, this, _1, _2, _3);
-    win->initAsync(cb);
+    win->initAsync(cb); // TODO: why not defined for WASM build?
     //cout << endl << " render once " << endl;
     //if (state == CONNECTED) win->render(ract);
     cout << " done " << getStateString() << endl;
+#endif
 }
 
 void OSG_sync(WindowMTRecPtr _win, RenderActionRefPtr ract) {

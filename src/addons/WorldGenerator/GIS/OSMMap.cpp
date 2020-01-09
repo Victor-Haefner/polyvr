@@ -892,7 +892,7 @@ int OSMMap::filterFileStreaming(string path, vector<pair<string, string>> whitel
             res+="newOSM.osm";
             return res;
         }
-        for (int i = 0; i < filepath.length()-4; i++) {
+        for (uint i = 0; i+4 < filepath.length(); i++) {
             res += filepath.at(i);
         }
         res += in;
@@ -1054,7 +1054,7 @@ vector<OSMWayPtr> OSMMap::splitWay(OSMWayPtr way, int segN) {
     vector<OSMWayPtr> res;
     int segL = way->nodes.size()/segN;
 
-    int k = 0;
+    uint k = 0;
     OSMWayPtr w = 0;
     for (int s=0; s<segN && k<way->nodes.size(); s++) {
         w = OSMWayPtr( new OSMWay(way->id + "_" + toString(s)) );
