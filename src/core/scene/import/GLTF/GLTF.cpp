@@ -392,10 +392,19 @@ struct GLTFNNode : GLTFNode{
     }
 
     Matrix4d applyTransformations(Matrix4d m = Matrix4d()) {
-        if (isTransformationNode(type)) {
-            VRTransformPtr t = dynamic_pointer_cast<VRTransform>(obj); ///AGRAJAG
-            if (t) t->setMatrix(pose);
-        }
+        VRTransformPtr t = dynamic_pointer_cast<VRTransform>(obj);
+        if (t) t->setMatrix(pose);
+        m.mult(pose);
+        cout << m << endl;
+        /*
+        if (isGeometryNode(type)) {
+            VRTransformPtr t = dynamic_pointer_cast<VRTransform>(obj);
+            if (t) t->setMatrix(m);
+        } else if(isTransformationNode(type)) {
+            m.mult(pose);
+        } else if(isTransformationResetNode(type)) {
+            m.setIdentity();
+        }*/
 
         for (auto c : children) c->applyTransformations(m);
         return m;
@@ -408,7 +417,7 @@ struct GLTFNNode : GLTFNode{
             if (g) {
                 if (material) {
                     g->setMaterial(material);
-                    cout << "mat set " << matID << " on: " << name << endl;
+                    cout << "mat set " << matID << " on: " << name << " parent: "<< parent->name << endl;
                 }
             }
         }
@@ -494,6 +503,8 @@ class GLTFLoader : public GLTFUtils {
             res += to_string(nodeID) + " " + gltfNode.name;
             name = gltfNode.name;
 
+            vector<bool> transf = {false, false, false, false};
+
             if (gltfNode.mesh > -1) {
                 //res += " mesh: " + to_string(gltfNode.mesh);
                 nodeToMesh[nodeID] = gltfNode.mesh;
@@ -502,25 +513,25 @@ class GLTFLoader : public GLTFUtils {
                 type = "Mesh";
             }
 
+            if (gltfNode.translation.size() == 3) {
+                auto v = gltfNode.translation;
+                translation = Vec3d( v[0], v[1], v[2] );
+                res += " scale: found";
+                transf[0] = true;
+            }
+
             if (gltfNode.rotation.size() == 4) {
                 auto v = gltfNode.rotation;
                 rotation = Vec4d( v[0], v[1], v[2], v[3] );
                 res += " rotation: found";
-                type = "Rotation";
+                transf[1] = true;
             }
 
             if (gltfNode.scale.size() == 3) {
                 auto v = gltfNode.scale;
                 scale = Vec3d( v[0], v[1], v[2] );
                 res += " scale: found";
-                type = "Scale";
-            }
-
-            if (gltfNode.translation.size() == 3) {
-                auto v = gltfNode.translation;
-                translation = Vec3d( v[0], v[1], v[2] );
-                res += " scale: found";
-                type = "Translation";
+                transf[2] = true;
             }
 
             if (gltfNode.matrix.size() == 16) {
@@ -529,8 +540,10 @@ class GLTFLoader : public GLTFUtils {
                 res += " matrix:";
                 for (auto each: gltfNode.matrix) res += " " + to_string(each);
                 res += " found";
-                type = "Transform";
+                transf[3] = true;
             }
+
+            if (!isGeometryNode(type)) type = "Transform";
 
             if (name == "") name = "NN";
             GLTFNode* thisNode = new GLTFNNode(type,name);
@@ -543,14 +556,10 @@ class GLTFLoader : public GLTFUtils {
                 childrenPerNode[nodeID] = children;
             }
 
-            if (isTransformationNode(type)) {
-                thisNode->rotation = rotation;
-                thisNode->translation = translation;
-                thisNode->scale = scale;
-                if (type == "Transform") thisNode->pose = mat4;
-                else thisNode->handleTransform();
-                //cout << res << endl;
-            }
+            if (transf[0]) { thisNode->translation = translation; thisNode->handleTransform(); }
+            if (transf[1]) { thisNode->rotation = rotation; thisNode->handleRotation(); }
+            if (transf[2]) { thisNode->scale = scale; thisNode->handleScale(); }
+            if (transf[3]) { thisNode->matTransform = mat4; thisNode->pose = mat4; };
 
             //if (type == "Untyped") cout << res << " " << type << endl;
             //if (type == "Mesh") cout << res << " " << type << endl;
