@@ -56,6 +56,10 @@ template<> PyTypeObject VRPyBaseT<OSG::VRObject>::type = {
     New_VRObjects_ptr,                 /* tp_new */
 };
 
+const char* exportToFileDoc = "Export subtree to file"
+"bla"
+"\nblub";
+
 PyMethodDef VRPyObject::methods[] = {
     {"destroy", (PyCFunction)VRPyObject::destroy, METH_NOARGS, "Destroy object and reset py object to None" },
     {"getName", (PyCFunction)VRPyObject::getName, METH_NOARGS, "Return the object name" },
@@ -105,7 +109,7 @@ PyMethodDef VRPyObject::methods[] = {
     {"getWorldBoundingbox", PyWrap(Object, getWorldBoundingbox, "get world Boundingbox", BoundingboxPtr) },
     {"setVolume", PyWrap(Object, setVolume, "Set the scenegraph volume to boundingbox", void, Boundingbox) },
     {"getPoseTo", PyWrap(Object, getPoseTo, "Get the transformation from this object to another, returns a pose", PosePtr, VRObjectPtr ) },
-    {"exportToFile", PyWrap(Object, exportToFile, "Export subtree to file", void, string) },
+    {"exportToFile", PyWrap(Object, exportToFile, "Export object (and subtree) to file, supported extensions: [wrl, wrz, obj, osb, osg, ply, gltf]", void, string) },
     {NULL}  /* Sentinel */
 };
 

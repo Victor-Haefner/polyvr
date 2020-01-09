@@ -34,11 +34,15 @@ class VRGeoData {
         int sizeNormals() const;
         int getNFaces() const;
         int getFaceSize(int fID) const;
+        int getNTypes() const;
 
         void reset();
         bool valid() const;
         bool validIndices() const;
 
+        int getType(int i);
+        int getLength(int i);
+        int getIndex(int i);
         Pnt3d getPosition(int i);
         Vec3d getNormal(int i);
         Color4f getColor(int i);

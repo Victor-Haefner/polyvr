@@ -870,3 +870,180 @@ void OSG::loadGLTF(string path, VRTransformPtr res, VRProgressPtr p, bool thread
     GLTFLoader gltf(path, res, p, thread);
     gltf.load();
 }
+
+void constructGLTF(tinygltf::Model& model, VRObjectPtr obj, int pID = -1) {
+    tinygltf::Scene& scene = model.scenes.back();
+
+    // new node
+    int nID = model.nodes.size();
+    model.nodes.push_back(tinygltf::Node());
+    tinygltf::Node& node = model.nodes.back();
+
+    // from object
+    node.name = obj->getName();
+
+    // from transform
+    auto trans = dynamic_pointer_cast<VRTransform>(obj);
+    if (trans) {
+        Matrix4d mat = trans->getMatrix();
+        double* data = mat.getValues();
+        for (int i=0; i<16; i++) node.matrix.push_back(data[i]);
+    }
+
+    // scene graph structure
+    if (pID >= 0) {
+        auto& parent = model.nodes[pID];
+        parent.children.push_back(nID);
+    } else scene.nodes.push_back(nID);
+
+    // from geometry
+    auto geo = dynamic_pointer_cast<VRGeometry>(trans);
+    if (geo) {
+        int mID = model.meshes.size();
+        model.meshes.push_back(tinygltf::Mesh());
+        tinygltf::Mesh& mesh = model.meshes.back();
+        mesh.name = geo->getName() + "_mesh";
+        node.mesh = mID;
+
+        VRGeoData data(geo);
+
+        int Ntypes = data.getDataSize(0);
+        int Nlengths = data.getDataSize(1);
+        int Nindices = data.getDataSize(2);
+        int Npositions = data.getDataSize(3);
+        int Nnormals = data.getDataSize(4);
+        int Ncolors3 = data.getDataSize(5);
+        int Ncolors4 = data.getDataSize(6);
+        int Ntexcoords = data.getDataSize(7);
+
+        // buffer
+        int indicesBufID = model.buffers.size();
+        model.buffers.push_back(tinygltf::Buffer());
+        tinygltf::Buffer& indicesBuffer = model.buffers.back();
+        vector<int> indicesVec;
+        for (int i = 0; i<Nindices; i++) indicesVec.push_back(data.getIndex(i));
+        indicesBuffer.name = "indicesBuffer";
+        unsigned char* dInds = (unsigned char*)&indicesVec[0];
+        indicesBuffer.data = vector<unsigned char>( dInds, dInds + sizeof(int)*indicesVec.size() );
+
+        int positionsBufID = model.buffers.size();
+        model.buffers.push_back(tinygltf::Buffer());
+        tinygltf::Buffer& positionsBuffer = model.buffers.back();
+        vector<Vec3f> positionsVec;
+        for (int i = 0; i<Npositions; i++) positionsVec.push_back(Vec3f(data.getPosition(i)));
+        positionsBuffer.name = "positionsBuffer";
+        unsigned char* dPos = (unsigned char*)&positionsVec[0];
+        positionsBuffer.data = vector<unsigned char>( dPos, dPos + sizeof(Vec3f)*positionsVec.size() );
+
+        int normalsBufID = model.buffers.size();
+        model.buffers.push_back(tinygltf::Buffer());
+        tinygltf::Buffer& normalsBuffer = model.buffers.back();
+        vector<Vec3f> normalsVec;
+        for (int i = 0; i<Nnormals; i++) normalsVec.push_back(Vec3f(data.getNormal(i)));
+        normalsBuffer.name = "normalsBuffer";
+        unsigned char* dNorms = (unsigned char*)&normalsVec[0];
+        normalsBuffer.data = vector<unsigned char>( dNorms, dNorms + sizeof(Vec3f)*normalsVec.size() );
+
+        // buffer views
+        int indicesViewID = model.bufferViews.size();
+        model.bufferViews.push_back(tinygltf::BufferView());
+        tinygltf::BufferView& indicesView = model.bufferViews.back();
+        indicesView.buffer = indicesBufID;
+        indicesView.byteOffset = 0;
+        indicesView.byteLength = sizeof(int)*3;
+        indicesView.target = TINYGLTF_TARGET_ELEMENT_ARRAY_BUFFER;
+
+        int positionsViewID = model.bufferViews.size();
+        model.bufferViews.push_back(tinygltf::BufferView());
+        tinygltf::BufferView& positionsView = model.bufferViews.back();
+        positionsView.buffer = positionsBufID;
+        positionsView.byteOffset = 0;
+        positionsView.byteLength = sizeof(Vec3f)*3;
+        positionsView.target = TINYGLTF_TARGET_ARRAY_BUFFER;
+
+        int normalsViewID = model.bufferViews.size();
+        model.bufferViews.push_back(tinygltf::BufferView());
+        tinygltf::BufferView& normalsView = model.bufferViews.back();
+        normalsView.buffer = normalsBufID;
+        normalsView.byteOffset = 0;
+        normalsView.byteLength = sizeof(Vec3f)*3;
+        normalsView.target = TINYGLTF_TARGET_ARRAY_BUFFER;
+
+        // accessors
+        int indicesAccID = model.accessors.size();
+        model.accessors.push_back(tinygltf::Accessor());
+        tinygltf::Accessor& indices = model.accessors.back();
+        indices.name = "indices";
+        indices.componentType = TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT;
+        indices.type = TINYGLTF_TYPE_SCALAR;
+        indices.count = Nindices;
+        indices.bufferView = indicesViewID;
+        indices.byteOffset = 0;
+
+        int positionsAccID = model.accessors.size();
+        model.accessors.push_back(tinygltf::Accessor());
+        tinygltf::Accessor& positions = model.accessors.back();
+        positions.name = "positions";
+        positions.componentType = TINYGLTF_COMPONENT_TYPE_FLOAT;
+        positions.type = TINYGLTF_TYPE_VEC3;
+        positions.count = Npositions;
+        positions.bufferView = positionsViewID;
+        positions.byteOffset = 0;
+
+        int normalsAccID = model.accessors.size();
+        model.accessors.push_back(tinygltf::Accessor());
+        tinygltf::Accessor& normals = model.accessors.back();
+        normals.name = "normals";
+        normals.componentType = TINYGLTF_COMPONENT_TYPE_FLOAT;
+        normals.type = TINYGLTF_TYPE_VEC3;
+        normals.count = Nnormals;
+        normals.bufferView = normalsViewID;
+        normals.byteOffset = 0;
+
+        // add types
+        for (int iType = 0; iType < Ntypes; iType++) {
+            int type = data.getType(iType);
+            int length = data.getLength(iType);
+
+            mesh.primitives.push_back(tinygltf::Primitive());
+            tinygltf::Primitive& primitive = mesh.primitives.back();
+            primitive.mode = TINYGLTF_MODE_TRIANGLES;
+            primitive.indices = indicesAccID;
+            primitive.attributes["POSITION"] = positionsAccID;
+            primitive.attributes["NORMAL"] = normalsAccID;
+        }
+
+        /*
+        #define TINYGLTF_MODE_POINTS (0)
+        #define TINYGLTF_MODE_LINE (1)
+        #define TINYGLTF_MODE_LINE_LOOP (2)
+        #define TINYGLTF_MODE_LINE_STRIP (3)
+        #define TINYGLTF_MODE_TRIANGLES (4)
+        #define TINYGLTF_MODE_TRIANGLE_STRIP (5)
+        #define TINYGLTF_MODE_TRIANGLE_FAN (6);
+        */
+    }
+
+
+    for (auto child : obj->getChildren()) constructGLTF(model, child, nID);
+}
+
+void OSG::writeGLTF(VRObjectPtr obj, string path) {
+    tinygltf::Model model;
+    model.scenes.push_back(tinygltf::Scene());
+    model.defaultScene = 0;
+    model.asset.version = "2.0";
+
+    constructGLTF(model, obj);
+    tinygltf::TinyGLTF writer;
+    writer.WriteGltfSceneToFile(&model, path, true, true, true, false); // last flag is binary
+}
+
+
+
+
+
+
+
+
+

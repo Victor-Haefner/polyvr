@@ -739,9 +739,7 @@
 		<Unit filename="src/core/objects/VRObjectFwd.h" />
 		<Unit filename="src/core/objects/VRPointCloud.cpp" />
 		<Unit filename="src/core/objects/VRPointCloud.h" />
-		<Unit filename="src/core/objects/VRShadowEngine.cpp" />
 		<Unit filename="src/core/objects/VRShadowEngine.h" />
-		<Unit filename="src/core/objects/VRShadowEngineBase.cpp" />
 		<Unit filename="src/core/objects/VRShadowEngineBase.h" />
 		<Unit filename="src/core/objects/VRShadowEngineFields.h" />
 		<Unit filename="src/core/objects/VRStage.cpp" />

@@ -10,6 +10,7 @@
 #include "core/utils/VRFunction.h"
 #include "core/utils/VRUndoInterfaceT.h"
 #include "core/utils/VRStorage_template.h"
+#include "core/scene/import/VRExport.h"
 
 #include <OpenSG/OSGGroup.h>
 #include <OpenSG/OSGTransform.h>
@@ -655,7 +656,7 @@ bool VRObject::isVisible(string mode, bool recursive) {
 
 void VRObject::exportToFile(string path) { // may crash due to strange charachters in object names
     if (!getNode()) return;
-    SceneFileHandler::the()->write(getNode()->node, path.c_str());
+    VRExport::get()->write( ptr(), path );
 }
 
 void VRObject::setVisible(bool b, string mode) {
