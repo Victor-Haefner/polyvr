@@ -111,11 +111,15 @@ void PolyVR::init(int argc, char **argv) {
     initTime();
 
     cout << "Init PolyVR\n\n";
+#ifndef WASM
     enableCoreDump(true);
+#endif
     setlocale(LC_ALL, "C");
+#ifndef WASM
     options = shared_ptr<VROptions>(VROptions::get());
     options->parse(argc,argv);
     checkProcessesAndSockets();
+#endif
 
     //GLUT
     glutInit(&argc, argv);
