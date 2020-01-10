@@ -11,7 +11,6 @@
 #include "core/math/Octree.h"
 #include "core/utils/VRProgress.h"
 #include "core/utils/toString.h"
-#include "core/objects/VRPointCloud.h"
 
 using namespace e57;
 using namespace std;

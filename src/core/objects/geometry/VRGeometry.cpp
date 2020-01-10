@@ -23,6 +23,7 @@
 #include "core/objects/material/OSGMaterial.h"
 #include "core/objects/object/VRObjectT.h"
 #include "core/objects/OSGObject.h"
+#include "core/objects/VRPointCloud.h"
 #include "core/tools/selection/VRSelection.h"
 #ifndef WITHOUT_SHARED_MEMORY
 #include "core/networking/VRSharedMemory.h"
@@ -1163,40 +1164,44 @@ void VRGeometry::convertToTriangles() {
 
 
 
-vector<((Vec3d, Vec3d), int)> VRGeometry::calcLengths(vector<Vec3d> triangle) {
+vector< tuple<Vec3d, Vec3d, int>> VRGeometry::calcLengths(vector<Vec3d> triangle) {
     mesh->geo->getPositions();
-    return NULL;
+    vector< tuple<Vec3d, Vec3d, int>>  lengths;
+    return lengths;
 }
 
 
 vector<Vec3d> VRGeometry::addPointsOnEdges(int resolution, vector<Vec3d> triangle) {
-    if !(resolution || triangle) return;
+    vector<Vec3d> res;
+    if (triangle.empty()) return res;
     auto edgeLengths = calcLengths(triangle);
-    vector<(int, vector<int>)> pntsOnEdges;
-    int i;
-    auto ind = mesh->geo->getIndices()
+    vector< tuple<int, vector<int>>> pntsOnEdges;
+    int i = 0;
+    auto inds = getIndices();
+    auto pos = getPositions();
+    cout << inds << inds.getType() << endl;
 
-    if !ind i = 0;
-    else i = max(ind);
+    //if (inds->size() > 0) i = max(inds); //find max index
 
     for (auto& edge : edgeLengths)
 
 
-    return NULL;
+    return res;
 }
 
 
-vector<(Vec3d, Vec3d)> VRGeometry::mapPoints(int resolution, vector<Vec3d> triangle) {
-    vector<(Vec3d, Vec3d)> mappedPoints;
-    vector<Vec3d> pntsOnEdges = this.addPointsOnEdges(resolution, triangle);
+vector< tuple<Vec3d, Vec3d>> VRGeometry::mapPoints(int resolution, vector<Vec3d> triangle) {
+    vector< tuple<Vec3d, Vec3d>> mappedPoints;
+    vector<Vec3d> pntsOnEdges = addPointsOnEdges(resolution, triangle);
 
 
-    return NULL;
+    return mappedPoints;
 }
 
 
 VRPointCloudPtr VRGeometry::convertToPointCloud(map<string, string> options) {
     auto pointcloud = VRPointCloud::create("pointcloud");
+    pointcloud->applySettings(options);
     //VRTransformPtr res;
     if (!meshSet) return pointcloud;
 
@@ -1221,7 +1226,7 @@ VRPointCloudPtr VRGeometry::convertToPointCloud(map<string, string> options) {
     }
 
     */
-    pointcloud->applySettings(options);
+    //pointcloud->applySettings(options);
     return pointcloud;
 }
 

@@ -49,9 +49,9 @@ class VRGeometry : public VRTransform {
         VRGeometry(string name, bool hidden);
         static VRGeometryPtr create(string name, bool hidden);
 
-        vector<(Vec3d, int)> calcLengths(vector<Vec3d> triangle);
+        vector< tuple<Vec3d, Vec3d, int>> calcLengths(vector<Vec3d> triangle);
         vector<Vec3d> addPointsOnEdges(int resolution, vector<Vec3d> triangle);
-        vector<(Vec3d, Vec3d)> mapPoints(int resolution, vector<Vec3d> triangle);
+        vector< tuple<Vec3d, Vec3d>> mapPoints(int resolution, vector<Vec3d> triangle);
 
     public:
         VRGeometry(string name = "0");
