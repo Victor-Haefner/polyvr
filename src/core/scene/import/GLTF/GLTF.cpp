@@ -716,7 +716,7 @@ class GLTFLoader : public GLTFUtils {
                         const unsigned int* indices   = reinterpret_cast<const unsigned int*>(&bufferInd.data[bufferViewIndices.byteOffset + accessorIndices.byteOffset]);
                         for (size_t i = 0; i < accessorIndices.count/3; ++i) gdata.pushTri(indices[i*3+0],indices[i*3+1],indices[i*3+2]);
                     }
-                    if (accessorIndices.componentType != 5122 || accessorIndices.componentType != 5125 || accessorIndices.componentType != 5123) { cout << "GLTF-LOADER: data type of indices unknwon: " << accessorIndices.componentType << endl; }
+                    if (accessorIndices.componentType != 5122 && accessorIndices.componentType != 5125 && accessorIndices.componentType != 5123) { cout << "GLTF-LOADER: data type of indices unknwon: " << accessorIndices.componentType << endl; }
                 }
                 if (primitive.mode == 5) { /*TRIANGLE STRIP*/ cout << "GLTF-LOADER: not implemented TRIANGLE STRIP" << endl;}
                 if (primitive.mode == 6) { /*TRAINGLE FAN*/ cout << "GLTF-LOADER: not implemented fTRAINGLE FAN" << endl;}
