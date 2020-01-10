@@ -404,7 +404,6 @@ struct GLTFNNode : GLTFNode{
             if (g) {
                 if (material) {
                     g->setMaterial(material);
-                    //cout << "mat set " << matID << " on: " << name << " parent: "<< parent->name << endl;
                 }
             }
         }
@@ -471,6 +470,11 @@ class GLTFLoader : public GLTFUtils {
         void handleAsset(const tinygltf::Asset &gltfAsset){
             //gltfAsset.version;
             //gltfAsset.extensions
+            if (gltfAsset.extensions.size() > 0) {
+                cout << "GLTFLOADER::WARNING IN EXTENSIONS not supported: ";
+                for (auto each : gltfAsset.extensions) cout << " " << each.first;
+                cout << endl;
+            }
         }
 
         void handleScene(const tinygltf::Scene &gltfScene){
@@ -700,7 +704,6 @@ class GLTFLoader : public GLTFUtils {
                 if (primitive.mode == 2) { /*LINE LOOP*/ cout << "GLTF-LOADER: not implemented LINE LOOP" << endl; }
                 if (primitive.mode == 3) { /*LINE STRIP*/ cout << "GLTF-LOADER: not implemented LINE STRIP" << endl; }
                 if (primitive.mode == 4) { /*TRIANGLES*/
-                    cout << accessorIndices.componentType << endl;
                     if (accessorIndices.componentType == 5122) {
                         const unsigned short* indices   = reinterpret_cast<const unsigned short*>(&bufferInd.data[bufferViewIndices.byteOffset + accessorIndices.byteOffset]);
                         for (size_t i = 0; i < accessorIndices.count/3; ++i) gdata.pushTri(indices[i*3+0],indices[i*3+1],indices[i*3+2]);
@@ -713,6 +716,7 @@ class GLTFLoader : public GLTFUtils {
                         const unsigned int* indices   = reinterpret_cast<const unsigned int*>(&bufferInd.data[bufferViewIndices.byteOffset + accessorIndices.byteOffset]);
                         for (size_t i = 0; i < accessorIndices.count/3; ++i) gdata.pushTri(indices[i*3+0],indices[i*3+1],indices[i*3+2]);
                     }
+                    if (accessorIndices.componentType != 5122 || accessorIndices.componentType != 5125 || accessorIndices.componentType != 5123) { cout << "GLTF-LOADER: data type of indices unknwon: " << accessorIndices.componentType << endl; }
                 }
                 if (primitive.mode == 5) { /*TRIANGLE STRIP*/ cout << "GLTF-LOADER: not implemented TRIANGLE STRIP" << endl;}
                 if (primitive.mode == 6) { /*TRAINGLE FAN*/ cout << "GLTF-LOADER: not implemented fTRAINGLE FAN" << endl;}
@@ -792,7 +796,7 @@ class GLTFLoader : public GLTFUtils {
                 printf("Failed to parse glTF\n");
                 //return -1;
             }
-            debugDump(&model);
+            //debugDump(&model);
             if (err.empty()){
                 parsetinygltf();
                 version = 2;
@@ -800,7 +804,7 @@ class GLTFLoader : public GLTFUtils {
                 tree = new GLTFNNode("Root", "Root");
                 for (auto each:scenes) tree->addChild(each.second);
                 tree->obj = res;
-                tree->print();
+                //tree->print();
                 tree->buildOSG();
                 tree->applyTransformations();
                 tree->applyMaterials();
