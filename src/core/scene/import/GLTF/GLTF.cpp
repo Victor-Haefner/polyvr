@@ -295,7 +295,8 @@ struct GLTFNode : GLTFUtils {
     }
 
     void print(string padding = "") {
-        cout << padding << "Node '" << name << "' of type " << type << " with matID: " << matID;
+        cout << padding << "Node '" << name << "' of type " << type;
+        if (type == "mesh") cout << " with matID: " << matID;
         cout << endl;
         for (auto c : children) c->print(padding+" ");
     }
@@ -467,6 +468,11 @@ class GLTFLoader : public GLTFUtils {
             return fileSize;
         }
 
+        void handleAsset(const tinygltf::Asset &gltfAsset){
+            //gltfAsset.version;
+            //gltfAsset.extensions
+        }
+
         void handleScene(const tinygltf::Scene &gltfScene){
             sceneID++;
             GLTFNode* thisNode = new GLTFNNode("Scene",gltfScene.name);
@@ -512,7 +518,7 @@ class GLTFLoader : public GLTFUtils {
 
             if (gltfNode.matrix.size() == 16) {
                 auto v = gltfNode.matrix;
-                mat4 = Matrix4d( v[0], v[1], v[2], v[3], v[4], v[5], v[6], v[7], v[8], v[9], v[10], v[11], v[12], v[13], v[14], v[15] );
+                mat4 = Matrix4d( Vec4d(v[0], v[1], v[2], v[3]), Vec4d(v[4], v[5], v[6], v[7]), Vec4d(v[8], v[9], v[10], v[11]), Vec4d(v[12], v[13], v[14], v[15]) );
                 transf[3] = true;
             }
 
@@ -536,24 +542,21 @@ class GLTFLoader : public GLTFUtils {
 
         void handleMaterial(const tinygltf::Material &gltfMaterial){
             matID++;
-            //cout << "Emmissive Tex: " << gltfMaterial.emissiveTexture.index << endl;
-            //cout << "Oclusion Tex: " << gltfMaterial.occlusionTexture.index << endl;
             VRMaterialPtr mat = VRMaterial::create(gltfMaterial.name);
-            cout << "   MATE " << gltfMaterial.name << endl;
+            //cout << "   MATE " << gltfMaterial.name << endl;
             bool bsF = false;
             bool mtF = false;
             bool rfF = false;
             bool emF = false;
+            bool singleFace = false;
             for (const auto &content : gltfMaterial.values) {
                 if (content.first == "baseColorTexture") {
                     int tID = gltfMaterial.pbrMetallicRoughness.baseColorTexture.index;
-                    mat->setTexture(textures[tID]);
-                    //cout << "  " << matID << " " << gltfMaterial.name << " baseColor: " << tID << " - " << textures[tID]->getSize() << endl;
+                    if (textures.count(tID)) mat->setTexture(textures[tID]);
                 }
 
                 if (content.first == "metallicRoughnessTexture") {
                     int tID = gltfMaterial.pbrMetallicRoughness.metallicRoughnessTexture.index;
-                    //cout << "  " << matID << " " << gltfMaterial.name << " metallicRoughnessTexture: " << tID << " found but not used"<<endl;
                 }
                 if (content.first == "baseColorFactor") bsF = true;
                 if (content.first == "metallicFactor") mtF = true;
@@ -563,46 +566,34 @@ class GLTFLoader : public GLTFUtils {
             for (const auto &content : gltfMaterial.additionalValues) {
                 if (content.first == "normalTexture") {
                     int tID = gltfMaterial.normalTexture.index;
-                    //cout << "  " << matID << " " << gltfMaterial.name << " Normal Tex: " << gltfMaterial.normalTexture.index << " found but not used" << endl;
                 }
 
                 if (content.first == "emissiveTexture") {
                     int tID = gltfMaterial.emissiveTexture.index;
-                    //cout << "  " << matID << " " << gltfMaterial.name << " Emmissive Tex: " << gltfMaterial.emissiveTexture.index << " found but not used" << endl;
+                }
+                if (content.first == "alphaMode") {
+                    //cout << "alhphaMODE " << gltfMaterial.alphaMode << endl;
+                }
+                if (content.first == "doubleSided") {
+                    if (!gltfMaterial.doubleSided) { singleFace = true; cout << "GLTFLOADER::WARNING IN MATERIAL " << gltfMaterial.name << " - SINGLE SIDE - ambient set to black" << endl; }
                 }
             }
 
             if (bsF && mtF && rfF) {
-                if (gltfMaterial.pbrMetallicRoughness.baseColorFactor.size() == 3) {
-                    Color3f baseColor = Color3f(gltfMaterial.pbrMetallicRoughness.baseColorFactor[0],gltfMaterial.pbrMetallicRoughness.baseColorFactor[1],gltfMaterial.pbrMetallicRoughness.baseColorFactor[2]);
-                    double metallicFactor = gltfMaterial.pbrMetallicRoughness.metallicFactor;
-                    double roughnessFactor = gltfMaterial.pbrMetallicRoughness.roughnessFactor;
+                Color3f baseColor = Color3f(gltfMaterial.pbrMetallicRoughness.baseColorFactor[0],gltfMaterial.pbrMetallicRoughness.baseColorFactor[1],gltfMaterial.pbrMetallicRoughness.baseColorFactor[2]);
+                double metallicFactor = gltfMaterial.pbrMetallicRoughness.metallicFactor;
+                double roughnessFactor = gltfMaterial.pbrMetallicRoughness.roughnessFactor;
 
-                    Color3f spec = Color3f(0.04,0.04,0.04)*(1.0-metallicFactor) + baseColor*metallicFactor;
-                    Color3f diff = baseColor * (1.0 - metallicFactor);
-                    float shiny = 1.0 - roughnessFactor;
-                    mat->setSpecular(spec);
-                    mat->setAmbient(diff);
-                    mat->setShininess(shiny);
-                    mat->ignoreMeshColors(true);
-                    if (emF) {
-                        //gltfMaterial.pbrMetallicRoughness.
-                        //mat->setEmission(Color3f c);
-                    }
-                }
-                if (gltfMaterial.pbrMetallicRoughness.baseColorFactor.size() == 4) {
-                    Color4f baseColor = Color4f(gltfMaterial.pbrMetallicRoughness.baseColorFactor[0],gltfMaterial.pbrMetallicRoughness.baseColorFactor[1],gltfMaterial.pbrMetallicRoughness.baseColorFactor[2],gltfMaterial.pbrMetallicRoughness.baseColorFactor[3]);
-                    double metallicFactor = gltfMaterial.pbrMetallicRoughness.metallicFactor;
-                    double roughnessFactor = gltfMaterial.pbrMetallicRoughness.roughnessFactor;
-
-                    Color4f spec = Color4f(0.04,0.04,0.04,1)*(1.0-metallicFactor) + baseColor*metallicFactor;
-                    Color4f diff = baseColor * (1.0 - metallicFactor);
-                    float shiny = 1.0 - roughnessFactor;
-                    mat->setSpecular( Color3f(spec[0],spec[1],spec[2]) );
-                    mat->setAmbient( Color3f(diff[0],diff[1],diff[2]) );
-                    mat->setShininess(shiny);
-                    mat->ignoreMeshColors(true);
-                }
+                Color3f spec = Color3f(0.04,0.04,0.04)*(1.0-metallicFactor) + baseColor*metallicFactor;
+                Color3f diff = baseColor;
+                if (singleFace) metallicFactor = 1.0;
+                Color3f amb = baseColor * (1.0 - metallicFactor);
+                float shiny = 1.0 - roughnessFactor;
+                mat->setSpecular(spec);
+                mat->setAmbient(amb);
+                mat->setDiffuse(diff);
+                mat->setShininess(shiny);
+                //mat->ignoreMeshColors(true);
             }
             materials[matID] = mat;
         }
@@ -614,9 +605,10 @@ class GLTFLoader : public GLTFUtils {
             const auto &image = model.images[gltfTexture.source];
             int components = image.component;
             int width = image.width;
+            if (width < 0) { cout << "GLTFLOADER::WARNING IN TEXTURE loading failed " << gltfTexture.name << endl; return;}
             int height = image.height;
             int bits = image.bits;
-            cout << texID << " " << gltfTexture.source << " components " << components << " width " << width << " height " << height << " bits " << bits  << endl;
+            //cout << texID << " " << gltfTexture.source << " components " << components << " width " << width << " height " << height << " bits " << bits  << endl;
 
             const auto size = components * width * height * bits; //sizeof(unsigned char);
             char* data = new char[size];
@@ -636,19 +628,14 @@ class GLTFLoader : public GLTFUtils {
 
         void handleMesh(const tinygltf::Mesh &gltfMesh){
             meshID++;
-
             for (tinygltf::Primitive primitive : gltfMesh.primitives) {
-                if (gltfMesh.primitives.size() > 1) continue;
-                //cout << res << endl;
-
+                if (gltfMesh.primitives.size() > 1) { cout << "GLTFLOADER::WARNING IN MESH more than one primitive not suported" << endl; continue; }
                 auto nodeID = meshToNode[meshID];
                 auto& node = nodes[nodeID];
                 long n = 0;
                 VRGeoData gdata = VRGeoData();
 
-                string atts = "";
-                for (auto att : primitive.attributes) atts += att.first + " ";
-                //cout << atts << endl;
+                if (!primitive.attributes.count("POSITION")) { cout << "GLTFLOADER::ERROR IN MESH this pirimitive has no pos" << endl; continue; }
 
                 if (primitive.attributes.count("POSITION")){
                     const tinygltf::Accessor& accessorP = model.accessors[primitive.attributes["POSITION"]];
@@ -660,9 +647,7 @@ class GLTFLoader : public GLTFUtils {
                         Vec3d pos = Vec3d( positions[i * 3 + 0], positions[i * 3 + 1], positions[i * 3 + 2] );
                         gdata.pushVert(pos);
                         n++;
-                        //gdata.pushIndex(i);
                     }
-                    //cout << "PositBufferLength " << accessorP.count << " Type  " << accessorP.type << " " << bufferViewP.byteStride << endl;
                 }
 
                 if (primitive.attributes.count("NORMAL")) {
@@ -673,21 +658,20 @@ class GLTFLoader : public GLTFUtils {
                     for (size_t i = 0; i < accessorN.count; ++i) {
                         Vec3d nor = Vec3d( normals  [i * 3 + 0], normals  [i * 3 + 1], normals  [i * 3 + 2] );
                         gdata.pushNorm(nor);
-                        //gdata.pushNormalIndex(i);
                     }
-                    //cout << "NormaBufferLength " << accessorN.count << " Type  " << accessorN.type << " " << bufferViewN.byteStride << endl;
                 }
 
                 if (primitive.attributes.count("COLOR_0")){
                     const tinygltf::Accessor& accessorColor = model.accessors[primitive.attributes["COLOR_0"]];
                     const tinygltf::BufferView& bufferViewCO = model.bufferViews[accessorColor.bufferView];
                     const tinygltf::Buffer& bufferCO = model.buffers[bufferViewCO.buffer];
-                    const float* colors   = reinterpret_cast<const float*>(&bufferCO.data[bufferViewCO.byteOffset + accessorColor.byteOffset]);
-                    for (size_t i = 0; i < accessorColor.count; ++i) {
-                        if (accessorColor.type == 3){ auto cl = Color3f( colors[i * 3 + 0], colors[i * 3 + 1], colors[i * 3 + 2] ); gdata.pushColor(cl); }
-                        if (accessorColor.type == 4){ auto cl = Color4f( colors[i * 4 + 0], colors[i * 4 + 1], colors[i * 4 + 2], colors[i * 4 + 2] ); gdata.pushColor(cl);  }
+                    if (accessorColor.componentType == 5126) {
+                        const float* colors   = reinterpret_cast<const float*>(&bufferCO.data[bufferViewCO.byteOffset + accessorColor.byteOffset]);
+                        for (size_t i = 0; i < accessorColor.count; ++i) {
+                            if (accessorColor.type == 3){ auto cl = Color3f( colors[i * 3 + 0], colors[i * 3 + 1], colors[i * 3 + 2] ); gdata.pushColor(cl); }
+                            if (accessorColor.type == 4){ auto cl = Color4f( colors[i * 4 + 0], colors[i * 4 + 1], colors[i * 4 + 2], colors[i * 4 + 3] ); gdata.pushColor(cl);  }
+                        }
                     }
-                    //cout << "ColorBufferLength " << accessorColor.count << " Type  " << accessorColor.type << " " << bufferViewCO.byteStride << endl;
                 }
 
                 if (primitive.attributes.count("TEXCOORD_0")) {
@@ -699,10 +683,8 @@ class GLTFLoader : public GLTFUtils {
                         for (size_t i = 0; i < accessorTexUV.count; ++i) {
                             Vec2d UV = Vec2d( UVs[i*2 + 0], UVs[i*2 + 1] );
                             gdata.pushTexCoord(UV);
-                            //gdata.pushTexCoordIndex(i);
                         }
                     }
-                    //cout << "TexUVBufferLength " << accessorTexUV.count << " Type  " << accessorTexUV.type << " " << bufferViewUV.byteStride << endl;
                 }
 
                 if (primitive.attributes.count("TEXCOORD_1")) {
@@ -712,22 +694,13 @@ class GLTFLoader : public GLTFUtils {
                 const tinygltf::Accessor& accessorIndices = model.accessors[primitive.indices];
                 const tinygltf::BufferView& bufferViewIndices = model.bufferViews[accessorIndices.bufferView];
                 const tinygltf::Buffer& bufferInd = model.buffers[bufferViewIndices.buffer];
-                //cout << "PrimitiveIndecesC " << model.accessors[primitive.indices].count << " MODE: " << primitive.mode << " TRIS: " << model.accessors[primitive.indices].count/3 << endl;
 
-                if (primitive.mode == 0) {
-                //POINTS
-                }
-                if (primitive.mode == 1) {
-                //LINE
-                }
-                if (primitive.mode == 2) {
-                //LINE LOOP
-                }
-                if (primitive.mode == 3) {
-                //LINE STRIP
-                }
-                if (primitive.mode == 4) {
-                //TRIANGLES
+                if (primitive.mode == 0) { /*POINTS*/cout << "GLTF-LOADER: not implemented POINTS" << endl; }
+                if (primitive.mode == 1) { /*LINE*/ cout << "GLTF-LOADER: not implemented LINE" << endl; }
+                if (primitive.mode == 2) { /*LINE LOOP*/ cout << "GLTF-LOADER: not implemented LINE LOOP" << endl; }
+                if (primitive.mode == 3) { /*LINE STRIP*/ cout << "GLTF-LOADER: not implemented LINE STRIP" << endl; }
+                if (primitive.mode == 4) { /*TRIANGLES*/
+                    cout << accessorIndices.componentType << endl;
                     if (accessorIndices.componentType == 5122) {
                         const unsigned short* indices   = reinterpret_cast<const unsigned short*>(&bufferInd.data[bufferViewIndices.byteOffset + accessorIndices.byteOffset]);
                         for (size_t i = 0; i < accessorIndices.count/3; ++i) gdata.pushTri(indices[i*3+0],indices[i*3+1],indices[i*3+2]);
@@ -741,12 +714,9 @@ class GLTFLoader : public GLTFUtils {
                         for (size_t i = 0; i < accessorIndices.count/3; ++i) gdata.pushTri(indices[i*3+0],indices[i*3+1],indices[i*3+2]);
                     }
                 }
-                if (primitive.mode == 5) {
-                //TRIANGLE STRIP
-                }
-                if (primitive.mode == 6) {
-                //TRAINGEL FAN
-                }
+                if (primitive.mode == 5) { /*TRIANGLE STRIP*/ cout << "GLTF-LOADER: not implemented TRIANGLE STRIP" << endl;}
+                if (primitive.mode == 6) { /*TRAINGLE FAN*/ cout << "GLTF-LOADER: not implemented fTRAINGLE FAN" << endl;}
+
                 node->geoData = gdata;
                 node->matID = primitive.material;
                 if (materials.count(primitive.material)) node->material = materials[primitive.material];
@@ -768,6 +738,7 @@ class GLTFLoader : public GLTFUtils {
         }
 
         bool parsetinygltf() {
+            handleAsset(model.asset);
             for (auto each: model.scenes) handleScene(each);
             for (auto each: model.nodes) handleNode(each);
             for (auto each: model.textures) handleTexture(each);
@@ -813,6 +784,8 @@ class GLTFLoader : public GLTFUtils {
 
             if (!err.empty()) {
                 printf("Err: %s\n", err.c_str());
+                debugDump(&model);
+                cout << "ERR: not loading GLTF" << endl;
             }
 
             if (!ret) {
@@ -820,24 +793,21 @@ class GLTFLoader : public GLTFUtils {
                 //return -1;
             }
             debugDump(&model);
-            parsetinygltf();
-            version = 2;
-
-            gltfschema = GLTFSchema(version);
-            tree = new GLTFNNode("Root", "Root");
-            for (auto each:scenes) tree->addChild(each.second);
-            tree->obj = res;
-            tree->print();
-            tree->buildOSG();
-            tree->applyTransformations();
-            tree->applyMaterials();
-            tree->applyGeometries();
-            progress->finish();
+            if (err.empty()){
+                parsetinygltf();
+                version = 2;
+                gltfschema = GLTFSchema(version);
+                tree = new GLTFNNode("Root", "Root");
+                for (auto each:scenes) tree->addChild(each.second);
+                tree->obj = res;
+                tree->print();
+                tree->buildOSG();
+                tree->applyTransformations();
+                tree->applyMaterials();
+                tree->applyGeometries();
+                progress->finish();
+            }
             return;
-            tree->resolveLinks(references);
-
-            progress->finish();
-            delete tree;
         }
 
         void debugDump(tinygltf::Model *model){
