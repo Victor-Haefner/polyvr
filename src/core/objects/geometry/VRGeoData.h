@@ -1,6 +1,19 @@
 #ifndef VRGEODATA_H_INCLUDED
 #define VRGEODATA_H_INCLUDED
 
+static const int PositionsIndex       = 0;
+static const int NormalsIndex         = 2;
+static const int ColorsIndex          = 3;
+static const int SecondaryColorsIndex = 4;
+static const int TexCoordsIndex       = 8;
+static const int TexCoords1Index      = 9;
+static const int TexCoords2Index      = 10;
+static const int TexCoords3Index      = 11;
+static const int TexCoords4Index      = 12;
+static const int TexCoords5Index      = 13;
+static const int TexCoords6Index      = 14;
+static const int TexCoords7Index      = 15;
+
 #include "core/objects/VRObjectFwd.h"
 #include <OpenSG/OSGVector.h>
 #include <OpenSG/OSGMatrix.h>
@@ -42,7 +55,7 @@ class VRGeoData {
 
         int getType(int i);
         int getLength(int i);
-        int getIndex(int i);
+        int getIndex(int i, int a = PositionsIndex);
         Pnt3d getPosition(int i);
         Vec3d getNormal(int i);
         Color4f getColor(int i);

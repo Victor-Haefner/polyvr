@@ -46,7 +46,7 @@ class VRTerrain : public VRGeometry, public VRWorldModule {
         float heightScale = 1; // shader parameter
         double grid = 64;
         double LODfac = 1.0;
-        bool localMesh = true;
+        bool localMesh = false;
         VRTexturePtr heigthsTex;
         VRMaterialPtr mat;
         shared_ptr<vector<float>> physicsHeightBuffer;
