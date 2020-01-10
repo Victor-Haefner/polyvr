@@ -21,7 +21,9 @@
 
 #include "VRView.h"
 #include "VRGlutWindow.h"
+#ifndef WASM
 #include "VRMultiWindow.h"
+#endif
 
 #ifndef WITHOUT_GTK
 #include "core/gui/VRGuiUtils.h"
@@ -122,11 +124,15 @@ VRWindowPtr VRWindowManager::addGlutWindow(string name) {
 }
 
 VRWindowPtr VRWindowManager::addMultiWindow(string name) {
+#ifndef WASM
     VRMultiWindowPtr win = VRMultiWindow::create();
     win->setName(name);
     win->setAction(ract);
     windows[win->getName()] = win;
     return win;
+#else
+    return 0;
+#endif
 }
 
 VRWindowPtr VRWindowManager::addGtkWindow(string name, string glarea) {
@@ -236,7 +242,9 @@ void VRWindowManager::updateWindows() {
     auto tryRender = [&]() {
         if (barrier->getNumWaiting() != VRWindow::active_window_count) return true;
         if (!wait()) return false;
+#ifndef WASM
         for (auto w : getWindows() ) if (auto win = dynamic_pointer_cast<VRMultiWindow>(w.second)) if (win->getState() == VRMultiWindow::INITIALIZING) win->initialize();
+#endif
         commitChanges();
 
         auto clist = Thread::getCurrentChangeList();
@@ -256,6 +264,7 @@ void VRWindowManager::updateWindows() {
     updateSceneLinks();
 
     if (!tryRender()) {
+#ifndef WASM
         cout << "WARNING! a remote window hangs or something!\n";
         for (auto w : getWindows() ) {
             auto win = dynamic_pointer_cast<VRMultiWindow>(w.second);
@@ -265,6 +274,7 @@ void VRWindowManager::updateWindows() {
             WARN("WARNING! Lost connection with " + win->getName());
             win->reset();
         }
+#endif
     }
 
     if (scene) scene->blockScriptThreads();
@@ -277,9 +287,11 @@ void VRWindowManager::setWindowView(string name, VRViewPtr view) {
 }
 
 void VRWindowManager::addWindowServer(string name, string server) {
+#ifndef WASM
     if (!checkWin(name)) return;
     VRMultiWindowPtr win = dynamic_pointer_cast<VRMultiWindow>( windows[name] );
     win->addServer(server);
+#endif
 }
 
 void VRWindowManager::removeWindow(string name) { windows.erase(name); }

@@ -310,7 +310,7 @@ target_sources(polyvr PRIVATE src/core/setup/windows/VRView.cpp)
 #target_sources(polyvr PRIVATE src/core/setup/windows/VRGtkWindow.cpp) # needs GTK
 target_sources(polyvr PRIVATE src/core/setup/windows/VRWindowManager.cpp)
 target_sources(polyvr PRIVATE src/core/setup/windows/VRGlutWindow.cpp)
-target_sources(polyvr PRIVATE src/core/setup/windows/VRMultiWindow.cpp)
+#target_sources(polyvr PRIVATE src/core/setup/windows/VRMultiWindow.cpp)
 target_sources(polyvr PRIVATE src/core/setup/windows/VRViewManager.cpp)
 target_sources(polyvr PRIVATE src/core/setup/VRSetupManager.cpp)
 #target_sources(polyvr PRIVATE src/core/setup/tracking/Kinect.cpp) # needs freenect
