@@ -1164,52 +1164,67 @@ void VRGeometry::convertToTriangles() {
 
 
 
-vector< tuple<Vec3d, Vec3d, int>> VRGeometry::calcLengths(vector<Vec3d> triangle) {
-    mesh->geo->getPositions();
-    vector< tuple<Vec3d, Vec3d, int>>  lengths;
-    return lengths;
+vector<Pnt3d> VRGeometry::addPointsOnEdge(VRGeoData& data, int resolution, Pnt3d p1, Pnt3d p2) {
+    vector<Pnt3d> pntsOnEdge;
+    auto length = p1.dist(p2);
+    cout << "*********************************************************************" << endl;
+    cout << p1 << endl;
+    cout << p2 << endl;
+    cout << "length: " << length << endl;
+    cout << "resolution: " << resolution << endl;
+    //todo scaling!
+    auto scale = 10;
+    Vec3d connection = Vec3d(p2 - p1);
+    connection.normalize();
+    int steps = int (length * resolution * scale);
+    cout << "steps: " << steps << endl;
+    if (steps < 1) steps = 1;
+    auto stepSize = length/steps;
+    cout << "connection: " << connection << endl;
+    cout << "steps: " << steps << endl;
+    cout << "stepSize: " << stepSize << endl;
+    for (int i = 0; i < steps; i++) {
+      Pnt3d p = p1 + connection * i * stepSize;
+      cout << p << endl;
+      //todo add point to data or pointcloud
+
+      pntsOnEdge.push_back(p);
+
+    }
+    cout << pntsOnEdge.size() << endl;
+    return pntsOnEdge;
 }
 
 
-vector<Vec3d> VRGeometry::addPointsOnEdges(int resolution, vector<Vec3d> triangle) {
-    vector<Vec3d> res;
-    if (triangle.empty()) return res;
-    auto edgeLengths = calcLengths(triangle);
-    vector< tuple<int, vector<int>>> pntsOnEdges;
-    int i = 0;
-    auto inds = getIndices();
-    auto pos = getPositions();
-    cout << inds << inds.getType() << endl;
-
-    //if (inds->size() > 0) i = max(inds); //find max index
-
-    for (auto& edge : edgeLengths)
-
-
-    return res;
-}
-
-
-vector< tuple<Vec3d, Vec3d>> VRGeometry::mapPoints(int resolution, vector<Vec3d> triangle) {
-    vector< tuple<Vec3d, Vec3d>> mappedPoints;
-    vector<Vec3d> pntsOnEdges = addPointsOnEdges(resolution, triangle);
-
+vector< tuple<Pnt3d, Pnt3d>> VRGeometry::mapPoints(int resolution, vector<Pnt3d> e1, vector<Pnt3d> e2) {
+    vector< tuple<Pnt3d, Pnt3d>> mappedPoints;
+    //addPointsOnEdge for each match
 
     return mappedPoints;
 }
 
 
 VRPointCloudPtr VRGeometry::convertToPointCloud(map<string, string> options) {
-    auto pointcloud = VRPointCloud::create("pointcloud");
-    pointcloud->applySettings(options);
-    //VRTransformPtr res;
-    if (!meshSet) return pointcloud;
-
-    TriangleIterator it(mesh->geo);
     VRGeoData data;
     int resolution = 1;
     if (options.count("resolution")) resolution = toInt(options["resolution"]);
+    auto pointcloud = VRPointCloud::create("pointcloud");
+    pointcloud->applySettings(options);
 
+    if (!meshSet) return pointcloud;
+    convertToTriangles();
+
+    TriangleIterator it(mesh->geo);
+
+	for (int i=0; !it.isAtEnd(); ++it, i++) {
+        vector<Pnt3d> e1 = addPointsOnEdge(data, resolution, Pnt3d(it.getPosition(0)), Pnt3d(it.getPosition(1)));
+        vector<Pnt3d> e2 = addPointsOnEdge(data, resolution, Pnt3d(it.getPosition(1)), Pnt3d(it.getPosition(2)));
+        vector<Pnt3d> e3 = addPointsOnEdge(data, resolution, Pnt3d(it.getPosition(2)), Pnt3d(it.getPosition(0)));
+
+        //todo replace e0 and e1 with the shortest triangle edges
+        auto mappedPoints = mapPoints(resolution, e1, e2);
+
+    }
     /*
 
     Vec3d pos = Vec3d(x[j], y[j], z[j]);
