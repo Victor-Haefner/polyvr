@@ -18,6 +18,7 @@
 #include <stack>
 
 #include <OpenSG/OSGColor.h>
+#include <OpenSG/OSGMatrix.h>
 #include <OpenSG/OSGQuaternion.h>
 
 //#include "core/objects/geometry/OSGGeometry.h"
@@ -294,7 +295,8 @@ struct GLTFNode : GLTFUtils {
     }
 
     void print(string padding = "") {
-        cout << padding << "Node '" << name << "' of type " << type << endl;
+        cout << padding << "Node '" << name << "' of type " << type << " with matID: " << matID;
+        cout << endl;
         for (auto c : children) c->print(padding+" ");
     }
 
@@ -341,7 +343,8 @@ struct GLTFNode : GLTFUtils {
     }
 
     void handleRotation() {
-        pose.setRotate( Quaterniond( Vec3d(rotation[0], rotation[1], rotation[2]), rotation[3] ) );
+        Quaterniond q( rotation[0], rotation[1], rotation[2], rotation[3] );
+        pose.setRotate( q );
     }
 
     void handleScale() {
@@ -351,10 +354,10 @@ struct GLTFNode : GLTFUtils {
     void handleTransform() {
         Vec3d center = Vec3d(0,0,0);
         Vec4d scaleOrientation = Vec4d(0,0,1,0);
-        Matrix4d m1; m1.setTranslate(translation+center); m1.setRotate( Quaterniond( Vec3d(rotation[0], rotation[1], rotation[2]), rotation[3] ) );
-        Matrix4d m2; m2.setRotate( Quaterniond( Vec3d(scaleOrientation[0], scaleOrientation[1], scaleOrientation[2]), scaleOrientation[3] ) );
+        Matrix4d m1; m1.setTranslate(translation+center); m1.setRotate( Quaterniond( rotation[0], rotation[1], rotation[2], rotation[3] ) );
+        Matrix4d m2; m2.setRotate( Quaterniond( scaleOrientation[0], scaleOrientation[1], scaleOrientation[2], scaleOrientation[3] ) );
         Matrix4d m3; m3.setScale(scale);
-        Matrix4d m4; m4.setTranslate(-center); m4.setRotate( Quaterniond( Vec3d(scaleOrientation[0], scaleOrientation[1], scaleOrientation[2]), -scaleOrientation[3] ) );
+        Matrix4d m4; m4.setTranslate(-center); m4.setRotate( Quaterniond( scaleOrientation[0], scaleOrientation[1], scaleOrientation[2], scaleOrientation[3] ) );
         Matrix4d M = m1; M.mult(m2); M.mult(m3); M.mult(m4);
         pose = M;
     }
@@ -466,21 +469,13 @@ class GLTFLoader : public GLTFUtils {
 
         void handleScene(const tinygltf::Scene &gltfScene){
             sceneID++;
-            string res = "";
-
-            res += to_string(sceneID) + " " + gltfScene.name + " nodes: ";
-            for (auto each : gltfScene.nodes) {
-                GLTFNode* thisNode = new GLTFNNode("Scene",gltfScene.name);
-                scenes[sceneID] = thisNode;
-                for (auto each : gltfScene.nodes) childrenPerScene[sceneID].push_back(each);
-                res += " " + each;
-            }
-            //cout << res << endl;
+            GLTFNode* thisNode = new GLTFNNode("Scene",gltfScene.name);
+            scenes[sceneID] = thisNode;
+            for (auto each : gltfScene.nodes) childrenPerScene[sceneID].push_back(each);
         }
 
         void handleNode(const tinygltf::Node &gltfNode){
             nodeID++;
-            string res = "";
             string type = "Untyped";
             string name = "Unnamed";
             Matrix4d mat4;
@@ -488,47 +483,36 @@ class GLTFLoader : public GLTFUtils {
             Vec3d translation = Vec3d(0,0,0);
             Vec4d rotation = Vec4d(0,0,1,0);
             Vec3d scale = Vec3d(1,1,1);
-
-            res += to_string(nodeID) + " " + gltfNode.name;
             name = gltfNode.name;
-
             vector<bool> transf = {false, false, false, false};
 
             if (gltfNode.mesh > -1) {
-                res += " mesh: " + to_string(gltfNode.mesh);
                 nodeToMesh[nodeID] = gltfNode.mesh;
                 meshToNode[gltfNode.mesh] = nodeID;
-                res += " -------------------";
                 type = "Mesh";
             }
 
             if (gltfNode.translation.size() == 3) {
                 auto v = gltfNode.translation;
                 translation = Vec3d( v[0], v[1], v[2] );
-                res += " scale: found";
                 transf[0] = true;
             }
 
             if (gltfNode.rotation.size() == 4) {
                 auto v = gltfNode.rotation;
                 rotation = Vec4d( v[0], v[1], v[2], v[3] );
-                res += " rotation: found";
                 transf[1] = true;
             }
 
             if (gltfNode.scale.size() == 3) {
                 auto v = gltfNode.scale;
                 scale = Vec3d( v[0], v[1], v[2] );
-                res += " scale: found";
                 transf[2] = true;
             }
 
             if (gltfNode.matrix.size() == 16) {
                 auto v = gltfNode.matrix;
                 mat4 = Matrix4d( v[0], v[1], v[2], v[3], v[4], v[5], v[6], v[7], v[8], v[9], v[10], v[11], v[12], v[13], v[14], v[15] );
-                res += " matrix:";
-                for (auto each: gltfNode.matrix) res += " " + to_string(each);
-                res += " found";
                 transf[3] = true;
             }
 
@@ -539,9 +523,8 @@ class GLTFLoader : public GLTFUtils {
             nodes[nodeID] = thisNode;
 
             if (gltfNode.children.size() > 0) {
-                res += " children:";
                 vector<int> children;
-                for (auto each : gltfNode.children) { children.push_back(each); res += " " + to_string(each); }
+                for (auto each : gltfNode.children) children.push_back(each);
                 childrenPerNode[nodeID] = children;
             }
 
@@ -549,8 +532,6 @@ class GLTFLoader : public GLTFUtils {
             if (transf[1]) { thisNode->rotation = rotation; thisNode->handleRotation(); }
             if (transf[2]) { thisNode->scale = scale; thisNode->handleScale(); }
             if (transf[3]) { thisNode->matTransform = mat4; thisNode->pose = mat4; };
-
-            //cout << res << " " << type << endl;
         }
 
         void handleMaterial(const tinygltf::Material &gltfMaterial){
@@ -723,7 +704,9 @@ class GLTFLoader : public GLTFUtils {
                     //cout << "TexUVBufferLength " << accessorTexUV.count << " Type  " << accessorTexUV.type << " " << bufferViewUV.byteStride << endl;
                 }
 
-                const tinygltf::Accessor& accessorTexUV1 = model.accessors[primitive.attributes["TEXCOORD_1"]];
+                if (primitive.attributes.count("TEXCOORD_1")) {
+                    const tinygltf::Accessor& accessorTexUV1 = model.accessors[primitive.attributes["TEXCOORD_1"]];
+                }
 
                 const tinygltf::Accessor& accessorIndices = model.accessors[primitive.indices];
                 const tinygltf::BufferView& bufferViewIndices = model.bufferViews[accessorIndices.bufferView];
@@ -770,13 +753,13 @@ class GLTFLoader : public GLTFUtils {
             }
         }
 
-        void connectTree(){
-            for (auto eachPair : scenes){
+        void connectTree() {
+            for (auto eachPair : scenes) {
                 auto ID = eachPair.first;
                 auto& node = eachPair.second;
                 for (auto childID : childrenPerScene[ID]) node->addChild(nodes[childID]);
             }
-            for (auto eachPair : nodes){
+            for (auto eachPair : nodes) {
                 auto ID = eachPair.first;
                 auto& node = eachPair.second;
                 for (auto childID : childrenPerNode[ID]) node->addChild(nodes[childID]);
@@ -843,7 +826,7 @@ class GLTFLoader : public GLTFUtils {
             tree = new GLTFNNode("Root", "Root");
             for (auto each:scenes) tree->addChild(each.second);
             tree->obj = res;
-            //tree->print();
+            tree->print();
             tree->buildOSG();
             tree->applyTransformations();
             tree->applyMaterials();
