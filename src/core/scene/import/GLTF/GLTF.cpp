@@ -357,7 +357,7 @@ struct GLTFNode : GLTFUtils {
         Matrix4d m1; m1.setTranslate(translation+center); m1.setRotate( Quaterniond( rotation[0], rotation[1], rotation[2], rotation[3] ) );
         Matrix4d m2; m2.setRotate( Quaterniond( scaleOrientation[0], scaleOrientation[1], scaleOrientation[2], scaleOrientation[3] ) );
         Matrix4d m3; m3.setScale(scale);
-        Matrix4d m4; m4.setTranslate(-center); m4.setRotate( Quaterniond( scaleOrientation[0], scaleOrientation[1], scaleOrientation[2], scaleOrientation[3] ) );
+        Matrix4d m4; m4.setTranslate(-center); m4.setRotate( Quaterniond( scaleOrientation[0], scaleOrientation[1], scaleOrientation[2], -scaleOrientation[3] ) );
         Matrix4d M = m1; M.mult(m2); M.mult(m3); M.mult(m4);
         pose = M;
     }
@@ -530,7 +530,7 @@ class GLTFLoader : public GLTFUtils {
 
             if (transf[0]) { thisNode->translation = translation; thisNode->handleTranslation(); }
             if (transf[1]) { thisNode->rotation = rotation; thisNode->handleRotation(); }
-            if (transf[2]) { thisNode->scale = scale; thisNode->handleScale(); }
+            if (transf[2]) { thisNode->scale = scale; thisNode->handleScale(); thisNode->handleTransform(); }
             if (transf[3]) { thisNode->matTransform = mat4; thisNode->pose = mat4; };
         }
 
@@ -539,6 +539,7 @@ class GLTFLoader : public GLTFUtils {
             //cout << "Emmissive Tex: " << gltfMaterial.emissiveTexture.index << endl;
             //cout << "Oclusion Tex: " << gltfMaterial.occlusionTexture.index << endl;
             VRMaterialPtr mat = VRMaterial::create(gltfMaterial.name);
+            cout << "   MATE " << gltfMaterial.name << endl;
             bool bsF = false;
             bool mtF = false;
             bool rfF = false;
@@ -748,7 +749,7 @@ class GLTFLoader : public GLTFUtils {
                 }
                 node->geoData = gdata;
                 node->matID = primitive.material;
-                if (materials.count(matID)) node->material = materials[matID];
+                if (materials.count(primitive.material)) node->material = materials[primitive.material];
                 //cout << "prim with v " << n << " : " << primitive.mode <<  endl;
             }
         }
