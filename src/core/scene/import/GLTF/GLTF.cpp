@@ -435,11 +435,14 @@ class GLTFLoader : public GLTFUtils {
         map<string, GLTFNode*> references;
         tinygltf::Model model;
         map<int, GLTFNode*> nodes;
+        map<int, GLTFNode*> primitives;
         map<int, GLTFNode*> scenes;
         map<int, int> nodeToMesh;
         map<int, int> meshToNode;
+        map<int, int> primToMesh;
         map<int, vector<int>> childrenPerNode;
         map<int, vector<int>> childrenPerScene;
+        map<int, vector<int>> childrenPerMesh;
         map<int, VRMaterialPtr> materials;
         map<int, VRTexturePtr> textures;
         size_t sceneID = -1;
@@ -447,6 +450,7 @@ class GLTFLoader : public GLTFUtils {
         size_t meshID = -1;
         size_t matID = -1;
         size_t texID = -1;
+        size_t primID = -1;
 
         static string GetFilePathExtension(const string &FileName) {
             if (FileName.find_last_of(".") != std::string::npos)
@@ -632,14 +636,20 @@ class GLTFLoader : public GLTFUtils {
 
         void handleMesh(const tinygltf::Mesh &gltfMesh){
             meshID++;
+            auto nodeID = meshToNode[meshID];
+            auto& node = nodes[nodeID];
             for (tinygltf::Primitive primitive : gltfMesh.primitives) {
-                if (gltfMesh.primitives.size() > 1) { cout << "GLTFLOADER::WARNING IN MESH more than one primitive not suported" << endl; continue; }
-                auto nodeID = meshToNode[meshID];
-                auto& node = nodes[nodeID];
+                if (gltfMesh.primitives.size() > 1) {
+                    primID++;
+                    node = new GLTFNNode("Primitive","Primitive");
+                    primitives[primID] = node;
+                    primToMesh[primID] = meshID;
+                    childrenPerMesh[meshID].push_back(primID);
+                }
                 long n = 0;
                 VRGeoData gdata = VRGeoData();
 
-                if (!primitive.attributes.count("POSITION")) { cout << "GLTFLOADER::ERROR IN MESH this pirimitive has no pos" << endl; continue; }
+                if (!primitive.attributes.count("POSITION")) { cout << "GLTFLOADER::ERROR IN MESH this primitive has no pos" << endl; continue; }
 
                 if (primitive.attributes.count("POSITION")){
                     const tinygltf::Accessor& accessorP = model.accessors[primitive.attributes["POSITION"]];
@@ -728,6 +738,20 @@ class GLTFLoader : public GLTFUtils {
             }
         }
 
+        void handleSkin(const tinygltf::Skin &gltfSkin){
+            //cout << gltfSkin.name << endl;
+            //for (auto joint : gltfSkin.joints) cout << joint << endl;
+            //gltfSkin.inverseBindMatrices
+            cout << "GLTFLOADER::WARNING IN SKINS: not supported" << endl;
+            return;
+        }
+
+        void handleAnimation(const tinygltf::Animation &gltfAnimation){
+            //cout << gltfAnimation.name << endl;
+            cout << "GLTFLOADER::WARNING IN ANIMATIONS: not supported" << endl;
+            return;
+        }
+
         void connectTree() {
             for (auto eachPair : scenes) {
                 auto ID = eachPair.first;
@@ -739,6 +763,11 @@ class GLTFLoader : public GLTFUtils {
                 auto& node = eachPair.second;
                 for (auto childID : childrenPerNode[ID]) node->addChild(nodes[childID]);
             }
+            for (auto eachPair : primitives) {
+                auto ID = eachPair.first;
+                auto& node = eachPair.second;
+                for (auto childID : childrenPerMesh[ID]) node->addChild(primitives[childID]);
+            }
         }
 
         bool parsetinygltf() {
@@ -748,6 +777,8 @@ class GLTFLoader : public GLTFUtils {
             for (auto each: model.textures) handleTexture(each);
             for (auto each: model.materials) handleMaterial(each);
             for (auto each: model.meshes) handleMesh(each);
+            for (auto each: model.skins) handleSkin(each);
+            for (auto each: model.animations) handleAnimation(each);
             connectTree();
             return true;
         }
