@@ -161,7 +161,7 @@ struct VRMatData {
         if (gProgram) { m->gProgram = dynamic_pointer_cast<ShaderProgram>(gProgram->shallowCopy()); m->shaderChunk->addShader(m->gProgram); }
         if (tcProgram) { m->tcProgram = dynamic_pointer_cast<ShaderProgram>(tcProgram->shallowCopy()); m->shaderChunk->addShader(m->tcProgram); }
         if (teProgram) { m->teProgram = dynamic_pointer_cast<ShaderProgram>(teProgram->shallowCopy()); m->shaderChunk->addShader(m->teProgram); }
-        if (video) ; // TODO
+        //if (video) ; // TODO
 
         m->vertexScript = vertexScript;
         m->fragmentScript = fragmentScript;

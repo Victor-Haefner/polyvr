@@ -93,29 +93,7 @@ void setMultisampling(bool on) {
     if (res) {;};//__GL_FXAA_MODE 	 = 7;//find out how to set vie application
 }
 
-void VRWindowManager::initGlut() { // deprecated?
-    static bool initiated = false;
-    if (initiated) return;
-    initiated = true;
-
-    return;
-
-    cout << "\nGlut: Init\n";
-    int argc = 0;
-    glutInit(&argc, NULL);
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_STENCIL_TEST);
-
-    //glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST);
-    //setMultisampling(true);
-
-    if (VROptions::get()->getOption<bool>("active_stereo"))
-        glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE | GLUT_STEREO | GLUT_STENCIL);
-    else glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE | GLUT_STENCIL);
-}
-
 VRWindowPtr VRWindowManager::addGlutWindow(string name) {
-    initGlut();
     VRGlutWindowPtr win = VRGlutWindow::create();
     win->setName(name);
     win->setAction(ract);
@@ -240,11 +218,10 @@ void VRWindowManager::updateWindows() {
     };
 
     auto tryRender = [&]() {
+#ifndef WASM
         if (barrier->getNumWaiting() != VRWindow::active_window_count) return true;
         if (!wait()) return false;
-#ifndef WASM
         for (auto w : getWindows() ) if (auto win = dynamic_pointer_cast<VRMultiWindow>(w.second)) if (win->getState() == VRMultiWindow::INITIALIZING) win->initialize();
-#endif
         commitChanges();
 
         auto clist = Thread::getCurrentChangeList();
@@ -256,6 +233,14 @@ void VRWindowManager::updateWindows() {
         if (!wait()) return false;
 #ifndef WITHOUT_GTK
         for (auto w : getWindows() ) if (auto win = dynamic_pointer_cast<VRGtkWindow>(w.second)) win->render();
+#endif
+#else
+        commitChanges();
+
+        auto clist = Thread::getCurrentChangeList();
+        VRGlobals::NCHANGED = clist->getNumChanged();
+        VRGlobals::NCREATED = clist->getNumCreated();
+        for (auto w : getWindows() ) if (auto win = dynamic_pointer_cast<VRGlutWindow>(w.second)) win->render();
 #endif
         clist->clear();
         return true;

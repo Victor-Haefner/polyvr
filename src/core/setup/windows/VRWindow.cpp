@@ -31,7 +31,8 @@ VRWindow::VRWindow() : changeListStats("remote") {
 
 VRWindow::~VRWindow() {
     cout << " VRWindow::~VRWindow\n";
-    if (auto sm = VRSceneManager::get()) sm->stopThread(thread_id);
+    if (auto sm = VRSceneManager::get())
+        if (thread_id >= 0) sm->stopThread(thread_id);
     _win = NULL;
     active_window_count--;
 }
