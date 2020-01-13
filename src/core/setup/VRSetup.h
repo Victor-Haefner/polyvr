@@ -22,7 +22,14 @@ using namespace std;
 class VRScene;
 class VRVisualLayer;
 
-class VRSetup : public VRViewManager, public VRWindowManager, public VRDeviceManager/*, public VRScriptManager, public VRCallbackManager*/, public ART, public VRPN, public VRName {
+class VRSetup : public VRViewManager, public VRWindowManager, public VRDeviceManager/*, public VRScriptManager, public VRCallbackManager*/,
+#ifndef WITHOUT_ART
+                public ART,
+#endif
+#ifndef WITHOUT_VRPN
+                public VRPN,
+#endif
+                public VRName {
     private:
         string cfgfile;
         string tracking;

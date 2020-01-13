@@ -9,6 +9,7 @@ using namespace std;
 namespace bpo = boost::program_options;
 
 VROptions::VROptions() : desc("Configuration ") {
+    cout << "Init Options" << endl;
     desc.add_options() ("help", "show possible options");
 
     addOption<bool>(true, "dofailcheck");
@@ -17,6 +18,7 @@ VROptions::VROptions() : desc("Configuration ") {
     addOption<string>("", "decryption");
     addOption<string>("", "setup");
     addOption<bool>(false, "active_stereo", "use active_stereo or not");
+    cout << " ..done" << endl;
 }
 
 void VROptions::operator= (VROptions v) {;}

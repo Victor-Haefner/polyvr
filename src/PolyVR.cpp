@@ -108,9 +108,28 @@ void PolyVR::setOption(string name, int val) { options->setOption(name, val); }
 void PolyVR::setOption(string name, float val) { options->setOption(name, val); }
 
 void PolyVR::init(int argc, char **argv) {
+    cout << "Init PolyVR\n\n";
     initTime();
 
-    cout << "Init PolyVR\n\n";
+
+#ifdef WASM
+    setlocale(LC_ALL, "C");
+    options = shared_ptr<VROptions>(VROptions::get());
+    options->parse(argc,argv);
+
+    //GLUT
+    cout << "Init GLUT\n";
+    glutInit(&argc, argv);
+    cout << " ..done\n";
+
+    //OSG
+    cout << "Init OSG\n";
+    osgInit(argc,argv);
+    cout << " ..done\n";
+
+    PrimeMaterialRecPtr pMat = OSG::getDefaultMaterial();
+    OSG::setName(pMat, "default_material");
+#else
     enableCoreDump(true);
     setlocale(LC_ALL, "C");
     options = shared_ptr<VROptions>(VROptions::get());
@@ -118,16 +137,19 @@ void PolyVR::init(int argc, char **argv) {
     checkProcessesAndSockets();
 
     //GLUT
+    cout << "Init GLUT\n";
     glutInit(&argc, argv);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_STENCIL_TEST);
+    cout << " ..done\n";
 
     //OSG
+    cout << "Init OSG\n";
     ChangeList::setReadWriteDefault();
     OSG::preloadSharedObject("OSGFileIO");
     OSG::preloadSharedObject("OSGImageFileIO");
-    cout << "Init OSG\n";
     osgInit(argc,argv);
+    cout << " ..done\n";
 
 #ifndef WITHOUT_SHARED_MEMORY
     try {
@@ -139,6 +161,7 @@ void PolyVR::init(int argc, char **argv) {
 
     PrimeMaterialRecPtr pMat = OSG::getDefaultMaterial();
     OSG::setName(pMat, "default_material");
+#endif
 }
 
 void PolyVR::run() {
@@ -172,6 +195,9 @@ void PolyVR::start(bool runit) {
     monitor = shared_ptr<VRInternalMonitor>(VRInternalMonitor::get());
 #ifndef WITHOUT_GTK
     gui_mgr = shared_ptr<VRGuiManager>(VRGuiManager::get());
+#endif
+#ifdef WASM
+    VRSetupManager::get()->load("Browser", "Browser.xml");
 #endif
     loader = shared_ptr<VRSceneLoader>(VRSceneLoader::get());
 
