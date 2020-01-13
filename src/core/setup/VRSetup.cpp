@@ -295,6 +295,7 @@ void VRSetup::load(string file) {
         toValue( displayN->getAttribute("globalOffset"), globalOffset );
         setDisplaysOffset(globalOffset);
     }
+    cout << " setup loaded" << endl;
 }
 
 void VRSetup::makeTestCube() {

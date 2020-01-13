@@ -20,6 +20,7 @@ VRDevice::VRDevice(string _type) : VRAvatar(_type) {
 VRDevice::~VRDevice() {}
 
 VRDevicePtr VRDevice::create(string type) {
+    cout << " create device: " << type << endl;
     auto d = VRDevicePtr(new VRDevice(type));
     d->initIntersect(d);
     return d;

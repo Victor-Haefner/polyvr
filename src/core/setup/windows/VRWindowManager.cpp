@@ -329,10 +329,15 @@ void VRWindowManager::load(XMLElementPtr node) {
         string type = el->getAttribute("type");
         string name = el->getAttribute("name");
         cout << " VRWindowManager::load '" << type << "'  '" << name << "'" << endl;
-        el->print();
+        //el->print();
 
         if (type == "0") {
             VRWindowPtr win = addMultiWindow(name);
+            win->load(el);
+        }
+
+        if (type == "1") {
+            VRWindowPtr win = addGlutWindow(name);
             win->load(el);
         }
 

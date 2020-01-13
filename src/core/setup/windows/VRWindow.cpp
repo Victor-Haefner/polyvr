@@ -20,10 +20,13 @@ template<> string typeName(const VRWindow& o) { return "Window"; }
 unsigned int VRWindow::active_window_count = 0;
 
 VRWindow::VRWindow() : changeListStats("remote") {
+    cout << "New Window" << endl;
     active_window_count++;
     string n = getName();
+#ifndef WASM
     winThread = VRThreadCb::create("VRWindow", boost::bind(&VRWindow::update, this, _1) );
-    thread_id = VRSceneManager::get()->initThread(winThread,"window_"+n,true,0);
+    thread_id = VRSceneManager::get()->initThread(winThread,"window_"+n,true,0); // WASM crash, needed?
+#endif
 }
 
 VRWindow::~VRWindow() {
