@@ -10,16 +10,24 @@ using namespace std;
 
 map<int, VRGlutWindow*> glutWindows;
 
-void glutResize(int w, int h) { glutWindows[glutGetWindow()]->resize(w, h); }
-/*void glutMouse(int b, int s, int x, int y) { VRMouse::get()->mouse(b ,s ,x ,y); } // TODO: pass glutWindows[glutGetWindow()] as first parameter
+VRGlutWindow* getCurrentWindow() {
+#ifndef WASM
+    return glutWindows[glutGetWindow()];
+#else
+    return glutWindows.begin()->second;
+#endif
+}
+
+void glutResize(int w, int h) { getCurrentWindow()->resize(w, h); }
+/*void glutMouse(int b, int s, int x, int y) { VRMouse::get()->mouse(b ,s ,x ,y); } // TODO: pass getCurrentWindow() as first parameter
 void glutMotion(int x, int y) { VRMouse::get()->motion(x, y); }
 void glutKeyboard(unsigned char k, int x, int y) { VRKeyboard::get()->keyboard(k, x, y); }
 void glutKeyboard2(int k, int x, int y) { VRKeyboard::get()->keyboard_special(k, x, y); }*/
 
 VRGlutWindow::VRGlutWindow() {
+    cout << "Glut: New Window" << endl;
     type = 1;
 
-    cout << "\nGlut: New Window\n";
     GLUTWindowMTRecPtr win = GLUTWindow::create();
     _win = win;
 
@@ -31,7 +39,7 @@ VRGlutWindow::VRGlutWindow() {
 
     glutWindows[winID] = this;
 
-    glutReshapeFunc(glutResize);
+    glutReshapeFunc( glutResize );
     /*glutKeyboardFunc(glutKeyboard);
     glutSpecialFunc(glutKeyboard2);
     glutMotionFunc(glutMotion);
@@ -44,14 +52,13 @@ VRGlutWindow::~VRGlutWindow() {
 }
 
 VRGlutWindowPtr VRGlutWindow::ptr() { return static_pointer_cast<VRGlutWindow>( shared_from_this() ); }
-VRGlutWindowPtr VRGlutWindow::create() { return shared_ptr<VRGlutWindow>(new VRGlutWindow() ); }
+VRGlutWindowPtr VRGlutWindow::create() { return VRGlutWindowPtr(new VRGlutWindow() ); }
 
-void VRGlutWindow::save(XMLElementPtr node) {
-    VRWindow::save(node);
-}
-
-void VRGlutWindow::load(XMLElementPtr node) {
-    VRWindow::load(node);
-}
+void VRGlutWindow::save(XMLElementPtr node) { VRWindow::save(node); }
+void VRGlutWindow::load(XMLElementPtr node) { VRWindow::load(node); }
 
 OSG_END_NAMESPACE;
+
+
+
+

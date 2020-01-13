@@ -68,7 +68,6 @@ void VRAvatar::addAvatar(VRObjectPtr geo, int i) {
 
 VRAvatar::VRAvatar(string name) {
     this->deviceName = name;
-    cout << "Device Name: " << this->deviceName << endl;
     deviceRoot = VRTransform::create(name + "_beacons");
     deviceRoot->setPersistency(0);
 }
@@ -90,7 +89,6 @@ int VRAvatar::addBeacon(Vec3d castDir) {
     beacons[id].beacon->setPersistency(0);
     beacons[id].tmpContainer = VRTransform::create(this->deviceName + "_" + to_string(id) + "_tmp_beacon");
     beacons[id].tmpContainer->setPersistency(0);
-
     beacons[id].avatars["ray"] = initRay(id, castDir);
     //newB.avatars["cone"] = initCone();
     //newB.avatars["broadray"] = initBroadRay();

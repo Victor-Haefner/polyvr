@@ -108,7 +108,7 @@ class VRLeap : public VRDevice {
         void stopCalibration();
         void calibrateManual(Vec3d position, Vec3d direction, Vec3d normal);
 
-        void clearSignals();
+        void clearSignals() override;
 
         float getDragThreshold();
         float getDropThreshold();
