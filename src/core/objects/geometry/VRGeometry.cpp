@@ -1173,7 +1173,7 @@ vector<Pnt3d> VRGeometry::addPointsOnEdge(VRGeoData& data, int resolution, Pnt3d
     cout << "length: " << length << endl;
     cout << "resolution: " << resolution << endl;
     //todo scaling!
-    auto scale = 10;
+    auto scale = 1;
     Vec3d connection = Vec3d(p2 - p1);
     connection.normalize();
     int steps = int (length * resolution * scale);
@@ -1191,14 +1191,23 @@ vector<Pnt3d> VRGeometry::addPointsOnEdge(VRGeoData& data, int resolution, Pnt3d
       pntsOnEdge.push_back(p);
 
     }
-    cout << pntsOnEdge.size() << endl;
+    cout << "pntsOnEdge: " << pntsOnEdge.size() << endl;
     return pntsOnEdge;
 }
 
 
-vector< tuple<Pnt3d, Pnt3d>> VRGeometry::mapPoints(int resolution, vector<Pnt3d> e1, vector<Pnt3d> e2) {
+vector< tuple<Pnt3d, Pnt3d>> VRGeometry::mapPoints(vector<Pnt3d>& e1, vector<Pnt3d>& e2) {
     vector< tuple<Pnt3d, Pnt3d>> mappedPoints;
+    if (e1.size() == 0 || e2.size() == 0) return mappedPoints;
     //addPointsOnEdge for each match
+    auto stepSize1 = 100/e1.size();
+    auto stepSize2 = 100/e2.size();
+    for (int i = 1; i < e1.size(); i++) {
+        int k = nearbyint((i * stepSize1)/stepSize2);
+
+        mappedPoints.push_back(make_tuple(e1[i], e2[e2.size()-k]));
+        cout << "found match: " << e1[i] << e2[e2.size()-k] << endl;
+    }
 
     return mappedPoints;
 }
@@ -1217,13 +1226,24 @@ VRPointCloudPtr VRGeometry::convertToPointCloud(map<string, string> options) {
     TriangleIterator it(mesh->geo);
 
 	for (int i=0; !it.isAtEnd(); ++it, i++) {
-        vector<Pnt3d> e1 = addPointsOnEdge(data, resolution, Pnt3d(it.getPosition(0)), Pnt3d(it.getPosition(1)));
-        vector<Pnt3d> e2 = addPointsOnEdge(data, resolution, Pnt3d(it.getPosition(1)), Pnt3d(it.getPosition(2)));
-        vector<Pnt3d> e3 = addPointsOnEdge(data, resolution, Pnt3d(it.getPosition(2)), Pnt3d(it.getPosition(0)));
+        vector<vector<Pnt3d>> edges = {};
+        edges.push_back(addPointsOnEdge(data, resolution, Pnt3d(it.getPosition(0)), Pnt3d(it.getPosition(1))));
+        edges.push_back(addPointsOnEdge(data, resolution, Pnt3d(it.getPosition(1)), Pnt3d(it.getPosition(2))));
+        edges.push_back(addPointsOnEdge(data, resolution, Pnt3d(it.getPosition(2)), Pnt3d(it.getPosition(0))));
+        cout << "######" << endl;
+        for (auto& e : edges) cout << "size: " << e.size() << endl;
+        sort(edges.begin(), edges.end(), [](vector<Pnt3d> left, vector<Pnt3d> right)-> bool
+        {int sl = left.size(), sr = right.size(); return (sl < sr);});
+        for (auto& e : edges) cout << "size: " << e.size() << endl;
 
-        //todo replace e0 and e1 with the shortest triangle edges
-        auto mappedPoints = mapPoints(resolution, e1, e2);
+        if (edges[0].size() == 0) continue;
+        auto mappedPoints = mapPoints(edges[0], edges[1]);
+        for (auto& match : mappedPoints) {
+            addPointsOnEdge(data, resolution, get<0>(match), get<1>(match));
 
+        }
+
+    cout << "added " << data.size() << " new points!" << endl;
     }
     /*
 

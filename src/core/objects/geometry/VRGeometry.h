@@ -50,7 +50,7 @@ class VRGeometry : public VRTransform {
         static VRGeometryPtr create(string name, bool hidden);
 
         vector<Pnt3d> addPointsOnEdge(VRGeoData& data, int resolution, Pnt3d p1, Pnt3d p2);
-        vector< tuple<Pnt3d, Pnt3d>> mapPoints(int resolution, vector<Pnt3d> e1, vector<Pnt3d> e2);
+        vector< tuple<Pnt3d, Pnt3d>> mapPoints(vector<Pnt3d>& e1, vector<Pnt3d>& e2);
 
     public:
         VRGeometry(string name = "0");
