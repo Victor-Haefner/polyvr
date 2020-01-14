@@ -86,6 +86,7 @@ vector<VRViewPtr> VRWindow::getViews() {
 // will also crash in OSG::RemoteAspect::sendSync
 
 void VRWindow::update( weak_ptr<VRThread>  wt) {
+#ifndef WASM
     auto t = wt.lock();
     do {
         t = wt.lock();
@@ -118,6 +119,7 @@ void VRWindow::update( weak_ptr<VRThread>  wt) {
         osgSleep(1);
     } while(t && t->control_flag);
     cout << "VRWindow::update done" << endl;
+#endif
 }
 
 bool VRWindow::isWaiting() { return waitingAtBarrier; }

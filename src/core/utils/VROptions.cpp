@@ -29,11 +29,21 @@ VROptions* VROptions::get() {
 }
 
 void VROptions::parse(int _argc, char** _argv) {
-    cout << "Parse command line options\n";
+    cout << "Parse command line options" << endl;
     argc = _argc;
     argv = _argv;
+    cout << " argc " << argc << endl;
+    for (int i=0; i<argc; i++) cout << "  argv " << i << " '" << _argv[i] << "'" << endl;
 
-    bpo::store(bpo::parse_command_line(argc, argv, desc), vm);
-    bpo::notify(vm);
-    if (vm.count("help")) { cout << desc << "\n"; exit(1); }
+    try {
+        bpo::store(bpo::parse_command_line(argc, argv, desc), vm);
+        bpo::notify(vm);
+        if (vm.count("help")) { cout << desc << endl; exit(1); }
+    } catch(exception& e) {
+        cout << "VROptions::parse exception: " << e.what() << endl;
+    } catch(...) {
+        cout << "VROptions::parse unknown exception" << endl;
+        cout << desc << endl;
+    }
+    cout << " ..done" << endl;
 }

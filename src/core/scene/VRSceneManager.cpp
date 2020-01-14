@@ -61,10 +61,10 @@ VRSceneManagerPtr VRSceneManager::create() { return VRSceneManagerPtr( new VRSce
 VRSceneManager* VRSceneManager::get() { return main_instance; }
 
 void VRSceneManager::loadScene(string path, bool write_protected, string encryptionKey) {
-    if (!exists(path)) { cout << "loadScene " << path << " not found" << endl; return; }
+    if (!exists(path)) { cout << "VRSceneManager, loadScene: " << path << " not found" << endl; return; }
     path = canonical(path);
     if (current) if (current->getPath() == path) return;
-    cout << "loadScene " << path << endl;
+    cout << "VRSceneManager, loadScene: " << path << endl;
 
     newEmptyScene(path);
     VRSceneLoader::get()->loadScene(path, encryptionKey);
@@ -113,6 +113,7 @@ void VRSceneManager::setWorkdir(string path) {
 }
 
 void VRSceneManager::newEmptyScene(string path) {
+    cout << " create new empty scene: " << path << endl;
     closeScene();
     VRScenePtr scene = VRScenePtr( new VRScene() );
     VRSetup::getCurrent()->setupLESCCAVELights(scene);
@@ -120,6 +121,7 @@ void VRSceneManager::newEmptyScene(string path) {
     setWorkdir(scene->getWorkdir());
     scene->setName(scene->getFileName());
     current = scene;
+    cout << "  ..done" << endl;
 }
 
 void VRSceneManager::newScene(string path) {
