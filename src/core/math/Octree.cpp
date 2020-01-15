@@ -122,7 +122,6 @@ OctreeNode* OctreeNode::add(Vec3d pos, void* dat, int targetLevel, bool checkPos
 
     data.push_back(dat);
     points.push_back(pos);
-    cout << " ------------------ OctreeNode::add " << pos << "   " << this << endl;
     return this;
 }
 

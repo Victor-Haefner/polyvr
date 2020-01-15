@@ -53,7 +53,6 @@ void VRPointCloud::addLevel(float distance, int downsampling) {
 }
 
 void VRPointCloud::setupLODs() {
-    cout << octree->getAllLeafs().size() << endl;
     for (auto leaf : octree->getAllLeafs()) {
         Vec3d center = leaf->getCenter();
 
@@ -71,10 +70,8 @@ void VRPointCloud::setupLODs() {
             VRGeoData chunk;
             for (int i = 0; i < leaf->dataSize(); i+=downsamplingRate[lvl]) {
                 void* data = leaf->getData(i);
-                cout << "data: " << data << endl;
                 Vec3d pos = leaf->getPoint(i);
                 Color3f col = *((Color3f*)data);
-                cout << "chunk: " << pos << col << endl;
                 chunk.pushVert(pos - center, Vec3d(0,1,0), col);
                 chunk.pushPoint();
 

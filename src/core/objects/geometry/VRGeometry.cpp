@@ -1168,34 +1168,20 @@ void VRGeometry::convertToTriangles() {
 vector<Pnt3d> VRGeometry::addPointsOnEdge(VRGeoData& data, int resolution, Pnt3d p1, Pnt3d p2) {
     vector<Pnt3d> pntsOnEdge;
     auto length = p1.dist(p2);
-    //cout << "*********************************************************************" << endl;
-    //cout << p1 << endl;
-    //cout << p2 << endl;
-    //cout << "length: " << length << endl;
-    //cout << "resolution: " << resolution << endl;
-    //todo scaling!
+    //todo add scaling?
     auto scale = 1;
     Vec3d connection = Vec3d(p2 - p1);
     connection.normalize();
     int steps = int (length * resolution * scale);
-    //cout << "steps: " << steps << endl;
     if (steps < 1) steps = 1;
     auto stepSize = length/steps;
-    //cout << "connection: " << connection << endl;
-    //cout << "steps: " << steps << endl;
-    //cout << "stepSize: " << stepSize << endl;
     for (int i = 0; i < steps; i++) {
       Pnt3d p = p1 + connection * i * stepSize;
-      //cout << p << endl;
-      //todo add point to data or pointcloud
-
       pntsOnEdge.push_back(p);
       int ind = data.pushVert(p);
       data.pushPoint(ind);
-      //data.setColor(ind, new Color3f(col));
 
     }
-    //cout << "pntsOnEdge: " << pntsOnEdge.size() << endl;
     return pntsOnEdge;
 }
 
@@ -1208,9 +1194,7 @@ vector< tuple<Pnt3d, Pnt3d>> VRGeometry::mapPoints(vector<Pnt3d>& e1, vector<Pnt
     auto stepSize2 = 100/e2.size();
     for (int i = 1; i < e1.size(); i++) {
         int k = nearbyint((i * stepSize1)/stepSize2);
-
         mappedPoints.push_back(make_tuple(e1[i], e2[e2.size()-k]));
-        //cout << "found match: " << e1[i] << e2[e2.size()-k] << endl;
     }
 
     return mappedPoints;
@@ -1234,32 +1218,19 @@ VRPointCloudPtr VRGeometry::convertToPointCloud(map<string, string> options) {
         edges.push_back(addPointsOnEdge(data, resolution, Pnt3d(it.getPosition(0)), Pnt3d(it.getPosition(1))));
         edges.push_back(addPointsOnEdge(data, resolution, Pnt3d(it.getPosition(1)), Pnt3d(it.getPosition(2))));
         edges.push_back(addPointsOnEdge(data, resolution, Pnt3d(it.getPosition(2)), Pnt3d(it.getPosition(0))));
-        //cout << "######" << endl;
-        //for (auto& e : edges) cout << "size: " << e.size() << endl;
         sort(edges.begin(), edges.end(), [](vector<Pnt3d> left, vector<Pnt3d> right)-> bool
         {int sl = left.size(), sr = right.size(); return (sl < sr);});
-        //for (auto& e : edges) cout << "size: " << e.size() << endl;
 
         if (edges[0].size() == 0) continue;
         auto mappedPoints = mapPoints(edges[0], edges[1]);
-        for (auto& match : mappedPoints) {
-            addPointsOnEdge(data, resolution, get<0>(match), get<1>(match));
-
-        }
+        for (auto& match : mappedPoints) addPointsOnEdge(data, resolution, get<0>(match), get<1>(match));
     }
-    cout << "added " << data.size() << " new points!" << endl;
     Color3f col(1,0.5,0.5);
 
-    cout << pointcloud->getOctree() << endl;
     for (int i = 0; i < data.size(); i++) {
-        if (i < 10) cout << data.getPosition(i)[0] << endl;
         pointcloud->getOctree()->add(Vec3d(data.getPosition(i)), new Color3f(0,0,0) ); //, -1, true, 1e5);
     }
-    cout << " --------------sdf " << pointcloud->getOctree()->getRoot() << "   "  << endl;
-    cout << "  .... A0 " <<  pointcloud->getOctree()->getRoot()->getSubtree().size() << endl;
-    cout << "  .... A1 " <<  pointcloud->getOctree()->getAllLeafs().size() << endl;
     pointcloud->setupLODs();
-    cout << "  .... A2 " <<  pointcloud->getOctree()->getAllLeafs().size() << endl;
 
     return pointcloud;
 }
