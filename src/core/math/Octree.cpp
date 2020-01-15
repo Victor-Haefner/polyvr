@@ -122,6 +122,7 @@ OctreeNode* OctreeNode::add(Vec3d pos, void* dat, int targetLevel, bool checkPos
 
     data.push_back(dat);
     points.push_back(pos);
+    cout << " ------------------ OctreeNode::add " << pos << "   " << this << endl;
     return this;
 }
 
@@ -172,12 +173,14 @@ void gatherSubtree(OctreeNode* o, vector<OctreeNode*>& res, bool leafs) {
 
 vector<OctreeNode*> OctreeNode::getSubtree() {
     vector<OctreeNode*> res;
+    res.push_back(this);
     gatherSubtree(this, res, false);
     return res;
 }
 
 vector<OctreeNode*> OctreeNode::getLeafs() {
     vector<OctreeNode*> res;
+    if (isLeaf()) res.push_back(this);
     gatherSubtree(this, res, true);
     return res;
 }
