@@ -104,146 +104,26 @@ GLTFSchema gltfschema;
 struct GLTFUtils {
     int version = 1;
 
-    bool isGroupNode(string node) {
-        if (version == 1) {
-            if (node == "Group") return true;
-            if (node == "Separator") return true;
-            if (node == "Switch") return true;
-            if (node == "TransformSeparator") return true;
-        }
-
-        if (version == 2) {
-            //if (node == "children") return true;
-        }
-
-        return false;
-    }
-
     bool isGeometryNode(string node) {
         if (node == "Mesh") return true;
-
-        if (node == "IndexedFaceSet") return true;
-        if (node == "IndexedLineSet") return true;
-        if (node == "PointSet") return true;
-        if (node == "Cone") return true;
-        if (node == "Sphere") return true;
-        if (node == "Cylinder") return true;
-
-        if (version == 1) {
-            if (node == "Cube") return true;
-            if (node == "AsciiText") return true;
-        }
-
-        if (version == 2) {
-            if (node == "Box") return true;
-            if (node == "ElevationGrid") return true;
-            if (node == "Extrusion") return true;
-            if (node == "Text") return true;
-        }
+        if (node == "Primitive") return true;
 
         return false;
     }
 
     bool isPropertyNode(string node) {
-        if (node == "DirectionalLight") return true;
-        if (node == "PointLight") return true;
-        if (node == "SpotLight") return true;
-        if (node == "Normal") return true;
-        if (node == "FontStyle") return true;
-        if (node == "Material") return true;
-        if (node == "LOD") return true;
-        if (node == "Transform") return true;
-
-        if (version == 1) {
-            if (node == "Coordinate3") return true;
-            if (node == "Info") return true;
-            if (node == "MaterialBinding") return true;
-            if (node == "NormalBinding") return true;
-            if (node == "Texture2") return true;
-            if (node == "Texture2Transform") return true;
-            if (node == "TextureCoordinate2") return true;
-            if (node == "ShapeHints") return true;
-            if (node == "MatrixTransform") return true;
-            if (node == "Rotation") return true;
-            if (node == "Scale") return true;
-            if (node == "Translation") return true;
-            if (node == "OrthographicCamera") return true;
-            if (node == "PerspectiveCamera") return true;
-        }
-
-        if (version == 2) {
-            if (node == "Group") return true;
-            if (node == "Anchor") return true;
-            if (node == "Billboard") return true;
-            if (node == "Collision") return true;
-            if (node == "Inline") return true;
-            if (node == "Switch") return true;
-            if (node == "AudioClip") return true;
-            if (node == "Script") return true;
-            if (node == "Shape") return true;
-            if (node == "Sound") return true;
-            if (node == "WorldInfo") return true;
-            if (node == "Color") return true;
-            if (node == "Coordinate") return true;
-            if (node == "TextureCoordinate") return true;
-            if (node == "Appearance") return true;
-            if (node == "ImageTexture") return true;
-            if (node == "MovieTexture") return true;
-            if (node == "PixelTexture") return true;
-            if (node == "TextureTransform") return true;
-        }
-
-        return false;
-    }
-
-    bool isOtherNode(string node) {
-        if (version == 2) {
-            if (node == "CylinderSensor") return true;
-            if (node == "PlaneSensor") return true;
-            if (node == "ProximitySensor") return true;
-            if (node == "SphereSensor") return true;
-            if (node == "TimeSensor") return true;
-            if (node == "TouchSensor") return true;
-            if (node == "VisibilitySensor") return true;
-            if (node == "ColorInterpolator") return true;
-            if (node == "CoordinateInterpolator") return true;
-            if (node == "NormalInterpolator") return true;
-            if (node == "OrientationInterpolator") return true;
-            if (node == "PositionInterpolator") return true;
-            if (node == "ScalarInterpolator") return true;
-            if (node == "Background") return true;
-            if (node == "Fog") return true;
-            if (node == "NavigationInfo") return true;
-            if (node == "Viewpoint") return true;
-        }
         return false;
     }
 
     bool isNode(string node) {
-        if (isGroupNode(node)) return true;
         if (isGeometryNode(node)) return true;
         if (isPropertyNode(node)) return true;
-        if (isOtherNode(node)) return true;
         return false;
     }
 
     bool isTransformationNode(string node) {
-        if (node == "MatrixTransform") return true;
-        if (node == "Rotation") return true;
-        if (node == "Scale") return true;
         if (node == "Transform") return true;
-        if (node == "Translation") return true;
-
-        return false;
-    }
-
-    bool isTransformationResetNode(string node) {
-        if (version == 1) {
-            if (node == "Separator") return true;
-            if (node == "TransformSeparator") return true;
-        }
-
-        if (version == 2) {}
+        if (node == "Link") return true;
 
         return false;
     }
@@ -253,6 +133,7 @@ struct GLTFUtils {
 struct GLTFNode : GLTFUtils {
     string name;
     string type;
+    int nID = -1;
     GLTFNode* parent = 0;
     vector<GLTFNode*> children;
     vector<Pnt3d> positions;
@@ -295,8 +176,13 @@ struct GLTFNode : GLTFUtils {
     }
 
     void print(string padding = "") {
-        cout << padding << "Node '" << name << "' of type " << type;
+        cout << padding << "Node '" << name << "'";
+        VRGeometryPtr g = dynamic_pointer_cast<VRGeometry>(obj);
+        if (g) cout << " '" << g->getName() << "'";
+        cout << " " << nID;
+        cout << " of type " << type;
         if (type == "mesh") cout << " with matID: " << matID;
+        if (type == "Mesh" && name == "Node") cout << "-------";
         cout << endl;
         for (auto c : children) c->print(padding+" ");
     }
@@ -305,7 +191,6 @@ struct GLTFNode : GLTFUtils {
     // build OSG ---------------------
     VRObjectPtr makeObject() {
         //cout << "make object '" << name << "' of type " << type << endl;
-        if (isGroupNode(type)) return VRObject::create(name);
         if (isGeometryNode(type)) {
             if (type == "AsciiText") return VRSprite::create(name);
             return VRGeometry::create(name);
@@ -380,8 +265,8 @@ struct GLTFNode : GLTFUtils {
     virtual VRMaterialPtr applyMaterials() = 0;
     virtual VRGeoData applyGeometries() = 0;
 
-    void resolveLinks(map<string, GLTFNode*>& references) {
-        if (type == "Link") obj->getParent()->addChild(references[name]->obj->duplicate());
+    void resolveLinks(map<int, GLTFNode*>& references) {
+        if (type == "Link") { if (references.count(nID)) obj->addChild(references[nID]->obj->duplicate()); }
         for (auto c : children) c->resolveLinks(references);
     }
 };
@@ -413,10 +298,11 @@ struct GLTFNNode : GLTFNode{
     }
 
     VRGeoData applyGeometries() {
-        if (type == "Mesh") {
+        if (type == "Mesh" || type == "Primitive") {
             VRGeometryPtr g = dynamic_pointer_cast<VRGeometry>(obj);
             if (g) {
-                geoData.apply(g); //TODO: what if more than one primitive per mesh?
+                if (geoData.size()>0) geoData.apply(g); //TODO: what if more than one primitive per mesh?
+                else cout << g->getName() << " geoData with no data found" << endl;
             }
         }
 
@@ -432,14 +318,15 @@ class GLTFLoader : public GLTFUtils {
         VRProgressPtr progress;
         bool threaded = false;
         GLTFNode* tree = 0;
-        map<string, GLTFNode*> references;
+        map<int, GLTFNode*> references;
         tinygltf::Model model;
         map<int, GLTFNode*> nodes;
+        map<int, GLTFNode*> meshes;
         map<int, GLTFNode*> primitives;
         map<int, GLTFNode*> scenes;
         map<int, int> nodeToMesh;
-        map<int, int> meshToNode;
         map<int, int> primToMesh;
+        map<int, vector<int>> meshToNodes;
         map<int, vector<int>> childrenPerNode;
         map<int, vector<int>> childrenPerScene;
         map<int, vector<int>> childrenPerMesh;
@@ -492,7 +379,7 @@ class GLTFLoader : public GLTFUtils {
 
         void handleNode(const tinygltf::Node &gltfNode){
             nodeID++;
-            string type = "Untyped";
+            string type = "Transform";
             string name = "Unnamed";
             Matrix4d mat4;
             mat4.setTranslate(Vec3d(0,0,0));
@@ -504,8 +391,8 @@ class GLTFLoader : public GLTFUtils {
 
             if (gltfNode.mesh > -1) {
                 nodeToMesh[nodeID] = gltfNode.mesh;
-                meshToNode[gltfNode.mesh] = nodeID;
-                type = "Mesh";
+                meshToNodes[gltfNode.mesh].push_back(nodeID);
+                if (meshToNodes[gltfNode.mesh].size()>1) type = "Link";
             }
 
             if (gltfNode.translation.size() == 3) {
@@ -532,11 +419,10 @@ class GLTFLoader : public GLTFUtils {
                 transf[3] = true;
             }
 
-            if (!isGeometryNode(type)) type = "Transform";
-
             if (name == "") name = "Node";
             GLTFNode* thisNode = new GLTFNNode(type,name);
             nodes[nodeID] = thisNode;
+            thisNode->nID = nodeID;
 
             if (gltfNode.children.size() > 0) {
                 vector<int> children;
@@ -564,9 +450,8 @@ class GLTFLoader : public GLTFUtils {
                     int tID = gltfMaterial.pbrMetallicRoughness.baseColorTexture.index;
                     if (textures.count(tID)) mat->setTexture(textures[tID]);
                 }
-
                 if (content.first == "metallicRoughnessTexture") {
-                    int tID = gltfMaterial.pbrMetallicRoughness.metallicRoughnessTexture.index;
+                    //int tID = gltfMaterial.pbrMetallicRoughness.metallicRoughnessTexture.index;
                 }
                 if (content.first == "baseColorFactor") bsF = true;
                 if (content.first == "metallicFactor") mtF = true;
@@ -575,11 +460,10 @@ class GLTFLoader : public GLTFUtils {
             }
             for (const auto &content : gltfMaterial.additionalValues) {
                 if (content.first == "normalTexture") {
-                    int tID = gltfMaterial.normalTexture.index;
+                    //int tID = gltfMaterial.normalTexture.index;
                 }
-
                 if (content.first == "emissiveTexture") {
-                    int tID = gltfMaterial.emissiveTexture.index;
+                    //int tID = gltfMaterial.emissiveTexture.index;
                 }
                 if (content.first == "alphaMode") {
                     //cout << "alhphaMODE " << gltfMaterial.alphaMode << endl;
@@ -602,6 +486,9 @@ class GLTFLoader : public GLTFUtils {
                 spec = Color3f(0.04,0.04,0.04)*(1.0-metallicFactor) + baseColor*metallicFactor;
                 mat->setSpecular(spec);
                 amb = baseColor * (1.0 - metallicFactor);
+                if (amb[0]>0.5) amb[0] = 0.4;
+                if (amb[1]>0.5) amb[1] = 0.4;
+                if (amb[2]>0.5) amb[2] = 0.4;
                 mat->setAmbient(amb);
             }
 
@@ -645,8 +532,25 @@ class GLTFLoader : public GLTFUtils {
 
         void handleMesh(const tinygltf::Mesh &gltfMesh){
             meshID++;
-            auto nodeID = meshToNode[meshID];
-            auto& node = nodes[nodeID];
+            GLTFNode* node;
+            if (gltfMesh.primitives.size() == 1) {
+                string name;
+                name = gltfMesh.name;
+                if (name == "") name = "Mesh";
+                node = new GLTFNNode("Mesh",name);
+                meshes[meshID] = node;
+                for (auto nodeID : meshToNodes[meshID]) { references[nodeID] = node; }
+                nodes[meshToNodes[meshID][0]]->addChild(node);
+            }
+            else if (gltfMesh.primitives.size() > 1) {
+                string name;
+                name = gltfMesh.name;
+                if (name == "") name = "Mesh";
+                node = new GLTFNNode("Transform",name);
+                meshes[meshID] = node;
+                for (auto nodeID : meshToNodes[meshID]) { references[nodeID] = node; }
+                nodes[meshToNodes[meshID][0]]->addChild(node);
+            }
             for (tinygltf::Primitive primitive : gltfMesh.primitives) {
                 if (gltfMesh.primitives.size() > 1) {
                     primID++;
@@ -655,6 +559,7 @@ class GLTFLoader : public GLTFUtils {
                     primToMesh[primID] = meshID;
                     childrenPerMesh[meshID].push_back(primID);
                 }
+                if (!node) return;
                 long n = 0;
                 VRGeoData gdata = VRGeoData();
 
@@ -719,22 +624,18 @@ class GLTFLoader : public GLTFUtils {
                 }
 
                 if (primitive.attributes.count("TEXCOORD_1")) {
-                    const tinygltf::Accessor& accessorTexUV1 = model.accessors[primitive.attributes["TEXCOORD_1"]];
+                    //const tinygltf::Accessor& accessorTexUV1 = model.accessors[primitive.attributes["TEXCOORD_1"]];
                 }
 
                 if (primitive.indices > -1) {
                     const tinygltf::Accessor& accessorIndices = model.accessors[primitive.indices];
                     const tinygltf::BufferView& bufferViewIndices = model.bufferViews[accessorIndices.bufferView];
                     const tinygltf::Buffer& bufferInd = model.buffers[bufferViewIndices.buffer];
-
                     if (primitive.mode == 0) { /*POINTS*/cout << "GLTF-LOADER: not implemented POINTS" << endl; }
                     if (primitive.mode == 1) { /*LINE*/ cout << "GLTF-LOADER: not implemented LINE" << endl; }
                     if (primitive.mode == 2) { /*LINE LOOP*/ cout << "GLTF-LOADER: not implemented LINE LOOP" << endl; }
                     if (primitive.mode == 3) { /*LINE STRIP*/ cout << "GLTF-LOADER: not implemented LINE STRIP" << endl; }
                     if (primitive.mode == 4) { /*TRIANGLES*/
-                        if (accessorIndices.componentType == 0) {
-                            //for (size_t i = 0; i < n/3; ++i) cout << i << endl;//gdata.pushTri(i*3+0,i*3+1,i*3+2);
-                        }
                         if (accessorIndices.componentType == 5122) {
                             const unsigned short* indices   = reinterpret_cast<const unsigned short*>(&bufferInd.data[bufferViewIndices.byteOffset + accessorIndices.byteOffset]);
                             for (size_t i = 0; i < accessorIndices.count/3; ++i) gdata.pushTri(indices[i*3+0],indices[i*3+1],indices[i*3+2]);
@@ -747,7 +648,7 @@ class GLTFLoader : public GLTFUtils {
                             const unsigned int* indices   = reinterpret_cast<const unsigned int*>(&bufferInd.data[bufferViewIndices.byteOffset + accessorIndices.byteOffset]);
                             for (size_t i = 0; i < accessorIndices.count/3; ++i) gdata.pushTri(indices[i*3+0],indices[i*3+1],indices[i*3+2]);
                         }
-                        if (accessorIndices.componentType != 5122 && accessorIndices.componentType != 5125 && accessorIndices.componentType != 5123 && accessorIndices.componentType != 0) { cout << "GLTF-LOADER: data type of indices unknwon: " << accessorIndices.componentType << endl; }
+                        if (accessorIndices.componentType != 5122 && accessorIndices.componentType != 5125 && accessorIndices.componentType != 5123) { cout << "GLTF-LOADER: data type of indices unknwon: " << accessorIndices.componentType << endl; }
                     }
                     if (primitive.mode == 5) { /*TRIANGLE STRIP*/ cout << "GLTF-LOADER: not implemented TRIANGLE STRIP" << endl;}
                     if (primitive.mode == 6) { /*TRAINGLE FAN*/ cout << "GLTF-LOADER: not implemented fTRAINGLE FAN" << endl;}
@@ -757,12 +658,12 @@ class GLTFLoader : public GLTFUtils {
                     if (primitive.mode == 2) { /*LINE LOOP*/ cout << "GLTF-LOADER: not implemented LINE LOOP" << endl; }
                     if (primitive.mode == 3) { /*LINE STRIP*/ cout << "GLTF-LOADER: not implemented LINE STRIP" << endl; }
                     if (primitive.mode == 4) { /*TRIANGLES*/
-                        for (size_t i = 0; i < n/3; i++) gdata.pushTri(i*3+0,i*3+1,i*3+2);
+                        for (long i = 0; i < n/3; i++) gdata.pushTri(i*3+0,i*3+1,i*3+2);
                     }
                     if (primitive.mode == 5) { /*TRIANGLE STRIP*/ cout << "GLTF-LOADER: not implemented TRIANGLE STRIP" << endl;}
                     if (primitive.mode == 6) { /*TRAINGLE FAN*/ cout << "GLTF-LOADER: not implemented fTRAINGLE FAN" << endl;}
                 }
-
+                //cout << meshID << " " << gdata.size() << " --- " << n <<  endl;
                 node->geoData = gdata;
                 node->matID = primitive.material;
                 if (materials.count(primitive.material)) node->material = materials[primitive.material];
@@ -872,11 +773,13 @@ class GLTFLoader : public GLTFUtils {
                 tree = new GLTFNNode("Root", "Root");
                 for (auto each:scenes) tree->addChild(each.second);
                 tree->obj = res;
-                tree->print();
+                //tree->print();
                 tree->buildOSG();
                 tree->applyTransformations();
                 tree->applyMaterials();
                 tree->applyGeometries();
+                tree->resolveLinks(references);
+                //tree->print();
                 progress->finish();
             }
             return;
