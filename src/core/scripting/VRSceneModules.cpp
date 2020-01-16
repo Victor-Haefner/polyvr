@@ -124,6 +124,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyLight>("Light", pModVR, VRPyObject::typeRef);
     sm->registerModule<VRPyLightBeacon>("LightBeacon", pModVR, VRPyTransform::typeRef);
     sm->registerModule<VRPySyncNode>("SyncNode", pModVR, VRPyTransform::typeRef);
+    sm->registerModule<VRPySyncRemote>("SyncRemote", pModVR);
     sm->registerModule<VRPyCamera>("Camera", pModVR, VRPyTransform::typeRef);
     sm->registerModule<VRPyKinematics>("Kinematics", pModVR);
     sm->registerModule<VRPyFABRIK>("FABRIK", pModVR);
