@@ -181,8 +181,9 @@ struct GLTFNode : GLTFUtils {
         if (g) cout << " '" << g->getName() << "'";
         cout << " " << nID;
         cout << " of type " << type;
-        if (type == "mesh") cout << " with matID: " << matID;
-        if (type == "Mesh" && name == "Node") cout << "-------";
+        if (type == "Mesh" || type == "Primitive") cout << " with matID: " << matID;
+        //if (type == "Mesh" && name == "Node") cout << "-------";
+        if (type == "Primitive") cout << "----PRIM----";
         cout << endl;
         for (auto c : children) c->print(padding+" ");
     }
@@ -192,7 +193,6 @@ struct GLTFNode : GLTFUtils {
     VRObjectPtr makeObject() {
         //cout << "make object '" << name << "' of type " << type << endl;
         if (isGeometryNode(type)) {
-            if (type == "AsciiText") return VRSprite::create(name);
             return VRGeometry::create(name);
         }
         if (isPropertyNode(type)) {
@@ -533,15 +533,21 @@ class GLTFLoader : public GLTFUtils {
         void handleMesh(const tinygltf::Mesh &gltfMesh){
             meshID++;
             GLTFNode* node;
-            if (gltfMesh.primitives.size() == 1) {
-                string name;
-                name = gltfMesh.name;
-                if (name == "") name = "Mesh";
-                node = new GLTFNNode("Mesh",name);
-                meshes[meshID] = node;
-                for (auto nodeID : meshToNodes[meshID]) { references[nodeID] = node; }
-                nodes[meshToNodes[meshID][0]]->addChild(node);
-            }
+            string name;
+            name = gltfMesh.name;
+            if (name == "") name = "Mesh";
+            node = new GLTFNNode("Mesh",name);
+            meshes[meshID] = node;
+            for (auto nodeID : meshToNodes[meshID]) { references[nodeID] = node; }
+            nodes[meshToNodes[meshID][0]]->addChild(node);
+
+            long nPos = 0;
+            long nUpTo = 0; //nUpToThisPrimitive
+            long n = 0;
+            VRGeoData gdata = VRGeoData();
+            bool firstPrim = true;
+            // if (gltfMesh.primitives.size() > 1) cout << "GLTFLOADER::WARNING IN MESH: multiple primitives per mesh" << endl;
+            /*
             else if (gltfMesh.primitives.size() > 1) {
                 string name;
                 name = gltfMesh.name;
@@ -550,18 +556,17 @@ class GLTFLoader : public GLTFUtils {
                 meshes[meshID] = node;
                 for (auto nodeID : meshToNodes[meshID]) { references[nodeID] = node; }
                 nodes[meshToNodes[meshID][0]]->addChild(node);
-            }
+            }*/
             for (tinygltf::Primitive primitive : gltfMesh.primitives) {
                 if (gltfMesh.primitives.size() > 1) {
+                    /*
                     primID++;
                     node = new GLTFNNode("Primitive","Primitive");
                     primitives[primID] = node;
                     primToMesh[primID] = meshID;
-                    childrenPerMesh[meshID].push_back(primID);
+                    childrenPerMesh[meshID].push_back(primID);*/
                 }
                 if (!node) return;
-                long n = 0;
-                VRGeoData gdata = VRGeoData();
 
                 if (!primitive.attributes.count("POSITION")) { cout << "GLTFLOADER::ERROR IN MESH this primitive has no pos" << endl; continue; }
 
@@ -577,7 +582,7 @@ class GLTFLoader : public GLTFUtils {
                             if (bufferViewP.byteStride > 12) { pos = Vec3d( positions[i * (bufferViewP.byteStride/4) + 0], positions[i * (bufferViewP.byteStride/4) + 1], positions[i * (bufferViewP.byteStride/4) + 2] ); }
                             else pos = Vec3d( positions[i * 3 + 0], positions[i * 3 + 1], positions[i * 3 + 2] );
                             gdata.pushVert(pos);
-                            n++;
+                            nPos++;
                         }
                     }
                 }
@@ -618,7 +623,7 @@ class GLTFLoader : public GLTFUtils {
                         const float* UVs   = reinterpret_cast<const float*>(&bufferUV.data[bufferViewUV.byteOffset + accessorTexUV.byteOffset]);
                         for (size_t i = 0; i < accessorTexUV.count; ++i) {
                             Vec2d UV = Vec2d( UVs[i*2 + 0], UVs[i*2 + 1] );
-                            gdata.pushTexCoord(UV);
+                            if (firstPrim) gdata.pushTexCoord(UV);
                         }
                     }
                 }
@@ -636,19 +641,23 @@ class GLTFLoader : public GLTFUtils {
                     if (primitive.mode == 2) { /*LINE LOOP*/ cout << "GLTF-LOADER: not implemented LINE LOOP" << endl; }
                     if (primitive.mode == 3) { /*LINE STRIP*/ cout << "GLTF-LOADER: not implemented LINE STRIP" << endl; }
                     if (primitive.mode == 4) { /*TRIANGLES*/
+                        if (accessorIndices.componentType == 5121) {
+                            const unsigned char* indices   = reinterpret_cast<const unsigned char*>(&bufferInd.data[bufferViewIndices.byteOffset + accessorIndices.byteOffset]);
+                            for (size_t i = 0; i < accessorIndices.count/3; ++i) gdata.pushTri(nUpTo+indices[i*3+0],nUpTo+indices[i*3+1],nUpTo+indices[i*3+2]);
+                        }
                         if (accessorIndices.componentType == 5122) {
                             const unsigned short* indices   = reinterpret_cast<const unsigned short*>(&bufferInd.data[bufferViewIndices.byteOffset + accessorIndices.byteOffset]);
-                            for (size_t i = 0; i < accessorIndices.count/3; ++i) gdata.pushTri(indices[i*3+0],indices[i*3+1],indices[i*3+2]);
+                            for (size_t i = 0; i < accessorIndices.count/3; ++i) gdata.pushTri(nUpTo+indices[i*3+0],nUpTo+indices[i*3+1],nUpTo+indices[i*3+2]);
                         }
                         if (accessorIndices.componentType == 5123) {
                             const short* indices   = reinterpret_cast<const short*>(&bufferInd.data[bufferViewIndices.byteOffset + accessorIndices.byteOffset]);
-                            for (size_t i = 0; i < accessorIndices.count/3; ++i) gdata.pushTri(indices[i*3+0],indices[i*3+1],indices[i*3+2]);
+                            for (size_t i = 0; i < accessorIndices.count/3; ++i) gdata.pushTri(nUpTo+indices[i*3+0],nUpTo+indices[i*3+1],nUpTo+indices[i*3+2]);
                         }
                         if (accessorIndices.componentType == 5125) {
                             const unsigned int* indices   = reinterpret_cast<const unsigned int*>(&bufferInd.data[bufferViewIndices.byteOffset + accessorIndices.byteOffset]);
-                            for (size_t i = 0; i < accessorIndices.count/3; ++i) gdata.pushTri(indices[i*3+0],indices[i*3+1],indices[i*3+2]);
+                            for (size_t i = 0; i < accessorIndices.count/3; ++i) gdata.pushTri(nUpTo+indices[i*3+0],nUpTo+indices[i*3+1],nUpTo+indices[i*3+2]);
                         }
-                        if (accessorIndices.componentType != 5122 && accessorIndices.componentType != 5125 && accessorIndices.componentType != 5123) { cout << "GLTF-LOADER: data type of indices unknwon: " << accessorIndices.componentType << endl; }
+                        if (accessorIndices.componentType != 5121 && accessorIndices.componentType != 5122 && accessorIndices.componentType != 5125 && accessorIndices.componentType != 5123) { cout << "GLTF-LOADER: data type of INDICES unknwon: " << accessorIndices.componentType << endl; }
                     }
                     if (primitive.mode == 5) { /*TRIANGLE STRIP*/ cout << "GLTF-LOADER: not implemented TRIANGLE STRIP" << endl;}
                     if (primitive.mode == 6) { /*TRAINGLE FAN*/ cout << "GLTF-LOADER: not implemented fTRAINGLE FAN" << endl;}
@@ -658,17 +667,21 @@ class GLTFLoader : public GLTFUtils {
                     if (primitive.mode == 2) { /*LINE LOOP*/ cout << "GLTF-LOADER: not implemented LINE LOOP" << endl; }
                     if (primitive.mode == 3) { /*LINE STRIP*/ cout << "GLTF-LOADER: not implemented LINE STRIP" << endl; }
                     if (primitive.mode == 4) { /*TRIANGLES*/
-                        for (long i = 0; i < n/3; i++) gdata.pushTri(i*3+0,i*3+1,i*3+2);
+                        for (long i = 0; i < n/3; i++) gdata.pushTri(nUpTo+i*3+0,nUpTo+i*3+1,nUpTo+i*3+2);
                     }
                     if (primitive.mode == 5) { /*TRIANGLE STRIP*/ cout << "GLTF-LOADER: not implemented TRIANGLE STRIP" << endl;}
                     if (primitive.mode == 6) { /*TRAINGLE FAN*/ cout << "GLTF-LOADER: not implemented fTRAINGLE FAN" << endl;}
                 }
                 //cout << meshID << " " << gdata.size() << " --- " << n <<  endl;
-                node->geoData = gdata;
-                node->matID = primitive.material;
-                if (materials.count(primitive.material)) node->material = materials[primitive.material];
                 //cout << "prim with v " << n << " : " << primitive.mode <<  endl;
+                if (firstPrim) {
+                    node->matID = primitive.material;
+                    if (materials.count(primitive.material)) node->material = materials[primitive.material];
+                    firstPrim = false;
+                }
+                nUpTo = nPos;
             }
+            node->geoData = gdata;
         }
 
         void handleSkin(const tinygltf::Skin &gltfSkin){
