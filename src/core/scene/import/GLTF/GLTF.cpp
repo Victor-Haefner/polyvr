@@ -439,6 +439,8 @@ class GLTFLoader : public GLTFUtils {
         void handleMaterial(const tinygltf::Material &gltfMaterial){
             matID++;
             VRMaterialPtr mat = VRMaterial::create(gltfMaterial.name);
+
+            mat->setPointSize(5);
             //cout << "   MATE " << gltfMaterial.name << endl;
             bool bsF = false;
             bool mtF = false;
@@ -512,11 +514,14 @@ class GLTFLoader : public GLTFUtils {
             if (width < 0) { cout << "GLTFLOADER::WARNING IN TEXTURE loading failed " << gltfTexture.name << endl; return;}
             int height = image.height;
             int bits = image.bits;
-            //cout << texID << " " << gltfTexture.source << " components " << components << " width " << width << " height " << height << " bits " << bits  << endl;
+            cout << texID << " " << gltfTexture.source << " components " << components << " width " << width << " height " << height << " bits " << bits  << endl;
 
             const auto size = components * width * height * bits; //sizeof(unsigned char);
+            cout << bits << endl;
+            //unsigned char* data = new unsigned char[size];
             char* data = new char[size];
             memcpy(data, image.image.data(), size);
+            cout << bits << endl;
             Vec3i dims = Vec3i(width, height, 1);
 
             int pf = Image::OSG_RGB_PF;
@@ -546,6 +551,7 @@ class GLTFLoader : public GLTFUtils {
             long n = 0;
             VRGeoData gdata = VRGeoData();
             bool firstPrim = true;
+            bool pointsOnly = false;
             // if (gltfMesh.primitives.size() > 1) cout << "GLTFLOADER::WARNING IN MESH: multiple primitives per mesh" << endl;
             /*
             else if (gltfMesh.primitives.size() > 1) {
@@ -636,7 +642,26 @@ class GLTFLoader : public GLTFUtils {
                     const tinygltf::Accessor& accessorIndices = model.accessors[primitive.indices];
                     const tinygltf::BufferView& bufferViewIndices = model.bufferViews[accessorIndices.bufferView];
                     const tinygltf::Buffer& bufferInd = model.buffers[bufferViewIndices.buffer];
-                    if (primitive.mode == 0) { /*POINTS*/cout << "GLTF-LOADER: not implemented POINTS" << endl; }
+                    if (primitive.mode == 0) { /*POINTS*/
+                        pointsOnly = true;
+                        if (accessorIndices.componentType == 5121) {
+                            const unsigned char* indices   = reinterpret_cast<const unsigned char*>(&bufferInd.data[bufferViewIndices.byteOffset + accessorIndices.byteOffset]);
+                            for (size_t i = 0; i < accessorIndices.count; ++i) gdata.pushPoint(nUpTo+indices[i]);
+                        }
+                        if (accessorIndices.componentType == 5122) {
+                            const unsigned short* indices   = reinterpret_cast<const unsigned short*>(&bufferInd.data[bufferViewIndices.byteOffset + accessorIndices.byteOffset]);
+                            for (size_t i = 0; i < accessorIndices.count; ++i) gdata.pushPoint(nUpTo+indices[i]);
+                        }
+                        if (accessorIndices.componentType == 5123) {
+                            const short* indices   = reinterpret_cast<const short*>(&bufferInd.data[bufferViewIndices.byteOffset + accessorIndices.byteOffset]);
+                            for (size_t i = 0; i < accessorIndices.count; ++i) gdata.pushPoint(nUpTo+indices[i]);
+                        }
+                        if (accessorIndices.componentType == 5125) {
+                            const unsigned int* indices   = reinterpret_cast<const unsigned int*>(&bufferInd.data[bufferViewIndices.byteOffset + accessorIndices.byteOffset]);
+                            for (size_t i = 0; i < accessorIndices.count; ++i) gdata.pushPoint(nUpTo+indices[i]);
+                        }
+                        if (accessorIndices.componentType != 5121 && accessorIndices.componentType != 5122 && accessorIndices.componentType != 5125 && accessorIndices.componentType != 5123) { cout << "GLTF-LOADER: data type of POINT INDICES unknwon: " << accessorIndices.componentType << endl; }
+                    }
                     if (primitive.mode == 1) { /*LINE*/ cout << "GLTF-LOADER: not implemented LINE" << endl; }
                     if (primitive.mode == 2) { /*LINE LOOP*/ cout << "GLTF-LOADER: not implemented LINE LOOP" << endl; }
                     if (primitive.mode == 3) { /*LINE STRIP*/ cout << "GLTF-LOADER: not implemented LINE STRIP" << endl; }
@@ -657,12 +682,15 @@ class GLTFLoader : public GLTFUtils {
                             const unsigned int* indices   = reinterpret_cast<const unsigned int*>(&bufferInd.data[bufferViewIndices.byteOffset + accessorIndices.byteOffset]);
                             for (size_t i = 0; i < accessorIndices.count/3; ++i) gdata.pushTri(nUpTo+indices[i*3+0],nUpTo+indices[i*3+1],nUpTo+indices[i*3+2]);
                         }
-                        if (accessorIndices.componentType != 5121 && accessorIndices.componentType != 5122 && accessorIndices.componentType != 5125 && accessorIndices.componentType != 5123) { cout << "GLTF-LOADER: data type of INDICES unknwon: " << accessorIndices.componentType << endl; }
+                        if (accessorIndices.componentType != 5121 && accessorIndices.componentType != 5122 && accessorIndices.componentType != 5125 && accessorIndices.componentType != 5123) { cout << "GLTF-LOADER: data type of TRIANGLE INDICES unknwon: " << accessorIndices.componentType << endl; }
                     }
                     if (primitive.mode == 5) { /*TRIANGLE STRIP*/ cout << "GLTF-LOADER: not implemented TRIANGLE STRIP" << endl;}
                     if (primitive.mode == 6) { /*TRAINGLE FAN*/ cout << "GLTF-LOADER: not implemented fTRAINGLE FAN" << endl;}
                 }   else {
-                    if (primitive.mode == 0) { /*POINTS*/cout << "GLTF-LOADER: not implemented POINTS" << endl; }
+                    if (primitive.mode == 0) { /*POINTS*/
+                        pointsOnly = true;
+                        for (long i = nUpTo; i < nPos; i++) gdata.pushPoint(i);
+                    }
                     if (primitive.mode == 1) { /*LINE*/ cout << "GLTF-LOADER: not implemented LINE" << endl; }
                     if (primitive.mode == 2) { /*LINE LOOP*/ cout << "GLTF-LOADER: not implemented LINE LOOP" << endl; }
                     if (primitive.mode == 3) { /*LINE STRIP*/ cout << "GLTF-LOADER: not implemented LINE STRIP" << endl; }
@@ -676,7 +704,10 @@ class GLTFLoader : public GLTFUtils {
                 //cout << "prim with v " << n << " : " << primitive.mode <<  endl;
                 if (firstPrim) {
                     node->matID = primitive.material;
-                    if (materials.count(primitive.material)) node->material = materials[primitive.material];
+                    if (materials.count(primitive.material)) {
+                        node->material = materials[primitive.material];
+                        if (pointsOnly) materials[primitive.material]->setLit(false);
+                    }
                     firstPrim = false;
                 }
                 nUpTo = nPos;
