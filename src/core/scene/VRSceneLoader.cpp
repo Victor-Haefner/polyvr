@@ -81,7 +81,7 @@ void VRSceneLoader::saveScene(string file, XMLElementPtr guiN, string encryption
     if (scene == 0) return;
 
     XML xml;
-    XMLElementPtr sceneN = xml.newRoot("Scene", "", "VRF"); //name, ns_uri, ns_prefix
+    XMLElementPtr sceneN = xml.newRoot("Scene", "", ""); //name, ns_uri, ns_prefix
     XMLElementPtr objectsN = sceneN->addChild("Objects");
     if (guiN) sceneN->importNode(guiN, true, xml);
 
