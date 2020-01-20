@@ -8,6 +8,9 @@ message( "Configuring for system name / version: " ${CMAKE_SYSTEM_NAME} " / " ${
 
 #-s WASM=1 -s USE_ZLIB=1 -lz
 #-s USE_BOOST_HEADERS=1
+#-s ALLOW_MEMORY_GROWTH=1
+
+set(LINKER_FLAGS "${LINKER_FLAGS} -s ALLOW_MEMORY_GROWTH=1 -s EXIT_RUNTIME=1 -s DISABLE_EXCEPTION_CATCHING=0")
   
 add_definitions( -DWASM=1 )
 add_definitions( -DGLUT_glut_LIBRARY=1 )
@@ -310,7 +313,7 @@ target_sources(polyvr PRIVATE src/core/setup/windows/VRView.cpp)
 #target_sources(polyvr PRIVATE src/core/setup/windows/VRGtkWindow.cpp) # needs GTK
 target_sources(polyvr PRIVATE src/core/setup/windows/VRWindowManager.cpp)
 target_sources(polyvr PRIVATE src/core/setup/windows/VRGlutWindow.cpp)
-target_sources(polyvr PRIVATE src/core/setup/windows/VRMultiWindow.cpp)
+#target_sources(polyvr PRIVATE src/core/setup/windows/VRMultiWindow.cpp)
 target_sources(polyvr PRIVATE src/core/setup/windows/VRViewManager.cpp)
 target_sources(polyvr PRIVATE src/core/setup/VRSetupManager.cpp)
 #target_sources(polyvr PRIVATE src/core/setup/tracking/Kinect.cpp) # needs freenect

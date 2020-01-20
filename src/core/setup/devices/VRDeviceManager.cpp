@@ -100,13 +100,13 @@ void VRDeviceManager::save(XMLElementPtr node) {
 }
 
 void VRDeviceManager::load(XMLElementPtr node) {
-    cout << "Load devices:";
+    cout << "Load devices:" << endl;
     for (auto el : node->getChildren()) {
         if (!el) continue;
 
         string type = el->getAttribute("type");
         VRDevicePtr dev = 0;
-        cout << " " << type;
+        cout << "   device type: " << type << endl;
 
         if (type == "mouse") {
             VRMousePtr m = VRMouse::create();
@@ -155,7 +155,7 @@ void VRDeviceManager::load(XMLElementPtr node) {
         addDevice(dev);
     }
 
-    cout << endl;
+    cout << " devices loaded" << endl;
 }
 
 OSG_END_NAMESPACE;

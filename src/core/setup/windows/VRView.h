@@ -91,8 +91,10 @@ class VRView : public std::enable_shared_from_this<VRView> {
         VRCameraPtr cam;
 
         BackgroundMTRecPtr background;
-        SimpleStatisticsForegroundMTRecPtr stats = 0;
         GrabForegroundMTRecPtr grabfg = 0;
+#ifndef WASM
+        SimpleStatisticsForegroundMTRecPtr stats = 0;
+#endif
 
         void updateMirrorMatrix();
         void setMaterial();

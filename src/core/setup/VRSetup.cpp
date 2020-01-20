@@ -34,6 +34,7 @@ template<> string typeName(const VRSetup& o) { return "Setup"; }
 
 
 VRSetup::VRSetup(string name) {
+    cout << "Init VRSetup " << name << endl;
     setName(name);
     real_root = VRTransform::create("VR Setup");
     setup_cam = VRCamera::create("Setup", false);
@@ -294,6 +295,7 @@ void VRSetup::load(string file) {
         toValue( displayN->getAttribute("globalOffset"), globalOffset );
         setDisplaysOffset(globalOffset);
     }
+    cout << " setup loaded" << endl;
 }
 
 void VRSetup::makeTestCube() {

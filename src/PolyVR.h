@@ -40,6 +40,7 @@ class PolyVR {
         static void shutdown();
 
         void run();
+        void update();
         void init(int argc, char **argv);
         void start(bool runit = true);
         void startTestScene(OSGObjectPtr n);

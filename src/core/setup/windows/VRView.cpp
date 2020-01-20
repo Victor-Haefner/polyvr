@@ -285,7 +285,9 @@ VRView::~VRView() {
     rView_act = 0;
     PCDecoratorLeft = 0;
     PCDecoratorRight = 0;
+#ifndef WASM
     stats = 0;
+#endif
 }
 
 VRViewPtr VRView::create(string name) { return VRViewPtr(new VRView(name)); }
@@ -301,6 +303,7 @@ int VRView::getID() { return ID; }
 void VRView::setID(int i) { ID = i; }
 
 void VRView::showStats(bool b) {
+#ifndef WASM
     if (doStats == b) return;
     if (stats == 0) {
         stats = SimpleStatisticsForeground::create();
@@ -375,6 +378,7 @@ void VRView::showStats(bool b) {
     doStats = b;
 
     VRSetup::getCurrent()->getRenderAction()->setStatCollector(stats->getCollector());
+#endif
 }
 
 void VRView::showViewGeo(bool b) {
@@ -558,6 +562,8 @@ void VRView::setFotoMode(bool b) {
 VRTexturePtr VRView::grab() {
 #ifndef WITHOUT_GTK
     return takeSnapshot();
+#else
+    return 0;
 #endif
 
     /*if (grabfg == 0) {

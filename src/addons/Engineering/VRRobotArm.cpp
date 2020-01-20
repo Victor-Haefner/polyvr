@@ -344,6 +344,8 @@ PosePtr VRRobotArm::getPose() {
     return getKukaPose(); // default
 }
 
+vector<VRTransformPtr> VRRobotArm::getParts() { return parts; }
+
 void VRRobotArm::moveTo(PosePtr p2) {
     stop();
     auto p1 = getPose();
