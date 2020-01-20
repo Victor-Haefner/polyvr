@@ -1171,9 +1171,9 @@ vector<Pnt3d> VRGeometry::addPointsOnEdge(VRGeoData& data, int resolution, Pnt3d
 
     Vec3d connection = Vec3d(p2 - p1);
     connection.normalize();
-    cout << "connection: " << connection << endl;
-    int steps = int (length * resolution);
-    cout << "steps: " << steps << ", " << length << endl;
+    //cout << "connection: " << connection << endl;
+    int steps = int(length * resolution);
+    //cout << "steps: " << steps << ", " << length << endl;
     if (steps < 1) steps = 1;
     auto stepSize = length/steps;
 
@@ -1185,26 +1185,29 @@ vector<Pnt3d> VRGeometry::addPointsOnEdge(VRGeoData& data, int resolution, Pnt3d
     }
     pntsOnEdge.push_back(p2);
     //cout << "p1: " << p1 << ", " << pntsOnEdge[0] << endl;
-    cout << "p2: " << p2 << ", " << pntsOnEdge.back() << endl;
+    //cout << "p2: " << p2 << ", " << pntsOnEdge.back() << endl;
     return pntsOnEdge;
 }
 
 
 vector< tuple<Pnt3d, Pnt3d>> VRGeometry::mapPoints(vector<Pnt3d>& e1, vector<Pnt3d>& e2) {
     vector< tuple<Pnt3d, Pnt3d>> mappedPoints;
-    if (e1.size() <= 1 || e2.size() <= 1) return mappedPoints;
+    if (e1.size() < 3 || e2.size() < 3) return mappedPoints;
     //addPointsOnEdge for each match
-    auto stepSize1 = 100/(e1.size() - 1);
-    auto stepSize2 = 100/(e2.size() - 1);
+    float stepSize1 = 100.0/(e1.size() - 1);
+    float stepSize2 = 100.0/(e2.size() - 1);
+    if (e1.front() == e2.front()) cout << "********** forward *****************" << endl;
+    if (e1.back() == e2.back()) cout << "********** forward2 *****************" << endl;
+    if (e1.front() == e2.back()) cout << "+++++ backward +++++" << endl;
     cout << "stepSizes: " << stepSize1 << ", " << stepSize2 << endl;
     for (int i = 1; i< e1.size(); i++) {
-        int k = nearbyint((i * stepSize1)/stepSize2) +1;
+        int k = round((i * stepSize1)/stepSize2) + 1;
         try {
         mappedPoints.push_back(make_tuple(e1[i], e2.at(e2.size()-k)));
         } catch (exception& e) {
             cout << "exception in mapPoints(): " << e.what() << endl;
         }
-        cout << "index: " << k << ", " << e2.size()-k << ", " << e2[e2.size()-k] << endl;
+        cout << "index: " << k << ", " << e2.size() << ", " << (i * (stepSize1)/stepSize2) << endl;
     }
 
     return mappedPoints;
