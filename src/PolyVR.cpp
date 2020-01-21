@@ -30,6 +30,10 @@
 #include "core/objects/object/VRObject.h"
 #include "core/setup/VRSetup.h"
 
+#ifdef WASM
+#include <emscripten.h>
+#endif
+
 #ifndef _WIN32
 #include <unistd.h>
 #include <termios.h>
@@ -76,6 +80,11 @@ PolyVR* PolyVR::get() {
     return pvr;
 }
 
+#ifdef WASM
+EMSCRIPTEN_KEEPALIVE
+void PolyVR_shutdown() { PolyVR::get()->shutdown(); }
+#endif
+
 void PolyVR::shutdown() {
     cout << "PolyVR::shutdown" << endl;
 #ifndef WITHOUT_SHARED_MEMORY
@@ -91,10 +100,27 @@ void PolyVR::shutdown() {
     VRSetup::getCurrent()->stopWindows();
     pvr->scene_mgr->stopAllThreads();
     pvr->setup_mgr->closeSetup();
+
+/*
+    pvr->monitor.reset();
+    pvr->gui_mgr.reset();
+    pvr->interface.reset();
+    pvr->loader.reset();
+    pvr->setup_mgr.reset();
+    pvr->scene_mgr.reset();
+    pvr->sound_mgr.reset();
+    pvr->options.reset();*/
+
     delete pvr;
+#ifndef WASM
     printFieldContainer();
+#endif
     osgExit();
+#ifdef WASM
+    emscripten_force_exit(0);
+#else
     std::exit(0);
+#endif
 }
 
 void printNextOSGID(int i) {
@@ -164,20 +190,35 @@ void PolyVR::init(int argc, char **argv) {
 #endif
 }
 
+void PolyVR::update() {
+    VRSceneManager::get()->update();
+
+    if (VRGlobals::CURRENT_FRAME == 300) {
+        string app = options->getOption<string>("application");
+        string dcy = options->getOption<string>("decryption");
+        string key;
+        if (startsWith(dcy, "key:")) key = subString(dcy, 4, dcy.size()-4);
+        if (startsWith(dcy, "serial:")) key = "123"; // TODO: access serial connection to retreive key
+        if (app != "") VRSceneManager::get()->loadScene(app, false, key);
+    }
+}
+
+#ifdef WASM
+void glutUpdate() {
+    PolyVR::get()->update();
+}
+#endif
+
 void PolyVR::run() {
     cout << "Start main loop\n";
-    while(true) {
-        VRSceneManager::get()->update();
-
-        if (VRGlobals::CURRENT_FRAME == 300) {
-            string app = options->getOption<string>("application");
-            string dcy = options->getOption<string>("decryption");
-            string key;
-            if (startsWith(dcy, "key:")) key = subString(dcy, 4, dcy.size()-4);
-            if (startsWith(dcy, "serial:")) key = "123"; // TODO: access serial connection to retreive key
-            if (app != "") VRSceneManager::get()->loadScene(app, false, key);
-        }
-    }
+#ifndef WASM
+    while(true) update(); // default
+#else
+    // WASM needs to control the main loop
+    glutIdleFunc(glutPostRedisplay);
+    glutDisplayFunc(glutUpdate);
+    glutMainLoop();
+#endif
 }
 
 void PolyVR::start(bool runit) {

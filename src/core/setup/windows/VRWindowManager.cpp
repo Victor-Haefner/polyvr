@@ -147,10 +147,12 @@ void VRWindowManager::getWindowSize(string name, int& width, int& height) {
 
 void VRWindowManager::stopWindows() {
     cout << "VRWindowManager::stopWindows" << endl;
+#ifndef WASM
     BarrierRefPtr barrier = Barrier::get("PVR_rendering", true);
     while (barrier->getNumWaiting() < VRWindow::active_window_count) usleep(1);
     for (auto w : getWindows() ) w.second->stop();
     barrier->enter(VRWindow::active_window_count+1);
+#endif
 }
 
 bool VRWindowManager::doRenderSync = false;
@@ -187,7 +189,9 @@ void VRWindowManager::updateWindows() {
 
     //TODO: use barrier->getnumwaiting to make a state machine, allways ensure all are waiting!!
 
+#ifndef WASM
     BarrierRefPtr barrier = Barrier::get("PVR_rendering", true);
+#endif
 
     auto updateSceneLinks = [&]() {
         for (auto view : VRSetup::getCurrent()->getViews()) {
@@ -196,6 +200,7 @@ void VRWindowManager::updateWindows() {
         }
     };
 
+#ifndef WASM
     auto wait = [&](int timeout = -1) {
         int pID = VRProfiler::get()->regStart("window manager barrier");
 
@@ -216,6 +221,7 @@ void VRWindowManager::updateWindows() {
         VRProfiler::get()->regStop(pID);
         return true;
     };
+#endif
 
     auto tryRender = [&]() {
 #ifndef WASM

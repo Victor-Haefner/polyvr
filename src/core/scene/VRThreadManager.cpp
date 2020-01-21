@@ -136,6 +136,7 @@ void VRThreadManager::runLoop(VRThreadWeakPtr wt) {
 }
 
 int VRThreadManager::initThread(VRThreadCbPtr f, string name, bool loop, int aspect) { //start thread
+#ifndef WASM
     static int id = 1;
 
     VRThreadPtr t = VRThreadPtr( new VRThread() );
@@ -154,6 +155,10 @@ int VRThreadManager::initThread(VRThreadCbPtr f, string name, bool loop, int asp
 
     id++;
     return t->ID;
+#else
+    cout << "VRThreadManager::initThread skipped" << endl;
+    return -1;
+#endif
 }
 
 VRThreadPtr VRThreadManager::getThread(int id) {

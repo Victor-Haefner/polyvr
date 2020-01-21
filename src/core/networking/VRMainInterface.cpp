@@ -25,7 +25,7 @@ VRMainInterface::VRMainInterface() {
     cout << " done" << endl;
 }
 
-VRMainInterface::~VRMainInterface() {}
+VRMainInterface::~VRMainInterface() { cout << "VRMainInterface::~VRMainInterface\n"; }
 
 VRMainInterface* VRMainInterface::get() {
     static VRMainInterface* instance = new VRMainInterface();
