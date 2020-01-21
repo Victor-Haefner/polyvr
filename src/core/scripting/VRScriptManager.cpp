@@ -225,7 +225,9 @@ void VRScriptManager::initPyModules() {
     cout << " initPyModules" << endl;
     modOut = 0;
     modErr = 0;
-
+    #ifdef WASM
+    Py_NoSiteFlag = 1;
+    #endif
     Py_Initialize();
     cout << "  Py_Initialize done" << endl;
     char* argv[1];

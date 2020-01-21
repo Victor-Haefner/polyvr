@@ -100,10 +100,27 @@ void PolyVR::shutdown() {
     VRSetup::getCurrent()->stopWindows();
     pvr->scene_mgr->stopAllThreads();
     pvr->setup_mgr->closeSetup();
+
+/*
+    pvr->monitor.reset();
+    pvr->gui_mgr.reset();
+    pvr->interface.reset();
+    pvr->loader.reset();
+    pvr->setup_mgr.reset();
+    pvr->scene_mgr.reset();
+    pvr->sound_mgr.reset();
+    pvr->options.reset();*/
+
     delete pvr;
+#ifndef WASM
     printFieldContainer();
+#endif
     osgExit();
+#ifdef WASM
+    emscripten_force_exit(0);
+#else
     std::exit(0);
+#endif
 }
 
 void printNextOSGID(int i) {
