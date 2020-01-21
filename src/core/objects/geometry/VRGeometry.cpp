@@ -469,7 +469,7 @@ void VRGeometry::remColors(bool copyGeometry) {
     if (!mesh->geo->getColors()) return;
 
 
-    /*auto checkGeo = [&](Geometry* geo) {
+    auto checkGeo = [&](Geometry* geo) {
         cout << "checkGeo " << geo << endl;
         cout << " t " << geo->getTypes          () << endl;
         cout << " l " << geo->getLengths        () << endl;
@@ -509,7 +509,7 @@ void VRGeometry::remColors(bool copyGeometry) {
     };
 
     //checkGeo(mesh->geo);
-    //SceneFileHandler::the()->write(mesh_node->node, "temp1.osg");*/
+    //SceneFileHandler::the()->write(mesh_node->node, "temp1.osg");
 
     if (copyGeometry) {
         VRGeoData data(ptr());
@@ -518,6 +518,8 @@ void VRGeometry::remColors(bool copyGeometry) {
     }
 
     mesh->geo->setColors(0);
+
+    //checkGeo(mesh->geo);
 }
 
 void VRGeometry::setLengths(GeoIntegralProperty* lengths) { if (!meshSet) setMesh(); mesh->geo->setLengths(lengths); }
@@ -1153,10 +1155,25 @@ void VRGeometry::convertToTriangles() {
     TriangleIterator it(mesh->geo);
     VRGeoData data;
 
+    bool hasColor = (mesh->geo->getColors() != 0);
+    bool hasTexCoords = (mesh->geo->getTexCoords() != 0);
+
 	for (int i=0; !it.isAtEnd(); ++it, i++) {
-        data.pushVert(Pnt3d(it.getPosition(0)), Vec3d(it.getNormal(0)), Vec2d(it.getTexCoords(0,0)));
-        data.pushVert(Pnt3d(it.getPosition(1)), Vec3d(it.getNormal(1)), Vec2d(it.getTexCoords(0,1)));
-        data.pushVert(Pnt3d(it.getPosition(2)), Vec3d(it.getNormal(2)), Vec2d(it.getTexCoords(0,2)));
+        data.pushVert(Pnt3d(it.getPosition(0)), Vec3d(it.getNormal(0)));
+        data.pushVert(Pnt3d(it.getPosition(1)), Vec3d(it.getNormal(1)));
+        data.pushVert(Pnt3d(it.getPosition(2)), Vec3d(it.getNormal(2)));
+
+        if (hasColor) {
+            data.pushColor(it.getColor(0));
+            data.pushColor(it.getColor(1));
+            data.pushColor(it.getColor(2));
+        }
+
+        if (hasTexCoords) {
+            data.pushTexCoord(Vec2d(it.getTexCoords(0,0)));
+            data.pushTexCoord(Vec2d(it.getTexCoords(0,1)));
+            data.pushTexCoord(Vec2d(it.getTexCoords(0,2)));
+        }
         data.pushTri();
 	}
 
@@ -1171,11 +1188,10 @@ vector<Pnt3d> VRGeometry::addPointsOnEdge(VRGeoData& data, int resolution, Pnt3d
 
     Vec3d connection = Vec3d(p2 - p1);
     connection.normalize();
-    //cout << "connection: " << connection << endl;
     int steps = int(length * resolution);
-    //cout << "steps: " << steps << ", " << length << endl;
     if (steps < 1) steps = 1;
     auto stepSize = length/steps;
+    if (steps > 10) cout << length << ", " << steps << ", " << stepSize << endl;
 
     for (int i = 0; i < steps; i++) {
       Pnt3d p = p1 + connection * i * stepSize;
@@ -1183,9 +1199,8 @@ vector<Pnt3d> VRGeometry::addPointsOnEdge(VRGeoData& data, int resolution, Pnt3d
       data.pushVert(p);
       data.pushPoint();
     }
+    data.pushLine(data.pushVert(p1), data.pushVert(p2));
     pntsOnEdge.push_back(p2);
-    //cout << "p1: " << p1 << ", " << pntsOnEdge[0] << endl;
-    //cout << "p2: " << p2 << ", " << pntsOnEdge.back() << endl;
     return pntsOnEdge;
 }
 
@@ -1196,10 +1211,6 @@ vector< tuple<Pnt3d, Pnt3d>> VRGeometry::mapPoints(vector<Pnt3d>& e1, vector<Pnt
     //addPointsOnEdge for each match
     float stepSize1 = 100.0/(e1.size() - 1);
     float stepSize2 = 100.0/(e2.size() - 1);
-    if (e1.front() == e2.front()) cout << "********** forward *****************" << endl;
-    if (e1.back() == e2.back()) cout << "********** forward2 *****************" << endl;
-    if (e1.front() == e2.back()) cout << "+++++ backward +++++" << endl;
-    cout << "stepSizes: " << stepSize1 << ", " << stepSize2 << endl;
     for (int i = 1; i< e1.size(); i++) {
         int k = round((i * stepSize1)/stepSize2) + 1;
         try {
@@ -1207,7 +1218,6 @@ vector< tuple<Pnt3d, Pnt3d>> VRGeometry::mapPoints(vector<Pnt3d>& e1, vector<Pnt
         } catch (exception& e) {
             cout << "exception in mapPoints(): " << e.what() << endl;
         }
-        cout << "index: " << k << ", " << e2.size() << ", " << (i * (stepSize1)/stepSize2) << endl;
     }
 
     return mappedPoints;
@@ -1233,13 +1243,12 @@ VRPointCloudPtr VRGeometry::convertToPointCloud(map<string, string> options) {
         edges.push_back(addPointsOnEdge(data, resolution, Pnt3d(it.getPosition(2)), Pnt3d(it.getPosition(0))));
 
         sort(edges.begin(), edges.end(), [](vector<Pnt3d> left, vector<Pnt3d> right)-> bool {
-            //return (left.size() < right.size());
             return (left.front().dist(left.back()) < right.front().dist(right.back()) );
         } );
-
+        cout << "lengths: " << edges[0].front().dist(edges[0].back()) << ", " << edges[1].front().dist(edges[1].back()) << ", " << edges[2].front().dist(edges[2].back()) << endl;
         if (edges[0].size() == 0) continue;
-        //cout << edges[0].front().dist(edges[0].back()) << ", " << edges[1].front().dist(edges[1].back())  << ", " << edges[2].front().dist(edges[2].back()) << endl;
-        auto mappedPoints = mapPoints(edges[0], edges[1]);
+        //if edges[1].front().dist(edges[1].back()) edges[2].front().dist(edges[2].back())
+        auto mappedPoints = mapPoints(edges[0], edges[2]);
         for (auto& match : mappedPoints) addPointsOnEdge(data, resolution, get<0>(match), get<1>(match));
     }
     cout << "added " << data.size() << " new points!" << endl;
