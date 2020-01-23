@@ -237,6 +237,22 @@ void OctreeNode::findInSphere(Vec3d p, float r, int d, vector<void*>& res) { // 
     }
 }
 
+void OctreeNode::findPointsInSphere(Vec3d p, float r, int d, vector<Vec3d>& res, bool getAll) { // TODO: optimize!!
+    if (!sphere_box_intersect(p, center, r, size)) return;
+
+    float r2 = r*r;
+    for (unsigned int i=0; i<data.size(); i++) {
+        if ((points[i]-p).squareLength() <= r2)
+            res.push_back(points[i]);
+            if (!getAll) return;
+    }
+
+    if (level == d && d != -1) return;
+    for (int i=0; i<8; i++) {
+        if (children[i]) children[i]->findPointsInSphere(p, r, d, res, getAll);
+    }
+}
+
 // box min, box max, octree box center, octree box size
 bool box_box_intersect(Vec3d min, Vec3d max, Vec3d Bpos, float Sb)  {
     Vec3d Bdiag(Sb, Sb, Sb);
@@ -342,6 +358,13 @@ vector<void*> Octree::getAllData() { return getRoot()->getAllData(); }
 vector<void*> Octree::radiusSearch(Vec3d p, float r, int d) {
     vector<void*> res;
     getRoot()->findInSphere(p, r, d, res);
+    cout << "res: " << res.size() << ", " << res[0] << endl;
+    return res;
+}
+vector<Vec3d> Octree::radiusPointSearch(Vec3d p, float r, int d, bool getAll) {
+    vector<Vec3d> res = {};
+    getRoot()->findPointsInSphere(p, r, d, res, getAll);
+    cout << "res: " << res.size() << endl;
     return res;
 }
 

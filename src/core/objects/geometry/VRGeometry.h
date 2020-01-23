@@ -41,6 +41,11 @@ class VRGeometry : public VRTransform {
 
         Reference source;
 
+        struct Edge {
+            vector<Pnt3d> pnts;
+            float length;
+        };
+
         VRObjectPtr copy(vector<VRObjectPtr> children);
 
         void meshChanged();
@@ -49,7 +54,7 @@ class VRGeometry : public VRTransform {
         VRGeometry(string name, bool hidden);
         static VRGeometryPtr create(string name, bool hidden);
 
-        vector<Pnt3d> addPointsOnEdge(VRGeoData& data, int resolution, Pnt3d p1, Pnt3d p2);
+        vector<Pnt3d> addPointsOnEdge(VRGeoData& data, int resolution, Pnt3d p1, Pnt3d p2, bool isEdge);
         vector< tuple<Pnt3d, Pnt3d>> mapPoints(vector<Pnt3d>& e1, vector<Pnt3d>& e2);
 
     public:

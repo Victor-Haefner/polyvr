@@ -1182,7 +1182,10 @@ void VRGeometry::convertToTriangles() {
 
 
 
-vector<Pnt3d> VRGeometry::addPointsOnEdge(VRGeoData& data, int resolution, Pnt3d p1, Pnt3d p2) {
+//todo flag ifEdge
+// if not edge don't add first/last point to data
+// if edge: only add every other point to data, but add all points to pntsOnEdge
+vector<Pnt3d> VRGeometry::addPointsOnEdge(VRGeoData& data, int resolution, Pnt3d p1, Pnt3d p2, bool isEdge/*, float jitter*/) {
     vector<Pnt3d> pntsOnEdge;
     auto length = p1.dist(p2);
 
@@ -1191,15 +1194,17 @@ vector<Pnt3d> VRGeometry::addPointsOnEdge(VRGeoData& data, int resolution, Pnt3d
     int steps = int(length * resolution);
     if (steps < 1) steps = 1;
     auto stepSize = length/steps;
-    if (steps > 10) cout << length << ", " << steps << ", " << stepSize << endl;
 
     for (int i = 0; i < steps; i++) {
-      Pnt3d p = p1 + connection * i * stepSize;
-      pntsOnEdge.push_back(p);
-      data.pushVert(p);
-      data.pushPoint();
+        float t = i;
+        if (i > 0) t += -0.5 + 1.0*rand()/float(RAND_MAX);
+        Pnt3d p = p1 + connection * stepSize * t;
+        pntsOnEdge.push_back(p);
+        if (isEdge && (i%2 != 0) && (steps > 2)) continue;
+        if (!isEdge && i == 0) continue;
+        data.pushVert(p);
+        data.pushPoint();
     }
-    data.pushLine(data.pushVert(p1), data.pushVert(p2));
     pntsOnEdge.push_back(p2);
     return pntsOnEdge;
 }
@@ -1237,25 +1242,24 @@ VRPointCloudPtr VRGeometry::convertToPointCloud(map<string, string> options) {
     TriangleIterator it(mesh->geo);
 
 	for (int i=0; !it.isAtEnd(); ++it, i++) {
-        vector<vector<Pnt3d>> edges = {};
-        edges.push_back(addPointsOnEdge(data, resolution, Pnt3d(it.getPosition(0)), Pnt3d(it.getPosition(1))));
-        edges.push_back(addPointsOnEdge(data, resolution, Pnt3d(it.getPosition(1)), Pnt3d(it.getPosition(2))));
-        edges.push_back(addPointsOnEdge(data, resolution, Pnt3d(it.getPosition(2)), Pnt3d(it.getPosition(0))));
+        vector<Edge> edges = {};
+        for (int j = 0; j < 3; j++) {
+            Edge e{addPointsOnEdge(data, resolution, Pnt3d(it.getPosition(j)), Pnt3d(it.getPosition((j+1)%3)), true)};
+            e.length = e.pnts.front().dist(e.pnts.back());
+            edges.push_back(e);
+        }
+        sort(edges.begin(), edges.end(), [] (Edge left, Edge right) -> bool {return left.length < right.length;});
+        if (edges[0].pnts.size() == 0) continue;
 
-        sort(edges.begin(), edges.end(), [](vector<Pnt3d> left, vector<Pnt3d> right)-> bool {
-            return (left.front().dist(left.back()) < right.front().dist(right.back()) );
-        } );
-        cout << "lengths: " << edges[0].front().dist(edges[0].back()) << ", " << edges[1].front().dist(edges[1].back()) << ", " << edges[2].front().dist(edges[2].back()) << endl;
-        if (edges[0].size() == 0) continue;
-        //if edges[1].front().dist(edges[1].back()) edges[2].front().dist(edges[2].back())
-        auto mappedPoints = mapPoints(edges[0], edges[2]);
-        for (auto& match : mappedPoints) addPointsOnEdge(data, resolution, get<0>(match), get<1>(match));
+        float area = edges[0].length * edges[1].length / 2;
+        auto mappedPoints = mapPoints(edges[0].pnts, edges[2].pnts);
+        for (auto& match : mappedPoints) addPointsOnEdge(data, resolution, get<0>(match), get<1>(match), false);
     }
     cout << "added " << data.size() << " new points!" << endl;
 
     Color3f col(1,0.5,0.5);
     for (int i = 0; i < data.size(); i++) {
-        pointcloud->getOctree()->add(Vec3d(data.getPosition(i)), new Color3f(0,0,0) ); //, -1, true, 1e5);
+        pointcloud->getOctree()->add(Vec3d(data.getPosition(i)), new Color3f(0,0,0) );
     }
     pointcloud->setupLODs();
 
