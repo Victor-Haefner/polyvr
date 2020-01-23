@@ -317,6 +317,7 @@ class GLTFLoader : public GLTFUtils {
         VRTransformPtr res;
         VRProgressPtr progress;
         bool threaded = false;
+        bool disableMaterials = false;
         GLTFNode* tree = 0;
         map<int, GLTFNode*> references;
         tinygltf::Model model;
@@ -366,6 +367,12 @@ class GLTFLoader : public GLTFUtils {
                 for (auto each : gltfAsset.extensions) cout << " " << each.first;
                 cout << endl;
             }
+        }
+
+        void handleExtension(string extension){
+            cout << "GLTFLOADER::WARNING IN EXTENSIONS USED: '" << extension << "' not supported yet" << endl;
+            if (extension == "KHR_materials_unlit") disableMaterials = true;
+            if (extension == "KHR_materials_pbrSpecularGlossines") disableMaterials = true;
         }
 
         void handleScene(const tinygltf::Scene &gltfScene){
@@ -501,7 +508,7 @@ class GLTFLoader : public GLTFUtils {
                 mat->setShininess(shiny);
                 //mat->ignoreMeshColors(true);
             }
-            materials[matID] = mat;
+            if (!disableMaterials) materials[matID] = mat;
         }
 
         void handleTexture(const tinygltf::Texture &gltfTexture){
@@ -514,21 +521,20 @@ class GLTFLoader : public GLTFUtils {
             if (width < 0) { cout << "GLTFLOADER::WARNING IN TEXTURE loading failed " << gltfTexture.name << endl; return;}
             int height = image.height;
             int bits = image.bits;
-            cout << texID << " " << gltfTexture.source << " components " << components << " width " << width << " height " << height << " bits " << bits  << endl;
+            //cout << texID << " " << gltfTexture.source << " components " << components << " width " << width << " height " << height << " bits " << bits  << endl;
 
             const auto size = components * width * height * bits; //sizeof(unsigned char);
-            cout << bits << endl;
             //unsigned char* data = new unsigned char[size];
-            char* data = new char[size];
-            memcpy(data, image.image.data(), size);
-            cout << bits << endl;
+            //char* data = new char[size];
+            //memcpy(data, image.image.data(), size);
             Vec3i dims = Vec3i(width, height, 1);
 
             int pf = Image::OSG_RGB_PF;
             if (components == 4) pf = Image::OSG_RGBA_PF;
             int f = Image::OSG_UINT8_IMAGEDATA;
             if (bits == 32) f = Image::OSG_FLOAT32_IMAGEDATA;
-            img->getImage()->set( pf, dims[0], dims[1], dims[2], 1, 1, 0, (const UInt8*)data, f);
+            //img->getImage()->set( pf, dims[0], dims[1], dims[2], 1, 1, 0, (const UInt8*)data, f);
+            img->getImage()->set( pf, dims[0], dims[1], dims[2], 1, 1, 0, (const UInt8*)image.image.data(), f);
             //if (components == 4) setTexture(img, true);
             //if (components == 3) setTexture(img, false);
 
@@ -754,6 +760,7 @@ class GLTFLoader : public GLTFUtils {
 
         bool parsetinygltf() {
             handleAsset(model.asset);
+            for (auto each: model.extensionsUsed) handleExtension(each);
             for (auto each: model.scenes) handleScene(each);
             for (auto each: model.nodes) handleNode(each);
             for (auto each: model.textures) handleTexture(each);
