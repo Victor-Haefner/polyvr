@@ -117,6 +117,27 @@ void VRPlanet::localize(double north, double east) {
     } else cout << "Warning: VRPlanet::localize, no sector found at location " << Vec2d(north, east) << " !\n";*/
 }
 
+PosePtr VRPlanet::getSurfacePose( double north, double east, bool local){
+    auto poseG = fromLatLongPose(north, east);
+    auto sector = getSector(north, east);
+    auto height = sector->getTerrain()->getHeight(Vec2d(north, east));
+    auto newPos = poseG->pos() + poseG->up()*height;
+    Vec3d f = newPos;
+    Vec3d d = poseG->dir();
+    Vec3d u = poseG->up();
+    PosePtr newPose = Pose::create(f,d,u);
+
+    if (local) {
+        auto poseOrigin = origin->getPose()->multRight(newPose);
+        //auto newPinv = sector->getPose();
+        //newPinv->invert();
+        //auto poseLocalInPatch = newPinv->multRight(poseOrigin);
+        newPose = poseOrigin;
+    }
+
+    return newPose;
+}
+
 void VRPlanet::divideTIFF(string pathIn, string pathOut, double minLat, double maxLat, double minLon, double maxLon, double res) {
     //cout << "hello " << pathIn << " - " << pathOut << endl;
 #ifndef WITHOUT_GDAL
