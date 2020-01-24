@@ -119,19 +119,24 @@ void VRPlanet::localize(double north, double east) {
 
 PosePtr VRPlanet::getSurfacePose( double north, double east, bool local){
     auto poseG = fromLatLongPose(north, east);
+
     auto sector = getSector(north, east);
-    auto height = sector->getTerrain()->getHeight(Vec2d(north, east));
+    if (!sector) return Pose::create();
+
+    auto sectorCoords = sector->getPlanetCoords();
+    auto s = fromLatLongSize(sectorCoords[0], sectorCoords[1], sectorCoords[0]+sectorSize, sectorCoords[1]+sectorSize); //u = east, v = north
+    auto u = (east-sectorCoords[1]-sectorSize/2)/sectorSize*s[0];
+    auto v = -(north-sectorCoords[0]-sectorSize/2)/sectorSize*s[1];
+
+    auto height = sector->getTerrain()->getHeight(Vec2d(u, v));
     auto newPos = poseG->pos() + poseG->up()*height;
     Vec3d f = newPos;
     Vec3d d = poseG->dir();
-    Vec3d u = poseG->up();
-    PosePtr newPose = Pose::create(f,d,u);
+    Vec3d up = poseG->up();
+    PosePtr newPose = Pose::create(f,d,up);
 
     if (local) {
         auto poseOrigin = origin->getPose()->multRight(newPose);
-        //auto newPinv = sector->getPose();
-        //newPinv->invert();
-        //auto poseLocalInPatch = newPinv->multRight(poseOrigin);
         newPose = poseOrigin;
     }
 
