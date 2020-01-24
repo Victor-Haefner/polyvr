@@ -731,5 +731,17 @@ void VRGeoData::addVertexColors(Color4f c) {
     }
 }
 
+void VRGeoData::makeSingleIndex() {
+    if (!geo) return;
+    if (!geo->getMesh()->geo->isSingleIndex()) return;
+
+    geo->convertToTriangles(); // TODO: temp fix..
+}
+
+
+
+
+
+
 
 

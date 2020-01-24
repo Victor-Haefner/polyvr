@@ -1208,11 +1208,11 @@ string readFile(string path) {
     return str;
 }
 
-void VRMaterial::readVertexShader(string s) { setVertexShader(readFile(s), s); }
-void VRMaterial::readFragmentShader(string s, bool deferred) { setFragmentShader(readFile(s), s, deferred); }
-void VRMaterial::readGeometryShader(string s) { setGeometryShader(readFile(s), s); }
-void VRMaterial::readTessControlShader(string s) { setTessControlShader(readFile(s), s); }
-void VRMaterial::readTessEvaluationShader(string s) { setTessEvaluationShader(readFile(s), s); }
+void VRMaterial::readVertexShader(string s) { if (exists(s)) setVertexShader(readFile(s), s); }
+void VRMaterial::readFragmentShader(string s, bool deferred) { if (exists(s)) setFragmentShader(readFile(s), s, deferred); }
+void VRMaterial::readGeometryShader(string s) { if (exists(s)) setGeometryShader(readFile(s), s); }
+void VRMaterial::readTessControlShader(string s) { if (exists(s)) setTessControlShader(readFile(s), s); }
+void VRMaterial::readTessEvaluationShader(string s) { if (exists(s)) setTessEvaluationShader(readFile(s), s); }
 
 string VRMaterial::getVertexShader() {
     auto m = mats[activePass];

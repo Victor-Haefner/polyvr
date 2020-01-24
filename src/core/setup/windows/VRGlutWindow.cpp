@@ -28,11 +28,11 @@ VRGlutWindow::VRGlutWindow() {
     cout << "Glut: New Window" << endl;
     type = 1;
 
-    GLUTWindowMTRecPtr win = GLUTWindow::create();
-    _win = win;
-
     glutInitWindowSize(width, height);
     winID = glutCreateWindow("PolyVR");
+
+    GLUTWindowMTRecPtr win = GLUTWindow::create();
+    _win = win;
     win->setGlutId(winID);
     win->setSize(width, height);
     win->init();
