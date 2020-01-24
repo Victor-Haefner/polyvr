@@ -362,11 +362,6 @@ class GLTFLoader : public GLTFUtils {
         void handleAsset(const tinygltf::Asset &gltfAsset){
             //gltfAsset.version;
             //gltfAsset.extensions
-            if (gltfAsset.extensions.size() > 0) {
-                cout << "GLTFLOADER::WARNING IN EXTENSIONS not supported: ";
-                for (auto each : gltfAsset.extensions) cout << " " << each.first;
-                cout << endl;
-            }
         }
 
         void handleExtension(string extension){
@@ -446,7 +441,12 @@ class GLTFLoader : public GLTFUtils {
         void handleMaterial(const tinygltf::Material &gltfMaterial){
             matID++;
             VRMaterialPtr mat = VRMaterial::create(gltfMaterial.name);
-
+            if (gltfMaterial.extensions.count("KHR_materials_pbrSpecularGlossines")) {
+                cout << "GLTFLOADER::WARNING IN MATERIALS: extension KHR pbrSpecGloss" << endl;
+            }
+            if (gltfMaterial.extensions.count("KHR_materials_unlit")) {
+                cout << "GLTFLOADER::WARNING IN MATERIALS: extension KHR mat unlit" << endl;
+            }
             mat->setPointSize(5);
             //cout << "   MATE " << gltfMaterial.name << endl;
             bool bsF = false;
@@ -491,7 +491,8 @@ class GLTFLoader : public GLTFUtils {
             Color3f spec;
             Color3f amb;
             double metallicFactor = 0.0;
-            if (bsF && mtF) { metallicFactor = gltfMaterial.pbrMetallicRoughness.metallicFactor;
+            if (bsF && mtF) {
+                metallicFactor = gltfMaterial.pbrMetallicRoughness.metallicFactor;
                 spec = Color3f(0.04,0.04,0.04)*(1.0-metallicFactor) + baseColor*metallicFactor;
                 mat->setSpecular(spec);
                 amb = baseColor * (1.0 - metallicFactor);
