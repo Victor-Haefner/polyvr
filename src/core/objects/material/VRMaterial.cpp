@@ -1078,7 +1078,6 @@ bool VRMaterial::checkShader(int type, string shader, string name) {
 #endif
     auto errC = gm->getConsole("Errors");
     if (!errC) return true;
-
     if (!glXGetCurrentContext()) return true;
 
     GLuint shaderObject = glCreateShader(type);
@@ -1089,7 +1088,7 @@ bool VRMaterial::checkShader(int type, string shader, string name) {
 
     GLint compiled;
     glGetObjectParameterivARB(shaderObject, GL_COMPILE_STATUS, &compiled);
-    if (!compiled) errC->write( "Shader "+name+" of material "+getName()+" did not compiled!\n");
+    if (!compiled) errC->write( "Shader "+name+" of material "+getName()+" did not compile!\n");
 
     GLint blen = 0;
     GLsizei slen = 0;

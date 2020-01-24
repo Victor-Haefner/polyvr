@@ -96,7 +96,17 @@ PyMethodDef VRPyGeometry::methods[] = {
     {"readSharedMemory", PyWrap( Geometry, readSharedMemory, "Read the geometry from shared memory buffers - readSharedMemory( str segment, str object )", void, string, string ) },
     {"setPatchVertices", PyWrap(Geometry, setPatchVertices, "Set patch primitives for tesselation shader", void, int) },
     {"setMeshVisibility", PyWrap(Geometry, setMeshVisibility, "Set mesh visibility", void, bool) },
+    {"convertToTriangles", PyWrap(Geometry, convertToTriangles, "Convert geometry to triangles", void) },
     {"convertToTrianglePatches", PyWrap(Geometry, convertToTrianglePatches, "Convert to triangles patches, necessary for displacement maps", void) },
+    {"convertToPointCloud", PyWrap(Geometry, convertToPointCloud, "Convert geometry to pointcloud - convertToPointCloud(options = None)"
+                        "\n\t\topts = {}"
+                        "\n\t\topts['lit'] = 0"
+                        "\n\t\topts['resolution'] = 1"
+                        "\n\t\topts['pointSize'] = 5"
+                        "\n\t\topts['lod1'] = [5, 20]"
+                        "\n\t\topts['lod2'] = [10, 200]"
+                        "\n\t\topts['swapYZ'] = 1"
+                        "\n\t\topts['keepOctree'] = 1", VRPointCloudPtr, map<string, string>)},
 
     {"addVertex", (PyCFunction)VRPyGeometry::addVertex, METH_VARARGS, "Add a vertex to geometry - addVertex( pos | norm, col, tc )" },
     {"setVertex", (PyCFunction)VRPyGeometry::setVertex, METH_VARARGS, "Set a vertex - setVertex( int i, pos | norm, col, tc )" },

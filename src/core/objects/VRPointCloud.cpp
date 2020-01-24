@@ -34,6 +34,7 @@ void VRPointCloud::applySettings(map<string, string> options) {
     int pointSize = 1;
     if (options.count("lit")) lit = toInt(options["lit"]);
     if (options.count("pointSize")) pointSize = toInt(options["pointSize"]);
+    if (options.count("keepOctree")) keepOctree = toInt(options["keepOctree"]);
     setupMaterial(lit, pointSize);
 
     for (auto l : {"lod1", "lod2", "lod3", "lod4", "lod5"}) {
@@ -73,11 +74,12 @@ void VRPointCloud::setupLODs() {
                 Color3f col = *((Color3f*)data);
                 chunk.pushVert(pos - center, Vec3d(0,1,0), col);
                 chunk.pushPoint();
+
             }
             if (chunk.size() > 0) chunk.apply( geo );
         }
 
-        leaf->delContent<Color3f>();
+        if (!keepOctree) leaf->delContent<Color3f>();
     }
 
     //addChild(octree->getVisualization());

@@ -589,6 +589,9 @@ PyMethodDef VRPyOctree::methods[] = {
     {"get", PyWrapOpt2( Octree, get, "Get leaf node at position", "1", OctreeNode*, Vec3d, bool ) },
     {"getVisualization", PyWrapOpt2( Octree, getVisualization, "Get tree visual", "0", VRGeometryPtr, bool ) },
     {"getAllLeafs", PyWrap2( Octree, getAllLeafs, "Get all leafs", vector<OctreeNode*> ) },
+    {"radiusSearch", PyWrapOpt2( Octree, radiusSearch, "Search for data within radius", "-1", vector<void*>, Vec3d, float, int) },
+    {"radiusPointSearch", PyWrapOpt2( Octree, radiusPointSearch, "Search for points within radius", "-1|1", vector<Vec3d>, Vec3d, float, int, bool) },
+    //{"boxSearch", PyWrapOpt2( Octree, boxSearch, "Search for points within bounding box", "-1", vector<void*>, const Boundingbox&, int) },
     {NULL}  /* Sentinel */
 };
 
