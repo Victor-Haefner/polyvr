@@ -8,7 +8,7 @@
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-class VRLight;
+ptrFwd(VRSyncRemote);
 
 class VRSyncRemote {//: public VRName {
     private:
@@ -22,7 +22,7 @@ class VRSyncRemote {//: public VRName {
         ~VRSyncRemote();
 
         void connect();
-//        static VRSyncRemotePtr create(string name = "None");
+        static VRSyncRemotePtr create(string name = "None");
 //        VRSyncRemotePtr ptr();
 };
 
@@ -33,7 +33,7 @@ class VRSyncNode : public VRTransform {
         VRUpdateCbPtr updateFkt;
 
         map<int, bool> container; // local containers
-        map<string, VRSyncRemote> remotes;
+        map<string, VRSyncRemotePtr> remotes;
 
         VRObjectPtr copy(vector<VRObjectPtr> children);
 
@@ -52,6 +52,8 @@ class VRSyncNode : public VRTransform {
         void addRemote(string host, int port, string name);
 
         void printChangeList();
+        void greetRemotes();
+        void printGreet();
 };
 
 OSG_END_NAMESPACE;

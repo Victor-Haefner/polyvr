@@ -100,7 +100,8 @@ string asUri(string host, int port, string name) {
 void VRSyncNode::addRemote(string host, int port, string name) {
     string uri = asUri(host, port, name);
     cout << "added SyncRemote (host, port, name) " << "(" << host << ", " << port << ", " << name << ") -> " << uri << endl;
-    remotes[uri] = VRSyncRemote(uri);
+    remotes[uri] = VRSyncRemote::create(uri);
+    //remotes.insert(map<string, VRSyncRemote>::value_type(uri, VRSyncRemote(uri)));
     cout << " added SyncRemote 2" << endl;
     //remotes[uri].connect();
 }
@@ -128,6 +129,8 @@ VRSyncRemote::VRSyncRemote(string uri) : uri(uri) {
 //VRSyncRemotePtr VRSyncRemote::create(string name) { return VRSyncNodePtr(new VRSyncRemote(name) ); }
 
 VRSyncRemote::~VRSyncRemote() { cout << "~VRSyncRemote::VRSyncRemote" << endl; }
+
+VRSyncRemotePtr VRSyncRemote::create(string name) { return VRSyncRemotePtr( new VRSyncRemote(name) ); }
 
 void VRSyncRemote::connect() {
     cout << "VRSyncRemote, try connecting to " << uri << endl;
