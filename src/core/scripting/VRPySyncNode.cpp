@@ -7,7 +7,10 @@ simpleVRPyType(SyncNode, New_VRObjects_ptr);
 //simpleVRPyType(SyncRemote, New_VRObjects_ptr);
 
 PyMethodDef VRPySyncNode::methods[] = {
-    {"printChangeList", PyWrap(SyncNode, printChangeList, "void printChangeList()", void) },
+    {"printChangeList", PyWrap(SyncNode, printChangeList, "prints the ChangeList", void) },
+    {"startInterface", PyWrap(SyncNode, startInterface, "updates this SyncNode", void, int) },
+    {"addRemote", PyWrap(SyncNode, addRemote, "adds a SyncRemote", void, string, int, string) },
+
     {NULL}  /* Sentinel */
 };
 

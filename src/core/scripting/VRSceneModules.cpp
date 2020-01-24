@@ -126,7 +126,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPySyncNode>("SyncNode", pModVR, VRPyTransform::typeRef);
     //sm->registerModule<VRPySyncRemote>("SyncRemote", pModVR);
     sm->registerModule<VRPyCamera>("Camera", pModVR, VRPyTransform::typeRef);
-    sm->registerModule<VRPyKinematics>("Kinematics", pModVR);
+    sm->registerModule<VRPyKinematics>("Kinematics", pModVR, VRPyTransform::typeRef);
     sm->registerModule<VRPyFABRIK>("FABRIK", pModVR);
     sm->registerModule<VRPyLod>("Lod", pModVR, VRPyObject::typeRef);
     sm->registerModule<VRPyLodLeaf>("LodLeaf", pModVR, VRPyTransform::typeRef);

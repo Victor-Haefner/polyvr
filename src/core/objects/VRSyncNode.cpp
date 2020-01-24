@@ -64,10 +64,11 @@ VRSyncNode::~VRSyncNode() {}
 VRSyncNodePtr VRSyncNode::ptr() { return static_pointer_cast<VRSyncNode>( shared_from_this() ); }
 VRSyncNodePtr VRSyncNode::create(string name) { return VRSyncNodePtr(new VRSyncNode(name) ); }
 
+//update this SyncNode
 void VRSyncNode::update() {
     printChangeList();
     // go through all changes, gather changes where the container is known (in containers)
-    // serialize changes in new change list
+    // serialize changes in new change list (check OSGConnection for serialization Implementation)
 
     // send over websocket to remote
     for (auto remote : remotes) {
@@ -90,6 +91,7 @@ string asUri(string host, int port, string name) {
     return "ws://" + host + ":" + to_string(port) + "/" + name;
 }
 
+//Add a SyncRemote
 void VRSyncNode::addRemote(string host, int port, string name) {
     string uri = asUri(host, port, name);
     remotes[uri] = VRSyncRemote(uri);

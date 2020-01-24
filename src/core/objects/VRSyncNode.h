@@ -11,7 +11,7 @@ using namespace std;
 
 class VRLight;
 
-class VRSyncRemote { // : public VRName {;
+class VRSyncRemote {//: public VRName {
     private:
         map<int, int> mapping; // <remote container ID, local container ID>
         string uri;
