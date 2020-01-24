@@ -358,13 +358,13 @@ vector<void*> Octree::getAllData() { return getRoot()->getAllData(); }
 vector<void*> Octree::radiusSearch(Vec3d p, float r, int d) {
     vector<void*> res;
     getRoot()->findInSphere(p, r, d, res);
-    cout << "res: " << res.size() << ", " << res[0] << endl;
+    //cout << "res: " << res.size() << ", " << res[0] << endl;
     return res;
 }
 vector<Vec3d> Octree::radiusPointSearch(Vec3d p, float r, int d, bool getAll) {
     vector<Vec3d> res = {};
     getRoot()->findPointsInSphere(p, r, d, res, getAll);
-    cout << "res: " << res.size() << endl;
+    //cout << "res: " << res.size() << endl;
     return res;
 }
 

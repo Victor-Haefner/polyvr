@@ -453,13 +453,18 @@ void VRGeometry::fixColorMapping() {
 void VRGeometry::setColors(GeoVectorProperty* Colors, bool fixMapping) {
     if (!meshSet) setMesh();
     mesh->geo->setColors(Colors);
-    if (Colors) {
+    cout << "step 1" << endl;
+    if (Colors && mesh->geo->getPositions()) {
         auto N1 = mesh->geo->getPositions()->size();
         auto N2 = Colors->size();
+        cout << N1 << ", " << N2 << endl;
         if (N1 != N2) mesh->geo->setColors(0);
     }
+    cout << "step 2" << endl;
     if (!Colors || Colors->size() == 0) fixColorMapping();
+    cout << "step 3" << endl;
     if (fixMapping) fixColorMapping();
+    cout << "step 4" << endl;
 }
 
 void VRGeometry::remColors(bool copyGeometry) {
