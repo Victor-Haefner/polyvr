@@ -996,7 +996,10 @@ void VRMaterial::checkShader(int type, string shader, string name) {
     auto errC = gm->getConsole("Errors");
     if (!errC) return;
 
-    if (!glXGetCurrentContext()) return;
+// TODO (anne#1#): deprecated?   left over when removing  ...
+//#include <GL/glext.h>
+//#include <GL/glx.h>
+    //if (!glXGetCurrentContext()) return;
 
     GLuint shaderObject = glCreateShader(type);
     int N = shader.size();
@@ -1006,7 +1009,7 @@ void VRMaterial::checkShader(int type, string shader, string name) {
 
     GLint compiled;
     glGetObjectParameterivARB(shaderObject, GL_COMPILE_STATUS, &compiled);
-    if (!compiled) errC->write( "Shader "+name+" of material "+getName()+" did not compiled!\n");
+    if (!compiled) errC->write( "Shader "+name+" of material "+getName()+" did not compile!\n");
 
     GLint blen = 0;
     GLsizei slen = 0;

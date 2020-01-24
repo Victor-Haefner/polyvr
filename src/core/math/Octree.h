@@ -70,6 +70,7 @@ class OctreeNode {
 
         //void destroy(OctreeNode* guard);
         void findInSphere(Vec3d p, float r, int d, vector<void*>& res);
+        void findPointsInSphere(Vec3d p, float r, int d, vector<Vec3d>& res, bool getAll);
         void findInBox(const Boundingbox& b, int d, vector<void*>& res);
         int getOctant(Vec3d p);
         bool inBox(Vec3d p, Vec3d c, float size);
@@ -111,6 +112,7 @@ class Octree : public std::enable_shared_from_this<Octree> {
 
         vector<void*> getAllData();
         vector<void*> radiusSearch(Vec3d p, float r, int d = -1);
+        vector<Vec3d> radiusPointSearch(Vec3d p, float r, int d = -1, bool getAll = true);
         vector<void*> boxSearch(const Boundingbox& b, int d = -1);
 
         void test();
