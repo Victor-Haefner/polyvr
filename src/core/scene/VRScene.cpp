@@ -286,10 +286,8 @@ void VRScene::loadScene(XMLElementPtr e) {
 
     loadingTimer.start();
     loadingProgressThreadCb = VRFunction< VRThreadWeakPtr >::create( "loading progress thread", boost::bind(&VRScene::updateLoadingProgress, this, _1) );
-    cout << " VRScene::loadScene 12" << endl;
     loadingProgressThread = VRSceneManager::get()->initThread(loadingProgressThreadCb, "loading progress thread", true, 1);
 
-    cout << " VRScene::loadScene 2" << endl;
     VRName::load(e);
     VRCameraManager::loadChildFrom(e);
     VRRenderManager::loadChildFrom(e);

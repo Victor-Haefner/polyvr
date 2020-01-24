@@ -81,8 +81,8 @@ PolyVR* PolyVR::get() {
 }
 
 #ifdef WASM
-EMSCRIPTEN_KEEPALIVE
-void PolyVR_shutdown() { PolyVR::get()->shutdown(); }
+EMSCRIPTEN_KEEPALIVE void PolyVR_shutdown() { PolyVR::shutdown(); }
+EMSCRIPTEN_KEEPALIVE void PolyVR_reloadScene() { VRSceneManager::get()->reloadScene(); }
 #endif
 
 void PolyVR::shutdown() {

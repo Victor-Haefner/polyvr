@@ -51,7 +51,7 @@ class VRMaterial : public VRObject {
         bool isSMat(MaterialMTUncountedPtr matPtr);
         bool isSTMat(MaterialMTUncountedPtr matPtr);
 
-        void checkShader(int type, string shader, string name);
+        bool checkShader(int type, string shader, string name);
         void forceShaderUpdate();
 
     public:
@@ -65,6 +65,7 @@ class VRMaterial : public VRObject {
 
         void setDeferred(bool b);
         void updateDeferredShader();
+        void updateOGL2Shader();
         void testFix();
 
         void setActivePass(int i);

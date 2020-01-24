@@ -385,10 +385,12 @@ void VRScriptManager::blockScriptThreads() {
 }
 
 void VRScriptManager::triggerOnLoad() {
+    cout << "VRScriptManager::triggerOnLoad " << scripts.size() << endl;
     for (auto script : scripts) if (script.second->hasTrigger("on_scene_load")) script.second->queueExecution();
 }
 
 void VRScriptManager::triggerOnImport() { // deprecated
+    cout << "VRScriptManager::triggerOnImport" << endl;
     for (auto script : scripts) {
         if (script.second->hasTrigger("on_scene_import")) {
             script.second->execute();

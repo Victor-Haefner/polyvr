@@ -107,6 +107,13 @@ void VRSceneManager::closeScene() {
 #endif
 }
 
+void VRSceneManager::reloadScene() {
+    if (current == 0) return;
+    string path = current->getPath();
+    closeScene();
+    loadScene(path);
+}
+
 void VRSceneManager::setWorkdir(string path) {
 	if (path == "") return;
 	if (exists(path)) path = canonical(path);

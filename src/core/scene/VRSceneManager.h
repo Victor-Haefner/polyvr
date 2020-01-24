@@ -39,6 +39,7 @@ class VRSceneManager : public VRThreadManager, public VRCallbackManager, public 
         void newEmptyScene(string name);
         void newScene(string name);
         void closeScene();
+        void reloadScene();
         void loadScene(string path, bool write_protected = false, string encryptionKey = "");
 
         void setWorkdir(string path);

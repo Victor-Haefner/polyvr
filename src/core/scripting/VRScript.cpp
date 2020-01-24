@@ -461,6 +461,8 @@ void VRScript::pyErrPrint(string channel) {
     auto print = [&]( string m, string style = "", shared_ptr< VRFunction<string> > link = 0 ) {
 #ifndef WITHOUT_GTK
         VRGuiManager::get()->getConsole( channel )->write( m, style, link );
+#else
+        cout << m << endl;
 #endif
     };
 
@@ -563,7 +565,7 @@ void VRScript::execute() {
 
         auto res = PyObject_CallObject(fkt, pArgs);
         pyErrPrint("Errors");
-        if (!res) return;
+        if (!res) { cout << "Warning in VRScript::execute: PyObject_CallObject failed!" << endl; return; }
 
         execution_time = timer.stop();
 

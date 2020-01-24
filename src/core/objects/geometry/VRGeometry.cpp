@@ -236,6 +236,7 @@ void VRGeometry::setPrimitive(string parameters) {
     source.type = PRIMITIVE;
     source.parameter = prim + " " + this->primitive->toString();
     setMesh( OSGGeometry::create( this->primitive->make() ), source);
+    getMaterial()->updateOGL2Shader();
 }
 
 /** Create a mesh using vectors with positions, normals, indices && optionaly texture coordinates **/
@@ -303,6 +304,7 @@ void VRGeometry::setColor(string c) {
     auto m = VRMaterial::get(c); // use get instead of create because of memory leak?
     m->setDiffuse(c);
     setMaterial(m);
+    m->updateOGL2Shader();
 }
 
 void VRGeometry::setType(int t) {
