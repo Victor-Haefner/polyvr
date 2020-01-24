@@ -5,6 +5,7 @@
 #include "core/objects/material/OSGMaterial.h"
 #include "core/utils/VRStorage_template.h"
 #include "core/networking/VRSocket.h"
+#include "core/networking/VRWebSocket.h"
 #include "core/scene/VRScene.h"
 #include "core/scene/VRSceneManager.h"
 #include <OpenSG/OSGMultiPassMaterial.h>
@@ -59,19 +60,22 @@ VRSyncNode::VRSyncNode(string name) : VRTransform(name) {
 	VRScene::getCurrent()->addUpdateFkt(updateFkt, 100000);
 }
 
-VRSyncNode::~VRSyncNode() {}
+VRSyncNode::~VRSyncNode() {
+    cout << "VRSyncNode::~VRSyncNode " << name << endl;
+}
 
 VRSyncNodePtr VRSyncNode::ptr() { return static_pointer_cast<VRSyncNode>( shared_from_this() ); }
 VRSyncNodePtr VRSyncNode::create(string name) { return VRSyncNodePtr(new VRSyncNode(name) ); }
 
 //update this SyncNode
 void VRSyncNode::update() {
-    printChangeList();
+    //printChangeList();
+
     // go through all changes, gather changes where the container is known (in containers)
     // serialize changes in new change list (check OSGConnection for serialization Implementation)
 
     // send over websocket to remote
-    for (auto remote : remotes) {
+    for (auto& remote : remotes) {
         //remote.second.socket.sendMessage(cl_data);
     }
 }
@@ -85,6 +89,7 @@ void VRSyncNode::startInterface(int port) {
     socketCb = new VRHTTP_cb( "VRSyncNode callback", bind(&VRSyncNode::handleChangeList, this, _1) );
     socket->setHTTPCallback(socketCb);
     socket->setType("http receive");
+    cout << "maybe started Interface at port " << port << endl;
 }
 
 string asUri(string host, int port, string name) {
@@ -94,7 +99,10 @@ string asUri(string host, int port, string name) {
 //Add a SyncRemote
 void VRSyncNode::addRemote(string host, int port, string name) {
     string uri = asUri(host, port, name);
+    cout << "added SyncRemote (host, port, name) " << "(" << host << ", " << port << ", " << name << ") -> " << uri << endl;
     remotes[uri] = VRSyncRemote(uri);
+    cout << " added SyncRemote 2" << endl;
+    //remotes[uri].connect();
 }
 
 void VRSyncNode::handleChangeList(void* _args) {
@@ -107,11 +115,25 @@ void VRSyncNode::handleChangeList(void* _args) {
     cout << "GOT CHANGES!! " << endl;
 }
 
+
+// ------------------- VRSyncRemote
+
+
 VRSyncRemote::VRSyncRemote(string uri) : uri(uri) {
-    bool result = socket.open(uri);
-    if (!result) cout << "VRSyncRemote, Failed to open websocket to " << uri << endl;
+    socket = VRWebSocket::create("sync node ws");
+    cout << "VRSyncRemote::VRSyncRemote " << uri << endl;
+    if (uri != "") connect();
 }
 //VRSyncRemotePtr VRSyncRemote::ptr() { return static_pointer_cast<VRSyncRemote>( shared_from_this() ); }
 //VRSyncRemotePtr VRSyncRemote::create(string name) { return VRSyncNodePtr(new VRSyncRemote(name) ); }
 
-VRSyncRemote::~VRSyncRemote() {}
+VRSyncRemote::~VRSyncRemote() { cout << "~VRSyncRemote::VRSyncRemote" << endl; }
+
+void VRSyncRemote::connect() {
+    cout << "VRSyncRemote, try connecting to " << uri << endl;
+    bool result = socket->open(uri);
+    if (!result) cout << "VRSyncRemote, Failed to open websocket to " << uri << endl;
+    else cout << "VRSyncRemote, connected to " << uri << endl;
+}
+
+

@@ -2,7 +2,6 @@
 #define VRSyncNode_H_INCLUDED
 
 #include "VRTransform.h"
-#include "core/networking/VRWebSocket.h"
 #include "core/networking/VRNetworkingFwd.h"
 #include <OpenSG/OSGChangeList.h>
 
@@ -16,11 +15,13 @@ class VRSyncRemote {//: public VRName {
         map<int, int> mapping; // <remote container ID, local container ID>
         string uri;
 
-        VRWebSocket socket;
+        VRWebSocketPtr socket;
 
     public:
         VRSyncRemote(string uri = "");
         ~VRSyncRemote();
+
+        void connect();
 //        static VRSyncRemotePtr create(string name = "None");
 //        VRSyncRemotePtr ptr();
 };

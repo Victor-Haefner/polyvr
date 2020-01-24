@@ -1,5 +1,6 @@
 #pragma once
 
+#include "VRNetworkingFwd.h"
 #include <OpenSG/OSGConfig.h>
 #include <core/utils/VRName.h>
 #include <boost/thread/thread.hpp>
@@ -12,6 +13,8 @@ class VRWebSocket : public VRName {
     public:
         VRWebSocket(string name = "websocket");
         ~VRWebSocket();
+
+        static VRWebSocketPtr create(string name = "websocket");
 
         bool open(string url);
         bool close();
@@ -28,7 +31,7 @@ class VRWebSocket : public VRName {
         void processFrame(string frameData);
 
         VRThreadCbPtr threadFkt;
-        int threadId{-1};
+        int threadId = -1;
 
         vector<std::function<void(string)>> stringCallbacks;
         vector<std::function<void(Json::Value)>> jsonCallbacks;
@@ -38,7 +41,7 @@ class VRWebSocket : public VRName {
 
         Json::Reader reader;
 
-        int connectionStatus{-1}; // -1 unset, 0 error, 1 ok
+        int connectionStatus = -1; // -1 unset, 0 error, 1 ok
         bool done{true};
 };
 
