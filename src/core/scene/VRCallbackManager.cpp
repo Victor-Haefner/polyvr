@@ -93,10 +93,7 @@ void VRCallbackManager::updateCallbacks() {
     //printCallbacks();
     vector<VRUpdateCbWeakPtr> cbsPtr;
 
-    // gather all update callbacks
-    for (auto fl : updateFktPtrs) for (auto f : *fl.second) cbsPtr.push_back(f);
-
-    // gather all timeout callbacks
+    // gather all timeout callbacks, TODO: use priority system!
     int time = getTime()*1e-3;
     for (auto tfl : timeoutFktPtrs)
         for (auto& tf : *tfl.second)
@@ -104,6 +101,9 @@ void VRCallbackManager::updateCallbacks() {
                 cbsPtr.push_back(tf.fktPtr);
                 tf.last_call = time;
             }
+
+    // gather all update callbacks
+    for (auto fl : updateFktPtrs) for (auto f : *fl.second) cbsPtr.push_back(f);
 
     for (auto cb : cbsPtr) { // trigger all callbacks
         if ( auto scb = cb.lock()) (*scb)();
