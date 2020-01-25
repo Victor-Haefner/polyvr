@@ -46,7 +46,7 @@ class VRWebSocket : public VRName {
         struct mg_mgr mgr;
         struct mg_connection* connection{nullptr};
 
-        Json::Reader reader;
+        //Json::Reader reader;
 
         int connectionStatus = -1; // -1 unset, 0 error, 1 ok
         bool done{true};
