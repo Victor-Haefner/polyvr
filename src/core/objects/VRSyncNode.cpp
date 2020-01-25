@@ -114,6 +114,17 @@ void VRSyncNode::handleChangeList(void* _args) {
     string msg = args->ws_data;
 
     cout << "GOT CHANGES!! " << endl;
+    cout << "client " << client << ", msg " << msg << endl;
+}
+
+void VRSyncNode::broadcast(string message){
+    //all remotes
+    for (auto& remote : remotes) {
+        if (remote.second->send(message)) {
+            cout << "sent" << endl;
+        }
+        //socket->sendMessage(message); //cl_data
+    }
 }
 
 
@@ -125,11 +136,8 @@ VRSyncRemote::VRSyncRemote(string uri) : uri(uri) {
     cout << "VRSyncRemote::VRSyncRemote " << uri << endl;
     if (uri != "") connect();
 }
-//VRSyncRemotePtr VRSyncRemote::ptr() { return static_pointer_cast<VRSyncRemote>( shared_from_this() ); }
-//VRSyncRemotePtr VRSyncRemote::create(string name) { return VRSyncNodePtr(new VRSyncRemote(name) ); }
 
 VRSyncRemote::~VRSyncRemote() { cout << "~VRSyncRemote::VRSyncRemote" << endl; }
-
 VRSyncRemotePtr VRSyncRemote::create(string name) { return VRSyncRemotePtr( new VRSyncRemote(name) ); }
 
 void VRSyncRemote::connect() {
@@ -139,4 +147,7 @@ void VRSyncRemote::connect() {
     else cout << "VRSyncRemote, connected to " << uri << endl;
 }
 
-
+bool VRSyncRemote::send(string message){
+    if (!socket->sendMessage(message)) return 0;
+    return 1;
+}

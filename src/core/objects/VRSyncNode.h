@@ -22,6 +22,7 @@ class VRSyncRemote {//: public VRName {
         ~VRSyncRemote();
 
         void connect();
+        bool send(string message);
         static VRSyncRemotePtr create(string name = "None");
 //        VRSyncRemotePtr ptr();
 };
@@ -52,8 +53,8 @@ class VRSyncNode : public VRTransform {
         void addRemote(string host, int port, string name);
 
         void printChangeList();
-        void greetRemotes();
-        void printGreet();
+        void broadcast(string message);
+        //void printMessage();
 };
 
 OSG_END_NAMESPACE;
