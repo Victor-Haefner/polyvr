@@ -515,6 +515,7 @@ double VRTerrain::getHeight(Vec2d p, bool useEmbankments) {
 
     double u = uv[0]-i;
     double v = uv[1]-j;
+
     double h = ( h00*(1-u) + h10*u )*(1-v) + ( h01*(1-u) + h11*u )*v;
     if (useEmbankments) {
         for (auto e : embankments) {

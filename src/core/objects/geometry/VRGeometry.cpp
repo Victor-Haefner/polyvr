@@ -215,6 +215,13 @@ void VRGeometry::setMesh(OSGGeometryPtr g, Reference ref, bool keep_material) {
     if (keep_material) mat = VRMaterial::get(g->geo->getMaterial());
     setMaterial(mat);
     meshChanged();
+
+#ifdef WASM
+    if (!g->geo->isSingleIndex()) {
+        VRGeoData data(ptr());
+        data.makeSingleIndex();
+    }
+#endif
 }
 
 void VRGeometry::setMesh(OSGGeometryPtr g) {
@@ -238,6 +245,9 @@ void VRGeometry::setPrimitive(string parameters) {
     source.type = PRIMITIVE;
     source.parameter = prim + " " + this->primitive->toString();
     setMesh( OSGGeometry::create( this->primitive->make() ), source);
+#if WASM
+    getMaterial()->updateOGL2Shader();
+#endif
 }
 
 /** Create a mesh using vectors with positions, normals, indices && optionaly texture coordinates **/
@@ -305,6 +315,9 @@ void VRGeometry::setColor(string c) {
     auto m = VRMaterial::get(c); // use get instead of create because of memory leak?
     m->setDiffuse(c);
     setMaterial(m);
+#ifdef WASM
+    m->updateOGL2Shader();
+#endif
 }
 
 void VRGeometry::setType(int t) {

@@ -47,26 +47,6 @@ VRCamera::VRCamera(string name) : VRTransform(name) {
     store("orthoSize", &orthoSize);
     store("type", &type);
     regStorageSetupFkt( VRStorageCb::create("camera_update", boost::bind(&VRCamera::setup, this, true, _1)) );
-
-    // cam geo
-    TransformMTRecPtr trans = Transform::create();
-    NodeMTRecPtr t = makeNodeFor(trans);
-    trans->editMatrix().setTranslate(Vec3f(0,0,0.25));
-    GeometryMTRecPtr camGeo_ = makeBoxGeo(0.2, 0.2, 0.25, 1, 1, 1); //
-    GeometryMTRecPtr camGeo2_ = makeCylinderGeo(0.2, 0.07, 16, 1, 1, 1);
-    camGeo = OSGObject::create( makeNodeFor(camGeo_) );
-    NodeMTRecPtr camGeo2 = makeNodeFor(camGeo2_);
-    camGeo->node->setTravMask(0);
-    camGeo_->setMaterial(getCamGeoMat()->getMaterial()->mat);
-    camGeo2_->setMaterial(getCamGeoMat()->getMaterial()->mat);
-    addChild(OSGObject::create(t));
-    t->addChild(camGeo->node);
-    TransformMTRecPtr trans2 = Transform::create();
-    NodeMTRecPtr t2 = makeNodeFor(trans2);
-    trans2->editMatrix().setTranslate(Vec3f(0,0,-0.15));
-    trans2->editMatrix().setRotate(Quaternion(Vec3f(1,0,0), Pi*0.5));
-    camGeo->node->addChild(t2);
-    t2->addChild(camGeo2);
 }
 
 VRCamera::~VRCamera() {
@@ -176,6 +156,27 @@ void VRCamera::activate() {
 }
 
 void VRCamera::showCamGeo(bool b) {
+    if (!camGeo) {
+        TransformMTRecPtr trans = Transform::create();
+        NodeMTRecPtr t = makeNodeFor(trans);
+        trans->editMatrix().setTranslate(Vec3f(0,0,0.25));
+        GeometryMTRecPtr camGeo_ = makeBoxGeo(0.2, 0.2, 0.25, 1, 1, 1); //
+        GeometryMTRecPtr camGeo2_ = makeCylinderGeo(0.2, 0.07, 16, 1, 1, 1);
+        camGeo = OSGObject::create( makeNodeFor(camGeo_) );
+        NodeMTRecPtr camGeo2 = makeNodeFor(camGeo2_);
+        camGeo->node->setTravMask(0);
+        camGeo_->setMaterial(getCamGeoMat()->getMaterial()->mat);
+        camGeo2_->setMaterial(getCamGeoMat()->getMaterial()->mat);
+        addChild(OSGObject::create(t));
+        t->addChild(camGeo->node);
+        TransformMTRecPtr trans2 = Transform::create();
+        NodeMTRecPtr t2 = makeNodeFor(trans2);
+        trans2->editMatrix().setTranslate(Vec3f(0,0,-0.15));
+        trans2->editMatrix().setRotate(Quaternion(Vec3f(1,0,0), Pi*0.5));
+        camGeo->node->addChild(t2);
+        t2->addChild(camGeo2);
+    }
+
     if (b) camGeo->node->setTravMask(0xffffffff);
     else camGeo->node->setTravMask(0);
 }

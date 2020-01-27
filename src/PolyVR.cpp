@@ -28,6 +28,7 @@
 #include "core/scene/sound/VRSoundManager.h"
 #endif
 #include "core/objects/object/VRObject.h"
+#include "core/objects/VRTransform.h"
 #include "core/setup/VRSetup.h"
 
 #ifdef WASM
@@ -81,8 +82,8 @@ PolyVR* PolyVR::get() {
 }
 
 #ifdef WASM
-EMSCRIPTEN_KEEPALIVE
-void PolyVR_shutdown() { PolyVR::get()->shutdown(); }
+EMSCRIPTEN_KEEPALIVE void PolyVR_shutdown() { PolyVR::shutdown(); }
+EMSCRIPTEN_KEEPALIVE void PolyVR_reloadScene() { VRSceneManager::get()->reloadScene(); }
 #endif
 
 void PolyVR::shutdown() {
@@ -133,24 +134,57 @@ void PolyVR::setOption(string name, string val) { options->setOption(name, val);
 void PolyVR::setOption(string name, int val) { options->setOption(name, val); }
 void PolyVR::setOption(string name, float val) { options->setOption(name, val); }
 
+
+void display(void) {
+	/*static float f = 0;
+	static float d = 1;
+	f += d*0.005;
+	if (abs(f) > 1) d *= -1;
+
+	//background->setColor(Color3f(1,f,-f));
+	Matrix m;
+	m.setTransform( Vec3f(), Quaternion( OSG::Vec3f(0,1,0), f ) );
+	trans->setMatrix(m);
+
+	if (window) {
+		commitChanges();
+		window->render(renderAction);
+	}*/
+}
+
+void idle(void) {
+	glutPostRedisplay();
+}
+
+void reshape(int w, int h) {
+	//cout << "glut reshape " << glutGetWindow() << endl;
+	/*if (window) {
+		window->resize(w, h);
+		glutPostRedisplay();
+	}*/
+}
+
+
 void PolyVR::init(int argc, char **argv) {
     cout << "Init PolyVR\n\n";
     initTime();
-
 
 #ifdef WASM
     setlocale(LC_ALL, "C");
     options = shared_ptr<VROptions>(VROptions::get());
     options->parse(argc,argv);
 
+    //OSG
+    cout << "Init OSG\n";
+    ChangeList::setReadWriteDefault();
+    osgInit(argc,argv);
+    cout << " ..done\n";
+
     //GLUT
     cout << "Init GLUT\n";
     glutInit(&argc, argv);
-    cout << " ..done\n";
-
-    //OSG
-    cout << "Init OSG\n";
-    osgInit(argc,argv);
+	glutInitWindowSize(300, 300);
+    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
     cout << " ..done\n";
 
     PrimeMaterialRecPtr pMat = OSG::getDefaultMaterial();
@@ -167,6 +201,9 @@ void PolyVR::init(int argc, char **argv) {
     glutInit(&argc, argv);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_STENCIL_TEST);
+    if (VROptions::get()->getOption<bool>("active_stereo"))
+        glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE | GLUT_STEREO | GLUT_STENCIL);
+    else glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE | GLUT_STENCIL);
     cout << " ..done\n";
 
     //OSG
@@ -188,6 +225,26 @@ void PolyVR::init(int argc, char **argv) {
     PrimeMaterialRecPtr pMat = OSG::getDefaultMaterial();
     OSG::setName(pMat, "default_material");
 #endif
+
+    cout << "Init Modules\n";
+#ifndef WITHOUT_AV
+    sound_mgr = VRSoundManager::get();
+#endif
+    setup_mgr = VRSetupManager::create();
+#ifdef WASM
+    VRSetupManager::get()->load("Browser", "Browser.xml");
+#endif
+    scene_mgr = VRSceneManager::create();
+    interface = shared_ptr<VRMainInterface>(VRMainInterface::get());
+    monitor = shared_ptr<VRInternalMonitor>(VRInternalMonitor::get());
+#ifndef WITHOUT_GTK
+    gui_mgr = shared_ptr<VRGuiManager>(VRGuiManager::get());
+#endif
+    loader = shared_ptr<VRSceneLoader>(VRSceneLoader::get());
+
+    //string app = options->getOption<string>("application");
+    //if (app != "") VRSceneManager::get()->loadScene(app);
+    removeFile("setup/.startup"); // remove startup failsafe
 }
 
 void PolyVR::update() {
@@ -221,38 +278,14 @@ void PolyVR::run() {
 #endif
 }
 
-void PolyVR::start(bool runit) {
-    if (VROptions::get()->getOption<bool>("active_stereo"))
-        glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE | GLUT_STEREO | GLUT_STENCIL);
-    else glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE | GLUT_STENCIL);
-
-    cout << "Init Modules\n";
-#ifndef WITHOUT_AV
-    sound_mgr = VRSoundManager::get();
-#endif
-    setup_mgr = VRSetupManager::create();
-    scene_mgr = VRSceneManager::create();
-    interface = shared_ptr<VRMainInterface>(VRMainInterface::get());
-    monitor = shared_ptr<VRInternalMonitor>(VRInternalMonitor::get());
-#ifndef WITHOUT_GTK
-    gui_mgr = shared_ptr<VRGuiManager>(VRGuiManager::get());
-#endif
-#ifdef WASM
-    VRSetupManager::get()->load("Browser", "Browser.xml");
-#endif
-    loader = shared_ptr<VRSceneLoader>(VRSceneLoader::get());
-
-    //string app = options->getOption<string>("application");
-    //if (app != "") VRSceneManager::get()->loadScene(app);
-    removeFile("setup/.startup"); // remove startup failsafe
-    if (runit) run();
-}
-
-void PolyVR::startTestScene(OSGObjectPtr n) {
-    start(false);
+void PolyVR::startTestScene(OSGObjectPtr n, Vec3d camPos) {
     cout << "start test scene " << n << endl;
     VRSceneManager::get()->newScene("test");
     VRScene::getCurrent()->getRoot()->find("light")->addChild(n);
+
+    VRTransformPtr cam = dynamic_pointer_cast<VRTransform>( VRScene::getCurrent()->get("Default") );
+    cam->setFrom(camPos);
+
 #ifndef WITHOUT_GTK
     VRGuiManager::get()->wakeWindow();
 #endif

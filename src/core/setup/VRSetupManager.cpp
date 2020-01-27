@@ -30,6 +30,7 @@ VRSetupPtr VRSetupManager::newSetup() {
 }
 
 VRSetupPtr VRSetupManager::load(string name, string path) {
+    cout << "VRSetupManager::load " << name << ", " << path << endl;
     if (path == current_path) return current;
     current = VRSetup::create(name);
     current->load(path);

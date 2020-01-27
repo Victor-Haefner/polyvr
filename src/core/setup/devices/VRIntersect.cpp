@@ -166,7 +166,9 @@ VRIntersection VRIntersect::intersect(VRObjectWeakPtr wtree, bool force, VRTrans
 }
 
 VRIntersect::VRIntersect() {
+#ifndef WASM
     initCross();
+#endif
     drop_fkt = VRFunction<VRDeviceWeakPtr>::create("Intersect_drop", boost::bind(&VRIntersect::drop, this, _1, VRTransformPtr(0)));
     dragged_ghost = VRTransform::create("dev_ghost");
 }

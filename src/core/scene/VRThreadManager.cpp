@@ -156,7 +156,7 @@ int VRThreadManager::initThread(VRThreadCbPtr f, string name, bool loop, int asp
     id++;
     return t->ID;
 #else
-    cout << "VRThreadManager::initThread skipped" << endl;
+    cout << "VRThreadManager::initThread '" << name << "' skipped" << endl;
     return -1;
 #endif
 }

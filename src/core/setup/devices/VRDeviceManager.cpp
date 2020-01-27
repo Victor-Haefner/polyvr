@@ -132,6 +132,7 @@ void VRDeviceManager::load(XMLElementPtr node) {
             VRKeyboardPtr k = VRKeyboard::create();
             k->load(el);
             dev = k;
+            cout << "  keyboard loaded" << endl;
         }
 
 #ifndef WITHOUT_BULLET
@@ -143,6 +144,9 @@ void VRDeviceManager::load(XMLElementPtr node) {
 #endif
 
         if (type == "server") {
+#ifdef WASM  // TODO: hack, hangs here somewhere..
+            continue;
+#endif
             VRServerPtr m = VRServer::create(5500);
             m->load(el);
             dev = m;
@@ -150,8 +154,6 @@ void VRDeviceManager::load(XMLElementPtr node) {
 
 
         if (dev == 0) continue;
-        //cout << "\nMouse dev " << dev << flush;
-
         addDevice(dev);
     }
 
