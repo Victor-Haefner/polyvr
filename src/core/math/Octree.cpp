@@ -205,6 +205,7 @@ OctreeNode* OctreeNode::getRoot() { auto o = this; while(o->parent) o = o->paren
 
 float OctreeNode::getSize() { return size; }
 float OctreeNode::getResolution() { return resolution; }
+void OctreeNode::setResolution(float res) { resolution = res; }
 
 // sphere center, box center, sphere radius, box size
 bool sphere_box_intersect(Vec3d Ps, Vec3d Pb, float Rs, float Sb)  {
@@ -327,6 +328,7 @@ OctreePtr Octree::create(float resolution, float size, string n) {
 OctreePtr Octree::ptr() { return shared_from_this(); }
 
 float Octree::getSize() { return root->getSize(); }
+void Octree::setResolution(float res) { resolution = res; root->setResolution(res); }
 void Octree::clear() { if (root) delete root; root = new OctreeNode(ptr(), resolution, firstSize, 0); }
 
 OctreeNode* Octree::get(Vec3d p, bool checkPosition) { return root->get(p, checkPosition); }
@@ -358,13 +360,11 @@ vector<void*> Octree::getAllData() { return getRoot()->getAllData(); }
 vector<void*> Octree::radiusSearch(Vec3d p, float r, int d) {
     vector<void*> res;
     getRoot()->findInSphere(p, r, d, res);
-    //cout << "res: " << res.size() << ", " << res[0] << endl;
     return res;
 }
 vector<Vec3d> Octree::radiusPointSearch(Vec3d p, float r, int d, bool getAll) {
     vector<Vec3d> res = {};
     getRoot()->findPointsInSphere(p, r, d, res, getAll);
-    //cout << "res: " << res.size() << endl;
     return res;
 }
 
