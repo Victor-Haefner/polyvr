@@ -302,14 +302,19 @@ string VRMaterial::constructShaderFP(VRMatDataPtr data, bool deferred, int force
     fp += "precision mediump float;\n";
     fp += "varying vec3 vertNorm;\n";
     fp += "varying vec4 color;\n";
+    fp += "uniform int isLit;\n";
+    fp += "uniform vec4 mat_diffuse;\n";
+    fp += "uniform vec4 mat_ambient;\n";
+    fp += "uniform vec4 mat_specular;\n";
     fp += "void main(void) {\n";
     fp += "  vec3  n = normalize(vertNorm);\n";
     fp += "  vec3  light = normalize( vec3(0.8,1.0,0.5) );\n";
     fp += "  float NdotL = max(dot( n, light ), 0.0);\n";
-    fp += "  vec4  ambient = vec4(0.2,0.2,0.2,1.0) * color;\n";
-    fp += "  vec4  diffuse = vec4(1.0,1.0,0.9,1.0) * NdotL * color;\n";
-    fp += "  vec4  specular = vec4(1.0,1.0,1.0,1.0) * 0.0;\n";
-    fp += "  gl_FragColor = ambient + diffuse + specular;\n";
+    fp += "  vec4  ambient = mat_ambient * color;\n";
+    fp += "  vec4  diffuse = mat_diffuse * NdotL * color;\n";
+    fp += "  vec4  specular = mat_specular * 0.0;\n";
+    fp += "  if (isLit == 1) gl_FragColor = diffuse;\n";
+    fp += "  else gl_FragColor = ambient + diffuse + specular;\n";
     fp += "}\n";
 #else
     fp += "#version 120\n";
@@ -353,6 +358,18 @@ string VRMaterial::constructShaderFP(VRMatDataPtr data, bool deferred, int force
     return fp;
 }
 
+void VRMaterial::updateOGL2Parameters() {
+#ifdef WASM
+    auto a = getAmbient();
+    auto d = getDiffuse();
+    auto s = getSpecular();
+    setShaderParameter("isLit", int(isLit()));
+    setShaderParameter("mat_ambient", Vec4f(a[0], a[1], a[2], 1.0));
+    setShaderParameter("mat_diffuse", Vec4f(d[0], d[1], d[2], 1.0));
+    setShaderParameter("mat_specular", Vec4f(s[0], s[1], s[2], 1.0));
+#endif
+}
+
 void VRMaterial::updateOGL2Shader() {
     auto m = mats[activePass];
     initShaderChunk();
@@ -364,7 +381,7 @@ void VRMaterial::updateOGL2Shader() {
     m->fProgram->setProgram(s.c_str());
     checkShader(GL_FRAGMENT_SHADER, s, "ogl2FS");
 
-    setShaderParameter("isLit", int(isLit()));
+    updateOGL2Parameters();
 }
 
 void VRMaterial::updateDeferredShader() {
@@ -977,15 +994,15 @@ int VRMaterial::getDepthTest() {
     return md->depthChunk->getFunc();
 }
 
-void VRMaterial::setDiffuse(string c) { setDiffuse(toColor(c)); }
-void VRMaterial::setSpecular(string c) { setSpecular(toColor(c)); }
-void VRMaterial::setAmbient(string c) { setAmbient(toColor(c)); }
+void VRMaterial::setDiffuse(string c) { setDiffuse(toColor(c)); updateOGL2Parameters(); }
+void VRMaterial::setSpecular(string c) { setSpecular(toColor(c)); updateOGL2Parameters(); }
+void VRMaterial::setAmbient(string c) { setAmbient(toColor(c)); updateOGL2Parameters(); }
 void VRMaterial::setDiffuse(Color3f c) { mats[activePass]->colChunk->setDiffuse( toColor4f(c, getTransparency()) );}
 void VRMaterial::setSpecular(Color3f c) { mats[activePass]->colChunk->setSpecular(toColor4f(c)); }
 void VRMaterial::setAmbient(Color3f c) { mats[activePass]->colChunk->setAmbient(toColor4f(c)); }
 void VRMaterial::setEmission(Color3f c) { mats[activePass]->colChunk->setEmission(toColor4f(c)); }
 void VRMaterial::setShininess(float c) { mats[activePass]->colChunk->setShininess(c); }
-void VRMaterial::setLit(bool b) { if (activePass >= 0 && activePass < (int)mats.size() && mats[activePass]->colChunk) mats[activePass]->colChunk->setLit(b); updateDeferredShader(); }
+void VRMaterial::setLit(bool b) { if (activePass >= 0 && activePass < (int)mats.size() && mats[activePass]->colChunk) mats[activePass]->colChunk->setLit(b); updateDeferredShader(); updateOGL2Parameters(); }
 
 Color3f VRMaterial::getDiffuse() { return toColor3f( mats[activePass]->colChunk->getDiffuse() ); }
 Color3f VRMaterial::getSpecular() { return toColor3f( mats[activePass]->colChunk->getSpecular() ); }
@@ -1017,6 +1034,7 @@ void VRMaterial::initShaderChunk() {
 	vFProgram->addOSGVariable("OSGModelViewProjectionMatrix");
 	vFProgram->setProgram(vertFailShader);
 	fFProgram->setProgram(fragFailShader);
+	fFProgram->addOSGVariable("OSGActiveLightsMask");
 	md->shaderFailChunk->addShader(vFProgram);
 	md->shaderFailChunk->addShader(fFProgram);
 #endif
