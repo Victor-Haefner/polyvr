@@ -361,7 +361,7 @@ void VRMaterial::updateOGL2Shader() {
     checkShader(GL_VERTEX_SHADER, s, "ogl2VS");
 
     s = constructShaderFP(m);
-    m->fdProgram->setProgram(s.c_str());
+    m->fProgram->setProgram(s.c_str());
     checkShader(GL_FRAGMENT_SHADER, s, "ogl2FS");
 
     setShaderParameter("isLit", int(isLit()));

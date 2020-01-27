@@ -245,7 +245,9 @@ void VRGeometry::setPrimitive(string parameters) {
     source.type = PRIMITIVE;
     source.parameter = prim + " " + this->primitive->toString();
     setMesh( OSGGeometry::create( this->primitive->make() ), source);
+#if WASM
     getMaterial()->updateOGL2Shader();
+#endif
 }
 
 /** Create a mesh using vectors with positions, normals, indices && optionaly texture coordinates **/
@@ -309,27 +311,13 @@ void VRGeometry::setPositions(GeoVectorProperty* Pos) {
     meshChanged();
 }
 
-string vFailData =
-"attribute vec4 osg_Vertex;\n"
-"uniform mat4 OSGModelViewProjectionMatrix;\n"
-"void main(void) {\n"
-"  gl_Position = OSGModelViewProjectionMatrix * osg_Vertex;\n"
-"}\n";
-
-string fFailData =
-"precision mediump float;\n"
-"void main(void) {\n"
-"  gl_FragColor = vec4(0.0,0.8,1.0,1.0);\n"
-"}\n";
-
 void VRGeometry::setColor(string c) {
-    cout << "VRGeometry::setColor " << c << endl;
     auto m = VRMaterial::get(c); // use get instead of create because of memory leak?
     m->setDiffuse(c);
     setMaterial(m);
-    //m->updateOGL2Shader();
-    m->setVertexShader(vFailData, "vFailData");
-    m->setFragmentShader(fFailData, "fFailData");
+#ifdef WASM
+    m->updateOGL2Shader();
+#endif
 }
 
 void VRGeometry::setType(int t) {

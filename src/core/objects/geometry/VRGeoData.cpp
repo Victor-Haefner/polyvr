@@ -733,9 +733,13 @@ void VRGeoData::addVertexColors(Color4f c) {
 
 void VRGeoData::makeSingleIndex() {
     if (!geo) return;
-    if (!geo->getMesh()->geo->isSingleIndex()) return;
+    if (geo->getMesh()->geo->isSingleIndex()) return;
 
     geo->convertToTriangles(); // TODO: temp fix..
+    geo->getMesh()->geo->setIndex(geo->getMesh()->geo->getIndex(Geometry::PositionsIndex), Geometry::NormalsIndex);
+    geo->getMesh()->geo->setIndex(geo->getMesh()->geo->getIndex(Geometry::PositionsIndex), Geometry::ColorsIndex);
+
+    if (!geo->getMesh()->geo->isSingleIndex()) cout << "VRGeoData::makeSingleIndex FAILED!! probably needs to set more indices!" << endl;
 }
 
 

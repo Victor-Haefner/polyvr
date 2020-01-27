@@ -4,6 +4,15 @@
 
 using namespace OSG;
 
+PyMethodDef VRPyMath::methods[] = {
+    {"cos", (PyCFunction)VRPyMath::cos, METH_VARARGS, "Cosine" },
+    {"sin", (PyCFunction)VRPyMath::sin, METH_VARARGS, "Sine" },
+    {NULL}  /* Sentinel */
+};
+
+PyObject* VRPyMath::cos(VRPyMath* self, PyObject* args) { float v = VRPyBase::parseFloat(args); return PyFloat_FromDouble(::cos(v)); }
+PyObject* VRPyMath::sin(VRPyMath* self, PyObject* args) { float v = VRPyBase::parseFloat(args); return PyFloat_FromDouble(::sin(v)); }
+
 template<> PyTypeObject VRPyBaseT<Vec2d>::type = {
     PyObject_HEAD_INIT(NULL)
     0,                         /*ob_size*/
