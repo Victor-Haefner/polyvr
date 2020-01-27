@@ -15,6 +15,7 @@
 #include <OpenSG/OSGNode.h>
 #include <OpenSG/OSGNodeCore.h>
 #include <OpenSG/OSGTransformBase.h>
+#include "core/objects/OSGTransform.h"
 
 #include <OpenSG/OSGThreadManager.h>
 
@@ -35,6 +36,11 @@ void VRSyncNode::printChangeList(){
 
         cout << "uiEntryDesc " << j << ": " << entry->uiEntryDesc << ", uiContainerId: " << entry->uiContainerId << endl;
 
+//        auto thisContainer = FieldContainerFactory::the()->getContainer(entry->uiContainerId);
+//        auto mappedContainer = FieldContainerFactory::the()->getMappedContainer(entry->uiContainerId);
+//        auto mappedContainerID = mappedContainer->getId();
+//        cout << ">>>>>> thisContainer: " << thisContainer->getId() << " mappedContainer" << mappedContainerID << endl;
+
         for (int i=0; i<64; i++) {
             //int bit = (whichField & ( 1 << i )) >> i;
             BitVector one = 1;
@@ -53,8 +59,15 @@ VRSyncNode::VRSyncNode(string name) : VRTransform(name) {
     // TODO: get all container and their ID in this VRTransform
     NodeMTRefPtr node = getNode()->node;
     NodeCoreMTRefPtr core = node->getCore();
+
     container[node->getId()] = true;
     container[core->getId()] = true; //transform
+
+    OSGTransformPtr pt = getOSGTransformPtr();
+    //auto id = pt->getTypeName();
+    //container[id] = true;
+
+    cout << "VRSyncNode::VRSyncNode " << node->getTypeName() << ", " << core->getTypeName() << endl;
 
 	updateFkt = VRUpdateCb::create("SyncNode update", bind(&VRSyncNode::update, this));
 	VRScene::getCurrent()->addUpdateFkt(updateFkt, 100000);
@@ -114,19 +127,36 @@ void VRSyncNode::handleChangeList(void* _args) {
     string msg = args->ws_data;
 
     cout << "GOT CHANGES!! " << endl;
-    cout << "client " << client << ", msg " << msg << endl;
+    cout << "client " << client << ", received msg: " << msg << " container: ";
+
+    for (auto c : container){
+        cout << c.first << " ";
+    }
+    cout << endl;
 }
 
+//broadcast message to all remote nodes
 void VRSyncNode::broadcast(string message){
-    //all remotes
     for (auto& remote : remotes) {
         if (remote.second->send(message)) {
             cout << "sent" << endl;
         }
-        //socket->sendMessage(message); //cl_data
     }
 }
 
+void VRSyncNode::getContainer(){
+    FieldContainerFactoryBase* factory = FieldContainerFactory::the();
+    //auto containerStore = factory->getFieldContainerStore();
+
+    for( auto it = factory->beginStore(); it != factory->endStore(); ++it) {
+        AspectStore* aspect = it->second;
+        FieldContainer* container = aspect->getPtr();
+
+        cout << "container Id: " << factory->findContainer(container) << endl;
+
+    }
+
+}
 
 // ------------------- VRSyncRemote
 

@@ -78,6 +78,7 @@ class VRTransform : public VRObject {
 
         static VRTransformPtr create(string name = "None", bool doOptimizations = true);
         VRTransformPtr ptr();
+        OSGTransformPtr getOSGTransformPtr();
 
         static VRTransformPtr getParentTransform(VRObjectPtr o);
         static Vec3d computeEulerAngles(const Matrix4d& t);

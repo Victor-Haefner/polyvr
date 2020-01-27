@@ -54,7 +54,9 @@ class VRSyncNode : public VRTransform {
 
         void printChangeList();
         void broadcast(string message);
-        //void printMessage();
+
+        void getContainer();
+
 };
 
 OSG_END_NAMESPACE;

@@ -368,6 +368,10 @@ VRTransformPtr VRTransform::getParentTransform(VRObjectPtr o) {
     return static_pointer_cast<VRTransform>(o);
 }
 
+OSGTransformPtr VRTransform::getOSGTransformPtr(){
+    return t;
+}
+
 void VRTransform::setRelativePose(PosePtr p, VRObjectPtr o) {
     Matrix4d m = p->asMatrix();
     Matrix4d wm = getMatrixTo(o);

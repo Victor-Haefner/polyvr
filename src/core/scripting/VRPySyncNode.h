@@ -11,4 +11,7 @@ struct VRPySyncNode : VRPyBaseT<OSG::VRSyncNode> {
 //struct VRPySyncRemote : VRPyBaseT<OSG::VRSyncRemote> {
 //    static PyMethodDef methods[];
 //};
+//struct VRPyFieldContainerFactory : VRPyBaseT<OSG::FieldContainerFactory> {
+//    static PyMethodDef methods[];
+//};
 #endif // VRPySyncNode_H_INCLUDED
