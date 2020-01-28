@@ -40,6 +40,8 @@ class VRSyncNode : public VRTransform {
 
         void update();
         void handleChangeList(void* msg);
+        vector<FieldContainer*> findContainer(string typeName);
+        vector<FieldContainer*> getTransformationContainer(ChangeList* cl);
 
     public:
         VRSyncNode(string name = "syncNode");
@@ -56,6 +58,9 @@ class VRSyncNode : public VRTransform {
         void broadcast(string message);
 
         void getContainer();
+        //void getContainerFields();
+
+        string printContainer(vector<FieldContainer*> container);
 
 };
 

@@ -33,8 +33,11 @@ void VRSyncNode::printChangeList(){
         ContainerChangeEntry* entry = *it;
         const FieldFlags* fieldFlags = entry->pFieldFlags;
         BitVector whichField = entry->whichField;
+        UInt32 id = entry->uiContainerId;
 
-        cout << "uiEntryDesc " << j << ": " << entry->uiEntryDesc << ", uiContainerId: " << entry->uiContainerId << endl;
+        cout << "uiEntryDesc " << j << ": " << entry->uiEntryDesc << ", uiContainerId: " << id << endl;
+
+        cout << printContainer(getTransformationContainer(cl)) << endl;
 
 //        auto thisContainer = FieldContainerFactory::the()->getContainer(entry->uiContainerId);
 //        auto mappedContainer = FieldContainerFactory::the()->getMappedContainer(entry->uiContainerId);
@@ -64,7 +67,7 @@ VRSyncNode::VRSyncNode(string name) : VRTransform(name) {
     container[core->getId()] = true; //transform
 
     OSGTransformPtr pt = getOSGTransformPtr();
-    //auto id = pt->getTypeName();
+    //UInt32 id = pt->getId(); //TODO: OSGTransform has no member getId even though its inherited from ReflexiveFieldContainer
     //container[id] = true;
 
     cout << "VRSyncNode::VRSyncNode " << node->getTypeName() << ", " << core->getTypeName() << endl;
@@ -138,8 +141,8 @@ void VRSyncNode::handleChangeList(void* _args) {
 //broadcast message to all remote nodes
 void VRSyncNode::broadcast(string message){
     for (auto& remote : remotes) {
-        if (remote.second->send(message)) {
-            cout << "sent" << endl;
+        if (!remote.second->send(message)) {
+            cout << "Failed to send message to remote." << endl;
         }
     }
 }
@@ -152,10 +155,65 @@ void VRSyncNode::getContainer(){
         AspectStore* aspect = it->second;
         FieldContainer* container = aspect->getPtr();
 
-        cout << "container Id: " << factory->findContainer(container) << endl;
+        cout << "container Id: " << factory->findContainer(container) << " | size: " << container->getContainerSize();
+        cout << " | #Fields: " << container->getNumFields() << " | type name: " << container->getTypeName() << endl;
 
     }
 
+}
+
+//lists all container with typeName
+vector<FieldContainer*> VRSyncNode::findContainer(string typeName){
+    FieldContainerFactoryBase* factory = FieldContainerFactory::the();
+    vector<FieldContainer*> res;
+    for( auto it = factory->beginStore(); it != factory->endStore(); ++it){
+        AspectStore* aspect = it->second;
+        FieldContainer* container = aspect->getPtr();
+        if (container->getTypeName() == typeName){
+            res.push_back(container);
+        }
+    }
+    return res;
+}
+
+//returns container of type Transformation from changelist
+vector<FieldContainer*> VRSyncNode::getTransformationContainer(ChangeList* cl){
+    vector<FieldContainer*> res;
+    FieldContainerFactoryBase* factory = FieldContainerFactory::the();
+    for( auto it = cl->begin(); it != cl->end(); ++it) {
+        ContainerChangeEntry* entry = *it;
+        UInt32 id = entry->uiContainerId;
+        FieldContainer* container = factory->getContainer(id);
+        if (container != nullptr){
+            if(strcmp(container->getTypeName(), "Transform") == 0){
+                res.push_back(container);
+            }
+        }
+    }
+    return res;
+}
+
+string VRSyncNode::printContainer(vector<FieldContainer*> container){
+    cout << "VRSyncNode::printContainer size: " << container.size() << endl;
+    std::stringstream res;
+    for( auto c : container){
+        UInt32 id = c->getId();
+//        string typeName = c->getTypeName();
+//        UInt32 typeID = c->getTypeId();
+//        UInt16 groupID = c->getGroupId();
+//        UInt32 containerSize = c->getContainerSize();
+//        UInt32 numFields = c->getNumFields();
+//        const FieldFlags* fieldFlags = c->getFieldFlags();
+
+//        vector<string> fieldNames;
+//        for(int i = 0; i<numFields; ++i){
+//            FieldHandle* fh = c->getField(i);
+//
+//        }
+        cout << "container id: " << c->getId() << endl;
+        res << "container " << id << endl;// " " << typeName << " | typeID " << typeID  << " | groupID " << groupID << " | size " << containerSize << " | numFields " << numFields << endl;
+    }
+    return res.str();
 }
 
 // ------------------- VRSyncRemote
