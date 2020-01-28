@@ -235,7 +235,7 @@ void VRSetup::setDisplaysOffset(Vec3d o) {
 
 void VRSetup::save(string file) {
     XML xml;
-    XMLElementPtr setupN = xml.newRoot("Setup", "", "VRF"); //name, ns_uri, ns_prefix
+    XMLElementPtr setupN = xml.newRoot("Setup", "", ""); //name, ns_uri, ns_prefix
     XMLElementPtr displayN = setupN->addChild("Displays");
     XMLElementPtr deviceN = setupN->addChild("Devices");
     XMLElementPtr trackingARTN = setupN->addChild("TrackingART");
@@ -295,6 +295,7 @@ void VRSetup::load(string file) {
         toValue( displayN->getAttribute("globalOffset"), globalOffset );
         setDisplaysOffset(globalOffset);
     }
+    cout << " setup loaded" << endl;
 }
 
 void VRSetup::makeTestCube() {

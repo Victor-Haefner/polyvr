@@ -10,11 +10,13 @@ template<> string typeName(const OSG::VRDevice& t) { return "Device"; }
 OSG_BEGIN_NAMESPACE;
 
 VRDevice::VRDevice(string _type) : VRAvatar(_type) {
+    cout << " create device: " << _type << endl;
     type = _type;
     setName(_type);
 
     store("type", &type);
     store("name", &name);
+    cout << "  create device done: " << _type << endl;
 }
 
 VRDevice::~VRDevice() {}

@@ -172,12 +172,14 @@ void gatherSubtree(OctreeNode* o, vector<OctreeNode*>& res, bool leafs) {
 
 vector<OctreeNode*> OctreeNode::getSubtree() {
     vector<OctreeNode*> res;
+    res.push_back(this);
     gatherSubtree(this, res, false);
     return res;
 }
 
 vector<OctreeNode*> OctreeNode::getLeafs() {
     vector<OctreeNode*> res;
+    if (isLeaf()) res.push_back(this);
     gatherSubtree(this, res, true);
     return res;
 }
@@ -232,6 +234,22 @@ void OctreeNode::findInSphere(Vec3d p, float r, int d, vector<void*>& res) { // 
     if (level == d && d != -1) return;
     for (int i=0; i<8; i++) {
         if (children[i]) children[i]->findInSphere(p, r, d, res);
+    }
+}
+
+void OctreeNode::findPointsInSphere(Vec3d p, float r, int d, vector<Vec3d>& res, bool getAll) { // TODO: optimize!!
+    if (!sphere_box_intersect(p, center, r, size)) return;
+
+    float r2 = r*r;
+    for (unsigned int i=0; i<data.size(); i++) {
+        if ((points[i]-p).squareLength() <= r2)
+            res.push_back(points[i]);
+            if (!getAll) return;
+    }
+
+    if (level == d && d != -1) return;
+    for (int i=0; i<8; i++) {
+        if (children[i]) children[i]->findPointsInSphere(p, r, d, res, getAll);
     }
 }
 
@@ -340,6 +358,13 @@ vector<void*> Octree::getAllData() { return getRoot()->getAllData(); }
 vector<void*> Octree::radiusSearch(Vec3d p, float r, int d) {
     vector<void*> res;
     getRoot()->findInSphere(p, r, d, res);
+    cout << "res: " << res.size() << ", " << res[0] << endl;
+    return res;
+}
+vector<Vec3d> Octree::radiusPointSearch(Vec3d p, float r, int d, bool getAll) {
+    vector<Vec3d> res = {};
+    getRoot()->findPointsInSphere(p, r, d, res, getAll);
+    cout << "res: " << res.size() << endl;
     return res;
 }
 

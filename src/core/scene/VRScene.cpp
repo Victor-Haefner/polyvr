@@ -274,6 +274,7 @@ void VRScene::saveScene(XMLElementPtr e) {
 }
 
 void VRScene::loadScene(XMLElementPtr e) {
+    cout << "VRScene::loadScene" << endl;
     if (e == 0) return;
 
     string d = getWorkdir() + "/.local_"+getFileName()+"/stats";
@@ -308,6 +309,7 @@ void VRScene::loadScene(XMLElementPtr e) {
     semanticManager->update();
 
     queueJob(loadingTimeCb, 0, 2);
+    cout << " VRScene::loadScene done" << endl;
 }
 
 /**

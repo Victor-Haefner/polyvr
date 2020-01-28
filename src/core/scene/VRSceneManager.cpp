@@ -53,18 +53,18 @@ VRSceneManager::VRSceneManager() {
 }
 
 VRSceneManager::~VRSceneManager() {
-    main_instance = 0;
     cout << "VRSceneManager::~VRSceneManager" << endl;
+    main_instance = 0;
 }
 
 VRSceneManagerPtr VRSceneManager::create() { return VRSceneManagerPtr( new VRSceneManager()); }
 VRSceneManager* VRSceneManager::get() { return main_instance; }
 
 void VRSceneManager::loadScene(string path, bool write_protected, string encryptionKey) {
-    if (!exists(path)) { cout << "loadScene " << path << " not found" << endl; return; }
+    if (!exists(path)) { cout << "VRSceneManager, loadScene: " << path << " not found" << endl; return; }
     path = canonical(path);
     if (current) if (current->getPath() == path) return;
-    cout << "loadScene " << path << endl;
+    cout << "VRSceneManager, loadScene: " << path << endl;
 
     newEmptyScene(path);
     VRSceneLoader::get()->loadScene(path, encryptionKey);
@@ -74,10 +74,12 @@ void VRSceneManager::loadScene(string path, bool write_protected, string encrypt
     VRGuiSignals::get()->getSignal("scene_changed")->triggerPtr<VRDevice>(); // update gui
 #endif
 
+    cout << " VRSceneManager, storeFavorites" << endl;
     if (auto pEntry = projects->getEntry(path)) {
         pEntry->setTimestamp(toString(time(0)));
         storeFavorites();
     }
+    cout << " VRSceneManager, loadScene done" << endl;
 }
 
 string VRSceneManager::getOriginalWorkdir() { return original_workdir; }
@@ -105,6 +107,13 @@ void VRSceneManager::closeScene() {
 #endif
 }
 
+void VRSceneManager::reloadScene() {
+    if (current == 0) return;
+    string path = current->getPath();
+    closeScene();
+    loadScene(path);
+}
+
 void VRSceneManager::setWorkdir(string path) {
 	if (path == "") return;
 	if (exists(path)) path = canonical(path);
@@ -113,13 +122,14 @@ void VRSceneManager::setWorkdir(string path) {
 }
 
 void VRSceneManager::newEmptyScene(string path) {
+    cout << "VRSceneManager::newEmptyScene: " << path << endl;
     closeScene();
     VRScenePtr scene = VRScenePtr( new VRScene() );
-    VRSetup::getCurrent()->setupLESCCAVELights(scene);
     scene->setPath(path);
     setWorkdir(scene->getWorkdir());
     scene->setName(scene->getFileName());
     current = scene;
+    cout << " VRSceneManager::newEmptyScene done" << endl;
 }
 
 void VRSceneManager::newScene(string path) {

@@ -65,7 +65,7 @@ void regObjectStorageTypes() {
 }
 
 VRSceneLoader::VRSceneLoader() { cout << "\nInit VRSceneLoader\n"; regObjectStorageTypes(); }
-VRSceneLoader::~VRSceneLoader() { ; }
+VRSceneLoader::~VRSceneLoader() { cout << "VRSceneLoader::~VRSceneLoader\n"; }
 
 VRSceneLoader* VRSceneLoader::get() {
     static VRSceneLoader* s = new VRSceneLoader();
@@ -81,7 +81,7 @@ void VRSceneLoader::saveScene(string file, XMLElementPtr guiN, string encryption
     if (scene == 0) return;
 
     XML xml;
-    XMLElementPtr sceneN = xml.newRoot("Scene", "", "VRF"); //name, ns_uri, ns_prefix
+    XMLElementPtr sceneN = xml.newRoot("Scene", "", ""); //name, ns_uri, ns_prefix
     XMLElementPtr objectsN = sceneN->addChild("Objects");
     if (guiN) sceneN->importNode(guiN, true, xml);
 
@@ -138,6 +138,7 @@ XMLElementPtr VRSceneLoader_getElementChild_(XMLElementPtr e, int i) {
 }*/
 
 void VRSceneLoader::loadScene(string path, string encryptionKey) {
+    cout << "VRSceneLoader::loadScene " << path << endl;
     XML xml;
     if (!exists(path)) return;
 
@@ -165,6 +166,7 @@ void VRSceneLoader::loadScene(string path, string encryptionKey) {
     scene->getRoot()->load(root);
     scene->loadScene(sceneN);
     VRSceneManager::get()->setScene(scene);
+    cout << " VRSceneLoader::loadScene done" << endl;
 }
 
 VRObjectPtr VRSceneLoader::importScene(string path, string encryptionKey, bool offLights) {

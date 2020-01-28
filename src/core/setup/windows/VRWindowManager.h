@@ -31,8 +31,6 @@ class VRWindowManager {
         map<string, VRWindowPtr> getWindows();
         VRWindowPtr getWindow(string name);
 
-        void initGlut();
-
         VRWindowPtr addGlutWindow  (string name);
         VRWindowPtr addGtkWindow   (string name, string glarea = "glarea");
         VRWindowPtr addMultiWindow (string name);

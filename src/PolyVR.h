@@ -2,6 +2,7 @@
 #define VRFRAMEWORK_H_INCLUDED
 
 #include <OpenSG/OSGConfig.h>
+#include <OpenSG/OSGVector.h>
 #include <string>
 #include "core/objects/VRObjectFwd.h"
 
@@ -40,9 +41,9 @@ class PolyVR {
         static void shutdown();
 
         void run();
+        void update();
         void init(int argc, char **argv);
-        void start(bool runit = true);
-        void startTestScene(OSGObjectPtr n);
+        void startTestScene(OSGObjectPtr n, Vec3d camPos);
 
         void setOption(string name, bool val);
         void setOption(string name, string val);

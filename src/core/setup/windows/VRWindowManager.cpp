@@ -93,29 +93,7 @@ void setMultisampling(bool on) {
     if (res) {;};//__GL_FXAA_MODE 	 = 7;//find out how to set vie application
 }
 
-void VRWindowManager::initGlut() { // deprecated?
-    static bool initiated = false;
-    if (initiated) return;
-    initiated = true;
-
-    return;
-
-    cout << "\nGlut: Init\n";
-    int argc = 0;
-    glutInit(&argc, NULL);
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_STENCIL_TEST);
-
-    //glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST);
-    //setMultisampling(true);
-
-    if (VROptions::get()->getOption<bool>("active_stereo"))
-        glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE | GLUT_STEREO | GLUT_STENCIL);
-    else glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE | GLUT_STENCIL);
-}
-
 VRWindowPtr VRWindowManager::addGlutWindow(string name) {
-    initGlut();
     VRGlutWindowPtr win = VRGlutWindow::create();
     win->setName(name);
     win->setAction(ract);
@@ -169,10 +147,12 @@ void VRWindowManager::getWindowSize(string name, int& width, int& height) {
 
 void VRWindowManager::stopWindows() {
     cout << "VRWindowManager::stopWindows" << endl;
+#ifndef WASM
     BarrierRefPtr barrier = Barrier::get("PVR_rendering", true);
     while (barrier->getNumWaiting() < VRWindow::active_window_count) usleep(1);
     for (auto w : getWindows() ) w.second->stop();
     barrier->enter(VRWindow::active_window_count+1);
+#endif
 }
 
 bool VRWindowManager::doRenderSync = false;
@@ -209,7 +189,9 @@ void VRWindowManager::updateWindows() {
 
     //TODO: use barrier->getnumwaiting to make a state machine, allways ensure all are waiting!!
 
+#ifndef WASM
     BarrierRefPtr barrier = Barrier::get("PVR_rendering", true);
+#endif
 
     auto updateSceneLinks = [&]() {
         for (auto view : VRSetup::getCurrent()->getViews()) {
@@ -218,6 +200,7 @@ void VRWindowManager::updateWindows() {
         }
     };
 
+#ifndef WASM
     auto wait = [&](int timeout = -1) {
         int pID = VRProfiler::get()->regStart("window manager barrier");
 
@@ -238,13 +221,13 @@ void VRWindowManager::updateWindows() {
         VRProfiler::get()->regStop(pID);
         return true;
     };
+#endif
 
     auto tryRender = [&]() {
+#ifndef WASM
         if (barrier->getNumWaiting() != VRWindow::active_window_count) return true;
         if (!wait()) return false;
-#ifndef WASM
         for (auto w : getWindows() ) if (auto win = dynamic_pointer_cast<VRMultiWindow>(w.second)) if (win->getState() == VRMultiWindow::INITIALIZING) win->initialize();
-#endif
         commitChanges();
 
         auto clist = Thread::getCurrentChangeList();
@@ -256,6 +239,14 @@ void VRWindowManager::updateWindows() {
         if (!wait()) return false;
 #ifndef WITHOUT_GTK
         for (auto w : getWindows() ) if (auto win = dynamic_pointer_cast<VRGtkWindow>(w.second)) win->render();
+#endif
+#else
+        commitChanges();
+
+        auto clist = Thread::getCurrentChangeList();
+        VRGlobals::NCHANGED = clist->getNumChanged();
+        VRGlobals::NCREATED = clist->getNumCreated();
+        for (auto w : getWindows() ) if (auto win = dynamic_pointer_cast<VRGlutWindow>(w.second)) win->render();
 #endif
         clist->clear();
         return true;
@@ -329,10 +320,15 @@ void VRWindowManager::load(XMLElementPtr node) {
         string type = el->getAttribute("type");
         string name = el->getAttribute("name");
         cout << " VRWindowManager::load '" << type << "'  '" << name << "'" << endl;
-        el->print();
+        //el->print();
 
         if (type == "0") {
             VRWindowPtr win = addMultiWindow(name);
+            win->load(el);
+        }
+
+        if (type == "1") {
+            VRWindowPtr win = addGlutWindow(name);
             win->load(el);
         }
 

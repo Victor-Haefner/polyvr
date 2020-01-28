@@ -56,6 +56,7 @@ void checkGarbageCollection() { // for diagnostic purposes
 }
 
 VRScriptManager::VRScriptManager() {
+    cout << "Init ScriptManager" << endl;
     initPyModules();
 
     setStorageType("Scripts");
@@ -221,14 +222,19 @@ PyObject* VRScriptManager::getGlobalModule() { return pModVR; }
 PyObject* VRScriptManager::getGlobalDict() { return pGlobal; }
 
 void VRScriptManager::initPyModules() {
+    cout << " initPyModules" << endl;
     modOut = 0;
     modErr = 0;
-
+    #ifdef WASM
+    Py_NoSiteFlag = 1;
+    #endif
     Py_Initialize();
+    cout << "  Py_Initialize done" << endl;
     char* argv[1];
     argv[0] = (char*)"PolyVR";
     PySys_SetArgv(1, argv);
     PyEval_InitThreads();
+    cout << "  PyEval_InitThreads done" << endl;
     VRPyBase::err = PyErr_NewException((char *)"VR.Error", NULL, NULL);
 
     pGlobal = PyDict_New();
@@ -241,6 +247,7 @@ void VRScriptManager::initPyModules() {
     PyDict_SetItemString(pLocal, "__builtins__", PyEval_GetBuiltins());
     PyDict_SetItemString(pGlobal, "__builtins__", PyEval_GetBuiltins());
     VRPyListMath::init(pModBase);
+    cout << "  Added module PolyVR_base" << endl;
 
     PyObject* sys_path = PySys_GetObject((char*)"path");
     PyList_Append(sys_path, PyString_FromString(".") );
@@ -249,6 +256,7 @@ void VRScriptManager::initPyModules() {
 
     VRSceneModules sceneModules;
     sceneModules.setup(this, pModVR);
+    cout << "  Added scene modules" << endl;
 
 	if (!VROptions::get()->getOption<bool>("standalone")) {
         redirectPyOutput("stdout", "Console");
@@ -377,10 +385,12 @@ void VRScriptManager::blockScriptThreads() {
 }
 
 void VRScriptManager::triggerOnLoad() {
+    cout << "VRScriptManager::triggerOnLoad " << scripts.size() << endl;
     for (auto script : scripts) if (script.second->hasTrigger("on_scene_load")) script.second->queueExecution();
 }
 
 void VRScriptManager::triggerOnImport() { // deprecated
+    cout << "VRScriptManager::triggerOnImport" << endl;
     for (auto script : scripts) {
         if (script.second->hasTrigger("on_scene_import")) {
             script.second->execute();

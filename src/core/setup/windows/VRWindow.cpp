@@ -20,15 +20,19 @@ template<> string typeName(const VRWindow& o) { return "Window"; }
 unsigned int VRWindow::active_window_count = 0;
 
 VRWindow::VRWindow() : changeListStats("remote") {
+    cout << "New Window" << endl;
     active_window_count++;
     string n = getName();
+#ifndef WASM
     winThread = VRThreadCb::create("VRWindow", boost::bind(&VRWindow::update, this, _1) );
-    thread_id = VRSceneManager::get()->initThread(winThread,"window_"+n,true,0);
+    thread_id = VRSceneManager::get()->initThread(winThread,"window_"+n,true,0); // WASM crash, needed?
+#endif
 }
 
 VRWindow::~VRWindow() {
     cout << " VRWindow::~VRWindow\n";
-    if (auto sm = VRSceneManager::get()) sm->stopThread(thread_id);
+    if (auto sm = VRSceneManager::get())
+        if (thread_id >= 0) sm->stopThread(thread_id);
     _win = NULL;
     active_window_count--;
 }
@@ -82,6 +86,7 @@ vector<VRViewPtr> VRWindow::getViews() {
 // will also crash in OSG::RemoteAspect::sendSync
 
 void VRWindow::update( weak_ptr<VRThread>  wt) {
+#ifndef WASM
     auto t = wt.lock();
     do {
         t = wt.lock();
@@ -114,6 +119,7 @@ void VRWindow::update( weak_ptr<VRThread>  wt) {
         osgSleep(1);
     } while(t && t->control_flag);
     cout << "VRWindow::update done" << endl;
+#endif
 }
 
 bool VRWindow::isWaiting() { return waitingAtBarrier; }

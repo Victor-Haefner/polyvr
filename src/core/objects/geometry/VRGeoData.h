@@ -125,6 +125,7 @@ class VRGeoData {
         VRGeometryPtr asGeometry(string name) const;
         void append(VRGeometryPtr geo, const Matrix4d& m = Matrix4d());
         void append(const VRGeoData& geo, const Matrix4d& m = Matrix4d());
+        void makeSingleIndex();
 
         // primitive iterator
         struct Primitive {

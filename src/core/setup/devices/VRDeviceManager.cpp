@@ -100,13 +100,13 @@ void VRDeviceManager::save(XMLElementPtr node) {
 }
 
 void VRDeviceManager::load(XMLElementPtr node) {
-    cout << "Load devices:";
+    cout << "Load devices:" << endl;
     for (auto el : node->getChildren()) {
         if (!el) continue;
 
         string type = el->getAttribute("type");
         VRDevicePtr dev = 0;
-        cout << " " << type;
+        cout << "   device type: " << type << endl;
 
         if (type == "mouse") {
             VRMousePtr m = VRMouse::create();
@@ -132,6 +132,7 @@ void VRDeviceManager::load(XMLElementPtr node) {
             VRKeyboardPtr k = VRKeyboard::create();
             k->load(el);
             dev = k;
+            cout << "  keyboard loaded" << endl;
         }
 
 #ifndef WITHOUT_BULLET
@@ -143,6 +144,9 @@ void VRDeviceManager::load(XMLElementPtr node) {
 #endif
 
         if (type == "server") {
+#ifdef WASM  // TODO: hack, hangs here somewhere..
+            continue;
+#endif
             VRServerPtr m = VRServer::create(5500);
             m->load(el);
             dev = m;
@@ -150,12 +154,10 @@ void VRDeviceManager::load(XMLElementPtr node) {
 
 
         if (dev == 0) continue;
-        //cout << "\nMouse dev " << dev << flush;
-
         addDevice(dev);
     }
 
-    cout << endl;
+    cout << " devices loaded" << endl;
 }
 
 OSG_END_NAMESPACE;

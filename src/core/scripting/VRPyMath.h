@@ -16,6 +16,12 @@
 PyObject* toPyObject(const OSG::Vec2d& v);
 PyObject* toPyObject(const OSG::Vec3d& v);
 
+struct VRPyMath {
+    static PyMethodDef methods[];
+    static PyObject* cos(VRPyMath* self, PyObject* args);
+    static PyObject* sin(VRPyMath* self, PyObject* args);
+};
+
 struct VRPyVec2f : VRPyBaseT<OSG::Vec2d> {
     OSG::Vec2d v;
 

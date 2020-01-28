@@ -163,7 +163,9 @@ XMLElementPtr XML::getRoot() { return root; }
 XMLElementPtr XML::newRoot(string name, string ns_uri, string ns_prefix) {
     if (doc) xmlFreeDoc(doc);
     doc = xmlNewDoc(NULL);
-    auto ns = xmlNewNs(NULL, (xmlChar*)ns_uri.c_str(), (xmlChar*)ns_prefix.c_str());
+    xmlNsPtr ns;
+    if (ns_prefix != "") ns = xmlNewNs(NULL, (xmlChar*)ns_uri.c_str(), (xmlChar*)ns_prefix.c_str());
+    else ns = xmlNewNs(NULL, (xmlChar*)ns_uri.c_str(), NULL);
     auto rnode = xmlNewNode(ns, (xmlChar*)name.c_str());
     root = XMLElement::create( rnode );
     xmlDocSetRootElement(doc, rnode);
