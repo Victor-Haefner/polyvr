@@ -243,14 +243,18 @@ void OctreeNode::findPointsInSphere(Vec3d p, float r, int d, vector<Vec3d>& res,
 
     float r2 = r*r;
     for (unsigned int i=0; i<data.size(); i++) {
-        if ((points[i]-p).squareLength() <= r2)
+        if ((points[i]-p).squareLength() <= r2) {
             res.push_back(points[i]);
             if (!getAll) return;
+        }
     }
 
     if (level == d && d != -1) return;
     for (int i=0; i<8; i++) {
-        if (children[i]) children[i]->findPointsInSphere(p, r, d, res, getAll);
+        if (children[i]) {
+            children[i]->findPointsInSphere(p, r, d, res, getAll);
+            if (!getAll && res.size() > 0) return;
+        }
     }
 }
 
@@ -363,7 +367,7 @@ vector<void*> Octree::radiusSearch(Vec3d p, float r, int d) {
     return res;
 }
 vector<Vec3d> Octree::radiusPointSearch(Vec3d p, float r, int d, bool getAll) {
-    vector<Vec3d> res = {};
+    vector<Vec3d> res;
     getRoot()->findPointsInSphere(p, r, d, res, getAll);
     return res;
 }
