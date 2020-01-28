@@ -193,25 +193,25 @@ vector<FieldContainer*> VRSyncNode::getTransformationContainer(ChangeList* cl){
     return res;
 }
 
+//returns container infos as a string
 string VRSyncNode::printContainer(vector<FieldContainer*> container){
-    cout << "VRSyncNode::printContainer size: " << container.size() << endl;
     std::stringstream res;
     for( auto c : container){
         UInt32 id = c->getId();
-//        string typeName = c->getTypeName();
-//        UInt32 typeID = c->getTypeId();
-//        UInt16 groupID = c->getGroupId();
-//        UInt32 containerSize = c->getContainerSize();
-//        UInt32 numFields = c->getNumFields();
-//        const FieldFlags* fieldFlags = c->getFieldFlags();
+        string typeName = c->getTypeName();
+        UInt32 typeID = c->getTypeId();
+        UInt16 groupID = c->getGroupId();
+        UInt32 containerSize = c->getContainerSize();
+        UInt32 numFields = c->getNumFields();
+        const FieldFlags* fieldFlags = c->getFieldFlags();
 
-//        vector<string> fieldNames;
-//        for(int i = 0; i<numFields; ++i){
-//            FieldHandle* fh = c->getField(i);
-//
-//        }
-        cout << "container id: " << c->getId() << endl;
-        res << "container " << id << endl;// " " << typeName << " | typeID " << typeID  << " | groupID " << groupID << " | size " << containerSize << " | numFields " << numFields << endl;
+        vector<string> fieldNames;
+        for(int i = 0; i<numFields; ++i){
+            GetFieldHandlePtr fh = c->getField(i);
+            //cout << fh->getName() << endl;
+        }
+        //cout << "container id: " << c->getId() << endl;
+        res << "container " << id << " " << typeName << " | typeID " << typeID  << " | groupID " << groupID << " | size " << containerSize << " | numFields " << numFields << endl;
     }
     return res.str();
 }
