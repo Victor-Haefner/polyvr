@@ -39,11 +39,6 @@ void VRSyncNode::printChangeList(){
 
         cout << printContainer(getTransformationContainer(cl)) << endl;
 
-//        auto thisContainer = FieldContainerFactory::the()->getContainer(entry->uiContainerId);
-//        auto mappedContainer = FieldContainerFactory::the()->getMappedContainer(entry->uiContainerId);
-//        auto mappedContainerID = mappedContainer->getId();
-//        cout << ">>>>>> thisContainer: " << thisContainer->getId() << " mappedContainer" << mappedContainerID << endl;
-
         for (int i=0; i<64; i++) {
             //int bit = (whichField & ( 1 << i )) >> i;
             BitVector one = 1;
@@ -208,7 +203,9 @@ string VRSyncNode::printContainer(vector<FieldContainer*> container){
         vector<string> fieldNames;
         for(int i = 0; i<numFields; ++i){
             GetFieldHandlePtr fh = c->getField(i);
-            //cout << fh->getName() << endl;
+            if(fh != nullptr){
+                cout << fh->getName() << endl;
+            }
         }
         //cout << "container id: " << c->getId() << endl;
         res << "container " << id << " " << typeName << " | typeID " << typeID  << " | groupID " << groupID << " | size " << containerSize << " | numFields " << numFields << endl;

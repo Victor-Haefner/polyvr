@@ -42,6 +42,7 @@ class VRSyncNode : public VRTransform {
         void handleChangeList(void* msg);
         vector<FieldContainer*> findContainer(string typeName);
         vector<FieldContainer*> getTransformationContainer(ChangeList* cl);
+        //vector<OSG::Field
 
     public:
         VRSyncNode(string name = "syncNode");
