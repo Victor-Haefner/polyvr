@@ -22,6 +22,11 @@ class VRGlutWindow : public VRWindow {
 
         void save(XMLElementPtr node);
         void load(XMLElementPtr node);
+
+        void onMouse(int b, int s, int x, int y);
+        void onMotion(int x, int y);
+        void onKeyboard(int k, int s, int x, int y);
+        void onKeyboard_special(int k, int s, int x, int y);
 };
 
 OSG_END_NAMESPACE;
