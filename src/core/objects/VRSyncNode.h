@@ -33,15 +33,15 @@ class VRSyncNode : public VRTransform {
         VRFunction<void*>* socketCb;
         VRUpdateCbPtr updateFkt;
 
-        map<int, bool> container; // local containers
+        map<int, bool> container; // local containers, sub-set of containers which need to be synced for collaboration
         map<string, VRSyncRemotePtr> remotes;
 
         VRObjectPtr copy(vector<VRObjectPtr> children);
 
         void update();
         void handleChangeList(void* msg);
-        vector<FieldContainer*> findContainer(string typeName);
-        vector<FieldContainer*> getTransformationContainer(ChangeList* cl);
+        vector<FieldContainer*> findContainer(string typeName); //deprecated
+        vector<FieldContainer*> getTransformationContainer(ChangeList* cl); //deprecated
         //vector<OSG::Field
 
     public:
@@ -58,10 +58,10 @@ class VRSyncNode : public VRTransform {
         void printChangeList();
         void broadcast(string message);
 
-        void getContainer();
+        void getContainer(); //deprecated
         //void getContainerFields();
 
-        string printContainer(vector<FieldContainer*> container);
+        string printContainer(vector<FieldContainer*> container); //deprecated
 
 };
 

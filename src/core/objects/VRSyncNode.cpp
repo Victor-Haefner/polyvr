@@ -28,25 +28,45 @@ ThreadRefPtr applicationThread;
 void VRSyncNode::printChangeList(){
     //ChangeList* cl = Thread->getCurrentChangeList();
     ChangeList* cl = applicationThread->getChangeList();
+    FieldContainerFactoryBase* factory = FieldContainerFactory::the();
+    stringstream changedContainers;
     int j = 0;
-    for( auto it = cl->begin(); it != cl->end(); ++it) {
+    for (auto it = cl->begin(); it != cl->end(); ++it) {
         ContainerChangeEntry* entry = *it;
         const FieldFlags* fieldFlags = entry->pFieldFlags;
         BitVector whichField = entry->whichField;
         UInt32 id = entry->uiContainerId;
+        //cout << "entry->uiContainerId " << entry->uiContainerId << endl;
+        //continue;
 
-        cout << "uiEntryDesc " << j << ": " << entry->uiEntryDesc << ", uiContainerId: " << id << endl;
+        // ----- print info ---- //
+        string type = "";
+        if (factory->getContainer(id) != nullptr){
+            type += factory->getContainer(id)->getTypeName();
+        }
+        cout << "Node: " << getNode()->node->getId() << " uiEntryDesc " << j << ": " << entry->uiEntryDesc << ", uiContainerId: " << id << " containerType: " << type << endl;
+        // --------------------- //
 
-        cout << printContainer(getTransformationContainer(cl)) << endl;
+//        for (auto c : container){
+//            cout << "c.first " << c.first << ", id " << id << endl;
+//            if (c.first == id){
+//                changedContainers << "changed: " << id << ", Type: " << type << endl;
+//            }
+//        }
+
+//        cout << printContainer(fc) << endl;
 
         for (int i=0; i<64; i++) {
             //int bit = (whichField & ( 1 << i )) >> i;
             BitVector one = 1;
             BitVector mask = ( one << i );
             bool bit = (whichField & mask);
-            if (bit) cout << " whichField: " << i << " : " << bit << "  mask: " << mask << endl;
+            if (bit) {
+                cout << " whichField: " << i << " : " << bit << "  mask: " << mask << endl;
+            }
         }
         j++;
+        //cout << changedContainers.str();
     }
 }
 
@@ -59,13 +79,11 @@ VRSyncNode::VRSyncNode(string name) : VRTransform(name) {
     NodeCoreMTRefPtr core = node->getCore();
 
     container[node->getId()] = true;
-    container[core->getId()] = true; //transform
-
+    container[core->getId()] = true;
     OSGTransformPtr pt = getOSGTransformPtr();
-    //UInt32 id = pt->getId(); //TODO: OSGTransform has no member getId even though its inherited from ReflexiveFieldContainer
-    //container[id] = true;
+    container[pt->trans->getId()] = true; //transform
 
-    cout << "VRSyncNode::VRSyncNode " << node->getTypeName() << ", " << core->getTypeName() << endl;
+    cout << "VRSyncNode::VRSyncNode " << node->getTypeName() << ":" << node->getId() << ", " << core->getTypeName() << ":" << core->getId() << pt->trans->getTypeName() << ":" << pt->trans->getId() << endl;
 
 	updateFkt = VRUpdateCb::create("SyncNode update", bind(&VRSyncNode::update, this));
 	VRScene::getCurrent()->addUpdateFkt(updateFkt, 100000);
@@ -80,7 +98,7 @@ VRSyncNodePtr VRSyncNode::create(string name) { return VRSyncNodePtr(new VRSyncN
 
 //update this SyncNode
 void VRSyncNode::update() {
-    //printChangeList();
+    printChangeList();
 
     // go through all changes, gather changes where the container is known (in containers)
     // serialize changes in new change list (check OSGConnection for serialization Implementation)
@@ -125,12 +143,22 @@ void VRSyncNode::handleChangeList(void* _args) {
     string msg = args->ws_data;
 
     cout << "GOT CHANGES!! " << endl;
-    cout << "client " << client << ", received msg: " << msg << " container: ";
+    cout << "client " << client << ", received msg: "  << msg << endl;//<< " container: ";
+//    for (auto c : container){
+//        cout << c.first << " ";
+//    }
+//    cout << endl;
 
-    for (auto c : container){
-        cout << c.first << " ";
-    }
-    cout << endl;
+    //printChangeList();
+
+    //commit changes to entry
+//    ChangeList* cl = applicationThread->getChangeList();
+//    for (auto it = cl->begin(); it != cl->end(); ++it) {
+//        ContainerChangeEntry* entry = *it;
+//        entry->commitChanges(ChangedOrigin::Commit, 0); //TODO: determine input parameters
+//    }
+
+
 }
 
 //broadcast message to all remote nodes
@@ -142,6 +170,8 @@ void VRSyncNode::broadcast(string message){
     }
 }
 
+//deprecated
+//prints all container
 void VRSyncNode::getContainer(){
     FieldContainerFactoryBase* factory = FieldContainerFactory::the();
     //auto containerStore = factory->getFieldContainerStore();
@@ -157,6 +187,7 @@ void VRSyncNode::getContainer(){
 
 }
 
+//deprecated
 //lists all container with typeName
 vector<FieldContainer*> VRSyncNode::findContainer(string typeName){
     FieldContainerFactoryBase* factory = FieldContainerFactory::the();
@@ -171,6 +202,7 @@ vector<FieldContainer*> VRSyncNode::findContainer(string typeName){
     return res;
 }
 
+//deprecated
 //returns container of type Transformation from changelist
 vector<FieldContainer*> VRSyncNode::getTransformationContainer(ChangeList* cl){
     vector<FieldContainer*> res;
@@ -200,6 +232,7 @@ string VRSyncNode::printContainer(vector<FieldContainer*> container){
         UInt32 numFields = c->getNumFields();
         const FieldFlags* fieldFlags = c->getFieldFlags();
 
+
         vector<string> fieldNames;
         for(int i = 0; i<numFields; ++i){
             GetFieldHandlePtr fh = c->getField(i);
@@ -220,6 +253,7 @@ VRSyncRemote::VRSyncRemote(string uri) : uri(uri) {
     socket = VRWebSocket::create("sync node ws");
     cout << "VRSyncRemote::VRSyncRemote " << uri << endl;
     if (uri != "") connect();
+    //map IDs
 }
 
 VRSyncRemote::~VRSyncRemote() { cout << "~VRSyncRemote::VRSyncRemote" << endl; }
