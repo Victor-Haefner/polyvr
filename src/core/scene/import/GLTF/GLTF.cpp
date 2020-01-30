@@ -366,7 +366,7 @@ class GLTFLoader : public GLTFUtils {
 
         void handleExtension(string extension){
             cout << "GLTFLOADER::WARNING IN EXTENSIONS USED: '" << extension << "' not supported yet" << endl;
-            if (extension == "KHR_materials_unlit") disableMaterials = true;
+            //if (extension == "KHR_materials_unlit") disableMaterials = true;
             if (extension == "KHR_materials_pbrSpecularGlossines") disableMaterials = true;
         }
 
