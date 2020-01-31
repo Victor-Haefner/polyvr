@@ -38,11 +38,13 @@ class VRSyncNode : public VRTransform {
 
         VRObjectPtr copy(vector<VRObjectPtr> children);
 
-        void update();
         void handleChangeList(void* msg);
         vector<FieldContainer*> findContainer(string typeName); //deprecated
         vector<FieldContainer*> getTransformationContainer(ChangeList* cl); //deprecated
         //vector<OSG::Field
+
+        void registerContainer(FieldContainer* c);
+        void registerNode(Node* c);
 
     public:
         VRSyncNode(string name = "syncNode");
@@ -55,7 +57,8 @@ class VRSyncNode : public VRTransform {
 
         void addRemote(string host, int port, string name);
 
-        void printChangeList();
+        void update();
+        void printChangeList(ChangeList* cl);
         void broadcast(string message);
 
         void getContainer(); //deprecated

@@ -25,13 +25,14 @@ template<> string typeName(const VRSyncNode& o) { return "SyncNode"; }
 
 ThreadRefPtr applicationThread;
 
-void VRSyncNode::printChangeList(){
-    //ChangeList* cl = Thread->getCurrentChangeList();
-    ChangeList* cl = applicationThread->getChangeList();
+void VRSyncNode::printChangeList(ChangeList* cl) {
+    //if (cl->size() == 0) return;
+
     FieldContainerFactoryBase* factory = FieldContainerFactory::the();
     stringstream changedContainers;
     int j = 0;
     for (auto it = cl->begin(); it != cl->end(); ++it) {
+        if (j == 0) cout << "VRSyncNode::printChangeList " << name << endl;
         ContainerChangeEntry* entry = *it;
         const FieldFlags* fieldFlags = entry->pFieldFlags;
         BitVector whichField = entry->whichField;
@@ -44,7 +45,12 @@ void VRSyncNode::printChangeList(){
         if (factory->getContainer(id) != nullptr){
             type += factory->getContainer(id)->getTypeName();
         }
-        cout << "Node: " << getNode()->node->getId() << " uiEntryDesc " << j << ": " << entry->uiEntryDesc << ", uiContainerId: " << id << " containerType: " << type << endl;
+//        if (type== "Transform"){
+//            cout << "Node: " << getNode()->node->getId() << " uiEntryDesc " << j << ": " << entry->uiEntryDesc << ", uiContainerId: " << id << " containerType: " << type << endl;
+//        }
+        cout << " Node: " << getNode()->node->getId() << " whichField " << whichField << ", uiContainerId: " << id << " containerType: " << type << endl;
+        //cout << " getOSGTransformPtr()->pt->trans->getId() " << getOSGTransformPtr()->trans->getId() << endl;
+
         // --------------------- //
 
 //        for (auto c : container){
@@ -56,17 +62,23 @@ void VRSyncNode::printChangeList(){
 
 //        cout << printContainer(fc) << endl;
 
-        for (int i=0; i<64; i++) {
+        /*for (int i=0; i<64; i++) {
             //int bit = (whichField & ( 1 << i )) >> i;
             BitVector one = 1;
             BitVector mask = ( one << i );
             bool bit = (whichField & mask);
             if (bit) {
-                cout << " whichField: " << i << " : " << bit << "  mask: " << mask << endl;
+                cout << "  whichField: " << i << " : " << bit << "  mask: " << mask << endl;
             }
-        }
+        }*/
         j++;
         //cout << changedContainers.str();
+//        map<UInt64, UInt32> remoteToLocal = RemoteAspectP->LocalFCMapT;
+//        for (auto it = remoteToLocal->begin(); it != remoteToLocal->end(); ++it){
+//            UInt64 remoteId = it->first;
+//            UInt32 localId = it->second;
+//            cout << "remote id:" << remoteId << ", local id: " << localId << endl;
+//        }
     }
 }
 
@@ -76,14 +88,12 @@ VRSyncNode::VRSyncNode(string name) : VRTransform(name) {
 
     // TODO: get all container and their ID in this VRTransform
     NodeMTRefPtr node = getNode()->node;
-    NodeCoreMTRefPtr core = node->getCore();
+    registerNode(node);
 
-    container[node->getId()] = true;
-    container[core->getId()] = true;
-    OSGTransformPtr pt = getOSGTransformPtr();
-    container[pt->trans->getId()] = true; //transform
+    //OSGTransformPtr pt = getOSGTransformPtr();
+    //registerContainer(pt->trans); //transform
 
-    cout << "VRSyncNode::VRSyncNode " << node->getTypeName() << ":" << node->getId() << ", " << core->getTypeName() << ":" << core->getId() << pt->trans->getTypeName() << ":" << pt->trans->getId() << endl;
+    //cout << "VRSyncNode::VRSyncNode " << name << "  " << node->getTypeName() << ":" << node->getId() << ", " << core->getTypeName() << ":" << core->getId() << " ! " << pt->trans->getTypeName() << ":" << pt->trans->getId() << endl;
 
 	updateFkt = VRUpdateCb::create("SyncNode update", bind(&VRSyncNode::update, this));
 	VRScene::getCurrent()->addUpdateFkt(updateFkt, 100000);
@@ -96,17 +106,299 @@ VRSyncNode::~VRSyncNode() {
 VRSyncNodePtr VRSyncNode::ptr() { return static_pointer_cast<VRSyncNode>( shared_from_this() ); }
 VRSyncNodePtr VRSyncNode::create(string name) { return VRSyncNodePtr(new VRSyncNode(name) ); }
 
+class OSGChangeList : public ChangeList {
+    public:
+        ~OSGChangeList() {};
+
+        void addCreate(ContainerChangeEntry* entry) {
+            ContainerChangeEntry* pEntry = getNewCreatedEntry();
+            pEntry->uiEntryDesc   = entry->uiEntryDesc;
+            pEntry->uiContainerId = entry->uiContainerId;
+            pEntry->whichField    = entry->whichField;
+            if (pEntry->whichField == 0 && entry->bvUncommittedChanges != 0)
+                pEntry->whichField |= *entry->bvUncommittedChanges;
+            pEntry->pList         = this;
+        }
+
+        void addChange(ContainerChangeEntry* entry) {
+                if (entry->uiEntryDesc == ContainerChangeEntry::AddReference   ||
+                    entry->uiEntryDesc == ContainerChangeEntry::SubReference   ||
+                    entry->uiEntryDesc == ContainerChangeEntry::DepSubReference ) {
+                    ContainerChangeEntry *pEntry = getNewEntry();
+                    pEntry->uiEntryDesc   = entry->uiEntryDesc;
+                    pEntry->uiContainerId = entry->uiContainerId;
+                    pEntry->pList         = this;
+                } else if(entry->uiEntryDesc == ContainerChangeEntry::Change) {
+                    ContainerChangeEntry *pEntry = getNewEntry();
+                    pEntry->uiEntryDesc   = ContainerChangeEntry::Change;
+                    pEntry->pFieldFlags   = entry->pFieldFlags;
+                    pEntry->uiContainerId = entry->uiContainerId;
+                    pEntry->whichField    = entry->whichField;
+                    if (pEntry->whichField == 0 && entry->bvUncommittedChanges != 0)
+                        pEntry->whichField |= *entry->bvUncommittedChanges;
+                    pEntry->pList         = this;
+                }
+        }
+};
+
+typedef unsigned char BYTE;
+
+static const std::string base64_chars =
+             "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+             "abcdefghijklmnopqrstuvwxyz"
+             "0123456789+/";
+
+static inline bool is_base64(BYTE c) {
+  return (isalnum(c) || (c == '+') || (c == '/'));
+}
+
+std::string base64_encode(BYTE const* buf, unsigned int bufLen) {
+  std::string ret;
+  int i = 0;
+  int j = 0;
+  BYTE char_array_3[3];
+  BYTE char_array_4[4];
+
+  while (bufLen--) {
+    char_array_3[i++] = *(buf++);
+    if (i == 3) {
+      char_array_4[0] = (char_array_3[0] & 0xfc) >> 2;
+      char_array_4[1] = ((char_array_3[0] & 0x03) << 4) + ((char_array_3[1] & 0xf0) >> 4);
+      char_array_4[2] = ((char_array_3[1] & 0x0f) << 2) + ((char_array_3[2] & 0xc0) >> 6);
+      char_array_4[3] = char_array_3[2] & 0x3f;
+
+      for(i = 0; (i <4) ; i++)
+        ret += base64_chars[char_array_4[i]];
+      i = 0;
+    }
+  }
+
+  if (i)
+  {
+    for(j = i; j < 3; j++)
+      char_array_3[j] = '\0';
+
+    char_array_4[0] = (char_array_3[0] & 0xfc) >> 2;
+    char_array_4[1] = ((char_array_3[0] & 0x03) << 4) + ((char_array_3[1] & 0xf0) >> 4);
+    char_array_4[2] = ((char_array_3[1] & 0x0f) << 2) + ((char_array_3[2] & 0xc0) >> 6);
+    char_array_4[3] = char_array_3[2] & 0x3f;
+
+    for (j = 0; (j < i + 1); j++)
+      ret += base64_chars[char_array_4[j]];
+
+    while((i++ < 3))
+      ret += '=';
+  }
+
+  return ret;
+}
+
+std::vector<BYTE> base64_decode(std::string const& encoded_string) {
+  int in_len = encoded_string.size();
+  int i = 0;
+  int j = 0;
+  int in_ = 0;
+  BYTE char_array_4[4], char_array_3[3];
+  std::vector<BYTE> ret;
+
+  while (in_len-- && ( encoded_string[in_] != '=') && is_base64(encoded_string[in_])) {
+    char_array_4[i++] = encoded_string[in_]; in_++;
+    if (i ==4) {
+      for (i = 0; i <4; i++)
+        char_array_4[i] = base64_chars.find(char_array_4[i]);
+
+      char_array_3[0] = (char_array_4[0] << 2) + ((char_array_4[1] & 0x30) >> 4);
+      char_array_3[1] = ((char_array_4[1] & 0xf) << 4) + ((char_array_4[2] & 0x3c) >> 2);
+      char_array_3[2] = ((char_array_4[2] & 0x3) << 6) + char_array_4[3];
+
+      for (i = 0; (i < 3); i++)
+          ret.push_back(char_array_3[i]);
+      i = 0;
+    }
+  }
+
+  if (i) {
+    for (j = i; j <4; j++)
+      char_array_4[j] = 0;
+
+    for (j = 0; j <4; j++)
+      char_array_4[j] = base64_chars.find(char_array_4[j]);
+
+    char_array_3[0] = (char_array_4[0] << 2) + ((char_array_4[1] & 0x30) >> 4);
+    char_array_3[1] = ((char_array_4[1] & 0xf) << 4) + ((char_array_4[2] & 0x3c) >> 2);
+    char_array_3[2] = ((char_array_4[2] & 0x3) << 6) + char_array_4[3];
+
+    for (j = 0; (j < i - 1); j++) ret.push_back(char_array_3[j]);
+  }
+
+  return ret;
+}
+
+struct SerialEntry {
+    int localId = 0;
+    BitVector fieldMask;
+    int len = 0;
+};
+
+class ourBinaryDataHandler : public BinaryDataHandler {
+    public:
+        ourBinaryDataHandler() {
+            forceDirectIO();
+        }
+
+        void read(MemoryHandle src, UInt32 size) {
+            ; // TODO
+        }
+
+        void write(MemoryHandle src, UInt32 size) {
+            data.insert(data.end(), src, src + size);
+        }
+
+        //void readBuffer() throw (ReadError) {}
+        //void writeBuffer() {}
+
+        vector<BYTE> data;
+};
+
+void serialize_entry(ContainerChangeEntry* entry, vector<BYTE>& data) {
+    UInt32 id = entry->uiContainerId;
+    FieldContainerFactoryBase* factory = FieldContainerFactory::the();
+    FieldContainer* fcPtr = factory->getContainer(id);
+    if (fcPtr) {
+        SerialEntry sentry;
+        sentry.localId = id;
+        sentry.fieldMask = entry->whichField;
+
+        ourBinaryDataHandler handler;
+        fcPtr->copyToBin(handler, sentry.fieldMask);
+        sentry.len = handler.data.size();//UInt32(fcPtr->getBinSize(sentry.fieldMask));
+
+        cout << " !!! encoded: " << data.size() << endl;
+
+        data.insert(data.end(), (BYTE*)&sentry, (BYTE*)&sentry + sizeof(SerialEntry));
+        data.insert(data.end(), handler.data.begin(), handler.data.end());
+    }
+}
+
+string serialize(ChangeList* clist) {
+    vector<BYTE> data;
+    for (auto it = clist->begin(); it != clist->end(); ++it) {
+        ContainerChangeEntry* entry = *it;
+        if (entry->uiEntryDesc != ContainerChangeEntry::Change) continue;
+        serialize_entry(entry, data);
+    }
+    //string res = base64_encode((BYTE*)clist, sizeof(*clist));
+    //cout << " serialize result: " << data << endl;
+    return base64_encode(&data[0], data.size());
+}
+
+void deserializeAndApply(string& data) {
+    vector<BYTE> vec = base64_decode(data);
+    int pos = 0;
+    while (pos < vec.size()) {
+        cout << " !!! search for sentry at " << pos << "/" << vec.size() << endl;
+        SerialEntry sentry = *((SerialEntry*)&vec[pos]);
+        cout << "sentry: " << sentry.localId << " " << sentry.fieldMask << " " << sentry.len << endl;
+        pos += sizeof(SerialEntry);
+        vector<BYTE> FCdata;
+        FCdata.insert(FCdata.end(), vec.beg()+pos, vec.beg()+pos+sentry.len);
+        pos += sentry.len;
+        // TODO:
+        //  - get corresponding ID to sentry.localId
+        //  - get fieldcontainer using correct ID
+        //  - use ourBinaryDataHandler to somehow apply binary change to fieldcontainer (override read method)
+        // ourBinaryDataHandler handler;
+        // TODO: feed handler with FCdata!
+        // fcPtr->copyFromBin(handler, sentry.fieldMask);
+    }
+}
+
 //update this SyncNode
 void VRSyncNode::update() {
-    printChangeList();
 
     // go through all changes, gather changes where the container is known (in containers)
+    ChangeList* cl = applicationThread->getChangeList();
+    if (cl->getNumChanged() + cl->getNumCreated() == 0) return;
+    //cl->commitChanges();
+
+    FieldContainerFactoryBase* factory = FieldContainerFactory::the();
+    //printChangeList(cl);
+    int j = 0;
+
+    // create local changelist with changes of containers of the subtree of this sync node :D
+    OSGChangeList* localChanges = (OSGChangeList*)ChangeList::create();
+    for (auto it = cl->begin(); it != cl->end(); ++it) {
+        ContainerChangeEntry* entry = *it;
+        if (entry->uiEntryDesc != ContainerChangeEntry::Change) continue; // TODO: only for debugging!
+        UInt32 id = entry->uiContainerId;
+        if (container.count(id)) {
+            //cout << " change ? " << id << "  " << entry->whichField << "  " << Node::ChildrenFieldMask << endl;
+            //cout << " change ? " << id << "  " << *entry->bvUncommittedChanges << "  " << Node::ChildrenFieldMask << endl;
+            localChanges->addChange(entry);
+        }
+    }
+
+    if (localChanges->getNumChanged() == 0) return;
+
+    cout << "\nVRSyncNode::update " << name << endl;
+
+    // check for addChild changes
+    for (auto it = localChanges->begin(); it != localChanges->end(); ++it) {
+        ContainerChangeEntry* entry = *it;
+        UInt32 id = entry->uiContainerId;
+        //cout << " change of container: " << id << ", fields: " << entry->whichField << endl;
+        FieldContainer* fct = factory->getContainer(id);
+        if (fct){
+            string type = fct->getTypeName();
+
+            if (type == "Node" && entry->whichField & Node::ChildrenFieldMask) {
+                //cout << "  node children changed!" << endl;
+                Node* node = dynamic_cast<Node*>(fct);
+                for (int i=0; i<node->getNChildren(); i++) {
+                    Node* child = node->getChild(i);
+                    if (!container.count(child->getId())) {
+                        //cout << "   found unregistred child: " << child->getId() << endl;
+                        registerNode(child); // TODO: add created for every new registered container?
+                    }
+                }
+            }
+
+            if (type == "Node" && entry->whichField & Node::CoreFieldMask) {
+                //cout << "  node core changed!" << endl;
+                Node* node = dynamic_cast<Node*>(fct);
+                registerContainer(node->getCore()); // TODO: add created?
+            }
+        }
+    }
+
+    // check for created nodes
+    /*for (auto it = cl->beginCreated(); it != cl->endCreated(); ++it) {
+        ContainerChangeEntry* entry = *it;
+        UInt32 id = entry->uiContainerId;
+        if (container.count(id)) localChanges->addCreate(entry);
+    }*/
+
+    printChangeList(localChanges);
+
     // serialize changes in new change list (check OSGConnection for serialization Implementation)
+    string data = serialize(localChanges);
+    delete localChanges;
 
     // send over websocket to remote
     for (auto& remote : remotes) {
-        //remote.second.socket.sendMessage(cl_data);
+        remote.second->send(data);
     }
+}
+
+void VRSyncNode::registerContainer(FieldContainer* c) {
+    container[c->getId()] = true;
+}
+
+void VRSyncNode::registerNode(Node* node) {
+    NodeCoreMTRefPtr core = node->getCore();
+    registerContainer(node);
+    registerContainer(core);
+    for (int i=0; i<node->getNChildren(); i++) registerNode(node->getChild(i));
 }
 
 VRObjectPtr VRSyncNode::copy(vector<VRObjectPtr> children) {
@@ -144,6 +436,9 @@ void VRSyncNode::handleChangeList(void* _args) {
 
     cout << "GOT CHANGES!! " << endl;
     cout << "client " << client << ", received msg: "  << msg << endl;//<< " container: ";
+
+    deserializeAndApply(msg);
+
 //    for (auto c : container){
 //        cout << c.first << " ";
 //    }
