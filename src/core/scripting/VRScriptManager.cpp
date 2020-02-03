@@ -71,11 +71,11 @@ VRScriptManager::~VRScriptManager() {
     //Py_XDECREF(pModBase);
     if (PyErr_Occurred() != NULL) PyErr_Print();
     int N = Py_REFCNT(pModVR);
-    for (int i=0; i<N; i++) Py_DECREF(pModVR); // this destroys the VR module, helps with memory leaks :)
+    for (int i=1; i<N; i++) Py_DECREF(pModVR); // reduce the count to 1!
     //checkGarbageCollection();
     PyErr_Clear();
+    Py_Finalize(); // finally destroys pModVR
     VRPyBase::err = 0;
-    Py_Finalize();
 }
 
 void VRScriptManager::pauseScripts(bool b) {
@@ -168,7 +168,7 @@ static PyObject* writeOut(PyObject *self, PyObject *args) {
 #ifndef WITHOUT_GTK
     VRGuiManager::get()->getConsole(pyOutConsole)->write(what);
 #else
-    cout << " PYOUT: " << what << endl;
+    cout << what;
 #endif
     return Py_BuildValue("");
 }
@@ -179,7 +179,7 @@ static PyObject* writeErr(PyObject *self, PyObject *args) {
 #ifndef WITHOUT_GTK
     VRGuiManager::get()->getConsole(pyErrConsole)->write(what);
 #else
-    cout << " PYERR: " << what << endl;
+    cout << what;
 #endif
     return Py_BuildValue("");
 }
