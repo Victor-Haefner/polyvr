@@ -217,10 +217,7 @@ void VRGeometry::setMesh(OSGGeometryPtr g, Reference ref, bool keep_material) {
     meshChanged();
 
 #ifdef WASM
-    if (!g->geo->isSingleIndex()) {
-        VRGeoData data(ptr());
-        data.makeSingleIndex();
-    }
+    makeSingleIndex();
 #endif
 }
 
@@ -331,6 +328,14 @@ void VRGeometry::makeUnique() {
     if (mesh_node == 0) return;
     NodeMTRecPtr clone = deepCloneTree( mesh_node->node );
     setMesh( OSGGeometry::create( dynamic_cast<Geometry*>( clone->getCore() ) ), source );
+}
+
+void VRGeometry::makeSingleIndex() {
+    if (!mesh || !mesh->geo) return;
+    if (!mesh->geo->isSingleIndex()) {
+        VRGeoData data(ptr());
+        data.makeSingleIndex();
+    }
 }
 
 // OSG 2.0 function not implemented :(

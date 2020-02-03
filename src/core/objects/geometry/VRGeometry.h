@@ -72,6 +72,7 @@ class VRGeometry : public VRTransform {
         void setReference(Reference ref);
         Reference getReference();
         void makeUnique();
+        void makeSingleIndex();
         void setMeshVisibility(bool b);
         void setVolumeCheck(bool b, bool recursive = false);
 
