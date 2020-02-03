@@ -120,11 +120,16 @@ void VRAnnotationEngine::setSize(float f) { mat->setShaderParameter("size", Real
 void VRAnnotationEngine::setBillboard(bool b) { mat->setShaderParameter("doBillboard", Real32(b)); }
 void VRAnnotationEngine::setScreensize(bool b) { mat->setShaderParameter("screen_size", Real32(b)); }
 
+void VRAnnotationEngine::setOrientation(Vec3d d, Vec3d u) {
+    mat->setShaderParameter("orientationDir", Vec3f(d));
+    mat->setShaderParameter("orientationUp", Vec3f(u));
+}
+
 void VRAnnotationEngine::updateTexture() {
 #ifndef WITHOUT_PANGO_CAIRO
     string txt;
     for (int i=32; i<127; i++) txt += char(i);
-    txt += "ÄÜÖäüöß€";
+    txt += "ÄÜÖäüöß€°^";
     int cN = VRText::countGraphemes(txt);
     int padding = 3;
     auto img = VRText::get()->create(txt, "MONO 20", 20, fg, bg);
@@ -205,6 +210,8 @@ layout (triangle_strip, max_vertices=60) out;
 
 uniform float doBillboard;
 uniform float screen_size;
+uniform vec3 orientationDir;
+uniform vec3 orientationUp;
 uniform float size;
 uniform float texPadding;
 uniform float charTexSize;
@@ -215,6 +222,13 @@ in mat4 MVP[];
 out vec2 texCoord;
 out vec4 geomPos;
 out vec3 geomNorm;
+
+vec3 orientationX;
+
+vec4 transform(in float x, in float y) {
+    vec3 p = -orientationX*x + orientationUp*y;
+    return vec4(p, 0);
+}
 
 void emitVertex(in vec4 p, in vec2 tc, in vec4 v) {
     gl_Position = p;
@@ -244,20 +258,20 @@ void emitQuad(in float offset, in vec4 tc) {
     }
 
     if (doBillboard < 0.5) {
-        p1 = p+MVP[0]*vec4(-sx+ox,-sy,0,0);
-        p2 = p+MVP[0]*vec4(-sx+ox, sy,0,0);
-        p3 = p+MVP[0]*vec4( sx+ox, sy,0,0);
-        p4 = p+MVP[0]*vec4( sx+ox,-sy,0,0);
+        p1 = p+MVP[0]*transform(-sx+ox,-sy);
+        p2 = p+MVP[0]*transform(-sx+ox, sy);
+        p3 = p+MVP[0]*transform( sx+ox, sy);
+        p4 = p+MVP[0]*transform( sx+ox,-sy);
     } else {
         float a = OSGViewportSize.y/OSGViewportSize.x;
-        p1 = p+vec4(-sx*a+ox*a,-sy,0,0);
-        p2 = p+vec4(-sx*a+ox*a, sy,0,0);
-        p3 = p+vec4( sx*a+ox*a, sy,0,0);
-        p4 = p+vec4( sx*a+ox*a,-sy,0,0);
-        v1 = vertex[0]+vec4(-sx*a+ox*a,-sy,0,0);
-        v2 = vertex[0]+vec4(-sx*a+ox*a, sy,0,0);
-        v3 = vertex[0]+vec4( sx*a+ox*a, sy,0,0);
-        v4 = vertex[0]+vec4( sx*a+ox*a,-sy,0,0);
+        p1 = p+transform(-sx*a+ox*a,-sy);
+        p2 = p+transform(-sx*a+ox*a, sy);
+        p3 = p+transform( sx*a+ox*a, sy);
+        p4 = p+transform( sx*a+ox*a,-sy);
+        v1 = vertex[0]+transform(-sx*a+ox*a,-sy);
+        v2 = vertex[0]+transform(-sx*a+ox*a, sy);
+        v3 = vertex[0]+transform( sx*a+ox*a, sy);
+        v4 = vertex[0]+transform( sx*a+ox*a,-sy);
     }
 
     emitVertex(p1, vec2(tc[0], tc[2]), v1);
@@ -291,6 +305,7 @@ void emitString(in float str, in float offset) {
 }
 
 void main() {
+    orientationX = cross(orientationDir, orientationUp);
     float str = normal[0][0];
     float offset = normal[0][2];
     if (offset >= 0) emitString(str, offset);
