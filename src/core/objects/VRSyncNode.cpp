@@ -45,22 +45,8 @@ void VRSyncNode::printChangeList(ChangeList* cl) {
         if (factory->getContainer(id) != nullptr){
             type += factory->getContainer(id)->getTypeName();
         }
-//        if (type== "Transform"){
-//            cout << "Node: " << getNode()->node->getId() << " uiEntryDesc " << j << ": " << entry->uiEntryDesc << ", uiContainerId: " << id << " containerType: " << type << endl;
-//        }
-        cout << " Node: " << getNode()->node->getId() << " whichField " << whichField << ", uiContainerId: " << id << " containerType: " << type << endl;
-        //cout << " getOSGTransformPtr()->pt->trans->getId() " << getOSGTransformPtr()->trans->getId() << endl;
 
-        // --------------------- //
-
-//        for (auto c : container){
-//            cout << "c.first " << c.first << ", id " << id << endl;
-//            if (c.first == id){
-//                changedContainers << "changed: " << id << ", Type: " << type << endl;
-//            }
-//        }
-
-//        cout << printContainer(fc) << endl;
+        cout << "whichField " << whichField << ", uiContainerId: " << id << " containerType: " << type << endl;
 
         /*for (int i=0; i<64; i++) {
             //int bit = (whichField & ( 1 << i )) >> i;
@@ -72,13 +58,6 @@ void VRSyncNode::printChangeList(ChangeList* cl) {
             }
         }*/
         j++;
-        //cout << changedContainers.str();
-//        map<UInt64, UInt32> remoteToLocal = RemoteAspectP->LocalFCMapT;
-//        for (auto it = remoteToLocal->begin(); it != remoteToLocal->end(); ++it){
-//            UInt64 remoteId = it->first;
-//            UInt32 localId = it->second;
-//            cout << "remote id:" << remoteId << ", local id: " << localId << endl;
-//        }
     }
 }
 
@@ -247,7 +226,11 @@ class ourBinaryDataHandler : public BinaryDataHandler {
         }
 
         void read(MemoryHandle src, UInt32 size) {
-            ; // TODO
+            //;//TODO
+            data.insert(data.end(), (BYTE*)&src, (BYTE*)&src + sizeof(size)); //v.insert(v.end(), data.begin(), data.end())
+            //data.insert(data.end(), handler.data.begin(), handler.data.end());
+            cout << "writing data to handler " << sizeof(data) << endl;
+
         }
 
         void write(MemoryHandle src, UInt32 size) {
@@ -270,12 +253,12 @@ void serialize_entry(ContainerChangeEntry* entry, vector<BYTE>& data) {
         sentry.fieldMask = entry->whichField;
 
         ourBinaryDataHandler handler;
-        fcPtr->copyToBin(handler, sentry.fieldMask);
+        fcPtr->copyToBin(handler, sentry.fieldMask); //calls handler->write
         sentry.len = handler.data.size();//UInt32(fcPtr->getBinSize(sentry.fieldMask));
 
-        cout << " !!! encoded: " << data.size() << endl;
+        cout << "serialize > > > sentry: " << sentry.localId << " " << sentry.fieldMask << " " << sentry.len << " | encoded: " << data.size() << endl;
 
-        data.insert(data.end(), (BYTE*)&sentry, (BYTE*)&sentry + sizeof(SerialEntry));
+        data.insert(data.end(), (BYTE*)&sentry, (BYTE*)&sentry + sizeof(SerialEntry)); //v.insert(v.end(), data.begin(), data.end())
         data.insert(data.end(), handler.data.begin(), handler.data.end());
     }
 }
@@ -298,18 +281,25 @@ void deserializeAndApply(string& data) {
     while (pos < vec.size()) {
         cout << " !!! search for sentry at " << pos << "/" << vec.size() << endl;
         SerialEntry sentry = *((SerialEntry*)&vec[pos]);
-        cout << "sentry: " << sentry.localId << " " << sentry.fieldMask << " " << sentry.len << endl;
+        cout << "deserialize > > > sentry: " << sentry.localId << " " << sentry.fieldMask << " " << sentry.len << endl;
         pos += sizeof(SerialEntry);
         vector<BYTE> FCdata;
-        FCdata.insert(FCdata.end(), vec.beg()+pos, vec.beg()+pos+sentry.len);
+        FCdata.insert(FCdata.end(), vec.begin()+pos, vec.begin()+pos+sentry.len);
         pos += sentry.len;
         // TODO:
-        //  - get corresponding ID to sentry.localId
+        //  - get corresponding ID to sentry.localId -> 3021
+        UInt32 id = 3021;
         //  - get fieldcontainer using correct ID
+        FieldContainerFactoryBase* factory = FieldContainerFactory::the();
+        FieldContainer* fcPtr = factory->getContainer(id);
         //  - use ourBinaryDataHandler to somehow apply binary change to fieldcontainer (override read method)
         // ourBinaryDataHandler handler;
         // TODO: feed handler with FCdata!
         // fcPtr->copyFromBin(handler, sentry.fieldMask);
+        ourBinaryDataHandler handler;
+        fcPtr->copyFromBin(handler, sentry.fieldMask); //calls handler->read
+
+        //apply changes on the container
     }
 }
 
@@ -378,6 +368,7 @@ void VRSyncNode::update() {
         if (container.count(id)) localChanges->addCreate(entry);
     }*/
 
+    cout << "local changes: " << endl;
     printChangeList(localChanges);
 
     // serialize changes in new change list (check OSGConnection for serialization Implementation)
@@ -387,6 +378,7 @@ void VRSyncNode::update() {
     // send over websocket to remote
     for (auto& remote : remotes) {
         remote.second->send(data);
+        cout << name << " sending " << data  << endl;
     }
 }
 
@@ -410,20 +402,20 @@ void VRSyncNode::startInterface(int port) {
     socketCb = new VRHTTP_cb( "VRSyncNode callback", bind(&VRSyncNode::handleChangeList, this, _1) );
     socket->setHTTPCallback(socketCb);
     socket->setType("http receive");
-    cout << "maybe started Interface at port " << port << endl;
+    //cout << "maybe started Interface at port " << port << endl;
 }
 
 string asUri(string host, int port, string name) {
     return "ws://" + host + ":" + to_string(port) + "/" + name;
 }
 
-//Add a SyncRemote
+//Add remote Nodes to sync with
 void VRSyncNode::addRemote(string host, int port, string name) {
     string uri = asUri(host, port, name);
-    cout << "added SyncRemote (host, port, name) " << "(" << host << ", " << port << ", " << name << ") -> " << uri << endl;
+    //cout << "added SyncRemote (host, port, name) " << "(" << host << ", " << port << ", " << name << ") -> " << uri << endl;
     remotes[uri] = VRSyncRemote::create(uri);
     //remotes.insert(map<string, VRSyncRemote>::value_type(uri, VRSyncRemote(uri)));
-    cout << " added SyncRemote 2" << endl;
+    //cout << " added SyncRemote 2" << endl;
     //remotes[uri].connect();
 }
 
@@ -435,25 +427,9 @@ void VRSyncNode::handleChangeList(void* _args) {
     string msg = args->ws_data;
 
     cout << "GOT CHANGES!! " << endl;
-    cout << "client " << client << ", received msg: "  << msg << endl;//<< " container: ";
+    cout << name << ", received msg: "  << msg << endl;//<< " container: ";
 
     deserializeAndApply(msg);
-
-//    for (auto c : container){
-//        cout << c.first << " ";
-//    }
-//    cout << endl;
-
-    //printChangeList();
-
-    //commit changes to entry
-//    ChangeList* cl = applicationThread->getChangeList();
-//    for (auto it = cl->begin(); it != cl->end(); ++it) {
-//        ContainerChangeEntry* entry = *it;
-//        entry->commitChanges(ChangedOrigin::Commit, 0); //TODO: determine input parameters
-//    }
-
-
 }
 
 //broadcast message to all remote nodes
@@ -546,7 +522,7 @@ string VRSyncNode::printContainer(vector<FieldContainer*> container){
 
 VRSyncRemote::VRSyncRemote(string uri) : uri(uri) {
     socket = VRWebSocket::create("sync node ws");
-    cout << "VRSyncRemote::VRSyncRemote " << uri << endl;
+    //cout << "VRSyncRemote::VRSyncRemote " << uri << endl;
     if (uri != "") connect();
     //map IDs
 }
@@ -555,10 +531,10 @@ VRSyncRemote::~VRSyncRemote() { cout << "~VRSyncRemote::VRSyncRemote" << endl; }
 VRSyncRemotePtr VRSyncRemote::create(string name) { return VRSyncRemotePtr( new VRSyncRemote(name) ); }
 
 void VRSyncRemote::connect() {
-    cout << "VRSyncRemote, try connecting to " << uri << endl;
+    //cout << "VRSyncRemote, try connecting to " << uri << endl;
     bool result = socket->open(uri);
     if (!result) cout << "VRSyncRemote, Failed to open websocket to " << uri << endl;
-    else cout << "VRSyncRemote, connected to " << uri << endl;
+    //else cout << "VRSyncRemote, connected to " << uri << endl;
 }
 
 bool VRSyncRemote::send(string message){
