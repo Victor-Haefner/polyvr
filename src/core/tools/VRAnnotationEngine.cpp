@@ -34,6 +34,8 @@ VRAnnotationEngine::VRAnnotationEngine(string name) : VRGeometry(name) {
     setBillboard(false);
     setScreensize(false);
     data = VRGeoData::create();
+
+    setOrientation(Vec3d(0,0,1), Vec3d(0,1,0));
 }
 
 VRAnnotationEnginePtr VRAnnotationEngine::create(string name) { return shared_ptr<VRAnnotationEngine>(new VRAnnotationEngine(name) ); }
