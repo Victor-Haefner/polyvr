@@ -313,7 +313,7 @@ string VRMaterial::constructShaderFP(VRMatDataPtr data, bool deferred, int force
     fp += "  vec4  ambient = mat_ambient * color;\n";
     fp += "  vec4  diffuse = mat_diffuse * NdotL * color;\n";
     fp += "  vec4  specular = mat_specular * 0.0;\n";
-    fp += "  if (isLit == 1) gl_FragColor = diffuse;\n";
+    fp += "  if (isLit == 0) gl_FragColor = mat_diffuse * color;\n";
     fp += "  else gl_FragColor = ambient + diffuse + specular;\n";
     fp += "}\n";
 #else
@@ -367,6 +367,7 @@ void VRMaterial::updateOGL2Parameters() {
     setShaderParameter("mat_ambient", Vec4f(a[0], a[1], a[2], 1.0));
     setShaderParameter("mat_diffuse", Vec4f(d[0], d[1], d[2], 1.0));
     setShaderParameter("mat_specular", Vec4f(s[0], s[1], s[2], 1.0));
+    //setFrontBackModes(GL_NONE, GL_FILL);
 #endif
 }
 
@@ -994,15 +995,22 @@ int VRMaterial::getDepthTest() {
     return md->depthChunk->getFunc();
 }
 
-void VRMaterial::setDiffuse(string c) { setDiffuse(toColor(c)); updateOGL2Parameters(); }
-void VRMaterial::setSpecular(string c) { setSpecular(toColor(c)); updateOGL2Parameters(); }
-void VRMaterial::setAmbient(string c) { setAmbient(toColor(c)); updateOGL2Parameters(); }
-void VRMaterial::setDiffuse(Color3f c) { mats[activePass]->colChunk->setDiffuse( toColor4f(c, getTransparency()) );}
-void VRMaterial::setSpecular(Color3f c) { mats[activePass]->colChunk->setSpecular(toColor4f(c)); }
-void VRMaterial::setAmbient(Color3f c) { mats[activePass]->colChunk->setAmbient(toColor4f(c)); }
-void VRMaterial::setEmission(Color3f c) { mats[activePass]->colChunk->setEmission(toColor4f(c)); }
-void VRMaterial::setShininess(float c) { mats[activePass]->colChunk->setShininess(c); }
-void VRMaterial::setLit(bool b) { if (activePass >= 0 && activePass < (int)mats.size() && mats[activePass]->colChunk) mats[activePass]->colChunk->setLit(b); updateDeferredShader(); updateOGL2Parameters(); }
+void VRMaterial::setDiffuse(string c) { setDiffuse(toColor(c)); }
+void VRMaterial::setSpecular(string c) { setSpecular(toColor(c)); }
+void VRMaterial::setAmbient(string c) { setAmbient(toColor(c)); }
+void VRMaterial::setDiffuse(Color3f c) { mats[activePass]->colChunk->setDiffuse( toColor4f(c, getTransparency()) ); updateOGL2Parameters(); }
+void VRMaterial::setSpecular(Color3f c) { mats[activePass]->colChunk->setSpecular(toColor4f(c)); updateOGL2Parameters(); }
+void VRMaterial::setAmbient(Color3f c) { mats[activePass]->colChunk->setAmbient(toColor4f(c)); updateOGL2Parameters(); }
+void VRMaterial::setEmission(Color3f c) { mats[activePass]->colChunk->setEmission(toColor4f(c)); updateOGL2Parameters(); }
+void VRMaterial::setShininess(float c) { mats[activePass]->colChunk->setShininess(c); updateOGL2Parameters(); }
+
+void VRMaterial::setLit(bool b) {
+    if (activePass >= 0 && activePass < (int)mats.size() && mats[activePass]->colChunk) {
+        mats[activePass]->colChunk->setLit(b);
+        updateDeferredShader();
+        updateOGL2Parameters();
+    }
+}
 
 Color3f VRMaterial::getDiffuse() { return toColor3f( mats[activePass]->colChunk->getDiffuse() ); }
 Color3f VRMaterial::getSpecular() { return toColor3f( mats[activePass]->colChunk->getSpecular() ); }
@@ -1140,8 +1148,8 @@ bool VRMaterial::checkShader(int type, string shader, string name) {
         free(compiler_log);
         return false;
     }
-    return true;
 #endif
+    return true;
 }
 
 void VRMaterial::forceShaderUpdate() {

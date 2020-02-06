@@ -312,9 +312,6 @@ void VRGeometry::setColor(string c) {
     auto m = VRMaterial::get(c); // use get instead of create because of memory leak?
     m->setDiffuse(c);
     setMaterial(m);
-#ifdef WASM
-    m->updateOGL2Shader();
-#endif
 }
 
 void VRGeometry::setType(int t) {
@@ -960,6 +957,9 @@ void VRGeometry::setMaterial(VRMaterialPtr mat) {
     this->mat = mat;
     if (!meshSet) return;
     mesh->geo->setMaterial(mat->getMaterial()->mat);
+#ifdef WASM
+    mat->updateOGL2Shader();
+#endif
 }
 
 /*void VRGeometry::setMaterial(MaterialMTRecPtr mat) {
