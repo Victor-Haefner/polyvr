@@ -3,6 +3,10 @@
 #include "core/math/boundingbox.h"
 #include "core/utils/VRTimer.h"
 #include "core/utils/xml.h"
+#include <gdal/gdal.h>
+#include <gdal/gdal_priv.h>
+#include <gdal/gdal_version.h>
+#include <gdal/ogrsf_frmts.h>
 
 #include <iostream>
 #include <fstream>
@@ -832,6 +836,107 @@ void OSMMap::readFile(string path) {
     cout << "OSMMap::readFile path " << path << endl;
     cout << "  loaded " << ways.size() << " ways, " << nodes.size() << " nodes and " << relations.size() << " relations" << endl;
     cout << "  secs needed: " << t2 << endl;
+}
+
+void OSMMap::readGEOJSON23Up(string path) {
+    /*GDALAllRegister();
+    GDALDatasetUniquePtr poDS(GDALDataset::Open( path.c_str(), GDAL_OF_VECTOR));
+    if( poDS == nullptr ) { printf( "Open failed.\n" ); return; }
+    // general information
+    printf( "Driver: %s/%s\n", poDS->GetDriver()->GetDescription(), poDS->GetDriver()->GetMetadataItem( GDAL_DMD_LONGNAME ) );*/
+    cout << "UP" << endl;
+    //GDALClose(poDS);
+}
+
+void OSMMap::readGEOJSON23Be(string path) {
+    GDALAllRegister();
+    GDALDataset* poDS = (GDALDataset *) GDALOpenEx( path.c_str(), GDAL_OF_VECTOR, NULL, NULL, NULL  );
+    if( poDS == NULL ) { printf( "Open failed.\n" ); return; }
+    // general information
+    printf( "Driver: %s/%s\n", poDS->GetDriver()->GetDescription(), poDS->GetDriver()->GetMetadataItem( GDAL_DMD_LONGNAME ) );
+
+    int layercount = poDS->GetLayerCount();
+
+    auto pointFromString = [&](string in){
+
+        return;
+    };
+
+    auto multipolyFromString = [&](string in){
+
+        return;
+    };
+
+
+    for (int i = 0; i < layercount; i++) {
+        OGRLayer  *poLayer = poDS->GetLayer(i);
+        OGRFeature *poFeature;
+        poLayer->ResetReading();
+        int featureCounter = 0;
+        while( (poFeature = poLayer->GetNextFeature()) != NULL ) {
+            OGRFeatureDefn *poFDefn = poLayer->GetLayerDefn();
+            map<string, string> tags;
+            for( int iField = 0; iField < poFDefn->GetFieldCount(); iField++ ) {
+                OGRFieldDefn *poFieldDefn = poFDefn->GetFieldDefn( iField );
+                tags[poFieldDefn->GetNameRef()] = poFeature->GetFieldAsString(iField);
+                //printf( "%s-", poFieldDefn->GetNameRef() );
+                //printf( "%s,", poFeature->GetFieldAsString(iField) );
+            }
+
+            OGRGeometry *poGeometry;
+            poGeometry = poFeature->GetGeometryRef();
+            if( poGeometry != NULL && wkbFlatten(poGeometry->getGeometryType()) == wkbPoint ) {
+                //OGRPoint *poPoint = poGeometry->toPoint();
+                OGRPoint *poPoint = (OGRPoint *) poGeometry;
+                char *wkt_tmp = nullptr;
+                poGeometry->exportToWkt(&wkt_tmp);
+                cout << wkt_tmp << endl;
+                //node
+                /*
+                double lat = atof(miscAtts["lat"].c_str());
+                double lon = atof(miscAtts["lon"].c_str());
+                OSMNodePtr node = OSMNodePtr( new OSMNode(currentID, lat, lon) );
+                node->tags = tags;
+                nodes[node->id] = node;
+                map->bounds->update(Vec3d(lon,lat,0));
+                */
+                //printf( "%.3f,%3.f\n", poPoint->getX(), poPoint->getY() );
+            } else if ( poGeometry != NULL && wkbFlatten(poGeometry->getGeometryType()) == wkbMultiPolygon ) {
+                OGRMultiPolygon* poMPoly = (OGRMultiPolygon *) poGeometry;
+                char *wkt_tmp = nullptr;
+                poGeometry->exportToWkt(&wkt_tmp);
+                cout << wkt_tmp << endl;
+                /*
+                //way
+                //fill all nodes, connect with ways
+                double lat = atof(miscAtts["lat"].c_str());
+                double lon = atof(miscAtts["lon"].c_str());
+                OSMNodePtr node = OSMNodePtr( new OSMNode(currentID, lat, lon) );
+                //node->tags = tags;
+                nodes[node->id] = node;
+                OSMWayPtr way = OSMWayPtr( new OSMWay(currentID) );
+                way->nodes = refsForWays;
+                way->tags = tags;
+                ways[way->id] = way;
+                map->bounds->update(Vec3d(lon,lat,0));
+                }*/
+            }
+            else {
+                printf( "no point or multipolygon geometry\n" );
+            }
+            featureCounter++;
+        }
+        //OGRFeature::DestroyFeature( poFeature );
+    }
+    GDALClose(poDS);
+}
+
+void OSMMap::readGEOJSON(string path) {
+#if GDAL_VERSION_NUM >= GDAL_COMPUTE_VERSION(2,3,0)
+    readGEOJSON23Up(path);
+#else
+    readGEOJSON23Be(path);
+#endif
 }
 
 void OSMMap::writeFile(string path) {
