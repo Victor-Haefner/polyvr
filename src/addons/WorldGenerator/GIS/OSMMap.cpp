@@ -849,24 +849,64 @@ void OSMMap::readGEOJSON23Up(string path) {
 }
 
 void OSMMap::readGEOJSON23Be(string path) {
+    VRTimer t; t.start();
     GDALAllRegister();
     GDALDataset* poDS = (GDALDataset *) GDALOpenEx( path.c_str(), GDAL_OF_VECTOR, NULL, NULL, NULL  );
     if( poDS == NULL ) { printf( "Open failed.\n" ); return; }
     // general information
-    printf( "Driver: %s/%s\n", poDS->GetDriver()->GetDescription(), poDS->GetDriver()->GetMetadataItem( GDAL_DMD_LONGNAME ) );
+    cout << "OSMMap::readGEOJSON23Be path " << path << endl;
+    printf( "  Driver: %s/%s\n", poDS->GetDriver()->GetDescription(), poDS->GetDriver()->GetMetadataItem( GDAL_DMD_LONGNAME ) );
 
     int layercount = poDS->GetLayerCount();
+    int nodeID = -1;
+    int wayID = -1;
 
-    auto pointFromString = [&](string in){
-
-        return;
+    auto coordsFromString = [&](string inB) {
+        //string has format: "lon lat"
+        int at1 = inB.find_first_of(" ");
+        double lon = toFloat( inB.substr(0, at1).c_str() );
+        double lat = toFloat( inB.substr(at1+1, inB.length()-(at1+1)).c_str() );
+        return Vec2d(lat,lon);
     };
 
-    auto multipolyFromString = [&](string in){
-
-        return;
+    auto latlonFromPointString = [&](string in){
+        int at0 = in.find_first_of("(")+1;
+        return coordsFromString( in.substr(at0, (in.length()-1)-at0) );
     };
 
+    auto multicoordsFromString = [&](string inB){
+        //string has format: "lon lat,lon lat,lon lat"
+        vector<Vec2d> res;
+        bool ende = false;
+        int at1 = 0;
+        int at2 = 1;
+        while (!ende){
+            at2 = inB.find_first_of(',', at1);
+            if (at2 > 0) {
+                res.push_back( coordsFromString( inB.substr(at1, at2-at1) ) );
+                at1 = at2+1;
+            }
+            else {
+                res.push_back( coordsFromString( inB.substr(at1, inB.length()-at1) ) );
+                ende = true;
+            }
+        }
+        return res;
+    };
+
+    auto multipolyFromString = [&](string in) {
+        vector<vector<Vec2d>> res;
+        int at1 = in.find_first_of("(((") + 3;
+        int at2 = 1;
+        int at3 = in.find_first_of(")))");
+        int at4 = in.find_first_of(")");
+        if (at3 != at4) {
+            //TODO
+        } else {
+            res.push_back( multicoordsFromString( in.substr(at1, at3-at1) ) );
+        }
+        return res;
+    };
 
     for (int i = 0; i < layercount; i++) {
         OGRLayer  *poLayer = poDS->GetLayer(i);
@@ -879,8 +919,7 @@ void OSMMap::readGEOJSON23Be(string path) {
             for( int iField = 0; iField < poFDefn->GetFieldCount(); iField++ ) {
                 OGRFieldDefn *poFieldDefn = poFDefn->GetFieldDefn( iField );
                 tags[poFieldDefn->GetNameRef()] = poFeature->GetFieldAsString(iField);
-                //printf( "%s-", poFieldDefn->GetNameRef() );
-                //printf( "%s,", poFeature->GetFieldAsString(iField) );
+                //cout << poFieldDefn->GetNameRef() << "-" << poFeature->GetFieldAsString(iField) << endl;
             }
 
             OGRGeometry *poGeometry;
@@ -890,36 +929,37 @@ void OSMMap::readGEOJSON23Be(string path) {
                 OGRPoint *poPoint = (OGRPoint *) poGeometry;
                 char *wkt_tmp = nullptr;
                 poGeometry->exportToWkt(&wkt_tmp);
-                cout << wkt_tmp << endl;
-                //node
-                /*
-                double lat = atof(miscAtts["lat"].c_str());
-                double lon = atof(miscAtts["lon"].c_str());
-                OSMNodePtr node = OSMNodePtr( new OSMNode(currentID, lat, lon) );
+                Vec2d latlon = latlonFromPointString(wkt_tmp);
+                nodeID++;
+                string strNID = to_string(nodeID);
+                OSMNodePtr node = OSMNodePtr( new OSMNode(strNID, latlon[0], latlon[1] ) );
                 node->tags = tags;
                 nodes[node->id] = node;
-                map->bounds->update(Vec3d(lon,lat,0));
-                */
-                //printf( "%.3f,%3.f\n", poPoint->getX(), poPoint->getY() );
-            } else if ( poGeometry != NULL && wkbFlatten(poGeometry->getGeometryType()) == wkbMultiPolygon ) {
+                //bounds->update(Vec3d(latlon[1],latlon[0],0));
+            }
+            else if ( poGeometry != NULL && wkbFlatten(poGeometry->getGeometryType()) == wkbMultiPolygon ) {
                 OGRMultiPolygon* poMPoly = (OGRMultiPolygon *) poGeometry;
                 char *wkt_tmp = nullptr;
                 poGeometry->exportToWkt(&wkt_tmp);
-                cout << wkt_tmp << endl;
-                /*
-                //way
-                //fill all nodes, connect with ways
-                double lat = atof(miscAtts["lat"].c_str());
-                double lon = atof(miscAtts["lon"].c_str());
-                OSMNodePtr node = OSMNodePtr( new OSMNode(currentID, lat, lon) );
-                //node->tags = tags;
-                nodes[node->id] = node;
-                OSMWayPtr way = OSMWayPtr( new OSMWay(currentID) );
-                way->nodes = refsForWays;
-                way->tags = tags;
-                ways[way->id] = way;
-                map->bounds->update(Vec3d(lon,lat,0));
-                }*/
+                vector<vector<Vec2d>> multiPoly = multipolyFromString(wkt_tmp);
+                vector<string> refsForWays;
+                for (auto eachPoly : multiPoly) {
+                    refsForWays.clear();
+                    for (auto eachPoint : eachPoly) {
+                        nodeID++;
+                        string strNID = to_string(nodeID);
+                        OSMNodePtr node = OSMNodePtr( new OSMNode(strNID, eachPoint[0], eachPoint[1] ) );
+                        refsForWays.push_back(strNID);
+                        nodes[node->id] = node;
+                        //bounds->update(Vec3d(eachPoint[1],eachPoint[0],0));
+                    }
+                    wayID++;
+                    string strWID = to_string(wayID);
+                    OSMWayPtr way = OSMWayPtr( new OSMWay(strWID) );
+                    way->nodes = refsForWays;
+                    way->tags = tags;
+                    ways[way->id] = way;
+                }
             }
             else {
                 printf( "no point or multipolygon geometry\n" );
@@ -928,7 +968,11 @@ void OSMMap::readGEOJSON23Be(string path) {
         }
         //OGRFeature::DestroyFeature( poFeature );
     }
+
     GDALClose(poDS);
+    auto t2 = t.stop()/1000.0;
+    cout << "  loaded " << ways.size() << " ways, " << nodes.size() << " nodes and " << relations.size() << " relations" << endl;
+    cout << "  secs needed: " << t2 << endl;
 }
 
 void OSMMap::readGEOJSON(string path) {
