@@ -22,6 +22,8 @@ class VRAnnotationEngine : public VRGeometry {
         static string fp_es2;
 
         float size;
+        float charTexSize;
+        float texPadding;
         map<string, int> characterIDs;
 
         struct Label {

@@ -121,12 +121,20 @@ void VRAnnotationEngine::set(int i0, Vec3d p0, string txt) {
 #else
         int N = Ngraphemes;
         resize(l,p,N*4);
+        float H = size*0.5;
+        float D = charTexSize*0.5;
+        float P = texPadding;
 
         for (int j=0; j<N; j++) {
             string grapheme = graphemes[j];
-            char c = characterIDs[grapheme];
-            int k = l.entries[j];
-            data->setVert(k, p, Vec2d(u,v));
+            char c = characterIDs[grapheme] - 1;
+            float u1 = P+c*D*2;
+            float u2 = P+(c+1)*D*2;
+
+            data->setVert(l.entries[j*4+0], p+Vec3d(-D, H,0), Vec2d(u1,0));
+            data->setVert(l.entries[j*4+1], p+Vec3d( D, H,0), Vec2d(u2,0));
+            data->setVert(l.entries[j*4+2], p+Vec3d( D,-H,0), Vec2d(u2,1));
+            data->setVert(l.entries[j*4+3], p+Vec3d(-D,-H,0), Vec2d(u1,1));
         }
 #endif
     }
@@ -151,11 +159,11 @@ void VRAnnotationEngine::updateTexture() {
     auto img = VRText::get()->create(txt, "MONO 20", 20, fg, bg);
     float tW = img->getSize()[0];
     float lW = VRText::get()->layoutWidth;
-    float tp = padding / tW;
-    float cSize = lW/tW / cN;
+    texPadding = padding / tW;
+    charTexSize = lW/tW / cN;
     mat->setTexture(img);
-    mat->setShaderParameter("texPadding", Real32(tp)); // tested
-    mat->setShaderParameter("charTexSize", Real32(cSize));
+    mat->setShaderParameter("texPadding", Real32(texPadding)); // tested
+    mat->setShaderParameter("charTexSize", Real32(charTexSize));
     //img->write("annChars.png");
 
     int i=1; // 0 is used for invalid/no char
