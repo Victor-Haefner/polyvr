@@ -18,6 +18,9 @@ class VRAnnotationEngine : public VRGeometry {
         static string dfp;
         static string gp;
 
+        static string vp_es2;
+        static string fp_es2;
+
         float size;
         map<string, int> characterIDs;
 

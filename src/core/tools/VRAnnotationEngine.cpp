@@ -22,10 +22,15 @@ VRAnnotationEngine::VRAnnotationEngine(string name) : VRGeometry(name) {
     type = "AnnotationEngine";
 
     mat = VRMaterial::create("AnnEngMat");
+#ifndef OSG_OGL_ES2
     mat->setVertexShader(vp, "annotationVS");
     mat->setFragmentShader(fp, "annotationFS");
     mat->setFragmentShader(dfp, "annotationDFS", true);
     mat->setGeometryShader(gp, "annotationGS");
+#else
+    mat->setVertexShader(vp_es2, "annotationVSes2");
+    mat->setFragmentShader(fp_es2, "annotationFSes2");
+#endif
     mat->setPointSize(5);
     setMaterial(mat);
     updateTexture();
@@ -78,24 +83,23 @@ int VRAnnotationEngine::add(Vec3d p, string s) {
 }
 
 void VRAnnotationEngine::set(int i0, Vec3d p0, string txt) {
-#ifndef WITHOUT_PANGO_CAIRO
     auto strings = splitString(txt, '\n');
     int Nlines = strings.size();
     for (int y = 0; y<Nlines; y++) {
         string str = strings[y];
-        //cout << "VRAnnotationEngine::set str " << str << endl;
         Vec3d p = p0;
         p[1] -= y*size;
         int i = i0+y;
         if (i < 0) return;
         while (i >= (int)labels.size()) labels.push_back(Label());
         int Ngraphemes = VRText::countGraphemes(str);
-        int N = ceil(Ngraphemes/3.0); // number of points, 3 chars per point
+        auto graphemes = VRText::splitGraphemes(str);
         auto& l = labels[i];
 
+#ifndef OSG_OGL_ES2
+        int N = ceil(Ngraphemes/3.0); // number of points, 3 chars per point
         resize(l,p,N + 4); // plus 4 bounding points
 
-        auto graphemes = VRText::splitGraphemes(str);
         for (int j=0; j<N; j++) {
             char c[] = {0,0,0};
             for (int k = 0; k<3; k++) {
@@ -114,8 +118,18 @@ void VRAnnotationEngine::set(int i0, Vec3d p0, string txt) {
         data->setVert(l.entries[N+1], p+Vec3d(-0.25*size,  0.5*size, 0), Vec3d(0,0,-1));
         data->setVert(l.entries[N+2], p+Vec3d((Ngraphemes-0.25)*size, -0.5*size, 0), Vec3d(0,0,-1));
         data->setVert(l.entries[N+3], p+Vec3d((Ngraphemes-0.25)*size,  0.5*size, 0), Vec3d(0,0,-1));
-    }
+#else
+        int N = Ngraphemes;
+        resize(l,p,N*4);
+
+        for (int j=0; j<N; j++) {
+            string grapheme = graphemes[j];
+            char c = characterIDs[grapheme];
+            int k = l.entries[j];
+            data->setVert(k, p, Vec2d(u,v));
+        }
 #endif
+    }
 }
 
 void VRAnnotationEngine::setSize(float f) { mat->setShaderParameter("size", Real32(f)); size = f; }
@@ -315,8 +329,38 @@ void main() {
 );
 
 
+/// --------------- OpenGL ES 2.0 Version (no GS) ----------------------
 
+string VRAnnotationEngine::vp_es2 =
+"#version 120\n"
+GLSL(
+varying vec4 vertex;
+varying vec3 normal;
+varying vec2 texCoord;
 
+attribute vec4 osg_Vertex;
+attribute vec4 osg_Normal;
+attribute vec4 osg_TexCoord;
+
+void main( void ) {
+    gl_Position = gl_ModelViewProjectionMatrix*osg_Vertex;
+    normal = osg_Normal.xyz;
+    texCoord = osg_TexCoord;
+}
+);
+
+string VRAnnotationEngine::fp_es2 =
+"#version 120\n"
+GLSL(
+uniform sampler2D texture;
+
+varying vec2 texCoord;
+
+void main( void ) {
+    //gl_FragColor = vec4(texCoord.x,texCoord.y,0.0,1.0);
+    gl_FragColor = texture2D(texture, texCoord);
+}
+);
 
 
 
