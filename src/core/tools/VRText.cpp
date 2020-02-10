@@ -9,10 +9,12 @@
 #include <cstdlib>
 #include <new>
 
+#ifndef WITHOUT_PANGO_CAIRO
 //flags mit  $ pkg-config --cflags pango und $ pkg-config --libs pango :)
 #include <pango/pango.h>
 #include <pango/pangoft2.h>
 #include <pango/pangocairo.h>
+#endif
 
 #include "core/objects/material/VRTexture.h"
 
@@ -65,10 +67,11 @@ void VRText::convertData(UChar8* data, int width, int height) {
     //kopiere sie zurück nach data
     memcpy(data, buffer, fullSize);
 
-    delete buffer;
+    delete[] buffer;
 }
 
 VRTexturePtr VRText::createBmp (string text, string font, Color4f fg, Color4f bg) {
+#ifndef WITHOUT_PANGO_CAIRO
     this->text = text;
     analyzeText();
     computeTexParams();
@@ -112,8 +115,12 @@ VRTexturePtr VRText::createBmp (string text, string font, Color4f fg, Color4f bg
     cairo_destroy (cr);
     cairo_surface_destroy (surface);
     return tex;
+#else
+    return VRTexture::create();
+#endif
 }
 
+#ifndef WITHOUT_UNICODE
 #include <unicode/utypes.h>
 #include <unicode/ubrk.h>
 #include <unicode/utext.h>
@@ -128,6 +135,22 @@ void checkStatus(const UErrorCode status) {
 }
 
 size_t VRText::countGraphemes(string txt) {
+    /* TODO: try to get rid of unicode dependency!
+    PangoContext* ctx = pango_context_new();
+    GList* items = pango_itemize(ctx, txt.c_str(), 0, txt.size(), 0, 0);
+    g_object_unref(ctx);
+
+    GList *elem;
+    //MyType *item;
+
+    size_t charCount = 0;
+    for(elem = items; elem; elem = elem->next) {
+        //item = elem->data;
+        charCount++;
+    }
+    return charCount;*/
+
+
     UErrorCode status = U_ZERO_ERROR;
     PUText text(utext_openUTF8(nullptr, txt.data(), txt.length(), &status));
     checkStatus(status);
@@ -164,7 +187,20 @@ vector<string> VRText::splitGraphemes(string txt) {
     }
     return res;
 }
+#else
+size_t VRText::countGraphemes(string txt) {
+    return txt.size();
+}
 
+vector<string> VRText::splitGraphemes(string txt) {
+    vector<string> res;
+    for (int i=0; i<txt.size(); i++) {
+        string s(1,txt[i]);
+        res.push_back(s);
+    }
+    return res;
+}
+#endif
 
 
 

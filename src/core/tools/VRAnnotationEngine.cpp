@@ -4,9 +4,7 @@
 #include "core/objects/material/VRMaterialT.h"
 #include "core/objects/material/VRTexture.h"
 #include "core/objects/geometry/VRGeoData.h"
-#ifndef WITHOUT_PANGO_CAIRO
 #include "core/tools/VRText.h"
-#endif
 #include "core/utils/toString.h"
 
 #define GLSL(shader) #shader
@@ -84,7 +82,10 @@ void VRAnnotationEngine::resize(Label& l, Vec3d p, int N) {
     for (int i=eN; i<N; i++) {
         data->pushVert(p, Vec3d(), Vec2d());
         l.entries[i] = pN+i-eN;
-        if (i%4 == 3) data->pushQuad();
+        if (i%4 == 3) {
+            data->pushTri(-4,-3,-2);
+            data->pushTri(-4,-2,-1);
+        }
     }
 #endif
 
@@ -366,9 +367,7 @@ void main() {
 /// --------------- OpenGL ES 2.0 Version (no GS) ----------------------
 
 string VRAnnotationEngine::vp_es2 =
-"#version 120\n"
 GLSL(
-precision mediump float;
 varying vec4 vertex;
 varying vec3 normal;
 varying vec2 texCoord;
@@ -377,16 +376,18 @@ attribute vec4 osg_Vertex;
 attribute vec4 osg_Normal;
 attribute vec2 osg_MultiTexCoord0;
 
+uniform mat4 OSGModelViewProjectionMatrix;
+
 void main( void ) {
-    gl_Position = gl_ModelViewProjectionMatrix*osg_Vertex;
+    gl_Position = OSGModelViewProjectionMatrix*osg_Vertex;
     normal = osg_Normal.xyz;
     texCoord = osg_MultiTexCoord0;
 }
 );
 
 string VRAnnotationEngine::fp_es2 =
-"#version 120\n"
 GLSL(
+precision mediump float;
 uniform sampler2D texture;
 
 varying vec2 texCoord;
