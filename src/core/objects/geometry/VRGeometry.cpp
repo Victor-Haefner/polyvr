@@ -217,10 +217,7 @@ void VRGeometry::setMesh(OSGGeometryPtr g, Reference ref, bool keep_material) {
     meshChanged();
 
 #ifdef WASM
-    if (!g->geo->isSingleIndex()) {
-        VRGeoData data(ptr());
-        data.makeSingleIndex();
-    }
+    makeSingleIndex();
 #endif
 }
 
@@ -315,9 +312,6 @@ void VRGeometry::setColor(string c) {
     auto m = VRMaterial::get(c); // use get instead of create because of memory leak?
     m->setDiffuse(c);
     setMaterial(m);
-#ifdef WASM
-    m->updateOGL2Shader();
-#endif
 }
 
 void VRGeometry::setType(int t) {
@@ -331,6 +325,14 @@ void VRGeometry::makeUnique() {
     if (mesh_node == 0) return;
     NodeMTRecPtr clone = deepCloneTree( mesh_node->node );
     setMesh( OSGGeometry::create( dynamic_cast<Geometry*>( clone->getCore() ) ), source );
+}
+
+void VRGeometry::makeSingleIndex() {
+    if (!mesh || !mesh->geo) return;
+    if (!mesh->geo->isSingleIndex()) {
+        VRGeoData data(ptr());
+        data.makeSingleIndex();
+    }
 }
 
 // OSG 2.0 function not implemented :(
@@ -466,7 +468,7 @@ void VRGeometry::fixColorMapping() {
 void VRGeometry::setColors(GeoVectorProperty* Colors, bool fixMapping) {
     if (!meshSet) setMesh();
     mesh->geo->setColors(Colors);
-    if (Colors) {
+    if (Colors && mesh->geo->getPositions()) {
         auto N1 = mesh->geo->getPositions()->size();
         auto N2 = Colors->size();
         if (N1 != N2) mesh->geo->setColors(0);
@@ -955,6 +957,9 @@ void VRGeometry::setMaterial(VRMaterialPtr mat) {
     this->mat = mat;
     if (!meshSet) return;
     mesh->geo->setMaterial(mat->getMaterial()->mat);
+#ifdef WASM
+    mat->updateOGL2Shader();
+#endif
 }
 
 /*void VRGeometry::setMaterial(MaterialMTRecPtr mat) {
@@ -1245,7 +1250,9 @@ vector< tuple<Pnt3d, Pnt3d>> VRGeometry::mapPoints(vector<Pnt3d>& e1, vector<Pnt
 VRPointCloudPtr VRGeometry::convertToPointCloud(map<string, string> options) {
     VRGeoData data;
     int resolution = 1;
+    int partitionSize = -1;
     if (options.count("resolution")) resolution = toInt(options["resolution"]);
+    if (options.count("partitionSize")) partitionSize = toInt(options["partitionSize"]);
     auto pointcloud = VRPointCloud::create("pointcloud");
     pointcloud->applySettings(options);
 
@@ -1253,6 +1260,8 @@ VRPointCloudPtr VRGeometry::convertToPointCloud(map<string, string> options) {
     convertToTriangles();
 
     TriangleIterator it(mesh->geo);
+
+    Color3f color;
 
 	for (int i=0; !it.isAtEnd(); ++it, i++) {
         vector<Edge> edges = {};
@@ -1272,7 +1281,8 @@ VRPointCloudPtr VRGeometry::convertToPointCloud(map<string, string> options) {
 
     Color3f col(1,0.5,0.5);
     for (int i = 0; i < data.size(); i++) {
-        pointcloud->getOctree()->add(Vec3d(data.getPosition(i)), new Color3f(0,0,0) );
+        //pointcloud->getOctree()->add(Vec3d(data.getPosition(i)), new Color3f(0,0,0) );
+        pointcloud->getOctree()->add(Vec3d(data.getPosition(i)), &color, -1, true, partitionSize );
     }
     pointcloud->setupLODs();
 

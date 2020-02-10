@@ -19,10 +19,12 @@ VRGlutWindow* getCurrentWindow() {
 }
 
 void glutResize(int w, int h) { getCurrentWindow()->resize(w, h); }
-/*void glutMouse(int b, int s, int x, int y) { VRMouse::get()->mouse(b ,s ,x ,y); } // TODO: pass getCurrentWindow() as first parameter
-void glutMotion(int x, int y) { VRMouse::get()->motion(x, y); }
-void glutKeyboard(unsigned char k, int x, int y) { VRKeyboard::get()->keyboard(k, x, y); }
-void glutKeyboard2(int k, int x, int y) { VRKeyboard::get()->keyboard_special(k, x, y); }*/
+void glutMouse(int b, int s, int x, int y) { getCurrentWindow()->onMouse(b ,s ,x ,y); }
+void glutMotion(int x, int y) { getCurrentWindow()->onMotion(x, y); }
+void glutKeyboard(unsigned char k, int x, int y) { getCurrentWindow()->onKeyboard(k, 1, x, y); }
+void glutSpecial(int k, int x, int y) { getCurrentWindow()->onKeyboard_special(k, 1, x, y); }
+void glutKeyboardUp(unsigned char k, int x, int y) { getCurrentWindow()->onKeyboard(k, 0, x, y); }
+void glutSpecialUp(int k, int x, int y) { getCurrentWindow()->onKeyboard_special(k, 0, x, y); }
 
 VRGlutWindow::VRGlutWindow() {
     cout << "Glut: New Window" << endl;
@@ -39,11 +41,13 @@ VRGlutWindow::VRGlutWindow() {
 
     glutWindows[winID] = this;
 
-    glutReshapeFunc( glutResize );
-    /*glutKeyboardFunc(glutKeyboard);
-    glutSpecialFunc(glutKeyboard2);
+    glutReshapeFunc(glutResize);
+    glutKeyboardFunc(glutKeyboard);
+    glutSpecialFunc(glutSpecial);
+    glutKeyboardUpFunc(glutKeyboardUp);
+    glutSpecialUpFunc(glutSpecialUp);
     glutMotionFunc(glutMotion);
-    glutMouseFunc(glutMouse);*/
+    glutMouseFunc(glutMouse);
 }
 
 VRGlutWindow::~VRGlutWindow() {
@@ -56,6 +60,22 @@ VRGlutWindowPtr VRGlutWindow::create() { return VRGlutWindowPtr(new VRGlutWindow
 
 void VRGlutWindow::save(XMLElementPtr node) { VRWindow::save(node); }
 void VRGlutWindow::load(XMLElementPtr node) { VRWindow::load(node); }
+
+void VRGlutWindow::onMouse(int b, int s, int x, int y) {
+    if (auto m = getMouse()) m->mouse(b, s, x, y);
+}
+
+void VRGlutWindow::onMotion(int x, int y) {
+    if (auto m = getMouse()) m->motion(x, y);
+}
+
+void VRGlutWindow::onKeyboard(int c, int s, int x, int y) {
+    if (auto k = getKeyboard()) k->keyboard(c, s, x, y);
+}
+
+void VRGlutWindow::onKeyboard_special(int c, int s, int x, int y) {
+    if (auto k = getKeyboard()) k->keyboard_special(c, s, x, y);
+}
 
 OSG_END_NAMESPACE;
 

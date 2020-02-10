@@ -110,16 +110,16 @@ void VRCallbackManager::updateCallbacks() {
     }
 
     vector<job> delayedJobs;
+    vector<job> toExecuteJobs;
     for (auto j : jobFktPtrs) {
         if (j.delay > 0) {
             j.delay--;
             delayedJobs.push_back(j);
-            continue;
-        }
-
-        if (j.ptr) (*j.ptr)();
+        } else toExecuteJobs.push_back(j);
     }
     jobFktPtrs = delayedJobs;
+
+    for (auto j : toExecuteJobs) if (j.ptr) (*j.ptr)();
 }
 
 void VRCallbackManager::printCallbacks() {

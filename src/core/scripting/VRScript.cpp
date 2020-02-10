@@ -555,17 +555,19 @@ void VRScript::execute() {
         VRTimer timer; timer.start();
         auto args = getArguments(true);
         PyObject* pArgs = PyTuple_New(args.size());
+        pyErrPrint("Errors");
 
         int i=0;
         for (auto a : args) {
             a->pyo = getPyObj(a);
             PyTuple_SetItem(pArgs, i, a->pyo);
+            pyErrPrint("Errors");
             i++;
         }
 
         auto res = PyObject_CallObject(fkt, pArgs);
         pyErrPrint("Errors");
-        if (!res) { cout << "Warning in VRScript::execute: PyObject_CallObject failed!" << endl; return; }
+        if (!res) { cout << "Warning in VRScript::execute: PyObject_CallObject failed! in script " << name << endl; return; }
 
         execution_time = timer.stop();
 
