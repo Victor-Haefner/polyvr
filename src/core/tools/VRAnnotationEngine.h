@@ -13,6 +13,9 @@ class VRAnnotationEngine : public VRGeometry {
         VRMaterialPtr mat = 0;
         Color4f fg, bg;
 
+        Vec3d orientationUp;
+        Vec3d orientationDir;
+
         static string vp;
         static string fp;
         static string dfp;

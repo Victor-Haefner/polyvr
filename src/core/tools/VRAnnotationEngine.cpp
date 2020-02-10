@@ -61,6 +61,8 @@ bool VRAnnotationEngine::checkUIn(int i) {
 
 void VRAnnotationEngine::resize(Label& l, Vec3d p, int N) {
     int eN = l.entries.size();
+
+#ifndef OSG_OGL_ES2
     for (int i=0; i<eN; i++) data->setVert(l.entries[i], Vec3d(), Vec3d()); // clear old buffer
 
     if (N <= eN) return;
@@ -72,6 +74,19 @@ void VRAnnotationEngine::resize(Label& l, Vec3d p, int N) {
         data->pushPoint();
         l.entries[eN+i] = pN+i;
     }
+#else
+    for (int i=0; i<eN; i++) data->setVert(l.entries[i], Vec3d(), Vec3d(), Vec2d()); // clear old buffer
+
+    if (N <= eN) return;
+    l.entries.resize(N, 0);
+    int pN = data->size();
+
+    for (int i=eN; i<N; i++) {
+        data->pushVert(p, Vec3d(), Vec2d());
+        l.entries[i] = pN+i-eN;
+        if (i%4 == 3) data->pushQuad();
+    }
+#endif
 
     data->apply( ptr() );
 }
@@ -120,21 +135,30 @@ void VRAnnotationEngine::set(int i0, Vec3d p0, string txt) {
         data->setVert(l.entries[N+3], p+Vec3d((Ngraphemes-0.25)*size,  0.5*size, 0), Vec3d(0,0,-1));
 #else
         int N = Ngraphemes;
+
         resize(l,p,N*4);
         float H = size*0.5;
         float D = charTexSize*0.5;
         float P = texPadding;
+
+        Vec3d orientationX = -orientationDir.cross(orientationUp);
 
         for (int j=0; j<N; j++) {
             string grapheme = graphemes[j];
             char c = characterIDs[grapheme] - 1;
             float u1 = P+c*D*2;
             float u2 = P+(c+1)*D*2;
+            float X = H*2*j;
 
-            data->setVert(l.entries[j*4+0], p+Vec3d(-D, H,0), Vec2d(u1,0));
-            data->setVert(l.entries[j*4+1], p+Vec3d( D, H,0), Vec2d(u2,0));
-            data->setVert(l.entries[j*4+2], p+Vec3d( D,-H,0), Vec2d(u2,1));
-            data->setVert(l.entries[j*4+3], p+Vec3d(-D,-H,0), Vec2d(u1,1));
+            Vec3d p1 = p + orientationX*(-H+X) + orientationUp*(H*2);
+            Vec3d p2 = p + orientationX*( H+X) + orientationUp*(H*2);
+            Vec3d p3 = p + orientationX*( H+X) - orientationUp*(H*2);
+            Vec3d p4 = p + orientationX*(-H+X) - orientationUp*(H*2);
+
+            data->setVert(l.entries[j*4+0], p1, Vec3d(0,0,-1), Vec2d(u1,1));
+            data->setVert(l.entries[j*4+1], p2, Vec3d(0,0,-1), Vec2d(u2,1));
+            data->setVert(l.entries[j*4+2], p3, Vec3d(0,0,-1), Vec2d(u2,0));
+            data->setVert(l.entries[j*4+3], p4, Vec3d(0,0,-1), Vec2d(u1,0));
         }
 #endif
     }
@@ -145,6 +169,8 @@ void VRAnnotationEngine::setBillboard(bool b) { mat->setShaderParameter("doBillb
 void VRAnnotationEngine::setScreensize(bool b) { mat->setShaderParameter("screen_size", Real32(b)); }
 
 void VRAnnotationEngine::setOrientation(Vec3d d, Vec3d u) {
+    orientationUp = u;
+    orientationDir = d;
     mat->setShaderParameter("orientationDir", Vec3f(d));
     mat->setShaderParameter("orientationUp", Vec3f(u));
 }
@@ -342,18 +368,19 @@ void main() {
 string VRAnnotationEngine::vp_es2 =
 "#version 120\n"
 GLSL(
+precision mediump float;
 varying vec4 vertex;
 varying vec3 normal;
 varying vec2 texCoord;
 
 attribute vec4 osg_Vertex;
 attribute vec4 osg_Normal;
-attribute vec4 osg_TexCoord;
+attribute vec2 osg_MultiTexCoord0;
 
 void main( void ) {
     gl_Position = gl_ModelViewProjectionMatrix*osg_Vertex;
     normal = osg_Normal.xyz;
-    texCoord = osg_TexCoord;
+    texCoord = osg_MultiTexCoord0;
 }
 );
 

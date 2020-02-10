@@ -507,7 +507,7 @@ BoundingboxPtr VRObject::getBoundingbox() {
     commitChanges();
     osg->node->updateVolume();
     osg->node->getVolume().getBounds(p1, p2);
-    BoundingboxPtr b = shared_ptr<Boundingbox>( new Boundingbox );
+    auto b = Boundingbox::create();
     b->update(Vec3d(p1));
     b->update(Vec3d(p2));
     return b;
@@ -517,7 +517,7 @@ BoundingboxPtr VRObject::getBoundingbox() {
 #include "core/objects/geometry/OSGGeometry.h"
 
 BoundingboxPtr VRObject::getWorldBoundingbox() {
-    BoundingboxPtr b = shared_ptr<Boundingbox>( new Boundingbox );
+    auto b = Boundingbox::create();
     for (auto obj : getChildren(true, "", true)) {
         auto geo = dynamic_pointer_cast<VRGeometry>(obj);
         if (!geo) continue;
