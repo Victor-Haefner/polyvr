@@ -8,6 +8,7 @@
 #include <vector>
 #include <cstdlib>
 #include <new>
+#include <codecvt>
 
 #ifndef WITHOUT_PANGO_CAIRO
 //flags mit  $ pkg-config --cflags pango und $ pkg-config --libs pango :)
@@ -21,25 +22,148 @@
 
 
 #include "core/objects/material/VRTexture.h"
+#include "core/scene/VRSceneManager.h"
 
 
 using namespace std;
 using namespace OSG;
 
-
-
 class FTUtils {
     private:
-        FT_Library  library;
-        FT_Face     face;
+        FT_Library    library;
+        FT_Face       face;
+        FT_GlyphSlot  slot;
+        FT_Matrix     matrix;                 /* transformation matrix */
+        FT_Vector     pen;                    /* untransformed origin  */
+        FT_Error      error;
+
+        float WIDTH = 100;
+        float HEIGHT = 20;
+
+        vector<unsigned char> image;
 
     public:
-        FTUtils() {
+        FTUtils() : image(WIDTH*HEIGHT,0) {
+            clear_img();
+
             int e = FT_Init_FreeType( &library );
             if (e) cout << "FT_Init_FreeType failed!" << endl;
 
-            e = FT_New_Face( library, "/usr/share/fonts/truetype/arial.ttf", 0, &face );
+            string font = VRSceneManager::get()->getOriginalWorkdir();
+            font += "/ressources/fonts/Mono.ttf";
+            e = FT_New_Face( library, font.c_str(), 0, &face );
             if (e) cout << "FT_New_Face failed!" << endl;
+
+            char*         filename;
+            char*         text;
+
+            double        angle;
+            int           n, num_chars;
+
+                int X = 0;
+                int Y = 0;
+                int S = 20;
+
+            text          = "A-ö-ß";                           /* second argument    */
+
+
+              /* use 50pt at 100dpi */
+              error = FT_Set_Char_Size( face, S * 64, 0, 100, 0 );                /* set character size */
+              /* error handling omitted */
+
+              /* cmap selection omitted;                                        */
+              /* for simplicity we assume that the font contains a Unicode cmap */
+
+              slot = face->glyph;
+
+              /* set up matrix */
+              matrix.xx = (FT_Fixed)( 0x10000L );
+              matrix.xy = (FT_Fixed)( 0 );
+              matrix.yx = (FT_Fixed)( 0 );
+              matrix.yy = (FT_Fixed)( 0x10000L );
+
+              /* the pen position in 26.6 cartesian space coordinates; */
+              /* start at (300,200) relative to the upper left corner  */
+                pen.x = X * 64;
+                pen.y = ( HEIGHT - Y - S ) * 64;
+
+                // TODO: use this for countGraphemes!
+                std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t> convert;
+                const std::wstring wideText = convert.from_bytes(text);
+                num_chars = wideText.size();
+
+              for ( n = 0; n < num_chars; n++ ) {
+                /* set transformation */
+                FT_Set_Transform( face, &matrix, &pen );
+
+                /* load glyph image into the slot (erase previous one) */
+                FT_ULong cUL = wideText[n];
+                //int s = 1;
+                //for (int i = 0; i<chars[n].size(); i++) { cUL += chars[n][i]*s; s*=256; }
+                error = FT_Load_Char( face, cUL, FT_LOAD_RENDER );
+                if ( error ) {
+                    cout << "FT_Load_Char " << cUL << " failed! " << error << endl;
+                    continue;                 /* ignore errors */
+                }
+
+                /* now, draw to our target surface (convert position) */
+                draw_bitmap( &slot->bitmap, slot->bitmap_left, HEIGHT - slot->bitmap_top );
+
+                /* increment pen position */
+                pen.x += slot->advance.x;
+                pen.y += slot->advance.y;
+              }
+
+              show_image();
+
+              FT_Done_Face    ( face );
+              FT_Done_FreeType( library );
+
+        }
+
+        void set(int x, int y, int v) { image[x+y*WIDTH] = v; }
+        int get(int x, int y) { return image[x+y*WIDTH]; }
+
+        void clear_img() {
+            for ( int i = 0; i < WIDTH; i++ ) {
+                for ( int j = 0; j < HEIGHT; j++ ) set(i,j,0);
+            }
+        }
+
+        void draw_bitmap(FT_Bitmap* bitmap, FT_Int x, FT_Int y) {
+              FT_Int  i, j, p, q;
+              FT_Int  x_max = x + bitmap->width;
+              FT_Int  y_max = y + bitmap->rows;
+
+
+              /* for simplicity, we assume that `bitmap->pixel_mode' */
+              /* is `FT_PIXEL_MODE_GRAY' (i.e., not a bitmap font)   */
+
+              for ( i = x, p = 0; i < x_max; i++, p++ ) {
+                for ( j = y, q = 0; j < y_max; j++, q++ ) {
+                  if ( i < 0 || j < 0 || i >= WIDTH || j >= HEIGHT ) continue;
+                  set(i,j, bitmap->buffer[q * bitmap->width + p]);
+                }
+              }
+        }
+
+        void show_image( void ) {
+            ofstream fft("testFT.txt");
+
+            for ( int j = 0; j < WIDTH; j++ ) fft << "-";
+            fft << endl;
+
+            for ( int j = 0; j < HEIGHT; j++ ) {
+                for ( int i = 0; i < WIDTH; i++ ) {
+                    int B = get(i,j);
+                    char c = B == 0 ? ' ' : B < 128 ? '+' : '*';
+                    fft << c;
+                }
+                fft << endl;
+            }
+
+            for ( int j = 0; j < WIDTH; j++ ) fft << "-";
+            fft << endl;
         }
 };
 
@@ -95,7 +219,12 @@ void VRText::convertData(UChar8* data, int width, int height) {
 }
 
 VRTexturePtr VRText::createBmp (string text, string font, Color4f fg, Color4f bg) {
-#ifndef WITHOUT_PANGO_CAIRO
+#ifdef WITHOUT_PANGO_CAIRO
+    FTUtils ft;
+    //ft.
+    VRTexturePtr tex = VRTexture::create();
+    return tex;
+#else
     this->text = text;
     analyzeText();
     computeTexParams();
@@ -139,8 +268,6 @@ VRTexturePtr VRText::createBmp (string text, string font, Color4f fg, Color4f bg
     cairo_destroy (cr);
     cairo_surface_destroy (surface);
     return tex;
-#else
-    return VRTexture::create();
 #endif
 }
 
