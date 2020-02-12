@@ -83,8 +83,12 @@ class FTRenderer {
             error = FT_Init_FreeType( &library );
             if (error) cout << "FT_Init_FreeType failed!" << endl;
 
+#ifndef __EMSCRIPTEN__
             string font = VRSceneManager::get()->getOriginalWorkdir();
             font += "/ressources/fonts/Mono.ttf";
+#else
+            string font = "Mono.ttf";
+#endif
             error = FT_New_Face( library, font.c_str(), 0, &face );
             if (error) cout << "FT_New_Face failed!" << endl;
 
