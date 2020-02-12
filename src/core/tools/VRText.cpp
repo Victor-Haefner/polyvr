@@ -28,7 +28,7 @@
 using namespace std;
 using namespace OSG;
 
-class FTUtils {
+class FTRenderer {
     private:
         FT_Library    library;
         FT_Face       face;
@@ -37,50 +37,70 @@ class FTUtils {
         FT_Vector     pen;                    /* untransformed origin  */
         FT_Error      error;
 
+    public:
         float WIDTH = 100;
         float HEIGHT = 20;
-
         vector<unsigned char> image;
 
     public:
-        FTUtils() : image(WIDTH*HEIGHT,0) {
-            clear_img();
+        FTRenderer(float width, float height) : WIDTH(width), HEIGHT(height), image(width*height,0) {
+            /* set up matrix */
+            matrix.xx = (FT_Fixed)( 0x10000L );
+            matrix.xy = (FT_Fixed)( 0 );
+            matrix.yx = (FT_Fixed)( 0 );
+            matrix.yy = (FT_Fixed)( 0x10000L );
+        }
 
-            int e = FT_Init_FreeType( &library );
-            if (e) cout << "FT_Init_FreeType failed!" << endl;
+        std::vector<unsigned long> getGraphemes(const std::string& utf8) {
+            std::vector<unsigned long> unicode;
+            for (int i=0; i<utf8.size();) {
+                unsigned long uni;
+                size_t todo;
+                unsigned char ch = utf8[i++];
+                if (ch <= 0x7F) { uni = ch; todo = 0; } else if (ch <= 0xBF) return unicode;
+                else if (ch <= 0xDF) { uni = ch&0x1F; todo = 1; }
+                else if (ch <= 0xEF) { uni = ch&0x0F; todo = 2; }
+                else if (ch <= 0xF7) { uni = ch&0x07; todo = 3; }
+                else return unicode;
+
+                for (size_t j = 0; j < todo; ++j) {
+                    if (i == utf8.size()) return unicode;
+                    unsigned char ch = utf8[i++];
+                    if (ch < 0x80 || ch > 0xBF) return unicode;
+                    uni <<= 6;
+                    uni += ch & 0x3F;
+                }
+                if (uni >= 0xD800 && uni <= 0xDFFF) return unicode;
+                if (uni > 0x10FFFF) return unicode;
+                unicode.push_back(uni);
+            }
+
+            return unicode;
+        }
+
+        void render(string textt) {
+            error = FT_Init_FreeType( &library );
+            if (error) cout << "FT_Init_FreeType failed!" << endl;
 
             string font = VRSceneManager::get()->getOriginalWorkdir();
             font += "/ressources/fonts/Mono.ttf";
-            e = FT_New_Face( library, font.c_str(), 0, &face );
-            if (e) cout << "FT_New_Face failed!" << endl;
+            error = FT_New_Face( library, font.c_str(), 0, &face );
+            if (error) cout << "FT_New_Face failed!" << endl;
 
-            char*         filename;
-            char*         text;
+            string text = "A-ö-ß";
+            int n, num_chars;
+            int X = 0;
+            int Y = 0;
+            int S = 20;
 
-            double        angle;
-            int           n, num_chars;
+            error = FT_Set_Char_Size( face, S * 64, 0, 100, 0 ); // set character size,  use 50pt at 100dpi
+            if (error) cout << "FT_Set_Char_Size failed!" << endl;
 
-                int X = 0;
-                int Y = 0;
-                int S = 20;
+            /* cmap selection omitted;                                        */
+            /* for simplicity we assume that the font contains a Unicode cmap */
 
-            text          = "A-ö-ß";                           /* second argument    */
+            slot = face->glyph;
 
-
-              /* use 50pt at 100dpi */
-              error = FT_Set_Char_Size( face, S * 64, 0, 100, 0 );                /* set character size */
-              /* error handling omitted */
-
-              /* cmap selection omitted;                                        */
-              /* for simplicity we assume that the font contains a Unicode cmap */
-
-              slot = face->glyph;
-
-              /* set up matrix */
-              matrix.xx = (FT_Fixed)( 0x10000L );
-              matrix.xy = (FT_Fixed)( 0 );
-              matrix.yx = (FT_Fixed)( 0 );
-              matrix.yy = (FT_Fixed)( 0x10000L );
 
               /* the pen position in 26.6 cartesian space coordinates; */
               /* start at (300,200) relative to the upper left corner  */
@@ -88,16 +108,19 @@ class FTUtils {
                 pen.y = ( HEIGHT - Y - S ) * 64;
 
                 // TODO: use this for countGraphemes!
-                std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t> convert;
-                const std::wstring wideText = convert.from_bytes(text);
-                num_chars = wideText.size();
+                auto graphemes = getGraphemes(text);
+                num_chars = graphemes.size();
+                //std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t> convert;
+                //const std::wstring wideText = convert.from_bytes(text);
+                //num_chars = wideText.size();
 
               for ( n = 0; n < num_chars; n++ ) {
                 /* set transformation */
                 FT_Set_Transform( face, &matrix, &pen );
 
                 /* load glyph image into the slot (erase previous one) */
-                FT_ULong cUL = wideText[n];
+                FT_ULong cUL = graphemes[n];
+                cout << "render glyph " << n << "  " << graphemes[n] << endl;
                 //int s = 1;
                 //for (int i = 0; i<chars[n].size(); i++) { cUL += chars[n][i]*s; s*=256; }
                 error = FT_Load_Char( face, cUL, FT_LOAD_RENDER );
@@ -114,21 +137,12 @@ class FTUtils {
                 pen.y += slot->advance.y;
               }
 
-              show_image();
-
               FT_Done_Face    ( face );
               FT_Done_FreeType( library );
-
         }
 
-        void set(int x, int y, int v) { image[x+y*WIDTH] = v; }
-        int get(int x, int y) { return image[x+y*WIDTH]; }
-
-        void clear_img() {
-            for ( int i = 0; i < WIDTH; i++ ) {
-                for ( int j = 0; j < HEIGHT; j++ ) set(i,j,0);
-            }
-        }
+        void set(int x, int y, int v) { image[x+(HEIGHT-y-1)*WIDTH] = v; }
+        int get(int x, int y) { return image[x+(HEIGHT-y-1)*WIDTH]; }
 
         void draw_bitmap(FT_Bitmap* bitmap, FT_Int x, FT_Int y) {
               FT_Int  i, j, p, q;
@@ -145,25 +159,6 @@ class FTUtils {
                   set(i,j, bitmap->buffer[q * bitmap->width + p]);
                 }
               }
-        }
-
-        void show_image( void ) {
-            ofstream fft("testFT.txt");
-
-            for ( int j = 0; j < WIDTH; j++ ) fft << "-";
-            fft << endl;
-
-            for ( int j = 0; j < HEIGHT; j++ ) {
-                for ( int i = 0; i < WIDTH; i++ ) {
-                    int B = get(i,j);
-                    char c = B == 0 ? ' ' : B < 128 ? '+' : '*';
-                    fft << c;
-                }
-                fft << endl;
-            }
-
-            for ( int j = 0; j < WIDTH; j++ ) fft << "-";
-            fft << endl;
         }
 };
 
@@ -219,15 +214,19 @@ void VRText::convertData(UChar8* data, int width, int height) {
 }
 
 VRTexturePtr VRText::createBmp (string text, string font, Color4f fg, Color4f bg) {
-#ifdef WITHOUT_PANGO_CAIRO
-    FTUtils ft;
-    //ft.
-    VRTexturePtr tex = VRTexture::create();
-    return tex;
-#else
     this->text = text;
     analyzeText();
     computeTexParams();
+
+#ifdef WITHOUT_PANGO_CAIRO
+    FTRenderer ft(100, 20);
+    ft.render("A-ö-ß");
+    VRTexturePtr tex = VRTexture::create();
+    tex->getImage()->set( Image::OSG_A_PF, 100, 20, 1, 1, 1, 0, &ft.image[0]);
+    tex->write("testMonoFT.png");
+    return tex;
+
+#else
 
     cairo_surface_t* surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, texWidth, texHeight);
     cairo_t* cr = cairo_create (surface);
