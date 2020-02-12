@@ -40,10 +40,11 @@ class FTRenderer {
     public:
         float WIDTH = 100;
         float HEIGHT = 20;
-        vector<unsigned char> image;
+        Vec4ub background;
+        vector<Vec4ub> image;
 
     public:
-        FTRenderer(float width, float height) : WIDTH(width), HEIGHT(height), image(width*height,0) {
+        FTRenderer(float width, float height, Vec4ub bg) : WIDTH(width), HEIGHT(height), background(bg), image(width*height,bg) {
             /* set up matrix */
             matrix.xx = (FT_Fixed)( 0x10000L );
             matrix.xy = (FT_Fixed)( 0 );
@@ -78,7 +79,7 @@ class FTRenderer {
             return unicode;
         }
 
-        void render(string textt) {
+        int render(string text, int resolution, int padding, Vec4ub fg) {
             error = FT_Init_FreeType( &library );
             if (error) cout << "FT_Init_FreeType failed!" << endl;
 
@@ -87,11 +88,10 @@ class FTRenderer {
             error = FT_New_Face( library, font.c_str(), 0, &face );
             if (error) cout << "FT_New_Face failed!" << endl;
 
-            string text = "A-ö-ß";
             int n, num_chars;
-            int X = 0;
-            int Y = 0;
-            int S = 20;
+            int X = padding;
+            int Y = padding;
+            int S = resolution;
 
             error = FT_Set_Char_Size( face, S * 64, 0, 100, 0 ); // set character size,  use 50pt at 100dpi
             if (error) cout << "FT_Set_Char_Size failed!" << endl;
@@ -102,25 +102,26 @@ class FTRenderer {
             slot = face->glyph;
 
 
-              /* the pen position in 26.6 cartesian space coordinates; */
-              /* start at (300,200) relative to the upper left corner  */
-                pen.x = X * 64;
-                pen.y = ( HEIGHT - Y - S ) * 64;
+            /* the pen position in 26.6 cartesian space coordinates; */
+            /* start at (300,200) relative to the upper left corner  */
+            pen.x = X * 64;
+            pen.y = ( HEIGHT - Y - S ) * 64;
 
-                // TODO: use this for countGraphemes!
-                auto graphemes = getGraphemes(text);
-                num_chars = graphemes.size();
-                //std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t> convert;
-                //const std::wstring wideText = convert.from_bytes(text);
-                //num_chars = wideText.size();
+            // TODO: use this for countGraphemes!
+            auto graphemes = getGraphemes(text);
+            num_chars = graphemes.size();
+            //std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t> convert;
+            //const std::wstring wideText = convert.from_bytes(text);
+            //num_chars = wideText.size();
 
-              for ( n = 0; n < num_chars; n++ ) {
-                /* set transformation */
+            int layoutWidth = 0;
+
+            for ( n = 0; n < num_chars; n++ ) {
+
                 FT_Set_Transform( face, &matrix, &pen );
 
                 /* load glyph image into the slot (erase previous one) */
                 FT_ULong cUL = graphemes[n];
-                cout << "render glyph " << n << "  " << graphemes[n] << endl;
                 //int s = 1;
                 //for (int i = 0; i<chars[n].size(); i++) { cUL += chars[n][i]*s; s*=256; }
                 error = FT_Load_Char( face, cUL, FT_LOAD_RENDER );
@@ -130,35 +131,39 @@ class FTRenderer {
                 }
 
                 /* now, draw to our target surface (convert position) */
-                draw_bitmap( &slot->bitmap, slot->bitmap_left, HEIGHT - slot->bitmap_top );
+                draw_bitmap( &slot->bitmap, slot->bitmap_left, HEIGHT - slot->bitmap_top, fg );
 
                 /* increment pen position */
                 pen.x += slot->advance.x;
                 pen.y += slot->advance.y;
-              }
+                layoutWidth += slot->advance.x/64;
+            }
 
-              FT_Done_Face    ( face );
-              FT_Done_FreeType( library );
+            FT_Done_Face    ( face );
+            FT_Done_FreeType( library );
+            return layoutWidth;
         }
 
-        void set(int x, int y, int v) { image[x+(HEIGHT-y-1)*WIDTH] = v; }
-        int get(int x, int y) { return image[x+(HEIGHT-y-1)*WIDTH]; }
+        void draw_bitmap(FT_Bitmap* bitmap, FT_Int x, FT_Int y, Vec4ub fg) {
+            FT_Int  i, j, p, q;
+            FT_Int  x_max = x + bitmap->width;
+            FT_Int  y_max = y + bitmap->rows;
 
-        void draw_bitmap(FT_Bitmap* bitmap, FT_Int x, FT_Int y) {
-              FT_Int  i, j, p, q;
-              FT_Int  x_max = x + bitmap->width;
-              FT_Int  y_max = y + bitmap->rows;
-
-
-              /* for simplicity, we assume that `bitmap->pixel_mode' */
-              /* is `FT_PIXEL_MODE_GRAY' (i.e., not a bitmap font)   */
-
-              for ( i = x, p = 0; i < x_max; i++, p++ ) {
+            for ( i = x, p = 0; i < x_max; i++, p++ ) {
                 for ( j = y, q = 0; j < y_max; j++, q++ ) {
-                  if ( i < 0 || j < 0 || i >= WIDTH || j >= HEIGHT ) continue;
-                  set(i,j, bitmap->buffer[q * bitmap->width + p]);
+                    if ( i < 0 || j < 0 || i >= WIDTH || j >= HEIGHT ) continue;
+                    int v = bitmap->buffer[q * bitmap->width + p];
+                    float t = v/255.0;
+                    int k = i+(HEIGHT-j-1)*WIDTH;
+                    Vec4ub c = Vec4ub(255,255,255,255);
+                    c[0] = fg[0]*t+background[0]*(1.0-t);
+                    c[1] = fg[1]*t+background[1]*(1.0-t);
+                    c[2] = fg[2]*t+background[2]*(1.0-t);
+                    c[3] = fg[3]*t+background[3]*(1.0-t);
+                    //c = fg*t + background*(1.0-t); // TODO: wiso sieht das kacke aus?? müsste doch das gleiche sein wie oben!?!
+                    image[k] = c;
                 }
-              }
+            }
         }
 };
 
@@ -171,8 +176,9 @@ VRText* VRText::get() {
     return singleton_opt;
 }
 
-VRTexturePtr VRText::create(string text, string font, int res, Color4f fg, Color4f bg) {
+VRTexturePtr VRText::create(string text, string font, int res, int pad, Color4f fg, Color4f bg) {
     resolution = res;
+    padding = pad;
     return createBmp(text, font, fg, bg);
 }
 
@@ -188,7 +194,7 @@ void VRText::analyzeText() {
 }
 
 void VRText::computeTexParams() {
-    texWidth = resolution*maxLineLength;
+    texWidth = resolution*maxLineLength*1.5;
     texHeight = resolution*1.5;
     texWidth += 2*padding;
     texHeight += 2*padding;
@@ -219,10 +225,11 @@ VRTexturePtr VRText::createBmp (string text, string font, Color4f fg, Color4f bg
     computeTexParams();
 
 #ifdef WITHOUT_PANGO_CAIRO
-    FTRenderer ft(100, 20);
-    ft.render("A-ö-ß");
+    FTRenderer ft(texWidth, texHeight, Vec4ub(bg[2]*255,bg[1]*255,bg[0]*255,bg[3]*255));
+    layoutWidth = ft.render(text, resolution*1.5, padding, Vec4ub(fg[2]*255,fg[1]*255,fg[0]*255,fg[3]*255));
+    layoutHeight = texHeight;
     VRTexturePtr tex = VRTexture::create();
-    tex->getImage()->set( Image::OSG_A_PF, 100, 20, 1, 1, 1, 0, &ft.image[0]);
+    tex->getImage()->set( Image::OSG_BGRA_PF, texWidth, texHeight, 1, 1, 1, 0, (UInt8*)&ft.image[0]);
     tex->write("testMonoFT.png");
     return tex;
 
