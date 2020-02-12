@@ -10,6 +10,7 @@ message( "Configuring for system name / version: " ${CMAKE_SYSTEM_NAME} " / " ${
 #  -g -s ASSERTIONS=1
 
 set(LINKER_FLAGS "${LINKER_FLAGS} -s ALLOW_MEMORY_GROWTH=1 -s EXIT_RUNTIME=1 -s DISABLE_EXCEPTION_CATCHING=0 -g")
+#set(LINKER_FLAGS "${LINKER_FLAGS} -s ALLOW_MEMORY_GROWTH=1 -s EXIT_RUNTIME=1 -s DISABLE_EXCEPTION_CATCHING=0")
   
 add_definitions( -DWASM=1 )
 add_definitions( -DGLUT_glut_LIBRARY=1 )
@@ -52,6 +53,17 @@ function(FIND_BOOST)
 		set(LINKER_FLAGS "${LINKER_FLAGS} ${BOOST_LIBRARIES}" PARENT_SCOPE)
 	endif()
 	include_directories(SYSTEM PUBLIC ${BOOST_INCLUDE_DIR})
+endfunction()
+
+function(FIND_FREETYPE)
+	if(CMAKE_SYSTEM_NAME STREQUAL "Emscripten")
+		set(FREETYPE_INCLUDE_DIR "~/.emscripten_ports/freetype/FreeType-version_1/include")
+		set(FREETYPE_LIBRARY_DIR "~/.emscripten_cache/wasm-obj/")
+		set(FREETYPE_LIBRARIES "-lfreetype")
+		set(LINKER_FLAGS "${LINKER_FLAGS} ${FREETYPE_LIBRARIES}" PARENT_SCOPE)
+	endif()
+	include_directories(SYSTEM PUBLIC ${FREETYPE_INCLUDE_DIR})
+	link_directories(${FREETYPE_LIBRARY_DIR})
 endfunction()
 
 function(FIND_PYTHON)
@@ -118,6 +130,7 @@ endfunction()
 
 FIND_ZLIB()
 FIND_LIBXML()
+FIND_FREETYPE()
 FIND_BOOST()
 FIND_PYTHON()
 FIND_GLUT()

@@ -81,6 +81,7 @@ struct VRMatData {
     VRVideo* video = 0;
     bool deferred = false;
     bool tmpDeferredShdr = false;
+    bool tmpOGLESShdr = false;
 
 #ifdef WASM
     ShaderProgramChunkMTRecPtr shaderFailChunk;
@@ -130,6 +131,7 @@ struct VRMatData {
         stencilChunk = 0;
         deferred = false;
         tmpDeferredShdr = false;
+        tmpOGLESShdr = true;
 
         colChunk->setDiffuse( Color4f(1, 1, 1, 1) );
         colChunk->setAmbient( Color4f(0.3, 0.3, 0.3, 1) );
@@ -373,15 +375,16 @@ void VRMaterial::updateOGL2Parameters() {
 
 void VRMaterial::updateOGL2Shader() {
     auto m = mats[activePass];
-    initShaderChunk();
-    string s = constructShaderVP(m);
-    m->vProgram->setProgram(s.c_str());
-    checkShader(GL_VERTEX_SHADER, s, "ogl2VS");
+    if (m->tmpOGLESShdr) {
+        initShaderChunk();
+        string s = constructShaderVP(m);
+        m->vProgram->setProgram(s.c_str());
+        checkShader(GL_VERTEX_SHADER, s, "ogl2VS");
 
-    s = constructShaderFP(m);
-    m->fProgram->setProgram(s.c_str());
-    checkShader(GL_FRAGMENT_SHADER, s, "ogl2FS");
-
+        s = constructShaderFP(m);
+        m->fProgram->setProgram(s.c_str());
+        checkShader(GL_FRAGMENT_SHADER, s, "ogl2FS");
+    }
     updateOGL2Parameters();
 }
 
@@ -1178,6 +1181,7 @@ void VRMaterial::setVertexShader(string s, string name) {
 			m->mat->addChunk(m->shaderChunk);
 		}
 	}
+    m->tmpOGLESShdr = false;
 #endif
 }
 
@@ -1203,6 +1207,7 @@ void VRMaterial::setFragmentShader(string s, string name, bool deferred) {
 			m->mat->addChunk(m->shaderChunk);
 		}
 	}
+    m->tmpOGLESShdr = false;
 #endif
 }
 
@@ -1358,6 +1363,7 @@ string VRMaterial::diffPass(VRMaterialPtr m, int pass) {
     if (either(p1->video, p2->video)) res += "\ndiff on video|"+toString(bool(p1->video))+"|"+toString(bool(p2->video));
     if (either(p1->deferred, p2->deferred)) res += "\ndiff on deferred|"+toString(bool(p1->deferred))+"|"+toString(bool(p2->deferred));
     if (either(p1->tmpDeferredShdr, p2->tmpDeferredShdr)) res += "\ndiff on tmpDeferredShdr|"+toString(bool(p1->tmpDeferredShdr))+"|"+toString(bool(p2->tmpDeferredShdr));
+    if (either(p1->tmpOGLESShdr, p2->tmpOGLESShdr)) res += "\ndiff on tmpOGLESShdr|"+toString(bool(p1->tmpOGLESShdr))+"|"+toString(bool(p2->tmpOGLESShdr));
 
     if (p1->vertexScript != p2->vertexScript) res += "\ndiff on vertexScript|"+p1->vertexScript+"|"+p2->vertexScript;
     if (p1->fragmentScript != p2->fragmentScript) res += "\ndiff on fragmentScript|"+p1->fragmentScript+"|"+p2->fragmentScript;

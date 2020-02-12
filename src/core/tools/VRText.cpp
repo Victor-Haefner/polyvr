@@ -234,7 +234,7 @@ VRTexturePtr VRText::createBmp (string text, string font, Color4f fg, Color4f bg
     layoutHeight = texHeight;
     VRTexturePtr tex = VRTexture::create();
     tex->getImage()->set( Image::OSG_BGRA_PF, texWidth, texHeight, 1, 1, 1, 0, (UInt8*)&ft.image[0]);
-    tex->write("testMonoFT.png");
+    //tex->write("testMonoFT.png");
     return tex;
 
 #else

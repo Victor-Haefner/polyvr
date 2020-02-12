@@ -9,6 +9,8 @@
 
 #define GLSL(shader) #shader
 
+//#define OSG_OGL_ES2
+
 using namespace OSG;
 
 template<> string typeName(const VRAnnotationEngine& t) { return "AnnotationEngine"; }
@@ -177,7 +179,6 @@ void VRAnnotationEngine::setOrientation(Vec3d d, Vec3d u) {
 }
 
 void VRAnnotationEngine::updateTexture() {
-#ifndef WITHOUT_PANGO_CAIRO
     string txt;
     for (int i=32; i<127; i++) txt += char(i);
     txt += "ÄÜÖäüöß€°^";
@@ -198,7 +199,6 @@ void VRAnnotationEngine::updateTexture() {
         characterIDs[c] = i;
         i++;
     }
-#endif
 }
 
 string VRAnnotationEngine::vp =
@@ -380,6 +380,7 @@ uniform mat4 OSGModelViewProjectionMatrix;
 
 void main( void ) {
     gl_Position = OSGModelViewProjectionMatrix*osg_Vertex;
+    //gl_Position = gl_ModelViewProjectionMatrix*osg_Vertex;
     normal = osg_Normal.xyz;
     texCoord = osg_MultiTexCoord0;
 }
@@ -393,6 +394,7 @@ uniform sampler2D texture;
 varying vec2 texCoord;
 
 void main( void ) {
+    //gl_FragColor = vec4(1.0,0.0,0.0,1.0);
     //gl_FragColor = vec4(texCoord.x,texCoord.y,0.0,1.0);
     gl_FragColor = texture2D(texture, texCoord);
 }
