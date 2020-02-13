@@ -60,7 +60,7 @@ VRTexturePtr VRSprite::setText(string l, float res, Color4f c1, Color4f c2, stri
     auto m = VRMaterial::create(getName()+"label");
     VRTexturePtr tex;
 #ifndef WITHOUT_PANGO_CAIRO
-    tex = VRText::get()->create(l, font, 20*res, c1, c2);
+    tex = VRText::get()->create(l, font, 20*res, 3, c1, c2);
     m->setTexture(tex);
 #endif
     setMaterial(m);

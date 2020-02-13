@@ -27,7 +27,7 @@ class VRText {
 
     public:
         static VRText* get();
-        VRTexturePtr create(string text, string font, int res, Color4f fg, Color4f bg);
+        VRTexturePtr create(string text, string font, int res, int padding, Color4f fg, Color4f bg);
 
         static size_t countGraphemes(string txt);
         static vector<string> splitGraphemes(string txt);

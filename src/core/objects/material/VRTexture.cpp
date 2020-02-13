@@ -51,7 +51,6 @@ void VRTexture::write(string path, bool doThread) {
 
 void VRTexture::writeImage(ImageMTRecPtr img, string path) {
     //auto format = hasAlpha ? OSG::Image::OSG_RGBA_PF : OSG::Image::OSG_RGB_PF;
-    //auto format = img->getPixelFormat();
 
     //OSG::Image::OSG_FLOAT32_IMAGEDATA
     auto dtype = img->getDataType();
@@ -59,6 +58,13 @@ void VRTexture::writeImage(ImageMTRecPtr img, string path) {
         ImageMTRecPtr img2 = Image::create();
         img2->set(img);
         img2->convertDataTypeTo(OSG::Image::OSG_UINT8_IMAGEDATA);
+        img = img2;
+    }
+
+    auto format = img->getPixelFormat();
+    if (format == OSG::Image::OSG_A_PF) { // need to convert pixel data
+        ImageMTRecPtr img2 = Image::create();
+        img->reformat(OSG::Image::OSG_RGB_PF, img2);
         img = img2;
     }
 

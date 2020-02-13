@@ -161,7 +161,7 @@ VRGeometryPtr VRProcessLayout::newWidget(VRProcessNodePtr n, float height) {
 
     auto mat = VRMaterial::create("ProcessElement");
 #ifndef WITHOUT_PANGO_CAIRO
-    auto txt = VRText::get()->create(l, "MONO 20", 20, fg, bg);
+    auto txt = VRText::get()->create(l, "MONO 20", 20, 3, fg, bg);
     mat->setTexture(txt, false);
 #endif
     mat->setTextureParams(GL_LINEAR, GL_LINEAR);
@@ -377,7 +377,7 @@ void VRProcessLayout::setElementName(int ID, string name) {
 
     auto mat = VRMaterial::create("ProcessElement");
 #ifndef WITHOUT_PANGO_CAIRO
-    auto txt = VRText::get()->create(name, "MONO 20", 20, fg, bg);
+    auto txt = VRText::get()->create(name, "MONO 20", 20, 3, fg, bg);
     mat->setTexture(txt, false);
 #endif
     mat->setTextureParams(GL_LINEAR, GL_LINEAR);

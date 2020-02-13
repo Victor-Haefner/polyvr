@@ -13,12 +13,20 @@ class VRAnnotationEngine : public VRGeometry {
         VRMaterialPtr mat = 0;
         Color4f fg, bg;
 
+        Vec3d orientationUp;
+        Vec3d orientationDir;
+
         static string vp;
         static string fp;
         static string dfp;
         static string gp;
 
+        static string vp_es2;
+        static string fp_es2;
+
         float size;
+        float charTexSize;
+        float texPadding;
         map<string, int> characterIDs;
 
         struct Label {
@@ -47,6 +55,7 @@ class VRAnnotationEngine : public VRGeometry {
         void setBackground(Color4f c);
         void setBillboard(bool b);
         void setScreensize(bool b);
+        void setOrientation(Vec3d d, Vec3d u);
 };
 
 OSG_END_NAMESPACE;

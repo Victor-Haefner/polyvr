@@ -117,6 +117,7 @@ PyMethodDef VRPyGeometry::methods[] = {
     {"clear", PyWrap( Geometry, clear, "Clear all geometric data - clear()", void ) },
     {"size", PyWrap( Geometry, size, "Returns the size of the positions vector", int ) },
     {"remColors", PyWrapOpt( Geometry, remColors, "Removes color data", "0", void, bool ) },
+    {"makeSingleIndex", PyWrap( Geometry, makeSingleIndex, "Make geometry single index", void ) },
     {NULL}  /* Sentinel */
 };
 

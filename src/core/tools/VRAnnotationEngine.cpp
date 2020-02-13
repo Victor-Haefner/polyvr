@@ -4,12 +4,12 @@
 #include "core/objects/material/VRMaterialT.h"
 #include "core/objects/material/VRTexture.h"
 #include "core/objects/geometry/VRGeoData.h"
-#ifndef WITHOUT_PANGO_CAIRO
 #include "core/tools/VRText.h"
-#endif
 #include "core/utils/toString.h"
 
 #define GLSL(shader) #shader
+
+//#define OSG_OGL_ES2
 
 using namespace OSG;
 
@@ -22,10 +22,15 @@ VRAnnotationEngine::VRAnnotationEngine(string name) : VRGeometry(name) {
     type = "AnnotationEngine";
 
     mat = VRMaterial::create("AnnEngMat");
+#ifndef OSG_OGL_ES2
     mat->setVertexShader(vp, "annotationVS");
     mat->setFragmentShader(fp, "annotationFS");
     mat->setFragmentShader(dfp, "annotationDFS", true);
     mat->setGeometryShader(gp, "annotationGS");
+#else
+    mat->setVertexShader(vp_es2, "annotationVSes2");
+    mat->setFragmentShader(fp_es2, "annotationFSes2");
+#endif
     mat->setPointSize(5);
     setMaterial(mat);
     updateTexture();
@@ -34,6 +39,8 @@ VRAnnotationEngine::VRAnnotationEngine(string name) : VRGeometry(name) {
     setBillboard(false);
     setScreensize(false);
     data = VRGeoData::create();
+
+    setOrientation(Vec3d(0,0,1), Vec3d(0,1,0));
 }
 
 VRAnnotationEnginePtr VRAnnotationEngine::create(string name) { return shared_ptr<VRAnnotationEngine>(new VRAnnotationEngine(name) ); }
@@ -54,6 +61,8 @@ bool VRAnnotationEngine::checkUIn(int i) {
 
 void VRAnnotationEngine::resize(Label& l, Vec3d p, int N) {
     int eN = l.entries.size();
+
+#ifndef OSG_OGL_ES2
     for (int i=0; i<eN; i++) data->setVert(l.entries[i], Vec3d(), Vec3d()); // clear old buffer
 
     if (N <= eN) return;
@@ -65,6 +74,22 @@ void VRAnnotationEngine::resize(Label& l, Vec3d p, int N) {
         data->pushPoint();
         l.entries[eN+i] = pN+i;
     }
+#else
+    for (int i=0; i<eN; i++) data->setVert(l.entries[i], Vec3d(), Vec3d(), Vec2d()); // clear old buffer
+
+    if (N <= eN) return;
+    l.entries.resize(N, 0);
+    int pN = data->size();
+
+    for (int i=eN; i<N; i++) {
+        data->pushVert(p, Vec3d(), Vec2d());
+        l.entries[i] = pN+i-eN;
+        if (i%4 == 3) {
+            data->pushTri(-4,-3,-2);
+            data->pushTri(-4,-2,-1);
+        }
+    }
+#endif
 
     data->apply( ptr() );
 }
@@ -76,24 +101,23 @@ int VRAnnotationEngine::add(Vec3d p, string s) {
 }
 
 void VRAnnotationEngine::set(int i0, Vec3d p0, string txt) {
-#ifndef WITHOUT_PANGO_CAIRO
     auto strings = splitString(txt, '\n');
     int Nlines = strings.size();
     for (int y = 0; y<Nlines; y++) {
         string str = strings[y];
-        //cout << "VRAnnotationEngine::set str " << str << endl;
         Vec3d p = p0;
         p[1] -= y*size;
         int i = i0+y;
         if (i < 0) return;
         while (i >= (int)labels.size()) labels.push_back(Label());
         int Ngraphemes = VRText::countGraphemes(str);
-        int N = ceil(Ngraphemes/3.0); // number of points, 3 chars per point
+        auto graphemes = VRText::splitGraphemes(str);
         auto& l = labels[i];
 
+#ifndef OSG_OGL_ES2
+        int N = ceil(Ngraphemes/3.0); // number of points, 3 chars per point
         resize(l,p,N + 4); // plus 4 bounding points
 
-        auto graphemes = VRText::splitGraphemes(str);
         for (int j=0; j<N; j++) {
             char c[] = {0,0,0};
             for (int k = 0; k<3; k++) {
@@ -112,37 +136,69 @@ void VRAnnotationEngine::set(int i0, Vec3d p0, string txt) {
         data->setVert(l.entries[N+1], p+Vec3d(-0.25*size,  0.5*size, 0), Vec3d(0,0,-1));
         data->setVert(l.entries[N+2], p+Vec3d((Ngraphemes-0.25)*size, -0.5*size, 0), Vec3d(0,0,-1));
         data->setVert(l.entries[N+3], p+Vec3d((Ngraphemes-0.25)*size,  0.5*size, 0), Vec3d(0,0,-1));
-    }
+#else
+        int N = Ngraphemes;
+
+        resize(l,p,N*4);
+        float H = size*0.5;
+        float D = charTexSize*0.5;
+        float P = texPadding;
+
+        Vec3d orientationX = -orientationDir.cross(orientationUp);
+
+        for (int j=0; j<N; j++) {
+            string grapheme = graphemes[j];
+            char c = characterIDs[grapheme] - 1;
+            float u1 = P+c*D*2;
+            float u2 = P+(c+1)*D*2;
+            float X = H*2*j;
+
+            Vec3d p1 = p + orientationX*(-H+X) + orientationUp*(H*2);
+            Vec3d p2 = p + orientationX*( H+X) + orientationUp*(H*2);
+            Vec3d p3 = p + orientationX*( H+X) - orientationUp*(H*2);
+            Vec3d p4 = p + orientationX*(-H+X) - orientationUp*(H*2);
+
+            data->setVert(l.entries[j*4+0], p1, Vec3d(0,0,-1), Vec2d(u1,1));
+            data->setVert(l.entries[j*4+1], p2, Vec3d(0,0,-1), Vec2d(u2,1));
+            data->setVert(l.entries[j*4+2], p3, Vec3d(0,0,-1), Vec2d(u2,0));
+            data->setVert(l.entries[j*4+3], p4, Vec3d(0,0,-1), Vec2d(u1,0));
+        }
 #endif
+    }
 }
 
 void VRAnnotationEngine::setSize(float f) { mat->setShaderParameter("size", Real32(f)); size = f; }
 void VRAnnotationEngine::setBillboard(bool b) { mat->setShaderParameter("doBillboard", Real32(b)); }
 void VRAnnotationEngine::setScreensize(bool b) { mat->setShaderParameter("screen_size", Real32(b)); }
 
+void VRAnnotationEngine::setOrientation(Vec3d d, Vec3d u) {
+    orientationUp = u;
+    orientationDir = d;
+    mat->setShaderParameter("orientationDir", Vec3f(d));
+    mat->setShaderParameter("orientationUp", Vec3f(u));
+}
+
 void VRAnnotationEngine::updateTexture() {
-#ifndef WITHOUT_PANGO_CAIRO
     string txt;
     for (int i=32; i<127; i++) txt += char(i);
-    txt += "ÄÜÖäüöß€";
+    txt += "ÄÜÖäüöß€°^";
     int cN = VRText::countGraphemes(txt);
     int padding = 3;
-    auto img = VRText::get()->create(txt, "MONO 20", 20, fg, bg);
+    auto img = VRText::get()->create(txt, "MONO 20", 20, padding, fg, bg);
     float tW = img->getSize()[0];
     float lW = VRText::get()->layoutWidth;
-    float tp = padding / tW;
-    float cSize = lW/tW / cN;
+    texPadding = padding / tW;
+    charTexSize = lW/tW / cN;
     mat->setTexture(img);
-    mat->setShaderParameter("texPadding", Real32(tp)); // tested
-    mat->setShaderParameter("charTexSize", Real32(cSize));
-    img->write("annChars.png");
+    mat->setShaderParameter("texPadding", Real32(texPadding)); // tested
+    mat->setShaderParameter("charTexSize", Real32(charTexSize));
+    //img->write("annChars.png");
 
     int i=1; // 0 is used for invalid/no char
     for (auto c : VRText::splitGraphemes(txt)) {
         characterIDs[c] = i;
         i++;
     }
-#endif
 }
 
 string VRAnnotationEngine::vp =
@@ -205,6 +261,8 @@ layout (triangle_strip, max_vertices=60) out;
 
 uniform float doBillboard;
 uniform float screen_size;
+uniform vec3 orientationDir;
+uniform vec3 orientationUp;
 uniform float size;
 uniform float texPadding;
 uniform float charTexSize;
@@ -215,6 +273,13 @@ in mat4 MVP[];
 out vec2 texCoord;
 out vec4 geomPos;
 out vec3 geomNorm;
+
+vec3 orientationX;
+
+vec4 transform(in float x, in float y) {
+    vec3 p = -orientationX*x + orientationUp*y;
+    return vec4(p, 0);
+}
 
 void emitVertex(in vec4 p, in vec2 tc, in vec4 v) {
     gl_Position = p;
@@ -244,20 +309,20 @@ void emitQuad(in float offset, in vec4 tc) {
     }
 
     if (doBillboard < 0.5) {
-        p1 = p+MVP[0]*vec4(-sx+ox,-sy,0,0);
-        p2 = p+MVP[0]*vec4(-sx+ox, sy,0,0);
-        p3 = p+MVP[0]*vec4( sx+ox, sy,0,0);
-        p4 = p+MVP[0]*vec4( sx+ox,-sy,0,0);
+        p1 = p+MVP[0]*transform(-sx+ox,-sy);
+        p2 = p+MVP[0]*transform(-sx+ox, sy);
+        p3 = p+MVP[0]*transform( sx+ox, sy);
+        p4 = p+MVP[0]*transform( sx+ox,-sy);
     } else {
         float a = OSGViewportSize.y/OSGViewportSize.x;
-        p1 = p+vec4(-sx*a+ox*a,-sy,0,0);
-        p2 = p+vec4(-sx*a+ox*a, sy,0,0);
-        p3 = p+vec4( sx*a+ox*a, sy,0,0);
-        p4 = p+vec4( sx*a+ox*a,-sy,0,0);
-        v1 = vertex[0]+vec4(-sx*a+ox*a,-sy,0,0);
-        v2 = vertex[0]+vec4(-sx*a+ox*a, sy,0,0);
-        v3 = vertex[0]+vec4( sx*a+ox*a, sy,0,0);
-        v4 = vertex[0]+vec4( sx*a+ox*a,-sy,0,0);
+        p1 = p+transform(-sx*a+ox*a,-sy);
+        p2 = p+transform(-sx*a+ox*a, sy);
+        p3 = p+transform( sx*a+ox*a, sy);
+        p4 = p+transform( sx*a+ox*a,-sy);
+        v1 = vertex[0]+transform(-sx*a+ox*a,-sy);
+        v2 = vertex[0]+transform(-sx*a+ox*a, sy);
+        v3 = vertex[0]+transform( sx*a+ox*a, sy);
+        v4 = vertex[0]+transform( sx*a+ox*a,-sy);
     }
 
     emitVertex(p1, vec2(tc[0], tc[2]), v1);
@@ -291,6 +356,7 @@ void emitString(in float str, in float offset) {
 }
 
 void main() {
+    orientationX = cross(orientationDir, orientationUp);
     float str = normal[0][0];
     float offset = normal[0][2];
     if (offset >= 0) emitString(str, offset);
@@ -298,8 +364,41 @@ void main() {
 );
 
 
+/// --------------- OpenGL ES 2.0 Version (no GS) ----------------------
 
+string VRAnnotationEngine::vp_es2 =
+GLSL(
+varying vec4 vertex;
+varying vec3 normal;
+varying vec2 texCoord;
 
+attribute vec4 osg_Vertex;
+attribute vec4 osg_Normal;
+attribute vec2 osg_MultiTexCoord0;
+
+uniform mat4 OSGModelViewProjectionMatrix;
+
+void main( void ) {
+    gl_Position = OSGModelViewProjectionMatrix*osg_Vertex;
+    //gl_Position = gl_ModelViewProjectionMatrix*osg_Vertex;
+    normal = osg_Normal.xyz;
+    texCoord = osg_MultiTexCoord0;
+}
+);
+
+string VRAnnotationEngine::fp_es2 =
+GLSL(
+precision mediump float;
+uniform sampler2D texture;
+
+varying vec2 texCoord;
+
+void main( void ) {
+    //gl_FragColor = vec4(1.0,0.0,0.0,1.0);
+    //gl_FragColor = vec4(texCoord.x,texCoord.y,0.0,1.0);
+    gl_FragColor = texture2D(texture, texCoord);
+}
+);
 
 
 

@@ -13,5 +13,6 @@ PyMethodDef VRPyAnnotationEngine::methods[] = {
     {"setBackground", PyWrap( AnnotationEngine, setBackground, "Set background color - setBackground( [r,g,b,a] )", void, Color4f ) },
     {"setBillboard", PyWrap( AnnotationEngine, setBillboard, "Set billboard - setBillboard( bool )", void, bool ) },
     {"setScreensize", PyWrap( AnnotationEngine, setScreensize, "Set screensize mode", void, bool ) },
+    {"setOrientation", PyWrap( AnnotationEngine, setOrientation, "Set sprite orientation, dir and up", void, Vec3d, Vec3d ) },
     {NULL}  /* Sentinel */
 };
