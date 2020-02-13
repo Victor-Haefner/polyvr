@@ -5,6 +5,10 @@
 #include <OpenSG/OSGGLUT.h>
 #include <OpenSG/OSGPrimeMaterial.h>
 #include <OpenSG/OSGNameAttachment.h>
+#ifdef __EMSCRIPTEN__
+#include <OpenSG/OSGPNGImageFileType.h>
+#include <OpenSG/OSGJPGImageFileType.h>
+#endif
 
 #include "PolyVR.h"
 
@@ -179,6 +183,8 @@ void PolyVR::init(int argc, char **argv) {
     cout << "Init OSG\n";
     ChangeList::setReadWriteDefault();
     osgInit(argc,argv);
+	PNGImageFileType::the();
+	JPGImageFileType::the();
     cout << " ..done\n";
 
     //GLUT
