@@ -232,11 +232,11 @@ VRTexturePtr VRText::createBmp (string text, string font, Color4f fg, Color4f bg
     computeTexParams();
 
 #ifdef WITHOUT_PANGO_CAIRO
-    FTRenderer ft(texWidth, texHeight, Vec4ub(bg[2]*255,bg[1]*255,bg[0]*255,bg[3]*255));
-    layoutWidth = ft.render(text, resolution*1.5, padding, Vec4ub(fg[2]*255,fg[1]*255,fg[0]*255,fg[3]*255));
+    FTRenderer ft(texWidth, texHeight, Vec4ub(bg[0]*255,bg[1]*255,bg[2]*255,bg[3]*255));
+    layoutWidth = ft.render(text, resolution*1.5, padding, Vec4ub(fg[0]*255,fg[1]*255,fg[2]*255,fg[3]*255));
     layoutHeight = texHeight;
     VRTexturePtr tex = VRTexture::create();
-    tex->getImage()->set( Image::OSG_BGRA_PF, texWidth, texHeight, 1, 1, 1, 0, (UInt8*)&ft.image[0]);
+    tex->getImage()->set( Image::OSG_RGBA_PF, texWidth, texHeight, 1, 1, 1, 0, (UInt8*)&ft.image[0]);
     //tex->write("testMonoFT.png");
     return tex;
 
