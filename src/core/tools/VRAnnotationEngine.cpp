@@ -184,7 +184,8 @@ void VRAnnotationEngine::updateTexture() {
     txt += "ÄÜÖäüöß€°^";
     int cN = VRText::countGraphemes(txt);
     int padding = 3;
-    auto img = VRText::get()->create(txt, "MONO 20", 20, padding, fg, bg);
+    auto img = VRText::get()->create(txt, "MONO 20", 17, padding, fg, bg);
+    cout << "ann img size: " << img->getSize() << endl;
     float tW = img->getSize()[0];
     float lW = VRText::get()->layoutWidth;
     texPadding = padding / tW;

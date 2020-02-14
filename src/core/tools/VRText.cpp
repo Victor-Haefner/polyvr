@@ -203,6 +203,9 @@ void VRText::computeTexParams() {
     texWidth += 2*padding;
     texHeight += 2*padding;
     texHeight *= Nlines;
+
+    texWidth = osgNextPower2(texWidth);
+    texHeight = osgNextPower2(texHeight);
 }
 
 void VRText::convertData(UChar8* data, int width, int height) {
