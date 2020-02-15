@@ -45,7 +45,7 @@
 #include <OpenSG/OSGCubeTextureObjChunk.h>
 #include <OpenSG/OSGGLEXT.h>
 
-#ifndef WASM
+#ifndef OSG_OGL_ES2
 #include <GL/glx.h>
 #endif
 
@@ -83,7 +83,7 @@ struct VRMatData {
     bool tmpDeferredShdr = false;
     bool tmpOGLESShdr = false;
 
-#ifdef WASM
+#ifdef OSG_OGL_ES2
     ShaderProgramChunkMTRecPtr shaderFailChunk;
     bool vertShaderFail = false;
     bool fragShaderFail = false;
@@ -212,7 +212,7 @@ VRMaterialPtr VRMaterial::create(string name) {
     auto p = VRMaterialPtr(new VRMaterial(name) );
     p->init();
     materials[p->getName()] = p;
-#ifdef WASM
+#ifdef OSG_OGL_ES2
     p->updateOGL2Shader(); // TODO: find a better place!
 #endif
     return p;
@@ -258,16 +258,19 @@ string VRMaterial::constructShaderVP(VRMatDataPtr data) {
     int texD = data->getTextureDimension();
 
     string vp;
-#ifdef WASM
+#ifdef OSG_OGL_ES2
     vp += "attribute vec4 osg_Vertex;\n";
     vp += "attribute vec3 osg_Normal;\n";
+    if (texD == 2) vp += "attribute vec2 osg_MultiTexCoord0;\n";
     vp += "uniform mat4 OSGModelViewProjectionMatrix;\n";
     vp += "uniform mat4 OSGNormalMatrix;\n";
     vp += "varying vec4 vertPos;\n";
     vp += "varying vec3 vertNorm;\n";
     vp += "varying vec4 color;\n";
+	if (texD == 2) vp += "varying vec2 texCoord;\n";
     vp += "void main(void) {\n";
     vp += "  vertNorm = (OSGNormalMatrix * vec4(osg_Normal,1.0)).xyz;\n";
+    if (texD == 2) vp += "  texCoord = osg_MultiTexCoord0;\n";
     vp += "  color = vec4(1.0,1.0,1.0,1.0);\n";
     vp += "  gl_Position = OSGModelViewProjectionMatrix * osg_Vertex;\n";
     vp += "}\n";
@@ -300,22 +303,27 @@ string VRMaterial::constructShaderFP(VRMatDataPtr data, bool deferred, int force
     if (texD == -1) texD = data->getTextureDimension();
 
     string fp;
-#ifdef WASM
+#ifdef OSG_OGL_ES2
     fp += "precision mediump float;\n";
     fp += "varying vec3 vertNorm;\n";
     fp += "varying vec4 color;\n";
+	if (texD == 2) fp += "varying vec2 texCoord;\n";
     fp += "uniform int isLit;\n";
     fp += "uniform vec4 mat_diffuse;\n";
     fp += "uniform vec4 mat_ambient;\n";
     fp += "uniform vec4 mat_specular;\n";
+    if (texD == 2) fp += "uniform sampler2D tex0;\n";
     fp += "void main(void) {\n";
     fp += "  vec3  n = normalize(vertNorm);\n";
     fp += "  vec3  light = normalize( vec3(0.8,1.0,0.5) );\n";
     fp += "  float NdotL = max(dot( n, light ), 0.0);\n";
-    fp += "  vec4  ambient = mat_ambient * color;\n";
-    fp += "  vec4  diffuse = mat_diffuse * NdotL * color;\n";
+    if (texD == 2) fp += "  vec4 diffCol = texture2D(tex0, texCoord);\n";
+//    if (texD == 2) fp += "  vec4 diffCol = vec4(texCoord.x, texCoord.y, 0.0, 1.0);\n";
+    else fp += "  vec4 diffCol = color;\n";
+    fp += "  vec4  ambient = mat_ambient * diffCol;\n";
+    fp += "  vec4  diffuse = mat_diffuse * NdotL * diffCol;\n";
     fp += "  vec4  specular = mat_specular * 0.0;\n";
-    fp += "  if (isLit == 0) gl_FragColor = mat_diffuse * color;\n";
+    fp += "  if (isLit == 0) gl_FragColor = mat_diffuse * diffCol;\n";
     fp += "  else gl_FragColor = ambient + diffuse + specular;\n";
     fp += "}\n";
 #else
@@ -361,7 +369,7 @@ string VRMaterial::constructShaderFP(VRMatDataPtr data, bool deferred, int force
 }
 
 void VRMaterial::updateOGL2Parameters() {
-#ifdef WASM
+#ifdef OSG_OGL_ES2
     auto a = getAmbient();
     auto d = getDiffuse();
     auto s = getSpecular();
@@ -1037,7 +1045,7 @@ TextureObjChunkMTRecPtr VRMaterial::getTextureObjChunk(int unit) {
 void VRMaterial::initShaderChunk() {
     auto md = mats[activePass];
     if (md->shaderChunk != 0) return;
-#ifdef WASM
+#ifdef OSG_OGL_ES2
 	md->shaderFailChunk = ShaderProgramChunk::create();
 	ShaderProgramRefPtr vFProgram = ShaderProgram::createVertexShader  ();
 	ShaderProgramRefPtr fFProgram = ShaderProgram::createFragmentShader();
@@ -1100,7 +1108,7 @@ ShaderProgramMTRecPtr VRMaterial::getShaderProgram() { return mats[activePass]->
 
 // type: GL_VERTEX_SHADER, GL_FRAGMENT_SHADER, ...
 bool VRMaterial::checkShader(int type, string shader, string name) {
-#ifndef WASM
+#ifndef OSG_OGL_ES2
 #ifndef WITHOUT_GTK
     auto gm = VRGuiManager::get(false);
     if (!gm) return true;
@@ -1163,7 +1171,7 @@ void VRMaterial::forceShaderUpdate() {
 void VRMaterial::setVertexShader(string s, string name) {
     initShaderChunk();
     auto m = mats[activePass];
-#ifndef WASM
+#ifndef OSG_OGL_ES2
     m->vProgram->setProgram(s);
     checkShader(GL_VERTEX_SHADER, s, name);
     m->tmpDeferredShdr = false;
@@ -1188,7 +1196,7 @@ void VRMaterial::setVertexShader(string s, string name) {
 void VRMaterial::setFragmentShader(string s, string name, bool deferred) {
     initShaderChunk();
     auto m = mats[activePass];
-#ifndef WASM
+#ifndef OSG_OGL_ES2
     if (deferred) m->fdProgram->setProgram(s.c_str());
     else          m->fProgram->setProgram(s.c_str());
     checkShader(GL_FRAGMENT_SHADER, s, name);
