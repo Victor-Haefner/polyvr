@@ -1188,9 +1188,9 @@ void VRGeometry::convertToTriangles() {
         }
 
         if (hasTexCoords) {
-            data.pushTexCoord(Vec2d(it.getTexCoords(0,0)));
-            data.pushTexCoord(Vec2d(it.getTexCoords(0,1)));
-            data.pushTexCoord(Vec2d(it.getTexCoords(0,2)));
+            data.pushTexCoord(Vec2d(it.getTexCoords(0)));
+            data.pushTexCoord(Vec2d(it.getTexCoords(1)));
+            data.pushTexCoord(Vec2d(it.getTexCoords(2)));
         }
         data.pushTri();
 	}

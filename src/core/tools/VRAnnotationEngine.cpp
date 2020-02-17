@@ -9,7 +9,7 @@
 
 #define GLSL(shader) #shader
 
-//#define OSG_OGL_ES2
+#define OSG_OGL_ES2
 
 using namespace OSG;
 
@@ -184,7 +184,7 @@ void VRAnnotationEngine::updateTexture() {
     txt += "ÄÜÖäüöß€°^";
     int cN = VRText::countGraphemes(txt);
     int padding = 3;
-    auto img = VRText::get()->create(txt, "MONO 20", 20, padding, fg, bg);
+    auto img = VRText::get()->create(txt, "MONO 20", 17, padding, fg, bg);
     float tW = img->getSize()[0];
     float lW = VRText::get()->layoutWidth;
     texPadding = padding / tW;
@@ -379,8 +379,11 @@ attribute vec2 osg_MultiTexCoord0;
 uniform mat4 OSGModelViewProjectionMatrix;
 
 void main( void ) {
+#ifdef __EMSCRIPTEN__
     gl_Position = OSGModelViewProjectionMatrix*osg_Vertex;
-    //gl_Position = gl_ModelViewProjectionMatrix*osg_Vertex;
+#else
+    gl_Position = gl_ModelViewProjectionMatrix*osg_Vertex;
+#endif
     normal = osg_Normal.xyz;
     texCoord = osg_MultiTexCoord0;
 }
@@ -388,7 +391,9 @@ void main( void ) {
 
 string VRAnnotationEngine::fp_es2 =
 GLSL(
+#ifdef __EMSCRIPTEN__
 precision mediump float;
+#endif
 uniform sampler2D texture;
 
 varying vec2 texCoord;

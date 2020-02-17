@@ -10,6 +10,9 @@
 #include <new>
 #include <codecvt>
 
+#define WITHOUT_PANGO_CAIRO
+#define WITHOUT_UNICODE
+
 #ifndef WITHOUT_PANGO_CAIRO
 //flags mit  $ pkg-config --cflags pango und $ pkg-config --libs pango :)
 #include <pango/pango.h>
@@ -52,9 +55,10 @@ class FTRenderer {
             matrix.yy = (FT_Fixed)( 0x10000L );
         }
 
-        std::vector<unsigned long> getGraphemes(const std::string& utf8) {
-            std::vector<unsigned long> unicode;
+        static std::vector<pair<unsigned long, string>> getGraphemes(const std::string& utf8) {
+            std::vector<pair<unsigned long, string>> unicode;
             for (int i=0; i<utf8.size();) {
+                int i0 = i;
                 unsigned long uni;
                 size_t todo;
                 unsigned char ch = utf8[i++];
@@ -73,7 +77,8 @@ class FTRenderer {
                 }
                 if (uni >= 0xD800 && uni <= 0xDFFF) return unicode;
                 if (uni > 0x10FFFF) return unicode;
-                unicode.push_back(uni);
+                string str(utf8.substr(i0,i-i0));
+                unicode.push_back(make_pair(uni, str));
             }
 
             return unicode;
@@ -125,7 +130,7 @@ class FTRenderer {
                 FT_Set_Transform( face, &matrix, &pen );
 
                 /* load glyph image into the slot (erase previous one) */
-                FT_ULong cUL = graphemes[n];
+                FT_ULong cUL = graphemes[n].first;
                 //int s = 1;
                 //for (int i = 0; i<chars[n].size(); i++) { cUL += chars[n][i]*s; s*=256; }
                 error = FT_Load_Char( face, cUL, FT_LOAD_RENDER );
@@ -203,6 +208,9 @@ void VRText::computeTexParams() {
     texWidth += 2*padding;
     texHeight += 2*padding;
     texHeight *= Nlines;
+
+    texWidth = osgNextPower2(texWidth);
+    texHeight = osgNextPower2(texHeight);
 }
 
 void VRText::convertData(UChar8* data, int width, int height) {
@@ -229,11 +237,11 @@ VRTexturePtr VRText::createBmp (string text, string font, Color4f fg, Color4f bg
     computeTexParams();
 
 #ifdef WITHOUT_PANGO_CAIRO
-    FTRenderer ft(texWidth, texHeight, Vec4ub(bg[2]*255,bg[1]*255,bg[0]*255,bg[3]*255));
-    layoutWidth = ft.render(text, resolution*1.5, padding, Vec4ub(fg[2]*255,fg[1]*255,fg[0]*255,fg[3]*255));
+    FTRenderer ft(texWidth, texHeight, Vec4ub(bg[0]*255,bg[1]*255,bg[2]*255,bg[3]*255));
+    layoutWidth = ft.render(text, resolution*1.5, padding, Vec4ub(fg[0]*255,fg[1]*255,fg[2]*255,fg[3]*255));
     layoutHeight = texHeight;
     VRTexturePtr tex = VRTexture::create();
-    tex->getImage()->set( Image::OSG_BGRA_PF, texWidth, texHeight, 1, 1, 1, 0, (UInt8*)&ft.image[0]);
+    tex->getImage()->set( Image::OSG_RGBA_PF, texWidth, texHeight, 1, 1, 1, 0, (UInt8*)&ft.image[0]);
     //tex->write("testMonoFT.png");
     return tex;
 
@@ -350,14 +358,13 @@ vector<string> VRText::splitGraphemes(string txt) {
 }
 #else
 size_t VRText::countGraphemes(string txt) {
-    return txt.size();
+    return FTRenderer::getGraphemes(txt).size();
 }
 
 vector<string> VRText::splitGraphemes(string txt) {
     vector<string> res;
-    for (int i=0; i<txt.size(); i++) {
-        string s(1,txt[i]);
-        res.push_back(s);
+    for (auto g : FTRenderer::getGraphemes(txt)) {
+        res.push_back(g.second);
     }
     return res;
 }
