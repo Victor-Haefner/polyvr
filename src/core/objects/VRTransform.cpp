@@ -33,7 +33,7 @@ template<> string typeName(const VRTransform& t) { return "Transform"; }
 
 
 VRTransform::VRTransform(string name, bool doOpt) : VRObject(name) {
-    doOptimizations = doOpt;
+    doOptimizations = doOpt; // doOpt; // TODO: this is disabled for developing the sync
     t = OSGTransform::create( Transform::create() );
     constraint = VRConstraint::create();
     constraint->free({0,1,2,3,4,5});

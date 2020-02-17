@@ -33,7 +33,8 @@ class VRSyncNode : public VRTransform {
         VRFunction<void*>* socketCb;
         VRUpdateCbPtr updateFkt;
 
-        map<int, bool> container; // local containers, sub-set of containers which need to be synced for collaboration
+        map<int, int> container; // local containers, sub-set of containers which need to be synced for collaboration
+        vector<UInt32> syncedContainer;
         map<string, VRSyncRemotePtr> remotes;
 
         VRObjectPtr copy(vector<VRObjectPtr> children);
@@ -43,7 +44,10 @@ class VRSyncNode : public VRTransform {
         vector<FieldContainer*> getTransformationContainer(ChangeList* cl); //deprecated
         //vector<OSG::Field
 
-        void registerContainer(FieldContainer* c);
+        string serialize(ChangeList* clist);
+        void deserializeAndApply(string& data);
+
+        void registerContainer(FieldContainer* c, int syncNodeID = -1);
         void registerNode(Node* c);
 
     public:
