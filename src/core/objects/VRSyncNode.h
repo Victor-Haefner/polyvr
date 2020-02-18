@@ -34,8 +34,9 @@ class VRSyncNode : public VRTransform {
         VRUpdateCbPtr updateFkt;
 
         map<int, int> container; // local containers, sub-set of containers which need to be synced for collaboration
-        vector<UInt32> syncedContainer;
+        vector<UInt32> syncedContainer; //Id's of container that got changes over sync (changed by remote). Needed to filter out sync changes from local Changelist to prevent cycles.
         map<string, VRSyncRemotePtr> remotes;
+        map<int, int> syncNodeIDToLocalID;
 
         VRObjectPtr copy(vector<VRObjectPtr> children);
 

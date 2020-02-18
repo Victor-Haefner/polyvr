@@ -295,7 +295,8 @@ void VRSyncNode::deserializeAndApply(string& data) {
         if (sentry.syncNodeID != -1) {
             for (auto c : container) {
                 if (c.second == sentry.syncNodeID) {
-                    id = c.first; // TODO: write in mapping!
+                    id = c.first;
+                    syncNodeIDToLocalID[sentry.syncNodeID] = id; // TODO: write in mapping!
                     break;
                 }
             }
@@ -317,18 +318,18 @@ void VRSyncNode::deserializeAndApply(string& data) {
 
 
 
-        ourBinaryDataHandler testHandler;
-        fcPtr->copyToBin(testHandler, sentry.fieldMask);
-        cout << " field container before change: " << base64_encode(&testHandler.data[0], testHandler.data.size()) << endl;
+//        ourBinaryDataHandler testHandler;
+//        fcPtr->copyToBin(testHandler, sentry.fieldMask);
+//        cout << " field container before change: " << base64_encode(&testHandler.data[0], testHandler.data.size()) << endl;
 
 
 
         fcPtr->copyFromBin(handler, sentry.fieldMask); //calls handler->read
 
 
-        ourBinaryDataHandler testHandler2;
-        fcPtr->copyToBin(testHandler2, sentry.fieldMask);
-        cout << " field container after change: " << base64_encode(&testHandler2.data[0], testHandler2.data.size()) << endl;
+//        ourBinaryDataHandler testHandler2;
+//        fcPtr->copyToBin(testHandler2, sentry.fieldMask);
+//        cout << " field container after change: " << base64_encode(&testHandler2.data[0], testHandler2.data.size()) << endl;
 
 
         //fcPtr->changed(sentry.fieldMask, 0, BitVector());
@@ -378,18 +379,15 @@ void VRSyncNode::update() {
     for (auto it = localChanges->begin(); it != localChanges->end(); ++it) {
         ContainerChangeEntry* entry = *it;
         UInt32 id = entry->uiContainerId;
-        //cout << " change of container: " << id << ", fields: " << entry->whichField << endl;
         FieldContainer* fct = factory->getContainer(id);
         if (fct){
             string type = fct->getTypeName();
 
-            if (type == "Node" && entry->whichField & Node::ChildrenFieldMask) {
-                //cout << "  node children changed!" << endl;
+            if (type == "Node" && entry->whichField & Node::ChildrenFieldMask) { //if the children filed mask of node has changed, we check if a new child was added
                 Node* node = dynamic_cast<Node*>(fct);
                 for (int i=0; i<node->getNChildren(); i++) {
                     Node* child = node->getChild(i);
-                    if (!container.count(child->getId())) {
-                        //cout << "   found unregistred child: " << child->getId() << endl;
+                    if (!container.count(child->getId())) { //check if it is an unregistered child
                         registerNode(child); // TODO: add created for every new registered container?
                     }
                 }
