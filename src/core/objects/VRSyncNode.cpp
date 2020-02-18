@@ -296,7 +296,7 @@ void VRSyncNode::deserializeAndApply(string& data) {
             for (auto c : container) {
                 if (c.second == sentry.syncNodeID) {
                     id = c.first;
-                    syncNodeIDToLocalID[sentry.syncNodeID] = id; // TODO: write in mapping!
+                    remoteToLocalID[sentry.syncNodeID] = id; // TODO: write in mapping!
                     break;
                 }
             }
@@ -461,6 +461,9 @@ void VRSyncNode::addRemote(string host, int port, string name) {
     //remotes.insert(map<string, VRSyncRemote>::value_type(uri, VRSyncRemote(uri)));
     //cout << " added SyncRemote 2" << endl;
     //remotes[uri].connect();
+    ChangeList* cl = (OSGChangeList*)ChangeList::create();
+    cl->fillFromCurrentState(0,1);
+    printChangeList(cl);
 }
 
 void VRSyncNode::handleChangeList(void* _args) {

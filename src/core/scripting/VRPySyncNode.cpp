@@ -8,7 +8,7 @@ simpleVRPyType(SyncNode, New_VRObjects_ptr);
 //simpleVRPyType(FieldContainerFactory, New_VRObjects_ptr);
 
 PyMethodDef VRPySyncNode::methods[] = {
-    //{"printChangeList", PyWrap(SyncNode, printChangeList, "prints the ChangeList", void) },
+    //{"printCurrentChangeList", PyWrap(SyncNode, printCurrentChangeList, "prints the current ChangeList", void) },
     {"startInterface", PyWrap(SyncNode, startInterface, "updates this SyncNode", void, int) },
     {"addRemote", PyWrap(SyncNode, addRemote, "adds a SyncRemote", void, string, int, string) },
     {"broadcast", PyWrap(SyncNode, broadcast, "broadcasts a message to all SyncRemotes", void, string) },
