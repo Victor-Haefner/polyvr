@@ -26,7 +26,7 @@ template<> string typeName(const VRSyncNode& o) { return "SyncNode"; }
 ThreadRefPtr applicationThread;
 
 void VRSyncNode::printChangeList(ChangeList* cl) {
-    //if (cl->size() == 0) return;
+    //if (cl->size() == 0) cout << "VRSyncNode::printChangeList: empty Changelist." << endl;
 
     FieldContainerFactoryBase* factory = FieldContainerFactory::the();
     stringstream changedContainers;
@@ -37,26 +37,13 @@ void VRSyncNode::printChangeList(ChangeList* cl) {
         const FieldFlags* fieldFlags = entry->pFieldFlags;
         BitVector whichField = entry->whichField;
         UInt32 id = entry->uiContainerId;
-        //cout << "entry->uiContainerId " << entry->uiContainerId << endl;
-        //continue;
 
         // ----- print info ---- //
         string type = "";
         if (factory->getContainer(id) != nullptr){
             type += factory->getContainer(id)->getTypeName();
         }
-
         cout << "whichField " << whichField << ", uiContainerId: " << id << " containerType: " << type << endl;
-
-        /*for (int i=0; i<64; i++) {
-            //int bit = (whichField & ( 1 << i )) >> i;
-            BitVector one = 1;
-            BitVector mask = ( one << i );
-            bool bit = (whichField & mask);
-            if (bit) {
-                cout << "  whichField: " << i << " : " << bit << "  mask: " << mask << endl;
-            }
-        }*/
         j++;
     }
 }
@@ -227,17 +214,12 @@ class ourBinaryDataHandler : public BinaryDataHandler {
         }
 
         void read(MemoryHandle src, UInt32 size) {
-            cout << " ourBinaryDataHandler::read " << src << "  " << size << "   " << min((size_t)size, data.size()) << "   " << data.size() << endl;
-            //read data from handler into src (sentry.fieldMask)
-            memcpy(src, &data[0], min((size_t)size, data.size()));
+            memcpy(src, &data[0], min((size_t)size, data.size())); //read data from handler into src (sentry.fieldMask)
         }
 
         void write(MemoryHandle src, UInt32 size) {
             data.insert(data.end(), src, src + size);
         }
-
-        //void readBuffer() throw (ReadError) {}
-        //void writeBuffer() {}
 
         vector<BYTE> data;
 };
@@ -256,11 +238,10 @@ void serialize_entry(ContainerChangeEntry* entry, vector<BYTE>& data, int syncNo
         fcPtr->copyToBin(handler, sentry.fieldMask); //calls handler->write
         sentry.len = handler.data.size();//UInt32(fcPtr->getBinSize(sentry.fieldMask));
 
-        cout << "serialize > > > sentry: " << sentry.localId << " " << sentry.fieldMask << " " << sentry.len << " | encoded: " << data.size() << endl;
+        //cout << "serialize > > > sentry: " << sentry.localId << " " << sentry.fieldMask << " " << sentry.len << " | encoded: " << data.size() << endl;
 
         data.insert(data.end(), (BYTE*)&sentry, (BYTE*)&sentry + sizeof(SerialEntry)); //v.insert(v.end(), data.begin(), data.end())
         data.insert(data.end(), handler.data.begin(), handler.data.end());
-        cout << " | extended: " << data.size() << endl;
     }
 }
 
@@ -272,8 +253,6 @@ string VRSyncNode::serialize(ChangeList* clist) {
         if (entry->uiEntryDesc != ContainerChangeEntry::Change) continue;
         serialize_entry(entry, data, container[id]);
     }
-    //string res = base64_encode((BYTE*)clist, sizeof(*clist));
-    //cout << " serialize result: " << data << endl;
     return base64_encode(&data[0], data.size());
 }
 
@@ -281,9 +260,9 @@ void VRSyncNode::deserializeAndApply(string& data) {
     vector<BYTE> vec = base64_decode(data);
     int pos = 0;
     while (pos < vec.size()) {
-        cout << " !!! search for sentry at " << pos << "/" << vec.size() << endl;
+        //cout << " !!! search for sentry at " << pos << "/" << vec.size() << endl;
         SerialEntry sentry = *((SerialEntry*)&vec[pos]);
-        cout << "deserialize > > > sentry: " << sentry.localId << " " << sentry.fieldMask << " " << sentry.len << endl;
+        //cout << "deserialize > > > sentry: " << sentry.localId << " " << sentry.fieldMask << " " << sentry.len << endl;
         pos += sizeof(SerialEntry);
         vector<BYTE> FCdata;
         FCdata.insert(FCdata.end(), vec.begin()+pos, vec.begin()+pos+sentry.len);
@@ -303,36 +282,27 @@ void VRSyncNode::deserializeAndApply(string& data) {
         }
         if (id == -1) continue;
 
+        cout << name << " syncedContainer.push_back " << id << endl;
         syncedContainer.push_back(id);
+        cout << ">>> VRSyncNode::deserializeAndApply " << name << endl;
+        cout << " received container: " << sentry.localId << " syncNodeID " << sentry.syncNodeID << endl;
+        cout << "remoteToLocalID" << endl;
+        for (auto r : remoteToLocalID){
+            cout << "remoteID " << r.first << " localID " << r.second << endl;
+        }
 
         //  - get fieldcontainer using correct ID
         FieldContainerFactoryBase* factory = FieldContainerFactory::the();
         FieldContainer* fcPtr = factory->getContainer(id);
-        cout << " apply data to " << fcPtr->getTypeName() << " (" << fcPtr->getTypeId() << ")" << endl;
-        //  - use ourBinaryDataHandler to somehow apply binary change to fieldcontainer (override read method)
-        // ourBinaryDataHandler handler;
-        // fcPtr->copyFromBin(handler, sentry.fieldMask);
-        ourBinaryDataHandler handler; //use connection instead of handler, see OSGRemoteaspect.cpp (receiveSync)
-        // TODO: feed handler with FCdata!
-        handler.data.insert(handler.data.end(), FCdata.begin(), FCdata.end());
-
-
-
-//        ourBinaryDataHandler testHandler;
-//        fcPtr->copyToBin(testHandler, sentry.fieldMask);
-//        cout << " field container before change: " << base64_encode(&testHandler.data[0], testHandler.data.size()) << endl;
-
-
-
+        //cout << " apply data to " << fcPtr->getTypeName() << " (" << fcPtr->getTypeId() << ")" << endl;
+        ourBinaryDataHandler handler; //use ourBinaryDataHandler to somehow apply binary change to fieldcontainer (use connection instead of handler, see OSGRemoteaspect.cpp (receiveSync))
+        handler.data.insert(handler.data.end(), FCdata.begin(), FCdata.end()); //feed handler with FCdata
         fcPtr->copyFromBin(handler, sentry.fieldMask); //calls handler->read
 
 
 //        ourBinaryDataHandler testHandler2;
 //        fcPtr->copyToBin(testHandler2, sentry.fieldMask);
 //        cout << " field container after change: " << base64_encode(&testHandler2.data[0], testHandler2.data.size()) << endl;
-
-
-        //fcPtr->changed(sentry.fieldMask, 0, BitVector());
 
         // register field change
 
@@ -346,7 +316,6 @@ void VRSyncNode::deserializeAndApply(string& data) {
 
 //update this SyncNode
 void VRSyncNode::update() {
-
     // go through all changes, gather changes where the container is known (in containers)
     ChangeList* cl = applicationThread->getChangeList();
     if (cl->getNumChanged() + cl->getNumCreated() == 0) return;
@@ -363,6 +332,10 @@ void VRSyncNode::update() {
         if (entry->uiEntryDesc != ContainerChangeEntry::Change) continue; // TODO: only for debugging!
         UInt32 id = entry->uiContainerId;
         if (container.count(id)) {
+            cout << name << " checking id " << id << endl;
+            for (auto ID : syncedContainer){
+                cout << ID << endl;
+            }
             if (::find(syncedContainer.begin(), syncedContainer.end(), id) == syncedContainer.end()) { // check to avoid adding a change induced by remote sync
                 //cout << " change ? " << id << "  " << entry->whichField << "  " << Node::ChildrenFieldMask << endl;
                 //cout << " change ? " << id << "  " << *entry->bvUncommittedChanges << "  " << Node::ChildrenFieldMask << endl;
@@ -419,10 +392,24 @@ void VRSyncNode::update() {
     // send over websocket to remote
     for (auto& remote : remotes) {
         remote.second->send(data);
-        cout << name << " sending " << data  << endl;
+        //cout << name << " sending " << data  << endl;
     }
 
     syncedContainer.clear();
+    cout << "syncedContainer clear: " << endl;
+    for (auto ID : syncedContainer){
+        cout << ID << endl;
+    }
+
+    //DEBUG: print registered container
+    cout << name << " registered container: " << endl;
+    for (auto c : container){
+        cout << c.first << " syncNodeID " << c.second ;
+        if (factory->getContainer(c.first)){
+            cout << " " << factory->getContainer(c.first)->getTypeName();
+        }
+        cout << endl;
+    }
 }
 
 void VRSyncNode::registerContainer(FieldContainer* c, int syncNodeID) {
@@ -446,7 +433,6 @@ void VRSyncNode::startInterface(int port) {
     socketCb = new VRHTTP_cb( "VRSyncNode callback", bind(&VRSyncNode::handleChangeList, this, _1) );
     socket->setHTTPCallback(socketCb);
     socket->setType("http receive");
-    //cout << "maybe started Interface at port " << port << endl;
 }
 
 string asUri(string host, int port, string name) {
@@ -456,14 +442,11 @@ string asUri(string host, int port, string name) {
 //Add remote Nodes to sync with
 void VRSyncNode::addRemote(string host, int port, string name) {
     string uri = asUri(host, port, name);
-    //cout << "added SyncRemote (host, port, name) " << "(" << host << ", " << port << ", " << name << ") -> " << uri << endl;
     remotes[uri] = VRSyncRemote::create(uri);
-    //remotes.insert(map<string, VRSyncRemote>::value_type(uri, VRSyncRemote(uri)));
-    //cout << " added SyncRemote 2" << endl;
-    //remotes[uri].connect();
-    ChangeList* cl = (OSGChangeList*)ChangeList::create();
-    cl->fillFromCurrentState(0,1);
-    printChangeList(cl);
+
+//    ChangeList* cl = (OSGChangeList*)ChangeList::create();
+//    cl->fillFromCurrentState(0,1);
+//    printChangeList(cl);
 }
 
 void VRSyncNode::handleChangeList(void* _args) {
@@ -473,8 +456,8 @@ void VRSyncNode::handleChangeList(void* _args) {
     int client = args->ws_id;
     string msg = args->ws_data;
 
-    cout << "GOT CHANGES!! " << endl;
-    cout << name << ", received msg: "  << msg << endl;//<< " container: ";
+    //cout << "GOT CHANGES!! " << endl;
+    //cout << name << ", received msg: "  << msg << endl;//<< " container: ";
 
     deserializeAndApply(msg);
 }
