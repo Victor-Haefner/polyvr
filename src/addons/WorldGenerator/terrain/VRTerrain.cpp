@@ -206,6 +206,7 @@ void VRTerrain::setupGeo() {
     //cout << toString(gridN) << "-- "  << toString(size) << "-- "  << toString(texel) << "-- "  << toString(tcChunk) << "-- "  << toString(texSize) << endl;
 	//VRGeoData geo;
 	if (localMesh){
+        mat->setShaderParameter("local",1);
         if (meshTer.size()>0){
             VRGeoData geo;
             int t1 = 0;
@@ -233,12 +234,7 @@ void VRTerrain::setupGeo() {
                     geo.pushVert(meshTer[j][i][0], meshTer[j][i][1], Vec2d(tcx1,tcy1));
                     geo.pushVert(meshTer[j+1][i][0], meshTer[j+1][i][1], Vec2d(tcx1,tcy2));
                     geo.pushVert(meshTer[j+1][i+1][0], meshTer[j+1][i+1][1], Vec2d(tcx2,tcy2));
-                    geo.pushVert(meshTer[j][i+1][0], meshTer[j][i+1][1], Vec2d(tcx2,tcy1));/*
-                    auto n = (meshTer[i][j+1]-meshTer[i][j]).cross(meshTer[i+1][j+1]-meshTer[i][j]);
-                    geo.pushVert(meshTer[i][j], n, Vec2d(tcx1,tcy1));
-                    geo.pushVert(meshTer[i][j+1], n, Vec2d(tcx1,tcy2));
-                    geo.pushVert(meshTer[i+1][j+1], n, Vec2d(tcx2,tcy2));
-                    geo.pushVert(meshTer[i+1][j], n, Vec2d(tcx2,tcy1));*/
+                    geo.pushVert(meshTer[j][i+1][0], meshTer[j][i+1][1], Vec2d(tcx2,tcy1));
                     geo.pushQuad();
                 }
                 //cout << endl;
@@ -717,11 +713,14 @@ string VRTerrain::vertexShader =
 "#version 120\n"
 GLSL(
 attribute vec4 osg_Vertex;
+attribute vec3 osg_Normal;
 attribute vec2 osg_MultiTexCoord0;
+varying vec3 vNormal;
 
 void main(void) {
     gl_TexCoord[0] = vec4(osg_MultiTexCoord0,0.0,0.0);
 	gl_Position = osg_Vertex;
+	vNormal = osg_Normal;
 }
 );
 
@@ -927,7 +926,9 @@ string VRTerrain::tessControlShader =
 "#extension GL_ARB_tessellation_shader : enable\n"
 GLSL(
 layout(vertices = 4) out;
+in vec3 vNormal[];
 out vec3 tcPosition[];
+out vec3 tcNormal[];
 out vec2 tcTexCoords[];
 uniform float resolution;
 )
@@ -935,6 +936,7 @@ uniform float resolution;
 GLSL(
 void main() {
     tcPosition[ID] = gl_in[ID].gl_Position.xyz;
+    tcNormal[ID] = vNormal[ID];
     tcTexCoords[ID] = gl_in[ID].gl_TexCoord[0].xy;
 
     if (ID == 0) {
@@ -969,12 +971,14 @@ string VRTerrain::tessEvaluationShader =
 GLSL(
 layout( quads ) in;
 in vec3 tcPosition[];
+in vec3 tcNormal[];
 in vec2 tcTexCoords[];
 out float height;
 out vec4 pos;
 out vec4 vertex;
 
 uniform float heightScale;
+uniform int local = 0;
 uniform int channel;
 uniform sampler2D texture;
 
@@ -990,9 +994,12 @@ void main() {
     vec3 a = mix(tcPosition[0], tcPosition[1], u);
     vec3 b = mix(tcPosition[3], tcPosition[2], u);
     vec3 tePosition = mix(a, b, v);
+    vec3 c = mix(tcNormal[0], tcNormal[1], u);
+    vec3 d = mix(tcNormal[3], tcNormal[2], u);
+    vec3 teNormal = mix(c, d, v);
     height = heightScale * texture2D(texture, gl_TexCoord[0].xy)[channel];
-    //height = 0; //AGRAJAG
-    tePosition.y = height;
+    if (local > 0) tePosition += teNormal*height;
+    else tePosition.y = height;
     pos = gl_ModelViewProjectionMatrix * vec4(tePosition, 1);
     vertex = gl_ModelViewMatrix * vec4(tePosition, 1);
     gl_Position = pos;
