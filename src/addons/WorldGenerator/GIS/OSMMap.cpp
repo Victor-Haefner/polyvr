@@ -849,6 +849,7 @@ void OSMMap::readGEOJSON23Up(string path) {
 }
 
 void OSMMap::readGEOJSON23Be(string path) {
+#if GDAL_VERSION_NUM >= GDAL_COMPUTE_VERSION(2,0,0)
     VRTimer t; t.start();
     GDALAllRegister();
     GDALDataset* poDS = (GDALDataset *) GDALOpenEx( path.c_str(), GDAL_OF_VECTOR, NULL, NULL, NULL  );
@@ -973,6 +974,7 @@ void OSMMap::readGEOJSON23Be(string path) {
     auto t2 = t.stop()/1000.0;
     cout << "  loaded " << ways.size() << " ways, " << nodes.size() << " nodes and " << relations.size() << " relations" << endl;
     cout << "  secs needed: " << t2 << endl;
+#endif // GDAL_VERSION_NUM
 }
 
 void OSMMap::readGEOJSON(string path) {
