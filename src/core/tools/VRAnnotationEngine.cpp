@@ -9,7 +9,7 @@
 
 #define GLSL(shader) #shader
 
-#define OSG_OGL_ES2
+//#define OSG_OGL_ES2
 
 using namespace OSG;
 
