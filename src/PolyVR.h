@@ -3,12 +3,9 @@
 
 #include <OpenSG/OSGConfig.h>
 #include <OpenSG/OSGVector.h>
-#include <string>
 
 #include "PolyVRFwd.h"
 #include "core/objects/VRObjectFwd.h"
-
-class VROptions;
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -24,7 +21,6 @@ class PolyVR {
         VRSoundManagerPtr sound_mgr;
         VROptionsPtr options;
 
-        void setMultisampling(bool on);
         void checkProcessesAndSockets();
 
     public:

@@ -62,7 +62,7 @@ bool VRWindowManager::checkWin(string name) {
 
 RenderActionRefPtr VRWindowManager::getRenderAction() { return ract; }
 
-void setMultisampling(bool on) {
+void VRWindowManager::setMultisampling(bool on) {
     bool res = false;
 
 #if !defined(GL_MULTISAMPLE_SGIS) && !defined(GL_MULTISAMPLE_ARB)
