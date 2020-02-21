@@ -966,7 +966,7 @@ void OSMMap::readGEOJSON(string path) {
     auto t2 = t.stop()/1000.0;
     cout << "  loaded " << ways.size() << " ways, " << nodes.size() << " nodes and " << relations.size() << " relations" << endl;
     cout << "  secs needed: " << t2 << endl;
-#endif
+#endif // GDAL_VERSION_NUM
 }
 
 void OSMMap::writeFile(string path) {

@@ -1,5 +1,7 @@
+#ifdef __EMSCRIPTEN__
 #define GL_GLEXT_PROTOTYPES
 #define EGL_EGLEXT_PROTOTYPES
+#endif
 
 #include <OpenSG/OSGGL.h>
 #include <OpenSG/OSGGLUT.h>
@@ -133,12 +135,6 @@ void printNextOSGID(int i) {
     NodeRefPtr n = Node::create();
     cout << "next OSG ID: " << n->getId() << " at maker " << i << endl;
 }
-
-void PolyVR::setOption(string name, bool val) { options->setOption(name, val); }
-void PolyVR::setOption(string name, string val) { options->setOption(name, val); }
-void PolyVR::setOption(string name, int val) { options->setOption(name, val); }
-void PolyVR::setOption(string name, float val) { options->setOption(name, val); }
-
 
 void display(void) {
 	/*static float f = 0;
