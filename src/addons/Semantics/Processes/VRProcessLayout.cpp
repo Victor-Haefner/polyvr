@@ -161,10 +161,10 @@ VRGeometryPtr VRProcessLayout::newWidget(VRProcessNodePtr n, float height) {
     auto txt = VRText::get()->create(l, "MONO 20", 20, 3, fg, bg);
     mat->setTexture(txt, false);
     mat->setTextureParams(GL_LINEAR, GL_LINEAR);
-    if (n->type == SUBJECT) mat->setDiffuse( Color3f(0.8,0.9,1) );
-    if (n->type == MESSAGE) mat->setDiffuse( Color3f(1,1,0) );
-    if (n->type == TRANSITION) mat->setDiffuse( Color3f(1,1,0) );
-    if (n->type == STATE) mat->setDiffuse( Color3f(0.8,0.9,1) );
+    if (n->type == SUBJECT) mat->setDiffuse( colorSubject );
+    if (n->type == MESSAGE) mat->setDiffuse( colorMessage );
+    if (n->type == TRANSITION) mat->setDiffuse( colorMessage );
+    if (n->type == STATE) mat->setDiffuse( colorState );
     //mat->enableTransparency(0);
     VRGeoData geo;
 
