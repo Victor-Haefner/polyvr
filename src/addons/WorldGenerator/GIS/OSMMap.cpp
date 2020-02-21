@@ -838,17 +838,10 @@ void OSMMap::readFile(string path) {
     cout << "  secs needed: " << t2 << endl;
 }
 
-void OSMMap::readGEOJSON23Up(string path) {
-    /*GDALAllRegister();
-    GDALDatasetUniquePtr poDS(GDALDataset::Open( path.c_str(), GDAL_OF_VECTOR));
-    if( poDS == nullptr ) { printf( "Open failed.\n" ); return; }
-    // general information
-    printf( "Driver: %s/%s\n", poDS->GetDriver()->GetDescription(), poDS->GetDriver()->GetMetadataItem( GDAL_DMD_LONGNAME ) );*/
-    cout << "UP" << endl;
-    //GDALClose(poDS);
-}
+void OSMMap::readGEOJSON(string path) {
+#if GDAL_VERSION_NUM >= GDAL_COMPUTE_VERSION(2,3,0)
 
-void OSMMap::readGEOJSON23Be(string path) {
+#else if GDAL_VERSION_NUM >= GDAL_COMPUTE_VERSION(2,0,0)
     VRTimer t; t.start();
     GDALAllRegister();
     GDALDataset* poDS = (GDALDataset *) GDALOpenEx( path.c_str(), GDAL_OF_VECTOR, NULL, NULL, NULL  );
@@ -973,13 +966,6 @@ void OSMMap::readGEOJSON23Be(string path) {
     auto t2 = t.stop()/1000.0;
     cout << "  loaded " << ways.size() << " ways, " << nodes.size() << " nodes and " << relations.size() << " relations" << endl;
     cout << "  secs needed: " << t2 << endl;
-}
-
-void OSMMap::readGEOJSON(string path) {
-#if GDAL_VERSION_NUM >= GDAL_COMPUTE_VERSION(2,3,0)
-    readGEOJSON23Up(path);
-#else
-    readGEOJSON23Be(path);
 #endif
 }
 

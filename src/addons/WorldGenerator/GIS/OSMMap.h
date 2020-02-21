@@ -88,9 +88,6 @@ class OSMMap {
         void readRelation(XMLElementPtr element, map<string, bool>& invalidIDs);
         void writeBounds(XMLElementPtr parent);
 
-        void readGEOJSON23Up(string path);
-        void readGEOJSON23Be(string path);
-
         int filterFileStreaming(string path, vector<pair<string, string>> whitelist);
 
     public:
