@@ -5,7 +5,6 @@
 
 namespace OSG {
 
-ptrFwd(VRSceneManager);
 ptrFwd(VRProjectEntry);
 ptrFwd(VRProjectsList);
 ptrFwd(VRSemanticManager);
