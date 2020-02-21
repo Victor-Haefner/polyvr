@@ -31,7 +31,7 @@ vector<VRProcessNodePtr> VRProcessDiagram::getNodes() {
 void VRProcessDiagram::remNode(int i) { Graph::remNode(i); processnodes.erase(i); }
 void VRProcessDiagram::clear() { Graph::clear(); processnodes.clear(); }
 
-VRProcessNode::VRProcessNode(string name, PROCESS_WIDGET type, int ID, int sID) : type(type), label(name), ID(ID), subject(sID) {;}
+VRProcessNode::VRProcessNode(string name, PROCESS_WIDGET type, int ID, int sID) : type(type), label(name), ID(ID), subject(sID) { setName(name); }
 VRProcessNode::~VRProcessNode() {}
 VRProcessNodePtr VRProcessNode::create(string name, PROCESS_WIDGET type, int ID, int sID) { return VRProcessNodePtr( new VRProcessNode(name, type, ID, sID) ); }
 
@@ -65,6 +65,10 @@ VRProcess::VRProcess(string name) {
     setName(name);
 
     storeObj("Ontology", ontology);
+
+    ontology = VROntology::create(name);
+    //ontology->
+    update();
 }
 
 VRProcessPtr VRProcess::create(string name) { return VRProcessPtr( new VRProcess(name) ); }
@@ -181,6 +185,15 @@ vector<VRProcessNodePtr> VRProcess::getSubjectStates(int subjectID) {
         if (node.second->type == STATE) res.push_back(node.second);
     }
     return res;
+}
+
+VRProcessNodePtr VRProcess::getSubjectState(int subjectID, string name) {
+    if (!behaviorDiagrams.count(subjectID)) return 0;
+    auto d = behaviorDiagrams[subjectID];
+    for (auto node : d->processnodes) {
+        if (node.second->type == STATE && node.second->label == name) return node.second;
+    }
+    return 0;
 }
 
 void VRProcess::printNodes(VRProcessDiagramPtr d){

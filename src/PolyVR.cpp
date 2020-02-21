@@ -176,19 +176,19 @@ void PolyVR::init(int argc, char **argv) {
     options->parse(argc,argv);
 
     //OSG
-    cout << "Init OSG\n";
+    cout << " init OSG" << endl;
     ChangeList::setReadWriteDefault();
     osgInit(argc,argv);
 	PNGImageFileType::the();
 	JPGImageFileType::the();
-    cout << " ..done\n";
+    cout << "  ..done" << endl;
 
     //GLUT
-    cout << "Init GLUT\n";
+    cout << " init GLUT";
     glutInit(&argc, argv);
 	glutInitWindowSize(300, 300);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
-    cout << " ..done\n";
+    cout << " ..done " << endl << endl;
 
     PrimeMaterialRecPtr pMat = OSG::getDefaultMaterial();
     OSG::setName(pMat, "default_material");
@@ -274,7 +274,7 @@ void glutUpdate() {
 #endif
 
 void PolyVR::run() {
-    cout << "Start main loop\n";
+    cout << endl << "Start main loop" << endl << endl;
 #ifndef WASM
     while(true) update(); // default
 #else

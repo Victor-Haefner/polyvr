@@ -10,8 +10,8 @@
 #include <new>
 #include <codecvt>
 
-#define WITHOUT_PANGO_CAIRO
-#define WITHOUT_UNICODE
+//#define WITHOUT_PANGO_CAIRO
+//#define WITHOUT_UNICODE
 
 #ifndef WITHOUT_PANGO_CAIRO
 //flags mit  $ pkg-config --cflags pango und $ pkg-config --libs pango :)
