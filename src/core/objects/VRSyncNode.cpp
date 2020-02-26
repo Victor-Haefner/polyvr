@@ -316,6 +316,7 @@ void VRSyncNode::deserializeAndApply(string& data) {
 
 //update this SyncNode
 void VRSyncNode::update() {
+    cout << "update" << endl;
     // go through all changes, gather changes where the container is known (in containers)
     ChangeList* cl = applicationThread->getChangeList();
     if (cl->getNumChanged() + cl->getNumCreated() == 0) return;
@@ -339,11 +340,13 @@ void VRSyncNode::update() {
             if (::find(syncedContainer.begin(), syncedContainer.end(), id) == syncedContainer.end()) { // check to avoid adding a change induced by remote sync
                 //cout << " change ? " << id << "  " << entry->whichField << "  " << Node::ChildrenFieldMask << endl;
                 //cout << " change ? " << id << "  " << *entry->bvUncommittedChanges << "  " << Node::ChildrenFieldMask << endl;
+                cout << "localChanges->addChange " << endl;
                 localChanges->addChange(entry);
             }
         }
     }
 
+    cout << "localChanges->getNumChanged() " << localChanges->getNumChanged() << endl;
     if (localChanges->getNumChanged() == 0) return;
 
     cout << "\nVRSyncNode::update " << name << endl;
