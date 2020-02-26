@@ -19,6 +19,22 @@
 
 #include <OpenSG/OSGThreadManager.h>
 
+//BUGS:
+/*
+Known bugs:
+    - syncedContainer seem not get get empty (keeps filling with same id)
+    - in PolyVR: when syncNodes are not initialized on_scene_load but by manually triggering the script - the program will crash
+    - syncNodes need to be translated on initialization else no Transform Node will be created to track (PolyVR optimisation initialises with Group Node type; Transform Node only creates after a Transformation)
+
+*/
+
+//TODO:
+/*
+    - create (Node/Child) change handling and applying on remote SyncNode
+    - copy Changes from state for initialization of new remote SyncNode from master's State
+    - remove Changes (derefferencing?)
+*/
+
 using namespace OSG;
 
 template<> string typeName(const VRSyncNode& o) { return "SyncNode"; }
@@ -86,6 +102,17 @@ class OSGChangeList : public ChangeList {
             pEntry->pList         = this;
         }
 
+//        void addCreate(UInt32 uiContainerId, BitVector bFlags) {
+//            ContainerChangeEntry* pEntry = getNewCreatedEntry();
+//            pEntry->uiEntryDesc   = ContainerChangeEntry::Create;
+//            pEntry->uiContainerId = uiContainerId;
+//            pEntry->whichField    = bFlags;
+////            if (pEntry->whichField == 0 && entry->bvUncommittedChanges != 0)
+////                pEntry->whichField |= *entry->bvUncommittedChanges;
+//            pEntry->pList         = this;
+//            cout << "ChangeList addCreate" << endl;
+//        }
+
         void addChange(ContainerChangeEntry* entry) {
                 if (entry->uiEntryDesc == ContainerChangeEntry::AddReference   ||
                     entry->uiEntryDesc == ContainerChangeEntry::SubReference   ||
@@ -104,6 +131,7 @@ class OSGChangeList : public ChangeList {
                         pEntry->whichField |= *entry->bvUncommittedChanges;
                     pEntry->pList         = this;
                 }
+            cout << "ChangeList addChange" << endl;
         }
 };
 
@@ -205,6 +233,7 @@ struct SerialEntry {
     BitVector fieldMask;
     int len = 0;
     int syncNodeID = -1;
+    int uiEntryDesc = -1;
 };
 
 class ourBinaryDataHandler : public BinaryDataHandler {
@@ -282,33 +311,33 @@ void VRSyncNode::deserializeAndApply(string& data) {
         }
         if (id == -1) continue;
 
-        cout << name << " syncedContainer.push_back " << id << endl;
+//        cout << name << " syncedContainer.push_back " << id << endl;
         syncedContainer.push_back(id);
-        cout << ">>> VRSyncNode::deserializeAndApply " << name << endl;
-        cout << " received container: " << sentry.localId << " syncNodeID " << sentry.syncNodeID << endl;
-        cout << "remoteToLocalID" << endl;
-        for (auto r : remoteToLocalID){
-            cout << "remoteID " << r.first << " localID " << r.second << endl;
-        }
+//        cout << ">>> VRSyncNode::deserializeAndApply " << name << endl;
+//        cout << " received container: " << sentry.localId << " syncNodeID " << sentry.syncNodeID << endl;
+//        cout << "remoteToLocalID" << endl;
+//        for (auto r : remoteToLocalID){
+//            cout << "remoteID " << r.first << " localID " << r.second << endl;
+//        }
+
 
         //  - get fieldcontainer using correct ID
         FieldContainerFactoryBase* factory = FieldContainerFactory::the();
         FieldContainer* fcPtr = factory->getContainer(id);
-        //cout << " apply data to " << fcPtr->getTypeName() << " (" << fcPtr->getTypeId() << ")" << endl;
+//        cout << " apply data to " << fcPtr->getTypeName() << " (" << fcPtr->getTypeId() << ")" << endl;
+        string type = fcPtr->getTypeName();
         ourBinaryDataHandler handler; //use ourBinaryDataHandler to somehow apply binary change to fieldcontainer (use connection instead of handler, see OSGRemoteaspect.cpp (receiveSync))
         handler.data.insert(handler.data.end(), FCdata.begin(), FCdata.end()); //feed handler with FCdata
+        if (type == "Node") continue;
         fcPtr->copyFromBin(handler, sentry.fieldMask); //calls handler->read
 
+//        // check if the changed container was of type node, then register new of node children
+//        auto res = sentry.fieldMask & Node::ChildrenFieldMask;
+//        if (type == "Node" && sentry.fieldMask & Node::ChildrenFieldMask){
+//             Node* node = dynamic_cast<Node*>(fcPtr);
+//
+//        }
 
-//        ourBinaryDataHandler testHandler2;
-//        fcPtr->copyToBin(testHandler2, sentry.fieldMask);
-//        cout << " field container after change: " << base64_encode(&testHandler2.data[0], testHandler2.data.size()) << endl;
-
-        // register field change
-
-        /*UInt32 fID = fcp->getType().getId();
-        if (fID < _changedFunctors.size()) _changedFunctors[fID](fcp, this);
-        else result = _defaultChangedFunction(fcp, this);*/
     }
     //Thread::getCurrentChangeList()->commitChanges(ChangedOrigin::Sync);
     //Thread::getCurrentChangeList()->commitChangesAndClear(ChangedOrigin::Sync);
@@ -316,7 +345,6 @@ void VRSyncNode::deserializeAndApply(string& data) {
 
 //update this SyncNode
 void VRSyncNode::update() {
-    cout << "update" << endl;
     // go through all changes, gather changes where the container is known (in containers)
     ChangeList* cl = applicationThread->getChangeList();
     if (cl->getNumChanged() + cl->getNumCreated() == 0) return;
@@ -346,7 +374,6 @@ void VRSyncNode::update() {
         }
     }
 
-    cout << "localChanges->getNumChanged() " << localChanges->getNumChanged() << endl;
     if (localChanges->getNumChanged() == 0) return;
 
     cout << "\nVRSyncNode::update " << name << endl;
@@ -364,7 +391,8 @@ void VRSyncNode::update() {
                 for (int i=0; i<node->getNChildren(); i++) {
                     Node* child = node->getChild(i);
                     if (!container.count(child->getId())) { //check if it is an unregistered child
-                        registerNode(child); // TODO: add created for every new registered container?
+                        registerNode(child);
+                        //localChanges->addCreate(child->getId(), TypeTraits<BitVector>::BitsClear); // TODO: add created for every new registered container?
                     }
                 }
             }
@@ -379,11 +407,11 @@ void VRSyncNode::update() {
     }
 
     // check for created nodes
-    /*for (auto it = cl->beginCreated(); it != cl->endCreated(); ++it) {
+    for (auto it = cl->beginCreated(); it != cl->endCreated(); ++it) {
         ContainerChangeEntry* entry = *it;
         UInt32 id = entry->uiContainerId;
         if (container.count(id)) localChanges->addCreate(entry);
-    }*/
+    }
 
     cout << "local changes: " << endl;
     printChangeList(localChanges);
