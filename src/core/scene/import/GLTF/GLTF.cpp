@@ -365,9 +365,10 @@ class GLTFLoader : public GLTFUtils {
         }
 
         void handleExtension(string extension){
-            cout << "GLTFLOADER::WARNING IN EXTENSIONS USED: '" << extension << "' not supported yet" << endl;
-            //if (extension == "KHR_materials_unlit") disableMaterials = true;
+            bool extensionNotSupported = true;
             if (extension == "KHR_materials_pbrSpecularGlossines") disableMaterials = true;
+            if (extension == "KHR_materials_unlit") extensionNotSupported = false;
+            if (extensionNotSupported) cout << "GLTFLOADER::WARNING IN EXTENSIONS USED: '" << extension << "' not supported yet" << endl;
         }
 
         void handleScene(const tinygltf::Scene &gltfScene){
@@ -444,9 +445,7 @@ class GLTFLoader : public GLTFUtils {
             if (gltfMaterial.extensions.count("KHR_materials_pbrSpecularGlossines")) {
                 cout << "GLTFLOADER::WARNING IN MATERIALS: extension KHR pbrSpecGloss" << endl;
             }
-            if (gltfMaterial.extensions.count("KHR_materials_unlit")) {
-                cout << "GLTFLOADER::WARNING IN MATERIALS: extension KHR mat unlit" << endl;
-            }
+            if (gltfMaterial.extensions.count("KHR_materials_unlit")) mat->setLit(false);
             mat->setPointSize(5);
             //cout << "   MATE " << gltfMaterial.name << endl;
             bool bsF = false;
@@ -514,8 +513,8 @@ class GLTFLoader : public GLTFUtils {
                 mat->setShininess(shiny);
                 //mat->ignoreMeshColors(true);
             }
+            if (!alphaBlend) mat->clearTransparency();
             if (!disableMaterials) {
-                if (!alphaBlend) mat->clearTransparency();
                 materials[matID] = mat;
             }
         }
@@ -743,9 +742,45 @@ class GLTFLoader : public GLTFUtils {
 
         void handleAnimation(const tinygltf::Animation &gltfAnimation){
             //cout << gltfAnimation.name << endl;
-            cout << "GLTFLOADER::WARNING IN ANIMATIONS: not supported" << endl;
-            cout << " channels size int" << gltfAnimation.channels.size() << endl;
-            cout << " samplers size int" << gltfAnimation.samplers.size() << endl;
+            cout << "GLTFLOADER::WARNING IN ANIMATIONS: working on it..." << endl;
+            cout << " channelSizeN: " << gltfAnimation.channels.size() << endl;
+            cout << " samplerSizeN: " << gltfAnimation.samplers.size() << endl;
+            for (tinygltf::AnimationChannel each: gltfAnimation.channels) {
+                cout << " sampler: " << each.sampler  << " node: " << each.target_node  << " path: " << each.target_path << endl;
+                tinygltf::AnimationSampler anim = gltfAnimation.samplers[each.sampler];
+
+                //if (anim.interpolation == "STEP") cout << "  found STEP interpolation" << endl;
+                //if (anim.interpolation == "LINEAR") cout << "  found LINEAR interpolation" << endl;
+
+                cout << "  input: " << anim.input << " output: " << anim.output << " interpolation: " << anim.interpolation << endl;
+                const tinygltf::Accessor& accessorIn = model.accessors[anim.input];
+                const tinygltf::BufferView& bufferViewIn = model.bufferViews[accessorIn.bufferView];
+                const tinygltf::Buffer& bufferIn = model.buffers[bufferViewIn.buffer];
+                const float* dataIn = reinterpret_cast<const float*>(&bufferIn.data[bufferViewIn.byteOffset + accessorIn.byteOffset]);
+                if (accessorIn.componentType == 5126) {
+                    vector<float> keyFrameTs; //vector of timestamps for each keyframe
+                    for (size_t i = 0; i < accessorIn.count; ++i) {
+                        keyFrameTs.push_back(dataIn[i]);
+                        //cout << dataIn[i] << endl;
+                    }
+                }
+                const tinygltf::Accessor& accessorOut = model.accessors[anim.output];
+                const tinygltf::BufferView& bufferViewOut = model.bufferViews[accessorOut.bufferView];
+                const tinygltf::Buffer& bufferOut = model.buffers[bufferViewOut.buffer];
+                const float* dataOut = reinterpret_cast<const float*>(&bufferOut.data[bufferViewOut.byteOffset + accessorOut.byteOffset]);
+                if (accessorOut.componentType == 5126) {
+                    for (size_t i = 0; i < accessorOut.count; ++i) {
+                        if (accessorOut.type == 3){
+                            Vec3d vec = Vec3d( dataOut[i * 3 + 0], dataOut[i * 3 + 1], dataOut[i * 3 + 2] );
+                            //cout << vec << endl;
+                        }
+                        if (accessorOut.type == 4){
+                            Vec4d vec = Vec4d( dataOut[i * 4 + 0], dataOut[i * 4 + 1], dataOut[i * 4 + 2], dataOut[i * 4 + 3] );
+                            //cout << vec << endl;
+                        }
+                    }
+                }
+            }
             return;
         }
 
