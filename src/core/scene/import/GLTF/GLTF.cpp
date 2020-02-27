@@ -453,6 +453,9 @@ class GLTFLoader : public GLTFUtils {
             bool mtF = false;
             bool rfF = false;
             bool emF = false;
+            bool alphaBlend = false;
+            bool alphaMask = false;
+            bool alphaOpaque = false;
             bool singleFace = false;
             for (const auto &content : gltfMaterial.values) {
                 if (content.first == "baseColorTexture") {
@@ -476,6 +479,7 @@ class GLTFLoader : public GLTFUtils {
                 }
                 if (content.first == "alphaMode") {
                     //cout << "alhphaMODE " << gltfMaterial.alphaMode << endl;
+                    if (gltfMaterial.alphaMode == "BLEND") alphaBlend = true;
                 }
                 if (content.first == "doubleSided") {
                     if (!gltfMaterial.doubleSided) { singleFace = true; cout << "GLTFLOADER::WARNING IN MATERIAL " << gltfMaterial.name << " - SINGLE SIDE - ambient set to black" << endl; }
@@ -487,6 +491,7 @@ class GLTFLoader : public GLTFUtils {
                 baseColor = Color3f(gltfMaterial.pbrMetallicRoughness.baseColorFactor[0],gltfMaterial.pbrMetallicRoughness.baseColorFactor[1],gltfMaterial.pbrMetallicRoughness.baseColorFactor[2]);
                 diff = baseColor;
                 mat->setDiffuse(diff);
+                //if (alphaBlend) mat->setTransparency(gltfMaterial.pbrMetallicRoughness.baseColorFactor[3]);
             }
             Color3f spec;
             Color3f amb;
@@ -509,7 +514,10 @@ class GLTFLoader : public GLTFUtils {
                 mat->setShininess(shiny);
                 //mat->ignoreMeshColors(true);
             }
-            if (!disableMaterials) materials[matID] = mat;
+            if (!disableMaterials) {
+                if (!alphaBlend) mat->clearTransparency();
+                materials[matID] = mat;
+            }
         }
 
         void handleTexture(const tinygltf::Texture &gltfTexture){
