@@ -51,6 +51,8 @@ class VRSyncNode : public VRTransform {
         void registerContainer(FieldContainer* c, int syncNodeID = -1);
         void registerNode(Node* c);
 
+        void createChild();
+
     public:
         VRSyncNode(string name = "syncNode");
         ~VRSyncNode();

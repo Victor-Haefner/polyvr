@@ -243,7 +243,9 @@ class ourBinaryDataHandler : public BinaryDataHandler {
         }
 
         void read(MemoryHandle src, UInt32 size) {
+            cout << "ourBinaryDataHandler -> read() data.size" << data.size() << " size " << size << endl;
             memcpy(src, &data[0], min((size_t)size, data.size())); //read data from handler into src (sentry.fieldMask)
+            //memcpy(src, &data[0], data.size());
         }
 
         void write(MemoryHandle src, UInt32 size) {
@@ -262,19 +264,21 @@ void serialize_entry(ContainerChangeEntry* entry, vector<BYTE>& data, int syncNo
         sentry.localId = id;
         sentry.fieldMask = entry->whichField;
         sentry.syncNodeID = syncNodeID;
+        sentry.uiEntryDesc = entry->uiEntryDesc;
 
         ourBinaryDataHandler handler;
         fcPtr->copyToBin(handler, sentry.fieldMask); //calls handler->write
         sentry.len = handler.data.size();//UInt32(fcPtr->getBinSize(sentry.fieldMask));
 
-        //cout << "serialize > > > sentry: " << sentry.localId << " " << sentry.fieldMask << " " << sentry.len << " | encoded: " << data.size() << endl;
-
         data.insert(data.end(), (BYTE*)&sentry, (BYTE*)&sentry + sizeof(SerialEntry)); //v.insert(v.end(), data.begin(), data.end())
         data.insert(data.end(), handler.data.begin(), handler.data.end());
+
+        cout << "serialize > > > sentry: " << sentry.localId << " " << sentry.fieldMask << " " << sentry.len << " | encoded: " << data.size() << endl;
     }
 }
 
 string VRSyncNode::serialize(ChangeList* clist) {
+    cout << "> > >  " << name << " VRSyncNode::serialize()" << endl;
     vector<BYTE> data;
     for (auto it = clist->begin(); it != clist->end(); ++it) {
         ContainerChangeEntry* entry = *it;
@@ -282,16 +286,18 @@ string VRSyncNode::serialize(ChangeList* clist) {
         if (entry->uiEntryDesc != ContainerChangeEntry::Change) continue;
         serialize_entry(entry, data, container[id]);
     }
+    cout << "            / " << name << " / VRSyncNode::serialize()" <<"  < < <" << endl;
     return base64_encode(&data[0], data.size());
 }
 
 void VRSyncNode::deserializeAndApply(string& data) {
+    cout << "> > >  " << name << " VRSyncNode::deserializeAndApply()" << endl;
     vector<BYTE> vec = base64_decode(data);
     int pos = 0;
     while (pos < vec.size()) {
         //cout << " !!! search for sentry at " << pos << "/" << vec.size() << endl;
         SerialEntry sentry = *((SerialEntry*)&vec[pos]);
-        //cout << "deserialize > > > sentry: " << sentry.localId << " " << sentry.fieldMask << " " << sentry.len << endl;
+        cout << "deserialize > > > sentry: " << sentry.localId << " " << sentry.fieldMask << " " << sentry.len << " desc " << sentry.uiEntryDesc << endl;
         pos += sizeof(SerialEntry);
         vector<BYTE> FCdata;
         FCdata.insert(FCdata.end(), vec.begin()+pos, vec.begin()+pos+sentry.len);
@@ -311,60 +317,142 @@ void VRSyncNode::deserializeAndApply(string& data) {
         }
         if (id == -1) continue;
 
-//        cout << name << " syncedContainer.push_back " << id << endl;
         syncedContainer.push_back(id);
-//        cout << ">>> VRSyncNode::deserializeAndApply " << name << endl;
-//        cout << " received container: " << sentry.localId << " syncNodeID " << sentry.syncNodeID << endl;
-//        cout << "remoteToLocalID" << endl;
-//        for (auto r : remoteToLocalID){
-//            cout << "remoteID " << r.first << " localID " << r.second << endl;
-//        }
-
 
         //  - get fieldcontainer using correct ID
         FieldContainerFactoryBase* factory = FieldContainerFactory::the();
         FieldContainer* fcPtr = factory->getContainer(id);
-//        cout << " apply data to " << fcPtr->getTypeName() << " (" << fcPtr->getTypeId() << ")" << endl;
+        cout << name << " apply data to " << fcPtr->getTypeName() << " (" << fcPtr->getTypeId() << ")" << endl;
         string type = fcPtr->getTypeName();
         ourBinaryDataHandler handler; //use ourBinaryDataHandler to somehow apply binary change to fieldcontainer (use connection instead of handler, see OSGRemoteaspect.cpp (receiveSync))
         handler.data.insert(handler.data.end(), FCdata.begin(), FCdata.end()); //feed handler with FCdata
-        if (type == "Node") continue;
+        if (type == "Node") {
+            //check for children changes
+            if(sentry.fieldMask & Node::ChildrenFieldMask){
+                cout << "we've got a change in children here " << sentry.syncNodeID << " , " << sentry.uiEntryDesc << ", CreateDesc(1) " << ContainerChangeEntry::Create << endl;
+                //have we got a corresponding child id in local container of this SyncNode?
+                if (sentry.uiEntryDesc = ContainerChangeEntry::Create){
+                     createChild();
+                    //Node::addChild() //child pointer?
+                }
+            }
+        }
         fcPtr->copyFromBin(handler, sentry.fieldMask); //calls handler->read
-
-//        // check if the changed container was of type node, then register new of node children
-//        auto res = sentry.fieldMask & Node::ChildrenFieldMask;
-//        if (type == "Node" && sentry.fieldMask & Node::ChildrenFieldMask){
-//             Node* node = dynamic_cast<Node*>(fcPtr);
-//
-//        }
-
     }
     //Thread::getCurrentChangeList()->commitChanges(ChangedOrigin::Sync);
     //Thread::getCurrentChangeList()->commitChangesAndClear(ChangedOrigin::Sync);
+
+    //check if all cores are still there
+//    cout << "registered container" << endl;
+//    for (auto c : container) {
+//        cout << c.first << endl;
+//    }
+//    FieldContainerFactoryBase* factory = FieldContainerFactory::the();
+//    for (auto c : container) {
+//        UInt32 id = c.first;
+//        if (!factory->getContainer(id)) cout << "no FC with id " << id << endl; continue;
+//        FieldContainer* fc = factory->getContainer(id);
+//        string type = fc->getTypeName();
+//        Node* node = dynamic_cast<Node*>(fc);
+//        if(type == "Node") {
+//            cout << "Node " << c.first << " " << type << endl;
+//            if(node->getCore()){
+//                cout << "Core " << node->getCore() << endl;
+//            } else cout << "no Core" << endl;
+//        }
+//    }
+    //cout << "!!!!! registered 2 field container " << factory->getContainer(node1->getId())->getTypeName() << " and " << factory->getContainer(group->getId())->getTypeName() << endl;
+
+
+    cout << "            / " << name << " VRSyncNode::deserializeAndApply()" << "  < < <" << endl;
 }
+
+//create a node structure for create child
+//when a geometry is added to a scene Graph node, the following container are registered and need to be created on remote node: Node, Group, Node, Geometry, Node, Transform, Node, Geometry
+//TODO: shorten with helper functions
+void VRSyncNode::createChild(){
+    FieldContainerFactoryBase* factory = FieldContainerFactory::the();
+
+    //Node
+    NodeRefPtr n1 = Node::create();
+    Node* node1 = n1.get();
+    //Group
+    GroupRefPtr group = Group::create();
+    n1->setCore(group);
+
+
+    registerNode(node1);
+    syncedContainer.push_back(node1->getId());
+    syncedContainer.push_back(group->getId());
+//    factory->registerContainer(node1); //TODO: check if factory-> registerContainer is really needed here
+//    factory->registerContainer(group);
+
+    //Node
+    NodeRefPtr n2 = Node::create();
+    Node* node2 = n2.get();
+    //Geometry //GeometryMTRecPtr geo = Geometry::create();
+    GeometryMTRecPtr g1 = makeTorusGeo(0.5, 1.0, 16, 8); //VRTorus::make();
+    n2->setCore(g1);
+
+    registerNode(node2);
+    syncedContainer.push_back(node2->getId());
+    syncedContainer.push_back(g1->getId());
+//    factory->registerContainer(node2);
+//    factory->registerContainer(g1);
+
+
+    //Node
+    NodeRefPtr n3 = Node::create();
+    Node* node3 = n3.get();
+    //Transform
+    Matrix m;
+    m.setTransform(Vec3f(0,  0, 0));
+    TransformRecPtr trans  = Transform::create(); //node core
+    trans->setMatrix(m);
+    n3->setCore(trans);
+
+    registerNode(node3);
+    syncedContainer.push_back(node3->getId());
+    syncedContainer.push_back(trans->getId());
+//    factory->registerContainer(node3);
+//    factory->registerContainer(trans);
+
+
+    //Node
+    NodeRefPtr n4 = Node::create();
+    Node* node4 = n4.get();
+    //Geometry
+    GeometryMTRecPtr g2 = makeTorusGeo(0.5, 1.0, 16, 8);
+    n4->setCore(g2);
+
+    registerNode(node4);
+    syncedContainer.push_back(node4->getId());
+    syncedContainer.push_back(g2->getId());
+//    factory->registerContainer(node4);
+//    factory->registerContainer(g2);
+}
+
+
 
 //update this SyncNode
 void VRSyncNode::update() {
     // go through all changes, gather changes where the container is known (in containers)
     ChangeList* cl = applicationThread->getChangeList();
     if (cl->getNumChanged() + cl->getNumCreated() == 0) return;
-    //cl->commitChanges();
+    cout << "> > >  " << name << " VRSyncNode::update()" << endl;
+    //printChangeList(cl);
 
     FieldContainerFactoryBase* factory = FieldContainerFactory::the();
-    //printChangeList(cl);
     int j = 0;
 
     // create local changelist with changes of containers of the subtree of this sync node :D
     OSGChangeList* localChanges = (OSGChangeList*)ChangeList::create();
     for (auto it = cl->begin(); it != cl->end(); ++it) {
         ContainerChangeEntry* entry = *it;
+        //if (entry->uiEntryDesc == ContainerChangeEntry::Create) cout << ">>>>>>>>ContainerChangeEntry::Create" << endl;
         if (entry->uiEntryDesc != ContainerChangeEntry::Change) continue; // TODO: only for debugging!
         UInt32 id = entry->uiContainerId;
         if (container.count(id)) {
-            cout << name << " checking id " << id << endl;
-            for (auto ID : syncedContainer){
-                cout << ID << endl;
-            }
             if (::find(syncedContainer.begin(), syncedContainer.end(), id) == syncedContainer.end()) { // check to avoid adding a change induced by remote sync
                 //cout << " change ? " << id << "  " << entry->whichField << "  " << Node::ChildrenFieldMask << endl;
                 //cout << " change ? " << id << "  " << *entry->bvUncommittedChanges << "  " << Node::ChildrenFieldMask << endl;
@@ -374,12 +462,14 @@ void VRSyncNode::update() {
         }
     }
 
-    if (localChanges->getNumChanged() == 0) return;
-
-    cout << "\nVRSyncNode::update " << name << endl;
+    if (localChanges->getNumChanged() == 0){
+        cout << "            / " << name << " VRSyncNode::update()" << " < < <" << endl;
+        return;
+    }
 
     // check for addChild changes
     for (auto it = localChanges->begin(); it != localChanges->end(); ++it) {
+        cout << "update child changes" << endl;
         ContainerChangeEntry* entry = *it;
         UInt32 id = entry->uiContainerId;
         FieldContainer* fct = factory->getContainer(id);
@@ -413,7 +503,7 @@ void VRSyncNode::update() {
         if (container.count(id)) localChanges->addCreate(entry);
     }
 
-    cout << "local changes: " << endl;
+    cout << "print local changes: " << endl;
     printChangeList(localChanges);
 
     // serialize changes in new change list (check OSGConnection for serialization Implementation)
@@ -427,24 +517,23 @@ void VRSyncNode::update() {
     }
 
     syncedContainer.clear();
-    cout << "syncedContainer clear: " << endl;
-    for (auto ID : syncedContainer){
-        cout << ID << endl;
-    }
 
     //DEBUG: print registered container
-    cout << name << " registered container: " << endl;
+    cout << "print registered container: " << endl;
     for (auto c : container){
-        cout << c.first << " syncNodeID " << c.second ;
-        if (factory->getContainer(c.first)){
-            cout << " " << factory->getContainer(c.first)->getTypeName();
+        UInt32 id = c.first;
+        cout << id << " syncNodeID " << c.second ;
+        if (factory->getContainer(id)){
+            cout << " " << factory->getContainer(id)->getTypeName();
         }
         cout << endl;
     }
+
+    cout << "            / " << name << " VRSyncNode::update()" << "  < < < " << endl;
 }
 
 void VRSyncNode::registerContainer(FieldContainer* c, int syncNodeID) {
-    cout << " VRSyncNode::registerContainer " << getName() << " container: " << c->getTypeName() << " at: " << c->getId() << endl;
+    cout << " VRSyncNode::registerContainer " << getName() << " container: " << c->getTypeName() << " at fieldContainerId: " << c->getId() << endl;
     container[c->getId()] = syncNodeID;
 }
 
