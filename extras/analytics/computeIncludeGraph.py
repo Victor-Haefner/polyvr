@@ -2,6 +2,7 @@
 
 import os, fnmatch, subprocess
 import numpy, Gnuplot # sudo apt install python-gnuplot
+import datetime
 from PIL import Image
 from time import sleep
 
@@ -161,14 +162,29 @@ def drawGraph():
 				P.addEdge(A.positions[name], A.positions[include])
 	P.draw()
 
+compilationTimes = {}
+def getCompilationTimes():
+	def runCompilation(h):
+		with open("testMain.cpp") as f: lines = f.readlines()
+		lines[0] = '#include "'+A.headers[h]+'"\n'
+		with open("testMain.cpp", "w") as f: f.writelines(lines)
 
-A = Analytics()
-A.traverseSources(sourceDir)
-A.computeLayers()
-A.computePositions()
-#drawGraph()
+		cmd = "codeblocks -ni -ns --multiple-instance --target='Release' --rebuild PolyVR_18.04.cbp > /dev/null"
+		a = datetime.datetime.now()
+		os.system(cmd)
+		b = datetime.datetime.now()
+		return (b - a).total_seconds()
 
-if 1: # compute how many source files the header impacts
+	i = 0
+	for header in A.headers:
+		print 'compile header:', header,
+		compilationTimes[header] = runCompilation(header)
+		print compilationTimes[header]
+		i += 1
+		#if i == 5: break
+		
+
+def countImpact(): # compute how many source files the header impacts
 	def countIncludes(header, processed):
 		processed.append(header)
 		if header in A.includeGraph: 
@@ -180,11 +196,26 @@ if 1: # compute how many source files the header impacts
 	for header in A.headers: 
 		processed = []
 		countIncludes(header, processed)
-		Ndepends[header] = (len(processed), processed)
+		N = 0
+		for p in processed: 
+			if p[-4:] == '.cpp': N+=1
+		Ndepends[header] = (N, processed)
 	Ndepends = sorted(Ndepends.items(), key=operator.itemgetter(1,0))
 	for h in Ndepends:
 		#print len(h[1][1]), h
-		print h[0], h[1][0]
+		print h[0], ' '*(40-len(h[0])), len(A.includeGraph[h[0]]), '\t/', h[1][0], '\t/', len(A.sources), '\t- ', 
+		if h[0] in compilationTimes: print compilationTimes[h[0]], ' s'
+		else: print ' '
+
+
+A = Analytics()
+A.traverseSources(sourceDir)
+A.computeLayers()
+A.computePositions()
+getCompilationTimes()
+countImpact()
+#drawGraph()
+
 
 
 

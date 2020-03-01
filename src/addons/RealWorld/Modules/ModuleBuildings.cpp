@@ -10,7 +10,7 @@
 #include "core/utils/toString.h"
 #include "core/utils/system/VRSystem.h"
 #include "triangulate.h"
-#include "../Config.h"
+#include "../RealWorldConfig.h"
 #include "../World.h"
 #include "core/scene/VRSceneManager.h"
 #include "../RealWorld.h"
@@ -93,8 +93,8 @@ void ModuleBuildings::addBuildingWallLevel(VRGeoData* b_geo_d, Vec2d pos1, Vec2d
     Vec2d wallDir = (pos2 - pos1);
     wallDir.normalize();
 
-    float wall_segment = Config::get()->WINDOW_DOOR_WIDTH;
-    float FLOOR_HEIGHT = Config::get()->BUILDING_FLOOR_HEIGHT;
+    float wall_segment = RealWorldConfig::get()->WINDOW_DOOR_WIDTH;
+    float FLOOR_HEIGHT = RealWorldConfig::get()->BUILDING_FLOOR_HEIGHT;
 
     int segN = floor(len / wall_segment);
     segN = max(segN, 1);
@@ -173,7 +173,7 @@ void ModuleBuildings::addBuildingRoof(VRGeoData* r_geo_d, Building* building, fl
     Triangulate::Process(a,result); //  Invoke the triangulator to triangulate this VRPolygon.
 
     //create roof
-    height = (float)height * Config::get()->BUILDING_FLOOR_HEIGHT + elevation;
+    height = (float)height * RealWorldConfig::get()->BUILDING_FLOOR_HEIGHT + elevation;
     int tcount = result.size()/3;
     for (int i=0; i<tcount; i++) {
         const Vector2d &p1 = result[i*3+0];
@@ -196,7 +196,7 @@ void ModuleBuildings::makeBuildingGeometry(VRGeoData* b_geo_d, VRGeoData* r_geo_
     auto mc = RealWorld::get()->getCoordinator();
     if (!mc) return;
     int bNum = toInt(b->id);
-    int height = bNum % Config::get()->MAX_FLOORS + 2;
+    int height = bNum % RealWorldConfig::get()->MAX_FLOORS + 2;
     float minElevation = 99999.0f;
 
     for(auto corner : b->getCorners()){

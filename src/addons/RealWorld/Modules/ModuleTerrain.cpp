@@ -7,7 +7,7 @@
 #include "triangulate.h" // 0.1
 #include "addons/WorldGenerator/GIS/OSMMap.h"
 #include "ModuleTerrain.h" // 2.3
-#include "../Config.h" // 2.2
+#include "../RealWorldConfig.h" // 2.2
 #include "../MapCoordinator.h" // 2.2
 #include "../RealWorld.h" // 2.2
 //#include "Terrain.h" // 2.3
@@ -171,7 +171,7 @@ void ModuleTerrain::addTerrain(Terrain* ter, VRGeoData* gdTerrain, int height){
         else if(area < 300000) height = 2;
         //if(height > 10) height = 10;*/
 
-        float groundLevel = (float)height * Config::get()->LAYER_DISTANCE ;
+        float groundLevel = (float)height * RealWorldConfig::get()->LAYER_DISTANCE ;
 
         //create triangle
         tesselateTriangle(p1[0], p1[1], p2[0], p2[1], p3[0], p3[1], groundLevel, gdTerrain);
@@ -186,21 +186,21 @@ Vec3d ModuleTerrain::tesselateTriangle(float p1X, float p1Y, float p2X, float p2
     Vec2d p2 = Vec2d(p2X, p2Y);
     Vec2d p3 = Vec2d(p3X, p3Y);
     if (p1==p2 || p2==p3 || p1==p3) return res;
-    if ((p1-p2).length() > Config::get()->maxTriangleSize && (p1-p2).length() > (p1-p3).length() && (p1-p2).length() > (p2-p3).length()){
+    if ((p1-p2).length() > RealWorldConfig::get()->maxTriangleSize && (p1-p2).length() > (p1-p3).length() && (p1-p2).length() > (p2-p3).length()){
         Vec2d p12 = p1 + (p2-p1)/2;
         float p12X = p12.getValues()[0];
         float p12Y = p12.getValues()[1];
         res = tesselateTriangle(p1X, p1Y, p12X, p12Y, p3X, p3Y, height, gdTerrain);
         tesselateTriangle(p12X, p12Y, p2X, p2Y, p3X, p3Y, height, gdTerrain, Vec3d(res.getValues()[1], 0, res.getValues()[2]));
         return Vec3d(0,0,0);
-    } else if((p1-p3).length() > Config::get()->maxTriangleSize && (p1-p3).length() > (p2-p3).length()){
+    } else if((p1-p3).length() > RealWorldConfig::get()->maxTriangleSize && (p1-p3).length() > (p2-p3).length()){
         Vec2d p13 = p1 + (p3-p1)/2;
         float p13X = p13.getValues()[0];
         float p13Y = p13.getValues()[1];
         res = tesselateTriangle(p1X, p1Y, p2X, p2Y, p13X, p13Y, height, gdTerrain);
         tesselateTriangle(p13X, p13Y, p2X, p2Y, p3X, p3Y, height, gdTerrain, Vec3d(res.getValues()[2], res.getValues()[1], 0));
         return Vec3d(0,0,0);
-    } else if((p2-p3).length() > Config::get()->maxTriangleSize){
+    } else if((p2-p3).length() > RealWorldConfig::get()->maxTriangleSize){
         Vec2d p23 = p2 + (p3-p2)/2;
         float p23X = p23.getValues()[0];
         float p23Y = p23.getValues()[1];

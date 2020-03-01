@@ -1,5 +1,6 @@
 #include "VREmitter.h"
 #include "core/scene/VRScene.h"
+#include <boost/thread/recursive_mutex.hpp>
 
 using namespace std;
 using namespace OSG;

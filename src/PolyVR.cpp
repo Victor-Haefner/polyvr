@@ -7,6 +7,7 @@
 #include <OpenSG/OSGGLUT.h>
 #include <OpenSG/OSGPrimeMaterial.h>
 #include <OpenSG/OSGNameAttachment.h>
+#include <OpenSG/OSGVector.h>
 #ifdef __EMSCRIPTEN__
 #include <OpenSG/OSGPNGImageFileType.h>
 #include <OpenSG/OSGJPGImageFileType.h>
@@ -285,13 +286,13 @@ void PolyVR::run() {
 #endif
 }
 
-void PolyVR::startTestScene(OSGObjectPtr n, Vec3d camPos) {
+void PolyVR::startTestScene(OSGObjectPtr n, const Vec3d& camPos) {
     cout << "start test scene " << n << endl;
     VRSceneManager::get()->newScene("test");
     VRScene::getCurrent()->getRoot()->find("light")->addChild(n);
 
     VRTransformPtr cam = dynamic_pointer_cast<VRTransform>( VRScene::getCurrent()->get("Default") );
-    cam->setFrom(camPos);
+    cam->setFrom(Vec3d(camPos));
 
 #ifndef WITHOUT_GTK
     VRGuiManager::get()->wakeWindow();
