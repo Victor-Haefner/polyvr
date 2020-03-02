@@ -2,6 +2,7 @@
 
 import os, fnmatch, subprocess
 import numpy, Gnuplot # sudo apt install python-gnuplot
+import datetime
 from PIL import Image
 from time import sleep
 
@@ -115,10 +116,12 @@ class Analytics:
 				if include in self.includeGraph:
 					if not name in self.includeGraph[include]: self.includeGraph[include].append(name)
 
+
 	def computeLayers(self):
 		processedFiles = {}
 
-		def addNextLayer(layer, layers):
+		def getNewLayer(layer, layers):
+			ref = layer[:]
 			newLayer = []
 			for f in layer:
 				if not f in self.includeGraph: continue
@@ -126,8 +129,15 @@ class Analytics:
 					if includer in processedFiles: processedFiles[includer].remove(includer)
 					newLayer.append(includer)
 					processedFiles[includer] = newLayer
+			if ref == newLayer: 
+				del layers[-1]
+				layers.append(newLayer)
+				return []
+			return newLayer
 
-			if newLayer == layers[-1]: return
+		def addNextLayer(layer, layers):
+			if len(layers) > 20: return # safety check
+			newLayer = getNewLayer(layer, layers)
 			if len(newLayer) > 0:
 				layers.append(newLayer)
 				addNextLayer(newLayer, layers)
@@ -143,22 +153,83 @@ class Analytics:
 			for i,f in enumerate(layer):
 				if not f in self.positions: self.positions[f] = [j+0.1, -i-0.1]
 
+def drawGraph():
+	P = Plot()
+	for label, pos in A.positions.items(): P.addNode(pos, label)
+	for name, includes in A.dependsGraph.items():
+		for include in includes:
+			if name in A.positions and include in A.positions:
+				P.addEdge(A.positions[name], A.positions[include])
+	P.draw()
+
+compilationTimes = {}
+def getCompilationTimes():
+	def runCompilation(h):
+		with open("testMain.cpp") as f: lines = f.readlines()
+		lines[0] = '#include "'+A.headers[h]+'"\n'
+		with open("testMain.cpp", "w") as f: f.writelines(lines)
+
+		cmd = "codeblocks -ni -ns --multiple-instance --target='Release' --rebuild PolyVR_18.04.cbp > /dev/null"
+		a = datetime.datetime.now()
+		os.system(cmd)
+		b = datetime.datetime.now()
+		return (b - a).total_seconds()
+
+	i = 0
+	for header in A.headers:
+		print 'compile header:', header,
+		compilationTimes[header] = runCompilation(header)
+		print compilationTimes[header]
+		i += 1
+		#if i == 5: break
+		
+
+def countImpact(): # compute how many source files the header impacts
+	def countIncludes(header, processed):
+		processed.append(header)
+		if header in A.includeGraph: 
+			for f in A.includeGraph[header]:
+				if not f in processed: countIncludes(f, processed)
+
+	import random, operator
+	Ndepends = {}
+	for header in A.headers: 
+		processed = []
+		countIncludes(header, processed)
+		N = 0
+		for p in processed: 
+			if p[-4:] == '.cpp': N+=1
+		Ndepends[header] = (N, processed)
+	Ndepends = sorted(Ndepends.items(), key=operator.itemgetter(1,0))
+	for h in Ndepends:
+		#print len(h[1][1]), h
+		print h[0], ' '*(40-len(h[0])), len(A.includeGraph[h[0]]), '\t/', h[1][0], '\t/', len(A.sources), '\t- ', 
+		if h[0] in compilationTimes: print compilationTimes[h[0]], ' s'
+		else: print ' '
+
 
 A = Analytics()
 A.traverseSources(sourceDir)
 A.computeLayers()
 A.computePositions()
+getCompilationTimes()
+countImpact()
+#drawGraph()
 
-P = Plot()
 
-for label, pos in A.positions.items(): P.addNode(pos, label)
 
-for name, includes in A.dependsGraph.items():
-	for include in includes:
-		if name in A.positions and include in A.positions:
-			P.addEdge(A.positions[name], A.positions[include])
 
-P.draw()
+
+
+
+
+
+
+
+
+
+
+
 		
 				
 

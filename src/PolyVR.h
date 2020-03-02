@@ -2,13 +2,15 @@
 #define VRFRAMEWORK_H_INCLUDED
 
 #include <OpenSG/OSGConfig.h>
-#include <OpenSG/OSGVector.h>
 
 #include "PolyVRFwd.h"
 #include "core/objects/VRObjectFwd.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
+
+template<class ValueTypeT, unsigned int SizeI> class Vector;
+typedef Vector< double, 3 > Vec3d;
 
 class PolyVR {
     private:
@@ -32,7 +34,7 @@ class PolyVR {
         void run();
         void update();
         void init(int argc, char **argv);
-        void startTestScene(OSGObjectPtr n, Vec3d camPos);
+        void startTestScene(OSGObjectPtr n, const Vec3d& camPos);
 };
 
 OSG_END_NAMESPACE;

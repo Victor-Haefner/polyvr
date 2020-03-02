@@ -6,6 +6,7 @@
 
 #include "core/objects/geometry/OSGGeometry.h"
 #include <OpenSG/OSGGeometry.h>
+#include <boost/thread/recursive_mutex.hpp>
 
 typedef boost::recursive_mutex::scoped_lock BLock;
 

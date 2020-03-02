@@ -8,7 +8,7 @@
 #include "core/utils/toString.h"
 #include "core/math/pose.h"
 
-#include "../Config.h"
+#include "../RealWorldConfig.h"
 #include "../RealWorld.h"
 #include "addons/WorldGenerator/GIS/OSMMap.h"
 #include "../MapCoordinator.h"
@@ -22,7 +22,7 @@
 using namespace OSG;
 
 ModuleStreets::ModuleStreets(bool t, bool p) : BaseModule("ModuleStreets", t,p) {
-    //this->streetHeight = Config::STREET_HEIGHT + Config::GROUND_LVL;
+    //this->streetHeight = RealWorldConfig::STREET_HEIGHT + RealWorldConfig::GROUND_LVL;
 
     // create material
     matStreet = VRMaterial::create("Street");
@@ -47,8 +47,8 @@ ModuleStreets::ModuleStreets(bool t, bool p) : BaseModule("ModuleStreets", t,p) 
     matLights->readFragmentShader(wdir+"/shader/TexturePhong/phong.fp");
 
     // Autobahn
-    float W = Config::get()->STREET_WIDTH;
-    float BH = Config::get()->Config::get()->BRIDGE_HEIGHT;
+    float W = RealWorldConfig::get()->STREET_WIDTH;
+    float BH = RealWorldConfig::get()->RealWorldConfig::get()->BRIDGE_HEIGHT;
     types["motorway"] = StreetType("motorway", W, BH, matStreet, true);
     types["motorway_link"] = StreetType("motorway_link", W, BH, matStreet, true);
 
@@ -137,7 +137,7 @@ void ModuleStreets::loadBbox(MapGrid::Box bbox) {
     VRGeoData* jdata = new VRGeoData();
     VRGeoData* signs2 = new VRGeoData();
     VRAnnotationEnginePtr signs = VRAnnotationEngine::create();
-    signs->setSize(Config::get()->SIGN_WIDTH);
+    signs->setSize(RealWorldConfig::get()->SIGN_WIDTH);
     signs->setColor(Color4f(1,1,1,1));
     signs->setBackground(Color4f(0.1,0.1,0.8,1));
     signs->setBillboard(true);
@@ -277,7 +277,7 @@ void ModuleStreets::makeStreetNameSign(StreetSegment* seg, VRAnnotationEnginePtr
         if (n == -97) { name[i-1] = 's'; name[i] = 's'; }
     }
 
-    float h1 = Config::get()->SIGN_DISTANCE;
+    float h1 = RealWorldConfig::get()->SIGN_DISTANCE;
 
     //Vec2d dir = (seg->leftA - seg->rightA); dir.normalize();
     Vec2d p2 = (seg->leftA + seg->leftB)*0.5;
@@ -293,7 +293,7 @@ void ModuleStreets::makeSegment(StreetSegment* s, map<string, StreetJoint*>& joi
 
     if (s->lanes <= 0) s->lanes = 1;
     Vec2d laneW = (rightA-leftA)*1/s->lanes;
-    float streetH = Config::get()->STREET_HEIGHT;
+    float streetH = RealWorldConfig::get()->STREET_HEIGHT;
 
     if (!s->bridge) {//normal street
         for (int l = 0; l < s->lanes; l++) {
@@ -314,7 +314,7 @@ void ModuleStreets::makeSegment(StreetSegment* s, map<string, StreetJoint*>& joi
     // bridge
     Vec2d ABPart = (leftB - leftA)/3;
     float high = streetH + s->bridgeHeight;
-    Vec3d th = Vec3d(0, Config::get()->BRIDGE_SIZE, 0);
+    Vec3d th = Vec3d(0, RealWorldConfig::get()->BRIDGE_SIZE, 0);
 
     Vec3d laneW3 = Vec3d(laneW[0], 0, laneW[1]);
     auto pushPart = [&](Vec2d height, int i) {
@@ -393,7 +393,7 @@ Vec3d ModuleStreets::elevate(Vec2d p, float h) {
 
 void ModuleStreets::makeCurve(StreetJoint* sj, map<string, StreetSegment*>& streets, map<string, StreetJoint*>& joints, VRGeoData* geo) {
     vector<JointPoints*> jointPoints = StreetAlgos::calcJoints(sj, streets, joints);
-    float jointH = Config::get()->STREET_HEIGHT + sj->bridgeHeight;
+    float jointH = RealWorldConfig::get()->STREET_HEIGHT + sj->bridgeHeight;
 
     Vec2d _NULL;
     Vec3d norm = Vec3d(0, 1, 0);
@@ -430,7 +430,7 @@ void ModuleStreets::makeJoint(StreetJoint* sj, map<string, StreetSegment*>& stre
 
     int Nsegs = sj->segments.size();
     if (Nsegs <= 1) return;
-    float jointH = Config::get()->STREET_HEIGHT + sj->bridgeHeight;
+    float jointH = RealWorldConfig::get()->STREET_HEIGHT + sj->bridgeHeight;
 
     Vec3d right, left, leftExt, rightExt, firstRight, firstLeft, prevLeft, prevRight;
     Vec3d _NULL;
@@ -462,7 +462,7 @@ void ModuleStreets::makeJoint(StreetJoint* sj, map<string, StreetSegment*>& stre
     // TODO
     rightExt = _NULL;
     firstRight = _NULL;
-    jointH -= Config::get()->BRIDGE_SIZE;
+    jointH -= RealWorldConfig::get()->BRIDGE_SIZE;
 
     Vec2d tc05(0.5, 0.5);
     middle = elevate(sj->position, jointH);
@@ -475,21 +475,21 @@ void ModuleStreets::makeJoint(StreetJoint* sj, map<string, StreetSegment*>& stre
         if ((leftExt-middle).length() < 3) {
             pushTriangle(left, leftExt, middle, norm, geo, Vec2d(1, 1), Vec2d(1, 1), tc05);
             Vec3d normal = Vec3d(-(left-leftExt)[2], 0, (left-leftExt)[0]);
-            pushTriangle(left, leftExt, leftExt+Vec3d(0, Config::get()->BRIDGE_SIZE, 0), normal, geo, tc05, tc05, tc05);
-            pushTriangle(leftExt+Vec3d(0, Config::get()->BRIDGE_SIZE, 0), left+Vec3d(0, Config::get()->BRIDGE_SIZE, 0), left, normal, geo, tc05, tc05, tc05);
+            pushTriangle(left, leftExt, leftExt+Vec3d(0, RealWorldConfig::get()->BRIDGE_SIZE, 0), normal, geo, tc05, tc05, tc05);
+            pushTriangle(leftExt+Vec3d(0, RealWorldConfig::get()->BRIDGE_SIZE, 0), left+Vec3d(0, RealWorldConfig::get()->BRIDGE_SIZE, 0), left, normal, geo, tc05, tc05, tc05);
         }
 
         if (rightExt != _NULL && (rightExt-middle).length() < 3) {
             pushTriangle(right, rightExt, middle, norm, geo, Vec2d(1, 1), Vec2d(1, 1), tc05);
             Vec3d normal = Vec3d((right-rightExt)[2], 0, -(right-rightExt)[0]);
-            pushTriangle(right, rightExt, rightExt+Vec3d(0, Config::get()->BRIDGE_SIZE, 0), normal, geo, tc05, tc05, tc05);
-            pushTriangle(rightExt+Vec3d(0, Config::get()->BRIDGE_SIZE, 0), right+Vec3d(0, Config::get()->BRIDGE_SIZE, 0), right, normal, geo, tc05, tc05, tc05);
+            pushTriangle(right, rightExt, rightExt+Vec3d(0, RealWorldConfig::get()->BRIDGE_SIZE, 0), normal, geo, tc05, tc05, tc05);
+            pushTriangle(rightExt+Vec3d(0, RealWorldConfig::get()->BRIDGE_SIZE, 0), right+Vec3d(0, RealWorldConfig::get()->BRIDGE_SIZE, 0), right, normal, geo, tc05, tc05, tc05);
         } else firstRight = right;
 
         rightExt = leftExt;
     }
 
-    float bS = Config::get()->BRIDGE_SIZE;
+    float bS = RealWorldConfig::get()->BRIDGE_SIZE;
     pushTriangle(firstRight, rightExt, middle, norm, geo, Vec2d(1, 1), Vec2d(1, 1), tc05);
 
     Vec3d normal = Vec3d((firstRight-rightExt)[2], 0, -(firstRight-rightExt)[0]);
@@ -499,7 +499,7 @@ void ModuleStreets::makeJoint(StreetJoint* sj, map<string, StreetSegment*>& stre
 
 void ModuleStreets::makeJoint31(StreetJoint* sj, map<string, StreetSegment*>& streets, map<string, StreetJoint*>& joints, VRGeoData* geo, VRGeoData* signs2) {
     vector<JointPoints*> jointPoints = StreetAlgos::calcJoints(sj, streets, joints);
-    float jointH = Config::get()->STREET_HEIGHT + sj->bridgeHeight;
+    float jointH = RealWorldConfig::get()->STREET_HEIGHT + sj->bridgeHeight;
     Vec3d n = Vec3d(0, 1, 0);
 
     int sL3 = 0;
