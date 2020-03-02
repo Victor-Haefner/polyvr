@@ -4,6 +4,7 @@
 #include "VRTransform.h"
 #include "core/networking/VRNetworkingFwd.h"
 #include <OpenSG/OSGChangeList.h>
+#include <OpenSG/OSGFieldContainerFactory.h>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -32,6 +33,7 @@ class VRSyncNode : public VRTransform {
         VRSocketPtr socket;
         VRFunction<void*>* socketCb;
         VRUpdateCbPtr updateFkt;
+        FieldContainerFactoryBase* factory = FieldContainerFactory::the();
 
         map<int, int> container; // local containers, sub-set of containers which need to be synced for collaboration
         vector<UInt32> syncedContainer; //Id's of container that got changes over sync (changed by remote). Needed to filter out sync changes from local Changelist to prevent cycles.
