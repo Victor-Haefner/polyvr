@@ -2,6 +2,7 @@
 #define VRCALLBACKWRAPPERT_H_INCLUDED
 
 #include "VRCallbackWrapper.h"
+#include <type_traits>
 
 #define CW_CHECK_SIZE(N) \
 int Np = params.size(); \
@@ -16,7 +17,7 @@ if (Np < N-Ndp ) { \
 }
 
 #define CW_GET_VALUE(i,T,t,N) \
-T t; \
+typename std::remove_const< typename std::remove_reference<T>::type >::type t; \
 if (i < params.size()) { \
     if (! toValue(params[i], t)) { \
         VRCallbackWrapperBase::err = "Function argument "+toString(i)+" expects a "+typeName(t)+" ("+typeName( params[i] )+" given)"; \

@@ -7,7 +7,7 @@ template<> PyObject* VRPyTypeCaster::cast(const Pose& p) { return VRPyPose::from
 
 simplePyType( Pose, VRPyPose::New );
 
-PyMethodDef VRPyPose::methods[] = {
+/*PyMethodDef VRPyPose::methods[] = {
     {"pos", PyWrap2(Pose, pos, "Get the position", Vec3d ) },
     {"dir", PyWrap2(Pose, dir, "Get the direction", Vec3d ) },
     {"up", PyWrap2(Pose, up, "Get the up vector", Vec3d ) },
@@ -23,7 +23,26 @@ PyMethodDef VRPyPose::methods[] = {
     {"multLeft", PyWrap2(Pose, multLeft, "Transform back a vector", PosePtr, PosePtr ) },
     {"multRight", PyWrap2(Pose, multRight, "Transform back a vector", PosePtr, PosePtr ) },
     {"invert", PyWrap2(Pose, invert, "Invert pose", void ) },
-    {NULL}  /* Sentinel */
+    {NULL}
+};*/
+
+PyMethodDef VRPyPose::methods[] = {
+    {"pos", PyWrap2(Pose, pos, "Get the position", Vec3d ) },
+    {"dir", PyWrap2(Pose, dir, "Get the direction", Vec3d ) },
+    {"up", PyWrap2(Pose, up, "Get the up vector", Vec3d ) },
+    {"x", PyWrap2(Pose, x, "Get the x vector", Vec3d ) },
+    {"scale", PyWrap2(Pose, scale, "Get the scale vector", Vec3d ) },
+    {"setPos", PyWrap2(Pose, setPos, "Set the position", void, const Vec3d& ) },
+    {"setDir", PyWrap2(Pose, setDir, "Set the direction", void, const Vec3d& ) },
+    {"setUp", PyWrap2(Pose, setUp, "Set the up vector", void, const Vec3d& ) },
+    {"setScale", PyWrap2(Pose, setScale, "Set the scale vector", void, const Vec3d& ) },
+    {"set", PyWrapOpt2(Pose, set, "Set the pose: pos, dir, up, scale", "1 1 1", void, const Vec3d&, const Vec3d&, const Vec3d&, const Vec3d& ) },
+    {"mult", PyWrapOpt2(Pose, transform, "Transform a vector", "1", Vec3d, const Vec3d&, bool ) },
+    {"multInv", PyWrap2(Pose, transformInv, "Transform back a vector", Vec3d, const Vec3d& ) },
+    {"multLeft", PyWrap2(Pose, multLeft, "Transform back a vector", PosePtr, PosePtr ) },
+    {"multRight", PyWrap2(Pose, multRight, "Transform back a vector", PosePtr, PosePtr ) },
+    {"invert", PyWrap2(Pose, invert, "Invert pose", void ) },
+    {NULL}
 };
 
 PyObject* VRPyPose::New(PyTypeObject *type, PyObject *args, PyObject *kwds) {

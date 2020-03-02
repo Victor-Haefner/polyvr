@@ -419,8 +419,6 @@
 		<Unit filename="src/addons/RealWorld/Assets/Asset.h" />
 		<Unit filename="src/addons/RealWorld/Assets/StreetLamp.cpp" />
 		<Unit filename="src/addons/RealWorld/Assets/StreetLamp.h" />
-		<Unit filename="src/addons/RealWorld/Config.cpp" />
-		<Unit filename="src/addons/RealWorld/Config.h" />
 		<Unit filename="src/addons/RealWorld/Elevation.cpp" />
 		<Unit filename="src/addons/RealWorld/Elevation.h" />
 		<Unit filename="src/addons/RealWorld/MapCoordinator.cpp" />
@@ -459,6 +457,8 @@
 		<Unit filename="src/addons/RealWorld/Modules/triangulate.h" />
 		<Unit filename="src/addons/RealWorld/RealWorld.cpp" />
 		<Unit filename="src/addons/RealWorld/RealWorld.h" />
+		<Unit filename="src/addons/RealWorld/RealWorldConfig.cpp" />
+		<Unit filename="src/addons/RealWorld/RealWorldConfig.h" />
 		<Unit filename="src/addons/RealWorld/StreetAlgos.cpp" />
 		<Unit filename="src/addons/RealWorld/StreetAlgos.h" />
 		<Unit filename="src/addons/RealWorld/StreetBorder.h" />

@@ -527,3 +527,5 @@ VRObjectFwd.h                             115 	/ 387 	/ 465 	-  0.945069  s
 VRFunctionFwd.h                           60 	/ 388 	/ 465 	-  1.047282  s
 Config.h                                  150 	/ 397 	/ 465 	-  2.83233  s
 VRFwdDeclTemplate.h                       24 	/ 403 	/ 465 	-  0.911085  s
+total compilation time: 1640.279427
+
