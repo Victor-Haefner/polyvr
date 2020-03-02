@@ -7,7 +7,8 @@
 #include "core/math/polygon.h"
 #include "addons/WorldGenerator/VRWorldGeneratorFwd.h"
 #include "addons/WorldGenerator/VRWorldModule.h"
-#include <boost/thread/recursive_mutex.hpp>
+
+namespace boost { class recursive_mutex; }
 
 using namespace std;
 OSG_BEGIN_NAMESPACE;

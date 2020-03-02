@@ -5,13 +5,13 @@
 #include <OpenSG/OSGVector.h>
 #include <btBulletDynamicsCommon.h>
 #include <LinearMath/btVector3.h>
-#include <boost/thread/recursive_mutex.hpp>
 #include "core/utils/VRFunctionFwd.h"
 #include "core/tools/VRToolsFwd.h"
 #include "core/objects/object/VRObject.h"
 #include "addons/Bullet/VRPhysicsFwd.h"
 
 class pose;
+namespace boost { class recursive_mutex; }
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;

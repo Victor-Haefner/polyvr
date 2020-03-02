@@ -9,6 +9,7 @@
 #include "core/math/boundingbox.h"
 #include "core/scene/VRScene.h"
 #include "addons/LeapMotion/VRHandGeo.h"
+#include <boost/thread/recursive_mutex.hpp>
 
 using namespace OSG;
 
@@ -40,6 +41,7 @@ Vec3d VRLeapHistory::add(Vec3d v, float f) { // TODO
 
 
 VRLeap::VRLeap() : VRDevice("leap") {
+    mutex = new boost::recursive_mutex();
     transformation = Pose::create();
 
     //TODO: Debugging only
@@ -80,6 +82,13 @@ VRLeap::VRLeap() : VRDevice("leap") {
     //reconnect();
     enableAvatar("ray", 0);
     enableAvatar("ray", 6);
+}
+
+VRLeap::~VRLeap() {
+    cout << "~VRLeap" << endl;
+    delete mutex;
+    frameCallbacks.clear();
+    webSocket.close();
 }
 
 VRLeapPtr VRLeap::create() {
@@ -176,14 +185,14 @@ void VRLeap::updateHandFromJson(Json::Value& handData, Json::Value& pointableDat
 #endif
 
 VRTransformPtr VRLeap::getBeaconChild(int i) {
-    boost::recursive_mutex::scoped_lock lock(mutex);
+    boost::recursive_mutex::scoped_lock lock(*mutex);
     cout << static_pointer_cast<VRTransform>( getBeacon()->getChild(i) )->getFrom() << endl;
     return static_pointer_cast<VRTransform>( getBeacon()->getChild(i) );
 }
 
 void VRLeap::updateSceneData(vector<HandPtr> hands) {
 
-    boost::recursive_mutex::scoped_lock lock(mutex);
+    boost::recursive_mutex::scoped_lock lock(*mutex);
 
     // beaconRoot->Setup->Camera
     auto parent = getBeaconRoot()->getParent()->getParent();

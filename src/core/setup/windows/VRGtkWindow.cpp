@@ -6,6 +6,7 @@
 #include <gdkmm/cursor.h>
 #include <gdk/gdkgl.h>
 #include <gtk/gtkgl.h>
+#include <boost/thread/recursive_mutex.hpp>
 
 #include "../devices/VRKeyboard.h"
 #include "../devices/VRMouse.h"

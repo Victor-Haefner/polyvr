@@ -9,7 +9,6 @@
 #include "core/math/graph.h"
 #include "core/objects/object/VRObject.h"
 #include "core/tools/VRProjectManager.h"
-#include <boost/thread/recursive_mutex.hpp>
 #ifndef WITHOUT_BULLET
 #include "addons/Bullet/CarDynamics/CarDynamics.h"
 #endif
@@ -184,8 +183,8 @@ class VRTrafficSimulation : public VRObject {
         VRProjectManagerPtr simSettings;
         VRThreadCbPtr worker;
 
-        boost::recursive_mutex mtx; //locks main thread
-        boost::recursive_mutex mtx2; //locks transform updating
+        boost::recursive_mutex* mtx = 0; //locks main thread
+        boost::recursive_mutex* mtx2 = 0; //locks transform updating
 
         map<int, laneSegment> roads;
         map<int, Vehicle> vehicles;
