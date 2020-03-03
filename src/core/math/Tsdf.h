@@ -1,16 +1,17 @@
 #ifndef TSDF_H_INCLUDED
 #define TSDF_H_INCLUDED
 
-#include <OpenSG/OSGVector.h>
+#include "core/math/OSGMathFwd.h"
 #include "core/objects/VRObjectFwd.h"
 #include "core/math/VRMathFwd.h"
+#include <vector>
 
 using namespace std;
 OSG_BEGIN_NAMESPACE;
 
 class TSDF {
     private:
-        Vec3i size;
+        Vec3i* size;
         vector<float> field;
 
         bool inside(Vec3i& p);

@@ -1,7 +1,7 @@
 #ifndef VRTERRAIN_H_INCLUDED
 #define VRTERRAIN_H_INCLUDED
 
-#include <OpenSG/OSGVector.h>
+#include "core/math/OSGMathFwd.h"
 #include <OpenSG/OSGColor.h>
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/math/polygon.h"

@@ -12,6 +12,41 @@
 
 using namespace OSG;
 
+
+namespace OSG {
+    struct FABRIK::Joint {
+        int ID;
+        string name;
+        PosePtr p;
+        vector<int> in;
+        vector<int> out;
+        PosePtr target;
+        bool constrained = false;
+        Vec4d constraintAngles;
+        Vec3d debugPnt1, debugPnt2;
+    };
+
+    struct FABRIK::Chain {
+        string name;
+        vector<int> joints;
+        vector<float> distances;
+    };
+
+    struct FABRIK::step {
+        int joint;
+        int base;
+        int i1;
+        int i2;
+        string chain;
+        PosePtr target;
+        bool fwd = false;
+        bool mid = false;
+
+        step(int j, int b, int i1, int i2, string c, PosePtr t, bool f, bool m) : joint(j), base(b), i1(i1), i2(i2), chain(c), target(t), fwd(f), mid(m) {};
+    };
+}
+
+
 template<> string typeName(const FABRIK& k) { return "FABRIK"; }
 
 FABRIK::FABRIK() {}

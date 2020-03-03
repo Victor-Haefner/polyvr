@@ -6,6 +6,7 @@
 
 #include <boost/bind.hpp>
 #include <OpenSG/OSGDistanceLOD.h>
+#include <OpenSG/OSGVector.h>
 
 using namespace OSG;
 
@@ -13,24 +14,27 @@ template<> string typeName(const VRLod& t) { return "Lod"; }
 
 
 VRLod::VRLod(string name) : VRObject(name) {
+    center = new Vec3d;
     lod = DistanceLOD::create();
     setCore(OSGCore::create(lod), "Lod");
 
-    store("center", &center);
+    store("center", center);
     store("distances", &distances_string);
     regStorageSetupFkt( VRStorageCb::create("lod setup", boost::bind(&VRLod::loadSetup, this, _1)) );
 }
 
-VRLod::~VRLod() {}
+VRLod::~VRLod() {
+    delete center;
+}
 
 VRLodPtr VRLod::create(string name) { return shared_ptr<VRLod>(new VRLod(name) ); }
 VRLodPtr VRLod::ptr() { return static_pointer_cast<VRLod>( shared_from_this() ); }
 
-void VRLod::setCenter(Vec3d c) { center = c; setup(); }
+void VRLod::setCenter(Vec3d c) { *center = c; setup(); }
 void VRLod::setDecimate(bool b, int N) { decimate = b; decimateNumber = N; setup(); }
 void VRLod::setDistance(uint i, float dist) { distances[i] = dist; setup(); }
 void VRLod::addDistance(float dist) { setDistance(distances.size(), dist); }
-Vec3d VRLod::getCenter() { return center; }
+Vec3d VRLod::getCenter() { return *center; }
 bool VRLod::getDecimate() { return decimate; }
 int VRLod::getDecimateNumber() { return decimateNumber; }
 
@@ -103,7 +107,7 @@ void VRLod::setup() {
     dists->resize(distances.size(), 0);
     for (auto d : distances) (*dists)[d.first] = d.second;
 
-    lod->setCenter(Pnt3f(center));
+    lod->setCenter(Pnt3f(*center));
 }
 
 void VRLod::addEmpty() {

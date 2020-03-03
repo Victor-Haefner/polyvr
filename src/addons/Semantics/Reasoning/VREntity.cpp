@@ -5,6 +5,7 @@
 #include "core/utils/VRTimer.h"
 
 #include <iostream>
+#include <OpenSG/OSGVector.h>
 
 using namespace OSG;
 

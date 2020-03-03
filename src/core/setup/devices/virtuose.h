@@ -2,7 +2,7 @@
 #define VIRTUOSE_H_INCLUDED
 #include <virtuose/virtuoseAPI.h>
 
-#include <OpenSG/OSGVector.h>
+#include "core/math/OSGMathFwd.h"
 #include <OpenSG/OSGMatrix.h>
 #include <OpenSG/OSGGLUT.h>
 

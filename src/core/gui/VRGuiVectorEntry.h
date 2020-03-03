@@ -4,7 +4,7 @@
 #include <string>
 #include <gdk/gdkevents.h>
 #include <sigc++/functors/slot.h>
-#include <OpenSG/OSGVector.h>
+#include "core/math/OSGMathFwd.h"
 
 namespace Gtk {
     class Entry;

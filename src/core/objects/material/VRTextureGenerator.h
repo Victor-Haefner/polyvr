@@ -1,7 +1,7 @@
 #ifndef VRTEXTUREGENERATOR_H_INCLUDED
 #define VRTEXTUREGENERATOR_H_INCLUDED
 
-#include <OpenSG/OSGVector.h>
+#include "core/math/OSGMathFwd.h"
 #include <OpenSG/OSGColor.h>
 
 #include "core/objects/VRObjectFwd.h"

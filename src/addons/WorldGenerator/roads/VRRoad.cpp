@@ -3,14 +3,13 @@
 #include "VRRoadIntersection.h"
 #include "../VRWorldGenerator.h"
 #include "../terrain/VRTerrain.h"
+#include "../assets/StreetLamp.h"
 #include "core/utils/toString.h"
 #include "core/math/path.h"
 #include "core/objects/geometry/VRStroke.h"
 #include "addons/Semantics/Reasoning/VROntology.h"
 #include "addons/Semantics/Reasoning/VRProperty.h"
 #include "addons/Semantics/Reasoning/VREntity.h"
-
-#include "addons/RealWorld/Assets/StreetLamp.h"
 
 using namespace OSG;
 

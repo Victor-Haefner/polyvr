@@ -2,7 +2,7 @@
 #define OCTREE_H_INCLUDED
 
 #include <OpenSG/OSGConfig.h>
-#include <OpenSG/OSGVector.h>
+#include "core/math/OSGMathFwd.h"
 #include <OpenSG/OSGLine.h>
 #include <string.h>
 

@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <vector>
 #include <OpenSG/OSGConfig.h>
-#include <OpenSG/OSGVector.h>
+#include "core/math/OSGMathFwd.h"
 #include "VRMathFwd.h"
 #include "boundingbox.h"
 

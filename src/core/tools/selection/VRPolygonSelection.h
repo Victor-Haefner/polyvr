@@ -1,7 +1,7 @@
 #ifndef VRPOLYGONSELECTION_H_INCLUDED
 #define VRPOLYGONSELECTION_H_INCLUDED
 
-#include <OpenSG/OSGVector.h>
+#include "core/math/OSGMathFwd.h"
 #include <string>
 #include "VRSelection.h"
 #include "core/math/frustum.h"

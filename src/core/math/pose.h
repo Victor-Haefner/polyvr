@@ -4,24 +4,14 @@
 #include <OpenSG/OSGConfig.h>
 #include <vector>
 #include "core/math/VRMathFwd.h"
+#include "core/math/OSGMathFwd.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-template<class ValueTypeT, unsigned int SizeI> class Vector;
-typedef Vector< double, 3 > Vec3d;
-
-template<class ValueTypeT> class TransformationMatrix;
-typedef TransformationMatrix<float> Matrix;
-typedef TransformationMatrix<double> Matrix4d;
-
 class Pose {
     private:
         vector<Vec3d> data;
-
-        static Vec3d& DIR();
-        static Vec3d& UP();
-        static Vec3d& SCALE();
 
     public:
         Pose();

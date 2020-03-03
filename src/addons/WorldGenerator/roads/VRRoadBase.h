@@ -4,7 +4,7 @@
 #include <map>
 #include <string>
 #include <vector>
-#include <OpenSG/OSGVector.h>
+#include "core/math/OSGMathFwd.h"
 #include "../VRWorldModule.h"
 #include "../VRWorldGeneratorFwd.h"
 #include "core/objects/object/VRObject.h"

@@ -4,7 +4,7 @@
 #include "core/math/VRMathFwd.h"
 #include "core/utils/VRFunction.h"
 #include "core/utils/VRName.h"
-#include <OpenSG/OSGVector.h>
+#include "core/math/OSGMathFwd.h"
 
 using namespace std;
 OSG_BEGIN_NAMESPACE;

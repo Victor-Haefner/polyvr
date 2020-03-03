@@ -3,7 +3,7 @@
 
 #include <OpenSG/OSGConfig.h>
 #include <OpenSG/OSGBackground.h>
-#include <OpenSG/OSGVector.h>
+#include "core/math/OSGMathFwd.h"
 #include "core/objects/VRObjectFwd.h"
 #include "core/scene/VRSceneFwd.h"
 #include "core/setup/windows/VRView.h"

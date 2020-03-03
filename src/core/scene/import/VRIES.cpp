@@ -6,8 +6,17 @@
 
 using namespace OSG;
 
-VRIES::VRIES() {}
-VRIES::~VRIES() {}
+VRIES::VRIES() {
+    extents = new Vec3d();
+    vAngleRange = new Vec2i();
+    hAngleRange = new Vec2i();
+}
+
+VRIES::~VRIES() {
+    delete extents;
+    delete vAngleRange;
+    delete hAngleRange;
+}
 
 void VRIES::parseLabels(vector<string>& lines, int& i) {
     while (true) {
@@ -36,7 +45,7 @@ void VRIES::parseParameters(vector<string>& lines, int& i) {
     NhAngles = toInt(params[4]); // number of horizontal angles
     photometricType = toInt(params[5]); // photometric type
     unitsType = toInt(params[6]); // type of units
-    extents = Vec3d(toFloat(params[7]), toFloat(params[8]), toFloat(params[9])); // width length height
+    *extents = Vec3d(toFloat(params[7]), toFloat(params[8]), toFloat(params[9])); // width length height
 
     params = splitString(lines[i]); i++;
     ballastFactor = toFloat(params[0]); // ballast factor
@@ -63,8 +72,8 @@ void VRIES::parseData(vector<string>& lines, int& i) {
 void VRIES::resample() {
     vAngleRes = getMinDelta(vAngles);
     hAngleRes = getMinDelta(hAngles);
-    vAngleRange = Vec2i( round(getMin(vAngles)), round(getMax(vAngles)) );
-    hAngleRange = Vec2i( round(getMin(hAngles)), round(getMax(hAngles)) );
+    *vAngleRange = Vec2i( round(getMin(vAngles)), round(getMax(vAngles)) );
+    *hAngleRange = Vec2i( round(getMin(hAngles)), round(getMax(hAngles)) );
 
     symmetry = "NONE";
     if (hAngleRange[1] ==   0) symmetry = "UNI";
@@ -218,7 +227,7 @@ string VRIES::toString(bool withData) {
     s += "  N horz. Angles: " + ::toString(NhAngles) + "\n";
     s += "  photometric type: " + ::toString(photometricType) + "\n";
     s += "  units type: " + ::toString(unitsType) + "\n";
-    s += "  extents: " + ::toString(extents) + "\n";
+    s += "  extents: " + ::toString(*extents) + "\n";
 
     s += "  ballast factor: " + ::toString(ballastFactor) + "\n";
     s += "  photometric factor: " + ::toString(photometricFactor) + "\n";
@@ -226,8 +235,8 @@ string VRIES::toString(bool withData) {
 
     s += "  Symmetry: " + symmetry + "\n";
     s += "  Angle resolution: " + ::toString(Vec2d(vAngleRes, hAngleRes)) + "\n";
-    s += "  vert. Angle range: " + ::toString(vAngleRange) + "\n";
-    s += "  horz. Angle range: " + ::toString(hAngleRange) + "\n";
+    s += "  vert. Angle range: " + ::toString(*vAngleRange) + "\n";
+    s += "  horz. Angle range: " + ::toString(*hAngleRange) + "\n";
     s += "  N vAngles: " + ::toString(vAngles.size()) + "\n";
     s += "  N hAngles: " + ::toString(hAngles.size()) + "\n";
     s += "  N candela: " + ::toString(candela.size()) + "\n";

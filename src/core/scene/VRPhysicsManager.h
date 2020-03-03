@@ -5,6 +5,7 @@
 #include <OpenSG/OSGConfig.h>
 #include <map>
 #include <vector>
+#include "core/math/OSGMathFwd.h"
 #include "core/utils/VRFunctionFwd.h"
 #include "core/utils/VRUtilsFwd.h"
 #include "core/objects/VRObjectFwd.h"
@@ -36,9 +37,6 @@ class VRTransform;
 class VRVisualLayer;
 class VRMaterial;
 class VRThread;
-
-template<class ValueTypeT, unsigned int SizeI> class Vector;
-typedef Vector< double, 3 > Vec3d;
 
 class VRPhysicsManager {
      private:

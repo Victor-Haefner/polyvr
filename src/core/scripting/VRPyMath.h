@@ -9,7 +9,7 @@
 #include "core/math/PCA.h"
 #endif
 #include "core/math/patch.h"
-#include <OpenSG/OSGVector.h>
+#include "core/math/OSGMathFwd.h"
 #include <OpenSG/OSGMatrix.h>
 #include <OpenSG/OSGLine.h>
 
