@@ -1,4 +1,4 @@
-#include "Config.h"
+#include "RealWorldConfig.h"
 #include "core/objects/material/VRShader.h"
 #include "core/scene/VRSceneManager.h"
 #include <OpenSG/OSGSimpleMaterial.h>
@@ -7,20 +7,20 @@
 using namespace OSG;
 using namespace std;
 
-Config::Config() {
+RealWorldConfig::RealWorldConfig() {
     // override defaults:
     LAYER_DISTANCE = 0.04;
     STREET_HEIGHT = 0;
     SIGN_DISTANCE = 3;
 }
 
-Config* Config::get() {
-    static Config* c = new Config();
+RealWorldConfig* RealWorldConfig::get() {
+    static RealWorldConfig* c = new RealWorldConfig();
     return c;
 }
 
 //Lighting && Shading
-void Config::createPhongShader(SimpleMaterial* mat, bool phong) {
+void RealWorldConfig::createPhongShader(SimpleMaterial* mat, bool phong) {
     string wdir = VRSceneManager::get()->getOriginalWorkdir();
     if(phong){
         mat->setAmbient(Color3f(0.5, 0.5, 0.5)); //light reflection in all directions
@@ -38,7 +38,7 @@ void Config::createPhongShader(SimpleMaterial* mat, bool phong) {
 }
 
 //Start Position
-Vec2d Config::getStartPosition(){
+Vec2d RealWorldConfig::getStartPosition(){
     Vec2d tierGarten = Vec2d(48.998969, 8.400171); // Tiergarten
     Vec2d fasanengarten = Vec2d(49.013606, 8.418295);
     Vec2d karlKriegStr = Vec2d(49.005, 8.395); //Kreuzung Kriegsstr. und Karlstr.

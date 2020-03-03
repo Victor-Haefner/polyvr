@@ -5,10 +5,9 @@
 #include "core/networking/VRWebSocket.h"
 #include "core/tools/VRToolsFwd.h"
 
-#include <boost/thread/recursive_mutex.hpp>
-
 #include "VRLeapFrame.h"
 
+namespace boost { class recursive_mutex; }
 
 OSG_BEGIN_NAMESPACE;
 
@@ -49,7 +48,7 @@ class VRLeap : public VRDevice {
         int port{6437};
         string connectionStatus{"not connected"};
         VRWebSocket webSocket;
-        boost::recursive_mutex mutex;
+        boost::recursive_mutex* mutex = 0;
 
         bool transformed{false};
         PosePtr transformation;
@@ -74,12 +73,7 @@ class VRLeap : public VRDevice {
 
     public:
         VRLeap();
-
-        ~VRLeap() {
-            cout << "~VRLeap" << endl;
-            frameCallbacks.clear();
-            webSocket.close();
-        }
+        ~VRLeap();
 
         static VRLeapPtr create();
         VRLeapPtr ptr();

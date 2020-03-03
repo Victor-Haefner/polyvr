@@ -1,5 +1,5 @@
-#ifndef CONFIG_H
-#define	CONFIG_H
+#ifndef RealWorldConfig_H
+#define	RealWorldConfig_H
 
 #include <OpenSG/OSGVector.h>
 
@@ -7,7 +7,7 @@ using namespace std;
 
 namespace OSG { class SimpleMaterial; }
 
-struct Config {
+struct RealWorldConfig {
     float gridSize = 0.002f; //Size of loaded Chunks
     float maxTriangleSize = 15; //maximum size of a side of a tesselated triangle;
 
@@ -37,10 +37,10 @@ struct Config {
     float TREE_WIDTH = 3.0f;
     float TREE_HEIGHT = 5.0f;
 
-    Config();
-    static Config* get();
+    RealWorldConfig();
+    static RealWorldConfig* get();
     static void createPhongShader(OSG::SimpleMaterial* mat, bool phong = true);
     static OSG::Vec2d getStartPosition();
 };
 
-#endif	/* CONFIG_H */
+#endif	/* RealWorldConfig_H */

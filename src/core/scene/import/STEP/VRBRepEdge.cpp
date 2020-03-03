@@ -1,6 +1,7 @@
 #include "VRBRepEdge.h"
 
 #include "core/math/pose.h"
+#include <OpenSG/OSGMatrix.h>
 
 using namespace OSG;
 

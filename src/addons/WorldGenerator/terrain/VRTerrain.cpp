@@ -19,6 +19,7 @@
 #include <OpenSG/OSGIntersectAction.h>
 #include <OpenSG/OSGGeoProperties.h>
 #include <OpenSG/OSGGeometry.h>
+#include <boost/thread/recursive_mutex.hpp>
 
 #ifndef WITHOUT_BULLET
 #include "core/objects/geometry/VRPhysics.h"
@@ -118,7 +119,10 @@ void VREmbankment::createGeometry() {
 }
 
 
-VRTerrain::VRTerrain(string name) : VRGeometry(name) { hide("SHADOW"); }
+VRTerrain::VRTerrain(string name) : VRGeometry(name) {
+    hide("SHADOW");
+}
+
 VRTerrain::~VRTerrain() {}
 
 VRTerrainPtr VRTerrain::create(string name) {

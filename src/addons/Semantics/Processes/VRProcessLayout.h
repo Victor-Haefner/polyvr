@@ -22,6 +22,8 @@ class VRProcessLayout : public VRTransform {
         float height = 2;
         float layoutScale = 1; // 0.005
         bool updatePaused = false;
+        Color3f colorSubject = Color3f(0.8,0.9,1);
+        Color3f colorMessage = Color3f(1,1,0);
         Color3f colorState = Color3f(1,0.9,0.8);
         Color3f colorActiveState = Color3f(1,0.51,0.22);
         Color3f colorSendState = Color3f(0.62,0.99,0.66);

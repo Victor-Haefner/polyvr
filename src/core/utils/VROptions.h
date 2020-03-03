@@ -15,7 +15,7 @@ class VROptions {
 
         template <typename T>
         void addOption(T value, string name, string description = "") {
-            cout << "Add Option: " << name << endl;
+            cout << "  add option: " << name << " - " << description << ", default is '" << value << "'" << endl;
             desc.add_options() (name.c_str(), bpo::value<T>()->default_value(value, ""), description.c_str());
         }
 

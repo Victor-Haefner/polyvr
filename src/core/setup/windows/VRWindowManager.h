@@ -50,6 +50,8 @@ class VRWindowManager {
 
         VRGtkWindowPtr getEditorWindow();
 
+        void setMultisampling(bool on);
+
         void save(XMLElementPtr node);
         void load(XMLElementPtr node);
 

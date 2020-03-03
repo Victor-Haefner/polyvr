@@ -26,6 +26,7 @@
 
 #include <OpenSG/OSGSceneFileHandler.h>
 #include <boost/filesystem.hpp>
+#include <boost/thread/recursive_mutex.hpp>
 #include <time.h>
 
 typedef boost::recursive_mutex::scoped_lock PLock;

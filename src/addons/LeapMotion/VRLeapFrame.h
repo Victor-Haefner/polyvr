@@ -11,17 +11,18 @@ class VRLeapFrame : public std::enable_shared_from_this<VRLeapFrame> {
         ptrFwd(Pen);
 
         struct Pen {
-
-            Vec3d tipPosition;
-            Vec3d direction;
+            PosePtr pose = 0;
             float length;
             float width;
+
+            Pen();
+            ~Pen();
 
             void transform(Pose transformation);
         };
 
         struct Hand {
-            PosePtr pose; // pos, dir, normal
+            PosePtr pose = 0; // pos, dir, normal
             vector<vector<Vec3d>> joints; // joint positions of each finger, 0 is thumb -> 4 is pinky
             vector<vector<Pose>> bases; // 3 basis vectors for each bone, in index order, wrist to tip
             vector<bool> extended; // True, if the finger is a pointing, or extended, posture
