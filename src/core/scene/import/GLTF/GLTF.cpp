@@ -155,6 +155,9 @@ struct GLTFNode : GLTFUtils {
     Vec3d scale = Vec3d(1,1,1);
     Matrix4d matTransform  = Matrix4d();
 
+    Vec3d stepTranslation = Vec3d(0,0,0);
+    Vec4d stepRotation = Vec4d(0,0,0,0);
+    Vec3d stepScale = Vec3d(1,1,1);
 
     GLTFNode(string t, string n = "Unnamed") : name(n), type(t) {}
     virtual ~GLTFNode() {
@@ -241,9 +244,9 @@ struct GLTFNode : GLTFUtils {
         Vec3d center = Vec3d(0,0,0);
         Vec4d scaleOrientation = Vec4d(0,0,1,0);
         Matrix4d m1; m1.setTranslate(translation+center); m1.setRotate( Quaterniond( rotation[0], rotation[1], rotation[2], rotation[3] ) );
-        Matrix4d m2; m2.setRotate( Quaterniond( scaleOrientation[0], scaleOrientation[1], scaleOrientation[2], scaleOrientation[3] ) );
+        Matrix4d m2; m2.setRotate( Quaterniond( Vec3d( scaleOrientation[0], scaleOrientation[1], scaleOrientation[2] ), scaleOrientation[3] ) );
         Matrix4d m3; m3.setScale(scale);
-        Matrix4d m4; m4.setTranslate(-center); m4.setRotate( Quaterniond( scaleOrientation[0], scaleOrientation[1], scaleOrientation[2], -scaleOrientation[3] ) );
+        Matrix4d m4; m4.setTranslate(-center); m4.setRotate( Quaterniond( Vec3d( scaleOrientation[0], scaleOrientation[1], scaleOrientation[2] ), -scaleOrientation[3] ) );
         Matrix4d M = m1; M.mult(m2); M.mult(m3); M.mult(m4);
         pose = M;
     }
@@ -266,7 +269,7 @@ struct GLTFNode : GLTFUtils {
     virtual VRGeoData applyGeometries() = 0;
 
     void resolveLinks(map<int, GLTFNode*>& references) {
-        if (type == "Link") { if (references.count(nID)) obj->addChild(references[nID]->obj->duplicate()); }
+        if (type == "Link") { if (references.count(nID)) obj->addChild(references[nID]->obj->duplicate()); /*cout << "resolved a Link" << endl;*/ }
         for (auto c : children) c->resolveLinks(references);
     }
 };
@@ -387,7 +390,7 @@ class GLTFLoader : public GLTFUtils {
             Matrix4d mat4;
             mat4.setTranslate(Vec3d(0,0,0));
             Vec3d translation = Vec3d(0,0,0);
-            Vec4d rotation = Vec4d(0,0,1,0);
+            Vec4d rotation = Vec4d(0,0,0,1);
             Vec3d scale = Vec3d(1,1,1);
             name = gltfNode.name;
             vector<bool> transf = {false, false, false, false};
@@ -432,11 +435,10 @@ class GLTFLoader : public GLTFUtils {
                 for (auto each : gltfNode.children) children.push_back(each);
                 childrenPerNode[nodeID] = children;
             }
-
             if (transf[0]) { thisNode->translation = translation; thisNode->handleTranslation(); }
             if (transf[1]) { thisNode->rotation = rotation; thisNode->handleRotation(); }
-            if (transf[2]) { thisNode->scale = scale; thisNode->handleScale(); thisNode->handleTransform(); }
-            if (transf[3]) { thisNode->matTransform = mat4; thisNode->pose = mat4; };
+            if (transf[2]) { thisNode->translation = translation; thisNode->rotation = rotation; thisNode->scale = scale; thisNode->handleTransform(); }
+            if (transf[3]) { thisNode->matTransform = mat4; thisNode->pose = mat4; }
         }
 
         void handleMaterial(const tinygltf::Material &gltfMaterial){
@@ -742,17 +744,26 @@ class GLTFLoader : public GLTFUtils {
 
         void handleAnimation(const tinygltf::Animation &gltfAnimation){
             //cout << gltfAnimation.name << endl;
-            cout << "GLTFLOADER::WARNING IN ANIMATIONS: working on it..." << endl;
+            cout << "GLTFLOADER::WARNING IN ANIMATIONS: implementation not finished yet" << endl;
             cout << " channelSizeN: " << gltfAnimation.channels.size() << endl;
-            cout << " samplerSizeN: " << gltfAnimation.samplers.size() << endl;
+            //cout << " samplerSizeN: " << gltfAnimation.samplers.size() << endl;
+            vector<Vec3d> translation;
+            vector<Vec4d> rotation;
+            vector<Vec3d> scale;
+            bool step = false;
+            bool stepSingle = false;
+            int nodeID = -1;
+            int channelCheck = 0;
+            vector<bool> transf = {false, false, false};
             for (tinygltf::AnimationChannel each: gltfAnimation.channels) {
-                cout << " sampler: " << each.sampler  << " node: " << each.target_node  << " path: " << each.target_path << endl;
+                //cout << " sampler: " << each.sampler  << " node: " << each.target_node  << " path: " << each.target_path << endl;
+                if (nodeID >= 0 && nodeID != each.target_node) cout << "GLTFLOADER::WARNING IN ANIMATIONS: more than one node in animation channels" << endl;
+                nodeID = each.target_node;
                 tinygltf::AnimationSampler anim = gltfAnimation.samplers[each.sampler];
 
-                //if (anim.interpolation == "STEP") cout << "  found STEP interpolation" << endl;
+                if (anim.interpolation == "STEP") step = true;
                 //if (anim.interpolation == "LINEAR") cout << "  found LINEAR interpolation" << endl;
 
-                cout << "  input: " << anim.input << " output: " << anim.output << " interpolation: " << anim.interpolation << endl;
                 const tinygltf::Accessor& accessorIn = model.accessors[anim.input];
                 const tinygltf::BufferView& bufferViewIn = model.bufferViews[accessorIn.bufferView];
                 const tinygltf::Buffer& bufferIn = model.buffers[bufferViewIn.buffer];
@@ -772,14 +783,84 @@ class GLTFLoader : public GLTFUtils {
                     for (size_t i = 0; i < accessorOut.count; ++i) {
                         if (accessorOut.type == 3){
                             Vec3d vec = Vec3d( dataOut[i * 3 + 0], dataOut[i * 3 + 1], dataOut[i * 3 + 2] );
+                            if (each.target_path == "translation") translation.push_back(vec);
+                            if (each.target_path == "scale") scale.push_back(vec);
                             //cout << vec << endl;
                         }
                         if (accessorOut.type == 4){
                             Vec4d vec = Vec4d( dataOut[i * 4 + 0], dataOut[i * 4 + 1], dataOut[i * 4 + 2], dataOut[i * 4 + 3] );
+                            if (each.target_path == "rotation") rotation.push_back(vec);
                             //cout << vec << endl;
                         }
                     }
                 }
+                //cout << "  input: " << anim.input << " inN: " << accessorIn.count << " output: " << anim.output << " outN: " << accessorOut.count << " interpolation: " << anim.interpolation << endl;
+
+                if ( nodes.count(each.target_node) ) {
+                    auto& node = nodes[each.target_node];
+                    if (anim.interpolation == "STEP") {
+                        if (each.target_path == "translation" && translation.size() == 1) {
+                            //cout << "  found step, one element - translation" << endl;
+                            transf[0] = true;
+                            stepSingle = true;
+                            node->translation = translation[0];
+                        }
+
+                        if (each.target_path == "rotation" && rotation.size() == 1) {
+                            //cout << "  found step, one element - rotation" << endl;
+                            transf[1] = true;
+                            stepSingle = true;
+                            node->rotation = rotation[0];
+                        }
+
+                        if (each.target_path == "scale" && scale.size() == 1) {
+                            //cout << "  found step, one element - scale" << endl;
+                            transf[2] = true;
+                            stepSingle = true;
+                            node->scale = scale[0];
+                        }
+
+                        if (each.target_path == "translation" && translation.size() > 1) {
+                            //cout << "  found step, translation " << translation.size() << endl;
+                            transf[0] = true;
+                            node->translation = translation[translation.size()-1];
+                        }
+
+                        if (each.target_path == "rotation" && rotation.size() > 1) {
+                            //cout << "  found step, rotation " << rotation.size() << endl;
+                            transf[1] = true;
+                            node->rotation = rotation[rotation.size()-1];
+                        }
+
+                        if (each.target_path == "scale" && scale.size() > 1) {
+                            //cout << "  found step, scale " << scale.size() << endl;
+                            transf[2] = true;
+                            node->scale = scale[scale.size()-1];
+                        }
+                    }
+                    //node->
+                }
+            }
+            if ( nodes.count(nodeID) ) {
+                auto& node = nodes[nodeID];
+                /*
+                cout << " _translation: " << toString(translation) << endl;
+                cout << " _rotation: " << toString(rotation) << endl;
+                cout << " _scale: " << toString(scale) << endl;
+                /*
+                if (stepSingle) {
+                    cout << " .. " << endl;
+                    node->handleTranslation();
+                    node->handleRotation();
+                    node->handleScale();
+                    node->handleTransform();
+                }/*
+                if (!stepSingle) {
+                    node->handleTranslation();
+                    node->handleRotation();
+                    node->handleScale();
+                    node->handleTransform();
+                }*/
             }
             return;
         }
@@ -868,7 +949,6 @@ class GLTFLoader : public GLTFUtils {
                 tree = new GLTFNNode("Root", "Root");
                 for (auto each:scenes) tree->addChild(each.second);
                 tree->obj = res;
-                //tree->print();
                 tree->buildOSG();
                 tree->applyTransformations();
                 tree->applyMaterials();
