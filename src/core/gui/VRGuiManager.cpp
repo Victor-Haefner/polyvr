@@ -24,6 +24,7 @@
 #include <gtk/gtkglinit.h>
 
 #include <boost/bind.hpp>
+#include <boost/thread/recursive_mutex.hpp>
 
 typedef boost::recursive_mutex::scoped_lock PLock;
 
@@ -43,6 +44,7 @@ Gtk::Main* GtkMain;
 
 VRGuiManager::VRGuiManager() {
     cout << "Init VRGuiManager..";
+    mtx = new boost::recursive_mutex();
     standalone = VROptions::get()->getOption<bool>("standalone");
 
     int argc = 0;
@@ -128,6 +130,7 @@ VRGuiManager::~VRGuiManager() {
     delete g_sem;
     delete g_sc;
     delete g_di;
+    delete mtx;
 }
 
 void VRGuiManager::startThreadedUpdate() {
@@ -136,7 +139,7 @@ void VRGuiManager::startThreadedUpdate() {
     gtkUpdateThreadID = VRSceneManager::get()->initThread(gtkUpdateCb, "gtk update", true, 1);
 }
 
-boost::recursive_mutex& VRGuiManager::guiMutex() { return mtx; }
+boost::recursive_mutex& VRGuiManager::guiMutex() { return *mtx; }
 
 VRGuiManager* VRGuiManager::get(bool init) {
     static VRGuiManager* instance = 0;

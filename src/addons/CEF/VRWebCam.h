@@ -19,6 +19,7 @@ class VRWebCam : public VRSprite {
         static shared_ptr<VRWebCam> create(string name = "webCam");
 
         void connect(string uri, int res, float ratio);
+        void test();
 };
 
 typedef shared_ptr<VRWebCam> VRWebCamPtr;

@@ -2,6 +2,7 @@
 #define VRFABRIK_H_INCLUDED
 
 #include <map>
+#include <OpenSG/OSGVector.h>
 
 #include "core/utils/VRFwdDeclTemplate.h"
 #include "core/math/pose.h"

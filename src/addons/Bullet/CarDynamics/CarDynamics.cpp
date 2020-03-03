@@ -9,6 +9,7 @@
 #include "core/utils/system/VRSystem.h"
 #include "core/utils/VRStorage_template.h"
 
+#include <boost/thread/recursive_mutex.hpp>
 #include <OpenSG/OSGTextureEnvChunk.h>
 #include <OpenSG/OSGTextureObjChunk.h>
 #include <BulletDynamics/Vehicle/btRaycastVehicle.h>
