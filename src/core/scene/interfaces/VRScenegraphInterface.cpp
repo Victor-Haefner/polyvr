@@ -19,6 +19,18 @@ using namespace OSG;
 
 template<> string typeName(const VRScenegraphInterface& o) { return "ScenegraphInterface"; }
 
+namespace OSG {
+    struct VRScenegraphInterface::Mate {
+        VRTransformPtr a0;
+        VRTransformPtr b0;
+        vector<int> DoF0;
+        pair<PosePtr, PosePtr> C_AandB0;
+        PosePtr C0;
+        Vec3d IjkA0;
+        string TypeC0;
+        vector<float> MinMax;
+    };
+}
 
 VRScenegraphInterface::VRScenegraphInterface(string name) : VRObject(name) {
     resetWebsocket();

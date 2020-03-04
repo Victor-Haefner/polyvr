@@ -1,7 +1,7 @@
 #ifndef VRBREPUTILS_H_INCLUDED
 #define VRBREPUTILS_H_INCLUDED
 
-#include <OpenSG/OSGVector.h>
+#include "core/math/OSGMathFwd.h"
 #include "core/math/field.h"
 
 using namespace std;

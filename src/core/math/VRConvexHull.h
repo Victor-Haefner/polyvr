@@ -1,7 +1,7 @@
 #ifndef VRCONVEXHULL_H_INCLUDED
 #define VRCONVEXHULL_H_INCLUDED
 
-#include <OpenSG/OSGVector.h>
+#include "core/math/OSGMathFwd.h"
 #include "core/objects/VRObjectFwd.h"
 
 using namespace std;

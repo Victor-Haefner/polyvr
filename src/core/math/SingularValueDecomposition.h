@@ -2,7 +2,7 @@
 #define SINGULARVALUEDECOMPOSITION_H_INCLUDED
 
 #include <vector>
-#include <OpenSG/OSGVector.h>
+#include "core/math/OSGMathFwd.h"
 #include <OpenSG/OSGMatrix.h>
 
 using namespace std;

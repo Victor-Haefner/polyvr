@@ -1,7 +1,7 @@
 #ifndef BOUNDINGBOX_H_INCLUDED
 #define BOUNDINGBOX_H_INCLUDED
 
-#include <OpenSG/OSGVector.h>
+#include "core/math/OSGMathFwd.h"
 #include <OpenSG/OSGLine.h>
 #include "core/objects/VRObjectFwd.h"
 #include "core/math/VRMathFwd.h"

@@ -1,7 +1,7 @@
 #ifndef VRTRAFFICSIMULATION_H_INCLUDED
 #define VRTRAFFICSIMULATION_H_INCLUDED
 
-#include <OpenSG/OSGVector.h>
+#include "core/math/OSGMathFwd.h"
 #include "addons/Semantics/VRSemanticsFwd.h"
 #include "addons/WorldGenerator/VRWorldGeneratorFwd.h"
 #include "core/math/VRMathFwd.h"

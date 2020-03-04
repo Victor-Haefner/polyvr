@@ -971,8 +971,8 @@ struct VRSTEP::Edge : public VRSTEP::Instance, public VRBRepEdge {
             auto& EdgeElement = instances[ i.get<0, STEPentity*, bool>() ];
             //bool edir = i.get<1, STEPentity*, bool>();
             if (EdgeElement.type == "Edge_Curve") {
-                EBeg = toVec3d( EdgeElement.get<0, STEPentity*, STEPentity*, STEPentity*>(), instances );
-                EEnd = toVec3d( EdgeElement.get<1, STEPentity*, STEPentity*, STEPentity*>(), instances );
+                *EBeg = toVec3d( EdgeElement.get<0, STEPentity*, STEPentity*, STEPentity*>(), instances );
+                *EEnd = toVec3d( EdgeElement.get<1, STEPentity*, STEPentity*, STEPentity*>(), instances );
                 auto EdgeGeoI = EdgeElement.get<2, STEPentity*, STEPentity*, STEPentity*>();
 
                 if (instances[EdgeGeoI].type == "Surface_Curve") {

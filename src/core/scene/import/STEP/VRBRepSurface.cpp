@@ -99,7 +99,7 @@ VRGeometryPtr VRBRepSurface::build(string type) {
             cout << " poly\n";
             for (auto& e : b.edges) {
                 if (e.etype == "Circle") {
-                    float h = cylindricUnproject(e.EBeg)[1];
+                    float h = cylindricUnproject(*e.EBeg)[1];
                     double a1, a2;
                     a1 = e.a1; a2 = e.a2;
                     Vec3d cd = e.center->dir();
@@ -125,8 +125,8 @@ VRGeometryPtr VRBRepSurface::build(string type) {
                 }
 
                 if (e.etype == "Line") {
-                    Vec2d p1 = cylindricUnproject(e.EBeg);
-                    Vec2d p2 = cylindricUnproject(e.EEnd);
+                    Vec2d p1 = cylindricUnproject(*e.EBeg);
+                    Vec2d p2 = cylindricUnproject(*e.EEnd);
 
                     cout << " line " << Vec3d(p1[0],p2[0],la) << endl;
                     rebaseAngle(p1[0], la);

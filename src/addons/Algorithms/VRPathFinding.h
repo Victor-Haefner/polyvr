@@ -5,7 +5,9 @@
 #include "VRAlgorithmsFwd.h"
 #include "core/math/VRMathFwd.h"
 
-#include <OpenSG/OSGVector.h>
+#include "core/math/OSGMathFwd.h"
+#include <OpenSG/OSGConfig.h>
+#include <vector>
 #include <map>
 
 OSG_BEGIN_NAMESPACE;

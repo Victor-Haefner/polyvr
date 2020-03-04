@@ -23,10 +23,14 @@ template<> string typeName(const VRCarDynamics& o) { return "CarDynamics"; }
 
 
 VRCarDynamics::Wheel::Wheel() {
+    position = new Vec3d();
+    direction = new Vec3d(0, -1, 0);
+    axle = new Vec3d(-1, 0, 0);
+
     // suspension parameter
-    store("position", &position);
-    store("direction", &direction);
-    store("axle", &axle);
+    store("position", position);
+    store("direction", direction);
+    store("axle", axle);
     store("suspensionRestLength", &suspensionRestLength);
     store("suspensionStiffness", &suspensionStiffness);
     store("suspensionDamping", &suspensionDamping);
@@ -40,6 +44,12 @@ VRCarDynamics::Wheel::Wheel() {
     store("friction", &friction);
     store("radius", &radius);
     store("width", &width);
+}
+
+VRCarDynamics::Wheel::~Wheel() {
+    delete position;
+    delete direction;
+    delete axle;
 }
 
 VRCarDynamics::Engine::Engine() {
@@ -59,8 +69,14 @@ VRCarDynamics::Engine::Engine() {
 }
 
 VRCarDynamics::Chassis::Chassis() {
+    massOffset = new Vec3d();
+
     store("mass", &mass);
-    store("massOffset", &massOffset);
+    store("massOffset", massOffset);
+}
+
+VRCarDynamics::Chassis::~Chassis() {
+    delete massOffset;
 }
 
 VRCarDynamics::WheelPtr VRCarDynamics::Wheel::create() { return WheelPtr( new Wheel() ); }
@@ -113,7 +129,7 @@ void VRCarDynamics::updateChassis() {
     PLock lock(mtx());
     chassis->geo->getPhysics()->setPhysicalized(false);
     chassis->geo->getPhysics()->setMass(chassis->mass);
-    chassis->geo->getPhysics()->setCenterOfMass(chassis->massOffset);
+    chassis->geo->getPhysics()->setCenterOfMass(*chassis->massOffset);
     chassis->geo->getPhysics()->setPhysicalized(true);
     chassis->body = chassis->geo->getPhysics()->getRigidBody();
 
@@ -128,9 +144,9 @@ void VRCarDynamics::updateChassis() {
 
 void VRCarDynamics::addBTWheel(WheelPtr wheel) {
     if (!vehicle) return;
-    btVector3 pos = VRPhysics::toBtVector3(wheel->position - chassis->massOffset);
-    btVector3 dir = VRPhysics::toBtVector3(wheel->direction);
-    btVector3 axl = VRPhysics::toBtVector3(wheel->axle);
+    btVector3 pos = VRPhysics::toBtVector3(*wheel->position - *chassis->massOffset);
+    btVector3 dir = VRPhysics::toBtVector3(*wheel->direction);
+    btVector3 axl = VRPhysics::toBtVector3(*wheel->axle);
     btWheelInfo& btWheel = vehicle->addWheel(pos, dir, axl, wheel->suspensionRestLength, wheel->radius, m_tuning, wheel->isSteered);
     btWheel.m_suspensionStiffness = wheel->suspensionStiffness;
     btWheel.m_wheelsDampingRelaxation = wheel->suspensionDamping;
@@ -191,7 +207,7 @@ vector<VRTransformPtr> VRCarDynamics::getWheels() {
 void VRCarDynamics::addWheel(VRGeometryPtr geo, Vec3d p, float radius, float width, float maxSteering, bool steered, bool driven) {
     auto wheel = Wheel::create();
     wheel->ID = wheels.size();
-    wheel->position = p;
+    *wheel->position = p;
 	wheel->isSteered = steered;
 	wheel->isDriven = driven;
     wheel->geo = geo;
@@ -458,7 +474,7 @@ void VRCarDynamics::updateWheel(int w, float t, float b, float s, float c, int g
     wheel->gear = g;
 }
 
-void VRCarDynamics::setParameter(float mass, float enginePower, float breakPower, Vec3d massOffset) {
+void VRCarDynamics::setParameter(float mass, float enginePower, float breakPower, const Vec3d& massOffset) {
     if (mass > 0) chassis->mass = mass;
     engine->power = enginePower;
     engine->breakPower = breakPower;
@@ -505,10 +521,10 @@ void VRCarDynamics::setParameter(float mass, float enginePower, float breakPower
     for ( auto geo : chassis->geos ) {
         geo->setMatrix(Matrix4d());
         auto p = chassis->geo->getPoseTo(geo);
-        geo->setFrom( p->pos() - massOffset + chassis->massOffset );
+        geo->setFrom( p->pos() - massOffset + *chassis->massOffset );
         geo->applyTransformation();
     }
-    chassis->massOffset = massOffset;
+    *chassis->massOffset = massOffset;
     updateChassis();
 }
 

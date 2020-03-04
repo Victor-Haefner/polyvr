@@ -148,8 +148,3 @@ void Pose::makeDirOrthogonal() {
 }
 
 
-Vec3d& Pose::DIR() { static Vec3d d(0,0,-1); return d; }
-Vec3d& Pose::UP() { static Vec3d u(0,1,0); return u; }
-Vec3d& Pose::SCALE() { static Vec3d s(1,1,1); return s; }
-
-

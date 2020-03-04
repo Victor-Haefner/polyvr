@@ -3,8 +3,9 @@
 
 #include <string>
 #include <map>
+#include <vector>
 
-#include <OpenSG/OSGVector.h>
+#include "core/math/OSGMathFwd.h"
 #include "core/math/VRMathFwd.h"
 
 using namespace std;

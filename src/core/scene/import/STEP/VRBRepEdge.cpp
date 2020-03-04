@@ -1,18 +1,29 @@
 #include "VRBRepEdge.h"
 
 #include "core/math/pose.h"
+#include <OpenSG/OSGVector.h>
 #include <OpenSG/OSGMatrix.h>
 
 using namespace OSG;
 
-VRBRepEdge::VRBRepEdge() {}
+VRBRepEdge::VRBRepEdge() {
+    n = new Vec3d();
+    EBeg = new Vec3d();
+    EEnd = new Vec3d();
+}
 
-Vec3d& VRBRepEdge::beg() { return points.size() > 0 ? points[0] : n; }
-Vec3d& VRBRepEdge::end() { return points.size() > 0 ? points[points.size()-1] : n; }
+VRBRepEdge::~VRBRepEdge() {
+    delete n;
+    delete EBeg;
+    delete EEnd;
+}
+
+Vec3d& VRBRepEdge::beg() { return points.size() > 0 ? points[0] : *n; }
+Vec3d& VRBRepEdge::end() { return points.size() > 0 ? points[points.size()-1] : *n; }
 
 void VRBRepEdge::swap() {
     cout << "VRBRepEdge::swap\n";
-    std::swap(EBeg, EEnd);
+    std::swap(*EBeg, *EEnd);
     std::swap(a1, a2);
     reverse(points.begin(), points.end());
 }
@@ -23,8 +34,8 @@ void VRBRepEdge::build(string type) {
     etype = type;
 
     if (type == "Line") {
-        points.push_back(EBeg);
-        points.push_back(EEnd);
+        points.push_back(*EBeg);
+        points.push_back(*EEnd);
         if (points.size() <= 1) cout << "Warning: No edge points of Line" << endl;
         return;
     }
@@ -36,9 +47,9 @@ void VRBRepEdge::build(string type) {
 
         // get start and end angles
         Vec3d c1,c2;
-        mI.mult(Pnt3d(EBeg), c1);
-        mI.mult(Pnt3d(EEnd), c2);
-        cout << " circle ends: " << EBeg << " -> " << c1 << " , " << EEnd << " -> " << c2 << endl;
+        mI.mult(Pnt3d(*EBeg), c1);
+        mI.mult(Pnt3d(*EEnd), c2);
+        cout << " circle ends: " << *EBeg << " -> " << c1 << " , " << *EEnd << " -> " << c2 << endl;
         c1 *= _r; c2*= _r;
         a1 = atan2(c1[1],c1[0]);
         a2 = atan2(c2[1],c2[0]);

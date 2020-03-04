@@ -2,7 +2,7 @@
 #define CARDYNAMICS_H_INCLUDED
 
 #include <OpenSG/OSGConfig.h>
-#include <OpenSG/OSGVector.h>
+#include "core/math/OSGMathFwd.h"
 #include <btBulletDynamicsCommon.h>
 #include <LinearMath/btVector3.h>
 #include "core/utils/VRFunctionFwd.h"
@@ -23,9 +23,9 @@ class VRCarDynamics : public VRObject {
             int ID = -1;
 
             // suspension parameter
-            Vec3d position;
-            Vec3d direction = Vec3d(0, -1, 0);
-            Vec3d axle = Vec3d(-1, 0, 0);
+            Vec3d* position = 0;
+            Vec3d* direction = 0;
+            Vec3d* axle = 0;
             float suspensionRestLength = 0.6;
             float suspensionStiffness = 20;
             float suspensionDamping = 2.3;
@@ -50,6 +50,7 @@ class VRCarDynamics : public VRObject {
             float steering = 0;
 
             Wheel();
+            ~Wheel();
             static shared_ptr<Wheel> create();
         };
 
@@ -84,12 +85,13 @@ class VRCarDynamics : public VRObject {
             vector<VRGeometryPtr> geos;
             btRigidBody* body = 0;
             float mass = 1400.0f;//f850.0f;
-            Vec3d massOffset;
+            Vec3d* massOffset = 0;
 
             float cw = 0.28;
             float airA = 2;
 
             Chassis();
+            ~Chassis();
             static shared_ptr<Chassis> create();
         };
 
@@ -186,7 +188,7 @@ class VRCarDynamics : public VRObject {
         void setChassisGeo(VRTransformPtr geo, bool doPhys = 1);
         void setupSimpleWheels(VRTransformPtr geo, float xOffset, float frontZOffset, float rearZOffset, float height, float radius, float width, float maxSteering);
         void setType(TYPE type);
-        void setParameter(float mass, float enginePower, float breakPower, Vec3d massOffset = Vec3d());
+        void setParameter(float mass, float enginePower, float breakPower, const Vec3d& massOffset = VEC3D());
 
         void update(float throttle, float Break, float steering, float clutch = 0, int gear = 1);
         void updateWheel(int wheel, float throttle, float Break, float steering, float clutch = 0, int gear = 1);

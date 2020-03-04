@@ -1,7 +1,7 @@
 #ifndef VRGUIMONITOR_H_INCLUDED
 #define VRGUIMONITOR_H_INCLUDED
 
-#include <OpenSG/OSGVector.h>
+#include "core/math/OSGMathFwd.h"
 #include <gtkmm/drawingarea.h>
 #include <map>
 

@@ -2,7 +2,7 @@
 #define GRAPH_H_INCLUDED
 
 #include <vector>
-#include <OpenSG/OSGVector.h>
+#include "core/math/OSGMathFwd.h"
 #include "core/math/VRMathFwd.h"
 #include "core/math/boundingbox.h"
 #include "core/math/pose.h"

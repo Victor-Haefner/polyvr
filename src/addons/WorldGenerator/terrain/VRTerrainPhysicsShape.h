@@ -6,7 +6,7 @@
 #include <vector>
 #include <memory>
 #include <OpenSG/OSGConfig.h>
-#include <OpenSG/OSGVector.h>
+#include "core/math/OSGMathFwd.h"
 #include <BulletCollision/CollisionShapes/btConcaveShape.h>
 
 using namespace std;
