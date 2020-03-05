@@ -13,6 +13,8 @@
 #include "addons/Bullet/CarDynamics/CarDynamics.h"
 #endif
 
+namespace boost { class recursive_mutex; }
+
 using namespace std;
 OSG_BEGIN_NAMESPACE;
 
