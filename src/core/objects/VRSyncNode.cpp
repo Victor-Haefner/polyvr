@@ -329,13 +329,20 @@ void VRSyncNode::deserializeAndApply(string& data) {
                 }
             }
         }
-        if (id == -1) continue;
+//        if (id == -1) continue;
+        if (id == -1) {
+            cout << "create Child for syncNodeID " << sentry.syncNodeID << endl;
+            createChild();
+            cout << "// create Child for syncNodeID " << sentry.syncNodeID << endl;
+            continue;//TODO: continue or does smth else need to be applied?
+        }
 
         syncedContainer.push_back(id);
 
         //  - get fieldcontainer using correct ID
        // FieldContainerFactoryBase* factory = FieldContainerFactory::the();
         FieldContainer* fcPtr = factory->getContainer(id);
+        if(!fcPtr) {cout << "no container found with id " << id << endl; continue;} //TODO: This is cousing the WARNING: Action::recurse: core is NULL, aborting traversal.
         cout << name << " apply data to " << fcPtr->getTypeName() << " (" << fcPtr->getTypeId() << ")" << endl;
         string type = fcPtr->getTypeName();
         ourBinaryDataHandler handler; //use ourBinaryDataHandler to somehow apply binary change to fieldcontainer (use connection instead of handler, see OSGRemoteaspect.cpp (receiveSync))
@@ -343,11 +350,12 @@ void VRSyncNode::deserializeAndApply(string& data) {
 
         //TODO: Do I need to sort the id's ?
         //if the container doe not have the FC id then create a new node
-        if (!container.count(sentry.syncNodeID)){
-            cout << "create Child for syncNodeID " << sentry.syncNodeID << endl;
-            createChild();
-            cout << "// create Child for syncNodeID " << sentry.syncNodeID << endl;
-        }
+//        cout << "container.count(sentry.syncNodeID) " << container.count(sentry.syncNodeID) << endl;
+//        if (!container.count(sentry.syncNodeID)){
+//            cout << "create Child for syncNodeID " << sentry.syncNodeID << endl;
+//            createChild();
+//            cout << "// create Child for syncNodeID " << sentry.syncNodeID << endl;
+//        }
 
 //        if (type == "Node") {
 //            //check for children changes
