@@ -34,6 +34,7 @@ class VRSyncNode : public VRTransform {
         VRFunction<void*>* socketCb;
         VRUpdateCbPtr updateFkt;
         FieldContainerFactoryBase* factory = FieldContainerFactory::the();
+        vector<UInt32> created; //IDs of the currently created nodes/children
 
         map<int, int> container; // local containers, sub-set of containers which need to be synced for collaboration
         vector<UInt32> syncedContainer; //Id's of container that got changes over sync (changed by remote). Needed to filter out sync changes from local Changelist to prevent cycles.
