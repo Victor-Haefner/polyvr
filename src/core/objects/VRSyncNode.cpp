@@ -286,14 +286,17 @@ void serialize_entry(ContainerChangeEntry* entry, vector<BYTE>& data, int syncNo
 }
 
 string VRSyncNode::serialize(ChangeList* clist) {
+    int counter = 0;
     cout << "> > >  " << name << " VRSyncNode::serialize()" << endl;
     vector<BYTE> data;
     for (auto it = clist->begin(); it != clist->end(); ++it) {
         ContainerChangeEntry* entry = *it;
         UInt32 id = entry->uiContainerId;
-        if (entry->uiEntryDesc != ContainerChangeEntry::Change) continue;
+        //if (entry->uiEntryDesc != ContainerChangeEntry::Change) continue;
         serialize_entry(entry, data, container[id], factory);
+        counter++;
     }
+    cout << "serialized entries: " << counter << endl;
     cout << "            / " << name << " / VRSyncNode::serialize()" <<"  < < <" << endl;
     return base64_encode(&data[0], data.size());
 }
@@ -302,6 +305,7 @@ void VRSyncNode::deserializeAndApply(string& data) {
     cout << "> > >  " << name << " VRSyncNode::deserializeAndApply()" << endl;
     vector<BYTE> vec = base64_decode(data);
     int pos = 0;
+    int counter = 0;
     //FieldContainerFactoryBase* factory = FieldContainerFactory::the();
     while (pos < vec.size()) {
         //cout << " !!! search for sentry at " << pos << "/" << vec.size() << endl;
@@ -311,6 +315,7 @@ void VRSyncNode::deserializeAndApply(string& data) {
         vector<BYTE> FCdata;
         FCdata.insert(FCdata.end(), vec.begin()+pos, vec.begin()+pos+sentry.len);
         pos += sentry.len;
+        counter++;
 
         // TODO:
         //  - get corresponding ID to sentry.localId
@@ -341,7 +346,7 @@ void VRSyncNode::deserializeAndApply(string& data) {
                 cout << "we've got a change in children here " << sentry.syncNodeID << " , " << sentry.uiEntryDesc << ", CreateDesc(1) " << ContainerChangeEntry::Create << endl;
                 //have we got a corresponding child id in local container of this SyncNode?
                 if (sentry.uiEntryDesc = ContainerChangeEntry::Create){
-                     //createChild();
+                     createChild();
                     //Node::addChild() //child pointer?
 //                    cout << "!!!!!! createChild() container" << endl;
 //                    for (auto c : container){
@@ -367,7 +372,7 @@ void VRSyncNode::deserializeAndApply(string& data) {
 //            cout << "id " << id << " fc->getId " << fc->getId() << " " << fc->getTypeName() << endl;
 //        }
 //    }
-
+    cout << "deserialized entries: " << counter << endl;
     cout << "            / " << name << " VRSyncNode::deserializeAndApply()" << "  < < <" << endl;
 }
 
@@ -378,62 +383,62 @@ void VRSyncNode::createChild(){
     //Node
     NodeRefPtr n1 = Node::create();
     Node* node1 = n1.get();
-    //Group
-    GroupRefPtr group = Group::create();
-    n1->setCore(group);
+//    //Group
+//    GroupRefPtr group = Group::create();
+//    n1->setCore(group);
 
 
     registerNode(node1);
     syncedContainer.push_back(node1->getId());
-    syncedContainer.push_back(group->getId());
-//    factory->registerContainer(node1); //TODO: check if factory-> registerContainer is really needed here
-//    factory->registerContainer(group);
+//    syncedContainer.push_back(group->getId());
+////    factory->registerContainer(node1); //TODO: check if factory-> registerContainer is really needed here
+////    factory->registerContainer(group);
 
-    //Node
-    NodeRefPtr n2 = Node::create();
-    Node* node2 = n2.get();
-    //Geometry
-    GeometryMTRecPtr g1 = Geometry::create();
-    //GeometryMTRecPtr g1 = makeTorusGeo(0.5, 1.0, 16, 8); //VRTorus::make();
-    n2->setCore(g1);
-
-    registerNode(node2);
-    syncedContainer.push_back(node2->getId());
-    syncedContainer.push_back(g1->getId());
-//    factory->registerContainer(node2);
-//    factory->registerContainer(g1);
-
-
-    //Node
-    NodeRefPtr n3 = Node::create();
-    Node* node3 = n3.get();
-    //Transform
-    Matrix m;
-    m.setTransform(Vec3f(0,  0, 0));
-    TransformRecPtr trans  = Transform::create(); //node core
-    trans->setMatrix(m);
-    n3->setCore(trans);
-
-    registerNode(node3);
-    syncedContainer.push_back(node3->getId());
-    syncedContainer.push_back(trans->getId());
-//    factory->registerContainer(node3);
-//    factory->registerContainer(trans);
-
-
-    //Node
-    NodeRefPtr n4 = Node::create();
-    Node* node4 = n4.get();
-    //Geometry
-    GeometryMTRecPtr g2 = Geometry::create();
-    //GeometryMTRecPtr g2 = makeTorusGeo(0.5, 1.0, 16, 8);
-    n4->setCore(g2);
-
-    registerNode(node4);
-    syncedContainer.push_back(node4->getId());
-    syncedContainer.push_back(g2->getId());
-//    factory->registerContainer(node4);
-//    factory->registerContainer(g2);
+//    //Node
+//    NodeRefPtr n2 = Node::create();
+//    Node* node2 = n2.get();
+//    //Geometry
+//    GeometryMTRecPtr g1 = Geometry::create();
+//    //GeometryMTRecPtr g1 = makeTorusGeo(0.5, 1.0, 16, 8); //VRTorus::make();
+//    n2->setCore(g1);
+//
+//    registerNode(node2);
+//    syncedContainer.push_back(node2->getId());
+//    syncedContainer.push_back(g1->getId());
+////    factory->registerContainer(node2);
+////    factory->registerContainer(g1);
+//
+//
+//    //Node
+//    NodeRefPtr n3 = Node::create();
+//    Node* node3 = n3.get();
+//    //Transform
+//    Matrix m;
+//    m.setTransform(Vec3f(0,  0, 0));
+//    TransformRecPtr trans  = Transform::create(); //node core
+//    trans->setMatrix(m);
+//    n3->setCore(trans);
+//
+//    registerNode(node3);
+//    syncedContainer.push_back(node3->getId());
+//    syncedContainer.push_back(trans->getId());
+////    factory->registerContainer(node3);
+////    factory->registerContainer(trans);
+//
+//
+//    //Node
+//    NodeRefPtr n4 = Node::create();
+//    Node* node4 = n4.get();
+//    //Geometry
+//    GeometryMTRecPtr g2 = Geometry::create();
+//    //GeometryMTRecPtr g2 = makeTorusGeo(0.5, 1.0, 16, 8);
+//    n4->setCore(g2);
+//
+//    registerNode(node4);
+//    syncedContainer.push_back(node4->getId());
+//    syncedContainer.push_back(g2->getId());
+////    factory->registerContainer(node4);
+////    factory->registerContainer(g2);
 
 //    cout << "????? check Factory" << endl;
 //    cout << "id " << node1->getId() << " " << factory->getContainer(node1->getId())->getTypeName() << endl;
@@ -534,7 +539,6 @@ void VRSyncNode::update() {
     }
 
     //get the change entries of the created children into local changelist
-
     for (auto it = cl->begin(); it != cl->end(); ++it) {
         ContainerChangeEntry* entry = *it;
         UInt32 id = entry->uiContainerId;
