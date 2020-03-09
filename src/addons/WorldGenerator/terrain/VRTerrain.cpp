@@ -276,7 +276,7 @@ void VRTerrain::setupGeo() {
         //cout << "n,e OLD: " << old2 << " -- " << old1 << endl;
         geo.apply(ptr());
 	}
-#if __EMSCRIPTEN__ // TODO: directly create triangles above!
+#if __EMSCRIPTEN__// TODO: directly create triangles above!
     convertToTriangles();
 #else
 	setType(GL_PATCHES);
@@ -744,19 +744,37 @@ attribute vec3 osg_Normal;
 attribute vec2 osg_MultiTexCoord0;
 
 varying vec3 vNormal;
+varying vec4 vColor;
 varying vec4 vVertex;
 varying vec2 vTexCoord;
 
+uniform sampler2D tex;
+uniform float heightScale;
+uniform int local;
+uniform int channel;
 uniform mat4 OSGModelViewProjectionMatrix;
 
 void main(void) {
 	vVertex = osg_Vertex;
 	vNormal = osg_Normal;
     vTexCoord = osg_MultiTexCoord0;
+
+    vec4 texData = texture2D(tex, osg_MultiTexCoord0);
+    vColor = texData;
+    float height = texData.a;
+    if (channel == 0) height = texData.r;
+    if (channel == 1) height = texData.g;
+    if (channel == 2) height = texData.b;
+    if (channel == 3) height = texData.a;
+    vec4 tePosition = osg_Vertex;
+    //if (local > 0) tePosition.xyz += osg_Normal * height;
+    //else
+    tePosition.y = height;//height;
+
 #ifdef __EMSCRIPTEN__
-    gl_Position = OSGModelViewProjectionMatrix*osg_Vertex;
+    gl_Position = OSGModelViewProjectionMatrix * tePosition;
 #else
-    gl_Position = gl_ModelViewProjectionMatrix*osg_Vertex;
+    gl_Position = gl_ModelViewProjectionMatrix * tePosition;
 #endif
 }
 );
@@ -769,6 +787,7 @@ precision mediump float;
 uniform sampler2D texture;
 
 varying vec2 vTexCoord;
+varying vec4 vColor;
 
 void main( void ) {
     //gl_FragColor = vec4(1.0,0.0,0.0,1.0);
