@@ -39,6 +39,8 @@ class VRTerrain : public VRGeometry, public VRWorldModule {
         static string fragmentShaderDeferred;
         static string tessControlShader;
         static string tessEvaluationShader;
+        static string vertexShader_es2;
+        static string fragmentShader_es2;
 
         Vec2d size = Vec2d(100,100);
         Vec2f texelSize = Vec2f(0.01,0.01); // shader parameter
