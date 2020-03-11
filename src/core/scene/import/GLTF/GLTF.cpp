@@ -1085,6 +1085,34 @@ class GLTFLoader : public GLTFUtils {
                     //const tinygltf::Accessor& accessorTexUV1 = model.accessors[primitive.attributes["TEXCOORD_1"]];
                 }
 
+                if (primitive.attributes.count("JOINTS_0")) {
+                    const tinygltf::Accessor& accessor= model.accessors[primitive.attributes["JOINTS_0"]];
+                    const tinygltf::BufferView& bufferView = model.bufferViews[accessor.bufferView];
+                    const tinygltf::Buffer& buffer = model.buffers[bufferView.buffer];
+                    vector<Vec4i> joints;
+                    if (accessor.type == 4) {
+                        if (accessor.componentType == 5123) {
+                            const short* jointsData   = reinterpret_cast<const short*>(&buffer.data[bufferView.byteOffset + accessor.byteOffset]);
+                            for (size_t i = 0; i < accessor.count; i++) joints.push_back( Vec4i( jointsData[i*4 + 0], jointsData[i*4 + 1], jointsData[i*4 + 2], jointsData[i*4 + 3] ) );
+                        }
+                    }
+                    cout << " vertex_joints type: " << accessor.componentType << " accessor type: " << accessor.type << " accessor count: " << accessor.count << endl;//  << " joints:  " << toString(joints) << endl;
+                }
+
+                if (primitive.attributes.count("WEIGHTS_0")) {
+                    const tinygltf::Accessor& accessor = model.accessors[primitive.attributes["WEIGHTS_0"]];
+                    const tinygltf::BufferView& bufferView = model.bufferViews[accessor.bufferView];
+                    const tinygltf::Buffer& buffer = model.buffers[bufferView.buffer];
+                    vector<Vec4d> weights;
+                    if (accessor.type == 4) {
+                        if (accessor.componentType == 5126) {
+                            const float* weightsData   = reinterpret_cast<const float*>(&buffer.data[bufferView.byteOffset + accessor.byteOffset]);
+                            for (size_t i = 0; i < accessor.count; i++) weights.push_back( Vec4d( weightsData[i*4 + 0],  weightsData[i*4 + 1],  weightsData[i*4 + 2],  weightsData[i*4 + 3] ) );
+                        }
+                    }
+                    cout << " vertex_weights type: " << accessor.componentType << " accessor type: " << accessor.type << " accessor count: " << accessor.count << endl;// << " weights: " << toString(weights) << endl;
+                }
+
                 if (primitive.indices > -1) {
                     const tinygltf::Accessor& accessorIndices = model.accessors[primitive.indices];
                     const tinygltf::BufferView& bufferViewIndices = model.bufferViews[accessorIndices.bufferView];
@@ -1167,9 +1195,29 @@ class GLTFLoader : public GLTFUtils {
             //for (auto joint : gltfSkin.joints) cout << joint << endl;
             //gltfSkin.inverseBindMatrices
             cout << "GLTFLOADER::WARNING IN SKINS: not supported" << endl;
-            cout << " inverseBindMatrices int" << gltfSkin.inverseBindMatrices << endl;
-            cout << " joints size int" << gltfSkin.joints.size() << endl;
-            cout << " skeleton int" << gltfSkin.skeleton << endl;
+            //cout << " inverseBindMatrices int " << gltfSkin.inverseBindMatrices << endl;
+            cout << " joints size: " << gltfSkin.joints.size() << endl;
+            cout << "  joints vec: " << toString(gltfSkin.joints) << endl;
+            cout << " skeleton int " << gltfSkin.skeleton << endl;
+            if (gltfSkin.inverseBindMatrices > -1) {
+                vector<Matrix4d> invBMs;
+                const tinygltf::Accessor& accessor= model.accessors[gltfSkin.inverseBindMatrices];
+                const tinygltf::BufferView& bufferView = model.bufferViews[accessor.bufferView];
+                const tinygltf::Buffer& buffer = model.buffers[bufferView.buffer];
+                if (accessor.type == 36) {
+                    if (accessor.componentType == 5126) {
+                        const float* invBindData   = reinterpret_cast<const float*>(&buffer.data[bufferView.byteOffset + accessor.byteOffset]);
+                        for (size_t i = 0; i < accessor.count; i++) { invBMs.push_back( Matrix4d(
+                            invBindData[i*16 +  0], invBindData[i*16 +  1], invBindData[i*16 +  2], invBindData[i*16 +  3],
+                            invBindData[i*16 +  4], invBindData[i*16 +  5], invBindData[i*16 +  6], invBindData[i*16 +  7],
+                            invBindData[i*16 +  8], invBindData[i*16 +  9], invBindData[i*16 + 10], invBindData[i*16 + 11],
+                            invBindData[i*16 + 12], invBindData[i*16 + 13], invBindData[i*16 + 14], invBindData[i*16 + 15] )
+                            );
+                        }
+                    }
+                }
+                cout << " invBM type: " << accessor.componentType << " accessor type: " << accessor.type << " accessor count: " << accessor.count << endl;// << " invBM:   " << toString(invBMs) << endl;
+            }
             return;
         }
 
@@ -1181,6 +1229,7 @@ class GLTFLoader : public GLTFUtils {
             vector<Vec3d> translation;
             vector<Vec4d> rotation;
             vector<Vec3d> scale;
+            vector<float> weights;
             int nodeID = -1;
             vector<bool> transf = {false, false, false};
             vector<int> tempAnimNodeIDs;
@@ -1207,6 +1256,7 @@ class GLTFLoader : public GLTFUtils {
                 const tinygltf::BufferView& bufferViewOut = model.bufferViews[accessorOut.bufferView];
                 const tinygltf::Buffer& bufferOut = model.buffers[bufferViewOut.buffer];
                 const float* dataOut = reinterpret_cast<const float*>(&bufferOut.data[bufferViewOut.byteOffset + accessorOut.byteOffset]);
+                cout << " accOut-type: " << accessorOut.type << " accOut-component-type: " << accessorOut.componentType << endl;
                 if (accessorOut.componentType == 5126) {
                     for (size_t i = 0; i < accessorOut.count; ++i) {
                         if (accessorOut.type == 3){
@@ -1219,6 +1269,9 @@ class GLTFLoader : public GLTFUtils {
                             Vec4d vec = Vec4d( dataOut[i * 4 + 0], dataOut[i * 4 + 1], dataOut[i * 4 + 2], dataOut[i * 4 + 3] );
                             if (each.target_path == "rotation") rotation.push_back(vec);
                             //cout << vec << endl;
+                        }
+                        if (each.target_path == "weights") {
+                            weights.push_back( dataOut[i] );
                         }
                     }
                 }
@@ -1244,7 +1297,7 @@ class GLTFLoader : public GLTFUtils {
                         node->animationScales = scale;
                     }
                     if (each.target_path == "weights") {
-                        cout << "GLTFLOADER::WARNING IN ANIMATIONS: target path weights not implemented yet" << endl;
+                        cout << "GLTFLOADER::WARNING IN ANIMATIONS: target path 'weights' found but not yet implemented" << endl;
                     }
                     tempAnimNodeIDs.push_back(each.target_node);
                 }
