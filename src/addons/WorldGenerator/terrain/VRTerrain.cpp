@@ -142,7 +142,11 @@ void VRTerrain::setParameters( Vec2d s, double r, double h, float w, float aT, C
     size = s;
     resolution = r;
     heightScale = h;
+#ifdef __EMSCRIPTEN__
+    grid = r;
+#else
     grid = r*64;
+#endif
     mat->setShaderParameter("resolution", resolution);
     mat->setShaderParameter("heightScale", heightScale);
     mat->setShaderParameter("doHeightTextures", 0);
@@ -767,9 +771,8 @@ void main(void) {
     if (channel == 2) height = texData.b;
     if (channel == 3) height = texData.a;
     vec4 tePosition = osg_Vertex;
-    //if (local > 0) tePosition.xyz += osg_Normal * height;
-    //else
-    tePosition.y = height;//height;
+    if (local > 0) tePosition.xyz += osg_Normal * height * heightScale;
+    else tePosition.y = height * heightScale;
 
 #ifdef __EMSCRIPTEN__
     gl_Position = OSGModelViewProjectionMatrix * tePosition;
