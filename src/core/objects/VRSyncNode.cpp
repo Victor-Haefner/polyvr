@@ -264,8 +264,8 @@ class ourBinaryDataHandler : public BinaryDataHandler {
 void printNodeFieldMask(BitVector fieldmask) {
     string changeType = "";
     if (fieldmask & Node::AttachmentsFieldMask) changeType = " AttachmentsFieldMask";
-    else if (fieldmask & Node::bInvLocalFieldMask) changeType = " bInvLocalFieldMask ";
-    else if ( fieldmask & Node::bLocalFieldMask) changeType = " bLocalFieldMask      ";
+//    else if (fieldmask & Node::bInvLocalFieldMask) changeType = " bInvLocalFieldMask ";
+//    else if ( fieldmask & Node::bLocalFieldMask) changeType = " bLocalFieldMask      ";
     else if ( fieldmask & Node::ChangedCallbacksFieldMask) changeType = " ChangedCallbacksFieldMask";
     else if ( fieldmask & Node::ChildrenFieldMask) changeType = " ChildrenFieldMask   ";
     else if ( fieldmask & Node::ContainerIdMask) changeType = " ContainerIdMask ";
@@ -327,6 +327,9 @@ void VRSyncNode::deserializeAndApply(string& data) {
     int counter = 0;
     ourBinaryDataHandler handler; //use ourBinaryDataHandler to somehow apply binary change to fieldcontainer (use connection instead of handler, see OSGRemoteaspect.cpp (receiveSync))
     Node* parent;
+    map<int, vector<BYTE>> entryData; //syncID, data
+    map<int, SerialEntry*> entryChange; // syncID, entry
+
 
     //deserialize and collect change and create entries
     while (pos < vec.size()) {
@@ -337,53 +340,39 @@ void VRSyncNode::deserializeAndApply(string& data) {
         FCdata.insert(FCdata.end(), vec.begin()+pos, vec.begin()+pos+sentry.len);
         pos += sentry.len;
         counter++;
+        //if (sentry.uiEntryDesc == ContainerChangeEntry::Create) entryCreate[sentry.syncNodeID] = &sentry;
+        //else
+        entryChange[sentry.syncNodeID] = &sentry;
+        entryData[sentry.syncNodeID] = FCdata;
 
         // map remote id to local id if exist (otherwise id = -1)
-        UInt32 id = -1;//3021;
+        UInt32 id = -1;
         if (sentry.syncNodeID != -1) {
             for (auto c : container) {
                 if (c.second == sentry.syncNodeID) {
                     id = c.first;
                     remoteToLocalID[sentry.syncNodeID] = id;
-                    cout << "container for syncNodeID " << sentry.syncNodeID << " container id " << id << endl;
+                    cout << "replaced remoteID " << sentry.localId;
+                    sentry.localId = id; //replace remoteID by localID
+                    cout << " with localID" << sentry.localId << endl;
                     break;
                 }
             }
         }
-
-        //replace remote entry ID with local ID
-        if (id != -1) sentry.localId = id; //TODO: if works integrate it into previous loop
-        //else cout << "got sentry with id -1 !!!!!!" << endl;
-
-        if (sentry.fieldMask & Node::ChildrenFieldMask) {
-            cout << "Node::ChildrenFieldMask changed" << endl;
-            //we got a node whose children changed
-        }
-
-
-        //parentsfieldmask changed?
-        if (sentry.fieldMask & NodeCore::ParentsFieldMask) {
-            cout << "NodeCore::ParentsFieldMask changed" << endl;
-            //we got a node core whose parent changed
-        }
+        continue;
 
         FieldContainer* fc = nullptr; // Field Container to apply changes to
 //        if (id == -1) continue;
         // if fc does not exist we need to create a new fc = node
-        //TODO: continue here with creating/addressing node cores
-        if (sentry.uiEntryDesc == ContainerChangeEntry::Create && id == -1) { //if (id == -1) {
-            FieldContainer* fc = createChild(parent); //creates node with a core and registers with syncNodeID in container
-            //FieldContainer* fc = dynamic_cast<FieldContainer*>(node);
-            //FieldContainer* fc = factory->getContainer(node->getId());
-            if (!fc) cout << "no field container!!!! for node id " << endl;
-            UInt32 fcId = factory->findContainer(fc);
-            UInt32 fcId2 = fc->getId();
-            string fcType = fc->getTypeName();
-            //cout << "created fc !!!!!! " << fc->getTypeName() << " " << fc->getId() << endl;
+        if (sentry.uiEntryDesc == ContainerChangeEntry::Create && id == -1) { //if create and not registered
+            NodeRefPtr nodePtr = createChild(parent); //creates node with a core and registers with syncNodeID in container
+            Node* node = nodePtr.get();
+            UInt32 id = node->getId();
+            FieldContainer* fc = factory->getContainer(id);
+            if (!fc) cout << "no fc for node id " << id << endl;
             registerContainer(fc, sentry.syncNodeID);
             int coreSyncID = ++sentry.syncNodeID;
             cout << "nodeID " << sentry.syncNodeID << " coreSyncID " << coreSyncID << endl;
-            Node* node = dynamic_cast<Node*>(fc);
             FieldContainer* coreFC = dynamic_cast<FieldContainer*>(node->getCore());
             registerContainer(coreFC, coreSyncID); //Assume: coreID = nodeID+1
 
@@ -415,25 +404,90 @@ void VRSyncNode::deserializeAndApply(string& data) {
         syncedContainer.push_back(id);
     }
 
+//    //handle create entries
+//    for (auto entry : entryCreate) {
+//        int syncID = entry.first;
+//        cout << "syncID " << syncID << endl;
+//        FieldContainer* fc = createChild(parent);
+//    }
+
+    //handle change entries
+    for (auto entry : entryChange) {
+        int syncID = entry.first;
+        SerialEntry* sentry = entry.second;
+        vector<BYTE> FCdata = entryData[syncID];
+        cout << "syncID " << syncID << endl;
+        if (sentry->uiEntryDesc == ContainerChangeEntry::Create) {
+            cout << "create container" << endl;
+            NodeRefPtr nodePtr = createChild(parent);
+            Node* node = nodePtr.get();
+            NodeCore* core = node->getCore();
+            UInt32 nodeID = node->getId();
+            UInt32 coreID = core->getId();
+            int coreSyncID = ++syncID;
+            //register
+            FieldContainer* nodeFC = factory->getContainer(nodeID);
+            FieldContainer* coreFC = factory->getContainer(coreID);
+            if (!nodeFC) cout << " no nodeFC !!!!!" << " with id " << nodeID << endl;
+            if (!coreFC) cout << " no coreFC !!!!!" << " with id " << coreID <<endl;
+            registerContainer(nodeFC, syncID); //should be in right order if the entry map is sorted by syncID
+            registerContainer(coreFC, coreSyncID);
+
+            syncedContainer.push_back(nodeID);
+            syncedContainer.push_back(coreID);
+
+            //add remote to local ID mapping of node and core
+            if (!remoteToLocalID.count(syncID)) remoteToLocalID[syncID] = nodeID;
+            else cout << "this syncID is already in remoteToLocalID!!!!!" << endl;
+            if (!remoteToLocalID.count(coreSyncID)) remoteToLocalID[coreSyncID] = coreID;
+            else cout << "this coreSyncID is already in remoteToLocalID!!!!!" << endl;
+
+            //data
+            vector<BYTE> nodeData = entryData[syncID];
+            vector<BYTE> coreData = entryData[coreSyncID];
+
+            //apply data to node and core
+            handler.data.insert(handler.data.end(), nodeData.begin(), nodeData.end()); //feed handler with FCdata
+            nodeFC->copyFromBin(handler, sentry->fieldMask); //calls handler->read
+            handler.data.insert(handler.data.end(), coreData.begin(), coreData.end());
+            SerialEntry* coreEntry = entryChange[coreSyncID];
+            coreFC->copyFromBin(handler, coreEntry->fieldMask);
+        } else {
+            cout << "apply changes to existing container " << sentry->localId << endl;
+            FieldContainer* fc = factory->getContainer(sentry->localId);
+            if (!fc) cout << "no container found " << endl;
+            handler.data.insert(handler.data.end(), FCdata.begin(), FCdata.end()); //feed handler with FCdata
+            fc->copyFromBin(handler, sentry->fieldMask); //calls handler->read
+
+            syncedContainer.push_back(fc->getId());
+        }
+
+
+    }
+
     //Thread::getCurrentChangeList()->commitChanges(ChangedOrigin::Sync);
     //Thread::getCurrentChangeList()->commitChangesAndClear(ChangedOrigin::Sync);
+    cout << "registered container " << endl;
+    for (auto c : container) {
+        cout << c.second << " " << c.first << endl;
+    }
 
     cout << "deserialized entries: " << counter << endl;
     cout << "            / " << name << " VRSyncNode::deserializeAndApply()" << "  < < <" << endl;
 }
 
 //create a node and core for created child change entry
-FieldContainer* VRSyncNode::createChild(Node* parent){
+NodeRefPtr VRSyncNode::createChild(Node* parent){
     NodeRefPtr nodePtr = Node::create();
     GroupRefPtr group = Group::create();
     nodePtr->setCore(group);
     Node* node = nodePtr.get();
-    parent->addChild(node);
-    cout << "created node " << node->getId() << endl;
-    FieldContainer* fc = factory->getContainer(node->getId());
-    if (!fc) cout << "no fc found for node" << endl;
-    else cout << "found fc " << fc->getTypeName() << " " << fc->getId() << endl;
-    return fc;
+    parent->addChild(node); //Add to scene graph TODO: better to
+//    cout << "created node " << node->getId() << endl;
+//    //FieldContainer* fc = factory->getContainer(node->getId());
+//    if (!fc) cout << "no fc found for node" << endl;
+//    else cout << "found fc " << fc->getTypeName() << " " << fc->getId() << endl;
+    return nodePtr;
 }
 
 
@@ -512,9 +566,9 @@ void VRSyncNode::update() {
         ContainerChangeEntry* entry = *it;
         UInt32 id = entry->uiContainerId;
         //TODO: ignore core created somehow to have less created to handle on remote side
-        //FieldContainer* fc = factory->getContainer(id);
-        //if (fc->getTypeName() == "Node")
-        entry->uiEntryDesc = ContainerChangeEntry::Create;
+//        FieldContainer* fc = factory->getContainer(id);
+//        if (fc) if (fc->getTypeName() == "Node")
+//        entry->uiEntryDesc = ContainerChangeEntry::Create;
         if (container.count(id)) {
             localChanges->addChange(entry);
             cout << "add created " << entry->uiContainerId << endl;
