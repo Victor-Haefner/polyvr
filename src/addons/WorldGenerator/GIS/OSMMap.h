@@ -101,6 +101,7 @@ class OSMMap {
 
         void readFile(string path);
         void readGEOJSON(string path);
+        void readSHAPE(string path);
         void writeFile(string path);
         int readFileStreaming(string path);
         void filterFileStreaming(string path, vector<vector<string>> wl);
