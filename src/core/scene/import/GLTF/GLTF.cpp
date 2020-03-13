@@ -290,6 +290,9 @@ struct GLTFNode : GLTFUtils {
     virtual VRMaterialPtr applyMaterials() = 0;
     virtual VRGeoData applyGeometries() = 0;
     virtual VRTransformPtr applyAnimations() = 0;
+    virtual bool applyAnimationFrame(float maxDuration, float tIn) = 0;
+    virtual void initAnimations() = 0;
+    virtual float primeAnimations(float macDuration = 0.0) = 0;
 
     void resolveLinks(map<int, GLTFNode*>& references) {
         if (type == "Link") { if (references.count(nID)) obj->addChild(references[nID]->obj->duplicate()); /*cout << "resolved a Link" << endl;*/ }
@@ -363,7 +366,7 @@ struct GLTFNNode : GLTFNode{
                     translation = slerp3d(lastVec,nextVec,interP);
                 }
                 handleTranslation();
-                o->setMatrix(pose);
+                //o->setMatrix(pose);
             }
             return;
         };
@@ -381,7 +384,7 @@ struct GLTFNNode : GLTFNode{
                     }
                 } else translation = translationStart;
                 handleTranslation();
-                o->setMatrix(pose);
+                //o->setMatrix(pose);
             }
             return;
         };
@@ -438,7 +441,7 @@ struct GLTFNNode : GLTFNode{
                     translation = lastPos*s0 + outTan*s1 + nextPos*s2 + inTan*s3;
                 }
                 handleTranslation();
-                o->setMatrix(pose);
+                //o->setMatrix(pose);
             }
             return;
         };
@@ -467,9 +470,8 @@ struct GLTFNNode : GLTFNode{
                     scale = slerp3d(lastVec,nextVec,interP);
                 }
                 handleScale();
-                o->setMatrix(pose);
+                //o->setMatrix(pose);
             }
-            return;
             return;
         };
 
@@ -486,7 +488,7 @@ struct GLTFNNode : GLTFNode{
                     }
                 } else scale = scaleStart;
                 handleScale();
-                o->setMatrix(pose);
+                //o->setMatrix(pose);
             }
             return;
         };
@@ -543,7 +545,7 @@ struct GLTFNNode : GLTFNode{
                     scale = lastPos*s0 + outTan*s1 + nextPos*s2 + inTan*s3;
                 }
                 handleScale();
-                o->setMatrix(pose);
+                //o->setMatrix(pose);
             }
             return;
         };
@@ -612,7 +614,7 @@ struct GLTFNNode : GLTFNode{
                     rotation = slerpRot(lastVec,nextVec,interP);
                 }
                 handleRotation();
-                o->setMatrix(pose);
+                //o->setMatrix(pose);
             }
             return;
         };
@@ -632,7 +634,7 @@ struct GLTFNNode : GLTFNode{
                     rotation = rotationStart;
                 }
                 handleRotation();
-                o->setMatrix(pose);
+                //o->setMatrix(pose);
             }
             return;
         };
@@ -693,11 +695,411 @@ struct GLTFNNode : GLTFNode{
                     rotation = lastPos*s0 + outTan*s1 + nextPos*s2 + inTan*s3;
                 }
                 handleTransform();//handleRotation();
-                o->setMatrix(pose);
+                //o->setMatrix(pose);
             }
             return;
         };
 
+        VRTransformPtr t = dynamic_pointer_cast<VRTransform>(obj);
+        //for (auto c : children) c->applyAnimations();
+        return t;
+    }
+
+    bool applyAnimationFrame(float maxDuration, float tIn) {
+        VRTransformPtr t = dynamic_pointer_cast<VRTransform>(obj);
+        if (t) {
+            auto slerp3d = [&](Vec3d v0, Vec3d v1, double t) { return v0 + (v1-v0)*t; };
+
+            vector<bool> transf = {false, false, false, false};
+
+            auto animTranslationLinearCB = [&](OSG::VRTransformPtr o, float animationMaxDuration, float t) {
+                if (animationTimestampsTra.size() > 0){
+                    transf[0] = true;
+                    float duration = animationTimestampsTra[animationTimestampsTra.size() - 1];
+                    if (t*animationMaxDuration > animationTimestampsTra[0]) {
+                        if (t*animationMaxDuration > animationTimestampsTra[lastFrameTra+1]) lastFrameTra++;
+                        if (t*animationMaxDuration >= duration) {
+                            return;
+                        } else {
+                            if (t*animationMaxDuration < animationTimestampsTra[1]) lastFrameTra = 0;
+                            float lastT = animationTimestampsTra[lastFrameTra];
+                            float nextT = animationTimestampsTra[lastFrameTra+1];
+                            Vec3d lastVec = animationTranslations[lastFrameTra];
+                            Vec3d nextVec = animationTranslations[lastFrameTra+1];
+                            float interP = (t*animationMaxDuration - lastT)/(nextT-lastT);
+                            translation = slerp3d(lastVec,nextVec,interP);
+                        }
+                    } else {
+                        float lastT = 0.0;
+                        float nextT = animationTimestampsTra[0];
+                        Vec3d lastVec = translationStart;
+                        Vec3d nextVec = animationTranslations[0];
+                        float interP = (t*animationMaxDuration - lastT)/(nextT-lastT);
+                        translation = slerp3d(lastVec,nextVec,interP);
+                    }
+                }
+                return;
+            };
+
+            auto animTranslationStepCB = [&](OSG::VRTransformPtr o, float animationMaxDuration, float t) {
+                if (animationTimestampsTra.size() > 0){
+                    transf[0] = true;
+                    float duration = animationTimestampsTra[animationTimestampsTra.size() - 1];
+                    if (t*animationMaxDuration > animationTimestampsTra[0]) {
+                        if (t*animationMaxDuration > animationTimestampsTra[lastFrameTra+1]) lastFrameTra++;
+                        if (t*animationMaxDuration >= duration) {
+                            return;
+                        } else {
+                            if (t*animationMaxDuration < animationTimestampsTra[1]) lastFrameTra = 0;
+                            Vec3d lastVec = animationTranslations[lastFrameTra];
+                            translation = lastVec;
+                        }
+                    } else translation = translationStart;
+                }
+                return;
+            };
+
+            auto animTranslationCubicCB = [&](OSG::VRTransformPtr o, float animationMaxDuration, float t) {
+                if (animationTimestampsTra.size() > 0){
+                    transf[0] = true;
+                    float duration = animationTimestampsTra[animationTimestampsTra.size() - 1];
+                    if (t*animationMaxDuration > animationTimestampsTra[0]) {
+                        if (t*animationMaxDuration > animationTimestampsTra[lastFrameTra+1]) lastFrameTra++;
+                        if (t*animationMaxDuration >= duration) {
+                            return;
+                        } else {
+                            if (t*animationMaxDuration < animationTimestampsTra[1]) lastFrameTra = 0;
+                            float lastT = animationTimestampsTra[lastFrameTra];
+                            float nextT = animationTimestampsTra[lastFrameTra+1];
+                            float deltaT = nextT - lastT;
+
+                            Vec3d lastPos = animationTranslations[3*lastFrameTra +1];
+                            Vec3d nextPos = animationTranslations[3*(lastFrameTra+1) +1];
+
+                            Vec3d inTan  = animationTranslations[3*lastFrameTra +0];
+                            Vec3d outTan = animationTranslations[3*lastFrameTra +2]*deltaT;
+
+                            float iP = (t*animationMaxDuration - lastT)/(deltaT);
+                            float iPP = iP*iP;
+                            float iPPP = iPP*iP;
+
+                            float s2 = -2.0*iPPP + 3.0*iPP;
+                            float s3 = iPPP - iPP;
+                            float s0 = 1.0-s2;
+                            float s1 = s3 - iPP + iP;
+
+                            translation = lastPos*s0 + outTan*s1 + nextPos*s2 + inTan*s3;
+                        }
+                    } else {
+                        float lastT = 0.0;
+                        float nextT = animationTimestampsTra[0];
+                        float deltaT = nextT - lastT;
+
+                        Vec3d lastPos = translationStart;
+                        Vec3d nextPos = animationTranslations[1];
+
+                        Vec3d inTan  = Vec3d(0,0,0);
+                        Vec3d outTan = animationTranslations[2]*deltaT;
+
+                        float iP = (t*animationMaxDuration - lastT)/(deltaT);
+                        float iPP = iP*iP;
+                        float iPPP = iPP*iP;
+
+                        float s2 = -2.0*iPPP + 3.0*iPP;
+                        float s3 = iPPP - iPP;
+                        float s0 = 1.0-s2;
+                        float s1 = s3 - iPP + iP;
+
+                        translation = lastPos*s0 + outTan*s1 + nextPos*s2 + inTan*s3;
+                    }
+                }
+                return;
+            };
+
+            auto animScaleLinearCB = [&](OSG::VRTransformPtr o, float animationMaxDuration, float t) {
+                if (animationTimestampsSca.size() > 0){
+                    transf[2] = true;
+                    float duration = animationTimestampsSca[animationTimestampsSca.size() - 1];
+                    if (t*animationMaxDuration > animationTimestampsSca[0]) {
+                        if (t*animationMaxDuration > animationTimestampsSca[lastFrameSca+1]) lastFrameSca++;
+                        if (t*animationMaxDuration >= duration) {
+                            return;
+                        } else {
+                            if (t*animationMaxDuration < animationTimestampsSca[1]) lastFrameSca = 0;
+                            float lastT = animationTimestampsSca[lastFrameSca];
+                            float nextT = animationTimestampsSca[lastFrameSca+1];
+                            Vec3d lastVec = animationScales[lastFrameSca];
+                            Vec3d nextVec = animationScales[lastFrameSca+1];
+                            float interP = (t*animationMaxDuration - lastT)/(nextT-lastT);
+                            scale = slerp3d(lastVec,nextVec,interP);
+                        }
+                    } else {
+                        float lastT = 0.0;
+                        float nextT = animationTimestampsSca[0];
+                        Vec3d lastVec = scaleStart;
+                        Vec3d nextVec = animationScales[0];
+                        float interP = (t*animationMaxDuration - lastT)/(nextT-lastT);
+                        scale = slerp3d(lastVec,nextVec,interP);
+                    }
+                }
+                return;
+            };
+
+            auto animScaleStepCB = [&](OSG::VRTransformPtr o, float animationMaxDuration, float t) {
+                if (animationTimestampsSca.size() > 0){
+                    transf[2] = true;
+                    float duration = animationTimestampsSca[animationTimestampsSca.size() - 1];
+                    if (t*animationMaxDuration > animationTimestampsSca[0]) {
+                        if (t*animationMaxDuration > animationTimestampsSca[lastFrameSca+1]) lastFrameSca++;
+                        if (t*animationMaxDuration >= duration) {
+                            return;
+                        } else {
+                            if (t*animationMaxDuration < animationTimestampsSca[1]) lastFrameSca = 0;
+                            Vec3d lastVec = animationScales[lastFrameSca];
+                            scale = lastVec;
+                        }
+                    } else scale = scaleStart;
+                }
+                return;
+            };
+
+            auto animScaleCubicCB = [&](OSG::VRTransformPtr o, float animationMaxDuration, float t) {
+                if (animationTimestampsSca.size() > 0){
+                    transf[2] = true;
+                    float duration = animationTimestampsSca[animationTimestampsSca.size() - 1];
+                    if (t*animationMaxDuration > animationTimestampsSca[0]) {
+                        if (t*animationMaxDuration > animationTimestampsSca[lastFrameSca+1]) lastFrameSca++;
+                        if (t*animationMaxDuration >= duration) {
+                            return;
+                        } else {
+                            if (t*animationMaxDuration < animationTimestampsSca[1]) lastFrameSca = 0;
+                            float lastT = animationTimestampsSca[lastFrameSca];
+                            float nextT = animationTimestampsSca[lastFrameSca+1];
+                            float deltaT = nextT - lastT;
+
+                            Vec3d lastPos = animationScales[3*lastFrameSca +1];
+                            Vec3d nextPos = animationScales[3*(lastFrameSca+1) +1];
+
+                            Vec3d inTan  = animationScales[3*lastFrameSca +0];
+                            Vec3d outTan = animationScales[3*lastFrameSca +2]*deltaT;
+
+                            float iP = (t*animationMaxDuration - lastT)/(deltaT);
+                            float iPP = iP*iP;
+                            float iPPP = iPP*iP;
+
+                            float s2 = -2.0*iPPP + 3.0*iPP;
+                            float s3 = iPPP - iPP;
+                            float s0 = 1.0-s2;
+                            float s1 = s3 - iPP + iP;
+
+                            scale = lastPos*s0 + outTan*s1 + nextPos*s2 + inTan*s3;
+                        }
+                    } else {
+                        float lastT = 0.0;
+                        float nextT = animationTimestampsSca[0];
+                        float deltaT = nextT - lastT;
+
+                        Vec3d lastPos = scaleStart;
+                        Vec3d nextPos = animationScales[1];
+
+                        Vec3d inTan  = Vec3d(0,0,0);
+                        Vec3d outTan = animationScales[2]*deltaT;
+
+                        float iP = (t*animationMaxDuration - lastT)/(deltaT);
+                        float iPP = iP*iP;
+                        float iPPP = iPP*iP;
+
+                        float s2 = -2.0*iPPP + 3.0*iPP;
+                        float s3 = iPPP - iPP;
+                        float s0 = 1.0-s2;
+                        float s1 = s3 - iPP + iP;
+
+                        scale = lastPos*s0 + outTan*s1 + nextPos*s2 + inTan*s3;
+                    }
+                }
+                return;
+            };
+
+            auto animRotationLinearCB = [&](OSG::VRTransformPtr o, float animationMaxDuration, float t) {
+                auto slerpRot = [&](Vec4d v0, Vec4d v1, double t) {
+                    // Only unit quaternions are valid rotations.
+                    // Normalize to avoid undefined behavior.
+                    v0.normalize();
+                    v1.normalize();
+
+                    // Compute the cosine of the angle between the two vectors.
+                    double dot = v0.dot(v1);// dot_product(v0, v1);
+
+                    // If the dot product is negative, slerp won't take
+                    // the shorter path. Note that v1 and -v1 are equivalent when
+                    // the negation is applied to all four components. Fix by
+                    // reversing one quaternion.
+                    if (dot < 0.0f) {
+                        v1 = -v1;
+                        dot = -dot;
+                    }
+
+                    const double DOT_THRESHOLD = 0.9995;
+                    if (dot > DOT_THRESHOLD) {
+                        // If the inputs are too close for comfort, linearly interpolate
+                        // and normalize the result.
+
+                        Vec4d result = v0 + t*(v1 - v0);
+                        result.normalize();
+                        return result;
+                    }
+
+                    // Since dot is in range [0, DOT_THRESHOLD], acos is safe
+                    double theta_0 = acos(dot);        // theta_0 = angle between input vectors
+                    double theta = theta_0*t;          // theta = angle between v0 and result
+                    double sin_theta = sin(theta);     // compute this value only once
+                    double sin_theta_0 = sin(theta_0); // compute this value only once
+
+                    double s0 = cos(theta) - dot * sin_theta / sin_theta_0;  // == sin(theta_0 - theta) / sin(theta_0)
+                    double s1 = sin_theta / sin_theta_0;
+
+                    return (s0 * v0) + (s1 * v1);
+                };
+
+                if (animationTimestampsRot.size() > 0){
+                    transf[1] = true;
+                    float duration = animationTimestampsRot[animationTimestampsRot.size() - 1];
+                    if (t*animationMaxDuration > animationTimestampsRot[0]) {
+                        if (t*animationMaxDuration > animationTimestampsRot[lastFrameRot+1]) lastFrameRot++;
+                        if (t*animationMaxDuration >= duration) {
+                            return;
+                        } else {
+                            if (t*animationMaxDuration < animationTimestampsRot[1]) lastFrameRot = 0;
+                            float lastT = animationTimestampsRot[lastFrameRot];
+                            float nextT = animationTimestampsRot[lastFrameRot+1];
+                            Vec4d lastVec = animationRotations[lastFrameRot];
+                            Vec4d nextVec = animationRotations[lastFrameRot+1];
+                            float interP = (t*animationMaxDuration - lastT)/(nextT-lastT);
+                            rotation = slerpRot(lastVec,nextVec,interP);
+                        }
+                    } else {
+                        float lastT = 0.0;
+                        float nextT = animationTimestampsRot[0];
+                        Vec4d lastVec = rotationStart;
+                        Vec4d nextVec = animationRotations[0];
+                        float interP = (t*animationMaxDuration - lastT)/(nextT-lastT);
+                        rotation = slerpRot(lastVec,nextVec,interP);
+                    }
+                }
+                return;
+            };
+
+            auto animRotationStepCB = [&](OSG::VRTransformPtr o, float animationMaxDuration, float t) {
+                if (animationTimestampsRot.size() > 0){
+                    transf[1] = true;
+                    float duration = animationTimestampsRot[animationTimestampsRot.size() - 1];
+                    if (t*animationMaxDuration > animationTimestampsRot[lastFrameRot+1]) lastFrameRot++;
+                    if (t*animationMaxDuration > animationTimestampsRot[0]) {
+                        if (t*animationMaxDuration >= duration) {
+                            return;
+                        } else {
+                            if (t*animationMaxDuration < animationTimestampsRot[1]) lastFrameRot = 0;
+                            Vec4d lastVec = animationRotations[lastFrameRot];
+                            rotation = lastVec;
+                        }
+                    } else {
+                        rotation = rotationStart;
+                    }
+                }
+                return;
+            };
+
+            auto animRotationCubicCB = [&](OSG::VRTransformPtr o, float animationMaxDuration, float t) {
+                if (animationTimestampsRot.size() > 0){
+                    transf[1] = true;
+                    float duration = animationTimestampsRot[animationTimestampsRot.size() - 1];
+                    if (t*animationMaxDuration > animationTimestampsRot[0]) {
+                        if (t*animationMaxDuration > animationTimestampsRot[lastFrameRot+1]) lastFrameRot++;
+                        if (t*animationMaxDuration >= duration) {
+                            return;
+                        } else {
+                            if (t*animationMaxDuration < animationTimestampsRot[1]) lastFrameRot = 0;
+                            float lastT = animationTimestampsRot[lastFrameRot];
+                            float nextT = animationTimestampsRot[lastFrameRot+1];
+                            float deltaT = nextT - lastT;
+
+                            Vec4d lastPos = animationRotations[3*lastFrameRot +1];
+                            Vec4d nextPos = animationRotations[3*(lastFrameRot+1) +1];
+                            lastPos.normalize();
+                            nextPos.normalize();
+
+                            Vec4d inTan  = animationRotations[3*lastFrameRot +0];
+                            Vec4d outTan = animationRotations[3*lastFrameRot +2]*deltaT;
+
+                            float iP = (t*animationMaxDuration - lastT)/(deltaT);
+                            float iPP = iP*iP;
+                            float iPPP = iPP*iP;
+
+                            float s2 = -2.0*iPPP + 3.0*iPP;
+                            float s3 = iPPP - iPP;
+                            float s0 = 1.0-s2;
+                            float s1 = s3 - iPP + iP;
+
+                            rotation = lastPos*s0 + outTan*s1 + nextPos*s2 + inTan*s3;
+                        }
+                    } else {
+                        float lastT = 0.0;
+                        float nextT = animationTimestampsRot[0];
+                        float deltaT = nextT - lastT;
+
+                        Vec4d lastPos = rotationStart;
+                        Vec4d nextPos = animationRotations[1];
+                        lastPos.normalize();
+                        nextPos.normalize();
+
+                        Vec4d inTan  = Vec4d(0,0,0,0);
+                        Vec4d outTan = animationRotations[2]*deltaT;
+
+                        float iP = (t*animationMaxDuration - lastT)/(deltaT);
+                        float iPP = iP*iP;
+                        float iPPP = iPP*iP;
+
+                        float s2 = -2.0*iPPP + 3.0*iPP;
+                        float s3 = iPPP - iPP;
+                        float s0 = 1.0-s2;
+                        float s1 = s3 - iPP + iP;
+
+                        rotation = lastPos*s0 + outTan*s1 + nextPos*s2 + inTan*s3;
+                    }
+                }
+                return;
+            };
+
+            if (animationInterpolationTra == "STEP") animTranslationStepCB( t, maxDuration, tIn );
+            if (animationInterpolationTra == "CUBICSPLINE") animTranslationCubicCB( t, maxDuration, tIn );
+            if (animationInterpolationTra == "LINEAR") animTranslationLinearCB( t, maxDuration, tIn );
+
+            if (animationInterpolationRot == "STEP") animRotationStepCB( t, maxDuration, tIn );
+            if (animationInterpolationRot == "CUBICSPLINE") animRotationCubicCB( t, maxDuration, tIn );
+            if (animationInterpolationRot == "LINEAR") animRotationLinearCB( t, maxDuration, tIn );
+
+            if (animationInterpolationSca == "STEP") animScaleStepCB( t, maxDuration, tIn );
+            if (animationInterpolationSca == "CUBICSPLINE") animScaleCubicCB( t, maxDuration, tIn );
+            if (animationInterpolationSca == "LINEAR") animScaleLinearCB( t, maxDuration, tIn );
+
+            //handleTransform();
+            //pose = Matrix4d(); handleTransform();
+            //if (transf[0] || transf[1] || transf[2]) { pose = Matrix4d(); handleTransform(); }
+            /*if (transf[0]) { handleTranslation(); }
+            if (transf[1]) { handleRotation(); }*/
+            if (transf[2]) { handleTransform(); } else {
+                if (transf[0]) handleTranslation();
+                if (transf[1]) handleRotation();
+            }
+            //if (transf[3]) { pose = mat4; }
+            //t->setMatrix(pose);
+        }
+
+        for (auto c : children) c->applyAnimationFrame(maxDuration, tIn);
+        return 0;
+    }
+
+    float primeAnimations(float maxDuration = 0.0){
         VRTransformPtr t = dynamic_pointer_cast<VRTransform>(obj);
         if (t) {
             translationStart = translation;
@@ -707,39 +1109,40 @@ struct GLTFNNode : GLTFNode{
 
             if (animationTranslations.size() > 0) {
                 float duration = animationTimestampsTra[animationTimestampsTra.size() - 1];
-                VRAnimCbPtr fkt = 0;
-                if (animationInterpolationTra == "STEP") fkt = VRAnimCb::create("animTra", bind(animTranslationStepCB, t, duration, _1) );
-                if (animationInterpolationTra == "CUBICSPLINE") fkt = VRAnimCb::create("animRot", bind(animTranslationCubicCB, t, duration, _1) );
-                if (!fkt) fkt = VRAnimCb::create("animTra", bind(animTranslationLinearCB, t, duration, _1) );
-                VRAnimationPtr animptr = VRScene::getCurrent()->addAnimation<float>(animationMaxDuration, 0.f, fkt, 0.f, 1.f, true, true);
-                t->addAnimation(animptr);
+                if (duration > maxDuration) maxDuration = duration;
             }
 
             if (animationScales.size() > 0) {
                 float duration = animationTimestampsSca[animationTimestampsSca.size() - 1];
-                VRAnimCbPtr fkt = 0;
-                if (animationInterpolationSca == "STEP") fkt = VRAnimCb::create("animSca", bind(animScaleStepCB, t, duration, _1) );
-                if (animationInterpolationSca == "CUBICSPLINE") fkt = VRAnimCb::create("animSca", bind(animScaleCubicCB, t, duration, _1) );
-                if (!fkt) fkt = VRAnimCb::create("animSca", bind(animScaleLinearCB, t, duration, _1) );
-                VRAnimationPtr animptr = VRScene::getCurrent()->addAnimation<float>(animationMaxDuration, 0.f, fkt, 0.f, 1.f, true, true);
-                t->addAnimation(animptr);
+                if (duration > maxDuration) maxDuration = duration;
             }
 
             if (animationRotations.size() > 0) {
                 float duration = animationTimestampsRot[animationTimestampsRot.size() - 1];
-                VRAnimCbPtr fkt = 0;
-                if (animationInterpolationRot == "STEP") fkt = VRAnimCb::create("animRot", bind(animRotationStepCB, t, duration, _1) );
-                if (animationInterpolationRot == "CUBICSPLINE") fkt = VRAnimCb::create("animRot", bind(animRotationCubicCB, t, duration, _1) );
-                //if (animationInterpolationRot == "CUBICSPLINE") cout << toString(animationRotations) << endl;
-                if (!fkt) fkt = VRAnimCb::create("animRot", bind(animRotationLinearCB, t, duration, _1) );
-                VRAnimationPtr animptr = VRScene::getCurrent()->addAnimation<float>(animationMaxDuration, 0.f, fkt, 0.f, 1.f, true, true);
-                t->addAnimation(animptr);
-                //cout << " applyAnimations: transform found anim on" << " -n: '" << name << "' -t: '" <<  type << "' - animName: '" << animptr->getName() << "'" << endl;
+                if (duration > maxDuration) maxDuration = duration;
             }
         }
+        for (auto c : children) {
+            float res = c->primeAnimations();
+            if (res > maxDuration) maxDuration = res;
+        }
+        return maxDuration;
+    }
 
-        for (auto c : children) c->applyAnimations();
-        return t;
+    void initAnimations() {
+        auto animCB = [&](float maxDuration, float t) {
+            applyAnimationFrame(maxDuration, t);
+            //applyTransformations();
+            return;
+        };
+
+        VRTransformPtr t = dynamic_pointer_cast<VRTransform>(obj);
+        if (t) {
+            float maxDuration = primeAnimations();
+            VRAnimCbPtr fkt = VRAnimCb::create("anim", bind(animCB, maxDuration, _1) );
+            VRAnimationPtr animptr = VRScene::getCurrent()->addAnimation<float>(maxDuration, 0.f, fkt, 0.f, 1.f, true, true);
+            t->addAnimation(animptr);
+        }
     }
 };
 
@@ -1343,6 +1746,22 @@ class GLTFLoader : public GLTFUtils {
             return true;
         }
 
+        void setupAnimations() {
+            auto animCB = [&](float duration, float t) {
+                //tree->applyAnimationFrame(t);
+                cout << endl;
+                return;
+            };
+
+            VRTransformPtr t = dynamic_pointer_cast<VRTransform>(tree->obj);
+            if (t) {
+                float duration = 5.0;
+                VRAnimCbPtr fkt = VRAnimCb::create("anim", bind(animCB,duration, _1) );
+                VRAnimationPtr animptr = VRScene::getCurrent()->addAnimation<float>(duration, 0.f, fkt, 0.f, 1.f, true, true);
+                t->addAnimation(animptr);
+            } else cout << "no Tree found" << endl;
+        }
+
     public:
         GLTFLoader(string p, VRTransformPtr r, VRProgressPtr pr, bool t) : path(p), res(r), progress(pr), threaded(t) {}
 
@@ -1399,9 +1818,10 @@ class GLTFLoader : public GLTFUtils {
                 tree->applyTransformations();
                 tree->applyMaterials();
                 tree->applyGeometries();
-                tree->applyAnimations();
+                //tree->applyAnimations();
                 tree->resolveLinks(references);
                 //tree->print();
+                tree->initAnimations();
                 progress->finish();
             }
             return;
