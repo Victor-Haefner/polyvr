@@ -30,6 +30,7 @@ class VRSyncRemote {//: public VRName {
 
 class VRSyncNode : public VRTransform {
     private:
+        typedef unsigned char BYTE;
         VRSocketPtr socket;
         VRFunction<void*>* socketCb;
         VRUpdateCbPtr updateFkt;
@@ -37,6 +38,7 @@ class VRSyncNode : public VRTransform {
         vector<UInt32> createdNodes; //IDs of the currently created nodes/children
 
         map<int, int> container; // local containers, sub-set of containers which need to be synced for collaboration
+        //vector<int> cores; //lists IDs of nodecores
         vector<UInt32> syncedContainer; //Id's of container that got changes over sync (changed by remote). Needed to filter out sync changes from local Changelist to prevent cycles.
         map<string, VRSyncRemotePtr> remotes;
         map<int, int> remoteToLocalID;
@@ -48,6 +50,7 @@ class VRSyncNode : public VRTransform {
         vector<FieldContainer*> getTransformationContainer(ChangeList* cl); //deprecated
         //vector<OSG::Field
 
+        void serialize_entry(ContainerChangeEntry* entry, vector<BYTE>& data, int syncNodeID);
         string serialize(ChangeList* clist);
         void deserializeAndApply(string& data);
 
