@@ -13,7 +13,7 @@ OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 
-VRObjectPtr VRAvatar::initRay(int beaconID, Vec3d dir) {
+VRObjectPtr VRAvatar::initRay(int beaconID, const Vec3d& dir) {
     VRGeoData rayData;
     int N = 100;
     float L = 50;
@@ -78,7 +78,7 @@ void VRAvatar::enableAvatar(string avatar, int i) { if (beacons[i].avatars.count
 void VRAvatar::disableAvatar(string avatar, int i) { if (beacons[i].avatars.count(avatar)) beacons[i].avatars[avatar]->hide(); }
 
 
-int VRAvatar::addBeacon(Vec3d castDir) {
+int VRAvatar::addBeacon(const Vec3d& castDir) {
     map<string, VRObjectPtr> m;
     Beacon newB{0, 0, m};
     beacons.push_back(newB);

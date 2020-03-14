@@ -2,7 +2,7 @@
 #define VRSCENEGRAPHINTERFACE_H_INCLUDED
 
 #include <OpenSG/OSGConfig.h>
-#include <OpenSG/OSGVector.h>
+#include "core/math/OSGMathFwd.h"
 #include <map>
 
 #include "core/objects/object/VRObject.h"
@@ -16,16 +16,7 @@ using namespace std;
 
 class VRScenegraphInterface : public VRObject {
     public:
-        struct Mate {
-            VRTransformPtr a0;
-            VRTransformPtr b0;
-            vector<int> DoF0;
-            pair<PosePtr, PosePtr> C_AandB0;
-            PosePtr C0;
-            Vec3d IjkA0;
-            string TypeC0;
-            vector<float> MinMax;
-        };
+        struct Mate;
 
     private:
         int port = 5555;

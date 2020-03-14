@@ -1,7 +1,7 @@
 #ifndef VRENTITY_H_INCLUDED
 #define VRENTITY_H_INCLUDED
 
-#include <OpenSG/OSGVector.h>
+#include "core/math/OSGMathFwd.h"
 #include "VROntologyUtils.h"
 #include "VRProperty.h"
 #include "core/utils/VRName.h"

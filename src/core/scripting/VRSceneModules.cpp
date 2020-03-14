@@ -99,9 +99,6 @@
 #ifndef WITHOUT_CGAL
 #include "addons/Engineering/CSG/VRPyCSG.h"
 #endif
-#ifndef WASM
-#include "addons/RealWorld/VRPyRealWorld.h"
-#endif
 #include "addons/SimViDekont/VRPySimViDekont.h"
 #include "addons/Semantics/Reasoning/VRPyOntology.h"
 #include "addons/LeapMotion/VRPyHandGeo.h"
@@ -250,9 +247,6 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
 
 #ifndef WITHOUT_CGAL
 	sm->registerModule<VRPyCSG>("CSGGeometry", pModVR, VRPyGeometry::typeRef);
-#endif
-#ifndef WASM
-	sm->registerModule<VRPyRealWorld>("RealWorld", pModVR, VRPyObject::typeRef);
 #endif
 	sm->registerModule<VRPySimViDekont>("SimViDekont", pModVR);
 

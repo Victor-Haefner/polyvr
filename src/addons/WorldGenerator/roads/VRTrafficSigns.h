@@ -2,7 +2,7 @@
 #define VRTRAFFICSIGNS_H_INCLUDED
 
 #include <map>
-#include <OpenSG/OSGVector.h>
+#include "core/math/OSGMathFwd.h"
 #include "VRRoadBase.h"
 #include "core/objects/VRObjectFwd.h"
 #include "core/objects/VRTransform.h"

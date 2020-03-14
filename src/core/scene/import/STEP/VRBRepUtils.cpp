@@ -1,4 +1,5 @@
 #include "VRBRepUtils.h"
+#include <OpenSG/OSGVector.h>
 
 using namespace OSG;
 

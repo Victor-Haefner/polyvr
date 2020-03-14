@@ -1,7 +1,7 @@
 #ifndef VRNORMALMAP_H_INCLUDED
 #define VRNORMALMAP_H_INCLUDED
 
-#include <OpenSG/OSGVector.h>
+#include "core/math/OSGMathFwd.h"
 #include <OpenSG/OSGColor.h>
 
 OSG_BEGIN_NAMESPACE;

@@ -1,11 +1,14 @@
 #ifndef VRROBOTARM_H_INCLUDED
 #define VRROBOTARM_H_INCLUDED
 
-#include <OpenSG/OSGVector.h>
+#include "core/math/OSGMathFwd.h"
 #include "core/utils/VRFunctionFwd.h"
 #include "core/objects/VRObjectFwd.h"
 #include "core/tools/VRToolsFwd.h"
 #include "core/math/VRMathFwd.h"
+
+#include <list>
+#include <vector>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;

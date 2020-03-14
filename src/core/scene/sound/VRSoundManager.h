@@ -1,8 +1,9 @@
 #ifndef VRSOUNDMANAGER_H_INCLUDED
 #define VRSOUNDMANAGER_H_INCLUDED
 
-#include <OpenSG/OSGVector.h>
+#include "core/math/OSGMathFwd.h"
 #include <map>
+#include <vector>
 
 #include "VRSoundFwd.h"
 #include "core/utils/VRFunctionFwd.h"

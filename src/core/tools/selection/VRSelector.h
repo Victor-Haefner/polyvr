@@ -2,7 +2,7 @@
 #define VRSELECTOR_H_INCLUDED
 
 #include <OpenSG/OSGConfig.h>
-#include <OpenSG/OSGVector.h>
+#include "core/math/OSGMathFwd.h"
 #include <OpenSG/OSGColor.h>
 #include <string>
 #include <map>

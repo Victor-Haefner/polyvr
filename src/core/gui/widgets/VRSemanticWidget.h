@@ -2,7 +2,7 @@
 #define VRSEMANTICWIDGET_H_INCLUDED
 
 #include <string>
-#include <OpenSG/OSGVector.h>
+#include "core/math/OSGMathFwd.h"
 #include <gtkmm/treemodel.h>
 
 #include "core/gui/VRGuiFwd.h"

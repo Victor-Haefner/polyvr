@@ -2,7 +2,7 @@
 #define VRTEXTURE_H_INCLUDED
 
 #include <OpenSG/OSGSField.h>
-#include <OpenSG/OSGVector.h>
+#include "core/math/OSGMathFwd.h"
 #include <OpenSG/OSGColor.h>
 #include <OpenSG/OSGImage.h>
 

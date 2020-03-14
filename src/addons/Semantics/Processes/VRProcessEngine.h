@@ -6,7 +6,7 @@
 #include "core/utils/VRFunctionFwd.h"
 #include "core/math/VRStateMachine.h"
 #include <map>
-#include <OpenSG/OSGVector.h>
+#include "core/math/OSGMathFwd.h"
 
 using namespace std;
 OSG_BEGIN_NAMESPACE;

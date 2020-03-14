@@ -15,7 +15,7 @@ static const int TexCoords6Index      = 14;
 static const int TexCoords7Index      = 15;
 
 #include "core/objects/VRObjectFwd.h"
-#include <OpenSG/OSGVector.h>
+#include "core/math/OSGMathFwd.h"
 #include <OpenSG/OSGMatrix.h>
 #include <OpenSG/OSGConfig.h>
 #include <OpenSG/OSGColor.h>
