@@ -596,6 +596,7 @@
 		<Unit filename="src/core/math/Eigendecomposition.h" />
 		<Unit filename="src/core/math/Expression.cpp" />
 		<Unit filename="src/core/math/Expression.h" />
+		<Unit filename="src/core/math/OSGMathFwd.cpp" />
 		<Unit filename="src/core/math/Octree.cpp" />
 		<Unit filename="src/core/math/Octree.h" />
 		<Unit filename="src/core/math/PCA.cpp" />

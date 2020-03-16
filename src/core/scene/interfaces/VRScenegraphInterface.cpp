@@ -9,6 +9,7 @@
 #include "core/objects/material/VRMaterial.h"
 #include "core/tools/selection/VRSelector.h"
 #include "core/math/kinematics/VRConstraint.h"
+#include "core/objects/object/VRObjectT.h"
 
 #include <boost/bind.hpp>
 #include <OpenSG/OSGMatrix.h>
@@ -1122,9 +1123,12 @@ void VRScenegraphInterface::handle(string msg) {
 		}
 
 		if (m[1] == "visible") {
-		    if (toInt(m[3]) == 0) cout << " HIDE " << objID << " " << trans << " " << obj << endl;
-			//if (trans) trans->setVisible(toInt(m[3]));
-			if (obj) obj->setVisible(toInt(m[3]));
+            bool v = toInt(m[3]);
+		    //if (!v) cout << " HIDE " << objID << " " << trans << " " << obj << endl;
+			if (obj) {
+                obj->setVisible(v);
+                obj->addAttachment("CAD_visibility", v);
+            }
 		}
 
 		if (m[1] == "Material") {

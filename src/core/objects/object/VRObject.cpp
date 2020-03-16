@@ -1,4 +1,5 @@
 #include "VRObject.h"
+#include "VRAttachment.h"
 #include "OSGCore.h"
 #include "../OSGObject.h"
 #include "../VRTransform.h"
@@ -73,6 +74,8 @@ VRObject::~VRObject() {
     NodeMTRecPtr p;
     if (osg->node) p = osg->node->getParent();
     if (p) p->subChild(osg->node);
+    for (auto a : attachments) delete a.second;
+    attachments.clear();
 }
 
 Matrix4d VRObject::getMatrixTo(VRObjectPtr obj, bool parentOnly) {
@@ -158,7 +161,21 @@ int VRObject::getID() { return ID; }
 string VRObject::getType() { return type; }
 void VRObject::addTag(string name) { addAttachment(name, 0); }
 bool VRObject::hasTag(string name) { return attachments.count(name); }
-void VRObject::remTag(string name) { attachments.erase(name); }
+void VRObject::remTag(string name) { remAttachment(name); }
+
+void VRObject::remAttachment(string name) {
+    if (attachments.count(name)) {
+        delete attachments[name];
+        attachments.erase(name);
+    }
+}
+
+string VRObject::getAttachmentAsString(string name) {
+    if (attachments.count(name)) {
+        return attachments[name]->asString();
+    }
+    return "";
+}
 
 vector<string> VRObject::getTags() {
     vector<string> res;
