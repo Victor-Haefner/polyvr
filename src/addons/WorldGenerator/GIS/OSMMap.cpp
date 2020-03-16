@@ -18,6 +18,12 @@
     http://wiki.openstreetmap.org/wiki/Map_Features
 */
 
+/* TESTING GDAL
+	filepath = 'test.json'
+	VR.map = VR.OSMMap()
+	VR.map.readGEOJSON(filepath)
+*/
+
 using namespace OSG;
 
 //template<> string typeName(const OSMMap& t) { return "OSMMap"; }
@@ -842,20 +848,6 @@ void OSMMap::readFile(string path) {
 
 void OSMMap::readGEOJSON(string path) {
 #ifndef WITHOUT_GDAL
-#if GDAL_VERSION_NUM >= GDAL_COMPUTE_VERSION(2,3,0)
-#else if GDAL_VERSION_NUM >= GDAL_COMPUTE_VERSION(2,0,0)
-    VRTimer t; t.start();
-    GDALAllRegister();
-    GDALDataset* poDS = (GDALDataset *) GDALOpenEx( path.c_str(), GDAL_OF_VECTOR, NULL, NULL, NULL  );
-    if( poDS == NULL ) { printf( "Open failed.\n" ); return; }
-    // general information
-    cout << "OSMMap::readGEOJSON path " << path << endl;
-    printf( "  Driver: %s/%s\n", poDS->GetDriver()->GetDescription(), poDS->GetDriver()->GetMetadataItem( GDAL_DMD_LONGNAME ) );
-
-    int layercount = poDS->GetLayerCount();
-    int nodeID = -1;
-    int wayID = -1;
-
     auto coordsFromString = [&](string inB) {
         //string has format: "lon lat"
         int at1 = inB.find_first_of(" ");
@@ -902,6 +894,24 @@ void OSMMap::readGEOJSON(string path) {
         }
         return res;
     };
+
+    cout << "OSMMap::readGEOJSON path " << path << endl;
+    cout << "  GDAL Version Nr:" << GDAL_VERSION_NUM << endl;
+
+    int nodeID = -1;
+    int wayID = -1;
+    int layercount = -1;
+    VRTimer t; t.start();
+#if GDAL_VERSION_NUM >= GDAL_COMPUTE_VERSION(2,3,0)
+#elif GDAL_VERSION_NUM >= GDAL_COMPUTE_VERSION(2,0,0)
+    GDALAllRegister();
+    GDALDataset* poDS = (GDALDataset *) GDALOpenEx( path.c_str(), GDAL_OF_VECTOR, NULL, NULL, NULL  );
+    //GDALDataset* poDS = (GDALDataset *) GDALOpen( path.c_str(), GA_ReadOnly );
+    if( poDS == NULL ) { printf( "Open failed.\n" ); return; }
+    // general information
+    printf( "  Driver: %s/%s\n", poDS->GetDriver()->GetDescription(), poDS->GetDriver()->GetMetadataItem( GDAL_DMD_LONGNAME ) );
+
+    layercount = poDS->GetLayerCount();
 
     for (int i = 0; i < layercount; i++) {
         OGRLayer  *poLayer = poDS->GetLayer(i);
@@ -965,10 +975,10 @@ void OSMMap::readGEOJSON(string path) {
     }
 
     GDALClose(poDS);
+#endif // GDAL_VERSION_NUM
     auto t2 = t.stop()/1000.0;
     cout << "  loaded " << ways.size() << " ways, " << nodes.size() << " nodes and " << relations.size() << " relations" << endl;
     cout << "  secs needed: " << t2 << endl;
-#endif // GDAL_VERSION_NUM
 #endif // WITHOUT_GDAL
 }
 
@@ -976,7 +986,7 @@ void OSMMap::readSHAPE(string path) {
 #ifndef WITHOUT_GDAL
 #if GDAL_VERSION_NUM >= GDAL_COMPUTE_VERSION(2,3,0)
 
-#else if GDAL_VERSION_NUM >= GDAL_COMPUTE_VERSION(2,0,0)
+#elif GDAL_VERSION_NUM >= GDAL_COMPUTE_VERSION(2,0,0)
     VRTimer t; t.start();
     GDALAllRegister();
     GDALDataset* poDS = (GDALDataset *) GDALOpenEx( path.c_str(), GDAL_OF_VECTOR, NULL, NULL, NULL  );
