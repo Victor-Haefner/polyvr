@@ -264,11 +264,11 @@ struct GLTFNode : GLTFUtils {
 
     void handleTransform() {
         Vec3d center = Vec3d(0,0,0);
-        Vec4d scaleOrientation = Vec4d(0,0,1,0);
+        Vec4d scaleOrientation = Vec4d(1,0,0,0);
         Matrix4d m1; m1.setTranslate(translation+center); m1.setRotate( Quaterniond( rotation[0], rotation[1], rotation[2], rotation[3] ) );
-        Matrix4d m2; m2.setRotate( Quaterniond( Vec3d( scaleOrientation[0], scaleOrientation[1], scaleOrientation[2] ), scaleOrientation[3] ) );
+        Matrix4d m2; m2.setRotate( Quaterniond( scaleOrientation[0], scaleOrientation[1], scaleOrientation[2] , scaleOrientation[3] ) );
         Matrix4d m3; m3.setScale(scale);
-        Matrix4d m4; m4.setTranslate(-center); m4.setRotate( Quaterniond( Vec3d( scaleOrientation[0], scaleOrientation[1], scaleOrientation[2] ), -scaleOrientation[3] ) );
+        Matrix4d m4; m4.setTranslate(-center); m4.setRotate( Quaterniond( scaleOrientation[0], scaleOrientation[1], scaleOrientation[2] , -scaleOrientation[3] ) );
         Matrix4d M = m1; M.mult(m2); M.mult(m3); M.mult(m4);
         pose = M;
     }
@@ -286,10 +286,10 @@ struct GLTFNode : GLTFUtils {
         for (auto c : children) c->buildOSG();
     }
 
-    virtual Matrix4d applyTransformations(Matrix4d m = Matrix4d()) = 0;
-    virtual VRMaterialPtr applyMaterials() = 0;
-    virtual VRGeoData applyGeometries() = 0;
-    virtual VRTransformPtr applyAnimations() = 0;
+    virtual void applyTransformations() = 0;
+    virtual void applyMaterials() = 0;
+    virtual void applyGeometries() = 0;
+    virtual void applyAnimations() = 0;
     virtual bool applyAnimationFrame(float maxDuration, float tIn) = 0;
     virtual void initAnimations() = 0;
     virtual float primeAnimations(float macDuration = 0.0) = 0;
@@ -304,15 +304,14 @@ struct GLTFNNode : GLTFNode{
     GLTFNNode(string type, string name = "Unnamed") : GLTFNode(type, name) { version = 2; }
     ~GLTFNNode() {}
 
-    Matrix4d applyTransformations(Matrix4d m = Matrix4d()) {
+    void applyTransformations() {
         VRTransformPtr t = dynamic_pointer_cast<VRTransform>(obj);
         if (t) t->setMatrix(pose);
 
-        for (auto c : children) c->applyTransformations(m);
-        return m;
+        for (auto c : children) c->applyTransformations();
     }
 
-    VRMaterialPtr applyMaterials() {
+    void applyMaterials() {
         if (isGeometryNode(type)) {
             VRGeometryPtr g = dynamic_pointer_cast<VRGeometry>(obj);
             if (g) {
@@ -323,10 +322,9 @@ struct GLTFNNode : GLTFNode{
         }
 
         for (auto c : children) c->applyMaterials();
-        return material;
     }
 
-    VRGeoData applyGeometries() {
+    void applyGeometries() {
         if (type == "Mesh" || type == "Primitive") {
             VRGeometryPtr g = dynamic_pointer_cast<VRGeometry>(obj);
             if (g) {
@@ -336,10 +334,9 @@ struct GLTFNNode : GLTFNode{
         }
 
         for (auto c : children) c->applyGeometries();
-        return geoData;
     }
 
-    VRTransformPtr applyAnimations() {
+    void applyAnimations() {
         auto slerp3d = [&](Vec3d v0, Vec3d v1, double t) { return v0 + (v1-v0)*t; };
 
         auto animTranslationLinearCB = [&](OSG::VRTransformPtr o, float duration, float t) {
@@ -702,7 +699,7 @@ struct GLTFNNode : GLTFNode{
 
         VRTransformPtr t = dynamic_pointer_cast<VRTransform>(obj);
         //for (auto c : children) c->applyAnimations();
-        return t;
+        //return t;
     }
 
     bool applyAnimationFrame(float maxDuration, float tIn) {
@@ -1085,12 +1082,12 @@ struct GLTFNNode : GLTFNode{
             //handleTransform();
             //pose = Matrix4d(); handleTransform();
             //if (transf[0] || transf[1] || transf[2]) { pose = Matrix4d(); handleTransform(); }
-            /*if (transf[0]) { handleTranslation(); }
-            if (transf[1]) { handleRotation(); }*/
-            if (transf[2]) { handleTransform(); } else {
+            if (transf[0]) { handleTranslation(); }
+            if (transf[1]) { handleRotation(); }
+            if (transf[2]) { handleTransform(); } /*else {
                 if (transf[0]) handleTranslation();
                 if (transf[1]) handleRotation();
-            }
+            }*/
             //if (transf[3]) { pose = mat4; }
             //t->setMatrix(pose);
         }
@@ -1132,7 +1129,7 @@ struct GLTFNNode : GLTFNode{
     void initAnimations() {
         auto animCB = [&](float maxDuration, float t) {
             applyAnimationFrame(maxDuration, t);
-            //applyTransformations();
+            applyTransformations();
             return;
         };
 
@@ -1818,7 +1815,6 @@ class GLTFLoader : public GLTFUtils {
                 tree->applyTransformations();
                 tree->applyMaterials();
                 tree->applyGeometries();
-                //tree->applyAnimations();
                 tree->resolveLinks(references);
                 //tree->print();
                 tree->initAnimations();
