@@ -58,6 +58,7 @@ class VRRobotArm {
         void calcReverseKinematicsAubo(PosePtr p);
 
         void update();
+        double convertAngle(double a, int i);
         void applyAngles();
         void calcReverseKinematics(PosePtr p);
         void animOnPath(float t);
@@ -87,7 +88,7 @@ class VRRobotArm {
         bool isMoving();
 
         void moveTo(PosePtr p);
-        void setAngles(vector<float> angles);
+        void setAngles(vector<float> angles, bool force = false);
         void setGrab(float g);
         void toggleGrab();
 

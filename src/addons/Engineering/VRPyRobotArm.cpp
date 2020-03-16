@@ -19,7 +19,7 @@ PyMethodDef VRPyRobotArm::methods[] = {
     {"moveTo", PyWrap(RobotArm, moveTo, "Move the end effector to a certain position - moveTo([x,y,z])", void, PosePtr ) },
     {"setGrab", PyWrap(RobotArm, setGrab, "Set grab state - setGrab(float d)\n d: 0 is closed, 1 is open", void, float ) },
     {"toggleGrab", PyWrap(RobotArm, toggleGrab, "Toggle the grab - toggleGrab()", void ) },
-    {"setAngles", PyWrap(RobotArm, setAngles, "Set joint angles - setAngles( angles )", void, vector<float> ) },
+    {"setAngles", PyWrapOpt(RobotArm, setAngles, "Set joint angles - setAngles( angles, force )", "0", void, vector<float>, bool ) },
     {"getAngles", PyWrap(RobotArm, getAngles, "Get joint angles - getAngles()", vector<float> ) },
     //{"getForwardKinematics", PyWrap(RobotArm, getForwardKinematics, "Get end effector pose from angles - p,d,u getForwardKinematics( angles )") },
     //{"getBackwardKinematics", PyWrap(RobotArm, getBackwardKinematics, "Get angles from end effector pose - angles getBackwardKinematics( p,d,u )") },

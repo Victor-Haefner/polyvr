@@ -57,11 +57,15 @@ void VRRobotArm::applyAngles() {
     }
 }
 
+double VRRobotArm::convertAngle(double a, int i) {
+     return angle_directions[i]*a + angle_offsets[i]*Pi;
+}
+
 void VRRobotArm::update() { // update robot joint angles
     bool m = false;
 
     for (int i=0; i<N; i++) {
-        double a = angle_directions[i]*angle_targets[i] + angle_offsets[i]*Pi;
+        double a = convertAngle(angle_targets[i], i);
         double da = a - angles[i];
         if (isNan(da)) continue;
         while (da >  Pi) da -= 2*Pi;
@@ -303,7 +307,14 @@ void VRRobotArm::stop() {
     anim->stop();
 }
 
-void VRRobotArm::setAngles(vector<float> angles) { this->angle_targets = angles; }
+void VRRobotArm::setAngles(vector<float> angles, bool force) {
+    this->angle_targets = angles;
+    if (force) {
+        for (int i=0; i<N; i++) this->angles[i] = convertAngle(angles[i], i);
+        applyAngles();
+    }
+}
+
 void VRRobotArm::setMaxSpeed(float s) { maxSpeed = s; }
 
 PosePtr VRRobotArm::getKukaPose() {
