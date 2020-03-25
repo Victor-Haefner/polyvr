@@ -368,30 +368,21 @@ void VRSyncNode::deserializeAndApply(string& data) {
         cout << "deserialize > > > sentry: " << sentry.localId << " " << sentry.fieldMask << " " << sentry.len << " desc " << sentry.uiEntryDesc << " syncID " << sentry.syncNodeID << " at pos " << pos << endl;
 
         pos += sizeof(SerialEntry);
-//        cout << "handler data pos " << pos << endl;
         vector<BYTE> FCdata;
         FCdata.insert(FCdata.end(), vec.begin()+pos, vec.begin()+pos+sentry.len);
         pos += sentry.len;
-//        cout << "children data pos " << pos << endl;
         vector<BYTE> children;
-        children.insert(children.end(), vec.begin()+pos, vec.begin()+pos+sentry.clen*sizeof(int)); //TODO: check if deserialization is working
-        vector<int> IDs;
+        children.insert(children.end(), vec.begin()+pos, vec.begin()+pos+sentry.clen*sizeof(int));
+        vector<int> childIDs;
         cout << "children.size " << children.size() << endl;
-        for (int i = 0; i < children.size(); i+=4) {
+        for (int i = 0; i < children.size(); i+=4) { //NOTE: int can be either 4 (assumed here) or 2 bytes, depending on system
             int val;
             memcpy(&val, &children[i], sizeof(int));
-            IDs.push_back(val);
-        }
-
-        cout << "sentry.childIds | IDs " << sentry.childIDs.size() << " " << IDs.size() << endl;
-        for (int i = 0; i < IDs.size(); ++i) {
-//                int val = children[i];
-                cout << sentry.childIDs[i] << " | " << IDs[i] << endl;
-
+            childIDs.push_back(val);
+            sentry.childIDs[i] = val;
         }
 
         pos += sizeof(int)*sentry.clen;
-//        cout << "next entry pos " << pos << endl;
         counter++;
         //if (sentry.uiEntryDesc == ContainerChangeEntry::Create) entryCreate[sentry.syncNodeID] = &sentry;
         //else
@@ -479,8 +470,10 @@ void VRSyncNode::deserializeAndApply(string& data) {
         handler.data.insert(handler.data.end(), FCdata.begin(), FCdata.end()); //feed handler with FCdata
         fcPtr->copyFromBin(handler, sentry.fieldMask); //calls handler->read
         if (id != -1) {
-            syncedContainer.push_back(id);
-            cout << "syncedContainer.push_back " << id << endl;
+            if (count(syncedContainer.begin(), syncedContainer.end(), id) < 1) {
+                syncedContainer.push_back(id);
+                cout << "syncedContainer.push_back " << id << endl;
+            }
         }
     }
 
@@ -601,7 +594,9 @@ void VRSyncNode::update() {
         UInt32 id = entry->uiContainerId;
         //TODO: ignore core created somehow to have less created to handle on remote side
         if (container.count(id)) {
-            localChanges->addChange(entry);
+            if (::find(syncedContainer.begin(), syncedContainer.end(), id) == syncedContainer.end()) { / TODO: optimize by reorganizing if clauses
+                localChanges->addChange(entry);
+            }
             //cout << "add created " << entry->uiContainerId << endl;
             createdNodes.push_back(id);
             counter++;
@@ -618,7 +613,9 @@ void VRSyncNode::update() {
         UInt32 id = entry->uiContainerId;
         if (::find(createdNodes.begin(), createdNodes.end(), id) != createdNodes.end()) {
             //cout << "created FC entry type " << entry->uiEntryDesc << endl;
-            localChanges->addChange(entry);
+            if (::find(syncedContainer.begin(), syncedContainer.end(), id) == syncedContainer.end()) { // TODO: optimize by reorganizing if clauses
+                localChanges->addChange(entry);
+            }
             //cout << "add created " << entry->uiEntryDesc << " " << entry->uiContainerId << endl;
         }
         if (container.count(id)) counter ++;
