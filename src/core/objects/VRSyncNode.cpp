@@ -371,19 +371,22 @@ void VRSyncNode::deserializeAndApply(string& data) {
         vector<BYTE> FCdata;
         FCdata.insert(FCdata.end(), vec.begin()+pos, vec.begin()+pos+sentry.len);
         pos += sentry.len;
-        vector<BYTE> children;
-        children.insert(children.end(), vec.begin()+pos, vec.begin()+pos+sentry.clen*sizeof(int));
-        vector<int> childIDs;
-        cout << "children " << children.size() << endl;
-        for (int i = 0; i < children.size(); i+=4) { //NOTE: int can be either 4 (assumed here) or 2 bytes, depending on system
-            int val;
-            memcpy(&val, &children[i], sizeof(int));
-            childIDs.push_back(val);
-            sentry.childIDs[i] = val;
 
+        // if the Children FM changed, update the children
+        if (sentry.fieldMask & Node::ChildrenFieldMask) {
+            vector<BYTE> children;
+            children.insert(children.end(), vec.begin()+pos, vec.begin()+pos+sentry.clen*sizeof(int));
+            vector<int> childIDs;
+            cout << "children " << children.size() << endl;
+            for (int i = 0; i < children.size(); i+=4) { //NOTE: int can be either 4 (assumed here) or 2 bytes, depending on system
+                int val;
+                memcpy(&val, &children[i], sizeof(int));
+                childIDs.push_back(val);
+                sentry.childIDs[i] = val;
+            }
         }
-        for (int i = 0; i<childIDs.size(); i++) {
-            cout << childIDs[i] << endl;
+        for (int i = 0; i<sentry.childIDs.size(); i++) {
+            cout << sentry.childIDs[i] << endl;
         }
 
         pos += sizeof(int)*sentry.clen;
@@ -407,12 +410,11 @@ void VRSyncNode::deserializeAndApply(string& data) {
                 }
             }
         }
-        //continue;
 
         FieldContainerRecPtr fcPtr = nullptr; // Field Container to apply changes to
 //        if (id == -1) continue;
         // if fc does not exist we need to create a new fc = node
-        if (sentry.uiEntryDesc == ContainerChangeEntry::Create && id == -1) { //if create and not registered
+        if ( id == -1) { //if create and not registered | sentry.uiEntryDesc == ContainerChangeEntry::Create &&
 //            FieldContainerRecPtr fcPtr;
             UInt32 typeID = sentry.fcTypeID;
             FieldContainerType* fcType = factory->findType(typeID);
@@ -422,6 +424,9 @@ void VRSyncNode::deserializeAndApply(string& data) {
             registerContainer(fcPtr.get(), sentry.syncNodeID);
             id = fcPtr.get()->getId();
 
+            //find parent
+
+
             if (fcType->isNode()){
                 cout << "is node" << endl;
                 Node* node = dynamic_cast<Node*>(fcPtr.get());
@@ -429,6 +434,8 @@ void VRSyncNode::deserializeAndApply(string& data) {
                 cout << "created Node " << node->getId() << endl;
                 cout << "parent " << parent << endl;
                 cout << "added to parent " << parent->getId() << endl;
+                //TODO
+                //FieldContainer* parent = getParentFC(node->getId());
                 parent->addChild(node);
             }
 
@@ -445,11 +452,19 @@ void VRSyncNode::deserializeAndApply(string& data) {
                         node->setCore(core);
                         cout << "added core " << core->getId() << " to node " << node->getId() << endl;
                     }
+                    //TODO: if no node was found, this core is not referenced and the fc get deleted
+                    //create node with syncID-1
+                    else {
+                        NodeRefPtr nodePtr = Node::create();
+                        Node* node = nodePtr.get();
+                        //TODO
+                        //FieldContainer* parent = getParentFC(node->getId());
+                        node->setCore(core);
+                        parent->addChild(node);
+                    }
                 }
-                cout << "created Core " << endl;
             }
         }
-        //if (sentry.uiEntryDesc == ContainerChangeEntry::Change) {
         else {
             fcPtr = factory->getContainer(id);
         }
@@ -458,6 +473,7 @@ void VRSyncNode::deserializeAndApply(string& data) {
         //fc = factory->getContainer(id);
         //  - get fieldcontainer using correct ID
         if(fcPtr == nullptr) {cout << "no container found with id " << id << " syncNodeID " << sentry.syncNodeID << endl; continue;} //TODO: This is causing the WARNING: Action::recurse: core is NULL, aborting traversal.
+
         //did the children field mask change?
         if (sentry.fieldMask & Node::ChildrenFieldMask) {
             //set parent for next entry
@@ -573,7 +589,21 @@ void VRSyncNode::update() {
                         cout << "register child for node " << node->getId() << " entry type " << entry->uiEntryDesc << endl;
                         vector<int> newNodes = registerNode(child);
                         //createdNodes.push_back(child->getId()); //TODO
-                        createdNodes.insert(createdNodes.end(), newNodes.begin(), newNodes.end());
+//                        createdNodes.insert(createdNodes.end(), newNodes.begin(), newNodes.end());
+                        for (int i = 0; i<newNodes.size(); ++i){
+                            createdNodes.push_back(newNodes[i]);
+//                            cout << "pushed_back newNodes[i] " << newNodes[i] << endl;
+//                            cout << "search id in CL " << endl;
+//                            for (auto it = cl->begin(); it != cl->end(); ++it) {
+//                                ContainerChangeEntry* entry = *it;
+//                                UInt32 id = entry->uiContainerId;
+//                                if (id == newNodes[i]) cout << "found entry in global CL!!!!" << newNodes[i] << endl;
+//                            }
+//                            cout << "search id in syncedContainer " << endl;
+//                            for (int id : syncedContainer) {
+//                                if (id == newNodes[i]) cout << "found entry in syncedContainer!!!!" << newNodes[i] << endl;
+//                            }
+                        }
                     }
                 }
                 cout << "node get core field id " << node->CoreFieldId << " core field mask " << node->CoreFieldMask << endl;
@@ -615,12 +645,12 @@ void VRSyncNode::update() {
     for (auto it = cl->begin(); it != cl->end(); ++it) {
         ContainerChangeEntry* entry = *it;
         UInt32 id = entry->uiContainerId;
+//        cout << "searching createdNodes for " << id << endl;
         if (::find(createdNodes.begin(), createdNodes.end(), id) != createdNodes.end()) {
-            //cout << "created FC entry type " << entry->uiEntryDesc << endl;
             if (::find(syncedContainer.begin(), syncedContainer.end(), id) == syncedContainer.end()) { // TODO: optimize by reorganizing if clauses
                 localChanges->addChange(entry);
             }
-            //cout << "add created " << entry->uiEntryDesc << " " << entry->uiContainerId << endl;
+//            cout << "add created " << entry->uiEntryDesc << " " << entry->uiContainerId << endl;
         }
         if (container.count(id)) counter ++;
     }
