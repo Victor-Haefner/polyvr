@@ -352,22 +352,20 @@ string VRSyncNode::serialize(ChangeList* clist) {
 }
 
 void VRSyncNode::deserializeAndApply(string& data) {
-    cout << "> > >  " << name << " VRSyncNode::deserializeAndApply()" << endl;
+    cout << "> > >  " << name << " VRSyncNode::deserializeAndApply(), received data size: " << data.size() << endl;
     vector<BYTE> vec = base64_decode(data);
     int pos = 0;
     int counter = 0;
     ourBinaryDataHandler handler; //use ourBinaryDataHandler to somehow apply binary change to fieldcontainer (use connection instead of handler, see OSGRemoteaspect.cpp (receiveSync))
-    Node* parent;
+    Node* parent = 0;
 //    map<int, vector<BYTE>> entryData; //syncID, data
 //    map<int, SerialEntry*> entryChange; // syncID, entry
 
 
     //deserialize and collect change and create entries
-    while (pos < vec.size()) {
+    while (pos + sizeof(SerialEntry) < vec.size()) {
         SerialEntry sentry = *((SerialEntry*)&vec[pos]);
         cout << "deserialize > > > sentry: " << sentry.localId << " " << sentry.fieldMask << " " << sentry.len << " desc " << sentry.uiEntryDesc << " syncID " << sentry.syncNodeID << " at pos " << pos << endl;
-        pos += sizeof(SerialEntry) + sentry.len + sentry.clen*sizeof(int);
-        continue;
 
         pos += sizeof(SerialEntry);
         vector<BYTE> FCdata;
@@ -375,23 +373,23 @@ void VRSyncNode::deserializeAndApply(string& data) {
         pos += sentry.len;
 
         // if the Children FM changed, update the children
-        /*if (sentry.fieldMask & Node::ChildrenFieldMask) {
+        vector<int> childIDs;
+        if (sentry.fieldMask & Node::ChildrenFieldMask) {
             vector<BYTE> children;
             children.insert(children.end(), vec.begin()+pos, vec.begin()+pos+sentry.clen*sizeof(int));
-            vector<int> childIDs;
             cout << "children " << children.size() << endl;
             for (int i = 0; i < children.size(); i+=4) { //NOTE: int can be either 4 (assumed here) or 2 bytes, depending on system
                 int val;
                 memcpy(&val, &children[i], sizeof(int));
                 childIDs.push_back(val);
-                sentry.childIDs[i] = val;
+                childIDs[i] = val;
             }
         }
-        for (int i = 0; i<sentry.childIDs.size(); i++) {
-            cout << sentry.childIDs[i] << endl;
-        }*/
+        for (int i = 0; i<childIDs.size(); i++) {
+            cout << childIDs[i] << endl;
+        }
 
-        //pos += sizeof(int)*sentry.clen;
+        pos += sizeof(int)*sentry.clen;
         counter++;
         //if (sentry.uiEntryDesc == ContainerChangeEntry::Create) entryCreate[sentry.syncNodeID] = &sentry;
         //else
