@@ -242,7 +242,6 @@ struct SerialEntry {
     int uiEntryDesc = -1;
     int fcTypeID = -1;
     int coreID = -1;
-    vector<int> childIDs;
 };
 
 class ourBinaryDataHandler : public BinaryDataHandler {
@@ -300,6 +299,7 @@ void VRSyncNode::serialize_entry(ContainerChangeEntry* entry, vector<BYTE>& data
         fcPtr->copyToBin(handler, sentry.fieldMask); //calls handler->write
         sentry.len = handler.data.size();//UInt32(fcPtr->getBinSize(sentry.fieldMask));
 
+        vector<int> childIDs;
 
         // children and cores
         if (factory->findType(sentry.fcTypeID)->isNode()) {
@@ -314,20 +314,20 @@ void VRSyncNode::serialize_entry(ContainerChangeEntry* entry, vector<BYTE>& data
                 cout << "!!! change in childrenFM " << node->getNChildren() << endl;
                 for (int i=0; i<node->getNChildren(); i++) {
                     Node* child = node->getChild(i);
-                    sentry.childIDs.push_back(child->getId());
+                    childIDs.push_back(child->getId());
                     cout << "push_back " << child->getId() << endl;
                 }
             }
         }
-        sentry.clen = sentry.childIDs.size();
+        sentry.clen = childIDs.size();
         cout << "children " << sentry.clen << endl;
-        for (int i = 0; i < sentry.clen; ++i) cout << sentry.childIDs[i] << endl;
+        for (int i = 0; i < sentry.clen; ++i) cout << childIDs[i] << endl;
 
         data.insert(data.end(), (BYTE*)&sentry, (BYTE*)&sentry + sizeof(SerialEntry));
 //        cout << "data size sentry " << data.size() << endl;
         data.insert(data.end(), handler.data.begin(), handler.data.end());
 //        cout << "data size sentry + handler " << data.size() << endl;
-        data.insert(data.end(), (BYTE*)&sentry.childIDs[0], (BYTE*)&sentry.childIDs[0] + sizeof(int)*sentry.clen);
+        if (sentry.clen > 0) data.insert(data.end(), (BYTE*)&childIDs[0], (BYTE*)&childIDs[0] + sizeof(int)*sentry.clen);
 //        cout << " total data size " << data.size() << endl;
         cout << "serialize fc " << factory->findType(fcPtr->getTypeId())->getName() << " " << fcPtr->getTypeId() << " > > > sentry: " << sentry.localId << " syncID " << sentry.syncNodeID << " fieldMask " << sentry.fieldMask << " len " << sentry.len << " | encoded: " << data.size() << endl;
         //printNodeFieldMask(sentry.fieldMask);
@@ -366,6 +366,8 @@ void VRSyncNode::deserializeAndApply(string& data) {
     while (pos < vec.size()) {
         SerialEntry sentry = *((SerialEntry*)&vec[pos]);
         cout << "deserialize > > > sentry: " << sentry.localId << " " << sentry.fieldMask << " " << sentry.len << " desc " << sentry.uiEntryDesc << " syncID " << sentry.syncNodeID << " at pos " << pos << endl;
+        pos += sizeof(SerialEntry) + sentry.len + sentry.clen*sizeof(int);
+        continue;
 
         pos += sizeof(SerialEntry);
         vector<BYTE> FCdata;
@@ -373,7 +375,7 @@ void VRSyncNode::deserializeAndApply(string& data) {
         pos += sentry.len;
 
         // if the Children FM changed, update the children
-        if (sentry.fieldMask & Node::ChildrenFieldMask) {
+        /*if (sentry.fieldMask & Node::ChildrenFieldMask) {
             vector<BYTE> children;
             children.insert(children.end(), vec.begin()+pos, vec.begin()+pos+sentry.clen*sizeof(int));
             vector<int> childIDs;
@@ -387,9 +389,9 @@ void VRSyncNode::deserializeAndApply(string& data) {
         }
         for (int i = 0; i<sentry.childIDs.size(); i++) {
             cout << sentry.childIDs[i] << endl;
-        }
+        }*/
 
-        pos += sizeof(int)*sentry.clen;
+        //pos += sizeof(int)*sentry.clen;
         counter++;
         //if (sentry.uiEntryDesc == ContainerChangeEntry::Create) entryCreate[sentry.syncNodeID] = &sentry;
         //else
