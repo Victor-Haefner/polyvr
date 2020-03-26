@@ -374,12 +374,16 @@ void VRSyncNode::deserializeAndApply(string& data) {
         vector<BYTE> children;
         children.insert(children.end(), vec.begin()+pos, vec.begin()+pos+sentry.clen*sizeof(int));
         vector<int> childIDs;
-        cout << "children.size " << children.size() << endl;
+        cout << "children " << children.size() << endl;
         for (int i = 0; i < children.size(); i+=4) { //NOTE: int can be either 4 (assumed here) or 2 bytes, depending on system
             int val;
             memcpy(&val, &children[i], sizeof(int));
             childIDs.push_back(val);
             sentry.childIDs[i] = val;
+
+        }
+        for (int i = 0; i<childIDs.size(); i++) {
+            cout << childIDs[i] << endl;
         }
 
         pos += sizeof(int)*sentry.clen;
@@ -409,7 +413,7 @@ void VRSyncNode::deserializeAndApply(string& data) {
 //        if (id == -1) continue;
         // if fc does not exist we need to create a new fc = node
         if (sentry.uiEntryDesc == ContainerChangeEntry::Create && id == -1) { //if create and not registered
-            FieldContainerRecPtr fcPtr;
+//            FieldContainerRecPtr fcPtr;
             UInt32 typeID = sentry.fcTypeID;
             FieldContainerType* fcType = factory->findType(typeID);
             cout << "create node of type " << fcType->getName() << endl;
@@ -594,7 +598,7 @@ void VRSyncNode::update() {
         UInt32 id = entry->uiContainerId;
         //TODO: ignore core created somehow to have less created to handle on remote side
         if (container.count(id)) {
-            if (::find(syncedContainer.begin(), syncedContainer.end(), id) == syncedContainer.end()) { / TODO: optimize by reorganizing if clauses
+            if (::find(syncedContainer.begin(), syncedContainer.end(), id) == syncedContainer.end()) { // TODO: optimize by reorganizing if clauses
                 localChanges->addChange(entry);
             }
             //cout << "add created " << entry->uiContainerId << endl;
