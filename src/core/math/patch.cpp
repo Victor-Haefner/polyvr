@@ -195,8 +195,8 @@ void Patch::calcBezQuadPlane(bezVRPolygon<4>& q, bool normalizeNorms) {
     temp[1] = ha[3]-ha[1];
     hi[0] = ha[0]+projectInPlane(temp[0]*(1./3),q.n[0],false,normalizeNorms);
     hi[1] = ha[1]+projectInPlane(temp[1]*(1./3),q.n[1],false,normalizeNorms);
-    hi[2] = ha[2]+projectInPlane(-temp[0]*(1./3),q.n[2],false,normalizeNorms);
-    hi[3] = ha[3]+projectInPlane(-temp[1]*(1./3),q.n[3],false,normalizeNorms);
+    hi[2] = ha[2]+projectInPlane(-temp[0]*(1./3),q.n[3],false,normalizeNorms);
+    hi[3] = ha[3]+projectInPlane(-temp[1]*(1./3),q.n[2],false,normalizeNorms);
 
     //forward diff
     q.geo = makeQuadPlane(q.N-1,q.wired);
@@ -235,10 +235,7 @@ void Patch::calcBezQuadPlane(bezVRPolygon<4>& q, bool normalizeNorms) {
 
     //koeffizienten der t-polynome
     for (int i=0; i<4; i++) {
-        G[i][0] = P[i][3]-P[i][0]+P[i][1]*3-P[i][2]*3;
-        G[i][1] = P[i][0]*3-P[i][1]*6+P[i][2]*3;
-        G[i][2] = P[i][1]*3-P[i][0]*3;
-        G[i][3] = P[i][0];
+        computePolynomialFactors(G[i][0], G[i][1], G[i][2], G[i][3],  P[i][0], P[i][1], P[i][2], P[i][3]);
 
         //berechne schritte
         DELt[i][2] = G[i][0]*6*step*step*step;
