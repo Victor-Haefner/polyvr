@@ -32,14 +32,17 @@ class Patch {
         bezVRPolygon<3> bp3;
         bezVRPolygon<4> bp4;
 
+        VRObjectWeakPtr object;
+
     private:
-        Vec3d projectInPlane(Vec3d v, Vec3d n, bool keep_length);
+        Vec3d projectInPlane(Vec3d v, Vec3d n, bool keep_length, bool normalize);
         Vec3d reflectInPlane(Vec3d v, Vec3d n);
 
         VRGeometryPtr makeTrianglePlane(int N, bool wire = false);
+        VRGeometryPtr makeQuadPlane(int N, bool wire = false);
 
-        void calcBezQuadPlane(bezVRPolygon<4>& q);
-        void calcBezTrianglePlane(bezVRPolygon<3>& q);
+        void calcBezQuadPlane(bezVRPolygon<4>& q, bool normalizeNorms);
+        void calcBezTrianglePlane(bezVRPolygon<3>& q, bool normalizeNorms);
 
     public:
         Patch();
@@ -47,7 +50,14 @@ class Patch {
 
         static PatchPtr create();
 
+        VRObjectPtr getSurface();
+
+        Vec3d getClosestPoint(Vec3d p);
+        float getDistance(Vec3d p);
+
         //iteriert über die flächen der geometrie und macht bezierflächen hin
+        VRObjectPtr fromTriangle(vector<Vec3d> positions, vector<Vec3d> normals, int N, bool wire = false);
+        VRObjectPtr fromQuad(vector<Vec3d> positions, vector<Vec3d> normals, int N, bool wire = false);
         VRObjectPtr fromGeometry(VRGeometryPtr geo, int N, bool wire = false);
 };
 
