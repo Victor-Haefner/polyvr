@@ -132,7 +132,7 @@ void computePolynomialFactors(T& A, T& B, T& C, T& D, const T& P0, const T& P1, 
     D = P0;
 }
 
-void Patch::calcBezQuadPlane(bezVRPolygon<4>& q, bool normalizeNorms) {
+void Patch::calcBezQuadPlane(bezVRPolygon<4>& q, vector<Vec3d> handles, bool normalizeNorms) {
     cout << "calcBezQuadPlane" << endl;
     //schrittweite
     float step = 1./(q.N-1);
@@ -157,46 +157,63 @@ void Patch::calcBezQuadPlane(bezVRPolygon<4>& q, bool normalizeNorms) {
     //float rL[4];
     //for (int i=0;i<4;i++) rL[i] = r[i].length();
 
-    if (r[0] != Vec3d(0,0,0)) {
-        ha[0] = q.p[0]+projectInPlane(r[0]*(1./3.),q.n[0],false,normalizeNorms);
-        ha[1] = q.p[1]+projectInPlane(-r[0]*(1./3.),q.n[1],false,normalizeNorms);
-    } else {
-        ha[0] = q.p[0];
-        ha[1] = q.p[1];
-    }
+    if (handles.size() != 12) {
+        if (r[0] != Vec3d(0,0,0)) {
+            ha[0] = q.p[0]+projectInPlane(r[0]*(1./3.),q.n[0],false,normalizeNorms);
+            ha[1] = q.p[1]+projectInPlane(-r[0]*(1./3.),q.n[1],false,normalizeNorms);
+        } else {
+            ha[0] = q.p[0];
+            ha[1] = q.p[1];
+        }
 
-    if (r[1] != Vec3d(0,0,0)) {
-        ha[2] = q.p[3]+projectInPlane(r[1]*(1./3.),q.n[3],false,normalizeNorms);
-        ha[3] = q.p[2]+projectInPlane(-r[1]*(1./3.),q.n[2],false,normalizeNorms);
-    } else {
-        ha[2] = q.p[3];
-        ha[3] = q.p[2];
-    }
+        if (r[1] != Vec3d(0,0,0)) {
+            ha[2] = q.p[3]+projectInPlane(r[1]*(1./3.),q.n[3],false,normalizeNorms);
+            ha[3] = q.p[2]+projectInPlane(-r[1]*(1./3.),q.n[2],false,normalizeNorms);
+        } else {
+            ha[2] = q.p[3];
+            ha[3] = q.p[2];
+        }
 
-    if (r[2] != Vec3d(0,0,0)) {
-        ha[4] = q.p[0]+projectInPlane(r[2]*(1./3.),q.n[0],false,normalizeNorms);
-        ha[5] = q.p[3]+projectInPlane(-r[2]*(1./3.),q.n[3],false,normalizeNorms);
-    } else {
-        ha[4] = q.p[0];
-        ha[5] = q.p[3];
-    }
+        if (r[2] != Vec3d(0,0,0)) {
+            ha[4] = q.p[0]+projectInPlane(r[2]*(1./3.),q.n[0],false,normalizeNorms);
+            ha[5] = q.p[3]+projectInPlane(-r[2]*(1./3.),q.n[3],false,normalizeNorms);
+        } else {
+            ha[4] = q.p[0];
+            ha[5] = q.p[3];
+        }
 
-    if (r[3] != Vec3d(0,0,0)) {
-        ha[6] = q.p[1]+projectInPlane(r[3]*(1./3.),q.n[1],false,normalizeNorms);
-        ha[7] = q.p[2]+projectInPlane(-r[3]*(1./3.),q.n[2],false,normalizeNorms);
-    } else {
-        ha[6] = q.p[1];
-        ha[7] = q.p[2];
-    }
+        if (r[3] != Vec3d(0,0,0)) {
+            ha[6] = q.p[1]+projectInPlane(r[3]*(1./3.),q.n[1],false,normalizeNorms);
+            ha[7] = q.p[2]+projectInPlane(-r[3]*(1./3.),q.n[2],false,normalizeNorms);
+        } else {
+            ha[6] = q.p[1];
+            ha[7] = q.p[2];
+        }
 
-    //---V1
-    Vec3d temp[2];
-    temp[0] = ha[2]-ha[0];//zwischenrechnungen
-    temp[1] = ha[3]-ha[1];
-    hi[0] = ha[0]+projectInPlane(temp[0]*(1./3),q.n[0],false,normalizeNorms);
-    hi[1] = ha[1]+projectInPlane(temp[1]*(1./3),q.n[1],false,normalizeNorms);
-    hi[2] = ha[2]+projectInPlane(-temp[0]*(1./3),q.n[3],false,normalizeNorms);
-    hi[3] = ha[3]+projectInPlane(-temp[1]*(1./3),q.n[2],false,normalizeNorms);
+        //---V1
+        Vec3d temp[2];
+        temp[0] = ha[2]-ha[0];//zwischenrechnungen
+        temp[1] = ha[3]-ha[1];
+        hi[0] = ha[0]+projectInPlane(temp[0]*(1./3),q.n[0],false,normalizeNorms);
+        hi[1] = ha[1]+projectInPlane(temp[1]*(1./3),q.n[1],false,normalizeNorms);
+        hi[2] = ha[2]+projectInPlane(-temp[0]*(1./3),q.n[3],false,normalizeNorms);
+        hi[3] = ha[3]+projectInPlane(-temp[1]*(1./3),q.n[2],false,normalizeNorms);
+    } else {
+        ha[0] = handles[0];
+        ha[1] = handles[1];
+        ha[2] = handles[2];
+        ha[3] = handles[3];
+
+        ha[4] = handles[4];
+        ha[5] = handles[5];
+        ha[6] = handles[6];
+        ha[7] = handles[7];
+
+        hi[0] = handles[8];
+        hi[1] = handles[9];
+        hi[2] = handles[10];
+        hi[3] = handles[11];
+    }
 
     //forward diff
     q.geo = makeQuadPlane(q.N-1,q.wired);
@@ -565,7 +582,7 @@ VRObjectPtr Patch::fromTriangle(vector<Vec3d> positions, vector<Vec3d> normals, 
     return obj;
 }
 
-VRObjectPtr Patch::fromQuad(vector<Vec3d> positions, vector<Vec3d> normals, int N, bool wire) {
+VRObjectPtr Patch::fromFullQuad(vector<Vec3d> positions, vector<Vec3d> normals, vector<Vec3d> handles, int N, bool wire) {
     auto obj = VRObject::create("patch");
     if (positions.size() != 4 || normals.size() != 4) return obj;
 
@@ -581,11 +598,14 @@ VRObjectPtr Patch::fromQuad(vector<Vec3d> positions, vector<Vec3d> normals, int 
     q.n[2] = normals[2];
     q.n[3] = normals[3];
 
-    calcBezQuadPlane(q, false);
-    cout << "Patch::fromTriangle yay " << q.geo << endl;
+    calcBezQuadPlane(q, handles, false);
     obj->addChild(q.geo);
     object = obj;
     return obj;
+}
+
+VRObjectPtr Patch::fromQuad(vector<Vec3d> positions, vector<Vec3d> normals, int N, bool wire) {
+    return fromFullQuad(positions, normals, vector<Vec3d>(), N, wire);
 }
 
 //iteriert über die flächen der geometrie und macht bezierflächen hin

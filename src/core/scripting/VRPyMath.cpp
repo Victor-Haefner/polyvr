@@ -641,6 +641,7 @@ PyMethodDef VRPyPatch::methods[] = {
     {"getClosestPoint", PyWrap2( Patch, getClosestPoint, "Get closest point", Vec3d, Vec3d ) },
     {"fromTriangle", PyWrap2( Patch, fromTriangle, "Create patch from triangle data", VRObjectPtr, vector<Vec3d> positions, vector<Vec3d> normals, int, bool ) },
     {"fromQuad", PyWrap2( Patch, fromQuad, "Create patch from quad data", VRObjectPtr, vector<Vec3d> positions, vector<Vec3d> normals, int, bool ) },
+    {"fromFullQuad", PyWrap2( Patch, fromFullQuad, "Create patch from quad data including handles", VRObjectPtr, vector<Vec3d> positions, vector<Vec3d> normals, vector<Vec3d> handles, int, bool ) },
     {"fromGeometry", PyWrap2( Patch, fromGeometry, "Create patch from geometry", VRObjectPtr, VRGeometryPtr, int, bool ) },
     {NULL}  /* Sentinel */
 };

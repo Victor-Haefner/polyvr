@@ -41,7 +41,7 @@ class Patch {
         VRGeometryPtr makeTrianglePlane(int N, bool wire = false);
         VRGeometryPtr makeQuadPlane(int N, bool wire = false);
 
-        void calcBezQuadPlane(bezVRPolygon<4>& q, bool normalizeNorms);
+        void calcBezQuadPlane(bezVRPolygon<4>& q, vector<Vec3d> handles, bool normalizeNorms);
         void calcBezTrianglePlane(bezVRPolygon<3>& q, bool normalizeNorms);
 
     public:
@@ -58,6 +58,7 @@ class Patch {
         //iteriert über die flächen der geometrie und macht bezierflächen hin
         VRObjectPtr fromTriangle(vector<Vec3d> positions, vector<Vec3d> normals, int N, bool wire = false);
         VRObjectPtr fromQuad(vector<Vec3d> positions, vector<Vec3d> normals, int N, bool wire = false);
+        VRObjectPtr fromFullQuad(vector<Vec3d> positions, vector<Vec3d> normals, vector<Vec3d> handles, int N, bool wire = false);
         VRObjectPtr fromGeometry(VRGeometryPtr geo, int N, bool wire = false);
 };
 
