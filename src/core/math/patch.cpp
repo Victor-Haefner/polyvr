@@ -633,8 +633,46 @@ VRObjectPtr Patch::fromGeometry(VRGeometryPtr geo, int N, bool wire) {
     return obj;
 }
 
+float projectEdge(const Vec3d& p, const Vec3d& pe, const Vec3d& de) {
+    Vec3d d = p-pe;
+    float L2 = de.squareLength();
+    return d.dot(de)/L2;
+}
+
+bool abovePlane(const Vec3d& p, const Vec3d& P, const Vec3d& n) {
+    return (p-P).dot(n) >= 0;
+}
+
+Vec3d getClosestOnTriangle(Vec3d p, const Vec3d& p1, const Vec3d& p2, const Vec3d& p3) {
+    Vec3d d12 = p2-p1;
+    Vec3d d31 = p1-p3;
+
+    float u12 = projectEdge(p, p1, d12);
+    float u31 = projectEdge(p, p3, d31);
+    if (u31 > 1 && u12 < 0) return p1;
+
+    Vec3d d23 = p3-p2;
+    float u23 = projectEdge(p, p2, d23);
+    if (u12 > 1 && u23 < 0) return p2;
+    if (u23 > 1 && u31 < 0) return p3;
+
+    Vec3d n = d23.cross(d12);
+    Vec3d n12 = d12.cross(n);
+    Vec3d n23 = d23.cross(n);
+    Vec3d n31 = d31.cross(n);
+
+    if ( u12 <=1 && u12 >= 0 && !abovePlane( p,p1,n12 )) return p1 + d12*u12;
+    if ( u23 <=1 && u23 >= 0 && !abovePlane( p,p2,n23 )) return p2 + d23*u23;
+    if ( u31 <=1 && u31 >= 0 && !abovePlane( p,p3,n31 )) return p3 + d31*u31;
+
+    // return projected point on triangle
+    n.normalize();
+    return p - (p-p1).dot(n)*n;
+}
+
 Vec3d Patch::getClosestPoint(Vec3d p) {
     float dmin = 1e6;
+    float _3 = 1.0/3;
     Vec3d Dmin;
     auto obj = object.lock();
     if (obj) {
@@ -647,18 +685,15 @@ Vec3d Patch::getClosestPoint(Vec3d p) {
                 Vec3d p0 = Vec3d( it.getPosition(0) );
                 Vec3d p1 = Vec3d( it.getPosition(1) );
                 Vec3d p2 = Vec3d( it.getPosition(2) );
-                Vec3d c = (p0+p1+p2)*0.333;
 
-                // approx dist, triangles should be small enough
-                float d = (p-c).length();
+                //Vec3d pn = (p0+p1+p2)*_3; // approx with triangle center
+                Vec3d pn = getClosestOnTriangle(p,p0,p1,p2);
+
+                float d = (p-pn).length();
                 if (d < dmin) {
                     dmin = d; // get min dist
-                    Dmin = c;
+                    Dmin = pn;
                 }
-
-                /*Vec3d n = (p2-p0).cross(p1-p0);
-                n.normalize();
-                Vec3d pn = p - (p-p0).dot(n)*n;*/
             }
         }
     }
