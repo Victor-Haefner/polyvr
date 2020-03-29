@@ -10,6 +10,8 @@
 #include <algorithm>
 #include <OpenSG/OSGQuaternion.h>
 
+#include "core/math/patch.h"
+
 using namespace OSG;
 
 
@@ -24,6 +26,8 @@ namespace OSG {
         bool constrained = false;
         Vec4d constraintAngles;
         Vec3d debugPnt1, debugPnt2;
+        PatchPtr patch;
+        VRObjectPtr patchSurface;
     };
 
     struct FABRIK::Chain {
@@ -96,6 +100,40 @@ vector<int> FABRIK::getChainJoints(string name) { return chains[name].joints; }
 void FABRIK::addConstraint(int j, Vec4d angles) {
     joints[j].constrained = true;
     joints[j].constraintAngles = angles;
+    joints[j].patch = Patch::create();
+
+    float x1 = angles[2];
+    float x2 = angles[0];
+    float y1 = angles[1];
+    float y2 = angles[3];
+
+    float K = -0.3;
+    float N = 8;
+    float R = 0.1;
+
+    Vec3d p0 (0,0,0);
+    /*Vec3d px1(-sin(x1)*s, cos(x1)*s,          0);
+    Vec3d px2( sin(x2)*s, cos(x2)*s,          0);
+    Vec3d py1(         0, cos(y1)*s, -sin(y1)*s);
+    Vec3d py2(         0, cos(y2)*s,  sin(y2)*s);*/
+
+    Vec3d px1 = Vec3d( -sin(x1),        0, cos(x1) )*R;
+    Vec3d px2 = Vec3d(  sin(x2),        0, cos(x2) )*R;
+    Vec3d py1 = Vec3d(        0,  sin(y1), cos(y1) )*R;
+    Vec3d py2 = Vec3d(        0, -sin(y2), cos(y2) )*R;
+
+
+    vector<Vec3d> p = {px2, py2, px1, py1};
+
+    Vec3d t1 = (p[2]-p[0])*0.25;
+    Vec3d t2 = (p[1]-p[3])*0.25;
+
+    vector<Vec3d> handles = { p[0]+t2, p[1]-t1, p[3]+t1, p[2]-t2
+                            , p[0]-t2, p[3]-t1, p[1]+t1, p[2]+t2
+                            , p[0]*K, p[1]*K, p[3]*K, p[2]*K };
+
+    vector<Vec3d> normals(4, Vec3d(0,1,0));
+    joints[j].patchSurface = joints[j].patch->fromFullQuad(p, normals, handles, N, true);
 }
 
 Vec3d FABRIK::movePointTowards(int j, Vec3d target, float t) {
@@ -399,7 +437,10 @@ void FABRIK::visualize(VRGeometryPtr geo) {
 
     for (auto j : joints) {
         if (!j.second.constrained) continue;
-        Pnt3d P0 = Pnt3d(j.second.p->pos());
+        geo->addChild(j.second.patchSurface);
+        auto surf = dynamic_pointer_cast<VRGeometry>( j.second.patchSurface->getChild(0) );
+        surf->setPose( j.second.p );
+        /*Pnt3d P0 = Pnt3d(j.second.p->pos());
         int v0ID = cones.pushVert(P0, Vec3d(0,0,-1));
         cout << "constraint of joint " << j.first << endl;
         auto angles = j.second.constraintAngles;
@@ -423,7 +464,7 @@ void FABRIK::visualize(VRGeometryPtr geo) {
         cones.pushTri(v0ID, vID0, vID1);
         cones.pushTri(v0ID, vID1, vID2);
         cones.pushTri(v0ID, vID2, vID3);
-        cones.pushTri(v0ID, vID3, vID0);
+        cones.pushTri(v0ID, vID3, vID0);*/
 
         continue;
 
@@ -471,16 +512,16 @@ void FABRIK::visualize(VRGeometryPtr geo) {
             //Vec3d v = v1*cos(t*f) + k.cross(v1)*sin(t*f) + k*k.cross(v1)*(1-cos(t*f));
             Vec3d n = v; n.normalize();*/
 
-            v = j.second.p->transform(v, false);
+            /*v = j.second.p->transform(v, false);
             n = j.second.p->transform(n, false);
             int vID = cones.pushVert(P0 + v, n);
-            if (i > 0) cones.pushTri(v0ID, vID, vID-1);
+            if (i > 0) cones.pushTri(v0ID, vID, vID-1);*/
             //cout << " a " << a << ", tf " << Vec2f(0,f) << ", AB " << Vec2f(A,B) << ", v " << v << endl;
         }
     }
 
-    auto cgeo = cones.asGeometry("kcones");
-    geo->addChild(cgeo);
+    //auto cgeo = cones.asGeometry("kcones");
+    //geo->addChild(cgeo);
 }
 
 
