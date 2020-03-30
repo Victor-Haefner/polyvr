@@ -289,6 +289,7 @@ void VRObject::addChild(OSGObjectPtr n) {
 
 void VRObject::addChild(VRObjectPtr child, bool osg, int place) {
     if (child == 0 || child == ptr()) return;
+    //cout << "VRObject::addChild " << child->getName() << "  to: " << getName() << endl;
     if (child->getParent() != 0) { child->switchParent(ptr(), place); return; }
 
     if (osg) addChild(child->osg);
@@ -316,9 +317,10 @@ void VRObject::subChild(VRObjectPtr child, bool doOsg) {
 }
 
 void VRObject::switchParent(VRObjectPtr new_p, int place) {
-    if (destroyed) return;
+    //cout << "VRObject::switchParent of: " << getName() << "  new parent: " << new_p->getName() << " destroyed? " << destroyed << endl;
+    if (destroyed) { cout << "VRObject::switchParent ERROR: object is marked as destroyed!" << endl; return; }
     if (new_p == ptr()) return;
-    if (new_p == 0) { cout << "\nERROR : new parent is 0!\n"; return; }
+    if (new_p == 0) { cout << "VRObject::switchParent ERROR: new parent is 0!" << endl; return; }
 
     if (getParent() == 0) { new_p->addChild(ptr(), true, place); return; }
     if (getParent() == new_p && place == childIndex) { return; }
@@ -329,12 +331,12 @@ void VRObject::switchParent(VRObjectPtr new_p, int place) {
 
 size_t VRObject::getChildrenCount() { return children.size(); }
 
-void VRObject::clearChildren() {
+void VRObject::clearChildren(bool destroy) {
     int N = getChildrenCount();
     for (int i=N-1; i>=0; i--) {
         VRObjectPtr c = getChild(i);
         subChild( c );
-        c->destroy();
+        if (destroy) c->destroy();
     }
 }
 

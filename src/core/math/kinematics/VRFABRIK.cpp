@@ -155,7 +155,15 @@ Vec3d FABRIK::moveToDistance(int j1, int j2, float d, bool constrained) {
     Vec3d D = J1.p->pos() - J2.p->pos();
 
     if (J2.constrained && constrained) {
-        Vec3d cU = J2.p->up(); cU.normalize();
+        PosePtr pP = J2.patch->getClosestPose(pOld);
+        // TODO: transform pP!
+        float t = (pP->pos() - pOld).dot(pP->dir());
+        if (t > 0) {
+            J1.p->setPos( pP->pos() );
+            D = J1.p->pos() - J2.p->pos();
+        }
+
+        /*Vec3d cU = J2.p->up(); cU.normalize();
         Vec3d cX = J2.p->x();  cX.normalize();
         Vec3d cD =-J2.p->dir();cD.normalize();
         float y = D.dot(cU);
@@ -207,7 +215,7 @@ Vec3d FABRIK::moveToDistance(int j1, int j2, float d, bool constrained) {
 
             D = J1.p->pos() - J2.p->pos();
             cout << " xy " << Vec2d(x,y) << ", a " << a << "  t " << t << " p " << p << ", " << f1 << ", " << f2 << "   " << J1.ID << endl;
-        }
+        }*/
     }
 
     float L = D.length();

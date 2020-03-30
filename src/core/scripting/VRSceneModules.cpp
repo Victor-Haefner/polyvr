@@ -187,7 +187,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyAnnotationEngine>("AnnotationEngine", pModVR, VRPyGeometry::typeRef);
     sm->registerModule<VRPyAnalyticGeometry>("AnalyticGeometry", pModVR, VRPyObject::typeRef);
     sm->registerModule<VRPyConstructionKit>("ConstructionKit", pModVR);
-    sm->registerModule<VRPyPathtool>("Pathtool", pModVR, VRPyObject::typeRef);
+    sm->registerModule<VRPyPathtool>("Pathtool", pModVR, VRPyTransform::typeRef);
     sm->registerModule<VRPySelector>("Selector", pModVR);
     sm->registerModule<VRPySelection>("Selection", pModVR);
     sm->registerModule<VRPyPatchSelection>("PatchSelection", pModVR, VRPySelection::typeRef);

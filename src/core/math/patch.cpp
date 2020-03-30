@@ -643,20 +643,20 @@ bool abovePlane(const Vec3d& p, const Vec3d& P, const Vec3d& n) {
     return (p-P).dot(n) >= 0;
 }
 
-Vec3d getClosestOnTriangle(Vec3d p, const Vec3d& p1, const Vec3d& p2, const Vec3d& p3) {
+Vec3d getClosestOnTriangle(Vec3d p, Vec3d& n, const Vec3d& p1, const Vec3d& p2, const Vec3d& p3) {
     Vec3d d12 = p2-p1;
     Vec3d d31 = p1-p3;
+    Vec3d d23 = p3-p2;
+    n = d23.cross(d12);
 
     float u12 = projectEdge(p, p1, d12);
     float u31 = projectEdge(p, p3, d31);
     if (u31 > 1 && u12 < 0) return p1;
 
-    Vec3d d23 = p3-p2;
     float u23 = projectEdge(p, p2, d23);
     if (u12 > 1 && u23 < 0) return p2;
     if (u23 > 1 && u31 < 0) return p3;
 
-    Vec3d n = d23.cross(d12);
     Vec3d n12 = d12.cross(n);
     Vec3d n23 = d23.cross(n);
     Vec3d n31 = d31.cross(n);
@@ -668,6 +668,38 @@ Vec3d getClosestOnTriangle(Vec3d p, const Vec3d& p1, const Vec3d& p2, const Vec3
     // return projected point on triangle
     n.normalize();
     return p - (p-p1).dot(n)*n;
+}
+
+PosePtr Patch::getClosestPose(Vec3d p) {
+    float dmin = 1e6;
+    float _3 = 1.0/3;
+    PosePtr Dmin = Pose::create();
+    auto obj = object.lock();
+    if (obj) {
+        for (auto o : obj->getChildren()) {
+            auto geo = dynamic_pointer_cast<VRGeometry>(o);
+            if (!geo) continue;
+
+            auto g = geo->getMesh()->geo;
+            for (TriangleIterator it = g->beginTriangles(); it != g->endTriangles(); ++it) {
+                Vec3d p0 = Vec3d( it.getPosition(0) );
+                Vec3d p1 = Vec3d( it.getPosition(1) );
+                Vec3d p2 = Vec3d( it.getPosition(2) );
+
+                //Vec3d pn = (p0+p1+p2)*_3; // approx with triangle center
+                Vec3d n;
+                Vec3d pn = getClosestOnTriangle(p,n,p0,p1,p2);
+
+                float d = (p-pn).length();
+                if (d < dmin) {
+                    dmin = d; // get min dist
+                    Dmin->setPos(pn);
+                    Dmin->setDir(n);
+                }
+            }
+        }
+    }
+    return Dmin;
 }
 
 Vec3d Patch::getClosestPoint(Vec3d p) {
@@ -687,7 +719,8 @@ Vec3d Patch::getClosestPoint(Vec3d p) {
                 Vec3d p2 = Vec3d( it.getPosition(2) );
 
                 //Vec3d pn = (p0+p1+p2)*_3; // approx with triangle center
-                Vec3d pn = getClosestOnTriangle(p,p0,p1,p2);
+                Vec3d n;
+                Vec3d pn = getClosestOnTriangle(p,n,p0,p1,p2);
 
                 float d = (p-pn).length();
                 if (d < dmin) {

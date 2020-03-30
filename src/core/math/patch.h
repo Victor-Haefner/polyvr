@@ -53,6 +53,7 @@ class Patch {
         VRObjectPtr getSurface();
 
         Vec3d getClosestPoint(Vec3d p);
+        PosePtr getClosestPose(Vec3d p);
         float getDistance(Vec3d p);
 
         //iteriert über die flächen der geometrie und macht bezierflächen hin

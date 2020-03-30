@@ -215,7 +215,6 @@ void VRProcessLayout::setProcess(VRProcessPtr p) {
     toolSID->setGraph( p->getInteractionDiagram(), 1,0,1);
     toolSID->setArrowSize(layoutScale);
     constrainHandles(toolSID);
-
     rebuild();
 }
 
@@ -230,7 +229,7 @@ void VRProcessLayout::setEngine(VRProcessEnginePtr e) { engine = e; }
 
 void VRProcessLayout::rebuild() {
     if (!process) return;
-    clearChildren();
+    clearChildren(false);
     addChild(toolSID);
 
     for(auto tool : toolSBDs) addChild(tool.second);

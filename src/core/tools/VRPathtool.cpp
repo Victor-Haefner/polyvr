@@ -86,7 +86,7 @@ void VRManipulator::setup() {
 
 VRPathtool::option::option(int r, bool uch) : resolution(r), useControlHandles(uch) {}
 
-VRPathtool::VRPathtool() : VRObject("Pathtool") {
+VRPathtool::VRPathtool() : VRTransform("Pathtool") {
     updatePtr = VRUpdateCb::create("path tool update", boost::bind(&VRPathtool::updateDevs, this) );
     VRScene::getCurrent()->addUpdateFkt(updatePtr, 100);
 
