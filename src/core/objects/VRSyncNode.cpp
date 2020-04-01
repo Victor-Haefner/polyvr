@@ -300,7 +300,7 @@ void VRSyncNode::serialize_entry(ContainerChangeEntry* entry, vector<BYTE>& data
         fcPtr->copyToBin(handler, sentry.fieldMask); //calls handler->write
         sentry.len = handler.data.size();//UInt32(fcPtr->getBinSize(sentry.fieldMask));
 
-        vector<int> childIDs;
+//        vector<int> childIDs;
         vector<pair<int,int>> children;
 
         // children and cores
@@ -316,24 +316,24 @@ void VRSyncNode::serialize_entry(ContainerChangeEntry* entry, vector<BYTE>& data
 //                cout << "!!! change in childrenFM " << node->getNChildren() << endl;
                 for (int i=0; i<node->getNChildren(); i++) {
                     Node* child = node->getChild(i);
-                    childIDs.push_back(child->getId());
+//                    childIDs.push_back(child->getId());
 //                    int syncID = -1;
-                    int syncID = container[child->getId()] ? child->getId() : -1;
+                    int syncID = container[child->getId()] ? container[child->getId()] : -1;
                     children.push_back(make_pair(child->getId(), syncID));
 //                    cout << "push_back " << child->getId() << endl;
                 }
             }
         }
-        sentry.clen = childIDs.size();
+//        sentry.clen = childIDs.size();
         sentry.cplen = children.size();
 //        cout << "children " << sentry.clen << endl;
-        for (int i = 0; i < sentry.clen; ++i) cout << childIDs[i] << endl;
+//        for (int i = 0; i < sentry.clen; ++i) cout << childIDs[i] << endl;
 
         data.insert(data.end(), (BYTE*)&sentry, (BYTE*)&sentry + sizeof(SerialEntry));
 //        cout << "data size sentry " << data.size() << endl;
         data.insert(data.end(), handler.data.begin(), handler.data.end());
 //        cout << "data size sentry + handler " << data.size() << endl;
-        if (sentry.clen > 0) data.insert(data.end(), (BYTE*)&childIDs[0], (BYTE*)&childIDs[0] + sizeof(int)*sentry.clen);
+//        if (sentry.clen > 0) data.insert(data.end(), (BYTE*)&childIDs[0], (BYTE*)&childIDs[0] + sizeof(int)*sentry.clen);
 //        cout << " total data size " << data.size() << endl;
         if (sentry.cplen > 0) data.insert(data.end(), (BYTE*)&children[0], (BYTE*)&children[0] + sizeof(pair<int,int>)*sentry.cplen);
         cout << "serialize fc " << factory->findType(fcPtr->getTypeId())->getName() << " " << fcPtr->getTypeId() << " > > > sentry: " << sentry.localId << " syncID " << sentry.syncNodeID << " fieldMask " << sentry.fieldMask << " len " << sentry.len << " | encoded: " << data.size() << endl;
@@ -380,39 +380,45 @@ void VRSyncNode::deserializeAndApply(string& data) {
         pos += sentry.len;
 
         // if the Children FM changed, update the children
-        vector<int> childIDs;
-        if (sentry.fieldMask & Node::ChildrenFieldMask) {
-            vector<BYTE> children;
-            children.insert(children.end(), vec.begin()+pos, vec.begin()+pos+sentry.clen*sizeof(int));
-            cout << "children " << children.size() << endl;
-            for (int i = 0; i < children.size(); i+=sizeof(int)) { //TODO: test with i+=sizeof(int)//NOTE: int can be either 4 (assumed here) or 2 bytes, depending on system
-                cout << i << endl;
-                int val;
-                memcpy(&val, &children[i], sizeof(int));
-                cout << val << endl;
-                childIDs.push_back(val);
-            }
-        }
-        for (int i = 0; i<childIDs.size(); i++) {
-            cout << childIDs[i] << endl;
-        }
-        pos += sentry.clen*sizeof(int);
+//        vector<int> childIDs;
+//        if (sentry.fieldMask & Node::ChildrenFieldMask) {
+//            vector<BYTE> children;
+//            children.insert(children.end(), vec.begin()+pos, vec.begin()+pos+sentry.clen*sizeof(int));
+////            cout << "children " << children.size() << endl;
+//            for (int i = 0; i < children.size(); i+=sizeof(int)) { //TODO: test with i+=sizeof(int)//NOTE: int can be either 4 (assumed here) or 2 bytes, depending on system
+////                cout << i << endl;
+//                int val;
+//                memcpy(&val, &children[i], sizeof(int));
+////                cout << val << endl;
+//                childIDs.push_back(val);
+//            }
+//        }
+//        for (int i = 0; i<childIDs.size(); i++) {
+//            cout << childIDs[i] << endl;
+//        }
+//        pos += sentry.clen*sizeof(int);
         map<int,int> children;
         if (sentry.fieldMask & Node::ChildrenFieldMask) {
             vector<BYTE> childs;
-            cout << "insert attempt " << endl;
+//            cout << "insert attempt " << endl;
             childs.insert(childs.end(), vec.begin()+pos, vec.begin()+pos+sentry.cplen*sizeof(pair<int,int>));
-            cout << "children " << children.size() << endl;
+//            cout << "children " << children.size() << endl;
             for (int i = 0; i < childs.size(); i+=sizeof(pair<int,int>)) { //NOTE: int can be either 4 (assumed here) or 2 bytes, depending on system
                 int key;
                 int val;
                 memcpy(&key, &childs[i], sizeof(int));
                 memcpy(&val, &childs[i] + sizeof(int), sizeof(int));
                 children[key] = val;
-//                childIDs[i] = val;
             }
-            pos += childs.size();
+            pos += sentry.cplen * sizeof(pair<int,int>);
         }
+
+//        for (auto child : children) {
+//            cout << child.first << " " << child.second << endl;
+//        }
+//        for (int i = 0; i < chil.size(); ++i) {
+//            cout << chil[i].first << " " << chil[i].second << endl;
+//        }
 
         counter++;
         //if (sentry.uiEntryDesc == ContainerChangeEntry::Create) entryCreate[sentry.syncNodeID] = &sentry;
@@ -451,52 +457,52 @@ void VRSyncNode::deserializeAndApply(string& data) {
             //find parent
 
 
-            if (fcType->isNode()){
-//                cout << "is node" << endl;
-                Node* node = dynamic_cast<Node*>(fcPtr.get());
-//                cout << "casted to node " << node->getTypeName() << " " << node->getId() << endl;
-//                cout << "created Node " << node->getId() << endl;
-//                cout << "parent " << parent << endl;
-//                cout << "added to parent " << parent->getId() << endl;
-                //TODO
-                //FieldContainer* parent = getParentFC(node->getId());
-                parent->addChild(node);
-            }
-
-            if (fcType->isNodeCore()){
-                NodeCore* core = dynamic_cast<NodeCore*>(fcPtr.get());
-                //get node via syncID: node syncID is core syncID-1
-                UInt32 nodeSyncID = --sentry.syncNodeID;
-                for (auto entry : container) {
-                    UInt32 id = entry.first;
-                    int syncID = entry.second;
-                    if (syncID == nodeSyncID) {
-                        FieldContainer* nodeFC = factory->getContainer(id);
-                        Node* node = dynamic_cast<Node*>(nodeFC);
-                        node->setCore(core);
-//                        cout << "added core " << core->getId() << " to node " << node->getId() << endl;
-                    }
-                    //TODO: if no node was found, this core is not referenced and the fc get deleted
-                    //create node with syncID-1
-                    else {
-                        NodeRefPtr nodePtr = Node::create();
-                        Node* node = nodePtr.get();
-                        //TODO
-                        //FieldContainer* parent = getParentFC(node->getId());
-                        node->setCore(core);
-                        parent->addChild(node); //TODO reassure
-                        //register if not in container
-                        bool registered = false;
-                        for (auto entry : container) { //TODO: check if its not a cyclic dependence
-                            int entrySyncID = entry.second;
-                            if (nodeSyncID == entrySyncID) {
-                                registered = true;
-                            }
-                        }
-                        if (!registered) registerContainer(node, nodeSyncID);
-                    }
-                }
-            }
+//            if (fcType->isNode()){
+////                cout << "is node" << endl;
+//                Node* node = dynamic_cast<Node*>(fcPtr.get());
+////                cout << "casted to node " << node->getTypeName() << " " << node->getId() << endl;
+////                cout << "created Node " << node->getId() << endl;
+////                cout << "parent " << parent << endl;
+////                cout << "added to parent " << parent->getId() << endl;
+//                //TODO
+//                //FieldContainer* parent = getParentFC(node->getId());
+//                parent->addChild(node);
+//            }
+//
+//            if (fcType->isNodeCore()){
+//                NodeCore* core = dynamic_cast<NodeCore*>(fcPtr.get());
+//                //get node via syncID: node syncID is core syncID-1
+//                UInt32 nodeSyncID = --sentry.syncNodeID;
+//                for (auto entry : container) {
+//                    UInt32 id = entry.first;
+//                    int syncID = entry.second;
+//                    if (syncID == nodeSyncID) {
+//                        FieldContainer* nodeFC = factory->getContainer(id);
+//                        Node* node = dynamic_cast<Node*>(nodeFC);
+//                        node->setCore(core);
+////                        cout << "added core " << core->getId() << " to node " << node->getId() << endl;
+//                    }
+//                    //TODO: if no node was found, this core is not referenced and the fc get deleted
+//                    //create node with syncID-1
+//                    else {
+//                        NodeRefPtr nodePtr = Node::create();
+//                        Node* node = nodePtr.get();
+//                        //TODO
+//                        //FieldContainer* parent = getParentFC(node->getId());
+//                        node->setCore(core);
+//                        parent->addChild(node); //TODO reassure
+//                        //register if not in container
+//                        bool registered = false;
+//                        for (auto entry : container) { //TODO: check if its not a cyclic dependence
+//                            int entrySyncID = entry.second;
+//                            if (nodeSyncID == entrySyncID) {
+//                                registered = true;
+//                            }
+//                        }
+//                        if (!registered) registerContainer(node, nodeSyncID);
+//                    }
+//                }
+//            }
         }
         else {
             fcPtr = factory->getContainer(id);
