@@ -45,6 +45,7 @@ class VRSyncNode : public VRTransform {
 
         VRObjectPtr copy(vector<VRObjectPtr> children);
 
+        string copySceneState();
         void handleChangeList(void* msg);
         vector<FieldContainer*> findContainer(string typeName); //deprecated
         vector<FieldContainer*> getTransformationContainer(ChangeList* cl); //deprecated
