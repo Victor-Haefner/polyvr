@@ -35,6 +35,7 @@ struct VRProcessNode : VRName {
     bool isInitialState = false;
     bool isSendState = false;
     bool isReceiveState = false;
+    VRUpdateCbPtr callback = 0;
     //VRProcessNodePtr message;
 
     VRProcessNode(string name, PROCESS_WIDGET type, int ID, int sID);
@@ -73,6 +74,7 @@ class VRProcess : public std::enable_shared_from_this<VRProcess>, public VRName 
         map<VRProcessNodePtr, VRProcessNodePtr> transitionToMessage; //maps the send/receive transition node to the corresponding message node
 
         void update();
+        bool checkState(VRProcessNodePtr state);
 
     public:
         VRProcess(string name);
@@ -115,8 +117,10 @@ class VRProcess : public std::enable_shared_from_this<VRProcess>, public VRName 
         VRProcessNodePtr addSubject(string name, VREntityPtr e = 0);
         VRProcessNodePtr addMessage(string name, int i, int j, VRProcessDiagramPtr diag = 0, VREntityPtr e = 0);
         VRProcessNodePtr addState(string name, int sID, VREntityPtr e = 0);
-        VRProcessNodePtr addTransition(string name, int sID, int i, int j, VRProcessDiagramPtr d = 0);
+        VRProcessNodePtr addTransition(string name, int sID, int i, int j, VRProcessDiagramPtr d = 0, VRUpdateCbPtr callback = 0);
+
         void setInitialState(VRProcessNodePtr state);
+        void setSendState(VRProcessNodePtr sender, VRProcessNodePtr receiver, VRProcessNodePtr sendTransition, VRProcessNodePtr recvTransition, string message);
 
         void remNode(VRProcessNodePtr n);
         VRProcessNodePtr getTransitionState(VRProcessNodePtr transition);

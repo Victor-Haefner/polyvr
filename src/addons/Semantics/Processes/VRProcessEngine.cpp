@@ -198,6 +198,8 @@ void VRProcessEngine::initialize() {
                 //get transition requirements
                 auto nextState = process->getTransitionState(processTransition);
                 Transition transition(state, nextState, processTransition);
+                if (processTransition->callback)
+                    transition.actions.push_back( Action(processTransition->callback, Message()) );
 
                 if (processTransition->transition == RECEIVE_CONDITION) {
                     auto message = process->getTransitionMessage( processTransition );

@@ -120,6 +120,9 @@ VRPathtool::VRPathtool() : VRTransform("Pathtool") {
 
 VRPathtool::~VRPathtool() {
     if (manip) delete manip;
+    // destroy the handles to make sure, they may have been moved in the SG
+    for (auto hw : handles       ) if (auto h = hw.lock()) h->destroy();
+    for (auto hw : controlHandles) if (auto h = hw.lock()) h->destroy();
 }
 
 VRPathtoolPtr VRPathtool::create() { return VRPathtoolPtr( new VRPathtool() ); }

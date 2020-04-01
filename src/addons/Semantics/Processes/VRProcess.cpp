@@ -90,7 +90,7 @@ VRProcessDiagramPtr VRProcess::getInteractionDiagram() {
 
 VRProcessDiagramPtr VRProcess::getBehaviorDiagram(int subject) { return behaviorDiagrams.count(subject) ? behaviorDiagrams[subject] : 0; }
 
-bool VRProcess::isFunctionState(VRProcessNodePtr state){ return (state->isSendState || state->isReceiveState); }
+bool VRProcess::isFunctionState(VRProcessNodePtr state){ return (!state->isSendState && !state->isReceiveState); }
 bool VRProcess::isSendState(VRProcessNodePtr state){ return state->isSendState; }
 bool VRProcess::isReceiveState(VRProcessNodePtr state){ return state->isReceiveState; }
 bool VRProcess::isInitialState(VRProcessNodePtr state){ return state->isInitialState; }
@@ -108,6 +108,7 @@ vector<VRProcessNodePtr> VRProcess::getMessages() {
     vector<VRProcessNodePtr> res;
     if (!interactionDiagram) return res;
     for (auto node : interactionDiagram->processnodes) {
+        if (!node.second) continue;
         if (node.second->type == MESSAGE) res.push_back(node.second);
     }
     return res;
@@ -157,7 +158,7 @@ vector<VRProcessNodePtr> VRProcess::getMessageSubjects(int messageID) {
     return res;
 }
 
-vector<VRProcessNodePtr> VRProcess::getMessageReceiver(int messageID){
+vector<VRProcessNodePtr> VRProcess::getMessageReceiver(int messageID) {
     auto diag = interactionDiagram;
     auto nextNodes = diag->getNextNodes(messageID);
     vector<VRProcessNodePtr> res;
@@ -167,11 +168,11 @@ vector<VRProcessNodePtr> VRProcess::getMessageReceiver(int messageID){
     return res;
 }
 
-vector<VRProcessNodePtr> VRProcess::getMessageSender(int messageID){
+vector<VRProcessNodePtr> VRProcess::getMessageSender(int messageID) {
     auto diag = interactionDiagram;
     auto previousNodes = diag->getPreviousNodes(messageID);
     vector<VRProcessNodePtr> res;
-    for (auto node : previousNodes){
+    for (auto node : previousNodes) {
         res.push_back(diag->processnodes[node.ID]);
     }
     return res;
@@ -414,7 +415,7 @@ void VRProcess::update() {
                 */
                 if (auto messageConnector = transitionConditionEntity->get("requiresPerformedMessageExchange")){
                     if (auto connector = ontology->getEntity(messageConnector->value)) {
-                        if (auto m = connector->get("hasMessageType")){
+                        if (auto m = connector->get("hasMessageType")) {
                             if (auto messageEntity = ontology->getEntity(m->value)) transitionsToMessages[transition] = messageEntity;
                         }
                     }
@@ -497,27 +498,51 @@ VRProcessNodePtr VRProcess::addState(string name, int sID, VREntityPtr e) {
     return s;
 }
 
-void VRProcess::setInitialState(VRProcessNodePtr state) {
-    if (!state) return;
+bool VRProcess::checkState(VRProcessNodePtr state) {
+    if (!state) return false;
     int sID = state->subject;
     auto diag = behaviorDiagrams[sID];
-    if (!diag) cout << "VRProcess::setInitialState: No Behavior for subject " << getSubjects()[sID]->getLabel() << " found." << endl;
+    if (!diag) cout << "VRProcess::checkState: No Behavior for subject " << getSubjects()[sID]->getLabel() << " found." << endl;
 
     if (state->type != STATE) {
-        cout << "VRProcess::setInitialState: The given Processnode if not of type STATE." << endl;
-        return;
+        cout << "VRProcess::checkState: The given Processnode if not of type STATE." << endl;
+        return false;
     }
+    return true;
+}
 
+void VRProcess::setInitialState(VRProcessNodePtr state) {
+    if (!checkState(state)) return;
+    auto diag = behaviorDiagrams[state->subject];
     for (auto n : diag->processnodes) n.second->isInitialState = false; // reset all
     state->isInitialState = true;
 }
 
+void VRProcess::setSendState(VRProcessNodePtr sender, VRProcessNodePtr receiver, VRProcessNodePtr sendTransition, VRProcessNodePtr recvTransition, string message) {
+    if (!checkState(sender)) return;
+    if (!checkState(receiver)) return;
 
-VRProcessNodePtr VRProcess::addTransition(string name, int sID, int i, int j, VRProcessDiagramPtr diag ){
+    sender->isSendState = true;
+    sender->isReceiveState = false;
+    receiver->isSendState = false;
+    receiver->isReceiveState = true;
+    sendTransition->transition = SEND_CONDITION;
+    recvTransition->transition = RECEIVE_CONDITION;
+
+    auto messageNode = addMessage(message, sender->subject, receiver->subject, 0, 0);
+
+    transitionToMessage[sendTransition] = messageNode;
+    transitionToMessage[recvTransition] = messageNode;
+    stateToMessage[sender] = messageNode;
+    stateToMessage[receiver] = messageNode;
+}
+
+VRProcessNodePtr VRProcess::addTransition(string name, int sID, int i, int j, VRProcessDiagramPtr diag, VRUpdateCbPtr callback ){
     if (!diag) diag = behaviorDiagrams[sID];
     if (!diag) return 0;
     auto tID = diag->addNode();
     auto t = VRProcessNode::create(name, TRANSITION, tID, sID);
+    t->callback = callback;
     diag->processnodes[tID] = t;
     diag->connect(i, tID, Graph::HIERARCHY);
     diag->connect(tID, j, Graph::DEPENDENCY);

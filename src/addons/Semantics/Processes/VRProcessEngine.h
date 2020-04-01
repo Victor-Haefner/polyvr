@@ -20,6 +20,7 @@ class VRProcessEngine {
             VRProcessNodePtr messageNode;
 
             Message(string m, string s, string r, VRProcessNodePtr node) : message(m), sender(s), receiver(r), messageNode(node) {}
+            Message() {}
 
             bool operator==(const Message& m) { return m.message == message && m.sender == sender; }
         };
