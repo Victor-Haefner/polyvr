@@ -42,6 +42,8 @@ class VRSyncNode : public VRTransform {
         vector<UInt32> syncedContainer; //Id's of container that got changes over sync (changed by remote). Needed to filter out sync changes from local Changelist to prevent cycles.
         map<string, VRSyncRemotePtr> remotes;
         map<int, int> remoteToLocalID;
+        UInt32 getRegisteredContainerID(int syncID);
+        int getRegisteredSyncID(UInt32 fieldContainerID);
 
         VRObjectPtr copy(vector<VRObjectPtr> children);
 

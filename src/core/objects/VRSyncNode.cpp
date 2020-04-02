@@ -233,6 +233,20 @@ std::vector<BYTE> base64_decode(std::string const& encoded_string) {
   return ret;
 }
 
+int VRSyncNode::getRegisteredSyncID(UInt32 fieldContainerID) {
+    int syncID = container[fieldContainerID] ? container[fieldContainerID] : -1;
+    return syncID;
+}
+
+UInt32 VRSyncNode::getRegisteredContainerID(int syncID) {
+    int id = -1;
+    for (auto registered : container) {
+        int registeredSyncID = registered.second;
+        if (registeredSyncID == syncID) id = registered.first;
+    }
+    return id;
+}
+
 struct SerialEntry {
     int localId = 0;
     BitVector fieldMask;
@@ -397,21 +411,22 @@ void VRSyncNode::deserializeAndApply(string& data) {
         pos += sentry.len;
 
         map<int,int> children; // <ID,syncID>
-        if (sentry.fieldMask & Node::ChildrenFieldMask) {
-            vector<BYTE> childs;
+//        if (sentry.fieldMask & Node::ChildrenFieldMask) {
+        vector<BYTE> childs;
 //            cout << "insert attempt " << endl;
-            childs.insert(childs.end(), vec.begin()+pos, vec.begin()+pos+sentry.cplen*sizeof(pair<int,int>));
+        childs.insert(childs.end(), vec.begin()+pos, vec.begin()+pos+sentry.cplen*sizeof(pair<int,int>)); //TODO: get rid of the extra vector and fill childToParent map asap
 //            cout << "children " << children.size() << endl;
-            for (int i = 0; i < childs.size(); i+=sizeof(pair<int,int>)) { //NOTE: int can be either 4 (assumed here) or 2 bytes, depending on system
-                int key;
-                int val;
-                memcpy(&key, &childs[i], sizeof(int));
-                memcpy(&val, &childs[i] + sizeof(int), sizeof(int));
-                children[key] = val;
-                childToParent[val] = id;
-            }
-            pos += sentry.cplen * sizeof(pair<int,int>);
+        for (int i = 0; i < childs.size(); i+=sizeof(pair<int,int>)) { //NOTE: int can be either 4 (assumed here) or 2 bytes, depending on system
+            int key;
+            int val;
+            memcpy(&key, &childs[i], sizeof(int));
+            memcpy(&val, &childs[i] + sizeof(int), sizeof(int));
+            children[key] = val;
+            childToParent[val] = id;
+            cout << "key " << key << " val " << val << endl;
         }
+        pos += sentry.cplen * sizeof(pair<int,int>);
+//        }
 
         cout << "childToParent " << childToParent.size() << " " << children.size() << endl;
         for (auto child : childToParent) {
@@ -421,16 +436,26 @@ void VRSyncNode::deserializeAndApply(string& data) {
         counter++;
 
         FieldContainerRecPtr fcPtr = nullptr; // Field Container to apply changes to
-//        if (id == -1) continue;
-        // if fc does not exist we need to create a new fc = node
-        if (sentry.uiEntryDesc == ContainerChangeEntry::Create && id == -1) { //if create and not registered | sentry.uiEntryDesc == ContainerChangeEntry::Create &&
-//            FieldContainerRecPtr fcPtr;
+
+        if (sentry.uiEntryDesc == ContainerChangeEntry::Create) { //if create and not registered | sentry.uiEntryDesc == ContainerChangeEntry::Create &&
             UInt32 typeID = sentry.fcTypeID;
             FieldContainerType* fcType = factory->findType(typeID);
-//            cout << "create node of type " << fcType->getName() << endl;
-            fcPtr = fcType->createContainer();
-//            cout << "!!!!! created FC " << fcPtr->getTypeName() << " " << fcPtr->getId() << "  " << fcPtr->getRefCount() << endl;
-            registerContainer(fcPtr.get(), sentry.syncNodeID);
+
+            bool isRegistered = false;
+            for (auto reg : container) { //check if the FC is already registered, f.e. if nodeCore create entry arrives first a core along with its node will be created before the node create entry arrives
+                UInt32 id = reg.first;
+                if (reg.second == sentry.syncNodeID) {
+                    isRegistered = true;
+                }
+            }
+            if (!isRegistered) { //if not registered create a FC of fcType
+                fcPtr = fcType->createContainer();
+                registerContainer(fcPtr.get(), sentry.syncNodeID);
+            }
+            else { //else its registered. then get the existing FC
+                fcPtr = factory->getContainer(getRegisteredContainerID(sentry.syncNodeID));
+            }
+
             id = fcPtr.get()->getId();
 
 
@@ -438,14 +463,6 @@ void VRSyncNode::deserializeAndApply(string& data) {
             if (fcType->isNode()){
                 cout << "isNode" << endl;
                 //check if the node is already registered (in case, the core create was performed first, which creates a node aswell)
-                bool isRegistered = false;
-                for (auto reg : container) {
-                    UInt32 id = reg.first;
-                    int syncId = reg.second;
-                    if (syncId == sentry.syncNodeID) {
-                        isRegistered = true;
-                    }
-                }
 
                 Node* node = dynamic_cast<Node*>(fcPtr.get());
                 int parentId = childToParent[sentry.syncNodeID] ? childToParent[sentry.syncNodeID] : container.begin()->first;
