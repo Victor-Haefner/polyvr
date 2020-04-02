@@ -284,14 +284,14 @@ vector<VRProcessNodePtr> VRProcess::getInitialStates() {
     return res;
 }
 
-VRProcessNodePtr VRProcess::getStateMessage(VRProcessNodePtr state){
-    if (!stateToMessage.count(state)) return 0;
-    return stateToMessage[state];
+vector<VRProcessNodePtr> VRProcess::getStateMessages(VRProcessNodePtr state){
+    if (!stateToMessages.count(state)) return vector<VRProcessNodePtr>();
+    return stateToMessages[state];
 }
 
-VRProcessNodePtr VRProcess::getTransitionMessage(VRProcessNodePtr transition){
-    if (!transitionToMessage.count(transition)) return 0;
-    return transitionToMessage[transition];
+vector<VRProcessNodePtr> VRProcess::getTransitionMessages(VRProcessNodePtr transition){
+    if (!transitionToMessages.count(transition)) return vector<VRProcessNodePtr>();
+    return transitionToMessages[transition];
 }
 
 void VRProcess::update() {
@@ -438,11 +438,11 @@ void VRProcess::update() {
                         if (transitionsToMessages.count(transitionEntity)) { // ?
                             auto messageEntity = transitionsToMessages[transitionEntity];
                             auto messageNode = messageEntityToNode[messageEntity];
-                            transitionToMessage[transitionNode] = messageNode;
+                            transitionToMessages[transitionNode].push_back(messageNode);
                             auto sourceNode = getNode(nodes[source.first]);
                             auto targetNode = getNode(nodes[target.first]);
-                            stateToMessage[sourceNode] = messageNode;
-                            stateToMessage[targetNode] = messageNode;
+                            stateToMessages[sourceNode].push_back(messageNode);
+                            stateToMessages[targetNode].push_back(messageNode);
                         }
                     }
                 }
@@ -529,12 +529,12 @@ void VRProcess::setSendState(VRProcessNodePtr sender, VRProcessNodePtr receiver,
     sendTransition->transition = SEND_CONDITION;
     recvTransition->transition = RECEIVE_CONDITION;
 
-    auto messageNode = addMessage(message, sender->subject, receiver->subject, 0, 0);
+    auto messageNode = addMessage(message, sender->subject, receiver->subject, 0, 0); // TODO: add only if necessary!
 
-    transitionToMessage[sendTransition] = messageNode;
-    transitionToMessage[recvTransition] = messageNode;
-    stateToMessage[sender] = messageNode;
-    stateToMessage[receiver] = messageNode;
+    transitionToMessages[sendTransition].push_back(messageNode);
+    transitionToMessages[recvTransition].push_back(messageNode);
+    stateToMessages[sender].push_back(messageNode);
+    stateToMessages[receiver].push_back(messageNode);
 }
 
 VRProcessNodePtr VRProcess::addTransition(string name, int sID, int i, int j, VRProcessDiagramPtr diag, VRUpdateCbPtr callback ){

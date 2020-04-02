@@ -70,8 +70,8 @@ class VRProcess : public std::enable_shared_from_this<VRProcess>, public VRName 
         VRProcessDiagramPtr interactionDiagram;
         map<int, VRProcessDiagramPtr> behaviorDiagrams;
         void printNodes(VRProcessDiagramPtr d);
-        map<VRProcessNodePtr, VRProcessNodePtr> stateToMessage; //maps state to message for send/receive refenrences
-        map<VRProcessNodePtr, VRProcessNodePtr> transitionToMessage; //maps the send/receive transition node to the corresponding message node
+        map<VRProcessNodePtr, vector<VRProcessNodePtr>> stateToMessages; //maps state to messages for send/receive refenrences
+        map<VRProcessNodePtr, vector<VRProcessNodePtr>> transitionToMessages; //maps the send/receive transition node to the corresponding message nodes
 
         void update();
         bool checkState(VRProcessNodePtr state);
@@ -111,8 +111,8 @@ class VRProcess : public std::enable_shared_from_this<VRProcess>, public VRName 
         vector<VRProcessNodePtr> getInitialStates();
 
         VRProcessNodePtr getSubjectState(int subjectID, string name);
-        VRProcessNodePtr getStateMessage(VRProcessNodePtr state);
-        VRProcessNodePtr getTransitionMessage(VRProcessNodePtr transition);
+        vector<VRProcessNodePtr> getStateMessages(VRProcessNodePtr state);
+        vector<VRProcessNodePtr> getTransitionMessages(VRProcessNodePtr transition);
 
         VRProcessNodePtr addSubject(string name, VREntityPtr e = 0);
         VRProcessNodePtr addMessage(string name, int i, int j, VRProcessDiagramPtr diag = 0, VREntityPtr e = 0);

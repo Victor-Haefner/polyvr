@@ -63,6 +63,10 @@ string VRProcessEngine::Actor::transitioning( float t ) {
     for (auto& transition : transitions[stateName]) { // check if any actions are ready to start
         if (transition.valid(&inventory)) {
             currentState = transition.nextState;
+
+            int N = transition.actions.size();
+            if (N > 0) cout << "VRProcessEngine::Actor::transitioning " << N << " " << stateName << " " << transition.node->label << endl;
+
             for (auto& action : transition.actions){
                 (*action.cb)();
                 sendMessage(&action.message);
@@ -202,8 +206,8 @@ void VRProcessEngine::initialize() {
                     transition.actions.push_back( Action(processTransition->callback, Message()) );
 
                 if (processTransition->transition == RECEIVE_CONDITION) {
-                    auto message = process->getTransitionMessage( processTransition );
-                    if (message) {
+                    auto messages = process->getTransitionMessages( processTransition );
+                    for (auto message : messages) {
                         auto sender = process->getMessageSender(message->getID())[0];
                         auto receiver = process->getMessageReceiver(message->getID())[0];
                         if (message && sender && receiver) {
@@ -212,8 +216,8 @@ void VRProcessEngine::initialize() {
                         }
                     }
                 } else if (processTransition->transition == SEND_CONDITION) {
-                    auto message = process->getTransitionMessage( processTransition );
-                    if (message) {
+                    auto messages = process->getTransitionMessages( processTransition );
+                    for (auto message : messages) {
                         auto sender = process->getMessageSender(message->getID())[0];
                         auto receiver = process->getMessageReceiver(message->getID())[0];
                         if (sender && receiver) {
