@@ -311,7 +311,7 @@ void VRProcessLayout::buildSBDs() {
 	}
 }
 
-void VRProcessLayout::printHandlePositions(){
+void VRProcessLayout::printHandlePositions() {
     for (auto subject : process->getSubjects()){
         cout << "subject: " << subject->getID() << endl;
         auto toolSBD = toolSBDs[subject->getID()];

@@ -68,7 +68,7 @@ string VRProcessEngine::Actor::transitioning( float t ) {
             if (N > 0) cout << "VRProcessEngine::Actor::transitioning " << N << " " << stateName << " " << transition.node->label << endl;
 
             for (auto& action : transition.actions){
-                (*action.cb)();
+                (*action.cb)(transition.node);
                 sendMessage(&action.message);
             }
             for ( auto p : transition.prerequisites){
@@ -82,7 +82,7 @@ string VRProcessEngine::Actor::transitioning( float t ) {
 }
 
 //TODO: Actor should receive all messages that were sent to him without knowing the message
-void VRProcessEngine::Actor::receiveMessage(Message message) {
+void VRProcessEngine::Actor::receiveMessage(VRProcessNodePtr node, Message message) {
     cout << "VRProcessEngine::Actor::receiveMessage '" << message.message << "' to '" << message.receiver << "' inv: " << &inventory << ", actor: " << this << endl;
     inventory.messages.push_back( message );
 }
@@ -223,7 +223,7 @@ void VRProcessEngine::initialize() {
                         if (sender && receiver) {
                             Message m(message->getLabel(), sender->getLabel(), receiver->getLabel(), state);
                             Actor& rActor = subjects[receiver->getID()];
-                            auto cb = VRUpdateCb::create("action", boost::bind(&VRProcessEngine::Actor::receiveMessage, &rActor, m)); //better to trigger receiveMessage during receive transition of the receiver actor
+                            auto cb = VRProcessCb::create("action", boost::bind(&VRProcessEngine::Actor::receiveMessage, &rActor, _1, m)); //better to trigger receiveMessage during receive transition of the receiver actor
                             transition.actions.push_back( Action(cb, m) );
                         }
                     }

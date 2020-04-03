@@ -8,6 +8,8 @@
 #include <map>
 #include "core/math/OSGMathFwd.h"
 
+ptrFctFwd( VRProcess, OSG::VRProcessNodePtr );
+
 using namespace std;
 OSG_BEGIN_NAMESPACE;
 
@@ -41,10 +43,10 @@ class VRProcessEngine {
         };
 
         struct Action {
-            VRUpdateCbPtr cb;
+            VRProcessCbPtr cb;
             Message message; //sends an instance of this message
 
-            Action(VRUpdateCbPtr cb, Message m) : cb(cb), message(m) {}
+            Action(VRProcessCbPtr cb, Message m) : cb(cb), message(m) {}
         };
 
         struct Transition {
@@ -76,7 +78,7 @@ class VRProcessEngine {
             void checkTransitions();
             string transitioning( float t ); // performs transitions to next states
 
-            void receiveMessage(Message message);
+            void receiveMessage(VRProcessNodePtr node, Message message);
             void sendMessage(Message* message);
 
             void tryAdvance();

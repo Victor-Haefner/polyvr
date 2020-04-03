@@ -208,6 +208,10 @@ VRProcessNodePtr VRProcess::getSubjectState(int subjectID, string name) {
     return 0;
 }
 
+VRProcessNodePtr VRProcess::getSubject(string name) {
+    return getNodeByName(name);
+}
+
 void VRProcess::printNodes(VRProcessDiagramPtr d){
     for (auto node : d->processNodes) cout << node.second->getLabel() << endl;
 }
@@ -545,6 +549,7 @@ void VRProcess::setInitialState(VRProcessNodePtr state) {
 void VRProcess::setSendState(VRProcessNodePtr sender, VRProcessNodePtr receiver, VRProcessNodePtr sendTransition, VRProcessNodePtr recvTransition, string message) {
     if (!checkState(sender)) return;
     if (!checkState(receiver)) return;
+    if (!sendTransition || !recvTransition) return;
 
     sender->isSendState = true;
     sender->isReceiveState = false;
@@ -561,7 +566,7 @@ void VRProcess::setSendState(VRProcessNodePtr sender, VRProcessNodePtr receiver,
     stateToMessages[receiver].push_back(messageNode);
 }
 
-VRProcessNodePtr VRProcess::addTransition(string name, int sID, int i, int j, VRProcessDiagramPtr diag, VRUpdateCbPtr callback ){
+VRProcessNodePtr VRProcess::addTransition(string name, int sID, int i, int j, VRProcessDiagramPtr diag, VRProcessCbPtr callback ){
     if (!diag) diag = behaviorDiagrams[sID];
     if (!diag) return 0;
     auto tID = diag->addNode();

@@ -8,6 +8,8 @@
 
 #include <string>
 
+ptrFctFwd( VRProcess, OSG::VRProcessNodePtr );
+
 using namespace std;
 OSG_BEGIN_NAMESPACE;
 
@@ -35,10 +37,11 @@ struct VRProcessNode : VRName {
     bool isInitialState = false;
     bool isSendState = false;
     bool isReceiveState = false;
-    VRUpdateCbPtr callback = 0;
+    VRProcessCbPtr callback = 0;
     //VRProcessNodePtr message;
 
     VRProcessNode(string name, PROCESS_WIDGET type, int ID, int sID);
+    VRProcessNode(){};
     ~VRProcessNode();
     static VRProcessNodePtr create(string name, PROCESS_WIDGET type, int ID, int sID);
 
@@ -112,6 +115,7 @@ class VRProcess : public std::enable_shared_from_this<VRProcess>, public VRName 
         vector<VRProcessNodePtr> getTransitions(int subjectID);
         vector<VRProcessNodePtr> getInitialStates();
 
+        VRProcessNodePtr getSubject(string name);
         VRProcessNodePtr getSubjectState(int subjectID, string name);
         vector<VRProcessNodePtr> getStateMessages(VRProcessNodePtr state);
         vector<VRProcessNodePtr> getTransitionMessages(VRProcessNodePtr transition);
@@ -119,7 +123,7 @@ class VRProcess : public std::enable_shared_from_this<VRProcess>, public VRName 
         VRProcessNodePtr addSubject(string name, VREntityPtr e = 0);
         VRProcessNodePtr addMessage(string name, int i, int j, VRProcessDiagramPtr diag = 0, VREntityPtr e = 0);
         VRProcessNodePtr addState(string name, int sID, VREntityPtr e = 0);
-        VRProcessNodePtr addTransition(string name, int sID, int i, int j, VRProcessDiagramPtr d = 0, VRUpdateCbPtr callback = 0);
+        VRProcessNodePtr addTransition(string name, int sID, int i, int j, VRProcessDiagramPtr d = 0, VRProcessCbPtr callback = 0);
 
         void setInitialState(VRProcessNodePtr state);
         void setSendState(VRProcessNodePtr sender, VRProcessNodePtr receiver, VRProcessNodePtr sendTransition, VRProcessNodePtr recvTransition, string message);
