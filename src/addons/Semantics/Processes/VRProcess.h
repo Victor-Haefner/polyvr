@@ -52,7 +52,8 @@ struct VRProcessNode : VRName {
 };
 
 struct VRProcessDiagram : public Graph {
-    map<int, VRProcessNodePtr> processnodes;
+    map<int, VRProcessNodePtr> processNodes;
+    map<string, int> nodesByName;
 
     VRProcessDiagram();
     ~VRProcessDiagram();
@@ -87,6 +88,7 @@ class VRProcess : public std::enable_shared_from_this<VRProcess>, public VRName 
         VRProcessDiagramPtr getInteractionDiagram();
         VRProcessDiagramPtr getBehaviorDiagram(int subject);
         VRProcessNodePtr getNode(int i, VRProcessDiagramPtr diag = 0);
+        VRProcessNodePtr getNodeByName(string name, VRProcessDiagramPtr diag = 0);
 
         bool isFunctionState(VRProcessNodePtr); // = neither send/receive state
         bool isSendState(VRProcessNodePtr);

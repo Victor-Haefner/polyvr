@@ -36,6 +36,7 @@ class VRGuiBits {
         void on_navigation_changed();
 
         void on_save_clicked();
+        void on_web_export_clicked();
         void on_quit_clicked();
         void on_about_clicked();
         void on_internal_clicked();

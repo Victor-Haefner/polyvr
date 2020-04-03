@@ -41,6 +41,8 @@ PyMethodDef VRPyProcess::methods[] = {
     {"setSendState", PyWrap(Process, setSendState, "Set a state to senda message (sender, receiver, message)", void, VRProcessNodePtr, VRProcessNodePtr, VRProcessNodePtr, VRProcessNodePtr, string ) },
     {"addMessage", PyWrapOpt(Process, addMessage, "Add a new message between subjects or actions i and j - ProcessNode addMessage( name, int i, int j )", "0|0", VRProcessNodePtr, string, int, int, VRProcessDiagramPtr, VREntityPtr ) },
     {"addTransition", PyWrapOpt(Process, addTransition, "Add a new transition between actions i and j - ProcessNode addTransition( name, subject, int i, int j )", "0|0", VRProcessNodePtr, string, int, int, int, VRProcessDiagramPtr, VRUpdateCbPtr ) },
+    {"getNode", PyWrapOpt(Process, getNode, "Get node by ID", "0", VRProcessNodePtr, int, VRProcessDiagramPtr ) },
+    {"getNodeByName", PyWrapOpt(Process, getNodeByName, "Get node by name", "0", VRProcessNodePtr, string, VRProcessDiagramPtr ) },
    {NULL}  /* Sentinel */
 };
 

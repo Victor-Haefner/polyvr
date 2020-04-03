@@ -316,7 +316,7 @@ void VRProcessLayout::printHandlePositions(){
         cout << "subject: " << subject->getID() << endl;
         auto toolSBD = toolSBDs[subject->getID()];
         auto behavior = process->getBehaviorDiagram(subject->getID());
-        for (auto node : behavior->processnodes){
+        for (auto node : behavior->processNodes){
             auto nid = node.second->getID();
             auto handle = toolSBD->getHandle(nid);
             auto position = handle->getWorldPosition();
