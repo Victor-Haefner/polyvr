@@ -392,6 +392,19 @@ UInt32 VRSyncNode::getLocalId(UInt32 remoteID, int syncID) {
     return id;
 }
 
+//checks in container if the node with syncID is already been registered
+bool VRSyncNode::isRegistered(int syncID) {
+    bool registered = false;
+    for (auto reg : container) { //check if the FC is already registered, f.e. if nodeCore create entry arrives first a core along with its node will be created before the node create entry arrives
+        UInt32 id = reg.first;
+        if (reg.second == syncID) {
+            registered = true;
+            break;
+        }
+    }
+    return registered;
+}
+
 //get children IDs and map them to their parents. if a child was already registered, update it's parent
 void VRSyncNode::deserializeChildrenData(vector<BYTE>& childrenData, UInt32 fcID, map<int,int>& childToParent) {
     cout << "children " << childrenData.size() << endl;
@@ -466,48 +479,27 @@ void VRSyncNode::deserializeAndApply(string& data) {
 
         FieldContainerRecPtr fcPtr = nullptr; // Field Container to apply changes to
 
-        //id, sentry.fcTypeID, sentry.syncNodeID
         if (sentry.uiEntryDesc == ContainerChangeEntry::Create) { //if create and not registered | sentry.uiEntryDesc == ContainerChangeEntry::Create &&
             FieldContainerType* fcType = factory->findType(sentry.fcTypeID);
 
-            bool isRegistered = false;
-            for (auto reg : container) { //check if the FC is already registered, f.e. if nodeCore create entry arrives first a core along with its node will be created before the node create entry arrives
-                UInt32 id = reg.first;
-                if (reg.second == sentry.syncNodeID) {
-                    isRegistered = true;
-                    break;
-                }
-            }
-            if (!isRegistered) { //if not registered create a FC of fcType
+            if (!isRegistered(sentry.syncNodeID)) { //if not registered create a FC of fcType
                 fcPtr = fcType->createContainer();
                 registerContainer(fcPtr.get(), sentry.syncNodeID);
                 id = fcPtr.get()->getId();
                 remoteToLocalID[sentry.syncNodeID] = id;
-            }
-            else { //else its registered. then get the existing FC
-                fcPtr = factory->getContainer(getRegisteredContainerID(sentry.syncNodeID));
-            }
+            } else fcPtr = factory->getContainer(getRegisteredContainerID(sentry.syncNodeID));//else its registered. then get the existing FC
 
-            if (fcType->isNode()){
-                cout << "isNode" << endl;
-                //check if the node is already registered (in case, the core create was performed first, which creates a node aswell)
-                createNode(fcPtr, sentry.syncNodeID, childToParent);
-            }
-            if (fcType->isNodeCore()) {
-                cout << id << " isCore" << endl;
-                createNodeCore(fcPtr, sentry.syncNodeID, childToParent);
-            }
+            if (fcType->isNode()) { createNode(fcPtr, sentry.syncNodeID, childToParent);  cout << "isNode" << endl;}
+            else if (fcType->isNodeCore()) { createNodeCore(fcPtr, sentry.syncNodeID, childToParent); cout << id << " isCore" << endl; }
         }
-        else {
-            fcPtr = factory->getContainer(id);
-        }
+        else fcPtr = factory->getContainer(id);
 
-        if(fcPtr == nullptr) {cout << "no container found with id " << id << " syncNodeID " << sentry.syncNodeID << endl; continue;} //TODO: This is causing the WARNING: Action::recurse: core is NULL, aborting traversal.
+        if(fcPtr == nullptr) { cout << "no container found with id " << id << " syncNodeID " << sentry.syncNodeID << endl; continue; } //TODO: This is causing the WARNING: Action::recurse: core is NULL, aborting traversal.
 
 
         handler.data.insert(handler.data.end(), FCdata.begin(), FCdata.end()); //feed handler with FCdata
         fcPtr->copyFromBin(handler, sentry.fieldMask); //calls handler->read
-//        cout << "copied data" << endl;
+
         if (id != -1) {
             if (count(syncedContainer.begin(), syncedContainer.end(), id) < 1) {
                 syncedContainer.push_back(id);

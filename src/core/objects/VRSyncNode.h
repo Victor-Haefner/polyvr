@@ -45,6 +45,7 @@ class VRSyncNode : public VRTransform {
         UInt32 getRegisteredContainerID(int syncID);
         int getRegisteredSyncID(UInt32 fieldContainerID);
         UInt32 getLocalId(UInt32 remoteID, int syncID);
+        bool isRegistered(int syncID);
 
         VRObjectPtr copy(vector<VRObjectPtr> children);
 
