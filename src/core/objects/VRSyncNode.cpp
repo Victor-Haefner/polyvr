@@ -375,6 +375,23 @@ string VRSyncNode::serialize(ChangeList* clist) {
     return base64_encode(&data[0], data.size());
 }
 
+UInt32 VRSyncNode::getLocalId(UInt32 remoteID, int syncID) {
+    UInt32 id = -1;
+    if (syncID != -1) {
+        for (auto c : container) {
+            if (c.second == syncID) {
+                id = c.first;
+                remoteToLocalID[syncID] = id;
+                cout << "replaced remoteID " << remoteID;
+                remoteID = id; //replace remoteID by localID
+                cout << " with localID " << remoteID<< endl;
+                break;
+            }
+        }
+    }
+    return id;
+}
+
 //get children IDs and map them to their parents. if a child was already registered, update it's parent
 void VRSyncNode::deserializeChildrenData(vector<BYTE>& childrenData, UInt32 fcID, map<int,int>& childToParent) {
     cout << "children " << childrenData.size() << endl;
@@ -431,19 +448,20 @@ void VRSyncNode::deserializeAndApply(string& data) {
         cout << "deserialize > > > sentry: " << sentry.localId << " " << sentry.fieldMask << " " << sentry.len << " desc " << sentry.uiEntryDesc << " syncID " << sentry.syncNodeID << " at pos " << pos << endl;
 
         // map remote id to local id if exist (otherwise id = -1)
-        UInt32 id = -1;
-        if (sentry.syncNodeID != -1) {
-            for (auto c : container) {
-                if (c.second == sentry.syncNodeID) {
-                    id = c.first;
-                    remoteToLocalID[sentry.syncNodeID] = id;
-                    cout << "replaced remoteID " << sentry.localId;
-                    sentry.localId = id; //replace remoteID by localID
-                    cout << " with localID " << sentry.localId << endl;
-                    break;
-                }
-            }
-        }
+        UInt32 id = getLocalId(sentry.localId, sentry.syncNodeID);
+//        UInt32 id = -1;
+//        if (sentry.syncNodeID != -1) {
+//            for (auto c : container) {
+//                if (c.second == sentry.syncNodeID) {
+//                    id = c.first;
+//                    remoteToLocalID[sentry.syncNodeID] = id;
+//                    cout << "replaced remoteID " << sentry.localId;
+//                    sentry.localId = id; //replace remoteID by localID
+//                    cout << " with localID " << sentry.localId << endl;
+//                    break;
+//                }
+//            }
+//        }
 
         pos += sizeof(SerialEntry);
         vector<BYTE> FCdata;
