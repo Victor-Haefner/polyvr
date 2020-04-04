@@ -62,7 +62,8 @@ class VRSyncNode : public VRTransform {
         void registerContainer(FieldContainer* c, int syncNodeID = -1);
         vector<int> registerNode(Node* c); //returns all registered IDs
 
-        NodeRefPtr createChild(Node* parent);
+        void createNode(FieldContainerRecPtr& fcPtr, int syncNodeID, map<int,int>& childToParent);
+        void createNodeCore(FieldContainerRecPtr& fcPtr, int syncNodeID, map<int,int>& childToParent);
 
     public:
         VRSyncNode(string name = "syncNode");
