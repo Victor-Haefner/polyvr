@@ -56,6 +56,7 @@ class VRSyncNode : public VRTransform {
         void serialize_entry(ContainerChangeEntry* entry, vector<BYTE>& data, int syncNodeID);
         string serialize(ChangeList* clist);
         void deserializeAndApply(string& data);
+        void deserializeChildrenData(vector<BYTE>& childrenData, UInt32 fcID, map<int,int>& childToParent);
 
         void registerContainer(FieldContainer* c, int syncNodeID = -1);
         vector<int> registerNode(Node* c); //returns all registered IDs

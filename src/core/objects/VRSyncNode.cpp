@@ -316,7 +316,6 @@ void printContainer (FieldContainerFactoryBase* factory, map<int,int> container)
 
 void VRSyncNode::serialize_entry(ContainerChangeEntry* entry, vector<BYTE>& data, int syncNodeID) {
     UInt32 id = entry->uiContainerId;
-    //FieldContainerFactoryBase* factory = FieldContainerFactory::the();
     FieldContainer* fcPtr = factory->getContainer(id);
     if (fcPtr) {
         SerialEntry sentry;
@@ -330,12 +329,8 @@ void VRSyncNode::serialize_entry(ContainerChangeEntry* entry, vector<BYTE>& data
         fcPtr->copyToBin(handler, sentry.fieldMask); //calls handler->write
         sentry.len = handler.data.size();//UInt32(fcPtr->getBinSize(sentry.fieldMask));
 
-//        vector<int> childIDs;
         vector<pair<int,int>> children;
-
-        // children and cores
-        if (factory->findType(sentry.fcTypeID)->isNode()) {
-//            cout << "NODE entry" << endl;
+        if (factory->findType(sentry.fcTypeID)->isNode()) { // children and cores
             Node* node = dynamic_cast<Node*>(fcPtr);
 
             if (sentry.fieldMask & Node::CoreFieldMask) { // node core changed
@@ -343,31 +338,23 @@ void VRSyncNode::serialize_entry(ContainerChangeEntry* entry, vector<BYTE>& data
             }
 
             if (sentry.fieldMask & Node::ChildrenFieldMask) { // new child added
-//                cout << "!!! change in childrenFM " << node->getNChildren() << endl;
                 for (int i=0; i<node->getNChildren(); i++) {
                     Node* child = node->getChild(i);
-//                    childIDs.push_back(child->getId());
-//                    int syncID = -1;
                     int syncID = container[child->getId()] ? container[child->getId()] : -1;
                     children.push_back(make_pair(child->getId(), syncID));
                     cout << "children.push_back " << child->getId() << endl;
                 }
             }
         }
-//        sentry.clen = childIDs.size();
         sentry.cplen = children.size();
-//        cout << "children " << sentry.clen << endl;
-//        for (int i = 0; i < sentry.clen; ++i) cout << childIDs[i] << endl;
 
         data.insert(data.end(), (BYTE*)&sentry, (BYTE*)&sentry + sizeof(SerialEntry));
-//        cout << "data size sentry " << data.size() << endl;
         data.insert(data.end(), handler.data.begin(), handler.data.end());
 //        cout << "data size sentry + handler " << data.size() << endl;
 //        if (sentry.clen > 0) data.insert(data.end(), (BYTE*)&childIDs[0], (BYTE*)&childIDs[0] + sizeof(int)*sentry.clen);
 //        cout << " total data size " << data.size() << endl;
         if (sentry.cplen > 0) cout << "children " << sentry.cplen << endl; data.insert(data.end(), (BYTE*)&children[0], (BYTE*)&children[0] + sizeof(pair<int,int>)*sentry.cplen);
         cout << "serialize fc " << factory->findType(fcPtr->getTypeId())->getName() << " " << fcPtr->getTypeId() << " > > > sentry: " << sentry.localId << " syncID " << sentry.syncNodeID << " fieldMask " << sentry.fieldMask << " len " << sentry.len << " | encoded: " << data.size() << endl;
-        //printNodeFieldMask(sentry.fieldMask);
     }
 }
 
@@ -386,6 +373,44 @@ string VRSyncNode::serialize(ChangeList* clist) {
     cout << "serialized entries: " << counter << endl;
     cout << "            / " << name << " / VRSyncNode::serialize()" <<"  < < <" << endl;
     return base64_encode(&data[0], data.size());
+}
+
+//get children IDs and map them to their parents. if a child was already registered, update it's parent
+void VRSyncNode::deserializeChildrenData(vector<BYTE>& childrenData, UInt32 fcID, map<int,int>& childToParent) {
+    cout << "children " << childrenData.size() << endl;
+    map<int,int> children;
+    for (int i = 0; i < childrenData.size(); i+=sizeof(pair<int,int>)) { //NOTE: int can be either 4 (assumed here) or 2 bytes, depending on system
+        int childID;
+        int childSyncID;
+        memcpy(&childID, &childrenData[i], sizeof(int));
+        memcpy(&childSyncID, &childrenData[i] + sizeof(int), sizeof(int));
+        children[childID] = childSyncID;
+        childToParent[childSyncID] = fcID;
+        cout << "childID " << childID << " childSyncID " << childSyncID << endl;
+        //update parent id if child id is registered
+        int childFCId = getRegisteredContainerID(childSyncID);
+        cout << "registered child id " << childFCId << endl;
+        cout << "registered parent id " << childToParent[childSyncID] << endl;
+        cout << "id " << fcID << " childToParent[childSyncID]  " << childToParent[childSyncID] << " container " << container[fcID] << endl;
+        if (childFCId > 0) { //if the child is already been registered, check the parent id
+//                if (id != childToParent[childSyncID]) { //if parent id changed, get parent and set new child
+            Node* parent = dynamic_cast<Node*>(factory->getContainer(fcID));
+            Node* child = dynamic_cast<Node*>(factory->getContainer(childFCId));
+            parent->addChild(child);
+            cout << "!!!!!!!!!! update parent id " << container[parent->getId()] << " add child " << container[childFCId] << endl;
+            cout << parent->getId() << " children" << endl; //TODO: remove after debugging
+            for (int i = 0; i < parent->getNChildren(); i++) {
+                cout << parent->getChild(i)->getId() << endl;
+            }
+//                }
+        } else { //TODO: remove after debugging
+            Node* node = dynamic_cast<Node*>(factory->getContainer(fcID));
+            cout << "children" << endl;
+            for (int i = 0; i < node->getNChildren(); i++) {
+                cout << node->getChild(i)->getId() << endl;
+            }
+        }
+    }
 }
 
 void VRSyncNode::deserializeAndApply(string& data) {
@@ -425,48 +450,13 @@ void VRSyncNode::deserializeAndApply(string& data) {
         FCdata.insert(FCdata.end(), vec.begin()+pos, vec.begin()+pos+sentry.len);
         pos += sentry.len;
 
-        map<int,int> children; // <ID,syncID>
-//        if (sentry.fieldMask & Node::ChildrenFieldMask) {
-        vector<BYTE> childs;
-//            cout << "insert attempt " << endl;
-        childs.insert(childs.end(), vec.begin()+pos, vec.begin()+pos+sentry.cplen*sizeof(pair<int,int>)); //TODO: get rid of the extra vector and fill childToParent map asap
-        cout << "children " << childs.size() << endl;
-        for (int i = 0; i < childs.size(); i+=sizeof(pair<int,int>)) { //NOTE: int can be either 4 (assumed here) or 2 bytes, depending on system
-            int childID;
-            int childSyncID;
-            memcpy(&childID, &childs[i], sizeof(int));
-            memcpy(&childSyncID, &childs[i] + sizeof(int), sizeof(int));
-            children[childID] = childSyncID;
-            childToParent[childSyncID] = id;
-            cout << "childID " << childID << " childSyncID " << childSyncID << endl;
-            //update parent id if child id is registered
-            int childFCId = getRegisteredContainerID(childSyncID);
-            cout << "registered child id " << childFCId << endl;
-            cout << "registered parent id " << childToParent[childSyncID] << endl;
-            cout << "id " << id << " childToParent[childSyncID]  " << childToParent[childSyncID] << " container " << container[id] << endl;
-            if (childFCId > 0) { //if the child is already been registered, check the parent id
-//                if (id != childToParent[childSyncID]) { //if parent id changed, get parent and set new child
-                Node* parent = dynamic_cast<Node*>(factory->getContainer(id));
-                Node* child = dynamic_cast<Node*>(factory->getContainer(childFCId));
-                parent->addChild(child);
-                cout << "!!!!!!!!!! update parent id " << container[parent->getId()] << " add child " << container[childFCId] << endl;
-                cout << parent->getId() << " children" << endl;
-                for (int i = 0; i < parent->getNChildren(); i++) {
-                    cout << parent->getChild(i)->getId() << endl;
-                }
-//                }
-            } else {
-                Node* node = dynamic_cast<Node*>(factory->getContainer(id));
-                cout << "children" << endl;
-                for (int i = 0; i < node->getNChildren(); i++) {
-                    cout << node->getChild(i)->getId() << endl;
-                }
-            }
-        }
-        pos += sentry.cplen * sizeof(pair<int,int>);
-//        }
+        vector<BYTE> childrenData;
+        childrenData.insert(childrenData.end(), vec.begin()+pos, vec.begin()+pos+sentry.cplen*sizeof(pair<int,int>)); //TODO: get rid of the extra vector and fill childToParent map asap
+        if (childrenData.size() > 0) deserializeChildrenData(childrenData, id, childToParent);
 
-        cout << "childToParent " << childToParent.size() << " " << children.size() << endl;
+        pos += sentry.cplen * sizeof(pair<int,int>);
+
+        cout << "childToParent " << childToParent.size() << " " << children.size() << endl; //TODO: remove after debugging
         for (auto child : childToParent) {
             cout << child.first << " " << child.second << endl;
         }
