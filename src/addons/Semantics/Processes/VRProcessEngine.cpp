@@ -19,6 +19,11 @@ bool VRProcessEngine::Inventory::hasMessage(Message m) {
     return false;
 }
 
+VRProcessEngine::Message VRProcessEngine::Inventory::getMessage(Message m) {
+    for (auto& m2 : messages) if (m2 == m) return m2;
+    return Message();
+}
+
 void VRProcessEngine::Inventory::remMessage(Message m) {
     for (auto& m2 : messages) {
         if (m2 == m) {
@@ -64,16 +69,23 @@ string VRProcessEngine::Actor::transitioning( float t ) {
         if (transition.valid(&inventory)) {
             currentState = transition.nextState;
 
-            int N = transition.actions.size();
-            if (N > 0) cout << "VRProcessEngine::Actor::transitioning " << N << " " << stateName << " " << transition.node->label << endl;
-
-            for (auto& action : transition.actions){
-                (*action.cb)(transition.node);
-                sendMessage(&action.message);
+            vector<Message> messages;
+            for ( auto p : transition.prerequisites) {
+                messages.push_back( inventory.getMessage(p.message) );
             }
-            for ( auto p : transition.prerequisites){
+
+            for (auto& action : transition.actions) {
+                map<string,VRProcessNodePtr> data;
+                data["transition_receiver"] = transition.node;
+                data["transition_sender"] = messages.size() > 0 ? messages[0].messageSenderTransition : 0;
+                (*action.cb)(data);
+                //sendMessage(&action.message); // deprecated
+            }
+
+            for ( auto p : transition.prerequisites) {
                 inventory.remMessage(p.message);
             }
+
             traversedPath.push_back(transition.node);
             return transition.nextState->getLabel();
         }
@@ -82,14 +94,14 @@ string VRProcessEngine::Actor::transitioning( float t ) {
 }
 
 //TODO: Actor should receive all messages that were sent to him without knowing the message
-void VRProcessEngine::Actor::receiveMessage(VRProcessNodePtr node, Message message) {
-    cout << "VRProcessEngine::Actor::receiveMessage '" << message.message << "' to '" << message.receiver << "' inv: " << &inventory << ", actor: " << this << endl;
+void VRProcessEngine::Actor::receiveMessage(map<string,VRProcessNodePtr> data, Message message) {
+    //cout << "VRProcessEngine::Actor::receiveMessage '" << message.message << "' to '" << message.receiver << "' from: " << message.sender << ", sender transition: " << message.messageSenderTransition->label << endl;
     inventory.messages.push_back( message );
 }
 
-void VRProcessEngine::Actor::sendMessage(Message* m) {
-    cout << "VRProcessEngine::Actor::sendMessage '" << m->message << "' to '" << m->sender << "' inv: " << &inventory << ", actor: " << this << endl;
-    /*Message* message =*/ new Message(m->message, m->sender, m->receiver, m->messageNode);
+void VRProcessEngine::Actor::sendMessage(Message* m) { // deprecated
+    //cout << "VRProcessEngine::Actor::sendMessage '" << m->message << "' to '" << m->sender << "' inv: " << &inventory << ", actor: " << this << endl;
+    // /*Message* message =*/ new Message(m->message, m->sender, m->receiver, m->messageNode);
 }
 
 void VRProcessEngine::Actor::tryAdvance() {
@@ -198,12 +210,15 @@ void VRProcessEngine::initialize() {
             auto transitionCB = VRFunction<float, string>::create("processTransition", boost::bind(&VRProcessEngine::Actor::transitioning, &actor.second, _1));
             auto smState = actor.second.sm.addState(state->getLabel(), transitionCB);
 
-            for (auto processTransition : process->getStateOutTransitions(sID, state->getID())) { //for each transition out of this State create Actions which lead to the next State
+            for (auto processTransition : process->getStateOutTransitions(sID, state->getID())) { // for each transition out of this State create Actions which lead to the next State
                 //get transition requirements
                 auto nextState = process->getTransitionState(processTransition);
                 Transition transition(state, nextState, processTransition);
-                if (processTransition->callback)
-                    transition.actions.push_back( Action(processTransition->callback, Message()) );
+                if (processTransition->callback) {
+                    Message m;
+                    //m.messageNode = processTransition;
+                    transition.actions.push_back( Action(processTransition->callback, m) );
+                }
 
                 if (processTransition->transition == RECEIVE_CONDITION) {
                     auto messages = process->getTransitionMessages( processTransition );
@@ -221,9 +236,10 @@ void VRProcessEngine::initialize() {
                         auto sender = process->getMessageSender(message->getID())[0];
                         auto receiver = process->getMessageReceiver(message->getID())[0];
                         if (sender && receiver) {
-                            Message m(message->getLabel(), sender->getLabel(), receiver->getLabel(), state);
+                            Message m(message->getLabel(), sender->getLabel(), receiver->getLabel(), state); // TODO: add data artefact pointer?
+                            m.messageSenderTransition = processTransition;
                             Actor& rActor = subjects[receiver->getID()];
-                            auto cb = VRProcessCb::create("action", boost::bind(&VRProcessEngine::Actor::receiveMessage, &rActor, _1, m)); //better to trigger receiveMessage during receive transition of the receiver actor
+                            auto cb = VRProcessCb::create("action", boost::bind(&VRProcessEngine::Actor::receiveMessage, &rActor, _1, m)); // better to trigger receiveMessage during receive transition of the receiver actor
                             transition.actions.push_back( Action(cb, m) );
                         }
                     }

@@ -8,7 +8,8 @@
 #include <map>
 #include "core/math/OSGMathFwd.h"
 
-ptrFctFwd( VRProcess, OSG::VRProcessNodePtr );
+typedef std::map<std::string, OSG::VRProcessNodePtr> ProcessNodeData;
+ptrFctFwd( VRProcess, ProcessNodeData );
 
 using namespace std;
 OSG_BEGIN_NAMESPACE;
@@ -20,6 +21,7 @@ class VRProcessEngine {
             string sender;
             string receiver;
             VRProcessNodePtr messageNode;
+            VRProcessNodePtr messageSenderTransition;
 
             Message(string m, string s, string r, VRProcessNodePtr node) : message(m), sender(s), receiver(r), messageNode(node) {}
             Message() {}
@@ -30,6 +32,7 @@ class VRProcessEngine {
         struct Inventory {
             vector<Message> messages;
 
+            Message getMessage(Message m);
             bool hasMessage(Message m);
             void remMessage(Message m);
         };
@@ -78,7 +81,7 @@ class VRProcessEngine {
             void checkTransitions();
             string transitioning( float t ); // performs transitions to next states
 
-            void receiveMessage(VRProcessNodePtr node, Message message);
+            void receiveMessage(map<string,VRProcessNodePtr> data, Message message);
             void sendMessage(Message* message);
 
             void tryAdvance();

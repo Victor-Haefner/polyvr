@@ -377,11 +377,15 @@ void VRRobotArm::moveTo(PosePtr p2) {
 }
 
 void VRRobotArm::setGrab(float g) {
+    grab = g;
     float l = lengths[4]*g;
     Vec3d p; p[0] = l;
-    parts[7]->setFrom(p);
-    parts[8]->setFrom(-p);
-    grab = g;
+    if (parts.size() >= 9) {
+        if (parts[7] && parts[8]) {
+            parts[7]->setFrom( p);
+            parts[8]->setFrom(-p);
+        }
+    }
 }
 
 void VRRobotArm::moveOnPath(float t0, float t1, bool loop, float durationMultiplier) {

@@ -8,7 +8,8 @@
 
 #include <string>
 
-ptrFctFwd( VRProcess, OSG::VRProcessNodePtr );
+typedef std::map<std::string, OSG::VRProcessNodePtr> ProcessNodeData;
+ptrFctFwd( VRProcess, ProcessNodeData );
 
 using namespace std;
 OSG_BEGIN_NAMESPACE;
@@ -115,7 +116,8 @@ class VRProcess : public std::enable_shared_from_this<VRProcess>, public VRName 
         vector<VRProcessNodePtr> getTransitions(int subjectID);
         vector<VRProcessNodePtr> getInitialStates();
 
-        VRProcessNodePtr getSubject(string name);
+        VRProcessNodePtr getSubject(int subjectID);
+        VRProcessNodePtr getSubjectByName(string name);
         VRProcessNodePtr getSubjectState(int subjectID, string name);
         vector<VRProcessNodePtr> getStateMessages(VRProcessNodePtr state);
         vector<VRProcessNodePtr> getTransitionMessages(VRProcessNodePtr transition);

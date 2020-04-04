@@ -208,7 +208,11 @@ VRProcessNodePtr VRProcess::getSubjectState(int subjectID, string name) {
     return 0;
 }
 
-VRProcessNodePtr VRProcess::getSubject(string name) {
+VRProcessNodePtr VRProcess::getSubject(int ID) {
+    return getNode(ID);
+}
+
+VRProcessNodePtr VRProcess::getSubjectByName(string name) {
     return getNodeByName(name);
 }
 
