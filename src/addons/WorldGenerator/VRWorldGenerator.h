@@ -5,7 +5,6 @@
 #include "addons/Semantics/VRSemanticsFwd.h"
 #include "addons/WorldGenerator/GIS/GISFwd.h"
 #include "addons/WorldGenerator/VRWorldGeneratorFwd.h"
-#include "addons/RealWorld/VRRealWorldFwd.h"
 #include "core/math/VRMathFwd.h"
 #include "core/objects/VRTransform.h"
 #include "addons/Bullet/VRPhysicsFwd.h"

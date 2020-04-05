@@ -99,9 +99,6 @@
 #ifndef WITHOUT_CGAL
 #include "addons/Engineering/CSG/VRPyCSG.h"
 #endif
-#ifndef WASM
-#include "addons/RealWorld/VRPyRealWorld.h"
-#endif
 #include "addons/SimViDekont/VRPySimViDekont.h"
 #include "addons/Semantics/Reasoning/VRPyOntology.h"
 #include "addons/LeapMotion/VRPyHandGeo.h"
@@ -190,7 +187,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyAnnotationEngine>("AnnotationEngine", pModVR, VRPyGeometry::typeRef);
     sm->registerModule<VRPyAnalyticGeometry>("AnalyticGeometry", pModVR, VRPyObject::typeRef);
     sm->registerModule<VRPyConstructionKit>("ConstructionKit", pModVR);
-    sm->registerModule<VRPyPathtool>("Pathtool", pModVR, VRPyObject::typeRef);
+    sm->registerModule<VRPyPathtool>("Pathtool", pModVR, VRPyTransform::typeRef);
     sm->registerModule<VRPySelector>("Selector", pModVR);
     sm->registerModule<VRPySelection>("Selection", pModVR);
     sm->registerModule<VRPyPatchSelection>("PatchSelection", pModVR, VRPySelection::typeRef);
@@ -250,9 +247,6 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
 
 #ifndef WITHOUT_CGAL
 	sm->registerModule<VRPyCSG>("CSGGeometry", pModVR, VRPyGeometry::typeRef);
-#endif
-#ifndef WASM
-	sm->registerModule<VRPyRealWorld>("RealWorld", pModVR, VRPyObject::typeRef);
 #endif
 	sm->registerModule<VRPySimViDekont>("SimViDekont", pModVR);
 

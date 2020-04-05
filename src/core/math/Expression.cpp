@@ -1,6 +1,9 @@
 #include "Expression.h"
 #include "core/utils/toString.h"
 #include <stack>
+#include <iostream>
+#include <algorithm>
+#include <OpenSG/OSGVector.h>
 
 using namespace OSG;
 

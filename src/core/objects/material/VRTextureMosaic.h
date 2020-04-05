@@ -2,7 +2,7 @@
 #define VRTEXTUREMOSAIC_H_INCLUDED
 
 #include <OpenSG/OSGConfig.h>
-#include <OpenSG/OSGVector.h>
+#include "core/math/OSGMathFwd.h"
 #include "core/objects/VRObjectFwd.h"
 #include "core/objects/material/VRTexture.h"
 

@@ -1,7 +1,7 @@
 #ifndef VRRECORDER_H_INCLUDED
 #define VRRECORDER_H_INCLUDED
 
-#include <OpenSG/OSGVector.h>
+#include "core/math/OSGMathFwd.h"
 #include <string>
 #include <vector>
 

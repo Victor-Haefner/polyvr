@@ -245,6 +245,7 @@ VRAppManager::VRAppManager() {
 
     setToolButtonSensitivity("toolbutton4", false); // disable 'save' button on startup
     setToolButtonSensitivity("toolbutton5", false); // disable 'save as' button on startup
+    setToolButtonSensitivity("toolbutton50", false); // disable 'web export' button on startup
     setToolButtonSensitivity("toolbutton28", false); // disable 'stop' button on startup
 
     setEntryCallback("appSearch", sigc::mem_fun(*this, &VRAppManager::on_search), true); // app search
@@ -320,6 +321,7 @@ void VRAppManager::setGuiState(VRAppLauncherPtr e) {
 
     setToolButtonSensitivity("toolbutton4", running); // toggle 'save' button availability
     setToolButtonSensitivity("toolbutton5", running); // toggle 'save as' button availability
+    setToolButtonSensitivity("toolbutton50", running); // toggle 'web export' button availability
     setToolButtonSensitivity("toolbutton28", running); // toggle 'stop' button availability
 }
 

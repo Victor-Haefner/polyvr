@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="PolyVR" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Debug">
+				<Option output="bin/Debug/VRFramework" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Debug/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O2" />
+					<Add option="-g" />
+				</Compiler>
+			</Target>
+			<Target title="Release">
+				<Option output="bin/Release/VRFramework" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Release/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O2" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+				</Linker>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-Wall" />
+			<Add option="-std=c++14" />
+			<Add option="-fPIC" />
+			<Add option="`pkg-config gtk+-2.0 --cflags`" />
+			<Add option="`pkg-config gmodule-2.0 --cflags`" />
+			<Add option="`pkg-config gtkmm-2.4 --cflags`" />
+			<Add option="`pkg-config gtkglext-1.0 --cflags`" />
+			<Add option="`pkg-config python --cflags`" />
+			<Add option="`pkg-config gtksourceview-2.0 --cflags`" />
+			<Add option="-fopenmp" />
+			<Add option="-use_readonly_const" />
+			<Add option="-Wno-deprecated" />
+			<Add option="-frounding-math" />
+			<Add option="-ftime-report" />
+			<Add option="-fno-strict-aliasing" />
+			<Add option="-c" />
+			<Add option="-DLC_ALL=C" />
+			<Add option="-DLINUX" />
+			<Add option="-DOSG2" />
+			<Add option="-D_GNU_SOURCE" />
+			<Add option="-DQT_CLEAN_NAMESPACE" />
+			<Add option="-DOSG_WITH_GLUT" />
+			<Add option="-DOSG_WITH_QT" />
+			<Add option="-DOSG_WITH_JPG" />
+			<Add option="-DOSG_WITH_PNG" />
+			<Add option="-DOSG_WITH_COLLADA" />
+			<Add option="-DOSG_ENABLE_OGL_VERTEXT_ATTRIB_FUNCS=ON" />
+			<Add option="-D_OSG_HAVE_CONFIGURED_H_" />
+			<Add option="-DQT_NO_XINERAMA" />
+			<Add option="-DQT_NO_XRENDER" />
+			<Add option="-DQT_NO_XFTFREETYPE" />
+			<Add option="-DQT_NO_XKB" />
+			<Add option="-DQT_NO_SM_SUPPORT" />
+			<Add option="-DQT_NO_IMAGEIO_MNG" />
+			<Add option="-DQT_NO_IMAGEIO_JPEG" />
+			<Add option="-DQT_NO_STYLE_AQUA" />
+			<Add option="-DQT_NO_STYLE_MAC" />
+			<Add option="-DQT_NO_STYLE_INTERLACE" />
+			<Add option="-DQT_NO_STYLE_COMPACT" />
+			<Add option="-DOSG_BUILD_ACTIVE" />
+			<Add option="-DCRT_SECURE_NO_DEPRECATE" />
+			<Add option="-DCRT_SECURE_NO_WARNINGS" />
+			<Add option="-DCRT_NONSTDC_NO_DEPRECATE" />
+			<Add option="-DSECURE_SCL=0" />
+			<Add option="-D_SCL_SECURE_NO_WARNINGS" />
+			<Add option="-D_SCL_SECURE_NO_DEPRECATE" />
+			<Add option="-D__GCCXML__" />
+			<Add option="-DCGAL_CFG_NO_CPP0X_ARRAY" />
+			<Add option="-DCGAL_CFG_NO_TR1_ARRAY" />
+			<Add option="-DCGAL_CFG_NO_VARIADIC_TEMPLATES" />
+			<Add option="-DNDEBUG" />
+			<Add option="-DCGAL_NDEBUG" />
+			<Add option="-D__STDC_CONSTANT_MACROS" />
+			<Add option="-D_GLIBCXX_USE_CXX11_ABI=1" />
+			<Add option="-DBOOST_NO_COMPILER_CONFIG" />
+			<Add option="-DBOOST_NO_CXX14_DECLTYPE_AUTO" />
+			<Add option="-DBOOST_NO_CXX11_DECLTYPE_N3276" />
+			<Add option="-DBOOST_NO_CXX11_HDR_ATOMIC=1" />
+			<Add option="-DGL_GLEXT_PROTOTYPES" />
+			<Add option="-DWITH_SHADOW_VOLUME" />
+			<Add option="-DWITH_OPCUA" />
+			<Add option="-DWITH_CLUSTERING_FIX" />
+			<Add option="-DWITH_STEP" />
+			<Add option="-DCEF18" />
+			<Add directory="/usr/include/pango-1.0" />
+			<Add directory="/usr/include/glib-2.0" />
+			<Add directory="/usr/lib64/glib-2.0/include" />
+			<Add directory="/usr/include/freetype2" />
+			<Add directory="/usr/include/cairo" />
+			<Add directory="/usr/include/libpng12" />
+			<Add directory="/usr/lib/glib-2.0/include" />
+			<Add directory="/usr/lib/x86_64-linux-gnu/glib-2.0/include" />
+			<Add directory="/usr/include/vtk-5.8/" />
+			<Add directory="/usr/include/bullet" />
+			<Add directory="/usr/include/gtkglext-1.0" />
+			<Add directory="/usr/include/CEF" />
+			<Add directory="../../src" />
+			<Add directory="/usr/include/opensg" />
+			<Add directory="/usr/include/collada" />
+			<Add directory="/usr/include/STEPcode" />
+			<Add directory="/usr/include/vtk-5.10" />
+			<Add directory="/usr/include/Vive" />
+			<Add directory="/usr/include/OCE" />
+			<Add directory="/usr/include/IFC" />
+			<Add directory="/usr/include/vtk-7.1/" />
+			<Add directory="/usr/include/OPCUA" />
+		</Compiler>
+		<Linker>
+			<Add option="-c" />
+			<Add directory="/usr/lib/virtuose" />
+			<Add directory="/usr/lib/opensg" />
+			<Add directory="/usr/lib/CEF" />
+			<Add directory="/usr/include/CEF/include" />
+			<Add directory="/usr/lib/STEPcode" />
+			<Add directory="/usr/lib/1.4" />
+			<Add directory="/usr/lib/IFC" />
+			<Add directory="/usr/lib/OPCUA" />
+			<Add directory="/usr/lib/OCE" />
+		</Linker>
+		<Unit filename="testMain.cpp" />
+		<Extensions>
+			<code_completion />
+			<debugger />
+			<envvars />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>

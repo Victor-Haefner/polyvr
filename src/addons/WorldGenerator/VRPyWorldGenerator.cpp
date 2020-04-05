@@ -80,7 +80,8 @@ typedef map<string, string> osmTagMap;
 
 PyMethodDef VRPyOSMMap::methods[] = {
     {"readFile", PyWrap2( OSMMap, readFile, "readFile ", void, string ) },
-    {"readGEOJSON", PyWrap2( OSMMap, readGEOJSON, "readGEOJSON ", void, string ) },
+    {"readGEOJSON", PyWrap2( OSMMap, readGEOJSON, "reads a GEOJSON file and makes a readable OSM object", void, string ) },
+    {"readSHAPE", PyWrap2( OSMMap, readSHAPE, "reads a SHAPE file and makes a readable OSM object", void, string ) },
     {"writeFile", PyWrap2( OSMMap, writeFile, "writeFile ", void, string ) },
     {"filterFileStreaming", PyWrap2( OSMMap, filterFileStreaming, "filter OSM file with whitelist via stream - input path, output path, save temp file", void, string, vector<vector<string>> ) },
     {"readFileStreaming", PyWrap2( OSMMap, readFileStreaming, "reads OSM file via stream, builds map ", int, string ) },

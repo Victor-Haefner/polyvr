@@ -41,7 +41,7 @@ VRSharedMemory::VRSharedMemory(string segment, bool init, bool remove) :
     this->segment->memory = managed_shared_memory(open_or_create, segment.c_str(), 65536);
     unlock();
     int U = getObject<int>("__users__", 0);
-    cout << "Init SharedMemory segment " << segment << ", user: " << U << endl;
+    cout << "Access shared memory, segment: '" << segment << "', user ID: " << U << endl;
     setObject<int>("__users__", U+1);
 }
 
@@ -50,7 +50,7 @@ VRSharedMemory::~VRSharedMemory() {
     int U = getObject<int>("__users__")-1;
     setObject<int>("__users__", U);
     if (U == 0) {
-        cout << "Remove SharedMemory segment " << segment->name << endl;
+        cout << " clear shared memory, segment: '" << segment->name << "'" << endl;
         shared_memory_object::remove(segment->name.c_str());
     }
 }

@@ -1,10 +1,12 @@
 #ifndef VRDRIVER_H_INCLUDED
 #define VRDRIVER_H_INCLUDED
 
-#include <OpenSG/OSGVector.h>
+#include "core/math/OSGMathFwd.h"
 #include "addons/Bullet/VRPhysicsFwd.h"
 #include "core/math/VRMathFwd.h"
 #include "core/utils/VRFunctionFwd.h"
+
+#include <OpenSG/OSGConfig.h>
 
 using namespace std;
 OSG_BEGIN_NAMESPACE;

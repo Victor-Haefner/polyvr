@@ -1,9 +1,10 @@
 #ifndef POSE_H_INCLUDED
 #define POSE_H_INCLUDED
 
-#include <OpenSG/OSGVector.h>
-#include <OpenSG/OSGMatrix.h>
+#include <OpenSG/OSGConfig.h>
+#include <vector>
 #include "core/math/VRMathFwd.h"
+#include "core/math/OSGMathFwd.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -17,17 +18,17 @@ class Pose {
         Pose(const Matrix& m);
         Pose(const Matrix4d& m);
         Pose(const Pose& p);
-        Pose(Vec3d p, Vec3d d = Vec3d(0,0,-1), Vec3d u = Vec3d(0,1,0), Vec3d s = Vec3d(1,1,1));
-        void set(Vec3d p, Vec3d d = Vec3d(0,0,-1), Vec3d u = Vec3d(0,1,0), Vec3d s = Vec3d(1,1,1));
+        Pose(const Vec3d& p, const Vec3d& d = DIR(), const Vec3d& u = UP(), const Vec3d& s = SCALE());
+        void set(const Vec3d& p, const Vec3d& d = DIR(), const Vec3d& u = UP(), const Vec3d& s = SCALE());
         static PosePtr create();
         static PosePtr create(const Matrix4d& m);
         static PosePtr create(const Pose& p);
-        static PosePtr create(Vec3d p, Vec3d d = Vec3d(0,0,-1), Vec3d u = Vec3d(0,1,0), Vec3d s = Vec3d(1,1,1));
+        static PosePtr create(const Vec3d& p, const Vec3d& d = DIR(), const Vec3d& u = UP(), const Vec3d& s = SCALE());
 
-        void setPos(Vec3d p);
-        void setDir(Vec3d d);
-        void setUp(Vec3d u);
-        void setScale(Vec3d s);
+        void setPos(const Vec3d& p);
+        void setDir(const Vec3d& d);
+        void setUp(const Vec3d& u);
+        void setScale(const Vec3d& s);
         void makeUpOrthogonal();
         void makeDirOrthogonal();
 
@@ -39,8 +40,8 @@ class Pose {
 
         Matrix4d asMatrix() const;
         void invert();
-        Vec3d transform(Vec3d p, bool doTranslate = true);
-        Vec3d transformInv(Vec3d p);
+        Vec3d transform(const Vec3d& p, bool doTranslate = true);
+        Vec3d transformInv(const Vec3d& p);
 
         PosePtr multLeft(PosePtr p);
         PosePtr multRight(PosePtr p);

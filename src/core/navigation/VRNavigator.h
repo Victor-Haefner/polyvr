@@ -2,7 +2,7 @@
 #define VRNAVIGATOR_H_INCLUDED
 
 #include <OpenSG/OSGConfig.h>
-#include <OpenSG/OSGVector.h>
+#include "core/math/OSGMathFwd.h"
 #include <map>
 #include <string>
 #include <vector>
@@ -37,7 +37,8 @@ class VRNavPreset : public VRName {
         VRDevicePtr dev = 0;
         VRTransformWeakPtr target;
         bool active = false;
-        Vec2d speed;
+        double speedX = 1;
+        double speedY = 1;
 
     public:
         VRNavPreset();

@@ -86,7 +86,7 @@ void VRManipulator::setup() {
 
 VRPathtool::option::option(int r, bool uch) : resolution(r), useControlHandles(uch) {}
 
-VRPathtool::VRPathtool() : VRObject("Pathtool") {
+VRPathtool::VRPathtool() : VRTransform("Pathtool") {
     updatePtr = VRUpdateCb::create("path tool update", boost::bind(&VRPathtool::updateDevs, this) );
     VRScene::getCurrent()->addUpdateFkt(updatePtr, 100);
 
@@ -120,6 +120,9 @@ VRPathtool::VRPathtool() : VRObject("Pathtool") {
 
 VRPathtool::~VRPathtool() {
     if (manip) delete manip;
+    // destroy the handles to make sure, they may have been moved in the SG
+    for (auto hw : handles       ) if (auto h = hw.lock()) h->destroy();
+    for (auto hw : controlHandles) if (auto h = hw.lock()) h->destroy();
 }
 
 VRPathtoolPtr VRPathtool::create() { return VRPathtoolPtr( new VRPathtool() ); }
@@ -259,10 +262,11 @@ void VRPathtool::connect(int i1, int i2, Vec3d n1, Vec3d n2, bool handles, bool 
 VRMaterialPtr VRPathtool::getArrowMaterial() { return amat; }
 
 void VRPathtool::setArrowSize(float s) {
+    auto p = Pose::create();
+    float S = s/arrowScale;
+    p->setScale(Vec3d(S,S,S));
+    arrowTemplate->applyTransformation(p);
     arrowScale = s;
-    for (auto e : pathToEntry) {
-        if (auto a = e.second->arrow.lock()) a->setScale(Vec3d(s,s,s));
-    }
 }
 
 void VRPathtool::setGraphEdge(Graph::edge& e, bool handles, bool doArrow) {

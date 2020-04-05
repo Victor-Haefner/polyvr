@@ -396,3 +396,16 @@ vector<double> getGeoTransform(string path) {
 }
 
 OSG_END_NAMESPACE;
+
+
+// stubs
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#include <libproj/proj.h>
+#include <libproj/filemanager.hpp>
+namespace NS_PROJ { class File; }
+EMSCRIPTEN_KEEPALIVE
+int proj_context_is_network_enabled(PJ_CONTEXT* ctx) { return 0; }
+void NS_PROJ::FileManager::fillDefaultNetworkInterface(PJ_CONTEXT *ctx) {}
+std::unique_ptr<NS_PROJ::File> NS_PROJ::pj_network_file_open(PJ_CONTEXT *ctx, const char *filename) { return 0; }
+#endif

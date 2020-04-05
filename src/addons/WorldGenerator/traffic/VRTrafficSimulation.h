@@ -1,7 +1,7 @@
 #ifndef VRTRAFFICSIMULATION_H_INCLUDED
 #define VRTRAFFICSIMULATION_H_INCLUDED
 
-#include <OpenSG/OSGVector.h>
+#include "core/math/OSGMathFwd.h"
 #include "addons/Semantics/VRSemanticsFwd.h"
 #include "addons/WorldGenerator/VRWorldGeneratorFwd.h"
 #include "core/math/VRMathFwd.h"
@@ -9,10 +9,11 @@
 #include "core/math/graph.h"
 #include "core/objects/object/VRObject.h"
 #include "core/tools/VRProjectManager.h"
-#include <boost/thread/recursive_mutex.hpp>
 #ifndef WITHOUT_BULLET
 #include "addons/Bullet/CarDynamics/CarDynamics.h"
 #endif
+
+namespace boost { class recursive_mutex; }
 
 using namespace std;
 OSG_BEGIN_NAMESPACE;
@@ -184,8 +185,8 @@ class VRTrafficSimulation : public VRObject {
         VRProjectManagerPtr simSettings;
         VRThreadCbPtr worker;
 
-        boost::recursive_mutex mtx; //locks main thread
-        boost::recursive_mutex mtx2; //locks transform updating
+        boost::recursive_mutex* mtx = 0; //locks main thread
+        boost::recursive_mutex* mtx2 = 0; //locks transform updating
 
         map<int, laneSegment> roads;
         map<int, Vehicle> vehicles;

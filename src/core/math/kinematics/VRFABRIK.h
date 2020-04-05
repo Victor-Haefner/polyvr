@@ -2,6 +2,7 @@
 #define VRFABRIK_H_INCLUDED
 
 #include <map>
+#include "core/math/OSGMathFwd.h"
 
 #include "core/utils/VRFwdDeclTemplate.h"
 #include "core/math/pose.h"
@@ -14,36 +15,9 @@ ptrFwd(FABRIK);
 
 class FABRIK {
     private:
-        struct Joint {
-            int ID;
-            string name;
-            PosePtr p;
-            vector<int> in;
-            vector<int> out;
-            PosePtr target;
-            bool constrained = false;
-            Vec4d constraintAngles;
-            Vec3d debugPnt1, debugPnt2;
-        };
-
-        struct Chain {
-            string name;
-            vector<int> joints;
-            vector<float> distances;
-        };
-
-        struct step {
-            int joint;
-            int base;
-            int i1;
-            int i2;
-            string chain;
-            PosePtr target;
-            bool fwd = false;
-            bool mid = false;
-
-            step(int j, int b, int i1, int i2, string c, PosePtr t, bool f, bool m) : joint(j), base(b), i1(i1), i2(i2), chain(c), target(t), fwd(f), mid(m) {};
-        };
+        struct Joint;
+        struct Chain;
+        struct step;
 
         map<int, Joint> joints;
         map<string, Chain> chains;

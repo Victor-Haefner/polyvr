@@ -23,6 +23,7 @@
 #include "core/utils/VRInternalMonitor.h"
 #include "core/utils/VRVisualLayer.h"
 #include "core/utils/VRUtilsFwd.h"
+#include "core/utils/system/VRSystem.h"
 #include "core/scene/VRSceneLoader.h"
 #include "VRGuiUtils.h"
 #include "VRGuiSignals.h"
@@ -85,6 +86,24 @@ void VRGuiBits::on_save_clicked() {
 
 void VRGuiBits::on_quit_clicked() {
     PolyVR::shutdown();
+}
+
+void VRGuiBits::on_web_export_clicked() {
+    string D = VRSceneManager::get()->getOriginalWorkdir();
+    string project = VRScene::getCurrent()->getFile();
+
+    string folder = D+"/ressources/webBuild";
+    if (!exists(folder+"/.git"))
+        systemCall("git clone https://github.com/Victor-Haefner/polyvr-webport.git \"" + folder + "\"");
+
+    systemCall("git -C \"" + folder + "\" pull");
+    systemCall("cp -f \"" + folder + "/polyvr.wasm\" ./");
+    systemCall("cp -f \"" + folder + "/polyvr.js\" ./");
+    systemCall("cp -f \"" + folder + "/scanDir.php\" ./");
+
+    // generate html file
+    systemCall("cp -f \"" + folder + "/index.html\" ./");
+    systemCall("sed -i 's/PROJECT/"+project+"/g' ./index.html");
 }
 
 void VRGuiBits::on_about_clicked() {
@@ -216,6 +235,7 @@ VRGuiBits::VRGuiBits() {
     setComboboxCallback("combobox9", sigc::mem_fun(*this, &VRGuiBits::on_navigation_changed));
 
     setToolButtonCallback("toolbutton4", sigc::mem_fun(*this, &VRGuiBits::on_save_clicked));
+    setToolButtonCallback("toolbutton50", sigc::mem_fun(*this, &VRGuiBits::on_web_export_clicked));
     setToolButtonCallback("toolbutton3", sigc::mem_fun(*this, &VRGuiBits::on_quit_clicked));
     setToolButtonCallback("toolbutton17", sigc::mem_fun(*this, &VRGuiBits::on_about_clicked));
     setToolButtonCallback("toolbutton18", sigc::mem_fun(*this, &VRGuiBits::on_internal_clicked));

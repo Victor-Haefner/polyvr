@@ -3,6 +3,9 @@
 #include "core/utils/toString.h"
 #include "core/objects/VRTransform.h"
 
+#include <OpenSG/OSGVector.h>
+#include <OpenSG/OSGMatrix.h>
+
 using namespace OSG;
 
 template<> string typeName(const PosePtr& p) { return "Pose"; }
@@ -10,7 +13,7 @@ template<> string typeName(const Pose& p) { return "Pose"; }
 
 Pose::Pose() { set(Vec3d(), Vec3d(0,0,-1), Vec3d(0,1,0), Vec3d(1,1,1)); }
 Pose::Pose(const Pose& p) { *this = p; }
-Pose::Pose(Vec3d p, Vec3d d, Vec3d u, Vec3d s) { set(p,d,u,s); }
+Pose::Pose(const Vec3d& p, const Vec3d& d, const Vec3d& u, const Vec3d& s) { set(p,d,u,s); }
 
 Pose::Pose(const Matrix4d& m) {
     if (isNan(m)) return;
@@ -32,11 +35,11 @@ PosePtr Pose::create() { return PosePtr( new Pose() ); }
 PosePtr Pose::create(const Matrix4d& m) { return PosePtr( new Pose(m) ); }
 PosePtr Pose::create(const Pose& p) { return PosePtr( new Pose(p) ); }
 
-PosePtr Pose::create(Vec3d p, Vec3d d, Vec3d u, Vec3d s) {
+PosePtr Pose::create(const Vec3d& p, const Vec3d& d, const Vec3d& u, const Vec3d& s) {
     return PosePtr( new Pose(p,d,u,s) );
 }
 
-void Pose::set(Vec3d p, Vec3d d, Vec3d u, Vec3d s) {
+void Pose::set(const Vec3d& p, const Vec3d& d, const Vec3d& u, const Vec3d& s) {
     data.resize(4);
     data[0] = p;
     data[1] = d;
@@ -44,18 +47,19 @@ void Pose::set(Vec3d p, Vec3d d, Vec3d u, Vec3d s) {
     data[3] = s;
 }
 
-Vec3d Pose::transform(Vec3d p, bool doTranslate) {
+Vec3d Pose::transform(const Vec3d& p, bool doTranslate) {
     if (doTranslate) {
         Pnt3d P(p);
         asMatrix().mult(P,P);
         return Vec3d(P);
     } else {
-        asMatrix().mult(p,p);
-        return p;
+        Vec3d P(p);
+        asMatrix().mult(P,P);
+        return P;
     }
 }
 
-Vec3d Pose::transformInv(Vec3d p) {
+Vec3d Pose::transformInv(const Vec3d& p) {
     Pnt3d P(p);
     auto m = asMatrix();
     m.invert();
@@ -66,10 +70,10 @@ Vec3d Pose::transformInv(Vec3d p) {
 PosePtr Pose::multLeft(PosePtr p) { auto m1 = asMatrix(); auto m2 = p->asMatrix(); m1.multLeft(m2); return Pose::create(m1); }
 PosePtr Pose::multRight(PosePtr p) { auto m1 = asMatrix(); auto m2 = p->asMatrix(); m1.mult(m2); return Pose::create(m1); }
 
-void Pose::setPos(Vec3d p) { data[0] = p; }
-void Pose::setDir(Vec3d d) { data[1] = d; }
-void Pose::setUp(Vec3d u) { data[2] = u; }
-void Pose::setScale(Vec3d s) { data.resize(4); data[3] = s; }
+void Pose::setPos(const Vec3d& p) { data[0] = p; }
+void Pose::setDir(const Vec3d& d) { data[1] = d; }
+void Pose::setUp(const Vec3d& u) { data[2] = u; }
+void Pose::setScale(const Vec3d& s) { data.resize(4); data[3] = s; }
 
 Vec3d Pose::pos() { return data.size() > 0 ? data[0] : Vec3d(); }
 Vec3d Pose::dir() { return data.size() > 1 ? data[1] : Vec3d(); }
@@ -142,7 +146,5 @@ void Pose::makeDirOrthogonal() {
 
     setDir(d);
 }
-
-
 
 

@@ -19,6 +19,7 @@
 #include <OpenSG/OSGIntersectAction.h>
 #include <OpenSG/OSGGeoProperties.h>
 #include <OpenSG/OSGGeometry.h>
+#include <boost/thread/recursive_mutex.hpp>
 
 #ifndef WITHOUT_BULLET
 #include "core/objects/geometry/VRPhysics.h"
@@ -118,7 +119,10 @@ void VREmbankment::createGeometry() {
 }
 
 
-VRTerrain::VRTerrain(string name) : VRGeometry(name) { hide("SHADOW"); }
+VRTerrain::VRTerrain(string name) : VRGeometry(name) {
+    hide("SHADOW");
+}
+
 VRTerrain::~VRTerrain() {}
 
 VRTerrainPtr VRTerrain::create(string name) {
@@ -138,7 +142,11 @@ void VRTerrain::setParameters( Vec2d s, double r, double h, float w, float aT, C
     size = s;
     resolution = r;
     heightScale = h;
+#ifdef __EMSCRIPTEN__
+    grid = r;
+#else
     grid = r*64;
+#endif
     mat->setShaderParameter("resolution", resolution);
     mat->setShaderParameter("heightScale", heightScale);
     mat->setShaderParameter("doHeightTextures", 0);
@@ -272,8 +280,12 @@ void VRTerrain::setupGeo() {
         //cout << "n,e OLD: " << old2 << " -- " << old1 << endl;
         geo.apply(ptr());
 	}
+#if __EMSCRIPTEN__// TODO: directly create triangles above!
+    convertToTriangles();
+#else
 	setType(GL_PATCHES);
 	setPatchVertices(4);
+#endif
 	setMaterial(mat);
 }
 
@@ -431,11 +443,16 @@ void VRTerrain::setupMat() {
 	}
 
 	mat = VRMaterial::create("terrain");
+#ifndef OSG_OGL_ES2
 	mat->setVertexShader(vertexShader, "terrainVS");
 	mat->setFragmentShader(fragmentShader, "terrainFS");
 	mat->setFragmentShader(fragmentShaderDeferred, "terrainFSD", true);
 	mat->setTessControlShader(tessControlShader, "terrainTCS");
 	mat->setTessEvaluationShader(tessEvaluationShader, "terrainTES");
+#else
+    mat->setVertexShader(vertexShader_es2, "terrainVSes2");
+    mat->setFragmentShader(fragmentShader_es2, "terrainFSes2");
+#endif
 	mat->setShaderParameter("resolution", resolution);
 	mat->setShaderParameter("channel", 3);
 	mat->setShaderParameter("texel", texel);
@@ -721,6 +738,64 @@ void main(void) {
     gl_TexCoord[0] = vec4(osg_MultiTexCoord0,0.0,0.0);
 	gl_Position = osg_Vertex;
 	vNormal = osg_Normal;
+}
+);
+
+string VRTerrain::vertexShader_es2 =
+GLSL(
+attribute vec4 osg_Vertex;
+attribute vec3 osg_Normal;
+attribute vec2 osg_MultiTexCoord0;
+
+varying vec3 vNormal;
+varying vec4 vColor;
+varying vec4 vVertex;
+varying vec2 vTexCoord;
+
+uniform sampler2D tex;
+uniform float heightScale;
+uniform int local;
+uniform int channel;
+uniform mat4 OSGModelViewProjectionMatrix;
+
+void main(void) {
+	vVertex = osg_Vertex;
+	vNormal = osg_Normal;
+    vTexCoord = osg_MultiTexCoord0;
+
+    vec4 texData = texture2D(tex, osg_MultiTexCoord0);
+    vColor = texData;
+    float height = texData.a;
+    if (channel == 0) height = texData.r;
+    if (channel == 1) height = texData.g;
+    if (channel == 2) height = texData.b;
+    if (channel == 3) height = texData.a;
+    vec4 tePosition = osg_Vertex;
+    if (local > 0) tePosition.xyz += osg_Normal * height * heightScale;
+    else tePosition.y = height * heightScale;
+
+#ifdef __EMSCRIPTEN__
+    gl_Position = OSGModelViewProjectionMatrix * tePosition;
+#else
+    gl_Position = gl_ModelViewProjectionMatrix * tePosition;
+#endif
+}
+);
+
+string VRTerrain::fragmentShader_es2 =
+GLSL(
+#ifdef __EMSCRIPTEN__
+precision mediump float;
+#endif
+uniform sampler2D texture;
+
+varying vec2 vTexCoord;
+varying vec4 vColor;
+
+void main( void ) {
+    //gl_FragColor = vec4(1.0,0.0,0.0,1.0);
+    //gl_FragColor = vec4(vTexCoord.x,vTexCoord.y,0.0,1.0);
+    gl_FragColor = texture2D(texture, vTexCoord);
 }
 );
 

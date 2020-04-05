@@ -53,9 +53,9 @@ int VRSkeleton::addJoint(int bone1, int bone2, VRConstraintPtr constraint, strin
     int eID = armature->connect(bone1, bone2);
     joints[eID].bone1 = bone1;
     joints[eID].bone2 = bone2;
-    joints[eID].constraint = constraint;
     joints[eID].name = name;
     joints[eID].col = col;
+    joints[eID].constraint = constraint;
     return eID;
 }
 

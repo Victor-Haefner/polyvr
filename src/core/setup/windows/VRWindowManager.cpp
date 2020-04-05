@@ -62,7 +62,7 @@ bool VRWindowManager::checkWin(string name) {
 
 RenderActionRefPtr VRWindowManager::getRenderAction() { return ract; }
 
-void setMultisampling(bool on) {
+void VRWindowManager::setMultisampling(bool on) {
     bool res = false;
 
 #if !defined(GL_MULTISAMPLE_SGIS) && !defined(GL_MULTISAMPLE_ARB)
@@ -313,7 +313,7 @@ void VRWindowManager::save(XMLElementPtr node) {
 }
 
 void VRWindowManager::load(XMLElementPtr node) {
-    cout << "start loading windows\n";
+    cout << " load windows" << endl;
     for (auto el : node->getChildren()) {
         if (!el) continue;
 

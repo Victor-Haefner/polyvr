@@ -1,10 +1,13 @@
+#ifdef __EMSCRIPTEN__
 #define GL_GLEXT_PROTOTYPES
 #define EGL_EGLEXT_PROTOTYPES
+#endif
 
 #include <OpenSG/OSGGL.h>
 #include <OpenSG/OSGGLUT.h>
 #include <OpenSG/OSGPrimeMaterial.h>
 #include <OpenSG/OSGNameAttachment.h>
+#include <OpenSG/OSGVector.h>
 #ifdef __EMSCRIPTEN__
 #include <OpenSG/OSGPNGImageFileType.h>
 #include <OpenSG/OSGJPGImageFileType.h>
@@ -139,12 +142,6 @@ void printNextOSGID(int i) {
     cout << "next OSG ID: " << n->getId() << " at maker " << i << endl;
 }
 
-void PolyVR::setOption(string name, bool val) { options->setOption(name, val); }
-void PolyVR::setOption(string name, string val) { options->setOption(name, val); }
-void PolyVR::setOption(string name, int val) { options->setOption(name, val); }
-void PolyVR::setOption(string name, float val) { options->setOption(name, val); }
-
-
 void display(void) {
 	/*static float f = 0;
 	static float d = 1;
@@ -176,7 +173,7 @@ void reshape(int w, int h) {
 
 
 void PolyVR::init(int argc, char **argv) {
-    cout << "Init PolyVR\n\n";
+    cout << "Init PolyVR" << endl << endl;
     initTime();
 
 #ifdef WASM
@@ -185,19 +182,19 @@ void PolyVR::init(int argc, char **argv) {
     options->parse(argc,argv);
 
     //OSG
-    cout << "Init OSG\n";
+    cout << " init OSG" << endl;
     ChangeList::setReadWriteDefault();
     osgInit(argc,argv);
 	PNGImageFileType::the();
 	JPGImageFileType::the();
-    cout << " ..done\n";
+    cout << "  ..done" << endl;
 
     //GLUT
-    cout << "Init GLUT\n";
+    cout << " init GLUT";
     glutInit(&argc, argv);
 	glutInitWindowSize(300, 300);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
-    cout << " ..done\n";
+    cout << " ..done " << endl << endl;
 
     PrimeMaterialRecPtr pMat = OSG::getDefaultMaterial();
     OSG::setName(pMat, "default_material");
@@ -209,22 +206,22 @@ void PolyVR::init(int argc, char **argv) {
     checkProcessesAndSockets();
 
     //GLUT
-    cout << "Init GLUT\n";
+    cout << " init GLUT";
     glutInit(&argc, argv);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_STENCIL_TEST);
     if (VROptions::get()->getOption<bool>("active_stereo"))
         glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE | GLUT_STEREO | GLUT_STENCIL);
     else glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE | GLUT_STENCIL);
-    cout << " ..done\n";
+    cout << " ..done " << endl;
 
     //OSG
-    cout << "Init OSG\n";
+    cout << " init OSG" << endl;
     ChangeList::setReadWriteDefault();
     OSG::preloadSharedObject("OSGFileIO");
     OSG::preloadSharedObject("OSGImageFileIO");
     osgInit(argc,argv);
-    cout << " ..done\n";
+    cout << "  ..done" << endl << endl;
 
 #ifndef WITHOUT_SHARED_MEMORY
     try {
@@ -232,26 +229,30 @@ void PolyVR::init(int argc, char **argv) {
         int* i = sm.addObject<int>("identifier");
         *i = 1;
     } catch(...) {}
+    cout << endl;
 #endif
 
     PrimeMaterialRecPtr pMat = OSG::getDefaultMaterial();
     OSG::setName(pMat, "default_material");
 #endif
 
-    cout << "Init Modules\n";
 #ifndef WITHOUT_AV
     sound_mgr = VRSoundManager::get();
 #endif
+
     setup_mgr = VRSetupManager::create();
 #ifdef WASM
     VRSetupManager::get()->load("Browser", "Browser.xml");
 #endif
+
     scene_mgr = VRSceneManager::create();
     interface = shared_ptr<VRMainInterface>(VRMainInterface::get());
     monitor = shared_ptr<VRInternalMonitor>(VRInternalMonitor::get());
+
 #ifndef WITHOUT_GTK
     gui_mgr = shared_ptr<VRGuiManager>(VRGuiManager::get());
 #endif
+
     loader = shared_ptr<VRSceneLoader>(VRSceneLoader::get());
 
     //string app = options->getOption<string>("application");
@@ -279,7 +280,7 @@ void glutUpdate() {
 #endif
 
 void PolyVR::run() {
-    cout << "Start main loop\n";
+    cout << endl << "Start main loop" << endl << endl;
 #ifndef WASM
     while(true) update(); // default
 #else
@@ -290,13 +291,13 @@ void PolyVR::run() {
 #endif
 }
 
-void PolyVR::startTestScene(OSGObjectPtr n, Vec3d camPos) {
+void PolyVR::startTestScene(OSGObjectPtr n, const Vec3d& camPos) {
     cout << "start test scene " << n << endl;
     VRSceneManager::get()->newScene("test");
     VRScene::getCurrent()->getRoot()->find("light")->addChild(n);
 
     VRTransformPtr cam = dynamic_pointer_cast<VRTransform>( VRScene::getCurrent()->get("Default") );
-    cam->setFrom(camPos);
+    cam->setFrom(Vec3d(camPos));
 
 #ifndef WITHOUT_GTK
     VRGuiManager::get()->wakeWindow();
@@ -313,20 +314,16 @@ string createTimeStamp() {
 char getch() {
         char buf = 0;
         struct termios old = {0};
-        if (tcgetattr(0, &old) < 0)
-                perror("tcsetattr()");
+        if (tcgetattr(0, &old) < 0) perror("tcsetattr()");
         old.c_lflag &= ~ICANON;
         old.c_lflag &= ~ECHO;
         old.c_cc[VMIN] = 1;
         old.c_cc[VTIME] = 0;
-        if (tcsetattr(0, TCSANOW, &old) < 0)
-                perror("tcsetattr ICANON");
-        if (read(0, &buf, 1) < 0)
-                perror ("read()");
+        if (tcsetattr(0, TCSANOW, &old) < 0) perror("tcsetattr ICANON");
+        if (read(0, &buf, 1) < 0) perror ("read()");
         old.c_lflag |= ICANON;
         old.c_lflag |= ECHO;
-        if (tcsetattr(0, TCSADRAIN, &old) < 0)
-                perror ("tcsetattr ~ICANON");
+        if (tcsetattr(0, TCSADRAIN, &old) < 0) perror ("tcsetattr ~ICANON");
         return (buf);
 }
 
@@ -364,6 +361,7 @@ void PolyVR::checkProcessesAndSockets() {
         if (i) cout << "Error: A PolyVR instance is already running!\n";
     } catch(...) {}
 #endif
+    cout << endl;
 }
 
 

@@ -1,4 +1,5 @@
 #include "VRObject.h"
+#include "VRAttachment.h"
 #include "OSGCore.h"
 #include "../OSGObject.h"
 #include "../VRTransform.h"
@@ -73,6 +74,8 @@ VRObject::~VRObject() {
     NodeMTRecPtr p;
     if (osg->node) p = osg->node->getParent();
     if (p) p->subChild(osg->node);
+    for (auto a : attachments) delete a.second;
+    attachments.clear();
 }
 
 Matrix4d VRObject::getMatrixTo(VRObjectPtr obj, bool parentOnly) {
@@ -158,7 +161,21 @@ int VRObject::getID() { return ID; }
 string VRObject::getType() { return type; }
 void VRObject::addTag(string name) { addAttachment(name, 0); }
 bool VRObject::hasTag(string name) { return attachments.count(name); }
-void VRObject::remTag(string name) { attachments.erase(name); }
+void VRObject::remTag(string name) { remAttachment(name); }
+
+void VRObject::remAttachment(string name) {
+    if (attachments.count(name)) {
+        delete attachments[name];
+        attachments.erase(name);
+    }
+}
+
+string VRObject::getAttachmentAsString(string name) {
+    if (attachments.count(name)) {
+        return attachments[name]->asString();
+    }
+    return "";
+}
 
 vector<string> VRObject::getTags() {
     vector<string> res;
@@ -272,6 +289,7 @@ void VRObject::addChild(OSGObjectPtr n) {
 
 void VRObject::addChild(VRObjectPtr child, bool osg, int place) {
     if (child == 0 || child == ptr()) return;
+    //cout << "VRObject::addChild " << child->getName() << "  to: " << getName() << endl;
     if (child->getParent() != 0) { child->switchParent(ptr(), place); return; }
 
     if (osg) addChild(child->osg);
@@ -299,9 +317,10 @@ void VRObject::subChild(VRObjectPtr child, bool doOsg) {
 }
 
 void VRObject::switchParent(VRObjectPtr new_p, int place) {
-    if (destroyed) return;
+    //cout << "VRObject::switchParent of: " << getName() << "  new parent: " << new_p->getName() << " destroyed? " << destroyed << endl;
+    if (destroyed) { cout << "VRObject::switchParent ERROR: object is marked as destroyed!" << endl; return; }
     if (new_p == ptr()) return;
-    if (new_p == 0) { cout << "\nERROR : new parent is 0!\n"; return; }
+    if (new_p == 0) { cout << "VRObject::switchParent ERROR: new parent is 0!" << endl; return; }
 
     if (getParent() == 0) { new_p->addChild(ptr(), true, place); return; }
     if (getParent() == new_p && place == childIndex) { return; }
@@ -312,12 +331,12 @@ void VRObject::switchParent(VRObjectPtr new_p, int place) {
 
 size_t VRObject::getChildrenCount() { return children.size(); }
 
-void VRObject::clearChildren() {
+void VRObject::clearChildren(bool destroy) {
     int N = getChildrenCount();
     for (int i=N-1; i>=0; i--) {
         VRObjectPtr c = getChild(i);
         subChild( c );
-        c->destroy();
+        if (destroy) c->destroy();
     }
 }
 

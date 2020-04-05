@@ -1,11 +1,14 @@
 #ifndef VRROBOTARM_H_INCLUDED
 #define VRROBOTARM_H_INCLUDED
 
-#include <OpenSG/OSGVector.h>
+#include "core/math/OSGMathFwd.h"
 #include "core/utils/VRFunctionFwd.h"
 #include "core/objects/VRObjectFwd.h"
 #include "core/tools/VRToolsFwd.h"
 #include "core/math/VRMathFwd.h"
+
+#include <list>
+#include <vector>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -55,6 +58,7 @@ class VRRobotArm {
         void calcReverseKinematicsAubo(PosePtr p);
 
         void update();
+        double convertAngle(double a, int i);
         void applyAngles();
         void calcReverseKinematics(PosePtr p);
         void animOnPath(float t);
@@ -84,7 +88,7 @@ class VRRobotArm {
         bool isMoving();
 
         void moveTo(PosePtr p);
-        void setAngles(vector<float> angles);
+        void setAngles(vector<float> angles, bool force = false);
         void setGrab(float g);
         void toggleGrab();
 

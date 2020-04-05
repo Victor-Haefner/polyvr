@@ -2,35 +2,26 @@
 #define VRFRAMEWORK_H_INCLUDED
 
 #include <OpenSG/OSGConfig.h>
-#include <OpenSG/OSGVector.h>
-#include <string>
-#include "core/objects/VRObjectFwd.h"
 
-class VROptions;
+#include "PolyVRFwd.h"
+#include "core/objects/VRObjectFwd.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-class VRSceneManager;
-class VRSetupManager;
-class VRInternalMonitor;
-class VRGuiManager;
-class VRMainInterface;
-class VRSceneLoader;
-class VRSoundManager;
+template<class ValueTypeT, unsigned int SizeI> class Vector;
+typedef Vector< double, 3 > Vec3d;
 
 class PolyVR {
     private:
-        void setMultisampling(bool on);
-
-        shared_ptr<VRInternalMonitor> monitor;
-        shared_ptr<VRGuiManager> gui_mgr;
-        shared_ptr<VRMainInterface> interface;
-        shared_ptr<VRSceneLoader> loader;
-        shared_ptr<VRSetupManager> setup_mgr;
-        shared_ptr<VRSceneManager> scene_mgr;
-        shared_ptr<VRSoundManager> sound_mgr;
-        shared_ptr<VROptions> options;
+        VRInternalMonitorPtr monitor;
+        VRGuiManagerPtr gui_mgr;
+        VRMainInterfacePtr interface;
+        VRSceneLoaderPtr loader;
+        VRSetupManagerPtr setup_mgr;
+        VRSceneManagerPtr scene_mgr;
+        VRSoundManagerPtr sound_mgr;
+        VROptionsPtr options;
 
         void checkProcessesAndSockets();
 
@@ -43,12 +34,7 @@ class PolyVR {
         void run();
         void update();
         void init(int argc, char **argv);
-        void startTestScene(OSGObjectPtr n, Vec3d camPos);
-
-        void setOption(string name, bool val);
-        void setOption(string name, string val);
-        void setOption(string name, int val);
-        void setOption(string name, float val);
+        void startTestScene(OSGObjectPtr n, const Vec3d& camPos);
 };
 
 OSG_END_NAMESPACE;

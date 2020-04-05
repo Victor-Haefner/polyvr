@@ -484,7 +484,7 @@ void VRGeometry::remColors(bool copyGeometry) {
     if (!mesh->geo->getColors()) return;
 
 
-    auto checkGeo = [&](Geometry* geo) {
+    /*auto checkGeo = [&](Geometry* geo) {
         cout << "checkGeo " << geo << endl;
         cout << " t " << geo->getTypes          () << endl;
         cout << " l " << geo->getLengths        () << endl;
@@ -521,7 +521,7 @@ void VRGeometry::remColors(bool copyGeometry) {
         cout << " if " << geo->getFuncIdDrawElementsInstanced     () << endl;
         cout << " if " << geo->getFuncIdDrawArraysInstanced     () << endl;
         //cout << " ip " << geo->getPumpGroupStorage     () << endl;
-    };
+    };*/
 
     //checkGeo(mesh->geo);
     //SceneFileHandler::the()->write(mesh_node->node, "temp1.osg");
@@ -1234,10 +1234,10 @@ vector< tuple<Pnt3d, Pnt3d>> VRGeometry::mapPoints(vector<Pnt3d>& e1, vector<Pnt
     //addPointsOnEdge for each match
     float stepSize1 = 100.0/(e1.size() - 1);
     float stepSize2 = 100.0/(e2.size() - 1);
-    for (int i = 1; i< e1.size(); i++) {
+    for (uint i = 1; i< e1.size(); i++) {
         int k = round((i * stepSize1)/stepSize2) + 1;
         try {
-        mappedPoints.push_back(make_tuple(e1[i], e2.at(e2.size()-k)));
+            mappedPoints.push_back(make_tuple(e1[i], e2.at(e2.size()-k)));
         } catch (exception& e) {
             cout << "exception in mapPoints(): " << e.what() << endl;
         }

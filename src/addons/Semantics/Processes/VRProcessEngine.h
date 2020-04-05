@@ -6,7 +6,10 @@
 #include "core/utils/VRFunctionFwd.h"
 #include "core/math/VRStateMachine.h"
 #include <map>
-#include <OpenSG/OSGVector.h>
+#include "core/math/OSGMathFwd.h"
+
+typedef std::map<std::string, OSG::VRProcessNodePtr> ProcessNodeData;
+ptrFctFwd( VRProcess, ProcessNodeData );
 
 using namespace std;
 OSG_BEGIN_NAMESPACE;
@@ -18,8 +21,10 @@ class VRProcessEngine {
             string sender;
             string receiver;
             VRProcessNodePtr messageNode;
+            VRProcessNodePtr messageSenderTransition;
 
             Message(string m, string s, string r, VRProcessNodePtr node) : message(m), sender(s), receiver(r), messageNode(node) {}
+            Message() {}
 
             bool operator==(const Message& m) { return m.message == message && m.sender == sender; }
         };
@@ -27,6 +32,7 @@ class VRProcessEngine {
         struct Inventory {
             vector<Message> messages;
 
+            Message getMessage(Message m);
             bool hasMessage(Message m);
             void remMessage(Message m);
         };
@@ -40,10 +46,10 @@ class VRProcessEngine {
         };
 
         struct Action {
-            VRUpdateCbPtr cb;
+            VRProcessCbPtr cb;
             Message message; //sends an instance of this message
 
-            Action(VRUpdateCbPtr cb, Message m) : cb(cb), message(m) {}
+            Action(VRProcessCbPtr cb, Message m) : cb(cb), message(m) {}
         };
 
         struct Transition {
@@ -75,7 +81,7 @@ class VRProcessEngine {
             void checkTransitions();
             string transitioning( float t ); // performs transitions to next states
 
-            void receiveMessage(Message message);
+            void receiveMessage(map<string,VRProcessNodePtr> data, Message message);
             void sendMessage(Message* message);
 
             void tryAdvance();

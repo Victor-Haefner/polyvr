@@ -1,7 +1,7 @@
 #ifndef CAVEKEEPER_H_INCLUDED
 #define CAVEKEEPER_H_INCLUDED
 
-#include <OpenSG/OSGVector.h>
+#include "core/math/OSGMathFwd.h"
 #include <map>
 #include <string>
 #include <vector>

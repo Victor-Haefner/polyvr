@@ -2,7 +2,7 @@
 #define VRGUISEMANTICS_H_INCLUDED
 
 #include <OpenSG/OSGConfig.h>
-#include <OpenSG/OSGVector.h>
+#include "core/math/OSGMathFwd.h"
 #include "core/scene/VRSceneManager.h"
 #include "core/utils/VRFunctionFwd.h"
 #include "core/math/VRMathFwd.h"

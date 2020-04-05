@@ -1,13 +1,14 @@
 #ifndef VRTERRAIN_H_INCLUDED
 #define VRTERRAIN_H_INCLUDED
 
-#include <OpenSG/OSGVector.h>
+#include "core/math/OSGMathFwd.h"
 #include <OpenSG/OSGColor.h>
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/math/polygon.h"
 #include "addons/WorldGenerator/VRWorldGeneratorFwd.h"
 #include "addons/WorldGenerator/VRWorldModule.h"
-#include <boost/thread/recursive_mutex.hpp>
+
+namespace boost { class recursive_mutex; }
 
 using namespace std;
 OSG_BEGIN_NAMESPACE;
@@ -38,6 +39,8 @@ class VRTerrain : public VRGeometry, public VRWorldModule {
         static string fragmentShaderDeferred;
         static string tessControlShader;
         static string tessEvaluationShader;
+        static string vertexShader_es2;
+        static string fragmentShader_es2;
 
         Vec2d size = Vec2d(100,100);
         Vec2f texelSize = Vec2f(0.01,0.01); // shader parameter

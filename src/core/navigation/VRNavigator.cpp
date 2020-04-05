@@ -68,7 +68,7 @@ void VRNavPreset::setTarget(VRTransformPtr _target) { target = _target; if (dev)
 
 void VRNavPreset::activate() {
     active = true;
-    if (dev) dev->setSpeed(speed);
+    if (dev) dev->setSpeed(Vec2d(speedX, speedY));
     for (auto& b : bindings) updateBinding(b);
 }
 
@@ -87,7 +87,7 @@ void VRNavPreset::addKeyBinding(VRNavBinding b) {
     updateBinding(b);
 }
 
-void VRNavPreset::setSpeed(float vt, float vr) { speed = Vec2d(vt, vr); activate(); }
+void VRNavPreset::setSpeed(float vt, float vr) { speedX = vt; speedY = vr; activate(); }
 
 // preset management
 

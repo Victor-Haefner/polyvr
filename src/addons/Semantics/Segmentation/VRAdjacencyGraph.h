@@ -2,7 +2,7 @@
 #define VRADJACENCYGRAPH_H_INCLUDED
 
 #include <OpenSG/OSGConfig.h>
-#include <OpenSG/OSGVector.h>
+#include "core/math/OSGMathFwd.h"
 #include <vector>
 #include <map>
 #include "core/objects/VRObjectFwd.h"

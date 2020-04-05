@@ -35,20 +35,10 @@ HandPtr VRLeapFrame::Hand::clone() {
 
 VRLeapFramePtr VRLeapFrame::ptr() { return static_pointer_cast<VRLeapFrame>( shared_from_this() ); }
 
-Pose getDirTransform(Pose transformation) {
-    Matrix4d dirTransformation = transformation.asMatrix();
-    dirTransformation.invert();
-    dirTransformation.transpose();
-    Pose dirTransform(dirTransformation);
-    return dirTransform;
-}
-
 void VRLeapFrame::Hand::transform(Pose transformation) {
 
-    Pose dirTransform = getDirTransform(transformation);
-
     // transform pose
-    pose->set(transformation.transform(pose->pos()), dirTransform.transform(pose->dir()), dirTransform.transform(pose->up()));
+    pose->set(transformation.transform(pose->pos()), transformation.transform(pose->dir(), false), transformation.transform(pose->up(), false));
 
     // transform joint positions
     for (auto& finger : joints) {
@@ -58,18 +48,19 @@ void VRLeapFrame::Hand::transform(Pose transformation) {
     // transform basis vectors for each bone
     for (auto& finger : bases) {
         for (auto& bone : finger) {
-            bone.set(transformation.transform(bone.pos()), dirTransform.transform(bone.dir()), dirTransform.transform(bone.up()));
+            bone.set(transformation.transform(bone.pos()), transformation.transform(bone.dir(), false), transformation.transform(bone.up(), false));
         }
     }
 
 }
 
 void VRLeapFrame::Pen::transform(Pose transformation) {
-    transformation.transform(tipPosition);
-
-    Pose dirTransform = getDirTransform(transformation);
-    dirTransform.transform(direction);
+    pose->setPos( transformation.transform(pose->pos()) );
+    pose->setDir( transformation.transform(pose->dir(), false) );
 }
+
+VRLeapFrame::Pen::Pen() { pose = Pose::create(); }
+VRLeapFrame::Pen::~Pen() {}
 
 
 

@@ -2,7 +2,7 @@
 #define VRINTERSECT_H_INCLUDED
 
 #include <OpenSG/OSGConfig.h>
-#include <OpenSG/OSGVector.h>
+#include "core/math/OSGMathFwd.h"
 #include <OpenSG/OSGLine.h>
 #include <vector>
 #include <map>

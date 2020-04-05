@@ -2,7 +2,7 @@
 #define VRPATHTOOL_H_INCLUDED
 
 #include <OpenSG/OSGConfig.h>
-#include <OpenSG/OSGVector.h>
+#include "core/math/OSGMathFwd.h"
 #include <OpenSG/OSGColor.h>
 #include <vector>
 #include <map>
@@ -10,7 +10,7 @@
 #include "core/objects/VRObjectFwd.h"
 #include "core/utils/VRFunctionFwd.h"
 #include "core/tools/VRToolsFwd.h"
-#include "core/objects/object/VRObject.h"
+#include "core/objects/VRTransform.h"
 #include "core/math/graph.h"
 #include "core/math/VRMathFwd.h"
 
@@ -52,7 +52,8 @@ class VRExtruder {
         //   trigger events -> start drag/ update drag/ stop drag
 };
 
-class VRPathtool : public VRObject {
+class VRPathtool : public VRTransform {
+//class VRPathtool : public VRObject {
     public:
         struct entry {
             int edge = 0;

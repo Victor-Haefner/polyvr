@@ -8,7 +8,7 @@
 #include <string>
 #include <iostream>
 #include <OpenSG/OSGConfig.h>
-#include <OpenSG/OSGVector.h>
+#include "core/math/OSGMathFwd.h"
 #include <OpenSG/OSGLine.h>
 #include "core/utils/VRFunction.h"
 #include "core/utils/toString.h"

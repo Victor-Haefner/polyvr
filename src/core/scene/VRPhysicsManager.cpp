@@ -1,5 +1,6 @@
 #include "VRPhysicsManager.h"
 
+#include <boost/thread/recursive_mutex.hpp>
 #include <btBulletDynamicsCommon.h>
 #include <BulletCollision/CollisionShapes/btConvexPolyhedron.h>
 #include <BulletCollision/CollisionDispatch/btGhostObject.h>
@@ -32,7 +33,8 @@ using namespace std;
 
 
 VRPhysicsManager::VRPhysicsManager() {
-    MLock lock(mtx);
+    mtx = new boost::recursive_mutex();
+    MLock lock(*mtx);
     // Build the broadphase
     broadphase = new btDbvtBroadphase();
 
@@ -80,16 +82,17 @@ VRPhysicsManager::~VRPhysicsManager() {
     delete dispatcher;
     delete collisionConfiguration;
     delete broadphase;
+    delete mtx;
 }
 
-boost::recursive_mutex& VRPhysicsManager::physicsMutex() { return mtx; }
+boost::recursive_mutex& VRPhysicsManager::physicsMutex() { return *mtx; }
 
 VRVisualLayerPtr VRPhysicsManager::getVisualLayer() { return physics_visual_layer; }
 
 btSoftBodyWorldInfo* VRPhysicsManager::getSoftBodyWorldInfo() {return softBodyWorldInfo;}
 
 void VRPhysicsManager::setPhysicsActive(bool a) {
-    MLock lock(mtx);
+    MLock lock(*mtx);
     active = a;
     skip = true;
 }
@@ -114,7 +117,7 @@ void VRPhysicsManager::updatePhysics( VRThreadWeakPtr wthread) {
         if (skip || dt < 0) { skip = 0; dt = 0; }
 
         {
-            MLock lock(mtx);
+            MLock lock(*mtx);
             prepareObjects();
             for (auto f : updateFktsPre) (*(f.lock()))();
             dynamicsWorld->stepSimulation(1e-6*dt, 30, 1.0/500);
@@ -131,19 +134,19 @@ void VRPhysicsManager::updatePhysics( VRThreadWeakPtr wthread) {
     t3 = getTime();
 
     if (active) {
-        MLock lock(mtx);
+        MLock lock(*mtx);
         if (t3-t1 > 0) fps = 1e6/(t3-t1);
     }
 }
 
 void VRPhysicsManager::addPhysicsUpdateFunction(VRUpdateCbPtr fkt, bool after) {
-    MLock lock(mtx);
+    MLock lock(*mtx);
     if (after) updateFktsPost.push_back(fkt);
     else updateFktsPre.push_back(fkt);
 }
 
 void VRPhysicsManager::dropPhysicsUpdateFunction(VRUpdateCbPtr fkt, bool after) {
-    MLock lock(mtx);
+    MLock lock(*mtx);
     auto& fkts = after ? updateFktsPost : updateFktsPre;
     for (unsigned int i = 0; i < fkts.size() ; i++) {
         if (fkts[i].lock() == fkt) { fkts.erase(fkts.begin() + i); return; }
@@ -154,7 +157,7 @@ void VRPhysicsManager::updatePhysObjects() {
     //VRTimer timer;
     //timer.start("D1");
 
-    MLock lock(mtx);
+    MLock lock(*mtx);
     //timer.start("D2");
     VRGlobals::PHYSICS_FRAME_RATE.fps = fps;
     for (auto o : OSGobjs) if (auto so = o.second.lock()) so->resolvePhysics();
@@ -250,7 +253,7 @@ void VRPhysicsManager::unphysicalize(VRTransformPtr obj) {
     if (OSGobjs.count(bdy)) OSGobjs.erase(bdy);
 }
 
-void VRPhysicsManager::setGravity(Vec3d g) { MLock lock(mtx); dynamicsWorld->setGravity(btVector3(g[0],g[1],g[2])); }
+void VRPhysicsManager::setGravity(Vec3d g) { MLock lock(*mtx); dynamicsWorld->setGravity(btVector3(g[0],g[1],g[2])); }
 
 btSoftRigidDynamicsWorld* VRPhysicsManager::bltWorld() { return dynamicsWorld; }
 

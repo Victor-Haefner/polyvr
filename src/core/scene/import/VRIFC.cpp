@@ -298,6 +298,8 @@ class IFCLoader {
         }
 
         void load(string path, VRTransformPtr res) {
+            VRObjectPtr root = VRObject::create(path);
+
             //Logger::SetOutput(&cout, &cout); // Redirect the output (both progress and log) to stdout
             Logger::SetOutput(0, 0); // Redirect the output (both progress and log) to stdout
 
@@ -351,7 +353,7 @@ class IFCLoader {
                 IfcGeom::Element<real_t>* geom_object = context_iterator.get();
                 auto geo = convertGeo(static_cast<const IfcGeom::TriangulationElement<real_t>*>(geom_object));
                 if (geo) {
-                    res->addChild(geo);
+                    root->addChild(geo);
                     addSemantics(geo, geom_object);
                 }
 
@@ -380,6 +382,7 @@ class IFCLoader {
 
             }*/
 
+            res->addChild(root);
         }
 };
 
