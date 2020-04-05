@@ -102,8 +102,8 @@ void VRGuiBits::on_web_export_clicked() {
     systemCall("cp -f \"" + folder + "/scanDir.php\" ./");
 
     // generate html file
-    systemCall("cp -f \"" + folder + "/index.html\" ./");
-    systemCall("sed -i 's/PROJECT/"+project+"/g' ./index.html");
+    systemCall("cp -f \"" + folder + "/polyvr.html\" ./");
+    systemCall("sed -i 's/PROJECT/"+project+"/g' ./polyvr.html");
 }
 
 void VRGuiBits::on_about_clicked() {
