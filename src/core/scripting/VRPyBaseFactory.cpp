@@ -36,7 +36,12 @@ template<> bool toValue(PyObject* o, unsigned char& v) { if (!PyNumber_Check(o))
 template<> bool toValue(PyObject* o, unsigned int& v) { if (!PyInt_Check(o)) return 0; v = PyInt_AsLong(o); return 1; }
 template<> bool toValue(PyObject* o, float& v) { if (!PyNumber_Check(o)) return 0; v = PyFloat_AsDouble(o); return 1; }
 template<> bool toValue(PyObject* o, double& v) { if (!PyNumber_Check(o)) return 0; v = PyFloat_AsDouble(o); return 1; }
-template<> bool toValue(PyObject* o, string& v) { if (!PyString_Check(o)) return 0; v = PyString_AsString(o); return 1; }
+
+template<> bool toValue(PyObject* o, string& v) {
+    if (!PyString_Check(o) && !PyUnicode_Check(o)) return 0;
+    v = PyString_AsString(o);
+    return 1;
+}
 
 bool PyVec_Check(PyObject* o, int N, char type) {
     if (N == 2 && type == 'f') if (VRPyVec2f::check(o)) return true;

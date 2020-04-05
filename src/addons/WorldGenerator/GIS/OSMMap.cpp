@@ -3,7 +3,7 @@
 #include "core/math/boundingbox.h"
 #include "core/utils/VRTimer.h"
 #include "core/utils/xml.h"
-#ifndef WITHOUT_CGAL
+#ifndef WITHOUT_GDAL
 #include <gdal/gdal.h>
 #include <gdal/gdal_priv.h>
 #include <gdal/gdal_version.h>
