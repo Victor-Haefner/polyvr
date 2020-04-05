@@ -172,7 +172,7 @@ void VRScript::update() {
     if (type == "Python") {
         head = "def " + name + "(";
         bool first = true;
-        for (auto a : getArguments(true)) {
+        for (auto a : getArguments()) {
             if (!first) head += ", ";
             head += a->getName();
             first = false;
@@ -304,12 +304,21 @@ VRScript::Search VRScript::find(string s) {
     return search;
 }
 
-list<VRScript::argPtr> VRScript::getArguments(bool withInternals) {
-    if (withInternals && socArg) ;
+list<VRScript::argPtr> VRScript::getArguments() {
     auto tmp = args;
     if (socArg) tmp.push_front(socArg);
     if (devArg) tmp.push_front(devArg);
     return tmp;
+}
+
+void VRScript::setArguments(vector<string> vals) {
+    int i=0;
+    for (auto a : args) {
+        if (i >= vals.size()) return;
+        a->val = vals[i];
+        a->type = "str";
+        i++;
+    }
 }
 
 void VRScript::setName(string n) { clean(); VRName::setName(n); update(); }
@@ -553,7 +562,7 @@ void VRScript::execute() {
         pyErrPrint( "Errors" );
 
         VRTimer timer; timer.start();
-        auto args = getArguments(true);
+        auto args = getArguments();
         PyObject* pArgs = PyTuple_New(args.size());
         pyErrPrint("Errors");
 

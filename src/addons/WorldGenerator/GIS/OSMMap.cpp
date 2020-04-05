@@ -3,10 +3,13 @@
 #include "core/math/boundingbox.h"
 #include "core/utils/VRTimer.h"
 #include "core/utils/xml.h"
+
+#ifndef WITHOUT_GDAL
 #include <gdal/gdal.h>
 #include <gdal/gdal_priv.h>
 #include <gdal/gdal_version.h>
 #include <gdal/ogrsf_frmts.h>
+#endif
 
 #include <iostream>
 #include <fstream>
@@ -849,6 +852,7 @@ void OSMMap::readGEOJSON23Up(string path) {
 }
 
 void OSMMap::readGEOJSON23Be(string path) {
+#ifndef WITHOUT_GDAL
     VRTimer t; t.start();
     GDALAllRegister();
     GDALDataset* poDS = (GDALDataset *) GDALOpenEx( path.c_str(), GDAL_OF_VECTOR, NULL, NULL, NULL  );
@@ -973,13 +977,16 @@ void OSMMap::readGEOJSON23Be(string path) {
     auto t2 = t.stop()/1000.0;
     cout << "  loaded " << ways.size() << " ways, " << nodes.size() << " nodes and " << relations.size() << " relations" << endl;
     cout << "  secs needed: " << t2 << endl;
+#endif
 }
 
 void OSMMap::readGEOJSON(string path) {
+#ifndef WITHOUT_GDAL
 #if GDAL_VERSION_NUM >= GDAL_COMPUTE_VERSION(2,3,0)
     readGEOJSON23Up(path);
 #else
     readGEOJSON23Be(path);
+#endif
 #endif
 }
 

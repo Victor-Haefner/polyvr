@@ -143,7 +143,14 @@ VRScriptPtr VRScriptManager::changeScriptName(string name, string new_name) {
 
 map<string, VRScriptPtr> VRScriptManager::getScripts() { return scripts; }
 VRScriptPtr VRScriptManager::getScript(string name) { return scripts.count(name) == 1 ? scripts[name] : 0; }
-void VRScriptManager::triggerScript(string fkt) { if (scripts.count(fkt) == 1) scripts[fkt]->execute(); }
+
+void VRScriptManager::triggerScript(string fkt, vector<string> params) {
+    //cout << "VRScriptManager::triggerScript " << fkt << endl;
+    //for (auto p : params) cout << " param: " << p << endl;
+    if (!scripts.count(fkt)) return;
+    scripts[fkt]->setArguments(params);
+    scripts[fkt]->execute();
+}
 
 void VRScriptManager::updateScript(string name, string core, bool compile) {
     if (scripts.count(name) == 0) return;

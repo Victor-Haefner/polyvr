@@ -86,9 +86,14 @@ PolyVR* PolyVR::get() {
 }
 
 #ifdef WASM
+typedef const char* CSTR;
 EMSCRIPTEN_KEEPALIVE void PolyVR_shutdown() { PolyVR::shutdown(); }
 EMSCRIPTEN_KEEPALIVE void PolyVR_reloadScene() { VRSceneManager::get()->reloadScene(); }
-EMSCRIPTEN_KEEPALIVE void PolyVR_triggerScript(const char* name) { VRScene::getCurrent()->triggerScript(string(name)); }
+EMSCRIPTEN_KEEPALIVE void PolyVR_triggerScript(const char* name, CSTR* params, int N) {
+    vector<string> sparams;
+    for (int i=0; i<N; i++) sparams.push_back(string(params[i]));
+    VRScene::getCurrent()->triggerScript(string(name), sparams);
+}
 #endif
 
 void PolyVR::shutdown() {
