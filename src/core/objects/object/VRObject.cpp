@@ -573,6 +573,29 @@ vector<OSGObjectPtr> VRObject::getNodes() {
     return nodes;
 }
 
+string VRObject::getOSGTreeString() {
+    return printOSGTreeString( getNode() );
+}
+
+string VRObject::printOSGTreeString(OSGObjectPtr o, string indent) {
+    if (o == 0) return "";
+
+    string type = o->node->getCore()->getTypeName();
+    string name = "Unnamed";
+    if (OSG::getName(o->node)) name = OSG::getName(o->node);
+
+    string data = indent + name + " " + type + "  ";
+    if (type == "Transform") {
+        Transform* t = dynamic_cast<Transform*>(o->node->getCore());
+        data += toString(Vec4d(t->getMatrix()[0])) + "  " + toString(Vec4d(t->getMatrix()[1])) + "  " + toString(Vec4d(t->getMatrix()[2]));
+    }
+
+    for (uint i=0; i<o->node->getNChildren(); i++) {
+        data += "\n" + printOSGTreeString(OSGObject::create(o->node->getChild(i)), indent + " ");
+    }
+    return data;
+}
+
 void VRObject::printOSGTree(OSGObjectPtr o, string indent) {
     if (o == 0) return;
 

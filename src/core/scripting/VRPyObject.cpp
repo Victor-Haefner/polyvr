@@ -105,6 +105,7 @@ PyMethodDef VRPyObject::methods[] = {
     {"getEntity", PyWrap(Object, getEntity, "Get entity", VREntityPtr) },
     {"clearChildren", PyWrap(Object, clearChildren, "Remove all children - clearChildren()", void) },
     {"getChildIndex", PyWrap(Object, getChildIndex, "Return the child index of this object - int getChildIndex()", int) },
+    {"getOSGTreeString", PyWrap(Object, getOSGTreeString, "Get string description of OSG subtree", string) },
     {"getBoundingbox", PyWrap(Object, getBoundingbox, "get Boundingbox", BoundingboxPtr) },
     {"getWorldBoundingbox", PyWrap(Object, getWorldBoundingbox, "get world Boundingbox", BoundingboxPtr) },
     {"setVolume", PyWrap(Object, setVolume, "Set the scenegraph volume to boundingbox", void, Boundingbox) },
