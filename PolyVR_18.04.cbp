@@ -744,6 +744,8 @@
 		<Unit filename="src/core/objects/VRShadowEngineFields.h" />
 		<Unit filename="src/core/objects/VRStage.cpp" />
 		<Unit filename="src/core/objects/VRStage.h" />
+		<Unit filename="src/core/objects/VRSyncNode.cpp" />
+		<Unit filename="src/core/objects/VRSyncNode.h" />
 		<Unit filename="src/core/objects/VRTransform.cpp" />
 		<Unit filename="src/core/objects/VRTransform.h" />
 		<Unit filename="src/core/objects/geometry/OSGGeometry.cpp" />
@@ -1042,6 +1044,8 @@
 		<Unit filename="src/core/scripting/VRPyStateMachine.h" />
 		<Unit filename="src/core/scripting/VRPyStroke.cpp" />
 		<Unit filename="src/core/scripting/VRPyStroke.h" />
+		<Unit filename="src/core/scripting/VRPySyncNode.cpp" />
+		<Unit filename="src/core/scripting/VRPySyncNode.h" />
 		<Unit filename="src/core/scripting/VRPyTextureGenerator.cpp" />
 		<Unit filename="src/core/scripting/VRPyTextureGenerator.h" />
 		<Unit filename="src/core/scripting/VRPyTextureMosaic.cpp" />
