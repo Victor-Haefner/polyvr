@@ -4,6 +4,7 @@
 #include "VRTransform.h"
 #include "core/networking/VRNetworkingFwd.h"
 #include <OpenSG/OSGChangeList.h>
+#include <OpenSG/OSGFieldContainerFactory.h>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -29,26 +30,41 @@ class VRSyncRemote {//: public VRName {
 
 class VRSyncNode : public VRTransform {
     private:
+        typedef unsigned char BYTE;
         VRSocketPtr socket;
         VRFunction<void*>* socketCb;
         VRUpdateCbPtr updateFkt;
+        FieldContainerFactoryBase* factory = FieldContainerFactory::the();
+        vector<UInt32> createdNodes; //IDs of the currently created nodes/children
 
         map<int, int> container; // local containers, sub-set of containers which need to be synced for collaboration
-        vector<UInt32> syncedContainer;
+        //vector<int> cores; //lists IDs of nodecores
+        vector<UInt32> syncedContainer; //Id's of container that got changes over sync (changed by remote). Needed to filter out sync changes from local Changelist to prevent cycles.
         map<string, VRSyncRemotePtr> remotes;
+        map<int, int> remoteToLocalID;
+        UInt32 getRegisteredContainerID(int syncID);
+        int getRegisteredSyncID(UInt32 fieldContainerID);
+        UInt32 getLocalId(UInt32 remoteID, int syncID);
+        bool isRegistered(int syncID);
 
         VRObjectPtr copy(vector<VRObjectPtr> children);
 
+        string copySceneState();
         void handleChangeList(void* msg);
         vector<FieldContainer*> findContainer(string typeName); //deprecated
         vector<FieldContainer*> getTransformationContainer(ChangeList* cl); //deprecated
         //vector<OSG::Field
 
+        void serialize_entry(ContainerChangeEntry* entry, vector<BYTE>& data, int syncNodeID);
         string serialize(ChangeList* clist);
         void deserializeAndApply(string& data);
+        void deserializeChildrenData(vector<BYTE>& childrenData, UInt32 fcID, map<int,int>& childToParent);
 
         void registerContainer(FieldContainer* c, int syncNodeID = -1);
-        void registerNode(Node* c);
+        vector<int> registerNode(Node* c); //returns all registered IDs
+
+        void createNode(FieldContainerRecPtr& fcPtr, int syncNodeID, map<int,int>& childToParent);
+        void createNodeCore(FieldContainerRecPtr& fcPtr, int syncNodeID, map<int,int>& childToParent);
 
     public:
         VRSyncNode(string name = "syncNode");
@@ -65,10 +81,6 @@ class VRSyncNode : public VRTransform {
         void printChangeList(ChangeList* cl);
         void broadcast(string message);
 
-        void getContainer(); //deprecated
-        //void getContainerFields();
-
-        string printContainer(vector<FieldContainer*> container); //deprecated
 
 };
 
