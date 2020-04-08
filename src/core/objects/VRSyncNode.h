@@ -6,6 +6,8 @@
 #include <OpenSG/OSGChangeList.h>
 #include <OpenSG/OSGFieldContainerFactory.h>
 
+class OSGChangeList;
+
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
@@ -66,6 +68,16 @@ class VRSyncNode : public VRTransform {
         void createNode(FieldContainerRecPtr& fcPtr, int syncNodeID, map<int,int>& childToParent);
         void createNodeCore(FieldContainerRecPtr& fcPtr, int syncNodeID, map<int,int>& childToParent);
 
+        bool isRemoteChange(const UInt32& id);
+        bool isRegistred(const UInt32& id);
+
+        void printRegistredContainers();
+        void printSyncedContainers();
+        void printChangeList(OSGChangeList* cl);
+        void gatherCreatedContainers(OSGChangeList* localChanges);
+        void broadcastChangeList(OSGChangeList* cl, bool doDelete = false);
+        OSGChangeList* getFilteredChangeList();
+
     public:
         VRSyncNode(string name = "syncNode");
         ~VRSyncNode();
@@ -78,7 +90,6 @@ class VRSyncNode : public VRTransform {
         void addRemote(string host, int port, string name);
 
         void update();
-        void printChangeList(ChangeList* cl);
         void broadcast(string message);
 
 

@@ -41,69 +41,6 @@ template<> string typeName(const VRSyncNode& o) { return "SyncNode"; }
 
 ThreadRefPtr applicationThread;
 
-void VRSyncNode::printChangeList(ChangeList* cl) {
-    if (cl->getNumChanged() == 0 && cl->getNumCreated() == 0) cout << "no changes " << endl;
-    stringstream changedContainers;
-    int j = 0;
-    for (auto it = cl->begin(); it != cl->end(); ++it) {
-        if (j == 0) cout << "VRSyncNode::printChangeList " << name << " changed: " << cl->getNumChanged() << " created: " << cl->getNumCreated() << endl;
-        ContainerChangeEntry* entry = *it;
-        const FieldFlags* fieldFlags = entry->pFieldFlags;
-        BitVector whichField = entry->whichField;
-        UInt32 id = entry->uiContainerId;
-
-        // ----- print info ---- //
-        string type = "";
-        if (factory->getContainer(id)){
-            type += factory->getContainer(id)->getTypeName();
-        }
-        cout << "uiContainerId: " << id;
-        string changeType = "";
-        switch (entry->uiEntryDesc) {
-            case ContainerChangeEntry::Change:
-                changeType = " Change            ";
-                break;
-            case ContainerChangeEntry::AddField:
-                changeType = " addField/SubField ";
-                break;
-            case ContainerChangeEntry::AddReference:
-                changeType = " AddReference      ";
-                break;
-            case ContainerChangeEntry::Create:
-                changeType = " Create            ";
-                break;
-            case ContainerChangeEntry::DepSubReference:
-                changeType = " DepSubReference   ";
-                break;
-            case ContainerChangeEntry::SubReference:
-                changeType = " SubReference      ";
-                break;
-            default:
-                changeType = " none              ";;
-        }
-        cout << " " << changeType << " container: " << type<< endl;
-        j++;
-    }
-}
-
-VRSyncNode::VRSyncNode(string name) : VRTransform(name) {
-    type = "SyncNode";
-    applicationThread = dynamic_cast<Thread *>(ThreadManager::getAppThread());
-
-    NodeMTRefPtr node = getNode()->node;
-    registerNode(node);
-
-	updateFkt = VRUpdateCb::create("SyncNode update", bind(&VRSyncNode::update, this));
-	VRScene::getCurrent()->addUpdateFkt(updateFkt, 100000);
-}
-
-VRSyncNode::~VRSyncNode() {
-    cout << "VRSyncNode::~VRSyncNode " << name << endl;
-}
-
-VRSyncNodePtr VRSyncNode::ptr() { return static_pointer_cast<VRSyncNode>( shared_from_this() ); }
-VRSyncNodePtr VRSyncNode::create(string name) { return VRSyncNodePtr(new VRSyncNode(name) ); }
-
 class OSGChangeList : public ChangeList {
     public:
         ~OSGChangeList() {};
@@ -139,6 +76,70 @@ class OSGChangeList : public ChangeList {
                 }
         }
 };
+
+void VRSyncNode::printChangeList(OSGChangeList* cl) {
+    if (!cl) return;
+    cout << endl << "ChangeList:";
+    if (cl->getNumChanged() == 0 && cl->getNumCreated() == 0) cout << " no changes " << endl;
+    else cout << " node: " << name << ", changes: " << cl->getNumChanged() << ", created: " << cl->getNumCreated() << endl;
+
+    auto printEntry = [&](ContainerChangeEntry* entry) {
+        const FieldFlags* fieldFlags = entry->pFieldFlags;
+        BitVector whichField = entry->whichField;
+        UInt32 id = entry->uiContainerId;
+
+        // ----- print info ---- //
+        string type, changeType;
+        if (factory->getContainer(id)) type = factory->getContainer(id)->getTypeName();
+
+        switch (entry->uiEntryDesc) {
+            case ContainerChangeEntry::Change:
+                changeType = " Change            ";
+                break;
+            case ContainerChangeEntry::AddField:
+                changeType = " addField/SubField ";
+                break;
+            case ContainerChangeEntry::AddReference:
+                changeType = " AddReference      ";
+                break;
+            case ContainerChangeEntry::Create:
+                changeType = " Create            ";
+                break;
+            case ContainerChangeEntry::DepSubReference:
+                changeType = " DepSubReference   ";
+                break;
+            case ContainerChangeEntry::SubReference:
+                changeType = " SubReference      ";
+                break;
+            default:
+                changeType = " none              ";;
+        }
+        cout << "  " << "uiContainerId: " << id << ", changeType: " << changeType << ", container: " << type << endl;
+    };
+
+    cout << " Created:" << endl;
+    for (auto it = cl->beginCreated(); it != cl->endCreated(); ++it) printEntry(*it);
+    cout << " Changes:" << endl;
+    for (auto it = cl->begin(); it != cl->end(); ++it) printEntry(*it);
+}
+
+VRSyncNode::VRSyncNode(string name) : VRTransform(name) {
+    type = "SyncNode";
+    applicationThread = dynamic_cast<Thread *>(ThreadManager::getAppThread());
+
+    NodeMTRefPtr node = getNode()->node;
+    registerNode(node);
+
+	updateFkt = VRUpdateCb::create("SyncNode update", bind(&VRSyncNode::update, this));
+	//VRScene::getCurrent()->addUpdateFkt(updateFkt, 100000);
+}
+
+VRSyncNode::~VRSyncNode() {
+    cout << "VRSyncNode::~VRSyncNode " << name << endl;
+}
+
+VRSyncNodePtr VRSyncNode::ptr() { return static_pointer_cast<VRSyncNode>( shared_from_this() ); }
+VRSyncNodePtr VRSyncNode::create(string name) { return VRSyncNodePtr(new VRSyncNode(name) ); }
 
 typedef unsigned char BYTE;
 
@@ -234,12 +235,10 @@ std::vector<BYTE> base64_decode(std::string const& encoded_string) {
 }
 
 UInt32 VRSyncNode::getRegisteredContainerID(int syncID) {
-    int id = -1;
     for (auto registered : container) {
-        int registeredSyncID = registered.second;
-        if (registeredSyncID == syncID) id = registered.first;
+        if (registered.second == syncID) return registered.first;
     }
-    return id;
+    return -1;
 }
 
 struct SerialEntry {
@@ -612,50 +611,73 @@ string VRSyncNode::copySceneState() {
     return data;
 }
 
-//update this SyncNode
-void VRSyncNode::update() {
-    // go through all changes, gather changes where the container is known (in containers)
-    ChangeList* cl = applicationThread->getChangeList();
-    if (cl->getNumChanged() + cl->getNumCreated() == 0) return;
-    cout << "> > >  " << name << " VRSyncNode::update() changes " << cl->getNumChanged() << endl;
-//    if (name == "node1") printChangeList(cl);
-    //DEBUG: print registered container
-    bool first = true;
-    cout << "print registered container: " << endl;
+void VRSyncNode::printRegistredContainers() {
+    cout << endl << "registered container:" << endl;
     for (auto c : container){
         UInt32 id = c.first;
         FieldContainer* fc = factory->getContainer(id);
-        cout << id << " " << getRegisteredContainerID(c.second) << " syncNodeID " << c.second << " " << container[id];
+        cout << " " << id << " " << getRegisteredContainerID(c.second) << " syncNodeID " << c.second << " " << container[id];
         if (factory->getContainer(id)){
-            cout << " " << fc->getTypeName();
+            cout << " " << fc->getTypeName() << " Refs " << fc->getRefCount();
         }
         cout << endl;
     }
+}
 
-
-    cout << "syncedContainer " << endl;
+void VRSyncNode::printSyncedContainers() {
+    cout << endl << "synced container:" << endl;
     for (int id : syncedContainer) cout << id << endl;
+}
 
-    int j = 0;
+// checks if a container was changed by remote
+bool VRSyncNode::isRemoteChange(const UInt32& id) {
+    return bool(::find(syncedContainer.begin(), syncedContainer.end(), id) != syncedContainer.end());
+}
+
+bool VRSyncNode::isRegistred(const UInt32& id) {
+    return bool(container.count(id));
+}
+
+OSGChangeList* VRSyncNode::getFilteredChangeList() {
+    // go through all changes, gather changes where the container is known (in containers)
     // create local changelist with changes of containers of the subtree of this sync node :D
+
+    ChangeList* cl = applicationThread->getChangeList();
+    if (cl->getNumChanged() + cl->getNumCreated() == 0) return 0;
+
     OSGChangeList* localChanges = (OSGChangeList*)ChangeList::create();
-    for (auto it = cl->begin(); it != cl->end(); ++it) {
+    vector<UInt32> createdNodes;
+
+    // add created entries to local CL
+    for (auto it = cl->beginCreated(); it != cl->endCreated(); ++it) {
         ContainerChangeEntry* entry = *it;
         UInt32 id = entry->uiContainerId;
-        if (container.count(id)) {
-            if (::find(syncedContainer.begin(), syncedContainer.end(), id) == syncedContainer.end()) { // check to avoid adding a change induced by remote sync
-                localChanges->addChange(entry);
-            }
+        if (isRemoteChange(id)) continue;
+
+        if (isRegistred(id)) { // TODO: just created containers cannot be registered!, this is acctually just getting the initial sync node, which is bad!
+            localChanges->addChange(entry);
+            createdNodes.push_back(id);
         }
     }
 
-    printContainer(factory, container);
-    if (localChanges->getNumChanged() == 0){
-        cout << "            / " << name << " VRSyncNode::update()" << " < < <" << endl;
-        return;
+    auto justCreated = [&](UInt32 id) { return bool(::find(createdNodes.begin(), createdNodes.end(), id) != createdNodes.end()); };
+
+    // add changed entries to local CL
+    for (auto it = cl->begin(); it != cl->end(); ++it) {
+        ContainerChangeEntry* entry = *it;
+        UInt32 id = entry->uiContainerId;
+        if (isRemoteChange(id)) continue;
+        if (isRegistred(id) || justCreated(id)) {
+            localChanges->addChange(entry);
+        }
     }
 
-    // check for addChild changes
+    return localChanges;
+}
+
+void VRSyncNode::gatherCreatedContainers(OSGChangeList* localChanges) {
+    if (!localChanges) return;
+// check for addChild changes
     createdNodes.clear();
     for (auto it = localChanges->begin(); it != localChanges->end(); ++it) {
         cout << "update child changes" << endl;
@@ -703,70 +725,29 @@ void VRSyncNode::update() {
             }
         }
     }
+}
 
-    int counter = 0;
-    // add created entries to local CL
-    for (auto it = cl->beginCreated(); it != cl->endCreated(); ++it) {
-        ContainerChangeEntry* entry = *it;
-        UInt32 id = entry->uiContainerId;
-//        cout << "created " << id << endl;
-        //TODO: ignore core created somehow to have less created to handle on remote side
-        if (container.count(id)) {
-            if (::find(syncedContainer.begin(), syncedContainer.end(), id) == syncedContainer.end()) { // TODO: optimize by reorganizing if clauses
-                localChanges->addChange(entry);
-            }
-            //cout << "add created " << entry->uiContainerId << endl;
-            createdNodes.push_back(id);
-            counter++;
-        }
-    }
+void VRSyncNode::broadcastChangeList(OSGChangeList* cl, bool doDelete) {
+    if (!cl) return;
+    string data = serialize(cl); // serialize changes in new change list (check OSGConnection for serialization Implementation)
+    if (doDelete) delete cl;
+    for (auto& remote : remotes) remote.second->send(data); // send over websocket to remote
+}
 
-//    cout << "!!! print createdNodes" << endl;
-//    for (int i : createdNodes) cout << i << endl;
+//update this SyncNode
+void VRSyncNode::update() {
+    auto localChanges = getFilteredChangeList();
+    if (!localChanges) return;
+    cout << endl << " > > >  " << name << " VRSyncNode::update(), local created: " << localChanges->getNumCreated() << ", local changes: " << localChanges->getNumChanged() << endl;
 
-    //TODO: more performant if reordered loops? bc usually tehre are less createdNodes than change entries in CL
-    // add change entries (of created FC which were not tracked) to local change list
-    for (auto it = cl->begin(); it != cl->end(); ++it) {
-        ContainerChangeEntry* entry = *it;
-        UInt32 id = entry->uiContainerId;
-//        cout << "searching createdNodes for " << id << endl;
-        if (::find(createdNodes.begin(), createdNodes.end(), id) != createdNodes.end()) {
-            if (::find(syncedContainer.begin(), syncedContainer.end(), id) == syncedContainer.end()) { // TODO: optimize by reorganizing if clauses
-                localChanges->addChange(entry);
-            }
-//            cout << "add created " << entry->uiEntryDesc << " " << entry->uiContainerId << endl;
-        }
-        if (container.count(id)) counter ++;
-    }
-    cout << counter << " change entries in CL with registered IDs" << endl;
-
-    cout << "print local changes: " << endl;
+    printRegistredContainers(); // DEBUG: print registered container
+    //printSyncedContainers();
+    gatherCreatedContainers(localChanges);
+    printRegistredContainers(); // DEBUG: print registered container
     printChangeList(localChanges);
 
-    //DEBUG: print registered container
-    cout << "print registered container: " << endl;
-    for (auto c : container){
-        UInt32 id = c.first;
-        FieldContainer* fc = factory->getContainer(id);
-        cout << id << " " << getRegisteredContainerID(c.second) << " syncNodeID " << c.second << " " << container[id];
-        if (factory->getContainer(id)){
-            cout << " " << fc->getTypeName() << " Refs " << fc->getRefCount();
-        }
-        cout << endl;
-    }
-
-    // serialize changes in new change list (check OSGConnection for serialization Implementation)
-    string data = serialize(localChanges);
-    delete localChanges;
-
-    // send over websocket to remote
-    for (auto& remote : remotes) {
-        remote.second->send(data);
-        //cout << name << " sending " << data  << endl;
-    }
-
+    broadcastChangeList(localChanges, true);
     syncedContainer.clear();
-
     cout << "            / " << name << " VRSyncNode::update()" << "  < < < " << endl;
 }
 
@@ -907,3 +888,11 @@ bool VRSyncRemote::send(string message){
     if (!socket->sendMessage(message)) return 0;
     return 1;
 }
+
+
+
+
+
+
+
+
