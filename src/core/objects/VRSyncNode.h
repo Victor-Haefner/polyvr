@@ -49,6 +49,7 @@ class VRSyncNode : public VRTransform {
         int getRegisteredSyncID(UInt32 fieldContainerID);
         UInt32 getLocalId(UInt32 remoteID, int syncID);
         bool isRegisteredRemote(const UInt32& syncID);
+        vector<int> getFCChildren(FieldContainer* fcPtr, BitVector fieldMask);
 
         VRObjectPtr copy(vector<VRObjectPtr> children);
 
