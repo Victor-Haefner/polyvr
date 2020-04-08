@@ -70,11 +70,11 @@ class VRSyncNode : public VRTransform {
 
         bool isRemoteChange(const UInt32& id);
         bool isRegistred(const UInt32& id);
+        bool isSubContainer(const UInt32& id);
 
         void printRegistredContainers();
         void printSyncedContainers();
         void printChangeList(OSGChangeList* cl);
-        void gatherCreatedContainers(OSGChangeList* localChanges);
         void broadcastChangeList(OSGChangeList* cl, bool doDelete = false);
         OSGChangeList* getFilteredChangeList();
 

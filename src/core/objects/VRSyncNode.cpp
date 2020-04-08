@@ -127,8 +127,8 @@ VRSyncNode::VRSyncNode(string name) : VRTransform(name) {
     type = "SyncNode";
     applicationThread = dynamic_cast<Thread *>(ThreadManager::getAppThread());
 
-    NodeMTRefPtr node = getNode()->node;
-    registerNode(node);
+    //NodeMTRefPtr node = getNode()->node; // deprecated, gets filtered from created entries in CL
+    //registerNode(node);
 
 	updateFkt = VRUpdateCb::create("SyncNode update", bind(&VRSyncNode::update, this));
 	//VRScene::getCurrent()->addUpdateFkt(updateFkt, 100000);
@@ -638,6 +638,35 @@ bool VRSyncNode::isRegistred(const UInt32& id) {
     return bool(container.count(id));
 }
 
+bool VRSyncNode::isSubContainer(const UInt32& id) {
+    auto fct = factory->getContainer(id);
+    if (!fct) return false;
+
+    UInt32 syncNodeID = getNode()->node->getId();
+    auto type = factory->findType(fct->getTypeId());
+
+    function<bool(Node*)> checkAncestor = [&](Node* node) {
+        if (!node) return false;
+        if (node->getId() == syncNodeID) return true;
+        Node* parent = node->getParent();
+        return checkAncestor(parent);
+    };
+
+    if (type->isNode()) {
+        Node* node = dynamic_cast<Node*>(fct);
+        if (!node) return false;
+        return checkAncestor(node);
+    }
+
+    if (type->isNodeCore()) {
+        NodeCore* core = dynamic_cast<NodeCore*>(fct);
+        if (!core) return false;
+        for (auto node : core->getParents())
+            if (checkAncestor(dynamic_cast<Node*>(node))) return true;
+    }
+    return false;
+}
+
 OSGChangeList* VRSyncNode::getFilteredChangeList() {
     // go through all changes, gather changes where the container is known (in containers)
     // create local changelist with changes of containers of the subtree of this sync node :D
@@ -646,85 +675,30 @@ OSGChangeList* VRSyncNode::getFilteredChangeList() {
     if (cl->getNumChanged() + cl->getNumCreated() == 0) return 0;
 
     OSGChangeList* localChanges = (OSGChangeList*)ChangeList::create();
-    vector<UInt32> createdNodes;
 
-    // add created entries to local CL
+    // register created and add them to local CL
     for (auto it = cl->beginCreated(); it != cl->endCreated(); ++it) {
         ContainerChangeEntry* entry = *it;
         UInt32 id = entry->uiContainerId;
         if (isRemoteChange(id)) continue;
 
-        if (isRegistred(id)) { // TODO: just created containers cannot be registered!, this is acctually just getting the initial sync node, which is bad!
+        if (isSubContainer(id)) {
             localChanges->addChange(entry);
-            createdNodes.push_back(id);
+            registerContainer(factory->getContainer(id), container.size());
         }
     }
-
-    auto justCreated = [&](UInt32 id) { return bool(::find(createdNodes.begin(), createdNodes.end(), id) != createdNodes.end()); };
 
     // add changed entries to local CL
     for (auto it = cl->begin(); it != cl->end(); ++it) {
         ContainerChangeEntry* entry = *it;
         UInt32 id = entry->uiContainerId;
         if (isRemoteChange(id)) continue;
-        if (isRegistred(id) || justCreated(id)) {
+        if (isRegistred(id)) {
             localChanges->addChange(entry);
         }
     }
 
     return localChanges;
-}
-
-void VRSyncNode::gatherCreatedContainers(OSGChangeList* localChanges) {
-    if (!localChanges) return;
-// check for addChild changes
-    createdNodes.clear();
-    for (auto it = localChanges->begin(); it != localChanges->end(); ++it) {
-        cout << "update child changes" << endl;
-        ContainerChangeEntry* entry = *it;
-        UInt32 id = entry->uiContainerId;
-        FieldContainer* fct = factory->getContainer(id);
-        if (fct) {
-            //string type = fct->getTypeName();
-            if (factory->findType(fct->getTypeId())->isNode() && entry->whichField & Node::ChildrenFieldMask) { //if the children filed mask of node has changed, we check if a new child was added
-                Node* node = dynamic_cast<Node*>(fct);
-                for (int i=0; i<node->getNChildren(); i++) {
-                    Node* child = node->getChild(i);
-                    if (!container.count(child->getId())) { //check if it is an unregistered child
-                        cout << "register child for node " << node->getId() << " entry type " << entry->uiEntryDesc << endl;
-                        vector<int> newNodes = registerNode(child);
-                        //createdNodes.push_back(child->getId()); //TODO
-//                        createdNodes.insert(createdNodes.end(), newNodes.begin(), newNodes.end());
-                        for (int i = 0; i<newNodes.size(); ++i){
-                            createdNodes.push_back(newNodes[i]);
-//                            cout << "pushed_back newNodes[i] " << newNodes[i] << endl;
-//                            cout << "search id in CL " << endl;
-//                            for (auto it = cl->begin(); it != cl->end(); ++it) {
-//                                ContainerChangeEntry* entry = *it;
-//                                UInt32 id = entry->uiContainerId;
-//                                if (id == newNodes[i]) cout << "found entry in global CL!!!!" << newNodes[i] << endl;
-//                            }
-//                            cout << "search id in syncedContainer " << endl;
-//                            for (int id : syncedContainer) {
-//                                if (id == newNodes[i]) cout << "found entry in syncedContainer!!!!" << newNodes[i] << endl;
-//                            }
-                        }
-                    }
-                }
-                cout << "node get core field id " << node->CoreFieldId << " core field mask " << node->CoreFieldMask << endl;
-                NodeCore* core = node->getCore();
-                for (auto p : core->getParents()) {
-                    cout << "parent type " << p->getTypeName() << " id " << p->getId() << " of core " << core->getId() << endl;
-                }
-            }
-            if (factory->findType(fct->getTypeId())->isNode() && entry->whichField & Node::CoreFieldMask) { // core change of known node
-                cout << "  node core changed!" << endl;
-                Node* node = dynamic_cast<Node*>(fct);
-                registerContainer(node->getCore(), container.size());
-                createdNodes.push_back(node->getCore()->getId()); //TODO
-            }
-        }
-    }
 }
 
 void VRSyncNode::broadcastChangeList(OSGChangeList* cl, bool doDelete) {
@@ -736,14 +710,13 @@ void VRSyncNode::broadcastChangeList(OSGChangeList* cl, bool doDelete) {
 
 //update this SyncNode
 void VRSyncNode::update() {
+    cout << endl << " > > >  " << name << " VRSyncNode::update()" << endl;
     auto localChanges = getFilteredChangeList();
     if (!localChanges) return;
-    cout << endl << " > > >  " << name << " VRSyncNode::update(), local created: " << localChanges->getNumCreated() << ", local changes: " << localChanges->getNumChanged() << endl;
+    cout <<  "  local changelist, created: " << localChanges->getNumCreated() << ", changes: " << localChanges->getNumChanged() << endl;
 
     printRegistredContainers(); // DEBUG: print registered container
     //printSyncedContainers();
-    gatherCreatedContainers(localChanges);
-    printRegistredContainers(); // DEBUG: print registered container
     printChangeList(localChanges);
 
     broadcastChangeList(localChanges, true);
@@ -752,8 +725,9 @@ void VRSyncNode::update() {
 }
 
 void VRSyncNode::registerContainer(FieldContainer* c, int syncNodeID) {
-    cout << " VRSyncNode::registerContainer " << getName() << " container: " << c->getTypeName() << " at fieldContainerId: " << c->getId() << endl;
-    container[c->getId()] = syncNodeID;
+    UInt32 ID = c->getId();
+    cout << " VRSyncNode::registerContainer " << getName() << " container: " << c->getTypeName() << " at fieldContainerId: " << ID << endl;
+    container[ID] = syncNodeID;
 }
 
 //returns registered IDs
