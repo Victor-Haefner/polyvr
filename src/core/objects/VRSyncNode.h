@@ -7,6 +7,7 @@
 #include <OpenSG/OSGFieldContainerFactory.h>
 
 class OSGChangeList;
+struct SerialEntry;
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -47,7 +48,7 @@ class VRSyncNode : public VRTransform {
         UInt32 getRegisteredContainerID(int syncID);
         int getRegisteredSyncID(UInt32 fieldContainerID);
         UInt32 getLocalId(UInt32 remoteID, int syncID);
-        bool isRegistered(int syncID);
+        bool isRegisteredRemote(const UInt32& syncID);
 
         VRObjectPtr copy(vector<VRObjectPtr> children);
 
@@ -59,17 +60,21 @@ class VRSyncNode : public VRTransform {
 
         void serialize_entry(ContainerChangeEntry* entry, vector<BYTE>& data, int syncNodeID);
         string serialize(ChangeList* clist);
+
+        void printDeserializedData(vector<SerialEntry>& entries, map<int, vector<int>>& childToParent, map<int, vector<BYTE>>& fcData);
+        void handleRemoteEntries(vector<SerialEntry>& entries, map<int, vector<int>>& childToParent, map<int, vector<BYTE>>& fcData);
+        void deserializeEntries(string& data, vector<SerialEntry>& entries, map<int, vector<int>>& childToParent, map<int, vector<BYTE>>& fcData);
         void deserializeAndApply(string& data);
-        void deserializeChildrenData(vector<BYTE>& childrenData, UInt32 fcID, map<int,int>& childToParent);
+        void deserializeChildrenData(vector<BYTE>& childrenData, map<int,vector<int>>& childToParent);
 
         void registerContainer(FieldContainer* c, int syncNodeID = -1);
         vector<int> registerNode(Node* c); //returns all registered IDs
 
-        void createNode(FieldContainerRecPtr& fcPtr, int syncNodeID, map<int,int>& childToParent);
-        void createNodeCore(FieldContainerRecPtr& fcPtr, int syncNodeID, map<int,int>& childToParent);
+        void createNode(FieldContainerRecPtr& fcPtr, int syncNodeID, map<int,vector<int>>& childToParent);
+        void createNodeCore(FieldContainerRecPtr& fcPtr, int syncNodeID, map<int,vector<int>>& childToParent);
 
         bool isRemoteChange(const UInt32& id);
-        bool isRegistred(const UInt32& id);
+        bool isRegistered(const UInt32& id);
         bool isSubContainer(const UInt32& id);
 
         void printRegistredContainers();

@@ -19,7 +19,7 @@ VRCallbackManager::~VRCallbackManager() {
 }
 
 void VRCallbackManager::queueJob(VRUpdateCbPtr f, int priority, int delay) {
-    cout << "VRCallbackManager::queueJob " << f->name << endl;
+    //cout << "VRCallbackManager::queueJob " << f->name << endl;
     PLock lock(mtx);
     updateListsChanged = true;
     jobFktPtrs.push_back( job(f,priority,delay) );
