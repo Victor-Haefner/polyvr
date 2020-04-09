@@ -478,7 +478,7 @@ void VRSyncNode::handleRemoteEntries(vector<SerialEntry>& entries, map<int, vect
 //    cout << "parentToChildren" << endl;
 //    for (auto parent : parentToChildren) {
 //        cout << parent.first;
-//        for (int i = 0; i < parent.second.size(); i++) cout << parent.second[i];
+//        for (int i = 0; i < parent.second.size(); i++) cout << " " << parent.second[i];
 //        cout << endl;
 //    }
 //    cout << "remoteCoreToLocalNode " << endl;
@@ -522,6 +522,22 @@ void VRSyncNode::deserializeAndApply(string& data) {
     printDeserializedData(entries, parentToChildren, fcData);
     handleRemoteEntries(entries, parentToChildren, fcData);
     printRegistredContainers();
+
+//    cout << "print children" << endl;
+//    for (auto c : container) {
+//        if (!factory->getContainer(c.first)) continue;
+//        Node* node = dynamic_cast<Node*>(factory->getContainer(c.first));
+//        if (!node) continue;
+//        if (node->getNChildren()) {
+//            cout << node->getId() << " children:";
+//            for (int i=0; i < node->getNChildren(); i++) {
+//                cout << " " << node->getChild(i)->getId() << endl;
+//            }
+//        }
+//    }
+
+
+
     cout << "            / " << name << " VRSyncNode::deserializeAndApply()" << "  < < <" << endl;
 }
 
@@ -544,6 +560,7 @@ void VRSyncNode::handleNode(FieldContainerRecPtr& fcPtr, UInt32 remoteNodeID, UI
 //    cout << "remoteCoreID " << remoteCoreID << endl;
     Node* node = dynamic_cast<Node*>(fcPtr.get());
     int parentId = findParent(parentToChildren, remoteNodeID);
+    cout << "parent id " << parentId << " of node " << node->getId() << endl;
     FieldContainer* parentFC = factory->getContainer(parentId);
     Node* parent = dynamic_cast<Node*>(parentFC);
     parent->addChild(node);
