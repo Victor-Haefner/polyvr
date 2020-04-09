@@ -397,7 +397,7 @@ void VRSyncNode::deserializeEntries(string& data, vector<SerialEntry>& entries, 
         pos += sentry.len;
 
         vector<BYTE> childrenData;
-        childrenData.insert(childrenData.end(), vec.begin()+pos, vec.begin()+pos+sentry.cplen*sizeof(int)); //TODO: get rid of the extra vector and fill childToParent map asap
+        childrenData.insert(childrenData.end(), vec.begin()+pos, vec.begin()+pos+sentry.cplen*sizeof(int));
         if (childrenData.size() > 0) {
             int* castedData = (int*)&childrenData[0];
             for (int i=0; i<sentry.cplen; i++) {
@@ -414,19 +414,23 @@ void VRSyncNode::handleRemoteEntries(vector<SerialEntry>& entries, map<int, vect
     for (auto sentry : entries) {
         //cout << "deserialize > > > sentry: " << sentry.localId << " " << sentry.fieldMask << " " << sentry.len << " desc " << sentry.uiEntryDesc << " syncID " << sentry.syncNodeID << " at pos " << pos << endl;
 
-        UInt32 id = remoteToLocalID[sentry.localId] ? remoteToLocalID[sentry.localId] : -1;// map remote id to local id if exist (otherwise id = -1)
+        //sync of initial syncNode container
+        if (sentry.syncNodeID == 0 || sentry.syncNodeID == 1) {
+            for (auto c : container) {
+                if (c.second == sentry.syncNodeID) remoteToLocalID[sentry.localId] = c.first;
+            }
+        }
 
+        UInt32 id = remoteToLocalID[sentry.localId] ? remoteToLocalID[sentry.localId] : -1;// map remote id to local id if exist (otherwise id = -1)
         FieldContainerRecPtr fcPtr = nullptr; // Field Container to apply changes to
 
-        if (sentry.uiEntryDesc == ContainerChangeEntry::Create) { //if create and not registered | sentry.uiEntryDesc == ContainerChangeEntry::Create &&
+        if (sentry.uiEntryDesc == ContainerChangeEntry::Create) {
             FieldContainerType* fcType = factory->findType(sentry.fcTypeID);
-//            cout << "isRegistered(getLocalId(sentry.localID) " << isRegistered(remoteToLocalID[sentry.localId]) << endl;
             if (!isRegistered(remoteToLocalID[sentry.localId])) { //if not registered create a FC of fcType
-                //TODO: do not createContainer for nodes which already exist
                 UInt32 remoteCoreId = sentry.coreID;
                 if (!remoteCoreToLocalNode[remoteCoreId]) {
                     fcPtr = fcType->createContainer();
-                    cout << "createContainer() " << fcPtr.get()->getId() << endl;
+//                    cout << "createContainer() " << fcPtr.get()->getId() << endl;
                     registerContainer(fcPtr.get(), sentry.syncNodeID);
 
                 } else fcPtr = factory->getContainer(remoteCoreToLocalNode[remoteCoreId]);
@@ -435,11 +439,24 @@ void VRSyncNode::handleRemoteEntries(vector<SerialEntry>& entries, map<int, vect
 
             } else fcPtr = factory->getContainer(getRegisteredContainerID(sentry.syncNodeID));//else its registered. then get the existing FC
 
-            if (fcType->isNode()) { cout << "isNode" << endl; handleNode(fcPtr, sentry.localId, sentry.coreID , parentToChildren); }
-            else if (fcType->isNodeCore()) { cout << id << " isCore" << endl; handleNodeCore(fcPtr, sentry.localId, parentToChildren); }
+            if (fcType->isNode()) { handleNode(fcPtr, sentry.localId, sentry.coreID , parentToChildren); } //cout << "isNode" << endl;
+            else if (fcType->isNodeCore()) { handleNodeCore(fcPtr, sentry.localId); } //cout << id << " isCore" << endl;
         }
         else fcPtr = factory->getContainer(id);
-
+        if (sentry.uiEntryDesc == ContainerChangeEntry::Change) { //if its a node change, update child info has changed. TODO: check only if children info has changed
+            FieldContainerType* fcType = factory->findType(sentry.fcTypeID);
+            if (fcType->isNode() && parentToChildren[fcPtr->getId()].size()) {
+                Node* parent = dynamic_cast<Node*>(fcPtr.get());
+                vector<int> children = parentToChildren[fcPtr->getId()];
+                for (int i=0; i< children.size(); i++) {
+                    UInt32 childId = children[i];
+                    if (!parent->getChild(childId)) {
+                        Node* child = dynamic_cast<Node*>(factory->getContainer(childId));
+                        if (child) parent->findChild(child);
+                    }
+                }
+            }
+        }
         if (fcPtr == nullptr) { cout << "WARNING! no container found with id " << id << " syncNodeID " << sentry.syncNodeID << endl; continue; } //TODO: This is causing the WARNING: Action::recurse: core is NULL, aborting traversal.
 
         vector<BYTE>& FCdata = fcData[sentry.localId];
@@ -454,20 +471,20 @@ void VRSyncNode::handleRemoteEntries(vector<SerialEntry>& entries, map<int, vect
             }
         }
     }
-    cout << "remoteToLocalID" << endl;
-    for (auto remote : remoteToLocalID) {
-        cout << remote.first << " " << remote.second << endl;
-    }
-    cout << "parentToChildren" << endl;
-    for (auto parent : parentToChildren) {
-        cout << parent.first;
-        for (int i = 0; i < parent.second.size(); i++) cout << parent.second[i];
-        cout << endl;
-    }
-    cout << "remoteCoreToLocalNode " << endl;
-    for (auto core : remoteCoreToLocalNode) {
-        cout << core.first << " " << core.second << endl;
-    }
+//    cout << "remoteToLocalID" << endl;
+//    for (auto remote : remoteToLocalID) {
+//        cout << remote.first << " " << remote.second << endl;
+//    }
+//    cout << "parentToChildren" << endl;
+//    for (auto parent : parentToChildren) {
+//        cout << parent.first;
+//        for (int i = 0; i < parent.second.size(); i++) cout << parent.second[i];
+//        cout << endl;
+//    }
+//    cout << "remoteCoreToLocalNode " << endl;
+//    for (auto core : remoteCoreToLocalNode) {
+//        cout << core.first << " " << core.second << endl;
+//    }
 }
 
 void VRSyncNode::printDeserializedData(vector<SerialEntry>& entries, map<int, vector<int>>& parentToChildren, map<int, vector<BYTE>>& fcData) {
@@ -524,7 +541,7 @@ int VRSyncNode::findParent(map<int,vector<int>>& parentToChildren, int remoteNod
 }
 
 void VRSyncNode::handleNode(FieldContainerRecPtr& fcPtr, UInt32 remoteNodeID, UInt32 remoteCoreID, map<int,vector<int>>& parentToChildren) {
-    cout << "remoteCoreID " << remoteCoreID << endl;
+//    cout << "remoteCoreID " << remoteCoreID << endl;
     Node* node = dynamic_cast<Node*>(fcPtr.get());
     int parentId = findParent(parentToChildren, remoteNodeID);
     FieldContainer* parentFC = factory->getContainer(parentId);
@@ -535,10 +552,10 @@ void VRSyncNode::handleNode(FieldContainerRecPtr& fcPtr, UInt32 remoteNodeID, UI
     else remoteCoreToLocalNode[remoteCoreID] = node->getId();
 
 
-    cout << "created node " << node->getId() << " for remote node " << remoteNodeID << endl << "parent " << parentId << endl;
+//    cout << "created node " << node->getId() << " for remote node " << remoteNodeID << endl << "parent " << parentId << endl;
 }
 
-void VRSyncNode::handleNodeCore(FieldContainerRecPtr& fcPtr, UInt32 remoteNodeID, map<int,vector<int>>& childToParent) {
+void VRSyncNode::handleNodeCore(FieldContainerRecPtr& fcPtr, UInt32 remoteNodeID) {
     NodeCore* core = dynamic_cast<NodeCore*>(fcPtr.get());
     UInt32 nodeId = remoteCoreToLocalNode[remoteNodeID];
     if (nodeId) {
@@ -675,6 +692,20 @@ void VRSyncNode::broadcastChangeList(OSGChangeList* cl, bool doDelete) {
     for (auto& remote : remotes) remote.second->send(data); // send over websocket to remote
 }
 
+void VRSyncNode::sync(string uri) {
+    if (!container.size()) return;
+    vector<BYTE> data;
+    vector<int> containerData;
+    for (auto c : container) {
+        containerData.push_back(c.first);
+        containerData.push_back(c.second);
+    }
+    data.insert(data.end(), (BYTE*)&containerData[0], (BYTE*)&containerData[0] + sizeof(int)*containerData.size());
+    string msg = base64_encode(&data[0], data.size());
+    remotes[uri]->send("sync");
+    remotes[uri]->send(msg);
+}
+
 //update this SyncNode
 void VRSyncNode::update() {
     cout << endl << " > > >  " << name << " VRSyncNode::update()" << endl;
@@ -741,6 +772,7 @@ string asUri(string host, int port, string name) {
 void VRSyncNode::addRemote(string host, int port, string name) {
     string uri = asUri(host, port, name);
     remotes[uri] = VRSyncRemote::create(uri);
+//    sync(uri);
 }
 
 void VRSyncNode::handleChangeList(void* _args) { //TODO: rename in handleMessage
@@ -749,6 +781,54 @@ void VRSyncNode::handleChangeList(void* _args) { //TODO: rename in handleMessage
 
     int client = args->ws_id;
     string msg = args->ws_data;
+//
+//    if (syncronizing) {
+//        vector<BYTE> vec = base64_decode(msg);
+//        map<int,int> remoteContainer;
+//        vector<int> remoteContainerData;
+//        vector<BYTE> remoteData;
+//        int pos = 0;
+//        while (pos+sizeof(int) < vec.size()){
+//            remoteContainerData.insert(remoteContainerData.end(), vec.begin()+pos, vec.begin()+pos+sizeof(int));
+//        }
+//        //get remote container data into an int vec with IDs and syncIDs
+//        if (remoteContainerData.size() > 0) {
+//            int* castedData = (int*)&remoteContainerData[0];
+//            for (int i=0; i<remoteContainerData.size(); i++) {
+//                int id = castedData[i];
+//                remoteContainerData.push_back(id);
+//            }
+//        }
+//        //store remote container data in remoteContainer map
+//        for (int i=0; i<remoteContainerData.size(); i+=2){
+//            int id = remoteContainerData[i];
+//            int syncId = remoteContainerData[i++];
+//            remoteContainer[id] = syncId;
+//        }
+//        //update remoteToLocalIDs
+//        for (auto c : container) {
+//            int localSyncId = c.second;
+//            bool found = false;
+//            for (map<int,int>::iterator it = remoteContainer.begin(); it != remoteContainer.end() && !found; it++) {
+//                int remoteSyncId = it->second;
+//                if (localSyncId == remoteSyncId) {
+//                    int localId = c.first;
+//                    int remoteId = it->first;
+//                    remoteToLocalID[remoteId] = localId;
+//                    found = true;
+//                }
+//            }
+//        }
+//        //sync this nodes id's with others
+//        for (auto& remote : remotes) {
+//            sync(remote.first);
+//        }
+//        //end syncronizing
+//        syncronizing = false;
+//        cout << "end sync " << name << endl;
+//    }
+//    if (msg == "sync") { syncronizing = true; cout << "begin sync " << name << endl;}
+//    if (!syncronizing) deserializeAndApply(msg);
     deserializeAndApply(msg);
 }
 
@@ -767,9 +847,7 @@ void VRSyncNode::broadcast(string message){
 
 VRSyncRemote::VRSyncRemote(string uri) : uri(uri) {
     socket = VRWebSocket::create("sync node ws");
-    //cout << "VRSyncRemote::VRSyncRemote " << uri << endl;
     if (uri != "") connect();
-    //map IDs
 }
 
 VRSyncRemote::~VRSyncRemote() { cout << "~VRSyncRemote::VRSyncRemote" << endl; }

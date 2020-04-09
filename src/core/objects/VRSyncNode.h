@@ -73,7 +73,7 @@ class VRSyncNode : public VRTransform {
         vector<int> registerNode(Node* c); //returns all registered IDs
 
         void handleNode(FieldContainerRecPtr& fcPtr, UInt32 nodeID, UInt32 coreID, map<int,vector<int>>& parentToChildren);
-        void handleNodeCore(FieldContainerRecPtr& fcPtr, UInt32 remoteNodeID, map<int,vector<int>>& parentToChildren);
+        void handleNodeCore(FieldContainerRecPtr& fcPtr, UInt32 remoteNodeID);
 
         bool isRemoteChange(const UInt32& id);
         bool isRegistered(const UInt32& id);
@@ -84,6 +84,9 @@ class VRSyncNode : public VRTransform {
         void printChangeList(OSGChangeList* cl);
         void broadcastChangeList(OSGChangeList* cl, bool doDelete = false);
         OSGChangeList* getFilteredChangeList();
+
+        bool syncronizing = false;
+        void sync(string remoteUri);
 
     public:
         VRSyncNode(string name = "syncNode");
