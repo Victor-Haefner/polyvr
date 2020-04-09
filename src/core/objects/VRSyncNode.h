@@ -63,6 +63,10 @@ class VRSyncNode : public VRTransform {
         void serialize_entry(ContainerChangeEntry* entry, vector<BYTE>& data, int syncNodeID);
         string serialize(ChangeList* clist);
 
+        void handleChildrenChange(FieldContainerRecPtr fcPtr, SerialEntry& sentry, map<int, vector<int>>& parentToChildren);
+        void handleCoreChange(FieldContainerRecPtr fcPtr, SerialEntry& sentry);
+        void handleGenericChange(FieldContainerRecPtr fcPtr, SerialEntry& sentry, map<int, vector<BYTE>>& fcData);
+        FieldContainerRecPtr getOrCreate(UInt32& id, SerialEntry& sentry, map<int, vector<int>>& parentToChildren);
         void printDeserializedData(vector<SerialEntry>& entries, map<int, vector<int>>& parentToChildren, map<int, vector<BYTE>>& fcData);
         void handleRemoteEntries(vector<SerialEntry>& entries, map<int, vector<int>>& parentToChildren, map<int, vector<BYTE>>& fcData);
         void deserializeEntries(string& data, vector<SerialEntry>& entries, map<int, vector<int>>& parentToChildren, map<int, vector<BYTE>>& fcData);
