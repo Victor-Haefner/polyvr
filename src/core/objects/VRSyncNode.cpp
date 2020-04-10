@@ -40,27 +40,23 @@ Known bugs:
 
 using namespace OSG;
 
-struct VRSyncNodeFieldContainerMapper : public ContainerIdMapper
-{
-    VRSyncNode* syncNode;
+struct VRSyncNodeFieldContainerMapper : public ContainerIdMapper {
+    VRSyncNode* syncNode = 0;
 
-    UInt32 map(UInt32 uiId);
+    UInt32 map(UInt32 uiId) const;
     VRSyncNodeFieldContainerMapper(VRSyncNode* node) : syncNode(node) {};
 
-  private:
-
-    VRSyncNodeFieldContainerMapper(
-        const VRSyncNodeFieldContainerMapper &other);
-
-    void operator =(const VRSyncNodeFieldContainerMapper &other);
+ //   private:
+ //   VRSyncNodeFieldContainerMapper( const VRSyncNodeFieldContainerMapper &other);
+ //   void operator =(const VRSyncNodeFieldContainerMapper &other);
 };
 
 
 //typedef RemoteAspect *RemoteAspectP;
-UInt32 VRSyncNodeFieldContainerMapper::map(UInt32 uiId) {
-        std::map<int,int> remoteToLocalId = syncNode->getRemoteToLocalID();
-        UInt32 id = remoteToLocalId[uiId];
-        return id;
+UInt32 VRSyncNodeFieldContainerMapper::map(UInt32 uiId) const {
+    UInt32 id = syncNode ? syncNode->getRemoteToLocalID(uiId) : 0;
+    //cout << " --- VRSyncNodeFieldContainerMapper::map id " << uiId << " to " << id<< endl;
+    return id;
 }
 
 
@@ -292,7 +288,9 @@ class ourBinaryDataHandler : public BinaryDataHandler {
 
         void read(MemoryHandle src, UInt32 size) {
 //            cout << "ourBinaryDataHandler -> read() data.size" << data.size() << " size " << size << endl;
-            memcpy(src, &data[0], min((size_t)size, data.size())); //read data from handler into src (sentry.fieldMask)
+            size_t readSize = min((size_t)size, data.size()-progress);
+            memcpy(src, &data[progress], readSize); //read data from handler into src (sentry.fieldMask)
+            progress += readSize;
         }
 
         void write(MemoryHandle src, UInt32 size) {
@@ -300,8 +298,27 @@ class ourBinaryDataHandler : public BinaryDataHandler {
         }
 
         vector<BYTE> data;
+        size_t progress = 0;
 };
 
+void debugBinary(FieldContainer* fcPtr, ourBinaryDataHandler& handler2, SerialEntry& sentry) {
+    //auto core = dynamic_cast<Node*>(fcPtr)->getCore();
+    auto ccoreSF = dynamic_cast<Node*>(fcPtr)->getSFCore();
+    auto coreSF = const_cast<SFUnrecChildNodeCorePtr*>(ccoreSF);
+
+    ourBinaryDataHandler handler;
+    fcPtr->copyToBin(handler, sentry.fieldMask);
+    fcPtr->copyFromBin(handler, sentry.fieldMask);
+    coreSF->copyFromBin(handler);
+
+    cout << "\n------------------------- debugBinary \n";
+    cout << "node: " << fcPtr->getId() << endl; // << ", coreID: " << core->getId() << endl;
+    cout << " data size: " << handler.data.size() << endl;
+    for (int i=0; i<handler.data.size(); i++) {
+        cout << i << " \t " << (int)handler.data[i] << endl;
+    }
+    cout << "------------------------- \n";
+}
 
 void printNodeFieldMask(BitVector fieldmask) {
     string changeType = "";
@@ -371,6 +388,9 @@ void VRSyncNode::serialize_entry(ContainerChangeEntry* entry, vector<BYTE>& data
         ourBinaryDataHandler handler;
         fcPtr->copyToBin(handler, sentry.fieldMask); //calls handler->write
         sentry.len = handler.data.size();//UInt32(fcPtr->getBinSize(sentry.fieldMask));
+
+        //if (fcPtr->getId() == 3024 && sentry.uiEntryDesc == ContainerChangeEntry::Change)
+        //    debugBinary(fcPtr, handler);
 
         vector<int> children;
         if (factory->findType(sentry.fcTypeID)->isNode()) children = getFCChildren(fcPtr, sentry.fieldMask);
@@ -491,11 +511,11 @@ void VRSyncNode::handleCoreChange(FieldContainerRecPtr fcPtr, SerialEntry& sentr
 }
 
 void VRSyncNode::handleGenericChange(FieldContainerRecPtr fcPtr, SerialEntry& sentry, map<int, vector<BYTE>>& fcData) {
-    cout << "VRSyncNode::handleGenericChange " << fcPtr->getId() << " ---------------------------- " << endl;
+    //cout << "VRSyncNode::handleGenericChange " << fcPtr->getId() << " " << fcPtr->getTypeName() << " ---------------------------- " << endl;
 
     // deactivate certain changes
-    if (factory->findType(sentry.fcTypeID)->isNode()) {
-        sentry.fieldMask &= ~Node::AttachmentsFieldMask; // TODO: pass attachment containers when filtering the changelist
+    /*if (factory->findType(sentry.fcTypeID)->isNode()) {
+        //sentry.fieldMask &= ~Node::AttachmentsFieldMask; // TODO: pass attachment containers when filtering the changelist
 
         sentry.fieldMask &= ~Node::ChildrenFieldMask; // clear children field mask bit!
         sentry.fieldMask &= ~Node::ParentFieldMask; // clear parent field mask bit!
@@ -504,14 +524,22 @@ void VRSyncNode::handleGenericChange(FieldContainerRecPtr fcPtr, SerialEntry& se
 
     if (factory->findType(sentry.fcTypeID)->isNodeCore()) {
         sentry.fieldMask &= ~NodeCore::ParentsFieldMask; // clear parents field mask bit!
-    }
+    }*/
 
     // apply changes
     vector<BYTE>& FCdata = fcData[sentry.localId];
     ourBinaryDataHandler handler; //use ourBinaryDataHandler to somehow apply binary change to fieldcontainer
     handler.data.insert(handler.data.end(), FCdata.begin(), FCdata.end()); //feed handler with FCdata
+
+
+    /*if (fcPtr->getId() == 3075 && sentry.uiEntryDesc == ContainerChangeEntry::Change) {
+        debugBinary(fcPtr, handler, sentry);
+    }*/
+
     fcPtr->copyFromBin(handler, sentry.fieldMask); //calls handler->read
-    cout << " FCdata size: " << FCdata.size() << "  " << std::bitset<64>(sentry.fieldMask) << endl;
+    //cout << " FCdata size: " << FCdata.size() << "  " << std::bitset<64>(sentry.fieldMask) << endl;
+
+
 }
 
 void VRSyncNode::handleRemoteEntries(vector<SerialEntry>& entries, map<int, vector<int>>& parentToChildren, map<int, vector<BYTE>>& fcData) {
@@ -531,8 +559,8 @@ void VRSyncNode::handleRemoteEntries(vector<SerialEntry>& entries, map<int, vect
         if (fcPtr == nullptr) { cout << "WARNING! no container found with id " << id << " syncNodeID " << sentry.syncNodeID << endl; continue; } //TODO: This is causing the WARNING: Action::recurse: core is NULL, aborting traversal.
 
         if (sentry.uiEntryDesc == ContainerChangeEntry::Change) { //if its a node change, update child info has changed. TODO: check only if children info has changed
-            if (sentry.fieldMask & Node::ChildrenFieldMask) handleChildrenChange(fcPtr, sentry, parentToChildren);
-            if (sentry.fieldMask & Node::CoreFieldMask) handleCoreChange(fcPtr, sentry);
+            //if (sentry.fieldMask & Node::ChildrenFieldMask) handleChildrenChange(fcPtr, sentry, parentToChildren);
+            //if (sentry.fieldMask & Node::CoreFieldMask) handleCoreChange(fcPtr, sentry);
             handleGenericChange(fcPtr, sentry, fcData);
         }
 
@@ -570,7 +598,7 @@ void VRSyncNode::printDeserializedData(vector<SerialEntry>& entries, map<int, ve
 
 void VRSyncNode::deserializeAndApply(string& data) {
     cout << endl << "> > >  " << name << " VRSyncNode::deserializeAndApply(), received data size: " << data.size() << endl;
-    VRSyncNodeFieldContainerMapper mapper = VRSyncNodeFieldContainerMapper::VRSyncNodeFieldContainerMapper(this);
+    VRSyncNodeFieldContainerMapper mapper(this);
     factory->setMapper(&mapper);
 
     map<int, vector<int>> parentToChildren; //maps parent ID to its children syncIDs
@@ -580,9 +608,12 @@ void VRSyncNode::deserializeAndApply(string& data) {
     deserializeEntries(data, entries, parentToChildren, fcData);
     printDeserializedData(entries, parentToChildren, fcData);
     handleRemoteEntries(entries, parentToChildren, fcData);
-    printRegistredContainers();
+    //printRegistredContainers();
 
+    factory->setMapper(0);
     cout << "            / " << name << " VRSyncNode::deserializeAndApply()" << "  < < <" << endl;
+
+    //*(int*)0=0; // induce segfault!
 }
 
 int VRSyncNode::findParent(map<int,vector<int>>& parentToChildren, int remoteNodeID) {
@@ -705,7 +736,10 @@ OSGChangeList* VRSyncNode::getFilteredChangeList() {
         if (fct) cout << " getFilteredChangeList entry: " << fct->getTypeName() << " attachment? " << att << endl;
         if (att) cout << "    attachement N parents: " << att->getMFParents()->size() << endl;*/
 
-        if (isRemoteChange(id)) continue;
+        if (isRemoteChange(id)) {
+            cout << "ignore remote create " << id << endl;
+            continue;
+        }
 
         if (isSubContainer(id)) {
             localChanges->addChange(entry);
@@ -717,7 +751,10 @@ OSGChangeList* VRSyncNode::getFilteredChangeList() {
     for (auto it = cl->begin(); it != cl->end(); ++it) {
         ContainerChangeEntry* entry = *it;
         UInt32 id = entry->uiContainerId;
-        if (isRemoteChange(id)) continue;
+        if (isRemoteChange(id)) {
+            cout << "ignore remote change " << id << endl;
+            continue;
+        }
         if (isRegistered(id)) {
             localChanges->addChange(entry);
         }
@@ -755,7 +792,7 @@ void VRSyncNode::update() {
     cout <<  "  local changelist, created: " << localChanges->getNumCreated() << ", changes: " << localChanges->getNumChanged() << endl;
 
     printRegistredContainers(); // DEBUG: print registered container
-    //printSyncedContainers();
+    printSyncedContainers();
     printChangeList(localChanges);
 
     broadcastChangeList(localChanges, true);
@@ -765,7 +802,7 @@ void VRSyncNode::update() {
 
 void VRSyncNode::registerContainer(FieldContainer* c, int syncNodeID) {
     UInt32 ID = c->getId();
-    cout << " VRSyncNode::registerContainer " << getName() << " container: " << c->getTypeName() << " at fieldContainerId: " << ID << endl;
+    //cout << " VRSyncNode::registerContainer " << getName() << " container: " << c->getTypeName() << " at fieldContainerId: " << ID << endl;
     container[ID] = syncNodeID;
 }
 
@@ -882,8 +919,9 @@ void VRSyncNode::broadcast(string message){
     }
 }
 
-map<int, int> VRSyncNode::getRemoteToLocalID(){
-    return remoteToLocalID;
+UInt32 VRSyncNode::getRemoteToLocalID(UInt32 id) {
+    if (!remoteToLocalID.count(id)) return 0;
+    return remoteToLocalID[id];
 }
 // ------------------- VRSyncRemote
 

@@ -110,9 +110,7 @@ class VRSyncNode : public VRTransform {
         void update();
         void broadcast(string message);
 
-        map<int, int> getRemoteToLocalID();
-
-
+        UInt32 getRemoteToLocalID(UInt32 id);
 };
 
 OSG_END_NAMESPACE;
