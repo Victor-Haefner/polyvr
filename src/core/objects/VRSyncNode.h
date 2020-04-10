@@ -5,6 +5,7 @@
 #include "core/networking/VRNetworkingFwd.h"
 #include <OpenSG/OSGChangeList.h>
 #include <OpenSG/OSGFieldContainerFactory.h>
+#include <OpenSG/OSGRemoteAspect.h>
 
 class OSGChangeList;
 struct SerialEntry;
@@ -29,6 +30,23 @@ class VRSyncRemote {//: public VRName {
         bool send(string message);
         static VRSyncRemotePtr create(string name = "None");
 //        VRSyncRemotePtr ptr();
+};
+
+typedef RemoteAspect *RemoteAspectP;
+struct VRSyncNodeFieldContainerMapper : public ContainerIdMapper
+{
+    virtual UInt32 map(UInt32 uiId) const;
+
+    RemoteAspect *_remoteAspect;
+
+    VRSyncNodeFieldContainerMapper(void) : _remoteAspect(NULL) {}
+
+  private:
+
+    VRSyncNodeFieldContainerMapper(
+        const VRSyncNodeFieldContainerMapper &other);
+
+    void operator =(const VRSyncNodeFieldContainerMapper &other);
 };
 
 class VRSyncNode : public VRTransform {

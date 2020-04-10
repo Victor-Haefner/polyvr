@@ -483,7 +483,7 @@ void VRSyncNode::handleGenericChange(FieldContainerRecPtr fcPtr, SerialEntry& se
 
     // apply changes
     vector<BYTE>& FCdata = fcData[sentry.localId];
-    ourBinaryDataHandler handler; //use ourBinaryDataHandler to somehow apply binary change to fieldcontainer (use connection instead of handler, see OSGRemoteaspect.cpp (receiveSync))
+    ourBinaryDataHandler handler; //use ourBinaryDataHandler to somehow apply binary change to fieldcontainer
     handler.data.insert(handler.data.end(), FCdata.begin(), FCdata.end()); //feed handler with FCdata
     fcPtr->copyFromBin(handler, sentry.fieldMask); //calls handler->read
     cout << " FCdata size: " << FCdata.size() << "  " << std::bitset<64>(sentry.fieldMask) << endl;
@@ -554,6 +554,7 @@ void VRSyncNode::deserializeAndApply(string& data) {
     printDeserializedData(entries, parentToChildren, fcData);
     handleRemoteEntries(entries, parentToChildren, fcData);
     printRegistredContainers();
+
     cout << "            / " << name << " VRSyncNode::deserializeAndApply()" << "  < < <" << endl;
 }
 
