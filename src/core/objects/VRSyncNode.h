@@ -39,6 +39,7 @@ class VRSyncNode : public VRTransform {
         VRUpdateCbPtr updateFkt;
         FieldContainerFactoryBase* factory = FieldContainerFactory::the();
         vector<UInt32> createdNodes; //IDs of the currently created nodes/children
+        vector<FieldContainerRecPtr> justCreated; //IDs of the currently created nodes/children
 
         map<int, int> container; // local containers, sub-set of containers which need to be synced for collaboration
         //vector<int> cores; //lists IDs of nodecores
