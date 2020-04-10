@@ -483,7 +483,7 @@ void VRSyncNode::handleGenericChange(FieldContainerRecPtr fcPtr, SerialEntry& se
 
     // apply changes
     vector<BYTE>& FCdata = fcData[sentry.localId];
-    ourBinaryDataHandler handler; //use ourBinaryDataHandler to somehow apply binary change to fieldcontainer (use connection instead of handler, see OSGRemoteaspect.cpp (receiveSync))
+    ourBinaryDataHandler handler; //use ourBinaryDataHandler to somehow apply binary change to fieldcontainer
     handler.data.insert(handler.data.end(), FCdata.begin(), FCdata.end()); //feed handler with FCdata
     fcPtr->copyFromBin(handler, sentry.fieldMask); //calls handler->read
     cout << " FCdata size: " << FCdata.size() << "  " << std::bitset<64>(sentry.fieldMask) << endl;
@@ -517,7 +517,7 @@ void VRSyncNode::handleRemoteEntries(vector<SerialEntry>& entries, map<int, vect
         }
     }
 
-    justCreated.clear();
+    //justCreated.clear();
 }
 
 void VRSyncNode::printDeserializedData(vector<SerialEntry>& entries, map<int, vector<int>>& parentToChildren, map<int, vector<BYTE>>& fcData) {
@@ -555,21 +555,6 @@ void VRSyncNode::deserializeAndApply(string& data) {
     printDeserializedData(entries, parentToChildren, fcData);
     handleRemoteEntries(entries, parentToChildren, fcData);
     printRegistredContainers();
-
-//    cout << "print children" << endl;
-//    for (auto c : container) {
-//        if (!factory->getContainer(c.first)) continue;
-//        Node* node = dynamic_cast<Node*>(factory->getContainer(c.first));
-//        if (!node) continue;
-//        if (node->getNChildren()) {
-//            cout << node->getId() << " children:";
-//            for (int i=0; i < node->getNChildren(); i++) {
-//                cout << " " << node->getChild(i)->getId() << endl;
-//            }
-//        }
-//    }
-
-
 
     cout << "            / " << name << " VRSyncNode::deserializeAndApply()" << "  < < <" << endl;
 }
