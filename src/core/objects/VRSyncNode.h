@@ -5,7 +5,8 @@
 #include "core/networking/VRNetworkingFwd.h"
 #include <OpenSG/OSGChangeList.h>
 #include <OpenSG/OSGFieldContainerFactory.h>
-#include <OpenSG/OSGRemoteAspect.h>
+//#include <OpenSG/OSGRemoteAspect.h>
+#include <OpenSG/OSGContainerIdMapper.h>
 
 class OSGChangeList;
 struct SerialEntry;
@@ -32,25 +33,9 @@ class VRSyncRemote {//: public VRName {
 //        VRSyncRemotePtr ptr();
 };
 
-typedef RemoteAspect *RemoteAspectP;
-struct VRSyncNodeFieldContainerMapper : public ContainerIdMapper
-{
-    virtual UInt32 map(UInt32 uiId) const;
-
-    RemoteAspect *_remoteAspect;
-
-    VRSyncNodeFieldContainerMapper(void) : _remoteAspect(NULL) {}
-
-  private:
-
-    VRSyncNodeFieldContainerMapper(
-        const VRSyncNodeFieldContainerMapper &other);
-
-    void operator =(const VRSyncNodeFieldContainerMapper &other);
-};
-
 class VRSyncNode : public VRTransform {
     private:
+//        VRSyncNodeFieldContainerMapper mapper;
         typedef unsigned char BYTE;
         VRSocketPtr socket;
         VRFunction<void*>* socketCb;
@@ -124,6 +109,8 @@ class VRSyncNode : public VRTransform {
 
         void update();
         void broadcast(string message);
+
+        map<int, int> getRemoteToLocalID();
 
 
 };

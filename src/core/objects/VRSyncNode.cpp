@@ -16,6 +16,7 @@
 #include <OpenSG/OSGNodeCore.h>
 #include <OpenSG/OSGTransformBase.h>
 #include "core/objects/OSGTransform.h"
+#include <OpenSG/OSGContainerIdMapper.h>
 
 #include <OpenSG/OSGThreadManager.h>
 
@@ -38,6 +39,30 @@ Known bugs:
 */
 
 using namespace OSG;
+
+struct VRSyncNodeFieldContainerMapper : public ContainerIdMapper
+{
+    VRSyncNode* syncNode;
+
+    UInt32 map(UInt32 uiId);
+    VRSyncNodeFieldContainerMapper(VRSyncNode* node) : syncNode(node) {};
+
+  private:
+
+    VRSyncNodeFieldContainerMapper(
+        const VRSyncNodeFieldContainerMapper &other);
+
+    void operator =(const VRSyncNodeFieldContainerMapper &other);
+};
+
+
+//typedef RemoteAspect *RemoteAspectP;
+UInt32 VRSyncNodeFieldContainerMapper::map(UInt32 uiId) {
+        std::map<int,int> remoteToLocalId = syncNode->getRemoteToLocalID();
+        UInt32 id = remoteToLocalId[uiId];
+        return id;
+}
+
 
 template<> string typeName(const VRSyncNode& o) { return "SyncNode"; }
 
@@ -545,6 +570,8 @@ void VRSyncNode::printDeserializedData(vector<SerialEntry>& entries, map<int, ve
 
 void VRSyncNode::deserializeAndApply(string& data) {
     cout << endl << "> > >  " << name << " VRSyncNode::deserializeAndApply(), received data size: " << data.size() << endl;
+    VRSyncNodeFieldContainerMapper mapper = VRSyncNodeFieldContainerMapper::VRSyncNodeFieldContainerMapper(this);
+    factory->setMapper(&mapper);
 
     map<int, vector<int>> parentToChildren; //maps parent ID to its children syncIDs
     vector<SerialEntry> entries;
@@ -855,7 +882,9 @@ void VRSyncNode::broadcast(string message){
     }
 }
 
-
+map<int, int> VRSyncNode::getRemoteToLocalID(){
+    return remoteToLocalID;
+}
 // ------------------- VRSyncRemote
 
 
