@@ -594,6 +594,14 @@ string VRObject::printOSGTreeString(OSGObjectPtr o, string indent) {
         Transform* t = dynamic_cast<Transform*>(core);
         if (t) data += toString(Vec4d(t->getMatrix()[0])) + "  " + toString(Vec4d(t->getMatrix()[1])) + "  " + toString(Vec4d(t->getMatrix()[2]));
     }
+    if (type == "Geometry") {
+        Geometry* g = dynamic_cast<Geometry*>(core);
+        if (g) {
+            auto p = g->getPositions();
+            if (p) data += ", N positions: " + toString(p->size());
+            else data += ", no positions";
+        } else data += ", geo invalid";
+    }
 
     data += ", N children: " + toString(o->node->getNChildren());
     for (uint i=0; i<o->node->getNChildren(); i++) {
