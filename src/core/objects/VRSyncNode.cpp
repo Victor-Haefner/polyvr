@@ -789,6 +789,7 @@ void VRSyncNode::update() {
     cout << endl << " > > >  " << name << " VRSyncNode::update()" << endl;
     auto localChanges = getFilteredChangeList();
     if (!localChanges) return;
+    if (getChildrenCount() == 0) return;
     cout <<  "  local changelist, created: " << localChanges->getNumCreated() << ", changes: " << localChanges->getNumChanged() << endl;
 
     printRegistredContainers(); // DEBUG: print registered container
