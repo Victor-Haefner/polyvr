@@ -645,6 +645,16 @@ bool VRSyncNode::isSubContainer(const UInt32& id) {
         for (auto node : core->getParents())
             if (checkAncestor(dynamic_cast<Node*>(node))) return true;
     }
+
+    Attachment* att = dynamic_cast<Attachment*>(fct);
+    if (att) {
+        auto parents = att->getMFParents();
+        for (int i = 0; i<parents->size(); i++) {
+            FieldContainer* parent = parents->at(i);
+            if (isSubContainer(parent->getId())) return true;
+        }
+    }
+
     return false;
 }
 
@@ -661,6 +671,12 @@ OSGChangeList* VRSyncNode::getFilteredChangeList() {
     for (auto it = cl->beginCreated(); it != cl->endCreated(); ++it) {
         ContainerChangeEntry* entry = *it;
         UInt32 id = entry->uiContainerId;
+
+        /*FieldContainer* fct = factory->getContainer(id);
+        Attachment* att = dynamic_cast<Attachment*>(fct);
+        if (fct) cout << " getFilteredChangeList entry: " << fct->getTypeName() << " attachment? " << att << endl;
+        if (att) cout << "    attachement N parents: " << att->getMFParents()->size() << endl;*/
+
         if (isRemoteChange(id)) continue;
 
         if (isSubContainer(id)) {
