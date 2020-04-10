@@ -494,7 +494,7 @@ void VRSyncNode::handleRemoteEntries(vector<SerialEntry>& entries, map<int, vect
         //cout << "deserialize > > > sentry: " << sentry.localId << " " << sentry.fieldMask << " " << sentry.len << " desc " << sentry.uiEntryDesc << " syncID " << sentry.syncNodeID << " at pos " << pos << endl;
 
         //sync of initial syncNode container
-        if (sentry.syncNodeID == 0 || sentry.syncNodeID == 1) {
+        if (sentry.syncNodeID >= 0 && sentry.syncNodeID <= 2) {
             for (auto c : container) {
                 if (c.second == sentry.syncNodeID) remoteToLocalID[sentry.localId] = c.first;
             }
@@ -516,7 +516,7 @@ void VRSyncNode::handleRemoteEntries(vector<SerialEntry>& entries, map<int, vect
             //cout << "syncedContainer.push_back " << id << endl;
         }
     }
-    justCreated.clear();
+    //justCreated.clear(); // TODO: uncomment if finished debugging
 }
 
 void VRSyncNode::printDeserializedData(vector<SerialEntry>& entries, map<int, vector<int>>& parentToChildren, map<int, vector<BYTE>>& fcData) {
@@ -589,8 +589,8 @@ void VRSyncNode::printRegistredContainers() {
         UInt32 id = c.first;
         FieldContainer* fc = factory->getContainer(id);
         cout << " " << id << " syncNodeID " << c.second;
-        if (factory->getContainer(id)){
-            cout << " " << fc->getTypeName() << ", Refs: " << fc->getRefCount();
+        if (fc) {
+            cout << ", type: " << fc->getTypeName() << ", Refs: " << fc->getRefCount();
             if (Node* node = dynamic_cast<Node*>(fc)) cout << ", N children: " << node->getNChildren();
         }
         cout << endl;
