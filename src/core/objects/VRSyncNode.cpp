@@ -68,6 +68,9 @@ class OSGChangeList : public ChangeList {
     public:
         ~OSGChangeList() {};
 
+        ContainerChangeEntry* createChangeEntry() { return getNewEntry(); }
+        ContainerChangeEntry* createCreateEntry() { return getNewCreatedEntry(); }
+
         void addCreate(ContainerChangeEntry* entry) {
             ContainerChangeEntry* pEntry = getNewCreatedEntry();
             pEntry->uiEntryDesc   = entry->uiEntryDesc;
@@ -79,30 +82,24 @@ class OSGChangeList : public ChangeList {
         }
 
         void addChange(ContainerChangeEntry* entry) {
-                if (entry->uiEntryDesc == ContainerChangeEntry::AddReference   ||
-                    entry->uiEntryDesc == ContainerChangeEntry::SubReference   ||
-                    entry->uiEntryDesc == ContainerChangeEntry::DepSubReference) {
-                    ContainerChangeEntry *pEntry = getNewEntry();
-                    pEntry->uiEntryDesc   = entry->uiEntryDesc;
-                    pEntry->uiContainerId = entry->uiContainerId;
-                    pEntry->pList         = this;
-                } else if(entry->uiEntryDesc == ContainerChangeEntry::Change||
-                    entry->uiEntryDesc == ContainerChangeEntry::Create) {
-                    ContainerChangeEntry *pEntry = getNewEntry();
-                    pEntry->uiEntryDesc   = entry->uiEntryDesc; //ContainerChangeEntry::Change; //TODO: check what I did here (workaround to get created entries into the changelist aswell)
-                    pEntry->pFieldFlags   = entry->pFieldFlags;
-                    pEntry->uiContainerId = entry->uiContainerId;
-                    pEntry->whichField    = entry->whichField;
-                    if (pEntry->whichField == 0 && entry->bvUncommittedChanges != 0)
-                        pEntry->whichField |= *entry->bvUncommittedChanges;
-                    pEntry->pList         = this;
-                }
-        }
-
-
-        ContainerChangeEntry* createChangeEntry() {
-//            ContainerChangeEntry* pEntry = getNewEntry();
-            return getNewEntry();
+            if (entry->uiEntryDesc == ContainerChangeEntry::AddReference   ||
+                entry->uiEntryDesc == ContainerChangeEntry::SubReference   ||
+                entry->uiEntryDesc == ContainerChangeEntry::DepSubReference) {
+                ContainerChangeEntry *pEntry = getNewEntry();
+                pEntry->uiEntryDesc   = entry->uiEntryDesc;
+                pEntry->uiContainerId = entry->uiContainerId;
+                pEntry->pList         = this;
+            } else if(entry->uiEntryDesc == ContainerChangeEntry::Change||
+                entry->uiEntryDesc == ContainerChangeEntry::Create) {
+                ContainerChangeEntry *pEntry = getNewEntry();
+                pEntry->uiEntryDesc   = entry->uiEntryDesc; //ContainerChangeEntry::Change; //TODO: check what I did here (workaround to get created entries into the changelist aswell)
+                pEntry->pFieldFlags   = entry->pFieldFlags;
+                pEntry->uiContainerId = entry->uiContainerId;
+                pEntry->whichField    = entry->whichField;
+                if (pEntry->whichField == 0 && entry->bvUncommittedChanges != 0)
+                    pEntry->whichField |= *entry->bvUncommittedChanges;
+                pEntry->pList         = this;
+            }
         }
 };
 
@@ -425,6 +422,13 @@ string VRSyncNode::serialize(ChangeList* clist) {
     cout << "> > >  " << name << " VRSyncNode::serialize()" << endl; //Debugging
 
     vector<BYTE> data;
+
+    for (auto it = clist->beginCreated(); it != clist->endCreated(); ++it) {
+        ContainerChangeEntry* entry = *it;
+        serialize_entry(entry, data, container[entry->uiContainerId]);
+        counter++;//Debugging
+    }
+
     for (auto it = clist->begin(); it != clist->end(); ++it) {
         ContainerChangeEntry* entry = *it;
         serialize_entry(entry, data, container[entry->uiContainerId]);
@@ -617,7 +621,7 @@ void VRSyncNode::deserializeAndApply(string& data) {
     deserializeEntries(data, entries, parentToChildren, fcData);
     printDeserializedData(entries, parentToChildren, fcData);
     handleRemoteEntries(entries, parentToChildren, fcData);
-    //printRegistredContainers();
+    printRegistredContainers();
 
     factory->setMapper(0);
     cout << "            / " << name << " VRSyncNode::deserializeAndApply()" << "  < < <" << endl;
@@ -656,7 +660,9 @@ void VRSyncNode::printRegistredContainers() {
     for (auto c : container){
         UInt32 id = c.first;
         FieldContainer* fc = factory->getContainer(id);
-        cout << " " << id << " syncNodeID " << c.second;
+        cout << " " << id << ", syncNodeID " << c.second;
+        for (auto IDpair : remoteToLocalID)
+            if (IDpair.second == id) cout << ", remoteID " << IDpair.first;
         if (fc) {
             cout << ", type: " << fc->getTypeName() << ", Refs: " << fc->getRefCount();
             if (Node* node = dynamic_cast<Node*>(fc)) cout << ", N children: " << node->getNChildren();
@@ -763,7 +769,7 @@ OSGChangeList* VRSyncNode::getFilteredChangeList() {
         }
 
         if (isSubContainer(id)) {
-            localChanges->addChange(entry);
+            localChanges->addCreate(entry);
             registerContainer(factory->getContainer(id), container.size());
         }
     }
@@ -776,32 +782,37 @@ OSGChangeList* VRSyncNode::getFilteredChangeList() {
             cout << "ignore remote change " << id << endl;
             continue;
         }
-        if (isRegistered(id)) {
-            localChanges->addChange(entry);
-        }
 
+        if (isRegistered(id)) localChanges->addChange(entry);
+        if (!isSubContainer(id)) continue;
+
+        BitVector whichField = entry->whichField;
+        if (whichField == 0 && entry->bvUncommittedChanges != 0) whichField |= *entry->bvUncommittedChanges;
 //        cout << "entry->whichField " << entry->whichField << endl;
-        //check core
-        if (entry->whichField & Node::CoreFieldMask) {
-            cout << "entry core field mask changed!!!" << endl;
-            Node* node = dynamic_cast<Node*>(factory->getContainer(id));
+
+        if (whichField & Node::CoreFieldMask) { // check core
+            FieldContainer* fc = factory->getContainer(id);
+            if (!fc) continue;
+            Node* node = dynamic_cast<Node*>(fc);
+            if (!node) continue;
+
             UInt32 coreId = node->getCore()->getId();
+            if (isRegistered(coreId)) continue;
+
+            cout << "entry core field mask changed!!!" << endl;
             cout << "got core id " << coreId << endl;
-            if (!container[coreId]) {
-                cout << "no registered container for core " << coreId << " -> create change entry for core create " << endl;
-                ContainerChangeEntry* createCoreEntry = localChanges->createChangeEntry();
-                createCoreEntry->uiEntryDesc = ContainerChangeEntry::Create;
-                createCoreEntry->uiContainerId = coreId;
-                createCoreEntry->whichField = 0;
-                registerContainer(factory->getContainer(coreId), container.size());
-                localChanges->addChange(createCoreEntry);
-            }
+            cout << "no registered container for core " << coreId << " -> create change entry for core create " << endl;
+            ContainerChangeEntry* createCoreEntry = localChanges->createCreateEntry();
+            createCoreEntry->uiEntryDesc = ContainerChangeEntry::Create;
+            createCoreEntry->uiContainerId = coreId;
+            createCoreEntry->whichField = 0;
+            registerContainer(factory->getContainer(coreId), container.size());
+
             cout << " -> create change entry for core change " << endl;
-            ContainerChangeEntry* changeEntry = localChanges->createChangeEntry();
-            changeEntry->uiContainerId = id;
+            /*ContainerChangeEntry* changeEntry = localChanges->createChangeEntry();
+            changeEntry->uiContainerId = coreId;
             changeEntry->whichField = -1;
-            changeEntry->uiEntryDesc = ContainerChangeEntry::Change;
-            localChanges->addChange(changeEntry);
+            changeEntry->uiEntryDesc = ContainerChangeEntry::Change;*/
         }
     }
 
