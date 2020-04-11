@@ -142,13 +142,16 @@ void VRSyncNode::printChangeList(OSGChangeList* cl) {
     auto printEntry = [&](ContainerChangeEntry* entry) {
         const FieldFlags* fieldFlags = entry->pFieldFlags;
         BitVector whichField = entry->whichField;
+        if (whichField == 0 && entry->bvUncommittedChanges != 0) whichField |= *entry->bvUncommittedChanges;
         UInt32 id = entry->uiContainerId;
 
         // ----- print info ---- //
         string type;
         if (factory->getContainer(id)) type = factory->getContainer(id)->getTypeName();
         string changeType = getChangeType(entry->uiEntryDesc);
-        cout << "  " << "uiContainerId: " << id << ", changeType: " << changeType << ", container: " << type << endl;
+        cout << "  " << "uiContainerId: " << id << ", changeType: " << changeType << ", container: " << type;
+        cout << ", fields: " << std::bitset<64>(whichField) << ", node core changed? " << bool(whichField & Node::CoreFieldMask);
+        cout << ", node children changed? " << bool(whichField & Node::ChildrenFieldMask) << endl;
     };
 
     cout << " Created:" << endl;
@@ -730,10 +733,16 @@ OSGChangeList* VRSyncNode::getFilteredChangeList() {
     ChangeList* cl = applicationThread->getChangeList();
     cout << "cl entries: " << cl->getNumChanged() + cl->getNumCreated() << endl;
     if (cl->getNumChanged() + cl->getNumCreated() == 0) return 0;
-    if (cl->getNumChanged() + cl->getNumCreated() == 1) {
+
+    /*if (cl->getNumChanged() + cl->getNumCreated() >= 1) {
         ContainerChangeEntry* entry = *cl->begin();
-        cout << "entry: " << entry->uiContainerId << " " << factory->getContainer(entry->uiContainerId)->getTypeName() << " " << entry->whichField << endl;
-        cout << "Node::CoreFieldMask " << Node::CoreFieldMask << endl;
+        cout << " entry: " << entry->uiContainerId << " " << factory->getContainer(entry->uiContainerId)->getTypeName() << " " << entry->whichField << endl;
+        cout << " Node::CoreFieldMask " << Node::CoreFieldMask << endl;
+    }*/
+
+    if (cl->getNumChanged() < 15) {
+        cout << " GLOBALE CHANGES:" << endl;
+        printChangeList((OSGChangeList*)cl);
     }
 
     OSGChangeList* localChanges = (OSGChangeList*)ChangeList::create();
