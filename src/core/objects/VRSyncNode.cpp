@@ -98,6 +98,12 @@ class OSGChangeList : public ChangeList {
                     pEntry->pList         = this;
                 }
         }
+
+
+        ContainerChangeEntry* createChangeEntry() {
+//            ContainerChangeEntry* pEntry = getNewEntry();
+            return getNewEntry();
+        }
 };
 
 string getChangeType(int uiEntryDesc) {
@@ -722,7 +728,13 @@ OSGChangeList* VRSyncNode::getFilteredChangeList() {
     // create local changelist with changes of containers of the subtree of this sync node :D
 
     ChangeList* cl = applicationThread->getChangeList();
+    cout << "cl entries: " << cl->getNumChanged() + cl->getNumCreated() << endl;
     if (cl->getNumChanged() + cl->getNumCreated() == 0) return 0;
+    if (cl->getNumChanged() + cl->getNumCreated() == 1) {
+        ContainerChangeEntry* entry = *cl->begin();
+        cout << "entry: " << entry->uiContainerId << " " << factory->getContainer(entry->uiContainerId)->getTypeName() << " " << entry->whichField << endl;
+        cout << "Node::CoreFieldMask " << Node::CoreFieldMask << endl;
+    }
 
     OSGChangeList* localChanges = (OSGChangeList*)ChangeList::create();
 
@@ -757,6 +769,30 @@ OSGChangeList* VRSyncNode::getFilteredChangeList() {
         }
         if (isRegistered(id)) {
             localChanges->addChange(entry);
+        }
+
+//        cout << "entry->whichField " << entry->whichField << endl;
+        //check core
+        if (entry->whichField & Node::CoreFieldMask) {
+            cout << "entry core field mask changed!!!" << endl;
+            Node* node = dynamic_cast<Node*>(factory->getContainer(id));
+            UInt32 coreId = node->getCore()->getId();
+            cout << "got core id " << coreId << endl;
+            if (!container[coreId]) {
+                cout << "no registered container for core " << coreId << " -> create change entry for core create " << endl;
+                ContainerChangeEntry* createCoreEntry = localChanges->createChangeEntry();
+                createCoreEntry->uiEntryDesc = ContainerChangeEntry::Create;
+                createCoreEntry->uiContainerId = coreId;
+                createCoreEntry->whichField = 0;
+                registerContainer(factory->getContainer(coreId), container.size());
+                localChanges->addChange(createCoreEntry);
+            }
+            cout << " -> create change entry for core change " << endl;
+            ContainerChangeEntry* changeEntry = localChanges->createChangeEntry();
+            changeEntry->uiContainerId = id;
+            changeEntry->whichField = -1;
+            changeEntry->uiEntryDesc = ContainerChangeEntry::Change;
+            localChanges->addChange(changeEntry);
         }
     }
 
