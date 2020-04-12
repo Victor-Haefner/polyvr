@@ -17,6 +17,7 @@
 #include <OpenSG/OSGTransformBase.h>
 #include "core/objects/OSGTransform.h"
 #include <OpenSG/OSGContainerIdMapper.h>
+#include <OpenSG/OSGNameAttachment.h>
 
 #include <OpenSG/OSGThreadManager.h>
 
@@ -496,7 +497,7 @@ void VRSyncNode::handleChildrenChange(FieldContainerRecPtr fcPtr, SerialEntry& s
 
     vector<int> childrenIDs = parentToChildren[sentry.localId];
     //cout << " N children: " << childrenIDs.size() << endl;
-    for (cID : childrenIDs) {
+    for (auto cID : childrenIDs) {
         UInt32 childID = remoteToLocalID.count(cID) ? remoteToLocalID[cID] : 0;
         FieldContainer* childPtr = factory->getContainer(childID);
         Node* child = dynamic_cast<Node*>(childPtr);
@@ -697,6 +698,7 @@ bool VRSyncNode::isSubContainer(const UInt32& id) {
     auto fct = factory->getContainer(id);
     if (!fct) return false;
 
+
     UInt32 syncNodeID = getNode()->node->getId();
     auto type = factory->findType(fct->getTypeId());
 
@@ -758,15 +760,27 @@ OSGChangeList* VRSyncNode::getFilteredChangeList() {
         ContainerChangeEntry* entry = *it;
         UInt32 id = entry->uiContainerId;
 
-        /*FieldContainer* fct = factory->getContainer(id);
-        Attachment* att = dynamic_cast<Attachment*>(fct);
-        if (fct) cout << " getFilteredChangeList entry: " << fct->getTypeName() << " attachment? " << att << endl;
-        if (att) cout << "    attachement N parents: " << att->getMFParents()->size() << endl;*/
+        FieldContainer* fct = factory->getContainer(id);
+        if (fct) {
+            auto type = factory->findType(fct->getTypeId());
+            Attachment* att = dynamic_cast<Attachment*>(fct);
+            if (id > 3014 && !isSubContainer(id)) {
+                if (att) {
+                    auto parents = att->getMFParents();
+                    cout << " ----- getFilteredChangeList entry: " << id << " " << fct->getTypeName() << " isNode? " << type->isNode() << " isCore? " << type->isNodeCore() << " isAttachment? " << type->isAttachment() << " Nparents: " << parents->size() << endl;
 
-        if (isRemoteChange(id)) {
-            cout << "ignore remote create " << id << endl;
-            continue;
+                }
+                //cout << " ----- getFilteredChangeList entry: " << id << " " << fct->getTypeName() << " isNode? " << type->isNode() << " isCore? " << type->isNodeCore() << " isAttachment? " << type->isAttachment() << endl;
+                if (type->isNode()) {
+                    cout << "    node name: " << ::getName((Node*)fct) << endl;
+                }
+            }
+            //if (!att && !type->isNode() && !type->isNodeCore()) cout << " ----- getFilteredChangeList entry: " << fct->getTypeName() << "  " << fct->getId() << endl;
+            //if (fct) cout << " getFilteredChangeList entry: " << fct->getTypeName() << " attachment? " << att << endl;
+            //if (att) cout << "    attachement N parents: " << att->getMFParents()->size() << endl;
         }
+
+        if (isRemoteChange(id)) continue;
 
         if (isSubContainer(id)) {
             localChanges->addCreate(entry);

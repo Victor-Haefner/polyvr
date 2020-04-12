@@ -966,7 +966,10 @@ void VRGeometry::setMaterial(VRMaterialPtr mat) {
 
     this->mat = mat;
     if (!meshSet) return;
+
+    if (auto m = mesh->geo->getMaterial()) mesh->geo->subAttachment(m);
     mesh->geo->setMaterial(mat->getMaterial()->mat);
+    mesh->geo->addAttachment(mat->getMaterial()->mat);
 }
 
 /*void VRGeometry::setMaterial(MaterialMTRecPtr mat) {
