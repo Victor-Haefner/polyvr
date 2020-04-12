@@ -525,35 +525,26 @@ void VRSyncNode::handleCoreChange(FieldContainerRecPtr fcPtr, SerialEntry& sentr
 }
 
 void VRSyncNode::handleGenericChange(FieldContainerRecPtr fcPtr, SerialEntry& sentry, map<int, vector<BYTE>>& fcData) {
-    //cout << "VRSyncNode::handleGenericChange " << fcPtr->getId() << " " << fcPtr->getTypeName() << " ---------------------------- " << endl;
-
-    // deactivate certain changes
-    /*if (factory->findType(sentry.fcTypeID)->isNode()) {
-        //sentry.fieldMask &= ~Node::AttachmentsFieldMask; // TODO: pass attachment containers when filtering the changelist
-
-        sentry.fieldMask &= ~Node::ChildrenFieldMask; // clear children field mask bit!
-        sentry.fieldMask &= ~Node::ParentFieldMask; // clear parent field mask bit!
-        sentry.fieldMask &= ~Node::CoreFieldMask; // clear core field mask bit!
-    }
-
     if (factory->findType(sentry.fcTypeID)->isNodeCore()) {
-        sentry.fieldMask &= ~NodeCore::ParentsFieldMask; // clear parents field mask bit!
-    }*/
+        Geometry* geo = dynamic_cast<Geometry*>(fcPtr.get());
+        if (geo) { // don't copy GLId fields, they are not valid Ids!
+            sentry.fieldMask &= ~Geometry::ClassicGLIdFieldMask;
+            sentry.fieldMask &= ~Geometry::AttGLIdFieldMask;
+            sentry.fieldMask &= ~Geometry::ClassicVaoGLIdFieldMask;
+            sentry.fieldMask &= ~Geometry::AttribVaoGLIdFieldMask;
+        }
+    }
 
     // apply changes
     vector<BYTE>& FCdata = fcData[sentry.localId];
     ourBinaryDataHandler handler; //use ourBinaryDataHandler to somehow apply binary change to fieldcontainer
     handler.data.insert(handler.data.end(), FCdata.begin(), FCdata.end()); //feed handler with FCdata
 
-
     /*if (fcPtr->getId() == 3075 && sentry.uiEntryDesc == ContainerChangeEntry::Change) {
         debugBinary(fcPtr, handler, sentry);
     }*/
 
     fcPtr->copyFromBin(handler, sentry.fieldMask); //calls handler->read
-    //cout << " FCdata size: " << FCdata.size() << "  " << std::bitset<64>(sentry.fieldMask) << endl;
-
-
 }
 
 void VRSyncNode::handleRemoteEntries(vector<SerialEntry>& entries, map<int, vector<int>>& parentToChildren, map<int, vector<BYTE>>& fcData) {
@@ -573,8 +564,6 @@ void VRSyncNode::handleRemoteEntries(vector<SerialEntry>& entries, map<int, vect
         if (fcPtr == nullptr) { cout << "WARNING! no container found with id " << id << " syncNodeID " << sentry.syncNodeID << endl; continue; } //TODO: This is causing the WARNING: Action::recurse: core is NULL, aborting traversal.
 
         if (sentry.uiEntryDesc == ContainerChangeEntry::Change) { //if its a node change, update child info has changed. TODO: check only if children info has changed
-            //if (sentry.fieldMask & Node::ChildrenFieldMask) handleChildrenChange(fcPtr, sentry, parentToChildren);
-            //if (sentry.fieldMask & Node::CoreFieldMask) handleCoreChange(fcPtr, sentry);
             handleGenericChange(fcPtr, sentry, fcData);
         }
 
@@ -623,6 +612,8 @@ void VRSyncNode::deserializeAndApply(string& data) {
     printDeserializedData(entries, parentToChildren, fcData);
     handleRemoteEntries(entries, parentToChildren, fcData);
     printRegistredContainers();
+
+    exportToFile("syncnode.osg");
 
     factory->setMapper(0);
     cout << "            / " << name << " VRSyncNode::deserializeAndApply()" << "  < < <" << endl;
@@ -928,57 +919,11 @@ void VRSyncNode::handleChangeList(void* _args) { //TODO: rename in handleMessage
     HTTP_args* args = (HTTP_args*)_args;
     if (!args->websocket) cout << "AAAARGH" << endl;
 
-    int client = args->ws_id;
+    //int client = args->ws_id;
     string msg = args->ws_data;
-//
-//    if (syncronizing) {
-//        vector<BYTE> vec = base64_decode(msg);
-//        map<int,int> remoteContainer;
-//        vector<int> remoteContainerData;
-//        vector<BYTE> remoteData;
-//        int pos = 0;
-//        while (pos+sizeof(int) < vec.size()){
-//            remoteContainerData.insert(remoteContainerData.end(), vec.begin()+pos, vec.begin()+pos+sizeof(int));
-//        }
-//        //get remote container data into an int vec with IDs and syncIDs
-//        if (remoteContainerData.size() > 0) {
-//            int* castedData = (int*)&remoteContainerData[0];
-//            for (int i=0; i<remoteContainerData.size(); i++) {
-//                int id = castedData[i];
-//                remoteContainerData.push_back(id);
-//            }
-//        }
-//        //store remote container data in remoteContainer map
-//        for (int i=0; i<remoteContainerData.size(); i+=2){
-//            int id = remoteContainerData[i];
-//            int syncId = remoteContainerData[i++];
-//            remoteContainer[id] = syncId;
-//        }
-//        //update remoteToLocalIDs
-//        for (auto c : container) {
-//            int localSyncId = c.second;
-//            bool found = false;
-//            for (map<int,int>::iterator it = remoteContainer.begin(); it != remoteContainer.end() && !found; it++) {
-//                int remoteSyncId = it->second;
-//                if (localSyncId == remoteSyncId) {
-//                    int localId = c.first;
-//                    int remoteId = it->first;
-//                    remoteToLocalID[remoteId] = localId;
-//                    found = true;
-//                }
-//            }
-//        }
-//        //sync this nodes id's with others
-//        for (auto& remote : remotes) {
-//            sync(remote.first);
-//        }
-//        //end syncronizing
-//        syncronizing = false;
-//        cout << "end sync " << name << endl;
-//    }
-//    if (msg == "sync") { syncronizing = true; cout << "begin sync " << name << endl;}
-//    if (!syncronizing) deserializeAndApply(msg);
-    deserializeAndApply(msg);
+    auto j = VRUpdateCb::create( "deserializeAndApply job", bind(&VRSyncNode::deserializeAndApply, this, msg) );
+    VRScene::getCurrent()->queueJob(j);
+    //deserializeAndApply(msg);
 }
 
 //broadcast message to all remote nodes
