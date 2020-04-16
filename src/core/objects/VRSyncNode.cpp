@@ -166,7 +166,7 @@ VRSyncNode::VRSyncNode(string name) : VRTransform(name) {
 //    registerNode(node);
 
 	updateFkt = VRUpdateCb::create("SyncNode update", bind(&VRSyncNode::update, this));
-	//VRScene::getCurrent()->addUpdateFkt(updateFkt, 100000);
+	VRScene::getCurrent()->addUpdateFkt(updateFkt, 100000);
 }
 
 VRSyncNode::~VRSyncNode() {
@@ -795,12 +795,12 @@ OSGChangeList* VRSyncNode::getFilteredChangeList() {
         if (whichField == 0 && entry->bvUncommittedChanges != 0) whichField |= *entry->bvUncommittedChanges;
 //        cout << "entry->whichField " << entry->whichField << endl;
 
-        if (whichField & Node::CoreFieldMask) { // check core
-            FieldContainer* fc = factory->getContainer(id);
-            if (!fc) continue;
-            Node* node = dynamic_cast<Node*>(fc);
-            if (!node) continue;
+        FieldContainer* fc = factory->getContainer(id);
+        if (!fc) continue;
+        Node* node = dynamic_cast<Node*>(fc);
+        if (!node) continue;
 
+        if (whichField & Node::CoreFieldMask) { // check core
             UInt32 coreId = node->getCore()->getId();
             if (isRegistered(coreId)) continue;
 
@@ -818,6 +818,18 @@ OSGChangeList* VRSyncNode::getFilteredChangeList() {
             changeEntry->uiContainerId = coreId;
             changeEntry->whichField = -1;
             changeEntry->uiEntryDesc = ContainerChangeEntry::Change;*/
+        }
+        if (whichField & Node::ChildrenFieldMask) { // check children
+            for (int i = 0; i < node->getNChildren(); i++) {
+                UInt32 childId = node->getChild(i)->getId();
+                if (isRegistered(childId)) continue;
+                cout << "create entry for unregistered child" << childId << " of node " << node->getId() << endl;
+                ContainerChangeEntry* createChildEntry = localChanges->createCreateEntry();
+                createChildEntry->uiEntryDesc = ContainerChangeEntry::Create;
+                createChildEntry->uiContainerId = childId;
+                createChildEntry->whichField = 0;
+                registerContainer(factory->getContainer(childId), container.size());
+            }
         }
     }
 
