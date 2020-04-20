@@ -550,23 +550,29 @@ void VRProcess::setInitialState(VRProcessNodePtr state) {
     state->isInitialState = true;
 }
 
-void VRProcess::setSendState(VRProcessNodePtr sender, VRProcessNodePtr receiver, VRProcessNodePtr sendTransition, VRProcessNodePtr recvTransition, string message) {
+void VRProcess::setSendState(VRProcessNodePtr sender, VRProcessNodePtr sendTransition, int recvSubject, string message) {
     if (!checkState(sender)) return;
-    if (!checkState(receiver)) return;
-    if (!sendTransition || !recvTransition) return;
+    if (!sendTransition) return;
 
     sender->isSendState = true;
     sender->isReceiveState = false;
+    sendTransition->transition = SEND_CONDITION;
+
+    auto messageNode = addMessage(message, sender->subject, recvSubject, 0, 0);
+    transitionToMessages[sendTransition].push_back(messageNode);
+    stateToMessages[sender].push_back(messageNode);
+}
+
+void VRProcess::setReceiveState(VRProcessNodePtr receiver, VRProcessNodePtr recvTransition, int sendSubject, string message) {
+    if (!checkState(receiver)) return;
+    if (!recvTransition) return;
+
     receiver->isSendState = false;
     receiver->isReceiveState = true;
-    sendTransition->transition = SEND_CONDITION;
     recvTransition->transition = RECEIVE_CONDITION;
 
-    auto messageNode = addMessage(message, sender->subject, receiver->subject, 0, 0);
-
-    transitionToMessages[sendTransition].push_back(messageNode);
+    auto messageNode = addMessage(message, sendSubject, receiver->subject, 0, 0);
     transitionToMessages[recvTransition].push_back(messageNode);
-    stateToMessages[sender].push_back(messageNode);
     stateToMessages[receiver].push_back(messageNode);
 }
 

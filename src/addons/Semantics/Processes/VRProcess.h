@@ -128,7 +128,8 @@ class VRProcess : public std::enable_shared_from_this<VRProcess>, public VRName 
         VRProcessNodePtr addTransition(string name, int sID, int i, int j, VRProcessDiagramPtr d = 0, VRProcessCbPtr callback = 0);
 
         void setInitialState(VRProcessNodePtr state);
-        void setSendState(VRProcessNodePtr sender, VRProcessNodePtr receiver, VRProcessNodePtr sendTransition, VRProcessNodePtr recvTransition, string message);
+        void setSendState(VRProcessNodePtr sender, VRProcessNodePtr sendTransition, int recvSubject, string message);
+        void setReceiveState(VRProcessNodePtr receiver, VRProcessNodePtr recvTransition, int sendSubject, string message);
 
         void remNode(VRProcessNodePtr n);
         VRProcessNodePtr getTransitionState(VRProcessNodePtr transition);
