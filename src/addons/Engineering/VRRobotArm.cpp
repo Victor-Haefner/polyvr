@@ -37,7 +37,8 @@ VRRobotArm::~VRRobotArm() {}
 shared_ptr<VRRobotArm> VRRobotArm::create(string type) { return shared_ptr<VRRobotArm>(new VRRobotArm(type)); }
 
 void VRRobotArm::setParts(vector<VRTransformPtr> parts) {
-    this->parts = parts;
+    this->parts.clear();
+    for (auto p : parts) if (p) this->parts.push_back(p);
     ageo->switchParent(parts[0]->getParent());
 }
 
@@ -79,6 +80,19 @@ void VRRobotArm::update() { // update robot joint angles
 }
 
 bool VRRobotArm::isMoving() { return anim->isActive() || moving; }
+
+void VRRobotArm::grab(VRTransformPtr obj) {
+    auto ee = parts[parts.size()-1];
+    obj->drag(ee);
+    dragged = obj;
+    cout << "VRRobotArm::grab obj " << obj << ", ee " << ee << endl;
+    for (auto e : parts) cout << "  part " << e << endl;
+}
+
+void VRRobotArm::drop() {
+    if (dragged) dragged->drop();
+    dragged = 0;
+}
 
 /*
 
@@ -377,7 +391,7 @@ void VRRobotArm::moveTo(PosePtr p2) {
 }
 
 void VRRobotArm::setGrab(float g) {
-    grab = g;
+    grabDist = g;
     float l = lengths[4]*g;
     Vec3d p; p[0] = l;
     if (parts.size() >= 9) {
@@ -393,7 +407,7 @@ void VRRobotArm::moveOnPath(float t0, float t1, bool loop, float durationMultipl
     addJob( job(robotPath, orientationPath, t0, t1, 2*robotPath->getLength() * durationMultiplier, loop) );
 }
 
-void VRRobotArm::toggleGrab() { setGrab(1-grab); }
+void VRRobotArm::toggleGrab() { setGrab(1-grabDist); }
 
 void VRRobotArm::setPath(PathPtr p, PathPtr po) { robotPath = p; orientationPath = po; }
 PathPtr VRRobotArm::getPath() { return robotPath; }

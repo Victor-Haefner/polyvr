@@ -37,13 +37,14 @@ class VRRobotArm {
         list<job> job_queue;
 
         int N = 5;
-        float grab = 0;
+        float grabDist = 0;
         float pathPos = 0;
         bool showModel = false;
         bool moving = false;
         float maxSpeed = 0.01;
         string type = "kuka";
 
+        VRTransformPtr dragged = 0;
         vector<VRTransformPtr> parts;
         vector<float> angles;
         vector<float> angle_targets;
@@ -91,6 +92,9 @@ class VRRobotArm {
         void setAngles(vector<float> angles, bool force = false);
         void setGrab(float g);
         void toggleGrab();
+
+        void grab(VRTransformPtr obj);
+        void drop();
 
         void setPath(PathPtr p, PathPtr po = 0);
         PathPtr getPath();
