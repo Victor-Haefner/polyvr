@@ -73,6 +73,7 @@ class VRProcessEngine {
             Inventory inventory;
             string initialState = "";
             string label = "";
+            int actionFinished = false;
             VRProcessNodePtr currentState;
             vector<VRProcessNodePtr> traversedPath; //contains transitions the engine has chosen to traverse
 
@@ -85,6 +86,7 @@ class VRProcessEngine {
             void sendMessage(Message* message);
 
             void tryAdvance();
+            void finishAction();
 
             Transition& getTransition(int tID);
         };
@@ -122,6 +124,7 @@ class VRProcessEngine {
         vector<VRProcessNodePtr> getTraversedPath(int sID);
 
         void continueWith(VRProcessNodePtr n);
+        void finishAction(int sID);
         void tryAdvance(int sID);
         void sendMessage(string msg, int sID1, int sID2);
 };

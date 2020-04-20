@@ -31,5 +31,6 @@ PyMethodDef VRPyRobotArm::methods[] = {
     {"getParts", PyWrap(RobotArm, getParts, "Get robot parts", vector<VRTransformPtr> ) },
     {"moveOnPath", PyWrapOpt(RobotArm, moveOnPath, "Move robot on internal path - moveOnPath(t0, t1, doLoop, durationMultiplier)", "0|1", void, float, float, bool, float) },
     {"isMoving", PyWrap(RobotArm, isMoving, "Get animation status", bool) },
+    {"setEventCallback", PyWrap(RobotArm, setEventCallback, "Set callback for move and stop events", void, VRMessageCbPtr) },
     {NULL}  /* Sentinel */
 };

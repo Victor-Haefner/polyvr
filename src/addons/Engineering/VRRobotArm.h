@@ -33,6 +33,7 @@ class VRRobotArm {
         PathPtr robotPath = 0;
         PathPtr orientationPath = 0;
         PosePtr lastPose = 0;
+        VRMessageCbPtr eventCb = 0;
 
         list<job> job_queue;
 
@@ -87,6 +88,7 @@ class VRRobotArm {
         void pause();
         void stop();
         bool isMoving();
+        void setEventCallback(VRMessageCbPtr mCb);
 
         void moveTo(PosePtr p);
         void setAngles(vector<float> angles, bool force = false);

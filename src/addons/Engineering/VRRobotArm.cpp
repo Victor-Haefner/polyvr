@@ -42,6 +42,8 @@ void VRRobotArm::setParts(vector<VRTransformPtr> parts) {
     ageo->switchParent(parts[0]->getParent());
 }
 
+void VRRobotArm::setEventCallback(VRMessageCbPtr mCb) { eventCb = mCb; }
+
 void VRRobotArm::setAngleOffsets(vector<float> offsets) { angle_offsets = offsets; }
 void VRRobotArm::setAngleDirections(vector<int> dirs) { angle_directions = dirs; }
 void VRRobotArm::setAxis(vector<int> axis) { this->axis = axis; }
@@ -76,6 +78,8 @@ void VRRobotArm::update() { // update robot joint angles
     }
 
     if (m) applyAngles();
+    if (eventCb && moving && !m) (*eventCb)("stopped");
+    if (eventCb && !moving && m) (*eventCb)("moving");
     moving = m;
 }
 

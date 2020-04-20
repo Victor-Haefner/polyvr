@@ -55,6 +55,7 @@ PyMethodDef VRPyProcessNode::methods[] = {
     {"getID", PyWrap(ProcessNode, getID, "Get node graph ID", int) },
     {"getEntity", PyWrap(ProcessNode, getEntity, "Get entity", VREntityPtr) },
     {"getSubjectID", PyWrap(ProcessNode, getSubjectID, "Get subject ID", int) },
+    {"setWaitForExternalAction", PyWrap(ProcessNode, setWaitForExternalAction, "Set an action state to wait for external actions", void, bool) },
     {NULL}  /* Sentinel */
 };
 
@@ -95,6 +96,7 @@ PyMethodDef VRPyProcessEngine::methods[] = {
     {"getCurrentState", PyWrap(ProcessEngine, getCurrentState, "returns the current state of a subject - ProcessNode getCurrentState(int subjectID)", VRProcessNodePtr, int ) },
     {"continueWith", PyWrap(ProcessEngine, continueWith, "Continue execution with this next transition", void, VRProcessNodePtr ) },
     {"tryAdvance", PyWrap(ProcessEngine, tryAdvance, "Try advancing subject sID", void, int ) },
+    {"finishAction", PyWrap(ProcessEngine, finishAction, "Finish action of subject sID", void, int ) },
     {"sendMessage", PyWrap(ProcessEngine, sendMessage, "Send a message (message, senderID, receiverID)", void, string, int, int ) },
     {NULL}  /* Sentinel */
 };

@@ -67,6 +67,8 @@ int VRProcessNode::getID() { return ID; }
 string VRProcessNode::getLabel() { return label; }
 int VRProcessNode::getSubjectID() { return subject; }
 
+void VRProcessNode::setWaitForExternalAction(bool b) { waitForExternalAction = b; }
+
 VRProcess::VRProcess(string name) {
     setStorageType("Process");
     setPersistency(0);

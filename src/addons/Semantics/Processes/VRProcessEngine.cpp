@@ -63,10 +63,12 @@ void VRProcessEngine::Actor::checkTransitions() {
 string VRProcessEngine::Actor::transitioning( float t ) {
     auto state = sm.getCurrentState();
     if (!state) return "";
+    if (currentState->waitForExternalAction && !actionFinished) return "";
     string stateName = state->getName();
 
     for (auto& transition : transitions[stateName]) { // check if any actions are ready to start
         if (transition.valid(&inventory)) {
+            actionFinished = false; // reset flag
             currentState = transition.nextState;
 
             vector<Message> messages;
@@ -109,6 +111,8 @@ void VRProcessEngine::Actor::tryAdvance() {
     checkTransitions();
 }
 
+void VRProcessEngine::Actor::finishAction() { actionFinished = true; }
+
 auto nullTransition = VRProcessEngine::Transition(0,0,0);
 VRProcessEngine::Transition& VRProcessEngine::Actor::getTransition(int tID) {
     for (auto& state : transitions) {
@@ -135,6 +139,7 @@ VRProcessPtr VRProcessEngine::getProcess() { return process; }
 void VRProcessEngine::pause() { running = false; }
 void VRProcessEngine::performTransition(Transition transition) {}
 void VRProcessEngine::tryAdvance(int sID) { if (subjects.count(sID)) subjects[sID].tryAdvance(); }
+void VRProcessEngine::finishAction(int sID) { if (subjects.count(sID)) subjects[sID].finishAction(); }
 VRProcessEngine::Transition& VRProcessEngine::getTransition(int sID, int tID) { return subjects[sID].getTransition(tID); }
 
 void VRProcessEngine::run(float s) {

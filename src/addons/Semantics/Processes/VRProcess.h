@@ -38,6 +38,7 @@ struct VRProcessNode : VRName {
     bool isInitialState = false;
     bool isSendState = false;
     bool isReceiveState = false;
+    bool waitForExternalAction = false;
     VRProcessCbPtr callback = 0;
     //VRProcessNodePtr message;
 
@@ -53,6 +54,8 @@ struct VRProcessNode : VRName {
     VREntityPtr getEntity();
     int getSubjectID();
     Vec3d getPosition(Vec3d p, float scale = 1);
+
+    void setWaitForExternalAction(bool b);
 };
 
 struct VRProcessDiagram : public Graph {
