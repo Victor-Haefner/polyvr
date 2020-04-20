@@ -119,6 +119,7 @@ class VRProcess : public std::enable_shared_from_this<VRProcess>, public VRName 
         VRProcessNodePtr getSubject(int subjectID);
         VRProcessNodePtr getSubjectByName(string name);
         VRProcessNodePtr getSubjectState(int subjectID, string name);
+        VRProcessNodePtr getMessage(string msg, int sID1, int sID2);
         vector<VRProcessNodePtr> getStateMessages(VRProcessNodePtr state);
         vector<VRProcessNodePtr> getTransitionMessages(VRProcessNodePtr transition);
 

@@ -123,6 +123,7 @@ class VRProcessEngine {
 
         void continueWith(VRProcessNodePtr n);
         void tryAdvance(int sID);
+        void sendMessage(string msg, int sID1, int sID2);
 };
 
 OSG_END_NAMESPACE;

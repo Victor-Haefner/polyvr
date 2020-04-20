@@ -95,5 +95,6 @@ PyMethodDef VRPyProcessEngine::methods[] = {
     {"getCurrentState", PyWrap(ProcessEngine, getCurrentState, "returns the current state of a subject - ProcessNode getCurrentState(int subjectID)", VRProcessNodePtr, int ) },
     {"continueWith", PyWrap(ProcessEngine, continueWith, "Continue execution with this next transition", void, VRProcessNodePtr ) },
     {"tryAdvance", PyWrap(ProcessEngine, tryAdvance, "Try advancing subject sID", void, int ) },
+    {"sendMessage", PyWrap(ProcessEngine, sendMessage, "Send a message (message, senderID, receiverID)", void, string, int, int ) },
     {NULL}  /* Sentinel */
 };

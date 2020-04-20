@@ -194,6 +194,12 @@ void VRProcessEngine::continueWith(VRProcessNodePtr n) {
     }
 }
 
+void VRProcessEngine::sendMessage(string msg, int sID1, int sID2) {
+    auto mNode = process->getMessage(msg, sID1, sID2);
+    Message m(msg, process->getSubject(sID1)->label, process->getSubject(sID2)->label, mNode);
+    subjects[sID2].inventory.messages.push_back(m); // just push message into receiver inventory
+}
+
 void VRProcessEngine::initialize() {
     cout << "VRProcessEngine::initialize()" << endl;
 

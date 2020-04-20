@@ -495,21 +495,27 @@ VRProcessNodePtr VRProcess::addSubject(string name, VREntityPtr e) {
     return s;
 }
 
+VRProcessNodePtr VRProcess::getMessage(string msg, int sID1, int sID2) {
+    for (auto m : getMessages()) {
+        if (m->label == msg) {
+            auto sender = getMessageSender(m->getID())[0];
+            auto receiver = getMessageReceiver(m->getID())[0];
+            if (m->label == msg && sender->getID() == sID1 && receiver->getID() == sID2) return m;
+        }
+    }
+    return 0;
+}
+
 VRProcessNodePtr VRProcess::addMessage(string name, int i, int j, VRProcessDiagramPtr diag, VREntityPtr e) {
     if (!diag) diag = interactionDiagram;
     if (!diag) return 0;
 
     // only add message once!
-    for (auto m : getMessages()) {
-        if (m->label == name) {
-            auto sender = getMessageSender(m->getID())[0];
-            auto receiver = getMessageReceiver(m->getID())[0];
-            if (m->label == name && sender->getID() == i && receiver->getID() == j) return m;
-        }
-    }
+    auto m = getMessage(name, i, j);
+    if (m) return m;
 
     auto mID = diag->addNode();
-    auto m = VRProcessNode::create(name, MESSAGE, mID, i);
+    m = VRProcessNode::create(name, MESSAGE, mID, i);
     m->entity = e;
     diag->processNodes[mID] = m;
     diag->nodesByName[m->label] = mID;
