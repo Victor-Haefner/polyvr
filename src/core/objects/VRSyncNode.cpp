@@ -730,7 +730,7 @@ OSGChangeList* VRSyncNode::getFilteredChangeList() {
     // create local changelist with changes of containers of the subtree of this sync node :D
 
     ChangeList* cl = applicationThread->getChangeList();
-    cout << "cl entries: " << cl->getNumChanged() + cl->getNumCreated() << endl;
+//    cout << "cl entries: " << cl->getNumChanged() + cl->getNumCreated() << endl;
     if (cl->getNumChanged() + cl->getNumCreated() == 0) return 0;
 
     /*if (cl->getNumChanged() + cl->getNumCreated() >= 1) {
@@ -859,7 +859,7 @@ void VRSyncNode::sync(string uri) {
 
 //update this SyncNode
 void VRSyncNode::update() {
-    cout << endl << " > > >  " << name << " VRSyncNode::update()" << endl;
+//    cout << endl << " > > >  " << name << " VRSyncNode::update()" << endl;
     auto localChanges = getFilteredChangeList();
     if (!localChanges) return;
     if (getChildrenCount() == 0) return;
