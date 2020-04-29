@@ -49,12 +49,12 @@ Vec3d asVec3d(BITCODE_3BD& v) { return Vec3d(v.x,v.y,v.z); }
 
 string getLayerName(Dwg_Object_LAYER* layer, Dwg_Data& dwg) {
     if (!layer) return "GLOBAL";
-    Dwg_Object* obj = layer->parent->ownerhandle->obj;
 
     string name;
-    char* cname;
+    char* cname = 0;
 
-    /*if (dwg.header.from_version >= R_13 && dwg.header.from_version < R_2000) {
+    /*Dwg_Object* obj = layer->parent->ownerhandle->obj;
+    if (dwg.header.from_version >= R_13 && dwg.header.from_version < R_2000) {
         if (!(cname = dwg_find_table_extname (&dwg, obj))) cname = layer->name;
     } else cname = layer->name;*/
     cname = layer->name;
@@ -115,6 +115,7 @@ struct DWGContext {
     vector<Vec3d> scale_stack;
     vector<Vec3d> extrusion_stack;
     vector<double> rot_angle_stack;
+    vector<Dwg_Object_LAYER*> layer_stack;
 
     map<string, int> objectHistogram;
     map<string, int> entityHistogram;
@@ -289,18 +290,27 @@ Vec3d transform_OCS(Vec3d pt, Vec3d ext) {
     return Vec3d(pt.dot(ax), pt.dot(ay), pt.dot(az));
 }
 
+Dwg_Object_LAYER* getEntityLayer(Dwg_Object* obj, DWGContext& data, bool checkName = true) {
+    Dwg_Object_LAYER* layer = dwg_get_entity_layer(obj->tio.entity);
+    if (!checkName) return layer;
+    if (getLayerName(layer, *data.dwg) == "0") { // wrong layer
+        if (data.layer_stack.size() > 0) layer = data.layer_stack.back();
+    }
+    return layer;
+}
+
 void process_BLOCK_HEADER(Dwg_Object_Ref* ref, DWGContext& data, bool onlyRoot);
 
 void process_POINT(Dwg_Object* obj, DWGContext& data) {
     Dwg_Entity_POINT* point = obj->tio.entity->tio.POINT;
-    Dwg_Object_LAYER* layer = dwg_get_entity_layer(obj->tio.entity);
+    Dwg_Object_LAYER* layer = getEntityLayer(obj, data);
     Pnt3d P = transform_OCS( Vec3d(point->x, point->y, point->z), asVec3d(point->extrusion) );
     data.addPoint(P, layer);
 }
 
 void process_LINE(Dwg_Object* obj, DWGContext& data) {
     Dwg_Entity_LINE* line = obj->tio.entity->tio.LINE;
-    Dwg_Object_LAYER* layer = dwg_get_entity_layer(obj->tio.entity);
+    Dwg_Object_LAYER* layer = getEntityLayer(obj, data);
 
     Dwg_Object_MATERIAL* mat = 0;
     if (obj->tio.entity->material && obj->tio.entity->material->obj) mat = obj->tio.entity->material->obj->tio.object->tio.MATERIAL;
@@ -365,7 +375,7 @@ void bulgeToArc(float bulge, Vec3d s, Vec3d e, Vec3d& cen, Vec3d& arc) {
 
 void process_POLYLINE_2D(Dwg_Object* obj, DWGContext& data) {
     Dwg_Entity_POLYLINE_2D* line = obj->tio.entity->tio.POLYLINE_2D;
-    Dwg_Object_LAYER* layer = dwg_get_entity_layer(obj->tio.entity);
+    Dwg_Object_LAYER* layer = getEntityLayer(obj, data, false);
     Color3f col = asColor3f(obj->tio.entity->color);
 
     int N = line->num_owned-1;
@@ -392,7 +402,7 @@ void process_POLYLINE_2D(Dwg_Object* obj, DWGContext& data) {
 
 void process_LWPOLYLINE(Dwg_Object* obj, DWGContext& data) {
     Dwg_Entity_LWPOLYLINE* line = obj->tio.entity->tio.LWPOLYLINE;
-    Dwg_Object_LAYER* layer = dwg_get_entity_layer(obj->tio.entity);
+    Dwg_Object_LAYER* layer = getEntityLayer(obj, data);
     Color3f col = asColor3f(obj->tio.entity->color);
 
     bool vis = !obj->tio.entity->invisible;
@@ -427,16 +437,15 @@ void process_LWPOLYLINE(Dwg_Object* obj, DWGContext& data) {
 
 void process_CIRCLE(Dwg_Object* obj, DWGContext& data) {
     Dwg_Entity_CIRCLE* circle = obj->tio.entity->tio.CIRCLE;
-    Dwg_Object_LAYER* layer = dwg_get_entity_layer(obj->tio.entity);
+    Dwg_Object_LAYER* layer = getEntityLayer(obj, data);
     bool vis = !obj->tio.entity->invisible;
     if (!vis) return;
     data.addCircle(asVec3d(circle->center), circle->radius, layer);
 }
 
 void process_ARC(Dwg_Object* obj, DWGContext& data) {
-    return;
     Dwg_Entity_ARC* arc = obj->tio.entity->tio.ARC;
-    Dwg_Object_LAYER* layer = dwg_get_entity_layer(obj->tio.entity);
+    Dwg_Object_LAYER* layer = getEntityLayer(obj, data);
     bool vis = !obj->tio.entity->invisible;
     if (!vis) return;
     data.addArc(asVec3d(arc->center), arc->radius, arc->start_angle, arc->end_angle, layer);
@@ -444,7 +453,7 @@ void process_ARC(Dwg_Object* obj, DWGContext& data) {
 
 void process_TEXT(Dwg_Object* obj, DWGContext& data) {
     Dwg_Entity_TEXT* text = obj->tio.entity->tio.TEXT;
-    Dwg_Object_LAYER* layer = dwg_get_entity_layer(obj->tio.entity);
+    Dwg_Object_LAYER* layer = getEntityLayer(obj, data);
     double x = text->insertion_pt.x;
     double y = text->insertion_pt.y;
     char* t = text->text_value;
@@ -453,7 +462,7 @@ void process_TEXT(Dwg_Object* obj, DWGContext& data) {
 
 void process_MTEXT(Dwg_Object* obj, DWGContext& data) {
     Dwg_Entity_MTEXT* text = obj->tio.entity->tio.MTEXT;
-    Dwg_Object_LAYER* layer = dwg_get_entity_layer(obj->tio.entity);
+    Dwg_Object_LAYER* layer = getEntityLayer(obj, data);
     double x = text->insertion_pt.x;
     double y = text->insertion_pt.y;
     char* t = text->text;
@@ -462,11 +471,13 @@ void process_MTEXT(Dwg_Object* obj, DWGContext& data) {
 
 void process_INSERT(Dwg_Object* obj, DWGContext& data) {
     Dwg_Entity_INSERT* insert = obj->tio.entity->tio.INSERT;
+    Dwg_Object_LAYER* layer = getEntityLayer(obj, data);
 
     data.offset_stack.push_back( asVec3d(insert->ins_pt) );
     data.scale_stack.push_back( asVec3d(insert->scale) );
     data.extrusion_stack.push_back( asVec3d(insert->extrusion) );
     data.rot_angle_stack.push_back( insert->rotation );
+    data.layer_stack.push_back( layer );
     data.compute_current_transformation();
 
     //Dwg_Object_BLOCK_HEADER* block = insert->block_header->obj->tio.object->tio.BLOCK_HEADER;
@@ -476,6 +487,7 @@ void process_INSERT(Dwg_Object* obj, DWGContext& data) {
     data.scale_stack.pop_back();
     data.extrusion_stack.pop_back();
     data.rot_angle_stack.pop_back();
+    data.layer_stack.pop_back();
     data.compute_current_transformation();
 }
 
@@ -525,12 +537,7 @@ void process_object(Dwg_Object* obj, DWGContext& data) {
 
 
     switch (obj->type) {
-        case DWG_TYPE_LINE:
-            /*{auto layer = dwg_get_entity_layer(obj->tio.entity);
-            if (getLayerName(layer, *data.dwg) != "0") return;}
-            Nlines++;
-            if (Nlines < 1650 || Nlines > 1655) return;*/
-            process_LINE(obj, data); break;
+        case DWG_TYPE_LINE: process_LINE(obj, data); break;
         case DWG_TYPE_INSERT: process_INSERT(obj, data); break;
         case DWG_TYPE_CIRCLE: process_CIRCLE(obj, data); break;
         case DWG_TYPE_TEXT: process_TEXT(obj, data); break;
@@ -661,6 +668,32 @@ void loadDWG(string path, VRTransformPtr res) {
         //if (layer) printColor(layer->color);
     }
     //dwg_free(&dwg); // writes a lot to console..
+
+    map<string, int> hist;
+    for (int i=0; i < dwg.num_objects; i++) {
+        Dwg_Object& obj = dwg.object[i];
+        if (obj.type == DWG_TYPE_LINE ||
+            obj.type == DWG_TYPE_INSERT
+            ) {
+            Dwg_Object_LAYER* layer = dwg_get_entity_layer(obj.tio.entity);
+            string name = getLayerName(layer, dwg);
+            if ( startsWith(name, "Elektro-Beleuchtung-Deckenaufbauleuchte")  ) hist[name] += 1;
+        }
+    }
+
+    cout << "layers" << endl;
+    for (int i=0; i < dwg.layer_control.num_entries; i++) {
+        Dwg_Object* obj = dwg.layer_control.entries[i]->obj;
+        if (!obj || obj->type != DWG_TYPE_LAYER) continue;
+        Dwg_Object_LAYER* layer = dwg.layer_control.entries[i]->obj->tio.object->tio.LAYER;
+        string name = getLayerName(layer, dwg);
+        if ( startsWith(name, "Elektro-Beleuchtung-Deckenaufbauleuchte")  ) cout << " " << name << endl;
+    }
+
+    cout << "layer / entity historgam" << endl;
+    for (auto h : hist) {
+        cout << " " << h.first << " " << h.second << endl;
+    }
 
     cout << "DWG entity historgam" << endl;
     for (auto e : data.entityHistogram) cout << " " << e.first << ": " << e.second << endl;
