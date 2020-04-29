@@ -6,6 +6,7 @@
 #ifndef WASM
 #include "VRVTK.h"
 #include "VRDXF.h"
+#include "VRDWG.h"
 #include "VRIFC.h"
 #endif
 #include "VRML.h"
@@ -182,6 +183,7 @@ void VRImport::LoadJob::load(VRThreadWeakPtr tw) {
         if (ext == ".tiff" || ext == ".tif") { loadTIFF(path, res); return; }
         if (ext == ".hgt") { loadTIFF(path, res); return; }
         if (ext == ".dxf") { loadDXF(path, res); return; }
+        if (ext == ".dwg") { loadDWG(path, res); return; }
 #ifndef NO_IFC
         if (ext == ".ifc") { loadIFC(path, res); return; }
 #endif
