@@ -6,13 +6,14 @@ project(PolyVR)
 
 message( "Configuring for system name / version: " ${CMAKE_SYSTEM_NAME} " / " ${CMAKE_SYSTEM_VERSION} )
 
-# debugging flags:
-#  -g -s ASSERTIONS=1
-
-#set(LINKER_FLAGS "${LINKER_FLAGS} -s ALLOW_MEMORY_GROWTH=1 -s EXIT_RUNTIME=1 -s DISABLE_EXCEPTION_CATCHING=0 -g")
-set(LINKER_FLAGS "${LINKER_FLAGS} -s ALLOW_MEMORY_GROWTH=1 -s EXIT_RUNTIME=1 -s DISABLE_EXCEPTION_CATCHING=0")
   
 if(CMAKE_SYSTEM_NAME STREQUAL "Emscripten")
+	# debugging flags:
+	#  -g -s ASSERTIONS=1
+
+	#set(LINKER_FLAGS "${LINKER_FLAGS} -s ALLOW_MEMORY_GROWTH=1 -s EXIT_RUNTIME=1 -s DISABLE_EXCEPTION_CATCHING=0 -g")
+	set(LINKER_FLAGS "${LINKER_FLAGS} -s ALLOW_MEMORY_GROWTH=1 -s EXIT_RUNTIME=1 -s DISABLE_EXCEPTION_CATCHING=0")
+
 	add_definitions( -DWASM=1 )
 	add_definitions( -DGLUT_glut_LIBRARY=1 )
 	add_definitions( -DGLUT_Xi_LIBRARY=1 )
@@ -39,7 +40,7 @@ function(FIND_ZLIB)
 	if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
 		set(INCLUDE_DIRS ${INCLUDE_DIRS} "C:/libs/zlib" PARENT_SCOPE)
 		set(LIB_DIRS ${LIB_DIRS} "C:/libs/zlib" PARENT_SCOPE)
-		set(LINKER_FLAGS "${LINKER_FLAGS} -lz" PARENT_SCOPE)
+		set(LINKER_FLAGS ${LINKER_FLAGS} zlib PARENT_SCOPE)
 	endif()
 endfunction()
 
@@ -52,7 +53,7 @@ function(FIND_LIBXML)
 	if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
 		set(INCLUDE_DIRS ${INCLUDE_DIRS} "C:/usr/include/libxml2" PARENT_SCOPE)
 		set(LIB_DIRS ${LIB_DIRS} "C:/usr/lib" PARENT_SCOPE)
-		set(LINKER_FLAGS "${LINKER_FLAGS} -lxml2" PARENT_SCOPE)
+		set(LINKER_FLAGS ${LINKER_FLAGS} libxml2 PARENT_SCOPE)
 	endif()
 endfunction()
 
@@ -65,7 +66,7 @@ function(FIND_BOOST)
 	if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
 		set(INCLUDE_DIRS ${INCLUDE_DIRS} "C:/libs/boost" PARENT_SCOPE)
 		set(LIB_DIRS ${LIB_DIRS} "C:/libs/boost/lib64-msvc-14.1" PARENT_SCOPE)
-		set(LINKER_FLAGS "${LINKER_FLAGS} -lboost_system -lboost_program_options -lboost_serialization -lboost_filesystem" PARENT_SCOPE)
+		set(LINKER_FLAGS ${LINKER_FLAGS} boost_system-vc141-mt-1_65_1 boost_program_options-vc141-mt-1_65_1 boost_serialization-vc141-mt-1_65_1 boost_filesystem-vc141-mt-1_65_1 PARENT_SCOPE)
 	endif()
 endfunction()
 
@@ -78,7 +79,7 @@ function(FIND_FREETYPE)
 	if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
 		set(INCLUDE_DIRS ${INCLUDE_DIRS} "C:/usr/include" PARENT_SCOPE)
 		set(LIB_DIRS ${LIB_DIRS} "C:/usr/lib" PARENT_SCOPE)
-		set(LINKER_FLAGS "${LINKER_FLAGS} -lfreetype" PARENT_SCOPE)
+		set(LINKER_FLAGS ${LINKER_FLAGS} freetype PARENT_SCOPE)
 	endif()
 endfunction()
 
@@ -91,7 +92,7 @@ function(FIND_PYTHON)
 	if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
 		set(INCLUDE_DIRS ${INCLUDE_DIRS} "C:/usr/include/Python" PARENT_SCOPE)
 		set(LIB_DIRS ${LIB_DIRS} "C:/usr/lib" PARENT_SCOPE)
-		set(LINKER_FLAGS "${LINKER_FLAGS} -lpython2.7" PARENT_SCOPE)
+		set(LINKER_FLAGS ${LINKER_FLAGS} python27 PARENT_SCOPE)
 	endif()
 endfunction()
 
@@ -101,7 +102,7 @@ function(FIND_GLUT)
 	if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
 		set(INCLUDE_DIRS ${INCLUDE_DIRS} "C:/libs/freeglut" PARENT_SCOPE)
 		set(LIB_DIRS ${LIB_DIRS} "C:/libs/freeglut" PARENT_SCOPE)
-		set(LINKER_FLAGS "${LINKER_FLAGS} -lGL -lglut" PARENT_SCOPE)
+		set(LINKER_FLAGS ${LINKER_FLAGS} freeglut PARENT_SCOPE)
 	endif()
 endfunction()
 
@@ -114,7 +115,7 @@ function(FIND_OPENSG)
 	if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
 		set(INCLUDE_DIRS ${INCLUDE_DIRS} "C:/libs/opensg/include" PARENT_SCOPE)
 		set(LIB_DIRS ${LIB_DIRS} "C:/libs/opensg" PARENT_SCOPE)
-		set(LINKER_FLAGS "${LINKER_FLAGS} -lOSGWindowGLUT -lOSGWindowWASM -lOSGWindow -lOSGSystem -lOSGUtil -lOSGDrawable -lOSGGroup -lOSGState -lOSGBase -lOSGFileIO -lOSGImageFileIO" PARENT_SCOPE)
+		set(LINKER_FLAGS ${LINKER_FLAGS} OSGBase OSGContribTrapezoidalShadowMaps OSGCluster OSGDrawable OSGEffectGroups OSGGroup OSGImageFileIO OSGState OSGSystem OSGUtil OSGText OSGWindow OSGWindowGLUT PARENT_SCOPE)
 	endif()
 endfunction()
 
@@ -233,7 +234,9 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 SETUP_VARS()
+if(CMAKE_SYSTEM_NAME STREQUAL "Emscripten")
 string(STRIP ${LINKER_FLAGS} LINKER_FLAGS)
+endif()
 
 set(INCLUDE_DIRS ${INCLUDE_DIRS} "src")
 include_directories(${INCLUDE_DIRS})

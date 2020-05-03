@@ -9,7 +9,7 @@
 
 using namespace OSG;
 
-template<> string typeName(const BoundingboxPtr& o) { return "Boundingbox"; }
+template<> string typeName(const Boundingbox& o) { return "Boundingbox"; }
 
 Boundingbox::Boundingbox() { clear(); }
 

@@ -1,10 +1,8 @@
 #include "VRPyGraph.h"
 #include "VRPyBaseT.h"
 #include "VRPyTypeCaster.h"
-
-// doesnt link on windows, needed?
-//#include "VRPyTransform.h" 
-//#include "VRPyPose.h"
+#include "VRPyTransform.h" 
+#include "VRPyPose.h"
 
 using namespace OSG;
 
