@@ -119,7 +119,7 @@ bool VRReasoner::builtin(VRStatementPtr s, VRSemanticContextPtr c) {
 
     vector< map<VREntity*, vector<string> > > params; // get parameters
 
-    for (uint i=0; i<s->terms.size()-2; i++) {
+    for (unsigned int i=0; i<s->terms.size()-2; i++) {
         auto& t = s->terms[2+i];
         params.push_back( map<VREntity*, vector<string> >() );
         //cout << "builtin params in: " << t.str << endl;
@@ -245,7 +245,7 @@ bool VRReasoner::apply(VRStatementPtr statement, Query query, VRSemanticContextP
 
     auto aggr = [](vector<string> v) {
         string r;
-        for (uint i=0; i<v.size(); i++) {
+        for (unsigned int i=0; i<v.size(); i++) {
             if (i > 0) r += ", ";
             r += v[i];
         }
@@ -342,7 +342,7 @@ bool VRReasoner::apply(VRStatementPtr statement, Query query, VRSemanticContextP
                 auto ents2 = right.var->getEntities(Evaluation::VALID);
 
                 if (ents1.size() == ents2.size()) {
-                    for (uint i=0; i<ents1.size(); i++) applySet(ents1[i], ents2[i]);
+                    for (unsigned int i=0; i<ents1.size(); i++) applySet(ents1[i], ents2[i]);
                 } else {
                     for (auto eL : ents1) {
                         for (auto eR : ents2) applySet(eL, eR);

@@ -308,7 +308,7 @@ void VRTrafficSimulation::initiateWorker() {
 template<class T>
 T randomChoice(vector<T> vec) {
     if (vec.size() == 0) return 0;
-    auto res = vec[ round((float(random())/RAND_MAX) * (vec.size()-1)) ];
+    auto res = vec[ round((float(rand())/RAND_MAX) * (vec.size()-1)) ];
     return res;
 }
 
@@ -1179,7 +1179,7 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
             return;
         }
         if (vehicle.nextLanesCoices.size() > 1) {
-            vehicle.nextTurnLane = vehicle.nextLanesCoices[round((float(random())/RAND_MAX) * (vehicle.nextLanesCoices.size()-1))];
+            vehicle.nextTurnLane = vehicle.nextLanesCoices[round((float(rand())/RAND_MAX) * (vehicle.nextLanesCoices.size()-1))];
             return;
         }
     };

@@ -253,7 +253,7 @@ void VRScriptManager::initPyModules() {
 
     PyDict_SetItemString(pLocal, "__builtins__", PyEval_GetBuiltins());
     PyDict_SetItemString(pGlobal, "__builtins__", PyEval_GetBuiltins());
-    VRPyListMath::init(pModBase);
+    //VRPyListMath::init(pModBase);
     cout << "  Added module PolyVR_base" << endl;
 
     PyObject* sys_path = PySys_GetObject((char*)"path");

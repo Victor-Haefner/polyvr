@@ -81,7 +81,7 @@ PyObject* VRPySelection::getSubselection(VRPySelection* self, PyObject* args) {
 
     auto toPyArray = [](vector<int>& v) {
         PyObject* res = PyList_New(v.size());
-        for (uint i=0; i<v.size(); i++) PyList_SetItem(res, i, PyInt_FromLong(v[i]));
+        for (unsigned int i=0; i<v.size(); i++) PyList_SetItem(res, i, PyInt_FromLong(v[i]));
         return res;
     };
 
@@ -101,7 +101,7 @@ PyObject* VRPySelection::getSelected(VRPySelection* self) {
     if (!self->valid()) return NULL;
     auto sel = self->objPtr->getSelected();
     PyObject* res = PyList_New(sel.size());
-    for (uint i=0; i<sel.size(); i++) {
+    for (unsigned int i=0; i<sel.size(); i++) {
         auto sp = sel[i].lock();
         if (sp) PyList_SetItem(res, i, VRPyGeometry::fromSharedPtr(sp));
     }
@@ -112,7 +112,7 @@ PyObject* VRPySelection::getPartialSelected(VRPySelection* self) {
     if (!self->valid()) return NULL;
     auto sel = self->objPtr->getPartials();
     PyObject* res = PyList_New(sel.size());
-    for (uint i=0; i<sel.size(); i++) {
+    for (unsigned int i=0; i<sel.size(); i++) {
         auto sp = sel[i].lock();
         if (sp) PyList_SetItem(res, i, VRPyGeometry::fromSharedPtr(sp));
     }

@@ -86,10 +86,10 @@ class VRTransform : public VRObject {
         static list< VRTransformWeakPtr > changedObjects;
         static list< VRTransformWeakPtr > dynamicObjects;
 
-        uint getLastChange();
+        unsigned int getLastChange();
         bool changedNow();
-        bool changedSince(uint& frame, bool includingFrame = true);
-        bool changedSince2(uint frame, bool includingFrame = true);
+        bool changedSince(unsigned int& frame, bool includingFrame = true);
+        bool changedSince2(unsigned int frame, bool includingFrame = true);
 
         Vec3d getFrom();
         Vec3d getDir();

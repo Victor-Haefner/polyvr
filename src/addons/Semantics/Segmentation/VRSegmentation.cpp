@@ -206,7 +206,7 @@ struct Accumulator {
         Pnt3d p;
         Vec3d n;
         VRPlane pl;
-        for (uint i = 0; i<positions->size(); i++) {
+        for (unsigned int i = 0; i<positions->size(); i++) {
             positions->getValue(p, i);
             normals->getValue(n, i);
             pushPoint(p,n);
@@ -342,7 +342,7 @@ vector<VRGeometryPtr> extractPointsOnPlane(VRGeometryPtr geo_in, VRPlane plane, 
     }
 
     Pnt3d p;
-    for (uint i = 0; i<positions->size(); i++) {
+    for (unsigned int i = 0; i<positions->size(); i++) {
         positions->getValue(p, i);
         if (plane.on(p, Dp)) res[0]->getMesh()->geo->getPositions()->addValue(p);
         else res[1]->getMesh()->geo->getPositions()->addValue(p);
@@ -357,7 +357,7 @@ vector<VRGeometryPtr> clusterByPlanes(VRGeometryPtr geo_in, vector<VRPlane> plan
     Pnt3d p;
     int N = min(pMax+1, (int)planes.size());
 
-    for (uint i = 0; i<positions->size(); i++) {
+    for (unsigned int i = 0; i<positions->size(); i++) {
         positions->getValue(p, i);
         int pl = 0;
         float dmin = 1e7;
@@ -393,7 +393,7 @@ void finalizeClusterGeometries(vector<VRGeometryPtr>& res) {
     for (auto geo : res) { // finalize geometries
         geo->setType(GL_POINTS);
         GeoUInt32PropertyRecPtr inds = GeoUInt32Property::create();
-        for (uint i=0; i<geo->getMesh()->geo->getPositions()->size(); i++) inds->addValue(i);
+        for (unsigned int i=0; i<geo->getMesh()->geo->getPositions()->size(); i++) inds->addValue(i);
         geo->setIndices(inds);
         geo->setMaterial(VRMaterial::create("pmat"));
 
@@ -414,8 +414,8 @@ void fixNormalsIndices(VRGeometryPtr geo_in) {
     GeoVectorPropertyRecPtr norms = geo_in->getMesh()->geo->getNormals();
     GeoVec3fPropertyRecPtr norms2 = GeoVec3fProperty::create();
 
-    for (uint i=0; i<i_p->size(); i++) inds_map[i_n->getValue(i)] = i_p->getValue(i);
-    for (uint i=0; i<norms->size(); i++) {
+    for (unsigned int i=0; i<i_p->size(); i++) inds_map[i_n->getValue(i)] = i_p->getValue(i);
+    for (unsigned int i=0; i<norms->size(); i++) {
         Vec3d n;
         norms->getValue(n, inds_map[i]);
         norms2->addValue(n);
@@ -425,7 +425,7 @@ void fixNormalsIndices(VRGeometryPtr geo_in) {
     geo_in->getMesh()->geo->setIndex(geo_in->getMesh()->geo->getIndex(Geometry::PositionsIndex), Geometry::NormalsIndex);
 
     /*GeoColor4fPropertyRecPtr cols = GeoColor4fProperty::create();
-    for (uint i = 0; i<norms->size(); i++) {
+    for (unsigned int i = 0; i<norms->size(); i++) {
         Vec3d v; norms->getValue(v, i);
         Vec4d c(abs(v[0]), abs(v[1]), abs(v[2]), 1);
         cols->addValue(c);
@@ -698,7 +698,7 @@ void VRSegmentation::fillHoles(VRGeometryPtr geo, int steps) {
     vector<Vertex*> convexVerts;
 
 	// ---- fill holes ---- //
-	for (uint ib = 0; ib<borders.size(); ib++) {
+	for (unsigned int ib = 0; ib<borders.size(); ib++) {
         Border* b = borders[ib];
         //int N0 = b->vertices.size();
 
@@ -774,7 +774,7 @@ void VRSegmentation::fillHoles(VRGeometryPtr geo, int steps) {
     GeoColor3fPropertyRecPtr cols = GeoColor3fProperty::create();
     cols->resize(N);
     for (int i=0; i<N; i++) cols->setValue(Color3f(1,1,1),i);
-    for (uint i=0; i<borders.size(); i++) {
+    for (unsigned int i=0; i<borders.size(); i++) {
         float r = float(rand())/RAND_MAX;
         float g = float(rand())/RAND_MAX;
         float b = float(rand())/RAND_MAX;

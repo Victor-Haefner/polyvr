@@ -227,12 +227,12 @@ void VRTerrain::setupGeo() {
             //cout << "n,e Mes: " << meshTer.size() << " -- " << meshTer[0].size() << endl;
             //auto nN = meshTer.size()+1;
             //auto nE = meshTer[0].size();
-            for (uint i=0; i+1 < meshTer[0].size(); i++) {
+            for (unsigned int i=0; i+1 < meshTer[0].size(); i++) {
                 t1++;
                 t2 = 0;
                 double tcx1 = texel[0]*0.5 + i*tcChunk[0];
                 double tcx2 = tcx1 + tcChunk[0];
-                for (uint j =0; j+1 < meshTer.size(); j++) {
+                for (unsigned int j =0; j+1 < meshTer.size(); j++) {
                     t2++;
                     //cout << meshTer[a][b] ;
                     double tcy1 = texel[1]*0.5 + j*tcChunk[1];
@@ -549,7 +549,7 @@ void VRTerrain::elevateVertices(VRGeometryPtr geo, float offset) {
     auto t = terrain.lock();
     if (!t || !geo || !geo->getMesh() || !geo->getMesh()->geo) return;
     GeoPnt3fPropertyMTRecPtr pos = (GeoPnt3fProperty*)geo->getMesh()->geo->getPositions();
-    for (uint i=0; i<pos->size(); i++) {
+    for (unsigned int i=0; i<pos->size(); i++) {
         Pnt3f p;
         pos->getValue(p, i);
         p[1] = getHeight(Vec2d(p[0], p[2])) + offset;

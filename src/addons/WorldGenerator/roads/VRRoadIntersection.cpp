@@ -346,9 +346,9 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
             inl.push_back(inIDs);
             oul.push_back(ouIDs);
         }
-        for (uint i = 0; i < inl.size(); i++) {
+        for (unsigned int i = 0; i < inl.size(); i++) {
             if (inl[i].size()>1) graph->getEdge(inl[i][0]).relations.clear();
-            for (uint k = 1; k < inl[i].size(); k++) {
+            for (unsigned int k = 1; k < inl[i].size(); k++) {
                 graph->getEdge(inl[i][k]).relations.clear();
 
                 ///checking minimum length for lane relations
@@ -357,9 +357,9 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                 //cout << "rel: in " << toString(i) << " " << toString(inl[i][k]) << " -- " << toString(inl[i][k-1]) << endl;
             }
         }
-        for (uint i = 0; i < oul.size(); i++) {
+        for (unsigned int i = 0; i < oul.size(); i++) {
             if (oul[i].size()>1) graph->getEdge(oul[i][0]).relations.clear();
-            for (uint k = 1; k < oul[i].size(); k++) {
+            for (unsigned int k = 1; k < oul[i].size(); k++) {
                 graph->getEdge(oul[i][k]).relations.clear();
 
                 ///checking minimum length for lane relations
@@ -440,9 +440,9 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
             inl.push_back(inIDs);
             oul.push_back(ouIDs);
         }
-        for (uint i = 0; i < inl.size(); i++) {
+        for (unsigned int i = 0; i < inl.size(); i++) {
             if (inl[i].size()>1) graph->getEdge(inl[i][0]).relations.clear();
-            for (uint k = 1; k < inl[i].size(); k++) {
+            for (unsigned int k = 1; k < inl[i].size(); k++) {
                 graph->getEdge(inl[i][k]).relations.clear();
 
                 ///checking minimum length for lane relations
@@ -450,9 +450,9 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                 graph->addRelation(inl[i][k],inl[i][k-1]);
             }
         }
-        for (uint i = 0; i < oul.size(); i++) {
+        for (unsigned int i = 0; i < oul.size(); i++) {
             if (oul[i].size()>1) graph->getEdge(oul[i][0]).relations.clear();
-            for (uint k = 1; k < oul[i].size(); k++) {
+            for (unsigned int k = 1; k < oul[i].size(); k++) {
                 graph->getEdge(oul[i][k]).relations.clear();
 
                 ///checking minimum length for lane relations
@@ -929,9 +929,9 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
             inl.push_back(inIDs);
             oul.push_back(ouIDs);
         }
-        for (uint i = 0; i < inl.size(); i++) {
+        for (unsigned int i = 0; i < inl.size(); i++) {
             if (inl[i].size()>1) graph->getEdge(inl[i][0]).relations.clear();
-            for (uint k = 1; k < inl[i].size(); k++) {
+            for (unsigned int k = 1; k < inl[i].size(); k++) {
                 graph->getEdge(inl[i][k]).relations.clear();
 
                 ///checking minimum length for lane relations
@@ -939,9 +939,9 @@ void VRRoadIntersection::computeLanes(GraphPtr graph) {
                 graph->addRelation(inl[i][k],inl[i][k-1]);
             }
         }
-        for (uint i = 0; i < oul.size(); i++) {
+        for (unsigned int i = 0; i < oul.size(); i++) {
             if (oul[i].size()>1) graph->getEdge(oul[i][0]).relations.clear();
-            for (uint k = 1; k < oul[i].size(); k++) {
+            for (unsigned int k = 1; k < oul[i].size(); k++) {
                 graph->getEdge(oul[i][k]).relations.clear();
 
                 ///checking minimum length for lane relations
@@ -1346,7 +1346,7 @@ void VRRoadIntersection::computeMarkings() {
             return false;
         };
 
-        for (uint i=0; i<points.size(); i++) {
+        for (unsigned int i=0; i<points.size(); i++) {
             auto p1 = points[i];
             auto p2 = points[(i+1)%points.size()];
             if (isRoadEdge(p1, p2)) continue;

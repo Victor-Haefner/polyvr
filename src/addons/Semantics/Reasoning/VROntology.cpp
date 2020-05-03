@@ -137,7 +137,7 @@ VRConceptPtr VROntology::addConcept(string concept, string parents, map<string, 
     else Concept = Parents[0]->append(concept);
 
     //cout << "VROntology::addConcept " << concept << " " << parents << " " << Concept->getName() << " " << Concept->ID << endl;
-    for (uint i=1; i<Parents.size(); i++) Parents[i]->append(Concept);
+    for (unsigned int i=1; i<Parents.size(); i++) Parents[i]->append(Concept);
     Concept->addAnnotation(comment, "comment");
     addConcept(Concept);
     for (auto p : props) Concept->addProperty(p.first, p.second);

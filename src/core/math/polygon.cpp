@@ -51,7 +51,7 @@ bool VRPolygon::isCCW() {
     double s = 0;
     auto tmp = points;
     if (!closed && tmp.size() > 0) tmp.push_back(tmp[0]);
-    for (uint i=1; i<tmp.size(); i++) {
+    for (unsigned int i=1; i<tmp.size(); i++) {
         auto v1 = tmp[i-1];
         auto v2 = tmp[i];
         s += (v2[0]-v1[0])*(v2[1]+v1[1]);
@@ -157,7 +157,7 @@ void VRPolygon::removeDoubles(float d) {
     float d2 = d*d;
 
     auto process = [&]() {
-        for (uint i=1; i<points.size(); i++) {
+        for (unsigned int i=1; i<points.size(); i++) {
             auto p1 = points[i-1];
             auto p2 = points[i];
             if ((p2-p1).squareLength() < d2) { remPoint(i); return true; }
@@ -319,9 +319,9 @@ vector< VRPolygonPtr > VRPolygon::gridSplit(double G) {
     }
 
     // get all grid squares touching each point
-    for (uint i=0; i<self->points.size(); i++) {
+    for (unsigned int i=0; i<self->points.size(); i++) {
         auto point = self->points[i];
-        for (uint j=0; j<squares.size(); j++) {
+        for (unsigned int j=0; j<squares.size(); j++) {
             auto square = squares[j];
             if (inSquare(point, square)) pointSquaresMap[i].push_back(j);
             if (inSquare(point, square)) squarePointsMap[j].push_back(i);
@@ -329,7 +329,7 @@ vector< VRPolygonPtr > VRPolygon::gridSplit(double G) {
     }
 
     // get all grid squares fully inside of polygon
-    for (uint i=0; i<squares.size(); i++) {
+    for (unsigned int i=0; i<squares.size(); i++) {
         if (squarePointsMap.count(i)) continue; // intersects polygon, skip
         auto s = Vec2d(squares[i]);
         if (self->areInside({s*G,s*G+Vec2d(G,0),s*G+Vec2d(G,G),s*G+Vec2d(0,G)})) { // at least one corner in area
@@ -510,12 +510,12 @@ Vec3d VRPolygon::getRandomPoint() {
 
 double VRPolygon::computeArea() {
     double area = 0;
-    for (uint i=0; i<points.size(); i++) {
+    for (unsigned int i=0; i<points.size(); i++) {
         Vec2d p1 = points[i];
         Vec2d p2 = points[(i+1)%points.size()];
         area += p1[0]*p2[1] - p1[1]*p2[0];
     }
-    for (uint i=0; i<points3.size(); i++) {
+    for (unsigned int i=0; i<points3.size(); i++) {
         Vec3d p1 = points3[i];
         Vec3d p2 = points3[(i+1)%points3.size()];
         area += p1.cross(p2).length();
@@ -626,7 +626,7 @@ Boundingbox VRPolygon::getBoundingBox() {
 VRPolygon VRPolygon::sort() {
     if (points.size() == 0) return VRPolygon();
     Vec2d p0 = points[0]; // rightmost lowest point
-    for (uint i=0; i<points.size(); i++) {
+    for (unsigned int i=0; i<points.size(); i++) {
         Vec2d p = points[i];
         if ( p[1] < p0[1] ) p0 = p;
         if ( p[1] == p0[1] && p[0] > p0[0]) p0 = p;
@@ -721,11 +721,11 @@ double VRPolygon::getTurn(Vec2d p0, Vec2d p1, Vec2d p2) {
 }
 
 bool VRPolygon::isConvex() {
-    for (uint i=2; i<points.size(); i++) {
+    for (unsigned int i=2; i<points.size(); i++) {
         if (getTurn(points[i-2], points[i-1], points[i]) >= 0) return false;
     }
 
-    for (uint i=2; i<points3.size(); i++) {
+    for (unsigned int i=2; i<points3.size(); i++) {
         Vec3d& p0 = points3[i-2];
         Vec3d& p1 = points3[i-1];
         Vec3d& p2 = points3[i-0];

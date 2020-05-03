@@ -62,7 +62,7 @@ void VRImport::fixEmptyNames(NodeMTRecPtr o, map<string, bool>& m, string parent
     setName(o, name.c_str());
     m[name] = true;
 
-    for (uint i=0; i<o->getNChildren(); i++) fixEmptyNames(o->getChild(i), m, OSG::getName(o), i);
+    for (unsigned int i=0; i<o->getNChildren(); i++) fixEmptyNames(o->getChild(i), m, OSG::getName(o), i);
 }
 
 VRTransformPtr VRImport::prependTransform(VRObjectPtr o, string path) {
@@ -310,7 +310,7 @@ VRObjectPtr VRImport::OSGConstruct(NodeMTRecPtr n, VRObjectPtr parent, string na
         tmp->setCore(OSGCore::create(core), t_name);
     }
 
-    for (uint i=0;i<n->getNChildren();i++) {
+    for (unsigned int i=0;i<n->getNChildren();i++) {
         auto obj = OSGConstruct(n->getChild(i), tmp, name, currentFile, geoTrans, geoTransName);
         if (obj) tmp->addChild(obj);
     }

@@ -214,7 +214,7 @@ int VRPyVec2f::setItem(PyObject* self, Py_ssize_t i, PyObject* val) {
     return 0;
 }
 
-PyObject* VRPyVec2f::getSlice(PyObject* self, long ilow, long ihigh) {
+PyObject* VRPyVec2f::getSlice(PyObject* self, Py_ssize_t ilow, Py_ssize_t ihigh) {
     if (ilow < 0) ilow += 2;
     if (ihigh < 0) ihigh += 2;
     if (ilow >= 2) ilow = 2-1;
@@ -440,7 +440,7 @@ int VRPyVec3f::setItem(PyObject* self, Py_ssize_t i, PyObject* val) {
     return 0;
 }
 
-PyObject* VRPyVec3f::getSlice(PyObject* self, long ilow, long ihigh) {
+PyObject* VRPyVec3f::getSlice(PyObject* self, Py_ssize_t ilow, Py_ssize_t ihigh) {
     if (ilow < 0) ilow += 3;
     if (ihigh < 0) ihigh += 3;
     if (ilow >= 3) ilow = 3-1;

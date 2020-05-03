@@ -54,7 +54,7 @@ struct GLTFSchema {
 
     void addNodeRef(string node, vector<string> fields, vector<string> types, vector<string> defaults) {
         nodeRefs[node] = NodeRef();
-        for (uint i=0; i<fields.size(); i++) {
+        for (unsigned int i=0; i<fields.size(); i++) {
             nodeRefs[node].fieldRefs[fields[i]] = FieldRef();
             nodeRefs[node].fieldRefs[fields[i]].type = types[i];
             nodeRefs[node].fieldRefs[fields[i]].def  = defaults[i];

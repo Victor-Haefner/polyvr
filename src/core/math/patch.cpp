@@ -387,7 +387,8 @@ void Patch::calcBezTrianglePlane(bezVRPolygon<3>& q, bool normalizeNorms) {
     Vec3d Bu[4];
     Vec3d DELv[3][3];
     Vec3d Bv[4][4];
-    Vec3d T[3][q.N];
+	vector<Vec3d> T[3];
+	for (int i = 0; i < 3; i++) T[i] = vector<Vec3d>(q.N);
 
     //Bv03 * v³ + Bv02 * v² + Bv01 * v + Bv00 = Bu0
     /*Bv[0][0] = P[0][0][3];

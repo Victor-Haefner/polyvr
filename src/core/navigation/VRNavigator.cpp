@@ -131,7 +131,7 @@ string VRNavigator_base::getNavigationTip(string s) {
     auto p = presets[s];
 
     auto& bngs = p->getBindings();
-    for ( uint i=0; i<bngs.size(); i++ ) {
+    for ( unsigned int i=0; i<bngs.size(); i++ ) {
         auto& v = bngs[i];
         res += v.cb->name + " ";
         res += toString(v.key) + " ";

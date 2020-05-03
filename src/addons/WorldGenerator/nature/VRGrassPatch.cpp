@@ -212,7 +212,7 @@ VRMaterialPtr VRGrassPatch::getGrassSideMaterial() { return matGrassSide; }
 
 void VRGrassPatch::createSpriteLOD(VRGeoData& data, VRPolygonPtr area, int lvl, float density) {
     for ( auto p : area->getRandomPoints(density,0) ) {
-        float r = float(random())/RAND_MAX;
+        float r = float(rand())/RAND_MAX;
         data.pushQuad(p, Vec3d(1-r,0.1,-r), Vec3d(0,1,0), Vec2d(0.2, 0.65), true);
     }
 }

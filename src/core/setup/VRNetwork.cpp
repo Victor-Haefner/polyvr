@@ -11,6 +11,8 @@
 #include "core/scene/VRSceneManager.h"
 #include "core/utils/system/VRSystem.h"
 
+#include <thread>
+
 using namespace OSG;
 
 //template<> class VRManager<VRNetworkNode>;
@@ -99,7 +101,7 @@ void VRNetworkNode::initSlaves() {
             s->start();
         }
     }
-    if (hasAutostart) sleep(startupDelay);
+    if (hasAutostart) this_thread::sleep_for(chrono::seconds(startupDelay));
 }
 
 void VRNetwork::stopSlaves() {

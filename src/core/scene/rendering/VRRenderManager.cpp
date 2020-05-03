@@ -187,6 +187,7 @@ Vec2i getGLSLVersion() {
     string sV = glParam(GL_SHADING_LANGUAGE_VERSION);
     int i1 = toInt(splitString(sV, '.')[0]);
     int i2 = toInt(splitString(sV, '.')[1]);
+	return Vec2i(i1,i2);
 }
 
 string VRRenderManager::getSupportedGL() { return glParam(GL_VERSION); }

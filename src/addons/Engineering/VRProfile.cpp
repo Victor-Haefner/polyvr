@@ -10,7 +10,7 @@ vector<Vec3d> VRProfile::get(const Vec3d& n, const Vec3d& u) {
     vector<Vec3d> res;
     Vec3d v;
     Vec3d x = u.cross(n);
-    for (uint i=0; i<pnts.size(); i++) {
+    for (unsigned int i=0; i<pnts.size(); i++) {
         v = x*pnts[i][0] + u*pnts[i][1];
         res.push_back(v);
     }

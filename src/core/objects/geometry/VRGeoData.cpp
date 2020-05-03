@@ -94,7 +94,7 @@ VRGeoData::VRGeoData(VRGeometryPtr geo) : pend(this, 0) {
         GeoVec3fPropertyMTRecPtr norms  = (GeoVec3fProperty*)geo->getMesh()->geo->getNormals();
         GeoVec3fPropertyMTRecPtr norms2 = GeoVec3fProperty::create();
 
-        for (uint i=0; i<pIdx->size(); i++) {
+        for (unsigned int i=0; i<pIdx->size(); i++) {
             int pID = pIdx->getValue(i);
             int nID = nIdx->getValue(i);
             if (norms2->size() <= pID) norms2->resize(pID+1);
@@ -158,11 +158,11 @@ bool VRGeoData::valid() const {
 }
 
 bool VRGeoData::validIndices() const {
-    auto checkMaxIndex = [](GeoUInt32PropertyMTRecPtr indices, uint VecN) {
+    auto checkMaxIndex = [](GeoUInt32PropertyMTRecPtr indices, unsigned int VecN) {
         if (VecN == 0) return true;
-        uint Imax = 0;
-        for (uint i = 0; i < indices->size(); i++) {
-            uint idx = indices->getValue(i);
+        unsigned int Imax = 0;
+        for (unsigned int i = 0; i < indices->size(); i++) {
+            unsigned int idx = indices->getValue(i);
             if (idx > Imax) Imax = idx;
         }
         if (Imax >= VecN) return false;
@@ -209,7 +209,7 @@ int VRGeoData::getNTypes() const { return data->types->size(); }
 
 int VRGeoData::getNFaces() const {
     int N = 0;
-    for (uint i=0; i<data->types->size(); i++) {
+    for (unsigned int i=0; i<data->types->size(); i++) {
         int t = data->types->getValue(i);
         int l = data->lengths->getValue(i);
         if (t == GL_TRIANGLES) N += l/3;
@@ -221,7 +221,7 @@ int VRGeoData::getNFaces() const {
 int VRGeoData::getFaceSize(int fID) const {
     int n = 0;
     int N = 0;
-    for (uint i=0; i<data->types->size(); i++) {
+    for (unsigned int i=0; i<data->types->size(); i++) {
         int t = data->types->getValue(i);
         int l = data->lengths->getValue(i);
         if (t == GL_TRIANGLES) { N += l/3; n = 3; }
@@ -296,7 +296,7 @@ template<class T, typename P> string propToString(P p) {
     if (!p) return "";
     stringstream ss;
     ss << "[";
-    for (uint i=0; i<p->size(); i++) {
+    for (unsigned int i=0; i<p->size(); i++) {
         if (i > 0) ss << ", ";
         T t = T(p->getValue(i));
         ss << toString(t);
@@ -539,13 +539,13 @@ string VRGeoData::status() {
     string res;
     res += "VRGeoData stats:\n";
     res += " " + toString(data->types->size()) + " types: ";
-    for (uint i=0; i<data->types->size(); i++) res += " " + toString(data->types->getValue(i));
+    for (unsigned int i=0; i<data->types->size(); i++) res += " " + toString(data->types->getValue(i));
     res += "\n";
     res += " " + toString(data->lengths->size()) + " lengths: ";
-    for (uint i=0; i<data->lengths->size(); i++) res += " " + toString(data->lengths->getValue(i));
+    for (unsigned int i=0; i<data->lengths->size(); i++) res += " " + toString(data->lengths->getValue(i));
     res += "\n";
     res += " " + toString(data->pos->size()) + " positions\n";
-    for (uint i=0; i<data->pos->size(); i++) res += " " + toString(Pnt3d(data->pos->getValue(i)));
+    for (unsigned int i=0; i<data->pos->size(); i++) res += " " + toString(Pnt3d(data->pos->getValue(i)));
     res += "\n";
     res += " " + toString(data->norms->size()) + " normals\n";
     res += " " + toString(data->cols3->size()) + " colors 3\n";
@@ -553,7 +553,7 @@ string VRGeoData::status() {
     res += " " + toString(data->texs->size()) + " texture coordinates\n";
     res += " " + toString(data->texs2->size()) + " texture coordinates 2\n";
     res += " " + toString(data->indices->size()) + " indices: ";
-    for (uint i=0; i<data->indices->size(); i++) res += " " + toString(data->indices->getValue(i));
+    for (unsigned int i=0; i<data->indices->size(); i++) res += " " + toString(data->indices->getValue(i));
     res += "\n";
     return res;
 }
@@ -677,7 +677,7 @@ void VRGeoData::test_copy(VRGeoData& g) {
     // GL_TRIANGLE_STRIP 5
     // GL_TRIANGLE_FAN 6
 
-    for (uint i=0; i<g.data->types->size(); i++) {
+    for (unsigned int i=0; i<g.data->types->size(); i++) {
         int t = g.data->types->getValue(i);
         int l = g.data->lengths->getValue(i);
         data->types->addValue(t);

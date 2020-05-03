@@ -112,7 +112,7 @@ OctreeNode* OctreeNode::add(Vec3d pos, void* dat, int targetLevel, bool checkPos
 
     if (reachedPartitionLimit()) {
         while (size <= resolution) resolution *= 0.5;
-        for (uint i=0; i<points.size(); i++) {
+        for (unsigned int i=0; i<points.size(); i++) {
             add(points[i], data[i], targetLevel, false, partitionLimit);
         }
         data.clear();

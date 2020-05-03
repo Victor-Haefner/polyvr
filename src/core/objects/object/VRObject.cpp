@@ -123,7 +123,7 @@ void applyVolumeCheckRecursive(NodeMTRecPtr n, bool b) {
     if (!n) return;
     applyVolumeCheck(n, b);
 
-    for (uint i=0; i<n->getNChildren(); i++) {
+    for (unsigned int i=0; i<n->getNChildren(); i++) {
         applyVolumeCheckRecursive(n->getChild(i), b);
     }
 }
@@ -230,7 +230,7 @@ void VRObject::remLink(VRObjectPtr obj) {
     subChild(OSGObject::create(node));
     osg->links.erase(obj.get());
 
-    for (uint i=0; i<links.size(); i++) {
+    for (unsigned int i=0; i<links.size(); i++) {
         if (links[i].first == obj.get()) {
             links.erase(links.begin() + i);
             return;
@@ -503,7 +503,7 @@ VRObjectPtr VRObject::getRoot() {
 
 vector<VRObjectPtr> VRObject::filterByType(string Type, vector<VRObjectPtr> res) {
     if (type == Type) res.push_back(ptr());
-    for (uint i=0;i<children.size();i++)
+    for (unsigned int i=0;i<children.size();i++)
         res = children[i]->filterByType(Type, res);
     return res;
 }
@@ -542,7 +542,7 @@ BoundingboxPtr VRObject::getWorldBoundingbox() {
         if (!geo) continue;
         Matrix4d M = geo->getWorldMatrix();
         auto pos = geo->getMesh()->geo->getPositions();
-        for (uint i=0; i<pos->size(); i++) {
+        for (unsigned int i=0; i<pos->size(); i++) {
             Pnt3d p = Pnt3d( pos->getValue<Pnt3f>(i) );
             M.mult(p,p);
             b->update(Vec3d(p));
@@ -574,7 +574,7 @@ void VRObject::printTree(int indent) {
     for (int i=0;i<indent;i++) cout << "  ";
     cout << "name: " << name << " ID: " << ID << " type: " << type << " pnt: " << ptr();
     printInformation();
-    for (uint i=0;i<children.size();i++) children[i]->printTree(indent+1);
+    for (unsigned int i=0;i<children.size();i++) children[i]->printTree(indent+1);
 
     if(indent == 0) cout << "\n";
 }
@@ -584,7 +584,7 @@ vector<OSGObjectPtr> VRObject::getNodes() {
 
     function< void (NodeMTRecPtr)> aggregate = [&](NodeMTRecPtr node) {
         nodes.push_back( OSGObject::create(node) );
-        for (uint i=0; i<node->getNChildren(); i++) aggregate( node->getChild(i) );
+        for (unsigned int i=0; i<node->getNChildren(); i++) aggregate( node->getChild(i) );
     };
 
     aggregate(getNode()->node);
@@ -609,7 +609,7 @@ void VRObject::printOSGTree(OSGObjectPtr o, string indent) {
     }
     cout << flush;
 
-    for (uint i=0; i<o->node->getNChildren(); i++) {
+    for (unsigned int i=0; i<o->node->getNChildren(); i++) {
         printOSGTree(OSGObject::create(o->node->getChild(i)), indent + " ");
     }
 }
@@ -626,20 +626,20 @@ VRObjectPtr VRObject::duplicate(bool anchor, bool subgraph) {
     }
 
     VRObjectPtr o = copy(children); // copy himself
-    for (uint i=0; i<children.size();i++) o->addChild(children[i]); // append children
+    for (unsigned int i=0; i<children.size();i++) o->addChild(children[i]); // append children
     if (anchor && getParent()) getParent()->addChild(o);
     return o;
 }
 
 void VRObject::updateChildrenIndices(bool recursive) {
-    for (uint i=0; i<children.size(); i++) {
+    for (unsigned int i=0; i<children.size(); i++) {
         children[i]->childIndex = i;
         if (recursive) children[i]->updateChildrenIndices();
     }
 }
 
 int VRObject::findChild(VRObjectPtr node) {
-    for (uint i=0;i<children.size();i++)
+    for (unsigned int i=0;i<children.size();i++)
         if (children[i] == node) return i;
     return -1;
 }

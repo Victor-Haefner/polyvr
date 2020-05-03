@@ -1,6 +1,7 @@
 #include <core/utils/VRFunction.h>
 #include <core/scene/VRScene.h>
 #include <functional>
+#include <thread>
 #include "core/scene/VRSceneManager.h"
 #include "VRWebSocket.h"
 
@@ -36,7 +37,9 @@ bool VRWebSocket::open(string url) {
 
     cout << "Connecting to " << url << " ";
 
-    while (connectionStatus < 0) { usleep(10000); }
+    while (connectionStatus < 0) {
+		this_thread::sleep_for(chrono::microseconds(10000));
+	}
 
     return connectionStatus;
 }
@@ -61,7 +64,11 @@ bool VRWebSocket::close() {
         // TODO: output only for testing purposes. Remove after closing of web sockets is fixed.
         int i = 0;
         cout << "Waiting for confirmation";
-        while (connectionStatus != -1 && i < 100) { cout << "."; i++; usleep(10000); }
+        while (connectionStatus != -1 && i < 100) { 
+			cout << "."; 
+			i++;
+			this_thread::sleep_for(chrono::microseconds(10000));
+		}
         if(i==100) cout << endl << "No closing confirmation for web socket. Canceling wait period.";
         cout << endl;
         return true;

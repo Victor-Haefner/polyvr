@@ -202,7 +202,7 @@ void VRSetup::printOSG() {
     std::function<void(Node*, string)> printOSGNode = [&](Node* node, string indent) {
         string name = OSG::getName(node) ? OSG::getName(node) : "Unnamed";
         cout << indent << "Node: " << name << " <- " << node->getCore()->getTypeName() << endl;
-        for (uint i=0; i < node->getNChildren(); i++) printOSGNode(node->getChild(i), indent + " ");
+        for (unsigned int i=0; i < node->getNChildren(); i++) printOSGNode(node->getChild(i), indent + " ");
         if (string(node->getCore()->getTypeName()) == "VisitSubTree") {
             VisitSubTree* visitor = dynamic_cast<VisitSubTree*>( node->getCore() );
             Node* link = visitor->getSubTreeRoot();

@@ -101,6 +101,8 @@ PyObject* VRSceneGlobals::getFrame(VRSceneGlobals* self) {
 PyObject* VRSceneGlobals::getSoundManager(VRSceneGlobals* self) {
 #ifndef WITHOUT_AV
     return VRPySoundManager::fromSharedPtr( VRSoundManager::get() );
+#else
+	return 0;
 #endif
 }
 

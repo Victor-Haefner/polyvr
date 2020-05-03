@@ -35,7 +35,7 @@ VRObjectPtr VROpening::copy(vector<VRObjectPtr> children) {
 
     VRObjectPtr d1 = 0;
     VRObjectPtr d2 = 0;
-    for (uint i=0;i<children.size();i++) {
+    for (unsigned int i=0;i<children.size();i++) {
         if (d1 == 0) d1 = children[i]->find("opening");
         if (d2 == 0) d2 = children[i]->find("opening2");
     }

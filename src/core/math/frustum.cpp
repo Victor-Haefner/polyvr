@@ -53,7 +53,7 @@ frustum frustum::fromProfile(VRPolygon p, Pose t) {
 
 vector<Plane> frustum::getPlanes() {
     vector<Plane> res;
-    for (uint i=1; i<directions.size(); i++) {
+    for (unsigned int i=1; i<directions.size(); i++) {
         Vec3d e1 = directions[i-1];
         Vec3d e2 = directions[i];
         Vec3d n = e2.cross( e1 );

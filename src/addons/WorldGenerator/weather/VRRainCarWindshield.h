@@ -38,7 +38,7 @@ class VRRainCarWindshield : public VRGeometry {
         float newWiperSpeed = 0;
         float wiperState = 0;
 
-        uint textureSize;
+		unsigned int textureSize;
 
         void update();
 

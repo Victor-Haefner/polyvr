@@ -91,7 +91,7 @@ VRIntersection VRIntersect::intersectRay(VRObjectWeakPtr wtree, Line ray) {
     if (!tree->getNode()) return ins;
     if (!tree->getNode()->node) return ins;
 
-    uint now = VRGlobals::CURRENT_FRAME;
+    unsigned int now = VRGlobals::CURRENT_FRAME;
 
     VRIntersectAction iAct;
     //IntersectActionRefPtr iAct = IntersectAction::create();
@@ -146,7 +146,7 @@ VRIntersection VRIntersect::intersect(VRObjectWeakPtr wtree, bool force, VRTrans
 
     if (caster == 0) caster = dev->getBeacon();
     if (caster == 0) { cout << "Warning: VRIntersect::intersect, caster is 0!\n"; return ins; }
-    uint now = VRGlobals::CURRENT_FRAME;
+    unsigned int now = VRGlobals::CURRENT_FRAME;
     for (auto t : trees) {
         if (intersections.count(t.get())) {
             auto ins_tmp = intersections[t.get()];

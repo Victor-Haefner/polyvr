@@ -93,7 +93,7 @@ bool VRStatement::match(VRStatementPtr s) {
         return false;
     }
 
-    for (uint i=0; i<terms.size(); i++) {
+    for (unsigned int i=0; i<terms.size(); i++) {
         auto tS = s->terms[i];
         auto tR = terms[i];
         if (!tS.valid() || !tR.valid()) continue; // may be anything..
