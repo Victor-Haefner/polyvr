@@ -47,7 +47,7 @@ VRSetup::VRSetup(string name) {
     user = 0;
     tracking = "None";
 
-#ifndef WASM
+#ifndef WITHOUT_VIVE
     vive = shared_ptr<Vive>( new Vive() );
 #endif
 
@@ -136,7 +136,7 @@ void VRSetup::updateTracking() {
 #ifndef WITHOUT_VRPN
     VRPN::update();
 #endif
-#ifndef WASM
+#ifndef WITHOUT_VIVE
     vive->update();
 #endif
     for (auto view : getViews()) view->updateMirror();

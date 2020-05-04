@@ -4,7 +4,9 @@
 #endif
 #include "VRPLY.h"
 #ifndef WASM
+#ifndef WITHOUT_VTK
 #include "VRVTK.h"
+#endif
 #include "VRDXF.h"
 #include "VRIFC.h"
 #endif
@@ -12,7 +14,9 @@
 #include "VRSTEPCascade.h"
 #include "STEP/VRSTEP.h"
 #include "E57/E57.h"
+#ifndef WITHOUT_GDAL
 #include "GIS/VRGDAL.h"
+#endif
 #include "GLTF/GLTF.h"
 #include "addons/Engineering/Factory/VRFactory.h"
 
@@ -172,18 +176,22 @@ void VRImport::LoadJob::load(VRThreadWeakPtr tw) {
         //if (ext == ".step" || ext == ".stp" || ext == ".STEP" || ext == ".STP") { VRSTEP step; step.load(path, res, options); }
 #ifdef WITH_STEP
         if (ext == ".step" || ext == ".stp" || ext == ".STEP" || ext == ".STP") { loadSTEPCascade(path, res); return; }
+		if (ext == ".ifc") { loadIFC(path, res); return; }
 #endif
         if (ext == ".wrl" && preset == "SOLIDWORKS-VRML2") { VRFactory f; if (f.loadVRML(path, progress, res, thread)); else preset = "OSG"; }
         if (ext == ".wrl" && preset == "PVR") { loadVRML(path, res, progress, thread); }
 #ifndef WASM
+#ifndef WITHOUT_VTK
         if (ext == ".vtk") { loadVtk(path, res); return; }
+#endif
+#ifndef WITHOUT_GDAL
         if (ext == ".pdf") { loadPDF(path, res); return; }
         if (ext == ".shp") { loadSHP(path, res); return; }
         if (ext == ".tiff" || ext == ".tif") { loadTIFF(path, res); return; }
         if (ext == ".hgt") { loadTIFF(path, res); return; }
+#endif
+#ifndef WITHOUT_DWG
         if (ext == ".dxf") { loadDXF(path, res); return; }
-#ifndef NO_IFC
-        if (ext == ".ifc") { loadIFC(path, res); return; }
 #endif
 #endif
         if (ext == ".gltf" || ext == ".glb") { loadGLTF(path, res, progress, thread); return; }

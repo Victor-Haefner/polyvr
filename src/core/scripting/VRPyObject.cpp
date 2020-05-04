@@ -60,6 +60,11 @@ const char* exportToFileDoc = "Export subtree to file"
 "bla"
 "\nblub";
 
+// no idea why, but windows does not find the definition in VREntity.cpp
+#ifdef _WIN32
+template<> string typeName(const OSG::VREntity& o) { return "Entity"; }
+#endif
+
 PyMethodDef VRPyObject::methods[] = {
     {"destroy", (PyCFunction)VRPyObject::destroy, METH_NOARGS, "Destroy object and reset py object to None" },
     {"getName", (PyCFunction)VRPyObject::getName, METH_NOARGS, "Return the object name" },

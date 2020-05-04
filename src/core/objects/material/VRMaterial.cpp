@@ -14,7 +14,9 @@
 #include "core/setup/VRSetup.h"
 #include "core/setup/windows/VRWindow.h"
 #include "core/scripting/VRScript.h"
+#ifndef WITHOUT_AV
 #include "VRVideo.h"
+#endif
 #include "core/tools/VRQRCode.h"
 #include "core/utils/system/VRSystem.h"
 
@@ -884,9 +886,11 @@ bool VRMaterial::isWireFrame() {
 }
 
 void VRMaterial::setVideo(string vid_path) {
+#ifndef WITHOUT_AV
     auto md = mats[activePass];
     if (md->video == 0) md->video = new VRVideo( ptr() );
     md->video->open(vid_path);
+#endif
 }
 
 VRVideo* VRMaterial::getVideo() { return mats[activePass]->video; }
