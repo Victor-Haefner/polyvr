@@ -115,6 +115,7 @@
 			<Add directory="/usr/include/IFC" />
 			<Add directory="/usr/include/vtk-7.1/" />
 			<Add directory="/usr/include/OPCUA" />
+			<Add directory="/usr/include/DWG" />
 		</Compiler>
 		<Linker>
 			<Add option="-lTKV3d" />
@@ -260,6 +261,7 @@
 			<Add option="-lopcuaprotocol" />
 			<Add option="-lopcuacore" />
 			<Add option="-lxml2" />
+			<Add option="-lredwg" />
 			<Add option="-Wl,-rpath=/usr/lib/x86_64-linux-gnu:/usr/lib/OCE" />
 			<Add directory="/usr/lib/virtuose" />
 			<Add directory="/usr/lib/opensg" />
@@ -270,6 +272,7 @@
 			<Add directory="/usr/lib/IFC" />
 			<Add directory="/usr/lib/OPCUA" />
 			<Add directory="/usr/lib/OCE" />
+			<Add directory="/usr/lib/DWG" />
 		</Linker>
 		<ExtraCommands>
 			<Add after='/bin/bash -c &quot;mkdir -p bin/Release 2&gt;/dev/null&quot;' />
@@ -820,6 +823,8 @@
 		<Unit filename="src/core/scene/import/STEP/VRSTEP.h" />
 		<Unit filename="src/core/scene/import/VRCOLLADA.cpp" />
 		<Unit filename="src/core/scene/import/VRCOLLADA.h" />
+		<Unit filename="src/core/scene/import/VRDWG.cpp" />
+		<Unit filename="src/core/scene/import/VRDWG.h" />
 		<Unit filename="src/core/scene/import/VRDXF.cpp" />
 		<Unit filename="src/core/scene/import/VRDXF.h" />
 		<Unit filename="src/core/scene/import/VRExport.cpp" />
@@ -1208,10 +1213,6 @@
 		<Unit filename="src/core/utils/zipper/zipper.cpp" />
 		<Unit filename="src/core/utils/zipper/zipper.h" />
 		<Unit filename="src/main.cpp" />
-		<Extensions>
-			<code_completion />
-			<debugger />
-			<envvars />
-		</Extensions>
+		<Extensions />
 	</Project>
 </CodeBlocks_project_file>

@@ -8,6 +8,7 @@
 #include "VRVTK.h"
 #endif
 #include "VRDXF.h"
+#include "VRDWG.h"
 #include "VRIFC.h"
 #endif
 #include "VRML.h"
@@ -191,7 +192,8 @@ void VRImport::LoadJob::load(VRThreadWeakPtr tw) {
         if (ext == ".hgt") { loadTIFF(path, res); return; }
 #endif
 #ifndef WITHOUT_DWG
-        if (ext == ".dxf") { loadDXF(path, res); return; }
+        if (ext == ".dxf") { loadDWG(path, res); return; }
+        if (ext == ".dwg") { loadDWG(path, res); return; }
 #endif
 #endif
         if (ext == ".gltf" || ext == ".glb") { loadGLTF(path, res, progress, thread); return; }

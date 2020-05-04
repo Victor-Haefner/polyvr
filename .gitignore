@@ -27,3 +27,4 @@ examples/vals*.dat
 ./core
 cscope.out
 *.cscope_file_list
+ressources/webBuild
