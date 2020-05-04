@@ -642,7 +642,7 @@ void VRGeometry::removeSelection(VRSelectionPtr sel) {
     auto sinds = sel->getSubselection(ptr());
     std::sort(sinds.begin(), sinds.end());
     std::unique(sinds.begin(), sinds.end());
-    for (unsigned int k=0, i=0; i < unsigned int(self.size()); i++) {
+    for (unsigned int k=0, i=0; i < (unsigned int)(self.size()); i++) {
         bool selected = false;
         if (k < sinds.size()) if (int(i) == sinds[k]) selected = true;
         if (!selected) addVertex(i);
