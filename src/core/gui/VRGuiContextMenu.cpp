@@ -51,14 +51,10 @@ bool VRGuiContextMenu::on_widget_rightclick(GdkEventButton * event, string menu)
     popup(menu, event); return true;
 }
 
-void VRGuiContextMenu::connectWidget(string menu, Glib::RefPtr<Gtk::Widget> widget) {
-    widget->add_events((Gdk::EventMask)GDK_BUTTON_PRESS_MASK);
-    widget->add_events((Gdk::EventMask)GDK_BUTTON_RELEASE_MASK);
-    widget->signal_button_release_event().connect( sigc::bind( sigc::mem_fun(*this, &VRGuiContextMenu::on_widget_rightclick), menu) );
-}
+void VRGuiContextMenu::connectWidget(string menu, GtkWidget* widget) {
+    gtk_widget_add_events(widget, (Gdk::EventMask)GDK_BUTTON_PRESS_MASK);
+    gtk_widget_add_events(widget, (Gdk::EventMask)GDK_BUTTON_RELEASE_MASK);
 
-void VRGuiContextMenu::connectWidget(string menu, Gtk::Widget* widget) {
-    widget->add_events((Gdk::EventMask)GDK_BUTTON_PRESS_MASK);
-    widget->add_events((Gdk::EventMask)GDK_BUTTON_RELEASE_MASK);
-    widget->signal_button_release_event().connect( sigc::bind( sigc::mem_fun(*this, &VRGuiContextMenu::on_widget_rightclick), menu) );
+    function<void(GdkEventButton*)> sig = bind( &VRGuiContextMenu::on_widget_rightclick, this, placeholders::_1, menu );
+    connect_signal(widget, sig, "button_release_event");
 }

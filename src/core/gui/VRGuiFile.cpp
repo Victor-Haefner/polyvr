@@ -141,7 +141,7 @@ void VRGuiFile::setGeoLoadWidget() {
     setWidget(geoImportWidget);
 }
 
-void VRGuiFile::setSaveasWidget( sigc::slot<void, Gtk::CheckButton*> sig ) {
+void VRGuiFile::setSaveasWidget( function<void(GtkCheckButton*)> sig ) {
     if (saveasWidget == 0) {
         saveasWidget = manage( new Gtk::Table() );
         auto fixed = manage( new Gtk::Fixed() );
@@ -153,7 +153,8 @@ void VRGuiFile::setSaveasWidget( sigc::slot<void, Gtk::CheckButton*> sig ) {
 
         saveasWidget->attach(*fixed, 0,3,0,1, opts, opts2);
         saveasWidget->attach(*encrypt, 3,4,0,1, opts3, opts2);
-        encrypt->signal_toggled().connect( sigc::bind( sig, encrypt) );
+
+        connect_signal((GtkWidget*)encrypt, sig, "toggled");
     }
 
     setWidget(saveasWidget);

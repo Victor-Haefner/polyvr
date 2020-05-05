@@ -9,7 +9,8 @@
 
 using namespace std;
 
-namespace Gtk { class Menu; class Widget; };
+namespace Gtk { class Menu; };
+struct _GtkWidget;
 
 class VRGuiContextMenu {
     private:
@@ -23,8 +24,7 @@ class VRGuiContextMenu {
         void popup(string menu, GdkEventButton* event);
 
         bool on_widget_rightclick(GdkEventButton * event, string menu);
-        void connectWidget(string menu, Glib::RefPtr<Gtk::Widget> widget);
-        void connectWidget(string menu, Gtk::Widget* widget);
+        void connectWidget(string menu, _GtkWidget* widget);
 };
 
 #endif // VRGUICONTEXTMENU_H_INCLUDED

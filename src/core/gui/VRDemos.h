@@ -11,81 +11,16 @@
 #include "core/scene/VRSceneFwd.h"
 #include "core/utils/VRName.h"
 
-namespace Gtk {
-    class Button;
-    class Image;
-    class Label;
-    class Frame;
-    class Table;
-    class CheckButton;
-}
-
 class VRGuiContextMenu;
+struct _GtkImage;
+struct _GtkCheckButton;
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
+ptrFwd(VRAppPanel);
 ptrFwd(VRAppLauncher);
-ptrFwd(VRAppSection);
 ptrFwd(VRAppManager);
-
-class VRAppLauncher {
-    public:
-        string path;
-        string lastStarted;
-        string pxm_path;
-        string table;
-        Gtk::Frame* widget = 0;
-        Gtk::Button* butPlay = 0;
-        Gtk::Button* butOpts = 0;
-        Gtk::Button* butLock = 0;
-        Gtk::Label* label = 0;
-        Gtk::Label* timestamp = 0;
-        Gtk::Image* imgScene = 0;
-        Gtk::Image* imgPlay = 0;
-        Gtk::Image* imgLock = 0;
-        Gtk::Image* imgUnlock = 0;
-        Gtk::Image* imgOpts = 0;
-        bool running = false;
-        bool pixmap = false;
-        bool favorite = true;
-        bool write_protected = false;
-        VRDeviceCbPtr uPixmap;
-        VRAppSectionWeakPtr section;
-
-    public:
-        VRAppLauncher(VRAppSectionPtr s);
-        ~VRAppLauncher();
-        static VRAppLauncherPtr create(VRAppSectionPtr s);
-
-        void updatePixmap();
-
-        void show();
-        void hide();
-};
-
-class VRAppSection : public std::enable_shared_from_this<VRAppSection>, public VRName {
-    private:
-        map<string, VRAppLauncherPtr> apps;
-
-        void setButton(VRAppLauncherPtr e, VRGuiContextMenu* menu, VRAppManager* mgr);
-
-    public:
-        VRAppSection(string name);
-        ~VRAppSection();
-        static VRAppSectionPtr create(string name);
-        VRAppSectionPtr ptr();
-
-        VRAppLauncherPtr addLauncher(string path, string timestamp, VRGuiContextMenu* menu, VRAppManager* mgr, bool write_protected, bool favorite, string table);
-        void remLauncher(string path);
-        VRAppLauncherPtr getLauncher(string path);
-        map<string, VRAppLauncherPtr> getLaunchers();
-        int getSize();
-
-        void fillTable(string t, Gtk::Table* tab, int& i);
-        void clearTable(string t, Gtk::Table* tab);
-        void setGuiState(VRAppLauncherPtr e, bool running, bool noLauncherScene);
-};
 
 class VRAppManager {
     private:
@@ -94,7 +29,7 @@ class VRAppManager {
         VRSignalPtr on_scene_loaded = 0;
         VRSignalPtr on_scene_closing = 0;
         VRAppLauncherPtr current_demo = 0;
-        map<string, VRAppSectionPtr> sections;
+        map<string, VRAppPanelPtr> sections;
         VRGuiContextMenu* menu;
         VRDeviceCbPtr updateCb;
         bool noLauncherScene = false;
@@ -105,7 +40,7 @@ class VRAppManager {
         void setGuiState(VRAppLauncherPtr e);
         VRAppLauncherPtr addEntry(string path, string table, bool running, string timestamp = "", bool recent = false);
 
-        void updatePixmap(VRAppLauncherPtr e, Gtk::Image* img_pxb, int w, int h);
+        void updatePixmap(VRAppLauncherPtr e, _GtkImage* img_pxb, int w, int h);
         void update();
 
         void writeGitignore(string path);
@@ -126,7 +61,7 @@ class VRAppManager {
         void on_stop_clicked();
         void on_load_clicked();
 
-        void on_toggle_encryption(Gtk::CheckButton* b);
+        void on_toggle_encryption(_GtkCheckButton* b);
 
         void on_search();
 
@@ -135,7 +70,7 @@ class VRAppManager {
         ~VRAppManager();
         static VRAppManagerPtr create();
 
-        VRAppSectionPtr addSection(string name);
+        VRAppPanelPtr addSection(string name);
         void toggleDemo(VRAppLauncherPtr e);
         void on_lock_toggle(VRAppLauncherPtr e);
         void on_menu_advanced(VRAppLauncherPtr e);

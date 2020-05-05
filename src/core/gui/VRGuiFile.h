@@ -3,11 +3,14 @@
 
 #include <string>
 #include <vector>
+#include <functional>
 #include <sigc++/functors/slot.h>
 #include <gtk-2.0/gdk/gdkevents.h>
 
 namespace Gtk { class FileChooserDialog; class Table; class CheckButton; class Entry; class ComboBox; }
 using namespace std;
+
+struct _GtkCheckButton;
 
 class VRGuiFile {
     private:
@@ -46,7 +49,7 @@ class VRGuiFile {
         static void setCallbacks(sig sa = sig(), sig sc = sig(), sig ss = sig());
         static void setWidget(Gtk::Table* table, bool expand = false, bool fill = false);
         static void setGeoLoadWidget();
-        static void setSaveasWidget(sigc::slot<void, Gtk::CheckButton*> sig);
+        static void setSaveasWidget(function<void(_GtkCheckButton*)> sig);
 
         static bool exists(string path);
         static bool isDir(string path);

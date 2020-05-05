@@ -2,7 +2,7 @@
 #define VRGUICONSOLE_H_INCLUDED
 
 #include <OpenSG/OSGConfig.h>
-#include <string.h>
+#include <string>
 #include <queue>
 #include <gdkmm/event.h>
 #include <gtkmm/textbuffer.h>

@@ -18,6 +18,23 @@ namespace Gtk {
 
 Glib::RefPtr<Gtk::Builder> VRGuiBuilder(bool standalone = false);
 
+template<typename T>
+struct functor {
+    function<void(T*)> cb;
+    functor(function<void(T*)> f) : cb(f) {}
+    static void callback(GtkWidget* widget, T* t, gpointer* data) {
+        ((functor*)data)->cb(t);
+    }
+};
+
+template<typename T>
+void connect_signal(GtkWidget* widget, function<void(T*)> cb, string event) {
+    auto proxy = new functor<T>(cb);
+    g_signal_connect((GtkObject*)widget, event.c_str(), G_CALLBACK(functor<T>::callback), proxy);
+}
+
+void connect_signal_void(GtkWidget* widget, function<void()> cb, string event);
+
 // TEXT
 void setLabel(string l, string txt);
 void setTextEntry(string entry, string text);
@@ -88,7 +105,7 @@ OSG::Color4f chooseColor(string drawable, OSG::Color4f current);
 void setColorChooser(string drawable, sigc::slot<bool, GdkEventButton*> sig);
 void setColorChooserColor(string drawable, OSG::Color3f col);
 
-Gtk::Image* loadGTKIcon(Gtk::Image* img, string path, int w, int h);
+GtkImage* loadGTKIcon(GtkImage* img, string path, int w, int h);
 
 OSG::VRTexturePtr takeSnapshot();
 void saveScene(string path = "", bool saveas = false, string encryptionKey = "");

@@ -1287,7 +1287,7 @@ void VRGuiScene::setMaterial_texture_name() {
 
 void VRGuiScene::initMenu() {
     menu = new VRGuiContextMenu("SGMenu");
-    menu->connectWidget("SGMenu", tree_view);
+    menu->connectWidget("SGMenu", (GtkWidget*)tree_view->gobj());
 
     menu->appendMenu("SGMenu", "Add", "SGM_AddMenu");
     menu->appendMenu("SGM_AddMenu", "Primitive", "SGM_AddPrimMenu" );
@@ -1426,7 +1426,7 @@ VRGuiScene::VRGuiScene() { // TODO: reduce callbacks with templated functions
 
     auto tree_view9 = Glib::RefPtr<Gtk::TreeView>::cast_static(VRGuiBuilder()->get_object("treeview9"));
     menu = new VRGuiContextMenu("GeoMenu");
-    menu->connectWidget("GeoMenu", tree_view9);
+    menu->connectWidget("GeoMenu", (GtkWidget*)tree_view9->gobj());
     menu->appendItem("GeoMenu", "Print", sigc::mem_fun(*this, &VRGuiScene::on_geo_menu_print));
 
     updateObjectForms();

@@ -579,6 +579,11 @@
 		<Unit filename="src/core/gui/VRGuiUtils.h" />
 		<Unit filename="src/core/gui/VRGuiVectorEntry.cpp" />
 		<Unit filename="src/core/gui/VRGuiVectorEntry.h" />
+		<Unit filename="src/core/gui/elements/VRGuiButton.h" />
+		<Unit filename="src/core/gui/widgets/VRAppLauncher.cpp" />
+		<Unit filename="src/core/gui/widgets/VRAppLauncher.h" />
+		<Unit filename="src/core/gui/widgets/VRAppPanel.cpp" />
+		<Unit filename="src/core/gui/widgets/VRAppPanel.h" />
 		<Unit filename="src/core/gui/widgets/VRConceptWidget.cpp" />
 		<Unit filename="src/core/gui/widgets/VRConceptWidget.h" />
 		<Unit filename="src/core/gui/widgets/VRConnectorWidget.cpp" />

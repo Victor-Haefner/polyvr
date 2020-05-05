@@ -571,15 +571,27 @@ void setTooltip(string widget, string tp) {
     w->set_tooltip_text(tp);
 }
 
-Gtk::Image* loadGTKIcon(Gtk::Image* img, string path, int w, int h) {
+GtkImage* loadGTKIcon(GtkImage* img, string path, int w, int h) {
     if ( !exists( path ) ) {
         cout << "Warning (loadGTKIcon): " << path << " not found!" << endl;
         return img;
     }
-    if (img == 0) img = Gtk::manage(new Gtk::Image());
-    img->set(path);
-    img->set_size_request(w, h);
+    if (img == 0) img = (GtkImage*)gtk_image_new();
+    gtk_image_set_from_file(img, path.c_str());
+    gtk_widget_set_size_request((GtkWidget*)img, w, h);
     return img;
 }
 
+struct functorVoid {
+    function<void()> cb;
+    functorVoid(function<void()> f) : cb(f) {}
+    static void callback(GtkWidget* widget, gpointer* data) {
+        ((functorVoid*)data)->cb();
+    }
+};
+
+void connect_signal_void(GtkWidget* widget, function<void()> cb, string event) {
+    auto proxy = new functorVoid(cb);
+    g_signal_connect((GtkObject*)widget, event.c_str(), G_CALLBACK(functorVoid::callback), proxy);
+}
 
