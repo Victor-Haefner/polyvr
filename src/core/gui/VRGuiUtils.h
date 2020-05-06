@@ -11,12 +11,54 @@
 //OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-namespace Gtk {
-    class Builder;
-    class Image;
+class VRGuiBuilder {
+    private:
+        map<string, GtkWidget*> widgets;
+        map<string, GtkObject*> objects;
+
+    public:
+        VRGuiBuilder();
+        ~VRGuiBuilder();
+
+        void read(string path);
+
+        GtkWidget* get_widget(string name);
+        GtkObject* get_object(string name);
+};
+
+VRGuiBuilder* getGUIBuilder(bool standalone = false);
+
+template<typename T1, typename T2, typename T3>
+struct functor3 {
+    function<void(T1*, T2*, T3*)> cb;
+    functor3(function<void(T1*, T2*, T3*)> f) : cb(f) {}
+    static void callback(GtkWidget* widget, T1* t1, T2* t2, T3* t3, gpointer* data) {
+        ((functor3*)data)->cb(t1,t2,t3);
+    }
+};
+
+template<typename T1, typename T2, typename T3>
+void connect_signal3(GtkWidget* widget, function<void(T1*, T2*, T3*)> cb, string event, bool after = false) {
+    auto proxy = new functor3<T1,T2,T3>(cb);
+    if (after)  g_signal_connect_after((GtkObject*)widget, event.c_str(), G_CALLBACK((functor3<T1,T2,T3>::callback)), proxy);
+    else        g_signal_connect((GtkObject*)widget, event.c_str(), G_CALLBACK((functor3<T1,T2,T3>::callback)), proxy);
 }
 
-Glib::RefPtr<Gtk::Builder> VRGuiBuilder(bool standalone = false);
+template<typename T1, typename T2>
+struct functor2 {
+    function<void(T1*, T2*)> cb;
+    functor2(function<void(T1*, T2*)> f) : cb(f) {}
+    static void callback(GtkWidget* widget, T1* t1, T2* t2, gpointer* data) {
+        ((functor2*)data)->cb(t1,t2);
+    }
+};
+
+template<typename T1, typename T2>
+void connect_signal2(GtkWidget* widget, function<void(T1*, T2*)> cb, string event, bool after = false) {
+    auto proxy = new functor2<T1,T2>(cb);
+    if (after)  g_signal_connect_after((GtkObject*)widget, event.c_str(), G_CALLBACK((functor2<T1,T2>::callback)), proxy);
+    else        g_signal_connect((GtkObject*)widget, event.c_str(), G_CALLBACK((functor2<T1,T2>::callback)), proxy);
+}
 
 template<typename T>
 struct functor {
@@ -28,81 +70,75 @@ struct functor {
 };
 
 template<typename T>
-void connect_signal(GtkWidget* widget, function<void(T*)> cb, string event) {
+void connect_signal(GtkWidget* widget, function<void(T*)> cb, string event, bool after = false) {
     auto proxy = new functor<T>(cb);
-    g_signal_connect((GtkObject*)widget, event.c_str(), G_CALLBACK(functor<T>::callback), proxy);
+    if (after)  g_signal_connect_after((GtkObject*)widget, event.c_str(), G_CALLBACK(functor<T>::callback), proxy);
+    else        g_signal_connect((GtkObject*)widget, event.c_str(), G_CALLBACK(functor<T>::callback), proxy);
 }
 
 void connect_signal_void(GtkWidget* widget, function<void()> cb, string event);
+
+void setWidgetSensitivity(string e, bool b);
+
+// callback helpers
+void setButtonCallback(string b, function<void(GtkButton*)> sig );
+void setToggleButtonCallback(string b, function<void(GtkToggleButton*)> sig );
+void setToolButtonCallback(string b, function<void(GtkToolButton*)> sig );
+void setCheckButtonCallback(string cb, function<void(GtkCheckButton*)> sig );
+void setRadioToolButtonCallback(string cb, function<void(GtkRadioToolButton*)> sig );
+void setRadioButtonCallback(string cb, function<void(GtkRadioButton*)> sig );
+void setComboboxCallback(string b, function<void(GtkComboBox*)> sig);
+void setTreeviewSelectCallback(string treeview, function<void(GtkTreeView*)> sig);
+void setCellRendererCallback(string renderer, function<void(GtkEntry*, const char*, const char*)> sig, bool after = true);
+void setNoteBookCallback(string nb, function<void(GtkNotebook*, GtkNotebookPage*, guint, gpointer)> sig);
+void setSliderCallback(string s, function<void(GtkHScale*,int,double)> sig);
+void setEntryCallback(string e, function<void(GtkEntry*)> sig, bool onEveryChange = false, bool onFocusOut = true, bool onActivate = true);
 
 // TEXT
 void setLabel(string l, string txt);
 void setTextEntry(string entry, string text);
 string getTextEntry(string entry);
-void setEntryCallback(string e, sigc::slot<void> sig, bool onEveryChange = false, bool onFocusOut = true, bool onActivate = true);
-void setEntrySensitivity(string e, bool b);
 void focusEntry(string e);
 
 // BUTTONS
-void setButtonCallback(string b, sigc::slot<void> sig );
-void setToggleButtonCallback(string b, sigc::slot<void> sig );
-void setToolButtonCallback(string b, sigc::slot<void> sig );
-void setToolButtonSensitivity(string toolbutton, bool b);
-void setCheckButton(string cb, bool b);
+void setToggleButton(string b, bool v);
 bool getCheckButtonState(string b);
-void setCheckButtonCallback(string cb, sigc::slot<void> sig );
 bool getRadioButtonState(string b);
 bool getRadioToolButtonState(string b);
 bool getToggleButtonState(string b);
-void setRadioToolButtonCallback(string cb, sigc::slot<void> sig );
-void setRadioButtonCallback(string cb, sigc::slot<void> sig );
 void setRadioButton(string cb, bool b );
 void setRadioToolButton(string cb, bool b );
 void setButtonText(string cb, string txt );
-void setButtonSensitivity(string b, bool s );
 
 // COMBOBOX
-void setComboboxCallback(string b, sigc::slot<void> sig);
 void setComboboxLastActive(string cb);
 void setCombobox(string cb, int i);
 int getListStorePos(string ls, string s);
 string getComboboxText(string cbn);
 int getComboboxI(string cbn);
-Gtk::TreeModel::Row getComboboxRow(string cbn);
-Gtk::TreeModel::iterator getComboboxIter(string cbn);
+GtkTreeIter getComboboxIter(string cbn);
 void eraseComboboxActive(string cb);
-void setComboboxSensitivity(string cb, bool b);
 
 // SLIDER
-void setSliderCallback(string s, sigc::slot< bool,int,double > sig);
 float getSliderState(string s);
 
 // LISTVIEWS
 void fillStringListstore(string ls, vector<string> list);
-void setCellRendererCallback(string renderer, void (* fkt)(GtkCellRendererText*, gchar*, gchar*, gpointer));
-void setCellRendererCallback(string renderer, sigc::slot<void,const Glib::ustring&,const Glib::ustring& > sig, bool after = true);
-void setCellRendererCombo(string treeviewcolumn, string combolist, Gtk::TreeModelColumnBase& col, void (* fkt)(GtkCellRendererCombo*, gchar*, GtkTreeIter*, gpointer));
-void setCellRendererCombo(string treeviewcolumn, string combolist, Gtk::TreeModelColumnBase& col, sigc::slot<void,const Glib::ustring&,const Gtk::TreeModel::iterator& > sig);
-void setTreeviewSelectCallback(string treeview, sigc::slot<void> sig);
-Gtk::TreeModel::iterator getTreeviewSelected(string treeview);
-void selectTreestoreRow(string treeview, Gtk::TreeModel::iterator itr);
+void setCellRendererCombo(string treeviewcolumn, string combolist, int col, function<void(GtkCellRendererCombo*, gchar*, GtkTreeIter*)> fkt);
+GtkTreeSelection* getTreeviewSelected(string treeview);
+void selectTreestoreRow(string treeview, GtkTreePath* p, GtkTreeViewColumn* c);
 void focusTreeView(string treeview);
 
 // STUFF
-void setTableSensitivity(string table, bool b);
-void setNotebookSensitivity(string nb, bool b);
-void setVPanedSensitivity(string vp, bool b);
-void setNoteBookCallback(string nb, void (* fkt)(GtkNotebook*, GtkNotebookPage*, guint, gpointer) , gpointer ptr = NULL);
 void setNotebookPage(string nb, int p);
 void setTooltip(string widget, string tp);
 
 bool keySignalProxy(GdkEventKey* e, string k, sigc::slot<void> sig );
-void setExpanderSensitivity(string exp, bool b);
 bool askUser(string msg1, string msg2);
 string askUserInput(string msg);
 string askUserPass(string msg);
 OSG::Color4f chooseColor(string drawable, OSG::Color4f current);
-void setColorChooser(string drawable, sigc::slot<bool, GdkEventButton*> sig);
+void setColorChooser(string drawable, function<void(GdkEventButton*)> sig);
 void setColorChooserColor(string drawable, OSG::Color3f col);
 
 GtkImage* loadGTKIcon(GtkImage* img, string path, int w, int h);

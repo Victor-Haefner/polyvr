@@ -33,7 +33,7 @@ bool VRGuiVectorEntry::proxy2D(GdkEventFocus* focus, sigc::slot<void, OSG::Vec2d
 
 void VRGuiVectorEntry::init(string placeholder, string label,  sigc::slot<void, OSG::Vec3d&> sig) {
     Gtk::Fixed* ph;
-    VRGuiBuilder()->get_widget(placeholder.c_str(), ph);
+    getGUIBuilder()->get_widget(placeholder.c_str(), ph);
     Gtk::Container* frame = ph->get_parent();
     frame->remove(*ph);
 
@@ -82,7 +82,7 @@ void VRGuiVectorEntry::init(string placeholder, string label,  sigc::slot<void, 
 
 void VRGuiVectorEntry::init2D(string placeholder, string label,  sigc::slot<void, OSG::Vec2d&> sig) {
     Gtk::Fixed* ph;
-    VRGuiBuilder()->get_widget(placeholder.c_str(), ph);
+    getGUIBuilder()->get_widget(placeholder.c_str(), ph);
     Gtk::Container* frame = ph->get_parent();
     frame->remove(*ph);
 

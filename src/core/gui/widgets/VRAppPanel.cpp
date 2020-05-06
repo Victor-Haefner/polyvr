@@ -8,14 +8,14 @@
 
 using namespace OSG;
 
-VRAppPanel::VRAppPanel(string name) {
+VRAppPanel::VRAppPanel(string name, _GtkTable* t) : table(t) {
     setNameSpace("__system_apps__");
     setName(name);
 }
 
 VRAppPanel::~VRAppPanel() {}
 
-VRAppPanelPtr VRAppPanel::create(string name) { return VRAppPanelPtr( new VRAppPanel(name) ); }
+VRAppPanelPtr VRAppPanel::create(string name, _GtkTable* table) { return VRAppPanelPtr( new VRAppPanel(name, table) ); }
 VRAppPanelPtr VRAppPanel::ptr() { return shared_from_this(); }
 
 VRAppLauncherPtr VRAppPanel::addLauncher(string path, string timestamp, VRGuiContextMenu* menu, VRAppManager* mgr, bool write_protected, bool favorite, string table) {
@@ -36,8 +36,9 @@ VRAppLauncherPtr VRAppPanel::addLauncher(string path, string timestamp, VRGuiCon
 }
 
 int VRAppPanel::getSize() { return apps.size(); }
+_GtkTable* VRAppPanel::getTable() { return table; }
 
-void VRAppPanel::fillTable(string t, GtkTable* tab, int& i) {
+void VRAppPanel::fillTable(string t, int& i) {
     int x,y;
     GtkAttachOptions optsH = GtkAttachOptions(GTK_FILL|GTK_EXPAND);
     GtkAttachOptions optsV = GTK_SHRINK;
@@ -50,18 +51,19 @@ void VRAppPanel::fillTable(string t, GtkTable* tab, int& i) {
         GtkWidget* w = (GtkWidget*)d.second->widget;
         x = i%2;
         y = i/2;
-        gtk_table_attach(tab, w, x, x+1, y, y+1, optsH, optsV, 10, 10);
+        gtk_table_attach(table, w, x, x+1, y, y+1, optsH, optsV, 10, 10);
         i++;
     }
+    gtk_widget_show((GtkWidget*)table);
 }
 
-void VRAppPanel::clearTable(string t, GtkTable* tab) {
+void VRAppPanel::clearTable(string t) {
     for (auto d : apps) {
         if (d.second->table != t) continue;
 
         GtkWidget* w = (GtkWidget*)d.second->widget;
         if (w == 0) continue;
-        gtk_container_remove((GtkContainer*)tab, w);
+        gtk_container_remove((GtkContainer*)table, w);
     }
 }
 

@@ -17,13 +17,16 @@ ptrFwd(VRAppManager);
 
 class VRAppPanel : public std::enable_shared_from_this<VRAppPanel>, public VRName {
     private:
+        _GtkTable* table = 0;
         map<string, VRAppLauncherPtr> apps;
 
     public:
-        VRAppPanel(string name);
+        VRAppPanel(string name, _GtkTable* table);
         ~VRAppPanel();
-        static VRAppPanelPtr create(string name);
+        static VRAppPanelPtr create(string name, _GtkTable* table);
         VRAppPanelPtr ptr();
+
+        _GtkTable* getTable();
 
         VRAppLauncherPtr addLauncher(string path, string timestamp, VRGuiContextMenu* menu, VRAppManager* mgr, bool write_protected, bool favorite, string table);
         void remLauncher(string path);
@@ -31,8 +34,8 @@ class VRAppPanel : public std::enable_shared_from_this<VRAppPanel>, public VRNam
         map<string, VRAppLauncherPtr> getLaunchers();
         int getSize();
 
-        void fillTable(string t, _GtkTable* tab, int& i);
-        void clearTable(string t, _GtkTable* tab);
+        void fillTable(string t, int& i);
+        void clearTable(string t);
         void setGuiState(VRAppLauncherPtr e, bool running, bool noLauncherScene);
 };
 

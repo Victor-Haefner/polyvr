@@ -34,7 +34,7 @@ string VRGuiFile::preset = "SOLIDWORKS-VRML2";
 typedef boost::filesystem::path path;
 
 void VRGuiFile::init() {
-    VRGuiBuilder()->get_widget("file_dialog", VRGuiFile::dialog);
+    getGUIBuilder()->get_widget("file_dialog", VRGuiFile::dialog);
     setButtonCallback("button3", sigc::ptr_fun(VRGuiFile::close));
     setButtonCallback("button9", sigc::ptr_fun(VRGuiFile::apply));
     dialog->signal_selection_changed().connect( sigc::ptr_fun( VRGuiFile::select ));
@@ -50,8 +50,8 @@ void VRGuiFile::open(string button, int action, string title) {
     dialog->show();
 
     Gtk::Button *bt1, *bt2;
-    VRGuiBuilder()->get_widget("button9", bt1);
-    VRGuiBuilder()->get_widget("button3", bt2);
+    getGUIBuilder()->get_widget("button9", bt1);
+    getGUIBuilder()->get_widget("button3", bt2);
     bt1->set_label(button);
     bt2->set_label("Cancel");
 
@@ -75,7 +75,7 @@ void VRGuiFile::close() {
 void VRGuiFile::setWidget(Gtk::Table* table, bool expand, bool fill) {
     if (addon == table) return;
     Gtk::VBox* vbox;
-    VRGuiBuilder()->get_widget("dialog-vbox1", vbox);
+    getGUIBuilder()->get_widget("dialog-vbox1", vbox);
 
     // sub
     if (addon) vbox->remove(*addon);
@@ -131,7 +131,7 @@ void VRGuiFile::setGeoLoadWidget() {
         cache_override->signal_toggled().connect( sigc::bind(&VRGuiFile::on_toggle_cache_override, cache_override) );
         combobox15->signal_changed().connect( sigc::bind(&VRGuiFile::on_change_preset, combobox15) );
 
-        Glib::RefPtr<Gtk::ListStore> store = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("fileOpenPresets"));
+        Glib::RefPtr<Gtk::ListStore> store = Glib::RefPtr<Gtk::ListStore>::cast_static(getGUIBuilder()->get_object("fileOpenPresets"));
         vector<string> presets = { "SOLIDWORKS-VRML2", "OSG", "COLLADA", "PVR" };
         fillStringListstore("fileOpenPresets", presets);
         combobox15->set_model( store );

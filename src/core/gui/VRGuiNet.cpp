@@ -48,7 +48,7 @@ void VRGuiNet_updateList() {
     if (scene == 0) return;
 
     // update script list
-    Glib::RefPtr<Gtk::ListStore> store = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("Sockets"));
+    Glib::RefPtr<Gtk::ListStore> store = Glib::RefPtr<Gtk::ListStore>::cast_static(getGUIBuilder()->get_object("Sockets"));
     store->clear();
     for (auto s : scene->getSockets()) {
         VRSocketPtr socket = s.second;
@@ -77,7 +77,7 @@ void VRGuiNet::on_new_clicked() {
 }
 
 void VRGuiNet::on_del_clicked() {
-    Glib::RefPtr<Gtk::TreeView> tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(VRGuiBuilder()->get_object("treeview9"));
+    Glib::RefPtr<Gtk::TreeView> tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(getGUIBuilder()->get_object("treeview9"));
     Gtk::TreeModel::iterator iter = tree_view->get_selection()->get_selected();
     if(!iter) return;
 
@@ -90,23 +90,23 @@ void VRGuiNet::on_del_clicked() {
     auto scene = VRScene::getCurrent();
     if (scene) scene->remSocket(name);
 
-    Glib::RefPtr<Gtk::ListStore> list_store  = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("Sockets"));
+    Glib::RefPtr<Gtk::ListStore> list_store  = Glib::RefPtr<Gtk::ListStore>::cast_static(getGUIBuilder()->get_object("Sockets"));
     list_store->erase(iter);
 
     Gtk::ToolButton* b;
-    VRGuiBuilder()->get_widget("toolbutton15", b);
+    getGUIBuilder()->get_widget("toolbutton15", b);
     b->set_sensitive(false);
 }
 
 void VRGuiNet_on_treeview_select(GtkTreeView* tv, gpointer user_data) {
     Gtk::ToolButton* b;
-    VRGuiBuilder()->get_widget("toolbutton15", b);
+    getGUIBuilder()->get_widget("toolbutton15", b);
     b->set_sensitive(true);
 }
 
 
 void VRGuiNet_on_name_edited(GtkCellRendererText *cell, gchar *path_string, gchar *new_name, gpointer d) {
-    Glib::RefPtr<Gtk::TreeView> tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(VRGuiBuilder()->get_object("treeview9"));
+    Glib::RefPtr<Gtk::TreeView> tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(getGUIBuilder()->get_object("treeview9"));
     Gtk::TreeModel::iterator iter = tree_view->get_selection()->get_selected();
     if(!iter) return;
 
@@ -122,12 +122,12 @@ void VRGuiNet_on_name_edited(GtkCellRendererText *cell, gchar *path_string, gcha
 }
 
 void VRGuiNet_on_argtype_edited(GtkCellRendererCombo* crc, gchar *path_string, GtkTreeIter *new_iter, gpointer d) {
-    Glib::RefPtr<Gtk::TreeView> tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(VRGuiBuilder()->get_object("treeview9"));
+    Glib::RefPtr<Gtk::TreeView> tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(getGUIBuilder()->get_object("treeview9"));
     Gtk::TreeModel::iterator iter = tree_view->get_selection()->get_selected();
     if(!iter) return;
 
     // set the cell with new type
-    Glib::RefPtr<Gtk::ListStore> combo_list = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("socket_type_list"));
+    Glib::RefPtr<Gtk::ListStore> combo_list = Glib::RefPtr<Gtk::ListStore>::cast_static(getGUIBuilder()->get_object("socket_type_list"));
     gchar *t;
     gtk_tree_model_get((GtkTreeModel*)combo_list->gobj(), new_iter, 0, &t, -1);
     string type = string(t);
@@ -141,7 +141,7 @@ void VRGuiNet_on_argtype_edited(GtkCellRendererCombo* crc, gchar *path_string, G
 }
 
 void VRGuiNet_on_argport_edited(GtkCellRendererText *cell, gchar *path_string, gchar *port, gpointer d) {
-    Glib::RefPtr<Gtk::TreeView> tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(VRGuiBuilder()->get_object("treeview9"));
+    Glib::RefPtr<Gtk::TreeView> tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(getGUIBuilder()->get_object("treeview9"));
     Gtk::TreeModel::iterator iter = tree_view->get_selection()->get_selected();
     if(!iter) return;
 
@@ -155,7 +155,7 @@ void VRGuiNet_on_argport_edited(GtkCellRendererText *cell, gchar *path_string, g
 }
 
 void VRGuiNet_on_argip_edited(GtkCellRendererText *cell, gchar *path_string, gchar *ip, gpointer d) {
-    Glib::RefPtr<Gtk::TreeView> tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(VRGuiBuilder()->get_object("treeview9"));
+    Glib::RefPtr<Gtk::TreeView> tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(getGUIBuilder()->get_object("treeview9"));
     Gtk::TreeModel::iterator iter = tree_view->get_selection()->get_selected();
     if(!iter) return;
 
@@ -182,7 +182,7 @@ VRGuiNet::VRGuiNet() {
     setToolButtonCallback("toolbutton14", sigc::mem_fun(*this, &VRGuiNet::on_new_clicked));
     setToolButtonCallback("toolbutton15", sigc::mem_fun(*this, &VRGuiNet::on_del_clicked));
 
-    Glib::RefPtr<Gtk::TreeView> tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(VRGuiBuilder()->get_object("treeview9"));
+    Glib::RefPtr<Gtk::TreeView> tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(getGUIBuilder()->get_object("treeview9"));
     g_signal_connect (tree_view->gobj(), "cursor-changed", G_CALLBACK (VRGuiNet_on_treeview_select), NULL);
 
     setCellRendererCallback("cellrenderertext22", VRGuiNet_on_name_edited);
@@ -193,7 +193,7 @@ VRGuiNet::VRGuiNet() {
     setCellRendererCombo("treeviewcolumn18", "socket_type_list", cols.type, VRGuiNet_on_argtype_edited);
 
     // fill combolist
-    Glib::RefPtr<Gtk::ListStore> combo_list = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("socket_type_list"));
+    Glib::RefPtr<Gtk::ListStore> combo_list = Glib::RefPtr<Gtk::ListStore>::cast_static(getGUIBuilder()->get_object("socket_type_list"));
     VRGuiNet_TypeCols cols2;
     Gtk::ListStore::Row row;
     row = *combo_list->append(); row[cols2.type] = "tcpip send";

@@ -50,7 +50,7 @@ VRGuiManager::VRGuiManager() {
     int argc = 0;
     GtkMain = new Gtk::Main(&argc, NULL, false);
     gtk_gl_init(&argc, NULL);
-    VRGuiBuilder(standalone);
+    getGUIBuilder(standalone);
 
     if (standalone) {
         cout << " start in standalone mode\n";
@@ -60,7 +60,7 @@ VRGuiManager::VRGuiManager() {
         VRSceneManager::get()->addUpdateFkt(updatePtr, 1);
 
         Gtk::Window* top = 0;
-        VRGuiBuilder()->get_widget("window1", top);
+        getGUIBuilder()->get_widget("window1", top);
         top->maximize();
         top->show_all();
         return;
@@ -114,7 +114,7 @@ VRGuiManager::VRGuiManager() {
     VRSceneManager::get()->addUpdateFkt(updatePtr, 1);
 
     Gtk::Window* top = 0;
-    VRGuiBuilder()->get_widget("window1", top);
+    getGUIBuilder()->get_widget("window1", top);
     top->maximize();
     top->show_all();
 

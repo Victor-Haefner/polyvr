@@ -115,7 +115,7 @@ void VRGuiSetup::updateObjectData() {
             if (ct == "StreamSock") setRadioButton("radiobutton9", 1);
 
             //TODO: clear server array && add entry for each nx * ny
-            Glib::RefPtr<Gtk::ListStore> servers = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("serverlist"));
+            Glib::RefPtr<Gtk::ListStore> servers = Glib::RefPtr<Gtk::ListStore>::cast_static(getGUIBuilder()->get_object("serverlist"));
             servers->clear();
             for (int y=0; y<ny; y++) {
                 for (int x=0; x<nx; x++) {
@@ -365,7 +365,7 @@ void VRGuiSetup::on_del_clicked() { //TODO, should delete setup
     if (!askUser(msg1, "Are you sure you want to delete this script?")) return;
     return;
 
-    Glib::RefPtr<Gtk::TreeView> tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(VRGuiBuilder()->get_object("treeview2"));
+    Glib::RefPtr<Gtk::TreeView> tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(getGUIBuilder()->get_object("treeview2"));
     Gtk::TreeModel::iterator iter = tree_view->get_selection()->get_selected();
     if(!iter) return;
 
@@ -373,15 +373,15 @@ void VRGuiSetup::on_del_clicked() { //TODO, should delete setup
     Gtk::TreeModel::Row row = *iter;
     string name = row.get_value(cols.name);
 
-    Glib::RefPtr<Gtk::ListStore> list_store  = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("displays"));
+    Glib::RefPtr<Gtk::ListStore> list_store  = Glib::RefPtr<Gtk::ListStore>::cast_static(getGUIBuilder()->get_object("displays"));
     list_store->erase(iter);
 
     if (auto s = current_setup.lock()) s->removeWindow(name);
 
     /*Gtk::ToolButton* b;
-    VRGuiBuilder()->get_widget("toolbutton9", b);
+    getGUIBuilder()->get_widget("toolbutton9", b);
     b->set_sensitive(false);
-    VRGuiBuilder()->get_widget("toolbutton8", b);
+    getGUIBuilder()->get_widget("toolbutton8", b);
     b->set_sensitive(false);*/
 }
 
@@ -395,8 +395,8 @@ void VRGuiSetup::on_save_clicked() {
 
 // setup list
 void VRGuiSetup::on_treeview_select() {
-    Glib::RefPtr<Gtk::TreeView> tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(VRGuiBuilder()->get_object("treeview2"));
-    Glib::RefPtr<Gtk::TreeStore> tree_store  = Glib::RefPtr<Gtk::TreeStore>::cast_static(VRGuiBuilder()->get_object("setupTree"));
+    Glib::RefPtr<Gtk::TreeView> tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(getGUIBuilder()->get_object("treeview2"));
+    Glib::RefPtr<Gtk::TreeStore> tree_store  = Glib::RefPtr<Gtk::TreeStore>::cast_static(getGUIBuilder()->get_object("setupTree"));
     Gtk::TreeModel::iterator iter = tree_view->get_selection()->get_selected();
 
     closeAllExpander();
@@ -586,7 +586,7 @@ void VRGuiSetup::on_toggle_display_active() {
 
     string bg = "#FFFFFF";
     if (!b) bg = "#FFDDDD";
-    Glib::RefPtr<Gtk::TreeStore> tree_store = Glib::RefPtr<Gtk::TreeStore>::cast_static(VRGuiBuilder()->get_object("setupTree"));
+    Glib::RefPtr<Gtk::TreeStore> tree_store = Glib::RefPtr<Gtk::TreeStore>::cast_static(getGUIBuilder()->get_object("setupTree"));
     setTreeRow(tree_store, selected_row, win->getName().c_str(), "window", (gpointer)win, "#000000", bg);
     setToolButtonSensitivity("toolbutton12", true);
 }
@@ -619,7 +619,7 @@ void VRGuiSetup::on_server_ct_toggled() {
 }
 
 void VRGuiSetup::on_server_edit(const Glib::ustring& path, const Glib::ustring& server) {
-    Glib::RefPtr<Gtk::TreeView> tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(VRGuiBuilder()->get_object("treeview1"));
+    Glib::RefPtr<Gtk::TreeView> tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(getGUIBuilder()->get_object("treeview1"));
     Gtk::TreeModel::iterator iter = tree_view->get_selection()->get_selected();
     if(!iter) return;
 
@@ -1290,13 +1290,13 @@ VRGuiSetup::VRGuiSetup() {
     fillStringListstore("liststore8", VRHaptic::getDevTypes() );
     fillStringListstore("liststore11", VRMultiTouch::getDevices() );
 
-    tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(VRGuiBuilder()->get_object("treeview2"));
+    tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(getGUIBuilder()->get_object("treeview2"));
     tree_view->signal_cursor_changed().connect( sigc::mem_fun(*this, &VRGuiSetup::on_treeview_select) );
     tree_view->signal_button_release_event().connect( sigc::mem_fun(*this, &VRGuiSetup::on_treeview_rightclick) );
 
-    crt = Glib::RefPtr<Gtk::CellRendererText>::cast_static(VRGuiBuilder()->get_object("cellrenderertext3"));
+    crt = Glib::RefPtr<Gtk::CellRendererText>::cast_static(getGUIBuilder()->get_object("cellrenderertext3"));
     crt->signal_edited().connect( sigc::mem_fun(*this, &VRGuiSetup::on_name_edited) );
-    crt = Glib::RefPtr<Gtk::CellRendererText>::cast_static(VRGuiBuilder()->get_object("cellrenderertext21"));
+    crt = Glib::RefPtr<Gtk::CellRendererText>::cast_static(getGUIBuilder()->get_object("cellrenderertext21"));
     crt->signal_edited().connect( sigc::mem_fun(*this, &VRGuiSetup::on_server_edit) );
 
     setCheckButtonCallback("checkbutton9", sigc::mem_fun(*this, &VRGuiSetup::on_toggle_view_invert));
@@ -1378,8 +1378,8 @@ void VRGuiSetup::updateStatus() {
 }
 
 void VRGuiSetup::updateSetup() {
-    Glib::RefPtr<Gtk::TreeStore> tree_store = Glib::RefPtr<Gtk::TreeStore>::cast_static(VRGuiBuilder()->get_object("setupTree"));
-    Glib::RefPtr<Gtk::TreeView> tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(VRGuiBuilder()->get_object("treeview2"));
+    Glib::RefPtr<Gtk::TreeStore> tree_store = Glib::RefPtr<Gtk::TreeStore>::cast_static(getGUIBuilder()->get_object("setupTree"));
+    Glib::RefPtr<Gtk::TreeView> tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(getGUIBuilder()->get_object("treeview2"));
     tree_store->clear();
 
     auto network_itr = tree_store->append();
@@ -1397,14 +1397,14 @@ void VRGuiSetup::updateSetup() {
     setTreeRow(tree_store, *scripts_itr, "Scripts", "section", 0);
 
     Gtk::TreeStore::Row row;
-    Glib::RefPtr<Gtk::ListStore> user_list = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("user_list"));
+    Glib::RefPtr<Gtk::ListStore> user_list = Glib::RefPtr<Gtk::ListStore>::cast_static(getGUIBuilder()->get_object("user_list"));
     user_list->clear();
     row = *user_list->append();
     gtk_list_store_set (user_list->gobj(), row.gobj(), 0, "None", -1);
     gtk_list_store_set (user_list->gobj(), row.gobj(), 1, 0, -1);
 
     // Devices
-    Glib::RefPtr<Gtk::ListStore> mouse_list = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("mouse_list"));
+    Glib::RefPtr<Gtk::ListStore> mouse_list = Glib::RefPtr<Gtk::ListStore>::cast_static(getGUIBuilder()->get_object("mouse_list"));
     mouse_list->clear();
     row = *mouse_list->append();
     gtk_list_store_set (mouse_list->gobj(), row.gobj(), 0, "None", -1);
@@ -1510,7 +1510,7 @@ bool getSetupEntries(string dir, string& local, string& def) {
 
 void VRGuiSetup::updateSetupList() {
     // update script list
-    Glib::RefPtr<Gtk::ListStore> store = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("setups"));
+    Glib::RefPtr<Gtk::ListStore> store = Glib::RefPtr<Gtk::ListStore>::cast_static(getGUIBuilder()->get_object("setups"));
     store->clear();
 
     string dir = setupDir();

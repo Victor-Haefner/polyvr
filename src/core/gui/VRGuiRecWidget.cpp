@@ -21,8 +21,8 @@ VRGuiRecWidget::VRGuiRecWidget() {
     rec = VRRecorderPtr( new VRRecorder() );
     rec->setView(0);
 
-    VRGuiBuilder()->get_widget("recorder", diag);
-    VRGuiBuilder()->get_widget("label149", lbl);
+    getGUIBuilder()->get_widget("recorder", diag);
+    getGUIBuilder()->get_widget("label149", lbl);
     diag->set_deletable(false); // not working on most platforms
     diag->signal_delete_event().connect( sigc::mem_fun(*this, &VRGuiRecWidget::deleteHandler) );
     diag->set_resizable(false);

@@ -275,7 +275,7 @@ void VRGuiSemantics::disconnectAny(VRSemanticWidgetPtr w) {
 void VRGuiSemantics::on_treeview_select() {
     setToolButtonSensitivity("toolbutton15", true);
 
-    Glib::RefPtr<Gtk::TreeView> tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(VRGuiBuilder()->get_object("treeview16"));
+    Glib::RefPtr<Gtk::TreeView> tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(getGUIBuilder()->get_object("treeview16"));
     Gtk::TreeModel::iterator iter = tree_view->get_selection()->get_selected();
 
     clearCanvas();
@@ -292,7 +292,7 @@ void VRGuiSemantics::on_treeview_select() {
 }
 
 void VRGuiSemantics_on_name_edited(GtkCellRendererText *cell, gchar *path_string, gchar *new_name, gpointer d) {
-    Glib::RefPtr<Gtk::TreeView> tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(VRGuiBuilder()->get_object("treeview16"));
+    Glib::RefPtr<Gtk::TreeView> tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(getGUIBuilder()->get_object("treeview16"));
     Gtk::TreeModel::iterator iter = tree_view->get_selection()->get_selected();
     if(!iter) return;
 
@@ -321,7 +321,7 @@ void VRGuiSemantics_on_drag_data_received(const Glib::RefPtr<Gdk::DragContext>& 
 }
 
 VRGuiSemantics::VRGuiSemantics() {
-    VRGuiBuilder()->get_widget("onto_visu", canvas);
+    getGUIBuilder()->get_widget("onto_visu", canvas);
     setToolButtonCallback("toolbutton14", sigc::mem_fun(*this, &VRGuiSemantics::on_new_clicked));
     setToolButtonCallback("toolbutton15", sigc::mem_fun(*this, &VRGuiSemantics::on_del_clicked));
     setToolButtonCallback("toolbutton2", sigc::mem_fun(*this, &VRGuiSemantics::on_open_clicked));
@@ -364,7 +364,7 @@ void VRGuiSemantics::on_query_clicked() {
 
 void VRGuiSemantics::updateOntoList() {
     // update script list
-    Glib::RefPtr<Gtk::TreeStore> store = Glib::RefPtr<Gtk::TreeStore>::cast_static(VRGuiBuilder()->get_object("onto_list"));
+    Glib::RefPtr<Gtk::TreeStore> store = Glib::RefPtr<Gtk::TreeStore>::cast_static(getGUIBuilder()->get_object("onto_list"));
     store->clear();
 
     auto setRow = [&](Gtk::TreeIter itr, string name, string type) {

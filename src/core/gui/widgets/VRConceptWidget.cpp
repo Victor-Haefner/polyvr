@@ -61,7 +61,7 @@ int VRConceptWidget::ID() { return concept->ID; }
 void VRConceptWidget::on_edit_prop_clicked() {
     if (!selected_property) return;
     Gtk::Dialog* dialog;
-    VRGuiBuilder()->get_widget("PropertyEdit", dialog);
+    getGUIBuilder()->get_widget("PropertyEdit", dialog);
     setTextEntry("entry23", selected_property->getName());
     setTextEntry("entry24", selected_property->type);
     dialog->show();

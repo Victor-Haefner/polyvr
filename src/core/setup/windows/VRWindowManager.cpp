@@ -121,7 +121,7 @@ VRWindowPtr VRWindowManager::addGtkWindow(string name, string glarea) {
     //if (gdk_error_trap_pop()) cout << "    ---- AAA1 ------ " << endl;
 
     Gtk::DrawingArea* drawArea = 0;
-    VRGuiBuilder()->get_widget(glarea, drawArea); // TODO: create new glarea, add flag to editor area window!
+    getGUIBuilder()->get_widget(glarea, drawArea); // TODO: create new glarea, add flag to editor area window!
     VRGtkWindowPtr win = VRGtkWindow::create(drawArea);
 
     editorWindow = win;

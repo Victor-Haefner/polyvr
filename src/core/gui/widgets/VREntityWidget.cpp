@@ -28,7 +28,7 @@ int VREntityWidget::ID() { return entity->ID; }
 void VREntityWidget::on_edit_prop_clicked() {
     if (!selected_entity_property) return;
     Gtk::Dialog* dialog;
-    VRGuiBuilder()->get_widget("PropertyEdit", dialog);
+    getGUIBuilder()->get_widget("PropertyEdit", dialog);
     setTextEntry("entry23", selected_entity_property->getName());
     setTextEntry("entry24", selected_entity_property->value);
     dialog->show();

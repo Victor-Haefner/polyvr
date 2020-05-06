@@ -180,7 +180,7 @@ class GeoModelColumns : public Gtk::TreeModelColumnRecord {
 void VRGuiScene::on_geo_menu_print() {
     if(!selected_itr) return;
 
-    auto tview = Glib::RefPtr<Gtk::TreeView>::cast_static(VRGuiBuilder()->get_object("treeview9"));
+    auto tview = Glib::RefPtr<Gtk::TreeView>::cast_static(getGUIBuilder()->get_object("treeview9"));
     Gtk::TreeModel::iterator iter = tview->get_selection()->get_selected();
     if(!iter) return;
 
@@ -205,7 +205,7 @@ void VRGuiScene::setGeometry(VRGeometryPtr g) {
     setCheckButton("checkbutton28", false);
     setCombobox("combobox21", -1);
 
-    Glib::RefPtr<Gtk::ListStore> store = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("primitive_opts"));
+    Glib::RefPtr<Gtk::ListStore> store = Glib::RefPtr<Gtk::ListStore>::cast_static(getGUIBuilder()->get_object("primitive_opts"));
     store->clear();
     stringstream params;
     params << g->getReference().parameter;
@@ -237,7 +237,7 @@ void VRGuiScene::setGeometry(VRGeometryPtr g) {
     };
 
     VRGeoData data(g);
-    store = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("geodata"));
+    store = Glib::RefPtr<Gtk::ListStore>::cast_static(getGUIBuilder()->get_object("geodata"));
     store->clear();
     for (int i=0; i<=8; i++) {
         int N = data.getDataSize(i);
@@ -270,7 +270,7 @@ void VRGuiScene::setLight(VRLightPtr l) {
     if (beacon) bname = beacon->getName();
     setButtonText("button27", bname);
 
-    Glib::RefPtr<Gtk::ListStore> store = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("light_params"));
+    Glib::RefPtr<Gtk::ListStore> store = Glib::RefPtr<Gtk::ListStore>::cast_static(getGUIBuilder()->get_object("light_params"));
     vector<string> param_names = VRLight::getTypeParameter(l->getLightType());
     for (uint i=0; i<param_names.size(); i++) {
         string val; // TODO
@@ -307,7 +307,7 @@ void VRGuiScene::setLod(VRLodPtr lod) {
     setCheckButton("checkbutton35", lod->getDecimate());
     lodCEntry.set(lod->getCenter());
 
-    Glib::RefPtr<Gtk::ListStore> store = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("liststore5"));
+    Glib::RefPtr<Gtk::ListStore> store = Glib::RefPtr<Gtk::ListStore>::cast_static(getGUIBuilder()->get_object("liststore5"));
     store->clear();
 
     vector<float> dists = lod->getDistances();
@@ -324,7 +324,7 @@ void VRGuiScene::setEntity(VREntityPtr e) {
 
     setLabel("label145", e->getConceptList());
 
-    Glib::RefPtr<Gtk::ListStore> store = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("properties"));
+    Glib::RefPtr<Gtk::ListStore> store = Glib::RefPtr<Gtk::ListStore>::cast_static(getGUIBuilder()->get_object("properties"));
     store->clear();
 
     for(auto pvec : e->properties) {
@@ -497,7 +497,7 @@ void VRGuiScene::on_treeview_select() {
 
 void VRGuiScene::on_edit_object_name(string path, string new_text) {
     if(!trigger_cbs) return;
-    Glib::RefPtr<Gtk::TreeView> tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(VRGuiBuilder()->get_object("treeview6"));
+    Glib::RefPtr<Gtk::TreeView> tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(getGUIBuilder()->get_object("treeview6"));
     Gtk::TreeModel::iterator iter = tree_view->get_selection()->get_selected();
     if(!iter) return;
 
@@ -575,7 +575,7 @@ void VRGuiScene::on_group_edited() {
     string new_group = getTextEntry("entry41");
 
     // update group list
-    Glib::RefPtr<Gtk::ListStore> list = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("liststore3"));
+    Glib::RefPtr<Gtk::ListStore> list = Glib::RefPtr<Gtk::ListStore>::cast_static(getGUIBuilder()->get_object("liststore3"));
     Gtk::TreeModel::Row row = *list->append();
     ModelColumns mcols;
     row[mcols.name] = new_group;
@@ -707,7 +707,7 @@ void VRGuiScene::on_change_primitive() {
 
 void VRGuiScene::on_edit_primitive_params(string path, string new_text) {
     if(!trigger_cbs) return;
-    Glib::RefPtr<Gtk::TreeView> tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(VRGuiBuilder()->get_object("treeview12"));
+    Glib::RefPtr<Gtk::TreeView> tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(getGUIBuilder()->get_object("treeview12"));
     Gtk::TreeModel::iterator iter = tree_view->get_selection()->get_selected();
     if(!iter) return;
 
@@ -718,7 +718,7 @@ void VRGuiScene::on_edit_primitive_params(string path, string new_text) {
     Gtk::TreeModel::Row row = *iter;
     row[cols.val] = new_text; // set the cell with new name
 
-    Glib::RefPtr<Gtk::ListStore> store  = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("primitive_opts"));
+    Glib::RefPtr<Gtk::ListStore> store  = Glib::RefPtr<Gtk::ListStore>::cast_static(getGUIBuilder()->get_object("primitive_opts"));
     int N = gtk_tree_model_iter_n_children( (GtkTreeModel*) store->gobj(), NULL );
     for (int i=0; i<N; i++) {
         string _i = toString(i);
@@ -750,7 +750,7 @@ void VRGuiScene::on_edit_distance(string path, string new_text) {
     if(!trigger_cbs) return;
     VRLodPtr lod = static_pointer_cast<VRLod>( getSelected() );
 
-    Glib::RefPtr<Gtk::TreeView> tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(VRGuiBuilder()->get_object("treeview8"));
+    Glib::RefPtr<Gtk::TreeView> tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(getGUIBuilder()->get_object("treeview8"));
     Gtk::TreeModel::iterator iter = tree_view->get_selection()->get_selected();
     if(!iter) return;
 
@@ -1324,7 +1324,7 @@ void VRGuiScene::initMenu() {
 void VRGuiScene::initCallbacks() {
     Glib::RefPtr<Gtk::CheckButton> cbutton;
 
-    cbutton = Glib::RefPtr<Gtk::CheckButton>::cast_static(VRGuiBuilder()->get_object("checkbutton3"));
+    cbutton = Glib::RefPtr<Gtk::CheckButton>::cast_static(getGUIBuilder()->get_object("checkbutton3"));
     cbutton->signal_toggled().connect( sigc::mem_fun(*this, &VRGuiScene::setMaterial_lit) );
 }
 
@@ -1337,8 +1337,8 @@ VRGuiScene::VRGuiScene() { // TODO: reduce callbacks with templated functions
     //test_tree_dnd();
 
     // treeviewer
-    tree_store = Glib::RefPtr<Gtk::TreeStore>::cast_static(VRGuiBuilder()->get_object("scenegraph"));
-    tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(VRGuiBuilder()->get_object("treeview6"));
+    tree_store = Glib::RefPtr<Gtk::TreeStore>::cast_static(getGUIBuilder()->get_object("scenegraph"));
+    tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(getGUIBuilder()->get_object("treeview6"));
     //tree_view->signal_cursor_changed().connect( sigc::mem_fun(*this, &VRGuiScene::on_treeview_select) );
     setTreeviewSelectCallback("treeview6", sigc::mem_fun(*this, &VRGuiScene::on_treeview_select));
 
@@ -1424,7 +1424,7 @@ VRGuiScene::VRGuiScene() { // TODO: reduce callbacks with templated functions
     setColorChooser("light_amb", sigc::mem_fun(*this, &VRGuiScene::setLight_amb_color));
     setColorChooser("light_spec", sigc::mem_fun(*this, &VRGuiScene::setLight_spec_color));
 
-    auto tree_view9 = Glib::RefPtr<Gtk::TreeView>::cast_static(VRGuiBuilder()->get_object("treeview9"));
+    auto tree_view9 = Glib::RefPtr<Gtk::TreeView>::cast_static(getGUIBuilder()->get_object("treeview9"));
     menu = new VRGuiContextMenu("GeoMenu");
     menu->connectWidget("GeoMenu", (GtkWidget*)tree_view9->gobj());
     menu->appendItem("GeoMenu", "Print", sigc::mem_fun(*this, &VRGuiScene::on_geo_menu_print));

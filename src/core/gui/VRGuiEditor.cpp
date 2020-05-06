@@ -277,7 +277,7 @@ VRGuiEditor::VRGuiEditor(string window) {
     gtk_source_buffer_set_highlight_syntax(sourceBuffer, true);
     gtk_source_buffer_set_highlight_matching_brackets(sourceBuffer, true);
 
-    Glib::RefPtr<Gtk::ScrolledWindow> win = Glib::RefPtr<Gtk::ScrolledWindow>::cast_static(VRGuiBuilder()->get_object(window));
+    Glib::RefPtr<Gtk::ScrolledWindow> win = Glib::RefPtr<Gtk::ScrolledWindow>::cast_static(getGUIBuilder()->get_object(window));
     editor = gtk_source_view_new_with_buffer(sourceBuffer);
     editorBuffer = Glib::wrap( gtk_text_view_get_buffer(GTK_TEXT_VIEW(editor)) );
 

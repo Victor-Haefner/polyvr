@@ -21,7 +21,7 @@ class VRGuiMonitor_FktColumns : public Gtk::TreeModelColumnRecord {
 
 VRGuiMonitor::VRGuiMonitor() {
     Gtk::DrawingArea* _da;
-    VRGuiBuilder()->get_widget("profiler_area", _da);
+    getGUIBuilder()->get_widget("profiler_area", _da);
     da = Glib::RefPtr<Gtk::DrawingArea>(_da);
 
     da->add_events((Gdk::EventMask)GDK_BUTTON_PRESS_MASK);
@@ -205,7 +205,7 @@ void VRGuiMonitor::selectFrame() {
     }
 
     // update list
-    Glib::RefPtr<Gtk::ListStore> store = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("prof_fkts"));
+    Glib::RefPtr<Gtk::ListStore> store = Glib::RefPtr<Gtk::ListStore>::cast_static(getGUIBuilder()->get_object("prof_fkts"));
     store->clear();
     for (auto c : fkts) {
         string col = toHex( getColor(c.first) );

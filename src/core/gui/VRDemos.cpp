@@ -3,21 +3,7 @@
 #include "widgets/VRAppLauncher.h"
 
 #include <gtkmm/table.h>
-#include <gtkmm/stock.h>
-#include <gtkmm/settings.h>
-#include <gtkmm/box.h>
-#include <gtkmm/label.h>
-#include <gtkmm/paned.h>
-#include <gtkmm/liststore.h>
-#include <gtkmm/cellrenderertoggle.h>
-#include <gtkmm/treeview.h>
-#include <gtkmm/window.h>
-#include <gtkmm/button.h>
-#include <gtkmm/image.h>
 #include <gtkmm/builder.h>
-#include <gtkmm/frame.h>
-#include <gtkmm/eventbox.h>
-#include <gtkmm/filechooser.h>
 #include <string>
 #include <iostream>
 #include <boost/bind.hpp>
@@ -44,9 +30,9 @@ using namespace std;
 VRAppManager::VRAppManager() {
     initMenu();
 
-    auto examplesSection = addSection("examples");
-    auto favoritesSection = addSection("favorites");
-    auto recentsSection = addSection("recents");
+    auto examplesSection = addSection("examples", "examples_tab");
+    auto favoritesSection = addSection("favorites", "favorites_tab");
+    auto recentsSection = addSection("recents", "favorites_tab");
 
     auto examples = VRSceneManager::get()->getExamplePaths();
     for (auto p : examples->getPaths() ) examplesSection->addLauncher(p, "", menu, this, true, false, "examples_tab");
@@ -88,8 +74,12 @@ VRAppManager::~VRAppManager() {}
 
 VRAppManagerPtr VRAppManager::create() { return VRAppManagerPtr( new VRAppManager() ); }
 
-VRAppPanelPtr VRAppManager::addSection(string name) {
-    auto s = VRAppPanel::create(name);
+VRAppPanelPtr VRAppManager::addSection(string name, string t) {
+    Gtk::Table* tab;
+    getGUIBuilder()->get_widget(t, tab);
+    tables[t] = tab->gobj();
+
+    auto s = VRAppPanel::create(name, tables[t]);
     sections[name] = s;
     return s;
 }
@@ -104,31 +94,24 @@ void VRAppManager::on_lock_toggle(VRAppLauncherPtr e) {
 }
 
 void VRAppManager::updateTable(string t) {
-    Gtk::Table* tab;
-    VRGuiBuilder()->get_widget(t, tab);
-
     int N = 4;
     if (t == "examples_tab") N += sections["examples"]->getSize();
     if (t == "favorites_tab") N += sections["recents"]->getSize() + sections["favorites"]->getSize();
-    tab->resize(N*0.5+1, 2);
+    gtk_table_resize(tables[t], N*0.5+1, 2);
 
     int i = 0;
-    if (t == "examples_tab") sections["examples"]->fillTable(t, tab->gobj(), i);
+    if (t == "examples_tab") sections["examples"]->fillTable(t, i);
     if (t == "favorites_tab") {
-        sections["recents"]->fillTable(t, tab->gobj(), i);
-        sections["favorites"]->fillTable(t, tab->gobj(), i);
+        sections["recents"]->fillTable(t, i);
+        sections["favorites"]->fillTable(t, i);
     }
-
-    tab->show();
 }
 
 void VRAppManager::clearTable(string t) {
-    Gtk::Table* tab;
-    VRGuiBuilder()->get_widget(t, tab);
-    if (t == "examples_tab") sections["examples"]->clearTable(t, tab->gobj());
+    if (t == "examples_tab") sections["examples"]->clearTable(t);
     if (t == "favorites_tab") {
-        sections["recents"]->clearTable(t, tab->gobj());
-        sections["favorites"]->clearTable(t, tab->gobj());
+        sections["recents"]->clearTable(t);
+        sections["favorites"]->clearTable(t);
     }
 }
 
@@ -285,7 +268,7 @@ void VRAppManager::on_saveas_clicked() {
     VRGuiFile::clearFilter();
     VRGuiFile::addFilter("Project", 3, "*.xml", "*.pvr", "*.pvc");
     VRGuiFile::addFilter("All", 1, "*");
-    VRGuiFile::open( "Save", Gtk::FILE_CHOOSER_ACTION_SAVE, "Save project as.." );
+    VRGuiFile::open( "Save", GTK_FILE_CHOOSER_ACTION_SAVE, "Save project as.." );
     VRGuiFile::setSaveasWidget( bind( &VRAppManager::on_toggle_encryption, this, placeholders::_1 ) );
     VRGuiFile::setFile( scene->getFile() );
 }
@@ -344,7 +327,7 @@ void VRAppManager::on_load_clicked() {
     VRGuiFile::addFilter("Project", 3, "*.xml", "*.pvr", "*.pvc");
     VRGuiFile::addFilter("Model", 19, "*.dae", "*.wrl", "*.obj", "*.3ds", "*.3DS", "*.ply", "*.hgt", "*.tif", "*.tiff", "*.pdf", "*.shp", "*.e57", "*.xyz", "*.STEP", "*.STP", "*.step", "*.stp", "*.ifc", "*.dxf");
     VRGuiFile::addFilter("All", 1, "*");
-    VRGuiFile::open( "Load", Gtk::FILE_CHOOSER_ACTION_OPEN, "Load project" );
+    VRGuiFile::open( "Load", GTK_FILE_CHOOSER_ACTION_OPEN, "Load project" );
 }
 
 void VRAppManager::writeGitignore(string path) {
@@ -374,7 +357,7 @@ void VRAppManager::on_new_clicked() {
     VRGuiFile::gotoPath( g_get_home_dir() );
     VRGuiFile::setFile( "myApp.pvr" );
     VRGuiFile::clearFilter();
-    VRGuiFile::open( "Create", Gtk::FILE_CHOOSER_ACTION_SAVE, "Create new project" );
+    VRGuiFile::open( "Create", GTK_FILE_CHOOSER_ACTION_SAVE, "Create new project" );
 }
 
 void VRAppManager::on_search() {

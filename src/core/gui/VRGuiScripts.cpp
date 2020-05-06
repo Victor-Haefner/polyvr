@@ -79,7 +79,7 @@ class VRGuiScripts_HelpColumns : public Gtk::TreeModelColumnRecord {
 // --------------------------
 
 VRScriptPtr VRGuiScripts::getSelectedScript() {
-    Glib::RefPtr<Gtk::TreeView> tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(VRGuiBuilder()->get_object("treeview5"));
+    Glib::RefPtr<Gtk::TreeView> tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(getGUIBuilder()->get_object("treeview5"));
     Gtk::TreeModel::iterator iter = tree_view->get_selection()->get_selected();
     if(!iter) return 0;
 
@@ -95,7 +95,7 @@ VRScriptPtr VRGuiScripts::getSelectedScript() {
 }
 
 void VRGuiScripts::setGroupListRow(Gtk::TreeIter itr, group& g) {
-    Glib::RefPtr<Gtk::TreeStore> store = Glib::RefPtr<Gtk::TreeStore>::cast_static(VRGuiBuilder()->get_object("script_tree"));
+    Glib::RefPtr<Gtk::TreeStore> store = Glib::RefPtr<Gtk::TreeStore>::cast_static(getGUIBuilder()->get_object("script_tree"));
     Gtk::TreeStore::Row row = *itr;
     gtk_tree_store_set (store->gobj(), row.gobj(),
                         0, g.name.c_str(),
@@ -151,7 +151,7 @@ void VRGuiScripts::setScriptListRow(Gtk::TreeIter itr, VRScriptPtr script, bool 
     else if (exec_time >= 0) time = toString( exec_time ) + " ms";
 
     Gtk::Window* win1;
-    VRGuiBuilder()->get_widget("window1", win1);
+    getGUIBuilder()->get_widget("window1", win1);
     Gtk::Widget* wdg = 0;
     if (win1) wdg = win1->get_focus();
     string name;
@@ -168,7 +168,7 @@ void VRGuiScripts::setScriptListRow(Gtk::TreeIter itr, VRScriptPtr script, bool 
         Nfound = toString(Nf);
     }
 
-    Glib::RefPtr<Gtk::TreeStore> store = Glib::RefPtr<Gtk::TreeStore>::cast_static(VRGuiBuilder()->get_object("script_tree"));
+    Glib::RefPtr<Gtk::TreeStore> store = Glib::RefPtr<Gtk::TreeStore>::cast_static(getGUIBuilder()->get_object("script_tree"));
     Gtk::TreeStore::Row row = *itr;
     if (onlyTime) gtk_tree_store_set (store->gobj(), row.gobj(),
                         3, time.c_str(),
@@ -318,7 +318,7 @@ void VRGuiScripts::on_pause_toggled() {
 }
 
 void VRGuiScripts::on_del_clicked() {
-    Glib::RefPtr<Gtk::TreeView> tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(VRGuiBuilder()->get_object("treeview5"));
+    Glib::RefPtr<Gtk::TreeView> tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(getGUIBuilder()->get_object("treeview5"));
     Gtk::TreeModel::iterator iter = tree_view->get_selection()->get_selected();
     if(!iter) return;
 
@@ -369,7 +369,7 @@ void VRGuiScripts::on_select_script() { // selected a script
     //adjustment->set_value(pages[script.get()].line);
 
     // update arguments liststore
-    Glib::RefPtr<Gtk::ListStore> args = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("liststore2"));
+    Glib::RefPtr<Gtk::ListStore> args = Glib::RefPtr<Gtk::ListStore>::cast_static(getGUIBuilder()->get_object("liststore2"));
     args->clear();
 
     //if (PyErr_Occurred() != NULL) PyErr_Print();
@@ -382,7 +382,7 @@ void VRGuiScripts::on_select_script() { // selected a script
     }
 
     // update trigger liststore
-    Glib::RefPtr<Gtk::ListStore> trigs = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("triggers"));
+    Glib::RefPtr<Gtk::ListStore> trigs = Glib::RefPtr<Gtk::ListStore>::cast_static(getGUIBuilder()->get_object("triggers"));
     trigs->clear();
     for (auto t : script->getTriggers()) {
         string key = toString(t->key);
@@ -422,7 +422,7 @@ Gtk::TreeModel::Row trigger_row;
 void VRGuiScripts::on_select_trigger() {
     wait_for_key = false;
 
-    Glib::RefPtr<Gtk::TreeView> tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(VRGuiBuilder()->get_object("treeview14"));
+    Glib::RefPtr<Gtk::TreeView> tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(getGUIBuilder()->get_object("treeview14"));
     Gtk::TreeModel::iterator iter = tree_view->get_selection()->get_selected();
     if(!iter) return;
 
@@ -466,7 +466,7 @@ bool VRGuiScripts::on_any_event(GdkEvent* event) {
 
 
 void VRGuiScripts::on_name_edited(const Glib::ustring& path, const Glib::ustring& new_name) {
-    Glib::RefPtr<Gtk::TreeView> tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(VRGuiBuilder()->get_object("treeview5"));
+    Glib::RefPtr<Gtk::TreeView> tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(getGUIBuilder()->get_object("treeview5"));
     Gtk::TreeModel::iterator iter = tree_view->get_selection()->get_selected();
     if (!iter) return;
 
@@ -530,7 +530,7 @@ void VRGuiScripts::on_trigadd_clicked() {
 }
 
 void VRGuiScripts::on_argrem_clicked() {
-    Glib::RefPtr<Gtk::TreeView> tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(VRGuiBuilder()->get_object("treeview7"));
+    Glib::RefPtr<Gtk::TreeView> tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(getGUIBuilder()->get_object("treeview7"));
     Gtk::TreeModel::iterator iter = tree_view->get_selection()->get_selected();
     if(!iter) return;
 
@@ -546,7 +546,7 @@ void VRGuiScripts::on_argrem_clicked() {
 }
 
 void VRGuiScripts::on_trigrem_clicked() {
-    Glib::RefPtr<Gtk::TreeView> tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(VRGuiBuilder()->get_object("treeview14"));
+    Glib::RefPtr<Gtk::TreeView> tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(getGUIBuilder()->get_object("treeview14"));
     Gtk::TreeModel::iterator iter = tree_view->get_selection()->get_selected();
     if(!iter) return;
 
@@ -562,7 +562,7 @@ void VRGuiScripts::on_trigrem_clicked() {
 }
 
 void VRGuiScripts::on_argname_edited(const Glib::ustring& path, const Glib::ustring& new_name) {
-    Glib::RefPtr<Gtk::TreeView> tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(VRGuiBuilder()->get_object("treeview7"));
+    Glib::RefPtr<Gtk::TreeView> tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(getGUIBuilder()->get_object("treeview7"));
     Gtk::TreeModel::iterator iter = tree_view->get_selection()->get_selected();
     if(!iter) return;
 
@@ -580,7 +580,7 @@ void VRGuiScripts::on_argname_edited(const Glib::ustring& path, const Glib::ustr
 }
 
 void VRGuiScripts::on_argval_edited(const Glib::ustring& path, const Glib::ustring& new_name) {
-    Glib::RefPtr<Gtk::TreeView> tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(VRGuiBuilder()->get_object("treeview7"));
+    Glib::RefPtr<Gtk::TreeView> tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(getGUIBuilder()->get_object("treeview7"));
     Gtk::TreeModel::iterator iter = tree_view->get_selection()->get_selected();
     if(!iter) return;
 
@@ -599,12 +599,12 @@ void VRGuiScripts::on_argval_edited(const Glib::ustring& path, const Glib::ustri
 }
 
 void VRGuiScripts::on_argtype_edited(const Glib::ustring& new_name, const Gtk::TreeModel::iterator& new_iter) {
-    Glib::RefPtr<Gtk::TreeView> tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(VRGuiBuilder()->get_object("treeview7"));
+    Glib::RefPtr<Gtk::TreeView> tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(getGUIBuilder()->get_object("treeview7"));
     Gtk::TreeModel::iterator iter = tree_view->get_selection()->get_selected();
     if(!iter) return;
 
     // set the cell with new type
-    Glib::RefPtr<Gtk::ListStore> combo_list = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("arg_types"));
+    Glib::RefPtr<Gtk::ListStore> combo_list = Glib::RefPtr<Gtk::ListStore>::cast_static(getGUIBuilder()->get_object("arg_types"));
     gchar *t;
     gtk_tree_model_get((GtkTreeModel*)combo_list->gobj(), (GtkTreeIter*)new_iter->gobj(), 0, &t, -1);
     string type = string(t);
@@ -620,12 +620,12 @@ void VRGuiScripts::on_argtype_edited(const Glib::ustring& new_name, const Gtk::T
 }
 
 void VRGuiScripts::on_trigger_edited(const Glib::ustring& new_name, const Gtk::TreeModel::iterator& new_iter) {
-    Glib::RefPtr<Gtk::TreeView> tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(VRGuiBuilder()->get_object("treeview14"));
+    Glib::RefPtr<Gtk::TreeView> tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(getGUIBuilder()->get_object("treeview14"));
     Gtk::TreeModel::iterator iter = tree_view->get_selection()->get_selected();
     if(!iter) return;
 
     // set the cell with new type
-    Glib::RefPtr<Gtk::ListStore> combo_list = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("ScriptTrigger"));
+    Glib::RefPtr<Gtk::ListStore> combo_list = Glib::RefPtr<Gtk::ListStore>::cast_static(getGUIBuilder()->get_object("ScriptTrigger"));
     gchar *t;
     gtk_tree_model_get((GtkTreeModel*)combo_list->gobj(), (GtkTreeIter*)new_iter->gobj(), 0, &t, -1);
     string type = string(t);
@@ -641,12 +641,12 @@ void VRGuiScripts::on_trigger_edited(const Glib::ustring& new_name, const Gtk::T
 }
 
 void VRGuiScripts::on_trigdev_edited(const Glib::ustring& new_name, const Gtk::TreeModel::iterator& new_iter) {
-    Glib::RefPtr<Gtk::TreeView> tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(VRGuiBuilder()->get_object("treeview14"));
+    Glib::RefPtr<Gtk::TreeView> tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(getGUIBuilder()->get_object("treeview14"));
     Gtk::TreeModel::iterator iter = tree_view->get_selection()->get_selected();
     if(!iter) return;
 
     // set the cell with new type
-    Glib::RefPtr<Gtk::ListStore> combo_list = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("ScriptTriggerDevices"));
+    Glib::RefPtr<Gtk::ListStore> combo_list = Glib::RefPtr<Gtk::ListStore>::cast_static(getGUIBuilder()->get_object("ScriptTriggerDevices"));
     gchar *t;
     gtk_tree_model_get((GtkTreeModel*)combo_list->gobj(), (GtkTreeIter*)new_iter->gobj(), 0, &t, -1);
     string type = string(t);
@@ -663,7 +663,7 @@ void VRGuiScripts::on_trigdev_edited(const Glib::ustring& new_name, const Gtk::T
 
 
 void VRGuiScripts::on_trigparam_edited(const Glib::ustring& path, const Glib::ustring& new_name) {
-    Glib::RefPtr<Gtk::TreeView> tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(VRGuiBuilder()->get_object("treeview14"));
+    Glib::RefPtr<Gtk::TreeView> tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(getGUIBuilder()->get_object("treeview14"));
     Gtk::TreeModel::iterator iter = tree_view->get_selection()->get_selected();
     if(!iter) return;
 
@@ -680,7 +680,7 @@ void VRGuiScripts::on_trigparam_edited(const Glib::ustring& path, const Glib::us
 }
 
 void VRGuiScripts::on_trigkey_edited(const Glib::ustring& path, const Glib::ustring& new_name) {
-    Glib::RefPtr<Gtk::TreeView> tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(VRGuiBuilder()->get_object("treeview14"));
+    Glib::RefPtr<Gtk::TreeView> tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(getGUIBuilder()->get_object("treeview14"));
     Gtk::TreeModel::iterator iter = tree_view->get_selection()->get_selected();
     if(!iter) return;
 
@@ -697,12 +697,12 @@ void VRGuiScripts::on_trigkey_edited(const Glib::ustring& path, const Glib::ustr
 }
 
 void VRGuiScripts::on_trigstate_edited(const Glib::ustring& new_name, const Gtk::TreeModel::iterator& new_iter) {
-    Glib::RefPtr<Gtk::TreeView> tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(VRGuiBuilder()->get_object("treeview14"));
+    Glib::RefPtr<Gtk::TreeView> tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(getGUIBuilder()->get_object("treeview14"));
     Gtk::TreeModel::iterator iter = tree_view->get_selection()->get_selected();
     if(!iter) return;
 
     // set the cell with new type
-    Glib::RefPtr<Gtk::ListStore> combo_list = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("ScriptTriggerStates"));
+    Glib::RefPtr<Gtk::ListStore> combo_list = Glib::RefPtr<Gtk::ListStore>::cast_static(getGUIBuilder()->get_object("ScriptTriggerStates"));
     gchar *t;
     gtk_tree_model_get((GtkTreeModel*)combo_list->gobj(), (GtkTreeIter*)new_iter->gobj(), 0, &t, -1);
     string type = string(t);
@@ -721,18 +721,18 @@ void VRGuiScripts::on_trigstate_edited(const Glib::ustring& new_name, const Gtk:
 
 void VRGuiScripts::on_help_close_clicked() {
     Gtk::Dialog* diag;
-    VRGuiBuilder()->get_widget("pybindings-docs", diag);
+    getGUIBuilder()->get_widget("pybindings-docs", diag);
     diag->hide();
 }
 
 void VRGuiScripts::on_help_clicked() {
     VRGuiScripts::updateDocumentation();
 
-    Glib::RefPtr<Gtk::TextBuffer> tb  = Glib::RefPtr<Gtk::TextBuffer>::cast_static(VRGuiBuilder()->get_object("pydoc"));
+    Glib::RefPtr<Gtk::TextBuffer> tb  = Glib::RefPtr<Gtk::TextBuffer>::cast_static(getGUIBuilder()->get_object("pydoc"));
     tb->set_text("");
 
     Gtk::Dialog* diag;
-    VRGuiBuilder()->get_widget("pybindings-docs", diag);
+    getGUIBuilder()->get_widget("pybindings-docs", diag);
     diag->show();
 
     //diag->deiconify();
@@ -744,8 +744,8 @@ void VRGuiScripts::on_help_clicked() {
 }
 
 void VRGuiScripts::updateDocumentation() {
-    Glib::RefPtr<Gtk::TreeStore> store = Glib::RefPtr<Gtk::TreeStore>::cast_static(VRGuiBuilder()->get_object("bindings"));
-    Glib::RefPtr<Gtk::TreeView> view  = Glib::RefPtr<Gtk::TreeView>::cast_static(VRGuiBuilder()->get_object("treeview3"));
+    Glib::RefPtr<Gtk::TreeStore> store = Glib::RefPtr<Gtk::TreeStore>::cast_static(getGUIBuilder()->get_object("bindings"));
+    Glib::RefPtr<Gtk::TreeView> view  = Glib::RefPtr<Gtk::TreeView>::cast_static(getGUIBuilder()->get_object("treeview3"));
     store->clear();
 
     auto scene = VRScene::getCurrent();
@@ -819,7 +819,7 @@ void VRGuiScripts::updateDocumentation() {
 }
 
 void VRGuiScripts::on_select_help() {
-    Glib::RefPtr<Gtk::TreeView> tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(VRGuiBuilder()->get_object("treeview3"));
+    Glib::RefPtr<Gtk::TreeView> tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(getGUIBuilder()->get_object("treeview3"));
     Gtk::TreeModel::iterator iter = tree_view->get_selection()->get_selected();
     if(!iter) return;
 
@@ -833,7 +833,7 @@ void VRGuiScripts::on_select_help() {
 
     auto scene = VRScene::getCurrent();
     if (scene == 0) return;
-    Glib::RefPtr<Gtk::TextBuffer> tb  = Glib::RefPtr<Gtk::TextBuffer>::cast_static(VRGuiBuilder()->get_object("pydoc"));
+    Glib::RefPtr<Gtk::TextBuffer> tb  = Glib::RefPtr<Gtk::TextBuffer>::cast_static(getGUIBuilder()->get_object("pydoc"));
 
     tb->set_text(string());
     if (type == "class") {
@@ -877,8 +877,8 @@ void VRGuiScripts::focusScript(string name, int line, int column) {
     setNotebookPage("notebook1", 2);
     setNotebookPage("notebook3", 3);
 
-    Glib::RefPtr<Gtk::TreeStore> store = Glib::RefPtr<Gtk::TreeStore>::cast_static(VRGuiBuilder()->get_object("script_tree"));
-    Glib::RefPtr<Gtk::TreeView> tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(VRGuiBuilder()->get_object("treeview5"));
+    Glib::RefPtr<Gtk::TreeStore> store = Glib::RefPtr<Gtk::TreeStore>::cast_static(getGUIBuilder()->get_object("script_tree"));
+    Glib::RefPtr<Gtk::TreeView> tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(getGUIBuilder()->get_object("treeview5"));
 
     auto selectScript = [&](Gtk::TreeIter& itr) {
         Gtk::TreeModel::Row row = *itr;
@@ -1012,7 +1012,7 @@ void VRGuiScripts::updateList() {
     if (scene == 0) return;
 
     // update script list
-    Glib::RefPtr<Gtk::TreeStore> store = Glib::RefPtr<Gtk::TreeStore>::cast_static(VRGuiBuilder()->get_object("script_tree"));
+    Glib::RefPtr<Gtk::TreeStore> store = Glib::RefPtr<Gtk::TreeStore>::cast_static(getGUIBuilder()->get_object("script_tree"));
     store->clear();
 
     auto oldpages = pages;
@@ -1108,7 +1108,7 @@ VRGuiScripts::VRGuiScripts() {
     setComboboxCallback("combobox24", sigc::mem_fun(*this, &VRGuiScripts::on_change_server) );
 
     // trigger tree_view
-    Glib::RefPtr<Gtk::TreeView> tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(VRGuiBuilder()->get_object("treeview14"));
+    Glib::RefPtr<Gtk::TreeView> tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(getGUIBuilder()->get_object("treeview14"));
     tree_view->add_events((Gdk::EventMask)GDK_KEY_PRESS_MASK);
     tree_view->signal_event().connect(sigc::mem_fun(*this, &VRGuiScripts::on_any_event));
     tree_view->signal_key_press_event().connect(sigc::mem_fun(*this, &VRGuiScripts::on_any_key_event));

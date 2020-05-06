@@ -13,6 +13,7 @@
 
 class VRGuiContextMenu;
 struct _GtkImage;
+struct _GtkTable;
 struct _GtkCheckButton;
 
 OSG_BEGIN_NAMESPACE;
@@ -30,6 +31,7 @@ class VRAppManager {
         VRSignalPtr on_scene_closing = 0;
         VRAppLauncherPtr current_demo = 0;
         map<string, VRAppPanelPtr> sections;
+        map<string, _GtkTable*> tables;
         VRGuiContextMenu* menu;
         VRDeviceCbPtr updateCb;
         bool noLauncherScene = false;
@@ -70,7 +72,7 @@ class VRAppManager {
         ~VRAppManager();
         static VRAppManagerPtr create();
 
-        VRAppPanelPtr addSection(string name);
+        VRAppPanelPtr addSection(string name, string t);
         void toggleDemo(VRAppLauncherPtr e);
         void on_lock_toggle(VRAppLauncherPtr e);
         void on_menu_advanced(VRAppLauncherPtr e);

@@ -33,7 +33,7 @@ int VRRuleWidget::ID() { return rule->ID; }
 void VRRuleWidget::on_edit_prop_clicked() {
     if (!selected_statement) return;
     Gtk::Dialog* dialog;
-    VRGuiBuilder()->get_widget("PropertyEdit", dialog);
+    getGUIBuilder()->get_widget("PropertyEdit", dialog);
     setTextEntry("entry23", selected_statement->toString());
     //setTextEntry("entry24", selected_statement->toString());
     dialog->show();
