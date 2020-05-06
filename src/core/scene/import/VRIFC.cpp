@@ -349,7 +349,7 @@ class IFCLoader {
 
             int i=0;
             do {
-                cout << "IFC process object " << i << endl;
+                //cout << "IFC process object " << i << endl;
                 IfcGeom::Element<real_t>* geom_object = context_iterator.get();
                 auto geo = convertGeo(static_cast<const IfcGeom::TriangulationElement<real_t>*>(geom_object));
                 if (geo) {
@@ -387,8 +387,9 @@ class IFCLoader {
 };
 
 void OSG::loadIFC(string path, VRTransformPtr res) {
-    IFCLoader ifc;
-    ifc.load(path, res);
+   IFCLoader ifc;
+   ifc.load(path, res);
+
 }
 
 #endif
