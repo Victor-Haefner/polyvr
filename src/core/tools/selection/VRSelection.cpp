@@ -103,7 +103,7 @@ void VRSelection::updateSubselection(VRGeometryPtr geo) {
     if (!geo->getMesh()) return;
     auto pos = geo->getMesh()->geo->getPositions();
     if (!pos) return;
-    for (uint i=0; i<pos->size(); i++) {
+    for (unsigned int i=0; i<pos->size(); i++) {
         Pnt3d p = Pnt3d(pos->getValue<Pnt3f>(i));
         m.mult(p,p);
         if (vertSelected(Vec3d(p))) {
@@ -144,7 +144,7 @@ Vec3d VRSelection::computeCentroid() {
             }
         } else {
             N += pos->size();
-            for (uint i = 0; i< pos->size(); i++) {
+            for (unsigned int i = 0; i< pos->size(); i++) {
                 auto p = Vec3d(pos->getValue<Pnt3f>(i));
                 res += p;
             }
@@ -179,7 +179,7 @@ Matrix4d VRSelection::computeCovMatrix() {
             }
         } else {
             N += pos->size();
-            for (uint i = 0; i< pos->size(); i++) {
+            for (unsigned int i = 0; i< pos->size(); i++) {
                 auto pg = Vec3d(pos->getValue<Pnt3f>(i));
                 Vec3d p = pg - center;
                 res[0][0] += p[0]*p[0];
@@ -261,7 +261,7 @@ void VRSelection::selectPlane(Pose p, float threshold) {
         auto pos = geo->getMesh()->geo->getPositions();
         auto norms = geo->getMesh()->geo->getNormals();
         s.second.subselection.clear();
-        for (uint i=0; i<pos->size(); i++) {
+        for (unsigned int i=0; i<pos->size(); i++) {
             auto p = pos->getValue<Pnt3f>(i);
             auto n = Vec3d(norms->getValue<Vec3f>(i));
             auto d = plane.distance(p);

@@ -166,7 +166,7 @@ void VRScenegraphInterface::buildKinematics(vector<string> m) {
 	float MaximumVariation = 0, MinimumVariation = 0;
 	PosePtr newC;
 
-	for (uint i = 0; i< m.size(); i++) {
+	for (unsigned int i = 0; i< m.size(); i++) {
 		if (m[i] == "Type") Type = m[i+1];
 		else if (m[i] == "Alignment") Alignment = m[i+1];
 		else if (m[i] == "Can be flipped") CanBeFlipped = m[i+1];
@@ -325,7 +325,7 @@ void VRScenegraphInterface::buildKinematics(vector<string> m) {
                 TypeC = "1";
                 return TypeC;
 			}
-		} else if (h.length()< 1e-6 or k.length()< 1e-6) {
+		} else if (h.length()< 1e-6 || k.length()< 1e-6) {
 			//print "not possible: skew lines";
 			TypeC = "1";
 			return TypeC;
@@ -593,7 +593,7 @@ void VRScenegraphInterface::buildKinematics(vector<string> m) {
         }
 
 		else if (MateEntityTypeA == "3" && a && b) {  //Plane
-			if (MateEntityTypeB == "1" or MateEntityTypeB == "4" or MateEntityTypeB == "7")  { //Line,Cylinder,Cone
+			if (MateEntityTypeB == "1" || MateEntityTypeB == "4" || MateEntityTypeB == "7")  { //Line,Cylinder,Cone
 				DoF = {0,1,2,5};
 				C = Pose::create(pnt2plane(IjkA,XyzA,a->getFrom()),IjkA,buildnewUp(IjkA));//?
 				C_AandB = buildC_AandB(C,a,b);
@@ -628,7 +628,7 @@ void VRScenegraphInterface::buildKinematics(vector<string> m) {
 	else if (Type == "3") { //parallel
 
 		if (MateEntityTypeA == "1" && a && b) {    //Line
-			if (MateEntityTypeB == "1" or MateEntityTypeB == "4" or MateEntityTypeB == "7")  {
+			if (MateEntityTypeB == "1" || MateEntityTypeB == "4" || MateEntityTypeB == "7")  {
 				DoF = {0,1,2,5};
 				C = Pose::create(pnt2line(IjkA,XyzA,a->getFrom()),IjkA,buildnewUp(IjkA));
             }
@@ -737,7 +737,7 @@ void VRScenegraphInterface::buildKinematics(vector<string> m) {
 
 	else if (Type == "6" && MaximumVariation == 0 && MinimumVariation == 0 && a && b)  {  //angle
 
-		if (MateEntityTypeA == "1" or MateEntityTypeA == "4" or MateEntityTypeA == "7")  {    //Line,Cylinder,Cone
+		if (MateEntityTypeA == "1" || MateEntityTypeA == "4" || MateEntityTypeA == "7")  {    //Line,Cylinder,Cone
 			DoF = {2,5};
 			//print "work : progress: 6.1/4/7 (2 joints needed)" //2 joints DoF=[2,5] dir()1=IjkA; dir()2=IjkB
 			C = Pose::create(pnt2line(IjkA,XyzA,a->getFrom()),IjkA,buildnewUp(IjkA));
@@ -770,7 +770,7 @@ void VRScenegraphInterface::buildKinematics(vector<string> m) {
 	*/
 
     PosePtr D, E;
-	if (Type == "5" && (abs(MaximumVariation) > 1e-6 or abs(MinimumVariation) > 1e-6))  { //limit test
+	if (Type == "5" && (abs(MaximumVariation) > 1e-6 || abs(MinimumVariation) > 1e-6))  { //limit test
 		if (Mate_dictionary.count(Mates)  || Mate_dictionary.count(Mates2))  {
 			DoF = Values0.DoF0;
 			C = Values0.C0;
@@ -779,7 +779,7 @@ void VRScenegraphInterface::buildKinematics(vector<string> m) {
 		} else {
 			//print "todo: 5(advanced)  {Limit (new)"								////////?
 		}
-    } else if (Type == "6" && (abs(MaximumVariation) > 1e-6 or abs(MinimumVariation) > 1e-6))  { //limit test
+    } else if (Type == "6" && (abs(MaximumVariation) > 1e-6 || abs(MinimumVariation) > 1e-6))  { //limit test
 		if (Mate_dictionary.count(Mates)  || Mate_dictionary.count(Mates2))  {
 			DoF = Values0.DoF0;
 			C = Values0.C0;
@@ -840,7 +840,7 @@ void VRScenegraphInterface::buildKinematics(vector<string> m) {
 		Find_new_C("1","3",C1,C2);
 		C = newC;
 		TypeC = "0";
-		if ((abs(MaximumVariation) > 1e-6 or abs(MinimumVariation) > 1e-6))  {
+		if ((abs(MaximumVariation) > 1e-6 || abs(MinimumVariation) > 1e-6))  {
 			Type == "6";
 			Values0.MinMax = findMinMax(MinimumVariation,MaximumVariation,C);
 		}

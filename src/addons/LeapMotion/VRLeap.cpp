@@ -147,7 +147,7 @@ void VRLeap::updateHandFromJson(Json::Value& handData, Json::Value& pointableDat
 
         int id = handData["id"].asInt();
 
-        for (uint j = 0; j < pointableData.size(); ++j) { // Get the corresponding fingers
+        for (unsigned int j = 0; j < pointableData.size(); ++j) { // Get the corresponding fingers
             auto pointable = pointableData[j];
 
             if (pointable["handId"].asInt() != id) continue;
@@ -248,7 +248,7 @@ void VRLeap::newFrame(Json::Value json) {
     VRLeapFramePtr frame = VRLeapFrame::create();
     hands = vector<HandPtr>(2, nullptr);//vector<HandPtr> hands(2, nullptr);
 
-    for (uint i = 0; i < json["hands"].size(); ++i) { // Get the hands
+    for (unsigned int i = 0; i < json["hands"].size(); ++i) { // Get the hands
 
         auto newHand = json["hands"][i];
         auto hand = make_shared<VRLeapFrame::Hand>();
@@ -279,7 +279,7 @@ void VRLeap::newFrame(Json::Value json) {
     }
 
     // Get the currently recognized tools/pens
-    for (uint i = 0; i < json["pointables"].size(); ++i) {
+    for (unsigned int i = 0; i < json["pointables"].size(); ++i) {
         auto pointable = json["pointables"][i];
 
         if (!pointable["tool"].asBool()) continue;
@@ -404,7 +404,7 @@ VRIntersection findInside(VRObjectWeakPtr wtree, Vec3d point) {
     if (!tree->getNode()) return ins;
     if (!tree->getNode()->node) return ins;
 
-    uint now = VRGlobals::CURRENT_FRAME;
+    unsigned int now = VRGlobals::CURRENT_FRAME;
 
     vector<VRObjectPtr> children = tree->getChildren(true, "Geometry");
 

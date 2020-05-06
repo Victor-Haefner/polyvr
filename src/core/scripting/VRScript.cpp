@@ -280,7 +280,7 @@ VRScript::Search VRScript::find(string s) {
     search.search = s;
     map<int, bool> res;
 
-    uint pos = core.find(s, 0);
+    unsigned int pos = core.find(s, 0);
     while(pos != string::npos && pos <= core.size()) {
         res[pos] = false;
         pos = core.find(s, pos+1);

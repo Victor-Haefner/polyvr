@@ -225,7 +225,7 @@ void VRAtom::print() {
     cout << endl;
 }
 
-void VRAtom::propagateTransformation(Matrix4d& T, uint flag, bool self) {
+void VRAtom::propagateTransformation(Matrix4d& T, unsigned int flag, bool self) {
     if (flag == recFlag) return;
     recFlag = flag;
 
@@ -379,7 +379,7 @@ string parseNumber(string in, int offset) {
 vector<string> VRMolecule::parse(string mol, bool verbose) {
     mol += "%  "; // add an ending flag
     vector<string> res;
-    uint i = 0;
+    unsigned int i = 0;
     string X;
 
     if (verbose) cout << "parse " << mol << endl;
@@ -438,7 +438,7 @@ void VRMolecule::set(string definition) {
     vector<string> mol = parse(definition, false);
     atoms.clear();
 
-    for (uint i=0; i<mol.size(); i+=2) {
+    for (unsigned int i=0; i<mol.size(); i+=2) {
         string a = mol[i+1];
         int b = toInt(mol[i]);
         if (isNumber(a[0])) connectAtom(toInt(a), b);
@@ -483,7 +483,7 @@ int VRMolecule::getID() {
     return i;
 }
 
-uint VRMolecule::getFlag() {
+unsigned int VRMolecule::getFlag() {
 	return VRGlobals::CURRENT_FRAME + rand();
 }
 
@@ -493,7 +493,7 @@ void VRMolecule::rotateBond(int a, int b, float f) {
     VRAtom* A = atoms[a];
     VRAtom* B = atoms[b];
 
-	uint now = VRGlobals::CURRENT_FRAME + rand();
+	unsigned int now = VRGlobals::CURRENT_FRAME + rand();
     A->recFlag = now;
 
     Vec3d p1 = Vec3d( A->getTransformation()[3] );
@@ -562,7 +562,7 @@ void VRMolecule::substitute(int a, VRMoleculePtr m, int b) {
     A->append(B, 1, true);
 
     // transform new atoms
-	uint now = VRGlobals::CURRENT_FRAME + rand();
+	unsigned int now = VRGlobals::CURRENT_FRAME + rand();
     A->recFlag = now;
     bm.invert();
     Matrix4d Bm = B->getTransformation();
@@ -580,7 +580,7 @@ void VRMolecule::substitute(int a, VRMoleculePtr m, int b) {
 void VRMolecule::setLocalOrigin(int ID) {
     if (atoms.count(ID) == 0) return;
 
-	uint now = VRGlobals::CURRENT_FRAME + rand();
+	unsigned int now = VRGlobals::CURRENT_FRAME + rand();
     Matrix4d m = atoms[ID]->getTransformation();
     m.invert();
 
@@ -616,7 +616,7 @@ void VRMolecule::attachMolecule(int a, VRMoleculePtr m, int b) {
     A->computePositions();
 
     // transform new atoms
-    uint now = getFlag();
+    unsigned int now = getFlag();
     A->recFlag = now;
     Matrix4d bm = B->getTransformation();
     B->propagateTransformation(bm, now, false);

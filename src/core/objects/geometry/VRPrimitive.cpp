@@ -345,7 +345,7 @@ GeometryMTRecPtr VRPill::make() {
 
     auto pushRing = [&](float r, float h, float b) {
         for (int i=0; i<Nsides; i++) {
-            float a = i*2.0*M_PI/Nsides;
+            float a = i*2.0*Pi/Nsides;
             Vec3d n = Vec3d(cos(a)*cos(b), sin(b), sin(a)*cos(b));
             Vec3d p = n*r + Vec3d(0, h, 0);
             data.pushVert(p, n);
@@ -381,7 +381,7 @@ GeometryMTRecPtr VRPill::make() {
 
     if (doTop) {
         for (int i=1; i<Nsides; i++) {
-            float b = i*0.5*M_PI/Nsides;
+            float b = i*0.5*Pi/Nsides;
             RT = pushRing(radius, height*0.5, b);
             if (i == 1) pushRingInds(R1,  RT,-1);
             else        pushRingInds(RT-1,RT,-1);
@@ -390,7 +390,7 @@ GeometryMTRecPtr VRPill::make() {
 
     if (doBottom) {
         for (int i=1; i<Nsides; i++) {
-            float b = i*0.5*M_PI/Nsides;
+            float b = i*0.5*Pi/Nsides;
             RB = pushRing(radius, -height*0.5, -b);
             if (i == 1) pushRingInds(R2,  RB, 1);
             else        pushRingInds(RB-1,RB, 1);
@@ -419,12 +419,12 @@ GeometryMTRecPtr VRScrewThread::make() {
     int iN = 0;
     int tN = round(length/pitch);
     float r1 = radius;
-    float r2 = radius+0.5*pitch/tan(M_PI/6);
+    float r2 = radius+0.5*pitch/tan(Pi/6);
     for(int i=0; i<tN; i++) {
         iN = Pos->size();
         for (int j=0; j<rN; j++) {
-            float sa = sin(j*2*M_PI/rN);
-            float ca = cos(j*2*M_PI/rN);
+            float sa = sin(j*2*Pi/rN);
+            float ca = cos(j*2*Pi/rN);
             float o = j*pitch/rN;
 
             Pos->addValue(Vec3d(r1*ca ,r1*sa ,o+i*pitch));
@@ -489,7 +489,7 @@ GeometryMTRecPtr VRGear::make() {
     Vec3d n;
     int iN = 0;
     for(int i=0; i<tN; i++) {
-        for (int j=0; j<4; j++) a[j] = 2*M_PI*(i+j/6.)/tN;
+        for (int j=0; j<4; j++) a[j] = 2*Pi*(i+j/6.)/tN;
         for (int j=0; j<4; j++) { c[j] = cos(a[j]); s[j] = sin(a[j]); }
 
         iN = Pos->size();
@@ -568,7 +568,7 @@ GeometryMTRecPtr VRGear::make() {
     // sides
     int iNs = Pos->size();
     for(int i=0; i<tN; i++) {
-        for (int j=0; j<4; j++) a[j] = 2*M_PI*(i+j/6.)/tN;
+        for (int j=0; j<4; j++) a[j] = 2*Pi*(i+j/6.)/tN;
         for (int j=0; j<4; j++) { c[j] = cos(a[j]); s[j] = sin(a[j]); }
 
         iN = Pos->size();
@@ -679,4 +679,4 @@ GeometryMTRecPtr VRGear::make() {
 
 
 
-float VRGear::radius() { return 0.5*pitch*teeth_number/M_PI; }
+float VRGear::radius() { return 0.5*pitch*teeth_number/Pi; }

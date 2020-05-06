@@ -419,7 +419,7 @@ void VRNature::computeLODs3(map<OctreeNode*, VRLodLeafPtr>& leafs) {
             auto sides = tree.second->getLodMaterials();
             for (auto side : sides) Hmax = max(Hmax, side->getTexture(0)->getSize()[1]);
 
-            for (uint i=0; i<sides.size(); i++) {
+            for (unsigned int i=0; i<sides.size(); i++) {
                 mosaic1->add( sides[i]->getTexture(0), Vec2i(512*i,H), Vec2i(i,j) );
                 mosaic2->add( sides[i]->getTexture(1), Vec2i(512*i,H), Vec2i(i,j) );
                 //sides[i]->getTexture(0)->write("test_"+toString(i)+".png");

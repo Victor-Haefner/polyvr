@@ -226,7 +226,7 @@ void VRWorldGenerator::addTerrainsToLOD(){
     cout << "VRWorldGenerator::addTerrainsToLOD" << endl;
     //auto nLevel = lodLevels.size();
     auto nTerrains = terrains.size();
-    for (uint i = 0; i < nTerrains; i++) {
+    for (unsigned int i = 0; i < nTerrains; i++) {
         lodLevels[i]->addChild(terrains[i]);
         //cout << "  added Child to lodLevel " << lodLevels[i]->getName() << " " << i << endl;
     }
@@ -250,7 +250,7 @@ void VRWorldGenerator::setupLODTerrain(string pathMap, string pathPaint, float s
         string res = "";
         for (int i = 0; i < 4; i++) typ = filepath.at(filepath.length()-1-i) + typ;
         if (typ != type) return in+"newFile"+type;
-        for (uint i = 0; i < filepath.length()-4; i++) res += filepath.at(i);
+        for (unsigned int i = 0; i < filepath.length()-4; i++) res += filepath.at(i);
         return res + in + type;
     };
 
@@ -422,7 +422,7 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
             addPnt(pos[1], d);
         }
 
-        for (uint i=1; i<pos.size()-1; i++) {
+        for (unsigned int i=1; i<pos.size()-1; i++) {
             auto& p1 = pos[i-1];
             auto& p2 = pos[i];
             auto& p3 = pos[i+1];
@@ -460,7 +460,7 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
             addPnt(pos[1], d);
         }
 
-        for (uint i=1; i<pos.size()-1; i++) {
+        for (unsigned int i=1; i<pos.size()-1; i++) {
             auto& p1 = pos[i-1];
             auto& p2 = pos[i];
             auto& p3 = pos[i+1];
@@ -516,7 +516,7 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
             norms.push_back(norm);
         };
 
-        for (uint i=1; i<way->nodes.size(); i++) {
+        for (unsigned int i=1; i<way->nodes.size(); i++) {
             auto& n1 = graphNodes[ way->nodes[i-1] ];
             auto& n2 = graphNodes[ way->nodes[i  ] ];
             auto& n3 = graphNodes[ way->nodes[(i+1)%way->nodes.size()] ];

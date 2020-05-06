@@ -28,6 +28,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/thread/recursive_mutex.hpp>
 #include <time.h>
+#include <thread>
 
 typedef boost::recursive_mutex::scoped_lock PLock;
 
@@ -239,7 +240,7 @@ VRScenePtr VRSceneManager::getCurrent() { return current; }
 
 void VRSceneManager::updateSceneThread(VRThreadWeakPtr tw) {
     updateScene();
-    sleep(1);
+	std::this_thread::sleep_for(chrono::milliseconds(1));
 }
 
 void VRSceneManager::updateScene() {

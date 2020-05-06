@@ -90,12 +90,13 @@ template<> bool toValue(PyObject* o, std::shared_ptr<VRFunction<void>>& v) {
     if (VRPyBase::isNone(o)) v = 0;
     else {
         Py_IncRef(o);
-        v = VRFunction<void>::create( "pyExecCall", boost::bind(VRPyBase::execPyCallVoid, o, PyTuple_New(0)) );
+        v = VRFunction<void>::create( "pyExecCall", boost::bind(VRPyBase::execPyCallVoidVoid, o, PyTuple_New(0)) );
     }
     return 1;
 }
 
-template<> bool toValue(PyObject* o, map<string, string>& m) {
+// should not be needed
+/*template<> bool toValue(PyObject* o, map<string, string>& m) {
     if (!PyDict_Check(o)) return 0;
     PyObject* keys = PyDict_Keys(o);
     for (int i=0; i<VRPyBase::pySize(keys); i++) {
@@ -108,7 +109,7 @@ template<> bool toValue(PyObject* o, map<string, string>& m) {
         m[t] = u;
     }
     return 1;
-}
+}*/
 
 
 

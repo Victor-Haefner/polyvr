@@ -35,7 +35,7 @@ struct VRMLSchema {
 
     void addNodeRef(string node, vector<string> fields, vector<string> types, vector<string> defaults) {
         nodeRefs[node] = NodeRef();
-        for (uint i=0; i<fields.size(); i++) {
+        for (unsigned int i=0; i<fields.size(); i++) {
             nodeRefs[node].fieldRefs[fields[i]] = FieldRef();
             nodeRefs[node].fieldRefs[fields[i]].type = types[i];
             nodeRefs[node].fieldRefs[fields[i]].def  = defaults[i];
@@ -747,10 +747,10 @@ struct VRMLNode : VRMLUtils {
         vector<Color3f> diffuseColor = getMultiField<Color3f>(data, "diffuseColor", {Color3f(0.8,0.8,0.8)});
         vector<Color3f> specularColor = getMultiField<Color3f>(data, "specularColor", {Color3f(0,0,0)});
         vector<Color3f> emissiveColor = getMultiField<Color3f>(data, "emissiveColor", {Color3f(0,0,0)});
-        vector<float> shininess = getMultiField<float>(data, "shininess", {0.2});
-        vector<float> transparency = getMultiField<float>(data, "transparency", {0});
+        vector<float> shininess = getMultiField<float>(data, "shininess", {0.2f});
+        vector<float> transparency = getMultiField<float>(data, "transparency", {0.0f});
         auto m = VRMaterial::create("material");
-        for (uint i=0; i<diffuseColor.size(); i++) {
+        for (unsigned int i=0; i<diffuseColor.size(); i++) {
             if (i > 0) m->addPass();
             m->setAmbient( ambientColor[i] );
             m->setDiffuse( diffuseColor[i] );
@@ -960,7 +960,7 @@ struct VRML2Node : VRMLNode {
                 if (doNormals) { // TODO, there may be negative values??
                     if (!normalPerVertex) {
                         if (normalIndex.size()) { // different normal indices, one index per face
-                            for (uint i = 0; i<normalIndex.size(); i++) {
+                            for (unsigned int i = 0; i<normalIndex.size(); i++) {
                                 int ID = normalIndex[i];
                                 int N = geo.getFaceSize(i);
                                 for (int j=0; j<N; j++) if (ID >= 0) geo.pushNormalIndex(ID);
@@ -981,7 +981,7 @@ struct VRML2Node : VRMLNode {
                 if (doColors) {
                     if (!colorPerVertex) {
                         if (colorIndex.size()) { // different color indices, one index per face
-                            for (uint i = 0; i<colorIndex.size(); i++) {
+                            for (unsigned int i = 0; i<colorIndex.size(); i++) {
                                 int ID = colorIndex[i];
                                 int N = geo.getFaceSize(i);
                                 for (int j=0; j<N; j++) geo.pushColorIndex(ID);

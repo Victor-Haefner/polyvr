@@ -49,7 +49,7 @@ void VRWindow::addView(VRViewPtr view) {
 
 void VRWindow::remView(VRViewPtr view) {
     if (mouse) mouse->setViewport(0);
-    for (uint i=0;i<views.size();i++) {
+    for (unsigned int i=0;i<views.size();i++) {
         if (views[i].lock() != view) continue;
         views.erase(views.begin() + i);
         return;

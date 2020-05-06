@@ -75,7 +75,7 @@ void FABRIK::addChain(string name, vector<int> joints) {
     Chain c;
     c.name = name;
     c.joints = joints;
-    for (uint i=0; i+1<joints.size(); i++) {
+    for (unsigned int i=0; i+1<joints.size(); i++) {
         auto p1 = this->joints[joints[i  ]].p->pos();
         auto p2 = this->joints[joints[i+1]].p->pos();
         c.distances.push_back((p2-p1).length());
@@ -85,7 +85,7 @@ void FABRIK::addChain(string name, vector<int> joints) {
         return (find(v.begin(), v.end(), i) != v.end());
     };
 
-    for (uint i=0; i<joints.size(); i++) {
+    for (unsigned int i=0; i<joints.size(); i++) {
         auto& in = this->joints[joints[i]].in;
         auto& out = this->joints[joints[i]].out;
         if (i > 0 && has(in, joints[i-1]) == 0) in.push_back(joints[i-1]);

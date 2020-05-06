@@ -56,7 +56,7 @@ void VRGroup::sync() {
 
     clearChildren();
 
-    for (uint i=0; i<tmp->getChildrenCount(); i++)
+    for (unsigned int i=0; i<tmp->getChildrenCount(); i++)
         addChild(tmp->getChild(i)->duplicate());
 }
 
@@ -65,10 +65,10 @@ void VRGroup::apply() {
     auto tmp = templates[group].lock();
     if (tmp == 0) return;
 
-    for (uint i=0; i<getChildrenCount(); i++)
+    for (unsigned int i=0; i<getChildrenCount(); i++)
         tmp->addChild(getChild(i)->duplicate());
 
-    for (uint i=0; i< groups[group].size(); i++) {
+    for (unsigned int i=0; i< groups[group].size(); i++) {
         VRGroupPtr g = groups[group][i].lock();
         if (g == 0) continue;
         if (g->getActive()) g->sync();

@@ -118,7 +118,7 @@ void PolyVR::shutdown() {
 /*
     pvr->monitor.reset();
     pvr->gui_mgr.reset();
-    pvr->interface.reset();
+    pvr->main_interface.reset();
     pvr->loader.reset();
     pvr->setup_mgr.reset();
     pvr->scene_mgr.reset();
@@ -246,7 +246,7 @@ void PolyVR::init(int argc, char **argv) {
 #endif
 
     scene_mgr = VRSceneManager::create();
-    interface = shared_ptr<VRMainInterface>(VRMainInterface::get());
+	main_interface = shared_ptr<VRMainInterface>(VRMainInterface::get());
     monitor = shared_ptr<VRInternalMonitor>(VRInternalMonitor::get());
 
 #ifndef WITHOUT_GTK
@@ -311,6 +311,7 @@ string createTimeStamp() {
     return asctime(curtime);
 }
 
+#ifndef _WIN32
 char getch() {
         char buf = 0;
         struct termios old = {0};
@@ -326,6 +327,21 @@ char getch() {
         if (tcsetattr(0, TCSADRAIN, &old) < 0) perror ("tcsetattr ~ICANON");
         return (buf);
 }
+#else
+TCHAR getch() {
+	DWORD mode, cc;
+	HANDLE h = GetStdHandle(STD_INPUT_HANDLE);
+	if (h == NULL) {
+		return 0; // console not found
+	}
+	GetConsoleMode(h, &mode);
+	SetConsoleMode(h, mode & ~(ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT));
+	TCHAR c = 0;
+	ReadConsole(h, &c, 1, &cc, NULL);
+	SetConsoleMode(h, mode);
+	return c;
+}
+#endif
 
 void PolyVR::checkProcessesAndSockets() {
     // check for failed startup

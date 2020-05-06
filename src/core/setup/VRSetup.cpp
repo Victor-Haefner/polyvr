@@ -47,7 +47,7 @@ VRSetup::VRSetup(string name) {
     user = 0;
     tracking = "None";
 
-#ifndef WASM
+#ifndef WITHOUT_VIVE
     vive = shared_ptr<Vive>( new Vive() );
 #endif
 
@@ -136,7 +136,7 @@ void VRSetup::updateTracking() {
 #ifndef WITHOUT_VRPN
     VRPN::update();
 #endif
-#ifndef WASM
+#ifndef WITHOUT_VIVE
     vive->update();
 #endif
     for (auto view : getViews()) view->updateMirror();
@@ -202,7 +202,7 @@ void VRSetup::printOSG() {
     std::function<void(Node*, string)> printOSGNode = [&](Node* node, string indent) {
         string name = OSG::getName(node) ? OSG::getName(node) : "Unnamed";
         cout << indent << "Node: " << name << " <- " << node->getCore()->getTypeName() << endl;
-        for (uint i=0; i < node->getNChildren(); i++) printOSGNode(node->getChild(i), indent + " ");
+        for (unsigned int i=0; i < node->getNChildren(); i++) printOSGNode(node->getChild(i), indent + " ");
         if (string(node->getCore()->getTypeName()) == "VisitSubTree") {
             VisitSubTree* visitor = dynamic_cast<VisitSubTree*>( node->getCore() );
             Node* link = visitor->getSubTreeRoot();

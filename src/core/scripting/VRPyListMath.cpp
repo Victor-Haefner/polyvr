@@ -1,6 +1,8 @@
 #include "VRPyListMath.h"
 
-void printPyListType() {
+// DEPRECATED
+
+/*void printPyListType() {
     cout << "PyList_Type methods:\n";
     for (int i=0; PyList_Type.tp_methods[i].ml_name != NULL; i++) {
         PyMethodDef& m = PyList_Type.tp_methods[i];
@@ -33,4 +35,4 @@ void VRPyListMath::init(PyObject* mod) {
 PyObject* VRPyListMath::add(PyObject* self, PyObject* args) {
     cout << "YAAAAY: add working\n";
     Py_RETURN_TRUE;
-}
+}*/

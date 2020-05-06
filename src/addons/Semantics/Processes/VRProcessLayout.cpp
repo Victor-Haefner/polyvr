@@ -67,7 +67,7 @@ VRPathtoolPtr VRProcessLayout::getSBDPathtool(int subject) { return toolSBDs[sub
 int wrapString(string& s, int width) {
     int w = 0;
     vector<int> newBreaks;
-    for (uint i=0; i<s.size(); i++) {
+    for (unsigned int i=0; i<s.size(); i++) {
         char c = s[i];
 
         if (c == '\n') w = 0;
@@ -267,7 +267,7 @@ void VRProcessLayout::setupLabel(VRProcessNodePtr message, VRPathtoolPtr ptool, 
 
 void VRProcessLayout::buildSID() {
     auto subjects = process->getSubjects();
-	for (uint i=0; i < subjects.size(); i++) {
+	for (unsigned int i=0; i < subjects.size(); i++) {
         auto s = subjects[i];
         Vec3d pos = s->getPosition( Vec3d(0,0,i*25*layoutScale), 20*layoutScale);
         appendToHandle(pos, s, toolSID);
@@ -283,12 +283,12 @@ void VRProcessLayout::buildSID() {
 
 void VRProcessLayout::buildSBDs() {
     auto subjects = process->getSubjects();
-	for (uint i=0; i < subjects.size(); i++) {
+	for (unsigned int i=0; i < subjects.size(); i++) {
         int sID = subjects[i]->getID();
         auto toolSBD = toolSBDs[sID];
         auto actions = process->getSubjectStates(sID);
 
-        for (uint j=0; j < actions.size(); j++) {
+        for (unsigned int j=0; j < actions.size(); j++) {
             auto a = actions[j];
             Vec3d pos = a->getPosition( Vec3d((j+1)*40*layoutScale,0,i*25*layoutScale), 20*layoutScale);
             appendToHandle(pos, a, toolSBD);

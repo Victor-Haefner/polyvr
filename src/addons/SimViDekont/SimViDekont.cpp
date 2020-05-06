@@ -41,7 +41,7 @@ bool SimViDekont::isElementValid(int i, frame* f) {
     // compute bounding box
 
     Vec3d Min, Max, delta;
-    uint id = f->ind->at(i*8); // vert ID
+    unsigned int id = f->ind->at(i*8); // vert ID
 
     for (int k=0;k<3;k++) Min[k] = f->pos->at( id ).x[k];
     for (int k=0;k<3;k++) Max[k] = f->pos->at( id ).x[k];
@@ -71,7 +71,7 @@ bool SimViDekont::isElementValid0  (int i, frame* f) {
 
     if(f->strain->at(i) <= 0.85)
         return true;
-    //uint id = f->ind->at(i*8); // vert ID
+    //unsigned int id = f->ind->at(i*8); // vert ID
 
     //cout << "i that's i'm using now..." << i << endl;
     return false;
@@ -103,10 +103,10 @@ void SimViDekont::createGeo(frame* f) {
     // go through the point ids && count the elements they belong to
     map<int, int>* vmap = new map<int, int>();
     map<int, int>* vmap2 = new map<int, int>(); // maps points new to old IDs
-    for(uint i=0; i<f->ind->size()/8; i++) { // is element ID
+    for(unsigned int i=0; i<f->ind->size()/8; i++) { // is element ID
         bool eValid = isElementValid(i,f);
 
-        for (uint j=0; j < 8; j++) { // 8 verts in element
+        for (unsigned int j=0; j < 8; j++) { // 8 verts in element
             int id = f->ind->at(i*8+j); // vert ID
 
             // count vert IDs
@@ -125,7 +125,7 @@ void SimViDekont::createGeo(frame* f) {
     Vec3d p;
     float k = 200; // scale
     int j = 0;
-    for(uint i=0; i < f->pos->size(); i++) {
+    for(unsigned int i=0; i < f->pos->size(); i++) {
         if ((*vmap)[i] == 0 || (*vmap)[i] == 8) continue;
 
         //cout << "\n" << i << flush;
@@ -151,11 +151,11 @@ void SimViDekont::createGeo(frame* f) {
     }
 
     int* id = new int[8];
-    for(uint i=0; i < f->ind->size()/8; i++) {
+    for(unsigned int i=0; i < f->ind->size()/8; i++) {
         bool eValid = isElementValid(i,f);
         if (!eValid) continue;
 
-        for (uint j=0; j < 8; j++) id[j] = f->ind->at(i*8+j);
+        for (unsigned int j=0; j < 8; j++) id[j] = f->ind->at(i*8+j);
 
         // element sides
         if (doSurface) {
@@ -240,11 +240,11 @@ void SimViDekont::computeVertexColors(frame* f, map<int, int>* vmap, map<int, fl
     if (f->stress->size() == 0 || f->strain->size() == 0 ) return;
     //float max = f->stress->at(0);   //1.22e9;
     float max = (stress) ? f->stress->at(0) : f->strain->at(0);
-    for(uint i=0; i < f->ind->size()/8; i++) { // go through elements
+    for(unsigned int i=0; i < f->ind->size()/8; i++) { // go through elements
         //float stress = f->stress->at(i+1)/max;
         float sValue = (stress) ? (f->stress->at(i+1)/max) : (f->strain->at(i+1)/max);
 
-        for (uint j=0; j < 8; j++) { // 8 vertices per element
+        for (unsigned int j=0; j < 8; j++) { // 8 vertices per element
             int id = f->ind->at(i*8+j);
 
             VsValue[id] += sValue/float((*vmap)[id]);

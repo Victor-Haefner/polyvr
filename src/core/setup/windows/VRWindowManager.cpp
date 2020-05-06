@@ -2,6 +2,7 @@
 #include <OpenSG/OSGGLUT.h>
 #include <OpenSG/OSGGLUTWindow.h>
 #include <OpenSG/OSGChangeList.h>
+#include <thread>
 
 #include "VRWindowManager.h"
 #include "core/setup/devices/VRMouse.h"
@@ -149,7 +150,7 @@ void VRWindowManager::stopWindows() {
     cout << "VRWindowManager::stopWindows" << endl;
 #ifndef WASM
     BarrierRefPtr barrier = Barrier::get("PVR_rendering", true);
-    while (barrier->getNumWaiting() < VRWindow::active_window_count) usleep(1);
+    while (barrier->getNumWaiting() < VRWindow::active_window_count) this_thread::sleep_for(chrono::microseconds(1));
     for (auto w : getWindows() ) w.second->stop();
     barrier->enter(VRWindow::active_window_count+1);
 #endif
@@ -207,7 +208,7 @@ void VRWindowManager::updateWindows() {
         if (timeout > 0) {
             size_t tEnter = time(0);
             while (barrier->getNumWaiting() < VRWindow::active_window_count) {
-                usleep(1);
+				this_thread::sleep_for(chrono::microseconds(1));
                 size_t tNow = time(0);
                 int delta = tNow - tEnter;
                 if (delta >= timeout) {

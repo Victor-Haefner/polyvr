@@ -7,8 +7,10 @@
 
 #include <cstdio>
 #include <sys/types.h>
+#ifndef _WIN32
 #include <dirent.h>
 #include <unistd.h>
+#endif
 
 void getFileCrc(istream& input_stream, vector<char>& buff, unsigned long& result_crc) {
     unsigned long calculate_crc = 0;

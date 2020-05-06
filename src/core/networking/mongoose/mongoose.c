@@ -750,6 +750,7 @@ typedef int cs_dirent_dummy;
 #include <sys/time.h>
 #endif
 #else
+#include <WinSock2.h>
 #include <windows.h>
 #endif
 

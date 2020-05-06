@@ -1,8 +1,8 @@
 #include "VRPyGraph.h"
-#include "VRPyTransform.h"
 #include "VRPyBaseT.h"
-#include "VRPyPose.h"
 #include "VRPyTypeCaster.h"
+#include "VRPyTransform.h" 
+#include "VRPyPose.h"
 
 using namespace OSG;
 

@@ -77,7 +77,7 @@ void VRGeoPrimitive::update(int i, VRHandleWeakPtr hw, float v) {
 
     auto params = splitString(primitive->toString(), ' ');
     string args;
-    for (uint j=0; j<params.size(); j++) {
+    for (unsigned int j=0; j<params.size(); j++) {
         if (i != int(j)) args += params[j];
         else args += toString(v);
         if (j < params.size()-1) args += " ";

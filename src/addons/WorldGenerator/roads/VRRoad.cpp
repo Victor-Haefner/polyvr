@@ -140,7 +140,7 @@ vector<VRRoadPtr> VRRoad::splitAtIntersections(VRRoadNetworkPtr network) { // TO
     auto e = getEntity();
     auto path = e->getEntity("path");
     auto nodes = path->getAllEntities("nodes");
-    for (uint i=1; i+1<nodes.size(); i++) {
+    for (unsigned int i=1; i+1<nodes.size(); i++) {
         auto node = nodes[i]->getEntity("node");
         int N = node->getAllEntities("paths").size();
         if (N <= 1) continue;
@@ -149,7 +149,7 @@ vector<VRRoadPtr> VRRoad::splitAtIntersections(VRRoadNetworkPtr network) { // TO
         auto npath = path->copy();
         path->clear("nodes");
         npath->clear("nodes");
-        for (uint j=0; j<=i; j++) {
+        for (unsigned int j=0; j<=i; j++) {
             path->add("nodes", nodes[j]->getName());
         }
         nodes[i]->set("sign", "1"); // last node of old path
@@ -159,7 +159,7 @@ vector<VRRoadPtr> VRRoad::splitAtIntersections(VRRoadNetworkPtr network) { // TO
         npath->add("nodes", ne->getName());
         ne->set("path", npath->getName());
         ne->getEntity("node")->add("paths", ne->getName());
-        for (uint j=i+1; j<nodes.size(); j++) {
+        for (unsigned int j=i+1; j<nodes.size(); j++) {
             npath->add("nodes", nodes[j]->getName());
             nodes[j]->set("path", npath->getName());
         }

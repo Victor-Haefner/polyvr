@@ -210,7 +210,7 @@ void VRScene::showReferentials(bool b, VRObjectPtr o) {
     if (o->hasTag("transform")) t = static_pointer_cast<VRTransform>(o);
     if (t) t->showCoordAxis(b);
 
-    for (uint i=0; i<o->getChildrenCount(); i++) showReferentials(b, o->getChild(i));
+    for (unsigned int i=0; i<o->getChildrenCount(); i++) showReferentials(b, o->getChild(i));
 }
 
 void VRScene::showLights(bool b) { for (auto be : VRLightBeacon::getAll()) be.lock()->showLightGeo(b); }
@@ -247,7 +247,7 @@ VRProgressPtr VRScene::getLoadingProgress() { return loadingProgress; }
 void mkPath(string path) {
     auto dirs = splitString(path, '/');
     path = "";
-    for (uint i=1; i<dirs.size(); i++) {
+    for (unsigned int i=1; i<dirs.size(); i++) {
         path += "/"+dirs[i];
         makedir(path);
     }

@@ -23,7 +23,7 @@ Path::~Path() {}
 PathPtr Path::create() { return PathPtr(new Path()); }
 
 bool Path::isCrossing(PathPtr path) {
-    for (uint i = 1; i<positions.size(); i++) {
+    for (unsigned int i = 1; i<positions.size(); i++) {
         auto p1 = positions[i-1];
         auto p2 = positions[i];
         auto t = path->getClosestPoint(p1);
@@ -185,7 +185,7 @@ void Path::approximate(int d) {
     if (d == 2) {
         vector<Pose> res;
 
-		for (uint j=1; j<points.size(); j++) { // p1,p2,pm,p3,p4
+		for (unsigned int j=1; j<points.size(); j++) { // p1,p2,pm,p3,p4
 			auto p1 = points[j-1];
 			auto p4 = points[j];
 			res.push_back( p1 );
@@ -209,7 +209,7 @@ void Path::approximate(int d) {
                 for (auto t : Tvec) poses.push_back( *getPose(t, j-1, j, false) );
                 poses.push_back(p4);
 
-                for (uint i=1; i<poses.size()-1; i++) {
+                for (unsigned int i=1; i<poses.size()-1; i++) {
                     auto& pm = poses[i];
                     res.push_back( Pose( intersect(poses[i-1],pm) ) );
                     res.push_back(pm);
@@ -235,7 +235,7 @@ void Path::approximate(int d) {
             }
             poses.push_back(p4);
 
-            for (uint i=1; i<poses.size()-1; i++) {
+            for (unsigned int i=1; i<poses.size()-1; i++) {
                 auto& p0 = poses[i-1];
                 auto& pm = poses[i];
                 if (isLinear(p0,pm)) res.push_back( Pose( (p0.pos()+pm.pos())*0.5, p0.dir(), pm.up() ) );
@@ -381,7 +381,7 @@ vector<Vec3d> Path::getColors() { return colors; }
 
 vector<Pose> Path::getPoses() {
     vector<Pose> res;
-    for (uint i=0; i<positions.size(); i++) {
+    for (unsigned int i=0; i<positions.size(); i++) {
         res.push_back( Pose(positions[i], directions[i], up_vectors[i]) );
     }
     return res;
@@ -493,7 +493,7 @@ float Path::getClosestPoint(Vec3d p) {
     float dist2 = 1.0e20;
     float t_min = 0;
 
-    for (uint i=1; i<positions.size(); i++){
+    for (unsigned int i=1; i<positions.size(); i++){
         Vec3d p1 = positions[i-1];
         Vec3d p2 = positions[i];
 
@@ -516,7 +516,7 @@ float Path::getClosestPoint(Vec3d p) {
 float Path::getDistanceToHull(Vec3d p) {
     float dist2 = 1.0e20;
 
-    for (uint i=1; i<points.size(); i++){
+    for (unsigned int i=1; i<points.size(); i++){
         Vec3d p1 = points[i-1].pos();
         Vec3d p2 = points[i].pos();
         auto d = p2-p1;
@@ -535,7 +535,7 @@ float Path::getDistanceToHull(Vec3d p) {
 float Path::getDistance(Vec3d p) {
     float dist2 = 1.0e20;
 
-    for (uint i=1; i<positions.size(); i++){
+    for (unsigned int i=1; i<positions.size(); i++){
         Vec3d p1 = positions[i-1];
         Vec3d p2 = positions[i];
         auto d = p2-p1;

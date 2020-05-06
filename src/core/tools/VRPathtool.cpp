@@ -805,7 +805,7 @@ void VRPathtool::updateBezierVisuals() {
                 auto cPs = path->getControlPoints();
                 auto Ps = path->getPoints();
                 if ((Ps.size()-1)*2 != cPs.size()) continue;
-                for (uint i=0; i<Ps.size()-1; i++) {
+                for (unsigned int i=0; i<Ps.size()-1; i++) {
                     int p1 = data.pushVert(Ps[i].pos());
                     int p2 = data.pushVert(cPs[i*2]);
                     int p3 = data.pushVert(cPs[i*2+1]);

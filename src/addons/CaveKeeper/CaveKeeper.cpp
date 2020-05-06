@@ -112,7 +112,7 @@ VRGeometryPtr BlockWorld::createChunk(vector<CKOctree::element*>& elements) {
 
     int c = 0;
 
-    for(uint i=0;i<elements.size();i++) {
+    for(unsigned int i=0;i<elements.size();i++) {
 		CKOctree::element* e = elements[i];
         for (int j=0;j<3;j++) {
             Pos->addValue(e->pos);

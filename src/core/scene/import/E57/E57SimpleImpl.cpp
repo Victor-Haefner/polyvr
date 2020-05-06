@@ -49,7 +49,9 @@
 #    include <io.h>
 #    include <fcntl.h>
 #    include <sys\stat.h>
+#    include <WinSock2.h>
 #    include <windows.h>
+#    include <objbase.h>
 #  include <boost/uuid/uuid.hpp>
 #  include <boost/uuid/uuid_generators.hpp>
 #  include <boost/uuid/uuid_io.hpp>
@@ -372,7 +374,7 @@ char * e57::GetNewGuid(void)
 #if defined(_MSC_VER)
 	GUID		guid;
 	CoCreateGuid((GUID*)&guid);
-	OLECHAR wbuffer[64];
+	wchar_t wbuffer[64];
 	StringFromGUID2(guid,&wbuffer[0],64);
 	size_t	converted = 0;
 	wcstombs_s(&converted, fileGuid,wbuffer,64);

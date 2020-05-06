@@ -250,7 +250,7 @@ MChainGearRelation* checkChainPart(MChain* c, MPart* p) {
 
 vector<pointPolySegment> MChain::toPolygon(Vec3d p) {
     vector<pointPolySegment> res;
-    for (uint i=0; i<polygon.size(); i+=2) {
+    for (unsigned int i=0; i<polygon.size(); i+=2) {
         Vec3d p1 = polygon[i];
         Vec3d p2 = polygon[i+1];
         Vec3d d = p2-p1;
@@ -435,7 +435,7 @@ void MChain::updateGeo() {
 
     int j=0;
     //cout << "MChain::updateGeo " << nbrs.size() << "   " << neighbors.size() << endl;
-    for (uint i=0; i<nbrs.size(); i++) {
+    for (unsigned int i=0; i<nbrs.size(); i++) {
         j = (i+1) % nbrs.size(); // next
         VRPrimitive* p1 = nbrs[i]->prim;
         VRPrimitive* p2 = nbrs[j]->prim;
@@ -511,7 +511,7 @@ void MChain::updateGeo() {
     reference[3] = Vec4d(c[0], c[1], c[2], 1 );
 
     VRGeoData data; // draw polygon
-    for (uint i=0; i<polygon.size()-1; i+=2) {
+    for (unsigned int i=0; i<polygon.size()-1; i+=2) {
         data.pushVert(polygon[i], Vec3d(0,1,0), Color4f(0,1,0,1));
         data.pushVert(polygon[i+1], Vec3d(0,1,0), Color4f(1,1,0,1));
         data.pushLine();
@@ -579,7 +579,7 @@ void MGear::setup() {
 
 VRTransformPtr VRMechanism::addChain(float w, vector<VRTransformPtr> geos, string dirs) {
     MChain* c = new MChain();
-    for (uint i=0; i<geos.size(); i++) {
+    for (unsigned int i=0; i<geos.size(); i++) {
         int j = (i+1)%geos.size();
         int k = (i+2)%geos.size();
 

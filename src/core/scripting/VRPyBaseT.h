@@ -1,3 +1,6 @@
+#ifndef VRPYBASET_H_INCLUDED
+#define VRPYBASET_H_INCLUDED
+
 #include <boost/bind.hpp>
 #include "VRPyTypeCaster.h"
 #include "VRPyBaseFactory.h"
@@ -87,7 +90,7 @@ R VRPyBase::execPyCall(PyObject* pyFkt, PyObject* pArgs, T t) {
 }
 
 template <typename T>
-void VRPyBase::execPyCall(PyObject* pyFkt, PyObject* pArgs, T t) {
+void VRPyBase::execPyCallVoid(PyObject* pyFkt, PyObject* pArgs, T t) {
     if (pyFkt == 0) return;
     PyGILState_STATE gstate = PyGILState_Ensure();
     if (PyErr_Occurred() != NULL) PyErr_Print();
@@ -247,3 +250,5 @@ void VRPyBaseT<T>::registerModule(string name, PyObject* mod, PyTypeObject* tp_b
     Py_INCREF(typeRef);
     PyModule_AddObject(mod, name.c_str(), (PyObject*)typeRef);
 }
+
+#endif //VRPYBASET_H_INCLUDED

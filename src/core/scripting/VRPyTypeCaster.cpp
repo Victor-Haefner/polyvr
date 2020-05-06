@@ -66,7 +66,7 @@ template<> PyObject* VRPyTypeCaster::cast(const VRObjectPtr& obj) {
 typedef void* voidPtr;
 template<> PyObject* VRPyTypeCaster::cast(const voidPtr& v) { if (v) { PyObject* o = (PyObject*)v; Py_INCREF(o); return o; } else Py_RETURN_NONE; }
 template<> PyObject* VRPyTypeCaster::cast(const int& i) { return PyInt_FromLong(i); }
-template<> PyObject* VRPyTypeCaster::cast(const uint& i) { return PyInt_FromLong(i); }
+template<> PyObject* VRPyTypeCaster::cast(const unsigned int& i) { return PyInt_FromLong(i); }
 template<> PyObject* VRPyTypeCaster::cast(const short& s) { return PyInt_FromLong(s); }
 template<> PyObject* VRPyTypeCaster::cast(const char& i) { return PyInt_FromLong(i); }
 template<> PyObject* VRPyTypeCaster::cast(const size_t& i) { return PyInt_FromLong(i); }
@@ -96,13 +96,13 @@ template<> PyObject* VRPyTypeCaster::cast(const Line& l) {
 
 PyObject* VRPyTypeCaster::pack(const vector<PyObject*>& v) {
     auto l = PyList_New(v.size());
-    for (uint i=0; i<v.size(); i++) PyList_SetItem(l,i,v[i]);
+    for (unsigned int i=0; i<v.size(); i++) PyList_SetItem(l,i,v[i]);
     return l;
 }
 
 PyObject* VRPyTypeCaster::pack(const vector<vector<PyObject*>>& v) {
     auto l = PyList_New(v.size());
-    for (uint i=0; i<v.size(); i++) PyList_SetItem(l,i,pack(v[i]));
+    for (unsigned int i=0; i<v.size(); i++) PyList_SetItem(l,i,pack(v[i]));
     return l;
 }
 
