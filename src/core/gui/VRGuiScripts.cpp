@@ -26,50 +26,6 @@
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-/*class VRGuiScripts_ModelColumns : public Gtk::TreeModelColumnRecord {
-    public:
-        VRGuiScripts_ModelColumns() { add(script); add(fg); add(bg); add(time); add(tfg); add(tbg); add(icon); add(Nfound); add(type); }
-        Gtk::TreeModelColumn<Glib::ustring> script; 0
-        Gtk::TreeModelColumn<Glib::ustring> fg;     1
-        Gtk::TreeModelColumn<Glib::ustring> bg;     2
-        Gtk::TreeModelColumn<Glib::ustring> time;   3
-        Gtk::TreeModelColumn<Glib::ustring> tfg;    4
-        Gtk::TreeModelColumn<Glib::ustring> tbg;    5
-        Gtk::TreeModelColumn<Glib::ustring> icon;   6
-        Gtk::TreeModelColumn<Glib::ustring> Nfound; 7
-        Gtk::TreeModelColumn<gint> type;            8
-};*/
-
-/*class VRGuiScripts_ArgsModelColumns : public Gtk::TreeModelColumnRecord {
-    public:
-        VRGuiScripts_ArgsModelColumns() { add(name); add(value); add(obj); add(type); }
-        Gtk::TreeModelColumn<Glib::ustring> name;   0
-        Gtk::TreeModelColumn<Glib::ustring> value;  1
-        Gtk::TreeModelColumn<gpointer> obj;         2
-        Gtk::TreeModelColumn<Glib::ustring> type;   3
-};*/
-
-/*class VRGuiScripts_TrigsModelColumns : public Gtk::TreeModelColumnRecord {
-    public:
-        VRGuiScripts_TrigsModelColumns() { add(trigs); add(devs); add(key); add(state); add(params); add(obj); add(name); }
-        Gtk::TreeModelColumn<Glib::ustring> trigs;  0
-        Gtk::TreeModelColumn<Glib::ustring> devs;   1
-        Gtk::TreeModelColumn<Glib::ustring> key;    2
-        Gtk::TreeModelColumn<Glib::ustring> state;  3
-        Gtk::TreeModelColumn<Glib::ustring> params; 4
-        Gtk::TreeModelColumn<gpointer> obj;         5
-        Gtk::TreeModelColumn<Glib::ustring> name;   6
-};*/
-
-/*class VRGuiScripts_HelpColumns : public Gtk::TreeModelColumnRecord {
-    public:
-        VRGuiScripts_HelpColumns() { add(obj); add(type); add(cla); add(mod); }
-        Gtk::TreeModelColumn<Glib::ustring> obj;    0
-        Gtk::TreeModelColumn<Glib::ustring> type;   1
-        Gtk::TreeModelColumn<Glib::ustring> cla;    2
-        Gtk::TreeModelColumn<Glib::ustring> mod;    3
-};*/
-
 // --------------------------
 // ---------Callbacks--------
 // --------------------------
