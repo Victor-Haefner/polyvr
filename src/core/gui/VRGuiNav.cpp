@@ -20,6 +20,8 @@ using namespace std;
 // ---------SIGNALS----------
 // --------------------------
 
+GtkListStore* navBindings_store = 0;
+
 void VRGuiNav::on_preset_changed() {
     auto scene = VRScene::getCurrent();
     if (scene == 0) return;
@@ -27,10 +29,10 @@ void VRGuiNav::on_preset_changed() {
     if (preset == 0) return;
 
     //get binding type liststore
-    GtkListStore* store = (GtkListStore*)getGUIBuilder()->get_object("binding_types");
+    //GtkListStore* store = (GtkListStore*)getGUIBuilder()->get_object("binding_types");
 
     //TODO: get all bindings from preset && update nav_bindings
-    gtk_list_store_clear(store);
+    gtk_list_store_clear(navBindings_store);
     for (auto& b : *preset) {
         string cb_name;
         if (b.cb) cb_name = b.cb->name;
@@ -39,12 +41,12 @@ void VRGuiNav::on_preset_changed() {
         if (b.doRepeat) type = "State";
 
         GtkTreeIter row;
-        gtk_list_store_append(store, &row);
-        gtk_list_store_set(store, &row, 0, b.key, -1);
-        gtk_list_store_set(store, &row, 1, b.state, -1);
-        gtk_list_store_set(store, &row, 2, type.c_str(), -1);
-        gtk_list_store_set(store, &row, 3, cb_name.c_str(), -1);
-        gtk_list_store_set(store, &row, 4, NULL, -1);
+        gtk_list_store_append(navBindings_store, &row);
+        gtk_list_store_set(navBindings_store, &row, 0, b.key, -1);
+        gtk_list_store_set(navBindings_store, &row, 1, b.state, -1);
+        gtk_list_store_set(navBindings_store, &row, 2, type.c_str(), -1);
+        gtk_list_store_set(navBindings_store, &row, 3, cb_name.c_str(), -1);
+        gtk_list_store_set(navBindings_store, &row, 4, NULL, -1);
     }
 }
 
@@ -156,6 +158,7 @@ void VRGuiNav_on_cbbinding_changed(const char* path_string, GtkTreeIter* new_ite
 // --------------------------
 
 VRGuiNav::VRGuiNav() {
+    navBindings_store = (GtkListStore*)(getGUIBuilder()->get_object("nav_bindings"));
     setComboboxCallback("combobox5", bind(&VRGuiNav::on_preset_changed, this) );
 
     setButtonCallback("button2", bind(&VRGuiNav::on_new_preset_clicked, this) );
