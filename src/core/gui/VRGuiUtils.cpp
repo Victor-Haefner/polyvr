@@ -429,9 +429,10 @@ int getListStorePos(string ls, string s) {
         gchar* item = NULL;
         gtk_tree_model_get_iter_from_string((GtkTreeModel*)store, &iter, si.c_str());
         gtk_tree_model_get((GtkTreeModel*)store, &iter, 0, &item, -1);
+        string Item = string(item);
         g_free(item);
         if (!item) continue;
-        if (string(item) == s) return i;
+        if (Item == s) return i;
     }
     return -1;
 }

@@ -34,9 +34,16 @@ VRGuiRecWidget::VRGuiRecWidget() {
     gtk_button_box_set_child_size(box, 20, -1);
 
     auto addButton = [&](const char* icon, int signal) {
-        GtkButton* b = (GtkButton*)gtk_dialog_add_button(diag, "", signal);
+        //GtkButton* b = (GtkButton*)gtk_dialog_add_button(diag, NULL, signal);
+        //GtkButton* b = (GtkButton*)gtk_dialog_add_button(diag, GTK_STOCK_MEDIA_PLAY, signal);
+        //auto img = gtk_image_new_from_stock(GTK_STOCK_MEDIA_PLAY, GTK_ICON_SIZE_BUTTON);
+        //gtk_image_set_from_stock(imgPlay, stock_id, GTK_ICON_SIZE_BUTTON);
+        //gtk_button_set_image(but, img);
+
+        auto but = (GtkButton*)gtk_button_new();
         GtkWidget* img = gtk_image_new_from_stock(icon, GTK_ICON_SIZE_BUTTON);
-        gtk_button_set_image(b, img);
+        gtk_container_add((GtkContainer*)but, img);
+        gtk_container_add((GtkContainer*)box, (GtkWidget*)but);
     };
 
     addButton(GTK_STOCK_MEDIA_RECORD, 1);
@@ -56,6 +63,8 @@ VRGuiRecWidget::VRGuiRecWidget() {
     connect_signal((GtkWidget*)diag, sigr, "response");
     updateCb = VRUpdateCb::create("recorder widget", bind(&VRGuiRecWidget::update, this) );
     VRSceneManager::get()->addUpdateFkt( updateCb );
+
+    setVisible(false);
 }
 
 VRGuiRecWidget::~VRGuiRecWidget() {}

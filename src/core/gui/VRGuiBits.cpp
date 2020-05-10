@@ -33,7 +33,7 @@ using namespace std;
 // --------------------------
 
 void VRGuiBits::on_view_option_toggle(VRVisualLayer* l, GtkToggleToolButton* tb) {
-    bool b = gtk_toggle_button_get_active((GtkToggleButton*)tb);
+    bool b = gtk_toggle_tool_button_get_active(tb);
     l->setVisibility( b );
 }
 
@@ -300,7 +300,7 @@ void VRGuiBits::updateVisualLayer() {
         gtk_tool_item_set_tooltip_markup(ttb, l.c_str());
         gtk_toolbar_insert((GtkToolbar*)bar, (GtkToolItem*)ttb, -1);
 
-        connect_signal<void>(ttb, bind(&VRGuiBits::on_view_option_toggle, this, lay, (GtkToggleToolButton*)ttb), "clicked");
+        connect_signal<void>(ttb, bind(&VRGuiBits::on_view_option_toggle, this, lay, (GtkToggleToolButton*)ttb), "toggled");
 
         string icon_path = VRSceneManager::get()->getOriginalWorkdir() + "/ressources/gui/" + lay->getIconName();
         gtk_image_set_from_file((GtkImage*)icon, icon_path.c_str());
