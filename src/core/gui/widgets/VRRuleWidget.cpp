@@ -9,15 +9,11 @@
 
 #include "core/utils/toString.h"
 
-#include <gtkmm/label.h>
-#include <gtkmm/treestore.h>
-#include <gtkmm/treeview.h>
-#include <gtkmm/dialog.h>
-#include <gtkmm/builder.h>
-
 using namespace OSG;
 
-VRRuleWidget::VRRuleWidget(VRGuiSemantics* m, Gtk::Fixed* canvas, VROntologyRulePtr rule) : VRSemanticWidget(m, canvas, "#00DD00") {
+// TODO
+
+/*VRRuleWidget::VRRuleWidget(VRGuiSemantics* m, Gtk::Fixed* canvas, VROntologyRulePtr rule) : VRSemanticWidget(m, canvas, "#00DD00") {
     this->rule = rule;
     label->set_text("rule");
     if (rule->query) label->set_text(rule->query->toString());
@@ -115,4 +111,4 @@ void VRRuleWidget::update() {
 
 void VRRuleWidget::reparent(VRConceptWidgetPtr w) {}
 void VRRuleWidget::reparent(VREntityWidgetPtr w) {}
-void VRRuleWidget::reparent(VRRuleWidgetPtr w) {}
+void VRRuleWidget::reparent(VRRuleWidgetPtr w) {}*/

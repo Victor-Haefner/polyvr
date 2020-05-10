@@ -2,8 +2,6 @@
 #include "VRReasoner.h"
 #include "core/utils/VRFunction.h"
 
-#include <boost/bind.hpp>
-
 using namespace OSG;
 
 VRStatement::VRStatement() {;}
@@ -14,7 +12,7 @@ VRStatement::VRStatement(string s, int p) {
     setup(0);
 
     store("data", &statement);
-    regStorageSetupFkt( VRStorageCb::create("statement setup", boost::bind(&VRStatement::setup, this, _1)) );
+    regStorageSetupFkt( VRStorageCb::create("statement setup", bind(&VRStatement::setup, this, placeholders::_1)) );
 }
 
 void VRStatement::setup(VRStorageContextPtr context) { // parse statement

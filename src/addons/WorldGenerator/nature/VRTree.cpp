@@ -21,6 +21,7 @@
 #include "core/objects/geometry/sprite/VRSprite.h"
 
 #include <OpenSG/OSGQuaternion.h>
+#include <functional>
 #include <random>
 
 #include <boost/functional/hash.hpp>
@@ -116,14 +117,14 @@ VRTree::VRTree(string name) : VRTransform(name) {
     store("seed", &seed);
     storeObjVec("branching", parameters, true);
     storeObjVec("foliage", foliage, true);
-    regStorageSetupFkt( VRStorageCb::create("tree setup", boost::bind(&VRTree::setup, this, _1)) );
+    regStorageSetupFkt( VRStorageCb::create("tree setup", bind(&VRTree::storeSetup, this, placeholders::_1)) );
 }
 
 VRTree::~VRTree() {}
 VRTreePtr VRTree::create(string name) { return shared_ptr<VRTree>(new VRTree(name)); }
 VRTreePtr VRTree::ptr() { return static_pointer_cast<VRTree>( shared_from_this() ); }
 
-void VRTree::setup(VRStorageContextPtr context) {
+void VRTree::storeSetup(VRStorageContextPtr context) {
     grow(seed);
     for (auto lp : foliage) growLeafs(lp);
 }

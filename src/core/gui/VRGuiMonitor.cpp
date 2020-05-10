@@ -2,44 +2,45 @@
 #include "VRGuiUtils.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRGlobals.h"
-#include <gtkmm/window.h>
-#include <gtkmm/liststore.h>
-#include <gtkmm/builder.h>
-#include <cairomm/context.h>
-#include <pangomm/context.h>
+
+#include <functional>
+
+#include <gtk/gtkwindow.h>
+#include <gtk/gtkliststore.h>
+#include <gtk/gtkbuilder.h>
+
+#include <cairo.h>
+
+#include "wrapper/VRGuiTreeView.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-class VRGuiMonitor_FktColumns : public Gtk::TreeModelColumnRecord {
-    public:
-        VRGuiMonitor_FktColumns() { add(fkt); add(time); add(color); }
-        Gtk::TreeModelColumn<Glib::ustring> fkt;
-        Gtk::TreeModelColumn<Glib::ustring> time;
-        Gtk::TreeModelColumn<Glib::ustring> color;
-};
-
 VRGuiMonitor::VRGuiMonitor() {
-    Gtk::DrawingArea* _da;
-    getGUIBuilder()->get_widget("profiler_area", _da);
-    da = Glib::RefPtr<Gtk::DrawingArea>(_da);
+    GtkWidget* da = getGUIBuilder()->get_widget("profiler_area");
 
-    da->add_events((Gdk::EventMask)GDK_BUTTON_PRESS_MASK);
-    da->add_events((Gdk::EventMask)GDK_BUTTON_RELEASE_MASK);
-    da->add_events((Gdk::EventMask)GDK_POINTER_MOTION_MASK);
+    gtk_widget_add_events(da, (int)GDK_BUTTON_PRESS_MASK);
+    gtk_widget_add_events(da, (int)GDK_BUTTON_RELEASE_MASK);
+    gtk_widget_add_events(da, (int)GDK_POINTER_MOTION_MASK);
 
-    da->signal_expose_event().connect( sigc::mem_fun(*this, &VRGuiMonitor::draw) );
-    da->signal_button_press_event().connect(sigc::mem_fun(*this, &VRGuiMonitor::on_button) );
-    da->signal_button_release_event().connect(sigc::mem_fun(*this, &VRGuiMonitor::on_button) );
+    function<bool(GdkEventExpose*)> sig1 = bind(&VRGuiMonitor::draw, this, placeholders::_1);
+    function<bool(GdkEventButton*)> sig2 = bind(&VRGuiMonitor::on_button, this, placeholders::_1);
+    function<void(void)> sig3 = bind(&VRGuiMonitor::select_fkt, this);
 
-    setTreeviewSelectCallback("treeview15", sigc::mem_fun(*this, &VRGuiMonitor::select_fkt) );
+    connect_signal(da, sig1, "expose_event");
+    connect_signal(da, sig2, "button_press_event");
+    connect_signal(da, sig2, "button_release_event");
+
+    setTreeviewSelectCallback("treeview15", sig3 );
 }
 
 bool VRGuiMonitor::on_button(GdkEventButton * event) {
     //int state = 1;
     //if (event->type == GDK_BUTTON_PRESS) state = 0;
 
-    float w = da->get_allocation().get_width();
+    GtkAllocation rect;
+    gtk_widget_get_allocation((GtkWidget*)da, &rect);
+    float w = rect.width;
     float x = 1.0 - event->x/w;
 
     if (event->y > 40) return true;
@@ -51,10 +52,7 @@ bool VRGuiMonitor::on_button(GdkEventButton * event) {
 }
 
 void VRGuiMonitor::select_fkt() {
-    auto row = getTreeviewSelected("treeview15");
-    if (!row) return;
-    VRGuiMonitor_FktColumns cols;
-    string selection = row->get_value(cols.fkt);
+    string selection = VRGuiTreeView("treeview15").getSelectedStringValue(0);
     if (selection == selRow) return;
     selRow = selection;
     redraw(); // TODO: breaks row selection -> focus?
@@ -62,31 +60,29 @@ void VRGuiMonitor::select_fkt() {
 }
 
 void VRGuiMonitor::draw_text(string txt, int x, int y) {
-
-    Pango::FontDescription font;
-    font.set_family("Monospace");
-    font.set_weight(Pango::WEIGHT_BOLD);
-
-    Glib::RefPtr<Pango::Layout> layout = da->create_pango_layout(txt);
-    layout->set_font_description(font);
+    PangoFontDescription* font = pango_font_description_new();
+    pango_font_description_set_family(font, "Monospace");
+    pango_font_description_set_weight(font, PANGO_WEIGHT_BOLD);
+    PangoLayout* layout = gtk_widget_create_pango_layout((GtkWidget*)da, txt.c_str());
+    pango_layout_set_font_description(layout, font);
     int tw, th;
-    layout->get_pixel_size(tw, th);
-    cr->move_to(x-tw*0.5, y-th);
-    layout->show_in_cairo_context(cr);
+    pango_layout_get_pixel_size(layout, &tw, &th);
+    cairo_move_to(cr, x-tw*0.5, y-th);
+    pango_cairo_show_layout(cr, layout);
 }
 
 void VRGuiMonitor::draw_frame(int i, float w, float h, float x, int h0, bool fill) {
-    cr->set_line_width(1.0);
-    if (!fill) cr->set_source_rgb(0, 0.5, 0.9);
-    else cr->set_source_rgb(0.75, 0.9, 1.0);
+    cairo_set_line_width(cr, 1.0);
+    if (!fill) cairo_set_source_rgb(cr, 0, 0.5, 0.9);
+    else cairo_set_source_rgb(cr, 0.75, 0.9, 1.0);
 
     float w2 = w*0.5;
-    cr->move_to(x+w2, h0);
-    cr->line_to(x-w2, h0);
-    cr->line_to(x-w2, h0+h);
-    cr->line_to(x+w2, h0+h);
-    if (fill) cr->fill();
-    else cr->stroke();
+    cairo_move_to(cr, x+w2, h0);
+    cairo_line_to(cr, x-w2, h0);
+    cairo_line_to(cr, x-w2, h0+h);
+    cairo_line_to(cr, x+w2, h0+h);
+    if (fill) cairo_fill(cr);
+    else cairo_stroke(cr);
 
     draw_text(toString(i), x, h0+h);
 }
@@ -101,10 +97,10 @@ void VRGuiMonitor::draw_timeline(int N0, int N1, int DN, int w, int h, int h0, i
         j++;
     }
 
-    cr->set_line_width(1.0);
-    cr->set_source_rgb(0, 0.5, 0.9);
-    cr->rectangle(0,h0,j*d,h);
-    cr->stroke();
+    cairo_set_line_width(cr, 1.0);
+    cairo_set_source_rgb(cr, 0, 0.5, 0.9);
+    cairo_rectangle(cr, 0,h0,j*d,h);
+    cairo_stroke(cr);
 }
 
 Vec3d VRGuiMonitor::getColor(string name) {
@@ -120,16 +116,16 @@ Vec3d VRGuiMonitor::getColor(string name) {
 void VRGuiMonitor::draw_call(int x0, int y0, int w, int h, string name) {
     Vec3d c = getColor(name);
 
-    cr->set_line_width(0.5);
-    if (name == selRow) cr->set_line_width(1.5);
-    cr->set_source_rgb(c[0], c[1], c[2]);
+    cairo_set_line_width(cr, 0.5);
+    if (name == selRow) cairo_set_line_width(cr, 1.5);
+    cairo_set_source_rgb(cr, c[0], c[1], c[2]);
     if (x0 < 0) x0 = 0;
     if (y0 < 0) y0 = 0;
     if (w < 1) w = 1;
     if (h < 1) h = 1;
 
-    cr->rectangle(x0,y0,w,h);
-    cr->stroke();
+    cairo_rectangle(cr, x0,y0,w,h);
+    cairo_stroke(cr);
 }
 
 string VRGuiMonitor::toHex(Vec3d color) {
@@ -141,21 +137,27 @@ string VRGuiMonitor::toHex(Vec3d color) {
 }
 
 void VRGuiMonitor::redraw() {
-    Glib::RefPtr<Gdk::Window> win = da->get_window();
-    if (win) gdk_window_invalidate_rect( win->gobj(), NULL, false);
+    GdkWindow* win = ((GtkWidget*)da)->window;
+    if (win) gdk_window_invalidate_rect( win, NULL, false);
 }
 
 bool VRGuiMonitor::draw(GdkEventExpose* e) {
-    Glib::RefPtr<Gdk::Drawable> win = da->get_window();
-    cr = win->create_cairo_context();
-    cr->rectangle(e->area.x, e->area.y, e->area.width, e->area.height);
-    cr->clip(); // only draw on exposed area
+    GdkWindow* win = ((GtkWidget*)da)->window;
 
-    auto a = da->get_allocation();
+    int w, h;
+    gdk_window_get_size(win, &w, &h);
+    auto surf = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, w, h);
+
+    cr = cairo_create(surf);
+    cairo_rectangle(cr, e->area.x, e->area.y, e->area.width, e->area.height);
+    cairo_clip(cr); // only draw on exposed area
+
+    GtkAllocation rect;
+    gtk_widget_get_allocation((GtkWidget*)da, &rect);
 
     // construction parameters
     int line_height = 20;
-    int width = a.get_width();
+    int width = rect.width;
 
     // get needed lines
     int lineN = 2; // timeline 1 and 2
@@ -164,7 +166,7 @@ bool VRGuiMonitor::draw(GdkEventExpose* e) {
     int Hl = 5; // scale height
     lineN += Nt*Hl;
 
-    da->set_size_request(-1, line_height*lineN);
+    gtk_widget_set_size_request((GtkWidget*)da, -1, line_height*lineN);
 
     int N = VRProfiler::get()->getHistoryLength();
     int L = 10;
@@ -205,15 +207,17 @@ void VRGuiMonitor::selectFrame() {
     }
 
     // update list
-    Glib::RefPtr<Gtk::ListStore> store = Glib::RefPtr<Gtk::ListStore>::cast_static(getGUIBuilder()->get_object("prof_fkts"));
-    store->clear();
+    GtkListStore* store = (GtkListStore*)getGUIBuilder()->get_object("prof_fkts");
+    gtk_list_store_clear(store);
     for (auto c : fkts) {
         string col = toHex( getColor(c.first) );
-        Gtk::ListStore::Row row = *store->append();
+        GtkTreeIter iter;
+        gtk_list_store_append(store, &iter);
+
         uint T = c.second;
-        gtk_list_store_set (store->gobj(), row.gobj(), 0, c.first.c_str(), -1);
-        gtk_list_store_set (store->gobj(), row.gobj(), 1, T, -1);
-        gtk_list_store_set (store->gobj(), row.gobj(), 2, col.c_str(), -1);
+        gtk_list_store_set(store, &iter, 0, c.first.c_str(), -1);
+        gtk_list_store_set(store, &iter, 1, T, -1);
+        gtk_list_store_set(store, &iter, 2, col.c_str(), -1);
     }
 
     setLabel("Nframe", toString(frame.fID));

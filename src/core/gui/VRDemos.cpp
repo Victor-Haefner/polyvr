@@ -2,11 +2,12 @@
 #include "widgets/VRAppPanel.h"
 #include "widgets/VRAppLauncher.h"
 
-#include <gtkmm/table.h>
-#include <gtkmm/builder.h>
 #include <string>
 #include <iostream>
-#include <boost/bind.hpp>
+
+#include <gtk/gtktable.h>
+#include <gtk/gtkcheckbutton.h>
+#include <gtk/gtkfilechooser.h>
 
 #include "core/scene/VRSceneLoader.h"
 #include "core/scene/VRSceneManager.h"
@@ -18,6 +19,7 @@
 #include "core/scene/VRProjectsList.h"
 #include "core/setup/devices/VRSignal.h"
 #include "core/utils/system/VRSystem.h"
+
 #include "VRGuiUtils.h"
 #include "VRGuiSignals.h"
 #include "VRGuiFile.h"
@@ -54,20 +56,20 @@ VRAppManager::VRAppManager() {
 
     if (favorites->size() == 0) setNotebookPage("notebook2", 1);
 
-    updateCb = VRFunction<VRDeviceWeakPtr>::create("GUI_updateDemos", boost::bind(&VRAppManager::update, this) );
+    updateCb = VRFunction<VRDeviceWeakPtr>::create("GUI_updateDemos", bind(&VRAppManager::update, this) );
     VRGuiSignals::get()->getSignal("scene_changed")->add( updateCb );
 
-    setToolButtonCallback("toolbutton1", sigc::mem_fun(*this, &VRAppManager::on_new_clicked));
-    setToolButtonCallback("toolbutton5", sigc::mem_fun(*this, &VRAppManager::on_saveas_clicked));
-    setToolButtonCallback("toolbutton28", sigc::mem_fun(*this, &VRAppManager::on_stop_clicked));
-    setToolButtonCallback("toolbutton21", sigc::mem_fun(*this, &VRAppManager::on_load_clicked));
+    setToolButtonCallback("toolbutton1", bind(&VRAppManager::on_new_clicked, this));
+    setToolButtonCallback("toolbutton5", bind(&VRAppManager::on_saveas_clicked, this));
+    setToolButtonCallback("toolbutton28", bind(&VRAppManager::on_stop_clicked, this));
+    setToolButtonCallback("toolbutton21", bind(&VRAppManager::on_load_clicked, this));
 
-    setToolButtonSensitivity("toolbutton4", false); // disable 'save' button on startup
-    setToolButtonSensitivity("toolbutton5", false); // disable 'save as' button on startup
-    setToolButtonSensitivity("toolbutton50", false); // disable 'web export' button on startup
-    setToolButtonSensitivity("toolbutton28", false); // disable 'stop' button on startup
+    setWidgetSensitivity("toolbutton4", false); // disable 'save' button on startup
+    setWidgetSensitivity("toolbutton5", false); // disable 'save as' button on startup
+    setWidgetSensitivity("toolbutton50", false); // disable 'web export' button on startup
+    setWidgetSensitivity("toolbutton28", false); // disable 'stop' button on startup
 
-    setEntryCallback("appSearch", sigc::mem_fun(*this, &VRAppManager::on_search), true); // app search
+    setEntryCallback("appSearch", bind(&VRAppManager::on_search, this), true); // app search
 }
 
 VRAppManager::~VRAppManager() {}
@@ -75,9 +77,8 @@ VRAppManager::~VRAppManager() {}
 VRAppManagerPtr VRAppManager::create() { return VRAppManagerPtr( new VRAppManager() ); }
 
 VRAppPanelPtr VRAppManager::addSection(string name, string t) {
-    Gtk::Table* tab;
-    getGUIBuilder()->get_widget(t, tab);
-    tables[t] = tab->gobj();
+    GtkTable* tab = (GtkTable*)getGUIBuilder()->get_widget(t);
+    tables[t] = tab;
 
     auto s = VRAppPanel::create(name, tables[t]);
     sections[name] = s;
@@ -117,8 +118,8 @@ void VRAppManager::clearTable(string t) {
 
 void VRAppManager::setGuiState(VRAppLauncherPtr e) {
     bool running = (e == 0) ? noLauncherScene : e->running;
-    setVPanedSensitivity("vpaned1", running);
-    setNotebookSensitivity("notebook3", running);
+    setWidgetSensitivity("vpaned1", running);
+    setWidgetSensitivity("notebook3", running);
 
     for (auto section : sections) section.second->setGuiState(e, running, noLauncherScene);
 
@@ -127,10 +128,10 @@ void VRAppManager::setGuiState(VRAppLauncherPtr e) {
         else e->setState(0);
     }
 
-    setToolButtonSensitivity("toolbutton4", running); // toggle 'save' button availability
-    setToolButtonSensitivity("toolbutton5", running); // toggle 'save as' button availability
-    setToolButtonSensitivity("toolbutton50", running); // toggle 'web export' button availability
-    setToolButtonSensitivity("toolbutton28", running); // toggle 'stop' button availability
+    setWidgetSensitivity("toolbutton4", running); // toggle 'save' button availability
+    setWidgetSensitivity("toolbutton5", running); // toggle 'save as' button availability
+    setWidgetSensitivity("toolbutton50", running); // toggle 'web export' button availability
+    setWidgetSensitivity("toolbutton28", running); // toggle 'stop' button availability
 }
 
 VRAppLauncherPtr VRAppManager::addEntry(string path, string table, bool running, string timestamp, bool recent) {
@@ -153,12 +154,12 @@ VRAppLauncherPtr VRAppManager::addEntry(string path, string table, bool running,
 
 void VRAppManager::initMenu() {
     menu = new VRGuiContextMenu("DemoMenu");
-    menu->appendItem("DemoMenu", "Unpin", sigc::mem_fun(*this, &VRAppManager::on_menu_unpin));
-    menu->appendItem("DemoMenu", "Delete", sigc::mem_fun(*this, &VRAppManager::on_menu_delete));
-    menu->appendItem("DemoMenu", "Advanced..", sigc::bind<VRAppLauncherPtr>( sigc::mem_fun(*this, &VRAppManager::on_menu_advanced), 0));
+    menu->appendItem("DemoMenu", "Unpin", bind(&VRAppManager::on_menu_unpin, this));
+    menu->appendItem("DemoMenu", "Delete", bind(&VRAppManager::on_menu_delete, this));
+    menu->appendItem("DemoMenu", "Advanced..", bind(&VRAppManager::on_menu_advanced, this, VRAppLauncherPtr(0)));
 
-    setButtonCallback("button10", sigc::mem_fun(*this, &VRAppManager::on_advanced_cancel));
-    setButtonCallback("button26", sigc::mem_fun(*this, &VRAppManager::on_advanced_start));
+    setButtonCallback("button10", bind(&VRAppManager::on_advanced_cancel, this));
+    setButtonCallback("button26", bind(&VRAppManager::on_advanced_start, this));
 }
 
 void VRAppManager::on_menu_delete() {
@@ -204,8 +205,8 @@ void VRAppManager::on_menu_unpin() {
 
 void VRAppManager::on_menu_advanced(VRAppLauncherPtr e) {
     if (e) current_demo = e;
-    setCheckButton("checkbutton34", false);
-    setCheckButton("checkbutton36", false);
+    setToggleButton("checkbutton34", false);
+    setToggleButton("checkbutton36", false);
     showDialog("advanced_start");
 }
 
@@ -264,7 +265,7 @@ void VRAppManager::on_saveas_clicked() {
     if (!scene) return;
     encryptionKey = "";
     VRGuiFile::gotoPath( scene->getWorkdir() );
-    VRGuiFile::setCallbacks( sigc::mem_fun(*this, &VRAppManager::on_diag_save_clicked) );
+    VRGuiFile::setCallbacks( bind(&VRAppManager::on_diag_save_clicked, this) );
     VRGuiFile::clearFilter();
     VRGuiFile::addFilter("Project", 3, "*.xml", "*.pvr", "*.pvc");
     VRGuiFile::addFilter("All", 1, "*");
@@ -321,7 +322,7 @@ void VRAppManager::on_diag_load_clicked() {
 }
 
 void VRAppManager::on_load_clicked() {
-    VRGuiFile::setCallbacks( sigc::mem_fun(*this, &VRAppManager::on_diag_load_clicked) );
+    VRGuiFile::setCallbacks( bind(&VRAppManager::on_diag_load_clicked, this) );
     VRGuiFile::gotoPath( g_get_home_dir() );
     VRGuiFile::clearFilter();
     VRGuiFile::addFilter("Project", 3, "*.xml", "*.pvr", "*.pvc");
@@ -353,7 +354,7 @@ void VRAppManager::on_diag_new_clicked() {
 }
 
 void VRAppManager::on_new_clicked() {
-    VRGuiFile::setCallbacks( sigc::mem_fun(*this, &VRAppManager::on_diag_new_clicked) );
+    VRGuiFile::setCallbacks( bind(&VRAppManager::on_diag_new_clicked, this) );
     VRGuiFile::gotoPath( g_get_home_dir() );
     VRGuiFile::setFile( "myApp.pvr" );
     VRGuiFile::clearFilter();

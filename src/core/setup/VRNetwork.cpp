@@ -34,7 +34,7 @@ VRNetworkNode::VRNetworkNode(string name) : VRManager("NetworkNode") {
     store("address", &address);
     store("user", &user);
     store("slavePath", &slavePath);
-    regStorageSetupFkt( VRStorageCb::create("network_node_update", boost::bind(&VRNetworkNode::setup, this, _1)) );
+    regStorageSetupFkt( VRStorageCb::create("network_node_update", bind(&VRNetworkNode::setup, this, placeholders::_1)) );
 }
 
 VRNetworkNode::~VRNetworkNode() { stopSlaves(); }

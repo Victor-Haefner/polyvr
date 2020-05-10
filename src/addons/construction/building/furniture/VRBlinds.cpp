@@ -33,10 +33,10 @@ VRBlinds::VRBlinds(string name, VRGeometryPtr _window, VRScene* _scene): VRTrans
     blend_geo->addAttachment("blind", 0);
 
     // animation callback
-    fkt = VRFunction<float>::create("Blinds_interpolate", boost::bind(&VRBlinds::interpolate, this, _1));
+    fkt = VRFunction<float>::create("Blinds_interpolate", bind(&VRBlinds::interpolate, this, _1));
 
     // toggle callback
-    toggleCallback = VRFunction<VRDeviceWeakPtr>::create("Blinds_toggle", boost::bind(&VRBlinds::toggle, this, _1));
+    toggleCallback = VRFunction<VRDeviceWeakPtr>::create("Blinds_toggle", bind(&VRBlinds::toggle, this, _1));
 }
 
 VRBlindsPtr VRBlinds::create(string name, VRGeometryPtr _window, VRScene* _scene) {

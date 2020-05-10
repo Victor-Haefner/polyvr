@@ -7,7 +7,6 @@
 #include "core/utils/VRStorage_template.h"
 
 #include <OpenSG/OSGPlane.h>
-#include <boost/bind.hpp>
 
 using namespace OSG;
 
@@ -22,7 +21,7 @@ VRWaypoint::VRWaypoint(string name) : VRGeometry(name) {
     store("wp_at", &at);
     store("wp_size", &size);
 
-    regStorageSetupFkt( VRStorageCb::create("waypoint setup", boost::bind(&VRWaypoint::setup, this, _1)) );
+    regStorageSetupFkt( VRStorageCb::create("waypoint setup", bind(&VRWaypoint::setup, this, placeholders::_1)) );
 }
 
 VRWaypointPtr VRWaypoint::create(string name) { return shared_ptr<VRWaypoint>(new VRWaypoint(name) ); }

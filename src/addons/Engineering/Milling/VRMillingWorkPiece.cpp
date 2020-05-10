@@ -2,15 +2,13 @@
 #include "core/scene/VRScene.h"
 #include "core/math/pose.h"
 
-#include <boost/bind.hpp>
-
 using namespace OSG;
 
 template<> string typeName(const VRMillingWorkPiece& o) { return "MillingWorkPiece"; }
 
 VRMillingWorkPiece::VRMillingWorkPiece(string name) : VRGeometry(name), rootElement(nullptr) {
 	type = "MillingWorkPiece";
-	uFkt = VRUpdateCb::create("MillingWorkPiece-update", boost::bind(&VRMillingWorkPiece::update, this));
+	uFkt = VRUpdateCb::create("MillingWorkPiece-update", bind(&VRMillingWorkPiece::update, this));
 	VRScene::getCurrent()->addUpdateFkt(uFkt);
 }
 

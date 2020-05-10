@@ -11,7 +11,6 @@
 #include "core/math/kinematics/VRConstraint.h"
 #include "core/objects/object/VRObjectT.h"
 
-#include <boost/bind.hpp>
 #include <OpenSG/OSGMatrix.h>
 #include <OpenSG/OSGColor.h>
 #include <OpenSG/OSGGeoProperties.h>
@@ -62,7 +61,7 @@ void VRScenegraphInterface::send(string msg) { socket->answerWebSocket(clientID,
 void VRScenegraphInterface::resetWebsocket() {
     if (socket) VRSceneManager::get()->remSocket(socket->getName());
     socket = VRSceneManager::get()->getSocket(port);
-    cb = new VRHTTP_cb( "scenegraph interface callback", boost::bind(&VRScenegraphInterface::ws_callback, this, _1) );
+    cb = new VRHTTP_cb( "scenegraph interface callback", bind(&VRScenegraphInterface::ws_callback, this, _1) );
     socket->setHTTPCallback(cb);
     socket->setType("http receive");
 }
@@ -78,7 +77,7 @@ void VRScenegraphInterface::ws_callback(void* _args) {
     if (args->ws_data.size() == 0) return;
 
     handle(msg);
-    //auto job = VRUpdateCb::create("sgi_handler", boost::bind(&VRScenegraphInterface::handle, this, msg));
+    //auto job = VRUpdateCb::create("sgi_handler", bind(&VRScenegraphInterface::handle, this, msg));
     //VRScene::getCurrent()->queueJob(job);
 }
 

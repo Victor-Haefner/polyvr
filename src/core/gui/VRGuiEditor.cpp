@@ -5,15 +5,12 @@
 #include "core/utils/VRFunction.h"
 
 #include <iostream>
-#include <gtkmm/builder.h>
-#include <gtkmm/scrolledwindow.h>
 #include <gtksourceview/gtksourceview.h>
 #include <gtksourceview/gtksourcelanguagemanager.h>
 #include <gtksourceview/gtksourcecompletionprovider.h>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
-using namespace Gtk;
 
 string padding = "\n\n\n\n\n\n\n\n\n";
 
@@ -152,12 +149,14 @@ bool VRGuiEditor::on_editor_shortkey( GdkEventKey* e ) {
 string VRGuiEditor::getSelection() { return selection; }
 
 void VRGuiEditor::addStyle( string style, string fg, string bg, bool italic, bool bold, bool underlined ) {
-    auto tag = editorBuffer->create_tag();
-    tag->set_property("foreground", fg);
-    tag->set_property("background", bg);
-    if (underlined) tag->set_property("underline", Pango::UNDERLINE_SINGLE);
-    if (italic) tag->set_property("style", Pango::STYLE_ITALIC);
-    if (bold) tag->set_property("weight", Pango::WEIGHT_BOLD);
+    GtkTextTag* tag = gtk_text_buffer_create_tag(editorBuffer, "tag", NULL);
+    g_object_set(tag, "foreground", fg.c_str(), NULL);
+    g_object_set(tag, "background", bg.c_str(), NULL);
+
+    if (underlined) g_object_set(tag, "underline", PANGO_UNDERLINE_SINGLE, NULL);
+    if (italic) g_object_set(tag, "style", PANGO_STYLE_ITALIC, NULL);
+    if (bold) g_object_set(tag, "weight", PANGO_WEIGHT_BOLD, NULL);
+
     editorStyles[style] = tag;
     styleStates[style] = false;
 }
@@ -192,7 +191,9 @@ void VRGuiEditor::getCursor(int& line, int& column) {
 
 void VRGuiEditor::highlightStrings(string search, string style) {
     auto tag = editorStyles[style];
-    if (styleStates[style]) editorBuffer->remove_tag(tag, editorBuffer->begin(), editorBuffer->end());
+    GtkTextIter start, end;
+    gtk_text_buffer_get_bounds(editorBuffer, &start, &end);
+    gtk_text_buffer_remove_tag(editorBuffer, tag, &start, &end);
     if (search == "") return;
 
     auto S = VRScript::Search();
@@ -212,18 +213,18 @@ void VRGuiEditor::highlightStrings(string search, string style) {
         S.result[l].push_back(r.first - lpo);
     }
 
-    Gtk::TextBuffer::iterator SB, SE;
-    editorBuffer->get_selection_bounds(SB, SE);
+    GtkTextIter SB, SE, A, B;
+    gtk_text_buffer_get_selection_bounds(editorBuffer, &SB, &SE);
 
     for (auto line : S.result) {
         for (auto column : line.second) {
             if (line.first == 2) column++; // strange hack..
-            auto A = editorBuffer->get_iter_at_line(line.first-1);
-            auto B = editorBuffer->get_iter_at_line(line.first-1);
-            A.forward_chars( max(column-1, 0) );
-            B.forward_chars( column-1+search.size() );
-            if (A == SB) continue;
-            editorBuffer->apply_tag(tag, A, B);
+            gtk_text_buffer_get_iter_at_line(editorBuffer, &A, line.first-1);
+            gtk_text_buffer_get_iter_at_line(editorBuffer, &B, line.first-1);
+            gtk_text_iter_forward_chars(&A, max(column-1, 0));
+            gtk_text_iter_forward_chars(&B, column-1+search.size());
+            if (gtk_text_iter_compare(&A, &B) == 0) continue;
+            gtk_text_buffer_apply_tag(editorBuffer, tag, &A, &B);
             styleStates[style] = true;
         }
     }
@@ -277,9 +278,9 @@ VRGuiEditor::VRGuiEditor(string window) {
     gtk_source_buffer_set_highlight_syntax(sourceBuffer, true);
     gtk_source_buffer_set_highlight_matching_brackets(sourceBuffer, true);
 
-    Glib::RefPtr<Gtk::ScrolledWindow> win = Glib::RefPtr<Gtk::ScrolledWindow>::cast_static(getGUIBuilder()->get_object(window));
+    GtkScrolledWindow* win = (GtkScrolledWindow*)getGUIBuilder()->get_object(window);
     editor = gtk_source_view_new_with_buffer(sourceBuffer);
-    editorBuffer = Glib::wrap( gtk_text_view_get_buffer(GTK_TEXT_VIEW(editor)) );
+    editorBuffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(editor));
 
     // try adding margin at bottom, messes up VRGuiEditor::focus
     /*auto alignment = gtk_alignment_new(0.5,0.5,1,1);
@@ -301,10 +302,11 @@ VRGuiEditor::VRGuiEditor(string window) {
     gtk_widget_set_size_request(vport,-1,600);
     gtk_widget_set_size_request(alignment,-1,600);*/
 
-    gtk_container_add(GTK_CONTAINER (win->gobj()), editor);
+    gtk_container_add(GTK_CONTAINER(win), editor);
 
     // buffer changed callback
-    win->signal_key_press_event().connect( sigc::mem_fun(*this, &VRGuiEditor::on_editor_shortkey) );
+    function<void(GdkEventKey*)> sig = bind(&VRGuiEditor::on_editor_shortkey, this, placeholders::_1);
+    connect_signal((GtkWidget*)win, sig, "key_press_event");
 
     // editor signals
     g_signal_connect_after(editor, "event", G_CALLBACK(VRGuiEditor_on_editor_select), this );

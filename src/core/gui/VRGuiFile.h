@@ -4,38 +4,39 @@
 #include <string>
 #include <vector>
 #include <functional>
-#include <sigc++/functors/slot.h>
-#include <gtk-2.0/gdk/gdkevents.h>
 
-namespace Gtk { class FileChooserDialog; class Table; class CheckButton; class Entry; class ComboBox; }
-using namespace std;
-
+struct _GtkFileChooserDialog;
+struct _GtkTable;
 struct _GtkCheckButton;
+struct _GtkEntry;
+struct _GtkComboBox;
+union _GdkEvent;
+
+using namespace std;
 
 class VRGuiFile {
     private:
-        static Gtk::FileChooserDialog* dialog;
-        static Gtk::Table* addon;
-        typedef sigc::slot<void> sig;
-        static sig sigApply;
-        static sig sigClose;
-        static sig sigSelect;
+        static _GtkFileChooserDialog* dialog;
+        static _GtkTable* addon;
+        static _GtkTable* geoImportWidget;
+        static _GtkTable* saveasWidget;
+        static function<void()> sigApply;
+        static function<void()> sigClose;
+        static function<void()> sigSelect;
         static bool cache_override;
         static float scale;
         static string preset;
-        static Gtk::Table* geoImportWidget;
-        static Gtk::Table* saveasWidget;
         static void init();
 
-        static void on_toggle_cache_override(Gtk::CheckButton* b);
-        static void on_edit_import_scale(Gtk::Entry* e);
-        static void on_change_preset(Gtk::ComboBox* b);
+        static void on_toggle_cache_override(_GtkCheckButton* b);
+        static void on_edit_import_scale(_GtkEntry* e);
+        static void on_change_preset(_GtkComboBox* b);
 
     public:
         static void open(string button, int action, string title);
         static void close();
         static void apply();
-        static bool keyApply(GdkEvent*);
+        static bool keyApply(_GdkEvent*);
         static void select();
         static string getPath();
         static string getRelativePath_toOrigin();
@@ -46,8 +47,8 @@ class VRGuiFile {
         static void addFilter(string name, int N, ...);
         static void clearFilter();
 
-        static void setCallbacks(sig sa = sig(), sig sc = sig(), sig ss = sig());
-        static void setWidget(Gtk::Table* table, bool expand = false, bool fill = false);
+        static void setCallbacks(function<void()> sa = function<void()>(), function<void()> sc = function<void()>(), function<void()> ss = function<void()>());
+        static void setWidget(_GtkTable* table, bool expand = false, bool fill = false);
         static void setGeoLoadWidget();
         static void setSaveasWidget(function<void(_GtkCheckButton*)> sig);
 

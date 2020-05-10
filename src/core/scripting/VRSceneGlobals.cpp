@@ -26,14 +26,11 @@
 #include "core/utils/VRTests.h"
 #include "PolyVR.h"
 
-#include <boost/bind.hpp>
-
 #ifndef WITHOUT_GTK
 #include "core/gui/VRGuiManager.h"
 #include "core/gui/VRGuiConsole.h"
 #include "core/gui/VRGuiFile.h"
-#include <sigc++/adaptors/bind.h>
-#include <gtkmm/filechooser.h>
+#include <gtk/gtkfilechooser.h>
 #endif
 
 OSG_BEGIN_NAMESPACE;
@@ -140,7 +137,7 @@ PyObject* VRSceneGlobals::getSystemDirectory(VRSceneGlobals* self, PyObject *arg
 }
 
 PyObject* VRSceneGlobals::loadScene(VRSceneGlobals* self, PyObject *args) {
-    auto fkt = VRUpdateCb::create( "scheduled scene load", boost::bind(&VRSceneManager::loadScene, VRSceneManager::get(), parseString(args), false, "" ) );
+    auto fkt = VRUpdateCb::create( "scheduled scene load", bind(&VRSceneManager::loadScene, VRSceneManager::get(), parseString(args), false, "" ) );
     VRSceneManager::get()->queueJob(fkt);
     Py_RETURN_TRUE;
 }
@@ -269,7 +266,7 @@ PyObject* VRSceneGlobals::startThread(VRSceneGlobals* self, PyObject *args) {
         if (type == "list") pArgs = PyList_AsTuple(pArgs);
     }
 
-    auto pyThread = VRFunction< VRThreadWeakPtr >::create( "pyExecCall", boost::bind(execThread, pyFkt, pArgs, _1) );
+    auto pyThread = VRFunction< VRThreadWeakPtr >::create( "pyExecCall", bind(execThread, pyFkt, pArgs, _1) );
     int t = VRScene::getCurrent()->initThread(pyThread, "python thread");
     pyThreadsTmp[t] = pyThread; // need to keep a reference!
     //self->pyThreads[t] = pyThread; // TODO: self is 0 ???
@@ -296,7 +293,7 @@ PyObject* VRSceneGlobals::stackCall(VRSceneGlobals* self, PyObject *args) {
         if (type == "list") pArgs = PyList_AsTuple(pArgs);
     }
 
-    auto fkt = VRAnimCb::create( "pyExecCall", boost::bind(execCall, pyFkt, pArgs, _1) );
+    auto fkt = VRAnimCb::create( "pyExecCall", bind(execCall, pyFkt, pArgs, _1) );
     auto a = VRScene::getCurrent()->addAnimation(0, delay, fkt, 0.f, 0.f, false, true);
     Py_RETURN_TRUE;
 }
@@ -321,11 +318,11 @@ PyObject* VRSceneGlobals::openFileDialog(VRSceneGlobals* self, PyObject *args) {
     VRGuiFile::clearFilter();
     VRGuiFile::gotoPath( PyString_AsString(default_path) );
     VRGuiFile::setFile( PyString_AsString(default_path) );
-    VRGuiFile::setCallbacks( sigc::bind<PyObject*>( sigc::ptr_fun( &on_py_file_diag_cb ), cb) );
+    VRGuiFile::setCallbacks( bind(on_py_file_diag_cb, cb) );
 
     string m = PyString_AsString(mode);
-    Gtk::FileChooserAction action = Gtk::FILE_CHOOSER_ACTION_OPEN;
-    if (m == "Save" || m == "New" || m == "Create") action = Gtk::FILE_CHOOSER_ACTION_SAVE;
+    GtkFileChooserAction action = GTK_FILE_CHOOSER_ACTION_OPEN;
+    if (m == "Save" || m == "New" || m == "Create") action = GTK_FILE_CHOOSER_ACTION_SAVE;
     else VRGuiFile::setGeoLoadWidget();
     VRGuiFile::open( m, action, PyString_AsString(title) );
 #endif

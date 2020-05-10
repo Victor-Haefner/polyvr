@@ -14,7 +14,13 @@
 #include <gdk/gdkpixbuf.h>
 #include <gtk/gtksettings.h>
 #include <gtk/gtkstock.h>
-#include <boost/bind.hpp>
+#include <gtk/gtkcontainer.h>
+#include <gtk/gtkframe.h>
+#include <gtk/gtkeventbox.h>
+#include <gtk/gtkhbox.h>
+#include <gtk/gtkvbox.h>
+#include <gtk/gtklabel.h>
+#include <gtk/gtkbutton.h>
 
 using namespace OSG;
 
@@ -121,7 +127,7 @@ void VRAppLauncher::setup(VRGuiContextMenu* menu, VRAppManager* mgr) {
     updatePixmap();
 
     // events
-    uPixmap = VRDeviceCb::create("GUI_addDemoEntry", boost::bind(&VRAppLauncher::updatePixmap, this) );
+    uPixmap = VRDeviceCb::create("GUI_addDemoEntry", bind(&VRAppLauncher::updatePixmap, this) );
     VRGuiSignals::get()->getSignal("onSaveScene")->add( uPixmap );
 
     menu->connectWidget("DemoMenu", (GtkWidget*)ebox);
@@ -132,8 +138,8 @@ void VRAppLauncher::setup(VRGuiContextMenu* menu, VRAppManager* mgr) {
     function<void()> f1 = bind(&VRAppManager::toggleDemo, mgr, shared_from_this());
     function<void()> f2 = bind(&VRAppManager::on_menu_advanced, mgr, shared_from_this());
     function<void()> f3 = bind(&VRAppManager::on_lock_toggle, mgr, shared_from_this());
-    connect_signal_void((GtkWidget*)butPlay, f1, "clicked" );
-    connect_signal_void((GtkWidget*)butOpts, f2, "clicked" );
-    connect_signal_void((GtkWidget*)butLock, f3, "clicked" );
+    connect_signal((GtkWidget*)butPlay, f1, "clicked" );
+    connect_signal((GtkWidget*)butOpts, f2, "clicked" );
+    connect_signal((GtkWidget*)butLock, f3, "clicked" );
     gtk_widget_show_all((GtkWidget*)widget);
 }

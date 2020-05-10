@@ -18,7 +18,7 @@ template<> string typeName(const VRSpatialCollisionManager& o) { return "Spatial
 VRSpatialCollisionManager::VRSpatialCollisionManager(float resolution) : VRGeometry("spatialCollisionShape") {
     space = Octree::create(resolution,10,"spatialCollisionShape");
     hide("SHADOW");
-    updateCollisionCb = VRUpdateCb::create( "collision check", boost::bind( &VRSpatialCollisionManager::checkCollisions, this ) );
+    updateCollisionCb = VRUpdateCb::create( "collision check", bind( &VRSpatialCollisionManager::checkCollisions, this ) );
     VRScene::getCurrent()->addUpdateFkt(updateCollisionCb);
 }
 

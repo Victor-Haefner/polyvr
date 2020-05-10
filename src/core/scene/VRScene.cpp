@@ -47,7 +47,7 @@ VRScene::VRScene() {
     physicsThreadID = initThread(updatePhysicsFkt, "physics", true, 0);
 #endif
 
-    loadingTimeCb = VRUpdateCb::create("loadingTimeCb", boost::bind(&VRScene::recLoadingTime, this));
+    loadingTimeCb = VRUpdateCb::create("loadingTimeCb", bind(&VRScene::recLoadingTime, this));
 
     initDevices();
     VRMaterial::getDefault()->resetDefault();
@@ -56,9 +56,9 @@ VRScene::VRScene() {
     cameras_layer = VRVisualLayer::getLayer("Cameras", "cameras.png", 1);
     lights_layer = VRVisualLayer::getLayer("Lights", "lights.png", 1);
 
-    layer_ref_toggle = VRFunction<bool>::create("showReferentials", boost::bind(&VRScene::showReferentials, this, _1, (VRObjectPtr)0) );
-    layer_cam_toggle = VRFunction<bool>::create("showCameras", boost::bind(&VRScene::showCameras, this, _1) );
-    layer_light_toggle = VRFunction<bool>::create("showLights", boost::bind(&VRScene::showLights, this, _1) );
+    layer_ref_toggle = VRFunction<bool>::create("showReferentials", bind(&VRScene::showReferentials, this, _1, (VRObjectPtr)0) );
+    layer_cam_toggle = VRFunction<bool>::create("showCameras", bind(&VRScene::showCameras, this, _1) );
+    layer_light_toggle = VRFunction<bool>::create("showLights", bind(&VRScene::showLights, this, _1) );
     referentials_layer->setCallback( layer_ref_toggle );
     cameras_layer->setCallback( layer_cam_toggle );
     lights_layer->setCallback( layer_light_toggle );
@@ -285,7 +285,7 @@ void VRScene::loadScene(XMLElementPtr e) {
     }
 
     loadingTimer.start();
-    loadingProgressThreadCb = VRFunction< VRThreadWeakPtr >::create( "loading progress thread", boost::bind(&VRScene::updateLoadingProgress, this, _1) );
+    loadingProgressThreadCb = VRFunction< VRThreadWeakPtr >::create( "loading progress thread", bind(&VRScene::updateLoadingProgress, this, _1) );
     loadingProgressThread = VRSceneManager::get()->initThread(loadingProgressThreadCb, "loading progress thread", true, 1);
 
     VRName::load(e);

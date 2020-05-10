@@ -20,7 +20,6 @@
 #include "core/scene/VRScene.h"
 #include "core/scene/VRSpaceWarper.h"
 
-#include <boost/bind.hpp>
 #include <OpenSG/OSGSimpleGeometry.h>
 #include <OpenSG/OSGChunkMaterial.h>
 #include <OpenSG/OSGDepthChunk.h>
@@ -50,7 +49,7 @@ VRTransform::VRTransform(string name, bool doOpt) : VRObject(name) {
     store("at_dir", &orientation_mode);
     storeObj("constraint", constraint);
 
-    regStorageSetupFkt( VRStorageCb::create("transform_update", boost::bind(&VRTransform::setup, this, _1)) );
+    regStorageSetupFkt( VRStorageCb::create("transform_update", bind(&VRTransform::setup, this, _1)) );
 }
 
 VRTransform::~VRTransform() {
@@ -867,7 +866,7 @@ vector<VRAnimationPtr> VRTransform::getAnimations() {
 }
 
 VRAnimationPtr VRTransform::animate(PathPtr p, float time, float offset, bool redirect, bool loop, PathPtr po) {
-    pathAnimPtr = VRAnimCb::create("TransAnim", boost::bind(setFromPath, VRTransformWeakPtr(ptr()), p, po, redirect, _1));
+    pathAnimPtr = VRAnimCb::create("TransAnim", bind(setFromPath, VRTransformWeakPtr(ptr()), p, po, redirect, _1));
     animCBs.push_back(pathAnimPtr);
     auto a = VRScene::getCurrent()->addAnimation<float>(time, offset, pathAnimPtr, 0.f, 1.f, loop);addAnimation(a);
     return a;

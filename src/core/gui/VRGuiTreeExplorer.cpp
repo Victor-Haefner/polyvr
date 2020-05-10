@@ -1,15 +1,16 @@
 #include "VRGuiTreeExplorer.h"
 #include "VRGuiManager.h"
 
-#include <gtkmm/window.h>
 #include <cstdarg>
 #include "core/utils/toString.h"
 #include "core/utils/VRFunction.h"
 
 using namespace OSG;
 
+// TODO: this was developed for exploring the deprecated STEP BREP structure
+
 //Tree model columns:
-class ModelColumns : public Gtk::TreeModel::ColumnRecord {
+/*class ModelColumns : public Gtk::TreeModel::ColumnRecord {
     public:
 
     int N;
@@ -222,6 +223,6 @@ T VRGuiTreeExplorer::get(Gtk::TreeModel::iterator itr, int i) {
 }
 
 template int VRGuiTreeExplorer::get<int>(Gtk::TreeModel::iterator itr, int i);
-template string VRGuiTreeExplorer::get<string>(Gtk::TreeModel::iterator itr, int i);
+template string VRGuiTreeExplorer::get<string>(Gtk::TreeModel::iterator itr, int i);*/
 
 

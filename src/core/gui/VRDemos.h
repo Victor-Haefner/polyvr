@@ -5,7 +5,6 @@
 #include <string>
 #include <map>
 
-#include <gdkmm/event.h>
 #include "core/utils/VRFunctionFwd.h"
 #include "core/utils/VRDeviceFwd.h"
 #include "core/scene/VRSceneFwd.h"
@@ -15,6 +14,7 @@ class VRGuiContextMenu;
 struct _GtkImage;
 struct _GtkTable;
 struct _GtkCheckButton;
+union _GdkEvent;
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -76,7 +76,7 @@ class VRAppManager {
         void toggleDemo(VRAppLauncherPtr e);
         void on_lock_toggle(VRAppLauncherPtr e);
         void on_menu_advanced(VRAppLauncherPtr e);
-        bool on_any_event(GdkEvent* event, VRAppLauncherPtr entry);
+        bool on_any_event(_GdkEvent* event, VRAppLauncherPtr entry);
 };
 
 OSG_END_NAMESPACE;

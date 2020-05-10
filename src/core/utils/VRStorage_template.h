@@ -2,8 +2,6 @@
 #include "toString.h"
 #include "VRFunction.h"
 #include "xml.h"
-#include <boost/bind.hpp>
-#include <boost/function.hpp>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -297,112 +295,112 @@ void VRStorage::load_obj_cb(std::shared_ptr<T>* v, string tag, XMLElementPtr e) 
 template<typename T>
 void VRStorage::storeObj(string tag, std::shared_ptr<T>& o) {
     VRStorageBin b;
-    b.f1 = VRStoreCb::create("load", boost::bind( &VRStorage::load_obj_cb<T>, this, &o, tag, _1 ) );
-    b.f2 = VRStoreCb::create("save", boost::bind( &VRStorage::save_obj_cb<T>, this, &o, tag, _1 ) );
+    b.f1 = VRStoreCb::create("load", bind( &VRStorage::load_obj_cb<T>, this, &o, tag, placeholders::_1 ) );
+    b.f2 = VRStoreCb::create("save", bind( &VRStorage::save_obj_cb<T>, this, &o, tag, placeholders::_1 ) );
     storage[tag] = b;
 }
 
 template<typename T>
 void VRStorage::storeObjVec(string tag, vector<std::shared_ptr<T> >& v, bool under) {
     VRStorageBin b;
-    b.f1 = VRStoreCb::create("load", boost::bind( &VRStorage::load_obj_vec_cb<T>, this, &v, tag, under, _1 ) );
-    b.f2 = VRStoreCb::create("save", boost::bind( &VRStorage::save_obj_vec_cb<T>, this, &v, tag, under, _1 ) );
+    b.f1 = VRStoreCb::create("load", bind( &VRStorage::load_obj_vec_cb<T>, this, &v, tag, under, placeholders::_1 ) );
+    b.f2 = VRStoreCb::create("save", bind( &VRStorage::save_obj_vec_cb<T>, this, &v, tag, under, placeholders::_1 ) );
     storage[tag] = b;
 }
 
 template<typename T>
 void VRStorage::storeVec(string tag, vector<T>& v) {
     VRStorageBin b;
-    b.f1 = VRStoreCb::create("load", boost::bind( &VRStorage::load_vec_cb<T>, this, &v, tag, _1 ) );
-    b.f2 = VRStoreCb::create("save", boost::bind( &VRStorage::save_vec_cb<T>, this, &v, tag, _1 ) );
+    b.f1 = VRStoreCb::create("load", bind( &VRStorage::load_vec_cb<T>, this, &v, tag, placeholders::_1 ) );
+    b.f2 = VRStoreCb::create("save", bind( &VRStorage::save_vec_cb<T>, this, &v, tag, placeholders::_1 ) );
     storage[tag] = b;
 }
 
 template<typename T>
 void VRStorage::storeVecVec(string tag, vector<vector<T>>& v){
     VRStorageBin b;
-    b.f1 = VRStoreCb::create("load", boost::bind( &VRStorage::load_vec_vec_cb<T>, this, &v, tag, _1 ) );
-    b.f2 = VRStoreCb::create("save", boost::bind( &VRStorage::save_vec_vec_cb<T>, this, &v, tag, _1 ) );
+    b.f1 = VRStoreCb::create("load", bind( &VRStorage::load_vec_vec_cb<T>, this, &v, tag, placeholders::_1 ) );
+    b.f2 = VRStoreCb::create("save", bind( &VRStorage::save_vec_vec_cb<T>, this, &v, tag, placeholders::_1 ) );
     storage[tag] = b;
 }
 
 template<typename T>
 void VRStorage::store(string tag, T* t) {
     VRStorageBin b;
-    b.f1 = VRStoreCb::create("load", boost::bind( &VRStorage::load_cb<T>, this, t, tag, _1 ) );
-    b.f2 = VRStoreCb::create("save", boost::bind( &VRStorage::save_cb<T>, this, t, tag, _1 ) );
+    b.f1 = VRStoreCb::create("load", bind( &VRStorage::load_cb<T>, this, t, tag, placeholders::_1 ) );
+    b.f2 = VRStoreCb::create("save", bind( &VRStorage::save_cb<T>, this, t, tag, placeholders::_1 ) );
     storage[tag] = b;
 }
 
 template<typename T>
 void VRStorage::storeObjName(string tag, T* o, string* t) {
     VRStorageBin b;
-    b.f1 = VRStoreCb::create("load", boost::bind( &VRStorage::load_cb<string>, this, t, tag, _1 ) );
-    b.f2 = VRStoreCb::create("save", boost::bind( &VRStorage::save_on_cb<T>, this, o, tag, _1 ) );
+    b.f1 = VRStoreCb::create("load", bind( &VRStorage::load_cb<string>, this, t, tag, placeholders::_1 ) );
+    b.f2 = VRStoreCb::create("save", bind( &VRStorage::save_on_cb<T>, this, o, tag, placeholders::_1 ) );
     storage[tag] = b;
 }
 
 template<typename T>
 void VRStorage::storeObjNames(string tag, vector<T>* o, vector<string>* v) {
     VRStorageBin b;
-    b.f1 = VRStoreCb::create("load", boost::bind( &VRStorage::load_vec_cb<string>, this, v, tag, _1 ) );
-    b.f2 = VRStoreCb::create("save", boost::bind( &VRStorage::save_vec_on_cb<T>, this, o, tag, _1 ) );
+    b.f1 = VRStoreCb::create("load", bind( &VRStorage::load_vec_cb<string>, this, v, tag, placeholders::_1 ) );
+    b.f2 = VRStoreCb::create("save", bind( &VRStorage::save_vec_on_cb<T>, this, o, tag, placeholders::_1 ) );
     storage[tag] = b;
 }
 
 template<typename T>
 void VRStorage::storeMap(string tag, unordered_map<string, std::shared_ptr<T> >* mt, bool under) {
     VRStorageBin b;
-    b.f1 = VRStoreCb::create("load", boost::bind( &VRStorage::load_str_objumap_cb<T>, this, mt, tag, under, _1 ) );
-    b.f2 = VRStoreCb::create("save", boost::bind( &VRStorage::save_str_objumap_cb<T>, this, mt, tag, under, _1 ) );
+    b.f1 = VRStoreCb::create("load", bind( &VRStorage::load_str_objumap_cb<T>, this, mt, tag, under, placeholders::_1 ) );
+    b.f2 = VRStoreCb::create("save", bind( &VRStorage::save_str_objumap_cb<T>, this, mt, tag, under, placeholders::_1 ) );
     storage[tag] = b;
 }
 
 template<typename T>
 void VRStorage::storeMap(string tag, unordered_map<int, std::shared_ptr<T> >* mt, bool under) {
     VRStorageBin b;
-    b.f1 = VRStoreCb::create("load", boost::bind( &VRStorage::load_int_objumap_cb<T>, this, mt, tag, under, _1 ) );
-    b.f2 = VRStoreCb::create("save", boost::bind( &VRStorage::save_int_objumap_cb<T>, this, mt, tag, under, _1 ) );
+    b.f1 = VRStoreCb::create("load", bind( &VRStorage::load_int_objumap_cb<T>, this, mt, tag, under, placeholders::_1 ) );
+    b.f2 = VRStoreCb::create("save", bind( &VRStorage::save_int_objumap_cb<T>, this, mt, tag, under, placeholders::_1 ) );
     storage[tag] = b;
 }
 
 template<typename T>
 void VRStorage::storeMap(string tag, map<string, std::shared_ptr<T> >* mt, bool under) {
     VRStorageBin b;
-    b.f1 = VRStoreCb::create("load", boost::bind( &VRStorage::load_str_objmap_cb<T>, this, mt, tag, under, _1 ) );
-    b.f2 = VRStoreCb::create("save", boost::bind( &VRStorage::save_str_objmap_cb<T>, this, mt, tag, under, _1 ) );
+    b.f1 = VRStoreCb::create("load", bind( &VRStorage::load_str_objmap_cb<T>, this, mt, tag, under, placeholders::_1 ) );
+    b.f2 = VRStoreCb::create("save", bind( &VRStorage::save_str_objmap_cb<T>, this, mt, tag, under, placeholders::_1 ) );
     storage[tag] = b;
 }
 
 template<typename T>
 void VRStorage::storeMap(string tag, map<int, std::shared_ptr<T> >* mt, bool under) {
     VRStorageBin b;
-    b.f1 = VRStoreCb::create("load", boost::bind( &VRStorage::load_int_objmap_cb<T>, this, mt, tag, under, _1 ) );
-    b.f2 = VRStoreCb::create("save", boost::bind( &VRStorage::save_int_objmap_cb<T>, this, mt, tag, under, _1 ) );
+    b.f1 = VRStoreCb::create("load", bind( &VRStorage::load_int_objmap_cb<T>, this, mt, tag, under, placeholders::_1 ) );
+    b.f2 = VRStoreCb::create("save", bind( &VRStorage::save_int_objmap_cb<T>, this, mt, tag, under, placeholders::_1 ) );
     storage[tag] = b;
 }
 
 template<typename T>
 void VRStorage::storeMap(string tag, map<string, T*>* mt, bool under) {
     VRStorageBin b;
-    b.f1 = VRStoreCb::create("load", boost::bind( &VRStorage::load_str_map_cb<T>, this, mt, tag, under, _1 ) );
-    b.f2 = VRStoreCb::create("save", boost::bind( &VRStorage::save_str_map_cb<T>, this, mt, tag, under, _1 ) );
+    b.f1 = VRStoreCb::create("load", bind( &VRStorage::load_str_map_cb<T>, this, mt, tag, under, placeholders::_1 ) );
+    b.f2 = VRStoreCb::create("save", bind( &VRStorage::save_str_map_cb<T>, this, mt, tag, under, placeholders::_1 ) );
     storage[tag] = b;
 }
 
 template<typename T>
 void VRStorage::storeMap(string tag, map<int, T*>* mt, bool under) {
     VRStorageBin b;
-    b.f1 = VRStoreCb::create("load", boost::bind( &VRStorage::load_int_map_cb<T>, this, mt, tag, under, _1 ) );
-    b.f2 = VRStoreCb::create("save", boost::bind( &VRStorage::save_int_map_cb<T>, this, mt, tag, under, _1 ) );
+    b.f1 = VRStoreCb::create("load", bind( &VRStorage::load_int_map_cb<T>, this, mt, tag, under, placeholders::_1 ) );
+    b.f2 = VRStoreCb::create("save", bind( &VRStorage::save_int_map_cb<T>, this, mt, tag, under, placeholders::_1 ) );
     storage[tag] = b;
 }
 
 template<typename T>
 void VRStorage::storeMap(string tag, map<int, T>& mt) {
     VRStorageBin b;
-    b.f1 = VRStoreCb::create("load", boost::bind( &VRStorage::load_int_map2_cb<T>, this, &mt, tag, true, _1 ) );
-    b.f2 = VRStoreCb::create("save", boost::bind( &VRStorage::save_int_map2_cb<T>, this, &mt, tag, true, _1 ) );
+    b.f1 = VRStoreCb::create("load", bind( &VRStorage::load_int_map2_cb<T>, this, &mt, tag, true, placeholders::_1 ) );
+    b.f2 = VRStoreCb::create("save", bind( &VRStorage::save_int_map2_cb<T>, this, &mt, tag, true, placeholders::_1 ) );
     storage[tag] = b;
 }
 
@@ -411,7 +409,7 @@ void VRStorage::typeFactoryCb(VRStoragePtr& s) { s = T::create(); }
 
 template<class T>
 void VRStorage::regStorageType(string t) {
-    factory[t] = VRStorageFactoryCb::create("factorycb", boost::bind( &VRStorage::typeFactoryCb<T>, _1 ) );
+    factory[t] = VRStorageFactoryCb::create("factorycb", bind( &VRStorage::typeFactoryCb<T>, placeholders::_1 ) );
 }
 
 OSG_END_NAMESPACE;

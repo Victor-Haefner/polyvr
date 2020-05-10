@@ -47,7 +47,7 @@ using namespace OSG;
 template<> string typeName(const VRRoadNetwork& o) { return "RoadNetwork"; }
 
 VRRoadNetwork::VRRoadNetwork() : VRRoadBase("RoadNetwork") {
-    updateCb = VRUpdateCb::create( "roadNetworkUpdate", boost::bind(&VRRoadNetwork::update, this) );
+    updateCb = VRUpdateCb::create( "roadNetworkUpdate", bind(&VRRoadNetwork::update, this) );
     VRScene::getCurrent()->addUpdateFkt(updateCb);
 }
 

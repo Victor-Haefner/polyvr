@@ -170,7 +170,7 @@ VRGeometry::VRGeometry(string name) : VRTransform(name) {
     store("sourcetype", &source.type);
     store("sourceparam", &source.parameter);
 
-    regStorageSetupFkt( VRStorageCb::create("geometry_update", boost::bind(&VRGeometry::setup, this, _1)) );
+    regStorageSetupFkt( VRStorageCb::create("geometry_update", bind(&VRGeometry::setup, this, _1)) );
 
     // override intersect action callbacks for geometry
     IntersectAction::registerEnterDefault( Geometry::getClassType(), reinterpret_cast<Action::Callback>(&geoIntersectionProxy::intersectEnter));

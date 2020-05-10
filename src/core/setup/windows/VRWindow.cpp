@@ -24,7 +24,7 @@ VRWindow::VRWindow() : changeListStats("remote") {
     active_window_count++;
     string n = getName();
 #ifndef WASM
-    winThread = VRThreadCb::create("VRWindow", boost::bind(&VRWindow::update, this, _1) );
+    winThread = VRThreadCb::create("VRWindow", bind(&VRWindow::update, this, _1) );
     thread_id = VRSceneManager::get()->initThread(winThread,"window_"+n,true,0); // WASM crash, needed?
 #endif
 }

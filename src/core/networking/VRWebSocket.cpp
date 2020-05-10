@@ -7,12 +7,11 @@
 
 OSG_BEGIN_NAMESPACE
 using namespace std;
-using namespace std::placeholders;
 
 
 VRWebSocket::VRWebSocket(string name) : VRName() {
     setName(name);
-    threadFkt = VRThreadCb::create("webSocketPollThread", bind(&VRWebSocket::poll, this, _1));
+    threadFkt = VRThreadCb::create("webSocketPollThread", bind(&VRWebSocket::poll, this, placeholders::_1));
 }
 
 VRWebSocket::~VRWebSocket() {
@@ -64,8 +63,8 @@ bool VRWebSocket::close() {
         // TODO: output only for testing purposes. Remove after closing of web sockets is fixed.
         int i = 0;
         cout << "Waiting for confirmation";
-        while (connectionStatus != -1 && i < 100) { 
-			cout << "."; 
+        while (connectionStatus != -1 && i < 100) {
+			cout << ".";
 			i++;
 			this_thread::sleep_for(chrono::microseconds(10000));
 		}

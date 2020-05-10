@@ -42,7 +42,7 @@ VRNature::VRNature(string name) {
 
     storeMap("templateTrees", &treeTemplates, true);
     storeMap("trees", &treeEntries, true);
-    regStorageSetupFkt( VRStorageCb::create("woods setup", boost::bind(&VRNature::setup, this, _1)) );
+    regStorageSetupFkt( VRStorageCb::create("woods setup", bind(&VRNature::setup, this, placeholders::_1)) );
 }
 
 VRNature::~VRNature() {}
@@ -320,7 +320,7 @@ void VRNature::computeAllLODs(bool threaded) {
     if (!threaded) { computeLODs3(lodTree->getLeafs()); return; }
 
     auto scene = VRScene::getCurrent();
-    worker = VRThreadCb::create( "nature lods", boost::bind(&VRNature::computeLODsThread, this, _1) );
+    worker = VRThreadCb::create( "nature lods", bind(&VRNature::computeLODsThread, this, placeholders::_1) );
     scene->initThread(worker, "nature lods", false, 1);
 }
 

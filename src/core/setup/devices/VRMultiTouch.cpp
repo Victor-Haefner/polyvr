@@ -37,7 +37,7 @@ VRMultiTouch::VRMultiTouch() : VRDevice("multitouch") {
     store("device", &device);
     store("input", &input);
 
-    regStorageSetupFkt( VRStorageCb::create("connect mt device", boost::bind(&VRMultiTouch::setup, this, _1)) );
+    regStorageSetupFkt( VRStorageCb::create("connect mt device", bind(&VRMultiTouch::setup, this, _1)) );
 }
 
 VRMultiTouch::~VRMultiTouch() {
@@ -266,7 +266,7 @@ void VRMultiTouch::connectDevice() {
 	int ret = mtdev_open(&dev, fd);
 	if (ret) { cout << "VRMultiTouch::connectDevice Error: could not open device: " << input << endl; return; }
 
-    updatePtr = VRUpdateCb::create( "MultiTouch_update", boost::bind(&VRMultiTouch::updateDevice, this) );
+    updatePtr = VRUpdateCb::create( "MultiTouch_update", bind(&VRMultiTouch::updateDevice, this) );
     VRSceneManager::get()->addUpdateFkt(updatePtr);
     cout << "VRMultiTouch::connectDevice successfully connected to device " << devID << " at event " << input << endl;
 }

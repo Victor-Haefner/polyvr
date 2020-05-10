@@ -9,15 +9,11 @@
 
 #include "core/utils/toString.h"
 
-#include <gtkmm/label.h>
-#include <gtkmm/treestore.h>
-#include <gtkmm/treeview.h>
-#include <gtkmm/dialog.h>
-#include <gtkmm/builder.h>
-
 using namespace OSG;
 
-VREntityWidget::VREntityWidget(VRGuiSemantics* m, Gtk::Fixed* canvas, VREntityPtr entity) : VRSemanticWidget(m, canvas, "#FFEE00") {
+// TODO
+
+/*VREntityWidget::VREntityWidget(VRGuiSemantics* m, Gtk::Fixed* canvas, VREntityPtr entity) : VRSemanticWidget(m, canvas, "#FFEE00") {
     this->entity = entity;
     label->set_text(entity->getName());
     update();
@@ -122,5 +118,5 @@ void VREntityWidget::update() {
 
 void VREntityWidget::reparent(VRConceptWidgetPtr w) {}
 void VREntityWidget::reparent(VREntityWidgetPtr w) {}
-void VREntityWidget::reparent(VRRuleWidgetPtr w) {}
+void VREntityWidget::reparent(VRRuleWidgetPtr w) {}*/
 

@@ -169,7 +169,7 @@ VRIntersect::VRIntersect() {
 #ifndef WASM
     initCross();
 #endif
-    drop_fkt = VRFunction<VRDeviceWeakPtr>::create("Intersect_drop", boost::bind(&VRIntersect::drop, this, _1, VRTransformPtr(0)));
+    drop_fkt = VRFunction<VRDeviceWeakPtr>::create("Intersect_drop", bind(&VRIntersect::drop, this, _1, VRTransformPtr(0)));
     dragged_ghost = VRTransform::create("dev_ghost");
 }
 
@@ -275,7 +275,7 @@ VRDeviceCbPtr VRIntersect::addDrag(VRTransformWeakPtr caster, VRObjectWeakPtr tr
     auto key = sc.get();
     if (int_fkt_map.count(key)) return int_fkt_map[key];
 
-    VRDeviceCbPtr fkt = VRFunction<VRDeviceWeakPtr>::create("Intersect_drag", boost::bind(&VRIntersect::dragCB, this, caster, tree, _1));
+    VRDeviceCbPtr fkt = VRFunction<VRDeviceWeakPtr>::create("Intersect_drag", bind(&VRIntersect::dragCB, this, caster, tree, _1));
     dra_fkt_map[key] = fkt;
     return fkt;
 }
