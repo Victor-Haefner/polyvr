@@ -358,7 +358,7 @@ void setCellRendererCombo(string treeviewcolumn, string combolist, int col, func
     g_object_set(renderer, "editable", true, NULL);
 
     GtkTreeViewColumn* column = (GtkTreeViewColumn*)getGUIBuilder()->get_object(treeviewcolumn);
-    gtk_box_pack_start((GtkBox*)column, (GtkWidget*)renderer, true, true, 0);
+    gtk_tree_view_column_pack_start(column, (GtkCellRenderer*)renderer, false);
     gtk_tree_view_column_add_attribute(column, (GtkCellRenderer*)renderer, "", col);
     connect_signal((GtkWidget*)renderer, fkt, "changed");
 }
