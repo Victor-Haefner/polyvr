@@ -111,7 +111,7 @@ void VRConsoleWidget::resetColor() {
 }
 
 void VRConsoleWidget::addStyle( string style, string fg, string bg, bool italic, bool bold, bool underlined ) {
-    GtkTextTag* tag = gtk_text_buffer_create_tag(buffer, "tag", NULL);
+    GtkTextTag* tag = gtk_text_buffer_create_tag(buffer, NULL, NULL);
     function<bool(GdkEvent*, GtkTextIter*)> sig = bind(&VRConsoleWidget::on_link_activate, this, placeholders::_1, placeholders::_2);
     connect_signal((GtkWidget*)tag, sig, "event");
     g_object_set(tag, "editable", false, NULL);

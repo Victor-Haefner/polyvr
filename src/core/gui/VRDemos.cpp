@@ -41,9 +41,6 @@ VRAppManager::VRAppManager() {
     updateTable("examples_tab");
 
     auto favorites = VRSceneManager::get()->getFavoritePaths();
-    //for (string path : favorites) favoritesSection->addLauncher(path, menu, this);
-    //updateTable("favorites_tab");
-
 
     int i=0;
     for (auto p : favorites->getEntriesByTimestamp()) {
@@ -140,7 +137,7 @@ VRAppLauncherPtr VRAppManager::addEntry(string path, string table, bool running,
 
     VRAppLauncherPtr e = 0;
     if (table == "examples_tab") e = sections["examples"]->addLauncher(path, timestamp, menu, this, true, false, table);
-    if (table == "favorites_tab" &&  recent) e =   sections["recents"]->addLauncher(path, timestamp, menu, this, false, true, table);
+    if (table == "favorites_tab" &&  recent) e = sections["recents"]->addLauncher(path, timestamp, menu, this, false, true, table);
     if (table == "favorites_tab" && !recent) e = sections["favorites"]->addLauncher(path, timestamp, menu, this, false, true, table);
     if (!e) return 0;
 

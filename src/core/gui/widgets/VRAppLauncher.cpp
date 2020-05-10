@@ -56,7 +56,13 @@ void VRAppLauncher::setState(int state) {
 
     this->running = running;
     if (widget) gtk_widget_set_sensitive((GtkWidget*)widget, sensitive);
-    if (imgPlay) gtk_image_set_from_stock(imgPlay, stock_id, GTK_ICON_SIZE_BUTTON);
+    if (imgPlay) {
+        if (!GTK_IS_IMAGE(imgPlay)) {
+            cout << "   --  gtk_image_set_from_stock -- " << this << "   " << state << "   " << path << endl;
+            cout << "   -----  gtk_image_set_from_stock ----- " << stock_id << "   " << imgPlay << "    " << GTK_IS_IMAGE(imgPlay) << endl;
+        }
+        gtk_image_set_from_stock(imgPlay, stock_id, GTK_ICON_SIZE_BUTTON);
+    }
 }
 
 void VRAppLauncher::toggle_lock() {
@@ -87,9 +93,12 @@ void VRAppLauncher::setup(VRGuiContextMenu* menu, VRAppManager* mgr) {
     imgScene = loadGTKIcon(0, rpath+"/ressources/gui/default_scene.png", 100, 75);
     imgLock = loadGTKIcon(0, rpath+"/ressources/gui/lock20.png", 20, 20);
     imgUnlock = loadGTKIcon(0, rpath+"/ressources/gui/unlock20.png", 20, 20);
+    g_object_ref(imgLock); // increase ref count
+    g_object_ref(imgUnlock); // increase ref count
 
     // prep other widgets
     widget = (GtkFrame*)gtk_frame_new("");
+    g_object_ref(widget); // increase ref count
     GtkEventBox* ebox = (GtkEventBox*)gtk_event_box_new();
     GtkHBox* hb  = (GtkHBox*)gtk_hbox_new(false, 0);
     GtkVBox* vb  = (GtkVBox*)gtk_vbox_new(false, 0);

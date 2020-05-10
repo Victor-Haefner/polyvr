@@ -67,7 +67,10 @@ void VRGuiFile::setWidget(GtkTable* table, bool expand, bool fill) {
     auto vbox = getGUIBuilder()->get_widget("dialog-vbox1");
 
     // sub
-    if (addon) gtk_container_remove((GtkContainer*)vbox, (GtkWidget*)addon);
+    if (addon) {
+        g_object_ref(addon); // increase ref count
+        gtk_container_remove((GtkContainer*)vbox, (GtkWidget*)addon);
+    }
     addon = table;
     if (table == 0) return;
 

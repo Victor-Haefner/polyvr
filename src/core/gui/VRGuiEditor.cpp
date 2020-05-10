@@ -149,7 +149,7 @@ bool VRGuiEditor::on_editor_shortkey( GdkEventKey* e ) {
 string VRGuiEditor::getSelection() { return selection; }
 
 void VRGuiEditor::addStyle( string style, string fg, string bg, bool italic, bool bold, bool underlined ) {
-    GtkTextTag* tag = gtk_text_buffer_create_tag(editorBuffer, "tag", NULL);
+    GtkTextTag* tag = gtk_text_buffer_create_tag(editorBuffer, NULL, NULL);
     g_object_set(tag, "foreground", fg.c_str(), NULL);
     g_object_set(tag, "background", bg.c_str(), NULL);
 
