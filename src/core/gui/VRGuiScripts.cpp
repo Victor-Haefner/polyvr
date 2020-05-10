@@ -141,11 +141,17 @@ void VRGuiScripts::setScriptListRow(GtkTreeIter* itr, VRScriptPtr script, bool o
     else if (exec_time >= 1000) time = toString( exec_time*0.001 ) + " s";
     else if (exec_time >= 0) time = toString( exec_time ) + " ms";
 
-    auto win1 = (GtkWindow*)getGUIBuilder()->get_widget("window1");
-    GtkWidget* wdg = gtk_window_get_focus(win1);
-    string name = gtk_widget_get_name(wdg);
+    auto getUserFocus = []() {
+        auto win1 = (GtkWindow*)getGUIBuilder()->get_widget("window1");
+        GtkWidget* wdg = gtk_window_get_focus(win1);
+        if (!wdg) return "";
+        auto wn = gtk_widget_get_name(wdg);
+        return wn?wn:"";
+    };
+
+    string name = getUserFocus();
     bool user_focus = false;
-    if(!user_focus) user_focus = ("gtkmm__GtkTreeView" == name);
+    if(!user_focus) user_focus = ("GtkTreeView" == name);
     if(!user_focus) user_focus = ("GtkEntry" == name); // TODO: be more specific
     if(onlyTime && (user_focus || !doPerf)) return;
 

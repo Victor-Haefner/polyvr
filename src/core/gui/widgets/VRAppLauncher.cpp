@@ -56,13 +56,7 @@ void VRAppLauncher::setState(int state) {
 
     this->running = running;
     if (widget) gtk_widget_set_sensitive((GtkWidget*)widget, sensitive);
-    if (imgPlay) {
-        if (!GTK_IS_IMAGE(imgPlay)) {
-            cout << "   --  gtk_image_set_from_stock -- " << this << "   " << state << "   " << path << endl;
-            cout << "   -----  gtk_image_set_from_stock ----- " << stock_id << "   " << imgPlay << "    " << GTK_IS_IMAGE(imgPlay) << endl;
-        }
-        gtk_image_set_from_stock(imgPlay, stock_id, GTK_ICON_SIZE_BUTTON);
-    }
+    if (imgPlay) gtk_image_set_from_stock(imgPlay, stock_id, GTK_ICON_SIZE_BUTTON);
 }
 
 void VRAppLauncher::toggle_lock() {

@@ -423,12 +423,7 @@ void VRGuiScene::setSGRow(GtkTreeIter* itr, VRObjectPtr o) {
 void VRGuiScene::parseSGTree(VRObjectPtr o, GtkTreeIter* itr) {
     if (o == 0) return;
     GtkTreeIter nItr;
-    if (!itr) gtk_tree_store_append(tree_store, &nItr, 0);
-    else {
-        GtkTreeIter cItr;
-        gtk_tree_model_iter_children((GtkTreeModel*)tree_store, &cItr, itr);
-        gtk_tree_store_append(tree_store, &nItr, &cItr);
-    }
+    gtk_tree_store_append(tree_store, &nItr, itr);
     setSGRow( &nItr, o );
     for (uint i=0; i<o->getChildrenCount(); i++) parseSGTree( o->getChild(i), &nItr );
 }
