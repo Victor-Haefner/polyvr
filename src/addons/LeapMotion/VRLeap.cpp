@@ -76,8 +76,8 @@ VRLeap::VRLeap() : VRDevice("leap") {
     store("transformation", &transformation);
 
     // TODO: apparently needs to be a StorageCb instead of UpdateCb.
-    regStorageSetupFkt( VRStorageCb::create("leap setup", boost::bind(&VRLeap::setup, this)) );
-//    regStorageSetupFkt( VRUpdateCb::create("leap setup", boost::bind(&VRLeap::setup, this)) );
+    regStorageSetupFkt( VRStorageCb::create("leap setup", bind(&VRLeap::setup, this)) );
+//    regStorageSetupFkt( VRUpdateCb::create("leap setup", bind(&VRLeap::setup, this)) );
 
     //reconnect();
     enableAvatar("ray", 0);
@@ -268,7 +268,7 @@ void VRLeap::newFrame(Json::Value json) {
 
     auto scene = VRScene::getCurrent();
     if (scene) {
-        auto fkt = VRUpdateCb::create("leap_hands_update", boost::bind(&VRLeap::updateSceneData, this, hands));
+        auto fkt = VRUpdateCb::create("leap_hands_update", bind(&VRLeap::updateSceneData, this, hands));
         VRScene::getCurrent()->queueJob(fkt);
     }
 
@@ -389,7 +389,7 @@ void VRLeap::clearSignals() {
     newSignal( 1, 1)->add( addDrag( getBeacon(6) ) ); // 7
 
     // TODO: maybe use the drag and drop signals?
-    dndCb = VRFunction<VRDeviceWeakPtr>::create("leapDnD", boost::bind(&VRLeap::leapDnD, this, _1));
+    dndCb = VRFunction<VRDeviceWeakPtr>::create("leapDnD", bind(&VRLeap::leapDnD, this, placeholders::_1));
     newSignal(0, 1)->add(dndCb);
     newSignal(1, 1)->add(dndCb);
     newSignal(0, 0)->add(dndCb);

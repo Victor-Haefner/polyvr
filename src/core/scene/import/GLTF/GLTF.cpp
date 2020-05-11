@@ -14,7 +14,6 @@
 
 #include "core/scene/VRScene.h"
 
-//#include <boost/bind.hpp>
 #include <string>
 #include <iostream>
 #include <fstream>
@@ -36,7 +35,6 @@
 #include "tiny_gltf.h"
 
 using namespace OSG;
-using namespace std::placeholders;
 
 struct GLTFSchema {
     int version = 1;
@@ -1139,7 +1137,7 @@ struct GLTFNNode : GLTFNode{
         VRTransformPtr t = dynamic_pointer_cast<VRTransform>(obj);
         if (t) {
             float maxDuration = primeAnimations();
-            VRAnimCbPtr fkt = VRAnimCb::create("anim", bind(animCB, maxDuration, _1) );
+            VRAnimCbPtr fkt = VRAnimCb::create("anim", bind(animCB, maxDuration, placeholders::_1) );
             VRAnimationPtr animptr = VRScene::getCurrent()->addAnimation<float>(maxDuration, 0.f, fkt, 0.f, 1.f, true, true);
             t->addAnimation(animptr);
         }
@@ -1756,7 +1754,7 @@ class GLTFLoader : public GLTFUtils {
             VRTransformPtr t = dynamic_pointer_cast<VRTransform>(tree->obj);
             if (t) {
                 float duration = 5.0;
-                VRAnimCbPtr fkt = VRAnimCb::create("anim", bind(animCB,duration, _1) );
+                VRAnimCbPtr fkt = VRAnimCb::create("anim", bind(animCB,duration, placeholders::_1) );
                 VRAnimationPtr animptr = VRScene::getCurrent()->addAnimation<float>(duration, 0.f, fkt, 0.f, 1.f, true, true);
                 t->addAnimation(animptr);
             } else cout << "no Tree found" << endl;
@@ -1990,13 +1988,13 @@ void constructGLTF(tinygltf::Model& model, VRObjectPtr obj, int pID = -1) {
 
         // buffer
         map<string, int> bufIDs;
-        bufIDs["indices"]   = addBuffer<int  , int  >(model, "indicesBuffer"  , dataN["indices"]  , bind(&VRGeoData::getIndex   , &data, _1, PositionsIndex));
-        bufIDs["positions"] = addBuffer<Vec3f, Pnt3d>(model, "positionsBuffer", dataN["positions"], bind(&VRGeoData::getPosition, &data, _1));
-        bufIDs["normals"]   = addBuffer<Vec3f, Vec3d>(model, "normalsBuffer"  , dataN["normals"]  , bind(&VRGeoData::getNormal  , &data, _1));
+        bufIDs["indices"]   = addBuffer<int  , int  >(model, "indicesBuffer"  , dataN["indices"]  , bind(&VRGeoData::getIndex   , &data, placeholders::_1, PositionsIndex));
+        bufIDs["positions"] = addBuffer<Vec3f, Pnt3d>(model, "positionsBuffer", dataN["positions"], bind(&VRGeoData::getPosition, &data, placeholders::_1));
+        bufIDs["normals"]   = addBuffer<Vec3f, Vec3d>(model, "normalsBuffer"  , dataN["normals"]  , bind(&VRGeoData::getNormal  , &data, placeholders::_1));
         if (dataN["colors3"] > 0)
-            bufIDs["colors3"]   = addBuffer<Vec3f, Color3f>(model, "colors3Buffer"  , dataN["colors3"]  , bind(&VRGeoData::getColor3, &data, _1));
+            bufIDs["colors3"]   = addBuffer<Vec3f, Color3f>(model, "colors3Buffer"  , dataN["colors3"]  , bind(&VRGeoData::getColor3, &data, placeholders::_1));
         if (dataN["colors4"] > 0)
-            bufIDs["colors4"]   = addBuffer<Vec4f, Color4f>(model, "colors4Buffer"  , dataN["colors4"]  , bind(&VRGeoData::getColor , &data, _1));
+            bufIDs["colors4"]   = addBuffer<Vec4f, Color4f>(model, "colors4Buffer"  , dataN["colors4"]  , bind(&VRGeoData::getColor , &data, placeholders::_1));
         if (dataN["colors3"] > 0 || dataN["colors4"] > 0) {
             material.pbrMetallicRoughness.baseColorFactor = {1,1,1,1};
         }

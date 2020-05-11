@@ -5,7 +5,6 @@
 #include "core/math/VRStateMachine.h"
 #include "core/math/VRStateMachine.cpp"
 
-#include <boost/bind.hpp>
 #include <algorithm>
 
 using namespace OSG;
@@ -126,7 +125,7 @@ VRProcessEngine::Transition& VRProcessEngine::Actor::getTransition(int tID) {
 // ----------- process engine --------------
 
 VRProcessEngine::VRProcessEngine() {
-    updateCb = VRUpdateCb::create("process engine update", boost::bind(&VRProcessEngine::update, this));
+    updateCb = VRUpdateCb::create("process engine update", bind(&VRProcessEngine::update, this));
     VRScene::getCurrent()->addTimeoutFkt(updateCb, 0, 500);
 }
 
@@ -218,7 +217,7 @@ void VRProcessEngine::initialize() {
         int sID = actor.first;
 
         for (auto state : process->getSubjectStates(sID)) { //for each state of this Subject create the possible Actions
-            auto transitionCB = VRFunction<float, string>::create("processTransition", boost::bind(&VRProcessEngine::Actor::transitioning, &actor.second, _1));
+            auto transitionCB = VRFunction<float, string>::create("processTransition", bind(&VRProcessEngine::Actor::transitioning, &actor.second, placeholders::_1));
             auto smState = actor.second.sm.addState(state->getLabel(), transitionCB);
 
             for (auto processTransition : process->getStateOutTransitions(sID, state->getID())) { // for each transition out of this State create Actions which lead to the next State
@@ -250,7 +249,7 @@ void VRProcessEngine::initialize() {
                             Message m(message->getLabel(), sender->getLabel(), receiver->getLabel(), state); // TODO: add data artefact pointer?
                             m.messageSenderTransition = processTransition;
                             Actor& rActor = subjects[receiver->getID()];
-                            auto cb = VRProcessCb::create("action", boost::bind(&VRProcessEngine::Actor::receiveMessage, &rActor, _1, m)); // better to trigger receiveMessage during receive transition of the receiver actor
+                            auto cb = VRProcessCb::create("action", bind(&VRProcessEngine::Actor::receiveMessage, &rActor, placeholders::_1, m)); // better to trigger receiveMessage during receive transition of the receiver actor
                             transition.actions.push_back( Action(cb, m) );
                         }
                     }

@@ -140,7 +140,7 @@ VRTransformPtr VRImport::load(string path, VRObjectPtr parent, bool useCache, st
         }
 
         auto job = new LoadJob(path, preset, res, progress, options, useCache, useBinaryCache); // TODO: fix memory leak!
-        job->loadCb = VRFunction< VRThreadWeakPtr >::create( "geo load", boost::bind(&LoadJob::load, job, _1) );
+        job->loadCb = VRFunction< VRThreadWeakPtr >::create( "geo load", bind(&LoadJob::load, job, _1) );
         /*auto t =*/ VRScene::getCurrent()->initThread(job->loadCb, "geo load thread", false, 1);
         //testSync(t);
         return res;

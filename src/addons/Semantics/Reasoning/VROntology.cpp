@@ -37,7 +37,7 @@ VROntology::VROntology(string name) {
     storeMap("Entities", &entities, true);
     storeMap("Rules", &rules, true);
     store("flag", &flag);
-    regStorageSetupFkt( VRStorageCb::create("ontology setup", boost::bind(&VROntology::setup, this, _1)) );
+    regStorageSetupFkt( VRStorageCb::create("ontology setup", bind(&VROntology::setup, this, placeholders::_1)) );
 }
 
 VROntologyPtr VROntology::create(string name) {

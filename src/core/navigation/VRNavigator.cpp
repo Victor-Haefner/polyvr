@@ -157,14 +157,14 @@ VRNavigator::VRNavigator() {
         storeNavigationCallback( VRFunction<VRDeviceWeakPtr>::create(name, fkt) );
     };
 
-    addNavCb("mouse_orbit2d", boost::bind(&VRNavigator::orbit2D, this, _1) );
-    addNavCb("mouse_orbit", boost::bind(&VRNavigator::orbit, this, _1) );
-    addNavCb("mouse_zoom_in", boost::bind(&VRNavigator::zoom, this, _1, 1) );
-    addNavCb("mouse_zoom_out", boost::bind(&VRNavigator::zoom, this, _1, -1) );
-    addNavCb("mouse_focus", boost::bind(&VRNavigator::focus, this, _1) );
-    addNavCb("mouse_walk", boost::bind(&VRNavigator::walk, this, _1) );
-    addNavCb("fly_walk", boost::bind(&VRNavigator::fly_walk, this, _1) );
-    addNavCb("hyd_walk", boost::bind(&VRNavigator::hyd_walk, this, _1) );
+    addNavCb("mouse_orbit2d", bind(&VRNavigator::orbit2D, this, _1) );
+    addNavCb("mouse_orbit", bind(&VRNavigator::orbit, this, _1) );
+    addNavCb("mouse_zoom_in", bind(&VRNavigator::zoom, this, _1, 1) );
+    addNavCb("mouse_zoom_out", bind(&VRNavigator::zoom, this, _1, -1) );
+    addNavCb("mouse_focus", bind(&VRNavigator::focus, this, _1) );
+    addNavCb("mouse_walk", bind(&VRNavigator::walk, this, _1) );
+    addNavCb("fly_walk", bind(&VRNavigator::fly_walk, this, _1) );
+    addNavCb("hyd_walk", bind(&VRNavigator::hyd_walk, this, _1) );
 }
 
 VRNavigator::~VRNavigator() {}
@@ -346,7 +346,7 @@ void VRNavigator::focus(VRDeviceWeakPtr _dev) {
     p->addPoint( Pose(ins.point.subZero(), z));
     p->compute(20);
 
-    focus_fkt = VRFunction<float>::create("TransAnim", boost::bind(animPathAt, VRTransformWeakPtr(target), p, _1));
+    focus_fkt = VRFunction<float>::create("TransAnim", bind(animPathAt, VRTransformWeakPtr(target), p, _1));
     scene->addAnimation<float>(0.3,0,focus_fkt,0,1);
 }
 

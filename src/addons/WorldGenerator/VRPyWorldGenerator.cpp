@@ -24,7 +24,7 @@ template<> bool toValue(PyObject* o, VRWorldGenerator::VRUserGenCbPtr& v) {
     if (VRPyBase::isNone(o)) v = 0;
     else {
         Py_IncRef(o);
-        v = VRWorldGenerator::VRUserGenCb::create( "pyExecCall", boost::bind(VRPyBase::execPyCall<VRWorldGenerator::OsmEntity, bool>, o, PyTuple_New(1), _1) );
+        v = VRWorldGenerator::VRUserGenCb::create( "pyExecCall", bind(VRPyBase::execPyCall<VRWorldGenerator::OsmEntity, bool>, o, PyTuple_New(1), placeholders::_1) );
     }
     return 1;
 }

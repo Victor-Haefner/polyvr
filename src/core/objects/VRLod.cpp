@@ -4,7 +4,6 @@
 #include "core/utils/VRFunction.h"
 #include "core/objects/object/OSGCore.h"
 
-#include <boost/bind.hpp>
 #include <OpenSG/OSGDistanceLOD.h>
 #include <OpenSG/OSGVector.h>
 
@@ -20,7 +19,7 @@ VRLod::VRLod(string name) : VRObject(name) {
 
     store("center", center);
     store("distances", &distances_string);
-    regStorageSetupFkt( VRStorageCb::create("lod setup", boost::bind(&VRLod::loadSetup, this, _1)) );
+    regStorageSetupFkt( VRStorageCb::create("lod setup", bind(&VRLod::loadSetup, this, placeholders::_1)) );
 }
 
 VRLod::~VRLod() {

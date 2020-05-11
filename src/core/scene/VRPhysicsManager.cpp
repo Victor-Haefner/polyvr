@@ -61,8 +61,8 @@ VRPhysicsManager::VRPhysicsManager() {
     softBodyWorldInfo->water_normal	= btVector3(0,0,0);
 
 
-    updatePhysObjectsFkt = VRUpdateCb::create("Physics object update", boost::bind(&VRPhysicsManager::updatePhysObjects, this));
-    updatePhysicsFkt = VRThreadCb::create("Physics update", boost::bind(&VRPhysicsManager::updatePhysics, this, _1));
+    updatePhysObjectsFkt = VRUpdateCb::create("Physics object update", bind(&VRPhysicsManager::updatePhysObjects, this));
+    updatePhysicsFkt = VRThreadCb::create("Physics update", bind(&VRPhysicsManager::updatePhysics, this, _1));
 
     physics_visual_layer = VRVisualLayer::getLayer("Physics", "physics.png", 1);
 

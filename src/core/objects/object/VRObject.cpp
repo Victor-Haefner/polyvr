@@ -43,8 +43,8 @@ VRObject::VRObject(string _name) {
     store("visible", &visibleMask);
     storeObjVec("children", children);
 
-    regStorageSetupBeforeFkt( VRStorageCb::create("object setup", boost::bind(&VRObject::setupBefore, this, _1)) );
-    regStorageSetupFkt( VRStorageCb::create("object setup", boost::bind(&VRObject::setupAfter, this, _1)) );
+    regStorageSetupBeforeFkt( VRStorageCb::create("object setup", bind(&VRObject::setupBefore, this, placeholders::_1)) );
+    regStorageSetupFkt( VRStorageCb::create("object setup", bind(&VRObject::setupAfter, this, placeholders::_1)) );
 }
 
 vector<VRObjectPtr> tmpChildren;

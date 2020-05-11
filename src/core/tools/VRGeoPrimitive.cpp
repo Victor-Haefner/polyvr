@@ -8,8 +8,6 @@
 #include "core/tools/selection/VRSelector.h"
 #include "VRAnnotationEngine.h"
 
-#include <boost/bind.hpp>
-
 using namespace OSG;
 
 template<> string typeName(const VRGeoPrimitive& t) { return "GeoPrimitive"; }
@@ -130,7 +128,7 @@ void VRGeoPrimitive::setupHandles() {
             handles.push_back(h);
             geo->addChild(h);
 
-            auto cb = VRFunction<float>::create( "geo_prim_update", boost::bind(&VRGeoPrimitive::update, this, i, h, _1) );
+            auto cb = VRFunction<float>::create( "geo_prim_update", bind(&VRGeoPrimitive::update, this, i, h, placeholders::_1) );
             h->configure(cb, VRHandle::LINEAR, d, L);
 
             float v = toFloat(param);

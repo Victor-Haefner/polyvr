@@ -87,7 +87,7 @@ void VRManipulator::setup() {
 VRPathtool::option::option(int r, bool uch) : resolution(r), useControlHandles(uch) {}
 
 VRPathtool::VRPathtool() : VRTransform("Pathtool") {
-    updatePtr = VRUpdateCb::create("path tool update", boost::bind(&VRPathtool::updateDevs, this) );
+    updatePtr = VRUpdateCb::create("path tool update", bind(&VRPathtool::updateDevs, this) );
     VRScene::getCurrent()->addUpdateFkt(updatePtr, 100);
 
     manip = new VRManipulator();
@@ -113,9 +113,9 @@ VRPathtool::VRPathtool() : VRTransform("Pathtool") {
     storeObj("graph", graph);
     storeMap("paths", &paths, true);
     storeMap("options", options);
-    //regStorageSetupBeforeFkt( VRUpdateCb::create("pathtool clear", boost::bind(&VRPathtool::clear, this)) );
-    regStorageSetupBeforeFkt( VRStorageCb::create("pathtool clear", boost::bind(&VRPathtool::setupBefore, this, _1)) );
-    regStorageSetupFkt( VRStorageCb::create("pathtool setup", boost::bind(&VRPathtool::setup, this, _1)) );
+    //regStorageSetupBeforeFkt( VRUpdateCb::create("pathtool clear", bind(&VRPathtool::clear, this)) );
+    regStorageSetupBeforeFkt( VRStorageCb::create("pathtool clear", bind(&VRPathtool::setupBefore, this, _1)) );
+    regStorageSetupFkt( VRStorageCb::create("pathtool setup", bind(&VRPathtool::setup, this, _1)) );
 }
 
 VRPathtool::~VRPathtool() {

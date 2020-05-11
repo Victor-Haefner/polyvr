@@ -186,9 +186,9 @@ VRScript::VRScript(string _name) {
     auto ns = setNameSpace("__script__");
     ns->setSeparator('_');
     setName(_name);
-    cbfkt_sys = VRUpdateCb::create(_name + "_ScriptCallback_sys", boost::bind(&VRScript::execute, this));
-    cbfkt_dev = VRDeviceCb::create(_name + "_ScriptCallback_dev", boost::bind(&VRScript::execute_dev, this, _1));
-    cbfkt_soc = VRMessageCb::create(_name + "_ScriptCallback_soc", boost::bind(&VRScript::execute_soc, this, _1));
+    cbfkt_sys = VRUpdateCb::create(_name + "_ScriptCallback_sys", bind(&VRScript::execute, this));
+    cbfkt_dev = VRDeviceCb::create(_name + "_ScriptCallback_dev", bind(&VRScript::execute_dev, this, _1));
+    cbfkt_soc = VRMessageCb::create(_name + "_ScriptCallback_soc", bind(&VRScript::execute_soc, this, _1));
 
     setOverrideCallbacks(true);
     store("type", &type);
@@ -449,7 +449,7 @@ void VRScript::printSyntaxError(PyObject *exception, PyObject *value, PyObject *
         else {
             string fn = filename ? filename : "<string>";
             errLink eLink(fn, lineno, 0);
-            auto fkt = VRFunction<string>::create("search_link", boost::bind(&VRScript::on_err_link_clicked, this, eLink, _1) );
+            auto fkt = VRFunction<string>::create("search_link", bind(&VRScript::on_err_link_clicked, this, eLink, _1) );
             print("  ");
             print("Script \"" + fn + "\", line " + toString(lineno), "redLink", fkt);
             print("\n");
@@ -506,7 +506,7 @@ void VRScript::pyErrPrint(string channel) {
             string funcname = PyString_AsString(frame->f_code->co_name);
             errLink eLink(filename, line, 0);
             Line l;
-            l.fkt = VRFunction<string>::create("search_link", boost::bind(&VRScript::on_err_link_clicked, this, eLink, _1) );
+            l.fkt = VRFunction<string>::create("search_link", bind(&VRScript::on_err_link_clicked, this, eLink, _1) );
             //l.line = "Line "+toString(line)+" in "+funcname+" in script "+filename;
             l.line = "Script "+filename+", line "+toString(line);
             if (filename != funcname) l.line += ", in "+funcname;

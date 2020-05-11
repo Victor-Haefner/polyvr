@@ -18,7 +18,7 @@ template<> bool toValue(PyObject* o, VRSnappingEngine::VRSnapCbPtr& e) {
     //if (!VRPyEntity::check(o)) return 0; // TODO: add checks!
     Py_IncRef(o);
 	PyObject* args = PyTuple_New(1);
-    e = VRSnappingEngine::VRSnapCb::create( "pyExecCall", boost::bind(VRPyBase::execPyCallVoid<VRSnappingEngine::EventSnap>, o, args, _1));
+    e = VRSnappingEngine::VRSnapCb::create( "pyExecCall", bind(VRPyBase::execPyCallVoid<VRSnappingEngine::EventSnap>, o, args, placeholders::_1));
     return 1;
 }
 

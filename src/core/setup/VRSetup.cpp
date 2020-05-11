@@ -53,8 +53,8 @@ VRSetup::VRSetup(string name) {
 
     setup_layer = VRVisualLayer::getLayer("Setup", "setup.png",1);
     stats_layer = VRVisualLayer::getLayer("Statistics", "stats.png",1);
-    layer_setup_toggle = VRFunction<bool>::create("showSetup", boost::bind(&VRSetup::showSetup, this, _1) );
-    layer_stats_toggle = VRFunction<bool>::create("showStats", boost::bind(&VRSetup::showStats, this, _1) );
+    layer_setup_toggle = VRFunction<bool>::create("showSetup", bind(&VRSetup::showSetup, this, _1) );
+    layer_stats_toggle = VRFunction<bool>::create("showStats", bind(&VRSetup::showStats, this, _1) );
     setup_layer->setCallback( layer_setup_toggle );
     stats_layer->setCallback( layer_stats_toggle );
 
@@ -118,7 +118,7 @@ void VRSetup::setupLESCCAVELights(VRScenePtr scene) {
     //triggerScript(name);
     //cout << "VRSetup::setupLESCCAVELights B\n";
 
-    static auto fkt1 = VRAnimCb::create("setup loading lights cb", boost::bind(updateLoadingLights, _1));
+    static auto fkt1 = VRAnimCb::create("setup loading lights cb", bind(updateLoadingLights, _1));
     auto p = scene->getLoadingProgress();
     if (lightAvailable) {
         p->setCallback(fkt1);

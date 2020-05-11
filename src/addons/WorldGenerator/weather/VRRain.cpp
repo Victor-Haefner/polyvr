@@ -14,7 +14,6 @@
 
 #include <math.h>
 #include <random>
-#include <boost/bind.hpp>
 
 using namespace OSG;
 
@@ -113,7 +112,7 @@ VRRain::VRRain() : VRGeometry("Rain") {
     color = colorStart;
     light = lightStart;
 
-    updatePtr = VRUpdateCb::create("rain update", boost::bind(&VRRain::update, this));
+    updatePtr = VRUpdateCb::create("rain update", bind(&VRRain::update, this));
     VRScene::getCurrent()->addUpdateFkt(updatePtr);
 
     cout << "VRRain::VRRain()\n";
@@ -139,7 +138,7 @@ void VRRain::start() {
         else setScale(false, scale);
 
         auto rainAnimation = VRAnimation::create("startRain");
-        rainAnimationCb = VRAnimCb::create("rain update", boost::bind(&VRRain::startRainCallback, this, _1));
+        rainAnimationCb = VRAnimCb::create("rain update", bind(&VRRain::startRainCallback, this, _1));
         rainAnimation->setCallback(rainAnimationCb);
         rainAnimation->setDuration(durationTransition);
         rainAnimation->start();
@@ -165,7 +164,7 @@ void VRRain::startRainCallback(float t) {
 void VRRain::stop() {
     if (isRaining) {
         auto rainAnimation = VRAnimation::create("stopRain");
-        rainAnimationCb = VRAnimCb::create("rain update", boost::bind(&VRRain::stopRainCallback, this, _1));
+        rainAnimationCb = VRAnimCb::create("rain update", bind(&VRRain::stopRainCallback, this, _1));
         rainAnimation->setCallback(rainAnimationCb);
         rainAnimation->setDuration(durationTransition);
         rainAnimation->start();

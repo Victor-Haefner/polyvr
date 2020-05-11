@@ -15,7 +15,6 @@
 
 #include <algorithm>
 #include <OpenSG/OSGMatrixUtility.h>
-#include <boost/bind.hpp>
 
 using namespace OSG;
 
@@ -23,7 +22,7 @@ template<> string typeName(const VRProcessLayout& o) { return "ProcessLayout"; }
 
 
 VRProcessLayout::VRProcessLayout(string name) : VRTransform(name) {
-    updateCb = VRUpdateCb::create("process layout update", boost::bind(&VRProcessLayout::update, this));
+    updateCb = VRUpdateCb::create("process layout update", bind(&VRProcessLayout::update, this));
     VRScene::getCurrent()->addUpdateFkt(updateCb);
 }
 

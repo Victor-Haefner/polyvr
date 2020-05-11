@@ -38,14 +38,14 @@ void VRFluids::setFunctions(int from, int to) {
         }
         // enable graphical updates
         scene->dropUpdateFkt(fkt);
-        fkt = VRUpdateCb::create("particles_update", boost::bind(&VRFluids::updateParticles, this,from,to));
+        fkt = VRUpdateCb::create("particles_update", bind(&VRFluids::updateParticles, this,from,to));
         scene->addUpdateFkt(fkt);
         // enable physic updates
         scene->dropPhysicsUpdateFunction(fluidFkt, this->afterBullet);
         if (this->simulation == SPH) {
-            fluidFkt = VRUpdateCb::create("sph_update", boost::bind(&VRFluids::updateSPH, this,from,to));
+            fluidFkt = VRUpdateCb::create("sph_update", bind(&VRFluids::updateSPH, this,from,to));
         } else if (this->simulation == XSPH) {
-            fluidFkt = VRUpdateCb::create("xsph_update", boost::bind(&VRFluids::updateXSPH, this,from,to));
+            fluidFkt = VRUpdateCb::create("xsph_update", bind(&VRFluids::updateXSPH, this,from,to));
         }
         scene->addPhysicsUpdateFunction(fluidFkt, this->afterBullet);
     }
