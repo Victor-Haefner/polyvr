@@ -15,6 +15,7 @@ struct _GtkTextMark;
 struct _GtkScrolledWindow;
 struct _GtkLabel;
 struct _GtkTextIter;
+struct _GObject;
 union _GdkEvent;
 
 OSG_BEGIN_NAMESPACE;
@@ -42,7 +43,7 @@ class VRConsoleWidget {
         bool isOpen = 0;
         string notifyColor = "#006fe0";
 
-        bool on_link_activate(_GdkEvent* event, _GtkTextIter* itr);
+        bool on_link_activate(_GObject* object, _GdkEvent* event, _GtkTextIter* itr);
         //bool on_link_activate(const Glib::RefPtr<Glib::Object>& obj, GdkEvent* event, const Gtk::TextIter& itr);
         //bool on_link_activate(GdkEvent* event);
 

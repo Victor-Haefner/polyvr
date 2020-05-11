@@ -18,6 +18,7 @@ VRConsoleWidget::message::message(string m, string s, shared_ptr< VRFunction<str
 
 VRConsoleWidget::VRConsoleWidget() {
     buffer = gtk_text_buffer_new(0);
+    g_object_ref(buffer);
     GtkTextView* term_view = (GtkTextView*)gtk_text_view_new_with_buffer(buffer);
     PangoFontDescription* fdesc = pango_font_description_new();
     pango_font_description_set_family(fdesc, "monospace");
@@ -112,7 +113,7 @@ void VRConsoleWidget::resetColor() {
 
 void VRConsoleWidget::addStyle( string style, string fg, string bg, bool italic, bool bold, bool underlined ) {
     GtkTextTag* tag = gtk_text_buffer_create_tag(buffer, NULL, NULL);
-    function<bool(GdkEvent*, GtkTextIter*)> sig = bind(&VRConsoleWidget::on_link_activate, this, placeholders::_1, placeholders::_2);
+    function<bool(GObject*, GdkEvent*, GtkTextIter*)> sig = bind(&VRConsoleWidget::on_link_activate, this, placeholders::_1, placeholders::_2, placeholders::_3);
     connect_signal((GtkWidget*)tag, sig, "event");
     g_object_set(tag, "editable", false, NULL);
     g_object_set(tag, "foreground", fg.c_str(), NULL);
@@ -123,13 +124,13 @@ void VRConsoleWidget::addStyle( string style, string fg, string bg, bool italic,
     styles[style] = tag;
 }
 
-bool VRConsoleWidget::on_link_activate(GdkEvent* event, GtkTextIter* itr) {
-//bool VRConsoleWidget::on_link_activate(const Glib::RefPtr<Glib::Object>& obj, GdkEvent* event, const Gtk::TextIter& itr) {
+bool VRConsoleWidget::on_link_activate(GObject* object, GdkEvent* event, GtkTextIter* itr) {
     GdkEventButton* event_btn = (GdkEventButton*)event;
     if (event->type == GDK_BUTTON_PRESS && event_btn->button == 1) {
         GtkTextIter markItr, tagToggle, lineEnd;
         tagToggle = *itr;
         lineEnd = *itr;
+
         gtk_text_iter_forward_to_tag_toggle(&tagToggle, 0);
         gtk_text_iter_forward_to_line_end(&lineEnd);
         gtk_text_iter_forward_char(&lineEnd);
@@ -160,8 +161,7 @@ void VRConsoleWidget::update() {
             auto tag = styles[msg.style];
             gtk_text_buffer_get_end_iter(buffer, &itr);
             gtk_text_buffer_insert_with_tags(buffer, &itr, msg.msg.c_str(), msg.msg.size(), tag, NULL);
-            gtk_text_buffer_get_end_iter(buffer, &itr);
-            GtkTextMark* mark = gtk_text_buffer_create_mark(buffer, "mark", &itr, false);
+            GtkTextMark* mark = gtk_text_buffer_create_mark(buffer, NULL, &itr, true);
             if (msg.link) links[mark] = msg;
         }
         else {
