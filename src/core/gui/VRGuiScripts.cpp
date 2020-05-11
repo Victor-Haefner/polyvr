@@ -795,7 +795,7 @@ void VRGuiScripts::focusScript(string name, int line, int column) {
     auto tree_view = (GtkTreeView*)getGUIBuilder()->get_object("treeview5");
 
     auto selectScript = [&](GtkTreeIter* itr) {
-        string n = VRGuiTreeView((GtkWidget*)tree_view).getSelectedStringValue(0);
+        string n = VRGuiTreeView((GtkWidget*)tree_view).getStringValue(itr, 0);
         if (name == n) {
             GtkTreePath* path = gtk_tree_model_get_path(GTK_TREE_MODEL(store), itr);
             gtk_tree_view_expand_to_path(tree_view, path);

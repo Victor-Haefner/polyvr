@@ -18,7 +18,6 @@ VRConsoleWidget::message::message(string m, string s, shared_ptr< VRFunction<str
 
 VRConsoleWidget::VRConsoleWidget() {
     buffer = gtk_text_buffer_new(0);
-    g_object_ref(buffer);
     GtkTextView* term_view = (GtkTextView*)gtk_text_view_new_with_buffer(buffer);
     PangoFontDescription* fdesc = pango_font_description_new();
     pango_font_description_set_family(fdesc, "monospace");
