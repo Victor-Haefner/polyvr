@@ -35,7 +35,6 @@
 			<Add option="-fPIC" />
 			<Add option="`pkg-config gtk+-2.0 --cflags`" />
 			<Add option="`pkg-config gmodule-2.0 --cflags`" />
-			<Add option="`pkg-config gtkmm-2.4 --cflags`" />
 			<Add option="`pkg-config gtkglext-1.0 --cflags`" />
 			<Add option="`pkg-config python --cflags`" />
 			<Add option="`pkg-config gtksourceview-2.0 --cflags`" />
