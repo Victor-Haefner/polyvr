@@ -58,7 +58,7 @@ void VRGuiFile::close() {
     if (dialog == 0) init();
     setWidget(0);
     setWidgetVisibility("file_dialog", false);
-    sigClose();
+    if (sigClose) sigClose();
     clearFilter();
 }
 
@@ -189,13 +189,13 @@ void VRGuiFile::gotoPath(string path) {
 }
 
 void VRGuiFile::select() {
-    sigSelect();
+    if (sigSelect) sigSelect();
 }
 
 void VRGuiFile::apply() {
     if (dialog == 0) init();
     gtk_widget_hide((GtkWidget*)dialog);
-    sigApply();
+    if (sigApply) sigApply();
     setWidget(0);
 }
 
