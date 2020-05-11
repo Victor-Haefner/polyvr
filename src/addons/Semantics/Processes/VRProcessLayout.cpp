@@ -11,10 +11,10 @@
 #include "core/tools/VRText.h"
 #include "core/tools/VRPathtool.h"
 #include "core/scene/VRScene.h"
+#include "core/tools/VRAnnotationEngine.h"
 
 #include <algorithm>
 #include <OpenSG/OSGMatrixUtility.h>
-#include <boost/bind.hpp>
 
 using namespace OSG;
 
@@ -22,7 +22,7 @@ template<> string typeName(const VRProcessLayout& o) { return "ProcessLayout"; }
 
 
 VRProcessLayout::VRProcessLayout(string name) : VRTransform(name) {
-    updateCb = VRUpdateCb::create("process layout update", boost::bind(&VRProcessLayout::update, this));
+    updateCb = VRUpdateCb::create("process layout update", bind(&VRProcessLayout::update, this));
     VRScene::getCurrent()->addUpdateFkt(updateCb);
 }
 
@@ -66,7 +66,7 @@ VRPathtoolPtr VRProcessLayout::getSBDPathtool(int subject) { return toolSBDs[sub
 int wrapString(string& s, int width) {
     int w = 0;
     vector<int> newBreaks;
-    for (uint i=0; i<s.size(); i++) {
+    for (unsigned int i=0; i<s.size(); i++) {
         char c = s[i];
 
         if (c == '\n') w = 0;
@@ -157,27 +157,18 @@ VRGeometryPtr VRProcessLayout::newWidget(VRProcessNodePtr n, float height) {
     string l = n->label;
     int lineN = wrapString(l, wrapN);
 
-    auto mat = VRMaterial::create("ProcessElement");
-    auto txt = VRText::get()->create(l, "MONO 20", 20, 3, fg, bg);
-    mat->setTexture(txt, false);
-    mat->setTextureParams(GL_LINEAR, GL_LINEAR);
-    if (n->type == SUBJECT) mat->setDiffuse( colorSubject );
-    if (n->type == MESSAGE) mat->setDiffuse( colorMessage );
-    if (n->type == TRANSITION) mat->setDiffuse( colorMessage );
-    if (n->type == STATE) mat->setDiffuse( colorState );
-    //mat->enableTransparency(0);
-    VRGeoData geo;
+    auto w = VRAnnotationEngine::create("ProcessElement");
+    w->setBillboard(true);
+    if (n->type == SUBJECT) w->setBackground( colorSubject );
+    if (n->type == MESSAGE) w->setBackground( colorMessage );
+    if (n->type == TRANSITION) w->setBackground( colorMessage );
+    if (n->type == STATE) w->setBackground( colorState );
+    w->set(0, Vec3d(0,0,0), l);
 
-    if (n->type == SUBJECT) pushSubjectBox(geo, wrapN, lineN*height*0.5,layoutScale);
-    if (n->type == STATE) pushActionBox(geo, wrapN, lineN*height*0.5, layoutScale);
-    if (n->type == MESSAGE || n->type == TRANSITION) pushMsgBox(geo, wrapN, lineN*height*0.5, layoutScale);
-
-    auto w = geo.asGeometry("ProcessElement");
     if (n->type == SUBJECT) w->addTag("subject");
     if (n->type == STATE) w->addTag("action");
     if (n->type == MESSAGE) w->addTag("message");
     if (n->type == TRANSITION) w->addTag("transition");
-    w->setMaterial(mat);
     w->getConstraint()->lock({1,3,4,5});
     w->getConstraint()->setReferential(ptr());
     addChild(w);
@@ -215,7 +206,6 @@ void VRProcessLayout::setProcess(VRProcessPtr p) {
     toolSID->setGraph( p->getInteractionDiagram(), 1,0,1);
     toolSID->setArrowSize(layoutScale);
     constrainHandles(toolSID);
-
     rebuild();
 }
 
@@ -230,7 +220,7 @@ void VRProcessLayout::setEngine(VRProcessEnginePtr e) { engine = e; }
 
 void VRProcessLayout::rebuild() {
     if (!process) return;
-    clearChildren();
+    clearChildren(false);
     addChild(toolSID);
 
     for(auto tool : toolSBDs) addChild(tool.second);
@@ -276,7 +266,7 @@ void VRProcessLayout::setupLabel(VRProcessNodePtr message, VRPathtoolPtr ptool, 
 
 void VRProcessLayout::buildSID() {
     auto subjects = process->getSubjects();
-	for (uint i=0; i < subjects.size(); i++) {
+	for (unsigned int i=0; i < subjects.size(); i++) {
         auto s = subjects[i];
         Vec3d pos = s->getPosition( Vec3d(0,0,i*25*layoutScale), 20*layoutScale);
         appendToHandle(pos, s, toolSID);
@@ -292,12 +282,12 @@ void VRProcessLayout::buildSID() {
 
 void VRProcessLayout::buildSBDs() {
     auto subjects = process->getSubjects();
-	for (uint i=0; i < subjects.size(); i++) {
+	for (unsigned int i=0; i < subjects.size(); i++) {
         int sID = subjects[i]->getID();
         auto toolSBD = toolSBDs[sID];
         auto actions = process->getSubjectStates(sID);
 
-        for (uint j=0; j < actions.size(); j++) {
+        for (unsigned int j=0; j < actions.size(); j++) {
             auto a = actions[j];
             Vec3d pos = a->getPosition( Vec3d((j+1)*40*layoutScale,0,i*25*layoutScale), 20*layoutScale);
             appendToHandle(pos, a, toolSBD);
@@ -312,12 +302,12 @@ void VRProcessLayout::buildSBDs() {
 	}
 }
 
-void VRProcessLayout::printHandlePositions(){
+void VRProcessLayout::printHandlePositions() {
     for (auto subject : process->getSubjects()){
         cout << "subject: " << subject->getID() << endl;
         auto toolSBD = toolSBDs[subject->getID()];
         auto behavior = process->getBehaviorDiagram(subject->getID());
-        for (auto node : behavior->processnodes){
+        for (auto node : behavior->processNodes){
             auto nid = node.second->getID();
             auto handle = toolSBD->getHandle(nid);
             auto position = handle->getWorldPosition();
@@ -383,12 +373,14 @@ void VRProcessLayout::setElementName(int ID, string name) {
 void VRProcessLayout::update() {
     if (updatePaused) return;
 
-	auto setElementDisplay = [&](int eID, Color3f color, bool isLit) {
+	auto setElementDisplay = [&](int eID, Color4f color, bool isLit) {
         auto element = getElement(eID);
-        auto geo = dynamic_pointer_cast<VRGeometry>(element);
+        /*auto geo = dynamic_pointer_cast<VRGeometry>(element);
         auto mat = geo->getMaterial();
         mat->setDiffuse(color);
-        mat->setLit(isLit);
+        mat->setLit(isLit);*/
+        auto ann = dynamic_pointer_cast<VRAnnotationEngine>(element);
+        ann->setBackground(color);
 	} ;
 
 	//get current actions and change box color/material
@@ -401,7 +393,7 @@ void VRProcessLayout::update() {
             int sID = subject->getID();
 
             for (auto transition : process->getSubjectTransitions(sID)) {
-                setElementDisplay(transition->getID(), Color3f(1,1,0), 1);
+                setElementDisplay(transition->getID(), Color4f(1,1,0,1), 1);
             }
 
             for (auto state : process->getSubjectStates(sID)) {
@@ -412,9 +404,9 @@ void VRProcessLayout::update() {
 
                     for (auto transition : process->getStateOutTransitions(sID, state->getID())) {
                         auto& eTransition = engine->getTransition(sID, transition->getID());
-                        if (eTransition.overridePrerequisites) setElementDisplay(transition->getID(), Color3f(0.3,0.4,1), 0);
-                        if (eTransition.state == "invalid") setElementDisplay(transition->getID(), Color3f(1,0.4,0.3), 0);
-                        if (eTransition.state == "valid") setElementDisplay(transition->getID(), Color3f(0.3,1,0.3), 0);
+                        if (eTransition.overridePrerequisites) setElementDisplay(transition->getID(), Color4f(0.3,0.4,1,1), 0);
+                        if (eTransition.state == "invalid") setElementDisplay(transition->getID(), Color4f(1,0.4,0.3,1), 0);
+                        if (eTransition.state == "valid") setElementDisplay(transition->getID(), Color4f(0.3,1,0.3,1), 0);
                     }
                 } else {
                     if      (state->isSendState)    setElementDisplay(state->getID(), colorSendState, 1);

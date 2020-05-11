@@ -5,7 +5,6 @@
 #include "core/objects/material/VRMaterial.h"
 #include "core/math/kinematics/VRConstraint.h"
 #include "core/math/pose.h"
-#include <boost/bind.hpp>
 
 using namespace OSG;
 
@@ -14,7 +13,7 @@ template<> string typeName(const VRHandle& t) { return "Handle"; }
 
 VRHandle::VRHandle(string name) : VRGeometry(name) {
     type = "Handle";
-    updateCb = VRUpdateCb::create("handle_update", boost::bind(&VRHandle::updateHandle, this, true) );
+    updateCb = VRUpdateCb::create("handle_update", bind(&VRHandle::updateHandle, this, true) );
     setPickable(true);
     setPrimitive("Box 0.1 0.1 0.1 1 1 1");
     auto m = VRMaterial::get("VRHandle");

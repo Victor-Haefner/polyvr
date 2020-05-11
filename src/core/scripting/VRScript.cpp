@@ -172,7 +172,7 @@ void VRScript::update() {
     if (type == "Python") {
         head = "def " + name + "(";
         bool first = true;
-        for (auto a : getArguments(true)) {
+        for (auto a : getArguments()) {
             if (!first) head += ", ";
             head += a->getName();
             first = false;
@@ -186,9 +186,9 @@ VRScript::VRScript(string _name) {
     auto ns = setNameSpace("__script__");
     ns->setSeparator('_');
     setName(_name);
-    cbfkt_sys = VRUpdateCb::create(_name + "_ScriptCallback_sys", boost::bind(&VRScript::execute, this));
-    cbfkt_dev = VRDeviceCb::create(_name + "_ScriptCallback_dev", boost::bind(&VRScript::execute_dev, this, _1));
-    cbfkt_soc = VRMessageCb::create(_name + "_ScriptCallback_soc", boost::bind(&VRScript::execute_soc, this, _1));
+    cbfkt_sys = VRUpdateCb::create(_name + "_ScriptCallback_sys", bind(&VRScript::execute, this));
+    cbfkt_dev = VRDeviceCb::create(_name + "_ScriptCallback_dev", bind(&VRScript::execute_dev, this, _1));
+    cbfkt_soc = VRMessageCb::create(_name + "_ScriptCallback_soc", bind(&VRScript::execute_soc, this, _1));
 
     setOverrideCallbacks(true);
     store("type", &type);
@@ -280,7 +280,7 @@ VRScript::Search VRScript::find(string s) {
     search.search = s;
     map<int, bool> res;
 
-    uint pos = core.find(s, 0);
+    unsigned int pos = core.find(s, 0);
     while(pos != string::npos && pos <= core.size()) {
         res[pos] = false;
         pos = core.find(s, pos+1);
@@ -304,12 +304,21 @@ VRScript::Search VRScript::find(string s) {
     return search;
 }
 
-list<VRScript::argPtr> VRScript::getArguments(bool withInternals) {
-    if (withInternals && socArg) ;
+list<VRScript::argPtr> VRScript::getArguments() {
     auto tmp = args;
     if (socArg) tmp.push_front(socArg);
     if (devArg) tmp.push_front(devArg);
     return tmp;
+}
+
+void VRScript::setArguments(vector<string> vals) {
+    int i=0;
+    for (auto a : args) {
+        if (i >= vals.size()) return;
+        a->val = vals[i];
+        a->type = "str";
+        i++;
+    }
 }
 
 void VRScript::setName(string n) { clean(); VRName::setName(n); update(); }
@@ -440,7 +449,7 @@ void VRScript::printSyntaxError(PyObject *exception, PyObject *value, PyObject *
         else {
             string fn = filename ? filename : "<string>";
             errLink eLink(fn, lineno, 0);
-            auto fkt = VRFunction<string>::create("search_link", boost::bind(&VRScript::on_err_link_clicked, this, eLink, _1) );
+            auto fkt = VRFunction<string>::create("search_link", bind(&VRScript::on_err_link_clicked, this, eLink, _1) );
             print("  ");
             print("Script \"" + fn + "\", line " + toString(lineno), "redLink", fkt);
             print("\n");
@@ -497,7 +506,7 @@ void VRScript::pyErrPrint(string channel) {
             string funcname = PyString_AsString(frame->f_code->co_name);
             errLink eLink(filename, line, 0);
             Line l;
-            l.fkt = VRFunction<string>::create("search_link", boost::bind(&VRScript::on_err_link_clicked, this, eLink, _1) );
+            l.fkt = VRFunction<string>::create("search_link", bind(&VRScript::on_err_link_clicked, this, eLink, _1) );
             //l.line = "Line "+toString(line)+" in "+funcname+" in script "+filename;
             l.line = "Script "+filename+", line "+toString(line);
             if (filename != funcname) l.line += ", in "+funcname;
@@ -553,7 +562,7 @@ void VRScript::execute() {
         pyErrPrint( "Errors" );
 
         VRTimer timer; timer.start();
-        auto args = getArguments(true);
+        auto args = getArguments();
         PyObject* pArgs = PyTuple_New(args.size());
         pyErrPrint("Errors");
 

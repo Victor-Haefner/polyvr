@@ -80,6 +80,10 @@ class VRRenderManager : public VRStorage {
 
         void update();
         void reloadStageShaders();
+
+        string getSupportedGL();
+        bool hasGeomShader();
+        bool hasTessShader();
 };
 
 OSG_END_NAMESPACE;

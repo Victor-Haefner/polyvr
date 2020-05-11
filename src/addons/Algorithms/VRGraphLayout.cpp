@@ -87,14 +87,14 @@ void VRGraphLayout::applyOccupancy(float eps, float v) {
         o->addBox( n.box, (void*)i );
     }
 
-    for (uint i=0; i<nodes.size(); i++) {
+    for (unsigned int i=0; i<nodes.size(); i++) {
         if ( isFlag(i, FIXED) || isFlag(i, INACTIVE) ) continue;
         auto& n = nodes[i];
         Vec3d pn = n.box.center();
 
         Vec3d D;
         for (auto& on2 : o->boxSearch(n.box) ) {
-            uint j = (long)on2;
+            unsigned int j = (long)on2;
             if (i == j) continue; // no self interaction
 
             auto& n2 = nodes[j];
@@ -135,7 +135,7 @@ void VRGraphLayout::compute(int N, float eps) {
     }
 
     // update graph nodes a second time
-    for (uint i=0; i<graph->getNodes().size(); i++) graph->update(i, false);
+    for (unsigned int i=0; i<graph->getNodes().size(); i++) graph->update(i, false);
 }
 
 void VRGraphLayout::setFlag(int i, FLAG f) {

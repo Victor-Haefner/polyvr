@@ -1,9 +1,6 @@
 #include "VRGtkWindow.h"
-#include <gtkmm/drawingarea.h>
-#include <gtkmm/window.h>
-#include <gtkmm/label.h>
-#include <gtkmm/builder.h>
-#include <gdkmm/cursor.h>
+#include "core/gui/VRGuiUtils.h"
+#include <gtk/gtkdrawingarea.h>
 #include <gdk/gdkgl.h>
 #include <gtk/gtkgl.h>
 #include <boost/thread/recursive_mutex.hpp>
@@ -21,11 +18,12 @@ typedef boost::recursive_mutex::scoped_lock PLock;
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
+namespace PL = std::placeholders;
 
-VRGtkWindow::VRGtkWindow(Gtk::DrawingArea* da) {
+VRGtkWindow::VRGtkWindow(GtkDrawingArea* da) {
     type = 2;
     drawArea = da;
-    widget = (GtkWidget*)drawArea->gobj();
+    widget = (GtkWidget*)drawArea;
     if (gtk_widget_get_realized(widget)) cout << "Warning: glarea is realized!\n";
 
     auto mode = (GdkGLConfigMode)(GDK_GL_MODE_RGB | GDK_GL_MODE_DOUBLE | GDK_GL_MODE_DEPTH | GDK_GL_MODE_STENCIL);
@@ -34,129 +32,129 @@ VRGtkWindow::VRGtkWindow(Gtk::DrawingArea* da) {
     GdkGLConfig* glConfigMode = gdk_gl_config_new_by_mode(mode);
     gtk_widget_set_gl_capability(widget,glConfigMode,NULL,true,GDK_GL_RGBA_TYPE);
 
-    drawArea->show();
-    drawArea->add_events((Gdk::EventMask)GDK_VISIBILITY_NOTIFY_MASK);
-    drawArea->add_events((Gdk::EventMask)GDK_BUTTON_PRESS_MASK);
-    drawArea->add_events((Gdk::EventMask)GDK_BUTTON_RELEASE_MASK);
-    drawArea->add_events((Gdk::EventMask)GDK_POINTER_MOTION_MASK);
-    drawArea->add_events((Gdk::EventMask)GDK_KEY_PRESS_MASK);
-    drawArea->add_events((Gdk::EventMask)GDK_KEY_RELEASE_MASK);
-    drawArea->add_events((Gdk::EventMask)GDK_SCROLL_MASK);
-    drawArea->set_flags(Gtk::CAN_FOCUS);
+    gtk_widget_show(widget);
+    gtk_widget_add_events(widget, (GdkEventMask)GDK_VISIBILITY_NOTIFY_MASK);
+    gtk_widget_add_events(widget, (GdkEventMask)GDK_BUTTON_PRESS_MASK);
+    gtk_widget_add_events(widget, (GdkEventMask)GDK_BUTTON_RELEASE_MASK);
+    gtk_widget_add_events(widget, (GdkEventMask)GDK_POINTER_MOTION_MASK);
+    gtk_widget_add_events(widget, (GdkEventMask)GDK_KEY_PRESS_MASK);
+    gtk_widget_add_events(widget, (GdkEventMask)GDK_KEY_RELEASE_MASK);
+    gtk_widget_add_events(widget, (GdkEventMask)GDK_SCROLL_MASK);
+    GTK_WIDGET_SET_FLAGS(widget, GTK_CAN_FOCUS);
 
     win = PassiveWindow::create();
     _win = win;
     win->setSize(width, height);
 
-    signals.push_back( drawArea->signal_realize().connect(sigc::mem_fun(*this, &VRGtkWindow::on_realize)) );
-    signals.push_back( drawArea->signal_expose_event().connect(sigc::mem_fun(*this, &VRGtkWindow::on_expose)) );
-    signals.push_back( drawArea->signal_size_allocate().connect(sigc::mem_fun(*this, &VRGtkWindow::on_resize)) );
-
-    signals.push_back( drawArea->signal_scroll_event().connect(sigc::mem_fun(*this, &VRGtkWindow::on_scroll)) );
-    signals.push_back( drawArea->signal_button_press_event().connect(sigc::mem_fun(*this, &VRGtkWindow::on_button)) );
-    signals.push_back( drawArea->signal_button_release_event().connect(sigc::mem_fun(*this, &VRGtkWindow::on_button)) );
-    signals.push_back( drawArea->signal_motion_notify_event().connect(sigc::mem_fun(*this, &VRGtkWindow::on_motion)) );
-    signals.push_back( drawArea->signal_key_press_event().connect(sigc::mem_fun(*this, &VRGtkWindow::on_key)) );
-    signals.push_back( drawArea->signal_key_release_event().connect(sigc::mem_fun(*this, &VRGtkWindow::on_key)) );
+    connect_signal<void>(drawArea, bind(&VRGtkWindow::on_realize, this), "realize");
+    connect_signal<void, GdkEventExpose*>(drawArea, bind(&VRGtkWindow::on_expose, this, PL::_1), "expose_event");
+    connect_signal<void, GdkRectangle*>(drawArea, bind(&VRGtkWindow::on_resize, this, PL::_1), "size_allocate");
+    connect_signal<void, GdkEventScroll*>(drawArea, bind(&VRGtkWindow::on_scroll, this, PL::_1), "scroll_event");
+    connect_signal<void, GdkEventButton*>(drawArea, bind(&VRGtkWindow::on_button, this, PL::_1), "button_press_event");
+    connect_signal<void, GdkEventButton*>(drawArea, bind(&VRGtkWindow::on_button, this, PL::_1), "button_release_event");
+    connect_signal<void, GdkEventMotion*>(drawArea, bind(&VRGtkWindow::on_motion, this, PL::_1), "motion_notify_event");
+    connect_signal<void, GdkEventKey*>(drawArea, bind(&VRGtkWindow::on_key, this, PL::_1), "key_press_event");
+    connect_signal<void, GdkEventKey*>(drawArea, bind(&VRGtkWindow::on_key, this, PL::_1), "key_release_event");
 }
 
 VRGtkWindow::~VRGtkWindow() {
-    for (unsigned int i=0; i<signals.size(); i++) signals[i].disconnect();
     win = NULL;
 }
 
 VRGtkWindowPtr VRGtkWindow::ptr() { return static_pointer_cast<VRGtkWindow>( shared_from_this() ); }
-VRGtkWindowPtr VRGtkWindow::create(Gtk::DrawingArea* da) { return shared_ptr<VRGtkWindow>(new VRGtkWindow(da) ); }
+VRGtkWindowPtr VRGtkWindow::create(GtkDrawingArea* da) { return shared_ptr<VRGtkWindow>(new VRGtkWindow(da) ); }
 
 void VRGtkWindow::setCursor(string c) {
-    Glib::RefPtr <Gdk::Window> win = drawArea->get_window();
-    if (c == "") { win->set_cursor(); return; }
+    GdkWindow* win = widget->window;
+    if (c == "") { gdk_window_set_cursor(win, NULL); return; }
 
-    Gdk::Cursor cursor;
+    GdkCursorType cursor;
 
-    if (c == "X_CURSOR") cursor = Gdk::Cursor(Gdk::X_CURSOR);
-    if (c == "ARROW") cursor = Gdk::Cursor(Gdk::ARROW);
-    if (c == "BASED_ARROW_DOWN") cursor = Gdk::Cursor(Gdk::BASED_ARROW_DOWN);
-    if (c == "BASED_ARROW_UP") cursor = Gdk::Cursor(Gdk::BASED_ARROW_UP);
-    if (c == "BOAT") cursor = Gdk::Cursor(Gdk::BOAT);
-    if (c == "BOGOSITY") cursor = Gdk::Cursor(Gdk::BOGOSITY);
-    if (c == "BOTTOM_LEFT_CORNER") cursor = Gdk::Cursor(Gdk::BOTTOM_LEFT_CORNER);
-    if (c == "BOTTOM_RIGHT_CORNER") cursor = Gdk::Cursor(Gdk::BOTTOM_RIGHT_CORNER);
-    if (c == "BOTTOM_SIDE") cursor = Gdk::Cursor(Gdk::BOTTOM_SIDE);
-    if (c == "BOTTOM_TEE") cursor = Gdk::Cursor(Gdk::BOTTOM_TEE);
-    if (c == "BOX_SPIRAL") cursor = Gdk::Cursor(Gdk::BOX_SPIRAL);
-    if (c == "CENTER_PTR") cursor = Gdk::Cursor(Gdk::CENTER_PTR);
-    if (c == "CIRCLE") cursor = Gdk::Cursor(Gdk::CIRCLE);
-    if (c == "CLOCK") cursor = Gdk::Cursor(Gdk::CLOCK);
-    if (c == "COFFEE_MUG") cursor = Gdk::Cursor(Gdk::COFFEE_MUG);
-    if (c == "CROSS") cursor = Gdk::Cursor(Gdk::CROSS);
-    if (c == "CROSS_REVERSE") cursor = Gdk::Cursor(Gdk::CROSS_REVERSE);
-    if (c == "CROSSHAIR") cursor = Gdk::Cursor(Gdk::CROSSHAIR);
-    if (c == "DIAMOND_CROSS") cursor = Gdk::Cursor(Gdk::DIAMOND_CROSS);
-    if (c == "DOT") cursor = Gdk::Cursor(Gdk::DOT);
-    if (c == "DOTBOX") cursor = Gdk::Cursor(Gdk::DOTBOX);
-    if (c == "DOUBLE_ARROW") cursor = Gdk::Cursor(Gdk::DOUBLE_ARROW);
-    if (c == "DRAFT_LARGE") cursor = Gdk::Cursor(Gdk::DRAFT_LARGE);
-    if (c == "DRAFT_SMALL") cursor = Gdk::Cursor(Gdk::DRAFT_SMALL);
-    if (c == "DRAPED_BOX") cursor = Gdk::Cursor(Gdk::DRAPED_BOX);
-    if (c == "EXCHANGE") cursor = Gdk::Cursor(Gdk::EXCHANGE);
-    if (c == "FLEUR") cursor = Gdk::Cursor(Gdk::FLEUR);
-    if (c == "GOBBLER") cursor = Gdk::Cursor(Gdk::GOBBLER);
-    if (c == "GUMBY") cursor = Gdk::Cursor(Gdk::GUMBY);
-    if (c == "HAND1") cursor = Gdk::Cursor(Gdk::HAND1);
-    if (c == "HAND2") cursor = Gdk::Cursor(Gdk::HAND2);
-    if (c == "HEART") cursor = Gdk::Cursor(Gdk::HEART);
-    if (c == "ICON") cursor = Gdk::Cursor(Gdk::ICON);
-    if (c == "IRON_CROSS") cursor = Gdk::Cursor(Gdk::IRON_CROSS);
-    if (c == "LEFT_PTR") cursor = Gdk::Cursor(Gdk::LEFT_PTR);
-    if (c == "LEFT_SIDE") cursor = Gdk::Cursor(Gdk::LEFT_SIDE);
-    if (c == "LEFT_TEE") cursor = Gdk::Cursor(Gdk::LEFT_TEE);
-    if (c == "LEFTBUTTON") cursor = Gdk::Cursor(Gdk::LEFTBUTTON);
-    if (c == "LL_ANGLE") cursor = Gdk::Cursor(Gdk::LL_ANGLE);
-    if (c == "LR_ANGLE") cursor = Gdk::Cursor(Gdk::LR_ANGLE);
-    if (c == "MAN") cursor = Gdk::Cursor(Gdk::MAN);
-    if (c == "MIDDLEBUTTON") cursor = Gdk::Cursor(Gdk::MIDDLEBUTTON);
-    if (c == "MOUSE") cursor = Gdk::Cursor(Gdk::MOUSE);
-    if (c == "PENCIL") cursor = Gdk::Cursor(Gdk::PENCIL);
-    if (c == "PIRATE") cursor = Gdk::Cursor(Gdk::PIRATE);
-    if (c == "PLUS") cursor = Gdk::Cursor(Gdk::PLUS);
-    if (c == "QUESTION_ARROW") cursor = Gdk::Cursor(Gdk::QUESTION_ARROW);
-    if (c == "RIGHT_PTR") cursor = Gdk::Cursor(Gdk::RIGHT_PTR);
-    if (c == "RIGHT_SIDE") cursor = Gdk::Cursor(Gdk::RIGHT_SIDE);
-    if (c == "RIGHT_TEE") cursor = Gdk::Cursor(Gdk::RIGHT_TEE);
-    if (c == "RIGHTBUTTON") cursor = Gdk::Cursor(Gdk::RIGHTBUTTON);
-    if (c == "RTL_LOGO") cursor = Gdk::Cursor(Gdk::RTL_LOGO);
-    if (c == "SAILBOAT") cursor = Gdk::Cursor(Gdk::SAILBOAT);
-    if (c == "SB_DOWN_ARROW") cursor = Gdk::Cursor(Gdk::SB_DOWN_ARROW);
-    if (c == "SB_H_DOUBLE_ARROW") cursor = Gdk::Cursor(Gdk::SB_H_DOUBLE_ARROW);
-    if (c == "SB_LEFT_ARROW") cursor = Gdk::Cursor(Gdk::SB_LEFT_ARROW);
-    if (c == "SB_RIGHT_ARROW") cursor = Gdk::Cursor(Gdk::SB_RIGHT_ARROW);
-    if (c == "SB_UP_ARROW") cursor = Gdk::Cursor(Gdk::SB_UP_ARROW);
-    if (c == "SB_V_DOUBLE_ARROW") cursor = Gdk::Cursor(Gdk::SB_V_DOUBLE_ARROW);
-    if (c == "SHUTTLE") cursor = Gdk::Cursor(Gdk::SHUTTLE);
-    if (c == "SIZING") cursor = Gdk::Cursor(Gdk::SIZING);
-    if (c == "SPIDER") cursor = Gdk::Cursor(Gdk::SPIDER);
-    if (c == "SPRAYCAN") cursor = Gdk::Cursor(Gdk::SPRAYCAN);
-    if (c == "STAR") cursor = Gdk::Cursor(Gdk::STAR);
-    if (c == "TARGET") cursor = Gdk::Cursor(Gdk::TARGET);
-    if (c == "TCROSS") cursor = Gdk::Cursor(Gdk::TCROSS);
-    if (c == "TOP_LEFT_ARROW") cursor = Gdk::Cursor(Gdk::TOP_LEFT_ARROW);
-    if (c == "TOP_LEFT_CORNER") cursor = Gdk::Cursor(Gdk::TOP_LEFT_CORNER);
-    if (c == "TOP_RIGHT_CORNER") cursor = Gdk::Cursor(Gdk::TOP_RIGHT_CORNER);
-    if (c == "TOP_SIDE") cursor = Gdk::Cursor(Gdk::TOP_SIDE);
-    if (c == "TOP_TEE") cursor = Gdk::Cursor(Gdk::TOP_TEE);
-    if (c == "TREK") cursor = Gdk::Cursor(Gdk::TREK);
-    if (c == "UL_ANGLE") cursor = Gdk::Cursor(Gdk::UL_ANGLE);
-    if (c == "UMBRELLA") cursor = Gdk::Cursor(Gdk::UMBRELLA);
-    if (c == "UR_ANGLE") cursor = Gdk::Cursor(Gdk::UR_ANGLE);
-    if (c == "WATCH") cursor = Gdk::Cursor(Gdk::WATCH);
-    if (c == "XTERM") cursor = Gdk::Cursor(Gdk::XTERM);
+    if (c == "X_CURSOR") cursor = GDK_X_CURSOR;
+    if (c == "ARROW") cursor = GDK_ARROW;
+    if (c == "BASED_ARROW_DOWN") cursor = GDK_BASED_ARROW_DOWN;
+    if (c == "BASED_ARROW_UP") cursor = GDK_BASED_ARROW_UP;
+    if (c == "BOAT") cursor = GDK_BOAT;
+    if (c == "BOGOSITY") cursor = GDK_BOGOSITY;
+    if (c == "BOTTOM_LEFT_CORNER") cursor = GDK_BOTTOM_LEFT_CORNER;
+    if (c == "BOTTOM_RIGHT_CORNER") cursor = GDK_BOTTOM_RIGHT_CORNER;
+    if (c == "BOTTOM_SIDE") cursor = GDK_BOTTOM_SIDE;
+    if (c == "BOTTOM_TEE") cursor = GDK_BOTTOM_TEE;
+    if (c == "BOX_SPIRAL") cursor = GDK_BOX_SPIRAL;
+    if (c == "CENTER_PTR") cursor = GDK_CENTER_PTR;
+    if (c == "CIRCLE") cursor = GDK_CIRCLE;
+    if (c == "CLOCK") cursor = GDK_CLOCK;
+    if (c == "COFFEE_MUG") cursor = GDK_COFFEE_MUG;
+    if (c == "CROSS") cursor = GDK_CROSS;
+    if (c == "CROSS_REVERSE") cursor = GDK_CROSS_REVERSE;
+    if (c == "CROSSHAIR") cursor = GDK_CROSSHAIR;
+    if (c == "DIAMOND_CROSS") cursor = GDK_DIAMOND_CROSS;
+    if (c == "DOT") cursor = GDK_DOT;
+    if (c == "DOTBOX") cursor = GDK_DOTBOX;
+    if (c == "DOUBLE_ARROW") cursor = GDK_DOUBLE_ARROW;
+    if (c == "DRAFT_LARGE") cursor = GDK_DRAFT_LARGE;
+    if (c == "DRAFT_SMALL") cursor = GDK_DRAFT_SMALL;
+    if (c == "DRAPED_BOX") cursor = GDK_DRAPED_BOX;
+    if (c == "EXCHANGE") cursor = GDK_EXCHANGE;
+    if (c == "FLEUR") cursor = GDK_FLEUR;
+    if (c == "GOBBLER") cursor = GDK_GOBBLER;
+    if (c == "GUMBY") cursor = GDK_GUMBY;
+    if (c == "HAND1") cursor = GDK_HAND1;
+    if (c == "HAND2") cursor = GDK_HAND2;
+    if (c == "HEART") cursor = GDK_HEART;
+    if (c == "ICON") cursor = GDK_ICON;
+    if (c == "IRON_CROSS") cursor = GDK_IRON_CROSS;
+    if (c == "LEFT_PTR") cursor = GDK_LEFT_PTR;
+    if (c == "LEFT_SIDE") cursor = GDK_LEFT_SIDE;
+    if (c == "LEFT_TEE") cursor = GDK_LEFT_TEE;
+    if (c == "LEFTBUTTON") cursor = GDK_LEFTBUTTON;
+    if (c == "LL_ANGLE") cursor = GDK_LL_ANGLE;
+    if (c == "LR_ANGLE") cursor = GDK_LR_ANGLE;
+    if (c == "MAN") cursor = GDK_MAN;
+    if (c == "MIDDLEBUTTON") cursor = GDK_MIDDLEBUTTON;
+    if (c == "MOUSE") cursor = GDK_MOUSE;
+    if (c == "PENCIL") cursor = GDK_PENCIL;
+    if (c == "PIRATE") cursor = GDK_PIRATE;
+    if (c == "PLUS") cursor = GDK_PLUS;
+    if (c == "QUESTION_ARROW") cursor = GDK_QUESTION_ARROW;
+    if (c == "RIGHT_PTR") cursor = GDK_RIGHT_PTR;
+    if (c == "RIGHT_SIDE") cursor = GDK_RIGHT_SIDE;
+    if (c == "RIGHT_TEE") cursor = GDK_RIGHT_TEE;
+    if (c == "RIGHTBUTTON") cursor = GDK_RIGHTBUTTON;
+    if (c == "RTL_LOGO") cursor = GDK_RTL_LOGO;
+    if (c == "SAILBOAT") cursor = GDK_SAILBOAT;
+    if (c == "SB_DOWN_ARROW") cursor = GDK_SB_DOWN_ARROW;
+    if (c == "SB_H_DOUBLE_ARROW") cursor = GDK_SB_H_DOUBLE_ARROW;
+    if (c == "SB_LEFT_ARROW") cursor = GDK_SB_LEFT_ARROW;
+    if (c == "SB_RIGHT_ARROW") cursor = GDK_SB_RIGHT_ARROW;
+    if (c == "SB_UP_ARROW") cursor = GDK_SB_UP_ARROW;
+    if (c == "SB_V_DOUBLE_ARROW") cursor = GDK_SB_V_DOUBLE_ARROW;
+    if (c == "SHUTTLE") cursor = GDK_SHUTTLE;
+    if (c == "SIZING") cursor = GDK_SIZING;
+    if (c == "SPIDER") cursor = GDK_SPIDER;
+    if (c == "SPRAYCAN") cursor = GDK_SPRAYCAN;
+    if (c == "STAR") cursor = GDK_STAR;
+    if (c == "TARGET") cursor = GDK_TARGET;
+    if (c == "TCROSS") cursor = GDK_TCROSS;
+    if (c == "TOP_LEFT_ARROW") cursor = GDK_TOP_LEFT_ARROW;
+    if (c == "TOP_LEFT_CORNER") cursor = GDK_TOP_LEFT_CORNER;
+    if (c == "TOP_RIGHT_CORNER") cursor = GDK_TOP_RIGHT_CORNER;
+    if (c == "TOP_SIDE") cursor = GDK_TOP_SIDE;
+    if (c == "TOP_TEE") cursor = GDK_TOP_TEE;
+    if (c == "TREK") cursor = GDK_TREK;
+    if (c == "UL_ANGLE") cursor = GDK_UL_ANGLE;
+    if (c == "UMBRELLA") cursor = GDK_UMBRELLA;
+    if (c == "UR_ANGLE") cursor = GDK_UR_ANGLE;
+    if (c == "WATCH") cursor = GDK_WATCH;
+    if (c == "XTERM") cursor = GDK_XTERM;
 
-    win->set_cursor(cursor);
+    auto cur = gdk_cursor_new(cursor);
+    gdk_window_set_cursor(win, cur);
+    gdk_cursor_destroy(cur);
 }
 
-bool VRGtkWindow::on_button(GdkEventButton * event) {
-    gtk_widget_grab_focus((GtkWidget*)drawArea->gobj());
+bool VRGtkWindow::on_button(GdkEventButton* event) {
+    gtk_widget_grab_focus(widget);
     int state = 1;
     if (event->type == GDK_BUTTON_PRESS) state = 0;
 
@@ -206,7 +204,7 @@ bool VRGtkWindow::on_scroll(GdkEventScroll * event) {
 }
 
 void VRGtkWindow::clear(Color3f c) {
-    Glib::RefPtr<Gdk::Window> drawable = drawArea->get_window();
+    GdkWindow* drawable = widget->window;
     if (drawable) {
         GdkGLContext* glcontext = gtk_widget_get_gl_context (widget);
         GdkGLDrawable* gldrawable = gtk_widget_get_gl_drawable (widget);
@@ -225,7 +223,7 @@ void VRGtkWindow::render(bool fromThread) {
     if (!active || !content) return;
     auto profiler = VRProfiler::get();
     int pID = profiler->regStart("gtk window render");
-    Glib::RefPtr<Gdk::Window> drawable = drawArea->get_window();
+    GdkWindow* drawable = widget->window;
     if (drawable) {
         GdkGLContext* glcontext = gtk_widget_get_gl_context (widget);
         GdkGLDrawable* gldrawable = gtk_widget_get_gl_drawable (widget);
@@ -244,9 +242,9 @@ void VRGtkWindow::render(bool fromThread) {
     profiler->regStop(pID);
 }
 
-void VRGtkWindow::on_resize(Gtk::Allocation& allocation) {
+void VRGtkWindow::on_resize(GdkRectangle* allocation) {
     initialExpose = true;
-    resize(allocation.get_width(), allocation.get_height());
+    resize(allocation->width, allocation->height);
 }
 
 void VRGtkWindow::on_realize() {

@@ -7,7 +7,6 @@
 #include "core/utils/toString.h"
 #include "core/utils/isNan.h"
 #include "core/tools/VRAnalyticGeometry.h"
-#include <boost/bind.hpp>
 #include <OpenSG/OSGQuaternion.h>
 
 using namespace OSG;
@@ -25,10 +24,10 @@ VRRobotArm::VRRobotArm(string type) : type(type) {
     ageo->setLabelParams(0.05, 1, 1, Color4f(1,1,1,1), Color4f(1,1,1,0));
     ageo->hide("SHADOW");
 
-    animPtr = VRFunction<float>::create("animOnPath", boost::bind(&VRRobotArm::animOnPath, this, _1 ) );
+    animPtr = VRFunction<float>::create("animOnPath", bind(&VRRobotArm::animOnPath, this, placeholders::_1 ) );
     anim->setUnownedCallback(animPtr);
 
-    updatePtr = VRUpdateCb::create("run engines", boost::bind(&VRRobotArm::update, this) );
+    updatePtr = VRUpdateCb::create("run engines", bind(&VRRobotArm::update, this) );
     VRScene::getCurrent()->addUpdateFkt(updatePtr, 999);
 }
 
@@ -37,9 +36,12 @@ VRRobotArm::~VRRobotArm() {}
 shared_ptr<VRRobotArm> VRRobotArm::create(string type) { return shared_ptr<VRRobotArm>(new VRRobotArm(type)); }
 
 void VRRobotArm::setParts(vector<VRTransformPtr> parts) {
-    this->parts = parts;
+    this->parts.clear();
+    for (auto p : parts) if (p) this->parts.push_back(p);
     ageo->switchParent(parts[0]->getParent());
 }
+
+void VRRobotArm::setEventCallback(VRMessageCbPtr mCb) { eventCb = mCb; }
 
 void VRRobotArm::setAngleOffsets(vector<float> offsets) { angle_offsets = offsets; }
 void VRRobotArm::setAngleDirections(vector<int> dirs) { angle_directions = dirs; }
@@ -57,11 +59,15 @@ void VRRobotArm::applyAngles() {
     }
 }
 
+double VRRobotArm::convertAngle(double a, int i) {
+     return angle_directions[i]*a + angle_offsets[i]*Pi;
+}
+
 void VRRobotArm::update() { // update robot joint angles
     bool m = false;
 
     for (int i=0; i<N; i++) {
-        double a = angle_directions[i]*angle_targets[i] + angle_offsets[i]*Pi;
+        double a = convertAngle(angle_targets[i], i);
         double da = a - angles[i];
         if (isNan(da)) continue;
         while (da >  Pi) da -= 2*Pi;
@@ -71,10 +77,25 @@ void VRRobotArm::update() { // update robot joint angles
     }
 
     if (m) applyAngles();
+    if (eventCb && moving && !m) (*eventCb)("stopped");
+    if (eventCb && !moving && m) (*eventCb)("moving");
     moving = m;
 }
 
 bool VRRobotArm::isMoving() { return anim->isActive() || moving; }
+
+void VRRobotArm::grab(VRTransformPtr obj) {
+    auto ee = parts[parts.size()-1];
+    obj->drag(ee);
+    dragged = obj;
+    cout << "VRRobotArm::grab obj " << obj << ", ee " << ee << endl;
+    for (auto e : parts) cout << "  part " << e << endl;
+}
+
+void VRRobotArm::drop() {
+    if (dragged) dragged->drop();
+    dragged = 0;
+}
 
 /*
 
@@ -303,7 +324,14 @@ void VRRobotArm::stop() {
     anim->stop();
 }
 
-void VRRobotArm::setAngles(vector<float> angles) { this->angle_targets = angles; }
+void VRRobotArm::setAngles(vector<float> angles, bool force) {
+    this->angle_targets = angles;
+    if (force) {
+        for (int i=0; i<N; i++) this->angles[i] = convertAngle(angles[i], i);
+        applyAngles();
+    }
+}
+
 void VRRobotArm::setMaxSpeed(float s) { maxSpeed = s; }
 
 PosePtr VRRobotArm::getKukaPose() {
@@ -366,11 +394,15 @@ void VRRobotArm::moveTo(PosePtr p2) {
 }
 
 void VRRobotArm::setGrab(float g) {
+    grabDist = g;
     float l = lengths[4]*g;
     Vec3d p; p[0] = l;
-    parts[7]->setFrom(p);
-    parts[8]->setFrom(-p);
-    grab = g;
+    if (parts.size() >= 9) {
+        if (parts[7] && parts[8]) {
+            parts[7]->setFrom( p);
+            parts[8]->setFrom(-p);
+        }
+    }
 }
 
 void VRRobotArm::moveOnPath(float t0, float t1, bool loop, float durationMultiplier) {
@@ -378,7 +410,7 @@ void VRRobotArm::moveOnPath(float t0, float t1, bool loop, float durationMultipl
     addJob( job(robotPath, orientationPath, t0, t1, 2*robotPath->getLength() * durationMultiplier, loop) );
 }
 
-void VRRobotArm::toggleGrab() { setGrab(1-grab); }
+void VRRobotArm::toggleGrab() { setGrab(1-grabDist); }
 
 void VRRobotArm::setPath(PathPtr p, PathPtr po) { robotPath = p; orientationPath = po; }
 PathPtr VRRobotArm::getPath() { return robotPath; }

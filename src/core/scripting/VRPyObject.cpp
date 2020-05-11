@@ -60,6 +60,11 @@ const char* exportToFileDoc = "Export subtree to file"
 "bla"
 "\nblub";
 
+// no idea why, but windows does not find the definition in VREntity.cpp
+#ifdef _WIN32
+template<> string typeName(const OSG::VREntity& o) { return "Entity"; }
+#endif
+
 PyMethodDef VRPyObject::methods[] = {
     {"destroy", (PyCFunction)VRPyObject::destroy, METH_NOARGS, "Destroy object and reset py object to None" },
     {"getName", (PyCFunction)VRPyObject::getName, METH_NOARGS, "Return the object name" },
@@ -104,8 +109,8 @@ PyMethodDef VRPyObject::methods[] = {
     {"getLinks", PyWrap(Object, getLinks, "Return all links", vector<VRObjectPtr>) },
     {"setEntity", PyWrap(Object, setEntity, "Set entity", void, VREntityPtr) },
     {"getEntity", PyWrap(Object, getEntity, "Get entity", VREntityPtr) },
-    {"clearChildren", PyWrap(Object, clearChildren, "Remove all children - clearChildren()", void) },
-    {"getChildIndex", PyWrap(Object, getChildIndex, "Return the child index of this object - int getChildIndex()", int) },
+    {"clearChildren", PyWrapOpt(Object, clearChildren, "Remove all children", "1", void, bool) },
+    {"getChildIndex", PyWrap(Object, getChildIndex, "Return the child index of this object", int) },
     {"getBoundingbox", PyWrap(Object, getBoundingbox, "get Boundingbox", BoundingboxPtr) },
     {"getWorldBoundingbox", PyWrap(Object, getWorldBoundingbox, "get world Boundingbox", BoundingboxPtr) },
     {"setVolume", PyWrap(Object, setVolume, "Set the scenegraph volume to boundingbox", void, Boundingbox) },

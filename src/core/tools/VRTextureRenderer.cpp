@@ -375,7 +375,7 @@ vector<VRTexturePtr> VRTextureRenderer::createCubeMaps(VRTransformPtr focusObjec
     if (!focusObject) return {};
 
     auto pose = cam->getPose();
-    auto near = cam->getNear();
+    auto Near = cam->getNear();
     auto aspect = cam->getAspect();
     auto fov = cam->getFov();
 
@@ -406,7 +406,7 @@ vector<VRTexturePtr> VRTextureRenderer::createCubeMaps(VRTransformPtr focusObjec
 
     cam->setAspect(aspect);
     cam->setFov(fov);
-    cam->setNear(near);
+    cam->setNear(Near);
     cam->setPose(pose);
     return {texFront, texBack, texLeft, texRight, texUp, texDown};
 }

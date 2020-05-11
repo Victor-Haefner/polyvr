@@ -5,7 +5,6 @@
 #include "core/scene/VRScene.h"
 
 #include <OpenSG/OSGImage.h>
-#include <boost/bind.hpp>
 
 using namespace OSG;
 
@@ -44,7 +43,7 @@ void VRTexture::write(string path, bool doThread) {
         writeImage(img, path);
     } else {
         auto scene = VRScene::getCurrent();
-        if (!writeWorker) writeWorker = VRThreadCb::create("writeThreaded", boost::bind(&VRTexture::writeThreaded, this, path, ptr(), _1));
+        if (!writeWorker) writeWorker = VRThreadCb::create("writeThreaded", bind(&VRTexture::writeThreaded, this, path, ptr(), placeholders::_1));
         scene->initThread(writeWorker, "write image to disk");
     }
 }

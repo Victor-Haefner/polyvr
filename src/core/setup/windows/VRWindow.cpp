@@ -24,7 +24,7 @@ VRWindow::VRWindow() : changeListStats("remote") {
     active_window_count++;
     string n = getName();
 #ifndef WASM
-    winThread = VRThreadCb::create("VRWindow", boost::bind(&VRWindow::update, this, _1) );
+    winThread = VRThreadCb::create("VRWindow", bind(&VRWindow::update, this, _1) );
     thread_id = VRSceneManager::get()->initThread(winThread,"window_"+n,true,0); // WASM crash, needed?
 #endif
 }
@@ -49,7 +49,7 @@ void VRWindow::addView(VRViewPtr view) {
 
 void VRWindow::remView(VRViewPtr view) {
     if (mouse) mouse->setViewport(0);
-    for (uint i=0;i<views.size();i++) {
+    for (unsigned int i=0;i<views.size();i++) {
         if (views[i].lock() != view) continue;
         views.erase(views.begin() + i);
         return;

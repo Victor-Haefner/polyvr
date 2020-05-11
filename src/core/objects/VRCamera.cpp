@@ -46,7 +46,7 @@ VRCamera::VRCamera(string name) : VRTransform(name) {
     store("fov", &fov);
     store("orthoSize", &orthoSize);
     store("type", &type);
-    regStorageSetupFkt( VRStorageCb::create("camera_update", boost::bind(&VRCamera::setup, this, true, _1)) );
+    regStorageSetupFkt( VRStorageCb::create("camera_update", bind(&VRCamera::setup, this, true, _1)) );
 }
 
 VRCamera::~VRCamera() {

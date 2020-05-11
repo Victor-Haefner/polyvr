@@ -30,7 +30,9 @@
 
 #include <stdio.h>
 #include <fstream>
+#ifndef _WIN32
 #include <unistd.h>
+#endif
 
 #include "import/VRImport.h"
 
@@ -46,7 +48,7 @@ void VRSceneLoader::optimizeGraph(VRObjectPtr obj) { //TODO
         p->hide();
     }
 
-    for (uint i=0;i<obj->getChildrenCount();i++)
+    for (unsigned int i=0;i<obj->getChildrenCount();i++)
         optimizeGraph(obj->getChild(i));
 }
 

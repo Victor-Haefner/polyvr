@@ -1,6 +1,6 @@
 #include "VRAnimationManager.h"
 #include "VRAnimationManagerT.h"
-#include <boost/bind.hpp>
+
 #include <vector>
 #include "core/utils/VRFunction.h"
 #include "core/utils/system/VRSystem.h"
@@ -17,7 +17,7 @@ void VRAnimationManager::updateAnimations() {
 }
 
 VRAnimationManager::VRAnimationManager() {
-    updateAnimationsFkt = VRUpdateCb::create("AnimationUpdateFkt", boost::bind(&VRAnimationManager::updateAnimations, this));
+    updateAnimationsFkt = VRUpdateCb::create("AnimationUpdateFkt", bind(&VRAnimationManager::updateAnimations, this));
 }
 
 void VRAnimationManager::addAnimation(VRAnimationPtr anim) {

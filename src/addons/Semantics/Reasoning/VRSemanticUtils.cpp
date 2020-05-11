@@ -37,7 +37,7 @@ string Variable::toString() {
 
 string Variable::valToString() {
     string r;
-    for (uint i=0; i<value.size(); i++) {
+    for (unsigned int i=0; i<value.size(); i++) {
         if (i > 0) r += ", ";
         r += value[i];
     }
@@ -223,7 +223,7 @@ bool Variable::is(VariablePtr other, VPath& path1, VPath& path2) {
 
 bool Variable::operator==(Variable v) {
     if (!v.valid || !valid) return false;
-    for (uint i=0; i<entities.size(); i++) {
+    for (unsigned int i=0; i<entities.size(); i++) {
         if (v.entities[i] != entities[i]) return false;
     }
     return true;
@@ -392,7 +392,7 @@ Query::Query(string q) {
     if (parts.size() > 0) request = VRStatement::create(parts[0]);
     if (parts.size() > 1) {
         parts = VRReasoner::split(parts[1], ';');
-        for (uint i=0; i<parts.size(); i++) statements.push_back(VRStatement::create(parts[i], i));
+        for (unsigned int i=0; i<parts.size(); i++) statements.push_back(VRStatement::create(parts[i], i));
     }
 }
 
@@ -425,7 +425,7 @@ vector<string> Term::computeMathExpression(VRSemanticContextPtr context) {
                 if (e.second->is_a("Vector")) {
                     auto props = e.second->getAll();
                     vector<string> vec(props.size());
-                    for (uint i=0; i<props.size(); i++) vec[i] = props[i]->value;
+                    for (unsigned int i=0; i<props.size(); i++) vec[i] = props[i]->value;
                     values.push_back( "["+vec[0]+","+vec[1]+","+vec[2]+"]" );
                 } else {
                     auto vals = p.getValue(e.second);
@@ -446,14 +446,14 @@ vector<string> Term::computeMathExpression(VRSemanticContextPtr context) {
     vector<int> config(N, 0);
 
     auto setConfig = [&]() { // set a value configuration, compute and push result
-        for (uint i=0; i<valuesMap.size(); i++) {
+        for (unsigned int i=0; i<valuesMap.size(); i++) {
             leafs[i]->setValue( valuesMap[i][config[i]] );
         }
         res.push_back( me.compute() );
     };
 
     function<void(int)> aggregate = [&](int k) {
-        for (uint i=0; i<valuesMap[k].size(); i++) {
+        for (unsigned int i=0; i<valuesMap[k].size(); i++) {
             config[k] = i;
             if (k == N-1) setConfig();
             else aggregate(k+1);
@@ -495,7 +495,7 @@ void Query::checkState() {
 void Query::substituteRequest(VRStatementPtr replace) { // replaces the roots of all paths of the terms of each statement
     // compute all values to substitute
     map<string, string> substitutes;
-    for (uint i=0; i<request->terms.size(); i++) {
+    for (unsigned int i=0; i<request->terms.size(); i++) {
         Term& t1 = request->terms[i];
         Term& t2 = replace->terms[i];
         substitutes[t1.var->value[0]] = t2.str;
@@ -521,7 +521,7 @@ void Query::substituteRequest(VRStatementPtr replace) { // replaces the roots of
                 cout << "   substitute expression: " << e.toString() << " leafs: " << e.getLeafs().size() << endl;
                 for (auto& l : e.getLeafs()) {
                     cout << "    substitute leaf: " << l->chunk << endl;
-                    /*for (uint i=0; i<request->terms.size(); i++) {
+                    /*for (unsigned int i=0; i<request->terms.size(); i++) {
                         auto& t1 = request->terms[i];
                         //cout << " substitute " << l->param << " , " << t1.path.root << " in expression " << ts.str << " ?" << endl;
                         if (t1.path.root == l->param) substitute(l->param);
@@ -549,7 +549,7 @@ void Query::substituteRequest(VRStatementPtr replace) { // replaces the roots of
                 ts.path = VPath(ts.str);
                 cout << "    substituted expression: " << ts.str << endl;
             } else {
-                /*for (uint i=0; i<request->terms.size(); i++) { // this has trouble when verbs are identical
+                /*for (unsigned int i=0; i<request->terms.size(); i++) { // this has trouble when verbs are identical
                     auto& t1 = request->terms[i];
                     if (t1.path.root == ts.path.root) {
                         substitute(ts.path.root);

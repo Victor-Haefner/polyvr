@@ -556,7 +556,7 @@ PyObject* FPyLogistics::getContainers(FPyLogistics* self) {
     auto objs = self->objPtr->getContainers();
 
     PyObject* li = PyList_New(objs.size());
-    for (uint i=0; i<objs.size(); i++) {
+    for (unsigned int i=0; i<objs.size(); i++) {
         PyList_SetItem(li, i, FPyContainer::fromSharedPtr(objs[i]));
     }
 

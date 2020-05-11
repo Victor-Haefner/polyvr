@@ -480,7 +480,7 @@ PyObject* VRPyGeometry::getPositions(VRPyGeometry* self) {
     if (pos == 0) return PyList_New(0);
     PyObject* res = PyList_New(pos->size());
 
-    for (uint i=0; i<pos->size(); i++) {
+    for (unsigned int i=0; i<pos->size(); i++) {
         Vec3d v;
         pos->getValue(v,i);
         PyObject* pv = toPyObject(v);
@@ -499,7 +499,7 @@ PyObject* VRPyGeometry::getTypes(VRPyGeometry* self) {
     if (types == 0) return PyList_New(0);
     PyObject* res = PyList_New(types->size());
 
-    for (uint i=0; i<types->size(); i++) {
+    for (unsigned int i=0; i<types->size(); i++) {
         int v;
         types->getValue(v,i);
         PyList_SetItem(res, i, PyInt_FromLong(v));
@@ -516,7 +516,7 @@ PyObject* VRPyGeometry::getLengths(VRPyGeometry* self) {
     if (lengths == 0) return PyList_New(0);
     PyObject* res = PyList_New(lengths->size());
 
-    for (uint i=0; i<lengths->size(); i++) {
+    for (unsigned int i=0; i<lengths->size(); i++) {
         int v;
         lengths->getValue(v,i);
         PyList_SetItem(res, i, PyInt_FromLong(v));
@@ -533,7 +533,7 @@ PyObject* VRPyGeometry::getNormals(VRPyGeometry* self) {
     if (pos == 0) return PyList_New(0);
     PyObject* res = PyList_New(pos->size());
 
-    for (uint i=0; i<pos->size(); i++) {
+    for (unsigned int i=0; i<pos->size(); i++) {
         Vec3d v;
         pos->getValue(v,i);
         PyObject* pv = toPyObject(v);
@@ -551,7 +551,7 @@ PyObject* VRPyGeometry::getColors(VRPyGeometry* self) {
     if (pos == 0) return PyList_New(0);
     PyObject* res = PyList_New(pos->size());
 
-    for (uint i=0; i<pos->size(); i++) {
+    for (unsigned int i=0; i<pos->size(); i++) {
         Vec3d v;
         pos->getValue(v,i);
         PyObject* pv = toPyObject(v);
@@ -569,7 +569,7 @@ PyObject* VRPyGeometry::getIndices(VRPyGeometry* self) {
     if (pos == 0) return PyList_New(0);
     PyObject* res = PyList_New(pos->size());
 
-    for (uint i=0; i<pos->size(); i++) {
+    for (unsigned int i=0; i<pos->size(); i++) {
         int v;
         pos->getValue(v,i);
         PyObject* pv = PyInt_FromLong(v);

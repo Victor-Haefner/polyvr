@@ -81,8 +81,8 @@ VRRecorder::VRRecorder() {
     av_register_all();
     avcodec_register_all();
 
-    toggleCallback = VRFunction<bool>::create("recorder toggle", boost::bind(&VRRecorder::setRecording, this, _1));
-    updateCallback = VRUpdateCb::create("recorder update", boost::bind(&VRRecorder::capture, this));
+    toggleCallback = VRFunction<bool>::create("recorder toggle", bind(&VRRecorder::setRecording, this, _1));
+    updateCallback = VRUpdateCb::create("recorder update", bind(&VRRecorder::capture, this));
 
     //initCodec();
     setCodec("MPEG2VIDEO");

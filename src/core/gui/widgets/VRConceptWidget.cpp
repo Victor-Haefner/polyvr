@@ -11,19 +11,11 @@
 
 #include "core/utils/toString.h"
 
-#include <gtkmm/label.h>
-#include <gtkmm/treestore.h>
-#include <gtkmm/treeview.h>
-#include <gtkmm/dialog.h>
-#include <gtkmm/box.h>
-#include <gtkmm/toolbar.h>
-#include <gtkmm/toolbutton.h>
-#include <gtkmm/separatortoolitem.h>
-#include <gtkmm/builder.h>
-
 using namespace OSG;
 
-VRConceptWidget::VRConceptWidget(VRGuiSemantics* m, Gtk::Fixed* canvas, VRConceptPtr concept) : VRSemanticWidget(m, canvas, "#00CCFF") {
+// TODO
+
+/*VRConceptWidget::VRConceptWidget(VRGuiSemantics* m, GtkFixed* canvas, VRConceptPtr concept) : VRSemanticWidget(m, canvas, "#00CCFF") {
     this->concept = concept;
     label->set_text(concept->getName());
 
@@ -61,7 +53,7 @@ int VRConceptWidget::ID() { return concept->ID; }
 void VRConceptWidget::on_edit_prop_clicked() {
     if (!selected_property) return;
     Gtk::Dialog* dialog;
-    VRGuiBuilder()->get_widget("PropertyEdit", dialog);
+    getGUIBuilder()->get_widget("PropertyEdit", dialog);
     setTextEntry("entry23", selected_property->getName());
     setTextEntry("entry24", selected_property->type);
     dialog->show();
@@ -157,7 +149,7 @@ void VRConceptWidget::reparent(VRRuleWidgetPtr w) {
     manager->disconnectAny(w);
     manager->connect(ptr(), w, "#00DD00");
     saveScene();
-}
+}*/
 
 
 

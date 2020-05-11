@@ -41,7 +41,7 @@ class VRAtom {
         Matrix4d transformation;
 
         int bound_valence_electrons = 0;
-        uint recFlag = 0;
+        unsigned int recFlag = 0;
 
         map<int, VRBond> bonds;
         string geo;
@@ -63,7 +63,7 @@ class VRAtom {
 		bool append(VRAtom* b, int bType, bool extra = false);
 		void detach(VRAtom* a);
 
-		void propagateTransformation(Matrix4d& T, uint flag, bool self = true);
+		void propagateTransformation(Matrix4d& T, unsigned int flag, bool self = true);
 
 		void print();
 };
@@ -97,7 +97,7 @@ class VRMolecule : public VRGeometry {
 		int getID();
 		vector<string> parse(string mol, bool verbose = false);
 
-		uint getFlag();
+		unsigned int getFlag();
 
     public:
         VRMolecule(string name);

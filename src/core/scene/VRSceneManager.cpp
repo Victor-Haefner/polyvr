@@ -21,13 +21,13 @@
 #include "core/gui/VRGuiManager.h"
 #include "core/gui/VRGuiSignals.h"
 #include "core/gui/VRGuiFile.h"
-#include <gtkmm/main.h>
 #endif
 
 #include <OpenSG/OSGSceneFileHandler.h>
 #include <boost/filesystem.hpp>
 #include <boost/thread/recursive_mutex.hpp>
 #include <time.h>
+#include <thread>
 
 typedef boost::recursive_mutex::scoped_lock PLock;
 
@@ -49,7 +49,7 @@ VRSceneManager::VRSceneManager() {
     VROntology::setupLibrary();
     cout << " done" << endl;
 
-    sceneUpdateCb = VRThreadCb::create( "update scene", boost::bind(&VRSceneManager::updateSceneThread, this, _1) );
+    sceneUpdateCb = VRThreadCb::create( "update scene", bind(&VRSceneManager::updateSceneThread, this, _1) );
     //initThread(sceneUpdateCb, "update scene", true, 1); // TODO
 }
 
@@ -239,7 +239,7 @@ VRScenePtr VRSceneManager::getCurrent() { return current; }
 
 void VRSceneManager::updateSceneThread(VRThreadWeakPtr tw) {
     updateScene();
-    sleep(1);
+	std::this_thread::sleep_for(chrono::milliseconds(1));
 }
 
 void VRSceneManager::updateScene() {

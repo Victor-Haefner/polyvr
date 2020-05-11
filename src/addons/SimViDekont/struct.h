@@ -22,7 +22,7 @@ OSG_BEGIN_NAMESPACE;
         } vec;
 
    struct frame {
-            uint id;
+			unsigned int id;
             vector<vec>* pos;
             vector<int>* ind;
             vector<vec>* norm;

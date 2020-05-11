@@ -15,7 +15,6 @@
 
 #include <math.h>
 #include <random>
-#include <boost/bind.hpp>
 
 using namespace OSG;
 
@@ -75,7 +74,7 @@ VRRainCarWindshield::VRRainCarWindshield() : VRGeometry("RainCarWindshield") {
     setShaderParameter("durationWiper", durationWiper);
     setShaderParameter("hasPower", hasPower);
 
-    updatePtr = VRUpdateCb::create("VRRainCarWindshield update", boost::bind(&VRRainCarWindshield::update, this));
+    updatePtr = VRUpdateCb::create("VRRainCarWindshield update", bind(&VRRainCarWindshield::update, this));
     VRScene::getCurrent()->addUpdateFkt(updatePtr);
 
     cout << "VRRainCarWindshield::VRRainCarWindshield()\n";

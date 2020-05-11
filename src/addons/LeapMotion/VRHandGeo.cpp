@@ -22,7 +22,7 @@ VRHandGeo::VRHandGeo(string name) : VRGeometry(name), bones(5) {
     pinch = VRGeometry::create(name + "_pinch", true);
     pinch->setPrimitive("Sphere 0.025 2");
 
-    updateCb = VRUpdateCb::create("handgeo_update", boost::bind(&VRHandGeo::updateHandGeo, this));
+    updateCb = VRUpdateCb::create("handgeo_update", bind(&VRHandGeo::updateHandGeo, this));
     VRScene::getCurrent()->addUpdateFkt(updateCb);
 }
 

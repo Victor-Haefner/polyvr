@@ -30,16 +30,23 @@ PyMethodDef VRPyProcess::methods[] = {
     {"getMessageSubjects", PyWrap(Process, getMessageSubjects, "Return message subjects - [ProcessNode] getMessageSubjects(message)", vector<VRProcessNodePtr>, int ) },
     {"getMessageSender", PyWrap(Process, getMessageSender, "Returns the sender of the message - [ProcessNode] getMessageSender(message)", vector<VRProcessNodePtr>, int ) },
     {"getMessageReceiver", PyWrap(Process, getMessageReceiver, "Returns the receiver of the message - [ProcessNode] getMessageReceiver(message)", vector<VRProcessNodePtr>, int ) },
+    {"getSubject", PyWrap(Process, getSubject, "Return subject by ID", VRProcessNodePtr, int ) },
+    {"getSubjectByName", PyWrap(Process, getSubjectByName, "Return subject by name", VRProcessNodePtr, string ) },
     {"getSubjectState", PyWrap(Process, getSubjectState, "Return subject action", VRProcessNodePtr, int, string ) },
     {"getSubjectStates", PyWrap(Process, getSubjectStates, "Return subject actions - [ProcessNode] getSubjectStates(subject)", vector<VRProcessNodePtr>, int ) },
     {"getStateTransitions", PyWrap(Process, getStateTransitions, "Return action transitions - [ProcessNode] getActionTransitions(subject, action)", vector<VRProcessNodePtr>, int, int ) },
     //{"getTransitionStates", PyWrap(Process, getTransitionStates, "Return actions connected by a given transition - [ProcessNode] getTransitionActions(subject, transition)", vector<VRProcessNodePtr>, int, int ) },
-    {"getStateMessage", PyWrap(Process, getStateMessage, "Returns the Message of a send/receive state - [ProcessNode] getStateMessage(state)", VRProcessNodePtr, VRProcessNodePtr ) },
+    {"getStateMessages", PyWrap(Process, getStateMessages, "Returns the Messages of a send/receive state", vector<VRProcessNodePtr>, VRProcessNodePtr ) },
     {"addSubject", PyWrapOpt(Process, addSubject, "Add a new subject - ProcessNode addSubject( name )", "0", VRProcessNodePtr, string, VREntityPtr ) },
     {"addState", PyWrapOpt(Process, addState, "Add a new state to subject, by subject ID", "0", VRProcessNodePtr, string, int, VREntityPtr ) },
     {"setInitialState", PyWrap(Process, setInitialState, "Set a state to initial state.", void, VRProcessNodePtr ) },
+
+    {"setSendState", PyWrap(Process, setSendState, "Set a state to send a message (sender, sendTransition, recvSubject, message)", void, VRProcessNodePtr, VRProcessNodePtr, int, string ) },
+    {"setReceiveState", PyWrap(Process, setReceiveState, "Set a state to wait for a message (receiver, recvTransition, sendSubject, message)", void, VRProcessNodePtr, VRProcessNodePtr, int, string ) },
     {"addMessage", PyWrapOpt(Process, addMessage, "Add a new message between subjects or actions i and j - ProcessNode addMessage( name, int i, int j )", "0|0", VRProcessNodePtr, string, int, int, VRProcessDiagramPtr, VREntityPtr ) },
-    {"addTransition", PyWrapOpt(Process, addTransition, "Add a new transition between actions i and j - ProcessNode addTransition( name, subject, int i, int j )", "0", VRProcessNodePtr, string, int, int, int, VRProcessDiagramPtr ) },
+    {"addTransition", PyWrapOpt(Process, addTransition, "Add a new transition between actions i and j - ProcessNode addTransition( name, subject, int i, int j )", "0|0", VRProcessNodePtr, string, int, int, int, VRProcessDiagramPtr, VRProcessCbPtr ) },
+    {"getNode", PyWrapOpt(Process, getNode, "Get node by ID", "0", VRProcessNodePtr, int, VRProcessDiagramPtr ) },
+    {"getNodeByName", PyWrapOpt(Process, getNodeByName, "Get node by name", "0", VRProcessNodePtr, string, VRProcessDiagramPtr ) },
    {NULL}  /* Sentinel */
 };
 
@@ -48,6 +55,7 @@ PyMethodDef VRPyProcessNode::methods[] = {
     {"getID", PyWrap(ProcessNode, getID, "Get node graph ID", int) },
     {"getEntity", PyWrap(ProcessNode, getEntity, "Get entity", VREntityPtr) },
     {"getSubjectID", PyWrap(ProcessNode, getSubjectID, "Get subject ID", int) },
+    {"setWaitForExternalAction", PyWrap(ProcessNode, setWaitForExternalAction, "Set an action state to wait for external actions", void, bool) },
     {NULL}  /* Sentinel */
 };
 
@@ -88,5 +96,7 @@ PyMethodDef VRPyProcessEngine::methods[] = {
     {"getCurrentState", PyWrap(ProcessEngine, getCurrentState, "returns the current state of a subject - ProcessNode getCurrentState(int subjectID)", VRProcessNodePtr, int ) },
     {"continueWith", PyWrap(ProcessEngine, continueWith, "Continue execution with this next transition", void, VRProcessNodePtr ) },
     {"tryAdvance", PyWrap(ProcessEngine, tryAdvance, "Try advancing subject sID", void, int ) },
+    {"finishAction", PyWrap(ProcessEngine, finishAction, "Finish action of subject sID", void, int ) },
+    {"sendMessage", PyWrap(ProcessEngine, sendMessage, "Send a message (message, senderID, receiverID)", void, string, int, int ) },
     {NULL}  /* Sentinel */
 };

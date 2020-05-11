@@ -782,6 +782,7 @@ DEALINGS IN THE SOFTWARE.
 #    include <io.h>
 #    include <fcntl.h>
 #    include <sys\stat.h>
+#    include <WinSock2.h>
 #    include <windows.h>
 #  elif defined(__GNUC__)
 #  define _LARGEFILE64_SOURCE

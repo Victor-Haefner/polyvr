@@ -1,24 +1,13 @@
 #include "VRDemos.h"
+#include "widgets/VRAppPanel.h"
+#include "widgets/VRAppLauncher.h"
 
-#include <gtkmm/table.h>
-#include <gtkmm/stock.h>
-#include <gtkmm/settings.h>
-#include <gtkmm/box.h>
-#include <gtkmm/label.h>
-#include <gtkmm/paned.h>
-#include <gtkmm/liststore.h>
-#include <gtkmm/cellrenderertoggle.h>
-#include <gtkmm/treeview.h>
-#include <gtkmm/window.h>
-#include <gtkmm/button.h>
-#include <gtkmm/image.h>
-#include <gtkmm/builder.h>
-#include <gtkmm/frame.h>
-#include <gtkmm/eventbox.h>
-#include <gtkmm/filechooser.h>
 #include <string>
 #include <iostream>
-#include <boost/bind.hpp>
+
+#include <gtk/gtktable.h>
+#include <gtk/gtkcheckbutton.h>
+#include <gtk/gtkfilechooser.h>
 
 #include "core/scene/VRSceneLoader.h"
 #include "core/scene/VRSceneManager.h"
@@ -30,199 +19,28 @@
 #include "core/scene/VRProjectsList.h"
 #include "core/setup/devices/VRSignal.h"
 #include "core/utils/system/VRSystem.h"
+
 #include "VRGuiUtils.h"
 #include "VRGuiSignals.h"
 #include "VRGuiFile.h"
 #include "VRGuiContextMenu.h"
+#include "widgets/VRAppLauncher.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-// TODO:
-// rename && delete scenes
-// switch to a liststore || something!
-
-class scenes_columns : public Gtk::TreeModelColumnRecord {
-    public:
-        scenes_columns() { add(name); add(favs); add(obj); }
-
-        Gtk::TreeModelColumn<Glib::ustring> name;
-        Gtk::TreeModelColumn<bool> favs;
-        Gtk::TreeModelColumn<gpointer> obj;
-};
-
-VRAppLauncher::VRAppLauncher(VRAppSectionPtr s) : section(s) {}
-VRAppLauncher::~VRAppLauncher() {}
-
-VRAppLauncherPtr VRAppLauncher::create(VRAppSectionPtr s) { return VRAppLauncherPtr( new VRAppLauncher(s) ); }
-
-void VRAppLauncher::updatePixmap() {
-    if (imgScene == 0) return;
-    if ( !exists( pxm_path ) ) return;
-    try {
-        Glib::RefPtr<Gdk::Pixbuf> pxb = Gdk::Pixbuf::create_from_file (pxm_path);
-        imgScene->set(pxb);
-        imgScene->set_size_request(100, 75);
-    } catch (...) { cout << "Warning: Caught exception in VRAppManager::updatePixmap, ignoring.."; }
-}
-
-void VRAppLauncher::show() { widget->show(); }
-void VRAppLauncher::hide() { widget->hide(); }
-
-/** Section **/
-
-
-VRAppSection::VRAppSection(string name) {
-    setNameSpace("__system_apps__");
-    setName(name);
-}
-
-VRAppSection::~VRAppSection() {}
-VRAppSectionPtr VRAppSection::create(string name) { return VRAppSectionPtr( new VRAppSection(name) ); }
-VRAppSectionPtr VRAppSection::ptr() { return shared_from_this(); }
-
-VRAppLauncherPtr VRAppSection::addLauncher(string path, string timestamp, VRGuiContextMenu* menu, VRAppManager* mgr, bool write_protected, bool favorite, string table) {
-    if (!exists(path)) return 0;
-    if (apps.count(path)) return apps[path];
-    auto app = VRAppLauncher::create(ptr());
-    app->path = path;
-    app->lastStarted = timestamp;
-    string filename = getFileName(path);
-    string foldername = getFolderName(path);
-    app->pxm_path = foldername + "/.local_" + filename.substr(0,filename.size()-4) + "/snapshot.png";
-    app->write_protected = write_protected;
-    app->favorite = favorite;
-    app->table = table;
-    apps[path] = app;
-    setButton(app, menu, mgr);
-    return app;
-}
-
-void VRAppSection::setButton(VRAppLauncherPtr e, VRGuiContextMenu* menu, VRAppManager* mgr) {
-    Gtk::Settings::get_default()->property_gtk_button_images() = true;
-
-    string rpath = VRSceneManager::get()->getOriginalWorkdir();
-
-    // prep icons
-    e->imgPlay = Gtk::manage(new Gtk::Image(Gtk::Stock::MEDIA_PLAY, Gtk::ICON_SIZE_BUTTON));
-    e->imgOpts = loadGTKIcon(0, rpath+"/ressources/gui/opts20.png", 20, 20);
-    e->imgScene = loadGTKIcon(0, rpath+"/ressources/gui/default_scene.png", 100, 75);
-    e->imgLock = loadGTKIcon(0, rpath+"/ressources/gui/lock20.png", 20, 20);
-    e->imgUnlock = loadGTKIcon(0, rpath+"/ressources/gui/unlock20.png", 20, 20);
-
-    // prep other widgets
-    e->widget = Gtk::manage(new Gtk::Frame());
-    Gtk::EventBox* ebox = Gtk::manage(new Gtk::EventBox());
-    Gtk::HBox* hb = Gtk::manage(new Gtk::HBox(false, 0));
-    Gtk::VBox* vb = Gtk::manage(new Gtk::VBox(false, 0));
-    Gtk::VBox* vb2 = Gtk::manage(new Gtk::VBox(false, 0));
-    e->label = Gtk::manage(new Gtk::Label(e->path, true));
-    e->timestamp = Gtk::manage(new Gtk::Label(e->lastStarted, true));
-    e->butPlay = Gtk::manage(new Gtk::Button());
-    e->butOpts = Gtk::manage(new Gtk::Button());
-    e->butLock = Gtk::manage(new Gtk::Button());
-    e->label->set_alignment(0.5, 0.5);
-    e->timestamp->set_alignment(0.5, 0.5);
-    e->label->set_ellipsize(Pango::ELLIPSIZE_START);
-    e->label->set_max_width_chars(20);
-    e->butPlay->set_tooltip_text("Play/Stop");
-    e->butOpts->set_tooltip_text("Options");
-    e->butLock->set_tooltip_text("Write protection");
-    e->label->set_tooltip_text(e->path);
-
-    // build widget
-    vb2->pack_start(*e->butOpts, false, false, 0);
-    vb2->pack_end(*e->butLock, false, false, 0);
-    hb->pack_start(*e->imgScene, false, false, 10);
-    hb->pack_end(*e->butPlay, false, false, 5);
-    hb->pack_end(*vb2, false, false, 5);
-    vb->pack_start(*e->label, false, false, 5);
-    vb->pack_start(*hb, false, false, 5);
-    if (e->lastStarted != "") vb->pack_start(*e->timestamp, false, false, 2);
-    e->widget->add(*ebox);
-    ebox->add(*vb);
-    e->butPlay->add(*e->imgPlay);
-    e->butOpts->add(*e->imgOpts);
-    if (e->write_protected) e->butLock->add(*e->imgLock);
-    else e->butLock->add(*e->imgUnlock);
-
-    e->updatePixmap();
-
-    // events
-    e->uPixmap = VRDeviceCb::create("GUI_addDemoEntry", boost::bind(&VRAppLauncher::updatePixmap, e) );
-    VRGuiSignals::get()->getSignal("onSaveScene")->add( e->uPixmap );
-
-    menu->connectWidget("DemoMenu", ebox);
-    ebox->signal_event().connect( sigc::bind<VRAppLauncherPtr>( sigc::mem_fun(*mgr, &VRAppManager::on_any_event), e) );
-
-    e->butPlay->signal_clicked().connect( sigc::bind<VRAppLauncherPtr>( sigc::mem_fun(*mgr, &VRAppManager::toggleDemo), e) );
-    e->butOpts->signal_clicked().connect( sigc::bind<VRAppLauncherPtr>( sigc::mem_fun(*mgr, &VRAppManager::on_menu_advanced), e) );
-    e->butLock->signal_clicked().connect( sigc::bind<VRAppLauncherPtr>( sigc::mem_fun(*mgr, &VRAppManager::on_lock_toggle), e) );
-    e->widget->show_all();
-}
-
-int VRAppSection::getSize() { return apps.size(); }
-
-void VRAppSection::fillTable(string t, Gtk::Table* tab, int& i) {
-    int x,y;
-    Gtk::AttachOptions optsH = Gtk::FILL|Gtk::EXPAND;
-    Gtk::AttachOptions optsV = Gtk::SHRINK;
-    //Gtk::AttachOptions optsV = Gtk::AttachOptions(0);
-
-    for (auto d : apps) {
-        if (d.second->table != t) continue;
-        if (d.second->widget == 0) continue;
-
-        Gtk::Widget* w = d.second->widget;
-        x = i%2;
-        y = i/2;
-        tab->attach( *w, x, x+1, y, y+1, optsH, optsV, 10, 10);
-        i++;
-    }
-}
-
-void VRAppSection::clearTable(string t, Gtk::Table* tab) {
-    for (auto d : apps) {
-        if (d.second->table != t) continue;
-
-        Gtk::Widget* w = d.second->widget;
-        if (w == 0) continue;
-        tab->remove(*w);
-    }
-}
-
-void VRAppSection::setGuiState(VRAppLauncherPtr e, bool running, bool noLauncherScene) {
-    if (noLauncherScene) running = true; // disables widget
-    for (auto i : apps) {
-        VRAppLauncherPtr d = i.second;
-        if (d->widget) d->widget->set_sensitive(!running);
-        if (d->imgPlay) d->imgPlay->set(Gtk::Stock::MEDIA_PLAY, Gtk::ICON_SIZE_BUTTON);
-        if (d != e) d->running = false;
-    }
-}
-
-void VRAppSection::remLauncher(string path) { apps.erase(path); }
-VRAppLauncherPtr VRAppSection::getLauncher(string path) { return apps.count(path) ? apps[path] : 0; }
-
-map<string, VRAppLauncherPtr> VRAppSection::getLaunchers() { return apps; }
-
-/** Manager **/
-
 VRAppManager::VRAppManager() {
     initMenu();
 
-    auto examplesSection = addSection("examples");
-    auto favoritesSection = addSection("favorites");
-    auto recentsSection = addSection("recents");
+    auto examplesSection = addSection("examples", "examples_tab");
+    auto favoritesSection = addSection("favorites", "favorites_tab");
+    auto recentsSection = addSection("recents", "favorites_tab");
 
     auto examples = VRSceneManager::get()->getExamplePaths();
     for (auto p : examples->getPaths() ) examplesSection->addLauncher(p, "", menu, this, true, false, "examples_tab");
     updateTable("examples_tab");
 
     auto favorites = VRSceneManager::get()->getFavoritePaths();
-    //for (string path : favorites) favoritesSection->addLauncher(path, menu, this);
-    //updateTable("favorites_tab");
-
 
     int i=0;
     for (auto p : favorites->getEntriesByTimestamp()) {
@@ -235,27 +53,31 @@ VRAppManager::VRAppManager() {
 
     if (favorites->size() == 0) setNotebookPage("notebook2", 1);
 
-    updateCb = VRFunction<VRDeviceWeakPtr>::create("GUI_updateDemos", boost::bind(&VRAppManager::update, this) );
+    updateCb = VRFunction<VRDeviceWeakPtr>::create("GUI_updateDemos", bind(&VRAppManager::update, this) );
     VRGuiSignals::get()->getSignal("scene_changed")->add( updateCb );
 
-    setToolButtonCallback("toolbutton1", sigc::mem_fun(*this, &VRAppManager::on_new_clicked));
-    setToolButtonCallback("toolbutton5", sigc::mem_fun(*this, &VRAppManager::on_saveas_clicked));
-    setToolButtonCallback("toolbutton28", sigc::mem_fun(*this, &VRAppManager::on_stop_clicked));
-    setToolButtonCallback("toolbutton21", sigc::mem_fun(*this, &VRAppManager::on_load_clicked));
+    setToolButtonCallback("toolbutton1", bind(&VRAppManager::on_new_clicked, this));
+    setToolButtonCallback("toolbutton5", bind(&VRAppManager::on_saveas_clicked, this));
+    setToolButtonCallback("toolbutton28", bind(&VRAppManager::on_stop_clicked, this));
+    setToolButtonCallback("toolbutton21", bind(&VRAppManager::on_load_clicked, this));
 
-    setToolButtonSensitivity("toolbutton4", false); // disable 'save' button on startup
-    setToolButtonSensitivity("toolbutton5", false); // disable 'save as' button on startup
-    setToolButtonSensitivity("toolbutton28", false); // disable 'stop' button on startup
+    setWidgetSensitivity("toolbutton4", false); // disable 'save' button on startup
+    setWidgetSensitivity("toolbutton5", false); // disable 'save as' button on startup
+    setWidgetSensitivity("toolbutton50", false); // disable 'web export' button on startup
+    setWidgetSensitivity("toolbutton28", false); // disable 'stop' button on startup
 
-    setEntryCallback("appSearch", sigc::mem_fun(*this, &VRAppManager::on_search), true); // app search
+    setEntryCallback("appSearch", bind(&VRAppManager::on_search, this), true); // app search
 }
 
 VRAppManager::~VRAppManager() {}
 
 VRAppManagerPtr VRAppManager::create() { return VRAppManagerPtr( new VRAppManager() ); }
 
-VRAppSectionPtr VRAppManager::addSection(string name) {
-    auto s = VRAppSection::create(name);
+VRAppPanelPtr VRAppManager::addSection(string name, string t) {
+    GtkTable* tab = (GtkTable*)getGUIBuilder()->get_widget(t);
+    tables[t] = tab;
+
+    auto s = VRAppPanel::create(name, tables[t]);
     sections[name] = s;
     return s;
 }
@@ -266,61 +88,47 @@ bool VRAppManager::on_any_event(GdkEvent* event, VRAppLauncherPtr entry) {
 }
 
 void VRAppManager::on_lock_toggle(VRAppLauncherPtr e) {
-    e->write_protected = !e->write_protected;
-    e->butLock->remove();
-    if (e->write_protected) e->butLock->add(*e->imgLock);
-    else e->butLock->add(*e->imgUnlock);
-    e->butLock->show_all();
-
-    auto scene = VRScene::getCurrent();
-    if (scene) scene->setFlag("write_protected", e->write_protected);
+    e->toggle_lock();
 }
 
 void VRAppManager::updateTable(string t) {
-    Gtk::Table* tab;
-    VRGuiBuilder()->get_widget(t, tab);
-
     int N = 4;
     if (t == "examples_tab") N += sections["examples"]->getSize();
     if (t == "favorites_tab") N += sections["recents"]->getSize() + sections["favorites"]->getSize();
-    tab->resize(N*0.5+1, 2);
+    gtk_table_resize(tables[t], N*0.5+1, 2);
 
     int i = 0;
-    if (t == "examples_tab") sections["examples"]->fillTable(t, tab, i);
+    if (t == "examples_tab") sections["examples"]->fillTable(t, i);
     if (t == "favorites_tab") {
-        sections["recents"]->fillTable(t, tab, i);
-        sections["favorites"]->fillTable(t, tab, i);
+        sections["recents"]->fillTable(t, i);
+        sections["favorites"]->fillTable(t, i);
     }
-
-    tab->show();
 }
 
 void VRAppManager::clearTable(string t) {
-    Gtk::Table* tab;
-    VRGuiBuilder()->get_widget(t, tab);
-    if (t == "examples_tab") sections["examples"]->clearTable(t, tab);
+    if (t == "examples_tab") sections["examples"]->clearTable(t);
     if (t == "favorites_tab") {
-        sections["recents"]->clearTable(t, tab);
-        sections["favorites"]->clearTable(t, tab);
+        sections["recents"]->clearTable(t);
+        sections["favorites"]->clearTable(t);
     }
 }
 
 void VRAppManager::setGuiState(VRAppLauncherPtr e) {
     bool running = (e == 0) ? noLauncherScene : e->running;
-    setVPanedSensitivity("vpaned1", running);
-    setNotebookSensitivity("notebook3", running);
+    setWidgetSensitivity("vpaned1", running);
+    setWidgetSensitivity("notebook3", running);
 
     for (auto section : sections) section.second->setGuiState(e, running, noLauncherScene);
 
     if (e) {
-        if (e->widget) e->widget->set_sensitive(true);
-        if (running) { if (e->imgPlay) e->imgPlay->set(Gtk::Stock::MEDIA_STOP, Gtk::ICON_SIZE_BUTTON); }
-        else { if (e->imgPlay) e->imgPlay->set(Gtk::Stock::MEDIA_PLAY, Gtk::ICON_SIZE_BUTTON); }
+        if (running) e->setState(2);
+        else e->setState(0);
     }
 
-    setToolButtonSensitivity("toolbutton4", running); // toggle 'save' button availability
-    setToolButtonSensitivity("toolbutton5", running); // toggle 'save as' button availability
-    setToolButtonSensitivity("toolbutton28", running); // toggle 'stop' button availability
+    setWidgetSensitivity("toolbutton4", running); // toggle 'save' button availability
+    setWidgetSensitivity("toolbutton5", running); // toggle 'save as' button availability
+    setWidgetSensitivity("toolbutton50", running); // toggle 'web export' button availability
+    setWidgetSensitivity("toolbutton28", running); // toggle 'stop' button availability
 }
 
 VRAppLauncherPtr VRAppManager::addEntry(string path, string table, bool running, string timestamp, bool recent) {
@@ -329,7 +137,7 @@ VRAppLauncherPtr VRAppManager::addEntry(string path, string table, bool running,
 
     VRAppLauncherPtr e = 0;
     if (table == "examples_tab") e = sections["examples"]->addLauncher(path, timestamp, menu, this, true, false, table);
-    if (table == "favorites_tab" &&  recent) e =   sections["recents"]->addLauncher(path, timestamp, menu, this, false, true, table);
+    if (table == "favorites_tab" &&  recent) e = sections["recents"]->addLauncher(path, timestamp, menu, this, false, true, table);
     if (table == "favorites_tab" && !recent) e = sections["favorites"]->addLauncher(path, timestamp, menu, this, false, true, table);
     if (!e) return 0;
 
@@ -343,12 +151,12 @@ VRAppLauncherPtr VRAppManager::addEntry(string path, string table, bool running,
 
 void VRAppManager::initMenu() {
     menu = new VRGuiContextMenu("DemoMenu");
-    menu->appendItem("DemoMenu", "Unpin", sigc::mem_fun(*this, &VRAppManager::on_menu_unpin));
-    menu->appendItem("DemoMenu", "Delete", sigc::mem_fun(*this, &VRAppManager::on_menu_delete));
-    menu->appendItem("DemoMenu", "Advanced..", sigc::bind<VRAppLauncherPtr>( sigc::mem_fun(*this, &VRAppManager::on_menu_advanced), 0));
+    menu->appendItem("DemoMenu", "Unpin", bind(&VRAppManager::on_menu_unpin, this));
+    menu->appendItem("DemoMenu", "Delete", bind(&VRAppManager::on_menu_delete, this));
+    menu->appendItem("DemoMenu", "Advanced..", bind(&VRAppManager::on_menu_advanced, this, VRAppLauncherPtr(0)));
 
-    setButtonCallback("button10", sigc::mem_fun(*this, &VRAppManager::on_advanced_cancel));
-    setButtonCallback("button26", sigc::mem_fun(*this, &VRAppManager::on_advanced_start));
+    setButtonCallback("button10", bind(&VRAppManager::on_advanced_cancel, this));
+    setButtonCallback("button26", bind(&VRAppManager::on_advanced_start, this));
 }
 
 void VRAppManager::on_menu_delete() {
@@ -394,8 +202,8 @@ void VRAppManager::on_menu_unpin() {
 
 void VRAppManager::on_menu_advanced(VRAppLauncherPtr e) {
     if (e) current_demo = e;
-    setCheckButton("checkbutton34", false);
-    setCheckButton("checkbutton36", false);
+    setToggleButton("checkbutton34", false);
+    setToggleButton("checkbutton36", false);
     showDialog("advanced_start");
 }
 
@@ -425,8 +233,8 @@ void VRAppManager::normFileName(string& path) {
 }
 
 string encryptionKey;
-void VRAppManager::on_toggle_encryption(Gtk::CheckButton* b) {
-    bool doEncryption = b->get_active();
+void VRAppManager::on_toggle_encryption(GtkCheckButton* b) {
+    bool doEncryption = gtk_toggle_button_get_active((GtkToggleButton*)b);
     encryptionKey = "";
     if (!doEncryption) return;
     encryptionKey = askUserPass("Please enter an encryption key");
@@ -454,12 +262,12 @@ void VRAppManager::on_saveas_clicked() {
     if (!scene) return;
     encryptionKey = "";
     VRGuiFile::gotoPath( scene->getWorkdir() );
-    VRGuiFile::setCallbacks( sigc::mem_fun(*this, &VRAppManager::on_diag_save_clicked) );
+    VRGuiFile::setCallbacks( bind(&VRAppManager::on_diag_save_clicked, this) );
     VRGuiFile::clearFilter();
     VRGuiFile::addFilter("Project", 3, "*.xml", "*.pvr", "*.pvc");
     VRGuiFile::addFilter("All", 1, "*");
-    VRGuiFile::open( "Save", Gtk::FILE_CHOOSER_ACTION_SAVE, "Save project as.." );
-    VRGuiFile::setSaveasWidget( sigc::mem_fun(*this, &VRAppManager::on_toggle_encryption) );
+    VRGuiFile::open( "Save", GTK_FILE_CHOOSER_ACTION_SAVE, "Save project as.." );
+    VRGuiFile::setSaveasWidget( bind( &VRAppManager::on_toggle_encryption, this, placeholders::_1 ) );
     VRGuiFile::setFile( scene->getFile() );
 }
 
@@ -511,13 +319,13 @@ void VRAppManager::on_diag_load_clicked() {
 }
 
 void VRAppManager::on_load_clicked() {
-    VRGuiFile::setCallbacks( sigc::mem_fun(*this, &VRAppManager::on_diag_load_clicked) );
+    VRGuiFile::setCallbacks( bind(&VRAppManager::on_diag_load_clicked, this) );
     VRGuiFile::gotoPath( g_get_home_dir() );
     VRGuiFile::clearFilter();
     VRGuiFile::addFilter("Project", 3, "*.xml", "*.pvr", "*.pvc");
     VRGuiFile::addFilter("Model", 19, "*.dae", "*.wrl", "*.obj", "*.3ds", "*.3DS", "*.ply", "*.hgt", "*.tif", "*.tiff", "*.pdf", "*.shp", "*.e57", "*.xyz", "*.STEP", "*.STP", "*.step", "*.stp", "*.ifc", "*.dxf");
     VRGuiFile::addFilter("All", 1, "*");
-    VRGuiFile::open( "Load", Gtk::FILE_CHOOSER_ACTION_OPEN, "Load project" );
+    VRGuiFile::open( "Load", GTK_FILE_CHOOSER_ACTION_OPEN, "Load project" );
 }
 
 void VRAppManager::writeGitignore(string path) {
@@ -543,11 +351,11 @@ void VRAppManager::on_diag_new_clicked() {
 }
 
 void VRAppManager::on_new_clicked() {
-    VRGuiFile::setCallbacks( sigc::mem_fun(*this, &VRAppManager::on_diag_new_clicked) );
+    VRGuiFile::setCallbacks( bind(&VRAppManager::on_diag_new_clicked, this) );
     VRGuiFile::gotoPath( g_get_home_dir() );
     VRGuiFile::setFile( "myApp.pvr" );
     VRGuiFile::clearFilter();
-    VRGuiFile::open( "Create", Gtk::FILE_CHOOSER_ACTION_SAVE, "Create new project" );
+    VRGuiFile::open( "Create", GTK_FILE_CHOOSER_ACTION_SAVE, "Create new project" );
 }
 
 void VRAppManager::on_search() {

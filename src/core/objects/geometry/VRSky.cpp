@@ -5,9 +5,8 @@
 #include "core/utils/VRFunction.h"
 #include "core/utils/system/VRSystem.h"
 #include "core/scene/VRScene.h"
-#include <math.h>
 
-#include <boost/bind.hpp>
+#include <math.h>
 #include <time.h>
 
 using namespace OSG;
@@ -84,7 +83,7 @@ VRSky::VRSky() : VRGeometry("Sky") {
 	*/
 	mat->setTexture(tg.compose(0));
 
-    updatePtr = VRUpdateCb::create("sky update", boost::bind(&VRSky::update, this));
+    updatePtr = VRUpdateCb::create("sky update", bind(&VRSky::update, this));
     VRScene::getCurrent()->addUpdateFkt(updatePtr);
 }
 

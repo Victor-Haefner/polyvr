@@ -214,7 +214,7 @@ int VRPyVec2f::setItem(PyObject* self, Py_ssize_t i, PyObject* val) {
     return 0;
 }
 
-PyObject* VRPyVec2f::getSlice(PyObject* self, long ilow, long ihigh) {
+PyObject* VRPyVec2f::getSlice(PyObject* self, Py_ssize_t ilow, Py_ssize_t ihigh) {
     if (ilow < 0) ilow += 2;
     if (ihigh < 0) ihigh += 2;
     if (ilow >= 2) ilow = 2-1;
@@ -440,7 +440,7 @@ int VRPyVec3f::setItem(PyObject* self, Py_ssize_t i, PyObject* val) {
     return 0;
 }
 
-PyObject* VRPyVec3f::getSlice(PyObject* self, long ilow, long ihigh) {
+PyObject* VRPyVec3f::getSlice(PyObject* self, Py_ssize_t ilow, Py_ssize_t ihigh) {
     if (ilow < 0) ilow += 3;
     if (ihigh < 0) ihigh += 3;
     if (ilow >= 3) ilow = 3-1;
@@ -636,7 +636,13 @@ PyMethodDef VRPyPCA::methods[] = {
 #endif
 
 PyMethodDef VRPyPatch::methods[] = {
-    {"fromGeometry", PyWrap2( Patch, fromGeometry, "Create patch from Geometry", VRObjectPtr, VRGeometryPtr, int, bool ) },
+    {"getSurface", PyWrap2( Patch, getSurface, "Get surface object", VRObjectPtr ) },
+    {"getDistance", PyWrap2( Patch, getDistance, "Get closest distance", float, Vec3d ) },
+    {"getClosestPoint", PyWrap2( Patch, getClosestPoint, "Get closest point", Vec3d, Vec3d ) },
+    {"fromTriangle", PyWrap2( Patch, fromTriangle, "Create patch from triangle data", VRObjectPtr, vector<Vec3d> positions, vector<Vec3d> normals, int, bool ) },
+    {"fromQuad", PyWrap2( Patch, fromQuad, "Create patch from quad data", VRObjectPtr, vector<Vec3d> positions, vector<Vec3d> normals, int, bool ) },
+    {"fromFullQuad", PyWrap2( Patch, fromFullQuad, "Create patch from quad data including handles", VRObjectPtr, vector<Vec3d> positions, vector<Vec3d> normals, vector<Vec3d> handles, int, bool ) },
+    {"fromGeometry", PyWrap2( Patch, fromGeometry, "Create patch from geometry", VRObjectPtr, VRGeometryPtr, int, bool ) },
     {NULL}  /* Sentinel */
 };
 

@@ -14,7 +14,6 @@
 #include <curl/curl.h> // TODO: windows port
 #endif
 #include <stdint.h>
-#include <boost/bind.hpp>
 
 using namespace OSG;
 
@@ -114,7 +113,7 @@ class HTTPServer {
             s_http_server_opts.enable_directory_listing = "yes";
             //mg_set_option(server, "listening_port", toString(port).c_str());
 
-            serverThread = VRFunction<VRThreadWeakPtr>::create("mongoose loop", boost::bind(&HTTPServer::loop, this, _1));
+            serverThread = VRFunction<VRThreadWeakPtr>::create("mongoose loop", bind(&HTTPServer::loop, this, placeholders::_1));
             threadID = VRSceneManager::get()->initThread(serverThread, "mongoose", true);
 
             //server = MHD_start_daemon(MHD_USE_SELECT_INTERNALLY, port, NULL, NULL, &server_answer_to_connection, data, MHD_OPTION_END);
@@ -224,7 +223,7 @@ static void server_answer_to_connection_m(struct mg_connection *conn, int ev, vo
         if ( startsWith(sad->ws_data, "register ") ) sad->serv->ws_groups[sad->ws_id] = splitString(sad->ws_data, ' ')[1];
         else if ( startsWith(sad->ws_data, "register|") ) sad->serv->ws_groups[sad->ws_id] = splitString(sad->ws_data, '|')[1];
 
-        auto fkt = VRUpdateCb::create("HTTP_answer_job", boost::bind(server_answer_job, sad->copy()));
+        auto fkt = VRUpdateCb::create("HTTP_answer_job", bind(server_answer_job, sad->copy()));
         VRSceneManager::get()->queueJob(fkt);
         return;
     }
@@ -291,7 +290,7 @@ static void server_answer_to_connection_m(struct mg_connection *conn, int ev, vo
         }
 
         //--- process request --------
-        auto fkt = VRUpdateCb::create("HTTP_answer_job", boost::bind(server_answer_job, sad->copy()));
+        auto fkt = VRUpdateCb::create("HTTP_answer_job", bind(server_answer_job, sad->copy()));
         VRSceneManager::get()->queueJob(fkt);
         return;
     }
@@ -309,7 +308,7 @@ VRSocket::VRSocket(string name) {
     http_serv = 0;
 
     setOverrideCallbacks(true);
-    queued_signal = VRUpdateCb::create("signal_trigger", boost::bind(&VRSocket::trigger, this));
+    queued_signal = VRUpdateCb::create("signal_trigger", bind(&VRSocket::trigger, this));
     sig = VRSignal::create();
     setNameSpace("Sockets");
     setName(name);
@@ -543,8 +542,8 @@ void VRSocket::scanTCP(VRThreadWeakPtr thread) {
 
 void VRSocket::initServer(CONNECTION_TYPE t, int _port) {
     port = _port;
-    if (t == UNIX) socketThread = VRFunction<VRThreadWeakPtr>::create("UNIXSocket", boost::bind(&VRSocket::scanUnix, this, _1));
-    if (t == TCP) socketThread = VRFunction<VRThreadWeakPtr>::create("TCPSocket", boost::bind(&VRSocket::scanTCP, this, _1));
+    if (t == UNIX) socketThread = VRFunction<VRThreadWeakPtr>::create("UNIXSocket", bind(&VRSocket::scanUnix, this, placeholders::_1));
+    if (t == TCP) socketThread = VRFunction<VRThreadWeakPtr>::create("TCPSocket", bind(&VRSocket::scanTCP, this, placeholders::_1));
     run = true;
     threadID = VRSceneManager::get()->initThread(socketThread, "socket", true);
 }

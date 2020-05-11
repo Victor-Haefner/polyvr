@@ -16,7 +16,7 @@ class PolyVR {
     private:
         VRInternalMonitorPtr monitor;
         VRGuiManagerPtr gui_mgr;
-        VRMainInterfacePtr interface;
+        VRMainInterfacePtr main_interface;
         VRSceneLoaderPtr loader;
         VRSetupManagerPtr setup_mgr;
         VRSceneManagerPtr scene_mgr;

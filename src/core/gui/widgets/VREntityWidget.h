@@ -11,7 +11,7 @@ struct VREntityWidget : public VRSemanticWidget {
     VRPropertyPtr selected_entity_property;
     VRPropertyPtr selected_concept_property;
 
-    VREntityWidget(VRGuiSemantics* m, Gtk::Fixed* canvas = 0, VREntityPtr entity = 0);
+    VREntityWidget(VRGuiSemantics* m, _GtkFixed* canvas = 0, VREntityPtr entity = 0);
 
     void on_new_clicked();
     void on_select_property();

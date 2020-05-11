@@ -116,7 +116,7 @@ class VRObject : public std::enable_shared_from_this<VRObject>, public VRName, p
         VRObjectPtr getParent(bool checkForDrag = false);
         vector<VRObjectPtr> getAncestry(VRObjectPtr ancestor = 0);
         size_t getChildrenCount();
-        void clearChildren();
+        void clearChildren(bool destroy = true);
 
         bool hasDescendant(VRObjectPtr obj);
         bool hasAncestor(VRObjectPtr obj);
