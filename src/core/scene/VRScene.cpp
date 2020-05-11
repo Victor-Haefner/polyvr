@@ -153,10 +153,9 @@ VRObjectPtr VRScene::get(int ID) {
     return o;
 }
 
-VRObjectPtr VRScene::get(string name) {
-    VRObjectPtr o = 0;
-    o = root->find(name);
-    return o;
+VRObjectPtr VRScene::get(string name, bool strict) {
+    if (strict) return root->find(name);
+    else        return root->findFirst(name);
 }
 
 void VRScene::setActiveCamera(string camname) {
