@@ -4,13 +4,10 @@
 #include "../VRGuiUtils.h"
 #include "../VRGuiSemantics.h"
 
-#include <gtkmm/fixed.h>
-#include <gtkmm/separator.h>
-
 using namespace OSG;
 
 
-VRConnectorWidget::VRConnectorWidget(Gtk::Fixed* canvas, string color) {
+/*VRConnectorWidget::VRConnectorWidget(Gtk::Fixed* canvas, string color) {
     sh1 = Gtk::manage( new Gtk::HSeparator() );
     sh2 = Gtk::manage( new Gtk::HSeparator() );
     sv1 = Gtk::manage( new Gtk::VSeparator() );
@@ -168,4 +165,4 @@ void VRConnectorWidget::update() {
             return;
         }
     }
-}
+}*/

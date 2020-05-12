@@ -112,8 +112,8 @@ VRCarSoundPtr VRCarDynamics::getCarSound() { return carSound; }
 //only to be done once
 void VRCarDynamics::initPhysics() {
     auto scene = VRScene::getCurrent();
-    updateEPtr = VRUpdateCb::create("cardyn_engin_update", boost::bind(&VRCarDynamics::updateEngine, this));
-    updateWPtr = VRUpdateCb::create("cardyn_wheel_update", boost::bind(&VRCarDynamics::updateWheelGeos, this));
+    updateEPtr = VRUpdateCb::create("cardyn_engin_update", bind(&VRCarDynamics::updateEngine, this));
+    updateWPtr = VRUpdateCb::create("cardyn_wheel_update", bind(&VRCarDynamics::updateWheelGeos, this));
     scene->addUpdateFkt(updateEPtr);
     scene->addUpdateFkt(updateWPtr);
 

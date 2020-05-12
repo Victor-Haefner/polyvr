@@ -1,13 +1,6 @@
 
 #include "VRGuiGeneral.h"
 #include "VRGuiUtils.h"
-#include <gtkmm/liststore.h>
-#include <gtkmm/treeview.h>
-#include <gtkmm/textbuffer.h>
-#include <gtkmm/toolbutton.h>
-#include <gtkmm/textview.h>
-#include <gtkmm/combobox.h>
-#include <gtkmm/cellrenderercombo.h>
 
 #include <OpenSG/OSGSceneFileHandler.h>
 #include "core/scene/VRScene.h"
@@ -25,29 +18,29 @@ using namespace OSG;
 // --------------------------
 
 VRGuiGeneral::VRGuiGeneral() {
-    setCheckButtonCallback("radiobutton5", sigc::mem_fun(*this, &VRGuiGeneral::setMode) );
-    setCheckButtonCallback("radiobutton18", sigc::mem_fun(*this, &VRGuiGeneral::setMode) );
-    setCheckButtonCallback("radiobutton4", sigc::mem_fun(*this, &VRGuiGeneral::setMode) );
-    setCheckButtonCallback("checkbutton_01", sigc::mem_fun(*this, &VRGuiGeneral::toggleFrustumCulling) );
-    setCheckButtonCallback("checkbutton_02", sigc::mem_fun(*this, &VRGuiGeneral::toggleOcclusionCulling) );
-    setCheckButtonCallback("checkbutton_2", sigc::mem_fun(*this, &VRGuiGeneral::toggleTwoSided) );
-    setCheckButtonCallback("checkbutton_3", sigc::mem_fun(*this, &VRGuiGeneral::toggleDeferredShader) );
-    setCheckButtonCallback("checkbutton_4", sigc::mem_fun(*this, &VRGuiGeneral::toggleSSAO) );
-    setCheckButtonCallback("checkbutton_5", sigc::mem_fun(*this, &VRGuiGeneral::toggleCalib) );
-    setCheckButtonCallback("checkbutton_6", sigc::mem_fun(*this, &VRGuiGeneral::toggleHMDD) );
-    setCheckButtonCallback("checkbutton_7", sigc::mem_fun(*this, &VRGuiGeneral::toggleMarker) );
-    setCheckButtonCallback("checkbutton_8", sigc::mem_fun(*this, &VRGuiGeneral::toggleFXAA) );
-    setSliderCallback("hscale1", sigc::mem_fun(*this, &VRGuiGeneral::setSSAOradius) );
-    setSliderCallback("hscale2", sigc::mem_fun(*this, &VRGuiGeneral::setSSAOkernel) );
-    setSliderCallback("hscale3", sigc::mem_fun(*this, &VRGuiGeneral::setSSAOnoise) );
-    setColorChooser("bg_solid", sigc::mem_fun(*this, &VRGuiGeneral::setColor) );
-    setEntryCallback("entry42", sigc::mem_fun(*this, &VRGuiGeneral::setPath));
-    setEntryCallback("entry14", sigc::mem_fun(*this, &VRGuiGeneral::setExtension));
-    setButtonCallback("button22", sigc::mem_fun(*this, &VRGuiGeneral::dumpOSG));
-    setRadioButtonCallback("radiobutton13", sigc::mem_fun(*this, &VRGuiGeneral::toggleDRendChannel));
-    setRadioButtonCallback("radiobutton14", sigc::mem_fun(*this, &VRGuiGeneral::toggleDRendChannel));
-    setRadioButtonCallback("radiobutton15", sigc::mem_fun(*this, &VRGuiGeneral::toggleDRendChannel));
-    setRadioButtonCallback("radiobutton16", sigc::mem_fun(*this, &VRGuiGeneral::toggleDRendChannel));
+    setCheckButtonCallback("radiobutton5", bind(&VRGuiGeneral::setMode, this) );
+    setCheckButtonCallback("radiobutton18", bind(&VRGuiGeneral::setMode, this) );
+    setCheckButtonCallback("radiobutton4", bind(&VRGuiGeneral::setMode, this) );
+    setCheckButtonCallback("checkbutton_01", bind(&VRGuiGeneral::toggleFrustumCulling, this) );
+    setCheckButtonCallback("checkbutton_02", bind(&VRGuiGeneral::toggleOcclusionCulling, this) );
+    setCheckButtonCallback("checkbutton_2", bind(&VRGuiGeneral::toggleTwoSided, this) );
+    setCheckButtonCallback("checkbutton_3", bind(&VRGuiGeneral::toggleDeferredShader, this) );
+    setCheckButtonCallback("checkbutton_4", bind(&VRGuiGeneral::toggleSSAO, this) );
+    setCheckButtonCallback("checkbutton_5", bind(&VRGuiGeneral::toggleCalib, this) );
+    setCheckButtonCallback("checkbutton_6", bind(&VRGuiGeneral::toggleHMDD, this) );
+    setCheckButtonCallback("checkbutton_7", bind(&VRGuiGeneral::toggleMarker, this) );
+    setCheckButtonCallback("checkbutton_8", bind(&VRGuiGeneral::toggleFXAA, this) );
+    setSliderCallback("hscale1", bind(&VRGuiGeneral::setSSAOradius, this, placeholders::_1, placeholders::_2) );
+    setSliderCallback("hscale2", bind(&VRGuiGeneral::setSSAOkernel, this, placeholders::_1, placeholders::_2) );
+    setSliderCallback("hscale3", bind(&VRGuiGeneral::setSSAOnoise, this, placeholders::_1, placeholders::_2) );
+    setColorChooser("bg_solid", bind(&VRGuiGeneral::setColor, this, placeholders::_1) );
+    setEntryCallback("entry42", bind(&VRGuiGeneral::setPath, this));
+    setEntryCallback("entry14", bind(&VRGuiGeneral::setExtension, this));
+    setButtonCallback("button22", bind(&VRGuiGeneral::dumpOSG, this));
+    setRadioButtonCallback("radiobutton13", bind(&VRGuiGeneral::toggleDRendChannel, this));
+    setRadioButtonCallback("radiobutton14", bind(&VRGuiGeneral::toggleDRendChannel, this));
+    setRadioButtonCallback("radiobutton15", bind(&VRGuiGeneral::toggleDRendChannel, this));
+    setRadioButtonCallback("radiobutton16", bind(&VRGuiGeneral::toggleDRendChannel, this));
 }
 
 bool VRGuiGeneral::setSSAOradius( int st, double d ) {
@@ -125,8 +118,8 @@ void VRGuiGeneral::setMode() {
     auto scene = VRScene::getCurrent();
     scene->setBackground( t );
 
-    setEntrySensitivity("entry14", t == VRBackground::SKYBOX);
-    setEntrySensitivity("entry42", t == VRBackground::SKYBOX || t == VRBackground::IMAGE);
+    setWidgetSensitivity("entry14", t == VRBackground::SKYBOX);
+    setWidgetSensitivity("entry42", t == VRBackground::SKYBOX || t == VRBackground::IMAGE);
 }
 
 void VRGuiGeneral::toggleDeferredShader() {
@@ -207,21 +200,21 @@ void VRGuiGeneral::updateScene() {
 
     setColorChooserColor("bg_solid", Color3f(col[0], col[1], col[2]));
     setTextEntry("entry42", scene->getBackgroundPath());
-    setEntrySensitivity("entry14", t == VRBackground::SKYBOX);
+    setWidgetSensitivity("entry14", t == VRBackground::SKYBOX);
     if (t == VRBackground::SKYBOX) setTextEntry("entry14", scene->getSkyBGExtension());
 
-    setCheckButton("radiobutton18", t == VRBackground::SKY);
-    setCheckButton("radiobutton5", t == VRBackground::SKYBOX);
-    setCheckButton("radiobutton4", t == VRBackground::IMAGE);
+    setToggleButton("radiobutton18", t == VRBackground::SKY);
+    setToggleButton("radiobutton5", t == VRBackground::SKYBOX);
+    setToggleButton("radiobutton4", t == VRBackground::IMAGE);
 
     // rendering
-    setCheckButton("checkbutton_01", scene->getFrustumCulling() );
-    setCheckButton("checkbutton_02", scene->getOcclusionCulling() );
-    setCheckButton("checkbutton_2", scene->getTwoSided() );
-    setCheckButton("checkbutton_3", scene->getDefferedShading() );
-    setCheckButton("checkbutton_4", scene->getSSAO() );
-    setCheckButton("checkbutton_6", scene->getHMDD() );
-    setCheckButton("checkbutton_8", scene->getFXAA() );
+    setToggleButton("checkbutton_01", scene->getFrustumCulling() );
+    setToggleButton("checkbutton_02", scene->getOcclusionCulling() );
+    setToggleButton("checkbutton_2", scene->getTwoSided() );
+    setToggleButton("checkbutton_3", scene->getDefferedShading() );
+    setToggleButton("checkbutton_4", scene->getSSAO() );
+    setToggleButton("checkbutton_6", scene->getHMDD() );
+    setToggleButton("checkbutton_8", scene->getFXAA() );
 
     updating = false;
 }

@@ -340,7 +340,7 @@ void buildAnimations(AnimationLibrary& lib, VRObjectPtr objects) {
                 p->compute(80);
             }
             bool loop = false;
-            fkt = VRAnimCb::create(a.first, boost::bind(callback, t, axis, p, _1) );
+            fkt = VRAnimCb::create(a.first, bind(callback, t, axis, p, _1) );
 
             VRAnimationPtr anim = 0;
             if (bezier) anim = VRAnimation::create(duration, start[0], fkt, 0.f, 1.f, loop, true);

@@ -118,7 +118,7 @@ VRSnappingEngine::VRSnappingEngine() {
     event = new EventSnap();
     snapSignal = VRSignal::create();
 
-    updatePtr = VRUpdateCb::create("snapping engine update", boost::bind(&VRSnappingEngine::update, this) );
+    updatePtr = VRUpdateCb::create("snapping engine update", bind(&VRSnappingEngine::update, this) );
     VRScene::getCurrent()->addUpdateFkt(updatePtr, 999);
 }
 

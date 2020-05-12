@@ -9,15 +9,11 @@
 
 #include "core/utils/toString.h"
 
-#include <gtkmm/label.h>
-#include <gtkmm/treestore.h>
-#include <gtkmm/treeview.h>
-#include <gtkmm/dialog.h>
-#include <gtkmm/builder.h>
-
 using namespace OSG;
 
-VREntityWidget::VREntityWidget(VRGuiSemantics* m, Gtk::Fixed* canvas, VREntityPtr entity) : VRSemanticWidget(m, canvas, "#FFEE00") {
+// TODO
+
+/*VREntityWidget::VREntityWidget(VRGuiSemantics* m, Gtk::Fixed* canvas, VREntityPtr entity) : VRSemanticWidget(m, canvas, "#FFEE00") {
     this->entity = entity;
     label->set_text(entity->getName());
     update();
@@ -28,7 +24,7 @@ int VREntityWidget::ID() { return entity->ID; }
 void VREntityWidget::on_edit_prop_clicked() {
     if (!selected_entity_property) return;
     Gtk::Dialog* dialog;
-    VRGuiBuilder()->get_widget("PropertyEdit", dialog);
+    getGUIBuilder()->get_widget("PropertyEdit", dialog);
     setTextEntry("entry23", selected_entity_property->getName());
     setTextEntry("entry24", selected_entity_property->value);
     dialog->show();
@@ -122,5 +118,5 @@ void VREntityWidget::update() {
 
 void VREntityWidget::reparent(VRConceptWidgetPtr w) {}
 void VREntityWidget::reparent(VREntityWidgetPtr w) {}
-void VREntityWidget::reparent(VRRuleWidgetPtr w) {}
+void VREntityWidget::reparent(VRRuleWidgetPtr w) {}*/
 

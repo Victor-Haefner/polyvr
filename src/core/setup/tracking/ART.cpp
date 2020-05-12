@@ -76,7 +76,7 @@ void ART_device::update() {
 ART::ART() {
     mutex = new boost::recursive_mutex();
 
-    threadFkt = VRFunction< weak_ptr<VRThread> >::create("ART_fetch", boost::bind(&ART::updateT, this, _1));
+    threadFkt = VRFunction< weak_ptr<VRThread> >::create("ART_fetch", bind(&ART::updateT, this, _1));
     VRSceneManager::get()->initThread(threadFkt, "ART_fetch", true); // applyEvent is the sync function
 
     on_new_device = VRSignal::create();

@@ -2,29 +2,28 @@
 #define VRGUICONTEXTMENU_H_INCLUDED
 
 #include <OpenSG/OSGConfig.h>
+#include <functional>
 #include "VRGuiSignals.h"
-#include <sigc++/functors/slot.h>
-#include <gtk-2.0/gdk/gdkevents.h>
-#include <glibmm-2.4/glibmm/refptr.h>
 
 using namespace std;
 
-namespace Gtk { class Menu; class Widget; };
+struct _GtkMenu;
+struct _GdkEventButton;
+struct _GtkWidget;
 
 class VRGuiContextMenu {
     private:
-        map< string, Gtk::Menu* > menus;
+        map< string, _GtkMenu* > menus;
 
     public:
         VRGuiContextMenu(string name);
 
-        void appendItem( string menu, string item, const sigc::slot<void>& fkt );
+        void appendItem( string menu, string item, function<void()> fkt );
         void appendMenu( string menu, string item, string new_menu );
-        void popup(string menu, GdkEventButton* event);
+        void popup(string menu, _GdkEventButton* event);
 
-        bool on_widget_rightclick(GdkEventButton * event, string menu);
-        void connectWidget(string menu, Glib::RefPtr<Gtk::Widget> widget);
-        void connectWidget(string menu, Gtk::Widget* widget);
+        bool on_widget_rightclick(_GdkEventButton * event, string menu);
+        void connectWidget(string menu, _GtkWidget* widget);
 };
 
 #endif // VRGUICONTEXTMENU_H_INCLUDED

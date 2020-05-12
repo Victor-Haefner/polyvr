@@ -302,7 +302,7 @@ void SimViDekont::toggleColors(VRDevicePtr dev) {
 
 //--- END Player callbacks
 void SimViDekont::initPlayer() {
-    VRFunction<int>* cb = new VRFunction<int>("showFrame", boost::bind(&SimViDekont::showFrame, this, _1));
+    VRFunction<int>* cb = new VRFunction<int>("showFrame", bind(&SimViDekont::showFrame, this, _1));
     player = new Player(cb, 0, frames.size() );
 }
 

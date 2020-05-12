@@ -9,7 +9,6 @@
 
 #include <OpenSG/OSGPlane.h>
 #include <OpenSG/OSGLine.h>
-#include <boost/bind.hpp>
 
 using namespace OSG;
 
@@ -38,7 +37,7 @@ VRJointTool::VRJointTool(string name) : VRGeometry(name) {
     //store("jt_active", &active);
     //store("jt_lastAppended", &lastAppended);
 
-    regStorageSetupAfterFkt( VRUpdateCb::create("jointtool setup", boost::bind(&VRJointTool::delayed_setup, this)) );
+    regStorageSetupAfterFkt( VRUpdateCb::create("jointtool setup", bind(&VRJointTool::delayed_setup, this)) );
 }
 
 VRJointTool::~VRJointTool() {

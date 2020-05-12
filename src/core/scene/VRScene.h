@@ -86,7 +86,7 @@ class VRScene : public VRObjectGroupManager,
         void add(NodeMTRecPtr n);
 
         VRObjectPtr get(int ID);
-        VRObjectPtr get(string name);
+        VRObjectPtr get(string name, bool strict = true);
         VRObjectPtr getRoot();
         //VRObjectPtr getSystemRoot();
 

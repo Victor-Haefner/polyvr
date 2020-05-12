@@ -4,7 +4,8 @@
 #include <OpenSG/OSGConfig.h>
 #include "core/scene/VRSceneManager.h"
 #include "VRGuiSignals.h"
-#include <gtkmm/menu.h>
+
+struct _GdkEventButton;
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -14,7 +15,7 @@ class VRGuiGeneral {
         bool updating = false;
 
         // background signals
-        bool setColor(GdkEventButton* b);
+        bool setColor(_GdkEventButton* b);
         void setExtension();
         void setPath();
         void setMode();

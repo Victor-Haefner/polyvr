@@ -5,7 +5,6 @@
 #include <iostream>
 #include <sstream>
 #include <iomanip>
-#include <boost/bind.hpp>
 
 #include <OpenSG/OSGGeoProperties.h>
 

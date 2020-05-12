@@ -5,7 +5,6 @@
 #include "core/utils/VRGlobals.h"
 #include "core/scene/VRScene.h"
 #include "core/scene/VRSceneManager.h"
-#include <boost/bind.hpp>
 #include "core/utils/VRProfiler.h"
 #include <time.h>
 #include <OpenSG/OSGQuaternion.h>
@@ -24,13 +23,13 @@ VRHaptic::VRHaptic() : VRDevice("haptic") {
 
     v = new virtuose();
 
-    updatePtr = VRUpdateCb::create( "Haptic object update", boost::bind(&VRHaptic::applyTransformation, this, editBeacon()) );
+    updatePtr = VRUpdateCb::create( "Haptic object update", bind(&VRHaptic::applyTransformation, this, editBeacon()) );
     VRSceneManager::get()->addUpdateFkt(updatePtr);
 
-    //timestepWatchdog = VRUpdateCb::create( "Haptic Timestep Watchdog", boost::bind(&VRHaptic::updateHapticTimestep, this, editBeacon()) );
+    //timestepWatchdog = VRUpdateCb::create( "Haptic Timestep Watchdog", bind(&VRHaptic::updateHapticTimestep, this, editBeacon()) );
     //VRSceneManager::get()->addUpdateFkt(timestepWatchdog);
 
-    onSceneChange = VRDeviceCb::create( "Haptic on scene changed", boost::bind(&VRHaptic::on_scene_changed, this, _1) );
+    onSceneChange = VRDeviceCb::create( "Haptic on scene changed", bind(&VRHaptic::on_scene_changed, this, placeholders::_1) );
     VRSceneManager::get()->getSignal_on_scene_load()->add(onSceneChange);
 
     store("h_type", &type);
@@ -59,8 +58,8 @@ void VRHaptic::on_scene_changed(VRDeviceWeakPtr dev) {
     v->detachTransform();
     v->disconnect();
 
-    updateFktPre = VRUpdateCb::create( "Haptic pre update", boost::bind(&VRHaptic::updateHapticPre, this, editBeacon()) );
-    updateFktPost = VRUpdateCb::create( "Haptic post update", boost::bind(&VRHaptic::updateHapticPost, this, editBeacon()) );
+    updateFktPre = VRUpdateCb::create( "Haptic pre update", bind(&VRHaptic::updateHapticPre, this, editBeacon()) );
+    updateFktPost = VRUpdateCb::create( "Haptic post update", bind(&VRHaptic::updateHapticPost, this, editBeacon()) );
     VRScene::getCurrent()->addPhysicsUpdateFunction(updateFktPre,false);
     VRScene::getCurrent()->addPhysicsUpdateFunction(updateFktPost,true);
 
@@ -178,7 +177,7 @@ void VRHaptic::runTest1() {
     v->disconnect();
     setIP("172.22.151.200");
 
-    updatePtr = VRUpdateCb::create( "Haptic object update", boost::bind(&VRHaptic::applyTransformation, this, editBeacon()) );
+    updatePtr = VRUpdateCb::create( "Haptic object update", bind(&VRHaptic::applyTransformation, this, editBeacon()) );
     VRSceneManager::get()->addUpdateFkt(updatePtr);
 
     on_scene_changed(0);*/

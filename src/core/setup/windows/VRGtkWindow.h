@@ -3,16 +3,16 @@
 
 #include "VRWindow.h"
 
-#include <gdk/gdkevents.h>
-#include <gdkmm/rectangle.h>
-#include <gtk/gtkstyle.h>
-#include <sigc++/connection.h>
-
 #include <OpenSG/OSGPassiveWindow.h>
 
-namespace Gtk{
-    class DrawingArea;
-}
+struct _GtkDrawingArea;
+struct _GtkWidget;
+struct _GdkEventScroll;
+struct _GdkEventExpose;
+struct _GdkRectangle;
+struct _GdkEventButton;
+struct _GdkEventMotion;
+struct _GdkEventKey;
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -20,26 +20,24 @@ using namespace std;
 
 class VRGtkWindow : public VRWindow {
     private:
-        Gtk::DrawingArea* drawArea = 0;
-        GtkWidget* widget = 0;
+        _GtkDrawingArea* drawArea = 0;
+        _GtkWidget* widget = 0;
         PassiveWindowMTRecPtr win;
         bool initialExpose = true;
 
-        vector<sigc::connection> signals;
-
-        bool on_scroll(GdkEventScroll* e);
+        bool on_scroll(_GdkEventScroll* e);
         void on_realize();
-        bool on_expose(GdkEventExpose* e);
-        void on_resize(Gdk::Rectangle& a);
-        bool on_button(GdkEventButton* e);
-        bool on_motion(GdkEventMotion* e);
-        bool on_key(GdkEventKey* e);
+        bool on_expose(_GdkEventExpose* e);
+        void on_resize(_GdkRectangle* a);
+        bool on_button(_GdkEventButton* e);
+        bool on_motion(_GdkEventMotion* e);
+        bool on_key(_GdkEventKey* e);
 
     public:
-        VRGtkWindow(Gtk::DrawingArea* glarea);
+        VRGtkWindow(_GtkDrawingArea* glarea);
         ~VRGtkWindow();
 
-        static VRGtkWindowPtr create(Gtk::DrawingArea* da);
+        static VRGtkWindowPtr create(_GtkDrawingArea* da);
         VRGtkWindowPtr ptr();
 
         PassiveWindowMTRecPtr getOSGWindow();

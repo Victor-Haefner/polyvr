@@ -26,8 +26,8 @@ void VROpening::initAnimations(VRObjectPtr _d1, VRObjectPtr _d2) {
         d1 = 0;
     }
 
-    if (d1) fkt1 = VRFunction<Vec3d>::create("3DEntSetUp", boost::bind(&VRTransform::setUp, d1, _1));
-    if (d2) fkt2 = VRFunction<Vec3d>::create("3DEntSetUp", boost::bind(&VRTransform::setUp, d2, _1));
+    if (d1) fkt1 = VRFunction<Vec3d>::create("3DEntSetUp", bind(&VRTransform::setUp, d1, placeholders::_1));
+    if (d2) fkt2 = VRFunction<Vec3d>::create("3DEntSetUp", bind(&VRTransform::setUp, d2, placeholders::_1));
 }
 
 VRObjectPtr VROpening::copy(vector<VRObjectPtr> children) {
@@ -54,7 +54,7 @@ VROpening::VROpening(string name, VRObjectPtr obj, VRScene* _scene, VRSignalPtr 
     param = _param;
 
     // toggle callback
-    toggleCallback = VRFunction<VRDeviceWeakPtr>::create("OpeningToggle", boost::bind(&VROpening::toggle, this, _1));
+    toggleCallback = VRFunction<VRDeviceWeakPtr>::create("OpeningToggle", bind(&VROpening::toggle, this, placeholders::_1));
 
     if (obj) {
         addChild(obj);

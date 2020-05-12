@@ -28,13 +28,10 @@
 
 #ifndef WITHOUT_GTK
 #include "core/gui/VRGuiUtils.h"
-#include <gtkmm/builder.h>
-#include <gtkmm/main.h>
-#include <gtkmm/window.h>
-#include <gtkmm/drawingarea.h>
 #include "VRGtkWindow.h"
 #include "core/gui/VRGuiManager.h"
 #include "core/gui/VRGuiConsole.h"
+#include <gtk/gtkdrawingarea.h>
 #define WARN(x) \
 VRGuiManager::get()->getConsole( "Errors" )->write( x+"\n" );
 #else
@@ -120,8 +117,7 @@ VRWindowPtr VRWindowManager::addGtkWindow(string name, string glarea) {
     //gdk_error_trap_push();
     //if (gdk_error_trap_pop()) cout << "    ---- AAA1 ------ " << endl;
 
-    Gtk::DrawingArea* drawArea = 0;
-    VRGuiBuilder()->get_widget(glarea, drawArea); // TODO: create new glarea, add flag to editor area window!
+    GtkDrawingArea* drawArea = (GtkDrawingArea*)getGUIBuilder()->get_widget(glarea); // TODO: create new glarea, add flag to editor area window!
     VRGtkWindowPtr win = VRGtkWindow::create(drawArea);
 
     editorWindow = win;

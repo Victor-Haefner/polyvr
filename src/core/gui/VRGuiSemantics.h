@@ -11,16 +11,14 @@
 #include "VRGuiFwd.h"
 #include "addons/Algorithms/VRAlgorithmsFwd.h"
 
-namespace Gtk {
-    class Fixed;
-}
+struct _GtkFixed;
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 class VRGuiSemantics {
     private:
-        Gtk::Fixed* canvas = 0;
+        _GtkFixed* canvas = 0;
         map<int, VRSemanticWidgetPtr> widgets;
         map<int, map<int, VRConnectorWidgetPtr> > connectors;
         map<int, int> widgetIDs;

@@ -7,7 +7,6 @@
 #include "core/utils/toString.h"
 #include "core/utils/isNan.h"
 #include "core/tools/VRAnalyticGeometry.h"
-#include <boost/bind.hpp>
 #include <OpenSG/OSGQuaternion.h>
 
 using namespace OSG;
@@ -25,10 +24,10 @@ VRRobotArm::VRRobotArm(string type) : type(type) {
     ageo->setLabelParams(0.05, 1, 1, Color4f(1,1,1,1), Color4f(1,1,1,0));
     ageo->hide("SHADOW");
 
-    animPtr = VRFunction<float>::create("animOnPath", boost::bind(&VRRobotArm::animOnPath, this, _1 ) );
+    animPtr = VRFunction<float>::create("animOnPath", bind(&VRRobotArm::animOnPath, this, placeholders::_1 ) );
     anim->setUnownedCallback(animPtr);
 
-    updatePtr = VRUpdateCb::create("run engines", boost::bind(&VRRobotArm::update, this) );
+    updatePtr = VRUpdateCb::create("run engines", bind(&VRRobotArm::update, this) );
     VRScene::getCurrent()->addUpdateFkt(updatePtr, 999);
 }
 

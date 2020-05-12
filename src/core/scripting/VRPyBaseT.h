@@ -1,7 +1,6 @@
 #ifndef VRPYBASET_H_INCLUDED
 #define VRPYBASET_H_INCLUDED
 
-#include <boost/bind.hpp>
 #include "VRPyTypeCaster.h"
 #include "VRPyBaseFactory.h"
 #include "core/scene/VRScene.h"
@@ -117,7 +116,7 @@ VRFunction<T, R>* VRPyBase::parseCallback(PyObject* args) {
     else if (string(pArgs->ob_type->tp_name) == "list") pArgs = PyList_AsTuple(pArgs);
     _PyTuple_Resize(&pArgs, pySize(pArgs)+1);
 
-    return new VRFunction<T, R>( "pyExecCall", boost::bind(VRPyBase::execPyCall<T, R>, pyFkt, pArgs, _1) );
+    return new VRFunction<T, R>( "pyExecCall", bind(VRPyBase::execPyCall<T, R>, pyFkt, pArgs, std::placeholders::_1) );
 }
 
 template <class T, class t>
