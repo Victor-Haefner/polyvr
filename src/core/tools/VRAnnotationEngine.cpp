@@ -25,6 +25,7 @@ VRAnnotationEngine::VRAnnotationEngine(string name) : VRGeometry(name) {
     type = "AnnotationEngine";
 
     hasGS = VRScene::getCurrent()->hasGeomShader();
+    //cout << "VRAnnotationEngine::VRAnnotationEngine " << name << "  " << hasGS << endl;
 
     mat = VRMaterial::create("AnnEngMat");
 #ifndef OSG_OGL_ES2
