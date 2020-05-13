@@ -42,6 +42,7 @@ VRAnnotationEngine::VRAnnotationEngine(string name) : VRGeometry(name) {
     }
 #endif
     mat->setPointSize(5);
+    mat->setMagMinFilter(GL_LINEAR, GL_LINEAR); // TODO: check if texture has mipmaps!
     setMaterial(mat);
     updateTexture();
 
@@ -169,15 +170,15 @@ void VRAnnotationEngine::set(int i0, Vec3d p0, string txt) {
                 float u2 = P+(c+1)*D*2;
                 float X = H*2*j;
 
-                Vec3d p1 = p + orientationX*(-H+X) + orientationUp*(H*2);
-                Vec3d p2 = p + orientationX*( H+X) + orientationUp*(H*2);
-                Vec3d p3 = p + orientationX*( H+X) - orientationUp*(H*2);
-                Vec3d p4 = p + orientationX*(-H+X) - orientationUp*(H*2);
+                Vec3d n1 = orientationX*(-H+X) + orientationUp*(H*2);
+                Vec3d n2 = orientationX*( H+X) + orientationUp*(H*2);
+                Vec3d n3 = orientationX*( H+X) - orientationUp*(H*2);
+                Vec3d n4 = orientationX*(-H+X) - orientationUp*(H*2);
 
-                data->setVert(l.entries[j*4+0], p1, Vec3d(0,0,-1), Vec2d(u1,1));
-                data->setVert(l.entries[j*4+1], p2, Vec3d(0,0,-1), Vec2d(u2,1));
-                data->setVert(l.entries[j*4+2], p3, Vec3d(0,0,-1), Vec2d(u2,0));
-                data->setVert(l.entries[j*4+3], p4, Vec3d(0,0,-1), Vec2d(u1,0));
+                data->setVert(l.entries[j*4+0], p, n1, Vec2d(u1,1));
+                data->setVert(l.entries[j*4+1], p, n2, Vec2d(u2,1));
+                data->setVert(l.entries[j*4+2], p, n3, Vec2d(u2,0));
+                data->setVert(l.entries[j*4+3], p, n4, Vec2d(u1,0));
             }
 #ifndef OSG_OGL_ES2
         }
@@ -386,8 +387,6 @@ void main() {
 
 string VRAnnotationEngine::vp_es2 =
 GLSL(
-varying vec4 vertex;
-varying vec3 normal;
 varying vec2 texCoord;
 
 attribute vec4 osg_Vertex;
@@ -395,31 +394,33 @@ attribute vec4 osg_Normal;
 attribute vec2 osg_MultiTexCoord0;
 
 uniform float doBillboard;
+uniform vec2 OSGViewportSize;
+
+#ifdef __EMSCRIPTEN__
 uniform mat4 OSGModelViewProjectionMatrix;
 uniform mat4 OSGModelViewMatrix;
 uniform mat4 OSGProjectionMatrix;
+#endif
 
 void main( void ) {
     if (doBillboard < 0.5) {
 #ifdef __EMSCRIPTEN__
-        gl_Position = OSGModelViewProjectionMatrix*osg_Vertex;
+        gl_Position = OSGModelViewProjectionMatrix * (osg_Vertex + osg_Normal);
 #else
-        gl_Position = gl_ModelViewProjectionMatrix*osg_Vertex;
+        gl_Position = gl_ModelViewProjectionMatrix * (osg_Vertex + osg_Normal);
 #endif
     } else {
-        mat4 m;
-        m[0][0] = 1.0;
-        m[1][1] = 1.0;
-        m[2][2] = 1.0;
+        float a = OSGViewportSize.y/OSGViewportSize.x;
+        vec4 norm = osg_Normal;
+        norm.x = norm.x*a;
+        norm.z = 0.0;
+        norm.w = 0.0;
 #ifdef __EMSCRIPTEN__
-        m[3] = OSGModelViewMatrix[3];
-        gl_Position = OSGProjectionMatrix*(m*osg_Vertex);
+        gl_Position = OSGModelViewProjectionMatrix * osg_Vertex + osg_Normal;
 #else
-        m[3] = gl_ModelViewMatrix[3];
-        gl_Position = gl_ProjectionMatrix*(m*osg_Vertex);
+        gl_Position = gl_ModelViewProjectionMatrix * osg_Vertex + norm;
 #endif
     }
-    normal = osg_Normal.xyz;
     texCoord = osg_MultiTexCoord0;
 }
 );
@@ -434,7 +435,7 @@ uniform sampler2D texture;
 varying vec2 texCoord;
 
 void main( void ) {
-    //gl_FragColor = vec4(1.0,0.0,0.0,1.0);
+    //gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
     //gl_FragColor = vec4(texCoord.x,texCoord.y,0.0,1.0);
     gl_FragColor = texture2D(texture, texCoord);
 }
