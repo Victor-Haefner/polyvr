@@ -84,8 +84,10 @@ string VRGuiTreeView::getSelectedStringValue(int column) {
 }
 
 int VRGuiTreeView::getSelectedIntValue(int column) {
-    int* p = (int*)getSelectedValue(column);
-    return p?*p:0;
+    updateSelection();
+    int i = 0;
+    if (validSelection) gtk_tree_model_get(tree_model, selection, column, &i, -1);
+    return i;
 }
 
 void VRGuiTreeView::removeSelected() {

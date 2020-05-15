@@ -271,8 +271,11 @@ bool askUser(string msg1, string msg2) {
     GtkMessageDialog* dialog = (GtkMessageDialog*)gtk_message_dialog_new(0, flags, GTK_MESSAGE_WARNING, GTK_BUTTONS_OK_CANCEL, "%s", msg1.c_str());
     gtk_message_dialog_format_secondary_text(dialog, "%s", msg2.c_str());
     gtk_window_set_deletable((GtkWindow*)dialog, false);
-    if (gtk_dialog_run((GtkDialog*)dialog) == GTK_RESPONSE_OK) return true;
-    return false;
+
+    bool res = false;
+    if (gtk_dialog_run((GtkDialog*)dialog) == GTK_RESPONSE_OK) res = true;
+    gtk_widget_destroy ((GtkWidget*)dialog);
+    return res;
 }
 
 string askUserInput(string msg) {
@@ -285,8 +288,10 @@ string askUserInput(string msg) {
     gtk_box_pack_end((GtkBox*)vb, (GtkWidget*)entry, false, false, 0);
     gtk_widget_show((GtkWidget*)entry);
 
-    if (gtk_dialog_run((GtkDialog*)dialog) == GTK_RESPONSE_OK) return gtk_entry_get_text(entry);
-    return "";
+    string res = "";
+    if (gtk_dialog_run((GtkDialog*)dialog) == GTK_RESPONSE_OK) res = gtk_entry_get_text(entry);
+    gtk_widget_destroy ((GtkWidget*)dialog);
+    return res;
 }
 
 string askUserPass(string msg) {
