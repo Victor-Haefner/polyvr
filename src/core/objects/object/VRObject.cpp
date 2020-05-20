@@ -743,3 +743,45 @@ void VRObject::unitTest() {
 
 void VRObject::setEntity(VREntityPtr e) { entity = e; }
 VREntityPtr VRObject::getEntity() { return entity; }
+
+
+void VRObject::reduceModel(string strategy) {
+    map<string, string> strategies;
+    for (auto strat : splitString(strategy, ';')) {
+        string key = splitString(strat, ':')[0];
+        string val = splitString(strat, ':')[1];
+        strategies[key] = val;
+    }
+
+    vector<VRGeometryPtr> geos;
+    for (auto obj : getChildren(true, "Geometry", true)) {
+        VRGeometryPtr geo = dynamic_pointer_cast<VRGeometry>(obj);
+        geos.push_back( geo );
+    }
+
+    auto byBoundingRadius = [&](float f) {
+        auto BB = getBoundingbox();
+        float R = BB->radius();
+        int N = 0;
+        for (auto geo : geos) {
+            auto bb = geo->getBoundingbox();
+            float r = bb->radius();
+
+            if (r < R*f) {
+                N++;
+                geo->hide();
+            }
+        }
+        return N;
+    };
+
+    if (strategies.count("byBoundingRadius")) {
+        int N = byBoundingRadius( toFloat(strategies["byBoundingRadius"]) );
+        cout << "reduceModel " << getName() << ", N geos: " << geos.size() << ", N reduced: " << N << endl;
+    }
+}
+
+
+
+
+
