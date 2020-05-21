@@ -102,7 +102,7 @@ class OSGChangeList : public ChangeList {
 
         ContainerChangeEntry* newChange(UInt32 ID, BitVector fields, map<UInt32, ContainerChangeEntry*>& changedFCs) {
             ContainerChangeEntry* entry = 0;
-            if (changedFCs.count(ID) && 0) entry = changedFCs[ID];
+            if (changedFCs.count(ID)) entry = changedFCs[ID];
             else {
                 entry = getNewEntry();
                 entry->uiEntryDesc = ContainerChangeEntry::Change;
@@ -132,7 +132,7 @@ class OSGChangeList : public ChangeList {
                 pEntry->pList         = this;
             } else if(entry->uiEntryDesc == ContainerChangeEntry::Change) {
                 ContainerChangeEntry* pEntry = 0;
-                if (changedFCs.count(entry->uiContainerId) && 0) pEntry = changedFCs[entry->uiContainerId];
+                if (changedFCs.count(entry->uiContainerId)) pEntry = changedFCs[entry->uiContainerId];
                 else {
                     pEntry = getNewEntry();
                     pEntry->uiContainerId = entry->uiContainerId;
@@ -140,7 +140,7 @@ class OSGChangeList : public ChangeList {
                 }
                 pEntry->uiEntryDesc   = entry->uiEntryDesc; //ContainerChangeEntry::Change; //TODO: check what I did here (workaround to get created entries into the changelist aswell)
                 //pEntry->pFieldFlags   = entry->pFieldFlags; // what are they used for?
-                pEntry->whichField    = entry->whichField;
+                pEntry->whichField |= entry->whichField;
                 if (pEntry->whichField == 0 && entry->bvUncommittedChanges != 0)
                     pEntry->whichField |= *entry->bvUncommittedChanges;
                 pEntry->pList         = this;
@@ -447,6 +447,7 @@ vector<int> VRSyncNode::getFCChildren(FieldContainer* fcPtr, BitVector fieldMask
 void VRSyncNode::filterFieldMask(FieldContainer* fc, SerialEntry& sentry) {
     if (sentry.localId == getNode()->node->getId()) { // check for sync node ID
         sentry.fieldMask &= ~Node::ParentFieldMask; // remove parent field change!
+        sentry.fieldMask &= ~Node::CoreFieldMask; // remove core field change!
     }
 
     if (factory->findType(sentry.fcTypeID)->isNodeCore()) { // don't copy GLId fields, they are not valid Ids!
@@ -1000,7 +1001,7 @@ OSGChangeList* VRSyncNode::getFilteredChangeList() {
                 registerContainer(subc.first, container.size());
                 for (auto subcParent : subc.second) {
                     if (subcParent) {
-                        //localChanges->newChange(subcParent->getId(), -1, changedFCs);
+                        localChanges->newChange(subcParent->getId(), -1, changedFCs);
                     }
                 }
             }
