@@ -198,26 +198,37 @@ VRGeometryPtr VRGeometry::create(string name, string primitive, string params) {
 VRGeometryPtr VRGeometry::ptr() { return static_pointer_cast<VRGeometry>( shared_from_this() ); }
 
 /** Set the geometry mesh (OSG geometry core) **/
-void VRGeometry::setMesh(OSGGeometryPtr g, Reference ref, bool keep_material) {
-    if (g->geo == 0) return;
+void VRGeometry::setMesh(OSGGeometryPtr geo, Reference ref, bool keep_material) {
+    if (geo->geo == 0) return;
     if (mesh) remGeometryAttachment(mesh->geo);
     if (mesh_node && mesh_node->node && getNode() && getNode()->node) getNode()->node->subChild(mesh_node->node);
 
-    setGeometryAttachment(g->geo, this);
-    mesh = g;
-    mesh_node = OSGObject::create( makeNodeFor(g->geo) );
+    SFUnrecChildGeoIntegralPropertyPtr* types = geo->geo->editSFTypes();
+    SFUnrecChildGeoIntegralPropertyPtr* lengths = geo->geo->editSFLengths();
+    MFUnrecChildGeoVectorPropertyPtr* props = geo->geo->editMFProperties();
+    MFUnrecChildGeoIntegralPropertyPtr* inds = geo->geo->editMFPropIndices();
+
+    int i=0;
+    if (types->getValue()) { geo->geo->addAttachment(types->getValue(), i); i++; }
+    if (lengths->getValue()) { geo->geo->addAttachment(lengths->getValue(), i); i++; }
+    for (auto prop : *inds) if (prop) { geo->geo->addAttachment(prop, i); i++; }
+    for (auto prop : *props) if (prop) { geo->geo->addAttachment(prop, i); i++; }
+
+    setGeometryAttachment(geo->geo, this);
+    mesh = geo;
+    mesh_node = OSGObject::create( makeNodeFor(geo->geo) );
     OSG::setName(mesh_node->node, getName());
     getNode()->node->addChild(mesh_node->node);
     meshSet = true;
     source = ref;
 
     if (mat == 0) mat = VRMaterial::getDefault();
-    if (keep_material) mat = VRMaterial::get(g->geo->getMaterial());
+    if (keep_material) mat = VRMaterial::get(geo->geo->getMaterial());
     setMaterial(mat);
     meshChanged();
 
 #ifdef WASM
-    if (!g->geo->isSingleIndex()) {
+    if (!geo->geo->isSingleIndex()) {
         VRGeoData data(ptr());
         data.makeSingleIndex();
     }

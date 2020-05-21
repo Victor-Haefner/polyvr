@@ -100,8 +100,21 @@ class OSGChangeList : public ChangeList {
     public:
         ~OSGChangeList() {};
 
-        ContainerChangeEntry* createChangeEntry() { return getNewEntry(); }
-        ContainerChangeEntry* createCreateEntry() { return getNewCreatedEntry(); }
+        ContainerChangeEntry* newChange(UInt32 ID, BitVector fields) {
+            auto entry = getNewEntry();
+            entry->uiEntryDesc = ContainerChangeEntry::Change;
+            entry->uiContainerId = ID;
+            entry->whichField = -1;
+            return entry;
+        }
+
+        ContainerChangeEntry* newCreate(UInt32 ID, BitVector fields) {
+            auto entry = getNewCreatedEntry();
+            entry->uiEntryDesc = ContainerChangeEntry::Create;
+            entry->uiContainerId = ID;
+            entry->whichField = fields;
+            return entry;
+        }
 
         void addCreate(ContainerChangeEntry* entry) {
             ContainerChangeEntry* pEntry = getNewCreatedEntry();
@@ -748,8 +761,8 @@ string VRSyncNode::copySceneState() {
 }
 
 void VRSyncNode::printRegistredContainers() {
-    cout << endl << "registered container:" << endl;
-    for (auto c : container){
+    cout << endl << "registered container: " << name << endl;
+    for (auto c : container) {
         UInt32 id = c.first;
         FieldContainer* fc = factory->getContainer(id);
         cout << " " << id << ", syncNodeID " << c.second;
@@ -825,6 +838,55 @@ bool VRSyncNode::isSubContainer(const UInt32& id) {
     return false;
 }
 
+void VRSyncNode::getAllSubContainersRec(FieldContainer* parent, vector<FieldContainer*>& res) {
+    if (!parent) return;
+    if (!isRegistered(parent->getId())) res.push_back(parent);
+
+    auto ptype = factory->findType(parent->getTypeId());
+
+    if (ptype->isNode()) {
+        Node* pnode = dynamic_cast<Node*>(parent);
+
+        NodeCore* core = pnode->getCore();
+        getAllSubContainersRec(core, res);
+
+        auto attachments = pnode->getSFAttachments()->getValue();
+        for (auto a : attachments) {
+            Attachment* attachment = a.second;
+            getAllSubContainersRec(attachment, res);
+        }
+
+        for (int i=0; i<pnode->getNChildren(); i++) {
+            Node* child = pnode->getChild(i);
+            getAllSubContainersRec(child, res);
+        }
+    }
+
+    if (ptype->isNodeCore()) {
+        NodeCore* pcore = dynamic_cast<NodeCore*>(parent);
+        auto attachments = pcore->getSFAttachments()->getValue();
+        for (auto a : attachments) {
+            Attachment* attachment = a.second;
+            getAllSubContainersRec(attachment, res);
+        }
+    }
+
+    if (ptype->isAttachment()) {
+        Attachment* pattachment = dynamic_cast<Attachment*>(parent);
+        auto attachments = pattachment->getSFAttachments()->getValue();
+        for (auto a : attachments) {
+            Attachment* attachment = a.second;
+            getAllSubContainersRec(attachment, res);
+        }
+    }
+}
+
+vector<FieldContainer*> VRSyncNode::getAllSubContainers(FieldContainer* parent) {
+    vector<FieldContainer*> res;
+    getAllSubContainersRec(parent, res);
+    return res;
+}
+
 OSGChangeList* VRSyncNode::getFilteredChangeList() {
     // go through all changes, gather changes where the container is known (in containers)
     // create local changelist with changes of containers of the subtree of this sync node :D
@@ -892,10 +954,14 @@ OSGChangeList* VRSyncNode::getFilteredChangeList() {
         if (isRegistered(id)) localChanges->addChange(entry);
         if (!isSubContainer(id)) continue;
 
+        // now check if the container is a node and if his core or children contain unregistered nodes
+
+        // get changes fieldmask
         BitVector whichField = entry->whichField;
         if (whichField == 0 && entry->bvUncommittedChanges != 0) whichField |= *entry->bvUncommittedChanges;
 //        cout << "entry->whichField " << entry->whichField << endl;
 
+        // get container
         FieldContainer* fc = factory->getContainer(id);
         if (!fc) continue;
         Node* node = dynamic_cast<Node*>(fc);
@@ -905,31 +971,27 @@ OSGChangeList* VRSyncNode::getFilteredChangeList() {
             UInt32 coreId = node->getCore()->getId();
             if (isRegistered(coreId)) continue;
 
-            cout << "entry core field mask changed!!!" << endl;
-            cout << "got core id " << coreId << endl;
             cout << "no registered container for core " << coreId << " -> create change entry for core create " << endl;
-            ContainerChangeEntry* createCoreEntry = localChanges->createCreateEntry();
-            createCoreEntry->uiEntryDesc = ContainerChangeEntry::Create;
-            createCoreEntry->uiContainerId = coreId;
-            createCoreEntry->whichField = 0;
+            localChanges->newCreate(coreId, 0);
+            localChanges->newChange(coreId, -1);
             registerContainer(factory->getContainer(coreId), container.size());
-
-            cout << " -> create change entry for core change " << endl;
-            /*ContainerChangeEntry* changeEntry = localChanges->createChangeEntry();
-            changeEntry->uiContainerId = coreId;
-            changeEntry->whichField = -1;
-            changeEntry->uiEntryDesc = ContainerChangeEntry::Change;*/
         }
+
         if (whichField & Node::ChildrenFieldMask) { // check children
             for (int i = 0; i < node->getNChildren(); i++) {
-                UInt32 childId = node->getChild(i)->getId();
+                Node* child = node->getChild(i);
+                UInt32 childId = child->getId();
                 if (isRegistered(childId)) continue;
-                cout << "create entry for unregistered child" << childId << " of node " << node->getId() << endl;
-                ContainerChangeEntry* createChildEntry = localChanges->createCreateEntry();
-                createChildEntry->uiEntryDesc = ContainerChangeEntry::Create;
-                createChildEntry->uiContainerId = childId;
-                createChildEntry->whichField = 0;
-                registerContainer(factory->getContainer(childId), container.size());
+
+                cout << "create entry for unregistered child " << childId << " of node " << node->getId() << endl;
+
+                auto subcontainers = getAllSubContainers( child );
+                for (auto subc : subcontainers) {
+                    localChanges->newCreate(subc->getId(), 0);
+                    localChanges->newChange(subc->getId(), -1);
+                    registerContainer(subc, container.size());
+                }
+                //cout << " ------------------- found " << subcontainers.size() << " subcontainers!!!" << endl;
             }
         }
     }
@@ -960,13 +1022,11 @@ void VRSyncNode::sync(string uri) {
 
 //update this SyncNode
 void VRSyncNode::update() {
-    cout << endl << " > > >  " << name << " VRSyncNode::update()" << endl;
-    cout <<  "  container: " << container.size() << endl;
     auto localChanges = getFilteredChangeList();
     if (!localChanges) return;
-    cout <<  "  container: " << container.size() << endl;
-    cout <<  "  local changelist, created: " << localChanges->getNumCreated() << ", changes: " << localChanges->getNumChanged() << endl;
     if (getChildrenCount() == 0) return;
+    cout << endl << " > > >  " << name << " VRSyncNode::update()" << endl;
+    cout <<  "  local changelist, created: " << localChanges->getNumCreated() << ", changes: " << localChanges->getNumChanged() << endl;
 
     printRegistredContainers(); // DEBUG: print registered container
     printSyncedContainers();
@@ -976,9 +1036,9 @@ void VRSyncNode::update() {
     syncedContainer.clear();
     cout << "            / " << name << " VRSyncNode::update()" << "  < < < " << endl;
 
-    Node* node = getNode()->node;
+    /*Node* node = getNode()->node;
     Geometry* geo = dynamic_cast<Geometry*>(node->getChild(0)->getChild(0)->getCore());
-    printGeoGLIDs(geo);
+    printGeoGLIDs(geo);*/
 
     /*Node* node1 = VRScene::getCurrent()->getRoot()->find("node1")->getNode()->node;
     Geometry* geo1 = dynamic_cast<Geometry*>(node1->getChild(0)->getChild(0)->getCore());
