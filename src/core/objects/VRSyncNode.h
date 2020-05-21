@@ -64,6 +64,7 @@ class VRSyncNode : public VRTransform {
         vector<FieldContainer*> getTransformationContainer(ChangeList* cl); //deprecated
         //vector<OSG::Field
 
+        void filterFieldMask(FieldContainer* fc, SerialEntry& sentry);
         void serialize_entry(ContainerChangeEntry* entry, vector<BYTE>& data, int syncNodeID);
         string serialize(ChangeList* clist);
 

@@ -21,6 +21,23 @@
 
 #include <OpenSG/OSGThreadManager.h>
 
+// needed to filter GLId field masks
+#include <OpenSG/OSGSurface.h>
+#include <OpenSG/OSGGeoProperty.h>
+#include <OpenSG/OSGGeoMultiPropertyData.h>
+#include <OpenSG/OSGRenderBuffer.h>
+#include <OpenSG/OSGFrameBufferObject.h>
+#include <OpenSG/OSGTextureObjRefChunk.h>
+#include <OpenSG/OSGUniformBufferObjStd140Chunk.h>
+#include <OpenSG/OSGShaderStorageBufferObjStdLayoutChunk.h>
+#include <OpenSG/OSGTextureObjChunk.h>
+#include <OpenSG/OSGUniformBufferObjChunk.h>
+#include <OpenSG/OSGShaderStorageBufferObjChunk.h>
+#include <OpenSG/OSGShaderExecutableChunk.h>
+#include <OpenSG/OSGSimpleSHLChunk.h>
+#include <OpenSG/OSGShaderProgram.h>
+#include <OpenSG/OSGProgramChunk.h>
+
 #include <bitset>
 
 //BUGS:
@@ -40,6 +57,20 @@ Known bugs:
 */
 
 using namespace OSG;
+
+void printGeoGLIDs(Geometry* geo) {
+    if (!geo) {
+        cout << " printGeoGLIDs, no geo!" << endl;
+        return;
+    }
+
+    cout << " geometry GL IDs: " << Vec4i(
+            0,//geo->getAttribVaoGLId(),
+            geo->getClassicGLId(),
+            geo->getAttGLId(),
+            0//geo->getClassicVaoGLId()
+        ) << endl;
+}
 
 struct VRSyncNodeFieldContainerMapper : public ContainerIdMapper {
     VRSyncNode* syncNode = 0;
@@ -166,7 +197,7 @@ VRSyncNode::VRSyncNode(string name) : VRTransform(name) {
 //    registerNode(node);
 
 	updateFkt = VRUpdateCb::create("SyncNode update", bind(&VRSyncNode::update, this));
-	VRScene::getCurrent()->addUpdateFkt(updateFkt, 100000);
+	//VRScene::getCurrent()->addUpdateFkt(updateFkt, 100000);
 }
 
 VRSyncNode::~VRSyncNode() {
@@ -382,6 +413,83 @@ vector<int> VRSyncNode::getFCChildren(FieldContainer* fcPtr, BitVector fieldMask
     return res;
 }
 
+void VRSyncNode::filterFieldMask(FieldContainer* fc, SerialEntry& sentry) {
+    if (sentry.localId == getNode()->node->getId()) { // check for sync node ID
+        sentry.fieldMask &= ~Node::ParentFieldMask; // remove parent field change!
+    }
+
+    if (factory->findType(sentry.fcTypeID)->isNodeCore()) { // don't copy GLId fields, they are not valid Ids!
+        if (dynamic_cast<Geometry*>(fc)) {
+            sentry.fieldMask &= ~Geometry::ClassicGLIdFieldMask;
+            sentry.fieldMask &= ~Geometry::AttGLIdFieldMask;
+            sentry.fieldMask &= ~Geometry::ClassicVaoGLIdFieldMask;
+            sentry.fieldMask &= ~Geometry::AttribVaoGLIdFieldMask;
+        }
+
+        if (dynamic_cast<Surface*>(fc)) {
+            sentry.fieldMask &= ~Surface::SurfaceGLIdFieldMask;
+        }
+
+        if (dynamic_cast<GeoProperty*>(fc)) {
+            sentry.fieldMask &= ~GeoProperty::GLIdFieldMask;
+        }
+
+        if (dynamic_cast<GeoMultiPropertyData*>(fc)) {
+            sentry.fieldMask &= ~GeoMultiPropertyData::GLIdFieldMask;
+        }
+
+        if (dynamic_cast<RenderBuffer*>(fc)) {
+            sentry.fieldMask &= ~RenderBuffer::GLIdFieldMask;
+        }
+
+        if (dynamic_cast<FrameBufferObject*>(fc)) {
+            sentry.fieldMask &= ~FrameBufferObject::GLIdFieldMask;
+            sentry.fieldMask &= ~FrameBufferObject::MultiSampleGLIdFieldMask;
+        }
+
+        if (dynamic_cast<TextureObjRefChunk*>(fc)) {
+            sentry.fieldMask &= ~TextureObjRefChunk::OsgGLIdFieldMask;
+            sentry.fieldMask &= ~TextureObjRefChunk::OglGLIdFieldMask;
+        }
+
+        if (dynamic_cast<UniformBufferObjStd140Chunk*>(fc)) {
+            sentry.fieldMask &= ~UniformBufferObjStd140Chunk::GLIdFieldMask;
+        }
+
+        if (dynamic_cast<ShaderStorageBufferObjStdLayoutChunk*>(fc)) {
+            sentry.fieldMask &= ~ShaderStorageBufferObjStdLayoutChunk::GLIdFieldMask;
+        }
+
+        if (dynamic_cast<TextureObjChunk*>(fc)) {
+            sentry.fieldMask &= ~TextureObjChunk::GLIdFieldMask;
+        }
+
+        if (dynamic_cast<UniformBufferObjChunk*>(fc)) {
+            sentry.fieldMask &= ~UniformBufferObjChunk::GLIdFieldMask;
+        }
+
+        if (dynamic_cast<ShaderStorageBufferObjChunk*>(fc)) {
+            sentry.fieldMask &= ~ShaderStorageBufferObjChunk::GLIdFieldMask;
+        }
+
+        if (dynamic_cast<ShaderExecutableChunk*>(fc)) {
+            sentry.fieldMask &= ~ShaderExecutableChunk::GLIdFieldMask;
+        }
+
+        if (dynamic_cast<SimpleSHLChunk*>(fc)) {
+            sentry.fieldMask &= ~SimpleSHLChunk::GLIdFieldMask;
+        }
+
+        if (dynamic_cast<ShaderProgram*>(fc)) {
+            sentry.fieldMask &= ~ShaderProgram::GLIdFieldMask;
+        }
+
+        if (dynamic_cast<ProgramChunk*>(fc)) {
+            sentry.fieldMask &= ~ProgramChunk::GLIdFieldMask;
+        }
+    }
+}
+
 void VRSyncNode::serialize_entry(ContainerChangeEntry* entry, vector<BYTE>& data, int syncNodeID) {
     FieldContainer* fcPtr = factory->getContainer(entry->uiContainerId);
     if (fcPtr) {
@@ -391,6 +499,8 @@ void VRSyncNode::serialize_entry(ContainerChangeEntry* entry, vector<BYTE>& data
         sentry.syncNodeID = syncNodeID;
         sentry.uiEntryDesc = entry->uiEntryDesc;
         sentry.fcTypeID = fcPtr->getTypeId();
+
+        filterFieldMask(fcPtr, sentry);
 
         ourBinaryDataHandler handler;
         fcPtr->copyToBin(handler, sentry.fieldMask); //calls handler->write
@@ -525,16 +635,6 @@ void VRSyncNode::handleCoreChange(FieldContainerRecPtr fcPtr, SerialEntry& sentr
 }
 
 void VRSyncNode::handleGenericChange(FieldContainerRecPtr fcPtr, SerialEntry& sentry, map<int, vector<BYTE>>& fcData) {
-    if (factory->findType(sentry.fcTypeID)->isNodeCore()) {
-        Geometry* geo = dynamic_cast<Geometry*>(fcPtr.get());
-        if (geo) { // don't copy GLId fields, they are not valid Ids!
-            sentry.fieldMask &= ~Geometry::ClassicGLIdFieldMask;
-            sentry.fieldMask &= ~Geometry::AttGLIdFieldMask;
-            sentry.fieldMask &= ~Geometry::ClassicVaoGLIdFieldMask;
-            sentry.fieldMask &= ~Geometry::AttribVaoGLIdFieldMask;
-        }
-    }
-
     // apply changes
     vector<BYTE>& FCdata = fcData[sentry.localId];
     ourBinaryDataHandler handler; //use ourBinaryDataHandler to somehow apply binary change to fieldcontainer
@@ -872,6 +972,10 @@ void VRSyncNode::update() {
     broadcastChangeList(localChanges, true);
     syncedContainer.clear();
     cout << "            / " << name << " VRSyncNode::update()" << "  < < < " << endl;
+
+    Node* node = getNode()->node;
+    Geometry* geo = dynamic_cast<Geometry*>(node->getChild(0)->getChild(0)->getCore());
+    printGeoGLIDs(geo);
 }
 
 void VRSyncNode::registerContainer(FieldContainer* c, int syncNodeID) {
@@ -881,7 +985,7 @@ void VRSyncNode::registerContainer(FieldContainer* c, int syncNodeID) {
 }
 
 //returns registered IDs
-vector<int> VRSyncNode::registerNode(Node* node) {
+vector<int> VRSyncNode::registerNode(Node* node) { // deprecated?
     vector<int> res;
     vector<int> localRes;
     vector<int> recursiveRes;
