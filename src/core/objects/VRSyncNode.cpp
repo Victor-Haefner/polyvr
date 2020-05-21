@@ -197,7 +197,7 @@ VRSyncNode::VRSyncNode(string name) : VRTransform(name) {
 //    registerNode(node);
 
 	updateFkt = VRUpdateCb::create("SyncNode update", bind(&VRSyncNode::update, this));
-	//VRScene::getCurrent()->addUpdateFkt(updateFkt, 100000);
+	VRScene::getCurrent()->addUpdateFkt(updateFkt, 100000);
 }
 
 VRSyncNode::~VRSyncNode() {
@@ -875,6 +875,7 @@ OSGChangeList* VRSyncNode::getFilteredChangeList() {
 
         if (isSubContainer(id)) {
             localChanges->addCreate(entry);
+            cout << "    isSubContainer: " << id << " " << container.size() << endl;
             registerContainer(factory->getContainer(id), container.size());
         }
     }
@@ -959,11 +960,13 @@ void VRSyncNode::sync(string uri) {
 
 //update this SyncNode
 void VRSyncNode::update() {
-//    cout << endl << " > > >  " << name << " VRSyncNode::update()" << endl;
+    cout << endl << " > > >  " << name << " VRSyncNode::update()" << endl;
+    cout <<  "  container: " << container.size() << endl;
     auto localChanges = getFilteredChangeList();
     if (!localChanges) return;
-    if (getChildrenCount() == 0) return;
+    cout <<  "  container: " << container.size() << endl;
     cout <<  "  local changelist, created: " << localChanges->getNumCreated() << ", changes: " << localChanges->getNumChanged() << endl;
+    if (getChildrenCount() == 0) return;
 
     printRegistredContainers(); // DEBUG: print registered container
     printSyncedContainers();
@@ -976,10 +979,15 @@ void VRSyncNode::update() {
     Node* node = getNode()->node;
     Geometry* geo = dynamic_cast<Geometry*>(node->getChild(0)->getChild(0)->getCore());
     printGeoGLIDs(geo);
+
+    /*Node* node1 = VRScene::getCurrent()->getRoot()->find("node1")->getNode()->node;
+    Geometry* geo1 = dynamic_cast<Geometry*>(node1->getChild(0)->getChild(0)->getCore());
+    printGeoGLIDs(geo1);*/
 }
 
 void VRSyncNode::registerContainer(FieldContainer* c, int syncNodeID) {
     UInt32 ID = c->getId();
+    if (container.count(ID)) return;
     //cout << " VRSyncNode::registerContainer " << getName() << " container: " << c->getTypeName() << " at fieldContainerId: " << ID << endl;
     container[ID] = syncNodeID;
 }
