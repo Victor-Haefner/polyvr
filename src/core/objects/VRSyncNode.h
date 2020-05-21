@@ -54,8 +54,8 @@ class VRSyncNode : public VRTransform {
         int getRegisteredSyncID(UInt32 fieldContainerID);
         bool isRegisteredRemote(const UInt32& syncID);
         vector<int> getFCChildren(FieldContainer* fcPtr, BitVector fieldMask);
-        void getAllSubContainersRec(FieldContainer* parent, vector<FieldContainer*>& res);
-        vector<FieldContainer*> getAllSubContainers(FieldContainer* parent);
+        void getAllSubContainersRec(FieldContainer* node, FieldContainer* parent, map<FieldContainer*, vector<FieldContainer*>>& res);
+        map<FieldContainer*, vector<FieldContainer*>> getAllSubContainers(FieldContainer* node);
         int findParent(map<int,vector<int>>& parentToChildren, int remoteNodeID);
 
         VRObjectPtr copy(vector<VRObjectPtr> children);
