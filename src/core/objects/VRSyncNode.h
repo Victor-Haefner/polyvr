@@ -49,6 +49,7 @@ class VRSyncNode : public VRTransform {
         vector<UInt32> syncedContainer; //Id's of container that got changes over sync (changed by remote). Needed to filter out sync changes from local Changelist to prevent cycles.
         map<string, VRSyncRemotePtr> remotes;
         map<int, int> remoteToLocalID;
+        map<int, int> localToRemoteID;
         map<UInt32, UInt32> remoteCoreToLocalNode;
         UInt32 getRegisteredContainerID(int syncID);
         int getRegisteredSyncID(UInt32 fieldContainerID);
@@ -61,7 +62,8 @@ class VRSyncNode : public VRTransform {
         VRObjectPtr copy(vector<VRObjectPtr> children);
 
         string copySceneState();
-        void handleChangeList(void* msg);
+        void handleMessage(void* msg);
+        void handleMapping(string mappingData);
         vector<FieldContainer*> findContainer(string typeName); //deprecated
         vector<FieldContainer*> getTransformationContainer(ChangeList* cl); //deprecated
         //vector<OSG::Field

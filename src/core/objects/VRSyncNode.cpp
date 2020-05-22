@@ -624,6 +624,7 @@ FieldContainerRecPtr VRSyncNode::getOrCreate(UInt32& id, SerialEntry& sentry, ma
         registerContainer(fcPtr.get(), sentry.syncNodeID);
         id = fcPtr.get()->getId();
         remoteToLocalID[sentry.localId] = id;
+        localToRemoteID[id] = sentry.localId;
         //cout << " ---- create, new ID, remote: " << sentry.localId << ", local: " << id << endl;
     }
     //cout << " VRSyncNode::getOrCreate done with " << fcPtr << endl;
@@ -686,7 +687,10 @@ void VRSyncNode::handleRemoteEntries(vector<SerialEntry>& entries, map<int, vect
         //sync of initial syncNode container
         if (sentry.syncNodeID >= 0 && sentry.syncNodeID <= 2) {
             for (auto c : container) {
-                if (c.second == sentry.syncNodeID) remoteToLocalID[sentry.localId] = c.first;
+                if (c.second == sentry.syncNodeID) {
+                    remoteToLocalID[sentry.localId] = c.first;
+                    localToRemoteID[c.first] = sentry.localId;
+                }
             }
         }
 
@@ -704,7 +708,15 @@ void VRSyncNode::handleRemoteEntries(vector<SerialEntry>& entries, map<int, vect
             //cout << "syncedContainer.push_back " << id << endl;
         }
     }
-    //justCreated.clear(); // TODO: uncomment if finished debugging
+
+    // send the ID mapping of newly created field containers back to remote sync node
+    if (justCreated.size() > 0) {
+        for (auto fc : justCreated) {
+            mappingData += "|" + toString(localToRemoteID[fc->getId()]) + ":" + toString(fc->getId());
+        }
+        justCreated.clear();
+        broadcast(mappingData);
+    }
 }
 
 void VRSyncNode::printDeserializedData(vector<SerialEntry>& entries, map<int, vector<int>>& parentToChildren, map<int, vector<BYTE>>& fcData) {
@@ -745,7 +757,7 @@ void VRSyncNode::deserializeAndApply(string& data) {
     handleRemoteEntries(entries, parentToChildren, fcData);
     printRegistredContainers();
 
-    //exportToFile("syncnode.osg");
+    exportToFile(getName()+".osg");
 
     factory->setMapper(0);
     cout << "            / " << name << " VRSyncNode::deserializeAndApply()" << "  < < <" << endl;
@@ -785,8 +797,10 @@ void VRSyncNode::printRegistredContainers() {
         UInt32 id = c.first;
         FieldContainer* fc = factory->getContainer(id);
         cout << " " << id << ", syncNodeID " << c.second;
-        for (auto IDpair : remoteToLocalID)
-            if (IDpair.second == id) cout << ", remoteID " << IDpair.first;
+
+        if (localToRemoteID.count(id))  cout << ", remoteID " << localToRemoteID[id];
+        else                            cout << ",              ";
+
         if (fc) {
             cout << ", type: " << fc->getTypeName() << ", Refs: " << fc->getRefCount();
             if (Node* node = dynamic_cast<Node*>(fc)) cout << ", N children: " << node->getNChildren();
@@ -1017,7 +1031,7 @@ void VRSyncNode::broadcastChangeList(OSGChangeList* cl, bool doDelete) {
     if (!cl) return;
     string data = serialize(cl); // serialize changes in new change list (check OSGConnection for serialization Implementation)
     if (doDelete) delete cl;
-    for (auto& remote : remotes) remote.second->send(data); // send over websocket to remote
+    broadcast(data); // send over websocket to remote
 }
 
 void VRSyncNode::sync(string uri) {
@@ -1089,13 +1103,26 @@ VRObjectPtr VRSyncNode::copy(vector<VRObjectPtr> children) {
 
 void VRSyncNode::startInterface(int port) {
     socket = VRSceneManager::get()->getSocket(port);
-    socketCb = new VRHTTP_cb( "VRSyncNode callback", bind(&VRSyncNode::handleChangeList, this, _1) );
+    socketCb = new VRHTTP_cb( "VRSyncNode callback", bind(&VRSyncNode::handleMessage, this, _1) );
     socket->setHTTPCallback(socketCb);
     socket->setType("http receive");
 }
 
 string asUri(string host, int port, string name) {
     return "ws://" + host + ":" + to_string(port) + "/" + name;
+}
+
+void VRSyncNode::handleMapping(string mappingData) {
+    auto pairs = splitString(mappingData, '|');
+    for (auto p : pairs) {
+        auto IDs = splitString(p, ':');
+        if (IDs.size() != 2) continue;
+        UInt32 lID = toInt(IDs[0]);
+        UInt32 rID = toInt(IDs[1]);
+        remoteToLocalID[rID] = lID;
+        localToRemoteID[lID] = rID;
+    }
+    printRegistredContainers();
 }
 
 //Add remote Nodes to sync with
@@ -1105,15 +1132,16 @@ void VRSyncNode::addRemote(string host, int port, string name) {
 //    sync(uri);
 }
 
-void VRSyncNode::handleChangeList(void* _args) { //TODO: rename in handleMessage
+void VRSyncNode::handleMessage(void* _args) {
     HTTP_args* args = (HTTP_args*)_args;
     if (!args->websocket) cout << "AAAARGH" << endl;
 
     //int client = args->ws_id;
     string msg = args->ws_data;
-    auto j = VRUpdateCb::create( "deserializeAndApply job", bind(&VRSyncNode::deserializeAndApply, this, msg) );
-    VRScene::getCurrent()->queueJob(j);
-    //deserializeAndApply(msg);
+    VRUpdateCbPtr job = 0;
+    if (startsWith(msg, "mapping|"))   job = VRUpdateCb::create( "sync-handleMap", bind(&VRSyncNode::handleMapping, this, msg) );
+    else                               job = VRUpdateCb::create( "sync-handleCL", bind(&VRSyncNode::deserializeAndApply, this, msg) );
+    VRScene::getCurrent()->queueJob( job );
 }
 
 //broadcast message to all remote nodes
