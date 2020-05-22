@@ -711,6 +711,7 @@ void VRSyncNode::handleRemoteEntries(vector<SerialEntry>& entries, map<int, vect
 
     // send the ID mapping of newly created field containers back to remote sync node
     if (justCreated.size() > 0) {
+        string mappingData = "mapping";
         for (auto fc : justCreated) {
             mappingData += "|" + toString(localToRemoteID[fc->getId()]) + ":" + toString(fc->getId());
         }
