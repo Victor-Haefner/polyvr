@@ -1,6 +1,7 @@
 #include "VRSyncNode.h"
 #include "VRLight.h"
 #include "core/objects/OSGObject.h"
+#include "core/objects/object/OSGCore.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/material/OSGMaterial.h"
 #include "core/objects/geometry/VRGeometry.h"
@@ -116,7 +117,7 @@ class OSGChangeList : public ChangeList {
         }
 
         void addChange(ContainerChangeEntry* entry, map<UInt32, ContainerChangeEntry*>& changedFCs) {
-            if (entry->uiEntryDesc == ContainerChangeEntry::AddReference   ||
+            /*if (entry->uiEntryDesc == ContainerChangeEntry::AddReference   ||
                 entry->uiEntryDesc == ContainerChangeEntry::SubReference   ||
                 entry->uiEntryDesc == ContainerChangeEntry::DepSubReference) {
                 ContainerChangeEntry* pEntry = getNewEntry();
@@ -132,7 +133,7 @@ class OSGChangeList : public ChangeList {
                 if (pEntry->whichField == 0 && entry->bvUncommittedChanges != 0)
                     pEntry->whichField |= *entry->bvUncommittedChanges;
                 pEntry->pList         = this;
-            } else if(entry->uiEntryDesc == ContainerChangeEntry::Change) {
+            } else*/ if (entry->uiEntryDesc == ContainerChangeEntry::Change) {
                 ContainerChangeEntry* pEntry = 0;
                 if (changedFCs.count(entry->uiContainerId)) pEntry = changedFCs[entry->uiContainerId];
                 else {
@@ -746,12 +747,17 @@ void VRSyncNode::printDeserializedData(vector<SerialEntry>& entries, map<int, ve
     }
 }
 
-void gatherLeafs(VRObjectPtr parent, vector<pair<Node*, VRObjectPtr>>& leafs, string indent = "") {
+void gatherLeafs(VRObjectPtr parent, vector<pair<Node*, VRObjectPtr>>& leafs, vector<VRObjectPtr>& inconsistentCores) {
     vector<Node*> vrChildren;
     for (auto child : parent->getChildren()) vrChildren.push_back( child->getNode()->node );
 
     vector<Node*> vrChildrenTMP;
     Node* pNode = parent->getNode()->node;
+
+    // check if a transform core changed
+    NodeCore* c1 = parent->getCore()->core;
+    NodeCore* c2 = pNode->getCore();
+    if (c1 != c2 && c2->getTypeName() != "Group") inconsistentCores.push_back(parent);
 
     // ignore geometry nodes, they are part of vrgeometry
     if (pNode->getNChildren() == 1) {
@@ -768,7 +774,7 @@ void gatherLeafs(VRObjectPtr parent, vector<pair<Node*, VRObjectPtr>>& leafs, st
         leafs.push_back( make_pair(child, parent) );
     }
 
-    for (auto child : parent->getChildren()) gatherLeafs(child, leafs, indent+" ");
+    for (auto child : parent->getChildren()) gatherLeafs(child, leafs, inconsistentCores);
 }
 
 VRObjectPtr OSGConstruct(NodeMTRecPtr n, VRObjectPtr parent, Node* geoParent = 0) {
@@ -843,9 +849,14 @@ void wrapOSGLeaf(Node* node, VRObjectPtr parent) {
 void VRSyncNode::wrapOSG() { // TODO: check for deleted nodes!
     // traverse sub tree and get unwrapped OSG nodes
     vector<pair<Node*, VRObjectPtr>> leafs; // pair of nodes and VRObjects they are linked to
-    gatherLeafs(ptr(), leafs);
-    if (leafs.size() == 1)
-        for (auto p : leafs) wrapOSGLeaf(p.first, p.second);
+    vector<VRObjectPtr> inconsistentCores;
+    gatherLeafs(ptr(), leafs, inconsistentCores);
+    for (auto p : leafs) wrapOSGLeaf(p.first, p.second);
+    for (auto i : inconsistentCores) {
+        NodeCore* c = i->getNode()->node->getCore();
+        cout << "FOUND INCONSISTENT CORE -> set core " << c->getTypeName() << " of " << i->getName() << endl;
+        i->setCore(OSGCore::create(c), i->getType(), true);
+    }
 }
 
 void VRSyncNode::deserializeAndApply(string& data) {
