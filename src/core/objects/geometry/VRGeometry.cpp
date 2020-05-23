@@ -197,6 +197,18 @@ VRGeometryPtr VRGeometry::create(string name, string primitive, string params) {
 
 VRGeometryPtr VRGeometry::ptr() { return static_pointer_cast<VRGeometry>( shared_from_this() ); }
 
+void VRGeometry::wrapOSG(OSGObjectPtr node, OSGObjectPtr geoNode) {
+    VRTransform::wrapOSG(node);
+    mesh_node = geoNode;
+    Geometry* geo = dynamic_cast<Geometry*>(geoNode->node->getCore());
+    mesh = OSGGeometry::create(geo);
+    setGeometryAttachment(geo, this);
+    meshSet = true;
+    source.type = CODE;
+    mat = VRMaterial::get(geo->getMaterial());
+    setMaterial(mat);
+}
+
 /** Set the geometry mesh (OSG geometry core) **/
 void VRGeometry::setMesh(OSGGeometryPtr geo, Reference ref, bool keep_material) {
     if (geo->geo == 0) return;

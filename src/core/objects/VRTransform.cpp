@@ -60,6 +60,12 @@ VRTransform::~VRTransform() {
 VRTransformPtr VRTransform::ptr() { return static_pointer_cast<VRTransform>( shared_from_this() ); }
 VRTransformPtr VRTransform::create(string name, bool doOpt) { return VRTransformPtr(new VRTransform(name, doOpt) ); }
 
+void VRTransform::wrapOSG(OSGObjectPtr node) {
+    VRObject::wrapOSG(node);
+    Transform* t = dynamic_cast<Transform*>(node->node->getCore());
+    if (t) setMatrix(toMatrix4d(t->getMatrix()));
+}
+
 VRObjectPtr VRTransform::copy(vector<VRObjectPtr> children) {
     VRTransformPtr t = VRTransform::create(getBaseName());
     t->setVisible(isVisible());

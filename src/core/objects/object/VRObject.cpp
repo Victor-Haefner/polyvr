@@ -249,6 +249,11 @@ void VRObject::switchCore(OSGCorePtr c) {
 void VRObject::disableCore() { osg->node->setCore( Group::create() ); }
 void VRObject::enableCore() { osg->node->setCore( core->core ); }
 
+void VRObject::wrapOSG(OSGObjectPtr node) {
+    getNode()->node = node->node;
+    core = OSGCore::create(node->node->getCore());
+}
+
 OSGObjectPtr VRObject::getNode() { return osg; }
 
 void VRObject::setSiblingPosition(int i) {

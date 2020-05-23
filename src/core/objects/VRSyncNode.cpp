@@ -3,11 +3,13 @@
 #include "core/objects/OSGObject.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/material/OSGMaterial.h"
+#include "core/objects/geometry/VRGeometry.h"
 #include "core/utils/VRStorage_template.h"
 #include "core/networking/VRSocket.h"
 #include "core/networking/VRWebSocket.h"
 #include "core/scene/VRScene.h"
 #include "core/scene/VRSceneManager.h"
+#include "core/scene/import/VRImport.h"
 #include <OpenSG/OSGMultiPassMaterial.h>
 #include <OpenSG/OSGSimpleMaterial.h>
 #include <OpenSG/OSGSimpleGeometry.h>        // Methods to create simple geos.
@@ -744,6 +746,108 @@ void VRSyncNode::printDeserializedData(vector<SerialEntry>& entries, map<int, ve
     }
 }
 
+void gatherLeafs(VRObjectPtr parent, vector<pair<Node*, VRObjectPtr>>& leafs, string indent = "") {
+    vector<Node*> vrChildren;
+    for (auto child : parent->getChildren()) vrChildren.push_back( child->getNode()->node );
+
+    vector<Node*> vrChildrenTMP;
+    Node* pNode = parent->getNode()->node;
+
+    // ignore geometry nodes, they are part of vrgeometry
+    if (pNode->getNChildren() == 1) {
+        if (auto geo = dynamic_cast<Geometry*>(pNode->getChild(0)->getCore())) {
+            pNode = pNode->getChild(0);
+        }
+    }
+
+    for (int i=0; i<pNode->getNChildren(); i++) {
+        Node* child = pNode->getChild(i);
+        vrChildrenTMP.push_back(child);
+        if (i < vrChildren.size() && vrChildren[i] == child) continue; //try to check with index
+        if (find(vrChildren.begin(), vrChildren.end(), child) != vrChildren.end()) continue;
+        leafs.push_back( make_pair(child, parent) );
+    }
+
+    for (auto child : parent->getChildren()) gatherLeafs(child, leafs, indent+" ");
+}
+
+VRObjectPtr OSGConstruct(NodeMTRecPtr n, VRObjectPtr parent, Node* geoParent = 0) {
+    if (n == 0) return 0; // TODO add an osg wrap method for each object?
+
+    VRObjectPtr tmp = 0;
+    VRMaterialPtr tmp_m;
+    VRGeometryPtr tmp_g;
+    VRTransformPtr tmp_e;
+    VRGroupPtr tmp_gr;
+
+    NodeCoreMTRecPtr core = n->getCore();
+    string t_name = core->getTypeName();
+    string name = getName(n);
+
+    if (t_name == "Group") {//OpenSG Group
+        if (n->getNChildren() == 1) { // try to optimize the tree by avoiding obsolete transforms
+            string tp = n->getChild(0)->getCore()->getTypeName();
+            if (tp == "Geometry") {
+                geoParent = n;
+                tmp = parent;
+            }
+        }
+
+        if (tmp == 0) {
+            tmp = VRObject::create(name);
+            tmp->wrapOSG(OSGObject::create(n));
+        }
+    }
+
+    else if (t_name == "Transform") {
+        if (n->getNChildren() == 1) { // try to optimize the tree by avoiding obsolete transforms
+            string tp = n->getChild(0)->getCore()->getTypeName();
+            if (tp == "Geometry") {
+                geoParent = n;
+                tmp = parent;
+            }
+        }
+
+        if (tmp == 0) {
+            tmp_e = VRTransform::create(name);
+            tmp_e->wrapOSG(OSGObject::create(n));
+            tmp = tmp_e;
+        }
+    }
+
+    else if (t_name == "Geometry") {
+        tmp_g = VRGeometry::create(name);
+        tmp_g->wrapOSG(OSGObject::create(geoParent), OSGObject::create(n));
+        geoParent = 0;
+        tmp = tmp_g;
+    }
+
+    else {
+        tmp = VRObject::create(name);
+        tmp->wrapOSG(OSGObject::create(n));
+    }
+
+    for (uint i=0;i<n->getNChildren();i++) {
+        auto obj = OSGConstruct(n->getChild(i), tmp, geoParent);
+        if (obj) tmp->addChild(obj);
+    }
+
+    return tmp;
+}
+
+void wrapOSGLeaf(Node* node, VRObjectPtr parent) {
+    auto res = OSGConstruct(node, parent);
+    if (res) parent->addChild(res);
+}
+
+void VRSyncNode::wrapOSG() { // TODO: check for deleted nodes!
+    // traverse sub tree and get unwrapped OSG nodes
+    vector<pair<Node*, VRObjectPtr>> leafs; // pair of nodes and VRObjects they are linked to
+    gatherLeafs(ptr(), leafs);
+    if (leafs.size() == 1)
+        for (auto p : leafs) wrapOSGLeaf(p.first, p.second);
+}
+
 void VRSyncNode::deserializeAndApply(string& data) {
     cout << endl << "> > >  " << name << " VRSyncNode::deserializeAndApply(), received data size: " << data.size() << endl;
     VRSyncNodeFieldContainerMapper mapper(this);
@@ -757,8 +861,9 @@ void VRSyncNode::deserializeAndApply(string& data) {
     printDeserializedData(entries, parentToChildren, fcData);
     handleRemoteEntries(entries, parentToChildren, fcData);
     printRegistredContainers();
+    wrapOSG();
 
-    exportToFile(getName()+".osg");
+    //exportToFile(getName()+".osg");
 
     factory->setMapper(0);
     cout << "            / " << name << " VRSyncNode::deserializeAndApply()" << "  < < <" << endl;
