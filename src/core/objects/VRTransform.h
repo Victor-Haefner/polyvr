@@ -80,7 +80,7 @@ class VRTransform : public VRObject {
         VRTransformPtr ptr();
         OSGTransformPtr getOSGTransformPtr();
 
-        void wrapOSG(OSGObjectPtr node);
+        virtual void wrapOSG(OSGObjectPtr node);
 
         static VRTransformPtr getParentTransform(VRObjectPtr o);
         static Vec3d computeEulerAngles(const Matrix4d& t);

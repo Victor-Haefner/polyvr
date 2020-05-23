@@ -117,6 +117,8 @@ class VRSyncNode : public VRTransform {
         void broadcast(string message);
 
         UInt32 getRemoteToLocalID(UInt32 id);
+
+        void analyseSubGraph();
 };
 
 OSG_END_NAMESPACE;

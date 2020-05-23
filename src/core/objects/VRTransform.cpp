@@ -63,7 +63,12 @@ VRTransformPtr VRTransform::create(string name, bool doOpt) { return VRTransform
 void VRTransform::wrapOSG(OSGObjectPtr node) {
     VRObject::wrapOSG(node);
     Transform* t = dynamic_cast<Transform*>(node->node->getCore());
-    if (t) setMatrix(toMatrix4d(t->getMatrix()));
+    if (t) {
+        setMatrix(toMatrix4d(t->getMatrix()));
+        this->t->trans = t;
+    } else {
+        getCore()->core = this->t->trans;
+    }
 }
 
 VRObjectPtr VRTransform::copy(vector<VRObjectPtr> children) {

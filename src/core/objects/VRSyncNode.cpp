@@ -213,8 +213,10 @@ void VRSyncNode::printChangeList(OSGChangeList* cl) {
         if (factory->getContainer(id)) type = factory->getContainer(id)->getTypeName();
         string changeType = getChangeType(entry->uiEntryDesc);
         cout << "  " << "uiContainerId: " << id << ", changeType: " << changeType << ", container: " << type;
-        cout << ", fields: " << std::bitset<64>(whichField) << ", node core changed? " << bool(whichField & Node::CoreFieldMask);
-        cout << ", node children changed? " << bool(whichField & Node::ChildrenFieldMask) << endl;
+        cout << ", fields: " << std::bitset<64>(whichField);
+        //cout << ", node core changed? " << bool(whichField & Node::CoreFieldMask);
+        //cout << ", node children changed? " << bool(whichField & Node::ChildrenFieldMask);
+        cout << endl;
     };
 
     cout << " Created:" << endl;
@@ -565,7 +567,7 @@ void VRSyncNode::serialize_entry(ContainerChangeEntry* entry, vector<BYTE>& data
 
 string VRSyncNode::serialize(ChangeList* clist) {
     int counter = 0; //Debugging
-    //cout << "> > >  " << name << " VRSyncNode::serialize()" << endl; //Debugging
+    cout << "> > >  " << name << " VRSyncNode::serialize()" << endl; //Debugging
 
     vector<BYTE> data;
 
@@ -581,8 +583,8 @@ string VRSyncNode::serialize(ChangeList* clist) {
         counter++;//Debugging
     }
 
-    //cout << "serialized entries: " << counter << endl; //Debugging
-    //cout << "            / " << name << " / VRSyncNode::serialize()" <<"  < < <" << endl; //Debugging
+    cout << "serialized entries: " << counter << endl; //Debugging
+    cout << "            / " << name << " / VRSyncNode::serialize()" <<"  < < <" << endl; //Debugging
 
     return base64_encode(&data[0], data.size());
 }
@@ -757,7 +759,7 @@ void gatherLeafs(VRObjectPtr parent, vector<pair<Node*, VRObjectPtr>>& leafs, ve
     // check if a transform core changed
     NodeCore* c1 = parent->getCore()->core;
     NodeCore* c2 = pNode->getCore();
-    if (c1 != c2 && c2->getTypeName() != "Group") inconsistentCores.push_back(parent);
+    if (c1 != c2 && c2 && c2->getTypeName() != "Group") inconsistentCores.push_back(parent);
 
     // ignore geometry nodes, they are part of vrgeometry
     if (pNode->getNChildren() == 1) {
@@ -790,52 +792,43 @@ VRObjectPtr OSGConstruct(NodeMTRecPtr n, VRObjectPtr parent, Node* geoParent = 0
     string t_name = core->getTypeName();
     string name = getName(n);
 
-    if (t_name == "Group") {//OpenSG Group
-        if (n->getNChildren() == 1) { // try to optimize the tree by avoiding obsolete transforms
+    // try to optimize the tree by avoiding obsolete transforms
+    if (t_name == "Group" || t_name == "Transform") {
+        if (n->getNChildren() == 1) {
             string tp = n->getChild(0)->getCore()->getTypeName();
             if (tp == "Geometry") {
                 geoParent = n;
                 tmp = parent;
             }
         }
-
-        if (tmp == 0) {
-            tmp = VRObject::create(name);
-            tmp->wrapOSG(OSGObject::create(n));
-        }
     }
 
-    else if (t_name == "Transform") {
-        if (n->getNChildren() == 1) { // try to optimize the tree by avoiding obsolete transforms
-            string tp = n->getChild(0)->getCore()->getTypeName();
-            if (tp == "Geometry") {
-                geoParent = n;
-                tmp = parent;
-            }
-        }
-
-        if (tmp == 0) {
-            tmp_e = VRTransform::create(name);
-            tmp_e->wrapOSG(OSGObject::create(n));
-            tmp = tmp_e;
-        }
+    if (tmp == 0 && t_name == "Group") {
+        tmp = VRObject::create(name);
+        tmp->wrapOSG(OSGObject::create(n));
     }
 
-    else if (t_name == "Geometry") {
+    if (tmp == 0 && t_name == "Transform") {
+        tmp_e = VRTransform::create(name);
+        tmp_e->wrapOSG(OSGObject::create(n));
+        tmp = tmp_e;
+    }
+
+    if (t_name == "Geometry") {
         tmp_g = VRGeometry::create(name);
         tmp_g->wrapOSG(OSGObject::create(geoParent), OSGObject::create(n));
         geoParent = 0;
         tmp = tmp_g;
     }
 
-    else {
+    if (tmp == 0) { // fallback
         tmp = VRObject::create(name);
         tmp->wrapOSG(OSGObject::create(n));
     }
 
-    for (uint i=0;i<n->getNChildren();i++) {
+    for (uint i=0;i<n->getNChildren();i++) { // recursion
         auto obj = OSGConstruct(n->getChild(i), tmp, geoParent);
-        if (obj) tmp->addChild(obj);
+        if (obj) tmp->addChild(obj, false);
     }
 
     return tmp;
@@ -843,7 +836,7 @@ VRObjectPtr OSGConstruct(NodeMTRecPtr n, VRObjectPtr parent, Node* geoParent = 0
 
 void wrapOSGLeaf(Node* node, VRObjectPtr parent) {
     auto res = OSGConstruct(node, parent);
-    if (res) parent->addChild(res);
+    if (res) parent->addChild(res, false);
 }
 
 void VRSyncNode::wrapOSG() { // TODO: check for deleted nodes!
@@ -851,15 +844,14 @@ void VRSyncNode::wrapOSG() { // TODO: check for deleted nodes!
     vector<pair<Node*, VRObjectPtr>> leafs; // pair of nodes and VRObjects they are linked to
     vector<VRObjectPtr> inconsistentCores;
     gatherLeafs(ptr(), leafs, inconsistentCores);
+
+    // TODO: wrapping the nodes breaks DnD sync
     for (auto p : leafs) wrapOSGLeaf(p.first, p.second);
-    for (auto i : inconsistentCores) {
-        NodeCore* c = i->getNode()->node->getCore();
-        cout << "FOUND INCONSISTENT CORE -> set core " << c->getTypeName() << " of " << i->getName() << endl;
-        i->setCore(OSGCore::create(c), i->getType(), true);
-    }
+    for (auto i : inconsistentCores) i->wrapOSG(i->getNode());
 }
 
 void VRSyncNode::deserializeAndApply(string& data) {
+    if (data.size() == 0) return;
     cout << endl << "> > >  " << name << " VRSyncNode::deserializeAndApply(), received data size: " << data.size() << endl;
     VRSyncNodeFieldContainerMapper mapper(this);
     factory->setMapper(&mapper);
@@ -871,7 +863,7 @@ void VRSyncNode::deserializeAndApply(string& data) {
     deserializeEntries(data, entries, parentToChildren, fcData);
     printDeserializedData(entries, parentToChildren, fcData);
     handleRemoteEntries(entries, parentToChildren, fcData);
-    printRegistredContainers();
+    //printRegistredContainers();
     wrapOSG();
 
     //exportToFile(getName()+".osg");
@@ -1170,10 +1162,16 @@ void VRSyncNode::update() {
     auto localChanges = getFilteredChangeList();
     if (!localChanges) return;
     if (getChildrenCount() == 0) return;
+    if (localChanges->getNumCreated() == 0 && localChanges->getNumChanged() == 0) return;
     cout << endl << " > > >  " << name << " VRSyncNode::update()" << endl;
     cout <<  "  local changelist, created: " << localChanges->getNumCreated() << ", changes: " << localChanges->getNumChanged() << endl;
 
-    printRegistredContainers(); // DEBUG: print registered container
+
+    ChangeList* cl = applicationThread->getChangeList();
+    printChangeList((OSGChangeList*)cl);
+
+
+    //printRegistredContainers(); // DEBUG: print registered container
     printSyncedContainers();
     printChangeList(localChanges);
 
@@ -1239,7 +1237,7 @@ void VRSyncNode::handleMapping(string mappingData) {
         remoteToLocalID[rID] = lID;
         localToRemoteID[lID] = rID;
     }
-    printRegistredContainers();
+    //printRegistredContainers();
 }
 
 //Add remote Nodes to sync with
@@ -1262,7 +1260,7 @@ void VRSyncNode::handleMessage(void* _args) {
 }
 
 //broadcast message to all remote nodes
-void VRSyncNode::broadcast(string message){
+void VRSyncNode::broadcast(string message) {
     for (auto& remote : remotes) {
         if (!remote.second->send(message)) {
             cout << "Failed to send message to remote." << endl;
@@ -1296,6 +1294,22 @@ bool VRSyncRemote::send(string message){
 }
 
 
+void printNode(VRObjectPtr obj, string indent = "") {
+    cout << indent << "obj " << obj->getName() << " (" << obj->getType() << ")";
+    cout << ", nodeID: " << obj->getNode()->node->getId();
+    cout << ", nde coreID: " << obj->getNode()->node->getCore()->getId() << ", nde coreType: " << obj->getNode()->node->getCore()->getTypeName();
+    cout << ", obj coreID: " << obj->getCore()->core->getId() << ", obj coreType: " << obj->getCore()->core->getTypeName();
+    if (auto geo = dynamic_pointer_cast<VRGeometry>(obj)) cout << ", geoNodeID: " << geo->getNode()->node->getChild(0);
+    cout << endl;
+
+    for (auto c : obj->getChildren()) printNode(c, indent+" ");
+}
+
+void VRSyncNode::analyseSubGraph() {
+    cout << "VRSyncRemote::analyseSubGraph" << endl;
+    printNode(ptr());
+    printRegistredContainers();
+}
 
 
 

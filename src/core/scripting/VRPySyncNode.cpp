@@ -13,6 +13,7 @@ PyMethodDef VRPySyncNode::methods[] = {
     {"addRemote", PyWrap(SyncNode, addRemote, "adds a SyncRemote", void, string, int, string) },
     {"broadcast", PyWrap(SyncNode, broadcast, "broadcasts a message to all SyncRemotes", void, string) },
     {"update", PyWrap(SyncNode, update, "update", void) },
+    {"analyseSubGraph", PyWrap(SyncNode, analyseSubGraph, "Print subgraph to console", void) },
     {NULL}  /* Sentinel */
 };
 

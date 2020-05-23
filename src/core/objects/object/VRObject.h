@@ -60,7 +60,7 @@ class VRObject : public std::enable_shared_from_this<VRObject>, public VRName, p
         static VRObjectPtr create(string name = "None");
         VRObjectPtr ptr();
 
-        void wrapOSG(OSGObjectPtr node);
+        virtual void wrapOSG(OSGObjectPtr node);
 
         int getID();
         string getType();
