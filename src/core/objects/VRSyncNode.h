@@ -18,7 +18,7 @@ ptrFwd(VRSyncRemote);
 
 class VRSyncRemote {//: public VRName {
     private:
-        map<int, int> mapping; // <remote container ID, local container ID>
+        map<UInt32, UInt32> mapping; // <remote container ID, local container ID>
         string uri;
 
         VRWebSocketPtr socket;
@@ -44,20 +44,21 @@ class VRSyncNode : public VRTransform {
         vector<UInt32> createdNodes; //IDs of the currently created nodes/children
         vector<FieldContainerRecPtr> justCreated; //IDs of the currently created nodes/children
 
-        map<int, int> container; // local containers, sub-set of containers which need to be synced for collaboration
-        //vector<int> cores; //lists IDs of nodecores
+        map<UInt32, UInt32> container; // local containers, sub-set of containers which need to be synced for collaboration
+        //vector<UInt32> cores; //lists IDs of nodecores
         vector<UInt32> syncedContainer; //Id's of container that got changes over sync (changed by remote). Needed to filter out sync changes from local Changelist to prevent cycles.
         map<string, VRSyncRemotePtr> remotes;
-        map<int, int> remoteToLocalID;
-        map<int, int> localToRemoteID;
+        map<UInt32, UInt32> remoteToLocalID;
+        map<UInt32, UInt32> localToRemoteID;
         map<UInt32, UInt32> remoteCoreToLocalNode;
-        UInt32 getRegisteredContainerID(int syncID);
-        int getRegisteredSyncID(UInt32 fieldContainerID);
+        map<UInt32, VRObjectWeakPtr> nodeToVRObject;
+        UInt32 getRegisteredContainerID(UInt32 syncID);
+        UInt32 getRegisteredSyncID(UInt32 fieldContainerID);
         bool isRegisteredRemote(const UInt32& syncID);
-        vector<int> getFCChildren(FieldContainer* fcPtr, BitVector fieldMask);
+        vector<UInt32> getFCChildren(FieldContainer* fcPtr, BitVector fieldMask);
         void getAllSubContainersRec(FieldContainer* node, FieldContainer* parent, map<FieldContainer*, vector<FieldContainer*>>& res);
         map<FieldContainer*, vector<FieldContainer*>> getAllSubContainers(FieldContainer* node);
-        int findParent(map<int,vector<int>>& parentToChildren, int remoteNodeID);
+        UInt32 findParent(map<UInt32,vector<UInt32>>& parentToChildren, UInt32 remoteNodeID);
 
         VRObjectPtr copy(vector<VRObjectPtr> children);
 
@@ -69,24 +70,28 @@ class VRSyncNode : public VRTransform {
         //vector<OSG::Field
 
         void filterFieldMask(FieldContainer* fc, SerialEntry& sentry);
-        void serialize_entry(ContainerChangeEntry* entry, vector<BYTE>& data, int syncNodeID);
+        void serialize_entry(ContainerChangeEntry* entry, vector<BYTE>& data, UInt32 syncNodeID);
         string serialize(ChangeList* clist);
 
-        void handleChildrenChange(FieldContainerRecPtr fcPtr, SerialEntry& sentry, map<int, vector<int>>& parentToChildren);
+        void handleChildrenChange(FieldContainerRecPtr fcPtr, SerialEntry& sentry, map<UInt32, vector<UInt32>>& parentToChildren);
         void handleCoreChange(FieldContainerRecPtr fcPtr, SerialEntry& sentry);
-        void handleGenericChange(FieldContainerRecPtr fcPtr, SerialEntry& sentry, map<int, vector<BYTE>>& fcData);
-        FieldContainerRecPtr getOrCreate(UInt32& id, SerialEntry& sentry, map<int, vector<int>>& parentToChildren);
-        void printDeserializedData(vector<SerialEntry>& entries, map<int, vector<int>>& parentToChildren, map<int, vector<BYTE>>& fcData);
-        void handleRemoteEntries(vector<SerialEntry>& entries, map<int, vector<int>>& parentToChildren, map<int, vector<BYTE>>& fcData);
-        void deserializeEntries(string& data, vector<SerialEntry>& entries, map<int, vector<int>>& parentToChildren, map<int, vector<BYTE>>& fcData);
+        void handleGenericChange(FieldContainerRecPtr fcPtr, SerialEntry& sentry, map<UInt32, vector<BYTE>>& fcData);
+        FieldContainerRecPtr getOrCreate(UInt32& id, SerialEntry& sentry, map<UInt32, vector<UInt32>>& parentToChildren);
+        void printDeserializedData(vector<SerialEntry>& entries, map<UInt32, vector<UInt32>>& parentToChildren, map<UInt32, vector<BYTE>>& fcData);
+        void handleRemoteEntries(vector<SerialEntry>& entries, map<UInt32, vector<UInt32>>& parentToChildren, map<UInt32, vector<BYTE>>& fcData);
+        void deserializeEntries(string& data, vector<SerialEntry>& entries, map<UInt32, vector<UInt32>>& parentToChildren, map<UInt32, vector<BYTE>>& fcData);
         void deserializeAndApply(string& data);
-        void deserializeChildrenData(vector<BYTE>& childrenData, map<int,vector<int>>& parentToChildren);
+        void deserializeChildrenData(vector<BYTE>& childrenData, map<UInt32,vector<UInt32>>& parentToChildren);
+
+        void gatherLeafs(VRObjectPtr parent, vector<pair<Node*, VRObjectPtr>>& leafs, vector<VRObjectPtr>& inconsistentCores);
+        VRObjectPtr OSGConstruct(NodeMTRecPtr n, VRObjectPtr parent, Node* geoParent = 0);
+        void wrapOSGLeaf(Node* node, VRObjectPtr parent);
         void wrapOSG();
 
-        void registerContainer(FieldContainer* c, int syncNodeID = -1);
-        vector<int> registerNode(Node* c); //returns all registered IDs
+        void registerContainer(FieldContainer* c, UInt32 syncNodeID = -1);
+        vector<UInt32> registerNode(Node* c); //returns all registered IDs
 
-        void handleNode(FieldContainerRecPtr& fcPtr, UInt32 nodeID, UInt32 coreID, map<int,vector<int>>& parentToChildren);
+        void handleNode(FieldContainerRecPtr& fcPtr, UInt32 nodeID, UInt32 coreID, map<UInt32,vector<UInt32>>& parentToChildren);
         void handleNodeCore(FieldContainerRecPtr& fcPtr, UInt32 remoteNodeID);
 
         bool isRemoteChange(const UInt32& id);
