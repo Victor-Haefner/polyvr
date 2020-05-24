@@ -33,7 +33,7 @@ void VRGuiVectorEntry::init(string placeholder, string label,  function<void(OSG
     auto frame = gtk_widget_get_parent(ph);
     gtk_container_remove((GtkContainer*)frame, ph);
 
-    auto hb = gtk_hbox_new(true, 0);
+    auto hb = gtk_hbox_new(false, 0);
     gtk_container_add((GtkContainer*)frame, hb);
 
     auto lbl = gtk_label_new(label.c_str());
@@ -53,13 +53,13 @@ void VRGuiVectorEntry::init(string placeholder, string label,  function<void(OSG
     auto s2 = gtk_vseparator_new();
     auto s3 = gtk_vseparator_new();
 
-    gtk_box_pack_start((GtkBox*)hb, lbl, false, false, 2);
-    gtk_box_pack_start((GtkBox*)hb, s1, false, false, 0);
-    gtk_box_pack_start((GtkBox*)hb, (GtkWidget*)ex, false, false, 0);
-    gtk_box_pack_start((GtkBox*)hb, s2, false, false, 0);
-    gtk_box_pack_start((GtkBox*)hb, (GtkWidget*)ey, false, false, 0);
-    gtk_box_pack_start((GtkBox*)hb, s3, false, false, 0);
-    gtk_box_pack_start((GtkBox*)hb, (GtkWidget*)ez, false, false, 0);
+    gtk_box_pack_start((GtkBox*)hb, lbl, true, true, 2);
+    gtk_box_pack_start((GtkBox*)hb, s1, true, true, 0);
+    gtk_box_pack_start((GtkBox*)hb, (GtkWidget*)ex, true, true, 0);
+    gtk_box_pack_start((GtkBox*)hb, s2, true, true, 0);
+    gtk_box_pack_start((GtkBox*)hb, (GtkWidget*)ey, true, true, 0);
+    gtk_box_pack_start((GtkBox*)hb, s3, true, true, 0);
+    gtk_box_pack_start((GtkBox*)hb, (GtkWidget*)ez, true, true, 0);
     gtk_widget_show_all(frame);
 
     function<bool(GdkEventFocus*)> sif = bind(&VRGuiVectorEntry::proxy, placeholders::_1, sig, ex, ey, ez);
@@ -78,7 +78,7 @@ void VRGuiVectorEntry::init2D(string placeholder, string label,  function<void(O
     auto frame = gtk_widget_get_parent(ph);
     gtk_container_remove((GtkContainer*)frame, ph);
 
-    auto hb = gtk_hbox_new(true, 0);
+    auto hb = gtk_hbox_new(false, 0);
     gtk_container_add((GtkContainer*)frame, hb);
 
     auto lbl = gtk_label_new(label.c_str());
@@ -94,11 +94,11 @@ void VRGuiVectorEntry::init2D(string placeholder, string label,  function<void(O
     auto s1 = gtk_vseparator_new();
     auto s2 = gtk_vseparator_new();
 
-    gtk_box_pack_start((GtkBox*)hb, lbl, false, false, 2);
-    gtk_box_pack_start((GtkBox*)hb, s1, false, false, 0);
-    gtk_box_pack_start((GtkBox*)hb, (GtkWidget*)ex, false, false, 0);
-    gtk_box_pack_start((GtkBox*)hb, s2, false, false, 0);
-    gtk_box_pack_start((GtkBox*)hb, (GtkWidget*)ey, false, false, 0);
+    gtk_box_pack_start((GtkBox*)hb, lbl, true, true, 2);
+    gtk_box_pack_start((GtkBox*)hb, s1, true, true, 0);
+    gtk_box_pack_start((GtkBox*)hb, (GtkWidget*)ex, true, true, 0);
+    gtk_box_pack_start((GtkBox*)hb, s2, true, true, 0);
+    gtk_box_pack_start((GtkBox*)hb, (GtkWidget*)ey, true, true, 0);
     gtk_widget_show_all(frame);
 
     function<bool(GdkEventFocus*)> sif = bind(&VRGuiVectorEntry::proxy2D, placeholders::_1, sig, ex, ey);
