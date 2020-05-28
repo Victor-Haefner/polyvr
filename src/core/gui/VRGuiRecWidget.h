@@ -6,7 +6,9 @@
 #include <OpenSG/OSGConfig.h>
 #include <gdk/gdkevents.h>
 
-namespace Gtk{ class Dialog; class Label; }
+struct _GtkDialog;
+struct _GtkLabel;
+struct _GdkEventAny;
 
 OSG_BEGIN_NAMESPACE;
 
@@ -16,15 +18,15 @@ class VRGuiRecWidget {
 
         VRUpdateCbPtr updateCb;
 
-        Gtk::Dialog* diag = 0;
-        Gtk::Label* lbl = 0;
+        _GtkDialog* diag = 0;
+        _GtkLabel* lbl = 0;
 
         void on_codec_changed();
         void on_bitrate_changed();
 
         void update();
         void buttonHandler(int i);
-        bool deleteHandler(GdkEventAny* e);
+        bool deleteHandler(_GdkEventAny* e);
 
     public:
         VRGuiRecWidget();

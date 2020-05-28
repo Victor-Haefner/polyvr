@@ -8,7 +8,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const PosePtr& p) { return "Pose"; }
 template<> string typeName(const Pose& p) { return "Pose"; }
 
 Pose::Pose() { set(Vec3d(), Vec3d(0,0,-1), Vec3d(0,1,0), Vec3d(1,1,1)); }

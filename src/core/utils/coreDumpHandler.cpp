@@ -14,7 +14,9 @@ const char* dumpFile = "/tmp/core";
 
 
 void testSignal(int sig) {
+#ifndef _WIN32
     kill(getpid(), sig);
+#endif
 }
 
 #ifndef _WIN32

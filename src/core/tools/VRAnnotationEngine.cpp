@@ -6,6 +6,7 @@
 #include "core/objects/geometry/VRGeoData.h"
 #include "core/tools/VRText.h"
 #include "core/utils/toString.h"
+#include "core/scene/VRScene.h"
 
 #define GLSL(shader) #shader
 
@@ -15,23 +16,33 @@ using namespace OSG;
 
 template<> string typeName(const VRAnnotationEngine& t) { return "AnnotationEngine"; }
 
+bool hasGS = false;
+
 VRAnnotationEngine::VRAnnotationEngine(string name) : VRGeometry(name) {
     fg = Color4f(0,0,0,1);
     bg = Color4f(1,0,1,0);
 
     type = "AnnotationEngine";
 
+    hasGS = VRScene::getCurrent()->hasGeomShader();
+    //cout << "VRAnnotationEngine::VRAnnotationEngine " << name << "  " << hasGS << endl;
+
     mat = VRMaterial::create("AnnEngMat");
 #ifndef OSG_OGL_ES2
-    mat->setVertexShader(vp, "annotationVS");
-    mat->setFragmentShader(fp, "annotationFS");
-    mat->setFragmentShader(dfp, "annotationDFS", true);
-    mat->setGeometryShader(gp, "annotationGS");
-#else
-    mat->setVertexShader(vp_es2, "annotationVSes2");
-    mat->setFragmentShader(fp_es2, "annotationFSes2");
+    if (hasGS) {
+        mat->setVertexShader(vp, "annotationVS");
+        mat->setFragmentShader(fp, "annotationFS");
+        mat->setFragmentShader(dfp, "annotationDFS", true);
+        mat->setGeometryShader(gp, "annotationGS");
+    } else {
+#endif
+        mat->setVertexShader(vp_es2, "annotationVSes2");
+        mat->setFragmentShader(fp_es2, "annotationFSes2");
+#ifndef OSG_OGL_ES2
+    }
 #endif
     mat->setPointSize(5);
+    mat->setMagMinFilter(GL_LINEAR, GL_LINEAR); // TODO: check if texture has mipmaps!
     setMaterial(mat);
     updateTexture();
 
@@ -63,31 +74,35 @@ void VRAnnotationEngine::resize(Label& l, Vec3d p, int N) {
     int eN = l.entries.size();
 
 #ifndef OSG_OGL_ES2
-    for (int i=0; i<eN; i++) data->setVert(l.entries[i], Vec3d(), Vec3d()); // clear old buffer
+    if (hasGS) {
+        for (int i=0; i<eN; i++) data->setVert(l.entries[i], Vec3d(), Vec3d()); // clear old buffer
 
-    if (N <= eN) return;
-    l.entries.resize(N, 0);
-    int pN = data->size();
+        if (N <= eN) return;
+        l.entries.resize(N, 0);
+        int pN = data->size();
 
-    for (int i=0; i<N-eN; i++) {
-        data->pushVert(p, Vec3d());
-        data->pushPoint();
-        l.entries[eN+i] = pN+i;
-    }
-#else
-    for (int i=0; i<eN; i++) data->setVert(l.entries[i], Vec3d(), Vec3d(), Vec2d()); // clear old buffer
-
-    if (N <= eN) return;
-    l.entries.resize(N, 0);
-    int pN = data->size();
-
-    for (int i=eN; i<N; i++) {
-        data->pushVert(p, Vec3d(), Vec2d());
-        l.entries[i] = pN+i-eN;
-        if (i%4 == 3) {
-            data->pushTri(-4,-3,-2);
-            data->pushTri(-4,-2,-1);
+        for (int i=0; i<N-eN; i++) {
+            data->pushVert(p, Vec3d());
+            data->pushPoint();
+            l.entries[eN+i] = pN+i;
         }
+    } else {
+#endif
+        for (int i=0; i<eN; i++) data->setVert(l.entries[i], Vec3d(), Vec3d(), Vec2d()); // clear old buffer
+
+        if (N <= eN) return;
+        l.entries.resize(N, 0);
+        int pN = data->size();
+
+        for (int i=eN; i<N; i++) {
+            data->pushVert(p, Vec3d(), Vec2d());
+            l.entries[i] = pN+i-eN;
+            if (i%4 == 3) {
+                data->pushTri(-4,-3,-2);
+                data->pushTri(-4,-2,-1);
+            }
+        }
+#ifndef OSG_OGL_ES2
     }
 #endif
 
@@ -115,53 +130,57 @@ void VRAnnotationEngine::set(int i0, Vec3d p0, string txt) {
         auto& l = labels[i];
 
 #ifndef OSG_OGL_ES2
-        int N = ceil(Ngraphemes/3.0); // number of points, 3 chars per point
-        resize(l,p,N + 4); // plus 4 bounding points
+        if (hasGS) {
+            int N = ceil(Ngraphemes/3.0); // number of points, 3 chars per point
+            resize(l,p,N + 4); // plus 4 bounding points
 
-        for (int j=0; j<N; j++) {
-            char c[] = {0,0,0};
-            for (int k = 0; k<3; k++) {
-                if (j*3+k < (int)graphemes.size()) {
-                    string grapheme = graphemes[j*3+k];
-                    c[k] = characterIDs[grapheme];
+            for (int j=0; j<N; j++) {
+                char c[] = {0,0,0};
+                for (int k = 0; k<3; k++) {
+                    if (j*3+k < (int)graphemes.size()) {
+                        string grapheme = graphemes[j*3+k];
+                        c[k] = characterIDs[grapheme];
+                    }
                 }
+                float f = c[0] + c[1]*256 + c[2]*256*256;
+                int k = l.entries[j];
+                data->setVert(k, p, Vec3d(f,0,j));
             }
-            float f = c[0] + c[1]*256 + c[2]*256*256;
-            int k = l.entries[j];
-            data->setVert(k, p, Vec3d(f,0,j));
-        }
 
-        // bounding points to avoid word clipping
-        data->setVert(l.entries[N], p+Vec3d(-0.25*size, -0.5*size, 0), Vec3d(0,0,-1));
-        data->setVert(l.entries[N+1], p+Vec3d(-0.25*size,  0.5*size, 0), Vec3d(0,0,-1));
-        data->setVert(l.entries[N+2], p+Vec3d((Ngraphemes-0.25)*size, -0.5*size, 0), Vec3d(0,0,-1));
-        data->setVert(l.entries[N+3], p+Vec3d((Ngraphemes-0.25)*size,  0.5*size, 0), Vec3d(0,0,-1));
-#else
-        int N = Ngraphemes;
+            // bounding points to avoid word clipping
+            data->setVert(l.entries[N], p+Vec3d(-0.25*size, -0.5*size, 0), Vec3d(0,0,-1));
+            data->setVert(l.entries[N+1], p+Vec3d(-0.25*size,  0.5*size, 0), Vec3d(0,0,-1));
+            data->setVert(l.entries[N+2], p+Vec3d((Ngraphemes-0.25)*size, -0.5*size, 0), Vec3d(0,0,-1));
+            data->setVert(l.entries[N+3], p+Vec3d((Ngraphemes-0.25)*size,  0.5*size, 0), Vec3d(0,0,-1));
+        } else {
+#endif
+            int N = Ngraphemes;
 
-        resize(l,p,N*4);
-        float H = size*0.5;
-        float D = charTexSize*0.5;
-        float P = texPadding;
+            resize(l,p,N*4);
+            float H = size*0.5;
+            float D = charTexSize*0.5;
+            float P = texPadding;
 
-        Vec3d orientationX = -orientationDir.cross(orientationUp);
+            Vec3d orientationX = -orientationDir.cross(orientationUp);
 
-        for (int j=0; j<N; j++) {
-            string grapheme = graphemes[j];
-            char c = characterIDs[grapheme] - 1;
-            float u1 = P+c*D*2;
-            float u2 = P+(c+1)*D*2;
-            float X = H*2*j;
+            for (int j=0; j<N; j++) {
+                string grapheme = graphemes[j];
+                char c = characterIDs[grapheme] - 1;
+                float u1 = P+c*D*2;
+                float u2 = P+(c+1)*D*2;
+                float X = H*2*j;
 
-            Vec3d p1 = p + orientationX*(-H+X) + orientationUp*(H*2);
-            Vec3d p2 = p + orientationX*( H+X) + orientationUp*(H*2);
-            Vec3d p3 = p + orientationX*( H+X) - orientationUp*(H*2);
-            Vec3d p4 = p + orientationX*(-H+X) - orientationUp*(H*2);
+                Vec3d n1 = orientationX*(-H+X) + orientationUp*(H*2);
+                Vec3d n2 = orientationX*( H+X) + orientationUp*(H*2);
+                Vec3d n3 = orientationX*( H+X) - orientationUp*(H*2);
+                Vec3d n4 = orientationX*(-H+X) - orientationUp*(H*2);
 
-            data->setVert(l.entries[j*4+0], p1, Vec3d(0,0,-1), Vec2d(u1,1));
-            data->setVert(l.entries[j*4+1], p2, Vec3d(0,0,-1), Vec2d(u2,1));
-            data->setVert(l.entries[j*4+2], p3, Vec3d(0,0,-1), Vec2d(u2,0));
-            data->setVert(l.entries[j*4+3], p4, Vec3d(0,0,-1), Vec2d(u1,0));
+                data->setVert(l.entries[j*4+0], p, n1, Vec2d(u1,1));
+                data->setVert(l.entries[j*4+1], p, n2, Vec2d(u2,1));
+                data->setVert(l.entries[j*4+2], p, n3, Vec2d(u2,0));
+                data->setVert(l.entries[j*4+3], p, n4, Vec2d(u1,0));
+            }
+#ifndef OSG_OGL_ES2
         }
 #endif
     }
@@ -368,23 +387,40 @@ void main() {
 
 string VRAnnotationEngine::vp_es2 =
 GLSL(
-varying vec4 vertex;
-varying vec3 normal;
 varying vec2 texCoord;
 
 attribute vec4 osg_Vertex;
 attribute vec4 osg_Normal;
 attribute vec2 osg_MultiTexCoord0;
 
+uniform float doBillboard;
+uniform vec2 OSGViewportSize;
+
+#ifdef __EMSCRIPTEN__
 uniform mat4 OSGModelViewProjectionMatrix;
+uniform mat4 OSGModelViewMatrix;
+uniform mat4 OSGProjectionMatrix;
+#endif
 
 void main( void ) {
+    if (doBillboard < 0.5) {
 #ifdef __EMSCRIPTEN__
-    gl_Position = OSGModelViewProjectionMatrix*osg_Vertex;
+        gl_Position = OSGModelViewProjectionMatrix * (osg_Vertex + osg_Normal);
 #else
-    gl_Position = gl_ModelViewProjectionMatrix*osg_Vertex;
+        gl_Position = gl_ModelViewProjectionMatrix * (osg_Vertex + osg_Normal);
 #endif
-    normal = osg_Normal.xyz;
+    } else {
+        float a = OSGViewportSize.y/OSGViewportSize.x;
+        vec4 norm = osg_Normal;
+        norm.x = norm.x*a;
+        norm.z = 0.0;
+        norm.w = 0.0;
+#ifdef __EMSCRIPTEN__
+        gl_Position = OSGModelViewProjectionMatrix * osg_Vertex + osg_Normal;
+#else
+        gl_Position = gl_ModelViewProjectionMatrix * osg_Vertex + norm;
+#endif
+    }
     texCoord = osg_MultiTexCoord0;
 }
 );
@@ -399,7 +435,7 @@ uniform sampler2D texture;
 varying vec2 texCoord;
 
 void main( void ) {
-    //gl_FragColor = vec4(1.0,0.0,0.0,1.0);
+    //gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
     //gl_FragColor = vec4(texCoord.x,texCoord.y,0.0,1.0);
     gl_FragColor = texture2D(texture, texCoord);
 }

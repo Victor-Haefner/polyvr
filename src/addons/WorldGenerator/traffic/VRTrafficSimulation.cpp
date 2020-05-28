@@ -27,7 +27,6 @@
 #include "addons/Semantics/Reasoning/VRProperty.h"
 #include "core/tools/VRAnnotationEngine.h"
 
-#include <boost/bind.hpp>
 #include <boost/thread/recursive_mutex.hpp>
 #include <thread>
 
@@ -179,7 +178,7 @@ VRTrafficSimulation::VRTrafficSimulation() : VRObject("TrafficSimulation") {
     mtx2 = new boost::recursive_mutex();
     PLock lock(*mtx);
 
-    updateCb = VRUpdateCb::create( "traffic", boost::bind(&VRTrafficSimulation::updateSimulation, this) );
+    updateCb = VRUpdateCb::create( "traffic", bind(&VRTrafficSimulation::updateSimulation, this) );
     VRScene::getCurrent()->addUpdateFkt(updateCb);
 
     auto box = VRGeometry::create("boxCar");
@@ -206,7 +205,7 @@ VRTrafficSimulation::VRTrafficSimulation() : VRObject("TrafficSimulation") {
     setupLightMaterial("carLightOrangeOff", Color3f(0.5,0.35,0.05), true);
     setupLightMaterial("carLightOrangeBlink", Color3f(1,0.7,0.1), false);
 
-    turnSignalCb = VRUpdateCb::create( "turnSignal", boost::bind(&VRTrafficSimulation::updateTurnSignal, this) );
+    turnSignalCb = VRUpdateCb::create( "turnSignal", bind(&VRTrafficSimulation::updateTurnSignal, this) );
     VRScene::getCurrent()->addTimeoutFkt(turnSignalCb, 0, 500);
 
     initiateWorker();
@@ -299,7 +298,7 @@ void VRTrafficSimulation::setRoadNetwork(VRRoadNetworkPtr rds) {
 
 void VRTrafficSimulation::initiateWorker() {
     auto scene = VRScene::getCurrent();
-    worker = VRThreadCb::create( "traffic thread", boost::bind(&VRTrafficSimulation::trafficSimThread, this, _1) );
+    worker = VRThreadCb::create( "traffic thread", bind(&VRTrafficSimulation::trafficSimThread, this, placeholders::_1) );
     scene->initThread(worker, "traffic thread", true, 1);
     cout << "VRTrafficSimulation::initiateWorker" << endl;
 }
@@ -308,7 +307,7 @@ void VRTrafficSimulation::initiateWorker() {
 template<class T>
 T randomChoice(vector<T> vec) {
     if (vec.size() == 0) return 0;
-    auto res = vec[ round((float(random())/RAND_MAX) * (vec.size()-1)) ];
+    auto res = vec[ round((float(rand())/RAND_MAX) * (vec.size()-1)) ];
     return res;
 }
 
@@ -1179,7 +1178,7 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
             return;
         }
         if (vehicle.nextLanesCoices.size() > 1) {
-            vehicle.nextTurnLane = vehicle.nextLanesCoices[round((float(random())/RAND_MAX) * (vehicle.nextLanesCoices.size()-1))];
+            vehicle.nextTurnLane = vehicle.nextLanesCoices[round((float(rand())/RAND_MAX) * (vehicle.nextLanesCoices.size()-1))];
             return;
         }
     };

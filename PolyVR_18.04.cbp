@@ -35,7 +35,6 @@
 			<Add option="-fPIC" />
 			<Add option="`pkg-config gtk+-2.0 --cflags`" />
 			<Add option="`pkg-config gmodule-2.0 --cflags`" />
-			<Add option="`pkg-config gtkmm-2.4 --cflags`" />
 			<Add option="`pkg-config gtkglext-1.0 --cflags`" />
 			<Add option="`pkg-config python --cflags`" />
 			<Add option="`pkg-config gtksourceview-2.0 --cflags`" />
@@ -115,6 +114,7 @@
 			<Add directory="/usr/include/IFC" />
 			<Add directory="/usr/include/vtk-7.1/" />
 			<Add directory="/usr/include/OPCUA" />
+			<Add directory="/usr/include/DWG" />
 		</Compiler>
 		<Linker>
 			<Add option="-lTKV3d" />
@@ -150,7 +150,6 @@
 			<Add option="`pkg-config gtk+-2.0 --libs`" />
 			<Add option="`pkg-config gmodule-2.0 --libs`" />
 			<Add option="`pkg-config bullet --libs`" />
-			<Add option="`pkg-config gtkmm-2.4 --libs`" />
 			<Add option="`pkg-config gtkglext-1.0 --libs`" />
 			<Add option="`pkg-config python --libs`" />
 			<Add option="`pkg-config gtksourceview-2.0 --libs`" />
@@ -260,6 +259,7 @@
 			<Add option="-lopcuaprotocol" />
 			<Add option="-lopcuacore" />
 			<Add option="-lxml2" />
+			<Add option="-lredwg" />
 			<Add option="-Wl,-rpath=/usr/lib/x86_64-linux-gnu:/usr/lib/OCE" />
 			<Add directory="/usr/lib/virtuose" />
 			<Add directory="/usr/lib/opensg" />
@@ -270,6 +270,7 @@
 			<Add directory="/usr/lib/IFC" />
 			<Add directory="/usr/lib/OPCUA" />
 			<Add directory="/usr/lib/OCE" />
+			<Add directory="/usr/lib/DWG" />
 		</Linker>
 		<ExtraCommands>
 			<Add after='/bin/bash -c &quot;mkdir -p bin/Release 2&gt;/dev/null&quot;' />
@@ -556,8 +557,6 @@
 		<Unit filename="src/core/gui/VRGuiMonitor.h" />
 		<Unit filename="src/core/gui/VRGuiNav.cpp" />
 		<Unit filename="src/core/gui/VRGuiNav.h" />
-		<Unit filename="src/core/gui/VRGuiNet.cpp" />
-		<Unit filename="src/core/gui/VRGuiNet.h" />
 		<Unit filename="src/core/gui/VRGuiRecWidget.cpp" />
 		<Unit filename="src/core/gui/VRGuiRecWidget.h" />
 		<Unit filename="src/core/gui/VRGuiScene.cpp" />
@@ -576,6 +575,11 @@
 		<Unit filename="src/core/gui/VRGuiUtils.h" />
 		<Unit filename="src/core/gui/VRGuiVectorEntry.cpp" />
 		<Unit filename="src/core/gui/VRGuiVectorEntry.h" />
+		<Unit filename="src/core/gui/elements/VRGuiButton.h" />
+		<Unit filename="src/core/gui/widgets/VRAppLauncher.cpp" />
+		<Unit filename="src/core/gui/widgets/VRAppLauncher.h" />
+		<Unit filename="src/core/gui/widgets/VRAppPanel.cpp" />
+		<Unit filename="src/core/gui/widgets/VRAppPanel.h" />
 		<Unit filename="src/core/gui/widgets/VRConceptWidget.cpp" />
 		<Unit filename="src/core/gui/widgets/VRConceptWidget.h" />
 		<Unit filename="src/core/gui/widgets/VRConnectorWidget.cpp" />
@@ -586,6 +590,12 @@
 		<Unit filename="src/core/gui/widgets/VRRuleWidget.h" />
 		<Unit filename="src/core/gui/widgets/VRSemanticWidget.cpp" />
 		<Unit filename="src/core/gui/widgets/VRSemanticWidget.h" />
+		<Unit filename="src/core/gui/wrapper/VRGuiCombobox.cpp" />
+		<Unit filename="src/core/gui/wrapper/VRGuiCombobox.h" />
+		<Unit filename="src/core/gui/wrapper/VRGuiTreeView.cpp" />
+		<Unit filename="src/core/gui/wrapper/VRGuiTreeView.h" />
+		<Unit filename="src/core/gui/wrapper/VRGuiWidget.cpp" />
+		<Unit filename="src/core/gui/wrapper/VRGuiWidget.h" />
 		<Unit filename="src/core/math/Eigendecomposition.cpp" />
 		<Unit filename="src/core/math/Eigendecomposition.h" />
 		<Unit filename="src/core/math/Expression.cpp" />
@@ -820,6 +830,8 @@
 		<Unit filename="src/core/scene/import/STEP/VRSTEP.h" />
 		<Unit filename="src/core/scene/import/VRCOLLADA.cpp" />
 		<Unit filename="src/core/scene/import/VRCOLLADA.h" />
+		<Unit filename="src/core/scene/import/VRDWG.cpp" />
+		<Unit filename="src/core/scene/import/VRDWG.h" />
 		<Unit filename="src/core/scene/import/VRDXF.cpp" />
 		<Unit filename="src/core/scene/import/VRDXF.h" />
 		<Unit filename="src/core/scene/import/VRExport.cpp" />
@@ -1208,10 +1220,6 @@
 		<Unit filename="src/core/utils/zipper/zipper.cpp" />
 		<Unit filename="src/core/utils/zipper/zipper.h" />
 		<Unit filename="src/main.cpp" />
-		<Extensions>
-			<code_completion />
-			<debugger />
-			<envvars />
-		</Extensions>
+		<Extensions />
 	</Project>
 </CodeBlocks_project_file>

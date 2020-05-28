@@ -40,7 +40,7 @@ class VRTree : public VRTransform {
 
         void initMaterials();
 
-        void setup(VRStorageContextPtr context);
+        void storeSetup(VRStorageContextPtr context);
         void initLOD();
         void initArmatureGeo();
         void testSetup();

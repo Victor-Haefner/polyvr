@@ -213,7 +213,7 @@ void loadPly(string filename, VRTransformPtr res) {
         if (Type->size() == 0) Type->addValue(GL_POINTS);
         if (Length->size() == 0) {
             Length->addValue(int(Pos->size()));
-            for (uint i=0; i< Pos->size(); i++) Indices->addValue(i);
+            for (unsigned int i=0; i< Pos->size(); i++) Indices->addValue(i);
         }
     }*/
 
@@ -348,7 +348,7 @@ void writePly(VRGeometryPtr geo, string path) {
     if (Nt == Np) header += "property float s\n";
     if (Nt == Np) header += "property float t\n";
     header += "element face "+toString(Nfaces)+"\n"
-    "property list uchar uint vertex_indices\n"
+    "property list uchar unsigned int vertex_indices\n"
     "end_header\n";
 
 	cout << "PLY export " << geo->getName() << endl;

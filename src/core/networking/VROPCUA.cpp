@@ -1,7 +1,6 @@
 #include "VROPCUA.h"
 #include "core/utils/VRFunction.h"
 #include "core/scene/VRScene.h"
-#include <boost/bind.hpp>
 
 #include <iostream>
 #include <algorithm>
@@ -338,6 +337,6 @@ void startTestServerT() {
 }
 
 void VROPCUA::setupTestServer() {
-    server = VRFunction< VRThreadWeakPtr >::create( "OPCUA server", boost::bind(startTestServerT) );
+    server = VRFunction< VRThreadWeakPtr >::create( "OPCUA server", bind(startTestServerT) );
     VRScene::getCurrent()->initThread(server, "OPCUA server", true, false);
 }

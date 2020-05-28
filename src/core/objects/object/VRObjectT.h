@@ -3,11 +3,18 @@
 
 #include "VRObject.h"
 #include "VRAttachment.h"
+#include "core/utils/toString.h"
 
 using namespace std;
 
 template<typename T>
 VRAttachment::attachment<T>::attachment(T& t) : data(t) {}
+
+template<typename T>
+VRAttachment::attachment<T>::~attachment() {}
+
+template<typename T>
+string VRAttachment::attachment<T>::asString() { return toString<T>(data); }
 
 template<typename T>
 void VRAttachment::set(T& t) {
@@ -23,7 +30,7 @@ T VRAttachment::get() {
 
 template<typename T>
 void OSG::VRObject::addAttachment(string name, T t) {
-    attachments[name] = new VRAttachment();
+    if (!attachments.count(name)) attachments[name] = new VRAttachment();
     attachments[name]->set(t);
 }
 

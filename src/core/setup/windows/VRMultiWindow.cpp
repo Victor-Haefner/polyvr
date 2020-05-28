@@ -86,7 +86,7 @@ void VRMultiWindow::initialize() {
     for (auto s : servers) win->editMFServers()->push_back(s);
     for (auto wv : views) if (auto v = wv.lock()) v->setWindow(win);
 
-    ClusterWindow::ConnectionCB cb = boost::bind(&VRMultiWindow::init_win, this, _1, _2, _3);
+    ClusterWindow::ConnectionCB cb = bind(&VRMultiWindow::init_win, this, _1, _2, _3);
     win->initAsync(cb); // TODO: why not defined for WASM build?
     //cout << endl << " render once " << endl;
     //if (state == CONNECTED) win->render(ract);

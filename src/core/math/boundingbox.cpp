@@ -9,7 +9,7 @@
 
 using namespace OSG;
 
-template<> string typeName(const BoundingboxPtr& o) { return "Boundingbox"; }
+template<> string typeName(const Boundingbox& o) { return "Boundingbox"; }
 
 Boundingbox::Boundingbox() { clear(); }
 
@@ -42,7 +42,7 @@ void Boundingbox::clamp(Vec3d& p) const {
 void Boundingbox::updateFromGeometry(VRGeometryPtr g) {
     clear();
     auto pos = g->getMesh()->geo->getPositions();
-    for (uint i=0; i<pos->size(); i++) {
+    for (unsigned int i=0; i<pos->size(); i++) {
         auto p = Vec3d(pos->getValue<Pnt3f>(i));
         update(p);
     }

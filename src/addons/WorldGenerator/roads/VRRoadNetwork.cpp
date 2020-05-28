@@ -47,7 +47,7 @@ using namespace OSG;
 template<> string typeName(const VRRoadNetwork& o) { return "RoadNetwork"; }
 
 VRRoadNetwork::VRRoadNetwork() : VRRoadBase("RoadNetwork") {
-    updateCb = VRUpdateCb::create( "roadNetworkUpdate", boost::bind(&VRRoadNetwork::update, this) );
+    updateCb = VRUpdateCb::create( "roadNetworkUpdate", bind(&VRRoadNetwork::update, this) );
     VRScene::getCurrent()->addUpdateFkt(updateCb);
 }
 
@@ -227,7 +227,7 @@ VRRoadPtr VRRoadNetwork::addLongRoad( string name, string type, vector<VREntityP
     vector<Vec3d> norms;
 
     // check for inflection points!
-    for (uint i=1; i<nodesIn.size(); i++) {
+    for (unsigned int i=1; i<nodesIn.size(); i++) {
         nodes.push_back( nodesIn[i-1] );
         norms.push_back( normalsIn[i-1] );
         Vec3d p1 = nodesIn[i-1]->getVec3("position");
@@ -249,7 +249,7 @@ VRRoadPtr VRRoadNetwork::addLongRoad( string name, string type, vector<VREntityP
     norms.push_back( normalsIn[normalsIn.size()-1] );
 
     if (auto t = terrain.lock()) {
-        for (uint i=0; i<nodesIn.size(); i++) { // project tangents on terrain
+        for (unsigned int i=0; i<nodesIn.size(); i++) { // project tangents on terrain
             Vec3d p = nodesIn[i]->getVec3("position");
             t->projectTangent(normalsIn[i], p);
         }
@@ -289,7 +289,7 @@ void VRRoadNetwork::computeLanePaths( VREntityPtr road ) {
 	for (auto lane : lanes) roadWidth += toFloat( lane->get("width")->value );
 
 	float widthSum = -roadWidth*0.5;
-	for (uint li=0; li<lanes.size(); li++) {
+	for (unsigned int li=0; li<lanes.size(); li++) {
         auto lane = lanes[li];
 		float width = toFloat( lane->get("width")->value );
 
@@ -317,7 +317,7 @@ void VRRoadNetwork::computeLanePaths( VREntityPtr road ) {
         }
 
         vector<int> laneEdges;
-        for (uint i=1; i<nodes.size(); i++) {
+        for (unsigned int i=1; i<nodes.size(); i++) {
             connectGraph({nodes[i-1], nodes[i]}, {norms[i-1], norms[i]}, lane);
             int nID1 = nodes[i-1]->getValue<int>("graphID", -1);
             int nID2 = nodes[i]->getValue<int>("graphID", -1);
@@ -334,8 +334,8 @@ void VRRoadNetwork::computeLanePaths( VREntityPtr road ) {
     }
 
 	if (lanesD1.size()>1) {
-        for (uint i = 0; i<lanesD1[0].size();i++) {
-            for (uint j = 1; j<lanesD1.size();j++) {
+        for (unsigned int i = 0; i<lanesD1[0].size();i++) {
+            for (unsigned int j = 1; j<lanesD1.size();j++) {
                 ///checking minimum length for lane relations
                 if (graph->getEdgeLength(lanesD1[j][i]) < 10) continue;
                 if (graph->getEdgeLength(lanesD1[j-1][i]) < 10) continue;
@@ -345,8 +345,8 @@ void VRRoadNetwork::computeLanePaths( VREntityPtr road ) {
         }
 	}
     if (lanesD2.size()>1) {
-        for (uint i = 0; i<lanesD2[0].size();i++) {
-            for (uint j = 1; j<lanesD2.size();j++) {
+        for (unsigned int i = 0; i<lanesD2[0].size();i++) {
+            for (unsigned int j = 1; j<lanesD2.size();j++) {
                 ///checking minimum length for lane relations
                 if (graph->getEdgeLength(lanesD2[j][i]) < 10) continue;
                 if (graph->getEdgeLength(lanesD2[j-1][i]) < 10) continue;
@@ -777,7 +777,7 @@ VRTunnelPtr VRRoadNetwork::addTunnel(VRRoadPtr road) { auto t = VRTunnel::create
 VRBridgePtr VRRoadNetwork::addBridge(VRRoadPtr road) { auto b = VRBridge::create(road); addChild(b); bridges.push_back(b); return b; }
 
 void VRRoadNetwork::computeTracksLanes(VREntityPtr way) {
-    auto getBulge = [&](vector<Pose>& points, uint i, Vec3d& x) -> float {
+    auto getBulge = [&](vector<Pose>& points, unsigned int i, Vec3d& x) -> float {
         if (points.size() < 2) return 0;
         if (i == 0) return 0;
         if (i == points.size()-1) return 0;
@@ -801,7 +801,7 @@ void VRRoadNetwork::computeTracksLanes(VREntityPtr way) {
             vector<VREntityPtr> nodes;
             vector<Vec3d> normals;
             auto points = path->getPoints();
-            for (uint i=0; i < points.size(); i++) {
+            for (unsigned int i=0; i < points.size(); i++) {
                 auto& point = points[i];
                 Vec3d p = point.pos();
                 Vec3d n = point.dir();
@@ -1108,7 +1108,7 @@ VREntityPtr VRRoadNetwork::addRoute(vector<int> nodeIDs) { // nodeIDs as compute
     vector<VREntityPtr> nodes;
     vector<Vec3d> norms;
 
-    for (uint i=0; i<nodeIDs.size()-1; i++) {
+    for (unsigned int i=0; i<nodeIDs.size()-1; i++) {
         int n1 = nodeIDs[i];
         int n2 = nodeIDs[i+1];
         int eID = graph->getEdgeID(n1, n2);

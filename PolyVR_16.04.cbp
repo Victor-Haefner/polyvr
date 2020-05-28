@@ -37,7 +37,6 @@
 			<Add option="-fPIC" />
 			<Add option="`pkg-config gtk+-2.0 --cflags`" />
 			<Add option="`pkg-config gmodule-2.0 --cflags`" />
-			<Add option="`pkg-config gtkmm-2.4 --cflags`" />
 			<Add option="`pkg-config gtkglext-1.0 --cflags`" />
 			<Add option="`pkg-config python --cflags`" />
 			<Add option="`pkg-config gtksourceview-2.0 --cflags`" />
@@ -94,6 +93,7 @@
 			<Add option="-DWITH_STEP" />
 			<Add option="-DWITH_CLUSTERING_FIX" />
 			<Add option="-DWITH_SHADOW_VOLUME" />
+			<Add option="-DWITHOUT_DWG" />
 			<Add directory="/usr/include/pango-1.0" />
 			<Add directory="/usr/include/glib-2.0" />
 			<Add directory="/usr/lib64/glib-2.0/include" />
@@ -150,7 +150,6 @@
 			<Add option="`pkg-config gtk+-2.0 --libs`" />
 			<Add option="`pkg-config gmodule-2.0 --libs`" />
 			<Add option="`pkg-config bullet --libs`" />
-			<Add option="`pkg-config gtkmm-2.4 --libs`" />
 			<Add option="`pkg-config gtkglext-1.0 --libs`" />
 			<Add option="`pkg-config python --libs`" />
 			<Add option="`pkg-config gtksourceview-2.0 --libs`" />
@@ -582,6 +581,11 @@
 		<Unit filename="src/core/gui/VRGuiUtils.h" />
 		<Unit filename="src/core/gui/VRGuiVectorEntry.cpp" />
 		<Unit filename="src/core/gui/VRGuiVectorEntry.h" />
+		<Unit filename="src/core/gui/elements/VRGuiButton.h" />
+		<Unit filename="src/core/gui/widgets/VRAppLauncher.cpp" />
+		<Unit filename="src/core/gui/widgets/VRAppLauncher.h" />
+		<Unit filename="src/core/gui/widgets/VRAppPanel.cpp" />
+		<Unit filename="src/core/gui/widgets/VRAppPanel.h" />
 		<Unit filename="src/core/gui/widgets/VRConceptWidget.cpp" />
 		<Unit filename="src/core/gui/widgets/VRConceptWidget.h" />
 		<Unit filename="src/core/gui/widgets/VRConnectorWidget.cpp" />
@@ -592,10 +596,17 @@
 		<Unit filename="src/core/gui/widgets/VRRuleWidget.h" />
 		<Unit filename="src/core/gui/widgets/VRSemanticWidget.cpp" />
 		<Unit filename="src/core/gui/widgets/VRSemanticWidget.h" />
+		<Unit filename="src/core/gui/wrapper/VRGuiCombobox.cpp" />
+		<Unit filename="src/core/gui/wrapper/VRGuiCombobox.h" />
+		<Unit filename="src/core/gui/wrapper/VRGuiTreeView.cpp" />
+		<Unit filename="src/core/gui/wrapper/VRGuiTreeView.h" />
+		<Unit filename="src/core/gui/wrapper/VRGuiWidget.cpp" />
+		<Unit filename="src/core/gui/wrapper/VRGuiWidget.h" />
 		<Unit filename="src/core/math/Eigendecomposition.cpp" />
 		<Unit filename="src/core/math/Eigendecomposition.h" />
 		<Unit filename="src/core/math/Expression.cpp" />
 		<Unit filename="src/core/math/Expression.h" />
+		<Unit filename="src/core/math/OSGMathFwd.cpp" />
 		<Unit filename="src/core/math/Octree.cpp" />
 		<Unit filename="src/core/math/Octree.h" />
 		<Unit filename="src/core/math/PCA.cpp" />
@@ -1215,10 +1226,6 @@
 		<Unit filename="src/core/utils/zipper/zipper.cpp" />
 		<Unit filename="src/core/utils/zipper/zipper.h" />
 		<Unit filename="src/main.cpp" />
-		<Extensions>
-			<code_completion />
-			<debugger />
-			<envvars />
-		</Extensions>
+		<Extensions />
 	</Project>
 </CodeBlocks_project_file>

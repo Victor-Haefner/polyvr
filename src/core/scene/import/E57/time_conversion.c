@@ -57,7 +57,8 @@ SUCH DAMAGE.
 #endif
 
 #ifdef WIN32
-  #include <windows.h>
+#include <WinSock2.h>
+#include <windows.h>
 #endif
 
 

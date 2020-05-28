@@ -58,11 +58,11 @@ void VRStroke::strokeProfile(vector<Vec3d> profile, bool closed, bool lit, bool 
 
     float Lp = 0;
     vector<Vec2d> tcs(1);
-    for (uint i=1; i<profile.size(); i++) {
+    for (unsigned int i=1; i<profile.size(); i++) {
         Lp += (profile[i]-profile[i-1]).length();
         tcs.push_back( Vec2d(0,Lp) );
     }
-    for (uint i=1; i<profile.size(); i++) tcs[i] /= Lp;
+    for (unsigned int i=1; i<profile.size(); i++) tcs[i] /= Lp;
 
     clearChildren();
     for (auto path : paths) {
@@ -75,7 +75,7 @@ void VRStroke::strokeProfile(vector<Vec3d> profile, bool closed, bool lit, bool 
         //float L = path->getLength();
         float l = 0;
         Vec3d _p;
-        for (uint j=0; j<pnts.size(); j++) {
+        for (unsigned int j=0; j<pnts.size(); j++) {
             Vec3d p = pnts[j];
             Vec3d n = directions[j];
             Vec3d u = up_vectors[j];
@@ -91,7 +91,7 @@ void VRStroke::strokeProfile(vector<Vec3d> profile, bool closed, bool lit, bool 
             bool endArrow2 = (j == pnts.size()-1) && (cap_end == ARROW);
 
             // add new profile points and normals
-            for (uint i=0; i<profile.size(); i++) {
+            for (unsigned int i=0; i<profile.size(); i++) {
                 Vec3d pos = profile[i];
                 Vec2d tc = tcs[i];
                 tc[0] = l;
@@ -108,7 +108,7 @@ void VRStroke::strokeProfile(vector<Vec3d> profile, bool closed, bool lit, bool 
 
             if (profile.size() == 1) data.pushLine();
             else { // add quad
-                for (uint k=0; k<profile.size()-1; k++) {
+                for (unsigned int k=0; k<profile.size()-1; k++) {
                     int N1 = data.size() - 2*profile.size() + k;
                     int N2 = data.size() -   profile.size() + k;
                     data.pushQuad(N1, N2, N2+1, N1+1);
@@ -126,7 +126,7 @@ void VRStroke::strokeProfile(vector<Vec3d> profile, bool closed, bool lit, bool 
 
     // caps
     if (doCaps) {
-        for (uint i=0; i<paths.size(); i++) {
+        for (unsigned int i=0; i<paths.size(); i++) {
             if (paths[i]->isClosed()) continue;
 
             vector<Vec3d> pnts = paths[i]->getPositions();
@@ -150,7 +150,7 @@ void VRStroke::strokeProfile(vector<Vec3d> profile, bool closed, bool lit, bool 
             if (!doColor) data.pushVert(p + tmp, -n);
             else data.pushVert(p + tmp, -n, Vec3f(c));
 
-            for (uint k=0; k<profile.size(); k++) {
+            for (unsigned int k=0; k<profile.size(); k++) {
                 Vec3d tmp = profile[k];
                 m.mult(tmp, tmp);
 
@@ -158,7 +158,7 @@ void VRStroke::strokeProfile(vector<Vec3d> profile, bool closed, bool lit, bool 
                 else data.pushVert(p + tmp, -n, Vec3f(c));
             }
 
-            for (uint k=1; k<=profile.size(); k++) {
+            for (unsigned int k=1; k<=profile.size(); k++) {
                 int j = k+1;
                 if (k == profile.size()) j = 1;
                 data.pushTri(Ni, Ni+k, Ni+j);
@@ -177,7 +177,7 @@ void VRStroke::strokeProfile(vector<Vec3d> profile, bool closed, bool lit, bool 
             if (!doColor) data.pushVert(p + tmp, n);
             else data.pushVert(p + tmp, n, c);
 
-            for (uint k=0; k<profile.size(); k++) {
+            for (unsigned int k=0; k<profile.size(); k++) {
                 Vec3d tmp = profile[k];
                 m.mult(tmp, tmp);
 
@@ -185,7 +185,7 @@ void VRStroke::strokeProfile(vector<Vec3d> profile, bool closed, bool lit, bool 
                 else data.pushVert(p + tmp, n, c);
             }
 
-            for (uint k=1; k<=profile.size(); k++) {
+            for (unsigned int k=1; k<=profile.size(); k++) {
                 int j = k+1;
                 if (k == profile.size()) j = 1;
                 data.pushTri(Ni, Ni+j, Ni+k);
@@ -204,9 +204,9 @@ void VRStroke::strokeStrew(VRGeometryPtr geo) {
     strewGeo = geo;
 
     clearChildren();
-    for (uint i=0; i<paths.size(); i++) {
+    for (unsigned int i=0; i<paths.size(); i++) {
         vector<Vec3d> pnts = paths[i]->getPositions();
-        for (uint j=0; j<pnts.size(); j++) {
+        for (unsigned int j=0; j<pnts.size(); j++) {
             Vec3d p = pnts[j];
             VRGeometryPtr g = static_pointer_cast<VRGeometry>(geo->duplicate());
             addChild(g);

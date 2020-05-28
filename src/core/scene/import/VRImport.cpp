@@ -4,15 +4,20 @@
 #endif
 #include "VRPLY.h"
 #ifndef WASM
+#ifndef WITHOUT_VTK
 #include "VRVTK.h"
+#endif
 #include "VRDXF.h"
+#include "VRDWG.h"
 #include "VRIFC.h"
 #endif
 #include "VRML.h"
 #include "VRSTEPCascade.h"
 #include "STEP/VRSTEP.h"
 #include "E57/E57.h"
+#ifndef WITHOUT_GDAL
 #include "GIS/VRGDAL.h"
+#endif
 #include "GLTF/GLTF.h"
 #include "addons/Engineering/Factory/VRFactory.h"
 
@@ -62,7 +67,7 @@ void VRImport::fixEmptyNames(NodeMTRecPtr o, map<string, bool>& m, string parent
     setName(o, name.c_str());
     m[name] = true;
 
-    for (uint i=0; i<o->getNChildren(); i++) fixEmptyNames(o->getChild(i), m, OSG::getName(o), i);
+    for (unsigned int i=0; i<o->getNChildren(); i++) fixEmptyNames(o->getChild(i), m, OSG::getName(o), i);
 }
 
 VRTransformPtr VRImport::prependTransform(VRObjectPtr o, string path) {
@@ -135,7 +140,7 @@ VRTransformPtr VRImport::load(string path, VRObjectPtr parent, bool useCache, st
         }
 
         auto job = new LoadJob(path, preset, res, progress, options, useCache, useBinaryCache); // TODO: fix memory leak!
-        job->loadCb = VRFunction< VRThreadWeakPtr >::create( "geo load", boost::bind(&LoadJob::load, job, _1) );
+        job->loadCb = VRFunction< VRThreadWeakPtr >::create( "geo load", bind(&LoadJob::load, job, _1) );
         /*auto t =*/ VRScene::getCurrent()->initThread(job->loadCb, "geo load thread", false, 1);
         //testSync(t);
         return res;
@@ -172,18 +177,23 @@ void VRImport::LoadJob::load(VRThreadWeakPtr tw) {
         //if (ext == ".step" || ext == ".stp" || ext == ".STEP" || ext == ".STP") { VRSTEP step; step.load(path, res, options); }
 #ifdef WITH_STEP
         if (ext == ".step" || ext == ".stp" || ext == ".STEP" || ext == ".STP") { loadSTEPCascade(path, res); return; }
+		if (ext == ".ifc") { loadIFC(path, res); return; }
 #endif
         if (ext == ".wrl" && preset == "SOLIDWORKS-VRML2") { VRFactory f; if (f.loadVRML(path, progress, res, thread)); else preset = "OSG"; }
         if (ext == ".wrl" && preset == "PVR") { loadVRML(path, res, progress, thread); }
 #ifndef WASM
+#ifndef WITHOUT_VTK
         if (ext == ".vtk") { loadVtk(path, res); return; }
+#endif
+#ifndef WITHOUT_GDAL
         if (ext == ".pdf") { loadPDF(path, res); return; }
         if (ext == ".shp") { loadSHP(path, res); return; }
         if (ext == ".tiff" || ext == ".tif") { loadTIFF(path, res); return; }
         if (ext == ".hgt") { loadTIFF(path, res); return; }
-        if (ext == ".dxf") { loadDXF(path, res); return; }
-#ifndef NO_IFC
-        if (ext == ".ifc") { loadIFC(path, res); return; }
+#endif
+#ifndef WITHOUT_DWG
+        if (ext == ".dxf") { loadDWG(path, res); return; }
+        if (ext == ".dwg") { loadDWG(path, res); return; }
 #endif
 #endif
         if (ext == ".gltf" || ext == ".glb") { loadGLTF(path, res, progress, thread); return; }
@@ -310,7 +320,7 @@ VRObjectPtr VRImport::OSGConstruct(NodeMTRecPtr n, VRObjectPtr parent, string na
         tmp->setCore(OSGCore::create(core), t_name);
     }
 
-    for (uint i=0;i<n->getNChildren();i++) {
+    for (unsigned int i=0;i<n->getNChildren();i++) {
         auto obj = OSGConstruct(n->getChild(i), tmp, name, currentFile, geoTrans, geoTransName);
         if (obj) tmp->addChild(obj);
     }

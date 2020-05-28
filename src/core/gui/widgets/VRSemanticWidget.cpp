@@ -5,31 +5,24 @@
 #include "VRConnectorWidget.h"
 #include "../VRGuiSemantics.h"
 
-#include <gtkmm/object.h>
-#include <gtkmm/treestore.h>
-#include <gtkmm/treeview.h>
-#include <gtkmm/toolbar.h>
-#include <gtkmm/toolbutton.h>
-#include <gtkmm/separatortoolitem.h>
-#include <gtkmm/stock.h>
-#include <gtkmm/box.h>
-#include <gtkmm/frame.h>
-#include <gtkmm/fixed.h>
-#include <gtkmm/expander.h>
-
 using namespace OSG;
 
-void VRSemanticWidget_on_drag_data_get(const Glib::RefPtr<Gdk::DragContext>& context, Gtk::SelectionData& data, unsigned int info, unsigned int time, VRSemanticWidget* e) {
+// TODO
+
+// VRGuiSemantics_PropsColumns
+// add(name); add(type); add(prop); add(ptype); add(flag); add(rtype); add(ID)
+
+/*void VRSemanticWidget_on_drag_data_get(GdkDragContext* context, GtkSelectionData* data, unsigned int info, unsigned int time, VRSemanticWidget* e) {
     data.set("concept", 0, (const guint8*)&e, sizeof(void*));
 }
 
-void VRSemanticWidget_on_drag_data_received(const Glib::RefPtr<Gdk::DragContext>& context, int x, int y, const Gtk::SelectionData& data, guint info, guint time, VRSemanticWidget* self) {
+void VRSemanticWidget_on_drag_data_received(GdkDragContext* context, int x, int y, GtkSelectionData* data, guint info, guint time, VRSemanticWidget* self) {
     if (data.get_target() != "concept") { cout << "VRGuiSemantics_on_drag_data_received, wrong dnd: " << data.get_target() << endl; return; }
     VRSemanticWidget* e = *(VRSemanticWidget**)data.get_data();
     self->reparent(e->ptr());
 }
 
-VRSemanticWidget::VRSemanticWidget(VRGuiSemantics* m, Gtk::Fixed* canvas, string color) {
+VRSemanticWidget::VRSemanticWidget(VRGuiSemantics* m, GtkFixed* canvas, string color) {
     this->canvas = canvas;
     manager = m;
 
@@ -136,7 +129,7 @@ void VRSemanticWidget::reparent(VRSemanticWidgetPtr w) {
     if (r) reparent(r);
 }
 
-void VRSemanticWidget::setPropRow(Gtk::TreeModel::iterator iter, string name, string type, string color, int flag, int ID, int rtype) {
+void VRSemanticWidget::setPropRow(GtkTreeIter* iter, string name, string type, string color, int flag, int ID, int rtype) {
     string cname = "<span color=\""+color+"\">" + name + "</span>";
     string ctype = "<span color=\""+color+"\">" + type + "</span>";
 
@@ -204,4 +197,4 @@ Vec2d VRSemanticWidget::getAnchorPoint(Vec2d p) {
     if (w < h && p[1] < pos[1]) return pos - Vec2d(0, widget->get_height()*0.5);
     if (w < h && p[1] > pos[1]) return pos + Vec2d(0, widget->get_height()*0.5);
     return pos;
-}
+}*/

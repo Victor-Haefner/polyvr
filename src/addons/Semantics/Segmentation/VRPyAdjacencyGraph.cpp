@@ -85,7 +85,7 @@ PyObject* VRPyAdjacencyGraph::getNeighbors(VRPyAdjacencyGraph* self, PyObject* a
     if (! PyArg_ParseTuple(args, "i|i:getNeighbors", &i, &r)) return NULL;
     auto v = self->objPtr->getNeighbors(i,r);
     PyObject* res = PyList_New(v.size());
-    for (uint i=0; i<v.size(); i++) PyList_SetItem(res, i, PyInt_FromLong(v[i]));
+    for (unsigned int i=0; i<v.size(); i++) PyList_SetItem(res, i, PyInt_FromLong(v[i]));
     return res;
 }
 

@@ -4,7 +4,6 @@
 #include "VRUndoInterface.h"
 #include "VRFunction.h"
 #include "core/tools/VRUndoManager.h"
-#include <boost/bind.hpp>
 
 template<class O>
 void OSG_VRUndoInterface_valid(std::weak_ptr<O> o, bool& b) {
@@ -17,11 +16,11 @@ void OSG::VRUndoInterface::recUndo(F f, std::shared_ptr<O> o, V v1, V v2) {
     if (!u) return;
     if (v1 == v2) return;
 
-    auto f_undo = VRUpdateCb::create( "undo", boost::bind(f, o.get(), v1) );
-    auto f_redo = VRUpdateCb::create( "redo", boost::bind(f, o.get(), v2) );
+    auto f_undo = VRUpdateCb::create( "undo", bind(f, o.get(), v1) );
+    auto f_redo = VRUpdateCb::create( "redo", bind(f, o.get(), v2) );
 
     std::weak_ptr<O> ow = o;
-    auto f_valid = VRFunction<bool&>::create( "undo_valid", boost::bind(OSG_VRUndoInterface_valid<O>, ow, _1) );
+    auto f_valid = VRFunction<bool&>::create( "undo_valid", bind(OSG_VRUndoInterface_valid<O>, ow, placeholders::_1) );
 
     u->recUndo(f_undo, f_redo, f_valid);
 }

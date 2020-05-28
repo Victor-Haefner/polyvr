@@ -112,7 +112,7 @@ VRGeometryPtr BlockWorld::createChunk(vector<CKOctree::element*>& elements) {
 
     int c = 0;
 
-    for(uint i=0;i<elements.size();i++) {
+    for(unsigned int i=0;i<elements.size();i++) {
 		CKOctree::element* e = elements[i];
         for (int j=0;j<3;j++) {
             Pos->addValue(e->pos);
@@ -147,7 +147,7 @@ VRGeometryPtr BlockWorld::createChunk(vector<CKOctree::element*>& elements) {
 
 VRGeometryPtr BlockWorld::initChunk() {
 	vector<CKOctree::element*>* elements = new vector<CKOctree::element*>();
-	VRFunction<CKOctree::element*>* fkt = new VRFunction<CKOctree::element*>("blockworld_appendtovector", boost::bind(&BlockWorld::appendToVector, this, elements, _1));
+	VRFunction<CKOctree::element*>* fkt = new VRFunction<CKOctree::element*>("blockworld_appendtovector", bind(&BlockWorld::appendToVector, this, elements, _1));
     tree->traverse(fkt);
     delete fkt;
 
@@ -187,7 +187,7 @@ void BlockWorld::initWorld() {
 
     // TODO ?
     auto scene = VRScene::getCurrent();
-    updatePtr = VRUpdateCb::create("blockworld_update", boost::bind(&BlockWorld::updateShaderCamPos, this));
+    updatePtr = VRUpdateCb::create("blockworld_update", bind(&BlockWorld::updateShaderCamPos, this));
     if (scene) scene->addUpdateFkt(updatePtr, 1);
 
     chunks[0] = initChunk();

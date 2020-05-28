@@ -89,9 +89,14 @@ PolyVR* PolyVR::get() {
 }
 
 #ifdef WASM
+typedef const char* CSTR;
 EMSCRIPTEN_KEEPALIVE void PolyVR_shutdown() { PolyVR::shutdown(); }
 EMSCRIPTEN_KEEPALIVE void PolyVR_reloadScene() { VRSceneManager::get()->reloadScene(); }
-EMSCRIPTEN_KEEPALIVE void PolyVR_triggerScript(const char* name) { VRScene::getCurrent()->triggerScript(string(name)); }
+EMSCRIPTEN_KEEPALIVE void PolyVR_triggerScript(const char* name, CSTR* params, int N) {
+    vector<string> sparams;
+    for (int i=0; i<N; i++) sparams.push_back(string(params[i]));
+    VRScene::getCurrent()->triggerScript(string(name), sparams);
+}
 #endif
 
 void PolyVR::shutdown() {
@@ -113,7 +118,7 @@ void PolyVR::shutdown() {
 /*
     pvr->monitor.reset();
     pvr->gui_mgr.reset();
-    pvr->interface.reset();
+    pvr->main_interface.reset();
     pvr->loader.reset();
     pvr->setup_mgr.reset();
     pvr->scene_mgr.reset();
@@ -241,7 +246,7 @@ void PolyVR::init(int argc, char **argv) {
 #endif
 
     scene_mgr = VRSceneManager::create();
-    interface = shared_ptr<VRMainInterface>(VRMainInterface::get());
+	main_interface = shared_ptr<VRMainInterface>(VRMainInterface::get());
     monitor = shared_ptr<VRInternalMonitor>(VRInternalMonitor::get());
 
 #ifndef WITHOUT_GTK
@@ -306,6 +311,7 @@ string createTimeStamp() {
     return asctime(curtime);
 }
 
+#ifndef _WIN32
 char getch() {
         char buf = 0;
         struct termios old = {0};
@@ -321,6 +327,21 @@ char getch() {
         if (tcsetattr(0, TCSADRAIN, &old) < 0) perror ("tcsetattr ~ICANON");
         return (buf);
 }
+#else
+TCHAR getch() {
+	DWORD mode, cc;
+	HANDLE h = GetStdHandle(STD_INPUT_HANDLE);
+	if (h == NULL) {
+		return 0; // console not found
+	}
+	GetConsoleMode(h, &mode);
+	SetConsoleMode(h, mode & ~(ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT));
+	TCHAR c = 0;
+	ReadConsole(h, &c, 1, &cc, NULL);
+	SetConsoleMode(h, mode);
+	return c;
+}
+#endif
 
 void PolyVR::checkProcessesAndSockets() {
     // check for failed startup

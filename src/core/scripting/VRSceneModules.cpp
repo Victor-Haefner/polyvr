@@ -168,7 +168,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyPath>("Path", pModVR);
     sm->registerModule<VRPyGraph>("Graph", pModVR);
     sm->registerModule<VRPyStateMachine>("StateMachine", pModVR);
-#ifndef WASM
+#ifndef WITHOUT_HDLC
     sm->registerModule<VRPyHDLC>("HDLC", pModVR);
 #endif
     sm->registerModule<VRPyState>("State", pModVR);
@@ -187,7 +187,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyAnnotationEngine>("AnnotationEngine", pModVR, VRPyGeometry::typeRef);
     sm->registerModule<VRPyAnalyticGeometry>("AnalyticGeometry", pModVR, VRPyObject::typeRef);
     sm->registerModule<VRPyConstructionKit>("ConstructionKit", pModVR);
-    sm->registerModule<VRPyPathtool>("Pathtool", pModVR, VRPyObject::typeRef);
+    sm->registerModule<VRPyPathtool>("Pathtool", pModVR, VRPyTransform::typeRef);
     sm->registerModule<VRPySelector>("Selector", pModVR);
     sm->registerModule<VRPySelection>("Selection", pModVR);
     sm->registerModule<VRPyPatchSelection>("PatchSelection", pModVR, VRPySelection::typeRef);

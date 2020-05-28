@@ -2,7 +2,6 @@
 #include "VRSpaceWarper.h"
 #include "../objects/VRCamera.h"
 #include "core/utils/VRFunction.h"
-#include <boost/bind.hpp>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;

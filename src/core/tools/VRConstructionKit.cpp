@@ -1,8 +1,6 @@
 #include "VRConstructionKit.h"
 #include "selection/VRSelector.h"
 
-#include <boost/bind.hpp>
-
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/utils/toString.h"
@@ -19,7 +17,7 @@ VRConstructionKit::VRConstructionKit() {
     snapping = VRSnappingEngine::create();
     selector = VRSelector::create();
 
-    onSnap = VRFunction<VRSnappingEngine::EventSnap*>::create("on_snap_callback", boost::bind(&VRConstructionKit::on_snap, this, _1));
+    onSnap = VRFunction<VRSnappingEngine::EventSnap*>::create("on_snap_callback", bind(&VRConstructionKit::on_snap, this, placeholders::_1));
     snapping->getSignalSnap()->add(onSnap);
 }
 

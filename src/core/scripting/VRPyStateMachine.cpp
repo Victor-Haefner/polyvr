@@ -59,7 +59,7 @@ PyObject* VRPyStateMachine::addState(VRPyStateMachine* self, PyObject *args) {
     if (! PyArg_ParseTuple(args, "sO", &s, &c)) return NULL;
 
     Py_IncRef(c);
-    VRStateMachinePy::VRTransitionCbPtr fkt = VRStateMachinePy::VRTransitionCb::create( "pyStateTransition", boost::bind(cbWrapper, c, _1) );
+    VRStateMachinePy::VRTransitionCbPtr fkt = VRStateMachinePy::VRTransitionCb::create( "pyStateTransition", bind(cbWrapper, c, placeholders::_1) );
 
     auto state = self->objPtr->addState( s, fkt );
     return VRPyState::fromSharedPtr( state );

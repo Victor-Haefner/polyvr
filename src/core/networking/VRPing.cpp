@@ -87,10 +87,14 @@ bool VRPing::start(std::string address, int timeout) {
 
     FILE* in;
     char buff[512];
+#ifndef _WIN32
     if (!(in = popen(command.c_str(), "r"))) return false;
     while (fgets(buff, sizeof(buff), in)!=NULL) ;
     int code =  pclose(in);
-    return (code == 0);
+	return (code == 0);
+#else
+	return false;
+#endif
 }
 
 // define popen, not just for here, but also for python API

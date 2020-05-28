@@ -3,7 +3,8 @@
 #include "core/math/boundingbox.h"
 #include "core/utils/VRTimer.h"
 #include "core/utils/xml.h"
-#ifndef WITHOUT_CGAL
+
+#ifndef WITHOUT_GDAL
 #include <gdal/gdal.h>
 #include <gdal/gdal_priv.h>
 #include <gdal/gdal_version.h>
@@ -840,25 +841,16 @@ void OSMMap::readFile(string path) {
     cout << "  secs needed: " << t2 << endl;
 }
 
-void OSMMap::readGEOJSON23Up(string path) {
-    /*GDALAllRegister();
-    GDALDatasetUniquePtr poDS(GDALDataset::Open( path.c_str(), GDAL_OF_VECTOR));
-    if( poDS == nullptr ) { printf( "Open failed.\n" ); return; }
-    // general information
-    printf( "Driver: %s/%s\n", poDS->GetDriver()->GetDescription(), poDS->GetDriver()->GetMetadataItem( GDAL_DMD_LONGNAME ) );*/
-    cout << "UP" << endl;
-    //GDALClose(poDS);
-}
-
-void OSMMap::readGEOJSON23Be(string path) {
-#ifndef WITHOUT_CGAL
-#if GDAL_VERSION_NUM >= GDAL_COMPUTE_VERSION(2,0,0)
+void OSMMap::readGEOJSON(string path) {
+#ifndef WITHOUT_GDAL
+#if GDAL_VERSION_NUM >= GDAL_COMPUTE_VERSION(2,3,0)
+//#else if GDAL_VERSION_NUM >= GDAL_COMPUTE_VERSION(2,0,0)
     VRTimer t; t.start();
     GDALAllRegister();
     GDALDataset* poDS = (GDALDataset *) GDALOpenEx( path.c_str(), GDAL_OF_VECTOR, NULL, NULL, NULL  );
     if( poDS == NULL ) { printf( "Open failed.\n" ); return; }
     // general information
-    cout << "OSMMap::readGEOJSON23Be path " << path << endl;
+    cout << "OSMMap::readGEOJSON path " << path << endl;
     printf( "  Driver: %s/%s\n", poDS->GetDriver()->GetDescription(), poDS->GetDriver()->GetMetadataItem( GDAL_DMD_LONGNAME ) );
 
     int layercount = poDS->GetLayerCount();
@@ -981,14 +973,28 @@ void OSMMap::readGEOJSON23Be(string path) {
 #endif // WITHOUT_GDAL
 }
 
-void OSMMap::readGEOJSON(string path) {
-#ifndef WITHOUT_CGAL
+void OSMMap::readSHAPE(string path) {
+#ifndef WITHOUT_GDAL
 #if GDAL_VERSION_NUM >= GDAL_COMPUTE_VERSION(2,3,0)
-    readGEOJSON23Up(path);
-#else
-    readGEOJSON23Be(path);
-#endif
-#endif
+
+//#else if GDAL_VERSION_NUM >= GDAL_COMPUTE_VERSION(2,0,0)
+    VRTimer t; t.start();
+    GDALAllRegister();
+    GDALDataset* poDS = (GDALDataset *) GDALOpenEx( path.c_str(), GDAL_OF_VECTOR, NULL, NULL, NULL  );
+    if( poDS == NULL ) { printf( "Open failed.\n" ); return; }
+    // general information
+    cout << "OSMMap::readSHAPE path " << path << endl;
+    printf( "  Driver: %s/%s\n", poDS->GetDriver()->GetDescription(), poDS->GetDriver()->GetMetadataItem( GDAL_DMD_LONGNAME ) );
+
+    int nodeID = -1;
+    int wayID = -1;
+
+    GDALClose(poDS);
+    auto t2 = t.stop()/1000.0;
+    cout << "  loaded " << ways.size() << " ways, " << nodes.size() << " nodes and " << relations.size() << " relations" << endl;
+    cout << "  secs needed: " << t2 << endl;
+#endif // GDAL_VERSION_NUM
+#endif // WITHOUT_GDAL
 }
 
 void OSMMap::writeFile(string path) {
@@ -1049,7 +1055,7 @@ int OSMMap::filterFileStreaming(string path, vector<pair<string, string>> whitel
             res+="newOSM.osm";
             return res;
         }
-        for (uint i = 0; i+4 < filepath.length(); i++) {
+        for (unsigned int i = 0; i+4 < filepath.length(); i++) {
             res += filepath.at(i);
         }
         res += in;
@@ -1211,7 +1217,7 @@ vector<OSMWayPtr> OSMMap::splitWay(OSMWayPtr way, int segN) {
     vector<OSMWayPtr> res;
     int segL = way->nodes.size()/segN;
 
-    uint k = 0;
+    unsigned int k = 0;
     OSMWayPtr w = 0;
     for (int s=0; s<segN && k<way->nodes.size(); s++) {
         w = OSMWayPtr( new OSMWay(way->id + "_" + toString(s)) );

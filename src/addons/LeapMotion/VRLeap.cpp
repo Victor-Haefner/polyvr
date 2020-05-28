@@ -76,8 +76,8 @@ VRLeap::VRLeap() : VRDevice("leap") {
     store("transformation", &transformation);
 
     // TODO: apparently needs to be a StorageCb instead of UpdateCb.
-    regStorageSetupFkt( VRStorageCb::create("leap setup", boost::bind(&VRLeap::setup, this)) );
-//    regStorageSetupFkt( VRUpdateCb::create("leap setup", boost::bind(&VRLeap::setup, this)) );
+    regStorageSetupFkt( VRStorageCb::create("leap setup", bind(&VRLeap::setup, this)) );
+//    regStorageSetupFkt( VRUpdateCb::create("leap setup", bind(&VRLeap::setup, this)) );
 
     //reconnect();
     enableAvatar("ray", 0);
@@ -147,7 +147,7 @@ void VRLeap::updateHandFromJson(Json::Value& handData, Json::Value& pointableDat
 
         int id = handData["id"].asInt();
 
-        for (uint j = 0; j < pointableData.size(); ++j) { // Get the corresponding fingers
+        for (unsigned int j = 0; j < pointableData.size(); ++j) { // Get the corresponding fingers
             auto pointable = pointableData[j];
 
             if (pointable["handId"].asInt() != id) continue;
@@ -248,7 +248,7 @@ void VRLeap::newFrame(Json::Value json) {
     VRLeapFramePtr frame = VRLeapFrame::create();
     hands = vector<HandPtr>(2, nullptr);//vector<HandPtr> hands(2, nullptr);
 
-    for (uint i = 0; i < json["hands"].size(); ++i) { // Get the hands
+    for (unsigned int i = 0; i < json["hands"].size(); ++i) { // Get the hands
 
         auto newHand = json["hands"][i];
         auto hand = make_shared<VRLeapFrame::Hand>();
@@ -268,7 +268,7 @@ void VRLeap::newFrame(Json::Value json) {
 
     auto scene = VRScene::getCurrent();
     if (scene) {
-        auto fkt = VRUpdateCb::create("leap_hands_update", boost::bind(&VRLeap::updateSceneData, this, hands));
+        auto fkt = VRUpdateCb::create("leap_hands_update", bind(&VRLeap::updateSceneData, this, hands));
         VRScene::getCurrent()->queueJob(fkt);
     }
 
@@ -279,7 +279,7 @@ void VRLeap::newFrame(Json::Value json) {
     }
 
     // Get the currently recognized tools/pens
-    for (uint i = 0; i < json["pointables"].size(); ++i) {
+    for (unsigned int i = 0; i < json["pointables"].size(); ++i) {
         auto pointable = json["pointables"][i];
 
         if (!pointable["tool"].asBool()) continue;
@@ -389,7 +389,7 @@ void VRLeap::clearSignals() {
     newSignal( 1, 1)->add( addDrag( getBeacon(6) ) ); // 7
 
     // TODO: maybe use the drag and drop signals?
-    dndCb = VRFunction<VRDeviceWeakPtr>::create("leapDnD", boost::bind(&VRLeap::leapDnD, this, _1));
+    dndCb = VRFunction<VRDeviceWeakPtr>::create("leapDnD", bind(&VRLeap::leapDnD, this, placeholders::_1));
     newSignal(0, 1)->add(dndCb);
     newSignal(1, 1)->add(dndCb);
     newSignal(0, 0)->add(dndCb);
@@ -404,7 +404,7 @@ VRIntersection findInside(VRObjectWeakPtr wtree, Vec3d point) {
     if (!tree->getNode()) return ins;
     if (!tree->getNode()->node) return ins;
 
-    uint now = VRGlobals::CURRENT_FRAME;
+    unsigned int now = VRGlobals::CURRENT_FRAME;
 
     vector<VRObjectPtr> children = tree->getChildren(true, "Geometry");
 

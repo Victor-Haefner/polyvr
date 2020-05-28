@@ -45,7 +45,7 @@ PathPtr VRRoadBase::toPath( VREntityPtr pathEntity, int resolution ) {
 	}
 
 	PathPtr Path = Path::create();
-	for (uint i=0; i<pos.size(); i++) Path->addPoint(Pose(pos[i], norms[i]));
+	for (unsigned int i=0; i<pos.size(); i++) Path->addPoint(Pose(pos[i], norms[i]));
 	Path->compute(resolution);
 	return Path;
 }

@@ -178,3 +178,25 @@ void VRRenderManager::setHMDD(bool b) { do_hmdd = b; update(); }
 void VRRenderManager::setMarker(bool b) { do_marker = b; update(); }
 void VRRenderManager::setFXAA(bool b) { do_fxaa = b; update(); }
 
+string glParam(GLenum e) {
+    const char* s = (const char*)glGetString(e);
+    return s ? string(s) : "";
+}
+
+int getGLSLVersion() {
+    string sV = glParam(GL_SHADING_LANGUAGE_VERSION);
+    int i1 = toInt(splitString(sV, '.')[0]);
+    int i2 = toInt(splitString(sV, '.')[1]);
+    if (i2 < 10) i2 *= 10;
+    //cout << "getGLSLVersion " << sV << "  ->  " << Vec2i(i1,i2) << "  -> " << i1*100 + i2 << endl;
+    return i1*100 + i2;
+}
+
+string VRRenderManager::getSupportedGL() { return glParam(GL_VERSION); }
+bool VRRenderManager::hasGeomShader() { int v = getGLSLVersion(); return (v >= 150); }
+bool VRRenderManager::hasTessShader() { int v = getGLSLVersion(); return (v >= 400); }
+
+
+
+
+

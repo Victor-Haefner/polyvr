@@ -106,7 +106,7 @@ class geoIntersectionProxy : public Geometry {
 
             auto inds = getIndices();
             auto pos = getPositions();
-            for (uint i=0; i<inds->size(); i+=4) { // each 4 indices are a quad
+            for (unsigned int i=0; i<inds->size(); i+=4) { // each 4 indices are a quad
                 int i1 = inds->getValue(i+0);
                 int i2 = inds->getValue(i+1);
                 int i3 = inds->getValue(i+2);
@@ -170,7 +170,7 @@ VRGeometry::VRGeometry(string name) : VRTransform(name) {
     store("sourcetype", &source.type);
     store("sourceparam", &source.parameter);
 
-    regStorageSetupFkt( VRStorageCb::create("geometry_update", boost::bind(&VRGeometry::setup, this, _1)) );
+    regStorageSetupFkt( VRStorageCb::create("geometry_update", bind(&VRGeometry::setup, this, _1)) );
 
     // override intersect action callbacks for geometry
     IntersectAction::registerEnterDefault( Geometry::getClassType(), reinterpret_cast<Action::Callback>(&geoIntersectionProxy::intersectEnter));
@@ -265,13 +265,13 @@ void VRGeometry::create(int type, vector<Vec3d> pos, vector<Vec3d> norms, vector
     Length->addValue(inds.size());
 
     //positionen und Normalen
-    for(uint i=0;i<pos.size();i++) {
+    for(unsigned int i=0;i<pos.size();i++) {
             Pos->addValue(pos[i]);
             Norms->addValue(norms[i]);
             if (doTex) Tex->addValue(texs[i]);
     }
 
-    for(uint i=0;i<inds.size();i++) {
+    for(unsigned int i=0;i<inds.size();i++) {
             Indices->addValue(inds[i]);
     }
 
@@ -448,7 +448,7 @@ void VRGeometry::updateNormals(bool face) {
 void VRGeometry::flipNormals() {
     if (!mesh || !mesh->geo) return;
     GeoVectorPropertyMTRecPtr normals = mesh->geo->getNormals();
-    for (uint i=0; i<normals->size(); i++) {
+    for (unsigned int i=0; i<normals->size(); i++) {
         Vec3f n = normals->getValue<Vec3f>(i);
         normals->setValue(-n, i);
     }
@@ -556,7 +556,7 @@ void VRGeometry::setPositionalTexCoords(float scale, int i, Vec3i format) {
     GeoVectorPropertyRefPtr pos = mesh->geo->getPositions();
     GeoVec3fPropertyRefPtr tex = GeoVec3fProperty::create();
     if (!pos) return;
-    for (uint i=0; i<pos->size(); i++) {
+    for (unsigned int i=0; i<pos->size(); i++) {
         auto p = Vec3d(pos->getValue<Pnt3f>(i))*scale;
         tex->addValue(Vec3d(p[format[0]], p[format[1]], p[format[2]]));
     }
@@ -568,7 +568,7 @@ void VRGeometry::setPositionalTexCoords2D(float scale, int i, Vec2i format) {
     GeoVectorPropertyRefPtr pos = mesh->geo->getPositions();
     if (!pos) return;
     GeoVec2fPropertyRefPtr tex = GeoVec2fProperty::create();
-    for (uint i=0; i<pos->size(); i++) {
+    for (unsigned int i=0; i<pos->size(); i++) {
         auto p = Vec3d(pos->getValue<Pnt3f>(i))*scale;
         tex->addValue(Vec2d(p[format[0]], p[format[1]]));
     }
@@ -642,7 +642,7 @@ void VRGeometry::removeSelection(VRSelectionPtr sel) {
     auto sinds = sel->getSubselection(ptr());
     std::sort(sinds.begin(), sinds.end());
     std::unique(sinds.begin(), sinds.end());
-    for (uint k=0, i=0; i < uint(self.size()); i++) {
+    for (unsigned int k=0, i=0; i < (unsigned int)(self.size()); i++) {
         bool selected = false;
         if (k < sinds.size()) if (int(i) == sinds[k]) selected = true;
         if (!selected) addVertex(i);
@@ -783,7 +783,7 @@ void VRGeometry::decimate(float f) {
 	GeoVec3fPropertyMTRecPtr normals = GeoVec3fProperty::create();
 
 	GeoUInt32PropertyMTRecPtr idx = dynamic_cast<GeoUInt32Property*>(mesh->getIndices());
-	for (uint i=0; i<idx->size(); i++) {
+	for (unsigned int i=0; i<idx->size(); i++) {
         cout << "   VRGeometry::decimate " << i << " " << idx->getValue(i) << endl;
 	}
 
@@ -866,7 +866,7 @@ Vec3d VRGeometry::getGeometricCenter() {
     GeoPnt3fPropertyMTRecPtr pos = dynamic_cast<GeoPnt3fProperty*>(mesh->geo->getPositions());
 
     Vec3d center = Vec3d(0,0,0);
-    for (uint i=0;i<pos->size();i++)
+    for (unsigned int i=0;i<pos->size();i++)
         center += Vec3d(pos->getValue(i));
 
     center *= 1./pos->size();
@@ -880,7 +880,7 @@ Vec3d VRGeometry::getAverageNormal() {
     GeoVec3fPropertyMTRecPtr norms = dynamic_cast<GeoVec3fProperty*>(mesh->geo->getNormals());
 
     Vec3d normal = Vec3d(0,0,0);
-    for (uint i=0;i<norms->size();i++) {
+    for (unsigned int i=0;i<norms->size();i++) {
         normal += Vec3d(norms->getValue(i));
     }
 
@@ -914,7 +914,7 @@ float VRGeometry::getMax(int axis) {
     GeoPnt3fPropertyMTRecPtr pos = dynamic_cast<GeoPnt3fProperty*>(mesh->geo->getPositions());
 
     float max = pos->getValue(0)[axis];
-    for (uint i=0;i<pos->size();i++) {
+    for (unsigned int i=0;i<pos->size();i++) {
         if (max < pos->getValue(i)[axis]) max = pos->getValue(i)[axis];
     }
 
@@ -928,7 +928,7 @@ float VRGeometry::getMin(int axis) {
     GeoPnt3fPropertyMTRecPtr pos = dynamic_cast<GeoPnt3fProperty*>(mesh->geo->getPositions());
 
     float min = pos->getValue(0)[axis];
-    for (uint i=0;i<pos->size();i++) {
+    for (unsigned int i=0;i<pos->size();i++) {
         if (min > pos->getValue(i)[axis]) min = pos->getValue(i)[axis];
     }
 
@@ -1012,7 +1012,7 @@ void VRGeometry::showGeometricData(string type, bool b) {
     if (type == "Normals") {
         GeoVectorPropertyMTRecPtr g_norms = mesh->geo->getNormals();
         GeoVectorPropertyMTRecPtr g_pos = mesh->geo->getPositions();
-        for (uint i=0; i<g_norms->size(); i++) {
+        for (unsigned int i=0; i<g_norms->size(); i++) {
             p = Pnt3d(g_pos->getValue<Pnt3f>(i));
             n = Vec3d(g_norms->getValue<Vec3f>(i));
             pos->addValue(p);
@@ -1097,13 +1097,13 @@ void VRGeometry::readSharedMemory(string segment, string object) {
     if (sm_types.size() > 0) for (auto& t : sm_types) types->addValue(t);
     if (sm_lengths.size() > 0) for (auto& l : sm_lengths) lengths->addValue(l);
     for (auto& i : sm_inds) inds->addValue(i);
-    if (sm_pos.size() > 0) for (uint i=0; i<sm_pos.size()-2; i+=3) pos->addValue(Pnt3d(sm_pos[i], sm_pos[i+1], sm_pos[i+2]));
-    if (sm_norms.size() > 0) for (uint i=0; i<sm_norms.size()-2; i+=3) norms->addValue(Vec3d(sm_norms[i], sm_norms[i+1], sm_norms[i+2]));
-    if (sm_cols.size() > 0) for (uint i=0; i<sm_cols.size()-2; i+=3) cols->addValue(Pnt3d(sm_cols[i], sm_cols[i+1], sm_cols[i+2]));
+    if (sm_pos.size() > 0) for (unsigned int i=0; i<sm_pos.size()-2; i+=3) pos->addValue(Pnt3d(sm_pos[i], sm_pos[i+1], sm_pos[i+2]));
+    if (sm_norms.size() > 0) for (unsigned int i=0; i<sm_norms.size()-2; i+=3) norms->addValue(Vec3d(sm_norms[i], sm_norms[i+1], sm_norms[i+2]));
+    if (sm_cols.size() > 0) for (unsigned int i=0; i<sm_cols.size()-2; i+=3) cols->addValue(Pnt3d(sm_cols[i], sm_cols[i+1], sm_cols[i+2]));
 
     cout << "osg mesh data: " << types->size() << " " << lengths->size() << " " << pos->size() << " " << norms->size() << " " << inds->size() << " " << cols->size() << endl;
 
-    uint N = pos->size();
+    unsigned int N = pos->size();
     if (N == 0) return;
 
     setTypes(types);
@@ -1234,7 +1234,7 @@ vector< tuple<Pnt3d, Pnt3d>> VRGeometry::mapPoints(vector<Pnt3d>& e1, vector<Pnt
     //addPointsOnEdge for each match
     float stepSize1 = 100.0/(e1.size() - 1);
     float stepSize2 = 100.0/(e2.size() - 1);
-    for (uint i = 1; i< e1.size(); i++) {
+    for (unsigned int i = 1; i< e1.size(); i++) {
         int k = round((i * stepSize1)/stepSize2) + 1;
         try {
             mappedPoints.push_back(make_tuple(e1[i], e2.at(e2.size()-k)));

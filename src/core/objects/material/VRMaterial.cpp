@@ -14,7 +14,9 @@
 #include "core/setup/VRSetup.h"
 #include "core/setup/windows/VRWindow.h"
 #include "core/scripting/VRScript.h"
+#ifndef WITHOUT_AV
 #include "VRVideo.h"
+#endif
 #include "core/tools/VRQRCode.h"
 #include "core/utils/system/VRSystem.h"
 
@@ -45,7 +47,9 @@
 #include <OpenSG/OSGCubeTextureObjChunk.h>
 #include <OpenSG/OSGGLEXT.h>
 
-#ifndef OSG_OGL_ES2
+#ifdef OSG_OGL_ES2
+#elif defined(_WIN32)
+#else
 #include <GL/glx.h>
 #endif
 
@@ -415,7 +419,7 @@ void VRMaterial::updateDeferredShader() {
 void VRMaterial::setDeferred(bool b) {
     deferred = b;
     int a = activePass;
-    for (uint i=0; i<mats.size(); i++) {
+    for (unsigned int i=0; i<mats.size(); i++) {
         setActivePass(i);
         if (b) {
             if (mats[i]->shaderChunk == 0) {
@@ -611,7 +615,7 @@ void VRMaterial::setMaterial(MaterialMTRecPtr m) {
         auto md = mats[activePass];
 
         ChunkMaterialMTRecPtr cmat = dynamic_pointer_cast<ChunkMaterial>(m);
-        for (uint i=0; i<cmat->getMFChunks()->size(); i++) {
+        for (unsigned int i=0; i<cmat->getMFChunks()->size(); i++) {
             StateChunkMTRecPtr chunk = cmat->getChunk(i);
             int unit = -2; cmat->getChunkSlot(chunk, unit);
 
@@ -882,9 +886,11 @@ bool VRMaterial::isWireFrame() {
 }
 
 void VRMaterial::setVideo(string vid_path) {
+#ifndef WITHOUT_AV
     auto md = mats[activePass];
     if (md->video == 0) md->video = new VRVideo( ptr() );
     md->video->open(vid_path);
+#endif
 }
 
 VRVideo* VRMaterial::getVideo() { return mats[activePass]->video; }
@@ -919,7 +925,7 @@ class MAC : private SimpleTexturedMaterial {
             }
 
             if (cmat) {
-                for (uint i=0; i<cmat->getMFChunks()->size(); i++) {
+                for (unsigned int i=0; i<cmat->getMFChunks()->size(); i++) {
                     StateChunkMTRecPtr chunk = cmat->getChunk(i);
                     mchunk = dynamic_pointer_cast<MaterialChunk>(chunk);
                     if (mchunk) return mchunk;
@@ -934,7 +940,7 @@ class MAC : private SimpleTexturedMaterial {
             ChunkMaterialMTRecPtr cmat = dynamic_pointer_cast<ChunkMaterial>(mat);
             BlendChunkMTRecPtr bchunk = 0;
             if (cmat) {
-                for (uint i=0; i<cmat->getMFChunks()->size(); i++) {
+                for (unsigned int i=0; i<cmat->getMFChunks()->size(); i++) {
                     StateChunkMTRecPtr chunk = cmat->getChunk(i);
                     bchunk = dynamic_pointer_cast<BlendChunk>(chunk);
                     if (bchunk) return bchunk;
@@ -1112,9 +1118,10 @@ bool VRMaterial::checkShader(int type, string shader, string name) {
 #ifndef WITHOUT_GTK
     auto gm = VRGuiManager::get(false);
     if (!gm) return true;
+	auto errC = gm->getConsole("Errors");
+	if (!errC) return true;
 #endif
-    auto errC = gm->getConsole("Errors");
-    if (!errC) return true;
+#ifndef _WIN32
     if (!glXGetCurrentContext()) return true;
 
     GLuint shaderObject = glCreateShader(type);
@@ -1125,7 +1132,11 @@ bool VRMaterial::checkShader(int type, string shader, string name) {
 
     GLint compiled;
     glGetObjectParameterivARB(shaderObject, GL_COMPILE_STATUS, &compiled);
+#ifndef WITHOUT_GTK
     if (!compiled) errC->write( "Shader "+name+" of material "+getName()+" did not compile!\n");
+#else
+	if (!compiled) cout << "Shader " + name + " of material " + getName() + " did not compile!\n" << endl;
+#endif
 
     GLint blen = 0;
     GLsizei slen = 0;
@@ -1133,10 +1144,16 @@ bool VRMaterial::checkShader(int type, string shader, string name) {
     if (blen > 1) {
         GLchar* compiler_log = (GLchar*)malloc(blen);
         glGetInfoLogARB(shaderObject, blen, &slen, compiler_log);
+#ifndef WITHOUT_GTK
         errC->write( "Shader "+name+" of material "+getName()+" warnings and errors:\n");
         errC->write( string(compiler_log));
+#else
+		cout << "Shader " + name + " of material " + getName() + " warnings and errors:\n" << endl;
+		cout << string(compiler_log) << endl;
+#endif
         free(compiler_log);
-    }
+	}
+#endif
 #else
     GLuint shaderObject = glCreateShader(type);
     int N = shader.size();
@@ -1393,7 +1410,7 @@ string VRMaterial::diff(VRMaterialPtr m) {
     string res;
     if (mats.size() != m->mats.size()) res += "\nN passes|"+toString(mats.size())+"|"+toString(m->mats.size());
     else {
-        for (uint i=0; i<mats.size(); i++) res += diffPass(m, i);
+        for (unsigned int i=0; i<mats.size(); i++) res += diffPass(m, i);
     }
     return res;
 }

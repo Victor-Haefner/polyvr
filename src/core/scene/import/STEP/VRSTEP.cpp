@@ -9,7 +9,6 @@
 #include <unistd.h>
 #include <memory>
 #include <algorithm>
-#include <boost/bind.hpp>
 #include "core/utils/system/VRSystem.h"
 
 #include "core/objects/geometry/VRGeometry.h"
@@ -18,7 +17,7 @@
 #include "core/utils/VRFunction.h"
 #include "core/math/polygon.h"
 #include "core/math/pose.h"
-#include "core/gui/VRGuiTreeExplorer.h"
+//#include "core/gui/VRGuiTreeExplorer.h"
 
 #include "VRBRepEdge.h"
 #include "VRBRepBound.h"
@@ -38,7 +37,7 @@ sudo gdebi -n libstepcode-dev.deb
 using namespace std;
 using namespace OSG;
 
-VRGuiTreeExplorerPtr explorer;
+//VRGuiTreeExplorerPtr explorer;
 
 void VRSTEP::loadT(string file, STEPfilePtr sfile, bool* done) {
     if (exists(file)) file = canonical(file);
@@ -191,12 +190,12 @@ VRSTEP::VRSTEP() {
 }
 
 void VRSTEP::on_explorer_select(VRGuiTreeExplorer* e) {
-    auto row = e->getSelected();
+    /*auto row = e->getSelected();
     auto id = e->get<int>(row, 0);
     auto type = e->get<string>(row, 1);
     auto val = e->get<string>(row, 2);
     string info = toString(id) + "\n" + type + "\n" + val;
-    e->setInfo(info);
+    e->setInfo(info);*/
 }
 
 template<class T> void VRSTEP::addType(string typeName, string path, string cpath, bool print) {
@@ -204,7 +203,7 @@ template<class T> void VRSTEP::addType(string typeName, string path, string cpat
     type.print = print;
     type.path = path;
     type.cpath = cpath;
-    type.cb = VRFunction<STEPentity*>::create("STEPtypeCb", boost::bind( &VRSTEP::parse<T>, this, _1, path, cpath, typeName ));
+    type.cb = VRFunction<STEPentity*>::create("STEPtypeCb", bind( &VRSTEP::parse<T>, this, placeholders::_1, path, cpath, typeName ));
     types[typeName] = type;
 }
 
@@ -619,7 +618,8 @@ void VRSTEP::explore(VRSTEP::Node* node, int parent) {
         ID = 0;
     }
 
-    if (ID >= 0) parent = explorer->add( parent, 3, ID, name.c_str(), type.c_str() );
+    // huh?
+    //if (ID >= 0) parent = explorer->add( parent, 3, ID, name.c_str(), type.c_str() );
 
     for (auto n : node->childrenV) explore(n, parent);
 }
@@ -1441,8 +1441,8 @@ void VRSTEP::build() {
     }
 
     if (options == "explorer") {
-        explorer->setSelectCallback( VRFunction<VRGuiTreeExplorer*>::create( "step_explorer", boost::bind(&VRSTEP::on_explorer_select, this, _1) ) );
-        explore(root);
+        //explorer->setSelectCallback( VRFunction<VRGuiTreeExplorer*>::create( "step_explorer", bind(&VRSTEP::on_explorer_select, this, _1) ) );
+        //explore(root);
     }
 
     buildMaterials();
@@ -1457,7 +1457,7 @@ void VRSTEP::build() {
 
 void VRSTEP::load(string file, VRTransformPtr t, string opt) {
     options = opt;
-    if (options == "explorer") explorer = VRGuiTreeExplorer::create("iss", "STEP file explorer (" + file + ")");
+    //if (options == "explorer") explorer = VRGuiTreeExplorer::create("iss", "STEP file explorer (" + file + ")");
     resRoot = t;
     open(file);
     build();

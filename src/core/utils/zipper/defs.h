@@ -8,8 +8,10 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 
+#ifndef _WIN32
 #include <unistd.h>
 #include <utime.h>
+#endif
 
 #include "minizip/zip.h"
 #include "minizip/unzip.h"

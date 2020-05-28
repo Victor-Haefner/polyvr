@@ -4,7 +4,6 @@
 #include "core/scene/VRSceneManager.h"
 #include "core/utils/system/VRSystem.h"
 #include "core/utils/xml.h"
-#include <boost/bind.hpp>
 
 using namespace OSG;
 
@@ -65,8 +64,8 @@ void VRStorage::save_strstr_map_cb(map<string, string>* m, string tag, XMLElemen
 
 void VRStorage::storeMap(string tag, map<string, string>& m) {
     VRStorageBin b;
-    b.f1 = VRStoreCb::create("load", boost::bind( &VRStorage::load_strstr_map_cb, this, &m, tag, _1 ) );
-    b.f2 = VRStoreCb::create("save", boost::bind( &VRStorage::save_strstr_map_cb, this, &m, tag, _1 ) );
+    b.f1 = VRStoreCb::create("load", bind( &VRStorage::load_strstr_map_cb, this, &m, tag, placeholders::_1 ) );
+    b.f2 = VRStoreCb::create("save", bind( &VRStorage::save_strstr_map_cb, this, &m, tag, placeholders::_1 ) );
     storage[tag] = b;
 }
 

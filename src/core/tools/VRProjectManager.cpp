@@ -77,7 +77,7 @@ void VRProjectManager::load(string path) {
     storage.load(root);
 
     vault_rebuild.clear();
-    uint i=0;
+    unsigned int i=0;
     for (auto e : root->getChildren()) {
         if (!e) continue;
 

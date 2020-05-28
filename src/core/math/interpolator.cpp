@@ -11,7 +11,7 @@ void interpolator::setValues(vector<Vec3d> vals) { this->vals = vals; }
 Vec3d interpolator::eval(Vec3d& p, int power) { // frame
     Vec3d d;
     float Sw = 0, w = 0;
-    for (uint i=0; i<pnts.size(); i++) {
+    for (unsigned int i=0; i<pnts.size(); i++) {
         if (i >= vals.size()) break;
 
         w = (p - pnts[i]).squareLength();
@@ -30,7 +30,7 @@ void interpolator::evalVec(GeoVectorProperty* pvec, int power, GeoVectorProperty
     if (cvec) cdata = (Vec4d*)cvec->editData();
     float eps = 1e-5;
     float dl;
-    for (uint i=0; i<pvec->size(); i++) {
+    for (unsigned int i=0; i<pvec->size(); i++) {
         Vec3d d = eval(data[i], power);
         data[i] += d;
         if (cdata) {

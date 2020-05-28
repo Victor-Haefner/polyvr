@@ -203,7 +203,7 @@ void VRParticles::setFunctions(int from, int to) {
     this->to = to;
     VRScenePtr scene = VRScene::getCurrent();
     scene->dropUpdateFkt(fkt);
-    fkt = VRUpdateCb::create("particles_update", boost::bind(&VRParticles::updateParticles, this,from,to));
+    fkt = VRUpdateCb::create("particles_update", bind(&VRParticles::updateParticles, this,from,to));
     scene->addUpdateFkt(fkt);
 }
 

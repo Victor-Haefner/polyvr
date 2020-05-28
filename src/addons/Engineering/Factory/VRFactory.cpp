@@ -306,7 +306,7 @@ VRObjectPtr VRFactory::setupLod(vector<string> paths) {
     VRObjectPtr root = VRObject::create("factory_lod_root");
     root->setPersistency(0);
     vector<VRLodPtr> micro_lods;
-    for (uint i = 0; i<objects.size(); i++) {
+    for (unsigned int i = 0; i<objects.size(); i++) {
         vector<VRObjectPtr> geos = objects[i]->getChildren(true, "Geometry");
         VRProgress prog("setup factory LODs ", geos.size());
         for (auto g : geos) {

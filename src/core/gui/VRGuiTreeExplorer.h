@@ -4,27 +4,33 @@
 #include "VRGuiFwd.h"
 #include "core/utils/VRFunctionFwd.h"
 #include <OpenSG/OSGConfig.h>
-#include <gtkmm.h>
-#include <gtkmm/treemodel.h>
+
+struct _GtkWindow;
+struct _GtkTextView;
+struct _GtkTreeView;
+struct _GtkEntry;
+struct _GtkTreeIter;
+struct _GtkTreeStore;
+struct _GtkTextBuffer;
 
 using namespace std;
 OSG_BEGIN_NAMESPACE;
 
 class VRGuiTreeExplorer {
     private:
-        Gtk::WindowPtr win;
-        Gtk::TextView* m_TextView;
-        Gtk::TreeView* m_TreeView;
-        Gtk::Entry* searchEntry;
+        _GtkWindow* win = 0;
+        _GtkTextView* m_TextView = 0;
+        _GtkTreeView* m_TreeView = 0;
+        _GtkEntry* searchEntry = 0;
         string cols;
 
         shared_ptr< VRFunction<VRGuiTreeExplorer*> > cb;
         string info;
 
-        Glib::RefPtr<Gtk::TreeStore> m_refTreeModel;
-        Glib::RefPtr<Gtk::TextBuffer> infoBuffer;
-        map<int, Gtk::TreeModel::iterator> rows;
-        Gtk::TreeModel::iterator selected;
+        _GtkTreeStore* m_refTreeModel;
+        _GtkTextBuffer* infoBuffer;
+        map<int, _GtkTreeIter> rows;
+        _GtkTreeIter* selected;
 
         void on_search_edited();
         void on_row_select();
@@ -43,8 +49,8 @@ class VRGuiTreeExplorer {
         void setInfo(string s);
         void setSelectCallback( shared_ptr< VRFunction<VRGuiTreeExplorer*> > cb );
 
-        Gtk::TreeModel::iterator getSelected();
-        template<class T> T get(Gtk::TreeModel::iterator itr, int i);
+        _GtkTreeIter* getSelected();
+        template<class T> T get(_GtkTreeIter* itr, int i);
 };
 
 OSG_END_NAMESPACE;
