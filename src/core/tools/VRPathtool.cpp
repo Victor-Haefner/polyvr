@@ -170,11 +170,7 @@ VRGeometryPtr VRPathtool::addHandle(int nID, PosePtr p) {
 
 void VRPathtool::setHandlePose(int nID, PosePtr p) {
     auto h = getHandle(nID);
-    /*auto tmp = VRTransform::create("tmp");
-    tmp->setPose(p);
-    p = tmp->getRelativePose(ptr());
-    if (h) h->setPose(p);*/
-    if (h) h->setWorldPose(p);
+    if (h) h->setPose(p);
     if (graph) graph->setPosition(nID, p);
 }
 
