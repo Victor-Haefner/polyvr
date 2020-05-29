@@ -211,8 +211,8 @@ void PolyVR::init(int argc, char **argv) {
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_STENCIL_TEST);
     if (VROptions::get()->getOption<bool>("active_stereo"))
-        glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE | GLUT_STEREO | GLUT_STENCIL);
-    else glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE | GLUT_STENCIL);
+        glutInitDisplayMode(GLUT_RGBA | GLUT_DEPTH | GLUT_DOUBLE | GLUT_STEREO | GLUT_STENCIL | GLUT_MULTISAMPLE);
+    else glutInitDisplayMode(GLUT_RGBA | GLUT_DEPTH | GLUT_DOUBLE | GLUT_STENCIL | GLUT_MULTISAMPLE);
     cout << " ..done " << endl;
 
     //OSG
