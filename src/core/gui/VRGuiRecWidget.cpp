@@ -58,7 +58,7 @@ VRGuiRecWidget::VRGuiRecWidget() {
     setComboboxCallback("codecs", bind(&VRGuiRecWidget::on_codec_changed, this));
     setEntryCallback("entry27", bind(&VRGuiRecWidget::on_bitrate_changed, this));
 
-    gtk_widget_show_all((GtkWidget*)diag);
+    gtk_widget_show_all((GtkWidget*)box);
     function<void(int)> sigr = bind(&VRGuiRecWidget::buttonHandler, this, placeholders::_1);
     connect_signal((GtkWidget*)diag, sigr, "response");
     updateCb = VRUpdateCb::create("recorder widget", bind(&VRGuiRecWidget::update, this) );
