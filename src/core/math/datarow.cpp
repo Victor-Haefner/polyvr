@@ -16,8 +16,18 @@ void Datarow::setData(vector<double>& d) { data = d; }
 vector<double>& Datarow::getData() { return data; }
 
 void Datarow::append(double d) { data.push_back(d); }
-void Datarow::set(double d, int i) { data[i] = d; }
-double Datarow::get(int i) { return data[i]; }
+void Datarow::resize(int N, double v) { data = vector<double>(N, v); }
+
+void Datarow::set(double d, int i) { if (i < 0) i += length(); data[i] = d; }
+double Datarow::get(int i) { if (i < 0) i += length(); return data[i]; }
+
+void Datarow::add(DatarowPtr d) {
+    size_t dN = d->length();
+    int N = min(length(), dN);
+    int k1 = length()-N;
+    int k2 = dN-N;
+    for (int i=0; i<N; i++) data[i+k1] += d->data[i+k2];
+}
 
 double Datarow::getPCT(int i) {
     if (i == 0) return 0;

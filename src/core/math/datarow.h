@@ -28,6 +28,9 @@ class Datarow {
         void set(double d, int i);
         double get(int i);
 
+        void resize(int N, double v);
+        void add(DatarowPtr d);
+
         double getPCT(int i);
         double getLogRet(int i);
         DatarowPtr getPCTs();
