@@ -9,6 +9,7 @@
 #include "core/math/PCA.h"
 #endif
 #include "core/math/patch.h"
+#include "core/math/datarow.h"
 #include "core/math/OSGMathFwd.h"
 #include <OpenSG/OSGMatrix.h>
 #include <OpenSG/OSGLine.h>
@@ -129,6 +130,10 @@ struct VRPyPCA : VRPyBaseT<OSG::PCA> {
 };
 
 struct VRPyPatch : VRPyBaseT<OSG::Patch> {
+    static PyMethodDef methods[];
+};
+
+struct VRPyDatarow : VRPyBaseT<OSG::Datarow> {
     static PyMethodDef methods[];
 };
 
