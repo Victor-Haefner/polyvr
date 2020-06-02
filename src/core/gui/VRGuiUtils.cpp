@@ -35,6 +35,7 @@
 #include <gtk/gtkbuilder.h>
 
 using namespace std;
+namespace PL = std::placeholders;
 
 VRGuiBuilder::VRGuiBuilder() {}
 VRGuiBuilder::~VRGuiBuilder() {}
@@ -480,3 +481,12 @@ GtkImage* loadGTKIcon(GtkImage* img, string path, int w, int h) {
     return img;
 }
 
+bool on_close_frame_clicked(GdkEvent* event, GtkWidget* diag) {
+    gtk_widget_hide(diag);
+    return true;
+}
+
+void disableDestroyDiag(string diag) {
+    auto widget = getGUIBuilder()->get_widget(diag);
+    connect_signal<bool, GdkEvent*>(widget, bind(on_close_frame_clicked, PL::_1, widget), "delete-event");
+}
