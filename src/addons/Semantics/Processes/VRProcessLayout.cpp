@@ -159,6 +159,7 @@ VRGeometryPtr VRProcessLayout::newWidget(VRProcessNodePtr n, float height) {
 
     auto w = VRAnnotationEngine::create("ProcessElement");
     w->setBillboard(true);
+    w->setSize(layoutScale*3);
     if (n->type == SUBJECT) w->setBackground( colorSubject );
     if (n->type == MESSAGE) w->setBackground( colorMessage );
     if (n->type == TRANSITION) w->setBackground( colorMessage );
@@ -169,8 +170,8 @@ VRGeometryPtr VRProcessLayout::newWidget(VRProcessNodePtr n, float height) {
     if (n->type == STATE) w->addTag("action");
     if (n->type == MESSAGE) w->addTag("message");
     if (n->type == TRANSITION) w->addTag("transition");
-    w->getConstraint()->lock({1,3,4,5});
-    w->getConstraint()->setReferential(ptr());
+    //w->getConstraint()->lock({1,3,4,5});
+    //w->getConstraint()->setReferential(ptr());
     addChild(w);
     n->widget = w;
     return w;
@@ -201,11 +202,11 @@ void VRProcessLayout::setProcess(VRProcessPtr p) {
         addChild(toolSBD);
         toolSBD->setGraph(p->getBehaviorDiagram(subject->getID()), 1,0,1);
         toolSBD->setArrowSize(layoutScale);
-        constrainHandles(toolSBD);
+        //constrainHandles(toolSBD);
     }
     toolSID->setGraph( p->getInteractionDiagram(), 1,0,1);
     toolSID->setArrowSize(layoutScale);
-    constrainHandles(toolSID);
+    //constrainHandles(toolSID);
     rebuild();
 }
 
@@ -223,8 +224,6 @@ void VRProcessLayout::rebuild() {
     clearChildren(false);
     addChild(toolSID);
 
-    for(auto tool : toolSBDs) addChild(tool.second);
-
     auto sid = process->getInteractionDiagram();
     if (!sid) return;
 
@@ -234,6 +233,13 @@ void VRProcessLayout::rebuild() {
     }
 
     buildSID();
+
+    for (auto tool : toolSBDs) {
+        auto handle = getElement(tool.first)->getParent();
+        handle->addChild(tool.second);
+        tool.second->setTransform(Vec3d(), Vec3d(0,-1,0), Vec3d(1,0,0));
+    }
+
     buildSBDs();
     update();
 }
@@ -256,7 +262,7 @@ void VRProcessLayout::setupLabel(VRProcessNodePtr message, VRPathtoolPtr ptool, 
     Vec3d p;
     auto h0 = ptool->getHandle(id0);
     auto h1 = ptool->getHandle(id1);
-    if (h0 && h1) p = (h0->getWorldPosition() + h1->getWorldPosition())*0.5;
+    if (h0 && h1) p = (h0->getFrom() + h1->getFrom())*0.5;
 
     int idm = message->getID();
     ptool->setHandlePose(idm, Pose::create(p,Vec3d(0,0,-1),Vec3d(0,1,0) ));
@@ -289,7 +295,8 @@ void VRProcessLayout::buildSBDs() {
 
         for (unsigned int j=0; j < actions.size(); j++) {
             auto a = actions[j];
-            Vec3d pos = a->getPosition( Vec3d((j+1)*40*layoutScale,0,i*25*layoutScale), 20*layoutScale);
+            Vec3d pos = a->getPosition( Vec3d(0,0,(j+1)*15*layoutScale), 20*layoutScale);
+            //Vec3d pos = Vec3d(0,0,0);
             appendToHandle(pos, a, toolSBD);
         }
 

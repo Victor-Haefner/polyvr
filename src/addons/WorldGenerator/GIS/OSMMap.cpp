@@ -947,7 +947,7 @@ void OSMMap::readGEOJSON(string path) {
                 OGRMultiPolygon* poMPoly = (OGRMultiPolygon *) poGeometry;
                 char *wkt_tmp = nullptr;
                 poGeometry->exportToWkt(&wkt_tmp);
-                vector<vector<Vec2d>> multiPoly = multipolyFromString(wkt_tmp);
+vector<vector<Vec2d>> multiPoly = multipolyFromString(wkt_tmp);
                 vector<string> refsForWays;
                 for (auto eachPoly : multiPoly) {
                     refsForWays.clear();

@@ -97,6 +97,7 @@ class VRGuiScripts {
         void on_help_clicked();
         void on_help_close_clicked();
         void on_doc_filter_edited();
+        bool on_help_close_frame_clicked(_GdkEvent* event);
 
         void on_argadd_clicked();
         void on_argrem_clicked();

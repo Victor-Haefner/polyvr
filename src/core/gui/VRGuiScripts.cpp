@@ -1002,9 +1002,18 @@ bool VRGuiScripts_on_editor_select(GtkWidget* widget, GdkEvent* event, VRGuiScri
     return false;
 }
 
+bool VRGuiScripts::on_help_close_frame_clicked(GdkEvent* event) {
+    auto diag = getGUIBuilder()->get_widget("pybindings-docs");
+    gtk_widget_hide(diag);
+    return true;
+}
+
 namespace PL = std::placeholders;
 
 VRGuiScripts::VRGuiScripts() {
+    disableDestroyDiag("pybindings-docs");
+    disableDestroyDiag("find_dialog");
+
     setToolButtonCallback("toolbutton6", bind(&VRGuiScripts::on_new_clicked, this) );
     setToolButtonCallback("toolbutton7", bind(&VRGuiScripts::on_save_clicked, this) );
     setToolButtonCallback("toolbutton8", bind(&VRGuiScripts::on_exec_clicked, this) );

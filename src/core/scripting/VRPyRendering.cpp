@@ -19,6 +19,8 @@ PyMethodDef VRPyRendering::methods[] = {
     {"setDeferredShading", PyWrap(Rendering, setDeferredShading, "Toggle deferred shading", void, bool ) },
     {"reloadStageShaders", PyWrap(Rendering, reloadStageShaders, "Reload shaders of rendering stages", void ) },
     {"setFogParams", PyWrap(Rendering, setFogParams, "Set fog", void, Color4f, Color4f ) },
+    {"getMultisampling", PyWrap(Rendering, getMultisampling, "Get MSAA flag", bool ) },
+    {"setMultisampling", PyWrap(Rendering, setMultisampling, "Set MSAA", void, bool) },
     {NULL}  /* Sentinel */
 };
 

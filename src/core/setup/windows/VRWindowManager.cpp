@@ -60,37 +60,6 @@ bool VRWindowManager::checkWin(string name) {
 
 RenderActionRefPtr VRWindowManager::getRenderAction() { return ract; }
 
-void VRWindowManager::setMultisampling(bool on) {
-    bool res = false;
-
-#if !defined(GL_MULTISAMPLE_SGIS) && !defined(GL_MULTISAMPLE_ARB)
-#ifndef _WIN32
-#warning "No Multisampling support detected, disabling"
-#endif
-#else
-
-  if (on) {
-#ifdef GL_MULTISAMPLE_SGIS
-    res = true;
-    glEnable(GL_MULTISAMPLE_SGIS);
-#endif //GL_MULTISAMPLE_SGIS
-#ifdef GL_MULTISAMPLE_ARB
-    res = true;
-    glEnable(GL_MULTISAMPLE_ARB);
-#endif //GL_MULTISAMPLE_ARB
-  } else {
-#ifdef GL_MULTISAMPLE_SGIS
-    glDisable(GL_MULTISAMPLE_SGIS);
-#endif //GL_MULTISAMPLE_SGIS
-#ifdef GL_MULTISAMPLE_ARB
-    glDisable(GL_MULTISAMPLE_ARB);
-#endif //GL_MULTISAMPLE_ARB
-  }
-#endif //!defined(GL_MULTISAMPLE_SGIS) && !defined(GL_MULTISAMPLE_ARB)
-    //cout << "\nSET AA: " << res;
-    if (res) {;};//__GL_FXAA_MODE 	 = 7;//find out how to set vie application
-}
-
 VRWindowPtr VRWindowManager::addGlutWindow(string name) {
     VRGlutWindowPtr win = VRGlutWindow::create();
     win->setName(name);
