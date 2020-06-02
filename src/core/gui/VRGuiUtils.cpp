@@ -481,12 +481,12 @@ GtkImage* loadGTKIcon(GtkImage* img, string path, int w, int h) {
     return img;
 }
 
-bool on_close_frame_clicked(GdkEvent* event, GtkWidget* diag) {
-    gtk_widget_hide(diag);
+bool on_close_frame_clicked(GdkEvent* event, GtkWidget* diag, bool hide) {
+    if (hide) gtk_widget_hide(diag);
     return true;
 }
 
-void disableDestroyDiag(string diag) {
+void disableDestroyDiag(string diag, bool hide) {
     auto widget = getGUIBuilder()->get_widget(diag);
-    connect_signal<bool, GdkEvent*>(widget, bind(on_close_frame_clicked, PL::_1, widget), "delete-event");
+    connect_signal<bool, GdkEvent*>(widget, bind(on_close_frame_clicked, PL::_1, widget, hide), "delete-event");
 }
