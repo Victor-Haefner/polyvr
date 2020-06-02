@@ -266,6 +266,7 @@ void VRGuiEditor::setLanguage(string lang) {
 }
 
 _GtkSourceBuffer* VRGuiEditor::getSourceBuffer() { return sourceBuffer; }
+_GtkWidget* VRGuiEditor::getEditor() { return editor; }
 
 VRGuiEditor::VRGuiEditor(string window) {
     // init source view editor

@@ -47,6 +47,7 @@ class VRGuiEditor {
         void getCursor(int& line, int& column);
         void setSelection(string s);
         string getSelection();
+        _GtkWidget* getEditor();
         _GtkSourceBuffer* getSourceBuffer();
 };
 
