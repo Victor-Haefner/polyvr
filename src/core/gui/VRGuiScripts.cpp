@@ -286,11 +286,13 @@ void VRGuiScripts::on_del_clicked() {
 }
 
 void VRGuiScripts::on_select_script() { // selected a script
-    auto& P = pages[selected];
-    editor->getCursor(P.line, P.column);
-    P.line++;
-    P.column++;
-    cout << "editor focus out, cursor at: " << selected << "  " << P.line << "  " << P.column << endl;
+    if (pages.count(selected)) {
+        auto& P = pages[selected];
+        editor->getCursor(P.line, P.column);
+        P.line++;
+        P.column++;
+        //cout << "editor focus out, cursor at: " << selected << "  " << P.line << "  " << P.column << endl;
+    }
 
     VRScriptPtr script = VRGuiScripts::getSelectedScript();
     if (script == 0) {
@@ -367,11 +369,12 @@ void VRGuiScripts::on_select_script() { // selected a script
     //setCombobox("combobox1", getListStorePos("ScriptTrigger", trigger));
     trigger_cbs = true;
 
-
-    editor->grabFocus();
-    pagePos P2 = pages[selected];
-    editor->setCursor(P2.line, P2.column);
-    cout << "editor grab focus on " << selected << "  " << P2.line << "  " << P2.column << endl;
+    if (pages.count(selected)) {
+        editor->grabFocus();
+        pagePos P2 = pages[selected];
+        editor->setCursor(P2.line, P2.column);
+        //cout << "editor grab focus on " << selected << "  " << P2.line << "  " << P2.column << endl;
+    }
 }
 
 // keyboard key detection
