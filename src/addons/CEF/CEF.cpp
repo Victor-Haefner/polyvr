@@ -205,6 +205,7 @@ void CEF::addKeyboard(VRDevicePtr dev) {
 }
 
 void CEF::mouse_move(VRDeviceWeakPtr d) {
+    if (!focus) return;
     auto dev = d.lock();
     if (!dev) return;
     auto geo = obj.lock();
@@ -217,7 +218,14 @@ void CEF::mouse_move(VRDeviceWeakPtr d) {
     CefMouseEvent me;
     me.x = ins.texel[0]*resolution;
     me.y = ins.texel[1]*(resolution/aspect);
-    if (browser) browser->GetHost()->SendMouseMoveEvent(me, dev->b_state(dev->key()));
+    if (!browser) return;
+    auto host = browser->GetHost();
+    if (!host) return;
+    if (me.x != mX || me.y != mY) {
+        host->SendMouseMoveEvent(me, false);
+        mX = me.x;
+        mY = me.y;
+    }
 }
 
 void CEF::mouse(int lb, int rb, int wu, int wd, VRDeviceWeakPtr d) {
@@ -269,6 +277,7 @@ void CEF::mouse(int lb, int rb, int wu, int wd, VRDeviceWeakPtr d) {
         if (b == 0) mbt = MBT_LEFT;
         if (b == 1) mbt = MBT_MIDDLE;
         if (b == 2) mbt = MBT_RIGHT;
+        //cout << "CEF::mouse " << me.x << " " << me.y << " " << !down << endl;
         host->SendMouseClickEvent(me, mbt, !down, 1);
     }
 
