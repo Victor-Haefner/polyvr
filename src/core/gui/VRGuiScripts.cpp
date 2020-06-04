@@ -256,11 +256,11 @@ void VRGuiScripts::on_exec_clicked() {
 }
 
 void VRGuiScripts::on_perf_toggled() {
-    doPerf = getToggleButtonState("toggletoolbutton1");
+    doPerf = getToggleToolButtonState("toggletoolbutton1");
 }
 
 void VRGuiScripts::on_pause_toggled() {
-    bool b = getToggleButtonState("toggletoolbutton2");
+    bool b = getToggleToolButtonState("toggletoolbutton2");
     VRScene::getCurrent()->pauseScripts(b);
 }
 
@@ -286,15 +286,25 @@ void VRGuiScripts::on_del_clicked() {
 }
 
 void VRGuiScripts::on_select_script() { // selected a script
+    if (pages.count(selected)) {
+        auto& P = pages[selected];
+        editor->getCursor(P.line, P.column);
+        P.line++;
+        P.column++;
+        //cout << "editor focus out, cursor at: " << selected << "  " << P.line << "  " << P.column << endl;
+    }
+
     VRScriptPtr script = VRGuiScripts::getSelectedScript();
     if (script == 0) {
         setWidgetSensitivity("toolbutton8", false);
         setWidgetSensitivity("toolbutton7", false);
         setWidgetSensitivity("toolbutton9", false);
         setWidgetSensitivity("table15", false);
+        selected = "";
         return;
     }
 
+    selected = script->getName();
     trigger_cbs = false;
 
     // update options
@@ -310,7 +320,6 @@ void VRGuiScripts::on_select_script() { // selected a script
 
     // update editor content
     editor->setCore(script->getScript());
-    //adjustment->set_value(pages[script.get()].line);
 
     // update arguments liststore
     auto args = (GtkListStore*)getGUIBuilder()->get_object("liststore2");
@@ -359,6 +368,13 @@ void VRGuiScripts::on_select_script() { // selected a script
 
     //setCombobox("combobox1", getListStorePos("ScriptTrigger", trigger));
     trigger_cbs = true;
+
+    if (pages.count(selected)) {
+        editor->grabFocus();
+        pagePos P2 = pages[selected];
+        editor->setCursor(P2.line, P2.column);
+        //cout << "editor grab focus on " << selected << "  " << P2.line << "  " << P2.column << endl;
+    }
 }
 
 // keyboard key detection
@@ -428,23 +444,23 @@ void VRGuiScripts::on_name_edited(const char* path, const char* new_name) {
     on_select_script();
 }
 
-void VRGuiScripts_on_script_changed(GtkTextBuffer* tb, gpointer user_data) {
+void VRGuiScripts::on_buffer_changed() {
     setWidgetSensitivity("toolbutton7", true);
 
-    VRGuiScripts* gs = (VRGuiScripts*)user_data;
-
-    VRScriptPtr script = gs->getSelectedScript();
+    VRScriptPtr script = getSelectedScript();
     if (script == 0) return;
 
     // TODO
     // get in which line the changed occured
     // negate change if in line 0
 
-    string core = gs->getEditor()->getCore(script->getHeadSize());
+    string core = editor->getCore(script->getHeadSize());
     auto scene = VRScene::getCurrent();
     if (scene == 0) return;
     scene->updateScript(script->getName(), core, false);
 }
+
+void VRGuiScripts::on_focus_out_changed(GdkEvent*) {}
 
 shared_ptr<VRGuiEditor> VRGuiScripts::getEditor() { return editor; }
 
@@ -973,8 +989,10 @@ void VRGuiScripts::updateList() {
         }
         scriptRows.push_back( pair<VRScriptPtr, GtkTreeIter>(s,itr) );
         setScriptListRow(&itr, s);
-        if (oldpages.count(k)) pages[k] = oldpages[k];
-        else pages[k] = page();
+
+        string name = k->getName();
+        if (oldpages.count(name)) pages[name] = oldpages[name];
+        else pages[name] = pagePos();
     }
     on_select_script();
 }
@@ -1002,9 +1020,18 @@ bool VRGuiScripts_on_editor_select(GtkWidget* widget, GdkEvent* event, VRGuiScri
     return false;
 }
 
+bool VRGuiScripts::on_help_close_frame_clicked(GdkEvent* event) {
+    auto diag = getGUIBuilder()->get_widget("pybindings-docs");
+    gtk_widget_hide(diag);
+    return true;
+}
+
 namespace PL = std::placeholders;
 
 VRGuiScripts::VRGuiScripts() {
+    disableDestroyDiag("pybindings-docs");
+    disableDestroyDiag("find_dialog");
+
     setToolButtonCallback("toolbutton6", bind(&VRGuiScripts::on_new_clicked, this) );
     setToolButtonCallback("toolbutton7", bind(&VRGuiScripts::on_save_clicked, this) );
     setToolButtonCallback("toolbutton8", bind(&VRGuiScripts::on_exec_clicked, this) );
@@ -1044,7 +1071,8 @@ VRGuiScripts::VRGuiScripts() {
     editor->addKeyBinding("find", VRUpdateCb::create("findCb", bind(&VRGuiScripts::on_find_clicked, this)));
     editor->addKeyBinding("save", VRUpdateCb::create("saveCb", bind(&VRGuiScripts::on_save_clicked, this)));
     editor->addKeyBinding("exec", VRUpdateCb::create("execCb", bind(&VRGuiScripts::on_exec_clicked, this)));
-    g_signal_connect(editor->getSourceBuffer(), "changed", G_CALLBACK(VRGuiScripts_on_script_changed), this);
+    connect_signal<void>(editor->getSourceBuffer(), bind(&VRGuiScripts::on_buffer_changed, this), "changed");
+    //connect_signal<void, GdkEvent*>(editor->getEditor(), bind(&VRGuiScripts::on_focus_out_changed, this, PL::_1), "focus-out-event");
 
     setEntryCallback("entry10", bind(&VRGuiScripts::on_find_diag_find_clicked, this), false, false);
 

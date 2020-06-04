@@ -35,6 +35,7 @@
 #include <gtk/gtkbuilder.h>
 
 using namespace std;
+namespace PL = std::placeholders;
 
 VRGuiBuilder::VRGuiBuilder() {}
 VRGuiBuilder::~VRGuiBuilder() {}
@@ -171,6 +172,11 @@ bool getRadioToolButtonState(string b) {
 bool getToggleButtonState(string b) {
     GtkToggleButton* tbut = (GtkToggleButton*)getGUIBuilder()->get_widget(b);
     return gtk_toggle_button_get_active(tbut);
+}
+
+bool getToggleToolButtonState(string b) {
+    GtkToggleToolButton* tbut = (GtkToggleToolButton*)getGUIBuilder()->get_widget(b);
+    return gtk_toggle_tool_button_get_active(tbut);
 }
 
 string getTreeviewCell(string treeview, GtkTreeIter iter, int column) {
@@ -480,3 +486,12 @@ GtkImage* loadGTKIcon(GtkImage* img, string path, int w, int h) {
     return img;
 }
 
+bool on_close_frame_clicked(GdkEvent* event, GtkWidget* diag, bool hide) {
+    if (hide) gtk_widget_hide(diag);
+    return true;
+}
+
+void disableDestroyDiag(string diag, bool hide) {
+    auto widget = getGUIBuilder()->get_widget(diag);
+    connect_signal<bool, GdkEvent*>(widget, bind(on_close_frame_clicked, PL::_1, widget, hide), "delete-event");
+}

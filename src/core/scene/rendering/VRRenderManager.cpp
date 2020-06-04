@@ -37,6 +37,8 @@ VRRenderManager::VRRenderManager() {
     store("ssao_noise", &ssao_noise);
     store("fogParams", &fogParams);
     store("fogColor", &fogColor);
+
+    setMultisampling(true);
 }
 
 VRRenderManager::~VRRenderManager() {}
@@ -166,6 +168,16 @@ void VRRenderManager::setDeferredChannel(int c) {
 
 void VRRenderManager::reloadStageShaders() {
     for (auto r : getRenderings()) r->reloadStageShaders();
+}
+
+bool VRRenderManager::getMultisampling() { return glMSAA; }
+void VRRenderManager::setMultisampling(bool b) {
+    glMSAA = b;
+#ifdef GL_MULTISAMPLE_ARB
+    cout << "VRRenderManager::setMultisampling " << b << endl;
+    if (b) glEnable(GL_MULTISAMPLE_ARB);
+    else glDisable(GL_MULTISAMPLE_ARB);
+#endif
 }
 
 void VRRenderManager::setDeferredShading(bool b) { deferredRendering = b; update(); }

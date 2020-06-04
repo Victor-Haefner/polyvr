@@ -38,16 +38,18 @@ class VRGuiScripts {
             searchResult(string s, int l, int c);
         };
 
-        struct page {
+        struct pagePos {
             int line = 0;
+            int column = 0;
         };
 
         shared_ptr<VRGuiEditor> editor;
-        map<VRScript*, page> pages;
+        map<string, pagePos> pages;
         bool trigger_cbs = true;
         bool doPerf = false;
 	    VRUpdateCbPtr updatePtr;
 	    VRDeviceCbPtr sceneChangedCb;
+	    string selected;
 
         _GtkTable* scriptImportWidget = 0;
         _GtkTreeView* import_treeview1 = 0;
@@ -75,6 +77,8 @@ class VRGuiScripts {
         void on_pause_toggled();
 
         void on_select_script();
+        void on_buffer_changed();
+        void on_focus_out_changed(_GdkEvent*);
         void on_change_script_type();
         void on_change_group();
         void on_change_server();
@@ -97,6 +101,7 @@ class VRGuiScripts {
         void on_help_clicked();
         void on_help_close_clicked();
         void on_doc_filter_edited();
+        bool on_help_close_frame_clicked(_GdkEvent* event);
 
         void on_argadd_clicked();
         void on_argrem_clicked();

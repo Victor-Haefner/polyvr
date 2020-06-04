@@ -557,6 +557,22 @@ simplePyType(Octree, VRPyOctree::New );
 simplePyType(PCA, New_ptr);
 #endif
 simplePyType(Patch, New_ptr);
+simplePyType(Datarow, New_ptr);
+
+PyMethodDef VRPyDatarow::methods[] = {
+    {"append", PyWrap2( Datarow, append, "Add value", void, double ) },
+    {"set", PyWrap2( Datarow, set, "Set ith value", void, double, int ) },
+    {"get", PyWrap2( Datarow, get, "Get ith value", double, int ) },
+    {"length", PyWrap2( Datarow, length, "Get data size", size_t ) },
+    {"resize", PyWrap2( Datarow, resize, "Resize data with value", void, int, double ) },
+    {"add", PyWrap2( Datarow, add, "Add all elements of other datarow", void, DatarowPtr ) },
+    {"getPCT", PyWrap2( Datarow, getPCT, "Get ith PCT", double, int ) },
+    {"getLogRet", PyWrap2( Datarow, getLogRet, "Get ith log return", double, int ) },
+    {"getPCTs", PyWrap2( Datarow, getPCTs, "Get PCTs", DatarowPtr ) },
+    {"getLogRets", PyWrap2( Datarow, getLogRets, "Get log returns", DatarowPtr ) },
+    {"computeCorrelation", PyWrap2( Datarow, computeCorrelation, "Compute correlation between two series", double, DatarowPtr ) },
+    {NULL}  /* Sentinel */
+};
 
 PyMethodDef VRPyExpression::methods[] = {
     {"set", PyWrap2( Expression, set, "Set expression", void, string ) },

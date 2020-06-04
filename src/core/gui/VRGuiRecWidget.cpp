@@ -22,9 +22,7 @@ VRGuiRecWidget::VRGuiRecWidget() {
 
     diag = (GtkDialog*)getGUIBuilder()->get_widget("recorder");
     lbl = (GtkLabel*)getGUIBuilder()->get_widget("label149");
-    gtk_window_set_deletable((GtkWindow*)diag, false);  // not working on most platforms
-    function<bool(GdkEventAny*)> sig = bind(&VRGuiRecWidget::deleteHandler, this, placeholders::_1);
-    connect_signal((GtkWidget*)diag, sig, "delete_event");
+    disableDestroyDiag("recorder");
 
     gtk_window_set_resizable((GtkWindow*)diag, false);
     gtk_window_set_type_hint((GtkWindow*)diag, GDK_WINDOW_TYPE_HINT_MENU);
@@ -44,6 +42,8 @@ VRGuiRecWidget::VRGuiRecWidget() {
         GtkWidget* img = gtk_image_new_from_stock(icon, GTK_ICON_SIZE_BUTTON);
         gtk_container_add((GtkContainer*)but, img);
         gtk_container_add((GtkContainer*)box, (GtkWidget*)but);
+        function<void()> sig = bind(&VRGuiRecWidget::buttonHandler, this, signal);
+        connect_signal((GtkWidget*)but, sig, "clicked");
     };
 
     addButton(GTK_STOCK_MEDIA_RECORD, 1);
@@ -58,9 +58,7 @@ VRGuiRecWidget::VRGuiRecWidget() {
     setComboboxCallback("codecs", bind(&VRGuiRecWidget::on_codec_changed, this));
     setEntryCallback("entry27", bind(&VRGuiRecWidget::on_bitrate_changed, this));
 
-    gtk_widget_show_all((GtkWidget*)diag);
-    function<void(int)> sigr = bind(&VRGuiRecWidget::buttonHandler, this, placeholders::_1);
-    connect_signal((GtkWidget*)diag, sigr, "response");
+    gtk_widget_show_all((GtkWidget*)box);
     updateCb = VRUpdateCb::create("recorder widget", bind(&VRGuiRecWidget::update, this) );
     VRSceneManager::get()->addUpdateFkt( updateCb );
 
@@ -71,8 +69,6 @@ VRGuiRecWidget::~VRGuiRecWidget() {}
 
 void VRGuiRecWidget::on_codec_changed() { rec->setCodec( getComboboxText("codecs") ); }
 void VRGuiRecWidget::on_bitrate_changed() { rec->setBitrate( toInt( getTextEntry("entry27") ) ); }
-
-bool VRGuiRecWidget::deleteHandler(GdkEventAny* e) { setVisible(false); return true; }
 
 void VRGuiRecWidget::setVisible(bool b) {
     if (b) gtk_widget_show((GtkWidget*)diag);

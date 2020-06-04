@@ -60,37 +60,6 @@ bool VRWindowManager::checkWin(string name) {
 
 RenderActionRefPtr VRWindowManager::getRenderAction() { return ract; }
 
-void VRWindowManager::setMultisampling(bool on) {
-    bool res = false;
-
-#if !defined(GL_MULTISAMPLE_SGIS) && !defined(GL_MULTISAMPLE_ARB)
-#ifndef _WIN32
-#warning "No Multisampling support detected, disabling"
-#endif
-#else
-
-  if (on) {
-#ifdef GL_MULTISAMPLE_SGIS
-    res = true;
-    glEnable(GL_MULTISAMPLE_SGIS);
-#endif //GL_MULTISAMPLE_SGIS
-#ifdef GL_MULTISAMPLE_ARB
-    res = true;
-    glEnable(GL_MULTISAMPLE_ARB);
-#endif //GL_MULTISAMPLE_ARB
-  } else {
-#ifdef GL_MULTISAMPLE_SGIS
-    glDisable(GL_MULTISAMPLE_SGIS);
-#endif //GL_MULTISAMPLE_SGIS
-#ifdef GL_MULTISAMPLE_ARB
-    glDisable(GL_MULTISAMPLE_ARB);
-#endif //GL_MULTISAMPLE_ARB
-  }
-#endif //!defined(GL_MULTISAMPLE_SGIS) && !defined(GL_MULTISAMPLE_ARB)
-    //cout << "\nSET AA: " << res;
-    if (res) {;};//__GL_FXAA_MODE 	 = 7;//find out how to set vie application
-}
-
 VRWindowPtr VRWindowManager::addGlutWindow(string name) {
     VRGlutWindowPtr win = VRGlutWindow::create();
     win->setName(name);
@@ -158,6 +127,9 @@ void VRWindowManager::updateWindows() {
     if (rendering_paused) return;
     auto scene = VRScene::getCurrent();
     if (scene) scene->allowScriptThreads();
+
+    //auto clist = Thread::getCurrentChangeList();
+    //if (clist->getNumChanged() == 0 && clist->getNumCreated() == 0) return;
 
     ract->setResetStatistics(false);
     StatCollector* sc = ract->getStatCollector();
@@ -230,6 +202,7 @@ void VRWindowManager::updateWindows() {
         auto clist = Thread::getCurrentChangeList();
         VRGlobals::NCHANGED = clist->getNumChanged();
         VRGlobals::NCREATED = clist->getNumCreated();
+        if (VRGlobals::NCHANGED == 0 && VRGlobals::NCREATED == 0) return true;
         //changeListStats.update();
         if (!wait()) return false;
         /** let the windows merge the change lists, sync and clear **/

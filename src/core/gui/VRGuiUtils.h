@@ -92,6 +92,7 @@ void connect_signal(T1* widget, T2 bin, string event, bool after = false) {
 void clearContainer(GtkWidget* container);
 void setWidgetVisibility(string e, bool b);
 void setWidgetSensitivity(string e, bool b);
+void disableDestroyDiag(string diag, bool hide = true);
 
 // callback helpers
 void setButtonCallback(string b, function<void()> sig );
@@ -118,6 +119,7 @@ bool getCheckButtonState(string b);
 bool getRadioButtonState(string b);
 bool getRadioToolButtonState(string b);
 bool getToggleButtonState(string b);
+bool getToggleToolButtonState(string b);
 void setButtonText(string cb, string txt );
 
 // COMBOBOX

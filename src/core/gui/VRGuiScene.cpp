@@ -66,7 +66,7 @@ VRObjectPtr VRGuiScene::getSelected() {
 }
 
 void VRGuiScene::setObject(VRObjectPtr o) {
-    setWidgetSensitivity("expander2", true);
+    setWidgetVisibility("expander2", true);
 
     // set object properties
     setToggleButton("checkbutton6", o->isVisible());
@@ -80,7 +80,7 @@ void VRGuiScene::setObject(VRObjectPtr o) {
 }
 
 void VRGuiScene::setTransform(VRTransformPtr e) {
-    setWidgetSensitivity("expander1", true);
+    setWidgetVisibility("expander1", true);
 
     Vec3d f,a,u,d,s;
     if (transformModeLocal) {
@@ -182,9 +182,9 @@ void VRGuiScene::on_geo_menu_print() {
 }
 
 void VRGuiScene::setGeometry(VRGeometryPtr g) {
-    setWidgetSensitivity("expander11", true);
-    setWidgetSensitivity("expander14", true);
-    setWidgetSensitivity("expander16", true);
+    setWidgetVisibility("expander11", true);
+    setWidgetVisibility("expander14", true);
+    setWidgetVisibility("expander16", true);
     VRMaterialPtr mat = g->getMaterial();
     setMaterial(mat);
 
@@ -235,7 +235,7 @@ void VRGuiScene::setGeometry(VRGeometryPtr g) {
 }
 
 void VRGuiScene::setLight(VRLightPtr l) {
-    setWidgetSensitivity("expander13", true);
+    setWidgetVisibility("expander13", true);
 
     setToggleButton("checkbutton31", l->isOn());
     setToggleButton("checkbutton32", l->getShadows());
@@ -271,7 +271,7 @@ void VRGuiScene::setLight(VRLightPtr l) {
 }
 
 void VRGuiScene::setCamera(VRCameraPtr c) {
-    setWidgetSensitivity("expander12", true);
+    setWidgetVisibility("expander12", true);
     setToggleButton("checkbutton17", c->getAcceptRoot());
     setTextEntry("entry60", toString(c->getAspect()));
     setTextEntry("entry61", toString(c->getFov()));
@@ -280,8 +280,8 @@ void VRGuiScene::setCamera(VRCameraPtr c) {
 }
 
 void VRGuiScene::setGroup(VRGroupPtr g) {
-    setWidgetSensitivity("expander2", true);
-    setWidgetSensitivity("expander9", true);
+    setWidgetVisibility("expander2", true);
+    setWidgetVisibility("expander9", true);
     setToggleButton("checkbutton23", g->getActive() );
 
     fillStringListstore("liststore3", g->getGroups());
@@ -290,8 +290,8 @@ void VRGuiScene::setGroup(VRGroupPtr g) {
 }
 
 void VRGuiScene::setLod(VRLodPtr lod) {
-    setWidgetSensitivity("expander2", true);
-    setWidgetSensitivity("expander10", true);
+    setWidgetVisibility("expander2", true);
+    setWidgetVisibility("expander10", true);
 
     setTextEntry("entry9", toString(lod->getDecimateNumber()));
     setToggleButton("checkbutton35", lod->getDecimate());
@@ -311,7 +311,7 @@ void VRGuiScene::setLod(VRLodPtr lod) {
 }
 
 void VRGuiScene::setEntity(VREntityPtr e) {
-    setWidgetSensitivity("expander27", true);
+    setWidgetVisibility("expander27", true);
 
     setLabel("label145", e->getConceptList());
 
@@ -330,7 +330,7 @@ void VRGuiScene::setEntity(VREntityPtr e) {
 }
 
 /*void setCSG(CSGGeometryPtr g) {
-    setWidgetSensitivity("expander15", true);
+    setWidgetVisibility("expander15", true);
 
     bool b = g->getEditMode();
     string op = g->getOperation();
@@ -341,17 +341,17 @@ void VRGuiScene::setEntity(VREntityPtr e) {
 void VRGuiScene::on_toggle_liveupdate() { liveUpdate = !liveUpdate; }
 
 void VRGuiScene::updateObjectForms(bool disable) {
-    setWidgetSensitivity("expander1", false);
-    setWidgetSensitivity("expander2", false);
-    setWidgetSensitivity("expander9", false);
-    setWidgetSensitivity("expander10", false);
-    setWidgetSensitivity("expander11", false);
-    setWidgetSensitivity("expander12", false);
-    setWidgetSensitivity("expander13", false);
-    setWidgetSensitivity("expander14", false);
-    setWidgetSensitivity("expander15", false);
-    setWidgetSensitivity("expander16", false);
-    setWidgetSensitivity("expander27", false);
+    setWidgetVisibility("expander1", false);
+    setWidgetVisibility("expander2", false);
+    setWidgetVisibility("expander9", false);
+    setWidgetVisibility("expander10", false);
+    setWidgetVisibility("expander11", false);
+    setWidgetVisibility("expander12", false);
+    setWidgetVisibility("expander13", false);
+    setWidgetVisibility("expander14", false);
+    setWidgetVisibility("expander15", false);
+    setWidgetVisibility("expander16", false);
+    setWidgetVisibility("expander27", false);
     if (disable) return;
 
     VRObjectPtr obj = getSelected();
@@ -557,7 +557,7 @@ void VRGuiScene::on_change_from(Vec3d v) {
     if (!obj) return;
     if (transformModeLocal) obj->setFrom(v);
     else obj->setWorldPosition(v);
-    updateObjectForms();
+    //updateObjectForms(); // TODO: fix bug!
 }
 
 void VRGuiScene::on_change_at(Vec3d v) {

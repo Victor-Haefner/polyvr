@@ -243,7 +243,7 @@ vector<VREntityPtr> Variable::getEntities(Evaluation::STATE state) {
             continue; // ewntity has no evaluation
         }
         auto& eval = evaluations[e.first];
-        bool valid = (eval.state == state);
+        bool valid = (eval.state == state || state == Evaluation::ALL);
         if (valid) res.push_back(e.second);
     }
     return res;

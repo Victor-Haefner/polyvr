@@ -226,6 +226,7 @@ vector<VROntologyRulePtr> VROntology::getRules() {
 }
 
 VROntologyRulePtr VROntology::addRule(string rule, string ac) {
+    for (auto r : rules) if (r.second->rule == rule) return r.second;
     VROntologyRulePtr r = VROntologyRule::create(rule, ac);
     rules[r->ID] = r;
     return r;
