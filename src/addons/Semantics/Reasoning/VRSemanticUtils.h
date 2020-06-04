@@ -28,7 +28,7 @@ struct VPath {
 };
 
 struct Evaluation {
-    enum STATE {VALID, INVALID, ASSUMPTION};
+    enum STATE {ALL, VALID, INVALID, ASSUMPTION};
     STATE state = VALID; // valid, assumption, anonymous, ruled_out, ...
     string toString();
 };

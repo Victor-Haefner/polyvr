@@ -316,6 +316,7 @@ bool VRReasoner::apply(VRStatementPtr statement, Query query, VRSemanticContextP
     if (statement->verb == "set" && statement->terms.size() >= 2) {
         auto& left = statement->terms[0];
         auto& right = statement->terms[1];
+        print(" try apply set to " + left.str);
 
         bool lim = left.isMathExpression();
         bool rim = right.isMathExpression();
@@ -345,7 +346,11 @@ bool VRReasoner::apply(VRStatementPtr statement, Query query, VRSemanticContextP
                     for (unsigned int i=0; i<ents1.size(); i++) applySet(ents1[i], ents2[i]);
                 } else {
                     for (auto eL : ents1) {
-                        for (auto eR : ents2) applySet(eL, eR);
+                        if (ents2.size() > 0) for (auto eR : ents2) applySet(eL, eR);
+                        else {
+                            left.path.setValue(right.var->value[0], eL);
+                            print("  set " + left.str + " to " + right.str, GREEN);
+                        }
                     }
                 }
 
@@ -354,7 +359,7 @@ bool VRReasoner::apply(VRStatementPtr statement, Query query, VRSemanticContextP
                 print("  set " + left.str + " to " + right.str + " -> " + toString(left.var->value), GREEN);
             }
         }
-        statement->state = 1;
+        statement->state = 1; // at least wait to find someone!
     }
 
     if (statement->constructor && statement->terms.size() >= 1) { // 'Error(e) : Event(v) ; is(v.name,crash)'
