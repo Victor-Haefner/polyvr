@@ -102,7 +102,9 @@ struct VRSemanticContext : public std::enable_shared_from_this<VRSemanticContext
     VROntologyPtr onto = 0;
 
     int itr=0;
-    int itr_max = 5;
+    int itr_stale=0;
+    int itr_max = 20;
+    int itr_max_stale = 2;
 
     VRSemanticContext(VROntologyPtr onto = 0);
     VRSemanticContextPtr ptr();
