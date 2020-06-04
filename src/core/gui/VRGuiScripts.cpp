@@ -256,11 +256,11 @@ void VRGuiScripts::on_exec_clicked() {
 }
 
 void VRGuiScripts::on_perf_toggled() {
-    doPerf = getToggleButtonState("toggletoolbutton1");
+    doPerf = getToggleToolButtonState("toggletoolbutton1");
 }
 
 void VRGuiScripts::on_pause_toggled() {
-    bool b = getToggleButtonState("toggletoolbutton2");
+    bool b = getToggleToolButtonState("toggletoolbutton2");
     VRScene::getCurrent()->pauseScripts(b);
 }
 

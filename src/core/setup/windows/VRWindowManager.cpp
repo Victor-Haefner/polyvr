@@ -128,6 +128,9 @@ void VRWindowManager::updateWindows() {
     auto scene = VRScene::getCurrent();
     if (scene) scene->allowScriptThreads();
 
+    //auto clist = Thread::getCurrentChangeList();
+    //if (clist->getNumChanged() == 0 && clist->getNumCreated() == 0) return;
+
     ract->setResetStatistics(false);
     StatCollector* sc = ract->getStatCollector();
     if (sc) {
@@ -199,6 +202,7 @@ void VRWindowManager::updateWindows() {
         auto clist = Thread::getCurrentChangeList();
         VRGlobals::NCHANGED = clist->getNumChanged();
         VRGlobals::NCREATED = clist->getNumCreated();
+        if (VRGlobals::NCHANGED == 0 && VRGlobals::NCREATED == 0) return true;
         //changeListStats.update();
         if (!wait()) return false;
         /** let the windows merge the change lists, sync and clear **/

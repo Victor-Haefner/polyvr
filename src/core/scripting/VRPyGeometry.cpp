@@ -455,7 +455,7 @@ PyObject* VRPyGeometry::setTexCoords(VRPyGeometry* self, PyObject *args) {
 
     int vN = pySize(PyList_GetItem(vec,0));
 
-    cout << "VRPyGeometry::setTexCoords " << VRPyVec3f::check(PyList_GetItem(vec,0)) << endl;
+    //cout << "VRPyGeometry::setTexCoords " << VRPyVec3f::check(PyList_GetItem(vec,0)) << endl;
 
     if (vN == 2) {
         GeoVec2fPropertyMTRecPtr tc = GeoVec2fProperty::create();

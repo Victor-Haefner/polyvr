@@ -59,6 +59,8 @@ class CEF {
         float aspect = 1;
         bool init = false;
         bool focus = false;
+        int mX = -1;
+        int mY = -1;
 
         VRUpdateCbPtr update_callback;
         map<VRDevice*, VRDeviceCbPtr> mouse_dev_callback;

@@ -174,6 +174,11 @@ bool getToggleButtonState(string b) {
     return gtk_toggle_button_get_active(tbut);
 }
 
+bool getToggleToolButtonState(string b) {
+    GtkToggleToolButton* tbut = (GtkToggleToolButton*)getGUIBuilder()->get_widget(b);
+    return gtk_toggle_tool_button_get_active(tbut);
+}
+
 string getTreeviewCell(string treeview, GtkTreeIter iter, int column) {
     GtkTreeView* tree_view = (GtkTreeView*)getGUIBuilder()->get_object(treeview);
     GtkTreeModel* model = gtk_tree_view_get_model(tree_view);

@@ -119,6 +119,7 @@ bool getCheckButtonState(string b);
 bool getRadioButtonState(string b);
 bool getRadioToolButtonState(string b);
 bool getToggleButtonState(string b);
+bool getToggleToolButtonState(string b);
 void setButtonText(string cb, string txt );
 
 // COMBOBOX
