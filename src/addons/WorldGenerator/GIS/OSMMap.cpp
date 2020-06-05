@@ -986,7 +986,6 @@ vector<vector<Vec2d>> multiPoly = multipolyFromString(wkt_tmp);
 void OSMMap::readSHAPE(string path) {
 #ifndef WITHOUT_GDAL
 #if GDAL_VERSION_NUM >= GDAL_COMPUTE_VERSION(2,3,0)
-
 #elif GDAL_VERSION_NUM >= GDAL_COMPUTE_VERSION(2,0,0)
     VRTimer t; t.start();
     GDALAllRegister();
@@ -1004,6 +1003,24 @@ void OSMMap::readSHAPE(string path) {
     cout << "  loaded " << ways.size() << " ways, " << nodes.size() << " nodes and " << relations.size() << " relations" << endl;
     cout << "  secs needed: " << t2 << endl;
 #endif // GDAL_VERSION_NUM
+#endif // WITHOUT_GDAL
+}
+
+void OSMMap::readGML(string path) {
+#ifndef WITHOUT_GDAL
+    cout << "OSMMap::readGML path " << path << endl;
+    cout << "  GDAL Version Nr:" << GDAL_VERSION_NUM << endl;
+
+    int nodeID = -1;
+    int wayID = -1;
+    int layercount = -1;
+    VRTimer t; t.start();
+#if GDAL_VERSION_NUM >= GDAL_COMPUTE_VERSION(2,3,0)
+#elif GDAL_VERSION_NUM >= GDAL_COMPUTE_VERSION(2,0,0)
+#endif // GDAL_VERSION_NUM
+    auto t2 = t.stop()/1000.0;
+    cout << "  loaded " << ways.size() << " ways, " << nodes.size() << " nodes and " << relations.size() << " relations" << endl;
+    cout << "  secs needed: " << t2 << endl;
 #endif // WITHOUT_GDAL
 }
 
