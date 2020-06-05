@@ -13,6 +13,7 @@
 #include "core/math/path.h"
 
 #include "core/scene/VRScene.h"
+#include "core/scene/VRSceneManager.h"
 
 #include <string>
 #include <iostream>
@@ -31,6 +32,9 @@
 #define TINYGLTF_IMPLEMENTATION
 #define STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_WRITE_IMPLEMENTATION
+
+//DEV OPTION FOR SHADER IMPLEMENTATION - uncomment for dev with pbr
+//#define HANDLE_PBR_MATERIAL
 
 #include "tiny_gltf.h"
 
@@ -1270,6 +1274,10 @@ class GLTFLoader : public GLTFUtils {
         }
 
         void handleMaterial(const tinygltf::Material &gltfMaterial){
+            #ifdef HANDLE_PBR_MATERIAL
+                handlePBRMaterial(gltfMaterial);
+                return;
+            #endif
             matID++;
             VRMaterialPtr mat = VRMaterial::create(gltfMaterial.name);
             if (gltfMaterial.extensions.count("KHR_materials_pbrSpecularGlossines")) {
@@ -1347,6 +1355,153 @@ class GLTFLoader : public GLTFUtils {
             if (!disableMaterials) {
                 materials[matID] = mat;
             }
+        }
+
+        void handlePBRMaterial(const tinygltf::Material &gltfMaterial){
+            matID++;
+            VRMaterialPtr mat = VRMaterial::create(gltfMaterial.name);
+            mat->setPointSize(5);
+            //cout << "   MATE " << gltfMaterial.name << endl;
+            string defines = "#version 400 compatibility\n";
+            bool usePBR = false;
+
+            bool bsT = false;
+            bool mrT = false;
+            bool noT = false;
+            bool emT = false;
+
+            bool bsF = false;
+            bool mtF = false;
+            bool rfF = false;
+            bool emF = false;
+
+            bool alMask = false;
+            //bool alOpaque = false;
+            //bool alBlend = false;
+            //float alphaCutoff = 0.5;
+
+            bool doS = false;
+
+            if (gltfMaterial.values.count("baseColorTexture")) {
+                defines += "#define HAS_BASE_COLOR_MAP 1\n";
+                bsT = true;
+            }
+            if (gltfMaterial.values.count("metallicRoughnessTexture")) {
+                defines += "#define HAS_METALLIC_ROUGHNESS_MAP 1\n";
+                mrT = true;
+            }
+            if (gltfMaterial.values.count("baseColorFactor")) bsF = true;
+            if (gltfMaterial.values.count("metallicFactor")) mtF = true;
+            if (gltfMaterial.values.count("roughnessFactor")) rfF = true;
+            if (gltfMaterial.values.count("emissiveFactor")) emF = true;
+
+            if (gltfMaterial.additionalValues.count("normalTexture")) {
+                defines += "#define HAS_NORMAL_MAP 1\n";
+                noT = true;
+            }
+            if (gltfMaterial.additionalValues.count("emissiveTexture")) {
+                defines += "#define HAS_EMISSIVE_MAP 1\n";
+                emT = true;
+            }
+            if (gltfMaterial.additionalValues.count("alphaMode")) {
+                if (gltfMaterial.alphaMode == "MASK") {
+                    defines += "#define ALPHAMODE_MASK 1\n";
+                    alMask = true;
+                }
+                if (gltfMaterial.alphaMode == "OPAQUE") {
+                    defines += "#define ALPHAMODE_OPAQUE 1\n";
+                    //alOpaque = true;
+                }
+                if (gltfMaterial.alphaMode == "BLEND") {
+                    defines += "#define ALPHAMODE_BLEND 1\n";
+                    //alBlend = true;
+                }
+            }
+            if (gltfMaterial.additionalValues.count("doubleSided")) {
+                if (gltfMaterial.doubleSided) doS = true;
+            }
+
+            if (bsT || bsF) {
+                defines += "#define MATERIAL_METALLICROUGHNESS 1\n";
+                usePBR = true;
+            }
+            //defines += "#define USE_PUNCTUAL 1\n";
+
+            auto readFile = [&](string path) {
+                ifstream file(path.c_str());
+                string str((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+                file.close();
+                return str;
+            };
+
+            string wdir = VRSceneManager::get()->getOriginalWorkdir();
+            string fpPath = wdir+"/shader/PBR/PBR.fp.glsl";
+            //string fdpPath = wdir+"/shader/PBR/PBR.fdp";
+            string vpPath = wdir+"/shader/PBR/PBR.vp.glsl";
+            string fpShader = readFile(wdir+"/shader/PBR/PBR.fp.glsl");
+            string vpShader = readFile(wdir+"/shader/PBR/PBR.vp.glsl");
+            mat->setFragmentShader(defines+fpShader,fpPath, false);
+            mat->setVertexShader(vpShader,vpPath);
+
+            auto setTexture = [&](int pos, string sampler, int tID){
+                if (textures.count(tID)) {
+                    mat->setShaderParameter(sampler,pos);
+                    mat->setTexture(textures[tID], true, pos);
+                }
+            };
+
+            if (bsT) {
+                setTexture(0, "u_BaseColorSampler", gltfMaterial.pbrMetallicRoughness.baseColorTexture.index);
+                cout << gltfMaterial.pbrMetallicRoughness.baseColorTexture.texCoord << endl;
+                mat->setShaderParameter("u_BaseColorUVSet", gltfMaterial.pbrMetallicRoughness.baseColorTexture.texCoord);
+            }
+            if (mrT) {
+                setTexture(1, "u_MetallicRoughnessSampler", gltfMaterial.pbrMetallicRoughness.metallicRoughnessTexture.index);
+                mat->setShaderParameter("u_MetallicRoughnessUVSet", gltfMaterial.pbrMetallicRoughness.metallicRoughnessTexture.texCoord);
+            }
+            if (noT) {
+                setTexture(2, "u_NormalSampler", gltfMaterial.normalTexture.index);
+                cout << gltfMaterial.normalTexture.texCoord << endl;
+                mat->setShaderParameter("u_NormalUVSet", gltfMaterial.normalTexture.texCoord);
+            }
+            if (emT) {
+                setTexture(3, "u_EmissiveSampler", gltfMaterial.emissiveTexture.index);
+                mat->setShaderParameter("u_EmissiveUVSet", gltfMaterial.emissiveTexture.texCoord);
+            }
+
+            Color4f baseColor = Color4f(1,1,1,1);
+            float metallicFactor = 1.0;
+            float roughnessFactor = 1.0;
+            Color3f emissiveFactor = Color3f(0,0,0);
+
+            if (bsF) {
+                baseColor = Color4f(gltfMaterial.pbrMetallicRoughness.baseColorFactor[0],gltfMaterial.pbrMetallicRoughness.baseColorFactor[1],gltfMaterial.pbrMetallicRoughness.baseColorFactor[2],1.0);
+                if (gltfMaterial.pbrMetallicRoughness.baseColorFactor.size() > 3) baseColor[3] = gltfMaterial.pbrMetallicRoughness.baseColorFactor[3];
+            }
+            if (mtF) { metallicFactor = float(gltfMaterial.pbrMetallicRoughness.metallicFactor); }
+            if (rfF) { roughnessFactor = float(gltfMaterial.pbrMetallicRoughness.roughnessFactor); }
+            if (emF) emissiveFactor = Color3f(gltfMaterial.emissiveFactor[0],gltfMaterial.emissiveFactor[1],gltfMaterial.emissiveFactor[2]);
+            if (usePBR) {
+                mat->setShaderParameter("u_BaseColorFactor", baseColor);
+                mat->setShaderParameter("u_MetallicFactor", metallicFactor);
+                mat->setShaderParameter("u_RoughnessFactor", roughnessFactor);
+                mat->setShaderParameter("u_EmissiveFactor", emissiveFactor);
+            }
+            if (alMask) mat->setShaderParameter("u_AlphaCutoff", float(gltfMaterial.alphaCutoff));
+            mat->setShaderParameter("u_Exposure", float(1.0));
+            if (doS) ;
+
+            cout << "material with:\n";
+            cout << "   baseColorTexture: " << bsT << "\n";
+            cout << "   metallicRoughnessTexture: " << mrT << "\n";
+            cout << "   normalTexture: " << noT << "\n";
+            cout << "   emissiveTexture: " << emT << "\n";
+            cout << "    baseColor: " << bsF << " " << baseColor << "\n";
+            cout << "    roughnessFactor: " << rfF << " " << roughnessFactor << "\n";
+            cout << "    metallicFactor: " << mtF << " " << metallicFactor << "\n";
+            cout << "    emissiveFactor: " << emF << " " << emissiveFactor<< "\n";
+            cout << endl;
+            materials[matID] = mat;
         }
 
         void handleTexture(const tinygltf::Texture &gltfTexture){
