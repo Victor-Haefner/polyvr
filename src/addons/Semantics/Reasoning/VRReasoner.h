@@ -54,6 +54,7 @@ class VRReasoner {
         bool set(VRStatementPtr s, VRSemanticContextPtr c);
         bool has(VRStatementPtr s, VRSemanticContextPtr c);
         bool findRule(VRStatementPtr s, VRSemanticContextPtr c);
+        bool processQuery(Query& query, VRSemanticContextPtr c);
 
     public:
         static VRReasonerPtr create();

@@ -199,7 +199,7 @@ void VRGuiBits::toggleDock() { // TODO: redesign
 }
 
 void VRGuiBits::toggleVerbose(string s) {
-    if (s == "network") VRLog::setTag("net", getToggleButtonState("network_verbose"));
+    if (s == "network") VRLog::setTag("net", getToggleToolButtonState("network_verbose"));
 }
 
 VRGuiBits::VRGuiBits() {

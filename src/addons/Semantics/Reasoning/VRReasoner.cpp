@@ -220,7 +220,7 @@ bool VRReasoner::has(VRStatementPtr statement, VRSemanticContextPtr context) { /
     if (Pconcept == 0) { cout << "Warning (has): first concept " << left.var->concept << " not found!\n"; return false; }
     if (Cconcept == 0) { cout << "Warning (has): second concept " << right.var->concept << " not found!\n"; return false; }
     auto prop = Pconcept->getProperties( Cconcept->getName() );
-    if (prop.size() == 0) cout << "Warning: has evaluation failed, property " << right.var->valToString() << " missing!\n"; return false;
+    if (prop.size() == 0) { cout << "Warning: has evaluation failed, property " << right.var->valToString() << " missing!\n"; return false; }
     return false;
 }
 
@@ -297,7 +297,7 @@ bool VRReasoner::apply(VRStatementPtr statement, Query query, VRSemanticContextP
                 print("  set " + left.str + " to " + right.str + " -> " + toString(left.var->value), GREEN);
             }
         }
-        statement->state = 1;
+        //statement->state = 1;
     }
 
     if (statement->verb == "has" && statement->terms.size() >= 2) {
@@ -316,6 +316,7 @@ bool VRReasoner::apply(VRStatementPtr statement, Query query, VRSemanticContextP
     if (statement->verb == "set" && statement->terms.size() >= 2) {
         auto& left = statement->terms[0];
         auto& right = statement->terms[1];
+        print(" try apply set to " + left.str);
 
         bool lim = left.isMathExpression();
         bool rim = right.isMathExpression();
@@ -345,7 +346,11 @@ bool VRReasoner::apply(VRStatementPtr statement, Query query, VRSemanticContextP
                     for (unsigned int i=0; i<ents1.size(); i++) applySet(ents1[i], ents2[i]);
                 } else {
                     for (auto eL : ents1) {
-                        for (auto eR : ents2) applySet(eL, eR);
+                        if (ents2.size() > 0) for (auto eR : ents2) applySet(eL, eR);
+                        else {
+                            left.path.setValue(right.var->value[0], eL);
+                            print("  set " + left.str + " to " + right.str, GREEN);
+                        }
                     }
                 }
 
@@ -354,7 +359,7 @@ bool VRReasoner::apply(VRStatementPtr statement, Query query, VRSemanticContextP
                 print("  set " + left.str + " to " + right.str + " -> " + toString(left.var->value), GREEN);
             }
         }
-        statement->state = 1;
+        statement->state = 1; // at least wait to find someone!
     }
 
     if (statement->constructor && statement->terms.size() >= 1) { // 'Error(e) : Event(v) ; is(v.name,crash)'
@@ -369,6 +374,7 @@ bool VRReasoner::apply(VRStatementPtr statement, Query query, VRSemanticContextP
         for (auto s : statements) {
             if (s->terms.size() > 1) continue; // only variable declarations
             auto v2 = getVariable( s->terms[0].var->value[0] );
+            if (!context->onto->getConcept(s->verb)) continue; // check for concept
             print("   construction variable found: " + v2->toString(), GREEN);
             for (auto E : v2->getEntities(Evaluation::VALID)) {
                 auto e = context->onto->addEntity(x, concept);
@@ -434,8 +440,6 @@ bool VRReasoner::evaluate(VRStatementPtr statement, VRSemanticContextPtr context
     if (statement->terms.size() == 1) { // resolve (anonymous?) variables
         string concept = statement->verb;
 
-
-
         auto findConstructorRules = [&](VRStatementPtr statement, VRSemanticContextPtr context) {
             print("     search constructors for statement: " + statement->toString());
             for ( auto r : context->onto->getRules()) { // no match found -> check rules and initiate new queries
@@ -452,9 +456,9 @@ bool VRReasoner::evaluate(VRStatementPtr statement, VRSemanticContextPtr context
             }
         };
 
-        findConstructorRules(statement, context);
-
         if (auto c = context->onto->getConcept(concept)) {
+            findConstructorRules(statement, context);
+
             string name = statement->terms[0].path.root;
             if (context->vars.count(name)) { // there is already a variable with that name!
                 auto var = context->vars[name];
@@ -478,45 +482,77 @@ bool VRReasoner::evaluate(VRStatementPtr statement, VRSemanticContextPtr context
     return false;
 }
 
-vector<VREntityPtr> VRReasoner::process(string initial_query, VROntologyPtr onto) {
-    print(initial_query);
+bool VRReasoner::processQuery(Query& query, VRSemanticContextPtr context) {
+    query.checkState();
+    auto request = query.request;
+    if (!request) {
+        print(" ERROR, request is null: " + query.toString(), RED);
+        return false;
+    }
+
+    if (request->state == 1) {
+        apply(request, query, context);
+        print(" solved: " + query.toString(), RED);
+        context->queries.pop_back(); return false;
+    }; // query answered, pop and continue
+
+    print("QUERY " + query.toString(), RED);
+
+    request->updateLocalVariables(context->vars, context->onto);
+
+    for (auto& statement : query.statements) {
+        if (statement->state == 1) continue;
+        if (evaluate(statement, context)) { statement->state = 1; print("   evaluated successfully!"); continue; }
+        if (findRule(statement, context)) continue;
+        apply(statement, query, context);
+    }
+    return true;
+}
+
+vector<VREntityPtr> VRReasoner::process(string strQuery, VROntologyPtr onto) {
+    print(strQuery);
 
     auto context = VRSemanticContext::create(onto); // create context
     context->options = options;
-    context->queries.push_back(Query(initial_query));
+    context->queries.push_back(Query(strQuery));
+    Query initial_query = context->queries.back();
+
+    print("reasoning context options:");
+    for (auto opt : options) {
+        print(" " + opt.first + " : " + toString(opt.second));
+    }
+
+    vector<Query*> queryHash;
+
+    auto checkStale = [&] {
+        vector<Query*> newHash;
+        for (auto& q : context->queries) newHash.push_back(&q);
+        auto tmpHash = queryHash;
+        queryHash = newHash;
+
+        if (newHash.size() != tmpHash.size()) return false;
+        for (int i=0; i<newHash.size(); i++) if (newHash[i] != tmpHash[i]) return false;
+        return true;
+    };
 
     while( context->queries.size() ) { // while queries to process
+        print("\n");
         Query& query = context->queries.back();
-        query.checkState();
-        auto request = query.request;
-        if (!request) {
-            print(" ERROR, request is null: " + query.toString(), RED);
-            continue;
-        }
+        if (!processQuery(query, context)) continue;
 
-        if (request->state == 1) {
-            apply(request, query, context);
-            print(" solved: " + query.toString(), RED);
-            context->queries.pop_back(); continue;
-        }; // query answered, pop and continue
-
-        print("QUERY " + query.toString(), RED);
-
-        request->updateLocalVariables(context->vars, context->onto);
-
-        for (auto& statement : query.statements) {
-            if (statement->state == 1) continue;
-            if (evaluate(statement, context)) { statement->state = 1; continue; }
-            if (findRule(statement, context)) continue;
-            apply(statement, query, context);
-        }
+        bool stale = checkStale();
+        print("stale? " + toString(stale));
+        if (stale) context->itr_stale++;
+        if (context->itr_stale >= context->itr_max_stale) break;
 
         context->itr++;
         if (context->itr >= context->itr_max) break;
     }
 
-    print(" break after " + toString(context->itr) + " iterations\n");
+    print("\nFinish after " + toString(context->itr) + " iterations\n");
     for (auto e : context->results) print(" instance " + e->toString());
+
+    if (initial_query.request->state != 1) context->results.clear(); // invalidate results if the query was not fully answered
     return context->results;
 }
 

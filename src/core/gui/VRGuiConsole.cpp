@@ -89,7 +89,7 @@ void VRConsoleWidget::clear() {
 }
 
 GtkScrolledWindow* VRConsoleWidget::getWindow() { return swin; }
-void VRConsoleWidget::pause() { paused = getToggleButtonState("pause_terminal"); }
+void VRConsoleWidget::pause() { paused = getToggleToolButtonState("pause_terminal"); }
 void VRConsoleWidget::setLabel(GtkLabel* lbl) { label = lbl; }
 void VRConsoleWidget::setOpen(bool b) {
     isOpen = b;

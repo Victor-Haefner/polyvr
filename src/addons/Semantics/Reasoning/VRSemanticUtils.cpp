@@ -121,30 +121,52 @@ bool Variable::has(VariablePtr other, VPath& path1, VPath& path2, VROntologyPtr 
     map<VREntityPtr, vector<VREntityPtr>> matches;
     map<VREntity*, bool> visited;
 
-    function<bool(VREntityPtr, string&)> computeMatches = [&](VREntityPtr e, string& oName) -> bool {
+    function<bool(VREntityPtr, string&, string)> computeMatches = [&](VREntityPtr e, string& oName, string indent) -> bool {
         if (!e) return false;
         if (visited.count(e.get())) return false; // check for cycles / visited graph nodes
         visited[e.get()] = true;
+        VRReasoner::print( indent+"       search match with " + oName + " for entity: " + e->toString());
 
         for (auto p : e->properties) { // property vectors of local entity
             for (auto v : p.second) { // local properties
                 //cout << " prop: " << v->value << " " << oName << " " << bool(v->value == oName) << endl;
                 //if (v->value == other->value) matches[e].push_back(0); // TODO: direct match with other variable value
-                if (v.second->value == oName) return true;
-                //auto childEntity = onto->getEntity(v->value); // TODO: this might by stupid..
-                //if (childEntity && computeMatches(childEntity, oName)) return true;
+                if (v.second->value == oName) {
+                    VRReasoner::print( indent+"        found match! " + v.second->value + " and " + oName);
+                    return true;
+                }
+
+                // recursive has! has advantages and disadvantages!!
+                // TODO: make it optional in semantics context!
+                // TODO: maybe introduce a cycles detection?
+                auto childEntity = onto->getEntity(v.second->value);
+                if (evaluations.count(e->ID))
+                    if (evaluations[e->ID].state == Evaluation::INVALID) continue;
+                if (childEntity) VRReasoner::print( indent+"        computeMatches recursion, val: " + v.second->value + " and entity: " + childEntity->getName());
+                if (computeMatches(childEntity, oName, indent+"  ")) return true;
             }
         }
         return false;
     };
 
     // get all matches
+    VRReasoner::print( "    Variable::has, variable1: " + toString() + " at path " + path1.toString());
+    VRReasoner::print( "    Variable::has, variable2: " + other->toString() + " at path " + path2.toString());
     for (auto i2 : other->entities) { // check each instance of the other variable
+        if (other->evaluations[i2.first].state == Evaluation::INVALID) continue;
         string oName = i2.second->getName();
+        VRReasoner::print( "     check for match ent2: " + i2.second->toString());
         for (auto i1 : entities) { // all entities of that variable
+            if (evaluations[i1.first].state == Evaluation::INVALID) continue;
+            VRReasoner::print( "      check for match ent1: " + i1.second->toString());
             for (auto v : path1.getValue(i1.second)) {
-                bool doMatch = computeMatches(onto->getEntity(v), oName);
-                //cout << "Variable::has " << v << " has " << oName << " ? -> " << doMatch << endl;
+                auto e = onto->getEntity(v);
+                VRReasoner::print( "       check for match ent1 at path1: " + e->toString());
+                if (evaluations.count(e->ID))
+                    if (evaluations[e->ID].state == Evaluation::INVALID) continue;
+                bool doMatch = computeMatches(e, oName, "");
+                VRReasoner::print( "       check for match val1: " + v);
+                VRReasoner::print( "       var1 has " + oName + " ? -> " + ::toString(doMatch));
                 if (doMatch) matches[i1.second].push_back(i2.second);
             }
         }
@@ -152,13 +174,16 @@ bool Variable::has(VariablePtr other, VPath& path1, VPath& path2, VROntologyPtr 
     }
 
     // remove non matched entities
-    vector<VREntityPtr> toDiscard1;
-    vector<VREntityPtr> toDiscard2;
-    for (auto i1 : entities) { // all entities of that variable
-        if (matches.count(i1.second) == 0) toDiscard1.push_back(i1.second);
+    for (auto e : entities) { // all entities of that variable
+        if (evaluations[e.first].state == Evaluation::INVALID) continue;
+        if (matches.count(e.second) == 0) {
+            evaluations[e.first].state = Evaluation::INVALID;
+            VRReasoner::print( "     invalidate1 entity " + e.second->getName() );
+        }
     }
 
     for (auto i2 : other->entities) { // check each entity of the other variable
+        if (other->evaluations[i2.first].state == Evaluation::INVALID) continue;
         bool found = false;
         for (auto ev : matches) {
             for (auto e : ev.second) {
@@ -167,11 +192,14 @@ bool Variable::has(VariablePtr other, VPath& path1, VPath& path2, VROntologyPtr 
             }
             if (found) break;
         }
-        if (!found) toDiscard2.push_back(i2.second);
+        if (!found) {
+            other->evaluations[i2.first].state = Evaluation::INVALID;
+            VRReasoner::print( "     invalidate2 entity " + i2.second->getName() );
+        }
     }
 
-    for (auto e : toDiscard1) discard(e);
-    for (auto e : toDiscard2) other->discard(e);
+    VRReasoner::print( "     Variable::has, variable1: " + toString() + " at path " + path1.toString());
+    VRReasoner::print( "     Variable::has, variable2: " + other->toString() + " at path " + path2.toString());
 
     return (matches.size() > 0);
 }
@@ -181,20 +209,30 @@ bool Variable::is(VariablePtr other, VPath& path1, VPath& path2) {
     //VRReasoner::print( " Variable::is? " + toString() + "   /   " + other->toString() );
 
     auto hasSameVal = [&](vector<string>& val1, vector<string>& val2) {
+        VRReasoner::print( "       hasSameVal? " + ::toString(Vec2i(val1.size(), val2.size())) );
         for (string s1 : val1) {
-            for (string s2 : val2) if (s1 == s2) return true;
+            VRReasoner::print( "        str1 " + s1 );
+            for (string s2 : val2) {
+                VRReasoner::print( "         str2 " + s2 );
+                if (s1 == s2) return true;
+            }
         }
+        VRReasoner::print( "       nope");
         return false;
     };
 
     auto hasSameVal2 = [&](vector<string>& val1) {
         bool res = false;
         for (auto e : other->entities) {
+            if (other->evaluations[e.first].state == Evaluation::INVALID) continue;
             VRReasoner::print( "      other entity: " + e.second->toString() );
             vector<string> val2 = path2.getValue(e.second);
             for (auto v : val2) VRReasoner::print( "       var2 value: " + v );
             auto r = hasSameVal(val1, val2);
-            if (!r) evaluations[e.first].state = Evaluation::INVALID;
+            if (!r) {
+                other->evaluations[e.first].state = Evaluation::INVALID;
+                VRReasoner::print( "     invalidate2 entity " + e.second->getName() );
+            }
             if (r) res = true;
         }
         if (res) return true;
@@ -209,15 +247,23 @@ bool Variable::is(VariablePtr other, VPath& path1, VPath& path2) {
         return false;
     };
 
-    VRReasoner::print( "    Variable::is " + toString() + " at path " + path1.toString() + " =?= " + other->toString() + " at path " + path2.toString() );
+    VRReasoner::print( "    Variable::is, variable1: " + toString() + " at path " + path1.toString());
+    VRReasoner::print( "    Variable::is, variable2: " + other->toString() + " at path " + path2.toString());
     bool res = false;
     for (auto e : entities) {
+        if (evaluations[e.first].state == Evaluation::INVALID) continue;
+        VRReasoner::print( "     check entity: " + e.second->getName() );
         vector<string> val1 = path1.getValue(e.second);
-        for (auto v : val1) VRReasoner::print( "     var1 value: " + v );
+        for (auto v : val1) VRReasoner::print( "      value at path1 (val1) : " + v );
         auto r = hasSameVal2(val1);
-        if (!r) evaluations[e.first].state = Evaluation::INVALID;
+        if (!r) {
+            VRReasoner::print( "     invalidate1 entity " + e.second->getName() );
+            evaluations[e.first].state = Evaluation::INVALID;
+        }
         if (r) res = true;
     }
+    VRReasoner::print( "     Variable::is, variable1: " + toString() + " at path " + path1.toString());
+    VRReasoner::print( "     Variable::is, variable2: " + other->toString() + " at path " + path2.toString());
     return res;
 }
 
@@ -243,7 +289,7 @@ vector<VREntityPtr> Variable::getEntities(Evaluation::STATE state) {
             continue; // ewntity has no evaluation
         }
         auto& eval = evaluations[e.first];
-        bool valid = (eval.state == state);
+        bool valid = (eval.state == state || state == Evaluation::ALL);
         if (valid) res.push_back(e.second);
     }
     return res;
