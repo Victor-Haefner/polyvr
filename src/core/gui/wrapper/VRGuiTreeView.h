@@ -18,13 +18,14 @@ class VRGuiTreeView : public VRGuiWidget {
         _GtkTreeView* tree_view = 0;
         _GtkTreeModel* tree_model = 0;
         _GtkTreeIter* selection = 0;
+        bool hasListStore = false;
         bool validSelection;
 
         void init(_GtkWidget* widget);
 
     public:
-        VRGuiTreeView(string name);
-        VRGuiTreeView(_GtkWidget* widget);
+        VRGuiTreeView(string name, bool hasListStore = false);
+        VRGuiTreeView(_GtkWidget* widget, bool hasListStore = false);
         ~VRGuiTreeView();
 
         bool hasSelection();
