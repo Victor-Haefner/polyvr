@@ -216,6 +216,10 @@ void VRWorldGenerator::addOSMMap(string path, double subN, double subE, double s
     processOSMMap(subN, subE, subSize);
 }
 
+void VRWorldGenerator::addGML(string path) {
+
+}
+
 void VRWorldGenerator::readOSMMap(string path){
     osmMap = OSMMap::loadMap(path);
 }

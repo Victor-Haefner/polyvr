@@ -74,6 +74,7 @@ struct OSMRelation : OSMBase {
 class OSMMap {
     private:
         string filepath;
+        string mapType;
         BoundingboxPtr bounds;
         map<string, OSMWayPtr> ways;
         map<string, OSMNodePtr> nodes;
