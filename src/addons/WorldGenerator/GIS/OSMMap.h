@@ -38,6 +38,7 @@ struct OSMBase {
 struct OSMNode : OSMBase {
     double lat = 0;
     double lon = 0;
+    double height = 0;
     vector<string> ways;
 
     OSMNode(string id, double lat, double lon);

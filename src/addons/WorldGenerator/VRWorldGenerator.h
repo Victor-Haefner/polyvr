@@ -47,11 +47,13 @@ class VRWorldGenerator : public VRTransform {
         VRTrafficSignsPtr trafficSigns;
         VRDistrictPtr district;
         OSMMapPtr osmMap;
+        OSMMapPtr gmlMap;
         Vec2d coords;
         VRUserGenCbPtr userCbPtr;
         int metaLVL = 0;
 
         void processOSMMap(double subN = -1, double subE = -1, double subSize = -1);
+        void processGMLfromOSM();
         void init();
         void initMinimum();
 

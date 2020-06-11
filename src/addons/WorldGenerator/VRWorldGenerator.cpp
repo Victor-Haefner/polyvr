@@ -217,7 +217,9 @@ void VRWorldGenerator::addOSMMap(string path, double subN, double subE, double s
 }
 
 void VRWorldGenerator::addGML(string path) {
-
+    auto gmlMap = OSMMap::create();
+    gmlMap->readGML(path);
+    processGMLfromOSM();
 }
 
 void VRWorldGenerator::readOSMMap(string path){
@@ -889,6 +891,10 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
             }
         }
     }
+}
+
+void VRWorldGenerator::processGMLfromOSM(){
+
 }
 
 void VRWorldGenerator::setUserCallback(VRUserGenCbPtr cb) { userCbPtr = cb; }

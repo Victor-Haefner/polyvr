@@ -9,10 +9,13 @@
 #include <gdal/gdal_priv.h>
 #include <gdal/gdal_version.h>
 #include <gdal/ogrsf_frmts.h>
+#include <proj_api.h>
+#define ACCEPT_USE_OF_DEPRECATED_PROJ_API_H
 #endif
 
 #include <iostream>
 #include <fstream>
+#include <cmath>
 
 /* FILE FORMAT INFOS:
     http://wiki.openstreetmap.org/wiki/Elements
@@ -1012,14 +1015,33 @@ void OSMMap::readGML(string path) {
     cout << "OSMMap::readGML path " << path << endl;
     cout << "  GDAL Version Nr:" << GDAL_VERSION_NUM << endl;
 
+    auto toLatLon = [&](string rechts, string hoch) {
+        double lat = 0;
+        double lon = 0;
+        double x,y;
+
+        x = double( toFloat(rechts) );
+        y = double( toFloat(hoch) );
+        //if (rechts.substr(0,1) == "3") { rechts = rechts.substr(1,rechts.length()-1); cout << "Zone 3: " << rechts << "-" << hoch << endl; }
+        //if (toFloat(rechts) < 500000) lon = 3*3 - double(toFloat(rechts))*360.0/40000000.0;
+        //if (toFloat(rechts) > 500000) lon = 3*3 + double(toFloat(rechts))*360.0/40000000.0;
+        //lat = double(toFloat(hoch))*360.0/40000000.0;//double(toFloat(hoch))40000 km / 360
+        //lat = double(toFloat(hoch))*360.0/40000000.0;//double(toFloat(hoch))40000 km / 360
+        if (toFloat(rechts) < 500000) lat = -(500000.0-double( toFloat(rechts) ));
+        else lat = double( toFloat(rechts) );
+        lon = y;
+        return Vec2d(lat,lon);
+    };
+
     auto coordsFromString = [&](string inB) {
         //string has format: "x y z"
         int at1 = inB.find_first_of(" ");
         int at2 = inB.find_first_of(" ",at1+1);
-        double x = toFloat( inB.substr(0, at1).c_str() );
-        double y = toFloat( inB.substr(at1+1, at2-(at1+1)).c_str() );
-        double z = toFloat( inB.substr(at2+1, inB.length()-(at2+1)).c_str() );
-        return Vec3d(x,y,z);
+        string rechtswert = inB.substr(0, at1).c_str();
+        string hochwert = inB.substr(at1+1, at2-(at1+1)).c_str();
+        Vec2d latlon = toLatLon(rechtswert,hochwert);
+        double height = toFloat( inB.substr(at2+1, inB.length()-(at2+1)).c_str() );
+        return Vec3d(latlon[0],latlon[1],height);
     };
 
     auto multicoordsFromString = [&](string inB){
@@ -1093,7 +1115,7 @@ void OSMMap::readGML(string path) {
                 cout << " polygon" << endl;
             }
             else if ( poGeometry != NULL && wkbFlatten(poGeometry->getGeometryType()) == wkbMultiPolygon ) {
-                cout << " multipolygon" << endl;
+                //cout << " multipolygon" << endl;
                 OGRMultiPolygon* poMPoly = (OGRMultiPolygon *) poGeometry;
                 char *wkt_tmp = nullptr;
                 poGeometry->exportToWkt(&wkt_tmp);
@@ -1104,21 +1126,22 @@ void OSMMap::readGML(string path) {
                     for (auto eachPoint : eachPoly) {
                         nodeID++;
                         string strNID = to_string(nodeID);
-                        //OSMNodePtr node = OSMNodePtr( new OSMNode(strNID, eachPoint[0], eachPoint[1] ) );
-                        //refsForWays.push_back(strNID);
-                        //nodes[node->id] = node;*/
+                        OSMNodePtr node = OSMNodePtr( new OSMNode(strNID, eachPoint[0], eachPoint[1] ) );
+                        refsForWays.push_back(strNID);
+                        nodes[node->id] = node;
+                        node->height = eachPoint[2];
                         //bounds->update(Vec3d(eachPoint[1],eachPoint[0],0));
                         cout << eachPoint << " ";
                     }
                     wayID++;
                     string strWID = to_string(wayID);
-                    //OSMWayPtr way = OSMWayPtr( new OSMWay(strWID) );
-                    //way->nodes = refsForWays;
-                    //way->tags = tags;
-                    //ways[way->id] = way;*/
+                    OSMWayPtr way = OSMWayPtr( new OSMWay(strWID) );
+                    way->nodes = refsForWays;
+                    way->tags = tags;
+                    ways[way->id] = way;
                 }
                 cout << endl;
-                cout << i <<  " F: "<< featureCounter << endl;
+                //cout << i <<  " F: "<< featureCounter << endl;
             }
             else {
                 //printf( "no point or multipolygon geometry\n" );
