@@ -894,7 +894,33 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
 }
 
 void VRWorldGenerator::processGMLfromOSM(){
+    //auto res = gmlMap->getWays();
+    auto nodes = gmlMap->getNodes();
 
+    return;
+    for (auto wayItr : gmlMap->getWays()) { // use way->id to filter for debugging!
+        auto& way = wayItr.second;
+        //if (!wayInSubarea(way)) continue;
+
+        //auto poly = VRPolygon::create();
+        cout << " polygon:";
+        vector<Vec3d> pnts;
+        for (auto pID : way->nodes) {
+            auto node = gmlMap->getNode(pID);
+            if (!node) continue;
+            Vec3d pos = Vec3d( node->lat, node->height, node->lon );
+            pnts.push_back(pos);
+            //poly->addPoint(pos);
+            cout << " " << pos;
+        }
+        cout << endl;
+
+        //tg.drawPolygon(poly, Color4f(1,1,1,1));
+
+        for (auto tag : way->tags) {
+        }
+    }
+    //addChild();
 }
 
 void VRWorldGenerator::setUserCallback(VRUserGenCbPtr cb) { userCbPtr = cb; }

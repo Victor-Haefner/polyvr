@@ -1131,7 +1131,7 @@ void OSMMap::readGML(string path) {
                         nodes[node->id] = node;
                         node->height = eachPoint[2];
                         //bounds->update(Vec3d(eachPoint[1],eachPoint[0],0));
-                        cout << eachPoint << " ";
+                        //cout << eachPoint << " ";
                     }
                     wayID++;
                     string strWID = to_string(wayID);
@@ -1140,7 +1140,7 @@ void OSMMap::readGML(string path) {
                     way->tags = tags;
                     ways[way->id] = way;
                 }
-                cout << endl;
+                //cout << endl;
                 //cout << i <<  " F: "<< featureCounter << endl;
             }
             else {
