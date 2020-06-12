@@ -34,10 +34,10 @@ class VRGtkWindow : public VRWindow {
         bool on_key(_GdkEventKey* e);
 
     public:
-        VRGtkWindow(_GtkDrawingArea* glarea);
+        VRGtkWindow(_GtkDrawingArea* glarea, string msaa);
         ~VRGtkWindow();
 
-        static VRGtkWindowPtr create(_GtkDrawingArea* da);
+        static VRGtkWindowPtr create(_GtkDrawingArea* da, string msaa);
         VRGtkWindowPtr ptr();
 
         PassiveWindowMTRecPtr getOSGWindow();

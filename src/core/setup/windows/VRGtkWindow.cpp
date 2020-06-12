@@ -18,7 +18,7 @@
 
 
 // patch gdkglext MSAA
-static GdkGLConfig* gdk_gl_config_new_rgb(GdkScreen* screen, GdkGLConfigMode  mode) {
+static GdkGLConfig* gdk_gl_config_new_rgb(GdkScreen* screen, GdkGLConfigMode  mode, int msaa) {
   int list[32];
   int n = 0;
 
@@ -56,11 +56,11 @@ static GdkGLConfig* gdk_gl_config_new_rgb(GdkScreen* screen, GdkGLConfigMode  mo
           list[n++] = 1;
         }
     }
-   if (mode & GDK_GL_MODE_MULTISAMPLE) {
+   if (mode & GDK_GL_MODE_MULTISAMPLE && msaa >= 2) {
        list[n++] = GDK_GL_SAMPLE_BUFFERS;
        list[n++] = 1;
        list[n++] = GDK_GL_SAMPLES;
-       list[n++] = 4; // FSAA // 2x 4x 16x
+       list[n++] = msaa; // FSAA // 2x 4x 16x
     }
   list[n] = GDK_GL_ATTRIB_LIST_NONE;
 
@@ -71,13 +71,13 @@ static GdkGLConfig* gdk_gl_config_new_rgb(GdkScreen* screen, GdkGLConfigMode  mo
 #endif
 }
 
-GdkGLConfig* gdk_gl_config_new_by_mode (GdkGLConfigMode mode) {
+GdkGLConfig* gdk_gl_config_new_by_mode (GdkGLConfigMode mode, int msaa) {
 #ifdef GDKGLEXT_MULTIHEAD_SUPPORT
   GdkScreen* screen = gdk_screen_get_default ();
 #else
   GdkScreen* screen = NULL;
 #endif
-  return gdk_gl_config_new_rgb(screen, mode);
+  return gdk_gl_config_new_rgb(screen, mode, msaa);
 }
 
 typedef boost::recursive_mutex::scoped_lock PLock;
@@ -86,16 +86,18 @@ OSG_BEGIN_NAMESPACE;
 using namespace std;
 namespace PL = std::placeholders;
 
-VRGtkWindow::VRGtkWindow(GtkDrawingArea* da) {
+VRGtkWindow::VRGtkWindow(GtkDrawingArea* da, string msaa) {
     type = 2;
     drawArea = da;
     widget = (GtkWidget*)drawArea;
     if (gtk_widget_get_realized(widget)) cout << "Warning: glarea is realized!\n";
 
+
+    int MSAA = toInt(subString(msaa,1,-1));
     auto mode = (GdkGLConfigMode)(GDK_GL_MODE_RGBA | GDK_GL_MODE_DOUBLE | GDK_GL_MODE_DEPTH | GDK_GL_MODE_STENCIL | GDK_GL_MODE_MULTISAMPLE);
     if (VROptions::get()->getOption<bool>("active_stereo"))
         mode = (GdkGLConfigMode)(GDK_GL_MODE_RGBA | GDK_GL_MODE_DOUBLE | GDK_GL_MODE_DEPTH | GDK_GL_MODE_STENCIL | GDK_GL_MODE_MULTISAMPLE | GDK_GL_MODE_STEREO);
-    GdkGLConfig* glConfigMode = gdk_gl_config_new_by_mode(mode);
+    GdkGLConfig* glConfigMode = gdk_gl_config_new_by_mode(mode, MSAA);
     gtk_widget_set_gl_capability(widget,glConfigMode,NULL,true,GDK_GL_RGBA_TYPE);
 
     gtk_widget_show(widget);
@@ -128,7 +130,7 @@ VRGtkWindow::~VRGtkWindow() {
 }
 
 VRGtkWindowPtr VRGtkWindow::ptr() { return static_pointer_cast<VRGtkWindow>( shared_from_this() ); }
-VRGtkWindowPtr VRGtkWindow::create(GtkDrawingArea* da) { return shared_ptr<VRGtkWindow>(new VRGtkWindow(da) ); }
+VRGtkWindowPtr VRGtkWindow::create(GtkDrawingArea* da, string msaa) { return shared_ptr<VRGtkWindow>(new VRGtkWindow(da, msaa) ); }
 
 void VRGtkWindow::setCursor(string c) {
     GdkWindow* win = widget->window;
