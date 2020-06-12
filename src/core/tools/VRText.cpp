@@ -10,16 +10,6 @@
 #include <new>
 #include <codecvt>
 
-//#define WITHOUT_PANGO_CAIRO
-//#define WITHOUT_UNICODE
-
-#ifndef WITHOUT_PANGO_CAIRO
-//flags mit  $ pkg-config --cflags pango und $ pkg-config --libs pango :)
-#include <pango/pango.h>
-#include <pango/pangoft2.h>
-#include <pango/pangocairo.h>
-#endif
-
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
@@ -40,6 +30,8 @@ class FTRenderer {
         FT_Vector     pen;                    /* untransformed origin  */
         FT_Error      error;
 
+        Vec4ub convrt(Color4f c) { return Vec4ub(c[0]*255,c[1]*255,c[2]*255,c[3]*255); }
+
     public:
         float WIDTH = 100;
         float HEIGHT = 20;
@@ -47,7 +39,7 @@ class FTRenderer {
         vector<Vec4ub> image;
 
     public:
-        FTRenderer(float width, float height, Vec4ub bg) : WIDTH(width), HEIGHT(height), background(bg), image(width*height,bg) {
+        FTRenderer(float width, float height, Color4f bg) : WIDTH(width), HEIGHT(height), background(convrt(bg)), image(width*height,background) {
             /* set up matrix */
             matrix.xx = (FT_Fixed)( 0x10000L );
             matrix.xy = (FT_Fixed)( 0 );
@@ -84,16 +76,16 @@ class FTRenderer {
             return unicode;
         }
 
-        int render(string text, int resolution, int padding, Vec4ub fg) {
+        // font is for example "Mono.ttf"
+        int render(string text, string font, int resolution, int padding, Color4f fg) {
             error = FT_Init_FreeType( &library );
             if (error) cout << "FT_Init_FreeType failed!" << endl;
 
 #ifndef __EMSCRIPTEN__
-            string font = VRSceneManager::get()->getOriginalWorkdir();
+            font = VRSceneManager::get()->getOriginalWorkdir();
             font += "/ressources/fonts/Mono.ttf";
-#else
-            string font = "Mono.ttf";
 #endif
+
             error = FT_New_Face( library, font.c_str(), 0, &face );
             if (error) cout << "FT_New_Face failed!" << endl;
 
@@ -153,7 +145,9 @@ class FTRenderer {
             return layoutWidth;
         }
 
-        void draw_bitmap(FT_Bitmap* bitmap, FT_Int x, FT_Int y, Vec4ub fg) {
+        void draw_bitmap(FT_Bitmap* bitmap, FT_Int x, FT_Int y, Color4f fg) {
+            Vec4ub foreground = convrt(fg);
+
             FT_Int  i, j, p, q;
             FT_Int  x_max = x + bitmap->width;
             FT_Int  y_max = y + bitmap->rows;
@@ -165,10 +159,10 @@ class FTRenderer {
                     float t = v/255.0;
                     int k = i+(HEIGHT-j-1)*WIDTH;
                     Vec4ub c = Vec4ub(255,255,255,255);
-                    c[0] = fg[0]*t+background[0]*(1.0-t);
-                    c[1] = fg[1]*t+background[1]*(1.0-t);
-                    c[2] = fg[2]*t+background[2]*(1.0-t);
-                    c[3] = fg[3]*t+background[3]*(1.0-t);
+                    c[0] = foreground[0]*t+background[0]*(1.0-t);
+                    c[1] = foreground[1]*t+background[1]*(1.0-t);
+                    c[2] = foreground[2]*t+background[2]*(1.0-t);
+                    c[3] = foreground[3]*t+background[3]*(1.0-t);
                     //c = fg*t + background*(1.0-t); // TODO: wiso sieht das kacke aus?? müsste doch das gleiche sein wie oben!?!
                     image[k] = c;
                 }
@@ -236,57 +230,13 @@ VRTexturePtr VRText::createBmp (string text, string font, Color4f fg, Color4f bg
     analyzeText();
     computeTexParams();
 
-#ifdef WITHOUT_PANGO_CAIRO
-    FTRenderer ft(texWidth, texHeight, Vec4ub(bg[0]*255,bg[1]*255,bg[2]*255,bg[3]*255));
-    layoutWidth = ft.render(text, resolution*1.5, padding, Vec4ub(fg[0]*255,fg[1]*255,fg[2]*255,fg[3]*255));
+    FTRenderer ft(texWidth, texHeight, bg);
+    layoutWidth = ft.render(text, font, resolution*1.5, padding, fg);
     layoutHeight = texHeight;
     VRTexturePtr tex = VRTexture::create();
     tex->getImage()->set( Image::OSG_RGBA_PF, texWidth, texHeight, 1, 1, 1, 0, (UInt8*)&ft.image[0]);
     //tex->write("testMonoFT.png");
     return tex;
-
-#else
-
-    cairo_surface_t* surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, texWidth, texHeight);
-    cairo_t* cr = cairo_create (surface);
-    PangoLayout* layout = pango_cairo_create_layout (cr);
-    pango_layout_set_text(layout, text.c_str(), -1);
-    //pango_layout_set_alignment(layout, PANGO_ALIGN_CENTER);//MACHT IRGENDWIE NIX
-
-    //Pango Description
-    PangoFontDescription* desc = pango_font_description_from_string (font.c_str());
-    pango_layout_set_font_description (layout, desc);
-    pango_layout_get_pixel_size(layout, &layoutWidth, &layoutHeight);
-    pango_font_description_free (desc);
-
-    //hier wird gemalt!
-    //background
-    cairo_set_source_rgba(cr, bg[0],bg[1],bg[2],bg[3]);
-    cairo_rectangle(cr, 0, 0, texWidth, texHeight);
-    cairo_fill(cr);
-
-    //text
-    cairo_set_source_rgba (cr, fg[0],fg[1],fg[2],fg[3]);
-    cairo_translate(cr, padding, padding);
-    pango_cairo_update_layout (cr, layout);
-    pango_cairo_show_layout (cr, layout);
-
-    cairo_set_source_rgba(cr, bg[0],bg[1],bg[2],bg[3]);
-    cairo_rectangle(cr, 0, 0, texWidth, padding-1); cairo_fill(cr);
-    cairo_rectangle(cr, 0, texHeight-padding-1, texWidth, padding-1); cairo_fill(cr);
-    cairo_rectangle(cr, 0, 0, padding-1, texHeight); cairo_fill(cr);
-    cairo_rectangle(cr, texWidth-padding-1, 0, padding-1, texHeight); cairo_fill(cr);
-
-    UChar8* data = cairo_image_surface_get_data(surface);
-    convertData(data, texWidth, texHeight);
-
-    VRTexturePtr tex = VRTexture::create();
-    tex->getImage()->set( Image::OSG_BGRA_PF, texWidth, texHeight, 1, 1, 1, 0, data);
-
-    cairo_destroy (cr);
-    cairo_surface_destroy (surface);
-    return tex;
-#endif
 }
 
 #ifndef WITHOUT_UNICODE

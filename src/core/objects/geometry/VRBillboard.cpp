@@ -78,7 +78,7 @@ void VRBillboard::createTestScene() {//Todo
     VRBillboardPtr bb = new VRBillboard("bb");
     scene->add(bb);
     bb->setSize(1, 1);
-    bb->setTexture(VRText::get()->create(" Hallo Hallo \n Hallo Hallo \n Hallo Hallo", "SANS 20", 200, 100, Color3f(0,0,0)));*/
+    bb->setTexture(VRText::get()->create(" Hallo Hallo \n Hallo Hallo \n Hallo Hallo", "Mono.ttf", 200, 100, Color3f(0,0,0)));*/
 }
 
 OSG_END_NAMESPACE;
