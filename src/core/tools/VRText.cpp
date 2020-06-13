@@ -22,26 +22,6 @@
 using namespace std;
 using namespace OSG;
 
-struct FontStyle {
-    string font = "Mono.ttf";
-    int ptSize = 16; // size in pixel
-    int padding = 3; // padding in pixel
-    int charspread = 0;
-    int outline = 3; // outline in pixel
-    int dpi = 100; // dpi, 100 means that ptSize is in pixel!
-
-    Color4f foreground = Color4f(1,1,1,1);
-    Color4f background = Color4f(1,1,1,0);
-    Color4f outlineColor = Color4f(0,0,0,1);
-};
-
-struct ImageData {
-    int height = 0;
-    int width = 0;
-    int lineOffset = 0;
-    vector<Vec4ub> image;
-};
-
 class FTRenderer {
     private:
         FT_Library    library;
@@ -57,7 +37,7 @@ class FTRenderer {
         bool debugLayout = false;
 
     public:
-        ImageData data;
+        TextLayout data;
         FontStyle style;
 
     public:
@@ -192,17 +172,11 @@ class FTRenderer {
             }
         }
 
-        // font is for example "Mono.ttf"
-        void render(string text, string font, int ptSize, int padding, Color4f fg) {
+        void render(string text) {
             error = FT_Init_FreeType( &library );
             if (error) cout << "FT_Init_FreeType failed!" << endl;
 
-            //cout << "\nrender " << text << endl;
-
-            setFont(font);
-            style.ptSize = ptSize;
-            style.padding = padding;
-            style.foreground = fg;
+            setFont(style.font);
 
             error = FT_New_Face( library, style.font.c_str(), 0, &face );
             if (error) cout << "FT_New_Face failed!" << endl;
@@ -215,8 +189,6 @@ class FTRenderer {
             clearImg();
             if (style.outline > 0) drawOutline(graphemes);
             drawGraphemes(graphemes);
-
-            //cout << "FT render: w " << data.width << ", h " << data.height << ", ptSize " << style.ptSize << endl;
 
             FT_Done_Face    ( face );
             FT_Done_FreeType( library );
@@ -265,10 +237,10 @@ VRText* VRText::get() {
 }
 
 VRTexturePtr VRText::create(string text, string font, int res, int pad, Color4f fg, Color4f bg, int oline, Color4f oc, int spread) {
-    resolution = res;
-    padding = pad;
-    outline = oline;
-    charspread = spread;
+    style.ptSize = res;
+    style.padding = pad;
+    style.outline = oline;
+    style.charspread = spread;
     return createBmp(text, font, fg, bg, oc);
 }
 
@@ -283,7 +255,7 @@ void VRText::analyzeText() {
     }
 }
 
-void VRText::computeTexParams() {
+/*void VRText::computeTexParams() {
     texWidth = resolution*maxLineLength*1.5;
     texHeight = resolution*1.5;
     texWidth += 2*padding;
@@ -292,7 +264,7 @@ void VRText::computeTexParams() {
 
     texWidth = osgNextPower2(texWidth);
     texHeight = osgNextPower2(texHeight);
-}
+}*/
 
 void VRText::convertData(UChar8* data, int width, int height) {
     UChar8* buffer = new UChar8[height*width*4];
@@ -315,14 +287,16 @@ void VRText::convertData(UChar8* data, int width, int height) {
 VRTexturePtr VRText::createBmp(string text, string font, Color4f fg, Color4f bg, Color4f oc) {
     this->text = text;
     analyzeText();
-    computeTexParams();
+    //computeTexParams();
+
+    style.font = font;
+    style.foreground = fg;
+    style.background = bg;
+    style.outlineColor = oc;
 
     FTRenderer ft;
-    ft.style.background = bg;
-    ft.style.outline = outline;
-    ft.style.outlineColor = oc;
-    ft.style.charspread = charspread;
-    ft.render(text, font, resolution, padding, fg);
+    ft.style = style;
+    ft.render(text);
     VRTexturePtr tex = VRTexture::create();
     tex->getImage()->set( Image::OSG_RGBA_PF, ft.data.width, ft.data.height, 1, 1, 1, 0, (UInt8*)&ft.data.image[0]);
 
