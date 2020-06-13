@@ -27,7 +27,7 @@ class VRSprite : public VRGeometry {
         VRSpritePtr ptr();
 
         void setSize(float w, float h);
-        VRTexturePtr setText(string l, float res = 1, Color4f c1 = Color4f(0,0,0,1), Color4f c2 = Color4f(0,0,0,0), string font = "SANS 20");
+        VRTexturePtr setText(string l, float res = 1, Color4f c1 = Color4f(0,0,0,1), Color4f c2 = Color4f(0,0,0,0), int ol = 2, Color4f oc = Color4f(1,1,1,1), string font = "Mono.ttf");
         void setTexture(string path);
         void webOpen(string path, int res, float ratio);
 

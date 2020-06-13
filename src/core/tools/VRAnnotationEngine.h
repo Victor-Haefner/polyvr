@@ -11,7 +11,9 @@ class VRAnnotationEngine : public VRGeometry {
     private:
         VRGeoDataPtr data = 0;
         VRMaterialPtr mat = 0;
-        Color4f fg, bg;
+        Color4f fg = Color4f(0,0,0,1);
+        Color4f bg = Color4f(1,1,1,0);
+        Color4f oc = Color4f(1,1,1,1);
 
         Vec3d orientationUp;
         Vec3d orientationDir;
@@ -25,6 +27,7 @@ class VRAnnotationEngine : public VRGeometry {
         static string fp_es2;
 
         float size;
+        float oradius;
         float charTexSize;
         float texPadding;
         map<string, int> characterIDs;
@@ -53,6 +56,7 @@ class VRAnnotationEngine : public VRGeometry {
         void setSize(float f);
         void setColor(Color4f c);
         void setBackground(Color4f c);
+        void setOutline(int r, Color4f c);
         void setBillboard(bool b);
         void setScreensize(bool b);
         void setOrientation(Vec3d d, Vec3d u);

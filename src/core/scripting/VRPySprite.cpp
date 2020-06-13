@@ -9,7 +9,7 @@ simpleVRPyType(Sprite, New_VRObjects_ptr);
 PyMethodDef VRPySprite::methods[] = {
     {"getText", PyWrap(Sprite, getLabel, "Get label text from sprite.", string) },
     {"getSize", PyWrap(Sprite, getSize, "Get size of sprite.", Vec2d) },
-    {"setText", PyWrapOpt(Sprite, setText, "Create text texture, (text, resolution, fg, bg, font)", "1|0 0 0 1|0 0 0 0|SANS 20", VRTexturePtr, string, float, Color4f, Color4f, string ) },
+    {"setText", PyWrapOpt(Sprite, setText, "Create text texture, (text, resolution, color, background, outlineRadius, outlineColor, font)", "1|0 0 0 1|0 0 0 0|2|1 1 1 1|Mono.ttf", VRTexturePtr, string, float, Color4f, Color4f, int, Color4f, string ) },
     {"setSize", PyWrap(Sprite, setSize, "Set sprite size.", void, float, float ) },
     {"setTexture", PyWrap(Sprite, setTexture, "Set sprite texture", void, string) },
     {"webOpen", PyWrap(Sprite, webOpen, "Open and display a website - webOpen(str uri, int width, flt ratio)", void, string, int, float) },
