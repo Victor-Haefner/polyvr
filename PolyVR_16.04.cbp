@@ -624,6 +624,8 @@
 		<Unit filename="src/core/math/boundingbox.h" />
 		<Unit filename="src/core/math/coordinates.cpp" />
 		<Unit filename="src/core/math/coordinates.h" />
+		<Unit filename="src/core/math/datarow.cpp" />
+		<Unit filename="src/core/math/datarow.h" />
 		<Unit filename="src/core/math/equation.cpp" />
 		<Unit filename="src/core/math/equation.h" />
 		<Unit filename="src/core/math/field.h" />
@@ -1226,6 +1228,10 @@
 		<Unit filename="src/core/utils/zipper/zipper.cpp" />
 		<Unit filename="src/core/utils/zipper/zipper.h" />
 		<Unit filename="src/main.cpp" />
-		<Extensions />
+		<Extensions>
+			<envvars />
+			<code_completion />
+			<debugger />
+		</Extensions>
 	</Project>
 </CodeBlocks_project_file>
