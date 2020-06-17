@@ -1040,8 +1040,8 @@ void OSMMap::readGML(string path) {
         string rechtswert = inB.substr(0, at1).c_str();
         string hochwert = inB.substr(at1+1, at2-(at1+1)).c_str();
         Vec2d latlon = toLatLon(rechtswert,hochwert);
-        double height = toFloat( inB.substr(at2+1, inB.length()-(at2+1)).c_str() );
-        return Vec3d(latlon[0],latlon[1],height);
+        double elevation = toFloat( inB.substr(at2+1, inB.length()-(at2+1)).c_str() );
+        return Vec3d(latlon[0],latlon[1],elevation);
     };
 
     auto multicoordsFromString = [&](string inB){
@@ -1129,7 +1129,7 @@ void OSMMap::readGML(string path) {
                         OSMNodePtr node = OSMNodePtr( new OSMNode(strNID, eachPoint[0], eachPoint[1] ) );
                         refsForWays.push_back(strNID);
                         nodes[node->id] = node;
-                        node->height = eachPoint[2];
+                        node->elevation = eachPoint[2];
                         //bounds->update(Vec3d(eachPoint[1],eachPoint[0],0));
                         //cout << eachPoint << " ";
                     }
