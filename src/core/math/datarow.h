@@ -30,6 +30,7 @@ class Datarow {
 
         void resize(int N, double v);
         void add(DatarowPtr d);
+        void insert(int i, double v);
 
         double getPCT(int i);
         double getLogRet(int i);
