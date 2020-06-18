@@ -78,6 +78,7 @@ class VRSky : public VRGeometry {
         void reloadShader();
 
         int getHour();
+        Vec3d getSunPos();
 };
 
 OSG_END_NAMESPACE;

@@ -275,6 +275,10 @@ int VRSky::getHour(){
     return date.hour;
 }
 
+Vec3d VRSky::getSunPos(){
+    return Vec3d(sunPos[0],sunPos[1],sunPos[2]);
+}
+
 void VRSky::reloadShader() {
     cout << "VRSky::reloadShader" << endl;
     string resDir = VRSceneManager::get()->getOriginalWorkdir() + "/shader/Sky/";
