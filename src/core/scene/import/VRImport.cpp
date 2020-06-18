@@ -24,6 +24,7 @@
 #include <OpenSG/OSGSceneFileHandler.h>
 #include <OpenSG/OSGNameAttachment.h>
 #include <OpenSG/OSGComponentTransform.h>
+#include <OpenSG/OSGDistanceLOD.h>
 
 #include <boost/filesystem/path.hpp>
 #include <boost/filesystem/operations.hpp>
@@ -34,6 +35,8 @@
 #include "core/objects/VRGroup.h"
 #include "core/objects/object/VRObject.h"
 #include "core/objects/object/VRObjectT.h"
+#include "core/objects/VRLod.h"
+#include "core/objects/VRPointCloud.h"
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/geometry/OSGGeometry.h"
 #include "core/objects/material/VRMaterial.h"
@@ -244,6 +247,8 @@ VRObjectPtr VRImport::OSGConstruct(NodeMTRecPtr n, VRObjectPtr parent, string na
 
     VRObjectPtr tmp = 0;
     VRMaterialPtr tmp_m;
+    VRLodPtr tmp_l;
+    VRPointCloudPtr tmp_p;
     VRGeometryPtr tmp_g;
     VRTransformPtr tmp_e;
     VRGroupPtr tmp_gr;
@@ -292,6 +297,22 @@ VRObjectPtr VRImport::OSGConstruct(NodeMTRecPtr n, VRObjectPtr parent, string na
         /*tmp_m = VRMaterial::create(name);
         tmp = tmp_m;
         tmp->setCore(OSGCore::create(core), "Material");*/
+    }
+
+    else if (t_name == "DistanceLOD") {
+        DistanceLOD* lod = dynamic_cast<DistanceLOD*>(n->getCore());
+        tmp_l = VRLod::create(name);
+        tmp_l->setCenter(Vec3d(lod->getCenter()));
+        auto dists = lod->getMFRange();
+        for (int i=0; i<dists->size(); i++) tmp_l->addDistance(lod->getRange(i));
+        tmp_l->setCore(OSGCore::create(core), "Lod");
+        tmp = tmp_l;
+    }
+
+    else if (t_name == "PointCloud") {
+        tmp_p = VRPointCloud::create(name);
+        tmp_p->setCore(OSGCore::create(core), "PointCloud");
+        tmp = tmp_p;
     }
 
     else if (t_name == "Geometry") {
