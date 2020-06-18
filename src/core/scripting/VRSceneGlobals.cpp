@@ -214,6 +214,11 @@ PyObject* VRSceneGlobals::loadGeometry(VRSceneGlobals* self, PyObject *args, PyO
     map<string, string> options;
     if (opt) toValue(opt, options);
 
+    /*cout << "loadGeometry options? " << opt << endl;
+    for (auto o : options) {
+        cout << " loadGeometry option: " << o.first << " -> " << o.second << endl;
+    }*/
+
     VRTransformPtr obj = VRImport::get()->load( path, prnt, cached, preset, threaded, options, useBinaryCache);
     if (obj == 0) { VRPyBase::setErr("Error: " + string(path) + " not loaded!"); return NULL; }
     obj->setPersistency(0);

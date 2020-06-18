@@ -95,8 +95,8 @@ template<> bool toValue(PyObject* o, std::shared_ptr<VRFunction<void>>& v) {
     return 1;
 }
 
-// should not be needed
-/*template<> bool toValue(PyObject* o, map<string, string>& m) {
+// needed for passing options by loadGeometry
+template<> bool toValue(PyObject* o, map<string, string>& m) {
     if (!PyDict_Check(o)) return 0;
     PyObject* keys = PyDict_Keys(o);
     for (int i=0; i<VRPyBase::pySize(keys); i++) {
@@ -109,7 +109,7 @@ template<> bool toValue(PyObject* o, std::shared_ptr<VRFunction<void>>& v) {
         m[t] = u;
     }
     return 1;
-}*/
+}
 
 
 
