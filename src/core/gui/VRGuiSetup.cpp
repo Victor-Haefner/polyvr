@@ -116,6 +116,7 @@ void VRGuiSetup::updateObjectData() {
         if (win->getMouse()) name = win->getMouse()->getName();
         if (win->getMultitouch()) name = win->getMultitouch()->getName();
         setCombobox("combobox13", getListStorePos("mouse_list", name));
+        setCombobox("combobox15", getListStorePos("msaa_list", win->getMSAA()));
     }
 
     if (selected_type == "view") {
@@ -1241,11 +1242,13 @@ VRGuiSetup::VRGuiSetup() {
     setComboboxCallback("combobox6", bind( &VRGuiSetup::on_setup_changed, this) );
     setComboboxCallback("combobox12", bind( &VRGuiSetup::on_mt_device_changed, this) );
     setComboboxCallback("combobox13", bind( &VRGuiSetup::on_window_device_changed, this) );
+    setComboboxCallback("combobox15", bind( &VRGuiSetup::on_window_msaa_changed, this) );
     setComboboxCallback("combobox18", bind( &VRGuiSetup::on_change_view_user, this) );
     setComboboxCallback("combobox25", bind( &VRGuiSetup::on_change_haptic_type, this) );
 
     fillStringListstore("liststore8", VRHaptic::getDevTypes() );
     fillStringListstore("liststore11", VRMultiTouch::getDevices() );
+    fillStringListstore("msaa_list", {"x0", "x2", "x4", "x8", "x16"});
 
     auto tree_view = getGUIBuilder()->get_widget("treeview2");
     connect_signal<void>(tree_view, bind( &VRGuiSetup::on_treeview_select, this), "cursor_changed");
@@ -1321,6 +1324,13 @@ void VRGuiSetup::on_window_device_changed() {
     auto dev = VRSetup::getCurrent()->getDevice(name);
     window->setMouse( dynamic_pointer_cast<VRMouse>(dev) );
     window->setMultitouch( dynamic_pointer_cast<VRMultiTouch>(dev) );
+}
+
+void VRGuiSetup::on_window_msaa_changed() {
+    if (guard || !window) return;
+    string name = getComboboxText("combobox15");
+    window->setMSAA( name );
+    setLabel("msaa_info", "to take effect please restart PolyVR!");
 }
 
 void VRGuiSetup::setTreeRow(GtkTreeStore* tree_store, GtkTreeIter* row, string name, string type, gpointer ptr, string fg, string bg) {

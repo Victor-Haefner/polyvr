@@ -19,9 +19,6 @@ template<> string typeName(const VRAnnotationEngine& t) { return "AnnotationEngi
 bool hasGS = false;
 
 VRAnnotationEngine::VRAnnotationEngine(string name) : VRGeometry(name) {
-    fg = Color4f(0,0,0,1);
-    bg = Color4f(1,0,1,0);
-
     type = "AnnotationEngine";
 
     hasGS = VRScene::getCurrent()->hasGeomShader();
@@ -52,6 +49,7 @@ VRAnnotationEngine::VRAnnotationEngine(string name) : VRGeometry(name) {
     data = VRGeoData::create();
 
     setOrientation(Vec3d(0,0,1), Vec3d(0,1,0));
+    oradius = 3;
 }
 
 VRAnnotationEnginePtr VRAnnotationEngine::create(string name) { return shared_ptr<VRAnnotationEngine>(new VRAnnotationEngine(name) ); }
@@ -64,6 +62,7 @@ void VRAnnotationEngine::clear() {
 
 void VRAnnotationEngine::setColor(Color4f c) { fg = c; updateTexture(); }
 void VRAnnotationEngine::setBackground(Color4f c) { bg = c; updateTexture(); }
+void VRAnnotationEngine::setOutline(int r, Color4f c) { oradius = r; oc = c; updateTexture(); }
 
 bool VRAnnotationEngine::checkUIn(int i) {
     if (i < 0 || i > (int)data->size()) return true;
@@ -203,15 +202,18 @@ void VRAnnotationEngine::updateTexture() {
     txt += "ÄÜÖäüöß€°^";
     int cN = VRText::countGraphemes(txt);
     int padding = 3;
-    auto img = VRText::get()->create(txt, "MONO 20", 17, padding, fg, bg);
+    int spread = 6;
+    auto img = VRText::get()->create(txt, "Mono.ttf", 48, padding, fg, bg, oradius, oc, spread);
+
     float tW = img->getSize()[0];
     float lW = VRText::get()->layoutWidth;
-    texPadding = padding / tW;
+    texPadding = (padding+oradius) / tW;
     charTexSize = lW/tW / cN;
+
     mat->setTexture(img);
     mat->setShaderParameter("texPadding", Real32(texPadding)); // tested
     mat->setShaderParameter("charTexSize", Real32(charTexSize));
-    //img->write("annChars.png");
+    img->write("annChars.png");
 
     int i=1; // 0 is used for invalid/no char
     for (auto c : VRText::splitGraphemes(txt)) {

@@ -351,26 +351,59 @@ void Path::compute(int N) {
             controlPoints.push_back(h1);
             controlPoints.push_back(h2);
 
-            // berechne die hilfspunkte fuer die directions B'(0.5)
-            //  B(t) = (1 - t)^3 * p1 + 3t(1-t)^2 * h1 + 3t^2 (1-t) * h2 + t^3 * p2
-            // B'(t) = -3(1-t)^2 * p1 + 3(1-t)^2 *  h1 - 6t(1-t) *    h1 - 3t^2 * h2 + 6t(1-t) * h2 + 3t^2 * p2
-            //       = (1-t^2) * (3h1-3p1) + 2t*(1-t) * (3h2-3h1) + t^2 * (3p2-3h2)
-            //       = (1-t^2) * d1*L + 2t*(1-t) * (3r - d1*L - d2*L) + t^2 * d2*L
-            Vec3d n = L < 1e-4 ? Vec3d() : r*3.0/L;
-            n -= p1.dir() + p2.dir();
-            //Vec3d n = (p1.dir() - p2.dir())*L*0.25 + r*1.5;
-            //Vec3d n;
-            //if (L > 1e-4) n = -p1.pos()*9*0.25 + (h1+h2+p2.pos())*3*0.25;
-            //else n = (p1.dir() + p2.dir())*0.5;
-            n.normalize();
-            Vec3d u = (p1.up() + p2.up())*0.5;
-            u.normalize();
+            // the orientation vectors, dir and up, correspond to the derivative of the cubic bezier
+            // they are thus quadratic bezier curves
+            // to compute the parameters of the quadratic dir and up curves we first need to derive the cubic bezier:
+            // B(t)  =   (1 - t)^3 * p1 + 3 t(1 - t)^2               * h1 + 3   t^2(1 - t)        * h2 +  t^3 * p2
+            // B'(t) = -3(1 - t)^2 * p1 + 3[ (1 - t)^2 - 2t(1 - t) ] * h1 + 3[ -t^2 + 2t(1 - t) ] * h2 + 3t^2 * p2
+            //       =  3(1 - t)^2 * (h1 - p1) + 6(1 - t)t * (h2 - h1) + 3t^2 * (p2 - h2)
+            // now we can compute the parameters of the quadratic bezier:
+            // Q(t)  =   (1 - t)^2 * q1        + 2(1 - t)t * q2        +  t^2 * q3
+            // => q1 = 3*(h1 - p1), q2 = 3*(h2 - h1), q3 = 3*(p2 - h2)
+
+            // the up vector is orthogonal to dir
+
+
+            // TODO: use the above for the up vector
+            Vec3d dMid = (h2-h1)*3;
+            Vec3d uMid = (p1.up() + p2.up())*0.5;
+            Vec3d xMid = uMid.cross(dMid);
+            uMid = dMid.cross(xMid);
+            uMid.normalize();
 
             cubicBezier    (_pts+(N-1)*i, N, p1.pos(), p2.pos(), h1, h2);
-            quadraticBezier(_drs+(N-1)*i, N, p1.dir(), n, p2.dir());
-            quadraticBezier(_ups+(N-1)*i, N, p1.up(), u, p2.up());
+            quadraticBezier(_drs+(N-1)*i, N, (h1-p1.pos())*3, (h2-h1)*3, (p2.pos()-h2)*3);
+            computeUpVectors(_ups+(N-1)*i, _drs+(N-1)*i, N, p1.up(), p2.up());
+            //quadraticBezier(_ups+(N-1)*i, N, p1.up(), uMid, p2.up());
             linearBezier   (_cls+(N-1)*i, N, Vec3d(c1), Vec3d(c2));
         }
+    }
+}
+
+void Path::computeUpVectors(Vec3d* container, Vec3d* dirs, int N, Vec3d u0, Vec3d u1) {
+    if (container == 0) container = new Vec3d[N];
+
+    //schrittweite
+    Vec3d DEL = (u1 - u0)*1./(N-1);
+    Vec3d uLin = u0;
+
+    Vec3d uLinProj, uLinPrevProj;
+
+    // TODO: continue optimizing algorithm
+    //float A = u0.enclosedAngle(u1);
+    //float DELA = A*1./(N-1);
+
+    //fülle den vector
+    container[0] = u0;
+    container[N-1] = u1;
+    for (int i=1;i<N-1;i++) {
+        //Quaterniond q(dirs[i], DELA);
+
+        uLin += DEL;
+        uLinProj = projectInPlane(uLin,dirs[i],true);
+        //uLinPrevProj = projectInPlane(container[i-1],dirs[i],true);
+
+        container[i] = uLinProj;
     }
 }
 

@@ -619,6 +619,8 @@ void loadDWG(string path, VRTransformPtr res) {
     if (r != 0) { cout << "\n\nloadDWG failed!\n" << endl; } //return; }
     data.dwg = &dwg;
 
+    auto root = VRTransform::create(path);
+
     /*for (int i = 0; i < dwg.num_objects; i++) {
         Dwg_Object& o = dwg.object[i];
         string type = o.dxfname;
@@ -662,7 +664,7 @@ void loadDWG(string path, VRTransformPtr res) {
         mat->setLit(0);
         mat->setDiffuse( color );
         geo->setMaterial(mat);
-        res->addChild(geo);
+        root->addChild(geo);
 
         //cout << "Layer " <<  getLayerName(layer,dwg) << endl;
         //if (layer) printColor(layer->color);
@@ -690,7 +692,9 @@ void loadDWG(string path, VRTransformPtr res) {
         if ( startsWith(name, "Elektro-Beleuchtung-Deckenaufbauleuchte")  ) cout << " " << name << endl;
     }
 
-    cout << "layer / entity historgam" << endl;
+    res->addChild(root);
+
+    /*cout << "layer / entity historgam" << endl;
     for (auto h : hist) {
         cout << " " << h.first << " " << h.second << endl;
     }
@@ -698,8 +702,7 @@ void loadDWG(string path, VRTransformPtr res) {
     cout << "DWG entity historgam" << endl;
     for (auto e : data.entityHistogram) cout << " " << e.first << ": " << e.second << endl;
     cout << "DWG object historgam" << endl;
-    for (auto e : data.objectHistogram) cout << " " << e.first << ": " << e.second << endl;
-
+    for (auto e : data.objectHistogram) cout << " " << e.first << ": " << e.second << endl;*/
 }
 
 OSG_END_NAMESPACE;

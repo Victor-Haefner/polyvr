@@ -566,6 +566,7 @@ PyMethodDef VRPyDatarow::methods[] = {
     {"length", PyWrap2( Datarow, length, "Get data size", size_t ) },
     {"resize", PyWrap2( Datarow, resize, "Resize data with value", void, int, double ) },
     {"add", PyWrap2( Datarow, add, "Add all elements of other datarow", void, DatarowPtr ) },
+    {"insert", PyWrap2( Datarow, insert, "Add an element at ith place, element will be ith element, old ith element will shift to the right", void, int, double ) },
     {"getPCT", PyWrap2( Datarow, getPCT, "Get ith PCT", double, int ) },
     {"getLogRet", PyWrap2( Datarow, getLogRet, "Get ith log return", double, int ) },
     {"getPCTs", PyWrap2( Datarow, getPCTs, "Get PCTs", DatarowPtr ) },

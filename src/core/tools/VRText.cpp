@@ -10,18 +10,9 @@
 #include <new>
 #include <codecvt>
 
-//#define WITHOUT_PANGO_CAIRO
-//#define WITHOUT_UNICODE
-
-#ifndef WITHOUT_PANGO_CAIRO
-//flags mit  $ pkg-config --cflags pango und $ pkg-config --libs pango :)
-#include <pango/pango.h>
-#include <pango/pangoft2.h>
-#include <pango/pangocairo.h>
-#endif
-
 #include <ft2build.h>
 #include FT_FREETYPE_H
+#include FT_STROKER_H
 
 
 #include "core/objects/material/VRTexture.h"
@@ -40,14 +31,17 @@ class FTRenderer {
         FT_Vector     pen;                    /* untransformed origin  */
         FT_Error      error;
 
-    public:
-        float WIDTH = 100;
-        float HEIGHT = 20;
-        Vec4ub background;
-        vector<Vec4ub> image;
+        Vec4ub convrt(Color4f c) { return Vec4ub(c[0]*255, c[1]*255, c[2]*255, c[3]*255); }
+        Color4f convrt(Vec4ub c) { return Color4f(c[0]/255.0, c[1]/255.0, c[2]/255.0, c[3]/255.0); }
+
+        bool debugLayout = false;
 
     public:
-        FTRenderer(float width, float height, Vec4ub bg) : WIDTH(width), HEIGHT(height), background(bg), image(width*height,bg) {
+        TextLayout data;
+        FontStyle style;
+
+    public:
+        FTRenderer() {
             /* set up matrix */
             matrix.xx = (FT_Fixed)( 0x10000L );
             matrix.xy = (FT_Fixed)( 0 );
@@ -55,8 +49,20 @@ class FTRenderer {
             matrix.yy = (FT_Fixed)( 0x10000L );
         }
 
-        static std::vector<pair<unsigned long, string>> getGraphemes(const std::string& utf8) {
-            std::vector<pair<unsigned long, string>> unicode;
+        void setFont(string font) {
+            #ifndef __EMSCRIPTEN__
+                font = VRSceneManager::get()->getOriginalWorkdir();
+                font += "/ressources/fonts/Mono.ttf";
+            #endif
+            style.font = font;
+        }
+
+        void clearImg() {
+            data.image = vector<Vec4ub>(data.width * data.height, convrt(style.background));
+        }
+
+        static vector<pair<unsigned long, string>> getGraphemes(const string& utf8) {
+            vector<pair<unsigned long, string>> unicode;
             for (int i=0; i<utf8.size();) {
                 int i0 = i;
                 unsigned long uni;
@@ -84,93 +90,138 @@ class FTRenderer {
             return unicode;
         }
 
-        int render(string text, int resolution, int padding, Vec4ub fg) {
+        void computeLayout(vector<pair<unsigned long, string>>& graphemes) {
+            int layoutWidth = 0;
+            int layoutHeight = 0;
+            int maxH = 0;
+            int maxO = 0;
+
+            //cout << "computeLayout " << graphemes.size() << endl;
+            for ( int n = 0; n < graphemes.size(); n++ ) {
+                FT_ULong cUL = graphemes[n].first; // load glyph image into the slot (erase previous one)
+                error = FT_Load_Char( face, cUL, FT_LOAD_RENDER );
+                if (error) { cout << "FT_Load_Char " << cUL << " failed! " << error << endl; continue; } // ignore errors
+                layoutWidth += slot->advance.x/64;
+                layoutHeight += slot->advance.y/64;
+                if (n < graphemes.size()-1) layoutWidth += style.charspread;
+                maxO = max(maxO, (int)(slot->bitmap.rows-slot->bitmap_top));
+                maxH = max(maxH, (int)(slot->bitmap.rows + maxO));
+
+                //cout << "  slot adv: " << Vec2i(slot->advance.x/64, slot->advance.y/64);
+                //cout << "  (rows, top, rMax): " << Vec3i(slot->bitmap.rows, slot->bitmap_top, maxH) << endl;
+            }
+
+            layoutHeight += maxH;
+            data.width = layoutWidth + 2*style.padding + 2*style.outline;
+            data.height = layoutHeight + 2*style.padding + 2*style.outline;
+            data.lineOffset = maxO;
+        }
+
+        void drawOutline(vector<pair<unsigned long, string>>& graphemes) {
+            pen.x = 0;
+            pen.y = 0;
+
+            FT_Stroker stroker;
+            FT_Stroker_New(library, &stroker);
+            FT_Stroker_Set(stroker, style.outline * 64, FT_STROKER_LINECAP_ROUND, FT_STROKER_LINEJOIN_ROUND, 0);
+
+            //cout << "drawOutline " << endl;
+            for ( int n = 0; n < graphemes.size(); n++ ) {
+                FT_ULong cUL = graphemes[n].first; // load glyph image into the slot (erase previous one)
+                FT_Set_Transform( face, &matrix, &pen );
+                //error = FT_Load_Glyph(face, cUL, FT_LOAD_DEFAULT);
+                //if (error) { cout << "FT_Load_Char " << cUL << " failed! " << error << endl; continue; } // ignore errors
+
+                FT_UInt glyphIndex = FT_Get_Char_Index(face, cUL);
+                FT_Load_Glyph(face, glyphIndex, FT_LOAD_DEFAULT);
+                FT_Glyph glyph;
+                FT_Get_Glyph(face->glyph, &glyph);
+                FT_Glyph_StrokeBorder(&glyph, stroker, false, true);
+                FT_Glyph_To_Bitmap(&glyph, FT_RENDER_MODE_NORMAL, nullptr, true);
+                FT_BitmapGlyph bmGlyph = reinterpret_cast<FT_BitmapGlyph>(glyph);
+
+                int X = bmGlyph->left + style.padding + style.outline + n*style.charspread;
+                int Y = data.height - data.lineOffset - bmGlyph->top - style.padding - style.outline;
+                draw_bitmap( &bmGlyph->bitmap, X, Y, style.outlineColor );
+                //pen.x += bmGlyph->bitmap.width*64;
+                //pen.y += bmGlyph->bitmap.rows*64;
+
+                pen.x += slot->advance.x;
+                pen.y += slot->advance.y;
+                //cout << " pen " << Vec2i(pen.x, pen.y) << endl;
+            }
+        }
+
+        void drawGraphemes(vector<pair<unsigned long, string>>& graphemes) {
+            pen.x = 0;
+            pen.y = 0;
+
+            //cout << "drawGraphemes " << endl;
+            for ( int n = 0; n < graphemes.size(); n++ ) {
+                FT_ULong cUL = graphemes[n].first; // load glyph image into the slot (erase previous one)
+                FT_Set_Transform( face, &matrix, &pen );
+                error = FT_Load_Char( face, cUL, FT_LOAD_RENDER );
+                if (error) { cout << "FT_Load_Char " << cUL << " failed! " << error << endl; continue; } // ignore errors
+
+                int X = slot->bitmap_left + style.padding + style.outline + n*style.charspread;
+                int Y = data.height - data.lineOffset - slot->bitmap_top - style.padding - style.outline;
+                draw_bitmap( &slot->bitmap, X, Y, style.foreground );
+                pen.x += slot->advance.x;
+                pen.y += slot->advance.y;
+                //cout << " pen " << Vec2i(pen.x, pen.y) << "  slot: " << Vec2i(slot->bitmap_left, slot->bitmap_top) << endl;
+            }
+        }
+
+        void render(string text) {
             error = FT_Init_FreeType( &library );
             if (error) cout << "FT_Init_FreeType failed!" << endl;
 
-#ifndef __EMSCRIPTEN__
-            string font = VRSceneManager::get()->getOriginalWorkdir();
-            font += "/ressources/fonts/Mono.ttf";
-#else
-            string font = "Mono.ttf";
-#endif
-            error = FT_New_Face( library, font.c_str(), 0, &face );
+            setFont(style.font);
+
+            error = FT_New_Face( library, style.font.c_str(), 0, &face );
             if (error) cout << "FT_New_Face failed!" << endl;
-
-            int n, num_chars;
-            int X = padding;
-            int Y = padding;
-            int S = resolution;
-
-            error = FT_Set_Char_Size( face, S * 64, 0, 100, 0 ); // set character size,  use 50pt at 100dpi
+            error = FT_Set_Char_Size( face, style.ptSize * 64, 0, style.dpi, style.dpi );
             if (error) cout << "FT_Set_Char_Size failed!" << endl;
 
-            /* cmap selection omitted;                                        */
-            /* for simplicity we assume that the font contains a Unicode cmap */
-
             slot = face->glyph;
-
-
-            /* the pen position in 26.6 cartesian space coordinates; */
-            /* start at (300,200) relative to the upper left corner  */
-            pen.x = X * 64;
-            pen.y = ( HEIGHT - Y - S ) * 64;
-
-            // TODO: use this for countGraphemes!
-            auto graphemes = getGraphemes(text);
-            num_chars = graphemes.size();
-            //std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t> convert;
-            //const std::wstring wideText = convert.from_bytes(text);
-            //num_chars = wideText.size();
-
-            int layoutWidth = 0;
-
-            for ( n = 0; n < num_chars; n++ ) {
-
-                FT_Set_Transform( face, &matrix, &pen );
-
-                /* load glyph image into the slot (erase previous one) */
-                FT_ULong cUL = graphemes[n].first;
-                //int s = 1;
-                //for (int i = 0; i<chars[n].size(); i++) { cUL += chars[n][i]*s; s*=256; }
-                error = FT_Load_Char( face, cUL, FT_LOAD_RENDER );
-                if ( error ) {
-                    cout << "FT_Load_Char " << cUL << " failed! " << error << endl;
-                    continue;                 /* ignore errors */
-                }
-
-                /* now, draw to our target surface (convert position) */
-                draw_bitmap( &slot->bitmap, slot->bitmap_left, HEIGHT - slot->bitmap_top, fg );
-
-                /* increment pen position */
-                pen.x += slot->advance.x;
-                pen.y += slot->advance.y;
-                layoutWidth += slot->advance.x/64;
-            }
+            auto graphemes = getGraphemes(text); // TODO: use this for countGraphemes!
+            computeLayout(graphemes);
+            clearImg();
+            if (style.outline > 0) drawOutline(graphemes);
+            drawGraphemes(graphemes);
 
             FT_Done_Face    ( face );
             FT_Done_FreeType( library );
-            return layoutWidth;
+
+            if (debugLayout) draw_padding();
         }
 
-        void draw_bitmap(FT_Bitmap* bitmap, FT_Int x, FT_Int y, Vec4ub fg) {
+        void draw_bitmap(FT_Bitmap* bitmap, FT_Int x, FT_Int y, Color4f fg) {
             FT_Int  i, j, p, q;
             FT_Int  x_max = x + bitmap->width;
             FT_Int  y_max = y + bitmap->rows;
 
             for ( i = x, p = 0; i < x_max; i++, p++ ) {
                 for ( j = y, q = 0; j < y_max; j++, q++ ) {
-                    if ( i < 0 || j < 0 || i >= WIDTH || j >= HEIGHT ) continue;
+                    if ( i < 0 || j < 0 || i >= data.width || j >= data.height ) continue;
                     int v = bitmap->buffer[q * bitmap->width + p];
                     float t = v/255.0;
-                    int k = i+(HEIGHT-j-1)*WIDTH;
-                    Vec4ub c = Vec4ub(255,255,255,255);
-                    c[0] = fg[0]*t+background[0]*(1.0-t);
-                    c[1] = fg[1]*t+background[1]*(1.0-t);
-                    c[2] = fg[2]*t+background[2]*(1.0-t);
-                    c[3] = fg[3]*t+background[3]*(1.0-t);
-                    //c = fg*t + background*(1.0-t); // TODO: wiso sieht das kacke aus?? müsste doch das gleiche sein wie oben!?!
-                    image[k] = c;
+                    int k = i+(data.height-j-1)*data.width;
+                    Color4f c = fg*t + convrt(data.image[k])*(1.0-t);
+                    data.image[k] = convrt(c);
+                }
+            }
+        }
+
+        void draw_padding() {
+            Color4f c = Color4f(1,0,1,1);
+            int p = style.padding;
+            for (int i = 0; i < data.height; i++ ) {
+                for (int j = 0; j < data.width; j++ ) {
+                    if (j > p && j < data.width - p && i > p && i < data.height - p) continue;
+
+                    int k = j+(data.height-i-1)*data.width;
+                    data.image[k] = convrt(c);
                 }
             }
         }
@@ -185,10 +236,12 @@ VRText* VRText::get() {
     return singleton_opt;
 }
 
-VRTexturePtr VRText::create(string text, string font, int res, int pad, Color4f fg, Color4f bg) {
-    resolution = res;
-    padding = pad;
-    return createBmp(text, font, fg, bg);
+VRTexturePtr VRText::create(string text, string font, int res, int pad, Color4f fg, Color4f bg, int oline, Color4f oc, int spread) {
+    style.ptSize = res;
+    style.padding = pad;
+    style.outline = oline;
+    style.charspread = spread;
+    return createBmp(text, font, fg, bg, oc);
 }
 
 void VRText::analyzeText() {
@@ -202,7 +255,7 @@ void VRText::analyzeText() {
     }
 }
 
-void VRText::computeTexParams() {
+/*void VRText::computeTexParams() {
     texWidth = resolution*maxLineLength*1.5;
     texHeight = resolution*1.5;
     texWidth += 2*padding;
@@ -211,7 +264,7 @@ void VRText::computeTexParams() {
 
     texWidth = osgNextPower2(texWidth);
     texHeight = osgNextPower2(texHeight);
-}
+}*/
 
 void VRText::convertData(UChar8* data, int width, int height) {
     UChar8* buffer = new UChar8[height*width*4];
@@ -231,62 +284,26 @@ void VRText::convertData(UChar8* data, int width, int height) {
     delete[] buffer;
 }
 
-VRTexturePtr VRText::createBmp (string text, string font, Color4f fg, Color4f bg) {
+VRTexturePtr VRText::createBmp(string text, string font, Color4f fg, Color4f bg, Color4f oc) {
     this->text = text;
     analyzeText();
-    computeTexParams();
+    //computeTexParams();
 
-#ifdef WITHOUT_PANGO_CAIRO
-    FTRenderer ft(texWidth, texHeight, Vec4ub(bg[0]*255,bg[1]*255,bg[2]*255,bg[3]*255));
-    layoutWidth = ft.render(text, resolution*1.5, padding, Vec4ub(fg[0]*255,fg[1]*255,fg[2]*255,fg[3]*255));
-    layoutHeight = texHeight;
+    style.font = font;
+    style.foreground = fg;
+    style.background = bg;
+    style.outlineColor = oc;
+
+    FTRenderer ft;
+    ft.style = style;
+    ft.render(text);
     VRTexturePtr tex = VRTexture::create();
-    tex->getImage()->set( Image::OSG_RGBA_PF, texWidth, texHeight, 1, 1, 1, 0, (UInt8*)&ft.image[0]);
+    tex->getImage()->set( Image::OSG_RGBA_PF, ft.data.width, ft.data.height, 1, 1, 1, 0, (UInt8*)&ft.data.image[0]);
+
+    layoutWidth = ft.data.width - 2*ft.style.padding - 2*ft.style.outline;
+    layoutHeight = ft.data.height - 2*ft.style.padding - 2*ft.style.outline;
     //tex->write("testMonoFT.png");
     return tex;
-
-#else
-
-    cairo_surface_t* surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, texWidth, texHeight);
-    cairo_t* cr = cairo_create (surface);
-    PangoLayout* layout = pango_cairo_create_layout (cr);
-    pango_layout_set_text(layout, text.c_str(), -1);
-    //pango_layout_set_alignment(layout, PANGO_ALIGN_CENTER);//MACHT IRGENDWIE NIX
-
-    //Pango Description
-    PangoFontDescription* desc = pango_font_description_from_string (font.c_str());
-    pango_layout_set_font_description (layout, desc);
-    pango_layout_get_pixel_size(layout, &layoutWidth, &layoutHeight);
-    pango_font_description_free (desc);
-
-    //hier wird gemalt!
-    //background
-    cairo_set_source_rgba(cr, bg[0],bg[1],bg[2],bg[3]);
-    cairo_rectangle(cr, 0, 0, texWidth, texHeight);
-    cairo_fill(cr);
-
-    //text
-    cairo_set_source_rgba (cr, fg[0],fg[1],fg[2],fg[3]);
-    cairo_translate(cr, padding, padding);
-    pango_cairo_update_layout (cr, layout);
-    pango_cairo_show_layout (cr, layout);
-
-    cairo_set_source_rgba(cr, bg[0],bg[1],bg[2],bg[3]);
-    cairo_rectangle(cr, 0, 0, texWidth, padding-1); cairo_fill(cr);
-    cairo_rectangle(cr, 0, texHeight-padding-1, texWidth, padding-1); cairo_fill(cr);
-    cairo_rectangle(cr, 0, 0, padding-1, texHeight); cairo_fill(cr);
-    cairo_rectangle(cr, texWidth-padding-1, 0, padding-1, texHeight); cairo_fill(cr);
-
-    UChar8* data = cairo_image_surface_get_data(surface);
-    convertData(data, texWidth, texHeight);
-
-    VRTexturePtr tex = VRTexture::create();
-    tex->getImage()->set( Image::OSG_BGRA_PF, texWidth, texHeight, 1, 1, 1, 0, data);
-
-    cairo_destroy (cr);
-    cairo_surface_destroy (surface);
-    return tex;
-#endif
 }
 
 #ifndef WITHOUT_UNICODE
