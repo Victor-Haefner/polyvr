@@ -29,7 +29,6 @@ ptrFwd(VRMaterial);
 ptrFwd(VRLight);
 ptrFwd(VRLightBeacon);
 ptrFwd(VRGroup);
-ptrFwd(VRBillboard);
 ptrFwd(VRStage);
 ptrFwd(VRSky);
 ptrFwd(VRRain);
