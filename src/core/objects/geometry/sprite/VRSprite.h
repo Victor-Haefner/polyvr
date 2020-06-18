@@ -16,6 +16,10 @@ class VRSprite : public VRGeometry {
         string label;
         VRGeoPrimitivePtr resizeTool;
         shared_ptr<CEF> web;
+        bool usingShaders = false;
+
+        static string spriteShaderVP;
+        static string spriteShaderFP;
 
         void updateGeo();
 
@@ -29,6 +33,8 @@ class VRSprite : public VRGeometry {
         void setSize(float w, float h);
         VRTexturePtr setText(string l, float res = 1, Color4f c1 = Color4f(0,0,0,1), Color4f c2 = Color4f(0,0,0,0), int ol = 2, Color4f oc = Color4f(1,1,1,1), string font = "Mono.ttf");
         void setTexture(string path);
+        void setBillboard(int i);
+        void setScreensize(bool b);
         void webOpen(string path, int res, float ratio);
 
         Vec2d getSize();

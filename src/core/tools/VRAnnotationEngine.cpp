@@ -418,7 +418,7 @@ void main( void ) {
         norm.z = 0.0;
         norm.w = 0.0;
 #ifdef __EMSCRIPTEN__
-        gl_Position = OSGModelViewProjectionMatrix * osg_Vertex + osg_Normal;
+        gl_Position = OSGModelViewProjectionMatrix * osg_Vertex + norm;
 #else
         gl_Position = gl_ModelViewProjectionMatrix * osg_Vertex + norm;
 #endif
