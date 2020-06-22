@@ -14,6 +14,8 @@ class VRAnnotationEngine : public VRGeometry {
         Color4f fg = Color4f(0,0,0,1);
         Color4f bg = Color4f(1,1,1,0);
         Color4f oc = Color4f(1,1,1,1);
+        float oradius = 3;
+        float size = 0.2;
 
         Vec3d orientationUp;
         Vec3d orientationDir;
@@ -26,8 +28,6 @@ class VRAnnotationEngine : public VRGeometry {
         static string vp_es2;
         static string fp_es2;
 
-        float size;
-        float oradius;
         float charTexSize;
         float texPadding;
         map<string, int> characterIDs;

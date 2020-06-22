@@ -49,7 +49,6 @@ VRAnnotationEngine::VRAnnotationEngine(string name) : VRGeometry(name) {
     data = VRGeoData::create();
 
     setOrientation(Vec3d(0,0,1), Vec3d(0,1,0));
-    oradius = 3;
 }
 
 VRAnnotationEnginePtr VRAnnotationEngine::create(string name) { return shared_ptr<VRAnnotationEngine>(new VRAnnotationEngine(name) ); }
@@ -213,7 +212,7 @@ void VRAnnotationEngine::updateTexture() {
     mat->setTexture(img);
     mat->setShaderParameter("texPadding", Real32(texPadding)); // tested
     mat->setShaderParameter("charTexSize", Real32(charTexSize));
-    img->write("annChars.png");
+    img->write(getName()+"-annChars.png");
 
     int i=1; // 0 is used for invalid/no char
     for (auto c : VRText::splitGraphemes(txt)) {
