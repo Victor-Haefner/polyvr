@@ -341,9 +341,10 @@ void VRPlanet::setLit(bool b) { sphereMat->setShaderParameter("isLit", b?1:0); }
 
 void VRPlanet::setupMetaGeo() {
     metaGeo = VRAnalyticGeometry::create("PlanetMetaData");
-    metaGeo->setLabelParams(0.03, true, true, Color4f(0,0,0,1), Color4f(1,1,1,0));
+    metaGeo->setLabelParams(0.04, true, true, Color4f(0,0,0,1), Color4f(1,1,1,0));
     auto ae = metaGeo->getAnnotationEngine();
     ae->setOutline(4, Color4f(1,1,1,1));
+    //ae->setScreenSpace(1);
     origin->addChild(metaGeo);
 }
 
