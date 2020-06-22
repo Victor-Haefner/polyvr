@@ -43,7 +43,7 @@ void VRAnnotationEngine::initialize() {
     }
 #endif
     mat->setPointSize(5);
-    mat->setMagMinFilter(GL_LINEAR, GL_LINEAR); // TODO: check if texture has mipmaps!
+    if (!hasGS) mat->setMagMinFilter(GL_LINEAR, GL_LINEAR); // TODO: implement test for mipmaps!
     setMaterial(mat);
     updateTexture();
 
