@@ -8,8 +8,9 @@ simpleVRPyType(Terrain, New_VRObjects_ptr);
 simpleVRPyType(Planet, New_VRObjects_ptr);
 
 PyMethodDef VRPyTerrain::methods[] = {
-    {"setParameters", PyWrapOpt(Terrain, setParameters, "Set the terrain parameters, size, resolution, height scale, water level", "1|0|0.0001|0.7 0.9 1", void, Vec2d, double, double, float, float, Color3f ) },
+    {"setParameters", PyWrapOpt(Terrain, setParameters, "Set the terrain parameters, size, resolution, height scale, water level", "1|0|0.0001|0.7 0.9 1|1", void, Vec2d, double, double, float, float, Color3f, bool ) },
     {"setWaterLevel", PyWrap(Terrain, setWaterLevel, "Set the water level", void, float ) },
+    {"setLit", PyWrap(Terrain, setLit, "Set lit or not", void, bool ) },
     {"setAtmosphericEffect", PyWrap(Terrain, setAtmosphericEffect, "Set the atmospheric density and color", void, float, Color3f ) },
     {"loadMap", PyWrapOpt(Terrain, loadMap, "Load height map", "3", void, string, int ) },
     {"setMap", PyWrapOpt(Terrain, setMap, "Set height map", "3", void, VRTexturePtr, int ) },
