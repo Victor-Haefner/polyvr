@@ -42,11 +42,15 @@ class VRAnnotationEngine : public VRGeometry {
         void resize(Label& l, Vec3d p, int N);
         void updateTexture();
         bool checkUIn(int i);
+        void initialize();
+
+    protected:
+        VRObjectPtr copy(vector<VRObjectPtr> children);
 
     public:
-        VRAnnotationEngine(string name);
+        VRAnnotationEngine(string name, bool init = true);
 
-        static VRAnnotationEnginePtr create(string name = "AnnotationEngine");
+        static VRAnnotationEnginePtr create(string name = "AnnotationEngine", bool init = true);
         VRAnnotationEnginePtr ptr();
 
         void clear();
