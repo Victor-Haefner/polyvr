@@ -56,7 +56,7 @@ PyObject* VRPyView::getName(VRPyView* self) {
 
 PyObject* VRPyView::grab(VRPyView* self) {
     if (!self->valid()) return NULL;
-    return VRPyImage::fromSharedPtr( self->objPtr->grab() );
+    return VRPyTexture::fromSharedPtr( self->objPtr->grab() );
 }
 
 PyObject* VRPyView::setSize(VRPyView* self, PyObject* args) {
