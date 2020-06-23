@@ -46,7 +46,7 @@ class VRGeometry : public VRTransform {
             float length;
         };
 
-        VRObjectPtr copy(vector<VRObjectPtr> children);
+        virtual VRObjectPtr copy(vector<VRObjectPtr> children);
 
         void meshChanged();
         void setup(VRStorageContextPtr context);

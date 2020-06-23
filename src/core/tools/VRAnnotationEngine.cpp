@@ -18,12 +18,16 @@ template<> string typeName(const VRAnnotationEngine& t) { return "AnnotationEngi
 
 bool hasGS = false;
 
-VRAnnotationEngine::VRAnnotationEngine(string name) : VRGeometry(name) {
+VRAnnotationEngine::VRAnnotationEngine(string name, bool init) : VRGeometry(name) {
     type = "AnnotationEngine";
-
     hasGS = VRScene::getCurrent()->hasGeomShader();
-    //cout << "VRAnnotationEngine::VRAnnotationEngine " << name << "  " << hasGS << endl;
+    if (init) initialize();
+}
 
+VRAnnotationEnginePtr VRAnnotationEngine::create(string name, bool init) { return shared_ptr<VRAnnotationEngine>(new VRAnnotationEngine(name, init) ); }
+VRAnnotationEnginePtr VRAnnotationEngine::ptr() { return static_pointer_cast<VRAnnotationEngine>( shared_from_this() ); }
+
+void VRAnnotationEngine::initialize() {
     mat = VRMaterial::create("AnnEngMat");
 #ifndef OSG_OGL_ES2
     if (hasGS) {
@@ -39,7 +43,7 @@ VRAnnotationEngine::VRAnnotationEngine(string name) : VRGeometry(name) {
     }
 #endif
     mat->setPointSize(5);
-    mat->setMagMinFilter(GL_LINEAR, GL_LINEAR); // TODO: check if texture has mipmaps!
+    if (!hasGS) mat->setMagMinFilter(GL_LINEAR, GL_LINEAR); // TODO: implement test for mipmaps!
     setMaterial(mat);
     updateTexture();
 
@@ -49,15 +53,36 @@ VRAnnotationEngine::VRAnnotationEngine(string name) : VRGeometry(name) {
     data = VRGeoData::create();
 
     setOrientation(Vec3d(0,0,1), Vec3d(0,1,0));
-    oradius = 3;
 }
-
-VRAnnotationEnginePtr VRAnnotationEngine::create(string name) { return shared_ptr<VRAnnotationEngine>(new VRAnnotationEngine(name) ); }
-VRAnnotationEnginePtr VRAnnotationEngine::ptr() { return static_pointer_cast<VRAnnotationEngine>( shared_from_this() ); }
 
 void VRAnnotationEngine::clear() {
     labels.clear();
     data->reset();
+}
+
+VRObjectPtr VRAnnotationEngine::copy(vector<VRObjectPtr> children) {
+    VRAnnotationEnginePtr ann = VRAnnotationEngine::create(getBaseName(), false);
+    //ann->setMesh(mesh);
+    ann->setMaterial(mat);
+    ann->setReference(getReference());
+    ann->setVisible(isVisible());
+    ann->setPickable(isPickable());
+    ann->setEntity(entity);
+    ann->setMatrix(getMatrix());
+
+    ann->mat = mat;
+    ann->fg = fg;
+    ann->bg = bg;
+    ann->oc = oc;
+    ann->oradius = oradius;
+    ann->size = size;
+    ann->texPadding = texPadding;
+    ann->charTexSize = charTexSize;
+    ann->orientationUp = orientationUp;
+    ann->orientationDir = orientationDir;
+    ann->characterIDs = characterIDs;
+    ann->data = VRGeoData::create();
+    return ann;
 }
 
 void VRAnnotationEngine::setColor(Color4f c) { fg = c; updateTexture(); }
@@ -213,7 +238,7 @@ void VRAnnotationEngine::updateTexture() {
     mat->setTexture(img);
     mat->setShaderParameter("texPadding", Real32(texPadding)); // tested
     mat->setShaderParameter("charTexSize", Real32(charTexSize));
-    img->write("annChars.png");
+    img->write(getName()+"-annChars.png");
 
     int i=1; // 0 is used for invalid/no char
     for (auto c : VRText::splitGraphemes(txt)) {
@@ -418,7 +443,7 @@ void main( void ) {
         norm.z = 0.0;
         norm.w = 0.0;
 #ifdef __EMSCRIPTEN__
-        gl_Position = OSGModelViewProjectionMatrix * osg_Vertex + osg_Normal;
+        gl_Position = OSGModelViewProjectionMatrix * osg_Vertex + norm;
 #else
         gl_Position = gl_ModelViewProjectionMatrix * osg_Vertex + norm;
 #endif

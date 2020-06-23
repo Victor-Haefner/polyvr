@@ -1,9 +1,0 @@
-// vertex shader program
-
-//----------------------------------------------------------------------------------------------MAIN--VP
-void main( void ) {
-    gl_TexCoord[0] = gl_MultiTexCoord0;
-    vec4 pos = gl_ModelViewProjectionMatrix*vec4(0.0, 0.0, 0.0, 1.0);
-    pos.xyz += gl_Vertex.xyz;
-    gl_Position = pos;
-}

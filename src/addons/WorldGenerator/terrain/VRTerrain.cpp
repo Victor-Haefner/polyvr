@@ -138,7 +138,7 @@ void VRTerrain::clear() {
     embankments.clear();
 }
 
-void VRTerrain::setParameters( Vec2d s, double r, double h, float w, float aT, Color3f aC) {
+void VRTerrain::setParameters( Vec2d s, double r, double h, float w, float aT, Color3f aC, bool isLit) {
     size = s;
     resolution = r;
     heightScale = h;
@@ -151,6 +151,7 @@ void VRTerrain::setParameters( Vec2d s, double r, double h, float w, float aT, C
     mat->setShaderParameter("heightScale", heightScale);
     mat->setShaderParameter("doHeightTextures", 0);
     mat->setShaderParameter("waterLevel", w);
+    mat->setShaderParameter("isLit", int(isLit));
     mat->setShaderParameter("atmoColor", aC);
     mat->setShaderParameter("atmoThickness", aT);
     updateTexelSize();
@@ -162,6 +163,7 @@ void VRTerrain::setLODFactor(double in){ LODfac = in; }
 double VRTerrain::getLODFactor(){ return LODfac; }
 void VRTerrain::setMeshTer(vector<vector<vector<Vec3d>>> in){ meshTer = in; }
 void VRTerrain::setWaterLevel(float w) { mat->setShaderParameter("waterLevel", w); }
+void VRTerrain::setLit(bool isLit) { mat->setShaderParameter("isLit", int(isLit)); }
 void VRTerrain::setAtmosphericEffect(float thickness, Color3f color) { mat->setShaderParameter("atmoColor", color); mat->setShaderParameter("atmoThickness", thickness); }
 void VRTerrain::setHeightScale(float s) { heightScale = s; mat->setShaderParameter("heightScale", s); }
 
@@ -811,6 +813,7 @@ const vec3 light = vec3(-1,-1,-0.5);
 uniform vec2 texelSize;
 uniform int doHeightTextures;
 uniform float waterLevel;
+uniform int isLit;
 
 in vec4 pos;
 in vec4 vertex;
@@ -838,7 +841,7 @@ void applyBlinnPhong() {
 	gl_FragColor = ambient + diffuse + specular; //AGRAJAG
     //gl_FragColor = mix(diffuse + specular, vec4(0.7,0.9,1,1), clamp(1e-4*length(pos.xyz), 0.0, 1.0)); // atmospheric effects
 	gl_FragColor[3] = 1.0;
-	//gl_FragColor = vec4(diffuse.rgb, 1);
+	//gl_FragColor = vec4(1,0,0, 1);
 }
 
 vec3 getNormal() {
@@ -892,8 +895,8 @@ void main( void ) {
         }
 	}
 
-	applyBlinnPhong();
-	//gl_FragColor = vec4( norm, 1.0 );
+	if (isLit == 1) applyBlinnPhong();
+	else gl_FragColor = mix(color, vec4(1,1,1,1), 0.2);
 }
 );
 
@@ -910,6 +913,7 @@ uniform vec2 texelSize;
 uniform vec2 texel;
 uniform int doHeightTextures;
 uniform float waterLevel;
+uniform int isLit;
 uniform vec3 atmoColor;
 uniform float atmoThickness;
 
@@ -991,7 +995,7 @@ void main( void ) {
 	//norm = normalize( gl_NormalMatrix * norm );
 	norm = normalize( gl_NormalMatrix * norm ) + vec3(0,0,0.2); // bending normal towards camera to increase lightning
     gl_FragData[0] = vec4(vertex.xyz/vertex.w, 1.0);
-    gl_FragData[1] = vec4(norm, 1);
+    gl_FragData[1] = vec4(norm, isLit);
     gl_FragData[2] = color;
 }
 );

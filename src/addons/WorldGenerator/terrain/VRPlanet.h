@@ -27,6 +27,7 @@ class VRPlanet : public VRTransform {
 
         VRAnalyticGeometryPtr metaGeo;
         void rebuild();
+        void setupMetaGeo();
         Vec2i toSID(double north, double east);
 
     public:

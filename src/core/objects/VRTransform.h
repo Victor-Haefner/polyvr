@@ -58,7 +58,7 @@ class VRTransform : public VRObject {
 
         Matrix4d old_transformation; //drag n drop
 
-        VRObjectPtr copy(vector<VRObjectPtr> children);
+        virtual VRObjectPtr copy(vector<VRObjectPtr> children);
 
         void computeMatrix4d();
 
