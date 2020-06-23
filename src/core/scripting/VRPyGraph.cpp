@@ -1,7 +1,7 @@
 #include "VRPyGraph.h"
 #include "VRPyBaseT.h"
 #include "VRPyTypeCaster.h"
-#include "VRPyTransform.h" 
+#include "VRPyTransform.h"
 #include "VRPyPose.h"
 
 using namespace OSG;
@@ -28,6 +28,7 @@ PyMethodDef VRPyGraph::methods[] = {
     {"getInEdges", PyWrap2(Graph, getInEdges, "Return graph edges going in from node n", vector<Graph::edge>, int ) },
     {"getOutEdges", PyWrap2(Graph, getOutEdges, "Return graph edges going out from node n", vector<Graph::edge>, int ) },
     {"getNodePose", PyWrap2(Graph, getPosition, "Return graph node pose", PosePtr, int ) },
+    {"setNodePose", PyWrap2(Graph, setPosition, "Set graph node pose", void, int, PosePtr ) },
     {"addNode", PyWrapOpt2(Graph, addNode, "Add a node at pose p with optional boundingbox, returns node ID", "0", int, PosePtr, BoundingboxPtr ) },
     {"connect", PyWrapOpt2(Graph, connect, "Connect nodes n1 and n2, returns edge ID", "0", int, int, int, int ) },
     {"disconnect", PyWrap2(Graph, disconnect, "Disconnect nodes n1 and n2", void, int, int ) },
