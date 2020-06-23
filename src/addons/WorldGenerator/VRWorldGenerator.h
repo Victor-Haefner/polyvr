@@ -2,6 +2,7 @@
 #define VRWORLDGENERATOR_H_INCLUDED
 
 #include <OpenSG/OSGConfig.h>
+#include <OpenSG/OSGColor.h>
 #include "addons/Semantics/VRSemanticsFwd.h"
 #include "addons/WorldGenerator/GIS/GISFwd.h"
 #include "addons/WorldGenerator/VRWorldGeneratorFwd.h"
@@ -78,7 +79,7 @@ class VRWorldGenerator : public VRTransform {
 
         //getLODTerrain();
         void setupLOD(int layers);
-        void setupLODTerrain(string pathMap, string pathPaint = "", float scale = 1.0, bool cache = true, bool isLit = true);
+        void setupLODTerrain(string pathMap, string pathPaint = "", float scale = 1.0, bool cache = true, bool isLit = true, Color4f mixColor = Color4f(1,1,1,1), float mixAmount = 0);
         void addTerrainsToLOD();
         void setLODTerrainParameters(float heightScale);
         void setTerrainSize( Vec2d in );

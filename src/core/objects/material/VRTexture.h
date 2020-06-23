@@ -35,6 +35,7 @@ class VRTexture : public std::enable_shared_from_this<VRTexture> {
         size_t getByteSize();
         int getPixelByteN();
         int getPixelByteSize();
+        size_t getNPixel();
         ImageMTRecPtr getImage();
 
         void read(string path);
@@ -48,11 +49,13 @@ class VRTexture : public std::enable_shared_from_this<VRTexture> {
         Color4f getPixel(Vec3i p);
         Color4f getPixel(int i);
         void setPixel(Vec3i p, Color4f c);
+        void setPixel(int i, Color4f c);
 
         void resize(Vec3i size, Vec3i offset);
         void downsize();
         void paste(VRTexturePtr other, Vec3i offset);
         void merge(VRTexturePtr other, Vec3d pos);
+        void mixColor(Color4f c, float a);
 };
 
 OSG_END_NAMESPACE;

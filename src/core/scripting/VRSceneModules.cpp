@@ -137,7 +137,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
 #endif
     sm->registerModule<VRPyMaterial>("Material", pModVR, VRPyObject::typeRef);
     sm->registerModule<VRPyTextureGenerator>("TextureGenerator", pModVR);
-    sm->registerModule<VRPyImage>("Image", pModVR);
+    sm->registerModule<VRPyTexture>("Image", pModVR);
     sm->registerModule<VRPyLight>("Light", pModVR, VRPyObject::typeRef);
     sm->registerModule<VRPyLightBeacon>("LightBeacon", pModVR, VRPyTransform::typeRef);
     sm->registerModule<VRPyCamera>("Camera", pModVR, VRPyTransform::typeRef);
@@ -209,7 +209,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyJointTool>("JointTool", pModVR, VRPyGeometry::typeRef);
 	sm->registerModule<VRPyColorChooser>("ColorChooser", pModVR);
 	sm->registerModule<VRPyTextureRenderer>("TextureRenderer", pModVR, VRPyObject::typeRef);
-	sm->registerModule<VRPyTextureMosaic>("TextureMosaic", pModVR, VRPyImage::typeRef);
+	sm->registerModule<VRPyTextureMosaic>("TextureMosaic", pModVR, VRPyTexture::typeRef);
     sm->registerModule<VRPyCaveKeeper>("CaveKeeper", pModVR);
     sm->registerModule<VRPySegmentation>("Segmentation", pModVR);
     sm->registerModule<VRPyAdjacencyGraph>("AdjacencyGraph", pModVR);

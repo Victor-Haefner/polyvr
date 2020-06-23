@@ -191,6 +191,23 @@ void VRTerrain::setMap( VRTexturePtr t, int channel ) {
     setupGeo();
 }
 
+void VRTerrain::paintHeights(string woods, string gravel) {
+    mat->setTexture(woods, 0, 1);
+    mat->setTexture(gravel, 0, 2);
+    mat->setShaderParameter("texWoods", 1);
+    mat->setShaderParameter("texGravel", 2);
+    mat->setShaderParameter("doHeightTextures", 1);
+    mat->clearTransparency();
+}
+
+void VRTerrain::paintHeights(string path, Color4f mCol, float mAmount) {
+    mat->setTexture(path, 0, 3);
+    if (mAmount > 0) mat->getTexture(3)->mixColor(mCol, mAmount);
+    mat->setShaderParameter("texPic", 3);
+    mat->setShaderParameter("doHeightTextures", 2);
+    mat->clearTransparency();
+}
+
 void VRTerrain::updateTexelSize() {
     if (!heigthsTex) return;
     Vec3i s = heigthsTex->getSize();
@@ -695,22 +712,6 @@ void VRTerrain::projectOSM() {
     setMap(t);*/
 }
 
-void VRTerrain::paintHeights(string woods, string gravel) {
-    mat->setTexture(woods, 0, 1);
-    mat->setTexture(gravel, 0, 2);
-    mat->setShaderParameter("texWoods", 1);
-    mat->setShaderParameter("texGravel", 2);
-    mat->setShaderParameter("doHeightTextures", 1);
-    mat->clearTransparency();
-}
-
-void VRTerrain::paintHeights(string path) {
-    mat->setTexture(path, 0, 3);
-    mat->setShaderParameter("texPic", 3);
-    mat->setShaderParameter("doHeightTextures", 2);
-    mat->clearTransparency();
-}
-
 void VRTerrain::addEmbankment(string ID, PathPtr p1, PathPtr p2, PathPtr p3, PathPtr p4) {
     auto e = VREmbankment::create(p1, p2, p3, p4);
     auto m = VRMaterial::get("embankment");
@@ -896,7 +897,7 @@ void main( void ) {
 	}
 
 	if (isLit == 1) applyBlinnPhong();
-	else gl_FragColor = mix(color, vec4(1,1,1,1), 0.2);
+	else gl_FragColor = color;//mix(color, vec4(1,1,1,1), 0.2);
 }
 );
 

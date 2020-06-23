@@ -35,7 +35,7 @@ PyObject* VRPyRecorder::setTransform(VRPyRecorder* self, PyObject* args) {
 
 PyObject* VRPyRecorder::get(VRPyRecorder* self, PyObject* args) {
     int i = parseInt(args);
-    return VRPyImage::fromSharedPtr( self->objPtr->get(i) );
+    return VRPyTexture::fromSharedPtr( self->objPtr->get(i) );
 }
 
 PyObject* VRPyRecorder::getFrom(VRPyRecorder* self, PyObject* args) { return toPyObject(self->objPtr->getFrom( parseInt(args) ) ); }

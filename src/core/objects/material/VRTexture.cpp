@@ -201,39 +201,72 @@ size_t VRTexture::getByteSize() {
 }
 
 void VRTexture::setPixel(Vec3i p, Color4f c) {
-    int N = getChannels();
     int w = img->getWidth();
     int h = img->getHeight();
-
-    auto data = img->editData();
+    clampToImage(p);
     int i = p[0] + p[1]*w + p[2]*w*h;
+    setPixel(i, c);
+}
+
+size_t VRTexture::getNPixel() {
+    Vec3i s = getSize();
+    return s[0]*s[1]*s[2];
+}
+
+void VRTexture::setPixel(int i, Color4f c) {
+    int N = getChannels();
+    int Nbytes = getPixelByteN();
+    auto data = img->editData();
 
     if (N == 1) {
-        float* f = (float*)data;
-        f[i] = c[0];
+        if (Nbytes == 4) {
+            float* f = (float*)data;
+            f[i] = c[0];
+        } else if (Nbytes == 1) {
+            unsigned char* ub = (unsigned char*)data;
+            ub[i] = c[0]*255;
+        }
     }
 
     if (N == 2) {
-        Vec2f* data2 = (Vec2f*)data;
-        data2[i] = Vec2f(c[0], c[1]);
+        if (Nbytes == 4) {
+            Vec2f* data2 = (Vec2f*)data;
+            data2[i] = Vec2f(c[0], c[1]);
+        } else if (Nbytes == 1) {
+            Vec2ub* data2 = (Vec2ub*)data;
+            data2[i] = Vec2ub(c[0]*255, c[1]*255);
+        }
     }
 
     if (N == 3) {
-        Color3f* data3 = (Color3f*)data;
-        data3[i] = Color3f(c[0], c[1], c[2]);
+        if (Nbytes == 4) {
+            Color3f* data3 = (Color3f*)data;
+            data3[i] = Color3f(c[0], c[1], c[2]);
+        } else if (Nbytes == 1) {
+            Color3ub* data3 = (Color3ub*)data;
+            data3[i] = Color3ub(c[0]*255, c[1]*255, c[2]*255);
+        }
     }
 
     if (N == 4) {
-        Color4f* data4 = (Color4f*)data;
-        data4[i] = c;
+        if (Nbytes == 4) {
+            Color4f* data4 = (Color4f*)data;
+            data4[i] = c;
+        } else if (Nbytes == 1) {
+            Color4ub* data4 = (Color4ub*)data;
+            data4[i] = Color4ub(c[0]*255, c[1]*255, c[2]*255, c[3]*255);
+        }
     }
 }
 
 void VRTexture::clampToImage(Vec3i& p) {
     if (!img) return;
-    if (p[0] < 0) p[0] = 0; if (p[0] >= img->getWidth()) p[0] = img->getWidth()-1;
-    if (p[1] < 0) p[1] = 0; if (p[1] >= img->getHeight()) p[1] = img->getHeight()-1;
-    if (p[2] < 0) p[2] = 0; if (p[2] >= img->getDepth()) p[2] = img->getDepth()-1;
+    if (p[0] < 0) p[0] = 0;
+    if (p[0] >= img->getWidth()) p[0] = img->getWidth()-1;
+    if (p[1] < 0) p[1] = 0;
+    if (p[1] >= img->getHeight()) p[1] = img->getHeight()-1;
+    if (p[2] < 0) p[2] = 0;
+    if (p[2] >= img->getDepth()) p[2] = img->getDepth()-1;
 }
 
 Color4f VRTexture::getPixel(Vec3i p) {
@@ -388,4 +421,11 @@ void VRTexture::downsize() {
     if ( N == 4 ) { }
 }
 
+void VRTexture::mixColor(Color4f c, float a) {
+    size_t N = getNPixel();
+    for (int i=0; i<N; i++) {
+        Color4f p = getPixel(i);
+        setPixel(i, p*(1-a) + c*a);
+    }
+}
 
