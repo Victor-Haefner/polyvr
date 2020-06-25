@@ -9,8 +9,10 @@
 #include <gdal/gdal_priv.h>
 #include <gdal/gdal_version.h>
 #include <gdal/ogrsf_frmts.h>
-#include <proj_api.h>
+
+// define needed before including proj_api.h !!
 #define ACCEPT_USE_OF_DEPRECATED_PROJ_API_H
+#include <proj_api.h>
 #endif
 
 #include <iostream>
