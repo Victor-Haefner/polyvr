@@ -70,6 +70,7 @@ void VRGuiBits::on_quit_clicked() {
 void VRGuiBits::on_web_export_clicked() {
     string D = VRSceneManager::get()->getOriginalWorkdir();
     string project = VRScene::getCurrent()->getFile();
+    string projectName = VRScene::getCurrent()->getFileName();
 
     string folder = D+"/ressources/webBuild";
     if (!exists(folder+"/.git"))
@@ -80,10 +81,15 @@ void VRGuiBits::on_web_export_clicked() {
     systemCall("cp -f \"" + folder + "/polyvr.js\" ./");
     systemCall("cp -f \"" + folder + "/storage.js\" ./");
     systemCall("cp -f \"" + folder + "/scanDir.php\" ./");
+    systemCall("cp -f \"" + folder + "/Browser.xml\" ./");
 
     // generate html file
-    systemCall("cp -f \"" + folder + "/polyvr.html\" ./");
-    systemCall("sed -i 's/PROJECT.pvr/"+project+"/g' ./polyvr.html");
+    systemCall("cp -f \"" + folder + "/polyvr.html\" ./"+projectName+".html");
+    systemCall("sed -i 's/PROJECT.pvr/"+project+"/g' ./"+projectName+".html");
+
+    //systemCall("gedit ./"+projectName+".html");
+    if (askUser("Web build files copied to project directory", "Start in browser (google-chrome)?"))
+        systemCall("google-chrome --new-window http://localhost:5500/"+projectName+".html");
 }
 
 void VRGuiBits::on_about_clicked() {
