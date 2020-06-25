@@ -40,7 +40,7 @@ class VRSceneLoader {
         ~VRSceneLoader();
 
         void saveScene(string file, XMLElementPtr guiN = 0, string encryption = "");
-        void loadScene(string file, string encryptionKey = "");
+        bool loadScene(string file, string encryptionKey = "");
         VRObjectPtr importScene(string file, string encryptionKey = "", bool offLights = false);
 };
 

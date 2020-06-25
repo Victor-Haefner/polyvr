@@ -571,7 +571,7 @@ PyMethodDef VRPyDatarow::methods[] = {
     {"getLogRet", PyWrap2( Datarow, getLogRet, "Get ith log return", double, int ) },
     {"getPCTs", PyWrap2( Datarow, getPCTs, "Get PCTs", DatarowPtr ) },
     {"getLogRets", PyWrap2( Datarow, getLogRets, "Get log returns", DatarowPtr ) },
-    {"computeCorrelation", PyWrap2( Datarow, computeCorrelation, "Compute correlation between two series", double, DatarowPtr ) },
+    {"computeCorrelation", PyWrapOpt2( Datarow, computeCorrelation, "Compute correlation between two series", "0|0", double, DatarowPtr, int, int ) },
     {NULL}  /* Sentinel */
 };
 

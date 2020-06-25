@@ -1,5 +1,6 @@
 #include "datarow.h"
 #include "core/utils/toString.h"
+#include <iostream>
 
 using namespace OSG;
 
@@ -70,44 +71,49 @@ DatarowPtr Datarow::getLogRets() {
     return res;
 }
 
-double Datarow::computeAverage(int N) {
+double Datarow::computeAverage(int from, int to) {
+    if (to == -1) to = data.size();
     double a = 0;
-    for (int i=0; i<N; i++) a += data[data.size()-1-i];
-    return a/data.size();
+    for (int i=from; i<to; i++) a += data[i];
+    return a/(to-from);
 }
 
-double Datarow::computeDeviation(double average, int N) {
+double Datarow::computeDeviation(double average, int from, int to) {
+    if (to == -1) to = data.size();
     double dv = 0;
-    for (int i=0; i<N; i++) {
-        double d = data[data.size()-1-i];
-        dv += (d-average)*(d-average);
+    for (int i=from; i<to; i++) {
+        double d = data[i]-average;
+        dv += d*d;
     }
-    return sqrt(dv/(data.size()-1));
+    return sqrt(dv/(to-from-1));
 }
 
-double Datarow::computeCovariance(DatarowPtr other, double average1, double average2) {
-    size_t oDN = other->data.size();
-    int N = min(data.size(), oDN); // if not same length, align the ends! (best for time series)
+double Datarow::computeCovariance(DatarowPtr other, double average1, double average2, int offset1, int offset2) {
+    int N = min(data.size()-offset1, other->data.size()-offset2);
+    if (N <= 1) return 0;
+
     double cov = 0;
     for (int i=0; i<N; i++) {
-        double d1 = data[data.size()-1-i]; // read from last element
-        double d2 = other->data[oDN-1-i]; // read from last element
-        cov += (d1-average1)*(d2-average2);
+        double d1 = data[offset1+i]-average1; // read from last element
+        double d2 = other->data[offset2+i]-average2; // read from last element
+        cov += d1*d2;
     }
     return cov / (N-1);
 }
 
-double Datarow::computeCorrelation(DatarowPtr other) {
-    int N = min(data.size(), other->data.size()); // if not same length, align the ends! (best for time series)
+double Datarow::computeCorrelation(DatarowPtr other, int offset1, int offset2) {
+    int N = min(data.size()-offset1, other->data.size()-offset2);
+    if (N <= 1) return 0;
 
-    double avg1 = computeAverage(N);
-    double avg2 = other->computeAverage(N);
+    double avg1 = computeAverage(offset1, offset1+N);
+    double avg2 = other->computeAverage(offset2, offset2+N);
 
-    double dev1 = computeDeviation(avg1, N);
+    double dev1 = computeDeviation(avg1, offset1, offset1+N);
     if (dev1 == 0) return 0;
-    double dev2 = other->computeDeviation(avg2, N);
+    double dev2 = other->computeDeviation(avg2, offset2, offset2+N);
     if (dev2 == 0) return 0;
 
-    double cov = computeCovariance(other, avg1, avg2);
+    double cov = computeCovariance(other, avg1, avg2, offset1, offset2);
+    //cout << "Datarow::computeCorrelation avg, dev: " << avg1 << " " << avg2 << " " << dev1 << " " << dev2 << ", N: " << N << ", cov: " << cov << endl;
     return cov/dev1/dev2;
 }
