@@ -238,7 +238,7 @@ void VRAnnotationEngine::updateTexture() {
     mat->setTexture(img);
     mat->setShaderParameter("texPadding", Real32(texPadding)); // tested
     mat->setShaderParameter("charTexSize", Real32(charTexSize));
-    img->write(getName()+"-annChars.png");
+    //img->write(getName()+"-annChars.png");
 
     int i=1; // 0 is used for invalid/no char
     for (auto c : VRText::splitGraphemes(txt)) {
