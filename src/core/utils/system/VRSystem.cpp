@@ -63,7 +63,7 @@ string getFileExtension(string path) {
 
 string getFolderName(string path) {
     size_t sp = path.rfind('/');
-    if (sp == string::npos) return "";
+    if (sp == string::npos) return ".";
     return path.substr(0, sp);
 }
 
