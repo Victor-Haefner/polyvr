@@ -193,7 +193,7 @@ void PolyVR::init(int argc, char **argv) {
     cout << " init GLUT";
     glutInit(&argc, argv);
 	glutInitWindowSize(300, 300);
-    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
+    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH | GLUT_MULTISAMPLE);
     cout << " ..done " << endl << endl;
 
     PrimeMaterialRecPtr pMat = OSG::getDefaultMaterial();
