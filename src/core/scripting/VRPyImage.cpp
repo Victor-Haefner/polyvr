@@ -50,12 +50,12 @@ template<> PyTypeObject VRPyBaseT<VRTexture>::type = {
 };
 
 PyMethodDef VRPyTexture::methods[] = {
-    {"read", (PyCFunction)VRPyTexture::read, METH_VARARGS, "Read an image from disk - read( str path )" },
-    {"write", (PyCFunction)VRPyTexture::write, METH_VARARGS, "Write an image to disk - write( str path )" },
-    {"getPixel", (PyCFunction)VRPyTexture::getPixel, METH_VARARGS, "Return pixel at coordinates u,v - getPixel( [u,v] )" },
-    {"getSize", (PyCFunction)VRPyTexture::getSize, METH_NOARGS, "Return pixel at coordinates u,v - getPixel( [u,v] )" },
-    {"getAspectRatio", (PyCFunction)VRPyTexture::getAspectRatio, METH_NOARGS, "Return aspect ratio between width and height" },
-    {"getChannels", (PyCFunction)VRPyTexture::getChannels, METH_NOARGS, "Return pixel at coordinates u,v - getPixel( [u,v] )" },
+    {"read", PyWrap(Texture, read, "Read an image from disk - read( str path )", void, string ) },
+    {"write", PyWrapOpt(Texture, write, "Write an image to disk - write( str path )", "0", void, string, bool ) },
+    {"getPixel", PyWrap(Texture, getPixelUV, "Return pixel at coordinates u,v - getPixel( [u,v] )", Color4f, Vec2d ) },
+    {"getSize", PyWrap(Texture, getSize, "Return texture size, [W,H,D]", Vec3i ) },
+    {"getAspectRatio", PyWrap(Texture, getAspectRatio, "Return aspect ratio between width and height", float ) },
+    {"getChannels", PyWrap(Texture, getChannels, "Get number of image channels", int ) },
     {"mixColor", PyWrap(Texture, mixColor, "Mix texture colors with color", void, Color4f, float ) },
     {NULL}  /* Sentinel */
 };
@@ -102,40 +102,6 @@ PyObject* VRPyTexture::New(PyTypeObject *type, PyObject *args, PyObject *kwds) {
     VRTexturePtr img = VRTexture::create();
     return allocPtr( type, img );
 #endif
-}
-
-PyObject* VRPyTexture::getChannels(VRPyTexture* self, PyObject *args) {
-    return PyInt_FromLong(self->objPtr->getChannels());
-}
-
-PyObject* VRPyTexture::getSize(VRPyTexture* self, PyObject *args) {
-    return toPyTuple(self->objPtr->getSize());
-}
-
-PyObject* VRPyTexture::getAspectRatio(VRPyTexture* self, PyObject *args) {
-    float f = self->objPtr->getAspectRatio();
-    return PyFloat_FromDouble(f);
-}
-
-PyObject* VRPyTexture::read(VRPyTexture* self, PyObject *args) {
-    const char* path = 0;
-    if (! PyArg_ParseTuple(args, "s", (char*)&path)) return NULL;
-    if (path) self->objPtr->read(path);
-    Py_RETURN_TRUE;
-}
-
-PyObject* VRPyTexture::write(VRPyTexture* self, PyObject *args) {
-    const char* path = 0;
-    int doThread = 0;
-    if (! PyArg_ParseTuple(args, "s|i", (char*)&path, &doThread) ) return NULL;
-    if (path) self->objPtr->write(path, doThread);
-    Py_RETURN_TRUE;
-}
-
-PyObject* VRPyTexture::getPixel(VRPyTexture* self, PyObject *args) {
-    PyObject* uv;
-    if (! PyArg_ParseTuple(args, "O", &uv)) return NULL;
-    return toPyTuple( Vec4d(self->objPtr->getPixel( parseVec2dList(uv) )) );
 }
 
 

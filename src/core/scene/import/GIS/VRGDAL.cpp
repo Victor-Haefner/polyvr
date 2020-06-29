@@ -371,7 +371,7 @@ void writeGeoRasterData(string path, VRTexturePtr tex, double geoTransform[6], s
     for (int y = 0; y < sizeY; y++){
         for (int x = 0; x < sizeX; x++) {
             Vec3i pI(x,y,0);
-            auto fC = tex->getPixel(pI)[0];
+            auto fC = tex->getPixelVec(pI)[0];
             yRow[x] = fC;
         }
         poBand->RasterIO( GF_Write, 0, y, sizeX, 1, yRow, sizeX, 1, GDT_Float32, 0, 0 );
