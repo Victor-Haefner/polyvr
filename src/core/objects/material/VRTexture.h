@@ -45,8 +45,8 @@ class VRTexture : public std::enable_shared_from_this<VRTexture> {
         int getChannels();
         Vec3i getSize();
         float getAspectRatio();
-        Color4f getPixel(Vec2d uv);
-        Color4f getPixel(Vec3i p);
+        Color4f getPixelUV(Vec2d uv);
+        Color4f getPixelVec(Vec3i p);
         Color4f getPixel(int i);
         void setPixel(Vec3i p, Color4f c);
         void setPixel(int i, Color4f c);
