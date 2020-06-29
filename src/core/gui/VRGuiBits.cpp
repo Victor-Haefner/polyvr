@@ -96,6 +96,7 @@ void VRGuiBits::on_web_export_clicked() {
 
     // check scripts for paths to ressources
     for (auto script : VRScene::getCurrent()->getScripts()) {
+        if (script.second->getType() != "Python") continue;
         string core = script.second->getCore();
 
         // search for strings
@@ -118,6 +119,7 @@ void VRGuiBits::on_web_export_clicked() {
             size_t i1 = positions[i]+1;
             size_t i2 = positions[i+1];
             string str = core.substr(i1,i2-i1);
+            if (str.size() > 20) continue;
             if (exists(str)) {
                 preloadFile(str);
                 if (exists("."+str+".osb")) preloadFile("."+str+".osb"); // check for binary chaches
