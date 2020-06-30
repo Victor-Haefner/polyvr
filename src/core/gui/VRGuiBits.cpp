@@ -82,6 +82,7 @@ void VRGuiBits::on_web_export_clicked() {
     systemCall("cp -f \"" + folder + "/polyvr.js\" ./");
     systemCall("cp -f \"" + folder + "/storage.js\" ./");
     systemCall("cp -f \"" + folder + "/scanDir.php\" ./");
+    systemCall("cp -f \"" + folder + "/Mono.ttf\" ./");
     systemCall("cp -f \"" + folder + "/Browser.xml\" ./");
 
     // generate html file
@@ -121,6 +122,7 @@ void VRGuiBits::on_web_export_clicked() {
             string str = core.substr(i1,i2-i1);
             if (str.size() > 20) continue;
             if (exists(str)) {
+                cout << "preloadFile " << str << endl;
                 preloadFile(str);
                 if (exists("."+str+".osb")) preloadFile("."+str+".osb"); // check for binary chaches
             }
