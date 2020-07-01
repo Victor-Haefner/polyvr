@@ -2,12 +2,17 @@
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/material/VRMaterialT.h"
 #include "core/objects/material/VRTextureGenerator.h"
+#include "core/objects/VRCamera.h"
 #include "core/utils/VRFunction.h"
 #include "core/utils/system/VRSystem.h"
 #include "core/scene/VRScene.h"
+#include "core/setup/VRSetup.h"
+#include "core/setup/windows/VRView.h"
 
 #include <math.h>
 #include <time.h>
+
+#define GLSL(shader) #shader
 
 using namespace OSG;
 
@@ -82,6 +87,7 @@ VRSky::VRSky() : VRGeometry("Sky") {
 	tg.add(PERLIN, 1.0/256, Color3f(0.2), Color3f(1.0));
 	*/
 	mat->setTexture(tg.compose(0));
+    update();
 
     updatePtr = VRUpdateCb::create("sky update", bind(&VRSky::update, this));
     VRScene::getCurrent()->addUpdateFkt(updatePtr);
@@ -100,6 +106,19 @@ VRSkyPtr VRSky::ptr() { return static_pointer_cast<VRSky>( shared_from_this() );
 void VRSky::update() {
     if (!isVisible()) return;
 
+#ifdef WASM
+    // get inverse of modelviewprojection for wasm
+    VRCameraPtr cam = VRScene::getCurrent()->getActiveCamera();
+    Matrix mModelView = toMatrix4f(VRScene::getCurrent()->getActiveCamera()->getWorldMatrix());
+    mModelView[3] = Vec4f(0,0,0,mModelView[3][3]);
+    mModelView.invert();
+    Vec2i viewSize = VRSetup::getCurrent()->getView(0)->getSize();
+    Matrix mProj = cam->getProjectionMatrix(viewSize[0], viewSize[1]);
+    mModelView.multLeft(mProj);
+    mModelView.invert();
+    mat->setShaderParameter("extInvMat", mModelView);
+#endif
+
     double current = getTime()*1e-6;
     float dt = (current - lastTime)*speed;
     lastTime = current;
@@ -111,6 +130,7 @@ void VRSky::update() {
 }
 
 void VRSky::setSpeed(float s) { speed = s; }
+float VRSky::getSpeed() { return speed; }
 
 void VRSky::setTime(double second, int hour, int day, int year) {
     bool warning = false;
@@ -282,10 +302,298 @@ Vec3d VRSky::getSunPos(){
 void VRSky::reloadShader() {
     cout << "VRSky::reloadShader" << endl;
     string resDir = VRSceneManager::get()->getOriginalWorkdir() + "/shader/Sky/";
-    mat->readVertexShader(resDir + "Sky.vp");
-    mat->readFragmentShader(resDir + "Sky.fp");
-    mat->readFragmentShader(resDir + "Sky.dfp", true);
+    mat->setVertexShader(skyVP, "skyVP");
+    mat->setFragmentShader(skyFP, "skyFP");
+    mat->readFragmentShader(resDir + "Sky.dfp", true); // TODO
+    Matrix m;
+    mat->setShaderParameter("extInvMat", m);
     mat->updateDeferredShader();
 }
+
+string VRSky::skyVP =
+#ifndef __EMSCRIPTEN__
+"#version 400 compatibility\n"
+#endif
+GLSL(
+#ifdef __EMSCRIPTEN__
+varying vec3 norm;
+varying vec4 pos;
+varying vec2 tcs;
+varying mat4 mFragInv;
+
+attribute vec4 osg_Vertex;
+attribute vec3 osg_Normal;
+attribute vec2 osg_MultiTexCoord0;
+uniform mat4 extInvMat;
+#else
+out vec3 norm;
+out vec4 pos;
+out vec2 tcs;
+out mat4 mFragInv;
+
+in vec4 osg_Vertex;
+in vec3 osg_Normal;
+in vec2 osg_MultiTexCoord0;
+#endif
+
+uniform int c1; // test input
+
+void main() {
+#ifdef __EMSCRIPTEN__
+	mFragInv = extInvMat;
+#else
+	mFragInv = gl_ModelViewProjectionMatrix;
+	mFragInv[3] = vec4(0,0,0,mFragInv[3][3]);
+	mFragInv = inverse(mFragInv);
+#endif
+
+	pos = osg_Vertex * 0.5;
+	pos.z = 0.5; // try to fix stereo
+	gl_Position = osg_Vertex;
+	norm = osg_Normal;
+	tcs = osg_MultiTexCoord0;
+}
+);
+
+string VRSky::skyFP =
+#ifndef __EMSCRIPTEN__
+"#version 400 compatibility\n"
+#else
+"#extension GL_EXT_frag_depth : enable\n"
+#endif
+GLSL(
+#ifdef __EMSCRIPTEN__
+precision mediump float;
+#endif
+
+#ifndef __EMSCRIPTEN__
+in vec3 norm;
+in vec4 pos;
+in vec2 tcs;
+in mat4 mFragInv;
+#else
+varying vec3 norm;
+varying vec4 pos;
+varying vec2 tcs;
+varying mat4 mFragInv;
+#endif
+
+vec3 fragDir;
+vec4 color;
+uniform vec2 OSGViewportSize;
+
+// sun
+uniform vec3 sunPos; //define sun direction
+uniform float theta_s;
+
+// clouds
+uniform sampler2D tex;
+uniform vec2 cloudOffset; //to shift cloud texture
+uniform vec4 cloudColor; //to shift cloud texture
+uniform float cloudScale; // 1e-5
+uniform float cloudDensity;
+uniform float cloudHeight; // 1000.
+
+//sky
+uniform vec3 xyY_z;
+uniform vec3 A;
+uniform vec3 B;
+uniform vec3 C;
+uniform vec3 D;
+uniform vec3 E;
+
+float gamma;
+float theta;
+
+vec3 real_fragDir;
+vec4 colGround = vec4(0.6, 0.6, 0.7, 1.0);
+float rad_earth = 6.371e6;
+
+
+void computeDirection() {\n
+	real_fragDir = (mFragInv * pos).xyz;
+	float tol = 1e-5;
+	fragDir = real_fragDir;
+	if(fragDir.y<tol) fragDir.y = tol;
+	fragDir = normalize( fragDir );
+}
+
+vec3 xyYRGB(vec3 xyY) {\n
+	float Y = xyY[2];
+	float X = xyY[0] * Y / xyY[1];
+	float Z = (1. - xyY[0] - xyY[1]) * Y / xyY[1];
+
+
+	// scale XYZ from https://www.w3.org/Graphics/Color/srgb
+
+	X = 0.0125313*(X - 0.1901);
+	Y = 0.0125313*(Y - 0.2);
+	Z = 0.0125313*(Z - 0.2178);
+/*
+	mat4 m_inv = mat4(3.2406255, -0.9689307, 0.0557101, 0.,
+			-1.537208,  1.8757561,  -0.02040211, 0.,
+			-0.4986286, 0.0415175,  1.0569959, 0.,
+			0., 0., 0., 0.);
+*/
+	mat4 m_inv = mat4(3.06322, -0.96924, 0.06787, 0.,
+			-1.39333,  1.87597,  -0.22883, 0.,
+			-0.47580, 0.04156,  1.06925, 0.,
+			0., 0., 0., 0.);
+
+	vec4 rgb = m_inv * vec4(X, Y, Z, 0.);
+
+	// add non-linearity
+	for (int i=0; i<3; ++i) {
+		clamp(rgb[i], 0.0, 1.0);
+		if (rgb[i] > 0.0031308) {
+			rgb[i] = 1.055 * pow(rgb[i], 1.0/2.4) - 0.055;
+		} else {
+			rgb[i] = 12.92 * rgb[i];
+		}
+	}
+
+	return vec3(rgb[0], rgb[1], rgb[2]);
+}
+
+
+
+// returns the x-z coordinates on plane y = h
+// at which the ray fragDir intersects
+vec2 planeIntersect(float h) {\n
+	vec2 pt = vec2(0.);
+	// r = h / cos \phi
+	pt = - h * fragDir.xz / fragDir.y ;
+	return pt;
+}
+
+vec2 sphereIntersect(float h) {\n
+	float r = rad_earth;
+	float R = rad_earth + h;
+	vec2 pt = vec2(0.);
+
+	float b = -2.0*real_fragDir.y*r;
+	float c = r*r-R*R;
+
+	float disc = sqrt(b*b-4.0*c);
+	float lambda = 0.0;
+	lambda = max(b - disc, b + disc)*0.5;
+
+	pt.x = lambda*real_fragDir.x;
+	pt.y = lambda*real_fragDir.z;
+	return pt;
+}
+
+float computeLuminanceOvercast() {\n
+	// overcast luminance model (CIE - from preetham)
+	// Y_z(1 + 2 cos \theta) / 3
+	return xyY_z.z * (1.0 + 2.0 * fragDir.y) / 3.0;
+}
+
+float computeCloudLuminance() {\n
+	float factor = 0.5;
+	float offset = 0.4;
+	float l = factor*(offset + (1.0 - offset)*computeLuminanceOvercast());
+	return clamp(l, 0.0, 1.0);
+}
+
+void addCloudLayer(float height, vec2 offset, float density, float luminance) {\n
+	vec2 uv = cloudScale * sphereIntersect(height) + offset;
+#ifdef __EMSCRIPTEN__
+	float cloud = texture2D(tex, uv).x;
+	float noise = 0.9 + 0.1*texture2D(tex, uv * 4.0).x;
+#else
+	float cloud = texture(tex, uv).x;
+	float noise = 0.9 + 0.1*texture(tex, uv * 4.0).x;
+#endif
+
+	cloud = smoothstep(0.0, 1.0, (1.0 - density) * cloud);
+	vec3 c = mix(cloudColor.xyz, color.xyz, 1.0 - luminance);
+	color = mix(vec4(noise*c, 1.0), color, cloud);
+}
+
+void computeClouds() {\n
+	if (fragDir.y > 0.0 && cloudDensity > 0.0) {
+		float density = cloudDensity;
+		float scale = cloudScale;
+		float y = computeCloudLuminance(); // compute luminance of clouds based on angle
+
+		addCloudLayer(1.5*cloudHeight, 0.25*cloudOffset, 0.5*cloudDensity, y);
+		addCloudLayer(    cloudHeight,      cloudOffset,     cloudDensity, 0.8*y);
+	}
+}
+
+void addSun() {\n
+	float sunAngSize = 0.00873; // defined sun size in radians
+	float s = smoothstep( sunAngSize * 0.7, sunAngSize * 1.0, gamma);
+	color = mix(vec4(1.0, 1.0, 1.0, 1.0), color, s);
+}
+
+void addGround() {\n
+	float offset = 0.75;
+	float factor = 0.3 * (offset + (1.0 - offset)*xyY_z.z);
+	color = mix(factor * colGround, color, smoothstep( -0.05, 0.0, real_fragDir.y) );
+}
+
+vec3 f_f0() {\n
+	// f  = (1 + A*exp(B/cos(theta)))
+	//      * (1 + C*exp(D*gamma) + E*pow(cos(gamma),2))
+	vec3 xyY = vec3(0.0,0.0,0.0);
+	for (int i=0; i<3; ++i) {
+		float f = (1.0 + A[i] * exp( B[i] / cos(theta) ) )
+		    * (1.0 + C[i]*exp( D[i] * gamma ) + E[i] * pow( cos( gamma ), 2.0 ) );
+
+		float f0 = (1.0 + A[i] * exp( B[i] ) )
+		    * (1.0 + C[i] * exp( D[i] * theta_s ) + E[i] * pow( cos( theta_s ), 2.0) );
+		if (f0 != 0.0) xyY[i] = f/f0;
+	}
+	return xyY;
+}
+
+void main() {\n
+
+	computeDirection();
+
+	// \gamma is angle between viewing direction (fragDir) and sun (sunPos)
+	gamma = acos(dot(fragDir, sunPos));
+	// \theta is angle of fragDir to zenith
+	theta = acos(fragDir.y);
+
+	vec3 xyY = f_f0();
+	//xyY.x = xyY_z.x;
+	//xyY.y = xyY_z.y;
+	xyY.x *= xyY_z.x;
+	xyY.y *= xyY_z.y;
+	xyY.z *= xyY_z.z;
+
+	//vec3 xyY = vec3(0.150017, 0.060007, 7.22);
+	color = vec4(xyYRGB(xyY), 1.0);
+
+	color.rgb *= 1.0; // hack
+	color.b *= 1.1;
+	color.r *= 0.85;
+
+	// add cloud cover
+	computeClouds();
+
+	// add sun
+	addSun();
+	addGround();
+
+	gl_FragColor = color;
+#ifdef __EMSCRIPTEN__
+	gl_FragDepthEXT = 1.0; // depth is infinite at 1.0? behind all else (check)
+#else
+	gl_FragDepth = 1.0; // depth is infinite at 1.0? behind all else (check)
+#endif
+
+	// vertical line for testing
+	//if (real_fragDir.x < 0.01 && real_fragDir.x > 0) gl_FragColor = vec4(0,0,0,1);
+}
+);
+
+string VRSky::skyDFP =
+GLSL(
+bla
+);
 
 

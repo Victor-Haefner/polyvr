@@ -5,8 +5,7 @@
 in vec3 norm;
 in vec4 pos;
 in vec2 tcs;
-in mat3 miN;
-in mat4 miP;
+in mat4 mFragInv;
 vec3 fragDir;
 vec4 color;
 uniform vec2 OSGViewportSize;
@@ -40,7 +39,7 @@ float rad_earth = 6.371e6;
 
 
 void computeDirection() {
-	real_fragDir = miN * (miP * pos).xyz;
+	real_fragDir = (mFragInv * pos).xyz;
 	float tol = 1e-5;
 	fragDir = real_fragDir;
 	if(fragDir.y<tol) fragDir.y = tol;
