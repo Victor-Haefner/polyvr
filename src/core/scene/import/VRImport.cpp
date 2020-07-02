@@ -225,6 +225,7 @@ void VRImport::LoadJob::load(VRThreadWeakPtr tw) {
         SceneFileHandler::the()->write(res->getChild(0)->getNode()->node, osbPath.c_str());
         for (auto c : res->getChildren(true)) { if (auto t = dynamic_pointer_cast<VRTransform>(c)) t->enableOptimization(true); }
         // TODO: create descriptive hash of file, store hash
+        cout << "store in binary cache: " << path << " " << osbPath << endl;
     }
 }
 

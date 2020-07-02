@@ -62,13 +62,7 @@ void VRSprite::updateGeo() { // TODO: plane primitive would be better, but backw
 VRTexturePtr VRSprite::setText(string l, float res, Color4f c1, Color4f c2, int ol, Color4f oc, string font) {
     label = l;
     auto m = VRMaterial::create(getName()+"label");
-
     auto tex = VRText::get()->create(l, font, res, 3, c1, c2, ol, oc);
-    //float tW = tex->getSize()[0];
-    //float lW = VRText::get()->layoutWidth;
-    //texPadding = padding / tW;
-    //charTexSize = lW/tW / cN;
-
     m->setTexture(tex);
     setMaterial(m);
     return tex;

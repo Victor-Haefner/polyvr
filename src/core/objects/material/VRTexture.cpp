@@ -269,7 +269,7 @@ void VRTexture::clampToImage(Vec3i& p) {
     if (p[2] >= img->getDepth()) p[2] = img->getDepth()-1;
 }
 
-Color4f VRTexture::getPixel(Vec3i p) {
+Color4f VRTexture::getPixelVec(Vec3i p) {
     auto res = Color4f(0,0,0,1);
     if (!img) return res;
     //int N = getChannels();
@@ -283,14 +283,14 @@ Color4f VRTexture::getPixel(Vec3i p) {
     return getPixel(i);
 }
 
-Color4f VRTexture::getPixel(Vec2d uv) {
+Color4f VRTexture::getPixelUV(Vec2d uv) {
     auto res = Color4f(0,0,0,1);
     if (!img) return res;
     int w = img->getWidth();
     int h = img->getHeight();
     int x = uv[0]*(w-1);
     int y = uv[1]*(h-1);
-    return getPixel(Vec3i(x,y,0));
+    return getPixelVec(Vec3i(x,y,0));
 }
 
 Color4f VRTexture::getPixel(int i) {
@@ -348,7 +348,10 @@ Vec3i VRTexture::getSize() {
 }
 
 float VRTexture::getAspectRatio() {
-    return float(img->getWidth()) / img->getHeight();
+    int W = img->getWidth();
+    int H = img->getHeight();
+    if (H == 0) cout << "Warning in VRTexture::getAspectRatio! image height is " << H << endl;
+    return H > 0 ? float(W)/H : 1;
 }
 
 void VRTexture::downsize() {
@@ -378,14 +381,14 @@ void VRTexture::downsize() {
         for (int z = 0; z < s[2]; z++) {
             for (int y = 0; y < s[1]; y++) {
                 for (int x = 0; x < s[0]; x++) {
-                    Color4f p1 = getPixel(Vec3i(2*x,2*y,2*z));
-                    Color4f p2 = getPixel(Vec3i(2*x+1,2*y,2*z));
-                    Color4f p3 = getPixel(Vec3i(2*x,2*y+1,2*z));
-                    Color4f p4 = getPixel(Vec3i(2*x+1,2*y+1,2*z));
-                    Color4f p5 = getPixel(Vec3i(2*x,2*y,2*z+1));
-                    Color4f p6 = getPixel(Vec3i(2*x+1,2*y,2*z+1));
-                    Color4f p7 = getPixel(Vec3i(2*x,2*y+1,2*z+1));
-                    Color4f p8 = getPixel(Vec3i(2*x+1,2*y+1,2*z+1));
+                    Color4f p1 = getPixelVec(Vec3i(2*x,2*y,2*z));
+                    Color4f p2 = getPixelVec(Vec3i(2*x+1,2*y,2*z));
+                    Color4f p3 = getPixelVec(Vec3i(2*x,2*y+1,2*z));
+                    Color4f p4 = getPixelVec(Vec3i(2*x+1,2*y+1,2*z));
+                    Color4f p5 = getPixelVec(Vec3i(2*x,2*y,2*z+1));
+                    Color4f p6 = getPixelVec(Vec3i(2*x+1,2*y,2*z+1));
+                    Color4f p7 = getPixelVec(Vec3i(2*x,2*y+1,2*z+1));
+                    Color4f p8 = getPixelVec(Vec3i(2*x+1,2*y+1,2*z+1));
                     Color4f newC = Color4f((p1+p2+p3+p4+p5+p6+p7+p8)*0.125);
                     int i = N*(x + y*w + z*w*h);
 

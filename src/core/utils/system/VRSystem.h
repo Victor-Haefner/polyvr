@@ -23,6 +23,8 @@ vector<string> openFolder(string folder);
 int systemCall(string cmd);
 bool compileCodeblocksProject(string path);
 
+void fileReplaceStrings(string filePath, string oldString, string newString);
+
 void initTime();
 long long getTime();
 

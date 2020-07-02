@@ -139,10 +139,10 @@ XMLElementPtr VRSceneLoader_getElementChild_(XMLElementPtr e, int i) {
     return 0;
 }*/
 
-void VRSceneLoader::loadScene(string path, string encryptionKey) {
+bool VRSceneLoader::loadScene(string path, string encryptionKey) {
     cout << "VRSceneLoader::loadScene " << path << endl;
     XML xml;
-    if (!exists(path)) return;
+    if (!exists(path)) return false;
 
     if (encryptionKey== "")  xml.read(path, false);
 #ifndef WITHOUT_CRYPTOPP
@@ -162,6 +162,7 @@ void VRSceneLoader::loadScene(string path, string encryptionKey) {
 
     XMLElementPtr sceneN = xml.getRoot();
     XMLElementPtr objectsN = sceneN->getChild("Objects");
+    if (!objectsN) return false;
     XMLElementPtr root = objectsN->getChild(0);
 
     auto scene = VRScene::getCurrent();
@@ -169,6 +170,7 @@ void VRSceneLoader::loadScene(string path, string encryptionKey) {
     scene->loadScene(sceneN);
     VRSceneManager::get()->setScene(scene);
     cout << " VRSceneLoader::loadScene done" << endl;
+    return true;
 }
 
 VRObjectPtr VRSceneLoader::importScene(string path, string encryptionKey, bool offLights) {

@@ -37,11 +37,11 @@ class Datarow {
         DatarowPtr getPCTs();
         DatarowPtr getLogRets();
 
-        double computeAverage(int N);
-        double computeDeviation(double average, int N);
+        double computeAverage(int from = 0, int to = -1);
+        double computeDeviation(double average, int from = 0, int to = -1);
 
-        double computeCovariance(DatarowPtr other, double average1, double average2);
-        double computeCorrelation(DatarowPtr other);
+        double computeCovariance(DatarowPtr other, double average1, double average2, int offset1 = 0, int offset2 = 0);
+        double computeCorrelation(DatarowPtr other, int offset1 = 0, int offset2 = 0);
 };
 
 OSG_END_NAMESPACE;

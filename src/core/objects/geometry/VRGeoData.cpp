@@ -455,6 +455,10 @@ void VRGeoData::updateType(int t, int N) {
 }
 
 void VRGeoData::pushQuad(int i, int j, int k, int l) {
+#ifdef WASM
+    pushTri(i,j,k);
+    pushTri(i,k,l);
+#else
     int N = size();
     if (i < 0) i += N;
     if (j < 0) j += N;
@@ -465,6 +469,7 @@ void VRGeoData::pushQuad(int i, int j, int k, int l) {
     data->indices->addValue(k);
     data->indices->addValue(l);
     updateType(GL_QUADS, 4);
+#endif
 }
 
 void VRGeoData::pushPatch(int N) {

@@ -255,6 +255,22 @@ GeometryMTRecPtr VRBox::make() {
     }
 
     auto pushQuad = [&](Vec3i I1, Vec3i I2, Vec3i I3, Vec3i I4, int d) {
+#ifdef WASM
+        data.pushTri( pIDs[I1], pIDs[I2], pIDs[I3] );
+        data.pushTri( pIDs[I1], pIDs[I3], pIDs[I4] );
+        data.pushNormalIndex( nIDs[Vec4i(I1[0], I1[1], I1[2], d)] );
+        data.pushNormalIndex( nIDs[Vec4i(I2[0], I2[1], I2[2], d)] );
+        data.pushNormalIndex( nIDs[Vec4i(I3[0], I3[1], I3[2], d)] );
+        data.pushNormalIndex( nIDs[Vec4i(I1[0], I1[1], I1[2], d)] );
+        data.pushNormalIndex( nIDs[Vec4i(I3[0], I3[1], I3[2], d)] );
+        data.pushNormalIndex( nIDs[Vec4i(I4[0], I4[1], I4[2], d)] );
+        data.pushTexCoordIndex( tIDs[Vec4i(I1[0], I1[1], I1[2], d)] );
+        data.pushTexCoordIndex( tIDs[Vec4i(I2[0], I2[1], I2[2], d)] );
+        data.pushTexCoordIndex( tIDs[Vec4i(I3[0], I3[1], I3[2], d)] );
+        data.pushTexCoordIndex( tIDs[Vec4i(I1[0], I1[1], I1[2], d)] );
+        data.pushTexCoordIndex( tIDs[Vec4i(I3[0], I3[1], I3[2], d)] );
+        data.pushTexCoordIndex( tIDs[Vec4i(I4[0], I4[1], I4[2], d)] );
+#else
         data.pushQuad( pIDs[I1], pIDs[I2], pIDs[I3], pIDs[I4] );
         data.pushNormalIndex( nIDs[Vec4i(I1[0], I1[1], I1[2], d)] );
         data.pushNormalIndex( nIDs[Vec4i(I2[0], I2[1], I2[2], d)] );
@@ -264,6 +280,7 @@ GeometryMTRecPtr VRBox::make() {
         data.pushTexCoordIndex( tIDs[Vec4i(I2[0], I2[1], I2[2], d)] );
         data.pushTexCoordIndex( tIDs[Vec4i(I3[0], I3[1], I3[2], d)] );
         data.pushTexCoordIndex( tIDs[Vec4i(I4[0], I4[1], I4[2], d)] );
+#endif
     };
 
     for (int i=0; i<=Nx; i++) {

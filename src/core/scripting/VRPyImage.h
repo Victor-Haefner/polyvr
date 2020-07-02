@@ -6,15 +6,7 @@
 
 struct VRPyTexture : VRPyBaseT<OSG::VRTexture> {
     static PyMethodDef methods[];
-
     static PyObject* New(PyTypeObject *type, PyObject *args, PyObject *kwds);
-
-    static PyObject* read(VRPyTexture* self, PyObject *args);
-    static PyObject* write(VRPyTexture* self, PyObject *args);
-    static PyObject* getPixel(VRPyTexture* self, PyObject *args);
-    static PyObject* getSize(VRPyTexture* self, PyObject *args);
-    static PyObject* getAspectRatio(VRPyTexture* self, PyObject *args);
-    static PyObject* getChannels(VRPyTexture* self, PyObject *args);
 };
 
 #endif // VRPyTexture_H_INCLUDED
