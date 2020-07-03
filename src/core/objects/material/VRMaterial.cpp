@@ -1188,6 +1188,11 @@ void VRMaterial::forceShaderUpdate() {
 void VRMaterial::setVertexShader(string s, string name) {
     initShaderChunk();
     auto m = mats[activePass];
+
+#ifdef WASM
+    s = "#define WEBGL\n" + s;
+#endif
+
 #ifndef OSG_OGL_ES2
     m->vProgram->setProgram(s);
     checkShader(GL_VERTEX_SHADER, s, name);
@@ -1213,6 +1218,10 @@ void VRMaterial::setVertexShader(string s, string name) {
 void VRMaterial::setFragmentShader(string s, string name, bool deferred) {
     initShaderChunk();
     auto m = mats[activePass];
+#ifdef WASM
+    s = "#define WEBGL\nprecision mediump float;\n" + s;
+#endif
+
 #ifndef OSG_OGL_ES2
     if (deferred) m->fdProgram->setProgram(s.c_str());
     else          m->fProgram->setProgram(s.c_str());
