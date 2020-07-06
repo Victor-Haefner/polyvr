@@ -45,6 +45,7 @@ struct OSMNode : OSMBase {
     OSMNode(XMLElementPtr e);
     string toString();
     Vec2d getPosition();
+    Vec3d getPosition3();
     void writeTo(XMLElementPtr e);
 };
 

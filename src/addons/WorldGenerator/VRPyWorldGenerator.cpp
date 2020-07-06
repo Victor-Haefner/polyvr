@@ -62,6 +62,7 @@ PyMethodDef VRPyWorldGenerator::methods[] = {
     {"setupLODTerrain", PyWrapOpt( WorldGenerator, setupLODTerrain, "Sets up LOD for terrain: path to heightmap, path to texture (opt, default = ""), scale (opt, default = 1.0), cache (opt, default = True)", "|1.0|1|1|1 1 1 1|0", void, string, string, float, bool, bool, Color4f, float ) },
     {"readOSMMap", PyWrap( WorldGenerator, readOSMMap, "Read OpenStreetMap map without adding", void, string ) },
     {"getOSMMap", PyWrap( WorldGenerator, getOSMMap, "Access OSM map", OSMMapPtr ) },
+    {"getGMLMap", PyWrap( WorldGenerator, getGMLMap, "Access GML map", OSMMapPtr ) },
     {"reloadOSMMap", PyWrapOpt( WorldGenerator, reloadOSMMap, "Reload OSM data", "-1|-1|-1", void, double, double, double ) },
     {"clear", PyWrap( WorldGenerator, clear, "Clear everything", void ) },
     {"getStats", PyWrap( WorldGenerator, getStats, "Return stats as string", string ) },
@@ -112,7 +113,8 @@ PyMethodDef VRPyOSMWay::methods[] = {
 
 PyMethodDef VRPyOSMNode::methods[] = {
     {"toString", PyWrap2( OSMNode, toString, "As string", string ) },
-    {"getPosition", PyWrap2( OSMNode, getPosition, "Access position", Vec2d ) },
+    {"getPosition", PyWrap2( OSMNode, getPosition, "Access position - lat, lon", Vec2d ) },
+    {"getPosition3", PyWrap2( OSMNode, getPosition3, "Access position - lat, lon, elevation", Vec3d ) },
     {NULL}  /* Sentinel */
 };
 
