@@ -1155,6 +1155,25 @@ void VRSyncNode::broadcastChangeList(OSGChangeList* cl, bool doDelete) {
     broadcast(data); // send over websocket to remote
 }
 
+void VRSyncNode::getAndBroadcastPoses(){
+    string poses = "poses|name:" + name;
+    //get scene
+    VRScenePtr scene = VRScene::getCurrent();
+
+    //get camera pose
+    auto cam = scene->getActiveCamera();
+    auto camPose = cam->getWorldPose();
+    poses += "|" + "cam:" + toString(camPose);
+
+    //check devices and eventually get poses
+    VRDevicePtr mouse = VRSetup::getCurrent()->getDevice("mouse");
+    VRTransformPtr mouseBeacon = mouse->getBeacon();
+    if (mouseBeacon) poses += "|" + "mouse" + toString(mouseBeacon);
+
+    //broadcast
+    broadcast(poses);
+}
+
 void VRSyncNode::sync(string uri) {
     if (!container.size()) return;
     vector<BYTE> data;
@@ -1188,6 +1207,8 @@ void VRSyncNode::update() {
     printChangeList(localChanges);
 
     broadcastChangeList(localChanges, true);
+    //TODO: uncomment
+    //getAndBroadcastPoses();
     syncedContainer.clear();
     cout << "            / " << name << " VRSyncNode::update()" << "  < < < " << endl;
 }
@@ -1252,6 +1273,21 @@ void VRSyncNode::handleMapping(string mappingData) {
     //printRegistredContainers();
 }
 
+void VRSyncNode::handlePoses(string poses)  {
+    string nodeName;
+    vector<string> pairs = splitString(poses, '|');
+    vector<string> namePair = splitString(pairs[0], ':');
+    if (namePair[0] == "name") string nodeName = data[1];
+
+    for (int i = 1; i < pairs.size(); i++) {
+        auto data = splitString(pairs, ':');
+        if (data.size() != 2) continue;
+        string deviceName = pairs[0];
+        PosePtr pose = toValue(PosePtr)(pairs[1]);
+    }
+    //TODO: do something with poses
+}
+
 //Add remote Nodes to sync with
 void VRSyncNode::addRemote(string host, int port, string name) {
     string uri = asUri(host, port, name);
@@ -1267,6 +1303,7 @@ void VRSyncNode::handleMessage(void* _args) {
     string msg = args->ws_data;
     VRUpdateCbPtr job = 0;
     if (startsWith(msg, "mapping|"))   job = VRUpdateCb::create( "sync-handleMap", bind(&VRSyncNode::handleMapping, this, msg) );
+    if (startsWith(msg, "poses|"))   job = VRUpdateCb::create( "sync-handlePoses", bind(&VRSyncNode::handlePoses, this, msg) );
     else                               job = VRUpdateCb::create( "sync-handleCL", bind(&VRSyncNode::deserializeAndApply, this, msg) );
     VRScene::getCurrent()->queueJob( job );
 }

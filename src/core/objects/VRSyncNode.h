@@ -65,6 +65,7 @@ class VRSyncNode : public VRTransform {
         string copySceneState();
         void handleMessage(void* msg);
         void handleMapping(string mappingData);
+        void handlePoses(string poses);
         vector<FieldContainer*> findContainer(string typeName); //deprecated
         vector<FieldContainer*> getTransformationContainer(ChangeList* cl); //deprecated
         //vector<OSG::Field
@@ -103,6 +104,8 @@ class VRSyncNode : public VRTransform {
         void printChangeList(OSGChangeList* cl);
         void broadcastChangeList(OSGChangeList* cl, bool doDelete = false);
         OSGChangeList* getFilteredChangeList();
+
+        void getAndBroadcastPoses();
 
         bool syncronizing = false;
         void sync(string remoteUri);
