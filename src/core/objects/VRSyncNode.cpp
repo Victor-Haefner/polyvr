@@ -5,6 +5,9 @@
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/material/OSGMaterial.h"
 #include "core/objects/geometry/VRGeometry.h"
+#include "core/objects/VRCamera.h"
+#include "core/setup/VRSetup.h"
+//#include "core/math/pose.h"
 #include "core/utils/VRStorage_template.h"
 #include "core/networking/VRSocket.h"
 #include "core/networking/VRWebSocket.h"
@@ -1161,16 +1164,19 @@ void VRSyncNode::getAndBroadcastPoses(){
     VRScenePtr scene = VRScene::getCurrent();
 
     //get camera pose
-    auto cam = scene->getActiveCamera();
-    auto camPose = cam->getWorldPose();
-    poses += "|" + "cam:" + toString(camPose);
+    VRCameraPtr cam = scene->getActiveCamera();
+    PosePtr camPose = cam->getWorldPose();
+    string pose_str = toString(camPose);
+    poses += "|cam:" + pose_str;
 
     //check devices and eventually get poses
     VRDevicePtr mouse = VRSetup::getCurrent()->getDevice("mouse");
-    VRTransformPtr mouseBeacon = mouse->getBeacon();
-    if (mouseBeacon) poses += "|" + "mouse" + toString(mouseBeacon);
+    PosePtr mousePose = mouse->getBeacon()->getPose();
+    //string mousePos_str = toString(mouseBeacon->getPose());
+    if (mousePose) poses += "|mouse:" + toString(mousePose);
 
     //broadcast
+    cout << "broadcast poses " << poses << endl;
     broadcast(poses);
 }
 
@@ -1207,8 +1213,7 @@ void VRSyncNode::update() {
     printChangeList(localChanges);
 
     broadcastChangeList(localChanges, true);
-    //TODO: uncomment
-    //getAndBroadcastPoses();
+    getAndBroadcastPoses();
     syncedContainer.clear();
     cout << "            / " << name << " VRSyncNode::update()" << "  < < < " << endl;
 }
@@ -1276,16 +1281,31 @@ void VRSyncNode::handleMapping(string mappingData) {
 void VRSyncNode::handlePoses(string poses)  {
     string nodeName;
     vector<string> pairs = splitString(poses, '|');
-    vector<string> namePair = splitString(pairs[0], ':');
-    if (namePair[0] == "name") string nodeName = data[1];
+    vector<string> namePair = splitString(pairs[1], ':');
+    if (namePair[0] == "name") nodeName = namePair[1];
 
-    for (int i = 1; i < pairs.size(); i++) {
-        auto data = splitString(pairs, ':');
+    if (nodeName == "") return;
+    cout << nodeName << " ";
+    for (int i = 2; i < pairs.size(); i++) {
+        auto data = splitString(pairs[i], ':');
         if (data.size() != 2) continue;
-        string deviceName = pairs[0];
-        PosePtr pose = toValue(PosePtr)(pairs[1]);
+        string deviceName = data[0];
+        PosePtr pose = toValue<PosePtr>(data[1]);
+        cout << deviceName << " pose " << pose << " ";
+        if (deviceName == "cam") remotesCameraPose[nodeName] = pose;
+        else if (deviceName == "mouse") remotesMousePose[nodeName] = pose;
     }
+    cout << endl;
     //TODO: do something with poses
+
+}
+
+PosePtr VRSyncNode::getRemoteCamPose(string remoteName) {
+    return remotesCameraPose[remoteName];
+}
+
+PosePtr VRSyncNode::getRemoteMousePose(string remoteName) {
+    return remotesMousePose[remoteName];
 }
 
 //Add remote Nodes to sync with
@@ -1303,7 +1323,7 @@ void VRSyncNode::handleMessage(void* _args) {
     string msg = args->ws_data;
     VRUpdateCbPtr job = 0;
     if (startsWith(msg, "mapping|"))   job = VRUpdateCb::create( "sync-handleMap", bind(&VRSyncNode::handleMapping, this, msg) );
-    if (startsWith(msg, "poses|"))   job = VRUpdateCb::create( "sync-handlePoses", bind(&VRSyncNode::handlePoses, this, msg) );
+    else if (startsWith(msg, "poses|"))   job = VRUpdateCb::create( "sync-handlePoses", bind(&VRSyncNode::handlePoses, this, msg) );
     else                               job = VRUpdateCb::create( "sync-handleCL", bind(&VRSyncNode::deserializeAndApply, this, msg) );
     VRScene::getCurrent()->queueJob( job );
 }

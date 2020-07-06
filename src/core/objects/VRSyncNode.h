@@ -7,6 +7,7 @@
 #include <OpenSG/OSGFieldContainerFactory.h>
 //#include <OpenSG/OSGRemoteAspect.h>
 #include <OpenSG/OSGContainerIdMapper.h>
+#include "core/math/pose.h"
 
 class OSGChangeList;
 struct SerialEntry;
@@ -110,6 +111,11 @@ class VRSyncNode : public VRTransform {
         bool syncronizing = false;
         void sync(string remoteUri);
 
+        void updateRemoteAvatarPose(string nodeName, PosePtr camPose);
+        void updateRemoteMousePose(string nodeName, PosePtr mousePose);
+        map<string, PosePtr> remotesCameraPose;
+        map<string, PosePtr> remotesMousePose;
+
     public:
         VRSyncNode(string name = "syncNode");
         ~VRSyncNode();
@@ -127,6 +133,9 @@ class VRSyncNode : public VRTransform {
         UInt32 getRemoteToLocalID(UInt32 id);
 
         void analyseSubGraph();
+
+        PosePtr getRemoteCamPose(string remoteName);
+        PosePtr getRemoteMousePose(string remoteName);
 };
 
 OSG_END_NAMESPACE;

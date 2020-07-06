@@ -1,5 +1,6 @@
 #include "VRPySyncNode.h"
 #include "VRPyBaseT.h"
+//#include "core/math/pose.h"
 
 using namespace OSG;
 
@@ -14,6 +15,8 @@ PyMethodDef VRPySyncNode::methods[] = {
     {"broadcast", PyWrap(SyncNode, broadcast, "broadcasts a message to all SyncRemotes", void, string) },
     {"update", PyWrap(SyncNode, update, "update", void) },
     {"analyseSubGraph", PyWrap(SyncNode, analyseSubGraph, "Print subgraph to console", void) },
+    {"getRemoteCamPose", PyWrap(SyncNode, getRemoteCamPose, "getRemoteCamPose", PosePtr, string) },
+    {"getRemoteMousePose", PyWrap(SyncNode, getRemoteMousePose, "getRemoteMousePose", PosePtr, string) },
     {NULL}  /* Sentinel */
 };
 
