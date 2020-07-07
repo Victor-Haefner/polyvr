@@ -928,8 +928,9 @@ void VRWorldGenerator::processGMLfromOSM(){
             //Vec3d pos = Vec3d( node->lat, node->elevation, node->lon );
             //pnts.push_back(pos);
             //cout << " " << pos;
-            auto p = planet->fromLatLongPosition(node->lat, node->lon, true);
-            p = p + planet->fromLatLongNormal(node->lat, node->lon, true)*node->elevation;
+            //auto p = planet->fromLatLongPosition(node->lat, node->lon, true);
+            auto p = planet->fromLatLongElevationPose(node->lat, node->lon, node->elevation, true, true)->pos();
+            //p = p + planet->fromLatLongNormal(node->lat, node->lon, true)*node->elevation;
             poly->addPoint( p );
 
             /*data->pushVert(p);

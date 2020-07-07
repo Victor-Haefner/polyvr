@@ -190,6 +190,36 @@ Vec3d VRPlanet::fromLatLongPosition(double north, double east, bool local) {
     return Vec3d( pos );
 }
 
+PosePtr VRPlanet::fromLatLongElevationPose(double north, double east, double elevation, bool local, bool sectorLocal){
+    auto sector = getSector(north, east);
+    if (!sector && ( local || sectorLocal) ) return Pose::create();
+
+    auto poseG = fromLatLongPose(north, east);
+
+    auto sectorCoords = sector->getPlanetCoords();
+
+    auto newPos = poseG->pos() + poseG->up()*elevation;
+    Vec3d f = newPos;
+    Vec3d d = poseG->dir();
+    Vec3d up = poseG->up();
+    PosePtr newPose = Pose::create(f,d,up); //global pose
+
+    if (local) {
+        auto poseOrigin = origin->getPose()->multRight(newPose); //localized with transformed planed origin
+        newPose = poseOrigin;
+    }
+
+    if (sectorLocal) {
+        auto newP = sector->getPose();
+        auto newPinv = newP;
+        newPinv->invert();
+        auto localinSector = newPinv->multRight(newPose); //localized on sector
+        newPose = localinSector;
+    }
+
+    return newPose;
+}
+
 Vec3d VRPlanet::fromLatLongEast(double north, double east, bool local) { return fromLatLongNormal(0, east+90, local); }
 Vec3d VRPlanet::fromLatLongNorth(double north, double east, bool local) { return fromLatLongNormal(north+90, east, local); }
 

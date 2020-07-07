@@ -1019,33 +1019,14 @@ void OSMMap::readGML(string path) {
     cout << "OSMMap::readGML path " << path << endl;
     cout << "  GDAL Version Nr:" << GDAL_VERSION_NUM << endl;
 
-    auto toLatLon = [&](string rechts, string hoch) {
-        double lat = 0;
-        double lon = 0;
-        double x,y;
-
-        x = double( toFloat(rechts) );
-        y = double( toFloat(hoch) );
-        //if (rechts.substr(0,1) == "3") { rechts = rechts.substr(1,rechts.length()-1); cout << "Zone 3: " << rechts << "-" << hoch << endl; }
-        //if (toFloat(rechts) < 500000) lon = 3*3 - double(toFloat(rechts))*360.0/40000000.0;
-        //if (toFloat(rechts) > 500000) lon = 3*3 + double(toFloat(rechts))*360.0/40000000.0;
-        //lat = double(toFloat(hoch))*360.0/40000000.0;//double(toFloat(hoch))40000 km / 360
-        //lat = double(toFloat(hoch))*360.0/40000000.0;//double(toFloat(hoch))40000 km / 360
-        if (toFloat(rechts) < 500000) lat = -(500000.0-double( toFloat(rechts) ));
-        else lat = double( toFloat(rechts) );
-        lon = y;
-        return Vec2d(lat,lon);
-    };
-
     auto coordsFromString = [&](string inB) {
         //string has format: "x y z"
         int at1 = inB.find_first_of(" ");
         int at2 = inB.find_first_of(" ",at1+1);
         string rechtswert = inB.substr(0, at1).c_str();
         string hochwert = inB.substr(at1+1, at2-(at1+1)).c_str();
-        Vec2d latlon = toLatLon(rechtswert,hochwert);
         double elevation = toFloat( inB.substr(at2+1, inB.length()-(at2+1)).c_str() );
-        return Vec3d(latlon[0],latlon[1],elevation);
+        return Vec3d( atof(hochwert.c_str()), atof(rechtswert.c_str()), elevation);
     };
 
     auto multicoordsFromString = [&](string inB){
@@ -1093,11 +1074,20 @@ void OSMMap::readGML(string path) {
         double longitude;
 
         double centralMeridian = 9.0;
-        double flattening = 1.0 / 298.257222101;
-        double equatorialRadius = 6378137.0;
-        double scale = 1.000006;
+        //double flattening = 1.0 / 298.257222101; //GRS80
+        //double equatorialRadius = 6378137.0; //GRS80
+        //double scale = 1.000006; //GRS80
+
+        //double flattening = 1.0 / 298.3; //Krassowski
+        //double equatorialRadius = 6378245.0; //Krassowski
+        //double scale = 1.0; //Krassowski
+
+        double flattening = 1.0 / 299.1528128; //Bessel
+        double equatorialRadius = 6377397.155; //Bessel
+        double scale = 1.0; //Bessel
+
         double falseNorthing = 0.0;
-        double falseEasting = 500000.0;
+        double falseEasting = 3500000.0;
 
         const double e2 = flattening * (2 - flattening); // e2: first eccentricity squared
         const double n = flattening / (2 - flattening); // n: 3rd flattening
@@ -1139,6 +1129,7 @@ void OSMMap::readGML(string path) {
         // Return latitude and longitude as degrees
         latitude = phi * 180 / M_PI;
         longitude = centralMeridian + deltaLambda * 180 / M_PI;
+        cout << "  " << latitude << " - " << longitude << endl;
         return Vec2d(latitude, longitude);
     };
 
@@ -1179,7 +1170,7 @@ void OSMMap::readGML(string path) {
                 cout << " polygon" << endl;
             }
             else if ( poGeometry != NULL && wkbFlatten(poGeometry->getGeometryType()) == wkbMultiPolygon ) {
-                //cout << " multipolygon" << endl;
+                cout << " multipolygon" << endl;
                 OGRMultiPolygon* poMPoly = (OGRMultiPolygon *) poGeometry;
                 char *wkt_tmp = nullptr;
                 poGeometry->exportToWkt(&wkt_tmp);
@@ -1190,13 +1181,13 @@ void OSMMap::readGML(string path) {
                     for (auto eachPoint : eachPoly) {
                         nodeID++;
                         string strNID = to_string(nodeID);
-                        Vec2d latlon = GKtoLatLon(eachPoint[1],eachPoint[0]-3000000);
+                        Vec2d latlon = GKtoLatLon(eachPoint[0],eachPoint[1]);
                         OSMNodePtr node = OSMNodePtr( new OSMNode(strNID, latlon[0], latlon[1] ) );
                         refsForWays.push_back(strNID);
                         nodes[node->id] = node;
                         node->elevation = eachPoint[2];
                         //bounds->update(Vec3d(eachPoint[1],eachPoint[0],0));
-                        //cout << eachPoint << " ";
+                        cout << eachPoint << " ";
                     }
                     wayID++;
                     string strWID = to_string(wayID);
@@ -1205,15 +1196,15 @@ void OSMMap::readGML(string path) {
                     way->tags = tags;
                     ways[way->id] = way;
                 }
-                //cout << endl;
+                cout << endl;
                 //cout << i <<  " F: "<< featureCounter << endl;
             }
             else {
-                printf( "no point or multipolygon geometry\n" );
+                /*printf( "no point or multipolygon geometry\n" );
                 for (auto each:tags) {
                     cout << each.first << ":" << each.second << " ";
                 }
-                cout << endl;
+                cout << endl;*/
             }
             featureCounter++;
         }
