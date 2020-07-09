@@ -67,6 +67,8 @@ class VRCamera : public VRTransform {
         void setProjection(string p);
         string getProjection();
 
+        Matrix getProjectionMatrix(int w, int h);
+
         void showCamGeo(bool b);
 
         static list<VRCameraWeakPtr>& getAll();

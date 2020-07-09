@@ -77,10 +77,11 @@ class VRTerrain : public VRGeometry, public VRWorldModule {
         void setSimpleNoise();
         Boundingbox getBoundingBox();
 
-        void setParameters( Vec2d size, double resolution, double heightScale, float w = 0, float aT = 1e-4, Color3f aC = Color3f(0.7,0.9,1));
+        void setParameters( Vec2d size, double resolution, double heightScale, float w = 0, float aT = 1e-4, Color3f aC = Color3f(0.7,0.9,1), bool isLit = true);
         void setLocalized(bool in);
         void setMeshTer(vector<vector<vector<Vec3d>>> in);
         void setWaterLevel(float w);
+        void setLit(bool isLit);
         void setAtmosphericEffect(float thickness, Color3f color);
         void setHeightScale(float s);
         void setMap( VRTexturePtr tex, int channel = 3 );
@@ -113,7 +114,7 @@ class VRTerrain : public VRGeometry, public VRWorldModule {
 
         void flatten(vector<Vec2d> perimeter, float h);
         void paintHeights(string woods, string gravel);
-        void paintHeights( string path );
+        void paintHeights( string path, Color4f mCol = Color4f(1,1,1,1), float mAmount = 0 );
         void addEmbankment(string ID, PathPtr p1, PathPtr p2, PathPtr p3, PathPtr p4);
 
         vector<Vec3d> probeHeight( Vec2d p);

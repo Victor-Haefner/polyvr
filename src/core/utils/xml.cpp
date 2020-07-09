@@ -94,6 +94,7 @@ vector<XMLElementPtr> XMLElement::getChildren(string name) {
 }
 
 XMLElementPtr XMLElement::getChild(string name) {
+    if (!node) return 0;
     auto cnode = getNextNode( node->xmlChildrenNode );
     while (cnode) {
         if (cnode->type != XML_ELEMENT_NODE) continue;

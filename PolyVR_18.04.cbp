@@ -708,8 +708,6 @@
 		<Unit filename="src/core/objects/VRTransform.h" />
 		<Unit filename="src/core/objects/geometry/OSGGeometry.cpp" />
 		<Unit filename="src/core/objects/geometry/OSGGeometry.h" />
-		<Unit filename="src/core/objects/geometry/VRBillboard.cpp" />
-		<Unit filename="src/core/objects/geometry/VRBillboard.h" />
 		<Unit filename="src/core/objects/geometry/VRGeoData.cpp" />
 		<Unit filename="src/core/objects/geometry/VRGeoData.h" />
 		<Unit filename="src/core/objects/geometry/VRGeometry.cpp" />

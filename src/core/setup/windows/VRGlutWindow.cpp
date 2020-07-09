@@ -30,6 +30,9 @@ VRGlutWindow::VRGlutWindow() {
     cout << "Glut: New Window" << endl;
     type = 1;
 
+    int width = 20;
+    int height = 10;
+
     glutInitWindowSize(width, height);
     winID = glutCreateWindow("PolyVR");
 

@@ -216,6 +216,12 @@ void VRWorldGenerator::addOSMMap(string path, double subN, double subE, double s
     processOSMMap(subN, subE, subSize);
 }
 
+void VRWorldGenerator::addGML(string path) {
+    auto gmlMap = OSMMap::create();
+    gmlMap->readGML(path);
+    processGMLfromOSM();
+}
+
 void VRWorldGenerator::readOSMMap(string path){
     osmMap = OSMMap::loadMap(path);
 }
@@ -234,14 +240,14 @@ void VRWorldGenerator::addTerrainsToLOD(){
 
 void VRWorldGenerator::setTerrainSize( Vec2d in ) { terrainSize = in; }
 
-void VRWorldGenerator::setupLODTerrain(string pathMap, string pathPaint, float scale, bool cache ) {
+void VRWorldGenerator::setupLODTerrain(string pathMap, string pathPaint, float scale, bool cache, bool isLit, Color4f mixColor, float mixAmount ) {
 #ifndef WITHOUT_GDAL
     cout << "VRWorldGenerator::setupLODTerrain" << endl;
     auto tex = loadGeoRasterData(pathMap, false);
     Vec3i texSizeN = tex->getSize();
     //cout << " texSizeN: " << texSizeN << endl;
 
-    for (auto tt:terrains) tt->destroy();
+    for (auto tt : terrains) tt->destroy();
     terrains.clear();
     ///TODO: angular resolution human eye: 1 arcminute, approximately 0.02° or 0.0003 radians,[1] which corresponds to 0.3 m at a 1 km distance., https://en.wikipedia.org/wiki/Naked_eye
 
@@ -317,10 +323,13 @@ void VRWorldGenerator::setupLODTerrain(string pathMap, string pathPaint, float s
         if (a == 1) { texSc = tex1; satImg = pathPaint1; }
         if (a == 2) { texSc = tex2; satImg = pathPaint2; }
         if ( !FILESYSTEM::exist(pathPaint2) ) satImg = pathPaint;
+    //if (mixAmount > 0) texSc->mixColor(mixColor, mixAmount);
+        terrain->paintHeights( satImg, mixColor, mixAmount );
+        //terrain->paintHeights( satImg, Color4f(1,0,1,1), 0.5 );
         terrain->setMap( texSc, 3 );
-        terrain->paintHeights( satImg );
         terrain->setWorld( ptr() );
         terrain->setLODFactor(fac);
+        terrain->setLit(isLit);
         terrains.push_back(terrain);
     };
 
@@ -885,6 +894,36 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
             }
         }
     }
+}
+
+void VRWorldGenerator::processGMLfromOSM(){
+    //auto res = gmlMap->getWays();
+    //auto nodes = gmlMap->getNodes();
+
+    return;
+    for (auto wayItr : gmlMap->getWays()) { // use way->id to filter for debugging!
+        auto& way = wayItr.second;
+        //if (!wayInSubarea(way)) continue;
+
+        //auto poly = VRPolygon::create();
+        cout << " polygon:";
+        vector<Vec3d> pnts;
+        for (auto pID : way->nodes) {
+            auto node = gmlMap->getNode(pID);
+            if (!node) continue;
+            Vec3d pos = Vec3d( node->lat, node->elevation, node->lon );
+            pnts.push_back(pos);
+            //poly->addPoint(pos);
+            cout << " " << pos;
+        }
+        cout << endl;
+
+        //tg.drawPolygon(poly, Color4f(1,1,1,1));
+
+        for (auto tag : way->tags) {
+        }
+    }
+    //addChild();
 }
 
 void VRWorldGenerator::setUserCallback(VRUserGenCbPtr cb) { userCbPtr = cb; }

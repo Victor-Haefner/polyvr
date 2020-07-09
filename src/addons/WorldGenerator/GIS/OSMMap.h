@@ -38,6 +38,7 @@ struct OSMBase {
 struct OSMNode : OSMBase {
     double lat = 0;
     double lon = 0;
+    double elevation = 0;
     vector<string> ways;
 
     OSMNode(string id, double lat, double lon);
@@ -74,6 +75,7 @@ struct OSMRelation : OSMBase {
 class OSMMap {
     private:
         string filepath;
+        string mapType;
         BoundingboxPtr bounds;
         map<string, OSMWayPtr> ways;
         map<string, OSMNodePtr> nodes;
@@ -102,6 +104,7 @@ class OSMMap {
         void readFile(string path);
         void readGEOJSON(string path);
         void readSHAPE(string path);
+        void readGML(string path);
         void writeFile(string path);
         int readFileStreaming(string path);
         void filterFileStreaming(string path, vector<vector<string>> wl);

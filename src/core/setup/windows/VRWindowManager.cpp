@@ -80,14 +80,14 @@ VRWindowPtr VRWindowManager::addMultiWindow(string name) {
 #endif
 }
 
-VRWindowPtr VRWindowManager::addGtkWindow(string name, string glarea) {
+VRWindowPtr VRWindowManager::addGtkWindow(string name, string glarea, string msaa) {
 #ifndef WITHOUT_GTK
     cout << " add Gtk window " << name << endl;
     //gdk_error_trap_push();
     //if (gdk_error_trap_pop()) cout << "    ---- AAA1 ------ " << endl;
 
     GtkDrawingArea* drawArea = (GtkDrawingArea*)getGUIBuilder()->get_widget(glarea); // TODO: create new glarea, add flag to editor area window!
-    VRGtkWindowPtr win = VRGtkWindow::create(drawArea);
+    VRGtkWindowPtr win = VRGtkWindow::create(drawArea, msaa);
 
     editorWindow = win;
     win->setName(name);
@@ -289,21 +289,24 @@ void VRWindowManager::load(XMLElementPtr node) {
 
         string type = el->getAttribute("type");
         string name = el->getAttribute("name");
+        string msaa = "x4";
+        if (el->hasAttribute("msaa")) msaa = el->getAttribute("msaa");
         cout << " VRWindowManager::load '" << type << "'  '" << name << "'" << endl;
         //el->print();
+        VRWindowPtr win = 0;
 
         if (type == "0") {
-            VRWindowPtr win = addMultiWindow(name);
+            win = addMultiWindow(name);
             win->load(el);
         }
 
         if (type == "1") {
-            VRWindowPtr win = addGlutWindow(name);
+            win = addGlutWindow(name);
             win->load(el);
         }
 
         if (type == "2") {
-            VRWindowPtr win = addGtkWindow(name);
+            win = addGtkWindow(name, "glarea", msaa);
             win->load(el);
         }
     }

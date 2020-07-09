@@ -9,6 +9,7 @@
 #include "core/utils/VRUtilsFwd.h"
 #include "core/utils/system/VRSystem.h"
 #include "core/scene/VRSceneLoader.h"
+#include "core/scripting/VRScript.h"
 #include "VRGuiUtils.h"
 #include "VRGuiSignals.h"
 #include "VRGuiFile.h"
@@ -70,6 +71,7 @@ void VRGuiBits::on_quit_clicked() {
 void VRGuiBits::on_web_export_clicked() {
     string D = VRSceneManager::get()->getOriginalWorkdir();
     string project = VRScene::getCurrent()->getFile();
+    string projectName = VRScene::getCurrent()->getFileName();
 
     string folder = D+"/ressources/webBuild";
     if (!exists(folder+"/.git"))
@@ -80,10 +82,56 @@ void VRGuiBits::on_web_export_clicked() {
     systemCall("cp -f \"" + folder + "/polyvr.js\" ./");
     systemCall("cp -f \"" + folder + "/storage.js\" ./");
     systemCall("cp -f \"" + folder + "/scanDir.php\" ./");
+    systemCall("cp -f \"" + folder + "/Mono.ttf\" ./");
+    systemCall("cp -f \"" + folder + "/Browser.xml\" ./");
 
     // generate html file
-    systemCall("cp -f \"" + folder + "/polyvr.html\" ./");
-    systemCall("sed -i 's/PROJECT.pvr/"+project+"/g' ./polyvr.html");
+    systemCall("cp -f \"" + folder + "/polyvr.html\" ./"+projectName+".html");
+    fileReplaceStrings("./"+projectName+".html", "PROJECT.pvr", project);
+
+    // TODO: table widget to present preloaded files to user
+    auto preloadFile = [&](const string& path) {
+        string newStr = "preloadFile('" + path + "');\n\t\t\t//INCLUDE_PRELOAD_HOOK";
+        fileReplaceStrings("./"+projectName+".html", "//INCLUDE_PRELOAD_HOOK", newStr);
+    };
+
+    // check scripts for paths to ressources
+    for (auto script : VRScene::getCurrent()->getScripts()) {
+        if (script.second->getType() != "Python") continue;
+        string core = script.second->getCore();
+
+        // search for strings
+        vector<size_t> positions;
+        bool inString = false;
+        char strQuote = '"';
+        for (size_t i=0; i<core.size(); i++) {
+            char c = core[i];
+            if (!inString) {
+                if (c == '\'') { positions.push_back(i); inString = true; strQuote = c; }
+                if (c == '"') { positions.push_back(i); inString = true; strQuote = c; }
+            } else {
+                if (c == strQuote) {
+                    positions.push_back(i); inString = false;
+                }
+            }
+        }
+
+        for (int i=0; i<positions.size(); i+=2) {
+            size_t i1 = positions[i]+1;
+            size_t i2 = positions[i+1];
+            string str = core.substr(i1,i2-i1);
+            if (str.size() > 20) continue;
+            if (exists(str)) {
+                cout << "preloadFile " << str << endl;
+                preloadFile(str);
+                if (exists("."+str+".osb")) preloadFile("."+str+".osb"); // check for binary chaches
+            }
+        }
+    }
+
+    //systemCall("gedit ./"+projectName+".html");
+    if (askUser("Web build files copied to project directory", "Start in browser (google-chrome)?"))
+        systemCall("google-chrome --new-window http://localhost:5500/"+projectName+".html");
 }
 
 void VRGuiBits::on_about_clicked() {

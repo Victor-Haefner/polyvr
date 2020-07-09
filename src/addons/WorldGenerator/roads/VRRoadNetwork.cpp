@@ -533,7 +533,7 @@ void VRRoadNetwork::computeSigns() {
                 replaceChar(type, ' ', '\n');
                 auto m = VRMaterial::create("sign");
 #ifndef WITHOUT_PANGO_CAIRO
-                auto tex = VRText::get()->create(type, "MONO 20", 20, 3, Color4f(0,0,0,1), Color4f(1,1,1,1));
+                auto tex = VRText::get()->create(type, "Mono.ttf", 20, 3, Color4f(0,0,0,1), Color4f(1,1,1,1));
                 m->setTexture(tex);
 #endif
                 surface->setMaterial(m);

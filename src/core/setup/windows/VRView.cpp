@@ -52,7 +52,7 @@ void VRView::setMaterial() {
     Color3f cax = Color3f(0.9, 0.2, 0.2);
     Color3f cay = Color3f(0.2, 0.9, 0.2);
 
-    auto label = VRText::get()->create(name, "SANS 20", 20, 3, Color4f(1,1,1,1), Color4f(bg[2], bg[1], bg[0], 1));
+    auto label = VRText::get()->create(name, "Mono.ttf", 20, 3, Color4f(1,1,1,1), Color4f(bg[2], bg[1], bg[0], 1));
     float lw = label->getImage()->getWidth();
     float lh = label->getImage()->getHeight();
 

@@ -569,6 +569,11 @@ void VRTransform::setEuler(Vec3d e) {
     setMatrix(m);
 }
 
+void VRTransform::setEulerDegree(Vec3d e) {
+    e *= Pi/180.0;
+    setEuler(e);
+}
+
 Vec3d VRTransform::getScale() { return _scale; }
 Vec3d VRTransform::getEuler() {
     //return _euler;

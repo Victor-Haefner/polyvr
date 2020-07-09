@@ -22,6 +22,7 @@ class VRWindow : public std::enable_shared_from_this<VRWindow>, public VRName {
         bool content = false;
         bool waitingAtBarrier = false;
         bool stopping = false;
+        string msaa = "x4";
         int type = -1;
         WindowMTRecPtr _win;
         RenderActionRefPtr ract;
@@ -74,6 +75,9 @@ class VRWindow : public std::enable_shared_from_this<VRWindow>, public VRName {
         void addView(VRViewPtr view);
         void remView(VRViewPtr view);
         vector<VRViewPtr> getViews();
+
+        void setMSAA(string s);
+        string getMSAA();
 
         virtual void sync(bool fromThread = false);
         virtual void render(bool fromThread = false);

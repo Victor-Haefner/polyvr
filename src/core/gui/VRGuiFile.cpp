@@ -213,7 +213,7 @@ void VRGuiFile::setCallbacks(function<void()> sa, function<void()> sc, function<
 
 string VRGuiFile::getPath() {
     gchar* filename = gtk_file_chooser_get_filename((GtkFileChooser*)dialog);
-    string res = filename;
+    string res = filename?filename:"";
     g_free(filename);
     return res;
 }

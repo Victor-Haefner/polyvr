@@ -5,6 +5,7 @@
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/VRLod.h"
 #include "core/tools/VRAnalyticGeometry.h"
+#include "core/tools/VRAnnotationEngine.h"
 #include "core/math/pose.h"
 #include "core/utils/toString.h"
 #include "core/scene/import/GIS/VRGDAL.h"
@@ -283,12 +284,7 @@ void VRPlanet::rebuild() {
     addLod(4,radius*2.0);
     addLod(3,radius*5.0);
 
-    // init meta geo
-    if (!metaGeo) {
-        metaGeo = VRAnalyticGeometry::create("PlanetMetaData");
-        metaGeo->setLabelParams(0.02, true, true, Color4f(0.5,0.1,0,1), Color4f(1,1,0.5,1));
-        origin->addChild(metaGeo);
-    }
+    if (!metaGeo) setupMetaGeo();
 }
 
 void VRPlanet::setParameters( double r, string t, bool l, double s ) {
@@ -343,13 +339,17 @@ void VRPlanet::setupMaterial(string texture, bool isLit) { sphereMat->setTexture
 VRMaterialPtr VRPlanet::getMaterial() { return sphereMat; }
 void VRPlanet::setLit(bool b) { sphereMat->setShaderParameter("isLit", b?1:0); }
 
-int VRPlanet::addPin( string label, double north, double east, double length ) {
-    if (!metaGeo) {
-        metaGeo = VRAnalyticGeometry::create("PlanetMetaData");
-        metaGeo->setLabelParams(0.02, true, true, Color4f(0.5,0.1,0,1), Color4f(1,1,0.5,1));
-        origin->addChild(metaGeo);
-    }
+void VRPlanet::setupMetaGeo() {
+    metaGeo = VRAnalyticGeometry::create("PlanetMetaData");
+    metaGeo->setLabelParams(0.04, true, true, Color4f(0,0,0,1), Color4f(1,1,1,0));
+    auto ae = metaGeo->getAnnotationEngine();
+    ae->setOutline(4, Color4f(1,1,1,1));
+    //ae->setScreenSpace(1);
+    origin->addChild(metaGeo);
+}
 
+int VRPlanet::addPin( string label, double north, double east, double length ) {
+    if (!metaGeo) setupMetaGeo();
     Vec3d n = fromLatLongNormal(north, east);
     Vec3d p = fromLatLongPosition(north, east);
     static int ID = -1; ID++;//metaGeo->getNewID(); // TODO

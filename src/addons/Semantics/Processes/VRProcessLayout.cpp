@@ -370,7 +370,7 @@ void VRProcessLayout::setElementName(int ID, string name) {
     /*int lineN =*/ wrapString(name, wrapN);
 
     auto mat = VRMaterial::create("ProcessElement");
-    auto txt = VRText::get()->create(name, "MONO 20", 20, 3, fg, bg);
+    auto txt = VRText::get()->create(name, "Mono.ttf", 20, 3, fg, bg);
     mat->setTexture(txt, false);
     mat->setTextureParams(GL_LINEAR, GL_LINEAR);
 
