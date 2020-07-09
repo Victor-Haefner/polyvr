@@ -1063,82 +1063,33 @@ void OSMMap::readGML(string path) {
         return res;
     };
 
-    auto GKtoLatLon = [&](double northing, double easting) {
-    //          Copyright Erik Lundin 2016.
-    // Distributed under the Boost Software License, Version 1.0.
-    //    (See accompanying file LICENSE_1_0.txt or copy at
-    //          http://www.boost.org/LICENSE_1_0.txt)
-
-    // Version: 1.0.0
-        double latitude;
-        double longitude;
-
-        double centralMeridian = 9.0;
-        //double flattening = 1.0 / 298.257222101; //GRS80
-        //double equatorialRadius = 6378137.0; //GRS80
-        //double scale = 1.000006; //GRS80
-
-        //double flattening = 1.0 / 298.3; //Krassowski
-        //double equatorialRadius = 6378245.0; //Krassowski
-        //double scale = 1.0; //Krassowski
-
-        double flattening = 1.0 / 299.1528128; //Bessel
-        double equatorialRadius = 6377397.155; //Bessel
-        double scale = 1.0; //Bessel
-
-        double falseNorthing = 0.0;
-        double falseEasting = 3500000.0;
-
-        const double e2 = flattening * (2 - flattening); // e2: first eccentricity squared
-        const double n = flattening / (2 - flattening); // n: 3rd flattening
-        const double rectifyingRadius = equatorialRadius / (1 + n) * (1 + 0.25*pow(n, 2) + 0.015625*pow(n, 4));
-        double xi = (northing - falseNorthing) / (scale * rectifyingRadius);
-        double eta = (easting - falseEasting) / (scale * rectifyingRadius);
-
-        double delta1 = 1/2.0 * n - 2/3.0 * pow(n, 2) + 37/96.0 * pow(n, 3)     - 1/360.0 * pow(n, 4);
-        double delta2 =            1/48.0 * pow(n, 2)  + 1/15.0 * pow(n, 3)  - 437/1440.0 * pow(n, 4);
-        double delta3 =                                17/480.0 * pow(n, 3)    - 37/840.0 * pow(n, 4);
-        double delta4 =                                                     4397/161280.0 * pow(n, 4);
-
-        double xiPrim = xi
-                - delta1 * sin(2*xi) * cosh(2*eta)
-                - delta2 * sin(4*xi) * cosh(4*eta)
-                - delta3 * sin(6*xi) * cosh(6*eta)
-                - delta4 * sin(8*xi) * cosh(8*eta);
-        double etaPrim = eta
-                - delta1 * cos(2*xi) * sinh(2*eta)
-                - delta2 * cos(4*xi) * sinh(4*eta)
-                - delta3 * cos(6*xi) * sinh(6*eta)
-                - delta4 * cos(8*xi) * sinh(8*eta);
-
-        double phiStar = asin(sin(xiPrim) / cosh(etaPrim)); // Conformal latitude
-        double deltaLambda = atan(sinh(etaPrim) / cos(xiPrim));
-
-        double AStar =  e2     + pow(e2, 2)       + pow(e2, 3)        + pow(e2, 4);
-        double BStar =      (7 * pow(e2, 2)  + 17 * pow(e2, 3)   + 30 * pow(e2, 4)) / -6;
-        double CStar =                       (224 * pow(e2, 3)  + 889 * pow(e2, 4)) / 120;
-        double DStar =                                          (4279 * pow(e2, 4)) / -1260;
-
-        double phi = phiStar
-                + sin(phiStar) * cos(phiStar) * (  AStar
-                                                 + BStar * pow(sin(phiStar), 2)
-                                                 + CStar * pow(sin(phiStar), 4)
-                                                 + DStar * pow(sin(phiStar), 6));
-
-        // phi: latitude in radians, lambda: longitude in radians
-        // Return latitude and longitude as degrees
-        latitude = phi * 180 / M_PI;
-        longitude = centralMeridian + deltaLambda * 180 / M_PI;
-        cout << "  " << latitude << " - " << longitude << endl;
-        return Vec2d(latitude, longitude);
-    };
-
     int nodeID = -1;
     int wayID = -1;
     int layercount = -1;
     VRTimer t; t.start();
 //#if GDAL_VERSION_NUM >= GDAL_COMPUTE_VERSION(2,3,0)
 //#elif GDAL_VERSION_NUM >= GDAL_COMPUTE_VERSION(2,0,0)
+    auto GKtoLatLon = [&](double northing, double easting) {
+        GDALAllRegister();
+
+        OGRSpatialReference source, target;
+
+        source.importFromEPSG(31467);
+        target.importFromEPSG(4326);
+
+        OGRPoint p;
+        p.setX(easting);
+        p.setY(northing);
+        p.assignSpatialReference(&source);
+
+        p.transformTo(&target);
+
+        // transformed coordinates
+        //cout << " new " << p.getX() << " | " << p.getY();
+
+        return Vec2d(p.getY(), p.getX());
+    };
+
     string workingpath = "GMLAS:"+path;
 
     GDALAllRegister();
