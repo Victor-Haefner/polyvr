@@ -902,47 +902,29 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
 
 void VRWorldGenerator::processGMLfromOSM(){
     if (!gmlMap) return;
-    //auto res = gmlMap->getWays();
-    //auto nodes = gmlMap->getNodes();
+    cout << "VRWorldGenerator::processGMLfromOSM" << endl;
 
     auto GMLGeometries = VRObject::create("GMLGeometries");
-    auto mat = VRMaterial::create("test");
+    auto mat = VRMaterial::create("GMLMaterial");
     mat->setPointSize(15);
     addChild(GMLGeometries);
 
     for (auto wayItr : gmlMap->getWays()) { // use way->id to filter for debugging!
         auto& way = wayItr.second;
-        //if (!wayInSubarea(way)) continue;
-
-        //auto poly = VRPolygon::create();
-        cout << " polygon:";
 
         auto poly = VRPolygon::create();
 
-        //auto points = VRGeometry("GMLpoints");
-        //auto data = VRGeoData::create();
         int nID = 0;
         for (auto pID : way->nodes) {
             auto node = gmlMap->getNode(pID);
             if (!node) continue;
-            //Vec3d pos = Vec3d( node->lat, node->elevation, node->lon );
-            //pnts.push_back(pos);
-            //cout << " " << pos;
-            //auto p = planet->fromLatLongPosition(node->lat, node->lon, true);
             auto p = planet->fromLatLongElevationPose(node->lat, node->lon, node->elevation, true, true)->pos();
-            //p = p + planet->fromLatLongNormal(node->lat, node->lon, true)*node->elevation;
             poly->addPoint( p );
-
-            /*data->pushVert(p);
-            data->pushPoint(nID);*/
             nID++;
-            cout << p << " ";
         }
-        cout << "--" << poly->computeArea() << endl;
         if (poly->size() == 0) continue;
         poly->close();
         if (!poly->isCCW()) poly->reverseOrder();
-        //way->polygon = poly;
 
         auto patch = VRGeometry::create("polygonGML");
         patch->hide("SHADOW");
@@ -952,33 +934,7 @@ void VRWorldGenerator::processGMLfromOSM(){
         patch->merge( tri.compute() );
 #endif
         patch->updateNormals();
-        /*
-        VRGeoData nData(patch);
-        for (int i=0; i<nData.sizeNormals(); i++) {
-            auto n = nData.getNormal(i);
-            if (n[1] < 0) nData.setNorm(i,-n);
-        }
-        auto points = data->asGeometry("pointsGML");
-        points->setMaterial(mat);
-        GMLGeometries->addChild(points);*/
-
-        //patch->setPositionalTexCoords(1.0, 0, Vec3i(0,2,1));
         GMLGeometries->addChild(patch);
-        /*
-        auto path = Path::create();
-        for (auto p : poly->get3()) {
-            path->addPoint( Pose(p) );
-        }
-        //path->close();
-        path->compute(2);
-
-        auto shape = VRStroke::create("shape");
-        shape->addPath(path);
-        shape->strokeProfile({Vec3d(0, 0.1, 0), Vec3d(0, 0.1, 0)}, false, false, false);
-        GMLGeometries->addChild(shape);*/
-
-        cout << " !!" << endl;
-        //tg.drawPolygon(poly, Color4f(1,1,1,1));
 
         for (auto tag : way->tags) {
             //cout << tag.first << " " << tag.second << endl;

@@ -1121,7 +1121,7 @@ void OSMMap::readGML(string path) {
                 cout << " polygon" << endl;
             }
             else if ( poGeometry != NULL && wkbFlatten(poGeometry->getGeometryType()) == wkbMultiPolygon ) {
-                cout << " multipolygon" << endl;
+                //cout << " multipolygon" << endl;
                 OGRMultiPolygon* poMPoly = (OGRMultiPolygon *) poGeometry;
                 char *wkt_tmp = nullptr;
                 poGeometry->exportToWkt(&wkt_tmp);
@@ -1138,7 +1138,7 @@ void OSMMap::readGML(string path) {
                         nodes[node->id] = node;
                         node->elevation = eachPoint[2];
                         //bounds->update(Vec3d(eachPoint[1],eachPoint[0],0));
-                        cout << eachPoint << " ";
+                        //cout << eachPoint << " ";
                     }
                     wayID++;
                     string strWID = to_string(wayID);
@@ -1147,7 +1147,7 @@ void OSMMap::readGML(string path) {
                     way->tags = tags;
                     ways[way->id] = way;
                 }
-                cout << endl;
+                //cout << endl;
                 //cout << i <<  " F: "<< featureCounter << endl;
             }
             else {
