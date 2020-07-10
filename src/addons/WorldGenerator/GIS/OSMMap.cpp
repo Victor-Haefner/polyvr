@@ -1101,17 +1101,22 @@ void OSMMap::readGML(string path) {
 
     layercount = poDS->GetLayerCount();
     int featureCounter = 0;
+    map<string,string> pkIDs;
     for (int i = 0; i < layercount; i++) {
+        bool nlnG = true;
         OGRLayer  *poLayer = poDS->GetLayer(i);
         OGRFeature *poFeature;
         poLayer->ResetReading();
+        int localCounter = 0;
         while( (poFeature = poLayer->GetNextFeature()) != NULL ) {
+            localCounter++;
             OGRFeatureDefn *poFDefn = poLayer->GetLayerDefn();
             map<string, string> tags;
             //cout << " --- " << endl;
             for( int iField = 0; iField < poFDefn->GetFieldCount(); iField++ ) {
                 OGRFieldDefn *poFieldDefn = poFDefn->GetFieldDefn( iField );
                 tags[poFieldDefn->GetNameRef()] = poFeature->GetFieldAsString(iField);
+                //if (poFieldDefn->GetNameRef() == "ogr_pkid") pkIDs[poFeature->GetFieldAsString(iField)] = poLayer->GetName();
                 //cout << poFieldDefn->GetNameRef() << "-" << poFeature->GetFieldAsString(iField) << endl;
             }
 
@@ -1146,21 +1151,44 @@ void OSMMap::readGML(string path) {
                     way->nodes = refsForWays;
                     way->tags = tags;
                     ways[way->id] = way;
+                    nlnG = false;
+                }
+                for (auto each:tags) {
+                    if (each.first == "ogr_pkid") pkIDs[each.second] = poLayer->GetName();
                 }
                 //cout << endl;
                 //cout << i <<  " F: "<< featureCounter << endl;
             }
             else {
-                /*printf( "no point or multipolygon geometry\n" );
+                //printf( "no point or multipolygon geometry\n" );
+                cout << poLayer->GetName() << " = ";
                 for (auto each:tags) {
                     cout << each.first << ":" << each.second << " ";
+                    if (each.first == "ogr_pkid") pkIDs[each.second] = poLayer->GetName();
                 }
-                cout << endl;*/
+                cout << endl;
+
+                ///TODO: implement everything else as relations
+                /*Relations:
+                Building - a gathering of polygons
+                Building bounded by - gathering of polygons
+                Textures - materials and links to material as gathering for polygons (ways)
+                TextureCoordinates - meta data of polygons (ways)
+                */
             }
             featureCounter++;
         }
+
+        if (nlnG && localCounter>0) {
+            //cout << poLayer->GetName() << endl;
+            cout << "------new Layer------" << poLayer->GetName() << endl;
+        }
         //OGRFeature::DestroyFeature( poFeature );
     }
+    for (auto each : pkIDs) {
+        cout << each.first << " type: " << each.second << endl;
+    }
+
     mapType = "GML";
     GDALClose(poDS);
     cout << "Layers: " << layercount << " Features: " << featureCounter << endl;
