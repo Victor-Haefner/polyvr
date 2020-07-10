@@ -11,6 +11,8 @@
 #include "core/scene/VRSceneManager.h"
 #include "core/utils/system/VRSystem.h"
 
+#include <thread>
+
 using namespace OSG;
 
 //template<> class VRManager<VRNetworkNode>;
@@ -32,7 +34,7 @@ VRNetworkNode::VRNetworkNode(string name) : VRManager("NetworkNode") {
     store("address", &address);
     store("user", &user);
     store("slavePath", &slavePath);
-    regStorageSetupFkt( VRStorageCb::create("network_node_update", boost::bind(&VRNetworkNode::setup, this, _1)) );
+    regStorageSetupFkt( VRStorageCb::create("network_node_update", bind(&VRNetworkNode::setup, this, placeholders::_1)) );
 }
 
 VRNetworkNode::~VRNetworkNode() { stopSlaves(); }
@@ -99,7 +101,7 @@ void VRNetworkNode::initSlaves() {
             s->start();
         }
     }
-    if (hasAutostart) sleep(startupDelay);
+    if (hasAutostart) this_thread::sleep_for(chrono::seconds(startupDelay));
 }
 
 void VRNetwork::stopSlaves() {

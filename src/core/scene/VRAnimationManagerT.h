@@ -1,5 +1,4 @@
 #include "VRAnimationManager.h"
-#include <boost/bind.hpp>
 #include "core/utils/VRFunction.h"
 
 OSG_BEGIN_NAMESPACE;

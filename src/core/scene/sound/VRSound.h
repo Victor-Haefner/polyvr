@@ -1,8 +1,10 @@
 #ifndef VRSOUND_H_INCLUDED
 #define VRSOUND_H_INCLUDED
 
+#include <OpenSG/OSGConfig.h>
 #include <list>
-#include <OpenSG/OSGVector.h>
+#include <vector>
+#include "core/math/OSGMathFwd.h"
 
 #include "VRSoundFwd.h"
 #include "core/utils/VRFunctionFwd.h"
@@ -34,7 +36,8 @@ class VRSound {
         bool loop = false;
         float pitch = 1;
         float gain = 1;
-        Vec3d pos, vel;
+        Vec3d* pos;
+        Vec3d* vel;
 
         void playBuffer(vector<short>& buffer, int sample_rate);
 

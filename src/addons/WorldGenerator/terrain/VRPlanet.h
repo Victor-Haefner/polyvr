@@ -27,6 +27,7 @@ class VRPlanet : public VRTransform {
 
         VRAnalyticGeometryPtr metaGeo;
         void rebuild();
+        void setupMetaGeo();
         Vec2i toSID(double north, double east);
 
     public:
@@ -54,7 +55,7 @@ class VRPlanet : public VRTransform {
         Vec3d fromLatLongPosition(double north, double east, bool local = false);
         Vec2d fromLatLongSize(double north1, double east1, double north2, double east2);
         PosePtr fromLatLongPose(double north, double east, bool local = false);
-        PosePtr getSurfacePose(double north, double east, bool local = false );
+        PosePtr getSurfacePose(double north, double east, bool local = false, bool sectorLocal = false );
 
         Vec2d fromPosLatLong(Pnt3d p, bool local = false);
 

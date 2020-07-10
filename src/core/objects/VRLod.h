@@ -2,7 +2,7 @@
 #define VRLOD_H_INCLUDED
 
 #include "core/objects/object/VRObject.h"
-#include <OpenSG/OSGVector.h>
+#include "core/math/OSGMathFwd.h"
 #include <OpenSG/OSGSField.h>
 
 OSG_BEGIN_NAMESPACE;
@@ -14,12 +14,12 @@ class VRLod : public VRObject {
     private:
         DistanceLODRecPtr lod;
         bool decimate = false;
-        Vec3d center;
+        Vec3d* center = 0;
         string distances_string;
-        uint decimateNumber = 0;
-        map<uint, float> distances;
-        map<uint, VRObjectPtr> decimated;
-        map<uint, float> decimation;
+        unsigned int decimateNumber = 0;
+        map<unsigned int, float> distances;
+        map<unsigned int, VRObjectPtr> decimated;
+        map<unsigned int, float> decimation;
 
         void setup();
         void loadSetup(VRStorageContextPtr context);
@@ -38,7 +38,7 @@ class VRLod : public VRObject {
 
         void setCenter(Vec3d c);
         Vec3d getCenter();
-        void setDistance(uint i, float dist);
+        void setDistance(unsigned int i, float dist);
         void addDistance(float dist);
         vector<float> getDistances();
 

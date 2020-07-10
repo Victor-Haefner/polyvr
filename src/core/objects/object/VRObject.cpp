@@ -1,4 +1,5 @@
 #include "VRObject.h"
+#include "VRAttachment.h"
 #include "OSGCore.h"
 #include "../OSGObject.h"
 #include "../VRTransform.h"
@@ -42,8 +43,8 @@ VRObject::VRObject(string _name) {
     store("visible", &visibleMask);
     storeObjVec("children", children);
 
-    regStorageSetupBeforeFkt( VRStorageCb::create("object setup", boost::bind(&VRObject::setupBefore, this, _1)) );
-    regStorageSetupFkt( VRStorageCb::create("object setup", boost::bind(&VRObject::setupAfter, this, _1)) );
+    regStorageSetupBeforeFkt( VRStorageCb::create("object setup", bind(&VRObject::setupBefore, this, placeholders::_1)) );
+    regStorageSetupFkt( VRStorageCb::create("object setup", bind(&VRObject::setupAfter, this, placeholders::_1)) );
 }
 
 vector<VRObjectPtr> tmpChildren;
@@ -73,6 +74,8 @@ VRObject::~VRObject() {
     NodeMTRecPtr p;
     if (osg->node) p = osg->node->getParent();
     if (p) p->subChild(osg->node);
+    for (auto a : attachments) delete a.second;
+    attachments.clear();
 }
 
 Matrix4d VRObject::getMatrixTo(VRObjectPtr obj, bool parentOnly) {
@@ -120,7 +123,7 @@ void applyVolumeCheckRecursive(NodeMTRecPtr n, bool b) {
     if (!n) return;
     applyVolumeCheck(n, b);
 
-    for (uint i=0; i<n->getNChildren(); i++) {
+    for (unsigned int i=0; i<n->getNChildren(); i++) {
         applyVolumeCheckRecursive(n->getChild(i), b);
     }
 }
@@ -158,7 +161,21 @@ int VRObject::getID() { return ID; }
 string VRObject::getType() { return type; }
 void VRObject::addTag(string name) { addAttachment(name, 0); }
 bool VRObject::hasTag(string name) { return attachments.count(name); }
-void VRObject::remTag(string name) { attachments.erase(name); }
+void VRObject::remTag(string name) { remAttachment(name); }
+
+void VRObject::remAttachment(string name) {
+    if (attachments.count(name)) {
+        delete attachments[name];
+        attachments.erase(name);
+    }
+}
+
+string VRObject::getAttachmentAsString(string name) {
+    if (attachments.count(name)) {
+        return attachments[name]->asString();
+    }
+    return "";
+}
 
 vector<string> VRObject::getTags() {
     vector<string> res;
@@ -213,7 +230,7 @@ void VRObject::remLink(VRObjectPtr obj) {
     subChild(OSGObject::create(node));
     osg->links.erase(obj.get());
 
-    for (uint i=0; i<links.size(); i++) {
+    for (unsigned int i=0; i<links.size(); i++) {
         if (links[i].first == obj.get()) {
             links.erase(links.begin() + i);
             return;
@@ -277,6 +294,7 @@ void VRObject::addChild(OSGObjectPtr n) {
 
 void VRObject::addChild(VRObjectPtr child, bool osg, int place) {
     if (child == 0 || child == ptr()) return;
+    //cout << "VRObject::addChild " << child->getName() << "  to: " << getName() << endl;
     if (child->getParent() != 0) { child->switchParent(ptr(), place); return; }
 
     if (osg) addChild(child->osg);
@@ -304,9 +322,10 @@ void VRObject::subChild(VRObjectPtr child, bool doOsg) {
 }
 
 void VRObject::switchParent(VRObjectPtr new_p, int place) {
-    if (destroyed) return;
+    //cout << "VRObject::switchParent of: " << getName() << "  new parent: " << new_p->getName() << " destroyed? " << destroyed << endl;
+    if (destroyed) { cout << "VRObject::switchParent ERROR: object is marked as destroyed!" << endl; return; }
     if (new_p == ptr()) return;
-    if (new_p == 0) { cout << "\nERROR : new parent is 0!\n"; return; }
+    if (new_p == 0) { cout << "VRObject::switchParent ERROR: new parent is 0!" << endl; return; }
 
     if (getParent() == 0) { new_p->addChild(ptr(), true, place); return; }
     if (getParent() == new_p && place == childIndex) { return; }
@@ -317,12 +336,12 @@ void VRObject::switchParent(VRObjectPtr new_p, int place) {
 
 size_t VRObject::getChildrenCount() { return children.size(); }
 
-void VRObject::clearChildren() {
+void VRObject::clearChildren(bool destroy) {
     int N = getChildrenCount();
     for (int i=N-1; i>=0; i--) {
         VRObjectPtr c = getChild(i);
         subChild( c );
-        c->destroy();
+        if (destroy) c->destroy();
     }
 }
 
@@ -489,7 +508,7 @@ VRObjectPtr VRObject::getRoot() {
 
 vector<VRObjectPtr> VRObject::filterByType(string Type, vector<VRObjectPtr> res) {
     if (type == Type) res.push_back(ptr());
-    for (uint i=0;i<children.size();i++)
+    for (unsigned int i=0;i<children.size();i++)
         res = children[i]->filterByType(Type, res);
     return res;
 }
@@ -512,7 +531,7 @@ BoundingboxPtr VRObject::getBoundingbox() {
     commitChanges();
     osg->node->updateVolume();
     osg->node->getVolume().getBounds(p1, p2);
-    BoundingboxPtr b = shared_ptr<Boundingbox>( new Boundingbox );
+    auto b = Boundingbox::create();
     b->update(Vec3d(p1));
     b->update(Vec3d(p2));
     return b;
@@ -522,13 +541,13 @@ BoundingboxPtr VRObject::getBoundingbox() {
 #include "core/objects/geometry/OSGGeometry.h"
 
 BoundingboxPtr VRObject::getWorldBoundingbox() {
-    BoundingboxPtr b = shared_ptr<Boundingbox>( new Boundingbox );
+    auto b = Boundingbox::create();
     for (auto obj : getChildren(true, "", true)) {
         auto geo = dynamic_pointer_cast<VRGeometry>(obj);
         if (!geo) continue;
         Matrix4d M = geo->getWorldMatrix();
         auto pos = geo->getMesh()->geo->getPositions();
-        for (uint i=0; i<pos->size(); i++) {
+        for (unsigned int i=0; i<pos->size(); i++) {
             Pnt3d p = Pnt3d( pos->getValue<Pnt3f>(i) );
             M.mult(p,p);
             b->update(Vec3d(p));
@@ -560,7 +579,7 @@ void VRObject::printTree(int indent) {
     for (int i=0;i<indent;i++) cout << "  ";
     cout << "name: " << name << " ID: " << ID << " type: " << type << " pnt: " << ptr();
     printInformation();
-    for (uint i=0;i<children.size();i++) children[i]->printTree(indent+1);
+    for (unsigned int i=0;i<children.size();i++) children[i]->printTree(indent+1);
 
     if(indent == 0) cout << "\n";
 }
@@ -570,7 +589,7 @@ vector<OSGObjectPtr> VRObject::getNodes() {
 
     function< void (NodeMTRecPtr)> aggregate = [&](NodeMTRecPtr node) {
         nodes.push_back( OSGObject::create(node) );
-        for (uint i=0; i<node->getNChildren(); i++) aggregate( node->getChild(i) );
+        for (unsigned int i=0; i<node->getNChildren(); i++) aggregate( node->getChild(i) );
     };
 
     aggregate(getNode()->node);
@@ -633,7 +652,7 @@ void VRObject::printOSGTree(OSGObjectPtr o, string indent) {
     }
     cout << flush;
 
-    for (uint i=0; i<o->node->getNChildren(); i++) {
+    for (unsigned int i=0; i<o->node->getNChildren(); i++) {
         printOSGTree(OSGObject::create(o->node->getChild(i)), indent + " ");
     }
 }
@@ -650,20 +669,20 @@ VRObjectPtr VRObject::duplicate(bool anchor, bool subgraph) {
     }
 
     VRObjectPtr o = copy(children); // copy himself
-    for (uint i=0; i<children.size();i++) o->addChild(children[i]); // append children
+    for (unsigned int i=0; i<children.size();i++) o->addChild(children[i]); // append children
     if (anchor && getParent()) getParent()->addChild(o);
     return o;
 }
 
 void VRObject::updateChildrenIndices(bool recursive) {
-    for (uint i=0; i<children.size(); i++) {
+    for (unsigned int i=0; i<children.size(); i++) {
         children[i]->childIndex = i;
         if (recursive) children[i]->updateChildrenIndices();
     }
 }
 
 int VRObject::findChild(VRObjectPtr node) {
-    for (uint i=0;i<children.size();i++)
+    for (unsigned int i=0;i<children.size();i++)
         if (children[i] == node) return i;
     return -1;
 }
@@ -767,3 +786,45 @@ void VRObject::unitTest() {
 
 void VRObject::setEntity(VREntityPtr e) { entity = e; }
 VREntityPtr VRObject::getEntity() { return entity; }
+
+
+void VRObject::reduceModel(string strategy) {
+    map<string, string> strategies;
+    for (auto strat : splitString(strategy, ';')) {
+        string key = splitString(strat, ':')[0];
+        string val = splitString(strat, ':')[1];
+        strategies[key] = val;
+    }
+
+    vector<VRGeometryPtr> geos;
+    for (auto obj : getChildren(true, "Geometry", true)) {
+        VRGeometryPtr geo = dynamic_pointer_cast<VRGeometry>(obj);
+        geos.push_back( geo );
+    }
+
+    auto byBoundingRadius = [&](float f) {
+        auto BB = getBoundingbox();
+        float R = BB->radius();
+        int N = 0;
+        for (auto geo : geos) {
+            auto bb = geo->getBoundingbox();
+            float r = bb->radius();
+
+            if (r < R*f) {
+                N++;
+                geo->hide();
+            }
+        }
+        return N;
+    };
+
+    if (strategies.count("byBoundingRadius")) {
+        int N = byBoundingRadius( toFloat(strategies["byBoundingRadius"]) );
+        cout << "reduceModel " << getName() << ", N geos: " << geos.size() << ", N reduced: " << N << endl;
+    }
+}
+
+
+
+
+

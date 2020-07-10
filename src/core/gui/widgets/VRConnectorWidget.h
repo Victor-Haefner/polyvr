@@ -7,25 +7,23 @@
 #include <string>
 #include <OpenSG/OSGConfig.h>
 
-namespace Gtk {
-    class Fixed;
-    class Separator;
-}
+struct _GtkSeparator;
+struct _GtkFixed;
 
 using namespace std;
 OSG_BEGIN_NAMESPACE;
 
 struct VRConnectorWidget {
-    Gtk::Separator* sh1 = 0;
-    Gtk::Separator* sh2 = 0;
-    Gtk::Separator* sv1 = 0;
-    Gtk::Separator* sv2 = 0;
-    Gtk::Fixed* canvas = 0;
+    _GtkSeparator* sh1 = 0;
+    _GtkSeparator* sh2 = 0;
+    _GtkSeparator* sv1 = 0;
+    _GtkSeparator* sv2 = 0;
+    _GtkFixed* canvas = 0;
     VRSemanticWidgetWeakPtr w1;
     VRSemanticWidgetWeakPtr w2;
     bool visible = true;
 
-    VRConnectorWidget(Gtk::Fixed* canvas, string color);
+    VRConnectorWidget(_GtkFixed* canvas, string color);
     ~VRConnectorWidget();
 
     void set(VRSemanticWidgetPtr w1, VRSemanticWidgetPtr w2);

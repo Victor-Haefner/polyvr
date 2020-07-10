@@ -1,10 +1,9 @@
 #ifndef VRGRASSPATCH_H_INCLUDED
 #define VRGRASSPATCH_H_INCLUDED
 
-#include <OpenSG/OSGVector.h>
+#include "core/math/OSGMathFwd.h"
 #include <OpenSG/OSGColor.h>
 #include "core/objects/geometry/VRGeometry.h"
-#include "addons/RealWorld/VRRealWorldFwd.h"
 #include "addons/WorldGenerator/VRWorldGeneratorFwd.h"
 
 using namespace std;

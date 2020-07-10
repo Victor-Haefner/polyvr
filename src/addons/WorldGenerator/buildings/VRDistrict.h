@@ -6,7 +6,7 @@
 #include "../VRWorldGeneratorFwd.h"
 #include "../VRWorldModule.h"
 #include <map>
-#include <OpenSG/OSGVector.h>
+#include "core/math/OSGMathFwd.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;

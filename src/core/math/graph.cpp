@@ -48,6 +48,8 @@ int Graph::connect(int i, int j, int c) {
     if (i < 0 || j < 0) return -1;
     static size_t eID = -1; eID++;
     edges[eID] = edge(i,j,CONNECTION(c),eID);
+    if (!hasNode(i)) { cout << "Graph::connect, cannot connect unknown node " << i << endl; }
+    if (!hasNode(j)) { cout << "Graph::connect, cannot connect unknown node " << j << endl; }
     getNode(i).outEdges.push_back(eID);
     getNode(j).inEdges.push_back(eID);
     return eID;

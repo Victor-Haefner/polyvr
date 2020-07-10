@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <vector>
 #include <OpenSG/OSGConfig.h>
-#include <OpenSG/OSGVector.h>
+#include "core/math/OSGMathFwd.h"
 #include "VRMathFwd.h"
 #include "boundingbox.h"
 
@@ -39,6 +39,8 @@ class OctreeNode {
         float getResolution();
         Vec3d getCenter();
         Vec3d getLocalCenter();
+
+        void setResolution(float res);
 
         OctreeNode* add(Vec3d p, void* data, int targetLevel = -1, bool checkPosition = true, int partitionLimit = -1);
         OctreeNode* get(Vec3d p, bool checkPosition = true);
@@ -101,6 +103,7 @@ class Octree : public std::enable_shared_from_this<Octree> {
         OctreeNode* get(Vec3d p, bool checkPosition = true);
         vector<OctreeNode*> getAllLeafs();
 
+        void setResolution(float res);
         float getSize();
         void clear();
         void updateRoot();

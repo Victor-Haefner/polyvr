@@ -16,7 +16,6 @@
 #include <vrpn/vrpn_Analog.h>
 #include <vrpn/vrpn_Dial.h>
 #include <vrpn/vrpn_Text.h>
-#include <boost/bind.hpp>
 #include <OpenSG/OSGQuaternion.h>
 
 OSG_BEGIN_NAMESPACE
@@ -133,7 +132,7 @@ void VRPN_device::loop(bool verbose) {
 
 
 VRPN::VRPN() {
-    //auto update_cb = new VRFunction<VRThread*>("VRPN_update", boost::bind(&VRPN::update_t, this, _1));
+    //auto update_cb = new VRFunction<VRThread*>("VRPN_update", bind(&VRPN::update_t, this, _1));
     //threadID = VRSceneManager::get()->initThread(update_cb, "VRPN", true);
 
     vrpn_System_TextPrinter.set_ostream_to_use(NULL);
@@ -389,10 +388,10 @@ void VRPN::startVRPNTestServer() {
 
     cout << "Created VRPN server." << endl;
 
-    testServer = VRUpdateCb::create("VRPN_test_server", boost::bind(vrpn_test_server_main));
+    testServer = VRUpdateCb::create("VRPN_test_server", bind(vrpn_test_server_main));
     VRSceneManager::get()->addUpdateFkt(testServer);
 
-    //static VRThreadCbPtr update_cb = VRThreadCb::create("VRPN_test_server", boost::bind(vrpn_test_server_main_t, _1));
+    //static VRThreadCbPtr update_cb = VRThreadCb::create("VRPN_test_server", bind(vrpn_test_server_main_t, _1));
     //threadID = VRSceneManager::get()->initThread(update_cb, "VRPN", true);
 }
 

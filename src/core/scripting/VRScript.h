@@ -132,7 +132,8 @@ class VRScript : public std::enable_shared_from_this<VRScript>, public VRName {
 
         argPtr addArgument();
         void remArgument(string name);
-        list<argPtr> getArguments(bool withInternals = false);
+        list<argPtr> getArguments();
+        void setArguments(vector<string> vals);
 
         void changeArgName(string name, string _new);
         void changeArgValue(string name, string _new);

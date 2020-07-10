@@ -2,6 +2,7 @@
 #include "core/utils/toString.h"
 
 #include <iostream>
+#include <algorithm>
 
 using namespace OSG;
 

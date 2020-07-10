@@ -11,7 +11,13 @@ using namespace OSG;
 template<> string typeName(const VRMillingMachine& m) { return "MillingMachine"; }
 
 VRMillingMachine::VRMillingMachine() {
+    pos = new Vec3d();
     http = new VRSocket("milling machine");
+}
+
+VRMillingMachine::~VRMillingMachine() {
+    delete pos;
+    delete http;
 }
 
 shared_ptr<VRMillingMachine> VRMillingMachine::create() { return shared_ptr<VRMillingMachine>(new VRMillingMachine()); }
@@ -34,7 +40,7 @@ void VRMillingMachine::setSpeed(float s) { speed = s; }
 
 void VRMillingMachine::setPosition(Vec3d p) {
     if (online) return; // position comes from machine
-    pos = p*1000;
+    *pos = p*1000;
 }
 
 void VRMillingMachine::setSpeed(Vec3d v) {
@@ -62,7 +68,7 @@ void VRMillingMachine::update() {
 		stringstream ss(re);
 		while (getline(ss, re, '%')) res.push_back(re); // split by '%'
 
-		pos = Vec3d( toFloat(res[0]), toFloat(res[1]), toFloat(res[2]) );
+		*pos = Vec3d( toFloat(res[0]), toFloat(res[1]), toFloat(res[2]) );
 		state = toInt(res[5]);
 		mode = toInt(res[6]);
 	} else {
@@ -70,16 +76,17 @@ void VRMillingMachine::update() {
 		mode = 1;
 	}
 
+	Vec3d p = *pos;
 	float f = 0.001;
-	geos[0]->setFrom( Vec3d( 0.000,0.250+(pos[0]*f),0.033));
-	geos[0]->setAt(   Vec3d( 0.000,-1.00+(pos[0]*f),0.033));
-	geos[1]->setFrom( Vec3d( 0.031+(pos[1]*f),0.230,0.181));
-	geos[1]->setAt(   Vec3d( 0.031+(pos[1]*f),-1.00,0.181));
-	geos[2]->setFrom( Vec3d( -0.069+(pos[1]*f),0.268,0.181+(pos[2]*f)));
-	geos[2]->setAt(   Vec3d( -0.069+(pos[1]*f),-1.00,0.181+(pos[2]*f)));
+	geos[0]->setFrom( Vec3d( 0.000,0.250+(p[0]*f),0.033));
+	geos[0]->setAt(   Vec3d( 0.000,-1.00+(p[0]*f),0.033));
+	geos[1]->setFrom( Vec3d( 0.031+(p[1]*f),0.230,0.181));
+	geos[1]->setAt(   Vec3d( 0.031+(p[1]*f),-1.00,0.181));
+	geos[2]->setFrom( Vec3d( -0.069+(p[1]*f),0.268,0.181+(p[2]*f)));
+	geos[2]->setAt(   Vec3d( -0.069+(p[1]*f),-1.00,0.181+(p[2]*f)));
 }
 
-Vec3d VRMillingMachine::getPosition() { return pos; }
+Vec3d VRMillingMachine::getPosition() { return *pos; }
 
 size_t httpwritefkt( char *ptr, size_t size, size_t nmemb, void *userdata) {
     string* s = (string*)userdata;

@@ -266,7 +266,7 @@ void VRTextureGenerator::applyLine(T* data, Vec3d p1, Vec3d p2, Color4f c, float
 template<typename T>
 void VRTextureGenerator::applyPath(T* data, PathPtr p, Color4f c, float w) {
     auto poses = p->getPoses();
-    for (uint i=1; i<poses.size(); i++) {
+    for (unsigned int i=1; i<poses.size(); i++) {
         Pose& p1 = poses[i-1];
         Pose& p2 = poses[i];
 
@@ -350,10 +350,16 @@ VRTexturePtr VRTextureGenerator::compose(int seed) { // TODO: optimise!
         }
     }
 
+    auto dataType = OSG::Image::OSG_FLOAT32_IMAGEDATA;
+
     img = VRTexture::create();
+#ifdef __EMSCRIPTEN__ // define internal format for webgl
+    if (hasAlpha)   img->setInternalFormat(GL_RGBA);
+    else            img->setInternalFormat(GL_RGB);
+#endif
     auto format = hasAlpha ? OSG::Image::OSG_RGBA_PF : OSG::Image::OSG_RGB_PF;
-    if (hasAlpha)   img->getImage()->set(format, width, height, depth, 0, 1, 0.0, (const uint8_t*)data4, OSG::Image::OSG_FLOAT32_IMAGEDATA, true, 1);
-    else            img->getImage()->set(format, width, height, depth, 0, 1, 0.0, (const uint8_t*)data3, OSG::Image::OSG_FLOAT32_IMAGEDATA, true, 1);
+    if (hasAlpha)   img->getImage()->set(format, width, height, depth, 0, 1, 0.0, (const uint8_t*)data4, dataType, true, 1);
+    else            img->getImage()->set(format, width, height, depth, 0, 1, 0.0, (const uint8_t*)data3, dataType, true, 1);
     if (hasAlpha)   delete[] data4;
     else            delete[] data3;
     return img;

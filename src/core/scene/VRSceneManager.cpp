@@ -21,12 +21,14 @@
 #include "core/gui/VRGuiManager.h"
 #include "core/gui/VRGuiSignals.h"
 #include "core/gui/VRGuiFile.h"
-#include <gtkmm/main.h>
+#include "core/gui/VRGuiUtils.h"
 #endif
 
 #include <OpenSG/OSGSceneFileHandler.h>
 #include <boost/filesystem.hpp>
+#include <boost/thread/recursive_mutex.hpp>
 #include <time.h>
+#include <thread>
 
 typedef boost::recursive_mutex::scoped_lock PLock;
 
@@ -48,7 +50,7 @@ VRSceneManager::VRSceneManager() {
     VROntology::setupLibrary();
     cout << " done" << endl;
 
-    sceneUpdateCb = VRThreadCb::create( "update scene", boost::bind(&VRSceneManager::updateSceneThread, this, _1) );
+    sceneUpdateCb = VRThreadCb::create( "update scene", bind(&VRSceneManager::updateSceneThread, this, _1) );
     //initThread(sceneUpdateCb, "update scene", true, 1); // TODO
 }
 
@@ -67,7 +69,13 @@ void VRSceneManager::loadScene(string path, bool write_protected, string encrypt
     cout << "VRSceneManager, loadScene: " << path << endl;
 
     newEmptyScene(path);
-    VRSceneLoader::get()->loadScene(path, encryptionKey);
+    bool success = VRSceneLoader::get()->loadScene(path, encryptionKey);
+    if (!success) {
+#ifndef WITHOUT_GTK
+        notifyUser("Could not load scene", "File '" + path + "' not found or corrupted!");
+#endif
+        return;
+    }
     current->setFlag("write_protected", write_protected);
 
 #ifndef WITHOUT_GTK
@@ -238,7 +246,7 @@ VRScenePtr VRSceneManager::getCurrent() { return current; }
 
 void VRSceneManager::updateSceneThread(VRThreadWeakPtr tw) {
     updateScene();
-    sleep(1);
+	std::this_thread::sleep_for(chrono::milliseconds(1));
 }
 
 void VRSceneManager::updateScene() {

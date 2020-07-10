@@ -1,5 +1,6 @@
 #include "VREmitter.h"
 #include "core/scene/VRScene.h"
+#include <boost/thread/recursive_mutex.hpp>
 
 using namespace std;
 using namespace OSG;
@@ -26,7 +27,7 @@ void Emitter::set(btDiscreteDynamicsWorld* world, vector<Particle*> particlesV, 
 
     static int ID = 0;
     id = ID; ID++;
-    fkt = VRUpdateCb::create("particles_update", boost::bind(&Emitter::emitterLoop, this));
+    fkt = VRUpdateCb::create("particles_update", bind(&Emitter::emitterLoop, this));
 }
 
 Emitter::~Emitter() {

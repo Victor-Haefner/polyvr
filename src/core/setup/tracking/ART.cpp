@@ -14,6 +14,7 @@
 #include "core/math/coordinates.h"
 #include "core/utils/VRStorage_template.h"
 #include "core/setup/devices/VRSignal.h"
+#include <boost/thread/recursive_mutex.hpp>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -73,7 +74,9 @@ void ART_device::update() {
 
 
 ART::ART() {
-    threadFkt = VRFunction< weak_ptr<VRThread> >::create("ART_fetch", boost::bind(&ART::updateT, this, _1));
+    mutex = new boost::recursive_mutex();
+
+    threadFkt = VRFunction< weak_ptr<VRThread> >::create("ART_fetch", bind(&ART::updateT, this, _1));
     VRSceneManager::get()->initThread(threadFkt, "ART_fetch", true); // applyEvent is the sync function
 
     on_new_device = VRSignal::create();
@@ -87,6 +90,7 @@ ART::ART() {
 
 ART::~ART() {
     //VRSceneManager::get()->stopThread(fetchThread);
+    delete mutex;
 }
 
 template<typename dev>
@@ -117,7 +121,7 @@ void ART::getMatrix(dev t, ART_devicePtr d) {
 
 void ART::scan(int type, int N) {
     if (type < 0) {
-        LOCK lock(mutex);
+        LOCK lock(*mutex);
         scan(0, dtrack->get_num_body());
         scan(1, dtrack->get_num_flystick());
         scan(2, dtrack->get_num_hand());
@@ -209,7 +213,7 @@ void ART::checkNewDevices(int type, int N) {
 
 void ART::applyEvents() {
     //if (VRGlobals::CURRENT_FRAME < 10) return;
-    LOCK lock(mutex);
+    LOCK lock(*mutex);
     //updateL();
     checkNewDevices();
     for (auto d : devices) d.second->update();

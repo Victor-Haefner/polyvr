@@ -18,7 +18,6 @@ VRKeyboard::VRKeyboard() : VRDevice("keyboard") {
 VRKeyboard::~VRKeyboard() {;}
 
 VRKeyboardPtr VRKeyboard::create() {
-    cout << " VRKeyboard::create" << endl;
     auto d = VRKeyboardPtr(new VRKeyboard());
     d->initIntersect(d);
     return d;

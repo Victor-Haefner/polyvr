@@ -156,7 +156,7 @@ int main(int argc, char **argv) {
         fullscreen = false;
         name = "localhost";
     }
-	
+
 #ifdef _WIN32
 	/*DISPLAY_DEVICE dd;
 	DWORD idx = 0;
@@ -169,7 +169,7 @@ int main(int argc, char **argv) {
 		_tprintf(_T("\n"));
 		idx++;
 	}*/
-	
+
 	/*BOOL CALLBACK MyInfoEnumProc(HMONITOR hMonitor, HDC hdcMonitor, LPRECT lprcMonitor, LPARAM dwData) {
 		MONITORINFOEX iMonitor;
 		iMonitor.cbSize = sizeof(MONITORINFOEX);
@@ -184,7 +184,7 @@ int main(int argc, char **argv) {
 
 	std::vector<ScreenArray> monitorArray;
 	EnumDisplayMonitors(NULL, NULL, &MyInfoEnumProc, reinterpret_cast<LPARAM>(&monitorArray));*/
-	
+
 	struct MonitorRects {
 		static BOOL CALLBACK MonitorEnum(HMONITOR hMon, HDC hdc, LPRECT lprcMonitor, LPARAM pData) {
 			MONITORINFO info;
@@ -206,7 +206,7 @@ int main(int argc, char **argv) {
 			EnumDisplayMonitors(0, 0, MonitorEnum, (LPARAM)this);
 		}
 	};
-	
+
 	MonitorRects monitors;
 #endif
 
@@ -217,9 +217,13 @@ int main(int argc, char **argv) {
     enableCoreDumps();
     glutInit(&argc, argv);
     evalParams(argc, argv);
-    if (active_stereo) glutInitDisplayMode( GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE | GLUT_STENCIL | GLUT_STEREO | GLUT_BORDERLESS | GLUT_CAPTIONLESS);
-    else glutInitDisplayMode( GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE | GLUT_STENCIL | GLUT_BORDERLESS | GLUT_CAPTIONLESS);
-	
+    //glutSetOption(GLUT_MULTISAMPLE, 4);
+    if (active_stereo) glutInitDisplayMode( GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE | GLUT_MULTISAMPLE | GLUT_STENCIL | GLUT_BORDERLESS | GLUT_CAPTIONLESS | GLUT_STEREO);
+    else               glutInitDisplayMode( GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE | GLUT_MULTISAMPLE | GLUT_STENCIL | GLUT_BORDERLESS | GLUT_CAPTIONLESS);
+
+    //glEnable(GL_MULTISAMPLE);
+    //glHint(GL_MULTISAMPLE_FILTER_HINT_NV, GL_NICEST);
+
 #ifdef _WIN32
     OSG::preloadSharedObject("OSGBase");
     OSG::preloadSharedObject("OSGContribCSMSimplePlugin");

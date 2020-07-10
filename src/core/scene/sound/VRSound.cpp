@@ -54,6 +54,9 @@ struct VRSound::ALData {
 };
 
 VRSound::VRSound() {
+    pos = new Vec3d();
+    vel = new Vec3d();
+
     VRSoundManager::get(); // this may init channel
     buffers = new uint[Nbuffers];
     al = shared_ptr<ALData>( new ALData() );
@@ -63,6 +66,8 @@ VRSound::VRSound() {
 VRSound::~VRSound() {
     close();
     delete[] buffers;
+    delete pos;
+    delete vel;
 }
 
 VRSoundPtr VRSound::create() { return VRSoundPtr( new VRSound() ); }
@@ -74,7 +79,7 @@ void VRSound::setPath( string p ) { path = p; }
 void VRSound::setLoop(bool loop) { this->loop = loop; doUpdate = true; }
 void VRSound::setPitch(float pitch) { this->pitch = pitch; doUpdate = true; }
 void VRSound::setGain(float gain) { this->gain = gain; doUpdate = true; }
-void VRSound::setUser(Vec3d p, Vec3d v) { pos = p; vel = v; doUpdate = true; }
+void VRSound::setUser(Vec3d p, Vec3d v) { *pos = p; *vel = v; doUpdate = true; }
 void VRSound::setCallback(VRUpdateCbPtr cb) { callback = cb; }
 bool VRSound::isRunning() {
     recycleBuffer();
@@ -100,8 +105,8 @@ void VRSound::updateSource() {
     cout << "update source" << endl;
     ALCHECK( alSourcef(source, AL_PITCH, pitch));
     ALCHECK( alSourcef(source, AL_GAIN, gain));
-    ALCHECK( alSource3f(source, AL_POSITION, pos[0], pos[1], pos[2]));
-    ALCHECK( alSource3f(source, AL_VELOCITY, vel[0], vel[1], vel[2]));
+    ALCHECK( alSource3f(source, AL_POSITION, (*pos)[0], (*pos)[1], (*pos)[2]));
+    ALCHECK( alSource3f(source, AL_VELOCITY, (*vel)[0], (*vel)[1], (*vel)[2]));
     doUpdate = false;
 }
 

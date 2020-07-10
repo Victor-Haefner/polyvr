@@ -46,7 +46,7 @@ class VRGeometry : public VRTransform {
             float length;
         };
 
-        VRObjectPtr copy(vector<VRObjectPtr> children);
+        virtual VRObjectPtr copy(vector<VRObjectPtr> children);
 
         void meshChanged();
         void setup(VRStorageContextPtr context);
@@ -73,6 +73,7 @@ class VRGeometry : public VRTransform {
         void setReference(Reference ref);
         Reference getReference();
         void makeUnique();
+        void makeSingleIndex();
         void setMeshVisibility(bool b);
         void setVolumeCheck(bool b, bool recursive = false);
 

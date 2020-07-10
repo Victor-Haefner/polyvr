@@ -73,6 +73,8 @@ class VRObject : public std::enable_shared_from_this<VRObject>, public VRName, p
 
         template<typename T> void addAttachment(string name, T t);
         template<typename T> T getAttachment(string name);
+        string getAttachmentAsString(string name);
+        void remAttachment(string name);
         void addTag(string name);
         bool hasTag(string name);
         void remTag(string name);
@@ -119,7 +121,7 @@ class VRObject : public std::enable_shared_from_this<VRObject>, public VRName, p
         VRObjectPtr getParent(bool checkForDrag = false);
         vector<VRObjectPtr> getAncestry(VRObjectPtr ancestor = 0);
         size_t getChildrenCount();
-        void clearChildren();
+        void clearChildren(bool destroy = true);
 
         bool hasDescendant(VRObjectPtr obj);
         bool hasAncestor(VRObjectPtr obj);
@@ -167,6 +169,8 @@ class VRObject : public std::enable_shared_from_this<VRObject>, public VRName, p
         Matrix4d getMatrixTo(VRObjectPtr o, bool parentOnly = false);
 
         void exportToFile(string path);
+
+        void reduceModel(string strategy);
 };
 
 OSG_END_NAMESPACE;

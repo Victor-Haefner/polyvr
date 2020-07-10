@@ -4,12 +4,30 @@
 #include "core/utils/VRTimer.h"
 #include "core/utils/xml.h"
 
+#ifndef WITHOUT_GDAL
+#include <gdal/gdal.h>
+#include <gdal/gdal_priv.h>
+#include <gdal/gdal_version.h>
+#include <gdal/ogrsf_frmts.h>
+
+// define needed before including proj_api.h !!
+#define ACCEPT_USE_OF_DEPRECATED_PROJ_API_H
+#include <proj_api.h>
+#endif
+
 #include <iostream>
 #include <fstream>
+#include <cmath>
 
 /* FILE FORMAT INFOS:
     http://wiki.openstreetmap.org/wiki/Elements
     http://wiki.openstreetmap.org/wiki/Map_Features
+*/
+
+/* TESTING GDAL
+	filepath = 'test.json'
+	VR.map = VR.OSMMap()
+	VR.map.readGEOJSON(filepath)
 */
 
 using namespace OSG;
@@ -828,10 +846,321 @@ void OSMMap::readFile(string path) {
         }
     }
 
+    mapType = "OSM";
     auto t2 = t.stop()/1000.0;
     cout << "OSMMap::readFile path " << path << endl;
     cout << "  loaded " << ways.size() << " ways, " << nodes.size() << " nodes and " << relations.size() << " relations" << endl;
     cout << "  secs needed: " << t2 << endl;
+}
+
+void OSMMap::readGEOJSON(string path) {
+#ifndef WITHOUT_GDAL
+    auto coordsFromString = [&](string inB) {
+        //string has format: "lon lat"
+        int at1 = inB.find_first_of(" ");
+        double lon = toFloat( inB.substr(0, at1).c_str() );
+        double lat = toFloat( inB.substr(at1+1, inB.length()-(at1+1)).c_str() );
+        return Vec2d(lat,lon);
+    };
+
+    auto latlonFromPointString = [&](string in){
+        int at0 = in.find_first_of("(")+1;
+        return coordsFromString( in.substr(at0, (in.length()-1)-at0) );
+    };
+
+    auto multicoordsFromString = [&](string inB){
+        //string has format: "lon lat,lon lat,lon lat"
+        vector<Vec2d> res;
+        bool ende = false;
+        int at1 = 0;
+        int at2 = 1;
+        while (!ende){
+            at2 = inB.find_first_of(',', at1);
+            if (at2 > 0) {
+                res.push_back( coordsFromString( inB.substr(at1, at2-at1) ) );
+                at1 = at2+1;
+            }
+            else {
+                res.push_back( coordsFromString( inB.substr(at1, inB.length()-at1) ) );
+                ende = true;
+            }
+        }
+        return res;
+    };
+
+    auto multipolyFromString = [&](string in) {
+        vector<vector<Vec2d>> res;
+        int at1 = in.find_first_of("(((") + 3;
+        int at2 = 1;
+        int at3 = in.find_first_of(")))");
+        int at4 = in.find_first_of(")");
+        if (at3 != at4) {
+            //TODO
+        } else {
+            res.push_back( multicoordsFromString( in.substr(at1, at3-at1) ) );
+        }
+        return res;
+    };
+
+    cout << "OSMMap::readGEOJSON path " << path << endl;
+    cout << "  GDAL Version Nr:" << GDAL_VERSION_NUM << endl;
+
+    int nodeID = -1;
+    int wayID = -1;
+    int layercount = -1;
+    VRTimer t; t.start();
+#if GDAL_VERSION_NUM >= GDAL_COMPUTE_VERSION(2,3,0)
+#elif GDAL_VERSION_NUM >= GDAL_COMPUTE_VERSION(2,0,0)
+    GDALAllRegister();
+    GDALDataset* poDS = (GDALDataset *) GDALOpenEx( path.c_str(), GDAL_OF_VECTOR, NULL, NULL, NULL  );
+    //GDALDataset* poDS = (GDALDataset *) GDALOpen( path.c_str(), GA_ReadOnly );
+    if( poDS == NULL ) { printf( "Open failed.\n" ); return; }
+    // general information
+    printf( "  Driver: %s/%s\n", poDS->GetDriver()->GetDescription(), poDS->GetDriver()->GetMetadataItem( GDAL_DMD_LONGNAME ) );
+
+    layercount = poDS->GetLayerCount();
+
+    for (int i = 0; i < layercount; i++) {
+        OGRLayer  *poLayer = poDS->GetLayer(i);
+        OGRFeature *poFeature;
+        poLayer->ResetReading();
+        int featureCounter = 0;
+        while( (poFeature = poLayer->GetNextFeature()) != NULL ) {
+            OGRFeatureDefn *poFDefn = poLayer->GetLayerDefn();
+            map<string, string> tags;
+            for( int iField = 0; iField < poFDefn->GetFieldCount(); iField++ ) {
+                OGRFieldDefn *poFieldDefn = poFDefn->GetFieldDefn( iField );
+                tags[poFieldDefn->GetNameRef()] = poFeature->GetFieldAsString(iField);
+                //cout << poFieldDefn->GetNameRef() << "-" << poFeature->GetFieldAsString(iField) << endl;
+            }
+
+            OGRGeometry *poGeometry;
+            poGeometry = poFeature->GetGeometryRef();
+            if( poGeometry != NULL && wkbFlatten(poGeometry->getGeometryType()) == wkbPoint ) {
+                //OGRPoint *poPoint = poGeometry->toPoint();
+                OGRPoint *poPoint = (OGRPoint *) poGeometry;
+                char *wkt_tmp = nullptr;
+                poGeometry->exportToWkt(&wkt_tmp);
+                Vec2d latlon = latlonFromPointString(wkt_tmp);
+                nodeID++;
+                string strNID = to_string(nodeID);
+                OSMNodePtr node = OSMNodePtr( new OSMNode(strNID, latlon[0], latlon[1] ) );
+                node->tags = tags;
+                nodes[node->id] = node;
+                //bounds->update(Vec3d(latlon[1],latlon[0],0));
+            }
+            else if ( poGeometry != NULL && wkbFlatten(poGeometry->getGeometryType()) == wkbMultiPolygon ) {
+                OGRMultiPolygon* poMPoly = (OGRMultiPolygon *) poGeometry;
+                char *wkt_tmp = nullptr;
+                poGeometry->exportToWkt(&wkt_tmp);
+                vector<vector<Vec2d>> multiPoly = multipolyFromString(wkt_tmp);
+                vector<string> refsForWays;
+                for (auto eachPoly : multiPoly) {
+                    refsForWays.clear();
+                    for (auto eachPoint : eachPoly) {
+                        nodeID++;
+                        string strNID = to_string(nodeID);
+                        OSMNodePtr node = OSMNodePtr( new OSMNode(strNID, eachPoint[0], eachPoint[1] ) );
+                        refsForWays.push_back(strNID);
+                        nodes[node->id] = node;
+                        //bounds->update(Vec3d(eachPoint[1],eachPoint[0],0));
+                    }
+                    wayID++;
+                    string strWID = to_string(wayID);
+                    OSMWayPtr way = OSMWayPtr( new OSMWay(strWID) );
+                    way->nodes = refsForWays;
+                    way->tags = tags;
+                    ways[way->id] = way;
+                }
+            }
+            else {
+                printf( "no point or multipolygon geometry\n" );
+            }
+            featureCounter++;
+        }
+        //OGRFeature::DestroyFeature( poFeature );
+    }
+    mapType = "geoJSON";
+    GDALClose(poDS);
+#endif // GDAL_VERSION_NUM
+    auto t2 = t.stop()/1000.0;
+    cout << "  loaded " << ways.size() << " ways, " << nodes.size() << " nodes and " << relations.size() << " relations" << endl;
+    cout << "  secs needed: " << t2 << endl;
+#endif // WITHOUT_GDAL
+}
+
+void OSMMap::readSHAPE(string path) {
+#ifndef WITHOUT_GDAL
+#if GDAL_VERSION_NUM >= GDAL_COMPUTE_VERSION(2,3,0)
+#elif GDAL_VERSION_NUM >= GDAL_COMPUTE_VERSION(2,0,0)
+    VRTimer t; t.start();
+    GDALAllRegister();
+    GDALDataset* poDS = (GDALDataset *) GDALOpenEx( path.c_str(), GDAL_OF_VECTOR, NULL, NULL, NULL  );
+    if( poDS == NULL ) { printf( "Open failed.\n" ); return; }
+    // general information
+    cout << "OSMMap::readSHAPE path " << path << endl;
+    printf( "  Driver: %s/%s\n", poDS->GetDriver()->GetDescription(), poDS->GetDriver()->GetMetadataItem( GDAL_DMD_LONGNAME ) );
+
+    int nodeID = -1;
+    int wayID = -1;
+
+    GDALClose(poDS);
+    auto t2 = t.stop()/1000.0;
+    cout << "  loaded " << ways.size() << " ways, " << nodes.size() << " nodes and " << relations.size() << " relations" << endl;
+    cout << "  secs needed: " << t2 << endl;
+#endif // GDAL_VERSION_NUM
+#endif // WITHOUT_GDAL
+}
+
+void OSMMap::readGML(string path) {
+#ifndef WITHOUT_GDAL
+    cout << "OSMMap::readGML path " << path << endl;
+    cout << "  GDAL Version Nr:" << GDAL_VERSION_NUM << endl;
+
+    auto toLatLon = [&](string rechts, string hoch) {
+        double lat = 0;
+        double lon = 0;
+        double x,y;
+
+        x = double( toFloat(rechts) );
+        y = double( toFloat(hoch) );
+        //if (rechts.substr(0,1) == "3") { rechts = rechts.substr(1,rechts.length()-1); cout << "Zone 3: " << rechts << "-" << hoch << endl; }
+        //if (toFloat(rechts) < 500000) lon = 3*3 - double(toFloat(rechts))*360.0/40000000.0;
+        //if (toFloat(rechts) > 500000) lon = 3*3 + double(toFloat(rechts))*360.0/40000000.0;
+        //lat = double(toFloat(hoch))*360.0/40000000.0;//double(toFloat(hoch))40000 km / 360
+        //lat = double(toFloat(hoch))*360.0/40000000.0;//double(toFloat(hoch))40000 km / 360
+        if (toFloat(rechts) < 500000) lat = -(500000.0-double( toFloat(rechts) ));
+        else lat = double( toFloat(rechts) );
+        lon = y;
+        return Vec2d(lat,lon);
+    };
+
+    auto coordsFromString = [&](string inB) {
+        //string has format: "x y z"
+        int at1 = inB.find_first_of(" ");
+        int at2 = inB.find_first_of(" ",at1+1);
+        string rechtswert = inB.substr(0, at1).c_str();
+        string hochwert = inB.substr(at1+1, at2-(at1+1)).c_str();
+        Vec2d latlon = toLatLon(rechtswert,hochwert);
+        double elevation = toFloat( inB.substr(at2+1, inB.length()-(at2+1)).c_str() );
+        return Vec3d(latlon[0],latlon[1],elevation);
+    };
+
+    auto multicoordsFromString = [&](string inB){
+        //string has format: "x y z,x y z,x y z"
+        vector<Vec3d> res;
+        bool ende = false;
+        int at1 = 0;
+        int at2 = 1;
+        while (!ende){
+            at2 = inB.find_first_of(',', at1);
+            if (at2 > 0) {
+                res.push_back( coordsFromString( inB.substr(at1, at2-at1) ) );
+                at1 = at2+1;
+            }
+            else {
+                res.push_back( coordsFromString( inB.substr(at1, inB.length()-at1) ) );
+                ende = true;
+            }
+        }
+        return res;
+    };
+
+    auto multipolyFromString = [&](string in) {
+        vector<vector<Vec3d>> res;
+        int at1 = in.find_first_of("(((") + 3;
+        int at2 = 1;
+        int at3 = in.find_first_of(")))");
+        int at4 = in.find_first_of(")");
+        if (at3 != at4) {
+            //TODO
+        } else {
+            res.push_back( multicoordsFromString( in.substr(at1, at3-at1) ) );
+        }
+        return res;
+    };
+
+    int nodeID = -1;
+    int wayID = -1;
+    int layercount = -1;
+    VRTimer t; t.start();
+
+// GDALOpenEx is available since GDAL 2.0
+#if GDAL_VERSION_NUM >= GDAL_COMPUTE_VERSION(2,0,0)
+    string workingpath = "GMLAS:"+path;
+
+    GDALAllRegister();
+    GDALDataset* poDS = (GDALDataset *) GDALOpenEx( workingpath.c_str(), GDAL_OF_VECTOR, NULL, NULL, NULL  );
+    //GDALDataset* poDS = (GDALDataset *) GDALOpenEx( path.c_str(), GDAL_OF_VECTOR, NULL, NULL, NULL  );
+    if( poDS == NULL ) { printf( "Open failed.\n" ); return; }
+    // general information
+    printf( "  Driver: %s/%s\n", poDS->GetDriver()->GetDescription(), poDS->GetDriver()->GetMetadataItem( GDAL_DMD_LONGNAME ) );
+
+    layercount = poDS->GetLayerCount();
+    int featureCounter = 0;
+    for (int i = 0; i < layercount; i++) {
+        OGRLayer  *poLayer = poDS->GetLayer(i);
+        OGRFeature *poFeature;
+        poLayer->ResetReading();
+        while( (poFeature = poLayer->GetNextFeature()) != NULL ) {
+            OGRFeatureDefn *poFDefn = poLayer->GetLayerDefn();
+            map<string, string> tags;
+            //cout << " --- " << endl;
+            for( int iField = 0; iField < poFDefn->GetFieldCount(); iField++ ) {
+                OGRFieldDefn *poFieldDefn = poFDefn->GetFieldDefn( iField );
+                tags[poFieldDefn->GetNameRef()] = poFeature->GetFieldAsString(iField);
+                //cout << poFieldDefn->GetNameRef() << "-" << poFeature->GetFieldAsString(iField) << endl;
+            }
+
+            OGRGeometry *poGeometry;
+            poGeometry = poFeature->GetGeometryRef();
+            if( poGeometry != NULL && wkbFlatten(poGeometry->getGeometryType()) == wkbPoint ) {
+                cout << " polygon" << endl;
+            }
+            else if ( poGeometry != NULL && wkbFlatten(poGeometry->getGeometryType()) == wkbMultiPolygon ) {
+                //cout << " multipolygon" << endl;
+                OGRMultiPolygon* poMPoly = (OGRMultiPolygon *) poGeometry;
+                char *wkt_tmp = nullptr;
+                poGeometry->exportToWkt(&wkt_tmp);
+                vector<vector<Vec3d>> multiPoly = multipolyFromString(wkt_tmp);
+                vector<string> refsForWays;
+                for (auto eachPoly : multiPoly) {
+                    refsForWays.clear();
+                    for (auto eachPoint : eachPoly) {
+                        nodeID++;
+                        string strNID = to_string(nodeID);
+                        OSMNodePtr node = OSMNodePtr( new OSMNode(strNID, eachPoint[0], eachPoint[1] ) );
+                        refsForWays.push_back(strNID);
+                        nodes[node->id] = node;
+                        node->elevation = eachPoint[2];
+                        //bounds->update(Vec3d(eachPoint[1],eachPoint[0],0));
+                        //cout << eachPoint << " ";
+                    }
+                    wayID++;
+                    string strWID = to_string(wayID);
+                    OSMWayPtr way = OSMWayPtr( new OSMWay(strWID) );
+                    way->nodes = refsForWays;
+                    way->tags = tags;
+                    ways[way->id] = way;
+                }
+                //cout << endl;
+                //cout << i <<  " F: "<< featureCounter << endl;
+            }
+            else {
+                //printf( "no point or multipolygon geometry\n" );
+            }
+            featureCounter++;
+        }
+        //OGRFeature::DestroyFeature( poFeature );
+    }
+    mapType = "GML";
+    GDALClose(poDS);
+    cout << "Layers: " << layercount << " Features: " << featureCounter << endl;
+#endif // GDAL_VERSION_NUM
+    auto t2 = t.stop()/1000.0;
+    cout << "  loaded " << ways.size() << " ways, " << nodes.size() << " nodes and " << relations.size() << " relations" << endl;
+    cout << "  secs needed: " << t2 << endl;
+#endif // WITHOUT_GDAL
 }
 
 void OSMMap::writeFile(string path) {
@@ -862,6 +1191,7 @@ int OSMMap::readFileStreaming(string path) {
     nodes = docHandler->getNodes();
     ways = docHandler->getWays();
     relations = docHandler->getRelations();
+    mapType = "OSM";
     cout << "\r";
     cout << "OSMMap::readFileStreaming - elements read: " << docHandler->getNumerator() << endl;
     cout << "OSMMap::readFileStreaming - nodes: " << docHandler->getNodeCounter() << ", ways: " << docHandler->getWayCounter() <<  ", relations: " << docHandler->getRelationCounter() << endl;
@@ -892,7 +1222,7 @@ int OSMMap::filterFileStreaming(string path, vector<pair<string, string>> whitel
             res+="newOSM.osm";
             return res;
         }
-        for (uint i = 0; i+4 < filepath.length(); i++) {
+        for (unsigned int i = 0; i+4 < filepath.length(); i++) {
             res += filepath.at(i);
         }
         res += in;
@@ -1047,6 +1377,7 @@ OSMMapPtr OSMMap::subArea(double latMin, double latMax, double lonMin, double lo
         }
     }
 
+    map->mapType = mapType;
     return map;
 }
 
@@ -1054,7 +1385,7 @@ vector<OSMWayPtr> OSMMap::splitWay(OSMWayPtr way, int segN) {
     vector<OSMWayPtr> res;
     int segL = way->nodes.size()/segN;
 
-    uint k = 0;
+    unsigned int k = 0;
     OSMWayPtr w = 0;
     for (int s=0; s<segN && k<way->nodes.size(); s++) {
         w = OSMWayPtr( new OSMWay(way->id + "_" + toString(s)) );

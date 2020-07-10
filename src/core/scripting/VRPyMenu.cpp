@@ -3,8 +3,6 @@
 #include "VRPyDevice.h"
 #include "VRPyBaseT.h"
 
-#include <boost/bind.hpp>
-
 using namespace OSG;
 
 simpleVRPyType(Menu, New_VRObjects_ptr);
@@ -57,7 +55,7 @@ PyObject* VRPyMenu::setCallback(VRPyMenu* self, PyObject *args) {
     }
 
     Py_IncRef(pArgs);
-    self->objPtr->setCallback(new VRFunction<OSG::VRMenuPtr>( "pyMenuCB", boost::bind(execCall, pyFkt, pArgs, _1) ));
+    self->objPtr->setCallback(new VRFunction<OSG::VRMenuPtr>( "pyMenuCB", bind(execCall, pyFkt, pArgs, placeholders::_1) ));
     Py_RETURN_TRUE;
 }
 

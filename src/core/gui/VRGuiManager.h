@@ -5,10 +5,13 @@
 #include <string>
 #include <vector>
 #include <map>
-#include <boost/thread/recursive_mutex.hpp>
 #include "core/utils/VRFunctionFwd.h"
 #include "core/scripting/VRScriptFwd.h"
 #include "VRGuiFwd.h"
+
+struct _GtkWindow;
+
+namespace boost { class recursive_mutex; }
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -20,9 +23,9 @@ class VRGuiManager {
         VRThreadCbPtr gtkUpdateCb;
         int gtkUpdateThreadID = -1;
 	    vector<VRDeviceCbPtr> guiSignalCbs;
-        boost::recursive_mutex mtx;
+        boost::recursive_mutex* mtx = 0;
 
-	    map<Gtk::Window*, Gtk::WindowPtr> windows;
+	    map<_GtkWindow*, _GtkWindow*> windows;
 
         VRGuiManager();
 
@@ -42,8 +45,8 @@ class VRGuiManager {
         void startThreadedUpdate();
         void wakeWindow();
 
-        Gtk::WindowPtr newWindow();
-        void remWindow(Gtk::WindowPtr w);
+        _GtkWindow* newWindow();
+        void remWindow(_GtkWindow* w);
 
         boost::recursive_mutex& guiMutex();
 };

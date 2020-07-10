@@ -37,7 +37,7 @@ VROntology::VROntology(string name) {
     storeMap("Entities", &entities, true);
     storeMap("Rules", &rules, true);
     store("flag", &flag);
-    regStorageSetupFkt( VRStorageCb::create("ontology setup", boost::bind(&VROntology::setup, this, _1)) );
+    regStorageSetupFkt( VRStorageCb::create("ontology setup", bind(&VROntology::setup, this, placeholders::_1)) );
 }
 
 VROntologyPtr VROntology::create(string name) {
@@ -137,7 +137,7 @@ VRConceptPtr VROntology::addConcept(string concept, string parents, map<string, 
     else Concept = Parents[0]->append(concept);
 
     //cout << "VROntology::addConcept " << concept << " " << parents << " " << Concept->getName() << " " << Concept->ID << endl;
-    for (uint i=1; i<Parents.size(); i++) Parents[i]->append(Concept);
+    for (unsigned int i=1; i<Parents.size(); i++) Parents[i]->append(Concept);
     Concept->addAnnotation(comment, "comment");
     addConcept(Concept);
     for (auto p : props) Concept->addProperty(p.first, p.second);
@@ -226,6 +226,7 @@ vector<VROntologyRulePtr> VROntology::getRules() {
 }
 
 VROntologyRulePtr VROntology::addRule(string rule, string ac) {
+    for (auto r : rules) if (r.second->rule == rule) return r.second;
     VROntologyRulePtr r = VROntologyRule::create(rule, ac);
     rules[r->ID] = r;
     return r;

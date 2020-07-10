@@ -100,9 +100,6 @@
 #ifndef WITHOUT_CGAL
 #include "addons/Engineering/CSG/VRPyCSG.h"
 #endif
-#ifndef WASM
-#include "addons/RealWorld/VRPyRealWorld.h"
-#endif
 #include "addons/SimViDekont/VRPySimViDekont.h"
 #include "addons/Semantics/Reasoning/VRPyOntology.h"
 #include "addons/LeapMotion/VRPyHandGeo.h"
@@ -141,7 +138,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
 #endif
     sm->registerModule<VRPyMaterial>("Material", pModVR, VRPyObject::typeRef);
     sm->registerModule<VRPyTextureGenerator>("TextureGenerator", pModVR);
-    sm->registerModule<VRPyImage>("Image", pModVR);
+    sm->registerModule<VRPyTexture>("Image", pModVR);
     sm->registerModule<VRPyLight>("Light", pModVR, VRPyObject::typeRef);
     sm->registerModule<VRPyLightBeacon>("LightBeacon", pModVR, VRPyTransform::typeRef);
     sm->registerModule<VRPySyncNode>("SyncNode", pModVR, VRPyTransform::typeRef);
@@ -171,8 +168,9 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyPose>("Pose", pModVR);
     sm->registerModule<VRPyPath>("Path", pModVR);
     sm->registerModule<VRPyGraph>("Graph", pModVR);
+    sm->registerModule<VRPyDatarow>("Datarow", pModVR);
     sm->registerModule<VRPyStateMachine>("StateMachine", pModVR);
-#ifndef WASM
+#ifndef WITHOUT_HDLC
     sm->registerModule<VRPyHDLC>("HDLC", pModVR);
 #endif
     sm->registerModule<VRPyState>("State", pModVR);
@@ -191,7 +189,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyAnnotationEngine>("AnnotationEngine", pModVR, VRPyGeometry::typeRef);
     sm->registerModule<VRPyAnalyticGeometry>("AnalyticGeometry", pModVR, VRPyObject::typeRef);
     sm->registerModule<VRPyConstructionKit>("ConstructionKit", pModVR);
-    sm->registerModule<VRPyPathtool>("Pathtool", pModVR, VRPyObject::typeRef);
+    sm->registerModule<VRPyPathtool>("Pathtool", pModVR, VRPyTransform::typeRef);
     sm->registerModule<VRPySelector>("Selector", pModVR);
     sm->registerModule<VRPySelection>("Selection", pModVR);
     sm->registerModule<VRPyPatchSelection>("PatchSelection", pModVR, VRPySelection::typeRef);
@@ -212,7 +210,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyJointTool>("JointTool", pModVR, VRPyGeometry::typeRef);
 	sm->registerModule<VRPyColorChooser>("ColorChooser", pModVR);
 	sm->registerModule<VRPyTextureRenderer>("TextureRenderer", pModVR, VRPyObject::typeRef);
-	sm->registerModule<VRPyTextureMosaic>("TextureMosaic", pModVR, VRPyImage::typeRef);
+	sm->registerModule<VRPyTextureMosaic>("TextureMosaic", pModVR, VRPyTexture::typeRef);
     sm->registerModule<VRPyCaveKeeper>("CaveKeeper", pModVR);
     sm->registerModule<VRPySegmentation>("Segmentation", pModVR);
     sm->registerModule<VRPyAdjacencyGraph>("AdjacencyGraph", pModVR);
@@ -252,12 +250,9 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
 #ifndef WITHOUT_CGAL
 	sm->registerModule<VRPyCSG>("CSGGeometry", pModVR, VRPyGeometry::typeRef);
 #endif
-#ifndef WASM
-	sm->registerModule<VRPyRealWorld>("RealWorld", pModVR, VRPyObject::typeRef);
-#endif
 	sm->registerModule<VRPySimViDekont>("SimViDekont", pModVR);
 
-    PyObject* pModMath = sm->newModule("Math", VRSceneGlobals::methods, "VR math module");
+    PyObject* pModMath = sm->newModule("Math", VRPyMath::methods, "VR math module");
     sm->registerModule<VRPyVec2f>("Vec2", pModMath, 0, "Math");
     sm->registerModule<VRPyVec3f>("Vec3", pModMath, 0, "Math");
     sm->registerModule<VRPyLine>("Line", pModMath, 0, "Math");

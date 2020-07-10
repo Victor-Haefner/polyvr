@@ -2,32 +2,30 @@
 #define VRGUIVECTORENTRY_H_INCLUDED
 
 #include <string>
-#include <gdk/gdkevents.h>
-#include <sigc++/functors/slot.h>
-#include <OpenSG/OSGVector.h>
+#include <functional>
+#include "core/math/OSGMathFwd.h"
 
-namespace Gtk {
-    class Entry;
-    class Label;
-}
+struct _GtkEntry;
+struct _GtkLabel;
+struct _GdkEventFocus;
 
 using namespace std;
 
 class VRGuiVectorEntry {
     private:
-        Gtk::Entry* ex = 0;
-        Gtk::Entry* ey = 0;
-        Gtk::Entry* ez = 0;
-        Gtk::Label* lbl = 0;
+        _GtkEntry* ex = 0;
+        _GtkEntry* ey = 0;
+        _GtkEntry* ez = 0;
+        _GtkLabel* lbl = 0;
 
-        static bool proxy(GdkEventFocus* focus, sigc::slot<void, OSG::Vec3d&> sig, Gtk::Entry* ex, Gtk::Entry* ey, Gtk::Entry* ez);
-        static bool proxy2D(GdkEventFocus* focus, sigc::slot<void, OSG::Vec2d&> sig, Gtk::Entry* ex, Gtk::Entry* ey);
+        static bool proxy(_GdkEventFocus* focus, function<void(OSG::Vec3d&)> sig, _GtkEntry* ex, _GtkEntry* ey, _GtkEntry* ez);
+        static bool proxy2D(_GdkEventFocus* focus, function<void(OSG::Vec2d&)> sig, _GtkEntry* ex, _GtkEntry* ey);
 
     public:
         VRGuiVectorEntry();
 
-        void init(string placeholder, string label,  sigc::slot<void, OSG::Vec3d&> sig);
-        void init2D(string placeholder, string label,  sigc::slot<void, OSG::Vec2d&> sig);
+        void init(string placeholder, string label, function<void(OSG::Vec3d&)> sig);
+        void init2D(string placeholder, string label, function<void(OSG::Vec2d&)> sig);
 
         void set(OSG::Vec3d v);
         void set(OSG::Vec2d v);

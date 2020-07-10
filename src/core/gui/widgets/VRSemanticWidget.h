@@ -2,35 +2,21 @@
 #define VRSEMANTICWIDGET_H_INCLUDED
 
 #include <string>
-#include <OpenSG/OSGVector.h>
-#include <gtkmm/treemodel.h>
+#include "core/math/OSGMathFwd.h"
 
 #include "core/gui/VRGuiFwd.h"
 #include "addons/Algorithms/VRGraphLayout.h"
 
+struct _GtkFixed;
+struct _GtkFrame;
+struct _GtkLabel;
+struct _GtkTreeView;
+struct _GtkHBox;
+struct _GtkToolbar;
+struct _GtkToolButton;
+struct _GtkTreeIter;
+
 using namespace std;
-
-namespace Gtk {
-    class Fixed;
-    class Frame;
-    class Label;
-    class TreeView;
-    class HBox;
-    class Toolbar;
-    class ToolButton;
-}
-
-class VRGuiSemantics_PropsColumns : public Gtk::TreeModelColumnRecord {
-    public:
-        VRGuiSemantics_PropsColumns() { add(name); add(type); add(prop); add(ptype); add(flag); add(rtype); add(ID); }
-        Gtk::TreeModelColumn<Glib::ustring> name;
-        Gtk::TreeModelColumn<Glib::ustring> type;
-        Gtk::TreeModelColumn<Glib::ustring> prop;
-        Gtk::TreeModelColumn<Glib::ustring> ptype;
-        Gtk::TreeModelColumn<int> flag;
-        Gtk::TreeModelColumn<int> rtype;
-        Gtk::TreeModelColumn<int> ID;
-};
 
 OSG_BEGIN_NAMESPACE;
 
@@ -43,18 +29,18 @@ struct VRSemanticWidget : public std::enable_shared_from_this<VRSemanticWidget> 
     bool subTreeFolded = false;
 
     VRGuiSemantics* manager = 0;
-    Gtk::Fixed* canvas = 0;
-    Gtk::Frame* widget = 0;
-    Gtk::Label* label = 0;
-    Gtk::TreeView* treeview = 0;
-    Gtk::HBox* toolbars = 0;
-    Gtk::Toolbar* toolbar1 = 0;
-    Gtk::ToolButton* bFold = 0;
+    _GtkFixed* canvas = 0;
+    _GtkFrame* widget = 0;
+    _GtkLabel* label = 0;
+    _GtkTreeView* treeview = 0;
+    _GtkHBox* toolbars = 0;
+    _GtkToolbar* toolbar1 = 0;
+    _GtkToolButton* bFold = 0;
 
     map<VRSemanticWidget*, VRSemanticWidgetWeakPtr> children;
     map<VRConnectorWidget*, VRConnectorWidgetWeakPtr> connectors;
 
-    VRSemanticWidget(VRGuiSemantics* m, Gtk::Fixed* canvas, string color);
+    VRSemanticWidget(VRGuiSemantics* m, _GtkFixed* canvas, string color);
     ~VRSemanticWidget();
 
     VRSemanticWidgetPtr ptr();
@@ -64,7 +50,7 @@ struct VRSemanticWidget : public std::enable_shared_from_this<VRSemanticWidget> 
 
     void move(Vec2d p);
     Vec2d getAnchorPoint(Vec2d p);
-    void setPropRow(Gtk::TreeModel::iterator iter, string name, string type, string color, int flag, int ID = 0, int rtype = 0);
+    void setPropRow(_GtkTreeIter* iter, string name, string type, string color, int flag, int ID = 0, int rtype = 0);
 
     Vec3d getPosition();
     Vec3d getSize();

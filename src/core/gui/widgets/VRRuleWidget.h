@@ -10,7 +10,7 @@ struct VRRuleWidget : public VRSemanticWidget {
     VROntologyRulePtr rule;
     VRStatementPtr selected_statement;
 
-    VRRuleWidget(VRGuiSemantics* m, Gtk::Fixed* canvas = 0, VROntologyRulePtr rule = 0);
+    VRRuleWidget(VRGuiSemantics* m, _GtkFixed* canvas = 0, VROntologyRulePtr rule = 0);
 
     void on_new_clicked();
     void on_select_property();

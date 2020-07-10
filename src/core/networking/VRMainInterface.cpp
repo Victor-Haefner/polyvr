@@ -8,8 +8,6 @@
 #include "core/scene/VRSceneLoader.h"
 #include "core/scene/VRProjectsList.h"
 
-#include <boost/bind.hpp>
-
 OSG_BEGIN_NAMESPACE;
 
 VRMainInterface::VRMainInterface() {
@@ -17,9 +15,9 @@ VRMainInterface::VRMainInterface() {
     server = VRServer::create(5501);
     server->setName("MainInterface");
     VRSignalPtr sig = server->newSignal(0,1);
-    clickCb = VRDeviceCb::create( "VRMainInterface_on_scene_clicked", boost::bind(&VRMainInterface::on_scene_clicked, this, _1) );
+    clickCb = VRDeviceCb::create( "VRMainInterface_on_scene_clicked", bind(&VRMainInterface::on_scene_clicked, this, _1) );
     sig->add( clickCb );
-    reqCb = VRServerCb::create( "VRMainInterface_request_handler", boost::bind(&VRMainInterface::handleRequest, this, _1) );
+    reqCb = VRServerCb::create( "VRMainInterface_request_handler", bind(&VRMainInterface::handleRequest, this, _1) );
     server->addCallback( "request", reqCb);
     update();
     cout << " done" << endl;
@@ -80,13 +78,13 @@ string VRMainInterface::handleRequest(map<string, string> params) {
     if (var == "toggle_calib") {
         auto scene = VRScene::getCurrent();
         if (scene) {
-            auto fkt = VRUpdateCb::create("toggle_calib_job", boost::bind(&VRScene::setCalib, scene.get(), int(!scene->getCalib())));
+            auto fkt = VRUpdateCb::create("toggle_calib_job", bind(&VRScene::setCalib, scene.get(), int(!scene->getCalib())));
             scene->queueJob(fkt);
         }
     }
 
     if (var == "start") {
-        auto fkt = VRUpdateCb::create("start_demo", boost::bind(start_demo_proxy, param) );
+        auto fkt = VRUpdateCb::create("start_demo", bind(start_demo_proxy, param) );
         VRSceneManager::get()->queueJob(fkt);
     }
 
@@ -97,7 +95,7 @@ string VRMainInterface::handleRequest(map<string, string> params) {
             for ( auto v : VRSetup::getCurrent()->getViews() ) err += "'"+v->getName()+"' ";
             return err;
         }
-        auto fkt = VRUpdateCb::create("sitch_eyes", boost::bind(switch_eyes_proxy, param) );
+        auto fkt = VRUpdateCb::create("sitch_eyes", bind(switch_eyes_proxy, param) );
         VRSceneManager::get()->queueJob(fkt);
     }
 

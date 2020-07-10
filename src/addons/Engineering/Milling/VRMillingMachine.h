@@ -2,7 +2,9 @@
 #define VRMILLINGMACHINE_H_INCLUDED
 
 #include <string>
-#include <OpenSG/OSGVector.h>
+#include <vector>
+#include <OpenSG/OSGConfig.h>
+#include "core/math/OSGMathFwd.h"
 #include "core/objects/VRObjectFwd.h"
 
 OSG_BEGIN_NAMESPACE;
@@ -22,13 +24,14 @@ class VRMillingMachine {
         int state = 1; // CNC Status (z.B. Achsen aktiv)
         int mode = 1; // CNC Modus (z.B. JOG, Auto, ..)
 
-        Vec3d pos;
+        Vec3d* pos = 0;
         float speed = 4;
 
         string post(string cmd, string data);
 
     public:
         VRMillingMachine();
+        ~VRMillingMachine();
         static shared_ptr<VRMillingMachine> create();
 
         void connect(string s);

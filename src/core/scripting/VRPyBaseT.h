@@ -1,4 +1,6 @@
-#include <boost/bind.hpp>
+#ifndef VRPYBASET_H_INCLUDED
+#define VRPYBASET_H_INCLUDED
+
 #include "VRPyTypeCaster.h"
 #include "VRPyBaseFactory.h"
 #include "core/scene/VRScene.h"
@@ -87,7 +89,7 @@ R VRPyBase::execPyCall(PyObject* pyFkt, PyObject* pArgs, T t) {
 }
 
 template <typename T>
-void VRPyBase::execPyCall(PyObject* pyFkt, PyObject* pArgs, T t) {
+void VRPyBase::execPyCallVoid(PyObject* pyFkt, PyObject* pArgs, T t) {
     if (pyFkt == 0) return;
     PyGILState_STATE gstate = PyGILState_Ensure();
     if (PyErr_Occurred() != NULL) PyErr_Print();
@@ -114,7 +116,7 @@ VRFunction<T, R>* VRPyBase::parseCallback(PyObject* args) {
     else if (string(pArgs->ob_type->tp_name) == "list") pArgs = PyList_AsTuple(pArgs);
     _PyTuple_Resize(&pArgs, pySize(pArgs)+1);
 
-    return new VRFunction<T, R>( "pyExecCall", boost::bind(VRPyBase::execPyCall<T, R>, pyFkt, pArgs, _1) );
+    return new VRFunction<T, R>( "pyExecCall", bind(VRPyBase::execPyCall<T, R>, pyFkt, pArgs, std::placeholders::_1) );
 }
 
 template <class T, class t>
@@ -247,3 +249,5 @@ void VRPyBaseT<T>::registerModule(string name, PyObject* mod, PyTypeObject* tp_b
     Py_INCREF(typeRef);
     PyModule_AddObject(mod, name.c_str(), (PyObject*)typeRef);
 }
+
+#endif //VRPYBASET_H_INCLUDED

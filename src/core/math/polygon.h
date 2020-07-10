@@ -1,7 +1,7 @@
 #ifndef POLYGON_H_INCLUDED
 #define POLYGON_H_INCLUDED
 
-#include <OpenSG/OSGVector.h>
+#include "core/math/OSGMathFwd.h"
 #include <OpenSG/OSGMatrix.h>
 #include "boundingbox.h"
 

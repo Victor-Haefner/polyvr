@@ -4,21 +4,27 @@
 #endif
 #include "VRPLY.h"
 #ifndef WASM
+#ifndef WITHOUT_VTK
 #include "VRVTK.h"
+#endif
 #include "VRDXF.h"
+#include "VRDWG.h"
 #include "VRIFC.h"
 #endif
 #include "VRML.h"
 #include "VRSTEPCascade.h"
 #include "STEP/VRSTEP.h"
 #include "E57/E57.h"
+#ifndef WITHOUT_GDAL
 #include "GIS/VRGDAL.h"
+#endif
 #include "GLTF/GLTF.h"
 #include "addons/Engineering/Factory/VRFactory.h"
 
 #include <OpenSG/OSGSceneFileHandler.h>
 #include <OpenSG/OSGNameAttachment.h>
 #include <OpenSG/OSGComponentTransform.h>
+#include <OpenSG/OSGDistanceLOD.h>
 
 #include <boost/filesystem/path.hpp>
 #include <boost/filesystem/operations.hpp>
@@ -29,6 +35,8 @@
 #include "core/objects/VRGroup.h"
 #include "core/objects/object/VRObject.h"
 #include "core/objects/object/VRObjectT.h"
+#include "core/objects/VRLod.h"
+#include "core/objects/VRPointCloud.h"
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/geometry/OSGGeometry.h"
 #include "core/objects/material/VRMaterial.h"
@@ -62,7 +70,7 @@ void VRImport::fixEmptyNames(NodeMTRecPtr o, map<string, bool>& m, string parent
     setName(o, name.c_str());
     m[name] = true;
 
-    for (uint i=0; i<o->getNChildren(); i++) fixEmptyNames(o->getChild(i), m, OSG::getName(o), i);
+    for (unsigned int i=0; i<o->getNChildren(); i++) fixEmptyNames(o->getChild(i), m, OSG::getName(o), i);
 }
 
 VRTransformPtr VRImport::prependTransform(VRObjectPtr o, string path) {
@@ -135,7 +143,7 @@ VRTransformPtr VRImport::load(string path, VRObjectPtr parent, bool useCache, st
         }
 
         auto job = new LoadJob(path, preset, res, progress, options, useCache, useBinaryCache); // TODO: fix memory leak!
-        job->loadCb = VRFunction< VRThreadWeakPtr >::create( "geo load", boost::bind(&LoadJob::load, job, _1) );
+        job->loadCb = VRFunction< VRThreadWeakPtr >::create( "geo load", bind(&LoadJob::load, job, _1) );
         /*auto t =*/ VRScene::getCurrent()->initThread(job->loadCb, "geo load thread", false, 1);
         //testSync(t);
         return res;
@@ -172,18 +180,23 @@ void VRImport::LoadJob::load(VRThreadWeakPtr tw) {
         //if (ext == ".step" || ext == ".stp" || ext == ".STEP" || ext == ".STP") { VRSTEP step; step.load(path, res, options); }
 #ifdef WITH_STEP
         if (ext == ".step" || ext == ".stp" || ext == ".STEP" || ext == ".STP") { loadSTEPCascade(path, res); return; }
+		if (ext == ".ifc") { loadIFC(path, res); return; }
 #endif
         if (ext == ".wrl" && preset == "SOLIDWORKS-VRML2") { VRFactory f; if (f.loadVRML(path, progress, res, thread)); else preset = "OSG"; }
         if (ext == ".wrl" && preset == "PVR") { loadVRML(path, res, progress, thread); }
 #ifndef WASM
+#ifndef WITHOUT_VTK
         if (ext == ".vtk") { loadVtk(path, res); return; }
+#endif
+#ifndef WITHOUT_GDAL
         if (ext == ".pdf") { loadPDF(path, res); return; }
         if (ext == ".shp") { loadSHP(path, res); return; }
         if (ext == ".tiff" || ext == ".tif") { loadTIFF(path, res); return; }
         if (ext == ".hgt") { loadTIFF(path, res); return; }
-        if (ext == ".dxf") { loadDXF(path, res); return; }
-#ifndef NO_IFC
-        if (ext == ".ifc") { loadIFC(path, res); return; }
+#endif
+#ifndef WITHOUT_DWG
+        if (ext == ".dxf") { loadDWG(path, res); return; }
+        if (ext == ".dwg") { loadDWG(path, res); return; }
 #endif
 #endif
         if (ext == ".gltf" || ext == ".glb") { loadGLTF(path, res, progress, thread); return; }
@@ -212,6 +225,7 @@ void VRImport::LoadJob::load(VRThreadWeakPtr tw) {
         SceneFileHandler::the()->write(res->getChild(0)->getNode()->node, osbPath.c_str());
         for (auto c : res->getChildren(true)) { if (auto t = dynamic_pointer_cast<VRTransform>(c)) t->enableOptimization(true); }
         // TODO: create descriptive hash of file, store hash
+        cout << "store in binary cache: " << path << " " << osbPath << endl;
     }
 }
 
@@ -234,6 +248,8 @@ VRObjectPtr VRImport::OSGConstruct(NodeMTRecPtr n, VRObjectPtr parent, string na
 
     VRObjectPtr tmp = 0;
     VRMaterialPtr tmp_m;
+    VRLodPtr tmp_l;
+    VRPointCloudPtr tmp_p;
     VRGeometryPtr tmp_g;
     VRTransformPtr tmp_e;
     VRGroupPtr tmp_gr;
@@ -284,6 +300,22 @@ VRObjectPtr VRImport::OSGConstruct(NodeMTRecPtr n, VRObjectPtr parent, string na
         tmp->setCore(OSGCore::create(core), "Material");*/
     }
 
+    else if (t_name == "DistanceLOD") {
+        DistanceLOD* lod = dynamic_cast<DistanceLOD*>(n->getCore());
+        tmp_l = VRLod::create(name);
+        tmp_l->setCenter(Vec3d(lod->getCenter()));
+        auto dists = lod->getMFRange();
+        for (int i=0; i<dists->size(); i++) tmp_l->addDistance(lod->getRange(i));
+        tmp_l->setCore(OSGCore::create(core), "Lod");
+        tmp = tmp_l;
+    }
+
+    else if (t_name == "PointCloud") {
+        tmp_p = VRPointCloud::create(name);
+        tmp_p->setCore(OSGCore::create(core), "PointCloud");
+        tmp = tmp_p;
+    }
+
     else if (t_name == "Geometry") {
         auto osgGeo = dynamic_cast<Geometry*>(n->getCore());
         if (!osgGeo->getPositions()) return 0;
@@ -310,7 +342,7 @@ VRObjectPtr VRImport::OSGConstruct(NodeMTRecPtr n, VRObjectPtr parent, string na
         tmp->setCore(OSGCore::create(core), t_name);
     }
 
-    for (uint i=0;i<n->getNChildren();i++) {
+    for (unsigned int i=0;i<n->getNChildren();i++) {
         auto obj = OSGConstruct(n->getChild(i), tmp, name, currentFile, geoTrans, geoTransName);
         if (obj) tmp->addChild(obj);
     }

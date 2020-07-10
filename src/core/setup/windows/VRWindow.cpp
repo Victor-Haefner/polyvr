@@ -24,7 +24,7 @@ VRWindow::VRWindow() : changeListStats("remote") {
     active_window_count++;
     string n = getName();
 #ifndef WASM
-    winThread = VRThreadCb::create("VRWindow", boost::bind(&VRWindow::update, this, _1) );
+    winThread = VRThreadCb::create("VRWindow", bind(&VRWindow::update, this, _1) );
     thread_id = VRSceneManager::get()->initThread(winThread,"window_"+n,true,0); // WASM crash, needed?
 #endif
 }
@@ -49,12 +49,15 @@ void VRWindow::addView(VRViewPtr view) {
 
 void VRWindow::remView(VRViewPtr view) {
     if (mouse) mouse->setViewport(0);
-    for (uint i=0;i<views.size();i++) {
+    for (unsigned int i=0;i<views.size();i++) {
         if (views[i].lock() != view) continue;
         views.erase(views.begin() + i);
         return;
     }
 }
+
+void VRWindow::setMSAA(string s) { msaa = s; }
+string VRWindow::getMSAA() { return msaa; }
 
 void VRWindow::stop() { stopping = true; }
 void VRWindow::setAction(RenderActionRefPtr ract) { this->ract = ract; }
@@ -144,6 +147,7 @@ void VRWindow::save(XMLElementPtr node) {
     node->setAttribute("width", toString(width).c_str());
     node->setAttribute("height", toString(height).c_str());
     node->setAttribute("name", getName().c_str());
+    node->setAttribute("msaa", msaa.c_str());
     if (mouse) node->setAttribute("mouse", mouse->getName().c_str());
 #ifndef WITHOUT_MTOUCH
     else if (multitouch) node->setAttribute("mouse", multitouch->getName().c_str());
@@ -167,6 +171,7 @@ void VRWindow::load(XMLElementPtr node) {
     width = toInt( node->getAttribute("width") );
     height = toInt( node->getAttribute("height") );
     name = node->getAttribute("name");
+    if (node->hasAttribute("msaa")) msaa = node->getAttribute("msaa");
 
     for (auto el : node->getChildren()) {
         if (!el) continue;

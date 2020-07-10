@@ -1,17 +1,17 @@
 #include <core/utils/VRFunction.h>
 #include <core/scene/VRScene.h>
 #include <functional>
+#include <thread>
 #include "core/scene/VRSceneManager.h"
 #include "VRWebSocket.h"
 
 OSG_BEGIN_NAMESPACE
 using namespace std;
-using namespace std::placeholders;
 
 
 VRWebSocket::VRWebSocket(string name) : VRName() {
     setName(name);
-    threadFkt = VRThreadCb::create("webSocketPollThread", bind(&VRWebSocket::poll, this, _1));
+    threadFkt = VRThreadCb::create("webSocketPollThread", bind(&VRWebSocket::poll, this, placeholders::_1));
 }
 
 VRWebSocket::~VRWebSocket() {
@@ -38,7 +38,9 @@ bool VRWebSocket::open(string url) {
     if (threadId < 0) threadId = VRSceneManager::get()->initThread(threadFkt, "webSocketPollThread", false);
 
     cout << "Connecting to " << url << endl;
-    while (connectionStatus < 0) { usleep(10000); }
+    while (connectionStatus < 0) {
+		this_thread::sleep_for(chrono::microseconds(10000));
+	}
 
     return connectionStatus;
 }
@@ -61,7 +63,11 @@ bool VRWebSocket::close() {
         // TODO: output only for testing purposes. Remove after closing of web sockets is fixed.
         int i = 0;
         cout << "Waiting for confirmation";
-        while (connectionStatus != -1 && i < 100) { cout << "."; i++; usleep(10000); }
+        while (connectionStatus != -1 && i < 100) {
+			cout << ".";
+			i++;
+			this_thread::sleep_for(chrono::microseconds(10000));
+		}
         if(i==100) cout << endl << "No closing confirmation for web socket. Canceling wait period.";
         cout << endl;
         connectionStatus = -1;

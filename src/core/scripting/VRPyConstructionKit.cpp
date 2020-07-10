@@ -32,7 +32,7 @@ PyObject* VRPyConstructionKit::getObjects(VRPyConstructionKit* self) {
 
     auto objs = self->objPtr->getObjects();
     PyObject* res = PyList_New(objs.size());
-    for (uint i=0; i<objs.size(); i++) {
+    for (unsigned int i=0; i<objs.size(); i++) {
         PyList_SetItem(res, i, VRPyTypeCaster::cast(objs[i]));
     }
 

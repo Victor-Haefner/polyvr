@@ -4,8 +4,8 @@
 #include "core/utils/VRFunction.h"
 #include "core/objects/object/OSGCore.h"
 
-#include <boost/bind.hpp>
 #include <OpenSG/OSGDistanceLOD.h>
+#include <OpenSG/OSGVector.h>
 
 using namespace OSG;
 
@@ -13,24 +13,27 @@ template<> string typeName(const VRLod& t) { return "Lod"; }
 
 
 VRLod::VRLod(string name) : VRObject(name) {
+    center = new Vec3d;
     lod = DistanceLOD::create();
     setCore(OSGCore::create(lod), "Lod");
 
-    store("center", &center);
+    store("center", center);
     store("distances", &distances_string);
-    regStorageSetupFkt( VRStorageCb::create("lod setup", boost::bind(&VRLod::loadSetup, this, _1)) );
+    regStorageSetupFkt( VRStorageCb::create("lod setup", bind(&VRLod::loadSetup, this, placeholders::_1)) );
 }
 
-VRLod::~VRLod() {}
+VRLod::~VRLod() {
+    delete center;
+}
 
 VRLodPtr VRLod::create(string name) { return shared_ptr<VRLod>(new VRLod(name) ); }
 VRLodPtr VRLod::ptr() { return static_pointer_cast<VRLod>( shared_from_this() ); }
 
-void VRLod::setCenter(Vec3d c) { center = c; setup(); }
+void VRLod::setCenter(Vec3d c) { *center = c; setup(); }
 void VRLod::setDecimate(bool b, int N) { decimate = b; decimateNumber = N; setup(); }
-void VRLod::setDistance(uint i, float dist) { distances[i] = dist; setup(); }
+void VRLod::setDistance(unsigned int i, float dist) { distances[i] = dist; setup(); }
 void VRLod::addDistance(float dist) { setDistance(distances.size(), dist); }
-Vec3d VRLod::getCenter() { return center; }
+Vec3d VRLod::getCenter() { return *center; }
 bool VRLod::getDecimate() { return decimate; }
 int VRLod::getDecimateNumber() { return decimateNumber; }
 
@@ -46,7 +49,7 @@ VRObjectPtr VRLod::copy(vector<VRObjectPtr> childs) {
     _lod->setCenter(Vec3d(lod->getCenter()));
 
     MFReal32* vec = lod->editMFRange();
-    for (uint i=0;i<vec->size();i++) {
+    for (unsigned int i=0;i<vec->size();i++) {
         float tmp = lod->getRange(i);
         _lod->lod->editMFRange()->push_back(tmp);
     }
@@ -55,7 +58,7 @@ VRObjectPtr VRLod::copy(vector<VRObjectPtr> childs) {
 }
 
 vector<float> VRLod::getDistances() {
-    uint cN = max(getChildrenCount(), (size_t)1)-1;
+    unsigned int cN = max(getChildrenCount(), (size_t)1)-1;
     vector<float> res(cN);
     for (auto d : distances) {
         if (d.first >= cN) continue;
@@ -86,7 +89,7 @@ void VRLod::setup() {
         decimateNumber = min(decimateNumber, 7u);// max 7 decimation geometries?
 
         if (o != 0) { // has a child to decimate
-            for (uint i=0; i<decimateNumber; i++) {
+            for (unsigned int i=0; i<decimateNumber; i++) {
                 if (decimated.count(i) == 0) {
                     decimated[i] = o->duplicate(true);
                 }
@@ -103,7 +106,7 @@ void VRLod::setup() {
     dists->resize(distances.size(), 0);
     for (auto d : distances) (*dists)[d.first] = d.second;
 
-    lod->setCenter(Pnt3f(center));
+    lod->setCenter(Pnt3f(*center));
 }
 
 void VRLod::addEmpty() {

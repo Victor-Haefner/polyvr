@@ -1,8 +1,10 @@
 #ifndef VRIES_H_INCLUDED
 #define VRIES_H_INCLUDED
 
-#include <OpenSG/OSGVector.h>
+#include "core/math/OSGMathFwd.h"
 #include "core/objects/VRObjectFwd.h"
+#include <vector>
+#include <string>
 
 using namespace std;
 OSG_BEGIN_NAMESPACE;
@@ -20,7 +22,7 @@ class VRIES {
         int NhAngles = 0;
         int photometricType = 0;
         int unitsType = 0;
-        Vec3d extents;
+        Vec3d* extents = 0;
 
         float ballastFactor = 1;
         float photometricFactor = 1;
@@ -34,8 +36,8 @@ class VRIES {
         // computed parameters
         float vAngleRes = 0;
         float hAngleRes = 0;
-        Vec2i vAngleRange = 0;
-        Vec2i hAngleRange = 0;
+        Vec2i* vAngleRange = 0;
+        Vec2i* hAngleRange = 0;
         string symmetry = "NONE";
 
         vector<float> texData;

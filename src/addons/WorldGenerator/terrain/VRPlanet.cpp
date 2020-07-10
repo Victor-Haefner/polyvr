@@ -5,6 +5,7 @@
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/VRLod.h"
 #include "core/tools/VRAnalyticGeometry.h"
+#include "core/tools/VRAnnotationEngine.h"
 #include "core/math/pose.h"
 #include "core/utils/toString.h"
 #include "core/scene/import/GIS/VRGDAL.h"
@@ -117,22 +118,35 @@ void VRPlanet::localize(double north, double east) {
     } else cout << "Warning: VRPlanet::localize, no sector found at location " << Vec2d(north, east) << " !\n";*/
 }
 
-PosePtr VRPlanet::getSurfacePose( double north, double east, bool local){
+PosePtr VRPlanet::getSurfacePose( double north, double east, bool local, bool sectorLocal){
     auto poseG = fromLatLongPose(north, east);
+
     auto sector = getSector(north, east);
-    auto height = sector->getTerrain()->getHeight(Vec2d(north, east));
+    if (!sector) return Pose::create();
+
+    auto sectorCoords = sector->getPlanetCoords();
+    auto s = fromLatLongSize(sectorCoords[0], sectorCoords[1], sectorCoords[0]+sectorSize, sectorCoords[1]+sectorSize); //u = east, v = north
+    auto u = (east-sectorCoords[1]-sectorSize/2)/sectorSize*s[0];
+    auto v = -(north-sectorCoords[0]-sectorSize/2)/sectorSize*s[1];
+
+    auto height = sector->getTerrain()->getHeight(Vec2d(u, v));
     auto newPos = poseG->pos() + poseG->up()*height;
     Vec3d f = newPos;
     Vec3d d = poseG->dir();
-    Vec3d u = poseG->up();
-    PosePtr newPose = Pose::create(f,d,u);
+    Vec3d up = poseG->up();
+    PosePtr newPose = Pose::create(f,d,up); //global pose
 
     if (local) {
-        auto poseOrigin = origin->getPose()->multRight(newPose);
-        //auto newPinv = sector->getPose();
-        //newPinv->invert();
-        //auto poseLocalInPatch = newPinv->multRight(poseOrigin);
+        auto poseOrigin = origin->getPose()->multRight(newPose); //localized with transformed planed origin
         newPose = poseOrigin;
+    }
+
+    if (sectorLocal) {
+        auto newP = sector->getPose();
+        auto newPinv = newP;
+        newPinv->invert();
+        auto localinSector = newPinv->multRight(newPose); //localized on sector
+        newPose = localinSector;
     }
 
     return newPose;
@@ -270,12 +284,7 @@ void VRPlanet::rebuild() {
     addLod(4,radius*2.0);
     addLod(3,radius*5.0);
 
-    // init meta geo
-    if (!metaGeo) {
-        metaGeo = VRAnalyticGeometry::create("PlanetMetaData");
-        metaGeo->setLabelParams(0.02, true, true, Color4f(0.5,0.1,0,1), Color4f(1,1,0.5,1));
-        origin->addChild(metaGeo);
-    }
+    if (!metaGeo) setupMetaGeo();
 }
 
 void VRPlanet::setParameters( double r, string t, bool l, double s ) {
@@ -330,13 +339,17 @@ void VRPlanet::setupMaterial(string texture, bool isLit) { sphereMat->setTexture
 VRMaterialPtr VRPlanet::getMaterial() { return sphereMat; }
 void VRPlanet::setLit(bool b) { sphereMat->setShaderParameter("isLit", b?1:0); }
 
-int VRPlanet::addPin( string label, double north, double east, double length ) {
-    if (!metaGeo) {
-        metaGeo = VRAnalyticGeometry::create("PlanetMetaData");
-        metaGeo->setLabelParams(0.02, true, true, Color4f(0.5,0.1,0,1), Color4f(1,1,0.5,1));
-        origin->addChild(metaGeo);
-    }
+void VRPlanet::setupMetaGeo() {
+    metaGeo = VRAnalyticGeometry::create("PlanetMetaData");
+    metaGeo->setLabelParams(0.04, true, true, Color4f(0,0,0,1), Color4f(1,1,1,0));
+    auto ae = metaGeo->getAnnotationEngine();
+    ae->setOutline(4, Color4f(1,1,1,1));
+    //ae->setScreenSpace(1);
+    origin->addChild(metaGeo);
+}
 
+int VRPlanet::addPin( string label, double north, double east, double length ) {
+    if (!metaGeo) setupMetaGeo();
     Vec3d n = fromLatLongNormal(north, east);
     Vec3d p = fromLatLongPosition(north, east);
     static int ID = -1; ID++;//metaGeo->getNewID(); // TODO

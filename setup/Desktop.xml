@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Setup>
   <Displays globalOffset="0 0 0">
-    <Window active="1" type="2" width="1318" height="822" name="screen" mouse="mouse" keyboard="keyboard">
-      <View stereo="0" active_stereo="0" projection="0" eye_inverted="0" eye_separation="0.06" position="0 0 1 1" center="0 0.5 -1" normal="0 0 1" user_pos="0 0 0" up="0 1 0" size="2 1" shear="0 0" warp="0 0" vsize="1318 822" mirror="0" mirrorPos="0 0 0" mirrorNorm="0 0 1" user=""/>
+    <Window active="1" type="2" width="1322" height="748" name="screen" msaa="x4" mouse="mouse" keyboard="keyboard">
+      <View stereo="0" active_stereo="0" projection="0" eye_inverted="0" eye_separation="0.06" position="0 0 1 1" center="0 0.5 -1" normal="0 0 1" user_pos="0 0 0" up="0 1 0" size="2 1" shear="0 0" warp="0 0" vsize="1322 748" mirror="0" mirrorPos="0 0 0" mirrorNorm="0 0 1" user=""/>
     </Window>
   </Displays>
   <Devices>

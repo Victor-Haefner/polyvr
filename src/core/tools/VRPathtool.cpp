@@ -86,8 +86,8 @@ void VRManipulator::setup() {
 
 VRPathtool::option::option(int r, bool uch) : resolution(r), useControlHandles(uch) {}
 
-VRPathtool::VRPathtool() : VRObject("Pathtool") {
-    updatePtr = VRUpdateCb::create("path tool update", boost::bind(&VRPathtool::updateDevs, this) );
+VRPathtool::VRPathtool() : VRTransform("Pathtool") {
+    updatePtr = VRUpdateCb::create("path tool update", bind(&VRPathtool::updateDevs, this) );
     VRScene::getCurrent()->addUpdateFkt(updatePtr, 100);
 
     manip = new VRManipulator();
@@ -113,13 +113,16 @@ VRPathtool::VRPathtool() : VRObject("Pathtool") {
     storeObj("graph", graph);
     storeMap("paths", &paths, true);
     storeMap("options", options);
-    //regStorageSetupBeforeFkt( VRUpdateCb::create("pathtool clear", boost::bind(&VRPathtool::clear, this)) );
-    regStorageSetupBeforeFkt( VRStorageCb::create("pathtool clear", boost::bind(&VRPathtool::setupBefore, this, _1)) );
-    regStorageSetupFkt( VRStorageCb::create("pathtool setup", boost::bind(&VRPathtool::setup, this, _1)) );
+    //regStorageSetupBeforeFkt( VRUpdateCb::create("pathtool clear", bind(&VRPathtool::clear, this)) );
+    regStorageSetupBeforeFkt( VRStorageCb::create("pathtool clear", bind(&VRPathtool::setupBefore, this, _1)) );
+    regStorageSetupFkt( VRStorageCb::create("pathtool setup", bind(&VRPathtool::setup, this, _1)) );
 }
 
 VRPathtool::~VRPathtool() {
     if (manip) delete manip;
+    // destroy the handles to make sure, they may have been moved in the SG
+    for (auto hw : handles       ) if (auto h = hw.lock()) h->destroy();
+    for (auto hw : controlHandles) if (auto h = hw.lock()) h->destroy();
 }
 
 VRPathtoolPtr VRPathtool::create() { return VRPathtoolPtr( new VRPathtool() ); }
@@ -167,11 +170,7 @@ VRGeometryPtr VRPathtool::addHandle(int nID, PosePtr p) {
 
 void VRPathtool::setHandlePose(int nID, PosePtr p) {
     auto h = getHandle(nID);
-    /*auto tmp = VRTransform::create("tmp");
-    tmp->setPose(p);
-    p = tmp->getRelativePose(ptr());
-    if (h) h->setPose(p);*/
-    if (h) h->setWorldPose(p);
+    if (h) h->setPose(p);
     if (graph) graph->setPosition(nID, p);
 }
 
@@ -259,10 +258,11 @@ void VRPathtool::connect(int i1, int i2, Vec3d n1, Vec3d n2, bool handles, bool 
 VRMaterialPtr VRPathtool::getArrowMaterial() { return amat; }
 
 void VRPathtool::setArrowSize(float s) {
+    auto p = Pose::create();
+    float S = s/arrowScale;
+    p->setScale(Vec3d(S,S,S));
+    arrowTemplate->applyTransformation(p);
     arrowScale = s;
-    for (auto e : pathToEntry) {
-        if (auto a = e.second->arrow.lock()) a->setScale(Vec3d(s,s,s));
-    }
 }
 
 void VRPathtool::setGraphEdge(Graph::edge& e, bool handles, bool doArrow) {
@@ -801,7 +801,7 @@ void VRPathtool::updateBezierVisuals() {
                 auto cPs = path->getControlPoints();
                 auto Ps = path->getPoints();
                 if ((Ps.size()-1)*2 != cPs.size()) continue;
-                for (uint i=0; i<Ps.size()-1; i++) {
+                for (unsigned int i=0; i<Ps.size()-1; i++) {
                     int p1 = data.pushVert(Ps[i].pos());
                     int p2 = data.pushVert(cPs[i*2]);
                     int p3 = data.pushVert(cPs[i*2+1]);

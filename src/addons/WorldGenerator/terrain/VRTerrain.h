@@ -1,13 +1,14 @@
 #ifndef VRTERRAIN_H_INCLUDED
 #define VRTERRAIN_H_INCLUDED
 
-#include <OpenSG/OSGVector.h>
+#include "core/math/OSGMathFwd.h"
 #include <OpenSG/OSGColor.h>
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/math/polygon.h"
 #include "addons/WorldGenerator/VRWorldGeneratorFwd.h"
 #include "addons/WorldGenerator/VRWorldModule.h"
-#include <boost/thread/recursive_mutex.hpp>
+
+namespace boost { class recursive_mutex; }
 
 using namespace std;
 OSG_BEGIN_NAMESPACE;
@@ -38,6 +39,8 @@ class VRTerrain : public VRGeometry, public VRWorldModule {
         static string fragmentShaderDeferred;
         static string tessControlShader;
         static string tessEvaluationShader;
+        static string vertexShader_es2;
+        static string fragmentShader_es2;
 
         Vec2d size = Vec2d(100,100);
         Vec2f texelSize = Vec2f(0.01,0.01); // shader parameter
@@ -74,10 +77,11 @@ class VRTerrain : public VRGeometry, public VRWorldModule {
         void setSimpleNoise();
         Boundingbox getBoundingBox();
 
-        void setParameters( Vec2d size, double resolution, double heightScale, float w = 0, float aT = 1e-4, Color3f aC = Color3f(0.7,0.9,1));
+        void setParameters( Vec2d size, double resolution, double heightScale, float w = 0, float aT = 1e-4, Color3f aC = Color3f(0.7,0.9,1), bool isLit = true);
         void setLocalized(bool in);
         void setMeshTer(vector<vector<vector<Vec3d>>> in);
         void setWaterLevel(float w);
+        void setLit(bool isLit);
         void setAtmosphericEffect(float thickness, Color3f color);
         void setHeightScale(float s);
         void setMap( VRTexturePtr tex, int channel = 3 );
@@ -110,7 +114,7 @@ class VRTerrain : public VRGeometry, public VRWorldModule {
 
         void flatten(vector<Vec2d> perimeter, float h);
         void paintHeights(string woods, string gravel);
-        void paintHeights( string path );
+        void paintHeights( string path, Color4f mCol = Color4f(1,1,1,1), float mAmount = 0 );
         void addEmbankment(string ID, PathPtr p1, PathPtr p2, PathPtr p3, PathPtr p4);
 
         vector<Vec3d> probeHeight( Vec2d p);

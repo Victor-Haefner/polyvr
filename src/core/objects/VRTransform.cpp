@@ -20,7 +20,6 @@
 #include "core/scene/VRScene.h"
 #include "core/scene/VRSpaceWarper.h"
 
-#include <boost/bind.hpp>
 #include <OpenSG/OSGSimpleGeometry.h>
 #include <OpenSG/OSGChunkMaterial.h>
 #include <OpenSG/OSGDepthChunk.h>
@@ -50,7 +49,7 @@ VRTransform::VRTransform(string name, bool doOpt) : VRObject(name) {
     store("at_dir", &orientation_mode);
     storeObj("constraint", constraint);
 
-    regStorageSetupFkt( VRStorageCb::create("transform_update", boost::bind(&VRTransform::setup, this, _1)) );
+    regStorageSetupFkt( VRStorageCb::create("transform_update", bind(&VRTransform::setup, this, _1)) );
 }
 
 VRTransform::~VRTransform() {
@@ -178,12 +177,12 @@ void VRTransform::reg_change() {
 
 void VRTransform::printInformation() { Matrix4d m; getMatrix(m); cout << " pos " << m[3]; }
 
-uint VRTransform::getLastChange() { return change_time_stamp; }
+unsigned int VRTransform::getLastChange() { return change_time_stamp; }
 //bool VRTransform::changedNow() { return (change_time_stamp >= VRGlobals::get()->CURRENT_FRAME-1); }
 bool VRTransform::changedNow() { return checkWorldChange(); }
 
-bool VRTransform::changedSince(uint& frame, bool includingFrame) {
-    uint f = frame;
+bool VRTransform::changedSince(unsigned int& frame, bool includingFrame) {
+    unsigned int f = frame;
     frame = VRGlobals::CURRENT_FRAME;
     int offset = includingFrame?1:0;
     if (change_time_stamp + offset > f) return true;
@@ -195,7 +194,7 @@ bool VRTransform::changedSince(uint& frame, bool includingFrame) {
     return false;
 }
 
-bool VRTransform::changedSince2(uint frame, bool includingFrame) { // for py binding
+bool VRTransform::changedSince2(unsigned int frame, bool includingFrame) { // for py binding
     return changedSince(frame, includingFrame);
 }
 
@@ -585,6 +584,11 @@ void VRTransform::setEuler(Vec3d e) {
     setMatrix(m);
 }
 
+void VRTransform::setEulerDegree(Vec3d e) {
+    e *= Pi/180.0;
+    setEuler(e);
+}
+
 Vec3d VRTransform::getScale() { return _scale; }
 Vec3d VRTransform::getEuler() {
     //return _euler;
@@ -811,7 +815,7 @@ void VRTransform::printTransformationTree(int indent) {
         printPos();
     }
 
-    for (uint i=0;i<getChildrenCount();i++) {
+    for (unsigned int i=0;i<getChildrenCount();i++) {
         if (getChild(i)->getType() == "Transform" || getChild(i)->getType() == "Geometry") {
             VRTransformPtr tmp = static_pointer_cast<VRTransform>( getChild(i) );
             tmp->printTransformationTree(indent+1);
@@ -882,7 +886,7 @@ vector<VRAnimationPtr> VRTransform::getAnimations() {
 }
 
 VRAnimationPtr VRTransform::animate(PathPtr p, float time, float offset, bool redirect, bool loop, PathPtr po) {
-    pathAnimPtr = VRAnimCb::create("TransAnim", boost::bind(setFromPath, VRTransformWeakPtr(ptr()), p, po, redirect, _1));
+    pathAnimPtr = VRAnimCb::create("TransAnim", bind(setFromPath, VRTransformWeakPtr(ptr()), p, po, redirect, _1));
     animCBs.push_back(pathAnimPtr);
     auto a = VRScene::getCurrent()->addAnimation<float>(time, offset, pathAnimPtr, 0.f, 1.f, loop);addAnimation(a);
     return a;
@@ -919,13 +923,13 @@ void VRTransform::applyTransformation(PosePtr po) {
         auto pos = mesh->geo->getPositions();
         auto norms = mesh->geo->getNormals();
         Vec3d n; Pnt3d p;
-        for (uint i=0; i<pos->size(); i++) {
+        for (unsigned int i=0; i<pos->size(); i++) {
             p = Pnt3d(pos->getValue<Pnt3f>(i));
             m.mult(p,p);
             pos->setValue(p,i);
         }
 
-        for (uint i=0; i<norms->size(); i++) {
+        for (unsigned int i=0; i<norms->size(); i++) {
             n = Vec3d(norms->getValue<Vec3f>(i));
             m.mult(n,n);
             norms->setValue(n,i);

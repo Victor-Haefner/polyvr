@@ -4,7 +4,6 @@
 #include "core/objects/VRTransform.h"
 #include "core/math/pose.h"
 #include "core/math/path.h"
-#include <boost/bind.hpp>
 
 using namespace OSG;
 
@@ -12,7 +11,7 @@ template<> string typeName(const VRDriver& o) { return "Driver"; }
 
 VRDriver::VRDriver() {
     auto scene = VRScene::getCurrent();
-    updatePtr = VRUpdateCb::create("driver_update", boost::bind(&VRDriver::update, this));
+    updatePtr = VRUpdateCb::create("driver_update", bind(&VRDriver::update, this));
     scene->addUpdateFkt(updatePtr);
 }
 

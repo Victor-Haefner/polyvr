@@ -16,7 +16,7 @@ class SingleLinkNode;
 #include <string>
 #include <map>
 #include <tuple>
-#include <OpenSG/OSGVector.h>
+#include "core/math/OSGMathFwd.h"
 #include <OpenSG/OSGLine.h>
 #include "core/objects/VRObjectFwd.h"
 #include "core/utils/VRFunctionFwd.h"

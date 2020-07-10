@@ -1,7 +1,7 @@
 #ifndef INTERPOLATOR_H_INCLUDED
 #define INTERPOLATOR_H_INCLUDED
 
-#include <OpenSG/OSGVector.h>
+#include "core/math/OSGMathFwd.h"
 #include <vector>
 
 using namespace std;

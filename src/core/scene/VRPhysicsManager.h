@@ -3,10 +3,9 @@
 
 #include <LinearMath/btAlignedObjectArray.h>
 #include <OpenSG/OSGConfig.h>
-#include <OpenSG/OSGVector.h>
 #include <map>
 #include <vector>
-#include <boost/thread/recursive_mutex.hpp>
+#include "core/math/OSGMathFwd.h"
 #include "core/utils/VRFunctionFwd.h"
 #include "core/utils/VRUtilsFwd.h"
 #include "core/objects/VRObjectFwd.h"
@@ -26,6 +25,8 @@ class btSoftBodyWorldInfo;
 class btRigidBody;
 class btCollisionShape;
 class btCollisionObject;
+
+namespace boost { class recursive_mutex; }
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -61,7 +62,7 @@ class VRPhysicsManager {
         VRVisualLayerPtr physics_visual_layer;
         VRMaterialPtr phys_mat = 0;
 
-        boost::recursive_mutex mtx;
+        boost::recursive_mutex* mtx = 0;
         int fps = 500;
 
     protected:

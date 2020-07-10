@@ -2,6 +2,7 @@
 #include <OpenSG/OSGGLUT.h>
 #include <OpenSG/OSGGLUTWindow.h>
 #include <OpenSG/OSGChangeList.h>
+#include <thread>
 
 #include "VRWindowManager.h"
 #include "core/setup/devices/VRMouse.h"
@@ -27,13 +28,10 @@
 
 #ifndef WITHOUT_GTK
 #include "core/gui/VRGuiUtils.h"
-#include <gtkmm/builder.h>
-#include <gtkmm/main.h>
-#include <gtkmm/window.h>
-#include <gtkmm/drawingarea.h>
 #include "VRGtkWindow.h"
 #include "core/gui/VRGuiManager.h"
 #include "core/gui/VRGuiConsole.h"
+#include <gtk/gtkdrawingarea.h>
 #define WARN(x) \
 VRGuiManager::get()->getConsole( "Errors" )->write( x+"\n" );
 #else
@@ -62,37 +60,6 @@ bool VRWindowManager::checkWin(string name) {
 
 RenderActionRefPtr VRWindowManager::getRenderAction() { return ract; }
 
-void setMultisampling(bool on) {
-    bool res = false;
-
-#if !defined(GL_MULTISAMPLE_SGIS) && !defined(GL_MULTISAMPLE_ARB)
-#ifndef _WIN32
-#warning "No Multisampling support detected, disabling"
-#endif
-#else
-
-  if (on) {
-#ifdef GL_MULTISAMPLE_SGIS
-    res = true;
-    glEnable(GL_MULTISAMPLE_SGIS);
-#endif //GL_MULTISAMPLE_SGIS
-#ifdef GL_MULTISAMPLE_ARB
-    res = true;
-    glEnable(GL_MULTISAMPLE_ARB);
-#endif //GL_MULTISAMPLE_ARB
-  } else {
-#ifdef GL_MULTISAMPLE_SGIS
-    glDisable(GL_MULTISAMPLE_SGIS);
-#endif //GL_MULTISAMPLE_SGIS
-#ifdef GL_MULTISAMPLE_ARB
-    glDisable(GL_MULTISAMPLE_ARB);
-#endif //GL_MULTISAMPLE_ARB
-  }
-#endif //!defined(GL_MULTISAMPLE_SGIS) && !defined(GL_MULTISAMPLE_ARB)
-    //cout << "\nSET AA: " << res;
-    if (res) {;};//__GL_FXAA_MODE 	 = 7;//find out how to set vie application
-}
-
 VRWindowPtr VRWindowManager::addGlutWindow(string name) {
     VRGlutWindowPtr win = VRGlutWindow::create();
     win->setName(name);
@@ -113,15 +80,14 @@ VRWindowPtr VRWindowManager::addMultiWindow(string name) {
 #endif
 }
 
-VRWindowPtr VRWindowManager::addGtkWindow(string name, string glarea) {
+VRWindowPtr VRWindowManager::addGtkWindow(string name, string glarea, string msaa) {
 #ifndef WITHOUT_GTK
     cout << " add Gtk window " << name << endl;
     //gdk_error_trap_push();
     //if (gdk_error_trap_pop()) cout << "    ---- AAA1 ------ " << endl;
 
-    Gtk::DrawingArea* drawArea = 0;
-    VRGuiBuilder()->get_widget(glarea, drawArea); // TODO: create new glarea, add flag to editor area window!
-    VRGtkWindowPtr win = VRGtkWindow::create(drawArea);
+    GtkDrawingArea* drawArea = (GtkDrawingArea*)getGUIBuilder()->get_widget(glarea); // TODO: create new glarea, add flag to editor area window!
+    VRGtkWindowPtr win = VRGtkWindow::create(drawArea, msaa);
 
     editorWindow = win;
     win->setName(name);
@@ -149,7 +115,7 @@ void VRWindowManager::stopWindows() {
     cout << "VRWindowManager::stopWindows" << endl;
 #ifndef WASM
     BarrierRefPtr barrier = Barrier::get("PVR_rendering", true);
-    while (barrier->getNumWaiting() < VRWindow::active_window_count) usleep(1);
+    while (barrier->getNumWaiting() < VRWindow::active_window_count) this_thread::sleep_for(chrono::microseconds(1));
     for (auto w : getWindows() ) w.second->stop();
     barrier->enter(VRWindow::active_window_count+1);
 #endif
@@ -161,6 +127,9 @@ void VRWindowManager::updateWindows() {
     if (rendering_paused) return;
     auto scene = VRScene::getCurrent();
     if (scene) scene->allowScriptThreads();
+
+    //auto clist = Thread::getCurrentChangeList();
+    //if (clist->getNumChanged() == 0 && clist->getNumCreated() == 0) return;
 
     ract->setResetStatistics(false);
     StatCollector* sc = ract->getStatCollector();
@@ -207,7 +176,7 @@ void VRWindowManager::updateWindows() {
         if (timeout > 0) {
             size_t tEnter = time(0);
             while (barrier->getNumWaiting() < VRWindow::active_window_count) {
-                usleep(1);
+				this_thread::sleep_for(chrono::microseconds(1));
                 size_t tNow = time(0);
                 int delta = tNow - tEnter;
                 if (delta >= timeout) {
@@ -233,6 +202,7 @@ void VRWindowManager::updateWindows() {
         auto clist = Thread::getCurrentChangeList();
         VRGlobals::NCHANGED = clist->getNumChanged();
         VRGlobals::NCREATED = clist->getNumCreated();
+        if (VRGlobals::NCHANGED == 0 && VRGlobals::NCREATED == 0) return true;
         //changeListStats.update();
         if (!wait()) return false;
         /** let the windows merge the change lists, sync and clear **/
@@ -313,27 +283,30 @@ void VRWindowManager::save(XMLElementPtr node) {
 }
 
 void VRWindowManager::load(XMLElementPtr node) {
-    cout << "start loading windows\n";
+    cout << " load windows" << endl;
     for (auto el : node->getChildren()) {
         if (!el) continue;
 
         string type = el->getAttribute("type");
         string name = el->getAttribute("name");
+        string msaa = "x4";
+        if (el->hasAttribute("msaa")) msaa = el->getAttribute("msaa");
         cout << " VRWindowManager::load '" << type << "'  '" << name << "'" << endl;
         //el->print();
+        VRWindowPtr win = 0;
 
         if (type == "0") {
-            VRWindowPtr win = addMultiWindow(name);
+            win = addMultiWindow(name);
             win->load(el);
         }
 
         if (type == "1") {
-            VRWindowPtr win = addGlutWindow(name);
+            win = addGlutWindow(name);
             win->load(el);
         }
 
         if (type == "2") {
-            VRWindowPtr win = addGtkWindow(name);
+            win = addGtkWindow(name, "glarea", msaa);
             win->load(el);
         }
     }

@@ -8,8 +8,9 @@ simpleVRPyType(Terrain, New_VRObjects_ptr);
 simpleVRPyType(Planet, New_VRObjects_ptr);
 
 PyMethodDef VRPyTerrain::methods[] = {
-    {"setParameters", PyWrapOpt(Terrain, setParameters, "Set the terrain parameters, size, resolution, height scale, water level", "1|0|0.0001|0.7 0.9 1", void, Vec2d, double, double, float, float, Color3f ) },
+    {"setParameters", PyWrapOpt(Terrain, setParameters, "Set the terrain parameters, size, resolution, height scale, water level", "1|0|0.0001|0.7 0.9 1|1", void, Vec2d, double, double, float, float, Color3f, bool ) },
     {"setWaterLevel", PyWrap(Terrain, setWaterLevel, "Set the water level", void, float ) },
+    {"setLit", PyWrap(Terrain, setLit, "Set lit or not", void, bool ) },
     {"setAtmosphericEffect", PyWrap(Terrain, setAtmosphericEffect, "Set the atmospheric density and color", void, float, Color3f ) },
     {"loadMap", PyWrapOpt(Terrain, loadMap, "Load height map", "3", void, string, int ) },
     {"setMap", PyWrapOpt(Terrain, setMap, "Set height map", "3", void, VRTexturePtr, int ) },
@@ -32,7 +33,7 @@ PyMethodDef VRPyPlanet::methods[] = {
     {"addOSMMap", PyWrap(Planet, addOSMMap, "Add OSMMap to planet", OSMMapPtr, string ) },
     {"getSector", PyWrap(Planet, getSector, "Return sector at N E", VRWorldGeneratorPtr, double, double ) },
     {"getSectors", PyWrap(Planet, getSectors, "Return all sectors", vector<VRWorldGeneratorPtr> ) },
-    {"getSurfacePose", PyWrapOpt(Planet, getSurfacePose, "Get pose on surface, default in planet coordinates", "0", PosePtr, double, double, bool ) },
+    {"getSurfacePose", PyWrapOpt(Planet, getSurfacePose, "Get pose on surface, default in planet coordinates", "0|0", PosePtr, double, double, bool, bool ) },
     {"getMaterial", PyWrap(Planet, getMaterial, "Get planet material", VRMaterialPtr ) },
     {"setParameters", PyWrapOpt(Planet, setParameters, "Set planet parameters: radius, texture, isLit, sector size", "0.1", void, double, string, bool, double ) },
     {"setLayermode", PyWrap(Planet, setLayermode, "Set planet layer mode: full, minimum", void, string ) },

@@ -76,7 +76,7 @@ bool VRPolygonSelection::vertSelected(Vec3d p) {
 
     auto inFrustum = [&](frustum& f) {
         auto planes = f.getPlanes();
-        for (uint i=0; i<planes.size(); i++) {
+        for (unsigned int i=0; i<planes.size(); i++) {
             float d = planes[i].distance(Vec3f(p));
             if ( d < 0 ) return false;
         }
@@ -95,10 +95,10 @@ void VRPolygonSelection::updateShape(frustum f) {
     auto trans = f.getPose();
     Vec3d dir = trans.dir(); dir.normalize();
     Vec3d p0 = trans.pos();
-    float near = 1;
-    float far = 1;
-    if (bbox && !bbox->empty()) near = dir.dot( bbox->center() - p0 ) - bbox->radius();
-    if (bbox && !bbox->empty()) far = dir.dot( bbox->center() - p0 ) + bbox->radius();
+    float Near = 1;
+    float Far = 1;
+    if (bbox && !bbox->empty()) Near = dir.dot( bbox->center() - p0 ) - bbox->radius();
+    if (bbox && !bbox->empty()) Far = dir.dot( bbox->center() - p0 ) + bbox->radius();
 
     GeoPnt3fPropertyMTRecPtr pos = GeoPnt3fProperty::create();
     GeoUInt32PropertyMTRecPtr inds = GeoUInt32Property::create();
@@ -106,8 +106,8 @@ void VRPolygonSelection::updateShape(frustum f) {
     GeoUInt32PropertyMTRecPtr types = GeoUInt32Property::create();
 
     for (auto e : f.getEdges()) {
-        pos->addValue(p0+e*near);
-        pos->addValue(p0+e*far);
+        pos->addValue(p0+e*Near);
+        pos->addValue(p0+e*Far);
     }
 
     // near

@@ -66,6 +66,7 @@ class VRMaterial : public VRObject {
         void setDeferred(bool b);
         void updateDeferredShader();
         void updateOGL2Shader();
+        void updateOGL2Parameters();
         void testFix();
 
         void setActivePass(int i);

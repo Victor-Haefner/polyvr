@@ -227,13 +227,13 @@ PyObject* VRPyBase::toPyTuple(const OSG::Vec4i& v) {
 
 PyObject* VRPyBase::toPyTuple( const vector<string>& v ) {
     PyObject* res = PyList_New(v.size());
-    for (uint i=0; i<v.size(); i++) PyList_SetItem(res, i, PyString_FromString(v[i].c_str()));
+    for (unsigned int i=0; i<v.size(); i++) PyList_SetItem(res, i, PyString_FromString(v[i].c_str()));
     return res;
 }
 
 PyObject* VRPyBase::toPyTuple( const vector<PyObject*>& v ) {
     PyObject* res = PyList_New(v.size());
-    for (uint i=0; i<v.size(); i++) PyList_SetItem(res, i, v[i]);
+    for (unsigned int i=0; i<v.size(); i++) PyList_SetItem(res, i, v[i]);
     return res;
 }
 
@@ -347,7 +347,7 @@ int VRPyBase::toGLConst(string s) {
 
 bool VRPyBase::isNone(PyObject* o) { return (o == Py_None); }
 
-void VRPyBase::execPyCallVoid(PyObject* pyFkt, PyObject* pArgs) {
+void VRPyBase::execPyCallVoidVoid(PyObject* pyFkt, PyObject* pArgs) {
     if (pyFkt == 0) return;
     PyGILState_STATE gstate = PyGILState_Ensure();
     if (PyErr_Occurred() != NULL) PyErr_Print();

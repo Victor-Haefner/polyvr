@@ -11,7 +11,6 @@
 #include "core/scene/VRSceneManager.h"
 #include "core/scene/VRScene.h"
 #include "core/utils/VRLogger.h"
-#include <boost/bind.hpp>
 
 using namespace OSG;
 
@@ -22,7 +21,7 @@ VRServer::VRServer(int port) : VRDevice("server") {
     addBeacon();
     soc = VRSceneManager::get()->getSocket(port);
     this->port = port;
-    cb = new VRHTTP_cb( "Mobile_server_callback", boost::bind(&VRServer::callback, this, _1) );
+    cb = new VRHTTP_cb( "Mobile_server_callback", bind(&VRServer::callback, this, placeholders::_1) );
     soc->setHTTPCallback(cb);
     soc->setType("http receive");
 }

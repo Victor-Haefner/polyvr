@@ -4,6 +4,8 @@
 #include "VRStatement.h"
 #include "VRSemanticUtils.h"
 #include "core/utils/toString.h"
+#include <iostream>
+#include <functional>
 
 using namespace OSG;
 

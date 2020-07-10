@@ -3,12 +3,14 @@
 #include "VROntology.h"
 #include "core/utils/VRStorage_template.h"
 #include "core/utils/VRTimer.h"
+#include "core/utils/toString.h"
 
 #include <iostream>
+#include <OpenSG/OSGVector.h>
 
 using namespace OSG;
 
-template<> string typeName(const VREntity& o) { return "Entity"; }
+template<> string typeName(const OSG::VREntity& o) { return "Entity"; }
 
 VREntity::VREntity() {}
 

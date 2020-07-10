@@ -55,6 +55,10 @@ template<> string toString(const voidPtr& i) { stringstream ss; ss << i; return 
 template<> string toString(const size_t& i) { stringstream ss; ss << i; return ss.str(); }
 template<> string toString(const unsigned int& i) { stringstream ss; ss << long(i); return ss.str(); }
 
+#ifdef _WIN32
+template<> string toString(const __int64& i) { stringstream ss; ss << i; return ss.str(); }
+#endif
+
 string toString(const float& f, int d) {
     stringstream ss;
     if (d >= 0) ss << fixed << setprecision(d);//ss.precision(d);
@@ -187,7 +191,6 @@ template<> string typeName(const Matrix4d& t) { return "Matrix"; }
 template<> string typeName(const Color3f& t) { return "Vec3d"; }
 template<> string typeName(const Color4f& t) { return "Vec4d"; }
 template<> string typeName(const Line& t) { return "Line"; }
-template<> string typeName(const Boundingbox& t) { return "Boundingbox"; }
 string typeName(const std::shared_ptr<VRFunction<void>> t) { return "callback()"; }
 
 template <typename T> int ssToVal(stringstream& ss, T& t) {

@@ -1,6 +1,9 @@
 #include "Expression.h"
 #include "core/utils/toString.h"
 #include <stack>
+#include <iostream>
+#include <algorithm>
+#include <OpenSG/OSGVector.h>
 
 using namespace OSG;
 
@@ -83,9 +86,9 @@ Expression::TreeNode* Expression::TreeNode::getChild(int i) {
 Expression::TreeNode* Expression::TreeNode::getSibling(int offset) {
     if (!parent) return 0;
     auto siblings = parent->children;
-    for (uint i=0; i<siblings.size(); i++) {
+    for (unsigned int i=0; i<siblings.size(); i++) {
         if (siblings[i] == this) {
-            uint k = i+offset;
+            unsigned int k = i+offset;
             if (k >= 0 && k < siblings.size()) return siblings[k];
         }
     }

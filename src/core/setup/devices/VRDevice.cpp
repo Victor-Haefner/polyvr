@@ -3,20 +3,17 @@
 #include "core/utils/toString.h"
 #include "core/utils/VRFunction.h"
 #include "core/scene/VRSceneManager.h"
-#include <boost/bind.hpp>
 
 template<> string typeName(const OSG::VRDevice& t) { return "Device"; }
 
 OSG_BEGIN_NAMESPACE;
 
 VRDevice::VRDevice(string _type) : VRAvatar(_type) {
-    cout << " create device: " << _type << endl;
     type = _type;
     setName(_type);
 
     store("type", &type);
     store("name", &name);
-    cout << "  create device done: " << _type << endl;
 }
 
 VRDevice::~VRDevice() {}
@@ -101,7 +98,7 @@ VRSignalPtr VRDevice::addToggleSignal(int key) { // TODO: this is not ok, an act
 
     // deactivation signal
     VRSignalPtr sigB = createSignal(key, 0);
-    auto fkt = VRFunction<VRDeviceWeakPtr>::create("Device_remUpdate", boost::bind(&VRDevice::remUpdateSignal, ptr(), sigA, _1)); // TODO: check if passing ptr() induces a ptr cycle!!
+    auto fkt = VRFunction<VRDeviceWeakPtr>::create("Device_remUpdate", bind(&VRDevice::remUpdateSignal, ptr(), sigA, placeholders::_1)); // TODO: check if passing ptr() induces a ptr cycle!!
     sigB->add( fkt );
     deactivationCallbacks[sigA.get()] = fkt;
 

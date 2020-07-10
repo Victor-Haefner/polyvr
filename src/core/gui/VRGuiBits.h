@@ -4,12 +4,14 @@
 #include <OpenSG/OSGConfig.h>
 #include <string.h>
 #include <queue>
-#include <gtkmm/combobox.h>
-#include <gtkmm/textbuffer.h>
 #include "core/utils/VRFunctionFwd.h"
 #include "core/utils/VRDeviceFwd.h"
 #include "VRGuiRecWidget.h"
 #include "VRGuiFwd.h"
+
+struct _GtkNotebook;
+struct _GtkToggleToolButton;
+struct _GtkNotebookPage;
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -18,7 +20,7 @@ class VRGuiBits {
     private:
         bool update_ward = false;
         VRConsoleWidgetPtr openConsole;
-        Gtk::Notebook* terminal;
+        _GtkNotebook* terminal;
         map<string, VRConsoleWidgetPtr> consoles;
 
 	    VRUpdateCbPtr updatePtr;
@@ -29,20 +31,21 @@ class VRGuiBits {
 
         void hideAbout(int i);
         void updateVisualLayer();
-        void on_view_option_toggle(VRVisualLayer* l, Gtk::ToggleToolButton* tb);
+        void on_view_option_toggle(VRVisualLayer* l, _GtkToggleToolButton* tb);
         void toggleVerbose(string s);
 
         void on_camera_changed();
         void on_navigation_changed();
 
         void on_save_clicked();
+        void on_web_export_clicked();
         void on_quit_clicked();
         void on_about_clicked();
         void on_internal_clicked();
 
         void on_new_cancel_clicked();
         void on_internal_close_clicked();
-        void on_console_switch(GtkNotebookPage* page, unsigned int page_num);
+        void on_console_switch(_GtkNotebookPage* page, unsigned int page_num);
 
     public:
         VRGuiBits();

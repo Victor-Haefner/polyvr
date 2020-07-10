@@ -31,6 +31,8 @@ class VRRenderManager : public VRStorage {
         Color4f fogParams = Color4f(0, 0, 100, 0.1);
         Color4f fogColor = Color4f(0.5, 0.5, 0.5, 1);
 
+        bool glMSAA = false;
+
     protected:
         VRObjectPtr root = 0;
 
@@ -80,6 +82,13 @@ class VRRenderManager : public VRStorage {
 
         void update();
         void reloadStageShaders();
+
+        string getSupportedGL();
+        bool hasGeomShader();
+        bool hasTessShader();
+
+        bool getMultisampling();
+        void setMultisampling(bool b);
 };
 
 OSG_END_NAMESPACE;

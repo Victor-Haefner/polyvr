@@ -35,7 +35,6 @@
 			<Add option="-fPIC" />
 			<Add option="`pkg-config gtk+-2.0 --cflags`" />
 			<Add option="`pkg-config gmodule-2.0 --cflags`" />
-			<Add option="`pkg-config gtkmm-2.4 --cflags`" />
 			<Add option="`pkg-config gtkglext-1.0 --cflags`" />
 			<Add option="`pkg-config python --cflags`" />
 			<Add option="`pkg-config gtksourceview-2.0 --cflags`" />
@@ -115,6 +114,7 @@
 			<Add directory="/usr/include/IFC" />
 			<Add directory="/usr/include/vtk-7.1/" />
 			<Add directory="/usr/include/OPCUA" />
+			<Add directory="/usr/include/DWG" />
 		</Compiler>
 		<Linker>
 			<Add option="-lTKV3d" />
@@ -150,7 +150,6 @@
 			<Add option="`pkg-config gtk+-2.0 --libs`" />
 			<Add option="`pkg-config gmodule-2.0 --libs`" />
 			<Add option="`pkg-config bullet --libs`" />
-			<Add option="`pkg-config gtkmm-2.4 --libs`" />
 			<Add option="`pkg-config gtkglext-1.0 --libs`" />
 			<Add option="`pkg-config python --libs`" />
 			<Add option="`pkg-config gtksourceview-2.0 --libs`" />
@@ -260,6 +259,7 @@
 			<Add option="-lopcuaprotocol" />
 			<Add option="-lopcuacore" />
 			<Add option="-lxml2" />
+			<Add option="-lredwg" />
 			<Add option="-Wl,-rpath=/usr/lib/x86_64-linux-gnu:/usr/lib/OCE" />
 			<Add directory="/usr/lib/virtuose" />
 			<Add directory="/usr/lib/opensg" />
@@ -270,6 +270,7 @@
 			<Add directory="/usr/lib/IFC" />
 			<Add directory="/usr/lib/OPCUA" />
 			<Add directory="/usr/lib/OCE" />
+			<Add directory="/usr/lib/DWG" />
 		</Linker>
 		<ExtraCommands>
 			<Add after='/bin/bash -c &quot;mkdir -p bin/Release 2&gt;/dev/null&quot;' />
@@ -408,64 +409,6 @@
 		<Unit filename="src/addons/LeapMotion/VRPyHandGeo.h" />
 		<Unit filename="src/addons/LeapMotion/VRPyLeap.cpp" />
 		<Unit filename="src/addons/LeapMotion/VRPyLeap.h" />
-		<Unit filename="src/addons/RealWorld/Altitude.h" />
-		<Unit filename="src/addons/RealWorld/Assets/Asset.cpp" />
-		<Unit filename="src/addons/RealWorld/Assets/Asset.h" />
-		<Unit filename="src/addons/RealWorld/Assets/StreetLamp.cpp" />
-		<Unit filename="src/addons/RealWorld/Assets/StreetLamp.h" />
-		<Unit filename="src/addons/RealWorld/Config.cpp" />
-		<Unit filename="src/addons/RealWorld/Config.h" />
-		<Unit filename="src/addons/RealWorld/Elevation.cpp" />
-		<Unit filename="src/addons/RealWorld/Elevation.h" />
-		<Unit filename="src/addons/RealWorld/MapCoordinator.cpp" />
-		<Unit filename="src/addons/RealWorld/MapCoordinator.h" />
-		<Unit filename="src/addons/RealWorld/MapData.cpp" />
-		<Unit filename="src/addons/RealWorld/MapData.h" />
-		<Unit filename="src/addons/RealWorld/MapGrid.cpp" />
-		<Unit filename="src/addons/RealWorld/MapGrid.h" />
-		<Unit filename="src/addons/RealWorld/MapManager.cpp" />
-		<Unit filename="src/addons/RealWorld/MapManager.h" />
-		<Unit filename="src/addons/RealWorld/MeshGenerator.h" />
-		<Unit filename="src/addons/RealWorld/Modules/BaseModule.cpp" />
-		<Unit filename="src/addons/RealWorld/Modules/BaseModule.h" />
-		<Unit filename="src/addons/RealWorld/Modules/BaseWorldObject.h" />
-		<Unit filename="src/addons/RealWorld/Modules/Building.cpp" />
-		<Unit filename="src/addons/RealWorld/Modules/Building.h" />
-		<Unit filename="src/addons/RealWorld/Modules/ModuleBuildings.cpp" />
-		<Unit filename="src/addons/RealWorld/Modules/ModuleBuildings.h" />
-		<Unit filename="src/addons/RealWorld/Modules/ModuleFloor.cpp" />
-		<Unit filename="src/addons/RealWorld/Modules/ModuleFloor.h" />
-		<Unit filename="src/addons/RealWorld/Modules/ModuleStreets.cpp" />
-		<Unit filename="src/addons/RealWorld/Modules/ModuleStreets.h" />
-		<Unit filename="src/addons/RealWorld/Modules/ModuleTerrain.cpp" />
-		<Unit filename="src/addons/RealWorld/Modules/ModuleTerrain.h" />
-		<Unit filename="src/addons/RealWorld/Modules/ModuleTree.cpp" />
-		<Unit filename="src/addons/RealWorld/Modules/ModuleTree.h" />
-		<Unit filename="src/addons/RealWorld/Modules/ModuleWalls.cpp" />
-		<Unit filename="src/addons/RealWorld/Modules/ModuleWalls.h" />
-		<Unit filename="src/addons/RealWorld/Modules/NaturalTree.h" />
-		<Unit filename="src/addons/RealWorld/Modules/StreetJoint.cpp" />
-		<Unit filename="src/addons/RealWorld/Modules/StreetJoint.h" />
-		<Unit filename="src/addons/RealWorld/Modules/StreetSegment.cpp" />
-		<Unit filename="src/addons/RealWorld/Modules/StreetSegment.h" />
-		<Unit filename="src/addons/RealWorld/Modules/Wall.cpp" />
-		<Unit filename="src/addons/RealWorld/Modules/Wall.h" />
-		<Unit filename="src/addons/RealWorld/Modules/triangulate.h" />
-		<Unit filename="src/addons/RealWorld/RealWorld.cpp" />
-		<Unit filename="src/addons/RealWorld/RealWorld.h" />
-		<Unit filename="src/addons/RealWorld/StreetAlgos.cpp" />
-		<Unit filename="src/addons/RealWorld/StreetAlgos.h" />
-		<Unit filename="src/addons/RealWorld/StreetBorder.h" />
-		<Unit filename="src/addons/RealWorld/TestMover.h" />
-		<Unit filename="src/addons/RealWorld/VRPyRealWorld.cpp" />
-		<Unit filename="src/addons/RealWorld/VRPyRealWorld.h" />
-		<Unit filename="src/addons/RealWorld/VRRealWorldFwd.h" />
-		<Unit filename="src/addons/RealWorld/Vec2Helper.cpp" />
-		<Unit filename="src/addons/RealWorld/Vec2Helper.h" />
-		<Unit filename="src/addons/RealWorld/World.cpp" />
-		<Unit filename="src/addons/RealWorld/World.h" />
-		<Unit filename="src/addons/RealWorld/WorldFeatures/WorldFeatureExtractor.h" />
-		<Unit filename="src/addons/RealWorld/triangulate.cpp" />
 		<Unit filename="src/addons/Sandbox.h" />
 		<Unit filename="src/addons/Semantics/Processes/VRProcess.cpp" />
 		<Unit filename="src/addons/Semantics/Processes/VRProcess.h" />
@@ -531,6 +474,10 @@
 		<Unit filename="src/addons/WorldGenerator/VRWorldGeneratorFwd.h" />
 		<Unit filename="src/addons/WorldGenerator/VRWorldModule.cpp" />
 		<Unit filename="src/addons/WorldGenerator/VRWorldModule.h" />
+		<Unit filename="src/addons/WorldGenerator/assets/Asset.cpp" />
+		<Unit filename="src/addons/WorldGenerator/assets/Asset.h" />
+		<Unit filename="src/addons/WorldGenerator/assets/StreetLamp.cpp" />
+		<Unit filename="src/addons/WorldGenerator/assets/StreetLamp.h" />
 		<Unit filename="src/addons/WorldGenerator/buildings/VRBuilding.cpp" />
 		<Unit filename="src/addons/WorldGenerator/buildings/VRBuilding.h" />
 		<Unit filename="src/addons/WorldGenerator/buildings/VRDistrict.cpp" />
@@ -610,8 +557,6 @@
 		<Unit filename="src/core/gui/VRGuiMonitor.h" />
 		<Unit filename="src/core/gui/VRGuiNav.cpp" />
 		<Unit filename="src/core/gui/VRGuiNav.h" />
-		<Unit filename="src/core/gui/VRGuiNet.cpp" />
-		<Unit filename="src/core/gui/VRGuiNet.h" />
 		<Unit filename="src/core/gui/VRGuiRecWidget.cpp" />
 		<Unit filename="src/core/gui/VRGuiRecWidget.h" />
 		<Unit filename="src/core/gui/VRGuiScene.cpp" />
@@ -630,6 +575,11 @@
 		<Unit filename="src/core/gui/VRGuiUtils.h" />
 		<Unit filename="src/core/gui/VRGuiVectorEntry.cpp" />
 		<Unit filename="src/core/gui/VRGuiVectorEntry.h" />
+		<Unit filename="src/core/gui/elements/VRGuiButton.h" />
+		<Unit filename="src/core/gui/widgets/VRAppLauncher.cpp" />
+		<Unit filename="src/core/gui/widgets/VRAppLauncher.h" />
+		<Unit filename="src/core/gui/widgets/VRAppPanel.cpp" />
+		<Unit filename="src/core/gui/widgets/VRAppPanel.h" />
 		<Unit filename="src/core/gui/widgets/VRConceptWidget.cpp" />
 		<Unit filename="src/core/gui/widgets/VRConceptWidget.h" />
 		<Unit filename="src/core/gui/widgets/VRConnectorWidget.cpp" />
@@ -640,10 +590,18 @@
 		<Unit filename="src/core/gui/widgets/VRRuleWidget.h" />
 		<Unit filename="src/core/gui/widgets/VRSemanticWidget.cpp" />
 		<Unit filename="src/core/gui/widgets/VRSemanticWidget.h" />
+		<Unit filename="src/core/gui/wrapper/VRGuiCombobox.cpp" />
+		<Unit filename="src/core/gui/wrapper/VRGuiCombobox.h" />
+		<Unit filename="src/core/gui/wrapper/VRGuiTreeView.cpp" />
+		<Unit filename="src/core/gui/wrapper/VRGuiTreeView.h" />
+		<Unit filename="src/core/gui/wrapper/VRGuiWidget.cpp" />
+		<Unit filename="src/core/gui/wrapper/VRGuiWidget.h" />
 		<Unit filename="src/core/math/Eigendecomposition.cpp" />
 		<Unit filename="src/core/math/Eigendecomposition.h" />
 		<Unit filename="src/core/math/Expression.cpp" />
 		<Unit filename="src/core/math/Expression.h" />
+		<Unit filename="src/core/math/OSGMathFwd.cpp" />
+		<Unit filename="src/core/math/OSGMathFwd.h" />
 		<Unit filename="src/core/math/Octree.cpp" />
 		<Unit filename="src/core/math/Octree.h" />
 		<Unit filename="src/core/math/PCA.cpp" />
@@ -661,6 +619,8 @@
 		<Unit filename="src/core/math/boundingbox.h" />
 		<Unit filename="src/core/math/coordinates.cpp" />
 		<Unit filename="src/core/math/coordinates.h" />
+		<Unit filename="src/core/math/datarow.cpp" />
+		<Unit filename="src/core/math/datarow.h" />
 		<Unit filename="src/core/math/equation.cpp" />
 		<Unit filename="src/core/math/equation.h" />
 		<Unit filename="src/core/math/field.h" />
@@ -750,8 +710,6 @@
 		<Unit filename="src/core/objects/VRTransform.h" />
 		<Unit filename="src/core/objects/geometry/OSGGeometry.cpp" />
 		<Unit filename="src/core/objects/geometry/OSGGeometry.h" />
-		<Unit filename="src/core/objects/geometry/VRBillboard.cpp" />
-		<Unit filename="src/core/objects/geometry/VRBillboard.h" />
 		<Unit filename="src/core/objects/geometry/VRGeoData.cpp" />
 		<Unit filename="src/core/objects/geometry/VRGeoData.h" />
 		<Unit filename="src/core/objects/geometry/VRGeometry.cpp" />
@@ -874,6 +832,8 @@
 		<Unit filename="src/core/scene/import/STEP/VRSTEP.h" />
 		<Unit filename="src/core/scene/import/VRCOLLADA.cpp" />
 		<Unit filename="src/core/scene/import/VRCOLLADA.h" />
+		<Unit filename="src/core/scene/import/VRDWG.cpp" />
+		<Unit filename="src/core/scene/import/VRDWG.h" />
 		<Unit filename="src/core/scene/import/VRDXF.cpp" />
 		<Unit filename="src/core/scene/import/VRDXF.h" />
 		<Unit filename="src/core/scene/import/VRExport.cpp" />
@@ -1267,7 +1227,6 @@
 		<Extensions>
 			<code_completion />
 			<debugger />
-			<envvars />
 		</Extensions>
 	</Project>
 </CodeBlocks_project_file>

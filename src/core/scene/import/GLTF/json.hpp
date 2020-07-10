@@ -55,6 +55,9 @@ SOFTWARE.
 #include <memory> // allocator
 #include <string> // string
 #include <vector> // vector
+#include <stdio.h>
+
+using namespace std;
 
 /*!
 @brief namespace for Niels Lohmann
@@ -3927,7 +3930,7 @@ scan_number_done:
             {
                 // escape control characters
                 char cs[9];
-                (std::snprintf)(cs, 9, "<U+%.4X>", static_cast<unsigned char>(c));
+                (snprintf)(cs, 9, "<U+%.4X>", static_cast<unsigned char>(c));
                 result += cs;
             }
             else
@@ -11255,13 +11258,13 @@ class serializer
                             {
                                 if (codepoint <= 0xFFFF)
                                 {
-                                    (std::snprintf)(string_buffer.data() + bytes, 7, "\\u%04x",
+                                    (snprintf)(string_buffer.data() + bytes, 7, "\\u%04x",
                                                     static_cast<uint16_t>(codepoint));
                                     bytes += 6;
                                 }
                                 else
                                 {
-                                    (std::snprintf)(string_buffer.data() + bytes, 13, "\\u%04x\\u%04x",
+                                    (snprintf)(string_buffer.data() + bytes, 13, "\\u%04x\\u%04x",
                                                     static_cast<uint16_t>(0xD7C0 + (codepoint >> 10)),
                                                     static_cast<uint16_t>(0xDC00 + (codepoint & 0x3FF)));
                                     bytes += 12;
@@ -11299,7 +11302,7 @@ class serializer
                         case error_handler_t::strict:
                         {
                             std::string sn(3, '\0');
-                            (std::snprintf)(&sn[0], sn.size(), "%.2X", byte);
+                            (snprintf)(&sn[0], sn.size(), "%.2X", byte);
                             JSON_THROW(type_error::create(316, "invalid UTF-8 byte at index " + std::to_string(i) + ": 0x" + sn));
                         }
 
@@ -11380,7 +11383,7 @@ class serializer
                 case error_handler_t::strict:
                 {
                     std::string sn(3, '\0');
-                    (std::snprintf)(&sn[0], sn.size(), "%.2X", static_cast<uint8_t>(s.back()));
+                    (snprintf)(&sn[0], sn.size(), "%.2X", static_cast<uint8_t>(s.back()));
                     JSON_THROW(type_error::create(316, "incomplete UTF-8 string; last byte: 0x" + sn));
                 }
 

@@ -7,13 +7,12 @@
 #include "core/utils/VRFunction.h"
 #include "VRGuiUtils.h"
 
-#include <gtkmm/dialog.h>
-#include <gtkmm/image.h>
-#include <gtkmm/stock.h>
-#include <gtkmm/label.h>
-#include <gtkmm/window.h>
-#include <gtkmm/builder.h>
-#include <boost/bind.hpp>
+#include <gtk/gtkdialog.h>
+#include <gtk/gtklabel.h>
+#include <gtk/gtkbbox.h>
+#include <gtk/gtkbutton.h>
+#include <gtk/gtkimage.h>
+#include <gtk/gtkstock.h>
 
 using namespace OSG;
 
@@ -21,39 +20,49 @@ VRGuiRecWidget::VRGuiRecWidget() {
     rec = VRRecorderPtr( new VRRecorder() );
     rec->setView(0);
 
-    VRGuiBuilder()->get_widget("recorder", diag);
-    VRGuiBuilder()->get_widget("label149", lbl);
-    diag->set_deletable(false); // not working on most platforms
-    diag->signal_delete_event().connect( sigc::mem_fun(*this, &VRGuiRecWidget::deleteHandler) );
-    diag->set_resizable(false);
-    diag->set_type_hint(Gdk::WINDOW_TYPE_HINT_MENU);
-    diag->set_title("Recorder");
+    diag = (GtkDialog*)getGUIBuilder()->get_widget("recorder");
+    lbl = (GtkLabel*)getGUIBuilder()->get_widget("label149");
+    disableDestroyDiag("recorder");
 
-    Gtk::ButtonBox* box = diag->get_action_area();
-    box->set_child_min_width(20);
+    gtk_window_set_resizable((GtkWindow*)diag, false);
+    gtk_window_set_type_hint((GtkWindow*)diag, GDK_WINDOW_TYPE_HINT_MENU);
+    gtk_window_set_title((GtkWindow*)diag, "Recorder");
 
-    auto addButton = [&](Gtk::BuiltinStockID icon, int signal) {
-        auto b = diag->add_button("",signal);
-        Gtk::Image* img = Gtk::manage( new Gtk::Image(icon, Gtk::ICON_SIZE_BUTTON) );
-        b->set_image(*img);
+    GtkButtonBox* box = (GtkButtonBox*)gtk_dialog_get_action_area(diag);
+    gtk_button_box_set_child_size(box, 20, -1);
+
+    auto addButton = [&](const char* icon, int signal) {
+        //GtkButton* b = (GtkButton*)gtk_dialog_add_button(diag, NULL, signal);
+        //GtkButton* b = (GtkButton*)gtk_dialog_add_button(diag, GTK_STOCK_MEDIA_PLAY, signal);
+        //auto img = gtk_image_new_from_stock(GTK_STOCK_MEDIA_PLAY, GTK_ICON_SIZE_BUTTON);
+        //gtk_image_set_from_stock(imgPlay, stock_id, GTK_ICON_SIZE_BUTTON);
+        //gtk_button_set_image(but, img);
+
+        auto but = (GtkButton*)gtk_button_new();
+        GtkWidget* img = gtk_image_new_from_stock(icon, GTK_ICON_SIZE_BUTTON);
+        gtk_container_add((GtkContainer*)but, img);
+        gtk_container_add((GtkContainer*)box, (GtkWidget*)but);
+        function<void()> sig = bind(&VRGuiRecWidget::buttonHandler, this, signal);
+        connect_signal((GtkWidget*)but, sig, "clicked");
     };
 
-    addButton(Gtk::Stock::MEDIA_RECORD, 1);
-    addButton(Gtk::Stock::MEDIA_PAUSE, 2);
-    addButton(Gtk::Stock::FLOPPY, 3);
-    addButton(Gtk::Stock::REFRESH, 4);
+    addButton(GTK_STOCK_MEDIA_RECORD, 1);
+    addButton(GTK_STOCK_MEDIA_PAUSE, 2);
+    addButton(GTK_STOCK_FLOPPY, 3);
+    addButton(GTK_STOCK_REFRESH, 4);
 
     fillStringListstore("codecList", VRRecorder::getCodecList());
     setCombobox("codecs", getListStorePos("codecList", rec->getCodec()));
     setTextEntry("entry27", toString(rec->getBitrate()));
 
-    setComboboxCallback("codecs", sigc::mem_fun(*this, &VRGuiRecWidget::on_codec_changed));
-    setEntryCallback("entry27", sigc::mem_fun(*this, &VRGuiRecWidget::on_bitrate_changed));
+    setComboboxCallback("codecs", bind(&VRGuiRecWidget::on_codec_changed, this));
+    setEntryCallback("entry27", bind(&VRGuiRecWidget::on_bitrate_changed, this));
 
-    diag->show_all_children();
-    diag->signal_response().connect( sigc::mem_fun(*this, &VRGuiRecWidget::buttonHandler) );
-    updateCb = VRUpdateCb::create("recorder widget", boost::bind(&VRGuiRecWidget::update, this) );
+    gtk_widget_show_all((GtkWidget*)box);
+    updateCb = VRUpdateCb::create("recorder widget", bind(&VRGuiRecWidget::update, this) );
     VRSceneManager::get()->addUpdateFkt( updateCb );
+
+    setVisible(false);
 }
 
 VRGuiRecWidget::~VRGuiRecWidget() {}
@@ -61,17 +70,15 @@ VRGuiRecWidget::~VRGuiRecWidget() {}
 void VRGuiRecWidget::on_codec_changed() { rec->setCodec( getComboboxText("codecs") ); }
 void VRGuiRecWidget::on_bitrate_changed() { rec->setBitrate( toInt( getTextEntry("entry27") ) ); }
 
-bool VRGuiRecWidget::deleteHandler(GdkEventAny* e) { setVisible(false); return true; }
-
 void VRGuiRecWidget::setVisible(bool b) {
-    if (b) diag->show();
-    else diag->hide();
+    if (b) gtk_widget_show((GtkWidget*)diag);
+    else gtk_widget_hide((GtkWidget*)diag);
 }
 
 void VRGuiRecWidget::update() {
     if (!rec->isRunning()) return;
-    string T = toString(rec->getRecordingLength(), 2);
-    lbl->set_text("Recording: " + T );
+    string T = "Recording: " + toString(rec->getRecordingLength(), 2);
+    gtk_label_set_text(lbl, T.c_str());
 }
 
 void VRGuiRecWidget::buttonHandler(int i) {
@@ -79,11 +86,12 @@ void VRGuiRecWidget::buttonHandler(int i) {
     if (i == 2) rec->setRecording(false);
     if (i == 3) {
         string path = rec->getPath();
-        lbl->set_text("Exporting to: " + path);
+        string T = "Exporting to: " + path;
+        gtk_label_set_text(lbl, T.c_str());
         rec->compile(path);
     }
     if (i == 4) {
-        lbl->set_text("Idle");
+        gtk_label_set_text(lbl, "Idle");
         rec->clear();
     }
 }

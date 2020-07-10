@@ -46,7 +46,7 @@ VRCamera::VRCamera(string name) : VRTransform(name) {
     store("fov", &fov);
     store("orthoSize", &orthoSize);
     store("type", &type);
-    regStorageSetupFkt( VRStorageCb::create("camera_update", boost::bind(&VRCamera::setup, this, true, _1)) );
+    regStorageSetupFkt( VRStorageCb::create("camera_update", bind(&VRCamera::setup, this, true, _1)) );
 }
 
 VRCamera::~VRCamera() {
@@ -89,6 +89,12 @@ void VRCamera::setCam(OSGCameraPtr c) { cam = c; } // warning: setup() will over
 
 void VRCamera::setType(int type) { camType = type; setup(); }
 int VRCamera::getType() { return camType; }
+
+Matrix VRCamera::getProjectionMatrix(int w, int h) {
+    Matrix res;
+    cam->cam->getProjection(res, w, h);
+    return res;
+}
 
 void VRCamera::updateOrthSize() {
     if (camType == ORTHOGRAPHIC) {

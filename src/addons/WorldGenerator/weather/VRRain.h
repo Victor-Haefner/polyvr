@@ -49,7 +49,7 @@ class VRRain : public VRGeometry {
         bool isRaining = false;
         bool depthTexer = false;
 
-        uint textureSize;
+		unsigned int textureSize;
 
         void update();
         Vec3f convertV3dToV3f(Vec3d in);

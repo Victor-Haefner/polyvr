@@ -2,7 +2,6 @@
 #include "core/objects/VRTransform.h"
 #include "core/utils/VRFunction.h"
 #include "core/utils/VRStorage_template.h"
-#include <boost/bind.hpp>
 
 using namespace OSG;
 
@@ -28,7 +27,7 @@ void VRObjectManager::Entry::set(PosePtr p, string t) {
 VRObjectManager::VRObjectManager(string name) : VRObject(name) {
     storeMap("templates", &templatesByName, true);
     storeMap("instances", &entries, true);
-    regStorageSetupFkt( VRStorageCb::create("object manager setup", boost::bind(&VRObjectManager::setup, this, _1)) );
+    regStorageSetupFkt( VRStorageCb::create("object manager setup", bind(&VRObjectManager::setup, this, placeholders::_1)) );
 }
 
 VRObjectManager::~VRObjectManager() {}

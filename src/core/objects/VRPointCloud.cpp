@@ -32,10 +32,14 @@ OctreePtr VRPointCloud::getOctree() { return octree; }
 void VRPointCloud::applySettings(map<string, string> options) {
     bool lit = 0;
     int pointSize = 1;
+    int leafSize = 10;
     if (options.count("lit")) lit = toInt(options["lit"]);
+    if (options.count("leafSize")) leafSize = toInt(options["leafSize"]);
     if (options.count("pointSize")) pointSize = toInt(options["pointSize"]);
     if (options.count("keepOctree")) keepOctree = toInt(options["keepOctree"]);
+
     setupMaterial(lit, pointSize);
+    octree->setResolution(leafSize);
 
     for (auto l : {"lod1", "lod2", "lod3", "lod4", "lod5"}) {
         if (options.count(l)) {

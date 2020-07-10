@@ -1,7 +1,7 @@
 #ifndef VRSNAPPINGENGINE_H_INCLUDED
 #define VRSNAPPINGENGINE_H_INCLUDED
 
-#include <OpenSG/OSGVector.h>
+#include "core/math/OSGMathFwd.h"
 #include <OpenSG/OSGMatrix.h>
 #include <OpenSG/OSGLine.h>
 #include <OpenSG/OSGPlane.h>

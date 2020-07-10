@@ -17,13 +17,12 @@
 #include "core/utils/VRFunction.h"
 #include "core/setup/devices/VRDevice.h"
 #include "core/setup/devices/VRSignalT.h"
-#include <gtkmm/uimanager.h>
-#include <gtkmm/main.h>
-#include <gtkmm/window.h>
-#include <gtkmm/drawingarea.h>
-#include <gtk/gtkglinit.h>
 
-#include <boost/bind.hpp>
+#include <gtk/gtkmain.h>
+#include <gtk/gtkglinit.h>
+#include <gtk/gtkwindow.h>
+
+#include <boost/thread/recursive_mutex.hpp>
 
 typedef boost::recursive_mutex::scoped_lock PLock;
 
@@ -39,28 +38,28 @@ VRGuiSetup* g_di;
 VRGuiSemantics* g_sem;
 VRGuiGeneral* g_gen;
 VRGuiMonitor* g_mon;
-Gtk::Main* GtkMain;
 
 VRGuiManager::VRGuiManager() {
     cout << "Init VRGuiManager..";
+    mtx = new boost::recursive_mutex();
     standalone = VROptions::get()->getOption<bool>("standalone");
 
     int argc = 0;
-    GtkMain = new Gtk::Main(&argc, NULL, false);
+    gtk_disable_setlocale();
+    gtk_init(&argc, 0);
     gtk_gl_init(&argc, NULL);
-    VRGuiBuilder(standalone);
+    getGUIBuilder(standalone);
 
     if (standalone) {
         cout << " start in standalone mode\n";
         VRSetupManager::get()->load("Desktop", "setup/Desktop.xml");
 
-        updatePtr = VRUpdateCb::create("GUI_updateManager", boost::bind(&VRGuiManager::update, this) );
+        updatePtr = VRUpdateCb::create("GUI_updateManager", bind(&VRGuiManager::update, this) );
         VRSceneManager::get()->addUpdateFkt(updatePtr, 1);
 
-        Gtk::Window* top = 0;
-        VRGuiBuilder()->get_widget("window1", top);
-        top->maximize();
-        top->show_all();
+        GtkWindow* top = (GtkWindow*)getGUIBuilder()->get_widget("window1");
+        gtk_window_maximize(top);
+        gtk_widget_show_all((GtkWidget*)top);
         return;
     }
 
@@ -77,46 +76,45 @@ VRGuiManager::VRGuiManager() {
     g_scene->updateTreeView();
 
     auto editor = g_sc->getEditor();
-    editor->addKeyBinding("wipe", VRUpdateCb::create("wipeCb", boost::bind(&VRGuiBits::wipeConsoles, g_bits)));
+    editor->addKeyBinding("wipe", VRUpdateCb::create("wipeCb", bind(&VRGuiBits::wipeConsoles, g_bits)));
 
     VRDeviceCbPtr fkt;
-    fkt = VRFunction<VRDeviceWeakPtr>::create("GUI_updateSceneViewer", boost::bind(&VRGuiScene::updateTreeView, g_scene) );
+    fkt = VRFunction<VRDeviceWeakPtr>::create("GUI_updateSceneViewer", bind(&VRGuiScene::updateTreeView, g_scene) );
     VRGuiSignals::get()->getSignal("scene_modified")->add( fkt );
     VRGuiSignals::get()->getSignal("scene_changed")->add( fkt );
     VRGuiSignals::get()->getSignal("camera_changed")->add(fkt);
     guiSignalCbs.push_back(fkt);
 
-    fkt = VRFunction<VRDeviceWeakPtr>::create("GUI_updateBits", boost::bind(&VRGuiBits::update, g_bits) );
+    fkt = VRFunction<VRDeviceWeakPtr>::create("GUI_updateBits", bind(&VRGuiBits::update, g_bits) );
     VRGuiSignals::get()->getSignal("scene_changed")->add( fkt );
     VRGuiSignals::get()->getSignal("camera_added")->add( fkt );
     guiSignalCbs.push_back(fkt);
 
-    fkt = VRFunction<VRDeviceWeakPtr>::create("GUI_updateNav", boost::bind(&VRGuiNav::update, g_nav) );
+    fkt = VRFunction<VRDeviceWeakPtr>::create("GUI_updateNav", bind(&VRGuiNav::update, g_nav) );
     VRGuiSignals::get()->getSignal("scene_changed")->add( fkt );
     guiSignalCbs.push_back(fkt);
 
-    fkt = VRFunction<VRDeviceWeakPtr>::create("GUI_updateSem", boost::bind(&VRGuiSemantics::updateOntoList, g_sem) );
+    fkt = VRFunction<VRDeviceWeakPtr>::create("GUI_updateSem", bind(&VRGuiSemantics::updateOntoList, g_sem) );
     VRGuiSignals::get()->getSignal("scene_changed")->add( fkt );
     guiSignalCbs.push_back(fkt);
 
-    fkt = VRFunction<VRDeviceWeakPtr>::create("GUI_updateScripts", boost::bind(&VRGuiScripts::updateList, g_sc) );
+    fkt = VRFunction<VRDeviceWeakPtr>::create("GUI_updateScripts", bind(&VRGuiScripts::updateList, g_sc) );
     VRGuiSignals::get()->getSignal("scene_changed")->add( fkt );
     VRGuiSignals::get()->getSignal("scriptlist_changed")->add( fkt );
     guiSignalCbs.push_back(fkt);
 
-    fkt = VRFunction<VRDeviceWeakPtr>::create("GUI_updateBackground", boost::bind(&VRGuiGeneral::updateScene, g_gen) );
+    fkt = VRFunction<VRDeviceWeakPtr>::create("GUI_updateBackground", bind(&VRGuiGeneral::updateScene, g_gen) );
     VRGuiSignals::get()->getSignal("scene_changed")->add( fkt );
     guiSignalCbs.push_back(fkt);
 
-    updatePtr = VRUpdateCb::create("GUI_updateManager", boost::bind(&VRGuiManager::update, this) );
+    updatePtr = VRUpdateCb::create("GUI_updateManager", bind(&VRGuiManager::update, this) );
     VRSceneManager::get()->addUpdateFkt(updatePtr, 1);
 
-    Gtk::Window* top = 0;
-    VRGuiBuilder()->get_widget("window1", top);
-    top->maximize();
-    top->show_all();
+    GtkWindow* top = (GtkWindow*)getGUIBuilder()->get_widget("window1");
+    gtk_window_maximize(top);
+    gtk_widget_show_all((GtkWidget*)top);
 
-    gtkUpdateCb = VRThreadCb::create( "gtk update", boost::bind(&VRGuiManager::updateGtkThreaded, this, _1) );
+    gtkUpdateCb = VRThreadCb::create( "gtk update", bind(&VRGuiManager::updateGtkThreaded, this, placeholders::_1) );
     cout << " done" << endl;
 }
 
@@ -128,6 +126,7 @@ VRGuiManager::~VRGuiManager() {
     delete g_sem;
     delete g_sc;
     delete g_di;
+    delete mtx;
 }
 
 void VRGuiManager::startThreadedUpdate() {
@@ -136,7 +135,7 @@ void VRGuiManager::startThreadedUpdate() {
     gtkUpdateThreadID = VRSceneManager::get()->initThread(gtkUpdateCb, "gtk update", true, 1);
 }
 
-boost::recursive_mutex& VRGuiManager::guiMutex() { return mtx; }
+boost::recursive_mutex& VRGuiManager::guiMutex() { return *mtx; }
 
 VRGuiManager* VRGuiManager::get(bool init) {
     static VRGuiManager* instance = 0;
@@ -158,8 +157,8 @@ void VRGuiManager::broadcast(string sig) {
 }
 
 void VRGuiManager::wakeWindow() {
-    setVPanedSensitivity("vpaned1", true);
-    setNotebookSensitivity("notebook3", true);
+    setWidgetSensitivity("vpaned1", true);
+    setWidgetSensitivity("notebook3", true);
 }
 
 VRConsoleWidgetPtr VRGuiManager::getConsole(string t) {
@@ -169,7 +168,7 @@ VRConsoleWidgetPtr VRGuiManager::getConsole(string t) {
 
 void VRGuiManager::updateGtk() {
     PLock( guiMutex() );
-    while( Gtk::Main::events_pending() ) Gtk::Main::iteration();
+    while( gtk_events_pending() ) gtk_main_iteration_do(false);
 }
 
 void VRGuiManager::updateGtkThreaded(VRThreadWeakPtr t) {
@@ -181,17 +180,17 @@ void VRGuiManager::update() {
     if (!standalone) g_bits->update_terminals();
 }
 
-Gtk::WindowPtr VRGuiManager::newWindow() {
-    auto w = Gtk::WindowPtr( new Gtk::Window() );
-    w->set_default_size(200, 200);
-    w->show_all();
-    windows[w.get()] = w;
+GtkWindow* VRGuiManager::newWindow() {
+    GtkWindow* w = (GtkWindow*)gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    gtk_window_set_default_size(w, 200, 200);
+    gtk_widget_show_all((GtkWidget*)w);
+    windows[w] = w;
     return w;
 }
 
-void VRGuiManager::remWindow(Gtk::WindowPtr w) {
-    if (!windows.count(w.get())) return;
-    windows.erase(w.get());
+void VRGuiManager::remWindow(GtkWindow* w) {
+    if (!windows.count(w)) return;
+    windows.erase(w);
 }
 
 OSG_END_NAMESPACE;

@@ -2,7 +2,7 @@
 #define VRINTERSECT_H_INCLUDED
 
 #include <OpenSG/OSGConfig.h>
-#include <OpenSG/OSGVector.h>
+#include "core/math/OSGMathFwd.h"
 #include <OpenSG/OSGLine.h>
 #include <vector>
 #include <map>
@@ -17,7 +17,7 @@ using namespace std;
 struct VRIntersection {
     Line ray;
     bool hit = false;
-    uint time = 0;
+    unsigned int time = 0;
     string name;
     VRObjectWeakPtr object; // hit object
     VRObjectWeakPtr tree; // intersection tree
@@ -43,7 +43,7 @@ class VRIntersect {
         VRSignalPtr dropSignal = 0;
         map<VRTransform*, VRTransformWeakPtr> dragged;
         VRTransformPtr dragged_ghost;
-        uint drop_time = 0;
+        unsigned int drop_time = 0;
         VRGeometryPtr cross = 0;
         map<VRObject*, VRDeviceCbPtr > int_fkt_map;
         map<VRObject*, VRDeviceCbPtr > dra_fkt_map;

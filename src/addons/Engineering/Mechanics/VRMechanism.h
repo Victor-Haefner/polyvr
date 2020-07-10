@@ -2,7 +2,7 @@
 #define VRMECHANISM_H_INCLUDED
 
 #include <vector>
-#include <OpenSG/OSGVector.h>
+#include "core/math/OSGMathFwd.h"
 #include "core/objects/geometry/VRGeometry.h"
 
 class VRGear;
@@ -31,7 +31,7 @@ struct MChange {
     Vec3d n; // rotation axis
     float a = 0; // rotation angle
     float dx = 0;
-    uint time = 0;
+    unsigned int time = 0;
     MPart* origin = 0;
     bool doMove = true;
 
@@ -96,7 +96,7 @@ class MPart {
         VRPrimitive* prim = 0;
         MChange change;
         Matrix4d reference;
-        uint timestamp = 0;
+        unsigned int timestamp = 0;
         STATE state = FREE;
 
         MPart();

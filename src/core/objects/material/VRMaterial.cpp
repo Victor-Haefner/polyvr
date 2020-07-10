@@ -14,7 +14,9 @@
 #include "core/setup/VRSetup.h"
 #include "core/setup/windows/VRWindow.h"
 #include "core/scripting/VRScript.h"
+#ifndef WITHOUT_AV
 #include "VRVideo.h"
+#endif
 #include "core/tools/VRQRCode.h"
 #include "core/utils/system/VRSystem.h"
 
@@ -45,7 +47,9 @@
 #include <OpenSG/OSGCubeTextureObjChunk.h>
 #include <OpenSG/OSGGLEXT.h>
 
-#ifndef WASM
+#ifdef OSG_OGL_ES2
+#elif defined(_WIN32)
+#else
 #include <GL/glx.h>
 #endif
 
@@ -81,8 +85,9 @@ struct VRMatData {
     VRVideo* video = 0;
     bool deferred = false;
     bool tmpDeferredShdr = false;
+    bool tmpOGLESShdr = false;
 
-#ifdef WASM
+#ifdef OSG_OGL_ES2
     ShaderProgramChunkMTRecPtr shaderFailChunk;
     bool vertShaderFail = false;
     bool fragShaderFail = false;
@@ -133,6 +138,7 @@ struct VRMatData {
         stencilChunk = 0;
         deferred = false;
         tmpDeferredShdr = false;
+        tmpOGLESShdr = true;
 
         colChunk->setDiffuse( Color4f(1, 1, 1, 1) );
         colChunk->setAmbient( Color4f(0.3, 0.3, 0.3, 1) );
@@ -213,7 +219,7 @@ VRMaterialPtr VRMaterial::create(string name) {
     auto p = VRMaterialPtr(new VRMaterial(name) );
     p->init();
     materials[p->getName()] = p;
-#ifdef WASM
+#ifdef OSG_OGL_ES2
     p->updateOGL2Shader(); // TODO: find a better place!
 #endif
     return p;
@@ -259,16 +265,19 @@ string VRMaterial::constructShaderVP(VRMatDataPtr data) {
     int texD = data->getTextureDimension();
 
     string vp;
-#ifdef WASM
+#ifdef OSG_OGL_ES2
     vp += "attribute vec4 osg_Vertex;\n";
     vp += "attribute vec3 osg_Normal;\n";
+    if (texD == 2) vp += "attribute vec2 osg_MultiTexCoord0;\n";
     vp += "uniform mat4 OSGModelViewProjectionMatrix;\n";
     vp += "uniform mat4 OSGNormalMatrix;\n";
     vp += "varying vec4 vertPos;\n";
     vp += "varying vec3 vertNorm;\n";
     vp += "varying vec4 color;\n";
+	if (texD == 2) vp += "varying vec2 texCoord;\n";
     vp += "void main(void) {\n";
     vp += "  vertNorm = (OSGNormalMatrix * vec4(osg_Normal,1.0)).xyz;\n";
+    if (texD == 2) vp += "  texCoord = osg_MultiTexCoord0;\n";
     vp += "  color = vec4(1.0,1.0,1.0,1.0);\n";
     vp += "  gl_Position = OSGModelViewProjectionMatrix * osg_Vertex;\n";
     vp += "}\n";
@@ -301,18 +310,28 @@ string VRMaterial::constructShaderFP(VRMatDataPtr data, bool deferred, int force
     if (texD == -1) texD = data->getTextureDimension();
 
     string fp;
-#ifdef WASM
+#ifdef OSG_OGL_ES2
     fp += "precision mediump float;\n";
     fp += "varying vec3 vertNorm;\n";
     fp += "varying vec4 color;\n";
+	if (texD == 2) fp += "varying vec2 texCoord;\n";
+    fp += "uniform int isLit;\n";
+    fp += "uniform vec4 mat_diffuse;\n";
+    fp += "uniform vec4 mat_ambient;\n";
+    fp += "uniform vec4 mat_specular;\n";
+    if (texD == 2) fp += "uniform sampler2D tex0;\n";
     fp += "void main(void) {\n";
     fp += "  vec3  n = normalize(vertNorm);\n";
     fp += "  vec3  light = normalize( vec3(0.8,1.0,0.5) );\n";
     fp += "  float NdotL = max(dot( n, light ), 0.0);\n";
-    fp += "  vec4  ambient = vec4(0.2,0.2,0.2,1.0) * color;\n";
-    fp += "  vec4  diffuse = vec4(1.0,1.0,0.9,1.0) * NdotL * color;\n";
-    fp += "  vec4  specular = vec4(1.0,1.0,1.0,1.0) * 0.0;\n";
-    fp += "  gl_FragColor = ambient + diffuse + specular;\n";
+    if (texD == 2) fp += "  vec4 diffCol = texture2D(tex0, texCoord);\n";
+//    if (texD == 2) fp += "  vec4 diffCol = vec4(texCoord.x, texCoord.y, 0.0, 1.0);\n";
+    else fp += "  vec4 diffCol = color;\n";
+    fp += "  vec4  ambient = mat_ambient * diffCol;\n";
+    fp += "  vec4  diffuse = mat_diffuse * NdotL * diffCol;\n";
+    fp += "  vec4  specular = mat_specular * 0.0;\n";
+    fp += "  if (isLit == 0) gl_FragColor = mat_diffuse * diffCol;\n";
+    fp += "  else gl_FragColor = ambient + diffuse + specular;\n";
     fp += "}\n";
 #else
     fp += "#version 120\n";
@@ -356,18 +375,32 @@ string VRMaterial::constructShaderFP(VRMatDataPtr data, bool deferred, int force
     return fp;
 }
 
+void VRMaterial::updateOGL2Parameters() {
+#ifdef OSG_OGL_ES2
+    auto a = getAmbient();
+    auto d = getDiffuse();
+    auto s = getSpecular();
+    setShaderParameter("isLit", int(isLit()));
+    setShaderParameter("mat_ambient", Vec4f(a[0], a[1], a[2], 1.0));
+    setShaderParameter("mat_diffuse", Vec4f(d[0], d[1], d[2], 1.0));
+    setShaderParameter("mat_specular", Vec4f(s[0], s[1], s[2], 1.0));
+    //setFrontBackModes(GL_NONE, GL_FILL);
+#endif
+}
+
 void VRMaterial::updateOGL2Shader() {
     auto m = mats[activePass];
-    initShaderChunk();
-    string s = constructShaderVP(m);
-    m->vProgram->setProgram(s.c_str());
-    checkShader(GL_VERTEX_SHADER, s, "ogl2VS");
+    if (m->tmpOGLESShdr) {
+        initShaderChunk();
+        string s = constructShaderVP(m);
+        m->vProgram->setProgram(s.c_str());
+        checkShader(GL_VERTEX_SHADER, s, "ogl2VS");
 
-    s = constructShaderFP(m);
-    m->fdProgram->setProgram(s.c_str());
-    checkShader(GL_FRAGMENT_SHADER, s, "ogl2FS");
-
-    setShaderParameter("isLit", int(isLit()));
+        s = constructShaderFP(m);
+        m->fProgram->setProgram(s.c_str());
+        checkShader(GL_FRAGMENT_SHADER, s, "ogl2FS");
+    }
+    updateOGL2Parameters();
 }
 
 void VRMaterial::updateDeferredShader() {
@@ -389,7 +422,7 @@ void VRMaterial::updateDeferredShader() {
 void VRMaterial::setDeferred(bool b) {
     deferred = b;
     int a = activePass;
-    for (uint i=0; i<mats.size(); i++) {
+    for (unsigned int i=0; i<mats.size(); i++) {
         setActivePass(i);
         if (b) {
             if (mats[i]->shaderChunk == 0) {
@@ -587,7 +620,7 @@ void VRMaterial::setMaterial(MaterialMTRecPtr m) {
         auto md = mats[activePass];
 
         ChunkMaterialMTRecPtr cmat = dynamic_pointer_cast<ChunkMaterial>(m);
-        for (uint i=0; i<cmat->getMFChunks()->size(); i++) {
+        for (unsigned int i=0; i<cmat->getMFChunks()->size(); i++) {
             StateChunkMTRecPtr chunk = cmat->getChunk(i);
             int unit = -2; cmat->getChunkSlot(chunk, unit);
 
@@ -858,9 +891,11 @@ bool VRMaterial::isWireFrame() {
 }
 
 void VRMaterial::setVideo(string vid_path) {
+#ifndef WITHOUT_AV
     auto md = mats[activePass];
     if (md->video == 0) md->video = new VRVideo( ptr() );
     md->video->open(vid_path);
+#endif
 }
 
 VRVideo* VRMaterial::getVideo() { return mats[activePass]->video; }
@@ -895,7 +930,7 @@ class MAC : private SimpleTexturedMaterial {
             }
 
             if (cmat) {
-                for (uint i=0; i<cmat->getMFChunks()->size(); i++) {
+                for (unsigned int i=0; i<cmat->getMFChunks()->size(); i++) {
                     StateChunkMTRecPtr chunk = cmat->getChunk(i);
                     mchunk = dynamic_pointer_cast<MaterialChunk>(chunk);
                     if (mchunk) return mchunk;
@@ -910,7 +945,7 @@ class MAC : private SimpleTexturedMaterial {
             ChunkMaterialMTRecPtr cmat = dynamic_pointer_cast<ChunkMaterial>(mat);
             BlendChunkMTRecPtr bchunk = 0;
             if (cmat) {
-                for (uint i=0; i<cmat->getMFChunks()->size(); i++) {
+                for (unsigned int i=0; i<cmat->getMFChunks()->size(); i++) {
                     StateChunkMTRecPtr chunk = cmat->getChunk(i);
                     bchunk = dynamic_pointer_cast<BlendChunk>(chunk);
                     if (bchunk) return bchunk;
@@ -985,12 +1020,19 @@ int VRMaterial::getDepthTest() {
 void VRMaterial::setDiffuse(string c) { setDiffuse(toColor(c)); }
 void VRMaterial::setSpecular(string c) { setSpecular(toColor(c)); }
 void VRMaterial::setAmbient(string c) { setAmbient(toColor(c)); }
-void VRMaterial::setDiffuse(Color3f c) { mats[activePass]->colChunk->setDiffuse( toColor4f(c, getTransparency()) );}
-void VRMaterial::setSpecular(Color3f c) { mats[activePass]->colChunk->setSpecular(toColor4f(c)); }
-void VRMaterial::setAmbient(Color3f c) { mats[activePass]->colChunk->setAmbient(toColor4f(c)); }
-void VRMaterial::setEmission(Color3f c) { mats[activePass]->colChunk->setEmission(toColor4f(c)); }
-void VRMaterial::setShininess(float c) { mats[activePass]->colChunk->setShininess(c); }
-void VRMaterial::setLit(bool b) { if (activePass >= 0 && activePass < (int)mats.size() && mats[activePass]->colChunk) mats[activePass]->colChunk->setLit(b); updateDeferredShader(); }
+void VRMaterial::setDiffuse(Color3f c) { mats[activePass]->colChunk->setDiffuse( toColor4f(c, getTransparency()) ); updateOGL2Parameters(); }
+void VRMaterial::setSpecular(Color3f c) { mats[activePass]->colChunk->setSpecular(toColor4f(c)); updateOGL2Parameters(); }
+void VRMaterial::setAmbient(Color3f c) { mats[activePass]->colChunk->setAmbient(toColor4f(c)); updateOGL2Parameters(); }
+void VRMaterial::setEmission(Color3f c) { mats[activePass]->colChunk->setEmission(toColor4f(c)); updateOGL2Parameters(); }
+void VRMaterial::setShininess(float c) { mats[activePass]->colChunk->setShininess(c); updateOGL2Parameters(); }
+
+void VRMaterial::setLit(bool b) {
+    if (activePass >= 0 && activePass < (int)mats.size() && mats[activePass]->colChunk) {
+        mats[activePass]->colChunk->setLit(b);
+        updateDeferredShader();
+        updateOGL2Parameters();
+    }
+}
 
 Color3f VRMaterial::getDiffuse() { return toColor3f( mats[activePass]->colChunk->getDiffuse() ); }
 Color3f VRMaterial::getSpecular() { return toColor3f( mats[activePass]->colChunk->getSpecular() ); }
@@ -1014,7 +1056,7 @@ TextureObjChunkMTRecPtr VRMaterial::getTextureObjChunk(int unit) {
 void VRMaterial::initShaderChunk() {
     auto md = mats[activePass];
     if (md->shaderChunk != 0) return;
-#ifdef WASM
+#ifdef OSG_OGL_ES2
 	md->shaderFailChunk = ShaderProgramChunk::create();
 	ShaderProgramRefPtr vFProgram = ShaderProgram::createVertexShader  ();
 	ShaderProgramRefPtr fFProgram = ShaderProgram::createFragmentShader();
@@ -1022,6 +1064,7 @@ void VRMaterial::initShaderChunk() {
 	vFProgram->addOSGVariable("OSGModelViewProjectionMatrix");
 	vFProgram->setProgram(vertFailShader);
 	fFProgram->setProgram(fragFailShader);
+	fFProgram->addOSGVariable("OSGActiveLightsMask");
 	md->shaderFailChunk->addShader(vFProgram);
 	md->shaderFailChunk->addShader(fFProgram);
 #endif
@@ -1076,13 +1119,14 @@ ShaderProgramMTRecPtr VRMaterial::getShaderProgram() { return mats[activePass]->
 
 // type: GL_VERTEX_SHADER, GL_FRAGMENT_SHADER, ...
 bool VRMaterial::checkShader(int type, string shader, string name) {
-#ifndef WASM
+#ifndef OSG_OGL_ES2
 #ifndef WITHOUT_GTK
     auto gm = VRGuiManager::get(false);
     if (!gm) return true;
+	auto errC = gm->getConsole("Errors");
+	if (!errC) return true;
 #endif
-    auto errC = gm->getConsole("Errors");
-    if (!errC) return true;
+#ifndef _WIN32
     if (!glXGetCurrentContext()) return true;
 
     GLuint shaderObject = glCreateShader(type);
@@ -1093,7 +1137,11 @@ bool VRMaterial::checkShader(int type, string shader, string name) {
 
     GLint compiled;
     glGetObjectParameterivARB(shaderObject, GL_COMPILE_STATUS, &compiled);
+#ifndef WITHOUT_GTK
     if (!compiled) errC->write( "Shader "+name+" of material "+getName()+" did not compile!\n");
+#else
+	if (!compiled) cout << "Shader " + name + " of material " + getName() + " did not compile!\n" << endl;
+#endif
 
     GLint blen = 0;
     GLsizei slen = 0;
@@ -1101,10 +1149,16 @@ bool VRMaterial::checkShader(int type, string shader, string name) {
     if (blen > 1) {
         GLchar* compiler_log = (GLchar*)malloc(blen);
         glGetInfoLogARB(shaderObject, blen, &slen, compiler_log);
+#ifndef WITHOUT_GTK
         errC->write( "Shader "+name+" of material "+getName()+" warnings and errors:\n");
         errC->write( string(compiler_log));
+#else
+		cout << "Shader " + name + " of material " + getName() + " warnings and errors:\n" << endl;
+		cout << string(compiler_log) << endl;
+#endif
         free(compiler_log);
-    }
+	}
+#endif
 #else
     GLuint shaderObject = glCreateShader(type);
     int N = shader.size();
@@ -1127,8 +1181,8 @@ bool VRMaterial::checkShader(int type, string shader, string name) {
         free(compiler_log);
         return false;
     }
-    return true;
 #endif
+    return true;
 }
 
 void VRMaterial::forceShaderUpdate() {
@@ -1139,7 +1193,12 @@ void VRMaterial::forceShaderUpdate() {
 void VRMaterial::setVertexShader(string s, string name) {
     initShaderChunk();
     auto m = mats[activePass];
-#ifndef WASM
+
+#ifdef WASM
+    s = "#define WEBGL\n" + s;
+#endif
+
+#ifndef OSG_OGL_ES2
     m->vProgram->setProgram(s);
     checkShader(GL_VERTEX_SHADER, s, name);
     m->tmpDeferredShdr = false;
@@ -1157,13 +1216,18 @@ void VRMaterial::setVertexShader(string s, string name) {
 			m->mat->addChunk(m->shaderChunk);
 		}
 	}
+    m->tmpOGLESShdr = false;
 #endif
 }
 
 void VRMaterial::setFragmentShader(string s, string name, bool deferred) {
     initShaderChunk();
     auto m = mats[activePass];
-#ifndef WASM
+#ifdef WASM
+    s = "#define WEBGL\nprecision mediump float;\n" + s;
+#endif
+
+#ifndef OSG_OGL_ES2
     if (deferred) m->fdProgram->setProgram(s.c_str());
     else          m->fProgram->setProgram(s.c_str());
     checkShader(GL_FRAGMENT_SHADER, s, name);
@@ -1182,6 +1246,7 @@ void VRMaterial::setFragmentShader(string s, string name, bool deferred) {
 			m->mat->addChunk(m->shaderChunk);
 		}
 	}
+    m->tmpOGLESShdr = false;
 #endif
 }
 
@@ -1337,6 +1402,7 @@ string VRMaterial::diffPass(VRMaterialPtr m, int pass) {
     if (either(p1->video, p2->video)) res += "\ndiff on video|"+toString(bool(p1->video))+"|"+toString(bool(p2->video));
     if (either(p1->deferred, p2->deferred)) res += "\ndiff on deferred|"+toString(bool(p1->deferred))+"|"+toString(bool(p2->deferred));
     if (either(p1->tmpDeferredShdr, p2->tmpDeferredShdr)) res += "\ndiff on tmpDeferredShdr|"+toString(bool(p1->tmpDeferredShdr))+"|"+toString(bool(p2->tmpDeferredShdr));
+    if (either(p1->tmpOGLESShdr, p2->tmpOGLESShdr)) res += "\ndiff on tmpOGLESShdr|"+toString(bool(p1->tmpOGLESShdr))+"|"+toString(bool(p2->tmpOGLESShdr));
 
     if (p1->vertexScript != p2->vertexScript) res += "\ndiff on vertexScript|"+p1->vertexScript+"|"+p2->vertexScript;
     if (p1->fragmentScript != p2->fragmentScript) res += "\ndiff on fragmentScript|"+p1->fragmentScript+"|"+p2->fragmentScript;
@@ -1358,7 +1424,7 @@ string VRMaterial::diff(VRMaterialPtr m) {
     string res;
     if (mats.size() != m->mats.size()) res += "\nN passes|"+toString(mats.size())+"|"+toString(m->mats.size());
     else {
-        for (uint i=0; i<mats.size(); i++) res += diffPass(m, i);
+        for (unsigned int i=0; i<mats.size(); i++) res += diffPass(m, i);
     }
     return res;
 }

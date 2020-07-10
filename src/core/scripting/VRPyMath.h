@@ -9,12 +9,19 @@
 #include "core/math/PCA.h"
 #endif
 #include "core/math/patch.h"
-#include <OpenSG/OSGVector.h>
+#include "core/math/datarow.h"
+#include "core/math/OSGMathFwd.h"
 #include <OpenSG/OSGMatrix.h>
 #include <OpenSG/OSGLine.h>
 
 PyObject* toPyObject(const OSG::Vec2d& v);
 PyObject* toPyObject(const OSG::Vec3d& v);
+
+struct VRPyMath {
+    static PyMethodDef methods[];
+    static PyObject* cos(VRPyMath* self, PyObject* args);
+    static PyObject* sin(VRPyMath* self, PyObject* args);
+};
 
 struct VRPyVec2f : VRPyBaseT<OSG::Vec2d> {
     OSG::Vec2d v;
@@ -44,7 +51,7 @@ struct VRPyVec2f : VRPyBaseT<OSG::Vec2d> {
     static Py_ssize_t len(PyObject* self);
     static PyObject* getItem(PyObject* self, Py_ssize_t i);
     static int setItem(PyObject* self, Py_ssize_t i, PyObject* val);
-    static PyObject* getSlice(PyObject* self, long i0, long i1);
+    static PyObject* getSlice(PyObject* self, Py_ssize_t i0, Py_ssize_t i1);
 };
 
 struct VRPyVec3f : VRPyBaseT<OSG::Vec3d> {
@@ -77,7 +84,7 @@ struct VRPyVec3f : VRPyBaseT<OSG::Vec3d> {
     static Py_ssize_t len(PyObject* self);
     static PyObject* getItem(PyObject* self, Py_ssize_t i);
     static int setItem(PyObject* self, Py_ssize_t i, PyObject* val);
-    static PyObject* getSlice(PyObject* self, long i0, long i1);
+    static PyObject* getSlice(PyObject* self, Py_ssize_t i0, Py_ssize_t i1);
 };
 
 struct VRPyLine : VRPyBaseT<OSG::Line> {
@@ -123,6 +130,10 @@ struct VRPyPCA : VRPyBaseT<OSG::PCA> {
 };
 
 struct VRPyPatch : VRPyBaseT<OSG::Patch> {
+    static PyMethodDef methods[];
+};
+
+struct VRPyDatarow : VRPyBaseT<OSG::Datarow> {
     static PyMethodDef methods[];
 };
 

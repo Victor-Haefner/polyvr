@@ -71,11 +71,11 @@ VRScriptManager::~VRScriptManager() {
     //Py_XDECREF(pModBase);
     if (PyErr_Occurred() != NULL) PyErr_Print();
     int N = Py_REFCNT(pModVR);
-    for (int i=0; i<N; i++) Py_DECREF(pModVR); // this destroys the VR module, helps with memory leaks :)
+    for (int i=1; i<N; i++) Py_DECREF(pModVR); // reduce the count to 1!
     //checkGarbageCollection();
     PyErr_Clear();
+    Py_Finalize(); // finally destroys pModVR
     VRPyBase::err = 0;
-    Py_Finalize();
 }
 
 void VRScriptManager::pauseScripts(bool b) {
@@ -143,7 +143,14 @@ VRScriptPtr VRScriptManager::changeScriptName(string name, string new_name) {
 
 map<string, VRScriptPtr> VRScriptManager::getScripts() { return scripts; }
 VRScriptPtr VRScriptManager::getScript(string name) { return scripts.count(name) == 1 ? scripts[name] : 0; }
-void VRScriptManager::triggerScript(string fkt) { if (scripts.count(fkt) == 1) scripts[fkt]->execute(); }
+
+void VRScriptManager::triggerScript(string fkt, vector<string> params) {
+    //cout << "VRScriptManager::triggerScript " << fkt << endl;
+    //for (auto p : params) cout << " param: " << p << endl;
+    if (!scripts.count(fkt)) return;
+    scripts[fkt]->setArguments(params);
+    scripts[fkt]->execute();
+}
 
 void VRScriptManager::updateScript(string name, string core, bool compile) {
     if (scripts.count(name) == 0) return;
@@ -168,7 +175,7 @@ static PyObject* writeOut(PyObject *self, PyObject *args) {
 #ifndef WITHOUT_GTK
     VRGuiManager::get()->getConsole(pyOutConsole)->write(what);
 #else
-    cout << " PYOUT: " << what << endl;
+    cout << what;
 #endif
     return Py_BuildValue("");
 }
@@ -179,7 +186,7 @@ static PyObject* writeErr(PyObject *self, PyObject *args) {
 #ifndef WITHOUT_GTK
     VRGuiManager::get()->getConsole(pyErrConsole)->write(what);
 #else
-    cout << " PYERR: " << what << endl;
+    cout << what;
 #endif
     return Py_BuildValue("");
 }
@@ -246,7 +253,7 @@ void VRScriptManager::initPyModules() {
 
     PyDict_SetItemString(pLocal, "__builtins__", PyEval_GetBuiltins());
     PyDict_SetItemString(pGlobal, "__builtins__", PyEval_GetBuiltins());
-    VRPyListMath::init(pModBase);
+    //VRPyListMath::init(pModBase);
     cout << "  Added module PolyVR_base" << endl;
 
     PyObject* sys_path = PySys_GetObject((char*)"path");

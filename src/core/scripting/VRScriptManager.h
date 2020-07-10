@@ -51,7 +51,7 @@ class VRScriptManager : public VRStorage, public VRPyBase {
         void updateScript(string name, string core, bool compile = true);
         VRScriptPtr changeScriptName(string name, string new_name);
 
-        void triggerScript(string name);
+        void triggerScript(string name, vector<string> params = vector<string>());
 
         VRScriptPtr getScript(string name);
         map<string, VRScriptPtr> getScripts();

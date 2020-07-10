@@ -8,8 +8,11 @@
 #include "core/scripting/VRScriptFwd.h"
 #include "VRGuiVectorEntry.h"
 #include "VRGuiEditor.h"
-#include <gtkmm/treeview.h>
-#include <gtkmm/treestore.h>
+
+struct _GtkTreeIter;
+struct _GtkTreeStore;
+struct _GdkEventButton;
+typedef void* gpointer;
 
 class VRGuiContextMenu;
 
@@ -18,8 +21,8 @@ using namespace std;
 
 class VRGuiSetup {
     private:
-        Gtk::TreeModel::Row selected_row;
-        Gtk::TreeModel::Row parent_row;
+        _GtkTreeIter* selected_row = 0;
+        _GtkTreeIter* parent_row = 0;
         gpointer selected_object;
         gpointer selected_object_parent;
         string selected_type;
@@ -60,13 +63,13 @@ class VRGuiSetup {
         string setupDir();
 
         void on_treeview_select();
-        void on_name_edited(const Glib::ustring& path, const Glib::ustring& new_name);
+        void on_name_edited(const char* path, const char* new_name);
         void on_save_clicked();
         void on_del_clicked();
         void on_new_clicked();
         void on_foto_clicked();
         void on_setup_changed();
-        bool on_treeview_rightclick(GdkEventButton* event);
+        bool on_treeview_rightclick(_GdkEventButton* event);
 
         void on_menu_add_window();
         void on_menu_add_viewport();
@@ -78,11 +81,12 @@ class VRGuiSetup {
         void on_menu_delete();
 
         void on_window_device_changed();
+        void on_window_msaa_changed();
         void on_toggle_display_active();
         void on_toggle_display_multi();
         void on_servern_edit();
         void on_server_ct_toggled();
-        void on_server_edit(const Glib::ustring& path, const Glib::ustring& new_name);
+        void on_server_edit(const char* path, const char* new_name);
         void on_connect_mw_clicked();
 
         void on_toggle_view_stats();
@@ -144,10 +148,12 @@ class VRGuiSetup {
         void on_script_exec_clicked();
         void on_script_trigger_switched();
 
+        void on_script_changed();
+
         void closeAllExpander();
         void updateObjectData();
 
-        void setTreeRow(Glib::RefPtr<Gtk::TreeStore> tree_store, Gtk::TreeStore::Row row, string name, string type, gpointer ptr, string fg = "#000000", string bg = "#FFFFFF");
+        void setTreeRow(_GtkTreeStore* tree_store, _GtkTreeIter* row, string name, string type, gpointer ptr, string fg = "#000000", string bg = "#FFFFFF");
 
     public:
         VRGuiSetup();
