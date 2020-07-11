@@ -74,6 +74,7 @@ VRScriptManager::~VRScriptManager() {
     for (int i=1; i<N; i++) Py_DECREF(pModVR); // reduce the count to 1!
     //checkGarbageCollection();
     PyErr_Clear();
+    cout << " VRScriptManager Py_Finalize\n";
     Py_Finalize(); // finally destroys pModVR
     VRPyBase::err = 0;
 }

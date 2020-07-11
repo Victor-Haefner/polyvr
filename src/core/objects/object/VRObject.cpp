@@ -440,7 +440,7 @@ void VRObject::getObjectListByType(string _type, vector<VRObjectPtr>& list) {
 VRObjectPtr VRObject::find(OSGObjectPtr n, string indent) {
     //cout << endl << indent << getName() << " " << node << " " << ptr() << flush;
     if (osg->node == n->node) return ptr();
-    for (auto c : children) {
+    for (auto& c : children) {
         VRObjectPtr tmp = c->find(n, indent+" ");
         if (tmp != 0) return tmp;
     }
@@ -449,7 +449,7 @@ VRObjectPtr VRObject::find(OSGObjectPtr n, string indent) {
 
 VRObjectPtr VRObject::find(VRObjectPtr obj) {
     if (obj == ptr()) return ptr();
-    for (auto c : children) {
+    for (auto& c : children) {
         VRObjectPtr tmp = c->find(obj);
         if (tmp != 0) return tmp;
     }
@@ -458,8 +458,11 @@ VRObjectPtr VRObject::find(VRObjectPtr obj) {
 
 VRObjectPtr VRObject::find(string Name) {
     if (name == Name) return ptr();
-    for (auto c : children) {
-        if (c == ptr()) continue; // workaround! TODO: find why ptr() can happn
+    for (auto& c : children) {
+        if (c.get() == this) {
+            cout << "ERROR!! 'this' is also its child!" << endl;
+            continue; // workaround! TODO: find why ptr() can happn
+        }
         VRObjectPtr tmp = c->find(Name);
         if (tmp != 0) return tmp;
     }
@@ -468,7 +471,7 @@ VRObjectPtr VRObject::find(string Name) {
 
 VRObjectPtr VRObject::findFirst(string Name) {
     if (base_name == Name) return ptr();
-    for (auto c : children) {
+    for (auto& c : children) {
         if (c == ptr()) continue; // workaround! TODO: find why ptr() can happn
         VRObjectPtr tmp = c->findFirst(Name);
         if (tmp != 0) return tmp;
@@ -478,7 +481,7 @@ VRObjectPtr VRObject::findFirst(string Name) {
 
 vector<VRObjectPtr> VRObject::findAll(string Name, vector<VRObjectPtr> res ) {
     if (base_name == Name) res.push_back(ptr());
-    for (auto c : children) {
+    for (auto& c : children) {
         if (c == ptr()) continue; // workaround! TODO: find why ptr() can happn
         res = c->findAll(Name, res);
     }
@@ -488,7 +491,7 @@ vector<VRObjectPtr> VRObject::findAll(string Name, vector<VRObjectPtr> res ) {
 VRObjectPtr VRObject::find(int id) {
     if (ID == -1) return 0;
     if (ID == id) return ptr();
-    for (auto c : children) {
+    for (auto& c : children) {
         VRObjectPtr tmp = c->find(id);
         if (tmp != 0) return tmp;
     }
