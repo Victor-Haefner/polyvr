@@ -52,10 +52,11 @@ void VRSprite::updateGeo() {
     data.pushVert(Pnt3d(w2,h2,0), Vec3d(0,0,1), Vec2d(1,0));
     data.pushQuad();
     if (doubleSided) {
-        data.pushVert(Pnt3d(w2,h2,0), Vec3d(0,0,1), Vec2d(0,0));
-        data.pushVert(Pnt3d(w2,-h2,0), Vec3d(0,0,1), Vec2d(0,1));
-        data.pushVert(Pnt3d(-w2,-h2,0), Vec3d(0,0,1), Vec2d(1,1));
-        data.pushVert(Pnt3d(-w2,h2,0), Vec3d(0,0,1), Vec2d(1,0));
+        double e = -1e-3;
+        data.pushVert(Pnt3d(w2,h2,e), Vec3d(0,0,1), Vec2d(0,0));
+        data.pushVert(Pnt3d(w2,-h2,e), Vec3d(0,0,1), Vec2d(0,1));
+        data.pushVert(Pnt3d(-w2,-h2,e), Vec3d(0,0,1), Vec2d(1,1));
+        data.pushVert(Pnt3d(-w2,h2,e), Vec3d(0,0,1), Vec2d(1,0));
         data.pushQuad();
         getMaterial()->setFrontBackModes(GL_FILL, GL_NONE);
     }
