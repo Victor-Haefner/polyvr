@@ -36,6 +36,8 @@ class VRStroke : public VRGeometry {
         static VRStrokePtr create(string name = "None");
         VRStrokePtr ptr();
 
+        void clear();
+
         void setPath(PathPtr p);
         void addPath(PathPtr p);
         PathPtr getPath();
