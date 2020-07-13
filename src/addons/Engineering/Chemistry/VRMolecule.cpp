@@ -4,6 +4,7 @@
 
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/VRTransform.h"
+#include "core/objects/geometry/VRGeoData.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRGlobals.h"
 #include "addons/Engineering/VRNumberingEngine.h"
@@ -63,14 +64,8 @@ void VRMolecule::remAtom(int ID) {
 }
 
 void VRMolecule::updateGeo() {
-    GeoPnt3fPropertyRecPtr      Pos = GeoPnt3fProperty::create();
-    GeoVec3fPropertyRecPtr      Norms = GeoVec3fProperty::create();
-    GeoUInt32PropertyRecPtr     Indices = GeoUInt32Property::create();
-    GeoVec3fPropertyRecPtr      cols = GeoVec3fProperty::create();
-
-    GeoPnt3fPropertyRecPtr      Pos2 = GeoPnt3fProperty::create();
-    GeoVec3fPropertyRecPtr      Norms2 = GeoVec3fProperty::create();
-    GeoUInt32PropertyRecPtr     Indices2 = GeoUInt32Property::create();
+    VRGeoData atomsData;
+    VRGeoData bondsData;
 
     float r_scale = 0.6;
 
@@ -78,48 +73,29 @@ void VRMolecule::updateGeo() {
     int j=0;
     for (auto a : atoms) {
         PeriodicTableEntry aP = a.second->getParams();
-        cols->addValue(aP.color);
-        Pos->addValue(a.second->getTransformation()[3]);
-        Norms->addValue( Vec3d(0, r_scale*aP.radius, 0) );
-        Indices->addValue(i++);
+        atomsData.pushVert( Pnt3d(a.second->getTransformation()[3]), Vec3d(0, r_scale*aP.radius, 0), aP.color );
+        atomsData.pushPoint();
 
         // bonds
         for (auto b : a.second->getBonds()) {
             if (b.second.atom2 == 0) { // duplet
-                Pos2->addValue(b.second.p1);
-                Pos2->addValue(b.second.p2);
-                Norms2->addValue( Vec3d(0, 1, 0) );
-                Norms2->addValue( Vec3d(0.1*b.second.type, 1,1) );
-                Indices2->addValue(j++);
-                Indices2->addValue(j++);
+                bondsData.pushVert(b.second.p1, Vec3d(0, 1, 0));
+                bondsData.pushVert(b.second.p2, Vec3d(0.1*b.second.type, 1,1));
+                bondsData.pushLine();
                 continue;
             }
 
             if (b.second.atom2->getID() < a.first) {
                 PeriodicTableEntry bP = b.second.atom2->getParams();
-                Pos2->addValue(a.second->getTransformation()[3]);
-                Pos2->addValue(b.second.atom2->getTransformation()[3]);
-                Norms2->addValue( Vec3d(0, 1, 0) );
-                Norms2->addValue( Vec3d(0.1*b.second.type, r_scale*aP.radius, r_scale*bP.radius) );
-                Indices2->addValue(j++);
-                Indices2->addValue(j++);
+                bondsData.pushVert( Pnt3d(a.second->getTransformation()[3]), Vec3d(0, 1, 0));
+                bondsData.pushVert( Pnt3d(b.second.atom2->getTransformation()[3]), Vec3d(0.1*b.second.type, r_scale*aP.radius, r_scale*bP.radius));
+                bondsData.pushLine();
             }
         }
     }
 
-    // atoms geometry
-    setType(GL_POINTS);
-    setPositions(Pos);
-    setNormals(Norms);
-    setColors(cols);
-    setIndices(Indices);
-
-    // bonds geometry
-    bonds_geo->setType(GL_LINES);
-    bonds_geo->setPositions(Pos2);
-    bonds_geo->setNormals(Norms2);
-    bonds_geo->setColors(cols);
-    bonds_geo->setIndices(Indices2);
+    atomsData.apply(ptr());
+    bondsData.apply(bonds_geo);
 
     material = VRMoleculeMat::create();
     material->apply(ptr(), bonds_geo);

@@ -3,6 +3,7 @@
 
 #include <string>
 #include <OpenSG/OSGVector.h>
+#include <OpenSG/OSGColor.h>
 #include <OpenSG/OSGMatrix.h>
 #include "addons/Engineering/VREngineeringFwd.h"
 
@@ -11,11 +12,11 @@ OSG_BEGIN_NAMESPACE;
 
 struct PeriodicTableEntry {
     int valence_electrons = 0;
-    Vec3d color;
+    Color3f color;
     float radius = 1;
 
     PeriodicTableEntry();
-    PeriodicTableEntry( int valence_electrons, float radius, Vec3d color);
+    PeriodicTableEntry( int valence_electrons, float radius, Color3f color);
 };
 
 class VRAtom {

@@ -16,26 +16,26 @@ map<string, PeriodicTableEntry> VRAtom::PeriodicTable = map<string, PeriodicTabl
 map<string, vector<Matrix4d> > VRAtom::AtomicStructures = map<string, vector<Matrix4d> >();
 
 void VRAtom::initAtomicTables() { // TODO: set colors
-	PeriodicTable["H"] = PeriodicTableEntry(1, 0.37, Vec3d(1,1,1));
-	PeriodicTable["He"] = PeriodicTableEntry(8, 0.5, Vec3d(1,0,1));
+	PeriodicTable["H"] = PeriodicTableEntry(1, 0.37, Color3f(1,1,1));
+	PeriodicTable["He"] = PeriodicTableEntry(8, 0.5, Color3f(1,0,1));
 
-	PeriodicTable["Li"] = PeriodicTableEntry(1, 1.52, Vec3d(0.6,0.4,0.0));
-	PeriodicTable["Be"] = PeriodicTableEntry(2, 1.11, Vec3d(0.6,0.0,0.6));
-	PeriodicTable["B"] = PeriodicTableEntry(3, 0.88, Vec3d(0.4,1.0,0.4));
-	PeriodicTable["C"] = PeriodicTableEntry(4, 0.77, Vec3d(0.4,0.4,0.4));
-	PeriodicTable["N"] = PeriodicTableEntry(5, 0.7, Vec3d(0,0,1));
-	PeriodicTable["O"] = PeriodicTableEntry(6, 0.66, Vec3d(1,0,0));
-	PeriodicTable["F"] = PeriodicTableEntry(7, 0.64, Vec3d(0,0,1));
-	PeriodicTable["Ne"] = PeriodicTableEntry(8, 0.70, Vec3d(0,0,1));
+	PeriodicTable["Li"] = PeriodicTableEntry(1, 1.52, Color3f(0.6,0.4,0.0));
+	PeriodicTable["Be"] = PeriodicTableEntry(2, 1.11, Color3f(0.6,0.0,0.6));
+	PeriodicTable["B"] = PeriodicTableEntry(3, 0.88, Color3f(0.4,1.0,0.4));
+	PeriodicTable["C"] = PeriodicTableEntry(4, 0.77, Color3f(0.4,0.4,0.4));
+	PeriodicTable["N"] = PeriodicTableEntry(5, 0.7, Color3f(0,0,1));
+	PeriodicTable["O"] = PeriodicTableEntry(6, 0.66, Color3f(1,0,0));
+	PeriodicTable["F"] = PeriodicTableEntry(7, 0.64, Color3f(0,0,1));
+	PeriodicTable["Ne"] = PeriodicTableEntry(8, 0.70, Color3f(0,0,1));
 
-	PeriodicTable["Na"] = PeriodicTableEntry(1, 1.86, Vec3d(0,0,1));
-	PeriodicTable["Mg"] = PeriodicTableEntry(2, 1.60, Vec3d(0,1,0));
-	PeriodicTable["Al"] = PeriodicTableEntry(3, 1.43, Vec3d(0.6,0.6,0.6));
-	PeriodicTable["Si"] = PeriodicTableEntry(4, 1.17, Vec3d(0.5,1,0));
-	PeriodicTable["P"] = PeriodicTableEntry(5, 1.1, Vec3d(0.8,0.5,0));
-	PeriodicTable["S"] = PeriodicTableEntry(6, 1.04, Vec3d(1,1,0));
-	PeriodicTable["Cl"] = PeriodicTableEntry(7, 0.99, Vec3d(0.3,1,0));
-	PeriodicTable["Ar"] = PeriodicTableEntry(8, 0.94, Vec3d(0,1,0.5));
+	PeriodicTable["Na"] = PeriodicTableEntry(1, 1.86, Color3f(0,0,1));
+	PeriodicTable["Mg"] = PeriodicTableEntry(2, 1.60, Color3f(0,1,0));
+	PeriodicTable["Al"] = PeriodicTableEntry(3, 1.43, Color3f(0.6,0.6,0.6));
+	PeriodicTable["Si"] = PeriodicTableEntry(4, 1.17, Color3f(0.5,1,0));
+	PeriodicTable["P"] = PeriodicTableEntry(5, 1.1, Color3f(0.8,0.5,0));
+	PeriodicTable["S"] = PeriodicTableEntry(6, 1.04, Color3f(1,1,0));
+	PeriodicTable["Cl"] = PeriodicTableEntry(7, 0.99, Color3f(0.3,1,0));
+	PeriodicTable["Ar"] = PeriodicTableEntry(8, 0.94, Color3f(0,1,0.5));
 
 	AtomicStructures["tetra"] = vector<Matrix4d>();
 	AtomicStructures["iso"] = vector<Matrix4d>();
@@ -78,7 +78,7 @@ void VRAtom::initAtomicTables() { // TODO: set colors
 }
 
 PeriodicTableEntry::PeriodicTableEntry() {}
-PeriodicTableEntry::PeriodicTableEntry(int valence_electrons, float radius, Vec3d color) {
+PeriodicTableEntry::PeriodicTableEntry(int valence_electrons, float radius, Color3f color) {
     this->valence_electrons = valence_electrons;
     this->color = color;
     this->radius = radius;
