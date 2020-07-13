@@ -21,7 +21,7 @@
 
 	node = VR.find('node1')
 	
-	node.addRemote("141.2.150.77", "3022", "node2")
+	node.addRemote("141.2.150.77", 3022, "node2")
 </core>
     </Script>
     <Script base_name="init" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
