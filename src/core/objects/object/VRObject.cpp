@@ -42,6 +42,7 @@ VRObject::VRObject(string _name) {
     store("pickable", &pickable);
     store("visible", &visibleMask);
     storeObjVec("children", children);
+    storeMap("attachments", &attachments, true);
 
     regStorageSetupBeforeFkt( VRStorageCb::create("object setup", bind(&VRObject::setupBefore, this, placeholders::_1)) );
     regStorageSetupFkt( VRStorageCb::create("object setup", bind(&VRObject::setupAfter, this, placeholders::_1)) );
@@ -175,6 +176,11 @@ string VRObject::getAttachmentAsString(string name) {
         return attachments[name]->asString();
     }
     return "";
+}
+
+void VRObject::setAttachmentFromString(string name, string value) {
+    if (!hasTag(name)) addAttachment(name, value);
+    else attachments[name]->fromString(value);
 }
 
 vector<string> VRObject::getTags() {
