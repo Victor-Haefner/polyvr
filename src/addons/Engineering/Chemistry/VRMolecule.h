@@ -7,18 +7,6 @@
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-class VRNumberingEngine;
-
-struct PeriodicTableEntry {
-    int valence_electrons = 0;
-    Vec3d color;
-    float radius = 1;
-
-    PeriodicTableEntry();
-    PeriodicTableEntry( int valence_electrons, float radius, Vec3d color);
-};
-
-class VRAtom;
 struct VRBond {
     VRAtom* atom1 = 0;
     VRAtom* atom2 = 0;
@@ -29,43 +17,6 @@ struct VRBond {
 
     VRBond();
     VRBond(int t, int s, VRAtom* a2, VRAtom* a1);
-};
-
-class VRAtom {
-    public:
-        string type;
-        PeriodicTableEntry params;
-
-        int ID = 0; // ID in molecule
-        bool full = false; // all valence electrons bound
-        Matrix4d transformation;
-
-        int bound_valence_electrons = 0;
-        unsigned int recFlag = 0;
-
-        map<int, VRBond> bonds;
-        string geo;
-
-    public:
-        VRAtom(string type, int ID);
-        ~VRAtom();
-
-        PeriodicTableEntry getParams();
-        Matrix4d getTransformation();
-        void setTransformation(Matrix4d m);
-        map<int, VRBond>& getBonds();
-        int getID();
-        void setID(int ID);
-
-		void computeGeo();
-		void computePositions();
-
-		bool append(VRAtom* b, int bType, bool extra = false);
-		void detach(VRAtom* a);
-
-		void propagateTransformation(Matrix4d& T, unsigned int flag, bool self = true);
-
-		void print();
 };
 
 class VRMolecule : public VRGeometry {

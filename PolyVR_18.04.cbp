@@ -349,6 +349,8 @@
 		<Unit filename="src/addons/Engineering/CSG/PolyhedronBuilder.h" />
 		<Unit filename="src/addons/Engineering/CSG/VRPyCSG.cpp" />
 		<Unit filename="src/addons/Engineering/CSG/VRPyCSG.h" />
+		<Unit filename="src/addons/Engineering/Chemistry/VRAtom.cpp" />
+		<Unit filename="src/addons/Engineering/Chemistry/VRAtom.h" />
 		<Unit filename="src/addons/Engineering/Chemistry/VRCrystal.cpp" />
 		<Unit filename="src/addons/Engineering/Chemistry/VRCrystal.h" />
 		<Unit filename="src/addons/Engineering/Chemistry/VRMolecule.cpp" />
