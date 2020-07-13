@@ -21,6 +21,7 @@ VRBond::VRBond(int t, int s, VRAtom* a2, VRAtom* a1) { type = t; atom1 = a1; ato
 VRBond::VRBond() {}
 
 VRMolecule::VRMolecule(string name) : VRGeometry(name) {
+    if (VRAtom::PeriodicTable.size() == 0) VRAtom::initAtomicTables();
     bonds_geo = VRGeometry::create("bonds");
     coords_geo = VRGeometry::create("coords");
 
@@ -40,11 +41,11 @@ VRMoleculePtr VRMolecule::create(string name) {
 
 VRMoleculePtr VRMolecule::ptr() { return static_pointer_cast<VRMolecule>( shared_from_this() ); }
 
-VRAtom* VRMolecule::addAtom(string a) {
+int VRMolecule::addAtom(string a) {
     VRAtom* atm = new VRAtom(a, getID());
     atoms[atm->getID()] = atm;
     nonFullAtoms[atm->getID()] = atm;
-    return atm;
+    return atm->getID();
 }
 
 void VRMolecule::connectAtom(VRAtom* b, int bType, bool extra) {
@@ -183,23 +184,20 @@ vector<string> VRMolecule::parse(string mol, bool verbose) {
 }
 
 void VRMolecule::set(string definition) {
-    if (VRAtom::PeriodicTable.size() == 0) VRAtom::initAtomicTables();
     this->definition = definition;
 
     vector<string> mol = parse(definition, false);
     atoms.clear();
 
-cout << "AA1 " << getTime() << endl;
     for (unsigned int i=0; i<mol.size(); i+=2) {
         string a = mol[i+1];
         int b = toInt(mol[i]);
         if (isNumber(a[0])) connectAtom(toInt(a), b);
         else {
-            auto atm = addAtom(a);
-            connectAtom(atm, b);
+            auto atmID = addAtom(a);
+            connectAtom(atmID, b);
         }
     }
-cout << "AA2 " << getTime() << endl;
 
     for (auto a : atoms) a.second->computePositions();
     //for (auto a : atoms) a->print();
@@ -343,6 +341,10 @@ void VRMolecule::setLocalOrigin(int ID) {
     atoms[ID]->propagateTransformation(im, now);
 }
 
+void VRMolecule::update() {
+    updateGeo();
+}
+
 void VRMolecule::attachMolecule(int a, VRMoleculePtr m, int b) {
     if (atoms.count(a) == 0) return;
     if (m->atoms.count(b) == 0) return;
@@ -440,6 +442,15 @@ void VRMolecule::updateLabels() {
 VRAtom* VRMolecule::getAtom(int ID) {
     if (atoms.count(ID) != 0) return atoms[ID];
     return 0;
+}
+
+void VRMolecule::setAtomPosition(int ID, Vec3d pos) {
+    VRAtom* a = getAtom( ID );
+    if (a) {
+        Matrix4d m;
+        m.setTranslate(pos);
+        a->setTransformation(m);
+    }
 }
 
 Vec3d VRMolecule::getAtomPosition(int ID) {

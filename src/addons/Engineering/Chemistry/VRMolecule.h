@@ -33,9 +33,6 @@ class VRMolecule : public VRGeometry {
         VRMoleculeMatPtr material;
 
     protected:
-		VRAtom* addAtom(string a);
-		void connectAtom(VRAtom* b, int bType, bool extra = false);
-		void connectAtom(int a, int b);
 		void updateLabels();
 		void updateCoords();
 
@@ -54,8 +51,12 @@ class VRMolecule : public VRGeometry {
         void setRandom(int N);
         string getDefinition();
 
+		int addAtom(string a);
+		void connectAtom(VRAtom* b, int bType, bool extra = false);
+		void connectAtom(int a, int b);
         VRAtom* getAtom(int ID);
         Vec3d getAtomPosition(int ID);
+        void setAtomPosition(int ID, Vec3d pos);
 
         void setLocalOrigin(int ID);
 
@@ -66,6 +67,7 @@ class VRMolecule : public VRGeometry {
 		void remAtom(int ID);
 
 		void updateGeo();
+		void update();
 
         void showLabels(bool b);
         void showCoords(bool b);
