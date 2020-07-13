@@ -155,13 +155,14 @@ void VRAtom::computePositions() {
 }
 
 bool VRAtom::append(VRAtom* at, int bType, bool extra) {
+    if (full || at->full || at == this) return false;
+    for (auto b : bonds) if (b.second.atom2 == at) return false;
+    for (auto b : at->bonds) if (b.second.atom2 == this) return false;
+
     VRBond bond;
     bond.type = bType;
     bond.extra = extra;
     bond.atom2 = at;
-    if (full || at->full || at == this) return false;
-    for (auto b : bonds) if (b.second.atom2 == at) return false;
-    for (auto b : at->bonds) if (b.second.atom2 == this) return false;
 
     int bmax1 = 4 - abs(params.valence_electrons - 4);
     int bmax2 = 4 - abs(at->params.valence_electrons - 4);

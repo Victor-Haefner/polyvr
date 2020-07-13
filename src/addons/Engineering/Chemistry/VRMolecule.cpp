@@ -7,6 +7,7 @@
 #include "core/objects/geometry/VRGeoData.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRGlobals.h"
+#include "core/utils/system/VRSystem.h"
 #include "addons/Engineering/VRNumberingEngine.h"
 
 #include <OpenSG/OSGGeoProperties.h>
@@ -42,11 +43,25 @@ VRMoleculePtr VRMolecule::ptr() { return static_pointer_cast<VRMolecule>( shared
 VRAtom* VRMolecule::addAtom(string a) {
     VRAtom* atm = new VRAtom(a, getID());
     atoms[atm->getID()] = atm;
+    nonFullAtoms[atm->getID()] = atm;
     return atm;
 }
 
 void VRMolecule::connectAtom(VRAtom* b, int bType, bool extra) {
-    for (auto a : atoms) if (a.second->append(b, bType, extra)) break;
+    bool appended = false;
+
+    // first try with nonFullAtoms
+    vector<int> filled;
+    for (auto a : nonFullAtoms) {
+        appended = a.second->append(b, bType, extra);
+        if (a.second->full) filled.push_back(a.first);
+        if (appended) break;
+    }
+    for (auto ID : filled) nonFullAtoms.erase(ID);
+    if (appended) return;
+
+    // try again with all atoms
+    for (auto a : atoms) if (a.second->append(b, bType, extra)) return;
 }
 
 void VRMolecule::connectAtom(int ID, int t) {
@@ -174,6 +189,7 @@ void VRMolecule::set(string definition) {
     vector<string> mol = parse(definition, false);
     atoms.clear();
 
+cout << "AA1 " << getTime() << endl;
     for (unsigned int i=0; i<mol.size(); i+=2) {
         string a = mol[i+1];
         int b = toInt(mol[i]);
@@ -183,6 +199,7 @@ void VRMolecule::set(string definition) {
             connectAtom(atm, b);
         }
     }
+cout << "AA2 " << getTime() << endl;
 
     for (auto a : atoms) a.second->computePositions();
     //for (auto a : atoms) a->print();
@@ -193,7 +210,6 @@ void VRMolecule::set(string definition) {
 void VRMolecule::setRandom(int N) {
     string m;
     int a = 0;
-
     vector<string> types;
     for(auto a : VRAtom::PeriodicTable) types.push_back(a.first);
     int aN = types.size();

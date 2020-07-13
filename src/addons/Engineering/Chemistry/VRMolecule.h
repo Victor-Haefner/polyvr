@@ -23,6 +23,7 @@ class VRMolecule : public VRGeometry {
     private:
         string definition;
         map<int, VRAtom*> atoms;
+        map<int, VRAtom*> nonFullAtoms;
 
         VRGeometryPtr bonds_geo = 0;
         VRGeometryPtr coords_geo = 0;
