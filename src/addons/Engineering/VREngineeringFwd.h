@@ -9,6 +9,7 @@ ptrFwd(CSGGeometry);
 ptrFwd(VRMillingWorkPiece);
 ptrFwd(VRMillingCuttingToolProfile);
 ptrFwd(VRMolecule);
+ptrFwd(VRMoleculeMat);
 ptrFwd(VRCrystal);
 ptrFwd(VRAMLLoader);
 

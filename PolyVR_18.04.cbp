@@ -353,6 +353,8 @@
 		<Unit filename="src/addons/Engineering/Chemistry/VRCrystal.h" />
 		<Unit filename="src/addons/Engineering/Chemistry/VRMolecule.cpp" />
 		<Unit filename="src/addons/Engineering/Chemistry/VRMolecule.h" />
+		<Unit filename="src/addons/Engineering/Chemistry/VRMoleculeMat.cpp" />
+		<Unit filename="src/addons/Engineering/Chemistry/VRMoleculeMat.h" />
 		<Unit filename="src/addons/Engineering/Chemistry/VRPyMolecule.cpp" />
 		<Unit filename="src/addons/Engineering/Chemistry/VRPyMolecule.h" />
 		<Unit filename="src/addons/Engineering/Factory/VRAMLLoader.cpp" />

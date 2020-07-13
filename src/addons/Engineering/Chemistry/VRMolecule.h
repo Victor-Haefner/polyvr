@@ -78,14 +78,7 @@ class VRMolecule : public VRGeometry {
         VRNumberingEnginePtr labels = 0;
         bool doLabels = false;
         bool doCoords = false;
-
-        static string a_vp;
-        static string a_fp;
-        static string a_gp;
-
-        static string b_vp;
-        static string b_fp;
-        static string b_gp;
+        VRMoleculeMatPtr material;
 
     protected:
 		VRAtom* addAtom(string a);
