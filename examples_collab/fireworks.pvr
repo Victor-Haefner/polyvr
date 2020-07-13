@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Scene base_name="fireworks" name_space="Scene" name_suffix="0" persistency="666">
+  <Objects>
+    <Object base_name="Root" name_space="__global__" name_suffix="2" persistency="666" pickable="0" type="Object" visible="1">
+      <Object ambient="0.3 0.3 0.3 1" base_name="light" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" specular="0.1 0.1 0.1 1" type="Light" visible="1">
+        <Object accept_root="1" aspect="1" at="-1.28509 1.79272 3.24028" at_dir="0" base_name="Default" far="512" fov="1.0472" from="2.53427 1.41487 -4.72596" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
+          <Object at="0 0 -1" at_dir="0" base_name="Headlight_beacon" from="0 0 0" light="light" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" up="0 1 0" visible="1">
+            <constraint persistency="666"/>
+          </Object>
+          <constraint persistency="666"/>
+        </Object>
+      </Object>
+    </Object>
+  </Objects>
+  <Rendering deferred_rendering="0" frustum_culling="1" fxaa="0" hmdd="0" marker="0" occlusion_culling="0" persistency="666" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
+  <Scripts persistency="666">
+    <Script base_name="Rocket" group="fireworks" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR, random
+	from math import cos, sin, pi
+	
+	R = 0.2
+	
+	class Rocket:
+		def __init__(self):
+			self.path = None
+			self.offset = VR.frame
+			self.geo = VR.Geometry('rocket')
+			self.geo.setVolumeCheck(0)
+			VR.fireworksRoot.addChild(self.geo)
+			self.progress = 0
+			self.start()
+			
+			R = random.random()
+			G = random.random()
+			B = 1-R
+			color = [R,G,B]
+			
+			N = 150
+			normals = []
+			for i in range(N):
+				a = random.random()*2*pi # angle
+				t = random.random()*pi # angle
+				r = 0.9+random.random()*0.1 # radius
+				n = [R*r*cos(a)*cos(t),R*r*sin(t),R*r*sin(a)*cos(t)]
+				normals.append(n)
+			
+			self.geo.setType('GL_POINTS')
+			self.geo.setPositions([[0,0,0]]*N)
+			self.geo.setNormals(normals)
+			self.geo.setColors([color]*N)
+			self.geo.setTexCoords([[self.offset, 0]]*N)
+			self.geo.setIndices(range(N))
+			self.geo.setMaterial(VR.rocketMat)
+			
+		def start(self):
+			self.path = random.choice( VR.paths )
+			
+		def update(self):
+			p = VR.frame - self.offset
+			if p &lt; 0: p += VR.frameMax
+			if p &gt;= VR.frameMax-1: self.start()
+			self.progress = p
+			
+			t = float(p)/VR.frameMax
+			pose = self.path.getPose(t)
+			self.geo.setFrom(pose.pos())
+			
+	return Rocket()
+	
+	
+	
+	
+</core>
+    </Script>
+    <Script base_name="fireworks_init" group="fireworks" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR, math
+	from random import random
+	
+	if hasattr(VR, 'scene'): VR.scene.destroy()
+	VR.scene = VR.Object('scene')
+	VR.find('light').addChild(VR.scene)	
+	
+	VR.fireworksRoot = VR.Object('fireworks')
+	VR.scene.addChild(VR.fireworksRoot)
+	
+	def getRandomTrunc():
+		W = 5
+		D = 3
+		p1 = [W*random()-W*0.5, 1+1*random(), D*random()-D*0.5]
+		p0 = p1[:]
+		p0[1] = 0
+		return p0, p1
+	
+	VR.paths = []
+	for i in range(100):
+		p = VR.Path()
+		VR.paths.append(p)
+		
+		p0, p1 = getRandomTrunc()
+		p.addPoint(p0, [0,1,0], [0,0,0], [0,0,1])
+		Nd = 0
+		p.addPoint(p1, [random()*Nd,1,random()*Nd], [0,0,0], [0,0,1])
+		p.compute(16)
+			
+	def showPaths():
+		VR.stroke = VR.Stroke('stroke')
+		VR.stroke.setPaths(VR.paths)
+		VR.stroke.strokeProfile([[0,0,0]], 1,1)
+		VR.stroke.update()
+		VR.scene.addChild(VR.stroke)
+		
+	#showPaths()
+	
+	# rockets
+	VR.rockets = []
+	
+	VR.rocketMat = VR.Material('rocket')
+	VR.rocketMat.setLit(0)
+	VR.rocketMat.setPointSize(3)
+	VR.rocketMat.setVertexProgram('fireworks_shader_vp')
+	VR.rocketMat.setFragmentProgram('fireworks_shader_fp')
+	
+	VR.frame = 0
+	VR.frameMax = 100
+	
+	VR.stackCall(VR.fireworks_startSound, 2)
+	
+	
+	
+	
+	
+	
+	
+	
+</core>
+      <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="2" persistency="666"/>
+    </Script>
+    <Script base_name="fireworks_reset" group="fireworks" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+	VR.init()
+</core>
+      <trig type="on_device" dev="keyboard" state="Pressed" param="" key="114" base_name="trigger" name_space="__global__" name_suffix="3" persistency="666"/>
+    </Script>
+    <Script base_name="fireworks_shader_fp" group="fireworks" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="GLSL">
+      <core>
+#version 120
+
+void main( void ) {
+   gl_FragColor = gl_Color;
+}
+</core>
+    </Script>
+    <Script base_name="fireworks_shader_vp" group="fireworks" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="GLSL">
+      <core>
+#version 120
+
+attribute vec4 osg_Vertex;
+attribute vec4 osg_Normal;
+attribute vec4 osg_Color;
+attribute vec2 osg_MultiTexCoord0;
+
+uniform int frame;
+uniform int frameMax;
+uniform int frameMaxInv;
+
+void main( void ) {
+	// current progress
+	int o = int(osg_MultiTexCoord0[0]);
+	int p = frame-o;
+	if (p &lt;= 0) p = p+frameMax;
+	float f = float(p)/frameMax;
+	
+	// fade in/out
+	vec4 c = osg_Color;
+	float fFadeI = 0.1;
+	float fFadeO = 0.6;
+	float aI = min(f, fFadeI)/fFadeI; 
+	float aO = 1.0 - (max(f, fFadeO) - fFadeO)/(1.0-fFadeO); 
+	gl_FrontColor = c*min(aI, aO);
+	
+	// explosion
+	float fExpl = 0.5;
+	f = max(0.0, f-fExpl)/fExpl;&#13;
+	vec4 v = osg_Vertex + osg_Normal*f;
+    gl_Position = gl_ModelViewProjectionMatrix*v;
+}
+</core>
+    </Script>
+    <Script base_name="fireworks_startRocket" group="fireworks" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR, random
+	
+	Nrockets = 100
+	
+	N = len(VR.rockets)
+	
+	if N &lt; Nrockets:
+		r = VR.Rocket()
+		VR.rockets.append(r)
+		print 'add rocket', N, VR.frame
+		
+	if N &gt; Nrockets:
+		VR.rockets[0].geo.destroy()
+		del(VR.rockets[0])
+		print 'rem rocket', N, VR.frame
+</core>
+      <trig type="on_timeout" dev="" state="Pressed" param="1200" key="0" base_name="trigger" name_space="__global__" name_suffix="1" persistency="666"/>
+    </Script>
+    <Script base_name="fireworks_startSound" group="fireworks" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+	VR.sound = VR.getSoundManager().setupSound('fireworks1.mp3', 1)
+</core>
+    </Script>
+    <Script base_name="fireworks_update" group="fireworks" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+	
+	if hasattr(VR, 'rockets'):
+		VR.frame += 1
+		VR.rocketMat.setShaderParameter( 'frame', VR.frame )
+		VR.rocketMat.setShaderParameter( 'frameMax', VR.frameMax )
+		if VR.frame &gt; VR.frameMax: VR.frame = 0
+		
+		for r in VR.rockets: r.update()
+		
+</core>
+      <trig type="on_timeout" dev="" state="Pressed" param="0" key="0" base_name="trigger" name_space="__global__" name_suffix="0" persistency="666"/>
+    </Script>
+  </Scripts>
+  <Sockets persistency="666"/>
+  <Background color="0 0 0" format=".png" path="" persistency="666" type="0"/>
+  <Navigation active="FlyWalk" persistency="666"/>
+  <Materials persistency="666"/>
+  <Semantics persistency="666"/>
+</Scene>

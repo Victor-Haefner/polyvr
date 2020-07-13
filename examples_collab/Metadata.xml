@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Scene base_name="testNEng" name_space="Scene" name_suffix="0" persistency="666">
+  <Objects>
+    <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" visible="1">
+      <Object ambient="0.3 0.3 0.3 1" base_name="Headlight" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" shadowVolume="1e+06 1e+06 1e+06 -1e+06 -1e+06 -1e+06 1" specular="0.1 0.1 0.1 1" type="Light" visible="1">
+        <Object accept_root="1" aspect="1" at="0 0 2" at_dir="0" base_name="Default" far="250" fov="1.0472" from="1.9847 0.491631 10.8731" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
+          <Object at="0 0 -1" at_dir="0" base_name="Headlight_beacon" from="0 0 0" light="Headlight" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" up="0 1 0" visible="1">
+            <constraint persistency="666"/>
+          </Object>
+          <constraint persistency="666"/>
+        </Object>
+      </Object>
+    </Object>
+  </Objects>
+  <Cameras activeCam="Default" persistency="666"/>
+  <Rendering deferred_rendering="0" fogColor="0.5 0.5 0.5 1" fogParams="0 0 100 0.1" frustum_culling="1" fxaa="0" hmdd="0" marker="0" occlusion_culling="0" persistency="666" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
+  <Scripts persistency="666">
+    <Script base_name="init" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+	
+	if not hasattr(VR, 'ne'):
+		VR.ne = VR.AnnotationEngine()
+		VR.find('Headlight').addChild(VR.ne)
+		
+	if not hasattr(VR, 'ae'): 
+		VR.ae = VR.AnnotationEngine('bla')
+		VR.find('Headlight').addChild(VR.ae)
+		VR.ae.setColor([0,1,0,1])
+		VR.ae.setBackground([1,0,0,0.5])
+</core>
+      <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="0" persistency="666"/>
+    </Script>
+    <Script base_name="update" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+	from math import pi, cos, sin
+	from random import shuffle
+	
+	# offset
+	if not hasattr(VR, 'offset'): VR.offset = 0
+	VR.offset += 0.01
+	if VR.offset &gt; 2*pi: VR.offset = 0
+	
+	# numbers
+	N = 120
+	da = 0.5
+	r = 3.5
+	if hasattr(VR, 'ne'):
+		for i in range(N):
+			a = da*i + VR.offset;
+			d = (a*180/pi)%360
+			VR.ne.set(i, [r*cos(a), r*sin(a),2*sin(a*8)], str(d)[:6]) # ID, position, value
+	
+	#text	 
+	e = VR.ae
+	txt = 'This is a strange example'.split(' ')
+	shuffle(txt)
+	for i,t in enumerate(txt):
+		e.set(i, [-1,1-i*0.5,i*0.3*cos(VR.offset*10)], t)
+</core>
+      <trig type="on_timeout" dev="" state="Pressed" param="17" key="0" base_name="trigger" name_space="__global__" name_suffix="1" persistency="666"/>
+    </Script>
+  </Scripts>
+  <Sockets persistency="666"/>
+  <Background color="0.6 0.6 0.6" format=".png" path="" persistency="666" type="0"/>
+  <Navigation active="Orbit" persistency="666"/>
+  <Materials persistency="666"/>
+  <Semantics persistency="666"/>
+</Scene>

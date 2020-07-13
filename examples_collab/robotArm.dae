@@ -1,0 +1,415 @@
+<?xml version="1.0" encoding="utf-8"?>
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">
+  <asset>
+    <contributor>
+      <author>Blender User</author>
+      <authoring_tool>Blender 2.79.0</authoring_tool>
+    </contributor>
+    <created>2017-11-13T12:30:08</created>
+    <modified>2017-11-13T12:30:08</modified>
+    <unit name="meter" meter="1"/>
+    <up_axis>Z_UP</up_axis>
+  </asset>
+  <library_images/>
+  <library_effects>
+    <effect id="black-effect">
+      <profile_COMMON>
+        <technique sid="common">
+          <phong>
+            <emission>
+              <color sid="emission">0 0 0 1</color>
+            </emission>
+            <ambient>
+              <color sid="ambient">0 0 0 1</color>
+            </ambient>
+            <diffuse>
+              <color sid="diffuse">0.1411765 0.1411765 0.1411765 1</color>
+            </diffuse>
+            <specular>
+              <color sid="specular">0.1862745 0.1862745 0.1862745 1</color>
+            </specular>
+            <shininess>
+              <float sid="shininess">50</float>
+            </shininess>
+            <index_of_refraction>
+              <float sid="index_of_refraction">1</float>
+            </index_of_refraction>
+          </phong>
+        </technique>
+      </profile_COMMON>
+    </effect>
+    <effect id="steel-effect">
+      <profile_COMMON>
+        <technique sid="common">
+          <phong>
+            <emission>
+              <color sid="emission">0 0 0 1</color>
+            </emission>
+            <ambient>
+              <color sid="ambient">0 0 0 1</color>
+            </ambient>
+            <diffuse>
+              <color sid="diffuse">0.4015687 0.4015687 0.4015687 1</color>
+            </diffuse>
+            <specular>
+              <color sid="specular">0.2333333 0.2333333 0.2333333 1</color>
+            </specular>
+            <shininess>
+              <float sid="shininess">50</float>
+            </shininess>
+            <index_of_refraction>
+              <float sid="index_of_refraction">1</float>
+            </index_of_refraction>
+          </phong>
+        </technique>
+      </profile_COMMON>
+    </effect>
+    <effect id="orange-effect">
+      <profile_COMMON>
+        <technique sid="common">
+          <phong>
+            <emission>
+              <color sid="emission">0 0 0 1</color>
+            </emission>
+            <ambient>
+              <color sid="ambient">0 0 0 1</color>
+            </ambient>
+            <diffuse>
+              <color sid="diffuse">0.64 0.2154427 0.01205313 1</color>
+            </diffuse>
+            <specular>
+              <color sid="specular">0.5 0.5 0.5 1</color>
+            </specular>
+            <shininess>
+              <float sid="shininess">50</float>
+            </shininess>
+            <index_of_refraction>
+              <float sid="index_of_refraction">1</float>
+            </index_of_refraction>
+          </phong>
+        </technique>
+      </profile_COMMON>
+    </effect>
+  </library_effects>
+  <library_materials>
+    <material id="black-material" name="black">
+      <instance_effect url="#black-effect"/>
+    </material>
+    <material id="steel-material" name="steel">
+      <instance_effect url="#steel-effect"/>
+    </material>
+    <material id="orange-material" name="orange">
+      <instance_effect url="#orange-effect"/>
+    </material>
+  </library_materials>
+  <library_geometries>
+    <geometry id="J6_Default-mesh" name="J6_Default">
+      <mesh>
+        <source id="J6_Default-mesh-positions">
+          <float_array id="J6_Default-mesh-positions-array" count="48">-0.02521133 -0.02527034 0.0219804 -0.02521133 -0.02527034 0.02755212 -0.02521133 0.02536493 0.0219804 -0.02521133 0.02536493 0.02755212 0.02532809 -0.02527034 0.0219804 0.02532809 -0.02527034 0.02755212 0.02532809 0.02536493 0.0219804 0.02532809 0.02536493 0.02755212 -0.02010285 -0.02015221 0.02710521 -0.02010285 -0.02015221 0.03267693 -0.02010285 0.0202468 0.02710521 -0.02010285 0.0202468 0.03267693 0.02021962 -0.02015221 0.02710521 0.02021962 -0.02015221 0.03267693 0.02021962 0.0202468 0.02710521 0.02021962 0.0202468 0.03267693</float_array>
+          <technique_common>
+            <accessor source="#J6_Default-mesh-positions-array" count="16" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="J6_Default-mesh-normals">
+          <float_array id="J6_Default-mesh-normals-array" count="18">-1 0 0 0 1 0 1 0 0 0 -1 0 0 0 -1 0 0 1</float_array>
+          <technique_common>
+            <accessor source="#J6_Default-mesh-normals-array" count="6" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <vertices id="J6_Default-mesh-vertices">
+          <input semantic="POSITION" source="#J6_Default-mesh-positions"/>
+        </vertices>
+        <triangles material="black-material" count="12">
+          <input semantic="VERTEX" source="#J6_Default-mesh-vertices" offset="0"/>
+          <input semantic="NORMAL" source="#J6_Default-mesh-normals" offset="1"/>
+          <p>1 0 2 0 0 0 3 1 6 1 2 1 7 2 4 2 6 2 5 3 0 3 4 3 6 4 0 4 2 4 3 5 5 5 7 5 1 0 3 0 2 0 3 1 7 1 6 1 7 2 5 2 4 2 5 3 1 3 0 3 6 4 4 4 0 4 3 5 1 5 5 5</p>
+        </triangles>
+        <triangles material="steel-material" count="12">
+          <input semantic="VERTEX" source="#J6_Default-mesh-vertices" offset="0"/>
+          <input semantic="NORMAL" source="#J6_Default-mesh-normals" offset="1"/>
+          <p>9 0 10 0 8 0 11 1 14 1 10 1 15 2 12 2 14 2 13 3 8 3 12 3 14 4 8 4 10 4 11 5 13 5 15 5 9 0 11 0 10 0 11 1 15 1 14 1 15 2 13 2 12 2 13 3 9 3 8 3 14 4 12 4 8 4 11 5 9 5 13 5</p>
+        </triangles>
+      </mesh>
+    </geometry>
+    <geometry id="J5_Default-mesh" name="J5_Default">
+      <mesh>
+        <source id="J5_Default-mesh-positions">
+          <float_array id="J5_Default-mesh-positions-array" count="24">0.01392459 -0.04491275 -0.04426479 0.01392459 -0.04491275 0.05232179 0.01392459 0.0443511 -0.04426479 0.01392459 0.0443511 0.05232179 0.09682637 -0.04491275 -0.04426479 0.09682637 -0.04491275 0.05232179 0.09682637 0.0443511 -0.04426479 0.09682637 0.0443511 0.05232179</float_array>
+          <technique_common>
+            <accessor source="#J5_Default-mesh-positions-array" count="8" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="J5_Default-mesh-normals">
+          <float_array id="J5_Default-mesh-normals-array" count="18">-1 0 0 0 1 0 1 0 0 0 -1 0 0 0 -1 0 0 1</float_array>
+          <technique_common>
+            <accessor source="#J5_Default-mesh-normals-array" count="6" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <vertices id="J5_Default-mesh-vertices">
+          <input semantic="POSITION" source="#J5_Default-mesh-positions"/>
+        </vertices>
+        <triangles material="steel-material" count="12">
+          <input semantic="VERTEX" source="#J5_Default-mesh-vertices" offset="0"/>
+          <input semantic="NORMAL" source="#J5_Default-mesh-normals" offset="1"/>
+          <p>1 0 2 0 0 0 3 1 6 1 2 1 7 2 4 2 6 2 5 3 0 3 4 3 6 4 0 4 2 4 3 5 5 5 7 5 1 0 3 0 2 0 3 1 7 1 6 1 7 2 5 2 4 2 5 3 1 3 0 3 6 4 4 4 0 4 3 5 1 5 5 5</p>
+        </triangles>
+      </mesh>
+    </geometry>
+    <geometry id="J4_Default-mesh" name="J4_Default">
+      <mesh>
+        <source id="J4_Default-mesh-positions">
+          <float_array id="J4_Default-mesh-positions-array" count="42">-0.05515354 -0.04332852 0.001496911 -0.05515354 -0.04332852 0.2210543 -0.05515354 0.0417602 0.001496911 -0.05515354 0.0417602 0.2210543 -0.04018354 -0.04332852 0.001496911 -0.04018354 -0.04332852 0.2210543 -0.04018354 0.0417602 0.001496911 -0.04018354 0.0417602 0.2210543 -0.04018354 0.0417602 0.04358559 -0.04018354 -0.04332852 0.04358559 0.04292219 0.0417602 0.04358559 0.04292219 0.0417602 0.001496911 0.04292219 -0.04332852 0.001496911 0.04292219 -0.04332852 0.04358559</float_array>
+          <technique_common>
+            <accessor source="#J4_Default-mesh-positions-array" count="14" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="J4_Default-mesh-normals">
+          <float_array id="J4_Default-mesh-normals-array" count="18">-1 0 0 0 1 0 1 0 0 0 -1 0 0 0 -1 0 0 1</float_array>
+          <technique_common>
+            <accessor source="#J4_Default-mesh-normals-array" count="6" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <vertices id="J4_Default-mesh-vertices">
+          <input semantic="POSITION" source="#J4_Default-mesh-positions"/>
+        </vertices>
+        <triangles material="orange-material" count="24">
+          <input semantic="VERTEX" source="#J4_Default-mesh-vertices" offset="0"/>
+          <input semantic="NORMAL" source="#J4_Default-mesh-normals" offset="1"/>
+          <p>1 0 2 0 0 0 3 1 8 1 2 1 7 2 9 2 8 2 9 3 1 3 0 3 6 4 0 4 2 4 3 5 5 5 7 5 6 4 12 4 4 4 10 2 12 2 11 2 9 5 10 5 8 5 8 1 11 1 6 1 4 3 13 3 9 3 1 0 3 0 2 0 6 1 2 1 8 1 3 1 7 1 8 1 7 2 5 2 9 2 0 3 4 3 9 3 9 3 5 3 1 3 6 4 4 4 0 4 3 5 1 5 5 5 6 4 11 4 12 4 10 2 13 2 12 2 9 5 13 5 10 5 8 1 10 1 11 1 4 3 12 3 13 3</p>
+        </triangles>
+      </mesh>
+    </geometry>
+    <geometry id="J3_DefaultMaTeRiaLglass1-mesh" name="J3_DefaultMaTeRiaLglass1">
+      <mesh>
+        <source id="J3_DefaultMaTeRiaLglass1-mesh-positions">
+          <float_array id="J3_DefaultMaTeRiaLglass1-mesh-positions-array" count="24">0.01207792 -0.05148959 -0.05020505 0.01207792 -0.05148959 0.04813814 0.01207792 0.04851031 -0.05020505 0.01207792 0.04851031 0.04813814 0.1090957 -0.05148959 -0.05020505 0.1090957 -0.05148959 0.04813814 0.1090957 0.04851031 -0.05020505 0.1090957 0.04851031 0.04813814</float_array>
+          <technique_common>
+            <accessor source="#J3_DefaultMaTeRiaLglass1-mesh-positions-array" count="8" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="J3_DefaultMaTeRiaLglass1-mesh-normals">
+          <float_array id="J3_DefaultMaTeRiaLglass1-mesh-normals-array" count="18">-1 0 0 0 1 0 1 0 0 0 -1 0 0 0 -1 0 0 1</float_array>
+          <technique_common>
+            <accessor source="#J3_DefaultMaTeRiaLglass1-mesh-normals-array" count="6" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <vertices id="J3_DefaultMaTeRiaLglass1-mesh-vertices">
+          <input semantic="POSITION" source="#J3_DefaultMaTeRiaLglass1-mesh-positions"/>
+        </vertices>
+        <triangles material="steel-material" count="12">
+          <input semantic="VERTEX" source="#J3_DefaultMaTeRiaLglass1-mesh-vertices" offset="0"/>
+          <input semantic="NORMAL" source="#J3_DefaultMaTeRiaLglass1-mesh-normals" offset="1"/>
+          <p>1 0 2 0 0 0 3 1 6 1 2 1 7 2 4 2 6 2 5 3 0 3 4 3 6 4 0 4 2 4 3 5 5 5 7 5 1 0 3 0 2 0 3 1 7 1 6 1 7 2 5 2 4 2 5 3 1 3 0 3 6 4 4 4 0 4 3 5 1 5 5 5</p>
+        </triangles>
+      </mesh>
+    </geometry>
+    <geometry id="J2_DefaultMaTeRiaLglass1-mesh" name="J2_DefaultMaTeRiaLglass1">
+      <mesh>
+        <source id="J2_DefaultMaTeRiaLglass1-mesh-positions">
+          <float_array id="J2_DefaultMaTeRiaLglass1-mesh-positions-array" count="24">-0.02206593 -0.03475844 -0.0365228 -0.02206593 -0.03475844 0.03825235 -0.02206593 0.3047264 -0.0365228 -0.02206593 0.3047264 0.03825235 -0.001627981 -0.03475844 -0.0365228 -0.001627981 -0.03475844 0.03825235 -0.001627981 0.3047264 -0.0365228 -0.001627981 0.3047264 0.03825235</float_array>
+          <technique_common>
+            <accessor source="#J2_DefaultMaTeRiaLglass1-mesh-positions-array" count="8" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="J2_DefaultMaTeRiaLglass1-mesh-normals">
+          <float_array id="J2_DefaultMaTeRiaLglass1-mesh-normals-array" count="18">-1 0 0 0 1 0 1 0 0 0 -1 0 0 0 -1 0 0 1</float_array>
+          <technique_common>
+            <accessor source="#J2_DefaultMaTeRiaLglass1-mesh-normals-array" count="6" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <vertices id="J2_DefaultMaTeRiaLglass1-mesh-vertices">
+          <input semantic="POSITION" source="#J2_DefaultMaTeRiaLglass1-mesh-positions"/>
+        </vertices>
+        <triangles material="orange-material" count="12">
+          <input semantic="VERTEX" source="#J2_DefaultMaTeRiaLglass1-mesh-vertices" offset="0"/>
+          <input semantic="NORMAL" source="#J2_DefaultMaTeRiaLglass1-mesh-normals" offset="1"/>
+          <p>1 0 2 0 0 0 3 1 6 1 2 1 7 2 4 2 6 2 5 3 0 3 4 3 6 4 0 4 2 4 3 5 5 5 7 5 1 0 3 0 2 0 3 1 7 1 6 1 7 2 5 2 4 2 5 3 1 3 0 3 6 4 4 4 0 4 3 5 1 5 5 5</p>
+        </triangles>
+      </mesh>
+    </geometry>
+    <geometry id="J1_Default-mesh" name="J1_Default">
+      <mesh>
+        <source id="J1_Default-mesh-positions">
+          <float_array id="J1_Default-mesh-positions-array" count="24">-0.04806804 -0.04884994 -0.04806804 -0.04806804 -0.04884994 0.04806804 -0.04806804 0.05512386 -0.04806804 -0.04806804 0.05512386 0.04806804 0.04806804 -0.04884994 -0.04806804 0.04806804 -0.04884994 0.04806804 0.04806804 0.05512386 -0.04806804 0.04806804 0.05512386 0.04806804</float_array>
+          <technique_common>
+            <accessor source="#J1_Default-mesh-positions-array" count="8" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="J1_Default-mesh-normals">
+          <float_array id="J1_Default-mesh-normals-array" count="18">-1 0 0 0 1 0 1 0 0 0 -1 0 0 0 -1 0 0 1</float_array>
+          <technique_common>
+            <accessor source="#J1_Default-mesh-normals-array" count="6" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <vertices id="J1_Default-mesh-vertices">
+          <input semantic="POSITION" source="#J1_Default-mesh-positions"/>
+        </vertices>
+        <triangles material="steel-material" count="12">
+          <input semantic="VERTEX" source="#J1_Default-mesh-vertices" offset="0"/>
+          <input semantic="NORMAL" source="#J1_Default-mesh-normals" offset="1"/>
+          <p>1 0 2 0 0 0 3 1 6 1 2 1 7 2 4 2 6 2 5 3 0 3 4 3 6 4 0 4 2 4 3 5 5 5 7 5 1 0 3 0 2 0 3 1 7 1 6 1 7 2 5 2 4 2 5 3 1 3 0 3 6 4 4 4 0 4 3 5 1 5 5 5</p>
+        </triangles>
+      </mesh>
+    </geometry>
+    <geometry id="Powerball_LWA_4_DefaultMaTeRiaLglass1-mesh" name="Powerball LWA 4_DefaultMaTeRiaLglass1">
+      <mesh>
+        <source id="Powerball_LWA_4_DefaultMaTeRiaLglass1-mesh-positions">
+          <float_array id="Powerball_LWA_4_DefaultMaTeRiaLglass1-mesh-positions-array" count="24">-0.05399996 0 -0.05399996 -0.05399996 0 0.05399996 -0.05399996 0.1085 -0.05399996 -0.05399996 0.1085 0.05399996 0.05399996 0 -0.05399996 0.05399996 0 0.05399996 0.05399996 0.1085 -0.05399996 0.05399996 0.1085 0.05399996</float_array>
+          <technique_common>
+            <accessor source="#Powerball_LWA_4_DefaultMaTeRiaLglass1-mesh-positions-array" count="8" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="Powerball_LWA_4_DefaultMaTeRiaLglass1-mesh-normals">
+          <float_array id="Powerball_LWA_4_DefaultMaTeRiaLglass1-mesh-normals-array" count="18">-1 0 0 0 1 0 1 0 0 0 -1 0 0 0 -1 0 0 1</float_array>
+          <technique_common>
+            <accessor source="#Powerball_LWA_4_DefaultMaTeRiaLglass1-mesh-normals-array" count="6" stride="3">
+              <param name="X" type="float"/>
+              <param name="Y" type="float"/>
+              <param name="Z" type="float"/>
+            </accessor>
+          </technique_common>
+        </source>
+        <vertices id="Powerball_LWA_4_DefaultMaTeRiaLglass1-mesh-vertices">
+          <input semantic="POSITION" source="#Powerball_LWA_4_DefaultMaTeRiaLglass1-mesh-positions"/>
+        </vertices>
+        <triangles material="steel-material" count="12">
+          <input semantic="VERTEX" source="#Powerball_LWA_4_DefaultMaTeRiaLglass1-mesh-vertices" offset="0"/>
+          <input semantic="NORMAL" source="#Powerball_LWA_4_DefaultMaTeRiaLglass1-mesh-normals" offset="1"/>
+          <p>1 0 2 0 0 0 3 1 6 1 2 1 7 2 4 2 6 2 5 3 0 3 4 3 6 4 0 4 2 4 3 5 5 5 7 5 1 0 3 0 2 0 3 1 7 1 6 1 7 2 5 2 4 2 5 3 1 3 0 3 6 4 4 4 0 4 3 5 1 5 5 5</p>
+        </triangles>
+      </mesh>
+    </geometry>
+  </library_geometries>
+  <library_controllers/>
+  <library_visual_scenes>
+    <visual_scene id="Scene" name="Scene">
+      <node id="Arm_0_Link" name="Arm_0_Link" type="NODE">
+        <matrix sid="transform">1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1</matrix>
+        <instance_geometry url="#Powerball_LWA_4_DefaultMaTeRiaLglass1-mesh" name="Arm_0_Link">
+          <bind_material>
+            <technique_common>
+              <instance_material symbol="steel-material" target="#steel-material"/>
+            </technique_common>
+          </bind_material>
+        </instance_geometry>
+        <node id="Arm_1_Link" name="Arm_1_Link" type="NODE">
+          <matrix sid="transform">1 0 0 0 0 1 0 0.1595 0 0 1 0 0 0 0 1</matrix>
+          <instance_geometry url="#J1_Default-mesh" name="Arm_1_Link">
+            <bind_material>
+              <technique_common>
+                <instance_material symbol="steel-material" target="#steel-material"/>
+              </technique_common>
+            </bind_material>
+          </instance_geometry>
+          <node id="Arm_2_Link" name="Arm_2_Link" type="NODE">
+            <matrix sid="transform">1 0 0 -0.04832623 0 1 0 -4.07994e-5 0 0 1 -8.64778e-4 0 0 0 1</matrix>
+            <instance_geometry url="#J2_DefaultMaTeRiaLglass1-mesh" name="Arm_2_Link">
+              <bind_material>
+                <technique_common>
+                  <instance_material symbol="orange-material" target="#orange-material"/>
+                </technique_common>
+              </bind_material>
+            </instance_geometry>
+            <node id="Arm_3_Link" name="Arm_3_Link" type="NODE">
+              <matrix sid="transform">1 0 0 -0.01076947 0 1 0 0.2706413 0 0 1 0.001069821 0 0 0 1</matrix>
+              <instance_geometry url="#J3_DefaultMaTeRiaLglass1-mesh" name="Arm_3_Link">
+                <bind_material>
+                  <technique_common>
+                    <instance_material symbol="steel-material" target="#steel-material"/>
+                  </technique_common>
+                </bind_material>
+              </instance_geometry>
+              <node id="Arm_4_Link" name="Arm_4_Link" type="NODE">
+                <matrix sid="transform">1 0 0 0.059096 0 1 0 4.75764e-4 0 0 1 0.04845949 0 0 0 1</matrix>
+                <instance_geometry url="#J4_Default-mesh" name="Arm_4_Link">
+                  <bind_material>
+                    <technique_common>
+                      <instance_material symbol="orange-material" target="#orange-material"/>
+                    </technique_common>
+                  </bind_material>
+                </instance_geometry>
+                <node id="Arm_5_Link" name="Arm_5_Link" type="NODE">
+                  <matrix sid="transform">1 0 0 -0.05199593 0 1 0 -4.7034e-4 0 0 1 0.1875988 0 0 0 1</matrix>
+                  <instance_geometry url="#J5_Default-mesh" name="Arm_5_Link">
+                    <bind_material>
+                      <technique_common>
+                        <instance_material symbol="steel-material" target="#steel-material"/>
+                      </technique_common>
+                    </bind_material>
+                  </instance_geometry>
+                  <node id="Arm_6_Link" name="Arm_6_Link" type="NODE">
+                    <matrix sid="transform">1 0 0 0.05232076 0 1 0 -2.23756e-4 0 0 1 0.03090936 0 0 0 1</matrix>
+                    <instance_geometry url="#J6_Default-mesh" name="Arm_6_Link">
+                      <bind_material>
+                        <technique_common>
+                          <instance_material symbol="black-material" target="#black-material"/>
+                          <instance_material symbol="steel-material" target="#steel-material"/>
+                        </technique_common>
+                      </bind_material>
+                    </instance_geometry>
+                  </node>
+                </node>
+              </node>
+            </node>
+          </node>
+        </node>
+      </node>
+    </visual_scene>
+  </library_visual_scenes>
+  <scene>
+    <instance_visual_scene url="#Scene"/>
+  </scene>
+</COLLADA>

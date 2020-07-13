@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Scene base_name="bla" name_space="Scene" name_suffix="0" persistency="666">
+  <Objects>
+    <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" visible="1">
+      <Object ambient="0.3 0.3 0.3 1" base_name="light" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" specular="0.1 0.1 0.1 1" type="Light" visible="1">
+        <Object accept_root="1" aspect="1" at="-0.274138 0 -0.247486" at_dir="0" base_name="Default" far="512" fov="1.0472" from="1.23875 1.23027 1.24423" name_space="__global__" name_suffix="0" near="0.01" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
+          <Object at="0 0 -1" at_dir="0" base_name="Headlight_beacon" from="0 0 0" light="light" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" up="0 1 0" visible="1">
+            <constraint persistency="666"/>
+          </Object>
+          <constraint persistency="666"/>
+        </Object>
+      </Object>
+    </Object>
+  </Objects>
+  <Rendering deferred_rendering="0" frustum_culling="1" fxaa="0" hmdd="0" marker="0" occlusion_culling="0" persistency="666" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
+  <Scripts persistency="666">
+    <Script base_name="displ_fp" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="GLSL">
+      <core>
+#version 400 compatibility
+
+uniform sampler2D tex;
+const vec2 size = vec2(0.2,0.0);
+const ivec3 off = ivec3(-1,0,1);
+const vec3 light = vec3(-1,-1,-0.5);
+
+vec3 getNormal() {
+	vec2 tc = gl_TexCoord[0].xy;
+    float s11 = texture(tex, tc).r;
+    float s01 = textureOffset(tex, tc, off.xy).r;
+    float s21 = textureOffset(tex, tc, off.zy).r;
+    float s10 = textureOffset(tex, tc, off.yx).r;
+    float s12 = textureOffset(tex, tc, off.yz).r;
+    
+    vec3 va = normalize(vec3(size.xy,s21-s01));
+    vec3 vb = normalize(vec3(size.yx,s12-s10));
+    vec3 n = cross(va,vb);
+	return n;
+}
+
+vec3 mixColor(vec3 c1, vec3 c2, float t) {
+	t = clamp(t, 0.0, 1.0);
+	return mix(c1, c2, t);
+}
+
+vec3 getColor() {
+	vec3 green = vec3(0.2,0.5,0.2);
+	vec3 black = vec3(0.0);
+	vec3 brown = vec3(0.6,0.5,0.2);
+	vec3 grey = vec3(0.7);
+	vec3 white = vec3(1.0);
+	
+	float h = texture2D(tex, gl_TexCoord[0].xy).r;
+	if (h &gt; 1.2) return mixColor(grey, white, 10*(h-1.2));
+	if (h &gt; 1.0 &amp;&amp; h &lt;= 1.2) return mixColor(brown, grey, 5*(h-1.0));
+	if (h &gt; 0.8 &amp;&amp; h &lt;= 1.0) return mixColor(green, brown, 5*(h-0.8));
+	if (h &lt;= 0.8) return mixColor(black, green, 1.25*h);
+	return black;
+}
+
+void main( void ) {
+	vec3 n = getNormal();
+	vec3 c = getColor();
+	
+	// diffuse lightning
+	vec4 aCol = vec4(c * 0.4, 1.0f);
+	float dFac = dot(normalize(n), -normalize(light));
+	vec4 dCol = vec4(c * 0.6 * dFac, 1.0f);	
+	gl_FragColor = aCol+dCol;
+}
+</core>
+    </Script>
+    <Script base_name="displ_tcp" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="GLSL">
+      <core>
+#version 400 compatibility
+#extension GL_ARB_tessellation_shader : enable
+
+layout(vertices = 4) out;
+out vec3 tcPosition[];
+out vec2 tcTexCoords[];
+
+#define ID gl_InvocationID
+
+void main() {
+    tcPosition[ID] = gl_in[ID].gl_Position.xyz;
+    tcTexCoords[ID] = gl_in[ID].gl_TexCoord[0].xy;
+    
+    if (ID == 0) {
+		vec4 pos = gl_ModelViewProjectionMatrix * vec4(tcPosition[ID], 1.0);
+		float D = length(pos.xyz);
+		int p = int(5.0/D);
+		int res = int(pow(2,p));
+		res = clamp(res, 1, 64);
+		
+        gl_TessLevelInner[0] = res;
+        gl_TessLevelInner[1] = res;
+        
+        gl_TessLevelOuter[0] = 64;
+        gl_TessLevelOuter[1] = 64;
+        gl_TessLevelOuter[2] = 64;
+        gl_TessLevelOuter[3] = 64;
+    }
+}
+</core>
+    </Script>
+    <Script base_name="displ_tep" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="GLSL">
+      <core>
+#version 400 compatibility
+#extension GL_ARB_tessellation_shader : enable
+
+layout( quads ) in;
+in vec3 tcPosition[];
+in vec2 tcTexCoords[];
+
+uniform sampler2D texture;
+
+void main() {
+    float u = gl_TessCoord.x; 
+    float v = gl_TessCoord.y;
+    
+    vec2 ta = mix(tcTexCoords[0], tcTexCoords[1], u);
+    vec2 tb = mix(tcTexCoords[3], tcTexCoords[2], u);
+    vec2 tc = mix(ta, tb, v);
+    gl_TexCoord[0] = vec4(tc.x, tc.y, 1.0, 1.0);
+	
+    vec3 a = mix(tcPosition[0], tcPosition[1], u);
+    vec3 b = mix(tcPosition[3], tcPosition[2], u);
+    vec3 tePosition = mix(a, b, v);
+    tePosition.y = 0.4*texture2D(texture, gl_TexCoord[0].xy).r;
+    gl_Position = gl_ModelViewProjectionMatrix * vec4(tePosition, 1);
+}
+</core>
+    </Script>
+    <Script base_name="displ_vp" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="GLSL">
+      <core>
+#version 120
+
+attribute vec4 osg_Vertex;
+attribute vec2 osg_MultiTexCoord0;
+
+void main(void) {
+    gl_TexCoord[0] = vec4(osg_MultiTexCoord0,0.0,0.0);
+	gl_Position = osg_Vertex;
+}
+</core>
+    </Script>
+    <Script base_name="init" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+	
+	g = VR.Geometry('terrain')
+	g.setType('GL_PATCHES')
+	g.setPatchVertices(4)
+	
+	gridN = 16
+	pChunk = 2.0/gridN
+	tcChunk = 1.0/gridN
+
+	pos = []
+	tcs = []
+	ids = []
+	for i in range(gridN):
+		px1 = -1 + i*pChunk
+		px2 = px1 + pChunk
+		tcx1 = 0 + i*tcChunk
+		tcx2 = tcx1 + tcChunk
+
+		for j in range(gridN):
+			py1 = -1 + j*pChunk
+			py2 = py1 + pChunk
+			tcy1 = 0 + j*tcChunk
+			tcy2 = tcy1 + tcChunk
+
+			N = len(pos)
+			pos.append([px1,0,py1])
+			tcs.append([tcx1,tcy1])
+			pos.append([px1,0,py2])
+			tcs.append([tcx1,tcy2])
+			pos.append([px2,0,py2])
+			tcs.append([tcx2,tcy2])
+			pos.append([px2,0,py1])
+			tcs.append([tcx2,tcy1])
+			ids += [0+N,1+N,2+N,3+N]	
+	
+	g.setPositions(pos)
+	g.setTexCoords(tcs)
+	g.setIndices(ids)
+	
+	VR.find('light').addChild(g)
+	VR.ground = g
+	VR.setMat()
+</core>
+      <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="2" persistency="666"/>
+    </Script>
+    <Script base_name="setMat" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+	
+	tg = VR.TextureGenerator()
+	tg.setSize([400,400,1])
+	tg.add('Perlin', 1.0, [0.97]*3, [1.0]*3)
+	tg.add('Perlin', 1.0/2, [0.95]*3, [1.0]*3)
+	tg.add('Perlin', 1.0/4, [0.85]*3, [1.0]*3)
+	tg.add('Perlin', 1.0/8, [0.8]*3, [1.0]*3)
+	tg.add('Perlin', 1.0/16, [0.7]*3, [1.0]*3)
+	tg.add('Perlin', 1.0/32, [0.5]*3, [1.0]*3)
+	tex = tg.compose(0)
+	
+	m = VR.ground.getMaterial()
+	m.setWireFrame(0)
+	m.setLineWidth(1)
+	m.setVertexProgram('displ_vp')
+	m.setFragmentProgram('displ_fp')
+	m.setTessControlProgram('displ_tcp')
+	m.setTessEvaluationProgram('displ_tep')
+	m.setTexture(tex)
+</core>
+    </Script>
+  </Scripts>
+  <Sockets persistency="666"/>
+  <Background color="0.544594 0.865309 1" format=".png" path="" persistency="666" type="0"/>
+  <Navigation active="Orbit" persistency="666"/>
+  <Materials persistency="666"/>
+  <Semantics persistency="666"/>
+</Scene>

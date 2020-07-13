@@ -1,0 +1,986 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Scene base_name="nature" name_space="Scene" name_suffix="0" persistency="666">
+  <Objects>
+    <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" visible="1">
+      <Object ambient="0.516136 0.516136 0.516136 1" base_name="Headlight" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="directional" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" specular="0 0 0 1" type="Light" visible="1">
+        <Object at="-4.5 4 -1" at_dir="0" base_name="Headlight_beacon" from="-4 5 0" light="Headlight" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" up="0 1 0" visible="1">
+          <constraint persistency="666"/>
+        </Object>
+        <Object accept_root="1" aspect="1" at="-0.395315 0.301169 -0.511722" at_dir="0" base_name="Default" far="1024" fov="1.0472" from="1.59347 2.28197 1.88969" name_space="__global__" name_suffix="0" near="0.01" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
+          <constraint persistency="666"/>
+        </Object>
+      </Object>
+    </Object>
+  </Objects>
+  <Rendering deferred_rendering="0" frustum_culling="1" fxaa="0" hmdd="0" marker="0" occlusion_culling="0" persistency="666" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
+  <Scripts persistency="666">
+    <Script base_name="click" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+	
+	if dev.intersect():
+		print dev.getIntersection()
+</core>
+      <trig type="on_device" dev="mouse" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="4" persistency="666"/>
+    </Script>
+    <Script base_name="init" group="" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+	
+	r = VR.getRoot().find('Headlight')
+
+	if hasattr(VR, 'woods'): VR.woods.destroy()
+	VR.woods = VR.Nature()
+	r.addChild(VR.woods)
+	
+	VR.size = 10
+	
+	#VR.init_terrain()
+	#VR.init_trees()
+	#VR.init_woods()
+	VR.init_grass()
+	
+	VR.woods.computeLODs()
+</core>
+      <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="2" persistency="666"/>
+      <trig type="on_device" dev="keyboard" state="Pressed" param="" key="105" base_name="trigger" name_space="__global__" name_suffix="3" persistency="666"/>
+    </Script>
+    <Script base_name="init_grass" group="" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR, random
+	
+	S = VR.size
+	
+	polygon = VR.Polygon()
+	polygon.addPoint([-S*0.5, -S*0.5])
+	polygon.addPoint([ S*0.5, -S*0.5])
+	polygon.addPoint([ S*0.5,  S*0.5])
+	polygon.addPoint([-S*0.5,  S*0.5])
+	VR.woods.addGrassPatch(polygon)
+	
+	
+	
+	
+	
+	
+</core>
+    </Script>
+    <Script base_name="init_terrain" group="" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+	from math import pi, sin
+	
+	r = VR.getRoot().find('Headlight')
+
+	if hasattr(VR, 'terrain'): VR.terrain.destroy()
+	VR.terrain = VR.Terrain('ground')
+	r.addChild(VR.terrain)
+	
+	VR.terrain.setParameters([120,120],0.1)
+	
+	#tex = VR.Image()
+	#tex.read('face.png')
+	
+	tg = VR.TextureGenerator()
+	tg.setSize([200,200,1], True)
+	#tg.drawFill([0,10,0])
+	r = 0.85
+	g = 0.9
+	b = 0.8
+	tg.add('Perlin', 1, [r,g,b,0.9], [r,g,b,1] )
+	tg.add('Perlin', 0.5, [r,g,b,0.8], [r,g,b,1] )
+	tg.add('Perlin', 0.25, [r,g,b,0.7], [r,g,b,1] )
+	tg.add('Perlin', 0.125, [r,g,b,0.6], [r,g,b,1] )	
+	tex = tg.compose(0)
+	VR.terrain.setMap(tex)
+	
+	
+	
+</core>
+    </Script>
+    <Script base_name="init_trees" group="" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+	from random import random
+
+	if hasattr(VR, 'trees'): VR.trees.destroy()
+	VR.trees = VR.Object('trees', 'Headlight')
+	
+	m = VR.Material('treemat')
+	m.setVertexProgram('shrd_vert')
+	m.setFragmentProgram('shrd_frag')
+	m.setFragmentProgram('shdr_dfrag', True)
+	m.setTessControlProgram('shdr_tc')
+	m.setTessEvaluationProgram('shdr_te')
+	m.setGeometryProgram('shrd_geo')
+	m.setWireFrame(0)
+	m.setLineWidth(3)
+	
+	tg = VR.TextureGenerator()
+	tg.setSize([50,50,50])
+	tg.add('Perlin', 1, [0.7,0.5,0.3], [1,0.9,0.7])
+	tg.add('Perlin', 1.0/4, [1.0,0.9,0.7], [0.7,0.5,0.3])
+	m.setTexture(tg.compose(0))
+	
+	lmat = VR.Material('leafs')
+	lmat.setTexture('maple-leaf.png')
+	lmat.setVertexProgram('shdr_leafs_vert')
+	lmat.setFragmentProgram('shdr_leafs_frag')
+	lmat.setGeometryProgram('shdr_leafs_geo')
+	lmat.setLit(True)
+	#lmat.clearTransparency() # TODO: strange performance hit!
+		
+	def addTree(p):
+		t = VR.Tree()
+		t.setFrom(p)
+		VR.trees.addChild(t)
+	
+		#t.setup(6,5,int(random()*100), 0.2,0.5,0.78,0.45, 0.2,0.4,0.2,0.2)
+		t.setup(4,5,int(random()*100), 0.2,0.4,0.78,0.45, 0.2,0.4,0.2,0.2)
+			
+		#t.setMaterial(m)
+	
+		t.addLeafs(4, 30)
+		t.addLeafs(5, 20)
+		t.setLeafMaterial(lmat)
+	
+	N = 1
+	s = 10
+	for i in range(N):
+		for j in range(N):
+			addTree([(i-N*0.5)*s,0,(j-N*0.5)*s])
+	
+	
+	
+	
+	
+</core>
+    </Script>
+    <Script base_name="init_woods" group="" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+	from random import random
+	
+		
+	def addTree():
+		t = VR.Tree('tree')
+		
+		H = 2+random()*6
+		Nn = int(H)-1
+		r0 = 0.05+0.15*random()
+		t.addBranching(Nn,4, 0.2,0.4,H,r0, 0.2,0.4,0.2,0.2)
+		t.addBranching(1,4, 0.2,0.4,0.8,r0*pow(0.3,1), 0.2,0.4,0.2,0.2)
+		t.addBranching(1,4, 0.2,0.4,0.7,r0*pow(0.3,2), 0.2,0.4,0.2,0.2)
+		t.addBranching(1,4, 0.2,0.4,0.6,r0*pow(0.3,3), 0.2,0.4,0.2,0.2)
+		t.addBranching(1,4, 0.2,0.4,0.5,r0*pow(0.3,4), 0.2,0.4,0.2,0.2)
+		t.grow( int(random()*100) )
+		
+		t.addLeafs(4, 30)
+		return t
+		
+	def addBush():
+		t = VR.Tree('bush')
+		
+		t.addBranching(1,10, 0.2,0.4,0.1,0.1, 0.2,0.4,0.2,0.2)
+		t.addBranching(1,4, 0.2,0.9,0.8,0.02, 0.2,0.4,0.2,0.2)
+		t.addBranching(1,4, 0.2,0.4,0.7,0.004, 0.2,0.4,0.2,0.2)
+		t.grow( int(random()*100) )
+		
+		t.addLeafs(2, 20, 0.1)
+		return t
+		
+	def randPos(W):
+		x = random()*W*2-W
+		z = random()*W*2-W
+		return [x,0,z]
+	
+	trees = [ addTree() for i in range(5) ]
+	bushes = [ addBush() for i in range(5) ]
+	
+	for i in range(int(0.02*VR.size*VR.size)):
+		t = trees[int(random()*5)]
+		t.setFrom( randPos(VR.size*0.5) )
+		VR.woods.addTree(t)
+	
+	for i in range(int(0.1*VR.size*VR.size)):
+		t = bushes[int(random()*5)]
+		t.setFrom( randPos(VR.size*0.5) )
+		VR.woods.addTree(t)
+	
+	"""	
+	for t in trees:
+		t.setFrom( randPos(VR.size*0.5) )
+		VR.woods.addTree(t)
+	"""
+		
+	
+	
+	
+</core>
+    </Script>
+    <Script base_name="shdr_dfrag" group="" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="GLSL">
+      <core>
+#version 400 compatibility&#13;
+&#13;
+uniform sampler3D tex;&#13;
+
+in float cylR1;
+in float cylR2;
+in vec3 cylDir;
+in vec3 cylP0;
+in vec3 cylP1;
+in vec3 cylN0;
+in vec3 cylN1;
+in vec3 dir;
+&#13;
+in vec3 ViewDirection;&#13;
+in vec3 fvObjectPosition;
+in vec3 MVPos;
+in vec3 Normal;
+
+vec3 norm;
+vec3 position;
+vec4 color;
+vec3 tc;
+mat4 miMV;
+vec3 rayStart;
+vec3 rayDir;
+
+#define eps 0.0001
+#define mP gl_ProjectionMatrix
+
+vec2 solveEq(float A, float B, float C) {
+   	float D = B*B-4.0*A*C;
+   	if (D &lt; 0.0) discard; // no solution/intersection
+   	D = sqrt(D);
+   	float t1 = (-B+D)/A*0.5;
+   	float t2 = (-B-D)/A*0.5;
+   	return vec2(t1, t2);
+}
+
+float intersectCap(vec3 rayStart, vec3 rayDir, vec3 p0, vec3 n, float r) {
+	float t = dot((p0-rayStart),n)/dot(rayDir,n);
+   	vec3 p = rayStart + t*rayDir;
+   	if ( abs(dot(n, p-p0)) &gt; eps ) return -1.0;
+   	if ( distance(p,p0) &gt; r ) return -1.0;
+   	return t;
+}
+
+// ellipsoid: (x/a)2 + (y/b)2 + (z/c)2 = 1
+vec3 applyCaps(vec3 rayStart, vec3 rayDir, float tp) {
+   	vec3 pC = rayStart + tp*rayDir;
+   	if ( dot(cylN0, pC-cylP0) &lt; -eps ) {
+   		float tc0 = intersectCap(rayStart, rayDir, cylP0, cylN0, cylR1);
+   		if (tc0 &gt; eps) {
+   			tp = max( tp, tc0 );
+   			pC = rayStart + tp*rayDir;
+   		} else discard;
+   	}
+   	
+   	if ( dot(cylN1, pC-cylP1) &gt;  eps )  {
+   		float tc1 = intersectCap(rayStart, rayDir, cylP1, cylN1, cylR2);
+   		if (tc1 &gt; eps) {
+   			tp = max( tp, tc1 );
+   			pC = rayStart + tp*rayDir;
+   		} else discard;
+   	}
+   	return pC;
+}
+
+vec3 raycastCylinder() {
+   	vec3 rayDRad = rayDir - dot(rayDir, cylDir)*cylDir;
+   	vec3 rayPRad = rayStart-cylP0 - dot(rayStart-cylP0, cylDir)*cylDir;
+   	
+   	float A = dot(rayDRad,rayDRad);
+   	float B = 2.0*dot(rayDRad, rayPRad);
+   	float C = dot(rayPRad, rayPRad) - cylR1*cylR1;
+   	vec2 t = solveEq(A, B, C);
+   	float tp = min(t[0],t[1]);
+   	return applyCaps(rayStart, rayDir, tp);
+}
+
+vec3 raycastCone() {
+   	float H = distance(cylP0, cylP1);
+   	float H2 = H*H;
+   	float dR = cylR1-cylR2;
+   	float dR2 = dR*dR;
+   	
+   	if (abs(dR) &lt; eps) return raycastCylinder();
+   	//return fvObjectPosition;
+   	
+   	vec3 cylPa = cylP0 + cylDir * cylR1*H/dR;
+   	float vrvc = dot(rayDir, cylDir);
+   	float dpvc = dot(rayStart-cylPa, cylDir);
+   	vec3 rayDRad = rayDir - vrvc*cylDir;
+   	vec3 rayPRad = rayStart-cylPa - dpvc*cylDir;
+   	float cos2a = H2 / (H2 + dR2);
+   	float sin2a = 1.0 - cos2a;
+   	
+   	float A = cos2a * dot(rayDRad,rayDRad) - sin2a * vrvc * vrvc;
+   	float B = 2.0 * (cos2a * dot(rayDRad, rayPRad) - sin2a * vrvc * dpvc);
+   	float C = cos2a * dot(rayPRad, rayPRad) - sin2a * dpvc * dpvc;
+   	vec2 t = solveEq(A, B, C);
+   	float tp = min(t[0],t[1]);
+   	return applyCaps(rayStart, rayDir, tp);
+}
+
+const vec2 size = vec2(0.1,-0.1);
+const ivec3 off = ivec3(-1,0,1);
+void applyBumpMap() {
+    float s11 = texture(tex, tc).r;
+    float s01 = textureOffset(tex, tc, off.xyz).r;
+    float s21 = textureOffset(tex, tc, off.zyx).r;
+    float s10 = textureOffset(tex, tc, off.yxz).r;
+    float s12 = textureOffset(tex, tc, off.yzx).r;
+    
+    vec3 va = normalize(vec3(size.xy,s21-s01));
+    vec3 vb = normalize(vec3(size.yx,s12-s10));
+    norm = normalize(norm+0.8*cross(va,vb));
+    //norm = cross(va,vb);
+}
+
+void computeNormal() {
+   	norm = position - cylP0 - dot(position - cylP0, cylDir)*cylDir;
+	norm = (miMV*vec4(norm, 0.0)).xyz;
+   	norm = normalize(norm);
+}
+
+void computeTexCoords() {
+	float h = dot(position-cylP0, cylDir);
+	tc = vec3(norm.x+h*0.5, h*0.3/cylR1, norm.z+h*0.5);
+}
+
+void computeDepth() {
+	vec4 pp = mP * vec4(position, 1);
+	float d = pp.z / pp.w;
+	gl_FragDepth = d*0.5 + 0.5;
+}
+&#13;
+void main( void ) {
+	miMV = inverse( gl_ModelViewMatrix ); // TODO: avoid computing inverse in shader!
+	norm = Normal;
+   	rayStart = vec3(0.0);
+   	rayDir = MVPos;
+   	rayDir = normalize(rayDir);
+   	
+	position = fvObjectPosition;
+	position = raycastCone();
+	computeNormal();
+	computeTexCoords();
+	applyBumpMap();
+	color = texture(tex, tc);
+	computeDepth();
+	
+	norm = gl_NormalMatrix * norm;
+    gl_FragData[0] = vec4(position, 1.0);
+    gl_FragData[1] = vec4(norm, 1.0);
+    gl_FragData[2] = vec4(color.xyz, 0);&#13;
+}
+
+
+
+</core>
+    </Script>
+    <Script base_name="shdr_leaf_lod_fp" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="GLSL">
+      <core>
+#version 400 compatibility&#13;
+&#13;
+uniform sampler3D tex;&#13;
+&#13;
+in vec3 vn;&#13;
+in vec4 vc;&#13;
+in vec3 vp;&#13;
+&#13;
+vec4 color;&#13;
+&#13;
+void applyBlinnPhong() {&#13;
+	vec3 n = gl_NormalMatrix * vn;&#13;
+	vec3  light = normalize( gl_LightSource[0].position.xyz );// directional light&#13;
+	float NdotL = max(dot( n, light ), 0.0);&#13;
+	vec4  ambient = gl_LightSource[0].ambient * color;&#13;
+	vec4  diffuse = gl_LightSource[0].diffuse * NdotL * color;&#13;
+	float NdotHV = max(dot(n, normalize(gl_LightSource[0].halfVector.xyz)),0.0);&#13;
+	vec4  specular = gl_LightSource[0].specular * pow( NdotHV, gl_FrontMaterial.shininess ); &#13;
+	gl_FragColor = ambient + diffuse + specular;&#13;
+}&#13;
+&#13;
+void main( void ) {&#13;
+	color = vc;&#13;
+	vec4 noise = texture(tex,vp.xyz);
+	color.xyz *= noise.a;&#13;
+	//if (color.a &lt; 0.5) discard;&#13;
+	//gl_FragColor = c;&#13;
+	applyBlinnPhong();&#13;
+}
+</core>
+    </Script>
+    <Script base_name="shdr_leaf_lod_setup" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+	
+	l = VR.find('leafs')
+	m = l.getMaterial()
+	
+	tg = VR.TextureGenerator()
+	tg.setSize([50,50,50], True)
+	r = 0.85
+	g = 1.0
+	b = 0.8
+	tg.add('Perlin', 1, [r,g,b,0.9], [r,g,b,1] )
+	tg.add('Perlin', 0.5, [r,g,b,0.5], [r,g,b,1] )
+	tg.add('Perlin', 0.25, [r,g,b,0.8], [r,g,b,1] )
+	#tg.add('Perlin', 0.125, [r,g,b,0.7], [r,g,b,1] )
+	
+	m.setTexture(tg.compose(0))
+	m.setVertexProgram('shdr_leaf_lod_vp')
+	m.setFragmentProgram('shdr_leaf_lod_fp')
+</core>
+    </Script>
+    <Script base_name="shdr_leaf_lod_vp" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="GLSL">
+      <core>
+// vertex shader program&#13;
+varying vec3 vn;&#13;
+varying vec4 vc;&#13;
+varying vec3 vp;&#13;
+&#13;
+attribute vec4 osg_Vertex;&#13;
+attribute vec3 osg_Normal;&#13;
+attribute vec4 osg_Color;&#13;
+&#13;
+void main( void ) {&#13;
+	vn = osg_Normal;&#13;
+	vc = osg_Color;
+	vp = osg_Vertex.xyz;&#13;
+	gl_Position = gl_ModelViewProjectionMatrix*osg_Vertex;&#13;
+}
+</core>
+    </Script>
+    <Script base_name="shdr_leafs_frag" group="" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="GLSL">
+      <core>
+#version 400 compatibility&#13;
+&#13;
+uniform sampler2D tex;
+
+in vec2 tcs;
+in vec3 norm;
+vec4 color;
+
+
+void applyBlinnPhong() {
+	vec3 n = gl_NormalMatrix * norm;
+	vec3  light = normalize( gl_LightSource[0].position.xyz );// directional light
+	float NdotL = max(dot( n, light ), 0.0);&#13;
+	vec4  ambient = gl_LightSource[0].ambient * color;&#13;
+	vec4  diffuse = gl_LightSource[0].diffuse * NdotL * color;&#13;
+	float NdotHV = max(dot(norm, normalize(gl_LightSource[0].halfVector.xyz)),0.0);
+	vec4  specular = gl_LightSource[0].specular * pow( NdotHV, gl_FrontMaterial.shininess ); &#13;
+	gl_FragColor = ambient + diffuse + specular;
+}
+&#13;
+void main( void ) {
+	color = texture(tex,tcs);
+	if (color.a &lt; 0.5) discard;
+	color.a = 1.0;
+	color.y *= 0.7;
+	color.xz *= 0.2;
+	//gl_FragColor = c;
+	applyBlinnPhong();
+	//gl_FragColor = vec4(norm, 1.0);
+	//gl_FragColor = vec4(0,1,0,1);&#13;
+}
+
+
+
+
+</core>
+    </Script>
+    <Script base_name="shdr_leafs_geo" group="" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="GLSL">
+      <core>
+//----------------------------------------------------------------------------------------------MAIN--GP&#13;
+#version 400 compatibility&#13;
+#extension GL_EXT_geometry_shader4 : enable&#13;
+layout (points) in;&#13;
+layout (triangle_strip, max_vertices = 6) out;&#13;
+in vec3 vn[];
+out vec2 tcs;
+out vec3 norm;
+
+#define mMVP gl_ModelViewProjectionMatrix
+#define mMV gl_ModelViewMatrix
+#define mP gl_ProjectionMatrix
+&#13;
+vec4 crns[4];
+vec4 crnsMVP[4];
+vec2 TCS[4];
+&#13;
+void emit(int i) {&#13;
+	gl_Position = crnsMVP[i];
+	tcs = TCS[i];&#13;
+	EmitVertex();&#13;
+}
+&#13;
+void main() {&#13;
+	vec4 p = gl_PositionIn[0];
+	float s = 0.03;
+	vec3 u = vec3(0,1,0);
+	//vec4 x = vec4(s,0,0,0);
+	//vec4 z = vec4(0,0,s,0);
+	vec4 z = vec4(vn[0]*s, 0);
+	vec4 x = vec4(normalize(cross(z.xyz,u))*s, 0);
+	if (z[1] &gt; 0) z[1] *= -1;
+	crns[0] = p -x-z;
+	crns[1] = p +x-z;
+	crns[2] = p -x+z;
+	crns[3] = p +x+z;
+	TCS[0] = vec2(0,0);
+	TCS[1] = vec2(1,0);
+	TCS[2] = vec2(0,1);
+	TCS[3] = vec2(1,1);
+	norm = normalize(cross(x.xyz,z.xyz));
+	for (int i=0; i&lt;4; i++) crnsMVP[i] = mMVP * crns[i];&#13;
+	emit(0);
+	emit(1);
+	emit(2);
+	emit(3);&#13;
+	EndPrimitive();&#13;
+}
+
+
+
+
+
+</core>
+    </Script>
+    <Script base_name="shdr_leafs_vert" group="" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="GLSL">
+      <core>
+// vertex shader program
+varying vec3 vn;&#13;
+&#13;
+attribute vec4 osg_Vertex;&#13;
+attribute vec3 osg_Normal;
+
+void main( void ) {
+	vn = osg_Normal;
+    gl_Position = osg_Vertex;&#13;
+}
+</core>
+    </Script>
+    <Script base_name="shdr_tc" group="" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="GLSL">
+      <core>
+#version 400 compatibility
+#extension GL_ARB_tessellation_shader : enable
+
+layout(vertices = 2) out;
+out vec3 tcPosition[];
+in vec2 vtc[];
+out vec2 ctc[];
+in vec3 vn[];
+out vec3 cn[];
+
+#define ID gl_InvocationID
+
+void main() {
+    tcPosition[ID] = gl_in[ID].gl_Position.xyz;
+    ctc[ID] = vtc[ID];
+    cn[ID] = vn[ID];
+    
+    if (ID == 0) {
+        gl_TessLevelOuter[0] = 1;
+        gl_TessLevelOuter[1] = 4;
+    }
+}
+</core>
+    </Script>
+    <Script base_name="shdr_te" group="" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="GLSL">
+      <core>
+#version 400 compatibility
+#extension GL_ARB_tessellation_shader : enable
+
+layout( isolines ) in;
+in vec3 tcPosition[];
+in vec2 ctc[];
+in vec3 cn[];
+out vec2 tc;
+
+void main() {
+    float u = gl_TessCoord.x;
+     
+    vec3 n1 = cn[0];
+    vec3 n2 = cn[1];
+    vec3 p1 = tcPosition[0];
+    vec3 p2 = p1+n1*0.1;
+    vec3 p3 = tcPosition[1];
+    
+    vec3 pos = (1.0-u)*(1.0-u)*p1 + 2.0*(1.0-u)*u*p2 + u*u*p3;
+    
+    tc = mix(ctc[0], ctc[1], u);
+    gl_Position = vec4(pos, 1.0);
+}
+</core>
+    </Script>
+    <Script base_name="shrd_frag" group="" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="GLSL">
+      <core>
+#version 400 compatibility&#13;
+&#13;
+uniform sampler3D tex;&#13;
+
+in float cylR1;
+in float cylR2;
+in vec3 cylDir;
+in vec3 cylP0;
+in vec3 cylP1;
+in vec3 cylN0;
+in vec3 cylN1;
+in vec3 dir;
+&#13;
+in vec3 ViewDirection;&#13;
+in vec3 fvObjectPosition;
+in vec3 MVPos;
+in vec3 Normal;
+
+vec3 norm;
+vec3 position;
+vec4 color;
+vec3 tc;
+mat4 miMV;
+vec3 rayStart;
+vec3 rayDir;
+
+#define eps 0.0001
+#define mP gl_ProjectionMatrix
+
+vec2 solveEq(float A, float B, float C) {
+   	float D = B*B-4.0*A*C;
+   	if (D &lt; 0.0) discard; // no solution/intersection
+   	D = sqrt(D);
+   	float t1 = (-B+D)/A*0.5;
+   	float t2 = (-B-D)/A*0.5;
+   	return vec2(t1, t2);
+}
+
+float intersectCap(vec3 rayStart, vec3 rayDir, vec3 p0, vec3 n, float r) {
+	float t = dot((p0-rayStart),n)/dot(rayDir,n);
+   	vec3 p = rayStart + t*rayDir;
+   	if ( abs(dot(n, p-p0)) &gt; eps ) return -1.0;
+   	if ( distance(p,p0) &gt; r ) return -1.0;
+   	return t;
+}
+
+// ellipsoid: (x/a)2 + (y/b)2 + (z/c)2 = 1
+vec3 applyCaps(vec3 rayStart, vec3 rayDir, float tp) {
+   	vec3 pC = rayStart + tp*rayDir;
+   	if ( dot(cylN0, pC-cylP0) &lt; -eps ) {
+   		float tc0 = intersectCap(rayStart, rayDir, cylP0, cylN0, cylR1);
+   		if (tc0 &gt; eps) {
+   			tp = max( tp, tc0 );
+   			pC = rayStart + tp*rayDir;
+   		} else discard;
+   	}
+   	
+   	if ( dot(cylN1, pC-cylP1) &gt;  eps )  {
+   		float tc1 = intersectCap(rayStart, rayDir, cylP1, cylN1, cylR2);
+   		if (tc1 &gt; eps) {
+   			tp = max( tp, tc1 );
+   			pC = rayStart + tp*rayDir;
+   		} else discard;
+   	}
+   	return pC;
+}
+
+vec3 raycastCylinder() {
+   	vec3 rayDRad = rayDir - dot(rayDir, cylDir)*cylDir;
+   	vec3 rayPRad = rayStart-cylP0 - dot(rayStart-cylP0, cylDir)*cylDir;
+   	
+   	float A = dot(rayDRad,rayDRad);
+   	float B = 2.0*dot(rayDRad, rayPRad);
+   	float C = dot(rayPRad, rayPRad) - cylR1*cylR1;
+   	vec2 t = solveEq(A, B, C);
+   	float tp = min(t[0],t[1]);
+   	return applyCaps(rayStart, rayDir, tp);
+}
+
+vec3 raycastCone() {
+   	float H = distance(cylP0, cylP1);
+   	float H2 = H*H;
+   	float dR = cylR1-cylR2;
+   	float dR2 = dR*dR;
+   	
+   	if (abs(dR) &lt; eps) return raycastCylinder();
+   	//return fvObjectPosition;
+   	
+   	vec3 cylPa = cylP0 + cylDir * cylR1*H/dR;
+   	float vrvc = dot(rayDir, cylDir);
+   	float dpvc = dot(rayStart-cylPa, cylDir);
+   	vec3 rayDRad = rayDir - vrvc*cylDir;
+   	vec3 rayPRad = rayStart-cylPa - dpvc*cylDir;
+   	float cos2a = H2 / (H2 + dR2);
+   	float sin2a = 1.0 - cos2a;
+   	
+   	float A = cos2a * dot(rayDRad,rayDRad) - sin2a * vrvc * vrvc;
+   	float B = 2.0 * (cos2a * dot(rayDRad, rayPRad) - sin2a * vrvc * dpvc);
+   	float C = cos2a * dot(rayPRad, rayPRad) - sin2a * dpvc * dpvc;
+   	vec2 t = solveEq(A, B, C);
+   	float tp = min(t[0],t[1]);
+   	return applyCaps(rayStart, rayDir, tp);
+}
+
+const vec2 size = vec2(0.1,-0.1);
+const ivec3 off = ivec3(-1,0,1);
+void applyBumpMap() {
+    float s11 = texture(tex, tc).r;
+    float s01 = textureOffset(tex, tc, off.xyz).r;
+    float s21 = textureOffset(tex, tc, off.zyx).r;
+    float s10 = textureOffset(tex, tc, off.yxz).r;
+    float s12 = textureOffset(tex, tc, off.yzx).r;
+    
+    vec3 va = normalize(vec3(size.xy,s21-s01));
+    vec3 vb = normalize(vec3(size.yx,s12-s10));
+    norm = normalize(norm+0.8*cross(va,vb));
+    //norm = cross(va,vb);
+}
+
+void computeNormal() {
+   	norm = position - cylP0 - dot(position - cylP0, cylDir)*cylDir;
+	norm = (miMV*vec4(norm, 0.0)).xyz;
+   	norm = normalize(norm);
+}
+
+void computeTexCoords() {
+	float h = dot(position-cylP0, cylDir);
+	tc = vec3(norm.x+h*0.5, h*0.3/cylR1, norm.z+h*0.5);
+}
+
+void computeDepth() {
+	vec4 pp = mP * vec4(position, 1);
+	float d = pp.z / pp.w;
+	gl_FragDepth = d*0.5 + 0.5;
+}
+
+void applyBlinnPhong() {
+	norm = gl_NormalMatrix * norm;
+	vec3  light = normalize( gl_LightSource[0].position.xyz );// directional light
+	float NdotL = max(dot( norm, light ), 0.0);&#13;
+	vec4  ambient = gl_LightSource[0].ambient * color;&#13;
+	vec4  diffuse = gl_LightSource[0].diffuse * NdotL * color;&#13;
+	float NdotHV = max(dot(norm, normalize(gl_LightSource[0].halfVector.xyz)),0.0);
+	vec4  specular = gl_LightSource[0].specular * pow( NdotHV, gl_FrontMaterial.shininess ); &#13;
+	gl_FragColor = ambient + diffuse + specular;
+}
+&#13;
+void main( void ) {
+	miMV = inverse( gl_ModelViewMatrix ); // TODO: avoid computing inverse in shader!
+	norm = Normal;
+   	rayStart = vec3(0.0);
+   	rayDir = MVPos;
+   	rayDir = normalize(rayDir);
+   	
+	position = fvObjectPosition;
+	position = raycastCone();
+	computeNormal();
+	computeTexCoords();
+	applyBumpMap();
+	color = texture(tex, tc);
+	applyBlinnPhong();
+	computeDepth();&#13;
+}
+
+
+
+
+</core>
+    </Script>
+    <Script base_name="shrd_geo" group="" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="GLSL">
+      <core>
+//----------------------------------------------------------------------------------------------MAIN--GP&#13;
+#version 400 compatibility&#13;
+#extension GL_EXT_geometry_shader4 : enable&#13;
+layout (lines) in;&#13;
+layout (triangle_strip, max_vertices = 12) out;&#13;
+in vec2 tc[];&#13;
+&#13;
+//Phong&#13;
+out vec3 ViewDirection;&#13;
+out vec3 fvObjectPosition;
+out vec3 MVPos;
+out vec3 Normal;
+out vec3 dir;
+
+out float cylR1;
+out float cylR2;
+out vec3 cylDir;
+out vec3 cylP0;
+out vec3 cylP1;
+out vec3 cylN0;
+out vec3 cylN1;
+
+#define mMVP gl_ModelViewProjectionMatrix
+#define mMV gl_ModelViewMatrix
+#define mP gl_ProjectionMatrix&#13;
+
+vec4 crns[8];
+vec4 crnsMV[8];
+vec4 crnsMVP[8];
+&#13;
+void emit(int i) {&#13;
+	gl_Position = crnsMVP[i];&#13;
+	MVPos = crnsMV[i].xyz;
+	fvObjectPosition = crnsMVP[i].xyz;&#13;
+	ViewDirection = -fvObjectPosition.xyz;
+	ViewDirection = normalize(ViewDirection);&#13;
+	EmitVertex();&#13;
+}&#13;
+&#13;
+void emitQuad(int i1, int i2, int i3, int i4) {&#13;
+	vec4 mvp1 = crnsMVP[i1];
+	vec4 mvp2 = crnsMVP[i2];
+	vec4 mvp3 = crnsMVP[i3];
+	vec4 mvp4 = crnsMVP[i4];
+	
+	// check visibility
+	vec4 c = (mvp1+mvp3)*0.5;
+	vec3 i = normalize( vec3(mvp2.xyz - mvp1.xyz) );
+    vec3 j = normalize( vec3(mvp4.xyz - mvp1.xyz) );
+    if ( dot(cross(i, j),c.xyz) &lt; 0.0 ) return;
+&#13;
+	emit(i1);
+	emit(i2);
+	emit(i4);
+	emit(i3);&#13;
+	EndPrimitive();&#13;
+}
+
+vec3 perp(vec3 v) {
+    vec3 b = cross(v, vec3(1, 0, 0));
+    if (dot(b, b) &lt; 0.01) b = cross(v, vec3(0, 0, 1));
+    return b;
+}
+&#13;
+void main() {&#13;
+	vec4 p1 = gl_PositionIn[0];&#13;
+	vec4 p2 = gl_PositionIn[1];
+	vec4 pm = (p1+p2)*0.5;
+	dir = p2.xyz - p1.xyz;
+
+	// make the segment bigger to avoid chamfer problems
+	p1 -= vec4(dir*0.02, 0.0);
+	p2 += vec4(dir*0.02, 0.0);
+	dir *= 1.05;
+
+	// cylinder and cone raycast parameters
+	cylR1 = tc[0][0]*0.1;
+	cylR2 = tc[1][0]*0.1;
+	cylDir = normalize(vec3(mMV * vec4(dir,0.0)));
+	cylP0 = vec3(mMV * p1);
+	cylP1 = vec3(mMV * p2);
+	cylN0 = cylDir;
+	cylN1 = cylDir;
+	 
+	// build hull
+	vec4 Y = vec4(dir*0.5, 0.0);
+	vec4 X = vec4( normalize(perp(dir)) ,0.0);
+	vec4 Z = vec4( normalize(cross(dir, X.xyz)) ,0.0);
+	crns[0] = pm - X*cylR1 - Y - Z*cylR1;
+	crns[1] = pm + X*cylR1 - Y - Z*cylR1;
+	crns[2] = pm + X*cylR1 - Y + Z*cylR1;
+	crns[3] = pm - X*cylR1 - Y + Z*cylR1;
+	crns[4] = pm - X*cylR1 + Y - Z*cylR1;
+	crns[5] = pm + X*cylR1 + Y - Z*cylR1;
+	crns[6] = pm + X*cylR1 + Y + Z*cylR1;
+	crns[7] = pm - X*cylR1 + Y + Z*cylR1;
+	for (int i=0; i&lt;8; i++) crnsMV[i] = mMV * crns[i];
+	for (int i=0; i&lt;8; i++) crnsMVP[i] = mP * crnsMV[i];
+&#13;
+	emitQuad(3, 2, 1, 0); // bottom
+	emitQuad(4, 5, 6, 7); // top
+	emitQuad(0, 1, 5, 4); // sides
+	emitQuad(1, 2, 6, 5);
+	emitQuad(2, 3, 7, 6);
+	emitQuad(3, 0, 4, 7);&#13;
+}
+
+
+
+
+
+</core>
+    </Script>
+    <Script base_name="shrd_vert" group="" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="GLSL">
+      <core>
+// vertex shader program
+varying vec2 vtc;
+varying vec3 vn;&#13;
+&#13;
+attribute vec4 osg_Vertex;&#13;
+attribute vec3 osg_Normal;
+attribute vec2 osg_MultiTexCoord0;
+
+uniform int wind; // -100 to 100
+
+vec4 vertex;
+
+// TODO: work on wind
+void applyWind() {
+	vec3 v = vertex.xyz;
+	float dw = abs(float(wind)+50.0*v.x+50.0*v.z)*0.000002;
+	dw *= v.y*v.y;
+	dw *= sin(v.x*20.0)*sin(v.z*20.0);
+	dw /= vtc[0];&#13;
+    vertex += vec4(dw,0.0,dw,0.0);
+}&#13;
+&#13;
+//----------------------------------------------------------------------------------------------MAIN--VP&#13;
+void main( void ) {
+	vtc = osg_MultiTexCoord0;
+	vn = osg_Normal;
+	vertex = osg_Vertex;
+	applyWind();
+    gl_Position = vertex;&#13;
+}
+</core>
+    </Script>
+    <Script base_name="test" group="" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+</core>
+      <trig type="none" dev="" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="0" persistency="666"/>
+    </Script>
+    <Script base_name="test_materials" group="" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+	
+	geos = VR.getRoot().getChildren(True, 'Geometry')
+	print len(geos)
+	
+	for geo in geos:
+		m = geo.getMaterial()
+		print m.getName()
+</core>
+    </Script>
+    <Script base_name="wind" group="" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+	from math import sin, cos, asin
+	
+	if not hasattr(VR, 'tree'): return
+	if not hasattr(VR, 'windForce'): VR.windForce = 0
+	VR.windForce += 0.3
+	
+	def wave(x):
+		#return asin( sin(x*0.1) )
+		return sin(x*0.2)
+	
+	m = VR.tree.getMaterial()
+	f = wave(VR.windForce)
+	#m.setShaderParameter('wind', int(f*100))
+	
+	#VR.tree.setDir(cos(f),0,sin(f))
+</core>
+      <trig type="on_timeout" dev="" state="Pressed" param="0" key="0" base_name="trigger" name_space="__global__" name_suffix="1" persistency="666"/>
+    </Script>
+  </Scripts>
+  <Sockets persistency="666"/>
+  <Background color="0.6 0.6 0.6" format=".png" path="" persistency="666" type="0"/>
+  <Navigation active="Orbit" persistency="666"/>
+  <Materials persistency="666"/>
+  <Semantics persistency="666"/>
+</Scene>

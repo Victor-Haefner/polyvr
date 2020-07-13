@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Scene base_name="ProcessEngine" name_space="Scene" name_suffix="0" persistency="666">
+  <Objects>
+    <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" visible="4294967295">
+      <Object ambient="0.3 0.3 0.3 1" base_name="light" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" shadowVolume="1e+06 1e+06 1e+06 -1e+06 -1e+06 -1e+06 1" specular="0.1 0.1 0.1 1" type="Light" visible="4294967295">
+        <Object accept_root="1" aspect="1" at="0 0 0" at_dir="0" base_name="Default" far="512" fov="1.0472" from="3 2 3" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="4294967295">
+          <Object at="0 0 -1" at_dir="0" base_name="Headlight_beacon" from="0 0 0" light="light" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" up="0 1 0" visible="4294967295">
+            <constraint persistency="666"/>
+          </Object>
+          <constraint persistency="666"/>
+        </Object>
+      </Object>
+    </Object>
+  </Objects>
+  <Rendering deferred_rendering="0" fogColor="0.5 0.5 0.5 1" fogParams="0 0 100 0.1" frustum_culling="1" fxaa="0" hmdd="0" marker="0" occlusion_culling="0" persistency="666" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
+  <Scripts persistency="666">
+    <Script base_name="generateProcess" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+	
+	
+	#Process
+	process = VR.Process('SBPM')	
+
+	#SID Subjects
+	customer = process.addSubject('Customer')
+	manager = process.addSubject('Project Manager')
+	simulator = process.addSubject('Simulator')
+	trainee = process.addSubject('Trainee')
+	teacher = process.addSubject('Teacher')
+	
+	#SID Messages
+	process.addMessage('designate', customer.getID(), trainee.getID())
+	process.addMessage('project requirements', customer.getID(), manager.getID())
+	process.addMessage('parametrisation of training scenario', manager.getID(), simulator.getID())
+	process.addMessage('training with', trainee.getID(), simulator.getID())
+	process.addMessage('theoretical knowledge', teacher.getID(), trainee.getID())
+		
+	#Trainee SBD States
+	s = process.addState('Wait for Travel Order', trainee.getID())
+	a1 = process.addState('Travel', trainee.getID())
+	a2 = process.addState('Learn', trainee.getID())
+	a3 = process.addState('Train', trainee.getID())
+	a4 = process.addState('Travel back', trainee.getID())
+	e = process.addState('End', trainee.getID())
+	process.setInitialState(s, trainee.getID())
+
+	#Trainee transitions
+	process.addTransition('receive travel order', trainee.getID(), s.getID(), a1.getID())
+	process.addTransition('reached HK', trainee.getID(), a1.getID(), a2.getID())
+	process.addTransition('course finished', trainee.getID(), a2.getID(), a3.getID())
+	process.addTransition('training finished', trainee.getID(), a3.getID(), a4.getID())
+	process.addTransition('reached project site', trainee.getID(), a4.getID(), e.getID())
+	
+	#Manager SBD States
+	w = process.addState('Wait for Order', manager.getID())
+	a1 = process.addState('Develop Machine', manager.getID())
+	a2 = process.addState('Organise Training', manager.getID())
+	a3 = process.addState('End', manager.getID())
+	process.setInitialState(w, manager.getID())
+	
+	#Manager SBD Transitions
+	process.addTransition('has machine order', manager.getID(), w.getID(),a1.getID())
+	process.addTransition('get training order', manager.getID(), a1.getID(),a2.getID())
+	process.addTransition('project finished', manager.getID(), a2.getID(),a3.getID())
+	
+	#Customer SBD States
+	cs = process.addState('Start', customer.getID())
+	cm = process.addState('Order Machine', customer.getID())
+	ct = process.addState('Order Training', customer.getID())
+	ce  = process.addState('End', customer.getID())
+	process.setInitialState(cs, customer.getID())
+	
+	#Customer SBD Transitions
+	process.addTransition('make Machine Order', customer.getID(), cs.getID(), cm.getID())
+	process.addTransition('make Training Order', customer.getID(), cm.getID(),ct.getID())
+	process.addTransition('finish', customer.getID(), ct.getID(),ce.getID())
+	
+	#Simulator SBD States
+	sid = simulator.getID()
+	s1 = process.addState('Wait for Machine', sid)
+	s2 = process.addState('Setup Simulation', sid)
+	s3 = process.addState('Start Simulation', sid)
+	s4 = process.addState('End Simulation', sid)
+	s5 = process.addState('End', sid)
+	process.setInitialState(s1, sid)
+	
+	#Simulator SBD Transitions
+	process.addTransition('Machine Project finished', sid, s1.getID(), s2.getID())
+	process.addTransition('Training started', sid, s2.getID(), s3.getID())
+	process.addTransition('Training finished', sid, s3.getID(), s4.getID())
+	process.addTransition('End Simulation', sid, s4.getID(), s5.getID())
+	
+	#Teacher SBD States
+	tid = teacher.getID()
+	t1 = process.addState('Wait for Trainee', tid)
+	t2 = process.addState('Teach', tid)
+	t3 = process.addState('End', tid)
+	process.setInitialState(t1, tid)
+
+	#Teacher SBD Transitions
+	process.addTransition('Trainee arrived', tid, t1.getID(), t2.getID())
+	process.addTransition('finished teaching', tid, t2.getID(), t3.getID())
+
+	print "generated a Process"
+	return process
+	
+	
+	
+</core>
+    </Script>
+    <Script base_name="init" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+
+	if hasattr(VR, 'scene'): VR.scene.destroy()
+	VR.scene = VR.Object('scene', 'light')
+
+	process = VR.generateProcess()
+	
+	layout = VR.ProcessLayout('layout')
+	layout.setProcess(process)
+	VR.scene.addChild(layout)
+	
+	VR.engine = VR.ProcessEngine()
+	VR.engine.setProcess(process)
+	VR.engine.run(1.0)
+	layout.setEngine(VR.engine)
+</core>
+      <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="0" persistency="666"/>
+    </Script>
+  </Scripts>
+  <Sockets persistency="666"/>
+  <Background color="0.6 0.6 0.6" format=".png" path="" persistency="666" type="0"/>
+  <Navigation active="Orbit" persistency="666"/>
+  <Materials persistency="666"/>
+  <Semantics persistency="666"/>
+</Scene>

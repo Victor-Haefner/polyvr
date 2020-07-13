@@ -1,0 +1,490 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Scene base_name="LeapMyoPicGallery" name_space="Scene" name_suffix="0" persistency="666">
+  <Objects>
+    <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" visible="1">
+      <Object ambient="0.3 0.3 0.3 1" base_name="light" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" specular="0.1 0.1 0.1 1" type="Light" visible="1">
+        <Object accept_root="1" aspect="1" at="-0.32989 0.0378165 -0.886817" at_dir="0" base_name="Default" far="512" fov="1.0472" from="2.0095 0.0593848 3.97031" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
+          <Object at="0 0 -1" at_dir="0" base_name="Headlight_beacon" from="0 0 0" light="light" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" up="0 1 0" visible="1">
+            <constraint persistency="666"/>
+          </Object>
+          <constraint persistency="666"/>
+        </Object>
+      </Object>
+    </Object>
+  </Objects>
+  <Rendering deferred_rendering="0" frustum_culling="1" fxaa="0" hmdd="0" marker="0" occlusion_culling="0" persistency="666" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
+  <Scripts persistency="666">
+    <Script base_name="devInitLeap" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+
+	"""
+	
+	needed packages:
+	python-bs4
+	python-requests
+	
+	"""
+
+
+	import VR, sys
+	
+	# install leapd from 
+	#  https://www.leapmotion.com/setup/linux
+	
+	if not hasattr(VR, 'leapd_init'):
+		from subprocess import call
+		call(["leapd"]) # does nothing if allready running
+		VR.leapd_init = True
+	
+	leapDir = VR.getSystemDirectory('ROOT') + '/extras/python/Leap'
+	sys.path.append(leapDir)
+	
+	import Leap, thread, time
+	from Leap import CircleGesture, KeyTapGesture, ScreenTapGesture, SwipeGesture
+	
+	def zoomIn(t):
+		VR.moveGallery(VR.R0 + t*0.5, VR.GalAngle)
+		
+	def zoomOut(t):
+		VR.moveGallery(VR.R0 - t*0.5, VR.GalAngle)
+		
+	def rotateL(t):
+		VR.moveGallery(VR.GalRadius, VR.A0 - t*0.5)
+		
+	def rotateR(t):
+		VR.moveGallery(VR.GalRadius, VR.A0 + t*0.5)
+	
+	class SampleListener(Leap.Listener):
+		finger_names = ['Thumb', 'Index', 'Middle', 'Ring', 'Pinky']
+		bone_names = ['Metacarpal', 'Proximal', 'Intermediate', 'Distal']
+		state_names = ['STATE_INVALID', 'STATE_START', 'STATE_UPDATE', 'STATE_END']
+
+		def on_init(self, controller): print "Initialized"
+		def on_disconnect(self, controller): print "Disconnected"
+		def on_exit(self, controller): print "Exited"
+
+		def on_connect(self, controller): # Enable gestures
+			print "Connected"
+			controller.enable_gesture(Leap.Gesture.TYPE_CIRCLE);
+			controller.enable_gesture(Leap.Gesture.TYPE_KEY_TAP);
+			controller.enable_gesture(Leap.Gesture.TYPE_SCREEN_TAP);
+			controller.enable_gesture(Leap.Gesture.TYPE_SWIPE);
+
+		def state_string(self, state):
+			if state == Leap.Gesture.STATE_START: return "STATE_START"
+			if state == Leap.Gesture.STATE_UPDATE: return "STATE_UPDATE"
+			if state == Leap.Gesture.STATE_STOP: return "STATE_STOP"
+			if state == Leap.Gesture.STATE_INVALID: return "STATE_INVALID"
+		        
+		def on_frame(self, controller):
+		    frame = controller.frame()
+		    #self.print_frame(frame)
+		    
+		    for gesture in frame.gestures():
+		        if gesture.type == Leap.Gesture.TYPE_CIRCLE:
+		            circle = CircleGesture(gesture)
+
+		            # Determine clock direction using the angle between the pointable and the circle normal
+		            if circle.pointable.direction.angle_to(circle.normal) &lt;= Leap.PI/2: clockwiseness = "clockwise"
+		            else: clockwiseness = "counterclockwise"
+
+		            # Calculate the angle swept since the last frame
+		            swept_angle = 0
+		            if circle.state != Leap.Gesture.STATE_START:
+		                previous_update = CircleGesture(controller.frame(1).gesture(circle.id))
+		                swept_angle =  (circle.progress - previous_update.progress) * 2 * Leap.PI
+		            #print 'circle', circle.progress, circle.radius, swept_angle * Leap.RAD_TO_DEG, clockwiseness
+
+		        if gesture.type == Leap.Gesture.TYPE_SWIPE:
+		            swipe = SwipeGesture(gesture)
+		            #print 'swipe', swipe.position, swipe.direction, swipe.speed
+						    
+		            a = VR.Animation('gallery')
+		            a.setDuration(2)
+		            
+		            if swipe.direction[0] &gt; 0.5: 
+						VR.A0 = VR.GalAngle
+						a.setCallback(rotateL)
+						a.start()
+		            elif swipe.direction[0] &lt; -0.5: 
+						VR.A0 = VR.GalAngle
+						a.setCallback(rotateR)
+						a.start()
+		            elif swipe.direction[2] &gt; 0.5:
+						VR.R0 = VR.GalRadius
+						a.setCallback(zoomIn)
+						a.start()
+		            elif swipe.direction[2] &lt; -0.5:
+						VR.R0 = VR.GalRadius
+						a.setCallback(zoomOut)
+						a.start()
+
+		        if gesture.type == Leap.Gesture.TYPE_KEY_TAP:
+		            keytap = KeyTapGesture(gesture)
+		            #print 'keytap', keytap.position, keytap.direction
+
+		        if gesture.type == Leap.Gesture.TYPE_SCREEN_TAP:
+		            screentap = ScreenTapGesture(gesture)
+		            #print 'screentap', screentap.position, screentap.direction
+		    
+
+		def print_frame(self, frame):
+		    print "Frame id: %d, timestamp: %d, hands: %d, fingers: %d, tools: %d, gestures: %d" % (
+		          frame.id, frame.timestamp, len(frame.hands), len(frame.fingers), len(frame.tools), len(frame.gestures()))
+
+		    # Get hands
+		    for hand in frame.hands:
+		        handType = "Left hand" if hand.is_left else "Right hand"
+		        print "  %s, id %d, position: %s" % (handType, hand.id, hand.palm_position)
+
+		        # Get the hand's normal vector and direction
+		        normal = hand.palm_normal
+		        direction = hand.direction
+
+		        # Calculate the hand's pitch, roll, and yaw angles
+		        print "  pitch: %f degrees, roll: %f degrees, yaw: %f degrees" % (
+		            direction.pitch * Leap.RAD_TO_DEG,
+		            normal.roll * Leap.RAD_TO_DEG,
+		            direction.yaw * Leap.RAD_TO_DEG)
+
+		        # Get arm bone
+		        arm = hand.arm
+		        print "  Arm direction: %s, wrist position: %s, elbow position: %s" % (
+		            arm.direction,
+		            arm.wrist_position,
+		            arm.elbow_position)
+
+		        # Get fingers
+		        for finger in hand.fingers:
+		            print "    %s finger, id: %d, length: %fmm, width: %fmm" % (
+		                self.finger_names[finger.type],
+		                finger.id,
+		                finger.length,
+		                finger.width)
+
+		            # Get bones
+		            for b in range(0, 4):
+		                bone = finger.bone(b)
+		                print "      Bone: %s, start: %s, end: %s, direction: %s" % (
+		                    self.bone_names[bone.type],
+		                    bone.prev_joint,
+		                    bone.next_joint,
+		                    bone.direction)
+
+		    # Get tools
+		    for tool in frame.tools:
+		        print "  Tool id: %d, position: %s, direction: %s" % (
+		            tool.id, tool.tip_position, tool.direction)
+
+		    # Get gestures
+		    for gesture in frame.gestures():
+		        if gesture.type == Leap.Gesture.TYPE_CIRCLE:
+		            circle = CircleGesture(gesture)
+
+		            # Determine clock direction using the angle between the pointable and the circle normal
+		            if circle.pointable.direction.angle_to(circle.normal) &lt;= Leap.PI/2:
+		                clockwiseness = "clockwise"
+		            else:
+		                clockwiseness = "counterclockwise"
+
+		            # Calculate the angle swept since the last frame
+		            swept_angle = 0
+		            if circle.state != Leap.Gesture.STATE_START:
+		                previous_update = CircleGesture(controller.frame(1).gesture(circle.id))
+		                swept_angle =  (circle.progress - previous_update.progress) * 2 * Leap.PI
+
+		            print "  Circle id: %d, %s, progress: %f, radius: %f, angle: %f degrees, %s" % (
+		                    gesture.id, self.state_names[gesture.state],
+		                    circle.progress, circle.radius, swept_angle * Leap.RAD_TO_DEG, clockwiseness)
+
+		        if gesture.type == Leap.Gesture.TYPE_SWIPE:
+		            swipe = SwipeGesture(gesture)
+		            print "  Swipe id: %d, state: %s, position: %s, direction: %s, speed: %f" % (
+		                    gesture.id, self.state_names[gesture.state],
+		                    swipe.position, swipe.direction, swipe.speed)
+
+		        if gesture.type == Leap.Gesture.TYPE_KEY_TAP:
+		            keytap = KeyTapGesture(gesture)
+		            print "  Key Tap id: %d, %s, position: %s, direction: %s" % (
+		                    gesture.id, self.state_names[gesture.state],
+		                    keytap.position, keytap.direction )
+
+		        if gesture.type == Leap.Gesture.TYPE_SCREEN_TAP:
+		            screentap = ScreenTapGesture(gesture)
+		            print "  Screen Tap id: %d, %s, position: %s, direction: %s" % (
+		                    gesture.id, self.state_names[gesture.state],
+		                    screentap.position, screentap.direction )
+
+		    if not (frame.hands.is_empty and frame.gestures().is_empty):
+		        print ""
+	
+	VR.leapThreadControl = True
+	def listen():
+	    # Create a sample listener and controller
+		listener = SampleListener()
+		controller = Leap.Controller()
+
+		# Have the sample listener receive events from the controller
+		controller.add_listener(listener)
+	
+		while VR.leapThreadControl:
+			time.sleep(1)
+		controller.remove_listener(listener)
+		
+	VR.leapThread = VR.startThread(listen)
+</core>
+    </Script>
+    <Script base_name="devInitMyo" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+
+	"""
+	
+	needed packages:
+		python-enum34
+	
+	user permissions:
+		sudo usermod -aG dialout $USER
+	
+	"""
+
+	import VR, sys
+	myoDir = VR.getSystemDirectory('ROOT') + '/extras/python/Myo'
+	sys.path.append(myoDir)
+	
+	import myo, thread, time
+	
+	def zoomIn(t):
+		VR.moveGallery(VR.R0 + t*0.5, VR.GalAngle)
+		
+	def zoomOut(t):
+		VR.moveGallery(VR.R0 - t*0.5, VR.GalAngle)
+		
+	def rotateL(t):
+		VR.moveGallery(VR.GalRadius, VR.A0 - t*0.5)
+		
+	def rotateR(t):
+		VR.moveGallery(VR.GalRadius, VR.A0 + t*0.5)
+			
+	"""
+	REST = 0
+    FIST = 1
+    WAVE_IN = 2
+    WAVE_OUT = 3
+    FINGERS_SPREAD = 4
+    THUMB_TO_PINKY = 5
+    UNKNOWN = 255
+    """
+	
+	VR.myoThreadControl = True
+	def listen():
+		import subprocess
+		m = myo.Myo(myo.NNClassifier(), None)
+
+		def page(pose):
+			if pose == 0: return
+			
+			a = VR.Animation('gallery')
+			a.setDuration(2)
+			p = pose.value
+			print 'poseMyo', pose, pose.name, pose.value
+			
+			if p == 3:
+				print ' Y1'
+				VR.A0 = VR.GalAngle
+				a.setCallback(rotateL)
+				a.start()
+			if p == 4:
+				print ' Y2'
+				VR.R0 = VR.GalRadius
+				a.setCallback(zoomIn)
+				a.start()
+			if p == 2:
+				print ' Y3'
+				VR.A0 = VR.GalAngle
+				a.setCallback(rotateR)
+				a.start()
+			if p == 1:
+				print ' Y4'
+				VR.R0 = VR.GalRadius
+				a.setCallback(zoomOut)
+				a.start()
+				
+			if pose == 0: print 'B', 0
+			if pose == 1: print 'B', 1
+			if pose == 2: print 'B', 2
+			if pose == 3: print 'B', 3
+			if pose == 4: print 'B', 4
+			if pose == 5: print 'B', 5
+			if pose == 255: print 'B', 255
+
+		m.add_raw_pose_handler(page)
+		m.connect()
+	
+		while VR.myoThreadControl:
+			m.run()
+			#time.sleep(1)
+		
+	VR.myoThread = VR.startThread(listen)
+	
+	
+	
+	
+</core>
+    </Script>
+    <Script base_name="devStopThreads" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+	
+	if hasattr(VR, 'leapThread'):
+		VR.leapThreadControl = False
+		VR.joinThread(VR.leapThread)
+		
+	if hasattr(VR, 'myoThread'):
+		VR.myoThreadControl = False
+		VR.joinThread(VR.myoThread)
+</core>
+      <trig type="on_scene_close" dev="" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="2" persistency="666"/>
+    </Script>
+    <Script base_name="init" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+	
+	if hasattr(VR, 'scene'): VR.scene.destroy()
+	VR.scene = VR.Transform('scene')
+	VR.getRoot().find('light').addChild(VR.scene)
+	
+	paths = VR.queryImages('flowers')
+	VR.updateGallery(paths)
+	VR.moveGallery(2,0)
+</core>
+      <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="1" persistency="666"/>
+    </Script>
+    <Script base_name="keyboardNav" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+	
+	k = dev.getKey()
+	
+	def zoomIn(t):
+		VR.moveGallery(VR.R0 + t*0.5, VR.GalAngle)
+		
+	def zoomOut(t):
+		VR.moveGallery(VR.R0 - t*0.5, VR.GalAngle)
+		
+	def rotateL(t):
+		VR.moveGallery(VR.GalRadius, VR.A0 - t*0.5)
+		
+	def rotateR(t):
+		VR.moveGallery(VR.GalRadius, VR.A0 + t*0.5)
+		
+	a = VR.Animation('gallery')
+	a.setDuration(2)
+	
+	if k == 65361:
+		VR.A0 = VR.GalAngle
+		a.setCallback(rotateL)
+		a.start()
+	if k == 65362:
+		VR.R0 = VR.GalRadius
+		a.setCallback(zoomIn)
+		a.start()
+	if k == 65363:
+		VR.A0 = VR.GalAngle
+		a.setCallback(rotateR)
+		a.start()
+	if k == 65364:
+		VR.R0 = VR.GalRadius
+		a.setCallback(zoomOut)
+		a.start()
+</core>
+      <trig type="on_device" dev="keyboard" state="Pressed" param="" key="-1" base_name="trigger" name_space="__global__" name_suffix="0" persistency="666"/>
+    </Script>
+    <Script base_name="moveGallery" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR, math
+	
+	VR.GalRadius = R
+	VR.GalAngle = a0
+	
+	images = VR.images.getChildren()
+	N = len(images)
+	for i,img in enumerate(images):
+		a = 2*i*math.pi/N + a0
+		c = math.cos(a)
+		s = math.sin(a)
+		img.setTransform([R*c,0,R*s], [c,0,s], [0,1,0])
+</core>
+      <arg type="float" value="2" base_name="R" name_space="moveGallery" name_suffix="0" persistency="666"/>
+      <arg type="float" value="0.1" base_name="a0" name_space="moveGallery" name_suffix="0" persistency="666"/>
+    </Script>
+    <Script base_name="queryImages" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	# missing module?
+	# sudo apt-get install python-bs4 python-requests
+	
+	from bs4 import BeautifulSoup
+	import re, os, urllib2
+
+
+	def get_soup(url,header):
+		return BeautifulSoup(urllib2.urlopen(urllib2.Request(url,headers=header)), 'lxml')
+
+	image_type = "Action"
+	query= query.split()
+	query='+'.join(query)
+	url=url="https://www.google.co.in/search?q="+query+"&amp;source=lnms&amp;tbm=isch"
+	header = {'User-Agent': 'Mozilla/5.0'} 
+	soup = get_soup(url,header)
+
+	images = [a['src'] for a in soup.find_all("img", {"src": re.compile("gstatic.com")})]
+	
+	if not os.path.exists("./tmp_pics"):
+		os.makedirs("./tmp_pics")
+	
+	paths = []
+	for i,img in enumerate(images):
+		raw_img = urllib2.urlopen(img).read()
+		path = "./tmp_pics/" + image_type + "_"+ str(i)+".jpg"
+		paths.append(path)
+		f = open(path, 'wb')
+		f.write(raw_img)
+		f.close()
+	  
+	return paths
+</core>
+      <arg type="str" value="bla" base_name="query" name_space="queryImages" name_suffix="0" persistency="666"/>
+    </Script>
+    <Script base_name="updateGallery" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR, math
+	
+	
+	if hasattr(VR, 'images'): VR.images.destroy()
+	VR.images = VR.Transform('scene')
+	VR.scene.addChild(VR.images)
+	
+	
+	N = len(images)
+	for i,img in enumerate(images):
+		sprite = VR.Sprite(img)
+		
+		m = VR.Material(img)
+		m.setTexture(img)
+		sprite.setMaterial(m)
+		
+		a = 2*i*math.pi/N
+		c = math.cos(a)
+		s = math.sin(a)
+		
+		sprite.setTransform([c,0,s], [c,0,s], [0,1,0])
+		VR.images.addChild(sprite)
+</core>
+      <arg type="NoneType" value="None" base_name="images" name_space="updateGallery" name_suffix="0" persistency="666"/>
+    </Script>
+  </Scripts>
+  <Sockets persistency="666"/>
+  <Background color="1 1 1" format=".png" path="" persistency="666" type="0"/>
+  <Navigation active="Orbit" persistency="666"/>
+  <Materials persistency="666"/>
+  <Semantics persistency="666"/>
+</Scene>

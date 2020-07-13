@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Scene base_name="KA300" name_space="Scene" name_suffix="0" persistency="666">
+  <Objects>
+    <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" visible="1">
+      <Object ambient="0.3 0.3 0.3 1" base_name="L1" beacon="L1_beacon" diffuse="0.774197 0.774197 0.774197 1" lightType="directional" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" specular="0.1 0.1 0.1 1" type="Light" visible="1">
+        <Object ambient="0.3 0.3 0.3 1" base_name="L2" beacon="L2_beacon" diffuse="1 1 1 1" lightType="directional" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" specular="0.1 0.1 0.1 1" type="Light" visible="1">
+          <Object at="-0.2 -0.2 -1" at_dir="0" base_name="L2_beacon" from="0 0 0" light="L2" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" up="0 1 0" visible="1">
+            <constraint persistency="666"/>
+          </Object>
+          <Object accept_root="1" aspect="1" at="0.455133 0.900688 0.00590563" at_dir="0" base_name="Default" far="250" fov="1.0472" from="2.43095 -0.674166 15.092" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
+            <constraint persistency="666"/>
+          </Object>
+          <Object at="0.2 0.2 -1" at_dir="0" base_name="L1_beacon" from="0 0 0" light="L1" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" up="0 1 0" visible="1">
+            <constraint persistency="666"/>
+          </Object>
+        </Object>
+      </Object>
+    </Object>
+  </Objects>
+  <Rendering deferred_rendering="0" frustum_culling="1" fxaa="0" hmdd="0" marker="0" occlusion_culling="0" persistency="666" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
+  <Scripts persistency="666">
+    <Script base_name="init" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+	import math
+	import random
+	
+	print 'init'
+	
+	ka = VR.loadGeometry('../ressources/misc/Karlsruhe300.dae', parent = 'L1')
+	
+	g = ka.getChild(0).getChild(0)
+	g.setFrom([1,0,0])
+	m = g.getMaterial()
+	
+	d = 1.0
+	a = 0.8
+	m.setDiffuse(d,d,d)
+	m.setAmbient(a,a,a)
+	
+	VR.fan = VR.Geometry('fan')
+	ka.addChild(VR.fan)
+		
+	N = 64
+	pos = []
+	pos.append([0,0,-200])
+	inds = []
+	cols = []
+	cols.append([1, 0.5, 0.5])
+	for i in range(N):
+		a1 = i*2*math.pi/N
+		a2 = a1 + 0.1 + random.random()
+		
+		ca1 = math.cos(a1)
+		sa1 = math.sin(a1)
+		ca2 = math.cos(a2)
+		sa2 = math.sin(a2)
+		
+		r = 3 + 4*random.random()
+		z1 = 1-2*random.random()
+		z2 = 1-2*random.random()
+		
+		pos.append([1.5+r*1.5*ca1, r*sa1-0.5, z1])
+		pos.append([1.5+r*1.5*ca2, r*sa2-0.5, z2])
+		
+		c1 = random.random()
+		c2 = random.random()
+		cols.append([c1, 1-c1*c2, c2])
+		cols.append([c1, 1-c1*c2, c2])
+		
+		inds.append(0)
+		inds.append(i*2+1)
+		inds.append(i*2+2)
+		
+	norms = [[0,0,1]]*len(pos)
+		
+	fm = VR.Material('fan')
+	fm.setLit(False)
+	fm.setDiffuse(1,1,1)
+	fm.setAmbient(1,1,1)
+	fm.setSpecular(1,1,1)
+	
+	VR.fan.setNormals(norms)
+	VR.fan.setPositions(pos)
+	VR.fan.setIndices(inds)
+	VR.fan.setColors(cols)
+	#VR.fan.setRandomColors()
+	VR.fan.setType('GL_TRIANGLES')
+	VR.fan.setMaterial(fm)
+	
+	
+	
+	
+</core>
+      <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="0" persistency="666"/>
+    </Script>
+    <Script base_name="update" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+	import random
+	
+	
+	if not hasattr(VR, 'fan'):
+		return
+	
+	f = VR.fan
+	pos = f.getPositions()
+	s = 1.15
+	
+	for i in range(len(pos)):
+		#pos[i][0] += s*(0.5-random.random())
+		#pos[i][1] += s*(0.5-random.random())
+		pos[i][2] += s*(0.5-random.random())
+		
+	f.setPositions(pos)
+</core>
+      <trig type="on_timeout" dev="" state="Pressed" param="100" key="0" base_name="trigger" name_space="__global__" name_suffix="1" persistency="666"/>
+    </Script>
+  </Scripts>
+  <Sockets persistency="666"/>
+  <Background color="1 1 1" format=".png" path="" persistency="666" type="0"/>
+  <Navigation active="Orbit" persistency="666"/>
+  <Materials persistency="666"/>
+  <Semantics persistency="666"/>
+</Scene>

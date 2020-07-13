@@ -1,0 +1,405 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Scene base_name="Tutorial1" name_space="Scene" name_suffix="0" persistency="666">
+  <Objects>
+    <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" visible="1">
+      <Object ambient="0.3 0.3 0.3 1" base_name="light" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" specular="0.1 0.1 0.1 1" type="Light" visible="1">
+        <Object accept_root="1" aspect="1" at="4.33788 3.8722 0.128584" at_dir="0" base_name="Default" far="512" fov="1.0472" from="16.1049 14.4876 11.6505" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
+          <Object at="0 0 -1" at_dir="0" base_name="Headlight_beacon" from="0 0 0" light="light" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" up="0 1 0" visible="1">
+            <constraint persistency="666"/>
+          </Object>
+          <constraint persistency="666"/>
+        </Object>
+      </Object>
+    </Object>
+  </Objects>
+  <Rendering deferred_rendering="0" frustum_culling="1" fxaa="0" hmdd="0" marker="0" occlusion_culling="0" persistency="666" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
+  <Scripts persistency="666">
+    <Script base_name="Answer_init" group="" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR, math
+	
+	#VR.setPhysicsActive(0)
+	
+	if hasattr(VR, 'factory') and VR.factory: VR.factory.destroy()
+	VR.factory = VR.Object('factory')
+	VR.getRoot().find('light').addChild(VR.factory)
+	
+	# ground
+	ground = VR.CSGGeometry('ground')
+	g1 = VR.Geometry('g1')
+	g2 = VR.Geometry('g2')
+	g1.setPrimitive('Box 50 2 50 1 1 1')
+	g2.setPrimitive('Box 2 1.5 2 1 1 1')
+	g2.setFrom([0,1,0])
+	ground.addChild(g1)
+	ground.addChild(g2)
+	ground.setOperation('subtract')
+	ground.setEditMode(0)
+	ground.setFrom([0,-1,0])
+	ground.setPhysicalizeTree(0)
+	ground.physicalize(1,0,'Concave')
+	VR.factory.addChild(ground)
+	
+	# truck wheel
+	wheel = VR.Geometry('wheel')
+	wheel.setPrimitive('Cylinder 0.1 0.3 16 1 1 1')
+	wheel.rotate(math.pi*0.5, [0,0,1])
+	wheel.applyTransformation()
+	
+	# truck chassis
+	chassis = VR.Geometry('chassis')
+	chassis.setPrimitive('Box 1.5 0.2 2 1 1 1')
+	
+	# truck
+	VR.truck = VR.CarDynamics('truck')
+	VR.truck.setChassis(chassis)
+	VR.truck.setParameter(850, 0.3, 1000, 70)
+	VR.truck.setupSimpleWheels(wheel, 0.7, 1.0, -1.0, -0.1, 0.1, 0.3, 0.4)
+	VR.factory.addChild( VR.truck )
+	p = VR.Pose([5,1,0], [0,0,-1], [0,1,0])
+	VR.truck.reset(p)
+	VR.truck.setIgnition(True)
+	
+	# truck dish
+	dish = VR.CSGGeometry('dish')
+	d1 = VR.Geometry('d1')
+	d2 = VR.Geometry('d2')
+	d1.setPrimitive('Box 1.5 1.5 2 1 1 1')
+	d2.setPrimitive('Cylinder 1.4 1 32 1 1 1')
+	d2.setTransform([0,1,0.2],[0,1,0],[1,0,0])
+	dish.addChild(d1)
+	dish.addChild(d2)
+	dish.setOperation('subtract')
+	dish.setEditMode(0)	
+	dish.setFrom([0,1,0])
+	chassis.addChild(dish)
+	dish.setMass(0.01)
+	dish.physicalize(1,0,'ConvexDecomposed', 0)
+	VR.dish = dish
+	
+	# pit blocks
+	block = VR.Geometry('block')
+	block.setPrimitive('Box 0.2 0.2 0.2 1 1 1')
+	block.setRandomColors()
+	W = 0.4
+	for i in range(5):
+		for j in range(5):
+			for k in range(5):
+				b = block.duplicate()
+				VR.factory.addChild(b)
+				b.setFrom([i*W-0.7, k*0.3 + 0, j*W-0.7])
+				b.setPhysicsActivationMode(4)
+				b.setPickable(1)
+				b.physicalize(1,1,'Convex')
+			
+	# crane support
+	support1 = VR.Geometry('support')
+	support1.setPrimitive('Box 0.3 5 0.3 1 1 1')
+	support1.setFrom([-8,2.5,-2])
+	VR.factory.addChild(support1)
+	support2 = support1.duplicate()
+	support2.setFrom([8,2.5,-2])
+	support3 = support1.duplicate()
+	support3.setFrom([-8,2.5,2])
+	support4 = support1.duplicate()
+	support4.setFrom([8,2.5,2])
+	support5 = support1.duplicate()
+	support5.setPrimitive('Box 16.3 0.3 0.3 1 1 1')
+	support5.setFrom([0,5,2])
+	support6 = support5.duplicate()
+	support6.setFrom([0,5,-2])
+	
+	# crane kinematics
+	axisX = VR.Geometry('axisX')
+	axisY = VR.Geometry('axisY')
+	axisX.setPrimitive('Box 0.2 0.2 4 1 1 1')
+	axisY.setPrimitive('Box 0.5 0.5 0.5 1 1 1')
+	axisX.setFrom([0,5,0])
+	VR.axisX = axisX
+	VR.axisY = axisY
+	
+	# crane
+	def craneSide(s):
+		side = VR.CSGGeometry('crane')
+		c1 = VR.Geometry('c1')
+		c2 = VR.Geometry('c2')
+		c1.setPrimitive('Box 1 1 0.5 1 1 1')
+		c2.setPrimitive('Box 0.9 1 0.9 1 1 1')
+		c1.translate([0,-0.1,-0.25*s])	
+		side.addChild(c1)
+		side.addChild(c2)
+		side.setOperation('subtract')
+		side.setEditMode(0)
+		side.setPhysicalizeTree(0)
+		side.physicalize(1,0,'Concave')
+		return side
+	
+	VR.crane = VR.Transform('crane')
+	VR.crane.addChild( craneSide(1) )	
+	VR.crane.addChild( craneSide(-1) )
+	VR.crane.setFrom([0,-1,0])
+	
+	axisY.addChild(VR.crane)
+	axisX.addChild(axisY)
+	VR.factory.addChild(axisX)
+	
+	VR.setPhysicsActive(1)
+	
+	
+	
+	
+	
+	
+</core>
+      <trig type="on_device" dev="keyboard" state="Pressed" param="" key="105" base_name="trigger" name_space="__global__" name_suffix="1" persistency="666"/>
+    </Script>
+    <Script base_name="Answer_keyboard" group="" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+	
+	k = dev.getKey()
+	print k
+	
+	# truck
+	if not hasattr(VR, 'throttle'): VR.throttle = 0
+	if not hasattr(VR, 'tbreak'): VR.tbreak = 0
+	if not hasattr(VR, 'steering'): VR.steering = 0
+	if not hasattr(VR, 'gear'): VR.gear = 0
+	
+	if k == 119: 
+		VR.throttle = 1
+		VR.gear = 1
+		VR.tbreak = 0
+	if k == 120: 
+		VR.throttle = 1
+		VR.gear = -1
+		VR.tbreak = 0
+	if k == 97: VR.steering = 1
+	if k == 100: VR.steering = -1
+	if k == 115: 
+		VR.tbreak = 100
+		VR.throttle = 0
+	
+	VR.truck.update(VR.throttle, VR.tbreak, VR.steering, 1,VR.gear)
+	
+	# truck dish
+	def anim(t):
+		t = t*2
+		if t &gt; 1: t = 2-t
+		VR.dish.setDir([0,t,-1+t])
+		VR.dish.setUp([0,1-t,t])
+		VR.dish.setFrom([0,1+t,0])
+	
+	if k == 103:
+		a = VR.Animation('a')
+		a.setCallback(anim)
+		a.setDuration(6)
+		a.start()
+	
+	# crane
+	st = 0.02
+	sr = 0.05
+	if k == 65361: VR.axisX.translate(st,0,0)
+	if k == 65363: VR.axisX.translate(-st,0,0)
+	if k == 65362: VR.axisY.translate(0,0,st)
+	if k == 65364: VR.axisY.translate(0,0,-st)
+	if k == 109: VR.crane.translate(0,st,0)
+	if k == 110: VR.crane.translate(0,-st,0)
+	if k == 118: 
+		VR.crane.getChild(0).rotate(1,0,0, sr)
+		VR.crane.getChild(1).rotate(1,0,0, -sr)
+	if k == 98:
+		VR.crane.getChild(0).rotate(1,0,0, -sr)
+		VR.crane.getChild(1).rotate(1,0,0, sr)
+</core>
+      <trig type="on_device" dev="keyboard" state="Pressed" param="" key="-1" base_name="trigger" name_space="__global__" name_suffix="2" persistency="666"/>
+    </Script>
+    <Script base_name="Answer_mouse" group="" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR, math
+	
+	if not hasattr(VR, 'crane_open'): VR.crane_open = 0
+	
+	# crane
+	if dev.intersect():
+		i = dev.getIntersected()
+		p = dev.getIntersection()
+		if i:
+			n = i.getName()
+			print n
+			if n in ['support.4', 'support.5']:
+				p0 = VR.axisX.getFrom()[0]
+				dif = p[0]-p0
+				s = math.copysign(1,dif)
+				path = VR.Path()
+				path.addPoint([p0,5,0],[s,0,0],[0,0,0],[0,1,0])
+				path.addPoint([p[0],5,0],[s,0,0],[0,0,0],[0,1,0])
+				path.compute(80)
+				VR.axisX.animate(path, abs(dif), 0, 0)
+				
+				
+			if n in ['support', 'support.1', 'support.2', 'support.3']:
+				p0 = VR.crane.getFrom()[1]
+				p1 = p[1]-5
+				dif = p1-p0
+				s = math.copysign(1,dif)
+				path = VR.Path()
+				path.addPoint([0,p0,0],[0,s,0],[0,0,0],[0,0,1])
+				path.addPoint([0,p1,0],[0,s,0],[0,0,0],[0,0,1])
+				path.compute(80)
+				VR.crane.animate(path, abs(dif), 0, 0)
+				
+			if n == 'axisX':
+				p0 = VR.axisY.getFrom()[2]
+				p1 = p[2]
+				dif = p1-p0
+				s = math.copysign(1,dif)
+				path = VR.Path()
+				path.addPoint([0,0,p0],[0,0,s],[0,0,0],[0,1,0])
+				path.addPoint([0,0,p1],[0,0,s],[0,0,0],[0,1,0])
+				path.compute(80)
+				VR.axisY.animate(path, abs(dif), 0, 0)
+				
+				
+			if n in ['crane.1', 'crane.2']:
+				path1 = VR.Path()
+				path2 = VR.Path()
+				if VR.crane_open:
+					path1.addPoint([0,0,0],[0,0,-1],[0,0,0],[0,1,0])
+					path1.addPoint([0,0,0],[0,1,-1],[0,0,0],[0,1,0])
+					path1.compute(80)
+					path2.addPoint([0,0,0],[0,0,-1],[0,0,0],[0,1,0])
+					path2.addPoint([0,0,0],[0,-1,-1],[0,0,0],[0,1,0])
+					path2.compute(80)
+					VR.crane.getChild(0).animate(path1, 2, 0, 1)
+					VR.crane.getChild(1).animate(path2, 2, 0, 1)
+				else:
+					path1.addPoint([0,0,0],[0,1,-1],[0,0,0],[0,1,0])
+					path1.addPoint([0,0,0],[0,0,-1],[0,0,0],[0,1,0])
+					path1.compute(80)
+					path2.addPoint([0,0,0],[0,-1,-1],[0,0,0],[0,1,0])
+					path2.addPoint([0,0,0],[0,0,-1],[0,0,0],[0,1,0])
+					path2.compute(80)
+					VR.crane.getChild(0).animate(path1, 2, 0, 1)
+					VR.crane.getChild(1).animate(path2, 2, 0, 1)
+				VR.crane_open = not VR.crane_open
+					
+					
+					
+					
+					
+					
+					
+</core>
+      <trig type="on_device" dev="mouse" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="0" persistency="666"/>
+    </Script>
+    <Script base_name="Hints" group="" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="HTML">
+      <core>
+
+Simple primitives:
+	
+	box = VR.Geometry('box')
+	box.setPrimitive('Box 3 4 5 1 1 1')
+	# parameter: width, length, depth
+	
+	cylinder = VR.Geometry('cylinder')
+	cylinder.setPrimitive('Cylinder 0.1 0.3 16 1 1 1')
+	# parameter: height, radius, N sides
+	
+
+CSG Geometries:
+
+	obj = VR.CSGGeometry('myObj')
+
+	g1 = VR.Geometry('g1')
+	g2 = VR.Geometry('g2')
+	g1.setPrimitive('Box 50 2 50 1 1 1')
+	g2.setPrimitive('Box 2 1.5 2 1 1 1')
+
+	obj.addChild(g1)
+	obj.addChild(g2)
+	obj.setOperation('subtract')
+	obj.setEditMode(0)
+	
+	
+Animation with callback:
+
+	def anim(t):
+		print t
+	
+	a = VR.Animation('a')
+	a.setCallback(anim)
+	a.setDuration(6)
+	a.start()
+	
+	
+CarDynamics:
+	car = VR.CarDynamics('car')
+	car.setWheelOffsets(.7, 1.0, -1.0, -0.1)
+	car.setWheelParams(0.1, 0.3)
+	car.setWheel(wheel)
+	car.setChassis(chassis)
+	
+	VR.getRoot().addChild( car )
+	car.reset([5,1,0])
+</core>
+    </Script>
+    <Script base_name="Task" group="" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="HTML">
+      <core>
+The aim of this tutorial is to build the following scene:
+	1) A dump truck
+	2) A crane excavator
+	3) Interaction
+	
+Bonus points for:
+	1) Use different materials
+		- Set diffuse colors
+		- Use the module VR.TextureGenerator to generate 3D Noise textures
+	2) Use CSG geometries for concave geometries
+	
+Roadmap:
+	0.1) Create a world ground geometry
+	0.2) Add a big pit in the ground
+
+	1.1) Create a wheel geometry
+	1.2) Create a truck cockpit geometry
+	1.3) Create a dish geometry
+	1.4) Use the module VR.CarDynamics to setup the truck
+	1.5) Add keyboard controls script for the truck
+	
+	2.1) Create a simple/small geometry to be transported over the belt
+	2.2) Fill the pit in 0.1) with the geometry from 2.3)
+	2.3) Create a support geometry for the crane
+	2.3) Create a shovel tool geometry for the crane
+	2.4) Script crane movement with 3 DoF and keyboard controls
+	
+	3.1) Add mouse interaction for crane
+	3.2) Add mouse interaction for truck dish animation
+</core>
+    </Script>
+    <Script base_name="Tutorial_init" group="" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+	
+	if hasattr(VR, 'factory') and VR.factory: VR.factory.destroy()
+	VR.factory = VR.Object('factory')
+	VR.getRoot().find('light').addChild(VR.factory)
+</core>
+    </Script>
+    <Script base_name="Tutorial_keyboard" group="" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	pass
+</core>
+    </Script>
+    <Script base_name="Tutorial_mouse" group="" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	pass
+</core>
+    </Script>
+  </Scripts>
+  <Sockets persistency="666"/>
+  <Background color="0.6 0.6 0.6" format=".png" path="" persistency="666" type="0"/>
+  <Navigation active="Orbit" persistency="666"/>
+  <Materials persistency="666"/>
+  <Semantics persistency="666"/>
+</Scene>
