@@ -20,6 +20,9 @@ template<typename T>
 void VRAttachment::attachment<T>::fromString(string s) { toValue<T>(s, data); }
 
 template<typename T>
+string VRAttachment::attachment<T>::typeName() { return ::typeName<T>(data); }
+
+template<typename T>
 void VRAttachment::set(T& t) {
     if (data != 0) delete data;
     data = new attachment<T>(t);

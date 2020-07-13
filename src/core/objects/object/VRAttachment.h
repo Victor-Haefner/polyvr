@@ -12,6 +12,7 @@ class VRAttachment : public OSG::VRName {
             virtual ~base();
             virtual string asString() = 0;
             virtual void fromString(string s) = 0;
+            virtual string typeName() = 0;
         };
 
         template<typename T>
@@ -21,6 +22,7 @@ class VRAttachment : public OSG::VRName {
             ~attachment();
             string asString();
             void fromString(string s);
+            string typeName();
         };
 
     private:

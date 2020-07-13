@@ -160,9 +160,12 @@ VRObjectPtr VRObject::copy(vector<VRObjectPtr> children) {
 
 int VRObject::getID() { return ID; }
 string VRObject::getType() { return type; }
-void VRObject::addTag(string name) { addAttachment(name, 0); }
 bool VRObject::hasTag(string name) { return attachments.count(name); }
 void VRObject::remTag(string name) { remAttachment(name); }
+
+void VRObject::addTag(string name) {
+    if (!attachments.count(name)) attachments[name] = new VRAttachment(name);
+}
 
 void VRObject::remAttachment(string name) {
     if (attachments.count(name)) {
@@ -172,6 +175,7 @@ void VRObject::remAttachment(string name) {
 }
 
 string VRObject::getAttachmentAsString(string name) {
+    cout << "VRObject::getAttachmentAsString " << name << " " << getName() << " " << attachments.size() << endl;
     if (attachments.count(name)) {
         return attachments[name]->asString();
     }
