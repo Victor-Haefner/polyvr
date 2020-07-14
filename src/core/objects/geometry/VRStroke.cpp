@@ -29,6 +29,12 @@ VRStroke::VRStroke(string name) : VRGeometry(name) { type = "Stroke"; }
 VRStrokePtr VRStroke::create(string name) { return shared_ptr<VRStroke>(new VRStroke(name) ); }
 VRStrokePtr VRStroke::ptr() { return static_pointer_cast<VRStroke>( shared_from_this() ); }
 
+void VRStroke::clear() {
+    paths.clear();
+    polygons.clear();
+    VRGeometry::clear();
+}
+
 void VRStroke::addPath(PathPtr p) { paths.push_back(p); }
 void VRStroke::setPath(PathPtr p) { paths.clear(); addPath(p); }
 void VRStroke::setPaths(vector<PathPtr> p) { paths = p; }

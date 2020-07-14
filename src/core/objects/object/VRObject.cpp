@@ -42,6 +42,7 @@ VRObject::VRObject(string _name) {
     store("pickable", &pickable);
     store("visible", &visibleMask);
     storeObjVec("children", children);
+    storeMap("attachments", &attachments, true);
 
     regStorageSetupBeforeFkt( VRStorageCb::create("object setup", bind(&VRObject::setupBefore, this, placeholders::_1)) );
     regStorageSetupFkt( VRStorageCb::create("object setup", bind(&VRObject::setupAfter, this, placeholders::_1)) );
@@ -159,9 +160,12 @@ VRObjectPtr VRObject::copy(vector<VRObjectPtr> children) {
 
 int VRObject::getID() { return ID; }
 string VRObject::getType() { return type; }
-void VRObject::addTag(string name) { addAttachment(name, 0); }
 bool VRObject::hasTag(string name) { return attachments.count(name); }
 void VRObject::remTag(string name) { remAttachment(name); }
+
+void VRObject::addTag(string name) {
+    if (!attachments.count(name)) attachments[name] = new VRAttachment(name);
+}
 
 void VRObject::remAttachment(string name) {
     if (attachments.count(name)) {
@@ -171,10 +175,16 @@ void VRObject::remAttachment(string name) {
 }
 
 string VRObject::getAttachmentAsString(string name) {
+    cout << "VRObject::getAttachmentAsString " << name << " " << getName() << " " << attachments.size() << endl;
     if (attachments.count(name)) {
         return attachments[name]->asString();
     }
     return "";
+}
+
+void VRObject::setAttachmentFromString(string name, string value) {
+    if (!hasTag(name)) addAttachment(name, value);
+    else attachments[name]->fromString(value);
 }
 
 vector<string> VRObject::getTags() {
@@ -440,7 +450,7 @@ void VRObject::getObjectListByType(string _type, vector<VRObjectPtr>& list) {
 VRObjectPtr VRObject::find(OSGObjectPtr n, string indent) {
     //cout << endl << indent << getName() << " " << node << " " << ptr() << flush;
     if (osg->node == n->node) return ptr();
-    for (auto c : children) {
+    for (auto& c : children) {
         VRObjectPtr tmp = c->find(n, indent+" ");
         if (tmp != 0) return tmp;
     }
@@ -449,7 +459,7 @@ VRObjectPtr VRObject::find(OSGObjectPtr n, string indent) {
 
 VRObjectPtr VRObject::find(VRObjectPtr obj) {
     if (obj == ptr()) return ptr();
-    for (auto c : children) {
+    for (auto& c : children) {
         VRObjectPtr tmp = c->find(obj);
         if (tmp != 0) return tmp;
     }
@@ -458,8 +468,11 @@ VRObjectPtr VRObject::find(VRObjectPtr obj) {
 
 VRObjectPtr VRObject::find(string Name) {
     if (name == Name) return ptr();
-    for (auto c : children) {
-        if (c == ptr()) continue; // workaround! TODO: find why ptr() can happn
+    for (auto& c : children) {
+        if (c.get() == this) {
+            cout << "ERROR!! 'this' is also its child!" << endl;
+            continue; // workaround! TODO: find why ptr() can happn
+        }
         VRObjectPtr tmp = c->find(Name);
         if (tmp != 0) return tmp;
     }
@@ -468,7 +481,7 @@ VRObjectPtr VRObject::find(string Name) {
 
 VRObjectPtr VRObject::findFirst(string Name) {
     if (base_name == Name) return ptr();
-    for (auto c : children) {
+    for (auto& c : children) {
         if (c == ptr()) continue; // workaround! TODO: find why ptr() can happn
         VRObjectPtr tmp = c->findFirst(Name);
         if (tmp != 0) return tmp;
@@ -478,7 +491,7 @@ VRObjectPtr VRObject::findFirst(string Name) {
 
 vector<VRObjectPtr> VRObject::findAll(string Name, vector<VRObjectPtr> res ) {
     if (base_name == Name) res.push_back(ptr());
-    for (auto c : children) {
+    for (auto& c : children) {
         if (c == ptr()) continue; // workaround! TODO: find why ptr() can happn
         res = c->findAll(Name, res);
     }
@@ -488,7 +501,7 @@ vector<VRObjectPtr> VRObject::findAll(string Name, vector<VRObjectPtr> res ) {
 VRObjectPtr VRObject::find(int id) {
     if (ID == -1) return 0;
     if (ID == id) return ptr();
-    for (auto c : children) {
+    for (auto& c : children) {
         VRObjectPtr tmp = c->find(id);
         if (tmp != 0) return tmp;
     }

@@ -38,6 +38,8 @@ class Pose {
         Vec3d x();
         Vec3d scale();
 
+        void translate(const Vec3d& p);
+
         Matrix4d asMatrix() const;
         void invert();
         Vec3d transform(const Vec3d& p, bool doTranslate = true);

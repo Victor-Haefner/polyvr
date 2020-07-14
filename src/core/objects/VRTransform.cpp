@@ -39,7 +39,7 @@ VRTransform::VRTransform(string name, bool doOpt) : VRObject(name) {
     constraint->setActive(false);
     setCore(OSGCore::create(t->trans), "Transform");
     if (doOptimizations) disableCore();
-    addAttachment("transform", 0);
+    addTag("transform");
 
     store("from", &_from);
     //store("dir", &_dir);
@@ -567,6 +567,11 @@ void VRTransform::setEuler(Vec3d e) {
     auto m = getMatrix();
     applyEulerAngles(m, e);
     setMatrix(m);
+}
+
+void VRTransform::setEulerDegree(Vec3d e) {
+    e *= Pi/180.0;
+    setEuler(e);
 }
 
 Vec3d VRTransform::getScale() { return _scale; }

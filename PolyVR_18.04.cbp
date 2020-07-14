@@ -84,6 +84,7 @@
 			<Add option="-D_GLIBCXX_USE_CXX11_ABI=1" />
 			<Add option="-DBOOST_NO_COMPILER_CONFIG" />
 			<Add option="-DBOOST_NO_CXX14_DECLTYPE_AUTO" />
+			<Add option="-DBOOST_NO_CXX14_CONSTEXPR" />
 			<Add option="-DBOOST_NO_CXX11_DECLTYPE_N3276" />
 			<Add option="-DBOOST_NO_CXX11_HDR_ATOMIC=1" />
 			<Add option="-DGL_GLEXT_PROTOTYPES" />
@@ -348,10 +349,14 @@
 		<Unit filename="src/addons/Engineering/CSG/PolyhedronBuilder.h" />
 		<Unit filename="src/addons/Engineering/CSG/VRPyCSG.cpp" />
 		<Unit filename="src/addons/Engineering/CSG/VRPyCSG.h" />
+		<Unit filename="src/addons/Engineering/Chemistry/VRAtom.cpp" />
+		<Unit filename="src/addons/Engineering/Chemistry/VRAtom.h" />
 		<Unit filename="src/addons/Engineering/Chemistry/VRCrystal.cpp" />
 		<Unit filename="src/addons/Engineering/Chemistry/VRCrystal.h" />
 		<Unit filename="src/addons/Engineering/Chemistry/VRMolecule.cpp" />
 		<Unit filename="src/addons/Engineering/Chemistry/VRMolecule.h" />
+		<Unit filename="src/addons/Engineering/Chemistry/VRMoleculeMat.cpp" />
+		<Unit filename="src/addons/Engineering/Chemistry/VRMoleculeMat.h" />
 		<Unit filename="src/addons/Engineering/Chemistry/VRPyMolecule.cpp" />
 		<Unit filename="src/addons/Engineering/Chemistry/VRPyMolecule.h" />
 		<Unit filename="src/addons/Engineering/Factory/VRAMLLoader.cpp" />

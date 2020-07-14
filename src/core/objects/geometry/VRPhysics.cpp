@@ -291,24 +291,32 @@ void VRPhysics::clear() {
 
     if (body != 0) {
         for (auto j : joints) {
-            if (j.second->btJoint != 0) {
-                VRPhysicsJoint* joint = j.second;
-                if (world) world->removeConstraint(joint->btJoint);
-                delete joint->btJoint;
-                joint->btJoint = 0;
-            }
-        }
+            VRPhysics* partner = j.first;
+            VRPhysicsJoint* joint = j.second;
 
-        for (auto j : joints2) {
-            if (!j.first) continue;
-            if (j.first->joints.count(this) == 0) continue;
-            VRPhysicsJoint* joint = j.first->joints[this];
             if (joint && joint->btJoint != 0) {
                 if (world) world->removeConstraint(joint->btJoint);
                 delete joint->btJoint;
                 joint->btJoint = 0;
             }
+
+            if (partner && partner->joints2.count(this)) partner->joints2.erase(this);
         }
+        joints.clear();
+
+        for (auto j : joints2) {
+            VRPhysics* partner = j.first;
+            VRPhysicsJoint* joint = j.second;
+
+            if (joint && joint->btJoint != 0) {
+                if (world) world->removeConstraint(joint->btJoint);
+                delete joint->btJoint;
+                joint->btJoint = 0;
+            }
+
+            if (partner && partner->joints.count(this)) partner->joints.erase(this);
+        }
+        joints2.clear();
 
         if (world) world->removeRigidBody(body);
         delete body;

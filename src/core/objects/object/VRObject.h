@@ -72,6 +72,7 @@ class VRObject : public std::enable_shared_from_this<VRObject>, public VRName, p
         template<typename T> void addAttachment(string name, T t);
         template<typename T> T getAttachment(string name);
         string getAttachmentAsString(string name);
+        void setAttachmentFromString(string name, string value);
         void remAttachment(string name);
         void addTag(string name);
         bool hasTag(string name);
