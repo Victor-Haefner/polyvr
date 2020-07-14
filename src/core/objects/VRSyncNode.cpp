@@ -1196,7 +1196,7 @@ void VRSyncNode::sync(string uri) {
 
 //update this SyncNode
 void VRSyncNode::update() {
-    getAndBroadcastPoses();
+    //getAndBroadcastPoses();
     auto localChanges = getFilteredChangeList();
     if (!localChanges) return;
     if (getChildrenCount() == 0) return;
@@ -1285,17 +1285,14 @@ void VRSyncNode::handlePoses(string poses)  {
     if (namePair[0] == "name") nodeName = namePair[1];
 
     if (nodeName == "") return;
-    cout << nodeName << " ";
     for (int i = 2; i < pairs.size(); i++) {
         auto data = splitString(pairs[i], ':');
         if (data.size() != 2) continue;
         string deviceName = data[0];
         PosePtr pose = toValue<PosePtr>(data[1]);
-        cout << deviceName << " pose " << pose << " ";
         if (deviceName == "cam") remotesCameraPose[nodeName] = pose;
         else if (deviceName == "mouse") remotesMousePose[nodeName] = pose;
     }
-    cout << endl;
     //TODO: do something with poses
 
 }
