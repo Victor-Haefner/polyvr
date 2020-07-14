@@ -1176,7 +1176,7 @@ void VRSyncNode::getAndBroadcastPoses(){
     if (mousePose) poses += "|mouse:" + toString(mousePose);
 
     //broadcast
-    cout << "broadcast poses " << poses << endl;
+    //cout << "broadcast poses " << poses << endl;
     broadcast(poses);
 }
 
@@ -1196,6 +1196,7 @@ void VRSyncNode::sync(string uri) {
 
 //update this SyncNode
 void VRSyncNode::update() {
+    getAndBroadcastPoses();
     auto localChanges = getFilteredChangeList();
     if (!localChanges) return;
     if (getChildrenCount() == 0) return;
@@ -1213,7 +1214,6 @@ void VRSyncNode::update() {
     printChangeList(localChanges);
 
     broadcastChangeList(localChanges, true);
-    getAndBroadcastPoses();
     syncedContainer.clear();
     cout << "            / " << name << " VRSyncNode::update()" << "  < < < " << endl;
 }
@@ -1300,6 +1300,25 @@ void VRSyncNode::handlePoses(string poses)  {
 
 }
 
+void VRSyncNode::handleOwnership(string ownership)  {
+    cout << "VRSyncNode::handleOwnership" << endl;
+    string nodeName;
+    vector<string> str_vec = splitString(ownership, '|');
+    nodeName = str_vec[1];
+    if (nodeName == "") return;
+    cout << nodeName << " ";
+    for (int i = 2; i < str_vec.size(); i++) {
+        cout << str_vec[i];
+        ownershipNodeToObject[nodeName].push_back(str_vec[i]);
+    }
+    cout << endl;
+}
+
+vector<string> VRSyncNode::getOwnedObjects(string nodeName) {
+    vector<string> owned = ownershipNodeToObject[nodeName];
+    return owned;
+}
+
 PosePtr VRSyncNode::getRemoteCamPose(string remoteName) {
     return remotesCameraPose[remoteName];
 }
@@ -1324,6 +1343,7 @@ void VRSyncNode::handleMessage(void* _args) {
     VRUpdateCbPtr job = 0;
     if (startsWith(msg, "mapping|"))   job = VRUpdateCb::create( "sync-handleMap", bind(&VRSyncNode::handleMapping, this, msg) );
     else if (startsWith(msg, "poses|"))   job = VRUpdateCb::create( "sync-handlePoses", bind(&VRSyncNode::handlePoses, this, msg) );
+    else if (startsWith(msg, "ownership|")) job = VRUpdateCb::create( "sync-ownership", bind(&VRSyncNode::handleOwnership, this, msg) );
     else                               job = VRUpdateCb::create( "sync-handleCL", bind(&VRSyncNode::deserializeAndApply, this, msg) );
     VRScene::getCurrent()->queueJob( job );
 }

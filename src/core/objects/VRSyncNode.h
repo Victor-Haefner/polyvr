@@ -62,11 +62,13 @@ class VRSyncNode : public VRTransform {
         UInt32 findParent(map<UInt32,vector<UInt32>>& parentToChildren, UInt32 remoteNodeID);
 
         VRObjectPtr copy(vector<VRObjectPtr> children);
+        map<string, vector<string>> ownershipNodeToObject;
 
         string copySceneState();
         void handleMessage(void* msg);
         void handleMapping(string mappingData);
         void handlePoses(string poses);
+        void handleOwnership(string ownership);
         vector<FieldContainer*> findContainer(string typeName); //deprecated
         vector<FieldContainer*> getTransformationContainer(ChangeList* cl); //deprecated
         //vector<OSG::Field
@@ -136,6 +138,8 @@ class VRSyncNode : public VRTransform {
 
         PosePtr getRemoteCamPose(string remoteName);
         PosePtr getRemoteMousePose(string remoteName);
+
+        vector<string> getOwnedObjects(string nodeName);
 };
 
 OSG_END_NAMESPACE;
