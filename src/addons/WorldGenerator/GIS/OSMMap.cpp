@@ -690,6 +690,7 @@ string OSMRelation::toString() {
 
 vector<string> OSMRelation::getNodes() { return nodes; }
 vector<string> OSMRelation::getWays() { return ways; }
+vector<string> OSMRelation::getRelations() { return relations; }
 
 bool OSMBase::hasTag(const string& t) {
     return tags.count(t) > 0;
@@ -1104,6 +1105,7 @@ void OSMMap::readGML(string path) {
     layercount = poDS->GetLayerCount();
     int featureCounter = 0;
     map<string,string> pkIDs;
+    map<string,map<string,string>> pkIDtoTags;
     for (int i = 0; i < layercount; i++) {
         bool nlnG = true;
         OGRLayer  *poLayer = poDS->GetLayer(i);
@@ -1122,6 +1124,12 @@ void OSMMap::readGML(string path) {
                 //cout << poFieldDefn->GetNameRef() << "-" << poFeature->GetFieldAsString(iField) << endl;
             }
 
+            for (auto each:tags) {
+                if (each.first == "ogr_pkid") {
+                    pkIDtoTags[each.second] = tags;
+                }
+            }
+
             OGRGeometry *poGeometry;
             poGeometry = poFeature->GetGeometryRef();
             if( poGeometry != NULL && wkbFlatten(poGeometry->getGeometryType()) == wkbPoint ) {
@@ -1134,6 +1142,15 @@ void OSMMap::readGML(string path) {
                 poGeometry->exportToWkt(&wkt_tmp);
                 vector<vector<Vec3d>> multiPoly = multipolyFromString(wkt_tmp);
                 vector<string> refsForWays;
+                string wID = "";
+
+                for (auto each:tags) {
+                    if (each.first == "ogr_pkid") {
+                        pkIDs[each.second] = poLayer->GetName();
+                        wID = each.second;
+                    }
+                }
+
                 for (auto eachPoly : multiPoly) {
                     refsForWays.clear();
                     for (auto eachPoint : eachPoly) {
@@ -1147,16 +1164,13 @@ void OSMMap::readGML(string path) {
                         //bounds->update(Vec3d(eachPoint[1],eachPoint[0],0));
                         //cout << eachPoint << " ";
                     }
-                    wayID++;
-                    string strWID = to_string(wayID);
-                    OSMWayPtr way = OSMWayPtr( new OSMWay(strWID) );
+                    //wayID++;
+                    //string strWID = to_string(wayID);
+                    OSMWayPtr way = OSMWayPtr( new OSMWay(wID) );
                     way->nodes = refsForWays;
                     way->tags = tags;
                     ways[way->id] = way;
                     nlnG = false;
-                }
-                for (auto each:tags) {
-                    if (each.first == "ogr_pkid") pkIDs[each.second] = poLayer->GetName();
                 }
                 //cout << endl;
                 //cout << i <<  " F: "<< featureCounter << endl;
@@ -1171,6 +1185,18 @@ void OSMMap::readGML(string path) {
                 cout << endl;
 
                 ///TODO: implement everything else as relations
+                if ( tags.count("texcoordlist_texturecoordinates") ){
+
+                }
+                if ( tags.count("") ){
+
+                }
+                if ( tags.count("") ){
+
+                }
+                if ( tags.count("") ){
+
+                }
                 /*Relations:
                 Building - a gathering of polygons
                 Building bounded by - gathering of polygons
@@ -1188,7 +1214,36 @@ void OSMMap::readGML(string path) {
         //OGRFeature::DestroyFeature( poFeature );
     }
     for (auto each : pkIDs) {
-        cout << each.first << " type: " << each.second << endl;
+        if (each.second == "texcoordlist") {}
+        if (each.second == "texcoordlist_texturecoordinates") { cout << "COORDINATES---" << each.first << " type: " << each.second << endl; }
+        if (each.second == "building_name") {}
+        if (each.second == "x3dmaterial") { cout << "MATERIAL---" << each.first << " type: " << each.second << endl; }
+        if (each.second == "parameterizedtexture") { cout << "URI HERE---" << each.first << " type: " << each.second << endl; }
+        if (each.second == "parameterizedtexture_target") {}
+        //cout << each.first << " type: " << each.second << endl;
+    }
+
+    for (auto outer : pkIDtoTags) {
+        if (outer.second.count("imageuri")) {
+            cout << "found imageuri: " << outer.second["imageuri"] << endl;
+            if (outer.second.count("imageuri")) {
+                //cout << "" << endl;
+            }
+        }
+
+        if (pkIDs[outer.first] == "parameterizedtexture_target") {
+            //cout << "found everything" << endl;
+            cout << " TCL " << outer.second["_textureparameterization_texcoordlist_pkid"] << " -- ";
+            cout << " Par " << outer.second["parent_ogr_pkid"] << " -- ";
+            cout << " uri " << outer.second["uri"];
+        }
+        for (auto inner : outer.second) {
+
+            /*for (auto each : inner) {
+                if (each.first == "target uri") { }
+                if (each.first == "") { }
+            }*/
+        }
     }
 
     mapType = "GML";
