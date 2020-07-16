@@ -5,6 +5,8 @@
 #include "core/scripting/VRPyObject.h"
 #include "core/scripting/VRPyStroke.h"
 
+using namespace OSG;
+
 
 // ------------------------------------------------------------------------ NODE
 

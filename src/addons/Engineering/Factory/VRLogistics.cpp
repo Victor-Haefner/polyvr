@@ -6,6 +6,7 @@
 #include "core/objects/geometry/VRStroke.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/utils/toString.h"
+#include "core/math/graph.h"
 
 #include <OpenSG/OSGMatrixUtility.h>
 
@@ -361,7 +362,10 @@ FProduct::~FProduct() {}
 
 // --------------------------------------------------------------------- NETWORK
 
-FNetwork::FNetwork() {}
+FNetwork::FNetwork() {
+    graph = Graph::create();
+}
+
 FNetwork::~FNetwork() {}
 
 shared_ptr<FNode> FNetwork::addNode(shared_ptr<FNode> parent) {

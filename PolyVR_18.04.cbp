@@ -375,8 +375,6 @@
 		<Unit filename="src/addons/Engineering/Factory/VRPyLogistics.h" />
 		<Unit filename="src/addons/Engineering/Factory/VRPyProduction.cpp" />
 		<Unit filename="src/addons/Engineering/Factory/VRPyProduction.h" />
-		<Unit filename="src/addons/Engineering/Factory/network.cpp" />
-		<Unit filename="src/addons/Engineering/Factory/network.h" />
 		<Unit filename="src/addons/Engineering/Mechanics/VRMechanism.cpp" />
 		<Unit filename="src/addons/Engineering/Mechanics/VRMechanism.h" />
 		<Unit filename="src/addons/Engineering/Mechanics/VRPyMechanism.cpp" />

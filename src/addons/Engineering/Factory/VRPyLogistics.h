@@ -4,7 +4,7 @@
 #include "core/scripting/VRPyObject.h"
 #include "VRLogistics.h"
 
-struct FPyNode : VRPyBaseT<FNode> {
+struct FPyNode : VRPyBaseT<OSG::FNode> {
     static PyMethodDef methods[];
 
     static PyObject* connect(FPyNode* self, PyObject* args);
@@ -14,14 +14,14 @@ struct FPyNode : VRPyBaseT<FNode> {
     static PyObject* getTransform(FPyNode* self);
 };
 
-struct FPyNetwork : VRPyBaseT<FNetwork> {
+struct FPyNetwork : VRPyBaseT<OSG::FNetwork> {
     static PyMethodDef methods[];
 
     static PyObject* addNodes(FPyNetwork* self, PyObject* args);
     static PyObject* stroke(FPyNetwork* self, PyObject* args);
 };
 
-struct FPyPath : VRPyBaseT<FPath> {
+struct FPyPath : VRPyBaseT<OSG::FPath> {
     int i;
     static PyMethodDef methods[];
 
@@ -31,14 +31,14 @@ struct FPyPath : VRPyBaseT<FPath> {
     static PyObject* tp_iternext(FPyPath* self);
 };
 
-struct FPyTransporter : VRPyBaseT<FTransporter> {
+struct FPyTransporter : VRPyBaseT<OSG::FTransporter> {
     static PyMethodDef methods[];
 
     static PyObject* setPath(FPyTransporter* self, PyObject* args);
     static PyObject* setSpeed(FPyTransporter* self, PyObject* args);
 };
 
-struct FPyContainer : VRPyBaseT<FContainer> {
+struct FPyContainer : VRPyBaseT<OSG::FContainer> {
     static PyMethodDef methods[];
     static PyObject* setCapacity(FPyContainer* self, PyObject* args);
     static PyObject* getCapacity(FPyContainer* self);
@@ -51,12 +51,12 @@ struct FPyContainer : VRPyBaseT<FContainer> {
     static PyObject* peek(FPyContainer* self);
 };
 
-struct FPyProduct : VRPyBaseT<FProduct> {
+struct FPyProduct : VRPyBaseT<OSG::FProduct> {
     static PyMethodDef methods[];
     static PyObject* getGeometry(FPyProduct* self);
 };
 
-struct FPyLogistics : VRPyBaseT<FLogistics> {
+struct FPyLogistics : VRPyBaseT<OSG::FLogistics> {
     static PyMethodDef methods[];
 
     static PyObject* addProduct(FPyLogistics* self, PyObject* args);
