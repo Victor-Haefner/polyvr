@@ -122,8 +122,8 @@ void FNode::disconnect(shared_ptr<FNode> n) {
 }
 
 void FNode::isolate() {
-    for (itr = out.begin(); itr != out.end(); itr++) disconnect(itr->second);
-    for (itr = in.begin(); itr != in.end(); itr++) disconnect(itr->second);
+    for (auto n : out) disconnect(n.second);
+    for (auto n : in ) disconnect(n.second);
     out.clear();
     in.clear();
 }
