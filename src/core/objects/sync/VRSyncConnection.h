@@ -22,6 +22,9 @@ class VRSyncConnection {
 
         void connect();
         bool send(string message);
+
+        static string base64_encode(unsigned char const* buf, UInt32 bufLen);
+        static vector<unsigned char> base64_decode(string const& encoded_string);
 };
 
 OSG_END_NAMESPACE;
