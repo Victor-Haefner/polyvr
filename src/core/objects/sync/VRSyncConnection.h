@@ -18,10 +18,10 @@ class VRSyncConnection {
     public:
         VRSyncConnection(string uri = "");
         ~VRSyncConnection();
+        static VRSyncConnectionPtr create(string name = "None");
 
         void connect();
         bool send(string message);
-        static VRSyncConnectionPtr create(string name = "None");
 };
 
 OSG_END_NAMESPACE;
