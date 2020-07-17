@@ -2,7 +2,7 @@
 #define VRPySyncNode_H_INCLUDED
 
 #include "VRPyObject.h"
-#include "core/objects/VRSyncNode.h"
+#include "core/objects/sync/VRSyncNode.h"
 
 struct VRPySyncNode : VRPyBaseT<OSG::VRSyncNode> {
     static PyMethodDef methods[];

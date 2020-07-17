@@ -1,7 +1,8 @@
 #ifndef VRSyncNode_H_INCLUDED
 #define VRSyncNode_H_INCLUDED
 
-#include "VRTransform.h"
+#include "VRSyncConnection.h"
+#include "core/objects/VRTransform.h"
 #include "core/networking/VRNetworkingFwd.h"
 #include <OpenSG/OSGChangeList.h>
 #include <OpenSG/OSGFieldContainerFactory.h>
@@ -14,25 +15,6 @@ struct SerialEntry;
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
-
-ptrFwd(VRSyncRemote);
-
-class VRSyncRemote {//: public VRName {
-    private:
-        map<UInt32, UInt32> mapping; // <remote container ID, local container ID>
-        string uri;
-
-        VRWebSocketPtr socket;
-
-    public:
-        VRSyncRemote(string uri = "");
-        ~VRSyncRemote();
-
-        void connect();
-        bool send(string message);
-        static VRSyncRemotePtr create(string name = "None");
-//        VRSyncRemotePtr ptr();
-};
 
 class VRSyncNode : public VRTransform {
     private:
@@ -48,7 +30,7 @@ class VRSyncNode : public VRTransform {
         map<UInt32, UInt32> container; // local containers, sub-set of containers which need to be synced for collaboration
         //vector<UInt32> cores; //lists IDs of nodecores
         vector<UInt32> syncedContainer; //Id's of container that got changes over sync (changed by remote). Needed to filter out sync changes from local Changelist to prevent cycles.
-        map<string, VRSyncRemotePtr> remotes;
+        map<string, VRSyncConnectionPtr> remotes;
         map<UInt32, UInt32> remoteToLocalID;
         map<UInt32, UInt32> localToRemoteID;
         map<UInt32, UInt32> remoteCoreToLocalNode;

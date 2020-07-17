@@ -1,5 +1,5 @@
 #include "VRSyncNode.h"
-#include "VRLight.h"
+#include "core/objects/VRLight.h"
 #include "core/objects/OSGObject.h"
 #include "core/objects/object/OSGCore.h"
 #include "core/objects/material/VRMaterial.h"
@@ -206,7 +206,7 @@ void VRSyncNode::printChangeList(OSGChangeList* cl) {
     else cout << " node: " << name << ", changes: " << cl->getNumChanged() << ", created: " << cl->getNumCreated() << endl;
 
     auto printEntry = [&](ContainerChangeEntry* entry) {
-        const FieldFlags* fieldFlags = entry->pFieldFlags;
+        //const FieldFlags* fieldFlags = entry->pFieldFlags;
         BitVector whichField = entry->whichField;
         if (whichField == 0 && entry->bvUncommittedChanges != 0) whichField |= *entry->bvUncommittedChanges;
         UInt32 id = entry->uiContainerId;
@@ -738,14 +738,16 @@ void VRSyncNode::printDeserializedData(vector<SerialEntry>& entries, map<UInt32,
     for (auto entry : entries) {
         cout << "  entry: " << entry.localId;
 
-        if (entry.fcTypeID != -1) {
+        UInt32 noID = UInt32(-1);
+
+        if (entry.fcTypeID != noID) {
             FieldContainerType* fcType = factory->findType(entry.fcTypeID);
             cout << ", fcType: " << fcType->getName();
         }
 
-        if (entry.syncNodeID != -1) cout << ", syncNodeID: " << entry.syncNodeID;
-        if (entry.uiEntryDesc != -1) cout << ", change type: " << getChangeType(entry.uiEntryDesc);
-        if (entry.coreID != -1) cout << ", coreID: " << entry.coreID;
+        if (entry.syncNodeID != noID) cout << ", syncNodeID: " << entry.syncNodeID;
+        if (entry.uiEntryDesc != noID) cout << ", change type: " << getChangeType(entry.uiEntryDesc);
+        if (entry.coreID != noID) cout << ", coreID: " << entry.coreID;
 
 
         if (parentToChildren[entry.localId].size() > 0) {
@@ -767,11 +769,14 @@ void VRSyncNode::gatherLeafs(VRObjectPtr parent, vector<pair<Node*, VRObjectPtr>
     // check if a transform core changed
     NodeCore* c1 = parent->getCore()->core;
     NodeCore* c2 = pNode->getCore();
-    if (c1 != c2 && c2 && c2->getTypeName() != "Group") inconsistentCores.push_back(parent);
+    if (c1 != c2 && c2) {
+        string type = c2->getTypeName();
+        if (type != "Group") inconsistentCores.push_back(parent);
+    }
 
     // ignore geometry nodes, they are part of vrgeometry
     if (pNode->getNChildren() == 1) {
-        if (auto geo = dynamic_cast<Geometry*>(pNode->getChild(0)->getCore())) {
+        if (dynamic_cast<Geometry*>(pNode->getChild(0)->getCore())) { // check if geo core
             pNode = pNode->getChild(0);
         }
     }
@@ -1079,7 +1084,7 @@ OSGChangeList* VRSyncNode::getFilteredChangeList() {
             Attachment* att = dynamic_cast<Attachment*>(fct);
             if (id > 3014 && !isSubContainer(id)) {
                 if (att) {
-                    auto parents = att->getMFParents();
+                    //auto parents = att->getMFParents();
                     //cout << " ----- getFilteredChangeList entry: " << id << " " << fct->getTypeName() << " isNode? " << type->isNode() << " isCore? " << type->isNodeCore() << " isAttachment? " << type->isAttachment() << " Nparents: " << parents->size() << endl;
 
                 }
@@ -1102,7 +1107,7 @@ OSGChangeList* VRSyncNode::getFilteredChangeList() {
         }
     }
 
-    bool childEvent = false;
+    //bool childEvent = false;
 
     // add changed entries to local CL
     for (auto it = cl->begin(); it != cl->end(); ++it) {
@@ -1131,7 +1136,7 @@ OSGChangeList* VRSyncNode::getFilteredChangeList() {
 
         // check for unregistered containers
         if (whichField & Node::ChildrenFieldMask || whichField & Node::CoreFieldMask) {
-            childEvent = true;
+            //childEvent = true;
             auto subcontainers = getAllSubContainers( node );
             for (auto subc : subcontainers) {
                 localChanges->newCreate(subc.first->getId(), 0);
@@ -1306,7 +1311,7 @@ void VRSyncNode::handlePoses(string poses)  {
     if (namePair[0] == "name") nodeName = namePair[1];
 
     if (nodeName == "") return;
-    for (int i = 2; i < pairs.size(); i++) {
+    for (unsigned int i = 2; i < pairs.size(); i++) {
         auto data = splitString(pairs[i], ':');
         if (data.size() != 2) continue;
         string deviceName = data[0];
@@ -1325,7 +1330,7 @@ void VRSyncNode::handleOwnership(string ownership)  {
     nodeName = str_vec[1];
     if (nodeName == "") return;
     cout << nodeName << " ";
-    for (int i = 2; i < str_vec.size(); i++) {
+    for (unsigned int i = 2; i < str_vec.size(); i++) {
         cout << str_vec[i];
         ownershipNodeToObject[nodeName].push_back(str_vec[i]);
     }
@@ -1348,7 +1353,7 @@ PosePtr VRSyncNode::getRemoteMousePose(string remoteName) {
 //Add remote Nodes to sync with
 void VRSyncNode::addRemote(string host, int port, string name) {
     string uri = asUri(host, port, name);
-    remotes[uri] = VRSyncRemote::create(uri);
+    remotes[uri] = VRSyncConnection::create(uri);
 //    sync(uri);
 }
 
@@ -1379,27 +1384,6 @@ UInt32 VRSyncNode::getRemoteToLocalID(UInt32 id) {
     if (!remoteToLocalID.count(id)) return 0;
     return remoteToLocalID[id];
 }
-// ------------------- VRSyncRemote
-
-
-VRSyncRemote::VRSyncRemote(string uri) : uri(uri) {
-    socket = VRWebSocket::create("sync node ws");
-    if (uri != "") connect();
-}
-
-VRSyncRemote::~VRSyncRemote() { cout << "~VRSyncRemote::VRSyncRemote" << endl; }
-VRSyncRemotePtr VRSyncRemote::create(string name) { return VRSyncRemotePtr( new VRSyncRemote(name) ); }
-
-void VRSyncRemote::connect() {
-    bool result = socket->open(uri);
-    if (!result) cout << "VRSyncRemote, Failed to open websocket to " << uri << endl;
-}
-
-bool VRSyncRemote::send(string message){
-    if (!socket->sendMessage(message)) return 0;
-    return 1;
-}
-
 
 void printNode(VRObjectPtr obj, string indent = "") {
     cout << indent << "obj " << obj->getName() << " (" << obj->getType() << ")";

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "VRNetworkingFwd.h"
+#include <functional>
 #include <OpenSG/OSGConfig.h>
 #include <core/utils/VRName.h>
 #include "mongoose/mongoose.h"
