@@ -1168,7 +1168,7 @@ bool poseChanged(Pose oldPose, PosePtr newPose, int thresholdPos, int thresholdA
     Vec3d oldDir = oldPose.dir();
     Vec3d newPos = newPose->pos();
     Vec3d newDir = newPose->dir();
-    cout << "oldPos, oldDir " << oldPos << ", " << oldDir << " newPos,newDir" << newPos << ", " << newDir << endl;
+    //cout << "oldPos, oldDir " << oldPos << ", " << oldDir << " newPos,newDir" << newPos << ", " << newDir << endl;
 
     Vec3d distancePos = oldPos - newPos; //calculate distances
 
@@ -1180,7 +1180,7 @@ bool poseChanged(Pose oldPose, PosePtr newPose, int thresholdPos, int thresholdA
     float dotProduct = oldPos.x()*newPos.x() + oldPos.y()*newPos.y() + oldPos.z()*newPos.z();
     float cosAngle = dotProduct / (magOldDir*magNewDir);
     auto angle = std::acos(cosAngle);
-    cout << "poseChanged      Angle: " << angle << " cosAngle " << cosAngle << " dotProduct " << dotProduct << " magNewDir " << magNewDir << " magOldDir " << magOldDir << endl;
+    //cout << "poseChanged      Angle: " << angle << " cosAngle " << cosAngle << " dotProduct " << dotProduct << " magNewDir " << magNewDir << " magOldDir " << magOldDir << endl;
 
     if (abs(distancePos.x()) > thresholdPos || abs(distancePos.y()) > thresholdPos || abs(distancePos.z()) > thresholdPos) return true; // check if differences exceed thresholds
     else if (abs(angle) > thresholdAngle) return true;
@@ -1354,6 +1354,7 @@ vector<string> VRSyncNode::getOwnedObjects(string nodeName) {
 }
 
 PosePtr VRSyncNode::getRemoteCamPose(string remoteName) {
+    cout << "VRSyncNode::getRemoteCamPose " << remoteName <<  " " << remotesCameraPose[remoteName] << endl;
     return remotesCameraPose[remoteName];
 }
 
