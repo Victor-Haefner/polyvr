@@ -704,8 +704,6 @@
 		<Unit filename="src/core/objects/VRShadowEngineFields.h" />
 		<Unit filename="src/core/objects/VRStage.cpp" />
 		<Unit filename="src/core/objects/VRStage.h" />
-		<Unit filename="src/core/objects/VRSyncNode.cpp" />
-		<Unit filename="src/core/objects/VRSyncNode.h" />
 		<Unit filename="src/core/objects/VRTransform.cpp" />
 		<Unit filename="src/core/objects/VRTransform.h" />
 		<Unit filename="src/core/objects/geometry/OSGGeometry.cpp" />
@@ -758,6 +756,10 @@
 		<Unit filename="src/core/objects/object/VRObject.cpp" />
 		<Unit filename="src/core/objects/object/VRObject.h" />
 		<Unit filename="src/core/objects/object/VRObjectT.h" />
+		<Unit filename="src/core/objects/sync/VRSyncConnection.cpp" />
+		<Unit filename="src/core/objects/sync/VRSyncConnection.h" />
+		<Unit filename="src/core/objects/sync/VRSyncNode.cpp" />
+		<Unit filename="src/core/objects/sync/VRSyncNode.h" />
 		<Unit filename="src/core/scene/VRAnimationManager.cpp" />
 		<Unit filename="src/core/scene/VRAnimationManager.h" />
 		<Unit filename="src/core/scene/VRAnimationManagerT.h" />
