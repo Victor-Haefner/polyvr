@@ -1158,37 +1158,45 @@ void VRSyncNode::broadcastChangeList(OSGChangeList* cl, bool doDelete) {
     broadcast(data); // send over websocket to remote
 }
 
-//bool poseChanged(Pose oldPose, Pose newPose){
-//    Vec3d oldPos = oldPose.pos();
-//    Vec3d oldDir = oldPose.dir();
-//    Vec3d newPos = newPos->pos();
-//    Vec3d newDir = newDir->dir();
-//
-//    //compare
-//}
+bool poseChanged(Pose oldPose, PosePtr newPose, int thresholdPos, int thresholdAngle){
+    Vec3d oldPos = oldPose.pos();
+    Vec3d oldDir = oldPose.dir();
+    Vec3d newPos = newPose->pos();
+    Vec3d newDir = newPose->dir();
+
+    Vec3d distancePos = oldPos - newPos; //calculate distances
+
+    float magOldDir = std::sqrt(oldDir.x()*oldDir.x() + oldDir.y()*oldDir.y() + oldDir.z()*oldDir.z()); //calculate dir angle
+    float magNewDir = std::sqrt(newDir.x()*newDir.x() + newDir.y()*newDir.y() + newDir.z()*newDir.z());
+    float dotProduct = oldPos.x()*newPos.x() + oldPos.y()*newPos.y() + oldPos.z()*newPos.z();
+    float cosAngle = dotProduct / (magOldDir*magNewDir);
+    float angle = std::acos(cosAngle);
+
+    if (abs(distancePos.x()) > thresholdPos || abs(distancePos.y()) > thresholdPos || abs(distancePos.z()) > thresholdPos) return true; // check if differences exceed thresholds
+    else if (abs(angle) > thresholdAngle) return true;
+    else return false;
+}
 
 void VRSyncNode::getAndBroadcastPoses(){
     string poses = "poses|name:" + name;
-    //get scene
-    VRScenePtr scene = VRScene::getCurrent();
 
-    //get camera pose
-    VRCameraPtr cam = scene->getActiveCamera();
+    VRScenePtr scene = VRScene::getCurrent(); //get scene
+    VRCameraPtr cam = scene->getActiveCamera(); //get camera pose
     PosePtr camPose = cam->getWorldPose();
-    // check if the position has changed
-
-    string pose_str = toString(camPose);
-    poses += "|cam:" + pose_str;
-
-    //check devices and eventually get poses
-    VRDevicePtr mouse = VRSetup::getCurrent()->getDevice("mouse");
+    VRDevicePtr mouse = VRSetup::getCurrent()->getDevice("mouse"); //check devices and eventually get poses
     PosePtr mousePose = mouse->getBeacon()->getPose();
-    //string mousePos_str = toString(mouseBeacon->getPose());
+
+    if (!poseChanged(oldCamPose, camPose, 10, 10)) return; //return if pose did not change according to threshold
+
+    string pose_str = toString(camPose); //append poses to string
+    poses += "|cam:" + pose_str;
     if (mousePose) poses += "|mouse:" + toString(mousePose);
 
-    //broadcast
+    oldCamPose = *camPose; //update oldPoses
+    oldMousePose = *mousePose;
+
+    broadcast(poses); //broadcast
     //cout << "broadcast poses " << poses << endl;
-    broadcast(poses);
 }
 
 void VRSyncNode::sync(string uri) {
