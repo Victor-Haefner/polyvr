@@ -1316,7 +1316,6 @@ void VRSyncNode::handleMapping(string mappingData) {
 void VRSyncNode::handlePoses(string poses)  {
     cout << "VRSyncNode::handlePoses: " << poses << endl;
     string nodeName;
-    return;
     vector<string> pairs = splitString(poses, '|');
     vector<string> namePair = splitString(pairs[1], ':');
     if (namePair[0] == "name") nodeName = namePair[1];
@@ -1329,6 +1328,8 @@ void VRSyncNode::handlePoses(string poses)  {
         PosePtr pose = toValue<PosePtr>(data[1]);
         if (deviceName == "cam") remotesCameraPose[nodeName] = pose;
         else if (deviceName == "mouse") remotesMousePose[nodeName] = pose;
+
+        cout <<  "VRSyncNode::handlePoses      deviceName " << deviceName << " pose " << pose << " remotesCameraPose[nodeName] " << remotesCameraPose[nodeName] << " nodeName " << nodeName << endl;
     }
     //TODO: do something with poses
 
@@ -1354,7 +1355,6 @@ vector<string> VRSyncNode::getOwnedObjects(string nodeName) {
 }
 
 PosePtr VRSyncNode::getRemoteCamPose(string remoteName) {
-    cout << "VRSyncNode::getRemoteCamPose " << remoteName <<  " " << remotesCameraPose[remoteName] << endl;
     return remotesCameraPose[remoteName];
 }
 
