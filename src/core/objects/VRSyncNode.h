@@ -117,6 +117,8 @@ class VRSyncNode : public VRTransform {
         void updateRemoteMousePose(string nodeName, PosePtr mousePose);
         map<string, PosePtr> remotesCameraPose;
         map<string, PosePtr> remotesMousePose;
+        Pose oldCamPose;
+        Pose oldMousePose;
 
     public:
         VRSyncNode(string name = "syncNode");

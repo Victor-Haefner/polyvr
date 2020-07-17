@@ -1158,6 +1158,15 @@ void VRSyncNode::broadcastChangeList(OSGChangeList* cl, bool doDelete) {
     broadcast(data); // send over websocket to remote
 }
 
+//bool poseChanged(Pose oldPose, Pose newPose){
+//    Vec3d oldPos = oldPose.pos();
+//    Vec3d oldDir = oldPose.dir();
+//    Vec3d newPos = newPos->pos();
+//    Vec3d newDir = newDir->dir();
+//
+//    //compare
+//}
+
 void VRSyncNode::getAndBroadcastPoses(){
     string poses = "poses|name:" + name;
     //get scene
@@ -1166,6 +1175,8 @@ void VRSyncNode::getAndBroadcastPoses(){
     //get camera pose
     VRCameraPtr cam = scene->getActiveCamera();
     PosePtr camPose = cam->getWorldPose();
+    // check if the position has changed
+
     string pose_str = toString(camPose);
     poses += "|cam:" + pose_str;
 
@@ -1196,7 +1207,7 @@ void VRSyncNode::sync(string uri) {
 
 //update this SyncNode
 void VRSyncNode::update() {
-    //getAndBroadcastPoses();
+    getAndBroadcastPoses();
     auto localChanges = getFilteredChangeList();
     if (!localChanges) return;
     if (getChildrenCount() == 0) return;
@@ -1279,7 +1290,9 @@ void VRSyncNode::handleMapping(string mappingData) {
 }
 
 void VRSyncNode::handlePoses(string poses)  {
+    cout << "VRSyncNode::handlePoses: " << poses << endl;
     string nodeName;
+    return;
     vector<string> pairs = splitString(poses, '|');
     vector<string> namePair = splitString(pairs[1], ':');
     if (namePair[0] == "name") nodeName = namePair[1];
