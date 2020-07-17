@@ -25,6 +25,7 @@
 #include <OpenSG/OSGContainerIdMapper.h>
 #include <OpenSG/OSGNameAttachment.h>
 
+#include <OpenSG/OSGChangeList.h>
 #include <OpenSG/OSGThreadManager.h>
 
 // needed to filter GLId field masks
@@ -102,134 +103,9 @@ template<> string typeName(const VRSyncNode& o) { return "SyncNode"; }
 
 ThreadRefPtr applicationThread;
 
-class OSGChangeList : public ChangeList {
-    public:
-        ~OSGChangeList() {};
-
-        ContainerChangeEntry* newChange(UInt32 ID, BitVector fields, map<UInt32, ContainerChangeEntry*>& changedFCs) {
-            ContainerChangeEntry* entry = 0;
-            if (changedFCs.count(ID)) entry = changedFCs[ID];
-            else {
-                entry = getNewEntry();
-                entry->uiEntryDesc = ContainerChangeEntry::Change;
-                entry->uiContainerId = ID;
-                changedFCs[ID] = entry;
-            }
-            entry->whichField = fields;
-            return entry;
-        }
-
-        void addChange(ContainerChangeEntry* entry, map<UInt32, ContainerChangeEntry*>& changedFCs) {
-            /*if (entry->uiEntryDesc == ContainerChangeEntry::AddReference   ||
-                entry->uiEntryDesc == ContainerChangeEntry::SubReference   ||
-                entry->uiEntryDesc == ContainerChangeEntry::DepSubReference) {
-                ContainerChangeEntry* pEntry = getNewEntry();
-                pEntry->uiEntryDesc   = entry->uiEntryDesc;
-                pEntry->uiContainerId = entry->uiContainerId;
-                pEntry->pList         = this;
-            } else if(entry->uiEntryDesc == ContainerChangeEntry::Create) {
-                ContainerChangeEntry* pEntry = getNewEntry();
-                pEntry->uiEntryDesc   = entry->uiEntryDesc; //ContainerChangeEntry::Change; //TODO: check what I did here (workaround to get created entries into the changelist aswell)
-                pEntry->pFieldFlags   = entry->pFieldFlags;
-                pEntry->uiContainerId = entry->uiContainerId;
-                pEntry->whichField    = entry->whichField;
-                if (pEntry->whichField == 0 && entry->bvUncommittedChanges != 0)
-                    pEntry->whichField |= *entry->bvUncommittedChanges;
-                pEntry->pList         = this;
-            } else*/ if (entry->uiEntryDesc == ContainerChangeEntry::Change) {
-                ContainerChangeEntry* pEntry = 0;
-                if (changedFCs.count(entry->uiContainerId)) pEntry = changedFCs[entry->uiContainerId];
-                else {
-                    pEntry = getNewEntry();
-                    pEntry->uiContainerId = entry->uiContainerId;
-                    changedFCs[pEntry->uiContainerId] = pEntry;
-                }
-                pEntry->uiEntryDesc   = entry->uiEntryDesc; //ContainerChangeEntry::Change; //TODO: check what I did here (workaround to get created entries into the changelist aswell)
-                //pEntry->pFieldFlags   = entry->pFieldFlags; // what are they used for?
-                pEntry->whichField |= entry->whichField;
-                if (pEntry->whichField == 0 && entry->bvUncommittedChanges != 0)
-                    pEntry->whichField |= *entry->bvUncommittedChanges;
-                pEntry->pList         = this;
-            }
-        }
-
-        ContainerChangeEntry* newCreate(UInt32 ID, BitVector fields) {
-            auto entry = getNewCreatedEntry();
-            entry->uiEntryDesc = ContainerChangeEntry::Create;
-            entry->uiContainerId = ID;
-            entry->whichField = fields;
-            return entry;
-        }
-
-        void addCreate(ContainerChangeEntry* entry) {
-            ContainerChangeEntry* pEntry = getNewCreatedEntry();
-            pEntry->uiEntryDesc   = entry->uiEntryDesc;
-            pEntry->uiContainerId = entry->uiContainerId;
-            pEntry->whichField    = entry->whichField;
-            if (pEntry->whichField == 0 && entry->bvUncommittedChanges != 0)
-                pEntry->whichField |= *entry->bvUncommittedChanges;
-            pEntry->pList         = this;
-        }
-};
-
-string getChangeType(UInt32 uiEntryDesc) {
-    string changeType;
-    switch (uiEntryDesc) {
-        case ContainerChangeEntry::Change:
-            changeType = " Change            ";
-            break;
-        case ContainerChangeEntry::AddField:
-            changeType = " addField/SubField ";
-            break;
-        case ContainerChangeEntry::AddReference:
-            changeType = " AddReference      ";
-            break;
-        case ContainerChangeEntry::Create:
-            changeType = " Create            ";
-            break;
-        case ContainerChangeEntry::DepSubReference:
-            changeType = " DepSubReference   ";
-            break;
-        case ContainerChangeEntry::SubReference:
-            changeType = " SubReference      ";
-            break;
-        default:
-            changeType = " none              ";
-    }
-    return changeType;
-}
-
-void VRSyncNode::printChangeList(OSGChangeList* cl) {
-    if (!cl) return;
-    cout << endl << "ChangeList:";
-    if (cl->getNumChanged() == 0 && cl->getNumCreated() == 0) cout << " no changes " << endl;
-    else cout << " node: " << name << ", changes: " << cl->getNumChanged() << ", created: " << cl->getNumCreated() << endl;
-
-    auto printEntry = [&](ContainerChangeEntry* entry) {
-        //const FieldFlags* fieldFlags = entry->pFieldFlags;
-        BitVector whichField = entry->whichField;
-        if (whichField == 0 && entry->bvUncommittedChanges != 0) whichField |= *entry->bvUncommittedChanges;
-        UInt32 id = entry->uiContainerId;
-
-        // ----- print info ---- //
-        string type;
-        if (factory->getContainer(id)) type = factory->getContainer(id)->getTypeName();
-        string changeType = getChangeType(entry->uiEntryDesc);
-        cout << "  " << "uiContainerId: " << id << ", changeType: " << changeType << ", container: " << type;
-        cout << ", fields: " << std::bitset<64>(whichField);
-        //cout << ", node core changed? " << bool(whichField & Node::CoreFieldMask);
-        //cout << ", node children changed? " << bool(whichField & Node::ChildrenFieldMask);
-        cout << endl;
-    };
-
-    cout << " Created:" << endl;
-    for (auto it = cl->beginCreated(); it != cl->endCreated(); ++it) printEntry(*it);
-    cout << " Changes:" << endl;
-    for (auto it = cl->begin(); it != cl->end(); ++it) printEntry(*it);
-}
-
 VRSyncNode::VRSyncNode(string name) : VRTransform(name) {
     type = "SyncNode";
+    changelist = VRSyncChangelist::create();
     applicationThread = dynamic_cast<Thread *>(ThreadManager::getAppThread());
 
 //    NodeMTRefPtr node = getNode()->node; // deprecated, gets filtered from created entries in CL
@@ -245,6 +121,51 @@ VRSyncNode::~VRSyncNode() {
 
 VRSyncNodePtr VRSyncNode::ptr() { return static_pointer_cast<VRSyncNode>( shared_from_this() ); }
 VRSyncNodePtr VRSyncNode::create(string name) { return VRSyncNodePtr(new VRSyncNode(name) ); }
+
+bool VRSyncNode::isSubContainer(const UInt32& id) {
+    auto fct = factory->getContainer(id);
+    if (!fct) return false;
+
+
+    UInt32 syncNodeID = getNode()->node->getId();
+    auto type = factory->findType(fct->getTypeId());
+
+    function<bool(Node*)> checkAncestor = [&](Node* node) {
+        if (!node) return false;
+        if (node->getId() == syncNodeID) return true;
+        Node* parent = node->getParent();
+        return checkAncestor(parent);
+    };
+
+    if (type->isNode()) {
+        Node* node = dynamic_cast<Node*>(fct);
+        if (!node) return false;
+        return checkAncestor(node);
+    }
+
+    if (type->isNodeCore()) {
+        NodeCore* core = dynamic_cast<NodeCore*>(fct);
+        if (!core) return false;
+        for (auto node : core->getParents())
+            if (checkAncestor(dynamic_cast<Node*>(node))) return true;
+    }
+
+    Attachment* att = dynamic_cast<Attachment*>(fct);
+    if (att) {
+        auto parents = att->getMFParents();
+        for (UInt32 i = 0; i<parents->size(); i++) {
+            FieldContainer* parent = parents->at(i);
+            if (isSubContainer(parent->getId())) return true;
+        }
+    }
+
+    return false;
+}
+
+// checks if a container was changed by remote
+bool VRSyncNode::isRemoteChange(const UInt32& id) {
+    return bool(::find(syncedContainer.begin(), syncedContainer.end(), id) != syncedContainer.end());
+}
 
 typedef unsigned char BYTE;
 
@@ -746,7 +667,7 @@ void VRSyncNode::printDeserializedData(vector<SerialEntry>& entries, map<UInt32,
         }
 
         if (entry.syncNodeID != noID) cout << ", syncNodeID: " << entry.syncNodeID;
-        if (entry.uiEntryDesc != noID) cout << ", change type: " << getChangeType(entry.uiEntryDesc);
+        if (entry.uiEntryDesc != noID) cout << ", change type: " << changelist->getChangeType(entry.uiEntryDesc);
         if (entry.coreID != noID) cout << ", coreID: " << entry.coreID;
 
 
@@ -870,30 +791,6 @@ void VRSyncNode::wrapOSG() { // TODO: check for deleted nodes!
     for (auto i : inconsistentCores) i->wrapOSG(i->getNode());
 }
 
-void VRSyncNode::deserializeAndApply(string& data) {
-    if (data.size() == 0) return;
-    cout << endl << "> > >  " << name << " VRSyncNode::deserializeAndApply(), received data size: " << data.size() << endl;
-    VRSyncNodeFieldContainerMapper mapper(this);
-    factory->setMapper(&mapper);
-
-    map<UInt32, vector<UInt32>> parentToChildren; //maps parent ID to its children syncIDs
-    vector<SerialEntry> entries;
-    map<UInt32, vector<BYTE>> fcData; // map entry localID to its binary field data
-
-    deserializeEntries(data, entries, parentToChildren, fcData);
-    printDeserializedData(entries, parentToChildren, fcData);
-    handleRemoteEntries(entries, parentToChildren, fcData);
-    //printRegistredContainers();
-    wrapOSG();
-
-    //exportToFile(getName()+".osg");
-
-    factory->setMapper(0);
-    cout << "            / " << name << " VRSyncNode::deserializeAndApply()" << "  < < <" << endl;
-
-    //*(UInt32*)0=0; // induce segfault!
-}
-
 UInt32 VRSyncNode::findParent(map<UInt32,vector<UInt32>>& parentToChildren, UInt32 remoteNodeID) {
     UInt32 parentId = container.begin()->first;
     for (auto remoteParent : parentToChildren) {
@@ -907,17 +804,6 @@ UInt32 VRSyncNode::findParent(map<UInt32,vector<UInt32>>& parentToChildren, UInt
         }
     }
     return parentId;
-}
-
-//copies state into a CL and serializes it as string
-string VRSyncNode::copySceneState() {
-    OSGChangeList* localChanges = (OSGChangeList*)ChangeList::create();
-    localChanges->fillFromCurrentState();
-    printChangeList(localChanges);
-
-    string data = serialize(localChanges);
-    delete localChanges;
-    return data;
 }
 
 void VRSyncNode::printRegistredContainers() {
@@ -943,11 +829,6 @@ void VRSyncNode::printSyncedContainers() {
     for (UInt32 id : syncedContainer) cout << id << endl;
 }
 
-// checks if a container was changed by remote
-bool VRSyncNode::isRemoteChange(const UInt32& id) {
-    return bool(::find(syncedContainer.begin(), syncedContainer.end(), id) != syncedContainer.end());
-}
-
 bool VRSyncNode::isRegistered(const UInt32& id) {
     return bool(container.count(id));
 }
@@ -957,46 +838,6 @@ bool VRSyncNode::isRegisteredRemote(const UInt32& syncID) {
     for (auto reg : container) { //check if the FC is already registered, f.e. if nodeCore create entry arrives first a core along with its node will be created before the node create entry arrives
         if (reg.second == syncID) return true;
     }
-    return false;
-}
-
-bool VRSyncNode::isSubContainer(const UInt32& id) {
-    auto fct = factory->getContainer(id);
-    if (!fct) return false;
-
-
-    UInt32 syncNodeID = getNode()->node->getId();
-    auto type = factory->findType(fct->getTypeId());
-
-    function<bool(Node*)> checkAncestor = [&](Node* node) {
-        if (!node) return false;
-        if (node->getId() == syncNodeID) return true;
-        Node* parent = node->getParent();
-        return checkAncestor(parent);
-    };
-
-    if (type->isNode()) {
-        Node* node = dynamic_cast<Node*>(fct);
-        if (!node) return false;
-        return checkAncestor(node);
-    }
-
-    if (type->isNodeCore()) {
-        NodeCore* core = dynamic_cast<NodeCore*>(fct);
-        if (!core) return false;
-        for (auto node : core->getParents())
-            if (checkAncestor(dynamic_cast<Node*>(node))) return true;
-    }
-
-    Attachment* att = dynamic_cast<Attachment*>(fct);
-    if (att) {
-        auto parents = att->getMFParents();
-        for (UInt32 i = 0; i<parents->size(); i++) {
-            FieldContainer* parent = parents->at(i);
-            if (isSubContainer(parent->getId())) return true;
-        }
-    }
-
     return false;
 }
 
@@ -1049,118 +890,6 @@ map<FieldContainer*, vector<FieldContainer*>> VRSyncNode::getAllSubContainers(Fi
     map<FieldContainer*, vector<FieldContainer*>> res;
     getAllSubContainersRec(node, 0, res);
     return res;
-}
-
-OSGChangeList* VRSyncNode::getFilteredChangeList() {
-    // go through all changes, gather changes where the container is known (in containers)
-    // create local changelist with changes of containers of the subtree of this sync node :D
-
-    ChangeList* cl = applicationThread->getChangeList();
-//    cout << "cl entries: " << cl->getNumChanged() + cl->getNumCreated() << endl;
-    if (cl->getNumChanged() + cl->getNumCreated() == 0) return 0;
-
-    /*if (cl->getNumChanged() + cl->getNumCreated() >= 1) {
-        ContainerChangeEntry* entry = *cl->begin();
-        cout << " entry: " << entry->uiContainerId << " " << factory->getContainer(entry->uiContainerId)->getTypeName() << " " << entry->whichField << endl;
-        cout << " Node::CoreFieldMask " << Node::CoreFieldMask << endl;
-    }*/
-
-    /*if (cl->getNumChanged() < 15) {
-        cout << " GLOBALE CHANGES:" << endl;
-        printChangeList((OSGChangeList*)cl);
-    }*/
-
-    OSGChangeList* localChanges = (OSGChangeList*)ChangeList::create();
-    map<UInt32, ContainerChangeEntry*> changedFCs;
-
-    // register created and add them to local CL
-    for (auto it = cl->beginCreated(); it != cl->endCreated(); ++it) {
-        ContainerChangeEntry* entry = *it;
-        UInt32 id = entry->uiContainerId;
-
-        FieldContainer* fct = factory->getContainer(id);
-        if (fct) {
-            auto type = factory->findType(fct->getTypeId());
-            Attachment* att = dynamic_cast<Attachment*>(fct);
-            if (id > 3014 && !isSubContainer(id)) {
-                if (att) {
-                    //auto parents = att->getMFParents();
-                    //cout << " ----- getFilteredChangeList entry: " << id << " " << fct->getTypeName() << " isNode? " << type->isNode() << " isCore? " << type->isNodeCore() << " isAttachment? " << type->isAttachment() << " Nparents: " << parents->size() << endl;
-
-                }
-                //cout << " ----- getFilteredChangeList entry: " << id << " " << fct->getTypeName() << " isNode? " << type->isNode() << " isCore? " << type->isNodeCore() << " isAttachment? " << type->isAttachment() << endl;
-                if (type->isNode()) {
-                    //cout << "    node name: " << ::getName((Node*)fct) << endl;
-                }
-            }
-            //if (!att && !type->isNode() && !type->isNodeCore()) cout << " ----- getFilteredChangeList entry: " << fct->getTypeName() << "  " << fct->getId() << endl;
-            //if (fct) cout << " getFilteredChangeList entry: " << fct->getTypeName() << " attachment? " << att << endl;
-            //if (att) cout << "    attachement N parents: " << att->getMFParents()->size() << endl;
-        }
-
-        if (isRemoteChange(id)) continue;
-
-        if (isSubContainer(id)) {
-            localChanges->addCreate(entry);
-            //cout << "    isSubContainer: " << id << " " << container.size() << endl;
-            registerContainer(factory->getContainer(id), container.size());
-        }
-    }
-
-    //bool childEvent = false;
-
-    // add changed entries to local CL
-    for (auto it = cl->begin(); it != cl->end(); ++it) {
-        ContainerChangeEntry* entry = *it;
-        UInt32 id = entry->uiContainerId;
-        if (isRemoteChange(id)) {
-            //cout << "ignore remote change " << id << endl;
-            continue;
-        }
-
-        if (isRegistered(id)) localChanges->addChange(entry, changedFCs);
-        if (!isSubContainer(id)) continue;
-
-        // now check if the container is a node and if his core or children contain unregistered nodes
-
-        // get changes fieldmask
-        BitVector whichField = entry->whichField;
-        if (whichField == 0 && entry->bvUncommittedChanges != 0) whichField |= *entry->bvUncommittedChanges;
-//        cout << "entry->whichField " << entry->whichField << endl;
-
-        // get container
-        FieldContainer* fc = factory->getContainer(id);
-        if (!fc) continue;
-        Node* node = dynamic_cast<Node*>(fc);
-        if (!node) continue;
-
-        // check for unregistered containers
-        if (whichField & Node::ChildrenFieldMask || whichField & Node::CoreFieldMask) {
-            //childEvent = true;
-            auto subcontainers = getAllSubContainers( node );
-            for (auto subc : subcontainers) {
-                localChanges->newCreate(subc.first->getId(), 0);
-                localChanges->newChange(subc.first->getId(), -1, changedFCs);
-                registerContainer(subc.first, container.size());
-                for (auto subcParent : subc.second) {
-                    if (subcParent) {
-                        localChanges->newChange(subcParent->getId(), -1, changedFCs);
-                    }
-                }
-            }
-        }
-    }
-
-    //if (childEvent) printChangeList(localChanges);
-
-    return localChanges;
-}
-
-void VRSyncNode::broadcastChangeList(OSGChangeList* cl, bool doDelete) {
-    if (!cl) return;
-    string data = serialize(cl); // serialize changes in new change list (check OSGConnection for serialization Implementation)
-    if (doDelete) delete cl;
-    broadcast(data); // send over websocket to remote
 }
 
 bool poseChanged(Pose oldPose, PosePtr newPose, int thresholdPos, int thresholdAngle){
@@ -1232,23 +961,21 @@ void VRSyncNode::sync(string uri) {
 //update this SyncNode
 void VRSyncNode::update() {
     getAndBroadcastPoses();
-    auto localChanges = getFilteredChangeList();
+    auto localChanges = changelist->filterChanges(ptr());
     if (!localChanges) return;
     if (getChildrenCount() == 0) return;
-    if (localChanges->getNumCreated() == 0 && localChanges->getNumChanged() == 0) return;
     cout << endl << " > > >  " << name << " VRSyncNode::update()" << endl;
-    cout <<  "  local changelist, created: " << localChanges->getNumCreated() << ", changes: " << localChanges->getNumChanged() << endl;
 
 
-    ChangeList* cl = applicationThread->getChangeList();
-    printChangeList((OSGChangeList*)cl);
+    OSGChangeList* cl = (OSGChangeList*)applicationThread->getChangeList();
+    changelist->printChangeList(ptr(), cl);
 
 
     //printRegistredContainers(); // DEBUG: print registered container
     printSyncedContainers();
-    printChangeList(localChanges);
+    changelist->printChangeList(ptr(), localChanges);
 
-    broadcastChangeList(localChanges, true);
+    changelist->broadcastChangeList(ptr(), localChanges, true);
     syncedContainer.clear();
     cout << "            / " << name << " VRSyncNode::update()" << "  < < < " << endl;
 }
@@ -1259,6 +986,8 @@ void VRSyncNode::registerContainer(FieldContainer* c, UInt32 syncNodeID) {
     //cout << " VRSyncNode::registerContainer " << getName() << " container: " << c->getTypeName() << " at fieldContainerId: " << ID << endl;
     container[ID] = syncNodeID;
 }
+
+size_t VRSyncNode::getContainerCount() { return container.size(); }
 
 //returns registered IDs
 vector<UInt32> VRSyncNode::registerNode(Node* node) { // deprecated?
@@ -1283,6 +1012,30 @@ vector<UInt32> VRSyncNode::registerNode(Node* node) { // deprecated?
     res.insert(res.end(), localRes.begin(), localRes.end());
     res.insert(res.end(), recursiveRes.begin(), recursiveRes.end());
     return res;
+}
+
+void VRSyncNode::deserializeAndApply(string& data) {
+    if (data.size() == 0) return;
+    cout << endl << "> > >  " << name << " VRSyncNode::deserializeAndApply(), received data size: " << data.size() << endl;
+    VRSyncNodeFieldContainerMapper mapper(this);
+    factory->setMapper(&mapper);
+
+    map<UInt32, vector<UInt32>> parentToChildren; //maps parent ID to its children syncIDs
+    vector<SerialEntry> entries;
+    map<UInt32, vector<BYTE>> fcData; // map entry localID to its binary field data
+
+    deserializeEntries(data, entries, parentToChildren, fcData);
+    printDeserializedData(entries, parentToChildren, fcData);
+    handleRemoteEntries(entries, parentToChildren, fcData);
+    //printRegistredContainers();
+    wrapOSG();
+
+    //exportToFile(getName()+".osg");
+
+    factory->setMapper(0);
+    cout << "            / " << name << " VRSyncNode::deserializeAndApply()" << "  < < <" << endl;
+
+    //*(UInt32*)0=0; // induce segfault!
 }
 
 VRObjectPtr VRSyncNode::copy(vector<VRObjectPtr> children) {

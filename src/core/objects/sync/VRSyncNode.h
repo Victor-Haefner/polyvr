@@ -2,6 +2,7 @@
 #define VRSyncNode_H_INCLUDED
 
 #include "VRSyncConnection.h"
+#include "VRSyncChangelist.h"
 #include "core/objects/VRTransform.h"
 #include "core/networking/VRNetworkingFwd.h"
 #include <OpenSG/OSGChangeList.h>
@@ -27,6 +28,8 @@ class VRSyncNode : public VRTransform {
         vector<UInt32> createdNodes; //IDs of the currently created nodes/children
         vector<FieldContainerRecPtr> justCreated; //IDs of the currently created nodes/children
 
+        VRSyncChangelistPtr changelist;
+
         map<UInt32, UInt32> container; // local containers, sub-set of containers which need to be synced for collaboration
         //vector<UInt32> cores; //lists IDs of nodecores
         vector<UInt32> syncedContainer; //Id's of container that got changes over sync (changed by remote). Needed to filter out sync changes from local Changelist to prevent cycles.
@@ -40,13 +43,11 @@ class VRSyncNode : public VRTransform {
         bool isRegisteredRemote(const UInt32& syncID);
         vector<UInt32> getFCChildren(FieldContainer* fcPtr, BitVector fieldMask);
         void getAllSubContainersRec(FieldContainer* node, FieldContainer* parent, map<FieldContainer*, vector<FieldContainer*>>& res);
-        map<FieldContainer*, vector<FieldContainer*>> getAllSubContainers(FieldContainer* node);
         UInt32 findParent(map<UInt32,vector<UInt32>>& parentToChildren, UInt32 remoteNodeID);
 
         VRObjectPtr copy(vector<VRObjectPtr> children);
         map<string, vector<string>> ownershipNodeToObject;
 
-        string copySceneState();
         void handleMessage(void* msg);
         void handleMapping(string mappingData);
         void handlePoses(string poses);
@@ -57,7 +58,6 @@ class VRSyncNode : public VRTransform {
 
         void filterFieldMask(FieldContainer* fc, SerialEntry& sentry);
         void serialize_entry(ContainerChangeEntry* entry, vector<BYTE>& data, UInt32 syncNodeID);
-        string serialize(ChangeList* clist);
 
         void handleChildrenChange(FieldContainerRecPtr fcPtr, SerialEntry& sentry, map<UInt32, vector<UInt32>>& parentToChildren);
         void handleCoreChange(FieldContainerRecPtr fcPtr, SerialEntry& sentry);
@@ -74,22 +74,11 @@ class VRSyncNode : public VRTransform {
         void wrapOSGLeaf(Node* node, VRObjectPtr parent);
         void wrapOSG();
 
-        void registerContainer(FieldContainer* c, UInt32 syncNodeID = -1);
-        vector<UInt32> registerNode(Node* c); //returns all registered IDs
-
         void handleNode(FieldContainerRecPtr& fcPtr, UInt32 nodeID, UInt32 coreID, map<UInt32,vector<UInt32>>& parentToChildren);
         void handleNodeCore(FieldContainerRecPtr& fcPtr, UInt32 remoteNodeID);
 
-        bool isRemoteChange(const UInt32& id);
-        bool isRegistered(const UInt32& id);
-        bool isSubContainer(const UInt32& id);
-
         void printRegistredContainers();
         void printSyncedContainers();
-        void printChangeList(OSGChangeList* cl);
-        void broadcastChangeList(OSGChangeList* cl, bool doDelete = false);
-        OSGChangeList* getFilteredChangeList();
-
         void getAndBroadcastPoses();
 
         bool syncronizing = false;
@@ -115,6 +104,11 @@ class VRSyncNode : public VRTransform {
 
         void update();
         void broadcast(string message);
+        size_t getContainerCount();
+
+        bool isRegistered(const UInt32& id);
+        bool isSubContainer(const UInt32& id);
+        bool isRemoteChange(const UInt32& id);
 
         UInt32 getRemoteToLocalID(UInt32 id);
 
@@ -124,6 +118,12 @@ class VRSyncNode : public VRTransform {
         PosePtr getRemoteMousePose(string remoteName);
 
         vector<string> getOwnedObjects(string nodeName);
+
+        void registerContainer(FieldContainer* c, UInt32 syncNodeID = -1);
+        vector<UInt32> registerNode(Node* c); //returns all registered IDs
+
+        map<FieldContainer*, vector<FieldContainer*>> getAllSubContainers(FieldContainer* node);
+        string serialize(ChangeList* clist);
 };
 
 OSG_END_NAMESPACE;
