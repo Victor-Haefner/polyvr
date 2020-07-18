@@ -46,8 +46,6 @@ class VRSyncNode : public VRTransform {
 
         void handleMessage(void* msg);
         void handleMapping(string mappingData);
-        void handlePoses(string poses);
-        void handleOwnership(string ownership);
         vector<FieldContainer*> findContainer(string typeName); //deprecated
         vector<FieldContainer*> getTransformationContainer(ChangeList* cl); //deprecated
         //vector<OSG::Field
@@ -67,8 +65,9 @@ class VRSyncNode : public VRTransform {
         void sync(string remoteUri);
 
         //Avatars
-        void updateRemoteAvatarPose(string nodeName, PosePtr camPose);
-        void updateRemoteMousePose(string nodeName, PosePtr mousePose);
+        void handlePoses(string poses);
+        //void updateRemoteAvatarPose(string nodeName, PosePtr camPose);
+        //void updateRemoteMousePose(string nodeName, PosePtr mousePose);
         map<string, PosePtr> remotesCameraPose;
         map<string, PosePtr> remotesMousePose;
         Pose oldCamPose;
@@ -76,6 +75,8 @@ class VRSyncNode : public VRTransform {
 
         //Ownership
         vector<string> owned; //names of owned objects by this node
+        void handleOwnershipMessage(string ownership);
+
 
     public:
         VRSyncNode(string name = "syncNode");
@@ -112,6 +113,8 @@ class VRSyncNode : public VRTransform {
         PosePtr getRemoteMousePose(string remoteName);
 
         vector<string> getOwnedObjects(string nodeName);
+        void requestOwnership(string objectName);
+        void addOwnedObject(string objectName);
 
         void registerContainer(FieldContainer* c, UInt32 syncNodeID = -1);
         vector<UInt32> registerNode(Node* c); //returns all registered IDs

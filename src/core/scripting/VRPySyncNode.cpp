@@ -18,6 +18,8 @@ PyMethodDef VRPySyncNode::methods[] = {
     {"getRemoteCamPose", PyWrap(SyncNode, getRemoteCamPose, "getRemoteCamPose", PosePtr, string) },
     {"getRemoteMousePose", PyWrap(SyncNode, getRemoteMousePose, "getRemoteMousePose", PosePtr, string) },
     {"getOwnedObjects", PyWrap(SyncNode, getOwnedObjects, "getOwnedObjects", vector<string>, string) },
+    {"requestOwnership", PyWrap(SyncNode, requestOwnership, "requestOwnership( objectName )", void, string) },
+    {"addOwnedObject", PyWrap(SyncNode, addOwnedObject, "addOwnedObject ( objectName )", void, string) },
     {NULL}  /* Sentinel */
 };
 

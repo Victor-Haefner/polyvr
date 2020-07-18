@@ -594,22 +594,52 @@ void VRSyncNode::handlePoses(string poses)  {
 
 }
 
-void VRSyncNode::handleOwnership(string ownership)  {
+void VRSyncNode::handleOwnershipMessage(string ownership)  {
     cout << "VRSyncNode::handleOwnership" << endl;
-    string nodeName;
     vector<string> str_vec = splitString(ownership, '|');
-    nodeName = str_vec[1];
-    if (nodeName == "") return;
-    cout << nodeName << " ";
-    for (unsigned int i = 2; i < str_vec.size(); i++) {
-        cout << str_vec[i];
-        //ownershipNodeToObject[nodeName].push_back(str_vec[i]);
+    string nodeName = str_vec[2];
+    string objectName = str_vec[3];
+    if (str_vec[1] == "request") {
+        for (string s : owned) {
+            if (s == objectName) {
+                auto object = VRScene::getCurrent()->getRoot()->find(objectName);
+                if (!object) return;
+                for (auto dev : VRSetup::getCurrent()->getDevices()) { //if object is grabbed return
+                    VRTransformPtr obj = dev.second->getDraggedObject();
+                    VRTransformPtr gobj = dev.second->getDraggedGhost();
+                    if (obj == 0 || gobj == 0) continue;
+                    if (obj->getName() == objectName || gobj->getName() == objectName) {
+                        return;
+                    }
+                }
+                for (auto remote : remotes) { //grant ownership
+                    if (remote.first.find(nodeName) != string::npos) {
+                        string message = "ownership|grant|" + nodeName + "|" + objectName;
+                        remote.second->send(message);
+                        auto it = std::find(owned.begin(), owned.end(), objectName);
+                        if (it != owned.end()) owned.erase(it);
+                        cout << "grant ownership " << message << endl;
+                    }
+                }
+            }
+        }
     }
-    cout << endl;
+    else if (str_vec[1] == "grant") {
+        if (nodeName == name) owned.push_back(objectName);
+        cout << "got ownership of object " << objectName << endl;
+    }
 }
 
 vector<string> VRSyncNode::getOwnedObjects(string nodeName) {
     return owned;
+}
+
+void VRSyncNode::requestOwnership(string objectName){
+    string message = "ownership|request|" + name + "|" + objectName;
+    broadcast(message);
+}
+void VRSyncNode::addOwnedObject(string objectName){
+    owned.push_back(objectName);
 }
 
 PosePtr VRSyncNode::getRemoteCamPose(string remoteName) {
@@ -636,7 +666,7 @@ void VRSyncNode::handleMessage(void* _args) {
     VRUpdateCbPtr job = 0;
     if (startsWith(msg, "mapping|"))   job = VRUpdateCb::create( "sync-handleMap", bind(&VRSyncNode::handleMapping, this, msg) );
     else if (startsWith(msg, "poses|"))   job = VRUpdateCb::create( "sync-handlePoses", bind(&VRSyncNode::handlePoses, this, msg) );
-    else if (startsWith(msg, "ownership|")) job = VRUpdateCb::create( "sync-ownership", bind(&VRSyncNode::handleOwnership, this, msg) );
+    else if (startsWith(msg, "ownership|")) job = VRUpdateCb::create( "sync-ownership", bind(&VRSyncNode::handleOwnershipMessage, this, msg) );
     else                               job = VRUpdateCb::create( "sync-handleCL", bind(&VRSyncChangelist::deserializeAndApply, changelist.get(), ptr(), msg) );
     VRScene::getCurrent()->queueJob( job );
 }
