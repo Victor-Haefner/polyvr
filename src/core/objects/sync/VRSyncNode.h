@@ -43,7 +43,6 @@ class VRSyncNode : public VRTransform {
         UInt32 findParent(map<UInt32,vector<UInt32>>& parentToChildren, UInt32 remoteNodeID);
 
         VRObjectPtr copy(vector<VRObjectPtr> children);
-        map<string, vector<string>> ownershipNodeToObject;
 
         void handleMessage(void* msg);
         void handleMapping(string mappingData);
@@ -67,12 +66,16 @@ class VRSyncNode : public VRTransform {
         bool syncronizing = false;
         void sync(string remoteUri);
 
+        //Avatars
         void updateRemoteAvatarPose(string nodeName, PosePtr camPose);
         void updateRemoteMousePose(string nodeName, PosePtr mousePose);
         map<string, PosePtr> remotesCameraPose;
         map<string, PosePtr> remotesMousePose;
         Pose oldCamPose;
         Pose oldMousePose;
+
+        //Ownership
+        vector<string> owned; //names of owned objects by this node
 
     public:
         VRSyncNode(string name = "syncNode");
