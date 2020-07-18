@@ -1097,13 +1097,12 @@ void VRSyncNode::handleOwnership(string ownership)  {
     cout << nodeName << " ";
     for (unsigned int i = 2; i < str_vec.size(); i++) {
         cout << str_vec[i];
-        ownershipNodeToObject[nodeName].push_back(str_vec[i]);
+        //ownershipNodeToObject[nodeName].push_back(str_vec[i]);
     }
     cout << endl;
 }
 
 vector<string> VRSyncNode::getOwnedObjects(string nodeName) {
-    vector<string> owned = ownershipNodeToObject[nodeName];
     return owned;
 }
 
