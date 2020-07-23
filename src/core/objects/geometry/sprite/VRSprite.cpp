@@ -46,17 +46,19 @@ void VRSprite::updateGeo() {
     VRGeoData data;
     float w2 = width*0.5;
     float h2 = height*0.5;
-    data.pushVert(Pnt3d(-w2,h2,0), Vec3d(0,0,1), Vec2d(0,0));
-    data.pushVert(Pnt3d(-w2,-h2,0), Vec3d(0,0,1), Vec2d(0,1));
-    data.pushVert(Pnt3d(w2,-h2,0), Vec3d(0,0,1), Vec2d(1,1));
-    data.pushVert(Pnt3d(w2,h2,0), Vec3d(0,0,1), Vec2d(1,0));
+    Vec4d uvs = Vec4d(0,1,1,0);
+    if (web) uvs = Vec4d(0,1,0,1);
+    data.pushVert(Pnt3d(-w2,h2,0), Vec3d(0,0,1), Vec2d(uvs[0],uvs[2]));
+    data.pushVert(Pnt3d(-w2,-h2,0), Vec3d(0,0,1), Vec2d(uvs[0],uvs[3]));
+    data.pushVert(Pnt3d(w2,-h2,0), Vec3d(0,0,1), Vec2d(uvs[1],uvs[3]));
+    data.pushVert(Pnt3d(w2,h2,0), Vec3d(0,0,1), Vec2d(uvs[1],uvs[2]));
     data.pushQuad();
     if (doubleSided) {
         double e = -1e-3;
-        data.pushVert(Pnt3d(w2,h2,e), Vec3d(0,0,1), Vec2d(0,0));
-        data.pushVert(Pnt3d(w2,-h2,e), Vec3d(0,0,1), Vec2d(0,1));
-        data.pushVert(Pnt3d(-w2,-h2,e), Vec3d(0,0,1), Vec2d(1,1));
-        data.pushVert(Pnt3d(-w2,h2,e), Vec3d(0,0,1), Vec2d(1,0));
+        data.pushVert(Pnt3d(w2,h2,e), Vec3d(0,0,-1), Vec2d(uvs[0],uvs[2]));
+        data.pushVert(Pnt3d(w2,-h2,e), Vec3d(0,0,-1), Vec2d(uvs[0],uvs[3]));
+        data.pushVert(Pnt3d(-w2,-h2,e), Vec3d(0,0,-1), Vec2d(uvs[1],uvs[3]));
+        data.pushVert(Pnt3d(-w2,h2,e), Vec3d(0,0,-1), Vec2d(uvs[1],uvs[2]));
         data.pushQuad();
         getMaterial()->setFrontBackModes(GL_FILL, GL_NONE);
     }
@@ -92,6 +94,7 @@ void VRSprite::webOpen(string path, int res, float ratio) {
     if (keyboard) web->addKeyboard(keyboard);
     web->setResolution(res);
     web->setAspectRatio(ratio);
+    updateGeo();
 #endif
 }
 

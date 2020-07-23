@@ -39,8 +39,14 @@ void VRProduction::addMachine(VRProductionMachine* pm, string machine, VRGeometr
 
     pm->geo = m;
     machines[pm->ID] = pm;
-    auto n0 = network->addNode();
-    for (auto n : network->getNodes()) if (n != n0) { n0->connect(n); n->connect(n0); }
+    auto n0ID = network->addNode(m->getPose());
+    for (auto n : network->getNodes()) {
+        int nID = n->getID();
+        if (nID != n0ID) {
+            network->connect(nID, n0ID);
+            network->connect(n0ID, nID);
+        }
+    }
 }
 
 VRProductionJob* VRProduction::queueJob(VRProduct* p, string job) {

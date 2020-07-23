@@ -1,6 +1,7 @@
 #include "VRScriptManager.h"
 #include "core/utils/VRStorage_template.h"
 #include "core/utils/VROptions.h"
+#include "core/utils/VRLogger.h"
 #ifndef WITHOUT_GTK
 #include "core/gui/VRGuiManager.h"
 #include "core/gui/VRGuiConsole.h"
@@ -61,6 +62,8 @@ VRScriptManager::VRScriptManager() {
 
     setStorageType("Scripts");
     storeMap("Script", &scripts);
+
+    VRLog::setTag("PyAPI", true);
 }
 
 VRScriptManager::~VRScriptManager() {

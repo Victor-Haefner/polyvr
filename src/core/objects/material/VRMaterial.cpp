@@ -19,6 +19,7 @@
 #endif
 #include "core/tools/VRQRCode.h"
 #include "core/utils/system/VRSystem.h"
+#include "core/utils/VRLogger.h"
 
 #include <OpenSG/OSGNameAttachment.h>
 #include <OpenSG/OSGMaterialGroup.h>
@@ -684,6 +685,7 @@ void VRMaterial::setTextureWrapping(int wrapS, int wrapT, int unit) {
 
 void VRMaterial::setTexture(string img_path, bool alpha, int unit) { // TODO: improve with texture map
     if (exists(img_path)) img_path = canonical(img_path);
+    else { VRLog::wrn("PyAPI", "Material '" + getName() + "' setTexture failed, path invalid: '" + img_path + "'"); return; }
     /*auto md = mats[activePass];
     if (md->texture == 0) md->texture = VRTexture::create();
     md->texture->getImage()->read(img_path.c_str());
