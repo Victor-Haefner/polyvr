@@ -12,6 +12,7 @@
 #include "core/scene/rendering/VRRenderManager.h"
 #include "core/math/VRMathFwd.h"
 #include "core/utils/VRGlobals.h"
+#include "core/tools/VRToolsFwd.h"
 
 namespace xmlpp{ class Element; }
 
@@ -92,8 +93,9 @@ class VRView : public std::enable_shared_from_this<VRView> {
 
         BackgroundMTRecPtr background;
         GrabForegroundMTRecPtr grabfg = 0;
-#ifndef WASM
-        SimpleStatisticsForegroundMTRecPtr stats = 0;
+        ForegroundMTRecPtr stats = 0;
+#ifdef WASM
+        VRAnnotationEnginePtr statsEngine = 0;
 #endif
 
         void updateMirrorMatrix();
@@ -156,6 +158,7 @@ class VRView : public std::enable_shared_from_this<VRView> {
 
         void showStats(bool b);
         void showViewGeo(bool b);
+        void toggleStats();
 
         Vec4d getPosition();
         void setPosition(Vec4d pos);
