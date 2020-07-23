@@ -61,7 +61,7 @@ PyMethodDef VRPyGeometry::methods[] = {
     {"getNormals", (PyCFunction)VRPyGeometry::getNormals, METH_NOARGS, "get geometry normals" },
     {"getColors", (PyCFunction)VRPyGeometry::getColors, METH_NOARGS, "get geometry colors" },
     {"getIndices", (PyCFunction)VRPyGeometry::getIndices, METH_NOARGS, "get geometry indices" },
-    {"getTexCoords", (PyCFunction)VRPyGeometry::getTexCoords, METH_NOARGS, "get geometry texture coordinates" },
+    {"getTexCoords", (PyCFunction)VRPyGeometry::getTexCoords, METH_VARARGS, "get geometry texture coordinates" },
     {"getMaterial", PyWrap( Geometry, getMaterial, "get material", VRMaterialPtr ) },
     {"getGeometricCenter", PyWrap(Geometry, getGeometricCenter, "Get geometric center", Vec3d ) },
     {"merge", PyWrapOpt( Geometry, merge, "Merge another geometry into this one - merge( geo )", "0", void, VRGeometryPtr, PosePtr ) },
@@ -579,11 +579,23 @@ PyObject* VRPyGeometry::getIndices(VRPyGeometry* self) {
     return res;
 }
 
-PyObject* VRPyGeometry::getTexCoords(VRPyGeometry* self) {
+PyObject* VRPyGeometry::getTexCoords(VRPyGeometry* self, PyObject *args) {
     if (!self->valid()) return NULL;
     if (self->objPtr->getMesh() == 0) { PyErr_SetString(err, "VRPyGeometry::getTexCoords - Mesh is invalid"); return NULL; }
 
-    GeoVectorProperty* tc = self->objPtr->getMesh()->geo->getTexCoords();
+    int channel = 0;
+    if (!PyArg_ParseTuple(args, "|i", &channel)) return NULL;
+
+    GeoVectorProperty* tc = 0;
+    if (channel == 0) tc = self->objPtr->getMesh()->geo->getTexCoords();
+    if (channel == 1) tc = self->objPtr->getMesh()->geo->getTexCoords1();
+    if (channel == 2) tc = self->objPtr->getMesh()->geo->getTexCoords2();
+    if (channel == 3) tc = self->objPtr->getMesh()->geo->getTexCoords3();
+    if (channel == 4) tc = self->objPtr->getMesh()->geo->getTexCoords4();
+    if (channel == 5) tc = self->objPtr->getMesh()->geo->getTexCoords5();
+    if (channel == 6) tc = self->objPtr->getMesh()->geo->getTexCoords6();
+    if (channel == 7) tc = self->objPtr->getMesh()->geo->getTexCoords7();
+
     if (tc == 0) return PyList_New(0);
     PyObject* res = PyList_New(tc->size());
 
