@@ -17,6 +17,12 @@ template<typename T>
 string VRAttachment::attachment<T>::asString() { return toString<T>(data); }
 
 template<typename T>
+void VRAttachment::attachment<T>::fromString(string s) { toValue<T>(s, data); }
+
+template<typename T>
+string VRAttachment::attachment<T>::typeName() { return ::typeName<T>(data); }
+
+template<typename T>
 void VRAttachment::set(T& t) {
     if (data != 0) delete data;
     data = new attachment<T>(t);
@@ -30,7 +36,7 @@ T VRAttachment::get() {
 
 template<typename T>
 void OSG::VRObject::addAttachment(string name, T t) {
-    if (!attachments.count(name)) attachments[name] = new VRAttachment();
+    if (!attachments.count(name)) attachments[name] = new VRAttachment(name);
     attachments[name]->set(t);
 }
 

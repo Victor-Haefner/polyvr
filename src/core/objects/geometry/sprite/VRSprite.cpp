@@ -42,20 +42,24 @@ VRSpritePtr VRSprite::create(string name, bool alpha, float w, float h) {
 
 VRSpritePtr VRSprite::ptr() { return static_pointer_cast<VRSprite>( shared_from_this() ); }
 
-void VRSprite::updateGeo() { // TODO: plane primitive would be better, but backwards compatibility??
+void VRSprite::updateGeo() {
     VRGeoData data;
     float w2 = width*0.5;
     float h2 = height*0.5;
-    data.pushVert(Pnt3d(-w2,h2,0), Vec3d(0,0,1), Vec2d(0,1));
-    data.pushVert(Pnt3d(-w2,-h2,0), Vec3d(0,0,1), Vec2d(0,0));
-    data.pushVert(Pnt3d(w2,-h2,0), Vec3d(0,0,1), Vec2d(1,0));
-    data.pushVert(Pnt3d(w2,h2,0), Vec3d(0,0,1), Vec2d(1,1));
-#ifndef __EMSCRIPTEN__
+    data.pushVert(Pnt3d(-w2,h2,0), Vec3d(0,0,1), Vec2d(0,0));
+    data.pushVert(Pnt3d(-w2,-h2,0), Vec3d(0,0,1), Vec2d(0,1));
+    data.pushVert(Pnt3d(w2,-h2,0), Vec3d(0,0,1), Vec2d(1,1));
+    data.pushVert(Pnt3d(w2,h2,0), Vec3d(0,0,1), Vec2d(1,0));
     data.pushQuad();
-#else
-    data.pushTri(-4,-3,-2);
-    data.pushTri(-4,-2,-1);
-#endif
+    if (doubleSided) {
+        double e = -1e-3;
+        data.pushVert(Pnt3d(w2,h2,e), Vec3d(0,0,1), Vec2d(0,0));
+        data.pushVert(Pnt3d(w2,-h2,e), Vec3d(0,0,1), Vec2d(0,1));
+        data.pushVert(Pnt3d(-w2,-h2,e), Vec3d(0,0,1), Vec2d(1,1));
+        data.pushVert(Pnt3d(-w2,h2,e), Vec3d(0,0,1), Vec2d(1,0));
+        data.pushQuad();
+        getMaterial()->setFrontBackModes(GL_FILL, GL_NONE);
+    }
     data.apply(ptr());
 }
 
@@ -103,6 +107,11 @@ Vec2d VRSprite::getSize() { return Vec2d(width, height); }
 void VRSprite::setSize(float w, float h) {
     width = w;
     height = h;
+    updateGeo();
+}
+
+void VRSprite::setDoubleSided(bool b) {
+    doubleSided = true;
     updateGeo();
 }
 

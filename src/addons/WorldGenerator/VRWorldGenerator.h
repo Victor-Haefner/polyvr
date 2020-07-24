@@ -76,6 +76,7 @@ class VRWorldGenerator : public VRTransform {
         void reloadOSMMap(double subN = -1, double subE = -1, double subSize = -1);
         void clear();
         OSMMapPtr getOSMMap();
+        OSMMapPtr getGMLMap();
 
         //getLODTerrain();
         void setupLOD(int layers);

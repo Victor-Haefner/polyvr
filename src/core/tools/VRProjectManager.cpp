@@ -55,7 +55,7 @@ void VRProjectManager::save(string path) {
     cout << "VRProjectManager::save " << path << " (" << toString(vault_reload.size()) << " + " << toString(vault_rebuild.size()) << " objects)" << endl;
 
     XML xml;
-    XMLElementPtr root = xml.newRoot("Project", "", "VRP"); // name, ns_uri, ns_prefix
+    XMLElementPtr root = xml.newRoot("Project", "", ""); // name, ns_uri, ns_prefix
     storage.save(root);
 
     for (auto v : vault_reload) v->saveUnder(root, persistencyLvl);

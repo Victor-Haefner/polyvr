@@ -45,6 +45,7 @@ struct OSMNode : OSMBase {
     OSMNode(XMLElementPtr e);
     string toString();
     Vec2d getPosition();
+    Vec3d getPosition3();
     void writeTo(XMLElementPtr e);
 };
 
@@ -63,12 +64,14 @@ struct OSMWay : OSMBase {
 struct OSMRelation : OSMBase {
     vector<string> ways;
     vector<string> nodes;
+    vector<string> relations; //not OSM, but for GML
 
     OSMRelation(string id);
     OSMRelation(XMLElementPtr e, map<string, bool>& invalidIDs);
     string toString();
     vector<string> getWays();
     vector<string> getNodes();
+    vector<string> getRelations(); //not OSM, but for GML
     void writeTo(XMLElementPtr e);
 };
 
