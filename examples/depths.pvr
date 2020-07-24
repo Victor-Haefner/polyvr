@@ -4,7 +4,13 @@
     <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" visible="4294967295">
       <Object ambient="0.3 0.3 0.3 1" base_name="light" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" shadowVolume="1e+06 1e+06 1e+06 -1e+06 -1e+06 -1e+06 1" specular="0.1 0.1 0.1 1" type="Light" visible="4294967295">
         <Object accept_root="1" aspect="1" at="0 0 0" at_dir="0" base_name="Default" far="512" fov="1.0472" from="-0.141531 1.84659 4.04013" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="4294967295">
+          <attachments>
+            <Node base_name="transform" name_space="VRAttachment" name_suffix="0" persistency="666" value=""/>
+          </attachments>
           <Object at="0 0 -1" at_dir="0" base_name="Headlight_beacon" from="0 0 0" light="light" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" up="0 1 0" visible="4294967295">
+            <attachments>
+              <Node base_name="transform" name_space="VRAttachment" name_suffix="0" persistency="666" value=""/>
+            </attachments>
             <constraint persistency="666"/>
           </Object>
           <constraint persistency="666"/>
@@ -24,7 +30,7 @@
 
 	def addSprite(txt, W, pos, c, doT):
 		s = VR.Sprite(txt)
-		tex = s.setText(txt, 1, [0,0,0,1], c, 'arial narrow italic 20')
+		tex = s.setText(txt, 50, [0,0,0,1], c, 3, [1,1,1,1], 'arial narrow italic 20')
 		a = tex.getAspectRatio()
 		s.setSize(W*a, W)
 		VR.scene.addChild(s,1,-1)

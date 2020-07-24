@@ -8,7 +8,10 @@ namespace OSG {
 ptrFwd(CSGGeometry);
 ptrFwd(VRMillingWorkPiece);
 ptrFwd(VRMillingCuttingToolProfile);
+ptrFwd(VRAtom);
+ptrFwd(VRBond);
 ptrFwd(VRMolecule);
+ptrFwd(VRMoleculeMat);
 ptrFwd(VRCrystal);
 ptrFwd(VRAMLLoader);
 

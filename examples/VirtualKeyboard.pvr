@@ -2,17 +2,24 @@
 <Scene base_name="graphtool" name_space="Scene" name_suffix="0" persistency="666">
   <Objects>
     <Object base_name="Root" name_space="__global__" name_suffix="2" persistency="666" pickable="0" type="Object" visible="1">
-      <Object ambient="0.354833 0.354833 0.354833 1" base_name="light" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="directional" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" specular="0.1 0.1 0.1 1" type="Light" visible="1">
+      <Object ambient="0.354833 0.354833 0.354833 1" base_name="light" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="directional" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" shadowVolume="1e+06 1e+06 1e+06 -1e+06 -1e+06 -1e+06 1" specular="0.1 0.1 0.1 1" type="Light" visible="1">
         <Object at="0.6 -0.5 0.8" at_dir="0" base_name="Headlight_beacon" from="0 0 0" light="light" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" up="0 1 0" visible="1">
+          <attachments>
+            <Node base_name="transform" name_space="VRAttachment" name_suffix="0" persistency="666" value=""/>
+          </attachments>
           <constraint persistency="666"/>
         </Object>
         <Object accept_root="1" aspect="1" at="-0.0503397 -0.0904348 0" at_dir="0" base_name="Default" far="3000" fov="1.0472" from="0.0847997 0.330891 3.56753" name_space="__global__" name_suffix="0" near="1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
+          <attachments>
+            <Node base_name="transform" name_space="VRAttachment" name_suffix="0" persistency="666" value=""/>
+          </attachments>
           <constraint persistency="666"/>
         </Object>
       </Object>
     </Object>
   </Objects>
-  <Rendering deferred_rendering="0" frustum_culling="1" fxaa="0" hmdd="0" marker="0" occlusion_culling="0" persistency="666" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
+  <Cameras activeCam="Default" persistency="666"/>
+  <Rendering deferred_rendering="0" fogColor="0.5 0.5 0.5 1" fogParams="0 0 100 0.1" frustum_culling="1" fxaa="0" hmdd="0" marker="0" occlusion_culling="0" persistency="666" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
   <Scripts persistency="666">
     <Script base_name="cssMain" group="gui" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="HTML">
       <core>
@@ -335,7 +342,6 @@ button {
 	VR.viewer = VR.Sprite('layers')
 	VR.viewer.addTag('gui')
 	VR.viewer.setSize(2,1)
-	VR.viewer.setTransform([0,0,0], [0,0,1], [0,-1,0])
 	VR.viewer.webOpen('http://localhost:5500/gui_site_viewer', 256, 2)
 	VR.viewer.getMaterial().clearTransparency()
 	VR.scene.addChild(VR.viewer)
@@ -344,7 +350,7 @@ button {
 	VR.guiKeyboard = VR.Sprite('keyboard')
 	VR.guiKeyboard.addTag('gui')
 	VR.guiKeyboard.setSize(2,1)
-	VR.guiKeyboard.setTransform([0,-1,0.5], [0,1,1], [0,-1,0])
+	VR.guiKeyboard.setTransform([0,-1,0.5], [0,-1,-1], [0,1,0])
 	VR.guiKeyboard.webOpen('http://localhost:5500/gui_site_keyboard', 512, 2)
 	VR.guiKeyboard.getMaterial().enableTransparency()
 	VR.scene.addChild(VR.guiKeyboard)

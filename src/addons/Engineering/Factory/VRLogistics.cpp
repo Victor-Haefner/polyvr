@@ -6,6 +6,8 @@
 #include "core/objects/geometry/VRStroke.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/utils/toString.h"
+#include "core/math/graph.h"
+#include "addons/Algorithms/VRPathFinding.h"
 
 #include <OpenSG/OSGMatrixUtility.h>
 
@@ -13,15 +15,18 @@ using namespace std;
 using namespace OSG;
 
 template<> string typeName(const FNode& m) { return "FNode"; }
+template<> string typeName(const FObject& m) { return "FObject"; }
 template<> string typeName(const FProduct& m) { return "FProduct"; }
 template<> string typeName(const FContainer& m) { return "FContainer"; }
 template<> string typeName(const FNetwork& m) { return "FNetwork"; }
 template<> string typeName(const FPath& m) { return "FPath"; }
 template<> string typeName(const FTransporter& m) { return "FTransporter"; }
+template<> string typeName(const FLogistics& m) { return "FLogistics"; }
 
 
 FID::FID() { static int i = 0; i++; ID = i; }
 int FID::getID() { return ID; }
+void FID::setID(int i) { ID = i; }
 
 
 // --------------------------------------------------------------------- OBJECT
@@ -84,110 +89,48 @@ bool FObject::move(OSG::PathPtr p, float dx) {
 // --------------------------------------------------------------------- NODE
 
 FNode::FNode() : object(0), transporter(0), state(FREE) {}
-
 FNode::~FNode() { ; }
-shared_ptr<FObject> FNode::get() { return object; }
-void FNode::set(shared_ptr<FObject> o) {
+FObjectPtr FNode::get() { return object; }
+
+void FNode::set(FObjectPtr o) {
     object = o;
     if (o == 0) { setState(FREE); return; }
     if (o->getType() == FObject::CONTAINER) setState(CONTAINER);
     if (o->getType() == FObject::PRODUCT) setState(PRODUCT);
-    if (o->getTransformation() == 0) return;
 
     auto t = o->getTransformation();
+    auto t2 = getTransform();
+    if (!t || !t2) return;
+
     Matrix4d wm;
     wm = t->getWorldMatrix();
-    t->switchParent(getTransform());
-    wm.setTranslate(getTransform()->getWorldPosition());
+    t->switchParent(t2);
+    wm.setTranslate(t2->getWorldPosition());
     t->setWorldMatrix(wm);
     t->updateChange();
-}
-
-void FNode::connect(shared_ptr<FNode> n) {
-    if (n == 0) return;
-
-    disconnect(n);
-    out[n->getID()] = n;
-    n->in[n->getID()] = shared_from_this();
-}
-
-void FNode::disconnect(shared_ptr<FNode> n) {
-    int i = n->getID();
-    int j = getID();
-    if (out.count(i)) out.erase(i);
-    if (n->out.count(j)) n->out.erase(j);
-    if (in.count(i)) in.erase(i);
-    if (n->in.count(j)) n->in.erase(j);
-}
-
-void FNode::isolate() {
-    for (itr = out.begin(); itr != out.end(); itr++) disconnect(itr->second);
-    for (itr = in.begin(); itr != in.end(); itr++) disconnect(itr->second);
-    out.clear();
-    in.clear();
 }
 
 void FNode::setState(State s) { state = s; }
 FNode::State FNode::getState() { return state; }
 
-map<int, shared_ptr<FNode>>& FNode::getIncoming() { return in; }
-map<int, shared_ptr<FNode>>& FNode::getOutgoing() { return out; }
-
-shared_ptr<FNode> FNode::previous() { if (in.size() > 0) return in.begin()->second; else return 0; }
-shared_ptr<FNode> FNode::next() { if (out.size() > 0) return out.begin()->second; else return 0; }
-
 void FNode::setTransform(OSG::VRTransformPtr t) { transform = t; }
 VRTransformPtr FNode::getTransform() { return transform; }
-
-Vec3d FNode::getTangent() {
-    int Nout = out.size();
-    int Nin = in.size();
-    if (Nout == 0 && Nin == 0) return Vec3d(0,0,1);
-
-    Vec3d t;
-    //for (auto o : out) t += (o.second->transform->getFrom() - transform->getFrom());
-    for (auto o : out) t += (o.second->transform->getWorldPosition() - transform->getWorldPosition());
-    t.normalize();
-    return t;
-}
 
 
 // --------------------------------------------------------------------- PATH
 
 FPath::FPath() {}
-std::vector<shared_ptr<FNode>>& FPath::get() {return nodes; }
-
-void FPath::set(shared_ptr<FNode> n1, shared_ptr<FNode> n2) { // TODO: A*
-    nodes.clear();
-    shared_ptr<FNode> n = n1;
-    nodes.push_back(n);
-    while(n != n2 && n->next() > 0) {
-        n = n->next(); // assumes linear networks
-        nodes.push_back(n);
+void FPath::updatePath(GraphPtr graph) {
+    path = Path::create();
+    for (auto n : nodes) {
+        auto p = graph->getPosition(n);
+        path->addPoint(*p, Color3f());
     }
-    update();
+    path->compute(32);
 }
 
-void FPath::add(shared_ptr<FNode> n) {
-    nodes.push_back(n);
-    update();
-}
-
-OSG::PathPtr FPath::getPath(shared_ptr<FNode> n) { return paths[n.get()]; }
-
-void FPath::update() {
-    paths.clear();
-    for (unsigned int i=1; i<nodes.size(); i++) {
-        auto n0 = nodes[i-1];
-        auto n1 = nodes[i];
-        auto p = Path::create();
-        p->addPoint(*n0->getTransform()->getWorldPose());
-        p->addPoint(*n1->getTransform()->getWorldPose());
-        p->compute(12);
-        paths[n1.get()] = p;
-    }
-}
-
+int FPath::first() { return nodes[0]; }
+int FPath::last() { return nodes[nodes.size()-1]; }
 
 // --------------------------------------------------------------------- CONTAINER
 
@@ -199,7 +142,7 @@ FContainer::~FContainer() { ; }
 void FContainer::setCapacity(int i) { capacity = i; }
 int FContainer::getCapacity() { return capacity; }
 
-void FContainer::add(shared_ptr<FProduct> p) {
+void FContainer::add(FProductPtr p) {
     auto t = p->getTransformation();
     t->hide();
     products.push_back(p);
@@ -213,8 +156,8 @@ void FContainer::add(shared_ptr<FProduct> p) {
     t->updateChange();
 }
 
-shared_ptr<FProduct> FContainer::pop() {
-    shared_ptr<FProduct> p = products.back();
+FProductPtr FContainer::pop() {
+    FProductPtr p = products.back();
     //p->getTransformation()->setMatrix(getTransformation()->getMatrix());
     products.pop_back();
     p->getTransformation()->show();
@@ -223,8 +166,8 @@ shared_ptr<FProduct> FContainer::pop() {
     return p;
 }
 
-shared_ptr<FProduct> FContainer::peek() {
-    shared_ptr<FProduct> p = products.back();
+FProductPtr FContainer::peek() {
+    FProductPtr p = products.back();
     return p;
 }
 
@@ -238,29 +181,23 @@ int FContainer::getCount() { return products.size(); }
 
 FTransporter::FTransporter() : speed(0.5) {}
 FTransporter::~FTransporter() {}
-void FTransporter::setPath(shared_ptr<FPath> fpath) { this->fpath = fpath; }
+void FTransporter::setPath(FPathPtr fpath) { this->fpath = fpath; }
 void FTransporter::setTransportType(FTType type) { transport_type = type; }
 void FTransporter::setSpeed(float s) { speed = s; }
 float FTransporter::getSpeed() { return speed; }
 
 void FTransporter::update(float dt) {
-    vector<shared_ptr<FNode>> nodes = fpath->get();
+    if (!fpath) return;
+    auto net = network.lock();
+    if (!net) return;
+    vector<int>& nodes = fpath->nodes;
+    if (!fpath->path) fpath->updatePath(net->getGraph());
 
-    bool changed = true; // TODO: chengeNow does not yet work!
-    for (auto n : nodes) {
-        if (n->getTransform()->changedNow()) {
-            changed = true; break;
-            cout << "detected change!\n";
-        }
-    }
 
-    if (changed) fpath->update();
-
-    vector<shared_ptr<FNode>>::reverse_iterator itr;
-    shared_ptr<FNode> n1, n2;
-    shared_ptr<FObject> o1, o2;
-    shared_ptr<FProduct> p1, p2;
-    shared_ptr<FContainer> c1, c2;
+    FNodePtr n1, n2;
+    FObjectPtr o1, o2;
+    FProductPtr p1, p2;
+    FContainerPtr c1, c2;
     FNode::State s1, s2;
     FObject::Type t1, t2;
 	s1 = FNode::FREE;
@@ -269,8 +206,10 @@ void FTransporter::update(float dt) {
     int test_id = -1;
 
     // state machine
-    for (itr = nodes.rbegin(); itr != nodes.rend(); itr++) {
-        n2 = n1; n1 = *itr;
+    for (int i=0; i<nodes.size(); i++) {
+        n2 = n1;
+        int nID = nodes[nodes.size()-1-i];
+        n1 = net->getNode(nID);
         s2 = s1; s1 = n1->getState();
         if (n2 == 0) continue; // ignore last node of path, this is where everything gets transported to
 
@@ -326,14 +265,14 @@ void FTransporter::update(float dt) {
     }
 
     // objects in cargo are moved
-    vector<shared_ptr<FNode>> toErase;
+    vector<FNodePtr> toErase;
     for (auto c : cargo) {
-        shared_ptr<FNode> n = c.first;
-        shared_ptr<FObject> o = c.second;
+        FNodePtr n = c.first;
+        FObjectPtr o = c.second;
         if (n == 0) continue;
-        shared_ptr<FObject> no = n->get();
+        FObjectPtr no = n->get();
 
-        auto p = fpath->getPath(n);
+        auto p = fpath->path;
         float dx = speed*dt/p->getLength();
         if (o->move(p, dx)) {
             toErase.push_back(n);
@@ -361,42 +300,44 @@ FProduct::~FProduct() {}
 
 // --------------------------------------------------------------------- NETWORK
 
-FNetwork::FNetwork() {}
+FNetwork::FNetwork() {
+    graph = Graph::create();
+}
+
 FNetwork::~FNetwork() {}
 
-shared_ptr<FNode> FNetwork::addNode(shared_ptr<FNode> parent) {
-    shared_ptr<FNode> n = shared_ptr<FNode>(new FNode());
-    nodes[n->getID()] = n;
-    if (parent) parent->connect(n);
-    return n;
+GraphPtr FNetwork::getGraph() { return graph; }
+FNodePtr FNetwork::getNode(int ID) { return nodes[ID]; }
+
+int FNetwork::addNode(PosePtr p) {
+    auto nID = graph->addNode(p);
+    nodes[nID] = FNodePtr(new FNode());
+    nodes[nID]->setID(nID);
+    return nID;
 }
 
-shared_ptr<FNode> FNetwork::addNodeChain(int N, shared_ptr<FNode> parent) {
-    for (int i=0; i<N; i++) parent = addNode(parent);
-    return parent;
+void FNetwork::connect(int n1, int n2) {
+    graph->connect(n1, n2);
 }
 
-vector<shared_ptr<FNode>> FNetwork::getNodes() {
-    vector<shared_ptr<FNode>> res;
+vector<FNodePtr> FNetwork::getNodes() {
+    vector<FNodePtr> res;
     for (auto n : nodes) res.push_back(n.second);
     return res;
 }
 
 VRStrokePtr FNetwork::stroke(Color3f c, float k) {
     vector<PathPtr> paths;
-    for (auto n1 : nodes) {
-        auto p1 = n1.second->getTransform()->getWorldPose();
-        map<int, shared_ptr<FNode>>::iterator itr2;
-        for (auto n2 : n1.second->getOutgoing()) {
-            auto p2 = n2.second->getTransform()->getWorldPose();
-            PathPtr p = Path::create();
-            p->addPoint( *p1, c );
-            p->addPoint( *p2, c );
-            p->compute(20);
-            paths.push_back(p);
-        }
+    for (auto& e : graph->getEdges()) {
+        auto& edge = e.second;
+        PosePtr p1 = graph->getPosition(edge.from);
+        PosePtr p2 = graph->getPosition(edge.to);
+        PathPtr p = Path::create();
+        p->addPoint( *p1, c );
+        p->addPoint( *p2, c );
+        p->compute(8);
+        paths.push_back(p);
     }
-
 
     VRStrokePtr stroke = VRStroke::create("FNetwork_stroke");
     stroke->setPaths(paths);
@@ -413,42 +354,40 @@ VRStrokePtr FNetwork::stroke(Color3f c, float k) {
 // --------------------------------------------------------------------- LOGISTICS
 
 
-FLogistics::FLogistics() {}
+FLogistics::FLogistics() {
+    network = FNetworkPtr(new FNetwork());
+}
+
 FLogistics::~FLogistics() {
     objects.clear();
     transporter.clear();
-    networks.clear();
 }
 
-shared_ptr<FProduct> FLogistics::addProduct(OSG::VRTransformPtr t) {
-    auto p = shared_ptr<FProduct>(new FProduct());
+FProductPtr FLogistics::addProduct(OSG::VRTransformPtr t) {
+    auto p = FProductPtr(new FProduct());
     objects[p->getID()] = p;
     if (t) p->setTransformation(t);
     return p;
 }
 
-shared_ptr<FNetwork> FLogistics::addNetwork() {
-    auto n = shared_ptr<FNetwork>(new FNetwork());
-    networks[n->getID()] = n;
-    return n;
+FNetworkPtr FLogistics::addNetwork() {
+    return network;
 }
 
-shared_ptr<FTransporter> FLogistics::addTransporter(FTransporter::FTType type) {
-    auto t = shared_ptr<FTransporter>(new FTransporter());
+FTransporterPtr FLogistics::addTransporter(string stype) {
+    FTransporter::FTType type = FTransporter::PRODUCT;
+    if (stype == "CONTAINER_FULL") type = FTransporter::CONTAINER_FULL;
+    if (stype == "CONTAINER_EMPTY") type = FTransporter::CONTAINER_EMPTY;
+    auto t = FTransporterPtr(new FTransporter());
+    t->network = network;
     t->setTransportType(type);
     transporter[t->getID()] = t;
     return t;
 }
 
-shared_ptr<FPath> FLogistics::addPath() {
-    shared_ptr<FPath> p = shared_ptr<FPath>(new FPath());
-    paths[p->getID()] = p;
-    return p;
-}
-
-shared_ptr<FContainer> FLogistics::addContainer(VRTransformPtr t) {
+FContainerPtr FLogistics::addContainer(VRTransformPtr t) {
     if (t == 0) return 0;
-    auto c = shared_ptr<FContainer>(new FContainer());
+    auto c = FContainerPtr(new FContainer());
     t = static_pointer_cast<VRTransform>(t->duplicate(true));
     t->setVisible(true);
     t->setPersistency(0);
@@ -457,7 +396,7 @@ shared_ptr<FContainer> FLogistics::addContainer(VRTransformPtr t) {
     return c;
 }
 
-void FLogistics::fillContainer(shared_ptr<FContainer> c, int N, VRTransformPtr t) {
+void FLogistics::fillContainer(FContainerPtr c, int N, VRTransformPtr t) {
     for (int i=0; i<N; i++) {
         auto p = addProduct();
         t = static_pointer_cast<VRTransform>(t->duplicate(true));
@@ -468,8 +407,8 @@ void FLogistics::fillContainer(shared_ptr<FContainer> c, int N, VRTransformPtr t
     }
 }
 
-vector<shared_ptr<FContainer>> FLogistics::getContainers() {
-    vector<shared_ptr<FContainer>> res;
+vector<FContainerPtr> FLogistics::getContainers() {
+    vector<FContainerPtr> res;
     for (auto o : objects) if (o.second->getType() == FObject::CONTAINER) res.push_back(dynamic_pointer_cast<FContainer>(o.second));
     return res;
 }
@@ -483,7 +422,18 @@ void FLogistics::update() {
     float dt = t1 - t2;
     t2 = t1;
 
-    for (t_ritr = transporter.rbegin(); t_ritr != transporter.rend(); t_ritr++) {
-        t_ritr->second->update(dt);
-    }
+    for (auto& t : transporter) t.second->update(dt);
+}
+
+FPathPtr FLogistics::computeRoute(int n1, int n2) {
+    auto nav = VRPathFinding::create();
+    nav->setGraph(network->getGraph());
+    auto route = nav->computePath(n1, n2);
+    auto path = FPathPtr( new FPath() );
+    for (auto& n : route) path->nodes.push_back(n.nID);
+    return path;
+}
+
+void FLogistics::clear() { // TODO
+    ;
 }

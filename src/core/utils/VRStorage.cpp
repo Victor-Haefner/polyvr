@@ -146,7 +146,7 @@ int getID(XMLElementPtr el) {
 
 bool VRStorage::saveToFile(string path, bool createDirs) {
     XML xml;
-    XMLElementPtr root = xml.newRoot("ProjectsList", "", "VRP"); // name, ns_uri, ns_prefix
+    XMLElementPtr root = xml.newRoot("ProjectsList", "", ""); // name, ns_uri, ns_prefix
     save(root);
     xml.write(path);
     return true;

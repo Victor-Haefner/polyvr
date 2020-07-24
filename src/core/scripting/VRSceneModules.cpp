@@ -287,13 +287,14 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyOSMBase>("OSMBase", pModVR, 0, "WorldGenerator");
 
     PyObject* pModFactory = sm->newModule("Factory", VRSceneGlobals::methods, "VR factory module");
-    sm->registerModule<FPyNode>("Node", pModFactory, 0, "Factory");
-    sm->registerModule<FPyNetwork>("Network", pModFactory, 0, "Factory");
-    sm->registerModule<FPyPath>("FPath", pModFactory, 0, "Factory");
-    sm->registerModule<FPyTransporter>("Transporter", pModFactory, 0, "Factory");
-    sm->registerModule<FPyContainer>("Container", pModFactory, 0, "Factory");
-    sm->registerModule<FPyProduct>("Product", pModFactory, 0, "Factory");
-    sm->registerModule<FPyLogistics>("Logistics", pModFactory, 0, "Factory");
+    sm->registerModule<VRPyFNode>("Node", pModFactory, 0, "Factory");
+    sm->registerModule<VRPyFNetwork>("Network", pModFactory, 0, "Factory");
+    sm->registerModule<VRPyFPath>("FPath", pModFactory, 0, "Factory");
+    sm->registerModule<VRPyFTransporter>("Transporter", pModFactory, 0, "Factory");
+    sm->registerModule<VRPyFObject>("Product", pModFactory, 0, "Factory");
+    sm->registerModule<VRPyFContainer>("Container", pModFactory, VRPyFObject::typeRef, "Factory");
+    sm->registerModule<VRPyFProduct>("Product", pModFactory, VRPyFObject::typeRef, "Factory");
+    sm->registerModule<VRPyFLogistics>("Logistics", pModFactory, 0, "Factory");
     sm->registerModule<VRPyFactory>("Factory", pModFactory, 0, "Factory");
     sm->registerModule<VRPyProduction>("Production", pModFactory, 0, "Factory");
     sm->registerModule<VRPyAMLLoader>("AMLLoader", pModFactory, 0, "Factory");
