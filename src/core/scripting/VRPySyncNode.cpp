@@ -20,6 +20,9 @@ PyMethodDef VRPySyncNode::methods[] = {
     {"getOwnedObjects", PyWrap(SyncNode, getOwnedObjects, "getOwnedObjects", vector<string>, string) },
     {"requestOwnership", PyWrap(SyncNode, requestOwnership, "requestOwnership( objectName )", void, string) },
     {"addOwnedObject", PyWrap(SyncNode, addOwnedObject, "addOwnedObject ( objectName )", void, string) },
+    {"setDoWrapping", PyWrap(SyncNode, setDoWrapping, "Set if doing OSG wrapping", void, bool) },
+    {"setDoAvatars", PyWrap(SyncNode, setDoAvatars, "Set if dogin avatars", void, bool) },
+    {"addTrackedObject", PyWrap(SyncNode, addTrackedObject, "Start tracking changes of object", void, VRObjectPtr, VRObjectPtr) },
     {NULL}  /* Sentinel */
 };
 

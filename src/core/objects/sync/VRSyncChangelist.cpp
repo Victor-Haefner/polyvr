@@ -457,7 +457,8 @@ void VRSyncChangelist::deserializeAndApply(VRSyncNodePtr syncNode, string& data)
     map<UInt32, vector<unsigned char>> fcData; // map entry localID to its binary field data
 
     deserializeEntries(data, entries, parentToChildren, fcData);
-    printDeserializedData(entries, parentToChildren, fcData);
+    cout << " deserialized " << entries.size() << " entries" << endl;
+    //printDeserializedData(entries, parentToChildren, fcData);
     handleRemoteEntries(syncNode, entries, parentToChildren, fcData);
     //printRegistredContainers();
     syncNode->wrapOSG();
@@ -539,7 +540,7 @@ string VRSyncChangelist::getChangeType(UInt32 uiEntryDesc) {
 string VRSyncChangelist::copySceneState(VRSyncNodePtr syncNode) {
     OSGChangeList* localChanges = (OSGChangeList*)ChangeList::create();
     localChanges->fillFromCurrentState();
-    printChangeList(syncNode, localChanges);
+    //printChangeList(syncNode, localChanges);
 
     string data = serialize(syncNode, localChanges);
     delete localChanges;

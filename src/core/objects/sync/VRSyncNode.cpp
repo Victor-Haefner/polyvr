@@ -102,6 +102,9 @@ VRSyncNode::~VRSyncNode() {
 VRSyncNodePtr VRSyncNode::ptr() { return static_pointer_cast<VRSyncNode>( shared_from_this() ); }
 VRSyncNodePtr VRSyncNode::create(string name) { return VRSyncNodePtr(new VRSyncNode(name) ); }
 
+void VRSyncNode::setDoWrapping(bool b) { doWrapping = b; }
+void VRSyncNode::setDoAvatars(bool b) { doAvatars = b; }
+
 bool VRSyncNode::isSubContainer(const UInt32& id) {
     auto fct = factory->getContainer(id);
     if (!fct) return false;
@@ -243,6 +246,7 @@ void VRSyncNode::gatherLeafs(VRObjectPtr parent, vector<pair<Node*, VRObjectPtr>
 }
 
 VRObjectPtr VRSyncNode::OSGConstruct(NodeMTRecPtr n, VRObjectPtr parent, Node* geoParent) {
+    if (!doWrapping) return 0;
     if (n == 0) return 0; // TODO add an osg wrap method for each object?
 
     VRObjectPtr tmp = 0;
@@ -251,6 +255,9 @@ VRObjectPtr VRSyncNode::OSGConstruct(NodeMTRecPtr n, VRObjectPtr parent, Node* g
     VRTransformPtr tmp_e;
     VRGroupPtr tmp_gr;
 
+    if (!n) { cout << "WARNING! VRSyncNode::OSGConstruct: node invalid!" << endl; return 0; }
+    if (!n->getCore()) { cout << "WARNING! VRSyncNode::OSGConstruct: node core invalid!" << endl; return 0; }
+
     NodeCoreMTRecPtr core = n->getCore();
     string t_name = core->getTypeName();
     string name = ::getName(n);
@@ -258,11 +265,15 @@ VRObjectPtr VRSyncNode::OSGConstruct(NodeMTRecPtr n, VRObjectPtr parent, Node* g
     // try to optimize the tree by avoiding obsolete transforms
     if (t_name == "Group" || t_name == "Transform") {
         if (n->getNChildren() == 1) {
-            string tp = n->getChild(0)->getCore()->getTypeName();
-            if (tp == "Geometry") {
-                geoParent = n;
-                tmp = parent;
-            }
+            if (n->getChild(0)) {
+                if (n->getChild(0)->getCore()) {
+                    string tp = n->getChild(0)->getCore()->getTypeName();
+                    if (tp == "Geometry") {
+                        geoParent = n;
+                        tmp = parent;
+                    }
+                } else { cout << "WARNING! VRSyncNode::OSGConstruct: no transform child core!" << endl; }
+            } else { cout << "WARNING! VRSyncNode::OSGConstruct: no transform child!" << endl; }
         }
     }
 
@@ -442,7 +453,8 @@ bool poseChanged(Pose oldPose, PosePtr newPose, int thresholdPos, int thresholdA
     else return false;
 }
 
-void VRSyncNode::getAndBroadcastPoses(){
+void VRSyncNode::getAndBroadcastPoses() {
+    if (!doAvatars) return;
     string poses = "poses|name:" + name;
 
     VRScenePtr scene = VRScene::getCurrent(); //get scene
@@ -494,12 +506,12 @@ void VRSyncNode::update() {
 
 
     OSGChangeList* cl = (OSGChangeList*)applicationThread->getChangeList();
-    changelist->printChangeList(ptr(), cl);
+    //changelist->printChangeList(ptr(), cl);
 
 
     //printRegistredContainers(); // DEBUG: print registered container
     printSyncedContainers();
-    changelist->printChangeList(ptr(), localChanges);
+    //changelist->printChangeList(ptr(), localChanges);
 
     changelist->broadcastChangeList(ptr(), localChanges, true);
     syncedContainer.clear();
@@ -515,6 +527,16 @@ void VRSyncNode::registerContainer(FieldContainer* c, UInt32 syncNodeID) {
     if (container.count(ID)) return;
     //cout << " VRSyncNode::registerContainer " << getName() << " container: " << c->getTypeName() << " at fieldContainerId: " << ID << endl;
     container[ID] = syncNodeID;
+}
+
+void VRSyncNode::addTrackedObject(VRObjectPtr obj1, VRObjectPtr obj2) { // was just a test
+    Node* node1 = obj1->getNode()->node;
+    Node* node2 = obj2->getNode()->node;
+    UInt32 ID1 = node1->getId();
+    UInt32 ID2 = node2->getId();
+    //registerContainer(node, container.size());
+    //NodeCoreMTRefPtr core = node->getCore();
+    //registerNode(obj->getNode()->node);
 }
 
 size_t VRSyncNode::getContainerCount() { return container.size(); }
@@ -643,10 +665,12 @@ void VRSyncNode::addOwnedObject(string objectName){
 }
 
 PosePtr VRSyncNode::getRemoteCamPose(string remoteName) {
+    if (!remotesCameraPose.count(remoteName)) { cout << "Error in VRSyncNode::getRemoteCamPose: " << remoteName << " not in camera poses!" << endl; return 0; }
     return remotesCameraPose[remoteName];
 }
 
 PosePtr VRSyncNode::getRemoteMousePose(string remoteName) {
+    if (!remotesMousePose.count(remoteName)) { cout << "Error in VRSyncNode::getRemoteMousePose: " << remoteName << " not in mouse poses!" << endl; return 0; }
     return remotesMousePose[remoteName];
 }
 

@@ -26,6 +26,9 @@ class VRSyncNode : public VRTransform {
         FieldContainerFactoryBase* factory = FieldContainerFactory::the();
         vector<UInt32> createdNodes; //IDs of the currently created nodes/children
 
+        bool doWrapping = true;
+        bool doAvatars = true;
+
         VRSyncChangelistPtr changelist;
 
         map<UInt32, UInt32> container; // local containers, sub-set of containers which need to be synced for collaboration
@@ -85,6 +88,9 @@ class VRSyncNode : public VRTransform {
         static VRSyncNodePtr create(string name = "None");
         VRSyncNodePtr ptr();
 
+        void setDoWrapping(bool b);
+        void setDoAvatars(bool b);
+
         void startInterface(int port);
 
         void addRemote(string host, int port, string name);
@@ -118,6 +124,7 @@ class VRSyncNode : public VRTransform {
 
         void registerContainer(FieldContainer* c, UInt32 syncNodeID = -1);
         vector<UInt32> registerNode(Node* c); //returns all registered IDs
+        void addTrackedObject(VRObjectPtr obj, VRObjectPtr obj2);
 
         map<FieldContainer*, vector<FieldContainer*>> getAllSubContainers(FieldContainer* node);
 
