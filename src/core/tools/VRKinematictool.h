@@ -25,6 +25,7 @@ class VRJointTool : public VRGeometry {
         bool lastAppended = true;
         VRAnalyticGeometryPtr ageo;
 
+        VRUpdateCbPtr setupAfterCb;
         void delayed_setup();
         void updateConstraint();
 
