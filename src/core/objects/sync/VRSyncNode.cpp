@@ -262,18 +262,17 @@ VRObjectPtr VRSyncNode::OSGConstruct(NodeMTRecPtr n, VRObjectPtr parent, Node* g
     string t_name = core->getTypeName();
     string name = ::getName(n);
 
-    // try to optimize the tree by avoiding obsolete transforms
     if (t_name == "Group" || t_name == "Transform") {
-        if (n->getNChildren() == 1) {
-            if (n->getChild(0)) {
-                if (n->getChild(0)->getCore()) {
-                    string tp = n->getChild(0)->getCore()->getTypeName();
-                    if (tp == "Geometry") {
-                        geoParent = n;
-                        tmp = parent;
-                    }
-                } else { cout << "WARNING! VRSyncNode::OSGConstruct: no transform child core!" << endl; }
-            } else { cout << "WARNING! VRSyncNode::OSGConstruct: no transform child!" << endl; }
+        if (n->getChild(0)) {
+            if (n->getChild(0)->getCore()) {
+                string tp = n->getChild(0)->getCore()->getTypeName();
+                if (tp == "Geometry") {
+                    tmp_g = VRGeometry::create(name);
+                    tmp_g->wrapOSG(OSGObject::create(n), OSGObject::create(n->getChild(0)));
+                    tmp = tmp_g;
+                    nodeToVRObject[n->getCore()->getId()] = tmp;
+                }
+            }
         }
     }
 
@@ -290,13 +289,7 @@ VRObjectPtr VRSyncNode::OSGConstruct(NodeMTRecPtr n, VRObjectPtr parent, Node* g
         nodeToVRObject[n->getCore()->getId()] = tmp;
     }
 
-    if (t_name == "Geometry") {
-        tmp_g = VRGeometry::create(name);
-        tmp_g->wrapOSG(OSGObject::create(geoParent), OSGObject::create(n));
-        tmp = tmp_g;
-        nodeToVRObject[geoParent->getCore()->getId()] = tmp;
-        geoParent = 0;
-    }
+    if (t_name == "Geometry") return 0; // ignore geo leafs
 
     if (tmp == 0) { // fallback
         tmp = VRObject::create(name);
@@ -305,8 +298,11 @@ VRObjectPtr VRSyncNode::OSGConstruct(NodeMTRecPtr n, VRObjectPtr parent, Node* g
     }
 
     for (uint i=0;i<n->getNChildren();i++) { // recursion
-        auto obj = OSGConstruct(n->getChild(i), tmp, geoParent);
-        if (obj) tmp->addChild(obj, false);
+        VRObjectPtr obj;
+        if (tmp) {
+            obj = OSGConstruct(n->getChild(i), tmp, geoParent);
+            if (obj) tmp->addChild(obj, false);
+        }
     }
 
     return tmp;
