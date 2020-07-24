@@ -36,6 +36,7 @@
 #include "VRPyTextureGenerator.h"
 #include "VRPyLight.h"
 #include "VRPyLightBeacon.h"
+#include "VRPySyncNode.h"
 #include "VRPyCamera.h"
 #include "VRPyLod.h"
 #include "VRPyKinematics.h"
@@ -140,10 +141,10 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyTexture>("Image", pModVR);
     sm->registerModule<VRPyLight>("Light", pModVR, VRPyObject::typeRef);
     sm->registerModule<VRPyLightBeacon>("LightBeacon", pModVR, VRPyTransform::typeRef);
+    sm->registerModule<VRPySyncNode>("SyncNode", pModVR, VRPyTransform::typeRef);
+    //sm->registerModule<VRPySyncRemote>("SyncRemote", pModVR);
     sm->registerModule<VRPyCamera>("Camera", pModVR, VRPyTransform::typeRef);
-#ifndef WITHOUT_BULLET
-    sm->registerModule<VRPyKinematics>("Kinematics", pModVR);
-#endif
+    sm->registerModule<VRPyKinematics>("Kinematics", pModVR, VRPyTransform::typeRef);
     sm->registerModule<VRPyFABRIK>("FABRIK", pModVR);
     sm->registerModule<VRPyLod>("Lod", pModVR, VRPyObject::typeRef);
     sm->registerModule<VRPyLodLeaf>("LodLeaf", pModVR, VRPyTransform::typeRef);
