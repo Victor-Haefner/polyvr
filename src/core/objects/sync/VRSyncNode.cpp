@@ -529,7 +529,8 @@ void VRSyncNode::registerContainer(FieldContainer* c, UInt32 syncNodeID) {
     container[ID] = syncNodeID;
 }
 
-void VRSyncNode::addTrackedObject(VRObjectPtr obj1, VRObjectPtr obj2) { // was just a test
+void VRSyncNode::addTrackedObject(VRObjectPtr obj1, VRObjectPtr obj2) {
+    // TODO: use this to map
     Node* node1 = obj1->getNode()->node;
     Node* node2 = obj2->getNode()->node;
     UInt32 ID1 = node1->getId();
@@ -691,7 +692,8 @@ void VRSyncNode::handleMessage(void* _args) {
     if (startsWith(msg, "mapping|"))   job = VRUpdateCb::create( "sync-handleMap", bind(&VRSyncNode::handleMapping, this, msg) );
     else if (startsWith(msg, "poses|"))   job = VRUpdateCb::create( "sync-handlePoses", bind(&VRSyncNode::handlePoses, this, msg) );
     else if (startsWith(msg, "ownership|")) job = VRUpdateCb::create( "sync-ownership", bind(&VRSyncNode::handleOwnershipMessage, this, msg) );
-    else                               job = VRUpdateCb::create( "sync-handleCL", bind(&VRSyncChangelist::deserializeAndApply, changelist.get(), ptr(), msg) );
+    else if (startsWith(msg, "changelistEnd|")) job = VRUpdateCb::create( "sync-finalizeCL", bind(&VRSyncChangelist::deserializeAndApply, changelist.get(), ptr()) );
+    else job = VRUpdateCb::create( "sync-handleCL", bind(&VRSyncChangelist::gatherChangelistData, changelist.get(), ptr(), msg) );
     VRScene::getCurrent()->queueJob( job );
 }
 

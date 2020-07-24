@@ -380,13 +380,18 @@ void VRSyncChangelist::handleRemoteEntries(VRSyncNodePtr syncNode, vector<Serial
 
     // send the ID mapping of newly created field containers back to remote sync node
     if (justCreated.size() > 0) {
-        string mappingData = "mapping";
-        for (auto fc : justCreated) {
-            UInt32 lID = syncNode->getLocalToRemoteID(fc->getId());
-            mappingData += "|" + toString(lID) + ":" + toString(fc->getId());
+        size_t counter = 0;
+        while (counter < justCreated.size()) {
+            string mappingData = "mapping";
+            for (int i=0; i<1000 && counter < justCreated.size(); i++) {
+                auto fc = justCreated[counter];
+                UInt32 lID = syncNode->getLocalToRemoteID(fc->getId());
+                mappingData += "|" + toString(lID) + ":" + toString(fc->getId());
+                counter++;
+            }
+            syncNode->broadcast(mappingData);
         }
         justCreated.clear();
-        syncNode->broadcast(mappingData);
     }
 }
 
@@ -417,22 +422,23 @@ void VRSyncChangelist::printDeserializedData(vector<SerialEntry>& entries, map<U
     }
 }
 
-void VRSyncChangelist::deserializeEntries(string& data, vector<SerialEntry>& entries, map<UInt32, vector<UInt32>>& parentToChildren, map<UInt32, vector<unsigned char>>& fcData) {
-    vector<unsigned char> vec = VRSyncConnection::base64_decode(data);
+void VRSyncChangelist::deserializeEntries(vector<unsigned char>& data, vector<SerialEntry>& entries, map<UInt32, vector<UInt32>>& parentToChildren, map<UInt32, vector<unsigned char>>& fcData) {
     UInt32 pos = 0;
 
+    cout << " deserializeEntries, data size: " << data.size() << " -> " << CLdata.size() << endl;
+
     //deserialize and collect change and create entries
-    while (pos + sizeof(SerialEntry) < vec.size()) {
-        SerialEntry sentry = *((SerialEntry*)&vec[pos]);
+    while (pos + sizeof(SerialEntry) < CLdata.size()) {
+        SerialEntry sentry = *((SerialEntry*)&CLdata[pos]);
         entries.push_back(sentry);
 
         pos += sizeof(SerialEntry);
         vector<unsigned char>& FCdata = fcData[sentry.localId];
-        FCdata.insert(FCdata.end(), vec.begin()+pos, vec.begin()+pos+sentry.len);
+        FCdata.insert(FCdata.end(), CLdata.begin()+pos, CLdata.begin()+pos+sentry.len);
         pos += sentry.len;
 
         vector<unsigned char> childrenData;
-        childrenData.insert(childrenData.end(), vec.begin()+pos, vec.begin()+pos+sentry.cplen*sizeof(UInt32));
+        childrenData.insert(childrenData.end(), CLdata.begin()+pos, CLdata.begin()+pos+sentry.cplen*sizeof(UInt32));
         if (childrenData.size() > 0) {
             UInt32* castedData = (UInt32*)&childrenData[0];
             for (UInt32 i=0; i<sentry.cplen; i++) {
@@ -445,9 +451,9 @@ void VRSyncChangelist::deserializeEntries(string& data, vector<SerialEntry>& ent
     }
 }
 
-void VRSyncChangelist::deserializeAndApply(VRSyncNodePtr syncNode, string& data) {
-    if (data.size() == 0) return;
-    cout << endl << "> > >  " << syncNode->getName() << " VRSyncNode::deserializeAndApply(), received data size: " << data.size() << endl;
+void VRSyncChangelist::deserializeAndApply(VRSyncNodePtr syncNode) {
+    if (CLdata.size() == 0) return;
+    cout << endl << "> > >  " << syncNode->getName() << " VRSyncNode::deserializeAndApply(), received data size: " << CLdata.size() << endl;
     VRSyncNodeFieldContainerMapper mapper(syncNode.get());
     FieldContainerFactoryBase* factory = FieldContainerFactory::the();
     factory->setMapper(&mapper);
@@ -456,7 +462,7 @@ void VRSyncChangelist::deserializeAndApply(VRSyncNodePtr syncNode, string& data)
     vector<SerialEntry> entries;
     map<UInt32, vector<unsigned char>> fcData; // map entry localID to its binary field data
 
-    deserializeEntries(data, entries, parentToChildren, fcData);
+    deserializeEntries(CLdata, entries, parentToChildren, fcData);
     cout << " deserialized " << entries.size() << " entries" << endl;
     //printDeserializedData(entries, parentToChildren, fcData);
     handleRemoteEntries(syncNode, entries, parentToChildren, fcData);
@@ -469,13 +475,14 @@ void VRSyncChangelist::deserializeAndApply(VRSyncNodePtr syncNode, string& data)
     cout << "            / " << syncNode->getName() << " VRSyncNode::deserializeAndApply()" << "  < < <" << endl;
 
     //*(UInt32*)0=0; // induce segfault!
+    CLdata.clear();
 }
 
-void VRSyncChangelist::broadcastChangeList(VRSyncNodePtr syncNode, OSGChangeList* cl, bool doDelete) {
-    if (!cl) return;
-    string data = serialize(syncNode, cl); // serialize changes in new change list (check OSGConnection for serialization Implementation)
-    if (doDelete) delete cl;
-    syncNode->broadcast(data); // send over websocket to remote
+void VRSyncChangelist::gatherChangelistData(VRSyncNodePtr syncNode, string& data) {
+    if (data.size() == 0) return;
+    cout << "  gatherChangelistData " << data.size() << endl;
+    auto d = VRSyncConnection::base64_decode(data);
+    CLdata.insert(CLdata.end(), d.begin(), d.end());
 }
 
 void VRSyncChangelist::printChangeList(VRSyncNodePtr syncNode, OSGChangeList* cl) {
@@ -536,16 +543,6 @@ string VRSyncChangelist::getChangeType(UInt32 uiEntryDesc) {
 }
 
 
-//copies state into a CL and serializes it as string
-string VRSyncChangelist::copySceneState(VRSyncNodePtr syncNode) {
-    OSGChangeList* localChanges = (OSGChangeList*)ChangeList::create();
-    localChanges->fillFromCurrentState();
-    //printChangeList(syncNode, localChanges);
-
-    string data = serialize(syncNode, localChanges);
-    delete localChanges;
-    return data;
-}
 
 vector<UInt32> VRSyncChangelist::getFCChildren(FieldContainer* fcPtr, BitVector fieldMask) {
     vector<UInt32> res;
@@ -680,28 +677,48 @@ void VRSyncChangelist::serialize_entry(VRSyncNodePtr syncNode, ContainerChangeEn
     }
 }
 
-string VRSyncChangelist::serialize(VRSyncNodePtr syncNode, ChangeList* clist) {
-    UInt32 counter = 0; //Debugging
+string VRSyncChangelist::serialize(VRSyncNodePtr syncNode, ChangeList* clist, size_t& counter1, size_t& counter2, size_t limit) {
     cout << "> > >  " << syncNode->getName() << " VRSyncNode::serialize()" << endl; //Debugging
 
     vector<unsigned char> data;
+    size_t i = 0;
 
-    for (auto it = clist->beginCreated(); it != clist->endCreated(); ++it) {
+    for (auto it = clist->beginCreated()+counter1; it != clist->endCreated() && (i < limit || limit == 0); it++, i++, counter1++) {
         ContainerChangeEntry* entry = *it;
         serialize_entry(syncNode, entry, data, syncNode->getContainerMappedID(entry->uiContainerId));
-        counter++;//Debugging
     }
 
-    for (auto it = clist->begin(); it != clist->end(); ++it) {
+    for (auto it = clist->begin()+counter2; it != clist->end() && (i < limit || limit == 0); it++, i++, counter2++) {
         ContainerChangeEntry* entry = *it;
         serialize_entry(syncNode, entry, data, syncNode->getContainerMappedID(entry->uiContainerId));
-        counter++;//Debugging
     }
 
-    cout << "serialized entries: " << counter << endl; //Debugging
-    cout << "            / " << syncNode->getName() << " / VRSyncNode::serialize()" <<"  < < <" << endl; //Debugging
+    cout << "serialized entries: " << i << "/" << counter1+counter2 << endl; //Debugging
+    cout << "            / " << syncNode->getName() << " / VRSyncNode::serialize(), data size: " << data.size() << "  < < <" << endl; //Debugging
 
+    if (data.size() == 0) return "";
     return VRSyncConnection::base64_encode(&data[0], data.size());
+}
+
+void VRSyncChangelist::broadcastChangeList(VRSyncNodePtr syncNode, OSGChangeList* cl, bool doDelete) {
+    if (!cl) return;
+    size_t counter1 = 0;
+    size_t counter2 = 0;
+    while(true) {
+        string data = serialize(syncNode, cl, counter1, counter2, 1000); // serialize changes in new change list (check OSGConnection for serialization Implementation)
+        if (data == "") break;
+        //syncNode->broadcast(data); // send over websocket to remote
+        syncNode->broadcast(data); // send over websocket to remote
+    }
+    syncNode->broadcast("changelistEnd|");
+    if (doDelete) delete cl;
+}
+
+//copies state into a CL and serializes it as string
+void VRSyncChangelist::broadcastSceneState(VRSyncNodePtr syncNode) {
+    OSGChangeList* localChanges = (OSGChangeList*)ChangeList::create();
+    localChanges->fillFromCurrentState();
+    broadcastChangeList(syncNode, localChanges, true);
 }
 
 

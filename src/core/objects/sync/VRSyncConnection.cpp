@@ -110,7 +110,7 @@ void VRSyncConnection::connect() {
     if (!result) cout << "VRSyncConnection, Failed to open websocket to " << uri << endl;
 }
 
-bool VRSyncConnection::send(string message){
+bool VRSyncConnection::send(string message) {
     if (!socket->sendMessage(message)) return 0;
     return 1;
 }
