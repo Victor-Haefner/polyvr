@@ -48,6 +48,8 @@ class VRLight : public VRObject {
         bool on = true;
         bool deferred = false;
 
+        VRUpdateCbPtr setupAfterCb;
+
         VRObjectPtr copy(vector<VRObjectPtr> children);
 
         void setup(VRStorageContextPtr context);
