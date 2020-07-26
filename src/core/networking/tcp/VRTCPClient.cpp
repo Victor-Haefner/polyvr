@@ -42,10 +42,13 @@ class TCPClient {
         }
 
         void send(string msg) {
-            cout << " send " << msg << endl;
+            cout << " send data N:" << msg.size() << endl;
             msg += "TCPPVR\n";
-            boost::asio::async_write(socket, boost::asio::buffer(msg.data(), msg.length()),
-                                    [this](boost::system::error_code ec, size_t N) {} );
+            /*boost::asio::async_write(socket, boost::asio::buffer(msg.data(), msg.length()),
+                                    [this, &msg](boost::system::error_code ec, size_t N) {
+                                        cout << "  ERROR: " << ec << "  N: " << N << endl;
+                                    });*/
+            boost::asio::write(socket, boost::asio::buffer(msg.data(), msg.length()));
         }
 };
 

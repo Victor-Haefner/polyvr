@@ -677,23 +677,23 @@ void VRSyncChangelist::serialize_entry(VRSyncNodePtr syncNode, ContainerChangeEn
     }
 }
 
-string VRSyncChangelist::serialize(VRSyncNodePtr syncNode, ChangeList* clist, size_t& counter1, size_t& counter2, size_t limit) {
+string VRSyncChangelist::serialize(VRSyncNodePtr syncNode, ChangeList* clist) {
     cout << "> > >  " << syncNode->getName() << " VRSyncNode::serialize()" << endl; //Debugging
 
     vector<unsigned char> data;
     size_t i = 0;
 
-    for (auto it = clist->beginCreated()+counter1; it != clist->endCreated() && (i < limit || limit == 0); it++, i++, counter1++) {
+    for (auto it = clist->beginCreated(); it != clist->endCreated(); it++, i++) {
         ContainerChangeEntry* entry = *it;
         serialize_entry(syncNode, entry, data, syncNode->getContainerMappedID(entry->uiContainerId));
     }
 
-    for (auto it = clist->begin()+counter2; it != clist->end() && (i < limit || limit == 0); it++, i++, counter2++) {
+    for (auto it = clist->begin(); it != clist->end(); it++, i++) {
         ContainerChangeEntry* entry = *it;
         serialize_entry(syncNode, entry, data, syncNode->getContainerMappedID(entry->uiContainerId));
     }
 
-    cout << "serialized entries: " << i << "/" << counter1+counter2 << endl; //Debugging
+    cout << "serialized entries: " << i << endl; //Debugging
     cout << "            / " << syncNode->getName() << " / VRSyncNode::serialize(), data size: " << data.size() << "  < < <" << endl; //Debugging
 
     if (data.size() == 0) return "";
@@ -702,14 +702,8 @@ string VRSyncChangelist::serialize(VRSyncNodePtr syncNode, ChangeList* clist, si
 
 void VRSyncChangelist::broadcastChangeList(VRSyncNodePtr syncNode, OSGChangeList* cl, bool doDelete) {
     if (!cl) return;
-    size_t counter1 = 0;
-    size_t counter2 = 0;
-    while(true) {
-        string data = serialize(syncNode, cl, counter1, counter2, 1000); // serialize changes in new change list (check OSGConnection for serialization Implementation)
-        if (data == "") break;
-        //syncNode->broadcast(data); // send over websocket to remote
-        syncNode->broadcast(data); // send over websocket to remote
-    }
+    string data = serialize(syncNode, cl); // serialize changes in new change list (check OSGConnection for serialization Implementation)
+    syncNode->broadcast(data); // send over websocket to remote
     syncNode->broadcast("changelistEnd|");
     if (doDelete) delete cl;
 }
