@@ -1390,7 +1390,7 @@ size_t mbuf_insert(struct mbuf *a, size_t off, const void *buf, size_t len) {
   if (~(size_t) 0 - (size_t) a->buf < len) return 0;
 
   if (a->len + len <= a->size) {
-    if (a->len - off > 0) memmove(a->buf + off + len, a->buf + off, a->len - off);
+    memmove(a->buf + off + len, a->buf + off, a->len - off);
     if (buf != NULL) {
       memcpy(a->buf + off, buf, len);
     }
@@ -1401,7 +1401,7 @@ size_t mbuf_insert(struct mbuf *a, size_t off, const void *buf, size_t len) {
       a->buf = p;
       printf("mg mbuf_insert memmove( dest: %p, src: %p, size: %zu )", a->buf + off + len, a->buf + off, a->len - off);
       printf(" params: a->buf: %p, a->len : %zu, off: %zu, len: %zu )\n", a->buf, a->len, off, len);
-      if (a->len - off > 0) memmove(a->buf + off + len, a->buf + off, a->len - off); // websocket send segfaults here sometimes
+      memmove(a->buf + off + len, a->buf + off, a->len - off); // websocket send segfaults here sometimes
       if (buf != NULL) memcpy(a->buf + off, buf, len);
       a->len += len;
       a->size = new_size;

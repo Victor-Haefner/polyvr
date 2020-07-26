@@ -1,8 +1,11 @@
 #ifndef VRSYNCCONNECTION_H_INCLUDED
 #define VRSYNCCONNECTION_H_INCLUDED
 
-#include "core/networking/VRWebSocket.h"
+#include "core/networking/VRNetworkingFwd.h"
+#include "core/objects/VRObjectFwd.h"
 #include <OpenSG/OSGBaseTypes.h>
+
+#include <map>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -12,16 +15,18 @@ ptrFwd(VRSyncConnection);
 class VRSyncConnection {
     private:
         map<UInt32, UInt32> mapping; // <remote container ID, local container ID>
-        string uri;
-        VRWebSocketPtr socket;
+        string host;
+        int port;
+        VRTCPClientPtr client;
 
     public:
-        VRSyncConnection(string uri = "");
+        VRSyncConnection(string host, int port);
         ~VRSyncConnection();
-        static VRSyncConnectionPtr create(string name = "None");
+        static VRSyncConnectionPtr create(string host, int port);
 
         void connect();
         bool send(string message);
+        void startInterface(int port, VRSyncNodePtr snode);
 
         static string base64_encode(unsigned char const* buf, UInt32 bufLen);
         static vector<unsigned char> base64_decode(string const& encoded_string);

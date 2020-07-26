@@ -20,8 +20,7 @@ using namespace std;
 class VRSyncNode : public VRTransform {
     private:
         typedef unsigned char BYTE;
-        VRSocketPtr socket;
-        VRFunction<void*>* socketCb;
+        VRTCPServerPtr server;
         VRUpdateCbPtr updateFkt;
         FieldContainerFactoryBase* factory = FieldContainerFactory::the();
         vector<UInt32> createdNodes; //IDs of the currently created nodes/children
@@ -47,7 +46,6 @@ class VRSyncNode : public VRTransform {
 
         VRObjectPtr copy(vector<VRObjectPtr> children);
 
-        void handleMessage(void* msg);
         void handleMapping(string mappingData);
         vector<FieldContainer*> findContainer(string typeName); //deprecated
         vector<FieldContainer*> getTransformationContainer(ChangeList* cl); //deprecated
@@ -91,13 +89,13 @@ class VRSyncNode : public VRTransform {
         void setDoWrapping(bool b);
         void setDoAvatars(bool b);
 
-        void startInterface(int port);
-
         void addRemote(string host, int port, string name);
 
         void addRemoteMapping(UInt32 lID, UInt32 rID);
         void replaceContainerMapping(UInt32 ID1, UInt32 ID2);
 
+        void startInterface(int port);
+        void handleMessage(string msg);
         void update();
         void broadcast(string message);
         size_t getContainerCount();

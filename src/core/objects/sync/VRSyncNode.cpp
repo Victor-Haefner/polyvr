@@ -1,4 +1,6 @@
 #include "VRSyncNode.h"
+#include "core/networking/tcp/VRTCPServer.h"
+
 #include "core/objects/VRLight.h"
 #include "core/objects/OSGObject.h"
 #include "core/objects/object/OSGCore.h"
@@ -9,8 +11,6 @@
 #include "core/setup/VRSetup.h"
 //#include "core/math/pose.h"
 #include "core/utils/VRStorage_template.h"
-#include "core/networking/VRSocket.h"
-#include "core/networking/VRWebSocket.h"
 #include "core/scene/VRScene.h"
 #include "core/scene/VRSceneManager.h"
 #include "core/scene/import/VRImport.h"
@@ -567,17 +567,6 @@ VRObjectPtr VRSyncNode::copy(vector<VRObjectPtr> children) {
     return 0;
 }
 
-void VRSyncNode::startInterface(int port) {
-    socket = VRSceneManager::get()->getSocket(port);
-    socketCb = new VRHTTP_cb( "VRSyncNode callback", bind(&VRSyncNode::handleMessage, this, _1) );
-    socket->setHTTPCallback(socketCb);
-    socket->setType("http receive");
-}
-
-string asUri(string host, int port, string name) {
-    return "ws://" + host + ":" + to_string(port) + "/" + name;
-}
-
 void VRSyncNode::handleMapping(string mappingData) {
     auto pairs = splitString(mappingData, '|');
     for (auto p : pairs) {
@@ -673,24 +662,32 @@ PosePtr VRSyncNode::getRemoteMousePose(string remoteName) {
 
 //Add remote Nodes to sync with
 void VRSyncNode::addRemote(string host, int port, string name) {
-    string uri = asUri(host, port, name);
-    remotes[uri] = VRSyncConnection::create(uri);
+    string uri = host + toString(port);
+    remotes[uri] = VRSyncConnection::create(host, port);
 //    sync(uri);
 }
 
-void VRSyncNode::handleMessage(void* _args) {
+void VRSyncNode::startInterface(int port) {
+    server = VRTCPServer::create();
+    server->listen(port);
+    server->onMessage( bind(&VRSyncNode::handleMessage, this, std::placeholders::_1) );
+}
+
+/*void VRSyncNode::handleMessage(void* _args) {
     HTTP_args* args = (HTTP_args*)_args;
     if (!args->websocket) cout << "AAAARGH" << endl;
 
     //UInt32 client = args->ws_id;
-    string msg = args->ws_data;
+    string msg = args->ws_data;*/
+void VRSyncNode::handleMessage(string msg) {
     VRUpdateCbPtr job = 0;
-    if (startsWith(msg, "mapping|"))   job = VRUpdateCb::create( "sync-handleMap", bind(&VRSyncNode::handleMapping, this, msg) );
+    if (startsWith(msg, "message|"));
+    else if (startsWith(msg, "mapping|"))   job = VRUpdateCb::create( "sync-handleMap", bind(&VRSyncNode::handleMapping, this, msg) );
     else if (startsWith(msg, "poses|"))   job = VRUpdateCb::create( "sync-handlePoses", bind(&VRSyncNode::handlePoses, this, msg) );
     else if (startsWith(msg, "ownership|")) job = VRUpdateCb::create( "sync-ownership", bind(&VRSyncNode::handleOwnershipMessage, this, msg) );
     else if (startsWith(msg, "changelistEnd|")) job = VRUpdateCb::create( "sync-finalizeCL", bind(&VRSyncChangelist::deserializeAndApply, changelist.get(), ptr()) );
     else job = VRUpdateCb::create( "sync-handleCL", bind(&VRSyncChangelist::gatherChangelistData, changelist.get(), ptr(), msg) );
-    VRScene::getCurrent()->queueJob( job );
+    if (job) VRScene::getCurrent()->queueJob( job );
 }
 
 //broadcast message to all remote nodes
