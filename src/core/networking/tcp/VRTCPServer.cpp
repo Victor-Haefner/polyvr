@@ -32,21 +32,14 @@ class TCPServer {
 
         void read_handler(const boost::system::error_code& ec, size_t N) {
             if (!ec) {
-                if (N > 7) {
-                    string data;
-                    std::istream is(&buffer);
-                    std::istreambuf_iterator<char> it(is);
-                    copy_n( it, N-7, std::back_inserter<std::string>(data) );
-                    //if (data.size() > 0) {
-                        cout << "read_handler received: " << data << endl;
-                        if (onMessageCb) onMessageCb(data);
-                    //}
-                    //std::cout << "        session receive msg: " << line << std::endl;
-                }
+                string data;
+                std::istream is(&buffer);
+                std::istreambuf_iterator<char> it(is);
+                copy_n( it, N, std::back_inserter<std::string>(data) );
+                if (onMessageCb) onMessageCb(data);
+                //std::cout << "        session receive msg: " << line << std::endl;
                 serve();
-            } else {
-                cout << " read_handler ERR: " << ec << "  N: " << N << endl;
-            }
+            } else {}
         }
 
         void serve() {
