@@ -7,6 +7,7 @@
 #include <thread>
 #include <string>
 #include <memory>
+#include <list>
 
 using namespace OSG;
 using namespace boost::asio;
@@ -15,7 +16,10 @@ using ip::tcp;
 class TCPClient {
     private:
         boost::asio::io_service io_service;
+        boost::asio::io_service::work worker;
         tcp::socket socket;
+        list<string> messages;
+        thread service;
 
         vector<boost::asio::ip::tcp::endpoint> uriToEndpoints(const string& uri) {
             boost::asio::ip::tcp::resolver resolver(io_service);
@@ -27,28 +31,47 @@ class TCPClient {
             return res;
         }
 
+        void processQueue() {
+            boost::asio::async_write(socket, boost::asio::buffer(messages.front().data(), messages.front().length()),
+                                    [this](boost::system::error_code ec, size_t N) {
+                    if (!ec) {
+                        messages.pop_front();
+                        if (!messages.empty()) processQueue();
+                    } else {
+                        cout << " tcp client write ERROR: " << ec << "  N: " << N << endl;
+                        socket.close();
+                    }
+                });
+        }
+
     public:
-        TCPClient() : socket(io_service) {}
-        ~TCPClient() {}
+        TCPClient() : worker(io_service), socket(io_service) {
+            service = thread([this](){ io_service.run(); });
+        }
+
+        ~TCPClient() { close(); }
+
+        void close() {
+            io_service.stop();
+            socket.cancel();
+            boost::system::error_code _error_code;
+            socket.shutdown(boost::asio::ip::tcp::socket::shutdown_both, _error_code);
+            if (service.joinable()) service.join();
+        }
 
         void connect(string host, int port) {
-            cout << "connect to " << host << " on " << port << endl;
             socket.connect( tcp::endpoint( boost::asio::ip::address::from_string(host), port ));
         }
 
         void connect(string uri) {
-            cout << "connect to " << uri << endl;
             socket.connect( uriToEndpoints(uri)[0] );
         }
 
         void send(string msg) {
-            cout << " send data N:" << msg.size() << endl;
             msg += "TCPPVR\n";
-            /*boost::asio::async_write(socket, boost::asio::buffer(msg.data(), msg.length()),
-                                    [this, &msg](boost::system::error_code ec, size_t N) {
-                                        cout << "  ERROR: " << ec << "  N: " << N << endl;
-                                    });*/
-            boost::asio::write(socket, boost::asio::buffer(msg.data(), msg.length()));
+            bool write_in_progress = !messages.empty();
+            messages.push_back(msg);
+            if (!write_in_progress) processQueue();
         }
 };
 
