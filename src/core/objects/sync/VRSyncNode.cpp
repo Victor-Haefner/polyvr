@@ -533,20 +533,30 @@ void VRSyncNode::registerContainer(FieldContainer* c, UInt32 syncNodeID) {
     container[ID] = syncNodeID;
 }
 
-void VRSyncNode::addTrackedObject(VRObjectPtr obj1, VRObjectPtr obj2) { // mouse beacon, avatar device
-    Node* node1 = obj1->getNode()->node;
-    Node* node2 = obj2->getNode()->node;
-    UInt32 ID1 = node1->getId(); // local mouse beacon ID
-    UInt32 ID2 = node2->getId(); // remote avatar device beacon ID
+void VRSyncNode::setAvatarBeacons(VRTransformPtr head, VRTransformPtr device) {
+    avatarHeadBeacon = head;
+    avatarDeviceBeacon = device;
+}
 
-    addRemoteMapping(ID1, ID2); // local, remote
-    broadcast("mapping|"+toString(ID2)+":"+toString(ID1));
+void VRSyncNode::addRemoteAvatar(VRTransformPtr head, VRTransformPtr device) {
+    UInt32 headID = head->getNode()->node->getId();
+    UInt32 deviceID = device->getNode()->node->getId();
+    broadcast("addAvatar|"+toString(headID)+":"+toString(deviceID));
+}
+
+void VRSyncNode::handleAvatar(string data) {
+    auto IDs = splitString( splitString(data, '|')[1], ':');
+    UInt32 avatarBeaconID = toInt(IDs[1]);
+    UInt32 mouseBeaconID = avatarDeviceBeacon->getNode()->node->getId();
+
+    addRemoteMapping(mouseBeaconID, avatarBeaconID); // local, remote
+    broadcast("mapping|"+toString(avatarBeaconID)+":"+toString(mouseBeaconID));
 
     UInt32 mask = 0;
     mask |= Node::ChildrenFieldMask;
-    externalContainer[ID1] = mask;
+    externalContainer[mouseBeaconID] = mask;
 
-    cout << " ---> addTrackedObject, " << ID1 << ": " << obj1->getName() << ", " << ID2 << ": " << obj2->getName() << endl;
+    //cout << " ---> mapAvatar, " << mouseBeaconID << ": " << mouseBeacon->getName() << ", " << avatarBeaconID << ": " << avatarBeacon->getName() << endl;
 }
 
 size_t VRSyncNode::getContainerCount() { return container.size(); }
@@ -694,6 +704,7 @@ void VRSyncNode::startInterface(int port) {
 void VRSyncNode::handleMessage(string msg) {
     VRUpdateCbPtr job = 0;
     if (startsWith(msg, "message|"));
+    else if (startsWith(msg, "addAvatar|")) job = VRUpdateCb::create( "sync-handleAvatar", bind(&VRSyncNode::handleAvatar, this, msg) );
     else if (startsWith(msg, "mapping|")) job = VRUpdateCb::create( "sync-handleMap", bind(&VRSyncNode::handleMapping, this, msg) );
     else if (startsWith(msg, "poses|"))   job = VRUpdateCb::create( "sync-handlePoses", bind(&VRSyncNode::handlePoses, this, msg) );
     else if (startsWith(msg, "ownership|")) job = VRUpdateCb::create( "sync-ownership", bind(&VRSyncNode::handleOwnershipMessage, this, msg) );

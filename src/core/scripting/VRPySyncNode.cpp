@@ -22,7 +22,8 @@ PyMethodDef VRPySyncNode::methods[] = {
     {"addOwnedObject", PyWrap(SyncNode, addOwnedObject, "addOwnedObject ( objectName )", void, string) },
     {"setDoWrapping", PyWrap(SyncNode, setDoWrapping, "Set if doing OSG wrapping", void, bool) },
     {"setDoAvatars", PyWrap(SyncNode, setDoAvatars, "Set if dogin avatars", void, bool) },
-    {"addTrackedObject", PyWrap(SyncNode, addTrackedObject, "Start tracking changes of object", void, VRObjectPtr, VRObjectPtr) },
+    {"setAvatarBeacons", PyWrap(SyncNode, setAvatarBeacons, "Set own avatar beacons", void, VRTransformPtr, VRTransformPtr) },
+    {"addRemoteAvatar", PyWrap(SyncNode, addRemoteAvatar, "Add avatar components", void, VRTransformPtr, VRTransformPtr) },
     {NULL}  /* Sentinel */
 };
 

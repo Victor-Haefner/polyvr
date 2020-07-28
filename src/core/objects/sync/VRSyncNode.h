@@ -79,6 +79,10 @@ class VRSyncNode : public VRTransform {
         vector<string> owned; //names of owned objects by this node
         void handleOwnershipMessage(string ownership);
 
+        // avatar
+        VRTransformPtr avatarHeadBeacon;
+        VRTransformPtr avatarDeviceBeacon;
+        void handleAvatar(string data);
 
     public:
         VRSyncNode(string name = "syncNode");
@@ -124,7 +128,8 @@ class VRSyncNode : public VRTransform {
 
         void registerContainer(FieldContainer* c, UInt32 syncNodeID = -1);
         vector<UInt32> registerNode(Node* c); //returns all registered IDs
-        void addTrackedObject(VRObjectPtr obj, VRObjectPtr obj2);
+        void setAvatarBeacons(VRTransformPtr head, VRTransformPtr device);
+        void addRemoteAvatar(VRTransformPtr head, VRTransformPtr device);
 
         map<FieldContainer*, vector<FieldContainer*>> getAllSubContainers(FieldContainer* node);
 
