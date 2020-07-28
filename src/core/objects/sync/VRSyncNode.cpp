@@ -540,25 +540,11 @@ void VRSyncNode::addTrackedObject(VRObjectPtr obj1, VRObjectPtr obj2) { // mouse
     UInt32 ID2 = node2->getId(); // remote avatar device beacon ID
 
     addRemoteMapping(ID1, ID2); // local, remote
-    //registerContainer(node1, container.size());
-    //registerContainer(node1, -1);
     broadcast("mapping|"+toString(ID2)+":"+toString(ID1));
-
-    UInt32 ID = node1->getId();
 
     UInt32 mask = 0;
     mask |= Node::ChildrenFieldMask;
-    externalContainer[ID] = mask;
-    //registerContainer(node2->getCore(), container.size());
-
-    /**
-
-
-    */
-
-    //registerContainer(node, container.size());
-    //NodeCoreMTRefPtr core = node->getCore();
-    //registerNode(obj->getNode()->node);
+    externalContainer[ID1] = mask;
 
     cout << " ---> addTrackedObject, " << ID1 << ": " << obj1->getName() << ", " << ID2 << ": " << obj2->getName() << endl;
 }
