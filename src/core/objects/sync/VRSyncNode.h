@@ -31,6 +31,7 @@ class VRSyncNode : public VRTransform {
         VRSyncChangelistPtr changelist;
 
         map<UInt32, UInt32> container; // local containers, sub-set of containers which need to be synced for collaboration
+        map<UInt32, UInt32> externalContainer; // local external containers, key is container ID, value is change mask to use
         //vector<UInt32> cores; //lists IDs of nodecores
         vector<UInt32> syncedContainer; //Id's of container that got changes over sync (changed by remote). Needed to filter out sync changes from local Changelist to prevent cycles.
         map<string, VRSyncConnectionPtr> remotes;
@@ -103,6 +104,7 @@ class VRSyncNode : public VRTransform {
         bool isRegistered(const UInt32& id);
         bool isSubContainer(const UInt32& id);
         bool isRemoteChange(const UInt32& id);
+        bool isExternalContainer(const UInt32& id, UInt32& mask);
 
         void logSyncedContainer(UInt32 id);
 

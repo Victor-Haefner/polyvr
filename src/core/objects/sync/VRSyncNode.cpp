@@ -366,6 +366,14 @@ bool VRSyncNode::isRegistered(const UInt32& id) {
     return bool(container.count(id));
 }
 
+bool VRSyncNode::isExternalContainer(const UInt32& id, UInt32& mask) {
+    if (externalContainer.count(id)) {
+        mask = externalContainer[id];
+        return true;
+    }
+    return false;
+}
+
 //checks in container if the node with syncID is already been registered
 bool VRSyncNode::isRegisteredRemote(const UInt32& syncID) {
     for (auto reg : container) { //check if the FC is already registered, f.e. if nodeCore create entry arrives first a core along with its node will be created before the node create entry arrives
@@ -497,7 +505,7 @@ void VRSyncNode::update() {
     getAndBroadcastPoses();
     auto localChanges = changelist->filterChanges(ptr());
     if (!localChanges) return;
-    if (getChildrenCount() == 0) return;
+    if (getChildrenCount() == 0) return; // TODO: this may happen if the only child is dragged..
     cout << endl << " > > >  " << name << " VRSyncNode::update()" << endl;
 
 
@@ -525,15 +533,34 @@ void VRSyncNode::registerContainer(FieldContainer* c, UInt32 syncNodeID) {
     container[ID] = syncNodeID;
 }
 
-void VRSyncNode::addTrackedObject(VRObjectPtr obj1, VRObjectPtr obj2) {
-    // TODO: use this to map
+void VRSyncNode::addTrackedObject(VRObjectPtr obj1, VRObjectPtr obj2) { // mouse beacon, avatar device
     Node* node1 = obj1->getNode()->node;
     Node* node2 = obj2->getNode()->node;
-    UInt32 ID1 = node1->getId();
-    UInt32 ID2 = node2->getId();
+    UInt32 ID1 = node1->getId(); // local mouse beacon ID
+    UInt32 ID2 = node2->getId(); // remote avatar device beacon ID
+
+    addRemoteMapping(ID1, ID2); // local, remote
+    //registerContainer(node1, container.size());
+    //registerContainer(node1, -1);
+    broadcast("mapping|"+toString(ID2)+":"+toString(ID1));
+
+    UInt32 ID = node1->getId();
+
+    UInt32 mask = 0;
+    mask |= Node::ChildrenFieldMask;
+    externalContainer[ID] = mask;
+    //registerContainer(node2->getCore(), container.size());
+
+    /**
+
+
+    */
+
     //registerContainer(node, container.size());
     //NodeCoreMTRefPtr core = node->getCore();
     //registerNode(obj->getNode()->node);
+
+    cout << " ---> addTrackedObject, " << ID1 << ": " << obj1->getName() << ", " << ID2 << ": " << obj2->getName() << endl;
 }
 
 size_t VRSyncNode::getContainerCount() { return container.size(); }
@@ -581,7 +608,7 @@ void VRSyncNode::handleMapping(string mappingData) {
 }
 
 void VRSyncNode::handlePoses(string poses)  {
-    cout << "VRSyncNode::handlePoses: " << poses << endl;
+    //cout << "VRSyncNode::handlePoses: " << poses << endl;
     string nodeName;
     vector<string> pairs = splitString(poses, '|');
     vector<string> namePair = splitString(pairs[1], ':');
@@ -595,8 +622,7 @@ void VRSyncNode::handlePoses(string poses)  {
         PosePtr pose = toValue<PosePtr>(data[1]);
         if (deviceName == "cam") remotesCameraPose[nodeName] = pose;
         else if (deviceName == "mouse") remotesMousePose[nodeName] = pose;
-
-        cout <<  "VRSyncNode::handlePoses      deviceName " << deviceName << " pose " << pose << " remotesCameraPose[nodeName] " << remotesCameraPose[nodeName] << " nodeName " << nodeName << endl;
+        //cout <<  "VRSyncNode::handlePoses      deviceName " << deviceName << " pose " << pose << " remotesCameraPose[nodeName] " << remotesCameraPose[nodeName] << " nodeName " << nodeName << endl;
     }
     //TODO: do something with poses
 
@@ -682,7 +708,7 @@ void VRSyncNode::startInterface(int port) {
 void VRSyncNode::handleMessage(string msg) {
     VRUpdateCbPtr job = 0;
     if (startsWith(msg, "message|"));
-    else if (startsWith(msg, "mapping|"))   job = VRUpdateCb::create( "sync-handleMap", bind(&VRSyncNode::handleMapping, this, msg) );
+    else if (startsWith(msg, "mapping|")) job = VRUpdateCb::create( "sync-handleMap", bind(&VRSyncNode::handleMapping, this, msg) );
     else if (startsWith(msg, "poses|"))   job = VRUpdateCb::create( "sync-handlePoses", bind(&VRSyncNode::handlePoses, this, msg) );
     else if (startsWith(msg, "ownership|")) job = VRUpdateCb::create( "sync-ownership", bind(&VRSyncNode::handleOwnershipMessage, this, msg) );
     else if (startsWith(msg, "changelistEnd|")) job = VRUpdateCb::create( "sync-finalizeCL", bind(&VRSyncChangelist::deserializeAndApply, changelist.get(), ptr()) );
@@ -710,7 +736,7 @@ UInt32 VRSyncNode::getLocalToRemoteID(UInt32 id) {
 }
 
 UInt32 VRSyncNode::getContainerMappedID(UInt32 id) {
-    if (!container.count(id)) return 0;
+    if (!container.count(id)) return -1;
     return container[id];
 }
 
