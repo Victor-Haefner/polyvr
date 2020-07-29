@@ -107,6 +107,7 @@ struct DWGLayer {
     VRAnnotationEnginePtr ann;
 };
 
+size_t aCount = 0;
 struct DWGContext {
     Dwg_Data* dwg = 0;
     map<Dwg_Object_LAYER*, DWGLayer> layers;
@@ -175,7 +176,12 @@ struct DWGContext {
         //cout << "addLine " << col << endl;
 	}
 
+    /** DWG arcs always rotate counterclockwise! */
 	void addArc(Pnt3d c, double r, double a1, double a2, Dwg_Object_LAYER* layer, Vec3d eBox = Vec3d(1,1,1)) {
+        //aCount++;
+        //if (aCount < 54 || aCount > 55) return;
+        //if (aCount != 54) return;
+        //cout << " addArc, c: " << c << ", r: " << r << ", a12: " << Vec2d(a1, a2) << ", i:" << aCount << endl;
         VRGeoData& geo = layers[layer].geo;
 
 		/*Pnt3d sp = c + Vec3d(cos(a1),sin(a1),0)*r;
@@ -186,8 +192,9 @@ struct DWGContext {
 		a2 = atan2(ep[1] - c[1], ep[0] - c[0]) + Pi;
 		if (transformation.det() < 0) swap(a1, a2);*/
 
-		transformation.mult(c, c);
+		if (a2 < a1) a2 += 2*Pi; // make sure to rotate counterclockwise!
 
+		transformation.mult(c, c);
 
 		if (r < 1e-6) r = 1; // elipse -> use box
         else r = scaleLength(r);
@@ -200,6 +207,7 @@ struct DWGContext {
             geo.pushVert(p);
             if (i > 0) geo.pushLine();
         }
+        //cout << "  computed params, da: " << da << ", N: " << N << ", sr: " << r << endl;
 	}
 
 	void addCircle(Vec3d c, float r, Dwg_Object_LAYER* layer) {
