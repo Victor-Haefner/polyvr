@@ -250,11 +250,11 @@ struct DWGContext {
 Color3f getLayerColor(Dwg_Object_LAYER* layer) {
     if (!layer) return Color3f(0.2,0.5,0);
     Color3f col = asColor3f(layer->color); //
-    short colShrt = layer->color_rs; //
-    layer->flag;
-    Dwg_Object_MATERIAL* mat = 0; //
-    if (layer->material && layer->material->obj) mat = layer->material->obj->tio.object->tio.MATERIAL; //
-    bool pflag = layer->plotflag;
+    //short colShrt = layer->color_rs; //
+    //layer->flag;
+    //Dwg_Object_MATERIAL* mat = 0; //
+    //if (layer->material && layer->material->obj) mat = layer->material->obj->tio.object->tio.MATERIAL; //
+    //bool pflag = layer->plotflag;
     //Dwg_Object_STYLE* pstyle = 0;
     //if (layer->plotstyle && layer->plotstyle->obj) pstyle = layer->plotstyle->obj->tio.object->tio.PLACEHOLDER
 
@@ -492,7 +492,7 @@ void process_INSERT(Dwg_Object* obj, DWGContext& data) {
 }
 
 void process_VIEWPORT(Dwg_Object* obj, DWGContext& data) {
-    Dwg_Entity_VIEWPORT* viewport = obj->tio.entity->tio.VIEWPORT;
+    //Dwg_Entity_VIEWPORT* viewport = obj->tio.entity->tio.VIEWPORT;
 
     /*data.offset_stack.push_back( asVec3d(insert->ins_pt) );
     data.scale_stack.push_back( asVec3d(insert->scale) );
@@ -672,7 +672,7 @@ void loadDWG(string path, VRTransformPtr res) {
     //dwg_free(&dwg); // writes a lot to console..
 
     map<string, int> hist;
-    for (int i=0; i < dwg.num_objects; i++) {
+    for (unsigned int i=0; i < dwg.num_objects; i++) {
         Dwg_Object& obj = dwg.object[i];
         if (obj.type == DWG_TYPE_LINE ||
             obj.type == DWG_TYPE_INSERT
@@ -707,9 +707,14 @@ void loadDWG(string path, VRTransformPtr res) {
 
 VRGeometryPtr dwgArcTest() {
     DWGContext data;
+    float a = 6.28/10.0;
     data.layers[0] = DWGLayer();
     for (int i=-5; i<5; i++) data.addArc(Pnt3d(i, 0, 0), 0.4, 0, i*6.28/5.0, 0);
     for (int i=-5; i<5; i++) data.addArc(Pnt3d(i, 1, 0), 0.4, i*6.28/5.0, 0, 0);
+    for (int i=-5; i<5; i++) data.addArc(Pnt3d(i, 2, 0), 0.4, i*6.28/5.0-a, i*6.28/5.0+a, 0);
+    for (int i=-5; i<5; i++) data.addArc(Pnt3d(i, 3, 0), 0.4, i*6.28/5.0+a, i*6.28/5.0-a, 0);
+    for (int i=-5; i<5; i++) data.addArc(Pnt3d(i, 4, 0), 0.4, i*6.28/5.0-a*3, i*6.28/5.0+a*3, 0);
+    for (int i=-5; i<5; i++) data.addArc(Pnt3d(i, 5, 0), 0.4, i*6.28/5.0+a*3, i*6.28/5.0-a*3, 0);
     auto geo = data.layers[0].geo.asGeometry( "arcTest" );
     auto m = VRMaterial::create("arcMat");
     m->setLit(0);
