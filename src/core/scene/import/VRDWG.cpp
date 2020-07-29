@@ -705,4 +705,18 @@ void loadDWG(string path, VRTransformPtr res) {
     for (auto e : data.objectHistogram) cout << " " << e.first << ": " << e.second << endl;*/
 }
 
+VRGeometryPtr dwgArcTest() {
+    DWGContext data;
+    data.layers[0] = DWGLayer();
+    for (int i=-5; i<5; i++) data.addArc(Pnt3d(i, 0, 0), 0.4, 0, i*6.28/5.0, 0);
+    for (int i=-5; i<5; i++) data.addArc(Pnt3d(i, 1, 0), 0.4, i*6.28/5.0, 0, 0);
+    auto geo = data.layers[0].geo.asGeometry( "arcTest" );
+    auto m = VRMaterial::create("arcMat");
+    m->setLit(0);
+    m->setDiffuse(Color3f(0,0.7,0.4));
+    m->setLineWidth(3);
+    geo->setMaterial(m);
+    return geo;
+}
+
 OSG_END_NAMESPACE;

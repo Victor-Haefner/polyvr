@@ -9,6 +9,7 @@ OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 void loadDWG(string path, VRTransformPtr res);
+VRGeometryPtr dwgArcTest();
 
 OSG_END_NAMESPACE;
 
