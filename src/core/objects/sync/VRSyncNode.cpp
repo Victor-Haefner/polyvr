@@ -486,7 +486,7 @@ void VRSyncNode::getAndBroadcastPoses() {
 
     if (flyStick) {
         PosePtr flyStickPose = flyStick->getBeacon()->getPose();
-        bool flyStickChanged = poseChanged(oldFlyStickPose, flyStickPose, 0.1, 10);
+        bool flyStickChanged = poseChanged(oldFlystickPose, flyStickPose, 0.1, 10);
         if (flyStickChanged) {
             poses += "|flystick:" + toString(flyStickPose);
             oldFlystickPose = *flyStickPose;
