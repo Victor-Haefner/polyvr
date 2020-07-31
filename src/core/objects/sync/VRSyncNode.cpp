@@ -642,22 +642,29 @@ void VRSyncNode::handleOwnershipMessage(string ownership)  {
     string nodeName = str_vec[2];
     string objectName = str_vec[3];
     if (str_vec[1] == "request") {
+        cout << "handle request" << endl;
         for (string s : owned) {
+
+            cout << "check owned" << endl;
             if (s == objectName) {
+                cout << "found owned, try to get object..." << endl;
                 auto object = VRScene::getCurrent()->getRoot()->find(objectName);
-                if (!object) return;
+                if (!object) {cout<< "object " << objectName << " not fould!" << endl; return;}
                 for (auto dev : VRSetup::getCurrent()->getDevices()) { //if object is grabbed return
                     VRTransformPtr obj = dev.second->getDraggedObject();
                     VRTransformPtr gobj = dev.second->getDraggedGhost();
-                    if (obj == 0 || gobj == 0) continue;
+                    if (obj == 0 || gobj == 0) {cout << "continue" << endl; continue;}
                     if (obj->getName() == objectName || gobj->getName() == objectName) {
+                        cout << "object is not available. ownership not granted." << endl;
                         return;
                     }
                 }
-                for (auto remote : remotes) { //grant ownership
+                for (auto remote : remotesUri) { //grant ownership
+                    cout << "remote.first " << remote.first << endl;
                     if (remote.first.find(nodeName) != string::npos) {
                         string message = "ownership|grant|" + nodeName + "|" + objectName;
-                        remote.second->send(message);
+                        string uri = remote.second;
+                        remotes[uri]->send(message);
                         auto it = std::find(owned.begin(), owned.end(), objectName);
                         if (it != owned.end()) owned.erase(it);
                         cout << "grant ownership " << message << endl;
@@ -703,6 +710,7 @@ PosePtr VRSyncNode::getRemoteFlystickPose(string remoteName) {
 void VRSyncNode::addRemote(string host, int port, string name) {
     string uri = host + toString(port);
     remotes[uri] = VRSyncConnection::create(host, port);
+    remotesUri[name] = uri;
 //    sync(uri);
 }
 
