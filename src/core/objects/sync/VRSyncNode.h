@@ -123,6 +123,7 @@ class VRSyncNode : public VRTransform {
 
         PosePtr getRemoteCamPose(string remoteName);
         PosePtr getRemoteMousePose(string remoteName);
+        PosePtr getRemoteFlystickPose(string remoteName);
 
         vector<string> getOwnedObjects(string nodeName);
         void requestOwnership(string objectName);

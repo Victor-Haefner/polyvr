@@ -693,6 +693,11 @@ PosePtr VRSyncNode::getRemoteMousePose(string remoteName) {
     if (!remotesMousePose.count(remoteName)) { cout << "Error in VRSyncNode::getRemoteMousePose: " << remoteName << " not in mouse poses!" << endl; return 0; }
     return remotesMousePose[remoteName];
 }
+PosePtr VRSyncNode::getRemoteFlystickPose(string remoteName) {
+    if (!remotesFlystickPose.count(remoteName)) { cout << "Error in VRSyncNode::getRemoteFlystickPose: " << remoteName << " not in flystick poses!" << endl; return 0; }
+    return remotesFlystickPose[remoteName];
+}
+
 
 //Add remote Nodes to sync with
 void VRSyncNode::addRemote(string host, int port, string name) {
