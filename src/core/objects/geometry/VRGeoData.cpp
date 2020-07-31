@@ -2,8 +2,10 @@
 #include "VRGeometry.h"
 #include "OSGGeometry.h"
 #include "core/utils/toString.h"
+
 #include <OpenSG/OSGGeoProperties.h>
 #include <OpenSG/OSGGeometry.h>
+#include <OpenSG/OSGTriangleIterator.h>
 
 using namespace OSG;
 
@@ -747,6 +749,46 @@ void VRGeoData::makeSingleIndex() {
     if (!geo->getMesh()->geo->isSingleIndex()) cout << "VRGeoData::makeSingleIndex FAILED!! probably needs to set more indices!" << endl;
 }
 
+vector<VRGeometryPtr> VRGeoData::splitByVertexColors(const Matrix4d& m) {
+    auto hashColor3 = [](const Color3f& col) -> size_t {
+        return col[0]*255 + col[1]*255*255 + col[2]*255*255*255;
+    };
+
+    auto hashColor4 = [](const Color4f& col) -> size_t {
+        return col[0]*255 + col[1]*255*255 + col[2]*255*255*255 + col[3]*255*255*255*255;
+    };
+
+    auto getHash = [&](size_t i) -> size_t {
+        if (data->cols3) return hashColor3(data->cols3->getValue(i));
+        if (data->cols4) return hashColor4(data->cols4->getValue(i));
+        return 0;
+    };
+
+    map<size_t, VRGeoData> geos;
+    map<size_t, map<size_t, size_t>> indexMaps;
+
+    for (auto& prim : *this) {
+        auto h = getHash(prim.indices[0]);
+        auto& geo = geos[h];
+        auto& indexMap = indexMaps[h];
+
+        vector<int> ninds;
+        for (auto i : prim.indices) {
+            if (!indexMap.count(i)) indexMap[i] = geo.pushVert(*this, i);
+            ninds.push_back(indexMap[i]);
+        }
+        prim.indices = ninds;
+        geo.pushPrim(prim);
+    }
+
+    vector<VRGeometryPtr> res;
+    for (auto g : geos) {
+        auto gg = g.second.asGeometry(geo->getBaseName());
+        gg->setMatrix(m);
+        res.push_back(gg);
+    }
+    return res;
+}
 
 
 
