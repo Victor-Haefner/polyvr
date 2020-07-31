@@ -72,8 +72,10 @@ class VRSyncNode : public VRTransform {
         //void updateRemoteMousePose(string nodeName, PosePtr mousePose);
         map<string, PosePtr> remotesCameraPose;
         map<string, PosePtr> remotesMousePose;
+        map<string, PosePtr> remotesFlystickPose;
         Pose oldCamPose;
         Pose oldMousePose;
+        Pose oldFlystickPose;
 
         //Ownership
         vector<string> owned; //names of owned objects by this node

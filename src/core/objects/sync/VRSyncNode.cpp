@@ -466,11 +466,13 @@ void VRSyncNode::getAndBroadcastPoses() {
     PosePtr camPose = cam->getWorldPose();
     VRDevicePtr mouse = VRSetup::getCurrent()->getDevice("mouse"); //check devices and eventually get poses
     PosePtr mousePose = mouse->getBeacon()->getPose();
+    VRDevicePtr flyStick = VRSetup::getCurrent()->getDevice("flystick"); //check devices and eventually get poses
+
 
     bool camChanged = poseChanged(oldCamPose, camPose, 0.1, 10);
     bool mouseChanged = poseChanged(oldMousePose, mousePose, 0.1, 10);
 
-    if (!camChanged && !mouseChanged) return;
+    //if (!camChanged && !mouseChanged) return;
 
     if (camChanged) {
         string pose_str = toString(camPose); //append poses to string
@@ -480,6 +482,15 @@ void VRSyncNode::getAndBroadcastPoses() {
     if (mousePose && mouseChanged) {
         poses += "|mouse:" + toString(mousePose);
         oldMousePose = *mousePose;
+    }
+
+    if (flyStick) {
+        PosePtr flyStickPose = flyStick->getBeacon()->getPose();
+        bool flyStickChanged = poseChanged(oldFlyStickPose, flyStickPose, 0.1, 10);
+        if (flyStickChanged) {
+            poses += "|flystick:" + toString(flyStickPose);
+            oldFlystickPose = *flyStickPose;
+        }
     }
 
     broadcast(poses); //broadcast
@@ -618,6 +629,7 @@ void VRSyncNode::handlePoses(string poses)  {
         PosePtr pose = toValue<PosePtr>(data[1]);
         if (deviceName == "cam") remotesCameraPose[nodeName] = pose;
         else if (deviceName == "mouse") remotesMousePose[nodeName] = pose;
+        else if (deviceName == "flystick") remotesFlystickPose[nodeName] = pose;
         //cout <<  "VRSyncNode::handlePoses      deviceName " << deviceName << " pose " << pose << " remotesCameraPose[nodeName] " << remotesCameraPose[nodeName] << " nodeName " << nodeName << endl;
     }
     //TODO: do something with poses
