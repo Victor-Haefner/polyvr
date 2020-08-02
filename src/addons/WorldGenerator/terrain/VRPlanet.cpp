@@ -118,18 +118,33 @@ void VRPlanet::localize(double north, double east) {
     } else cout << "Warning: VRPlanet::localize, no sector found at location " << Vec2d(north, east) << " !\n";*/
 }
 
+Vec2d VRPlanet::getSurfaceUV(double north, double east) {
+    Vec2d res;
+    auto sector = getSector(north, east);
+    if (!sector) return res;
+
+    auto sectorCoords = sector->getPlanetCoords();
+    auto s = fromLatLongSize(sectorCoords[0], sectorCoords[1], sectorCoords[0]+sectorSize, sectorCoords[1]+sectorSize); //u = east, v = north
+    auto u = (east-sectorCoords[1]-sectorSize/2)/sectorSize*s[0];
+    auto v = -(north-sectorCoords[0]-sectorSize/2)/sectorSize*s[1];
+    return sector->getTerrain()->getTexCoord( Vec2d(u,v) );
+}
+
+double VRPlanet::getRadius() { return radius; }
+
 PosePtr VRPlanet::getSurfacePose( double north, double east, bool local, bool sectorLocal){
     auto poseG = fromLatLongPose(north, east);
 
     auto sector = getSector(north, east);
-    if (!sector) return Pose::create();
+    if (!sector) return poseG;
 
     auto sectorCoords = sector->getPlanetCoords();
     auto s = fromLatLongSize(sectorCoords[0], sectorCoords[1], sectorCoords[0]+sectorSize, sectorCoords[1]+sectorSize); //u = east, v = north
     auto u = (east-sectorCoords[1]-sectorSize/2)/sectorSize*s[0];
     auto v = -(north-sectorCoords[0]-sectorSize/2)/sectorSize*s[1];
 
-    auto height = sector->getTerrain()->getHeight(Vec2d(u, v));
+    Vec2d uv = Vec2d(u,v);
+    auto height = sector->getTerrain()->getHeight(uv);
     auto newPos = poseG->pos() + poseG->up()*height;
     Vec3d f = newPos;
     Vec3d d = poseG->dir();
