@@ -679,7 +679,22 @@ string OSMWay::toString() {
 }
 
 VRPolygon OSMWay::getPolygon() { return polygon; }
-vector<string> OSMWay::getNodes() { return nodes; }
+
+vector<string> OSMWay::getNodes(float downSampleRate) {
+    if (downSampleRate > 0.999) return nodes;
+
+    vector<string> res;
+    res.push_back(nodes[0]); // force first node!
+
+    for (int i=0; i<nodes.size(); i++) {
+        float k = i*downSampleRate;
+        int N = res.size();
+        if (N < k) res.push_back(nodes[i]);
+    }
+
+    res.push_back(nodes[nodes.size()-1]); // force last node!
+    return res;
+}
 
 string OSMRelation::toString() {
     string res = OSMBase::toString();
