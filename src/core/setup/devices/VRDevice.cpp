@@ -146,7 +146,6 @@ int VRDevice::b_state(int key) { if (BStates.count(key)) return BStates[key]; el
 
 void VRDevice::s_state(int key, float* s_state) { if (SStates.count(key)) *s_state = SStates[key];}
 float VRDevice::s_state(int key) { if (SStates.count(key)) return SStates[key]; else return 0; }
-
 void VRDevice::setTarget(VRTransformPtr e) { target = e; }
 VRTransformPtr VRDevice::getTarget() { return target.lock(); }
 
@@ -184,7 +183,7 @@ Vec2d VRDevice::getIntersectionUV() { return getLastIntersection().texel; }
 Line  VRDevice::getIntersectionRay() { return getLastIntersection().ray; }
 VRObjectPtr VRDevice::getIntersected() { return getLastIntersection().object.lock(); }
 
-void VRDevice::addIntersection(VRObjectPtr obj) { addDynTree(obj); }
+void VRDevice::addIntersection(VRObjectPtr obj, int priority) { addDynTree(obj, priority); }
 void VRDevice::remIntersection(VRObjectPtr obj) { remDynTree(obj); }
 VRTransformPtr VRDevice::getDragged() { return getDraggedObject(); }
 VRTransformPtr VRDevice::getDragGhost() { return getDraggedGhost(); }

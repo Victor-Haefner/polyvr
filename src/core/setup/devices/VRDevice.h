@@ -93,7 +93,7 @@ class VRDevice : public std::enable_shared_from_this<VRDevice>, public VRName, p
         Line  getIntersectionRay();
         VRObjectPtr getIntersected();
 
-        void addIntersection(VRObjectPtr obj);
+        void addIntersection(VRObjectPtr obj, int priority = 0);
         void remIntersection(VRObjectPtr obj);
         VRTransformPtr getDragged();
         VRTransformPtr getDragGhost();
