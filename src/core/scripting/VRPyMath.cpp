@@ -114,6 +114,7 @@ PyObject* VRPyVec2f::New(PyTypeObject *type, PyObject *args, PyObject *kwds) {
 
 PyObject* VRPyVec2f::Print(PyObject* self) {
     string s = "[" + toString(((VRPyVec2f*)self)->v) + "]";
+    std::replace( s.begin(), s.end(), ' ', ',');
     return PyString_FromString( s.c_str() );
 }
 
@@ -514,6 +515,7 @@ PyObject* VRPyLine::New(PyTypeObject *type, PyObject *args, PyObject *kwds) {
 PyObject* VRPyLine::Print(PyObject* self) {
     auto l = ((VRPyLine*)self)->l;
     string s = "[" + toString(l) + "]";
+    std::replace( s.begin(), s.end(), ' ', ',');
     return PyString_FromString( s.c_str() );
 }
 
