@@ -96,6 +96,10 @@ class VRNavigator : public VRNavigator_base {
         static float clip_dist_down;
         std::shared_ptr<VRFunction<float> > focus_fkt;
 
+        bool isCtrlDown();
+        bool isShiftDown();
+        bool isKeyDown(int k);
+
         // callbacks
         void zoom(VRDeviceWeakPtr dev, int dir);
         void walk(VRDeviceWeakPtr dev);
