@@ -134,7 +134,18 @@ struct VRPyPatch : VRPyBaseT<OSG::Patch> {
 };
 
 struct VRPyDatarow : VRPyBaseT<OSG::Datarow> {
+    size_t itr = 0;
+
     static PyMethodDef methods[];
+    static PySequenceMethods sMethods;
+
+    static Py_ssize_t len(PyObject* self);
+    static PyObject* getItem(PyObject* self, Py_ssize_t i);
+    static int setItem(PyObject* self, Py_ssize_t i, PyObject* val);
+    static PyObject* getSlice(PyObject* self, Py_ssize_t i0, Py_ssize_t i1);
+
+    static PyObject* iter(PyObject *self) ;
+    static PyObject* iternext(PyObject *self) ;
 };
 
 #endif // VRPYMATH_H_INCLUDED
