@@ -209,6 +209,7 @@ void VRNavigator::orbit(VRDeviceWeakPtr _dev) {
     static Vec3d camAtRef(0,0,0);
     static Pose camPanRef;
     static Vec2d mouseOnMouseDown;
+    static bool doPan = false;
 
     Vec3d camDelta;
     Vec2d mousePos;
@@ -216,6 +217,8 @@ void VRNavigator::orbit(VRDeviceWeakPtr _dev) {
     mousePos[1] = dev->s_state(6);
 
     if (state == 0) { // drag camera
+        doPan = isShiftDown();
+
         camPos = target->getFrom();
         camAtRef = target->getAt();
         camPanRef = *target->getPose();
@@ -241,7 +244,7 @@ void VRNavigator::orbit(VRDeviceWeakPtr _dev) {
     // move cam
     mousePos -= mouseOnMouseDown;
 
-    if (!isShiftDown()) {
+    if (!doPan) {
         camDelta = camSphereRef;
         camDelta[1] += mousePos[0]*1.5; //yaw
         camDelta[2] -= mousePos[1]*1.5; //pitch
