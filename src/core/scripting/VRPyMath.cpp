@@ -656,10 +656,8 @@ Py_ssize_t VRPyDatarow::len(PyObject* self) {
 PyObject* VRPyDatarow::getItem(PyObject* self, Py_ssize_t i) {
     auto v = ((VRPyDatarow*)self)->objPtr;
     if (i < 0 || i >= v->length()) {
-        //setErr("VRPyDatarow::getItem, index i not in range [0-"+toString(v->length())+"] ("+toString(int(i))+")");
-        //return NULL;
-        cout << "AAAAAAAAAAA " << i << " " << len(self) << endl;
-        return PyFloat_FromDouble(0);
+        setErr("VRPyDatarow::getItem, index i not in range [0-"+toString(v->length())+"] ("+toString(int(i))+")");
+        return NULL;
     }
     return PyFloat_FromDouble(v->get(i));
 }
@@ -697,6 +695,7 @@ PyMethodDef VRPyDatarow::methods[] = {
     {"resize", PyWrap2( Datarow, resize, "Resize data with value", void, int, double ) },
     {"add", PyWrap2( Datarow, add, "Add all elements of other datarow", void, DatarowPtr ) },
     {"insert", PyWrap2( Datarow, insert, "Add an element at ith place, element will be ith element, old ith element will shift to the right", void, int, double ) },
+    {"getMinMax", PyWrap2( Datarow, getMinMax, "Return min and max value", vector<double> ) },
     {"getPCT", PyWrap2( Datarow, getPCT, "Get ith PCT", double, int ) },
     {"getLogRet", PyWrap2( Datarow, getLogRet, "Get ith log return", double, int ) },
     {"getPCTs", PyWrap2( Datarow, getPCTs, "Get PCTs", DatarowPtr ) },
