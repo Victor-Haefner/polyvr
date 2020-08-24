@@ -337,7 +337,7 @@ void VRGuiSetup::on_new_clicked() {
 
 void VRGuiSetup::on_foto_clicked() {
     if (auto s = current_setup.lock()) {
-        bool b = getToggleButtonState("toolbutton19");
+        bool b = getToggleToolButtonState("toolbutton19");
         s->setFotoMode(b);
     }
 }

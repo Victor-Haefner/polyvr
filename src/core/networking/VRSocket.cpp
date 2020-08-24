@@ -99,7 +99,7 @@ class HTTPServer {
             if (auto t = wt.lock()) if (t->control_flag == false) return;
         }
 
-        void initServer(VRHTTP_cb* fkt, int port) {
+        bool initServer(VRHTTP_cb* fkt, int port) {
             data->cb = fkt;
             server = new mg_mgr();
             mg_mgr_init(server, data);
@@ -107,7 +107,7 @@ class HTTPServer {
             memset(&bind_opts, 0, sizeof(bind_opts));
             bind_opts.error_string = &err_str;
             nc = mg_bind_opt(server, toString(port).c_str(), server_answer_to_connection_m, bind_opts);
-            if (!nc) { cout << "Warning in initServer: could not bind to " << server << ":" << port << endl; return; }
+            if (!nc) { cout << "Warning in initServer: could not bind to " << server << ":" << port << endl; return false; }
             mg_set_protocol_http_websocket(nc);
             //s_http_server_opts.document_root = ".";
             s_http_server_opts.enable_directory_listing = "yes";
@@ -117,6 +117,7 @@ class HTTPServer {
             threadID = VRSceneManager::get()->initThread(serverThread, "mongoose", true);
 
             //server = MHD_start_daemon(MHD_USE_SELECT_INTERNALLY, port, NULL, NULL, &server_answer_to_connection, data, MHD_OPTION_END);
+            return true;
         }
 
         void addPage(string path, string page) {
@@ -322,6 +323,7 @@ VRSocket::VRSocket(string name) {
 
 VRSocket::~VRSocket() {
     run = false;
+    if (http_serv) http_serv->close();
     //shutdown(socketID, SHUT_RDWR);
     if (auto sm = VRSceneManager::get()) sm->stopThread(threadID);
     if (http_args) delete http_args;
@@ -557,7 +559,7 @@ void VRSocket::update() {
     sig->setName("on_" + name + "_" + type);
 
     if (type == "tcpip receive") if (tcp_fkt.lock()) initServer(TCP, port);
-    if (type == "http receive") if (http_serv && http_fkt) http_serv->initServer(http_fkt, port);
+    if (type == "http receive" && http_serv && http_fkt) http_serv->initServer(http_fkt, port);
 }
 
 bool VRSocket::isClient() {

@@ -276,6 +276,11 @@ void VRObject::switchCore(OSGCorePtr c) {
 void VRObject::disableCore() { osg->node->setCore( Group::create() ); }
 void VRObject::enableCore() { osg->node->setCore( core->core ); }
 
+void VRObject::wrapOSG(OSGObjectPtr node) {
+    getNode()->node = node->node;
+    core->core = node->node->getCore();
+}
+
 OSGObjectPtr VRObject::getNode() { return osg; }
 
 void VRObject::setSiblingPosition(int i) {
@@ -603,6 +608,44 @@ vector<OSGObjectPtr> VRObject::getNodes() {
     aggregate(getNode()->node);
 
     return nodes;
+}
+
+string VRObject::getOSGTreeString() {
+    return printOSGTreeString( getNode() );
+}
+
+string VRObject::printOSGTreeString(OSGObjectPtr o, string indent) {
+    if (indent.size() > 10) return "recursionLimit10";
+    if (o == 0) return "";
+    if (!o->node) return "noNode";
+
+    auto core = o->node->getCore();
+    string type = "noCore";
+    if (core) type = core->getTypeName();
+
+    string name = "Unnamed";
+    if (OSG::getName(o->node)) name = OSG::getName(o->node);
+
+    string data = indent + name + " " + type + "  ";
+    if (type == "Transform") {
+        Transform* t = dynamic_cast<Transform*>(core);
+        if (t) data += toString(Vec4d(t->getMatrix()[0])) + "  " + toString(Vec4d(t->getMatrix()[1])) + "  " + toString(Vec4d(t->getMatrix()[2]));
+    }
+    if (type == "Geometry") {
+        Geometry* g = dynamic_cast<Geometry*>(core);
+        if (g) {
+            auto p = g->getPositions();
+            if (p) data += ", N positions: " + toString(p->size());
+            else data += ", no positions";
+        } else data += ", geo invalid";
+    }
+
+    data += ", N children: " + toString(o->node->getNChildren());
+    for (uint i=0; i<o->node->getNChildren(); i++) {
+        auto child = o->node->getChild(i);
+        if (child) data += "\n" + printOSGTreeString(OSGObject::create(child), indent + " ");
+    }
+    return data;
 }
 
 void VRObject::printOSGTree(OSGObjectPtr o, string indent) {

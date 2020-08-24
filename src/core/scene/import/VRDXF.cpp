@@ -1,6 +1,5 @@
-#include "VRPLY.h"
+#include "VRDXF.h"
 #include "core/objects/geometry/VRGeometry.h"
-#include "core/objects/geometry/VRGeoData.h"
 #include "core/utils/toString.h"
 
 #include <OpenSG/OSGGeoProperties.h>

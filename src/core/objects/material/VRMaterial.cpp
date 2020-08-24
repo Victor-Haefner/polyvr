@@ -19,6 +19,7 @@
 #endif
 #include "core/tools/VRQRCode.h"
 #include "core/utils/system/VRSystem.h"
+#include "core/utils/VRLogger.h"
 
 #include <OpenSG/OSGNameAttachment.h>
 #include <OpenSG/OSGMaterialGroup.h>
@@ -116,8 +117,11 @@ struct VRMatData {
         colChunk = MaterialChunk::create();
         colChunk->setBackMaterial(false);
         mat->addChunk(colChunk);
+        mat->addAttachment(colChunk, 0);
+        if (colChunk->getId() == 3060) cout << " -------------------- MaterialChunk " << colChunk->getId() << endl;
         twoSidedChunk = TwoSidedLightingChunk::create();
         mat->addChunk(twoSidedChunk);
+        mat->addAttachment(twoSidedChunk, 1);
         texChunks.clear();
         envChunks.clear();
         genChunks.clear();
@@ -476,6 +480,7 @@ int VRMaterial::addPass() {
     VRMatDataPtr md = VRMatDataPtr( new VRMatData() );
     md->reset();
     passes->mat->addMaterial(md->mat);
+    passes->mat->addAttachment(md->mat);
     mats.push_back(md);
     setDeferred(deferred);
     return activePass;
@@ -483,6 +488,7 @@ int VRMaterial::addPass() {
 
 void VRMaterial::remPass(int i) {
     if (i < 0 || i >= getNPasses()) return;
+    passes->mat->subAttachment(passes->mat->getMaterials(i));
     passes->mat->subMaterial(i);
     mats.erase(remove(mats.begin(), mats.end(), mats[i]), mats.end());
     if (activePass == i) activePass = 0;
@@ -684,6 +690,7 @@ void VRMaterial::setTextureWrapping(int wrapS, int wrapT, int unit) {
 
 void VRMaterial::setTexture(string img_path, bool alpha, int unit) { // TODO: improve with texture map
     if (exists(img_path)) img_path = canonical(img_path);
+    else { VRLog::wrn("PyAPI", "Material '" + getName() + "' setTexture failed, path invalid: '" + img_path + "'"); return; }
     /*auto md = mats[activePass];
     if (md->texture == 0) md->texture = VRTexture::create();
     md->texture->getImage()->read(img_path.c_str());

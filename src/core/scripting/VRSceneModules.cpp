@@ -36,6 +36,7 @@
 #include "VRPyTextureGenerator.h"
 #include "VRPyLight.h"
 #include "VRPyLightBeacon.h"
+#include "VRPySyncNode.h"
 #include "VRPyCamera.h"
 #include "VRPyLod.h"
 #include "VRPyKinematics.h"
@@ -140,10 +141,10 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyTexture>("Image", pModVR);
     sm->registerModule<VRPyLight>("Light", pModVR, VRPyObject::typeRef);
     sm->registerModule<VRPyLightBeacon>("LightBeacon", pModVR, VRPyTransform::typeRef);
+    sm->registerModule<VRPySyncNode>("SyncNode", pModVR, VRPyTransform::typeRef);
+    //sm->registerModule<VRPySyncRemote>("SyncRemote", pModVR);
     sm->registerModule<VRPyCamera>("Camera", pModVR, VRPyTransform::typeRef);
-#ifndef WITHOUT_BULLET
-    sm->registerModule<VRPyKinematics>("Kinematics", pModVR);
-#endif
+    sm->registerModule<VRPyKinematics>("Kinematics", pModVR, VRPyTransform::typeRef);
     sm->registerModule<VRPyFABRIK>("FABRIK", pModVR);
     sm->registerModule<VRPyLod>("Lod", pModVR, VRPyObject::typeRef);
     sm->registerModule<VRPyLodLeaf>("LodLeaf", pModVR, VRPyTransform::typeRef);
@@ -286,13 +287,14 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyOSMBase>("OSMBase", pModVR, 0, "WorldGenerator");
 
     PyObject* pModFactory = sm->newModule("Factory", VRSceneGlobals::methods, "VR factory module");
-    sm->registerModule<FPyNode>("Node", pModFactory, 0, "Factory");
-    sm->registerModule<FPyNetwork>("Network", pModFactory, 0, "Factory");
-    sm->registerModule<FPyPath>("FPath", pModFactory, 0, "Factory");
-    sm->registerModule<FPyTransporter>("Transporter", pModFactory, 0, "Factory");
-    sm->registerModule<FPyContainer>("Container", pModFactory, 0, "Factory");
-    sm->registerModule<FPyProduct>("Product", pModFactory, 0, "Factory");
-    sm->registerModule<FPyLogistics>("Logistics", pModFactory, 0, "Factory");
+    sm->registerModule<VRPyFNode>("Node", pModFactory, 0, "Factory");
+    sm->registerModule<VRPyFNetwork>("Network", pModFactory, 0, "Factory");
+    sm->registerModule<VRPyFPath>("FPath", pModFactory, 0, "Factory");
+    sm->registerModule<VRPyFTransporter>("Transporter", pModFactory, 0, "Factory");
+    sm->registerModule<VRPyFObject>("Product", pModFactory, 0, "Factory");
+    sm->registerModule<VRPyFContainer>("Container", pModFactory, VRPyFObject::typeRef, "Factory");
+    sm->registerModule<VRPyFProduct>("Product", pModFactory, VRPyFObject::typeRef, "Factory");
+    sm->registerModule<VRPyFLogistics>("Logistics", pModFactory, 0, "Factory");
     sm->registerModule<VRPyFactory>("Factory", pModFactory, 0, "Factory");
     sm->registerModule<VRPyProduction>("Production", pModFactory, 0, "Factory");
     sm->registerModule<VRPyAMLLoader>("AMLLoader", pModFactory, 0, "Factory");

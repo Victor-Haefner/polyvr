@@ -15,10 +15,12 @@ class VRCallbackManager {
     private:
         struct job {
             VRUpdateCbPtr ptr;
+            VRUpdateCbWeakPtr wptr;
             int prio = 0;
             int delay = 0;
             job() {}
-            job(VRUpdateCbPtr j, int p, int d) : ptr(j), prio(p), delay(d) {}
+            job(VRUpdateCbPtr j    , int p, int d) :  ptr(j), prio(p), delay(d) {}
+            job(VRUpdateCbWeakPtr j, int p, int d) : wptr(j), prio(p), delay(d) {}
         };
 
         struct timeoutFkt {
@@ -39,7 +41,7 @@ class VRCallbackManager {
         VRCallbackManager();
         ~VRCallbackManager();
 
-        void queueJob(VRUpdateCbPtr f, int priority = 0, int delay = 0);
+        void queueJob(VRUpdateCbPtr f, int priority = 0, int delay = 0, bool ownRef = true);
         void addUpdateFkt(VRUpdateCbWeakPtr f, int priority = 0);
         void addTimeoutFkt(VRUpdateCbWeakPtr f, int priority, int timeout);
 

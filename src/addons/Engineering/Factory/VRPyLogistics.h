@@ -4,70 +4,36 @@
 #include "core/scripting/VRPyObject.h"
 #include "VRLogistics.h"
 
-struct FPyNode : VRPyBaseT<FNode> {
+struct VRPyFNode : VRPyBaseT<OSG::FNode> {
     static PyMethodDef methods[];
-
-    static PyObject* connect(FPyNode* self, PyObject* args);
-    static PyObject* set(FPyNode* self, PyObject* args);
-
-    static PyObject* setTransform(FPyNode* self, PyObject* args);
-    static PyObject* getTransform(FPyNode* self);
 };
 
-struct FPyNetwork : VRPyBaseT<FNetwork> {
+struct VRPyFNetwork : VRPyBaseT<OSG::FNetwork> {
     static PyMethodDef methods[];
-
-    static PyObject* addNodes(FPyNetwork* self, PyObject* args);
-    static PyObject* stroke(FPyNetwork* self, PyObject* args);
 };
 
-struct FPyPath : VRPyBaseT<FPath> {
-    int i;
+struct VRPyFPath : VRPyBaseT<OSG::FPath> {
     static PyMethodDef methods[];
-
-    static PyObject* set(FPyPath* self, PyObject* args);
-    static PyObject* add(FPyPath* self, PyObject* args);
-    static PyObject* tp_iter(FPyPath* self);
-    static PyObject* tp_iternext(FPyPath* self);
 };
 
-struct FPyTransporter : VRPyBaseT<FTransporter> {
+struct VRPyFTransporter : VRPyBaseT<OSG::FTransporter> {
     static PyMethodDef methods[];
-
-    static PyObject* setPath(FPyTransporter* self, PyObject* args);
-    static PyObject* setSpeed(FPyTransporter* self, PyObject* args);
 };
 
-struct FPyContainer : VRPyBaseT<FContainer> {
+struct VRPyFContainer : VRPyBaseT<OSG::FContainer> {
     static PyMethodDef methods[];
-    static PyObject* setCapacity(FPyContainer* self, PyObject* args);
-    static PyObject* getCapacity(FPyContainer* self);
-    static PyObject* isEmpty(FPyContainer* self);
-    static PyObject* isFull(FPyContainer* self);
-    static PyObject* clear(FPyContainer* self);
-    static PyObject* getCount(FPyContainer* self);
-    static PyObject* add(FPyContainer* self, PyObject* args);
-    static PyObject* get(FPyContainer* self);
-    static PyObject* peek(FPyContainer* self);
 };
 
-struct FPyProduct : VRPyBaseT<FProduct> {
+struct VRPyFObject : VRPyBaseT<OSG::FObject> {
     static PyMethodDef methods[];
-    static PyObject* getGeometry(FPyProduct* self);
 };
 
-struct FPyLogistics : VRPyBaseT<FLogistics> {
+struct VRPyFProduct : VRPyBaseT<OSG::FProduct> {
     static PyMethodDef methods[];
+};
 
-    static PyObject* addProduct(FPyLogistics* self, PyObject* args);
-    static PyObject* addNetwork(FPyLogistics* self);
-    static PyObject* addPath(FPyLogistics* self);
-    static PyObject* addTransporter(FPyLogistics* self, PyObject* args);
-    static PyObject* addContainer(FPyLogistics* self, PyObject* args);
-    static PyObject* fillContainer(FPyLogistics* self, PyObject* args);
-    static PyObject* update(FPyLogistics* self);
-    static PyObject* destroy(FPyLogistics* self);
-    static PyObject* getContainers(FPyLogistics* self);
+struct VRPyFLogistics : VRPyBaseT<OSG::FLogistics> {
+    static PyMethodDef methods[];
 };
 
 #endif // PYVRLOGISTICS_H_INCLUDED

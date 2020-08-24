@@ -60,6 +60,8 @@ class VRObject : public std::enable_shared_from_this<VRObject>, public VRName, p
         static VRObjectPtr create(string name = "None");
         VRObjectPtr ptr();
 
+        virtual void wrapOSG(OSGObjectPtr node);
+
         int getID();
         string getType();
 
@@ -92,6 +94,9 @@ class VRObject : public std::enable_shared_from_this<VRObject>, public VRName, p
         virtual void addChild(OSGObjectPtr n);
         virtual void subChild(OSGObjectPtr n);
         VRObjectPtr find(OSGObjectPtr n, string indent = " ");
+
+        string getOSGTreeString();
+        static string printOSGTreeString(OSGObjectPtr o, string indent = "");
         static void printOSGTree(OSGObjectPtr o, string indent = "");
 
         void setTravMask(int i);

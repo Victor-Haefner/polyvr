@@ -375,8 +375,6 @@
 		<Unit filename="src/addons/Engineering/Factory/VRPyLogistics.h" />
 		<Unit filename="src/addons/Engineering/Factory/VRPyProduction.cpp" />
 		<Unit filename="src/addons/Engineering/Factory/VRPyProduction.h" />
-		<Unit filename="src/addons/Engineering/Factory/network.cpp" />
-		<Unit filename="src/addons/Engineering/Factory/network.h" />
 		<Unit filename="src/addons/Engineering/Mechanics/VRMechanism.cpp" />
 		<Unit filename="src/addons/Engineering/Mechanics/VRMechanism.h" />
 		<Unit filename="src/addons/Engineering/Mechanics/VRPyMechanism.cpp" />
@@ -761,6 +759,12 @@
 		<Unit filename="src/core/objects/object/VRObject.cpp" />
 		<Unit filename="src/core/objects/object/VRObject.h" />
 		<Unit filename="src/core/objects/object/VRObjectT.h" />
+		<Unit filename="src/core/objects/sync/VRSyncChangelist.cpp" />
+		<Unit filename="src/core/objects/sync/VRSyncChangelist.h" />
+		<Unit filename="src/core/objects/sync/VRSyncConnection.cpp" />
+		<Unit filename="src/core/objects/sync/VRSyncConnection.h" />
+		<Unit filename="src/core/objects/sync/VRSyncNode.cpp" />
+		<Unit filename="src/core/objects/sync/VRSyncNode.h" />
 		<Unit filename="src/core/scene/VRAnimationManager.cpp" />
 		<Unit filename="src/core/scene/VRAnimationManager.h" />
 		<Unit filename="src/core/scene/VRAnimationManagerT.h" />
@@ -1007,6 +1011,8 @@
 		<Unit filename="src/core/scripting/VRPyStateMachine.h" />
 		<Unit filename="src/core/scripting/VRPyStroke.cpp" />
 		<Unit filename="src/core/scripting/VRPyStroke.h" />
+		<Unit filename="src/core/scripting/VRPySyncNode.cpp" />
+		<Unit filename="src/core/scripting/VRPySyncNode.h" />
 		<Unit filename="src/core/scripting/VRPyTextureGenerator.cpp" />
 		<Unit filename="src/core/scripting/VRPyTextureGenerator.h" />
 		<Unit filename="src/core/scripting/VRPyTextureMosaic.cpp" />

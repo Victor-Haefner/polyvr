@@ -68,11 +68,13 @@ class VRGeometry : public VRTransform {
         /** Set the geometry mesh (OSG geometry core) **/
         void setMesh(OSGGeometryPtr g = 0);
         void setMesh(OSGGeometryPtr g, Reference ref, bool keep_material = false);
+        virtual void wrapOSG(OSGObjectPtr node, OSGObjectPtr geoNode);
 
         void setReference(Reference ref);
         Reference getReference();
         void makeUnique();
         void makeSingleIndex();
+        vector<VRGeometryPtr> splitByVertexColors();
         void setMeshVisibility(bool b);
         void setVolumeCheck(bool b, bool recursive = false);
 

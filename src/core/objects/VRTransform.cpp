@@ -32,7 +32,7 @@ template<> string typeName(const VRTransform& t) { return "Transform"; }
 
 
 VRTransform::VRTransform(string name, bool doOpt) : VRObject(name) {
-    doOptimizations = doOpt;
+    doOptimizations = doOpt; // doOpt; // TODO: this is disabled for developing the sync
     t = OSGTransform::create( Transform::create() );
     constraint = VRConstraint::create();
     constraint->free({0,1,2,3,4,5});
@@ -58,6 +58,17 @@ VRTransform::~VRTransform() {
 
 VRTransformPtr VRTransform::ptr() { return static_pointer_cast<VRTransform>( shared_from_this() ); }
 VRTransformPtr VRTransform::create(string name, bool doOpt) { return VRTransformPtr(new VRTransform(name, doOpt) ); }
+
+void VRTransform::wrapOSG(OSGObjectPtr node) {
+    VRObject::wrapOSG(node);
+    Transform* t = dynamic_cast<Transform*>(node->node->getCore());
+    if (t) {
+        setMatrix(toMatrix4d(t->getMatrix()));
+        this->t->trans = t;
+    } else {
+        getCore()->core = this->t->trans;
+    }
+}
 
 VRObjectPtr VRTransform::copy(vector<VRObjectPtr> children) {
     VRTransformPtr t = VRTransform::create(getBaseName());
@@ -365,6 +376,10 @@ VRTransformPtr VRTransform::getParentTransform(VRObjectPtr o) {
     if (!o) return 0;
     o = o->hasAncestorWithTag("transform");
     return static_pointer_cast<VRTransform>(o);
+}
+
+OSGTransformPtr VRTransform::getOSGTransformPtr(){
+    return t;
 }
 
 void VRTransform::setRelativePose(PosePtr p, VRObjectPtr o) {
