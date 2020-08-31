@@ -31,7 +31,7 @@ PyObject* VRPyPathFinding::computePath(VRPyPathFinding* self, PyObject* args) {
     VRPathFinding::Position p2(j);
     if (t1 >= 0) p1 = VRPathFinding::Position(i,t1);
     if (t2 >= 0) p2 = VRPathFinding::Position(j,t2);
-    auto route = self->objPtr->computePath( p1, p2 );
+    auto route = self->objPtr->computePath( p1, p2, bd );
 
     PyObject* res = PyList_New(0);
     for (auto p : route) PyList_Append(res, PyInt_FromLong(p.nID));
