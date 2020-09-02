@@ -49,7 +49,7 @@ VRNavPreset::~VRNavPreset() {}
 shared_ptr<VRNavPreset> VRNavPreset::create() { return shared_ptr<VRNavPreset>(new VRNavPreset()); }
 
 void VRNavPreset::updateBinding(VRNavBinding& b) {
-    if (!active) return;
+    if (!active || !b.active) return;
     if (dev == 0) return;
 
     b.clearSignal();
@@ -78,6 +78,15 @@ void VRNavPreset::deactivate() {
     for (auto& b : bindings) b.clearSignal();
 }
 
+void VRNavPreset::setBindingState(int i, bool b) {
+    if (i < 0 || i >= bindings.size()) return;
+    bindings[i].active = b;
+    if (active) {
+        deactivate();
+        activate();
+    }
+}
+
 vector<VRNavBinding>::iterator VRNavPreset::begin() { return bindings.begin(); }
 vector<VRNavBinding>::iterator VRNavPreset::end() { return bindings.end(); }
 
@@ -88,7 +97,11 @@ void VRNavPreset::addKeyBinding(VRNavBinding b) {
     updateBinding(b);
 }
 
-void VRNavPreset::setSpeed(float vt, float vr) { speedX = vt; speedY = vr; activate(); }
+void VRNavPreset::setSpeed(float vt, float vr) {
+    speedX = vt;
+    speedY = vr;
+    if (active) activate();
+}
 
 // preset management
 
