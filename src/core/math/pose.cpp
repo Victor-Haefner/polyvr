@@ -94,9 +94,10 @@ Matrix4d Pose::asMatrix() const {
 }
 
 string Pose::toString() {
-    stringstream ss;
+    return ::toString(*this);
+    /*stringstream ss;
     ss << "pose " << data[0] << " : " << data[1] << " : " << data[2];
-    return ss.str();
+    return ss.str();*/
 }
 
 void Pose::invert() {
