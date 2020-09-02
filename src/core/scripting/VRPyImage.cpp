@@ -11,14 +11,14 @@
 
 using namespace OSG;
 
-template<> PyObject* VRPyTypeCaster::cast(const VRTexturePtr& e) { return VRPyImage::fromSharedPtr(e); }
-template<> bool toValue(PyObject* o, VRTexturePtr& v) { if (!VRPyImage::check(o)) return 0; v = ((VRPyImage*)o)->objPtr; return 1; }
+template<> PyObject* VRPyTypeCaster::cast(const VRTexturePtr& e) { return VRPyTexture::fromSharedPtr(e); }
+template<> bool toValue(PyObject* o, VRTexturePtr& v) { if (!VRPyTexture::check(o)) return 0; v = ((VRPyTexture*)o)->objPtr; return 1; }
 
 template<> PyTypeObject VRPyBaseT<VRTexture>::type = {
     PyObject_HEAD_INIT(NULL)
     0,
     "VR.Image",
-    sizeof(VRPyImage),
+    sizeof(VRPyTexture),
     0,
     (destructor)dealloc,
     0,0,0,0,0,0,0,0,0,0,0,0,0,0,
@@ -42,20 +42,21 @@ template<> PyTypeObject VRPyBaseT<VRTexture>::type = {
 "\timg = VR.Image(data, 2,2,'RGB','FLOAT32')\n"
 "\tmat.setTexture(img)\n",
     0,0,0,0,0,0,
-    VRPyImage::methods,
+    VRPyTexture::methods,
     0,0,0,0,0,0,0,
     (initproc)init,
     0,
-    VRPyImage::New,
+    VRPyTexture::New,
 };
 
-PyMethodDef VRPyImage::methods[] = {
-    {"read", (PyCFunction)VRPyImage::read, METH_VARARGS, "Read an image from disk - read( str path )" },
-    {"write", (PyCFunction)VRPyImage::write, METH_VARARGS, "Write an image to disk - write( str path )" },
-    {"getPixel", (PyCFunction)VRPyImage::getPixel, METH_VARARGS, "Return pixel at coordinates u,v - getPixel( [u,v] )" },
-    {"getSize", (PyCFunction)VRPyImage::getSize, METH_NOARGS, "Return pixel at coordinates u,v - getPixel( [u,v] )" },
-    {"getAspectRatio", (PyCFunction)VRPyImage::getAspectRatio, METH_NOARGS, "Return aspect ratio between width and height" },
-    {"getChannels", (PyCFunction)VRPyImage::getChannels, METH_NOARGS, "Return pixel at coordinates u,v - getPixel( [u,v] )" },
+PyMethodDef VRPyTexture::methods[] = {
+    {"read", PyWrap(Texture, read, "Read an image from disk - read( str path )", void, string ) },
+    {"write", PyWrapOpt(Texture, write, "Write an image to disk - write( str path )", "0", void, string, bool ) },
+    {"getPixel", PyWrap(Texture, getPixelUV, "Return pixel at coordinates u,v - getPixel( [u,v] )", Color4f, Vec2d ) },
+    {"getSize", PyWrap(Texture, getSize, "Return texture size, [W,H,D]", Vec3i ) },
+    {"getAspectRatio", PyWrap(Texture, getAspectRatio, "Return aspect ratio between width and height", float ) },
+    {"getChannels", PyWrap(Texture, getChannels, "Get number of image channels", int ) },
+    {"mixColor", PyWrap(Texture, mixColor, "Mix texture colors with color", void, Color4f, float ) },
     {NULL}  /* Sentinel */
 };
 
@@ -68,7 +69,7 @@ bool CheckExtension(string extN) {
     return false;
 }
 
-PyObject* VRPyImage::New(PyTypeObject *type, PyObject *args, PyObject *kwds) {
+PyObject* VRPyTexture::New(PyTypeObject *type, PyObject *args, PyObject *kwds) {
 #ifndef WITHOUT_NUMPY
     import_array1(NULL);
     VRTexturePtr img = VRTexture::create();
@@ -101,40 +102,6 @@ PyObject* VRPyImage::New(PyTypeObject *type, PyObject *args, PyObject *kwds) {
     VRTexturePtr img = VRTexture::create();
     return allocPtr( type, img );
 #endif
-}
-
-PyObject* VRPyImage::getChannels(VRPyImage* self, PyObject *args) {
-    return PyInt_FromLong(self->objPtr->getChannels());
-}
-
-PyObject* VRPyImage::getSize(VRPyImage* self, PyObject *args) {
-    return toPyTuple(self->objPtr->getSize());
-}
-
-PyObject* VRPyImage::getAspectRatio(VRPyImage* self, PyObject *args) {
-    float f = self->objPtr->getAspectRatio();
-    return PyFloat_FromDouble(f);
-}
-
-PyObject* VRPyImage::read(VRPyImage* self, PyObject *args) {
-    const char* path = 0;
-    if (! PyArg_ParseTuple(args, "s", (char*)&path)) return NULL;
-    if (path) self->objPtr->read(path);
-    Py_RETURN_TRUE;
-}
-
-PyObject* VRPyImage::write(VRPyImage* self, PyObject *args) {
-    const char* path = 0;
-    int doThread = 0;
-    if (! PyArg_ParseTuple(args, "s|i", (char*)&path, &doThread) ) return NULL;
-    if (path) self->objPtr->write(path, doThread);
-    Py_RETURN_TRUE;
-}
-
-PyObject* VRPyImage::getPixel(VRPyImage* self, PyObject *args) {
-    PyObject* uv;
-    if (! PyArg_ParseTuple(args, "O", &uv)) return NULL;
-    return toPyTuple( Vec4d(self->objPtr->getPixel( parseVec2dList(uv) )) );
 }
 
 

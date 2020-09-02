@@ -9,6 +9,7 @@ template<> bool toValue(PyObject* o, VRStroke::CAP& v) { if (!PyString_Check(o))
 simpleVRPyType(Stroke, New_VRObjects_ptr);
 
 PyMethodDef VRPyStroke::methods[] = {
+    {"clear", PyWrap( Stroke, clear, "Clear paths and polygons", void ) },
     {"setPath", PyWrap( Stroke, setPath, "Set a single path", void, PathPtr ) },
     {"addPath", PyWrap( Stroke, addPath, "Add a path", void, PathPtr ) },
     {"setPaths", PyWrap( Stroke, setPaths, "Set a list of paths", void, vector<PathPtr> ) },

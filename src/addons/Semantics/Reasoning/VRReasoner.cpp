@@ -502,7 +502,7 @@ bool VRReasoner::processQuery(Query& query, VRSemanticContextPtr context) {
 
     for (auto& statement : query.statements) {
         if (statement->state == 1) continue;
-        if (evaluate(statement, context)) { statement->state = 1; continue; }
+        if (evaluate(statement, context)) { statement->state = 1; print("   evaluated successfully!"); continue; }
         if (findRule(statement, context)) continue;
         apply(statement, query, context);
     }

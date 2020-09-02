@@ -32,6 +32,7 @@ class Path : public VRStorage {
         void cubicBezier(Vec3d* container, int N, Vec3d p0, Vec3d p1, Vec3d n0, Vec3d n1);
         void quadraticBezier(Vec3d* container, int N, Vec3d p0, Vec3d p1, Vec3d n);
         void linearBezier(Vec3d* container, int N, Vec3d p0, Vec3d p1);
+        void computeUpVectors(Vec3d* container, Vec3d* dirs, int N, Vec3d p0, Vec3d p1);
 
     public:
         Path(int degree = 3);

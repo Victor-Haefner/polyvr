@@ -1,0 +1,722 @@
+#include "VRSyncNode.h"
+#include "core/objects/VRLight.h"
+#include "core/objects/OSGObject.h"
+#include "core/objects/object/OSGCore.h"
+#include "core/objects/material/VRMaterial.h"
+#include "core/objects/material/OSGMaterial.h"
+#include "core/objects/geometry/VRGeometry.h"
+#include "core/objects/VRCamera.h"
+#include "core/setup/VRSetup.h"
+//#include "core/math/pose.h"
+#include "core/utils/VRStorage_template.h"
+#include "core/networking/VRSocket.h"
+#include "core/networking/VRWebSocket.h"
+#include "core/scene/VRScene.h"
+#include "core/scene/VRSceneManager.h"
+#include "core/scene/import/VRImport.h"
+#include <OpenSG/OSGMultiPassMaterial.h>
+#include <OpenSG/OSGSimpleMaterial.h>
+#include <OpenSG/OSGSimpleGeometry.h>        // Methods to create simple geos.
+
+#include <OpenSG/OSGNode.h>
+#include <OpenSG/OSGNodeCore.h>
+#include <OpenSG/OSGTransformBase.h>
+#include "core/objects/OSGTransform.h"
+#include <OpenSG/OSGContainerIdMapper.h>
+#include <OpenSG/OSGNameAttachment.h>
+
+#include <OpenSG/OSGChangeList.h>
+#include <OpenSG/OSGThreadManager.h>
+
+// needed to filter GLId field masks
+#include <OpenSG/OSGSurface.h>
+#include <OpenSG/OSGGeoProperty.h>
+#include <OpenSG/OSGGeoMultiPropertyData.h>
+#include <OpenSG/OSGRenderBuffer.h>
+#include <OpenSG/OSGFrameBufferObject.h>
+#include <OpenSG/OSGTextureObjRefChunk.h>
+#include <OpenSG/OSGUniformBufferObjStd140Chunk.h>
+#include <OpenSG/OSGShaderStorageBufferObjStdLayoutChunk.h>
+#include <OpenSG/OSGTextureObjChunk.h>
+#include <OpenSG/OSGUniformBufferObjChunk.h>
+#include <OpenSG/OSGShaderStorageBufferObjChunk.h>
+#include <OpenSG/OSGShaderExecutableChunk.h>
+#include <OpenSG/OSGSimpleSHLChunk.h>
+#include <OpenSG/OSGShaderProgram.h>
+#include <OpenSG/OSGProgramChunk.h>
+
+#include <bitset>
+
+//BUGS:
+/*
+Known bugs:
+    - syncedContainer seem not get get empty (keeps filling with same id)
+    - in PolyVR: when syncNodes are not initialized on_scene_load but by manually triggering the script - the program will crash
+    - syncNodes need to be translated on initialization else no Transform Node will be created to track (PolyVR optimisation initialises with Group Node type; Transform Node only creates after a Transformation)
+
+*/
+
+//TODO:
+/*
+    - create (Node/Child) change handling and applying on remote SyncNode
+    - copy Changes from state for initialization of new remote SyncNode from master's State
+    - remove Changes (derefferencing?)
+*/
+
+using namespace OSG;
+
+void printGeoGLIDs(Geometry* geo) {
+    if (!geo) {
+        cout << " printGeoGLIDs, no geo!" << endl;
+        return;
+    }
+
+    cout << " geometry GL IDs: " << Vec4i(
+            0,//geo->getAttribVaoGLId(),
+            geo->getClassicGLId(),
+            geo->getAttGLId(),
+            0//geo->getClassicVaoGLId()
+        ) << endl;
+}
+
+template<> string typeName(const VRSyncNode& o) { return "SyncNode"; }
+
+ThreadRefPtr applicationThread;
+
+VRSyncNode::VRSyncNode(string name) : VRTransform(name) {
+    type = "SyncNode";
+    changelist = VRSyncChangelist::create();
+    applicationThread = dynamic_cast<Thread *>(ThreadManager::getAppThread());
+
+//    NodeMTRefPtr node = getNode()->node; // deprecated, gets filtered from created entries in CL
+//    registerNode(node);
+
+	updateFkt = VRUpdateCb::create("SyncNode update", bind(&VRSyncNode::update, this));
+	VRScene::getCurrent()->addUpdateFkt(updateFkt, 100000);
+}
+
+VRSyncNode::~VRSyncNode() {
+    cout << "VRSyncNode::~VRSyncNode " << name << endl;
+}
+
+VRSyncNodePtr VRSyncNode::ptr() { return static_pointer_cast<VRSyncNode>( shared_from_this() ); }
+VRSyncNodePtr VRSyncNode::create(string name) { return VRSyncNodePtr(new VRSyncNode(name) ); }
+
+bool VRSyncNode::isSubContainer(const UInt32& id) {
+    auto fct = factory->getContainer(id);
+    if (!fct) return false;
+
+
+    UInt32 syncNodeID = getNode()->node->getId();
+    auto type = factory->findType(fct->getTypeId());
+
+    function<bool(Node*)> checkAncestor = [&](Node* node) {
+        if (!node) return false;
+        if (node->getId() == syncNodeID) return true;
+        Node* parent = node->getParent();
+        return checkAncestor(parent);
+    };
+
+    if (type->isNode()) {
+        Node* node = dynamic_cast<Node*>(fct);
+        if (!node) return false;
+        return checkAncestor(node);
+    }
+
+    if (type->isNodeCore()) {
+        NodeCore* core = dynamic_cast<NodeCore*>(fct);
+        if (!core) return false;
+        for (auto node : core->getParents())
+            if (checkAncestor(dynamic_cast<Node*>(node))) return true;
+    }
+
+    Attachment* att = dynamic_cast<Attachment*>(fct);
+    if (att) {
+        auto parents = att->getMFParents();
+        for (UInt32 i = 0; i<parents->size(); i++) {
+            FieldContainer* parent = parents->at(i);
+            if (isSubContainer(parent->getId())) return true;
+        }
+    }
+
+    return false;
+}
+
+// checks if a container was changed by remote
+bool VRSyncNode::isRemoteChange(const UInt32& id) {
+    return bool(::find(syncedContainer.begin(), syncedContainer.end(), id) != syncedContainer.end());
+}
+
+void VRSyncNode::addRemoteMapping(UInt32 lID, UInt32 rID) {
+    remoteToLocalID[rID] = lID;
+    localToRemoteID[lID] = rID;
+}
+
+void VRSyncNode::replaceContainerMapping(UInt32 ID1, UInt32 ID2) {
+    for (auto c : container) {
+        if (c.second == ID1) addRemoteMapping(c.first, ID2);
+    }
+}
+
+UInt32 VRSyncNode::getRegisteredContainerID(UInt32 syncID) {
+    for (auto registered : container) {
+        if (registered.second == syncID) return registered.first;
+    }
+    return -1;
+}
+
+void printNodeFieldMask(BitVector fieldmask) {
+    string changeType = "";
+    if (fieldmask & Node::AttachmentsFieldMask) changeType = " AttachmentsFieldMask";
+//    else if (fieldmask & Node::bInvLocalFieldMask) changeType = " bInvLocalFieldMask ";
+//    else if ( fieldmask & Node::bLocalFieldMask) changeType = " bLocalFieldMask      ";
+    else if ( fieldmask & Node::ChangedCallbacksFieldMask) changeType = " ChangedCallbacksFieldMask";
+    else if ( fieldmask & Node::ChildrenFieldMask) changeType = " ChildrenFieldMask   ";
+    else if ( fieldmask & Node::ContainerIdMask) changeType = " ContainerIdMask ";
+    else if ( fieldmask & Node::DeadContainerMask) changeType = " DeadContainerMask ";
+    else if ( fieldmask & Node::NextFieldMask) changeType = " NextFieldMask ";
+    else if ( fieldmask & Node::ParentFieldMask) changeType = " ParentFieldMask ";
+    else if ( fieldmask & Node::SpinLockClearMask) changeType = " SpinLockClearMask ";
+    else if ( fieldmask & Node::TravMaskFieldMask) changeType = " TravMaskFieldMask ";
+    else if ( fieldmask & Node::VolumeFieldMask) changeType = " VolumeFieldMask ";
+    else if ( fieldmask & Node::CoreFieldMask) changeType = " CoreFieldMask ";
+    else changeType = " none ";
+
+    cout << changeType << endl;
+}
+
+void printContainer (FieldContainerFactoryBase* factory, map<UInt32,UInt32> container) {
+    for (auto c : container) {
+        UInt32 id = c.first;
+        FieldContainer* fcPt = factory->getContainer(id);
+        if (!fcPt) continue;
+        FieldContainerType* fcType = factory->findType(fcPt->getTypeId());
+        if (fcType) {
+            if (fcType->isNode()) {
+                Node* node = dynamic_cast<Node*>(fcPt);
+                cout << id << " " << fcPt->getTypeName() << " children " << node->getNChildren() << endl;
+                if (node->getNChildren() == 0) cout << "no children" << endl;
+                for (UInt32 i = 0; i < node->getNChildren(); i++) {
+                    Node* childNode = node->getChild(i);
+                    cout << "   " << childNode->getId() << endl;
+                }
+            }
+        }
+    }
+}
+
+
+void VRSyncNode::gatherLeafs(VRObjectPtr parent, vector<pair<Node*, VRObjectPtr>>& leafs, vector<VRObjectPtr>& inconsistentCores) {
+    vector<Node*> vrChildren;
+    for (auto child : parent->getChildren()) vrChildren.push_back( child->getNode()->node );
+
+    vector<Node*> vrChildrenTMP;
+    Node* pNode = parent->getNode()->node;
+
+    // check if a transform core changed
+    NodeCore* c1 = parent->getCore()->core;
+    NodeCore* c2 = pNode->getCore();
+    if (c1 != c2 && c2) {
+        string type = c2->getTypeName();
+        if (type != "Group") inconsistentCores.push_back(parent);
+    }
+
+    // ignore geometry nodes, they are part of vrgeometry
+    if (pNode->getNChildren() == 1) {
+        if (dynamic_cast<Geometry*>(pNode->getChild(0)->getCore())) { // check if geo core
+            pNode = pNode->getChild(0);
+        }
+    }
+
+    // check if transform core and obj are mapped
+    if (c2 && !nodeToVRObject.count(c2->getId())) nodeToVRObject[c2->getId()] = parent;
+
+    for (UInt32 i=0; i<pNode->getNChildren(); i++) {
+        Node* child = pNode->getChild(i);
+        vrChildrenTMP.push_back(child);
+        if (i < vrChildren.size() && vrChildren[i] == child) continue; //try to check with index
+        if (::find(vrChildren.begin(), vrChildren.end(), child) != vrChildren.end()) continue;
+        leafs.push_back( make_pair(child, parent) );
+    }
+
+    for (auto child : parent->getChildren()) gatherLeafs(child, leafs, inconsistentCores);
+}
+
+VRObjectPtr VRSyncNode::OSGConstruct(NodeMTRecPtr n, VRObjectPtr parent, Node* geoParent) {
+    if (n == 0) return 0; // TODO add an osg wrap method for each object?
+
+    VRObjectPtr tmp = 0;
+    VRMaterialPtr tmp_m;
+    VRGeometryPtr tmp_g;
+    VRTransformPtr tmp_e;
+    VRGroupPtr tmp_gr;
+
+    NodeCoreMTRecPtr core = n->getCore();
+    string t_name = core->getTypeName();
+    string name = ::getName(n);
+
+    // try to optimize the tree by avoiding obsolete transforms
+    if (t_name == "Group" || t_name == "Transform") {
+        if (n->getNChildren() == 1) {
+            string tp = n->getChild(0)->getCore()->getTypeName();
+            if (tp == "Geometry") {
+                geoParent = n;
+                tmp = parent;
+            }
+        }
+    }
+
+    if (tmp == 0 && t_name == "Group") {
+        tmp = VRObject::create(name);
+        tmp->wrapOSG(OSGObject::create(n));
+        //nodeToVRObject[n->getCore()->getId()] = tmp;
+    }
+
+    if (tmp == 0 && t_name == "Transform") {
+        tmp_e = VRTransform::create(name);
+        tmp_e->wrapOSG(OSGObject::create(n));
+        tmp = tmp_e;
+        nodeToVRObject[n->getCore()->getId()] = tmp;
+    }
+
+    if (t_name == "Geometry") {
+        tmp_g = VRGeometry::create(name);
+        tmp_g->wrapOSG(OSGObject::create(geoParent), OSGObject::create(n));
+        tmp = tmp_g;
+        nodeToVRObject[geoParent->getCore()->getId()] = tmp;
+        geoParent = 0;
+    }
+
+    if (tmp == 0) { // fallback
+        tmp = VRObject::create(name);
+        tmp->wrapOSG(OSGObject::create(n));
+        //nodeToVRObject[n->getId()] = tmp;
+    }
+
+    for (uint i=0;i<n->getNChildren();i++) { // recursion
+        auto obj = OSGConstruct(n->getChild(i), tmp, geoParent);
+        if (obj) tmp->addChild(obj, false);
+    }
+
+    return tmp;
+}
+
+void VRSyncNode::wrapOSGLeaf(Node* node, VRObjectPtr parent) {
+    auto res = OSGConstruct(node, parent);
+    if (res) parent->addChild(res, false);
+}
+
+void VRSyncNode::wrapOSG() { // TODO: check for deleted nodes!
+    // traverse sub tree and get unwrapped OSG nodes
+    vector<pair<Node*, VRObjectPtr>> leafs; // pair of nodes and VRObjects they are linked to
+    vector<VRObjectPtr> inconsistentCores;
+    gatherLeafs(ptr(), leafs, inconsistentCores);
+
+    // TODO: wrapping the nodes breaks DnD sync
+    for (auto p : leafs) wrapOSGLeaf(p.first, p.second);
+    for (auto i : inconsistentCores) i->wrapOSG(i->getNode());
+}
+
+UInt32 VRSyncNode::findParent(map<UInt32,vector<UInt32>>& parentToChildren, UInt32 remoteNodeID) {
+    UInt32 parentId = container.begin()->first;
+    for (auto remoteParent : parentToChildren) {
+        UInt32 remoteParentId = remoteParent.first;
+        vector<UInt32> remoteChildren = remoteParent.second;
+        for (UInt32 i = 0; i<remoteChildren.size(); i++) {
+            UInt32 remoteChildId = remoteChildren[i];
+            if (remoteChildId == remoteNodeID) {
+                if (remoteToLocalID[remoteParentId]) return remoteToLocalID[remoteParentId];
+            }
+        }
+    }
+    return parentId;
+}
+
+void VRSyncNode::printRegistredContainers() {
+    cout << endl << "registered container: " << name << endl;
+    for (auto c : container) {
+        UInt32 id = c.first;
+        FieldContainer* fc = factory->getContainer(id);
+        cout << " " << id << ", syncNodeID " << c.second;
+
+        if (localToRemoteID.count(id))  cout << ", remoteID " << localToRemoteID[id];
+        else                            cout << ",              ";
+
+        if (fc) {
+            cout << ", type: " << fc->getTypeName() << ", Refs: " << fc->getRefCount();
+            if (Node* node = dynamic_cast<Node*>(fc)) cout << ", N children: " << node->getNChildren();
+        }
+        cout << endl;
+    }
+}
+
+void VRSyncNode::printSyncedContainers() {
+    cout << endl << "synced container:" << endl;
+    for (UInt32 id : syncedContainer) cout << id << endl;
+}
+
+bool VRSyncNode::isRegistered(const UInt32& id) {
+    return bool(container.count(id));
+}
+
+//checks in container if the node with syncID is already been registered
+bool VRSyncNode::isRegisteredRemote(const UInt32& syncID) {
+    for (auto reg : container) { //check if the FC is already registered, f.e. if nodeCore create entry arrives first a core along with its node will be created before the node create entry arrives
+        if (reg.second == syncID) return true;
+    }
+    return false;
+}
+
+void VRSyncNode::getAllSubContainersRec(FieldContainer* node, FieldContainer* parent, map<FieldContainer*, vector<FieldContainer*>>& res) {
+    if (!node) return;
+    if (!isRegistered(node->getId())) {
+        res[node].push_back(parent);
+    }
+
+    auto ptype = factory->findType(node->getTypeId());
+
+    if (ptype->isNode()) {
+        Node* pnode = dynamic_cast<Node*>(node);
+
+        NodeCore* core = pnode->getCore();
+        getAllSubContainersRec(core, node, res);
+
+        auto attachments = pnode->getSFAttachments()->getValue();
+        for (auto a : attachments) {
+            Attachment* attachment = a.second;
+            getAllSubContainersRec(attachment, node, res);
+        }
+
+        for (UInt32 i=0; i<pnode->getNChildren(); i++) {
+            Node* child = pnode->getChild(i);
+            getAllSubContainersRec(child, node, res);
+        }
+    }
+
+    if (ptype->isNodeCore()) {
+        NodeCore* pcore = dynamic_cast<NodeCore*>(node);
+        auto attachments = pcore->getSFAttachments()->getValue();
+        for (auto a : attachments) {
+            Attachment* attachment = a.second;
+            getAllSubContainersRec(attachment, node, res);
+        }
+    }
+
+    if (ptype->isAttachment()) {
+        Attachment* pattachment = dynamic_cast<Attachment*>(node);
+        auto attachments = pattachment->getSFAttachments()->getValue();
+        for (auto a : attachments) {
+            Attachment* attachment = a.second;
+            getAllSubContainersRec(attachment, node, res);
+        }
+    }
+}
+
+map<FieldContainer*, vector<FieldContainer*>> VRSyncNode::getAllSubContainers(FieldContainer* node) {
+    map<FieldContainer*, vector<FieldContainer*>> res;
+    getAllSubContainersRec(node, 0, res);
+    return res;
+}
+
+bool poseChanged(Pose oldPose, PosePtr newPose, int thresholdPos, int thresholdAngle){
+    Vec3d oldPos = oldPose.pos();
+    Vec3d oldDir = oldPose.dir();
+    Vec3d newPos = newPose->pos();
+    Vec3d newDir = newPose->dir();
+    //cout << "oldPos, oldDir " << oldPos << ", " << oldDir << " newPos,newDir" << newPos << ", " << newDir << endl;
+
+    Vec3d distancePos = oldPos - newPos; //calculate distances
+
+    float magOldDir = std::sqrt(oldDir.x()*oldDir.x() + oldDir.y()*oldDir.y() + oldDir.z()*oldDir.z()); //calculate dir angle
+    float magNewDir = std::sqrt(newDir.x()*newDir.x() + newDir.y()*newDir.y() + newDir.z()*newDir.z());
+
+    oldDir.normalize();
+    newDir.normalize();
+    float dotProduct = oldPos.x()*newPos.x() + oldPos.y()*newPos.y() + oldPos.z()*newPos.z();
+    float cosAngle = dotProduct / (magOldDir*magNewDir);
+    auto angle = std::acos(cosAngle);
+    //cout << "poseChanged      Angle: " << angle << " cosAngle " << cosAngle << " dotProduct " << dotProduct << " magNewDir " << magNewDir << " magOldDir " << magOldDir << endl;
+
+    if (abs(distancePos.x()) > thresholdPos || abs(distancePos.y()) > thresholdPos || abs(distancePos.z()) > thresholdPos) return true; // check if differences exceed thresholds
+    else if (abs(angle) > thresholdAngle) return true;
+    else return false;
+}
+
+void VRSyncNode::getAndBroadcastPoses(){
+    string poses = "poses|name:" + name;
+
+    VRScenePtr scene = VRScene::getCurrent(); //get scene
+    VRCameraPtr cam = scene->getActiveCamera(); //get camera pose
+    PosePtr camPose = cam->getWorldPose();
+    VRDevicePtr mouse = VRSetup::getCurrent()->getDevice("mouse"); //check devices and eventually get poses
+    PosePtr mousePose = mouse->getBeacon()->getPose();
+
+    bool camChanged = poseChanged(oldCamPose, camPose, 0.1, 10);
+    bool mouseChanged = poseChanged(oldMousePose, mousePose, 0.1, 10);
+
+    if (!camChanged && !mouseChanged) return;
+
+    if (camChanged) {
+        string pose_str = toString(camPose); //append poses to string
+        poses += "|cam:" + pose_str;
+        oldCamPose = *camPose; //update oldPoses
+    }
+    if (mousePose && mouseChanged) {
+        poses += "|mouse:" + toString(mousePose);
+        oldMousePose = *mousePose;
+    }
+
+    broadcast(poses); //broadcast
+    //cout << "broadcast poses " << poses << endl;
+}
+
+void VRSyncNode::sync(string uri) {
+    if (!container.size()) return;
+    vector<BYTE> data;
+    vector<UInt32> containerData;
+    for (auto c : container) {
+        containerData.push_back(c.first);
+        containerData.push_back(c.second);
+    }
+    data.insert(data.end(), (BYTE*)&containerData[0], (BYTE*)&containerData[0] + sizeof(UInt32)*containerData.size());
+    string msg = VRSyncConnection::base64_encode(&data[0], data.size());
+    remotes[uri]->send("sync");
+    remotes[uri]->send(msg);
+}
+
+//update this SyncNode
+void VRSyncNode::update() {
+    getAndBroadcastPoses();
+    auto localChanges = changelist->filterChanges(ptr());
+    if (!localChanges) return;
+    if (getChildrenCount() == 0) return;
+    cout << endl << " > > >  " << name << " VRSyncNode::update()" << endl;
+
+
+    OSGChangeList* cl = (OSGChangeList*)applicationThread->getChangeList();
+    changelist->printChangeList(ptr(), cl);
+
+
+    //printRegistredContainers(); // DEBUG: print registered container
+    printSyncedContainers();
+    changelist->printChangeList(ptr(), localChanges);
+
+    changelist->broadcastChangeList(ptr(), localChanges, true);
+    syncedContainer.clear();
+    cout << "            / " << name << " VRSyncNode::update()" << "  < < < " << endl;
+}
+
+void VRSyncNode::logSyncedContainer(UInt32 id) {
+    if (isRemoteChange(id)) syncedContainer.push_back(id); // TODO: irgendwie komisch.. wird syncedContainer ueberhaupt verwendet?
+}
+
+void VRSyncNode::registerContainer(FieldContainer* c, UInt32 syncNodeID) {
+    UInt32 ID = c->getId();
+    if (container.count(ID)) return;
+    //cout << " VRSyncNode::registerContainer " << getName() << " container: " << c->getTypeName() << " at fieldContainerId: " << ID << endl;
+    container[ID] = syncNodeID;
+}
+
+size_t VRSyncNode::getContainerCount() { return container.size(); }
+
+//returns registered IDs
+vector<UInt32> VRSyncNode::registerNode(Node* node) { // deprecated?
+    vector<UInt32> res;
+    vector<UInt32> localRes;
+    vector<UInt32> recursiveRes;
+    NodeCoreMTRefPtr core = node->getCore();
+    cout << "register node " << node->getId() << endl;
+
+    registerContainer(node, container.size());
+    if (!core) cout << "no core" << core << endl;
+    cout << "register core " << core->getId() << endl;
+
+    registerContainer(core, container.size());
+    localRes.push_back(node->getId());
+    localRes.push_back(core->getId());
+    for (UInt32 i=0; i<node->getNChildren(); i++) {
+        cout << "register child " << node->getChild(i)->getId() << endl;
+        recursiveRes = registerNode(node->getChild(i));
+    }
+    res.reserve(localRes.size() + recursiveRes.size());
+    res.insert(res.end(), localRes.begin(), localRes.end());
+    res.insert(res.end(), recursiveRes.begin(), recursiveRes.end());
+    return res;
+}
+
+VRObjectPtr VRSyncNode::copy(vector<VRObjectPtr> children) {
+    return 0;
+}
+
+void VRSyncNode::startInterface(int port) {
+    socket = VRSceneManager::get()->getSocket(port);
+    socketCb = new VRHTTP_cb( "VRSyncNode callback", bind(&VRSyncNode::handleMessage, this, _1) );
+    socket->setHTTPCallback(socketCb);
+    socket->setType("http receive");
+}
+
+string asUri(string host, int port, string name) {
+    return "ws://" + host + ":" + to_string(port) + "/" + name;
+}
+
+void VRSyncNode::handleMapping(string mappingData) {
+    auto pairs = splitString(mappingData, '|');
+    for (auto p : pairs) {
+        auto IDs = splitString(p, ':');
+        if (IDs.size() != 2) continue;
+        UInt32 lID = toInt(IDs[0]);
+        UInt32 rID = toInt(IDs[1]);
+        remoteToLocalID[rID] = lID;
+        localToRemoteID[lID] = rID;
+    }
+    //printRegistredContainers();
+}
+
+void VRSyncNode::handlePoses(string poses)  {
+    cout << "VRSyncNode::handlePoses: " << poses << endl;
+    string nodeName;
+    vector<string> pairs = splitString(poses, '|');
+    vector<string> namePair = splitString(pairs[1], ':');
+    if (namePair[0] == "name") nodeName = namePair[1];
+
+    if (nodeName == "") return;
+    for (unsigned int i = 2; i < pairs.size(); i++) {
+        auto data = splitString(pairs[i], ':');
+        if (data.size() != 2) continue;
+        string deviceName = data[0];
+        PosePtr pose = toValue<PosePtr>(data[1]);
+        if (deviceName == "cam") remotesCameraPose[nodeName] = pose;
+        else if (deviceName == "mouse") remotesMousePose[nodeName] = pose;
+
+        cout <<  "VRSyncNode::handlePoses      deviceName " << deviceName << " pose " << pose << " remotesCameraPose[nodeName] " << remotesCameraPose[nodeName] << " nodeName " << nodeName << endl;
+    }
+    //TODO: do something with poses
+
+}
+
+void VRSyncNode::handleOwnershipMessage(string ownership)  {
+    cout << "VRSyncNode::handleOwnership" << endl;
+    vector<string> str_vec = splitString(ownership, '|');
+    string nodeName = str_vec[2];
+    string objectName = str_vec[3];
+    if (str_vec[1] == "request") {
+        for (string s : owned) {
+            if (s == objectName) {
+                auto object = VRScene::getCurrent()->getRoot()->find(objectName);
+                if (!object) return;
+                for (auto dev : VRSetup::getCurrent()->getDevices()) { //if object is grabbed return
+                    VRTransformPtr obj = dev.second->getDraggedObject();
+                    VRTransformPtr gobj = dev.second->getDraggedGhost();
+                    if (obj == 0 || gobj == 0) continue;
+                    if (obj->getName() == objectName || gobj->getName() == objectName) {
+                        return;
+                    }
+                }
+                for (auto remote : remotes) { //grant ownership
+                    if (remote.first.find(nodeName) != string::npos) {
+                        string message = "ownership|grant|" + nodeName + "|" + objectName;
+                        remote.second->send(message);
+                        auto it = std::find(owned.begin(), owned.end(), objectName);
+                        if (it != owned.end()) owned.erase(it);
+                        cout << "grant ownership " << message << endl;
+                    }
+                }
+            }
+        }
+    }
+    else if (str_vec[1] == "grant") {
+        if (nodeName == name) owned.push_back(objectName);
+        cout << "got ownership of object " << objectName << endl;
+    }
+}
+
+vector<string> VRSyncNode::getOwnedObjects(string nodeName) {
+    return owned;
+}
+
+void VRSyncNode::requestOwnership(string objectName){
+    string message = "ownership|request|" + name + "|" + objectName;
+    broadcast(message);
+}
+void VRSyncNode::addOwnedObject(string objectName){
+    owned.push_back(objectName);
+}
+
+PosePtr VRSyncNode::getRemoteCamPose(string remoteName) {
+    return remotesCameraPose[remoteName];
+}
+
+PosePtr VRSyncNode::getRemoteMousePose(string remoteName) {
+    return remotesMousePose[remoteName];
+}
+
+//Add remote Nodes to sync with
+void VRSyncNode::addRemote(string host, int port, string name) {
+    string uri = asUri(host, port, name);
+    remotes[uri] = VRSyncConnection::create(uri);
+//    sync(uri);
+}
+
+void VRSyncNode::handleMessage(void* _args) {
+    HTTP_args* args = (HTTP_args*)_args;
+    if (!args->websocket) cout << "AAAARGH" << endl;
+
+    //UInt32 client = args->ws_id;
+    string msg = args->ws_data;
+    VRUpdateCbPtr job = 0;
+    if (startsWith(msg, "mapping|"))   job = VRUpdateCb::create( "sync-handleMap", bind(&VRSyncNode::handleMapping, this, msg) );
+    else if (startsWith(msg, "poses|"))   job = VRUpdateCb::create( "sync-handlePoses", bind(&VRSyncNode::handlePoses, this, msg) );
+    else if (startsWith(msg, "ownership|")) job = VRUpdateCb::create( "sync-ownership", bind(&VRSyncNode::handleOwnershipMessage, this, msg) );
+    else                               job = VRUpdateCb::create( "sync-handleCL", bind(&VRSyncChangelist::deserializeAndApply, changelist.get(), ptr(), msg) );
+    VRScene::getCurrent()->queueJob( job );
+}
+
+//broadcast message to all remote nodes
+void VRSyncNode::broadcast(string message) {
+    for (auto& remote : remotes) {
+        if (!remote.second->send(message)) {
+            cout << "Failed to send message to remote." << endl;
+        }
+    }
+}
+
+UInt32 VRSyncNode::getRemoteToLocalID(UInt32 id) {
+    if (!remoteToLocalID.count(id)) return 0;
+    return remoteToLocalID[id];
+}
+
+UInt32 VRSyncNode::getLocalToRemoteID(UInt32 id) {
+    if (!localToRemoteID.count(id)) return 0;
+    return localToRemoteID[id];
+}
+
+UInt32 VRSyncNode::getContainerMappedID(UInt32 id) {
+    if (!container.count(id)) return 0;
+    return container[id];
+}
+
+VRObjectPtr VRSyncNode::getVRObject(UInt32 id) {
+    if (!nodeToVRObject.count(id)) return 0;
+    return nodeToVRObject[id].lock();
+}
+
+void printNode(VRObjectPtr obj, string indent = "") {
+    cout << indent << "obj " << obj->getName() << " (" << obj->getType() << ")";
+    cout << ", nodeID: " << obj->getNode()->node->getId();
+    cout << ", nde coreID: " << obj->getNode()->node->getCore()->getId() << ", nde coreType: " << obj->getNode()->node->getCore()->getTypeName();
+    cout << ", obj coreID: " << obj->getCore()->core->getId() << ", obj coreType: " << obj->getCore()->core->getTypeName();
+    if (auto geo = dynamic_pointer_cast<VRGeometry>(obj)) cout << ", geoNodeID: " << geo->getNode()->node->getChild(0);
+    cout << endl;
+
+    for (auto c : obj->getChildren()) printNode(c, indent+" ");
+}
+
+void VRSyncNode::analyseSubGraph() {
+    cout << "VRSyncRemote::analyseSubGraph" << endl;
+    printNode(ptr());
+    printRegistredContainers();
+}
+
+
+
+

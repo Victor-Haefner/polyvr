@@ -45,6 +45,7 @@ class VRAnalyticGeometry : public VRTransform {
         //void remove(int ID);
 
         void setLabelParams(float size, bool screen_size = false, bool billboard = false, Color4f fg = Color4f(0,0,0,1), Color4f bg = Color4f(0,0,0,0), Vec3d offset = Vec3d(0,0,0));
+        VRAnnotationEnginePtr getAnnotationEngine();
 
         void setVector(int i, Vec3d pos, Vec3d vec, Color3f color, string label="", bool doArrow = false);
         void setAngle(int i, Vec3d pos, Vec3d v1, Vec3d v2, Color3f c1, Color3f c2, string label="");

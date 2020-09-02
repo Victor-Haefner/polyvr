@@ -272,6 +272,15 @@ GtkTreeIter getComboboxIter(string cbn) {
     return i;
 }
 
+void notifyUser(string msg1, string msg2) {
+    GtkDialogFlags flags = GTK_DIALOG_MODAL;
+    GtkMessageDialog* dialog = (GtkMessageDialog*)gtk_message_dialog_new(0, flags, GTK_MESSAGE_WARNING, GTK_BUTTONS_OK, "%s", msg1.c_str());
+    gtk_message_dialog_format_secondary_text(dialog, "%s", msg2.c_str());
+    gtk_window_set_deletable((GtkWindow*)dialog, false);
+    gtk_dialog_run((GtkDialog*)dialog);
+    gtk_widget_destroy ((GtkWidget*)dialog);
+}
+
 bool askUser(string msg1, string msg2) {
     GtkDialogFlags flags = GTK_DIALOG_MODAL;
     GtkMessageDialog* dialog = (GtkMessageDialog*)gtk_message_dialog_new(0, flags, GTK_MESSAGE_WARNING, GTK_BUTTONS_OK_CANCEL, "%s", msg1.c_str());

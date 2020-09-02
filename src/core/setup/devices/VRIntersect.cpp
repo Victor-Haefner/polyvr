@@ -214,7 +214,7 @@ void VRIntersect::drop(VRDeviceWeakPtr dev, VRTransformWeakPtr beacon) {
     auto d = getDraggedObject(beacon.lock());
     if (d) {
         d->drop();
-        dropSignal->triggerPtr<VRDevice>();
+        if (d != dragged_ghost) dropSignal->triggerPtr<VRDevice>();
         drop_time = VRGlobals::CURRENT_FRAME;
         dragged.erase(beacon.lock().get());
         if (beacon.lock() == 0) dragged.clear();

@@ -370,7 +370,7 @@ void VRProcessLayout::setElementName(int ID, string name) {
     /*int lineN =*/ wrapString(name, wrapN);
 
     auto mat = VRMaterial::create("ProcessElement");
-    auto txt = VRText::get()->create(name, "MONO 20", 20, 3, fg, bg);
+    auto txt = VRText::get()->create(name, "Mono.ttf", 20, 3, fg, bg);
     mat->setTexture(txt, false);
     mat->setTextureParams(GL_LINEAR, GL_LINEAR);
 
@@ -434,7 +434,7 @@ void VRProcessLayout::storeLayout(string path) {
     if (path == "") path = ".process_layout.plt";
 
     XML xml;
-    auto root = xml.newRoot("ProjectsList", "", "VRP"); // name, ns_uri, ns_prefix
+    auto root = xml.newRoot("ProjectsList", "", ""); // name, ns_uri, ns_prefix
 
     auto storeHandles = [&](VRPathtoolPtr tool) {
         for (auto handle : tool->getHandles()) {

@@ -16,8 +16,11 @@ PyMethodDef VRPyMolecule::methods[] = {
     {"attachMolecule", PyWrap(Molecule, attachMolecule, "Attach a molecule to the second - attachMolecule(int aID, mol b, int bID)", void, int, VRMoleculePtr, int ) },
     {"rotateBond", PyWrap(Molecule, rotateBond, "Rotate the bond between atom a && b - rotateBond(int aID, int bID, float a)", void, int, int, float ) },
     {"changeBond", PyWrap(Molecule, changeBond, "Change the bond type between atom a && b to type t- changeBond(int aID, int bID, int t)", void, int, int, int ) },
+    {"addAtom", PyWrap(Molecule, addAtom, "Add an atom, returns ID", int, string ) },
     {"remAtom", PyWrap(Molecule, remAtom, "Remove an atom by ID", void, int ) },
+    {"setAtomPosition", PyWrap(Molecule, setAtomPosition, "Set the position of the atom by ID", void, int, Vec3d ) },
     {"getAtomPosition", PyWrap(Molecule, getAtomPosition, "Returns the position of the atom by ID", Vec3d, int ) },
+    {"update", PyWrap(Molecule, update, "Update, call after changing configuration", void ) },
     {NULL}  /* Sentinel */
 };
 

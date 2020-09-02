@@ -7,42 +7,31 @@ using namespace OSG;
 
 simpleVRPyType(PathFinding, New_ptr);
 
+static string computePathDoc =
+"Compute the best path from start to end\n"
+"\tstart/end can either be a node ID or an edge ID followed by a float edge position.";
+
 PyMethodDef VRPyPathFinding::methods[] = {
-    {"setGraph", (PyCFunction)VRPyPathFinding::setGraph, METH_VARARGS, "Set graph - setGraph( graph )" },
-    {"setPaths", (PyCFunction)VRPyPathFinding::setPaths, METH_VARARGS, "Set paths - setPaths( [path] )" },
-    {"computePath", (PyCFunction)VRPyPathFinding::computePath, METH_VARARGS, "Compute the best path from start to end - computePath( start, end )\n\tstart/end can either be a node ID or an edge ID followed by a float edge position." },
+    {"setGraph", PyWrap(PathFinding, setGraph, "Set pathfinding graph", void, GraphPtr ) },
+    {"setPaths", PyWrap(PathFinding, setPaths, "Set pathfinding paths", void, vector<PathPtr> ) },
+    {"computePath", (PyCFunction)VRPyPathFinding::computePath, METH_VARARGS, computePathDoc.c_str() },
+    //{"computePath", PyWrapOpt(PathFinding, computePath, computePathDoc, "0", vector<Position>, Position },
     {NULL}  /* Sentinel */
 };
-
-PyObject* VRPyPathFinding::setGraph(VRPyPathFinding* self, PyObject* args) {
-    if (!self->valid()) return NULL;
-    VRPyGraph* g = 0;
-    if (!PyArg_ParseTuple(args, "O", &g)) return NULL;
-    self->objPtr->setGraph( g->objPtr );
-    Py_RETURN_TRUE;
-}
-
-PyObject* VRPyPathFinding::setPaths(VRPyPathFinding* self, PyObject* args) {
-    if (!self->valid()) return NULL;
-    vector<PyObject*> pypaths = parseList(args);
-    vector<PathPtr> paths;
-    for (auto p : pypaths) paths.push_back( ((VRPyPath*)p)->objPtr );
-    self->objPtr->setPaths( paths );
-    Py_RETURN_TRUE;
-}
 
 PyObject* VRPyPathFinding::computePath(VRPyPathFinding* self, PyObject* args) {
     if (!self->valid()) return NULL;
     int i, j;
     float t1 = -1;
     float t2 = -1;
-    if (!PyArg_ParseTuple(args, "ii|ff", &i, &j, &t1, &t2)) return NULL;
+    int bd = 0;
+    if (!PyArg_ParseTuple(args, "ii|ffi", &i, &j, &t1, &t2, &bd)) return NULL;
 
     VRPathFinding::Position p1(i);
     VRPathFinding::Position p2(j);
     if (t1 >= 0) p1 = VRPathFinding::Position(i,t1);
     if (t2 >= 0) p2 = VRPathFinding::Position(j,t2);
-    auto route = self->objPtr->computePath( p1, p2 );
+    auto route = self->objPtr->computePath( p1, p2, bd );
 
     PyObject* res = PyList_New(0);
     for (auto p : route) PyList_Append(res, PyInt_FromLong(p.nID));

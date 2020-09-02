@@ -4,6 +4,9 @@
 #include "core/scene/VRSceneManager.h"
 #include "core/setup/VRSetup.h"
 
+#include "core/scene/import/VRDWG.h"
+#include "core/scripting/VRPyGeometry.h"
+
 #include "VRPyBaseT.h"
 #include "VRPySetup.h"
 #include "VRPyNavigator.h"
@@ -77,6 +80,7 @@ PyMethodDef VRSceneGlobals::methods[] = {
 	{"getFrame", (PyCFunction)VRSceneGlobals::getFrame, METH_NOARGS, "Get current frame number" },
 	{"getScript", (PyCFunction)VRSceneGlobals::getScript, METH_VARARGS, "Get python script by name" },
 	{"importScene", (PyCFunction)VRSceneGlobals::importScene, METH_VARARGS, "Import scene" },
+	{"testDWGArcs", (PyCFunction)VRSceneGlobals::testDWGArcs, METH_NOARGS, "A test for DWG arcs tesselation" },
     {NULL}  /* Sentinel */
 };
 
@@ -93,6 +97,10 @@ PyObject* VRSceneGlobals::getScript(VRSceneGlobals* self, PyObject* args) {
 
 PyObject* VRSceneGlobals::getFrame(VRSceneGlobals* self) {
     return PyInt_FromLong(VRGlobals::CURRENT_FRAME);
+}
+
+PyObject* VRSceneGlobals::testDWGArcs(VRSceneGlobals* self) {
+    return VRPyGeometry::fromSharedPtr( dwgArcTest() );
 }
 
 PyObject* VRSceneGlobals::getSoundManager(VRSceneGlobals* self) {
@@ -213,6 +221,11 @@ PyObject* VRSceneGlobals::loadGeometry(VRSceneGlobals* self, PyObject *args, PyO
     VRObjectPtr prnt = VRScene::getCurrent()->getRoot()->find( parent );
     map<string, string> options;
     if (opt) toValue(opt, options);
+
+    /*cout << "loadGeometry options? " << opt << endl;
+    for (auto o : options) {
+        cout << " loadGeometry option: " << o.first << " -> " << o.second << endl;
+    }*/
 
     VRTransformPtr obj = VRImport::get()->load( path, prnt, cached, preset, threaded, options, useBinaryCache);
     if (obj == 0) { VRPyBase::setErr("Error: " + string(path) + " not loaded!"); return NULL; }

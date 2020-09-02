@@ -15,12 +15,15 @@ VRWebSocket::VRWebSocket(string name) : VRName() {
 }
 
 VRWebSocket::~VRWebSocket() {
+    cout << "~VRWebSocket::VRWebSocket" << endl;
     done = true;
     close();
 }
 
-bool VRWebSocket::open(string url) {
+VRWebSocketPtr VRWebSocket::create(string name) { return VRWebSocketPtr( new VRWebSocket(name) ); }
 
+bool VRWebSocket::open(string url) {
+    cout << "VRWebSocket::open " << url << endl;
     close();
 
     mg_mgr_init(&mgr, (void*) this);
@@ -34,8 +37,7 @@ bool VRWebSocket::open(string url) {
     done = false;
     if (threadId < 0) threadId = VRSceneManager::get()->initThread(threadFkt, "webSocketPollThread", false);
 
-    cout << "Connecting to " << url << " ";
-
+    cout << "Connecting to " << url << endl;
     while (connectionStatus < 0) {
 		this_thread::sleep_for(chrono::microseconds(10000));
 	}
@@ -44,9 +46,7 @@ bool VRWebSocket::open(string url) {
 }
 
 void VRWebSocket::poll(VRThreadWeakPtr t) {
-    while (!done) {
-        mg_mgr_poll(&mgr, 30);
-    }
+    while (!done) mg_mgr_poll(&mgr, 30);
     mg_mgr_free(&mgr);
     threadId = -1;
 }
@@ -57,7 +57,7 @@ void VRWebSocket::poll(VRThreadWeakPtr t) {
 */
 bool VRWebSocket::close() {
     if (isConnected()) {
-        cout << "Closing socket: ";
+        cout << "Closing socket: " << this << endl;
         mg_send_websocket_frame(connection, WEBSOCKET_OP_CLOSE, nullptr, 0);
 
         // TODO: output only for testing purposes. Remove after closing of web sockets is fixed.
@@ -70,6 +70,7 @@ bool VRWebSocket::close() {
 		}
         if(i==100) cout << endl << "No closing confirmation for web socket. Canceling wait period.";
         cout << endl;
+        connectionStatus = -1;
         return true;
     } else {
         done = true;

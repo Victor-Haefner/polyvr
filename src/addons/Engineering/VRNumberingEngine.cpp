@@ -97,7 +97,7 @@ void VRNumberingEngine::updateTexture() {
 #ifndef WITHOUT_PANGO_CAIRO
     string txt = "0123456789.";
     //for (auto g : groups) txt += "\n+g.pre+"\n"+g.post;
-    auto img = VRText::get()->create(txt, "MONO 20", 20, 3, Color4f(0,0,0,1), Color4f(0,0,0,0) );
+    auto img = VRText::get()->create(txt, "Mono.ttf", 20, 3, Color4f(0,0,0,1), Color4f(0,0,0,0) );
     mat->setTexture(img);
 #endif
 }

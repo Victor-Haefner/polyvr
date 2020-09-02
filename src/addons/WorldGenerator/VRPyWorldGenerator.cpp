@@ -58,7 +58,8 @@ PyMethodDef VRPyWorldGenerator::methods[] = {
     {"getMaterial", PyWrap( WorldGenerator, getMaterial, "Get a material by name", VRMaterialPtr, string ) },
     {"getMiscArea", PyWrap( WorldGenerator, getMiscArea, "Get the Geometry of a misc area by Entity", VRGeometryPtr, VREntityPtr ) },
     {"addOSMMap", PyWrapOpt( WorldGenerator, addOSMMap, "Add an OpenStreetMap map: path to OSM map, opt: double subN, double subE, double subSize, -1|-1|-1", "-1|-1|-1", void, string, double, double, double ) },
-    {"setupLODTerrain", PyWrapOpt( WorldGenerator, setupLODTerrain, "Sets up LOD for terrain: path to heightmap, path to texture (opt, default = ""), scale (opt, default = 1.0), cache (opt, default = True)", "|1.0|1", void, string, string, float, bool ) },
+    {"addGML", PyWrap( WorldGenerator, addGML, "adding a GML file and generate buildings", void, string) },
+    {"setupLODTerrain", PyWrapOpt( WorldGenerator, setupLODTerrain, "Sets up LOD for terrain: path to heightmap, path to texture (opt, default = ""), scale (opt, default = 1.0), cache (opt, default = True)", "|1.0|1|1|1 1 1 1|0", void, string, string, float, bool, bool, Color4f, float ) },
     {"readOSMMap", PyWrap( WorldGenerator, readOSMMap, "Read OpenStreetMap map without adding", void, string ) },
     {"getOSMMap", PyWrap( WorldGenerator, getOSMMap, "Access OSM map", OSMMapPtr ) },
     {"reloadOSMMap", PyWrapOpt( WorldGenerator, reloadOSMMap, "Reload OSM data", "-1|-1|-1", void, double, double, double ) },
@@ -81,9 +82,10 @@ typedef map<string, string> osmTagMap;
 PyMethodDef VRPyOSMMap::methods[] = {
     {"readFile", PyWrap2( OSMMap, readFile, "readFile ", void, string ) },
     {"readGEOJSON", PyWrap2( OSMMap, readGEOJSON, "reads a GEOJSON file and makes a readable OSM object", void, string ) },
-    {"readSHAPE", PyWrap2( OSMMap, readSHAPE, "reads a SHAPE file and makes a readable OSM object", void, string ) },
+    //{"readSHAPE", PyWrap2( OSMMap, readSHAPE, "reads a SHAPE file and makes a readable OSM object", void, string ) },
+    {"readGML", PyWrap2( OSMMap, readGML, "reads a GML file and makes a readable OSM object", void, string ) },
     {"writeFile", PyWrap2( OSMMap, writeFile, "writeFile ", void, string ) },
-    {"filterFileStreaming", PyWrap2( OSMMap, filterFileStreaming, "filter OSM file with whitelist via stream - input path, output path, save temp file", void, string, vector<vector<string>> ) },
+    {"filterFileStreaming", PyWrap2( OSMMap, filterFileStreaming, "filter OSM file with whitelist via stream - input path, whitelist", void, string, vector<vector<string>> ) },
     {"readFileStreaming", PyWrap2( OSMMap, readFileStreaming, "reads OSM file via stream, builds map ", int, string ) },
     {"getRelations", PyWrap2( OSMMap, getRelations, "Access OSM relations", osmRelationMap ) },
     {"getWays", PyWrap2( OSMMap, getWays, "Access OSM ways", osmWayMap ) },
@@ -104,7 +106,7 @@ PyMethodDef VRPyOSMRelation::methods[] = {
 PyMethodDef VRPyOSMWay::methods[] = {
     {"getPolygon", PyWrap2( OSMWay, getPolygon, "Access polygon", VRPolygon ) },
     {"toString", PyWrap2( OSMWay, toString, "As string", string ) },
-    {"getNodes", PyWrap2( OSMWay, getNodes, "Access nodes", vector<string> ) },
+    {"getNodes", PyWrapOpt2( OSMWay, getNodes, "Access nodes", "1", vector<string>, float ) },
     {NULL}  /* Sentinel */
 };
 

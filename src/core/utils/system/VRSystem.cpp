@@ -63,7 +63,7 @@ string getFileExtension(string path) {
 
 string getFolderName(string path) {
     size_t sp = path.rfind('/');
-    if (sp == string::npos) return "";
+    if (sp == string::npos) return ".";
     return path.substr(0, sp);
 }
 
@@ -107,6 +107,52 @@ long long getTime() {
     return chrono::duration_cast<chrono::microseconds>(elapsed).count();
 }
 
+void fileReplaceStrings(string filePath, string oldString, string newString) {
+    auto escapeSpecialChar = [&](string& str, char c1, const string& c2) {
+        vector<size_t> positions; // get all singe quote positions to escape
+        for (size_t i=0; i<str.size(); i++) {
+            char c = str[i];
+            if (c == c1) positions.push_back(i);
+        }
+
+        if (positions.size() == 0) return;
+
+        for (size_t i = positions.size()-1; i>=0; i--) {
+            str.replace(positions[i], 1, c2);
+            if (i == 0) break;
+        }
+    };
+
+    auto escapeChars = [&](string& str) {
+        escapeSpecialChar(str, '\t', "\\x09");
+        escapeSpecialChar(str, '\n', "\\n");
+        escapeSpecialChar(str, '\'', "\\x27");
+
+        vector<size_t> positions; // get all char positions to escape
+        for (size_t i=0; i<str.size(); i++) {
+            char c = str[i];
+            if (c == '/') positions.push_back(i);
+            if (c == '\'') positions.push_back(i);
+            if (c == '(') positions.push_back(i);
+            if (c == ')') positions.push_back(i);
+        }
+
+        if (positions.size() == 0) return;
+
+        for (size_t i = positions.size()-1; i>=0; i--) {
+            str.insert(positions[i], "\\");
+            if (i == 0) break;
+        }
+        cout << " escapeChars " << str << endl;
+    };
+
+    escapeChars(oldString);
+    escapeChars(newString);
+
+    string cmd = "sed -i 's/" + oldString + "/" + newString + "/g' "+filePath;
+    systemCall(cmd);
+    cout << "fileReplaceStrings " << cmd << endl;
+}
 
 
 

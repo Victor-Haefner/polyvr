@@ -41,6 +41,7 @@ class VRSceneGlobals: public VRPyBase {
 		static PyObject* getFrame(VRSceneGlobals* self);
 		static PyObject* getScript(VRSceneGlobals* self, PyObject *args);
 		static PyObject* importScene(VRSceneGlobals* self, PyObject *args);
+		static PyObject* testDWGArcs(VRSceneGlobals* self);
 };
 
 OSG_END_NAMESPACE;

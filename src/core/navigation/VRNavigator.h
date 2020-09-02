@@ -23,6 +23,7 @@ struct VRNavBinding {
     VRDeviceCbPtr cb;
     string sig_name;
     string cb_name;
+    bool active = true;
     bool doRepeat = false;
 
     VRNavBinding(VRDeviceCbPtr c, int k, int s, bool repeat);
@@ -53,6 +54,7 @@ class VRNavPreset : public VRName {
 
         void activate();
         void deactivate();
+        void setBindingState(int i, bool b);
 
         void addKeyBinding(VRNavBinding b);
         vector<VRNavBinding>& getBindings();
@@ -95,6 +97,10 @@ class VRNavigator : public VRNavigator_base {
         vector<VRTransformWeakPtr> walk_surfaces;
         static float clip_dist_down;
         std::shared_ptr<VRFunction<float> > focus_fkt;
+
+        bool isCtrlDown();
+        bool isShiftDown();
+        bool isKeyDown(int k);
 
         // callbacks
         void zoom(VRDeviceWeakPtr dev, int dir);

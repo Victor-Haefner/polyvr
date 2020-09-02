@@ -144,6 +144,7 @@ void setNotebookPage(string nb, int p);
 void setTooltip(string widget, string tp);
 
 bool keySignalProxy(_GdkEventKey* e, string k, function<void(void)> sig );
+void notifyUser(string msg1, string msg2);
 bool askUser(string msg1, string msg2);
 string askUserInput(string msg);
 string askUserPass(string msg);

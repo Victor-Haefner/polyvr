@@ -125,6 +125,11 @@ void OSG::loadXYZ(string path, VRTransformPtr res, map<string, string> importOpt
     if (importOptions.count("downsampling")) downsampling = toFloat(importOptions["downsampling"]);
     if (importOptions.count("swapYZ")) swapYZ = toInt(importOptions["swapYZ"]);
 
+    /*cout << "OSG::loadXYZ, swapYZ: " << swapYZ << endl;
+    for (auto o : importOptions) {
+        cout << " importOption " << o.first << " " << o.second << endl;
+    }*/
+
     try {
         auto pointcloud = VRPointCloud::create("pointcloud");
         pointcloud->applySettings(importOptions);
