@@ -85,9 +85,10 @@ bool VRWebSocket::isConnected() {
 }
 
 bool VRWebSocket::sendMessage(string message) {
-
+    cout << "VRWebSocket::sendMessage N " << message.size() << endl;
     if (isConnected()) {
         mg_send_websocket_frame(connection, WEBSOCKET_OP_TEXT, message.c_str(), message.length());
+        cout << " VRWebSocket::sendMessage N " << message.size() << " done" << endl;
         return true;
     } else {
         cerr << "Not connected to WebSocket Server." << endl;

@@ -60,13 +60,15 @@ VRTransformPtr VRTransform::ptr() { return static_pointer_cast<VRTransform>( sha
 VRTransformPtr VRTransform::create(string name, bool doOpt) { return VRTransformPtr(new VRTransform(name, doOpt) ); }
 
 void VRTransform::wrapOSG(OSGObjectPtr node) {
+    if (!node) return;
     VRObject::wrapOSG(node);
+    if (!node->node || !node->node->getCore()) return;
     Transform* t = dynamic_cast<Transform*>(node->node->getCore());
     if (t) {
         setMatrix(toMatrix4d(t->getMatrix()));
         this->t->trans = t;
     } else {
-        getCore()->core = this->t->trans;
+        if (getCore()) getCore()->core = this->t->trans;
     }
 }
 

@@ -277,7 +277,10 @@ void VRObject::disableCore() { osg->node->setCore( Group::create() ); }
 void VRObject::enableCore() { osg->node->setCore( core->core ); }
 
 void VRObject::wrapOSG(OSGObjectPtr node) {
+    if (!node || !getNode()) return;
+    if (!node->node) return;
     getNode()->node = node->node;
+    if (!core || !node->node->getCore()) return;
     core->core = node->node->getCore();
 }
 
