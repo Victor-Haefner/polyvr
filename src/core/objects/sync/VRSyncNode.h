@@ -138,6 +138,8 @@ class VRSyncNode : public VRTransform {
         map<FieldContainer*, vector<FieldContainer*>> getAllSubContainers(FieldContainer* node);
 
         void wrapOSG();
+
+        string getConnectionLink();
 };
 
 OSG_END_NAMESPACE;

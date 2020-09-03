@@ -13,6 +13,7 @@ namespace OSG {
 class VRTCPServer {
     private:
         TCPServer* server = 0;
+        int port = 0;
 
     public:
         VRTCPServer();
@@ -24,6 +25,9 @@ class VRTCPServer {
 
         void listen(int port);
         void close();
+
+        string getPublicIP();
+        int getPort();
 };
 
 }

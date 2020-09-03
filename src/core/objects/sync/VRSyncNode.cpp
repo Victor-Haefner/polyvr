@@ -784,6 +784,14 @@ void VRSyncNode::analyseSubGraph() {
     printRegistredContainers();
 }
 
-
+string VRSyncNode::getConnectionLink() {
+    /*ifconf ic;
+    ioctl(s, SIOCGIFCONF, ic);
+    IP = string(ic.ifc_buf);*/
+    string IP = server->getPublicIP();
+    int port = server->getPort();
+    string name = getBaseName();
+    return IP+":"+toString(port)+"/"+name;
+}
 
 

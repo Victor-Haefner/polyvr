@@ -69,7 +69,7 @@ class TCPServer {
             io_service.stop();
             socket.cancel();
             boost::system::error_code _error_code;
-            socket.shutdown(boost::asio::ip::tcp::socket::shutdown_both, _error_code);
+            socket.shutdown(tcp::socket::shutdown_both, _error_code);
             if (service.joinable()) service.join();
         }
 };
@@ -80,6 +80,32 @@ VRTCPServer::~VRTCPServer() { delete server; }
 VRTCPServerPtr VRTCPServer::create() { return VRTCPServerPtr(new VRTCPServer()); }
 
 void VRTCPServer::onMessage( function<void (string)> f ) { server->onMessage(f); }
-void VRTCPServer::listen(int port) { server->listen(port); }
+void VRTCPServer::listen(int port) { this->port = port; server->listen(port); }
 void VRTCPServer::close() { server->close(); }
+int VRTCPServer::getPort() { return port; }
+
+string VRTCPServer::getPublicIP() {
+    int sock = socket(AF_INET, SOCK_DGRAM, 0);
+    assert(sock != -1);
+
+    const char* kGoogleDnsIp = "8.8.8.8";
+    uint16_t kDnsPort = 53;
+    struct sockaddr_in serv;
+    memset(&serv, 0, sizeof(serv));
+    serv.sin_family = AF_INET;
+    serv.sin_addr.s_addr = inet_addr(kGoogleDnsIp);
+    serv.sin_port = htons(kDnsPort);
+
+    connect(sock, (const sockaddr*) &serv, sizeof(serv));
+
+    sockaddr_in name;
+    socklen_t namelen = sizeof(name);
+    getsockname(sock, (sockaddr*) &name, &namelen);
+
+    char addressBuffer[INET_ADDRSTRLEN];
+    inet_ntop(AF_INET, &name.sin_addr, addressBuffer, INET_ADDRSTRLEN);
+
+    ::close(sock);
+    return string(addressBuffer);
+}
 
