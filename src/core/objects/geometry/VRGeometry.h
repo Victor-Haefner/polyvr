@@ -74,6 +74,7 @@ class VRGeometry : public VRTransform {
         Reference getReference();
         void makeUnique();
         void makeSingleIndex();
+        vector<VRGeometryPtr> splitByVertexColors();
         void setMeshVisibility(bool b);
         void setVolumeCheck(bool b, bool recursive = false);
 

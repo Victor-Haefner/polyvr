@@ -65,6 +65,8 @@ class VRGeoData {
         int getDataSize(int type);
         string getDataAsString(int type);
 
+        vector<VRGeometryPtr> splitByVertexColors(const Matrix4d& m);
+
         int pushVert(Pnt3d p);
         int pushVert(Pnt3d p, Vec3d n);
         int pushVert(Pnt3d p, Vec3d n, Color3f c);

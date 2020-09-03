@@ -6,6 +6,7 @@
 #include "core/utils/VRFunction.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRGlobals.h"
+#include "core/setup/VRSetup.h"
 #include "core/setup/devices/VRSignal.h"
 #include "core/setup/devices/VRDevice.h"
 #include "core/setup/devices/VRMouse.h"
@@ -184,6 +185,15 @@ void VRNavigator::zoom(VRDeviceWeakPtr _dev, int dir) {
     target->zoom(speed*dir);
 }
 
+bool VRNavigator::isCtrlDown() { return isKeyDown(65507); }
+bool VRNavigator::isShiftDown() { return isKeyDown(65505); }
+
+bool VRNavigator::isKeyDown(int k) {
+    auto kb = VRSetup::getCurrent()->getDevice("keyboard");
+    if (kb) return (kb->b_state(k) == 1);
+    else return false;
+}
+
 void VRNavigator::orbit(VRDeviceWeakPtr _dev) {
     auto dev = _dev.lock();
     if (!dev) return;
@@ -195,8 +205,11 @@ void VRNavigator::orbit(VRDeviceWeakPtr _dev) {
 
     static int state = 0;
     static Vec3d camPos;
-    static Vec3d camRef(0,0,0);
+    static Vec3d camSphereRef(0,0,0);
+    static Vec3d camAtRef(0,0,0);
+    static Pose camPanRef;
     static Vec2d mouseOnMouseDown;
+    static bool doPan = false;
 
     Vec3d camDelta;
     Vec2d mousePos;
@@ -204,19 +217,24 @@ void VRNavigator::orbit(VRDeviceWeakPtr _dev) {
     mousePos[1] = dev->s_state(6);
 
     if (state == 0) { // drag camera
+        doPan = isShiftDown();
+
         camPos = target->getFrom();
+        camAtRef = target->getAt();
+        camPanRef = *target->getPose();
+        camPanRef.makeUpOrthogonal();
         mouseOnMouseDown = mousePos;
 
         Vec3d dir = -target->getDir();
-        camRef[0] = dir.length();
+        camSphereRef[0] = dir.length();
         dir.normalize();
 
-        camRef[2] = asin(dir[1]);
+        camSphereRef[2] = asin(dir[1]);
 
-        float cosb = cos(camRef[2]);
+        float cosb = cos(camSphereRef[2]);
         float a = acos(dir[0]/cosb);
         if (dir[2]/cosb<0) a *= -1;
-        camRef[1] = a;
+        camSphereRef[1] = a;
     }
 
     state = dev->b_state(dev->key());
@@ -225,21 +243,29 @@ void VRNavigator::orbit(VRDeviceWeakPtr _dev) {
 
     // move cam
     mousePos -= mouseOnMouseDown;
-    camDelta = camRef;
-    camDelta[1] += mousePos[0]*1.5; //yaw
-    camDelta[2] -= mousePos[1]*1.5; //pitch
 
-    camDelta[2] = max(camDelta[2], -Pi*0.49);
-    camDelta[2] = min(camDelta[2], Pi*0.49);
+    if (!doPan) {
+        camDelta = camSphereRef;
+        camDelta[1] += mousePos[0]*1.5; //yaw
+        camDelta[2] -= mousePos[1]*1.5; //pitch
 
-    float cosa = cos(camDelta[1]);
-	float sina = sin(camDelta[1]);
-	float cosb = cos(camDelta[2]);
-	float sinb = sin(camDelta[2]);
+        camDelta[2] = max(camDelta[2], -Pi*0.49);
+        camDelta[2] = min(camDelta[2],  Pi*0.49);
 
-	camPos = Vec3d(cosa*cosb, sinb, sina*cosb)*camDelta[0] + target->getAt();
-	target->set_orientation_mode(false);
-	target->setFrom(camPos);
+        float cosa = cos(camDelta[1]);
+        float sina = sin(camDelta[1]);
+        float cosb = cos(camDelta[2]);
+        float sinb = sin(camDelta[2]);
+
+        camPos = Vec3d(cosa*cosb, sinb, sina*cosb)*camDelta[0] + camAtRef;
+        target->setAt(camAtRef);
+        target->setFrom(camPos);
+	} else {
+        Vec3d delta = -mousePos[0]*camPanRef.x() -mousePos[1]*camPanRef.up();
+        camPos = camPanRef.pos() + delta;
+        target->setAt(camAtRef + delta);
+        target->setFrom(camPos);
+	}
 }
 
 void VRNavigator::walk(VRDeviceWeakPtr _dev) {

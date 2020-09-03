@@ -6,8 +6,6 @@
 
 struct VRPyPathFinding : VRPyBaseT<OSG::VRPathFinding> {
     static PyMethodDef methods[];
-    static PyObject* setGraph(VRPyPathFinding* self, PyObject* args);
-    static PyObject* setPaths(VRPyPathFinding* self, PyObject* args);
     static PyObject* computePath(VRPyPathFinding* self, PyObject* args);
 };
 

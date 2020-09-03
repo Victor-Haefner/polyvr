@@ -32,6 +32,8 @@ class Datarow {
         void add(DatarowPtr d);
         void insert(int i, double v);
 
+        vector<double> getMinMax();
+
         double getPCT(int i);
         double getLogRet(int i);
         DatarowPtr getPCTs();

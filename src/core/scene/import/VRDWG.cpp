@@ -107,6 +107,7 @@ struct DWGLayer {
     VRAnnotationEnginePtr ann;
 };
 
+size_t aCount = 0;
 struct DWGContext {
     Dwg_Data* dwg = 0;
     map<Dwg_Object_LAYER*, DWGLayer> layers;
@@ -175,7 +176,12 @@ struct DWGContext {
         //cout << "addLine " << col << endl;
 	}
 
+    /** DWG arcs always rotate counterclockwise! */
 	void addArc(Pnt3d c, double r, double a1, double a2, Dwg_Object_LAYER* layer, Vec3d eBox = Vec3d(1,1,1)) {
+        //aCount++;
+        //if (aCount < 54 || aCount > 55) return;
+        //if (aCount != 54) return;
+        //cout << " addArc, c: " << c << ", r: " << r << ", a12: " << Vec2d(a1, a2) << ", i:" << aCount << endl;
         VRGeoData& geo = layers[layer].geo;
 
 		/*Pnt3d sp = c + Vec3d(cos(a1),sin(a1),0)*r;
@@ -186,8 +192,9 @@ struct DWGContext {
 		a2 = atan2(ep[1] - c[1], ep[0] - c[0]) + Pi;
 		if (transformation.det() < 0) swap(a1, a2);*/
 
-		transformation.mult(c, c);
+		if (a2 < a1) a2 += 2*Pi; // make sure to rotate counterclockwise!
 
+		transformation.mult(c, c);
 
 		if (r < 1e-6) r = 1; // elipse -> use box
         else r = scaleLength(r);
@@ -200,6 +207,7 @@ struct DWGContext {
             geo.pushVert(p);
             if (i > 0) geo.pushLine();
         }
+        //cout << "  computed params, da: " << da << ", N: " << N << ", sr: " << r << endl;
 	}
 
 	void addCircle(Vec3d c, float r, Dwg_Object_LAYER* layer) {
@@ -250,11 +258,11 @@ struct DWGContext {
 Color3f getLayerColor(Dwg_Object_LAYER* layer) {
     if (!layer) return Color3f(0.2,0.5,0);
     Color3f col = asColor3f(layer->color); //
-    short colShrt = layer->color_rs; //
-    layer->flag;
-    Dwg_Object_MATERIAL* mat = 0; //
-    if (layer->material && layer->material->obj) mat = layer->material->obj->tio.object->tio.MATERIAL; //
-    bool pflag = layer->plotflag;
+    //short colShrt = layer->color_rs; //
+    //layer->flag;
+    //Dwg_Object_MATERIAL* mat = 0; //
+    //if (layer->material && layer->material->obj) mat = layer->material->obj->tio.object->tio.MATERIAL; //
+    //bool pflag = layer->plotflag;
     //Dwg_Object_STYLE* pstyle = 0;
     //if (layer->plotstyle && layer->plotstyle->obj) pstyle = layer->plotstyle->obj->tio.object->tio.PLACEHOLDER
 
@@ -492,7 +500,7 @@ void process_INSERT(Dwg_Object* obj, DWGContext& data) {
 }
 
 void process_VIEWPORT(Dwg_Object* obj, DWGContext& data) {
-    Dwg_Entity_VIEWPORT* viewport = obj->tio.entity->tio.VIEWPORT;
+    //Dwg_Entity_VIEWPORT* viewport = obj->tio.entity->tio.VIEWPORT;
 
     /*data.offset_stack.push_back( asVec3d(insert->ins_pt) );
     data.scale_stack.push_back( asVec3d(insert->scale) );
@@ -672,7 +680,7 @@ void loadDWG(string path, VRTransformPtr res) {
     //dwg_free(&dwg); // writes a lot to console..
 
     map<string, int> hist;
-    for (int i=0; i < dwg.num_objects; i++) {
+    for (unsigned int i=0; i < dwg.num_objects; i++) {
         Dwg_Object& obj = dwg.object[i];
         if (obj.type == DWG_TYPE_LINE ||
             obj.type == DWG_TYPE_INSERT
@@ -703,6 +711,25 @@ void loadDWG(string path, VRTransformPtr res) {
     for (auto e : data.entityHistogram) cout << " " << e.first << ": " << e.second << endl;
     cout << "DWG object historgam" << endl;
     for (auto e : data.objectHistogram) cout << " " << e.first << ": " << e.second << endl;*/
+}
+
+VRGeometryPtr dwgArcTest() {
+    DWGContext data;
+    float a = 6.28/10.0;
+    data.layers[0] = DWGLayer();
+    for (int i=-5; i<5; i++) data.addArc(Pnt3d(i, 0, 0), 0.4, 0, i*6.28/5.0, 0);
+    for (int i=-5; i<5; i++) data.addArc(Pnt3d(i, 1, 0), 0.4, i*6.28/5.0, 0, 0);
+    for (int i=-5; i<5; i++) data.addArc(Pnt3d(i, 2, 0), 0.4, i*6.28/5.0-a, i*6.28/5.0+a, 0);
+    for (int i=-5; i<5; i++) data.addArc(Pnt3d(i, 3, 0), 0.4, i*6.28/5.0+a, i*6.28/5.0-a, 0);
+    for (int i=-5; i<5; i++) data.addArc(Pnt3d(i, 4, 0), 0.4, i*6.28/5.0-a*3, i*6.28/5.0+a*3, 0);
+    for (int i=-5; i<5; i++) data.addArc(Pnt3d(i, 5, 0), 0.4, i*6.28/5.0+a*3, i*6.28/5.0-a*3, 0);
+    auto geo = data.layers[0].geo.asGeometry( "arcTest" );
+    auto m = VRMaterial::create("arcMat");
+    m->setLit(0);
+    m->setDiffuse(Color3f(0,0.7,0.4));
+    m->setLineWidth(3);
+    geo->setMaterial(m);
+    return geo;
 }
 
 OSG_END_NAMESPACE;

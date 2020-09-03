@@ -106,7 +106,7 @@ PyMethodDef VRPyOSMRelation::methods[] = {
 PyMethodDef VRPyOSMWay::methods[] = {
     {"getPolygon", PyWrap2( OSMWay, getPolygon, "Access polygon", VRPolygon ) },
     {"toString", PyWrap2( OSMWay, toString, "As string", string ) },
-    {"getNodes", PyWrap2( OSMWay, getNodes, "Access nodes", vector<string> ) },
+    {"getNodes", PyWrapOpt2( OSMWay, getNodes, "Access nodes", "1", vector<string>, float ) },
     {NULL}  /* Sentinel */
 };
 

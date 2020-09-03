@@ -128,7 +128,9 @@ void VRGuiBits::on_web_export_clicked() {
                 preloadedFiles[str] = true;
                 cout << "preloadFile " << str << endl;
                 preloadFile(str);
-                if (exists("."+str+".osb")) preloadFile("."+str+".osb"); // check for binary chaches
+                string osbCache = getFolderName(str)+"/."+getFileName(str)+".osb";
+                if (exists(osbCache)) preloadFile(osbCache); // check for binary chaches
+                else cout << " did not find osb cache '" << osbCache << "'" << endl;
             }
         }
     }

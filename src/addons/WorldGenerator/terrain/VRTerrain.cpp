@@ -308,22 +308,6 @@ void VRTerrain::setupGeo() {
 	setMaterial(mat);
 }
 
-Vec2d VRTerrain::toUVSpace(Vec2d p) {
-    int W = heigthsTex->getSize()[0]-1;
-    int H = heigthsTex->getSize()[1]-1;
-    double u = (p[0]/size[0] + 0.5)*W;
-    double v = (p[1]/size[1] + 0.5)*H;
-    return Vec2d(u,v);
-};
-
-Vec2d VRTerrain::fromUVSpace(Vec2d uv) {
-    int W = heigthsTex->getSize()[0]-1;
-    int H = heigthsTex->getSize()[1]-1;
-    double x = ((uv[0])/W-0.5)*size[0];
-    double z = ((uv[1])/H-0.5)*size[1];
-    return Vec2d(x,z);
-};
-
 vector<Vec3d> VRTerrain::probeHeight( Vec2d p ) {
     Vec2d uv = toUVSpace(p); // uv, i and j are tested
     int i = round(uv[0]-0.5);
@@ -520,22 +504,29 @@ bool VRTerrain::applyIntersectionAction(Action* action) {
     return true;
 }
 
-double VRTerrain::getHeight(Vec2d p, bool useEmbankments) {
+Vec2d VRTerrain::toUVSpace(Vec2d p) {
     int W = heigthsTex->getSize()[0]-1;
     int H = heigthsTex->getSize()[1]-1;
+    double u = (p[0]/size[0] + 0.5)*W;
+    double v = (p[1]/size[1] + 0.5)*H;
+    return Vec2d(u,v);
+};
 
-    auto toUVSpace = [&](Vec2d p) {
-        double u = (p[0]/size[0] + 0.5)*W;
-        double v = (p[1]/size[1] + 0.5)*H;
-        return Vec2d(u,v);
-    };
+Vec2d VRTerrain::fromUVSpace(Vec2d uv) {
+    int W = heigthsTex->getSize()[0]-1;
+    int H = heigthsTex->getSize()[1]-1;
+    double x = ((uv[0])/W-0.5)*size[0];
+    double z = ((uv[1])/H-0.5)*size[1];
+    return Vec2d(x,z);
+};
 
-    /*auto fromUVSpace = [&](Vec2d uv) { // keep for debugging
-        double x = ((uv[0])/W-0.5)*size[0];
-        double z = ((uv[1])/H-0.5)*size[1];
-        return Vec2d(x,z);
-    };*/
+Vec2d VRTerrain::getTexCoord( Vec2d p ) {
+    double u = p[0]/size[0] + 0.5;
+    double v = p[1]/size[1] + 0.5;
+    return Vec2d(u,v);
+}
 
+double VRTerrain::getHeight(Vec2d p, bool useEmbankments) {
     Vec2d uv = toUVSpace(p); // uv, i and j are tested
     int i = round(uv[0]-0.5);
     int j = round(uv[1]-0.5);

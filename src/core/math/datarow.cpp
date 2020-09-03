@@ -45,6 +45,16 @@ void Datarow::insert(int i, double v) {
     data.insert(data.begin() + i, v);
 }
 
+vector<double> Datarow::getMinMax() {
+    if (length() == 0) return vector<double>();
+    vector<double> res = { data[0], data[0] };
+    for (auto d : data) {
+        if (d < res[0]) res[0] = d;
+        if (d > res[1]) res[1] = d;
+    }
+    return res;
+}
+
 double Datarow::getPCT(int i) {
     if (i == 0) return 0;
     if (i < 0) i += length();

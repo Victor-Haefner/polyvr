@@ -118,38 +118,53 @@ void VRPlanet::localize(double north, double east) {
     } else cout << "Warning: VRPlanet::localize, no sector found at location " << Vec2d(north, east) << " !\n";*/
 }
 
-PosePtr VRPlanet::getSurfacePose( double north, double east, bool local, bool sectorLocal){
-    auto poseG = fromLatLongPose(north, east);
-
+Vec2d VRPlanet::getSurfaceUV(double north, double east) {
+    Vec2d res;
     auto sector = getSector(north, east);
-    if (!sector) return Pose::create();
+    if (!sector) return res;
 
     auto sectorCoords = sector->getPlanetCoords();
     auto s = fromLatLongSize(sectorCoords[0], sectorCoords[1], sectorCoords[0]+sectorSize, sectorCoords[1]+sectorSize); //u = east, v = north
     auto u = (east-sectorCoords[1]-sectorSize/2)/sectorSize*s[0];
     auto v = -(north-sectorCoords[0]-sectorSize/2)/sectorSize*s[1];
+    return sector->getTerrain()->getTexCoord( Vec2d(u,v) );
+}
 
-    auto height = sector->getTerrain()->getHeight(Vec2d(u, v));
-    auto newPos = poseG->pos() + poseG->up()*height;
-    Vec3d f = newPos;
-    Vec3d d = poseG->dir();
-    Vec3d up = poseG->up();
-    PosePtr newPose = Pose::create(f,d,up); //global pose
+double VRPlanet::getRadius() { return radius; }
 
-    if (local) {
-        auto poseOrigin = origin->getPose()->multRight(newPose); //localized with transformed planed origin
-        newPose = poseOrigin;
+PosePtr VRPlanet::getSurfacePose( double north, double east, bool local, bool sectorLocal){
+    auto poseG = fromLatLongPose(north, east);
+
+    auto sector = getSector(north, east);
+    if (sector) {
+        auto sectorCoords = sector->getPlanetCoords();
+        auto s = fromLatLongSize(sectorCoords[0], sectorCoords[1], sectorCoords[0]+sectorSize, sectorCoords[1]+sectorSize); //u = east, v = north
+        auto u = (east-sectorCoords[1]-sectorSize/2)/sectorSize*s[0];
+        auto v = -(north-sectorCoords[0]-sectorSize/2)/sectorSize*s[1];
+
+        Vec2d uv = Vec2d(u,v);
+        auto height = sector->getTerrain()->getHeight(uv);
+        auto newPos = poseG->pos() + poseG->up()*height;
+        Vec3d f = newPos;
+        Vec3d d = poseG->dir();
+        Vec3d up = poseG->up();
+        poseG = Pose::create(f,d,up); //global pose
     }
 
-    if (sectorLocal) {
+    if (local) {
+        auto poseOrigin = origin->getPose()->multRight(poseG); //localized with transformed planed origin
+        poseG = poseOrigin;
+    }
+
+    if (sectorLocal && sector) {
         auto newP = sector->getPose();
         auto newPinv = newP;
         newPinv->invert();
-        auto localinSector = newPinv->multRight(newPose); //localized on sector
-        newPose = localinSector;
+        auto localinSector = newPinv->multRight(poseG); //localized on sector
+        poseG = localinSector;
     }
 
-    return newPose;
+    return poseG;
 }
 
 void VRPlanet::divideTIFF(string pathIn, string pathOut, double minLat, double maxLat, double minLon, double maxLon, double res) {

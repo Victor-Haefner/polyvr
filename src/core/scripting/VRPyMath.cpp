@@ -92,14 +92,14 @@ PyMethodDef VRPyVec2f::methods[] = {
     {NULL}  /* Sentinel */
 };
 
-VRPyVec2f* toPyVec3f(const Vec2d& v) {
+VRPyVec2f* toPyVec2f(const Vec2d& v) {
     VRPyVec2f* pv = (VRPyVec2f*)VRPyVec2f::typeRef->tp_alloc(VRPyVec2f::typeRef, 0);
     pv->owner = false;
     pv->v = v;
     return pv;
 }
 
-PyObject* toPyObject(const Vec2d& v) { return (PyObject*)toPyVec3f(v); }
+PyObject* toPyObject(const Vec2d& v) { return (PyObject*)toPyVec2f(v); }
 
 PyObject* VRPyVec2f::New(PyTypeObject *type, PyObject *args, PyObject *kwds) {
     PyObject* v = 0;
@@ -114,18 +114,19 @@ PyObject* VRPyVec2f::New(PyTypeObject *type, PyObject *args, PyObject *kwds) {
 
 PyObject* VRPyVec2f::Print(PyObject* self) {
     string s = "[" + toString(((VRPyVec2f*)self)->v) + "]";
+    std::replace( s.begin(), s.end(), ' ', ',');
     return PyString_FromString( s.c_str() );
 }
 
 PyObject* VRPyVec2f::normalize(VRPyVec2f* self) {
     self->v.normalize();
-    return (PyObject*) toPyVec3f(self->v);
+    return (PyObject*) toPyVec2f(self->v);
 }
 
 PyObject* VRPyVec2f::normalized(VRPyVec2f* self) {
     auto v = self->v;
     v.normalize();
-    return (PyObject*) toPyVec3f(v);
+    return (PyObject*) toPyVec2f(v);
 }
 
 PyObject* VRPyVec2f::asList(VRPyVec2f* self) {
@@ -433,7 +434,7 @@ PyObject* VRPyVec3f::getItem(PyObject* self, Py_ssize_t i) {
 int VRPyVec3f::setItem(PyObject* self, Py_ssize_t i, PyObject* val) {
     if (i < 0 || i > 2) {
         setErr("Index i not in range [0-2] ("+toString(int(i))+")");
-        return 0;
+        return -1;
     }
     Vec3d& v = ((VRPyVec3f*)self)->v;
     v[i] = PyFloat_AsDouble(val);
@@ -514,6 +515,7 @@ PyObject* VRPyLine::New(PyTypeObject *type, PyObject *args, PyObject *kwds) {
 PyObject* VRPyLine::Print(PyObject* self) {
     auto l = ((VRPyLine*)self)->l;
     string s = "[" + toString(l) + "]";
+    std::replace( s.begin(), s.end(), ' ', ',');
     return PyString_FromString( s.c_str() );
 }
 
@@ -557,7 +559,133 @@ simplePyType(Octree, VRPyOctree::New );
 simplePyType(PCA, New_ptr);
 #endif
 simplePyType(Patch, New_ptr);
-simplePyType(Datarow, New_ptr);
+
+template<> PyTypeObject VRPyBaseT<Datarow>::type = {
+    PyObject_HEAD_INIT(NULL)
+    0,                         /*ob_size*/
+    "VR.Datarow",             /*tp_name*/
+    sizeof(VRPyDatarow),             /*tp_basicsize*/
+    0,                         /*tp_itemsize*/
+    (destructor)dealloc, /*tp_dealloc*/
+    0,                         /*tp_print*/
+    0,                         /*tp_getattr*/
+    0,                         /*tp_setattr*/
+    0,                         /*tp_compare*/
+    0,                         /*tp_repr*/
+    0,                         /*tp_as_number*/
+    &VRPyDatarow::sMethods,                         /*tp_as_sequence*/
+    0,                         /*tp_as_mapping*/
+    0,                         /*tp_hash */
+    0,                         /*tp_call*/
+    0,                         /*tp_str*/
+    0,                         /*tp_getattro*/
+    0,                         /*tp_setattro*/
+    0,                         /*tp_as_buffer*/
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, /*tp_flags*/
+    "VRDatarow binding",           /* tp_doc */
+    0,		               /* tp_traverse */
+    0,		               /* tp_clear */
+    0,		               /* tp_richcompare */
+    0,		               /* tp_weaklistoffset */
+    VRPyDatarow::iter,		               /* tp_iter */
+    VRPyDatarow::iternext,		              /* tp_iternext */
+    VRPyDatarow::methods,             /* tp_methods */
+    0,                      /* tp_members */
+    0,                         /* tp_getset */
+    0,                         /* tp_base */
+    0,                         /* tp_dict */
+    0,                         /* tp_descr_get */
+    0,                         /* tp_descr_set */
+    0,                         /* tp_dictoffset */
+    (initproc)init,      /* tp_init */
+    0,                         /* tp_alloc */
+    New_ptr,                 /* tp_new */
+};
+
+template<> bool toValue(PyObject* o, DatarowPtr& v) {
+    if (VRPyBase::isNone(o)) { v = 0; return 1; }
+    if (!VRPyDatarow::check(o)) return 0;
+    v = ((VRPyDatarow*)o)->objPtr; return 1;
+};
+
+template<> bool toValue(PyObject* o, Datarow*& v) {
+    if (VRPyBase::isNone(o)) { v = 0; return 1; }
+    if (!VRPyDatarow::check(o)) return 0;
+    v = ((VRPyDatarow*)o)->obj; return 1;
+};
+
+template<> PyObject* VRPyTypeCaster::cast(const DatarowPtr& e) {
+    return VRPyDatarow::fromSharedPtr(e);
+};
+
+PyObject* VRPyDatarow::iter(PyObject *self) {
+    Py_INCREF(self);
+    auto p = (VRPyDatarow*)self;
+    p->itr = 0;
+    return self;
+}
+
+PyObject* VRPyDatarow::iternext(PyObject *self) {
+    auto p = (VRPyDatarow*)self;
+    auto v = p->objPtr;
+    if (p->itr < v->length()) {
+        int i = p->itr;
+        (p->itr)++;
+        return PyFloat_FromDouble(v->get(i));
+    } else {
+        PyErr_SetNone(PyExc_StopIteration);
+        return NULL;
+    }
+}
+
+PySequenceMethods VRPyDatarow::sMethods = {
+    VRPyDatarow::len,       /* inquiry sq_length;              __len__ */
+    0,    /* binaryfunc sq_concat;           __add__ */
+    0,    /* intargfunc sq_repeat;           __mul__ */
+    VRPyDatarow::getItem,   /* intargfunc sq_item;             __getitem__ */
+    VRPyDatarow::getSlice,  /* intintargfunc sq_slice;         __getslice__ */
+    VRPyDatarow::setItem,   /* intobjargproc sq_ass_item;      __setitem__ */
+    0,  /* intintobjargproc sq_ass_slice;  __setslice__ */
+};
+
+Py_ssize_t VRPyDatarow::len(PyObject* self) {
+    auto v = ((VRPyDatarow*)self)->objPtr;
+    return v->length();
+}
+
+PyObject* VRPyDatarow::getItem(PyObject* self, Py_ssize_t i) {
+    auto v = ((VRPyDatarow*)self)->objPtr;
+    if (i < 0 || i >= v->length()) {
+        setErr("VRPyDatarow::getItem, index i not in range [0-"+toString(v->length())+"] ("+toString(int(i))+")");
+        return NULL;
+    }
+    return PyFloat_FromDouble(v->get(i));
+}
+
+int VRPyDatarow::setItem(PyObject* self, Py_ssize_t i, PyObject* val) {
+    auto v = ((VRPyDatarow*)self)->objPtr;
+    if (i < 0 || i >= v->length()) {
+        setErr("VRPyDatarow::setItem, index i not in range [0-"+toString(v->length())+"] ("+toString(int(i))+")");
+        return -1;
+    }
+    v->set( PyFloat_AsDouble(val), i );
+    return 0;
+}
+
+PyObject* VRPyDatarow::getSlice(PyObject* self, Py_ssize_t ilow, Py_ssize_t ihigh) {
+    auto v = ((VRPyDatarow*)self)->objPtr;
+    int N = v->length();
+    if (ilow < 0) ilow += N;
+    if (ihigh < 0) ihigh += N;
+    if (ilow >= N) ilow = N-1;
+    if (ihigh > N) ihigh = N;
+
+    auto v2 = Datarow::create();
+    if (0 <= ilow && ihigh <= N && ilow < ihigh) {
+        for (int i=ilow; i < ihigh; i++) v2->append( v->get(i) );
+    } else return NULL;
+    return VRPyDatarow::fromSharedPtr(v2);
+}
 
 PyMethodDef VRPyDatarow::methods[] = {
     {"append", PyWrap2( Datarow, append, "Add value", void, double ) },
@@ -567,6 +695,7 @@ PyMethodDef VRPyDatarow::methods[] = {
     {"resize", PyWrap2( Datarow, resize, "Resize data with value", void, int, double ) },
     {"add", PyWrap2( Datarow, add, "Add all elements of other datarow", void, DatarowPtr ) },
     {"insert", PyWrap2( Datarow, insert, "Add an element at ith place, element will be ith element, old ith element will shift to the right", void, int, double ) },
+    {"getMinMax", PyWrap2( Datarow, getMinMax, "Return min and max value", vector<double> ) },
     {"getPCT", PyWrap2( Datarow, getPCT, "Get ith PCT", double, int ) },
     {"getLogRet", PyWrap2( Datarow, getLogRet, "Get ith log return", double, int ) },
     {"getPCTs", PyWrap2( Datarow, getPCTs, "Get PCTs", DatarowPtr ) },
