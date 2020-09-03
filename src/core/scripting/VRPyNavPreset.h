@@ -6,8 +6,6 @@
 
 struct VRPyNavPreset : VRPyBaseT<OSG::VRNavPreset> {
     static PyMethodDef methods[];
-
-    static PyObject* setSpeed(VRPyNavPreset* self, PyObject* args);
 };
 
 #endif // VRPYNAVPRESET_H_INCLUDED
