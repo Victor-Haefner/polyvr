@@ -12,6 +12,7 @@ class VRStroke : public VRGeometry {
     public:
         enum CAP {
             NONE,
+            ROUND,
             ARROW
         };
 
