@@ -1,4 +1,6 @@
 #include "VRSyncConnection.h"
+#include "VRSyncNode.h"
+#include "core/networking/tcp/VRTCPClient.h"
 
 using namespace OSG;
 
@@ -97,25 +99,23 @@ vector<BYTE> VRSyncConnection::base64_decode(string const& encoded_string) {
 }
 
 
-VRSyncConnection::VRSyncConnection(string uri) : uri(uri) {
-    socket = VRWebSocket::create("sync node ws");
-    if (uri != "") connect();
+VRSyncConnection::VRSyncConnection(string host, int port) : host(host), port(port) {
+    client = VRTCPClient::create();
+    if (host != "") connect();
 }
 
 VRSyncConnection::~VRSyncConnection() { cout << "~VRSyncConnection::VRSyncConnection" << endl; }
-VRSyncConnectionPtr VRSyncConnection::create(string name) { return VRSyncConnectionPtr( new VRSyncConnection(name) ); }
+VRSyncConnectionPtr VRSyncConnection::create(string host, int port) { return VRSyncConnectionPtr( new VRSyncConnection(host, port) ); }
 
 void VRSyncConnection::connect() {
-    bool result = socket->open(uri);
-    if (!result) cout << "VRSyncConnection, Failed to open websocket to " << uri << endl;
+    client->connect(host, port);
+    //if (!result) cout << "VRSyncConnection, Failed to open websocket to " << uri << endl;
 }
 
-bool VRSyncConnection::send(string message){
-    if (!socket->sendMessage(message)) return 0;
+bool VRSyncConnection::send(string message) {
+    client->send(message);
     return 1;
 }
-
-
 
 
 

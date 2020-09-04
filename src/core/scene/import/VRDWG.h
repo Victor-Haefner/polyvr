@@ -3,12 +3,13 @@
 
 #include <OpenSG/OSGConfig.h>
 #include <string>
+#include <map>
 #include "core/objects/VRObjectFwd.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-void loadDWG(string path, VRTransformPtr res);
+void loadDWG(string path, VRTransformPtr res, map<string, string> options);
 VRGeometryPtr dwgArcTest();
 
 OSG_END_NAMESPACE;

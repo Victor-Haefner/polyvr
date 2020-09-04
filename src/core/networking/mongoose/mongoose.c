@@ -1399,7 +1399,9 @@ size_t mbuf_insert(struct mbuf *a, size_t off, const void *buf, size_t len) {
     size_t new_size = (size_t)((a->len + len) * MBUF_SIZE_MULTIPLIER);
     if ((p = (char *) MBUF_REALLOC(a->buf, new_size)) != NULL) {
       a->buf = p;
-      memmove(a->buf + off + len, a->buf + off, a->len - off);
+      //printf("mg mbuf_insert memmove( dest: %p, src: %p, size: %zu )", a->buf + off + len, a->buf + off, a->len - off);
+      //printf(" params: a->buf: %p, a->len : %zu, off: %zu, len: %zu )\n", a->buf, a->len, off, len);
+      memmove(a->buf + off + len, a->buf + off, a->len - off); // websocket send segfaults here sometimes
       if (buf != NULL) memcpy(a->buf + off, buf, len);
       a->len += len;
       a->size = new_size;
@@ -9680,6 +9682,7 @@ static void mg_send_ws_header(struct mg_connection *nc, int op, size_t len,
 static void mg_ws_mask_frame(struct mbuf *mbuf, struct ws_mask_ctx *ctx) {
   size_t i;
   if (ctx->pos == 0) return;
+  printf("mg_ws_mask_frame, ctx->pos: %zu, N: %zu\n", ctx->pos, (mbuf->len - ctx->pos));
   for (i = 0; i < (mbuf->len - ctx->pos); i++) {
     mbuf->buf[ctx->pos + i] ^= ((char *) &ctx->mask)[i % 4];
   }

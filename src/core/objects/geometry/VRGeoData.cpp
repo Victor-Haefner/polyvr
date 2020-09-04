@@ -1,5 +1,6 @@
 #include "VRGeoData.h"
 #include "VRGeometry.h"
+#include "core/objects/material/VRMaterial.h"
 #include "OSGGeometry.h"
 #include "core/utils/toString.h"
 
@@ -750,12 +751,20 @@ void VRGeoData::makeSingleIndex() {
 }
 
 vector<VRGeometryPtr> VRGeoData::splitByVertexColors(const Matrix4d& m) {
-    auto hashColor3 = [](const Color3f& col) -> size_t {
-        return col[0]*255 + col[1]*255*255 + col[2]*255*255*255;
+    map<size_t, VRGeoData> geos;
+    map<size_t, Color3f> colors;
+    map<size_t, map<size_t, size_t>> indexMaps;
+
+    auto hashColor3 = [&](const Color3f& col) -> size_t {
+        size_t h = col[0]*255 + col[1]*255*255 + col[2]*255*255*255;
+        colors[h] = col;
+        return h;
     };
 
-    auto hashColor4 = [](const Color4f& col) -> size_t {
-        return col[0]*255 + col[1]*255*255 + col[2]*255*255*255 + col[3]*255*255*255*255;
+    auto hashColor4 = [&](const Color4f& col) -> size_t {
+        size_t h = col[0]*255 + col[1]*255*255 + col[2]*255*255*255 + col[3]*255*255*255*255;
+        colors[h] = Color3f(col[0], col[1], col[2]);
+        return h;
     };
 
     auto getHash = [&](size_t i) -> size_t {
@@ -763,9 +772,6 @@ vector<VRGeometryPtr> VRGeoData::splitByVertexColors(const Matrix4d& m) {
         if (data->cols4) return hashColor4(data->cols4->getValue(i));
         return 0;
     };
-
-    map<size_t, VRGeoData> geos;
-    map<size_t, map<size_t, size_t>> indexMaps;
 
     for (auto& prim : *this) {
         auto h = getHash(prim.indices[0]);
@@ -783,8 +789,11 @@ vector<VRGeometryPtr> VRGeoData::splitByVertexColors(const Matrix4d& m) {
 
     vector<VRGeometryPtr> res;
     for (auto g : geos) {
-        auto gg = g.second.asGeometry(geo->getBaseName());
+        auto gg = g.second.asGeometry(geo?geo->getBaseName():"part");
         gg->setMatrix(m);
+        auto mat = VRMaterial::create("part-mat");
+        mat->setDiffuse(colors[g.first]);
+        gg->setMaterial(mat);
         res.push_back(gg);
     }
     return res;

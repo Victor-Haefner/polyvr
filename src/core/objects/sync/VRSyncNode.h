@@ -20,18 +20,22 @@ using namespace std;
 class VRSyncNode : public VRTransform {
     private:
         typedef unsigned char BYTE;
-        VRSocketPtr socket;
-        VRFunction<void*>* socketCb;
+        VRTCPServerPtr server;
         VRUpdateCbPtr updateFkt;
         FieldContainerFactoryBase* factory = FieldContainerFactory::the();
         vector<UInt32> createdNodes; //IDs of the currently created nodes/children
 
+        bool doWrapping = true;
+        bool doAvatars = true;
+
         VRSyncChangelistPtr changelist;
 
         map<UInt32, UInt32> container; // local containers, sub-set of containers which need to be synced for collaboration
+        map<UInt32, UInt32> externalContainer; // local external containers, key is container ID, value is change mask to use
         //vector<UInt32> cores; //lists IDs of nodecores
         vector<UInt32> syncedContainer; //Id's of container that got changes over sync (changed by remote). Needed to filter out sync changes from local Changelist to prevent cycles.
         map<string, VRSyncConnectionPtr> remotes;
+        map<string, string> remotesUri;
         map<UInt32, UInt32> remoteToLocalID;
         map<UInt32, UInt32> localToRemoteID;
         map<UInt32, UInt32> remoteCoreToLocalNode;
@@ -44,7 +48,6 @@ class VRSyncNode : public VRTransform {
 
         VRObjectPtr copy(vector<VRObjectPtr> children);
 
-        void handleMessage(void* msg);
         void handleMapping(string mappingData);
         vector<FieldContainer*> findContainer(string typeName); //deprecated
         vector<FieldContainer*> getTransformationContainer(ChangeList* cl); //deprecated
@@ -70,13 +73,19 @@ class VRSyncNode : public VRTransform {
         //void updateRemoteMousePose(string nodeName, PosePtr mousePose);
         map<string, PosePtr> remotesCameraPose;
         map<string, PosePtr> remotesMousePose;
+        map<string, PosePtr> remotesFlystickPose;
         Pose oldCamPose;
         Pose oldMousePose;
+        Pose oldFlystickPose;
 
         //Ownership
         vector<string> owned; //names of owned objects by this node
         void handleOwnershipMessage(string ownership);
 
+        // avatar
+        VRTransformPtr avatarHeadBeacon;
+        VRTransformPtr avatarDeviceBeacon;
+        void handleAvatar(string data);
 
     public:
         VRSyncNode(string name = "syncNode");
@@ -85,13 +94,16 @@ class VRSyncNode : public VRTransform {
         static VRSyncNodePtr create(string name = "None");
         VRSyncNodePtr ptr();
 
-        void startInterface(int port);
+        void setDoWrapping(bool b);
+        void setDoAvatars(bool b);
 
         void addRemote(string host, int port, string name);
 
         void addRemoteMapping(UInt32 lID, UInt32 rID);
         void replaceContainerMapping(UInt32 ID1, UInt32 ID2);
 
+        void startInterface(int port);
+        void handleMessage(string msg);
         void update();
         void broadcast(string message);
         size_t getContainerCount();
@@ -99,6 +111,7 @@ class VRSyncNode : public VRTransform {
         bool isRegistered(const UInt32& id);
         bool isSubContainer(const UInt32& id);
         bool isRemoteChange(const UInt32& id);
+        bool isExternalContainer(const UInt32& id, UInt32& mask);
 
         void logSyncedContainer(UInt32 id);
 
@@ -111,6 +124,7 @@ class VRSyncNode : public VRTransform {
 
         PosePtr getRemoteCamPose(string remoteName);
         PosePtr getRemoteMousePose(string remoteName);
+        PosePtr getRemoteFlystickPose(string remoteName);
 
         vector<string> getOwnedObjects(string nodeName);
         void requestOwnership(string objectName);
@@ -118,10 +132,14 @@ class VRSyncNode : public VRTransform {
 
         void registerContainer(FieldContainer* c, UInt32 syncNodeID = -1);
         vector<UInt32> registerNode(Node* c); //returns all registered IDs
+        void setAvatarBeacons(VRTransformPtr head, VRTransformPtr device);
+        void addRemoteAvatar(VRTransformPtr head, VRTransformPtr device);
 
         map<FieldContainer*, vector<FieldContainer*>> getAllSubContainers(FieldContainer* node);
 
         void wrapOSG();
+
+        string getConnectionLink();
 };
 
 OSG_END_NAMESPACE;

@@ -65,8 +65,6 @@ class VRGeoData {
         int getDataSize(int type);
         string getDataAsString(int type);
 
-        vector<VRGeometryPtr> splitByVertexColors(const Matrix4d& m);
-
         int pushVert(Pnt3d p);
         int pushVert(Pnt3d p, Vec3d n);
         int pushVert(Pnt3d p, Vec3d n, Color3f c);
@@ -125,6 +123,7 @@ class VRGeoData {
 
         void apply(VRGeometryPtr geo, bool check = true, bool checkIndices = false) const;
         VRGeometryPtr asGeometry(string name) const;
+        vector<VRGeometryPtr> splitByVertexColors(const Matrix4d& m = Matrix4d());
         void append(VRGeometryPtr geo, const Matrix4d& m = Matrix4d());
         void append(const VRGeoData& geo, const Matrix4d& m = Matrix4d());
         void makeSingleIndex();

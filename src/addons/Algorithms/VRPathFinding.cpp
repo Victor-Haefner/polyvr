@@ -34,8 +34,10 @@ Vec3d VRPathFinding::pos(Position& p) {
     }
 
     if (p.eID >= 0) {
-        auto path = paths[p.eID];
-        return path->getPose(p.t)->pos();
+        if (p.eID < paths.size()) {
+            auto path = paths[p.eID];
+            return path->getPose(p.t)->pos();
+        }
     }
 
     return Vec3d();
@@ -92,12 +94,16 @@ VRPathFinding::Position VRPathFinding::getMinFromOpenSet() {
 }
 
 // changed behaviour to use directed graph edges
-vector<VRPathFinding::Position> VRPathFinding::getNeighbors(Position& p) {
+vector<VRPathFinding::Position> VRPathFinding::getNeighbors(Position& p, bool bidirectional) {
     vector<Position> res;
     if (!graph) return res;
 
     if (graph->hasNode(p.nID)) {
         for (auto n : graph->getNextNodes(p.nID)) res.push_back( Position(n.ID) );
+
+        if (bidirectional) {
+            for (auto n : graph->getPreviousNodes(p.nID)) res.push_back( Position(n.ID) );
+        }
 
         for (auto e : graph->getOutEdges(p.nID)) {
             for (auto eID2 : e.relations) { // bridges between edges
@@ -118,7 +124,7 @@ vector<VRPathFinding::Position> VRPathFinding::getNeighbors(Position& p) {
     return res;
 }
 
-vector<VRPathFinding::Position> VRPathFinding::computePath(Position start, Position goal) {
+vector<VRPathFinding::Position> VRPathFinding::computePath(Position start, Position goal, bool bidirectional) {
     if (!valid(start) || !valid(goal)) {
         string p = valid(start)?"goal":"start";
         cout << "VRPathFinding::computePath Error: " << p << " position invalid!" << endl;
@@ -140,7 +146,7 @@ vector<VRPathFinding::Position> VRPathFinding::computePath(Position start, Posit
         openSet.erase(current);
         closedSet[current] = 1;
 
-        for (auto neighbor : getNeighbors(current)) { // TODO: take edge positions into account!
+        for (auto neighbor : getNeighbors(current, bidirectional)) { // TODO: take edge positions into account!
             if (closedSet.count(neighbor)) continue;
             gCost[current] = getDistance(start, current);
             float tentative_gCost = gCost[current] + getDistance(current, neighbor);

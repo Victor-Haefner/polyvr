@@ -40,7 +40,7 @@ class VRPathFinding {
 
 
         Vec3d pos(Position& p);
-        vector<Position> getNeighbors(Position& p);
+        vector<Position> getNeighbors(Position& p, bool bidirectional);
 
         bool valid(Position& p);
         Position getMinFromOpenSet();
@@ -56,7 +56,7 @@ class VRPathFinding {
 
         void setGraph(GraphPtr g);
         void setPaths(vector<PathPtr> p);
-        vector<Position> computePath(Position start, Position goal);
+        vector<Position> computePath(Position start, Position goal, bool bidirectional = false);
 };
 
 OSG_END_NAMESPACE
