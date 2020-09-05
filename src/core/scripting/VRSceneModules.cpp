@@ -45,6 +45,7 @@
 #include "VRPySnappingEngine.h"
 #include "VRPyAnnotationEngine.h"
 #include "VRPyAnalyticGeometry.h"
+#include "VRPyPDF.h"
 #include "VRPySelector.h"
 #include "VRPySelection.h"
 #include "VRPyPatchSelection.h"
@@ -169,6 +170,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyPath>("Path", pModVR);
     sm->registerModule<VRPyGraph>("Graph", pModVR);
     sm->registerModule<VRPyDatarow>("Datarow", pModVR);
+    sm->registerModule<VRPyPDF>("PDF", pModVR);
     sm->registerModule<VRPyStateMachine>("StateMachine", pModVR);
 #ifndef WITHOUT_HDLC
     sm->registerModule<VRPyHDLC>("HDLC", pModVR);
