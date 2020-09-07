@@ -973,6 +973,11 @@ void VRMaterial::setTransparency(float c) {
     //enableTransparency();
 }
 
+bool VRMaterial::doesIgnoreMeshColors() {
+    auto md = mats[activePass];
+    return (md->colChunk->getColorMaterial() == GL_NONE);
+}
+
 void VRMaterial::ignoreMeshColors(bool b) {
     auto md = mats[activePass];
     if (b) {
