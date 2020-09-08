@@ -474,7 +474,7 @@ void process_ARC(Dwg_Object* obj, DWGContext& data) {
 void process_TEXT(Dwg_Object* obj, DWGContext& data) {
     Dwg_Entity_TEXT* text = obj->tio.entity->tio.TEXT;
     Dwg_Object_LAYER* layer = getEntityLayer(obj, data);
-#if LIBREDWG_VERSION_MINOR >= 10
+#if LIBREDWG_VERSION_MINOR >= 11
     double x = text->ins_pt.x;
     double y = text->ins_pt.y;
 #else
@@ -488,7 +488,7 @@ void process_TEXT(Dwg_Object* obj, DWGContext& data) {
 void process_MTEXT(Dwg_Object* obj, DWGContext& data) {
     Dwg_Entity_MTEXT* text = obj->tio.entity->tio.MTEXT;
     Dwg_Object_LAYER* layer = getEntityLayer(obj, data);
-#if LIBREDWG_VERSION_MINOR >= 10
+#if LIBREDWG_VERSION_MINOR >= 11
     double x = text->ins_pt.x;
     double y = text->ins_pt.y;
 #else

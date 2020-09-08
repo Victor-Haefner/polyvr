@@ -18,6 +18,7 @@ namespace OSG {
     ptrFwd(VRVisualLayer);
     ptrFwd(VRProgress);
     ptrFwd(VREncryption);
+    ptrFwd(VRPDF);
 }
 
 #endif // VRUTILSFWD_H_INCLUDED

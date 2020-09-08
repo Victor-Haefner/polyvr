@@ -133,6 +133,7 @@ class VRMaterial : public VRObject {
         void setStencilBuffer(bool clear, float value, float mask, int func, int opFail, int opZFail, int opPass);
 
         bool isWireFrame();
+        bool doesIgnoreMeshColors();
 
         Color3f getDiffuse();
         Color3f getSpecular();
