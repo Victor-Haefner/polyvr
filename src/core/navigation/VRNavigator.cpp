@@ -274,7 +274,9 @@ void VRNavigator::orbit(VRDeviceWeakPtr _dev) {
         target->setAt(camAtRef);
         target->setFrom(camPos);
 	} else {
-        Vec3d delta = -mousePos[0]*camPanRef.x() -mousePos[1]*camPanRef.up();
+        Vec3d x = camPanRef.x(); x.normalize();
+        Vec3d u = x.cross( camPanRef.dir() ); u.normalize();
+        Vec3d delta = -mousePos[0]*x -mousePos[1]*u;
         camPos = camPanRef.pos() + delta;
         target->setAt(camAtRef + delta);
         target->setFrom(camPos);
