@@ -100,7 +100,11 @@ PyObject* VRSceneGlobals::getFrame(VRSceneGlobals* self) {
 }
 
 PyObject* VRSceneGlobals::testDWGArcs(VRSceneGlobals* self) {
+#ifndef WITHOUT_DWG
     return VRPyGeometry::fromSharedPtr( dwgArcTest() );
+#else
+	return 0;
+#endif
 }
 
 PyObject* VRSceneGlobals::getSoundManager(VRSceneGlobals* self) {

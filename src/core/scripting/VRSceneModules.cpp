@@ -36,7 +36,9 @@
 #include "VRPyTextureGenerator.h"
 #include "VRPyLight.h"
 #include "VRPyLightBeacon.h"
+#ifndef WITHOUT_TCP
 #include "VRPySyncNode.h"
+#endif
 #include "VRPyCamera.h"
 #include "VRPyLod.h"
 #include "VRPyKinematics.h"
@@ -45,7 +47,9 @@
 #include "VRPySnappingEngine.h"
 #include "VRPyAnnotationEngine.h"
 #include "VRPyAnalyticGeometry.h"
+#ifndef WITHOUT_PANGO_CAIRO
 #include "VRPyPDF.h"
+#endif
 #include "VRPySelector.h"
 #include "VRPySelection.h"
 #include "VRPyPatchSelection.h"
@@ -142,10 +146,14 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyTexture>("Image", pModVR);
     sm->registerModule<VRPyLight>("Light", pModVR, VRPyObject::typeRef);
     sm->registerModule<VRPyLightBeacon>("LightBeacon", pModVR, VRPyTransform::typeRef);
+#ifndef WITHOUT_TCP
     sm->registerModule<VRPySyncNode>("SyncNode", pModVR, VRPyTransform::typeRef);
     //sm->registerModule<VRPySyncRemote>("SyncRemote", pModVR);
+#endif
     sm->registerModule<VRPyCamera>("Camera", pModVR, VRPyTransform::typeRef);
+#ifndef WITHOUT_BULLET
     sm->registerModule<VRPyKinematics>("Kinematics", pModVR, VRPyTransform::typeRef);
+#endif
     sm->registerModule<VRPyFABRIK>("FABRIK", pModVR);
     sm->registerModule<VRPyLod>("Lod", pModVR, VRPyObject::typeRef);
     sm->registerModule<VRPyLodLeaf>("LodLeaf", pModVR, VRPyTransform::typeRef);
@@ -170,7 +178,9 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyPath>("Path", pModVR);
     sm->registerModule<VRPyGraph>("Graph", pModVR);
     sm->registerModule<VRPyDatarow>("Datarow", pModVR);
+#ifndef WITHOUT_PANGO_CAIRO
     sm->registerModule<VRPyPDF>("PDF", pModVR);
+#endif
     sm->registerModule<VRPyStateMachine>("StateMachine", pModVR);
 #ifndef WITHOUT_HDLC
     sm->registerModule<VRPyHDLC>("HDLC", pModVR);
