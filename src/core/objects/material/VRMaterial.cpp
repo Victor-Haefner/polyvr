@@ -277,15 +277,11 @@ string VRMaterial::constructShaderVP(VRMatDataPtr data) {
     vp += "varying vec4 vertPos;\n";
     vp += "varying vec3 vertNorm;\n";
     vp += "varying vec4 color;\n";
-    vp += "varying float hasVertexColors;\n";
 	if (texD == 2) vp += "varying vec2 texCoord;\n";
     vp += "void main(void) {\n";
     vp += "  vertNorm = (OSGNormalMatrix * vec4(osg_Normal,1.0)).xyz;\n";
     if (texD == 2) vp += "  texCoord = osg_MultiTexCoord0;\n";
     vp += "  color = osg_Color;\n";
-    vp += "  hasVertexColors = 0.0;\n";
-    vp += "  if (color.a < 0.001) hasVertexColors = 1.0;\n"; // try to detect geometry with vertex colors
-    vp += "  if (hasVertexColors < 0.5) color = vec4(1.0,1.0,1.0,1.0);\n";
     vp += "  gl_Position = OSGModelViewProjectionMatrix * osg_Vertex;\n";
     vp += "}\n";
 #else
@@ -321,7 +317,6 @@ string VRMaterial::constructShaderFP(VRMatDataPtr data, bool deferred, int force
     fp += "precision mediump float;\n";
     fp += "varying vec3 vertNorm;\n";
     fp += "varying vec4 color;\n";
-    fp += "varying float hasVertexColors;\n";
 	if (texD == 2) fp += "varying vec2 texCoord;\n";
     fp += "uniform int isLit;\n";
     fp += "uniform vec4 mat_diffuse;\n";
@@ -336,12 +331,8 @@ string VRMaterial::constructShaderFP(VRMatDataPtr data, bool deferred, int force
 //    if (texD == 2) fp += "  vec4 diffCol = vec4(texCoord.x, texCoord.y, 0.0, 1.0);\n";
     else fp += "  vec4 diffCol = color;\n";
     fp += "  vec4  ambient = mat_ambient * diffCol;\n";
-    fp += "  vec4  diffuse = mat_diffuse * NdotL * diffCol;\n";
+    fp += "  vec4  diffuse = NdotL * diffCol;\n";
     fp += "  vec4  specular = mat_specular * 0.0;\n";
-    fp += "  if (hasVertexColors > 0.5) {\n";
-    fp += "     ambient = mat_ambient * diffCol;\n";
-    fp += "     diffuse = diffCol * NdotL;\n";
-    fp += "  }\n";
     fp += "  if (isLit == 0) gl_FragColor = mat_diffuse * diffCol;\n";
     fp += "  else gl_FragColor = ambient + diffuse + specular;\n";
     fp += "}\n";

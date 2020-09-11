@@ -77,7 +77,7 @@ void VRGuiBits::on_web_export_clicked() {
     if (!exists(folder+"/.git"))
         systemCall("git clone https://github.com/Victor-Haefner/polyvr-webport.git \"" + folder + "\"");
 
-    //systemCall("git -C \"" + folder + "\" pull");
+    systemCall("git -C \"" + folder + "\" pull");
     systemCall("cp -f \"" + folder + "/polyvr.wasm\" ./");
     systemCall("cp -f \"" + folder + "/polyvr.js\" ./");
     systemCall("cp -f \"" + folder + "/storage.js\" ./");
