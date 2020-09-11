@@ -10,6 +10,7 @@ OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 void loadDWG(string path, VRTransformPtr res, map<string, string> options);
+void writeDWG(VRObjectPtr res, string path);
 VRGeometryPtr dwgArcTest();
 
 OSG_END_NAMESPACE;

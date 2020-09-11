@@ -3,6 +3,7 @@
 
 #define restrict
 #define template dwg_template
+#define USE_WRITE
 #include <dwg_api.h>
 #undef template
 
@@ -13,6 +14,8 @@
 #include "core/objects/material/VRMaterial.h"
 #include "core/utils/toString.h"
 #include "core/math/boundingbox.h"
+#include "core/math/Layer2D.h"
+#include "core/math/pose.h"
 #include "core/tools/VRAnnotationEngine.h"
 
 #include <OpenSG/OSGQuaternion.h>
@@ -747,6 +750,38 @@ VRGeometryPtr dwgArcTest() {
     m->setLineWidth(3);
     geo->setMaterial(m);
     return geo;
+}
+
+void writeDWG(VRObjectPtr obj, string path) {
+    auto plane = Pose::create(Vec3d(0,0,0), Vec3d(0,1,0), Vec3d(0,0,1));
+    Layer2D projection;
+    projection.project(obj, plane);
+    for (auto l : projection.getLines()) {
+        //drawLine(l.p1, l.p2, l.c1, l.c2);
+    }
+
+    Dwg_Data data;
+    data.header.version = R_13; //R_2000;
+
+    dwg_add_object(&data);
+    Dwg_Object& lineObj = data.object[data.num_objects-1];
+    dwg_setup_LINE(&lineObj);
+    Dwg_Entity_LINE* line = lineObj.tio.entity->tio.LINE;
+
+    BITCODE_3BD p1;
+    BITCODE_3BD p2;
+    p1.x = 0;
+    p1.y = 0;
+    p1.z = 0;
+    p2.x = 10;
+    p2.y = 10;
+    p2.z = 10;
+    line->start = p1;
+    line->end   = p2;
+
+    return; // TODO: for now this crashes
+
+    dwg_write_file(path.c_str(), &data);
 }
 
 OSG_END_NAMESPACE;
