@@ -603,6 +603,8 @@
 		<Unit filename="src/core/math/Eigendecomposition.h" />
 		<Unit filename="src/core/math/Expression.cpp" />
 		<Unit filename="src/core/math/Expression.h" />
+		<Unit filename="src/core/math/Layer2D.cpp" />
+		<Unit filename="src/core/math/Layer2D.h" />
 		<Unit filename="src/core/math/OSGMathFwd.cpp" />
 		<Unit filename="src/core/math/OSGMathFwd.h" />
 		<Unit filename="src/core/math/Octree.cpp" />

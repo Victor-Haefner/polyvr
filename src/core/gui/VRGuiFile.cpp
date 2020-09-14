@@ -40,6 +40,7 @@ void VRGuiFile::init() {
     connect_signal<void>(dialog, bind(VRGuiFile::apply), "file_activated");
     connect_signal<bool, GdkEvent*>(dialog, bind(VRGuiFile::keyApply, placeholders::_1), "event");
     gtk_file_chooser_set_action((GtkFileChooser*)dialog, GTK_FILE_CHOOSER_ACTION_OPEN);
+    disableDestroyDiag("file_dialog");
 }
 
 void VRGuiFile::open(string button, int action, string title) {

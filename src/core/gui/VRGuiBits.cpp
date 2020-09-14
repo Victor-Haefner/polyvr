@@ -274,6 +274,9 @@ VRGuiBits::VRGuiBits() {
 
     setLabel("label24", "Project: None");
 
+    disableDestroyDiag("aboutdialog1");
+    disableDestroyDiag("dialog2");
+
     // recorder
     recorder_visual_layer = VRVisualLayer::getLayer("Recorder", "recorder.png", 1);
     recToggleCb = VRFunction<bool>::create("recorder toggle", bind(&VRGuiRecWidget::setVisible, &recorder, placeholders::_1));

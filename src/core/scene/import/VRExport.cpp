@@ -1,6 +1,9 @@
 #include "VRExport.h"
 #include "VRPLY.h"
 #include "GLTF/GLTF.h"
+#ifndef WITHOUT_DWG
+#include "VRDWG.h"
+#endif
 //#include "VRCOLLADA.h"
 //#include "VRSTEP.h"
 
@@ -24,6 +27,9 @@ void VRExport::write(VRObjectPtr obj, string path) {
     cout << "VRExport::write '" << obj->getName() << "' to '" << path << "', extension: " << ext << endl;
     if (ext == ".ply") { writePly( dynamic_pointer_cast<VRGeometry>(obj), path); }
     if (ext == ".gltf") { writeGLTF(obj, path); }
+#ifndef WITHOUT_DWG
+    if (ext == ".dwg") { writeDWG(obj, path); }
+#endif
 
     if (ext == ".wrl" || ext == ".wrz" || ext == ".obj" || ext == ".osb" || ext == ".osg")
         SceneFileHandler::the()->write(obj->getNode()->node, path.c_str());

@@ -264,11 +264,13 @@ string fragFailShader =
 string VRMaterial::constructShaderVP(VRMatDataPtr data) {
     if (!data) data = mats[activePass];
     int texD = data->getTextureDimension();
+    //bool hasVertCols = ;
 
     string vp;
 #ifdef OSG_OGL_ES2
     vp += "attribute vec4 osg_Vertex;\n";
     vp += "attribute vec3 osg_Normal;\n";
+    vp += "attribute vec4 osg_Color;\n";
     if (texD == 2) vp += "attribute vec2 osg_MultiTexCoord0;\n";
     vp += "uniform mat4 OSGModelViewProjectionMatrix;\n";
     vp += "uniform mat4 OSGNormalMatrix;\n";
@@ -279,7 +281,7 @@ string VRMaterial::constructShaderVP(VRMatDataPtr data) {
     vp += "void main(void) {\n";
     vp += "  vertNorm = (OSGNormalMatrix * vec4(osg_Normal,1.0)).xyz;\n";
     if (texD == 2) vp += "  texCoord = osg_MultiTexCoord0;\n";
-    vp += "  color = vec4(1.0,1.0,1.0,1.0);\n";
+    vp += "  color = osg_Color;\n";
     vp += "  gl_Position = OSGModelViewProjectionMatrix * osg_Vertex;\n";
     vp += "}\n";
 #else
@@ -329,7 +331,7 @@ string VRMaterial::constructShaderFP(VRMatDataPtr data, bool deferred, int force
 //    if (texD == 2) fp += "  vec4 diffCol = vec4(texCoord.x, texCoord.y, 0.0, 1.0);\n";
     else fp += "  vec4 diffCol = color;\n";
     fp += "  vec4  ambient = mat_ambient * diffCol;\n";
-    fp += "  vec4  diffuse = mat_diffuse * NdotL * diffCol;\n";
+    fp += "  vec4  diffuse = NdotL * diffCol;\n";
     fp += "  vec4  specular = mat_specular * 0.0;\n";
     fp += "  if (isLit == 0) gl_FragColor = mat_diffuse * diffCol;\n";
     fp += "  else gl_FragColor = ambient + diffuse + specular;\n";
@@ -1231,7 +1233,8 @@ void VRMaterial::setFragmentShader(string s, string name, bool deferred) {
     initShaderChunk();
     auto m = mats[activePass];
 #ifdef WASM
-    s = "#define WEBGL\nprecision mediump float;\n" + s;
+    if (!contains(s, "precision mediump"))
+        s = "#define WEBGL\nprecision mediump float;\n" + s;
 #endif
 
 #ifndef OSG_OGL_ES2

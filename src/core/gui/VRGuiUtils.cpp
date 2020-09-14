@@ -346,6 +346,7 @@ OSG::Color4f chooseColor(string drawable, OSG::Color4f current) {
         gtk_color_selection_get_current_color(csel, &c);
         alpha = gtk_color_selection_get_current_alpha(csel)/65535.0;
     }
+    gtk_widget_destroy((GtkWidget*)cdiag);
 
     gtk_widget_modify_bg((GtkWidget*)darea, GTK_STATE_NORMAL, &c);  // TODO: blend with pattern to show alpha channel
 

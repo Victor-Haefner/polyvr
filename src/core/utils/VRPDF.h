@@ -26,8 +26,6 @@ class VRPDF {
         float Ox = 100;
         float Oy = 100;
 
-        Vec2d projectVector(Pnt3d v, PosePtr plane);
-
     public:
         VRPDF(string path);
         ~VRPDF();
@@ -36,12 +34,10 @@ class VRPDF {
 
         void write(string path);
 
-        void drawLine(Vec2d p1, Vec2d p2, Color3f c1, Color3f c2);
+        void drawLine(Pnt2d p1, Pnt2d p2, Color3f c1, Color3f c2);
         void drawText();
 
         void project(VRObjectPtr obj, PosePtr plane);
-        void projectGeometry(VRGeometryPtr geo, PosePtr plane, PosePtr transform);
-
         void slice(VRObjectPtr obj, PosePtr plane);
 };
 
