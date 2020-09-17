@@ -7,12 +7,7 @@
 #include "core/utils/VRFunction.h"
 #include "VRGuiUtils.h"
 
-#include <gtk/gtkdialog.h>
-#include <gtk/gtklabel.h>
-#include <gtk/gtkbbox.h>
-#include <gtk/gtkbutton.h>
-#include <gtk/gtkimage.h>
-#include <gtk/gtkstock.h>
+#include <gtk/gtk.h>
 
 using namespace OSG;
 
@@ -29,15 +24,11 @@ VRGuiRecWidget::VRGuiRecWidget() {
     gtk_window_set_title((GtkWindow*)diag, "Recorder");
 
     GtkButtonBox* box = (GtkButtonBox*)gtk_dialog_get_action_area(diag);
+#if GTK_MAJOR_VERSION == 2
     gtk_button_box_set_child_size(box, 20, -1);
+#endif
 
     auto addButton = [&](const char* icon, int signal) {
-        //GtkButton* b = (GtkButton*)gtk_dialog_add_button(diag, NULL, signal);
-        //GtkButton* b = (GtkButton*)gtk_dialog_add_button(diag, GTK_STOCK_MEDIA_PLAY, signal);
-        //auto img = gtk_image_new_from_stock(GTK_STOCK_MEDIA_PLAY, GTK_ICON_SIZE_BUTTON);
-        //gtk_image_set_from_stock(imgPlay, stock_id, GTK_ICON_SIZE_BUTTON);
-        //gtk_button_set_image(but, img);
-
         auto but = (GtkButton*)gtk_button_new();
         GtkWidget* img = gtk_image_new_from_stock(icon, GTK_ICON_SIZE_BUTTON);
         gtk_container_add((GtkContainer*)but, img);

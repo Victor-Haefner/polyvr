@@ -1,4 +1,4 @@
-
+#include <gtk/gtk.h>
 #include "VRGuiSemantics.h"
 #include "VRGuiUtils.h"
 #include "VRGuiFile.h"
@@ -20,10 +20,6 @@
 
 #include "wrapper/VRGuiTreeView.h"
 
-#include <gtk/gtkwidget.h>
-#include <gtk/gtkfixed.h>
-#include <gtk/gtkdnd.h>
-#include <gtk/gtktreestore.h>
 
 // TODOd, refactoring from gtk mm
 

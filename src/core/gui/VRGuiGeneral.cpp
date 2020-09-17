@@ -1,4 +1,4 @@
-
+#include <gtk/gtk.h>
 #include "VRGuiGeneral.h"
 #include "VRGuiUtils.h"
 

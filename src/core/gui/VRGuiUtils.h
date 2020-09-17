@@ -4,11 +4,15 @@
 #include <map>
 #include <OpenSG/OSGConfig.h>
 #include <OpenSG/OSGColor.h>
-#include <gtk/gtkwidget.h>
 #include "core/objects/VRObjectFwd.h"
 
 struct _GtkWidget;
+#if GTK_MAJOR_VERSION == 2
 struct _GtkObject;
+#else
+struct _GObject;
+#define _GtkObject _GObject
+#endif
 struct _GtkButton;
 struct _GtkToggleButton;
 struct _GtkToolButton;
@@ -18,7 +22,6 @@ struct _GtkRadioButton;
 struct _GtkComboBox;
 struct _GtkEntry;
 struct _GtkNotebook;
-struct _GtkNotebookPage;
 struct _GtkHScale;
 struct _GtkImage;
 struct _GtkCellRendererCombo;
@@ -47,7 +50,11 @@ class VRGuiBuilder {
         void read(string path);
 
         _GtkWidget* get_widget(string name);
+#if GTK_MAJOR_VERSION == 2
         _GtkObject* get_object(string name);
+#else
+        _GObject* get_object(string name);
+#endif
 };
 
 VRGuiBuilder* getGUIBuilder(bool standalone = false);
@@ -89,7 +96,7 @@ void connect_signal(T1* widget, T2 bin, string event, bool after = false) {
     connect_signal(widget, cb, event, after);
 }
 
-void clearContainer(GtkWidget* container);
+void clearContainer(_GtkWidget* container);
 void setWidgetVisibility(string e, bool b);
 void setWidgetSensitivity(string e, bool b);
 void disableDestroyDiag(string diag, bool hide = true);
@@ -103,8 +110,8 @@ void setRadioToolButtonCallback(string cb, function<void()> sig );
 void setRadioButtonCallback(string cb, function<void()> sig );
 void setComboboxCallback(string b, function<void()> sig);
 void setTreeviewSelectCallback(string treeview, function<void()> sig);
-void setCellRendererCallback(string renderer, function<void(gchar*, gchar*)> sig, bool after = true);
-void setNoteBookCallback(string nb, function<void(_GtkNotebookPage*, guint, gpointer)> sig);
+void setCellRendererCallback(string renderer, function<void(char*, char*)> sig, bool after = true);
+void setNoteBookCallback(string nb, function<void(_GtkWidget*, guint, gpointer)> sig);
 void setSliderCallback(string s, function<bool(int,double)> sig);
 void setEntryCallback(string e, function<void()> sig, bool onEveryChange = false, bool onFocusOut = true, bool onActivate = true);
 
@@ -126,6 +133,7 @@ void setButtonText(string cb, string txt );
 void setComboboxLastActive(string cb);
 void setCombobox(string cb, int i);
 int getListStorePos(string ls, string s);
+string getComboboxPtrText(_GtkComboBox* cb);
 string getComboboxText(string cbn);
 int getComboboxI(string cbn);
 _GtkTreeIter getComboboxIter(string cbn);

@@ -1,3 +1,6 @@
+#ifndef WITHOUT_GTK
+#include <gtk/gtk.h>
+#endif
 #include <OpenSG/OSGGL.h>
 #include <OpenSG/OSGGLUT.h>
 #include <OpenSG/OSGGLUTWindow.h>
@@ -31,7 +34,6 @@
 #include "VRGtkWindow.h"
 #include "core/gui/VRGuiManager.h"
 #include "core/gui/VRGuiConsole.h"
-#include <gtk/gtkdrawingarea.h>
 #define WARN(x) \
 VRGuiManager::get()->getConsole( "Errors" )->write( x+"\n" );
 #else

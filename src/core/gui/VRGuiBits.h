@@ -11,7 +11,7 @@
 
 struct _GtkNotebook;
 struct _GtkToggleToolButton;
-struct _GtkNotebookPage;
+struct _GtkWidget;
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -45,7 +45,7 @@ class VRGuiBits {
 
         void on_new_cancel_clicked();
         void on_internal_close_clicked();
-        void on_console_switch(_GtkNotebookPage* page, unsigned int page_num);
+        void on_console_switch(_GtkWidget* page, unsigned int page_num);
 
     public:
         VRGuiBits();

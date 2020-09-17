@@ -33,11 +33,11 @@
 			<Add option="-Wall" />
 			<Add option="-std=c++14" />
 			<Add option="-fPIC" />
-			<Add option="`pkg-config gtk+-2.0 --cflags`" />
+			<Add option="`pkg-config gtk+-3.0 --cflags`" />
 			<Add option="`pkg-config gmodule-2.0 --cflags`" />
 			<Add option="`pkg-config gtkglext-1.0 --cflags`" />
 			<Add option="`pkg-config python --cflags`" />
-			<Add option="`pkg-config gtksourceview-2.0 --cflags`" />
+			<Add option="`pkg-config gtksourceview-3.0 --cflags`" />
 			<Add option="-fopenmp" />
 			<Add option="-use_readonly_const" />
 			<Add option="-Wno-deprecated" />
@@ -148,12 +148,12 @@
 			<Add option="`pkg-config icu-i18n --libs`" />
 			<Add option="-lcef" />
 			<Add option="-lcef_dll_wrapper" />
-			<Add option="`pkg-config gtk+-2.0 --libs`" />
+			<Add option="`pkg-config gtk+-3.0 --libs`" />
 			<Add option="`pkg-config gmodule-2.0 --libs`" />
 			<Add option="`pkg-config bullet --libs`" />
 			<Add option="`pkg-config gtkglext-1.0 --libs`" />
 			<Add option="`pkg-config python --libs`" />
-			<Add option="`pkg-config gtksourceview-2.0 --libs`" />
+			<Add option="`pkg-config gtksourceview-3.0 --libs`" />
 			<Add option="`pkg-config vte --libs`" />
 			<Add option="-ljsoncpp" />
 			<Add option="-lvrpn" />
@@ -219,15 +219,6 @@
 			<Add option="-lpng" />
 			<Add option="-lz" />
 			<Add option="-lXt" />
-			<Add option="-lpango-1.0" />
-			<Add option="-lgobject-2.0" />
-			<Add option="-lgmodule-2.0" />
-			<Add option="-lglib-2.0" />
-			<Add option="-lpangoft2-1.0" />
-			<Add option="-lfreetype" />
-			<Add option="-lfontconfig" />
-			<Add option="-lpangocairo-1.0" />
-			<Add option="-lcairo" />
 			<Add option="-lbase" />
 			<Add option="-lsdai_ap214e3" />
 			<Add option="-lstepdai" />
@@ -1092,6 +1083,8 @@
 		<Unit filename="src/core/setup/tracking/Vive.h" />
 		<Unit filename="src/core/setup/windows/VRGlutWindow.cpp" />
 		<Unit filename="src/core/setup/windows/VRGlutWindow.h" />
+		<Unit filename="src/core/setup/windows/VRGtk2Window.h" />
+		<Unit filename="src/core/setup/windows/VRGtk3Window.h" />
 		<Unit filename="src/core/setup/windows/VRGtkWindow.cpp" />
 		<Unit filename="src/core/setup/windows/VRGtkWindow.h" />
 		<Unit filename="src/core/setup/windows/VRMultiWindow.cpp" />

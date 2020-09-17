@@ -8,6 +8,7 @@
 #define XK_3270  // for XK_3270_BackTab
 #ifndef _WIN32
 #include <gdk/gdkx.h>
+#include <gdk/gdkkeysyms-compat.h>
 #include <X11/keysym.h>
 #include <X11/XF86keysym.h>
 #endif

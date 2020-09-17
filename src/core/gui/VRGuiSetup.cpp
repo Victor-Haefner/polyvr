@@ -1,3 +1,4 @@
+#include <gtk/gtk.h>
 #include "VRGuiSetup.h"
 #include "VRGuiUtils.h"
 #include "VRGuiFile.h"
@@ -28,10 +29,6 @@
 
 #include "wrapper/VRGuiTreeView.h"
 #include "wrapper/VRGuiCombobox.h"
-
-#include <gtk/gtktreestore.h>
-#include <gtk/gtkliststore.h>
-#include <gtk/gtktreeview.h>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -1299,12 +1296,14 @@ void VRGuiSetup::on_setup_changed() {
     if (guard) return;
     cout << "on_setup_changed\n";
     string name = getComboboxText("combobox6");
+    if (name == "") return;
 
     static bool init = true;
     if (!init) if (!askUser("Switch to setup '" + name + "' - this will quit PolyVR", "Are you sure you want to switch to the " + name + " setup?")) return;
 
-    ofstream f(setupDir()+".local"); f.write(name.c_str(), name.size()); f.close(); // remember setup
-    string d = setupDir() + name + ".xml";
+    string setupDirPath = setupDir();
+    ofstream f(setupDirPath+".local"); f.write(name.c_str(), name.size()); f.close(); // remember setup
+    string d = setupDirPath + name + ".xml";
     auto mgr = VRSetupManager::get();
     current_setup = mgr->load(name, d);
     updateSetup();

@@ -12,6 +12,9 @@
 #include "VRPyNavigator.h"
 #include "VRPyRendering.h"
 #include "VRPyTypeCaster.h"
+#ifndef WITHOUT_GTK
+#include <gtk/gtk.h>
+#endif
 #include "VRPyProgress.h"
 #include "VRPySky.h"
 #ifndef WITHOUT_AV
@@ -33,7 +36,6 @@
 #include "core/gui/VRGuiManager.h"
 #include "core/gui/VRGuiConsole.h"
 #include "core/gui/VRGuiFile.h"
-#include <gtk/gtkfilechooser.h>
 #endif
 
 OSG_BEGIN_NAMESPACE;

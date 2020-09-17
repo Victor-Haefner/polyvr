@@ -4,7 +4,7 @@
 #include "core/utils/system/VRSystem.h"
 #include "core/scene/VRSceneManager.h"
 
-#include <gtk/gtktable.h>
+#include <gtk/gtk.h>
 
 using namespace OSG;
 

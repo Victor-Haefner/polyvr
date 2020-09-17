@@ -3,7 +3,7 @@
 //#include <GL/glut.h>
 //#include <OpenSG/OSGBaseInitFunctions.h>
 #ifndef WITHOUT_GTK
-#include <gdk/gdkevents.h>
+#include <gdk/gdk.h>
 #endif
 
 using namespace OSG;

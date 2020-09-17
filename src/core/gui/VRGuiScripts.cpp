@@ -1,3 +1,4 @@
+#include <gtk/gtk.h>
 #include "VRGuiScripts.h"
 #include "VRGuiUtils.h"
 #include "VRGuiFile.h"
@@ -11,17 +12,6 @@
 #include "core/utils/VRTimer.h"
 #include "core/utils/xml.h"
 #include "wrapper/VRGuiTreeView.h"
-
-#include <gtk/gtktextview.h>
-#include <gtk/gtktreemodel.h>
-#include <gtk/gtktreestore.h>
-#include <gtk/gtkwindow.h>
-#include <gtk/gtkscrolledwindow.h>
-#include <gtk/gtkliststore.h>
-#include <gtk/gtkfilechooser.h>
-#include <gtk/gtktreeview.h>
-#include <gtk/gtktable.h>
-#include <gtk/gtkcellrenderertext.h>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;

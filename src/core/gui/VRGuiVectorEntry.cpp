@@ -1,11 +1,7 @@
+#include <gtk/gtk.h>
 #include "VRGuiVectorEntry.h"
 #include "core/utils/toString.h"
 #include "VRGuiUtils.h"
-
-#include <gtk/gtkentry.h>
-#include <gtk/gtkhbox.h>
-#include <gtk/gtklabel.h>
-#include <gtk/gtkvseparator.h>
 
 VRGuiVectorEntry::VRGuiVectorEntry() {
     ex = ey = ez = 0;

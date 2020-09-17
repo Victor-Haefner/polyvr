@@ -5,9 +5,7 @@
 #include <string>
 #include <iostream>
 
-#include <gtk/gtktable.h>
-#include <gtk/gtkcheckbutton.h>
-#include <gtk/gtkfilechooser.h>
+#include <gtk/gtk.h>
 
 #include "core/scene/VRSceneLoader.h"
 #include "core/scene/VRSceneManager.h"

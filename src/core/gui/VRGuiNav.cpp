@@ -9,8 +9,7 @@
 
 #include "wrapper/VRGuiTreeView.h"
 
-#include <gtk/gtkliststore.h>
-#include <gtk/gtkcellrenderertext.h>
+#include <gtk/gtk.h>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
