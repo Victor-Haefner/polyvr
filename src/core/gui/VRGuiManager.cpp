@@ -21,6 +21,8 @@
 #include <gtk/gtk.h>
 #if GTK_MAJOR_VERSION == 2
 #include <gtk/gtkglinit.h>
+#else
+#include "core/gui/gtkglext/gtk/gtkglinit.h"
 #endif
 
 #include <boost/thread/recursive_mutex.hpp>
@@ -48,9 +50,7 @@ VRGuiManager::VRGuiManager() {
     int argc = 0;
     gtk_disable_setlocale();
     gtk_init(&argc, 0);
-#if GTK_MAJOR_VERSION == 2
     gtk_gl_init(&argc, NULL);
-#endif
     getGUIBuilder(standalone);
 
     if (standalone) {

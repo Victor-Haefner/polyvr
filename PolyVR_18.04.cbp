@@ -33,11 +33,10 @@
 			<Add option="-Wall" />
 			<Add option="-std=c++14" />
 			<Add option="-fPIC" />
-			<Add option="`pkg-config gtk+-2.0 --cflags`" />
+			<Add option="`pkg-config gtk+-3.0 --cflags`" />
 			<Add option="`pkg-config gmodule-2.0 --cflags`" />
-			<Add option="`pkg-config gtkglext-1.0 --cflags`" />
 			<Add option="`pkg-config python --cflags`" />
-			<Add option="`pkg-config gtksourceview-2.0 --cflags`" />
+			<Add option="`pkg-config gtksourceview-3.0 --cflags`" />
 			<Add option="-fopenmp" />
 			<Add option="-use_readonly_const" />
 			<Add option="-Wno-deprecated" />
@@ -93,6 +92,9 @@
 			<Add option="-DWITH_CLUSTERING_FIX" />
 			<Add option="-DWITH_STEP" />
 			<Add option="-DCEF18" />
+			<Add option="-DGDK_GL_COMPILATION" />
+			<Add option="-DGTK_GL_COMPILATION" />
+			<Add option="-DGDKGLEXT_WINDOWING_X11" />
 			<Add directory="/usr/include/pango-1.0" />
 			<Add directory="/usr/include/glib-2.0" />
 			<Add directory="/usr/lib64/glib-2.0/include" />
@@ -103,7 +105,6 @@
 			<Add directory="/usr/lib/x86_64-linux-gnu/glib-2.0/include" />
 			<Add directory="/usr/include/vtk-5.8/" />
 			<Add directory="/usr/include/bullet" />
-			<Add directory="/usr/include/gtkglext-1.0" />
 			<Add directory="/usr/include/CEF" />
 			<Add directory="src" />
 			<Add directory="/usr/include/opensg" />
@@ -148,12 +149,11 @@
 			<Add option="`pkg-config icu-i18n --libs`" />
 			<Add option="-lcef" />
 			<Add option="-lcef_dll_wrapper" />
-			<Add option="`pkg-config gtk+-2.0 --libs`" />
+			<Add option="`pkg-config gtk+-3.0 --libs`" />
 			<Add option="`pkg-config gmodule-2.0 --libs`" />
 			<Add option="`pkg-config bullet --libs`" />
-			<Add option="`pkg-config gtkglext-1.0 --libs`" />
 			<Add option="`pkg-config python --libs`" />
-			<Add option="`pkg-config gtksourceview-2.0 --libs`" />
+			<Add option="`pkg-config gtksourceview-3.0 --libs`" />
 			<Add option="`pkg-config vte --libs`" />
 			<Add option="-ljsoncpp" />
 			<Add option="-lvrpn" />
@@ -570,6 +570,107 @@
 		<Unit filename="src/core/gui/VRGuiVectorEntry.cpp" />
 		<Unit filename="src/core/gui/VRGuiVectorEntry.h" />
 		<Unit filename="src/core/gui/elements/VRGuiButton.h" />
+		<Unit filename="src/core/gui/gtkglext/gdk/gdkgl.h" />
+		<Unit filename="src/core/gui/gtkglext/gdk/gdkglconfig.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/core/gui/gtkglext/gdk/gdkglconfig.h" />
+		<Unit filename="src/core/gui/gtkglext/gdk/gdkglconfigimpl.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/core/gui/gtkglext/gdk/gdkglconfigimpl.h" />
+		<Unit filename="src/core/gui/gtkglext/gdk/gdkglcontext.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/core/gui/gtkglext/gdk/gdkglcontext.h" />
+		<Unit filename="src/core/gui/gtkglext/gdk/gdkglcontextimpl.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/core/gui/gtkglext/gdk/gdkglcontextimpl.h" />
+		<Unit filename="src/core/gui/gtkglext/gdk/gdkgldebug.h" />
+		<Unit filename="src/core/gui/gtkglext/gdk/gdkgldefs.h" />
+		<Unit filename="src/core/gui/gtkglext/gdk/gdkgldrawable.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/core/gui/gtkglext/gdk/gdkgldrawable.h" />
+		<Unit filename="src/core/gui/gtkglext/gdk/gdkglinit.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/core/gui/gtkglext/gdk/gdkglinit.h" />
+		<Unit filename="src/core/gui/gtkglext/gdk/gdkglprivate.h" />
+		<Unit filename="src/core/gui/gtkglext/gdk/gdkglquery.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/core/gui/gtkglext/gdk/gdkglquery.h" />
+		<Unit filename="src/core/gui/gtkglext/gdk/gdkgltokens.h" />
+		<Unit filename="src/core/gui/gtkglext/gdk/gdkgltypes.h" />
+		<Unit filename="src/core/gui/gtkglext/gdk/gdkglversion.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/core/gui/gtkglext/gdk/gdkglwindow.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/core/gui/gtkglext/gdk/gdkglwindow.h" />
+		<Unit filename="src/core/gui/gtkglext/gdk/gdkglwindowimpl.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/core/gui/gtkglext/gdk/gdkglwindowimpl.h" />
+		<Unit filename="src/core/gui/gtkglext/gdk/win32/gdkglconfig-win32.h" />
+		<Unit filename="src/core/gui/gtkglext/gdk/win32/gdkglcontext-win32.h" />
+		<Unit filename="src/core/gui/gtkglext/gdk/win32/gdkglprivate-win32.h" />
+		<Unit filename="src/core/gui/gtkglext/gdk/win32/gdkglquery-win32.h" />
+		<Unit filename="src/core/gui/gtkglext/gdk/win32/gdkglwin32.h" />
+		<Unit filename="src/core/gui/gtkglext/gdk/win32/gdkglwindow-win32.h" />
+		<Unit filename="src/core/gui/gtkglext/gdk/win32/gdkwin32glconfig.h" />
+		<Unit filename="src/core/gui/gtkglext/gdk/win32/gdkwin32glcontext.h" />
+		<Unit filename="src/core/gui/gtkglext/gdk/win32/gdkwin32glquery.h" />
+		<Unit filename="src/core/gui/gtkglext/gdk/win32/gdkwin32glwindow.h" />
+		<Unit filename="src/core/gui/gtkglext/gdk/x11/gdkglconfig-x11.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/core/gui/gtkglext/gdk/x11/gdkglconfig-x11.h" />
+		<Unit filename="src/core/gui/gtkglext/gdk/x11/gdkglcontext-x11.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/core/gui/gtkglext/gdk/x11/gdkglcontext-x11.h" />
+		<Unit filename="src/core/gui/gtkglext/gdk/x11/gdkglprivate-x11.h" />
+		<Unit filename="src/core/gui/gtkglext/gdk/x11/gdkglquery-x11.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/core/gui/gtkglext/gdk/x11/gdkglquery-x11.h" />
+		<Unit filename="src/core/gui/gtkglext/gdk/x11/gdkglwindow-x11.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/core/gui/gtkglext/gdk/x11/gdkglwindow-x11.h" />
+		<Unit filename="src/core/gui/gtkglext/gdk/x11/gdkglx.h" />
+		<Unit filename="src/core/gui/gtkglext/gdk/x11/gdkx11glconfig.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/core/gui/gtkglext/gdk/x11/gdkx11glconfig.h" />
+		<Unit filename="src/core/gui/gtkglext/gdk/x11/gdkx11glcontext.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/core/gui/gtkglext/gdk/x11/gdkx11glcontext.h" />
+		<Unit filename="src/core/gui/gtkglext/gdk/x11/gdkx11glquery.h" />
+		<Unit filename="src/core/gui/gtkglext/gdk/x11/gdkx11glwindow.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/core/gui/gtkglext/gdk/x11/gdkx11glwindow.h" />
+		<Unit filename="src/core/gui/gtkglext/gtk/gtkgl.h" />
+		<Unit filename="src/core/gui/gtkglext/gtk/gtkgldebug.h" />
+		<Unit filename="src/core/gui/gtkglext/gtk/gtkgldefs.h" />
+		<Unit filename="src/core/gui/gtkglext/gtk/gtkglinit.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/core/gui/gtkglext/gtk/gtkglinit.h" />
+		<Unit filename="src/core/gui/gtkglext/gtk/gtkglprivate.h" />
+		<Unit filename="src/core/gui/gtkglext/gtk/gtkglversion.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/core/gui/gtkglext/gtk/gtkglwidget.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/core/gui/gtkglext/gtk/gtkglwidget.h" />
 		<Unit filename="src/core/gui/widgets/VRAppLauncher.cpp" />
 		<Unit filename="src/core/gui/widgets/VRAppLauncher.h" />
 		<Unit filename="src/core/gui/widgets/VRAppPanel.cpp" />
