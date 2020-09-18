@@ -64,6 +64,9 @@ void VRGtkWindow::clear(Color3f c) {
 }
 
 void VRGtkWindow::render(bool fromThread) {
+    if (fromThread) return;
+    PLock( VRGuiManager::get()->guiMutex() );
+    if (!active || !content || !isRealized) return;
     gtk_gl_area_queue_render((GtkGLArea*)widget);
     VRGuiManager::get()->updateGtk();
     return;

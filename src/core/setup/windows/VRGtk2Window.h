@@ -1,3 +1,8 @@
+#include <gtk/gtkdrawingarea.h>
+#include <gdk/gdkgl.h>
+#include <gdk/gdkglconfig.h>
+#include <gtk/gtkgl.h>
+
 static GdkGLConfig* gdk_gl_config_new_rgb(GdkScreen* screen, GdkGLConfigMode  mode, int msaa) {
   int list[32];
   int n = 0;

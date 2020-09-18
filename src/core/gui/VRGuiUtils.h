@@ -1,6 +1,7 @@
 #ifndef VRGUIUTILS_H_INCLUDED
 #define VRGUIUTILS_H_INCLUDED
 
+#include <gtk/gtk.h>
 #include <map>
 #include <OpenSG/OSGConfig.h>
 #include <OpenSG/OSGColor.h>

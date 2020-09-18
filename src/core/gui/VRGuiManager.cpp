@@ -19,6 +19,9 @@
 #include "core/setup/devices/VRSignalT.h"
 
 #include <gtk/gtk.h>
+#if GTK_MAJOR_VERSION == 2
+#include <gtk/gtkglinit.h>
+#endif
 
 #include <boost/thread/recursive_mutex.hpp>
 
