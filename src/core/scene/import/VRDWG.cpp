@@ -672,7 +672,9 @@ void loadDWG(string path, VRTransformPtr res, map<string, string> options) {
     }
     process_BLOCK_HEADER(dwg.header_vars.BLOCK_RECORD_PSPACE, data, true); // and last all entities in the paper space
 
-    bool doSplitByColors = true;
+    bool doSplitByColors = false;
+    if (options.count("doSplitByColors"))
+        toValue(options["doSplitByColors"], doSplitByColors);
 
     for (auto& l : data.layers) {
         Dwg_Object_LAYER* layer = l.first;
