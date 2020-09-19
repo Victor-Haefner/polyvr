@@ -35,6 +35,8 @@ G_BEGIN_DECLS
 #define GDK_IS_X11_GL_CONFIG_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), GDK_TYPE_X11_GL_CONFIG))
 #define GDK_X11_GL_CONFIG_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS ((obj), GDK_TYPE_X11_GL_CONFIG, GdkX11GLConfigClass))
 
+#define INSIDE_GDK_GL_X11
+
 #ifdef INSIDE_GDK_GL_X11
 typedef struct _GdkX11GLConfig GdkX11GLConfig;
 #else

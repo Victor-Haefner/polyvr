@@ -1,6 +1,6 @@
 #include "core/gui/gtkglext/gtk/gtkgl.h"
 
-static GdkGLConfig* gdk_gl_config_new_rgb(GdkScreen* screen, GdkGLConfigMode  mode, int msaa) {
+static GdkGLConfig* gdk_gl_config_new_rgb_msaa(GdkScreen* screen, GdkGLConfigMode  mode, int msaa) {
   int list[32];
   int n = 0;
 
@@ -53,13 +53,13 @@ static GdkGLConfig* gdk_gl_config_new_rgb(GdkScreen* screen, GdkGLConfigMode  mo
 #endif
 }
 
-GdkGLConfig* gdk_gl_config_new_by_mode (GdkGLConfigMode mode, int msaa) {
+GdkGLConfig* gdk_gl_config_new_by_mode_msaa (GdkGLConfigMode mode, int msaa) {
 #ifdef GDKGLEXT_MULTIHEAD_SUPPORT
   GdkScreen* screen = gdk_screen_get_default ();
 #else
   GdkScreen* screen = NULL;
 #endif
-  return gdk_gl_config_new_rgb(screen, mode, msaa);
+  return gdk_gl_config_new_rgb_msaa(screen, mode, msaa);
 }
 
 VRGtkWindow::VRGtkWindow(GtkDrawingArea* da, string msaa) {
@@ -73,7 +73,8 @@ VRGtkWindow::VRGtkWindow(GtkDrawingArea* da, string msaa) {
     auto mode = (GdkGLConfigMode)(GDK_GL_MODE_RGBA | GDK_GL_MODE_DOUBLE | GDK_GL_MODE_DEPTH | GDK_GL_MODE_STENCIL | GDK_GL_MODE_MULTISAMPLE);
     if (VROptions::get()->getOption<bool>("active_stereo"))
         mode = (GdkGLConfigMode)(GDK_GL_MODE_RGBA | GDK_GL_MODE_DOUBLE | GDK_GL_MODE_DEPTH | GDK_GL_MODE_STENCIL | GDK_GL_MODE_MULTISAMPLE | GDK_GL_MODE_STEREO);
-    GdkGLConfig* glConfigMode = gdk_gl_config_new_by_mode(mode, MSAA);
+    //GdkGLConfig* glConfigMode = gdk_gl_config_new_by_mode(mode, MSAA);
+    GdkGLConfig* glConfigMode = gdk_gl_config_new_by_mode(mode);
     gtk_widget_set_gl_capability(widget,glConfigMode,NULL,true,GDK_GL_RGBA_TYPE);
 
     gtk_widget_show(widget);

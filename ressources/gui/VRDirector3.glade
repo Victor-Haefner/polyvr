@@ -2017,14 +2017,6 @@ cave allocated</property>
       <column type="gpointer"/>
     </columns>
   </object>
-  <object class="GtkListStore" id="view_options">
-    <columns>
-      <!-- column-name option -->
-      <column type="gchararray"/>
-      <!-- column-name state -->
-      <column type="gint"/>
-    </columns>
-  </object>
   <object class="GtkWindow" id="window1">
     <property name="can_focus">False</property>
     <child>
@@ -2039,6 +2031,8 @@ cave allocated</property>
           <object class="GtkSeparator" id="hseparator1">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
+            <property name="valign">start</property>
+            <property name="vexpand">False</property>
           </object>
           <packing>
             <property name="left_attach">0</property>
@@ -2051,7 +2045,8 @@ cave allocated</property>
             <property name="height_request">100</property>
             <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <property name="valign">center</property>
+            <property name="valign">start</property>
+            <property name="vexpand">False</property>
             <child>
               <object class="GtkImage" id="banner">
                 <property name="width_request">400</property>
@@ -2072,6 +2067,7 @@ cave allocated</property>
               <object class="GtkToolbar" id="toolbar1">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
+                <property name="icon_size">6</property>
                 <child>
                   <object class="GtkToolButton" id="toolbutton1">
                     <property name="visible">True</property>
@@ -2233,10 +2229,12 @@ cave allocated</property>
           <object class="GtkPaned" id="hpaned1">
             <property name="visible">True</property>
             <property name="can_focus">True</property>
+            <property name="vexpand">True</property>
             <child>
               <object class="GtkNotebook" id="notebook1">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
+                <property name="hexpand">True</property>
                 <child>
                   <object class="GtkVBox" id="vbox3">
                     <property name="visible">True</property>
@@ -2263,6 +2261,7 @@ cave allocated</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="invisible_char">•</property>
+                            <property name="max_width_chars">10</property>
                             <property name="primary_icon_activatable">False</property>
                             <property name="secondary_icon_activatable">False</property>
                           </object>
@@ -2704,6 +2703,12 @@ cave allocated</property>
                                     <child>
                                       <placeholder/>
                                     </child>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
                                   </object>
                                 </child>
                               </object>
@@ -2733,6 +2738,12 @@ cave allocated</property>
                                     <property name="visible">True</property>
                                     <property name="can_focus">False</property>
                                     <property name="n_columns">2</property>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
                                     <child>
                                       <placeholder/>
                                     </child>
@@ -6804,6 +6815,7 @@ cave allocated</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="invisible_char">•</property>
+                            <property name="max_width_chars">5</property>
                             <property name="primary_icon_activatable">False</property>
                             <property name="secondary_icon_activatable">False</property>
                           </object>
@@ -7057,6 +7069,7 @@ cave allocated</property>
                                 <property name="visible">True</property>
                                 <property name="can_focus">True</property>
                                 <property name="invisible_char">•</property>
+                                <property name="max_width_chars">3</property>
                                 <property name="primary_icon_activatable">False</property>
                                 <property name="secondary_icon_activatable">False</property>
                               </object>
@@ -7072,6 +7085,7 @@ cave allocated</property>
                                 <property name="visible">True</property>
                                 <property name="can_focus">True</property>
                                 <property name="invisible_char">•</property>
+                                <property name="max_width_chars">3</property>
                                 <property name="primary_icon_activatable">False</property>
                                 <property name="secondary_icon_activatable">False</property>
                               </object>
@@ -7087,6 +7101,7 @@ cave allocated</property>
                                 <property name="visible">True</property>
                                 <property name="can_focus">True</property>
                                 <property name="invisible_char">•</property>
+                                <property name="max_width_chars">3</property>
                                 <property name="primary_icon_activatable">False</property>
                                 <property name="secondary_icon_activatable">False</property>
                               </object>
@@ -7129,6 +7144,7 @@ cave allocated</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="invisible_char">•</property>
+                            <property name="max_width_chars">5</property>
                             <property name="primary_icon_activatable">False</property>
                             <property name="secondary_icon_activatable">False</property>
                           </object>
@@ -11367,7 +11383,7 @@ to add distances</property>
                 </child>
               </object>
               <packing>
-                <property name="resize">False</property>
+                <property name="resize">True</property>
                 <property name="shrink">True</property>
               </packing>
             </child>
@@ -11615,5 +11631,13 @@ to add distances</property>
         </child>
       </object>
     </child>
+  </object>
+  <object class="GtkListStore" id="view_options">
+    <columns>
+      <!-- column-name option -->
+      <column type="gchararray"/>
+      <!-- column-name state -->
+      <column type="gint"/>
+    </columns>
   </object>
 </interface>

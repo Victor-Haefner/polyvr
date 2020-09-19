@@ -241,7 +241,7 @@ _gdk_x11_gl_context_impl_new (GdkGLContext  *glcontext,
 
   glconfig = gdk_gl_drawable_get_gl_config (gldrawable);
 
-  xdisplay = GDK_GL_CONFIG_XDISPLAY (glconfig);
+  xdisplay = GDK_GL_CONFIG_XDISPLAY (glconfig); // segfault
   xvinfo = GDK_GL_CONFIG_XVINFO (glconfig);
 
   if (share_list != NULL && GDK_IS_GL_CONTEXT (share_list))

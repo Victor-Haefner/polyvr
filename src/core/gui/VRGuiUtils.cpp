@@ -51,7 +51,11 @@ VRGuiBuilder* getGUIBuilder(bool standalone) {
 	if (b) return b;
 	b = new VRGuiBuilder();
 
+#if GTK_MAJOR_VERSION == 2
 	string path = "ressources/gui/VRDirector.glade";
+#else
+	string path = "ressources/gui/VRDirector3.glade";
+#endif
 	if (standalone) path = "ressources/gui/VRDirector_min.glade";
 	if (!VRGuiFile::exists(path)) cerr << "FATAL ERROR: " << path << " not found\n";
 	else {
