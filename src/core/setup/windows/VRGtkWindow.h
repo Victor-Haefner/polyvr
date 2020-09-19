@@ -22,6 +22,7 @@ struct _GdkEventKey;
 
 struct _GtkGLArea;
 struct _GdkGLContext;
+struct CairoContext;
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -36,15 +37,16 @@ class VRGtkWindow : public VRWindow {
         bool isRealized = false;
 
         bool on_scroll(_GdkEventScroll* e);
-        bool on_expose(_GdkEventExpose* e);
         void on_resize(GDKRECTANGLE* a);
         bool on_button(_GdkEventButton* e);
         bool on_motion(_GdkEventMotion* e);
         bool on_key(_GdkEventKey* e);
 
 #if GTK_MAJOR_VERSION == 2
+        bool on_expose(_GdkEventExpose* e);
         void on_realize();
 #else
+        bool on_expose(CairoContext* e);
         _GdkGLContext* glcontext = 0;
         void on_realize();
         bool on_render(_GdkGLContext* glcontext);

@@ -92,7 +92,7 @@ VRGtkWindow::VRGtkWindow(GtkDrawingArea* da, string msaa) {
     win->setSize(width, height);
 
     connect_signal<void>(drawArea, bind(&VRGtkWindow::on_realize, this), "realize");
-    connect_signal<void, GdkEventExpose*>(drawArea, bind(&VRGtkWindow::on_expose, this, PL::_1), "expose_event");
+    connect_signal<void, CairoContext*>(drawArea, bind(&VRGtkWindow::on_expose, this, PL::_1), "draw");
     connect_signal<void, GdkRectangle*>(drawArea, bind(&VRGtkWindow::on_resize, this, PL::_1), "size_allocate");
     connect_signal<void, GdkEventScroll*>(drawArea, bind(&VRGtkWindow::on_scroll, this, PL::_1), "scroll_event");
     connect_signal<void, GdkEventButton*>(drawArea, bind(&VRGtkWindow::on_button, this, PL::_1), "button_press_event");
@@ -150,7 +150,7 @@ void VRGtkWindow::on_realize() {
     gtk_widget_end_gl(widget, false);
 }
 
-bool VRGtkWindow::on_expose(GdkEventExpose* event) {
+bool VRGtkWindow::on_expose(CairoContext* event) {
     if (initialExpose) {
         gtk_widget_begin_gl(widget);
         glClearColor(0.2, 0.2, 0.2, 1.0);

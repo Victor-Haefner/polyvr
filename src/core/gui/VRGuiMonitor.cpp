@@ -25,7 +25,11 @@ VRGuiMonitor::VRGuiMonitor() {
     function<bool(GdkEventButton*)> sig2 = bind(&VRGuiMonitor::on_button, this, placeholders::_1);
     function<void(void)> sig3 = bind(&VRGuiMonitor::select_fkt, this);
 
+#if GTK_MAJOR_VERSION == 2
     connect_signal(da, sig1, "expose_event");
+#else
+    connect_signal(da, sig1, "draw");
+#endif
     connect_signal(da, sig2, "button_press_event");
     connect_signal(da, sig2, "button_release_event");
 
