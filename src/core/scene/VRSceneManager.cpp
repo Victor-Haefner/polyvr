@@ -165,6 +165,7 @@ VRSignalPtr VRSceneManager::getSignal_on_scene_load() { return on_scene_load; }
 VRSignalPtr VRSceneManager::getSignal_on_scene_close() { return on_scene_close; }
 
 void VRSceneManager::setScene(VRScenePtr scene) {
+	cout << "VRSceneManager::setScene " << scene << endl;
     if (!scene) return;
     current = scene;
     VRSetup::getCurrent()->setScene(scene);
@@ -176,6 +177,7 @@ void VRSceneManager::setScene(VRScenePtr scene) {
 #ifndef WITHOUT_GTK
     VRGuiSignals::get()->getSignal("scene_changed")->triggerPtr<VRDevice>(); // update gui
 #endif
+	cout << " VRSceneManager::setScene done" << endl;
 }
 
 void VRSceneManager::storeFavorites() {

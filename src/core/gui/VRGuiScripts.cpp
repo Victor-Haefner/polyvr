@@ -12,16 +12,8 @@
 #include "core/utils/xml.h"
 #include "wrapper/VRGuiTreeView.h"
 
-#include <gtk/gtktextview.h>
-#include <gtk/gtktreemodel.h>
-#include <gtk/gtktreestore.h>
-#include <gtk/gtkwindow.h>
-#include <gtk/gtkscrolledwindow.h>
-#include <gtk/gtkliststore.h>
-#include <gtk/gtkfilechooser.h>
-#include <gtk/gtktreeview.h>
-#include <gtk/gtktable.h>
-#include <gtk/gtkcellrenderertext.h>
+#include <gtk/gtk.h>
+#include <iostream>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -680,7 +672,7 @@ void VRGuiScripts::updateDocumentation() {
     map<string, map<string, map<string, bool> > > data;
     map<string, map<string, map<string, bool> > > filtered;
 
-    auto sameChar = [](char c1, char c2) { return std::toupper(c1) == std::toupper(c2); };
+    auto sameChar = [](char c1, char c2) { return std::toupper(c1, std::locale()) == std::toupper(c2, std::locale()); };
 
     auto contain = [&](const string& s, const string& i) {
         return bool( search( s.begin(), s.end(), i.begin(), i.end(), sameChar ) != s.end() );
@@ -934,6 +926,7 @@ void VRGuiScripts::on_change_server() {
 // --------------------------
 
 void VRGuiScripts::on_scene_changed() {
+	cout << "VRGuiScripts::on_scene_changed" << endl;
     groups.clear();
 }
 
@@ -944,6 +937,7 @@ void VRGuiScripts::update() {
 }
 
 void VRGuiScripts::updateList() {
+	cout << "VRGuiScripts::updateList" << endl;
     auto scene = VRScene::getCurrent();
     if (scene == 0) return;
 

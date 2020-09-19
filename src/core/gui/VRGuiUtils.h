@@ -4,7 +4,7 @@
 #include <map>
 #include <OpenSG/OSGConfig.h>
 #include <OpenSG/OSGColor.h>
-#include <gtk/gtkwidget.h>
+#include <gtk/gtk.h>
 #include "core/objects/VRObjectFwd.h"
 
 struct _GtkWidget;
@@ -18,7 +18,6 @@ struct _GtkRadioButton;
 struct _GtkComboBox;
 struct _GtkEntry;
 struct _GtkNotebook;
-struct _GtkNotebookPage;
 struct _GtkHScale;
 struct _GtkImage;
 struct _GtkCellRendererCombo;
@@ -47,7 +46,7 @@ class VRGuiBuilder {
         void read(string path);
 
         _GtkWidget* get_widget(string name);
-        _GtkObject* get_object(string name);
+        _GObject* get_object(string name);
 };
 
 VRGuiBuilder* getGUIBuilder(bool standalone = false);
@@ -104,7 +103,7 @@ void setRadioButtonCallback(string cb, function<void()> sig );
 void setComboboxCallback(string b, function<void()> sig);
 void setTreeviewSelectCallback(string treeview, function<void()> sig);
 void setCellRendererCallback(string renderer, function<void(gchar*, gchar*)> sig, bool after = true);
-void setNoteBookCallback(string nb, function<void(_GtkNotebookPage*, guint, gpointer)> sig);
+void setNoteBookCallback(string nb, function<void(_GtkWidget*, guint, gpointer)> sig);
 void setSliderCallback(string s, function<bool(int,double)> sig);
 void setEntryCallback(string e, function<void()> sig, bool onEveryChange = false, bool onFocusOut = true, bool onActivate = true);
 
@@ -127,6 +126,7 @@ void setComboboxLastActive(string cb);
 void setCombobox(string cb, int i);
 int getListStorePos(string ls, string s);
 string getComboboxText(string cbn);
+string gtk_combo_box_get_active_text(GtkComboBox* b);
 int getComboboxI(string cbn);
 _GtkTreeIter getComboboxIter(string cbn);
 void eraseComboboxActive(string cb);

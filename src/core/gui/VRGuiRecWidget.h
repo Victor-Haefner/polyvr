@@ -4,7 +4,6 @@
 #include "core/tools/VRToolsFwd.h"
 #include "core/utils/VRFunctionFwd.h"
 #include <OpenSG/OSGConfig.h>
-#include <gdk/gdkevents.h>
 
 struct _GtkDialog;
 struct _GtkLabel;

@@ -9,8 +9,7 @@
 
 #include "wrapper/VRGuiTreeView.h"
 
-#include <gtk/gtkliststore.h>
-#include <gtk/gtkcellrenderertext.h>
+#include <gtk/gtk.h>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -179,6 +178,7 @@ VRGuiNav::VRGuiNav() {
 
 // scene updated, get cameras && nav presets
 void VRGuiNav::update() {
+	cout << "VRGuiNav::update" << endl;
     auto scene = VRScene::getCurrent();
     if (scene == 0) return;
 

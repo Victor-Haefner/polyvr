@@ -30,7 +30,7 @@
 #include "core/gui/VRGuiManager.h"
 #include "core/gui/VRGuiConsole.h"
 #include "core/gui/VRGuiFile.h"
-#include <gtk/gtkfilechooser.h>
+#include <gtk/gtk.h>
 #endif
 
 OSG_BEGIN_NAMESPACE;

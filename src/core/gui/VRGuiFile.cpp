@@ -6,16 +6,7 @@
 #include "core/scene/VRScene.h"
 #include "core/utils/toString.h"
 
-#include <gtk/gtkfilechooserdialog.h>
-#include <gtk/gtkcheckbutton.h>
-#include <gtk/gtkentry.h>
-#include <gtk/gtkbox.h>
-#include <gtk/gtkcombobox.h>
-#include <gtk/gtktable.h>
-#include <gtk/gtkfixed.h>
-#include <gtk/gtklabel.h>
-#include <gtk/gtkcellrenderertext.h>
-#include <gtk/gtkcelllayout.h>
+#include <gtk/gtk.h>
 
 #include <boost/filesystem.hpp>
 
@@ -88,9 +79,7 @@ void VRGuiFile::on_edit_import_scale(GtkEntry* e) {
 }
 
 void VRGuiFile::on_change_preset(GtkComboBox* b) {
-    char* name = gtk_combo_box_get_active_text(b);
-    if (name == 0) return;
-    preset = string(name);
+    preset = gtk_combo_box_get_active_text(b);
 }
 
 void VRGuiFile::setGeoLoadWidget() {

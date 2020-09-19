@@ -4,10 +4,7 @@
 
 #include <string>
 #include <iostream>
-
-#include <gtk/gtktable.h>
-#include <gtk/gtkcheckbutton.h>
-#include <gtk/gtkfilechooser.h>
+#include <gtk/gtk.h>
 
 #include "core/scene/VRSceneLoader.h"
 #include "core/scene/VRSceneManager.h"
@@ -44,7 +41,7 @@ VRAppManager::VRAppManager() {
 
     int i=0;
     for (auto p : favorites->getEntriesByTimestamp()) {
-        long ts = p->getTimestamp();
+        time_t ts = p->getTimestamp();
         string t = "";
         if (ts > 0) t = asctime( localtime(&ts) );
         addEntry(p->getPath(), "favorites_tab", false, t, i<2);
@@ -371,6 +368,7 @@ void VRAppManager::on_search() {
 }
 
 void VRAppManager::update() {
+	cout << "VRAppManager::update" << endl;
     auto scene = VRScene::getCurrent();
     if (scene == 0) {
         if (current_demo) current_demo->running = false;

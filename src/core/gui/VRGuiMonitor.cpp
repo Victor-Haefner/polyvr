@@ -4,11 +4,7 @@
 #include "core/utils/VRGlobals.h"
 
 #include <functional>
-
-#include <gtk/gtkwindow.h>
-#include <gtk/gtkliststore.h>
-#include <gtk/gtkbuilder.h>
-
+#include <gtk/gtk.h>
 #include <cairo.h>
 
 #include "wrapper/VRGuiTreeView.h"
@@ -137,15 +133,14 @@ string VRGuiMonitor::toHex(Vec3d color) {
 }
 
 void VRGuiMonitor::redraw() {
-    GdkWindow* win = ((GtkWidget*)da)->window;
+    GdkWindow* win = gtk_widget_get_window((GtkWidget*)da);
     if (win) gdk_window_invalidate_rect( win, NULL, false);
 }
 
 bool VRGuiMonitor::draw(GdkEventExpose* e) {
-    GdkWindow* win = ((GtkWidget*)da)->window;
-
-    int w, h;
-    gdk_window_get_size(win, &w, &h);
+	GdkWindow* win = gtk_widget_get_window((GtkWidget*)da);
+	int w = gdk_window_get_width(win);
+	int h = gdk_window_get_height(win);
     auto surf = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, w, h);
 
     cr = cairo_create(surf);

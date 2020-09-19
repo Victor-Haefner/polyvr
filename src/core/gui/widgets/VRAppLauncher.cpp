@@ -10,17 +10,7 @@
 #include "core/gui/VRGuiContextMenu.h"
 
 #include <iostream>
-#include <gtk/gtkimage.h>
-#include <gdk/gdkpixbuf.h>
-#include <gtk/gtksettings.h>
-#include <gtk/gtkstock.h>
-#include <gtk/gtkcontainer.h>
-#include <gtk/gtkframe.h>
-#include <gtk/gtkeventbox.h>
-#include <gtk/gtkhbox.h>
-#include <gtk/gtkvbox.h>
-#include <gtk/gtklabel.h>
-#include <gtk/gtkbutton.h>
+#include <gtk/gtk.h>
 
 using namespace OSG;
 

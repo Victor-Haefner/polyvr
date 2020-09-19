@@ -5,9 +5,8 @@
 #include "core/scripting/VRPyCodeCompletion.h"
 #include "core/scripting/VRScriptFwd.h"
 
-#include <gtksourceview/gtksourcecompletionprovider.h>
-#include <gtksourceview/gtksourceview-typebuiltins.h>
-#include <gtksourceview/gtksourcecompletionitem.h>
+#include <gtk/gtk.h>
+#include "gtksourceview/gtksource.h"
 #include <string.h>
 #include <vector>
 #include <iostream>
@@ -83,7 +82,9 @@ void provPopulate(GtkProvider* provider, GtkSourceCompletionContext* context) {
 
     GList* ret = NULL;
     for (auto d : suggestions) {
-        auto proposal = gtk_source_completion_item_new(d.c_str(), d.c_str(), 0, 0);
+        auto proposal = gtk_source_completion_item_new();
+		gtk_source_completion_item_set_text(proposal, d.c_str());
+		gtk_source_completion_item_set_label(proposal, d.c_str());
         ret = g_list_prepend (ret, proposal);
     }
 	setProposals( g_list_reverse(ret) );
@@ -110,7 +111,8 @@ VRGuiCodeCompletion* VRGuiCodeCompletionNew () {
 	return (VRGuiCodeCompletion*) g_object_new (VRGuiCodeCompletionType, NULL);
 }
 
-G_DEFINE_TYPE_WITH_CODE( VRGuiCodeCompletion, vr_code_completion, G_TYPE_OBJECT, G_ADD_PRIVATE(VRGuiCodeCompletion) G_IMPLEMENT_INTERFACE(GTK_TYPE_SOURCE_COMPLETION_PROVIDER, initInterface) )
+G_DEFINE_TYPE_WITH_CODE( VRGuiCodeCompletion, vr_code_completion, G_TYPE_OBJECT, 
+			G_ADD_PRIVATE(VRGuiCodeCompletion) G_IMPLEMENT_INTERFACE(vr_code_completion_get_type(), initInterface) )
 
 
 

@@ -5,6 +5,7 @@
 
 #include <OpenSG/OSGPassiveWindow.h>
 
+struct _GtkGLArea;
 struct _GtkDrawingArea;
 struct _GtkWidget;
 struct _GdkEventScroll;
@@ -20,7 +21,7 @@ using namespace std;
 
 class VRGtkWindow : public VRWindow {
     private:
-        _GtkDrawingArea* drawArea = 0;
+		_GtkGLArea* drawArea = 0;
         _GtkWidget* widget = 0;
         PassiveWindowMTRecPtr win;
         bool initialExpose = true;

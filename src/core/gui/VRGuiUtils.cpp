@@ -13,26 +13,8 @@
 #include <iostream>
 #include <functional>
 
-#include <gtk/gtkwidget.h>
-#include <gtk/gtklabel.h>
-#include <gtk/gtkentry.h>
-#include <gtk/gtkhscale.h>
-#include <gtk/gtkradiobutton.h>
-#include <gtk/gtkradiotoolbutton.h>
-#include <gtk/gtktoolbutton.h>
-#include <gtk/gtktogglebutton.h>
-#include <gtk/gtkcombobox.h>
-#include <gtk/gtkcheckbutton.h>
-#include <gtk/gtkcellrenderertext.h>
-#include <gtk/gtkcellrenderercombo.h>
-#include <gtk/gtknotebook.h>
-#include <gtk/gtkdrawingarea.h>
-#include <gtk/gtkdialog.h>
-#include <gtk/gtkmessagedialog.h>
-#include <gtk/gtktreeselection.h>
-#include <gtk/gtkcolorseldialog.h>
-#include <gtk/gtkvbox.h>
-#include <gtk/gtkbuilder.h>
+#include <gtk/gtk.h>
+#include <gdk/gdk.h>
 
 using namespace std;
 namespace PL = std::placeholders;
@@ -54,10 +36,19 @@ GtkWidget* VRGuiBuilder::get_widget(string name) {
     return 0;
 }
 
-GtkObject* VRGuiBuilder::get_object(string name) {
-    return (GtkObject*)gtk_builder_get_object(builder, name.c_str());
+GObject* VRGuiBuilder::get_object(string name) {
+    return (GObject*)gtk_builder_get_object(builder, name.c_str());
     //if (objects.count(name)) return objects[name];
     return 0;
+}
+
+string gtk_combo_box_get_active_text(GtkComboBox* b) {
+	GtkTreeIter itr;
+	gtk_combo_box_get_active_iter(b, &itr);
+	GtkTreeModel* m = gtk_combo_box_get_model(b);
+	char* str = 0;
+	gtk_tree_model_get(m, &itr, 0, &str, -1);
+	return str ? string(str) : "";
 }
 
 VRGuiBuilder* getGUIBuilder(bool standalone) {
@@ -71,6 +62,7 @@ VRGuiBuilder* getGUIBuilder(bool standalone) {
 	else {
         cout << " found glade file: " << path << endl;
         b->read(path);
+		cout << "  finished importing glade file: " << path << endl;
 	}
     return b;
 }
@@ -129,7 +121,7 @@ void setComboboxCallback(string b, function<void()> sig) { setupCallback(b, sig,
 void setSliderCallback(string b, function<bool(int,double)> sig) { setupCallback(b, sig, "change_value"); }
 void setTreeviewSelectCallback(string b, function<void(void)> sig) { setupCallback(b, sig, "cursor_changed"); }
 void setCellRendererCallback(string b, function<void(gchar*, gchar*)> sig, bool after) { setupCallback(b, sig, "edited"); }
-void setNoteBookCallback(string b, function<void(GtkNotebookPage*, guint)> sig) { setupCallback(b, sig, "switch-page", true); }
+void setNoteBookCallback(string b, function<void(GtkWidget*, guint)> sig) { setupCallback(b, sig, "switch-page", true); }
 
 void setColorChooser(string drawable, function<void(GdkEventButton*)> sig) {
     GtkDrawingArea* darea = (GtkDrawingArea*)getGUIBuilder()->get_object(drawable);
@@ -256,8 +248,7 @@ void eraseComboboxActive(string n) {
 
 string getComboboxText(string cbn) {
     GtkComboBox* cb = (GtkComboBox*)getGUIBuilder()->get_widget(cbn);
-    char* n = gtk_combo_box_get_active_text(cb);
-    return n?n:"";
+    return gtk_combo_box_get_active_text(cb);
 }
 
 int getComboboxI(string cbn) {
@@ -388,14 +379,11 @@ void setNotebookPage(string nb, int p) {
 
 OSG::VRTexturePtr takeSnapshot() {
     GtkDrawingArea* drawArea = (GtkDrawingArea*)getGUIBuilder()->get_widget("glarea");
-    GdkDrawable* src = gtk_widget_get_window((GtkWidget*)drawArea); // 24 bits per pixel ( src->get_depth() )
-    int w, h;
-    gdk_drawable_get_size(src, &w, &h);
+    GdkWindow* src = gtk_widget_get_window((GtkWidget*)drawArea); // 24 bits per pixel ( src->get_depth() )
+	int w = gdk_window_get_width(src);
+	int h = gdk_window_get_height(src);
     w -= w%4; h -= h%4;
-
-    GdkColormap* cm = gdk_drawable_get_colormap(src);
-    GdkImage* img = gdk_drawable_get_image(src, 0, 0, w, h);
-    GdkPixbuf* pxb = gdk_pixbuf_get_from_image(NULL, img, cm, 0,0,0,0,w,h);
+	GdkPixbuf* pxb = gdk_pixbuf_get_from_window(src, 0, 0, w, h);
 
     OSG::ImageMTRecPtr res = OSG::Image::create();
     //Image::set(pixFormat, width, height, depth, mipmapcount, framecount, framedelay, data, type, aloc, sidecount);
@@ -406,16 +394,13 @@ OSG::VRTexturePtr takeSnapshot() {
 void saveSnapshot(string path) {
     if (!exists(getFolderName(path))) return;
     GtkDrawingArea* drawArea = (GtkDrawingArea*)getGUIBuilder()->get_widget("glarea");
-    GdkDrawable* src = gtk_widget_get_window((GtkWidget*)drawArea);
-    int w, h;
-    gdk_drawable_get_size(src, &w, &h);
+	GdkWindow* src = gtk_widget_get_window((GtkWidget*)drawArea);
+	int w = gdk_window_get_width(src);
+	int h = gdk_window_get_height(src);
     int smin = min(w, h);
     int u = max(0.0, w*0.5 - smin*0.5);
     int v = max(0.0, h*0.5 - smin*0.5);
-
-    GdkColormap* cm = gdk_drawable_get_colormap(src);
-    GdkImage* img = gdk_drawable_get_image(src, 0, 0, w, h);
-    GdkPixbuf* pxb = gdk_pixbuf_get_from_image(NULL, img, cm, u, v,0,0,smin, smin);
+	GdkPixbuf* pxb = gdk_pixbuf_get_from_window(src, u, v, smin, smin);
     pxb = gdk_pixbuf_scale_simple(pxb, 128, 128, GDK_INTERP_HYPER);
     gdk_pixbuf_save(pxb, path.c_str(), "png", 0, 0, NULL);
 }
@@ -448,10 +433,41 @@ int getListStorePos(string ls, string s) {
     return -1;
 }
 
+void gtk_list_store_clear_debug(GtkListStore *list_store) {
+	//GtkListStorePrivate *priv;
+	GtkTreeIter iter;
+
+	g_return_if_fail(GTK_IS_LIST_STORE(list_store));
+	//priv = list_store->priv;
+
+	cout << " gtk_list_store_clear_debug, Nstore: " << gtk_tree_model_iter_n_children(GTK_TREE_MODEL(list_store), NULL) << endl;
+	while (gtk_tree_model_iter_n_children(GTK_TREE_MODEL(list_store), NULL) > 0) {
+		//iter.stamp = priv->stamp;
+		//iter.user_data = g_sequence_get_begin_iter(priv->seq);
+		auto path = gtk_tree_path_new_from_string("0");
+		gtk_tree_model_get_iter(GTK_TREE_MODEL(list_store), &iter, path);
+
+		cout << "  gtk_list_store_clear_debug valid iter? " << gtk_list_store_iter_is_valid(list_store, &iter) << endl;
+
+		char* str = 0;
+		gtk_tree_model_get(GTK_TREE_MODEL(list_store), &iter, 0, &str, -1);
+		cout << "  gtk_list_store_clear_debug valid str? " << str << endl;
+
+		gtk_list_store_remove(list_store, &iter);
+		cout << "  gtk_list_store_clear_debug" << endl;
+	}
+	cout << " gtk_list_store_clear_debug done, Nstore: " << gtk_tree_model_iter_n_children(GTK_TREE_MODEL(list_store), NULL) << endl;
+
+	//gtk_list_store_increment_stamp(list_store);
+}
+
 void fillStringListstore(string ls, vector<string> list) {
-    GtkListStore* store = (GtkListStore*)getGUIBuilder()->get_object(ls);
+    GtkListStore* store = GTK_LIST_STORE( getGUIBuilder()->get_object(ls) );
     if (!store) { cout << "ERROR: liststore " << ls << " not found!" << endl; return; }
-    gtk_list_store_clear(store);
+	int number_of_rows = gtk_tree_model_iter_n_children(GTK_TREE_MODEL(store), NULL);
+	cout << "fillStringListstore A1 " << ls << ", Nlist: " << list.size() << ", Nstore: " << number_of_rows << endl;
+	gtk_list_store_clear_debug(store);
+	cout << "fillStringListstore A2 " << endl;
     for (unsigned int i=0; i<list.size(); i++) {
         GtkTreeIter iter;
         gtk_list_store_append(store, &iter);

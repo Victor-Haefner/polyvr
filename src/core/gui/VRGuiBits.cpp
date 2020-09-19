@@ -22,8 +22,7 @@
 #include "VRGuiManager.h"
 
 #include <iostream>
-#include <gtk/gtktoolbar.h>
-#include <gtk/gtktoggletoolbutton.h>
+#include <gtk/gtk.h>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -272,7 +271,7 @@ VRGuiBits::VRGuiBits() {
     GtkWidget* box = getGUIBuilder()->get_widget("hbox15");
     gtk_box_pack_start((GtkBox*)box, (GtkWidget*)terminal, true, true, 0);
     gtk_widget_show_all(box);
-    connect_signal<void, GtkNotebookPage*, guint>(terminal, bind(&VRGuiBits::on_console_switch, this, placeholders::_1, placeholders::_2), "switch_page");
+    connect_signal<void, GtkWidget*, guint>(terminal, bind(&VRGuiBits::on_console_switch, this, placeholders::_1, placeholders::_2), "switch_page");
 
     updatePtr = VRUpdateCb::create( "IntMonitor_guiUpdate", VRGuiBits_on_internal_update );
     VRSceneManager::get()->addUpdateFkt(updatePtr);
@@ -280,7 +279,7 @@ VRGuiBits::VRGuiBits() {
     updateVisualLayer();
 }
 
-void VRGuiBits::on_console_switch(GtkNotebookPage* page, guint page_num) {
+void VRGuiBits::on_console_switch(GtkWidget* page, guint page_num) {
     auto p = gtk_notebook_get_nth_page(terminal, page_num);
     string name = gtk_notebook_get_tab_label_text(terminal, p);
     openConsole->setOpen(false);
@@ -316,6 +315,7 @@ void VRGuiBits::updateVisualLayer() {
 }
 
 void VRGuiBits::update() { // scene changed
+	cout << "VRGuiBits::update" << endl;
     update_ward = true;
     auto scene = VRScene::getCurrent();
     setLabel("label24", "Project: None");

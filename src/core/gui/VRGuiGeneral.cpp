@@ -189,6 +189,7 @@ void VRGuiGeneral::toggleTwoSided() {
 }
 
 void VRGuiGeneral::updateScene() {
+	cout << "VRGuiGeneral::updateScene" << endl;
     auto scene = VRScene::getCurrent();
     if (scene == 0) return;
 

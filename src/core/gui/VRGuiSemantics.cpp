@@ -20,10 +20,7 @@
 
 #include "wrapper/VRGuiTreeView.h"
 
-#include <gtk/gtkwidget.h>
-#include <gtk/gtkfixed.h>
-#include <gtk/gtkdnd.h>
-#include <gtk/gtktreestore.h>
+#include <gtk/gtk.h>
 
 // TODOd, refactoring from gtk mm
 
@@ -341,6 +338,7 @@ void VRGuiSemantics::on_query_clicked() {
 }
 
 void VRGuiSemantics::updateOntoList() {
+	cout << "VRGuiSemantics::updateOntoList" << endl;
     // update script list
     auto store = (GtkTreeStore*)getGUIBuilder()->get_object("onto_list");
     gtk_tree_store_clear(store);

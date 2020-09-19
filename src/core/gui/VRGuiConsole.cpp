@@ -1,10 +1,7 @@
 #include "VRGuiConsole.h"
 #include "core/utils/VRFunction.h"
 
-#include <gtk/gtktextbuffer.h>
-#include <gtk/gtktextview.h>
-#include <gtk/gtkscrolledwindow.h>
-#include <gtk/gtklabel.h>
+#include <gtk/gtk.h>
 #include <pango/pango-font.h>
 #include <boost/thread/recursive_mutex.hpp>
 #include "VRGuiUtils.h"

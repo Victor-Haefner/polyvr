@@ -2,7 +2,7 @@
 
 #include <iostream>
 #include <stdio.h>
-#include <unistd.h>
+//#include <unistd.h>
 
 #include "core/scene/VRSceneLoader.h"
 #include "core/objects/VRLight.h"
@@ -12,7 +12,9 @@
 #include "core/objects/VRLod.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/material/VRTexture.h"
+#ifndef WITHOUT_BULLET
 #include "core/objects/geometry/VRPhysics.h"
+#endif
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/geometry/VRGeoData.h"
 #include "core/objects/geometry/VRPrimitive.h"
@@ -31,11 +33,7 @@
 
 #include "wrapper/VRGuiTreeView.h"
 
-#include <gtk/gtkliststore.h>
-#include <gtk/gtktreestore.h>
-#include <gtk/gtktreeselection.h>
-#include <gtk/gtktreeview.h>
-#include <gtk/gtkfilechooser.h>
+#include <gtk/gtk.h>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -130,6 +128,7 @@ void VRGuiScene::setTransform(VRTransformPtr e) {
     setToggleButton("radiobutton19",  transformModeLocal);
     setToggleButton("radiobutton20", !transformModeLocal);
 
+#ifndef WITHOUT_BULLET
     if (e->getPhysics()) {
         setToggleButton("checkbutton13", e->getPhysics()->isPhysicalized());
         setToggleButton("checkbutton33", e->getPhysics()->isDynamic());
@@ -137,6 +136,7 @@ void VRGuiScene::setTransform(VRTransformPtr e) {
         setCombobox("combobox8", getListStorePos("phys_shapes", e->getPhysics()->getShape()));
         setWidgetSensitivity("combobox8", e->getPhysics()->isPhysicalized());
     }
+#endif
 }
 
 void VRGuiScene::setMaterial(VRMaterialPtr mat) {
@@ -937,7 +937,9 @@ void VRGuiScene::on_toggle_phys() {
     VRTransformPtr obj = static_pointer_cast<VRTransform>( getSelected() );
 
     bool phys = getCheckButtonState("checkbutton13");
+#ifndef WITHOUT_BULLET
     if (obj->getPhysics()) obj->getPhysics()->setPhysicalized(phys);
+#endif
     setWidgetSensitivity("combobox8", phys);
 }
 
@@ -946,7 +948,9 @@ void VRGuiScene::on_toggle_dynamic() {
     VRTransformPtr obj = static_pointer_cast<VRTransform>( getSelected() );
 
     bool dyn = getCheckButtonState("checkbutton33");
+#ifndef WITHOUT_BULLET
     if (obj->getPhysics()) obj->getPhysics()->setDynamic(dyn);
+#endif
 }
 
 void VRGuiScene::on_mass_changed() {
@@ -954,14 +958,18 @@ void VRGuiScene::on_mass_changed() {
     VRTransformPtr obj = static_pointer_cast<VRTransform>( getSelected() );
 
     string m = getTextEntry("entry59");
+#ifndef WITHOUT_BULLET
     if (obj->getPhysics()) obj->getPhysics()->setMass(toFloat(m));
+#endif
 }
 
 void VRGuiScene::on_change_phys_shape() {
     if(!trigger_cbs) return;
     VRTransformPtr obj = static_pointer_cast<VRTransform>( getSelected() );
     string t = getComboboxText("combobox8");
+#ifndef WITHOUT_BULLET
     if (obj->getPhysics()) obj->getPhysics()->setShape(t);
+#endif
 }
 
 
@@ -1266,7 +1274,9 @@ VRGuiScene::VRGuiScene() { // TODO: reduce callbacks with templated functions
     fillStringListstore("light_types", VRLight::getTypes());
     fillStringListstore("shadow_types", VRLight::getShadowMapResolutions());
     //fillStringListstore("csg_operations", CSGGeometry::getOperations());
+#ifndef WITHOUT_BULLET
     fillStringListstore("phys_shapes", VRPhysics::getPhysicsShapes());
+#endif
     fillStringListstore("cam_proj", VRCamera::getProjectionTypes());
 
     // object form
@@ -1342,6 +1352,7 @@ VRGuiScene::VRGuiScene() { // TODO: reduce callbacks with templated functions
 
 // new scene, update stuff here
 void VRGuiScene::updateTreeView() {
+	cout << "VRGuiScene::updateTreeView" << endl;
     auto scene = VRScene::getCurrent();
     if (scene == 0) return;
 

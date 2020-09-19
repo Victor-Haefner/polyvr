@@ -18,9 +18,7 @@
 #include "core/setup/devices/VRDevice.h"
 #include "core/setup/devices/VRSignalT.h"
 
-#include <gtk/gtkmain.h>
-#include <gtk/gtkglinit.h>
-#include <gtk/gtkwindow.h>
+#include <gtk/gtk.h>
 
 #include <boost/thread/recursive_mutex.hpp>
 
@@ -47,7 +45,7 @@ VRGuiManager::VRGuiManager() {
     int argc = 0;
     gtk_disable_setlocale();
     gtk_init(&argc, 0);
-    gtk_gl_init(&argc, NULL);
+    //gtk_gl_init(&argc, NULL);
     getGUIBuilder(standalone);
 
     if (standalone) {

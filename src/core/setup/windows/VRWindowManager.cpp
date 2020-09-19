@@ -31,7 +31,7 @@
 #include "VRGtkWindow.h"
 #include "core/gui/VRGuiManager.h"
 #include "core/gui/VRGuiConsole.h"
-#include <gtk/gtkdrawingarea.h>
+#include <gtk/gtk.h>
 #define WARN(x) \
 VRGuiManager::get()->getConsole( "Errors" )->write( x+"\n" );
 #else

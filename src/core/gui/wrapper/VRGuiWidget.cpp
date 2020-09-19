@@ -19,7 +19,7 @@ void VRGuiWidget::setVisibility(bool b, bool all) {
         else   gtk_widget_hide(widget);
     } else {
         if (b) gtk_widget_show_all(widget);
-        else   gtk_widget_hide_all(widget);
+        else   gtk_widget_hide(widget);
     }
 }
 

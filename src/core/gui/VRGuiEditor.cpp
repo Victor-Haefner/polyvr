@@ -5,9 +5,7 @@
 #include "core/utils/VRFunction.h"
 
 #include <iostream>
-#include <gtksourceview/gtksourceview.h>
-#include <gtksourceview/gtksourcelanguagemanager.h>
-#include <gtksourceview/gtksourcecompletionprovider.h>
+#include "gtksourceview/gtksource.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -49,10 +47,16 @@ void VRGuiEditor::focus(int line, int column) {
 }
 
 void VRGuiEditor::printViewerLanguages() {
+	cout << "VRGuiEditor::printViewerLanguages" << endl;
     GtkSourceLanguageManager* langMgr = gtk_source_language_manager_get_default();
+	cout << " langMgr: " << langMgr << endl;
     const gchar* const* ids = gtk_source_language_manager_get_language_ids(langMgr);
-    for(const gchar* const* id = ids; *id != NULL; ++id)
-        if(ids != NULL) cout << "\nLID " << *id << endl;
+	cout << " ids: " << ids << endl;
+	if (ids) {
+		for (auto id = ids; *id != NULL; ++id)
+			if (ids != NULL) cout << "  LID " << *id << endl;
+	}
+	cout << " VRGuiEditor::printViewerLanguages done" << endl;
 }
 
 bool VRGuiEditor::on_editor_shortkey( GdkEventKey* e ) {
@@ -200,7 +204,7 @@ void VRGuiEditor::highlightStrings(string search, string style) {
     map<int, bool> res;
 
     string core = getCore(1);
-    uint pos = core.find(search, 0);
+    unsigned int pos = core.find(search, 0);
     while(pos != string::npos && pos <= core.size()) { res[pos] = false; pos = core.find(search, pos+1); }
     pos = core.find("\n", 0);
     while(pos != string::npos && pos <= core.size()) { res[pos] = true; pos = core.find("\n", pos+1); }
@@ -275,33 +279,16 @@ VRGuiEditor::VRGuiEditor(string window) {
     if (!glsl) glsl = gtk_source_language_manager_get_language(langMgr, "glsl");
     if (!web) web = gtk_source_language_manager_get_language(langMgr, "html");
 
-    sourceBuffer = gtk_source_buffer_new_with_language(python);
+	cout << "VRGuiEditor::VRGuiEditor langs: " << python << " " << glsl << " " << web << endl;
+	printViewerLanguages();
+	if (!python) sourceBuffer = gtk_source_buffer_new(0);
+    else sourceBuffer = gtk_source_buffer_new_with_language(python);
     gtk_source_buffer_set_highlight_syntax(sourceBuffer, true);
     gtk_source_buffer_set_highlight_matching_brackets(sourceBuffer, true);
 
     GtkScrolledWindow* win = (GtkScrolledWindow*)getGUIBuilder()->get_object(window);
     editor = gtk_source_view_new_with_buffer(sourceBuffer);
     editorBuffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(editor));
-
-    // try adding margin at bottom, messes up VRGuiEditor::focus
-    /*auto alignment = gtk_alignment_new(0.5,0.5,1,1);
-    gtk_alignment_set_padding(GTK_ALIGNMENT(alignment), 0, 600, 0, 0);
-    auto vport = gtk_viewport_new(0, 0);
-    auto white = new GdkColor();
-    gdk_color_parse("#fff", white);
-    gtk_widget_modify_bg(vport, GTK_STATE_NORMAL, white);
-    delete white;
-    gtk_container_add (GTK_CONTAINER (alignment), editor);
-    gtk_container_add (GTK_CONTAINER (vport), alignment);
-    gtk_container_add (GTK_CONTAINER (win->gobj()), vport);*/
-
-    /*auto vadjustment = gtk_text_view_get_vadjustment(GTK_TEXT_VIEW(editor));
-    //gtk_scrolled_window_set_vadjustment(GTK_SCROLLED_WINDOW(win->gobj()), vadjustment);
-    gtk_viewport_set_vadjustment(GTK_VIEWPORT(vport), vadjustment);
-    //auto vadjustment = gtk_viewport_get_vadjustment(GTK_VIEWPORT(vport));
-    //gtk_text_view_set_vadjustment(GTK_TEXT_VIEW(editor), vadjustment);
-    gtk_widget_set_size_request(vport,-1,600);
-    gtk_widget_set_size_request(alignment,-1,600);*/
 
     gtk_container_add(GTK_CONTAINER(win), editor);
 
@@ -327,7 +314,8 @@ VRGuiEditor::VRGuiEditor(string window) {
     gtk_widget_modify_font (editor, font_desc);
     gtk_widget_show_all(editor);
 
-    auto provider = VRGuiCodeCompletionNew();
+#ifndef WIN32
+    auto provider = VRGuiCodeCompletionNew(); // Windows: hangs
     auto completion = gtk_source_view_get_completion(GTK_SOURCE_VIEW(editor));
     GError* error = 0;
     gtk_source_completion_add_provider(completion, GTK_SOURCE_COMPLETION_PROVIDER(provider), &error);
@@ -336,8 +324,10 @@ VRGuiEditor::VRGuiEditor(string window) {
         g_clear_error(&error);
         g_error_free(error);
     }
+#endif
 
     addStyle( "asSelected", "#000", "#FF0", false, false, false);
+	cout << " VRGuiEditor::VRGuiEditor done" << endl;
 }
 
 OSG_END_NAMESPACE;

@@ -7,16 +7,12 @@
 #include "core/utils/VRFunction.h"
 #include "VRGuiUtils.h"
 
-#include <gtk/gtkdialog.h>
-#include <gtk/gtklabel.h>
-#include <gtk/gtkbbox.h>
-#include <gtk/gtkbutton.h>
-#include <gtk/gtkimage.h>
-#include <gtk/gtkstock.h>
+#include <gtk/gtk.h>
 
 using namespace OSG;
 
 VRGuiRecWidget::VRGuiRecWidget() {
+#ifndef WITHOUT_AV
     rec = VRRecorderPtr( new VRRecorder() );
     rec->setView(0);
 
@@ -29,7 +25,6 @@ VRGuiRecWidget::VRGuiRecWidget() {
     gtk_window_set_title((GtkWindow*)diag, "Recorder");
 
     GtkButtonBox* box = (GtkButtonBox*)gtk_dialog_get_action_area(diag);
-    gtk_button_box_set_child_size(box, 20, -1);
 
     auto addButton = [&](const char* icon, int signal) {
         //GtkButton* b = (GtkButton*)gtk_dialog_add_button(diag, NULL, signal);
@@ -39,6 +34,7 @@ VRGuiRecWidget::VRGuiRecWidget() {
         //gtk_button_set_image(but, img);
 
         auto but = (GtkButton*)gtk_button_new();
+		gtk_widget_set_size_request((GtkWidget*)but, 20, -1);
         GtkWidget* img = gtk_image_new_from_stock(icon, GTK_ICON_SIZE_BUTTON);
         gtk_container_add((GtkContainer*)but, img);
         gtk_container_add((GtkContainer*)box, (GtkWidget*)but);
@@ -63,12 +59,22 @@ VRGuiRecWidget::VRGuiRecWidget() {
     VRSceneManager::get()->addUpdateFkt( updateCb );
 
     setVisible(false);
+#endif
 }
 
 VRGuiRecWidget::~VRGuiRecWidget() {}
 
-void VRGuiRecWidget::on_codec_changed() { rec->setCodec( getComboboxText("codecs") ); }
-void VRGuiRecWidget::on_bitrate_changed() { rec->setBitrate( toInt( getTextEntry("entry27") ) ); }
+void VRGuiRecWidget::on_codec_changed() {
+#ifndef WITHOUT_AV
+	rec->setCodec( getComboboxText("codecs") );
+#endif
+}
+
+void VRGuiRecWidget::on_bitrate_changed() {
+#ifndef WITHOUT_AV
+	rec->setBitrate( toInt( getTextEntry("entry27") ) );
+#endif
+}
 
 void VRGuiRecWidget::setVisible(bool b) {
     if (b) gtk_widget_show((GtkWidget*)diag);
@@ -76,12 +82,15 @@ void VRGuiRecWidget::setVisible(bool b) {
 }
 
 void VRGuiRecWidget::update() {
+#ifndef WITHOUT_AV
     if (!rec->isRunning()) return;
     string T = "Recording: " + toString(rec->getRecordingLength(), 2);
     gtk_label_set_text(lbl, T.c_str());
+#endif
 }
 
 void VRGuiRecWidget::buttonHandler(int i) {
+#ifndef WITHOUT_AV
     if (i == 1) rec->setRecording(true);
     if (i == 2) rec->setRecording(false);
     if (i == 3) {
@@ -94,5 +103,6 @@ void VRGuiRecWidget::buttonHandler(int i) {
         gtk_label_set_text(lbl, "Idle");
         rec->clear();
     }
+#endif
 }
 
