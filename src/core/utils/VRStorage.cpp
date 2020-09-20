@@ -93,7 +93,7 @@ void VRStorage::load(XMLElementPtr e, VRStorageContextPtr context) {
     for (auto f : f_setup_before) (*f)(context);
     for (auto s : storage) (*s.second.f1)(e);
     for (auto f : f_setup) (*f)(context);
-    for (auto f : f_setup_after) VRSceneManager::get()->queueJob(f);
+    for (auto f : f_setup_after) VRSceneManager::get()->queueJob(f, 0, 0, false);
     f_setup_after.clear();
 }
 
@@ -146,7 +146,7 @@ int getID(XMLElementPtr el) {
 
 bool VRStorage::saveToFile(string path, bool createDirs) {
     XML xml;
-    XMLElementPtr root = xml.newRoot("ProjectsList", "", "VRP"); // name, ns_uri, ns_prefix
+    XMLElementPtr root = xml.newRoot("ProjectsList", "", ""); // name, ns_uri, ns_prefix
     save(root);
     xml.write(path);
     return true;

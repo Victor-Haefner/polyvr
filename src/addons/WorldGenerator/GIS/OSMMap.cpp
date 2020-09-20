@@ -9,8 +9,10 @@
 #include <gdal/gdal_priv.h>
 #include <gdal/gdal_version.h>
 #include <gdal/ogrsf_frmts.h>
-#include <proj_api.h>
+
+// define needed before including proj_api.h !!
 #define ACCEPT_USE_OF_DEPRECATED_PROJ_API_H
+#include <proj_api.h>
 #endif
 
 #include <iostream>
@@ -677,7 +679,22 @@ string OSMWay::toString() {
 }
 
 VRPolygon OSMWay::getPolygon() { return polygon; }
-vector<string> OSMWay::getNodes() { return nodes; }
+
+vector<string> OSMWay::getNodes(float downSampleRate) {
+    if (downSampleRate > 0.999) return nodes;
+
+    vector<string> res;
+    res.push_back(nodes[0]); // force first node!
+
+    for (int i=0; i<nodes.size(); i++) {
+        float k = i*downSampleRate;
+        int N = res.size();
+        if (N < k) res.push_back(nodes[i]);
+    }
+
+    res.push_back(nodes[nodes.size()-1]); // force last node!
+    return res;
+}
 
 string OSMRelation::toString() {
     string res = OSMBase::toString();
@@ -1082,8 +1099,9 @@ void OSMMap::readGML(string path) {
     int wayID = -1;
     int layercount = -1;
     VRTimer t; t.start();
-//#if GDAL_VERSION_NUM >= GDAL_COMPUTE_VERSION(2,3,0)
-//#elif GDAL_VERSION_NUM >= GDAL_COMPUTE_VERSION(2,0,0)
+
+// GDALOpenEx is available since GDAL 2.0
+#if GDAL_VERSION_NUM >= GDAL_COMPUTE_VERSION(2,0,0)
     string workingpath = "GMLAS:"+path;
 
     GDALAllRegister();
@@ -1153,7 +1171,7 @@ void OSMMap::readGML(string path) {
     mapType = "GML";
     GDALClose(poDS);
     cout << "Layers: " << layercount << " Features: " << featureCounter << endl;
-//#endif // GDAL_VERSION_NUM
+#endif // GDAL_VERSION_NUM
     auto t2 = t.stop()/1000.0;
     cout << "  loaded " << ways.size() << " ways, " << nodes.size() << " nodes and " << relations.size() << " relations" << endl;
     cout << "  secs needed: " << t2 << endl;

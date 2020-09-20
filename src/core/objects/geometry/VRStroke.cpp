@@ -18,6 +18,7 @@ template<> string typeName(const OSG::VRStroke::CAP& s) { return "StrokeCap"; }
 template<> int toValue(stringstream& ss, OSG::VRStroke::CAP& c) {
     string s; ss >> s;
     c = OSG::VRStroke::NONE;
+    if (s == "ROUND") c = OSG::VRStroke::ROUND;
     if (s == "ARROW") c = OSG::VRStroke::ARROW;
     return s.length();
 }
@@ -28,6 +29,12 @@ using namespace std;
 VRStroke::VRStroke(string name) : VRGeometry(name) { type = "Stroke"; }
 VRStrokePtr VRStroke::create(string name) { return shared_ptr<VRStroke>(new VRStroke(name) ); }
 VRStrokePtr VRStroke::ptr() { return static_pointer_cast<VRStroke>( shared_from_this() ); }
+
+void VRStroke::clear() {
+    paths.clear();
+    polygons.clear();
+    VRGeometry::clear();
+}
 
 void VRStroke::addPath(PathPtr p) { paths.push_back(p); }
 void VRStroke::setPath(PathPtr p) { paths.clear(); addPath(p); }
@@ -126,6 +133,9 @@ void VRStroke::strokeProfile(vector<Vec3d> profile, bool closed, bool lit, bool 
 
     // caps
     if (doCaps) {
+        bool begRound = (cap_beg == ROUND);
+        bool endRound = (cap_beg == ROUND);
+
         for (unsigned int i=0; i<paths.size(); i++) {
             if (paths[i]->isClosed()) continue;
 
@@ -140,19 +150,27 @@ void VRStroke::strokeProfile(vector<Vec3d> profile, bool closed, bool lit, bool 
 
              // first cap
             Vec3d p = pnts[0];
+            Vec3d pc = p;
             Vec3d n = directions[0];
             Vec3d u = up_vectors[0];
             Color3f c = Vec3f(cols[0]);
             MatrixLookAt(m, Vec3d(0,0,0), n, u);
             Vec3d tmp; m.mult(pCenter, tmp);
 
+            if (begRound) {
+                Vec3d nc = n; nc.normalize();
+                pc -= nc*profile[0].length();
+            }
+
             int Ni = data.size();
-            if (!doColor) data.pushVert(p + tmp, -n);
-            else data.pushVert(p + tmp, -n, Vec3f(c));
+            if (!doColor) data.pushVert(pc + tmp, -n);
+            else data.pushVert(pc + tmp, -n, Vec3f(c));
 
             for (unsigned int k=0; k<profile.size(); k++) {
                 Vec3d tmp = profile[k];
                 m.mult(tmp, tmp);
+
+                if (begRound) { n = -tmp; n.normalize(); }
 
                 if (!doColor) data.pushVert(p + tmp, -n);
                 else data.pushVert(p + tmp, -n, Vec3f(c));
@@ -168,18 +186,26 @@ void VRStroke::strokeProfile(vector<Vec3d> profile, bool closed, bool lit, bool 
             int N = pnts.size()-1;
             Ni = data.size();
             p = pnts[N];
+            pc = p;
             n = directions[N];
             u = up_vectors[N];
             c = Vec3f(cols[N]);
             MatrixLookAt(m, Vec3d(0,0,0), n, u);
             m.mult(pCenter, tmp);
 
-            if (!doColor) data.pushVert(p + tmp, n);
-            else data.pushVert(p + tmp, n, c);
+            if (endRound) {
+                Vec3d nc = n; nc.normalize();
+                pc += nc*profile[0].length();
+            }
+
+            if (!doColor) data.pushVert(pc + tmp, n);
+            else data.pushVert(pc + tmp, n, c);
 
             for (unsigned int k=0; k<profile.size(); k++) {
                 Vec3d tmp = profile[k];
                 m.mult(tmp, tmp);
+
+                if (endRound) { n = tmp; n.normalize(); }
 
                 if (!doColor) data.pushVert(p + tmp, n);
                 else data.pushVert(p + tmp, n, c);

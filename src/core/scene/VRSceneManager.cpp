@@ -21,6 +21,7 @@
 #include "core/gui/VRGuiManager.h"
 #include "core/gui/VRGuiSignals.h"
 #include "core/gui/VRGuiFile.h"
+#include "core/gui/VRGuiUtils.h"
 #endif
 
 #include <OpenSG/OSGSceneFileHandler.h>
@@ -68,7 +69,13 @@ void VRSceneManager::loadScene(string path, bool write_protected, string encrypt
     cout << "VRSceneManager, loadScene: " << path << endl;
 
     newEmptyScene(path);
-    VRSceneLoader::get()->loadScene(path, encryptionKey);
+    bool success = VRSceneLoader::get()->loadScene(path, encryptionKey);
+    if (!success) {
+#ifndef WITHOUT_GTK
+        notifyUser("Could not load scene", "File '" + path + "' not found or corrupted!");
+#endif
+        return;
+    }
     current->setFlag("write_protected", write_protected);
 
 #ifndef WITHOUT_GTK

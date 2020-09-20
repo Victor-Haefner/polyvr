@@ -68,7 +68,8 @@ VRLight::VRLight(string name) : VRObject(name) {
     store("shadowVolume", &shadowVolume);
     storeObjName("beacon", &beacon, &beacon_name);
     regStorageSetupFkt( VRStorageCb::create("light setup", bind(&VRLight::setup, this, _1)) );
-    regStorageSetupAfterFkt( VRUpdateCb::create("light setup after", bind(&VRLight::setup_after, this)) );
+    setupAfterCb = VRUpdateCb::create("light setup after", bind(&VRLight::setup_after, this));
+    regStorageSetupAfterFkt( setupAfterCb );
 
     // test scene
     //shadow_test_scene* sts = new shadow_test_scene();
@@ -105,6 +106,7 @@ void VRLight::setup_after() {
     //auto root = VRScene::getCurrent()->getRoot();
     auto root = getRoot();
     if (!root) { cout << "  !! could not find root for light beacon: " << root << " " << this << endl; return; }
+    else cout << "VRLight::setup_after, root: " << root.get() << ", light: " << this << endl;
     VRObjectPtr tmp = root->find(beacon_name);
     if (tmp) setBeacon( static_pointer_cast<VRLightBeacon>(tmp) );
     else cout << "  !! could not find light beacon: " << root << " " << this << endl;

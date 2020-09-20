@@ -19,6 +19,7 @@
 #endif
 #include "core/tools/VRQRCode.h"
 #include "core/utils/system/VRSystem.h"
+#include "core/utils/VRLogger.h"
 
 #include <OpenSG/OSGNameAttachment.h>
 #include <OpenSG/OSGMaterialGroup.h>
@@ -116,8 +117,11 @@ struct VRMatData {
         colChunk = MaterialChunk::create();
         colChunk->setBackMaterial(false);
         mat->addChunk(colChunk);
+        mat->addAttachment(colChunk, 0);
+        if (colChunk->getId() == 3060) cout << " -------------------- MaterialChunk " << colChunk->getId() << endl;
         twoSidedChunk = TwoSidedLightingChunk::create();
         mat->addChunk(twoSidedChunk);
+        mat->addAttachment(twoSidedChunk, 1);
         texChunks.clear();
         envChunks.clear();
         genChunks.clear();
@@ -260,11 +264,13 @@ string fragFailShader =
 string VRMaterial::constructShaderVP(VRMatDataPtr data) {
     if (!data) data = mats[activePass];
     int texD = data->getTextureDimension();
+    //bool hasVertCols = ;
 
     string vp;
 #ifdef OSG_OGL_ES2
     vp += "attribute vec4 osg_Vertex;\n";
     vp += "attribute vec3 osg_Normal;\n";
+    vp += "attribute vec4 osg_Color;\n";
     if (texD == 2) vp += "attribute vec2 osg_MultiTexCoord0;\n";
     vp += "uniform mat4 OSGModelViewProjectionMatrix;\n";
     vp += "uniform mat4 OSGNormalMatrix;\n";
@@ -275,7 +281,7 @@ string VRMaterial::constructShaderVP(VRMatDataPtr data) {
     vp += "void main(void) {\n";
     vp += "  vertNorm = (OSGNormalMatrix * vec4(osg_Normal,1.0)).xyz;\n";
     if (texD == 2) vp += "  texCoord = osg_MultiTexCoord0;\n";
-    vp += "  color = vec4(1.0,1.0,1.0,1.0);\n";
+    vp += "  color = osg_Color;\n";
     vp += "  gl_Position = OSGModelViewProjectionMatrix * osg_Vertex;\n";
     vp += "}\n";
 #else
@@ -325,7 +331,7 @@ string VRMaterial::constructShaderFP(VRMatDataPtr data, bool deferred, int force
 //    if (texD == 2) fp += "  vec4 diffCol = vec4(texCoord.x, texCoord.y, 0.0, 1.0);\n";
     else fp += "  vec4 diffCol = color;\n";
     fp += "  vec4  ambient = mat_ambient * diffCol;\n";
-    fp += "  vec4  diffuse = mat_diffuse * NdotL * diffCol;\n";
+    fp += "  vec4  diffuse = NdotL * diffCol;\n";
     fp += "  vec4  specular = mat_specular * 0.0;\n";
     fp += "  if (isLit == 0) gl_FragColor = mat_diffuse * diffCol;\n";
     fp += "  else gl_FragColor = ambient + diffuse + specular;\n";
@@ -476,6 +482,7 @@ int VRMaterial::addPass() {
     VRMatDataPtr md = VRMatDataPtr( new VRMatData() );
     md->reset();
     passes->mat->addMaterial(md->mat);
+    passes->mat->addAttachment(md->mat);
     mats.push_back(md);
     setDeferred(deferred);
     return activePass;
@@ -483,6 +490,7 @@ int VRMaterial::addPass() {
 
 void VRMaterial::remPass(int i) {
     if (i < 0 || i >= getNPasses()) return;
+    passes->mat->subAttachment(passes->mat->getMaterials(i));
     passes->mat->subMaterial(i);
     mats.erase(remove(mats.begin(), mats.end(), mats[i]), mats.end());
     if (activePass == i) activePass = 0;
@@ -684,6 +692,7 @@ void VRMaterial::setTextureWrapping(int wrapS, int wrapT, int unit) {
 
 void VRMaterial::setTexture(string img_path, bool alpha, int unit) { // TODO: improve with texture map
     if (exists(img_path)) img_path = canonical(img_path);
+    else { VRLog::wrn("PyAPI", "Material '" + getName() + "' setTexture failed, path invalid: '" + img_path + "'"); return; }
     /*auto md = mats[activePass];
     if (md->texture == 0) md->texture = VRTexture::create();
     md->texture->getImage()->read(img_path.c_str());
@@ -966,6 +975,11 @@ void VRMaterial::setTransparency(float c) {
     //enableTransparency();
 }
 
+bool VRMaterial::doesIgnoreMeshColors() {
+    auto md = mats[activePass];
+    return (md->colChunk->getColorMaterial() == GL_NONE);
+}
+
 void VRMaterial::ignoreMeshColors(bool b) {
     auto md = mats[activePass];
     if (b) {
@@ -1188,6 +1202,11 @@ void VRMaterial::forceShaderUpdate() {
 void VRMaterial::setVertexShader(string s, string name) {
     initShaderChunk();
     auto m = mats[activePass];
+
+#ifdef WASM
+    s = "#define WEBGL\n" + s;
+#endif
+
 #ifndef OSG_OGL_ES2
     m->vProgram->setProgram(s);
     checkShader(GL_VERTEX_SHADER, s, name);
@@ -1213,6 +1232,11 @@ void VRMaterial::setVertexShader(string s, string name) {
 void VRMaterial::setFragmentShader(string s, string name, bool deferred) {
     initShaderChunk();
     auto m = mats[activePass];
+#ifdef WASM
+    if (!contains(s, "precision mediump"))
+        s = "#define WEBGL\nprecision mediump float;\n" + s;
+#endif
+
 #ifndef OSG_OGL_ES2
     if (deferred) m->fdProgram->setProgram(s.c_str());
     else          m->fProgram->setProgram(s.c_str());

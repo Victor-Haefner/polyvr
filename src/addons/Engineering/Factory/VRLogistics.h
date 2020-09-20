@@ -7,20 +7,24 @@
 #include <memory>
 
 #include "core/math/OSGMathFwd.h"
-#include <OpenSG/OSGColor.h>
 #include "core/objects/VRObjectFwd.h"
 #include "core/math/VRMathFwd.h"
 
-class FID;
-class FNode;
-class FNetwork;
-class FProduct;
-class FStack;
-class FTransporter;
-class FLogistics;
+#include <OpenSG/OSGColor.h>
 
 using namespace std;
-namespace OSG{ class VRTransform; class VRStroke; class VRSprite; class Path; }
+OSG_BEGIN_NAMESPACE;
+
+ptrFwd(FID);
+ptrFwd(FPath);
+ptrFwd(FObject);
+ptrFwd(FNode);
+ptrFwd(FNetwork);
+ptrFwd(FProduct);
+ptrFwd(FStack);
+ptrFwd(FTransporter);
+ptrFwd(FContainer);
+ptrFwd(FLogistics);
 
 class FID {
     private:
@@ -31,6 +35,7 @@ class FID {
 
     public:
         int getID();
+        void setID(int ID);
 };
 
 class FObject : public FID {
@@ -39,8 +44,8 @@ class FObject : public FID {
 
     private:
         Type type;
-        OSG::VRTransformPtr transform = 0;
-        OSG::VRSpritePtr metaData = 0;
+        VRTransformPtr transform = 0;
+        VRSpritePtr metaData = 0;
         float t = 0;
 
     protected:
@@ -52,87 +57,71 @@ class FObject : public FID {
         void setType(Type);
         Type getType();
 
-        void setTransformation(OSG::VRTransformPtr t);
-        OSG::VRTransformPtr getTransformation();
-        bool move(OSG::PathPtr p, float dx);
+        void setTransformation(VRTransformPtr t);
+        VRTransformPtr getTransformation();
+        bool move(PathPtr p, float dx);
 
-        void setMetaData(std::string s);
+        void setMetaData(string s);
 
         friend class FLogistics;
 };
 
-class FNode : public FID, public std::enable_shared_from_this<FNode> {
+class FNode : public FID, public enable_shared_from_this<FNode> {
     public:
         enum State { FREE, CONTAINER, RESERVED, PRODUCT };
 
     private:
-        shared_ptr<FObject> object;
-        shared_ptr<FTransporter> transporter;
+        FObjectPtr object;
+        FTransporterPtr transporter;
         State state;
-        OSG::VRTransformPtr transform = 0;
-
-        std::map<int, shared_ptr<FNode>> out;
-        std::map<int, shared_ptr<FNode>> in;
-        std::map<int, shared_ptr<FNode>>::iterator itr;
+        VRTransformPtr transform = 0;
 
     protected:
         FNode();
 
     public:
         ~FNode();
-        void set(shared_ptr<FObject> o);
-        shared_ptr<FObject> get();
-
-        std::map<int, shared_ptr<FNode>>& getIncoming();
-        std::map<int, shared_ptr<FNode>>& getOutgoing();
-        shared_ptr<FNode> previous();
-        shared_ptr<FNode> next();
+        void set(FObjectPtr o);
+        FObjectPtr get();
 
         void setState(State);
         State getState();
 
-        OSG::Vec3d getTangent();
-
-        void connect(shared_ptr<FNode> n);
-        void disconnect(shared_ptr<FNode> n);
-        void isolate();
-
-        void setTransform(OSG::VRTransformPtr t);
-        OSG::VRTransformPtr getTransform();
+        void setTransform(VRTransformPtr t);
+        VRTransformPtr getTransform();
 
         friend class FNetwork;
 };
 
-class FPath : public FID {
-    private:
-        std::vector<shared_ptr<FNode>> nodes;
-        std::map<FNode*, OSG::PathPtr> paths;
-
+class FPath {
     public:
-        FPath();
-        void set(shared_ptr<FNode> n1, shared_ptr<FNode> n2);
-        void add(shared_ptr<FNode> n);
-        std::vector<shared_ptr<FNode>>& get();
-        shared_ptr<OSG::Path> getPath(shared_ptr<FNode>);
-        void update();
-};
+        vector<int> nodes;
+        PathPtr path;
 
+        FPath();
+        void updatePath(GraphPtr graph);
+
+        int first();
+        int last();
+};
 
 class FNetwork : public FID {
     private:
-        std::map<int, shared_ptr<FNode>> nodes;
-        std::map<int, shared_ptr<FNode>>::iterator itr;
+        GraphPtr graph;
+        map<int, FNodePtr> nodes;
 
     public:
         FNetwork();
         ~FNetwork();
 
-        shared_ptr<FNode> addNode(shared_ptr<FNode> parent = 0);
-        shared_ptr<FNode> addNodeChain(int N, shared_ptr<FNode> parent = 0);
+        int addNode(PosePtr p);
+        void connect(int n1, int n2);
 
-        std::vector<shared_ptr<FNode>> getNodes();
+        GraphPtr getGraph();
+        FNodePtr getNode(int ID);
+        vector<FNodePtr> getNodes();
 
-        OSG::VRStrokePtr stroke(OSG::Color3f c, float k);
+        VRStrokePtr stroke(Color3f c, float k);
 
         friend class FLogistics;
 };
@@ -151,7 +140,7 @@ class FProduct : public FObject {
 class FContainer : public FObject {
     private:
         int capacity;
-        std::vector<shared_ptr<FProduct>> products;
+        vector<FProductPtr> products;
 
     public:
         FContainer();
@@ -160,9 +149,9 @@ class FContainer : public FObject {
         void setCapacity(int i);
         int getCapacity();
 
-        void add(shared_ptr<FProduct> p);
-        shared_ptr<FProduct> pop();
-        shared_ptr<FProduct> peek();
+        void add(FProductPtr p);
+        FProductPtr pop();
+        FProductPtr peek();
 
         bool isFull();
         bool isEmpty();
@@ -178,17 +167,18 @@ class FTransporter : public FID {
         enum FTType { PRODUCT, CONTAINER_FULL, CONTAINER_EMPTY };
 
     private:
-        std::map<shared_ptr<FNode>, shared_ptr<FObject>> cargo;
-        shared_ptr<FPath> fpath;
+        map<shared_ptr<FNode>, FObjectPtr> cargo;
+        FPathPtr fpath;
         FTType transport_type;
         float speed;
+        weak_ptr<FNetwork> network;
 
     public:
         FTransporter();
         ~FTransporter();
 
         void setRoute(shared_ptr<FNode> n1, shared_ptr<FNode> n2);
-        void setPath(shared_ptr<FPath> p);
+        void setPath(FPathPtr p);
         void setTransportType(FTType type);
         void setSpeed(float s);
         float getSpeed();
@@ -203,13 +193,9 @@ class FTransporter : public FID {
 
 class FLogistics {
     private:
-        std::map<int, shared_ptr<FNetwork>> networks;
-        std::map<int, shared_ptr<FObject>> objects;
-        std::map<int, shared_ptr<FTransporter>> transporter;
-        std::map<int, shared_ptr<FPath>> paths;
-        std::map<int, shared_ptr<FNetwork>>::iterator n_itr;
-        std::map<int, shared_ptr<FObject>>::iterator o_itr;
-        std::map<int, shared_ptr<FTransporter>>::reverse_iterator t_ritr;
+        FNetworkPtr network;
+        map<int, FObjectPtr> objects;
+        map<int, FTransporterPtr> transporter;
 
     public:
         FLogistics();
@@ -217,16 +203,20 @@ class FLogistics {
 
         static shared_ptr<FLogistics> create();
 
-        shared_ptr<FProduct> addProduct(OSG::VRTransformPtr t = 0);
-        shared_ptr<FNetwork> addNetwork();
-        shared_ptr<FTransporter> addTransporter(FTransporter::FTType type);
-        shared_ptr<FPath> addPath();
-        shared_ptr<FContainer> addContainer(OSG::VRTransformPtr t);
-        void fillContainer(shared_ptr<FContainer> c, int N, OSG::VRTransformPtr t);
-        std::vector<shared_ptr<FContainer>> getContainers();
+        FProductPtr addProduct(VRTransformPtr t = 0);
+        FNetworkPtr addNetwork();
+        FTransporterPtr addTransporter(string type);
+        FContainerPtr addContainer(VRTransformPtr t);
+        void fillContainer(FContainerPtr c, int N, VRTransformPtr t);
+        vector<FContainerPtr> getContainers();
+
+        FPathPtr computeRoute(int n1, int n2);
 
         void update();
         void run();
+        void clear();
 };
+
+OSG_END_NAMESPACE;
 
 #endif // VRLOGISTICS_H_INCLUDED

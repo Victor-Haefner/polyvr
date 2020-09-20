@@ -1,3 +1,4 @@
+#include <gtk/gtk.h>
 #include "VRGuiScene.h"
 
 #include <iostream>
@@ -32,8 +33,6 @@
 //#include "addons/Engineering/CSG/CSGGeometry.h"
 
 #include "wrapper/VRGuiTreeView.h"
-
-#include <gtk/gtk.h>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;

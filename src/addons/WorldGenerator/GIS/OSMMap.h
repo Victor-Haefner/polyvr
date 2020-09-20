@@ -56,7 +56,7 @@ struct OSMWay : OSMBase {
     OSMWay(XMLElementPtr e, map<string, bool>& invalidIDs);
     string toString();
     VRPolygon getPolygon();
-    vector<string> getNodes();
+    vector<string> getNodes(float downSampleRate = 1.0);
     void writeTo(XMLElementPtr e);
 };
 

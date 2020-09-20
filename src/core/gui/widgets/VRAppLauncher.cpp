@@ -1,3 +1,4 @@
+#include <gtk/gtk.h>
 #include "VRAppLauncher.h"
 #include "../VRDemos.h"
 #include "../VRGuiUtils.h"
@@ -10,7 +11,6 @@
 #include "core/gui/VRGuiContextMenu.h"
 
 #include <iostream>
-#include <gtk/gtk.h>
 
 using namespace OSG;
 

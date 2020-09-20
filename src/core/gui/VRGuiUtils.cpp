@@ -1,3 +1,5 @@
+#include <gtk/gtk.h>
+
 #include "VRGuiUtils.h"
 #include "VRGuiSignals.h"
 #include "VRGuiFile.h"
@@ -12,9 +14,6 @@
 
 #include <iostream>
 #include <functional>
-
-#include <gtk/gtk.h>
-#include <gdk/gdk.h>
 
 using namespace std;
 namespace PL = std::placeholders;
@@ -36,11 +35,15 @@ GtkWidget* VRGuiBuilder::get_widget(string name) {
     return 0;
 }
 
-GObject* VRGuiBuilder::get_object(string name) {
-    return (GObject*)gtk_builder_get_object(builder, name.c_str());
-    //if (objects.count(name)) return objects[name];
-    return 0;
+#if GTK_MAJOR_VERSION == 2
+GtkObject* VRGuiBuilder::get_object(string name) {
+    return (GtkObject*)gtk_builder_get_object(builder, name.c_str());
 }
+#else
+GObject* VRGuiBuilder::get_object(string name) {
+    return gtk_builder_get_object(builder, name.c_str());
+}
+#endif
 
 string gtk_combo_box_get_active_text(GtkComboBox* b) {
 	GtkTreeIter itr;
@@ -56,7 +59,11 @@ VRGuiBuilder* getGUIBuilder(bool standalone) {
 	if (b) return b;
 	b = new VRGuiBuilder();
 
+#if GTK_MAJOR_VERSION == 2
 	string path = "ressources/gui/VRDirector.glade";
+#else
+	string path = "ressources/gui/VRDirector3.glade";
+#endif
 	if (standalone) path = "ressources/gui/VRDirector_min.glade";
 	if (!VRGuiFile::exists(path)) cerr << "FATAL ERROR: " << path << " not found\n";
 	else {
@@ -246,9 +253,25 @@ void eraseComboboxActive(string n) {
     }
 }
 
+string getComboboxPtrText(GtkComboBox* cb) {
+    if (!cb) return "";
+#if GTK_MAJOR_VERSION == 2
+    char* n = gtk_combo_box_get_active_text(cb);
+#else
+    GtkTreeIter itr;
+    bool b = gtk_combo_box_get_active_iter(cb, &itr);
+    if (!b) return "";
+
+    char* n = 0;
+    GtkTreeModel* model = gtk_combo_box_get_model(cb);
+    gtk_tree_model_get(model, &itr, 0, &n, -1); // Gtk-CRITICAL **: 12:00:31.666: gtk_list_store_get_value: assertion 'iter_is_valid (iter, list_store)' failed
+#endif
+    return n?n:"";
+}
+
 string getComboboxText(string cbn) {
     GtkComboBox* cb = (GtkComboBox*)getGUIBuilder()->get_widget(cbn);
-    return gtk_combo_box_get_active_text(cb);
+    return getComboboxPtrText(cb);
 }
 
 int getComboboxI(string cbn) {
@@ -261,6 +284,15 @@ GtkTreeIter getComboboxIter(string cbn) {
     GtkTreeIter i;
     gtk_combo_box_get_active_iter(cb, &i);
     return i;
+}
+
+void notifyUser(string msg1, string msg2) {
+    GtkDialogFlags flags = GTK_DIALOG_MODAL;
+    GtkMessageDialog* dialog = (GtkMessageDialog*)gtk_message_dialog_new(0, flags, GTK_MESSAGE_WARNING, GTK_BUTTONS_OK, "%s", msg1.c_str());
+    gtk_message_dialog_format_secondary_text(dialog, "%s", msg2.c_str());
+    gtk_window_set_deletable((GtkWindow*)dialog, false);
+    gtk_dialog_run((GtkDialog*)dialog);
+    gtk_widget_destroy ((GtkWidget*)dialog);
 }
 
 bool askUser(string msg1, string msg2) {
@@ -328,6 +360,7 @@ OSG::Color4f chooseColor(string drawable, OSG::Color4f current) {
         gtk_color_selection_get_current_color(csel, &c);
         alpha = gtk_color_selection_get_current_alpha(csel)/65535.0;
     }
+    gtk_widget_destroy((GtkWidget*)cdiag);
 
     gtk_widget_modify_bg((GtkWidget*)darea, GTK_STATE_NORMAL, &c);  // TODO: blend with pattern to show alpha channel
 
@@ -380,10 +413,22 @@ void setNotebookPage(string nb, int p) {
 OSG::VRTexturePtr takeSnapshot() {
     GtkDrawingArea* drawArea = (GtkDrawingArea*)getGUIBuilder()->get_widget("glarea");
     GdkWindow* src = gtk_widget_get_window((GtkWidget*)drawArea); // 24 bits per pixel ( src->get_depth() )
-	int w = gdk_window_get_width(src);
-	int h = gdk_window_get_height(src);
+#if GTK_MAJOR_VERSION == 2
+    int w, h;
+    gdk_drawable_get_size(src, &w, &h);
+#else
+    int w = gdk_window_get_width(src);
+    int h = gdk_window_get_height(src);
+#endif
     w -= w%4; h -= h%4;
-	GdkPixbuf* pxb = gdk_pixbuf_get_from_window(src, 0, 0, w, h);
+
+#if GTK_MAJOR_VERSION == 2
+    GdkColormap* cm = gdk_drawable_get_colormap(src);
+    GdkImage* img = gdk_drawable_get_image(src, 0, 0, w, h);
+    GdkPixbuf* pxb = gdk_pixbuf_get_from_image(NULL, img, cm, 0,0,0,0,w,h);
+#else
+    GdkPixbuf* pxb = gdk_pixbuf_get_from_window(src, 0,0,w,h);
+#endif
 
     OSG::ImageMTRecPtr res = OSG::Image::create();
     //Image::set(pixFormat, width, height, depth, mipmapcount, framecount, framedelay, data, type, aloc, sidecount);
@@ -394,13 +439,25 @@ OSG::VRTexturePtr takeSnapshot() {
 void saveSnapshot(string path) {
     if (!exists(getFolderName(path))) return;
     GtkDrawingArea* drawArea = (GtkDrawingArea*)getGUIBuilder()->get_widget("glarea");
-	GdkWindow* src = gtk_widget_get_window((GtkWidget*)drawArea);
-	int w = gdk_window_get_width(src);
-	int h = gdk_window_get_height(src);
+    GdkWindow* src = gtk_widget_get_window((GtkWidget*)drawArea);
+#if GTK_MAJOR_VERSION == 2
+    int w, h;
+    gdk_drawable_get_size(src, &w, &h);
+#else
+    int w = gdk_window_get_width(src);
+    int h = gdk_window_get_height(src);
+#endif
     int smin = min(w, h);
     int u = max(0.0, w*0.5 - smin*0.5);
     int v = max(0.0, h*0.5 - smin*0.5);
-	GdkPixbuf* pxb = gdk_pixbuf_get_from_window(src, u, v, smin, smin);
+
+#if GTK_MAJOR_VERSION == 2
+    GdkColormap* cm = gdk_drawable_get_colormap(src);
+    GdkImage* img = gdk_drawable_get_image(src, 0, 0, w, h);
+    GdkPixbuf* pxb = gdk_pixbuf_get_from_image(NULL, img, cm, u, v,0,0,smin, smin);
+#else
+    GdkPixbuf* pxb = gdk_pixbuf_get_from_window(src, u,v,smin,smin);
+#endif
     pxb = gdk_pixbuf_scale_simple(pxb, 128, 128, GDK_INTERP_HYPER);
     gdk_pixbuf_save(pxb, path.c_str(), "png", 0, 0, NULL);
 }

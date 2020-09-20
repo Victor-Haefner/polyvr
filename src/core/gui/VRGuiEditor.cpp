@@ -1,3 +1,4 @@
+#include <gtk/gtk.h>
 #include "VRGuiEditor.h"
 #include "VRGuiUtils.h"
 #include "VRGuiCodeCompletion.h"
@@ -5,7 +6,14 @@
 #include "core/utils/VRFunction.h"
 
 #include <iostream>
+
+#if GTK_MAJOR_VERSION == 2
+#include <gtksourceview/gtksourceview.h>
+#include <gtksourceview/gtksourcelanguagemanager.h>
+#include <gtksourceview/gtksourcecompletionprovider.h>
+#else
 #include "gtksourceview/gtksource.h"
+#endif
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;

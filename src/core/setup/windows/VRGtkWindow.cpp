@@ -1,6 +1,7 @@
+#include <gtk/gtk.h>
+#include <gdk/gdk.h>
 #include "VRGtkWindow.h"
 #include "core/gui/VRGuiUtils.h"
-#include <gtk/gtk.h>
 #include <boost/thread/recursive_mutex.hpp>
 
 #include "../devices/VRKeyboard.h"
@@ -12,72 +13,19 @@
 #include "core/scene/VRScene.h"
 #include "core/gui/VRGuiManager.h"
 
+
 typedef boost::recursive_mutex::scoped_lock PLock;
 
-OSG_BEGIN_NAMESPACE;
+using namespace OSG;
 using namespace std;
 namespace PL = std::placeholders;
 
-static gboolean renderTest(GtkGLArea *area, GdkGLContext *context) {
-	// inside this function it's safe to use GL; the given
-	// #GdkGLContext has been made current to the drawable
-	// surface used by the #GtkGLArea and the viewport has
-	// already been set to be the size of the allocation
-
-	// we can start by clearing the buffer
-	glClearColor(0, 0, 0, 0);
-	glClear(GL_COLOR_BUFFER_BIT);
-
-	// draw your object
-	//draw_an_object();
-
-	// we completed our drawing; the draw commands will be
-	// flushed at the end of the signal emission chain, and
-	// the buffers will be drawn on the window
-	return TRUE;
-}
-
-VRGtkWindow::VRGtkWindow(GtkDrawingArea* da, string msaa) {
-    type = 2;
-
-	widget = gtk_gl_area_new();
-	drawArea = (GtkGLArea*)widget;
-	g_signal_connect(widget, "render", G_CALLBACK(renderTest), NULL);
-
-
-    int MSAA = toInt(subString(msaa,1,-1));
-	bool activeStereo = VROptions::get()->getOption<bool>("active_stereo");
-
-	gtk_gl_area_set_has_alpha(drawArea, true);
-	gtk_gl_area_set_has_depth_buffer(drawArea, true);
-	gtk_gl_area_set_has_stencil_buffer(drawArea, true);
-
-    //( GDK_GL_MODE_DOUBLE |  | GDK_GL_MODE_MULTISAMPLE | GDK_GL_MODE_STEREO);
-
-    gtk_widget_show(widget);
-    gtk_widget_add_events(widget, (GdkEventMask)GDK_VISIBILITY_NOTIFY_MASK);
-    gtk_widget_add_events(widget, (GdkEventMask)GDK_BUTTON_PRESS_MASK);
-    gtk_widget_add_events(widget, (GdkEventMask)GDK_BUTTON_RELEASE_MASK);
-    gtk_widget_add_events(widget, (GdkEventMask)GDK_POINTER_MOTION_MASK);
-    gtk_widget_add_events(widget, (GdkEventMask)GDK_KEY_PRESS_MASK);
-    gtk_widget_add_events(widget, (GdkEventMask)GDK_KEY_RELEASE_MASK);
-    gtk_widget_add_events(widget, (GdkEventMask)GDK_SCROLL_MASK);
-    //GTK_WIDGET_SET_FLAGS(widget, GTK_CAN_FOCUS);
-
-    win = PassiveWindow::create();
-    _win = win;
-    win->setSize(width, height);
-
-    /*connect_signal<void>(drawArea, bind(&VRGtkWindow::on_realize, this), "realize");
-    connect_signal<void, GdkEventExpose*>(drawArea, bind(&VRGtkWindow::on_expose, this, PL::_1), "expose_event");
-    connect_signal<void, GdkRectangle*>(drawArea, bind(&VRGtkWindow::on_resize, this, PL::_1), "size_allocate");
-    connect_signal<void, GdkEventScroll*>(drawArea, bind(&VRGtkWindow::on_scroll, this, PL::_1), "scroll_event");
-    connect_signal<void, GdkEventButton*>(drawArea, bind(&VRGtkWindow::on_button, this, PL::_1), "button_press_event");
-    connect_signal<void, GdkEventButton*>(drawArea, bind(&VRGtkWindow::on_button, this, PL::_1), "button_release_event");
-    connect_signal<void, GdkEventMotion*>(drawArea, bind(&VRGtkWindow::on_motion, this, PL::_1), "motion_notify_event");
-    connect_signal<void, GdkEventKey*>(drawArea, bind(&VRGtkWindow::on_key, this, PL::_1), "key_press_event");
-    connect_signal<void, GdkEventKey*>(drawArea, bind(&VRGtkWindow::on_key, this, PL::_1), "key_release_event");*/
-}
+#if GTK_MAJOR_VERSION == 2
+#include "VRGtk2Window.h"
+#else
+//#include "VRGtk3Window.h"
+#include "VRGtk32Window.h"
+#endif
 
 VRGtkWindow::~VRGtkWindow() {
     win = NULL;
@@ -172,7 +120,9 @@ void VRGtkWindow::setCursor(string c) {
 
     auto cur = gdk_cursor_new(cursor);
     gdk_window_set_cursor(win, cur);
-	gdk_cursor_unref(cur);
+#if GTK_MAJOR_VERSION == 2
+    gdk_cursor_destroy(cur);
+#endif
 }
 
 bool VRGtkWindow::on_button(GdkEventButton* event) {
@@ -225,58 +175,9 @@ bool VRGtkWindow::on_scroll(GdkEventScroll * event) {
     return true;
 }
 
-void VRGtkWindow::clear(Color3f c) {
-    /*GdkWindow* drawable = gtk_widget_get_window(widget);
-    if (drawable) {
-		GdkGLContext* glcontext = gtk_gl_area_get_context(drawArea);
-        GdkGLDrawable* gldrawable = gtk_widget_get_gl_drawable (widget);
-        gdk_gl_drawable_gl_begin (gldrawable, glcontext);
-        resize(widget->allocation.width, widget->allocation.height);
-        glClearColor(c[0], c[1], c[2], 1.0);
-        glClear(GL_COLOR_BUFFER_BIT);
-        gdk_gl_drawable_swap_buffers (gldrawable);
-        gdk_gl_drawable_gl_end (gldrawable);
-    }*/
-}
-
-void VRGtkWindow::render(bool fromThread) {
-    /*if (fromThread) return;
-    PLock( VRGuiManager::get()->guiMutex() );
-    if (!active || !content) return;
-    auto profiler = VRProfiler::get();
-    int pID = profiler->regStart("gtk window render");
-	GdkWindow* drawable = gtk_widget_get_window(widget);
-    if (drawable) {
-        GdkGLContext* glcontext = gtk_widget_get_gl_context (widget);
-        GdkGLDrawable* gldrawable = gtk_widget_get_gl_drawable (widget);
-        gdk_gl_drawable_gl_begin (gldrawable, glcontext);
-        resize(widget->allocation.width, widget->allocation.height);
-        glClearColor(0.2, 0.2, 0.2, 1.0);
-        glClear(GL_COLOR_BUFFER_BIT);
-        VRTimer t1; t1.start();
-        if (active && content) win->render(ract);
-        VRGlobals::RENDER_FRAME_RATE.update(t1);
-        VRTimer t2; t2.start();
-        gdk_gl_drawable_swap_buffers (gldrawable);
-        VRGlobals::SWAPB_FRAME_RATE.update(t2);
-        gdk_gl_drawable_gl_end (gldrawable);
-    }
-    profiler->regStop(pID);*/
-}
-
-/*void VRGtkWindow::on_resize(GdkRectangle* allocation) {
+void VRGtkWindow::on_resize(GdkRectangle* allocation) {
     initialExpose = true;
     resize(allocation->width, allocation->height);
-}*/
-
-void VRGtkWindow::on_realize() {
-    initialExpose = true;
-    /*GdkGLContext* glcontext = gtk_widget_get_gl_context (widget);   // TODO: rare x error on startup!!
-    GdkGLDrawable* gldrawable = gtk_widget_get_gl_drawable (widget);
-    gdk_gl_drawable_gl_begin(gldrawable, glcontext);
-    win->init();
-    resize(widget->allocation.width,widget->allocation.height);
-    gdk_gl_drawable_gl_end (gldrawable);*/
 }
 
 void printGLversion() {
@@ -285,24 +186,9 @@ void printGLversion() {
     cout << "Supported OpenGL version: " << version << endl;
 }
 
-bool VRGtkWindow::on_expose(GdkEventExpose* event) {
-    if (initialExpose) {
-        /*GdkGLContext* glcontext = gtk_widget_get_gl_context (widget);   // TODO: rare x error on startup!!
-        GdkGLDrawable* gldrawable = gtk_widget_get_gl_drawable (widget);
-        gdk_gl_drawable_gl_begin(gldrawable, glcontext);
-        glClearColor(0.2, 0.2, 0.2, 1.0);
-        glClear(GL_COLOR_BUFFER_BIT);
-        gdk_gl_drawable_swap_buffers (gldrawable);
-        gdk_gl_drawable_gl_end (gldrawable);
-        initialExpose = false;*/
-    }
-    return true;
-}
-
 void VRGtkWindow::save(XMLElementPtr node) { VRWindow::save(node); }
 void VRGtkWindow::load(XMLElementPtr node) { VRWindow::load(node); }
 
-OSG_END_NAMESPACE;
 
 
 

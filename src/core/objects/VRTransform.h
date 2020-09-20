@@ -58,7 +58,7 @@ class VRTransform : public VRObject {
 
         Matrix4d old_transformation; //drag n drop
 
-        VRObjectPtr copy(vector<VRObjectPtr> children);
+        virtual VRObjectPtr copy(vector<VRObjectPtr> children);
 
         void computeMatrix4d();
 
@@ -78,6 +78,9 @@ class VRTransform : public VRObject {
 
         static VRTransformPtr create(string name = "None", bool doOptimizations = true);
         VRTransformPtr ptr();
+        OSGTransformPtr getOSGTransformPtr();
+
+        virtual void wrapOSG(OSGObjectPtr node);
 
         static VRTransformPtr getParentTransform(VRObjectPtr o);
         static Vec3d computeEulerAngles(const Matrix4d& t);
@@ -113,6 +116,7 @@ class VRTransform : public VRObject {
         void setScale(Vec3d s);
         void setOrientation(Vec3d dir, Vec3d up);
         void setEuler(Vec3d euler);
+        void setEulerDegree(Vec3d euler);
         void setTransform(Vec3d p, Vec3d d = Vec3d(0,0,-1), Vec3d u = Vec3d(0,1,0));
         void setPose2(Pose& p);
         void setPose(PosePtr p);

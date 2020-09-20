@@ -5,15 +5,24 @@
 
 #include <OpenSG/OSGPassiveWindow.h>
 
-struct _GtkGLArea;
+#if GTK_MAJOR_VERSION == 2
+#define GDKRECTANGLE _GdkRectangle
+#else
+#define GDKRECTANGLE _cairo_rectangle_int
+#endif
+
 struct _GtkDrawingArea;
 struct _GtkWidget;
 struct _GdkEventScroll;
 struct _GdkEventExpose;
-struct _GdkRectangle;
+struct GDKRECTANGLE;
 struct _GdkEventButton;
 struct _GdkEventMotion;
 struct _GdkEventKey;
+
+struct _GtkGLArea;
+struct _GdkGLContext;
+struct CairoContext;
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -21,18 +30,27 @@ using namespace std;
 
 class VRGtkWindow : public VRWindow {
     private:
-		_GtkGLArea* drawArea = 0;
+		_GtkDrawingArea* drawArea = 0;
         _GtkWidget* widget = 0;
         PassiveWindowMTRecPtr win;
         bool initialExpose = true;
+        bool isRealized = false;
 
         bool on_scroll(_GdkEventScroll* e);
-        void on_realize();
-        bool on_expose(_GdkEventExpose* e);
-        void on_resize(_GdkRectangle* a);
+        void on_resize(GDKRECTANGLE* a);
         bool on_button(_GdkEventButton* e);
         bool on_motion(_GdkEventMotion* e);
         bool on_key(_GdkEventKey* e);
+
+#if GTK_MAJOR_VERSION == 2
+        bool on_expose(_GdkEventExpose* e);
+        void on_realize();
+#else
+        bool on_expose(CairoContext* e);
+        _GdkGLContext* glcontext = 0;
+        void on_realize();
+        bool on_render(_GdkGLContext* glcontext);
+#endif
 
     public:
         VRGtkWindow(_GtkDrawingArea* glarea, string msaa);

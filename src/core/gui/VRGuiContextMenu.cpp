@@ -1,7 +1,6 @@
+#include <gtk/gtk.h>
 #include "VRGuiContextMenu.h"
 #include "VRGuiUtils.h"
-
-#include <gtk/gtk.h>
 
 VRGuiContextMenu::VRGuiContextMenu(string name) {
     ;

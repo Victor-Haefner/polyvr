@@ -12,6 +12,7 @@ class VRStroke : public VRGeometry {
     public:
         enum CAP {
             NONE,
+            ROUND,
             ARROW
         };
 
@@ -35,6 +36,8 @@ class VRStroke : public VRGeometry {
 
         static VRStrokePtr create(string name = "None");
         VRStrokePtr ptr();
+
+        void clear();
 
         void setPath(PathPtr p);
         void addPath(PathPtr p);

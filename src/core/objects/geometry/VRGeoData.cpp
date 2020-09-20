@@ -1,9 +1,12 @@
 #include "VRGeoData.h"
 #include "VRGeometry.h"
+#include "core/objects/material/VRMaterial.h"
 #include "OSGGeometry.h"
 #include "core/utils/toString.h"
+
 #include <OpenSG/OSGGeoProperties.h>
 #include <OpenSG/OSGGeometry.h>
+#include <OpenSG/OSGTriangleIterator.h>
 
 using namespace OSG;
 
@@ -455,6 +458,10 @@ void VRGeoData::updateType(int t, int N) {
 }
 
 void VRGeoData::pushQuad(int i, int j, int k, int l) {
+#ifdef WASM
+    pushTri(i,j,k);
+    pushTri(i,k,l);
+#else
     int N = size();
     if (i < 0) i += N;
     if (j < 0) j += N;
@@ -465,6 +472,7 @@ void VRGeoData::pushQuad(int i, int j, int k, int l) {
     data->indices->addValue(k);
     data->indices->addValue(l);
     updateType(GL_QUADS, 4);
+#endif
 }
 
 void VRGeoData::pushPatch(int N) {
@@ -742,6 +750,54 @@ void VRGeoData::makeSingleIndex() {
     if (!geo->getMesh()->geo->isSingleIndex()) cout << "VRGeoData::makeSingleIndex FAILED!! probably needs to set more indices!" << endl;
 }
 
+vector<VRGeometryPtr> VRGeoData::splitByVertexColors(const Matrix4d& m) {
+    map<size_t, VRGeoData> geos;
+    map<size_t, Color3f> colors;
+    map<size_t, map<size_t, size_t>> indexMaps;
+
+    auto hashColor3 = [&](const Color3f& col) -> size_t {
+        size_t h = col[0]*255 + col[1]*255*255 + col[2]*255*255*255;
+        colors[h] = col;
+        return h;
+    };
+
+    auto hashColor4 = [&](const Color4f& col) -> size_t {
+        size_t h = col[0]*255 + col[1]*255*255 + col[2]*255*255*255 + col[3]*255*255*255*255;
+        colors[h] = Color3f(col[0], col[1], col[2]);
+        return h;
+    };
+
+    auto getHash = [&](size_t i) -> size_t {
+        if (data->cols3) return hashColor3(data->cols3->getValue(i));
+        if (data->cols4) return hashColor4(data->cols4->getValue(i));
+        return 0;
+    };
+
+    for (auto& prim : *this) {
+        auto h = getHash(prim.indices[0]);
+        auto& geo = geos[h];
+        auto& indexMap = indexMaps[h];
+
+        vector<int> ninds;
+        for (auto i : prim.indices) {
+            if (!indexMap.count(i)) indexMap[i] = geo.pushVert(*this, i);
+            ninds.push_back(indexMap[i]);
+        }
+        prim.indices = ninds;
+        geo.pushPrim(prim);
+    }
+
+    vector<VRGeometryPtr> res;
+    for (auto g : geos) {
+        auto gg = g.second.asGeometry(geo?geo->getBaseName():"part");
+        gg->setMatrix(m);
+        auto mat = VRMaterial::create("part-mat");
+        mat->setDiffuse(colors[g.first]);
+        gg->setMaterial(mat);
+        res.push_back(gg);
+    }
+    return res;
+}
 
 
 

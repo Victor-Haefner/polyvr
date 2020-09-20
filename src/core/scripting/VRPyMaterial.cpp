@@ -38,9 +38,11 @@ PyMethodDef VRPyMaterial::methods[] = {
     {"setTessControlProgram", (PyCFunction)VRPyMaterial::setTessControlProgram, METH_VARARGS, "Set tess control program - setTessControlProgram( myScript )" },
     {"setTessEvaluationProgram", (PyCFunction)VRPyMaterial::setTessEvaluationProgram, METH_VARARGS, "Set tess evaluation program - setTessEvaluationProgram( myScript )" },
     {"ignoreMeshColors", PyWrapOpt( Material, ignoreMeshColors, "Allows to ignore vertex colors, only works if lit", "1", void, bool ) },
+    {"doesIgnoreMeshColors", PyWrap( Material, doesIgnoreMeshColors, "Check if ignoring vertex colors", bool ) },
     {"setWireFrame", PyWrap( Material, setWireFrame, "Set front and back to wireframe", void, bool ) },
     {"isWireFrame", PyWrap( Material, isWireFrame, "Check if wireframe", bool ) },
     {"setLit", (PyCFunction)VRPyMaterial::setLit, METH_VARARGS, "Set if geometry is lit - setLit(bool)" },
+    {"isLit", PyWrap( Material, isLit, "Get if geometry is lit", bool ) },
     {"addPass", PyWrap( Material, addPass, "Add a new pass", int ) },
     {"setActivePass", PyWrap( Material, setActivePass, "Set active pass", void, int ) },
     {"remPass", PyWrap( Material, remPass, "Remove a pass", void, int ) },
@@ -115,7 +117,7 @@ PyObject* VRPyMaterial::getTexture(VRPyMaterial* self, PyObject* args) {
     if (!self->valid()) return NULL;
 	int i=0;
     if (! PyArg_ParseTuple(args, "|i", &i)) return NULL;
-	return VRPyImage::fromSharedPtr( self->objPtr->getTexture(i) );
+	return VRPyTexture::fromSharedPtr( self->objPtr->getTexture(i) );
 }
 
 PyObject* VRPyMaterial::setShaderParameter(VRPyMaterial* self, PyObject* args) {
@@ -159,8 +161,8 @@ PyObject* VRPyMaterial::setTexture(VRPyMaterial* self, PyObject* args) {
         PyObject* o = 0; int pos = 0;
         if (! PyArg_ParseTuple(args, "O|i", &o, &pos)) return NULL;
         if (PyString_Check(o)) self->objPtr->setTexture( PyString_AsString(o), true, pos ); // load a file
-        else if (VRPyImage::check(o)) {
-            VRPyImage* img = (VRPyImage*)o;
+        else if (VRPyTexture::check(o)) {
+            VRPyTexture* img = (VRPyTexture*)o;
             self->objPtr->setTexture( img->objPtr, false, pos );
         }
 	}

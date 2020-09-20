@@ -7,8 +7,11 @@ namespace OSG {
     ptrFwd(VROPCUA);
     ptrFwd(VROPCUANode);
     ptrFwd(VRSocket);
+    ptrFwd(VRWebSocket);
     ptrFwd(VRSerial);
     ptrFwd(VRHDLC);
+    ptrFwd(VRTCPServer);
+    ptrFwd(VRTCPClient);
 }
 
 #endif // VRNETWORKINGFWD_H_INCLUDED

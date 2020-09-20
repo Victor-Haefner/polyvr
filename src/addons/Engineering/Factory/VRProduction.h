@@ -10,11 +10,11 @@
 #include "addons/Semantics/Reasoning/VROntology.h"
 #include "core/utils/VRName.h"
 
-class FLogistics;
-class FNetwork;
-
 OSG_BEGIN_NAMESPACE;
 using namespace std;
+
+class FLogistics;
+class FNetwork;
 
 struct VRProcessFragment;
 struct VRProcessRequirement;

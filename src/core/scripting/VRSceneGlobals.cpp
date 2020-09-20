@@ -4,11 +4,17 @@
 #include "core/scene/VRSceneManager.h"
 #include "core/setup/VRSetup.h"
 
+#include "core/scene/import/VRDWG.h"
+#include "core/scripting/VRPyGeometry.h"
+
 #include "VRPyBaseT.h"
 #include "VRPySetup.h"
 #include "VRPyNavigator.h"
 #include "VRPyRendering.h"
 #include "VRPyTypeCaster.h"
+#ifndef WITHOUT_GTK
+#include <gtk/gtk.h>
+#endif
 #include "VRPyProgress.h"
 #include "VRPySky.h"
 #ifndef WITHOUT_AV
@@ -30,7 +36,6 @@
 #include "core/gui/VRGuiManager.h"
 #include "core/gui/VRGuiConsole.h"
 #include "core/gui/VRGuiFile.h"
-#include <gtk/gtk.h>
 #endif
 
 OSG_BEGIN_NAMESPACE;
@@ -77,6 +82,7 @@ PyMethodDef VRSceneGlobals::methods[] = {
 	{"getFrame", (PyCFunction)VRSceneGlobals::getFrame, METH_NOARGS, "Get current frame number" },
 	{"getScript", (PyCFunction)VRSceneGlobals::getScript, METH_VARARGS, "Get python script by name" },
 	{"importScene", (PyCFunction)VRSceneGlobals::importScene, METH_VARARGS, "Import scene" },
+	{"testDWGArcs", (PyCFunction)VRSceneGlobals::testDWGArcs, METH_NOARGS, "A test for DWG arcs tesselation" },
     {NULL}  /* Sentinel */
 };
 
@@ -93,6 +99,14 @@ PyObject* VRSceneGlobals::getScript(VRSceneGlobals* self, PyObject* args) {
 
 PyObject* VRSceneGlobals::getFrame(VRSceneGlobals* self) {
     return PyInt_FromLong(VRGlobals::CURRENT_FRAME);
+}
+
+PyObject* VRSceneGlobals::testDWGArcs(VRSceneGlobals* self) {
+#ifndef WITHOUT_DWG
+    return VRPyGeometry::fromSharedPtr( dwgArcTest() );
+#else
+	return 0;
+#endif
 }
 
 PyObject* VRSceneGlobals::getSoundManager(VRSceneGlobals* self) {

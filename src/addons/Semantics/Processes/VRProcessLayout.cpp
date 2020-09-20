@@ -434,7 +434,7 @@ void VRProcessLayout::storeLayout(string path) {
     if (path == "") path = ".process_layout.plt";
 
     XML xml;
-    auto root = xml.newRoot("ProjectsList", "", "VRP"); // name, ns_uri, ns_prefix
+    auto root = xml.newRoot("ProjectsList", "", ""); // name, ns_uri, ns_prefix
 
     auto storeHandles = [&](VRPathtoolPtr tool) {
         for (auto handle : tool->getHandles()) {

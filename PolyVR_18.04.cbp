@@ -33,11 +33,10 @@
 			<Add option="-Wall" />
 			<Add option="-std=c++14" />
 			<Add option="-fPIC" />
-			<Add option="`pkg-config gtk+-2.0 --cflags`" />
+			<Add option="`pkg-config gtk+-3.0 --cflags`" />
 			<Add option="`pkg-config gmodule-2.0 --cflags`" />
-			<Add option="`pkg-config gtkglext-1.0 --cflags`" />
 			<Add option="`pkg-config python --cflags`" />
-			<Add option="`pkg-config gtksourceview-2.0 --cflags`" />
+			<Add option="`pkg-config gtksourceview-3.0 --cflags`" />
 			<Add option="-fopenmp" />
 			<Add option="-use_readonly_const" />
 			<Add option="-Wno-deprecated" />
@@ -84,6 +83,7 @@
 			<Add option="-D_GLIBCXX_USE_CXX11_ABI=1" />
 			<Add option="-DBOOST_NO_COMPILER_CONFIG" />
 			<Add option="-DBOOST_NO_CXX14_DECLTYPE_AUTO" />
+			<Add option="-DBOOST_NO_CXX14_CONSTEXPR" />
 			<Add option="-DBOOST_NO_CXX11_DECLTYPE_N3276" />
 			<Add option="-DBOOST_NO_CXX11_HDR_ATOMIC=1" />
 			<Add option="-DGL_GLEXT_PROTOTYPES" />
@@ -92,6 +92,8 @@
 			<Add option="-DWITH_CLUSTERING_FIX" />
 			<Add option="-DWITH_STEP" />
 			<Add option="-DCEF18" />
+			<Add option="-DGDK_GL_COMPILATION" />
+			<Add option="-DGTK_GL_COMPILATION" />
 			<Add directory="/usr/include/pango-1.0" />
 			<Add directory="/usr/include/glib-2.0" />
 			<Add directory="/usr/lib64/glib-2.0/include" />
@@ -102,7 +104,6 @@
 			<Add directory="/usr/lib/x86_64-linux-gnu/glib-2.0/include" />
 			<Add directory="/usr/include/vtk-5.8/" />
 			<Add directory="/usr/include/bullet" />
-			<Add directory="/usr/include/gtkglext-1.0" />
 			<Add directory="/usr/include/CEF" />
 			<Add directory="src" />
 			<Add directory="/usr/include/opensg" />
@@ -147,12 +148,11 @@
 			<Add option="`pkg-config icu-i18n --libs`" />
 			<Add option="-lcef" />
 			<Add option="-lcef_dll_wrapper" />
-			<Add option="`pkg-config gtk+-2.0 --libs`" />
+			<Add option="`pkg-config gtk+-3.0 --libs`" />
 			<Add option="`pkg-config gmodule-2.0 --libs`" />
 			<Add option="`pkg-config bullet --libs`" />
-			<Add option="`pkg-config gtkglext-1.0 --libs`" />
 			<Add option="`pkg-config python --libs`" />
-			<Add option="`pkg-config gtksourceview-2.0 --libs`" />
+			<Add option="`pkg-config gtksourceview-3.0 --libs`" />
 			<Add option="`pkg-config vte --libs`" />
 			<Add option="-ljsoncpp" />
 			<Add option="-lvrpn" />
@@ -218,15 +218,6 @@
 			<Add option="-lpng" />
 			<Add option="-lz" />
 			<Add option="-lXt" />
-			<Add option="-lpango-1.0" />
-			<Add option="-lgobject-2.0" />
-			<Add option="-lgmodule-2.0" />
-			<Add option="-lglib-2.0" />
-			<Add option="-lpangoft2-1.0" />
-			<Add option="-lfreetype" />
-			<Add option="-lfontconfig" />
-			<Add option="-lpangocairo-1.0" />
-			<Add option="-lcairo" />
 			<Add option="-lbase" />
 			<Add option="-lsdai_ap214e3" />
 			<Add option="-lstepdai" />
@@ -348,10 +339,14 @@
 		<Unit filename="src/addons/Engineering/CSG/PolyhedronBuilder.h" />
 		<Unit filename="src/addons/Engineering/CSG/VRPyCSG.cpp" />
 		<Unit filename="src/addons/Engineering/CSG/VRPyCSG.h" />
+		<Unit filename="src/addons/Engineering/Chemistry/VRAtom.cpp" />
+		<Unit filename="src/addons/Engineering/Chemistry/VRAtom.h" />
 		<Unit filename="src/addons/Engineering/Chemistry/VRCrystal.cpp" />
 		<Unit filename="src/addons/Engineering/Chemistry/VRCrystal.h" />
 		<Unit filename="src/addons/Engineering/Chemistry/VRMolecule.cpp" />
 		<Unit filename="src/addons/Engineering/Chemistry/VRMolecule.h" />
+		<Unit filename="src/addons/Engineering/Chemistry/VRMoleculeMat.cpp" />
+		<Unit filename="src/addons/Engineering/Chemistry/VRMoleculeMat.h" />
 		<Unit filename="src/addons/Engineering/Chemistry/VRPyMolecule.cpp" />
 		<Unit filename="src/addons/Engineering/Chemistry/VRPyMolecule.h" />
 		<Unit filename="src/addons/Engineering/Factory/VRAMLLoader.cpp" />
@@ -370,8 +365,6 @@
 		<Unit filename="src/addons/Engineering/Factory/VRPyLogistics.h" />
 		<Unit filename="src/addons/Engineering/Factory/VRPyProduction.cpp" />
 		<Unit filename="src/addons/Engineering/Factory/VRPyProduction.h" />
-		<Unit filename="src/addons/Engineering/Factory/network.cpp" />
-		<Unit filename="src/addons/Engineering/Factory/network.h" />
 		<Unit filename="src/addons/Engineering/Mechanics/VRMechanism.cpp" />
 		<Unit filename="src/addons/Engineering/Mechanics/VRMechanism.h" />
 		<Unit filename="src/addons/Engineering/Mechanics/VRPyMechanism.cpp" />
@@ -576,6 +569,107 @@
 		<Unit filename="src/core/gui/VRGuiVectorEntry.cpp" />
 		<Unit filename="src/core/gui/VRGuiVectorEntry.h" />
 		<Unit filename="src/core/gui/elements/VRGuiButton.h" />
+		<Unit filename="src/core/gui/gtkglext/gdk/gdkgl.h" />
+		<Unit filename="src/core/gui/gtkglext/gdk/gdkglconfig.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/core/gui/gtkglext/gdk/gdkglconfig.h" />
+		<Unit filename="src/core/gui/gtkglext/gdk/gdkglconfigimpl.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/core/gui/gtkglext/gdk/gdkglconfigimpl.h" />
+		<Unit filename="src/core/gui/gtkglext/gdk/gdkglcontext.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/core/gui/gtkglext/gdk/gdkglcontext.h" />
+		<Unit filename="src/core/gui/gtkglext/gdk/gdkglcontextimpl.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/core/gui/gtkglext/gdk/gdkglcontextimpl.h" />
+		<Unit filename="src/core/gui/gtkglext/gdk/gdkgldebug.h" />
+		<Unit filename="src/core/gui/gtkglext/gdk/gdkgldefs.h" />
+		<Unit filename="src/core/gui/gtkglext/gdk/gdkgldrawable.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/core/gui/gtkglext/gdk/gdkgldrawable.h" />
+		<Unit filename="src/core/gui/gtkglext/gdk/gdkglinit.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/core/gui/gtkglext/gdk/gdkglinit.h" />
+		<Unit filename="src/core/gui/gtkglext/gdk/gdkglprivate.h" />
+		<Unit filename="src/core/gui/gtkglext/gdk/gdkglquery.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/core/gui/gtkglext/gdk/gdkglquery.h" />
+		<Unit filename="src/core/gui/gtkglext/gdk/gdkgltokens.h" />
+		<Unit filename="src/core/gui/gtkglext/gdk/gdkgltypes.h" />
+		<Unit filename="src/core/gui/gtkglext/gdk/gdkglversion.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/core/gui/gtkglext/gdk/gdkglwindow.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/core/gui/gtkglext/gdk/gdkglwindow.h" />
+		<Unit filename="src/core/gui/gtkglext/gdk/gdkglwindowimpl.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/core/gui/gtkglext/gdk/gdkglwindowimpl.h" />
+		<Unit filename="src/core/gui/gtkglext/gdk/win32/gdkglconfig-win32.h" />
+		<Unit filename="src/core/gui/gtkglext/gdk/win32/gdkglcontext-win32.h" />
+		<Unit filename="src/core/gui/gtkglext/gdk/win32/gdkglprivate-win32.h" />
+		<Unit filename="src/core/gui/gtkglext/gdk/win32/gdkglquery-win32.h" />
+		<Unit filename="src/core/gui/gtkglext/gdk/win32/gdkglwin32.h" />
+		<Unit filename="src/core/gui/gtkglext/gdk/win32/gdkglwindow-win32.h" />
+		<Unit filename="src/core/gui/gtkglext/gdk/win32/gdkwin32glconfig.h" />
+		<Unit filename="src/core/gui/gtkglext/gdk/win32/gdkwin32glcontext.h" />
+		<Unit filename="src/core/gui/gtkglext/gdk/win32/gdkwin32glquery.h" />
+		<Unit filename="src/core/gui/gtkglext/gdk/win32/gdkwin32glwindow.h" />
+		<Unit filename="src/core/gui/gtkglext/gdk/x11/gdkglconfig-x11.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/core/gui/gtkglext/gdk/x11/gdkglconfig-x11.h" />
+		<Unit filename="src/core/gui/gtkglext/gdk/x11/gdkglcontext-x11.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/core/gui/gtkglext/gdk/x11/gdkglcontext-x11.h" />
+		<Unit filename="src/core/gui/gtkglext/gdk/x11/gdkglprivate-x11.h" />
+		<Unit filename="src/core/gui/gtkglext/gdk/x11/gdkglquery-x11.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/core/gui/gtkglext/gdk/x11/gdkglquery-x11.h" />
+		<Unit filename="src/core/gui/gtkglext/gdk/x11/gdkglwindow-x11.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/core/gui/gtkglext/gdk/x11/gdkglwindow-x11.h" />
+		<Unit filename="src/core/gui/gtkglext/gdk/x11/gdkglx.h" />
+		<Unit filename="src/core/gui/gtkglext/gdk/x11/gdkx11glconfig.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/core/gui/gtkglext/gdk/x11/gdkx11glconfig.h" />
+		<Unit filename="src/core/gui/gtkglext/gdk/x11/gdkx11glcontext.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/core/gui/gtkglext/gdk/x11/gdkx11glcontext.h" />
+		<Unit filename="src/core/gui/gtkglext/gdk/x11/gdkx11glquery.h" />
+		<Unit filename="src/core/gui/gtkglext/gdk/x11/gdkx11glwindow.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/core/gui/gtkglext/gdk/x11/gdkx11glwindow.h" />
+		<Unit filename="src/core/gui/gtkglext/gtk/gtkgl.h" />
+		<Unit filename="src/core/gui/gtkglext/gtk/gtkgldebug.h" />
+		<Unit filename="src/core/gui/gtkglext/gtk/gtkgldefs.h" />
+		<Unit filename="src/core/gui/gtkglext/gtk/gtkglinit.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/core/gui/gtkglext/gtk/gtkglinit.h" />
+		<Unit filename="src/core/gui/gtkglext/gtk/gtkglprivate.h" />
+		<Unit filename="src/core/gui/gtkglext/gtk/gtkglversion.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/core/gui/gtkglext/gtk/gtkglwidget.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/core/gui/gtkglext/gtk/gtkglwidget.h" />
 		<Unit filename="src/core/gui/widgets/VRAppLauncher.cpp" />
 		<Unit filename="src/core/gui/widgets/VRAppLauncher.h" />
 		<Unit filename="src/core/gui/widgets/VRAppPanel.cpp" />
@@ -600,6 +694,8 @@
 		<Unit filename="src/core/math/Eigendecomposition.h" />
 		<Unit filename="src/core/math/Expression.cpp" />
 		<Unit filename="src/core/math/Expression.h" />
+		<Unit filename="src/core/math/Layer2D.cpp" />
+		<Unit filename="src/core/math/Layer2D.h" />
 		<Unit filename="src/core/math/OSGMathFwd.cpp" />
 		<Unit filename="src/core/math/OSGMathFwd.h" />
 		<Unit filename="src/core/math/Octree.cpp" />
@@ -676,6 +772,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/core/networking/mongoose/mongoose.h" />
+		<Unit filename="src/core/networking/tcp/VRTCPClient.cpp" />
+		<Unit filename="src/core/networking/tcp/VRTCPClient.h" />
+		<Unit filename="src/core/networking/tcp/VRTCPServer.cpp" />
+		<Unit filename="src/core/networking/tcp/VRTCPServer.h" />
 		<Unit filename="src/core/objects/OSGCamera.cpp" />
 		<Unit filename="src/core/objects/OSGCamera.h" />
 		<Unit filename="src/core/objects/OSGObject.cpp" />
@@ -756,6 +856,12 @@
 		<Unit filename="src/core/objects/object/VRObject.cpp" />
 		<Unit filename="src/core/objects/object/VRObject.h" />
 		<Unit filename="src/core/objects/object/VRObjectT.h" />
+		<Unit filename="src/core/objects/sync/VRSyncChangelist.cpp" />
+		<Unit filename="src/core/objects/sync/VRSyncChangelist.h" />
+		<Unit filename="src/core/objects/sync/VRSyncConnection.cpp" />
+		<Unit filename="src/core/objects/sync/VRSyncConnection.h" />
+		<Unit filename="src/core/objects/sync/VRSyncNode.cpp" />
+		<Unit filename="src/core/objects/sync/VRSyncNode.h" />
 		<Unit filename="src/core/scene/VRAnimationManager.cpp" />
 		<Unit filename="src/core/scene/VRAnimationManager.h" />
 		<Unit filename="src/core/scene/VRAnimationManagerT.h" />
@@ -956,6 +1062,8 @@
 		<Unit filename="src/core/scripting/VRPyObject.h" />
 		<Unit filename="src/core/scripting/VRPyObjectManager.cpp" />
 		<Unit filename="src/core/scripting/VRPyObjectManager.h" />
+		<Unit filename="src/core/scripting/VRPyPDF.cpp" />
+		<Unit filename="src/core/scripting/VRPyPDF.h" />
 		<Unit filename="src/core/scripting/VRPyPatchSelection.cpp" />
 		<Unit filename="src/core/scripting/VRPyPatchSelection.h" />
 		<Unit filename="src/core/scripting/VRPyPath.cpp" />
@@ -1002,6 +1110,8 @@
 		<Unit filename="src/core/scripting/VRPyStateMachine.h" />
 		<Unit filename="src/core/scripting/VRPyStroke.cpp" />
 		<Unit filename="src/core/scripting/VRPyStroke.h" />
+		<Unit filename="src/core/scripting/VRPySyncNode.cpp" />
+		<Unit filename="src/core/scripting/VRPySyncNode.h" />
 		<Unit filename="src/core/scripting/VRPyTextureGenerator.cpp" />
 		<Unit filename="src/core/scripting/VRPyTextureGenerator.h" />
 		<Unit filename="src/core/scripting/VRPyTextureMosaic.cpp" />
@@ -1073,6 +1183,9 @@
 		<Unit filename="src/core/setup/tracking/Vive.h" />
 		<Unit filename="src/core/setup/windows/VRGlutWindow.cpp" />
 		<Unit filename="src/core/setup/windows/VRGlutWindow.h" />
+		<Unit filename="src/core/setup/windows/VRGtk2Window.h" />
+		<Unit filename="src/core/setup/windows/VRGtk32Window.h" />
+		<Unit filename="src/core/setup/windows/VRGtk3Window.h" />
 		<Unit filename="src/core/setup/windows/VRGtkWindow.cpp" />
 		<Unit filename="src/core/setup/windows/VRGtkWindow.h" />
 		<Unit filename="src/core/setup/windows/VRMultiWindow.cpp" />
@@ -1159,6 +1272,8 @@
 		<Unit filename="src/core/utils/VRName.h" />
 		<Unit filename="src/core/utils/VROptions.cpp" />
 		<Unit filename="src/core/utils/VROptions.h" />
+		<Unit filename="src/core/utils/VRPDF.cpp" />
+		<Unit filename="src/core/utils/VRPDF.h" />
 		<Unit filename="src/core/utils/VRProfiler.cpp" />
 		<Unit filename="src/core/utils/VRProfiler.h" />
 		<Unit filename="src/core/utils/VRProgress.cpp" />

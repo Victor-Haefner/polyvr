@@ -17,6 +17,7 @@ class VRSprite : public VRGeometry {
         VRGeoPrimitivePtr resizeTool;
         shared_ptr<CEF> web;
         bool usingShaders = false;
+        bool doubleSided = false;
 
         static string spriteShaderVP;
         static string spriteShaderFP;
@@ -35,6 +36,7 @@ class VRSprite : public VRGeometry {
         void setTexture(string path);
         void setBillboard(int i);
         void setScreensize(bool b);
+        void setDoubleSided(bool b);
         void webOpen(string path, int res, float ratio);
 
         Vec2d getSize();

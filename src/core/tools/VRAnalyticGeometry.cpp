@@ -105,6 +105,8 @@ void VRAnalyticGeometry::init() {
     }
 }
 
+VRAnnotationEnginePtr VRAnalyticGeometry::getAnnotationEngine() { return ae; }
+
 void VRAnalyticGeometry::setLabelParams(float size, bool screen_size, bool billboard, Color4f fg, Color4f bg, Vec3d offset) {
     if (ae) {
         ae->setSize(size);

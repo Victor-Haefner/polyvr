@@ -1,3 +1,4 @@
+#include <gtk/gtk.h>
 #include "VRGuiScripts.h"
 #include "VRGuiUtils.h"
 #include "VRGuiFile.h"
@@ -12,7 +13,6 @@
 #include "core/utils/xml.h"
 #include "wrapper/VRGuiTreeView.h"
 
-#include <gtk/gtk.h>
 #include <iostream>
 
 OSG_BEGIN_NAMESPACE;
@@ -188,10 +188,12 @@ void VRGuiScripts::on_diag_import_select() {
     xml.read(path, false);
 
     XMLElementPtr scene = xml.getRoot();
-    vector<XMLElementPtr> scripts = scene->getChild("Scripts")->getChildren();
+    if (!scene) return;
+    auto scripts = scene->getChild("Scripts");
+    if (!scripts) return;
 
     GtkTreeIter row;
-    for (auto script : scripts) {
+    for (auto script : scripts->getChildren()) {
         string name = script->getName();
         if (script->hasAttribute("base_name")) {
             string suffix = script->getAttribute("name_suffix");

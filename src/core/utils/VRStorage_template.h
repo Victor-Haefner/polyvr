@@ -14,7 +14,7 @@ void VRStorage::load_cb(T* t, string tag, XMLElementPtr e) {
 
 template<typename T>
 void VRStorage::save_cb(T* t, string tag, XMLElementPtr e) {
-    e->setAttribute(tag, toString(*t));
+    if (t) e->setAttribute(tag, toString(*t));
 }
 
 template<typename T>

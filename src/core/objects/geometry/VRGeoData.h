@@ -123,6 +123,7 @@ class VRGeoData {
 
         void apply(VRGeometryPtr geo, bool check = true, bool checkIndices = false) const;
         VRGeometryPtr asGeometry(string name) const;
+        vector<VRGeometryPtr> splitByVertexColors(const Matrix4d& m = Matrix4d());
         void append(VRGeometryPtr geo, const Matrix4d& m = Matrix4d());
         void append(const VRGeoData& geo, const Matrix4d& m = Matrix4d());
         void makeSingleIndex();

@@ -1,10 +1,10 @@
+#include <gtk/gtk.h>
 #include "VRGuiMonitor.h"
 #include "VRGuiUtils.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRGlobals.h"
 
 #include <functional>
-#include <gtk/gtk.h>
 #include <cairo.h>
 
 #include "wrapper/VRGuiTreeView.h"
@@ -23,7 +23,11 @@ VRGuiMonitor::VRGuiMonitor() {
     function<bool(GdkEventButton*)> sig2 = bind(&VRGuiMonitor::on_button, this, placeholders::_1);
     function<void(void)> sig3 = bind(&VRGuiMonitor::select_fkt, this);
 
+#if GTK_MAJOR_VERSION == 2
     connect_signal(da, sig1, "expose_event");
+#else
+    connect_signal(da, sig1, "draw");
+#endif
     connect_signal(da, sig2, "button_press_event");
     connect_signal(da, sig2, "button_release_event");
 
@@ -133,14 +137,28 @@ string VRGuiMonitor::toHex(Vec3d color) {
 }
 
 void VRGuiMonitor::redraw() {
+#if GTK_MAJOR_VERSION == 2
+    GdkWindow* win = ((GtkWidget*)da)->window;
+#else
     GdkWindow* win = gtk_widget_get_window((GtkWidget*)da);
+#endif
     if (win) gdk_window_invalidate_rect( win, NULL, false);
 }
 
 bool VRGuiMonitor::draw(GdkEventExpose* e) {
-	GdkWindow* win = gtk_widget_get_window((GtkWidget*)da);
-	int w = gdk_window_get_width(win);
-	int h = gdk_window_get_height(win);
+#if GTK_MAJOR_VERSION == 2
+    GdkWindow* win = ((GtkWidget*)da)->window;
+#else
+    GdkWindow* win = gtk_widget_get_window((GtkWidget*)da);
+#endif
+
+#if GTK_MAJOR_VERSION == 2
+    int w, h;
+    gdk_window_get_size(win, &w, &h);
+#else
+    int w = gdk_window_get_width(win);
+    int h = gdk_window_get_height(win);
+#endif
     auto surf = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, w, h);
 
     cr = cairo_create(surf);

@@ -285,9 +285,7 @@ VRView::~VRView() {
     rView_act = 0;
     PCDecoratorLeft = 0;
     PCDecoratorRight = 0;
-#ifndef WASM
     stats = 0;
-#endif
 }
 
 VRViewPtr VRView::create(string name) { return VRViewPtr(new VRView(name)); }
@@ -302,83 +300,98 @@ Vec2i VRView::getSize() { return window_size; }
 int VRView::getID() { return ID; }
 void VRView::setID(int i) { ID = i; }
 
+void VRView::toggleStats() { showStats(!doStats); }
+
+
+
+#include "core/tools/VRAnnotationEngine.h"
+
 void VRView::showStats(bool b) {
-#ifndef WASM
     if (doStats == b) return;
+
+#ifndef WASM
     if (stats == 0) {
-        stats = SimpleStatisticsForeground::create();
-        stats->setSize(25);
-        stats->setColor(Color4f(0.1,0.9,0.6,0.7f));
+        SimpleStatisticsForegroundMTRecPtr statsFg = SimpleStatisticsForeground::create();
+        stats = statsFg;
+        statsFg->setSize(25);
+        statsFg->setColor(Color4f(0.1,0.9,0.6,0.7f));
 
-        stats->addText("\nPerformance:");
-        stats->addElement(VRGlobals::FRAME_RATE.statFPS, " application FPS: %d");
-        stats->addElement(VRGlobals::UPDATE_LOOP1.statFPS, "  main update loop point 1 FPS (after first Gtk update) : %d");
-        stats->addElement(VRGlobals::UPDATE_LOOP2.statFPS, "  main update loop point 2 FPS (after callbacks update) : %d");
-        stats->addElement(VRGlobals::UPDATE_LOOP3.statFPS, "  main update loop point 3 FPS (after hardware update)  : %d");
-        stats->addElement(VRGlobals::UPDATE_LOOP4.statFPS, "  main update loop point 4 FPS (after scene update)     : %d");
-        stats->addElement(VRGlobals::UPDATE_LOOP5.statFPS, "  main update loop point 5 FPS (after remote rendering) : %d");
-        stats->addElement(VRGlobals::UPDATE_LOOP6.statFPS, "  main update loop point 6 FPS (after second Gtk update): %d");
-        stats->addElement(VRGlobals::UPDATE_LOOP7.statFPS, "  main update loop point 7 FPS (end of loop iteration)  : %d");
-        stats->addElement(VRGlobals::SLEEP_FRAME_RATE.statFPS, " application sleep FPS: %d");
-        stats->addElement(VRGlobals::SLEEP_FRAME_RATE.statFPS, " application sleep FPS: %d");
-        stats->addElement(VRGlobals::SCRIPTS_FRAME_RATE.statFPS, "  script FPS: %d");
-        stats->addElement(VRGlobals::WINDOWS_FRAME_RATE.statFPS, "  distributed windows FPS: %d");
-        stats->addElement(VRGlobals::GTK1_FRAME_RATE.statFPS, " GTK devices FPS: %d");
-        stats->addElement(VRGlobals::GTK2_FRAME_RATE.statFPS, " GTK rendering FPS: %d");
-        stats->addElement(VRGlobals::RENDER_FRAME_RATE.statFPS, "  rendering FPS: %d");
-        stats->addElement(VRGlobals::SWAPB_FRAME_RATE.statFPS, "  swap buffer FPS: %d");
-        stats->addElement(RenderAction::statDrawTime, "   draw FPS: %r.2f");
-        stats->addElement(RenderAction::statTravTime, "   trav FPS: %r.2f");
-        stats->addElement(VRGlobals::SMCALLBACKS_FRAME_RATE.statFPS, " scene manager callbacks FPS: %d");
-        stats->addElement(VRGlobals::SETUP_FRAME_RATE.statFPS, " setup devices FPS: %d");
-        stats->addElement(VRGlobals::PHYSICS_FRAME_RATE.statFPS, " physics FPS: %d");
+        statsFg->addText("\nPerformance:");
+        statsFg->addElement(VRGlobals::FRAME_RATE.statFPS, " application FPS: %d");
+        statsFg->addElement(VRGlobals::UPDATE_LOOP1.statFPS, "  main update loop point 1 FPS (after first Gtk update) : %d");
+        statsFg->addElement(VRGlobals::UPDATE_LOOP2.statFPS, "  main update loop point 2 FPS (after callbacks update) : %d");
+        statsFg->addElement(VRGlobals::UPDATE_LOOP3.statFPS, "  main update loop point 3 FPS (after hardware update)  : %d");
+        statsFg->addElement(VRGlobals::UPDATE_LOOP4.statFPS, "  main update loop point 4 FPS (after scene update)     : %d");
+        statsFg->addElement(VRGlobals::UPDATE_LOOP5.statFPS, "  main update loop point 5 FPS (after remote rendering) : %d");
+        statsFg->addElement(VRGlobals::UPDATE_LOOP6.statFPS, "  main update loop point 6 FPS (after second Gtk update): %d");
+        statsFg->addElement(VRGlobals::UPDATE_LOOP7.statFPS, "  main update loop point 7 FPS (end of loop iteration)  : %d");
+        statsFg->addElement(VRGlobals::SLEEP_FRAME_RATE.statFPS, " application sleep FPS: %d");
+        statsFg->addElement(VRGlobals::SLEEP_FRAME_RATE.statFPS, " application sleep FPS: %d");
+        statsFg->addElement(VRGlobals::SCRIPTS_FRAME_RATE.statFPS, "  script FPS: %d");
+        statsFg->addElement(VRGlobals::WINDOWS_FRAME_RATE.statFPS, "  distributed windows FPS: %d");
+        statsFg->addElement(VRGlobals::GTK1_FRAME_RATE.statFPS, " GTK devices FPS: %d");
+        statsFg->addElement(VRGlobals::GTK2_FRAME_RATE.statFPS, " GTK rendering FPS: %d");
+        statsFg->addElement(VRGlobals::RENDER_FRAME_RATE.statFPS, "  rendering FPS: %d");
+        statsFg->addElement(VRGlobals::SWAPB_FRAME_RATE.statFPS, "  swap buffer FPS: %d");
+        statsFg->addElement(RenderAction::statDrawTime, "   draw FPS: %r.2f");
+        statsFg->addElement(RenderAction::statTravTime, "   trav FPS: %r.2f");
+        statsFg->addElement(VRGlobals::SMCALLBACKS_FRAME_RATE.statFPS, " scene manager callbacks FPS: %d");
+        statsFg->addElement(VRGlobals::SETUP_FRAME_RATE.statFPS, " setup devices FPS: %d");
+        statsFg->addElement(VRGlobals::PHYSICS_FRAME_RATE.statFPS, " physics FPS: %d");
 
-        stats->addText("\nMaterials:");
-        stats->addElement(RenderAction::statNStates, " state changes: %d");
-        stats->addElement(RenderAction::statNShaders, " shader changes: %d");
-        stats->addElement(RenderAction::statNShaderParams, " shader param changes: %d");
-        stats->addElement(TextureObjChunk::statNTextures, " textures: %d");
-        stats->addElement(TextureObjChunk::statNTexBytes, " tex mem: %MB MB");
-        stats->addElement(RenderAction::statNChunks, " chunk changes: %d");
+        statsFg->addText("\nMaterials:");
+        statsFg->addElement(RenderAction::statNStates, " state changes: %d");
+        statsFg->addElement(RenderAction::statNShaders, " shader changes: %d");
+        statsFg->addElement(RenderAction::statNShaderParams, " shader param changes: %d");
+        statsFg->addElement(TextureObjChunk::statNTextures, " textures: %d");
+        statsFg->addElement(TextureObjChunk::statNTexBytes, " tex mem: %MB MB");
+        statsFg->addElement(RenderAction::statNChunks, " chunk changes: %d");
 
-        stats->addText("\nScene:");
-        stats->addElement(RenderAction::statNMatrices, " matrix changes: %d");
-        stats->addElement(Drawable::statNTriangles, " tris: %d");
-        stats->addElement(Drawable::statNLines, " lines: %d");
-        stats->addElement(Drawable::statNPoints, " points: %d");
-        stats->addElement(Drawable::statNVertices, " verts: %d");
+        statsFg->addText("\nScene:");
+        statsFg->addElement(RenderAction::statNMatrices, " matrix changes: %d");
+        statsFg->addElement(Drawable::statNTriangles, " tris: %d");
+        statsFg->addElement(Drawable::statNLines, " lines: %d");
+        statsFg->addElement(Drawable::statNPoints, " points: %d");
+        statsFg->addElement(Drawable::statNVertices, " verts: %d");
 
-        stats->addText("\nChange list:");
-        stats->addElement(ChangeList::statNChangedStoreSize, " %d entries in changedStore");
-        stats->addElement(ChangeList::statNCreatedStoreSize, " %d entries in createdStore");
-        stats->addElement(ChangeList::statNUnCommittedStoreSize, " %d entries in uncommitedStore");
-        stats->addElement(ChangeList::statNPoolSize, " %d entries in pool");
+        statsFg->addText("\nChange list:");
+        statsFg->addElement(ChangeList::statNChangedStoreSize, " %d entries in changedStore");
+        statsFg->addElement(ChangeList::statNCreatedStoreSize, " %d entries in createdStore");
+        statsFg->addElement(ChangeList::statNUnCommittedStoreSize, " %d entries in uncommitedStore");
+        statsFg->addElement(ChangeList::statNPoolSize, " %d entries in pool");
 
 
-        //stats->addElement(RenderAction::statNGeometries, "    Geom nodes: %d");
-        //stats->addElement(RenderAction::statNTransGeometries, "Transparent Nodes drawn   %d");
-        //stats->addElement(RenderAction::statNTriangles, "     Triangles: %d");
-        //stats->addElement(RenderAction::statNMaterials, "%d material changes");
-        //stats->addElement(PointLight::statNPointLights, "%d active point lights");
-        //stats->addElement(DirectionalLight::statNDirectionalLights, "%d active directional lights");
-        //stats->addElement(SpotLight::statNSpotLights, "%d active spot lights");
-        //stats->addElement(DrawActionBase::statCullTestedNodes, "Nodes culltested      %d");
-        //stats->addElement(DrawActionBase::statCulledNodes, "Nodes culled          %d");
-        //stats->addElement(RenderAction::statNOcclusionMode, "Occlusion culling     %s");
-        //stats->addElement(RenderAction::statNOcclusionTests, "Occlusion tests       %d");
-        //stats->addElement(RenderAction::statNOcclusionCulled, "Occlusion culled      %d");
+        //statsFg->addElement(RenderAction::statNGeometries, "    Geom nodes: %d");
+        //statsFg->addElement(RenderAction::statNTransGeometries, "Transparent Nodes drawn   %d");
+        //statsFg->addElement(RenderAction::statNTriangles, "     Triangles: %d");
+        //statsFg->addElement(RenderAction::statNMaterials, "%d material changes");
+        //statsFg->addElement(PointLight::statNPointLights, "%d active point lights");
+        //statsFg->addElement(DirectionalLight::statNDirectionalLights, "%d active directional lights");
+        //statsFg->addElement(SpotLight::statNSpotLights, "%d active spot lights");
+        //statsFg->addElement(DrawActionBase::statCullTestedNodes, "Nodes culltested      %d");
+        //statsFg->addElement(DrawActionBase::statCulledNodes, "Nodes culled          %d");
+        //statsFg->addElement(RenderAction::statNOcclusionMode, "Occlusion culling     %s");
+        //statsFg->addElement(RenderAction::statNOcclusionTests, "Occlusion tests       %d");
+        //statsFg->addElement(RenderAction::statNOcclusionCulled, "Occlusion culled      %d");
 
-        if (stats->getCollector() != NULL) stats->getCollector() ->getElem(Drawable::statNTriangles);
-        if (stats->getCollector() != NULL) stats->editCollector()->getElem(Drawable::statNTriangles);
+        if (statsFg->getCollector() != NULL) statsFg->getCollector() ->getElem(Drawable::statNTriangles);
+        if (statsFg->getCollector() != NULL) statsFg->editCollector()->getElem(Drawable::statNTriangles);
     }
 
     if (lView == 0) return;
     if (b && !doStats) lView->addForeground(stats);
     if (!b && doStats) lView->removeObjFromForegrounds(stats);
-    doStats = b;
 
-    VRSetup::getCurrent()->getRenderAction()->setStatCollector(stats->getCollector());
+    VRSetup::getCurrent()->getRenderAction()->setStatCollector(dynamic_pointer_cast<SimpleStatisticsForeground>(stats)->getCollector());
+#else
+    if (b && statsEngine == 0) {
+        statsEngine = VRAnnotationEngine::create();
+        statsEngine->set(1, Vec3d(-0.5,0,-3), "Rendering Statistics, TBI");
+        real_root->addChild(statsEngine);
+    }
+    statsEngine->setVisible(b);
 #endif
+    doStats = b;
 }
 
 void VRView::showViewGeo(bool b) {

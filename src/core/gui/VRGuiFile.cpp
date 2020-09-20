@@ -1,3 +1,4 @@
+#include <gtk/gtk.h>
 #include "VRGuiFile.h"
 #include "VRGuiUtils.h"
 
@@ -5,8 +6,6 @@
 #include "core/scene/VRSceneManager.h"
 #include "core/scene/VRScene.h"
 #include "core/utils/toString.h"
-
-#include <gtk/gtk.h>
 
 #include <boost/filesystem.hpp>
 
@@ -31,6 +30,7 @@ void VRGuiFile::init() {
     connect_signal<void>(dialog, bind(VRGuiFile::apply), "file_activated");
     connect_signal<bool, GdkEvent*>(dialog, bind(VRGuiFile::keyApply, placeholders::_1), "event");
     gtk_file_chooser_set_action((GtkFileChooser*)dialog, GTK_FILE_CHOOSER_ACTION_OPEN);
+    disableDestroyDiag("file_dialog");
 }
 
 void VRGuiFile::open(string button, int action, string title) {
@@ -79,7 +79,9 @@ void VRGuiFile::on_edit_import_scale(GtkEntry* e) {
 }
 
 void VRGuiFile::on_change_preset(GtkComboBox* b) {
-    preset = gtk_combo_box_get_active_text(b);
+    string name = getComboboxPtrText(b);
+    if (name == "") return;
+    preset = name;
 }
 
 void VRGuiFile::setGeoLoadWidget() {
@@ -202,7 +204,7 @@ void VRGuiFile::setCallbacks(function<void()> sa, function<void()> sc, function<
 
 string VRGuiFile::getPath() {
     gchar* filename = gtk_file_chooser_get_filename((GtkFileChooser*)dialog);
-    string res = filename;
+    string res = filename?filename:"";
     g_free(filename);
     return res;
 }

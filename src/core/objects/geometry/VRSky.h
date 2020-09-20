@@ -30,6 +30,10 @@ class VRSky : public VRGeometry {
         VRUpdateCbPtr updatePtr;
         VRMaterialPtr mat;
 
+        static string skyVP;
+        static string skyFP;
+        static string skyDFP;
+
         // time and location
         double lastTime = 0;
         Date date;
@@ -79,6 +83,7 @@ class VRSky : public VRGeometry {
 
         int getHour();
         Vec3d getSunPos();
+        float getSpeed();
 };
 
 OSG_END_NAMESPACE;

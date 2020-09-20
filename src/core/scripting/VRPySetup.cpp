@@ -33,7 +33,8 @@ PyObject* VRPySetup::getWindow(VRPySetup* self, PyObject* args) {
 }
 
 PyMethodDef VRPyView::methods[] = {
-    {"toggleStereo", (PyCFunction)VRPyView::toggleStereo, METH_NOARGS, "Toggle stereo - toggleStereo()" },
+    {"toggleStereo", (PyCFunction)VRPyView::toggleStereo, METH_NOARGS, "Toggle stereo mode" },
+    {"toggleStats", PyWrap(View, toggleStats, "Toggle displayed stats", void) },
     {"setPose", (PyCFunction)VRPyView::setPose, METH_VARARGS, "Set the pose - setPose( pose p )" },
     {"getPose", (PyCFunction)VRPyView::getPose, METH_NOARGS, "Get the pose - pose getPose()" },
     {"setSize", (PyCFunction)VRPyView::setSize, METH_VARARGS, "Set the size in meter - setSize( [W,H] )" },
@@ -56,7 +57,7 @@ PyObject* VRPyView::getName(VRPyView* self) {
 
 PyObject* VRPyView::grab(VRPyView* self) {
     if (!self->valid()) return NULL;
-    return VRPyImage::fromSharedPtr( self->objPtr->grab() );
+    return VRPyTexture::fromSharedPtr( self->objPtr->grab() );
 }
 
 PyObject* VRPyView::setSize(VRPyView* self, PyObject* args) {

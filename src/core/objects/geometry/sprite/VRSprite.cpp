@@ -42,33 +42,33 @@ VRSpritePtr VRSprite::create(string name, bool alpha, float w, float h) {
 
 VRSpritePtr VRSprite::ptr() { return static_pointer_cast<VRSprite>( shared_from_this() ); }
 
-void VRSprite::updateGeo() { // TODO: plane primitive would be better, but backwards compatibility??
+void VRSprite::updateGeo() {
     VRGeoData data;
     float w2 = width*0.5;
     float h2 = height*0.5;
-    data.pushVert(Pnt3d(-w2,h2,0), Vec3d(0,0,1), Vec2d(0,1));
-    data.pushVert(Pnt3d(-w2,-h2,0), Vec3d(0,0,1), Vec2d(0,0));
-    data.pushVert(Pnt3d(w2,-h2,0), Vec3d(0,0,1), Vec2d(1,0));
-    data.pushVert(Pnt3d(w2,h2,0), Vec3d(0,0,1), Vec2d(1,1));
-#ifndef __EMSCRIPTEN__
+    Vec4d uvs = Vec4d(0,1,1,0);
+    if (web) uvs = Vec4d(0,1,0,1);
+    data.pushVert(Pnt3d(-w2,h2,0), Vec3d(0,0,1), Vec2d(uvs[0],uvs[2]));
+    data.pushVert(Pnt3d(-w2,-h2,0), Vec3d(0,0,1), Vec2d(uvs[0],uvs[3]));
+    data.pushVert(Pnt3d(w2,-h2,0), Vec3d(0,0,1), Vec2d(uvs[1],uvs[3]));
+    data.pushVert(Pnt3d(w2,h2,0), Vec3d(0,0,1), Vec2d(uvs[1],uvs[2]));
     data.pushQuad();
-#else
-    data.pushTri(-4,-3,-2);
-    data.pushTri(-4,-2,-1);
-#endif
+    if (doubleSided) {
+        double e = -1e-3;
+        data.pushVert(Pnt3d(w2,h2,e), Vec3d(0,0,-1), Vec2d(uvs[0],uvs[2]));
+        data.pushVert(Pnt3d(w2,-h2,e), Vec3d(0,0,-1), Vec2d(uvs[0],uvs[3]));
+        data.pushVert(Pnt3d(-w2,-h2,e), Vec3d(0,0,-1), Vec2d(uvs[1],uvs[3]));
+        data.pushVert(Pnt3d(-w2,h2,e), Vec3d(0,0,-1), Vec2d(uvs[1],uvs[2]));
+        data.pushQuad();
+        getMaterial()->setFrontBackModes(GL_FILL, GL_NONE);
+    }
     data.apply(ptr());
 }
 
 VRTexturePtr VRSprite::setText(string l, float res, Color4f c1, Color4f c2, int ol, Color4f oc, string font) {
     label = l;
     auto m = VRMaterial::create(getName()+"label");
-
     auto tex = VRText::get()->create(l, font, res, 3, c1, c2, ol, oc);
-    //float tW = tex->getSize()[0];
-    //float lW = VRText::get()->layoutWidth;
-    //texPadding = padding / tW;
-    //charTexSize = lW/tW / cN;
-
     m->setTexture(tex);
     setMaterial(m);
     return tex;
@@ -94,6 +94,7 @@ void VRSprite::webOpen(string path, int res, float ratio) {
     if (keyboard) web->addKeyboard(keyboard);
     web->setResolution(res);
     web->setAspectRatio(ratio);
+    updateGeo();
 #endif
 }
 
@@ -109,6 +110,11 @@ Vec2d VRSprite::getSize() { return Vec2d(width, height); }
 void VRSprite::setSize(float w, float h) {
     width = w;
     height = h;
+    updateGeo();
+}
+
+void VRSprite::setDoubleSided(bool b) {
+    doubleSided = true;
     updateGeo();
 }
 

@@ -32,14 +32,14 @@ template<> string typeName(const VRTransform& t) { return "Transform"; }
 
 
 VRTransform::VRTransform(string name, bool doOpt) : VRObject(name) {
-    doOptimizations = doOpt;
+    doOptimizations = doOpt; // doOpt; // TODO: this is disabled for developing the sync
     t = OSGTransform::create( Transform::create() );
     constraint = VRConstraint::create();
     constraint->free({0,1,2,3,4,5});
     constraint->setActive(false);
     setCore(OSGCore::create(t->trans), "Transform");
     if (doOptimizations) disableCore();
-    addAttachment("transform", 0);
+    addTag("transform");
 
     store("from", &_from);
     //store("dir", &_dir);
@@ -58,6 +58,19 @@ VRTransform::~VRTransform() {
 
 VRTransformPtr VRTransform::ptr() { return static_pointer_cast<VRTransform>( shared_from_this() ); }
 VRTransformPtr VRTransform::create(string name, bool doOpt) { return VRTransformPtr(new VRTransform(name, doOpt) ); }
+
+void VRTransform::wrapOSG(OSGObjectPtr node) {
+    if (!node) return;
+    VRObject::wrapOSG(node);
+    if (!node->node || !node->node->getCore()) return;
+    Transform* t = dynamic_cast<Transform*>(node->node->getCore());
+    if (t) {
+        setMatrix(toMatrix4d(t->getMatrix()));
+        this->t->trans = t;
+    } else {
+        if (getCore()) getCore()->core = this->t->trans;
+    }
+}
 
 VRObjectPtr VRTransform::copy(vector<VRObjectPtr> children) {
     VRTransformPtr t = VRTransform::create(getBaseName());
@@ -367,6 +380,10 @@ VRTransformPtr VRTransform::getParentTransform(VRObjectPtr o) {
     return static_pointer_cast<VRTransform>(o);
 }
 
+OSGTransformPtr VRTransform::getOSGTransformPtr(){
+    return t;
+}
+
 void VRTransform::setRelativePose(PosePtr p, VRObjectPtr o) {
     Matrix4d m = p->asMatrix();
     Matrix4d wm = getMatrixTo(o);
@@ -567,6 +584,11 @@ void VRTransform::setEuler(Vec3d e) {
     auto m = getMatrix();
     applyEulerAngles(m, e);
     setMatrix(m);
+}
+
+void VRTransform::setEulerDegree(Vec3d e) {
+    e *= Pi/180.0;
+    setEuler(e);
 }
 
 Vec3d VRTransform::getScale() { return _scale; }

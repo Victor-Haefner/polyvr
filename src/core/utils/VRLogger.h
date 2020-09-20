@@ -9,7 +9,7 @@ using namespace std;
 class VRLog {
     private:
         static map<string, bool> tags;
-        static void print(string tag, string s);
+        static void print(string tag, string s, string c);
 
     public:
         static void log(string tag, string s);

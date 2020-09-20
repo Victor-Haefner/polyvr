@@ -1,10 +1,7 @@
 #include "VRGuiTreeView.h"
 #include "../VRGuiUtils.h"
 
-#include <gtk/gtktreeview.h>
-#include <gtk/gtktreemodel.h>
-#include <gtk/gtktreestore.h>
-#include <gtk/gtktreeselection.h>
+#include <gtk/gtk.h>
 
 VRGuiTreeView::VRGuiTreeView(string name, bool lstore) : VRGuiWidget(name), hasListStore(lstore) {
     auto widget = getGUIBuilder()->get_widget(name);
