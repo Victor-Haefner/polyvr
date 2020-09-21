@@ -24,6 +24,9 @@
 #include "gtkglprivate.h"
 #include "gtkglwidget.h"
 
+#ifdef _WINDOWS
+#include <windows.h>
+#endif
 #include <GL/gl.h>
 
 typedef struct

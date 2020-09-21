@@ -20,6 +20,7 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
+#include "../gdkglcontext.h"
 #include "gdkglwin32.h"
 #include "gdkglprivate-win32.h"
 #include "gdkglconfig-win32.h"

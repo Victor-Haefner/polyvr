@@ -20,9 +20,11 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
+#include "../gdkglcontext.h"
 #include "../gdkgldebug.h"
 #include "gdkglwin32.h"
 
+#include "gdkwin32glcontext.h"
 #include "gdkglcontext-win32.h"
 
 struct _GdkWin32GLContext

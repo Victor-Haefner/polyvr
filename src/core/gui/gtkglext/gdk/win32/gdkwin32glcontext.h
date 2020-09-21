@@ -20,8 +20,10 @@
 #error "Only <gdk/gdkglwin32.h> can be included directly."
 #endif
 
-#ifndef __GDK_WIN32_GL_CONTEXT_H__
-#define __GDK_WIN32_GL_CONTEXT_H__
+#ifndef __GDK_WIN32_GL_CONTEXT_H__m
+#define __GDK_WIN32_GL_CONTEXT_H__m
+
+#define INSIDE_GDK_GL_WIN32
 
 #include <gdk/gdkwin32.h>
 #include "../gdkgl.h"
@@ -58,4 +60,4 @@ G_END_DECLS
 #define GDK_GL_CONTEXT_HGLRC(glcontext)      (gdk_win32_gl_context_get_hglrc (glcontext))
 #endif
 
-#endif /* __GDK_WIN32_GL_CONTEXT_H__ */
+#endif /* __GDK_WIN32_GL_CONTEXT_H__m */

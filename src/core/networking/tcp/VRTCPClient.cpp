@@ -44,9 +44,13 @@ class TCPClient {
                 });
         }
 
+		void run() {
+			io_service.run();
+		}
+
     public:
         TCPClient() : worker(io_service), socket(io_service) {
-            service = thread([this](){ io_service.run(); });
+			service = thread([this]() { run(); });
         }
 
         ~TCPClient() { close(); }

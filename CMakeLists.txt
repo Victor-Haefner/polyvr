@@ -300,6 +300,8 @@ target_sources(polyvr PRIVATE src/core/networking/VRSceneSync.cpp)
 #target_sources(polyvr PRIVATE src/core/networking/VRHDLC.cpp) # needs ioctl
 #target_sources(polyvr PRIVATE src/core/networking/VRSSH.cpp) # needs libssh2
 target_sources(polyvr PRIVATE src/core/networking/VRPing.cpp)
+target_sources(polyvr PRIVATE src/core/networking/tcp/VRTCPClient.cpp)
+target_sources(polyvr PRIVATE src/core/networking/tcp/VRTCPServer.cpp)
 endif()
 
 if(TRUE) # ok
@@ -417,6 +419,7 @@ target_sources(polyvr PRIVATE src/core/scripting/VRScriptManager.cpp)
 target_sources(polyvr PRIVATE src/core/scripting/VRPyAnalyticGeometry.cpp)
 #target_sources(polyvr PRIVATE src/core/scripting/VRPySpatialCollisionManager.cpp) # needs bullet
 target_sources(polyvr PRIVATE src/core/scripting/VRPyStroke.cpp)
+target_sources(polyvr PRIVATE src/core/scripting/VRPySyncNode.cpp)
 target_sources(polyvr PRIVATE src/core/scripting/VRScript.cpp)
 target_sources(polyvr PRIVATE src/core/scripting/VRPyUndoManager.cpp)
 target_sources(polyvr PRIVATE src/core/scripting/VRPyNavigator.cpp)
@@ -655,6 +658,12 @@ target_sources(polyvr PRIVATE src/core/objects/VRPointCloud.cpp)
 #target_sources(polyvr PRIVATE src/core/objects/VRShadowEngineBase.cpp) # to delete
 target_sources(polyvr PRIVATE src/core/objects/VRStage.cpp)
 target_sources(polyvr PRIVATE src/core/objects/VRTransform.cpp)
+endif()
+
+if(TRUE) # ?
+target_sources(polyvr PRIVATE src/core/objects/sync/VRSyncChangelist.cpp)
+target_sources(polyvr PRIVATE src/core/objects/sync/VRSyncConnection.cpp)
+target_sources(polyvr PRIVATE src/core/objects/sync/VRSyncNode.cpp)
 endif()
 
 if(TRUE) # ok
