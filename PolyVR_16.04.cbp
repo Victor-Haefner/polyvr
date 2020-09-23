@@ -617,6 +617,8 @@
 		<Unit filename="src/core/math/Eigendecomposition.h" />
 		<Unit filename="src/core/math/Expression.cpp" />
 		<Unit filename="src/core/math/Expression.h" />
+		<Unit filename="src/core/math/Layer2D.cpp" />
+		<Unit filename="src/core/math/Layer2D.h" />
 		<Unit filename="src/core/math/OSGMathFwd.cpp" />
 		<Unit filename="src/core/math/Octree.cpp" />
 		<Unit filename="src/core/math/Octree.h" />
@@ -987,6 +989,8 @@
 		<Unit filename="src/core/scripting/VRPyObject.h" />
 		<Unit filename="src/core/scripting/VRPyObjectManager.cpp" />
 		<Unit filename="src/core/scripting/VRPyObjectManager.h" />
+		<Unit filename="src/core/scripting/VRPyPDF.cpp" />
+		<Unit filename="src/core/scripting/VRPyPDF.h" />
 		<Unit filename="src/core/scripting/VRPyPatchSelection.cpp" />
 		<Unit filename="src/core/scripting/VRPyPatchSelection.h" />
 		<Unit filename="src/core/scripting/VRPyPath.cpp" />
@@ -1193,6 +1197,8 @@
 		<Unit filename="src/core/utils/VRName.h" />
 		<Unit filename="src/core/utils/VROptions.cpp" />
 		<Unit filename="src/core/utils/VROptions.h" />
+		<Unit filename="src/core/utils/VRPDF.cpp" />
+		<Unit filename="src/core/utils/VRPDF.h" />
 		<Unit filename="src/core/utils/VRProfiler.cpp" />
 		<Unit filename="src/core/utils/VRProfiler.h" />
 		<Unit filename="src/core/utils/VRProgress.cpp" />
