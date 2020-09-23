@@ -1757,6 +1757,8 @@ class GLTFLoader : public GLTFUtils {
                 //cout << meshID << " " << gdata.size() << " --- " << n <<  endl;
                 //cout << "prim with v " << n << " : " << primitive.mode <<  endl;
 
+
+#ifdef HANDLE_PBR_MATERIAL
                 //MAKE TEXTURE FOR TANGENTS
                 VRTexturePtr img = VRTexture::create();
                 Vec3i dims = Vec3i(texSizeX, texSizeY, 1);
@@ -1777,6 +1779,7 @@ class GLTFLoader : public GLTFUtils {
                     img->setPixel(Vec3i(x,y,1), Color4f(r,g,b,a));
                     //cout << i << "::" << x << " " << y << "--" << tangentsUVs[i][0]*float(dims[0]) << endl;
                 }
+#endif // HANDLE_PBR_MATERIAL
 
                 if (firstPrim) {
                     node->matID = primitive.material;
@@ -1788,7 +1791,7 @@ class GLTFLoader : public GLTFUtils {
                             materials[primitive.material]->setShaderParameter("u_TangentSampler",4);
                             materials[primitive.material]->setTexture(img, true, 4);
                         }
-#endif
+#endif // HANDLE_PBR_MATERIAL
                     }
                     firstPrim = false;
                 }
