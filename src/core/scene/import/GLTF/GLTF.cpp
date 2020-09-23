@@ -1615,6 +1615,7 @@ class GLTFLoader : public GLTFUtils {
                     }
                 }
 
+#ifdef HANDLE_PBR_MATERIAL
                 if (primitive.attributes.count("TANGENT")) {
                     const tinygltf::Accessor& accessorT = model.accessors[primitive.attributes["TANGENT"]];
                     const tinygltf::BufferView& bufferViewT = model.bufferViews[accessorT.bufferView];
@@ -1630,6 +1631,7 @@ class GLTFLoader : public GLTFUtils {
                         }
                     }
                 }
+#endif // HANDLE_PBR_MATERIAL
 
                 if (primitive.attributes.count("COLOR_0")){
                     const tinygltf::Accessor& accessorColor = model.accessors[primitive.attributes["COLOR_0"]];
@@ -1781,11 +1783,12 @@ class GLTFLoader : public GLTFUtils {
                     if (materials.count(primitive.material)) {
                         node->material = materials[primitive.material];
                         if (pointsOnly) materials[primitive.material]->setLit(false);
-
+#ifdef HANDLE_PBR_MATERIAL
                         if (tangentsVec.size() > 0) {
                             materials[primitive.material]->setShaderParameter("u_TangentSampler",4);
                             materials[primitive.material]->setTexture(img, true, 4);
                         }
+#endif
                     }
                     firstPrim = false;
                 }
