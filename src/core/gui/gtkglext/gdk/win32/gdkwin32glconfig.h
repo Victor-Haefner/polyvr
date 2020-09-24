@@ -56,6 +56,8 @@ PIXELFORMATDESCRIPTOR *gdk_win32_gl_config_get_pfd                (GdkGLConfig *
 
 G_END_DECLS
 
+#define INSIDE_GDK_GL_WIN32
+
 #ifdef INSIDE_GDK_GL_WIN32
 #define GDK_GL_CONFIG_PFD(glconfig)          (&(GDK_GL_CONFIG_IMPL_WIN32 (glconfig->impl)->pfd))
 #else

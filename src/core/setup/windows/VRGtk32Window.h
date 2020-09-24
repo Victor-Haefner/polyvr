@@ -68,14 +68,15 @@ VRGtkWindow::VRGtkWindow(GtkDrawingArea* da, string msaa) {
     widget = (GtkWidget*)drawArea;
     if (gtk_widget_get_realized(widget)) cout << "Warning: glarea is realized!\n";
 
-
     int MSAA = toInt(subString(msaa,1,-1));
     auto mode = (GdkGLConfigMode)(GDK_GL_MODE_RGBA | GDK_GL_MODE_DOUBLE | GDK_GL_MODE_DEPTH | GDK_GL_MODE_STENCIL | GDK_GL_MODE_MULTISAMPLE);
     if (VROptions::get()->getOption<bool>("active_stereo"))
         mode = (GdkGLConfigMode)(GDK_GL_MODE_RGBA | GDK_GL_MODE_DOUBLE | GDK_GL_MODE_DEPTH | GDK_GL_MODE_STENCIL | GDK_GL_MODE_MULTISAMPLE | GDK_GL_MODE_STEREO);
     //GdkGLConfig* glConfigMode = gdk_gl_config_new_by_mode(mode, MSAA);
     GdkGLConfig* glConfigMode = gdk_gl_config_new_by_mode(mode);
+
     gtk_widget_set_gl_capability(widget,glConfigMode,NULL,true,GDK_GL_RGBA_TYPE);
+
 
     gtk_widget_show(widget);
     gtk_widget_add_events(widget, (GdkEventMask)GDK_VISIBILITY_NOTIFY_MASK);

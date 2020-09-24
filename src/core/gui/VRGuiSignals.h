@@ -3,6 +3,7 @@
 
 #include <OpenSG/OSGConfig.h>
 #include "core/utils/VRDeviceFwd.h"
+#include <string>
 #include <map>
 
 OSG_BEGIN_NAMESPACE;

@@ -183,8 +183,9 @@ gdk_gl_config_new_by_mode_common (GdkScreen       *screen,
              buffers as no-ops. */
           mode |= GDK_GL_MODE_DOUBLE;
           glconfig = _GL_CONFIG_NEW_BY_MODE (screen, mode);
-          if (glconfig != NULL)
-            glconfig->impl->as_single_mode = TRUE;
+          if (glconfig != NULL) {
+              glconfig->impl->as_single_mode = TRUE;
+          }
         }
     }
 
