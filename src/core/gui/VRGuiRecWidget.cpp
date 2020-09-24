@@ -25,12 +25,10 @@ VRGuiRecWidget::VRGuiRecWidget() {
     gtk_window_set_title((GtkWindow*)diag, "Recorder");
 
     GtkButtonBox* box = (GtkButtonBox*)gtk_dialog_get_action_area(diag);
-<<<<<<< HEAD
-=======
+
 #if GTK_MAJOR_VERSION == 2
     gtk_button_box_set_child_size(box, 20, -1);
 #endif
->>>>>>> 208a50f7da1a2db4782d933e500f2a89709c1e7c
 
     auto addButton = [&](const char* icon, int signal) {
         auto but = (GtkButton*)gtk_button_new();

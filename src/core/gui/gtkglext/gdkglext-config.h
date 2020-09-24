@@ -10,8 +10,11 @@
 extern "C" {
 #endif /* __cplusplus */
 
-
+#ifdef _WINDOWS
 #define GDKGLEXT_WINDOWING_WIN32
+#else
+#define GDKGLEXT_WINDOWING_X11
+#endif
 
 #define GDKGLEXT_MULTIHEAD_SUPPORT
 
