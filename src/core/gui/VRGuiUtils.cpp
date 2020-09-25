@@ -497,23 +497,17 @@ void gtk_list_store_clear_debug(GtkListStore *list_store) {
 	g_return_if_fail(GTK_IS_LIST_STORE(list_store));
 	//priv = list_store->priv;
 
-	cout << " gtk_list_store_clear_debug, Nstore: " << gtk_tree_model_iter_n_children(GTK_TREE_MODEL(list_store), NULL) << endl;
 	while (gtk_tree_model_iter_n_children(GTK_TREE_MODEL(list_store), NULL) > 0) {
 		//iter.stamp = priv->stamp;
 		//iter.user_data = g_sequence_get_begin_iter(priv->seq);
 		auto path = gtk_tree_path_new_from_string("0");
 		gtk_tree_model_get_iter(GTK_TREE_MODEL(list_store), &iter, path);
 
-		cout << "  gtk_list_store_clear_debug valid iter? " << gtk_list_store_iter_is_valid(list_store, &iter) << endl;
-
 		char* str = 0;
 		gtk_tree_model_get(GTK_TREE_MODEL(list_store), &iter, 0, &str, -1);
-		cout << "  gtk_list_store_clear_debug valid str? " << str << endl;
 
 		gtk_list_store_remove(list_store, &iter);
-		cout << "  gtk_list_store_clear_debug" << endl;
 	}
-	cout << " gtk_list_store_clear_debug done, Nstore: " << gtk_tree_model_iter_n_children(GTK_TREE_MODEL(list_store), NULL) << endl;
 
 	//gtk_list_store_increment_stamp(list_store);
 }
@@ -522,9 +516,7 @@ void fillStringListstore(string ls, vector<string> list) {
     GtkListStore* store = GTK_LIST_STORE( getGUIBuilder()->get_object(ls) );
     if (!store) { cout << "ERROR: liststore " << ls << " not found!" << endl; return; }
 	int number_of_rows = gtk_tree_model_iter_n_children(GTK_TREE_MODEL(store), NULL);
-	cout << "fillStringListstore A1 " << ls << ", Nlist: " << list.size() << ", Nstore: " << number_of_rows << endl;
 	gtk_list_store_clear_debug(store);
-	cout << "fillStringListstore A2 " << endl;
     for (unsigned int i=0; i<list.size(); i++) {
         GtkTreeIter iter;
         gtk_list_store_append(store, &iter);

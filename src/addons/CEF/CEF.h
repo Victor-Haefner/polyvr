@@ -25,7 +25,11 @@ class CEF_handler : public CefRenderHandler {
         CEF_handler();
         ~CEF_handler();
 
+#ifdef _WIN32
+        void GetViewRect(CefRefPtr<CefBrowser> browser, CefRect& rect);
+#else
         bool GetViewRect(CefRefPtr<CefBrowser> browser, CefRect& rect);
+#endif
         void OnPaint(CefRefPtr<CefBrowser> browser, PaintElementType type, const RectList& dirtyRects, const void* buffer, int width, int height);
         VRTexturePtr getImage();
         void resize(int resolution, float aspect);

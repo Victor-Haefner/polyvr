@@ -42,6 +42,12 @@ VRGuiSemantics* g_sem;
 VRGuiGeneral* g_gen;
 VRGuiMonitor* g_mon;
 
+void addIconsPath(string p) {
+    string icons = VRSceneManager::get()->getOriginalWorkdir() + "/" + p;
+    gtk_icon_theme_add_resource_path(gtk_icon_theme_get_default(), icons.c_str());
+    gtk_icon_theme_append_search_path(gtk_icon_theme_get_default(), icons.c_str());
+}
+
 VRGuiManager::VRGuiManager() {
     cout << "Init VRGuiManager..";
     mtx = new boost::recursive_mutex();
@@ -50,6 +56,9 @@ VRGuiManager::VRGuiManager() {
     int argc = 0;
     gtk_disable_setlocale();
     gtk_init(&argc, 0);
+
+    addIconsPath("ressources/gui/icons");
+
     //gtk_gl_init(&argc, NULL);
     getGUIBuilder(standalone);
 
@@ -64,7 +73,7 @@ VRGuiManager::VRGuiManager() {
         gtk_window_maximize(top);
         gtk_widget_show_all((GtkWidget*)top);
         return;
-    }
+    }    
 
     //gtk_rc_parse("gui/gtkrc");
     g_demos = new VRAppManager();

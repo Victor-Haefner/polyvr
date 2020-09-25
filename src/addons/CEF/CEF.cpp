@@ -34,15 +34,26 @@ CEF_handler::~CEF_handler() {
     cout << "~CEF_handler\n";
 }
 
+#ifdef _WIN32
+void CEF_handler::GetViewRect(CefRefPtr<CefBrowser> browser, CefRect& rect) {
+    rect = CefRect(0, 0, width, height);
+    cout << "CEF_handler::GetViewRect" << endl;
+}
+#else
 bool CEF_handler::GetViewRect(CefRefPtr<CefBrowser> browser, CefRect& rect) {
     rect = CefRect(0, 0, width, height);
     return true;
 }
+#endif
 
 void CEF_handler::OnPaint(CefRefPtr<CefBrowser> browser, PaintElementType type, const RectList& dirtyRects, const void* buffer, int width, int height) {
+    cout << "CEF_handler::OnPaint" << endl;
     if (!image) return;
     auto img = image->getImage();
-    if (img) img->set(Image::OSG_BGRA_PF, width, height, 1, 0, 1, 0.0, (const uint8_t*)buffer, Image::OSG_UINT8_IMAGEDATA, true, 1);
+    if (img) {
+        img->set(Image::OSG_BGRA_PF, width, height, 1, 0, 1, 0.0, (const uint8_t*)buffer, Image::OSG_UINT8_IMAGEDATA, true, 1);
+        cout << " CEF_handler::OnPaint" << endl;
+    }
 }
 
 OSG::VRTexturePtr CEF_handler::getImage() { return image; }
@@ -50,6 +61,7 @@ OSG::VRTexturePtr CEF_handler::getImage() { return image; }
 void CEF_handler::resize(int resolution, float aspect) {
     width = resolution;
     height = width/aspect;
+    cout << "CEF_handler::resize" << endl;
 }
 
 CEF_client::CEF_client() {
@@ -93,7 +105,9 @@ void CEF::global_initiate() {
     cef_gl_init = true;
     CefSettings settings;
 
-#ifdef CEF18
+#ifdef _WIN32
+    string path = "/ressources/cefWin";
+#elif defined(CEF18)
     string path = "/ressources/cef18";
 #else
     string path = "/ressources/cef";
@@ -113,22 +127,33 @@ void CEF::global_initiate() {
     CefString(&settings.resources_dir_path).FromASCII(rdp.c_str());
     CefString(&settings.log_file).FromASCII(lfp.c_str());
     settings.no_sandbox = true;
+#ifdef _WIN32
+    settings.windowless_rendering_enabled = true;
+    settings.log_severity = LOGSEVERITY_VERBOSE;
+#endif
 
     CefMainArgs args;
     CefInitialize(args, settings, 0, 0);
+    cout << "CEF::global_initiate" << endl;
 }
 
 void CEF::initiate() {
     init = true;
     CefWindowInfo win;
     CefBrowserSettings browser_settings;
-#ifdef CEF18
+#if defined(CEF18) || defined(_WIN32)
     win.SetAsWindowless(0);
 #else
     win.SetAsWindowless(0, true);
 #endif
 
+#ifdef _WIN32
+    //requestContext = CefRequestContext::CreateContext(handler.get());
+    browser = CefBrowserHost::CreateBrowserSync(win, client, "www.google.de", browser_settings, 0, 0);
+#else
     browser = CefBrowserHost::CreateBrowserSync(win, client, "www.google.de", browser_settings, 0);
+#endif
+    cout << "CEF::initiate, browser: " << browser << endl;
 }
 
 void CEF::setMaterial(VRMaterialPtr mat) {
@@ -136,6 +161,7 @@ void CEF::setMaterial(VRMaterialPtr mat) {
     if (!client->getHandler()) return;
     this->mat = mat;
     mat->setTexture(client->getHandler()->getImage());
+    cout << "CEF::setMaterial, mat: " << mat->getName() << endl;
 }
 
 string CEF::getSite() { return site; }
@@ -154,7 +180,10 @@ void CEF::update() {
 void CEF::open(string site) {
     if (!init) initiate();
     this->site = site;
-    if (browser) browser->GetMainFrame()->LoadURL(site);
+    if (browser) {
+        browser->GetMainFrame()->LoadURL(site);
+        cout << "CEF::open, site: " << site << endl;
+    }
 }
 
 void CEF::resize() {
@@ -302,7 +331,11 @@ void CEF::keyboard(VRDeviceWeakPtr d) {
 
     CefKeyEvent kev;
     kev.modifiers = GetCefStateModifiers(event->state);
+#if GTK_MAJOR_VERSION == 2
     if (event->keyval >= GDK_KP_Space && event->keyval <= GDK_KP_9) kev.modifiers |= EVENTFLAG_IS_KEY_PAD;
+#else
+    if (event->keyval >= GDK_KEY_KP_Space && event->keyval <= GDK_KEY_KP_9) kev.modifiers |= EVENTFLAG_IS_KEY_PAD;
+#endif
     if (kev.modifiers & EVENTFLAG_ALT_DOWN) kev.is_system_key = true;
 
     KeyboardCode windows_key_code = GdkEventToWindowsKeyCode(event);
