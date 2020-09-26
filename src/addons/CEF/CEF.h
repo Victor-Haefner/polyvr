@@ -27,10 +27,22 @@ class CEF_handler : public CefRenderHandler {
 
 #ifdef _WIN32
         void GetViewRect(CefRefPtr<CefBrowser> browser, CefRect& rect);
+        bool GetScreenPoint(CefRefPtr<CefBrowser> browser, int viewX, int viewY, int& screenX, int& screenY);
+        bool GetScreenInfo(CefRefPtr<CefBrowser> browser, CefScreenInfo& screen_info);
+        void OnPopupShow(CefRefPtr<CefBrowser> browser, bool show);
+        void OnPopupSize(CefRefPtr<CefBrowser> browser, const CefRect& rect);
+        void OnCursorChange(CefRefPtr<CefBrowser> browser, CefCursorHandle cursor, CursorType type, const CefCursorInfo& custom_cursor_info);
+        void OnImeCompositionRangeChanged(CefRefPtr<CefBrowser> browser, const CefRange& range, const CefRenderHandler::RectList& bounds);
+        bool StartDragging(CefRefPtr<CefBrowser> browser, CefRefPtr<CefDragData> drag_data, CefRenderHandler::DragOperationsMask allowed_ops, int x, int y);
+        void UpdateDragCursor(CefRefPtr<CefBrowser> browser, DragOperation operation);
+        void OnTextSelectionChanged(CefRefPtr<CefBrowser> browser, const CefString& selected_text, const CefRange& selected_range);
+        void OnVirtualKeyboardRequested(CefRefPtr<CefBrowser> browser, TextInputMode input_mode);
+        bool OnTooltip(CefRefPtr<CefBrowser> browser, CefString& text);
+        void OnBeforeContextMenu(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefContextMenuParams> params, CefRefPtr<CefMenuModel> model);
 #else
         bool GetViewRect(CefRefPtr<CefBrowser> browser, CefRect& rect);
 #endif
-        void OnPaint(CefRefPtr<CefBrowser> browser, PaintElementType type, const RectList& dirtyRects, const void* buffer, int width, int height);
+        void OnPaint(CefRefPtr<CefBrowser> browser, PaintElementType type, const RectList& dirtyRects, const void* buffer, int width, int height) override;
         VRTexturePtr getImage();
         void resize(int resolution, float aspect);
 

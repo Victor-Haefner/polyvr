@@ -36,12 +36,25 @@ CEF_handler::~CEF_handler() {
 
 #ifdef _WIN32
 void CEF_handler::GetViewRect(CefRefPtr<CefBrowser> browser, CefRect& rect) {
-    rect = CefRect(0, 0, width, height);
-    cout << "CEF_handler::GetViewRect" << endl;
+    rect = CefRect(0, 0, max(8,width), max(8,height)); // never give an empty rectangle!!
+    cout << "CEF_handler::GetViewRect, W:" << max(8, width) << " H:" << max(8, height) << endl;
 }
+
+bool CEF_handler::GetScreenPoint(CefRefPtr<CefBrowser> browser, int viewX, int viewY, int& screenX, int& screenY) { return false; }
+bool CEF_handler::GetScreenInfo(CefRefPtr<CefBrowser> browser, CefScreenInfo& screen_info) { return false; }
+void CEF_handler::OnPopupShow(CefRefPtr<CefBrowser> browser, bool show) {}
+void CEF_handler::OnPopupSize(CefRefPtr<CefBrowser> browser, const CefRect& rect) {}
+void CEF_handler::OnCursorChange(CefRefPtr<CefBrowser> browser, CefCursorHandle cursor, CursorType type, const CefCursorInfo& custom_cursor_info) {}
+void CEF_handler::OnImeCompositionRangeChanged( CefRefPtr<CefBrowser> browser, const CefRange& range, const CefRenderHandler::RectList& bounds) {}
+bool CEF_handler::StartDragging(CefRefPtr<CefBrowser> browser, CefRefPtr<CefDragData> drag_data, CefRenderHandler::DragOperationsMask allowed_ops, int x, int y) { return false; }
+void CEF_handler::UpdateDragCursor(CefRefPtr<CefBrowser> browser, DragOperation operation) {}
+void CEF_handler::OnTextSelectionChanged(CefRefPtr<CefBrowser> browser, const CefString& selected_text, const CefRange& selected_range) {}
+void CEF_handler::OnVirtualKeyboardRequested(CefRefPtr<CefBrowser> browser, TextInputMode input_mode) {}
+bool CEF_handler::OnTooltip(CefRefPtr<CefBrowser> browser, CefString& text) { return false; }
+void CEF_handler::OnBeforeContextMenu(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefContextMenuParams> params, CefRefPtr<CefMenuModel> model) {}
 #else
 bool CEF_handler::GetViewRect(CefRefPtr<CefBrowser> browser, CefRect& rect) {
-    rect = CefRect(0, 0, width, height);
+    rect = CefRect(0, 0, max(8, width), max(8, height)); // never give an empty rectangle!!
     return true;
 }
 #endif
@@ -113,10 +126,10 @@ void CEF::global_initiate() {
     string path = "/ressources/cef";
 #endif
 
-#ifndef _WIN32
-    string bsp = VRSceneManager::get()->getOriginalWorkdir() + path + "/CefSubProcess";
+#ifdef _WIN32
+    string bsp = VRSceneManager::get()->getOriginalWorkdir() + path + "/CefSubProcessWin.exe";
 #else
-    string bsp = VRSceneManager::get()->getOriginalWorkdir() + "/ressources/cef/CefSubProcessWin.exe";
+    string bsp = VRSceneManager::get()->getOriginalWorkdir() + path + "/CefSubProcess";
 #endif
 
     string ldp = VRSceneManager::get()->getOriginalWorkdir() + path + "/locales";
@@ -143,6 +156,7 @@ void CEF::initiate() {
     CefBrowserSettings browser_settings;
 #if defined(CEF18) || defined(_WIN32)
     win.SetAsWindowless(0);
+    win.shared_texture_enabled = false;
 #else
     win.SetAsWindowless(0, true);
 #endif
@@ -150,6 +164,7 @@ void CEF::initiate() {
 #ifdef _WIN32
     //requestContext = CefRequestContext::CreateContext(handler.get());
     browser = CefBrowserHost::CreateBrowserSync(win, client, "www.google.de", browser_settings, 0, 0);
+    browser->GetHost()->WasResized();
 #else
     browser = CefBrowserHost::CreateBrowserSync(win, client, "www.google.de", browser_settings, 0);
 #endif
@@ -182,6 +197,9 @@ void CEF::open(string site) {
     this->site = site;
     if (browser) {
         browser->GetMainFrame()->LoadURL(site);
+#ifdef _WIN32
+        browser->GetHost()->WasResized();
+#endif
         cout << "CEF::open, site: " << site << endl;
     }
 }
