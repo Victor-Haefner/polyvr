@@ -39,7 +39,7 @@ void VRGuiScripts::setGroupListRow(GtkTreeIter* itr, group& g) {
     gtk_tree_store_set (store, itr,
                         0, g.name.c_str(),
                         1, "#FFFFFF",
-                        2, "#444444",
+                        2, "#666666",
                         3, "",
                         4, "#666666",
                         5, "#FFFFFF",
