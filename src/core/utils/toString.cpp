@@ -53,7 +53,9 @@ template<> string toString(const unsigned long& i) { stringstream ss; ss << i; r
 template<> string toString(const signed char& i) { stringstream ss; ss << i; return ss.str(); }
 template<> string toString(const unsigned char& i) { stringstream ss; ss << int(i); return ss.str(); }
 template<> string toString(const voidPtr& i) { stringstream ss; ss << i; return ss.str(); }
+#ifdef _WIN32
 template<> string toString(const size_t& i) { stringstream ss; ss << i; return ss.str(); }
+#endif
 template<> string toString(const unsigned int& i) { stringstream ss; ss << long(i); return ss.str(); }
 
 #ifdef _WIN32

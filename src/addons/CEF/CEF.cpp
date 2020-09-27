@@ -150,9 +150,11 @@ void CEF::initiate() {
     init = true;
     CefWindowInfo win;
     CefBrowserSettings browser_settings;
-#if defined(CEF18) || defined(_WIN32)
+#ifdef _WIN32
     win.SetAsWindowless(0);
     win.shared_texture_enabled = false;
+#elif defined(CEF18)
+    win.SetAsWindowless(0);
 #else
     win.SetAsWindowless(0, true);
 #endif
