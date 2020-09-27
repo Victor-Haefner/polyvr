@@ -287,8 +287,8 @@ VRGuiEditor::VRGuiEditor(string window) {
     if (!glsl) glsl = gtk_source_language_manager_get_language(langMgr, "glsl");
     if (!web) web = gtk_source_language_manager_get_language(langMgr, "html");
 
-	cout << "VRGuiEditor::VRGuiEditor langs: " << python << " " << glsl << " " << web << endl;
-	printViewerLanguages();
+	//cout << "VRGuiEditor::VRGuiEditor langs: " << python << " " << glsl << " " << web << endl;
+	//printViewerLanguages();
 	if (!python) sourceBuffer = gtk_source_buffer_new(0);
     else sourceBuffer = gtk_source_buffer_new_with_language(python);
     gtk_source_buffer_set_highlight_syntax(sourceBuffer, true);

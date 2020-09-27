@@ -166,8 +166,10 @@ bool VRGtkWindow::on_key(GdkEventKey *event) {
 }
 
 bool VRGtkWindow::on_scroll(GdkEventScroll * event) {
-    int button = 3;
+    int button = 999;
+    if (event->direction == GDK_SCROLL_DOWN) button = 3;
     if (event->direction == GDK_SCROLL_UP) button = 4;
+    if (button == 999) return false;
 
     if (getMouse() == 0) return false;
     getMouse()->mouse(button, 0 ,event->x ,event->y);
