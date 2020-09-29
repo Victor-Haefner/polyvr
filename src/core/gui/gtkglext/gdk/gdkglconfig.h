@@ -86,7 +86,7 @@ GdkGLConfig *gdk_gl_config_new_for_screen         (GdkScreen       *screen,
                                                    gsize            n_attribs);
 
 #ifndef GDK_MULTIHEAD_SAFE
-GdkGLConfig *gdk_gl_config_new_by_mode            (GdkGLConfigMode  mode);
+GdkGLConfig *gdk_gl_config_new_by_mode            (GdkGLConfigMode  mode, int msaa);
 #endif /* GDK_MULTIHEAD_SAFE */
 
 GdkGLConfig *gdk_gl_config_new_by_mode_for_screen (GdkScreen       *screen,

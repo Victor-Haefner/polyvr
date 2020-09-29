@@ -106,7 +106,7 @@ gdk_gl_config_new_ci (GdkScreen       *screen,
 
 static GdkGLConfig *
 gdk_gl_config_new_rgb (GdkScreen       *screen,
-                       GdkGLConfigMode  mode)
+                       GdkGLConfigMode  mode, int msaa)
 {
   int list[32];
   int n = 0;
@@ -155,20 +155,27 @@ gdk_gl_config_new_rgb (GdkScreen       *screen,
           list[n++] = 1;
         }
     }
+   if (mode & GDK_GL_MODE_MULTISAMPLE && msaa >= 2) {
+       list[n++] = GDK_GL_SAMPLE_BUFFERS;
+       list[n++] = 1;
+       list[n++] = GDK_GL_SAMPLES;
+       list[n++] = msaa; // FSAA // 2x 4x 16x
+    }
+  list[n] = GDK_GL_ATTRIB_LIST_NONE;
 
   return gdk_gl_config_new_for_screen (screen, list, n);
 }
 
 static GdkGLConfig *
 gdk_gl_config_new_by_mode_common (GdkScreen       *screen,
-                                  GdkGLConfigMode  mode)
+                                  GdkGLConfigMode  mode, int msaa)
 {
   GdkGLConfig *glconfig;
 
 #define _GL_CONFIG_NEW_BY_MODE(__screen, __mode)        \
   ( ((__mode) & GDK_GL_MODE_INDEX) ?                    \
     gdk_gl_config_new_ci (__screen, __mode) :           \
-    gdk_gl_config_new_rgb (__screen, __mode) )
+    gdk_gl_config_new_rgb (__screen, __mode, msaa) )
 
   glconfig = _GL_CONFIG_NEW_BY_MODE (screen, mode);
   if (glconfig == NULL)
@@ -204,13 +211,13 @@ gdk_gl_config_new_by_mode_common (GdkScreen       *screen,
  * Return value: the new #GdkGLConfig.
  **/
 GdkGLConfig *
-gdk_gl_config_new_by_mode (GdkGLConfigMode mode)
+gdk_gl_config_new_by_mode (GdkGLConfigMode mode, int msaa)
 {
   GdkScreen *screen;
 
   screen = gdk_screen_get_default ();
 
-  return gdk_gl_config_new_by_mode_common (screen, mode);
+  return gdk_gl_config_new_by_mode_common (screen, mode, msaa);
 }
 
 /**
@@ -227,7 +234,7 @@ GdkGLConfig *
 gdk_gl_config_new_by_mode_for_screen (GdkScreen       *screen,
                                       GdkGLConfigMode  mode)
 {
-  return gdk_gl_config_new_by_mode_common (screen, mode);
+  return gdk_gl_config_new_by_mode_common (screen, mode, 0);
 }
 
 /**

@@ -266,14 +266,7 @@ gdk_x11_gl_config_impl_new_common (GdkGLConfig *glconfig,
    * Find an OpenGL-capable visual.
    */
 
-  glx_attrib_list = glx_attrib_list_from_attrib_list(attrib_list, n_attribs);
-
-  if (glx_attrib_list == NULL)
-    goto err_glx_attrib_list_from_attrib_list;
-
-  GDK_GL_NOTE_FUNC_IMPL ("glXChooseVisual");
-
-  xvinfo = glXChooseVisual (xdisplay, screen_num, glx_attrib_list);
+  xvinfo = glXChooseVisual (xdisplay, screen_num, (int*)attrib_list);
 
   if (xvinfo == NULL)
     goto err_glXChooseVisual;

@@ -1,67 +1,5 @@
 #include "core/gui/gtkglext/gtk/gtkgl.h"
 
-static GdkGLConfig* gdk_gl_config_new_rgb_msaa(GdkScreen* screen, GdkGLConfigMode  mode, int msaa) {
-  int list[32];
-  int n = 0;
-
-  list[n++] = GDK_GL_RGBA;
-  list[n++] = GDK_GL_RED_SIZE;
-  list[n++] = 1;
-  list[n++] = GDK_GL_GREEN_SIZE;
-  list[n++] = 1;
-  list[n++] = GDK_GL_BLUE_SIZE;
-  list[n++] = 1;
-  if (mode & GDK_GL_MODE_ALPHA)
-    {
-      list[n++] = GDK_GL_ALPHA_SIZE;
-      list[n++] = 1;
-    }
-  if (mode & GDK_GL_MODE_DOUBLE) list[n++] = GDK_GL_DOUBLEBUFFER;
-  if (mode & GDK_GL_MODE_STEREO) list[n++] = GDK_GL_STEREO;
-  if (mode & GDK_GL_MODE_DEPTH) {
-      list[n++] = GDK_GL_DEPTH_SIZE;
-      list[n++] = 1;
-    }
-  if (mode & GDK_GL_MODE_STENCIL) {
-      list[n++] = GDK_GL_STENCIL_SIZE;
-      list[n++] = 1;
-    }
-  if (mode & GDK_GL_MODE_ACCUM) {
-      list[n++] = GDK_GL_ACCUM_RED_SIZE;
-      list[n++] = 1;
-      list[n++] = GDK_GL_ACCUM_GREEN_SIZE;
-      list[n++] = 1;
-      list[n++] = GDK_GL_ACCUM_BLUE_SIZE;
-      list[n++] = 1;
-      if (mode & GDK_GL_MODE_ALPHA) {
-          list[n++] = GDK_GL_ACCUM_ALPHA_SIZE;
-          list[n++] = 1;
-        }
-    }
-   if (mode & GDK_GL_MODE_MULTISAMPLE && msaa >= 2) {
-       list[n++] = GDK_GL_SAMPLE_BUFFERS;
-       list[n++] = 1;
-       list[n++] = GDK_GL_SAMPLES;
-       list[n++] = msaa; // FSAA // 2x 4x 16x
-    }
-  list[n] = GDK_GL_ATTRIB_LIST_NONE;
-
-#ifdef GDKGLEXT_MULTIHEAD_SUPPORT
-  return gdk_gl_config_new_for_screen(screen, list, n);
-#else
-  return gdk_gl_config_new (list, n);
-#endif
-}
-
-GdkGLConfig* gdk_gl_config_new_by_mode_msaa (GdkGLConfigMode mode, int msaa) {
-#ifdef GDKGLEXT_MULTIHEAD_SUPPORT
-  GdkScreen* screen = gdk_screen_get_default ();
-#else
-  GdkScreen* screen = NULL;
-#endif
-  return gdk_gl_config_new_rgb_msaa(screen, mode, msaa);
-}
-
 VRGtkWindow::VRGtkWindow(GtkDrawingArea* da, string msaa) {
     type = 2;
     drawArea = da;
@@ -72,8 +10,7 @@ VRGtkWindow::VRGtkWindow(GtkDrawingArea* da, string msaa) {
     auto mode = (GdkGLConfigMode)(GDK_GL_MODE_RGBA | GDK_GL_MODE_DOUBLE | GDK_GL_MODE_DEPTH | GDK_GL_MODE_STENCIL | GDK_GL_MODE_MULTISAMPLE);
     if (VROptions::get()->getOption<bool>("active_stereo"))
         mode = (GdkGLConfigMode)(GDK_GL_MODE_RGBA | GDK_GL_MODE_DOUBLE | GDK_GL_MODE_DEPTH | GDK_GL_MODE_STENCIL | GDK_GL_MODE_MULTISAMPLE | GDK_GL_MODE_STEREO);
-    //GdkGLConfig* glConfigMode = gdk_gl_config_new_by_mode(mode, MSAA);
-    GdkGLConfig* glConfigMode = gdk_gl_config_new_by_mode(mode);
+    GdkGLConfig* glConfigMode = gdk_gl_config_new_by_mode(mode, MSAA);
 
     gtk_widget_set_gl_capability(widget,glConfigMode,NULL,true,GDK_GL_RGBA_TYPE);
 
