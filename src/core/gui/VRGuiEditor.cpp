@@ -2,6 +2,7 @@
 #include "VRGuiEditor.h"
 #include "VRGuiUtils.h"
 #include "VRGuiCodeCompletion.h"
+#include "core/scene/VRSceneManager.h"
 #include "core/scripting/VRScript.h"
 #include "core/utils/VRFunction.h"
 
@@ -59,11 +60,11 @@ void VRGuiEditor::printViewerLanguages() {
     GtkSourceLanguageManager* langMgr = gtk_source_language_manager_get_default();
 	cout << " langMgr: " << langMgr << endl;
     const gchar* const* ids = gtk_source_language_manager_get_language_ids(langMgr);
-	cout << " ids: " << ids << endl;
+	cout << "  ids: " << ids << endl;
 	if (ids) {
 		for (auto id = ids; *id != NULL; ++id)
 			if (ids != NULL) cout << "  LID " << *id << endl;
-	}
+	} else cout << "  WARNING! no languages found for source highlighting!" << endl;
 	cout << " VRGuiEditor::printViewerLanguages done" << endl;
 }
 
@@ -283,16 +284,29 @@ _GtkWidget* VRGuiEditor::getEditor() { return editor; }
 VRGuiEditor::VRGuiEditor(string window) {
     // init source view editor
     GtkSourceLanguageManager* langMgr = gtk_source_language_manager_get_default();
+    static bool onInitLangMgr = true;
+    if (onInitLangMgr) {
+        string langPath = VRSceneManager::get()->getOriginalWorkdir() + "/ressources/gui/gtksv";
+        char** new_langs = g_new (char*, 2);
+        new_langs[0] = (char*)langPath.c_str();
+        new_langs[1] = NULL;
+        gtk_source_language_manager_set_search_path (langMgr, new_langs);
+        onInitLangMgr = false;
+    }
+
     if (!python) python = gtk_source_language_manager_get_language(langMgr, "python");
     if (!glsl) glsl = gtk_source_language_manager_get_language(langMgr, "glsl");
     if (!web) web = gtk_source_language_manager_get_language(langMgr, "html");
 
-	//cout << "VRGuiEditor::VRGuiEditor langs: " << python << " " << glsl << " " << web << endl;
+	cout << "VRGuiEditor::VRGuiEditor langs: " << python << " " << glsl << " " << web << endl;
 	//printViewerLanguages();
 	if (!python) sourceBuffer = gtk_source_buffer_new(0);
     else sourceBuffer = gtk_source_buffer_new_with_language(python);
     gtk_source_buffer_set_highlight_syntax(sourceBuffer, true);
     gtk_source_buffer_set_highlight_matching_brackets(sourceBuffer, true);
+
+    auto l = gtk_source_buffer_get_language(sourceBuffer);
+	cout << "VRGuiEditor::VRGuiEditor buffer lang: " << l << endl;
 
     GtkScrolledWindow* win = (GtkScrolledWindow*)getGUIBuilder()->get_object(window);
     editor = gtk_source_view_new_with_buffer(sourceBuffer);
