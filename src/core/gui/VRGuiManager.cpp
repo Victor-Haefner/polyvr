@@ -48,6 +48,11 @@ void addIconsPath(string p) {
     gtk_icon_theme_append_search_path(gtk_icon_theme_get_default(), icons.c_str());
 }
 
+void addSchemaPath(string p) {
+    string schemas = VRSceneManager::get()->getOriginalWorkdir() + "/" + p;
+    // TODO;
+}
+
 VRGuiManager::VRGuiManager() {
     cout << "Init VRGuiManager..";
     mtx = new boost::recursive_mutex();
@@ -58,6 +63,7 @@ VRGuiManager::VRGuiManager() {
     gtk_init(&argc, 0);
 
     addIconsPath("ressources/gui/icons");
+    addSchemaPath("ressources/gui/schemas");
 
     //gtk_gl_init(&argc, NULL);
     getGUIBuilder(standalone);

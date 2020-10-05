@@ -371,6 +371,7 @@ void VRAppManager::update() {
 	cout << "VRAppManager::update" << endl;
     auto scene = VRScene::getCurrent();
     if (scene == 0) {
+        cout << " .. no scene" << endl;
         if (current_demo) current_demo->running = false;
         setGuiState(current_demo);
         return;
@@ -378,13 +379,17 @@ void VRAppManager::update() {
 
     string sPath = scene->getPath();
     if (current_demo) {
+        cout << " .. current_demo set" << endl;
         if (current_demo->path == sPath) {
             current_demo->running = true;
+            cout << "  .. to running, set ui state accordingly" << endl;
             setGuiState(current_demo);
             return;
         }
+        cout << "  .. to not running, set ui state accordingly" << endl;
         current_demo->running = false;
         setGuiState(current_demo);
+        return;
     }
 
     auto e = sections["recents"]->getLauncher(sPath);
@@ -394,10 +399,20 @@ void VRAppManager::update() {
     if (e) {
         current_demo = e;
         current_demo->running = true;
+        cout << " .. found launcher, set to current and to running, set ui state accordingly" << endl;
         setGuiState(current_demo);
+        return;
     }
 
-    if (noLauncherScene) setGuiState(0);
+    noLauncherScene = true;
+
+    if (noLauncherScene) {
+        cout << " .. noLauncherScene set, set ui state accordingly" << endl;
+        setGuiState(0);
+        return;
+    }
+        
+    cout << " .. ui state not changed" << endl;
 }
 
 OSG_END_NAMESPACE;
