@@ -131,6 +131,7 @@ bool VRSyncNode::isSubContainer(const UInt32& id) {
         if (!core) return false;
         for (auto node : core->getParents())
             if (checkAncestor(dynamic_cast<Node*>(node))) return true;
+        return false;
     }
 
     Attachment* att = dynamic_cast<Attachment*>(fct);
@@ -140,7 +141,24 @@ bool VRSyncNode::isSubContainer(const UInt32& id) {
             FieldContainer* parent = parents->at(i);
             if (isSubContainer(parent->getId())) return true;
         }
+        return false;
     }
+
+    string typeName = fct->getTypeName();
+
+    if (typeName == "Viewport") return false; // TODO, use ID checks instead of string comparisions
+    if (typeName == "PassiveWindow") return false;
+
+    if (typeName == "ShaderProgram") { // TODO, implement propper check
+        return true;
+    }
+
+    if (typeName == "ShaderVariableOSG") { // TODO, implement propper check
+        return true;
+    }
+
+
+    cout << " -- WARNING -- unhandled FC type in isSubContainer: " << id << " " << typeName << endl;
 
     return false;
 }
