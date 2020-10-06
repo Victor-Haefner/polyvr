@@ -23,7 +23,7 @@ VRGtkWindow::VRGtkWindow(GtkDrawingArea* da, string msaa) {
     gtk_widget_add_events(widget, (GdkEventMask)GDK_KEY_PRESS_MASK);
     gtk_widget_add_events(widget, (GdkEventMask)GDK_KEY_RELEASE_MASK);
     gtk_widget_add_events(widget, (GdkEventMask)GDK_SCROLL_MASK);
-    //GTK_WIDGET_SET_FLAGS(widget, GTK_CAN_FOCUS);
+    gtk_widget_set_can_focus(widget, true);
 
     win = PassiveWindow::create();
     _win = win;
