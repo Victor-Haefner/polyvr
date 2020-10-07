@@ -8,23 +8,25 @@
 VRGuiBuilder::VRGuiBuilder() {}
 VRGuiBuilder::~VRGuiBuilder() {}
 
+string getDefaultPath(bool standalone) {
+	if (standalone) return "ressources/gui/VRDirector_min.glade";
+#if GTK_MAJOR_VERSION == 2
+	return "ressources/gui/VRDirector.glade";
+#else
+	return "ressources/gui/VRDirector3.glade";
+#endif
+}
+
 VRGuiBuilder* VRGuiBuilder::get(bool standalone) {
 	static VRGuiBuilder* b = 0;
-	if (b) return b;
-	b = new VRGuiBuilder();
 
-#if GTK_MAJOR_VERSION == 2
-	string path = "ressources/gui/VRDirector.glade";
-#else
-	string path = "ressources/gui/VRDirector3.glade";
-#endif
-	if (standalone) path = "ressources/gui/VRDirector_min.glade";
-	if (!VRGuiFile::exists(path)) cerr << "FATAL ERROR: " << path << " not found\n";
-	else {
-        cout << " found glade file: " << path << endl;
-        b->read(path);
-		cout << "  finished importing glade file: " << path << endl;
+	if (!b) {
+        b = new VRGuiBuilder();
+        string path = getDefaultPath(standalone);
+        if (!VRGuiFile::exists(path)) cerr << "FATAL ERROR: " << path << " not found\n";
+        else b->read(path);
 	}
+
     return b;
 }
 
