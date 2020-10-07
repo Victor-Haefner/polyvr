@@ -60,7 +60,11 @@ VRSceneManager::~VRSceneManager() {
 }
 
 VRSceneManagerPtr VRSceneManager::create() { return VRSceneManagerPtr( new VRSceneManager()); }
-VRSceneManager* VRSceneManager::get() { return main_instance; }
+
+VRSceneManager* VRSceneManager::get() {
+    if (main_instance == 0) cout << " -- Warning! VRSceneManager::get called during shutdown!" << endl;
+    return main_instance; 
+}
 
 void VRSceneManager::loadScene(string path, bool write_protected, string encryptionKey) {
     if (!exists(path)) { cout << "VRSceneManager, loadScene: " << path << " not found" << endl; return; }

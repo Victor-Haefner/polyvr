@@ -30,14 +30,14 @@ VRGtkWindow::VRGtkWindow(GtkDrawingArea* da, string msaa) {
     win->setSize(width, height);
 
     connect_signal<void>(drawArea, bind(&VRGtkWindow::on_realize, this), "realize");
-    connect_signal<void, CairoContext*>(drawArea, bind(&VRGtkWindow::on_expose, this, PL::_1), "draw");
+    connect_signal<bool, CairoContext*>(drawArea, bind(&VRGtkWindow::on_expose, this, PL::_1), "draw");
     connect_signal<void, GdkRectangle*>(drawArea, bind(&VRGtkWindow::on_resize, this, PL::_1), "size_allocate");
-    connect_signal<void, GdkEventScroll*>(drawArea, bind(&VRGtkWindow::on_scroll, this, PL::_1), "scroll_event");
-    connect_signal<void, GdkEventButton*>(drawArea, bind(&VRGtkWindow::on_button, this, PL::_1), "button_press_event");
-    connect_signal<void, GdkEventButton*>(drawArea, bind(&VRGtkWindow::on_button, this, PL::_1), "button_release_event");
-    connect_signal<void, GdkEventMotion*>(drawArea, bind(&VRGtkWindow::on_motion, this, PL::_1), "motion_notify_event");
-    connect_signal<void, GdkEventKey*>(drawArea, bind(&VRGtkWindow::on_key, this, PL::_1), "key_press_event");
-    connect_signal<void, GdkEventKey*>(drawArea, bind(&VRGtkWindow::on_key, this, PL::_1), "key_release_event");
+    connect_signal<bool, GdkEventScroll*>(drawArea, bind(&VRGtkWindow::on_scroll, this, PL::_1), "scroll_event");
+    connect_signal<bool, GdkEventButton*>(drawArea, bind(&VRGtkWindow::on_button, this, PL::_1), "button_press_event");
+    connect_signal<bool, GdkEventButton*>(drawArea, bind(&VRGtkWindow::on_button, this, PL::_1), "button_release_event");
+    connect_signal<bool, GdkEventMotion*>(drawArea, bind(&VRGtkWindow::on_motion, this, PL::_1), "motion_notify_event");
+    connect_signal<bool, GdkEventKey*>(drawArea, bind(&VRGtkWindow::on_key, this, PL::_1), "key_press_event");
+    connect_signal<bool, GdkEventKey*>(drawArea, bind(&VRGtkWindow::on_key, this, PL::_1), "key_release_event");
 }
 
 void VRGtkWindow::clear(Color3f c) {
