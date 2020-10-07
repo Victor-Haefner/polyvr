@@ -38,28 +38,6 @@ typedef unsigned int guint;
 //OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-class VRGuiBuilder {
-    private:
-        _GtkBuilder* builder = 0;
-        //map<string, _GtkWidget*> widgets;
-        //map<string, _GtkObject*> objects;
-
-    public:
-        VRGuiBuilder();
-        ~VRGuiBuilder();
-
-        void read(string path);
-
-        _GtkWidget* get_widget(string name);
-#if GTK_MAJOR_VERSION == 2
-        _GtkObject* get_object(string name);
-#else
-        _GObject* get_object(string name);
-#endif
-};
-
-VRGuiBuilder* getGUIBuilder(bool standalone = false);
-
 template<class R, class... Args>
 struct functor {
     function<R(Args...)> cb;

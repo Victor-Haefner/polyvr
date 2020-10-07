@@ -530,6 +530,8 @@
 		<Unit filename="src/core/gui/VRDemos.h" />
 		<Unit filename="src/core/gui/VRGuiBits.cpp" />
 		<Unit filename="src/core/gui/VRGuiBits.h" />
+		<Unit filename="src/core/gui/VRGuiBuilder.cpp" />
+		<Unit filename="src/core/gui/VRGuiBuilder.h" />
 		<Unit filename="src/core/gui/VRGuiCodeCompletion.cpp" />
 		<Unit filename="src/core/gui/VRGuiCodeCompletion.h" />
 		<Unit filename="src/core/gui/VRGuiConsole.cpp" />

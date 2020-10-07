@@ -1,6 +1,7 @@
 #include <gtk/gtk.h>
 
 #include "VRGuiUtils.h"
+#include "VRGuiBuilder.h"
 #include "VRGuiSignals.h"
 #include "VRGuiFile.h"
 #include "core/scene/VRSceneLoader.h"
@@ -18,41 +19,6 @@
 using namespace std;
 namespace PL = std::placeholders;
 
-VRGuiBuilder::VRGuiBuilder() {}
-VRGuiBuilder::~VRGuiBuilder() {}
-
-void VRGuiBuilder::read(string path) {
-    //XML xml;
-    //xml.read(path);
-    cout << "VRGuiBuilder::read " << path << endl;
-    builder = gtk_builder_new();
-    cout << " VRGuiBuilder::read file" << endl;
-    GError* error = 0;
-    gtk_builder_add_from_file(builder, path.c_str(), &error);
-    cout << " VRGuiBuilder::read done" << endl;
-    if (error) {
-        cout << "  -- VRGuiBuilder read error: " << error->message << endl;
-        g_clear_error(&error);
-        g_error_free(error);
-    }
-}
-
-GtkWidget* VRGuiBuilder::get_widget(string name) {
-    return (GtkWidget*)gtk_builder_get_object(builder, name.c_str());
-    //if (widgets.count(name)) return widgets[name];
-    return 0;
-}
-
-#if GTK_MAJOR_VERSION == 2
-GtkObject* VRGuiBuilder::get_object(string name) {
-    return (GtkObject*)gtk_builder_get_object(builder, name.c_str());
-}
-#else
-GObject* VRGuiBuilder::get_object(string name) {
-    return gtk_builder_get_object(builder, name.c_str());
-}
-#endif
-
 string gtk_combo_box_get_active_text(GtkComboBox* b) {
 	GtkTreeIter itr;
 	gtk_combo_box_get_active_iter(b, &itr);
@@ -62,66 +28,46 @@ string gtk_combo_box_get_active_text(GtkComboBox* b) {
 	return str ? string(str) : "";
 }
 
-VRGuiBuilder* getGUIBuilder(bool standalone) {
-	static VRGuiBuilder* b = 0;
-	if (b) return b;
-	b = new VRGuiBuilder();
-
-#if GTK_MAJOR_VERSION == 2
-	string path = "ressources/gui/VRDirector.glade";
-#else
-	string path = "ressources/gui/VRDirector3.glade";
-#endif
-	if (standalone) path = "ressources/gui/VRDirector_min.glade";
-	if (!VRGuiFile::exists(path)) cerr << "FATAL ERROR: " << path << " not found\n";
-	else {
-        cout << " found glade file: " << path << endl;
-        b->read(path);
-		cout << "  finished importing glade file: " << path << endl;
-	}
-    return b;
-}
-
 void setLabel(string l, string txt) {
-    GtkLabel* label = (GtkLabel*)getGUIBuilder()->get_object(l);
+    GtkLabel* label = (GtkLabel*)VRGuiBuilder::get()->get_object(l);
     gtk_label_set_text(label, txt.c_str());
 }
 
 void setTextEntry(string entry, string text) {
-    GtkEntry* ent = (GtkEntry*)getGUIBuilder()->get_widget(entry);
+    GtkEntry* ent = (GtkEntry*)VRGuiBuilder::get()->get_widget(entry);
     gtk_entry_set_text(ent, text.c_str());
 }
 
 string getTextEntry(string entry) {
-    GtkEntry* ent = (GtkEntry*)getGUIBuilder()->get_widget(entry);
+    GtkEntry* ent = (GtkEntry*)VRGuiBuilder::get()->get_widget(entry);
     auto t = gtk_entry_get_text(ent);
     return t?t:"";
 }
 
 void setToggleButton(string cb, bool b) {
-    GtkToggleButton* tb = (GtkToggleButton*)getGUIBuilder()->get_widget(cb);
+    GtkToggleButton* tb = (GtkToggleButton*)VRGuiBuilder::get()->get_widget(cb);
     gtk_toggle_button_set_active(tb, b);
 }
 
 void setWidgetSensitivity(string table, bool b) {
-    GtkWidget* w = getGUIBuilder()->get_widget(table);
+    GtkWidget* w = VRGuiBuilder::get()->get_widget(table);
     gtk_widget_set_sensitive(w, b);
 }
 
 void setWidgetVisibility(string table, bool b) {
-    GtkWidget* w = getGUIBuilder()->get_widget(table);
+    GtkWidget* w = VRGuiBuilder::get()->get_widget(table);
     if (b) gtk_widget_show(w);
     else   gtk_widget_hide(w);
 }
 
 void setCombobox(string n, int i) {
-    GtkComboBox* cb = (GtkComboBox*)getGUIBuilder()->get_widget(n);
+    GtkComboBox* cb = (GtkComboBox*)VRGuiBuilder::get()->get_widget(n);
     gtk_combo_box_set_active(cb, i);
 }
 
 template<typename T>
 void setupCallback(string w, T fkt, string event, bool after = false) {
-    GtkWidget* W = getGUIBuilder()->get_widget(w);
+    GtkWidget* W = VRGuiBuilder::get()->get_widget(w);
     connect_signal(W, fkt, event, after);
 }
 
@@ -139,7 +85,7 @@ void setCellRendererCallback(string b, function<void(gchar*, gchar*)> sig, bool 
 void setNoteBookCallback(string b, function<void(GtkWidget*, guint)> sig) { setupCallback(b, sig, "switch-page", true); }
 
 void setColorChooser(string drawable, function<void(GdkEventButton*)> sig) {
-    GtkDrawingArea* darea = (GtkDrawingArea*)getGUIBuilder()->get_object(drawable);
+    GtkDrawingArea* darea = (GtkDrawingArea*)VRGuiBuilder::get()->get_object(drawable);
     gtk_widget_add_events((GtkWidget*)darea, (GdkEventMask)GDK_BUTTON_PRESS_MASK);
     gtk_widget_add_events((GtkWidget*)darea, (GdkEventMask)GDK_BUTTON_RELEASE_MASK);
     connect_signal((GtkWidget*)darea, sig, "button_release_event");
@@ -162,32 +108,32 @@ void setEntryCallback(string b, function<void()> sig, bool onEveryChange, bool o
 }
 
 bool getCheckButtonState(string b) {
-    GtkToggleButton* tbut = (GtkToggleButton*)getGUIBuilder()->get_widget(b);
+    GtkToggleButton* tbut = (GtkToggleButton*)VRGuiBuilder::get()->get_widget(b);
     return gtk_toggle_button_get_active(tbut);
 }
 
 bool getRadioButtonState(string b) {
-    GtkToggleButton* tbut = (GtkToggleButton*)getGUIBuilder()->get_widget(b);
+    GtkToggleButton* tbut = (GtkToggleButton*)VRGuiBuilder::get()->get_widget(b);
     return gtk_toggle_button_get_active(tbut);
 }
 
 bool getRadioToolButtonState(string b) {
-    GtkToggleButton* tbut = (GtkToggleButton*)getGUIBuilder()->get_widget(b);
+    GtkToggleButton* tbut = (GtkToggleButton*)VRGuiBuilder::get()->get_widget(b);
     return gtk_toggle_button_get_active(tbut);
 }
 
 bool getToggleButtonState(string b) {
-    GtkToggleButton* tbut = (GtkToggleButton*)getGUIBuilder()->get_widget(b);
+    GtkToggleButton* tbut = (GtkToggleButton*)VRGuiBuilder::get()->get_widget(b);
     return gtk_toggle_button_get_active(tbut);
 }
 
 bool getToggleToolButtonState(string b) {
-    GtkToggleToolButton* tbut = (GtkToggleToolButton*)getGUIBuilder()->get_widget(b);
+    GtkToggleToolButton* tbut = (GtkToggleToolButton*)VRGuiBuilder::get()->get_widget(b);
     return gtk_toggle_tool_button_get_active(tbut);
 }
 
 string getTreeviewCell(string treeview, GtkTreeIter iter, int column) {
-    GtkTreeView* tree_view = (GtkTreeView*)getGUIBuilder()->get_object(treeview);
+    GtkTreeView* tree_view = (GtkTreeView*)VRGuiBuilder::get()->get_object(treeview);
     GtkTreeModel* model = gtk_tree_view_get_model(tree_view);
     gchar* n;
     gtk_tree_model_get(model, &iter, column, &n, -1);
@@ -197,7 +143,7 @@ string getTreeviewCell(string treeview, GtkTreeIter iter, int column) {
 }
 
 string getTreeviewSelected(string treeview, int column) {
-    GtkTreeView* tree_view = (GtkTreeView*)getGUIBuilder()->get_object(treeview);
+    GtkTreeView* tree_view = (GtkTreeView*)VRGuiBuilder::get()->get_object(treeview);
     GtkTreeSelection* sel = gtk_tree_view_get_selection(tree_view);
     GtkTreeModel* model = gtk_tree_view_get_model(tree_view);
 
@@ -209,7 +155,7 @@ string getTreeviewSelected(string treeview, int column) {
 }
 
 bool hasTreeviewSelection(string treeview) {
-    GtkTreeView* tree_view = (GtkTreeView*)getGUIBuilder()->get_object(treeview);
+    GtkTreeView* tree_view = (GtkTreeView*)VRGuiBuilder::get()->get_object(treeview);
     GtkTreeSelection* sel = gtk_tree_view_get_selection(tree_view);
     GtkTreeModel* model = gtk_tree_view_get_model(tree_view);
 
@@ -218,7 +164,7 @@ bool hasTreeviewSelection(string treeview) {
 }
 
 void setTreeViewSelectedText(string tv, int column, string data) {
-    GtkTreeView* tree_view = (GtkTreeView*)getGUIBuilder()->get_object(tv);
+    GtkTreeView* tree_view = (GtkTreeView*)VRGuiBuilder::get()->get_object(tv);
     GtkTreeSelection* sel = gtk_tree_view_get_selection(tree_view);
     GtkTreeModel* model = gtk_tree_view_get_model(tree_view);
 
@@ -229,12 +175,12 @@ void setTreeViewSelectedText(string tv, int column, string data) {
 }
 
 void setButtonText(string b, string txt ) {
-    GtkButton* bu = (GtkButton*)getGUIBuilder()->get_widget(b);
+    GtkButton* bu = (GtkButton*)VRGuiBuilder::get()->get_widget(b);
     gtk_button_set_label(bu, txt.c_str());
 }
 
 float getSliderState(string s) {
-    GtkHScale* hs = (GtkHScale*)getGUIBuilder()->get_widget(s);
+    GtkHScale* hs = (GtkHScale*)VRGuiBuilder::get()->get_widget(s);
     return gtk_adjustment_get_value((GtkAdjustment*)hs);
 }
 
@@ -244,14 +190,14 @@ bool keySignalProxy(GdkEventKey* e, string k, function<void(void)> sig ) {
 }
 
 void setComboboxLastActive(string n) { // TODO: google how to get N rows!
-    GtkComboBox* cb = (GtkComboBox*)getGUIBuilder()->get_widget(n);
+    GtkComboBox* cb = (GtkComboBox*)VRGuiBuilder::get()->get_widget(n);
     GtkTreeModel* model = gtk_combo_box_get_model(cb);
     int i = gtk_tree_model_iter_n_children(model, 0);
     gtk_combo_box_set_active(cb, i-1);
 }
 
 void eraseComboboxActive(string n) {
-    GtkComboBox* cb = (GtkComboBox*)getGUIBuilder()->get_widget(n);
+    GtkComboBox* cb = (GtkComboBox*)VRGuiBuilder::get()->get_widget(n);
     GtkTreeModel* model = gtk_combo_box_get_model(cb);
     GtkTreeIter i;
     bool b = gtk_combo_box_get_active_iter(cb, &i);
@@ -278,17 +224,17 @@ string getComboboxPtrText(GtkComboBox* cb) {
 }
 
 string getComboboxText(string cbn) {
-    GtkComboBox* cb = (GtkComboBox*)getGUIBuilder()->get_widget(cbn);
+    GtkComboBox* cb = (GtkComboBox*)VRGuiBuilder::get()->get_widget(cbn);
     return getComboboxPtrText(cb);
 }
 
 int getComboboxI(string cbn) {
-    GtkComboBox* cb = (GtkComboBox*)getGUIBuilder()->get_widget(cbn);
+    GtkComboBox* cb = (GtkComboBox*)VRGuiBuilder::get()->get_widget(cbn);
     return gtk_combo_box_get_active(cb);
 }
 
 GtkTreeIter getComboboxIter(string cbn) {
-    GtkComboBox* cb = (GtkComboBox*)getGUIBuilder()->get_widget(cbn);
+    GtkComboBox* cb = (GtkComboBox*)VRGuiBuilder::get()->get_widget(cbn);
     GtkTreeIter i;
     gtk_combo_box_get_active_iter(cb, &i);
     return i;
@@ -347,7 +293,7 @@ string askUserPass(string msg) {
 }
 
 OSG::Color4f chooseColor(string drawable, OSG::Color4f current) {
-    GtkDrawingArea* darea = (GtkDrawingArea*)getGUIBuilder()->get_object(drawable);
+    GtkDrawingArea* darea = (GtkDrawingArea*)VRGuiBuilder::get()->get_object(drawable);
     GtkColorSelectionDialog* cdiag = (GtkColorSelectionDialog*)gtk_color_selection_dialog_new("");
     gtk_window_set_deletable((GtkWindow*)cdiag, false);
 
@@ -387,12 +333,12 @@ void setColorChooserColor(string drawable, OSG::Color3f col) {
     c.green = col[1]*65535;
     c.blue = col[2]*65535;
 
-    GtkDrawingArea* darea = (GtkDrawingArea*)getGUIBuilder()->get_object(drawable);
+    GtkDrawingArea* darea = (GtkDrawingArea*)VRGuiBuilder::get()->get_object(drawable);
     gtk_widget_modify_bg((GtkWidget*)darea, GTK_STATE_NORMAL, &c);
 }
 
 void setCellRendererCombo(string treeviewcolumn, string combolist, int col, function<void(const char*, GtkTreeIter*)> fkt) {
-    GtkListStore* combo_list = (GtkListStore*)getGUIBuilder()->get_object(combolist);
+    GtkListStore* combo_list = (GtkListStore*)VRGuiBuilder::get()->get_object(combolist);
     GtkCellRendererCombo* renderer = (GtkCellRendererCombo*)gtk_cell_renderer_combo_new();
 
     g_object_set(renderer, "has_entry", false, NULL);
@@ -400,7 +346,7 @@ void setCellRendererCombo(string treeviewcolumn, string combolist, int col, func
     g_object_set(renderer, "text_column", 0, NULL);
     g_object_set(renderer, "editable", true, NULL);
 
-    GtkTreeViewColumn* column = (GtkTreeViewColumn*)getGUIBuilder()->get_object(treeviewcolumn);
+    GtkTreeViewColumn* column = (GtkTreeViewColumn*)VRGuiBuilder::get()->get_object(treeviewcolumn);
     gtk_tree_view_column_pack_start(column, (GtkCellRenderer*)renderer, true);
     gtk_tree_view_column_add_attribute(column, (GtkCellRenderer*)renderer, "text", col);
     connect_signal((GtkWidget*)renderer, fkt, "changed");
@@ -414,12 +360,12 @@ void clearContainer(GtkWidget* container) {
 }
 
 void setNotebookPage(string nb, int p) {
-    GtkNotebook* nbk = (GtkNotebook*)getGUIBuilder()->get_object(nb);
+    GtkNotebook* nbk = (GtkNotebook*)VRGuiBuilder::get()->get_object(nb);
     gtk_notebook_set_current_page(nbk, p);
 }
 
 OSG::VRTexturePtr takeSnapshot() {
-    GtkDrawingArea* drawArea = (GtkDrawingArea*)getGUIBuilder()->get_widget("glarea");
+    GtkDrawingArea* drawArea = (GtkDrawingArea*)VRGuiBuilder::get()->get_widget("glarea");
     GdkWindow* src = gtk_widget_get_window((GtkWidget*)drawArea); // 24 bits per pixel ( src->get_depth() )
 #if GTK_MAJOR_VERSION == 2
     int w, h;
@@ -446,7 +392,7 @@ OSG::VRTexturePtr takeSnapshot() {
 
 void saveSnapshot(string path) {
     if (!exists(getFolderName(path))) return;
-    GtkDrawingArea* drawArea = (GtkDrawingArea*)getGUIBuilder()->get_widget("glarea");
+    GtkDrawingArea* drawArea = (GtkDrawingArea*)VRGuiBuilder::get()->get_widget("glarea");
     GdkWindow* src = gtk_widget_get_window((GtkWidget*)drawArea);
 #if GTK_MAJOR_VERSION == 2
     int w, h;
@@ -482,7 +428,7 @@ void saveScene(string path, bool saveas, string encryptionKey) {
 }
 
 int getListStorePos(string ls, string s) {
-    GtkListStore* store = (GtkListStore*)getGUIBuilder()->get_object(ls);
+    GtkListStore* store = (GtkListStore*)VRGuiBuilder::get()->get_object(ls);
     int N = gtk_tree_model_iter_n_children( (GtkTreeModel*)store, NULL );
     for (int i=0; i<N; i++) {
         string si = toString(i);
@@ -521,7 +467,7 @@ void gtk_list_store_clear_debug(GtkListStore *list_store) {
 }
 
 void fillStringListstore(string ls, vector<string> list) {
-    GtkListStore* store = GTK_LIST_STORE( getGUIBuilder()->get_object(ls) );
+    GtkListStore* store = GTK_LIST_STORE( VRGuiBuilder::get()->get_object(ls) );
     if (!store) { cout << "ERROR: liststore " << ls << " not found!" << endl; return; }
 	int number_of_rows = gtk_tree_model_iter_n_children(GTK_TREE_MODEL(store), NULL);
 	gtk_list_store_clear_debug(store);
@@ -533,18 +479,18 @@ void fillStringListstore(string ls, vector<string> list) {
 }
 
 void showDialog(string d) {
-    GtkWidget* dialog = getGUIBuilder()->get_widget(d);
+    GtkWidget* dialog = VRGuiBuilder::get()->get_widget(d);
     //gtk_dialog_run(dialog);
     gtk_widget_show(dialog);
 }
 
 void hideDialog(string d) {
-    GtkWidget* dialog = getGUIBuilder()->get_widget(d);
+    GtkWidget* dialog = VRGuiBuilder::get()->get_widget(d);
     gtk_widget_hide(dialog);
 }
 
 void setTooltip(string widget, string tp) {
-    GtkWidget* w = getGUIBuilder()->get_widget(widget);
+    GtkWidget* w = VRGuiBuilder::get()->get_widget(widget);
     gtk_widget_set_tooltip_text(w, tp.c_str());
 }
 
@@ -565,6 +511,6 @@ bool on_close_frame_clicked(GdkEvent* event, GtkWidget* diag, bool hide) {
 }
 
 void disableDestroyDiag(string diag, bool hide) {
-    auto widget = getGUIBuilder()->get_widget(diag);
+    auto widget = VRGuiBuilder::get()->get_widget(diag);
     connect_signal<bool, GdkEvent*>(widget, bind(on_close_frame_clicked, PL::_1, widget, hide), "delete-event");
 }

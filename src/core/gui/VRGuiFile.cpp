@@ -1,6 +1,7 @@
 #include <gtk/gtk.h>
 #include "VRGuiFile.h"
 #include "VRGuiUtils.h"
+#include "VRGuiBuilder.h"
 
 #include "core/setup/VRSetup.h"
 #include "core/scene/VRSceneManager.h"
@@ -23,7 +24,7 @@ string VRGuiFile::preset = "SOLIDWORKS-VRML2";
 typedef boost::filesystem::path path;
 
 void VRGuiFile::init() {
-    VRGuiFile::dialog = (GtkFileChooserDialog*)getGUIBuilder()->get_widget("file_dialog");
+    VRGuiFile::dialog = (GtkFileChooserDialog*)VRGuiBuilder::get()->get_widget("file_dialog");
     setButtonCallback("button3", bind(&VRGuiFile::close));
     setButtonCallback("button9", bind(&VRGuiFile::apply));
     connect_signal<void>(dialog, bind(VRGuiFile::select), "selection_changed");
@@ -55,7 +56,7 @@ void VRGuiFile::close() {
 
 void VRGuiFile::setWidget(GtkTable* table, bool expand, bool fill) {
     if (addon == table) return;
-    auto vbox = getGUIBuilder()->get_widget("dialog-vbox1");
+    auto vbox = VRGuiBuilder::get()->get_widget("dialog-vbox1");
 
     // sub
     if (addon) {
@@ -115,7 +116,7 @@ void VRGuiFile::setGeoLoadWidget() {
         connect_signal<void>(cache_override, bind(VRGuiFile::on_toggle_cache_override, (_GtkCheckButton*)cache_override), "toggled");
         connect_signal<void>(combobox15, bind(VRGuiFile::on_change_preset, (_GtkComboBox*)combobox15), "changed");
 
-        auto store = getGUIBuilder()->get_object("fileOpenPresets");
+        auto store = VRGuiBuilder::get()->get_object("fileOpenPresets");
         vector<string> presets = { "SOLIDWORKS-VRML2", "OSG", "COLLADA", "PVR" };
         fillStringListstore("fileOpenPresets", presets);
         gtk_combo_box_set_model((GtkComboBox*)combobox15, (GtkTreeModel*)store);

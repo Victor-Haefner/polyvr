@@ -1,5 +1,6 @@
 #include "VRGuiRecWidget.h"
 #include "VRGuiUtils.h"
+#include "VRGuiBuilder.h"
 
 #include "core/tools/VRRecorder.h"
 #include "core/scene/VRSceneManager.h"
@@ -16,8 +17,8 @@ VRGuiRecWidget::VRGuiRecWidget() {
     rec = VRRecorderPtr( new VRRecorder() );
     rec->setView(0);
 
-    diag = (GtkDialog*)getGUIBuilder()->get_widget("recorder");
-    lbl = (GtkLabel*)getGUIBuilder()->get_widget("label149");
+    diag = (GtkDialog*)VRGuiBuilder::get()->get_widget("recorder");
+    lbl = (GtkLabel*)VRGuiBuilder::get()->get_widget("label149");
     disableDestroyDiag("recorder");
 
     gtk_window_set_resizable((GtkWindow*)diag, false);

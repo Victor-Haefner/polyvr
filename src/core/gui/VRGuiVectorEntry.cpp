@@ -2,6 +2,7 @@
 #include "VRGuiVectorEntry.h"
 #include "core/utils/toString.h"
 #include "VRGuiUtils.h"
+#include "VRGuiBuilder.h"
 
 VRGuiVectorEntry::VRGuiVectorEntry() {
     ex = ey = ez = 0;
@@ -25,7 +26,7 @@ bool VRGuiVectorEntry::proxy2D(GdkEventFocus* focus, function<void(OSG::Vec2d&)>
 }
 
 void VRGuiVectorEntry::init(string placeholder, string label,  function<void(OSG::Vec3d&)> sig) {
-    auto ph = getGUIBuilder()->get_widget(placeholder.c_str());
+    auto ph = VRGuiBuilder::get()->get_widget(placeholder.c_str());
     auto frame = gtk_widget_get_parent(ph);
     gtk_container_remove((GtkContainer*)frame, ph);
 
@@ -70,7 +71,7 @@ void VRGuiVectorEntry::init(string placeholder, string label,  function<void(OSG
 }
 
 void VRGuiVectorEntry::init2D(string placeholder, string label,  function<void(OSG::Vec2d&)> sig) {
-    auto ph = getGUIBuilder()->get_widget(placeholder.c_str());
+    auto ph = VRGuiBuilder::get()->get_widget(placeholder.c_str());
     auto frame = gtk_widget_get_parent(ph);
     gtk_container_remove((GtkContainer*)frame, ph);
 

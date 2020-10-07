@@ -1,6 +1,7 @@
 #include <gtk/gtk.h>
 #include "VRGuiMonitor.h"
 #include "VRGuiUtils.h"
+#include "VRGuiBuilder.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRGlobals.h"
 
@@ -13,7 +14,7 @@ OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 VRGuiMonitor::VRGuiMonitor() {
-    GtkWidget* da = getGUIBuilder()->get_widget("profiler_area");
+    GtkWidget* da = VRGuiBuilder::get()->get_widget("profiler_area");
 
     gtk_widget_add_events(da, (int)GDK_BUTTON_PRESS_MASK);
     gtk_widget_add_events(da, (int)GDK_BUTTON_RELEASE_MASK);
@@ -220,7 +221,7 @@ void VRGuiMonitor::selectFrame() {
     }
 
     // update list
-    GtkListStore* store = (GtkListStore*)getGUIBuilder()->get_object("prof_fkts");
+    GtkListStore* store = (GtkListStore*)VRGuiBuilder::get()->get_object("prof_fkts");
     gtk_list_store_clear(store);
     for (auto c : fkts) {
         string col = toHex( getColor(c.first) );

@@ -11,6 +11,7 @@
 #include "core/scene/VRSceneLoader.h"
 #include "core/scripting/VRScript.h"
 #include "VRGuiUtils.h"
+#include "VRGuiBuilder.h"
 #include "VRGuiSignals.h"
 #include "VRGuiFile.h"
 #include "core/setup/VRSetup.h"
@@ -55,7 +56,7 @@ void VRGuiBits::on_navigation_changed() {
 }
 
 void VRGuiBits::on_new_cancel_clicked() {
-    GtkWidget* dialog = getGUIBuilder()->get_widget("NewProject");
+    GtkWidget* dialog = VRGuiBuilder::get()->get_widget("NewProject");
     gtk_widget_hide(dialog);
 }
 
@@ -140,23 +141,23 @@ void VRGuiBits::on_web_export_clicked() {
 }
 
 void VRGuiBits::on_about_clicked() {
-    GtkDialog* diag = (GtkDialog*)getGUIBuilder()->get_widget("aboutdialog1");
+    GtkDialog* diag = (GtkDialog*)VRGuiBuilder::get()->get_widget("aboutdialog1");
     gtk_dialog_run(diag);
 }
 
 void VRGuiBits::on_internal_clicked() {
-    GtkDialog* diag = (GtkDialog*)getGUIBuilder()->get_widget("dialog2");
+    GtkDialog* diag = (GtkDialog*)VRGuiBuilder::get()->get_widget("dialog2");
     gtk_dialog_run(diag);
 }
 
 void VRGuiBits::on_internal_close_clicked() {
-    GtkWidget* diag = getGUIBuilder()->get_widget("dialog2");
+    GtkWidget* diag = VRGuiBuilder::get()->get_widget("dialog2");
     gtk_widget_hide(diag);
 }
 
 void VRGuiBits_on_internal_update() {
     VRInternalMonitor* mnr = VRInternalMonitor::get();
-    GtkListStore* store = (GtkListStore*)getGUIBuilder()->get_object("liststore4");
+    GtkListStore* store = (GtkListStore*)VRGuiBuilder::get()->get_object("liststore4");
     gtk_list_store_clear(store);
 
     for (auto var : mnr->getVariables()) {
@@ -178,7 +179,7 @@ void VRGuiBits::update_terminals() {
 VRConsoleWidgetPtr VRGuiBits::getConsole(string t) { return consoles[t]; }
 
 void VRGuiBits::hideAbout(int i) {
-    GtkWidget* diag = getGUIBuilder()->get_widget("aboutdialog1");
+    GtkWidget* diag = VRGuiBuilder::get()->get_widget("aboutdialog1");
     gtk_widget_hide(diag);
 }
 
@@ -187,12 +188,12 @@ bool VRGuiBits::toggleWidgets(GdkEventKey* k) {
     static bool fs = false;
     fs = !fs;
 
-    GtkWidget* win = getGUIBuilder()->get_widget("window1");
-    GtkWidget* hs1 = getGUIBuilder()->get_widget("hseparator1");
-    GtkWidget* tab = getGUIBuilder()->get_widget("table20");
-    GtkWidget* nb1 = getGUIBuilder()->get_widget("notebook1");
-    GtkWidget* hb1 = getGUIBuilder()->get_widget("hbox1");
-    GtkWidget* hb2 = getGUIBuilder()->get_widget("hbox15");
+    GtkWidget* win = VRGuiBuilder::get()->get_widget("window1");
+    GtkWidget* hs1 = VRGuiBuilder::get()->get_widget("hseparator1");
+    GtkWidget* tab = VRGuiBuilder::get()->get_widget("table20");
+    GtkWidget* nb1 = VRGuiBuilder::get()->get_widget("notebook1");
+    GtkWidget* hb1 = VRGuiBuilder::get()->get_widget("hbox1");
+    GtkWidget* hb2 = VRGuiBuilder::get()->get_widget("hbox15");
 
     if (fs) {
         gtk_widget_hide(nb1);
@@ -209,7 +210,7 @@ bool VRGuiBits::toggleFullscreen(GdkEventKey* k) {
     static bool fs = false;
     fs = !fs;
 
-    GtkWindow* win = (GtkWindow*)getGUIBuilder()->get_widget("window1");
+    GtkWindow* win = (GtkWindow*)VRGuiBuilder::get()->get_widget("window1");
     if (fs) gtk_window_fullscreen(win);
     else gtk_window_unfullscreen(win);
     return true;
@@ -229,12 +230,12 @@ bool VRGuiBits::toggleStereo(GdkEventKey* k) {
 }
 
 void VRGuiBits::toggleDock() { // TODO: redesign
-    GtkToggleButton* tbut = (GtkToggleButton*)getGUIBuilder()->get_widget("togglebutton1");
+    GtkToggleButton* tbut = (GtkToggleButton*)VRGuiBuilder::get()->get_widget("togglebutton1");
     bool a = gtk_toggle_button_get_active(tbut);
 
     static GtkWindow* win = 0;
-    GtkVBox* box = (GtkVBox*)getGUIBuilder()->get_widget("vbox5");
-    GtkVPaned* pan = (GtkVPaned*)getGUIBuilder()->get_widget("vpaned1");
+    GtkVBox* box = (GtkVBox*)VRGuiBuilder::get()->get_widget("vbox5");
+    GtkVPaned* pan = (GtkVPaned*)VRGuiBuilder::get()->get_widget("vpaned1");
 
     if (a) {
         win = (GtkWindow*)gtk_window_new(GTK_WINDOW_TOPLEVEL);
@@ -282,7 +283,7 @@ VRGuiBits::VRGuiBits() {
     recorder_visual_layer->setCallback( recToggleCb );
 
     // About Dialog
-    GtkAboutDialog* diag = (GtkAboutDialog*)getGUIBuilder()->get_widget("aboutdialog1");
+    GtkAboutDialog* diag = (GtkAboutDialog*)VRGuiBuilder::get()->get_widget("aboutdialog1");
     function<void(int)> sig = bind(&VRGuiBits::hideAbout, this, placeholders::_1);
     connect_signal((GtkWidget*)diag, sig, "response");
     ifstream f("ressources/gui/authors");
@@ -298,7 +299,7 @@ VRGuiBits::VRGuiBits() {
     free(auths);
 
     // window fullscreen
-    GtkWidget* win = getGUIBuilder()->get_widget("window1");
+    GtkWidget* win = VRGuiBuilder::get()->get_widget("window1");
     connect_signal<bool,GdkEventKey*>(win, bind(&VRGuiBits::toggleStereo, this, placeholders::_1), "key_press_event");
     connect_signal<bool,GdkEventKey*>(win, bind(&VRGuiBits::toggleFullscreen, this, placeholders::_1), "key_press_event");
     connect_signal<bool,GdkEventKey*>(win, bind(&VRGuiBits::toggleWidgets, this, placeholders::_1), "key_press_event");
@@ -325,7 +326,7 @@ VRGuiBits::VRGuiBits() {
     openConsole = consoles["Console"];
     openConsole->setOpen(true);
 
-    GtkWidget* box = getGUIBuilder()->get_widget("hbox15");
+    GtkWidget* box = VRGuiBuilder::get()->get_widget("hbox15");
     gtk_box_pack_start((GtkBox*)box, (GtkWidget*)terminal, true, true, 0);
     gtk_widget_show_all(box);
     connect_signal<void, GtkWidget*, guint>(terminal, bind(&VRGuiBits::on_console_switch, this, placeholders::_1, placeholders::_2), "switch_page");
@@ -345,7 +346,7 @@ void VRGuiBits::on_console_switch(GtkWidget* page, guint page_num) {
 }
 
 void VRGuiBits::updateVisualLayer() {
-    auto bar = getGUIBuilder()->get_widget("toolbar6");
+    auto bar = VRGuiBuilder::get()->get_widget("toolbar6");
     clearContainer(bar);
 
     for (auto l : VRVisualLayer::getLayers()) {

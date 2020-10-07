@@ -1,4 +1,5 @@
 #include "VRGuiManager.h"
+#include "VRGuiBuilder.h"
 #include "core/scene/VRSceneManager.h"
 #include "core/setup/VRSetupManager.h"
 #include "core/scripting/VRScript.h"
@@ -66,7 +67,7 @@ VRGuiManager::VRGuiManager() {
     addSchemaPath("ressources/gui/schemas");
 
     //gtk_gl_init(&argc, NULL);
-    getGUIBuilder(standalone);
+    VRGuiBuilder::get(standalone);
 
     if (standalone) {
         cout << " start in standalone mode\n";
@@ -75,11 +76,11 @@ VRGuiManager::VRGuiManager() {
         updatePtr = VRUpdateCb::create("GUI_updateManager", bind(&VRGuiManager::update, this) );
         VRSceneManager::get()->addUpdateFkt(updatePtr, 1);
 
-        GtkWindow* top = (GtkWindow*)getGUIBuilder()->get_widget("window1");
+        GtkWindow* top = (GtkWindow*)VRGuiBuilder::get()->get_widget("window1");
         gtk_window_maximize(top);
         gtk_widget_show_all((GtkWidget*)top);
         return;
-    }    
+    }
 
     //gtk_rc_parse("gui/gtkrc");
     g_demos = new VRAppManager();
@@ -128,7 +129,7 @@ VRGuiManager::VRGuiManager() {
     updatePtr = VRUpdateCb::create("GUI_updateManager", bind(&VRGuiManager::update, this) );
     VRSceneManager::get()->addUpdateFkt(updatePtr, 1);
 
-    GtkWindow* top = (GtkWindow*)getGUIBuilder()->get_widget("window1");
+    GtkWindow* top = (GtkWindow*)VRGuiBuilder::get()->get_widget("window1");
     gtk_window_maximize(top);
     gtk_widget_show_all((GtkWidget*)top);
 

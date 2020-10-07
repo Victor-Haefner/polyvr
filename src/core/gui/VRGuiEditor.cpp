@@ -1,6 +1,7 @@
 #include <gtk/gtk.h>
 #include "VRGuiEditor.h"
 #include "VRGuiUtils.h"
+#include "VRGuiBuilder.h"
 #include "VRGuiCodeCompletion.h"
 #include "core/scene/VRSceneManager.h"
 #include "core/scripting/VRScript.h"
@@ -309,7 +310,7 @@ VRGuiEditor::VRGuiEditor(string window) {
     auto l = gtk_source_buffer_get_language(sourceBuffer);
 	cout << "VRGuiEditor::VRGuiEditor buffer lang: " << l << endl;
 
-    GtkScrolledWindow* win = (GtkScrolledWindow*)getGUIBuilder()->get_object(window);
+    GtkScrolledWindow* win = (GtkScrolledWindow*)VRGuiBuilder::get()->get_object(window);
     editor = gtk_source_view_new_with_buffer(sourceBuffer);
     editorBuffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(editor));
 
@@ -345,7 +346,7 @@ VRGuiEditor::VRGuiEditor(string window) {
 
 #ifndef WIN32  // Windows: induces hang in VRGuiBuilder read sometimes? not consistent!
     cout << "VRGuiEditor::VRGuiEditor, enable code completion" << endl;
-    auto provider = VRGuiCodeCompletionNew(); 
+    auto provider = VRGuiCodeCompletionNew();
     auto completion = gtk_source_view_get_completion(GTK_SOURCE_VIEW(editor));
     GError* error = 0;
     gtk_source_completion_add_provider(completion, GTK_SOURCE_COMPLETION_PROVIDER(provider), &error);

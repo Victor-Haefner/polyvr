@@ -27,6 +27,7 @@
 #include "addons/Semantics/Reasoning/VRConcept.h"
 #include "addons/Semantics/Reasoning/VRProperty.h"
 #include "VRGuiUtils.h"
+#include "VRGuiBuilder.h"
 #include "VRGuiSignals.h"
 #include "VRGuiFile.h"
 #include "addons/construction/building/VRElectricDevice.h"
@@ -190,7 +191,7 @@ void VRGuiScene::setGeometry(VRGeometryPtr g) {
     setToggleButton("checkbutton28", false);
     setCombobox("combobox21", -1);
 
-    auto store = (GtkListStore*)getGUIBuilder()->get_object("primitive_opts");
+    auto store = (GtkListStore*)VRGuiBuilder::get()->get_object("primitive_opts");
     gtk_list_store_clear(store);
 
     stringstream params;
@@ -225,7 +226,7 @@ void VRGuiScene::setGeometry(VRGeometryPtr g) {
     };
 
     VRGeoData data(g);
-    store = (GtkListStore*)getGUIBuilder()->get_object("geodata");
+    store = (GtkListStore*)VRGuiBuilder::get()->get_object("geodata");
     gtk_list_store_clear(store);
     for (int i=0; i<=8; i++) {
         int N = data.getDataSize(i);
@@ -258,7 +259,7 @@ void VRGuiScene::setLight(VRLightPtr l) {
     if (beacon) bname = beacon->getName();
     setButtonText("button27", bname);
 
-    auto store = (GtkListStore*)getGUIBuilder()->get_object("light_params");
+    auto store = (GtkListStore*)VRGuiBuilder::get()->get_object("light_params");
     vector<string> param_names = VRLight::getTypeParameter(l->getLightType());
     for (uint i=0; i<param_names.size(); i++) {
         string val; // TODO
@@ -296,7 +297,7 @@ void VRGuiScene::setLod(VRLodPtr lod) {
     setToggleButton("checkbutton35", lod->getDecimate());
     lodCEntry.set(lod->getCenter());
 
-    auto store = (GtkListStore*)getGUIBuilder()->get_object("liststore5");
+    auto store = (GtkListStore*)VRGuiBuilder::get()->get_object("liststore5");
     gtk_list_store_clear(store);
 
     vector<float> dists = lod->getDistances();
@@ -314,7 +315,7 @@ void VRGuiScene::setEntity(VREntityPtr e) {
 
     setLabel("label145", e->getConceptList());
 
-    auto store = (GtkListStore*)getGUIBuilder()->get_object("properties");
+    auto store = (GtkListStore*)VRGuiBuilder::get()->get_object("properties");
     gtk_list_store_clear(store);
 
     for(auto pvec : e->properties) {
@@ -538,7 +539,7 @@ void VRGuiScene::on_group_edited() {
 
     // update group list
     GtkTreeIter itr;
-    auto store = (GtkListStore*)getGUIBuilder()->get_object("liststore3");
+    auto store = (GtkListStore*)VRGuiBuilder::get()->get_object("liststore3");
     gtk_list_store_append(store, &itr);
     gtk_list_store_set(store, &itr, 0, new_group.c_str(), -1);
 
@@ -676,7 +677,7 @@ void VRGuiScene::on_edit_primitive_params(const char* path_string, const char* n
     VRGuiTreeView tree_view("treeview12", true);
     tree_view.setSelectedStringValue(1, new_text);
 
-    auto store = getGUIBuilder()->get_object("primitive_opts");
+    auto store = VRGuiBuilder::get()->get_object("primitive_opts");
     int N = gtk_tree_model_iter_n_children((GtkTreeModel*)store, NULL );
     for (int i=0; i<N; i++) {
         GtkTreeIter iter;
@@ -1252,8 +1253,8 @@ VRGuiScene::VRGuiScene() { // TODO: reduce callbacks with templated functions
     //test_tree_dnd();
 
     // treeviewer
-    tree_store = (GtkTreeStore*)getGUIBuilder()->get_object("scenegraph");
-    tree_view  = (GtkTreeView*)getGUIBuilder()->get_object("treeview6");
+    tree_store = (GtkTreeStore*)VRGuiBuilder::get()->get_object("scenegraph");
+    tree_view  = (GtkTreeView*)VRGuiBuilder::get()->get_object("treeview6");
     //tree_view->signal_cursor_changed().connect( bind(&VRGuiScene::on_treeview_select) );
     setTreeviewSelectCallback("treeview6", bind(&VRGuiScene::on_treeview_select, this));
 
@@ -1341,7 +1342,7 @@ VRGuiScene::VRGuiScene() { // TODO: reduce callbacks with templated functions
     setColorChooser("light_amb", bind(&VRGuiScene::setLight_amb_color, this, placeholders::_1));
     setColorChooser("light_spec", bind(&VRGuiScene::setLight_spec_color, this, placeholders::_1));
 
-    auto tree_view9 = getGUIBuilder()->get_object("treeview9");
+    auto tree_view9 = VRGuiBuilder::get()->get_object("treeview9");
     menu = new VRGuiContextMenu("GeoMenu");
     menu->connectWidget("GeoMenu", (GtkWidget*)tree_view9);
     menu->appendItem("GeoMenu", "Print", bind(&VRGuiScene::on_geo_menu_print, this));

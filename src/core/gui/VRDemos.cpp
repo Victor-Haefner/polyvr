@@ -18,6 +18,7 @@
 #include "core/utils/system/VRSystem.h"
 
 #include "VRGuiUtils.h"
+#include "VRGuiBuilder.h"
 #include "VRGuiSignals.h"
 #include "VRGuiFile.h"
 #include "VRGuiContextMenu.h"
@@ -71,7 +72,7 @@ VRAppManager::~VRAppManager() {}
 VRAppManagerPtr VRAppManager::create() { return VRAppManagerPtr( new VRAppManager() ); }
 
 VRAppPanelPtr VRAppManager::addSection(string name, string t) {
-    GtkTable* tab = (GtkTable*)getGUIBuilder()->get_widget(t);
+    GtkTable* tab = (GtkTable*)VRGuiBuilder::get()->get_widget(t);
     tables[t] = tab;
 
     auto s = VRAppPanel::create(name, tables[t]);
@@ -411,7 +412,7 @@ void VRAppManager::update() {
         setGuiState(0);
         return;
     }
-        
+
     cout << " .. ui state not changed" << endl;
 }
 

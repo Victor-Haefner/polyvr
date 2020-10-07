@@ -1782,6 +1782,7 @@ void
 gtk_source_buffer_set_highlight_syntax (GtkSourceBuffer *buffer,
 					gboolean         highlight)
 {
+    printf(" gtk_source_buffer_set_highlight_syntax, is buffer? %i\n", GTK_SOURCE_IS_BUFFER (buffer));
 	g_return_if_fail (GTK_SOURCE_IS_BUFFER (buffer));
 
 	highlight = highlight != FALSE;
@@ -1790,6 +1791,7 @@ gtk_source_buffer_set_highlight_syntax (GtkSourceBuffer *buffer,
 	{
 		buffer->priv->highlight_syntax = highlight;
 		g_object_notify_by_pspec (G_OBJECT (buffer), buffer_properties[PROP_HIGHLIGHT_SYNTAX]);
+		printf("  gtk_source_buffer_set_highlight_syntax %p %i\n", buffer, highlight);
 	}
 }
 

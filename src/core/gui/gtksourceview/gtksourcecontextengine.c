@@ -912,6 +912,7 @@ highlight_region (GtkSourceContextEngine *ce,
 #endif
 
 	/* First we need to delete tags in the regions. */
+	printf(" highlight_region region\n");
 	unhighlight_region (ce, start, end);
 
 	apply_tags (ce, ce->priv->root_segment,
@@ -944,6 +945,7 @@ ensure_highlighted (GtkSourceContextEngine *ce,
 		    const GtkTextIter      *start,
 		    const GtkTextIter      *end)
 {
+	printf("ensure_highlighted %p %p %p\n", ce, start, end);
 	GtkSourceRegion *region;
 	GtkSourceRegionIter reg_iter;
 
@@ -959,6 +961,7 @@ ensure_highlighted (GtkSourceContextEngine *ce,
 	 * hopefully this will only be one subregion. */
 	while (!gtk_source_region_iter_is_end (&reg_iter))
 	{
+	printf(" ensure_highlighted region\n");
 		GtkTextIter s, e;
 		gtk_source_region_iter_get_subregion (&reg_iter, &s, &e);
 		highlight_region (ce, &s, &e);
@@ -2240,8 +2243,11 @@ gtk_source_context_engine_update_highlight (GtkSourceEngine   *engine,
 	gint end_line;
 	GtkSourceContextEngine *ce = GTK_SOURCE_CONTEXT_ENGINE (engine);
 
+	printf("gtk_source_context_engine_update_highlight %p %p %p %i\n", engine, start, end, synchronous);
 	if (!ce->priv->highlight || ce->priv->disabled)
 		return;
+
+
 
 	invalid_line = get_invalid_line (ce);
 	end_line = gtk_text_iter_get_line (end);

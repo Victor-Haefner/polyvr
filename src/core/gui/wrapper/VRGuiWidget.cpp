@@ -1,10 +1,11 @@
 #include "VRGuiWidget.h"
 #include "../VRGuiUtils.h"
+#include "../VRGuiBuilder.h"
 
 #include <gtk/gtk.h>
 
 VRGuiWidget::VRGuiWidget(string name) {
-    widget = getGUIBuilder()->get_widget(name);
+    widget = VRGuiBuilder::get()->get_widget(name);
 }
 
 VRGuiWidget::VRGuiWidget(_GtkWidget* w) {
