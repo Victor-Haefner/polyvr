@@ -69,6 +69,7 @@ void VRGuiEditor::printViewerLanguages() {
 }
 
 bool VRGuiEditor::on_editor_shortkey( GdkEventKey* e ) {
+    cout << "VRGuiEditor::on_editor_shortkey " << e->keyval << endl;
     if ( !(e->state & GDK_CONTROL_MASK) ) return false;
 
     auto getCurrentLine = [&]() {
@@ -312,6 +313,11 @@ VRGuiEditor::VRGuiEditor(string window) {
     editor = gtk_source_view_new_with_buffer(sourceBuffer);
     editorBuffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(editor));
 
+    gtk_text_view_set_editable(GTK_TEXT_VIEW(editor), true);
+    //gtk_widget_add_events((GtkWidget*)win, (GdkEventMask)GDK_KEY_PRESS_MASK);
+    //gtk_widget_add_events((GtkWidget*)win, (GdkEventMask)GDK_KEY_RELEASE_MASK);
+    //gtk_widget_set_can_focus((GtkWidget*)win, true);
+
     gtk_container_add(GTK_CONTAINER(win), editor);
 
     // buffer changed callback
@@ -336,13 +342,15 @@ VRGuiEditor::VRGuiEditor(string window) {
     gtk_widget_modify_font (editor, font_desc);
     gtk_widget_show_all(editor);
 
-#ifndef WIN32
-    auto provider = VRGuiCodeCompletionNew(); // Windows: hangs
+
+#ifndef WIN32  // Windows: induces hang in VRGuiBuilder read sometimes? not consistent!
+    cout << "VRGuiEditor::VRGuiEditor, enable code completion" << endl;
+    auto provider = VRGuiCodeCompletionNew(); 
     auto completion = gtk_source_view_get_completion(GTK_SOURCE_VIEW(editor));
     GError* error = 0;
     gtk_source_completion_add_provider(completion, GTK_SOURCE_COMPLETION_PROVIDER(provider), &error);
     if (error) {
-        cout << "source view completion error: " << error->message << endl;
+        cout << "  -- source view completion error: " << error->message << endl;
         g_clear_error(&error);
         g_error_free(error);
     }

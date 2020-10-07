@@ -32,15 +32,15 @@ typedef boost::recursive_mutex::scoped_lock PLock;
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-VRGuiScene* g_scene;
-VRGuiBits* g_bits;
-VRAppManager* g_demos;
-VRGuiNav* g_nav;
-VRGuiScripts* g_sc;
-VRGuiSetup* g_di;
-VRGuiSemantics* g_sem;
-VRGuiGeneral* g_gen;
-VRGuiMonitor* g_mon;
+VRGuiScene* g_scene = 0;
+VRGuiBits* g_bits = 0;
+VRAppManager* g_demos = 0;
+VRGuiNav* g_nav = 0;
+VRGuiScripts* g_sc = 0;
+VRGuiSetup* g_di = 0;
+VRGuiSemantics* g_sem = 0;
+VRGuiGeneral* g_gen = 0;
+VRGuiMonitor* g_mon = 0;
 
 void addIconsPath(string p) {
     string icons = VRSceneManager::get()->getOriginalWorkdir() + "/" + p;
@@ -137,6 +137,7 @@ VRGuiManager::VRGuiManager() {
 }
 
 VRGuiManager::~VRGuiManager() {
+    cout << "VRGuiManager::~VRGuiManager" << endl;
     delete g_scene;
     delete g_bits;
     delete g_demos;

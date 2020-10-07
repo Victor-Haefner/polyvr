@@ -85,6 +85,8 @@
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
+PolyVR* pvr = 0;
+
 void printFieldContainer(int maxID = -1) {
     int N = FieldContainerFactory::the()->getNumTotalContainers();
     for (int i=0;i<N;++i) {
@@ -116,12 +118,60 @@ void printFieldContainer(int maxID = -1) {
 }
 
 PolyVR::PolyVR() {}
-PolyVR::~PolyVR() {}
 
-PolyVR* PolyVR::get() {
-    static PolyVR* pvr = new PolyVR();
-    return pvr;
+PolyVR::~PolyVR() {
+    cout << "PolyVR::~PolyVR" << endl;
+#ifndef WITHOUT_SHARED_MEMORY
+    try {
+        VRSharedMemory sm("PolyVR_System");
+        int* i = sm.addObject<int>("identifier");
+        *i = 0;
+    }
+    catch (...) {}
+#endif
+
+    pvr = 0;
+
+    scene_mgr->closeScene();
+    VRSetup::getCurrent()->stopWindows();
+    scene_mgr->stopAllThreads();
+    setup_mgr->closeSetup();
+
+
+    monitor.reset();
+    gui_mgr.reset();
+    main_interface.reset();
+    loader.reset();
+    setup_mgr.reset();
+    scene_mgr.reset();
+    sound_mgr.reset();
+    options.reset();
+
+    cout << " terminated all polyvr modules" << endl;
+#ifndef WASM
+    printFieldContainer();
+#endif
+
+    cout << "call osgExit" << endl;
+    osgExit();
+
+    /*#ifdef WASM
+        cout << "call emscripten_force_exit" << endl;
+        emscripten_force_exit(0);
+    #else
+        cout << "call exit" << endl;
+        std::exit(0);
+    #endif*/
 }
+
+shared_ptr<PolyVR> PolyVR::create() { 
+    if (!pvr) { 
+        pvr = new PolyVR(); 
+        return shared_ptr<PolyVR>(pvr); 
+    } else return 0; 
+}
+
+PolyVR* PolyVR::get() { return pvr; }
 
 #ifdef WASM
 typedef const char* CSTR;
@@ -135,41 +185,9 @@ EMSCRIPTEN_KEEPALIVE void PolyVR_triggerScript(const char* name, CSTR* params, i
 #endif
 
 void PolyVR::shutdown() {
+    if (!pvr) return;
     cout << "PolyVR::shutdown" << endl;
-#ifndef WITHOUT_SHARED_MEMORY
-    try {
-        VRSharedMemory sm("PolyVR_System");
-        int* i = sm.addObject<int>("identifier");
-        *i = 0;
-    } catch(...) {}
-#endif
-
-    auto pvr = get();
-    pvr->scene_mgr->closeScene();
-    VRSetup::getCurrent()->stopWindows();
-    pvr->scene_mgr->stopAllThreads();
-    pvr->setup_mgr->closeSetup();
-
-/*
-    pvr->monitor.reset();
-    pvr->gui_mgr.reset();
-    pvr->main_interface.reset();
-    pvr->loader.reset();
-    pvr->setup_mgr.reset();
-    pvr->scene_mgr.reset();
-    pvr->sound_mgr.reset();
-    pvr->options.reset();*/
-
-    delete pvr;
-#ifndef WASM
-    printFieldContainer();
-#endif
-    osgExit();
-#ifdef WASM
-    emscripten_force_exit(0);
-#else
-    std::exit(0);
-#endif
+    pvr->doLoop = false;
 }
 
 void printNextOSGID(int i) {
@@ -483,7 +501,8 @@ void glutUpdate() {
 void PolyVR::run() {
     cout << endl << "Start main loop" << endl << endl;
 #ifndef WASM
-    while(true) update(); // default
+    doLoop = true;
+    while(doLoop) update(); // default
 #else
     // WASM needs to control the main loop
     glutIdleFunc(glutPostRedisplay);

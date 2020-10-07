@@ -24,9 +24,17 @@ VRGuiBuilder::~VRGuiBuilder() {}
 void VRGuiBuilder::read(string path) {
     //XML xml;
     //xml.read(path);
-
+    cout << "VRGuiBuilder::read " << path << endl;
     builder = gtk_builder_new();
-    gtk_builder_add_from_file(builder, path.c_str(), NULL);
+    cout << " VRGuiBuilder::read file" << endl;
+    GError* error = 0;
+    gtk_builder_add_from_file(builder, path.c_str(), &error);
+    cout << " VRGuiBuilder::read done" << endl;
+    if (error) {
+        cout << "  -- VRGuiBuilder read error: " << error->message << endl;
+        g_clear_error(&error);
+        g_error_free(error);
+    }
 }
 
 GtkWidget* VRGuiBuilder::get_widget(string name) {

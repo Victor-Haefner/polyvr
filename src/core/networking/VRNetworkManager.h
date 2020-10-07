@@ -22,7 +22,7 @@ class VRNetworkManager : public VRStorage {
 
     public:
         VRNetworkManager();
-        ~VRNetworkManager();
+        virtual ~VRNetworkManager();
 
         VRSocketPtr getSocket(int port);
         void remSocket(string name);
