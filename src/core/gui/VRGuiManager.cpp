@@ -69,7 +69,7 @@ VRGuiManager::VRGuiManager() {
     //gtk_gl_init(&argc, NULL);
     VRGuiBuilder::get(standalone);
 
-    if (standalone) {
+    /*if (standalone) {
         cout << " start in standalone mode\n";
         VRSetupManager::get()->load("Desktop", "setup/Desktop.xml");
 
@@ -80,18 +80,18 @@ VRGuiManager::VRGuiManager() {
         gtk_window_maximize(top);
         gtk_widget_show_all((GtkWidget*)top);
         return;
-    }
+    }*/
 
     //gtk_rc_parse("gui/gtkrc");
     g_demos = new VRAppManager();
-    g_scene = new VRGuiScene();
     g_bits = new VRGuiBits();
+    g_mon = new VRGuiMonitor();
+    /*g_scene = new VRGuiScene();
     g_nav = new VRGuiNav();
     g_sc = new VRGuiScripts();
     g_sem = new VRGuiSemantics();
     g_di = new VRGuiSetup();
     g_gen = new VRGuiGeneral();
-    g_mon = new VRGuiMonitor();
     g_scene->updateTreeView();
 
     auto editor = g_sc->getEditor();
@@ -127,7 +127,7 @@ VRGuiManager::VRGuiManager() {
     guiSignalCbs.push_back(fkt);
 
     updatePtr = VRUpdateCb::create("GUI_updateManager", bind(&VRGuiManager::update, this) );
-    VRSceneManager::get()->addUpdateFkt(updatePtr, 1);
+    VRSceneManager::get()->addUpdateFkt(updatePtr, 1);*/
 
     GtkWindow* top = (GtkWindow*)VRGuiBuilder::get()->get_widget("window1");
     gtk_window_maximize(top);

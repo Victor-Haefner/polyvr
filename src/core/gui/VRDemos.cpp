@@ -72,7 +72,7 @@ VRAppManager::~VRAppManager() {}
 VRAppManagerPtr VRAppManager::create() { return VRAppManagerPtr( new VRAppManager() ); }
 
 VRAppPanelPtr VRAppManager::addSection(string name, string t) {
-    GtkTable* tab = (GtkTable*)VRGuiBuilder::get()->get_widget(t);
+    auto tab = VRGuiBuilder::get()->get_widget(t);
     tables[t] = tab;
 
     auto s = VRAppPanel::create(name, tables[t]);
@@ -90,10 +90,12 @@ void VRAppManager::on_lock_toggle(VRAppLauncherPtr e) {
 }
 
 void VRAppManager::updateTable(string t) {
+#if GTK_MAJOR_VERSION == 2
     int N = 4;
     if (t == "examples_tab") N += sections["examples"]->getSize();
     if (t == "favorites_tab") N += sections["recents"]->getSize() + sections["favorites"]->getSize();
     gtk_table_resize(tables[t], N*0.5+1, 2);
+#endif
 
     int i = 0;
     if (t == "examples_tab") sections["examples"]->fillTable(t, i);

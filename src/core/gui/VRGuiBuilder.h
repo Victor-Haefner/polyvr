@@ -22,6 +22,8 @@ class VRGuiBuilder {
         map<string, _GtkWidget*> widgets;
         map<string, _GtkObject*> objects;
 
+        void buildBaseUI();
+
     public:
         VRGuiBuilder();
         ~VRGuiBuilder();
@@ -32,6 +34,9 @@ class VRGuiBuilder {
 
         _GtkWidget* get_widget(string name);
         _GtkObject* get_object(string name);
+
+        void reg_widget(_GtkWidget* w, string name);
+        void reg_object(_GtkObject* o, string name);
 };
 
 #endif // VRGUIBUILDER_H_INCLUDED

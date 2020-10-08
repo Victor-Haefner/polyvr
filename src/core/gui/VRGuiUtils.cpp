@@ -29,7 +29,7 @@ string gtk_combo_box_get_active_text(GtkComboBox* b) {
 }
 
 void setLabel(string l, string txt) {
-    GtkLabel* label = (GtkLabel*)VRGuiBuilder::get()->get_object(l);
+    GtkLabel* label = (GtkLabel*)VRGuiBuilder::get()->get_widget(l);
     gtk_label_set_text(label, txt.c_str());
 }
 
@@ -360,7 +360,7 @@ void clearContainer(GtkWidget* container) {
 }
 
 void setNotebookPage(string nb, int p) {
-    GtkNotebook* nbk = (GtkNotebook*)VRGuiBuilder::get()->get_object(nb);
+    GtkNotebook* nbk = (GtkNotebook*)VRGuiBuilder::get()->get_widget(nb);
     gtk_notebook_set_current_page(nbk, p);
 }
 
@@ -481,7 +481,7 @@ void fillStringListstore(string ls, vector<string> list) {
 void showDialog(string d) {
     GtkWidget* dialog = VRGuiBuilder::get()->get_widget(d);
     //gtk_dialog_run(dialog);
-    gtk_widget_show(dialog);
+    gtk_widget_show_all(dialog);
 }
 
 void hideDialog(string d) {

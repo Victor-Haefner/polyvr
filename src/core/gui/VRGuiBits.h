@@ -44,7 +44,6 @@ class VRGuiBits {
         void on_about_clicked();
         void on_internal_clicked();
 
-        void on_new_cancel_clicked();
         void on_internal_close_clicked();
         void on_console_switch(_GtkWidget* page, unsigned int page_num);
 

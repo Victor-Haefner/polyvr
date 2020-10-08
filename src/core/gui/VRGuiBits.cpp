@@ -55,11 +55,6 @@ void VRGuiBits::on_navigation_changed() {
     setTooltip("combobox9", scene->getNavigationTip(name) );
 }
 
-void VRGuiBits::on_new_cancel_clicked() {
-    GtkWidget* dialog = VRGuiBuilder::get()->get_widget("NewProject");
-    gtk_widget_hide(dialog);
-}
-
 void VRGuiBits::on_save_clicked() {
     saveScene();
 }
@@ -146,8 +141,8 @@ void VRGuiBits::on_about_clicked() {
 }
 
 void VRGuiBits::on_internal_clicked() {
-    GtkDialog* diag = (GtkDialog*)VRGuiBuilder::get()->get_widget("dialog2");
-    gtk_dialog_run(diag);
+    auto diag = VRGuiBuilder::get()->get_widget("dialog2");
+    gtk_widget_show_all(diag);
 }
 
 void VRGuiBits::on_internal_close_clicked() {
@@ -156,6 +151,9 @@ void VRGuiBits::on_internal_close_clicked() {
 }
 
 void VRGuiBits_on_internal_update() {
+    GtkWidget* diag = VRGuiBuilder::get()->get_widget("dialog2");
+    if (!gtk_widget_is_visible(diag)) return;
+
     VRInternalMonitor* mnr = VRInternalMonitor::get();
     GtkListStore* store = (GtkListStore*)VRGuiBuilder::get()->get_object("liststore4");
     gtk_list_store_clear(store);
@@ -266,7 +264,6 @@ VRGuiBits::VRGuiBits() {
     setToolButtonCallback("toolbutton17", bind(&VRGuiBits::on_about_clicked, this));
     setToolButtonCallback("toolbutton18", bind(&VRGuiBits::on_internal_clicked, this));
 
-    setButtonCallback("button14", bind(&VRGuiBits::on_new_cancel_clicked, this));
     setButtonCallback("button21", bind(&VRGuiBits::on_internal_close_clicked, this));
 
     setToolButtonCallback("togglebutton1", bind(&VRGuiBits::toggleDock, this) );
