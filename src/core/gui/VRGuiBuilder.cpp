@@ -135,14 +135,14 @@ GtkWidget* addToolbar(string ID, GtkIconSize iSize, GtkOrientation o) {
 GtkToolItem* addToolButton(string ID, string stock, GtkWidget* bar) {
     auto item = gtk_tool_button_new_from_stock(stock.c_str());
     VRGuiBuilder::get()->reg_widget(GTK_WIDGET(item), ID);
-    gtk_toolbar_insert(GTK_TOOLBAR(bar), item, 0);
+    gtk_toolbar_insert(GTK_TOOLBAR(bar), item, -1);
     return item;
 }
 
 GtkToolItem* addToggleToolButton(string ID, string stock, GtkWidget* bar) {
     auto item = gtk_toggle_tool_button_new_from_stock(stock.c_str());
     VRGuiBuilder::get()->reg_widget(GTK_WIDGET(item), ID);
-    gtk_toolbar_insert(GTK_TOOLBAR(bar), item, 0);
+    gtk_toolbar_insert(GTK_TOOLBAR(bar), item, -1);
     return item;
 }
 
@@ -171,6 +171,22 @@ GtkWidget* addButton(string ID, string label) {
     return n;
 }
 
+GtkWidget* addImgButton(string ID, string stockID) {
+    auto n = gtk_button_new();
+    auto img = gtk_image_new_from_stock(stockID.c_str(), GTK_ICON_SIZE_SMALL_TOOLBAR);
+    gtk_button_set_image(GTK_BUTTON(n), img);
+    VRGuiBuilder::get()->reg_widget(n, ID);
+    return n;
+}
+
+GtkWidget* addRadiobutton(string ID, string label, GtkWidget* groupWidget) {
+    GtkWidget* n = 0;
+    if (groupWidget == 0) n = gtk_radio_button_new_with_label(NULL, label.c_str());
+    else n = gtk_radio_button_new_with_label_from_widget(GTK_RADIO_BUTTON(groupWidget), label.c_str());
+    VRGuiBuilder::get()->reg_widget(n, ID);
+    return n;
+}
+
 GtkWidget* addEntry(string ID) {
     auto n = gtk_entry_new();
     VRGuiBuilder::get()->reg_widget(n, ID);
@@ -186,6 +202,10 @@ GtkWidget* addDrawingArea(string ID) {
 GtkWidget* addCombobox(string ID, string mID) {
     auto m = gtk_list_store_new(1, G_TYPE_STRING);
     auto n = gtk_combo_box_new_with_model_and_entry(GTK_TREE_MODEL(m));
+    //auto r = gtk_cell_renderer_text_new();
+    gtk_combo_box_set_id_column(GTK_COMBO_BOX(n), 0);
+    gtk_combo_box_set_entry_text_column(GTK_COMBO_BOX(n), 0);
+    gtk_combo_box_set_button_sensitivity(GTK_COMBO_BOX(n), GTK_SENSITIVITY_ON);
     VRGuiBuilder::get()->reg_widget(n, ID);
     VRGuiBuilder::get()->reg_object(G_OBJECT(m), mID);
     return n;
@@ -194,6 +214,8 @@ GtkWidget* addCombobox(string ID, string mID) {
 GtkWidget* addScrolledWindow(string ID) {
     auto n = gtk_scrolled_window_new(0, 0);
     VRGuiBuilder::get()->reg_widget(n, ID);
+    gtk_widget_set_hexpand(n, true);
+    gtk_widget_set_vexpand(n, true);
     return n;
 }
 
@@ -216,6 +238,21 @@ GtkWidget* addTreeview(string ID, string mID, GtkTreeModel* m) {
     return n;
 }
 
+GtkWidget* addExpander(string ID, string label) {
+    auto n = gtk_expander_new(label.c_str());
+    VRGuiBuilder::get()->reg_widget(n, ID);
+    return n;
+}
+
+GtkWidget* appendExpander(string ID, string label, string gID, GtkWidget* box) {
+    auto n = gtk_expander_new(label.c_str());
+    VRGuiBuilder::get()->reg_widget(n, ID);
+    gtk_box_pack_start(GTK_BOX(box), n, false, true, 0);
+    auto g = addGrid(gID);
+    gtk_container_add(GTK_CONTAINER(n), g);
+    return g;
+}
+
 void addNotebookPage(GtkWidget* notebook, GtkWidget* content, string label) {
     auto lbl = gtk_label_new(label.c_str());
     gtk_notebook_append_page(GTK_NOTEBOOK(notebook), content, lbl);
@@ -230,15 +267,54 @@ void addNotebookPage(GtkWidget* notebook, GtkWidget* content, string label) {
     g_object_set_property(G_OBJECT(page), "tab-fill", &v);*/
 }
 
-void addTreeviewTextcolumn(GtkWidget* treeview, string cName, int pos) {
-    auto renderer = gtk_cell_renderer_text_new();
-    gtk_tree_view_insert_column_with_attributes(GTK_TREE_VIEW(treeview), -1, cName.c_str(), renderer, "text", pos, NULL);
+GtkCellRenderer* addCellrenderer(string ID, GtkTreeViewColumn* c) {
+    auto r = gtk_cell_renderer_text_new();
+    VRGuiBuilder::get()->reg_widget((GtkWidget*)r, ID);
+    gtk_tree_view_column_pack_start(c, r, true);
+    return r;
+}
+
+GtkCellRenderer* addImgCellrenderer(string ID, GtkTreeViewColumn* c) {
+    auto r = gtk_cell_renderer_pixbuf_new();
+    VRGuiBuilder::get()->reg_widget((GtkWidget*)r, ID);
+    gtk_tree_view_column_pack_start(c, r, true);
+    return r;
+}
+
+GtkTreeViewColumn* addTreecolumn(string ID, string title) {
+    auto c = gtk_tree_view_column_new();
+    VRGuiBuilder::get()->reg_widget((GtkWidget*)c, ID);
+    gtk_tree_view_column_set_title(c, title.c_str());
+    return c;
+}
+
+void addTreeviewTextcolumn(GtkWidget* treeview, string cName, string rID, int pos) {
+    auto c = addTreecolumn(cName+"ID", cName);
+    auto r = addCellrenderer(rID, c);
+    gtk_tree_view_column_add_attribute(c, r, "text", pos);
+    gtk_tree_view_append_column(GTK_TREE_VIEW(treeview), c);
+}
+
+void setStringProperty(GtkWidget* w, string p, string v) {
+    GValue V = G_VALUE_INIT;
+    g_value_init(&V, G_TYPE_STRING);
+    g_value_set_string(&V, v.c_str());
+    g_object_set_property(G_OBJECT(w), p.c_str(), &V);
+}
+
+GtkWidget* addVectorFrame(string ID, string fID) {
+    auto f = gtk_frame_new("");
+    VRGuiBuilder::get()->reg_widget(f, ID);
+    auto F = addFixed(fID);
+    gtk_container_add(GTK_CONTAINER(f), F);
+    return f;
 }
 
 void VRGuiBuilder::buildBaseUI() {
     auto window1 = addWindow("window1", "PolyVR");
     auto main_frame = addGrid("main_frame");
     gtk_container_add(GTK_CONTAINER(window1), main_frame);
+    gtk_window_set_icon_from_file(GTK_WINDOW(window1), "ressources/gui/logo_icon.png", 0);
 
     /* ---------- head section ---------------------- */
     auto table20 = addGrid("table20");
@@ -248,6 +324,7 @@ void VRGuiBuilder::buildBaseUI() {
     gtk_grid_attach(GTK_GRID(main_frame), hseparator1, 0,1,2,1);
     gtk_grid_attach(GTK_GRID(main_frame), hpaned1, 0,2,2,1);
     gtk_widget_set_vexpand(hpaned1, true);
+    gtk_paned_set_position(GTK_PANED(hpaned1), 500);
 
     auto banner = addImage("banner", "ressources/gui/logo4.png");
     auto label13 = addLabel("label13", "VR Setup:");
@@ -262,15 +339,15 @@ void VRGuiBuilder::buildBaseUI() {
     gtk_widget_set_hexpand(label13, true);
     gtk_widget_set_hexpand(label24, true);
 
-    auto toolbutton18 = addToolButton("toolbutton18", "gtk-paste", toolbar1);
-    auto toolbutton17 = addToolButton("toolbutton17", "gtk-about", toolbar1);
-    auto toolbutton3 = addToolButton("toolbutton3", "gtk-quit", toolbar1);
-    auto toolbutton28 = addToolButton("toolbutton28", "gtk-stop", toolbar1);
-    auto toolbutton50 = addToolButton("toolbutton50", "gtk-go-up", toolbar1);
-    auto toolbutton5 = addToolButton("toolbutton5", "gtk-save-as", toolbar1);
-    auto toolbutton4 = addToolButton("toolbutton4", "gtk-save", toolbar1);
-    auto toolbutton21 = addToolButton("toolbutton21", "gtk-open", toolbar1);
     auto toolbutton1 = addToolButton("toolbutton1", "gtk-new", toolbar1);
+    auto toolbutton21 = addToolButton("toolbutton21", "gtk-open", toolbar1);
+    auto toolbutton4 = addToolButton("toolbutton4", "gtk-save", toolbar1);
+    auto toolbutton5 = addToolButton("toolbutton5", "gtk-save-as", toolbar1);
+    auto toolbutton50 = addToolButton("toolbutton50", "gtk-go-up", toolbar1);
+    auto toolbutton28 = addToolButton("toolbutton28", "gtk-stop", toolbar1);
+    auto toolbutton3 = addToolButton("toolbutton3", "gtk-quit", toolbar1);
+    auto toolbutton17 = addToolButton("toolbutton17", "gtk-about", toolbar1);
+    auto toolbutton18 = addToolButton("toolbutton18", "gtk-paste", toolbar1);
 
     /* ---------- core section ---------------------- */
     auto notebook1 = addNotebook("notebook1");
@@ -282,6 +359,9 @@ void VRGuiBuilder::buildBaseUI() {
     gtk_paned_add1(GTK_PANED(vpaned1), vbox5);
     gtk_paned_add2(GTK_PANED(vpaned1), hbox15);
     gtk_widget_set_hexpand(notebook1, true);
+    gtk_widget_set_vexpand(vbox5, true);
+    gtk_paned_set_position(GTK_PANED(vpaned1), 800);
+    gtk_widget_set_size_request(vbox5, -1, 800);
 
     /* ---------- right core section ---------------------- */
     auto hbox1 = addBox("hbox1", GTK_ORIENTATION_HORIZONTAL);
@@ -302,15 +382,15 @@ void VRGuiBuilder::buildBaseUI() {
     gtk_box_pack_start(GTK_BOX(hbox1), combobox9, false, true, 0);
     gtk_box_pack_start(GTK_BOX(hbox1), hseparator6, false, true, 0);
     gtk_box_pack_start(GTK_BOX(hbox1), toolbar6, false, true, 0);
-
+    gtk_widget_set_vexpand(glarea, true);
 
     auto togglebutton1 = addToggleToolButton("togglebutton1", "gtk-leave-fullscreen", toolbar6);
 
     auto toolbar7 = addToolbar("toolbar7", GTK_ICON_SIZE_LARGE_TOOLBAR, GTK_ORIENTATION_VERTICAL);
     auto pause_terminal = addToggleToolButton("pause_terminal", "gtk-media-pause", toolbar7);
     auto network_verbose = addToggleToolButton("network_verbose", "gtk-network", toolbar7);
-    auto toolbutton25 = addToolButton("toolbutton25", "gtk-go-down", toolbar7);
     auto toolbutton24 = addToolButton("toolbutton24", "gtk-clear", toolbar7);
+    auto toolbutton25 = addToolButton("toolbutton25", "gtk-go-down", toolbar7);
     gtk_box_pack_end(GTK_BOX(hbox15), toolbar7, false, true, 0);
 
     /* ---------- left core section ---------------------- */
@@ -449,8 +529,8 @@ void VRGuiBuilder::buildBaseUI() {
     auto liststore4 = gtk_list_store_new(2, G_TYPE_STRING, G_TYPE_STRING);
     auto treeview10 = addTreeview("treeview10", "liststore4", GTK_TREE_MODEL(liststore4));
     addNotebookPage(notebook4, treeview10, "Name Dictionaries");
-    addTreeviewTextcolumn(treeview10, "column", 0);
-    addTreeviewTextcolumn(treeview10, "column", 1);
+    addTreeviewTextcolumn(treeview10, "column", "cellrenderertext25", 0);
+    addTreeviewTextcolumn(treeview10, "column", "cellrenderertext26", 1);
 
     auto table47 = addGrid("table47");
     auto scrolledwindow1 = addScrolledWindow("scrolledwindow1");
@@ -483,8 +563,542 @@ void VRGuiBuilder::buildBaseUI() {
     auto treeview15 = addTreeview("treeview15", "prof_fkts", GTK_TREE_MODEL(prof_fkts));
     gtk_container_add(GTK_CONTAINER(scrolledwindow13), treeview15);
     gtk_widget_set_vexpand(treeview15, true);
-    addTreeviewTextcolumn(treeview15, "function", 0);
-    addTreeviewTextcolumn(treeview15, "time (μs)", 1);
+    addTreeviewTextcolumn(treeview15, "function", "cellrenderertext30", 0);
+    addTreeviewTextcolumn(treeview15, "time (μs)", "cellrenderertext48", 1);
+
+    /* ---------- VR Setup ---------------------- */
+    auto setupTree = gtk_tree_store_new(5, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_POINTER, G_TYPE_STRING, G_TYPE_STRING);
+    auto treeview2 = addTreeview("treeview2", "setupTree", GTK_TREE_MODEL(setupTree));
+    auto toolbar4 = addToolbar("toolbar4", GTK_ICON_SIZE_LARGE_TOOLBAR, GTK_ORIENTATION_HORIZONTAL);
+    auto combobox6 = addCombobox("combobox6", "setups");
+    auto scrolledwindow6 = addScrolledWindow("scrolledwindow6");
+    gtk_grid_attach(GTK_GRID(table6), toolbar4, 0,0,2,1);
+    gtk_grid_attach(GTK_GRID(table6), combobox6, 0,1,2,1);
+    gtk_grid_attach(GTK_GRID(table6), treeview2, 0,2,1,1);
+    gtk_grid_attach(GTK_GRID(table6), scrolledwindow6, 1,2,1,1);
+
+    auto toolbutton10 = addToolButton("toolbutton10", "gtk-new", toolbar4);
+    auto toolbutton11 = addToolButton("toolbutton11", "gtk-delete", toolbar4);
+    auto toolbutton12 = addToolButton("toolbutton12", "gtk-save", toolbar4);
+    auto toolbutton19 = addToggleToolButton("toolbutton19", "gtk-orientation-portrait", toolbar4);
+
+    GtkTreeViewColumn* treeviewcolumn2 = gtk_tree_view_column_new();
+    gtk_tree_view_column_set_title(treeviewcolumn2, "Setup");
+    auto cellrenderertext3 = addCellrenderer("cellrenderertext3", treeviewcolumn2);
+    auto cellrenderertext5 = addCellrenderer("cellrenderertext5", treeviewcolumn2);
+    gtk_tree_view_column_add_attribute(treeviewcolumn2, cellrenderertext3, "text", 0);
+    gtk_tree_view_column_add_attribute(treeviewcolumn2, cellrenderertext5, "text", 1);
+    gtk_tree_view_append_column(GTK_TREE_VIEW(treeview2), treeviewcolumn2);
+
+    auto viewport3 = addViewport("viewport3");
+    auto vbox1 = addBox("vbox1", GTK_ORIENTATION_VERTICAL);
+    auto fixed4 = addFixed("fixed4");
+    gtk_container_add(GTK_CONTAINER(scrolledwindow6), viewport3);
+    gtk_container_add(GTK_CONTAINER(viewport3), vbox1);
+    auto table41 = appendExpander("expander28", "Displays Section", "table41", vbox1);
+    auto options = appendExpander("expander3", "Window", "options", vbox1);
+    auto table35 = appendExpander("expander22", "Window - Gtk", "table35", vbox1);
+    auto fixed49 = appendExpander("expander23", "Window - Glut", "fixed49", vbox1);
+    auto table9 = appendExpander("expander24", "Window - Remote", "table9", vbox1);
+    auto vbox2 = appendExpander("expander8", "View", "vbox2", vbox1);
+    auto table27 = appendExpander("expander7", "VRPN", "table27", vbox1);
+    auto table3 = appendExpander("expander4", "VRPN Tracker", "table3", vbox1);
+    auto table25 = appendExpander("expander6", "ART", "table25", vbox1);
+    auto table26 = appendExpander("expander5", "ART Device", "table26", vbox1);
+    auto table34 = appendExpander("expander21", "Device", "table34", vbox1);
+    auto table43 = appendExpander("expander30", "Multitouch Device", "table43", vbox1);
+    auto table44 = appendExpander("expander31", "Leap Device", "table44", vbox1);
+    auto table33 = appendExpander("expander20", "Haptic Device", "table33", vbox1);
+    auto table36 = appendExpander("expander25", "Network Node", "table36", vbox1);
+    auto table37 = appendExpander("expander26", "Network Slave", "table37", vbox1);
+    auto table42 = appendExpander("expander29", "Script", "table42", vbox1);
+    gtk_box_pack_start(GTK_BOX(vbox1), fixed4, true, true, 0);
+
+    /* ---------- VR Setup - display section ---------------------- */
+    auto label153 = addLabel("label153", "Offset:");
+    auto entry29 = addEntry("entry29");
+    auto entry30 = addEntry("entry30");
+    auto entry31 = addEntry("entry31");
+    auto fixed65 = addFixed("fixed65");
+    gtk_grid_attach(GTK_GRID(table41), label153, 0,0,3,1);
+    gtk_grid_attach(GTK_GRID(table41), entry29, 0,1,1,1);
+    gtk_grid_attach(GTK_GRID(table41), entry30, 1,1,1,1);
+    gtk_grid_attach(GTK_GRID(table41), entry31, 2,1,1,1);
+    gtk_grid_attach(GTK_GRID(table41), fixed65, 3,0,1,2);
+
+    /* ---------- VR Setup - window section ---------------------- */
+    auto checkbutton7 = addCheckbutton("checkbutton7", "Active");
+    auto fixed3 = addFixed("fixed3");
+    auto checkbutton1 = addCheckbutton("checkbutton1", "Fullscreen");
+    auto label7 = addLabel("label7", "Position:");
+    auto entry1 = addEntry("entry1");
+    auto entry2 = addEntry("entry2");
+    auto entry3 = addEntry("entry3");
+    auto label8 = addLabel("label8", "[px]");
+    auto label9 = addLabel("label9", "[px]");
+    auto entry4 = addEntry("entry4");
+    auto entry5 = addEntry("entry5");
+    auto label10 = addLabel("label10", "Resolution:");
+    auto fixed6 = addFixed("fixed6");
+    auto label23 = addLabel("label23", "X Display:");
+    auto combobox3 = addCombobox("combobox3", "xDisplays");
+    auto fixed7 = addFixed("fixed7");
+    auto label90 = addLabel("label90", "Mouse:");
+    auto combobox13 = addCombobox("combobox13", "mouse_list");
+    auto label174 = addLabel("label174", "MSAA:");
+    auto combobox15 = addCombobox("combobox15", "msaa_list");
+    auto msaa_info = addLabel("msaa_info", "");
+
+    gtk_grid_attach(GTK_GRID(options), checkbutton7, 0,0,6,1);
+    gtk_grid_attach(GTK_GRID(options), fixed3, 0,1,1,4);
+
+    gtk_grid_attach(GTK_GRID(options), label23, 1,1,1,1);
+    gtk_grid_attach(GTK_GRID(options), combobox3, 2,1,2,1);
+    gtk_grid_attach(GTK_GRID(options), fixed7, 4,1,2,1);
+
+    gtk_grid_attach(GTK_GRID(options), checkbutton1, 1,2,5,1);
+
+    gtk_grid_attach(GTK_GRID(options), label7, 1,3,1,1);
+    gtk_grid_attach(GTK_GRID(options), entry1, 2,3,1,1);
+    gtk_grid_attach(GTK_GRID(options), entry2, 3,3,1,1);
+    gtk_grid_attach(GTK_GRID(options), entry3, 4,3,1,1);
+    gtk_grid_attach(GTK_GRID(options), label8, 5,3,1,1);
+
+    gtk_grid_attach(GTK_GRID(options), label10, 1,4,1,1);
+    gtk_grid_attach(GTK_GRID(options), entry4, 2,4,1,1);
+    gtk_grid_attach(GTK_GRID(options), entry5, 3,4,1,1);
+    gtk_grid_attach(GTK_GRID(options), fixed6, 4,4,1,1);
+    gtk_grid_attach(GTK_GRID(options), label9, 5,4,1,1);
+
+    gtk_grid_attach(GTK_GRID(options), label90, 0,5,1,1);
+    gtk_grid_attach(GTK_GRID(options), combobox13, 1,5,5,1);
+
+    gtk_grid_attach(GTK_GRID(options), label174, 0,6,1,1);
+    gtk_grid_attach(GTK_GRID(options), combobox15, 1,6,4,1);
+    gtk_grid_attach(GTK_GRID(options), msaa_info, 2,6,1,1);
+
+    /* ---------- VR Setup - window gtk section ---------------------- */
+    /* ---------- VR Setup - window glut section ---------------------- */
+
+    /* ---------- VR Setup - window remote section ---------------------- */
+    auto label38 = addLabel("label38", "Nx: ");
+    auto entry33 = addEntry("entry33");
+    auto label39 = addLabel("label39", "Ny:");
+    auto entry34 = addEntry("entry34");
+    auto serverlist = gtk_tree_store_new(3, G_TYPE_INT, G_TYPE_INT, G_TYPE_STRING);
+    auto treeview1 = addTreeview("treeview1", "serverlist", GTK_TREE_MODEL(serverlist));
+    auto fixed8 = addFixed("fixed8");
+    auto label18 = addLabel("label18", "State:");
+    auto win_state = addLabel("win_state", "");
+    auto fixed11 = addFixed("fixed11");
+    auto button25 = addButton("button25", "connect");
+    auto label135 = addLabel("label135", "Connection type:");
+    auto radiobutton6 = addRadiobutton("radiobutton6", "Multicast", 0);
+    auto radiobutton7 = addRadiobutton("radiobutton7", "SockPipeline", radiobutton6);
+    auto radiobutton9 = addRadiobutton("radiobutton9", "StreamSock", radiobutton6);
+
+    GtkTreeViewColumn* treeviewcolumn3 = gtk_tree_view_column_new();
+    gtk_tree_view_column_set_title(treeviewcolumn3, "Server List");
+    auto cellrenderertext6 = addCellrenderer("cellrenderertext6", treeviewcolumn3);
+    auto cellrenderertext19 = addCellrenderer("cellrenderertext19", treeviewcolumn3);
+    auto cellrenderertext21 = addCellrenderer("cellrenderertext21", treeviewcolumn3);
+    gtk_tree_view_column_add_attribute(treeviewcolumn3, cellrenderertext6, "text", 0);
+    gtk_tree_view_column_add_attribute(treeviewcolumn3, cellrenderertext19, "text", 1);
+    gtk_tree_view_column_add_attribute(treeviewcolumn3, cellrenderertext21, "text", 2);
+    gtk_tree_view_append_column(GTK_TREE_VIEW(treeview1), treeviewcolumn3);
+
+
+    gtk_grid_attach(GTK_GRID(table9), fixed8, 0,0,1,4);
+    gtk_grid_attach(GTK_GRID(table9), label18, 1,0,1,1);
+    gtk_grid_attach(GTK_GRID(table9), win_state, 2,0,2,1);
+    gtk_grid_attach(GTK_GRID(table9), button25, 4,0,1,1);
+    gtk_grid_attach(GTK_GRID(table9), label135, 1,1,1,1);
+    gtk_grid_attach(GTK_GRID(table9), radiobutton6, 2,1,1,1);
+    gtk_grid_attach(GTK_GRID(table9), radiobutton7, 3,1,1,1);
+    gtk_grid_attach(GTK_GRID(table9), radiobutton9, 4,1,1,1);
+    gtk_grid_attach(GTK_GRID(table9), label38, 1,2,1,1);
+    gtk_grid_attach(GTK_GRID(table9), entry33, 2,2,1,1);
+    gtk_grid_attach(GTK_GRID(table9), label39, 3,2,1,1);
+    gtk_grid_attach(GTK_GRID(table9), entry34, 4,2,1,1);
+    gtk_grid_attach(GTK_GRID(table9), treeview1, 1,3,4,1);
+    gtk_grid_attach(GTK_GRID(table9), fixed11, 5,0,1,4);
+
+    /* ---------- VR Setup - view ---------------------- */
+    auto label28 = addLabel("label28", "Area");
+    auto label82 = addLabel("label82", "x:");
+    auto label83 = addLabel("label83", "y:");
+    auto entry52 = addEntry("entry52");
+    auto entry53 = addEntry("entry53");
+    auto entry56 = addEntry("entry56");
+    auto entry57 = addEntry("entry57");
+    auto checkbutton4 = addCheckbutton("checkbutton4", "statistics");
+    auto checkbutton8 = addCheckbutton("checkbutton8", "Stereo");
+    auto table7 = addGrid("table7");
+    auto checkbutton11 = addCheckbutton("checkbutton11", "Projection");
+    auto table8 = addGrid("table8");
+
+    // table 7
+    auto label25 = addLabel("label25", "Eye separation:");
+    auto entry12 = addEntry("entry12");
+    auto label26 = addLabel("label26", "[m]");
+    auto checkbutton9 = addCheckbutton("checkbutton9", "Invert");
+    auto checkbutton10 = addCheckbutton("checkbutton10", "Active stereo");
+
+    // table 8
+    auto checkbutton26 = addCheckbutton("checkbutton26", "User:");
+    auto checkbutton30 = addCheckbutton("checkbutton30", "Mirror:");
+    auto combobox18 = addCombobox("combobox18", "user_list");
+    auto frame13 = addVectorFrame("frame13", "center_entry");
+    auto frame14 = addVectorFrame("frame14", "user_entry");
+    auto frame15 = addVectorFrame("frame15", "normal_entry");
+    auto frame16 = addVectorFrame("frame16", "viewup_entry");
+    auto frame17 = addVectorFrame("frame17", "size_entry");
+    auto frame26 = addVectorFrame("frame26", "shear_entry");
+    auto frame27 = addVectorFrame("frame27", "warp_entry");
+    auto frame28 = addVectorFrame("frame28", "vsize_entry");
+    auto frame29 = addVectorFrame("frame29", "mirror_pos_entry");
+    auto frame30 = addVectorFrame("frame30", "mirror_norm_entry");
+
+    gtk_grid_attach(GTK_GRID(vbox2), label28, 0,0,3,1);
+    gtk_grid_attach(GTK_GRID(vbox2), label82, 0,1,1,1);
+    gtk_grid_attach(GTK_GRID(vbox2), entry52, 1,1,1,1);
+    gtk_grid_attach(GTK_GRID(vbox2), entry53, 2,1,1,1);
+    gtk_grid_attach(GTK_GRID(vbox2), label83, 0,2,1,1);
+    gtk_grid_attach(GTK_GRID(vbox2), entry56, 1,2,1,1);
+    gtk_grid_attach(GTK_GRID(vbox2), entry57, 2,2,1,1);
+    gtk_grid_attach(GTK_GRID(vbox2), frame28, 0,3,3,1);
+    gtk_grid_attach(GTK_GRID(vbox2), checkbutton4, 0,4,3,1);
+    gtk_grid_attach(GTK_GRID(vbox2), checkbutton8, 0,5,3,1);
+    gtk_grid_attach(GTK_GRID(vbox2), table7, 0,6,3,1);
+    gtk_grid_attach(GTK_GRID(vbox2), checkbutton11, 0,7,3,1);
+    gtk_grid_attach(GTK_GRID(vbox2), table8, 0,8,3,1);
+
+    gtk_grid_attach(GTK_GRID(table7), label25, 0,0,1,1);
+    gtk_grid_attach(GTK_GRID(table7), entry12, 1,0,1,1);
+    gtk_grid_attach(GTK_GRID(table7), label26, 2,0,1,1);
+    gtk_grid_attach(GTK_GRID(table7), checkbutton9, 0,1,3,1);
+    gtk_grid_attach(GTK_GRID(table7), checkbutton10, 0,2,3,1);
+
+    gtk_grid_attach(GTK_GRID(table8), checkbutton26, 0,0,1,1);
+    gtk_grid_attach(GTK_GRID(table8), combobox18, 1,0,1,1);
+    gtk_grid_attach(GTK_GRID(table8), frame13, 0,1,2,1);
+    gtk_grid_attach(GTK_GRID(table8), frame14, 0,2,2,1);
+    gtk_grid_attach(GTK_GRID(table8), frame15, 0,3,2,1);
+    gtk_grid_attach(GTK_GRID(table8), frame16, 0,4,2,1);
+    gtk_grid_attach(GTK_GRID(table8), frame17, 0,5,2,1);
+    gtk_grid_attach(GTK_GRID(table8), frame26, 0,6,2,1);
+    gtk_grid_attach(GTK_GRID(table8), frame27, 0,7,2,1);
+    gtk_grid_attach(GTK_GRID(table8), checkbutton30, 0,8,2,1);
+    gtk_grid_attach(GTK_GRID(table8), frame29, 0,9,2,1);
+    gtk_grid_attach(GTK_GRID(table8), frame30, 0,10,2,1);
+
+    /* ---------- VR Setup - vrpn ---------------------- */
+    auto checkbutton25 = addCheckbutton("checkbutton25", "active");
+    auto label120 = addLabel("label120", "Port:");
+    auto entry13 = addEntry("entry13");
+    auto checkbutton39 = addCheckbutton("checkbutton39", "test server");
+    auto checkbutton40 = addCheckbutton("checkbutton40", "verbose");
+    gtk_grid_attach(GTK_GRID(table27), checkbutton25, 0,0,1,1);
+    gtk_grid_attach(GTK_GRID(table27), label120, 1,0,1,1);
+    gtk_grid_attach(GTK_GRID(table27), entry13, 2,0,1,1);
+    gtk_grid_attach(GTK_GRID(table27), checkbutton39, 0,1,1,1);
+    gtk_grid_attach(GTK_GRID(table27), checkbutton40, 1,1,2,1);
+
+    /* ---------- VR Setup - vrpn tracker ---------------------- */
+    auto label43 = addLabel("label43", "address:");
+    auto entry50 = addEntry("entry50");
+    auto label116 = addLabel("label116", "translation axis:");
+    auto frame23 = addVectorFrame("frame23", "tvrpn_entry");
+    auto label117 = addLabel("label117", "rotation axis:");
+    auto frame24 = addVectorFrame("frame24", "rvrpn_entry");
+    gtk_grid_attach(GTK_GRID(table3), label43, 0,0,1,1);
+    gtk_grid_attach(GTK_GRID(table3), entry50, 1,0,1,1);
+    gtk_grid_attach(GTK_GRID(table3), label116, 0,1,1,1);
+    gtk_grid_attach(GTK_GRID(table3), frame23, 1,1,1,1);
+    gtk_grid_attach(GTK_GRID(table3), label117, 0,2,1,1);
+    gtk_grid_attach(GTK_GRID(table3), frame24, 1,2,1,1);
+
+    /* ---------- VR Setup - art ---------------------- */
+    auto checkbutton24 = addCheckbutton("checkbutton24", "active");
+    auto label74 = addLabel("label74", "Port:");
+    auto entry39 = addEntry("entry39");
+    auto frame36 = addVectorFrame("frame36", "art_offset");
+    auto frame35 = addVectorFrame("frame35", "art_axis");
+    gtk_grid_attach(GTK_GRID(table25), checkbutton24, 0,0,1,1);
+    gtk_grid_attach(GTK_GRID(table25), label74, 1,0,1,1);
+    gtk_grid_attach(GTK_GRID(table25), entry39, 2,0,1,1);
+    gtk_grid_attach(GTK_GRID(table25), frame36, 0,1,3,1);
+    gtk_grid_attach(GTK_GRID(table25), frame35, 0,2,3,1);
+
+    /* ---------- VR Setup - art device ---------------------- */
+    auto label75 = addLabel("label75", "ID:");
+    auto entry40 = addEntry("entry40");
+    auto label76 = addLabel("label76", "type:");
+    auto combobox17 = addCombobox("combobox17", "art_devices");
+    gtk_grid_attach(GTK_GRID(table26), label75, 0,0,1,1);
+    gtk_grid_attach(GTK_GRID(table26), entry40, 1,0,1,1);
+    gtk_grid_attach(GTK_GRID(table26), label76, 0,1,1,1);
+    gtk_grid_attach(GTK_GRID(table26), combobox17, 1,1,1,1);
+
+    /* ---------- VR Setup - device ---------------------- */
+    auto label41 = addLabel("label41", "name:");
+    auto label93 = addLabel("label93", "dev_name");
+    auto label50 = addLabel("label50", "type:");
+    auto combobox26 = addCombobox("combobox26", "dev_types_list");
+    auto label109 = addLabel("label109", "Intersection:");
+    auto label110 = addLabel("label110", "int_obj");
+    auto label113 = addLabel("label113", "int. point:");
+    auto label111 = addLabel("label111", "int_pnt");
+    auto label114 = addLabel("label114", "int. texel:");
+    auto label112 = addLabel("label112", "int_uv");
+    auto checkbutton37 = addCheckbutton("checkbutton37", "show intersection point");
+    gtk_grid_attach(GTK_GRID(table34), label41, 0,0,1,1);
+    gtk_grid_attach(GTK_GRID(table34), label93, 1,0,1,1);
+    gtk_grid_attach(GTK_GRID(table34), label50, 0,1,1,1);
+    gtk_grid_attach(GTK_GRID(table34), combobox26, 1,1,1,1);
+    gtk_grid_attach(GTK_GRID(table34), label109, 0,2,1,1);
+    gtk_grid_attach(GTK_GRID(table34), label110, 1,2,1,1);
+    gtk_grid_attach(GTK_GRID(table34), label113, 0,3,1,1);
+    gtk_grid_attach(GTK_GRID(table34), label111, 1,3,1,1);
+    gtk_grid_attach(GTK_GRID(table34), label114, 0,4,1,1);
+    gtk_grid_attach(GTK_GRID(table34), label112, 1,4,1,1);
+    gtk_grid_attach(GTK_GRID(table34), checkbutton37, 0,5,2,1);
+
+    /* ---------- VR Setup - multitouch ---------------------- */
+    auto label61 = addLabel("label61", "name:");
+    auto combobox12 = addCombobox("combobox12", "liststore11");
+    gtk_grid_attach(GTK_GRID(table43), label61, 0,0,1,1);
+    gtk_grid_attach(GTK_GRID(table43), combobox12, 1,0,1,1);
+
+    /* ---------- VR Setup - leap ---------------------- */
+    auto label155 = addLabel("label155", "host:");
+    auto entry28 = addEntry("entry28");
+    auto label156 = addLabel("label156", "status:");
+    auto label157 = addLabel("label157", "not connected");
+    auto label158 = addLabel("label158", "serial:");
+    auto label159 = addLabel("label159", "label");
+    auto button34 = addButton("button34", "start calibration");
+    auto button35 = addButton("button35", "stop calibration");
+    auto label160 = addLabel("label160", "transformation:");
+    auto frame31 = addVectorFrame("frame31", "leap_pos_entry");
+    auto frame32 = addVectorFrame("frame32", "leap_dir_entry");
+    auto frame34 = addVectorFrame("frame34", "leap_up_entry");
+
+    gtk_grid_attach(GTK_GRID(table44), label155, 0,0,1,1);
+    gtk_grid_attach(GTK_GRID(table44), entry28, 1,0,1,1);
+    gtk_grid_attach(GTK_GRID(table44), label156, 0,1,1,1);
+    gtk_grid_attach(GTK_GRID(table44), label157, 1,1,1,1);
+    gtk_grid_attach(GTK_GRID(table44), label158, 0,2,1,1);
+    gtk_grid_attach(GTK_GRID(table44), label159, 1,2,1,1);
+    gtk_grid_attach(GTK_GRID(table44), button34, 0,3,1,1);
+    gtk_grid_attach(GTK_GRID(table44), button35, 1,3,1,1);
+    gtk_grid_attach(GTK_GRID(table44), label160, 0,4,2,1);
+    gtk_grid_attach(GTK_GRID(table44), frame31, 0,5,2,1);
+    gtk_grid_attach(GTK_GRID(table44), frame32, 0,6,2,1);
+    gtk_grid_attach(GTK_GRID(table44), frame34, 0,7,2,1);
+
+    /* ---------- VR Setup - haptic ---------------------- */
+    auto label34 = addLabel("label34", "IP:");
+    auto entry8 = addEntry("entry8");
+    auto label35 = addLabel("label35", "type:");
+    auto combobox25 = addCombobox("combobox25", "liststore8");
+    auto label57 = addLabel("label57", "status:");
+    auto label63= addLabel("label63", "deamon");
+    auto label64 = addLabel("label64", "no");
+    auto label65 = addLabel("label65", "device");
+    auto label66 = addLabel("label66", "no");
+
+    gtk_grid_attach(GTK_GRID(table33), label34, 0,0,1,1);
+    gtk_grid_attach(GTK_GRID(table33), entry8, 1,0,1,1);
+    gtk_grid_attach(GTK_GRID(table33), label35, 0,1,1,1);
+    gtk_grid_attach(GTK_GRID(table33), combobox25, 1,1,1,1);
+    gtk_grid_attach(GTK_GRID(table33), label57, 0,2,2,1);
+    gtk_grid_attach(GTK_GRID(table33), label63, 0,3,1,1);
+    gtk_grid_attach(GTK_GRID(table33), label64, 1,3,1,1);
+    gtk_grid_attach(GTK_GRID(table33), label65, 0,4,1,1);
+    gtk_grid_attach(GTK_GRID(table33), label66, 1,4,1,1);
+
+    /* ---------- VR Setup - network node ---------------------- */
+    auto label125 = addLabel("label125", "address:");
+    auto entry15 = addEntry("entry15");
+    auto label130 = addLabel("label130", "status");
+    auto label128 = addLabel("label128", "ssh user:");
+    auto entry20 = addEntry("entry20");
+    auto label129 = addLabel("label129", "status");
+    auto button6 = addButton("button6", "distribute key");
+    auto label126 = addLabel("label126", "status");
+    auto button30 = addButton("button30", "stop slaves");
+    auto label108 = addLabel("label108", "root path:");
+    auto entry32 = addEntry("entry32");
+    auto label161 = addLabel("label161", "status");
+
+    gtk_grid_attach(GTK_GRID(table36), label125, 0,0,1,1);
+    gtk_grid_attach(GTK_GRID(table36), entry15, 1,0,1,1);
+    gtk_grid_attach(GTK_GRID(table36), label130, 2,0,1,1);
+    gtk_grid_attach(GTK_GRID(table36), label128, 0,1,1,1);
+    gtk_grid_attach(GTK_GRID(table36), entry20, 1,1,1,1);
+    gtk_grid_attach(GTK_GRID(table36), label129, 2,1,1,1);
+    gtk_grid_attach(GTK_GRID(table36), button6, 0,2,2,1);
+    gtk_grid_attach(GTK_GRID(table36), label126, 1,2,1,1);
+    gtk_grid_attach(GTK_GRID(table36), button30, 0,3,3,1);
+    gtk_grid_attach(GTK_GRID(table36), label108, 0,4,1,1);
+    gtk_grid_attach(GTK_GRID(table36), entry32, 1,4,1,1);
+    gtk_grid_attach(GTK_GRID(table36), label161, 2,4,1,1);
+
+    /* ---------- VR Setup - network slave ---------------------- */
+    auto label131 = addLabel("label131", "connection identifier:");
+    auto label138 = addLabel("label138", "NAME");
+    auto label132 = addLabel("label132", "status");
+    auto checkbutton42 = addCheckbutton("checkbutton42", "autostart");
+    auto button1 = addButton("button1", "start");
+    auto label136 = addLabel("label136", "status");
+
+    auto checkbutton41 = addCheckbutton("checkbutton41", "active stereo");
+    auto checkbutton29 = addCheckbutton("checkbutton29", "fullscreen");
+    auto label140 = addLabel("label140", "port: ");
+    auto entry22 = addEntry("entry22");
+
+    auto label139 = addLabel("label139", "Connection type:");
+    auto radiobutton10 = addRadiobutton("radiobutton10", "", 0);
+    auto radiobutton11 = addRadiobutton("radiobutton11", "", radiobutton10);
+    auto radiobutton12 = addRadiobutton("radiobutton12", "", radiobutton10);
+
+    auto label133 = addLabel("label133", "local display:");
+    auto entry19 = addEntry("entry19");
+    auto label173 = addLabel("label173", "startup delay: ");
+    auto entry37 = addEntry("entry37");
+
+    gtk_grid_attach(GTK_GRID(table37), label131, 0,0,1,1);
+    gtk_grid_attach(GTK_GRID(table37), label138, 1,0,2,1);
+    gtk_grid_attach(GTK_GRID(table37), label132, 3,0,1,1);
+
+    gtk_grid_attach(GTK_GRID(table37), checkbutton42, 0,1,1,1);
+    gtk_grid_attach(GTK_GRID(table37), button1, 1,1,2,1);
+    gtk_grid_attach(GTK_GRID(table37), label136, 3,1,1,1);
+
+    gtk_grid_attach(GTK_GRID(table37), checkbutton41, 0,2,1,1);
+    gtk_grid_attach(GTK_GRID(table37), checkbutton29, 1,2,1,1);
+    gtk_grid_attach(GTK_GRID(table37), label140, 2,2,1,1);
+    gtk_grid_attach(GTK_GRID(table37), entry22, 3,2,1,1);
+
+    gtk_grid_attach(GTK_GRID(table37), label139, 0,3,1,1);
+    gtk_grid_attach(GTK_GRID(table37), radiobutton10, 1,3,1,1);
+    gtk_grid_attach(GTK_GRID(table37), radiobutton11, 2,3,1,1);
+    gtk_grid_attach(GTK_GRID(table37), radiobutton12, 3,3,1,1);
+
+    gtk_grid_attach(GTK_GRID(table37), label133, 0,4,1,1);
+    gtk_grid_attach(GTK_GRID(table37), entry19, 1,4,1,1);
+    gtk_grid_attach(GTK_GRID(table37), label173, 2,4,1,1);
+    gtk_grid_attach(GTK_GRID(table37), entry37, 3,4,1,1);
+
+    /* ---------- VR Setup - scripts ---------------------- */
+    // TODO or deprecated?
+
+
+    /* ---------- VR Scene ---------------------- */
+    auto table14 = addGrid("table14");
+    auto scenegraph_tab = addGrid("scenegraph_tab");
+    auto table30 = addGrid("table30");
+    auto table4 = addGrid("table4");
+    auto table21 = addGrid("table21");
+    addNotebookPage(notebook3, table14, "Scripting");
+    addNotebookPage(notebook3, scenegraph_tab, "Scenegraph");
+    addNotebookPage(notebook3, table30, "General");
+    addNotebookPage(notebook3, table4, "Navigation");
+    addNotebookPage(notebook3, table21, "Semantics");
+
+    /* ---------- VR Scene -scripting ---------------------- */
+    auto toolbar3 = addToolbar("toolbar3", GTK_ICON_SIZE_LARGE_TOOLBAR, GTK_ORIENTATION_HORIZONTAL);
+    auto script_tree = gtk_tree_store_new(9, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_INT);
+    auto treeview5 = addTreeview("treeview5", "script_tree", GTK_TREE_MODEL(script_tree));
+    auto table15 = addGrid("table15");
+    gtk_grid_attach(GTK_GRID(table14), toolbar3, 0,0,2,1);
+    gtk_grid_attach(GTK_GRID(table14), treeview5, 0,1,1,1);
+    gtk_grid_attach(GTK_GRID(table14), table15, 1,1,1,1);
+
+    auto toolbutton6 = addToolButton("toolbutton6", "gtk-new", toolbar3);
+    auto toolbutton20 = addToolButton("toolbutton20", "gtk-indent", toolbar3);
+    auto toolbutton22 = addToolButton("toolbutton22", "gtk-open", toolbar3);
+    auto toolbutton9 = addToolButton("toolbutton9", "gtk-delete", toolbar3);
+    auto toolbutton7 = addToolButton("toolbutton7", "gtk-save", toolbar3);
+    auto toolbutton8 = addToolButton("toolbutton8", "gtk-execute", toolbar3);
+    auto toolbutton23 = addToolButton("toolbutton23", "gtk-find", toolbar3);
+    auto toolbutton16 = addToolButton("toolbutton16", "gtk-help", toolbar3);
+    auto toggletoolbutton1 = addToggleToolButton("toggletoolbutton1", "gtk-sort-ascending", toolbar3);
+    auto toggletoolbutton2 = addToggleToolButton("toggletoolbutton2", "gtk-media-pause", toolbar3);
+
+
+    GtkTreeViewColumn* treeviewcolumn14 = gtk_tree_view_column_new();
+    gtk_tree_view_column_set_title(treeviewcolumn14, "Script");
+    auto cellrenderertext13 = addCellrenderer("cellrenderertext13", treeviewcolumn14);
+    auto cellrenderertext45 = addCellrenderer("cellrenderertext45", treeviewcolumn14);
+    auto cellrendererpixbuf2 = addImgCellrenderer("cellrendererpixbuf2", treeviewcolumn14);
+    auto cellrenderertext47 = addCellrenderer("cellrenderertext47", treeviewcolumn14);
+    gtk_tree_view_column_add_attribute(treeviewcolumn14, cellrenderertext13, "text", 0);
+    gtk_tree_view_column_add_attribute(treeviewcolumn14, cellrenderertext45, "text", 3);
+    gtk_tree_view_column_add_attribute(treeviewcolumn14, cellrendererpixbuf2, "stock-id", 6);
+    gtk_tree_view_column_add_attribute(treeviewcolumn14, cellrenderertext47, "text", 7);
+    gtk_tree_view_append_column(GTK_TREE_VIEW(treeview5), treeviewcolumn14);
+
+    auto expander19 = addExpander("expander19", "Options");
+    auto expander17 = addExpander("expander17", "Triggers");
+    auto expander18 = addExpander("expander18", "Arguments");
+    auto scrolledwindow4 = addScrolledWindow("scrolledwindow4");
+    gtk_grid_attach(GTK_GRID(table15), expander19, 0,0,2,1);
+    gtk_grid_attach(GTK_GRID(table15), expander17, 0,1,2,1);
+    gtk_grid_attach(GTK_GRID(table15), expander18, 0,2,2,1);
+    gtk_grid_attach(GTK_GRID(table15), scrolledwindow4, 0,3,2,1);
+
+    auto table32 = addGrid("table32");
+    auto label32 = addLabel("label32", "Type:");
+    auto combobox1 = addCombobox("combobox1", "liststore6");
+    auto label148 = addLabel("label148", "Group:");
+    auto combobox10 = addCombobox("combobox10", "liststore10");
+    auto label33 = addLabel("label33", "Server:");
+    auto combobox24 = addCombobox("combobox24", "liststore7");
+    gtk_container_add(GTK_CONTAINER(expander19), table32);
+    gtk_grid_attach(GTK_GRID(table32), label32, 0,0,1,1);
+    gtk_grid_attach(GTK_GRID(table32), combobox1, 1,0,1,1);
+    gtk_grid_attach(GTK_GRID(table32), label148, 0,1,1,1);
+    gtk_grid_attach(GTK_GRID(table32), combobox10, 1,1,1,1);
+    gtk_grid_attach(GTK_GRID(table32), label33, 0,2,1,1);
+    gtk_grid_attach(GTK_GRID(table32), combobox24, 1,2,1,1);
+
+    auto hbox3 = addGrid("hbox3");
+    auto triggers = gtk_list_store_new(7, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_POINTER, G_TYPE_STRING);
+    auto treeview14 = addTreeview("treeview14", "triggers", GTK_TREE_MODEL(triggers));
+    auto button23 = addImgButton("button23", "gtk-add");
+    auto button24 = addImgButton("button24", "gtk-remove");
+    gtk_container_add(GTK_CONTAINER(expander17), hbox3);
+    gtk_grid_attach(GTK_GRID(hbox3), treeview14, 0,0,1,2);
+    gtk_grid_attach(GTK_GRID(hbox3), button23, 1,0,1,1);
+    gtk_grid_attach(GTK_GRID(hbox3), button24, 1,1,1,1);
+    gtk_widget_set_hexpand(treeview14, true);
+
+    auto treeviewcolumn27 = addTreecolumn("treeviewcolumn27", "Trigger");
+    auto treeviewcolumn28 = addTreecolumn("treeviewcolumn28", "Device");
+    auto treeviewcolumn32 = addTreecolumn("treeviewcolumn32", " ");
+    auto treeviewcolumn30 = addTreecolumn("treeviewcolumn30", "State");
+    auto treeviewcolumn32cr = addImgCellrenderer("treeviewcolumn32cr", treeviewcolumn32);
+    setStringProperty((GtkWidget*)treeviewcolumn32cr, "stock_id", "gtk-index");
+
+    gtk_tree_view_append_column(GTK_TREE_VIEW(treeview14), treeviewcolumn27);
+    addTreeviewTextcolumn(treeview14, "Parameter", "cellrenderertext16", 4);
+    gtk_tree_view_append_column(GTK_TREE_VIEW(treeview14), treeviewcolumn28);
+    addTreeviewTextcolumn(treeview14, "Key", "cellrenderertext41", 2);
+    gtk_tree_view_append_column(GTK_TREE_VIEW(treeview14), treeviewcolumn32);
+    gtk_tree_view_append_column(GTK_TREE_VIEW(treeview14), treeviewcolumn30);
+
+    auto hbox13 = addGrid("hbox13");
+    auto liststore2 = gtk_list_store_new(4, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_POINTER, G_TYPE_STRING);
+    auto treeview7 = addTreeview("treeview7", "liststore2", GTK_TREE_MODEL(liststore2));
+    auto button12 = addImgButton("button12", "gtk-add");
+    auto button13 = addImgButton("button13", "gtk-remove");
+    gtk_container_add(GTK_CONTAINER(expander18), hbox13);
+    gtk_grid_attach(GTK_GRID(hbox13), treeview7, 0,0,1,2);
+    gtk_grid_attach(GTK_GRID(hbox13), button12, 1,0,1,1);
+    gtk_grid_attach(GTK_GRID(hbox13), button13, 1,1,1,1);
+    gtk_widget_set_hexpand(treeview7, true);
 }
 
 

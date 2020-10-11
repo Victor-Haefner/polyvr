@@ -163,6 +163,7 @@ void VRScene::setActiveCamera(string camname) {
     //printBacktrace();
     setMActiveCamera(camname);
     auto setup = VRSetup::getCurrent();
+    if (!setup) return;
 
     // TODO: refactor the following workaround
     VRCameraPtr cam = getActiveCamera();

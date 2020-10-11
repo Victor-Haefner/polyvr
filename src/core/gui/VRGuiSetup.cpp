@@ -1223,12 +1223,12 @@ VRGuiSetup::VRGuiSetup() {
     setToolButtonCallback("toolbutton11", bind( &VRGuiSetup::on_del_clicked, this) );
     setToolButtonCallback("toolbutton12", bind( &VRGuiSetup::on_save_clicked, this) );
     setToolButtonCallback("toolbutton19", bind( &VRGuiSetup::on_foto_clicked, this) );
-    setToolButtonCallback("toolbutton27", bind( &VRGuiSetup::on_script_save_clicked, this) );
-    setToolButtonCallback("toolbutton26", bind( &VRGuiSetup::on_script_exec_clicked, this) );
+    //setToolButtonCallback("toolbutton27", bind( &VRGuiSetup::on_script_save_clicked, this) );
+    //setToolButtonCallback("toolbutton26", bind( &VRGuiSetup::on_script_exec_clicked, this) );
 
-    setRadioToolButtonCallback("radiotoolbutton1", bind( &VRGuiSetup::on_script_trigger_switched, this) );
-    setRadioToolButtonCallback("radiotoolbutton2", bind( &VRGuiSetup::on_script_trigger_switched, this) );
-    setRadioToolButtonCallback("radiotoolbutton3", bind( &VRGuiSetup::on_script_trigger_switched, this) );
+    //setRadioToolButtonCallback("radiotoolbutton1", bind( &VRGuiSetup::on_script_trigger_switched, this) );
+    //setRadioToolButtonCallback("radiotoolbutton2", bind( &VRGuiSetup::on_script_trigger_switched, this) );
+    //setRadioToolButtonCallback("radiotoolbutton3", bind( &VRGuiSetup::on_script_trigger_switched, this) );
 
 #ifndef WITHOUT_ART
     artAxis.init("art_axis", "Axis", bind( &VRGuiSetup::on_art_edit_axis, this, PL::_1));
@@ -1348,13 +1348,12 @@ VRGuiSetup::VRGuiSetup() {
     setToggleButtonCallback("checkbutton42", bind( &VRGuiSetup::on_netslave_edited, this));
 
 
-    editor = shared_ptr<VRGuiEditor>( new VRGuiEditor("scrolledwindow12") );
-    connect_signal<void>(editor->getSourceBuffer(), bind( &VRGuiSetup::on_script_changed, this), "changed");
+    //editor = shared_ptr<VRGuiEditor>( new VRGuiEditor("scrolledwindow12") );
+    //connect_signal<void>(editor->getSourceBuffer(), bind( &VRGuiSetup::on_script_changed, this), "changed");
 
     // primitive list
     fillStringListstore("prim_list", VRPrimitive::getTypes());
 
-    setWidgetSensitivity("table2", false);
     setWidgetSensitivity("table7", false);
     setWidgetSensitivity("table8", false);
 
@@ -1422,7 +1421,7 @@ void VRGuiSetup::updateStatus() {
 }
 
 void VRGuiSetup::updateSetup() {
-    auto tree_store = (GtkTreeStore*)VRGuiBuilder::get()->get_widget("setupTree");
+    auto tree_store = (GtkTreeStore*)VRGuiBuilder::get()->get_object("setupTree");
     gtk_tree_store_clear(tree_store);
 
     GtkTreeIter network_itr, windows_itr, devices_itr, art_itr, vrpn_itr, scripts_itr;

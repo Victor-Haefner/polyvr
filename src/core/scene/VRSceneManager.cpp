@@ -63,7 +63,7 @@ VRSceneManagerPtr VRSceneManager::create() { return VRSceneManagerPtr( new VRSce
 
 VRSceneManager* VRSceneManager::get() {
     if (main_instance == 0) cout << " -- Warning! VRSceneManager::get called during shutdown!" << endl;
-    return main_instance; 
+    return main_instance;
 }
 
 void VRSceneManager::loadScene(string path, bool write_protected, string encryptionKey) {
@@ -179,7 +179,8 @@ void VRSceneManager::setScene(VRScenePtr scene) {
 	cout << "VRSceneManager::setScene " << scene << endl;
     if (!scene) return;
     current = scene;
-    VRSetup::getCurrent()->setScene(scene);
+    auto setup = VRSetup::getCurrent();
+    if (setup) setup->setScene(scene);
     scene->setActiveCamera();
     VRProfiler::get()->setActive(true);
 
@@ -257,7 +258,7 @@ void VRSceneManager::updateSceneThread(VRThreadWeakPtr tw) {
 
 void VRSceneManager::updateScene() {
     if (!current) return;
-    VRSetup::getCurrent()->updateActivatedSignals();
+    if (auto setup = VRSetup::getCurrent()) setup->updateActivatedSignals();
     current->update();
 }
 

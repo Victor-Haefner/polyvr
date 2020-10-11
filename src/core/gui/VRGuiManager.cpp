@@ -55,7 +55,7 @@ void addSchemaPath(string p) {
 }
 
 VRGuiManager::VRGuiManager() {
-    cout << "Init VRGuiManager..";
+    cout << "Init VRGuiManager.." << endl;
     mtx = new boost::recursive_mutex();
     standalone = VROptions::get()->getOption<bool>("standalone");
 
@@ -86,43 +86,44 @@ VRGuiManager::VRGuiManager() {
     g_demos = new VRAppManager();
     g_bits = new VRGuiBits();
     g_mon = new VRGuiMonitor();
-    /*g_scene = new VRGuiScene();
-    g_nav = new VRGuiNav();
     g_sc = new VRGuiScripts();
-    g_sem = new VRGuiSemantics();
+    //g_scene = new VRGuiScene();
+    //g_nav = new VRGuiNav();
+    //g_sem = new VRGuiSemantics();
     g_di = new VRGuiSetup();
-    g_gen = new VRGuiGeneral();
-    g_scene->updateTreeView();
+    //g_gen = new VRGuiGeneral();
+    //g_scene->updateTreeView();
+
+    VRDeviceCbPtr fkt;
 
     auto editor = g_sc->getEditor();
     editor->addKeyBinding("wipe", VRUpdateCb::create("wipeCb", bind(&VRGuiBits::wipeConsoles, g_bits)));
 
-    VRDeviceCbPtr fkt;
-    fkt = VRFunction<VRDeviceWeakPtr>::create("GUI_updateSceneViewer", bind(&VRGuiScene::updateTreeView, g_scene) );
+    /*fkt = VRFunction<VRDeviceWeakPtr>::create("GUI_updateSceneViewer", bind(&VRGuiScene::updateTreeView, g_scene) );
     VRGuiSignals::get()->getSignal("scene_modified")->add( fkt );
     VRGuiSignals::get()->getSignal("scene_changed")->add( fkt );
     VRGuiSignals::get()->getSignal("camera_changed")->add(fkt);
-    guiSignalCbs.push_back(fkt);
+    guiSignalCbs.push_back(fkt);*/
 
     fkt = VRFunction<VRDeviceWeakPtr>::create("GUI_updateBits", bind(&VRGuiBits::update, g_bits) );
     VRGuiSignals::get()->getSignal("scene_changed")->add( fkt );
     VRGuiSignals::get()->getSignal("camera_added")->add( fkt );
     guiSignalCbs.push_back(fkt);
 
-    fkt = VRFunction<VRDeviceWeakPtr>::create("GUI_updateNav", bind(&VRGuiNav::update, g_nav) );
+    /*fkt = VRFunction<VRDeviceWeakPtr>::create("GUI_updateNav", bind(&VRGuiNav::update, g_nav) );
     VRGuiSignals::get()->getSignal("scene_changed")->add( fkt );
     guiSignalCbs.push_back(fkt);
 
     fkt = VRFunction<VRDeviceWeakPtr>::create("GUI_updateSem", bind(&VRGuiSemantics::updateOntoList, g_sem) );
     VRGuiSignals::get()->getSignal("scene_changed")->add( fkt );
-    guiSignalCbs.push_back(fkt);
+    guiSignalCbs.push_back(fkt);*/
 
     fkt = VRFunction<VRDeviceWeakPtr>::create("GUI_updateScripts", bind(&VRGuiScripts::updateList, g_sc) );
     VRGuiSignals::get()->getSignal("scene_changed")->add( fkt );
     VRGuiSignals::get()->getSignal("scriptlist_changed")->add( fkt );
     guiSignalCbs.push_back(fkt);
 
-    fkt = VRFunction<VRDeviceWeakPtr>::create("GUI_updateBackground", bind(&VRGuiGeneral::updateScene, g_gen) );
+    /*fkt = VRFunction<VRDeviceWeakPtr>::create("GUI_updateBackground", bind(&VRGuiGeneral::updateScene, g_gen) );
     VRGuiSignals::get()->getSignal("scene_changed")->add( fkt );
     guiSignalCbs.push_back(fkt);
 

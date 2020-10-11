@@ -61,7 +61,7 @@ void setWidgetVisibility(string table, bool b) {
 }
 
 void setCombobox(string n, int i) {
-    GtkComboBox* cb = (GtkComboBox*)VRGuiBuilder::get()->get_widget(n);
+    GtkComboBox* cb = GTK_COMBO_BOX(VRGuiBuilder::get()->get_widget(n));
     gtk_combo_box_set_active(cb, i);
 }
 
@@ -500,8 +500,13 @@ GtkImage* loadGTKIcon(GtkImage* img, string path, int w, int h) {
         return img;
     }
     if (img == 0) img = (GtkImage*)gtk_image_new();
-    gtk_image_set_from_file(img, path.c_str());
-    gtk_widget_set_size_request((GtkWidget*)img, w, h);
+    auto pbuf = gdk_pixbuf_new_from_file(path.c_str(), 0);
+    int W = gdk_pixbuf_get_width(pbuf);
+    int H = gdk_pixbuf_get_height(pbuf);
+    int Ox = floor((W-w)*0.5);
+    int Oy = floor((H-h)*0.5);
+    auto pbuf2 = gdk_pixbuf_new_subpixbuf(pbuf, max(0,Ox), max(0,Oy), min(w,W), min(h,H));
+    gtk_image_set_from_pixbuf(img, pbuf2);
     return img;
 }
 
