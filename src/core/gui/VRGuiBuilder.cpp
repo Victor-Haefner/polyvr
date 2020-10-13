@@ -137,6 +137,12 @@ GtkWidget* addLabel(string ID, string label) {
     return p;
 }
 
+GtkWidget* addScale(string ID, float min, float max, float step) {
+    auto p = gtk_scale_new_with_range(GTK_ORIENTATION_HORIZONTAL, min, max, step);
+    VRGuiBuilder::get()->reg_widget(p, ID);
+    return p;
+}
+
 GtkWidget* addFixed(string ID) {
     auto p = gtk_fixed_new();
     VRGuiBuilder::get()->reg_widget(p, ID);
@@ -1233,6 +1239,91 @@ void VRGuiBuilder::buildBaseUI() {
     VRGuiBuilder::reg_object(G_OBJECT(binding_types), "binding_types");
     auto prim_list = gtk_list_store_new(1, G_TYPE_STRING);
     VRGuiBuilder::reg_object(G_OBJECT(binding_callbacks), "prim_list");
+
+    /* ---------- VR Scene - general ---------------------- */
+    auto label87 = addLabel("label87", "Background:");
+    auto bg_solid = addDrawingArea("bg_solid");
+    auto radiobutton3 = addRadiobutton("radiobutton3", "Solid", 0);
+    auto radiobutton4 = addRadiobutton("radiobutton4", "Image", radiobutton3);
+    auto radiobutton5 = addRadiobutton("radiobutton5", "Skybox", radiobutton3);
+    auto radiobutton18 = addRadiobutton("radiobutton18", "Sky", radiobutton3);
+    auto label88 = addLabel("label88", "Path:");
+    auto entry42 = addEntry("entry42");
+    auto entry14 = addEntry("entry14");
+    auto button18 = addImgButton("button18", "gtk-directory");
+    auto label_2 = addLabel("label_2", "Physics:");
+
+    gtk_grid_attach(GTK_GRID(table30), label87, 0,0,2,1);
+    gtk_grid_attach(GTK_GRID(table30), bg_solid, 1,0,2,1);
+    gtk_grid_attach(GTK_GRID(table30), radiobutton3, 0,1,1,1);
+    gtk_grid_attach(GTK_GRID(table30), radiobutton4, 1,1,1,1);
+    gtk_grid_attach(GTK_GRID(table30), radiobutton5, 2,1,1,1);
+    gtk_grid_attach(GTK_GRID(table30), radiobutton18, 3,1,1,1);
+    gtk_grid_attach(GTK_GRID(table30), label88, 0,2,1,1);
+    gtk_grid_attach(GTK_GRID(table30), entry42, 1,2,1,1);
+    gtk_grid_attach(GTK_GRID(table30), entry14, 2,2,1,1);
+    gtk_grid_attach(GTK_GRID(table30), button18, 3,2,1,1);
+    gtk_grid_attach(GTK_GRID(table30), label_2, 0,3,4,1);
+
+    auto checkbutton_1 = addCheckbutton("checkbutton_1", "Gravity:");
+    auto entry43 = addEntry("entry43");
+    auto entry47 = addEntry("entry47");
+    auto entry58 = addEntry("entry58");
+    auto label_01 = addLabel("label_01", "Rendering:");
+    auto checkbutton_01 = addCheckbutton("checkbutton_01", "Frustum culling:");
+    auto checkbutton_02 = addCheckbutton("checkbutton_02", "Occlusion culling:");
+    auto checkbutton_2 = addCheckbutton("checkbutton_2", "Two sided:");
+    auto checkbutton_3 = addCheckbutton("checkbutton_3", "Deferred rendering:");
+    auto hbuttonbox7 = addGrid("hbuttonbox7");
+    auto radiobutton13 = addRadiobutton("radiobutton13", "rendered", 0);
+    auto radiobutton14 = addRadiobutton("radiobutton14", "positions", radiobutton13);
+    auto radiobutton15 = addRadiobutton("radiobutton15", "normals", radiobutton13);
+    auto radiobutton16 = addRadiobutton("radiobutton16", "diffuse", radiobutton13);
+    auto radiobutton17 = addRadiobutton("radiobutton17", "ambient", radiobutton13);
+
+    gtk_grid_attach(GTK_GRID(table30), checkbutton_1, 0,4,1,1);
+    gtk_grid_attach(GTK_GRID(table30), entry43, 1,4,1,1);
+    gtk_grid_attach(GTK_GRID(table30), entry47, 2,4,1,1);
+    gtk_grid_attach(GTK_GRID(table30), entry58, 3,4,1,1);
+    gtk_grid_attach(GTK_GRID(table30), label_01, 0,6,4,1);
+    gtk_grid_attach(GTK_GRID(table30), checkbutton_01, 0,7,2,1);
+    gtk_grid_attach(GTK_GRID(table30), checkbutton_02, 2,7,2,1);
+    gtk_grid_attach(GTK_GRID(table30), checkbutton_2, 0,8,2,1);
+    gtk_grid_attach(GTK_GRID(table30), checkbutton_3, 2,8,2,1);
+    gtk_grid_attach(GTK_GRID(table30), hbuttonbox7, 0,9,4,1);
+    gtk_grid_attach(GTK_GRID(hbuttonbox7), radiobutton13, 0,0,1,1);
+    gtk_grid_attach(GTK_GRID(hbuttonbox7), radiobutton14, 1,0,1,1);
+    gtk_grid_attach(GTK_GRID(hbuttonbox7), radiobutton15, 2,0,1,1);
+    gtk_grid_attach(GTK_GRID(hbuttonbox7), radiobutton16, 3,0,1,1);
+    gtk_grid_attach(GTK_GRID(hbuttonbox7), radiobutton17, 4,0,1,1);
+
+    auto checkbutton_4 = addCheckbutton("checkbutton_4", "SSAO:");
+    auto label121 = addLabel("label121", "radius:");
+    auto hscale1 = addScale("hscale1", 0, 1, 0.01);
+    auto label122 = addLabel("label122", "kernel:");
+    auto hscale2 = addScale("hscale2", 0, 32, 1);
+    auto label123 = addLabel("label123", "noise:");
+    auto hscale3 = addScale("hscale3", 0, 32, 1);
+    auto checkbutton_5 = addCheckbutton("checkbutton_5", "Calibration screen");
+    auto checkbutton_7 = addCheckbutton("checkbutton_7", "Marker");
+    auto checkbutton_6 = addCheckbutton("checkbutton_6", "HMD distortion");
+    auto checkbutton_8 = addCheckbutton("checkbutton_8", "FXAA");
+    auto label_1 = addLabel("label_1", "Export OSG:");
+    auto button22 = addButton("button22", "dump");
+
+    gtk_grid_attach(GTK_GRID(table30), checkbutton_4, 0,10,4,1);
+    gtk_grid_attach(GTK_GRID(table30), label121, 0,11,2,1);
+    gtk_grid_attach(GTK_GRID(table30), hscale1, 2,11,2,1);
+    gtk_grid_attach(GTK_GRID(table30), label122, 0,12,2,1);
+    gtk_grid_attach(GTK_GRID(table30), hscale2, 2,12,2,1);
+    gtk_grid_attach(GTK_GRID(table30), label123, 0,13,2,1);
+    gtk_grid_attach(GTK_GRID(table30), hscale3, 2,13,2,1);
+    gtk_grid_attach(GTK_GRID(table30), checkbutton_5, 0,14,2,1);
+    gtk_grid_attach(GTK_GRID(table30), checkbutton_7, 2,14,2,1);
+    gtk_grid_attach(GTK_GRID(table30), checkbutton_6, 0,15,2,1);
+    gtk_grid_attach(GTK_GRID(table30), checkbutton_8, 2,15,2,1);
+    gtk_grid_attach(GTK_GRID(table30), label_1, 0,16,2,1);
+    gtk_grid_attach(GTK_GRID(table30), button22, 2,16,2,1);
 }
 
 

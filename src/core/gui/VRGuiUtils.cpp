@@ -85,7 +85,7 @@ void setCellRendererCallback(string b, function<void(gchar*, gchar*)> sig, bool 
 void setNoteBookCallback(string b, function<void(GtkWidget*, guint)> sig) { setupCallback(b, sig, "switch-page", true); }
 
 void setColorChooser(string drawable, function<void(GdkEventButton*)> sig) {
-    GtkDrawingArea* darea = (GtkDrawingArea*)VRGuiBuilder::get()->get_object(drawable);
+    GtkDrawingArea* darea = (GtkDrawingArea*)VRGuiBuilder::get()->get_widget(drawable);
     gtk_widget_add_events((GtkWidget*)darea, (GdkEventMask)GDK_BUTTON_PRESS_MASK);
     gtk_widget_add_events((GtkWidget*)darea, (GdkEventMask)GDK_BUTTON_RELEASE_MASK);
     connect_signal((GtkWidget*)darea, sig, "button_release_event");
@@ -293,7 +293,7 @@ string askUserPass(string msg) {
 }
 
 OSG::Color4f chooseColor(string drawable, OSG::Color4f current) {
-    GtkDrawingArea* darea = (GtkDrawingArea*)VRGuiBuilder::get()->get_object(drawable);
+    GtkDrawingArea* darea = (GtkDrawingArea*)VRGuiBuilder::get()->get_widget(drawable);
     GtkColorSelectionDialog* cdiag = (GtkColorSelectionDialog*)gtk_color_selection_dialog_new("");
     gtk_window_set_deletable((GtkWindow*)cdiag, false);
 
@@ -333,7 +333,7 @@ void setColorChooserColor(string drawable, OSG::Color3f col) {
     c.green = col[1]*65535;
     c.blue = col[2]*65535;
 
-    GtkDrawingArea* darea = (GtkDrawingArea*)VRGuiBuilder::get()->get_object(drawable);
+    GtkDrawingArea* darea = (GtkDrawingArea*)VRGuiBuilder::get()->get_widget(drawable);
     gtk_widget_modify_bg((GtkWidget*)darea, GTK_STATE_NORMAL, &c);
 }
 

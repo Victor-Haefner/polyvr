@@ -91,7 +91,7 @@ VRGuiManager::VRGuiManager() {
     g_nav = new VRGuiNav();
     //g_sem = new VRGuiSemantics();
     g_di = new VRGuiSetup();
-    //g_gen = new VRGuiGeneral();
+    g_gen = new VRGuiGeneral();
     //g_scene->updateTreeView();
 
 
@@ -124,9 +124,9 @@ VRGuiManager::VRGuiManager() {
     VRGuiSignals::get()->getSignal("scriptlist_changed")->add( fkt );
     guiSignalCbs.push_back(fkt);
 
-    /*fkt = VRFunction<VRDeviceWeakPtr>::create("GUI_updateBackground", bind(&VRGuiGeneral::updateScene, g_gen) );
+    fkt = VRFunction<VRDeviceWeakPtr>::create("GUI_updateBackground", bind(&VRGuiGeneral::updateScene, g_gen) );
     VRGuiSignals::get()->getSignal("scene_changed")->add( fkt );
-    guiSignalCbs.push_back(fkt);*/
+    guiSignalCbs.push_back(fkt);
 
     updatePtr = VRUpdateCb::create("GUI_updateManager", bind(&VRGuiManager::update, this) );
     VRSceneManager::get()->addUpdateFkt(updatePtr, 1);
