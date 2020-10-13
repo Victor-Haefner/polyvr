@@ -18,7 +18,7 @@ VRGuiTreeView::~VRGuiTreeView() {
 }
 
 void VRGuiTreeView::init(_GtkWidget* widget) {
-    tree_view = (GtkTreeView*)widget;
+    tree_view = GTK_TREE_VIEW(widget);
     tree_model = (GtkTreeModel*)gtk_tree_view_get_model(tree_view);
     selection = new GtkTreeIter();
 }

@@ -1026,10 +1026,10 @@ void VRGuiBuilder::buildBaseUI() {
     auto table30 = addGrid("table30");
     auto table4 = addGrid("table4");
     auto table21 = addGrid("table21");
-    addNotebookPage(notebook3, table14, "Scripting");
-    addNotebookPage(notebook3, scenegraph_tab, "Scenegraph");
     addNotebookPage(notebook3, table30, "General");
+    addNotebookPage(notebook3, scenegraph_tab, "Scenegraph");
     addNotebookPage(notebook3, table4, "Navigation");
+    addNotebookPage(notebook3, table14, "Scripting");
     addNotebookPage(notebook3, table21, "Semantics");
 
     /* ---------- VR Scene -scripting ---------------------- */

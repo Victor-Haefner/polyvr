@@ -803,7 +803,7 @@ void VRGuiScripts::focusScript(string name, int line, int column) {
     setNotebookPage("notebook3", 3);
 
     auto store = (GtkTreeStore*)VRGuiBuilder::get()->get_object("script_tree");
-    auto tree_view = (GtkTreeView*)VRGuiBuilder::get()->get_object("treeview5");
+    auto tree_view = (GtkTreeView*)VRGuiBuilder::get()->get_widget("treeview5");
 
     auto selectScript = [&](GtkTreeIter* itr) {
         string n = VRGuiTreeView((GtkWidget*)tree_view).getStringValue(itr, 0);
