@@ -69,7 +69,7 @@ VRGuiManager::VRGuiManager() {
     //gtk_gl_init(&argc, NULL);
     VRGuiBuilder::get(standalone);
 
-    /*if (standalone) {
+    if (standalone) {
         cout << " start in standalone mode\n";
         VRSetupManager::get()->load("Desktop", "setup/Desktop.xml");
 
@@ -80,7 +80,7 @@ VRGuiManager::VRGuiManager() {
         gtk_window_maximize(top);
         gtk_widget_show_all((GtkWidget*)top);
         return;
-    }*/
+    }
 
     //gtk_rc_parse("gui/gtkrc");
     g_demos = new VRAppManager();
@@ -88,11 +88,12 @@ VRGuiManager::VRGuiManager() {
     g_mon = new VRGuiMonitor();
     g_sc = new VRGuiScripts();
     //g_scene = new VRGuiScene();
-    //g_nav = new VRGuiNav();
+    g_nav = new VRGuiNav();
     //g_sem = new VRGuiSemantics();
     g_di = new VRGuiSetup();
     //g_gen = new VRGuiGeneral();
     //g_scene->updateTreeView();
+
 
     VRDeviceCbPtr fkt;
 
@@ -110,11 +111,11 @@ VRGuiManager::VRGuiManager() {
     VRGuiSignals::get()->getSignal("camera_added")->add( fkt );
     guiSignalCbs.push_back(fkt);
 
-    /*fkt = VRFunction<VRDeviceWeakPtr>::create("GUI_updateNav", bind(&VRGuiNav::update, g_nav) );
+    fkt = VRFunction<VRDeviceWeakPtr>::create("GUI_updateNav", bind(&VRGuiNav::update, g_nav) );
     VRGuiSignals::get()->getSignal("scene_changed")->add( fkt );
     guiSignalCbs.push_back(fkt);
 
-    fkt = VRFunction<VRDeviceWeakPtr>::create("GUI_updateSem", bind(&VRGuiSemantics::updateOntoList, g_sem) );
+    /*fkt = VRFunction<VRDeviceWeakPtr>::create("GUI_updateSem", bind(&VRGuiSemantics::updateOntoList, g_sem) );
     VRGuiSignals::get()->getSignal("scene_changed")->add( fkt );
     guiSignalCbs.push_back(fkt);*/
 
@@ -125,10 +126,10 @@ VRGuiManager::VRGuiManager() {
 
     /*fkt = VRFunction<VRDeviceWeakPtr>::create("GUI_updateBackground", bind(&VRGuiGeneral::updateScene, g_gen) );
     VRGuiSignals::get()->getSignal("scene_changed")->add( fkt );
-    guiSignalCbs.push_back(fkt);
+    guiSignalCbs.push_back(fkt);*/
 
     updatePtr = VRUpdateCb::create("GUI_updateManager", bind(&VRGuiManager::update, this) );
-    VRSceneManager::get()->addUpdateFkt(updatePtr, 1);*/
+    VRSceneManager::get()->addUpdateFkt(updatePtr, 1);
 
     GtkWindow* top = (GtkWindow*)VRGuiBuilder::get()->get_widget("window1");
     gtk_window_maximize(top);
@@ -183,7 +184,7 @@ void VRGuiManager::wakeWindow() {
 }
 
 VRConsoleWidgetPtr VRGuiManager::getConsole(string t) {
-    if (standalone) return 0;
+    if (standalone || !g_bits) return 0;
     return g_bits->getConsole(t);
 }
 
@@ -197,8 +198,8 @@ void VRGuiManager::updateGtkThreaded(VRThreadWeakPtr t) {
 }
 
 void VRGuiManager::update() {
-    g_scene->update();
-    if (!standalone) g_bits->update_terminals();
+    if (g_scene) g_scene->update();
+    if (!standalone && g_bits) g_bits->update_terminals();
 }
 
 GtkWindow* VRGuiManager::newWindow() {

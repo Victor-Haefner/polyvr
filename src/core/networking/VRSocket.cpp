@@ -141,18 +141,18 @@ class HTTPServer {
         }
 
         void close() {
-            cout << "  HTTPServer::close" << endl;
+            //cout << "  HTTPServer::close" << endl;
             if (server) {
-                cout << "   HTTPServer::close stop thread " << threadID << endl;
+                //cout << "   HTTPServer::close stop thread " << threadID << endl;
                 auto sm = VRSceneManager::get();
                 if (sm) sm->stopThread(threadID);
-                cout << "   HTTPServer::close mg_mgr_free server" << endl;
+                //cout << "   HTTPServer::close mg_mgr_free server" << endl;
                 mg_mgr_free(server);
-                cout << "   HTTPServer::close delete server" << endl;
+                //cout << "   HTTPServer::close delete server" << endl;
                 delete server;
             }
             server = 0;
-            cout << "   HTTPServer::close done" << endl;
+            //cout << "   HTTPServer::close done" << endl;
         }
 
         void websocket_send(int id, string message) {

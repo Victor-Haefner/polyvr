@@ -1347,7 +1347,6 @@ VRGuiSetup::VRGuiSetup() {
     setToggleButtonCallback("checkbutton41", bind( &VRGuiSetup::on_netslave_edited, this));
     setToggleButtonCallback("checkbutton42", bind( &VRGuiSetup::on_netslave_edited, this));
 
-
     //editor = shared_ptr<VRGuiEditor>( new VRGuiEditor("scrolledwindow12") );
     //connect_signal<void>(editor->getSourceBuffer(), bind( &VRGuiSetup::on_script_changed, this), "changed");
 
@@ -1360,6 +1359,7 @@ VRGuiSetup::VRGuiSetup() {
     updateSetupCb = VRFunction<VRDeviceWeakPtr>::create("update gui setup", bind(&VRGuiSetup::updateSetup, this) );
 
     guard = false;
+
     updateSetupList();
     updateSetup();
 }

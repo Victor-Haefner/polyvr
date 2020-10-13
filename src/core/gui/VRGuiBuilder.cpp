@@ -2,6 +2,7 @@
 
 #include "VRGuiBuilder.h"
 #include "VRGuiFile.h"
+#include "core/utils/system/VRSystem.h"
 
 #include <iostream>
 
@@ -50,6 +51,9 @@ void VRGuiBuilder::read(string path) {
 void VRGuiBuilder::reg_widget(_GtkWidget* w, string name) { widgets[name] = w; }
 void VRGuiBuilder::reg_object(_GtkObject* o, string name) { objects[name] = o; }
 
+bool VRGuiBuilder::has_object(string name) { return objects.count(name); }
+bool VRGuiBuilder::has_widget(string name) { return widgets.count(name); }
+
 GtkWidget* VRGuiBuilder::get_widget(string name) {
     /*auto w = (GtkWidget*)gtk_builder_get_object(builder, name.c_str());
     if (!w) cout << " Error in VRGuiBuilder::get_widget, no widget called " << name << endl;
@@ -57,7 +61,8 @@ GtkWidget* VRGuiBuilder::get_widget(string name) {
 
     if (widgets.count(name)) return widgets[name];
     else {
-        cout << " Error in VRGuiBuilder::get_widget, no object called " << name << endl;
+        cout << " ! --------------------- Error in VRGuiBuilder::get_widget, no object called " << name << endl;
+        printBacktrace();
         return 0;
     }
 }
@@ -69,7 +74,8 @@ _GtkObject* VRGuiBuilder::get_object(string name) {
 
     if (objects.count(name)) return objects[name];
     else {
-        cout << " Error in VRGuiBuilder::get_object, no object called " << name << endl;
+        cout << " ! --------------------- Error in VRGuiBuilder::get_object, no object called " << name << endl;
+        printBacktrace();
         return 0;
     }
 }
@@ -214,8 +220,11 @@ GtkWidget* addDrawingArea(string ID) {
 }
 
 GtkWidget* addCombobox(string ID, string mID) {
-    auto m = gtk_list_store_new(1, G_TYPE_STRING);
-    auto n = gtk_combo_box_new_with_model_and_entry(GTK_TREE_MODEL(m));
+    GtkTreeModel* m = 0;
+    if (VRGuiBuilder::get()->has_object(mID)) m = GTK_TREE_MODEL(VRGuiBuilder::get()->get_object(mID));
+    else m = GTK_TREE_MODEL(gtk_list_store_new(1, G_TYPE_STRING, -1));
+
+    auto n = gtk_combo_box_new_with_model_and_entry(m);
     //auto r = gtk_cell_renderer_text_new();
     gtk_combo_box_set_id_column(GTK_COMBO_BOX(n), 0);
     gtk_combo_box_set_entry_text_column(GTK_COMBO_BOX(n), 0);
@@ -761,6 +770,8 @@ void VRGuiBuilder::buildBaseUI() {
     // table 8
     auto checkbutton26 = addCheckbutton("checkbutton26", "User:");
     auto checkbutton30 = addCheckbutton("checkbutton30", "Mirror:");
+    auto user_list = gtk_list_store_new(2, G_TYPE_STRING, G_TYPE_POINTER);
+    VRGuiBuilder::get()->reg_object(G_OBJECT(user_list), "user_list");
     auto combobox18 = addCombobox("combobox18", "user_list");
     auto frame13 = addVectorFrame("frame13", "center_entry");
     auto frame14 = addVectorFrame("frame14", "user_entry");
@@ -1095,6 +1106,12 @@ void VRGuiBuilder::buildBaseUI() {
     auto treeviewcolumn30 = addTreecolumn("treeviewcolumn30", "State");
     auto treeviewcolumn32cr = addImgCellrenderer("treeviewcolumn32cr", treeviewcolumn32);
     setStringProperty((GtkWidget*)treeviewcolumn32cr, "stock_id", "gtk-index");
+    auto ScriptTrigger = gtk_list_store_new(1, G_TYPE_STRING);
+    auto ScriptTriggerDevices = gtk_list_store_new(1, G_TYPE_STRING);
+    auto ScriptTriggerStates = gtk_list_store_new(1, G_TYPE_STRING);
+    VRGuiBuilder::reg_object(G_OBJECT(ScriptTrigger), "ScriptTrigger");
+    VRGuiBuilder::reg_object(G_OBJECT(ScriptTriggerDevices), "ScriptTriggerDevices");
+    VRGuiBuilder::reg_object(G_OBJECT(ScriptTriggerStates), "ScriptTriggerStates");
 
     gtk_tree_view_append_column(GTK_TREE_VIEW(treeview14), treeviewcolumn27);
     addTreeviewTextcolumn(treeview14, "Parameter", "cellrenderertext16", 4);
@@ -1118,6 +1135,8 @@ void VRGuiBuilder::buildBaseUI() {
     auto treeviewcolumn16 = addTreecolumn("treeviewcolumn16", "Type");
     gtk_tree_view_append_column(GTK_TREE_VIEW(treeview7), treeviewcolumn16);
     addTreeviewTextcolumn(treeview7, "Value", "cellrenderertext14", 1);
+    auto arg_types = gtk_list_store_new(1, G_TYPE_STRING);
+    VRGuiBuilder::reg_object(G_OBJECT(arg_types), "arg_types");
 
     /* ---------- Py Docs ---------------------- */
     auto pybindings_docs = addDialog("pybindings-docs");
@@ -1149,6 +1168,8 @@ void VRGuiBuilder::buildBaseUI() {
     gtk_paned_add2(GTK_PANED(hpaned2), scrolledwindow7);
     gtk_container_add(GTK_CONTAINER(scrolledwindow7), textview1);
 
+    addTreeviewTextcolumn(treeview3, "VR Module", "cellrenderertext1", 0);
+
     /* ---------- Py Find ---------------------- */
     auto find_dialog = addDialog("find_dialog");
     auto dialog_vbox12 = gtk_dialog_get_content_area(GTK_DIALOG(find_dialog));
@@ -1170,6 +1191,48 @@ void VRGuiBuilder::buildBaseUI() {
     gtk_grid_attach(GTK_GRID(hbox14), checkbutton12, 0,2,1,1);
     gtk_grid_attach(GTK_GRID(hbox14), entry11, 1,2,1,1);
     gtk_window_set_transient_for(GTK_WINDOW(find_dialog), GTK_WINDOW(window1));
+
+    /* ---------- VR Scene - navigation ---------------------- */
+    auto label16 = addLabel("label16", "Preset:");
+    auto combobox5 = addCombobox("combobox5", "nav_presets");
+    auto button2 = addImgButton("button2", "gtk-add");
+    auto button7 = addImgButton("button7", "gtk-remove");
+    auto label19 = addLabel("label19", "Target:");
+    auto combobox7 = addCombobox("combobox7", "trgt_list");
+    auto label47 = addLabel("label47", "Device:");
+    auto combobox11 = addCombobox("combobox11", "devs_list");
+    auto label48 = addLabel("label48", "Bindings:");
+    auto button5 = addImgButton("button5", "gtk-add");
+    auto button8 = addImgButton("button8", "gtk-remove");
+    auto nav_bindings = gtk_list_store_new(6, G_TYPE_INT, G_TYPE_INT, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_POINTER, G_TYPE_FLOAT);
+    auto treeview4 = addTreeview("treeview4", "nav_bindings", GTK_TREE_MODEL(nav_bindings));
+    gtk_grid_attach(GTK_GRID(table4), label16, 0,0,1,1);
+    gtk_grid_attach(GTK_GRID(table4), combobox5, 1,0,1,1);
+    gtk_grid_attach(GTK_GRID(table4), button2, 2,0,1,1);
+    gtk_grid_attach(GTK_GRID(table4), button7, 3,0,1,1);
+    gtk_grid_attach(GTK_GRID(table4), label19, 0,1,1,1);
+    gtk_grid_attach(GTK_GRID(table4), combobox7, 1,1,1,1);
+    gtk_grid_attach(GTK_GRID(table4), label47, 2,1,1,1);
+    gtk_grid_attach(GTK_GRID(table4), combobox11, 3,1,1,1);
+    gtk_grid_attach(GTK_GRID(table4), label48, 0,2,2,1);
+    gtk_grid_attach(GTK_GRID(table4), button5, 2,2,1,1);
+    gtk_grid_attach(GTK_GRID(table4), button8, 3,2,1,1);
+    gtk_grid_attach(GTK_GRID(table4), treeview4, 0,3,4,1);
+
+    addTreeviewTextcolumn(treeview4, "Name", "cellrenderertext11", 0);
+    addTreeviewTextcolumn(treeview4, "State", "cellrenderertext12", 1);
+    addTreeviewTextcolumn(treeview4, "Speed", "cellrenderertext46", 5);
+    auto treeviewcolumn12 = addTreecolumn("treeviewcolumn12", "Type");
+    gtk_tree_view_append_column(GTK_TREE_VIEW(treeview4), treeviewcolumn12);
+    auto treeviewcolumn13 = addTreecolumn("treeviewcolumn13", "Callback");
+    gtk_tree_view_append_column(GTK_TREE_VIEW(treeview4), treeviewcolumn13);
+
+    auto binding_callbacks = gtk_list_store_new(1, G_TYPE_STRING);
+    VRGuiBuilder::reg_object(G_OBJECT(binding_callbacks), "binding_callbacks");
+    auto binding_types = gtk_list_store_new(1, G_TYPE_STRING);
+    VRGuiBuilder::reg_object(G_OBJECT(binding_types), "binding_types");
+    auto prim_list = gtk_list_store_new(1, G_TYPE_STRING);
+    VRGuiBuilder::reg_object(G_OBJECT(binding_callbacks), "prim_list");
 }
 
 

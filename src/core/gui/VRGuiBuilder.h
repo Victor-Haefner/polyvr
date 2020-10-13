@@ -32,6 +32,9 @@ class VRGuiBuilder {
 
         void read(string path);
 
+        bool has_object(string name);
+        bool has_widget(string name);
+
         _GtkWidget* get_widget(string name);
         _GtkObject* get_object(string name);
 

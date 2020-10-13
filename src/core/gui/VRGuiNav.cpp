@@ -167,10 +167,10 @@ VRGuiNav::VRGuiNav() {
     setButtonCallback("button5", bind(&VRGuiNav::on_new_binding_clicked, this) );
     setButtonCallback("button8", bind(&VRGuiNav::on_del_binding_clicked, this) );
 
-    GtkCellRendererText* crt = (GtkCellRendererText*)VRGuiBuilder::get()->get_object("cellrenderertext11");
+    GtkCellRendererText* crt = (GtkCellRendererText*)VRGuiBuilder::get()->get_widget("cellrenderertext11");
     g_signal_connect(crt, "edited", G_CALLBACK(VRGuiNav_on_keybinding_edited), NULL);
 
-    crt = (GtkCellRendererText*)VRGuiBuilder::get()->get_object("cellrenderertext12");
+    crt = (GtkCellRendererText*)VRGuiBuilder::get()->get_widget("cellrenderertext12");
     g_signal_connect(crt, "edited", G_CALLBACK(VRGuiNav_on_statebinding_edited), NULL);
 
     setCellRendererCombo("treeviewcolumn12", "binding_types", 2, bind(VRGuiNav_on_typebinding_changed, placeholders::_1, placeholders::_2));
