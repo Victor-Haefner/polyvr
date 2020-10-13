@@ -654,7 +654,7 @@ void VRGuiScripts::on_help_clicked() {
     gtk_text_buffer_set_text((GtkTextBuffer*)tb, "", 0);
 
     auto diag = VRGuiBuilder::get()->get_widget("pybindings-docs");
-    gtk_widget_show(diag);
+    gtk_widget_show_all(diag);
 
     //diag->deiconify();
     //diag->raise();

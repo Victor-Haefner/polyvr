@@ -346,7 +346,7 @@ void setCellRendererCombo(string treeviewcolumn, string combolist, int col, func
     g_object_set(renderer, "text_column", 0, NULL);
     g_object_set(renderer, "editable", true, NULL);
 
-    GtkTreeViewColumn* column = (GtkTreeViewColumn*)VRGuiBuilder::get()->get_object(treeviewcolumn);
+    GtkTreeViewColumn* column = (GtkTreeViewColumn*)VRGuiBuilder::get()->get_widget(treeviewcolumn);
     gtk_tree_view_column_pack_start(column, (GtkCellRenderer*)renderer, true);
     gtk_tree_view_column_add_attribute(column, (GtkCellRenderer*)renderer, "text", col);
     connect_signal((GtkWidget*)renderer, fkt, "changed");

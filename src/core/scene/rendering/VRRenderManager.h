@@ -83,9 +83,10 @@ class VRRenderManager : public VRStorage {
         void update();
         void reloadStageShaders();
 
-        string getSupportedGL();
-        bool hasGeomShader();
-        bool hasTessShader();
+        static string getGLVersion();
+        static int getGLSLVersion();
+        static bool hasGeomShader();
+        static bool hasTessShader();
 
         bool getMultisampling();
         void setMultisampling(bool b);

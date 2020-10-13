@@ -164,11 +164,11 @@ PolyVR::~PolyVR() {
     #endif*/
 }
 
-shared_ptr<PolyVR> PolyVR::create() { 
-    if (!pvr) { 
-        pvr = new PolyVR(); 
-        return shared_ptr<PolyVR>(pvr); 
-    } else return 0; 
+shared_ptr<PolyVR> PolyVR::create() {
+    if (!pvr) {
+        pvr = new PolyVR();
+        return shared_ptr<PolyVR>(pvr);
+    } else return 0;
 }
 
 PolyVR* PolyVR::get() { return pvr; }
@@ -392,6 +392,14 @@ void initOSGImporter() {
 }
 #endif
 
+void testGLCapabilities() {
+    cout << "Check OpenGL capabilities:" << endl;
+    cout << " OpenGL version: " << VRRenderManager::getGLVersion() << endl;
+    cout << " GLSL version: " << VRRenderManager::getGLSLVersion() << endl;
+    cout << " has geometry shader: " << VRRenderManager::hasGeomShader() << endl;
+    cout << " has tesselation shader: " << VRRenderManager::hasTessShader() << endl;
+}
+
 void PolyVR::init(int argc, char **argv) {
     cout << "Init PolyVR" << endl << endl;
     initTime();
@@ -477,6 +485,8 @@ void PolyVR::init(int argc, char **argv) {
     //string app = options->getOption<string>("application");
     //if (app != "") VRSceneManager::get()->loadScene(app);
     removeFile("setup/.startup"); // remove startup failsafe
+
+    testGLCapabilities();
 }
 
 void PolyVR::update() {

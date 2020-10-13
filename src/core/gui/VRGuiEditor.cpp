@@ -310,7 +310,7 @@ VRGuiEditor::VRGuiEditor(string window) {
     auto l = gtk_source_buffer_get_language(sourceBuffer);
 	cout << "VRGuiEditor::VRGuiEditor buffer lang: " << l << endl;
 
-    GtkScrolledWindow* win = (GtkScrolledWindow*)VRGuiBuilder::get()->get_object(window);
+    GtkScrolledWindow* win = (GtkScrolledWindow*)VRGuiBuilder::get()->get_widget(window);
     editor = gtk_source_view_new_with_buffer(sourceBuffer);
     editorBuffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(editor));
 

@@ -93,6 +93,14 @@ GtkWidget* addGrid(string ID) {
     return g;
 }
 
+GtkWidget* addTextview(string ID, string mID) {
+    auto b = gtk_text_buffer_new(0);
+    auto g = gtk_text_view_new_with_buffer(b);
+    VRGuiBuilder::get()->reg_object(G_OBJECT(b), mID);
+    VRGuiBuilder::get()->reg_widget(g, ID);
+    return g;
+}
+
 GtkWidget* addSeparator(string ID, GtkOrientation o) {
     auto s = gtk_separator_new(o);
     VRGuiBuilder::get()->reg_widget(s, ID);
@@ -107,6 +115,12 @@ GtkWidget* addPaned(string ID, GtkOrientation o) {
 
 GtkWidget* addImage(string ID, string path) {
     auto p = gtk_image_new_from_file(path.c_str());
+    VRGuiBuilder::get()->reg_widget(p, ID);
+    return p;
+}
+
+GtkWidget* addStockImage(string ID, string sID, GtkIconSize iSize) {
+    auto p = gtk_image_new_from_stock(sID.c_str(), iSize);
     VRGuiBuilder::get()->reg_widget(p, ID);
     return p;
 }
@@ -1099,6 +1113,63 @@ void VRGuiBuilder::buildBaseUI() {
     gtk_grid_attach(GTK_GRID(hbox13), button12, 1,0,1,1);
     gtk_grid_attach(GTK_GRID(hbox13), button13, 1,1,1,1);
     gtk_widget_set_hexpand(treeview7, true);
+
+    addTreeviewTextcolumn(treeview7, "Name", "cellrenderertext2", 0);
+    auto treeviewcolumn16 = addTreecolumn("treeviewcolumn16", "Type");
+    gtk_tree_view_append_column(GTK_TREE_VIEW(treeview7), treeviewcolumn16);
+    addTreeviewTextcolumn(treeview7, "Value", "cellrenderertext14", 1);
+
+    /* ---------- Py Docs ---------------------- */
+    auto pybindings_docs = addDialog("pybindings-docs");
+    auto dialog_vbox6 = gtk_dialog_get_content_area(GTK_DIALOG(pybindings_docs));
+    auto dialog_action_area6 = gtk_dialog_get_action_area(GTK_DIALOG(pybindings_docs));
+    auto button16 = addButton("button16", "Close");
+    auto label69 = addLabel("label69", "PolyVR Python Bindings");
+    auto hpaned2 = addPaned("hpaned2", GTK_ORIENTATION_HORIZONTAL);
+    gtk_box_pack_start(GTK_BOX(dialog_action_area6), button16, false, true, 0);
+    gtk_box_pack_start(GTK_BOX(dialog_vbox6), label69, false, true, 0);
+    gtk_box_pack_start(GTK_BOX(dialog_vbox6), hpaned2, false, true, 0);
+    gtk_window_set_transient_for(GTK_WINDOW(pybindings_docs), GTK_WINDOW(window1));
+    gtk_widget_set_size_request(pybindings_docs, 800, 600);
+
+    auto table40 = addGrid("table40");
+    auto image49 = addStockImage("image49", "gtk-find", GTK_ICON_SIZE_SMALL_TOOLBAR);
+    auto entry25 = addEntry("entry25");
+    auto scrolledwindow8 = addScrolledWindow("scrolledwindow8");
+    auto bindings = gtk_tree_store_new(5, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING);
+    auto treeview3 = addTreeview("treeview3", "bindings", GTK_TREE_MODEL(bindings));
+    auto scrolledwindow7 = addScrolledWindow("scrolledwindow7");
+    auto textview1 = addTextview("textview1", "pydoc");
+    gtk_widget_set_hexpand(treeview3, true);
+    gtk_paned_add1(GTK_PANED(hpaned2), table40);
+    gtk_grid_attach(GTK_GRID(table40), image49, 0,0,1,1);
+    gtk_grid_attach(GTK_GRID(table40), entry25, 1,0,1,1);
+    gtk_grid_attach(GTK_GRID(table40), scrolledwindow8, 0,1,2,1);
+    gtk_container_add(GTK_CONTAINER(scrolledwindow8), treeview3);
+    gtk_paned_add2(GTK_PANED(hpaned2), scrolledwindow7);
+    gtk_container_add(GTK_CONTAINER(scrolledwindow7), textview1);
+
+    /* ---------- Py Find ---------------------- */
+    auto find_dialog = addDialog("find_dialog");
+    auto dialog_vbox12 = gtk_dialog_get_content_area(GTK_DIALOG(find_dialog));
+    auto dialog_action_area12 = gtk_dialog_get_action_area(GTK_DIALOG(find_dialog));
+    auto button28 = addButton("button28", "Cancel");
+    auto button29 = addButton("button29", "Find");
+    auto hbox14 = addGrid("hbox14");
+    auto label115 = addLabel("label115", "Search");
+    auto entry10 = addEntry("entry10");
+    auto entry11 = addEntry("entry11");
+    auto checkbutton38 = addCheckbutton("checkbutton38", "all scripts");
+    auto checkbutton12 = addCheckbutton("checkbutton12", "replace by:");
+    gtk_box_pack_start(GTK_BOX(dialog_action_area12), button28, false, true, 0);
+    gtk_box_pack_start(GTK_BOX(dialog_action_area12), button29, false, true, 0);
+    gtk_box_pack_start(GTK_BOX(dialog_vbox12), hbox14, false, true, 0);
+    gtk_grid_attach(GTK_GRID(hbox14), label115, 0,0,2,1);
+    gtk_grid_attach(GTK_GRID(hbox14), checkbutton38, 0,1,1,1);
+    gtk_grid_attach(GTK_GRID(hbox14), entry10, 1,1,1,1);
+    gtk_grid_attach(GTK_GRID(hbox14), checkbutton12, 0,2,1,1);
+    gtk_grid_attach(GTK_GRID(hbox14), entry11, 1,2,1,1);
+    gtk_window_set_transient_for(GTK_WINDOW(find_dialog), GTK_WINDOW(window1));
 }
 
 
