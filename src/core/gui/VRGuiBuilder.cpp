@@ -1324,6 +1324,65 @@ void VRGuiBuilder::buildBaseUI() {
     gtk_grid_attach(GTK_GRID(table30), checkbutton_8, 2,15,2,1);
     gtk_grid_attach(GTK_GRID(table30), label_1, 0,16,2,1);
     gtk_grid_attach(GTK_GRID(table30), button22, 2,16,2,1);
+
+    /* ---------- VR Scene - scenegraph ---------------------- */
+    auto hpaned3 = addPaned("hpaned3", GTK_ORIENTATION_HORIZONTAL);
+    auto scenegraph = gtk_tree_store_new(6, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_INT);
+    auto treeview6 = addTreeview("treeview6", "scenegraph", GTK_TREE_MODEL(scenegraph));
+    auto table11 = addBox("table11", GTK_ORIENTATION_VERTICAL);
+    auto button17 = addImgButton("button17", "gtk-refresh");
+    auto current_object_lab = addLabel("current_object_lab", "obj");
+    auto checkbutton16 = addCheckbutton("checkbutton16", "live");
+    gtk_grid_attach(GTK_GRID(scenegraph_tab), button17, 0,0,1,1);
+    gtk_grid_attach(GTK_GRID(scenegraph_tab), current_object_lab, 1,0,1,1);
+    gtk_grid_attach(GTK_GRID(scenegraph_tab), checkbutton16, 2,0,1,1);
+    gtk_grid_attach(GTK_GRID(scenegraph_tab), hpaned3, 0,1,3,1);
+    gtk_paned_add1(GTK_PANED(hpaned3), treeview6);
+    gtk_paned_add2(GTK_PANED(hpaned3), table11);
+    gtk_widget_set_hexpand(treeview6, true);
+    gtk_widget_set_hexpand(current_object_lab, true);
+    gtk_widget_set_vexpand(treeview6, true);
+
+    auto treeviewcolumn10 = addTreecolumn("treeviewcolumn10", "Object");
+    auto cellrenderertext8 = addCellrenderer("cellrenderertext8", treeviewcolumn10);
+    auto cellrenderertext7 = addCellrenderer("cellrenderertext7", treeviewcolumn10);
+    gtk_tree_view_column_add_attribute(treeviewcolumn10, cellrenderertext8, "text", 1);
+    gtk_tree_view_column_add_attribute(treeviewcolumn10, cellrenderertext8, "background", 4);
+    gtk_tree_view_column_add_attribute(treeviewcolumn10, cellrenderertext8, "foreground", 3);
+    gtk_tree_view_column_add_attribute(treeviewcolumn10, cellrenderertext7, "markup", 0);
+    gtk_tree_view_column_add_attribute(treeviewcolumn10, cellrenderertext7, "background", 4);
+    gtk_tree_view_column_add_attribute(treeviewcolumn10, cellrenderertext7, "foreground", 3);
+    gtk_tree_view_append_column(GTK_TREE_VIEW(treeview6), treeviewcolumn10);
+
+    /* ---------- VR Scene - scenegraph ---------------------- */
+    auto table13 = appendExpander("expander2", "Object", "table13", table11);
+    auto table24 = appendExpander("expander9", "Group", "table24", table11);
+    auto table12 = appendExpander("expander1", "Transform", "table12", table11);
+    auto table16 = appendExpander("expander10", "LoD", "table16", table11);
+    auto table17 = appendExpander("expander11", "Geometry", "table17", table11);
+    auto table23 = appendExpander("expander14", "Material", "table23", table11);
+    auto table29 = appendExpander("expander16", "Primitive", "table29", table11);
+    auto table18 = appendExpander("expander12", "Camera", "table18", table11);
+    auto table19 = appendExpander("expander13", "Light", "table19", table11);
+    auto table28 = appendExpander("expander15", "CSG", "table28", table11);
+    auto table38 = appendExpander("expander27", "Entity", "table38", table11);
+
+    /* ---------- VR Scene - scenegraph  object ---------------------- */
+    auto label44 = addLabel("label44", "parent:");
+    auto label172 = addLabel("label172", "persistency:");
+    auto entry17 = addEntry("entry17");
+    auto entry21 = addEntry("entry21");
+    auto checkbutton6 = addCheckbutton("checkbutton6", "visible");
+    auto checkbutton43 = addCheckbutton("checkbutton43", "throw shadow");
+    auto checkbutton15 = addCheckbutton("checkbutton15", "pickable");
+
+    gtk_grid_attach(GTK_GRID(table13), label44, 0,0,1,1);
+    gtk_grid_attach(GTK_GRID(table13), entry17, 1,0,1,1);
+    gtk_grid_attach(GTK_GRID(table13), label172, 0,1,1,1);
+    gtk_grid_attach(GTK_GRID(table13), entry21, 1,1,1,1);
+    gtk_grid_attach(GTK_GRID(table13), checkbutton6, 0,2,1,1);
+    gtk_grid_attach(GTK_GRID(table13), checkbutton43, 1,2,1,1);
+    gtk_grid_attach(GTK_GRID(table13), checkbutton15, 0,3,2,1);
 }
 
 

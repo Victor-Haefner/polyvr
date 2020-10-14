@@ -1254,7 +1254,7 @@ VRGuiScene::VRGuiScene() { // TODO: reduce callbacks with templated functions
 
     // treeviewer
     tree_store = (GtkTreeStore*)VRGuiBuilder::get()->get_object("scenegraph");
-    tree_view  = (GtkTreeView*)VRGuiBuilder::get()->get_object("treeview6");
+    tree_view  = (GtkTreeView*)VRGuiBuilder::get()->get_widget("treeview6");
     //tree_view->signal_cursor_changed().connect( bind(&VRGuiScene::on_treeview_select) );
     setTreeviewSelectCallback("treeview6", bind(&VRGuiScene::on_treeview_select, this));
 

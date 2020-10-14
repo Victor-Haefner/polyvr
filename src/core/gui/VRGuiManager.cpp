@@ -87,12 +87,12 @@ VRGuiManager::VRGuiManager() {
     g_bits = new VRGuiBits();
     g_mon = new VRGuiMonitor();
     g_sc = new VRGuiScripts();
-    //g_scene = new VRGuiScene();
+    g_scene = new VRGuiScene();
     g_nav = new VRGuiNav();
     //g_sem = new VRGuiSemantics();
     g_di = new VRGuiSetup();
     g_gen = new VRGuiGeneral();
-    //g_scene->updateTreeView();
+    g_scene->updateTreeView();
 
 
     VRDeviceCbPtr fkt;
@@ -100,11 +100,11 @@ VRGuiManager::VRGuiManager() {
     auto editor = g_sc->getEditor();
     editor->addKeyBinding("wipe", VRUpdateCb::create("wipeCb", bind(&VRGuiBits::wipeConsoles, g_bits)));
 
-    /*fkt = VRFunction<VRDeviceWeakPtr>::create("GUI_updateSceneViewer", bind(&VRGuiScene::updateTreeView, g_scene) );
+    fkt = VRFunction<VRDeviceWeakPtr>::create("GUI_updateSceneViewer", bind(&VRGuiScene::updateTreeView, g_scene) );
     VRGuiSignals::get()->getSignal("scene_modified")->add( fkt );
     VRGuiSignals::get()->getSignal("scene_changed")->add( fkt );
     VRGuiSignals::get()->getSignal("camera_changed")->add(fkt);
-    guiSignalCbs.push_back(fkt);*/
+    guiSignalCbs.push_back(fkt);
 
     fkt = VRFunction<VRDeviceWeakPtr>::create("GUI_updateBits", bind(&VRGuiBits::update, g_bits) );
     VRGuiSignals::get()->getSignal("scene_changed")->add( fkt );
@@ -141,14 +141,14 @@ VRGuiManager::VRGuiManager() {
 
 VRGuiManager::~VRGuiManager() {
     cout << "VRGuiManager::~VRGuiManager" << endl;
-    delete g_scene;
-    delete g_bits;
-    delete g_demos;
-    delete g_nav;
-    delete g_sem;
-    delete g_sc;
-    delete g_di;
-    delete mtx;
+    if (g_scene) delete g_scene;
+    if (g_bits) delete g_bits;
+    if (g_demos) delete g_demos;
+    if (g_nav) delete g_nav;
+    if (g_sem) delete g_sem;
+    if (g_sc) delete g_sc;
+    if (g_di) delete g_di;
+    if (mtx) delete mtx;
 }
 
 void VRGuiManager::startThreadedUpdate() {
