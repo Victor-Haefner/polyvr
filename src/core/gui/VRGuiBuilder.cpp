@@ -296,10 +296,25 @@ void addNotebookPage(GtkWidget* notebook, GtkWidget* content, string label) {
     g_object_set_property(G_OBJECT(page), "tab-fill", &v);*/
 }
 
-GtkCellRenderer* addCellrenderer(string ID, GtkTreeViewColumn* c) {
+void setStringProperty(GtkWidget* w, string p, string v) {
+    GValue V = G_VALUE_INIT;
+    g_value_init(&V, G_TYPE_STRING);
+    g_value_set_string(&V, v.c_str());
+    g_object_set_property(G_OBJECT(w), p.c_str(), &V);
+}
+
+void setBoolProperty(GtkWidget* w, string p, bool v) {
+    GValue V = G_VALUE_INIT;
+    g_value_init(&V, G_TYPE_BOOLEAN);
+    g_value_set_boolean(&V, v);
+    g_object_set_property(G_OBJECT(w), p.c_str(), &V);
+}
+
+GtkCellRenderer* addCellrenderer(string ID, GtkTreeViewColumn* c, bool editable = false) {
     auto r = gtk_cell_renderer_text_new();
     VRGuiBuilder::get()->reg_widget((GtkWidget*)r, ID);
     gtk_tree_view_column_pack_start(c, r, true);
+    if (editable) setBoolProperty((GtkWidget*)r, "editable", true);
     return r;
 }
 
@@ -317,18 +332,11 @@ GtkTreeViewColumn* addTreecolumn(string ID, string title) {
     return c;
 }
 
-void addTreeviewTextcolumn(GtkWidget* treeview, string cName, string rID, int pos) {
+void addTreeviewTextcolumn(GtkWidget* treeview, string cName, string rID, int pos, bool editable = false) {
     auto c = addTreecolumn(cName+"ID", cName);
-    auto r = addCellrenderer(rID, c);
+    auto r = addCellrenderer(rID, c, editable);
     gtk_tree_view_column_add_attribute(c, r, "text", pos);
     gtk_tree_view_append_column(GTK_TREE_VIEW(treeview), c);
-}
-
-void setStringProperty(GtkWidget* w, string p, string v) {
-    GValue V = G_VALUE_INIT;
-    g_value_init(&V, G_TYPE_STRING);
-    g_value_set_string(&V, v.c_str());
-    g_object_set_property(G_OBJECT(w), p.c_str(), &V);
 }
 
 GtkWidget* addVectorFrame(string ID, string fID) {
@@ -353,7 +361,7 @@ void VRGuiBuilder::buildBaseUI() {
     gtk_grid_attach(GTK_GRID(main_frame), hseparator1, 0,1,2,1);
     gtk_grid_attach(GTK_GRID(main_frame), hpaned1, 0,2,2,1);
     gtk_widget_set_vexpand(hpaned1, true);
-    gtk_paned_set_position(GTK_PANED(hpaned1), 500);
+    gtk_paned_set_position(GTK_PANED(hpaned1), 700);
 
     auto banner = addImage("banner", "ressources/gui/logo4.png");
     auto label13 = addLabel("label13", "VR Setup:");
@@ -416,10 +424,10 @@ void VRGuiBuilder::buildBaseUI() {
     auto togglebutton1 = addToggleToolButton("togglebutton1", "gtk-leave-fullscreen", toolbar6);
 
     auto toolbar7 = addToolbar("toolbar7", GTK_ICON_SIZE_LARGE_TOOLBAR, GTK_ORIENTATION_VERTICAL);
-    auto pause_terminal = addToggleToolButton("pause_terminal", "gtk-media-pause", toolbar7);
-    auto network_verbose = addToggleToolButton("network_verbose", "gtk-network", toolbar7);
     auto toolbutton24 = addToolButton("toolbutton24", "gtk-clear", toolbar7);
     auto toolbutton25 = addToolButton("toolbutton25", "gtk-go-down", toolbar7);
+    auto network_verbose = addToggleToolButton("network_verbose", "gtk-network", toolbar7);
+    auto pause_terminal = addToggleToolButton("pause_terminal", "gtk-media-pause", toolbar7);
     gtk_box_pack_end(GTK_BOX(hbox15), toolbar7, false, true, 0);
 
     /* ---------- left core section ---------------------- */
@@ -613,7 +621,7 @@ void VRGuiBuilder::buildBaseUI() {
 
     GtkTreeViewColumn* treeviewcolumn2 = gtk_tree_view_column_new();
     gtk_tree_view_column_set_title(treeviewcolumn2, "Setup");
-    auto cellrenderertext3 = addCellrenderer("cellrenderertext3", treeviewcolumn2);
+    auto cellrenderertext3 = addCellrenderer("cellrenderertext3", treeviewcolumn2, true);
     auto cellrenderertext5 = addCellrenderer("cellrenderertext5", treeviewcolumn2);
     gtk_tree_view_column_add_attribute(treeviewcolumn2, cellrenderertext3, "text", 0);
     gtk_tree_view_column_add_attribute(treeviewcolumn2, cellrenderertext5, "text", 1);
@@ -730,7 +738,7 @@ void VRGuiBuilder::buildBaseUI() {
     gtk_tree_view_column_set_title(treeviewcolumn3, "Server List");
     auto cellrenderertext6 = addCellrenderer("cellrenderertext6", treeviewcolumn3);
     auto cellrenderertext19 = addCellrenderer("cellrenderertext19", treeviewcolumn3);
-    auto cellrenderertext21 = addCellrenderer("cellrenderertext21", treeviewcolumn3);
+    auto cellrenderertext21 = addCellrenderer("cellrenderertext21", treeviewcolumn3, true);
     gtk_tree_view_column_add_attribute(treeviewcolumn3, cellrenderertext6, "text", 0);
     gtk_tree_view_column_add_attribute(treeviewcolumn3, cellrenderertext19, "text", 1);
     gtk_tree_view_column_add_attribute(treeviewcolumn3, cellrenderertext21, "text", 2);
@@ -1061,12 +1069,18 @@ void VRGuiBuilder::buildBaseUI() {
 
     GtkTreeViewColumn* treeviewcolumn14 = gtk_tree_view_column_new();
     gtk_tree_view_column_set_title(treeviewcolumn14, "Script");
-    auto cellrenderertext13 = addCellrenderer("cellrenderertext13", treeviewcolumn14);
+    auto cellrenderertext13 = addCellrenderer("cellrenderertext13", treeviewcolumn14, true);
     auto cellrenderertext45 = addCellrenderer("cellrenderertext45", treeviewcolumn14);
     auto cellrendererpixbuf2 = addImgCellrenderer("cellrendererpixbuf2", treeviewcolumn14);
     auto cellrenderertext47 = addCellrenderer("cellrenderertext47", treeviewcolumn14);
     gtk_tree_view_column_add_attribute(treeviewcolumn14, cellrenderertext13, "text", 0);
+    gtk_tree_view_column_add_attribute(treeviewcolumn14, cellrenderertext13, "background", 2);
+    gtk_tree_view_column_add_attribute(treeviewcolumn14, cellrenderertext13, "foreground", 1);
+    gtk_tree_view_column_add_attribute(treeviewcolumn14, cellrenderertext13, "text", 0);
+    setBoolProperty((GtkWidget*)cellrenderertext13, "editable", true);
     gtk_tree_view_column_add_attribute(treeviewcolumn14, cellrenderertext45, "text", 3);
+    gtk_tree_view_column_add_attribute(treeviewcolumn14, cellrenderertext45, "background", 5);
+    gtk_tree_view_column_add_attribute(treeviewcolumn14, cellrenderertext45, "foreground", 4);
     gtk_tree_view_column_add_attribute(treeviewcolumn14, cellrendererpixbuf2, "stock-id", 6);
     gtk_tree_view_column_add_attribute(treeviewcolumn14, cellrenderertext47, "text", 7);
     gtk_tree_view_append_column(GTK_TREE_VIEW(treeview5), treeviewcolumn14);
@@ -1120,9 +1134,9 @@ void VRGuiBuilder::buildBaseUI() {
     VRGuiBuilder::reg_object(G_OBJECT(ScriptTriggerStates), "ScriptTriggerStates");
 
     gtk_tree_view_append_column(GTK_TREE_VIEW(treeview14), treeviewcolumn27);
-    addTreeviewTextcolumn(treeview14, "Parameter", "cellrenderertext16", 4);
+    addTreeviewTextcolumn(treeview14, "Parameter", "cellrenderertext16", 4, true);
     gtk_tree_view_append_column(GTK_TREE_VIEW(treeview14), treeviewcolumn28);
-    addTreeviewTextcolumn(treeview14, "Key", "cellrenderertext41", 2);
+    addTreeviewTextcolumn(treeview14, "Key", "cellrenderertext41", 2, true);
     gtk_tree_view_append_column(GTK_TREE_VIEW(treeview14), treeviewcolumn32);
     gtk_tree_view_append_column(GTK_TREE_VIEW(treeview14), treeviewcolumn30);
 
@@ -1137,10 +1151,10 @@ void VRGuiBuilder::buildBaseUI() {
     gtk_grid_attach(GTK_GRID(hbox13), button13, 1,1,1,1);
     gtk_widget_set_hexpand(treeview7, true);
 
-    addTreeviewTextcolumn(treeview7, "Name", "cellrenderertext2", 0);
+    addTreeviewTextcolumn(treeview7, "Name", "cellrenderertext2", 0, true);
     auto treeviewcolumn16 = addTreecolumn("treeviewcolumn16", "Type");
     gtk_tree_view_append_column(GTK_TREE_VIEW(treeview7), treeviewcolumn16);
-    addTreeviewTextcolumn(treeview7, "Value", "cellrenderertext14", 1);
+    addTreeviewTextcolumn(treeview7, "Value", "cellrenderertext14", 1, true);
     auto arg_types = gtk_list_store_new(1, G_TYPE_STRING);
     VRGuiBuilder::reg_object(G_OBJECT(arg_types), "arg_types");
 
@@ -1225,8 +1239,8 @@ void VRGuiBuilder::buildBaseUI() {
     gtk_grid_attach(GTK_GRID(table4), button8, 3,2,1,1);
     gtk_grid_attach(GTK_GRID(table4), treeview4, 0,3,4,1);
 
-    addTreeviewTextcolumn(treeview4, "Name", "cellrenderertext11", 0);
-    addTreeviewTextcolumn(treeview4, "State", "cellrenderertext12", 1);
+    addTreeviewTextcolumn(treeview4, "Name", "cellrenderertext11", 0, true);
+    addTreeviewTextcolumn(treeview4, "State", "cellrenderertext12", 1, true);
     addTreeviewTextcolumn(treeview4, "Speed", "cellrenderertext46", 5);
     auto treeviewcolumn12 = addTreecolumn("treeviewcolumn12", "Type");
     gtk_tree_view_append_column(GTK_TREE_VIEW(treeview4), treeviewcolumn12);
@@ -1345,7 +1359,7 @@ void VRGuiBuilder::buildBaseUI() {
 
     auto treeviewcolumn10 = addTreecolumn("treeviewcolumn10", "Object");
     auto cellrenderertext8 = addCellrenderer("cellrenderertext8", treeviewcolumn10);
-    auto cellrenderertext7 = addCellrenderer("cellrenderertext7", treeviewcolumn10);
+    auto cellrenderertext7 = addCellrenderer("cellrenderertext7", treeviewcolumn10, true);
     gtk_tree_view_column_add_attribute(treeviewcolumn10, cellrenderertext8, "text", 1);
     gtk_tree_view_column_add_attribute(treeviewcolumn10, cellrenderertext8, "background", 4);
     gtk_tree_view_column_add_attribute(treeviewcolumn10, cellrenderertext8, "foreground", 3);
