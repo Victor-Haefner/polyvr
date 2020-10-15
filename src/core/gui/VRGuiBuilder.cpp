@@ -1397,6 +1397,80 @@ void VRGuiBuilder::buildBaseUI() {
     gtk_grid_attach(GTK_GRID(table13), checkbutton6, 0,2,1,1);
     gtk_grid_attach(GTK_GRID(table13), checkbutton43, 1,2,1,1);
     gtk_grid_attach(GTK_GRID(table13), checkbutton15, 0,3,2,1);
+
+    /* ---------- VR Scene - scenegraph object ---------------------- */
+    auto checkbutton23 = addCheckbutton("checkbutton23", "group:");
+    auto combobox14 = addCombobox("combobox14", "liststore3");
+    auto label85 = addLabel("label85", "new:");
+    auto entry41 = addEntry("entry41");
+    auto button19 = addButton("button19", "sync");
+    auto button20 = addButton("button20", "apply");
+
+    gtk_grid_attach(GTK_GRID(table24), checkbutton23, 0,0,1,1);
+    gtk_grid_attach(GTK_GRID(table24), combobox14, 1,0,1,1);
+    gtk_grid_attach(GTK_GRID(table24), label85, 0,1,1,1);
+    gtk_grid_attach(GTK_GRID(table24), entry41, 1,1,1,1);
+    gtk_grid_attach(GTK_GRID(table24), button19, 0,2,1,1);
+    gtk_grid_attach(GTK_GRID(table24), button20, 1,2,1,1);
+
+    /* ---------- VR Scene - scenegraph transform ---------------------- */
+    auto frame9 = addVectorFrame("frame9", "pos_entry");
+    auto frame10 = addVectorFrame("frame10", "at_entry");
+    auto frame11 = addVectorFrame("frame11", "up_entry");
+    auto frame12 = addVectorFrame("frame12", "ct_entry");
+    auto frame19 = addVectorFrame("frame19", "dir_entry");
+    auto frame25 = addVectorFrame("frame25", "scale_entry");
+    auto radiobutton19 = addRadiobutton("radiobutton19", "local", 0);
+    auto radiobutton20 = addRadiobutton("radiobutton20", "global", radiobutton19);
+    auto checkbutton14 = addCheckbutton("checkbutton14", "target:");
+    auto entry16 = addEntry("entry16");
+    auto label20 = addLabel("label20", "scale:");
+    auto entry18 = addEntry("entry18");
+    auto button11 = addButton("button11", "Identity");
+    auto button4 = addButton("button4", "Focus");
+    auto label70 = addLabel("label70", "Constraints:");
+    auto checkbutton21 = addCheckbutton("checkbutton21", "Translate:");
+    auto radiobutton1 = addRadiobutton("radiobutton1", "axis", 0);
+    auto radiobutton2 = addRadiobutton("radiobutton2", "plane", radiobutton1);
+    auto checkbutton22 = addCheckbutton("checkbutton22", "Rotate:");
+    auto checkbutton18 = addCheckbutton("checkbutton18", "x");
+    auto checkbutton19 = addCheckbutton("checkbutton19", "y");
+    auto checkbutton20 = addCheckbutton("checkbutton20", "z");
+    auto label102 = addLabel("label102", "Physics:");
+    auto checkbutton13 = addCheckbutton("checkbutton13", "Physicalized:");
+    auto combobox8 = addCombobox("combobox8", "phys_shapes");
+    auto checkbutton33 = addCheckbutton("checkbutton33", "dynamic");
+    auto label103 = addLabel("label103", "mass:");
+    auto entry59 = addEntry("entry59");
+
+    gtk_grid_attach(GTK_GRID(table12), frame9, 0,1,4,1);
+    gtk_grid_attach(GTK_GRID(table12), frame10, 0,2,4,1);
+    gtk_grid_attach(GTK_GRID(table12), frame19, 0,3,4,1);
+    gtk_grid_attach(GTK_GRID(table12), frame11, 0,4,4,1);
+    gtk_grid_attach(GTK_GRID(table12), frame25, 0,5,4,1);
+    gtk_grid_attach(GTK_GRID(table12), radiobutton19, 0,6,2,1);
+    gtk_grid_attach(GTK_GRID(table12), radiobutton20, 2,6,2,1);
+    gtk_grid_attach(GTK_GRID(table12), checkbutton14, 0,7,2,1);
+    gtk_grid_attach(GTK_GRID(table12), entry16, 2,7,2,1);
+    gtk_grid_attach(GTK_GRID(table12), label20, 0,8,2,1);
+    gtk_grid_attach(GTK_GRID(table12), entry18, 2,8,2,1);
+    gtk_grid_attach(GTK_GRID(table12), button11, 0,9,2,1);
+    gtk_grid_attach(GTK_GRID(table12), button4, 2,9,2,1);
+    gtk_grid_attach(GTK_GRID(table12), label70, 0,10,4,1);
+    gtk_grid_attach(GTK_GRID(table12), checkbutton21, 0,11,2,1);
+    gtk_grid_attach(GTK_GRID(table12), radiobutton1, 2,11,1,1);
+    gtk_grid_attach(GTK_GRID(table12), radiobutton2, 3,11,1,1);
+    gtk_grid_attach(GTK_GRID(table12), frame12, 0,12,4,1);
+    gtk_grid_attach(GTK_GRID(table12), checkbutton22, 0,13,1,1);
+    gtk_grid_attach(GTK_GRID(table12), checkbutton18, 1,13,1,1);
+    gtk_grid_attach(GTK_GRID(table12), checkbutton19, 2,13,1,1);
+    gtk_grid_attach(GTK_GRID(table12), checkbutton20, 3,13,1,1);
+    gtk_grid_attach(GTK_GRID(table12), label102, 0,14,4,1);
+    gtk_grid_attach(GTK_GRID(table12), checkbutton13, 0,15,2,1);
+    gtk_grid_attach(GTK_GRID(table12), combobox8, 2,15,2,1);
+    gtk_grid_attach(GTK_GRID(table12), checkbutton33, 0,16,2,1);
+    gtk_grid_attach(GTK_GRID(table12), label103, 2,16,1,1);
+    gtk_grid_attach(GTK_GRID(table12), entry59, 3,16,1,1);
 }
 
 
