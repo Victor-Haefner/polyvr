@@ -1342,7 +1342,7 @@ VRGuiScene::VRGuiScene() { // TODO: reduce callbacks with templated functions
     setColorChooser("light_amb", bind(&VRGuiScene::setLight_amb_color, this, placeholders::_1));
     setColorChooser("light_spec", bind(&VRGuiScene::setLight_spec_color, this, placeholders::_1));
 
-    auto tree_view9 = VRGuiBuilder::get()->get_object("treeview9");
+    auto tree_view9 = VRGuiBuilder::get()->get_widget("treeview9");
     menu = new VRGuiContextMenu("GeoMenu");
     menu->connectWidget("GeoMenu", (GtkWidget*)tree_view9);
     menu->appendItem("GeoMenu", "Print", bind(&VRGuiScene::on_geo_menu_print, this));

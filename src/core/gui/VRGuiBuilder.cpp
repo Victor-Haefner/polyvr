@@ -1073,7 +1073,6 @@ void VRGuiBuilder::buildBaseUI() {
     auto toggletoolbutton1 = addToggleToolButton("toggletoolbutton1", "gtk-sort-ascending", toolbar3);
     auto toggletoolbutton2 = addToggleToolButton("toggletoolbutton2", "gtk-media-pause", toolbar3);
 
-
     GtkTreeViewColumn* treeviewcolumn14 = gtk_tree_view_column_new();
     gtk_tree_view_column_set_title(treeviewcolumn14, "Script");
     auto cellrenderertext13 = addCellrenderer("cellrenderertext13", treeviewcolumn14, true);
@@ -1083,8 +1082,6 @@ void VRGuiBuilder::buildBaseUI() {
     gtk_tree_view_column_add_attribute(treeviewcolumn14, cellrenderertext13, "text", 0);
     gtk_tree_view_column_add_attribute(treeviewcolumn14, cellrenderertext13, "background", 2);
     gtk_tree_view_column_add_attribute(treeviewcolumn14, cellrenderertext13, "foreground", 1);
-    gtk_tree_view_column_add_attribute(treeviewcolumn14, cellrenderertext13, "text", 0);
-    setBoolProperty((GtkWidget*)cellrenderertext13, "editable", true);
     gtk_tree_view_column_add_attribute(treeviewcolumn14, cellrenderertext45, "text", 3);
     gtk_tree_view_column_add_attribute(treeviewcolumn14, cellrenderertext45, "background", 5);
     gtk_tree_view_column_add_attribute(treeviewcolumn14, cellrenderertext45, "foreground", 4);
@@ -1592,12 +1589,9 @@ void VRGuiBuilder::buildBaseUI() {
     /* ---------- VR Scene - scenegraph light ---------------------- */
     auto label100 = addLabel("label100", "Light type:");
     auto combobox2 = addCombobox("combobox2", "light_types");
-
     auto checkbutton31 = addCheckbutton("checkbutton31", "on");
-
     auto label37 = addLabel("label37", "Light beacon:");
     auto button27 = addLabel("button27", "button");
-
     auto label96 = addLabel("label96", "Attenuation: A(C,L,Q) = C + L.r + Q.r²");
 
     auto hbox8 = addBox("hbox8", GTK_ORIENTATION_HORIZONTAL);
@@ -1629,12 +1623,31 @@ void VRGuiBuilder::buildBaseUI() {
 
     auto checkbutton32 = addCheckbutton("checkbutton32", "shadow");
     auto combobox22 = addCombobox("combobox22", "shadow_types");
-
     auto label95 = addLabel("label95", "Shadow color:");
     auto shadow_col = addDrawingArea("shadow_col");
     gtk_widget_set_size_request(shadow_col, 50, 30);
+    auto checkbutton2 = addCheckbutton("checkbutton2", "shadow volume:");
+    auto entry36 = addEntry("entry36");
+    gtk_entry_set_text(GTK_ENTRY(entry36), "10");
+    auto light_params = gtk_list_store_new(2, G_TYPE_STRING, G_TYPE_STRING);
+    auto treeview13 = addTreeview("treeview13", "light_params", GTK_TREE_MODEL(light_params));
 
-    // TODO!!
+    gtk_grid_attach(GTK_GRID(table19), label100, 0,0,1,1);
+    gtk_grid_attach(GTK_GRID(table19), combobox2, 1,0,1,1);
+    gtk_grid_attach(GTK_GRID(table19), checkbutton31, 0,1,2,1);
+    gtk_grid_attach(GTK_GRID(table19), label37, 0,2,1,1);
+    gtk_grid_attach(GTK_GRID(table19), button27, 1,2,1,1);
+    gtk_grid_attach(GTK_GRID(table19), label96, 0,3,2,1);
+    gtk_grid_attach(GTK_GRID(table19), hbox8, 0,4,2,1);
+    gtk_grid_attach(GTK_GRID(table19), label101, 0,5,2,1);
+    gtk_grid_attach(GTK_GRID(table19), hbox9, 0,6,2,1);
+    gtk_grid_attach(GTK_GRID(table19), checkbutton32, 0,7,1,1);
+    gtk_grid_attach(GTK_GRID(table19), combobox22, 1,7,1,1);
+    gtk_grid_attach(GTK_GRID(table19), label95, 0,8,1,1);
+    gtk_grid_attach(GTK_GRID(table19), shadow_col, 1,8,1,1);
+    gtk_grid_attach(GTK_GRID(table19), checkbutton2, 0,9,1,1);
+    gtk_grid_attach(GTK_GRID(table19), entry36, 1,9,1,1);
+    gtk_grid_attach(GTK_GRID(table19), treeview13, 0,10,2,1);
 
     /* ---------- VR Scene - scenegraph csg ---------------------- */
     auto checkbutton27 = addCheckbutton("checkbutton27", "edit mode");
