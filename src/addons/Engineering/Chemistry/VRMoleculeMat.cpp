@@ -34,8 +34,8 @@ VRMaterialPtr VRMoleculeMat::getBondsMaterial() { return mat2; }
 VRMaterialPtr VRMoleculeMat::getCoordsMaterial() { return mat3; }
 
 void VRMoleculeMat::apply(VRGeometryPtr atoms, VRGeometryPtr bonds) {
-    atoms->setMaterial(mat1);
-    bonds->setMaterial(mat2);
+    if (atoms) atoms->setMaterial(mat1);
+    if (bonds) bonds->setMaterial(mat2);
 }
 
 string VRMoleculeMat::a_fp =

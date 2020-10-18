@@ -165,13 +165,13 @@ bool VRSyncNode::isSubContainer(const UInt32& id) {
         return true;
     }
 
-    /*if (typeName == "ShaderVariableReal") { // TODO, implement propper check
+    if (typeName == "ShaderVariableReal") { // TODO, implement propper check
         return true;
     }
 
     if (typeName == "Image") { // TODO, implement propper check
         return true;
-    }*/
+    }
 
 
     cout << " -- WARNING -- unhandled FC type in isSubContainer: " << id << " " << typeName << endl;

@@ -33,9 +33,9 @@ VRMolecule::VRMolecule(string name) : VRGeometry(name) {
 
 VRMoleculePtr VRMolecule::create(string name) {
     auto ptr = VRMoleculePtr(new VRMolecule(name) );
-    ptr->addChild(ptr->bonds_geo);
-    ptr->addChild(ptr->coords_geo);
-    ptr->addChild(ptr->labels);
+    if (ptr->bonds_geo) ptr->addChild(ptr->bonds_geo);
+    if (ptr->coords_geo) ptr->addChild(ptr->coords_geo);
+    if (ptr->labels) ptr->addChild(ptr->labels);
     return ptr;
 }
 
@@ -69,7 +69,7 @@ void VRMolecule::connectAtom(int ID, int t) {
     if (atoms.count(ID) == 0) return;
     VRAtom* at = atoms[ID];
     if (at->full) return;
-    connectAtom(at, t, true);
+    connectAtom(at, t, false);
 }
 
 void VRMolecule::remAtom(int ID) {
@@ -111,7 +111,7 @@ void VRMolecule::updateGeo() {
     }
 
     atomsData.apply(ptr());
-    bondsData.apply(bonds_geo);
+    if (bonds_geo) bondsData.apply(bonds_geo);
 
     material = VRMoleculeMat::create();
     material->apply(ptr(), bonds_geo);
@@ -382,6 +382,7 @@ void VRMolecule::showLabels(bool b) { if (doLabels == b) return; doLabels = b; u
 void VRMolecule::showCoords(bool b) { if (doCoords == b) return; doCoords = b; updateCoords(); }
 
 void VRMolecule::updateCoords() {
+    if (!coords_geo) return;
     coords_geo->hide();
     if (!doCoords) return;
 
@@ -427,6 +428,7 @@ void VRMolecule::updateCoords() {
 }
 
 void VRMolecule::updateLabels() {
+    if (!labels) return;
     labels->clear();
     if (!doLabels) return;
 
