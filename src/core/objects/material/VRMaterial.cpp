@@ -105,6 +105,23 @@ struct VRMatData {
         if (video) delete video;
     }
 
+    void regChunk(StateChunkMTRecPtr chunk, int unit, int attachmentID) {
+        mat->addChunk(chunk, unit);
+        mat->addAttachment(chunk, attachmentID);
+    }
+
+    void addTextureChunks(int unit) {
+        if (texChunks.count(unit) == 0) {
+            texChunks[unit] = TextureObjChunk::create();
+            regChunk(texChunks[unit], unit, 4*10+unit);
+        }
+        if (envChunks.count(unit) == 0) {
+            envChunks[unit] = TextureEnvChunk::create();
+            regChunk(envChunks[unit], unit, 5*10+unit);
+            envChunks[unit]->setEnvMode(GL_MODULATE);
+        }
+    }
+
     int getTextureDimension(int unit = 0) {
         if (texChunks.count(unit) == 0) return 0;
         ImageMTRecPtr img = texChunks[unit]->getImage();
@@ -116,12 +133,10 @@ struct VRMatData {
         mat = ChunkMaterial::create();
         colChunk = MaterialChunk::create();
         colChunk->setBackMaterial(false);
-        mat->addChunk(colChunk);
-        mat->addAttachment(colChunk, 0);
+        regChunk(colChunk, -2, 0);
         if (colChunk->getId() == 3060) cout << " -------------------- MaterialChunk " << colChunk->getId() << endl;
         twoSidedChunk = TwoSidedLightingChunk::create();
-        mat->addChunk(twoSidedChunk);
-        mat->addAttachment(twoSidedChunk, 1);
+        regChunk(twoSidedChunk, -2, 1);
         texChunks.clear();
         envChunks.clear();
         genChunks.clear();
@@ -666,8 +681,7 @@ ChunkMaterialMTRecPtr VRMaterial::getMaterial(int i) { return mats[i]->mat; }
 
 void VRMaterial::setTextureParams(int min, int mag, int envMode, int wrapS, int wrapT, int unit) {
     auto md = mats[activePass];
-    if (md->texChunks.count(unit) == 0) { md->texChunks[unit] = TextureObjChunk::create(); md->mat->addChunk(md->texChunks[unit], unit); }
-    if (md->envChunks.count(unit) == 0) { md->envChunks[unit] = TextureEnvChunk::create(); md->mat->addChunk(md->envChunks[unit], unit); }
+    md->addTextureChunks(unit);
 
     int Min = min < 0 ? md->texChunks[unit]->getMinFilter() : min;
     int Mag = mag < 0 ? md->texChunks[unit]->getMagFilter() : mag;
@@ -693,10 +707,6 @@ void VRMaterial::setTextureWrapping(int wrapS, int wrapT, int unit) {
 void VRMaterial::setTexture(string img_path, bool alpha, int unit) { // TODO: improve with texture map
     if (exists(img_path)) img_path = canonical(img_path);
     else { VRLog::wrn("PyAPI", "Material '" + getName() + "' setTexture failed, path invalid: '" + img_path + "'"); return; }
-    /*auto md = mats[activePass];
-    if (md->texture == 0) md->texture = VRTexture::create();
-    md->texture->getImage()->read(img_path.c_str());
-    setTexture(md->texture, alpha, unit);*/
     auto tex = VRTexture::create();
     tex->read(img_path);
     setTexture(tex, alpha, unit);
@@ -707,12 +717,10 @@ void VRMaterial::setTexture(VRTexturePtr img, bool alpha, int unit) {
     if (img->getImage() == 0) return;
 
     auto md = mats[activePass];
-    if (md->texChunks.count(unit) == 0) { md->texChunks[unit] = TextureObjChunk::create(); md->mat->addChunk(md->texChunks[unit], unit); }
-    if (md->envChunks.count(unit) == 0) { md->envChunks[unit] = TextureEnvChunk::create(); md->mat->addChunk(md->envChunks[unit], unit); }
+    md->addTextureChunks(unit);
 
     //md->texture = img;
     md->texChunks[unit]->setImage(img->getImage());
-    md->envChunks[unit]->setEnvMode(GL_MODULATE);
     if (alpha && img->getImage()->hasAlphaChannel()) enableTransparency(false);
 
     md->texChunks[unit]->setInternalFormat(img->getInternalFormat());
@@ -735,15 +743,7 @@ void VRMaterial::setTexture(char* data, int format, Vec3i dims, bool isfloat) {
 
 TextureObjChunkMTRefPtr VRMaterial::getTexChunk(int unit) {
     auto md = mats[activePass];
-
-    if (md->texChunks.count(unit) == 0) {
-        md->texChunks[unit] = TextureObjChunk::create();
-        md->envChunks[unit] = TextureEnvChunk::create();
-        md->mat->addChunk(md->texChunks[unit], unit);
-        md->mat->addChunk(md->envChunks[unit], unit);
-        md->envChunks[unit]->setEnvMode(GL_MODULATE);
-    }
-
+    md->addTextureChunks(unit);
     return md->texChunks[unit];
 }
 
