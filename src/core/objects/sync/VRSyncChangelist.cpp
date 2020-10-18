@@ -174,7 +174,10 @@ struct VRSyncNodeFieldContainerMapper : public ContainerIdMapper {
 
 UInt32 VRSyncNodeFieldContainerMapper::map(UInt32 uiId) const {
     UInt32 id = syncNode ? syncNode->getRemoteToLocalID(uiId) : 0;
-    //cout << " --- VRSyncNodeFieldContainerMapper::map id " << uiId << " to " << id << ", syncNode: " << syncNode->getName() << endl;
+    if (id == 0) {
+        cout << " --- WARNING in VRSyncNodeFieldContainerMapper::map id " << uiId << " to " << id << ", syncNode: " << syncNode->getName() << endl;
+        if (syncNode) syncNode->broadcast("warn|mappingFailed|"+toString(uiId));
+    }
     return id;
 }
 

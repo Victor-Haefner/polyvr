@@ -141,6 +141,14 @@ bool VRSyncNode::isSubContainer(const UInt32& id) {
             FieldContainer* parent = parents->at(i);
             if (isSubContainer(parent->getId())) return true;
         }
+        if (parents->size() == 0) {
+            cout << " -- WARNING -- attachment FC has no parents: " << id << " type: " << fct->getTypeName();
+            if (AttachmentContainer* attc = dynamic_cast<AttachmentContainer*>(fct)) {
+                if (auto n = ::getName(attc)) cout << " named: " << n;
+                else cout << " unnamed";
+            }
+            cout << endl;
+        }
         return false;
     }
 
@@ -156,6 +164,14 @@ bool VRSyncNode::isSubContainer(const UInt32& id) {
     if (typeName == "ShaderVariableOSG") { // TODO, implement propper check
         return true;
     }
+
+    /*if (typeName == "ShaderVariableReal") { // TODO, implement propper check
+        return true;
+    }
+
+    if (typeName == "Image") { // TODO, implement propper check
+        return true;
+    }*/
 
 
     cout << " -- WARNING -- unhandled FC type in isSubContainer: " << id << " " << typeName << endl;
@@ -738,6 +754,21 @@ void VRSyncNode::startInterface(int port) {
     server->onMessage( bind(&VRSyncNode::handleMessage, this, std::placeholders::_1) );
 }
 
+void VRSyncNode::handleWarning(string msg) {
+    auto data = splitString(msg, '|');
+    int ID = toInt(data[2]);
+    //ID = 2979;
+    cout << " --> Warning from other SyncNode: " << data[1] << " with fc ID: " << ID;
+    if (auto fct = factory->getContainer(ID)) {
+        cout << " fc type: " << fct->getTypeName();
+        if (AttachmentContainer* attc = dynamic_cast<AttachmentContainer*>(fct)) {
+            if (auto n = ::getName(attc)) cout << " named: " << n;
+            else cout << " unnamed";
+        }
+    }
+    cout << endl;
+}
+
 /*void VRSyncNode::handleMessage(void* _args) {
     HTTP_args* args = (HTTP_args*)_args;
     if (!args->websocket) cout << "AAAARGH" << endl;
@@ -752,6 +783,8 @@ void VRSyncNode::handleMessage(string msg) {
     else if (startsWith(msg, "poses|"))   job = VRUpdateCb::create( "sync-handlePoses", bind(&VRSyncNode::handlePoses, this, msg) );
     else if (startsWith(msg, "ownership|")) job = VRUpdateCb::create( "sync-ownership", bind(&VRSyncNode::handleOwnershipMessage, this, msg) );
     else if (startsWith(msg, "changelistEnd|")) job = VRUpdateCb::create( "sync-finalizeCL", bind(&VRSyncChangelist::deserializeAndApply, changelist.get(), ptr()) );
+    //else if (startsWith(msg, "warn|")) job = VRUpdateCb::create( "sync-handleWarning", bind(&VRSyncNode::handleWarning, this, msg) );
+    else if (startsWith(msg, "warn|")) handleWarning(msg);
     else job = VRUpdateCb::create( "sync-handleCL", bind(&VRSyncChangelist::gatherChangelistData, changelist.get(), ptr(), msg) );
     if (job) VRScene::getCurrent()->queueJob( job );
 }
