@@ -49,7 +49,7 @@ class VRSyncNode : public VRTransform {
         VRObjectPtr copy(vector<VRObjectPtr> children);
 
         void handleWarning(string msg);
-
+        void handleSelfmapRequest(string msg);
         void handleMapping(string mappingData);
         vector<FieldContainer*> findContainer(string typeName); //deprecated
         vector<FieldContainer*> getTransformationContainer(ChangeList* cl); //deprecated

@@ -134,6 +134,8 @@ bool VRSyncNode::isSubContainer(const UInt32& id) {
         return false;
     }
 
+    string typeName = fct->getTypeName();
+
     Attachment* att = dynamic_cast<Attachment*>(fct);
     if (att) {
         auto parents = att->getMFParents();
@@ -142,6 +144,7 @@ bool VRSyncNode::isSubContainer(const UInt32& id) {
             if (isSubContainer(parent->getId())) return true;
         }
         if (parents->size() == 0) {
+            if (typeName == "MultiPassMaterial") return false; // Materials may not be attached to a geometry, thats fine!
             cout << " -- WARNING -- attachment FC has no parents: " << id << " type: " << fct->getTypeName();
             if (AttachmentContainer* attc = dynamic_cast<AttachmentContainer*>(fct)) {
                 if (auto n = ::getName(attc)) cout << " named: " << n;
@@ -151,8 +154,6 @@ bool VRSyncNode::isSubContainer(const UInt32& id) {
         }
         return false;
     }
-
-    string typeName = fct->getTypeName();
 
     if (typeName == "Viewport") return false; // TODO, use ID checks instead of string comparisions
     if (typeName == "PassiveWindow") return false;
@@ -187,6 +188,7 @@ bool VRSyncNode::isRemoteChange(const UInt32& id) {
 void VRSyncNode::addRemoteMapping(UInt32 lID, UInt32 rID) {
     remoteToLocalID[rID] = lID;
     localToRemoteID[lID] = rID;
+    cout << " addRemoteMapping in " << getName() << ", map local " << lID << " to remote " << rID << endl;
 }
 
 void VRSyncNode::replaceContainerMapping(UInt32 ID1, UInt32 ID2) {
@@ -642,8 +644,7 @@ void VRSyncNode::handleMapping(string mappingData) {
         if (IDs.size() != 2) continue;
         UInt32 lID = toInt(IDs[0]);
         UInt32 rID = toInt(IDs[1]);
-        remoteToLocalID[rID] = lID;
-        localToRemoteID[lID] = rID;
+        addRemoteMapping(lID, rID);
     }
     //printRegistredContainers();
 }
@@ -742,10 +743,14 @@ PosePtr VRSyncNode::getRemoteFlystickPose(string remoteName) {
 
 //Add remote Nodes to sync with
 void VRSyncNode::addRemote(string host, int port, string name) {
+    cout << " >>> > > VRSyncNode::addRemote to " << getName() << ": " << name << " at " << host << " on " << port << endl;
     string uri = host + toString(port);
     remotes[uri] = VRSyncConnection::create(host, port);
     remotesUri[name] = uri;
-//    sync(uri);
+
+    // sync node ID
+    //auto nID = getNode()->node->getId();
+    //remotes[uri]->send("selfmap|"+toString(nID));
 }
 
 void VRSyncNode::startInterface(int port) {
@@ -769,6 +774,14 @@ void VRSyncNode::handleWarning(string msg) {
     cout << endl;
 }
 
+void VRSyncNode::handleSelfmapRequest(string msg) {
+    auto data = splitString(msg, '|');
+    int rID = toInt(data[2]);
+    auto nID = getNode()->node->getId();
+    broadcast("mapping|"+toString(rID)+":"+toString(nID));
+    cout << " >>--<< sync node ID mapping, local: " << nID << ", remote: " << rID << endl;
+}
+
 /*void VRSyncNode::handleMessage(void* _args) {
     HTTP_args* args = (HTTP_args*)_args;
     if (!args->websocket) cout << "AAAARGH" << endl;
@@ -779,6 +792,7 @@ void VRSyncNode::handleMessage(string msg) {
     VRUpdateCbPtr job = 0;
     if (startsWith(msg, "message|"));
     else if (startsWith(msg, "addAvatar|")) job = VRUpdateCb::create( "sync-handleAvatar", bind(&VRSyncNode::handleAvatar, this, msg) );
+    else if (startsWith(msg, "selfmap|")) handleSelfmapRequest(msg);
     else if (startsWith(msg, "mapping|")) job = VRUpdateCb::create( "sync-handleMap", bind(&VRSyncNode::handleMapping, this, msg) );
     else if (startsWith(msg, "poses|"))   job = VRUpdateCb::create( "sync-handlePoses", bind(&VRSyncNode::handlePoses, this, msg) );
     else if (startsWith(msg, "ownership|")) job = VRUpdateCb::create( "sync-ownership", bind(&VRSyncNode::handleOwnershipMessage, this, msg) );
