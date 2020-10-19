@@ -47,6 +47,9 @@
 #include <OpenSG/OSGMaterialChunk.h>
 #include <OpenSG/OSGCubeTextureObjChunk.h>
 #include <OpenSG/OSGGLEXT.h>
+#include <OpenSG/OSGShaderProgramVariables.h>
+#include <OpenSG/OSGShaderValueVariable.h>
+#include <OpenSG/OSGShaderProcVariable.h>
 
 #ifdef OSG_OGL_ES2
 #elif defined(_WIN32)
@@ -1071,6 +1074,14 @@ TextureObjChunkMTRecPtr VRMaterial::getTextureObjChunk(int unit) {
     return mats[activePass]->texChunks[unit];
 }
 
+void regVProgramVars(ShaderProgram* vp) {
+    ShaderProgramVariables* vars = vp->getVariables();
+    const MFUnrecShaderValueVariablePtr* mfvvars = vars->getMFVariables();
+    const MFUnrecChildShaderProcVariablePtr* mfpvars = vars->getMFProceduralVariables();
+    for (int i=0; i < mfvvars->size(); i++) VRMaterial::fieldContainerMap[(*mfvvars)[i]->getId()] = vp->getId();
+    for (int i=0; i < mfpvars->size(); i++) VRMaterial::fieldContainerMap[(*mfpvars)[i]->getId()] = vp->getId();
+}
+
 void VRMaterial::initShaderChunk() {
     auto md = mats[activePass];
     if (md->shaderChunk != 0) return;
@@ -1122,11 +1133,13 @@ void VRMaterial::initShaderChunk() {
     md->vProgram->addOSGVariable("OSGViewportSize");
 	md->vProgram->addOSGVariable("OSGNormalMatrix");
 	md->vProgram->addOSGVariable("OSGModelViewProjectionMatrix");
+	regVProgramVars(md->vProgram);
 }
 
 void VRMaterial::enableShaderParameter(string name) {
     auto md = mats[activePass];
     md->vProgram->addOSGVariable(name.c_str());
+	regVProgramVars(md->vProgram);
 }
 
 void VRMaterial::remShaderChunk() {

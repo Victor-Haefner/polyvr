@@ -158,20 +158,25 @@ bool VRSyncNode::isSubContainer(const UInt32& id) {
     if (typeName == "Viewport") return false; // TODO, use ID checks instead of string comparisions
     if (typeName == "PassiveWindow") return false;
 
-    if (typeName == "ShaderProgram") { // TODO, implement propper check
-        //return true;
+    if (typeName == "ShaderProgram") {
         if (VRMaterial::fieldContainerMap.count(id)) {
             auto scID = VRMaterial::fieldContainerMap[id];
             return isSubContainer(scID);
         }
     }
 
-    if (typeName == "ShaderVariableOSG") { // TODO, implement propper check
-        return true;
+    if (typeName == "ShaderVariableOSG") {
+        if (VRMaterial::fieldContainerMap.count(id)) {
+            auto scID = VRMaterial::fieldContainerMap[id];
+            return isSubContainer(scID);
+        }
     }
 
-    if (typeName == "ShaderVariableReal") { // TODO, implement propper check
-        return true;
+    if (typeName == "ShaderVariableReal") {
+        if (VRMaterial::fieldContainerMap.count(id)) {
+            auto scID = VRMaterial::fieldContainerMap[id];
+            return isSubContainer(scID);
+        }
     }
 
     /*if (typeName == "Image") { // TODO, implement propper check
