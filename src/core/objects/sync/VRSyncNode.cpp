@@ -749,8 +749,8 @@ void VRSyncNode::addRemote(string host, int port, string name) {
     remotesUri[name] = uri;
 
     // sync node ID
-    //auto nID = getNode()->node->getId();
-    //remotes[uri]->send("selfmap|"+toString(nID));
+    auto nID = getNode()->node->getId();
+    remotes[uri]->send("selfmap|"+toString(nID));
 }
 
 void VRSyncNode::startInterface(int port) {
@@ -776,10 +776,9 @@ void VRSyncNode::handleWarning(string msg) {
 
 void VRSyncNode::handleSelfmapRequest(string msg) {
     auto data = splitString(msg, '|');
-    int rID = toInt(data[2]);
-    auto nID = getNode()->node->getId();
-    broadcast("mapping|"+toString(rID)+":"+toString(nID));
-    cout << " >>--<< sync node ID mapping, local: " << nID << ", remote: " << rID << endl;
+    int rID = toInt(data[1]);
+    auto lID = getNode()->node->getId();
+    addRemoteMapping(lID, rID);
 }
 
 /*void VRSyncNode::handleMessage(void* _args) {
