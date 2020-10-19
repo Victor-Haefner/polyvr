@@ -771,7 +771,7 @@ void VRSyncNode::handleWarning(string msg) {
             else cout << " unnamed";
         }
     }
-    cout << endl;
+    cout << " owned by " << getName() << endl;
 }
 
 void VRSyncNode::handleSelfmapRequest(string msg) {

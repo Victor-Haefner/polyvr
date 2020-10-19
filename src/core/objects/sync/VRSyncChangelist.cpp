@@ -175,7 +175,7 @@ struct VRSyncNodeFieldContainerMapper : public ContainerIdMapper {
 UInt32 VRSyncNodeFieldContainerMapper::map(UInt32 uiId) const {
     UInt32 id = syncNode ? syncNode->getRemoteToLocalID(uiId) : 0;
     if (id == 0) {
-        cout << " --- WARNING in VRSyncNodeFieldContainerMapper::map id " << uiId << " to " << id << ", syncNode: " << syncNode->getName() << endl;
+        cout << " --- WARNING in VRSyncNodeFieldContainerMapper::map remote id " << uiId << " to " << id << ", syncNode: " << syncNode->getName() << endl;
         if (syncNode) syncNode->broadcast("warn|mappingFailed|"+toString(uiId));
     }
     return id;
@@ -293,6 +293,8 @@ OSGChangeList* VRSyncChangelist::filterChanges(VRSyncNodePtr syncNode) {
     return localChanges;
 }
 
+static vector<FieldContainerRecPtr> debugStorage;
+
 FieldContainerRecPtr VRSyncChangelist::getOrCreate(VRSyncNodePtr syncNode, UInt32& id, SerialEntry& sentry, map<UInt32, vector<UInt32>>& parentToChildren) {
     //cout << "VRSyncNode::getOrCreate remote: " << sentry.localId << ", local: " << id << endl;
     FieldContainerRecPtr fcPtr = 0; // Field Container to apply changes to
@@ -301,7 +303,8 @@ FieldContainerRecPtr VRSyncChangelist::getOrCreate(VRSyncNodePtr syncNode, UInt3
     else if (sentry.uiEntryDesc == ContainerChangeEntry::Create) {
         FieldContainerType* fcType = factory->findType(sentry.fcTypeID);
         fcPtr = fcType->createContainer();
-        justCreated.push_back(fcPtr); // increase ref count to avoid destruction!
+        justCreated.push_back(fcPtr); // increase ref count temporarily to avoid destruction!
+        //debugStorage.push_back(fcPtr); // increase ref count permanently to avoid destruction! only for testing!
         syncNode->registerContainer(fcPtr.get(), sentry.syncNodeID);
         id = fcPtr.get()->getId();
         syncNode->addRemoteMapping(id, sentry.localId);
@@ -393,7 +396,10 @@ void VRSyncChangelist::handleRemoteEntries(VRSyncNodePtr syncNode, vector<Serial
         //cout << " --- getRemoteToLocalID: " << sentry.localId << " to " << id << " syncNode: " << syncNode->getName() << ", syncNodeID: " << sentry.syncNodeID << endl;
         FieldContainerRecPtr fcPtr = getOrCreate(syncNode, id, sentry, parentToChildren); // Field Container to apply changes to
 
-        if (fcPtr == nullptr) { cout << " -- WARNING in handleRemoteEntries, no container found with id " << id << " syncNodeID " << sentry.syncNodeID << endl; continue; } //TODO: This is causing the WARNING: Action::recurse: core is NULL, aborting traversal.
+        if (fcPtr == nullptr) {
+            cout << " -- WARNING in handleRemoteEntries, no container found with id " << id << ", entry local ID " << sentry.localId << endl;
+            continue;
+        }
 
         if (sentry.uiEntryDesc == ContainerChangeEntry::Change) { //if its a node change, update child info has changed. TODO: check only if children info has changed
             handleGenericChange(syncNode, fcPtr, sentry, fcData);

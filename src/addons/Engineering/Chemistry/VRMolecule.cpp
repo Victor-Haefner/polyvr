@@ -22,10 +22,10 @@ VRBond::VRBond() {}
 
 VRMolecule::VRMolecule(string name) : VRGeometry(name) {
     if (VRAtom::PeriodicTable.size() == 0) VRAtom::initAtomicTables();
-    /*bonds_geo = VRGeometry::create("bonds");
+    bonds_geo = VRGeometry::create("bonds");
     coords_geo = VRGeometry::create("coords");
 
-    labels = VRNumberingEngine::create();
+    /*labels = VRNumberingEngine::create();
     labels->setBillboard(true);
     labels->setOnTop(false);
     labels->setSize(0.1);*/
