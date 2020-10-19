@@ -27,6 +27,7 @@
 #include <OpenSG/OSGShaderExecutableChunk.h>
 #include <OpenSG/OSGSimpleSHLChunk.h>
 #include <OpenSG/OSGShaderProgram.h>
+#include <OpenSG/OSGShaderVariableOSG.h>
 #include <OpenSG/OSGProgramChunk.h>
 
 #include <bitset>

@@ -8,7 +8,7 @@
 #include "core/utils/toString.h"
 #include "core/utils/VRGlobals.h"
 #include "core/utils/system/VRSystem.h"
-#include "addons/Engineering/VRNumberingEngine.h"
+#include "core/tools/VRAnnotationEngine.h"
 
 #include <OpenSG/OSGGeoProperties.h>
 #include <OpenSG/OSGQuaternion.h>
@@ -25,9 +25,10 @@ VRMolecule::VRMolecule(string name) : VRGeometry(name) {
     bonds_geo = VRGeometry::create("bonds");
     coords_geo = VRGeometry::create("coords");
 
-    /*labels = VRNumberingEngine::create();
+    // TODO: not working with syncnodes
+    /*labels = VRAnnotationEngine::create();
     labels->setBillboard(true);
-    labels->setOnTop(false);
+    //labels->setOnTop(false);
     labels->setSize(0.1);*/
 }
 
@@ -432,12 +433,13 @@ void VRMolecule::updateLabels() {
     labels->clear();
     if (!doLabels) return;
 
-    labels->add(Vec3d(), atoms.size(), 0, 0);
+    //labels->add(Vec3d(), atoms.size(), 0, 0);
+    labels->add(Vec3d(), toString(atoms.size()));
 
     int i=0;
     for (auto a : atoms) {
         Vec3d p = Vec3d(a.second->getTransformation()[3]);
-        labels->set(i++, p, a.first);
+        labels->set(i++, p, toString(a.first));
     }
 }
 

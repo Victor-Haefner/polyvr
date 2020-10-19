@@ -224,6 +224,7 @@ struct VRMatData {
 
 map<string, VRMaterialWeakPtr> VRMaterial::materials;
 map<MaterialMTRecPtr, VRMaterialWeakPtr> VRMaterial::materialsByPtr;
+map<size_t, size_t> VRMaterial::fieldContainerMap;
 
 VRMaterial::VRMaterial(string name) : VRObject(name) {}
 
@@ -1088,6 +1089,7 @@ void VRMaterial::initShaderChunk() {
 
     md->shaderChunk = ShaderProgramChunk::create();
     md->regChunk(md->shaderChunk, -2, 7);
+    auto scID = md->shaderChunk->getId();
 
     md->vProgram = ShaderProgram::createVertexShader  ();
     md->fProgram = ShaderProgram::createFragmentShader();
@@ -1098,6 +1100,14 @@ void VRMaterial::initShaderChunk() {
     md->tcProgram->setShaderType(GL_TESS_CONTROL_SHADER);
     md->teProgram = ShaderProgram::create();
     md->teProgram->setShaderType(GL_TESS_EVALUATION_SHADER);
+
+    // link shaderprogramchunk to is programs
+    fieldContainerMap[md->vProgram->getId()] = scID;
+    fieldContainerMap[md->fProgram->getId()] = scID;
+    fieldContainerMap[md->fdProgram->getId()] = scID;
+    fieldContainerMap[md->gProgram->getId()] = scID;
+    fieldContainerMap[md->tcProgram->getId()] = scID;
+    fieldContainerMap[md->teProgram->getId()] = scID;
 
     md->shaderChunk->addShader(md->vProgram);
 

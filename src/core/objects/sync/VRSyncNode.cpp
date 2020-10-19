@@ -159,7 +159,11 @@ bool VRSyncNode::isSubContainer(const UInt32& id) {
     if (typeName == "PassiveWindow") return false;
 
     if (typeName == "ShaderProgram") { // TODO, implement propper check
-        return true;
+        //return true;
+        if (VRMaterial::fieldContainerMap.count(id)) {
+            auto scID = VRMaterial::fieldContainerMap[id];
+            return isSubContainer(scID);
+        }
     }
 
     if (typeName == "ShaderVariableOSG") { // TODO, implement propper check
@@ -170,9 +174,9 @@ bool VRSyncNode::isSubContainer(const UInt32& id) {
         return true;
     }
 
-    if (typeName == "Image") { // TODO, implement propper check
+    /*if (typeName == "Image") { // TODO, implement propper check
         return true;
-    }
+    }*/
 
 
     cout << " -- WARNING -- unhandled FC type in isSubContainer: " << id << " " << typeName << endl;
@@ -188,7 +192,7 @@ bool VRSyncNode::isRemoteChange(const UInt32& id) {
 void VRSyncNode::addRemoteMapping(UInt32 lID, UInt32 rID) {
     remoteToLocalID[rID] = lID;
     localToRemoteID[lID] = rID;
-    cout << " addRemoteMapping in " << getName() << ", map local " << lID << " to remote " << rID << endl;
+    //cout << " addRemoteMapping in " << getName() << ", map local " << lID << " to remote " << rID << endl;
 }
 
 void VRSyncNode::replaceContainerMapping(UInt32 ID1, UInt32 ID2) {
