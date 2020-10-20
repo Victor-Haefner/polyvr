@@ -197,7 +197,17 @@ bool VRSyncNode::isRemoteChange(const UInt32& id) {
 void VRSyncNode::addRemoteMapping(UInt32 lID, UInt32 rID) {
     remoteToLocalID[rID] = lID;
     localToRemoteID[lID] = rID;
-    //cout << " addRemoteMapping in " << getName() << ", map local " << lID << " to remote " << rID << endl;
+
+    if (false) { // for debugging
+        cout << " addRemoteMapping in " << getName() << ", map local " << lID << " to remote " << rID;
+        if (auto afc = dynamic_cast<AttachmentContainer*>(factory->getContainer(lID))) {
+            if (auto n = ::getName(afc)) cout << ", local named " << n;
+        }
+        if (auto afc = dynamic_cast<AttachmentContainer*>(factory->getContainer(rID))) {
+            if (auto n = ::getName(afc)) cout << ", remote named " << n;
+        }
+        cout << endl;
+    }
 }
 
 void VRSyncNode::replaceContainerMapping(UInt32 ID1, UInt32 ID2) {

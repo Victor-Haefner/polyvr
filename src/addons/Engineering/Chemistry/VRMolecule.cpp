@@ -3,8 +3,10 @@
 #include "VRMoleculeMat.h"
 
 #include "core/objects/material/VRMaterial.h"
+#include "core/objects/material/OSGMaterial.h"
 #include "core/objects/VRTransform.h"
 #include "core/objects/geometry/VRGeoData.h"
+#include "core/objects/geometry/OSGGeometry.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRGlobals.h"
 #include "core/utils/system/VRSystem.h"
@@ -12,6 +14,7 @@
 
 #include <OpenSG/OSGGeoProperties.h>
 #include <OpenSG/OSGQuaternion.h>
+#include <OpenSG/OSGMaterial.h>
 
 using namespace OSG;
 
@@ -116,6 +119,7 @@ void VRMolecule::updateGeo() {
 
     material = VRMoleculeMat::create();
     material->apply(ptr(), bonds_geo);
+    coords_geo->setMaterial(material->getCoordsMaterial()); // avoids sync warning
 
     updateLabels();
     updateCoords();

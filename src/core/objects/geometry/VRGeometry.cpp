@@ -246,7 +246,10 @@ void VRGeometry::setMesh(OSGGeometryPtr geo, Reference ref, bool keep_material) 
 }
 
 void VRGeometry::setMesh(OSGGeometryPtr g) {
-    if (!g) g = OSGGeometry::create( Geometry::create() );
+    if (!g) {
+        g = OSGGeometry::create( Geometry::create() );
+        OSG::setName(g->geo, getName()+"_newMesh");
+    }
     Reference ref;
     ref.type = CODE;
     setMesh(g, ref);
@@ -305,6 +308,7 @@ void VRGeometry::create(int type, vector<Vec3d> pos, vector<Vec3d> norms, vector
     Mat->setSpecular(Color3f(0.1, 0.1, 0.1));
 
     GeometryMTRecPtr geo = Geometry::create();
+    OSG::setName(geo, "simpleMesh");
     geo->setTypes(Type);
     geo->setLengths(Length);
     geo->setIndices(Indices);
