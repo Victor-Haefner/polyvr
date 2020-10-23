@@ -1080,6 +1080,7 @@ void VRMaterial::initShaderChunk() {
 
     md->shaderChunk = ShaderProgramChunk::create();
     md->mat->addChunk(md->shaderChunk);
+    md->mat->addAttachment(md->shaderChunk, 2);
 
     md->vProgram = ShaderProgram::createVertexShader  ();
     md->fProgram = ShaderProgram::createFragmentShader();
