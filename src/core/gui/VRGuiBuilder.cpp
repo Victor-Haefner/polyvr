@@ -355,11 +355,13 @@ GtkWidget* addVectorFrame(string ID, string fID) {
 }
 
 void VRGuiBuilder::buildBaseUI() {
+    cout << "VRGuiBuilder buildBaseUI.." << endl;
     auto window1 = addWindow("window1", "PolyVR");
     auto main_frame = addGrid("main_frame");
     gtk_container_add(GTK_CONTAINER(window1), main_frame);
     gtk_window_set_icon_from_file(GTK_WINDOW(window1), "ressources/gui/logo_icon.png", 0);
 
+    cout << " build head section" << endl;
     /* ---------- head section ---------------------- */
     auto table20 = addGrid("table20");
     auto hseparator1 = addSeparator("hseparator1", GTK_ORIENTATION_HORIZONTAL);
@@ -393,6 +395,7 @@ void VRGuiBuilder::buildBaseUI() {
     auto toolbutton17 = addToolButton("toolbutton17", "gtk-about", toolbar1);
     auto toolbutton18 = addToolButton("toolbutton18", "gtk-paste", toolbar1);
 
+    cout << " build core section" << endl;
     /* ---------- core section ---------------------- */
     auto notebook1 = addNotebook("notebook1");
     auto vpaned1 = addPaned("vpaned1", GTK_ORIENTATION_VERTICAL);
@@ -466,6 +469,7 @@ void VRGuiBuilder::buildBaseUI() {
     gtk_container_add(GTK_CONTAINER(viewport1), favorites_tab);
     gtk_container_add(GTK_CONTAINER(viewport4), examples_tab);
 
+    cout << " build app launch dialog" << endl;
     /* ---------- app launch dialog ---------------------- */
     auto advanced_start = addDialog("advanced_start");
     auto dialog_vbox9 = gtk_dialog_get_content_area(GTK_DIALOG(advanced_start));
@@ -498,6 +502,7 @@ void VRGuiBuilder::buildBaseUI() {
     gtk_box_pack_start(GTK_BOX(dialog_action_area3), button15, false, true, 0);
     gtk_window_set_transient_for(GTK_WINDOW(NewProject), GTK_WINDOW(window1));*/
 
+    cout << " build recorder dialog" << endl;
     /* ---------- recorder ---------------------- */  // TODO: to test!
     auto recorder = addDialog("recorder");
     auto dialog_vbox15 = gtk_dialog_get_content_area(GTK_DIALOG(recorder));
@@ -518,6 +523,7 @@ void VRGuiBuilder::buildBaseUI() {
     gtk_box_pack_start(GTK_BOX(hbox20), entry27, true, true, 0);
     gtk_window_set_transient_for(GTK_WINDOW(recorder), GTK_WINDOW(window1));
 
+    cout << " build about dialog" << endl;
     /* ---------- about dialog ---------------------- */
     string cpyr =
     "Copyright © 2009-2020 IMI, KIT\n"
@@ -543,6 +549,9 @@ void VRGuiBuilder::buildBaseUI() {
     gtk_about_dialog_set_logo(aboutdialog1, logo);
     gtk_window_set_transient_for(GTK_WINDOW(aboutdialog1), GTK_WINDOW(window1));
 
+// TODO: fix GSettings schema under windows!
+#ifndef _WIN32
+    cout << " build file open dialog" << endl;
     /* ---------- file open dialog ---------------------- */
     auto file_dialog = GTK_FILE_CHOOSER_DIALOG(gtk_file_chooser_dialog_new("Open File", GTK_WINDOW(window1), GTK_FILE_CHOOSER_ACTION_SAVE, "Cancel", 0, "Open", 0, 0));
     auto dialog_action_area1 = gtk_dialog_get_action_area(GTK_DIALOG(file_dialog));
@@ -552,7 +561,9 @@ void VRGuiBuilder::buildBaseUI() {
     reg_widget(GTK_WIDGET(file_dialog), "file_dialog");
     reg_widget(GTK_WIDGET(button3), "button3");
     reg_widget(GTK_WIDGET(button9), "button9");
+#endif
 
+    cout << " build internal monitor dialog" << endl;
     /* ---------- internal monitor ---------------------- */
     auto dialog2 = addDialog("dialog2");
     auto dialog_vbox10 = gtk_dialog_get_content_area(GTK_DIALOG(dialog2));
@@ -610,6 +621,7 @@ void VRGuiBuilder::buildBaseUI() {
     addTreeviewTextcolumn(treeview15, "function", "cellrenderertext30", 0);
     addTreeviewTextcolumn(treeview15, "time (μs)", "cellrenderertext48", 1);
 
+    cout << " build VR Setup" << endl;
     /* ---------- VR Setup ---------------------- */
     auto setupTree = gtk_tree_store_new(5, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_POINTER, G_TYPE_STRING, G_TYPE_STRING);
     auto treeview2 = addTreeview("treeview2", "setupTree", GTK_TREE_MODEL(setupTree));
@@ -1041,6 +1053,7 @@ void VRGuiBuilder::buildBaseUI() {
     // TODO or deprecated?
 
 
+    cout << " build VR Scene" << endl;
     /* ---------- VR Scene ---------------------- */
     auto table14 = addGrid("table14");
     auto scenegraph_tab = addGrid("scenegraph_tab");
@@ -1672,6 +1685,8 @@ void VRGuiBuilder::buildBaseUI() {
     gtk_grid_attach(GTK_GRID(table38), label141, 0,0,1,1);
     gtk_grid_attach(GTK_GRID(table38), label145, 1,0,1,1);
     gtk_grid_attach(GTK_GRID(table38), treeview11, 0,1,2,1);
+
+    cout << " ..building all widgets done!" << endl;
 }
 
 

@@ -7,6 +7,11 @@ appProject="conceptV1.pvr"
 
 pckFolder="packages/"$appName
 
+pyPath="/c/usr/vcpkg/installed/x64-windows/share/python2/Lib"
+redistPath="/c/Program Files (x86)/Windows Kits/10/Redist/ucrt/DLLs/x64"
+redistPath2="/c/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Redist/MSVC/14.27.29016/x64/Microsoft.VC142.CRT/vcruntime140_1.dll"
+vcpkgLibs="/c/usr/vcpkg/installed/x64-windows/lib"
+
 if [ ! -e $pckFolder ]; then
 	mkdir -p $pckFolder 
 fi
@@ -23,15 +28,26 @@ cp -r ressources $pckFolder/engine/ressources
 cp -r setup $pckFolder/engine/setup
 cp -r shader $pckFolder/engine/shader
 
+echo " copy libs"
+cp -r $pyPath $pckFolder/engine/pyLibs
+mkdir -p $pckFolder/engine/libs
+cp -r "$redistPath"/* $pckFolder/engine/libs/
+cp -r "$redistPath2" $pckFolder/engine/libs/
+cp -r /c/usr/lib/opensg/* $pckFolder/engine/libs/
+cp -r /c/usr/lib/cef/* $pckFolder/engine/libs/
+cp -r "$vcpkgLibs"/* $pckFolder/engine/libs/
+
 
 cat <<EOT >> $pckFolder/startApp.bat
 @echo off
 
-set PATH=%PATH%;C:\Program Files (x86)\Windows Kits\10\Redist\ucrt\DLLs\x64;C:\usr\lib\opensg;C:\usr\vcpkg\installed\x64-windows\lib;C:\usr\lib\cef;
-set PYTHONPATH=%PYTHONPATH%;C:\usr\vcpkg\installed\x64-windows\share\python2\Lib
+set PATH=%PATH%;%~f0\..\engine\libs;
+set PYTHONPATH=%PYTHONPATH%;%~f0\..\engine\pyLibs
 cd engine
 polyvr.exe --application ../$appProject
 EOT
 
 
 echo " done"
+
+# package the folder $pckFolder with inno setup compiler
