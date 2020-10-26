@@ -178,6 +178,16 @@ GtkWidget* addNotebook(string ID) {
     return n;
 }
 
+void add1ToPaned(GtkWidget* p, GtkWidget* w) {
+    GtkWidget* v = gtk_scrolled_window_new(0,0);
+    gtk_container_add(GTK_CONTAINER(v), w);
+    gtk_paned_pack1(GTK_PANED(p), v, true, true);
+}
+
+void add2ToPaned(GtkWidget* p, GtkWidget* w) {
+    gtk_paned_pack2(GTK_PANED(p), w, true, true);
+}
+
 GtkWidget* addBox(string ID, GtkOrientation o) {
     auto n = gtk_box_new(o, 0);
     VRGuiBuilder::get()->reg_widget(n, ID);
@@ -284,7 +294,9 @@ GtkWidget* appendExpander(string ID, string label, string gID, GtkWidget* box) {
 
 void addNotebookPage(GtkWidget* notebook, GtkWidget* content, string label) {
     auto lbl = gtk_label_new(label.c_str());
+    gtk_widget_set_size_request(lbl, 1, -1);
     gtk_notebook_append_page(GTK_NOTEBOOK(notebook), content, lbl);
+    gtk_notebook_set_show_border(GTK_NOTEBOOK(notebook), true);
 
     /*auto i = gtk_notebook_append_page(GTK_NOTEBOOK(notebook), content, lbl);
     auto page = gtk_notebook_get_nth_page(GTK_NOTEBOOK(notebook), i);
@@ -370,7 +382,7 @@ void VRGuiBuilder::buildBaseUI() {
     gtk_grid_attach(GTK_GRID(main_frame), hseparator1, 0,1,2,1);
     gtk_grid_attach(GTK_GRID(main_frame), hpaned1, 0,2,2,1);
     gtk_widget_set_vexpand(hpaned1, true);
-    gtk_paned_set_position(GTK_PANED(hpaned1), 700);
+    gtk_paned_set_position(GTK_PANED(hpaned1), 210);
 
     auto banner = addImage("banner", "ressources/gui/logo4.png");
     auto label13 = addLabel("label13", "VR Setup:");
@@ -401,14 +413,15 @@ void VRGuiBuilder::buildBaseUI() {
     auto vpaned1 = addPaned("vpaned1", GTK_ORIENTATION_VERTICAL);
     auto vbox5 = addBox("vbox5", GTK_ORIENTATION_VERTICAL);
     auto hbox15 = addBox("hbox15", GTK_ORIENTATION_HORIZONTAL);
-    gtk_paned_add1(GTK_PANED(hpaned1), notebook1);
-    gtk_paned_add2(GTK_PANED(hpaned1), vpaned1);
-    gtk_paned_add1(GTK_PANED(vpaned1), vbox5);
-    gtk_paned_add2(GTK_PANED(vpaned1), hbox15);
+    add1ToPaned(hpaned1, notebook1);
+    add2ToPaned(hpaned1, vpaned1);
+    add1ToPaned(vpaned1, vbox5);
+    add2ToPaned(vpaned1, hbox15);
     gtk_widget_set_hexpand(notebook1, true);
     gtk_widget_set_vexpand(vbox5, true);
-    gtk_paned_set_position(GTK_PANED(vpaned1), 800);
-    gtk_widget_set_size_request(vbox5, -1, 800);
+    gtk_paned_set_position(GTK_PANED(vpaned1), 120);
+    //gtk_widget_set_size_request(vbox5, -1, 800);
+    //gtk_widget_set_size_request(hbox15, -1, 200);
 
     /* ---------- right core section ---------------------- */
     auto hbox1 = addBox("hbox1", GTK_ORIENTATION_HORIZONTAL);
@@ -1199,12 +1212,12 @@ void VRGuiBuilder::buildBaseUI() {
     auto scrolledwindow7 = addScrolledWindow("scrolledwindow7");
     auto textview1 = addTextview("textview1", "pydoc");
     gtk_widget_set_hexpand(treeview3, true);
-    gtk_paned_add1(GTK_PANED(hpaned2), table40);
+    add1ToPaned(hpaned2, table40);
     gtk_grid_attach(GTK_GRID(table40), image49, 0,0,1,1);
     gtk_grid_attach(GTK_GRID(table40), entry25, 1,0,1,1);
     gtk_grid_attach(GTK_GRID(table40), scrolledwindow8, 0,1,2,1);
     gtk_container_add(GTK_CONTAINER(scrolledwindow8), treeview3);
-    gtk_paned_add2(GTK_PANED(hpaned2), scrolledwindow7);
+    add2ToPaned(hpaned2, scrolledwindow7);
     gtk_container_add(GTK_CONTAINER(scrolledwindow7), textview1);
 
     addTreeviewTextcolumn(treeview3, "VR Module", "cellrenderertext1", 0);
@@ -1370,8 +1383,8 @@ void VRGuiBuilder::buildBaseUI() {
     gtk_grid_attach(GTK_GRID(scenegraph_tab), checkbutton16, 2,0,1,1);
     gtk_grid_attach(GTK_GRID(scenegraph_tab), hpaned3, 0,1,3,1);
     gtk_container_add(GTK_CONTAINER(scrolledwindow2), treeview6);
-    gtk_paned_add1(GTK_PANED(hpaned3), scrolledwindow2);
-    gtk_paned_add2(GTK_PANED(hpaned3), table11);
+    add1ToPaned(hpaned3, scrolledwindow2);
+    add2ToPaned(hpaned3, table11);
     gtk_widget_set_hexpand(treeview6, true);
     gtk_widget_set_hexpand(current_object_lab, true);
     gtk_widget_set_vexpand(treeview6, true);
