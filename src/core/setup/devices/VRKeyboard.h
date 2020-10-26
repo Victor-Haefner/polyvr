@@ -21,6 +21,9 @@ class VRKeyboard : public VRDevice {
         void keyboard(unsigned int k, bool pressed, int x, int y);
         void keyboard_special(int k, bool pressed, int x, int y);
 
+        bool shiftDown();
+        bool ctrlDown();
+
 #ifndef WITHOUT_GTK
         void setGtkEvent(_GdkEventKey* event);
         _GdkEventKey* getGtkEvent();

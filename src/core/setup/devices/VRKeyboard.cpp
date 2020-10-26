@@ -25,6 +25,9 @@ VRKeyboardPtr VRKeyboard::create() {
 
 VRKeyboardPtr VRKeyboard::ptr() { return static_pointer_cast<VRKeyboard>( shared_from_this() ); }
 
+bool VRKeyboard::shiftDown() { return b_state(65505); }
+bool VRKeyboard::ctrlDown() { return b_state(65507); }
+
 #ifndef WITHOUT_GTK
 void VRKeyboard::setGtkEvent(_GdkEventKey* event) { gdk_event = event; }
 _GdkEventKey* VRKeyboard::getGtkEvent() { return gdk_event; }

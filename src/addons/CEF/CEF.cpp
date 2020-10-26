@@ -293,12 +293,21 @@ void CEF::keyboard(VRDeviceWeakPtr d) {
     if (!focus) return;
     if (dev->getType() != "keyboard") return;
     //bool down = dev->getState();
-    VRKeyboardPtr kb = dynamic_pointer_cast<VRKeyboard>(dev);
-    if (!kb) return;
-    auto event = kb->getGtkEvent();
+    VRKeyboardPtr keyboard = dynamic_pointer_cast<VRKeyboard>(dev);
+    if (!keyboard) return;
+    auto event = keyboard->getGtkEvent();
     if (!browser) return;
     auto host = browser->GetHost();
     if (!host) return;
+
+    if (keyboard->ctrlDown() && event->type == GDK_KEY_PRESS) {
+        if (event->keyval == 'a') { browser->GetFocusedFrame()->SelectAll(); ctrlUsed = true; }
+        if (event->keyval == 'c') { browser->GetFocusedFrame()->Copy(); ctrlUsed = true; }
+        if (event->keyval == 'v') { browser->GetFocusedFrame()->Paste(); ctrlUsed = true; }
+        return;
+    }
+
+    if (ctrlUsed && event->type == GDK_KEY_RELEASE) return; // ignore next key up event when ctrl was used for a shortcut above!
 
     CefKeyEvent kev;
     kev.modifiers = GetCefStateModifiers(event->state);

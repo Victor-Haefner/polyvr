@@ -59,6 +59,7 @@ class CEF {
         float aspect = 1;
         bool init = false;
         bool focus = false;
+        bool ctrlUsed = false;
         int mX = -1;
         int mY = -1;
 
