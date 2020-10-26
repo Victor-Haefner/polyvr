@@ -420,8 +420,6 @@ void VRGuiBuilder::buildBaseUI() {
     gtk_widget_set_hexpand(notebook1, true);
     gtk_widget_set_vexpand(vbox5, true);
     gtk_paned_set_position(GTK_PANED(vpaned1), 120);
-    //gtk_widget_set_size_request(vbox5, -1, 800);
-    //gtk_widget_set_size_request(hbox15, -1, 200);
 
     /* ---------- right core section ---------------------- */
     auto hbox1 = addBox("hbox1", GTK_ORIENTATION_HORIZONTAL);
@@ -1089,6 +1087,8 @@ void VRGuiBuilder::buildBaseUI() {
     gtk_grid_attach(GTK_GRID(table14), scrolledwindow5, 0,1,1,1);
     gtk_grid_attach(GTK_GRID(table14), table15, 1,1,1,1);
     gtk_container_add(GTK_CONTAINER(scrolledwindow5), treeview5);
+    gtk_widget_set_hexpand(scrolledwindow5, false);
+    gtk_scrolled_window_set_propagate_natural_width(GTK_SCROLLED_WINDOW(scrolledwindow5), true);
 
     auto toolbutton6 = addToolButton("toolbutton6", "gtk-new", toolbar3);
     auto toolbutton20 = addToolButton("toolbutton20", "gtk-indent", toolbar3);
