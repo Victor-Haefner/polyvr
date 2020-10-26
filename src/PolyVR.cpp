@@ -394,6 +394,7 @@ void initOSGImporter() {
 
 void testGLCapabilities() {
     cout << "Check OpenGL capabilities:" << endl;
+    cout << " OpenGL vendor: " << VRRenderManager::getGLVendor() << endl;
     cout << " OpenGL version: " << VRRenderManager::getGLVersion() << endl;
     cout << " GLSL version: " << VRRenderManager::getGLSLVersion() << endl;
     cout << " has geometry shader: " << VRRenderManager::hasGeomShader() << endl;

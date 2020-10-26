@@ -369,6 +369,7 @@ GtkWidget* addVectorFrame(string ID, string fID) {
 void VRGuiBuilder::buildBaseUI() {
     cout << "VRGuiBuilder buildBaseUI.." << endl;
     auto window1 = addWindow("window1", "PolyVR");
+
     auto main_frame = addGrid("main_frame");
     gtk_container_add(GTK_CONTAINER(window1), main_frame);
     gtk_window_set_icon_from_file(GTK_WINDOW(window1), "ressources/gui/logo_icon.png", 0);
@@ -383,6 +384,7 @@ void VRGuiBuilder::buildBaseUI() {
     gtk_grid_attach(GTK_GRID(main_frame), hpaned1, 0,2,2,1);
     gtk_widget_set_vexpand(hpaned1, true);
     gtk_paned_set_position(GTK_PANED(hpaned1), 210);
+    gtk_paned_set_wide_handle(GTK_PANED(hpaned1), true);
 
     auto banner = addImage("banner", "ressources/gui/logo4.png");
     auto label13 = addLabel("label13", "VR Setup:");
@@ -420,6 +422,7 @@ void VRGuiBuilder::buildBaseUI() {
     gtk_widget_set_hexpand(notebook1, true);
     gtk_widget_set_vexpand(vbox5, true);
     gtk_paned_set_position(GTK_PANED(vpaned1), 120);
+    gtk_paned_set_wide_handle(GTK_PANED(vpaned1), true);
 
     /* ---------- right core section ---------------------- */
     auto hbox1 = addBox("hbox1", GTK_ORIENTATION_HORIZONTAL);

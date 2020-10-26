@@ -83,6 +83,7 @@ class VRRenderManager : public VRStorage {
         void update();
         void reloadStageShaders();
 
+        static string getGLVendor();
         static string getGLVersion();
         static int getGLSLVersion();
         static bool hasGeomShader();

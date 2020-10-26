@@ -206,6 +206,7 @@ int VRRenderManager::getGLSLVersion() {
     return i1*100 + i2;
 }
 
+string VRRenderManager::getGLVendor() { return glParam(GL_VENDOR); }
 string VRRenderManager::getGLVersion() { return glParam(GL_VERSION); }
 bool VRRenderManager::hasGeomShader() { int v = getGLSLVersion(); return (v >= 150); }
 bool VRRenderManager::hasTessShader() { int v = getGLSLVersion(); return (v >= 400); }

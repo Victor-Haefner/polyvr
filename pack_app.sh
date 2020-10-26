@@ -27,6 +27,7 @@ cp -r build/Release/* $pckFolder/engine/
 cp -r ressources $pckFolder/engine/ressources
 cp -r setup $pckFolder/engine/setup
 cp -r shader $pckFolder/engine/shader
+cp -r examples $pckFolder/engine/examples
 
 echo " copy libs"
 cp -r $pyPath $pckFolder/engine/pyLibs
@@ -44,9 +45,10 @@ cat <<EOT >> $pckFolder/startApp.bat
 set PATH=%PATH%;%~f0\..\engine\libs;
 set PYTHONPATH=%PYTHONPATH%;%~f0\..\engine\pyLibs
 cd engine
-polyvr.exe --application ../$appProject
+polyvr.exe
 EOT
 
+#polyvr.exe --application ../$appProject
 
 echo " done"
 

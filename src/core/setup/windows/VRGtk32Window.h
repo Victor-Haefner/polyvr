@@ -1,6 +1,7 @@
 #include "core/gui/gtkglext/gtk/gtkgl.h"
 
 VRGtkWindow::VRGtkWindow(GtkDrawingArea* da, string msaa) {
+    cout << " -= VRGtkWindow init =-" << endl;
     type = 2;
     drawArea = da;
     widget = (GtkWidget*)drawArea;
@@ -11,11 +12,12 @@ VRGtkWindow::VRGtkWindow(GtkDrawingArea* da, string msaa) {
     if (VROptions::get()->getOption<bool>("active_stereo"))
         mode = (GdkGLConfigMode)(GDK_GL_MODE_RGBA | GDK_GL_MODE_DOUBLE | GDK_GL_MODE_DEPTH | GDK_GL_MODE_STENCIL | GDK_GL_MODE_MULTISAMPLE | GDK_GL_MODE_STEREO);
     GdkGLConfig* glConfigMode = gdk_gl_config_new_by_mode(mode, MSAA);
+    cout << "  glConfigMode: " << glConfigMode << endl;
 
-    gtk_widget_set_gl_capability(widget,glConfigMode,NULL,true,GDK_GL_RGBA_TYPE);
+    bool r = gtk_widget_set_gl_capability(widget,glConfigMode,NULL,true,GDK_GL_RGBA_TYPE);
+    cout << "  gtk_widget_set_gl_capability: " << r << endl;
 
-
-    gtk_widget_show(widget);
+    gtk_widget_show_all(widget);
     gtk_widget_add_events(widget, (GdkEventMask)GDK_VISIBILITY_NOTIFY_MASK);
     gtk_widget_add_events(widget, (GdkEventMask)GDK_BUTTON_PRESS_MASK);
     gtk_widget_add_events(widget, (GdkEventMask)GDK_BUTTON_RELEASE_MASK);
@@ -38,6 +40,7 @@ VRGtkWindow::VRGtkWindow(GtkDrawingArea* da, string msaa) {
     connect_signal<bool, GdkEventMotion*>(drawArea, bind(&VRGtkWindow::on_motion, this, PL::_1), "motion_notify_event");
     connect_signal<bool, GdkEventKey*>(drawArea, bind(&VRGtkWindow::on_key, this, PL::_1), "key_press_event");
     connect_signal<bool, GdkEventKey*>(drawArea, bind(&VRGtkWindow::on_key, this, PL::_1), "key_release_event");
+    cout << "  VRGtkWindow init done" << endl;
 }
 
 void VRGtkWindow::clear(Color3f c) {

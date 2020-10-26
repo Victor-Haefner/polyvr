@@ -56,9 +56,10 @@ class VRGuiBits {
         void update_terminals();
 
         void toggleDock();
-        bool toggleFullscreen(_GdkEventKey* k);
-        bool toggleWidgets(_GdkEventKey* k);
-        bool toggleStereo(_GdkEventKey* k);
+        void toggleFullscreen();
+        void toggleWidgets();
+        void toggleStereo();
+        bool pressFKey(_GdkEventKey* k);
 
         void update();
         void wipeConsoles();

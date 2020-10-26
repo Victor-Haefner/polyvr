@@ -181,8 +181,7 @@ void VRGuiBits::hideAbout(int i) {
     gtk_widget_hide(diag);
 }
 
-bool VRGuiBits::toggleWidgets(GdkEventKey* k) {
-    if (k->keyval != 65481) return false;
+void VRGuiBits::toggleWidgets() {
     static bool fs = false;
     fs = !fs;
 
@@ -192,38 +191,48 @@ bool VRGuiBits::toggleWidgets(GdkEventKey* k) {
     GtkWidget* nb1 = VRGuiBuilder::get()->get_widget("notebook1");
     GtkWidget* hb1 = VRGuiBuilder::get()->get_widget("hbox1");
     GtkWidget* hb2 = VRGuiBuilder::get()->get_widget("hbox15");
+    GtkWidget* hp1 = VRGuiBuilder::get()->get_widget("hpaned1");
 
     if (fs) {
-        gtk_widget_hide(nb1);
+        //gtk_widget_hide(nb1);
+        gtk_paned_set_position(GTK_PANED(hp1), 0);
+        gtk_paned_set_wide_handle(GTK_PANED(hp1), false);
         gtk_widget_hide(hb1);
         gtk_widget_hide(hb2);
         gtk_widget_hide(tab);
         gtk_widget_hide(hs1);
-    } else gtk_widget_show_all(win);
-    return true;
+    }
+    else {
+        gtk_paned_set_position(GTK_PANED(hp1), 410);
+        gtk_paned_set_wide_handle(GTK_PANED(hp1), true);
+        gtk_widget_show_all(win);
+    }
 }
 
-bool VRGuiBits::toggleFullscreen(GdkEventKey* k) {
-    if (k->keyval != 65480) return false;
+void VRGuiBits::toggleFullscreen() {
     static bool fs = false;
     fs = !fs;
-
     GtkWindow* win = (GtkWindow*)VRGuiBuilder::get()->get_widget("window1");
     if (fs) gtk_window_fullscreen(win);
     else gtk_window_unfullscreen(win);
-    return true;
 }
 
-bool VRGuiBits::toggleStereo(GdkEventKey* k) {
-    if (k->keyval != 65479) return false;
-
+void VRGuiBits::toggleStereo() {
     auto win = VRSetup::getCurrent()->getEditorWindow();
     for (auto v : win->getViews()) {
         if (v == 0) continue;
         bool b = v->isStereo();
         v->setStereo(!b);
     }
+}
 
+bool VRGuiBits::pressFKey(GdkEventKey* k) {
+    if (k->keyval == 65479) toggleStereo();
+    if (k->keyval == 65480) toggleFullscreen();
+    if (k->keyval == 65481) toggleWidgets();
+
+    GtkWindow* win = (GtkWindow*)VRGuiBuilder::get()->get_widget("window1");
+    gtk_window_propagate_key_event(GTK_WINDOW(win), k);
     return true;
 }
 
@@ -297,9 +306,7 @@ VRGuiBits::VRGuiBits() {
 
     // window fullscreen
     GtkWidget* win = VRGuiBuilder::get()->get_widget("window1");
-    connect_signal<bool,GdkEventKey*>(win, bind(&VRGuiBits::toggleStereo, this, placeholders::_1), "key_press_event");
-    connect_signal<bool,GdkEventKey*>(win, bind(&VRGuiBits::toggleFullscreen, this, placeholders::_1), "key_press_event");
-    connect_signal<bool,GdkEventKey*>(win, bind(&VRGuiBits::toggleWidgets, this, placeholders::_1), "key_press_event");
+    connect_signal<bool,GdkEventKey*>(win, bind(&VRGuiBits::pressFKey, this, placeholders::_1), "key_press_event");
 
     // TERMINAL
     terminal = (GtkNotebook*)gtk_notebook_new();
