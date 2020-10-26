@@ -38,6 +38,12 @@ VRSyncChangelist::VRSyncChangelist() {}
 VRSyncChangelist::~VRSyncChangelist() { cout << "~VRSyncChangelist::VRSyncChangelist" << endl; }
 VRSyncChangelistPtr VRSyncChangelist::create() { return VRSyncChangelistPtr( new VRSyncChangelist() ); }
 
+string toString(const BitVector& v) {
+    std::stringstream ss;
+    ss << std::bitset<sizeof(BitVector)*CHAR_BIT>(v);
+    return ss.str();
+}
+
 struct SerialEntry {
     UInt32 localId = 0; //local FieldContainer Id
     BitVector fieldMask;
@@ -597,75 +603,73 @@ void VRSyncChangelist::filterFieldMask(VRSyncNodePtr syncNode, FieldContainer* f
     }
 
     FieldContainerFactoryBase* factory = FieldContainerFactory::the();
-    if (factory->findType(sentry.fcTypeID)->isNodeCore()) { // don't copy GLId fields, they are not valid Ids!
-        if (dynamic_cast<Geometry*>(fc)) {
-            sentry.fieldMask &= ~Geometry::ClassicGLIdFieldMask;
-            sentry.fieldMask &= ~Geometry::AttGLIdFieldMask;
-            sentry.fieldMask &= ~Geometry::ClassicVaoGLIdFieldMask;
-            sentry.fieldMask &= ~Geometry::AttribVaoGLIdFieldMask;
-        }
+    if (dynamic_cast<Geometry*>(fc)) {
+        sentry.fieldMask &= ~Geometry::ClassicGLIdFieldMask;
+        sentry.fieldMask &= ~Geometry::AttGLIdFieldMask;
+        sentry.fieldMask &= ~Geometry::ClassicVaoGLIdFieldMask;
+        sentry.fieldMask &= ~Geometry::AttribVaoGLIdFieldMask;
+    }
 
-        if (dynamic_cast<Surface*>(fc)) {
-            sentry.fieldMask &= ~Surface::SurfaceGLIdFieldMask;
-        }
+    if (dynamic_cast<Surface*>(fc)) {
+        sentry.fieldMask &= ~Surface::SurfaceGLIdFieldMask;
+    }
 
-        if (dynamic_cast<GeoProperty*>(fc)) {
-            sentry.fieldMask &= ~GeoProperty::GLIdFieldMask;
-        }
+    if (dynamic_cast<GeoProperty*>(fc)) {
+        sentry.fieldMask &= ~GeoProperty::GLIdFieldMask;
+    }
 
-        if (dynamic_cast<GeoMultiPropertyData*>(fc)) {
-            sentry.fieldMask &= ~GeoMultiPropertyData::GLIdFieldMask;
-        }
+    if (dynamic_cast<GeoMultiPropertyData*>(fc)) {
+        sentry.fieldMask &= ~GeoMultiPropertyData::GLIdFieldMask;
+    }
 
-        if (dynamic_cast<RenderBuffer*>(fc)) {
-            sentry.fieldMask &= ~RenderBuffer::GLIdFieldMask;
-        }
+    if (dynamic_cast<RenderBuffer*>(fc)) {
+        sentry.fieldMask &= ~RenderBuffer::GLIdFieldMask;
+    }
 
-        if (dynamic_cast<FrameBufferObject*>(fc)) {
-            sentry.fieldMask &= ~FrameBufferObject::GLIdFieldMask;
-            sentry.fieldMask &= ~FrameBufferObject::MultiSampleGLIdFieldMask;
-        }
+    if (dynamic_cast<FrameBufferObject*>(fc)) {
+        sentry.fieldMask &= ~FrameBufferObject::GLIdFieldMask;
+        sentry.fieldMask &= ~FrameBufferObject::MultiSampleGLIdFieldMask;
+    }
 
-        if (dynamic_cast<TextureObjRefChunk*>(fc)) {
-            sentry.fieldMask &= ~TextureObjRefChunk::OsgGLIdFieldMask;
-            sentry.fieldMask &= ~TextureObjRefChunk::OglGLIdFieldMask;
-        }
+    if (dynamic_cast<TextureObjRefChunk*>(fc)) {
+        sentry.fieldMask &= ~TextureObjRefChunk::OsgGLIdFieldMask;
+        sentry.fieldMask &= ~TextureObjRefChunk::OglGLIdFieldMask;
+    }
 
-        if (dynamic_cast<UniformBufferObjStd140Chunk*>(fc)) {
-            sentry.fieldMask &= ~UniformBufferObjStd140Chunk::GLIdFieldMask;
-        }
+    if (dynamic_cast<UniformBufferObjStd140Chunk*>(fc)) {
+        sentry.fieldMask &= ~UniformBufferObjStd140Chunk::GLIdFieldMask;
+    }
 
-        if (dynamic_cast<ShaderStorageBufferObjStdLayoutChunk*>(fc)) {
-            sentry.fieldMask &= ~ShaderStorageBufferObjStdLayoutChunk::GLIdFieldMask;
-        }
+    if (dynamic_cast<ShaderStorageBufferObjStdLayoutChunk*>(fc)) {
+        sentry.fieldMask &= ~ShaderStorageBufferObjStdLayoutChunk::GLIdFieldMask;
+    }
 
-        if (dynamic_cast<TextureObjChunk*>(fc)) {
-            sentry.fieldMask &= ~TextureObjChunk::GLIdFieldMask;
-        }
+    if (dynamic_cast<TextureObjChunk*>(fc)) {
+        sentry.fieldMask &= ~TextureObjChunk::GLIdFieldMask;
+    }
 
-        if (dynamic_cast<UniformBufferObjChunk*>(fc)) {
-            sentry.fieldMask &= ~UniformBufferObjChunk::GLIdFieldMask;
-        }
+    if (dynamic_cast<UniformBufferObjChunk*>(fc)) {
+        sentry.fieldMask &= ~UniformBufferObjChunk::GLIdFieldMask;
+    }
 
-        if (dynamic_cast<ShaderStorageBufferObjChunk*>(fc)) {
-            sentry.fieldMask &= ~ShaderStorageBufferObjChunk::GLIdFieldMask;
-        }
+    if (dynamic_cast<ShaderStorageBufferObjChunk*>(fc)) {
+        sentry.fieldMask &= ~ShaderStorageBufferObjChunk::GLIdFieldMask;
+    }
 
-        if (dynamic_cast<ShaderExecutableChunk*>(fc)) {
-            sentry.fieldMask &= ~ShaderExecutableChunk::GLIdFieldMask;
-        }
+    if (dynamic_cast<ShaderExecutableChunk*>(fc)) {
+        sentry.fieldMask &= ~ShaderExecutableChunk::GLIdFieldMask;
+    }
 
-        if (dynamic_cast<SimpleSHLChunk*>(fc)) {
-            sentry.fieldMask &= ~SimpleSHLChunk::GLIdFieldMask;
-        }
+    if (dynamic_cast<SimpleSHLChunk*>(fc)) {
+        sentry.fieldMask &= ~SimpleSHLChunk::GLIdFieldMask;
+    }
 
-        if (dynamic_cast<ShaderProgram*>(fc)) {
-            sentry.fieldMask &= ~ShaderProgram::GLIdFieldMask;
-        }
+    if (dynamic_cast<ShaderProgram*>(fc)) {
+        sentry.fieldMask &= ~ShaderProgram::GLIdFieldMask;
+    }
 
-        if (dynamic_cast<ProgramChunk*>(fc)) {
-            sentry.fieldMask &= ~ProgramChunk::GLIdFieldMask;
-        }
+    if (dynamic_cast<ProgramChunk*>(fc)) {
+        sentry.fieldMask &= ~ProgramChunk::GLIdFieldMask;
     }
 }
 

@@ -163,25 +163,21 @@ bool VRSyncNode::isSubContainer(const UInt32& id) {
             auto scID = VRMaterial::fieldContainerMap[id];
             return isSubContainer(scID);
         }
+        cout << "  -- WARNING -- untracked ShaderProgram " << id << endl;
     }
 
-    if (typeName == "ShaderVariableOSG") {
+    if (typeName == "ShaderVariableOSG" || typeName == "ShaderVariableInt" || typeName == "ShaderVariableReal") {
         if (VRMaterial::fieldContainerMap.count(id)) {
             auto scID = VRMaterial::fieldContainerMap[id];
             return isSubContainer(scID);
         }
+        cout << "  -- WARNING -- untracked ShaderVariable " << id << endl;
     }
 
-    if (typeName == "ShaderVariableReal") {
-        if (VRMaterial::fieldContainerMap.count(id)) {
-            auto scID = VRMaterial::fieldContainerMap[id];
-            return isSubContainer(scID);
-        }
+    if (typeName == "Image" || typeName == "SolidBackground" || typeName == "FrameBufferObject") { // TODO, implement propper check
+        //cout << " -- WARNING -- unhandled FC type in isSubContainer: " << id << " " << typeName << endl;
+        return false;
     }
-
-    /*if (typeName == "Image") { // TODO, implement propper check
-        return true;
-    }*/
 
 
     cout << " -- WARNING -- unhandled FC type in isSubContainer: " << id << " " << typeName << endl;
