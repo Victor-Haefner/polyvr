@@ -24,7 +24,7 @@ string VRGuiFile::preset = "SOLIDWORKS-VRML2";
 typedef boost::filesystem::path path;
 
 void VRGuiFile::init() {
-    VRGuiFile::dialog = (GtkFileChooserDialog*)VRGuiBuilder::get()->get_widget("file_dialog");
+    VRGuiFile::dialog = GTK_FILE_CHOOSER_DIALOG(VRGuiBuilder::get()->get_widget("file_dialog"));
     setButtonCallback("button3", bind(&VRGuiFile::close));
     setButtonCallback("button9", bind(&VRGuiFile::apply));
     connect_signal<void>(dialog, bind(VRGuiFile::select), "selection_changed");
@@ -56,7 +56,8 @@ void VRGuiFile::close() {
 
 void VRGuiFile::setWidget(GtkTable* table, bool expand, bool fill) {
     if (addon == table) return;
-    auto vbox = VRGuiBuilder::get()->get_widget("dialog-vbox1");
+    auto vbox = gtk_dialog_get_content_area(GTK_DIALOG(dialog));
+    if (!vbox) cout << "Error in VRGuiFile::setWidget: no file dialog vbox!" << endl;
 
     // sub
     if (addon) {
@@ -67,8 +68,8 @@ void VRGuiFile::setWidget(GtkTable* table, bool expand, bool fill) {
     if (table == 0) return;
 
     // add
-    gtk_box_pack_start((GtkBox*)vbox, (GtkWidget*)table, expand, fill, 0);
-    gtk_widget_show_all((GtkWidget*)vbox);
+    gtk_box_pack_start(GTK_BOX(vbox), GTK_WIDGET(table), expand, fill, 0);
+    gtk_widget_show_all(GTK_WIDGET(vbox));
 }
 
 void VRGuiFile::on_toggle_cache_override(GtkCheckButton* b) {
@@ -93,13 +94,14 @@ void VRGuiFile::setGeoLoadWidget() {
         auto label163 = gtk_label_new("Loader:");
         auto openFileWarning1 = gtk_label_new("Scale:");
         auto entry21 = gtk_entry_new();
-        auto combobox15 = gtk_combo_box_new();
-        auto cellrenderertext54 = gtk_cell_renderer_text_new();
+
+        auto store = VRGuiBuilder::get()->get_object("fileOpenPresets");
+        auto combobox15 = gtk_combo_box_new_with_model_and_entry(GTK_TREE_MODEL(store));
+        gtk_combo_box_set_id_column(GTK_COMBO_BOX(combobox15), 0);
+        gtk_combo_box_set_entry_text_column(GTK_COMBO_BOX(combobox15), 0);
+        gtk_combo_box_set_button_sensitivity(GTK_COMBO_BOX(combobox15), GTK_SENSITIVITY_ON);
 
         gtk_misc_set_alignment((GtkMisc*)openFileWarning1, 1, 0);
-
-        gtk_box_pack_start((GtkBox*)combobox15, (GtkWidget*)cellrenderertext54, false, false, 0);
-        gtk_cell_layout_add_attribute((GtkCellLayout*)combobox15, (GtkCellRenderer*)cellrenderertext54, "text", 0 );
 
         GtkAttachOptions opts = GtkAttachOptions(GTK_FILL|GTK_EXPAND);
         GtkAttachOptions opts3 = GTK_FILL;
@@ -116,7 +118,6 @@ void VRGuiFile::setGeoLoadWidget() {
         connect_signal<void>(cache_override, bind(VRGuiFile::on_toggle_cache_override, (_GtkCheckButton*)cache_override), "toggled");
         connect_signal<void>(combobox15, bind(VRGuiFile::on_change_preset, (_GtkComboBox*)combobox15), "changed");
 
-        auto store = VRGuiBuilder::get()->get_object("fileOpenPresets");
         vector<string> presets = { "SOLIDWORKS-VRML2", "OSG", "COLLADA", "PVR" };
         fillStringListstore("fileOpenPresets", presets);
         gtk_combo_box_set_model((GtkComboBox*)combobox15, (GtkTreeModel*)store);
@@ -164,6 +165,7 @@ void VRGuiFile::addFilter(string name, int N, ...) {
 }
 
 void VRGuiFile::clearFilter() {
+    if (dialog == 0) init();
     GSList* filters = gtk_file_chooser_list_filters(GTK_FILE_CHOOSER(dialog));
     for (GSList* elem = filters; elem != NULL; elem = g_slist_next(elem))
         gtk_file_chooser_remove_filter((GtkFileChooser*)dialog, (GtkFileFilter*)elem->data);

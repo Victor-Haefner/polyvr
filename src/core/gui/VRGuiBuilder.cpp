@@ -573,6 +573,8 @@ void VRGuiBuilder::buildBaseUI() {
     reg_widget(GTK_WIDGET(button3), "button3");
     reg_widget(GTK_WIDGET(button9), "button9");
 #endif
+    auto fileOpenPresets = gtk_list_store_new(1, G_TYPE_STRING);
+    reg_object(G_OBJECT(fileOpenPresets), "fileOpenPresets");
 
     cout << " build internal monitor dialog" << endl;
     /* ---------- internal monitor ---------------------- */
