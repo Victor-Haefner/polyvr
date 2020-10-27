@@ -1,5 +1,5 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8; coding: utf-8 -*-
- *
+ * gtksourcemarkattributes.c
  * This file is part of GtkSourceView
  *
  * Copyright (C) 2010 - Jesse van den Kieboom
@@ -15,18 +15,16 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this library; if not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-
-#define GTK_SOURCE_H_INSIDE
-
-#include "config.h"
 
 #include "gtksourcemarkattributes.h"
 #include "gtksourcemark.h"
-#include "gtksource-marshal.h"
+#include "gtksourceview-i18n.h"
 #include "gtksourcepixbufhelper.h"
+#include "gtksourceview-marshal.h"
 
 /**
  * SECTION:markattributes
@@ -58,6 +56,11 @@
  *  </listitem>
  *  <listitem>
  *   <para>
+ *    gtk_source_mark_attributes_set_stock_id()
+ *   </para>
+ *  </listitem>
+ *  <listitem>
+ *   <para>
  *    gtk_source_mark_attributes_set_gicon()
  *   </para>
  *  </listitem>
@@ -77,6 +80,8 @@
  * takes precedence.
  */
 
+#define GTK_SOURCE_MARK_ATTRIBUTES_GET_PRIVATE(object)(G_TYPE_INSTANCE_GET_PRIVATE((object), GTK_SOURCE_TYPE_MARK_ATTRIBUTES, GtkSourceMarkAttributesPrivate))
+
 struct _GtkSourceMarkAttributesPrivate
 {
 	GdkRGBA background;
@@ -86,12 +91,13 @@ struct _GtkSourceMarkAttributesPrivate
 	guint background_set : 1;
 };
 
-G_DEFINE_TYPE_WITH_PRIVATE (GtkSourceMarkAttributes, gtk_source_mark_attributes, G_TYPE_OBJECT)
+G_DEFINE_TYPE (GtkSourceMarkAttributes, gtk_source_mark_attributes, G_TYPE_OBJECT)
 
 enum
 {
 	PROP_0,
 	PROP_BACKGROUND,
+	PROP_STOCK_ID,
 	PROP_PIXBUF,
 	PROP_ICON_NAME,
 	PROP_GICON
@@ -101,10 +107,10 @@ enum
 {
 	QUERY_TOOLTIP_TEXT,
 	QUERY_TOOLTIP_MARKUP,
-	N_SIGNALS
+	NUM_SIGNALS
 };
 
-static guint signals[N_SIGNALS];
+static guint signals[NUM_SIGNALS] = {0,};
 
 static void
 gtk_source_mark_attributes_finalize (GObject *object)
@@ -118,7 +124,7 @@ gtk_source_mark_attributes_finalize (GObject *object)
 
 static void
 set_background (GtkSourceMarkAttributes *attributes,
-		const GdkRGBA           *color)
+                const GdkRGBA         *color)
 {
 	if (color)
 	{
@@ -131,8 +137,22 @@ set_background (GtkSourceMarkAttributes *attributes,
 }
 
 static void
+set_stock_id (GtkSourceMarkAttributes *attributes,
+              const gchar           *stock_id)
+{
+	if (0 != g_strcmp0 (gtk_source_pixbuf_helper_get_stock_id (attributes->priv->helper),
+	                                                           stock_id))
+	{
+		gtk_source_pixbuf_helper_set_stock_id (attributes->priv->helper,
+				                       stock_id);
+
+		g_object_notify (G_OBJECT (attributes), "stock-id");
+	}
+}
+
+static void
 set_icon_name (GtkSourceMarkAttributes *attributes,
-	       const gchar             *icon_name)
+               const gchar           *icon_name)
 {
 	if (g_strcmp0 (gtk_source_pixbuf_helper_get_icon_name (attributes->priv->helper),
 	                                                       icon_name) == 0)
@@ -148,7 +168,7 @@ set_icon_name (GtkSourceMarkAttributes *attributes,
 
 static void
 set_pixbuf (GtkSourceMarkAttributes *attributes,
-	    const GdkPixbuf         *pixbuf)
+            const GdkPixbuf       *pixbuf)
 {
 	if (gtk_source_pixbuf_helper_get_pixbuf (attributes->priv->helper) == pixbuf)
 	{
@@ -163,7 +183,7 @@ set_pixbuf (GtkSourceMarkAttributes *attributes,
 
 static void
 set_gicon (GtkSourceMarkAttributes *attributes,
-	   GIcon                   *gicon)
+           GIcon                 *gicon)
 {
 	if (gtk_source_pixbuf_helper_get_gicon (attributes->priv->helper) == gicon)
 	{
@@ -178,9 +198,9 @@ set_gicon (GtkSourceMarkAttributes *attributes,
 
 static void
 gtk_source_mark_attributes_set_property (GObject      *object,
-					 guint         prop_id,
-					 const GValue *value,
-					 GParamSpec   *pspec)
+                                         guint         prop_id,
+                                         const GValue *value,
+                                         GParamSpec   *pspec)
 {
 	GtkSourceMarkAttributes *self = GTK_SOURCE_MARK_ATTRIBUTES (object);
 
@@ -188,6 +208,9 @@ gtk_source_mark_attributes_set_property (GObject      *object,
 	{
 		case PROP_BACKGROUND:
 			set_background (self, g_value_get_boxed (value));
+			break;
+		case PROP_STOCK_ID:
+			set_stock_id (self, g_value_get_string (value));
 			break;
 		case PROP_PIXBUF:
 			set_pixbuf (self, g_value_get_object (value));
@@ -206,9 +229,9 @@ gtk_source_mark_attributes_set_property (GObject      *object,
 
 static void
 gtk_source_mark_attributes_get_property (GObject    *object,
-					 guint       prop_id,
-					 GValue     *value,
-					 GParamSpec *pspec)
+                                         guint       prop_id,
+                                         GValue     *value,
+                                         GParamSpec *pspec)
 {
 	GtkSourceMarkAttributes *self = GTK_SOURCE_MARK_ATTRIBUTES (object);
 
@@ -223,6 +246,10 @@ gtk_source_mark_attributes_get_property (GObject    *object,
 			{
 				g_value_set_boxed (value, NULL);
 			}
+			break;
+		case PROP_STOCK_ID:
+			g_value_set_string (value,
+			                    gtk_source_pixbuf_helper_get_stock_id (self->priv->helper));
 			break;
 		case PROP_PIXBUF:
 			g_value_set_object (value,
@@ -252,6 +279,8 @@ gtk_source_mark_attributes_class_init (GtkSourceMarkAttributesClass *klass)
 	object_class->get_property = gtk_source_mark_attributes_get_property;
 	object_class->set_property = gtk_source_mark_attributes_set_property;
 
+	g_type_class_add_private (object_class, sizeof (GtkSourceMarkAttributesPrivate));
+
 	/**
 	 * GtkSourceMarkAttributes:background:
 	 *
@@ -260,11 +289,23 @@ gtk_source_mark_attributes_class_init (GtkSourceMarkAttributesClass *klass)
 	g_object_class_install_property (object_class,
 	                                 PROP_BACKGROUND,
 	                                 g_param_spec_boxed ("background",
-	                                                     "Background",
-	                                                     "The background",
+	                                                     _("Background"),
+	                                                     _("The background"),
 	                                                     GDK_TYPE_RGBA,
-	                                                     G_PARAM_READWRITE |
-							     G_PARAM_STATIC_STRINGS));
+	                                                     G_PARAM_READWRITE));
+
+	/**
+	 * GtkSourceMarkAttributes:stock-id:
+	 *
+	 * A stock id that may be a base of a rendered icon.
+	 */
+	g_object_class_install_property (object_class,
+	                                 PROP_STOCK_ID,
+	                                 g_param_spec_string ("stock-id",
+	                                                      _("Stock Id"),
+	                                                      _("The stock id"),
+	                                                      NULL,
+	                                                      G_PARAM_READWRITE));
 
 	/**
 	 * GtkSourceMarkAttributes:pixbuf:
@@ -274,11 +315,10 @@ gtk_source_mark_attributes_class_init (GtkSourceMarkAttributesClass *klass)
 	g_object_class_install_property (object_class,
 	                                 PROP_PIXBUF,
 	                                 g_param_spec_object ("pixbuf",
-	                                                      "Pixbuf",
-	                                                      "The pixbuf",
+	                                                      _("Pixbuf"),
+	                                                      _("The pixbuf"),
 	                                                      GDK_TYPE_PIXBUF,
-	                                                      G_PARAM_READWRITE |
-							      G_PARAM_STATIC_STRINGS));
+	                                                      G_PARAM_READWRITE));
 
 	/**
 	 * GtkSourceMarkAttributes:icon-name:
@@ -288,11 +328,10 @@ gtk_source_mark_attributes_class_init (GtkSourceMarkAttributesClass *klass)
 	g_object_class_install_property (object_class,
 	                                 PROP_ICON_NAME,
 	                                 g_param_spec_string ("icon-name",
-	                                                      "Icon Name",
-	                                                      "The icon name",
+	                                                      _("Icon Name"),
+	                                                      _("The icon name"),
 	                                                      NULL,
-	                                                      G_PARAM_READWRITE |
-							      G_PARAM_STATIC_STRINGS));
+	                                                      G_PARAM_READWRITE));
 
 	/**
 	 * GtkSourceMarkAttributes:gicon:
@@ -302,11 +341,10 @@ gtk_source_mark_attributes_class_init (GtkSourceMarkAttributesClass *klass)
 	g_object_class_install_property (object_class,
 	                                 PROP_GICON,
 	                                 g_param_spec_object ("gicon",
-	                                                      "GIcon",
-	                                                      "The GIcon",
+	                                                      _("GIcon"),
+	                                                      _("The GIcon"),
 	                                                      G_TYPE_ICON,
-	                                                      G_PARAM_READWRITE |
-							      G_PARAM_STATIC_STRINGS));
+	                                                      G_PARAM_READWRITE));
 
 	/**
 	 * GtkSourceMarkAttributes::query-tooltip-text:
@@ -324,14 +362,12 @@ gtk_source_mark_attributes_class_init (GtkSourceMarkAttributesClass *klass)
 		              G_TYPE_FROM_CLASS (klass),
 		              G_SIGNAL_RUN_LAST,
 		              0,
-		              NULL, NULL,
-		              _gtk_source_marshal_STRING__OBJECT,
+		              NULL,
+		              NULL,
+		              _gtksourceview_marshal_STRING__OBJECT,
 		              G_TYPE_STRING,
 		              1,
 		              GTK_SOURCE_TYPE_MARK);
-	g_signal_set_va_marshaller (signals[QUERY_TOOLTIP_TEXT],
-	                            G_TYPE_FROM_CLASS (klass),
-	                            _gtk_source_marshal_STRING__OBJECTv);
 
 	/**
 	 * GtkSourceMarkAttributes::query-tooltip-markup:
@@ -349,20 +385,18 @@ gtk_source_mark_attributes_class_init (GtkSourceMarkAttributesClass *klass)
 		              G_TYPE_FROM_CLASS (klass),
 		              G_SIGNAL_RUN_LAST,
 		              0,
-		              NULL, NULL,
-		              _gtk_source_marshal_STRING__OBJECT,
+		              NULL,
+		              NULL,
+		              _gtksourceview_marshal_STRING__OBJECT,
 		              G_TYPE_STRING,
 		              1,
 		              GTK_SOURCE_TYPE_MARK);
-	g_signal_set_va_marshaller (signals[QUERY_TOOLTIP_TEXT],
-	                            G_TYPE_FROM_CLASS (klass),
-	                            _gtk_source_marshal_STRING__OBJECTv);
 }
 
 static void
 gtk_source_mark_attributes_init (GtkSourceMarkAttributes *self)
 {
-	self->priv = gtk_source_mark_attributes_get_instance_private (self);
+	self->priv = GTK_SOURCE_MARK_ATTRIBUTES_GET_PRIVATE (self);
 
 	self->priv->helper = gtk_source_pixbuf_helper_new ();
 }
@@ -375,7 +409,7 @@ gtk_source_mark_attributes_init (GtkSourceMarkAttributes *self)
  * Returns: (transfer full): a new source mark attributes.
  */
 GtkSourceMarkAttributes *
-gtk_source_mark_attributes_new (void)
+gtk_source_mark_attributes_new ()
 {
 	return g_object_new (GTK_SOURCE_TYPE_MARK_ATTRIBUTES, NULL);
 }
@@ -389,7 +423,7 @@ gtk_source_mark_attributes_new (void)
  */
 void
 gtk_source_mark_attributes_set_background (GtkSourceMarkAttributes *attributes,
-					   const GdkRGBA           *background)
+                                           const GdkRGBA           *background)
 {
 	g_return_if_fail (GTK_SOURCE_IS_MARK_ATTRIBUTES (attributes));
 
@@ -407,7 +441,7 @@ gtk_source_mark_attributes_set_background (GtkSourceMarkAttributes *attributes,
  */
 gboolean
 gtk_source_mark_attributes_get_background (GtkSourceMarkAttributes *attributes,
-					   GdkRGBA                 *background)
+                                           GdkRGBA                 *background)
 {
 	g_return_val_if_fail (GTK_SOURCE_IS_MARK_ATTRIBUTES (attributes), FALSE);
 
@@ -419,6 +453,40 @@ gtk_source_mark_attributes_get_background (GtkSourceMarkAttributes *attributes,
 }
 
 /**
+ * gtk_source_mark_attributes_set_stock_id:
+ * @attributes: a #GtkSourceMarkAttributes.
+ * @stock_id: a stock id.
+ *
+ * Sets stock id to be used as a base for rendered icon.
+ */
+void
+gtk_source_mark_attributes_set_stock_id (GtkSourceMarkAttributes *attributes,
+                                         const gchar             *stock_id)
+{
+	g_return_if_fail (GTK_SOURCE_IS_MARK_ATTRIBUTES (attributes));
+
+	set_stock_id (attributes, stock_id);
+}
+
+/**
+ * gtk_source_mark_attributes_get_stock_id:
+ * @attributes: a #GtkSourceMarkAttributes.
+ *
+ * Gets a stock id of an icon used by this attributes. Note that the stock id can
+ * be %NULL if it wasn't set earlier.
+ *
+ * Returns: (transfer none): Stock id. Returned string is owned by @attributes and
+ * shouldn't be freed.
+ */
+const gchar *
+gtk_source_mark_attributes_get_stock_id (GtkSourceMarkAttributes *attributes)
+{
+	g_return_val_if_fail (GTK_SOURCE_IS_MARK_ATTRIBUTES (attributes), NULL);
+
+	return gtk_source_pixbuf_helper_get_stock_id (attributes->priv->helper);
+}
+
+/**
  * gtk_source_mark_attributes_set_icon_name:
  * @attributes: a #GtkSourceMarkAttributes.
  * @icon_name: name of an icon to be used.
@@ -427,7 +495,7 @@ gtk_source_mark_attributes_get_background (GtkSourceMarkAttributes *attributes,
  */
 void
 gtk_source_mark_attributes_set_icon_name (GtkSourceMarkAttributes *attributes,
-					  const gchar             *icon_name)
+                                          const gchar             *icon_name)
 {
 	g_return_if_fail (GTK_SOURCE_IS_MARK_ATTRIBUTES (attributes));
 
@@ -461,7 +529,7 @@ gtk_source_mark_attributes_get_icon_name (GtkSourceMarkAttributes *attributes)
  */
 void
 gtk_source_mark_attributes_set_gicon (GtkSourceMarkAttributes *attributes,
-				      GIcon                   *gicon)
+                                      GIcon                   *gicon)
 {
 	g_return_if_fail (GTK_SOURCE_IS_MARK_ATTRIBUTES (attributes));
 
@@ -495,7 +563,7 @@ gtk_source_mark_attributes_get_gicon (GtkSourceMarkAttributes *attributes)
  */
 void
 gtk_source_mark_attributes_set_pixbuf (GtkSourceMarkAttributes *attributes,
-				       const GdkPixbuf         *pixbuf)
+                                       const GdkPixbuf         *pixbuf)
 {
 	g_return_if_fail (GTK_SOURCE_IS_MARK_ATTRIBUTES (attributes));
 
@@ -528,16 +596,17 @@ gtk_source_mark_attributes_get_pixbuf (GtkSourceMarkAttributes *attributes)
  *
  * Renders an icon of given size. The base of the icon is set by the last call
  * to one of: gtk_source_mark_attributes_set_pixbuf(),
- * gtk_source_mark_attributes_set_gicon() or
- * gtk_source_mark_attributes_set_icon_name(). @size cannot be lower than 1.
+ * gtk_source_mark_attributes_set_gicon(),
+ * gtk_source_mark_attributes_set_icon_name() or
+ * gtk_source_mark_attributes_set_stock_id(). @size cannot be lower than 1.
  *
  * Returns: (transfer none): A rendered pixbuf. The pixbuf belongs to @attributes
  * and should not be unreffed.
  */
 const GdkPixbuf *
 gtk_source_mark_attributes_render_icon (GtkSourceMarkAttributes *attributes,
-					GtkWidget               *widget,
-					gint                     size)
+                                        GtkWidget               *widget,
+                                        gint                     size)
 {
 	g_return_val_if_fail (GTK_SOURCE_IS_MARK_ATTRIBUTES (attributes), NULL);
 	g_return_val_if_fail (GTK_IS_WIDGET (widget), NULL);
@@ -554,7 +623,7 @@ gtk_source_mark_attributes_render_icon (GtkSourceMarkAttributes *attributes,
  * @mark: a #GtkSourceMark.
  *
  * Queries for a tooltip by emitting
- * a #GtkSourceMarkAttributes::query-tooltip-text signal. The tooltip is a plain
+ * a GtkSourceMarkAttributes::query-tooltip-text signal. The tooltip is a plain
  * text.
  *
  * Returns: (transfer full): A tooltip. The returned string should be freed by
@@ -562,7 +631,7 @@ gtk_source_mark_attributes_render_icon (GtkSourceMarkAttributes *attributes,
  */
 gchar *
 gtk_source_mark_attributes_get_tooltip_text (GtkSourceMarkAttributes *attributes,
-					     GtkSourceMark           *mark)
+                                             GtkSourceMark           *mark)
 {
 	gchar *ret;
 
@@ -581,7 +650,7 @@ gtk_source_mark_attributes_get_tooltip_text (GtkSourceMarkAttributes *attributes
  * @mark: a #GtkSourceMark.
  *
  * Queries for a tooltip by emitting
- * a #GtkSourceMarkAttributes::query-tooltip-markup signal. The tooltip may contain
+ * a GtkSourceMarkAttributes::query-tooltip-markup signal. The tooltip may contain
  * a markup.
  *
  * Returns: (transfer full): A tooltip. The returned string should be freed by
@@ -589,7 +658,7 @@ gtk_source_mark_attributes_get_tooltip_text (GtkSourceMarkAttributes *attributes
  */
 gchar *
 gtk_source_mark_attributes_get_tooltip_markup (GtkSourceMarkAttributes *attributes,
-					       GtkSourceMark           *mark)
+                                               GtkSourceMark           *mark)
 {
 	gchar *ret;
 

@@ -1,5 +1,5 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8; coding: utf-8 -*-
- *
+ * gtksourcegutterrendererlines.c
  * This file is part of GtkSourceView
  *
  * Copyright (C) 2010 - Jesse van den Kieboom
@@ -14,26 +14,30 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this library; if not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include "config.h"
-
-#define GTK_SOURCE_H_INSIDE
-
 #include "gtksourcegutterrendererlines.h"
-#include "gtksourceutils-private.h"
 #include "gtksourceview.h"
+
+#define GTK_SOURCE_GUTTER_RENDERER_LINES_GET_PRIVATE(object)(G_TYPE_INSTANCE_GET_PRIVATE((object), GTK_SOURCE_TYPE_GUTTER_RENDERER_LINES, GtkSourceGutterRendererLinesPrivate))
 
 struct _GtkSourceGutterRendererLinesPrivate
 {
 	gint num_line_digits;
-	gint prev_line_num;
-	guint cursor_visible : 1;
+
+	guint changed_handler_id;
 };
 
-G_DEFINE_TYPE_WITH_PRIVATE (GtkSourceGutterRendererLines, gtk_source_gutter_renderer_lines, GTK_SOURCE_TYPE_GUTTER_RENDERER_TEXT)
+G_DEFINE_TYPE (GtkSourceGutterRendererLines, gtk_source_gutter_renderer_lines, GTK_SOURCE_TYPE_GUTTER_RENDERER_TEXT)
+
+static void
+gtk_source_gutter_renderer_lines_finalize (GObject *object)
+{
+	G_OBJECT_CLASS (gtk_source_gutter_renderer_lines_parent_class)->finalize (object);
+}
 
 static GtkTextBuffer *
 get_buffer (GtkSourceGutterRendererLines *renderer)
@@ -42,36 +46,7 @@ get_buffer (GtkSourceGutterRendererLines *renderer)
 
 	view = gtk_source_gutter_renderer_get_view (GTK_SOURCE_GUTTER_RENDERER (renderer));
 
-	return view != NULL ? gtk_text_view_get_buffer (view) : NULL;
-}
-
-static inline gint
-count_num_digits (gint num_lines)
-{
-	if (num_lines < 100)
-	{
-		return 2;
-	}
-	else if (num_lines < 1000)
-	{
-		return 3;
-	}
-	else if (num_lines < 10000)
-	{
-		return 4;
-	}
-	else if (num_lines < 100000)
-	{
-		return 5;
-	}
-	else if (num_lines < 1000000)
-	{
-		return 6;
-	}
-	else
-	{
-		return 10;
-	}
+	return gtk_text_view_get_buffer (view);
 }
 
 static void
@@ -79,28 +54,38 @@ recalculate_size (GtkSourceGutterRendererLines *renderer)
 {
 	gint num_lines;
 	gint num_digits = 0;
+	gint num;
 	GtkTextBuffer *buffer;
 
 	buffer = get_buffer (renderer);
 
 	num_lines = gtk_text_buffer_get_line_count (buffer);
 
-	num_digits = count_num_digits (num_lines);
+	num = num_lines;
+
+	while (num > 0)
+	{
+		num /= 10;
+		++num_digits;
+	}
+
+	num_digits = MAX (num_digits, 2);
 
 	if (num_digits != renderer->priv->num_line_digits)
 	{
-		gchar markup[24];
+		gchar *markup;
 		gint size;
 
 		renderer->priv->num_line_digits = num_digits;
 
 		num_lines = MAX (num_lines, 99);
 
-		g_snprintf (markup, sizeof markup, "<b>%d</b>", num_lines);
+		markup = g_strdup_printf ("<b>%d</b>", num_lines);
 		gtk_source_gutter_renderer_text_measure_markup (GTK_SOURCE_GUTTER_RENDERER_TEXT (renderer),
 		                                                markup,
 		                                                &size,
 		                                                NULL);
+		g_free (markup);
 
 		gtk_source_gutter_renderer_set_size (GTK_SOURCE_GUTTER_RENDERER (renderer),
 		                                     size);
@@ -118,94 +103,35 @@ static void
 gutter_renderer_change_buffer (GtkSourceGutterRenderer *renderer,
                                GtkTextBuffer           *old_buffer)
 {
-	GtkSourceGutterRendererLines *lines = GTK_SOURCE_GUTTER_RENDERER_LINES (renderer);
-	GtkTextBuffer *buffer;
+	GtkTextView *view;
+	GtkSourceGutterRendererLines *lines;
 
-	if (old_buffer != NULL)
+	lines = GTK_SOURCE_GUTTER_RENDERER_LINES (renderer);
+
+	if (old_buffer)
 	{
-		g_signal_handlers_disconnect_by_func (old_buffer,
-						      on_buffer_changed,
-						      lines);
+		g_signal_handler_disconnect (old_buffer,
+		                             lines->priv->changed_handler_id);
 	}
 
-	buffer = get_buffer (lines);
+	view = gtk_source_gutter_renderer_get_view (renderer);
 
-	if (buffer != NULL)
+	if (view)
 	{
-		g_signal_connect_object (buffer,
-					 "changed",
-					 G_CALLBACK (on_buffer_changed),
-					 lines,
-					 0);
+		GtkTextBuffer *buffer;
 
-		recalculate_size (lines);
-	}
+		buffer = gtk_text_view_get_buffer (view);
 
-	lines->priv->prev_line_num = 0;
+		if (buffer)
+		{
+			lines->priv->changed_handler_id =
+				g_signal_connect (buffer,
+				                  "changed",
+				                  G_CALLBACK (on_buffer_changed),
+				                  lines);
 
-	if (GTK_SOURCE_GUTTER_RENDERER_CLASS (gtk_source_gutter_renderer_lines_parent_class)->change_buffer != NULL)
-	{
-		GTK_SOURCE_GUTTER_RENDERER_CLASS (gtk_source_gutter_renderer_lines_parent_class)->change_buffer (renderer,
-														 old_buffer);
-	}
-}
-
-static void
-on_view_style_updated (GtkTextView                  *view,
-		       GtkSourceGutterRendererLines *renderer)
-{
-	/* Force to recalculate the size. */
-	renderer->priv->num_line_digits = -1;
-	recalculate_size (renderer);
-}
-
-static void
-on_view_notify_cursor_visible (GtkTextView                  *view,
-                               GParamSpec                   *pspec,
-                               GtkSourceGutterRendererLines *renderer)
-{
-	renderer->priv->cursor_visible = gtk_text_view_get_cursor_visible (view);
-}
-
-static void
-gutter_renderer_change_view (GtkSourceGutterRenderer *renderer,
-			     GtkTextView             *old_view)
-{
-	GtkTextView *new_view;
-
-	if (old_view != NULL)
-	{
-		g_signal_handlers_disconnect_by_func (old_view,
-						      on_view_style_updated,
-						      renderer);
-		g_signal_handlers_disconnect_by_func (old_view,
-						      on_view_notify_cursor_visible,
-						      renderer);
-	}
-
-	new_view = gtk_source_gutter_renderer_get_view (renderer);
-
-	if (new_view != NULL)
-	{
-		g_signal_connect_object (new_view,
-					 "style-updated",
-					 G_CALLBACK (on_view_style_updated),
-					 renderer,
-					 0);
-
-		g_signal_connect_object (new_view,
-					 "notify::cursor-visible",
-					 G_CALLBACK (on_view_notify_cursor_visible),
-					 renderer,
-					 0);
-
-		GTK_SOURCE_GUTTER_RENDERER_LINES (renderer)->priv->cursor_visible = gtk_text_view_get_cursor_visible (new_view);
-	}
-
-	if (GTK_SOURCE_GUTTER_RENDERER_CLASS (gtk_source_gutter_renderer_lines_parent_class)->change_view != NULL)
-	{
-		GTK_SOURCE_GUTTER_RENDERER_CLASS (gtk_source_gutter_renderer_lines_parent_class)->change_view (renderer,
-													       old_view);
+			recalculate_size (lines);
+		}
 	}
 }
 
@@ -215,101 +141,29 @@ gutter_renderer_query_data (GtkSourceGutterRenderer      *renderer,
                             GtkTextIter                  *end,
                             GtkSourceGutterRendererState  state)
 {
-	GtkSourceGutterRendererLines *lines = GTK_SOURCE_GUTTER_RENDERER_LINES (renderer);
-	gchar text[24];
-	const gchar *textptr = text;
+	gchar *text;
 	gint line;
-	gint len;
 	gboolean current_line;
 
 	line = gtk_text_iter_get_line (start) + 1;
 
 	current_line = (state & GTK_SOURCE_GUTTER_RENDERER_STATE_CURSOR) &&
-	               lines->priv->cursor_visible;
+	               gtk_text_view_get_cursor_visible (gtk_source_gutter_renderer_get_view (renderer));
 
-	if G_LIKELY (!current_line)
+	if (current_line)
 	{
-		len = _gtk_source_utils_int_to_string (line, &textptr);
+		text = g_strdup_printf ("<b>%d</b>", line);
 	}
 	else
 	{
-		len = g_snprintf (text, sizeof text, "<b>%d</b>", line);
+		text = g_strdup_printf ("%d", line);
 	}
 
 	gtk_source_gutter_renderer_text_set_markup (GTK_SOURCE_GUTTER_RENDERER_TEXT (renderer),
-	                                            textptr,
-	                                            len);
-}
+	                                            text,
+	                                            -1);
 
-static gint
-get_last_visible_line_number (GtkSourceGutterRendererLines *lines)
-{
-	GtkTextView *view;
-	GdkRectangle visible_rect;
-	GtkTextIter iter;
-
-	view = gtk_source_gutter_renderer_get_view (GTK_SOURCE_GUTTER_RENDERER (lines));
-
-	gtk_text_view_get_visible_rect (view, &visible_rect);
-
-	gtk_text_view_get_line_at_y (view,
-				     &iter,
-				     visible_rect.y + visible_rect.height,
-				     NULL);
-
-	gtk_text_iter_forward_line (&iter);
-
-	return gtk_text_iter_get_line (&iter);
-}
-
-static void
-gutter_renderer_end (GtkSourceGutterRenderer *renderer)
-{
-	GtkSourceGutterRendererLines *lines = GTK_SOURCE_GUTTER_RENDERER_LINES (renderer);
-	GtkTextBuffer *buffer = get_buffer (lines);
-
-	if (buffer != NULL)
-	{
-		gint line_num = get_last_visible_line_number (lines);
-
-		/* When the text is modified in a GtkTextBuffer, GtkTextView tries to
-		 * redraw the smallest required region. But the information displayed in
-		 * the gutter may become invalid in a bigger region.
-		 * See https://bugzilla.gnome.org/show_bug.cgi?id=732418 for an example
-		 * where line numbers are not updated correctly when splitting a wrapped
-		 * line.
-		 * The performances should not be a big problem here. Correctness is
-		 * more important than performances. It just triggers a second
-		 * draw.
-		 * The queue_draw() is called in gutter_renderer_end(), because
-		 * the first draw is anyway needed to avoid flickering (if the
-		 * first draw is not done, there will be a white region in the
-		 * gutter during one frame).
-		 * Another solution that has better performances is to compare
-		 * the total number of lines in the buffer, instead of the last
-		 * visible line. But it has the drawback that the gutter is
-		 * continuously redrawn during file loading.
-		 *
-		 * FIXME A better solution would be to add a vfunc in the
-		 * GutterRenderer so that the Gutter can ask each renderer for
-		 * the invalidation region, before drawing. So that only one
-		 * draw is needed, and the solution would be more generic (if
-		 * other renderers also need a different invalidation region
-		 * than the GtkTextView). But the GutterRendererClass doesn't
-		 * have padding for future expansion, so it must wait for
-		 * GtkSourceView 4.
-		 */
-		if (lines->priv->prev_line_num != line_num)
-		{
-			lines->priv->prev_line_num = line_num;
-			gtk_source_gutter_renderer_queue_draw (renderer);
-		}
-	}
-
-	if (GTK_SOURCE_GUTTER_RENDERER_CLASS (gtk_source_gutter_renderer_lines_parent_class)->end != NULL)
-	{
-		GTK_SOURCE_GUTTER_RENDERER_CLASS (gtk_source_gutter_renderer_lines_parent_class)->end (renderer);
-	}
+	g_free (text);
 }
 
 static void
@@ -426,24 +280,27 @@ gutter_renderer_query_activatable (GtkSourceGutterRenderer *renderer,
 static void
 gtk_source_gutter_renderer_lines_class_init (GtkSourceGutterRendererLinesClass *klass)
 {
+	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 	GtkSourceGutterRendererClass *renderer_class = GTK_SOURCE_GUTTER_RENDERER_CLASS (klass);
 
+	object_class->finalize = gtk_source_gutter_renderer_lines_finalize;
+
 	renderer_class->query_data = gutter_renderer_query_data;
-	renderer_class->end = gutter_renderer_end;
 	renderer_class->query_activatable = gutter_renderer_query_activatable;
 	renderer_class->activate = gutter_renderer_activate;
 	renderer_class->change_buffer = gutter_renderer_change_buffer;
-	renderer_class->change_view = gutter_renderer_change_view;
+
+	g_type_class_add_private (object_class, sizeof(GtkSourceGutterRendererLinesPrivate));
 }
 
 static void
 gtk_source_gutter_renderer_lines_init (GtkSourceGutterRendererLines *self)
 {
-	self->priv = gtk_source_gutter_renderer_lines_get_instance_private (self);
+	self->priv = GTK_SOURCE_GUTTER_RENDERER_LINES_GET_PRIVATE (self);
 }
 
 GtkSourceGutterRenderer *
-gtk_source_gutter_renderer_lines_new (void)
+gtk_source_gutter_renderer_lines_new ()
 {
 	return g_object_new (GTK_SOURCE_TYPE_GUTTER_RENDERER_LINES, NULL);
 }

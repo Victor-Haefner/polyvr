@@ -1,5 +1,5 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8; coding: utf-8 -*-
- *
+ * gtksourcecompletion.h
  * This file is part of GtkSourceView
  *
  * Copyright (C) 2007 - 2009 Jesús Barbero Rodríguez <chuchiperriman@gmail.com>
@@ -15,16 +15,13 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this library; if not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef GTK_SOURCE_COMPLETION_H
-#define GTK_SOURCE_COMPLETION_H
-
-#if !defined (GTK_SOURCE_H_INSIDE) && !defined (GTK_SOURCE_COMPILATION)
-#error "Only <gtksourceview/gtksource.h> can be included directly."
-#endif
+#ifndef __GTK_SOURCE_COMPLETION_H__
+#define __GTK_SOURCE_COMPLETION_H__
 
 #include <gtk/gtk.h>
 #include "gtksourcetypes.h"
@@ -63,7 +60,7 @@ typedef struct _GtkSourceCompletionClass GtkSourceCompletionClass;
  * An error code used with %GTK_SOURCE_COMPLETION_ERROR in a #GError returned
  * from a completion-related function.
  */
-typedef enum _GtkSourceCompletionError
+typedef enum
 {
 	GTK_SOURCE_COMPLETION_ERROR_ALREADY_BOUND = 0,
 	GTK_SOURCE_COMPLETION_ERROR_NOT_BOUND
@@ -96,61 +93,50 @@ struct _GtkSourceCompletionClass
 							 GtkScrollStep                step,
 							 gint                         num);
 	void		(* activate_proposal)		(GtkSourceCompletion         *completion);
-
-	gpointer padding[20];
 };
 
-extern
 GType		 gtk_source_completion_get_type			(void) G_GNUC_CONST;
 
-extern
 GQuark		 gtk_source_completion_error_quark		(void);
 
-extern
 gboolean	 gtk_source_completion_add_provider		(GtkSourceCompletion           *completion,
 								 GtkSourceCompletionProvider   *provider,
 								 GError                       **error);
 
-extern
 gboolean	 gtk_source_completion_remove_provider		(GtkSourceCompletion           *completion,
 								 GtkSourceCompletionProvider   *provider,
 								 GError                       **error);
 
-extern
 GList		*gtk_source_completion_get_providers		(GtkSourceCompletion           *completion);
 
-extern
-gboolean	 gtk_source_completion_start			(GtkSourceCompletion           *completion,
+gboolean	 gtk_source_completion_show			(GtkSourceCompletion           *completion,
 								 GList                         *providers,
 								 GtkSourceCompletionContext    *context);
 
-extern
 void		 gtk_source_completion_hide			(GtkSourceCompletion           *completion);
 
-extern
 GtkSourceCompletionInfo *
 		 gtk_source_completion_get_info_window		(GtkSourceCompletion           *completion);
 
-extern
 GtkSourceView	*gtk_source_completion_get_view			(GtkSourceCompletion	       *completion);
 
-extern
 GtkSourceCompletionContext *
 		 gtk_source_completion_create_context		(GtkSourceCompletion           *completion,
 		 						 GtkTextIter                   *position);
 
-extern
-void		 gtk_source_completion_block_interactive	(GtkSourceCompletion           *completion);
+G_DEPRECATED_FOR (gtk_source_completion_provider_get_start_iter)
+void		 gtk_source_completion_move_window		(GtkSourceCompletion           *completion,
+								 GtkTextIter                   *iter);
 
-extern
-void		 gtk_source_completion_unblock_interactive	(GtkSourceCompletion           *completion);
-
-G_GNUC_INTERNAL
 void		 _gtk_source_completion_add_proposals		(GtkSourceCompletion           *completion,
 								 GtkSourceCompletionContext    *context,
 								 GtkSourceCompletionProvider   *provider,
 								 GList                         *proposals,
 								 gboolean                       finished);
+
+void		 gtk_source_completion_block_interactive	(GtkSourceCompletion           *completion);
+void		 gtk_source_completion_unblock_interactive	(GtkSourceCompletion           *completion);
+
 G_END_DECLS
 
-#endif /* GTK_SOURCE_COMPLETION_H */
+#endif /* __GTK_SOURCE_COMPLETION_H__ */

@@ -1,5 +1,5 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8; coding: utf-8 -*-
- *
+ * gtksourcebuffer.c
  * This file is part of GtkSourceView
  *
  * Copyright (C) 2007 - Johannes Schmid <jhs@gnome.org>
@@ -14,16 +14,13 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this library; if not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef GTKSOURCEMARK_H
-#define GTKSOURCEMARK_H
-
-#if !defined (GTK_SOURCE_H_INSIDE) && !defined (GTK_SOURCE_COMPILATION)
-#error "Only <gtksourceview/gtksource.h> can be included directly."
-#endif
+#ifndef __GTKSOURCEMARK_H__
+#define __GTKSOURCEMARK_H__
 
 #include <gtk/gtk.h>
 #include "gtksourcetypes.h"
@@ -53,27 +50,22 @@ struct _GtkSourceMarkClass
 	GtkTextMarkClass parent_class;
 
 	/* Padding for future expansion */
-	gpointer padding[10];
+	void (*_gtk_source_reserved1) (void);
+	void (*_gtk_source_reserved2) (void);
 };
 
-extern
 GType		 gtk_source_mark_get_type (void) G_GNUC_CONST;
 
-extern
 GtkSourceMark   *gtk_source_mark_new		(const gchar	*name,
 						 const gchar	*category);
 
-extern
 const gchar	*gtk_source_mark_get_category	(GtkSourceMark	*mark);
 
-extern
 GtkSourceMark	*gtk_source_mark_next		(GtkSourceMark	*mark,
 						 const gchar	*category);
-
-extern
 GtkSourceMark	*gtk_source_mark_prev		(GtkSourceMark	*mark,
 						 const gchar	*category);
 
 G_END_DECLS
 
-#endif /* GTKSOURCEMARK_H */
+#endif /* __GTKSOURCEMARK_H__ */

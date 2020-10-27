@@ -1,24 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
 
+ This file is part of GtkSourceView
+
  Author: Silian Della Ragione <silian87@gechi.it>
  Copyright (C) 2005 Silian Della Ragione <silian87@gechi.it>
  Copyright (C) 2008 Steve Frécinaux <code@istique.net>
 
- This library is free software; you can redistribute it and/or
- modify it under the terms of the GNU Library General Public
+ GtkSourceView is free software; you can redistribute it and/or
+ modify it under the terms of the GNU Lesser General Public
  License as published by the Free Software Foundation; either
- version 2 of the License, or (at your option) any later version.
+ version 2.1 of the License, or (at your option) any later version.
 
- This library is distributed in the hope that it will be useful,
+ GtkSourceView is distributed in the hope that it will be useful,
  but WITHOUT ANY WARRANTY; without even the implied warranty of
  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- Library General Public License for more details.
+ Lesser General Public License for more details.
 
- You should have received a copy of the GNU Library General Public
- License along with this library; if not, write to the
- Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- Boston, MA 02111-1307, USA.
+ You should have received a copy of the GNU Lesser General Public
+ License along with this library; if not, write to the Free Software
+ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 -->
 <language id="sh" _name="sh" version="2.0" _section="Scripts">
@@ -30,7 +31,6 @@
 
   <styles>
     <style id="comment"             _name="Comment"             map-to="def:comment"/>
-    <style id="shebang"             _name="Shebang"             map-to="def:shebang"/>
     <style id="function"            _name="Function"            map-to="def:function"/>
     <style id="string"              _name="String"              map-to="def:string"/>
     <style id="keyword"             _name="Keyword"             map-to="def:keyword"/>
@@ -46,14 +46,14 @@
 
     <!-- we cannot use def:shell-like-comment, because
          m4.lang needs to replace this context -->
-    <context id="line-comment" style-ref="comment" end-at-line-end="true">
+    <context id="line-comment" style-ref="comment" end-at-line-end="true" class="comment" class-disabled="no-spell-check">
       <start>(?&lt;!\S)#</start>
       <include>
         <context ref="def:in-comment"/>
       </include>
     </context>
 
-    <context id="double-quoted-string" style-ref="string">
+    <context id="double-quoted-string" style-ref="string" class="string" class-disabled="no-spell-check">
       <start>"</start>
       <end>"</end>
       <include>
@@ -66,12 +66,12 @@
             <match>\\</match>
         </context>
         <context ref="def:line-continue"/>
-	<context ref="variable"/>
-	<context ref="backtick-subshell"/>
+        <context ref="variable"/>
+        <context ref="backtick-subshell"/>
       </include>
     </context>
 
-    <context id="single-quoted-string" style-ref="string">
+    <context id="single-quoted-string" style-ref="string" class="string" class-disabled="no-spell-check">
       <start>'</start>
       <end>'</end>
     </context>
@@ -185,7 +185,7 @@
     </context>
 
     <context id="variable-definition">
-      <match>(^|(?&lt;=then|else|do|export))\s*([a-zA-Z_][a-zA-Z0-9_]*)\=</match>
+      <match>(^\s*|(?&lt;=then|else|do|export)\s+)([a-zA-Z_][a-zA-Z0-9_]*)\=</match>
       <include>
         <context sub-pattern="2" style-ref="variable-definition"/>
       </include>
@@ -214,12 +214,11 @@
     </context>
 
     <context id="built-in-command-2" style-ref="keyword">
-      <prefix>(?&lt;![^\s;\(\)])</prefix>
-      <suffix>(?![^\s;\(\)])</suffix>
+      <prefix>(?&lt;![^\s;\(\)\`])</prefix>
+      <suffix>(?![^\s;\(\)\`])</suffix>
       <keyword>do</keyword>
       <keyword>done</keyword>
       <keyword>elif</keyword>
-      <keyword>else</keyword>
       <keyword>else</keyword>
       <keyword>fi</keyword>
       <keyword>for</keyword>
@@ -230,7 +229,6 @@
       <keyword>then</keyword>
       <keyword>until</keyword>
       <keyword>while</keyword>
-      <keyword>bash</keyword>
       <keyword>alias</keyword>
       <keyword>bg</keyword>
       <keyword>bind</keyword>
@@ -257,14 +255,12 @@
       <keyword>help</keyword>
       <keyword>history</keyword>
       <keyword>jobs</keyword>
-      <keyword>kill</keyword>
       <keyword>let</keyword>
       <keyword>local</keyword>
       <keyword>logout</keyword>
-      <keyword>podp</keyword>
+      <keyword>popd</keyword>
       <keyword>printf</keyword>
       <keyword>pushd</keyword>
-      <keyword>pwd</keyword>
       <keyword>read</keyword>
       <keyword>readonly</keyword>
       <keyword>return</keyword>
@@ -296,81 +292,170 @@
     <context id="common-command" style-ref="common-command">
       <prefix>(?&lt;![\w\-\.])</prefix>
       <suffix>(?![\w\-\.])</suffix>
-      <keyword>cp</keyword>
-      <keyword>rm</keyword>
-      <keyword>mv</keyword>
-      <keyword>which</keyword>
-      <keyword>cat</keyword>
-      <keyword>grep</keyword>
-      <keyword>sed</keyword>
+      <keyword>ar</keyword>
       <keyword>awk</keyword>
-      <keyword>mkdir</keyword>
-      <keyword>rmdir</keyword>
-      <keyword>ls</keyword>
-      <keyword>ps</keyword>
-      <keyword>killall</keyword>
-      <keyword>pidof</keyword>
-      <keyword>diff</keyword>
-      <keyword>head</keyword>
-      <keyword>tail</keyword>
-      <keyword>chown</keyword>
-      <keyword>chmod</keyword>
-      <keyword>dd</keyword>
-      <keyword>find</keyword>
-      <keyword>locate</keyword>
-      <keyword>tar</keyword>
-      <keyword>gunzip</keyword>
-      <keyword>gzip</keyword>
+      <keyword>basename</keyword>
+      <keyword>bash</keyword>
+      <keyword>beep</keyword>
       <keyword>bunzip2</keyword>
+      <keyword>bzcat</keyword>
+      <keyword>bzcmp</keyword>
+      <keyword>bzdiff</keyword>
+      <keyword>bzegrep</keyword>
+      <keyword>bzfgrep</keyword>
+      <keyword>bzgrep</keyword>
+      <keyword>bzip2recover</keyword>
       <keyword>bzip2</keyword>
-      <keyword>zip</keyword>
-      <keyword>unzip</keyword>
-      <keyword>mount</keyword>
-      <keyword>umount</keyword>
-      <keyword>sh</keyword>
+      <keyword>bzless</keyword>
+      <keyword>bzmore</keyword>
+      <keyword>cc</keyword>
+      <keyword>cat</keyword>
+      <keyword>chattr</keyword>
+      <keyword>chgrp</keyword>
+      <keyword>chmod</keyword>
+      <keyword>chown</keyword>
+      <keyword>chroot</keyword>
       <keyword>clear</keyword>
-      <keyword>wget</keyword>
+      <keyword>cmp</keyword>
+      <keyword>cpp</keyword>
+      <keyword>cp</keyword>
+      <keyword>cut</keyword>
       <keyword>date</keyword>
+      <keyword>dd</keyword>
+      <keyword>df</keyword>
+      <keyword>dialog</keyword>
+      <keyword>diff3</keyword>
+      <keyword>diff</keyword>
+      <keyword>dirname</keyword>
       <keyword>dir</keyword>
       <keyword>du</keyword>
+      <keyword>egrep</keyword>
+      <keyword>eject</keyword>
+      <keyword>env</keyword>
       <keyword>expr</keyword>
-      <keyword>su</keyword>
-      <keyword>passwd</keyword>
-      <keyword>man</keyword>
-      <keyword>info</keyword>
+      <keyword>false</keyword>
+      <keyword>fgrep</keyword>
+      <keyword>file</keyword>
+      <keyword>find</keyword>
+      <keyword>fmt</keyword>
+      <keyword>free</keyword>
+      <keyword>ftp</keyword>
+      <keyword>funzip</keyword>
+      <keyword>fuser</keyword>
+      <keyword>gawk</keyword>
+      <keyword>gcc</keyword>
+      <keyword>getent</keyword>
+      <keyword>getopt</keyword>
+      <keyword>grep</keyword>
+      <keyword>groups</keyword>
+      <keyword>gunzip</keyword>
+      <keyword>gzip</keyword>
+      <keyword>head</keyword>
+      <keyword>hostname</keyword>
       <keyword>id</keyword>
       <keyword>ifconfig</keyword>
-      <keyword>gcc</keyword>
-      <keyword>make</keyword>
-      <keyword>ld</keyword>
-      <keyword>ln</keyword>
-      <keyword>lsmod</keyword>
+      <keyword>info</keyword>
       <keyword>insmod</keyword>
-      <keyword>modprobe</keyword>
+      <keyword>install</keyword>
+      <keyword>join</keyword>
+      <keyword>killall</keyword>
+      <keyword>kill</keyword>
+      <keyword>lastb</keyword>
+      <keyword>last</keyword>
+      <keyword>ld</keyword>
       <keyword>less</keyword>
+      <keyword>ln</keyword>
+      <keyword>locate</keyword>
+      <keyword>lockfile</keyword>
+      <keyword>login</keyword>
+      <keyword>logname</keyword>
+      <keyword>lp</keyword>
+      <keyword>lpr</keyword>
+      <keyword>lsattr</keyword>
+      <keyword>ls</keyword>
+      <keyword>lsmod</keyword>
+      <keyword>make</keyword>
+      <keyword>man</keyword>
+      <keyword>mkdir</keyword>
+      <keyword>mkfifo</keyword>
+      <keyword>mknod</keyword>
+      <keyword>mktemp</keyword>
+      <keyword>modprobe</keyword>
       <keyword>more</keyword>
+      <keyword>mount</keyword>
+      <keyword>mv</keyword>
+      <keyword>namei</keyword>
+      <keyword>nawk</keyword>
+      <keyword>nice</keyword>
+      <keyword>nl</keyword>
+      <keyword>passwd</keyword>
       <keyword>patch</keyword>
+      <keyword>perl</keyword>
+      <keyword>pgawk</keyword>
+      <keyword>pidof</keyword>
       <keyword>ping</keyword>
       <keyword>pkg-config</keyword>
-      <keyword>nice</keyword>
+      <keyword>pr</keyword>
+      <keyword>ps</keyword>
+      <keyword>pwd</keyword>
+      <keyword>readlink</keyword>
       <keyword>renice</keyword>
-      <keyword>file</keyword>
+      <keyword>rmdir</keyword>
+      <keyword>rm</keyword>
+      <keyword>scp</keyword>
+      <keyword>sed</keyword>
+      <keyword>seq</keyword>
+      <keyword>sh</keyword>
+      <keyword>sleep</keyword>
+      <keyword>sort</keyword>
+      <keyword>split</keyword>
+      <keyword>ssh-add</keyword>
+      <keyword>ssh-agent</keyword>
+      <keyword>ssh-keygen</keyword>
+      <keyword>ssh-keyscan</keyword>
+      <keyword>ssh</keyword>
+      <keyword>stat</keyword>
       <keyword>sudo</keyword>
-      <keyword>beep</keyword>
+      <keyword>sum</keyword>
+      <keyword>su</keyword>
+      <keyword>sync</keyword>
+      <keyword>tac</keyword>
+      <keyword>tail</keyword>
+      <keyword>tar</keyword>
+      <keyword>tee</keyword>
       <keyword>tempfile</keyword>
       <keyword>touch</keyword>
-      <keyword>eject</keyword>
+      <keyword>true</keyword>
+      <keyword>tr</keyword>
+      <keyword>umount</keyword>
       <keyword>uname</keyword>
+      <keyword>uniq</keyword>
+      <keyword>unlink</keyword>
+      <keyword>unzip</keyword>
       <keyword>uptime</keyword>
+      <keyword>wall</keyword>
+      <keyword>wc</keyword>
+      <keyword>wget</keyword>
+      <keyword>whereis</keyword>
+      <keyword>which</keyword>
       <keyword>whoami</keyword>
       <keyword>who</keyword>
-      <keyword>whereis</keyword>
-      <keyword>sleep</keyword>
-      <keyword>dialog</keyword>
+      <keyword>write</keyword>
+      <keyword>w</keyword>
+      <keyword>xargs</keyword>
       <keyword>xdialog</keyword>
+      <keyword>zcat</keyword>
+      <keyword>zcmp</keyword>
+      <keyword>zdiff</keyword>
+      <keyword>zegrep</keyword>
       <keyword>zenity</keyword>
-      <keyword>sort</keyword>
-      <keyword>uniq</keyword>
+      <keyword>zfgrep</keyword>
+      <keyword>zforce</keyword>
+      <keyword>zgrep</keyword>
+      <keyword>zip</keyword>
+      <keyword>zless</keyword>
+      <keyword>zmore</keyword>
+      <keyword>znew</keyword>
     </context>
 
     <context id="case">
@@ -388,9 +473,9 @@
       </include>
     </context>
 
-    <context id="sh">
+    <context id="sh" class="no-spell-check">
       <include>
-        <context ref="def:shebang" style-ref="shebang"/>
+        <context ref="def:shebang"/>
         <context ref="line-comment"/>
         <context ref="def:escape"/>
         <context ref="single-quoted-string"/>

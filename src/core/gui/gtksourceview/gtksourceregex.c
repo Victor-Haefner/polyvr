@@ -1,5 +1,5 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8; coding: utf-8 -*-
- *
+ * gtksourceregex.c
  * This file is part of GtkSourceView
  *
  * Copyright (C) 2003 - Gustavo Giráldez <gustavo.giraldez@gmx.net>
@@ -15,19 +15,16 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this library; if not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#define GTK_SOURCE_H_INSIDE
-
-#include "config.h"
-
-#include "gtksourceregex.h"
 #include <string.h>
 #include <glib.h>
-#include <glib/gi18n-lib.h>
-#include "gtksourceutils-private.h"
+#include "gtksourceview-i18n.h"
+#include "gtksourceview-utils.h"
+#include "gtksourceregex.h"
 
 /*
  * GRegex wrapper which adds a few features needed for syntax highlighting,
@@ -198,7 +195,7 @@ replace_start_regex (const GMatchInfo *match_info,
 
 	escapes = g_match_info_fetch (match_info, 1);
 	num_string = g_match_info_fetch (match_info, 2);
-	num = _gtk_source_utils_string_to_int (num_string);
+	num = _gtk_source_string_to_int (num_string);
 
 	if (num < 0)
 	{
@@ -333,7 +330,6 @@ _gtk_source_regex_fetch_pos (GtkSourceRegex *regex,
 
 	g_assert (regex->resolved);
 
-	/* g_match_info_fetch_pos() can return TRUE with start_pos/end_pos set to -1 */
 	if (!g_match_info_fetch_pos (regex->u.regex.match, num, &byte_start_pos, &byte_end_pos))
 	{
 		if (start_pos != NULL)
@@ -344,9 +340,9 @@ _gtk_source_regex_fetch_pos (GtkSourceRegex *regex,
 	else
 	{
 		if (start_pos != NULL)
-			*start_pos = g_utf8_pointer_to_offset (text, text + MAX (0, byte_start_pos));
+			*start_pos = g_utf8_pointer_to_offset (text, text + byte_start_pos);
 		if (end_pos != NULL)
-			*end_pos = g_utf8_pointer_to_offset (text, text + MAX (0, byte_end_pos));
+			*end_pos = g_utf8_pointer_to_offset (text, text + byte_end_pos);
 	}
 }
 

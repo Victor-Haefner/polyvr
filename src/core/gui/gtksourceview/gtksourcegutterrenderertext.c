@@ -1,5 +1,5 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8; coding: utf-8 -*-
- *
+ * gtksourcegutterrenderertext.c
  * This file is part of GtkSourceView
  *
  * Copyright (C) 2010 - Jesse van den Kieboom
@@ -14,36 +14,28 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this library; if not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-
-#include "config.h"
-
-#define GTK_SOURCE_H_INSIDE
 
 #include "gtksourcegutterrenderertext.h"
+#include "gtksourceview-i18n.h"
 
-/**
- * SECTION:gutterrenderertext
- * @Short_description: Renders text in the gutter
- * @Title: GtkSourceGutterRendererText
- * @See_also: #GtkSourceGutterRenderer, #GtkSourceGutter
- *
- * A #GtkSourceGutterRendererText can be used to render text in a cell of
- * #GtkSourceGutter.
- */
+#define GTK_SOURCE_GUTTER_RENDERER_TEXT_GET_PRIVATE(object)(G_TYPE_INSTANCE_GET_PRIVATE((object), GTK_SOURCE_TYPE_GUTTER_RENDERER_TEXT, GtkSourceGutterRendererTextPrivate))
 
 struct _GtkSourceGutterRendererTextPrivate
 {
 	gchar *text;
 
 	PangoLayout *cached_layout;
+	PangoAttribute *fg_attr;
+	PangoAttrList *cached_attr_list;
 
 	guint is_markup : 1;
 };
 
-G_DEFINE_TYPE_WITH_PRIVATE (GtkSourceGutterRendererText, gtk_source_gutter_renderer_text, GTK_SOURCE_TYPE_GUTTER_RENDERER)
+G_DEFINE_TYPE (GtkSourceGutterRendererText, gtk_source_gutter_renderer_text, GTK_SOURCE_TYPE_GUTTER_RENDERER)
 
 enum
 {
@@ -53,44 +45,65 @@ enum
 };
 
 static void
-gutter_renderer_text_begin (GtkSourceGutterRenderer *renderer,
-			    cairo_t                 *cr,
-			    GdkRectangle            *background_area,
-			    GdkRectangle            *cell_area,
-			    GtkTextIter             *start,
-			    GtkTextIter             *end)
+create_layout (GtkSourceGutterRendererText *renderer,
+               GtkWidget                   *widget)
 {
-	GtkSourceGutterRendererText *text = GTK_SOURCE_GUTTER_RENDERER_TEXT (renderer);
-	GtkTextView *view;
+	PangoLayout *layout;
+	PangoAttribute *attr;
+	GtkStyleContext *context;
+	GdkRGBA color;
+	PangoAttrList *attr_list;
 
-	view = gtk_source_gutter_renderer_get_view (renderer);
+	layout = gtk_widget_create_pango_layout (widget, NULL);
 
-	g_clear_object (&text->priv->cached_layout);
-	text->priv->cached_layout = gtk_widget_create_pango_layout (GTK_WIDGET (view), NULL);
+	context = gtk_widget_get_style_context (widget);
+	gtk_style_context_get_color (context, GTK_STATE_FLAG_NORMAL, &color);
 
-	if (GTK_SOURCE_GUTTER_RENDERER_CLASS (gtk_source_gutter_renderer_text_parent_class)->begin != NULL)
-	{
-		GTK_SOURCE_GUTTER_RENDERER_CLASS (gtk_source_gutter_renderer_text_parent_class)->begin (renderer,
-													cr,
-													background_area,
-													cell_area,
-													start,
-													end);
-	}
+	attr = pango_attr_foreground_new (color.red * 65535,
+	                                  color.green * 65535,
+	                                  color.blue * 65535);
+
+	attr->start_index = 0;
+	attr->end_index = G_MAXINT;
+
+	attr_list = pango_attr_list_new ();
+	pango_attr_list_insert (attr_list, attr);
+
+	renderer->priv->fg_attr = attr;
+	renderer->priv->cached_layout = layout;
+	renderer->priv->cached_attr_list = attr_list;
 }
 
 static void
-center_on (GtkTextView  *view,
-           GdkRectangle *cell_area,
-           GtkTextIter  *iter,
-           gint          width,
-           gint          height,
-           gfloat        xalign,
-           gfloat        yalign,
-           gint         *x,
-           gint         *y)
+gutter_renderer_text_begin (GtkSourceGutterRenderer      *renderer,
+                            cairo_t                      *cr,
+                            GdkRectangle                 *background_area,
+                            GdkRectangle                 *cell_area,
+                            GtkTextIter                  *start,
+                            GtkTextIter                  *end)
+{
+	GtkSourceGutterRendererText *text;
+
+	text = GTK_SOURCE_GUTTER_RENDERER_TEXT (renderer);
+
+	create_layout (text, GTK_WIDGET (gtk_source_gutter_renderer_get_view (renderer)));
+}
+
+static void
+center_on (GtkSourceGutterRenderer *renderer,
+           GdkRectangle            *cell_area,
+           GtkTextIter             *iter,
+           gint                     width,
+           gint                     height,
+           gfloat                   xalign,
+           gfloat                   yalign,
+           gint                    *x,
+           gint                    *y)
 {
 	GdkRectangle location;
+	GtkTextView *view;
+
+	view = gtk_source_gutter_renderer_get_view (renderer);
 
 	gtk_text_view_get_iter_location (view, iter, &location);
 
@@ -100,36 +113,36 @@ center_on (GtkTextView  *view,
 
 static void
 gutter_renderer_text_draw (GtkSourceGutterRenderer      *renderer,
-			   cairo_t                      *cr,
-			   GdkRectangle                 *background_area,
-			   GdkRectangle                 *cell_area,
-			   GtkTextIter                  *start,
-			   GtkTextIter                  *end,
-			   GtkSourceGutterRendererState  state)
+                           cairo_t                      *cr,
+                           GdkRectangle                 *background_area,
+                           GdkRectangle                 *cell_area,
+                           GtkTextIter                  *start,
+                           GtkTextIter                  *end,
+                           GtkSourceGutterRendererState  state)
 {
-	GtkSourceGutterRendererText *text = GTK_SOURCE_GUTTER_RENDERER_TEXT (renderer);
-	GtkTextView *view;
+	GtkSourceGutterRendererText *text;
 	gint width;
 	gint height;
+	PangoAttrList *attr_list;
 	gfloat xalign;
 	gfloat yalign;
 	GtkSourceGutterRendererAlignmentMode mode;
+	GtkTextView *view;
 	gint x = 0;
 	gint y = 0;
 	GtkStyleContext *context;
 
 	/* Chain up to draw background */
-	if (GTK_SOURCE_GUTTER_RENDERER_CLASS (gtk_source_gutter_renderer_text_parent_class)->draw != NULL)
-	{
-		GTK_SOURCE_GUTTER_RENDERER_CLASS (gtk_source_gutter_renderer_text_parent_class)->draw (renderer,
-												       cr,
-												       background_area,
-												       cell_area,
-												       start,
-												       end,
-												       state);
-	}
+	GTK_SOURCE_GUTTER_RENDERER_CLASS (
+		gtk_source_gutter_renderer_text_parent_class)->draw (renderer,
+		                                                     cr,
+		                                                     background_area,
+		                                                     cell_area,
+		                                                     start,
+		                                                     end,
+		                                                     state);
 
+	text = GTK_SOURCE_GUTTER_RENDERER_TEXT (renderer);
 	view = gtk_source_gutter_renderer_get_view (renderer);
 
 	if (text->priv->is_markup)
@@ -145,31 +158,38 @@ gutter_renderer_text_draw (GtkSourceGutterRenderer      *renderer,
 		                       -1);
 	}
 
-	pango_layout_get_pixel_size (text->priv->cached_layout, &width, &height);
+	attr_list = pango_layout_get_attributes (text->priv->cached_layout);
+
+	if (!attr_list)
+	{
+		pango_layout_set_attributes (text->priv->cached_layout,
+		                             pango_attr_list_copy (text->priv->cached_attr_list));
+	}
+	else
+	{
+		pango_attr_list_insert (attr_list,
+		                        pango_attribute_copy (text->priv->fg_attr));
+	}
+
+	pango_layout_get_size (text->priv->cached_layout, &width, &height);
+
+	width /= PANGO_SCALE;
+	height /= PANGO_SCALE;
 
 	gtk_source_gutter_renderer_get_alignment (renderer,
 	                                          &xalign,
 	                                          &yalign);
 
-	/* Avoid calculations if we don't wrap text */
-	if (gtk_text_view_get_wrap_mode (view) == GTK_WRAP_NONE)
-	{
-		mode = GTK_SOURCE_GUTTER_RENDERER_ALIGNMENT_MODE_CELL;
-	}
-	else
-	{
-		mode = gtk_source_gutter_renderer_get_alignment_mode (renderer);
-	}
+	mode = gtk_source_gutter_renderer_get_alignment_mode (renderer);
 
 	switch (mode)
 	{
 		case GTK_SOURCE_GUTTER_RENDERER_ALIGNMENT_MODE_CELL:
 			x = cell_area->x + (cell_area->width - width) * xalign;
 			y = cell_area->y + (cell_area->height - height) * yalign;
-			break;
-
+		break;
 		case GTK_SOURCE_GUTTER_RENDERER_ALIGNMENT_MODE_FIRST:
-			center_on (view,
+			center_on (renderer,
 			           cell_area,
 			           start,
 			           width,
@@ -178,10 +198,9 @@ gutter_renderer_text_draw (GtkSourceGutterRenderer      *renderer,
 			           yalign,
 			           &x,
 			           &y);
-			break;
-
+		break;
 		case GTK_SOURCE_GUTTER_RENDERER_ALIGNMENT_MODE_LAST:
-			center_on (view,
+			center_on (renderer,
 			           cell_area,
 			           end,
 			           width,
@@ -190,10 +209,7 @@ gutter_renderer_text_draw (GtkSourceGutterRenderer      *renderer,
 			           yalign,
 			           &x,
 			           &y);
-			break;
-
-		default:
-			g_assert_not_reached ();
+		break;
 	}
 
 	context = gtk_widget_get_style_context (GTK_WIDGET (view));
@@ -203,14 +219,17 @@ gutter_renderer_text_draw (GtkSourceGutterRenderer      *renderer,
 static void
 gutter_renderer_text_end (GtkSourceGutterRenderer *renderer)
 {
-	GtkSourceGutterRendererText *text = GTK_SOURCE_GUTTER_RENDERER_TEXT (renderer);
+	GtkSourceGutterRendererText *text;
 
-	g_clear_object (&text->priv->cached_layout);
+	text = GTK_SOURCE_GUTTER_RENDERER_TEXT (renderer);
 
-	if (GTK_SOURCE_GUTTER_RENDERER_CLASS (gtk_source_gutter_renderer_text_parent_class)->end != NULL)
-	{
-		GTK_SOURCE_GUTTER_RENDERER_CLASS (gtk_source_gutter_renderer_text_parent_class)->end (renderer);
-	}
+	g_object_unref (text->priv->cached_layout);
+	text->priv->cached_layout = NULL;
+
+	pango_attr_list_unref (text->priv->cached_attr_list);
+	text->priv->cached_attr_list = NULL;
+
+	text->priv->fg_attr = NULL;
 }
 
 static void
@@ -220,39 +239,45 @@ measure_text (GtkSourceGutterRendererText *renderer,
               gint                        *width,
               gint                        *height)
 {
-	GtkTextView *view;
 	PangoLayout *layout;
+	gint w;
+	gint h;
+	GtkSourceGutterRenderer *r;
+	GtkTextView *view;
 
-	view = gtk_source_gutter_renderer_get_view (GTK_SOURCE_GUTTER_RENDERER (renderer));
+	r = GTK_SOURCE_GUTTER_RENDERER (renderer);
+	view = gtk_source_gutter_renderer_get_view (r);
 
 	layout = gtk_widget_create_pango_layout (GTK_WIDGET (view), NULL);
 
-	if (markup != NULL)
+	if (markup)
 	{
-		pango_layout_set_markup (layout, markup, -1);
+		pango_layout_set_markup (layout,
+		                         markup,
+		                         -1);
 	}
 	else
 	{
-		pango_layout_set_text (layout, text, -1);
+		pango_layout_set_text (layout,
+		                       text,
+		                       -1);
 	}
 
-	pango_layout_get_pixel_size (layout, width, height);
+	pango_layout_get_size (layout, &w, &h);
+
+	if (width)
+	{
+		*width = w / PANGO_SCALE;
+	}
+
+	if (height)
+	{
+		*height = h / PANGO_SCALE;
+	}
 
 	g_object_unref (layout);
 }
 
-/**
- * gtk_source_gutter_renderer_text_measure:
- * @renderer: a #GtkSourceGutterRendererText.
- * @text: the text to measure.
- * @width: (out) (optional): location to store the width of the text in pixels,
- *   or %NULL.
- * @height: (out) (optional): location to store the height of the text in
- *   pixels, or %NULL.
- *
- * Measures the text provided using the pango layout used by the
- * #GtkSourceGutterRendererText.
- */
 void
 gtk_source_gutter_renderer_text_measure (GtkSourceGutterRendererText *renderer,
                                          const gchar                 *text,
@@ -265,18 +290,6 @@ gtk_source_gutter_renderer_text_measure (GtkSourceGutterRendererText *renderer,
 	measure_text (renderer, NULL, text, width, height);
 }
 
-/**
- * gtk_source_gutter_renderer_text_measure_markup:
- * @renderer: a #GtkSourceGutterRendererText.
- * @markup: the pango markup to measure.
- * @width: (out) (optional): location to store the width of the text in pixels,
- *   or %NULL.
- * @height: (out) (optional): location to store the height of the text in
- *   pixels, or %NULL.
- *
- * Measures the pango markup provided using the pango layout used by the
- * #GtkSourceGutterRendererText.
- */
 void
 gtk_source_gutter_renderer_text_measure_markup (GtkSourceGutterRendererText *renderer,
                                                 const gchar                 *markup,
@@ -295,7 +308,6 @@ gtk_source_gutter_renderer_text_finalize (GObject *object)
 	GtkSourceGutterRendererText *renderer = GTK_SOURCE_GUTTER_RENDERER_TEXT (object);
 
 	g_free (renderer->priv->text);
-	g_clear_object (&renderer->priv->cached_layout);
 
 	G_OBJECT_CLASS (gtk_source_gutter_renderer_text_parent_class)->finalize (object);
 }
@@ -375,19 +387,21 @@ gtk_source_gutter_renderer_text_class_init (GtkSourceGutterRendererTextClass *kl
 	renderer_class->draw = gutter_renderer_text_draw;
 	renderer_class->end = gutter_renderer_text_end;
 
+	g_type_class_add_private (object_class, sizeof (GtkSourceGutterRendererTextPrivate));
+
 	g_object_class_install_property (object_class,
 	                                 PROP_MARKUP,
 	                                 g_param_spec_string ("markup",
-	                                                      "Markup",
-	                                                      "The markup",
+	                                                      _("Markup"),
+	                                                      _("The markup"),
 	                                                      NULL,
 	                                                      G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
 	g_object_class_install_property (object_class,
 	                                 PROP_TEXT,
 	                                 g_param_spec_string ("text",
-	                                                      "Text",
-	                                                      "The text",
+	                                                      _("Text"),
+	                                                      _("The text"),
 	                                                      NULL,
 	                                                      G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 }
@@ -395,7 +409,7 @@ gtk_source_gutter_renderer_text_class_init (GtkSourceGutterRendererTextClass *kl
 static void
 gtk_source_gutter_renderer_text_init (GtkSourceGutterRendererText *self)
 {
-	self->priv = gtk_source_gutter_renderer_text_get_instance_private (self);
+	self->priv = GTK_SOURCE_GUTTER_RENDERER_TEXT_GET_PRIVATE (self);
 
 	self->priv->is_markup = TRUE;
 }
@@ -409,7 +423,7 @@ gtk_source_gutter_renderer_text_init (GtkSourceGutterRendererText *self)
  *
  **/
 GtkSourceGutterRenderer *
-gtk_source_gutter_renderer_text_new (void)
+gtk_source_gutter_renderer_text_new ()
 {
 	return g_object_new (GTK_SOURCE_TYPE_GUTTER_RENDERER_TEXT, NULL);
 }

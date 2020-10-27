@@ -1,5 +1,5 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8; coding: utf-8 -*- *
- *
+ * gtksourcecompletionwordsproposal.c
  * This file is part of GtkSourceView
  *
  * Copyright (C) 2009 - Jesse van den Kieboom
@@ -14,15 +14,15 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this library; if not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-//#include "config.h"
-
-#define GTK_SOURCE_H_INSIDE
-
+#include "../../gtksourcecompletionproposal.h"
 #include "gtksourcecompletionwordsproposal.h"
+
+#define GTK_SOURCE_COMPLETION_WORDS_PROPOSAL_GET_PRIVATE(object)(G_TYPE_INSTANCE_GET_PRIVATE((object), GTK_SOURCE_TYPE_COMPLETION_WORDS_PROPOSAL, GtkSourceCompletionWordsProposalPrivate))
 
 struct _GtkSourceCompletionWordsProposalPrivate
 {
@@ -33,17 +33,16 @@ struct _GtkSourceCompletionWordsProposalPrivate
 enum
 {
 	UNUSED,
-	N_SIGNALS
+	NUM_SIGNALS
 };
 
-static guint signals[N_SIGNALS];
+static guint signals[NUM_SIGNALS] = {0,};
 
 static void gtk_source_completion_proposal_iface_init (gpointer g_iface, gpointer iface_data);
 
 G_DEFINE_TYPE_WITH_CODE (GtkSourceCompletionWordsProposal,
 			 gtk_source_completion_words_proposal,
 			 G_TYPE_OBJECT,
-			 G_ADD_PRIVATE (GtkSourceCompletionWordsProposal)
 			 G_IMPLEMENT_INTERFACE (GTK_SOURCE_TYPE_COMPLETION_PROPOSAL,
 			 			gtk_source_completion_proposal_iface_init))
 
@@ -87,14 +86,20 @@ gtk_source_completion_words_proposal_class_init (GtkSourceCompletionWordsProposa
 		              G_TYPE_FROM_CLASS (klass),
 		              G_SIGNAL_RUN_LAST,
 		              0,
-		              NULL, NULL, NULL,
-		              G_TYPE_NONE, 0);
+		              NULL,
+		              NULL,
+		              g_cclosure_marshal_VOID__VOID,
+		              G_TYPE_NONE,
+		              0);
+
+	g_type_class_add_private (object_class, sizeof(GtkSourceCompletionWordsProposalPrivate));
 }
 
 static void
 gtk_source_completion_words_proposal_init (GtkSourceCompletionWordsProposal *self)
 {
-	self->priv = gtk_source_completion_words_proposal_get_instance_private (self);
+	self->priv = GTK_SOURCE_COMPLETION_WORDS_PROPOSAL_GET_PRIVATE (self);
+
 	self->priv->use_count = 1;
 }
 

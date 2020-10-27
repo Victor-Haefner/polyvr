@@ -1,23 +1,24 @@
 <?xml version="1.0"?>
 <!--
 
+ This file is part of GtkSourceView
+
  Author: Marco Barisione <barisione@gmail.com>
  Copyright (C) 2005-2007 Marco Barisione <barisione@gmail.com>
 
- This library is free software; you can redistribute it and/or
- modify it under the terms of the GNU Library General Public
+ GtkSourceView is free software; you can redistribute it and/or
+ modify it under the terms of the GNU Lesser General Public
  License as published by the Free Software Foundation; either
- version 2 of the License, or (at your option) any later version.
+ version 2.1 of the License, or (at your option) any later version.
 
- This library is distributed in the hope that it will be useful,
+ GtkSourceView is distributed in the hope that it will be useful,
  but WITHOUT ANY WARRANTY; without even the implied warranty of
  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- Library General Public License for more details.
+ Lesser General Public License for more details.
 
- You should have received a copy of the GNU Library General Public
- License along with this library; if not, write to the
- Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- Boston, MA 02111-1307, USA.
+ You should have received a copy of the GNU Lesser General Public
+ License along with this library; if not, write to the Free Software
+ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 -->
 <language id="latex" _name="LaTeX" version="2.0" _section="Markup">
@@ -36,7 +37,7 @@
     <style id="inline-math"        _name="Inline Math Mode" map-to="latex:display-math"/>
     <style id="structure"          _name="Inline Math Mode"/>
     <style id="section"            _name="Inline Math Mode"/>
-    <style id="math"               _name="Math Mode" map-to="latex:display-math"/>
+    <style id="math"               _name="Math Mode"  map-to="latex:display-math"/>
     <style id="math-bound"         _name="math-bound" map-to="latex:display-math"/>
     <style id="include"            _name="Include"    map-to="def:keyword"/>
     <style id="common-commands"    _name="Command"    map-to="def:keyword"/>
@@ -45,244 +46,299 @@
   </styles>
 
   <definitions>
-        <context id="common-commands" style-ref="common-commands">
-            <prefix>\\</prefix>
+    <context id="common-commands" style-ref="common-commands" class="no-spell-check">
+      <prefix>\\</prefix>
+      <!-- We need to special case "_" since it is not considered a
+        boundary but it is allowed in latex -->
+      <suffix>(\b|(?=_))</suffix>
+      <keyword>Alpha</keyword>
+      <keyword>Beta</keyword>
+      <keyword>Chi</keyword>
+      <keyword>Delta</keyword>
+      <keyword>Epsilon</keyword>
+      <keyword>Eta</keyword>
+      <keyword>Gamma</keyword>
+      <keyword>Iota</keyword>
+      <keyword>Kappa</keyword>
+      <keyword>Lambda</keyword>
+      <keyword>Leftarrow</keyword>
+      <keyword>Leftrightarrow</keyword>
+      <keyword>Mu</keyword>
+      <keyword>Nu</keyword>
+      <keyword>Omega</keyword>
+      <keyword>Phi</keyword>
+      <keyword>Pi</keyword>
+      <keyword>Psi</keyword>
+      <keyword>Rho</keyword>
+      <keyword>Rightarrow</keyword>
+      <keyword>Sigma</keyword>
+      <keyword>Tau</keyword>
+      <keyword>Zeta</keyword>
+      <keyword>alpha</keyword>
+      <keyword>appendix</keyword>
+      <keyword>begin</keyword>
+      <keyword>beta</keyword>
+      <keyword>bigcap</keyword>
+      <keyword>bigcup</keyword>
+      <keyword>cap</keyword>
+      <keyword>cdot</keyword>
+      <keyword>chapter</keyword>
+      <keyword>chi</keyword>
+      <keyword>cite</keyword>
+      <keyword>cup</keyword>
+      <keyword>delta</keyword>
+      <keyword>documentclass</keyword>
+      <keyword>end</keyword>
+      <keyword>enumi</keyword>
+      <keyword>enumii</keyword>
+      <keyword>enumiii</keyword>
+      <keyword>enumiv</keyword>
+      <keyword>epsilon</keyword>
+      <keyword>equation</keyword>
+      <keyword>eta</keyword>
+      <keyword>exists</keyword>
+      <keyword>figure</keyword>
+      <keyword>footnote</keyword>
+      <keyword>footnotemark</keyword>
+      <keyword>footnotetext</keyword>
+      <keyword>forall</keyword>
+      <keyword>gamma</keyword>
+      <keyword>geq</keyword>
+      <keyword>in</keyword>
+      <keyword>int</keyword>
+      <keyword>iota</keyword>
+      <keyword>kappa</keyword>
+      <keyword>label</keyword>
+      <keyword>lambda</keyword>
+      <keyword>ldots</keyword>
+      <keyword>leftarrow</keyword>
+      <keyword>leq</keyword>
+      <keyword>mpfootnote</keyword>
+      <keyword>mu</keyword>
+      <keyword>neq</keyword>
+      <keyword>newcommand</keyword>
+      <keyword>newenvironment</keyword>
+      <keyword>newfont</keyword>
+      <keyword>newtheorem</keyword>
+      <keyword>not</keyword>
+      <keyword>notin</keyword>
+      <keyword>nu</keyword>
+      <keyword>omega</keyword>
+      <keyword>onecolumn</keyword>
+      <keyword>page</keyword>
+      <keyword>pageref</keyword>
+      <keyword>paragraph</keyword>
+      <keyword>part</keyword>
+      <keyword>phi</keyword>
+      <keyword>pi</keyword>
+      <keyword>prod</keyword>
+      <keyword>psi</keyword>
+      <keyword>qquad</keyword>
+      <keyword>quad</keyword>
+      <keyword>ref</keyword>
+      <keyword>rho</keyword>
+      <keyword>rightarrow</keyword>
+      <keyword>section</keyword>
+      <keyword>setminus</keyword>
+      <keyword>sigma</keyword>
+      <keyword>subparagraph</keyword>
+      <keyword>subsection</keyword>
+      <keyword>subset</keyword>
+      <keyword>subseteq</keyword>
+      <keyword>subsetneq</keyword>
+      <keyword>subsubsection</keyword>
+      <keyword>subsubsubsection</keyword>
+      <keyword>sum</keyword>
+      <keyword>supset</keyword>
+      <keyword>supseteq</keyword>
+      <keyword>supsetneq</keyword>
+      <keyword>table</keyword>
+      <keyword>tau</keyword>
+      <keyword>times</keyword>
+      <keyword>twocolumn</keyword>
+      <keyword>varepsilon</keyword>
+      <keyword>varphi</keyword>
+      <keyword>zeta</keyword>
+    </context>
 
-            <keyword>Alpha</keyword>
-            <keyword>Beta</keyword>
-            <keyword>Chi</keyword>
-            <keyword>Delta</keyword>
-            <keyword>Epsilon</keyword>
-            <keyword>Eta</keyword>
-            <keyword>Gamma</keyword>
-            <keyword>Iota</keyword>
-            <keyword>Kappa</keyword>
-            <keyword>Lambda</keyword>
-            <keyword>Leftarrow</keyword>
-            <keyword>Leftrightarrow</keyword>
-            <keyword>Mu</keyword>
-            <keyword>Nu</keyword>
-            <keyword>Omega</keyword>
-            <keyword>Phi</keyword>
-            <keyword>Pi</keyword>
-            <keyword>Psi</keyword>
-            <keyword>Rho</keyword>
-            <keyword>Rightarrow</keyword>
-            <keyword>Sigma</keyword>
-            <keyword>Tau</keyword>
-            <keyword>Zeta</keyword>
-            <keyword>alpha</keyword>
-            <keyword>appendix</keyword>
-            <keyword>begin</keyword>
-            <keyword>beta</keyword>
-            <keyword>bigcap</keyword>
-            <keyword>bigcup</keyword>
-            <keyword>cap</keyword>
-            <keyword>cdot</keyword>
-            <keyword>chapter</keyword>
-            <keyword>chi</keyword>
-            <keyword>cup</keyword>
-            <keyword>delta</keyword>
-            <keyword>documentclass</keyword>
-            <keyword>end</keyword>
-            <keyword>enumi</keyword>
-            <keyword>enumii</keyword>
-            <keyword>enumiii</keyword>
-            <keyword>enumiv</keyword>
-            <keyword>epsilon</keyword>
-            <keyword>equation</keyword>
-            <keyword>eta</keyword>
-            <keyword>exists</keyword>
-            <keyword>figure</keyword>
-            <keyword>footnote</keyword>
-            <keyword>footnotemark</keyword>
-            <keyword>footnotetext</keyword>
-            <keyword>forall</keyword>
-            <keyword>gamma</keyword>
-            <keyword>geq</keyword>
-            <keyword>in</keyword>
-            <keyword>int</keyword>
-            <keyword>iota</keyword>
-            <keyword>kappa</keyword>
-            <keyword>label</keyword>
-            <keyword>lambda</keyword>
-            <keyword>ldots</keyword>
-            <keyword>leftarrow</keyword>
-            <keyword>leq</keyword>
-            <keyword>mpfootnote</keyword>
-            <keyword>mu</keyword>
-            <keyword>neq</keyword>
-            <keyword>newcommand</keyword>
-            <keyword>newenvironment</keyword>
-            <keyword>newfont</keyword>
-            <keyword>newtheorem</keyword>
-            <keyword>not</keyword>
-            <keyword>notin</keyword>
-            <keyword>nu</keyword>
-            <keyword>omega</keyword>
-            <keyword>onecolumn</keyword>
-            <keyword>page</keyword>
-            <keyword>pageref</keyword>
-            <keyword>paragraph</keyword>
-            <keyword>part</keyword>
-            <keyword>phi</keyword>
-            <keyword>pi</keyword>
-            <keyword>prod</keyword>
-            <keyword>psi</keyword>
-            <keyword>qquad</keyword>
-            <keyword>quad</keyword>
-            <keyword>ref</keyword>
-            <keyword>rho</keyword>
-            <keyword>rightarrow</keyword>
-            <keyword>section</keyword>
-            <keyword>setminus</keyword>
-            <keyword>sigma</keyword>
-            <keyword>subparagraph</keyword>
-            <keyword>subsection</keyword>
-            <keyword>subset</keyword>
-            <keyword>subseteq</keyword>
-            <keyword>subsetneq</keyword>
-            <keyword>subsubsection</keyword>
-            <keyword>subsubsubsection</keyword>
-            <keyword>sum</keyword>
-            <keyword>supset</keyword>
-            <keyword>supseteq</keyword>
-            <keyword>supsetneq</keyword>
-            <keyword>table</keyword>
-            <keyword>tau</keyword>
-            <keyword>times</keyword>
-            <keyword>twocolumn</keyword>
-            <keyword>varepsilon</keyword>
-            <keyword>varphi</keyword>
-            <keyword>zeta</keyword>
-        </context>
+    <context id="specials-symbol" style-ref="command" class="no-spell-check">
+      <prefix>\\</prefix>
+      <suffix></suffix>
 
-        <context id="specials-symbol" style-ref="command">
-            <prefix>\\</prefix>
-            <suffix></suffix>
+      <keyword>\$</keyword>
+      <keyword>&amp;</keyword>
+      <keyword>%</keyword>
+      <keyword>#</keyword>
+      <keyword>_</keyword>
+      <keyword>\{</keyword>
+      <keyword>\}</keyword>
+      <keyword>~</keyword>
+      <keyword>\^</keyword>
+      <keyword>\\</keyword>
+    </context>
 
-            <keyword>\$</keyword>
-            <keyword>&amp;</keyword>
-            <keyword>%</keyword>
-            <keyword>#</keyword>
-            <keyword>_</keyword>
-            <keyword>\{</keyword>
-            <keyword>\}</keyword>
-            <keyword>~</keyword>
-            <keyword>\^</keyword>
-            <keyword>\\</keyword>
-        </context>
+    <context id="command" style-ref="command" class="no-spell-check">
+      <match>\\[a-zA-Z]+</match>
+    </context>
 
-        <context id="command" style-ref="command">
-            <match>\\[a-zA-Z]+</match>
-        </context>
+    <context id="in-math" class="no-spell-check">
+      <include>
+        <context ref="common-commands"/>
+        <context ref="specials-symbol"/>
+        <context ref="command"/>
+      </include>
+    </context>
 
-        <context id="in-math">
-            <include>
-                <context ref="common-commands"/>
-                <context ref="specials-symbol"/>
-                <context ref="command"/>
-            </include>
-        </context>
+    <context id="in-inline-math" class="no-spell-check">
+      <include>
+        <context ref="common-commands"/>
+        <context ref="specials-symbol"/>
+        <context ref="command"/>
+      </include>
+    </context>
 
-        <context id="in-inline-math">
-            <include>
-                <context ref="common-commands"/>
-                <context ref="specials-symbol"/>
-                <context ref="command"/>
-            </include>
-        </context>
+    <context id="comment" style-ref="comment">
+      <start>%</start>
+      <end>$</end>
+      <include>
+        <context ref="def:in-comment"/>
+      </include>
+    </context>
 
-        <context id="latex">
-            <include>
+    <context id="verbatim-comment" style-ref="comment" class="no-spell-check">
+      <start>\\begin\{comment\}</start>
+      <end>\\end\{comment\}</end>
+      <include>
+        <context ref="def:in-comment"/>
+      </include>
+    </context>
 
-                <context id="comment" style-ref="comment">
-                    <start>%</start>
-                    <end>$</end>
-                    <include>
-                        <context ref="def:in-comment"/>
-                    </include>
-                </context>
+    <context id="math-1" style-ref="math" class="no-spell-check">
+      <start>\$\$</start>
+      <end>\$\$</end>
+      <include>
+        <context sub-pattern="0" where="start" style-ref="math-bound"/>
+        <context sub-pattern="0" where="end" style-ref="math-bound"/>
+        <context ref="in-math"/>
+      </include>
+    </context>
 
-                <context id="verbatim-comment" style-ref="comment">
-                    <start>\\begin\{comment\}</start>
-                    <end>\\end\{comment\}</end>
-                    <include>
-                        <context ref="def:in-comment"/>
-                    </include>
-                </context>
+    <context id="math-2" style-ref="math" class="no-spell-check">
+      <start>\\\[</start>
+      <end>\\\]</end>
+      <include>
+        <context sub-pattern="0" where="start" style-ref="math-bound"/>
+        <context sub-pattern="0" where="end" style-ref="math-bound"/>
+        <context ref="in-math"/>
+      </include>
+    </context>
 
-                <context id="math-1" style-ref="math">
-                    <start>\$\$</start>
-                    <end>\$\$</end>
-                    <include>
-                        <context sub-pattern="0" where="start" style-ref="math-bound"/>
-                        <context sub-pattern="0" where="end" style-ref="math-bound"/>
-                        <context ref="in-math"/>
-                    </include>
-                </context>
+    <context id="inline-math-1" style-ref="inline-math" class="no-spell-check">
+      <start>\$</start>
+      <end>\$</end>
+      <include>
+        <context sub-pattern="0" where="start" style-ref="math-bound"/>
+        <context sub-pattern="0" where="end" style-ref="math-bound"/>
+        <context ref="in-inline-math"/>
+      </include>
+    </context>
 
-                <context id="math-2" style-ref="math">
-                    <start>\\\[</start>
-                    <end>\\\]</end>
-                    <include>
-                        <context sub-pattern="0" where="start" style-ref="math-bound"/>
-                        <context sub-pattern="0" where="end" style-ref="math-bound"/>
-                        <context ref="in-math"/>
-                    </include>
-                </context>
+    <context id="inline-math-2" style-ref="inline-math" class="no-spell-check">
+      <start>\\\(</start>
+      <end>\\\)</end>
+      <include>
+        <context sub-pattern="0" where="start" style-ref="math-bound"/>
+        <context sub-pattern="0" where="end" style-ref="math-bound"/>
+        <context ref="in-inline-math"/>
+      </include>
+    </context>
 
-                <context id="inline-math-1" style-ref="inline-math">
-                    <start>\$</start>
-                    <end>\$</end>
-                    <include>
-                        <context sub-pattern="0" where="start" style-ref="math-bound"/>
-                        <context sub-pattern="0" where="end" style-ref="math-bound"/>
-                        <context ref="in-inline-math"/>
-                    </include>
-                </context>
+    <context id="verbatim-env" style-inside="true" style-ref="verbatim" class-disabled="no-spell-check">
+      <start>(\\begin)\{(verbatim\*?|lstlisting|alltt)\}</start>
+      <end>(\\end)\{\%{2@start}\}</end>
+      <include>
+        <context sub-pattern="1" where="start" style-ref="common-commands" class="no-spell-check"/>
+        <context sub-pattern="1" where="end" style-ref="common-commands" class="no-spell-check"/>
+      </include>
+    </context>
 
-                <context id="inline-math-2" style-ref="inline-math">
-                    <start>\\\(</start>
-                    <end>\\\)</end>
-                    <include>
-                        <context sub-pattern="0" where="start" style-ref="math-bound"/>
-                        <context sub-pattern="0" where="end" style-ref="math-bound"/>
-                        <context ref="in-inline-math"/>
-                    </include>
-                </context>
+    <!--using brackets is an experimental feature from the listings package. The
+        following must support these cases:
 
-                <context id="verbatim-env" style-ref="verbatim">
-                    <start extended="true">
-                        \\begin\{
-                            (
-                                verbatim\*?|
-                                lstlisting|
-                                alltt
-                            )
-                        \}
-                    </start>
-                    <end>\\end\{\%{1@start}\}</end>
-                </context>
+          \lstinline[]{code in here}
+          \lstinline[key=val, key=val]{code in here}
+          \lstinline[key=val, key=val]!code in here!
+          \lstinline[]!code in here!
+          \lstinline[][code in here[
+          \lstinline[NOT code in here, must specify empty optional argument to use square brackets[
+          \lstinline{code in here}
+          \lstinline{code in {here} but NOT in here}  % brackets do not nest
+          \lstinline!code in here!
+          \lstinline=code in here=
+          \lstinline{this needs to fail{
 
-                <context id="verbatim-inline" style-ref="verbatim">
-                    <start>\\(verb\*?|lstinline)(\S)</start>
-                    <end>\%{2@start}</end>
-                </context>
+          If using \verb instead of \lstinline, the brackets cannot be used
+        -->
+    <context id="lstinline-curly-brackets" style-inside="true" style-ref="verbatim" class-disabled="no-spell-check">
+      <start>(\\lstinline)(\[.*?\])?{</start>
+      <end>}</end>
+      <include>
+        <context sub-pattern="1" where="start" style-ref="command" class="no-spell-check"/>
+      </include>
+    </context>
+    <context id="lstinline-square-brackets" style-inside="true" style-ref="verbatim" class-disabled="no-spell-check">
+      <!-- square brackets don't match with the pair, and they require an
+           optional argument, even if empty -->
+      <start>(\\lstinline)(\[.*?\])\[</start>
+      <end>\[</end>
+      <include>
+        <context sub-pattern="1" where="start" style-ref="command" class="no-spell-check"/>
+      </include>
+    </context>
+    <context id="lstinline" style-inside="true" style-ref="verbatim" class-disabled="no-spell-check">
+      <start>(\\lstinline)(\[.*?\])?((?!\[)\S)</start>  <!-- ignore when starting with [ -->
+      <end>\%{3@start}</end>
+      <include>
+        <context sub-pattern="1" where="start" style-ref="command" class="no-spell-check"/>
+      </include>
+    </context>
+    <!-- If using \verb instead of \lstinline, the brackets cannot be used -->
+    <context id="verbatim-inline" style-inside="true" style-ref="verbatim" class-disabled="no-spell-check">
+      <start>(\\verb)\*?(\S)</start>
+      <end>\%{2@start}</end>
+      <include>
+        <context sub-pattern="1" where="start" style-ref="command" class="no-spell-check"/>
+      </include>
+    </context>
 
-                <context id="include" style-ref="include">
-                    <prefix>\\</prefix>
 
-                    <keyword>input</keyword>
-                    <keyword>include</keyword>
-                    <keyword>includeonly</keyword>
-                    <keyword>usepackage</keyword>
-                </context>
+  <context id="include" style-ref="include" class="no-spell-check">
+    <prefix>\\</prefix>
 
-                <context ref="common-commands"/>
-                <context ref="specials-symbol"/>
-                <context ref="command"/>
-            </include>
-        </context>
+    <keyword>input</keyword>
+    <keyword>include</keyword>
+    <keyword>includeonly</keyword>
+    <keyword>usepackage</keyword>
+  </context>
+
+    <context id="latex">
+      <include>
+        <context ref="comment"/>
+        <context ref="verbatim-comment"/>
+        <context ref="math-1"/>
+        <context ref="math-2"/>
+        <context ref="inline-math-1"/>
+        <context ref="inline-math-2"/>
+        <context ref="verbatim-env"/>
+        <context ref="lstinline-curly-brackets"/>
+        <context ref="lstinline-square-brackets"/>
+        <context ref="lstinline"/>
+        <context ref="verbatim-inline"/>
+        <context ref="include"/>
+        <context ref="common-commands"/>
+        <context ref="specials-symbol"/>
+        <context ref="command"/>
+      </include>
+    </context>
   </definitions>
 </language>

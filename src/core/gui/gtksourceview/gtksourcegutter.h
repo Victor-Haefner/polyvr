@@ -1,5 +1,5 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8; coding: utf-8 -*- *
- *
+ * gtksourcegutter.h
  * This file is part of GtkSourceView
  *
  * Copyright (C) 2009 - Jesse van den Kieboom
@@ -14,16 +14,14 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this library; if not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef GTK_SOURCE_GUTTER_H
-#define GTK_SOURCE_GUTTER_H
 
-#if !defined (GTK_SOURCE_H_INSIDE) && !defined (GTK_SOURCE_COMPILATION)
-#error "Only <gtksourceview/gtksource.h> can be included directly."
-#endif
+#ifndef __GTK_SOURCE_GUTTER_H__
+#define __GTK_SOURCE_GUTTER_H__
 
 #include <gtk/gtk.h>
 #include "gtksourcetypes.h"
@@ -50,39 +48,33 @@ struct _GtkSourceGutter
 struct _GtkSourceGutterClass
 {
 	GObjectClass parent_class;
-
-	gpointer padding[10];
 };
 
-extern
 GType gtk_source_gutter_get_type 		(void) G_GNUC_CONST;
 
-extern
-GtkSourceView *
-     gtk_source_gutter_get_view			(GtkSourceGutter         *gutter);
+GdkWindow *gtk_source_gutter_get_window 	(GtkSourceGutter         *gutter);
 
-extern
-GtkTextWindowType
-     gtk_source_gutter_get_window_type		(GtkSourceGutter         *gutter);
-
-extern
 gboolean gtk_source_gutter_insert               (GtkSourceGutter         *gutter,
                                                  GtkSourceGutterRenderer *renderer,
                                                  gint                     position);
 
-extern
 void gtk_source_gutter_reorder			(GtkSourceGutter	 *gutter,
                                                  GtkSourceGutterRenderer *renderer,
                                                  gint                     position);
 
-extern
 void gtk_source_gutter_remove			(GtkSourceGutter         *gutter,
                                                  GtkSourceGutterRenderer *renderer);
 
-extern
 void gtk_source_gutter_queue_draw		(GtkSourceGutter         *gutter);
 
-extern
+void gtk_source_gutter_set_padding              (GtkSourceGutter         *gutter,
+                                                 gint                     xpad,
+                                                 gint                     ypad);
+
+void gtk_source_gutter_get_padding              (GtkSourceGutter         *gutter,
+                                                 gint                    *xpad,
+                                                 gint                    *ypad);
+
 GtkSourceGutterRenderer *
      gtk_source_gutter_get_renderer_at_pos      (GtkSourceGutter         *gutter,
                                                  gint                     x,
@@ -90,4 +82,6 @@ GtkSourceGutterRenderer *
 
 G_END_DECLS
 
-#endif /* GTK_SOURCE_GUTTER_H */
+#endif /* __GTK_SOURCE_GUTTER_H__ */
+
+/* vi:ts=8 */

@@ -1,5 +1,5 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8; coding: utf-8 -*- *
- *
+ * gtksourcecompletionmodel.c
  * This file is part of GtkSourceView
  *
  * Copyright (C) 2009 - Jesse van den Kieboom <jessevdk@gnome.org>
@@ -15,18 +15,17 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this library; if not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include "config.h"
-
-#define GTK_SOURCE_H_INSIDE
-
 #include "gtksourcecompletionmodel.h"
-#include <glib/gi18n-lib.h>
 #include "gtksourcecompletionprovider.h"
 #include "gtksourcecompletionproposal.h"
+#include "gtksourceview-i18n.h"
+
+#define GTK_SOURCE_COMPLETION_MODEL_GET_PRIVATE(object)(G_TYPE_INSTANCE_GET_PRIVATE((object), GTK_SOURCE_TYPE_COMPLETION_MODEL, GtkSourceCompletionModelPrivate))
 
 typedef struct
 {
@@ -74,11 +73,10 @@ static void tree_model_iface_init (gpointer g_iface, gpointer iface_data);
 G_DEFINE_TYPE_WITH_CODE (GtkSourceCompletionModel,
                          gtk_source_completion_model,
                          G_TYPE_OBJECT,
-			 G_ADD_PRIVATE (GtkSourceCompletionModel)
                          G_IMPLEMENT_INTERFACE (GTK_TYPE_TREE_MODEL,
                                                 tree_model_iface_init))
 
-/* Utility functions */
+/* Utilities functions */
 
 static gboolean
 is_header (ProposalInfo *info)
@@ -523,32 +521,6 @@ tree_model_get_value (GtkTreeModel *tree_model,
 			}
 			break;
 
-		case GTK_SOURCE_COMPLETION_MODEL_COLUMN_ICON_NAME:
-			if (is_header (proposal_info))
-			{
-				const gchar *icon_name = gtk_source_completion_provider_get_icon_name (completion_provider);
-				g_value_set_string (value, (gpointer)icon_name);
-			}
-			else
-			{
-				const gchar *icon_name = gtk_source_completion_proposal_get_icon_name (completion_proposal);
-				g_value_set_string (value, (gpointer)icon_name);
-			}
-			break;
-
-		case GTK_SOURCE_COMPLETION_MODEL_COLUMN_GICON:
-			if (is_header (proposal_info))
-			{
-				GIcon *icon = gtk_source_completion_provider_get_gicon (completion_provider);
-				g_value_set_object (value, (gpointer)icon);
-			}
-			else
-			{
-				GIcon *icon = gtk_source_completion_proposal_get_gicon (completion_proposal);
-				g_value_set_object (value, (gpointer)icon);
-			}
-			break;
-
 		case GTK_SOURCE_COMPLETION_MODEL_COLUMN_IS_HEADER:
 			g_value_set_boolean (value, is_header (proposal_info));
 			break;
@@ -744,17 +716,17 @@ gtk_source_completion_model_class_init (GtkSourceCompletionModelClass *klass)
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
 	object_class->dispose = gtk_source_completion_model_dispose;
+
+	g_type_class_add_private (object_class, sizeof(GtkSourceCompletionModelPrivate));
 }
 
 static void
 gtk_source_completion_model_init (GtkSourceCompletionModel *self)
 {
-	self->priv = gtk_source_completion_model_get_instance_private (self);
+	self->priv = GTK_SOURCE_COMPLETION_MODEL_GET_PRIVATE (self);
 
 	self->priv->column_types[GTK_SOURCE_COMPLETION_MODEL_COLUMN_MARKUP] = G_TYPE_STRING;
 	self->priv->column_types[GTK_SOURCE_COMPLETION_MODEL_COLUMN_ICON] = GDK_TYPE_PIXBUF;
-	self->priv->column_types[GTK_SOURCE_COMPLETION_MODEL_COLUMN_ICON_NAME] = G_TYPE_STRING;
-	self->priv->column_types[GTK_SOURCE_COMPLETION_MODEL_COLUMN_GICON] = G_TYPE_ICON;
 	self->priv->column_types[GTK_SOURCE_COMPLETION_MODEL_COLUMN_PROPOSAL] = G_TYPE_OBJECT;
 	self->priv->column_types[GTK_SOURCE_COMPLETION_MODEL_COLUMN_PROVIDER] = G_TYPE_OBJECT;
 	self->priv->column_types[GTK_SOURCE_COMPLETION_MODEL_COLUMN_IS_HEADER] = G_TYPE_BOOLEAN;
@@ -881,13 +853,6 @@ gtk_source_completion_model_add_proposals (GtkSourceCompletionModel    *model,
 
 /* Other public functions */
 
-static gpointer
-provider_copy_func (gconstpointer src,
-		    gpointer      data)
-{
-	return g_object_ref ((gpointer) src);
-}
-
 void
 gtk_source_completion_model_set_visible_providers (GtkSourceCompletionModel *model,
                                                    GList                    *providers)
@@ -904,7 +869,7 @@ gtk_source_completion_model_set_visible_providers (GtkSourceCompletionModel *mod
 	g_list_free_full (model->priv->visible_providers, g_object_unref);
 
 	model->priv->visible_providers = g_list_copy_deep (providers,
-							   provider_copy_func,
+							   (GCopyFunc)g_object_ref,
 							   NULL);
 
 	for (l = model->priv->providers; l != NULL; l = l->next)
@@ -1155,73 +1120,6 @@ gtk_source_completion_model_previous_proposal (GtkSourceCompletionModel *model,
 	} while (gtk_source_completion_model_iter_is_header (model, iter));
 
 	return TRUE;
-}
-
-static gboolean
-proposal_has_info (GtkSourceCompletionProvider *provider,
-		   GtkSourceCompletionProposal *proposal)
-{
-	gchar *info;
-
-	if (gtk_source_completion_provider_get_info_widget (provider, proposal) != NULL)
-	{
-		return TRUE;
-	}
-
-	info = gtk_source_completion_proposal_get_info (proposal);
-
-	if (info != NULL)
-	{
-		g_free (info);
-		return TRUE;
-	}
-
-	return FALSE;
-}
-
-static gboolean
-provider_has_info (ProviderInfo *provider_info)
-{
-	GList *l;
-
-	for (l = provider_info->proposals->head; l != NULL; l = l->next)
-	{
-		ProposalInfo *proposal_info = l->data;
-
-		if (proposal_info->completion_proposal == NULL)
-		{
-			continue;
-		}
-
-		if (proposal_has_info (provider_info->completion_provider,
-				       proposal_info->completion_proposal))
-		{
-			return TRUE;
-		}
-	}
-
-	return FALSE;
-}
-
-/* Returns whether the model contains one or more proposal with extra
- * information. If the function returns %FALSE, the "Details" button is useless.
- */
-gboolean
-gtk_source_completion_model_has_info (GtkSourceCompletionModel *model)
-{
-	GList *l;
-
-	for (l = model->priv->providers; l != NULL; l = l->next)
-	{
-		ProviderInfo *provider_info = l->data;
-
-		if (provider_has_info (provider_info))
-		{
-			return TRUE;
-		}
-	}
-
-	return FALSE;
 }
 
 gboolean

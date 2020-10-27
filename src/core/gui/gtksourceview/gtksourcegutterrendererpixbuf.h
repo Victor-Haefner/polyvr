@@ -1,5 +1,5 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8; coding: utf-8 -*-
- *
+ * gtksourcegutterrenderertext.h
  * This file is part of GtkSourceView
  *
  * Copyright (C) 2010 - Jesse van den Kieboom
@@ -14,16 +14,13 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this library; if not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef GTK_SOURCE_GUTTER_RENDERER_PIXBUF_H
-#define GTK_SOURCE_GUTTER_RENDERER_PIXBUF_H
-
-#if !defined (GTK_SOURCE_H_INSIDE) && !defined (GTK_SOURCE_COMPILATION)
-#error "Only <gtksourceview/gtksource.h> can be included directly."
-#endif
+#ifndef __GTK_SOURCE_GUTTER_RENDERER_PIXBUF_H__
+#define __GTK_SOURCE_GUTTER_RENDERER_PIXBUF_H__
 
 #include "gtksourcetypes.h"
 #include "gtksourcegutterrenderer.h"
@@ -56,36 +53,33 @@ struct _GtkSourceGutterRendererPixbufClass
 	/*< private >*/
 	GtkSourceGutterRendererClass parent_class;
 
-	gpointer padding[10];
+	/*< public >*/
 };
 
-extern
 GType gtk_source_gutter_renderer_pixbuf_get_type (void) G_GNUC_CONST;
 
-extern
 GtkSourceGutterRenderer *gtk_source_gutter_renderer_pixbuf_new (void);
 
-extern
 void         gtk_source_gutter_renderer_pixbuf_set_pixbuf       (GtkSourceGutterRendererPixbuf *renderer,
                                                                  GdkPixbuf                     *pixbuf);
 
-extern
 GdkPixbuf   *gtk_source_gutter_renderer_pixbuf_get_pixbuf       (GtkSourceGutterRendererPixbuf *renderer);
 
-extern
+void         gtk_source_gutter_renderer_pixbuf_set_stock_id     (GtkSourceGutterRendererPixbuf *renderer,
+                                                                 const gchar                   *stock_id);
+
+const gchar *gtk_source_gutter_renderer_pixbuf_get_stock_id     (GtkSourceGutterRendererPixbuf *renderer);
+
 void         gtk_source_gutter_renderer_pixbuf_set_gicon        (GtkSourceGutterRendererPixbuf *renderer,
                                                                  GIcon                         *icon);
 
-extern
 GIcon       *gtk_source_gutter_renderer_pixbuf_get_gicon        (GtkSourceGutterRendererPixbuf *renderer);
 
-extern
 void         gtk_source_gutter_renderer_pixbuf_set_icon_name    (GtkSourceGutterRendererPixbuf *renderer,
                                                                  const gchar                   *icon_name);
 
-extern
 const gchar *gtk_source_gutter_renderer_pixbuf_get_icon_name    (GtkSourceGutterRendererPixbuf *renderer);
 
 G_END_DECLS
 
-#endif /* GTK_SOURCE_GUTTER_RENDERER_TEXT_H */
+#endif /* __GTK_SOURCE_GUTTER_RENDERER_TEXT_H__ */

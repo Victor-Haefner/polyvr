@@ -1,5 +1,5 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8; coding: utf-8 -*-
- *
+ * gtksourcepixbufhelper.h
  * This file is part of GtkSourceView
  *
  * Copyright (C) 2010 - Jesse van den Kieboom
@@ -14,12 +14,13 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this library; if not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef GTK_SOURCE_PIXBUF_HELPER_H
-#define GTK_SOURCE_PIXBUF_HELPER_H
+#ifndef __GTK_SOURCE_PIXBUF_HELPER_H__
+#define __GTK_SOURCE_PIXBUF_HELPER_H__
 
 #include <gtk/gtk.h>
 #include "gtksourcetypes-private.h"
@@ -36,6 +37,13 @@ void gtk_source_pixbuf_helper_set_pixbuf (GtkSourcePixbufHelper *helper,
 
 G_GNUC_INTERNAL
 GdkPixbuf *gtk_source_pixbuf_helper_get_pixbuf (GtkSourcePixbufHelper *helper);
+
+G_GNUC_INTERNAL
+void gtk_source_pixbuf_helper_set_stock_id (GtkSourcePixbufHelper *helper,
+                                            const gchar           *stock_id);
+
+G_GNUC_INTERNAL
+const gchar *gtk_source_pixbuf_helper_get_stock_id (GtkSourcePixbufHelper *helper);
 
 G_GNUC_INTERNAL
 void gtk_source_pixbuf_helper_set_icon_name (GtkSourcePixbufHelper *helper,
@@ -56,5 +64,5 @@ GdkPixbuf *gtk_source_pixbuf_helper_render (GtkSourcePixbufHelper *helper,
                                             GtkWidget             *widget,
                                             gint                   size);
 
-#endif /* GTK_SOURCE_PIXBUF_HELPER_H */
+#endif /* __GTK_SOURCE_PIXBUF_HELPER_H__ */
 

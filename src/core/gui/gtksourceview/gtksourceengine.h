@@ -1,5 +1,5 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8; coding: utf-8 -*-
- *
+ * gtksourceengine.h - Abstract base class for highlighting engines
  * This file is part of GtkSourceView
  *
  * Copyright (C) 2003 - Gustavo Giráldez
@@ -14,12 +14,13 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this library; if not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef GTK_SOURCE_ENGINE_H
-#define GTK_SOURCE_ENGINE_H
+#ifndef __GTK_SOURCE_ENGINE_H__
+#define __GTK_SOURCE_ENGINE_H__
 
 #include <gtk/gtk.h>
 #include "gtksourcetypes.h"
@@ -27,16 +28,23 @@
 
 G_BEGIN_DECLS
 
-#define GTK_SOURCE_TYPE_ENGINE               (_gtk_source_engine_get_type ())
-#define GTK_SOURCE_ENGINE(obj)               (G_TYPE_CHECK_INSTANCE_CAST ((obj), GTK_SOURCE_TYPE_ENGINE, GtkSourceEngine))
-#define GTK_SOURCE_IS_ENGINE(obj)            (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GTK_SOURCE_TYPE_ENGINE))
-#define GTK_SOURCE_ENGINE_GET_INTERFACE(obj) (G_TYPE_INSTANCE_GET_INTERFACE ((obj), GTK_SOURCE_TYPE_ENGINE, GtkSourceEngineInterface))
+#define GTK_SOURCE_TYPE_ENGINE            (_gtk_source_engine_get_type ())
+#define GTK_SOURCE_ENGINE(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), GTK_SOURCE_TYPE_ENGINE, GtkSourceEngine))
+#define GTK_SOURCE_ENGINE_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass), GTK_SOURCE_TYPE_ENGINE, GtkSourceEngineClass))
+#define GTK_SOURCE_IS_ENGINE(obj)         (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GTK_SOURCE_TYPE_ENGINE))
+#define GTK_SOURCE_IS_ENGINE_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), GTK_SOURCE_TYPE_ENGINE))
+#define GTK_SOURCE_ENGINE_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), GTK_SOURCE_TYPE_ENGINE, GtkSourceEngineClass))
 
-typedef struct _GtkSourceEngineInterface GtkSourceEngineInterface;
+typedef struct _GtkSourceEngineClass	GtkSourceEngineClass;
 
-struct _GtkSourceEngineInterface
+struct _GtkSourceEngine
 {
-	GTypeInterface parent_interface;
+	GObject parent_instance;
+};
+
+struct _GtkSourceEngineClass
+{
+	GObjectClass parent_class;
 
 	void     (* attach_buffer)    (GtkSourceEngine      *engine,
 				       GtkTextBuffer        *buffer);
@@ -55,6 +63,10 @@ struct _GtkSourceEngineInterface
 
 	void     (* set_style_scheme) (GtkSourceEngine      *engine,
 				       GtkSourceStyleScheme *scheme);
+
+	GtkTextTag *(* get_context_class_tag)
+				      (GtkSourceEngine      *engine,
+				       const gchar          *context_class);
 };
 
 G_GNUC_INTERNAL
@@ -84,6 +96,11 @@ G_GNUC_INTERNAL
 void        _gtk_source_engine_set_style_scheme	(GtkSourceEngine      *engine,
 						 GtkSourceStyleScheme *scheme);
 
+G_GNUC_INTERNAL
+GtkTextTag *_gtk_source_engine_get_context_class_tag
+						 (GtkSourceEngine     *engine,
+						  const gchar         *context_class);
+
 G_END_DECLS
 
-#endif /* GTK_SOURCE_ENGINE_H */
+#endif /* __GTK_SOURCE_ENGINE_H__ */

@@ -1,5 +1,5 @@
 /* -*- mode: c; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8; coding: utf-8 -*-
- *
+ * gtksourcecontextengine.c
  * This file is part of GtkSourceView
  *
  * Copyright (C) 2003 - Gustavo Giráldez <gustavo.giraldez@gmx.net>
@@ -15,26 +15,23 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this library; if not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include "config.h"
-
-#define GTK_SOURCE_H_INSIDE
-
-#include "gtksourcecontextengine.h"
 #include <string.h>
 #include <glib.h>
-#include <glib/gi18n-lib.h>
-#include "gtksourceregion.h"
+#include "gtksourceview-i18n.h"
+#include "gtksourcecontextengine.h"
+#include "gtktextregion.h"
 #include "gtksourcelanguage.h"
 #include "gtksourcelanguage-private.h"
 #include "gtksourcebuffer.h"
 #include "gtksourceregex.h"
-#include "gtksourcestyle.h"
+#include "gtksourcestyle-private.h"
+#include "gtksourceview-utils.h"
 #include "gtksourcestylescheme.h"
-#include "gtksourceutils-private.h"
 
 #undef ENABLE_DEBUG
 #undef ENABLE_PROFILE
@@ -59,31 +56,24 @@
 
 /* Priority of one-time idle which is installed after buffer is modified. */
 #define FIRST_UPDATE_PRIORITY		G_PRIORITY_HIGH_IDLE
-
-/* Maximal amount of time (in milliseconds) allowed to spend in the first idle.
- * Should be small enough, since in worst case we block ui for this time after
- * each keypress.
+/* Maximal amount of time allowed to spent in this first idle. Should be
+ * small enough, since in worst case we block ui for this time after each keypress.
  */
 #define FIRST_UPDATE_TIME_SLICE		10
 
 /* Priority of long running idle which is used to analyze whole buffer, if
- * the engine wasn't quick enough to analyze it in one shot.
- */
+ * the engine wasn't quick enough to analyze it in one shot. */
 /* FIXME this priority is low, since we don't want to block other gui stuff.
  * But, e.g. if we have a big file, and scroll down, we do want the engine
  * to analyze quickly. Perhaps we want to reinstall first_update in case
- * of expose events or something.
- */
+ * of expose events or something. */
 #define INCREMENTAL_UPDATE_PRIORITY	G_PRIORITY_LOW
 
-/* Maximal amount of time (in milliseconds) allowed to spend in one cycle of
- * background idle.
- */
+/* Maximal amount of time allowed to spent in one cycle of background idle. */
 #define INCREMENTAL_UPDATE_TIME_SLICE	30
 
-/* Maximal amount of time (in milliseconds) allowed to spend highlihting a
- * single line. If it is not enough, then highlighting is disabled.
- */
+/* Maximal amount of time allowed to spent highlihting a single line. If it
+ * is not enough, then highlighting is disabled. */
 #define MAX_TIME_FOR_ONE_LINE		2000
 
 #define GTK_SOURCE_CONTEXT_ENGINE_ERROR (gtk_source_context_engine_error_quark ())
@@ -92,25 +82,24 @@
 
 /* Can the context be terminated by ancestor? */
 /* Root context can't be terminated; its child may not be terminated by it;
- * grandchildren look at the flag.
- */
+ * grandchildren look at the flag */
 #define ANCESTOR_CAN_END_CONTEXT(ctx) \
 	((ctx)->parent != NULL && (ctx)->parent->parent != NULL && \
 		(!HAS_OPTION ((ctx)->definition, EXTEND_PARENT) || !(ctx)->all_ancestors_extend))
 
-/* Root context and its children have this TRUE; grandchildren use the flag. */
+/* Root context and its children have this TRUE; grandchildren use the flag */
 #define CONTEXT_EXTENDS_PARENT(ctx) \
 	((ctx)->parent == NULL || (ctx)->parent->parent == NULL || \
 		HAS_OPTION ((ctx)->definition, EXTEND_PARENT))
 
-/* Root and its children have this FALSE; grandchildren use the flag. */
+/* Root and its children have this FALSE; grandchildren use the flag */
 #define CONTEXT_ENDS_PARENT(ctx) \
 	((ctx)->parent != NULL && (ctx)->parent->parent != NULL && \
 		HAS_OPTION ((ctx)->definition, END_PARENT))
 #define SEGMENT_ENDS_PARENT(s) CONTEXT_ENDS_PARENT ((s)->context)
 
 /* Does the segment terminate at line end? */
-/* Root segment doesn't, children look at the flag. */
+/* Root segment doesn't, children look at the flag */
 #define CONTEXT_END_AT_LINE_END(ctx) \
 	((ctx)->parent != NULL && HAS_OPTION ((ctx)->definition, END_AT_LINE_END))
 #define SEGMENT_END_AT_LINE_END(s) CONTEXT_END_AT_LINE_END((s)->context)
@@ -120,6 +109,8 @@
 #define SEGMENT_IS_INVALID(s) ((s)->context == NULL)
 #define SEGMENT_IS_SIMPLE(s) CONTEXT_IS_SIMPLE ((s)->context)
 #define SEGMENT_IS_CONTAINER(s) CONTEXT_IS_CONTAINER ((s)->context)
+
+#define TAG_CONTEXT_CLASS_NAME "GtkSourceViewTagContextClassName"
 
 typedef struct _SubPatternDefinition SubPatternDefinition;
 typedef struct _SubPattern SubPattern;
@@ -133,23 +124,24 @@ typedef struct _LineInfo LineInfo;
 typedef struct _InvalidRegion InvalidRegion;
 typedef struct _ContextClassTag ContextClassTag;
 
-typedef enum _GtkSourceContextEngineError {
+typedef enum {
 	GTK_SOURCE_CONTEXT_ENGINE_ERROR_DUPLICATED_ID = 0,
 	GTK_SOURCE_CONTEXT_ENGINE_ERROR_INVALID_ARGS,
 	GTK_SOURCE_CONTEXT_ENGINE_ERROR_INVALID_PARENT,
 	GTK_SOURCE_CONTEXT_ENGINE_ERROR_INVALID_REF,
 	GTK_SOURCE_CONTEXT_ENGINE_ERROR_INVALID_WHERE,
 	GTK_SOURCE_CONTEXT_ENGINE_ERROR_INVALID_START_REF,
+	GTK_SOURCE_CONTEXT_ENGINE_ERROR_INVALID_REGEX,
 	GTK_SOURCE_CONTEXT_ENGINE_ERROR_INVALID_STYLE,
 	GTK_SOURCE_CONTEXT_ENGINE_ERROR_BAD_FILE
 } GtkSourceContextEngineError;
 
-typedef enum _ContextType {
+typedef enum {
 	CONTEXT_TYPE_SIMPLE = 0,
 	CONTEXT_TYPE_CONTAINER
 } ContextType;
 
-typedef enum _SubPatternWhere {
+typedef enum {
 	SUB_PATTERN_WHERE_DEFAULT = 0,
 	SUB_PATTERN_WHERE_START,
 	SUB_PATTERN_WHERE_END
@@ -157,9 +149,9 @@ typedef enum _SubPatternWhere {
 
 struct _ContextDefinition
 {
-	gchar *id;
+	gchar			*id;
 
-	ContextType type;
+	ContextType		 type;
 	union
 	{
 		GtkSourceRegex *match;
@@ -170,179 +162,165 @@ struct _ContextDefinition
 	} u;
 
 	/* Name of the style used for contexts of this type. */
-	gchar *default_style;
+	gchar			*default_style;
 
-	/* List of DefinitionChild pointers. */
-	GSList *children;
+	/* This is a list of DefinitionChild pointers. */
+	GSList			*children;
 
-	/* Sub-patterns (list of SubPatternDefinition pointers). */
-	GSList *sub_patterns;
-	guint n_sub_patterns;
+	/* Sub patterns (list of SubPatternDefinition pointers.) */
+	GSList			*sub_patterns;
+	guint			 n_sub_patterns;
 
-	/* List of class definitions. */
-	GSList *context_classes;
+	/* List of class definitions */
+	GSList			*context_classes;
 
-	/* Union of every regular expression we can find from this context. */
-	GtkSourceRegex *reg_all;
+	/* Union of every regular expression we can find from this
+	 * context. */
+	GtkSourceRegex		*reg_all;
 
-	guint flags : 8;
-	guint ref_count : 24;
+	guint			flags : 8;
+	guint			ref_count : 24;
 };
 
 struct _SubPatternDefinition
 {
 #ifdef NEED_DEBUG_ID
 	/* We need the id only for debugging. */
-	gchar *id;
+	gchar			*id;
 #endif
-	gchar *style;
-	SubPatternWhere where;
+	gchar			*style;
+	SubPatternWhere		 where;
 
 	/* List of class definitions */
-	GSList *context_classes;
+	GSList                  *context_classes;
 
 	/* index in the ContextDefinition's list */
-	guint index;
+	guint			 index;
 
 	union
 	{
-		gint num;
-		gchar *name;
+		gint	 	 num;
+		gchar		*name;
 	} u;
-	guint is_named : 1;
+	guint			 is_named : 1;
 };
 
 struct _DefinitionChild
 {
 	union
 	{
-		/* Equal to definition->id, used when it's not resolved yet. */
-		gchar *id;
-		ContextDefinition *definition;
+		/* Equal to definition->id, used when it's not resolved yet */
+		gchar			*id;
+		ContextDefinition	*definition;
 	} u;
 
-	gchar *style;
+	gchar			*style;
 
 	/* Whether this child is a reference to all child contexts of
-	 * <definition>.
-	 */
-	guint is_ref_all : 1;
-
+	 * <definition>. */
+	guint			 is_ref_all : 1;
 	/* Whether it is resolved, i.e. points to actual context definition. */
-	guint resolved : 1;
-
-	/* Whether style is overridden, i.e. use child->style instead of what
-	 * definition says.
-	 */
-	guint override_style : 1;
-
+	guint			 resolved : 1;
+	/* Whether style is overridden, i.e. use child->style instead of what definition says. */
+	guint			 override_style : 1;
 	/* Whether style should be ignored for this and all child contexts. */
-	guint override_style_deep : 1;
+	guint			 override_style_deep : 1;
 };
 
 struct _DefinitionsIter
 {
-	GSList *children_stack;
+	GSList			*children_stack;
 };
 
 struct _Context
 {
 	/* Definition for the context. */
-	ContextDefinition *definition;
+	ContextDefinition	*definition;
 
-	Context *parent;
-	ContextPtr *children;
+	Context			*parent;
+	ContextPtr		*children;
 
 	/* This is the regex returned by regex_resolve() called on
-	 * definition->start_end.end.
-	 */
-	GtkSourceRegex *end;
-
-	/* The regular expression containing every regular expression that could
-	 * be matched in this context.
-	 */
-	GtkSourceRegex *reg_all;
+	 * definition->start_end.end. */
+	GtkSourceRegex		*end;
+	/* The regular expression containing every regular expression that
+	 * could be matched in this context. */
+	GtkSourceRegex		*reg_all;
 
 	/* Either definition->default_style or child_def->style, not copied. */
-	const gchar *style;
-	GtkTextTag *tag;
-	GtkTextTag **subpattern_tags;
+	const gchar		*style;
+	GtkTextTag		*tag;
+	GtkTextTag	       **subpattern_tags;
 
 	/* Cache for generated list of class tags */
-	GSList *context_classes;
+	GSList                  *context_classes;
 
 	/* Cache for generated list of subpattern class tags */
-	GSList **subpattern_context_classes;
+	GSList                 **subpattern_context_classes;
 
-	guint ref_count;
-
+	guint			 ref_count;
 	/* see context_freeze() */
-	guint frozen : 1;
-
+	guint                    frozen : 1;
 	/* Do all the ancestors extend their parent? */
-	guint all_ancestors_extend : 1;
-
+	guint			 all_ancestors_extend : 1;
 	/* Do not apply styles to children contexts */
-	guint ignore_children_style : 1;
+	guint			 ignore_children_style : 1;
 };
 
 struct _ContextPtr
 {
-	ContextDefinition *definition;
+	ContextDefinition	*definition;
 
-	ContextPtr *next;
+	ContextPtr		*next;
 
 	union {
-		Context *context;
-		GHashTable *hash; /* char* -> Context* */
+		Context		*context;
+		GHashTable	*hash; /* char* -> Context* */
 	} u;
-	guint fixed : 1;
+	guint			 fixed : 1;
 };
 
 struct _GtkSourceContextReplace
 {
-	gchar *id;
-	gchar *replace_with;
+	gchar			*id;
+	gchar			*replace_with;
 };
 
 struct _Segment
 {
-	Segment *parent;
-	Segment *next;
-	Segment *prev;
-	Segment *children;
-	Segment *last_child;
+	Segment			*parent;
+	Segment			*next;
+	Segment			*prev;
+	Segment			*children;
+	Segment			*last_child;
 
 	/* This is NULL if and only if it's a dummy segment which denotes
-	 * inserted or deleted text.
-	 */
-	Context *context;
+	 * inserted or deleted text. */
+	Context			*context;
 
 	/* Subpatterns found in this segment. */
-	SubPattern *sub_patterns;
+	SubPattern		*sub_patterns;
 
 	/* The context is used in the interval [start_at; end_at). */
-	gint start_at;
-	gint end_at;
+	gint			 start_at;
+	gint			 end_at;
 
 	/* In case of container contexts, start_len/end_len is length in chars
-	 * of start/end match.
-	 */
-	gint start_len;
-	gint end_len;
+	 * of start/end match. */
+	gint			 start_len;
+	gint			 end_len;
 
-	/* Whether this segment is a whole good segment, or it's an end of
-	 * a bigger one left after erase_segments() call.
-	 */
-	guint is_start : 1;
+	/* Whether this segment is a whole good segment, or it's an
+	 * an end of bigger one left after erase_segments() call. */
+	guint			 is_start : 1;
 };
 
 struct _SubPattern
 {
-	SubPatternDefinition *definition;
-	gint start_at;
-	gint end_at;
-	SubPattern *next;
+	SubPatternDefinition	*definition;
+	gint			 start_at;
+	gint			 end_at;
+	SubPattern		*next;
 };
 
 /* Line terminator characters (\n, \r, \r\n, or unicode paragraph separator)
@@ -366,35 +344,31 @@ struct _SubPattern
 struct _LineInfo
 {
 	/* Line text. */
-	gchar *text;
-
+	gchar			*text;
 	/* Character offset of the line in text buffer. */
-	gint start_at;
-
-	/* Character length of line terminator, or 0 if it's the last line in
-	 * buffer.
-	 */
-	gint eol_length;
-
-	/* Length of the line text not including line terminator. */
-	gint char_length;
-	gint byte_length;
+	gint			 start_at;
+	/* Character length of line terminator, or 0 if it's the
+	 * last line in buffer. */
+	gint			 eol_length;
+	/* Length of the line text not including line terminator */
+	gint			 char_length;
+	gint			 byte_length;
 };
 
 struct _InvalidRegion
 {
-	gboolean empty;
-	GtkTextMark *start;
-	GtkTextMark *end;
-
-	/* offset_at(end) - delta == original offset, i.e. offset in the tree. */
-	gint delta;
+	gboolean		 empty;
+	GtkTextMark		*start;
+	GtkTextMark		*end;
+	/* offset_at(end) - delta == original offset,
+	 * i.e. offset in the tree */
+	gint			 delta;
 };
 
 struct _GtkSourceContextClass
 {
-	gchar *name;
-	gboolean enabled;
+	gchar    *name;
+	gboolean  enabled;
 };
 
 struct _ContextClassTag
@@ -405,53 +379,50 @@ struct _ContextClassTag
 
 struct _GtkSourceContextData
 {
-	guint ref_count;
+	guint			 ref_count;
 
-	GtkSourceLanguage *lang;
+	GtkSourceLanguage	*lang;
 
 	/* Contains every ContextDefinition indexed by its id. */
-	GHashTable *definitions;
+	GHashTable		*definitions;
 };
 
 struct _GtkSourceContextEnginePrivate
 {
-	GtkSourceContextData *ctx_data;
+	GtkSourceContextData	*ctx_data;
 
-	GtkTextBuffer *buffer;
-	GtkSourceStyleScheme *style_scheme;
+	GtkTextBuffer		*buffer;
+	GtkSourceStyleScheme	*style_scheme;
 
 	/* All tags indexed by style name: values are GSList's of tags, ref()'ed. */
-	GHashTable *tags;
+	GHashTable		*tags;
+	/* Number of all syntax tags created by the engine, needed to set correct
+	 * tag priorities */
+	guint			 n_tags;
 
-	/* Number of all syntax tags created by the engine, needed to set
-	 * correct tag priorities.
-	 */
-	guint n_tags;
-
-	/* List of GtkTextTag* for context classes. */
-	GSList *context_classes;
+	GHashTable		*context_classes;
 
 	/* Whether or not to actually highlight the buffer. */
-	gboolean highlight;
+	gboolean		 highlight;
 
 	/* Whether syntax analysis was disabled because of errors. */
-	gboolean disabled;
+	gboolean		 disabled;
 
 	/* Region covering the unhighlighted text. */
-	GtkSourceRegion *refresh_region;
+	GtkTextRegion		*refresh_region;
 
 	/* Tree of contexts. */
-	Context *root_context;
-	Segment *root_segment;
-	Segment *hint;
-	Segment *hint2;
+	Context			*root_context;
+	Segment			*root_segment;
+	Segment			*hint;
+	Segment			*hint2;
 
 	/* list of Segment* */
-	GSList *invalid;
-	InvalidRegion invalid_region;
+	GSList			*invalid;
+	InvalidRegion		 invalid_region;
 
-	guint first_update;
-	guint incremental_update;
+	guint			 first_update;
+	guint			 incremental_update;
 };
 
 #ifdef ENABLE_CHECK_TREE
@@ -525,8 +496,7 @@ static void		install_idle_worker	(GtkSourceContextEngine	*ce);
 static void		install_first_update	(GtkSourceContextEngine	*ce);
 
 static ContextDefinition *
-gtk_source_context_data_lookup (GtkSourceContextData *ctx_data,
-				const gchar          *id)
+gtk_source_context_data_lookup (GtkSourceContextData *ctx_data, const char *id)
 {
 	return g_hash_table_lookup (ctx_data->definitions, id);
 }
@@ -575,7 +545,7 @@ gtk_source_context_class_free (GtkSourceContextClass *cclass)
 
 static ContextClassTag *
 context_class_tag_new (GtkTextTag *tag,
-		       gboolean    enabled)
+                       gboolean    enabled)
 {
 	ContextClassTag *attrtag = g_slice_new (ContextClassTag);
 
@@ -597,9 +567,9 @@ struct BufAndIters {
 };
 
 static void
-unhighlight_region_cb (G_GNUC_UNUSED gpointer  style,
-		       GSList                 *tags,
-		       gpointer                user_data)
+unhighlight_region_cb (G_GNUC_UNUSED gpointer style,
+		       GSList   *tags,
+		       gpointer  user_data)
 {
 	struct BufAndIters *data = user_data;
 
@@ -644,7 +614,7 @@ set_tag_style (GtkSourceContextEngine *ce,
 	g_return_if_fail (GTK_IS_TEXT_TAG (tag));
 	g_return_if_fail (style_id != NULL);
 
-	gtk_source_style_apply (NULL, tag);
+	_gtk_source_style_apply (NULL, tag);
 
 	if (ce->priv->style_scheme == NULL)
 		return;
@@ -674,7 +644,7 @@ set_tag_style (GtkSourceContextEngine *ce,
 	/* not having style is fine, since parser checks validity of every style reference,
 	 * so we don't need to spit a warning here */
 	if (style != NULL)
-		gtk_source_style_apply (style, tag);
+		_gtk_source_style_apply (style, tag);
 }
 
 static GtkTextTag *
@@ -912,7 +882,6 @@ highlight_region (GtkSourceContextEngine *ce,
 #endif
 
 	/* First we need to delete tags in the regions. */
-	printf(" highlight_region region\n");
 	unhighlight_region (ce, start, end);
 
 	apply_tags (ce, ce->priv->root_segment,
@@ -945,64 +914,60 @@ ensure_highlighted (GtkSourceContextEngine *ce,
 		    const GtkTextIter      *start,
 		    const GtkTextIter      *end)
 {
-	printf("ensure_highlighted %p %p %p\n", ce, start, end);
-	GtkSourceRegion *region;
-	GtkSourceRegionIter reg_iter;
+	GtkTextRegion *region;
+	GtkTextRegionIterator reg_iter;
 
 	/* Get the subregions not yet highlighted. */
-	region = gtk_source_region_intersect_subregion (ce->priv->refresh_region, start, end);
+	region = gtk_text_region_intersect (ce->priv->refresh_region, start, end);
 
 	if (region == NULL)
 		return;
 
-	gtk_source_region_get_start_region_iter (region, &reg_iter);
+	gtk_text_region_get_iterator (region, &reg_iter, 0);
 
 	/* Highlight all subregions from the intersection.
 	 * hopefully this will only be one subregion. */
-	while (!gtk_source_region_iter_is_end (&reg_iter))
+	while (!gtk_text_region_iterator_is_end (&reg_iter))
 	{
-	printf(" ensure_highlighted region\n");
 		GtkTextIter s, e;
-		gtk_source_region_iter_get_subregion (&reg_iter, &s, &e);
+		gtk_text_region_iterator_get_subregion (&reg_iter, &s, &e);
 		highlight_region (ce, &s, &e);
-		gtk_source_region_iter_next (&reg_iter);
+		gtk_text_region_iterator_next (&reg_iter);
 	}
 
-	g_clear_object (&region);
+	gtk_text_region_destroy (region, TRUE);
 
 	/* Remove the just highlighted region. */
-	gtk_source_region_subtract_subregion (ce->priv->refresh_region, start, end);
+	gtk_text_region_subtract (ce->priv->refresh_region, start, end);
 }
 
 static GtkTextTag *
 get_context_class_tag (GtkSourceContextEngine *ce,
 		       gchar const            *name)
 {
-	gchar *tag_name;
-	GtkTextTagTable *tag_table;
-	GtkTextTag *tag;
+	GtkTextTag *ret;
 
-	tag_name = g_strdup_printf ("gtksourceview:context-classes:%s", name);
+	ret = g_hash_table_lookup (ce->priv->context_classes, name);
 
-	tag_table = gtk_text_buffer_get_tag_table (ce->priv->buffer);
-	tag = gtk_text_tag_table_lookup (tag_table, tag_name);
-
-	if (tag == NULL)
+	if (ret == NULL)
 	{
-		tag = gtk_text_buffer_create_tag (ce->priv->buffer, tag_name, NULL);
-		g_return_val_if_fail (tag != NULL, NULL);
+		ret = gtk_text_buffer_create_tag (ce->priv->buffer, NULL, NULL);
+		g_object_set_data_full (G_OBJECT (ret),
+		                        TAG_CONTEXT_CLASS_NAME,
+		                        g_strdup (name),
+		                        (GDestroyNotify)g_free);
 
-		ce->priv->context_classes = g_slist_prepend (ce->priv->context_classes,
-							     g_object_ref (tag));
+		g_hash_table_insert (ce->priv->context_classes,
+		                     g_strdup (name),
+		                     ret);
 	}
 
-	g_free (tag_name);
-	return tag;
+	return ret;
 }
 
 static GSList *
 extend_context_classes (GtkSourceContextEngine *ce,
-			GSList                 *definitions)
+                        GSList                 *definitions)
 {
 	GSList *item;
 	GSList *ret = NULL;
@@ -1021,8 +986,8 @@ extend_context_classes (GtkSourceContextEngine *ce,
 
 static GSList *
 get_subpattern_context_classes (GtkSourceContextEngine *ce,
-				Context                *context,
-				SubPatternDefinition   *sp_def)
+                                Context                *context,
+                                SubPatternDefinition   *sp_def)
 {
 	g_assert (sp_def->index < context->definition->n_sub_patterns);
 
@@ -1041,7 +1006,7 @@ get_subpattern_context_classes (GtkSourceContextEngine *ce,
 
 static GSList *
 get_context_classes (GtkSourceContextEngine *ce,
-		     Context                *context)
+                     Context                *context)
 {
 	if (context->context_classes == NULL)
 	{
@@ -1055,9 +1020,9 @@ get_context_classes (GtkSourceContextEngine *ce,
 
 static void
 apply_context_classes (GtkSourceContextEngine *ce,
-		       GSList                 *context_classes,
-		       gint                    start,
-		       gint                    end)
+                       GSList                 *context_classes,
+                       gint                    start,
+                       gint                    end)
 {
 	GtkTextIter start_iter;
 	GtkTextIter end_iter;
@@ -1090,9 +1055,9 @@ apply_context_classes (GtkSourceContextEngine *ce,
 
 static void
 add_region_context_classes (GtkSourceContextEngine *ce,
-			    Segment                *segment,
-			    gint                    start_offset,
-			    gint                    end_offset)
+                            Segment                *segment,
+                            gint                    start_offset,
+                            gint                    end_offset)
 {
 	SubPattern *sp;
 	Segment *child;
@@ -1156,29 +1121,40 @@ add_region_context_classes (GtkSourceContextEngine *ce,
 }
 
 static void
-remove_region_context_classes (GtkSourceContextEngine *ce,
-			       const GtkTextIter      *start,
-			       const GtkTextIter      *end)
+remove_region_context_class_cb (G_GNUC_UNUSED gpointer class,
+                                GtkTextTag             *tag,
+                                gpointer                user_data)
 {
-	GSList *l;
+	struct BufAndIters *data = user_data;
+	gtk_text_buffer_remove_tag (data->buffer,
+	                            tag,
+	                            data->start,
+	                            data->end);
+}
+
+static void
+remove_region_context_classes (GtkSourceContextEngine *ce,
+                               const GtkTextIter      *start,
+                               const GtkTextIter      *end)
+{
+	struct BufAndIters data;
+
+	data.buffer = ce->priv->buffer;
+	data.start = start;
+	data.end = end;
 
 	if (gtk_text_iter_equal (start, end))
-	{
 		return;
-	}
 
-	for (l = ce->priv->context_classes; l != NULL; l = l->next)
-	{
-		GtkTextTag *tag = l->data;
-
-		gtk_text_buffer_remove_tag (ce->priv->buffer, tag, start, end);
-	}
+	g_hash_table_foreach (ce->priv->context_classes,
+	                      (GHFunc) remove_region_context_class_cb,
+	                      &data);
 }
 
 static void
 refresh_context_classes (GtkSourceContextEngine *ce,
-			 const GtkTextIter      *start,
-			 const GtkTextIter      *end)
+                         const GtkTextIter      *start,
+                         const GtkTextIter      *end)
 {
 #ifdef ENABLE_PROFILE
 	GTimer *timer;
@@ -1249,7 +1225,7 @@ refresh_range (GtkSourceContextEngine *ce,
 	}
 
 	g_signal_emit_by_name (ce->priv->buffer,
-			       "highlight-updated",
+			       "highlight_updated",
 			       start,
 			       &real_end);
 }
@@ -1991,8 +1967,8 @@ gtk_source_context_engine_text_inserted (GtkSourceEngine *engine,
  */
 static inline gint
 fix_offset_delete_one_ (gint offset,
-			gint start,
-			gint length)
+		        gint start,
+		        gint length)
 {
 	if (offset > start)
 	{
@@ -2243,11 +2219,8 @@ gtk_source_context_engine_update_highlight (GtkSourceEngine   *engine,
 	gint end_line;
 	GtkSourceContextEngine *ce = GTK_SOURCE_CONTEXT_ENGINE (engine);
 
-	printf("gtk_source_context_engine_update_highlight %p %p %p %i\n", engine, start, end, synchronous);
 	if (!ce->priv->highlight || ce->priv->disabled)
 		return;
-
-
 
 	invalid_line = get_invalid_line (ce);
 	end_line = gtk_text_iter_get_line (end);
@@ -2303,7 +2276,7 @@ enable_highlight (GtkSourceContextEngine *ce,
 
 	if (enable)
 	{
-		gtk_source_region_add_subregion (ce->priv->refresh_region, &start, &end);
+		gtk_text_region_add (ce->priv->refresh_region, &start, &end);
 
 		refresh_range (ce, &start, &end);
 	}
@@ -2347,9 +2320,9 @@ all_analyzed (GtkSourceContextEngine *ce)
 static gboolean
 idle_worker (GtkSourceContextEngine *ce)
 {
-	gboolean retval = G_SOURCE_CONTINUE;
+	gboolean retval = TRUE;
 
-	g_return_val_if_fail (ce->priv->buffer != NULL, G_SOURCE_REMOVE);
+	g_return_val_if_fail (ce->priv->buffer != NULL, FALSE);
 
 	/* analyze batch of text */
 	update_syntax (ce, NULL, INCREMENTAL_UPDATE_TIME_SLICE);
@@ -2358,7 +2331,7 @@ idle_worker (GtkSourceContextEngine *ce)
 	if (all_analyzed (ce))
 	{
 		ce->priv->incremental_update = 0;
-		retval = G_SOURCE_REMOVE;
+		retval = FALSE;
 	}
 
 	return retval;
@@ -2374,7 +2347,7 @@ idle_worker (GtkSourceContextEngine *ce)
 static gboolean
 first_update_callback (GtkSourceContextEngine *ce)
 {
-	g_return_val_if_fail (ce->priv->buffer != NULL, G_SOURCE_REMOVE);
+	g_return_val_if_fail (ce->priv->buffer != NULL, FALSE);
 
 	/* analyze batch of text */
 	update_syntax (ce, NULL, FIRST_UPDATE_TIME_SLICE);
@@ -2385,7 +2358,7 @@ first_update_callback (GtkSourceContextEngine *ce)
 	if (!all_analyzed (ce))
 		install_idle_worker (ce);
 
-	return G_SOURCE_REMOVE;
+	return FALSE;
 }
 
 /**
@@ -2431,14 +2404,7 @@ install_first_update (GtkSourceContextEngine *ce)
 
 /* GtkSourceContextEngine class ------------------------------------------- */
 
-static void _gtk_source_engine_interface_init (GtkSourceEngineInterface *iface);
-
-G_DEFINE_TYPE_WITH_CODE (GtkSourceContextEngine,
-			 _gtk_source_context_engine,
-			 G_TYPE_OBJECT,
-			 G_ADD_PRIVATE (GtkSourceContextEngine)
-			 G_IMPLEMENT_INTERFACE (GTK_SOURCE_TYPE_ENGINE,
-						_gtk_source_engine_interface_init))
+G_DEFINE_TYPE (GtkSourceContextEngine, _gtk_source_context_engine, GTK_SOURCE_TYPE_ENGINE)
 
 static GQuark
 gtk_source_context_engine_error_quark (void)
@@ -2450,9 +2416,9 @@ gtk_source_context_engine_error_quark (void)
 }
 
 static void
-remove_tags_hash_cb (G_GNUC_UNUSED gpointer  style,
-		     GSList                 *tags,
-		     GtkTextTagTable        *table)
+remove_tags_hash_cb (G_GNUC_UNUSED gpointer style,
+		     GSList          *tags,
+		     GtkTextTagTable *table)
 {
 	GSList *l = tags;
 
@@ -2464,6 +2430,14 @@ remove_tags_hash_cb (G_GNUC_UNUSED gpointer  style,
 	}
 
 	g_slist_free (tags);
+}
+
+static void
+remove_context_classes_hash_cb (G_GNUC_UNUSED gpointer class,
+                                GtkTextTag             *tag,
+                                GtkTextTagTable        *table)
+{
+	gtk_text_tag_table_remove (table, tag);
 }
 
 /**
@@ -2482,22 +2456,11 @@ destroy_tags_hash (GtkSourceContextEngine *ce)
 }
 
 static void
-destroy_context_classes_list (GtkSourceContextEngine *ce)
+destroy_context_classes_hash (GtkSourceContextEngine *ce)
 {
-	GtkTextTagTable *table;
-	GSList *l;
-
-	table = gtk_text_buffer_get_tag_table (ce->priv->buffer);
-
-	for (l = ce->priv->context_classes; l != NULL; l = l->next)
-	{
-		GtkTextTag *tag = l->data;
-
-		gtk_text_tag_table_remove (table, tag);
-		g_object_unref (tag);
-	}
-
-	g_slist_free (ce->priv->context_classes);
+	g_hash_table_foreach (ce->priv->context_classes, (GHFunc) remove_context_classes_hash_cb,
+	                      gtk_text_buffer_get_tag_table (ce->priv->buffer));
+	g_hash_table_destroy (ce->priv->context_classes);
 	ce->priv->context_classes = NULL;
 }
 
@@ -2562,9 +2525,11 @@ gtk_source_context_engine_attach_buffer (GtkSourceEngine *engine,
 		destroy_tags_hash (ce);
 		ce->priv->n_tags = 0;
 
-		destroy_context_classes_list (ce);
+		destroy_context_classes_hash (ce);
 
-		g_clear_object (&ce->priv->refresh_region);
+		if (ce->priv->refresh_region != NULL)
+			gtk_text_region_destroy (ce->priv->refresh_region, FALSE);
+		ce->priv->refresh_region = NULL;
 	}
 
 	ce->priv->buffer = buffer;
@@ -2584,7 +2549,7 @@ gtk_source_context_engine_attach_buffer (GtkSourceEngine *engine,
 		ce->priv->root_segment = create_segment (ce, NULL, ce->priv->root_context, 0, 0, TRUE, NULL);
 
 		ce->priv->tags = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
-		ce->priv->context_classes = NULL;
+		ce->priv->context_classes = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
 
 		gtk_text_buffer_get_bounds (buffer, &start, &end);
 		ce->priv->invalid_region.start = gtk_text_buffer_create_mark (buffer, NULL,
@@ -2604,7 +2569,7 @@ gtk_source_context_engine_attach_buffer (GtkSourceEngine *engine,
 		}
 
 		g_object_get (buffer, "highlight-syntax", &ce->priv->highlight, NULL);
-		ce->priv->refresh_region = gtk_source_region_new (buffer);
+		ce->priv->refresh_region = gtk_text_region_new (buffer);
 
 		g_signal_connect_swapped (buffer,
 					  "notify::highlight-syntax",
@@ -2665,10 +2630,14 @@ gtk_source_context_engine_set_style_scheme (GtkSourceEngine      *engine,
 
 	ce = GTK_SOURCE_CONTEXT_ENGINE (engine);
 
-	if (g_set_object (&ce->priv->style_scheme, scheme))
-	{
-		g_hash_table_foreach (ce->priv->tags, (GHFunc) set_tag_style_hash_cb, ce);
-	}
+	if (scheme == ce->priv->style_scheme)
+		return;
+
+	if (ce->priv->style_scheme != NULL)
+		g_object_unref (ce->priv->style_scheme);
+
+	ce->priv->style_scheme = scheme ? g_object_ref (scheme) : NULL;
+	g_hash_table_foreach (ce->priv->tags, (GHFunc) set_tag_style_hash_cb, ce);
 }
 
 static void
@@ -2687,18 +2656,8 @@ gtk_source_context_engine_finalize (GObject *object)
 	g_assert (!ce->priv->tags);
 	g_assert (!ce->priv->root_context);
 	g_assert (!ce->priv->root_segment);
-
-	if (ce->priv->first_update != 0)
-	{
-		g_source_remove (ce->priv->first_update);
-		ce->priv->first_update = 0;
-	}
-
-	if (ce->priv->incremental_update != 0)
-	{
-		g_source_remove (ce->priv->incremental_update);
-		ce->priv->incremental_update = 0;
-	}
+	g_assert (!ce->priv->first_update);
+	g_assert (!ce->priv->incremental_update);
 
 	_gtk_source_context_data_unref (ce->priv->ctx_data);
 
@@ -2708,28 +2667,45 @@ gtk_source_context_engine_finalize (GObject *object)
 	G_OBJECT_CLASS (_gtk_source_context_engine_parent_class)->finalize (object);
 }
 
-static void
-_gtk_source_engine_interface_init (GtkSourceEngineInterface *iface)
+static GtkTextTag *
+gtk_source_context_engine_get_context_class_tag (GtkSourceEngine *engine,
+						 const gchar     *context_class)
 {
-	iface->attach_buffer = gtk_source_context_engine_attach_buffer;
-	iface->text_inserted = gtk_source_context_engine_text_inserted;
-	iface->text_deleted = gtk_source_context_engine_text_deleted;
-	iface->update_highlight = gtk_source_context_engine_update_highlight;
-	iface->set_style_scheme = gtk_source_context_engine_set_style_scheme;
+	GHashTable *hash_table = GTK_SOURCE_CONTEXT_ENGINE (engine)->priv->context_classes;
+
+	if (hash_table == NULL)
+	{
+		/* This happens when highlighting is disabled */
+		return NULL;
+	}
+
+	return g_hash_table_lookup (hash_table,
+				    context_class);
 }
 
 static void
 _gtk_source_context_engine_class_init (GtkSourceContextEngineClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
+	GtkSourceEngineClass *engine_class = GTK_SOURCE_ENGINE_CLASS (klass);
 
 	object_class->finalize = gtk_source_context_engine_finalize;
+
+	engine_class->attach_buffer = gtk_source_context_engine_attach_buffer;
+	engine_class->text_inserted = gtk_source_context_engine_text_inserted;
+	engine_class->text_deleted = gtk_source_context_engine_text_deleted;
+	engine_class->update_highlight = gtk_source_context_engine_update_highlight;
+	engine_class->set_style_scheme = gtk_source_context_engine_set_style_scheme;
+	engine_class->get_context_class_tag = gtk_source_context_engine_get_context_class_tag;
+
+	g_type_class_add_private (object_class, sizeof (GtkSourceContextEnginePrivate));
 }
 
 static void
 _gtk_source_context_engine_init (GtkSourceContextEngine *ce)
 {
-	ce->priv = _gtk_source_context_engine_get_instance_private (ce);
+	ce->priv = G_TYPE_INSTANCE_GET_PRIVATE (ce, GTK_SOURCE_TYPE_CONTEXT_ENGINE,
+						GtkSourceContextEnginePrivate);
 }
 
 GtkSourceContextEngine *
@@ -3146,7 +3122,7 @@ create_reg_all (Context           *context,
 		g_warning (_("Cannot create a regex for all the transitions, "
 			     "the syntax highlighting process will be slower "
 			     "than usual.\nThe error was: %s"), error->message);
-		g_clear_error (&error);
+		g_error_free (error);
 	}
 
 	g_string_free (all, TRUE);
@@ -3234,18 +3210,17 @@ context_new (Context           *parent,
 }
 
 static void
-context_unref_hash_cb (gpointer  text,
-		       Context  *context,
-		       gpointer  user_data)
+context_unref_hash_cb (G_GNUC_UNUSED gpointer text,
+		       Context *context)
 {
 	context->parent = NULL;
 	context_unref (context);
 }
 
 static gboolean
-remove_context_cb (G_GNUC_UNUSED gpointer  text,
-		   Context                *context,
-		   Context                *target)
+remove_context_cb (G_GNUC_UNUSED gpointer text,
+		   Context *context,
+		   Context *target)
 {
 	return context == target;
 }
@@ -3307,7 +3282,7 @@ static void
 context_unref (Context *context)
 {
 	ContextPtr *children;
-	guint i;
+	gint i;
 
 	if (context == NULL || --context->ref_count != 0)
 		return;
@@ -3367,9 +3342,8 @@ context_unref (Context *context)
 }
 
 static void
-context_freeze_hash_cb (gpointer  text,
-			Context  *context,
-			gpointer  user_data)
+context_freeze_hash_cb (G_GNUC_UNUSED gpointer text,
+		        Context *context)
 {
 	context_freeze (context);
 }
@@ -3417,18 +3391,11 @@ context_freeze (Context *ctx)
 }
 
 static void
-get_child_contexts_hash_cb (G_GNUC_UNUSED gpointer   text,
-			    Context                 *context,
-			    GSList                 **list)
+get_child_contexts_hash_cb (G_GNUC_UNUSED gpointer text,
+			    Context *context,
+			    GSList **list)
 {
 	*list = g_slist_prepend (*list, context);
-}
-
-static void
-context_thaw_cb (Context *ctx,
-		 gpointer user_data)
-{
-	context_thaw (ctx);
 }
 
 /**
@@ -3462,7 +3429,7 @@ context_thaw (Context *ctx)
 					      (GHFunc) get_child_contexts_hash_cb,
 					      &children);
 
-			g_slist_foreach (children, (GFunc) context_thaw_cb, NULL);
+			g_slist_foreach (children, (GFunc) context_thaw, NULL);
 			g_slist_free (children);
 		}
 
@@ -3474,9 +3441,9 @@ context_thaw (Context *ctx)
 }
 
 static Context *
-create_child_context (Context         *parent,
-		      DefinitionChild *child_def,
-		      const gchar     *line_text)
+create_child_context (Context           *parent,
+		      DefinitionChild   *child_def,
+		      const gchar       *line_text)
 {
 	Context *context;
 	ContextPtr *ptr;
@@ -4034,12 +4001,12 @@ simple_context_starts_here (GtkSourceContextEngine *ce,
  * Returns: %TRUE if the context starts here.
  */
 static gboolean
-child_starts_here (GtkSourceContextEngine  *ce,
-		   Segment                 *state,
-		   DefinitionChild         *child_def,
-		   LineInfo                *line,
-		   gint                    *line_pos,
-		   Segment                **new_state)
+child_starts_here (GtkSourceContextEngine *ce,
+		   Segment                *state,
+		   DefinitionChild        *child_def,
+		   LineInfo               *line,
+		   gint                   *line_pos,
+		   Segment               **new_state)
 {
 	g_return_val_if_fail (child_def->resolved, FALSE);
 
@@ -4101,9 +4068,9 @@ segment_ends_here (Segment  *state,
  * Returns: the ancestor context that terminates here or %NULL.
  */
 static Context *
-ancestor_context_ends_here (Context  *state,
-			    LineInfo *line,
-			    gint      line_pos)
+ancestor_context_ends_here (Context                *state,
+			    LineInfo               *line,
+			    gint                    line_pos)
 {
 	Context *current_context;
 	GSList *current_context_list;
@@ -4164,10 +4131,10 @@ ancestor_context_ends_here (Context  *state,
  * Returns: %TRUE if an ancestor ends at the given position.
  */
 static gboolean
-ancestor_ends_here (Segment   *state,
-		    LineInfo  *line,
-		    gint       line_pos,
-		    Segment  **new_state)
+ancestor_ends_here (Segment                *state,
+		    LineInfo               *line,
+		    gint                    line_pos,
+		    Segment               **new_state)
 {
 	Context *terminating_context;
 
@@ -4341,7 +4308,7 @@ next_segment (GtkSourceContextEngine  *ce,
  */
 static Segment *
 check_line_end (GtkSourceContextEngine *ce,
-		Segment                *state)
+                Segment                *state)
 {
 	Segment *current_segment;
 	Segment *terminating_segment;
@@ -5319,7 +5286,7 @@ erase_segments (GtkSourceContextEngine *ce,
  * when time elapsed is greater than @time, so analyzed region is
  * not necessarily what's requested (unless @time is 0).
  */
-/* TODO it must be refactored. */
+/* XXX it must be refactored. */
 static void
 update_syntax (GtkSourceContextEngine *ce,
 	       const GtkTextIter      *end,
@@ -5384,19 +5351,15 @@ update_syntax (GtkSourceContextEngine *ce,
 
 	if (0 == start_offset)
 	{
-		gunichar c;
-
 		first_line = TRUE;
 
 		/* If it is the first line and it starts with BOM, skip it
 		 * since regexes in lang files do not take it into account */
-		c = gtk_text_iter_get_char (&start_iter);
+		gunichar c = gtk_text_iter_get_char (&start_iter);
 		if (IS_BOM (c))
 		{
 			gtk_text_iter_forward_char (&start_iter);
 			start_offset = gtk_text_iter_get_offset (&start_iter);
-			segment_remove (ce, invalid);
-			CHECK_TREE (ce);
 		}
 	}
 
@@ -5487,7 +5450,7 @@ update_syntax (GtkSourceContextEngine *ce,
 
 		line_info_destroy (&line);
 
-		gtk_source_region_add_subregion (ce->priv->refresh_region, &line_start, &line_end);
+		gtk_text_region_add (ce->priv->refresh_region, &line_start, &line_end);
 		analyzed_end = line_end_offset;
 		invalid = get_invalid_segment (ce);
 
@@ -5646,15 +5609,15 @@ copy_context_classes (GSList *context_classes)
 }
 
 static ContextDefinition *
-context_definition_new (const gchar            *id,
-			ContextType             type,
-			const gchar            *match,
-			const gchar            *start,
-			const gchar            *end,
-			const gchar            *style,
-			GSList                 *context_classes,
-			GtkSourceContextFlags   flags,
-			GError                **error)
+context_definition_new (const gchar        *id,
+			ContextType         type,
+			const gchar        *match,
+			const gchar        *start,
+			const gchar        *end,
+			const gchar        *style,
+			GSList             *context_classes,
+			GtkSourceContextFlags flags,
+			GError            **error)
 {
 	ContextDefinition *definition;
 	gboolean regex_error = FALSE;
@@ -5672,8 +5635,6 @@ context_definition_new (const gchar            *id,
 			g_return_val_if_fail (!match, NULL);
 			g_return_val_if_fail (!end || start, NULL);
 			break;
-		default:
-			g_assert_not_reached ();
 	}
 
 	definition = g_slice_new0 (ContextDefinition);
@@ -5725,7 +5686,7 @@ context_definition_new (const gchar            *id,
 		g_set_error (error,
 			     GTK_SOURCE_CONTEXT_ENGINE_ERROR,
 			     GTK_SOURCE_CONTEXT_ENGINE_ERROR_INVALID_START_REF,
-			     _("context “%s” cannot contain a \\%%{...@start} command"),
+			     _("context '%s' cannot contain a \\%%{...@start} command"),
 			     id);
 		regex_error = TRUE;
 	}
@@ -5775,8 +5736,6 @@ context_definition_unref (ContextDefinition *definition)
 			_gtk_source_regex_unref (definition->u.start_end.start);
 			_gtk_source_regex_unref (definition->u.start_end.end);
 			break;
-		default:
-			g_assert_not_reached ();
 	}
 
 	sub_pattern_list = definition->sub_patterns;
@@ -5861,16 +5820,16 @@ definition_iter_next (DefinitionsIter *iter)
 }
 
 gboolean
-_gtk_source_context_data_define_context (GtkSourceContextData   *ctx_data,
-					 const gchar            *id,
-					 const gchar            *parent_id,
-					 const gchar            *match_regex,
-					 const gchar            *start_regex,
-					 const gchar            *end_regex,
-					 const gchar            *style,
-					 GSList                 *context_classes,
-					 GtkSourceContextFlags   flags,
-					 GError                **error)
+_gtk_source_context_data_define_context (GtkSourceContextData *ctx_data,
+					 const gchar          *id,
+					 const gchar          *parent_id,
+					 const gchar          *match_regex,
+					 const gchar          *start_regex,
+					 const gchar          *end_regex,
+					 const gchar          *style,
+					 GSList               *context_classes,
+					 GtkSourceContextFlags flags,
+					 GError              **error)
 {
 	ContextDefinition *definition, *parent = NULL;
 	ContextType type;
@@ -5888,7 +5847,7 @@ _gtk_source_context_data_define_context (GtkSourceContextData   *ctx_data,
 		g_set_error (error,
 			     GTK_SOURCE_CONTEXT_ENGINE_ERROR,
 			     GTK_SOURCE_CONTEXT_ENGINE_ERROR_DUPLICATED_ID,
-			     _("duplicated context id “%s”"), id);
+			     _("duplicated context id '%s'"), id);
 		return FALSE;
 	}
 
@@ -5905,10 +5864,9 @@ _gtk_source_context_data_define_context (GtkSourceContextData   *ctx_data,
 				wrong_args = TRUE;
 			break;
 		case CONTEXT_TYPE_CONTAINER:
-			g_assert (match_regex == NULL);
+			if (match_regex != NULL)
+				wrong_args = TRUE;
 			break;
-		default:
-			g_assert_not_reached ();
 	}
 
 	if (wrong_args)
@@ -5951,14 +5909,14 @@ _gtk_source_context_data_define_context (GtkSourceContextData   *ctx_data,
 }
 
 gboolean
-_gtk_source_context_data_add_sub_pattern (GtkSourceContextData  *ctx_data,
-					  const gchar           *id,
-					  const gchar           *parent_id,
-					  const gchar           *name,
-					  const gchar           *where,
-					  const gchar           *style,
-					  GSList                *context_classes,
-					  GError               **error)
+_gtk_source_context_data_add_sub_pattern (GtkSourceContextData *ctx_data,
+					  const gchar          *id,
+					  const gchar          *parent_id,
+					  const gchar          *name,
+					  const gchar          *where,
+					  const gchar          *style,
+					  GSList               *context_classes,
+					  GError              **error)
 {
 	ContextDefinition *parent;
 	SubPatternDefinition *sp_def;
@@ -5978,7 +5936,7 @@ _gtk_source_context_data_add_sub_pattern (GtkSourceContextData  *ctx_data,
 		g_set_error (error,
 			     GTK_SOURCE_CONTEXT_ENGINE_ERROR,
 			     GTK_SOURCE_CONTEXT_ENGINE_ERROR_DUPLICATED_ID,
-			     _("duplicated context id “%s”"), id);
+			     _("duplicated context id '%s'"), id);
 		return FALSE;
 	}
 
@@ -6017,7 +5975,7 @@ _gtk_source_context_data_add_sub_pattern (GtkSourceContextData  *ctx_data,
 #endif
 	sp_def->style = g_strdup (style);
 	sp_def->where = where_num;
-	number = _gtk_source_utils_string_to_int (name);
+	number = _gtk_source_string_to_int (name);
 
 	if (number < 0)
 	{
@@ -6054,13 +6012,13 @@ context_is_pure_container (ContextDefinition *def)
 }
 
 gboolean
-_gtk_source_context_data_add_ref (GtkSourceContextData        *ctx_data,
-				  const gchar                 *parent_id,
-				  const gchar                 *ref_id,
-				  GtkSourceContextRefOptions   options,
-				  const gchar                 *style,
-				  gboolean                     all,
-				  GError                     **error)
+_gtk_source_context_data_add_ref (GtkSourceContextData *ctx_data,
+				  const gchar          *parent_id,
+				  const gchar          *ref_id,
+				  GtkSourceContextRefOptions options,
+				  const gchar          *style,
+				  gboolean              all,
+				  GError              **error)
 {
 	ContextDefinition *parent;
 	ContextDefinition *ref;
@@ -6093,7 +6051,7 @@ _gtk_source_context_data_add_ref (GtkSourceContextData        *ctx_data,
 		g_set_error (error, GTK_SOURCE_CONTEXT_ENGINE_ERROR,
 			     GTK_SOURCE_CONTEXT_ENGINE_ERROR_INVALID_STYLE,
 			     _("style override used with wildcard context reference"
-			       " in language “%s” in ref “%s”"),
+			       " in language '%s' in ref '%s'"),
 			     ctx_data->lang->priv->id, ref_id);
 		return FALSE;
 	}
@@ -6120,8 +6078,8 @@ struct ResolveRefData {
 
 static void
 resolve_reference (G_GNUC_UNUSED const gchar *id,
-		   ContextDefinition         *definition,
-		   gpointer                   user_data)
+		   ContextDefinition *definition,
+		   gpointer           user_data)
 {
 	GSList *l;
 
@@ -6153,7 +6111,7 @@ resolve_reference (G_GNUC_UNUSED const gchar *id,
 					g_set_error (&data->error, GTK_SOURCE_CONTEXT_ENGINE_ERROR,
 						     GTK_SOURCE_CONTEXT_ENGINE_ERROR_INVALID_STYLE,
 						     _("style override used with wildcard context reference"
-						       " in language “%s” in ref “%s”"),
+						       " in language '%s' in ref '%s'"),
 						     data->ctx_data->lang->priv->id, ref->id);
 				}
 				else
@@ -6166,16 +6124,16 @@ resolve_reference (G_GNUC_UNUSED const gchar *id,
 		{
 			g_set_error (&data->error, GTK_SOURCE_CONTEXT_ENGINE_ERROR,
 				     GTK_SOURCE_CONTEXT_ENGINE_ERROR_INVALID_REF,
-				     _("invalid context reference “%s”"), child_def->u.id);
+				     _("invalid context reference '%s'"), child_def->u.id);
 		}
 	}
 }
 
 static gboolean
-process_replace (GtkSourceContextData  *ctx_data,
-		 const gchar           *id,
-		 const gchar           *replace_with,
-		 GError               **error)
+process_replace (GtkSourceContextData *ctx_data,
+		 const gchar          *id,
+		 const gchar          *replace_with,
+		 GError              **error)
 {
 	ContextDefinition *to_replace, *new;
 
@@ -6185,7 +6143,7 @@ process_replace (GtkSourceContextData  *ctx_data,
 	{
 		g_set_error (error, GTK_SOURCE_CONTEXT_ENGINE_ERROR,
 			     GTK_SOURCE_CONTEXT_ENGINE_ERROR_INVALID_REF,
-			     _("unknown context “%s”"), id);
+			     _("unknown context '%s'"), id);
 		return FALSE;
 	}
 
@@ -6195,7 +6153,7 @@ process_replace (GtkSourceContextData  *ctx_data,
 	{
 		g_set_error (error, GTK_SOURCE_CONTEXT_ENGINE_ERROR,
 			     GTK_SOURCE_CONTEXT_ENGINE_ERROR_INVALID_REF,
-			     _("unknown context “%s”"), replace_with);
+			     _("unknown context '%s'"), replace_with);
 		return FALSE;
 	}
 
@@ -6250,9 +6208,9 @@ _gtk_source_context_replace_free (GtkSourceContextReplace *repl)
  * references.
  */
 gboolean
-_gtk_source_context_data_finish_parse (GtkSourceContextData  *ctx_data,
-				       GList                 *overrides,
-				       GError               **error)
+_gtk_source_context_data_finish_parse (GtkSourceContextData *ctx_data,
+				       GList                *overrides,
+				       GError		   **error)
 {
 	struct ResolveRefData data;
 	gchar *root_id;
@@ -6327,14 +6285,14 @@ out:
 	if (error)
 	{
 		g_warning ("%s", error->message);
-		g_clear_error (&error);
+		g_error_free (error);
 	}
 }
 
 static void
-prepend_definition (G_GNUC_UNUSED gchar  *id,
-		    ContextDefinition    *definition,
-		    GSList              **list)
+prepend_definition (G_GNUC_UNUSED gchar *id,
+		    ContextDefinition *definition,
+		    GSList **list)
 {
 	*list = g_slist_prepend (*list, definition);
 }
@@ -6389,7 +6347,7 @@ out:
 	if (error)
 	{
 		g_warning ("%s", error->message);
-		g_clear_error (&error);
+		g_error_free (error);
 	}
 
 	g_free (pattern);

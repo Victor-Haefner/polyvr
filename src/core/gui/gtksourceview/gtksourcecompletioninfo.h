@@ -1,5 +1,5 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8; coding: utf-8 -*-
- *
+ * gtksourcecompletioninfo.h
  * This file is part of GtkSourceView
  *
  * Copyright (C) 2007 - 2009 Jesús Barbero Rodríguez <chuchiperriman@gmail.com>
@@ -15,16 +15,13 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this library; if not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef GTK_SOURCE_COMPLETION_INFO_H
-#define GTK_SOURCE_COMPLETION_INFO_H
-
-#if !defined (GTK_SOURCE_H_INSIDE) && !defined (GTK_SOURCE_COMPILATION)
-#error "Only <gtksourceview/gtksource.h> can be included directly."
-#endif
+#ifndef __GTK_SOURCE_COMPLETION_INFO_H__
+#define __GTK_SOURCE_COMPLETION_INFO_H__
 
 #include <gtk/gtk.h>
 #include "gtksourcetypes.h"
@@ -53,25 +50,25 @@ struct _GtkSourceCompletionInfoClass
 {
 	GtkWindowClass parent_class;
 
-	gpointer padding[10];
+	void	(*before_show)		(GtkSourceCompletionInfo *info);
 };
 
-extern
 GType		 gtk_source_completion_info_get_type		(void) G_GNUC_CONST;
 
-extern
 GtkSourceCompletionInfo *
 		 gtk_source_completion_info_new			(void);
 
-extern
 void		 gtk_source_completion_info_move_to_iter	(GtkSourceCompletionInfo *info,
 								 GtkTextView             *view,
 								 GtkTextIter             *iter);
 
-G_GNUC_INTERNAL
-void		 _gtk_source_completion_info_set_xoffset	(GtkSourceCompletionInfo *info,
-								 gint                     xoffset);
+G_DEPRECATED_FOR (gtk_container_add)
+void		 gtk_source_completion_info_set_widget		(GtkSourceCompletionInfo *info,
+								 GtkWidget               *widget);
+
+G_DEPRECATED_FOR (gtk_bin_get_child)
+GtkWidget	*gtk_source_completion_info_get_widget		(GtkSourceCompletionInfo *info);
 
 G_END_DECLS
 
-#endif /* GTK_SOURCE_COMPLETION_INFO_H */
+#endif /* __GTK_SOURCE_COMPLETION_INFO_H__ */

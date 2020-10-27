@@ -1,5 +1,5 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8; coding: utf-8 -*-
- *
+ * gtksourcepixbufhelper.c
  * This file is part of GtkSourceView
  *
  * Copyright (C) 2010 - Jesse van den Kieboom
@@ -14,19 +14,18 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this library; if not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#define GTK_SOURCE_H_INSIDE
-
-#include "config.h"
 
 #include "gtksourcepixbufhelper.h"
 
-typedef enum _IconType
+typedef enum
 {
 	ICON_TYPE_PIXBUF,
+	ICON_TYPE_STOCK,
 	ICON_TYPE_GICON,
 	ICON_TYPE_NAME
 } IconType;
@@ -38,6 +37,7 @@ struct _GtkSourcePixbufHelper
 
 	GdkPixbuf *pixbuf;
 	gchar *icon_name;
+	gchar *stock_id;
 	GIcon *gicon;
 };
 
@@ -65,6 +65,7 @@ gtk_source_pixbuf_helper_free (GtkSourcePixbufHelper *helper)
 		g_object_unref (helper->gicon);
 	}
 
+	g_free (helper->stock_id);
 	g_free (helper->icon_name);
 
 	g_slice_free (GtkSourcePixbufHelper, helper);
@@ -119,10 +120,32 @@ gtk_source_pixbuf_helper_get_pixbuf (GtkSourcePixbufHelper *helper)
 }
 
 void
+gtk_source_pixbuf_helper_set_stock_id (GtkSourcePixbufHelper *helper,
+                                       const gchar           *stock_id)
+{
+	helper->type = ICON_TYPE_STOCK;
+
+	if (helper->stock_id)
+	{
+		g_free (helper->stock_id);
+	}
+
+	helper->stock_id = g_strdup (stock_id);
+
+	clear_cache (helper);
+}
+
+const gchar *
+gtk_source_pixbuf_helper_get_stock_id (GtkSourcePixbufHelper *helper)
+{
+	return helper->stock_id;
+}
+
+void
 gtk_source_pixbuf_helper_set_icon_name (GtkSourcePixbufHelper *helper,
                                         const gchar           *icon_name)
 {
-	helper->type = ICON_TYPE_NAME;
+	helper->type = ICON_TYPE_STOCK;
 
 	if (helper->icon_name)
 	{
@@ -194,6 +217,29 @@ from_pixbuf (GtkSourcePixbufHelper *helper,
 }
 
 static void
+from_stock (GtkSourcePixbufHelper *helper,
+            GtkWidget             *widget,
+            gint                   size)
+{
+	GtkIconSize icon_size;
+	gchar *name;
+
+	name = g_strdup_printf ("GtkSourcePixbufHelper%d", size);
+
+	icon_size = gtk_icon_size_from_name (name);
+
+	if (icon_size == GTK_ICON_SIZE_INVALID)
+	{
+		icon_size = gtk_icon_size_register (name, size, size);
+	}
+
+	g_free (name);
+
+	set_cache (helper, gtk_widget_render_icon_pixbuf (widget,
+	                                                  helper->stock_id,
+	                                                  icon_size));
+}
+static void
 from_gicon (GtkSourcePixbufHelper *helper,
             GtkWidget             *widget,
             gint                   size)
@@ -228,37 +274,20 @@ from_name (GtkSourcePixbufHelper *helper,
 	GtkIconTheme *icon_theme;
 	GtkIconInfo *info;
 	GtkIconLookupFlags flags;
-	gint scale;
 
 	screen = gtk_widget_get_screen (widget);
 	icon_theme = gtk_icon_theme_get_for_screen (screen);
 
 	flags = GTK_ICON_LOOKUP_USE_BUILTIN;
-        scale = gtk_widget_get_scale_factor (widget);
 
-	info = gtk_icon_theme_lookup_icon_for_scale (icon_theme,
-	                                             helper->icon_name,
-	                                             size,
-	                                             scale,
-	                                             flags);
+	info = gtk_icon_theme_lookup_icon (icon_theme,
+	                                   helper->icon_name,
+	                                   size,
+	                                   flags);
 
 	if (info)
 	{
-		GdkPixbuf *pixbuf;
-
-		if (gtk_icon_info_is_symbolic (info))
-		{
-			GtkStyleContext *context;
-
-			context = gtk_widget_get_style_context (widget);
-			pixbuf = gtk_icon_info_load_symbolic_for_context (info, context, NULL, NULL);
-		}
-		else
-		{
-			pixbuf = gtk_icon_info_load_icon (info, NULL);
-		}
-
-		set_cache (helper, pixbuf);
+		set_cache (helper, gtk_icon_info_load_icon (info, NULL));
 	}
 }
 
@@ -278,14 +307,15 @@ gtk_source_pixbuf_helper_render (GtkSourcePixbufHelper *helper,
 		case ICON_TYPE_PIXBUF:
 			from_pixbuf (helper, widget, size);
 			break;
+		case ICON_TYPE_STOCK:
+			from_stock (helper, widget, size);
+			break;
 		case ICON_TYPE_GICON:
 			from_gicon (helper, widget, size);
 			break;
 		case ICON_TYPE_NAME:
 			from_name (helper, widget, size);
 			break;
-		default:
-			g_assert_not_reached ();
 	}
 
 	return helper->cached_pixbuf;

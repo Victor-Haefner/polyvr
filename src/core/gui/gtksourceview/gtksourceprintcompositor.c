@@ -1,5 +1,5 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8; coding: utf-8 -*- *
- *
+ * gtksourceprintcompositor.c
  * This file is part of GtkSourceView
  *
  * Copyright (C) 2000, 2001 Chema Celorio
@@ -18,25 +18,26 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this library; if not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#define GTK_SOURCE_H_INSIDE
-
-#include "config.h"
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
 
 #include <string.h>
 #include <time.h>
 
+#include "gtksourceview-i18n.h"
 #include "gtksourceprintcompositor.h"
 #include "gtksourceview.h"
 #include "gtksourcebuffer.h"
-#include "gtksourcebuffer-private.h"
 
 /**
  * SECTION:printcompositor
- * @Short_description: Compose a GtkSourceBuffer for printing
+ * @Short_description: Compose a #GtkSourceBuffer for printing
  * @Title: GtkSourcePrintCompositor
  *
  * The #GtkSourcePrintCompositor object is used to compose a #GtkSourceBuffer
@@ -89,7 +90,7 @@ static GTimer *pagination_timer = NULL;
 /* Number of pages paginated on each invocation of the paginate() method. */
 #define PAGINATION_CHUNK_SIZE 3
 
-typedef enum _PaginatorState
+typedef enum
 {
 	/* Initial state: properties can be changed only when the paginator
 	   is in the INIT state */
@@ -195,7 +196,7 @@ enum
 	PROP_N_PAGES
 };
 
-G_DEFINE_TYPE_WITH_PRIVATE (GtkSourcePrintCompositor, gtk_source_print_compositor, G_TYPE_OBJECT)
+G_DEFINE_TYPE (GtkSourcePrintCompositor, gtk_source_print_compositor, G_TYPE_OBJECT)
 
 #define MM_PER_INCH 25.4
 #define POINTS_PER_INCH 72
@@ -440,12 +441,10 @@ gtk_source_print_compositor_class_init (GtkSourcePrintCompositorClass *klass)
 	g_object_class_install_property (object_class,
 					 PROP_BUFFER,
 					 g_param_spec_object ("buffer",
-							      "Source Buffer",
-							      "The GtkSourceBuffer object to print",
+							      _("Source Buffer"),
+							      _("The GtkSourceBuffer object to print"),
 							      GTK_SOURCE_TYPE_BUFFER,
-							      G_PARAM_READWRITE |
-							      G_PARAM_CONSTRUCT_ONLY |
-							      G_PARAM_STATIC_STRINGS));
+							      G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
 
 	/**
 	 * GtkSourcePrintCompositor:tab-width:
@@ -460,13 +459,12 @@ gtk_source_print_compositor_class_init (GtkSourcePrintCompositorClass *klass)
 	g_object_class_install_property (object_class,
 					 PROP_TAB_WIDTH,
 					 g_param_spec_uint ("tab-width",
-							    "Tab Width",
-							    "Width of a tab character expressed in spaces",
+							    _("Tab Width"),
+							    _("Width of a tab character expressed in spaces"),
 							    1,
 							    MAX_TAB_WIDTH,
 							    DEFAULT_TAB_WIDTH,
-							    G_PARAM_READWRITE |
-							    G_PARAM_STATIC_STRINGS));
+							    G_PARAM_READWRITE));
 
 
 	/**
@@ -482,12 +480,13 @@ gtk_source_print_compositor_class_init (GtkSourcePrintCompositorClass *klass)
 	g_object_class_install_property (object_class,
 					 PROP_WRAP_MODE,
 					 g_param_spec_enum ("wrap-mode",
-							    "Wrap Mode",
-							    "",
+							    _("Wrap Mode"),
+							    _("Whether to wrap lines never, "
+							      "at word boundaries, or at "
+							      "character boundaries."),
 							    GTK_TYPE_WRAP_MODE,
 							    GTK_WRAP_NONE,
-							    G_PARAM_READWRITE |
-							    G_PARAM_STATIC_STRINGS));
+							    G_PARAM_READWRITE));
 
 	/**
 	 * GtkSourcePrintCompositor:highlight-syntax:
@@ -502,11 +501,12 @@ gtk_source_print_compositor_class_init (GtkSourcePrintCompositorClass *klass)
 	g_object_class_install_property (object_class,
 					 PROP_HIGHLIGHT_SYNTAX,
 					 g_param_spec_boolean ("highlight-syntax",
-							       "Highlight Syntax",
-							       "",
+							       _("Highlight Syntax"),
+							       _("Whether to print the "
+								 "document with highlighted "
+								 "syntax"),
 							       TRUE,
-							       G_PARAM_READWRITE |
-							       G_PARAM_STATIC_STRINGS));
+							       G_PARAM_READWRITE));
 
 	/**
 	 * GtkSourcePrintCompositor:print-line-numbers:
@@ -523,11 +523,11 @@ gtk_source_print_compositor_class_init (GtkSourcePrintCompositorClass *klass)
 	g_object_class_install_property (object_class,
 					 PROP_PRINT_LINE_NUMBERS,
 					 g_param_spec_uint ("print-line-numbers",
-							    "Print Line Numbers",
-							    "",
+							    _("Print Line Numbers"),
+							    _("Interval of printed line numbers "
+							      "(0 means no numbers)"),
 							    0, 100, 1,
-							    G_PARAM_READWRITE |
-							    G_PARAM_STATIC_STRINGS));
+							    G_PARAM_READWRITE));
 
 	/**
 	 * GtkSourcePrintCompositor:print-header:
@@ -546,11 +546,11 @@ gtk_source_print_compositor_class_init (GtkSourcePrintCompositorClass *klass)
 	g_object_class_install_property (object_class,
 					 PROP_PRINT_HEADER,
 					 g_param_spec_boolean ("print-header",
-							       "Print Header",
-							       "",
+							       _("Print Header"),
+							       _("Whether to print a header "
+								 "in each page"),
 							       FALSE,
-							       G_PARAM_READWRITE |
-							       G_PARAM_STATIC_STRINGS));
+							       G_PARAM_READWRITE));
 
 	/**
 	 * GtkSourcePrintCompositor:print-footer:
@@ -569,11 +569,11 @@ gtk_source_print_compositor_class_init (GtkSourcePrintCompositorClass *klass)
 	g_object_class_install_property (object_class,
 					 PROP_PRINT_FOOTER,
 					 g_param_spec_boolean ("print-footer",
-							       "Print Footer",
-							       "",
+							       _("Print Footer"),
+							       _("Whether to print a footer "
+								 "in each page"),
 							       FALSE,
-							       G_PARAM_READWRITE |
-							       G_PARAM_STATIC_STRINGS));
+							       G_PARAM_READWRITE));
 
 	/**
 	 * GtkSourcePrintCompositor:body-font-name:
@@ -592,11 +592,11 @@ gtk_source_print_compositor_class_init (GtkSourcePrintCompositorClass *klass)
 	g_object_class_install_property (object_class,
 					 PROP_BODY_FONT_NAME,
 					 g_param_spec_string ("body-font-name",
-							      "Body Font Name",
-							      "",
+							      _("Body Font Name"),
+							      _("Name of the font to use for the text body "
+							        "(e.g. \"Monospace 10\")"),
 							      NULL,
-							      G_PARAM_READWRITE |
-							      G_PARAM_STATIC_STRINGS));
+							      G_PARAM_READWRITE));
 
 	/**
 	 * GtkSourcePrintCompositor:line-numbers-font-name:
@@ -616,11 +616,11 @@ gtk_source_print_compositor_class_init (GtkSourcePrintCompositorClass *klass)
 	g_object_class_install_property (object_class,
 					 PROP_LINE_NUMBERS_FONT_NAME,
 					 g_param_spec_string ("line-numbers-font-name",
-							      "Line Numbers Font Name",
-							      "",
+							      _("Line Numbers Font Name"),
+							      _("Name of the font to use for the line numbers "
+							        "(e.g. \"Monospace 10\")"),
 							      NULL,
-							      G_PARAM_READWRITE |
-							      G_PARAM_STATIC_STRINGS));
+							      G_PARAM_READWRITE));
 
 	/**
 	 * GtkSourcePrintCompositor:header-font-name:
@@ -640,11 +640,11 @@ gtk_source_print_compositor_class_init (GtkSourcePrintCompositorClass *klass)
 	g_object_class_install_property (object_class,
 					 PROP_HEADER_FONT_NAME,
 					 g_param_spec_string ("header-font-name",
-							      "Header Font Name",
-							      "",
+							      _("Header Font Name"),
+							      _("Name of the font to use for the page header "
+							        "(e.g. \"Monospace 10\")"),
 							      NULL,
-							      G_PARAM_READWRITE |
-							      G_PARAM_STATIC_STRINGS));
+							      G_PARAM_READWRITE));
 
 	/**
 	 * GtkSourcePrintCompositor:footer-font-name:
@@ -664,11 +664,11 @@ gtk_source_print_compositor_class_init (GtkSourcePrintCompositorClass *klass)
 	g_object_class_install_property (object_class,
 					 PROP_FOOTER_FONT_NAME,
 					 g_param_spec_string ("footer-font-name",
-							      "Footer Font Name",
-							      "",
+							      _("Footer Font Name"),
+							      _("Name of the font to use for the page footer "
+							        "(e.g. \"Monospace 10\")"),
 							      NULL,
-							      G_PARAM_READWRITE |
-							      G_PARAM_STATIC_STRINGS));
+							      G_PARAM_READWRITE));
 
 	/**
 	 * GtkSourcePrintCompositor:n-pages:
@@ -681,11 +681,14 @@ gtk_source_print_compositor_class_init (GtkSourcePrintCompositorClass *klass)
 	g_object_class_install_property (object_class,
 					 PROP_N_PAGES,
 					 g_param_spec_int ("n-pages",
-							   "Number of pages",
-							   "",
+							   _("Number of pages"),
+							   _("The number of pages in the document "
+							     "(-1 means the document has not been "
+							     "completely paginated)."),
 							   -1, G_MAXINT, -1,
-							   G_PARAM_READABLE |
-							   G_PARAM_STATIC_STRINGS));
+							   G_PARAM_READABLE));
+
+	g_type_class_add_private (object_class, sizeof(GtkSourcePrintCompositorPrivate));
 }
 
 static void
@@ -693,7 +696,9 @@ gtk_source_print_compositor_init (GtkSourcePrintCompositor *compositor)
 {
 	GtkSourcePrintCompositorPrivate *priv;
 
-	priv = gtk_source_print_compositor_get_instance_private (compositor);
+	priv = G_TYPE_INSTANCE_GET_PRIVATE (compositor,
+					    GTK_SOURCE_TYPE_PRINT_COMPOSITOR,
+					    GtkSourcePrintCompositorPrivate);
 
 	compositor->priv = priv;
 
@@ -814,7 +819,7 @@ gtk_source_print_compositor_new_from_view (GtkSourceView *view)
 	font_desc = pango_context_get_font_description (pango_context);
 
 	compositor->priv->body_font = pango_font_description_copy (font_desc);
-	g_object_notify (G_OBJECT (compositor), "body-font-name"); /* FIXME: is this needed? */
+	g_object_notify (G_OBJECT (compositor), "body-font-name"); // FIXME: is this needed?
 
 	return compositor;
 }
@@ -1128,18 +1133,15 @@ gtk_source_print_compositor_get_print_footer (GtkSourcePrintCompositor *composit
  * gtk_source_print_compositor_set_header_format:
  * @compositor: a #GtkSourcePrintCompositor.
  * @separator: %TRUE if you want a separator line to be printed.
- * @left: (nullable): a format string to print on the left of the header.
- * @center: (nullable): a format string to print on the center of the header.
- * @right: (nullable): a format string to print on the right of the header.
+ * @left: (allow-none): a format string to print on the left of the header.
+ * @center: (allow-none): a format string to print on the center of the header.
+ * @right: (allow-none): a format string to print on the right of the header.
  *
  * Sets strftime like header format strings, to be printed on the
  * left, center and right of the top of each page.  The strings may
  * include strftime(3) codes which will be expanded at print time.
- * A subset of strftime() codes are accepted, see g_date_time_format()
- * for more details on the accepted format specifiers.
- * Additionally the following format specifiers are accepted:
- * - #N: the page number
- * - #Q: the page count.
+ * All strftime() codes are accepted, with the addition of #N for the
+ * page number and #Q for the page count.
  *
  * @separator specifies if a solid line should be drawn to separate
  * the header from the document text.
@@ -1182,12 +1184,28 @@ gtk_source_print_compositor_set_header_format (GtkSourcePrintCompositor *composi
  * gtk_source_print_compositor_set_footer_format:
  * @compositor: a #GtkSourcePrintCompositor.
  * @separator: %TRUE if you want a separator line to be printed.
- * @left: (nullable): a format string to print on the left of the footer.
- * @center: (nullable): a format string to print on the center of the footer.
- * @right: (nullable): a format string to print on the right of the footer.
+ * @left: (allow-none): a format string to print on the left of the footer.
+ * @center: (allow-none): a format string to print on the center of the footer.
+ * @right: (allow-none): a format string to print on the right of the footer.
  *
- * See gtk_source_print_compositor_set_header_format() for more information
- * about the parameters.
+ * Sets strftime like header format strings, to be printed on the
+ * left, center and right of the bottom of each page. The strings may
+ * include strftime(3) codes which will be expanded at print time.
+ * All strftime() codes are accepted, with the addition of #N for the
+ * page number and #Q for the page count.
+ *
+ * @separator specifies if a solid line should be drawn to separate
+ * the footer from the document text.
+ *
+ * If %NULL is given for any of the three arguments, that particular
+ * string will not be printed.
+ *
+ * For the footer to be printed, in
+ * addition to specifying format strings, you need to enable footer
+ * printing with gtk_source_print_compositor_set_print_footer().
+ *
+ * This function cannot be called anymore after the first call to the
+ * gtk_source_print_compositor_paginate() function.
  *
  * Since: 2.2
  **/
@@ -1320,7 +1338,7 @@ gtk_source_print_compositor_get_body_font_name (GtkSourcePrintCompositor *compos
 /**
  * gtk_source_print_compositor_set_line_numbers_font_name:
  * @compositor: a #GtkSourcePrintCompositor.
- * @font_name: (nullable): the name of the font for line numbers, or %NULL.
+ * @font_name: (allow-none): the name of the font for line numbers, or %NULL.
  *
  * Sets the font for printing line numbers on the left margin.  If
  * %NULL is supplied, the default font (i.e. the one being used for the
@@ -1381,7 +1399,7 @@ gtk_source_print_compositor_get_line_numbers_font_name (GtkSourcePrintCompositor
 /**
  * gtk_source_print_compositor_set_header_font_name:
  * @compositor: a #GtkSourcePrintCompositor.
- * @font_name: (nullable): the name of the font for header text, or %NULL.
+ * @font_name: (allow-none): the name of the font for header text, or %NULL.
  *
  * Sets the font for printing the page header. If
  * %NULL is supplied, the default font (i.e. the one being used for the
@@ -1443,7 +1461,7 @@ gtk_source_print_compositor_get_header_font_name (GtkSourcePrintCompositor *comp
 /**
  * gtk_source_print_compositor_set_footer_font_name:
  * @compositor: a #GtkSourcePrintCompositor.
- * @font_name: (nullable): the name of the font for the footer text, or %NULL.
+ * @font_name: (allow-none): the name of the font for the footer text, or %NULL.
  *
  * Sets the font for printing the page footer. If
  * %NULL is supplied, the default font (i.e. the one being used for the
@@ -1837,8 +1855,6 @@ setup_pango_layouts (GtkSourcePrintCompositor *compositor,
 			 */
 			pango_layout_set_ellipsize (layout, PANGO_ELLIPSIZE_END);
 			break;
-		default:
-			g_return_if_reached ();
 	}
 
 	set_layout_tab_width (compositor, layout);
@@ -1889,16 +1905,95 @@ setup_pango_layouts (GtkSourcePrintCompositor *compositor,
 	}
 }
 
+/* ---- Header and footer ---- */
+
+/* Most of this code taken from GLib's g_date_strftime() in gdate.c
+ * GLIB - Library of useful routines for C programming
+ * Copyright (C) 1995-1997  Peter Mattis, Spencer Kimball and Josh MacDonald */
+
+static gchar *
+strdup_strftime (const gchar *format, const struct tm *tm)
+{
+	gsize locale_format_len = 0;
+	gchar *locale_format;
+	gsize tmplen;
+	gchar *tmpbuf;
+	gsize tmpbufsize;
+	gchar *convbuf;
+	gsize convlen = 0;
+	GError *error = NULL;
+
+	g_return_val_if_fail (format != NULL, NULL);
+	g_return_val_if_fail (tm != NULL, NULL);
+
+	locale_format = g_locale_from_utf8 (format, -1, NULL, &locale_format_len, &error);
+
+	if (error)
+	{
+		g_warning (G_STRLOC "Error converting format to locale encoding: %s",
+			   error->message);
+		g_error_free (error);
+
+		return NULL;
+	}
+
+	tmpbufsize = MAX (128, locale_format_len * 2);
+	while (TRUE)
+	{
+		tmpbuf = g_malloc (tmpbufsize);
+
+		/* Set the first byte to something other than '\0', to be able to
+		 * recognize whether strftime actually failed or just returned "".
+		 */
+		tmpbuf[0] = '\1';
+		tmplen = strftime (tmpbuf, tmpbufsize, locale_format, tm);
+
+		if (tmplen == 0 && tmpbuf[0] != '\0')
+		{
+			g_free (tmpbuf);
+			tmpbufsize *= 2;
+
+			if (tmpbufsize > 65536)
+			{
+				g_warning (G_STRLOC "Maximum buffer size for strdup_strftime "
+					   "exceeded: giving up");
+				g_free (locale_format);
+				return NULL;
+			}
+		}
+		else
+			break;
+	}
+	g_free (locale_format);
+
+	convbuf = g_locale_to_utf8 (tmpbuf, tmplen, NULL, &convlen, &error);
+	g_free (tmpbuf);
+
+	if (error)
+	{
+		g_warning (G_STRLOC "Error converting results of strftime to UTF-8: %s",
+			   error->message);
+		g_error_free (error);
+
+		return NULL;
+	}
+
+	return convbuf;
+}
+
 static gchar *
 evaluate_format_string (GtkSourcePrintCompositor *compositor,
 			const gchar              *format)
 {
-	GDateTime *now;
 	GString *eval;
 	gchar *eval_str, *retval;
+	const struct tm *tm;
+	time_t now;
 	gunichar ch;
 
-	now = g_date_time_new_now_local ();
+	/* get time */
+	time (&now);
+	tm = localtime (&now);
 
 	/* analyze format string and replace the codes we know */
 	eval = g_string_new_len (NULL, strlen (format));
@@ -1929,10 +2024,8 @@ evaluate_format_string (GtkSourcePrintCompositor *compositor,
 	}
 
 	eval_str = g_string_free (eval, FALSE);
-	retval = g_date_time_format (now, eval_str);
+	retval = strdup_strftime (eval_str, tm);
 	g_free (eval_str);
-
-	g_date_time_unref (now);
 
 	return retval;
 }
@@ -2221,34 +2314,20 @@ get_iter_attrs (GtkSourcePrintCompositor *compositor,
 
 		if (bg_set)
 		{
-			GdkRGBA *color = NULL;
-
-			if (bg != NULL)
-			{
-				pango_attribute_destroy (bg);
-			}
-
-			g_object_get (tag, "background-rgba", &color, NULL);
-			bg = pango_attr_background_new (color->red * 65535,
-							color->green * 65535,
-							color->blue * 65535);
-			gdk_rgba_free (color);
+			GdkColor *color = NULL;
+			if (bg) pango_attribute_destroy (bg);
+			g_object_get (tag, "background-gdk", &color, NULL);
+			bg = pango_attr_background_new (color->red, color->green, color->blue);
+			gdk_color_free (color);
 		}
 
 		if (fg_set)
 		{
-			GdkRGBA *color = NULL;
-
-			if (fg != NULL)
-			{
-				pango_attribute_destroy (fg);
-			}
-
-			g_object_get (tag, "foreground-rgba", &color, NULL);
-			fg = pango_attr_foreground_new (color->red * 65535,
-							color->green * 65535,
-							color->blue * 65535);
-			gdk_rgba_free (color);
+			GdkColor *color = NULL;
+			if (fg) pango_attribute_destroy (fg);
+			g_object_get (tag, "foreground-gdk", &color, NULL);
+			fg = pango_attr_foreground_new (color->red, color->green, color->blue);
+			gdk_color_free (color);
 		}
 
 		if (style_set)
@@ -2619,7 +2698,7 @@ gtk_source_print_compositor_paginate (GtkSourcePrintCompositor *compositor,
 					double layout_line_height;
 
 					pango_layout_iter_get_line_extents (layout_iter, NULL, &logical_rect);
-					layout_line_height = (double) logical_rect.height / PANGO_SCALE;
+					layout_line_height = logical_rect.height / PANGO_SCALE;
 
 					if (is_first_line &&
 					    line_is_numbered (compositor, line_number))

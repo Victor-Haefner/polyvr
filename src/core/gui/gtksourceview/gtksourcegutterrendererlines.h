@@ -1,5 +1,5 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8; coding: utf-8 -*-
- *
+ * gtksourcegutterrendererlines.h
  * This file is part of GtkSourceView
  *
  * Copyright (C) 2010 - Jesse van den Kieboom
@@ -14,12 +14,13 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this library; if not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef GTK_SOURCE_GUTTER_RENDERER_LINES_H
-#define GTK_SOURCE_GUTTER_RENDERER_LINES_H
+#ifndef __GTK_SOURCE_GUTTER_RENDERER_LINES_H__
+#define __GTK_SOURCE_GUTTER_RENDERER_LINES_H__
 
 #include <gtk/gtk.h>
 #include "gtksourcetypes.h"
@@ -65,4 +66,4 @@ GtkSourceGutterRenderer *gtk_source_gutter_renderer_lines_new (void);
 
 G_END_DECLS
 
-#endif /* GTK_SOURCE_GUTTER_RENDERER_LINES_H */
+#endif /* __GTK_SOURCE_GUTTER_RENDERER_LINES_H__ */

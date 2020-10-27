@@ -89,9 +89,7 @@ void provPopulate(GtkProvider* provider, GtkSourceCompletionContext* context) {
 
     GList* ret = NULL;
     for (auto d : suggestions) {
-        auto proposal = gtk_source_completion_item_new();
-		gtk_source_completion_item_set_text(proposal, d.c_str());
-		gtk_source_completion_item_set_label(proposal, d.c_str());
+        auto proposal = gtk_source_completion_item_new(d.c_str(), d.c_str(), 0, 0);
         ret = g_list_prepend (ret, proposal);
     }
 	setProposals( g_list_reverse(ret) );

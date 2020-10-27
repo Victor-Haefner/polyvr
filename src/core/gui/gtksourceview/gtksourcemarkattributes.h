@@ -1,5 +1,5 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8; coding: utf-8 -*-
- *
+ * gtksourcemarkattributes.h
  * This file is part of GtkSourceView
  *
  * Copyright (C) 2010 - Jesse van den Kieboom
@@ -15,16 +15,13 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this library; if not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef GTK_SOURCE_MARK_ATTRIBUTES_H
-#define GTK_SOURCE_MARK_ATTRIBUTES_H
-
-#if !defined (GTK_SOURCE_H_INSIDE) && !defined (GTK_SOURCE_COMPILATION)
-#error "Only <gtksourceview/gtksource.h> can be included directly."
-#endif
+#ifndef __GTK_SOURCE_MARK_ATTRIBUTES_H__
+#define __GTK_SOURCE_MARK_ATTRIBUTES_H__
 
 #include <gtk/gtk.h>
 #include "gtksourcetypes.h"
@@ -56,57 +53,45 @@ struct _GtkSourceMarkAttributesClass
 	/*< private >*/
 	GObjectClass parent_class;
 
-	gpointer padding[10];
+	/*< public >*/
 };
 
-extern
 GType gtk_source_mark_attributes_get_type (void) G_GNUC_CONST;
 
-extern
 GtkSourceMarkAttributes *gtk_source_mark_attributes_new (void);
 
-extern
 void             gtk_source_mark_attributes_set_background      (GtkSourceMarkAttributes *attributes,
                                                                  const GdkRGBA           *background);
 
-extern
 gboolean         gtk_source_mark_attributes_get_background      (GtkSourceMarkAttributes *attributes,
                                                                  GdkRGBA                 *background);
 
-extern
+void             gtk_source_mark_attributes_set_stock_id        (GtkSourceMarkAttributes *attributes,
+                                                                 const gchar             *stock_id);
+const gchar     *gtk_source_mark_attributes_get_stock_id        (GtkSourceMarkAttributes *attributes);
+
 void             gtk_source_mark_attributes_set_icon_name       (GtkSourceMarkAttributes *attributes,
                                                                  const gchar             *icon_name);
-
-extern
 const gchar     *gtk_source_mark_attributes_get_icon_name       (GtkSourceMarkAttributes *attributes);
 
-extern
 void             gtk_source_mark_attributes_set_gicon           (GtkSourceMarkAttributes *attributes,
                                                                  GIcon                   *gicon);
-
-extern
 GIcon           *gtk_source_mark_attributes_get_gicon           (GtkSourceMarkAttributes *attributes);
 
-extern
 void             gtk_source_mark_attributes_set_pixbuf          (GtkSourceMarkAttributes *attributes,
                                                                  const GdkPixbuf         *pixbuf);
-
-extern
 const GdkPixbuf *gtk_source_mark_attributes_get_pixbuf          (GtkSourceMarkAttributes *attributes);
 
-extern
 const GdkPixbuf *gtk_source_mark_attributes_render_icon         (GtkSourceMarkAttributes *attributes,
                                                                  GtkWidget               *widget,
                                                                  gint                   size);
 
-extern
 gchar           *gtk_source_mark_attributes_get_tooltip_text    (GtkSourceMarkAttributes *attributes,
                                                                  GtkSourceMark           *mark);
 
-extern
 gchar           *gtk_source_mark_attributes_get_tooltip_markup  (GtkSourceMarkAttributes *attributes,
                                                                  GtkSourceMark           *mark);
 
 G_END_DECLS
 
-#endif /* GTK_SOURCE_MARK_ATTRIBUTES_H */
+#endif /* __GTK_SOURCE_MARK_ATTRIBUTES_H__ */

@@ -1,5 +1,6 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*- */
 /*
+ * gtksourceundomanager.c
  * This file is part of GtkSourceView
  *
  * Copyright (C) 1998, 1999 Alex Roberts, Evan Lawrence
@@ -15,33 +16,33 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this library; if not, see <http://www.gnu.org/licenses/>.
+
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#define GTK_SOURCE_H_INSIDE
-
-#include "config.h"
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
 
 #include <glib.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "gtksourceundomanager.h"
+#include "gtksourceview-marshal.h"
 
 /**
  * SECTION:undomanager
- * @short_description: Undo manager interface for GtkSourceView
+ * @short_description: Undo manager interface for #GtkSourceView
  * @title: GtkSourceUndoManager
  * @see_also: #GtkTextBuffer, #GtkSourceView
  *
- * For most uses it isn't needed to use #GtkSourceUndoManager. #GtkSourceBuffer
- * already provides an API and a default implementation for the undo/redo.
- *
- * For specific needs, the #GtkSourceUndoManager interface can be implemented to
- * provide custom undo management. Use gtk_source_buffer_set_undo_manager() to
- * install a custom undo manager for a particular #GtkSourceBuffer.
+ * The #GtkSourceUndoManager interface can be implemented to provide custom
+ * undo management to a #GtkSourceBuffer. Use
+ * gtk_source_buffer_set_undo_manager() to install a custom undo manager for
+ * a particular source buffer.
  *
  * Use gtk_source_undo_manager_can_undo_changed() and
  * gtk_source_undo_manager_can_redo_changed() when respectively the undo state
@@ -50,14 +51,15 @@
  * Since: 2.10
  */
 
+/* Signals */
 enum
 {
 	CAN_UNDO_CHANGED,
 	CAN_REDO_CHANGED,
-	N_SIGNALS
+	NUM_SIGNALS
 };
 
-static guint signals[N_SIGNALS];
+static guint signals[NUM_SIGNALS] = {0,};
 
 typedef GtkSourceUndoManagerIface GtkSourceUndoManagerInterface;
 
@@ -98,6 +100,8 @@ gtk_source_undo_manager_end_not_undoable_action_default (GtkSourceUndoManager *m
 static void
 gtk_source_undo_manager_default_init (GtkSourceUndoManagerIface *iface)
 {
+	static gboolean initialized = FALSE;
+
 	iface->can_undo = gtk_source_undo_manager_can_undo_default;
 	iface->can_redo = gtk_source_undo_manager_can_redo_default;
 
@@ -107,49 +111,50 @@ gtk_source_undo_manager_default_init (GtkSourceUndoManagerIface *iface)
 	iface->begin_not_undoable_action = gtk_source_undo_manager_begin_not_undoable_action_default;
 	iface->end_not_undoable_action = gtk_source_undo_manager_end_not_undoable_action_default;
 
-	/**
-	 * GtkSourceUndoManager::can-undo-changed:
-	 * @manager: The #GtkSourceUndoManager
-	 *
-	 * Emitted when the ability to undo has changed.
-	 *
-	 * Since: 2.10
-	 *
-	 */
-	signals[CAN_UNDO_CHANGED] =
-		g_signal_new ("can-undo-changed",
+	if (!initialized)
+	{
+		/**
+		 * GtkSourceUndoManager::can-undo-changed:
+		 * @manager: The #GtkSourceUndoManager
+		 *
+		 * Emitted when the ability to undo has changed.
+		 *
+		 * Since: 2.10
+		 *
+		 */
+		signals[CAN_UNDO_CHANGED] =
+			g_signal_new ("can-undo-changed",
 			      G_TYPE_FROM_INTERFACE (iface),
 			      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
 			      G_STRUCT_OFFSET (GtkSourceUndoManagerIface, can_undo_changed),
-			      NULL, NULL,
-		              g_cclosure_marshal_VOID__VOID,
-			      G_TYPE_NONE,
-			      0);
-	g_signal_set_va_marshaller (signals[CAN_UNDO_CHANGED],
-	                            G_TYPE_FROM_INTERFACE (iface),
-	                            g_cclosure_marshal_VOID__VOIDv);
-
-	/**
-	 * GtkSourceUndoManager::can-redo-changed:
-	 * @manager: The #GtkSourceUndoManager
-	 *
-	 * Emitted when the ability to redo has changed.
-	 *
-	 * Since: 2.10
-	 *
-	 */
-	signals[CAN_REDO_CHANGED] =
-		g_signal_new ("can-redo-changed",
-			      G_TYPE_FROM_INTERFACE (iface),
-			      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
-			      G_STRUCT_OFFSET (GtkSourceUndoManagerIface, can_redo_changed),
-			      NULL, NULL,
+			      NULL,
+			      NULL,
 			      g_cclosure_marshal_VOID__VOID,
 			      G_TYPE_NONE,
 			      0);
-	g_signal_set_va_marshaller (signals[CAN_REDO_CHANGED],
-	                            G_TYPE_FROM_INTERFACE (iface),
-	                            g_cclosure_marshal_VOID__VOIDv);
+
+		/**
+		 * GtkSourceUndoManager::can-redo-changed:
+		 * @manager: The #GtkSourceUndoManager
+		 *
+		 * Emitted when the ability to redo has changed.
+		 *
+		 * Since: 2.10
+		 *
+		 */
+		signals[CAN_REDO_CHANGED] =
+			g_signal_new ("can-redo-changed",
+			      G_TYPE_FROM_INTERFACE (iface),
+			      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
+			      G_STRUCT_OFFSET (GtkSourceUndoManagerIface, can_redo_changed),
+			      NULL,
+			      NULL,
+			      g_cclosure_marshal_VOID__VOID,
+			      G_TYPE_NONE,
+			      0);
+
+		initialized = TRUE;
+	}
 }
 
 /**

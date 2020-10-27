@@ -1,5 +1,5 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8; coding: utf-8 -*-
- *
+ * gtksourcecompletionproposal.h
  * This file is part of GtkSourceView
  *
  * Copyright (C) 2007 - 2009 Jesús Barbero Rodríguez <chuchiperriman@gmail.com>
@@ -15,16 +15,13 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this library; if not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef GTK_SOURCE_COMPLETION_PROPOSAL_H
-#define GTK_SOURCE_COMPLETION_PROPOSAL_H
-
-#if !defined (GTK_SOURCE_H_INSIDE) && !defined (GTK_SOURCE_COMPILATION)
-#error "Only <gtksourceview/gtksource.h> can be included directly."
-#endif
+#ifndef __GTK_SOURCE_COMPLETION_PROPOSAL_H__
+#define __GTK_SOURCE_COMPLETION_PROPOSAL_H__
 
 #include <glib-object.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
@@ -50,10 +47,6 @@ typedef struct _GtkSourceCompletionProposalIface	GtkSourceCompletionProposalIfac
  * By default, %NULL is returned.
  * @get_icon: The virtual function pointer for gtk_source_completion_proposal_get_icon().
  * By default, %NULL is returned.
- * @get_icon_name: The virtual function pointer for gtk_source_completion_proposal_get_icon_name().
- * By default, %NULL is returned.
- * @get_gicon: The virtual function pointer for gtk_source_completion_proposal_get_gicon().
- * By default, %NULL is returned.
  * @get_info: The virtual function pointer for gtk_source_completion_proposal_get_info().
  * By default, %NULL is returned.
  * @hash: The virtual function pointer for gtk_source_completion_proposal_hash().
@@ -69,58 +62,36 @@ struct _GtkSourceCompletionProposalIface
 	GTypeInterface parent;
 
 	/* Interface functions */
-	gchar		*(*get_label)		(GtkSourceCompletionProposal *proposal);
-	gchar		*(*get_markup)		(GtkSourceCompletionProposal *proposal);
-	gchar		*(*get_text)		(GtkSourceCompletionProposal *proposal);
+	gchar		*(*get_label)	(GtkSourceCompletionProposal *proposal);
+	gchar		*(*get_markup)	(GtkSourceCompletionProposal *proposal);
+	gchar		*(*get_text)	(GtkSourceCompletionProposal *proposal);
 
-	GdkPixbuf	*(*get_icon)		(GtkSourceCompletionProposal *proposal);
-	const gchar	*(*get_icon_name)	(GtkSourceCompletionProposal *proposal);
-	GIcon		*(*get_gicon)		(GtkSourceCompletionProposal *proposal);
+	GdkPixbuf	*(*get_icon)	(GtkSourceCompletionProposal *proposal);
+	gchar		*(*get_info)	(GtkSourceCompletionProposal *proposal);
 
-	gchar		*(*get_info)		(GtkSourceCompletionProposal *proposal);
-
-	guint		 (*hash)		(GtkSourceCompletionProposal *proposal);
-	gboolean	 (*equal)		(GtkSourceCompletionProposal *proposal,
-						 GtkSourceCompletionProposal *other);
+	guint		 (*hash)	(GtkSourceCompletionProposal *proposal);
+	gboolean	 (*equal)	(GtkSourceCompletionProposal *proposal,
+					 GtkSourceCompletionProposal *other);
 
 	/* Signals */
-	void		 (*changed)		(GtkSourceCompletionProposal *proposal);
+	void		 (*changed)	(GtkSourceCompletionProposal *proposal);
 };
 
-extern
 GType 			 gtk_source_completion_proposal_get_type 	(void) G_GNUC_CONST;
 
-extern
 gchar			*gtk_source_completion_proposal_get_label	(GtkSourceCompletionProposal *proposal);
-
-extern
 gchar			*gtk_source_completion_proposal_get_markup	(GtkSourceCompletionProposal *proposal);
-
-extern
 gchar			*gtk_source_completion_proposal_get_text	(GtkSourceCompletionProposal *proposal);
 
-extern
 GdkPixbuf		*gtk_source_completion_proposal_get_icon	(GtkSourceCompletionProposal *proposal);
-
-extern
-const gchar		*gtk_source_completion_proposal_get_icon_name	(GtkSourceCompletionProposal *proposal);
-
-extern
-GIcon			*gtk_source_completion_proposal_get_gicon	(GtkSourceCompletionProposal *proposal);
-
-extern
 gchar			*gtk_source_completion_proposal_get_info	(GtkSourceCompletionProposal *proposal);
 
-extern
 void			 gtk_source_completion_proposal_changed		(GtkSourceCompletionProposal *proposal);
 
-extern
 guint			 gtk_source_completion_proposal_hash		(GtkSourceCompletionProposal *proposal);
-
-extern
-gboolean		 gtk_source_completion_proposal_equal		(GtkSourceCompletionProposal *proposal,
+gboolean		 gtk_source_completion_proposal_equal           (GtkSourceCompletionProposal *proposal,
 									 GtkSourceCompletionProposal *other);
 
 G_END_DECLS
 
-#endif /* GTK_SOURCE_COMPLETION_PROPOSAL_H */
+#endif /* __GTK_SOURCE_COMPLETION_PROPOSAL_H__ */

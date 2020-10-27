@@ -1,5 +1,5 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8; coding: utf-8 -*-
- *
+ * gtksourcelanguage-parser-2.c
  * Language specification parser for 2.0 version .lang files
  * This file is part of GtkSourceView
  *
@@ -16,11 +16,14 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this library; if not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#define GTK_SOURCE_H_INSIDE
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
 
 #undef ENABLE_DEBUG
 
@@ -30,8 +33,7 @@
 #define DEBUG(x)
 #endif
 
-#include "config.h"
-
+#include "gtksourceview-i18n.h"
 #include "gtksourcebuffer.h"
 #include "gtksourcelanguage.h"
 #include "gtksourcelanguage-private.h"
@@ -39,10 +41,12 @@
 
 #include <glib.h>
 #include <glib/gstdio.h>
-#include <glib/gi18n-lib.h>
 
 #include <string.h>
 #include <fcntl.h>
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
 #ifdef G_OS_WIN32
 #include <io.h>
 #endif
@@ -51,7 +55,7 @@
 #define PARSER_ERROR (parser_error_quark ())
 #define ATTR_NO_STYLE ""
 
-typedef enum _ParserError {
+typedef enum {
 	PARSER_ERROR_CANNOT_OPEN     = 0,
 	PARSER_ERROR_CANNOT_VALIDATE,
 	PARSER_ERROR_INVALID_DOC,
@@ -943,7 +947,7 @@ replace_by_id (const GMatchInfo *match_info,
 	if (subst == NULL)
 		g_set_error (&tmp_error,
 			     PARSER_ERROR, PARSER_ERROR_WRONG_ID,
-			     _("Unknown id “%s” in regex “%s”"), id,
+			     _("Unknown id '%s' in regex '%s'"), id,
 			     g_match_info_get_string (match_info));
 
 	if (tmp_error == NULL)
@@ -1086,8 +1090,6 @@ replace_delimiter (const GMatchInfo *match_info,
 			g_string_append (expanded_regex,
 					parser_state->closing_delimiter);
 			break;
-		default:
-			break;
 	}
 
 	g_free (delim);
@@ -1098,13 +1100,13 @@ replace_delimiter (const GMatchInfo *match_info,
 
 static gchar *
 expand_regex_delimiters (ParserState *parser_state,
-			 gchar       *regex,
-			 gint         len)
+		gchar *regex,
+		gint len)
 {
 	/* This is the commented regex without the doubled escape needed
 	 * in a C string:
 	 *
-	 * (?<!\\)(\\\\)*\\%(\[|\])
+	 * (?<!\\)(\\\\)*\\%([\[|\])
 	 * |------------||---------|
 	 *      |             |
 	 *      |        the strings
@@ -1173,7 +1175,7 @@ expand_regex (ParserState *parser_state,
 		if (g_regex_get_max_backref (compiled) > 0)
 		{
 			g_set_error (error, PARSER_ERROR, PARSER_ERROR_MALFORMED_REGEX,
-				     _("in regex “%s”: backreferences are not supported"),
+				     _("in regex '%s': backreferences are not supported"),
 				     regex);
 			g_regex_unref (compiled);
 			return NULL;
@@ -1463,7 +1465,7 @@ static void
 handle_keyword_char_class_element (ParserState *parser_state)
 {
 	xmlChar *char_class;
-	int type;
+	int ret, type;
 
 	g_return_if_fail (parser_state->error == NULL);
 
@@ -1471,11 +1473,6 @@ handle_keyword_char_class_element (ParserState *parser_state)
 		return;
 
 	do {
-#ifdef G_DISABLE_ASSERT
-		G_GNUC_UNUSED
-#endif
-		int ret;
-
 		ret = xmlTextReaderRead (parser_state->reader);
 		g_assert (ret == 1);
 		type = xmlTextReaderNodeType (parser_state->reader);
@@ -1487,7 +1484,7 @@ handle_keyword_char_class_element (ParserState *parser_state)
 	g_free (parser_state->opening_delimiter);
 	g_free (parser_state->closing_delimiter);
 
-	parser_state->opening_delimiter = g_strdup_printf ("(?<!%s)(?=%s)",
+	parser_state->opening_delimiter = g_strdup_printf ("(?!<%s)(?=%s)",
 							   char_class, char_class);
 	parser_state->closing_delimiter = g_strdup_printf ("(?<=%s)(?!%s)",
 							   char_class, char_class);
@@ -1681,8 +1678,6 @@ file_parse (gchar                     *filename,
 			case XML_READER_TYPE_END_ELEMENT:
 				element_end (parser_state);
 				break;
-			default:
-				break;
 		}
 	}
 
@@ -1756,7 +1751,8 @@ parser_state_destroy (ParserState *parser_state)
 	if (parser_state->reader != NULL)
 		xmlFreeTextReader (parser_state->reader);
 
-	g_clear_error (&parser_state->error);
+	if (parser_state->error != NULL)
+		g_error_free (parser_state->error);
 
 	g_queue_free (parser_state->curr_parents);
 	g_free (parser_state->current_lang_id);
@@ -1827,7 +1823,8 @@ _gtk_source_language_file_parse_version2 (GtkSourceLanguage       *language,
 					    (GHRFunc) steal_styles_mapping,
 					    language->priv->styles);
 
-	g_queue_free_full (replacements, (GDestroyNotify) _gtk_source_context_replace_free);
+	g_queue_foreach (replacements, (GFunc) _gtk_source_context_replace_free, NULL);
+	g_queue_free (replacements);
 	g_hash_table_destroy (loaded_lang_ids);
 	g_hash_table_destroy (defined_regexes);
 	g_hash_table_destroy (styles);
@@ -1836,7 +1833,7 @@ _gtk_source_language_file_parse_version2 (GtkSourceLanguage       *language,
 	{
 		g_warning ("Failed to load '%s': %s",
 			   filename, error->message);
-		g_clear_error (&error);
+		g_error_free (error);
 		return FALSE;
 	}
 
