@@ -31,6 +31,7 @@
 
 struct _GtkSourceGutterRendererMarksPrivate
 {
+	char dummy;
 };
 
 G_DEFINE_TYPE (GtkSourceGutterRendererMarks, gtk_source_gutter_renderer_marks, GTK_SOURCE_TYPE_GUTTER_RENDERER_PIXBUF)

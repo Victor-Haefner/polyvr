@@ -343,8 +343,7 @@ VRGuiEditor::VRGuiEditor(string window) {
     gtk_widget_modify_font (editor, font_desc);
     gtk_widget_show_all(editor);
 
-
-#ifndef WIN32  // Windows: induces hang in VRGuiBuilder read sometimes? not consistent!
+#ifndef WIN32
     cout << "VRGuiEditor::VRGuiEditor, enable code completion" << endl;
     auto provider = VRGuiCodeCompletionNew();
     auto completion = gtk_source_view_get_completion(GTK_SOURCE_VIEW(editor));
