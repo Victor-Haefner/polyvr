@@ -2,13 +2,12 @@
 VRGtkWindow::VRGtkWindow(GtkDrawingArea* da, string msaa) {
     type = 2;
 
-    GtkWidget* window = gtk_widget_get_parent((GtkWidget*)da);
-    gtk_container_remove(GTK_CONTAINER(window), (GtkWidget*)da);
+    GtkWidget* box = gtk_widget_get_parent((GtkWidget*)da);
+    gtk_container_remove(GTK_CONTAINER(box), (GtkWidget*)da);
 
     widget = gtk_gl_area_new();
-    gtk_container_add(GTK_CONTAINER(window), widget);
+    gtk_box_pack_start(GTK_BOX(box), widget, true, true, 0);
     if (gtk_widget_get_realized(widget)) cout << "Warning: glarea is realized!\n";
-
 
     /*int MSAA = toInt(subString(msaa,1,-1));
     auto mode = (GdkGLConfigMode)(GDK_GL_MODE_RGBA | GDK_GL_MODE_DOUBLE | GDK_GL_MODE_DEPTH | GDK_GL_MODE_STENCIL | GDK_GL_MODE_MULTISAMPLE);
@@ -22,7 +21,7 @@ VRGtkWindow::VRGtkWindow(GtkDrawingArea* da, string msaa) {
     gtk_gl_area_set_has_depth_buffer((GtkGLArea*)widget, true);
     gtk_gl_area_set_has_stencil_buffer((GtkGLArea*)widget, true);
 
-    gtk_widget_show(widget);
+    gtk_widget_show_all(widget);
     gtk_widget_add_events(widget, (GdkEventMask)GDK_VISIBILITY_NOTIFY_MASK);
     gtk_widget_add_events(widget, (GdkEventMask)GDK_BUTTON_PRESS_MASK);
     gtk_widget_add_events(widget, (GdkEventMask)GDK_BUTTON_RELEASE_MASK);
@@ -39,8 +38,7 @@ VRGtkWindow::VRGtkWindow(GtkDrawingArea* da, string msaa) {
     connect_signal<void>(widget, bind(&VRGtkWindow::on_realize, this), "realize");
     connect_signal<bool, GdkGLContext*>(widget, bind(&VRGtkWindow::on_render , this, PL::_1), "render" );
 
-    /*connect_signal<void, GdkEventExpose*>(drawArea, bind(&VRGtkWindow::on_expose, this, PL::_1), "expose_event");
-    connect_signal<void, GdkRectangle*>(drawArea, bind(&VRGtkWindow::on_resize, this, PL::_1), "size_allocate");
+    /*connect_signal<void, GdkRectangle*>(drawArea, bind(&VRGtkWindow::on_resize, this, PL::_1), "size_allocate");
     connect_signal<void, GdkEventScroll*>(drawArea, bind(&VRGtkWindow::on_scroll, this, PL::_1), "scroll_event");
     connect_signal<void, GdkEventButton*>(drawArea, bind(&VRGtkWindow::on_button, this, PL::_1), "button_press_event");
     connect_signal<void, GdkEventButton*>(drawArea, bind(&VRGtkWindow::on_button, this, PL::_1), "button_release_event");
@@ -107,11 +105,11 @@ void VRGtkWindow::render(bool fromThread) {
 }
 
 bool VRGtkWindow::on_render(GdkGLContext* glcontext) {
-    cout << " --- VRGtkWindow::on_render " << endl;
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
 
-    glClearColor(0.2, 0.2, 0.2, 1.0);
+    //glClearColor(0.2, 0.2, 0.2, 1.0);
+    glClearColor(0.2, 0.2, 1.0, 1.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     win->render(ract);
@@ -125,7 +123,7 @@ void VRGtkWindow::on_realize() {
     initialExpose = true;
     gtk_gl_area_make_current(GTK_GL_AREA(widget));
     if (gtk_gl_area_get_error(GTK_GL_AREA(widget)) != NULL) {
-        printf("VRGtkWindow::on_realize - failed to initialiize buffers\n");
+        printf("VRGtkWindow::on_realize - failed to initialize buffers\n");
         return;
     }
     win->init();
@@ -136,16 +134,4 @@ void VRGtkWindow::on_realize() {
     return;
 }
 
-bool VRGtkWindow::on_expose(GdkEventExpose* event) {
-    /*if (initialExpose) {
-        GdkGLContext* glcontext = gtk_widget_get_gl_context (widget);   // TODO: rare x error on startup!!
-        GdkGLDrawable* gldrawable = gtk_widget_get_gl_drawable (widget);
-        gdk_gl_drawable_gl_begin(gldrawable, glcontext);
-        glClearColor(0.2, 0.2, 0.2, 1.0);
-        glClear(GL_COLOR_BUFFER_BIT);
-        gdk_gl_drawable_swap_buffers (gldrawable);
-        gdk_gl_drawable_gl_end (gldrawable);
-        initialExpose = false;
-    }*/
-    return true;
-}
+

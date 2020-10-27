@@ -5,13 +5,14 @@ VRGtkWindow::VRGtkWindow(GtkDrawingArea* da, string msaa) {
     type = 2;
     drawArea = da;
     widget = (GtkWidget*)drawArea;
-    if (gtk_widget_get_realized(widget)) cout << "Warning: glarea is realized!\n";
+    if (gtk_widget_get_realized(widget)) cout << " --- !!! Warning: glarea is realized!\n";
 
     int MSAA = toInt(subString(msaa,1,-1));
     auto mode = (GdkGLConfigMode)(GDK_GL_MODE_RGBA | GDK_GL_MODE_DOUBLE | GDK_GL_MODE_DEPTH | GDK_GL_MODE_STENCIL | GDK_GL_MODE_MULTISAMPLE);
     if (VROptions::get()->getOption<bool>("active_stereo"))
         mode = (GdkGLConfigMode)(GDK_GL_MODE_RGBA | GDK_GL_MODE_DOUBLE | GDK_GL_MODE_DEPTH | GDK_GL_MODE_STENCIL | GDK_GL_MODE_MULTISAMPLE | GDK_GL_MODE_STEREO);
     GdkGLConfig* glConfigMode = gdk_gl_config_new_by_mode(mode, MSAA);
+
     cout << "  glConfigMode: " << glConfigMode << endl;
 
     bool r = gtk_widget_set_gl_capability(widget,glConfigMode,NULL,true,GDK_GL_RGBA_TYPE);
@@ -44,6 +45,7 @@ VRGtkWindow::VRGtkWindow(GtkDrawingArea* da, string msaa) {
 }
 
 void VRGtkWindow::clear(Color3f c) {
+    cout << "VRGtkWindow::clear with color " << c << endl;
     GdkWindow* drawable = gtk_widget_get_window(widget);
     //GdkWindow* drawable = widget->window;
     if (drawable) {
@@ -82,11 +84,13 @@ void VRGtkWindow::render(bool fromThread) {
 }
 
 void VRGtkWindow::on_realize() {
+    cout << "VRGtkWindow::on_realize, init OSG window" << endl;
     initialExpose = true;
     gtk_widget_begin_gl(widget);
     win->init();
     GtkAllocation a;
     gtk_widget_get_allocation(widget, &a);
+    cout << " call resize to " << a.width << " x " << a.height << endl;
     resize(a.width, a.height);
     gtk_widget_end_gl(widget, false);
 }
