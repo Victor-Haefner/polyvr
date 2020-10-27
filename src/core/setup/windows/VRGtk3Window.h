@@ -1,5 +1,6 @@
 
 VRGtkWindow::VRGtkWindow(GtkDrawingArea* da, string msaa) {
+    cout << " --------------------- VRGtkWindow::VRGtkWindow -------------- " << endl;
     type = 2;
 
     GtkWidget* box = gtk_widget_get_parent((GtkWidget*)da);
@@ -20,6 +21,7 @@ VRGtkWindow::VRGtkWindow(GtkDrawingArea* da, string msaa) {
     gtk_gl_area_set_has_alpha((GtkGLArea*)widget, true);
     gtk_gl_area_set_has_depth_buffer((GtkGLArea*)widget, true);
     gtk_gl_area_set_has_stencil_buffer((GtkGLArea*)widget, true);
+    gtk_gl_area_set_required_version((GtkGLArea*)widget, 4,4);
 
     gtk_widget_show_all(widget);
     gtk_widget_add_events(widget, (GdkEventMask)GDK_VISIBILITY_NOTIFY_MASK);
@@ -105,6 +107,7 @@ void VRGtkWindow::render(bool fromThread) {
 }
 
 bool VRGtkWindow::on_render(GdkGLContext* glcontext) {
+    //cout << " --------------------- VRGtkWindow::on_render -------------- " << endl;
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
 
