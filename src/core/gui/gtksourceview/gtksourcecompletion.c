@@ -638,8 +638,8 @@ update_selection_label (GtkSourceCompletion *completion)
 		/* Translators: "All" is used as a label in the status bar of the
 		popup, telling that all completion pages are shown. */
 		name = g_strdup_printf("<b>%s</b>", _("All"));
-
-		gtk_image_clear (completion->priv->selection_image);
+        if (completion && completion->priv && completion->priv->selection_image)
+            gtk_image_clear (completion->priv->selection_image);
 	}
 	else
 	{
