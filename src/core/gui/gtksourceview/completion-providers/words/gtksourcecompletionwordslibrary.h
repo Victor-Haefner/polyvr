@@ -19,8 +19,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef __GTK_SOURCE_COMPLETION_WORDS_LIBRARY_H__
-#define __GTK_SOURCE_COMPLETION_WORDS_LIBRARY_H__
+#ifndef GTK_SOURCE_COMPLETION_WORDS_LIBRARY_H
+#define GTK_SOURCE_COMPLETION_WORDS_LIBRARY_H
 
 #include <glib-object.h>
 #include "gtksourcecompletionwordsproposal.h"
@@ -28,7 +28,7 @@
 G_BEGIN_DECLS
 
 #define GTK_SOURCE_TYPE_COMPLETION_WORDS_LIBRARY			(gtk_source_completion_words_library_get_type ())
-#define GTK_SOURCE_COMPLETION_WORDS_LIBRARY(obj)			(G_TYPE_CHECK_INSTANCE_CAST ((obj), GTK_SOURCE_TYPE_COMPLETION_PROVIDER_WORDS_LIBRARY, GtkSourceCompletionWordsLibrary))
+#define GTK_SOURCE_COMPLETION_WORDS_LIBRARY(obj)			(G_TYPE_CHECK_INSTANCE_CAST ((obj), GTK_SOURCE_TYPE_COMPLETION_WORDS_LIBRARY, GtkSourceCompletionWordsLibrary))
 #define GTK_SOURCE_COMPLETION_WORDS_LIBRARY_CONST(obj)			(G_TYPE_CHECK_INSTANCE_CAST ((obj), GTK_SOURCE_TYPE_COMPLETION_WORDS_LIBRARY, GtkSourceCompletionWordsLibrary const))
 #define GTK_SOURCE_COMPLETION_WORDS_LIBRARY_CLASS(klass)		(G_TYPE_CHECK_CLASS_CAST ((klass), GTK_SOURCE_TYPE_COMPLETION_WORDS_LIBRARY, GtkSourceCompletionWordsLibraryClass))
 #define GTK_SOURCE_IS_COMPLETION_WORDS_LIBRARY(obj)			(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GTK_SOURCE_TYPE_COMPLETION_WORDS_LIBRARY))
@@ -49,52 +49,52 @@ struct _GtkSourceCompletionWordsLibraryClass {
 	GObjectClass parent_class;
 };
 
-G_GNUC_INTERNAL
-GType gtk_source_completion_words_library_get_type (void) G_GNUC_CONST;
+GTK_SOURCE_INTERNAL
+GType		 gtk_source_completion_words_library_get_type		(void) G_GNUC_CONST;
 
-G_GNUC_INTERNAL
+GTK_SOURCE_INTERNAL
 GtkSourceCompletionWordsLibrary *
-		gtk_source_completion_words_library_new			(void);
+		 gtk_source_completion_words_library_new		(void);
 
 /* Finding */
-G_GNUC_INTERNAL
+GTK_SOURCE_INTERNAL
 GSequenceIter	*gtk_source_completion_words_library_find 		(GtkSourceCompletionWordsLibrary  *library,
 									 GtkSourceCompletionWordsProposal *proposal);
 
-G_GNUC_INTERNAL
+GTK_SOURCE_INTERNAL
 GSequenceIter	*gtk_source_completion_words_library_find_first		(GtkSourceCompletionWordsLibrary  *library,
 									 const gchar                      *word,
 									 gint                              len);
 
-G_GNUC_INTERNAL
+GTK_SOURCE_INTERNAL
 GSequenceIter	*gtk_source_completion_words_library_find_next		(GSequenceIter                    *iter,
 									 const gchar                      *word,
 									 gint                              len);
 
 /* Getting */
-G_GNUC_INTERNAL
+GTK_SOURCE_INTERNAL
 GtkSourceCompletionWordsProposal *
 		 gtk_source_completion_words_library_get_proposal 	(GSequenceIter                    *iter);
 
 /* Adding/removing */
-G_GNUC_INTERNAL
+GTK_SOURCE_INTERNAL
 GtkSourceCompletionWordsProposal *
 		 gtk_source_completion_words_library_add_word 		(GtkSourceCompletionWordsLibrary  *library,
                                               				 const gchar                      *word);
 
-G_GNUC_INTERNAL
+GTK_SOURCE_INTERNAL
 void		 gtk_source_completion_words_library_remove_word 	(GtkSourceCompletionWordsLibrary  *library,
                                                  			 GtkSourceCompletionWordsProposal *proposal);
 
-G_GNUC_INTERNAL
-gboolean	 gtk_source_completion_words_library_is_locked 		(GtkSourceCompletionWordsLibrary *library);
+GTK_SOURCE_INTERNAL
+gboolean	 gtk_source_completion_words_library_is_locked 		(GtkSourceCompletionWordsLibrary  *library);
 
-G_GNUC_INTERNAL
-void		 gtk_source_completion_words_library_lock 		(GtkSourceCompletionWordsLibrary *library);
+GTK_SOURCE_INTERNAL
+void		 gtk_source_completion_words_library_lock 		(GtkSourceCompletionWordsLibrary  *library);
 
-G_GNUC_INTERNAL
-void		 gtk_source_completion_words_library_unlock 		(GtkSourceCompletionWordsLibrary *library);
+GTK_SOURCE_INTERNAL
+void		 gtk_source_completion_words_library_unlock 		(GtkSourceCompletionWordsLibrary  *library);
 
 G_END_DECLS
 
-#endif /* __GTK_SOURCE_COMPLETION_WORDS_LIBRARY_H__ */
+#endif /* GTK_SOURCE_COMPLETION_WORDS_LIBRARY_H */

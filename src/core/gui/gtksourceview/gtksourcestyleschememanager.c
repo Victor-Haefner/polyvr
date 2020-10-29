@@ -19,17 +19,23 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include "gtksourcestyleschememanager.h"
-#include "gtksourceview-marshal.h"
+#include "gtksourcestylescheme.h"
 #include "gtksourceview-i18n.h"
 #include "gtksourceview-utils.h"
 #include <string.h>
 
 /**
  * SECTION:styleschememanager
- * @Short_description: Object which provides access to #GtkSourceStyleScheme<!-- -->s
+ * @Short_description: Provides access to GtkSourceStyleSchemes
  * @Title: GtkSourceStyleSchemeManager
  * @See_also: #GtkSourceStyleScheme
+ *
+ * Object which provides access to #GtkSourceStyleScheme<!-- -->s.
  */
 
 #define SCHEME_FILE_SUFFIX	".xml"
@@ -45,15 +51,15 @@ struct _GtkSourceStyleSchemeManagerPrivate
 	gchar          **ids; /* Cache the IDs of the available schemes */
 };
 
-
 enum {
 	PROP_0,
 	PROP_SEARCH_PATH,
 	PROP_SCHEME_IDS
 };
 
+static GtkSourceStyleSchemeManager *default_instance;
 
-G_DEFINE_TYPE (GtkSourceStyleSchemeManager, gtk_source_style_scheme_manager, G_TYPE_OBJECT)
+G_DEFINE_TYPE_WITH_PRIVATE (GtkSourceStyleSchemeManager, gtk_source_style_scheme_manager, G_TYPE_OBJECT)
 
 static void
 gtk_source_style_scheme_manager_set_property (GObject 	   *object,
@@ -149,30 +155,24 @@ gtk_source_style_scheme_manager_class_init (GtkSourceStyleSchemeManagerClass *kl
 	g_object_class_install_property (object_class,
 					 PROP_SEARCH_PATH,
 					 g_param_spec_boxed ("search-path",
-						 	     _("Style scheme search path"),
-							     _("List of directories and files where the "
-							       "style schemes are located"),
+						 	     "Style scheme search path",
+							     "List of directories and files where the style schemes are located",
 							     G_TYPE_STRV,
 							     G_PARAM_READWRITE));
 
 	g_object_class_install_property (object_class,
 					 PROP_SCHEME_IDS,
 					 g_param_spec_boxed ("scheme-ids",
-						 	     _("Scheme ids"),
-							     _("List of the ids of the available "
-							       "style schemes"),
+						 	     "Scheme ids",
+							     "List of the ids of the available style schemes",
 							     G_TYPE_STRV,
 							     G_PARAM_READABLE));
-
-	g_type_class_add_private (object_class, sizeof(GtkSourceStyleSchemeManagerPrivate));
 }
 
 static void
 gtk_source_style_scheme_manager_init (GtkSourceStyleSchemeManager *mgr)
 {
-	mgr->priv = G_TYPE_INSTANCE_GET_PRIVATE (mgr,
-						 GTK_SOURCE_TYPE_STYLE_SCHEME_MANAGER,
-						 GtkSourceStyleSchemeManagerPrivate);
+	mgr->priv = gtk_source_style_scheme_manager_get_instance_private (mgr);
 	mgr->priv->schemes_hash = NULL;
 	mgr->priv->ids = NULL;
 	mgr->priv->search_path = NULL;
@@ -204,16 +204,20 @@ gtk_source_style_scheme_manager_new (void)
 GtkSourceStyleSchemeManager *
 gtk_source_style_scheme_manager_get_default (void)
 {
-	static GtkSourceStyleSchemeManager *instance;
-
-	if (instance == NULL)
+	if (default_instance == NULL)
 	{
-		instance = gtk_source_style_scheme_manager_new ();
-		g_object_add_weak_pointer (G_OBJECT (instance),
-					   (gpointer) &instance);
+		default_instance = gtk_source_style_scheme_manager_new ();
+		g_object_add_weak_pointer (G_OBJECT (default_instance),
+					   (gpointer) &default_instance);
 	}
 
-	return instance;
+	return default_instance;
+}
+
+GtkSourceStyleSchemeManager *
+_gtk_source_style_scheme_manager_peek_default (void)
+{
+	return default_instance;
 }
 
 static gboolean
@@ -403,7 +407,7 @@ notify_search_path (GtkSourceStyleSchemeManager *mgr)
 /**
  * gtk_source_style_scheme_manager_set_search_path:
  * @manager: a #GtkSourceStyleSchemeManager.
- * @path: (array zero-terminated=1) (allow-none):
+ * @path: (array zero-terminated=1) (nullable):
  * a %NULL-terminated array of strings or %NULL.
  *
  * Sets the list of directories where the @manager looks for
@@ -547,9 +551,9 @@ gtk_source_style_scheme_manager_force_rescan (GtkSourceStyleSchemeManager *manag
  *
  * Returns the ids of the available style schemes.
  *
- * Returns: (array zero-terminated=1) (transfer none): a %NULL-terminated array
- * of string containing the ids of the available style schemes or %NULL if no
- * style scheme is available.
+ * Returns: (nullable) (array zero-terminated=1) (transfer none):
+ * a %NULL-terminated array of strings containing the ids of the available
+ * style schemes or %NULL if no style scheme is available.
  * The array is sorted alphabetically according to the scheme name.
  * The array is owned by the @manager and must not be modified.
  */

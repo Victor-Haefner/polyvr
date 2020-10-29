@@ -20,8 +20,16 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef __GTK_SOURCE_COMPLETION_INFO_H__
-#define __GTK_SOURCE_COMPLETION_INFO_H__
+#ifndef GTK_SOURCE_COMPLETION_INFO_H
+#define GTK_SOURCE_COMPLETION_INFO_H
+
+#if !defined (GTK_SOURCE_H_INSIDE) && !defined (GTK_SOURCE_COMPILATION)
+#  if defined (__GNUC__)
+#    warning "Only <gtksourceview/gtksource.h> can be included directly."
+#  elif defined (G_OS_WIN32)
+#    pragma message("Only <gtksourceview/gtksource.h> can be included directly.")
+#  endif
+#endif
 
 #include <gtk/gtk.h>
 #include "gtksourcetypes.h"
@@ -53,22 +61,29 @@ struct _GtkSourceCompletionInfoClass
 	void	(*before_show)		(GtkSourceCompletionInfo *info);
 };
 
+GTK_SOURCE_AVAILABLE_IN_ALL
 GType		 gtk_source_completion_info_get_type		(void) G_GNUC_CONST;
 
+GTK_SOURCE_AVAILABLE_IN_ALL
 GtkSourceCompletionInfo *
 		 gtk_source_completion_info_new			(void);
 
+GTK_SOURCE_AVAILABLE_IN_ALL
 void		 gtk_source_completion_info_move_to_iter	(GtkSourceCompletionInfo *info,
 								 GtkTextView             *view,
 								 GtkTextIter             *iter);
 
-G_DEPRECATED_FOR (gtk_container_add)
+GTK_SOURCE_DEPRECATED_IN_3_8_FOR (gtk_container_add)
 void		 gtk_source_completion_info_set_widget		(GtkSourceCompletionInfo *info,
 								 GtkWidget               *widget);
 
-G_DEPRECATED_FOR (gtk_bin_get_child)
+GTK_SOURCE_DEPRECATED_IN_3_8_FOR (gtk_bin_get_child)
 GtkWidget	*gtk_source_completion_info_get_widget		(GtkSourceCompletionInfo *info);
+
+G_GNUC_INTERNAL
+void		 _gtk_source_completion_info_set_xoffset	(GtkSourceCompletionInfo *info,
+								 gint                     xoffset);
 
 G_END_DECLS
 
-#endif /* __GTK_SOURCE_COMPLETION_INFO_H__ */
+#endif /* GTK_SOURCE_COMPLETION_INFO_H */

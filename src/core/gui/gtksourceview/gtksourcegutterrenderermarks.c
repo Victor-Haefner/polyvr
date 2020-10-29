@@ -19,6 +19,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include "gtksourcegutterrenderermarks.h"
 #include "gtksourceview.h"
 #include "gtksourcebuffer.h"
@@ -27,20 +31,7 @@
 
 #define COMPOSITE_ALPHA                 225
 
-#define GTK_SOURCE_GUTTER_RENDERER_MARKS_GET_PRIVATE(object)(G_TYPE_INSTANCE_GET_PRIVATE((object), GTK_SOURCE_TYPE_GUTTER_RENDERER_MARKS, GtkSourceGutterRendererMarksPrivate))
-
-struct _GtkSourceGutterRendererMarksPrivate
-{
-	char dummy;
-};
-
 G_DEFINE_TYPE (GtkSourceGutterRendererMarks, gtk_source_gutter_renderer_marks, GTK_SOURCE_TYPE_GUTTER_RENDERER_PIXBUF)
-
-static void
-gtk_source_gutter_renderer_marks_finalize (GObject *object)
-{
-	G_OBJECT_CLASS (gtk_source_gutter_renderer_marks_parent_class)->finalize (object);
-}
 
 static gint
 sort_marks_by_priority (gconstpointer m1,
@@ -176,10 +167,10 @@ composite_marks (GtkSourceView *view,
 }
 
 static void
-gutter_renderer_query_data (GtkSourceGutterRenderer *renderer,
-                            GtkTextIter             *start,
-                            GtkTextIter             *end,
-                            GtkSourceGutterRendererState state)
+gutter_renderer_query_data (GtkSourceGutterRenderer      *renderer,
+			    GtkTextIter                  *start,
+			    GtkTextIter                  *end,
+			    GtkSourceGutterRendererState  state)
 {
 	GSList *marks;
 	GdkPixbuf *pixbuf = NULL;
@@ -205,11 +196,12 @@ gutter_renderer_query_data (GtkSourceGutterRenderer *renderer,
 	g_object_set (G_OBJECT (renderer),
 	              "pixbuf", pixbuf,
 	              "xpad", 2,
-	              "ypad", 1,
 	              "yalign", 0.5,
 	              "xalign", 0.5,
 	              "alignment-mode", GTK_SOURCE_GUTTER_RENDERER_ALIGNMENT_MODE_FIRST,
 	              NULL);
+
+	g_clear_object (&pixbuf);
 }
 
 static gboolean
@@ -217,7 +209,11 @@ set_tooltip_widget_from_marks (GtkSourceView *view,
                                GtkTooltip    *tooltip,
                                GSList        *marks)
 {
-	GtkWidget *vbox = NULL;
+	GtkGrid *grid = NULL;
+	gint row_num = 0;
+	gint icon_size;
+
+	gtk_icon_size_lookup (GTK_ICON_SIZE_MENU, NULL, &icon_size);
 
 	for (; marks; marks = g_slist_next (marks))
 	{
@@ -227,29 +223,23 @@ set_tooltip_widget_from_marks (GtkSourceView *view,
 		gchar *text;
 		gboolean ismarkup = FALSE;
 		GtkWidget *label;
-		GtkWidget *hbox;
 		const GdkPixbuf *pixbuf;
-		gint size;
 
 		mark = marks->data;
 		category = gtk_source_mark_get_category (mark);
 
-		attrs = gtk_source_view_get_mark_attributes (view,
-		                                             category,
-		                                             NULL);
+		attrs = gtk_source_view_get_mark_attributes (view, category, NULL);
 
 		if (attrs == NULL)
 		{
 			continue;
 		}
 
-		text = gtk_source_mark_attributes_get_tooltip_markup (attrs,
-		                                                      mark);
+		text = gtk_source_mark_attributes_get_tooltip_markup (attrs, mark);
 
 		if (text == NULL)
 		{
-			text = gtk_source_mark_attributes_get_tooltip_text (attrs,
-			                                                    mark);
+			text = gtk_source_mark_attributes_get_tooltip_text (attrs, mark);
 		}
 		else
 		{
@@ -261,15 +251,12 @@ set_tooltip_widget_from_marks (GtkSourceView *view,
 			continue;
 		}
 
-		if (vbox == NULL)
+		if (grid == NULL)
 		{
-			vbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
-			gtk_widget_show (vbox);
+			grid = GTK_GRID (gtk_grid_new ());
+			gtk_grid_set_column_spacing (grid, 4);
+			gtk_widget_show (GTK_WIDGET (grid));
 		}
-
-		hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 4);
-		gtk_widget_show (hbox);
-		gtk_box_pack_start (GTK_BOX (vbox), hbox, FALSE, FALSE, 0);
 
 		label = gtk_label_new (NULL);
 
@@ -282,71 +269,39 @@ set_tooltip_widget_from_marks (GtkSourceView *view,
 			gtk_label_set_text (GTK_LABEL (label), text);
 		}
 
-		gtk_misc_set_alignment (GTK_MISC (label), 0, 0);
+		gtk_widget_set_halign (label, GTK_ALIGN_START);
+		gtk_widget_set_valign (label, GTK_ALIGN_START);
 		gtk_widget_show (label);
 
-		gtk_icon_size_lookup (GTK_ICON_SIZE_MENU, NULL, &size);
 		pixbuf = gtk_source_mark_attributes_render_icon (attrs,
 		                                                 GTK_WIDGET (view),
-		                                                 size);
+		                                                 icon_size);
 
-		if (pixbuf != NULL)
+		if (pixbuf == NULL)
+		{
+			gtk_grid_attach (grid, label, 0, row_num, 2, 1);
+		}
+		else
 		{
 			GtkWidget *image;
-			PangoLayoutLine *line;
-			PangoRectangle rect;
-			GtkWidget *align;
 			GdkPixbuf *copy;
 
-			align = gtk_alignment_new (0, 0, 0, 0);
-			gtk_widget_show (align);
-
+			/* FIXME why a copy is needed? */
 			copy = gdk_pixbuf_copy (pixbuf);
 			image = gtk_image_new_from_pixbuf (copy);
 			g_object_unref (copy);
 
-			gtk_misc_set_alignment (GTK_MISC (image), 0, 0);
+			gtk_widget_set_halign (image, GTK_ALIGN_START);
+			gtk_widget_set_valign (image, GTK_ALIGN_START);
 			gtk_widget_show (image);
 
-			/* Measure up to align exact */
-			line = pango_layout_get_line (gtk_label_get_layout (GTK_LABEL (label)), 0);
-			pango_layout_line_get_pixel_extents (line, NULL, &rect);
-
-			gtk_alignment_set_padding (GTK_ALIGNMENT (align),
-				                   (rect.height > size ? rect.height - size : size - rect.height) - 1,
-				                   0, 0, 0);
-			if (rect.height > size)
-			{
-				gtk_container_add (GTK_CONTAINER (align),
-				                   image);
-
-				image = align;
-			}
-			else if (size > rect.height)
-			{
-				gtk_container_add (GTK_CONTAINER (align),
-				                   label);
-				label = align;
-			}
-			else
-			{
-				gtk_widget_destroy (align);
-			}
-
-			gtk_box_pack_start (GTK_BOX (hbox),
-			                    image,
-			                    FALSE,
-			                    FALSE,
-			                    0);
+			gtk_grid_attach (grid, image, 0, row_num, 1, 1);
+			gtk_grid_attach (grid, label, 1, row_num, 1, 1);
 		}
 
-		gtk_box_pack_end (GTK_BOX (hbox),
-		                  label,
-		                  TRUE,
-		                  TRUE,
-		                  0);
+		row_num++;
 
-		if (g_slist_length (marks) != 1)
+		if (marks->next != NULL)
 		{
 			GtkWidget *separator;
 
@@ -354,22 +309,19 @@ set_tooltip_widget_from_marks (GtkSourceView *view,
 
 			gtk_widget_show (separator);
 
-			gtk_box_pack_start (GTK_BOX (vbox),
-			                    separator,
-			                    FALSE,
-			                    FALSE,
-			                    0);
+			gtk_grid_attach (grid, separator, 0, row_num, 2, 1);
+			row_num++;
 		}
 
 		g_free (text);
 	}
 
-	if (vbox == NULL)
+	if (grid == NULL)
 	{
 		return FALSE;
 	}
 
-	gtk_tooltip_set_custom (tooltip, vbox);
+	gtk_tooltip_set_custom (tooltip, GTK_WIDGET (grid));
 
 	return TRUE;
 }
@@ -385,6 +337,7 @@ gutter_renderer_query_tooltip (GtkSourceGutterRenderer *renderer,
 	GSList *marks;
 	GtkSourceView *view;
 	GtkSourceBuffer *buffer;
+	gboolean ret;
 
 	view = GTK_SOURCE_VIEW (gtk_source_gutter_renderer_get_view (renderer));
 	buffer = GTK_SOURCE_BUFFER (gtk_text_view_get_buffer (GTK_TEXT_VIEW (view)));
@@ -401,7 +354,11 @@ gutter_renderer_query_tooltip (GtkSourceGutterRenderer *renderer,
 
 		marks = g_slist_reverse (marks);
 
-		return set_tooltip_widget_from_marks (view, tooltip, marks);
+		ret = set_tooltip_widget_from_marks (view, tooltip, marks);
+
+		g_slist_free (marks);
+
+		return ret;
 	}
 
 	return FALSE;
@@ -429,32 +386,32 @@ gutter_renderer_change_view (GtkSourceGutterRenderer *renderer,
 		gtk_source_gutter_renderer_set_size (renderer,
 		                                     measure_line_height (view));
 	}
+
+	if (GTK_SOURCE_GUTTER_RENDERER_CLASS (gtk_source_gutter_renderer_marks_parent_class)->change_view != NULL)
+	{
+		GTK_SOURCE_GUTTER_RENDERER_CLASS (gtk_source_gutter_renderer_marks_parent_class)->change_view (renderer,
+													       old_view);
+	}
 }
 
 static void
 gtk_source_gutter_renderer_marks_class_init (GtkSourceGutterRendererMarksClass *klass)
 {
-	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 	GtkSourceGutterRendererClass *renderer_class = GTK_SOURCE_GUTTER_RENDERER_CLASS (klass);
-
-	object_class->finalize = gtk_source_gutter_renderer_marks_finalize;
 
 	renderer_class->query_data = gutter_renderer_query_data;
 	renderer_class->query_tooltip = gutter_renderer_query_tooltip;
 	renderer_class->query_activatable = gutter_renderer_query_activatable;
 	renderer_class->change_view = gutter_renderer_change_view;
-
-	/*g_type_class_add_private (object_class, sizeof (GtkSourceGutterRendererMarksPrivate));*/
 }
 
 static void
 gtk_source_gutter_renderer_marks_init (GtkSourceGutterRendererMarks *self)
 {
-	/*self->priv = GTK_SOURCE_GUTTER_RENDERER_MARKS_GET_PRIVATE (self);*/
 }
 
 GtkSourceGutterRenderer *
-gtk_source_gutter_renderer_marks_new ()
+gtk_source_gutter_renderer_marks_new (void)
 {
 	return g_object_new (GTK_SOURCE_TYPE_GUTTER_RENDERER_MARKS, NULL);
 }

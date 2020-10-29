@@ -55,7 +55,7 @@
 #define PARSER_ERROR (parser_error_quark ())
 #define ATTR_NO_STYLE ""
 
-typedef enum {
+typedef enum _ParserError {
 	PARSER_ERROR_CANNOT_OPEN     = 0,
 	PARSER_ERROR_CANNOT_VALIDATE,
 	PARSER_ERROR_INVALID_DOC,
@@ -947,7 +947,7 @@ replace_by_id (const GMatchInfo *match_info,
 	if (subst == NULL)
 		g_set_error (&tmp_error,
 			     PARSER_ERROR, PARSER_ERROR_WRONG_ID,
-			     _("Unknown id '%s' in regex '%s'"), id,
+			     _("Unknown id “%s” in regex “%s”"), id,
 			     g_match_info_get_string (match_info));
 
 	if (tmp_error == NULL)
@@ -1090,6 +1090,8 @@ replace_delimiter (const GMatchInfo *match_info,
 			g_string_append (expanded_regex,
 					parser_state->closing_delimiter);
 			break;
+		default:
+			break;
 	}
 
 	g_free (delim);
@@ -1100,13 +1102,13 @@ replace_delimiter (const GMatchInfo *match_info,
 
 static gchar *
 expand_regex_delimiters (ParserState *parser_state,
-		gchar *regex,
-		gint len)
+			 gchar       *regex,
+			 gint         len)
 {
 	/* This is the commented regex without the doubled escape needed
 	 * in a C string:
 	 *
-	 * (?<!\\)(\\\\)*\\%([\[|\])
+	 * (?<!\\)(\\\\)*\\%(\[|\])
 	 * |------------||---------|
 	 *      |             |
 	 *      |        the strings
@@ -1175,7 +1177,7 @@ expand_regex (ParserState *parser_state,
 		if (g_regex_get_max_backref (compiled) > 0)
 		{
 			g_set_error (error, PARSER_ERROR, PARSER_ERROR_MALFORMED_REGEX,
-				     _("in regex '%s': backreferences are not supported"),
+				     _("in regex “%s”: backreferences are not supported"),
 				     regex);
 			g_regex_unref (compiled);
 			return NULL;
@@ -1484,7 +1486,7 @@ handle_keyword_char_class_element (ParserState *parser_state)
 	g_free (parser_state->opening_delimiter);
 	g_free (parser_state->closing_delimiter);
 
-	parser_state->opening_delimiter = g_strdup_printf ("(?!<%s)(?=%s)",
+	parser_state->opening_delimiter = g_strdup_printf ("(?<!%s)(?=%s)",
 							   char_class, char_class);
 	parser_state->closing_delimiter = g_strdup_printf ("(?<=%s)(?!%s)",
 							   char_class, char_class);
@@ -1678,6 +1680,8 @@ file_parse (gchar                     *filename,
 			case XML_READER_TYPE_END_ELEMENT:
 				element_end (parser_state);
 				break;
+			default:
+				break;
 		}
 	}
 
@@ -1751,8 +1755,7 @@ parser_state_destroy (ParserState *parser_state)
 	if (parser_state->reader != NULL)
 		xmlFreeTextReader (parser_state->reader);
 
-	if (parser_state->error != NULL)
-		g_error_free (parser_state->error);
+	g_clear_error (&parser_state->error);
 
 	g_queue_free (parser_state->curr_parents);
 	g_free (parser_state->current_lang_id);
@@ -1833,7 +1836,7 @@ _gtk_source_language_file_parse_version2 (GtkSourceLanguage       *language,
 	{
 		g_warning ("Failed to load '%s': %s",
 			   filename, error->message);
-		g_error_free (error);
+		g_clear_error (&error);
 		return FALSE;
 	}
 

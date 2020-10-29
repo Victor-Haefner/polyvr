@@ -19,15 +19,23 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef __GTK_SOURCE_COMPLETION_WORDS_H__
-#define __GTK_SOURCE_COMPLETION_WORDS_H__
+#ifndef GTK_SOURCE_COMPLETION_WORDS_H
+#define GTK_SOURCE_COMPLETION_WORDS_H
+
+#if !defined (GTK_SOURCE_H_INSIDE) && !defined (GTK_SOURCE_COMPILATION)
+#  if defined (__GNUC__)
+#    warning "Only <gtksourceview/gtksource.h> can be included directly."
+#  elif defined (G_OS_WIN32)
+#    pragma message("Only <gtksourceview/gtksource.h> can be included directly.")
+#  endif
+#endif
 
 #include "../../gtksourcecompletionprovider.h"
 #include <gtk/gtk.h>
 
 G_BEGIN_DECLS
 
-#define GTK_SOURCE_TYPE_COMPLETION_WORDS				(gtk_source_completion_words_get_type ())
+#define GTK_SOURCE_TYPE_COMPLETION_WORDS		(gtk_source_completion_words_get_type ())
 #define GTK_SOURCE_COMPLETION_WORDS(obj)		(G_TYPE_CHECK_INSTANCE_CAST ((obj), GTK_SOURCE_TYPE_COMPLETION_WORDS, GtkSourceCompletionWords))
 #define GTK_SOURCE_COMPLETION_WORDS_CLASS(klass)	(G_TYPE_CHECK_CLASS_CAST ((klass), GTK_SOURCE_TYPE_COMPLETION_WORDS, GtkSourceCompletionWordsClass))
 #define GTK_SOURCE_IS_COMPLETION_WORDS(obj)		(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GTK_SOURCE_TYPE_COMPLETION_WORDS))
@@ -48,18 +56,22 @@ struct _GtkSourceCompletionWordsClass {
 	GObjectClass parent_class;
 };
 
-GType gtk_source_completion_words_get_type (void) G_GNUC_CONST;
+GTK_SOURCE_AVAILABLE_IN_ALL
+GType		gtk_source_completion_words_get_type	(void) G_GNUC_CONST;
 
+GTK_SOURCE_AVAILABLE_IN_ALL
 GtkSourceCompletionWords *
 		gtk_source_completion_words_new 	(const gchar              *name,
 		                                         GdkPixbuf                *icon);
 
+GTK_SOURCE_AVAILABLE_IN_ALL
 void 		gtk_source_completion_words_register 	(GtkSourceCompletionWords *words,
                                                          GtkTextBuffer            *buffer);
 
+GTK_SOURCE_AVAILABLE_IN_ALL
 void 		gtk_source_completion_words_unregister 	(GtkSourceCompletionWords *words,
                                                          GtkTextBuffer            *buffer);
 
 G_END_DECLS
 
-#endif /* __GTK_SOURCE_COMPLETION_WORDS_H__ */
+#endif /* GTK_SOURCE_COMPLETION_WORDS_H */

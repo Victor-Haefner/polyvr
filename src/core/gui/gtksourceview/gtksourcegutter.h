@@ -19,9 +19,16 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#ifndef GTK_SOURCE_GUTTER_H
+#define GTK_SOURCE_GUTTER_H
 
-#ifndef __GTK_SOURCE_GUTTER_H__
-#define __GTK_SOURCE_GUTTER_H__
+#if !defined (GTK_SOURCE_H_INSIDE) && !defined (GTK_SOURCE_COMPILATION)
+#  if defined (__GNUC__)
+#    warning "Only <gtksourceview/gtksource.h> can be included directly."
+#  elif defined (G_OS_WIN32)
+#    pragma message("Only <gtksourceview/gtksource.h> can be included directly.")
+#  endif
+#endif
 
 #include <gtk/gtk.h>
 #include "gtksourcetypes.h"
@@ -50,31 +57,48 @@ struct _GtkSourceGutterClass
 	GObjectClass parent_class;
 };
 
+GTK_SOURCE_AVAILABLE_IN_ALL
 GType gtk_source_gutter_get_type 		(void) G_GNUC_CONST;
 
+GTK_SOURCE_AVAILABLE_IN_3_24
+GtkSourceView *
+     gtk_source_gutter_get_view			(GtkSourceGutter         *gutter);
+
+GTK_SOURCE_AVAILABLE_IN_3_24
+GtkTextWindowType
+     gtk_source_gutter_get_window_type		(GtkSourceGutter         *gutter);
+
+GTK_SOURCE_DEPRECATED_IN_3_10_FOR (gtk_text_view_get_window)
 GdkWindow *gtk_source_gutter_get_window 	(GtkSourceGutter         *gutter);
 
+GTK_SOURCE_AVAILABLE_IN_ALL
 gboolean gtk_source_gutter_insert               (GtkSourceGutter         *gutter,
                                                  GtkSourceGutterRenderer *renderer,
                                                  gint                     position);
 
+GTK_SOURCE_AVAILABLE_IN_ALL
 void gtk_source_gutter_reorder			(GtkSourceGutter	 *gutter,
                                                  GtkSourceGutterRenderer *renderer,
                                                  gint                     position);
 
+GTK_SOURCE_AVAILABLE_IN_ALL
 void gtk_source_gutter_remove			(GtkSourceGutter         *gutter,
                                                  GtkSourceGutterRenderer *renderer);
 
+GTK_SOURCE_AVAILABLE_IN_ALL
 void gtk_source_gutter_queue_draw		(GtkSourceGutter         *gutter);
 
+GTK_SOURCE_DEPRECATED_IN_3_12_FOR (gtk_source_gutter_renderer_set_padding)
 void gtk_source_gutter_set_padding              (GtkSourceGutter         *gutter,
                                                  gint                     xpad,
                                                  gint                     ypad);
 
+GTK_SOURCE_DEPRECATED_IN_3_12_FOR (gtk_source_gutter_renderer_get_padding)
 void gtk_source_gutter_get_padding              (GtkSourceGutter         *gutter,
                                                  gint                    *xpad,
                                                  gint                    *ypad);
 
+GTK_SOURCE_AVAILABLE_IN_ALL
 GtkSourceGutterRenderer *
      gtk_source_gutter_get_renderer_at_pos      (GtkSourceGutter         *gutter,
                                                  gint                     x,
@@ -82,6 +106,4 @@ GtkSourceGutterRenderer *
 
 G_END_DECLS
 
-#endif /* __GTK_SOURCE_GUTTER_H__ */
-
-/* vi:ts=8 */
+#endif /* GTK_SOURCE_GUTTER_H */

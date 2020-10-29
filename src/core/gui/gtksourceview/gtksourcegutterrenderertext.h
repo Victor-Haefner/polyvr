@@ -19,8 +19,16 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef __GTK_SOURCE_GUTTER_RENDERER_TEXT_H__
-#define __GTK_SOURCE_GUTTER_RENDERER_TEXT_H__
+#ifndef GTK_SOURCE_GUTTER_RENDERER_TEXT_H
+#define GTK_SOURCE_GUTTER_RENDERER_TEXT_H
+
+#if !defined (GTK_SOURCE_H_INSIDE) && !defined (GTK_SOURCE_COMPILATION)
+#  if defined (__GNUC__)
+#    warning "Only <gtksourceview/gtksource.h> can be included directly."
+#  elif defined (G_OS_WIN32)
+#    pragma message("Only <gtksourceview/gtksource.h> can be included directly.")
+#  endif
+#endif
 
 #include "gtksourcetypes.h"
 #include "gtksourcegutterrenderer.h"
@@ -56,23 +64,29 @@ struct _GtkSourceGutterRendererTextClass
 	/*< public >*/
 };
 
+GTK_SOURCE_AVAILABLE_IN_ALL
 GType gtk_source_gutter_renderer_text_get_type (void) G_GNUC_CONST;
 
+GTK_SOURCE_AVAILABLE_IN_ALL
 GtkSourceGutterRenderer *gtk_source_gutter_renderer_text_new (void);
 
+GTK_SOURCE_AVAILABLE_IN_ALL
 void gtk_source_gutter_renderer_text_set_markup (GtkSourceGutterRendererText *renderer,
                                                  const gchar                 *markup,
                                                  gint                         length);
 
+GTK_SOURCE_AVAILABLE_IN_ALL
 void gtk_source_gutter_renderer_text_set_text (GtkSourceGutterRendererText *renderer,
                                                const gchar                 *text,
                                                gint                         length);
 
+GTK_SOURCE_AVAILABLE_IN_ALL
 void gtk_source_gutter_renderer_text_measure (GtkSourceGutterRendererText *renderer,
                                               const gchar                 *text,
                                               gint                        *width,
                                               gint                        *height);
 
+GTK_SOURCE_AVAILABLE_IN_ALL
 void gtk_source_gutter_renderer_text_measure_markup (GtkSourceGutterRendererText *renderer,
                                                      const gchar                 *markup,
                                                      gint                        *width,
@@ -80,4 +94,4 @@ void gtk_source_gutter_renderer_text_measure_markup (GtkSourceGutterRendererText
 
 G_END_DECLS
 
-#endif /* __GTK_SOURCE_GUTTER_RENDERER_TEXT_H__ */
+#endif /* GTK_SOURCE_GUTTER_RENDERER_TEXT_H */

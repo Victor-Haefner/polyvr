@@ -1,55 +1,39 @@
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8; coding: utf-8 -*-
+ *
+ * This file is part of GtkSourceView
+ *
+ * Copyright (C) 2016 - Sébastien Wilmet <swilmet@gnome.org>
+ *
+ * GtkSourceView is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * GtkSourceView is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ */
 
+/* Deprecated: 3.22: This header is deprecated. For internal GtkSourceView code,
+ * include gtksourceview-enumtypes.h. For external code, include gtksource.h.
+ */
 
+#ifndef GTK_SOURCE_VIEW_TYPE_BUILTINS_H
+#define GTK_SOURCE_VIEW_TYPE_BUILTINS_H
 
-#ifndef __GTKSOURCEVIEW_TYPEBUILTINS_H__
-#define __GTKSOURCEVIEW_TYPEBUILTINS_H__
+#if !defined (GTK_SOURCE_H_INSIDE) && !defined (GTK_SOURCE_COMPILATION)
+#  if defined (__GNUC__)
+#    warning "Only <gtksourceview/gtksource.h> can be included directly."
+#  elif defined (G_OS_WIN32)
+#    pragma message("Only <gtksourceview/gtksource.h> can be included directly.")
+#  endif
+#endif
 
-#include "gtksourcebuffer.h"
-G_BEGIN_DECLS
-#define GTK_SOURCE_TYPE_BRACKET_MATCH_TYPE gtk_source_bracket_match_type_get_type()
-GType gtk_source_bracket_match_type_get_type (void);
-G_END_DECLS
+#include "gtksourceview-enumtypes.h"
 
-#include "gtksourcecompletioncontext.h"
-G_BEGIN_DECLS
-#define GTK_SOURCE_TYPE_COMPLETION_ACTIVATION gtk_source_completion_activation_get_type()
-GType gtk_source_completion_activation_get_type (void);
-G_END_DECLS
-
-#include "gtksourcecompletion.h"
-G_BEGIN_DECLS
-#define GTK_SOURCE_TYPE_COMPLETION_ERROR gtk_source_completion_error_get_type()
-GType gtk_source_completion_error_get_type (void);
-G_END_DECLS
-
-#include "gtksourcegutterrenderer.h"
-G_BEGIN_DECLS
-#define GTK_SOURCE_TYPE_GUTTER_RENDERER_STATE gtk_source_gutter_renderer_state_get_type()
-GType gtk_source_gutter_renderer_state_get_type (void);
-G_END_DECLS
-
-G_BEGIN_DECLS
-#define GTK_SOURCE_TYPE_GUTTER_RENDERER_ALIGNMENT_MODE gtk_source_gutter_renderer_alignment_mode_get_type()
-GType gtk_source_gutter_renderer_alignment_mode_get_type (void);
-G_END_DECLS
-
-#include "gtksourceview.h"
-G_BEGIN_DECLS
-#define GTK_SOURCE_TYPE_VIEW_GUTTER_POSITION gtk_source_view_gutter_position_get_type()
-GType gtk_source_view_gutter_position_get_type (void);
-G_END_DECLS
-
-G_BEGIN_DECLS
-#define GTK_SOURCE_TYPE_SMART_HOME_END_TYPE gtk_source_smart_home_end_type_get_type()
-GType gtk_source_smart_home_end_type_get_type (void);
-G_END_DECLS
-
-G_BEGIN_DECLS
-#define GTK_SOURCE_TYPE_DRAW_SPACES_FLAGS gtk_source_draw_spaces_flags_get_type()
-GType gtk_source_draw_spaces_flags_get_type (void);
-G_END_DECLS
-
-#endif /* __GTKSOURCEVIEW_TYPEBUILTINS_H__ */
-
-
-
+#endif /* GTK_SOURCE_VIEW_TYPE_BUILTINS_H */

@@ -17,9 +17,12 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef __GTK_SOURCE_H__
-#define __GTK_SOURCE_H__
+#ifndef GTK_SOURCE_H
+#define GTK_SOURCE_H
 
+#define GTK_SOURCE_H_INSIDE
+
+#include "completion-providers/words/gtksourcecompletionwords.h"
 #include "gtksourcetypes.h"
 #include "gtksourcebuffer.h"
 #include "gtksourcecompletioncontext.h"
@@ -28,19 +31,39 @@
 #include "gtksourcecompletionitem.h"
 #include "gtksourcecompletionproposal.h"
 #include "gtksourcecompletionprovider.h"
+#include "gtksourceencoding.h"
+#include "gtksourcefile.h"
+#include "gtksourcefileloader.h"
+#include "gtksourcefilesaver.h"
 #include "gtksourcegutter.h"
 #include "gtksourcegutterrenderer.h"
 #include "gtksourcegutterrenderertext.h"
 #include "gtksourcegutterrendererpixbuf.h"
 #include "gtksourcelanguage.h"
 #include "gtksourcelanguagemanager.h"
+#include "gtksourcemap.h"
 #include "gtksourcemark.h"
 #include "gtksourcemarkattributes.h"
 #include "gtksourceprintcompositor.h"
+#include "gtksourceregion.h"
+#include "gtksourcesearchcontext.h"
+#include "gtksourcesearchsettings.h"
+#include "gtksourcespacedrawer.h"
 #include "gtksourcestyle.h"
 #include "gtksourcestylescheme.h"
+#include "gtksourcestyleschemechooser.h"
+#include "gtksourcestyleschemechooserbutton.h"
+#include "gtksourcestyleschemechooserwidget.h"
 #include "gtksourcestyleschememanager.h"
+#include "gtksourcetag.h"
 #include "gtksourceundomanager.h"
+#include "gtksourceutils.h"
+#include "gtksourceversion.h"
 #include "gtksourceview.h"
+#include "gtksourceview-enumtypes.h"
+#include "gtksourceview-typebuiltins.h"
+#include "gtksourceautocleanups.h"
 
-#endif /* __GTK_SOURCE_H__ */
+#undef GTK_SOURCE_H_INSIDE
+
+#endif /* GTK_SOURCE_H */

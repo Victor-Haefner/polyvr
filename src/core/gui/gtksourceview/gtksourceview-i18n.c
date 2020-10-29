@@ -23,17 +23,46 @@
 #include <config.h>
 #endif
 
-#ifdef OS_OSX
-#include <gtkosxapplication.h>
-#endif
-
 #include <string.h>
 
 #include "gtksourceview-i18n.h"
 
-char *
-_gtksourceview_dgettext (const char *domain,
-                         const char *string)
+/**
+ * _gtksourceview_dgettext:
+ *
+ * Try to translate string from given domain. It returns
+ * duplicated string which must be freed with g_free().
+ */
+gchar *
+_gtksourceview_dgettext (const gchar *domain,
+                         const gchar *string)
 {
+#ifdef ENABLE_NLS
+	const gchar *translated;
+	gchar *tmp;
+
+	g_return_val_if_fail (string != NULL, NULL);
+
+	if (domain == NULL)
+	{
+		return g_strdup (_(string));
+	}
+
+	translated = dgettext (domain, string);
+
+	if (g_strcmp0 (translated, string) == 0)
+	{
+		return g_strdup (_(string));
+	}
+
+	if (g_utf8_validate (translated, -1, NULL))
+	{
+		return g_strdup (translated);
+	}
+
+	tmp = g_locale_to_utf8 (translated, -1, NULL, NULL, NULL);
+	return tmp != NULL ? tmp : g_strdup (string);
+#else
 	return g_strdup (string);
+#endif
 }

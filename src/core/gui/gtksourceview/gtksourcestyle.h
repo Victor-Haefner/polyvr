@@ -19,23 +19,41 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef __GTK_SOURCE_STYLE_H__
-#define __GTK_SOURCE_STYLE_H__
+#ifndef GTK_SOURCE_STYLE_H
+#define GTK_SOURCE_STYLE_H
 
-#include <glib-object.h>
+#if !defined (GTK_SOURCE_H_INSIDE) && !defined (GTK_SOURCE_COMPILATION)
+#  if defined (__GNUC__)
+#    warning "Only <gtksourceview/gtksource.h> can be included directly."
+#  elif defined (G_OS_WIN32)
+#    pragma message("Only <gtksourceview/gtksource.h> can be included directly.")
+#  endif
+#endif
+
+#include <gtk/gtk.h>
 #include "gtksourcetypes.h"
 
 G_BEGIN_DECLS
 
-#define GTK_SOURCE_TYPE_STYLE		(gtk_source_style_get_type ())
-#define GTK_SOURCE_STYLE(obj)		(G_TYPE_CHECK_INSTANCE_CAST ((obj), GTK_SOURCE_TYPE_STYLE, GtkSourceStyle))
-#define GTK_SOURCE_IS_STYLE(obj)	(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GTK_SOURCE_TYPE_STYLE))
+#define GTK_SOURCE_TYPE_STYLE             (gtk_source_style_get_type ())
+#define GTK_SOURCE_STYLE(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), GTK_SOURCE_TYPE_STYLE, GtkSourceStyle))
+#define GTK_SOURCE_IS_STYLE(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GTK_SOURCE_TYPE_STYLE))
+#define GTK_SOURCE_STYLE_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), GTK_SOURCE_TYPE_STYLE, GtkSourceStyleClass))
+#define GTK_SOURCE_IS_STYLE_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), GTK_SOURCE_TYPE_STYLE))
+#define GTK_SOURCE_STYLE_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS ((obj), GTK_SOURCE_TYPE_STYLE, GtkSourceStyleClass))
 
+typedef struct _GtkSourceStyleClass GtkSourceStyleClass;
+
+GTK_SOURCE_AVAILABLE_IN_ALL
 GType		 gtk_source_style_get_type	(void) G_GNUC_CONST;
 
+GTK_SOURCE_AVAILABLE_IN_ALL
 GtkSourceStyle	*gtk_source_style_copy		(const GtkSourceStyle *style);
 
+GTK_SOURCE_AVAILABLE_IN_3_22
+void		 gtk_source_style_apply		(const GtkSourceStyle *style,
+						 GtkTextTag           *tag);
 
 G_END_DECLS
 
-#endif  /* __GTK_SOURCE_STYLE_H__ */
+#endif  /* GTK_SOURCE_STYLE_H */

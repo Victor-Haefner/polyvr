@@ -27,39 +27,122 @@
 #include <config.h>
 #endif
 
+#include "gtksourcebuffer.h"
+#include "gtksourcebuffer-private.h"
+
 #include <string.h>
+#include <stdlib.h>
 #include <gtk/gtk.h>
 
-#include "gtksourceview-i18n.h"
 #include "gtksourcelanguage.h"
 #include "gtksourcelanguage-private.h"
-#include "gtksourcebuffer.h"
 #include "gtksourceundomanager.h"
-#include "gtksourceview-marshal.h"
+#include "gtksourceundomanagerdefault.h"
+#include "gtksourcestyle.h"
 #include "gtksourcestylescheme.h"
 #include "gtksourcestyleschememanager.h"
-#include "gtksourcestyle-private.h"
-#include "gtksourceundomanagerdefault.h"
-#include "gtksourceview-typebuiltins.h"
 #include "gtksourcemark.h"
+#include "gtksourcemarkssequence.h"
+#include "gtksourcesearchcontext.h"
+#include "gtksourcetag.h"
+#include "gtksourceview-i18n.h"
+#include "gtksourceview-enumtypes.h"
 
 /**
  * SECTION:buffer
- * @Short_description: Buffer object for #GtkSourceView
+ * @Short_description: Stores the text for display in a GtkSourceView
  * @Title: GtkSourceBuffer
- * @See_also: #GtkTextBuffer,#GtkSourceView
+ * @See_also: #GtkTextBuffer, #GtkSourceView
  *
- * The #GtkSourceBuffer object is the model for #GtkSourceView widgets.
- * It extends the #GtkTextBuffer object by adding features useful to display
- * and edit source code as syntax highlighting and bracket matching. It
- * also implements support for undo/redo operations.
+ * A #GtkSourceBuffer object is the model for #GtkSourceView widgets.
+ * It extends the #GtkTextBuffer class by adding features useful to display
+ * and edit source code such as syntax highlighting and bracket matching. It
+ * also implements support for the undo/redo.
  *
  * To create a #GtkSourceBuffer use gtk_source_buffer_new() or
  * gtk_source_buffer_new_with_language(). The second form is just a convenience
- * function which allows you to initially set a #GtkSourceLanguage.
+ * function which allows you to initially set a #GtkSourceLanguage. You can also
+ * directly create a #GtkSourceView and get its #GtkSourceBuffer with
+ * gtk_text_view_get_buffer().
  *
- * By default highlighting is enabled, but you can disable it with
+ * The highlighting is enabled by default, but you can disable it with
  * gtk_source_buffer_set_highlight_syntax().
+ *
+ * # Undo/Redo
+ *
+ * A custom #GtkSourceUndoManager can be implemented and set with
+ * gtk_source_buffer_set_undo_manager(). However the default implementation
+ * should be suitable for most uses, so you can use the API provided by
+ * #GtkSourceBuffer instead of using #GtkSourceUndoManager. By default, actions
+ * that can be undone or redone are defined as groups of operations between a
+ * call to gtk_text_buffer_begin_user_action() and
+ * gtk_text_buffer_end_user_action(). In general, this happens whenever the user
+ * presses any key which modifies the buffer. But the default undo manager will
+ * try to merge similar consecutive actions into one undo/redo level. The
+ * merging is done word by word, so after writing a new sentence (character by
+ * character), each undo will remove the previous word.
+ *
+ * The default undo manager remembers the "modified" state of the buffer, and
+ * restores it when an action is undone or redone. It can be useful in a text
+ * editor to know whether the file is saved. See gtk_text_buffer_get_modified()
+ * and gtk_text_buffer_set_modified().
+ *
+ * The default undo manager also restores the selected text (or cursor
+ * position), if the selection was related to the action. For example if the
+ * user selects some text and deletes it, an undo will restore the selection. On
+ * the other hand, if some text is selected but a deletion occurs elsewhere (the
+ * deletion was done programmatically), an undo will not restore the selection,
+ * it will only moves the cursor (the cursor is moved so that the user sees the
+ * undo's effect). Warning: the selection restoring behavior might change in the
+ * future.
+ *
+ * # Context Classes # {#context-classes}
+ *
+ * It is possible to retrieve some information from the syntax highlighting
+ * engine. The default context classes that are applied to regions of a
+ * #GtkSourceBuffer:
+ *  - <emphasis>comment</emphasis>: the region delimits a comment;
+ *  - <emphasis>no-spell-check</emphasis>: the region should not be spell checked;
+ *  - <emphasis>path</emphasis>: the region delimits a path to a file;
+ *  - <emphasis>string</emphasis>: the region delimits a string.
+ *
+ * Custom language definition files can create their own context classes,
+ * since the functions like gtk_source_buffer_iter_has_context_class() take
+ * a string parameter as the context class.
+ *
+ * #GtkSourceBuffer provides an API to access the context classes:
+ * gtk_source_buffer_iter_has_context_class(),
+ * gtk_source_buffer_get_context_classes_at_iter(),
+ * gtk_source_buffer_iter_forward_to_context_class_toggle() and
+ * gtk_source_buffer_iter_backward_to_context_class_toggle().
+ *
+ * And the #GtkSourceBuffer::highlight-updated signal permits to be notified
+ * when a context class region changes.
+ *
+ * Each context class has also an associated #GtkTextTag with the name
+ * <emphasis>gtksourceview:context-classes:&lt;name&gt;</emphasis>. For example to
+ * retrieve the #GtkTextTag for the string context class, one can write:
+ * |[
+ * GtkTextTagTable *tag_table;
+ * GtkTextTag *tag;
+ *
+ * tag_table = gtk_text_buffer_get_tag_table (buffer);
+ * tag = gtk_text_tag_table_lookup (tag_table, "gtksourceview:context-classes:string");
+ * ]|
+ *
+ * The tag must be used for read-only purposes.
+ *
+ * Accessing a context class via the associated #GtkTextTag is less
+ * convenient than the #GtkSourceBuffer API, because:
+ *  - The tag doesn't always exist, you need to listen to the
+ *    #GtkTextTagTable::tag-added and #GtkTextTagTable::tag-removed signals.
+ *  - Instead of the #GtkSourceBuffer::highlight-updated signal, you can listen
+ *    to the #GtkTextBuffer::apply-tag and #GtkTextBuffer::remove-tag signals.
+ *
+ * A possible use-case for accessing a context class via the associated
+ * #GtkTextTag is to read the region but without adding a hard dependency on the
+ * GtkSourceView library (for example for a spell-checking library that wants to
+ * read the no-spell-check region).
  */
 
 /*
@@ -81,22 +164,22 @@
 #define PROFILE(x)
 #endif
 
-#define MAX_CHARS_BEFORE_FINDING_A_MATCH    10000
+#define UPDATE_BRACKET_DELAY		50
+#define BRACKET_MATCHING_CHARS_LIMIT	10000
+#define CONTEXT_CLASSES_PREFIX		"gtksourceview:context-classes:"
 
-#define TAG_CONTEXT_CLASS_NAME "GtkSourceViewTagContextClassName"
-
-/* Signals */
-enum {
+enum
+{
 	HIGHLIGHT_UPDATED,
 	SOURCE_MARK_UPDATED,
 	UNDO,
 	REDO,
 	BRACKET_MATCHED,
-	LAST_SIGNAL
+	N_SIGNALS
 };
 
-/* Properties */
-enum {
+enum
+{
 	PROP_0,
 	PROP_CAN_UNDO,
 	PROP_CAN_REDO,
@@ -105,37 +188,46 @@ enum {
 	PROP_MAX_UNDO_LEVELS,
 	PROP_LANGUAGE,
 	PROP_STYLE_SCHEME,
-	PROP_UNDO_MANAGER
+	PROP_UNDO_MANAGER,
+	PROP_IMPLICIT_TRAILING_NEWLINE,
+	N_PROPERTIES
 };
 
 struct _GtkSourceBufferPrivate
 {
-	GtkTextTag            *bracket_match_tag;
-	GtkTextMark           *bracket_mark_cursor;
-	GtkTextMark           *bracket_mark_match;
-	GtkSourceBracketMatchType bracket_match;
+	GtkTextTag *bracket_match_tag;
+	GtkSourceBracketMatchType bracket_match_state;
+	guint bracket_highlighting_timeout_id;
 
-	GArray                *source_marks;
+	/* Hash table: category -> MarksSequence */
+	GHashTable *source_marks;
+	GtkSourceMarksSequence *all_source_marks;
 
-	GtkSourceLanguage     *language;
+	GtkSourceStyleScheme *style_scheme;
+	GtkSourceLanguage *language;
+	GtkSourceEngine *highlight_engine;
 
-	GtkSourceEngine       *highlight_engine;
-	GtkSourceStyleScheme  *style_scheme;
+	GtkSourceUndoManager *undo_manager;
+	gint max_undo_levels;
 
-	GtkSourceUndoManager  *undo_manager;
-	gint                   max_undo_levels;
+	GtkTextMark *tmp_insert_mark;
+	GtkTextMark *tmp_selection_bound_mark;
 
-	guint                  highlight_syntax : 1;
-	guint                  highlight_brackets : 1;
-	guint                  constructed : 1;
-	guint                  allow_bracket_match : 1;
+	GList *search_contexts;
+
+	GtkTextTag *invalid_char_tag;
+
+	guint highlight_syntax : 1;
+	guint highlight_brackets : 1;
+	guint implicit_trailing_newline : 1;
 };
 
-G_DEFINE_TYPE (GtkSourceBuffer, gtk_source_buffer, GTK_TYPE_TEXT_BUFFER)
+static guint buffer_signals[N_SIGNALS];
+static GParamSpec *buffer_properties[N_PROPERTIES];
 
-static guint 	 buffer_signals[LAST_SIGNAL];
+G_DEFINE_TYPE_WITH_PRIVATE (GtkSourceBuffer, gtk_source_buffer, GTK_TYPE_TEXT_BUFFER)
 
-static void 	 gtk_source_buffer_finalize		(GObject                 *object);
+/* Prototypes */
 static void 	 gtk_source_buffer_dispose		(GObject                 *object);
 static void      gtk_source_buffer_set_property         (GObject                 *object,
 							 guint                    prop_id,
@@ -156,7 +248,8 @@ static void 	 gtk_source_buffer_real_insert_text 	(GtkTextBuffer           *buff
 static void	 gtk_source_buffer_real_insert_pixbuf	(GtkTextBuffer           *buffer,
 							 GtkTextIter             *pos,
 							 GdkPixbuf               *pixbuf);
-static void	 gtk_source_buffer_real_insert_anchor	(GtkTextBuffer           *buffer,
+static void	 gtk_source_buffer_real_insert_child_anchor
+							(GtkTextBuffer           *buffer,
 							 GtkTextIter             *pos,
 							 GtkTextChildAnchor      *anchor);
 static void 	 gtk_source_buffer_real_delete_range 	(GtkTextBuffer           *buffer,
@@ -166,28 +259,21 @@ static void 	 gtk_source_buffer_real_mark_set	(GtkTextBuffer		 *buffer,
 							 const GtkTextIter	 *location,
 							 GtkTextMark		 *mark);
 
-static void 	 gtk_source_buffer_real_apply_tag	(GtkTextBuffer		 *buffer,
-							 GtkTextTag		 *tag,
-							 const GtkTextIter	 *start,
-							 const GtkTextIter	 *end);
-
 static void 	 gtk_source_buffer_real_mark_deleted	(GtkTextBuffer		 *buffer,
 							 GtkTextMark		 *mark);
-static gboolean	 gtk_source_buffer_find_bracket_match_with_limit (GtkSourceBuffer *buffer,
-								  GtkTextIter     *orig,
-								  GtkSourceBracketMatchType *result,
-								  gint             max_chars);
 
 static void	 gtk_source_buffer_real_undo		(GtkSourceBuffer	 *buffer);
 static void	 gtk_source_buffer_real_redo		(GtkSourceBuffer	 *buffer);
+
+static void	 gtk_source_buffer_real_highlight_updated
+							(GtkSourceBuffer         *buffer,
+							 GtkTextIter             *start,
+							 GtkTextIter             *end);
 
 static void
 gtk_source_buffer_constructed (GObject *object)
 {
 	GtkSourceBuffer *buffer = GTK_SOURCE_BUFFER (object);
-
-	/* we need to know that the tag-table was set */
-	buffer->priv->constructed = TRUE;
 
 	if (buffer->priv->undo_manager == NULL)
 	{
@@ -201,27 +287,23 @@ gtk_source_buffer_constructed (GObject *object)
 static void
 gtk_source_buffer_class_init (GtkSourceBufferClass *klass)
 {
-	GObjectClass        *object_class;
-	GtkTextBufferClass  *tb_class;
-	GType                param_types[2];
+	GObjectClass *object_class;
+	GtkTextBufferClass *text_buffer_class;
 
-	object_class 	= G_OBJECT_CLASS (klass);
-	tb_class	= GTK_TEXT_BUFFER_CLASS (klass);
+	object_class = G_OBJECT_CLASS (klass);
+	text_buffer_class = GTK_TEXT_BUFFER_CLASS (klass);
 
-	object_class->constructed  = gtk_source_buffer_constructed;
-	object_class->finalize	   = gtk_source_buffer_finalize;
-	object_class->dispose	   = gtk_source_buffer_dispose;
+	object_class->constructed = gtk_source_buffer_constructed;
+	object_class->dispose = gtk_source_buffer_dispose;
 	object_class->get_property = gtk_source_buffer_get_property;
 	object_class->set_property = gtk_source_buffer_set_property;
 
-	tb_class->delete_range        = gtk_source_buffer_real_delete_range;
-	tb_class->insert_text 	      = gtk_source_buffer_real_insert_text;
-	tb_class->insert_pixbuf       = gtk_source_buffer_real_insert_pixbuf;
-	tb_class->insert_child_anchor = gtk_source_buffer_real_insert_anchor;
-	tb_class->apply_tag           = gtk_source_buffer_real_apply_tag;
-
-	tb_class->mark_set	= gtk_source_buffer_real_mark_set;
-	tb_class->mark_deleted	= gtk_source_buffer_real_mark_deleted;
+	text_buffer_class->delete_range = gtk_source_buffer_real_delete_range;
+	text_buffer_class->insert_text = gtk_source_buffer_real_insert_text;
+	text_buffer_class->insert_pixbuf = gtk_source_buffer_real_insert_pixbuf;
+	text_buffer_class->insert_child_anchor = gtk_source_buffer_real_insert_child_anchor;
+	text_buffer_class->mark_set = gtk_source_buffer_real_mark_set;
+	text_buffer_class->mark_deleted = gtk_source_buffer_real_mark_deleted;
 
 	klass->undo = gtk_source_buffer_real_undo;
 	klass->redo = gtk_source_buffer_real_redo;
@@ -231,27 +313,26 @@ gtk_source_buffer_class_init (GtkSourceBufferClass *klass)
 	 *
 	 * Whether to highlight syntax in the buffer.
 	 */
-	g_object_class_install_property (object_class,
-					 PROP_HIGHLIGHT_SYNTAX,
-					 g_param_spec_boolean ("highlight-syntax",
-							       _("Highlight Syntax"),
-							       _("Whether to highlight syntax "
-								 "in the buffer"),
-							       TRUE,
-							       G_PARAM_READWRITE));
+	buffer_properties[PROP_HIGHLIGHT_SYNTAX] =
+		g_param_spec_boolean ("highlight-syntax",
+				      "Highlight Syntax",
+				      "Whether to highlight syntax in the buffer",
+				      TRUE,
+				      G_PARAM_READWRITE |
+				      G_PARAM_STATIC_STRINGS);
 
 	/**
 	 * GtkSourceBuffer:highlight-matching-brackets:
 	 *
 	 * Whether to highlight matching brackets in the buffer.
 	 */
-	g_object_class_install_property (object_class,
-					 PROP_HIGHLIGHT_MATCHING_BRACKETS,
-					 g_param_spec_boolean ("highlight-matching-brackets",
-							       _("Highlight Matching Brackets"),
-							       _("Whether to highlight matching brackets"),
-							       TRUE,
-							       G_PARAM_READWRITE));
+	buffer_properties[PROP_HIGHLIGHT_MATCHING_BRACKETS] =
+		g_param_spec_boolean ("highlight-matching-brackets",
+				      "Highlight Matching Brackets",
+				      "Whether to highlight matching brackets",
+				      TRUE,
+				      G_PARAM_READWRITE |
+				      G_PARAM_STATIC_STRINGS);
 
 	/**
 	 * GtkSourceBuffer:max-undo-levels:
@@ -259,43 +340,39 @@ gtk_source_buffer_class_init (GtkSourceBufferClass *klass)
 	 * Number of undo levels for the buffer. -1 means no limit. This property
 	 * will only affect the default undo manager.
 	 */
-	g_object_class_install_property (object_class,
-					 PROP_MAX_UNDO_LEVELS,
-					 g_param_spec_int ("max-undo-levels",
-							   _("Maximum Undo Levels"),
-							   _("Number of undo levels for "
-							     "the buffer"),
-							   -1,
-							   G_MAXINT,
-							   1000,
-							   G_PARAM_READWRITE));
+	buffer_properties[PROP_MAX_UNDO_LEVELS] =
+		g_param_spec_int ("max-undo-levels",
+				  "Maximum Undo Levels",
+				  "Number of undo levels for the buffer",
+				  -1,
+				  G_MAXINT,
+				  -1,
+				  G_PARAM_READWRITE |
+				  G_PARAM_STATIC_STRINGS);
 
-	g_object_class_install_property (object_class,
-					 PROP_LANGUAGE,
-					 g_param_spec_object ("language",
-							      /* Translators: throughout GtkSourceView "language" stands
-							       * for "programming language", not "spoken language" */
-							      _("Language"),
-							      _("Language object to get "
-								"highlighting patterns from"),
-							      GTK_SOURCE_TYPE_LANGUAGE,
-							      G_PARAM_READWRITE));
+	buffer_properties[PROP_LANGUAGE] =
+		g_param_spec_object ("language",
+				     "Language",
+				     "Language object to get highlighting patterns from",
+				     GTK_SOURCE_TYPE_LANGUAGE,
+				     G_PARAM_READWRITE |
+				     G_PARAM_STATIC_STRINGS);
 
-	g_object_class_install_property (object_class,
-					 PROP_CAN_UNDO,
-					 g_param_spec_boolean ("can-undo",
-							       _("Can undo"),
-							       _("Whether Undo operation is possible"),
-							       FALSE,
-							       G_PARAM_READABLE));
+	buffer_properties[PROP_CAN_UNDO] =
+		g_param_spec_boolean ("can-undo",
+				      "Can undo",
+				      "Whether Undo operation is possible",
+				      FALSE,
+				      G_PARAM_READABLE |
+				      G_PARAM_STATIC_STRINGS);
 
-	g_object_class_install_property (object_class,
-					 PROP_CAN_REDO,
-					 g_param_spec_boolean ("can-redo",
-							       _("Can redo"),
-							       _("Whether Redo operation is possible"),
-							       FALSE,
-							       G_PARAM_READABLE));
+	buffer_properties[PROP_CAN_REDO] =
+		g_param_spec_boolean ("can-redo",
+				      "Can redo",
+				      "Whether Redo operation is possible",
+				      FALSE,
+				      G_PARAM_READABLE |
+				      G_PARAM_STATIC_STRINGS);
 
 	/**
 	 * GtkSourceBuffer:style-scheme:
@@ -304,81 +381,123 @@ gtk_source_buffer_class_init (GtkSourceBufferClass *klass)
 	 * foreground, background, cursor color, current line color, and matching
 	 * brackets style.
 	 */
-	g_object_class_install_property (object_class,
-					 PROP_STYLE_SCHEME,
-					 g_param_spec_object ("style_scheme",
-							      _("Style scheme"),
-							      _("Style scheme"),
-							      GTK_SOURCE_TYPE_STYLE_SCHEME,
-							      G_PARAM_READWRITE));
+	buffer_properties[PROP_STYLE_SCHEME] =
+		g_param_spec_object ("style-scheme",
+				     "Style scheme",
+				     "Style scheme",
+				     GTK_SOURCE_TYPE_STYLE_SCHEME,
+				     G_PARAM_READWRITE |
+				     G_PARAM_STATIC_STRINGS);
 
-	g_object_class_install_property (object_class,
-	                                 PROP_UNDO_MANAGER,
-	                                 g_param_spec_object ("undo-manager",
-	                                                      _("Undo manager"),
-	                                                      _("The buffer undo manager"),
-	                                                      GTK_SOURCE_TYPE_UNDO_MANAGER,
-	                                                      G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+	buffer_properties[PROP_UNDO_MANAGER] =
+		g_param_spec_object ("undo-manager",
+				     "Undo manager",
+				     "The buffer undo manager",
+				     GTK_SOURCE_TYPE_UNDO_MANAGER,
+				     G_PARAM_READWRITE |
+				     G_PARAM_CONSTRUCT |
+				     G_PARAM_STATIC_STRINGS);
 
-	param_types[0] = GTK_TYPE_TEXT_ITER | G_SIGNAL_TYPE_STATIC_SCOPE;
-	param_types[1] = GTK_TYPE_TEXT_ITER | G_SIGNAL_TYPE_STATIC_SCOPE;
+	/**
+	 * GtkSourceBuffer:implicit-trailing-newline:
+	 *
+	 * Whether the buffer has an implicit trailing newline. See
+	 * gtk_source_buffer_set_implicit_trailing_newline().
+	 *
+	 * Since: 3.14
+	 */
+	buffer_properties[PROP_IMPLICIT_TRAILING_NEWLINE] =
+		g_param_spec_boolean ("implicit-trailing-newline",
+				      "Implicit trailing newline",
+				      "",
+				      TRUE,
+				      G_PARAM_READWRITE |
+				      G_PARAM_CONSTRUCT |
+				      G_PARAM_STATIC_STRINGS);
 
+	g_object_class_install_properties (object_class, N_PROPERTIES, buffer_properties);
+
+	/**
+	 * GtkSourceBuffer::highlight-updated:
+	 * @buffer: the buffer that received the signal
+	 * @start: the start of the updated region
+	 * @end: the end of the updated region
+	 *
+	 * The ::highlight-updated signal is emitted when the syntax
+	 * highlighting and [context classes][context-classes] are updated in a
+	 * certain region of the @buffer.
+	 */
 	buffer_signals[HIGHLIGHT_UPDATED] =
-	    g_signal_newv ("highlight_updated",
-			   G_OBJECT_CLASS_TYPE (object_class),
-			   G_SIGNAL_RUN_LAST,
-			   NULL,
-			   NULL, NULL,
-			   _gtksourceview_marshal_VOID__BOXED_BOXED,
-			   G_TYPE_NONE,
-			   2, param_types);
+	    g_signal_new_class_handler ("highlight-updated",
+	                                G_OBJECT_CLASS_TYPE (object_class),
+	                                G_SIGNAL_RUN_LAST,
+	                                G_CALLBACK (gtk_source_buffer_real_highlight_updated),
+					NULL, NULL, NULL,
+	                                G_TYPE_NONE,
+	                                2,
+	                                GTK_TYPE_TEXT_ITER | G_SIGNAL_TYPE_STATIC_SCOPE,
+	                                GTK_TYPE_TEXT_ITER | G_SIGNAL_TYPE_STATIC_SCOPE);
 
 	/**
 	 * GtkSourceBuffer::source-mark-updated:
 	 * @buffer: the buffer that received the signal
+	 * @mark: the #GtkSourceMark
 	 *
-	 * The ::source_mark_updated signal is emitted each time
+	 * The ::source-mark-updated signal is emitted each time
 	 * a mark is added to, moved or removed from the @buffer.
-	 **/
+	 */
 	buffer_signals[SOURCE_MARK_UPDATED] =
-	    g_signal_new ("source_mark_updated",
+	    g_signal_new ("source-mark-updated",
 			   G_OBJECT_CLASS_TYPE (object_class),
 			   G_SIGNAL_RUN_LAST,
 			   0,
-			   NULL, NULL,
-			   g_cclosure_marshal_VOID__OBJECT,
+			   NULL, NULL, NULL,
 			   G_TYPE_NONE,
 			   1, GTK_TYPE_TEXT_MARK);
 
+	/**
+	 * GtkSourceBuffer::undo:
+	 * @buffer: the buffer that received the signal
+	 *
+	 * The ::undo signal is emitted to undo the last user action which
+	 * modified the buffer.
+	 */
 	buffer_signals[UNDO] =
 	    g_signal_new ("undo",
 			  G_OBJECT_CLASS_TYPE (object_class),
 			  G_SIGNAL_RUN_LAST,
 			  G_STRUCT_OFFSET (GtkSourceBufferClass, undo),
-			  NULL, NULL,
-			  g_cclosure_marshal_VOID__VOID,
-			  G_TYPE_NONE,
-			  0);
+			  NULL, NULL, NULL,
+			  G_TYPE_NONE, 0);
 
+	/**
+	 * GtkSourceBuffer::redo:
+	 * @buffer: the buffer that received the signal
+	 *
+	 * The ::redo signal is emitted to redo the last undo operation.
+	 */
 	buffer_signals[REDO] =
 	    g_signal_new ("redo",
 			  G_OBJECT_CLASS_TYPE (object_class),
 			  G_SIGNAL_RUN_LAST,
 			  G_STRUCT_OFFSET (GtkSourceBufferClass, redo),
-			  NULL, NULL,
-			  g_cclosure_marshal_VOID__VOID,
-			  G_TYPE_NONE,
-			  0);
+			  NULL, NULL, NULL,
+			  G_TYPE_NONE, 0);
 
 	/**
 	 * GtkSourceBuffer::bracket-matched:
 	 * @buffer: a #GtkSourceBuffer.
-	 * @iter: iterator to initialize.
-	 * @state: state of bracket matching
+	 * @iter: (nullable): if found, the location of the matching bracket.
+	 * @state: state of bracket matching.
 	 *
-	 * Sets @iter to a valid iterator pointing to the matching bracket
-	 * if @state is #GTK_SOURCE_BRACKET_MATCH_FOUND. Otherwise @iter is
+	 * @iter is set to a valid iterator pointing to the matching bracket
+	 * if @state is %GTK_SOURCE_BRACKET_MATCH_FOUND. Otherwise @iter is
 	 * meaningless.
+	 *
+	 * The signal is emitted only when the @state changes, typically when
+	 * the cursor moves.
+	 *
+	 * A use-case for this signal is to show messages in a #GtkStatusbar.
 	 *
 	 * Since: 2.12
 	 */
@@ -387,13 +506,10 @@ gtk_source_buffer_class_init (GtkSourceBufferClass *klass)
 			  G_OBJECT_CLASS_TYPE (object_class),
 			  G_SIGNAL_RUN_LAST,
 			  G_STRUCT_OFFSET (GtkSourceBufferClass, bracket_matched),
-			  NULL, NULL,
-			  _gtksourceview_marshal_VOID__BOXED_ENUM,
+			  NULL, NULL, NULL,
 			  G_TYPE_NONE, 2,
 			  GTK_TYPE_TEXT_ITER,
 			  GTK_SOURCE_TYPE_BRACKET_MATCH_TYPE);
-
-	g_type_class_add_private (object_class, sizeof (GtkSourceBufferPrivate));
 }
 
 static void
@@ -434,60 +550,57 @@ set_undo_manager (GtkSourceBuffer      *buffer,
 		                  buffer);
 
 		/* Notify possible changes in the can-undo/redo state */
-		g_object_notify (G_OBJECT (buffer), "can-undo");
-		g_object_notify (G_OBJECT (buffer), "can-redo");
+		g_object_notify_by_pspec (G_OBJECT (buffer), buffer_properties[PROP_CAN_UNDO]);
+		g_object_notify_by_pspec (G_OBJECT (buffer), buffer_properties[PROP_CAN_REDO]);
 	}
+}
+
+static void
+search_context_weak_notify_cb (GtkSourceBuffer *buffer,
+			       GObject         *search_context)
+{
+	buffer->priv->search_contexts = g_list_remove (buffer->priv->search_contexts,
+						       search_context);
 }
 
 static void
 gtk_source_buffer_init (GtkSourceBuffer *buffer)
 {
-	GtkSourceBufferPrivate *priv;
-
-	priv = G_TYPE_INSTANCE_GET_PRIVATE (buffer, GTK_SOURCE_TYPE_BUFFER,
-					    GtkSourceBufferPrivate);
+	GtkSourceBufferPrivate *priv = gtk_source_buffer_get_instance_private (buffer);
 
 	buffer->priv = priv;
 
 	priv->highlight_syntax = TRUE;
 	priv->highlight_brackets = TRUE;
-	priv->bracket_mark_cursor = NULL;
-	priv->bracket_mark_match = NULL;
-	priv->bracket_match = GTK_SOURCE_BRACKET_MATCH_NONE;
+	priv->bracket_match_state = GTK_SOURCE_BRACKET_MATCH_NONE;
+	priv->max_undo_levels = -1;
 
-	priv->source_marks = g_array_new (FALSE, FALSE, sizeof (GtkSourceMark *));
+	priv->source_marks = g_hash_table_new_full (g_str_hash,
+						    g_str_equal,
+						    (GDestroyNotify)g_free,
+						    (GDestroyNotify)g_object_unref);
+
+	priv->all_source_marks = _gtk_source_marks_sequence_new (GTK_TEXT_BUFFER (buffer));
+
 	priv->style_scheme = _gtk_source_style_scheme_get_default ();
 
 	if (priv->style_scheme != NULL)
+	{
 		g_object_ref (priv->style_scheme);
-}
-
-static void
-gtk_source_buffer_finalize (GObject *object)
-{
-	GtkSourceBuffer *buffer;
-
-	g_return_if_fail (object != NULL);
-	g_return_if_fail (GTK_SOURCE_IS_BUFFER (object));
-
-	buffer = GTK_SOURCE_BUFFER (object);
-	g_return_if_fail (buffer->priv != NULL);
-
-	if (buffer->priv->source_marks)
-		g_array_free (buffer->priv->source_marks, TRUE);
-
-	G_OBJECT_CLASS (gtk_source_buffer_parent_class)->finalize (object);
+	}
 }
 
 static void
 gtk_source_buffer_dispose (GObject *object)
 {
-	GtkSourceBuffer *buffer;
+	GtkSourceBuffer *buffer = GTK_SOURCE_BUFFER (object);
+	GList *l;
 
-	g_return_if_fail (object != NULL);
-	g_return_if_fail (GTK_SOURCE_IS_BUFFER (object));
-
-	buffer = GTK_SOURCE_BUFFER (object);
+	if (buffer->priv->bracket_highlighting_timeout_id != 0)
+	{
+		g_source_remove (buffer->priv->bracket_highlighting_timeout_id);
+		buffer->priv->bracket_highlighting_timeout_id = 0;
+	}
 
 	if (buffer->priv->undo_manager != NULL)
 	{
@@ -503,6 +616,26 @@ gtk_source_buffer_dispose (GObject *object)
 	g_clear_object (&buffer->priv->language);
 	g_clear_object (&buffer->priv->style_scheme);
 
+	for (l = buffer->priv->search_contexts; l != NULL; l = l->next)
+	{
+		GtkSourceSearchContext *search_context = l->data;
+
+		g_object_weak_unref (G_OBJECT (search_context),
+				     (GWeakNotify)search_context_weak_notify_cb,
+				     buffer);
+	}
+
+	g_list_free (buffer->priv->search_contexts);
+	buffer->priv->search_contexts = NULL;
+
+	g_clear_object (&buffer->priv->all_source_marks);
+
+	if (buffer->priv->source_marks != NULL)
+	{
+		g_hash_table_unref (buffer->priv->source_marks);
+		buffer->priv->source_marks = NULL;
+	}
+
 	G_OBJECT_CLASS (gtk_source_buffer_parent_class)->dispose (object);
 }
 
@@ -512,42 +645,40 @@ gtk_source_buffer_set_property (GObject      *object,
 				const GValue *value,
 				GParamSpec   *pspec)
 {
-	GtkSourceBuffer *source_buffer;
+	GtkSourceBuffer *buffer;
 
 	g_return_if_fail (GTK_SOURCE_IS_BUFFER (object));
 
-	source_buffer = GTK_SOURCE_BUFFER (object);
+	buffer = GTK_SOURCE_BUFFER (object);
 
 	switch (prop_id)
 	{
 		case PROP_HIGHLIGHT_SYNTAX:
-			gtk_source_buffer_set_highlight_syntax (source_buffer,
-							      g_value_get_boolean (value));
+			gtk_source_buffer_set_highlight_syntax (buffer, g_value_get_boolean (value));
 			break;
 
 		case PROP_HIGHLIGHT_MATCHING_BRACKETS:
-			gtk_source_buffer_set_highlight_matching_brackets (source_buffer,
-								g_value_get_boolean (value));
+			gtk_source_buffer_set_highlight_matching_brackets (buffer, g_value_get_boolean (value));
 			break;
 
 		case PROP_MAX_UNDO_LEVELS:
-			gtk_source_buffer_set_max_undo_levels (source_buffer,
-							       g_value_get_int (value));
+			gtk_source_buffer_set_max_undo_levels (buffer, g_value_get_int (value));
 			break;
 
 		case PROP_LANGUAGE:
-			gtk_source_buffer_set_language (source_buffer,
-							g_value_get_object (value));
+			gtk_source_buffer_set_language (buffer, g_value_get_object (value));
 			break;
 
 		case PROP_STYLE_SCHEME:
-			gtk_source_buffer_set_style_scheme (source_buffer,
-							    g_value_get_object (value));
+			gtk_source_buffer_set_style_scheme (buffer, g_value_get_object (value));
 			break;
 
 		case PROP_UNDO_MANAGER:
-			gtk_source_buffer_set_undo_manager (source_buffer,
-			                                    g_value_get_object (value));
+			gtk_source_buffer_set_undo_manager (buffer, g_value_get_object (value));
+			break;
+
+		case PROP_IMPLICIT_TRAILING_NEWLINE:
+			gtk_source_buffer_set_implicit_trailing_newline (buffer, g_value_get_boolean (value));
 			break;
 
 		default:
@@ -562,47 +693,48 @@ gtk_source_buffer_get_property (GObject    *object,
 				GValue     *value,
 				GParamSpec *pspec)
 {
-	GtkSourceBuffer *source_buffer;
+	GtkSourceBuffer *buffer;
 
 	g_return_if_fail (GTK_SOURCE_IS_BUFFER (object));
 
-	source_buffer = GTK_SOURCE_BUFFER (object);
+	buffer = GTK_SOURCE_BUFFER (object);
 
 	switch (prop_id)
 	{
 		case PROP_HIGHLIGHT_SYNTAX:
-			g_value_set_boolean (value,
-					     source_buffer->priv->highlight_syntax);
+			g_value_set_boolean (value, buffer->priv->highlight_syntax);
 			break;
 
 		case PROP_HIGHLIGHT_MATCHING_BRACKETS:
-			g_value_set_boolean (value,
-					     source_buffer->priv->highlight_brackets);
+			g_value_set_boolean (value, buffer->priv->highlight_brackets);
 			break;
 
 		case PROP_MAX_UNDO_LEVELS:
-			g_value_set_int (value,
-					 source_buffer->priv->max_undo_levels);
+			g_value_set_int (value, buffer->priv->max_undo_levels);
 			break;
 
 		case PROP_LANGUAGE:
-			g_value_set_object (value, source_buffer->priv->language);
+			g_value_set_object (value, buffer->priv->language);
 			break;
 
 		case PROP_STYLE_SCHEME:
-			g_value_set_object (value, source_buffer->priv->style_scheme);
+			g_value_set_object (value, buffer->priv->style_scheme);
 			break;
 
 		case PROP_CAN_UNDO:
-			g_value_set_boolean (value, gtk_source_buffer_can_undo (source_buffer));
+			g_value_set_boolean (value, gtk_source_buffer_can_undo (buffer));
 			break;
 
 		case PROP_CAN_REDO:
-			g_value_set_boolean (value, gtk_source_buffer_can_redo (source_buffer));
+			g_value_set_boolean (value, gtk_source_buffer_can_redo (buffer));
 			break;
 
 		case PROP_UNDO_MANAGER:
-			g_value_set_object (value, source_buffer->priv->undo_manager);
+			g_value_set_object (value, buffer->priv->undo_manager);
+			break;
+
+		case PROP_IMPLICIT_TRAILING_NEWLINE:
+			g_value_set_boolean (value, buffer->priv->implicit_trailing_newline);
 			break;
 
 		default:
@@ -613,12 +745,12 @@ gtk_source_buffer_get_property (GObject    *object,
 
 /**
  * gtk_source_buffer_new:
- * @table: (allow-none): a #GtkTextTagTable, or %NULL to create a new one.
+ * @table: (nullable): a #GtkTextTagTable, or %NULL to create a new one.
  *
  * Creates a new source buffer.
  *
- * Return value: a new source buffer.
- **/
+ * Returns: a new source buffer.
+ */
 GtkSourceBuffer *
 gtk_source_buffer_new (GtkTextTagTable *table)
 {
@@ -635,9 +767,9 @@ gtk_source_buffer_new (GtkTextTagTable *table)
  * @language.  This is equivalent to creating a new source buffer with
  * a new tag table and then calling gtk_source_buffer_set_language().
  *
- * Return value: a new source buffer which will highlight text
+ * Returns: a new source buffer which will highlight text
  * according to the highlighting patterns in @language.
- **/
+ */
 GtkSourceBuffer *
 gtk_source_buffer_new_with_language (GtkSourceLanguage *language)
 {
@@ -655,7 +787,7 @@ gtk_source_buffer_can_undo_handler (GtkSourceUndoManager *manager,
 {
 	g_return_if_fail (GTK_SOURCE_IS_BUFFER (buffer));
 
-	g_object_notify (G_OBJECT (buffer), "can-undo");
+	g_object_notify_by_pspec (G_OBJECT (buffer), buffer_properties[PROP_CAN_UNDO]);
 }
 
 static void
@@ -664,21 +796,25 @@ gtk_source_buffer_can_redo_handler (GtkSourceUndoManager *manager,
 {
 	g_return_if_fail (GTK_SOURCE_IS_BUFFER (buffer));
 
-	g_object_notify (G_OBJECT (buffer), "can-redo");
+	g_object_notify_by_pspec (G_OBJECT (buffer), buffer_properties[PROP_CAN_REDO]);
 }
 
 static void
 update_bracket_match_style (GtkSourceBuffer *buffer)
 {
-	if (buffer->priv->bracket_match_tag != NULL)
+	GtkSourceStyle *style = NULL;
+
+	if (buffer->priv->bracket_match_tag == NULL)
 	{
-		GtkSourceStyle *style = NULL;
-
-		if (buffer->priv->style_scheme)
-			style = _gtk_source_style_scheme_get_matching_brackets_style (buffer->priv->style_scheme);
-
-		_gtk_source_style_apply (style, buffer->priv->bracket_match_tag);
+		return;
 	}
+
+	if (buffer->priv->style_scheme != NULL)
+	{
+		style = _gtk_source_style_scheme_get_matching_brackets_style (buffer->priv->style_scheme);
+	}
+
+	gtk_source_style_apply (style, buffer->priv->bracket_match_tag);
 }
 
 static GtkTextTag *
@@ -696,8 +832,7 @@ get_bracket_match_tag (GtkSourceBuffer *buffer)
 	return buffer->priv->bracket_match_tag;
 }
 
-/*
- * This is private, just used by the compositor to not print bracket
+/* This is private, just used by the print compositor to not print bracket
  * matches. Note that unlike get_bracket_match_tag() it returns NULL
  * if the tag is not set.
  */
@@ -708,184 +843,295 @@ _gtk_source_buffer_get_bracket_match_tag (GtkSourceBuffer *buffer)
 }
 
 static gunichar
-bracket_pair (gunichar base_char, gint *direction)
+bracket_pair (gunichar  base_char,
+	      gint     *direction)
 {
 	gint dir;
 	gunichar pair;
 
-	switch ((int)base_char)
+	switch (base_char)
 	{
 		case '{':
 			dir = 1;
 			pair = '}';
 			break;
+
 		case '(':
 			dir = 1;
 			pair = ')';
 			break;
+
 		case '[':
 			dir = 1;
 			pair = ']';
 			break;
+
 		case '<':
 			dir = 1;
 			pair = '>';
 			break;
+
 		case '}':
 			dir = -1;
 			pair = '{';
 			break;
+
 		case ')':
 			dir = -1;
 			pair = '(';
 			break;
+
 		case ']':
 			dir = -1;
 			pair = '[';
 			break;
+
 		case '>':
 			dir = -1;
 			pair = '<';
 			break;
+
 		default:
 			dir = 0;
 			pair = 0;
 			break;
 	}
 
-	/* Let direction be NULL if we don't care */
 	if (direction != NULL)
+	{
 		*direction = dir;
+	}
 
 	return pair;
 }
 
+/*
+ * This function works similar to gtk_text_buffer_remove_tag() except that
+ * instead of taking the optimization to make removing tags fast in terms
+ * of wall clock time, it tries to avoiding to much time of the screen
+ * by minimizing the damage regions. This results in fewer full-redraws
+ * when updating the text marks. To see the difference, compare this to
+ * gtk_text_buffer_remove_tag() and enable the "show pixel cache" feature
+ * the GTK+ inspector.
+ */
 static void
-gtk_source_buffer_move_cursor (GtkTextBuffer     *buffer,
-			       const GtkTextIter *iter,
-			       GtkTextMark       *mark)
+remove_tag_with_minimal_damage (GtkTextBuffer     *buffer,
+                                GtkTextTag        *tag,
+                                const GtkTextIter *begin,
+                                const GtkTextIter *end)
 {
-	GtkSourceBuffer *source_buffer;
-	GtkTextIter start, end;
-	gunichar cursor_char;
+	GtkTextIter tag_begin = *begin;
+	GtkTextIter tag_end;
+
+	if (!gtk_text_iter_starts_tag (&tag_begin, tag))
+	{
+		if (!gtk_text_iter_forward_to_tag_toggle (&tag_begin, tag))
+		{
+			return;
+		}
+	}
+
+	while (gtk_text_iter_starts_tag (&tag_begin, tag) &&
+	       gtk_text_iter_compare (&tag_begin, end) < 0)
+	{
+		gint count = 1;
+
+		tag_end = tag_begin;
+
+		/*
+		 * We might have found the start of another tag embedded
+		 * inside this tag. So keep scanning forward until we have
+		 * reached the right number of end tags.
+		 */
+
+		while (gtk_text_iter_forward_to_tag_toggle (&tag_end, tag))
+		{
+			if (gtk_text_iter_starts_tag (&tag_end, tag))
+			{
+				count++;
+			}
+			else if (gtk_text_iter_ends_tag (&tag_end, tag))
+			{
+				if (--count == 0)
+				{
+					break;
+				}
+			}
+		}
+
+		if (gtk_text_iter_ends_tag (&tag_end, tag))
+		{
+			gtk_text_buffer_remove_tag (buffer, tag, &tag_begin, &tag_end);
+
+			tag_begin = tag_end;
+
+			/*
+			 * Move to the next start tag. It's possible to have an overlapped
+			 * end tag, which would be non-ideal, but possible.
+			 */
+			if (!gtk_text_iter_starts_tag (&tag_begin, tag))
+			{
+				while (gtk_text_iter_forward_to_tag_toggle (&tag_begin, tag))
+				{
+					if (gtk_text_iter_starts_tag (&tag_begin, tag))
+					{
+						break;
+					}
+				}
+			}
+		}
+	}
+}
+
+static void
+update_bracket_highlighting (GtkSourceBuffer *source_buffer)
+{
+	GtkTextBuffer *buffer;
+	GtkTextIter insert_iter;
+	GtkTextIter bracket;
+	GtkTextIter bracket_match;
 	GtkSourceBracketMatchType previous_state;
 
-	g_return_if_fail (GTK_SOURCE_IS_BUFFER (buffer));
-	g_return_if_fail (iter != NULL);
-	g_return_if_fail (mark != NULL);
-	g_return_if_fail (gtk_text_iter_get_buffer (iter) == buffer);
+	buffer = GTK_TEXT_BUFFER (source_buffer);
 
-	if (mark != gtk_text_buffer_get_insert (buffer))
-		return;
-
-	source_buffer = GTK_SOURCE_BUFFER (buffer);
-
-	if (source_buffer->priv->bracket_match == GTK_SOURCE_BRACKET_MATCH_FOUND)
+	if (source_buffer->priv->bracket_match_tag != NULL)
 	{
-		gtk_text_buffer_get_iter_at_mark (buffer,
-						  &start,
-						  source_buffer->priv->bracket_mark_match);
+		GtkTextIter start;
+		GtkTextIter end;
 
-		gtk_text_buffer_get_iter_at_mark (buffer,
-						  &end,
-						  source_buffer->priv->bracket_mark_cursor);
+		gtk_text_buffer_get_bounds (buffer, &start, &end);
 
-		gtk_text_iter_order (&start, &end);
-		gtk_text_iter_forward_char (&end);
-		gtk_text_buffer_remove_tag (buffer,
-					    source_buffer->priv->bracket_match_tag,
-					    &start,
-					    &end);
+		remove_tag_with_minimal_damage (GTK_TEXT_BUFFER (source_buffer),
+		                                source_buffer->priv->bracket_match_tag,
+		                                &start,
+		                                &end);
 	}
 
 	if (!source_buffer->priv->highlight_brackets)
-		return;
-
-	start = *iter;
-	previous_state = source_buffer->priv->bracket_match;
-	if (!gtk_source_buffer_find_bracket_match_with_limit (source_buffer,
-	                                                      &start,
-	                                                      &source_buffer->priv->bracket_match,
-	                                                      MAX_CHARS_BEFORE_FINDING_A_MATCH))
 	{
-		/* don't emit the signal at all if chars at previous and current
-		   positions are nonbrackets. */
-		if (previous_state != GTK_SOURCE_BRACKET_MATCH_NONE ||
-		    source_buffer->priv->bracket_match != GTK_SOURCE_BRACKET_MATCH_NONE)
+		if (source_buffer->priv->bracket_match_tag != NULL)
 		{
-			g_signal_emit (source_buffer,
-				       buffer_signals[BRACKET_MATCHED],
-				       0,
-				       &end,
-				       source_buffer->priv->bracket_match);
+			GtkTextTagTable *table;
+
+			table = gtk_text_buffer_get_tag_table (buffer);
+			gtk_text_tag_table_remove (table, source_buffer->priv->bracket_match_tag);
+			source_buffer->priv->bracket_match_tag = NULL;
 		}
+
+		return;
 	}
-	else
+
+	gtk_text_buffer_get_iter_at_mark (buffer,
+					  &insert_iter,
+					  gtk_text_buffer_get_insert (buffer));
+
+	previous_state = source_buffer->priv->bracket_match_state;
+	source_buffer->priv->bracket_match_state =
+		_gtk_source_buffer_find_bracket_match (source_buffer,
+						       &insert_iter,
+						       &bracket,
+						       &bracket_match);
+
+	if (source_buffer->priv->bracket_match_state == GTK_SOURCE_BRACKET_MATCH_FOUND)
+	{
+		GtkTextIter next_iter;
+
+		g_signal_emit (source_buffer,
+			       buffer_signals[BRACKET_MATCHED],
+			       0,
+			       &bracket_match,
+			       GTK_SOURCE_BRACKET_MATCH_FOUND);
+
+		next_iter = bracket_match;
+		gtk_text_iter_forward_char (&next_iter);
+		gtk_text_buffer_apply_tag (buffer,
+					   get_bracket_match_tag (source_buffer),
+					   &bracket_match,
+					   &next_iter);
+
+		next_iter = bracket;
+		gtk_text_iter_forward_char (&next_iter);
+		gtk_text_buffer_apply_tag (buffer,
+					   get_bracket_match_tag (source_buffer),
+					   &bracket,
+					   &next_iter);
+		return;
+	}
+
+	/* Don't emit the signal at all if chars at previous and current
+	 * positions are nonbrackets.
+	 */
+	if (previous_state != GTK_SOURCE_BRACKET_MATCH_NONE ||
+	    source_buffer->priv->bracket_match_state != GTK_SOURCE_BRACKET_MATCH_NONE)
 	{
 		g_signal_emit (source_buffer,
 			       buffer_signals[BRACKET_MATCHED],
 			       0,
-			       &start,
-			       source_buffer->priv->bracket_match);
-
-		/* allow_bracket_match will allow the bracket match tag to be
-		   applied to the buffer. See apply_tag_real for more
-		   information */
-		source_buffer->priv->allow_bracket_match = TRUE;
-
-		/* Mark matching bracket */
-		if (!source_buffer->priv->bracket_mark_match)
-		{
-			source_buffer->priv->bracket_mark_match =
- 				gtk_text_buffer_create_mark (buffer,
-							     NULL,
-							     &start,
-							     TRUE);
- 		}
- 		else
- 		{
- 			gtk_text_buffer_move_mark (buffer,
-						   source_buffer->priv->bracket_mark_match,
-						   &start);
- 		}
-
-		end = start;
-		gtk_text_iter_forward_char (&end);
-		gtk_text_buffer_apply_tag (buffer,
-					   get_bracket_match_tag (source_buffer),
-					   &start,
-					   &end);
-
-		/* Mark the bracket near the cursor */
-		start = *iter;
-		cursor_char = gtk_text_iter_get_char (&start);
-		if (bracket_pair (cursor_char, NULL) == 0)
-			gtk_text_iter_backward_char (&start);
-
-		if (!source_buffer->priv->bracket_mark_cursor)
-		{
-			source_buffer->priv->bracket_mark_cursor =
-				gtk_text_buffer_create_mark (buffer,
-							     NULL,
-							     &start,
-							     FALSE);
-		}
-		else
-		{
-			gtk_text_buffer_move_mark (buffer,
-						   source_buffer->priv->bracket_mark_cursor,
-						   &start);
-		}
-
-		end = start;
-		gtk_text_iter_forward_char (&end);
-		gtk_text_buffer_apply_tag (buffer,
-					   get_bracket_match_tag (source_buffer),
-					   &start,
-					   &end);
-
-		source_buffer->priv->allow_bracket_match = FALSE;
+			       NULL,
+			       source_buffer->priv->bracket_match_state);
 	}
+}
+
+static gboolean
+bracket_highlighting_timeout_cb (gpointer user_data)
+{
+	GtkSourceBuffer *buffer = GTK_SOURCE_BUFFER (user_data);
+
+	update_bracket_highlighting (buffer);
+
+	buffer->priv->bracket_highlighting_timeout_id = 0;
+	return G_SOURCE_REMOVE;
+}
+
+static void
+queue_bracket_highlighting_update (GtkSourceBuffer *buffer)
+{
+	if (buffer->priv->bracket_highlighting_timeout_id != 0)
+	{
+		g_source_remove (buffer->priv->bracket_highlighting_timeout_id);
+	}
+
+	/* Queue an update to the bracket location instead of doing it
+	 * immediately. We are likely going to be servicing a draw deadline
+	 * immediately, so blocking to find the match and invalidating
+	 * visible regions causes animations to stutter. Instead, give
+	 * ourself just a little bit of a delay to catch up.
+	 *
+	 * The value for this delay was found experimentally, as 25msec
+	 * resulted in continuing to see frame stutter, but 50 was not
+	 * distinguishable from having matching-brackets disabled.
+	 * The animation in gtkscrolledwindow is 200, but that creates
+	 * an undesireable delay before the match is shown to the user.
+	 * 50msec errors on the side of "immediate", but without the
+	 * frame stutter.
+	 *
+	 * If we had access to a GdkFrameClock, we might consider using
+	 * ::update() or ::after-paint() to synchronize this.
+	 */
+	buffer->priv->bracket_highlighting_timeout_id =
+		gdk_threads_add_timeout_full (G_PRIORITY_LOW,
+					      UPDATE_BRACKET_DELAY,
+					      bracket_highlighting_timeout_cb,
+					      buffer,
+					      NULL);
+}
+
+/* Although this function is not really useful
+ * (queue_bracket_highlighting_update() could be called directly), the name
+ * cursor_moved() is more meaningful.
+ */
+static void
+cursor_moved (GtkSourceBuffer *buffer)
+{
+	queue_bracket_highlighting_update (buffer);
+}
+
+static void
+gtk_source_buffer_real_highlight_updated (GtkSourceBuffer *buffer,
+					  GtkTextIter     *start,
+					  GtkTextIter     *end)
+{
+	queue_bracket_highlighting_update (buffer);
 }
 
 static void
@@ -893,18 +1139,16 @@ gtk_source_buffer_content_inserted (GtkTextBuffer *buffer,
 				    gint           start_offset,
 				    gint           end_offset)
 {
-	GtkTextMark *mark;
-	GtkTextIter insert_iter;
 	GtkSourceBuffer *source_buffer = GTK_SOURCE_BUFFER (buffer);
 
-	mark = gtk_text_buffer_get_insert (buffer);
-	gtk_text_buffer_get_iter_at_mark (buffer, &insert_iter, mark);
-	gtk_source_buffer_move_cursor (buffer, &insert_iter, mark);
+	cursor_moved (source_buffer);
 
 	if (source_buffer->priv->highlight_engine != NULL)
+	{
 		_gtk_source_engine_text_inserted (source_buffer->priv->highlight_engine,
 						  start_offset,
 						  end_offset);
+	}
 }
 
 static void
@@ -922,11 +1166,10 @@ gtk_source_buffer_real_insert_text (GtkTextBuffer *buffer,
 
 	start_offset = gtk_text_iter_get_offset (iter);
 
-	/*
-	 * iter is invalidated when
+	/* iter is invalidated when
 	 * insertion occurs (because the buffer contents change), but the
 	 * default signal handler revalidates it to point to the end of the
-	 * inserted text
+	 * inserted text.
 	 */
 	GTK_TEXT_BUFFER_CLASS (gtk_source_buffer_parent_class)->insert_text (buffer, iter, text, len);
 
@@ -937,7 +1180,8 @@ gtk_source_buffer_real_insert_text (GtkTextBuffer *buffer,
 
 /* insert_pixbuf and insert_child_anchor do nothing except notifying
  * the highlighting engine about the change, because engine's idea
- * of buffer char count must be correct at all times */
+ * of buffer char count must be correct at all times.
+ */
 static void
 gtk_source_buffer_real_insert_pixbuf (GtkTextBuffer *buffer,
 				      GtkTextIter   *iter,
@@ -951,11 +1195,10 @@ gtk_source_buffer_real_insert_pixbuf (GtkTextBuffer *buffer,
 
 	start_offset = gtk_text_iter_get_offset (iter);
 
-	/*
-	 * iter is invalidated when
+	/* iter is invalidated when
 	 * insertion occurs (because the buffer contents change), but the
 	 * default signal handler revalidates it to point to the end of the
-	 * inserted text
+	 * inserted text.
 	 */
 	GTK_TEXT_BUFFER_CLASS (gtk_source_buffer_parent_class)->insert_pixbuf (buffer, iter, pixbuf);
 
@@ -965,9 +1208,9 @@ gtk_source_buffer_real_insert_pixbuf (GtkTextBuffer *buffer,
 }
 
 static void
-gtk_source_buffer_real_insert_anchor (GtkTextBuffer      *buffer,
-				      GtkTextIter        *iter,
-				      GtkTextChildAnchor *anchor)
+gtk_source_buffer_real_insert_child_anchor (GtkTextBuffer      *buffer,
+					    GtkTextIter        *iter,
+					    GtkTextChildAnchor *anchor)
 {
 	gint start_offset;
 
@@ -977,11 +1220,9 @@ gtk_source_buffer_real_insert_anchor (GtkTextBuffer      *buffer,
 
 	start_offset = gtk_text_iter_get_offset (iter);
 
-	/*
-	 * iter is invalidated when
-	 * insertion occurs (because the buffer contents change), but the
-	 * default signal handler revalidates it to point to the end of the
-	 * inserted text
+	/* iter is invalidated when insertion occurs (because the buffer
+	 * contents change), but the default signal handler revalidates it to
+	 * point to the end of the inserted text.
 	 */
 	GTK_TEXT_BUFFER_CLASS (gtk_source_buffer_parent_class)->insert_child_anchor (buffer, iter, anchor);
 
@@ -996,8 +1237,6 @@ gtk_source_buffer_real_delete_range (GtkTextBuffer *buffer,
 				     GtkTextIter   *end)
 {
 	gint offset, length;
-	GtkTextMark *mark;
-	GtkTextIter iter;
 	GtkSourceBuffer *source_buffer = GTK_SOURCE_BUFFER (buffer);
 
 	g_return_if_fail (GTK_SOURCE_IS_BUFFER (buffer));
@@ -1012,161 +1251,205 @@ gtk_source_buffer_real_delete_range (GtkTextBuffer *buffer,
 
 	GTK_TEXT_BUFFER_CLASS (gtk_source_buffer_parent_class)->delete_range (buffer, start, end);
 
-	mark = gtk_text_buffer_get_insert (buffer);
-	gtk_text_buffer_get_iter_at_mark (buffer, &iter, mark);
-	gtk_source_buffer_move_cursor (buffer, &iter, mark);
+	cursor_moved (source_buffer);
 
 	/* emit text deleted for engines */
 	if (source_buffer->priv->highlight_engine != NULL)
+	{
 		_gtk_source_engine_text_deleted (source_buffer->priv->highlight_engine,
 						 offset, length);
+	}
 }
-
-/* This describes a mask of relevant context classes for highlighting matching
-   brackets. Additional classes can be added below */
-static const gchar *cclass_mask_definitions[] = {
-	"comment",
-	"string",
-};
 
 static gint
-get_context_class_mask (GtkSourceBuffer *buffer,
-                        GtkTextIter     *iter)
+get_bracket_matching_context_class_mask (GtkSourceBuffer *buffer,
+					 GtkTextIter     *iter)
 {
-	gint i;
-	gint ret = 0;
+	gint mask = 0;
+	guint i;
 
-	for (i = 0; i < sizeof (cclass_mask_definitions) / sizeof (gchar *); ++i)
+	/* This describes a mask of relevant context classes for highlighting
+	 * matching brackets.
+	 */
+	const gchar *cclass_mask_definitions[] = {
+		"comment",
+		"string",
+	};
+
+	for (i = 0; i < G_N_ELEMENTS (cclass_mask_definitions); ++i)
 	{
-		gboolean hasclass = gtk_source_buffer_iter_has_context_class (buffer,
-		                                                              iter,
-		                                                              cclass_mask_definitions[i]);
+		gboolean has_class;
 
-		ret |= hasclass << i;
+		has_class = gtk_source_buffer_iter_has_context_class (buffer,
+								      iter,
+								      cclass_mask_definitions[i]);
+
+		mask |= has_class << i;
 	}
 
-	return ret;
+	return mask;
 }
 
-static gboolean
-gtk_source_buffer_find_bracket_match_real (GtkSourceBuffer           *buffer,
-                                           GtkTextIter               *orig,
-					   GtkSourceBracketMatchType *result,
-                                           gint                       max_chars)
+/* Note that we only look BRACKET_MATCHING_CHARS_LIMIT at most.
+ * @pos is moved to the bracket match, if found.
+ */
+static GtkSourceBracketMatchType
+find_bracket_match_real (GtkSourceBuffer *buffer,
+			 GtkTextIter     *pos)
 {
 	GtkTextIter iter;
-
 	gunichar base_char;
 	gunichar search_char;
-	gunichar cur_char;
-	gint addition;
-	gint char_cont;
-	gint counter;
-
+	gint direction;
+	gint bracket_count;
+	gint char_count;
+	gint cclass_mask;
 	gboolean found;
 
-	gint cclass_mask;
+	base_char = gtk_text_iter_get_char (pos);
+	search_char = bracket_pair (base_char, &direction);
 
-	iter = *orig;
-
-	cur_char = gtk_text_iter_get_char (&iter);
-
-	base_char = cur_char;
-	cclass_mask = get_context_class_mask (buffer, &iter);
-
-	search_char = bracket_pair (base_char, &addition);
-
-	if (addition == 0)
+	if (direction == 0)
 	{
-		*result = GTK_SOURCE_BRACKET_MATCH_NONE;
-		return FALSE;
+		return GTK_SOURCE_BRACKET_MATCH_NONE;
 	}
 
-	counter = 0;
+	cclass_mask = get_bracket_matching_context_class_mask (buffer, pos);
+
+	iter = *pos;
+	bracket_count = 0;
+	char_count = 0;
 	found = FALSE;
-	char_cont = 0;
 
 	do
 	{
-		gint current_mask;
+		gunichar cur_char;
+		gint cur_mask;
 
-		gtk_text_iter_forward_chars (&iter, addition);
+		gtk_text_iter_forward_chars (&iter, direction);
 		cur_char = gtk_text_iter_get_char (&iter);
-		++char_cont;
+		char_count++;
 
-		current_mask = get_context_class_mask (buffer, &iter);
+		cur_mask = get_bracket_matching_context_class_mask (buffer, &iter);
 
 		/* Check if we lost a class, which means we don't look any
-		   further */
-		if (current_mask < cclass_mask)
+		 * further.
+		 */
+		if ((cclass_mask & cur_mask) != cclass_mask)
 		{
 			found = FALSE;
 			break;
 		}
 
-		if ((cur_char == search_char || cur_char == base_char) &&
-		    cclass_mask == current_mask)
+		if (cclass_mask != cur_mask)
 		{
-			if ((cur_char == search_char) && counter == 0)
+			continue;
+		}
+
+		if (cur_char == search_char)
+		{
+			if (bracket_count == 0)
 			{
 				found = TRUE;
 				break;
 			}
-			if (cur_char == base_char)
-				counter++;
-			else
-				counter--;
+
+			bracket_count--;
+		}
+		else if (cur_char == base_char)
+		{
+			bracket_count++;
 		}
 	}
-	while (!gtk_text_iter_is_end (&iter) && !gtk_text_iter_is_start (&iter) &&
-		((char_cont < max_chars) || (max_chars < 0)));
+	while (!gtk_text_iter_is_end (&iter) &&
+	       !gtk_text_iter_is_start (&iter) &&
+	       char_count < BRACKET_MATCHING_CHARS_LIMIT);
 
 	if (found)
 	{
-		*orig = iter;
-		*result = GTK_SOURCE_BRACKET_MATCH_FOUND;
+		*pos = iter;
+		return GTK_SOURCE_BRACKET_MATCH_FOUND;
 	}
-	else if (char_cont >= max_chars && max_chars >= 0)
+
+	if (char_count >= BRACKET_MATCHING_CHARS_LIMIT)
 	{
-		*result = GTK_SOURCE_BRACKET_MATCH_OUT_OF_RANGE;
+		return GTK_SOURCE_BRACKET_MATCH_OUT_OF_RANGE;
+	}
+
+	return GTK_SOURCE_BRACKET_MATCH_NOT_FOUND;
+}
+
+/* Note that we take into account both the character following @pos and the one
+ * preceding it. If there are brackets on both sides, the one following @pos
+ * takes precedence.
+ * @bracket and @bracket_match are valid only if GTK_SOURCE_BRACKET_MATCH_FOUND
+ * is returned. @bracket is set either to @pos or @pos-1.
+ */
+GtkSourceBracketMatchType
+_gtk_source_buffer_find_bracket_match (GtkSourceBuffer   *buffer,
+				       const GtkTextIter *pos,
+				       GtkTextIter       *bracket,
+				       GtkTextIter       *bracket_match)
+{
+	GtkSourceBracketMatchType result_right;
+	GtkSourceBracketMatchType result_left;
+	GtkTextIter prev;
+
+	g_return_val_if_fail (GTK_SOURCE_IS_BUFFER (buffer), GTK_SOURCE_BRACKET_MATCH_NONE);
+	g_return_val_if_fail (pos != NULL, GTK_SOURCE_BRACKET_MATCH_NONE);
+	g_return_val_if_fail (bracket_match != NULL, GTK_SOURCE_BRACKET_MATCH_NONE);
+
+	*bracket_match = *pos;
+	result_right = find_bracket_match_real (buffer, bracket_match);
+
+	if (result_right == GTK_SOURCE_BRACKET_MATCH_FOUND)
+	{
+		if (bracket != NULL)
+		{
+			*bracket = *pos;
+		}
+
+		return GTK_SOURCE_BRACKET_MATCH_FOUND;
+	}
+
+	prev = *pos;
+	if (!gtk_text_iter_starts_line (&prev) &&
+	    gtk_text_iter_backward_cursor_position (&prev))
+	{
+		*bracket_match = prev;
+		result_left = find_bracket_match_real (buffer, bracket_match);
 	}
 	else
 	{
-		*result = GTK_SOURCE_BRACKET_MATCH_NOT_FOUND;
+		result_left = GTK_SOURCE_BRACKET_MATCH_NONE;
 	}
 
-	return found;
-}
-
-/* Note that we take into account both the character following the cursor and the
- * one preceding it. If there are brackets on both sides the one following the
- * cursor takes precedence.
- */
-static gboolean
-gtk_source_buffer_find_bracket_match_with_limit (GtkSourceBuffer           *buffer,
-                                                 GtkTextIter               *orig,
-                                                 GtkSourceBracketMatchType *result,
-                                                 gint                       max_chars)
-{
-	GtkTextIter iter;
-
-	if (gtk_source_buffer_find_bracket_match_real (buffer, orig, result, max_chars))
+	if (result_left == GTK_SOURCE_BRACKET_MATCH_FOUND)
 	{
-		return TRUE;
-	}
-
-	iter = *orig;
-	if (!gtk_text_iter_starts_line (&iter) &&
-	    gtk_text_iter_backward_char (&iter))
-	{
-		if (gtk_source_buffer_find_bracket_match_real (buffer, &iter, result, max_chars))
+		if (bracket != NULL)
 		{
-			*orig = iter;
-			return TRUE;
+			*bracket = prev;
 		}
+
+		return GTK_SOURCE_BRACKET_MATCH_FOUND;
 	}
 
-	return FALSE;
+	/* If there is a bracket, the expected return value is for the bracket,
+	 * not the other character.
+	 */
+	if (result_right == GTK_SOURCE_BRACKET_MATCH_NONE)
+	{
+		return result_left;
+	}
+	if (result_left == GTK_SOURCE_BRACKET_MATCH_NONE)
+	{
+		return result_right;
+	}
+
+	/* There are brackets on both sides, and none was successful. The one on
+	 * the right takes precedence.
+	 */
+	return result_right;
 }
 
 /**
@@ -1175,8 +1458,8 @@ gtk_source_buffer_find_bracket_match_with_limit (GtkSourceBuffer           *buff
  *
  * Determines whether a source buffer can undo the last action.
  *
- * Return value: %TRUE if it's possible to undo the last action.
- **/
+ * Returns: %TRUE if it's possible to undo the last action.
+ */
 gboolean
 gtk_source_buffer_can_undo (GtkSourceBuffer *buffer)
 {
@@ -1192,8 +1475,8 @@ gtk_source_buffer_can_undo (GtkSourceBuffer *buffer)
  * Determines whether a source buffer can redo the last action
  * (i.e. if the last operation was an undo).
  *
- * Return value: %TRUE if a redo is possible.
- **/
+ * Returns: %TRUE if a redo is possible.
+ */
 gboolean
 gtk_source_buffer_can_redo (GtkSourceBuffer *buffer)
 {
@@ -1210,11 +1493,8 @@ gtk_source_buffer_can_redo (GtkSourceBuffer *buffer)
  * gtk_source_buffer_can_undo() to check whether a call to this
  * function will have any effect.
  *
- * Actions are defined as groups of operations between a call to
- * gtk_text_buffer_begin_user_action() and
- * gtk_text_buffer_end_user_action(), or sequences of similar edits
- * (inserts or deletes) on the same line.
- **/
+ * This function emits the #GtkSourceBuffer::undo signal.
+ */
 void
 gtk_source_buffer_undo (GtkSourceBuffer *buffer)
 {
@@ -1229,7 +1509,9 @@ gtk_source_buffer_undo (GtkSourceBuffer *buffer)
  *
  * Redoes the last undo operation.  Use gtk_source_buffer_can_redo()
  * to check whether a call to this function will have any effect.
- **/
+ *
+ * This function emits the #GtkSourceBuffer::redo signal.
+ */
 void
 gtk_source_buffer_redo (GtkSourceBuffer *buffer)
 {
@@ -1242,12 +1524,10 @@ gtk_source_buffer_redo (GtkSourceBuffer *buffer)
  * gtk_source_buffer_get_max_undo_levels:
  * @buffer: a #GtkSourceBuffer.
  *
- * Determines the number of undo levels the buffer will track for
- * buffer edits.
+ * Determines the number of undo levels the buffer will track for buffer edits.
  *
- * Return value: the maximum number of possible undo levels or
- *               -1 if no limit is set.
- **/
+ * Returns: the maximum number of possible undo levels or -1 if no limit is set.
+ */
 gint
 gtk_source_buffer_get_max_undo_levels (GtkSourceBuffer *buffer)
 {
@@ -1265,15 +1545,10 @@ gtk_source_buffer_get_max_undo_levels (GtkSourceBuffer *buffer)
  * track.  If the number of user actions exceeds the limit set by this
  * function, older actions will be discarded.
  *
- * If @max_undo_levels is -1, no limit is set.
+ * If @max_undo_levels is -1, the undo/redo is unlimited.
  *
- * A new action is started whenever the function
- * gtk_text_buffer_begin_user_action() is called.  In general, this
- * happens whenever the user presses any key which modifies the
- * buffer, but the undo manager will try to merge similar consecutive
- * actions, such as multiple character insertions into one action.
- * But, inserting a newline does start a new action.
- **/
+ * If @max_undo_levels is 0, the undo/redo is disabled.
+ */
 void
 gtk_source_buffer_set_max_undo_levels (GtkSourceBuffer *buffer,
 				       gint             max_undo_levels)
@@ -1293,7 +1568,26 @@ gtk_source_buffer_set_max_undo_levels (GtkSourceBuffer *buffer,
 		                                                     max_undo_levels);
 	}
 
-	g_object_notify (G_OBJECT (buffer), "max-undo-levels");
+	g_object_notify_by_pspec (G_OBJECT (buffer), buffer_properties[PROP_MAX_UNDO_LEVELS]);
+}
+
+gboolean
+_gtk_source_buffer_is_undo_redo_enabled (GtkSourceBuffer *buffer)
+{
+	g_return_val_if_fail (GTK_SOURCE_IS_BUFFER (buffer), FALSE);
+
+	if (buffer->priv->undo_manager == NULL)
+	{
+		return FALSE;
+	}
+
+	/* A custom UndoManager is not forced to follow max_undo_levels. */
+	if (!GTK_SOURCE_IS_UNDO_MANAGER_DEFAULT (buffer->priv->undo_manager))
+	{
+		return TRUE;
+	}
+
+	return buffer->priv->max_undo_levels != 0;
 }
 
 /**
@@ -1307,7 +1601,7 @@ gtk_source_buffer_set_max_undo_levels (GtkSourceBuffer *buffer,
  *
  * You may nest gtk_source_buffer_begin_not_undoable_action() /
  * gtk_source_buffer_end_not_undoable_action() blocks.
- **/
+ */
 void
 gtk_source_buffer_begin_not_undoable_action (GtkSourceBuffer *buffer)
 {
@@ -1324,7 +1618,7 @@ gtk_source_buffer_begin_not_undoable_action (GtkSourceBuffer *buffer)
  * last not undoable block is closed through the call to this
  * function, the list of undo actions is cleared and the undo manager
  * is re-enabled.
- **/
+ */
 void
 gtk_source_buffer_end_not_undoable_action (GtkSourceBuffer *buffer)
 {
@@ -1340,15 +1634,15 @@ gtk_source_buffer_end_not_undoable_action (GtkSourceBuffer *buffer)
  * Determines whether bracket match highlighting is activated for the
  * source buffer.
  *
- * Return value: %TRUE if the source buffer will highlight matching
+ * Returns: %TRUE if the source buffer will highlight matching
  * brackets.
- **/
+ */
 gboolean
 gtk_source_buffer_get_highlight_matching_brackets (GtkSourceBuffer *buffer)
 {
 	g_return_val_if_fail (GTK_SOURCE_IS_BUFFER (buffer), FALSE);
 
-	return (buffer->priv->highlight_brackets != FALSE);
+	return buffer->priv->highlight_brackets;
 }
 
 /**
@@ -1360,34 +1654,22 @@ gtk_source_buffer_get_highlight_matching_brackets (GtkSourceBuffer *buffer)
  * activated, when you position your cursor over a bracket character
  * (a parenthesis, a square bracket, etc.) the matching opening or
  * closing bracket character will be highlighted.
- **/
+ */
 void
 gtk_source_buffer_set_highlight_matching_brackets (GtkSourceBuffer *buffer,
 						   gboolean         highlight)
 {
 	g_return_if_fail (GTK_SOURCE_IS_BUFFER (buffer));
 
-	highlight = (highlight != FALSE);
+	highlight = highlight != FALSE;
 
 	if (highlight != buffer->priv->highlight_brackets)
 	{
-		GtkTextIter iter;
-		GtkTextMark *mark;
-
 		buffer->priv->highlight_brackets = highlight;
 
-		/* try to see if there is already a bracket match at the
-		 * current position, but only if the tag table is already set
-		 * otherwise we have problems when calling this function
-		 * on init (get_insert creates the tag table as a side effect */
-		if (buffer->priv->constructed)
-		{
-			mark = gtk_text_buffer_get_insert (GTK_TEXT_BUFFER (buffer));
-			gtk_text_buffer_get_iter_at_mark (GTK_TEXT_BUFFER (buffer), &iter, mark);
-			gtk_source_buffer_move_cursor (GTK_TEXT_BUFFER (buffer), &iter, mark);
-		}
+		update_bracket_highlighting (buffer);
 
-		g_object_notify (G_OBJECT (buffer), "highlight-matching-brackets");
+		g_object_notify_by_pspec (G_OBJECT (buffer), buffer_properties[PROP_HIGHLIGHT_MATCHING_BRACKETS]);
 	}
 }
 
@@ -1398,14 +1680,14 @@ gtk_source_buffer_set_highlight_matching_brackets (GtkSourceBuffer *buffer,
  * Determines whether syntax highlighting is activated in the source
  * buffer.
  *
- * Return value: %TRUE if syntax highlighting is enabled, %FALSE otherwise.
- **/
+ * Returns: %TRUE if syntax highlighting is enabled, %FALSE otherwise.
+ */
 gboolean
 gtk_source_buffer_get_highlight_syntax (GtkSourceBuffer *buffer)
 {
 	g_return_val_if_fail (GTK_SOURCE_IS_BUFFER (buffer), FALSE);
 
-	return (buffer->priv->highlight_syntax != FALSE);
+	return buffer->priv->highlight_syntax;
 }
 
 /**
@@ -1413,41 +1695,44 @@ gtk_source_buffer_get_highlight_syntax (GtkSourceBuffer *buffer)
  * @buffer: a #GtkSourceBuffer.
  * @highlight: %TRUE to enable syntax highlighting, %FALSE to disable it.
  *
- * Controls whether syntax is highlighted in the buffer. If @highlight
- * is %TRUE, the text will be highlighted according to the syntax
- * patterns specified in the language set with
- * gtk_source_buffer_set_language(). If @highlight is %FALSE, syntax highlighting
- * is disabled and all the GtkTextTag objects that have been added by the
- * syntax highlighting engine are removed from the buffer.
- **/
+ * Controls whether syntax is highlighted in the buffer.
+ *
+ * If @highlight is %TRUE, the text will be highlighted according to the syntax
+ * patterns specified in the #GtkSourceLanguage set with
+ * gtk_source_buffer_set_language().
+ *
+ * If @highlight is %FALSE, syntax highlighting is disabled and all the
+ * #GtkTextTag objects that have been added by the syntax highlighting engine
+ * are removed from the buffer.
+ */
 void
 gtk_source_buffer_set_highlight_syntax (GtkSourceBuffer *buffer,
 					gboolean         highlight)
 {
 	g_return_if_fail (GTK_SOURCE_IS_BUFFER (buffer));
 
-	highlight = (highlight != FALSE);
+	highlight = highlight != FALSE;
 
 	if (buffer->priv->highlight_syntax != highlight)
 	{
 		buffer->priv->highlight_syntax = highlight;
-		g_object_notify (G_OBJECT (buffer), "highlight-syntax");
+		g_object_notify_by_pspec (G_OBJECT (buffer), buffer_properties[PROP_HIGHLIGHT_SYNTAX]);
 	}
 }
 
 /**
  * gtk_source_buffer_set_language:
  * @buffer: a #GtkSourceBuffer.
- * @language: (allow-none): a #GtkSourceLanguage to set, or %NULL.
+ * @language: (nullable): a #GtkSourceLanguage to set, or %NULL.
  *
- * Associate a #GtkSourceLanguage with the buffer. If @language is
- * not-%NULL and syntax highlighting is enabled (see gtk_source_buffer_set_highlight_syntax()),
- * the syntax patterns defined in @language will be used to highlight the text
- * contained in the buffer. If @language is %NULL, the text contained in the
- * buffer is not highlighted.
+ * Associates a #GtkSourceLanguage with the buffer.
+ *
+ * Note that a #GtkSourceLanguage affects not only the syntax highlighting, but
+ * also the [context classes][context-classes]. If you want to disable just the
+ * syntax highlighting, see gtk_source_buffer_set_highlight_syntax().
  *
  * The buffer holds a reference to @language.
- **/
+ */
 void
 gtk_source_buffer_set_language (GtkSourceBuffer   *buffer,
 				GtkSourceLanguage *language)
@@ -1455,8 +1740,10 @@ gtk_source_buffer_set_language (GtkSourceBuffer   *buffer,
 	g_return_if_fail (GTK_SOURCE_IS_BUFFER (buffer));
 	g_return_if_fail (GTK_SOURCE_IS_LANGUAGE (language) || language == NULL);
 
-	if (buffer->priv->language == language)
+	if (!g_set_object (&buffer->priv->language, language))
+	{
 		return;
+	}
 
 	if (buffer->priv->highlight_engine != NULL)
 	{
@@ -1466,30 +1753,25 @@ gtk_source_buffer_set_language (GtkSourceBuffer   *buffer,
 		buffer->priv->highlight_engine = NULL;
 	}
 
-	if (buffer->priv->language != NULL)
-		g_object_unref (buffer->priv->language);
-
-	buffer->priv->language = language;
-
 	if (language != NULL)
 	{
-		g_object_ref (language);
-
 		/* get a new engine */
 		buffer->priv->highlight_engine = _gtk_source_language_create_engine (language);
 
-		if (buffer->priv->highlight_engine)
+		if (buffer->priv->highlight_engine != NULL)
 		{
 			_gtk_source_engine_attach_buffer (buffer->priv->highlight_engine,
 							  GTK_TEXT_BUFFER (buffer));
 
-			if (buffer->priv->style_scheme)
+			if (buffer->priv->style_scheme != NULL)
+			{
 				_gtk_source_engine_set_style_scheme (buffer->priv->highlight_engine,
 								     buffer->priv->style_scheme);
+			}
 		}
 	}
 
-	g_object_notify (G_OBJECT (buffer), "language");
+	g_object_notify_by_pspec (G_OBJECT (buffer), buffer_properties[PROP_LANGUAGE]);
 }
 
 /**
@@ -1500,8 +1782,9 @@ gtk_source_buffer_set_language (GtkSourceBuffer   *buffer,
  * see gtk_source_buffer_set_language().  The returned object should not be
  * unreferenced by the user.
  *
- * Return value: (transfer none): the #GtkSourceLanguage associated with the buffer, or %NULL.
- **/
+ * Returns: (nullable) (transfer none): the #GtkSourceLanguage associated
+ * with the buffer, or %NULL.
+ */
 GtkSourceLanguage *
 gtk_source_buffer_get_language (GtkSourceBuffer *buffer)
 {
@@ -1510,28 +1793,51 @@ gtk_source_buffer_get_language (GtkSourceBuffer *buffer)
 	return buffer->priv->language;
 }
 
-/**
- * _gtk_source_buffer_update_highlight:
+/*
+ * _gtk_source_buffer_update_syntax_highlight:
  * @buffer: a #GtkSourceBuffer.
  * @start: start of the area to highlight.
  * @end: end of the area to highlight.
  * @synchronous: whether the area should be highlighted synchronously.
  *
  * Asks the buffer to analyze and highlight given area.
- **/
+ */
 void
-_gtk_source_buffer_update_highlight (GtkSourceBuffer   *buffer,
-				     const GtkTextIter *start,
-				     const GtkTextIter *end,
-				     gboolean           synchronous)
+_gtk_source_buffer_update_syntax_highlight (GtkSourceBuffer   *buffer,
+					    const GtkTextIter *start,
+					    const GtkTextIter *end,
+					    gboolean           synchronous)
 {
 	g_return_if_fail (GTK_SOURCE_IS_BUFFER (buffer));
 
 	if (buffer->priv->highlight_engine != NULL)
+	{
 		_gtk_source_engine_update_highlight (buffer->priv->highlight_engine,
 						     start,
 						     end,
 						     synchronous);
+	}
+}
+
+void
+_gtk_source_buffer_update_search_highlight (GtkSourceBuffer   *buffer,
+					    const GtkTextIter *start,
+					    const GtkTextIter *end,
+					    gboolean           synchronous)
+{
+	GList *l;
+
+	g_return_if_fail (GTK_SOURCE_IS_BUFFER (buffer));
+
+	for (l = buffer->priv->search_contexts; l != NULL; l = l->next)
+	{
+		GtkSourceSearchContext *search_context = l->data;
+
+		_gtk_source_search_context_update_highlight (search_context,
+							     start,
+							     end,
+							     synchronous);
+	}
 }
 
 /**
@@ -1555,20 +1861,29 @@ gtk_source_buffer_ensure_highlight (GtkSourceBuffer   *buffer,
 				    const GtkTextIter *start,
 				    const GtkTextIter *end)
 {
-	_gtk_source_buffer_update_highlight (buffer,
-					     start,
-					     end,
-					     TRUE);
+	_gtk_source_buffer_update_syntax_highlight (buffer, start, end, TRUE);
+	_gtk_source_buffer_update_search_highlight (buffer, start, end, TRUE);
 }
 
 /**
  * gtk_source_buffer_set_style_scheme:
  * @buffer: a #GtkSourceBuffer.
- * @scheme: (allow-none): a #GtkSourceStyleScheme or %NULL.
+ * @scheme: (nullable): a #GtkSourceStyleScheme or %NULL.
  *
- * Sets style scheme used by the buffer. If @scheme is %NULL no
- * style scheme is used.
- **/
+ * Sets a #GtkSourceStyleScheme to be used by the buffer and the view.
+ *
+ * Note that a #GtkSourceStyleScheme affects not only the syntax highlighting,
+ * but also other #GtkSourceView features such as highlighting the current line,
+ * matching brackets, the line numbers, etc.
+ *
+ * Instead of setting a %NULL @scheme, it is better to disable syntax
+ * highlighting with gtk_source_buffer_set_highlight_syntax(), and setting the
+ * #GtkSourceStyleScheme with the "classic" or "tango" ID, because those two
+ * style schemes follow more closely the GTK+ theme (for example for the
+ * background color).
+ *
+ * The buffer holds a reference to @scheme.
+ */
 void
 gtk_source_buffer_set_style_scheme (GtkSourceBuffer      *buffer,
 				    GtkSourceStyleScheme *scheme)
@@ -1576,20 +1891,17 @@ gtk_source_buffer_set_style_scheme (GtkSourceBuffer      *buffer,
 	g_return_if_fail (GTK_SOURCE_IS_BUFFER (buffer));
 	g_return_if_fail (GTK_SOURCE_IS_STYLE_SCHEME (scheme) || scheme == NULL);
 
-	if (buffer->priv->style_scheme == scheme)
-		return;
+	if (g_set_object (&buffer->priv->style_scheme, scheme))
+	{
+		update_bracket_match_style (buffer);
 
-	if (buffer->priv->style_scheme)
-		g_object_unref (buffer->priv->style_scheme);
+		if (buffer->priv->highlight_engine != NULL)
+		{
+			_gtk_source_engine_set_style_scheme (buffer->priv->highlight_engine, scheme);
+		}
 
-	buffer->priv->style_scheme = scheme ? g_object_ref (scheme) : NULL;
-	update_bracket_match_style (buffer);
-
-	if (buffer->priv->highlight_engine != NULL)
-		_gtk_source_engine_set_style_scheme (buffer->priv->highlight_engine,
-						     scheme);
-
-	g_object_notify (G_OBJECT (buffer), "style-scheme");
+		g_object_notify_by_pspec (G_OBJECT (buffer), buffer_properties[PROP_STYLE_SCHEME]);
+	}
 }
 
 /**
@@ -1600,9 +1912,9 @@ gtk_source_buffer_set_style_scheme (GtkSourceBuffer      *buffer,
  * see gtk_source_buffer_set_style_scheme().
  * The returned object should not be unreferenced by the user.
  *
- * Return value: (transfer none): the #GtkSourceStyleScheme associated
- * with the buffer, or %NULL.
- **/
+ * Returns: (nullable) (transfer none): the #GtkSourceStyleScheme
+ * associated with the buffer, or %NULL.
+ */
 GtkSourceStyleScheme *
 gtk_source_buffer_get_style_scheme (GtkSourceBuffer *buffer)
 {
@@ -1611,187 +1923,29 @@ gtk_source_buffer_get_style_scheme (GtkSourceBuffer *buffer)
 	return buffer->priv->style_scheme;
 }
 
-/* Source Marks functionality */
-
-/* At the moment this is pretty dumb (O(N)), if it is a performance
- * problem we should change data struct.
- * Since it's used from mark_set when the mark was moved, we cannot bsearch.
- * Returns TRUE if the mark was found and removed */
-static gboolean
-source_mark_remove (GtkSourceBuffer *buffer, GtkSourceMark *mark)
-{
-	guint i;
-
-	for (i = 0; i < buffer->priv->source_marks->len; ++i)
-	{
-		GtkSourceMark *m;
-
-		m = g_array_index (buffer->priv->source_marks, GtkSourceMark *, i);
-		if (mark == m)
-		{
-			g_array_remove_index (buffer->priv->source_marks, i);
-			g_object_unref (m);
-
-			return TRUE;
-		}
-	}
-
-	return FALSE;
-}
-
-/* Performs a binary search among the source marks in @buffer for the
- * position of the @iter.  Returns the index of the mark at the specified
- * position or nearest before or after depending on @before.
- *
- * Return value: an index in the source marks array or -1 if the array is
- * empty or if there is no mark before/after the specified position
- */
-static gint
-source_mark_bsearch (GtkSourceBuffer *buffer, GtkTextIter *iter, gboolean before)
-{
-	GArray *marks = buffer->priv->source_marks;
-	GtkSourceMark *check;
-	GtkTextIter check_iter, found_iter;
-	gint cmp, i, min, max;
-
-	if (marks->len == 0)
-		return -1;
-
-	i = min = 0;
-	max = marks->len - 1;
-	while (max >= min)
-	{
-		i = (min + max) >> 1;
-		check = g_array_index (marks, GtkSourceMark *, i);
-		gtk_text_buffer_get_iter_at_mark (GTK_TEXT_BUFFER (buffer),
-						  &check_iter,
-						  GTK_TEXT_MARK (check));
-		cmp = gtk_text_iter_compare (iter, &check_iter);
-		if (cmp < 0)
-		{
-			max = i - 1;
-		}
-		else if (cmp > 0)
-		{
-			min = i + 1;
-		}
-		else
-			break;
-	}
-
-	if (before)
-	{
-		/* if the binary search match is after the specified iter, go back */
-		while (cmp < 0 && i >= 0)
-		{
-			if (i == 0)
-				return -1;
-
-			i--;
-			check = g_array_index (marks, GtkSourceMark *, i);
-			gtk_text_buffer_get_iter_at_mark (GTK_TEXT_BUFFER (buffer),
-							  &check_iter,
-							  GTK_TEXT_MARK (check));
-			cmp = gtk_text_iter_compare (iter, &check_iter);
-		}
-
-		/* if there are many marks at the given iter, return the last */
-		found_iter = check_iter;
-		while (i < marks->len - 1)
-		{
-			check = g_array_index (marks, GtkSourceMark *, i + 1);
-			gtk_text_buffer_get_iter_at_mark (GTK_TEXT_BUFFER (buffer),
-							  &check_iter,
-							  GTK_TEXT_MARK (check));
-			cmp = gtk_text_iter_compare (&found_iter, &check_iter);
-			if (cmp != 0)
-			{
-				break;
-			}
-			i++;
-		}
-	}
-	else
-	{
-		/* if the binary search match is before the specified iter, go forward */
-		while (cmp > 0 && i < marks->len)
-		{
-			if (i == marks->len - 1)
-				return -1;
-
-			i++;
-			check = g_array_index (marks, GtkSourceMark *, i);
-			gtk_text_buffer_get_iter_at_mark (GTK_TEXT_BUFFER (buffer),
-							  &check_iter,
-							  GTK_TEXT_MARK (check));
-			cmp = gtk_text_iter_compare (iter, &check_iter);
-		}
-
-		/* if there are many marks at the given iter, return the first */
-		found_iter = check_iter;
-		while (i > 0)
-		{
-			check = g_array_index (marks, GtkSourceMark *, i - 1);
-			gtk_text_buffer_get_iter_at_mark (GTK_TEXT_BUFFER (buffer),
-							  &check_iter,
-							  GTK_TEXT_MARK (check));
-			cmp = gtk_text_iter_compare (&found_iter, &check_iter);
-			if (cmp != 0)
-			{
-				break;
-			}
-			i--;
-		}
-	}
-
-	return i;
-}
-
 static void
-source_mark_insert (GtkSourceBuffer *buffer, GtkSourceMark *mark)
+add_source_mark (GtkSourceBuffer *buffer,
+		 GtkSourceMark   *mark)
 {
-	GtkTextIter iter;
-	gint idx;
+	const gchar *category;
+	GtkSourceMarksSequence *seq;
 
-	gtk_text_buffer_get_iter_at_mark (GTK_TEXT_BUFFER (buffer),
-					  &iter,
-					  GTK_TEXT_MARK (mark));
+	_gtk_source_marks_sequence_add (buffer->priv->all_source_marks,
+					GTK_TEXT_MARK (mark));
 
-	idx = source_mark_bsearch (buffer, &iter, TRUE);
-	if (idx >= 0)
+	category = gtk_source_mark_get_category (mark);
+	seq = g_hash_table_lookup (buffer->priv->source_marks, category);
+
+	if (seq == NULL)
 	{
-		/* if the mark we found is at same iter or before
-		 * put our mark after that */
-		idx++;
-	}
-	else
-	{
-		idx = 0;
+		seq = _gtk_source_marks_sequence_new (GTK_TEXT_BUFFER (buffer));
+
+		g_hash_table_insert (buffer->priv->source_marks,
+				     g_strdup (category),
+				     seq);
 	}
 
-	g_object_ref (mark);
-	g_array_insert_val (buffer->priv->source_marks, idx, mark);
-}
-
-static void
-gtk_source_buffer_real_apply_tag (GtkTextBuffer     *buffer,
-                                  GtkTextTag        *tag,
-                                  const GtkTextIter *start,
-                                  const GtkTextIter *end)
-{
-	GtkSourceBuffer *source;
-
-	source = GTK_SOURCE_BUFFER (buffer);
-
-	/* We only allow the bracket match tag to be applied when we are doing
-	   it ourselves (i.e. when allow_bracket_match is TRUE). The reason for
-	   doing so is that when you copy/paste from the same buffer, the tags
-	   get pasted too. This is ok for highlighting because the region will
-	   get rehighlighted, but not for bracket matching. */
-	if (source->priv->allow_bracket_match || tag != get_bracket_match_tag (source))
-	{
-		GTK_TEXT_BUFFER_CLASS (gtk_source_buffer_parent_class)->apply_tag (buffer, tag, start, end);
-	}
+	_gtk_source_marks_sequence_add (seq, GTK_TEXT_MARK (mark));
 }
 
 static void
@@ -1801,20 +1955,14 @@ gtk_source_buffer_real_mark_set	(GtkTextBuffer     *buffer,
 {
 	if (GTK_SOURCE_IS_MARK (mark))
 	{
-		/* for now we simply remove and reinsert at
-		 * the right place every time */
-		source_mark_remove (GTK_SOURCE_BUFFER (buffer),
-				    GTK_SOURCE_MARK (mark));
-		source_mark_insert (GTK_SOURCE_BUFFER (buffer),
-				    GTK_SOURCE_MARK (mark));
+		add_source_mark (GTK_SOURCE_BUFFER (buffer),
+				 GTK_SOURCE_MARK (mark));
 
-		g_signal_emit_by_name (buffer, "source_mark_updated", mark);
+		g_signal_emit (buffer, buffer_signals[SOURCE_MARK_UPDATED], 0, mark);
 	}
-
-	/* if the mark is the insert mark, update bracket matching */
 	else if (mark == gtk_text_buffer_get_insert (buffer))
 	{
-		gtk_source_buffer_move_cursor (buffer, location, mark);
+		cursor_moved (GTK_SOURCE_BUFFER (buffer));
 	}
 
 	GTK_TEXT_BUFFER_CLASS (gtk_source_buffer_parent_class)->mark_set (buffer, location, mark);
@@ -1822,18 +1970,29 @@ gtk_source_buffer_real_mark_set	(GtkTextBuffer     *buffer,
 
 static void
 gtk_source_buffer_real_mark_deleted (GtkTextBuffer *buffer,
-				     GtkTextMark *mark)
+				     GtkTextMark   *mark)
 {
 	if (GTK_SOURCE_IS_MARK (mark))
 	{
-		source_mark_remove (GTK_SOURCE_BUFFER (buffer),
-				    GTK_SOURCE_MARK (mark));
+		GtkSourceBuffer *source_buffer = GTK_SOURCE_BUFFER (buffer);
+		const gchar *category;
+		GtkSourceMarksSequence *seq;
 
-		g_signal_emit_by_name (buffer, "source_mark_updated", mark);
+		category = gtk_source_mark_get_category (GTK_SOURCE_MARK (mark));
+		seq = g_hash_table_lookup (source_buffer->priv->source_marks, category);
+
+		if (_gtk_source_marks_sequence_is_empty (seq))
+		{
+			g_hash_table_remove (source_buffer->priv->source_marks, category);
+		}
+
+		g_signal_emit (buffer, buffer_signals[SOURCE_MARK_UPDATED], 0, mark);
 	}
 
 	if (GTK_TEXT_BUFFER_CLASS (gtk_source_buffer_parent_class)->mark_deleted != NULL)
+	{
 		GTK_TEXT_BUFFER_CLASS (gtk_source_buffer_parent_class)->mark_deleted (buffer, mark);
+	}
 }
 
 static void
@@ -1855,7 +2014,7 @@ gtk_source_buffer_real_redo (GtkSourceBuffer *buffer)
 /**
  * gtk_source_buffer_create_source_mark:
  * @buffer: a #GtkSourceBuffer.
- * @name: (allow-none): the name of the mark, or %NULL.
+ * @name: (nullable): the name of the mark, or %NULL.
  * @category: a string defining the mark category.
  * @where: location to place the mark.
  *
@@ -1873,10 +2032,10 @@ gtk_source_buffer_real_redo (GtkSourceBuffer *buffer)
  * Typical uses for a source mark are bookmarks, breakpoints, current
  * executing instruction indication in a source file, etc..
  *
- * Return value: (transfer none): a new #GtkSourceMark, owned by the buffer.
+ * Returns: (transfer none): a new #GtkSourceMark, owned by the buffer.
  *
  * Since: 2.2
- **/
+ */
 GtkSourceMark *
 gtk_source_buffer_create_source_mark (GtkSourceBuffer   *buffer,
 				      const gchar       *name,
@@ -1894,35 +2053,22 @@ gtk_source_buffer_create_source_mark (GtkSourceBuffer   *buffer,
 				  GTK_TEXT_MARK (mark),
 				  where);
 
+	/* We want to return a borrowed reference and the mark is already
+	 * owned by @buffer due to gtk_text_buffer_add_mark(). Therefore
+	 * it is safe to unref immediately.
+	 */
+	g_object_unref (mark);
+
 	return mark;
 }
 
-static gint
-get_mark_index (GtkSourceBuffer *buffer,
-		GtkSourceMark   *mark)
+static GtkSourceMarksSequence *
+get_marks_sequence (GtkSourceBuffer *buffer,
+		    const gchar     *category)
 {
-	GtkTextIter iter;
-	gint idx;
-
-	/* TODO: we could speed this up by caching the current
-	 * position in the mark and invalidating the cache when
-	 * the marks array changes. For now we always lookup. */
-	gtk_text_buffer_get_iter_at_mark (GTK_TEXT_BUFFER (buffer),
-					  &iter,
-					  GTK_TEXT_MARK (mark));
-
-	idx = source_mark_bsearch (buffer, &iter, FALSE);
-
-	/* the array should already contain @mark */
-	g_assert (idx >= 0);
-
-	/* move up to our mark among the ones at this position */
-	while (mark != g_array_index (buffer->priv->source_marks, GtkSourceMark *, idx))
-	{
-		++idx;
-	}
-
-	return idx;
+	return category == NULL ?
+		buffer->priv->all_source_marks :
+		g_hash_table_lookup (buffer->priv->source_marks, category);
 }
 
 GtkSourceMark *
@@ -1930,25 +2076,21 @@ _gtk_source_buffer_source_mark_next (GtkSourceBuffer *buffer,
 				     GtkSourceMark   *mark,
 				     const gchar     *category)
 {
-	gint idx;
+	GtkSourceMarksSequence *seq;
+	GtkTextMark *next_mark;
 
 	g_return_val_if_fail (GTK_SOURCE_IS_BUFFER (buffer), NULL);
 
-	idx = get_mark_index (buffer, mark);
+	seq = get_marks_sequence (buffer, category);
 
-	while ((guint) ++idx < buffer->priv->source_marks->len)
+	if (seq == NULL)
 	{
-		GtkSourceMark *ret;
-
-		ret = g_array_index (buffer->priv->source_marks, GtkSourceMark *, idx);
-		if (category == NULL ||
-		    0 == strcmp (category, gtk_source_mark_get_category (ret)))
-		{
-			return ret;
-		}
+		return NULL;
 	}
 
-	return NULL;
+	next_mark = _gtk_source_marks_sequence_next (seq, GTK_TEXT_MARK (mark));
+
+	return next_mark == NULL ? NULL : GTK_SOURCE_MARK (next_mark);
 }
 
 GtkSourceMark *
@@ -1956,32 +2098,28 @@ _gtk_source_buffer_source_mark_prev (GtkSourceBuffer *buffer,
 				     GtkSourceMark   *mark,
 				     const gchar     *category)
 {
-	gint idx;
+	GtkSourceMarksSequence *seq;
+	GtkTextMark *prev_mark;
 
 	g_return_val_if_fail (GTK_SOURCE_IS_BUFFER (buffer), NULL);
 
-	idx = get_mark_index (buffer, mark);
+	seq = get_marks_sequence (buffer, category);
 
-	while (--idx >= 0)
+	if (seq == NULL)
 	{
-		GtkSourceMark *ret;
-
-		ret = g_array_index (buffer->priv->source_marks, GtkSourceMark *, idx);
-		if (category == NULL ||
-		    0 == strcmp (category, gtk_source_mark_get_category (ret)))
-		{
-			return ret;
-		}
+		return NULL;
 	}
 
-	return NULL;
+	prev_mark = _gtk_source_marks_sequence_prev (seq, GTK_TEXT_MARK (mark));
+
+	return prev_mark == NULL ? NULL : GTK_SOURCE_MARK (prev_mark);
 }
 
 /**
  * gtk_source_buffer_forward_iter_to_source_mark:
  * @buffer: a #GtkSourceBuffer.
- * @iter: an iterator.
- * @category: (allow-none): category to search for, or %NULL
+ * @iter: (inout): an iterator.
+ * @category: (nullable): category to search for, or %NULL
  *
  * Moves @iter to the position of the next #GtkSourceMark of the given
  * @category. Returns %TRUE if @iter was moved. If @category is NULL, the
@@ -1990,52 +2128,32 @@ _gtk_source_buffer_source_mark_prev (GtkSourceBuffer *buffer,
  * Returns: whether @iter was moved.
  *
  * Since: 2.2
- **/
+ */
 gboolean
 gtk_source_buffer_forward_iter_to_source_mark (GtkSourceBuffer *buffer,
 					       GtkTextIter     *iter,
 					       const gchar     *category)
 {
-	GtkTextIter i;
-	gint idx;
+	GtkSourceMarksSequence *seq;
 
 	g_return_val_if_fail (GTK_SOURCE_IS_BUFFER (buffer), FALSE);
 	g_return_val_if_fail (iter != NULL, FALSE);
 
-	i = *iter;
+	seq = get_marks_sequence (buffer, category);
 
-	idx = source_mark_bsearch (buffer, &i, FALSE);
-	if (idx < 0)
-		return FALSE;
-
-	while ((guint) idx < buffer->priv->source_marks->len)
+	if (seq == NULL)
 	{
-		GtkSourceMark *mark;
-
-		mark = g_array_index (buffer->priv->source_marks, GtkSourceMark *, idx);
-		if (category == NULL ||
-		    0 == strcmp (category, gtk_source_mark_get_category (mark)))
-		{
-			/* update the iter */
-			gtk_text_buffer_get_iter_at_mark (GTK_TEXT_BUFFER (buffer), &i, GTK_TEXT_MARK (mark));
-			if (gtk_text_iter_compare (&i, iter) > 0)
-			{
-				*iter = i;
-				return TRUE;
-			}
-		}
-
-		++idx;
+		return FALSE;
 	}
 
-	return FALSE;
+	return _gtk_source_marks_sequence_forward_iter (seq, iter);
 }
 
 /**
  * gtk_source_buffer_backward_iter_to_source_mark:
  * @buffer: a #GtkSourceBuffer.
- * @iter: an iterator.
- * @category: (allow-none): category to search for, or %NULL
+ * @iter: (inout): an iterator.
+ * @category: (nullable): category to search for, or %NULL
  *
  * Moves @iter to the position of the previous #GtkSourceMark of the given
  * category. Returns %TRUE if @iter was moved. If @category is NULL, the
@@ -2044,52 +2162,32 @@ gtk_source_buffer_forward_iter_to_source_mark (GtkSourceBuffer *buffer,
  * Returns: whether @iter was moved.
  *
  * Since: 2.2
- **/
+ */
 gboolean
 gtk_source_buffer_backward_iter_to_source_mark (GtkSourceBuffer *buffer,
 						GtkTextIter     *iter,
 						const gchar     *category)
 {
-	GtkTextIter i;
-	gint idx;
+	GtkSourceMarksSequence *seq;
 
 	g_return_val_if_fail (GTK_SOURCE_IS_BUFFER (buffer), FALSE);
 	g_return_val_if_fail (iter != NULL, FALSE);
 
-	i = *iter;
+	seq = get_marks_sequence (buffer, category);
 
-	idx = source_mark_bsearch (buffer, &i, TRUE);
-	if (idx < 0)
-		return FALSE;
-
-	while (idx >= 0)
+	if (seq == NULL)
 	{
-		GtkSourceMark *mark;
-
-		mark = g_array_index (buffer->priv->source_marks, GtkSourceMark *, idx);
-		if (category == NULL ||
-		    0 == strcmp (category, gtk_source_mark_get_category (mark)))
-		{
-			/* update the iter */
-			gtk_text_buffer_get_iter_at_mark (GTK_TEXT_BUFFER (buffer), &i, GTK_TEXT_MARK (mark));
-			if (gtk_text_iter_compare (&i, iter) < 0)
-			{
-				*iter = i;
-				return TRUE;
-			}
-		}
-
-		--idx;
+		return FALSE;
 	}
 
-	return FALSE;
+	return _gtk_source_marks_sequence_backward_iter (seq, iter);
 }
 
 /**
  * gtk_source_buffer_get_source_marks_at_iter:
  * @buffer: a #GtkSourceBuffer.
  * @iter: an iterator.
- * @category: (allow-none): category to search for, or %NULL
+ * @category: (nullable): category to search for, or %NULL
  *
  * Returns the list of marks of the given category at @iter. If @category
  * is %NULL it returns all marks at @iter.
@@ -2098,97 +2196,71 @@ gtk_source_buffer_backward_iter_to_source_mark (GtkSourceBuffer *buffer,
  * a newly allocated #GSList.
  *
  * Since: 2.2
- **/
+ */
 GSList *
 gtk_source_buffer_get_source_marks_at_iter (GtkSourceBuffer *buffer,
 					    GtkTextIter     *iter,
 					    const gchar     *category)
 {
-	GSList *marks, *l, *res;
+	GtkSourceMarksSequence *seq;
 
+	g_return_val_if_fail (GTK_SOURCE_IS_BUFFER (buffer), NULL);
 	g_return_val_if_fail (iter != NULL, NULL);
 
-	if (buffer->priv->source_marks->len == 0)
-		return NULL;
+	seq = get_marks_sequence (buffer, category);
 
-	res = NULL;
-	marks = gtk_text_iter_get_marks (iter);
-
-	for (l = marks; l != NULL; l = l->next)
+	if (seq == NULL)
 	{
-		GtkSourceMark *mark;
-
-		if (!GTK_SOURCE_IS_MARK (l->data))
-			continue;
-
-		mark = GTK_SOURCE_MARK (l->data);
-		if (category == NULL ||
-		    0 == strcmp (category, gtk_source_mark_get_category (mark)))
-		{
-			res = g_slist_prepend (res, l->data);
-		}
+		return NULL;
 	}
 
-	g_slist_free (marks);
-
-	return g_slist_reverse (res);
+	return _gtk_source_marks_sequence_get_marks_at_iter (seq, iter);
 }
 
 /**
  * gtk_source_buffer_get_source_marks_at_line:
  * @buffer: a #GtkSourceBuffer.
  * @line: a line number.
- * @category: (allow-none): category to search for, or %NULL
+ * @category: (nullable): category to search for, or %NULL
  *
  * Returns the list of marks of the given category at @line.
- * If @category is NULL, all marks at @line are returned.
+ * If @category is %NULL, all marks at @line are returned.
  *
  * Returns: (element-type GtkSource.Mark) (transfer container):
  * a newly allocated #GSList.
  *
  * Since: 2.2
- **/
+ */
 GSList *
 gtk_source_buffer_get_source_marks_at_line (GtkSourceBuffer *buffer,
 					    gint             line,
 					    const gchar     *category)
 {
-	GtkTextIter iter;
-	GSList *res;
+	GtkSourceMarksSequence *seq;
+	GtkTextIter start;
+	GtkTextIter end;
 
- 	g_return_val_if_fail (GTK_SOURCE_IS_BUFFER (buffer), NULL);
+	g_return_val_if_fail (GTK_SOURCE_IS_BUFFER (buffer), NULL);
 
-	if (buffer->priv->source_marks->len == 0)
-		return NULL;
+	seq = get_marks_sequence (buffer, category);
 
-	gtk_text_buffer_get_iter_at_line (GTK_TEXT_BUFFER (buffer),
-					  &iter, line);
-
-	res = gtk_source_buffer_get_source_marks_at_iter (buffer,
-							  &iter,
-							  category);
-
-	while (gtk_source_buffer_forward_iter_to_source_mark (buffer,
-							      &iter,
-							      category))
+	if (seq == NULL)
 	{
-		if (gtk_text_iter_get_line (&iter) == line)
-		{
-			GSList *l;
-
-			l =  gtk_source_buffer_get_source_marks_at_iter (buffer,
-									 &iter,
-									 category);
-
-			res = g_slist_concat (res, l);
-		}
-		else
-		{
-			break;
-		}
+		return NULL;
 	}
 
-	return res;
+	gtk_text_buffer_get_iter_at_line (GTK_TEXT_BUFFER (buffer),
+					  &start,
+					  line);
+
+	end = start;
+
+	if (!gtk_text_iter_ends_line (&end))
+	{
+		gtk_text_iter_forward_to_line_end (&end);
+	}
+
+	return _gtk_source_marks_sequence_get_marks_in_range (seq, &start, &end);
 }
 
 /**
@@ -2196,20 +2268,20 @@ gtk_source_buffer_get_source_marks_at_line (GtkSourceBuffer *buffer,
  * @buffer: a #GtkSourceBuffer.
  * @start: a #GtkTextIter.
  * @end: a #GtkTextIter.
- * @category: (allow-none): category to search for, or %NULL.
+ * @category: (nullable): category to search for, or %NULL.
  *
  * Remove all marks of @category between @start and @end from the buffer.
  * If @category is NULL, all marks in the range will be removed.
  *
  * Since: 2.2
- **/
+ */
 void
 gtk_source_buffer_remove_source_marks (GtkSourceBuffer   *buffer,
 				       const GtkTextIter *start,
 				       const GtkTextIter *end,
 				       const gchar       *category)
 {
-	GtkTextIter iter;
+	GtkSourceMarksSequence *seq;
 	GSList *list;
 	GSList *l;
 
@@ -2217,39 +2289,39 @@ gtk_source_buffer_remove_source_marks (GtkSourceBuffer   *buffer,
  	g_return_if_fail (start != NULL);
  	g_return_if_fail (end != NULL);
 
-	iter = *start;
+	seq = get_marks_sequence (buffer, category);
 
-	list = gtk_source_buffer_get_source_marks_at_iter (buffer,
-							   &iter,
-							   category);
-
-	while (gtk_source_buffer_forward_iter_to_source_mark (buffer,
-							      &iter,
-							      category))
+	if (seq == NULL)
 	{
-		if (gtk_text_iter_compare (&iter, end) <= 0)
-		{
-			l =  gtk_source_buffer_get_source_marks_at_iter (buffer,
-									 &iter,
-									 category);
-
-			list = g_slist_concat (list, l);
-		}
-		else
-		{
-			break;
-		}
+		return;
 	}
+
+	list = _gtk_source_marks_sequence_get_marks_in_range (seq, start, end);
 
 	for (l = list; l != NULL; l = l->next)
 	{
-		gtk_text_buffer_delete_mark (GTK_TEXT_BUFFER (buffer),
-					     GTK_TEXT_MARK (l->data));
+		gtk_text_buffer_delete_mark (GTK_TEXT_BUFFER (buffer), l->data);
 	}
 
 	g_slist_free (list);
 }
 
+static GtkTextTag *
+get_context_class_tag (GtkSourceBuffer *buffer,
+		       const gchar     *context_class)
+{
+	gchar *tag_name;
+	GtkTextTagTable *tag_table;
+	GtkTextTag *tag;
+
+	tag_name = g_strdup_printf (CONTEXT_CLASSES_PREFIX "%s", context_class);
+
+	tag_table = gtk_text_buffer_get_tag_table (GTK_TEXT_BUFFER (buffer));
+	tag = gtk_text_tag_table_lookup (tag_table, tag_name);
+
+	g_free (tag_name);
+	return tag;
+}
 
 /**
  * gtk_source_buffer_iter_has_context_class:
@@ -2257,10 +2329,13 @@ gtk_source_buffer_remove_source_marks (GtkSourceBuffer   *buffer,
  * @iter: a #GtkTextIter.
  * @context_class: class to search for.
  *
- * Check if the class @context_klass is set on @iter.
+ * Check if the class @context_class is set on @iter.
  *
+ * See the #GtkSourceBuffer description for the list of default context classes.
+ *
+ * Returns: whether @iter has the context class.
  * Since: 2.10
- **/
+ */
 gboolean
 gtk_source_buffer_iter_has_context_class (GtkSourceBuffer   *buffer,
                                           const GtkTextIter *iter,
@@ -2272,22 +2347,14 @@ gtk_source_buffer_iter_has_context_class (GtkSourceBuffer   *buffer,
 	g_return_val_if_fail (iter != NULL, FALSE);
 	g_return_val_if_fail (context_class != NULL, FALSE);
 
-	if (buffer->priv->highlight_engine == NULL)
-	{
-		return FALSE;
-	}
-
-	tag = _gtk_source_engine_get_context_class_tag (buffer->priv->highlight_engine,
-							context_class);
+	tag = get_context_class_tag (buffer, context_class);
 
 	if (tag != NULL)
 	{
 		return gtk_text_iter_has_tag (iter, tag);
 	}
-	else
-	{
-		return FALSE;
-	}
+
+	return FALSE;
 }
 
 /**
@@ -2297,18 +2364,21 @@ gtk_source_buffer_iter_has_context_class (GtkSourceBuffer   *buffer,
  *
  * Get all defined context classes at @iter.
  *
+ * See the #GtkSourceBuffer description for the list of default context classes.
+ *
  * Returns: (array zero-terminated=1) (transfer full): a new %NULL
  * terminated array of context class names.
  * Use g_strfreev() to free the array if it is no longer needed.
  *
  * Since: 2.10
- **/
+ */
 gchar **
 gtk_source_buffer_get_context_classes_at_iter (GtkSourceBuffer   *buffer,
                                                const GtkTextIter *iter)
 {
+	const gsize prefix_len = strlen (CONTEXT_CLASSES_PREFIX);
 	GSList *tags;
-	GSList *item;
+	GSList *l;
 	GPtrArray *ret;
 
 	g_return_val_if_fail (GTK_SOURCE_IS_BUFFER (buffer), NULL);
@@ -2317,16 +2387,25 @@ gtk_source_buffer_get_context_classes_at_iter (GtkSourceBuffer   *buffer,
 	tags = gtk_text_iter_get_tags (iter);
 	ret = g_ptr_array_new ();
 
-	for (item = tags; item; item = g_slist_next (item))
+	for (l = tags; l != NULL; l = l->next)
 	{
-		gchar const *name = g_object_get_data (G_OBJECT (item->data),
-		                                       TAG_CONTEXT_CLASS_NAME);
+		GtkTextTag *tag = l->data;
+		gchar *tag_name;
 
-		if (name != NULL)
+		g_object_get (tag, "name", &tag_name, NULL);
+
+		if (tag_name != NULL &&
+		    g_str_has_prefix (tag_name, CONTEXT_CLASSES_PREFIX))
 		{
-			g_ptr_array_add (ret, g_strdup (name));
+			gchar *context_class_name = g_strdup (tag_name + prefix_len);
+
+			g_ptr_array_add (ret, context_class_name);
 		}
+
+		g_free (tag_name);
 	}
+
+	g_slist_free (tags);
 
 	g_ptr_array_add (ret, NULL);
 	return (gchar **) g_ptr_array_free (ret, FALSE);
@@ -2335,7 +2414,7 @@ gtk_source_buffer_get_context_classes_at_iter (GtkSourceBuffer   *buffer,
 /**
  * gtk_source_buffer_iter_forward_to_context_class_toggle:
  * @buffer: a #GtkSourceBuffer.
- * @iter: a #GtkTextIter.
+ * @iter: (inout): a #GtkTextIter.
  * @context_class: the context class.
  *
  * Moves forward to the next toggle (on or off) of the context class. If no
@@ -2344,10 +2423,12 @@ gtk_source_buffer_get_context_classes_at_iter (GtkSourceBuffer   *buffer,
  * @iter to the location of the toggle, or to the end of the buffer if no
  * toggle is found.
  *
+ * See the #GtkSourceBuffer description for the list of default context classes.
+ *
  * Returns: whether we found a context class toggle after @iter
  *
  * Since: 2.10
- **/
+ */
 gboolean
 gtk_source_buffer_iter_forward_to_context_class_toggle (GtkSourceBuffer *buffer,
                                                         GtkTextIter     *iter,
@@ -2359,28 +2440,20 @@ gtk_source_buffer_iter_forward_to_context_class_toggle (GtkSourceBuffer *buffer,
 	g_return_val_if_fail (iter != NULL, FALSE);
 	g_return_val_if_fail (context_class != NULL, FALSE);
 
-	if (buffer->priv->highlight_engine == NULL)
-	{
-		return FALSE;
-	}
+	tag = get_context_class_tag (buffer, context_class);
 
-	tag = _gtk_source_engine_get_context_class_tag (buffer->priv->highlight_engine,
-							context_class);
-
-	if (tag == NULL)
-	{
-		return FALSE;
-	}
-	else
+	if (tag != NULL)
 	{
 		return gtk_text_iter_forward_to_tag_toggle (iter, tag);
 	}
+
+	return FALSE;
 }
 
 /**
  * gtk_source_buffer_iter_backward_to_context_class_toggle:
  * @buffer: a #GtkSourceBuffer.
- * @iter: a #GtkTextIter.
+ * @iter: (inout): a #GtkTextIter.
  * @context_class: the context class.
  *
  * Moves backward to the next toggle (on or off) of the context class. If no
@@ -2389,10 +2462,12 @@ gtk_source_buffer_iter_forward_to_context_class_toggle (GtkSourceBuffer *buffer,
  * @iter to the location of the toggle, or to the end of the buffer if no
  * toggle is found.
  *
+ * See the #GtkSourceBuffer description for the list of default context classes.
+ *
  * Returns: whether we found a context class toggle before @iter
  *
  * Since: 2.10
- **/
+ */
 gboolean
 gtk_source_buffer_iter_backward_to_context_class_toggle (GtkSourceBuffer *buffer,
                                                          GtkTextIter     *iter,
@@ -2404,32 +2479,587 @@ gtk_source_buffer_iter_backward_to_context_class_toggle (GtkSourceBuffer *buffer
 	g_return_val_if_fail (iter != NULL, FALSE);
 	g_return_val_if_fail (context_class != NULL, FALSE);
 
-	if (buffer->priv->highlight_engine == NULL)
-	{
-		return FALSE;
-	}
+	tag = get_context_class_tag (buffer, context_class);
 
-	tag = _gtk_source_engine_get_context_class_tag (buffer->priv->highlight_engine,
-							context_class);
-
-	if (tag == NULL)
-	{
-		return FALSE;
-	}
-	else
+	if (tag != NULL)
 	{
 		return gtk_text_iter_backward_to_tag_toggle (iter, tag);
 	}
+
+	return FALSE;
+}
+
+/*
+ * GtkTextView wastes a lot of time tracking the clipboard content if
+ * we do insert/delete operations while there is a selection.
+ * These two utilities store the current selection with marks before
+ * doing an edit operation and restore it at the end.
+ */
+void
+_gtk_source_buffer_save_and_clear_selection (GtkSourceBuffer *buffer)
+{
+	GtkTextBuffer *buf;
+
+	g_return_if_fail (GTK_SOURCE_IS_BUFFER (buffer));
+
+	buf = GTK_TEXT_BUFFER (buffer);
+
+	/* Note we cannot use buffer_get_selection_bounds since it
+	 * orders the iters while we want to know the position of
+	 * each mark.
+	 */
+	if (gtk_text_buffer_get_has_selection (GTK_TEXT_BUFFER (buffer)))
+	{
+		GtkTextIter insert_iter;
+		GtkTextIter selection_bound_iter;
+
+		g_assert (buffer->priv->tmp_insert_mark == NULL);
+		g_assert (buffer->priv->tmp_selection_bound_mark == NULL);
+
+		gtk_text_buffer_get_iter_at_mark (buf, &insert_iter, gtk_text_buffer_get_insert (buf));
+		gtk_text_buffer_get_iter_at_mark (buf, &selection_bound_iter, gtk_text_buffer_get_selection_bound (buf));
+		buffer->priv->tmp_insert_mark = gtk_text_buffer_create_mark (buf, NULL, &insert_iter, FALSE);
+		buffer->priv->tmp_selection_bound_mark = gtk_text_buffer_create_mark (buf, NULL, &selection_bound_iter, FALSE);
+
+		gtk_text_buffer_place_cursor (buf, &insert_iter);
+	}
+}
+
+void
+_gtk_source_buffer_restore_selection (GtkSourceBuffer *buffer)
+{
+	g_return_if_fail (GTK_SOURCE_IS_BUFFER (buffer));
+
+	if (buffer->priv->tmp_insert_mark != NULL &&
+	    buffer->priv->tmp_selection_bound_mark != NULL)
+	{
+		GtkTextBuffer *buf;
+		GtkTextIter insert_iter;
+		GtkTextIter selection_bound_iter;
+
+		buf = GTK_TEXT_BUFFER (buffer);
+
+		gtk_text_buffer_get_iter_at_mark (buf, &insert_iter, buffer->priv->tmp_insert_mark);
+		gtk_text_buffer_get_iter_at_mark (buf, &selection_bound_iter, buffer->priv->tmp_selection_bound_mark);
+
+		gtk_text_buffer_select_range (buf, &insert_iter, &selection_bound_iter);
+
+		gtk_text_buffer_delete_mark (buf, buffer->priv->tmp_insert_mark);
+		gtk_text_buffer_delete_mark (buf, buffer->priv->tmp_selection_bound_mark);
+		buffer->priv->tmp_insert_mark = NULL;
+		buffer->priv->tmp_selection_bound_mark = NULL;
+	}
+}
+
+static gchar *
+do_lower_case (GtkTextBuffer     *buffer,
+	       const GtkTextIter *start,
+	       const GtkTextIter *end)
+{
+	gchar *text;
+	gchar *new_text;
+
+	text = gtk_text_buffer_get_text (buffer, start, end, TRUE);
+	new_text = g_utf8_strdown (text, -1);
+
+	g_free (text);
+	return new_text;
+}
+
+static gchar *
+do_upper_case (GtkTextBuffer     *buffer,
+	       const GtkTextIter *start,
+	       const GtkTextIter *end)
+{
+	gchar *text;
+	gchar *new_text;
+
+	text = gtk_text_buffer_get_text (buffer, start, end, TRUE);
+	new_text = g_utf8_strup (text, -1);
+
+	g_free (text);
+	return new_text;
+}
+
+static gchar *
+do_toggle_case (GtkTextBuffer     *buffer,
+		const GtkTextIter *start,
+		const GtkTextIter *end)
+{
+	GString *str;
+	GtkTextIter iter_start;
+
+	str = g_string_new (NULL);
+	iter_start = *start;
+
+	while (!gtk_text_iter_is_end (&iter_start))
+	{
+		GtkTextIter iter_end;
+		gchar *text;
+		gchar *text_down;
+		gchar *text_up;
+
+		iter_end = iter_start;
+		gtk_text_iter_forward_cursor_position (&iter_end);
+
+		if (gtk_text_iter_compare (end, &iter_end) < 0)
+		{
+			break;
+		}
+
+		text = gtk_text_buffer_get_text (buffer, &iter_start, &iter_end, TRUE);
+		text_down = g_utf8_strdown (text, -1);
+		text_up = g_utf8_strup (text, -1);
+
+		if (g_strcmp0 (text, text_down) == 0)
+		{
+			g_string_append (str, text_up);
+		}
+		else if (g_strcmp0 (text, text_up) == 0)
+		{
+			g_string_append (str, text_down);
+		}
+		else
+		{
+			g_string_append (str, text);
+		}
+
+		g_free (text);
+		g_free (text_down);
+		g_free (text_up);
+
+		iter_start = iter_end;
+	}
+
+	return g_string_free (str, FALSE);
+}
+
+static gchar *
+do_title_case (GtkTextBuffer     *buffer,
+	       const GtkTextIter *start,
+	       const GtkTextIter *end)
+{
+	GString *str;
+	GtkTextIter iter_start;
+
+	str = g_string_new (NULL);
+	iter_start = *start;
+
+	while (!gtk_text_iter_is_end (&iter_start))
+	{
+		GtkTextIter iter_end;
+		gchar *text;
+
+		iter_end = iter_start;
+		gtk_text_iter_forward_cursor_position (&iter_end);
+
+		if (gtk_text_iter_compare (end, &iter_end) < 0)
+		{
+			break;
+		}
+
+		text = gtk_text_buffer_get_text (buffer, &iter_start, &iter_end, TRUE);
+
+		if (gtk_text_iter_starts_word (&iter_start))
+		{
+			gchar *text_normalized;
+
+			text_normalized = g_utf8_normalize (text, -1, G_NORMALIZE_DEFAULT);
+
+			if (g_utf8_strlen (text_normalized, -1) == 1)
+			{
+				gunichar c;
+				gunichar new_c;
+
+				c = gtk_text_iter_get_char (&iter_start);
+				new_c = g_unichar_totitle (c);
+
+				g_string_append_unichar (str, new_c);
+			}
+			else
+			{
+				gchar *text_up;
+
+				text_up = g_utf8_strup (text, -1);
+				g_string_append (str, text_up);
+
+				g_free (text_up);
+			}
+
+			g_free (text_normalized);
+		}
+		else
+		{
+			gchar *text_down;
+
+			text_down = g_utf8_strdown (text, -1);
+			g_string_append (str, text_down);
+
+			g_free (text_down);
+		}
+
+		g_free (text);
+		iter_start = iter_end;
+	}
+
+	return g_string_free (str, FALSE);
+}
+
+/**
+ * gtk_source_buffer_change_case:
+ * @buffer: a #GtkSourceBuffer.
+ * @case_type: how to change the case.
+ * @start: a #GtkTextIter.
+ * @end: a #GtkTextIter.
+ *
+ * Changes the case of the text between the specified iterators.
+ *
+ * Since: 3.12
+ */
+void
+gtk_source_buffer_change_case (GtkSourceBuffer         *buffer,
+                               GtkSourceChangeCaseType  case_type,
+                               GtkTextIter             *start,
+                               GtkTextIter             *end)
+{
+	GtkTextBuffer *text_buffer;
+	gchar *new_text;
+
+	g_return_if_fail (GTK_SOURCE_IS_BUFFER (buffer));
+	g_return_if_fail (start != NULL);
+	g_return_if_fail (end != NULL);
+
+	gtk_text_iter_order (start, end);
+
+	text_buffer = GTK_TEXT_BUFFER (buffer);
+
+	switch (case_type)
+	{
+		case GTK_SOURCE_CHANGE_CASE_LOWER:
+			new_text = do_lower_case (text_buffer, start, end);
+			break;
+
+		case GTK_SOURCE_CHANGE_CASE_UPPER:
+			new_text = do_upper_case (text_buffer, start, end);
+			break;
+
+		case GTK_SOURCE_CHANGE_CASE_TOGGLE:
+			new_text = do_toggle_case (text_buffer, start, end);
+			break;
+
+		case GTK_SOURCE_CHANGE_CASE_TITLE:
+			new_text = do_title_case (text_buffer, start, end);
+			break;
+
+		default:
+			g_return_if_reached ();
+	}
+
+	gtk_text_buffer_begin_user_action (text_buffer);
+	gtk_text_buffer_delete (text_buffer, start, end);
+	gtk_text_buffer_insert (text_buffer, start, new_text, -1);
+	gtk_text_buffer_end_user_action (text_buffer);
+
+	g_free (new_text);
+}
+
+/* Move to the end of the line excluding trailing spaces. */
+static void
+move_to_line_text_end(GtkTextIter *iter)
+{
+	gint line;
+
+	line = gtk_text_iter_get_line (iter);
+
+	if (!gtk_text_iter_ends_line (iter))
+	{
+		gtk_text_iter_forward_to_line_end (iter);
+	}
+
+	while (gtk_text_iter_backward_char (iter) &&
+	       (gtk_text_iter_get_line (iter) == line))
+	{
+		gunichar ch;
+
+		ch = gtk_text_iter_get_char (iter);
+		if (!g_unichar_isspace (ch))
+		{
+			break;
+		}
+	}
+
+	gtk_text_iter_forward_char (iter);
+}
+
+/**
+ * gtk_source_buffer_join_lines:
+ * @buffer: a #GtkSourceBuffer.
+ * @start: a #GtkTextIter.
+ * @end: a #GtkTextIter.
+ *
+ * Joins the lines of text between the specified iterators.
+ *
+ * Since: 3.16
+ */
+void
+gtk_source_buffer_join_lines (GtkSourceBuffer *buffer,
+                              GtkTextIter     *start,
+                              GtkTextIter     *end)
+{
+	GtkTextBuffer *text_buffer;
+	GtkTextMark *end_mark;
+
+	g_return_if_fail (GTK_SOURCE_IS_BUFFER (buffer));
+	g_return_if_fail (start != NULL);
+	g_return_if_fail (end != NULL);
+
+	gtk_text_iter_order (start, end);
+
+	text_buffer = GTK_TEXT_BUFFER (buffer);
+	end_mark = gtk_text_buffer_create_mark (text_buffer, NULL, end, FALSE);
+
+	_gtk_source_buffer_save_and_clear_selection (buffer);
+	gtk_text_buffer_begin_user_action (text_buffer);
+
+	move_to_line_text_end (start);
+	if (!gtk_text_iter_ends_line (end))
+	{
+		gtk_text_iter_forward_to_line_end (end);
+	}
+
+	while (gtk_text_iter_compare (start, end) < 0)
+	{
+		GtkTextIter iter;
+		gunichar ch;
+
+		iter = *start;
+
+		do
+		{
+			ch = gtk_text_iter_get_char (&iter);
+			if (!g_unichar_isspace (ch))
+			{
+				break;
+			}
+		} while (gtk_text_iter_forward_char (&iter) &&
+			 gtk_text_iter_compare (&iter, end) < 0);
+
+		if (!gtk_text_iter_is_end (&iter))
+		{
+			gtk_text_buffer_delete (text_buffer, start, &iter);
+			if (!gtk_text_iter_ends_line (start))
+			{
+				gtk_text_buffer_insert (text_buffer, start, " ", 1);
+			}
+		}
+
+		move_to_line_text_end (start);
+
+		gtk_text_buffer_get_iter_at_mark (text_buffer, end, end_mark);
+	}
+
+	gtk_text_buffer_end_user_action (text_buffer);
+	_gtk_source_buffer_restore_selection (buffer);
+
+	gtk_text_buffer_delete_mark (text_buffer, end_mark);
+}
+
+static gchar *
+get_line_slice (GtkTextBuffer *buf,
+		gint           line)
+{
+	GtkTextIter start, end;
+
+	gtk_text_buffer_get_iter_at_line (buf, &start, line);
+	end = start;
+
+	if (!gtk_text_iter_ends_line (&start))
+	{
+		gtk_text_iter_forward_to_line_end (&end);
+	}
+
+	return gtk_text_buffer_get_slice (buf, &start, &end, TRUE);
+}
+
+typedef struct {
+	gchar *line; /* the original text to re-insert */
+	gchar *key;  /* the key to use for the comparison */
+} SortLine;
+
+static gint
+compare_line (gconstpointer aptr,
+              gconstpointer bptr)
+{
+	const SortLine *a = aptr;
+	const SortLine *b = bptr;
+
+	return g_strcmp0 (a->key, b->key);
+}
+
+static gint
+compare_line_reversed (gconstpointer aptr,
+                       gconstpointer bptr)
+{
+	const SortLine *a = aptr;
+	const SortLine *b = bptr;
+
+	return g_strcmp0 (b->key, a->key);
+}
+
+/**
+ * gtk_source_buffer_sort_lines:
+ * @buffer: a #GtkSourceBuffer.
+ * @start: a #GtkTextIter.
+ * @end: a #GtkTextIter.
+ * @flags: #GtkSourceSortFlags specifying how the sort should behave
+ * @column: sort considering the text starting at the given column
+ *
+ * Sort the lines of text between the specified iterators.
+ *
+ * Since: 3.18
+ */
+void
+gtk_source_buffer_sort_lines (GtkSourceBuffer    *buffer,
+                              GtkTextIter        *start,
+                              GtkTextIter        *end,
+                              GtkSourceSortFlags  flags,
+                              gint                column)
+{
+	GtkTextBuffer *text_buffer;
+	gint start_line;
+	gint end_line;
+	gint num_lines;
+	SortLine *lines;
+	gchar *last_line = NULL;
+	gint i;
+
+	g_return_if_fail (GTK_SOURCE_IS_BUFFER (buffer));
+	g_return_if_fail (start != NULL);
+	g_return_if_fail (end != NULL);
+
+	text_buffer = GTK_TEXT_BUFFER (buffer);
+
+	gtk_text_iter_order (start, end);
+
+	start_line = gtk_text_iter_get_line (start);
+	end_line = gtk_text_iter_get_line (end);
+
+	/* Required for gtk_text_buffer_delete() */
+	if (!gtk_text_iter_starts_line (start))
+	{
+		gtk_text_iter_set_line_offset (start, 0);
+	}
+
+	/* if we are at line start our last line is the previus one.
+	 * Otherwise the last line is the current one but we try to
+	 * move the iter after the line terminator */
+	if (gtk_text_iter_starts_line (end))
+	{
+		end_line = MAX (start_line, end_line - 1);
+	}
+	else
+	{
+		gtk_text_iter_forward_line (end);
+	}
+
+	if (start_line == end_line)
+	{
+		return;
+	}
+
+	num_lines = end_line - start_line + 1;
+	lines = g_new0 (SortLine, num_lines);
+
+	for (i = 0; i < num_lines; i++)
+	{
+		gchar *line;
+		gboolean free_line = FALSE;
+		glong length;
+
+		lines[i].line = get_line_slice (text_buffer, start_line + i);
+
+		if ((flags & GTK_SOURCE_SORT_FLAGS_CASE_SENSITIVE) != 0)
+		{
+			line = lines[i].line;
+		}
+		else
+		{
+			line = g_utf8_casefold (lines[i].line, -1);
+			free_line = TRUE;
+		}
+
+		length = g_utf8_strlen (line, -1);
+
+		if (length < column)
+		{
+			lines[i].key = NULL;
+		}
+		else if (column > 0)
+		{
+			gchar *substring;
+
+			substring = g_utf8_offset_to_pointer (line, column);
+			lines[i].key = g_utf8_collate_key (substring, -1);
+		}
+		else
+		{
+			lines[i].key = g_utf8_collate_key (line, -1);
+		}
+
+		if (free_line)
+		{
+			g_free (line);
+		}
+	}
+
+	if ((flags & GTK_SOURCE_SORT_FLAGS_REVERSE_ORDER) != 0)
+	{
+		qsort (lines, num_lines, sizeof (SortLine), compare_line_reversed);
+	}
+	else
+	{
+		qsort (lines, num_lines, sizeof (SortLine), compare_line);
+	}
+
+	_gtk_source_buffer_save_and_clear_selection (buffer);
+	gtk_text_buffer_begin_user_action (text_buffer);
+
+	gtk_text_buffer_delete (text_buffer, start, end);
+
+	for (i = 0; i < num_lines; i++)
+	{
+		if ((flags & GTK_SOURCE_SORT_FLAGS_REMOVE_DUPLICATES) != 0 &&
+		    g_strcmp0 (last_line, lines[i].line) == 0)
+		{
+			continue;
+		}
+
+		gtk_text_buffer_insert (text_buffer, start, lines[i].line, -1);
+		gtk_text_buffer_insert (text_buffer, start, "\n", -1);
+
+		last_line = lines[i].line;
+	}
+
+	gtk_text_buffer_end_user_action (text_buffer);
+	_gtk_source_buffer_restore_selection (buffer);
+
+	for (i = 0; i < num_lines; i++)
+	{
+		g_free (lines[i].line);
+		g_free (lines[i].key);
+	}
+
+	g_free (lines);
 }
 
 /**
  * gtk_source_buffer_set_undo_manager:
  * @buffer: a #GtkSourceBuffer.
- * @manager: (allow-none): A #GtkSourceUndoManager or %NULL.
+ * @manager: (nullable): A #GtkSourceUndoManager or %NULL.
  *
  * Set the buffer undo manager. If @manager is %NULL the default undo manager
  * will be set.
- **/
+ */
 void
 gtk_source_buffer_set_undo_manager (GtkSourceBuffer      *buffer,
                                     GtkSourceUndoManager *manager)
@@ -2452,7 +3082,7 @@ gtk_source_buffer_set_undo_manager (GtkSourceBuffer      *buffer,
 	set_undo_manager (buffer, manager);
 	g_object_unref (manager);
 
-	g_object_notify (G_OBJECT (buffer), "undo-manager");
+	g_object_notify_by_pspec (G_OBJECT (buffer), buffer_properties[PROP_UNDO_MANAGER]);
 }
 
 /**
@@ -2463,12 +3093,227 @@ gtk_source_buffer_set_undo_manager (GtkSourceBuffer      *buffer,
  * see gtk_source_buffer_set_undo_manager().  The returned object should not be
  * unreferenced by the user.
  *
- * Returns: (transfer none): the #GtkSourceUndoManager associated with the buffer, or %NULL.
- **/
+ * Returns: (nullable) (transfer none): the #GtkSourceUndoManager associated
+ * with the buffer, or %NULL.
+ */
 GtkSourceUndoManager *
 gtk_source_buffer_get_undo_manager (GtkSourceBuffer *buffer)
 {
 	g_return_val_if_fail (GTK_SOURCE_IS_BUFFER (buffer), NULL);
 
 	return buffer->priv->undo_manager;
+}
+
+void
+_gtk_source_buffer_add_search_context (GtkSourceBuffer        *buffer,
+				       GtkSourceSearchContext *search_context)
+{
+	g_return_if_fail (GTK_SOURCE_IS_BUFFER (buffer));
+	g_return_if_fail (GTK_SOURCE_IS_SEARCH_CONTEXT (search_context));
+	g_return_if_fail (gtk_source_search_context_get_buffer (search_context) == buffer);
+
+	if (g_list_find (buffer->priv->search_contexts, search_context) != NULL)
+	{
+		return;
+	}
+
+	buffer->priv->search_contexts = g_list_prepend (buffer->priv->search_contexts,
+							search_context);
+
+	g_object_weak_ref (G_OBJECT (search_context),
+			   (GWeakNotify)search_context_weak_notify_cb,
+			   buffer);
+}
+
+static void
+sync_invalid_char_tag (GtkSourceBuffer *buffer,
+		       GParamSpec      *pspec,
+		       gpointer         data)
+{
+	GtkSourceStyle *style = NULL;
+
+	if (buffer->priv->style_scheme != NULL)
+	{
+		style = gtk_source_style_scheme_get_style (buffer->priv->style_scheme, "def:error");
+	}
+
+	gtk_source_style_apply (style, buffer->priv->invalid_char_tag);
+}
+
+static void
+text_tag_set_highest_priority (GtkTextTag    *tag,
+			       GtkTextBuffer *buffer)
+{
+	GtkTextTagTable *table;
+	gint n;
+
+	table = gtk_text_buffer_get_tag_table (buffer);
+	n = gtk_text_tag_table_get_size (table);
+	gtk_text_tag_set_priority (tag, n - 1);
+}
+
+void
+_gtk_source_buffer_set_as_invalid_character (GtkSourceBuffer   *buffer,
+					     const GtkTextIter *start,
+					     const GtkTextIter *end)
+{
+	if (buffer->priv->invalid_char_tag == NULL)
+	{
+		buffer->priv->invalid_char_tag = gtk_text_buffer_create_tag (GTK_TEXT_BUFFER (buffer),
+									     "invalid-char-style",
+									     NULL);
+
+		sync_invalid_char_tag (buffer, NULL, NULL);
+
+		g_signal_connect (buffer,
+		                  "notify::style-scheme",
+		                  G_CALLBACK (sync_invalid_char_tag),
+		                  NULL);
+	}
+
+	/* Make sure the 'error' tag has the priority over
+	 * syntax highlighting tags.
+	 */
+	text_tag_set_highest_priority (buffer->priv->invalid_char_tag,
+	                               GTK_TEXT_BUFFER (buffer));
+
+	gtk_text_buffer_apply_tag (GTK_TEXT_BUFFER (buffer),
+	                           buffer->priv->invalid_char_tag,
+	                           start,
+	                           end);
+}
+
+gboolean
+_gtk_source_buffer_has_invalid_chars (GtkSourceBuffer *buffer)
+{
+	GtkTextIter start;
+
+	g_return_val_if_fail (GTK_SOURCE_IS_BUFFER (buffer), FALSE);
+
+	if (buffer->priv->invalid_char_tag == NULL)
+	{
+		return FALSE;
+	}
+
+	gtk_text_buffer_get_start_iter (GTK_TEXT_BUFFER (buffer), &start);
+
+	if (gtk_text_iter_starts_tag (&start, buffer->priv->invalid_char_tag) ||
+	    gtk_text_iter_forward_to_tag_toggle (&start, buffer->priv->invalid_char_tag))
+	{
+		return TRUE;
+	}
+
+	return FALSE;
+}
+
+/**
+ * gtk_source_buffer_set_implicit_trailing_newline:
+ * @buffer: a #GtkSourceBuffer.
+ * @implicit_trailing_newline: the new value.
+ *
+ * Sets whether the @buffer has an implicit trailing newline.
+ *
+ * If an explicit trailing newline is present in a #GtkTextBuffer, #GtkTextView
+ * shows it as an empty line. This is generally not what the user expects.
+ *
+ * If @implicit_trailing_newline is %TRUE (the default value):
+ *  - when a #GtkSourceFileLoader loads the content of a file into the @buffer,
+ *    the trailing newline (if present in the file) is not inserted into the
+ *    @buffer.
+ *  - when a #GtkSourceFileSaver saves the content of the @buffer into a file, a
+ *    trailing newline is added to the file.
+ *
+ * On the other hand, if @implicit_trailing_newline is %FALSE, the file's
+ * content is not modified when loaded into the @buffer, and the @buffer's
+ * content is not modified when saved into a file.
+ *
+ * Since: 3.14
+ */
+void
+gtk_source_buffer_set_implicit_trailing_newline (GtkSourceBuffer *buffer,
+						 gboolean         implicit_trailing_newline)
+{
+	g_return_if_fail (GTK_SOURCE_IS_BUFFER (buffer));
+
+	implicit_trailing_newline = implicit_trailing_newline != FALSE;
+
+	if (buffer->priv->implicit_trailing_newline != implicit_trailing_newline)
+	{
+		buffer->priv->implicit_trailing_newline = implicit_trailing_newline;
+		g_object_notify_by_pspec (G_OBJECT (buffer), buffer_properties[PROP_IMPLICIT_TRAILING_NEWLINE]);
+	}
+}
+
+/**
+ * gtk_source_buffer_get_implicit_trailing_newline:
+ * @buffer: a #GtkSourceBuffer.
+ *
+ * Returns: whether the @buffer has an implicit trailing newline.
+ * Since: 3.14
+ */
+gboolean
+gtk_source_buffer_get_implicit_trailing_newline (GtkSourceBuffer *buffer)
+{
+	g_return_val_if_fail (GTK_SOURCE_IS_BUFFER (buffer), TRUE);
+
+	return buffer->priv->implicit_trailing_newline;
+}
+
+/**
+ * gtk_source_buffer_create_source_tag:
+ * @buffer: a #GtkSourceBuffer
+ * @tag_name: (nullable): name of the new tag, or %NULL
+ * @first_property_name: (nullable): name of first property to set, or %NULL
+ * @...: %NULL-terminated list of property names and values
+ *
+ * In short, this is the same function as gtk_text_buffer_create_tag(), but
+ * instead of creating a #GtkTextTag, this function creates a #GtkSourceTag.
+ *
+ * This function creates a #GtkSourceTag and adds it to the tag table for
+ * @buffer.  Equivalent to calling gtk_text_tag_new() and then adding the tag to
+ * the buffer’s tag table. The returned tag is owned by the buffer’s tag table,
+ * so the ref count will be equal to one.
+ *
+ * If @tag_name is %NULL, the tag is anonymous.
+ *
+ * If @tag_name is non-%NULL, a tag called @tag_name must not already
+ * exist in the tag table for this buffer.
+ *
+ * The @first_property_name argument and subsequent arguments are a list
+ * of properties to set on the tag, as with g_object_set().
+ *
+ * Returns: (transfer none): a new #GtkSourceTag.
+ * Since: 3.20
+ */
+GtkTextTag *
+gtk_source_buffer_create_source_tag (GtkSourceBuffer *buffer,
+				     const gchar     *tag_name,
+				     const gchar     *first_property_name,
+				     ...)
+{
+	GtkTextTag *tag;
+	GtkTextTagTable *table;
+	va_list list;
+
+	g_return_val_if_fail (GTK_SOURCE_IS_BUFFER (buffer), NULL);
+
+	tag = gtk_source_tag_new (tag_name);
+
+	table = gtk_text_buffer_get_tag_table (GTK_TEXT_BUFFER (buffer));
+	if (!gtk_text_tag_table_add (table, tag))
+	{
+		g_object_unref (tag);
+		return NULL;
+	}
+
+	if (first_property_name != NULL)
+	{
+		va_start (list, first_property_name);
+		g_object_set_valist (G_OBJECT (tag), first_property_name, list);
+		va_end (list);
+	}
+
+	g_object_unref (tag);
+
+	return tag;
 }

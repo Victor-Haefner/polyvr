@@ -20,8 +20,16 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef __GTK_SOURCE_COMPLETION_PROPOSAL_H__
-#define __GTK_SOURCE_COMPLETION_PROPOSAL_H__
+#ifndef GTK_SOURCE_COMPLETION_PROPOSAL_H
+#define GTK_SOURCE_COMPLETION_PROPOSAL_H
+
+#if !defined (GTK_SOURCE_H_INSIDE) && !defined (GTK_SOURCE_COMPILATION)
+#  if defined (__GNUC__)
+#    warning "Only <gtksourceview/gtksource.h> can be included directly."
+#  elif defined (G_OS_WIN32)
+#    pragma message("Only <gtksourceview/gtksource.h> can be included directly.")
+#  endif
+#endif
 
 #include <glib-object.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
@@ -47,6 +55,10 @@ typedef struct _GtkSourceCompletionProposalIface	GtkSourceCompletionProposalIfac
  * By default, %NULL is returned.
  * @get_icon: The virtual function pointer for gtk_source_completion_proposal_get_icon().
  * By default, %NULL is returned.
+ * @get_icon_name: The virtual function pointer for gtk_source_completion_proposal_get_icon_name().
+ * By default, %NULL is returned.
+ * @get_gicon: The virtual function pointer for gtk_source_completion_proposal_get_gicon().
+ * By default, %NULL is returned.
  * @get_info: The virtual function pointer for gtk_source_completion_proposal_get_info().
  * By default, %NULL is returned.
  * @hash: The virtual function pointer for gtk_source_completion_proposal_hash().
@@ -62,36 +74,58 @@ struct _GtkSourceCompletionProposalIface
 	GTypeInterface parent;
 
 	/* Interface functions */
-	gchar		*(*get_label)	(GtkSourceCompletionProposal *proposal);
-	gchar		*(*get_markup)	(GtkSourceCompletionProposal *proposal);
-	gchar		*(*get_text)	(GtkSourceCompletionProposal *proposal);
+	gchar		*(*get_label)		(GtkSourceCompletionProposal *proposal);
+	gchar		*(*get_markup)		(GtkSourceCompletionProposal *proposal);
+	gchar		*(*get_text)		(GtkSourceCompletionProposal *proposal);
 
-	GdkPixbuf	*(*get_icon)	(GtkSourceCompletionProposal *proposal);
-	gchar		*(*get_info)	(GtkSourceCompletionProposal *proposal);
+	GdkPixbuf	*(*get_icon)		(GtkSourceCompletionProposal *proposal);
+	const gchar	*(*get_icon_name)	(GtkSourceCompletionProposal *proposal);
+	GIcon		*(*get_gicon)		(GtkSourceCompletionProposal *proposal);
 
-	guint		 (*hash)	(GtkSourceCompletionProposal *proposal);
-	gboolean	 (*equal)	(GtkSourceCompletionProposal *proposal,
-					 GtkSourceCompletionProposal *other);
+	gchar		*(*get_info)		(GtkSourceCompletionProposal *proposal);
+
+	guint		 (*hash)		(GtkSourceCompletionProposal *proposal);
+	gboolean	 (*equal)		(GtkSourceCompletionProposal *proposal,
+						 GtkSourceCompletionProposal *other);
 
 	/* Signals */
-	void		 (*changed)	(GtkSourceCompletionProposal *proposal);
+	void		 (*changed)		(GtkSourceCompletionProposal *proposal);
 };
 
+GTK_SOURCE_AVAILABLE_IN_ALL
 GType 			 gtk_source_completion_proposal_get_type 	(void) G_GNUC_CONST;
 
+GTK_SOURCE_AVAILABLE_IN_ALL
 gchar			*gtk_source_completion_proposal_get_label	(GtkSourceCompletionProposal *proposal);
+
+GTK_SOURCE_AVAILABLE_IN_ALL
 gchar			*gtk_source_completion_proposal_get_markup	(GtkSourceCompletionProposal *proposal);
+
+GTK_SOURCE_AVAILABLE_IN_ALL
 gchar			*gtk_source_completion_proposal_get_text	(GtkSourceCompletionProposal *proposal);
 
+GTK_SOURCE_AVAILABLE_IN_ALL
 GdkPixbuf		*gtk_source_completion_proposal_get_icon	(GtkSourceCompletionProposal *proposal);
+
+GTK_SOURCE_AVAILABLE_IN_3_18
+const gchar		*gtk_source_completion_proposal_get_icon_name	(GtkSourceCompletionProposal *proposal);
+
+GTK_SOURCE_AVAILABLE_IN_3_18
+GIcon			*gtk_source_completion_proposal_get_gicon	(GtkSourceCompletionProposal *proposal);
+
+GTK_SOURCE_AVAILABLE_IN_ALL
 gchar			*gtk_source_completion_proposal_get_info	(GtkSourceCompletionProposal *proposal);
 
+GTK_SOURCE_AVAILABLE_IN_ALL
 void			 gtk_source_completion_proposal_changed		(GtkSourceCompletionProposal *proposal);
 
+GTK_SOURCE_AVAILABLE_IN_ALL
 guint			 gtk_source_completion_proposal_hash		(GtkSourceCompletionProposal *proposal);
-gboolean		 gtk_source_completion_proposal_equal           (GtkSourceCompletionProposal *proposal,
+
+GTK_SOURCE_AVAILABLE_IN_ALL
+gboolean		 gtk_source_completion_proposal_equal		(GtkSourceCompletionProposal *proposal,
 									 GtkSourceCompletionProposal *other);
 
 G_END_DECLS
 
-#endif /* __GTK_SOURCE_COMPLETION_PROPOSAL_H__ */
+#endif /* GTK_SOURCE_COMPLETION_PROPOSAL_H */

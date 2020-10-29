@@ -20,6 +20,13 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
+#include "gtksourcecompletionprovider.h"
+#include "gtksourcecompletionproposal.h"
+#include "gtksourcecompletioninfo.h"
 
 /**
  * SECTION:completionprovider
@@ -27,11 +34,14 @@
  * @short_description: Completion provider interface
  *
  * You must implement this interface to provide proposals to #GtkSourceCompletion
+ *
+ * The provider may be displayed in the completion window as a header row, showing
+ * its name and optionally an icon.
+ * The icon may be specified as a #GdkPixbuf, as an icon name or as a #GIcon by
+ * implementing the corresponding get function. At most one of those get functions
+ * should return a value different from %NULL, if they all return %NULL no icon
+ * will be used.
  */
-
-#include "gtksourcecompletionprovider.h"
-#include "gtksourcecompletionproposal.h"
-#include "gtksourcecompletioninfo.h"
 
 typedef GtkSourceCompletionProviderIface GtkSourceCompletionProviderInterface;
 
@@ -46,6 +56,18 @@ gtk_source_completion_provider_get_name_default (GtkSourceCompletionProvider *pr
 
 static GdkPixbuf *
 gtk_source_completion_provider_get_icon_default (GtkSourceCompletionProvider *provider)
+{
+	return NULL;
+}
+
+static const gchar *
+gtk_source_completion_provider_get_icon_name_default (GtkSourceCompletionProvider *provider)
+{
+	return NULL;
+}
+
+static GIcon *
+gtk_source_completion_provider_get_gicon_default (GtkSourceCompletionProvider *provider)
 {
 	return NULL;
 }
@@ -119,7 +141,10 @@ static void
 gtk_source_completion_provider_default_init (GtkSourceCompletionProviderIface *iface)
 {
 	iface->get_name = gtk_source_completion_provider_get_name_default;
+
 	iface->get_icon = gtk_source_completion_provider_get_icon_default;
+	iface->get_icon_name = gtk_source_completion_provider_get_icon_name_default;
+	iface->get_gicon = gtk_source_completion_provider_get_gicon_default;
 
 	iface->populate = gtk_source_completion_provider_populate_default;
 
@@ -158,9 +183,9 @@ gtk_source_completion_provider_get_name (GtkSourceCompletionProvider *provider)
  * gtk_source_completion_provider_get_icon:
  * @provider: The #GtkSourceCompletionProvider
  *
- * Get the icon of the provider.
+ * Get the #GdkPixbuf for the icon of the @provider.
  *
- * Returns: (transfer none): The icon to be used for the provider,
+ * Returns: (nullable) (transfer none): The icon to be used for the provider,
  *          or %NULL if the provider does not have a special icon.
  */
 GdkPixbuf *
@@ -169,6 +194,44 @@ gtk_source_completion_provider_get_icon (GtkSourceCompletionProvider *provider)
 	g_return_val_if_fail (GTK_SOURCE_IS_COMPLETION_PROVIDER (provider), NULL);
 
 	return GTK_SOURCE_COMPLETION_PROVIDER_GET_INTERFACE (provider)->get_icon (provider);
+}
+
+/**
+ * gtk_source_completion_provider_get_icon_name:
+ * @provider: The #GtkSourceCompletionProvider
+ *
+ * Gets the icon name of @provider.
+ *
+ * Returns: (nullable) (transfer none): The icon name to be used for the provider,
+ *          or %NULL if the provider does not have a special icon.
+ *
+ * Since: 3.18
+ */
+const gchar *
+gtk_source_completion_provider_get_icon_name (GtkSourceCompletionProvider *provider)
+{
+	g_return_val_if_fail (GTK_SOURCE_IS_COMPLETION_PROVIDER (provider), NULL);
+
+	return GTK_SOURCE_COMPLETION_PROVIDER_GET_INTERFACE (provider)->get_icon_name (provider);
+}
+
+/**
+ * gtk_source_completion_provider_get_gicon:
+ * @provider: The #GtkSourceCompletionProvider
+ *
+ * Gets the #GIcon for the icon of @provider.
+ *
+ * Returns: (nullable) (transfer none): The icon to be used for the provider,
+ *          or %NULL if the provider does not have a special icon.
+ *
+ * Since: 3.18
+ */
+GIcon *
+gtk_source_completion_provider_get_gicon (GtkSourceCompletionProvider *provider)
+{
+	g_return_val_if_fail (GTK_SOURCE_IS_COMPLETION_PROVIDER (provider), NULL);
+
+	return GTK_SOURCE_COMPLETION_PROVIDER_GET_INTERFACE (provider)->get_gicon (provider);
 }
 
 /**
@@ -245,8 +308,9 @@ gtk_source_completion_provider_match (GtkSourceCompletionProvider *provider,
  *   </para>
  * </note>
  *
- * Returns: (transfer none): a custom #GtkWidget to show extra
- * information about @proposal.
+ * Returns: (nullable) (transfer none): a custom #GtkWidget to show extra
+ * information about @proposal, or %NULL if the provider does not have a special
+ * info widget.
  */
 GtkWidget *
 gtk_source_completion_provider_get_info_widget (GtkSourceCompletionProvider *provider,
@@ -290,12 +354,16 @@ gtk_source_completion_provider_update_info (GtkSourceCompletionProvider *provide
  * @provider: a #GtkSourceCompletionProvider.
  * @proposal: a #GtkSourceCompletionProposal.
  * @context: a #GtkSourceCompletionContext.
- * @iter: a #GtkTextIter.
+ * @iter: (out): a #GtkTextIter.
  *
  * Get the #GtkTextIter at which the completion for @proposal starts. When
- * implemented, the completion can use this information to position the
- * completion window accordingly when a proposal is selected in the completion
- * window.
+ * implemented, this information is used to position the completion window
+ * accordingly when a proposal is selected in the completion window. The
+ * @proposal text inside the completion window is aligned on @iter.
+ *
+ * If this function is not implemented, the word boundary is taken to position
+ * the completion window. See gtk_source_completion_provider_activate_proposal()
+ * for an explanation on the word boundaries.
  *
  * When the @proposal is activated, the default handler uses @iter as the start
  * of the word to replace. See

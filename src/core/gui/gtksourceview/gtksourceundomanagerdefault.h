@@ -1,6 +1,6 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*- */
 /*
- * gtksourceundomanager_defaultdefault.h
+ * gtksourceundomanagerdefault.h
  * This file is part of GtkSourceView
  *
  * Copyright (C) 1998, 1999 Alex Roberts, Evan Lawrence
@@ -16,14 +16,14 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
-
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef __GTK_SOURCE_UNDO_MANAGER_DEFAULT_H__
-#define __GTK_SOURCE_UNDO_MANAGER_DEFAULT_H__
+#ifndef GTK_SOURCE_UNDO_MANAGER_DEFAULT_H
+#define GTK_SOURCE_UNDO_MANAGER_DEFAULT_H
 
 #include <glib-object.h>
 #include "gtksourcetypes-private.h"
@@ -61,4 +61,4 @@ void gtk_source_undo_manager_default_set_max_undo_levels (GtkSourceUndoManagerDe
 
 G_END_DECLS
 
-#endif /* __GTK_SOURCE_UNDO_MANAGER_DEFAULT_H__ */
+#endif /* GTK_SOURCE_UNDO_MANAGER_DEFAULT_H */
