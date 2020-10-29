@@ -831,7 +831,7 @@ generate_css_style (GtkSourceStyleScheme *scheme)
 	append_css_style (final_style, style, "");
 
 	style = gtk_source_style_scheme_get_style (scheme, STYLE_SELECTED);
-	append_css_style (final_style, style, ":selected:focused");
+	append_css_style (final_style, style, ":selected:focus");
 
 	style2 = gtk_source_style_scheme_get_style (scheme, STYLE_SELECTED_UNFOCUSED);
 	if (style2 == NULL)

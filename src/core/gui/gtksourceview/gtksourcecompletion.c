@@ -2033,8 +2033,7 @@ selection_func (GtkTreeSelection    *selection,
 }
 
 static void
-init_tree_view (GtkSourceCompletion *completion,
-		GtkBuilder          *builder)
+init_tree_view (GtkSourceCompletion *completion, GtkWidget* tview, GtkWidget* crp, GtkWidget* col1, GtkWidget* crt, GtkWidget* col2, GtkWidget* crt2)
 {
 	GtkTreeSelection *selection;
 	GtkTreeViewColumn *column;
@@ -2044,7 +2043,8 @@ init_tree_view (GtkSourceCompletion *completion,
 	GdkRGBA background_color;
 	GdkRGBA foreground_color;
 
-	completion->priv->tree_view_proposals = GTK_TREE_VIEW (gtk_builder_get_object (builder, "tree_view_proposals"));
+
+	completion->priv->tree_view_proposals = GTK_TREE_VIEW (tview);
 
 	g_signal_connect_swapped (completion->priv->tree_view_proposals,
 				  "row-activated",
@@ -2067,9 +2067,9 @@ init_tree_view (GtkSourceCompletion *completion,
 
 	/* Icon cell renderer */
 
-	completion->priv->cell_renderer_icon = GTK_CELL_RENDERER (gtk_builder_get_object (builder, "cell_renderer_icon"));
+	completion->priv->cell_renderer_icon = GTK_CELL_RENDERER (crp);
 
-	column = GTK_TREE_VIEW_COLUMN (gtk_builder_get_object (builder, "tree_view_column_proposal"));
+	column = GTK_TREE_VIEW_COLUMN (col1);
 
 	gtk_tree_view_column_set_attributes (column, completion->priv->cell_renderer_icon,
 					     "pixbuf", GTK_SOURCE_COMPLETION_MODEL_COLUMN_ICON,
@@ -2087,7 +2087,7 @@ init_tree_view (GtkSourceCompletion *completion,
 
 	/* Proposal text cell renderer */
 
-	cell_renderer_proposal = GTK_CELL_RENDERER (gtk_builder_get_object (builder, "cell_renderer_proposal"));
+	cell_renderer_proposal = GTK_CELL_RENDERER (crt);
 
 	gtk_tree_view_column_set_attributes (column, cell_renderer_proposal,
 					     "markup", GTK_SOURCE_COMPLETION_MODEL_COLUMN_MARKUP,
@@ -2107,9 +2107,9 @@ init_tree_view (GtkSourceCompletion *completion,
 	/* Accelerators cell renderer */
 
 	completion->priv->tree_view_column_accelerator =
-		GTK_TREE_VIEW_COLUMN (gtk_builder_get_object (builder, "tree_view_column_accelerator"));
+		GTK_TREE_VIEW_COLUMN (col2);
 
-	cell_renderer_accelerator = GTK_CELL_RENDERER (gtk_builder_get_object (builder, "cell_renderer_accelerator"));
+	cell_renderer_accelerator = GTK_CELL_RENDERER (crt2);
 
 	gtk_tree_view_column_set_attributes (completion->priv->tree_view_column_accelerator,
 					     cell_renderer_accelerator,
@@ -2131,13 +2131,12 @@ init_tree_view (GtkSourceCompletion *completion,
 }
 
 static void
-init_main_window (GtkSourceCompletion *completion,
-		  GtkBuilder          *builder)
+init_main_window (GtkSourceCompletion *completion, GtkWidget* win, GtkWidget* ibut, GtkWidget* simg, GtkWidget* slbl)
 {
-	completion->priv->main_window = GTK_WINDOW (gtk_builder_get_object (builder, "main_window"));
-	completion->priv->info_button = GTK_TOGGLE_BUTTON (gtk_builder_get_object (builder, "info_button"));
-	completion->priv->selection_image = GTK_IMAGE (gtk_builder_get_object (builder, "selection_image"));
-	completion->priv->selection_label = GTK_LABEL (gtk_builder_get_object (builder, "selection_label"));
+	completion->priv->main_window = GTK_WINDOW (win);
+	completion->priv->info_button = GTK_TOGGLE_BUTTON (ibut);
+	completion->priv->selection_image = GTK_IMAGE (simg);
+	completion->priv->selection_label = GTK_LABEL (slbl);
 
 	gtk_window_set_attached_to (completion->priv->main_window,
 				    GTK_WIDGET (completion->priv->view));
@@ -2191,21 +2190,53 @@ init_info_window (GtkSourceCompletion *completion)
 static void
 gtk_source_completion_init (GtkSourceCompletion *completion)
 {
-	GtkBuilder *builder = gtk_builder_new ();
-
 	completion->priv = GTK_SOURCE_COMPLETION_GET_PRIVATE (completion);
 
-	//gtk_builder_set_translation_domain (builder, GETTEXT_PACKAGE); // TODO: needed?
+	GtkWidget* win = gtk_window_new(GTK_WINDOW_POPUP);
+	GtkWidget* grid = gtk_grid_new();
+	gtk_container_add(GTK_CONTAINER(win), grid);
 
-	gtk_builder_add_from_resource (builder,
-				       "/org/gnome/gtksourceview/ui/gtksourcecompletion.ui",
-				       NULL);
+	GtkWidget* swin = gtk_scrolled_window_new(0,0);
+	GtkWidget* tview = gtk_tree_view_new();
+	GtkTreeViewColumn* col1 = gtk_tree_view_column_new();
+	GtkTreeViewColumn* col2 = gtk_tree_view_column_new();
+	GtkCellRenderer* crp = gtk_cell_renderer_pixbuf_new();
+	GtkCellRenderer* crt = gtk_cell_renderer_text_new();
+	GtkCellRenderer* crt2 = gtk_cell_renderer_text_new();
+    gtk_tree_view_column_pack_start(col1, crp, TRUE);
+    gtk_tree_view_column_pack_start(col1, crt, TRUE);
+    gtk_tree_view_column_pack_start(col2, crt2, TRUE);
+	gtk_tree_view_append_column(GTK_TREE_VIEW(tview), col1);
+	gtk_tree_view_append_column(GTK_TREE_VIEW(tview), col2);
+	gtk_grid_attach(GTK_GRID(grid), swin, 0, 0, 1, 1);
+	gtk_container_add(GTK_CONTAINER(swin), tview);
+	gtk_tree_view_set_headers_visible(GTK_TREE_VIEW(tview), FALSE);
+	gtk_tree_view_set_enable_search(GTK_TREE_VIEW(tview), FALSE);
+	gtk_tree_view_set_show_expanders(GTK_TREE_VIEW(tview), FALSE);
+	gtk_widget_set_vexpand(tview, TRUE);
+	gtk_tree_view_column_set_expand(col1, TRUE);
+	gtk_tree_view_column_set_sizing(col1, GTK_TREE_VIEW_COLUMN_AUTOSIZE);
 
-	init_tree_view (completion, builder);
-	init_main_window (completion, builder);
-	init_info_window (completion);
+	GtkWidget* bar = gtk_grid_new();
+	GtkWidget* tbut = gtk_toggle_button_new_with_label("_Details...");
+	GtkWidget* img = gtk_image_new_from_stock("gtk-info", GTK_ICON_SIZE_BUTTON);
+	GtkWidget* img2 = gtk_image_new();
+	GtkWidget* lbl = gtk_label_new("?");
+	gtk_button_set_image(GTK_BUTTON(tbut), img);
+	gtk_button_set_use_underline(GTK_BUTTON(tbut), TRUE);
+	gtk_widget_set_tooltip_text(tbut, "Show detailed proposal information");
+	gtk_widget_set_hexpand(img2, TRUE);
+	gtk_grid_attach(GTK_GRID(grid), bar, 0, 1, 1, 1);
+	gtk_grid_attach(GTK_GRID(bar), tbut, 0, 0, 1, 1);
+	gtk_grid_attach(GTK_GRID(bar), img2, 1, 0, 1, 1);
+	gtk_grid_attach(GTK_GRID(bar), lbl, 2, 0, 1, 1);
 
-	g_object_unref (builder);
+	gtk_widget_show_all(win);
+	gtk_widget_hide(win);
+
+	init_tree_view(completion, tview, crp, col1, crt, col2, crt2);
+	init_main_window(completion, win, tbut, img2, lbl);
+	init_info_window(completion);
 }
 
 void
