@@ -26,6 +26,7 @@ PyMethodDef VRPySyncNode::methods[] = {
     {"setAvatarBeacons", PyWrap(SyncNode, setAvatarBeacons, "Set own avatar beacons", void, VRTransformPtr, VRTransformPtr) },
     {"addRemoteAvatar", PyWrap(SyncNode, addRemoteAvatar, "Add avatar components", void, VRTransformPtr, VRTransformPtr) },
     {"getConnectionLink", PyWrap(SyncNode, getConnectionLink, "Get Connection Link", string) },
+    {"setCallback", PyWrap(SyncNode, setCallback, "Set syncNode callback", void, VRUpdateCbPtr) },
     {NULL}  /* Sentinel */
 };
 

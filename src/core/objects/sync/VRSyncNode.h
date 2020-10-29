@@ -28,6 +28,8 @@ class VRSyncNode : public VRTransform {
         bool doWrapping = true;
         bool doAvatars = true;
 
+        VRUpdateCbPtr onConnect;
+
         VRSyncChangelistPtr changelist;
 
         map<UInt32, UInt32> container; // local containers, sub-set of containers which need to be synced for collaboration
@@ -89,7 +91,7 @@ class VRSyncNode : public VRTransform {
         VRTransformPtr avatarDeviceBeacon;
         void handleAvatar(string data);
 
-        void handleNewRemote(string data);
+        void handleNewConnect(string data);
 
     public:
         VRSyncNode(string name = "syncNode");
@@ -144,6 +146,7 @@ class VRSyncNode : public VRTransform {
         void wrapOSG();
 
         string getConnectionLink();
+        void setCallback(VRUpdateCbPtr fkt);
 };
 
 OSG_END_NAMESPACE;
