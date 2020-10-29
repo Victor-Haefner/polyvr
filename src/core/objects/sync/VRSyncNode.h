@@ -89,6 +89,8 @@ class VRSyncNode : public VRTransform {
         VRTransformPtr avatarDeviceBeacon;
         void handleAvatar(string data);
 
+        void handleNewRemote(string data);
+
     public:
         VRSyncNode(string name = "syncNode");
         ~VRSyncNode();

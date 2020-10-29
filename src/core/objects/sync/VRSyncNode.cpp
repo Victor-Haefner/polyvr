@@ -766,6 +766,20 @@ void VRSyncNode::addRemote(string host, int port, string name) {
     // sync node ID
     auto nID = getNode()->node->getId();
     remotes[uri]->send("selfmap|"+toString(nID));
+    remotes[uri]->send("newRemote|"+getConnectionLink());
+}
+
+void VRSyncNode::handleNewRemote(string data){
+    cout << "VRSyncNode::handleNewRemote" << endl;
+    auto remoteData = splitString(data, '|');
+    auto remote = splitString(remoteData[1], '/');
+    string remoteName = remote[1];
+    auto uri = splitString(remote[0], ':');
+    string ip = uri[0];
+    string port = uri[1];
+    cout << "handleNewRemote with ip " << ip << " port " << port << " name " << name << endl;
+    //if not in list then it is a new connection, the add remote
+    if (remotes.count(uri)) { addRemote(ip, toInt(port), name); cout << "added new remote automatically" << endl;}
 }
 
 void VRSyncNode::startInterface(int port) {
@@ -810,6 +824,7 @@ void VRSyncNode::handleMessage(string msg) {
     else if (startsWith(msg, "mapping|")) job = VRUpdateCb::create( "sync-handleMap", bind(&VRSyncNode::handleMapping, this, msg) );
     else if (startsWith(msg, "poses|"))   job = VRUpdateCb::create( "sync-handlePoses", bind(&VRSyncNode::handlePoses, this, msg) );
     else if (startsWith(msg, "ownership|")) job = VRUpdateCb::create( "sync-ownership", bind(&VRSyncNode::handleOwnershipMessage, this, msg) );
+    else if (startsWith(msg, "newRemote|")) job = VRUpdateCb::create( "sync-newRemote", bind(&VRSyncNode::handleNewRemote, this, msg) );
     else if (startsWith(msg, "changelistEnd|")) job = VRUpdateCb::create( "sync-finalizeCL", bind(&VRSyncChangelist::deserializeAndApply, changelist.get(), ptr()) );
     //else if (startsWith(msg, "warn|")) job = VRUpdateCb::create( "sync-handleWarning", bind(&VRSyncNode::handleWarning, this, msg) );
     else if (startsWith(msg, "warn|")) handleWarning(msg);
