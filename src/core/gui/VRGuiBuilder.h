@@ -22,6 +22,7 @@ class VRGuiBuilder {
         map<string, _GtkWidget*> widgets;
         map<string, _GtkObject*> objects;
 
+        void buildMinimalUI();
         void buildBaseUI();
 
     public:

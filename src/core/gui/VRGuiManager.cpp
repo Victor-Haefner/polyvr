@@ -78,6 +78,8 @@ VRGuiManager::VRGuiManager() {
         updatePtr = VRUpdateCb::create("GUI_updateManager", bind(&VRGuiManager::update, this) );
         VRSceneManager::get()->addUpdateFkt(updatePtr, 1);
 
+        g_bits = new VRGuiBits();
+
         GtkWindow* top = (GtkWindow*)VRGuiBuilder::get()->get_widget("window1");
         gtk_window_maximize(top);
         gtk_widget_show_all((GtkWidget*)top);
