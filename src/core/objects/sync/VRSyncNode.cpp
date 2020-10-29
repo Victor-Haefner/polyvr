@@ -777,9 +777,9 @@ void VRSyncNode::handleNewRemote(string data){
     auto uri = splitString(remote[0], ':');
     string ip = uri[0];
     string port = uri[1];
-    cout << "handleNewRemote with ip " << ip << " port " << port << " name " << name << endl;
+    cout << "handleNewRemote with ip " << ip << " port " << port << " name " << remoteName << endl;
     //if not in list then it is a new connection, the add remote
-    if (remotes.count(uri)) { addRemote(ip, toInt(port), name); cout << "added new remote automatically" << endl;}
+    if (!remotesUri.count(remoteName)) VRSyncNode::addRemote(ip, toInt(port), remoteName);
 }
 
 void VRSyncNode::startInterface(int port) {
