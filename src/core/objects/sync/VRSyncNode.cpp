@@ -770,9 +770,8 @@ void VRSyncNode::addRemote(string host, int port) {
 void VRSyncNode::handleNewConnect(string data){
     cout << "VRSyncNode::handleNewConnect" << endl;
     auto remoteData = splitString(data, '|');
-    auto remote = splitString(remoteData[1], '/');
-    string remoteName = remote[1];
-    auto uri = splitString(remote[0], ':');
+    string remoteName = remoteData[1];
+    auto uri = splitString(remoteName, ':');
     string ip = uri[0];
     string port = uri[1];
     cout << "handleNewConnect with ip " << ip << " port " << port << " name " << remoteName << endl;
