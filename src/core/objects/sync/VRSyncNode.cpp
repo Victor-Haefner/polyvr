@@ -746,16 +746,16 @@ void VRSyncNode::addOwnedObject(string objectName){
 }
 
 PosePtr VRSyncNode::getRemoteCamPose(string remoteName) {
-    if (!remotesCameraPose.count(remoteName)) { cout << "Error in VRSyncNode::getRemoteCamPose: " << remoteName << " not in camera poses!" << endl; return 0; }
+    if (!remotesCameraPose.count(remoteName)) { /*cout << "Error in VRSyncNode::getRemoteCamPose: " << remoteName << " not in camera poses!" << endl;*/ return 0; }
     return remotesCameraPose[remoteName];
 }
 
 PosePtr VRSyncNode::getRemoteMousePose(string remoteName) {
-    if (!remotesMousePose.count(remoteName)) { cout << "Error in VRSyncNode::getRemoteMousePose: " << remoteName << " not in mouse poses!" << endl; return 0; }
+    if (!remotesMousePose.count(remoteName)) { /*cout << "Error in VRSyncNode::getRemoteMousePose: " << remoteName << " not in mouse poses!" << endl;*/ return 0; }
     return remotesMousePose[remoteName];
 }
 PosePtr VRSyncNode::getRemoteFlystickPose(string remoteName) {
-    if (!remotesFlystickPose.count(remoteName)) { cout << "Error in VRSyncNode::getRemoteFlystickPose: " << remoteName << " not in flystick poses!" << endl; return 0; }
+    if (!remotesFlystickPose.count(remoteName)) { /*cout << "Error in VRSyncNode::getRemoteFlystickPose: " << remoteName << " not in flystick poses!" << endl;*/ return 0; }
     return remotesFlystickPose[remoteName];
 }
 
@@ -788,7 +788,7 @@ void VRSyncNode::handleNewConnect(string data){
     string port = uri[1];
 
     cout << " handleNewConnect with ip " << remoteName << endl;
-    (*onConnect)(); //if not in list then it is a new connection, the add remote
+    (*onEvent)("connection|"+remoteName); //if not in list then it is a new connection, the add remote
 
     if (!remotes.count(remoteName)) {
         cout << "  new connection -> add remote" << remoteName << endl;
@@ -901,8 +901,8 @@ string VRSyncNode::getConnectionLink() {
     return IP+":"+toString(port);
 }
 
-void VRSyncNode::setCallback(VRUpdateCbPtr fkt){
-    onConnect = fkt;
+void VRSyncNode::setCallback(VRMessageCbPtr fkt){
+    onEvent = fkt;
     cout << "VRSyncNode::setCallback" << endl;
 }
 

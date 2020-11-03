@@ -28,7 +28,7 @@ class VRSyncNode : public VRTransform {
         bool doWrapping = true;
         bool doAvatars = true;
 
-        VRUpdateCbPtr onConnect;
+        VRMessageCbPtr onEvent;
 
         VRSyncChangelistPtr changelist;
 
@@ -146,7 +146,7 @@ class VRSyncNode : public VRTransform {
         void wrapOSG();
 
         string getConnectionLink();
-        void setCallback(VRUpdateCbPtr fkt);
+        void setCallback(VRMessageCbPtr fkt);
 
         string getConnectionStatus();
 };
