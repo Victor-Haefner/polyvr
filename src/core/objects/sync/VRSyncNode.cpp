@@ -766,20 +766,22 @@ void VRSyncNode::addRemote(string host, int port, string name) {
     // sync node ID
     auto nID = getNode()->node->getId();
     remotes[uri]->send("selfmap|"+toString(nID));
-    remotes[uri]->send("newRemote|"+getConnectionLink());
+    remotes[uri]->send("newConnect|"+getConnectionLink());
 }
 
-void VRSyncNode::handleNewRemote(string data){
-    cout << "VRSyncNode::handleNewRemote" << endl;
+void VRSyncNode::handleNewConnect(string data){
+    cout << "VRSyncNode::handleNewConnect" << endl;
     auto remoteData = splitString(data, '|');
     auto remote = splitString(remoteData[1], '/');
     string remoteName = remote[1];
     auto uri = splitString(remote[0], ':');
     string ip = uri[0];
     string port = uri[1];
-    cout << "handleNewRemote with ip " << ip << " port " << port << " name " << remoteName << endl;
-    //if not in list then it is a new connection, the add remote
-    if (!remotesUri.count(remoteName)) VRSyncNode::addRemote(ip, toInt(port), remoteName);
+    cout << "handleNewConnect with ip " << ip << " port " << port << " name " << remoteName << endl;
+
+    if (remotesUri.count(remoteName)) VRScene::getCurrent()->queueJob( onConnect ); //if not in list then it is a new connection, the add remote
+    else VRSyncNode::addRemote(ip, toInt(port), remoteName);
+
 }
 
 void VRSyncNode::startInterface(int port) {
@@ -824,7 +826,7 @@ void VRSyncNode::handleMessage(string msg) {
     else if (startsWith(msg, "mapping|")) job = VRUpdateCb::create( "sync-handleMap", bind(&VRSyncNode::handleMapping, this, msg) );
     else if (startsWith(msg, "poses|"))   job = VRUpdateCb::create( "sync-handlePoses", bind(&VRSyncNode::handlePoses, this, msg) );
     else if (startsWith(msg, "ownership|")) job = VRUpdateCb::create( "sync-ownership", bind(&VRSyncNode::handleOwnershipMessage, this, msg) );
-    else if (startsWith(msg, "newRemote|")) job = VRUpdateCb::create( "sync-newRemote", bind(&VRSyncNode::handleNewRemote, this, msg) );
+    else if (startsWith(msg, "newConnect|")) job = VRUpdateCb::create( "sync-newConnect", bind(&VRSyncNode::handleNewConnect, this, msg) );
     else if (startsWith(msg, "changelistEnd|")) job = VRUpdateCb::create( "sync-finalizeCL", bind(&VRSyncChangelist::deserializeAndApply, changelist.get(), ptr()) );
     //else if (startsWith(msg, "warn|")) job = VRUpdateCb::create( "sync-handleWarning", bind(&VRSyncNode::handleWarning, this, msg) );
     else if (startsWith(msg, "warn|")) handleWarning(msg);
@@ -888,4 +890,8 @@ string VRSyncNode::getConnectionLink() {
     return IP+":"+toString(port)+"/"+name;
 }
 
+void VRSyncNode::setCallback(VRUpdateCbPtr fkt){
+    onConnect = fkt;
+    cout << "VRSyncNode::setCallback" << endl;
+}
 
