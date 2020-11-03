@@ -261,6 +261,10 @@ void printContainer (FieldContainerFactoryBase* factory, map<UInt32,UInt32> cont
 
 
 void VRSyncNode::gatherLeafs(VRObjectPtr parent, vector<pair<Node*, VRObjectPtr>>& leafs, vector<VRObjectPtr>& inconsistentCores) {
+    if (!parent) return;
+    if (!parent->getNode()) return;
+    if (!parent->getCore()) return;
+
     vector<Node*> vrChildren;
     for (auto child : parent->getChildren()) vrChildren.push_back( child->getNode()->node );
 
