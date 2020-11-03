@@ -120,7 +120,7 @@ bool VRSyncConnection::send(string message) {
 
 string VRSyncConnection::getStatus() {
     string s;
-    s = " connection with "+host+":"+toString(port)+toString(client->connected());
+    s = " connection with "+host+":"+toString(port)+", "+toString(client->connected());
     return s;
 }
 

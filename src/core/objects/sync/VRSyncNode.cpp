@@ -759,6 +759,7 @@ PosePtr VRSyncNode::getRemoteFlystickPose(string remoteName) {
 void VRSyncNode::addRemote(string host, int port) {
     cout << " >>> > > VRSyncNode::addRemote to " << getName() << ": " << name << " at " << host << " on " << port << endl;
     string uri = host + toString(port);
+    if (remotes.count(uri)) return;
     remotes[uri] = VRSyncConnection::create(host, port);
 
     // sync node ID
