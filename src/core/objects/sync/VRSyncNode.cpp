@@ -677,7 +677,7 @@ void VRSyncNode::handlePoses(string poses)  {
 
     if (nodeName == "") return;
     for (unsigned int i = 2; i < pairs.size(); i++) {
-        auto data = splitString(pairs[i], ':');
+        auto data = splitString(pairs[i], '$');
         if (data.size() != 2) continue;
         string deviceName = data[0];
         PosePtr pose = toValue<PosePtr>(data[1]);
