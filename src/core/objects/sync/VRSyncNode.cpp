@@ -776,8 +776,10 @@ void VRSyncNode::handleNewConnect(string data){
     string port = uri[1];
     cout << "handleNewConnect with ip " << ip << " port " << port << " name " << remoteName << endl;
 
-    if (remotes.count(remoteName)) VRScene::getCurrent()->queueJob( onConnect ); //if not in list then it is a new connection, the add remote
-    else VRSyncNode::addRemote(ip, toInt(port));
+    (*onConnect)(); //if not in list then it is a new connection, the add remote
+
+    if (!remotes.count(remoteName))
+        VRSyncNode::addRemote(ip, toInt(port));
 }
 
 void VRSyncNode::startInterface(int port) {
