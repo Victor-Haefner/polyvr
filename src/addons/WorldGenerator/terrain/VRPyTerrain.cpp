@@ -6,6 +6,7 @@ using namespace OSG;
 
 simpleVRPyType(Terrain, New_VRObjects_ptr);
 simpleVRPyType(Planet, New_VRObjects_ptr);
+simpleVRPyType(Orbit, New_ptr);
 
 PyMethodDef VRPyTerrain::methods[] = {
     {"setParameters", PyWrapOpt(Terrain, setParameters, "Set the terrain parameters, size, resolution, height scale, water level", "1|0|0.0001|0.7 0.9 1|1", void, Vec2d, double, double, float, float, Color3f, bool ) },
@@ -48,5 +49,33 @@ PyMethodDef VRPyPlanet::methods[] = {
     {"fromPosLatLong", PyWrapOpt(Planet, fromPosLatLong, "Convert space position to lat and long", "0", Vec2d, Pnt3d, bool) },
     {"localize", PyWrap(Planet, localize, "Center the planet origin on a sector", void, double, double) },
     {"divideTIFF", PyWrap(Planet, divideTIFF, "loads sat images as .tif, dividing into .png chunks - string pathIn, string pathOut, double minLat, double maxLat, double minLon, double maxLon, double res \n        pathOut only placeholder right now, new files are saved in project directory", void, string, string, double, double, double, double, double) },
+    {"setRotation", PyWrap(Planet, setRotation, "Set rotation in days", void, double ) },
+    {"getRotation", PyWrap(Planet, getRotation, "Get rotation in days", double ) },
+    {"setInclination", PyWrap(Planet, setInclination, "Set inclination in rad", void, double ) },
+    {"getInclination", PyWrap(Planet, getInclination, "Get inclination in rad", double ) },
+    {"addMoon", PyWrap(Planet, addMoon, "Add moon", void, VRTransformPtr ) },
+    {"getMoons", PyWrap(Planet, getMoons, "Get all moons", vector<VRTransformPtr> ) },
     {NULL}  /* Sentinel */
 };
+
+PyMethodDef VRPyOrbit::methods[] = {
+    {"fromCircle", PyWrap(Orbit, fromCircle, "Parameterize the orbit from a circle, inclination, radius[au], speed[deg]", void, Vec3d, double, double) },
+    {"fromKepler", PyWrap(Orbit, fromKepler, "Parameterize the orbit from the 6 Keplerian elements and their rates [/century], "
+                                             "semi-major axis[au], eccentricity[deg], inclination[deg], "
+                                             "mean longitude[deg], longitude of perihelion[deg], longitude of the ascending node[deg]"
+                                             "([a0, e0, I0, l0, w0, o0, da, de, dI, dl, dw, do])", void, vector<double> ) },
+    {"computeCoords", PyWrap(Orbit, computeCoords, "Compute the coordinates relative to the ecliptic plane based on the Julian Ephemeris date", Vec3d, double ) },
+    {"getPeriod", PyWrap(Orbit, getPeriod, "Estimate the period to do a full orbit", double ) },
+    {"setReferential", PyWrap(Orbit, setReferential, "Set referential", void, VRObjectPtr ) },
+    {"getReferential", PyWrap(Orbit, getReferential, "Get referential", VRObjectPtr ) },
+    {"setTarget", PyWrap(Orbit, setTarget, "Set target", void, VRObjectPtr ) },
+    {"getTarget", PyWrap(Orbit, getTarget, "Get target", VRObjectPtr ) },
+    {"setTrail", PyWrap(Orbit, setTrail, "Set trail", void, VRObjectPtr ) },
+    {"getTrail", PyWrap(Orbit, getTrail, "Get trail", VRObjectPtr ) },
+    {NULL}  /* Sentinel */
+};
+
+
+
+
+

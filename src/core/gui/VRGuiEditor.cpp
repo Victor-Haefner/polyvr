@@ -335,7 +335,7 @@ VRGuiEditor::VRGuiEditor(string window) {
     gtk_source_view_set_highlight_current_line (GTK_SOURCE_VIEW (editor), TRUE);
     gtk_source_view_set_show_line_numbers (GTK_SOURCE_VIEW (editor), TRUE);
     gtk_source_view_set_right_margin_position (GTK_SOURCE_VIEW (editor), 80); // default is 70 chars
-    gtk_source_view_set_show_right_margin (GTK_SOURCE_VIEW (editor), TRUE);
+    gtk_source_view_set_show_right_margin (GTK_SOURCE_VIEW (editor), FALSE);
 
     // editor font
     PangoFontDescription *font_desc = pango_font_description_new();

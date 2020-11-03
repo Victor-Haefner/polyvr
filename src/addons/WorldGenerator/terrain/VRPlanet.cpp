@@ -32,6 +32,14 @@ VRPlanetPtr VRPlanet::ptr() { return static_pointer_cast<VRPlanet>( shared_from_
 double VRPlanet::toRad(double deg) { return pi*deg/180; }
 double VRPlanet::toDeg(double rad) { return 180*rad/pi; }
 
+void VRPlanet::setRotation(double rDays) { rotation = rDays; }
+void VRPlanet::setInclination(double I) { inclination = I; }
+double VRPlanet::getRotation() { return rotation; }
+double VRPlanet::getInclination() { return inclination; }
+
+void VRPlanet::addMoon(VRTransformPtr t) { moons.push_back(t); }
+vector<VRTransformPtr> VRPlanet::getMoons() { return moons; }
+
 void VRPlanet::localize(double north, double east) {
     cout << "VRPlanet::localize" << endl;
     originCoords = Vec2d(north, east);

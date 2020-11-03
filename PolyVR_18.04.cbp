@@ -501,6 +501,8 @@
 		<Unit filename="src/addons/WorldGenerator/roads/VRTrafficSigns.h" />
 		<Unit filename="src/addons/WorldGenerator/roads/VRTunnel.cpp" />
 		<Unit filename="src/addons/WorldGenerator/roads/VRTunnel.h" />
+		<Unit filename="src/addons/WorldGenerator/terrain/VROrbit.cpp" />
+		<Unit filename="src/addons/WorldGenerator/terrain/VROrbit.h" />
 		<Unit filename="src/addons/WorldGenerator/terrain/VRPlanet.cpp" />
 		<Unit filename="src/addons/WorldGenerator/terrain/VRPlanet.h" />
 		<Unit filename="src/addons/WorldGenerator/terrain/VRPyTerrain.cpp" />
