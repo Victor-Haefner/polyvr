@@ -762,7 +762,7 @@ PosePtr VRSyncNode::getRemoteFlystickPose(string remoteName) {
 //Add remote Nodes to sync with
 void VRSyncNode::addRemote(string host, int port) {
     cout << " >>> > > VRSyncNode::addRemote to " << getName() << ": " << name << " at " << host << " on " << port << endl;
-    string uri = host + toString(port);
+    string uri = host + ":" + toString(port);
     if (remotes.count(uri)) return;
     remotes[uri] = VRSyncConnection::create(host, port);
 
@@ -770,6 +770,7 @@ void VRSyncNode::addRemote(string host, int port) {
     auto nID = getNode()->node->getId();
     remotes[uri]->send("selfmap|"+toString(nID));
     remotes[uri]->send("newConnect|"+getConnectionLink());
+    cout << "   send newConnect from " << uri << endl;
 }
 
 void VRSyncNode::handleNewConnect(string data){
@@ -779,12 +780,14 @@ void VRSyncNode::handleNewConnect(string data){
     auto uri = splitString(remoteName, ':');
     string ip = uri[0];
     string port = uri[1];
-    cout << "handleNewConnect with ip " << ip << " port " << port << " name " << remoteName << endl;
 
+    cout << " handleNewConnect with ip " << remoteName << endl;
     (*onConnect)(); //if not in list then it is a new connection, the add remote
 
-    if (!remotes.count(remoteName))
+    if (!remotes.count(remoteName)) {
+        cout << "  new connection -> add remote" << remoteName << endl;
         VRSyncNode::addRemote(ip, toInt(port));
+    }
 }
 
 void VRSyncNode::startInterface(int port) {
