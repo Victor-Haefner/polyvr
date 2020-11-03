@@ -892,3 +892,12 @@ void VRSyncNode::setCallback(VRUpdateCbPtr fkt){
     cout << "VRSyncNode::setCallback" << endl;
 }
 
+string VRSyncNode::getConnectionStatus(){
+    string status = "SyncNode: " + getConnectionLink() + "\n";
+    for (auto remote : remotes) {
+        status += " (" + remote.first + ") " + remote.second->getStatus();
+        status += "\n";
+    }
+    return status;
+}
+

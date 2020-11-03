@@ -28,6 +28,8 @@ class VRSyncConnection {
         bool send(string message);
         void startInterface(int port, VRSyncNodePtr snode);
 
+        string getStatus();
+
         static string base64_encode(unsigned char const* buf, UInt32 bufLen);
         static vector<unsigned char> base64_decode(string const& encoded_string);
 };

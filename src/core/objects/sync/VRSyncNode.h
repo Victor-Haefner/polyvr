@@ -146,6 +146,8 @@ class VRSyncNode : public VRTransform {
 
         string getConnectionLink();
         void setCallback(VRUpdateCbPtr fkt);
+
+        string getConnectionStatus();
 };
 
 OSG_END_NAMESPACE;
