@@ -510,7 +510,7 @@ bool poseChanged(Pose oldPose, PosePtr newPose, int thresholdPos, int thresholdA
 
 void VRSyncNode::getAndBroadcastPoses() {
     if (!doAvatars) return;
-    string poses = "poses|name:" + name;
+    string poses = "poses|name:" + getConnectionLink();
 
     VRScenePtr scene = VRScene::getCurrent(); //get scene
     VRCameraPtr cam = scene->getActiveCamera(); //get camera pose
@@ -548,7 +548,7 @@ void VRSyncNode::getAndBroadcastPoses() {
     //cout << "broadcast poses " << poses << endl;
 }
 
-void VRSyncNode::sync(string uri) {
+/*void VRSyncNode::sync(string uri) {
     if (!container.size()) return;
     vector<BYTE> data;
     vector<UInt32> containerData;
@@ -560,7 +560,7 @@ void VRSyncNode::sync(string uri) {
     string msg = VRSyncConnection::base64_encode(&data[0], data.size());
     remotes[uri]->send("sync");
     remotes[uri]->send(msg);
-}
+}*/
 
 //update this SyncNode
 void VRSyncNode::update() {
@@ -571,7 +571,7 @@ void VRSyncNode::update() {
     cout << endl << " > > >  " << name << " VRSyncNode::update()" << endl;
 
 
-    OSGChangeList* cl = (OSGChangeList*)applicationThread->getChangeList();
+    //OSGChangeList* cl = (OSGChangeList*)applicationThread->getChangeList();
     //changelist->printChangeList(ptr(), cl);
 
 
@@ -709,12 +709,11 @@ void VRSyncNode::handleOwnershipMessage(string ownership)  {
                         return;
                     }
                 }
-                for (auto remote : remotesUri) { //grant ownership
+                for (auto remote : remotes) { //grant ownership
                     cout << "remote.first " << remote.first << endl;
                     if (remote.first.find(nodeName) != string::npos) {
                         string message = "ownership|grant|" + nodeName + "|" + objectName;
-                        string uri = remote.second;
-                        remotes[uri]->send(message);
+                        remote.second->send(message);
                         auto it = std::find(owned.begin(), owned.end(), objectName);
                         if (it != owned.end()) owned.erase(it);
                         cout << "grant ownership " << message << endl;
@@ -724,7 +723,7 @@ void VRSyncNode::handleOwnershipMessage(string ownership)  {
         }
     }
     else if (str_vec[1] == "grant") {
-        if (nodeName == name) owned.push_back(objectName);
+        if (nodeName == getConnectionLink()) owned.push_back(objectName);
         cout << "got ownership of object " << objectName << endl;
     }
 }
@@ -734,7 +733,7 @@ vector<string> VRSyncNode::getOwnedObjects(string nodeName) {
 }
 
 void VRSyncNode::requestOwnership(string objectName){
-    string message = "ownership|request|" + name + "|" + objectName;
+    string message = "ownership|request|" + getConnectionLink() + "|" + objectName;
     broadcast(message);
 }
 void VRSyncNode::addOwnedObject(string objectName){
@@ -757,11 +756,10 @@ PosePtr VRSyncNode::getRemoteFlystickPose(string remoteName) {
 
 
 //Add remote Nodes to sync with
-void VRSyncNode::addRemote(string host, int port, string name) {
+void VRSyncNode::addRemote(string host, int port) {
     cout << " >>> > > VRSyncNode::addRemote to " << getName() << ": " << name << " at " << host << " on " << port << endl;
     string uri = host + toString(port);
     remotes[uri] = VRSyncConnection::create(host, port);
-    remotesUri[name] = uri;
 
     // sync node ID
     auto nID = getNode()->node->getId();
@@ -779,9 +777,8 @@ void VRSyncNode::handleNewConnect(string data){
     string port = uri[1];
     cout << "handleNewConnect with ip " << ip << " port " << port << " name " << remoteName << endl;
 
-    if (remotesUri.count(remoteName)) VRScene::getCurrent()->queueJob( onConnect ); //if not in list then it is a new connection, the add remote
-    else VRSyncNode::addRemote(ip, toInt(port), remoteName);
-
+    if (remotes.count(remoteName)) VRScene::getCurrent()->queueJob( onConnect ); //if not in list then it is a new connection, the add remote
+    else VRSyncNode::addRemote(ip, toInt(port));
 }
 
 void VRSyncNode::startInterface(int port) {
@@ -886,8 +883,7 @@ string VRSyncNode::getConnectionLink() {
     IP = string(ic.ifc_buf);*/
     string IP = server->getPublicIP();
     int port = server->getPort();
-    string name = getBaseName();
-    return IP+":"+toString(port)+"/"+name;
+    return IP+":"+toString(port);
 }
 
 void VRSyncNode::setCallback(VRUpdateCbPtr fkt){
