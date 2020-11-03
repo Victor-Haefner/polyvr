@@ -514,7 +514,7 @@ bool poseChanged(Pose oldPose, PosePtr newPose, int thresholdPos, int thresholdA
 
 void VRSyncNode::getAndBroadcastPoses() {
     if (!doAvatars) return;
-    string poses = "poses|name:" + getConnectionLink();
+    string poses = "poses|name$" + getConnectionLink();
 
     VRScenePtr scene = VRScene::getCurrent(); //get scene
     VRCameraPtr cam = scene->getActiveCamera(); //get camera pose
@@ -531,11 +531,11 @@ void VRSyncNode::getAndBroadcastPoses() {
 
     if (camChanged) {
         string pose_str = toString(camPose); //append poses to string
-        poses += "|cam:" + pose_str;
+        poses += "|cam$" + pose_str;
         oldCamPose = *camPose; //update oldPoses
     }
     if (mousePose && mouseChanged) {
-        poses += "|mouse:" + toString(mousePose);
+        poses += "|mouse$" + toString(mousePose);
         oldMousePose = *mousePose;
     }
 
@@ -543,7 +543,7 @@ void VRSyncNode::getAndBroadcastPoses() {
         PosePtr flyStickPose = flyStick->getBeacon()->getPose();
         bool flyStickChanged = poseChanged(oldFlystickPose, flyStickPose, 0.1, 10);
         if (flyStickChanged) {
-            poses += "|flystick:" + toString(flyStickPose);
+            poses += "|flystick$" + toString(flyStickPose);
             oldFlystickPose = *flyStickPose;
         }
     }
@@ -669,10 +669,10 @@ void VRSyncNode::handleMapping(string mappingData) {
 }
 
 void VRSyncNode::handlePoses(string poses)  {
-    //cout << "VRSyncNode::handlePoses: " << poses << endl;
+    cout << "VRSyncNode::handlePoses: " << poses << endl;
     string nodeName;
     vector<string> pairs = splitString(poses, '|');
-    vector<string> namePair = splitString(pairs[1], ':');
+    vector<string> namePair = splitString(pairs[1], '$');
     if (namePair[0] == "name") nodeName = namePair[1];
 
     if (nodeName == "") return;
@@ -740,6 +740,7 @@ void VRSyncNode::requestOwnership(string objectName){
     string message = "ownership|request|" + getConnectionLink() + "|" + objectName;
     broadcast(message);
 }
+
 void VRSyncNode::addOwnedObject(string objectName){
     owned.push_back(objectName);
 }
@@ -758,6 +759,11 @@ PosePtr VRSyncNode::getRemoteFlystickPose(string remoteName) {
     return remotesFlystickPose[remoteName];
 }
 
+vector<string> VRSyncNode::getRemotes() {
+    vector<string> res;
+    for (auto r : remotes) res.push_back(r.first);
+    return res;
+}
 
 //Add remote Nodes to sync with
 void VRSyncNode::addRemote(string host, int port) {

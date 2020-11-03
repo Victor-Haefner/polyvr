@@ -28,6 +28,7 @@ PyMethodDef VRPySyncNode::methods[] = {
     {"getConnectionLink", PyWrap(SyncNode, getConnectionLink, "Get Connection Link", string) },
     {"setCallback", PyWrap(SyncNode, setCallback, "Set syncNode callback", void, VRUpdateCbPtr) },
     {"getConnectionStatus", PyWrap(SyncNode, getConnectionStatus, "Set syncNode callback", string) },
+    {"getRemotes", PyWrap(SyncNode, getRemotes, "Get list with uris of remotes", vector<string>) },
     {NULL}  /* Sentinel */
 };
 

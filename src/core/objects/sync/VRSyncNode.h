@@ -127,6 +127,7 @@ class VRSyncNode : public VRTransform {
 
         void analyseSubGraph();
 
+        vector<string> getRemotes();
         PosePtr getRemoteCamPose(string remoteName);
         PosePtr getRemoteMousePose(string remoteName);
         PosePtr getRemoteFlystickPose(string remoteName);
