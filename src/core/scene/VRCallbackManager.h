@@ -39,7 +39,7 @@ class VRCallbackManager {
 
     public:
         VRCallbackManager();
-        ~VRCallbackManager();
+        virtual ~VRCallbackManager();
 
         void queueJob(VRUpdateCbPtr f, int priority = 0, int delay = 0, bool ownRef = true);
         void addUpdateFkt(VRUpdateCbWeakPtr f, int priority = 0);

@@ -231,8 +231,10 @@ typedef int bool;
 #define STR(x) STRX(x)
 #define __func__ __FILE__ ":" STR(__LINE__)
 #endif
+#ifndef _WIN32
 #define snprintf _snprintf
 #define vsnprintf _vsnprintf
+#endif
 #define to64(x) _atoi64(x)
 #if !defined(__MINGW32__) && !defined(__MINGW64__)
 #define popen(x, y) _popen((x), (y))

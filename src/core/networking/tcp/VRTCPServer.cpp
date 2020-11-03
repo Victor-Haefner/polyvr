@@ -8,6 +8,10 @@
 #include <string>
 #include <memory>
 
+//#ifdef _WINDOWS // TODO
+//#include <ws2tcpip.h>
+//#endif
+
 using namespace std;
 using namespace OSG;
 using namespace boost::asio;
@@ -51,9 +55,13 @@ class TCPServer {
             acceptor->async_accept(socket, [this](boost::system::error_code ec) { if (!ec) serve(); /*waitFor();*/ });
         }
 
+		void run() {
+			io_service.run();
+		}
+
     public:
         TCPServer() : worker(io_service), socket(io_service) {
-            service = thread([this](){ io_service.run(); });
+            service = thread([this](){ run(); });
         }
 
         ~TCPServer() { close(); }
@@ -85,6 +93,7 @@ void VRTCPServer::close() { server->close(); }
 int VRTCPServer::getPort() { return port; }
 
 string VRTCPServer::getPublicIP() {
+#ifndef _WINDOWS // TODO
     int sock = socket(AF_INET, SOCK_DGRAM, 0);
     assert(sock != -1);
 
@@ -103,9 +112,18 @@ string VRTCPServer::getPublicIP() {
     getsockname(sock, (sockaddr*) &name, &namelen);
 
     char addressBuffer[INET_ADDRSTRLEN];
-    inet_ntop(AF_INET, &name.sin_addr, addressBuffer, INET_ADDRSTRLEN);
 
-    ::close(sock);
+#ifdef _WINDOWS
+	inet_ntop(AF_INET, &name.sin_addr, addressBuffer, INET_ADDRSTRLEN);
+	closesocket(sock);
+#else
+	inet_ntop(AF_INET, &name.sin_addr, addressBuffer, INET_ADDRSTRLEN);
+	::close(sock);
+#endif
+
     return string(addressBuffer);
+#else
+	return "";
+#endif
 }
 

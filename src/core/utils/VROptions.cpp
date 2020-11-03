@@ -22,6 +22,10 @@ VROptions::VROptions() : desc("Configuration ") {
     cout << endl;
 }
 
+VROptions::~VROptions() {
+    cout << "VROptions::~VROptions" << endl;
+}
+
 void VROptions::operator= (VROptions v) {;}
 
 VROptions* VROptions::get() {

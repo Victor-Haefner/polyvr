@@ -195,16 +195,19 @@ string glParam(GLenum e) {
     return s ? string(s) : "";
 }
 
-int getGLSLVersion() {
+int VRRenderManager::getGLSLVersion() {
     string sV = glParam(GL_SHADING_LANGUAGE_VERSION);
-    int i1 = toInt(splitString(sV, '.')[0]);
-    int i2 = toInt(splitString(sV, '.')[1]);
+    auto prts = splitString(sV, '.');
+    if (prts.size() < 2) return 0;
+    int i1 = toInt(prts[0]);
+    int i2 = toInt(prts[1]);
     if (i2 < 10) i2 *= 10;
     //cout << "getGLSLVersion " << sV << "  ->  " << Vec2i(i1,i2) << "  -> " << i1*100 + i2 << endl;
     return i1*100 + i2;
 }
 
-string VRRenderManager::getSupportedGL() { return glParam(GL_VERSION); }
+string VRRenderManager::getGLVendor() { return glParam(GL_VENDOR); }
+string VRRenderManager::getGLVersion() { return glParam(GL_VERSION); }
 bool VRRenderManager::hasGeomShader() { int v = getGLSLVersion(); return (v >= 150); }
 bool VRRenderManager::hasTessShader() { int v = getGLSLVersion(); return (v >= 400); }
 

@@ -2,6 +2,7 @@
 #define ASSET_H_INCLUDED
 
 #include <map>
+#include <string>
 #include <OpenSG/OSGConfig.h>
 #include "core/objects/VRObjectFwd.h"
 

@@ -15,6 +15,7 @@ boost::recursive_mutex mtx;
 
 VRCallbackManager::VRCallbackManager() { updateListsChanged = false; }
 VRCallbackManager::~VRCallbackManager() {
+    cout << "VRCallbackManager::~VRCallbackManager" << endl;
     for (auto ufs : updateFktPtrs) delete ufs.second;
 }
 

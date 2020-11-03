@@ -129,17 +129,16 @@ void VRNetworkNode::update() {
 
     VRPing p;
     if ( !p.start(address, 1) ) { stat_node = "not reachable"; return; }
-    if ( !p.start(address, "22", 1) ) { stat_node = "no ssh"; return; }
+    if ( !p.start(address, "22", 1) ) { stat_node = "no ssh, install with sudo apt install ssh"; return; }
 
     auto ssh = VRSSHSession::open(address, user);
     stat_ssh = ssh->getStat();
     stat_ssh_key = ssh->getKeyStat();
     if (stat_ssh != "ok") { stat_path = "no ssh access"; return; }
 
-    bool b1 = hasFile(slavePath + "/src/cluster/start");
-    bool b2 = hasFile(slavePath + "/src/cluster/stop");
-    if (b1 && b2) stat_path = "ok";
-    else stat_path = "not found";
+    if (!hasFile(slavePath + "/src/cluster/start")) stat_path = "PolyVR root directory not found";
+    else if (!hasFile(slavePath + "/src/cluster/VRServer")) stat_path = "Slave not compiled, execute " + slavePath + "/src/cluster/setup";
+    else stat_path = "ok";
 #endif
 }
 

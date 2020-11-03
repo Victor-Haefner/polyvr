@@ -221,15 +221,16 @@ void VRMouse::updatePosition(int x, int y) {
 * @param y: y coordinate of mouse pointer on screen
 */
 void VRMouse::mouse(int button, int state, int x, int y) {
-
-    float _x, _y;
     auto sv = view.lock();
     if (!sv) return;
-
     ViewportMTRecPtr v = sv->getViewportL();
+    if (!v) return;
+    if (!v->getParent()) return;
+
+    float _x, _y;
     v->calcNormalizedCoordinates(_x, _y, x, y);
-    change_slider(5,_x);
-    change_slider(6,_y);
+    change_slider(5, _x);
+    change_slider(6, _y);
 
     updatePosition(x,y);
     if (state) change_button(button,false);
@@ -239,9 +240,9 @@ void VRMouse::mouse(int button, int state, int x, int y) {
 void VRMouse::motion(int x, int y) {
     auto sv = view.lock();
     if (!sv) return;
-
     ViewportMTRecPtr v = sv->getViewportL();
     if (!v) return;
+    if (!v->getParent()) return;
 
     float _x, _y;
     v->calcNormalizedCoordinates(_x, _y, x, y);

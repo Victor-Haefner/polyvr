@@ -1,12 +1,11 @@
 #include "VRGuiCombobox.h"
 #include "../VRGuiUtils.h"
+#include "../VRGuiBuilder.h"
 
-#include <gtk/gtkcombobox.h>
-#include <gtk/gtktreemodel.h>
-#include <gtk/gtkliststore.h>
+#include <gtk/gtk.h>
 
 VRGuiCombobox::VRGuiCombobox(string name) : VRGuiWidget(name) {
-    auto widget = getGUIBuilder()->get_widget(name);
+    auto widget = VRGuiBuilder::get()->get_widget(name);
     init(widget);
 }
 

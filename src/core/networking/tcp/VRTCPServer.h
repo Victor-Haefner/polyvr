@@ -3,6 +3,7 @@
 
 #include "../VRNetworkingFwd.h"
 
+#include <string>
 #include <functional>
 
 class TCPServer;

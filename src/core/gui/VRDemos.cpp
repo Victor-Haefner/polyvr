@@ -4,10 +4,7 @@
 
 #include <string>
 #include <iostream>
-
-#include <gtk/gtktable.h>
-#include <gtk/gtkcheckbutton.h>
-#include <gtk/gtkfilechooser.h>
+#include <gtk/gtk.h>
 
 #include "core/scene/VRSceneLoader.h"
 #include "core/scene/VRSceneManager.h"
@@ -21,6 +18,7 @@
 #include "core/utils/system/VRSystem.h"
 
 #include "VRGuiUtils.h"
+#include "VRGuiBuilder.h"
 #include "VRGuiSignals.h"
 #include "VRGuiFile.h"
 #include "VRGuiContextMenu.h"
@@ -44,7 +42,7 @@ VRAppManager::VRAppManager() {
 
     int i=0;
     for (auto p : favorites->getEntriesByTimestamp()) {
-        long ts = p->getTimestamp();
+        time_t ts = p->getTimestamp();
         string t = "";
         if (ts > 0) t = asctime( localtime(&ts) );
         addEntry(p->getPath(), "favorites_tab", false, t, i<2);
@@ -74,7 +72,7 @@ VRAppManager::~VRAppManager() {}
 VRAppManagerPtr VRAppManager::create() { return VRAppManagerPtr( new VRAppManager() ); }
 
 VRAppPanelPtr VRAppManager::addSection(string name, string t) {
-    GtkTable* tab = (GtkTable*)getGUIBuilder()->get_widget(t);
+    auto tab = VRGuiBuilder::get()->get_widget(t);
     tables[t] = tab;
 
     auto s = VRAppPanel::create(name, tables[t]);
@@ -92,10 +90,12 @@ void VRAppManager::on_lock_toggle(VRAppLauncherPtr e) {
 }
 
 void VRAppManager::updateTable(string t) {
+#if GTK_MAJOR_VERSION == 2
     int N = 4;
     if (t == "examples_tab") N += sections["examples"]->getSize();
     if (t == "favorites_tab") N += sections["recents"]->getSize() + sections["favorites"]->getSize();
     gtk_table_resize(tables[t], N*0.5+1, 2);
+#endif
 
     int i = 0;
     if (t == "examples_tab") sections["examples"]->fillTable(t, i);
@@ -371,8 +371,10 @@ void VRAppManager::on_search() {
 }
 
 void VRAppManager::update() {
+	cout << "VRAppManager::update" << endl;
     auto scene = VRScene::getCurrent();
     if (scene == 0) {
+        cout << " .. no scene" << endl;
         if (current_demo) current_demo->running = false;
         setGuiState(current_demo);
         return;
@@ -380,13 +382,17 @@ void VRAppManager::update() {
 
     string sPath = scene->getPath();
     if (current_demo) {
+        cout << " .. current_demo set" << endl;
         if (current_demo->path == sPath) {
             current_demo->running = true;
+            cout << "  .. to running, set ui state accordingly" << endl;
             setGuiState(current_demo);
             return;
         }
+        cout << "  .. to not running, set ui state accordingly" << endl;
         current_demo->running = false;
         setGuiState(current_demo);
+        return;
     }
 
     auto e = sections["recents"]->getLauncher(sPath);
@@ -396,10 +402,20 @@ void VRAppManager::update() {
     if (e) {
         current_demo = e;
         current_demo->running = true;
+        cout << " .. found launcher, set to current and to running, set ui state accordingly" << endl;
         setGuiState(current_demo);
+        return;
     }
 
-    if (noLauncherScene) setGuiState(0);
+    noLauncherScene = true;
+
+    if (noLauncherScene) {
+        cout << " .. noLauncherScene set, set ui state accordingly" << endl;
+        setGuiState(0);
+        return;
+    }
+
+    cout << " .. ui state not changed" << endl;
 }
 
 OSG_END_NAMESPACE;

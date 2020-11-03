@@ -206,7 +206,10 @@ VRSignalPtr VRSnappingEngine::getSignalSnap() { return snapSignal; }
 void VRSnappingEngine::update() {
     if (!active) return;
 
-    for (auto dev : VRSetup::getCurrent()->getDevices()) { // get dragged objects
+    auto setup = VRSetup::getCurrent();
+    if (!setup) return;
+
+    for (auto dev : setup->getDevices()) { // get dragged objects
         VRTransformPtr obj = dev.second->getDraggedObject();
         VRTransformPtr gobj = dev.second->getDraggedGhost();
         if (obj == 0 || gobj == 0) continue;

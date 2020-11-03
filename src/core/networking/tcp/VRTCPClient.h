@@ -2,6 +2,7 @@
 #define VRTCPCLIENT_H_INCLUDED
 
 #include "../VRNetworkingFwd.h"
+#include <string>
 
 class TCPClient;
 

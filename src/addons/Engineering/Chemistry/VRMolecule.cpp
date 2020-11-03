@@ -1,5 +1,5 @@
-#include "VRMolecule.h"
 #include "VRAtom.h"
+#include "VRMolecule.h"
 #include "VRMoleculeMat.h"
 
 #include "core/objects/material/VRMaterial.h"

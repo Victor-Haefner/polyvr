@@ -23,11 +23,15 @@ class PolyVR {
         VRSoundManagerPtr sound_mgr;
         VROptionsPtr options;
 
+        bool doLoop = false;
+
         void checkProcessesAndSockets();
 
     public:
         PolyVR();
         ~PolyVR();
+
+        static shared_ptr<PolyVR> create();
         static PolyVR* get();
         static void shutdown();
 

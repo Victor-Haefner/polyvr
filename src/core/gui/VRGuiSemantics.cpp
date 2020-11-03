@@ -1,6 +1,7 @@
-
+#include <gtk/gtk.h>
 #include "VRGuiSemantics.h"
 #include "VRGuiUtils.h"
+#include "VRGuiBuilder.h"
 #include "VRGuiFile.h"
 #include "addons/Semantics/Reasoning/VROntology.h"
 #include "addons/Semantics/Reasoning/VRProperty.h"
@@ -20,10 +21,6 @@
 
 #include "wrapper/VRGuiTreeView.h"
 
-#include <gtk/gtkwidget.h>
-#include <gtk/gtkfixed.h>
-#include <gtk/gtkdnd.h>
-#include <gtk/gtktreestore.h>
 
 // TODOd, refactoring from gtk mm
 
@@ -300,7 +297,7 @@ void VRGuiSemantics_on_drag_data_received( GdkDragContext* context, int x, int y
 namespace PL = std::placeholders;
 
 VRGuiSemantics::VRGuiSemantics() {
-    canvas = (GtkFixed*)getGUIBuilder()->get_widget("onto_visu");
+    canvas = (GtkFixed*)VRGuiBuilder::get()->get_widget("onto_visu");
     setToolButtonCallback("toolbutton14", bind(&VRGuiSemantics::on_new_clicked, this));
     setToolButtonCallback("toolbutton15", bind(&VRGuiSemantics::on_del_clicked, this));
     setToolButtonCallback("toolbutton2", bind(&VRGuiSemantics::on_open_clicked, this));
@@ -341,8 +338,9 @@ void VRGuiSemantics::on_query_clicked() {
 }
 
 void VRGuiSemantics::updateOntoList() {
+	cout << "VRGuiSemantics::updateOntoList" << endl;
     // update script list
-    auto store = (GtkTreeStore*)getGUIBuilder()->get_object("onto_list");
+    auto store = (GtkTreeStore*)VRGuiBuilder::get()->get_object("onto_list");
     gtk_tree_store_clear(store);
 
     auto setRow = [&](GtkTreeIter* itr, string name, string type) {

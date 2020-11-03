@@ -1,14 +1,11 @@
+#include <gtk/gtk.h>
 #include "VRGuiMonitor.h"
 #include "VRGuiUtils.h"
+#include "VRGuiBuilder.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRGlobals.h"
 
 #include <functional>
-
-#include <gtk/gtkwindow.h>
-#include <gtk/gtkliststore.h>
-#include <gtk/gtkbuilder.h>
-
 #include <cairo.h>
 
 #include "wrapper/VRGuiTreeView.h"
@@ -17,7 +14,7 @@ OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 VRGuiMonitor::VRGuiMonitor() {
-    GtkWidget* da = getGUIBuilder()->get_widget("profiler_area");
+    GtkWidget* da = VRGuiBuilder::get()->get_widget("profiler_area");
 
     gtk_widget_add_events(da, (int)GDK_BUTTON_PRESS_MASK);
     gtk_widget_add_events(da, (int)GDK_BUTTON_RELEASE_MASK);
@@ -27,7 +24,11 @@ VRGuiMonitor::VRGuiMonitor() {
     function<bool(GdkEventButton*)> sig2 = bind(&VRGuiMonitor::on_button, this, placeholders::_1);
     function<void(void)> sig3 = bind(&VRGuiMonitor::select_fkt, this);
 
+#if GTK_MAJOR_VERSION == 2
     connect_signal(da, sig1, "expose_event");
+#else
+    connect_signal(da, sig1, "draw");
+#endif
     connect_signal(da, sig2, "button_press_event");
     connect_signal(da, sig2, "button_release_event");
 
@@ -137,15 +138,28 @@ string VRGuiMonitor::toHex(Vec3d color) {
 }
 
 void VRGuiMonitor::redraw() {
+#if GTK_MAJOR_VERSION == 2
     GdkWindow* win = ((GtkWidget*)da)->window;
+#else
+    GdkWindow* win = gtk_widget_get_window((GtkWidget*)da);
+#endif
     if (win) gdk_window_invalidate_rect( win, NULL, false);
 }
 
 bool VRGuiMonitor::draw(GdkEventExpose* e) {
+#if GTK_MAJOR_VERSION == 2
     GdkWindow* win = ((GtkWidget*)da)->window;
+#else
+    GdkWindow* win = gtk_widget_get_window((GtkWidget*)da);
+#endif
 
+#if GTK_MAJOR_VERSION == 2
     int w, h;
     gdk_window_get_size(win, &w, &h);
+#else
+    int w = gdk_window_get_width(win);
+    int h = gdk_window_get_height(win);
+#endif
     auto surf = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, w, h);
 
     cr = cairo_create(surf);
@@ -207,7 +221,7 @@ void VRGuiMonitor::selectFrame() {
     }
 
     // update list
-    GtkListStore* store = (GtkListStore*)getGUIBuilder()->get_object("prof_fkts");
+    GtkListStore* store = (GtkListStore*)VRGuiBuilder::get()->get_object("prof_fkts");
     gtk_list_store_clear(store);
     for (auto c : fkts) {
         string col = toHex( getColor(c.first) );
