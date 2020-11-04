@@ -77,6 +77,10 @@ class TCPClient {
             messages.push_back(msg);
             if (!write_in_progress) processQueue();
         }
+
+        bool connected() {
+            return socket.is_open();
+        }
 };
 
 
@@ -88,6 +92,7 @@ VRTCPClientPtr VRTCPClient::create() { return VRTCPClientPtr(new VRTCPClient());
 void VRTCPClient::connect(string host, int port) { client->connect(host, port); }
 void VRTCPClient::connect(string host) { client->connect(host); }
 void VRTCPClient::send(const string& message) { client->send(message); }
+bool VRTCPClient::connected() { return client->connected(); }
 
 
 

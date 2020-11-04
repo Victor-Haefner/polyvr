@@ -7,6 +7,7 @@
 #include <OpenSG/OSGGeoProperties.h>
 #include <OpenSG/OSGGeometry.h>
 #include <OpenSG/OSGTriangleIterator.h>
+#include <OpenSG/OSGNameAttachment.h>
 
 using namespace OSG;
 
@@ -77,7 +78,7 @@ VRGeoData::VRGeoData(VRGeometryPtr geo) : pend(this, 0) {
     }
 
     if (data->types && data->types->size() > 0) data->lastPrim = data->types->getValue( data->types->size()-1 );
-    if (!data->types) data->types = GeoUInt8Property::create();
+    if (!data->types) { data->types = GeoUInt8Property::create(); OSG::setName( data->types, "GeoData_types"); }
     if (!data->lengths) data->lengths = GeoUInt32Property::create();
     if (!data->indices) data->indices = GeoUInt32Property::create();
     if (!data->pos) data->pos = GeoPnt3fProperty::create();
@@ -194,12 +195,27 @@ void VRGeoData::apply(VRGeometryPtr geo, bool check, bool checkIndices) const {
     geo->setTexCoords( data->texs->size() > 0 ? data->texs : 0, 0 );
     geo->setTexCoords( data->texs2->size() > 0 ? data->texs2 : 0, 1 );
     if (data->indices->size() > 0) geo->setIndices( data->indices );
-    if (data->indicesNormals->size() > 0)
-        if (data->indicesNormals->size() == data->indices->size()) geo->getMesh()->geo->setIndex( data->indicesNormals, Geometry::NormalsIndex );
-    if (data->indicesColors->size() > 0)
-        if (data->indicesColors->size() == data->indices->size()) geo->getMesh()->geo->setIndex( data->indicesColors, Geometry::ColorsIndex );
-    if (data->indicesTexCoords->size() > 0)
-        if (data->indicesTexCoords->size() == data->indices->size()) geo->getMesh()->geo->setIndex( data->indicesTexCoords, Geometry::TexCoordsIndex );
+
+    if (data->indicesNormals->size() > 0) {
+        if (data->indicesNormals->size() == data->indices->size()) {
+            geo->getMesh()->geo->setIndex( data->indicesNormals, Geometry::NormalsIndex );
+            geo->getMesh()->geo->addAttachment(data->indicesNormals, 61);
+        }
+    }
+
+    if (data->indicesColors->size() > 0) {
+        if (data->indicesColors->size() == data->indices->size()) {
+            geo->getMesh()->geo->setIndex( data->indicesColors, Geometry::ColorsIndex );
+            geo->getMesh()->geo->addAttachment(data->indicesColors, 62);
+        }
+    }
+
+    if (data->indicesTexCoords->size() > 0) {
+        if (data->indicesTexCoords->size() == data->indices->size()) {
+            geo->getMesh()->geo->setIndex( data->indicesTexCoords, Geometry::TexCoordsIndex );
+            geo->getMesh()->geo->addAttachment(data->indicesTexCoords, 63);
+        }
+    }
 
     GeoVectorProperty* c3 = data->cols3->size() > 0 ? data->cols3 : 0;
     GeoVectorProperty* c4 = data->cols4->size() > 0 ? data->cols4 : 0;

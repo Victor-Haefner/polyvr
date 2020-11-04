@@ -22,6 +22,7 @@ class VRTCPClient {
         void connect(string host, int port);
         void connect(string uri);
         void send(const string& message);
+        bool connected();
 };
 
 }

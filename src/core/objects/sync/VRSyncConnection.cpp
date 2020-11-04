@@ -1,6 +1,7 @@
 #include "VRSyncConnection.h"
 #include "VRSyncNode.h"
 #include "core/networking/tcp/VRTCPClient.h"
+#include "core/utils/toString.h"
 
 using namespace OSG;
 
@@ -117,5 +118,10 @@ bool VRSyncConnection::send(string message) {
     return 1;
 }
 
+string VRSyncConnection::getStatus() {
+    string s;
+    s = " connection with "+host+":"+toString(port)+", "+toString(client->connected());
+    return s;
+}
 
 
