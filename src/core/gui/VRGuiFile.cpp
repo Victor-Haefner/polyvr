@@ -11,6 +11,9 @@
 #include <boost/filesystem.hpp>
 
 GtkFileChooserDialog* VRGuiFile::dialog = 0;
+GtkListStore* VRGuiFile::fileOpenPresets = 0;
+GtkButton* VRGuiFile::button3 = 0;
+GtkButton* VRGuiFile::button9 = 0;
 GtkTable* VRGuiFile::addon = 0;
 GtkTable* VRGuiFile::geoImportWidget = 0;
 GtkTable* VRGuiFile::saveasWidget = 0;
@@ -24,22 +27,31 @@ string VRGuiFile::preset = "SOLIDWORKS-VRML2";
 typedef boost::filesystem::path path;
 
 void VRGuiFile::init() {
-    VRGuiFile::dialog = GTK_FILE_CHOOSER_DIALOG(VRGuiBuilder::get()->get_widget("file_dialog"));
-    setButtonCallback("button3", bind(&VRGuiFile::close));
-    setButtonCallback("button9", bind(&VRGuiFile::apply));
+    cout << " build file open dialog" << endl;
+    fileOpenPresets = gtk_list_store_new(1, G_TYPE_STRING);
+
+    auto window1 = VRGuiBuilder::get()->get_widget("window1");
+    VRGuiFile::dialog = GTK_FILE_CHOOSER_DIALOG(gtk_file_chooser_dialog_new("Open File", GTK_WINDOW(window1), GTK_FILE_CHOOSER_ACTION_SAVE, "Cancel", 0, "Open", 0, 0));
+    auto dialog_action_area1 = gtk_dialog_get_action_area(GTK_DIALOG(VRGuiFile::dialog));
+    auto buttons = gtk_container_get_children(GTK_CONTAINER(dialog_action_area1));
+    VRGuiFile::button3 = GTK_BUTTON(g_list_nth_data(buttons, 0));
+    VRGuiFile::button9 = GTK_BUTTON(g_list_nth_data(buttons, 1));
+
+    connect_signal<void>(button3, bind(&VRGuiFile::close), "clicked");
+    connect_signal<void>(button9, bind(&VRGuiFile::apply), "clicked");
     connect_signal<void>(dialog, bind(VRGuiFile::select), "selection_changed");
     connect_signal<void>(dialog, bind(VRGuiFile::apply), "file_activated");
     connect_signal<bool, GdkEvent*>(dialog, bind(VRGuiFile::keyApply, placeholders::_1), "event");
     gtk_file_chooser_set_action((GtkFileChooser*)dialog, GTK_FILE_CHOOSER_ACTION_OPEN);
-    disableDestroyDiag("file_dialog");
+    disableDestroyDiag(GTK_WIDGET(VRGuiFile::dialog));
 }
 
 void VRGuiFile::open(string button, int action, string title) {
     if (dialog == 0) init();
-    setWidgetVisibility("file_dialog", true);
+    gtk_widget_show(GTK_WIDGET(VRGuiFile::dialog));
 
-    setButtonText("button9", button);
-    setButtonText("button3", "Cancel");
+    gtk_button_set_label(button9, button.c_str());
+    gtk_button_set_label(button3, "Cancel");
 
     gtk_window_set_title((GtkWindow*)dialog, title.c_str());
     gtk_file_chooser_set_action((GtkFileChooser*)dialog, GtkFileChooserAction(action));
@@ -49,7 +61,7 @@ void VRGuiFile::close() {
     //OSG::VRSetup::getCurrent()->pauseRendering(false);
     if (dialog == 0) init();
     setWidget(0);
-    setWidgetVisibility("file_dialog", false);
+    gtk_widget_hide(GTK_WIDGET(VRGuiFile::dialog));
     if (sigClose) sigClose();
     clearFilter();
 }

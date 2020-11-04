@@ -515,7 +515,11 @@ bool on_close_frame_clicked(GdkEvent* event, GtkWidget* diag, bool hide) {
     return true;
 }
 
+void disableDestroyDiag(GtkWidget* widget, bool hide) {
+    connect_signal<bool, GdkEvent*>(widget, bind(on_close_frame_clicked, PL::_1, widget, hide), "delete-event");
+}
+
 void disableDestroyDiag(string diag, bool hide) {
     auto widget = VRGuiBuilder::get()->get_widget(diag);
-    connect_signal<bool, GdkEvent*>(widget, bind(on_close_frame_clicked, PL::_1, widget, hide), "delete-event");
+    disableDestroyDiag(widget, hide);
 }

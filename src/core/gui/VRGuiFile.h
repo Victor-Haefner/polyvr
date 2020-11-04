@@ -6,6 +6,8 @@
 #include <functional>
 
 struct _GtkFileChooserDialog;
+struct _GtkListStore;
+struct _GtkButton;
 struct _GtkTable;
 struct _GtkCheckButton;
 struct _GtkEntry;
@@ -17,6 +19,9 @@ using namespace std;
 class VRGuiFile {
     private:
         static _GtkFileChooserDialog* dialog;
+        static _GtkListStore* fileOpenPresets;
+        static _GtkButton* button3;
+        static _GtkButton* button9;
         static _GtkTable* addon;
         static _GtkTable* geoImportWidget;
         static _GtkTable* saveasWidget;

@@ -78,6 +78,7 @@ void connect_signal(T1* widget, T2 bin, string event, bool after = false) {
 void clearContainer(_GtkWidget* container);
 void setWidgetVisibility(string e, bool b);
 void setWidgetSensitivity(string e, bool b);
+void disableDestroyDiag(GtkWidget* widget, bool hide = true);
 void disableDestroyDiag(string diag, bool hide = true);
 
 // callback helpers
