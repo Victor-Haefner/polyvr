@@ -335,7 +335,7 @@ VRGuiEditor::VRGuiEditor(string window) {
     gtk_source_view_set_highlight_current_line (GTK_SOURCE_VIEW (editor), TRUE);
     gtk_source_view_set_show_line_numbers (GTK_SOURCE_VIEW (editor), TRUE);
     gtk_source_view_set_right_margin_position (GTK_SOURCE_VIEW (editor), 80); // default is 70 chars
-    gtk_source_view_set_show_right_margin (GTK_SOURCE_VIEW (editor), TRUE);
+    gtk_source_view_set_show_right_margin (GTK_SOURCE_VIEW (editor), FALSE);
 
     // editor font
     PangoFontDescription *font_desc = pango_font_description_new();
@@ -343,7 +343,6 @@ VRGuiEditor::VRGuiEditor(string window) {
     gtk_widget_modify_font (editor, font_desc);
     gtk_widget_show_all(editor);
 
-#ifndef WIN32
     cout << "VRGuiEditor::VRGuiEditor, enable code completion" << endl;
     auto provider = VRGuiCodeCompletionNew();
     auto completion = gtk_source_view_get_completion(GTK_SOURCE_VIEW(editor));
@@ -354,7 +353,6 @@ VRGuiEditor::VRGuiEditor(string window) {
         g_clear_error(&error);
         g_error_free(error);
     }
-#endif
 
     addStyle( "asSelected", "#000", "#FF0", false, false, false);
 	cout << " VRGuiEditor::VRGuiEditor done" << endl;

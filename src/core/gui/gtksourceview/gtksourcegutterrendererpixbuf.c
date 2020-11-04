@@ -19,19 +19,30 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
 
 #include "gtksourcegutterrendererpixbuf.h"
 #include "gtksourceview-i18n.h"
 #include "gtksourcepixbufhelper.h"
 
-#define GTK_SOURCE_GUTTER_RENDERER_PIXBUF_GET_PRIVATE(object)(G_TYPE_INSTANCE_GET_PRIVATE((object), GTK_SOURCE_TYPE_GUTTER_RENDERER_PIXBUF, GtkSourceGutterRendererPixbufPrivate))
+/**
+ * SECTION:gutterrendererpixbuf
+ * @Short_description: Renders a pixbuf in the gutter
+ * @Title: GtkSourceGutterRendererPixbuf
+ * @See_also: #GtkSourceGutterRenderer, #GtkSourceGutter
+ *
+ * A #GtkSourceGutterRendererPixbuf can be used to render an image in a cell of
+ * #GtkSourceGutter.
+ */
 
 struct _GtkSourceGutterRendererPixbufPrivate
 {
 	GtkSourcePixbufHelper *helper;
 };
 
-G_DEFINE_TYPE (GtkSourceGutterRendererPixbuf, gtk_source_gutter_renderer_pixbuf, GTK_SOURCE_TYPE_GUTTER_RENDERER)
+G_DEFINE_TYPE_WITH_PRIVATE (GtkSourceGutterRendererPixbuf, gtk_source_gutter_renderer_pixbuf, GTK_SOURCE_TYPE_GUTTER_RENDERER)
 
 enum
 {
@@ -53,15 +64,23 @@ center_on (GtkSourceGutterRenderer *renderer,
            gint                    *x,
            gint                    *y)
 {
-	GdkRectangle location;
 	GtkTextView *view;
+	GtkTextWindowType window_type;
+	GdkRectangle buffer_location;
+	gint window_y;
 
 	view = gtk_source_gutter_renderer_get_view (renderer);
+	window_type = gtk_source_gutter_renderer_get_window_type (renderer);
 
-	gtk_text_view_get_iter_location (view, iter, &location);
+	gtk_text_view_get_iter_location (view, iter, &buffer_location);
+
+	gtk_text_view_buffer_to_window_coords (view,
+					       window_type,
+					       0, buffer_location.y,
+					       NULL, &window_y);
 
 	*x = cell_area->x + (cell_area->width - width) * xalign;
-	*y = cell_area->y + (location.height - height) * yalign;
+	*y = window_y + (buffer_location.height - height) * yalign;
 }
 
 static void
@@ -73,28 +92,31 @@ gutter_renderer_pixbuf_draw (GtkSourceGutterRenderer      *renderer,
                              GtkTextIter                  *end,
                              GtkSourceGutterRendererState  state)
 {
-	GtkSourceGutterRendererPixbuf *pix;
+	GtkSourceGutterRendererPixbuf *pix = GTK_SOURCE_GUTTER_RENDERER_PIXBUF (renderer);
 	gint width;
 	gint height;
 	gfloat xalign;
 	gfloat yalign;
 	GtkSourceGutterRendererAlignmentMode mode;
 	GtkTextView *view;
+	gint scale;
 	gint x = 0;
 	gint y = 0;
 	GdkPixbuf *pixbuf;
+	cairo_surface_t *surface;
 
 	/* Chain up to draw background */
-	GTK_SOURCE_GUTTER_RENDERER_CLASS (
-		gtk_source_gutter_renderer_pixbuf_parent_class)->draw (renderer,
-		                                                       cr,
-		                                                       background_area,
-		                                                       cell_area,
-		                                                       start,
-		                                                       end,
-		                                                       state);
+	if (GTK_SOURCE_GUTTER_RENDERER_CLASS (gtk_source_gutter_renderer_pixbuf_parent_class)->draw != NULL)
+	{
+		GTK_SOURCE_GUTTER_RENDERER_CLASS (gtk_source_gutter_renderer_pixbuf_parent_class)->draw (renderer,
+													 cr,
+													 background_area,
+													 cell_area,
+													 start,
+													 end,
+													 state);
+	}
 
-	pix = GTK_SOURCE_GUTTER_RENDERER_PIXBUF (renderer);
 	view = gtk_source_gutter_renderer_get_view (renderer);
 
 	pixbuf = gtk_source_pixbuf_helper_render (pix->priv->helper,
@@ -107,7 +129,23 @@ gutter_renderer_pixbuf_draw (GtkSourceGutterRenderer      *renderer,
 	}
 
 	width = gdk_pixbuf_get_width (pixbuf);
-	height = gdk_pixbuf_get_width (pixbuf);
+	height = gdk_pixbuf_get_height (pixbuf);
+
+	/*
+	 * We might have gotten a pixbuf back from the helper that will allow
+	 * us to render for HiDPI. If we detect this, we pretend that we got a
+	 * different size back and then gdk_cairo_surface_create_from_pixbuf()
+	 * will take care of the rest.
+	 */
+	scale = gtk_widget_get_scale_factor (GTK_WIDGET (view));
+	if ((scale > 1) &&
+	    ((width > cell_area->width) || (height > cell_area->height)) &&
+	    (width <= (cell_area->width * scale)) &&
+	    (height <= (cell_area->height * scale)))
+	{
+		width = width / scale;
+		height = height / scale;
+	}
 
 	gtk_source_gutter_renderer_get_alignment (renderer,
 	                                          &xalign,
@@ -143,10 +181,16 @@ gutter_renderer_pixbuf_draw (GtkSourceGutterRenderer      *renderer,
 			           &x,
 			           &y);
 			break;
+		default:
+			g_assert_not_reached ();
 	}
 
-	gdk_cairo_set_source_pixbuf (cr, pixbuf, x, y);
+	surface = gdk_cairo_surface_create_from_pixbuf (pixbuf, scale, NULL);
+	cairo_set_source_surface (cr, surface, x, y);
+
 	cairo_paint (cr);
+
+	cairo_surface_destroy (surface);
 }
 
 static void
@@ -285,37 +329,42 @@ gtk_source_gutter_renderer_pixbuf_class_init (GtkSourceGutterRendererPixbufClass
 
 	renderer_class->draw = gutter_renderer_pixbuf_draw;
 
-	g_type_class_add_private (object_class, sizeof (GtkSourceGutterRendererPixbufPrivate));
-
 	g_object_class_install_property (object_class,
 	                                 PROP_PIXBUF,
 	                                 g_param_spec_object ("pixbuf",
-	                                                      _("Pixbuf"),
-	                                                      _("The pixbuf"),
+	                                                      "Pixbuf",
+	                                                      "The pixbuf",
 	                                                      GDK_TYPE_PIXBUF,
 	                                                      G_PARAM_READWRITE));
 
+	/**
+	 * GtkSourceGutterRendererPixbuf:stock-id:
+	 *
+	 * The stock id.
+	 *
+	 * Deprecated: 3.10: Don't use this property.
+	 */
 	g_object_class_install_property (object_class,
 	                                 PROP_STOCK_ID,
 	                                 g_param_spec_string ("stock-id",
-	                                                      _("Stock Id"),
-	                                                      _("The stock id"),
+	                                                      "Stock Id",
+	                                                      "The stock id",
 	                                                      NULL,
-	                                                      G_PARAM_READWRITE));
+	                                                      G_PARAM_READWRITE | G_PARAM_DEPRECATED));
 
 	g_object_class_install_property (object_class,
 	                                 PROP_ICON_NAME,
 	                                 g_param_spec_string ("icon-name",
-	                                                      _("Icon Name"),
-	                                                      _("The icon name"),
+	                                                      "Icon Name",
+	                                                      "The icon name",
 	                                                      NULL,
 	                                                      G_PARAM_READWRITE));
 
 	g_object_class_install_property (object_class,
 	                                 PROP_GICON,
 	                                 g_param_spec_object ("gicon",
-	                                                      _("GIcon"),
-	                                                      _("The gicon"),
+	                                                      "GIcon",
+	                                                      "The gicon",
 	                                                      G_TYPE_ICON,
 	                                                      G_PARAM_READWRITE));
 }
@@ -323,7 +372,7 @@ gtk_source_gutter_renderer_pixbuf_class_init (GtkSourceGutterRendererPixbufClass
 static void
 gtk_source_gutter_renderer_pixbuf_init (GtkSourceGutterRendererPixbuf *self)
 {
-	self->priv = GTK_SOURCE_GUTTER_RENDERER_PIXBUF_GET_PRIVATE (self);
+	self->priv = gtk_source_gutter_renderer_pixbuf_get_instance_private (self);
 
 	self->priv->helper = gtk_source_pixbuf_helper_new ();
 }
@@ -337,11 +386,16 @@ gtk_source_gutter_renderer_pixbuf_init (GtkSourceGutterRendererPixbuf *self)
  *
  **/
 GtkSourceGutterRenderer *
-gtk_source_gutter_renderer_pixbuf_new ()
+gtk_source_gutter_renderer_pixbuf_new (void)
 {
 	return g_object_new (GTK_SOURCE_TYPE_GUTTER_RENDERER_PIXBUF, NULL);
 }
 
+/**
+ * gtk_source_gutter_renderer_pixbuf_set_pixbuf:
+ * @renderer: a #GtkSourceGutterRendererPixbuf
+ * @pixbuf: (nullable): the pixbuf, or %NULL.
+ */
 void
 gtk_source_gutter_renderer_pixbuf_set_pixbuf (GtkSourceGutterRendererPixbuf *renderer,
                                               GdkPixbuf                     *pixbuf)
@@ -370,6 +424,13 @@ gtk_source_gutter_renderer_pixbuf_get_pixbuf (GtkSourceGutterRendererPixbuf *ren
 	return gtk_source_pixbuf_helper_get_pixbuf (renderer->priv->helper);
 }
 
+/**
+ * gtk_source_gutter_renderer_pixbuf_set_stock_id:
+ * @renderer: a #GtkSourceGutterRendererPixbuf
+ * @stock_id: (nullable): the stock id
+ *
+ * Deprecated: 3.10: Don't use this function.
+ */
 void
 gtk_source_gutter_renderer_pixbuf_set_stock_id (GtkSourceGutterRendererPixbuf *renderer,
                                                 const gchar                   *stock_id)
@@ -379,6 +440,13 @@ gtk_source_gutter_renderer_pixbuf_set_stock_id (GtkSourceGutterRendererPixbuf *r
 	set_stock_id (renderer, stock_id);
 }
 
+/**
+ * gtk_source_gutter_renderer_pixbuf_get_stock_id:
+ * @renderer: a #GtkSourceGutterRendererPixbuf
+ *
+ * Returns: the stock id.
+ * Deprecated: 3.10: Don't use this function.
+ */
 const gchar *
 gtk_source_gutter_renderer_pixbuf_get_stock_id (GtkSourceGutterRendererPixbuf *renderer)
 {
@@ -387,6 +455,11 @@ gtk_source_gutter_renderer_pixbuf_get_stock_id (GtkSourceGutterRendererPixbuf *r
 	return gtk_source_pixbuf_helper_get_stock_id (renderer->priv->helper);
 }
 
+/**
+ * gtk_source_gutter_renderer_pixbuf_set_gicon:
+ * @renderer: a #GtkSourceGutterRendererPixbuf
+ * @icon: (nullable): the icon, or %NULL.
+ */
 void
 gtk_source_gutter_renderer_pixbuf_set_gicon (GtkSourceGutterRendererPixbuf *renderer,
                                              GIcon                         *icon)
@@ -414,6 +487,11 @@ gtk_source_gutter_renderer_pixbuf_get_gicon (GtkSourceGutterRendererPixbuf *rend
 	return gtk_source_pixbuf_helper_get_gicon (renderer->priv->helper);
 }
 
+/**
+ * gtk_source_gutter_renderer_pixbuf_set_icon_name:
+ * @renderer: a #GtkSourceGutterRendererPixbuf
+ * @icon_name: (nullable): the icon name, or %NULL.
+ */
 void
 gtk_source_gutter_renderer_pixbuf_set_icon_name (GtkSourceGutterRendererPixbuf *renderer,
                                                  const gchar                   *icon_name)

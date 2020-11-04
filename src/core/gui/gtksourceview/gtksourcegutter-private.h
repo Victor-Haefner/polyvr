@@ -19,8 +19,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef __GTK_SOURCE_GUTTER_PRIVATE_H__
-#define __GTK_SOURCE_GUTTER_PRIVATE_H__
+#ifndef GTK_SOURCE_GUTTER_PRIVATE_H
+#define GTK_SOURCE_GUTTER_PRIVATE_H
 
 #include <gtk/gtk.h>
 #include "gtksourcetypes.h"
@@ -28,11 +28,15 @@
 G_BEGIN_DECLS
 
 G_GNUC_INTERNAL
-GtkSourceGutter *gtk_source_gutter_new (GtkSourceView     *view,
-                                        GtkTextWindowType  type);
+GtkSourceGutter *	_gtk_source_gutter_new		(GtkSourceView     *view,
+							 GtkTextWindowType  type);
+
+G_GNUC_INTERNAL
+void			_gtk_source_gutter_draw		(GtkSourceGutter *gutter,
+							 GtkSourceView   *view,
+							 cairo_t         *cr);
+
 
 G_END_DECLS
 
-#endif /* __GTK_SOURCE_GUTTER_PRIVATE_H__ */
-
-/* vi:ts=8 */
+#endif /* GTK_SOURCE_GUTTER_PRIVATE_H */

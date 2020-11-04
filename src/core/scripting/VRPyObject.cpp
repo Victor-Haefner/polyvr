@@ -12,7 +12,12 @@
 
 using namespace OSG;
 
-template<> bool toValue(PyObject* o, VRObjectPtr& v) { if (!VRPyObject::check(o)) return 0; v = ((VRPyObject*)o)->objPtr; return 1; }
+template<> bool toValue(PyObject* o, VRObjectPtr& v) {
+    if (o == Py_None) { v = 0; return true; }
+    if (!VRPyObject::check(o)) return 0;
+    v = ((VRPyObject*)o)->objPtr;
+    return true;
+}
 
 template<> PyTypeObject VRPyBaseT<OSG::VRObject>::type = {
     PyObject_HEAD_INIT(NULL)
@@ -108,6 +113,7 @@ PyMethodDef VRPyObject::methods[] = {
     {"getPersistency", (PyCFunction)VRPyObject::getPersistency, METH_NOARGS, "Get the persistency level - getPersistency()" },
     {"addLink", PyWrap(Object, addLink, "Link subtree", void, VRObjectPtr) },
     {"remLink", PyWrap(Object, remLink, "Unlink subtree", void, VRObjectPtr) },
+    {"clearLinks", PyWrap(Object, clearLinks, "Remove all links", void) },
     {"getLinks", PyWrap(Object, getLinks, "Return all links", vector<VRObjectPtr>) },
     {"setEntity", PyWrap(Object, setEntity, "Set entity", void, VREntityPtr) },
     {"getEntity", PyWrap(Object, getEntity, "Get entity", VREntityPtr) },

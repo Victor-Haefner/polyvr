@@ -93,6 +93,7 @@
 			<Add option="-DCEF18" />
 			<Add option="-DGDK_GL_COMPILATION" />
 			<Add option="-DGTK_GL_COMPILATION" />
+			<Add option="-DGTK_SOURCE_COMPILATION" />
 			<Add directory="/usr/include/pango-1.0" />
 			<Add directory="/usr/include/glib-2.0" />
 			<Add directory="/usr/lib64/glib-2.0/include" />
@@ -500,6 +501,8 @@
 		<Unit filename="src/addons/WorldGenerator/roads/VRTrafficSigns.h" />
 		<Unit filename="src/addons/WorldGenerator/roads/VRTunnel.cpp" />
 		<Unit filename="src/addons/WorldGenerator/roads/VRTunnel.h" />
+		<Unit filename="src/addons/WorldGenerator/terrain/VROrbit.cpp" />
+		<Unit filename="src/addons/WorldGenerator/terrain/VROrbit.h" />
 		<Unit filename="src/addons/WorldGenerator/terrain/VRPlanet.cpp" />
 		<Unit filename="src/addons/WorldGenerator/terrain/VRPlanet.h" />
 		<Unit filename="src/addons/WorldGenerator/terrain/VRPyTerrain.cpp" />
@@ -671,6 +674,7 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/core/gui/gtkglext/gtk/gtkglwidget.h" />
+		<Unit filename="src/core/gui/gtksourceview/GtkSource.metadata.in" />
 		<Unit filename="src/core/gui/gtksourceview/completion-providers/words/gtksourcecompletionwords.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -692,6 +696,7 @@
 		</Unit>
 		<Unit filename="src/core/gui/gtksourceview/completion-providers/words/gtksourcecompletionwordsutils.h" />
 		<Unit filename="src/core/gui/gtksourceview/config.h" />
+		<Unit filename="src/core/gui/gtksourceview/gconstructor.h" />
 		<Unit filename="src/core/gui/gtksourceview/gtksource-enumtypes.h" />
 		<Unit filename="src/core/gui/gtksourceview/gtksource-marshal.h" />
 		<Unit filename="src/core/gui/gtksourceview/gtksource.h" />
@@ -701,8 +706,17 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/core/gui/gtksourceview/gtksourcebuffer.h" />
+		<Unit filename="src/core/gui/gtksourceview/gtksourcebufferinputstream.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="src/core/gui/gtksourceview/gtksourcebufferinputstream.h" />
+		<Unit filename="src/core/gui/gtksourceview/gtksourcebufferinternal.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="src/core/gui/gtksourceview/gtksourcebufferinternal.h" />
+		<Unit filename="src/core/gui/gtksourceview/gtksourcebufferoutputstream.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="src/core/gui/gtksourceview/gtksourcebufferoutputstream.h" />
 		<Unit filename="src/core/gui/gtksourceview/gtksourcecompletion-private.h" />
 		<Unit filename="src/core/gui/gtksourceview/gtksourcecompletion.c">
@@ -710,6 +724,9 @@
 		</Unit>
 		<Unit filename="src/core/gui/gtksourceview/gtksourcecompletion.h" />
 		<Unit filename="src/core/gui/gtksourceview/gtksourcecompletion.ui" />
+		<Unit filename="src/core/gui/gtksourceview/gtksourcecompletioncontainer.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="src/core/gui/gtksourceview/gtksourcecompletioncontainer.h" />
 		<Unit filename="src/core/gui/gtksourceview/gtksourcecompletioncontext.c">
 			<Option compilerVar="CC" />
@@ -735,22 +752,31 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/core/gui/gtksourceview/gtksourcecompletionprovider.h" />
-		<Unit filename="src/core/gui/gtksourceview/gtksourcecompletionutils.c">
-			<Option compilerVar="CC" />
-		</Unit>
 		<Unit filename="src/core/gui/gtksourceview/gtksourcecompletionutils.h" />
 		<Unit filename="src/core/gui/gtksourceview/gtksourcecontextengine.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/core/gui/gtksourceview/gtksourcecontextengine.h" />
 		<Unit filename="src/core/gui/gtksourceview/gtksourceencoding-private.h" />
+		<Unit filename="src/core/gui/gtksourceview/gtksourceencoding.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="src/core/gui/gtksourceview/gtksourceencoding.h" />
 		<Unit filename="src/core/gui/gtksourceview/gtksourceengine.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/core/gui/gtksourceview/gtksourceengine.h" />
+		<Unit filename="src/core/gui/gtksourceview/gtksourcefile.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="src/core/gui/gtksourceview/gtksourcefile.h" />
+		<Unit filename="src/core/gui/gtksourceview/gtksourcefileloader.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="src/core/gui/gtksourceview/gtksourcefileloader.h" />
+		<Unit filename="src/core/gui/gtksourceview/gtksourcefilesaver.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="src/core/gui/gtksourceview/gtksourcefilesaver.h" />
 		<Unit filename="src/core/gui/gtksourceview/gtksourcegutter-private.h" />
 		<Unit filename="src/core/gui/gtksourceview/gtksourcegutter.c">
@@ -779,6 +805,9 @@
 		</Unit>
 		<Unit filename="src/core/gui/gtksourceview/gtksourcegutterrenderertext.h" />
 		<Unit filename="src/core/gui/gtksourceview/gtksourceinit.h" />
+		<Unit filename="src/core/gui/gtksourceview/gtksourceiter.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="src/core/gui/gtksourceview/gtksourceiter.h" />
 		<Unit filename="src/core/gui/gtksourceview/gtksourcelanguage-parser-1.c">
 			<Option compilerVar="CC" />
@@ -795,6 +824,9 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/core/gui/gtksourceview/gtksourcelanguagemanager.h" />
+		<Unit filename="src/core/gui/gtksourceview/gtksourcemap.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="src/core/gui/gtksourceview/gtksourcemap.h" />
 		<Unit filename="src/core/gui/gtksourceview/gtksourcemark.c">
 			<Option compilerVar="CC" />
@@ -804,6 +836,9 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/core/gui/gtksourceview/gtksourcemarkattributes.h" />
+		<Unit filename="src/core/gui/gtksourceview/gtksourcemarkssequence.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="src/core/gui/gtksourceview/gtksourcemarkssequence.h" />
 		<Unit filename="src/core/gui/gtksourceview/gtksourcemarshalers.list" />
 		<Unit filename="src/core/gui/gtksourceview/gtksourcepixbufhelper.c">
@@ -818,10 +853,22 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/core/gui/gtksourceview/gtksourceregex.h" />
+		<Unit filename="src/core/gui/gtksourceview/gtksourceregion.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="src/core/gui/gtksourceview/gtksourceregion.h" />
+		<Unit filename="src/core/gui/gtksourceview/gtksourcesearchcontext.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="src/core/gui/gtksourceview/gtksourcesearchcontext.h" />
+		<Unit filename="src/core/gui/gtksourceview/gtksourcesearchsettings.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="src/core/gui/gtksourceview/gtksourcesearchsettings.h" />
 		<Unit filename="src/core/gui/gtksourceview/gtksourcespacedrawer-private.h" />
+		<Unit filename="src/core/gui/gtksourceview/gtksourcespacedrawer.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="src/core/gui/gtksourceview/gtksourcespacedrawer.h" />
 		<Unit filename="src/core/gui/gtksourceview/gtksourcestyle-private.h" />
 		<Unit filename="src/core/gui/gtksourceview/gtksourcestyle.c">
@@ -832,13 +879,25 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/core/gui/gtksourceview/gtksourcestylescheme.h" />
+		<Unit filename="src/core/gui/gtksourceview/gtksourcestyleschemechooser.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="src/core/gui/gtksourceview/gtksourcestyleschemechooser.h" />
+		<Unit filename="src/core/gui/gtksourceview/gtksourcestyleschemechooserbutton.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="src/core/gui/gtksourceview/gtksourcestyleschemechooserbutton.h" />
+		<Unit filename="src/core/gui/gtksourceview/gtksourcestyleschemechooserwidget.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="src/core/gui/gtksourceview/gtksourcestyleschemechooserwidget.h" />
 		<Unit filename="src/core/gui/gtksourceview/gtksourcestyleschememanager.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/core/gui/gtksourceview/gtksourcestyleschememanager.h" />
+		<Unit filename="src/core/gui/gtksourceview/gtksourcetag.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="src/core/gui/gtksourceview/gtksourcetag.h" />
 		<Unit filename="src/core/gui/gtksourceview/gtksourcetypes-private.h" />
 		<Unit filename="src/core/gui/gtksourceview/gtksourcetypes.h" />
@@ -851,20 +910,28 @@
 		</Unit>
 		<Unit filename="src/core/gui/gtksourceview/gtksourceundomanagerdefault.h" />
 		<Unit filename="src/core/gui/gtksourceview/gtksourceutils-private.h" />
+		<Unit filename="src/core/gui/gtksourceview/gtksourceutils.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="src/core/gui/gtksourceview/gtksourceutils.h" />
+		<Unit filename="src/core/gui/gtksourceview/gtksourceversion.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="src/core/gui/gtksourceview/gtksourceversion.h" />
+		<Unit filename="src/core/gui/gtksourceview/gtksourceversion.h.in" />
+		<Unit filename="src/core/gui/gtksourceview/gtksourceview-enumtypes.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/core/gui/gtksourceview/gtksourceview-enumtypes.h" />
 		<Unit filename="src/core/gui/gtksourceview/gtksourceview-gresources.h" />
 		<Unit filename="src/core/gui/gtksourceview/gtksourceview-i18n.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/core/gui/gtksourceview/gtksourceview-i18n.h" />
-		<Unit filename="src/core/gui/gtksourceview/gtksourceview-marshal.c">
+		<Unit filename="src/core/gui/gtksourceview/gtksourceview-init.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/core/gui/gtksourceview/gtksourceview-marshal.h" />
-		<Unit filename="src/core/gui/gtksourceview/gtksourceview-typebuiltins.c">
-			<Option compilerVar="CC" />
-		</Unit>
 		<Unit filename="src/core/gui/gtksourceview/gtksourceview-typebuiltins.h" />
 		<Unit filename="src/core/gui/gtksourceview/gtksourceview-utils.c">
 			<Option compilerVar="CC" />
@@ -875,9 +942,6 @@
 		</Unit>
 		<Unit filename="src/core/gui/gtksourceview/gtksourceview.gresource.xml" />
 		<Unit filename="src/core/gui/gtksourceview/gtksourceview.h" />
-		<Unit filename="src/core/gui/gtksourceview/gtktextregion.c">
-			<Option compilerVar="CC" />
-		</Unit>
 		<Unit filename="src/core/gui/gtksourceview/gtktextregion.h" />
 		<Unit filename="src/core/gui/widgets/VRAppLauncher.cpp" />
 		<Unit filename="src/core/gui/widgets/VRAppLauncher.h" />

@@ -19,8 +19,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef __GTK_SOURCE_GUTTER_RENDERER_MARKS_H__
-#define __GTK_SOURCE_GUTTER_RENDERER_MARKS_H__
+#ifndef GTK_SOURCE_GUTTER_RENDERER_MARKS_H
+#define GTK_SOURCE_GUTTER_RENDERER_MARKS_H
 
 #include <gtk/gtk.h>
 #include "gtksourcetypes.h"
@@ -38,24 +38,15 @@ G_BEGIN_DECLS
 #define GTK_SOURCE_GUTTER_RENDERER_MARKS_GET_CLASS(obj)	(G_TYPE_INSTANCE_GET_CLASS ((obj), GTK_SOURCE_TYPE_GUTTER_RENDERER_MARKS, GtkSourceGutterRendererMarksClass))
 
 typedef struct _GtkSourceGutterRendererMarksClass	GtkSourceGutterRendererMarksClass;
-typedef struct _GtkSourceGutterRendererMarksPrivate	GtkSourceGutterRendererMarksPrivate;
 
 struct _GtkSourceGutterRendererMarks
 {
-	/*< private >*/
 	GtkSourceGutterRendererPixbuf parent;
-
-	GtkSourceGutterRendererMarksPrivate *priv;
-
-	/*< public >*/
 };
 
 struct _GtkSourceGutterRendererMarksClass
 {
-	/*< private >*/
 	GtkSourceGutterRendererPixbufClass parent_class;
-
-	/*< public >*/
 };
 
 G_GNUC_INTERNAL
@@ -66,4 +57,4 @@ GtkSourceGutterRenderer *gtk_source_gutter_renderer_marks_new (void);
 
 G_END_DECLS
 
-#endif /* __GTK_SOURCE_GUTTER_RENDERER_MARKS_H__ */
+#endif /* GTK_SOURCE_GUTTER_RENDERER_MARKS_H */

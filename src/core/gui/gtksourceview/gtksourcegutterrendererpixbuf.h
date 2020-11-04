@@ -19,8 +19,16 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef __GTK_SOURCE_GUTTER_RENDERER_PIXBUF_H__
-#define __GTK_SOURCE_GUTTER_RENDERER_PIXBUF_H__
+#ifndef GTK_SOURCE_GUTTER_RENDERER_PIXBUF_H
+#define GTK_SOURCE_GUTTER_RENDERER_PIXBUF_H
+
+#if !defined (GTK_SOURCE_H_INSIDE) && !defined (GTK_SOURCE_COMPILATION)
+#  if defined (__GNUC__)
+#    warning "Only <gtksourceview/gtksource.h> can be included directly."
+#  elif defined (G_OS_WIN32)
+#    pragma message("Only <gtksourceview/gtksource.h> can be included directly.")
+#  endif
+#endif
 
 #include "gtksourcetypes.h"
 #include "gtksourcegutterrenderer.h"
@@ -56,30 +64,40 @@ struct _GtkSourceGutterRendererPixbufClass
 	/*< public >*/
 };
 
+GTK_SOURCE_AVAILABLE_IN_ALL
 GType gtk_source_gutter_renderer_pixbuf_get_type (void) G_GNUC_CONST;
 
+GTK_SOURCE_AVAILABLE_IN_ALL
 GtkSourceGutterRenderer *gtk_source_gutter_renderer_pixbuf_new (void);
 
+GTK_SOURCE_AVAILABLE_IN_ALL
 void         gtk_source_gutter_renderer_pixbuf_set_pixbuf       (GtkSourceGutterRendererPixbuf *renderer,
                                                                  GdkPixbuf                     *pixbuf);
 
+GTK_SOURCE_AVAILABLE_IN_ALL
 GdkPixbuf   *gtk_source_gutter_renderer_pixbuf_get_pixbuf       (GtkSourceGutterRendererPixbuf *renderer);
 
+GTK_SOURCE_DEPRECATED_IN_3_10
 void         gtk_source_gutter_renderer_pixbuf_set_stock_id     (GtkSourceGutterRendererPixbuf *renderer,
                                                                  const gchar                   *stock_id);
 
+GTK_SOURCE_DEPRECATED_IN_3_10
 const gchar *gtk_source_gutter_renderer_pixbuf_get_stock_id     (GtkSourceGutterRendererPixbuf *renderer);
 
+GTK_SOURCE_AVAILABLE_IN_ALL
 void         gtk_source_gutter_renderer_pixbuf_set_gicon        (GtkSourceGutterRendererPixbuf *renderer,
                                                                  GIcon                         *icon);
 
+GTK_SOURCE_AVAILABLE_IN_ALL
 GIcon       *gtk_source_gutter_renderer_pixbuf_get_gicon        (GtkSourceGutterRendererPixbuf *renderer);
 
+GTK_SOURCE_AVAILABLE_IN_ALL
 void         gtk_source_gutter_renderer_pixbuf_set_icon_name    (GtkSourceGutterRendererPixbuf *renderer,
                                                                  const gchar                   *icon_name);
 
+GTK_SOURCE_AVAILABLE_IN_ALL
 const gchar *gtk_source_gutter_renderer_pixbuf_get_icon_name    (GtkSourceGutterRendererPixbuf *renderer);
 
 G_END_DECLS
 
-#endif /* __GTK_SOURCE_GUTTER_RENDERER_TEXT_H__ */
+#endif /* GTK_SOURCE_GUTTER_RENDERER_TEXT_H */

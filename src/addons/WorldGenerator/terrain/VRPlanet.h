@@ -17,6 +17,8 @@ class VRPlanet : public VRTransform {
         int layermode = 0;
 
         double radius = 6371000; // earth radius
+        double rotation = 0.99; // earth day
+        double inclination = 0.4; // earth inclination in rad
         map<Vec2i, VRWorldGeneratorPtr> sectors;
         map<string, OSMMapPtr> osmMaps;
         Vec2d originCoords = Vec2d(-1,-1);
@@ -24,6 +26,8 @@ class VRPlanet : public VRTransform {
         VRLodPtr lod;
         VRObjectPtr anchor;
         VRMaterialPtr sphereMat;
+
+        vector<VRTransformPtr> moons;
 
         VRAnalyticGeometryPtr metaGeo;
         void rebuild();
@@ -70,6 +74,14 @@ class VRPlanet : public VRTransform {
         void setLit(bool b);
 
         void divideTIFF(string pathIn, string pathOut, double minLat, double maxLat, double minLon, double maxLon, double res);
+
+        void setRotation(double rDays);
+        void setInclination(double I);
+        double getRotation();
+        double getInclination();
+
+        void addMoon(VRTransformPtr t);
+        vector<VRTransformPtr> getMoons();
 };
 
 OSG_END_NAMESPACE;

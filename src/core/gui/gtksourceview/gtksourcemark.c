@@ -19,13 +19,18 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include "gtksourcemark.h"
 #include "gtksourcebuffer.h"
+#include "gtksourcebuffer-private.h"
 #include "gtksourceview-i18n.h"
 
 /**
  * SECTION:mark
- * @Short_description: mark object for #GtkSourceBuffer
+ * @Short_description: Mark object for GtkSourceBuffer
  * @Title: GtkSourceMark
  * @See_also: #GtkSourceBuffer
  *
@@ -34,13 +39,12 @@
  * the text has changed though its position may change.
  *
  * #GtkSourceMark<!-- -->s are organised in categories which you have to set
- * when you create the mark. Each category can have a pixbuf and a priority
- * associated using gtk_source_view_set_mark_category_pixbuf() and
- * gtk_source_view_set_mark_category_priority(). The pixbuf will be displayed in
- * the margin at the line where the mark residents if the
- * #GtkSourceView:show-line-marks property is set to %TRUE. If there are
- * multiple marks in the same line, the pixbufs will be drawn on top of each
- * other. The mark with the highest priority will be drawn on top.
+ * when you create the mark. Each category can have a priority, a pixbuf and
+ * other associated attributes. See gtk_source_view_set_mark_attributes().
+ * The pixbuf will be displayed in the margin at the line where the mark
+ * residents if the #GtkSourceView:show-line-marks property is set to %TRUE. If
+ * there are multiple marks in the same line, the pixbufs will be drawn on top
+ * of each other. The mark with the highest priority will be drawn on top.
  */
 
 enum
@@ -54,7 +58,7 @@ struct _GtkSourceMarkPrivate
 	gchar *category;
 };
 
-G_DEFINE_TYPE (GtkSourceMark, gtk_source_mark, GTK_TYPE_TEXT_MARK);
+G_DEFINE_TYPE_WITH_PRIVATE (GtkSourceMark, gtk_source_mark, GTK_TYPE_TEXT_MARK);
 
 static void
 gtk_source_mark_set_property (GObject      *object,
@@ -137,19 +141,18 @@ gtk_source_mark_class_init (GtkSourceMarkClass *klass)
 	g_object_class_install_property (object_class,
 					 PROP_CATEGORY,
 					 g_param_spec_string ("category",
-							      _("category"),
-							      _("The mark category"),
+							      "Category",
+							      "The mark category",
 							      NULL,
-							      G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
-
-	g_type_class_add_private (object_class, sizeof (GtkSourceMarkPrivate));
+							      G_PARAM_READWRITE |
+							      G_PARAM_CONSTRUCT_ONLY |
+							      G_PARAM_STATIC_STRINGS));
 }
 
 static void
 gtk_source_mark_init (GtkSourceMark *mark)
 {
-	mark->priv = G_TYPE_INSTANCE_GET_PRIVATE (mark, GTK_SOURCE_TYPE_MARK,
-						  GtkSourceMarkPrivate);
+	mark->priv = gtk_source_mark_get_instance_private (mark);
 }
 
 /**
@@ -204,14 +207,14 @@ gtk_source_mark_get_category (GtkSourceMark *mark)
 /**
  * gtk_source_mark_next:
  * @mark: a #GtkSourceMark.
- * @category: (allow-none): a string specifying the mark category, or %NULL.
+ * @category: (nullable): a string specifying the mark category, or %NULL.
  *
  * Returns the next #GtkSourceMark in the buffer or %NULL if the mark
  * was not added to a buffer. If there is no next mark, %NULL will be returned.
  *
  * If @category is %NULL, looks for marks of any category.
  *
- * Returns: (transfer none): the next #GtkSourceMark, or %NULL.
+ * Returns: (nullable) (transfer none): the next #GtkSourceMark, or %NULL.
  *
  * Since: 2.2
  */
@@ -224,11 +227,15 @@ gtk_source_mark_next (GtkSourceMark *mark,
 	g_return_val_if_fail (GTK_SOURCE_IS_MARK (mark), NULL);
 
 	buffer = gtk_text_mark_get_buffer (GTK_TEXT_MARK (mark));
-	if (buffer != NULL)
-		return _gtk_source_buffer_source_mark_next (GTK_SOURCE_BUFFER (buffer),
-							    mark, category);
-	else
+
+	if (buffer == NULL)
+	{
 		return NULL;
+	}
+
+	return _gtk_source_buffer_source_mark_next (GTK_SOURCE_BUFFER (buffer),
+						    mark,
+						    category);
 }
 
 /**
@@ -241,7 +248,7 @@ gtk_source_mark_next (GtkSourceMark *mark,
  *
  * If @category is %NULL, looks for marks of any category
  *
- * Returns: (transfer none): the previous #GtkSourceMark, or %NULL.
+ * Returns: (nullable) (transfer none): the previous #GtkSourceMark, or %NULL.
  *
  * Since: 2.2
  */
@@ -254,10 +261,14 @@ gtk_source_mark_prev (GtkSourceMark *mark,
 	g_return_val_if_fail (GTK_SOURCE_IS_MARK (mark), NULL);
 
 	buffer = gtk_text_mark_get_buffer (GTK_TEXT_MARK (mark));
-	if (buffer != NULL)
-		return _gtk_source_buffer_source_mark_prev (GTK_SOURCE_BUFFER (buffer),
-							    mark, category);
-	else
+
+	if (buffer == NULL)
+	{
 		return NULL;
+	}
+
+	return _gtk_source_buffer_source_mark_prev (GTK_SOURCE_BUFFER (buffer),
+						    mark,
+						    category);
 }
 

@@ -19,49 +19,54 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef __GTK_SOURCE_STYLE_PRIVATE_H__
-#define __GTK_SOURCE_STYLE_PRIVATE_H__
+#ifndef GTK_SOURCE_STYLE_PRIVATE_H
+#define GTK_SOURCE_STYLE_PRIVATE_H
 
-#include "gtksourcestyle.h"
 #include <gtk/gtk.h>
 
 G_BEGIN_DECLS
 
-#define GTK_SOURCE_STYLE_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), GTK_SOURCE_TYPE_STYLE, GtkSourceStyleClass))
-#define GTK_SOURCE_IS_STYLE_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), GTK_SOURCE_TYPE_STYLE))
-#define GTK_SOURCE_STYLE_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS ((obj), GTK_SOURCE_TYPE_STYLE, GtkSourceStyleClass))
+/*
+ * We need to be lower than the application priority to allow
+ * application overrides. And we need enough room for
+ * GtkSourceMap to be able to override the style priority.
+ */
+#define GTK_SOURCE_STYLE_PROVIDER_PRIORITY (GTK_STYLE_PROVIDER_PRIORITY_APPLICATION-2)
 
-enum {
+enum
+{
 	GTK_SOURCE_STYLE_USE_LINE_BACKGROUND = 1 << 0,	/*< nick=use_line_background >*/
 	GTK_SOURCE_STYLE_USE_BACKGROUND      = 1 << 1,	/*< nick=use_background >*/
 	GTK_SOURCE_STYLE_USE_FOREGROUND      = 1 << 2,	/*< nick=use_foreground >*/
 	GTK_SOURCE_STYLE_USE_ITALIC          = 1 << 3,	/*< nick=use_italic >*/
 	GTK_SOURCE_STYLE_USE_BOLD            = 1 << 4,	/*< nick=use_bold >*/
 	GTK_SOURCE_STYLE_USE_UNDERLINE       = 1 << 5,	/*< nick=use_underline >*/
-	GTK_SOURCE_STYLE_USE_STRIKETHROUGH   = 1 << 6	/*< nick=use_strikethrough >*/
+	GTK_SOURCE_STYLE_USE_STRIKETHROUGH   = 1 << 6,	/*< nick=use_strikethrough >*/
+	GTK_SOURCE_STYLE_USE_SCALE           = 1 << 7,	/*< nick=use_scale >*/
+	GTK_SOURCE_STYLE_USE_UNDERLINE_COLOR = 1 << 8	/*< nick=use_underline_color >*/
 };
 
 struct _GtkSourceStyle
 {
 	GObject base_instance;
-	/* foreground and background are strings interned with
-	 * with g_intern_string(), so we don't need to copy/free
-	 * them. */
+
+	/* These fields are strings interned with g_intern_string(), so we don't
+	 * need to copy/free them.
+	 */
 	const gchar *foreground;
 	const gchar *background;
 	const gchar *line_background;
+	const gchar *scale;
+	const gchar *underline_color;
+
+	PangoUnderline underline;
+
 	guint italic : 1;
 	guint bold : 1;
-	guint underline : 1;
 	guint strikethrough : 1;
 	guint mask : 12;
 };
 
-G_GNUC_INTERNAL
-void		 _gtk_source_style_apply	(const GtkSourceStyle *style,
-						 GtkTextTag           *tag);
-
-
 G_END_DECLS
 
-#endif  /* __GTK_SOURCE_STYLE_PRIVATE_H__ */
+#endif  /* GTK_SOURCE_STYLE_PRIVATE_H */

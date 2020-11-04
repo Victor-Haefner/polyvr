@@ -19,8 +19,16 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef __GTK_SOURCE_LANGUAGE_H__
-#define __GTK_SOURCE_LANGUAGE_H__
+#ifndef GTK_SOURCE_LANGUAGE_H
+#define GTK_SOURCE_LANGUAGE_H
+
+#if !defined (GTK_SOURCE_H_INSIDE) && !defined (GTK_SOURCE_COMPILATION)
+#  if defined (__GNUC__)
+#    warning "Only <gtksourceview/gtksource.h> can be included directly."
+#  elif defined (G_OS_WIN32)
+#    pragma message("Only <gtksourceview/gtksource.h> can be included directly.")
+#  endif
+#endif
 
 #include <gtk/gtk.h>
 #include "gtksourcetypes.h"
@@ -54,32 +62,43 @@ struct _GtkSourceLanguageClass
 	void (*_gtk_source_reserved2) (void);
 };
 
+GTK_SOURCE_AVAILABLE_IN_ALL
 GType		  gtk_source_language_get_type 		(void) G_GNUC_CONST;
 
+GTK_SOURCE_AVAILABLE_IN_ALL
 const gchar	 *gtk_source_language_get_id		(GtkSourceLanguage *language);
 
+GTK_SOURCE_AVAILABLE_IN_ALL
 const gchar	 *gtk_source_language_get_name		(GtkSourceLanguage *language);
 
+GTK_SOURCE_AVAILABLE_IN_ALL
 const gchar	 *gtk_source_language_get_section	(GtkSourceLanguage *language);
 
+GTK_SOURCE_AVAILABLE_IN_ALL
 gboolean	  gtk_source_language_get_hidden 	(GtkSourceLanguage *language);
 
+GTK_SOURCE_AVAILABLE_IN_ALL
 const gchar	 *gtk_source_language_get_metadata	(GtkSourceLanguage *language,
 							 const gchar       *name);
 
+GTK_SOURCE_AVAILABLE_IN_ALL
 gchar		**gtk_source_language_get_mime_types	(GtkSourceLanguage *language);
 
+GTK_SOURCE_AVAILABLE_IN_ALL
 gchar		**gtk_source_language_get_globs		(GtkSourceLanguage *language);
 
+GTK_SOURCE_AVAILABLE_IN_ALL
 gchar		**gtk_source_language_get_style_ids 	(GtkSourceLanguage *language);
 
+GTK_SOURCE_AVAILABLE_IN_ALL
 const gchar	*gtk_source_language_get_style_name	(GtkSourceLanguage *language,
 							 const gchar       *style_id);
 
+GTK_SOURCE_AVAILABLE_IN_3_4
 const gchar	*gtk_source_language_get_style_fallback	(GtkSourceLanguage *language,
 							 const gchar       *style_id);
 
 G_END_DECLS
 
-#endif /* __GTK_SOURCE_LANGUAGE_H__ */
+#endif /* GTK_SOURCE_LANGUAGE_H */
 

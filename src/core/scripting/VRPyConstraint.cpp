@@ -35,6 +35,7 @@ PyMethodDef VRPyConstraint::methods[] = {
     {"getReferenceA", PyWrap(Constraint, getReferenceA, "Get reference in A", PosePtr ) },
     {"getReferenceB", PyWrap(Constraint, getReferenceB, "Get reference in B", PosePtr ) },
     {"setActive", PyWrap(Constraint, setActive, "Set active or not", void, bool ) },
+    {"isActive", PyWrap(Constraint, isActive, "Get if active or not", bool ) },
     {NULL}  /* Sentinel */
 };
 
