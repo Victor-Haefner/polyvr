@@ -1391,8 +1391,10 @@ void VRGuiBuilder::buildBaseUI() {
     add1ToPaned(hpaned3, scrolledwindow2);
     add2ToPaned(hpaned3, table11);
     gtk_widget_set_hexpand(treeview6, true);
-    gtk_widget_set_hexpand(current_object_lab, true);
     gtk_widget_set_vexpand(treeview6, true);
+    gtk_widget_set_size_request(treeview6, 300, -1);
+    gtk_tree_view_set_reorderable(GTK_TREE_VIEW(treeview6), true);
+    gtk_widget_set_hexpand(current_object_lab, true);
 
     auto treeviewcolumn10 = addTreecolumn("treeviewcolumn10", "Object");
     auto cellrenderertext8 = addCellrenderer("cellrenderertext8", treeviewcolumn10);
