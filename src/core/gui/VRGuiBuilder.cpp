@@ -629,8 +629,12 @@ void VRGuiBuilder::buildBaseUI() {
     gtk_grid_attach(GTK_GRID(table47), Tframe, 1,1,1,1);
     gtk_grid_attach(GTK_GRID(table47), Nchanges, 1,2,1,1);
     gtk_grid_attach(GTK_GRID(table47), Ncreated, 1,3,1,1);
+    gtk_widget_set_hexpand(scrolledwindow13, false);
+    gtk_widget_set_hexpand(scrolledwindow1, true);
+    gtk_widget_set_hexpand(profiler_area, true);
+    gtk_widget_set_vexpand(profiler_area, true);
 
-    auto prof_fkts = gtk_list_store_new(2, G_TYPE_STRING, G_TYPE_STRING);
+    auto prof_fkts = gtk_list_store_new(3, G_TYPE_STRING, G_TYPE_UINT, G_TYPE_STRING);
     auto treeview15 = addTreeview("treeview15", "prof_fkts", GTK_TREE_MODEL(prof_fkts));
     gtk_container_add(GTK_CONTAINER(scrolledwindow13), treeview15);
     gtk_widget_set_vexpand(treeview15, true);
