@@ -6,6 +6,7 @@
 #include "core/setup/windows/VRView.h"
 #include "core/utils/VRInternalMonitor.h"
 #include "core/utils/VRVisualLayer.h"
+#include "core/utils/VROptions.h"
 #include "core/utils/VRUtilsFwd.h"
 #include "core/utils/system/VRSystem.h"
 #include "core/scene/VRSceneLoader.h"
@@ -264,6 +265,14 @@ void VRGuiBits::toggleVerbose(string s) {
 }
 
 VRGuiBits::VRGuiBits() {
+    bool standalone = VROptions::get()->getOption<bool>("standalone");
+    if (standalone) {
+        GtkWidget* win = VRGuiBuilder::get()->get_widget("window1");
+        connect_signal<bool, GdkEventKey*>(win, bind(&VRGuiBits::pressFKey, this, placeholders::_1), "key_press_event");
+        connect_signal<void, void>(win, bind(&VRGuiBits::on_quit_clicked, this), "destroy");
+        return;
+    }
+
     setComboboxCallback("combobox4", bind(&VRGuiBits::on_camera_changed, this));
     setComboboxCallback("combobox9", bind(&VRGuiBits::on_navigation_changed, this));
 
@@ -307,6 +316,7 @@ VRGuiBits::VRGuiBits() {
     // window fullscreen
     GtkWidget* win = VRGuiBuilder::get()->get_widget("window1");
     connect_signal<bool,GdkEventKey*>(win, bind(&VRGuiBits::pressFKey, this, placeholders::_1), "key_press_event");
+    connect_signal<void,void>(win, bind(&VRGuiBits::on_quit_clicked, this), "destroy");
 
     // TERMINAL
     terminal = (GtkNotebook*)gtk_notebook_new();

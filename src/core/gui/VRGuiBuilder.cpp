@@ -23,10 +23,8 @@ VRGuiBuilder* VRGuiBuilder::get(bool standalone) {
 
 	if (!b) {
         b = new VRGuiBuilder();
-        b->buildBaseUI();
-        /*string path = getDefaultPath(standalone);
-        if (!VRGuiFile::exists(path)) cerr << "FATAL ERROR: " << path << " not found\n";
-        else b->read(path);*/
+        if (!standalone) b->buildBaseUI();
+        else b->buildMinimalUI();
 	}
 
     return b;
@@ -364,6 +362,14 @@ GtkWidget* addVectorFrame(string ID, string fID) {
     auto F = addFixed(fID);
     gtk_container_add(GTK_CONTAINER(f), F);
     return f;
+}
+
+void VRGuiBuilder::buildMinimalUI() {
+    cout << "VRGuiBuilder buildMinimalUI.." << endl;
+    auto window1 = addWindow("window1", "PolyVR");
+    auto glarea = addDrawingArea("glarea");
+    gtk_container_add(GTK_CONTAINER(window1), glarea);
+    cout << " ..building all widgets done!" << endl;
 }
 
 void VRGuiBuilder::buildBaseUI() {
