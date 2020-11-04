@@ -92,8 +92,8 @@ void VRTCPServer::listen(int port) { this->port = port; server->listen(port); }
 void VRTCPServer::close() { server->close(); }
 int VRTCPServer::getPort() { return port; }
 
+#ifndef _WINDOWS // under windows this only returns local network IP
 string VRTCPServer::getPublicIP() {
-#ifndef _WINDOWS // TODO
     int sock = socket(AF_INET, SOCK_DGRAM, 0);
     assert(sock != -1);
 
@@ -112,18 +112,26 @@ string VRTCPServer::getPublicIP() {
     getsockname(sock, (sockaddr*) &name, &namelen);
 
     char addressBuffer[INET_ADDRSTRLEN];
-
-#ifdef _WINDOWS
-	inet_ntop(AF_INET, &name.sin_addr, addressBuffer, INET_ADDRSTRLEN);
-	closesocket(sock);
-#else
-	inet_ntop(AF_INET, &name.sin_addr, addressBuffer, INET_ADDRSTRLEN);
+    inet_ntop(AF_INET, &name.sin_addr, addressBuffer, INET_ADDRSTRLEN);
 	::close(sock);
-#endif
-
     return string(addressBuffer);
-#else
-	return "";
-#endif
 }
+#else
+#include <windows.h>
+#include <wininet.h>
+#include <string>
+#include <iostream>
+string VRTCPServer::getPublicIP() {
+    HINTERNET net = InternetOpen("IP retriever", INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
+    HINTERNET conn = InternetOpenUrl(net, "http://myexternalip.com/raw", NULL, 0, INTERNET_FLAG_RELOAD, 0);
+
+    char buffer[4096];
+    DWORD read;
+
+    InternetReadFile(conn, buffer, sizeof(buffer) / sizeof(buffer[0]), &read);
+    InternetCloseHandle(net);
+
+    return std::string(buffer, read);
+}
+#endif
 
