@@ -1307,7 +1307,7 @@ void VRGuiBuilder::buildBaseUI() {
     auto label_2 = addLabel("label_2", "Physics:");
 
     gtk_grid_attach(GTK_GRID(table30), label87, 0,0,2,1);
-    gtk_grid_attach(GTK_GRID(table30), bg_solid, 1,0,2,1);
+    gtk_grid_attach(GTK_GRID(table30), bg_solid, 2,0,2,1);
     gtk_grid_attach(GTK_GRID(table30), radiobutton3, 0,1,1,1);
     gtk_grid_attach(GTK_GRID(table30), radiobutton4, 1,1,1,1);
     gtk_grid_attach(GTK_GRID(table30), radiobutton5, 2,1,1,1);
@@ -1317,6 +1317,7 @@ void VRGuiBuilder::buildBaseUI() {
     gtk_grid_attach(GTK_GRID(table30), entry14, 2,2,1,1);
     gtk_grid_attach(GTK_GRID(table30), button18, 3,2,1,1);
     gtk_grid_attach(GTK_GRID(table30), label_2, 0,3,4,1);
+    gtk_widget_set_size_request(bg_solid, 50, 30);
 
     auto checkbutton_1 = addCheckbutton("checkbutton_1", "Gravity:");
     auto entry43 = addEntry("entry43");

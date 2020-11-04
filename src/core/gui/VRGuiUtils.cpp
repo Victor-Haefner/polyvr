@@ -326,6 +326,19 @@ OSG::Color4f chooseColor(string drawable, OSG::Color4f current) {
     return col;
 }
 
+bool drawBG(GtkWidget *widget, cairo_t *cr, gpointer col) {
+    auto context = gtk_widget_get_style_context (widget);
+    int width = gtk_widget_get_allocated_width (widget);
+    int height = gtk_widget_get_allocated_height (widget);
+    gtk_render_background (context, cr, 0, 0, width, height);
+
+    GdkRGBA color;
+    gtk_style_context_get_color(context, gtk_style_context_get_state (context), &color);
+    gdk_cairo_set_source_rgba(cr, &color);
+    cairo_fill(cr);
+    return false;
+}
+
 void setColorChooserColor(string drawable, OSG::Color3f col) {
     GdkColor c;
     c.pixel = 0;
@@ -335,6 +348,7 @@ void setColorChooserColor(string drawable, OSG::Color3f col) {
 
     GtkDrawingArea* darea = (GtkDrawingArea*)VRGuiBuilder::get()->get_widget(drawable);
     gtk_widget_modify_bg((GtkWidget*)darea, GTK_STATE_NORMAL, &c);
+    g_signal_connect(G_OBJECT(darea), "draw", G_CALLBACK(drawBG), NULL);
 }
 
 void setCellRendererCombo(string treeviewcolumn, string combolist, int col, function<void(const char*, GtkTreeIter*)> fkt) {
