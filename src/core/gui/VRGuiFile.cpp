@@ -10,10 +10,10 @@
 
 #include <boost/filesystem.hpp>
 
-GtkFileChooserDialog* VRGuiFile::dialog = 0;
+GtkWidget* VRGuiFile::dialog = 0;
 GtkListStore* VRGuiFile::fileOpenPresets = 0;
-GtkButton* VRGuiFile::button3 = 0;
-GtkButton* VRGuiFile::button9 = 0;
+GtkWidget* VRGuiFile::button3 = 0;
+GtkWidget* VRGuiFile::button9 = 0;
 GtkTable* VRGuiFile::addon = 0;
 GtkTable* VRGuiFile::geoImportWidget = 0;
 GtkTable* VRGuiFile::saveasWidget = 0;
@@ -28,14 +28,28 @@ typedef boost::filesystem::path path;
 
 void VRGuiFile::init() {
     cout << " build file open dialog" << endl;
+    auto window1 = VRGuiBuilder::get()->get_widget("window1");
     fileOpenPresets = gtk_list_store_new(1, G_TYPE_STRING);
 
-    auto window1 = VRGuiBuilder::get()->get_widget("window1");
-    VRGuiFile::dialog = GTK_FILE_CHOOSER_DIALOG(gtk_file_chooser_dialog_new("Open File", GTK_WINDOW(window1), GTK_FILE_CHOOSER_ACTION_SAVE, "Cancel", 0, "Open", 0, 0));
-    auto dialog_action_area1 = gtk_dialog_get_action_area(GTK_DIALOG(VRGuiFile::dialog));
-    auto buttons = gtk_container_get_children(GTK_CONTAINER(dialog_action_area1));
-    VRGuiFile::button3 = GTK_BUTTON(g_list_nth_data(buttons, 0));
-    VRGuiFile::button9 = GTK_BUTTON(g_list_nth_data(buttons, 1));
+    if (false) {
+        dialog = gtk_dialog_new();
+        button3 = gtk_button_new_with_label("Cancel");
+        button9 = gtk_button_new_with_label("Open");
+
+        gtk_widget_set_size_request(dialog, 800, 600);
+        gtk_window_set_transient_for(GTK_WINDOW(dialog), GTK_WINDOW(window1));
+        auto dialog_action_area = gtk_dialog_get_action_area(GTK_DIALOG(dialog));
+        gtk_box_pack_start(GTK_BOX(dialog_action_area), button3, false, true, 0);
+        gtk_box_pack_start(GTK_BOX(dialog_action_area), button9, false, true, 0);
+
+        auto dialog_vbox = gtk_dialog_get_content_area(GTK_DIALOG(dialog));
+    } else {
+        dialog = gtk_file_chooser_dialog_new("Open File", GTK_WINDOW(window1), GTK_FILE_CHOOSER_ACTION_SAVE, "Cancel", 0, "Open", 0, 0);
+        auto dialog_action_area1 = gtk_dialog_get_action_area(GTK_DIALOG(dialog));
+        auto buttons = gtk_container_get_children(GTK_CONTAINER(dialog_action_area1));
+        button3 = GTK_WIDGET(g_list_nth_data(buttons, 0));
+        button9 = GTK_WIDGET(g_list_nth_data(buttons, 1));
+    }
 
     connect_signal<void>(button3, bind(&VRGuiFile::close), "clicked");
     connect_signal<void>(button9, bind(&VRGuiFile::apply), "clicked");
@@ -48,10 +62,10 @@ void VRGuiFile::init() {
 
 void VRGuiFile::open(string button, int action, string title) {
     if (dialog == 0) init();
-    gtk_widget_show(GTK_WIDGET(VRGuiFile::dialog));
+    gtk_widget_show_all(GTK_WIDGET(VRGuiFile::dialog));
 
-    gtk_button_set_label(button9, button.c_str());
-    gtk_button_set_label(button3, "Cancel");
+    gtk_button_set_label(GTK_BUTTON(button9), button.c_str());
+    gtk_button_set_label(GTK_BUTTON(button3), "Cancel");
 
     gtk_window_set_title((GtkWindow*)dialog, title.c_str());
     gtk_file_chooser_set_action((GtkFileChooser*)dialog, GtkFileChooserAction(action));
