@@ -83,6 +83,7 @@ PyMethodDef VRSceneGlobals::methods[] = {
 	{"getScript", (PyCFunction)VRSceneGlobals::getScript, METH_VARARGS, "Get python script by name" },
 	{"importScene", (PyCFunction)VRSceneGlobals::importScene, METH_VARARGS, "Import scene" },
 	{"testDWGArcs", (PyCFunction)VRSceneGlobals::testDWGArcs, METH_NOARGS, "A test for DWG arcs tesselation" },
+	{"setWindowTitle", (PyCFunction)VRSceneGlobals::setWindowTitle, METH_VARARGS, "Set window title" },
     {NULL}  /* Sentinel */
 };
 
@@ -90,6 +91,12 @@ PyMethodDef VRSceneGlobals::methods[] = {
 // ==============
 // Python methods
 // ==============
+
+PyObject* VRSceneGlobals::setWindowTitle(VRSceneGlobals* self, PyObject* args) {
+    string name = parseString(args);
+    VRGuiManager::get()->setWindowTitle(name);
+    Py_RETURN_TRUE;
+}
 
 PyObject* VRSceneGlobals::getScript(VRSceneGlobals* self, PyObject* args) {
     string name = parseString(args);

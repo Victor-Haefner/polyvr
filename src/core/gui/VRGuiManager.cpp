@@ -54,6 +54,11 @@ void addSchemaPath(string p) {
     // TODO;
 }
 
+void VRGuiManager::setWindowTitle(string title) {
+    GtkWindow* top = (GtkWindow*)VRGuiBuilder::get()->get_widget("window1");
+    gtk_window_set_title(top, title.c_str());
+}
+
 VRGuiManager::VRGuiManager() {
     cout << "Init VRGuiManager.." << endl;
     mtx = new boost::recursive_mutex();

@@ -48,6 +48,8 @@ class VRGuiManager {
         _GtkWindow* newWindow();
         void remWindow(_GtkWindow* w);
 
+        void setWindowTitle(string title);
+
         boost::recursive_mutex& guiMutex();
 };
 
