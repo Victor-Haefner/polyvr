@@ -343,6 +343,7 @@ VRGuiEditor::VRGuiEditor(string window) {
     gtk_widget_modify_font (editor, font_desc);
     gtk_widget_show_all(editor);
 
+#ifndef _WIN32 // TODO: loading ressources/gui/gtksourcecompletion.ui fails on windows
     cout << "VRGuiEditor::VRGuiEditor, enable code completion" << endl;
     auto provider = VRGuiCodeCompletionNew();
     auto completion = gtk_source_view_get_completion(GTK_SOURCE_VIEW(editor));
@@ -353,6 +354,7 @@ VRGuiEditor::VRGuiEditor(string window) {
         g_clear_error(&error);
         g_error_free(error);
     }
+#endif
 
     addStyle( "asSelected", "#000", "#FF0", false, false, false);
 	cout << " VRGuiEditor::VRGuiEditor done" << endl;
