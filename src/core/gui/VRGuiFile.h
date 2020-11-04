@@ -12,6 +12,8 @@ struct _GtkTable;
 struct _GtkCheckButton;
 struct _GtkEntry;
 struct _GtkComboBox;
+struct _GtkTreePath;
+struct _GtkTreeViewColumn;
 union _GdkEvent;
 
 using namespace std;
@@ -22,12 +24,18 @@ class VRGuiFile {
         static _GtkListStore* fileOpenPresets;
         static _GtkWidget* button3;
         static _GtkWidget* button9;
+        static _GtkWidget* fileEntry;
+        static _GtkWidget* pathEntry;
+        static _GtkWidget* treeview;
+        static _GtkListStore* filesStore;
         static _GtkTable* addon;
         static _GtkTable* geoImportWidget;
         static _GtkTable* saveasWidget;
         static function<void()> sigApply;
         static function<void()> sigClose;
         static function<void()> sigSelect;
+        static string currentFolder;
+        static string selection;
         static bool cache_override;
         static float scale;
         static string preset;
@@ -41,6 +49,7 @@ class VRGuiFile {
         static void open(string button, int action, string title);
         static void close();
         static void apply();
+        static void activate(_GtkTreePath* path, _GtkTreeViewColumn* column);
         static bool keyApply(_GdkEvent*);
         static void select();
         static string getPath();

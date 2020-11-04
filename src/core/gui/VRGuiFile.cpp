@@ -7,6 +7,7 @@
 #include "core/scene/VRSceneManager.h"
 #include "core/scene/VRScene.h"
 #include "core/utils/toString.h"
+#include "core/utils/system/VRSystem.h"
 
 #include <boost/filesystem.hpp>
 
@@ -14,24 +15,36 @@ GtkWidget* VRGuiFile::dialog = 0;
 GtkListStore* VRGuiFile::fileOpenPresets = 0;
 GtkWidget* VRGuiFile::button3 = 0;
 GtkWidget* VRGuiFile::button9 = 0;
+GtkWidget* VRGuiFile::treeview = 0;
+GtkListStore* VRGuiFile::filesStore;
+GtkWidget* VRGuiFile::pathEntry = 0;
+GtkWidget* VRGuiFile::fileEntry = 0;
 GtkTable* VRGuiFile::addon = 0;
 GtkTable* VRGuiFile::geoImportWidget = 0;
 GtkTable* VRGuiFile::saveasWidget = 0;
 function<void()> VRGuiFile::sigApply = function<void()>();
 function<void()> VRGuiFile::sigClose = function<void()>();
 function<void()> VRGuiFile::sigSelect = function<void()>();
+string VRGuiFile::currentFolder = "";
+string VRGuiFile::selection = "";
 bool VRGuiFile::cache_override = 0;
 float VRGuiFile::scale = 1;
 string VRGuiFile::preset = "SOLIDWORKS-VRML2";
 
 typedef boost::filesystem::path path;
 
+#ifdef _WIN32
+const bool useCustomWidget = true;
+#else
+const bool useCustomWidget = false;
+#endif
+
 void VRGuiFile::init() {
     cout << " build file open dialog" << endl;
     auto window1 = VRGuiBuilder::get()->get_widget("window1");
     fileOpenPresets = gtk_list_store_new(1, G_TYPE_STRING);
 
-    if (false) {
+    if (useCustomWidget) {
         dialog = gtk_dialog_new();
         button3 = gtk_button_new_with_label("Cancel");
         button9 = gtk_button_new_with_label("Open");
@@ -43,6 +56,29 @@ void VRGuiFile::init() {
         gtk_box_pack_start(GTK_BOX(dialog_action_area), button9, false, true, 0);
 
         auto dialog_vbox = gtk_dialog_get_content_area(GTK_DIALOG(dialog));
+        pathEntry = gtk_entry_new();
+        fileEntry = gtk_entry_new();
+        filesStore = gtk_list_store_new(2, G_TYPE_STRING, G_TYPE_STRING);
+        treeview = gtk_tree_view_new_with_model( GTK_TREE_MODEL(filesStore) );
+        auto scrolledWindow = gtk_scrolled_window_new(0, 0);
+        gtk_widget_set_hexpand(scrolledWindow, true);
+        gtk_widget_set_vexpand(scrolledWindow, true);
+        gtk_widget_set_hexpand(treeview, true);
+        gtk_widget_set_vexpand(treeview, true);
+        gtk_container_add(GTK_CONTAINER(scrolledWindow), treeview);
+        gtk_box_pack_start(GTK_BOX(dialog_vbox), pathEntry, false, true, 0);
+        gtk_box_pack_start(GTK_BOX(dialog_vbox), fileEntry, false, true, 0);
+        gtk_box_pack_start(GTK_BOX(dialog_vbox), scrolledWindow, true, true, 0);
+
+        auto c = gtk_tree_view_column_new();
+        auto r = gtk_cell_renderer_text_new();
+        auto p = gtk_cell_renderer_pixbuf_new();
+        gtk_tree_view_column_pack_start(c, p, false);
+        gtk_tree_view_column_pack_start(c, r, true);
+        gtk_tree_view_column_add_attribute(c, r, "text", 0);
+        gtk_tree_view_column_add_attribute(c, p, "stock-id", 1);
+        gtk_tree_view_column_set_title(c, "Name");
+        gtk_tree_view_append_column(GTK_TREE_VIEW(treeview), c);
     } else {
         dialog = gtk_file_chooser_dialog_new("Open File", GTK_WINDOW(window1), GTK_FILE_CHOOSER_ACTION_SAVE, "Cancel", 0, "Open", 0, 0);
         auto dialog_action_area1 = gtk_dialog_get_action_area(GTK_DIALOG(dialog));
@@ -51,12 +87,18 @@ void VRGuiFile::init() {
         button9 = GTK_WIDGET(g_list_nth_data(buttons, 1));
     }
 
+    if (!useCustomWidget) {
+        connect_signal<void>(dialog, bind(VRGuiFile::select), "selection_changed");
+        connect_signal<void>(dialog, bind(VRGuiFile::apply), "file_activated");
+        gtk_file_chooser_set_action((GtkFileChooser*)dialog, GTK_FILE_CHOOSER_ACTION_OPEN);
+    } else {
+        connect_signal<void>(treeview, bind(VRGuiFile::select), "cursor_changed");
+        connect_signal<void, GtkTreePath*, GtkTreeViewColumn*>(treeview, bind(VRGuiFile::activate, placeholders::_1, placeholders::_2), "row_activated");
+    }
+
     connect_signal<void>(button3, bind(&VRGuiFile::close), "clicked");
     connect_signal<void>(button9, bind(&VRGuiFile::apply), "clicked");
-    connect_signal<void>(dialog, bind(VRGuiFile::select), "selection_changed");
-    connect_signal<void>(dialog, bind(VRGuiFile::apply), "file_activated");
     connect_signal<bool, GdkEvent*>(dialog, bind(VRGuiFile::keyApply, placeholders::_1), "event");
-    gtk_file_chooser_set_action((GtkFileChooser*)dialog, GTK_FILE_CHOOSER_ACTION_OPEN);
     disableDestroyDiag(GTK_WIDGET(VRGuiFile::dialog));
 }
 
@@ -68,7 +110,9 @@ void VRGuiFile::open(string button, int action, string title) {
     gtk_button_set_label(GTK_BUTTON(button3), "Cancel");
 
     gtk_window_set_title((GtkWindow*)dialog, title.c_str());
-    gtk_file_chooser_set_action((GtkFileChooser*)dialog, GtkFileChooserAction(action));
+    if (!useCustomWidget) {
+        gtk_file_chooser_set_action((GtkFileChooser*)dialog, GtkFileChooserAction(action));
+    }
 }
 
 void VRGuiFile::close() {
@@ -187,29 +231,85 @@ void VRGuiFile::addFilter(string name, int N, ...) {
     }
     va_end(ap);
 
-    gtk_file_chooser_add_filter((GtkFileChooser*)dialog, filter);
+    if (!useCustomWidget) {
+        gtk_file_chooser_add_filter((GtkFileChooser*)dialog, filter);
+    }
 }
 
 void VRGuiFile::clearFilter() {
     if (dialog == 0) init();
-    GSList* filters = gtk_file_chooser_list_filters(GTK_FILE_CHOOSER(dialog));
-    for (GSList* elem = filters; elem != NULL; elem = g_slist_next(elem))
-        gtk_file_chooser_remove_filter((GtkFileChooser*)dialog, (GtkFileFilter*)elem->data);
-    g_slist_free (filters);
+    if (!useCustomWidget) {
+        GSList* filters = gtk_file_chooser_list_filters(GTK_FILE_CHOOSER(dialog));
+        for (GSList* elem = filters; elem != NULL; elem = g_slist_next(elem))
+            gtk_file_chooser_remove_filter((GtkFileChooser*)dialog, (GtkFileFilter*)elem->data);
+        g_slist_free (filters);
+    }
 }
 
 void VRGuiFile::setFile(string file) {
     if (dialog == 0) init();
-    gtk_file_chooser_set_current_name((GtkFileChooser*)dialog, file.c_str());
+    if (!useCustomWidget) {
+        gtk_file_chooser_set_current_name((GtkFileChooser*)dialog, file.c_str());
+    } else {
+        gtk_entry_set_text(GTK_ENTRY(fileEntry), file.c_str());
+    }
 }
 
 void VRGuiFile::gotoPath(string path) {
+    cout << "VRGuiFile::gotoPath " << path << endl;
     if (dialog == 0) init();
-    gtk_file_chooser_set_current_folder((GtkFileChooser*)dialog, path.c_str());
+    if (!useCustomWidget) {
+        gtk_file_chooser_set_current_folder((GtkFileChooser*)dialog, path.c_str());
+    } else {
+        currentFolder = canonical( path );
+        gtk_entry_set_text(GTK_ENTRY(pathEntry), path.c_str());
+        gtk_list_store_clear(filesStore);
+        GtkTreeIter iter;
+
+        vector<string> folders = { ".." };
+        vector<string> files;
+
+        for (auto f : openFolder(path)) {
+            if (f[0] == '.') continue; // ignore hidden files
+            if (isFolder(path+"/"+f)) folders.push_back(f);
+            if (isFile(path+"/"+f)) files.push_back(f);
+        }
+
+        for (auto f : folders) {
+            gtk_list_store_append(filesStore, &iter);
+            gtk_list_store_set(filesStore, &iter, 0, f.c_str(), -1);
+            gtk_list_store_set(filesStore, &iter, 1, "gtk-directory", -1);
+        }
+
+        for (auto f : files) {
+            gtk_list_store_append(filesStore, &iter);
+            gtk_list_store_set(filesStore, &iter, 0, f.c_str(), -1);
+            gtk_list_store_set(filesStore, &iter, 1, "gtk-file", -1);
+        }
+    }
 }
 
 void VRGuiFile::select() {
     if (sigSelect) sigSelect();
+
+    if (useCustomWidget) {
+        GtkTreeSelection* sel = gtk_tree_view_get_selection(GTK_TREE_VIEW(treeview));
+        GtkTreeModel* model = gtk_tree_view_get_model(GTK_TREE_VIEW(treeview));
+
+        GtkTreeIter selected;
+        gchar* new_text;
+        if (!gtk_tree_selection_get_selected(sel, &model, &selected)) return;
+        gtk_tree_model_get(model, &selected, 0, &new_text, -1);
+        selection = new_text?new_text:"";
+        gtk_entry_set_text(GTK_ENTRY(fileEntry), selection.c_str());
+    }
+}
+
+void VRGuiFile::activate(GtkTreePath* path, GtkTreeViewColumn* column) {
+    string p = currentFolder+"/"+selection;
+    if (currentFolder == "/") p = "/"+selection;
+    if (isFile(p)) apply();
+    if (isFolder(p)) gotoPath(p);
 }
 
 void VRGuiFile::apply() {
@@ -232,10 +332,14 @@ void VRGuiFile::setCallbacks(function<void()> sa, function<void()> sc, function<
 }
 
 string VRGuiFile::getPath() {
-    gchar* filename = gtk_file_chooser_get_filename((GtkFileChooser*)dialog);
-    string res = filename?filename:"";
-    g_free(filename);
-    return res;
+    if (!useCustomWidget) {
+        gchar* filename = gtk_file_chooser_get_filename((GtkFileChooser*)dialog);
+        string res = filename?filename:"";
+        g_free(filename);
+        return res;
+    } else {
+        return currentFolder+"/"+selection;
+    }
 }
 
 // Return path when appended to a_From will resolve to same as a_To

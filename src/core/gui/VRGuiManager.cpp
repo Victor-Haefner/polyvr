@@ -63,7 +63,7 @@ VRGuiManager::VRGuiManager() {
     gtk_disable_setlocale();
     gtk_init(&argc, 0);
 
-    gtk_window_set_interactive_debugging(true);
+    //gtk_window_set_interactive_debugging(true);
 
     addIconsPath("ressources/gui/icons");
     addSchemaPath("ressources/gui/schemas");
