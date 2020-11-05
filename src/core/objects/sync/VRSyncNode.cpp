@@ -565,6 +565,7 @@ void VRSyncNode::getAndBroadcastPoses() {
 
 //update this SyncNode
 void VRSyncNode::update() {
+    handledPoses = false;
     getAndBroadcastPoses();
     auto localChanges = changelist->filterChanges(ptr());
     if (!localChanges) return;
@@ -666,7 +667,9 @@ void VRSyncNode::handleMapping(string mappingData) {
 }
 
 void VRSyncNode::handlePoses(string poses)  {
-    cout << "VRSyncNode::handlePoses: " << poses << endl;
+    //cout << "VRSyncNode::handlePoses: " << poses << endl;
+    if (handledPoses) return;
+    handledPoses = true;
     string nodeName;
     vector<string> pairs = splitString(poses, '|');
     vector<string> namePair = splitString(pairs[1], '$');

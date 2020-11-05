@@ -28,6 +28,7 @@ class VRSyncNode : public VRTransform {
         size_t selfID = 0;
         bool doWrapping = true;
         bool doAvatars = true;
+        bool handledPoses = false; // optimization
 
         VRMessageCbPtr onEvent;
 
