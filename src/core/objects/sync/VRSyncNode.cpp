@@ -85,18 +85,15 @@ ThreadRefPtr applicationThread;
 
 VRSyncNode::VRSyncNode(string name) : VRTransform(name) {
     type = "SyncNode";
+    selfID = getNode()->node->getId();
     changelist = VRSyncChangelist::create();
     applicationThread = dynamic_cast<Thread *>(ThreadManager::getAppThread());
-
-//    NodeMTRefPtr node = getNode()->node; // deprecated, gets filtered from created entries in CL
-//    registerNode(node);
-
 	updateFkt = VRUpdateCb::create("SyncNode update", bind(&VRSyncNode::update, this));
 	VRScene::getCurrent()->addUpdateFkt(updateFkt, 100000);
 }
 
 VRSyncNode::~VRSyncNode() {
-    cout << "VRSyncNode::~VRSyncNode " << name << endl;
+    cout << " VRSyncNode::~VRSyncNode " << name << endl;
 }
 
 VRSyncNodePtr VRSyncNode::ptr() { return static_pointer_cast<VRSyncNode>( shared_from_this() ); }
@@ -820,8 +817,7 @@ void VRSyncNode::handleWarning(string msg) {
 void VRSyncNode::handleSelfmapRequest(string msg) {
     auto data = splitString(msg, '|');
     int rID = toInt(data[1]);
-    auto lID = getNode()->node->getId();
-    addRemoteMapping(lID, rID);
+    addRemoteMapping(selfID, rID);
 }
 
 /*void VRSyncNode::handleMessage(void* _args) {
@@ -831,6 +827,8 @@ void VRSyncNode::handleSelfmapRequest(string msg) {
     //UInt32 client = args->ws_id;
     string msg = args->ws_data;*/
 void VRSyncNode::handleMessage(string msg) {
+    //cout << "VRSyncNode::handleMessage " << msg.size() << endl;
+    //cout << msg << endl;
     VRUpdateCbPtr job = 0;
     if (startsWith(msg, "message|"));
     else if (startsWith(msg, "addAvatar|")) job = VRUpdateCb::create( "sync-handleAvatar", bind(&VRSyncNode::handleAvatar, this, msg) );

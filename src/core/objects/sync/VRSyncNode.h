@@ -25,6 +25,7 @@ class VRSyncNode : public VRTransform {
         FieldContainerFactoryBase* factory = FieldContainerFactory::the();
         vector<UInt32> createdNodes; //IDs of the currently created nodes/children
 
+        size_t selfID = 0;
         bool doWrapping = true;
         bool doAvatars = true;
 
