@@ -92,7 +92,7 @@ void VRTCPServer::listen(int port) { this->port = port; server->listen(port); }
 void VRTCPServer::close() { server->close(); }
 int VRTCPServer::getPort() { return port; }
 
-#ifndef _WINDOWS // under windows this only returns local network IP
+//#ifndef _WINDOWS // under windows this only returns local network IP
 string VRTCPServer::getPublicIP() {
     if (publicIP != "") return publicIP;
     int sock = socket(AF_INET, SOCK_DGRAM, 0);
@@ -113,13 +113,17 @@ string VRTCPServer::getPublicIP() {
     getsockname(sock, (sockaddr*) &name, &namelen);
 
     char addressBuffer[INET_ADDRSTRLEN];
-    inet_ntop(AF_INET, &name.sin_addr, addressBuffer, INET_ADDRSTRLEN);
+    inet_ntop(AF_INET, &name.sin_addr, addressBuffer, INET_ADDRSTRLEN); 
+#ifndef _WINDOWS
 	::close(sock);
+#else
+    closesocket(sock);
+#endif
 
     publicIP = string(addressBuffer);
     return publicIP;
 }
-#else
+/*#else
 #include <windows.h>
 #include <wininet.h>
 #include <string>
@@ -139,5 +143,5 @@ string VRTCPServer::getPublicIP() {
     publicIP = std::string(buffer, read);
     return publicIP;
 }
-#endif
+#endif*/
 
