@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# TODO: pass those as parameters!
-appName="FinancialFolder"
-appFolder="/c/Users/Victor/Projects/financialocean"
-appProject="conceptV1.pvr"
+
+appName=$1 #"FinancialFolder"
+appProject=$2 #"conceptV1.pvr"
+appFolder=$3 #"/c/Users/Victor/Projects/financialocean"
 
 pckFolder="packages/"$appName
 

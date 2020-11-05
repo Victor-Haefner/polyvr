@@ -15,6 +15,7 @@ class VRTCPServer {
     private:
         TCPServer* server = 0;
         int port = 0;
+        string publicIP = "";
 
     public:
         VRTCPServer();
