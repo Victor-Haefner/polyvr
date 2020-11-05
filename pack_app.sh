@@ -17,9 +17,11 @@ if [ ! -e $pckFolder ]; then
 fi
 
 rm -rf $pckFolder/*
-
-echo " copy app data"
-cp -r $appFolder/* $pckFolder/
+	
+if [ -n "$appFolder" ]; then # check is appFolder given
+	echo " copy app data"
+	cp -r $appFolder/* $pckFolder/
+fi
 
 echo " copy polyvr"
 mkdir $pckFolder/engine
@@ -39,14 +41,23 @@ cp -r /c/usr/lib/cef/* $pckFolder/engine/libs/
 cp -r "$vcpkgLibs"/* $pckFolder/engine/libs/
 
 
+if [ -n "$appProject" ]; then # check is appProject given
 cat <<EOT >> $pckFolder/startApp.bat
 @echo off
-
 set PATH=%PATH%;%~f0\..\engine\libs;
 set PYTHONPATH=%PYTHONPATH%;%~f0\..\engine\pyLibs
 cd engine
 polyvr.exe --standalone=1 --application ../$appProject
 EOT
+else
+cat <<EOT >> $pckFolder/startApp.bat
+@echo off
+set PATH=%PATH%;%~f0\..\engine\libs;
+set PYTHONPATH=%PYTHONPATH%;%~f0\..\engine\pyLibs
+cd engine
+polyvr.exe
+EOT
+fi
 
 #polyvr.exe --standalone=1 --application ../$appProject
 
