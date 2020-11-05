@@ -82,6 +82,12 @@
 #include <termios.h>
 #endif
 
+#ifdef _WIN32
+extern "C" {
+    _declspec(dllexport) DWORD NvOptimusEnablement = 0x00000001; // tells an optimus system to run PolyVR in high performance mode
+}
+#endif
+
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
