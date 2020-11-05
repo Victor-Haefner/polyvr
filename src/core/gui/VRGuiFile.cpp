@@ -69,6 +69,7 @@ void VRGuiFile::init() {
         gtk_box_pack_start(GTK_BOX(dialog_vbox), pathEntry, false, true, 0);
         gtk_box_pack_start(GTK_BOX(dialog_vbox), fileEntry, false, true, 0);
         gtk_box_pack_start(GTK_BOX(dialog_vbox), scrolledWindow, true, true, 0);
+        connect_signal<void>(pathEntry, bind(VRGuiFile::on_edit_path_entry, (_GtkEntry*)pathEntry), "activate");
 
         auto c = gtk_tree_view_column_new();
         auto r = gtk_cell_renderer_text_new();
@@ -91,6 +92,7 @@ void VRGuiFile::init() {
         connect_signal<void>(dialog, bind(VRGuiFile::select), "selection_changed");
         connect_signal<void>(dialog, bind(VRGuiFile::apply), "file_activated");
         gtk_file_chooser_set_action((GtkFileChooser*)dialog, GTK_FILE_CHOOSER_ACTION_OPEN);
+        connect_signal<bool, GdkEvent*>(dialog, bind(VRGuiFile::keyApply, placeholders::_1), "event");
     } else {
         connect_signal<void>(treeview, bind(VRGuiFile::select), "cursor_changed");
         connect_signal<void, GtkTreePath*, GtkTreeViewColumn*>(treeview, bind(VRGuiFile::activate, placeholders::_1, placeholders::_2), "row_activated");
@@ -98,7 +100,6 @@ void VRGuiFile::init() {
 
     connect_signal<void>(button3, bind(&VRGuiFile::close), "clicked");
     connect_signal<void>(button9, bind(&VRGuiFile::apply), "clicked");
-    connect_signal<bool, GdkEvent*>(dialog, bind(VRGuiFile::keyApply, placeholders::_1), "event");
     disableDestroyDiag(GTK_WIDGET(VRGuiFile::dialog));
 }
 
@@ -144,6 +145,11 @@ void VRGuiFile::setWidget(GtkTable* table, bool expand, bool fill) {
 
 void VRGuiFile::on_toggle_cache_override(GtkCheckButton* b) {
     cache_override = gtk_toggle_button_get_active((GtkToggleButton*)b);
+}
+
+void VRGuiFile::on_edit_path_entry(GtkEntry* e) {
+    auto p = gtk_entry_get_text(e);
+    gotoPath(p?p:"");
 }
 
 void VRGuiFile::on_edit_import_scale(GtkEntry* e) {

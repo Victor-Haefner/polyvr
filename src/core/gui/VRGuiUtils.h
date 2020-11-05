@@ -94,6 +94,7 @@ void setCellRendererCallback(string renderer, function<void(char*, char*)> sig, 
 void setNoteBookCallback(string nb, function<void(_GtkWidget*, guint, gpointer)> sig);
 void setSliderCallback(string s, function<bool(int,double)> sig);
 void setEntryCallback(string e, function<void()> sig, bool onEveryChange = false, bool onFocusOut = true, bool onActivate = true);
+void setEntryCallback(GtkWidget* e, function<void()> sig, bool onEveryChange = false, bool onFocusOut = true, bool onActivate = true);
 
 // TEXT
 void setLabel(string l, string txt);

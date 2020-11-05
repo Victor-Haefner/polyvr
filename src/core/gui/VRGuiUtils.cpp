@@ -96,15 +96,20 @@ bool entryFocusProxy(GdkEventFocus* e, function<void()> sig) {
     return true;
 }
 
-void setEntryCallback(string b, function<void()> sig, bool onEveryChange, bool onFocusOut, bool onActivate) {
-    if (onEveryChange) setupCallback(b, sig, "changed");
+void setEntryCallback(GtkWidget* e, function<void()> sig, bool onEveryChange, bool onFocusOut, bool onActivate) {
+    if (onEveryChange) connect_signal(e, sig, "changed");
     else {
-        if (onActivate) setupCallback(b, sig, "activate");
+        if (onActivate) connect_signal(e, sig, "activate");
         if (onFocusOut) {
             function<bool(GdkEventFocus*)> sig2 = bind(entryFocusProxy, placeholders::_1, sig);
-            setupCallback(b, sig2, "focus_out_event");
+            connect_signal(e, sig2, "focus_out_event");
         }
     }
+}
+
+void setEntryCallback(string b, function<void()> sig, bool onEveryChange, bool onFocusOut, bool onActivate) {
+    GtkWidget* e = VRGuiBuilder::get()->get_widget(b);
+    setEntryCallback(e, sig, onEveryChange, onFocusOut, onActivate);
 }
 
 bool getCheckButtonState(string b) {
