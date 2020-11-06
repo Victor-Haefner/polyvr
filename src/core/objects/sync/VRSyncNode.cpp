@@ -22,6 +22,7 @@
 #include <OpenSG/OSGNodeCore.h>
 #include <OpenSG/OSGTransformBase.h>
 #include "core/objects/OSGTransform.h"
+#include <OpenSG/OSGFieldContainerFactory.h>
 #include <OpenSG/OSGContainerIdMapper.h>
 #include <OpenSG/OSGNameAttachment.h>
 
@@ -672,12 +673,16 @@ void VRSyncNode::handleMapping(string mappingData) {
 
 void VRSyncNode::sendTypes() {
     string msg = "typeMapping";
-    for (int i = 0; i < factory->getNumTypes(); i++) {
-        FieldContainerType* fcT = factory->findType(i);
-        if (!fcT) cout << "AAAASAASFASGADAAAAA " << endl;
-        if (i != fcT->getId()) cout << "AAAASAASFASGADAAAAA " << i << " " << fcT->getId() << endl;
+    size_t N = factory->getNumTypes();
+    FieldContainerType fcT("");
+    for (DerivedFieldContainerTypeIterator itr = factory->begin(fcT); itr != factory->end(); ) {
+        //FieldContainerType* fcT = factory->findType(i);
+        //if (!fcT) cout << "AAAASAASFASGADAAAAA " << endl;
+        //if (i != fcT->getId()) cout << "AAAASAASFASGADAAAAA " << i << " " << fcT->getId() << endl;
 
-        msg += "|" + toString(fcT->getId()) + ":" + fcT->getName();
+        //msg += "|" + toString(fcT->getId()) + ":" + fcT->getName();
+        msg += "|" + toString(fcT.getId()) + ":" + fcT.getName();
+        itr.operator++(); // fucking windows
     }
     broadcast(msg);
 }
