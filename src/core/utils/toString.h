@@ -5,8 +5,11 @@
 #include <vector>
 #include <memory>
 #include <sstream>
-#include "core/math/VRMathFwd.h"
 #include "core/utils/VRFunctionFwd.h"
+
+namespace OSG {
+    class Pose;
+}
 
 // define types here, for example for webassembly
 typedef unsigned long int ulong;
@@ -62,7 +65,7 @@ template<typename T> int toValue(stringstream& s, std::shared_ptr<T>& t) {
     return true;
 }
 
-template<> int toValue(stringstream& ss, OSG::PosePtr& po);
+template<> int toValue(stringstream& ss, std::shared_ptr<OSG::Pose>& po);
 
 template<typename T> int toValue(string s, T& t) { stringstream ss(s); return toValue(ss, t); }
 
