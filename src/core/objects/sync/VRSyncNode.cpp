@@ -672,17 +672,17 @@ void VRSyncNode::handleMapping(string mappingData) {
 }
 
 void VRSyncNode::sendTypes() {
-    string msg = "typeMapping";
-    size_t N = factory->getNumTypes();
-    FieldContainerType fcT("");
-    for (DerivedFieldContainerTypeIterator itr = factory->begin(fcT); itr != factory->end(); ) {
-        //FieldContainerType* fcT = factory->findType(i);
-        //if (!fcT) cout << "AAAASAASFASGADAAAAA " << endl;
-        //if (i != fcT->getId()) cout << "AAAASAASFASGADAAAAA " << i << " " << fcT->getId() << endl;
+    cout << " sendTypes " << endl;
 
-        //msg += "|" + toString(fcT->getId()) + ":" + fcT->getName();
-        msg += "|" + toString(fcT.getId()) + ":" + fcT.getName();
-        itr.operator++(); // fucking windows
+    auto dtIt = factory->begin(FieldContainer::getClassType());
+    auto dtEnd = factory->end();
+
+    string msg = "typeMapping";
+    while (dtIt != dtEnd) {
+        FieldContainerType* fcT = *dtIt;
+        msg += "|" + toString(fcT->getId()) + ":" + fcT->getName();
+        cout << "  sendType " << toString(fcT->getId()) + ":" + fcT->getName() << endl;
+        ++dtIt;
     }
     broadcast(msg);
 }
@@ -696,6 +696,7 @@ void VRSyncNode::handleTypeMapping(string mappingData) {
         string name = IDs[1];
         FieldContainerType* fcT = factory->findType(name.c_str());
         typeMapping[fcT->getId()] = rID;
+        cout << " typeMapping: " << rID << " " << name << " " << fcT->getId() << endl;
     }
     //printRegistredContainers();
 }
