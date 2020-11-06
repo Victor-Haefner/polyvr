@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <iostream>
 #include <sstream>
 #include "core/utils/VRFunctionFwd.h"
 

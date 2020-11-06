@@ -269,7 +269,7 @@ VRGuiBits::VRGuiBits() {
     if (standalone) {
         GtkWidget* win = VRGuiBuilder::get()->get_widget("window1");
         connect_signal<bool, GdkEventKey*>(win, bind(&VRGuiBits::pressFKey, this, placeholders::_1), "key_press_event");
-        connect_signal<void, void>(win, bind(&VRGuiBits::on_quit_clicked, this), "destroy");
+        connect_signal<void>(win, bind(&VRGuiBits::on_quit_clicked, this), "destroy");
         return;
     }
 
@@ -316,7 +316,7 @@ VRGuiBits::VRGuiBits() {
     // window fullscreen
     GtkWidget* win = VRGuiBuilder::get()->get_widget("window1");
     connect_signal<bool,GdkEventKey*>(win, bind(&VRGuiBits::pressFKey, this, placeholders::_1), "key_press_event");
-    connect_signal<void,void>(win, bind(&VRGuiBits::on_quit_clicked, this), "destroy");
+    connect_signal<void>(win, bind(&VRGuiBits::on_quit_clicked, this), "destroy");
 
     // TERMINAL
     terminal = (GtkNotebook*)gtk_notebook_new();
