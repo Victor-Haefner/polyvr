@@ -692,8 +692,12 @@ void VRSyncNode::handleTypeMapping(string mappingData) {
         UInt32 rID = toInt(IDs[0]);
         string name = IDs[1];
         FieldContainerType* fcT = factory->findType(name.c_str());
+        if (!fcT) {
+            cout << "Warning in VRSyncNode::handleTypeMapping, unknown remote type " << name.c_str() << endl;
+            continue;
+        }
         typeMapping[rID] = fcT->getId();
-        cout << " typeMapping: " << rID << " " << name << " " << fcT->getId() << endl;
+        //cout << " typeMapping: " << rID << " " << name << " " << fcT->getId() << endl;
     }
     //printRegistredContainers();
 }
