@@ -90,12 +90,6 @@ VRSyncNode::VRSyncNode(string name) : VRTransform(name) {
     applicationThread = dynamic_cast<Thread *>(ThreadManager::getAppThread());
 	updateFkt = VRUpdateCb::create("SyncNode update", bind(&VRSyncNode::update, this));
 	VRScene::getCurrent()->addUpdateFkt(updateFkt, 100000);
-    
-
-    cout << "test pose toValue" << endl;
-    cout << " data: " << "-0.174067 -0.00671209 -0.199961 -0.656371 -0.02531 -0.754013 -0.0166181 0.99968 -0.0190902" << endl;
-    PosePtr pose = toValue<PosePtr>("-0.174067 -0.00671209 -0.199961 -0.656371 -0.02531 -0.754013 -0.0166181 0.99968 -0.0190902");
-    cout << pose->pos() << endl;
 }
 
 VRSyncNode::~VRSyncNode() {

@@ -306,9 +306,15 @@ FieldContainerRecPtr VRSyncChangelist::getOrCreate(VRSyncNodePtr syncNode, UInt3
     //cout << "VRSyncNode::getOrCreate remote: " << sentry.localId << ", local: " << id << endl;
     FieldContainerRecPtr fcPtr = 0; // Field Container to apply changes to
     FieldContainerFactoryBase* factory = FieldContainerFactory::the();
-    if (id != 0) fcPtr = factory->getContainer(id);
-    else if (sentry.uiEntryDesc == ContainerChangeEntry::Create) {
+    if (id != 0) {
+        fcPtr = factory->getContainer(id);
+    } else if (sentry.uiEntryDesc == ContainerChangeEntry::Create) {
         FieldContainerType* fcType = factory->findType(sentry.fcTypeID);
+        if (fcType == 0) {
+            cout << "Error in VRSyncChangelist::getOrCreate, unknown FC type!";
+            cout << " remote container ID : " << sentry.localId << ", remote type ID : " << sentry.fcTypeID << endl;
+            return 0;
+        }
         fcPtr = fcType->createContainer();
         justCreated.push_back(fcPtr); // increase ref count temporarily to avoid destruction!
         //debugStorage.push_back(fcPtr); // increase ref count permanently to avoid destruction! only for testing!
@@ -398,7 +404,7 @@ void VRSyncChangelist::handleRemoteEntries(VRSyncNodePtr syncNode, vector<Serial
         if (sentry.syncNodeID >= 0 && sentry.syncNodeID <= 2) {
             syncNode->replaceContainerMapping(sentry.syncNodeID, sentry.localId);
         }
-
+        
         UInt32 id = syncNode->getRemoteToLocalID(sentry.localId);// map remote id to local id if exist (otherwise id = -1)
         //cout << " --- getRemoteToLocalID: " << sentry.localId << " to " << id << " syncNode: " << syncNode->getName() << ", syncNodeID: " << sentry.syncNodeID << endl;
         FieldContainerRecPtr fcPtr = getOrCreate(syncNode, id, sentry, parentToChildren); // Field Container to apply changes to
