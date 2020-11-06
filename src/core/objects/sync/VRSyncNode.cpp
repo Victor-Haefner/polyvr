@@ -654,6 +654,10 @@ VRObjectPtr VRSyncNode::copy(vector<VRObjectPtr> children) {
     return 0;
 }
 
+UInt32 VRSyncNode::getLocalType(UInt32 id) {
+    return typeMapping[id];
+}
+
 void VRSyncNode::handleMapping(string mappingData) {
     auto pairs = splitString(mappingData, '|');
     for (auto p : pairs) {
@@ -662,6 +666,31 @@ void VRSyncNode::handleMapping(string mappingData) {
         UInt32 lID = toInt(IDs[0]);
         UInt32 rID = toInt(IDs[1]);
         addRemoteMapping(lID, rID);
+    }
+    //printRegistredContainers();
+}
+
+void VRSyncNode::sendTypes() {
+    string msg = "typeMapping";
+    for (int i = 0; i < factory->getNumTypes(); i++) {
+        FieldContainerType* fcT = factory->findType(i);
+        if (!fcT) cout << "AAAASAASFASGADAAAAA " << endl;
+        if (i != fcT->getId()) cout << "AAAASAASFASGADAAAAA " << i << " " << fcT->getId() << endl;
+
+        msg += "|" + toString(fcT->getId()) + ":" + fcT->getName();
+    }
+    broadcast(msg);
+}
+
+void VRSyncNode::handleTypeMapping(string mappingData) {
+    auto pairs = splitString(mappingData, '|');
+    for (auto p : pairs) {
+        auto IDs = splitString(p, ':');
+        if (IDs.size() != 2) continue;
+        UInt32 rID = toInt(IDs[0]);
+        string name = IDs[1];
+        FieldContainerType* fcT = factory->findType(name.c_str());
+        typeMapping[fcT->getId()] = rID;
     }
     //printRegistredContainers();
 }
@@ -789,6 +818,8 @@ void VRSyncNode::handleNewConnect(string data){
     cout << " handleNewConnect with ip " << remoteName << endl;
     (*onEvent)("connection|"+remoteName); //if not in list then it is a new connection, the add remote
 
+    sendTypes();
+
     if (!remotes.count(remoteName)) {
         cout << "  new connection -> add remote" << remoteName << endl;
         VRSyncNode::addRemote(ip, toInt(port));
@@ -839,6 +870,7 @@ void VRSyncNode::handleMessage(string msg) {
     else if (startsWith(msg, "addAvatar|")) job = VRUpdateCb::create( "sync-handleAvatar", bind(&VRSyncNode::handleAvatar, this, msg) );
     else if (startsWith(msg, "selfmap|")) handleSelfmapRequest(msg);
     else if (startsWith(msg, "mapping|")) job = VRUpdateCb::create( "sync-handleMap", bind(&VRSyncNode::handleMapping, this, msg) );
+    else if (startsWith(msg, "typeMapping|")) job = VRUpdateCb::create("sync-handleTMap", bind(&VRSyncNode::handleTypeMapping, this, msg));
     else if (startsWith(msg, "poses|"))   job = VRUpdateCb::create( "sync-handlePoses", bind(&VRSyncNode::handlePoses, this, msg) );
     else if (startsWith(msg, "ownership|")) job = VRUpdateCb::create( "sync-ownership", bind(&VRSyncNode::handleOwnershipMessage, this, msg) );
     else if (startsWith(msg, "newConnect|")) job = VRUpdateCb::create( "sync-newConnect", bind(&VRSyncNode::handleNewConnect, this, msg) );

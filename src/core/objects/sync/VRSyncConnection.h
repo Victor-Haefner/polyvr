@@ -14,7 +14,9 @@ ptrFwd(VRSyncConnection);
 
 class VRSyncConnection {
     private:
-        map<UInt32, UInt32> mapping; // <remote container ID, local container ID>
+        // TODO: unused, currently handled in syncnode, needs to move here
+        map<UInt32, UInt32> fcMapping; // <remote container ID, local container ID>
+        map<UInt32, UInt32> typeMapping; // <remote type ID, local type ID>
         string host;
         int port;
         VRTCPClientPtr client;

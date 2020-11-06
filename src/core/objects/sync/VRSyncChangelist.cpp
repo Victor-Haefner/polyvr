@@ -309,7 +309,8 @@ FieldContainerRecPtr VRSyncChangelist::getOrCreate(VRSyncNodePtr syncNode, UInt3
     if (id != 0) {
         fcPtr = factory->getContainer(id);
     } else if (sentry.uiEntryDesc == ContainerChangeEntry::Create) {
-        FieldContainerType* fcType = factory->findType(sentry.fcTypeID);
+        auto tID = syncNode->getLocalType(sentry.fcTypeID);
+        FieldContainerType* fcType = factory->findType(tID);
         if (fcType == 0) {
             cout << "Error in VRSyncChangelist::getOrCreate, unknown FC type!";
             cout << " remote container ID : " << sentry.localId << ", remote type ID : " << sentry.fcTypeID << endl;

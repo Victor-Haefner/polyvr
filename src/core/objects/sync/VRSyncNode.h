@@ -41,6 +41,7 @@ class VRSyncNode : public VRTransform {
         map<string, VRSyncConnectionPtr> remotes;
         map<UInt32, UInt32> remoteToLocalID;
         map<UInt32, UInt32> localToRemoteID;
+        map<UInt32, UInt32> typeMapping;
         map<UInt32, UInt32> remoteCoreToLocalNode;
         map<UInt32, VRObjectWeakPtr> nodeToVRObject;
         UInt32 getRegisteredContainerID(UInt32 syncID);
@@ -51,9 +52,12 @@ class VRSyncNode : public VRTransform {
 
         VRObjectPtr copy(vector<VRObjectPtr> children);
 
+        void sendTypes();
+
         void handleWarning(string msg);
         void handleSelfmapRequest(string msg);
         void handleMapping(string mappingData);
+        void handleTypeMapping(string mappingData);
         vector<FieldContainer*> findContainer(string typeName); //deprecated
         vector<FieldContainer*> getTransformationContainer(ChangeList* cl); //deprecated
         //vector<OSG::Field
@@ -124,6 +128,7 @@ class VRSyncNode : public VRTransform {
 
         UInt32 getRemoteToLocalID(UInt32 id);
         UInt32 getLocalToRemoteID(UInt32 id);
+        UInt32 getLocalType(UInt32 id);
         UInt32 getContainerMappedID(UInt32 id);
         VRObjectPtr getVRObject(UInt32 id);
 
