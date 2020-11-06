@@ -672,8 +672,6 @@ void VRSyncNode::handleMapping(string mappingData) {
 }
 
 void VRSyncNode::sendTypes() {
-    cout << " sendTypes " << endl;
-
     auto dtIt = factory->begin(FieldContainer::getClassType());
     auto dtEnd = factory->end();
 
@@ -681,7 +679,6 @@ void VRSyncNode::sendTypes() {
     while (dtIt != dtEnd) {
         FieldContainerType* fcT = *dtIt;
         msg += "|" + toString(fcT->getId()) + ":" + fcT->getName();
-        cout << "  sendType " << toString(fcT->getId()) + ":" + fcT->getName() << endl;
         ++dtIt;
     }
     broadcast(msg);
