@@ -692,7 +692,7 @@ void VRSyncNode::handleTypeMapping(string mappingData) {
         UInt32 rID = toInt(IDs[0]);
         string name = IDs[1];
         FieldContainerType* fcT = factory->findType(name.c_str());
-        typeMapping[fcT->getId()] = rID;
+        typeMapping[rID] = fcT->getId();
         cout << " typeMapping: " << rID << " " << name << " " << fcT->getId() << endl;
     }
     //printRegistredContainers();
@@ -808,6 +808,8 @@ void VRSyncNode::addRemote(string host, int port) {
     remotes[uri]->send("selfmap|"+toString(nID));
     remotes[uri]->send("newConnect|"+getConnectionLink());
     cout << "   send newConnect from " << uri << endl;
+
+    sendTypes();
 }
 
 void VRSyncNode::handleNewConnect(string data){
@@ -820,8 +822,6 @@ void VRSyncNode::handleNewConnect(string data){
 
     cout << " handleNewConnect with ip " << remoteName << endl;
     (*onEvent)("connection|"+remoteName); //if not in list then it is a new connection, the add remote
-
-    sendTypes();
 
     if (!remotes.count(remoteName)) {
         cout << "  new connection -> add remote" << remoteName << endl;
