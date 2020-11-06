@@ -5,6 +5,7 @@
 #include <vector>
 #include <memory>
 #include <sstream>
+#include "core/math/VRMathFwd.h"
 #include "core/utils/VRFunctionFwd.h"
 
 // define types here, for example for webassembly
@@ -53,7 +54,17 @@ template<typename T, typename U> string typeName(const std::shared_ptr<VRFunctio
 template<typename T, typename U> string typeName(const std::shared_ptr<VRFunction<map<T,std::shared_ptr<U>>>> t) { return "callback(dictionary of "+typeName<T>(T()) + " to " + typeName<U>(U())+")"; }
 
 template<typename T> int toValue(stringstream& s, T& t);
-template<typename T> int toValue(string s, T& t) { stringstream ss(s); return toValue(ss,t); }
+template<typename T> int toValue(stringstream& s, vector<std::shared_ptr<T>>& t) { return true; }
+
+template<typename T> int toValue(stringstream& s, std::shared_ptr<T>& t) {
+    if (s.str() != "0") cout << "Warning in toValue<shared_ptr<T>> (toString.h): ignore data '" << s.str() << "'" << endl;
+    t = 0;
+    return true;
+}
+
+template<> int toValue(stringstream& ss, OSG::PosePtr& po);
+
+template<typename T> int toValue(string s, T& t) { stringstream ss(s); return toValue(ss, t); }
 
 template<typename T> int toValue(string s, vector<T>& t) {
     stringstream ss(s);

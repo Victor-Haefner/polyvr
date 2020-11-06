@@ -12,7 +12,6 @@
 #include <OpenSG/OSGLine.h>
 #include "core/utils/VRFunction.h"
 #include "core/utils/toString.h"
-#include "core/utils/toStringBis.h"
 
 using namespace std;
 
