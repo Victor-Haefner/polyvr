@@ -802,15 +802,18 @@ void VRSyncNode::startInterface(int port) {
 }
 
 void VRSyncNode::handleWarning(string msg) {
+    //cout << "Incomming Warning! " << msg << endl;
     auto data = splitString(msg, '|');
+    if (data.size() != 3) { cout << "AAargh" << endl; return; }
     int ID = toInt(data[2]);
-    //ID = 2979;
     cout << " --> Warning from other SyncNode: " << data[1] << " with fc ID: " << ID;
-    if (auto fct = factory->getContainer(ID)) {
-        cout << " fc type: " << fct->getTypeName();
-        if (AttachmentContainer* attc = dynamic_cast<AttachmentContainer*>(fct)) {
-            if (auto n = ::getName(attc)) cout << " named: " << n;
-            else cout << " unnamed";
+    if (factory) {
+        if (auto fct = factory->getContainer(ID)) {
+            cout << " fc type: " << fct->getTypeName() << " (" << fct->getTypeId() << ")";
+            if (AttachmentContainer* attc = dynamic_cast<AttachmentContainer*>(fct)) {
+                if (auto n = ::getName(attc)) cout << " named: " << n;
+                else cout << " unnamed";
+            }
         }
     }
     cout << " owned by " << getName() << endl;
@@ -840,8 +843,8 @@ void VRSyncNode::handleMessage(string msg) {
     else if (startsWith(msg, "ownership|")) job = VRUpdateCb::create( "sync-ownership", bind(&VRSyncNode::handleOwnershipMessage, this, msg) );
     else if (startsWith(msg, "newConnect|")) job = VRUpdateCb::create( "sync-newConnect", bind(&VRSyncNode::handleNewConnect, this, msg) );
     else if (startsWith(msg, "changelistEnd|")) job = VRUpdateCb::create( "sync-finalizeCL", bind(&VRSyncChangelist::deserializeAndApply, changelist.get(), ptr()) );
-    //else if (startsWith(msg, "warn|")) job = VRUpdateCb::create( "sync-handleWarning", bind(&VRSyncNode::handleWarning, this, msg) );
-    else if (startsWith(msg, "warn|")) handleWarning(msg);
+    else if (startsWith(msg, "warn|")) job = VRUpdateCb::create( "sync-handleWarning", bind(&VRSyncNode::handleWarning, this, msg) );
+    //else if (startsWith(msg, "warn|")) handleWarning(msg);
     else job = VRUpdateCb::create( "sync-handleCL", bind(&VRSyncChangelist::gatherChangelistData, changelist.get(), ptr(), msg) );
     if (job) VRScene::getCurrent()->queueJob( job );
 }
