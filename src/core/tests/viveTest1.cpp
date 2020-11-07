@@ -1,7 +1,7 @@
 
-#include <GL/glew.h>
-#include <GL/gl.h>
+//#include <GL/glew.h>
 #include <GL/glut.h>
+#include <GL/gl.h>
 #include <GL/glu.h>
 #include <stdio.h>
 #include <string>
@@ -525,8 +525,9 @@ bool CMainApplication::BInit() {
 		return false;
 	}
 
-	cout << " init vr input actions" << endl;
-	vr::VRInput()->SetActionManifestPath(absolute("vive_actions.json").c_str());
+	string actionManifest = absolute("src\\core\\tests\\vive_actions.json");
+	cout << " init vr input actions, manifest: " << actionManifest << endl;
+	vr::VRInput()->SetActionManifestPath(actionManifest.c_str());
 
 	vr::VRInput()->GetActionHandle("/actions/demo/in/HideCubes", &m_actionHideCubes);
 	vr::VRInput()->GetActionHandle("/actions/demo/in/HideThisController", &m_actionHideThisController);
@@ -874,7 +875,7 @@ void CMainApplication::RenderFrame()
 	{
 		// We want to make sure the glFinish waits for the entire present to complete, not just the submission
 		// of the command. So, we do a clear here right here so the glFinish will wait fully for the swap.
-		glClearColor(0, 0, 0, 1);
+		glClearColor(1, 0, 0, 1);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	}
 
@@ -904,7 +905,7 @@ void CMainApplication::RenderFrame()
 //-----------------------------------------------------------------------------
 GLuint CMainApplication::CompileGLShader(const char* pchShaderName, const char* pchVertexShader, const char* pchFragmentShader)
 {
-	cout << "    compile shaderrr " << pchShaderName << endl;
+	/*cout << "    compile shaderrr " << pchShaderName << endl;
 	GLuint unProgramID = glCreateProgram();
 	cout << "    A01 " << unProgramID << endl;
 
@@ -964,7 +965,8 @@ GLuint CMainApplication::CompileGLShader(const char* pchShaderName, const char* 
 	glUseProgram(0);
 
 	cout << "    A7" << endl;
-	return unProgramID;
+	return unProgramID;*/
+	return 0;
 }
 
 
@@ -973,7 +975,7 @@ GLuint CMainApplication::CompileGLShader(const char* pchShaderName, const char* 
 //-----------------------------------------------------------------------------
 bool CMainApplication::CreateAllShaders()
 {
-
+	/*
 	cout << "   compile first shader" << endl;
 	m_unSceneProgramID = CompileGLShader(
 		"Scene",
@@ -1108,7 +1110,8 @@ bool CMainApplication::CreateAllShaders()
 	return m_unSceneProgramID != 0
 		&& m_unControllerTransformProgramID != 0
 		&& m_unRenderModelProgramID != 0
-		&& m_unCompanionWindowProgramID != 0;
+		&& m_unCompanionWindowProgramID != 0;*/
+	return 0;
 }
 
 
@@ -1154,8 +1157,7 @@ bool CMainApplication::SetupTexturemaps() {
 //-----------------------------------------------------------------------------
 void CMainApplication::SetupScene()
 {
-	if (!m_pHMD)
-		return;
+	/*if (!m_pHMD) return;
 
 	std::vector<float> vertdataarray;
 
@@ -1205,7 +1207,7 @@ void CMainApplication::SetupScene()
 
 	glBindVertexArray(0);
 	glDisableVertexAttribArray(0);
-	glDisableVertexAttribArray(1);
+	glDisableVertexAttribArray(1);*/
 
 }
 
@@ -1288,11 +1290,9 @@ void CMainApplication::AddCubeToScene(Matrix mat, std::vector<float>& vertdata)
 //-----------------------------------------------------------------------------
 // Purpose: Draw all of the controllers as X/Y/Z lines
 //-----------------------------------------------------------------------------
-void CMainApplication::RenderControllerAxes()
-{
+void CMainApplication::RenderControllerAxes() {
 	// Don't attempt to update controllers if input is not available
-	if (!m_pHMD->IsInputAvailable())
-		return;
+	/*if (!m_pHMD->IsInputAvailable()) return;
 
 	std::vector<float> vertdataarray;
 
@@ -1375,15 +1375,14 @@ void CMainApplication::RenderControllerAxes()
 	{
 		//$ TODO: Use glBufferSubData for this...
 		glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vertdataarray.size(), &vertdataarray[0], GL_STREAM_DRAW);
-	}
+	}*/
 }
 
 
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
-void CMainApplication::SetupCameras()
-{
+void CMainApplication::SetupCameras() {
 	m_mat4ProjectionLeft = GetHMDMatrixProjectionEye(vr::Eye_Left);
 	m_mat4ProjectionRight = GetHMDMatrixProjectionEye(vr::Eye_Right);
 	m_mat4eyePosLeft = GetHMDMatrixPoseEye(vr::Eye_Left);
@@ -1395,24 +1394,28 @@ void CMainApplication::SetupCameras()
 // Purpose: Creates a frame buffer. Returns true if the buffer was set up.
 //          Returns false if the setup failed.
 //-----------------------------------------------------------------------------
-bool CMainApplication::CreateFrameBuffer(int nWidth, int nHeight, FramebufferDesc& framebufferDesc)
-{
+bool CMainApplication::CreateFrameBuffer(int nWidth, int nHeight, FramebufferDesc& framebufferDesc) {
+	/*cout << "  CreateFrameBuffer" << endl;
 	glGenFramebuffers(1, &framebufferDesc.m_nRenderFramebufferId);
 	glBindFramebuffer(GL_FRAMEBUFFER, framebufferDesc.m_nRenderFramebufferId);
 
+	cout << "   B1" << endl;
 	glGenRenderbuffers(1, &framebufferDesc.m_nDepthBufferId);
 	glBindRenderbuffer(GL_RENDERBUFFER, framebufferDesc.m_nDepthBufferId);
 	glRenderbufferStorageMultisample(GL_RENDERBUFFER, 4, GL_DEPTH_COMPONENT, nWidth, nHeight);
 	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, framebufferDesc.m_nDepthBufferId);
 
+	cout << "   B2" << endl;
 	glGenTextures(1, &framebufferDesc.m_nRenderTextureId);
 	glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, framebufferDesc.m_nRenderTextureId);
 	glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 4, GL_RGBA8, nWidth, nHeight, true);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, framebufferDesc.m_nRenderTextureId, 0);
 
+	cout << "   B3" << endl;
 	glGenFramebuffers(1, &framebufferDesc.m_nResolveFramebufferId);
 	glBindFramebuffer(GL_FRAMEBUFFER, framebufferDesc.m_nResolveFramebufferId);
 
+	cout << "   B4" << endl;
 	glGenTextures(1, &framebufferDesc.m_nResolveTextureId);
 	glBindTexture(GL_TEXTURE_2D, framebufferDesc.m_nResolveTextureId);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -1420,6 +1423,7 @@ bool CMainApplication::CreateFrameBuffer(int nWidth, int nHeight, FramebufferDes
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, nWidth, nHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, framebufferDesc.m_nResolveTextureId, 0);
 
+	cout << "   B5" << endl;
 	// check FBO status
 	GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 	if (status != GL_FRAMEBUFFER_COMPLETE)
@@ -1427,8 +1431,9 @@ bool CMainApplication::CreateFrameBuffer(int nWidth, int nHeight, FramebufferDes
 		return false;
 	}
 
+	cout << "   B6" << endl;
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
+	*/
 	return true;
 }
 
@@ -1438,11 +1443,10 @@ bool CMainApplication::CreateFrameBuffer(int nWidth, int nHeight, FramebufferDes
 //-----------------------------------------------------------------------------
 bool CMainApplication::SetupStereoRenderTargets()
 {
-	if (!m_pHMD)
-		return false;
+	if (!m_pHMD) return false;
 
 	m_pHMD->GetRecommendedRenderTargetSize(&m_nRenderWidth, &m_nRenderHeight);
-
+	cout << "  HMD recomended render size: " << m_nRenderWidth << " " << m_nRenderHeight << endl;
 	CreateFrameBuffer(m_nRenderWidth, m_nRenderHeight, leftEyeDesc);
 	CreateFrameBuffer(m_nRenderWidth, m_nRenderHeight, rightEyeDesc);
 
@@ -1455,8 +1459,7 @@ bool CMainApplication::SetupStereoRenderTargets()
 //-----------------------------------------------------------------------------
 void CMainApplication::SetupCompanionWindow()
 {
-	if (!m_pHMD)
-		return;
+	/*if (!m_pHMD) return;
 
 	std::vector<VertexDataWindow> vVerts;
 
@@ -1498,7 +1501,7 @@ void CMainApplication::SetupCompanionWindow()
 	glDisableVertexAttribArray(1);
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);*/
 }
 
 
@@ -1507,8 +1510,8 @@ void CMainApplication::SetupCompanionWindow()
 //-----------------------------------------------------------------------------
 void CMainApplication::RenderStereoTargets()
 {
-	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-	glEnable(GL_MULTISAMPLE);
+	glClearColor(0.0f, 0.0f, 1.0f, 1.0f);
+	/*glEnable(GL_MULTISAMPLE);
 
 	// Left Eye
 	glBindFramebuffer(GL_FRAMEBUFFER, leftEyeDesc.m_nRenderFramebufferId);
@@ -1546,19 +1549,19 @@ void CMainApplication::RenderStereoTargets()
 		GL_LINEAR);
 
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);*/
 }
 
 
 //-----------------------------------------------------------------------------
 // Purpose: Renders a scene with respect to nEye.
 //-----------------------------------------------------------------------------
-void CMainApplication::RenderScene(vr::Hmd_Eye nEye)
-{
+void CMainApplication::RenderScene(vr::Hmd_Eye nEye) {
+	glClearColor(1.0, 0.2, 1.0, 1.0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glEnable(GL_DEPTH_TEST);
 
-	if (m_bShowCubes)
+	/*if (m_bShowCubes)
 	{
 		glUseProgram(m_unSceneProgramID);
 		glUniformMatrix4fv(m_nSceneMatrixLocation, 1, GL_FALSE, GetCurrentViewProjectionMatrix(nEye).getValues());
@@ -1595,7 +1598,7 @@ void CMainApplication::RenderScene(vr::Hmd_Eye nEye)
 		m_rHand[eHand].m_pRenderModel->Draw();
 	}
 
-	glUseProgram(0);
+	glUseProgram(0);*/
 }
 
 
@@ -1604,7 +1607,7 @@ void CMainApplication::RenderScene(vr::Hmd_Eye nEye)
 //-----------------------------------------------------------------------------
 void CMainApplication::RenderCompanionWindow()
 {
-	glDisable(GL_DEPTH_TEST);
+	/*glDisable(GL_DEPTH_TEST);
 	glViewport(0, 0, m_nCompanionWindowWidth, m_nCompanionWindowHeight);
 
 	glBindVertexArray(m_unCompanionWindowVAO);
@@ -1627,7 +1630,7 @@ void CMainApplication::RenderCompanionWindow()
 	glDrawElements(GL_TRIANGLES, m_uiCompanionWindowIndexSize / 2, GL_UNSIGNED_SHORT, (const void*)(uintptr_t)(m_uiCompanionWindowIndexSize));
 
 	glBindVertexArray(0);
-	glUseProgram(0);
+	glUseProgram(0);*/
 }
 
 
@@ -1837,7 +1840,7 @@ CGLRenderModel::~CGLRenderModel() {
 //-----------------------------------------------------------------------------
 bool CGLRenderModel::BInit(const vr::RenderModel_t& vrModel, const vr::RenderModel_TextureMap_t& vrDiffuseTexture) {
 	// create and bind a VAO to hold state for this model
-	glGenVertexArrays(1, &m_glVertArray);
+	/*glGenVertexArrays(1, &m_glVertArray);
 	glBindVertexArray(m_glVertArray);
 
 	// Populate a vertex buffer
@@ -1881,7 +1884,7 @@ bool CGLRenderModel::BInit(const vr::RenderModel_t& vrModel, const vr::RenderMod
 
 	glBindTexture(GL_TEXTURE_2D, 0);
 
-	m_unVertexCount = vrModel.unTriangleCount * 3;
+	m_unVertexCount = vrModel.unTriangleCount * 3;*/
 
 	return true;
 }
@@ -1891,14 +1894,14 @@ bool CGLRenderModel::BInit(const vr::RenderModel_t& vrModel, const vr::RenderMod
 // Purpose: Frees the GL resources for a render model
 //-----------------------------------------------------------------------------
 void CGLRenderModel::Cleanup() {
-	if (m_glVertBuffer) {
+	/*if (m_glVertBuffer) {
 		glDeleteBuffers(1, &m_glIndexBuffer);
 		glDeleteVertexArrays(1, &m_glVertArray);
 		glDeleteBuffers(1, &m_glVertBuffer);
 		m_glIndexBuffer = 0;
 		m_glVertArray = 0;
 		m_glVertBuffer = 0;
-	}
+	}*/
 }
 
 
@@ -1906,11 +1909,11 @@ void CGLRenderModel::Cleanup() {
 // Purpose: Draws the render model
 //-----------------------------------------------------------------------------
 void CGLRenderModel::Draw() {
-	glBindVertexArray(m_glVertArray);
+	/*glBindVertexArray(m_glVertArray);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, m_glTexture);
 	glDrawElements(GL_TRIANGLES, m_unVertexCount, GL_UNSIGNED_SHORT, 0);
-	glBindVertexArray(0);
+	glBindVertexArray(0);*/
 }
 
 
