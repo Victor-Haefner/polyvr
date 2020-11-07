@@ -575,12 +575,12 @@ bool CMainApplication::BInitGL()
 	}*/
 
 	cout << "  create shaders" << endl;
-	if (!CreateAllShaders()) return false;
+	//if (!CreateAllShaders()) return false;
 
 	cout << "  setup textures" << endl;
-	SetupTexturemaps();
+	//SetupTexturemaps();
 	cout << "  setup scene" << endl;
-	SetupScene();
+	//SetupScene();
 	cout << "  setup cameras" << endl;
 	SetupCameras();
 	cout << "  setup render targets" << endl;
