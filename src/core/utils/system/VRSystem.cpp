@@ -39,6 +39,7 @@ bool makedir(string path) {
 
 bool removeFile(string path) { return boost::filesystem::remove(path); }
 string canonical(string path) { return boost::filesystem::canonical(path).string(); }
+string absolute(string path) { return boost::filesystem::absolute(path).string(); }
 
 bool isFile(string path) { return boost::filesystem::is_regular_file(path); }
 bool isFolder(string path) { return boost::filesystem::is_directory(path); }
