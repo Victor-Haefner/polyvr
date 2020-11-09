@@ -231,7 +231,10 @@ GtkWidget* addRadiobutton(string ID, string label, GtkWidget* groupWidget) {
 GtkWidget* addEntry(string ID, int Nwidth = 0) {
     auto n = gtk_entry_new();
     VRGuiBuilder::get()->reg_widget(n, ID);
-    if (Nwidth > 0) gtk_entry_set_width_chars(GTK_ENTRY(n), Nwidth);
+    if (Nwidth > 0) {
+        gtk_entry_set_width_chars(GTK_ENTRY(n), Nwidth);
+        gtk_widget_set_halign(n, GTK_ALIGN_CENTER);
+    }
     return n;
 }
 
