@@ -93,7 +93,7 @@ PyMethodDef VRPyObject::methods[] = {
     {"getParent", PyWrapOpt(Object, getParent, "Return parent object, passing 'True' will take into account any DnD state", "0", VRObjectPtr, bool) },
     {"getAncestry", PyWrapOpt(Object, getAncestry, "Return all parents", "0", vector<VRObjectPtr>, VRObjectPtr) },
     {"find", PyWrap(Object, find, "Find node with given name in scene graph below this node - obj find(str)", VRObjectPtr, string) },
-    {"findAll", PyWrapOpt(Object, findAll, "Find nodes with given base name (str) in scene graph below this node", " ", vector<VRObjectPtr>, string, vector<VRObjectPtr>) },
+    {"findAll", PyWrapOpt(Object, findAll, "Find nodes with given base name (str) in scene graph below this node", "", vector<VRObjectPtr>, string, vector<VRObjectPtr>) },
     {"isPickable", PyWrap(Object, isPickable, "Return if the object is pickable", bool) },
     {"setPickable", PyWrap(Object, setPickable, "Set if the object is pickable - setPickable(int pickable)\n   pickable can be 0 or 1 to disable or enable picking, as well as -1 to block picking even if an ancestor is pickable", void, int) },
     //{"printOSG", PyWrap(Object, printOSGTree, "Print the OSG structure to console", void) },
