@@ -51,7 +51,7 @@ void updateArgPtr(VRScript::argPtr a) {
     }
     if (t == "VRPyDeviceType" || t == "VRPyMouseType" || t == "VRPyHapticType" || t == "VRPyServerType") {
         auto setup = VRSetup::getCurrent();
-        a->ptr = (void*)setup->getDevice(a->val).get();
+        if (setup) a->ptr = (void*)setup->getDevice(a->val).get();
         return;
     }
 
@@ -97,8 +97,10 @@ void VRScript::clean() {
 
 void VRScript::update() {
     if (type == "HTML") {
-        VRServerPtr mob = dynamic_pointer_cast<VRServer>( VRSetup::getCurrent()->getDevice(server) );
-        if (mob) mob->addWebSite(getName(), core);
+        if (VRSetup::getCurrent()) {
+            VRServerPtr mob = dynamic_pointer_cast<VRServer>( VRSetup::getCurrent()->getDevice(server) );
+            if (mob) mob->addWebSite(getName(), core);
+        }
     }
 
     auto scene = VRScene::getCurrent();
@@ -117,7 +119,9 @@ void VRScript::update() {
         }
 
         if (t->trigger == "on_device") {
-            VRDevicePtr dev = VRSetup::getCurrent()->getDevice(t->dev);
+            auto s = VRSetup::getCurrent();
+            if (!s) continue;
+            VRDevicePtr dev = s->getDevice(t->dev);
             int state = -1;
             if (t->state == "Released") state = 0;
             if (t->state == "Pressed") state = 1;

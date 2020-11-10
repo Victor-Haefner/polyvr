@@ -28,3 +28,9 @@ examples/vals*.dat
 cscope.out
 *.cscope_file_list
 ressources/webBuild
+build
+ressources/cefWin/build
+ressources/cefWin/*.exe
+ressources/cefWin/.vs
+tmp
+packages

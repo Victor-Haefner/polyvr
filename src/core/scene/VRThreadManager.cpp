@@ -106,6 +106,7 @@ void VRThreadManager::stopAllThreads() {
 }
 
 void VRThreadManager::stopThread(int id, int tries) {
+    //cout << " VRThreadManager::stopThread " << id << endl;
     if (threads.count(id) == 0) return;
     VRThreadPtr t = threads[id];
     t->control_flag = false;

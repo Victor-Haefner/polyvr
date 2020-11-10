@@ -1,10 +1,11 @@
 #include "VRGuiWidget.h"
 #include "../VRGuiUtils.h"
+#include "../VRGuiBuilder.h"
 
-#include <gtk/gtkwidget.h>
+#include <gtk/gtk.h>
 
 VRGuiWidget::VRGuiWidget(string name) {
-    widget = getGUIBuilder()->get_widget(name);
+    widget = VRGuiBuilder::get()->get_widget(name);
 }
 
 VRGuiWidget::VRGuiWidget(_GtkWidget* w) {
@@ -19,7 +20,11 @@ void VRGuiWidget::setVisibility(bool b, bool all) {
         else   gtk_widget_hide(widget);
     } else {
         if (b) gtk_widget_show_all(widget);
+#if GTK_MAJOR_VERSION == 2
         else   gtk_widget_hide_all(widget);
+#else
+        else   gtk_widget_hide(widget);
+#endif
     }
 }
 

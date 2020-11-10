@@ -15,7 +15,7 @@ OSG_BEGIN_NAMESPACE;
 
 class VRDevice;
 
-class CEF_handler : public CefRenderHandler {
+class CEF_handler : public CefRenderHandler, public CefContextMenuHandler {
     private:
         VRTexturePtr image = 0;
         int width = 1024;
@@ -25,8 +25,14 @@ class CEF_handler : public CefRenderHandler {
         CEF_handler();
         ~CEF_handler();
 
+#ifdef _WIN32
+        void GetViewRect(CefRefPtr<CefBrowser> browser, CefRect& rect);
+        void OnBeforeContextMenu(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefContextMenuParams> params, CefRefPtr<CefMenuModel> model);
+        bool OnContextMenuCommand(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefContextMenuParams> params, int command_id, EventFlags event_flags);
+#else
         bool GetViewRect(CefRefPtr<CefBrowser> browser, CefRect& rect);
-        void OnPaint(CefRefPtr<CefBrowser> browser, PaintElementType type, const RectList& dirtyRects, const void* buffer, int width, int height);
+#endif
+        void OnPaint(CefRefPtr<CefBrowser> browser, PaintElementType type, const RectList& dirtyRects, const void* buffer, int width, int height) override;
         VRTexturePtr getImage();
         void resize(int resolution, float aspect);
 
@@ -43,6 +49,7 @@ class CEF_client : public CefClient {
 
         CefRefPtr<CEF_handler> getHandler();
         CefRefPtr<CefRenderHandler> GetRenderHandler();
+        CefRefPtr<CefContextMenuHandler> GetContextMenuHandler();
 
         IMPLEMENT_REFCOUNTING(CEF_client);
 };
@@ -59,6 +66,7 @@ class CEF {
         float aspect = 1;
         bool init = false;
         bool focus = false;
+        bool ctrlUsed = false;
         int mX = -1;
         int mY = -1;
 

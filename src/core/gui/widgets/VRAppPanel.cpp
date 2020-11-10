@@ -4,18 +4,18 @@
 #include "core/utils/system/VRSystem.h"
 #include "core/scene/VRSceneManager.h"
 
-#include <gtk/gtktable.h>
+#include <gtk/gtk.h>
 
 using namespace OSG;
 
-VRAppPanel::VRAppPanel(string name, _GtkTable* t) : table(t) {
+VRAppPanel::VRAppPanel(string name, _GtkWidget* t) : table(t) {
     setNameSpace("__system_apps__");
     setName(name);
 }
 
 VRAppPanel::~VRAppPanel() {}
 
-VRAppPanelPtr VRAppPanel::create(string name, _GtkTable* table) { return VRAppPanelPtr( new VRAppPanel(name, table) ); }
+VRAppPanelPtr VRAppPanel::create(string name, _GtkWidget* table) { return VRAppPanelPtr( new VRAppPanel(name, table) ); }
 VRAppPanelPtr VRAppPanel::ptr() { return shared_from_this(); }
 
 VRAppLauncherPtr VRAppPanel::addLauncher(string path, string timestamp, VRGuiContextMenu* menu, VRAppManager* mgr, bool write_protected, bool favorite, string table) {
@@ -36,7 +36,7 @@ VRAppLauncherPtr VRAppPanel::addLauncher(string path, string timestamp, VRGuiCon
 }
 
 int VRAppPanel::getSize() { return apps.size(); }
-_GtkTable* VRAppPanel::getTable() { return table; }
+_GtkWidget* VRAppPanel::getTable() { return table; }
 
 void VRAppPanel::fillTable(string t, int& i) {
     int x,y;
@@ -51,10 +51,14 @@ void VRAppPanel::fillTable(string t, int& i) {
         GtkWidget* w = (GtkWidget*)d.second->widget;
         x = i%2;
         y = i/2;
-        gtk_table_attach(table, w, x, x+1, y, y+1, optsH, optsV, 10, 10);
+#if GTK_MAJOR_VERSION == 2
+        gtk_table_attach(GTK_TABLE(table), w, x, x+1, y, y+1, optsH, optsV, 10, 10);
+#else
+        gtk_grid_attach(GTK_GRID(table), w, x, y, 1, 1);
+#endif
         i++;
     }
-    gtk_widget_show((GtkWidget*)table);
+    gtk_widget_show(table);
 }
 
 void VRAppPanel::clearTable(string t) {

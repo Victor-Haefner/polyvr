@@ -236,7 +236,7 @@ void VRScriptManager::initPyModules() {
     cout << " initPyModules" << endl;
     modOut = 0;
     modErr = 0;
-    #ifdef WASM
+    #if defined(WASM) || defined(WIN32)
     Py_NoSiteFlag = 1;
     #endif
     Py_Initialize();

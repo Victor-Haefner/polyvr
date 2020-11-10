@@ -1,14 +1,11 @@
+#include <gtk/gtk.h>
 #include "VRGuiMonitor.h"
 #include "VRGuiUtils.h"
+#include "VRGuiBuilder.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRGlobals.h"
 
 #include <functional>
-
-#include <gtk/gtkwindow.h>
-#include <gtk/gtkliststore.h>
-#include <gtk/gtkbuilder.h>
-
 #include <cairo.h>
 
 #include "wrapper/VRGuiTreeView.h"
@@ -17,19 +14,19 @@ OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 VRGuiMonitor::VRGuiMonitor() {
-    GtkWidget* da = getGUIBuilder()->get_widget("profiler_area");
+    darea = VRGuiBuilder::get()->get_widget("profiler_area");
 
-    gtk_widget_add_events(da, (int)GDK_BUTTON_PRESS_MASK);
-    gtk_widget_add_events(da, (int)GDK_BUTTON_RELEASE_MASK);
-    gtk_widget_add_events(da, (int)GDK_POINTER_MOTION_MASK);
+    gtk_widget_add_events(darea, (int)GDK_BUTTON_PRESS_MASK);
+    gtk_widget_add_events(darea, (int)GDK_BUTTON_RELEASE_MASK);
+    gtk_widget_add_events(darea, (int)GDK_POINTER_MOTION_MASK);
 
-    function<bool(GdkEventExpose*)> sig1 = bind(&VRGuiMonitor::draw, this, placeholders::_1);
+    function<bool(cairo_t*)> sig1 = bind(&VRGuiMonitor::draw, this, placeholders::_1);
     function<bool(GdkEventButton*)> sig2 = bind(&VRGuiMonitor::on_button, this, placeholders::_1);
     function<void(void)> sig3 = bind(&VRGuiMonitor::select_fkt, this);
 
-    connect_signal(da, sig1, "expose_event");
-    connect_signal(da, sig2, "button_press_event");
-    connect_signal(da, sig2, "button_release_event");
+    connect_signal(darea, sig1, "draw");
+    connect_signal(darea, sig2, "button_press_event");
+    connect_signal(darea, sig2, "button_release_event");
 
     setTreeviewSelectCallback("treeview15", sig3 );
 }
@@ -39,7 +36,7 @@ bool VRGuiMonitor::on_button(GdkEventButton * event) {
     //if (event->type == GDK_BUTTON_PRESS) state = 0;
 
     GtkAllocation rect;
-    gtk_widget_get_allocation((GtkWidget*)da, &rect);
+    gtk_widget_get_allocation(darea, &rect);
     float w = rect.width;
     float x = 1.0 - event->x/w;
 
@@ -63,26 +60,26 @@ void VRGuiMonitor::draw_text(string txt, int x, int y) {
     PangoFontDescription* font = pango_font_description_new();
     pango_font_description_set_family(font, "Monospace");
     pango_font_description_set_weight(font, PANGO_WEIGHT_BOLD);
-    PangoLayout* layout = gtk_widget_create_pango_layout((GtkWidget*)da, txt.c_str());
+    PangoLayout* layout = gtk_widget_create_pango_layout(darea, txt.c_str());
     pango_layout_set_font_description(layout, font);
     int tw, th;
     pango_layout_get_pixel_size(layout, &tw, &th);
-    cairo_move_to(cr, x-tw*0.5, y-th);
-    pango_cairo_show_layout(cr, layout);
+    cairo_move_to(context, x-tw*0.5, y-th);
+    pango_cairo_show_layout(context, layout);
 }
 
 void VRGuiMonitor::draw_frame(int i, float w, float h, float x, int h0, bool fill) {
-    cairo_set_line_width(cr, 1.0);
-    if (!fill) cairo_set_source_rgb(cr, 0, 0.5, 0.9);
-    else cairo_set_source_rgb(cr, 0.75, 0.9, 1.0);
+    cairo_set_line_width(context, 1.0);
+    if (!fill) cairo_set_source_rgb(context, 0, 0.5, 0.9);
+    else cairo_set_source_rgb(context, 0.75, 0.9, 1.0);
 
     float w2 = w*0.5;
-    cairo_move_to(cr, x+w2, h0);
-    cairo_line_to(cr, x-w2, h0);
-    cairo_line_to(cr, x-w2, h0+h);
-    cairo_line_to(cr, x+w2, h0+h);
-    if (fill) cairo_fill(cr);
-    else cairo_stroke(cr);
+    cairo_move_to(context, x+w2, h0);
+    cairo_line_to(context, x-w2, h0);
+    cairo_line_to(context, x-w2, h0+h);
+    cairo_line_to(context, x+w2, h0+h);
+    if (fill) cairo_fill(context);
+    else cairo_stroke(context);
 
     draw_text(toString(i), x, h0+h);
 }
@@ -97,10 +94,10 @@ void VRGuiMonitor::draw_timeline(int N0, int N1, int DN, int w, int h, int h0, i
         j++;
     }
 
-    cairo_set_line_width(cr, 1.0);
-    cairo_set_source_rgb(cr, 0, 0.5, 0.9);
-    cairo_rectangle(cr, 0,h0,j*d,h);
-    cairo_stroke(cr);
+    cairo_set_line_width(context, 1.0);
+    cairo_set_source_rgb(context, 0, 0.5, 0.9);
+    cairo_rectangle(context, 0,h0,j*d,h);
+    cairo_stroke(context);
 }
 
 Vec3d VRGuiMonitor::getColor(string name) {
@@ -116,16 +113,16 @@ Vec3d VRGuiMonitor::getColor(string name) {
 void VRGuiMonitor::draw_call(int x0, int y0, int w, int h, string name) {
     Vec3d c = getColor(name);
 
-    cairo_set_line_width(cr, 0.5);
-    if (name == selRow) cairo_set_line_width(cr, 1.5);
-    cairo_set_source_rgb(cr, c[0], c[1], c[2]);
+    cairo_set_line_width(context, 0.5);
+    if (name == selRow) cairo_set_line_width(context, 1.5);
+    cairo_set_source_rgb(context, c[0], c[1], c[2]);
     if (x0 < 0) x0 = 0;
     if (y0 < 0) y0 = 0;
     if (w < 1) w = 1;
     if (h < 1) h = 1;
 
-    cairo_rectangle(cr, x0,y0,w,h);
-    cairo_stroke(cr);
+    cairo_rectangle(context, x0,y0,w,h);
+    cairo_stroke(context);
 }
 
 string VRGuiMonitor::toHex(Vec3d color) {
@@ -137,23 +134,19 @@ string VRGuiMonitor::toHex(Vec3d color) {
 }
 
 void VRGuiMonitor::redraw() {
-    GdkWindow* win = ((GtkWidget*)da)->window;
+    GdkWindow* win = gtk_widget_get_window(darea);
     if (win) gdk_window_invalidate_rect( win, NULL, false);
 }
 
-bool VRGuiMonitor::draw(GdkEventExpose* e) {
-    GdkWindow* win = ((GtkWidget*)da)->window;
+bool VRGuiMonitor::draw(cairo_t* cr) {
+    int w = gtk_widget_get_allocated_width(darea);
+    int h = gtk_widget_get_allocated_height(darea);
 
-    int w, h;
-    gdk_window_get_size(win, &w, &h);
-    auto surf = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, w, h);
-
-    cr = cairo_create(surf);
-    cairo_rectangle(cr, e->area.x, e->area.y, e->area.width, e->area.height);
-    cairo_clip(cr); // only draw on exposed area
+    GtkStyleContext* style = gtk_widget_get_style_context(darea);
+    context = cr;
 
     GtkAllocation rect;
-    gtk_widget_get_allocation((GtkWidget*)da, &rect);
+    gtk_widget_get_allocation(darea, &rect);
 
     // construction parameters
     int line_height = 20;
@@ -166,7 +159,7 @@ bool VRGuiMonitor::draw(GdkEventExpose* e) {
     int Hl = 5; // scale height
     lineN += Nt*Hl;
 
-    gtk_widget_set_size_request((GtkWidget*)da, -1, line_height*lineN);
+    gtk_widget_set_size_request(darea, -1, line_height*lineN);
 
     int N = VRProfiler::get()->getHistoryLength();
     int L = 10;
@@ -207,7 +200,7 @@ void VRGuiMonitor::selectFrame() {
     }
 
     // update list
-    GtkListStore* store = (GtkListStore*)getGUIBuilder()->get_object("prof_fkts");
+    GtkListStore* store = (GtkListStore*)VRGuiBuilder::get()->get_object("prof_fkts");
     gtk_list_store_clear(store);
     for (auto c : fkts) {
         string col = toHex( getColor(c.first) );

@@ -25,8 +25,12 @@ class VRSyncNode : public VRTransform {
         FieldContainerFactoryBase* factory = FieldContainerFactory::the();
         vector<UInt32> createdNodes; //IDs of the currently created nodes/children
 
+        size_t selfID = 0;
         bool doWrapping = true;
         bool doAvatars = true;
+        bool handledPoses = false; // optimization
+
+        VRMessageCbPtr onEvent;
 
         VRSyncChangelistPtr changelist;
 
@@ -35,9 +39,9 @@ class VRSyncNode : public VRTransform {
         //vector<UInt32> cores; //lists IDs of nodecores
         vector<UInt32> syncedContainer; //Id's of container that got changes over sync (changed by remote). Needed to filter out sync changes from local Changelist to prevent cycles.
         map<string, VRSyncConnectionPtr> remotes;
-        map<string, string> remotesUri;
         map<UInt32, UInt32> remoteToLocalID;
         map<UInt32, UInt32> localToRemoteID;
+        map<UInt32, UInt32> typeMapping;
         map<UInt32, UInt32> remoteCoreToLocalNode;
         map<UInt32, VRObjectWeakPtr> nodeToVRObject;
         UInt32 getRegisteredContainerID(UInt32 syncID);
@@ -48,7 +52,12 @@ class VRSyncNode : public VRTransform {
 
         VRObjectPtr copy(vector<VRObjectPtr> children);
 
+        void sendTypes();
+
+        void handleWarning(string msg);
+        void handleSelfmapRequest(string msg);
         void handleMapping(string mappingData);
+        void handleTypeMapping(string mappingData);
         vector<FieldContainer*> findContainer(string typeName); //deprecated
         vector<FieldContainer*> getTransformationContainer(ChangeList* cl); //deprecated
         //vector<OSG::Field
@@ -65,7 +74,7 @@ class VRSyncNode : public VRTransform {
         void getAndBroadcastPoses();
 
         bool syncronizing = false;
-        void sync(string remoteUri);
+        //void sync(string remoteUri);
 
         //Avatars
         void handlePoses(string poses);
@@ -87,6 +96,8 @@ class VRSyncNode : public VRTransform {
         VRTransformPtr avatarDeviceBeacon;
         void handleAvatar(string data);
 
+        void handleNewConnect(string data);
+
     public:
         VRSyncNode(string name = "syncNode");
         ~VRSyncNode();
@@ -97,7 +108,7 @@ class VRSyncNode : public VRTransform {
         void setDoWrapping(bool b);
         void setDoAvatars(bool b);
 
-        void addRemote(string host, int port, string name);
+        void addRemote(string host, int port);
 
         void addRemoteMapping(UInt32 lID, UInt32 rID);
         void replaceContainerMapping(UInt32 ID1, UInt32 ID2);
@@ -117,11 +128,13 @@ class VRSyncNode : public VRTransform {
 
         UInt32 getRemoteToLocalID(UInt32 id);
         UInt32 getLocalToRemoteID(UInt32 id);
+        UInt32 getLocalType(UInt32 id);
         UInt32 getContainerMappedID(UInt32 id);
         VRObjectPtr getVRObject(UInt32 id);
 
         void analyseSubGraph();
 
+        vector<string> getRemotes();
         PosePtr getRemoteCamPose(string remoteName);
         PosePtr getRemoteMousePose(string remoteName);
         PosePtr getRemoteFlystickPose(string remoteName);
@@ -140,6 +153,9 @@ class VRSyncNode : public VRTransform {
         void wrapOSG();
 
         string getConnectionLink();
+        void setCallback(VRMessageCbPtr fkt);
+
+        string getConnectionStatus();
 };
 
 OSG_END_NAMESPACE;

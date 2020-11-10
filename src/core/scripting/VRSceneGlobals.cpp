@@ -12,6 +12,9 @@
 #include "VRPyNavigator.h"
 #include "VRPyRendering.h"
 #include "VRPyTypeCaster.h"
+#ifndef WITHOUT_GTK
+#include <gtk/gtk.h>
+#endif
 #include "VRPyProgress.h"
 #include "VRPySky.h"
 #ifndef WITHOUT_AV
@@ -33,7 +36,6 @@
 #include "core/gui/VRGuiManager.h"
 #include "core/gui/VRGuiConsole.h"
 #include "core/gui/VRGuiFile.h"
-#include <gtk/gtkfilechooser.h>
 #endif
 
 OSG_BEGIN_NAMESPACE;
@@ -81,6 +83,7 @@ PyMethodDef VRSceneGlobals::methods[] = {
 	{"getScript", (PyCFunction)VRSceneGlobals::getScript, METH_VARARGS, "Get python script by name" },
 	{"importScene", (PyCFunction)VRSceneGlobals::importScene, METH_VARARGS, "Import scene" },
 	{"testDWGArcs", (PyCFunction)VRSceneGlobals::testDWGArcs, METH_NOARGS, "A test for DWG arcs tesselation" },
+	{"setWindowTitle", (PyCFunction)VRSceneGlobals::setWindowTitle, METH_VARARGS, "Set window title" },
     {NULL}  /* Sentinel */
 };
 
@@ -88,6 +91,12 @@ PyMethodDef VRSceneGlobals::methods[] = {
 // ==============
 // Python methods
 // ==============
+
+PyObject* VRSceneGlobals::setWindowTitle(VRSceneGlobals* self, PyObject* args) {
+    string name = parseString(args);
+    VRGuiManager::get()->setWindowTitle(name);
+    Py_RETURN_TRUE;
+}
 
 PyObject* VRSceneGlobals::getScript(VRSceneGlobals* self, PyObject* args) {
     string name = parseString(args);
@@ -181,7 +190,9 @@ PyObject* VRSceneGlobals::exit(VRSceneGlobals* self) {
 
 PyObject* VRSceneGlobals::find(VRSceneGlobals* self, PyObject *args) {
     string name = parseString(args);
-    if (auto res = VRSetup::getCurrent()->getDevice(name)) return VRPyTypeCaster::cast(res);
+    auto setup = VRSetup::getCurrent();
+    if (setup)
+        if (auto res = setup->getDevice(name)) return VRPyTypeCaster::cast(res);
     if (auto res = VRScene::getCurrent()->get(name, true)) return VRPyTypeCaster::cast(res);
     if (auto res = VRScene::getCurrent()->get(name, false)) return VRPyTypeCaster::cast(res);
     Py_RETURN_NONE;

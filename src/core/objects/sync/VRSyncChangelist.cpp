@@ -27,6 +27,7 @@
 #include <OpenSG/OSGShaderExecutableChunk.h>
 #include <OpenSG/OSGSimpleSHLChunk.h>
 #include <OpenSG/OSGShaderProgram.h>
+#include <OpenSG/OSGShaderVariableOSG.h>
 #include <OpenSG/OSGProgramChunk.h>
 
 #include <bitset>
@@ -36,6 +37,12 @@ using namespace OSG;
 VRSyncChangelist::VRSyncChangelist() {}
 VRSyncChangelist::~VRSyncChangelist() { cout << "~VRSyncChangelist::VRSyncChangelist" << endl; }
 VRSyncChangelistPtr VRSyncChangelist::create() { return VRSyncChangelistPtr( new VRSyncChangelist() ); }
+
+string toString(const BitVector& v) {
+    std::stringstream ss;
+    ss << std::bitset<sizeof(BitVector)*CHAR_BIT>(v);
+    return ss.str();
+}
 
 struct SerialEntry {
     UInt32 localId = 0; //local FieldContainer Id
@@ -174,7 +181,10 @@ struct VRSyncNodeFieldContainerMapper : public ContainerIdMapper {
 
 UInt32 VRSyncNodeFieldContainerMapper::map(UInt32 uiId) const {
     UInt32 id = syncNode ? syncNode->getRemoteToLocalID(uiId) : 0;
-    //cout << " --- VRSyncNodeFieldContainerMapper::map id " << uiId << " to " << id << ", syncNode: " << syncNode->getName() << endl;
+    if (id == 0) {
+        cout << " --- WARNING in VRSyncNodeFieldContainerMapper::map remote id " << uiId << " to " << id << ", syncNode: " << syncNode->getName() << endl;
+        if (syncNode) syncNode->broadcast("warn|mappingFailed|"+toString(uiId));
+    }
     return id;
 }
 
@@ -290,15 +300,26 @@ OSGChangeList* VRSyncChangelist::filterChanges(VRSyncNodePtr syncNode) {
     return localChanges;
 }
 
+static vector<FieldContainerRecPtr> debugStorage;
+
 FieldContainerRecPtr VRSyncChangelist::getOrCreate(VRSyncNodePtr syncNode, UInt32& id, SerialEntry& sentry, map<UInt32, vector<UInt32>>& parentToChildren) {
     //cout << "VRSyncNode::getOrCreate remote: " << sentry.localId << ", local: " << id << endl;
     FieldContainerRecPtr fcPtr = 0; // Field Container to apply changes to
     FieldContainerFactoryBase* factory = FieldContainerFactory::the();
-    if (id != 0) fcPtr = factory->getContainer(id);
-    else if (sentry.uiEntryDesc == ContainerChangeEntry::Create) {
-        FieldContainerType* fcType = factory->findType(sentry.fcTypeID);
+    if (id != 0) {
+        fcPtr = factory->getContainer(id);
+    } else if (sentry.uiEntryDesc == ContainerChangeEntry::Create) {
+        auto tID = syncNode->getLocalType(sentry.fcTypeID);
+        FieldContainerType* fcType = factory->findType(tID);
+        if (fcType == 0) {
+            cout << "Error in VRSyncChangelist::getOrCreate, unknown FC type!";
+            cout << " remote container ID : " << sentry.localId << ", remote type ID : " << sentry.fcTypeID << endl;
+            syncNode->broadcast("warn|unknownType "+ toString(sentry.fcTypeID) +"|" + toString(sentry.localId));
+            return 0;
+        }
         fcPtr = fcType->createContainer();
-        justCreated.push_back(fcPtr); // increase ref count to avoid destruction!
+        justCreated.push_back(fcPtr); // increase ref count temporarily to avoid destruction!
+        //debugStorage.push_back(fcPtr); // increase ref count permanently to avoid destruction! only for testing!
         syncNode->registerContainer(fcPtr.get(), sentry.syncNodeID);
         id = fcPtr.get()->getId();
         syncNode->addRemoteMapping(id, sentry.localId);
@@ -385,12 +406,15 @@ void VRSyncChangelist::handleRemoteEntries(VRSyncNodePtr syncNode, vector<Serial
         if (sentry.syncNodeID >= 0 && sentry.syncNodeID <= 2) {
             syncNode->replaceContainerMapping(sentry.syncNodeID, sentry.localId);
         }
-
+        
         UInt32 id = syncNode->getRemoteToLocalID(sentry.localId);// map remote id to local id if exist (otherwise id = -1)
         //cout << " --- getRemoteToLocalID: " << sentry.localId << " to " << id << " syncNode: " << syncNode->getName() << ", syncNodeID: " << sentry.syncNodeID << endl;
         FieldContainerRecPtr fcPtr = getOrCreate(syncNode, id, sentry, parentToChildren); // Field Container to apply changes to
 
-        if (fcPtr == nullptr) { cout << "WARNING! no container found with id " << id << " syncNodeID " << sentry.syncNodeID << endl; continue; } //TODO: This is causing the WARNING: Action::recurse: core is NULL, aborting traversal.
+        if (fcPtr == nullptr) {
+            cout << " -- WARNING in handleRemoteEntries, no container found with id " << id << ", entry local ID " << sentry.localId << endl;
+            continue;
+        }
 
         if (sentry.uiEntryDesc == ContainerChangeEntry::Change) { //if its a node change, update child info has changed. TODO: check only if children info has changed
             handleGenericChange(syncNode, fcPtr, sentry, fcData);
@@ -587,75 +611,73 @@ void VRSyncChangelist::filterFieldMask(VRSyncNodePtr syncNode, FieldContainer* f
     }
 
     FieldContainerFactoryBase* factory = FieldContainerFactory::the();
-    if (factory->findType(sentry.fcTypeID)->isNodeCore()) { // don't copy GLId fields, they are not valid Ids!
-        if (dynamic_cast<Geometry*>(fc)) {
-            sentry.fieldMask &= ~Geometry::ClassicGLIdFieldMask;
-            sentry.fieldMask &= ~Geometry::AttGLIdFieldMask;
-            sentry.fieldMask &= ~Geometry::ClassicVaoGLIdFieldMask;
-            sentry.fieldMask &= ~Geometry::AttribVaoGLIdFieldMask;
-        }
+    if (dynamic_cast<Geometry*>(fc)) {
+        sentry.fieldMask &= ~Geometry::ClassicGLIdFieldMask;
+        sentry.fieldMask &= ~Geometry::AttGLIdFieldMask;
+        sentry.fieldMask &= ~Geometry::ClassicVaoGLIdFieldMask;
+        sentry.fieldMask &= ~Geometry::AttribVaoGLIdFieldMask;
+    }
 
-        if (dynamic_cast<Surface*>(fc)) {
-            sentry.fieldMask &= ~Surface::SurfaceGLIdFieldMask;
-        }
+    if (dynamic_cast<Surface*>(fc)) {
+        sentry.fieldMask &= ~Surface::SurfaceGLIdFieldMask;
+    }
 
-        if (dynamic_cast<GeoProperty*>(fc)) {
-            sentry.fieldMask &= ~GeoProperty::GLIdFieldMask;
-        }
+    if (dynamic_cast<GeoProperty*>(fc)) {
+        sentry.fieldMask &= ~GeoProperty::GLIdFieldMask;
+    }
 
-        if (dynamic_cast<GeoMultiPropertyData*>(fc)) {
-            sentry.fieldMask &= ~GeoMultiPropertyData::GLIdFieldMask;
-        }
+    if (dynamic_cast<GeoMultiPropertyData*>(fc)) {
+        sentry.fieldMask &= ~GeoMultiPropertyData::GLIdFieldMask;
+    }
 
-        if (dynamic_cast<RenderBuffer*>(fc)) {
-            sentry.fieldMask &= ~RenderBuffer::GLIdFieldMask;
-        }
+    if (dynamic_cast<RenderBuffer*>(fc)) {
+        sentry.fieldMask &= ~RenderBuffer::GLIdFieldMask;
+    }
 
-        if (dynamic_cast<FrameBufferObject*>(fc)) {
-            sentry.fieldMask &= ~FrameBufferObject::GLIdFieldMask;
-            sentry.fieldMask &= ~FrameBufferObject::MultiSampleGLIdFieldMask;
-        }
+    if (dynamic_cast<FrameBufferObject*>(fc)) {
+        sentry.fieldMask &= ~FrameBufferObject::GLIdFieldMask;
+        sentry.fieldMask &= ~FrameBufferObject::MultiSampleGLIdFieldMask;
+    }
 
-        if (dynamic_cast<TextureObjRefChunk*>(fc)) {
-            sentry.fieldMask &= ~TextureObjRefChunk::OsgGLIdFieldMask;
-            sentry.fieldMask &= ~TextureObjRefChunk::OglGLIdFieldMask;
-        }
+    if (dynamic_cast<TextureObjRefChunk*>(fc)) {
+        sentry.fieldMask &= ~TextureObjRefChunk::OsgGLIdFieldMask;
+        sentry.fieldMask &= ~TextureObjRefChunk::OglGLIdFieldMask;
+    }
 
-        if (dynamic_cast<UniformBufferObjStd140Chunk*>(fc)) {
-            sentry.fieldMask &= ~UniformBufferObjStd140Chunk::GLIdFieldMask;
-        }
+    if (dynamic_cast<UniformBufferObjStd140Chunk*>(fc)) {
+        sentry.fieldMask &= ~UniformBufferObjStd140Chunk::GLIdFieldMask;
+    }
 
-        if (dynamic_cast<ShaderStorageBufferObjStdLayoutChunk*>(fc)) {
-            sentry.fieldMask &= ~ShaderStorageBufferObjStdLayoutChunk::GLIdFieldMask;
-        }
+    if (dynamic_cast<ShaderStorageBufferObjStdLayoutChunk*>(fc)) {
+        sentry.fieldMask &= ~ShaderStorageBufferObjStdLayoutChunk::GLIdFieldMask;
+    }
 
-        if (dynamic_cast<TextureObjChunk*>(fc)) {
-            sentry.fieldMask &= ~TextureObjChunk::GLIdFieldMask;
-        }
+    if (dynamic_cast<TextureObjChunk*>(fc)) {
+        sentry.fieldMask &= ~TextureObjChunk::GLIdFieldMask;
+    }
 
-        if (dynamic_cast<UniformBufferObjChunk*>(fc)) {
-            sentry.fieldMask &= ~UniformBufferObjChunk::GLIdFieldMask;
-        }
+    if (dynamic_cast<UniformBufferObjChunk*>(fc)) {
+        sentry.fieldMask &= ~UniformBufferObjChunk::GLIdFieldMask;
+    }
 
-        if (dynamic_cast<ShaderStorageBufferObjChunk*>(fc)) {
-            sentry.fieldMask &= ~ShaderStorageBufferObjChunk::GLIdFieldMask;
-        }
+    if (dynamic_cast<ShaderStorageBufferObjChunk*>(fc)) {
+        sentry.fieldMask &= ~ShaderStorageBufferObjChunk::GLIdFieldMask;
+    }
 
-        if (dynamic_cast<ShaderExecutableChunk*>(fc)) {
-            sentry.fieldMask &= ~ShaderExecutableChunk::GLIdFieldMask;
-        }
+    if (dynamic_cast<ShaderExecutableChunk*>(fc)) {
+        sentry.fieldMask &= ~ShaderExecutableChunk::GLIdFieldMask;
+    }
 
-        if (dynamic_cast<SimpleSHLChunk*>(fc)) {
-            sentry.fieldMask &= ~SimpleSHLChunk::GLIdFieldMask;
-        }
+    if (dynamic_cast<SimpleSHLChunk*>(fc)) {
+        sentry.fieldMask &= ~SimpleSHLChunk::GLIdFieldMask;
+    }
 
-        if (dynamic_cast<ShaderProgram*>(fc)) {
-            sentry.fieldMask &= ~ShaderProgram::GLIdFieldMask;
-        }
+    if (dynamic_cast<ShaderProgram*>(fc)) {
+        sentry.fieldMask &= ~ShaderProgram::GLIdFieldMask;
+    }
 
-        if (dynamic_cast<ProgramChunk*>(fc)) {
-            sentry.fieldMask &= ~ProgramChunk::GLIdFieldMask;
-        }
+    if (dynamic_cast<ProgramChunk*>(fc)) {
+        sentry.fieldMask &= ~ProgramChunk::GLIdFieldMask;
     }
 }
 

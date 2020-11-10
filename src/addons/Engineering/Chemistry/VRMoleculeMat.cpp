@@ -6,21 +6,24 @@
 using namespace OSG;
 
 VRMoleculeMat::VRMoleculeMat() {
-    mat1 = VRMaterial::get("atoms");
+    mat1 = VRMaterial::create("atoms");
+    //mat1 = VRMaterial::get("atoms");
     mat1->setPointSize(40);
     mat1->setLit(false);
     mat1->setVertexShader(a_vp, "moleculesVS");
     mat1->setFragmentShader(a_fp, "moleculesFS");
     mat1->setGeometryShader(a_gp, "moleculesGS");
 
-    mat2 = VRMaterial::get("molecule_bonds");
+    mat2 = VRMaterial::create("molecule_bonds");
+    //mat2 = VRMaterial::get("molecule_bonds");
     mat2->setLineWidth(5);
     mat2->setLit(false);
     mat2->setVertexShader(b_vp, "moleculeBondsVS");
     mat2->setFragmentShader(b_fp, "moleculeBondsFS");
     mat2->setGeometryShader(b_gp, "moleculeBondsGS");
 
-    mat3 = VRMaterial::get("coords");
+    mat3 = VRMaterial::create("coords");
+    //mat3 = VRMaterial::get("coords");
     mat3->setLineWidth(2);
     mat3->setLit(false);
 }
@@ -34,8 +37,8 @@ VRMaterialPtr VRMoleculeMat::getBondsMaterial() { return mat2; }
 VRMaterialPtr VRMoleculeMat::getCoordsMaterial() { return mat3; }
 
 void VRMoleculeMat::apply(VRGeometryPtr atoms, VRGeometryPtr bonds) {
-    atoms->setMaterial(mat1);
-    bonds->setMaterial(mat2);
+    if (atoms) atoms->setMaterial(mat1);
+    if (bonds) bonds->setMaterial(mat2);
 }
 
 string VRMoleculeMat::a_fp =

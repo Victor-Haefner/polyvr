@@ -3,6 +3,7 @@
 
 #include "../VRNetworkingFwd.h"
 
+#include <string>
 #include <functional>
 
 class TCPServer;
@@ -14,6 +15,7 @@ class VRTCPServer {
     private:
         TCPServer* server = 0;
         int port = 0;
+        string publicIP = "";
 
     public:
         VRTCPServer();

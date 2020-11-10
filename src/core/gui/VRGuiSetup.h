@@ -73,7 +73,9 @@ class VRGuiSetup {
 
         void on_menu_add_window();
         void on_menu_add_viewport();
+#ifndef WITHOUT_VRPN
         void on_menu_add_vrpn_tracker();
+#endif
         template<class T> void on_menu_add_device();
         void on_menu_add_network_node();
         void on_menu_add_network_slave();
@@ -112,21 +114,29 @@ class VRGuiSetup {
         void on_view_mirror_pos_edit(Vec3d v);
         void on_view_mirror_norm_edit(Vec3d v);
 
+#ifndef WITHOUT_VRPN
         void on_vrpn_edit_port();
         void on_edit_VRPN_tracker_address();
         void on_toggle_vrpn();
+#endif
+#ifndef WITHOUT_ART
         void on_toggle_art();
         void on_art_edit_port();
         void on_art_edit_id();
         void on_art_edit_axis(Vec3d v);
         void on_art_edit_offset(Vec3d v);
+#endif
 
+#ifndef WITHOUT_ART
         void on_toggle_vrpn_verbose();
         void on_toggle_vrpn_test_server();
         void on_vrpn_trans_axis_edit(Vec3d v);
         void on_vrpn_rot_axis_edit(Vec3d v);
+#endif
 
+#ifndef WITHOUT_MTOUCH
         void on_mt_device_changed();
+#endif
         void on_leap_host_edited();
         void on_leap_startcalib_clicked();
         void on_leap_stopcalib_clicked();

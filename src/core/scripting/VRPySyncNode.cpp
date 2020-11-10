@@ -11,7 +11,7 @@ simpleVRPyType(SyncNode, New_VRObjects_ptr);
 PyMethodDef VRPySyncNode::methods[] = {
     //{"printCurrentChangeList", PyWrap(SyncNode, printCurrentChangeList, "prints the current ChangeList", void) },
     {"startInterface", PyWrap(SyncNode, startInterface, "updates this SyncNode", void, int) },
-    {"addRemote", PyWrap(SyncNode, addRemote, "adds a SyncRemote", void, string, int, string) },
+    {"addRemote", PyWrap(SyncNode, addRemote, "adds a SyncRemote, address and port", void, string, int) },
     {"broadcast", PyWrap(SyncNode, broadcast, "broadcasts a message to all SyncRemotes", void, string) },
     {"update", PyWrap(SyncNode, update, "update", void) },
     {"analyseSubGraph", PyWrap(SyncNode, analyseSubGraph, "Print subgraph to console", void) },
@@ -26,6 +26,9 @@ PyMethodDef VRPySyncNode::methods[] = {
     {"setAvatarBeacons", PyWrap(SyncNode, setAvatarBeacons, "Set own avatar beacons", void, VRTransformPtr, VRTransformPtr) },
     {"addRemoteAvatar", PyWrap(SyncNode, addRemoteAvatar, "Add avatar components", void, VRTransformPtr, VRTransformPtr) },
     {"getConnectionLink", PyWrap(SyncNode, getConnectionLink, "Get Connection Link", string) },
+    {"setCallback", PyWrap(SyncNode, setCallback, "Set syncNode callback", void, VRMessageCbPtr) },
+    {"getConnectionStatus", PyWrap(SyncNode, getConnectionStatus, "Set syncNode callback", string) },
+    {"getRemotes", PyWrap(SyncNode, getRemotes, "Get list with uris of remotes", vector<string>) },
     {NULL}  /* Sentinel */
 };
 

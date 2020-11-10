@@ -12,7 +12,7 @@
 
 class VRGuiContextMenu;
 struct _GtkImage;
-struct _GtkTable;
+struct _GtkWidget;
 struct _GtkCheckButton;
 union _GdkEvent;
 
@@ -31,7 +31,7 @@ class VRAppManager {
         VRSignalPtr on_scene_closing = 0;
         VRAppLauncherPtr current_demo = 0;
         map<string, VRAppPanelPtr> sections;
-        map<string, _GtkTable*> tables;
+        map<string, _GtkWidget*> tables;
         VRGuiContextMenu* menu;
         VRDeviceCbPtr updateCb;
         bool noLauncherScene = false;

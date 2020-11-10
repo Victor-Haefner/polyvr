@@ -39,7 +39,8 @@ template<> bool toValue(PyObject* o, double& v) { if (!PyNumber_Check(o)) return
 
 template<> bool toValue(PyObject* o, string& v) {
     if (!PyString_Check(o) && !PyUnicode_Check(o)) o = PyObject_Repr(o);
-    v = PyString_AsString(o);
+    auto vc = PyString_AsString(o);
+    v = vc?vc:"";
     return 1;
 }
 

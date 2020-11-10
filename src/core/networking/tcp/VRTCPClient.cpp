@@ -44,9 +44,13 @@ class TCPClient {
                 });
         }
 
+		void run() {
+			io_service.run();
+		}
+
     public:
         TCPClient() : worker(io_service), socket(io_service) {
-            service = thread([this](){ io_service.run(); });
+			service = thread([this]() { run(); });
         }
 
         ~TCPClient() { close(); }
@@ -73,6 +77,10 @@ class TCPClient {
             messages.push_back(msg);
             if (!write_in_progress) processQueue();
         }
+
+        bool connected() {
+            return socket.is_open();
+        }
 };
 
 
@@ -84,6 +92,7 @@ VRTCPClientPtr VRTCPClient::create() { return VRTCPClientPtr(new VRTCPClient());
 void VRTCPClient::connect(string host, int port) { client->connect(host, port); }
 void VRTCPClient::connect(string host) { client->connect(host); }
 void VRTCPClient::send(const string& message) { client->send(message); }
+bool VRTCPClient::connected() { return client->connected(); }
 
 
 

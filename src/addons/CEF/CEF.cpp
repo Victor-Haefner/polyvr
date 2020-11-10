@@ -34,15 +34,36 @@ CEF_handler::~CEF_handler() {
     cout << "~CEF_handler\n";
 }
 
+#ifdef _WIN32
+void CEF_handler::GetViewRect(CefRefPtr<CefBrowser> browser, CefRect& rect) {
+    rect = CefRect(0, 0, max(8,width), max(8,height)); // never give an empty rectangle!!
+}
+
+//Disable context menu
+//Define below two functions to essentially do nothing, overwriting defaults
+void CEF_handler::OnBeforeContextMenu( CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefContextMenuParams> params, CefRefPtr<CefMenuModel> model) {
+    //CEF_REQUIRE_UI_THREAD();
+    model->Clear();
+}
+
+bool CEF_handler::OnContextMenuCommand( CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefContextMenuParams> params, int command_id, EventFlags event_flags) {
+    //CEF_REQUIRE_UI_THREAD();
+    //MessageBox(browser->GetHost()->GetWindowHandle(), L"The requested action is not supported", L"Unsupported Action", MB_OK | MB_ICONINFORMATION);
+    return false;
+}
+#else
 bool CEF_handler::GetViewRect(CefRefPtr<CefBrowser> browser, CefRect& rect) {
-    rect = CefRect(0, 0, width, height);
+    rect = CefRect(0, 0, max(8, width), max(8, height)); // never give an empty rectangle!!
     return true;
 }
+#endif
 
 void CEF_handler::OnPaint(CefRefPtr<CefBrowser> browser, PaintElementType type, const RectList& dirtyRects, const void* buffer, int width, int height) {
     if (!image) return;
     auto img = image->getImage();
-    if (img) img->set(Image::OSG_BGRA_PF, width, height, 1, 0, 1, 0.0, (const uint8_t*)buffer, Image::OSG_UINT8_IMAGEDATA, true, 1);
+    if (img) {
+        img->set(Image::OSG_BGRA_PF, width, height, 1, 0, 1, 0.0, (const uint8_t*)buffer, Image::OSG_UINT8_IMAGEDATA, true, 1);
+    }
 }
 
 OSG::VRTexturePtr CEF_handler::getImage() { return image; }
@@ -62,6 +83,7 @@ CEF_client::~CEF_client() {
 
 CefRefPtr<CefRenderHandler> CEF_client::GetRenderHandler() { return handler; }
 CefRefPtr<CEF_handler> CEF_client::getHandler() { return handler; }
+CefRefPtr<CefContextMenuHandler> CEF_client::GetContextMenuHandler() { return handler; }
 
 CEF::CEF() {
     global_initiate();
@@ -93,16 +115,18 @@ void CEF::global_initiate() {
     cef_gl_init = true;
     CefSettings settings;
 
-#ifdef CEF18
+#ifdef _WIN32
+    string path = "/ressources/cefWin";
+#elif defined(CEF18)
     string path = "/ressources/cef18";
 #else
     string path = "/ressources/cef";
 #endif
 
-#ifndef _WIN32
-    string bsp = VRSceneManager::get()->getOriginalWorkdir() + path + "/CefSubProcess";
+#ifdef _WIN32
+    string bsp = VRSceneManager::get()->getOriginalWorkdir() + path + "/CefSubProcessWin.exe";
 #else
-    string bsp = VRSceneManager::get()->getOriginalWorkdir() + "/ressources/cef/CefSubProcessWin.exe";
+    string bsp = VRSceneManager::get()->getOriginalWorkdir() + path + "/CefSubProcess";
 #endif
 
     string ldp = VRSceneManager::get()->getOriginalWorkdir() + path + "/locales";
@@ -113,6 +137,10 @@ void CEF::global_initiate() {
     CefString(&settings.resources_dir_path).FromASCII(rdp.c_str());
     CefString(&settings.log_file).FromASCII(lfp.c_str());
     settings.no_sandbox = true;
+#ifdef _WIN32
+    settings.windowless_rendering_enabled = true;
+    //settings.log_severity = LOGSEVERITY_VERBOSE;
+#endif
 
     CefMainArgs args;
     CefInitialize(args, settings, 0, 0);
@@ -122,13 +150,22 @@ void CEF::initiate() {
     init = true;
     CefWindowInfo win;
     CefBrowserSettings browser_settings;
-#ifdef CEF18
+#ifdef _WIN32
+    win.SetAsWindowless(0);
+    win.shared_texture_enabled = false;
+#elif defined(CEF18)
     win.SetAsWindowless(0);
 #else
     win.SetAsWindowless(0, true);
 #endif
 
+#ifdef _WIN32
+    //requestContext = CefRequestContext::CreateContext(handler.get());
+    browser = CefBrowserHost::CreateBrowserSync(win, client, "www.google.de", browser_settings, 0, 0);
+    browser->GetHost()->WasResized();
+#else
     browser = CefBrowserHost::CreateBrowserSync(win, client, "www.google.de", browser_settings, 0);
+#endif
 }
 
 void CEF::setMaterial(VRMaterialPtr mat) {
@@ -154,7 +191,12 @@ void CEF::update() {
 void CEF::open(string site) {
     if (!init) initiate();
     this->site = site;
-    if (browser) browser->GetMainFrame()->LoadURL(site);
+    if (browser) {
+        browser->GetMainFrame()->LoadURL(site);
+#ifdef _WIN32
+        browser->GetHost()->WasResized();
+#endif
+    }
 }
 
 void CEF::resize() {
@@ -293,16 +335,29 @@ void CEF::keyboard(VRDeviceWeakPtr d) {
     if (!focus) return;
     if (dev->getType() != "keyboard") return;
     //bool down = dev->getState();
-    VRKeyboardPtr kb = dynamic_pointer_cast<VRKeyboard>(dev);
-    if (!kb) return;
-    auto event = kb->getGtkEvent();
+    VRKeyboardPtr keyboard = dynamic_pointer_cast<VRKeyboard>(dev);
+    if (!keyboard) return;
+    auto event = keyboard->getGtkEvent();
     if (!browser) return;
     auto host = browser->GetHost();
     if (!host) return;
 
+    if (keyboard->ctrlDown() && event->type == GDK_KEY_PRESS) {
+        if (event->keyval == 'a') { browser->GetFocusedFrame()->SelectAll(); ctrlUsed = true; }
+        if (event->keyval == 'c') { browser->GetFocusedFrame()->Copy(); ctrlUsed = true; }
+        if (event->keyval == 'v') { browser->GetFocusedFrame()->Paste(); ctrlUsed = true; }
+        return;
+    }
+
+    if (ctrlUsed && event->type == GDK_KEY_RELEASE) return; // ignore next key up event when ctrl was used for a shortcut above!
+
     CefKeyEvent kev;
     kev.modifiers = GetCefStateModifiers(event->state);
+#if GTK_MAJOR_VERSION == 2
     if (event->keyval >= GDK_KP_Space && event->keyval <= GDK_KP_9) kev.modifiers |= EVENTFLAG_IS_KEY_PAD;
+#else
+    if (event->keyval >= GDK_KEY_KP_Space && event->keyval <= GDK_KEY_KP_9) kev.modifiers |= EVENTFLAG_IS_KEY_PAD;
+#endif
     if (kev.modifiers & EVENTFLAG_ALT_DOWN) kev.is_system_key = true;
 
     KeyboardCode windows_key_code = GdkEventToWindowsKeyCode(event);

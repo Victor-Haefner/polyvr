@@ -1,13 +1,11 @@
 #include "VRGuiTreeView.h"
 #include "../VRGuiUtils.h"
+#include "../VRGuiBuilder.h"
 
-#include <gtk/gtktreeview.h>
-#include <gtk/gtktreemodel.h>
-#include <gtk/gtktreestore.h>
-#include <gtk/gtktreeselection.h>
+#include <gtk/gtk.h>
 
 VRGuiTreeView::VRGuiTreeView(string name, bool lstore) : VRGuiWidget(name), hasListStore(lstore) {
-    auto widget = getGUIBuilder()->get_widget(name);
+    auto widget = VRGuiBuilder::get()->get_widget(name);
     init(widget);
 }
 
@@ -20,7 +18,7 @@ VRGuiTreeView::~VRGuiTreeView() {
 }
 
 void VRGuiTreeView::init(_GtkWidget* widget) {
-    tree_view = (GtkTreeView*)widget;
+    tree_view = GTK_TREE_VIEW(widget);
     tree_model = (GtkTreeModel*)gtk_tree_view_get_model(tree_view);
     selection = new GtkTreeIter();
 }

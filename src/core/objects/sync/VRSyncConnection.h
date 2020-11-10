@@ -14,7 +14,9 @@ ptrFwd(VRSyncConnection);
 
 class VRSyncConnection {
     private:
-        map<UInt32, UInt32> mapping; // <remote container ID, local container ID>
+        // TODO: unused, currently handled in syncnode, needs to move here
+        map<UInt32, UInt32> fcMapping; // <remote container ID, local container ID>
+        map<UInt32, UInt32> typeMapping; // <remote type ID, local type ID>
         string host;
         int port;
         VRTCPClientPtr client;
@@ -27,6 +29,8 @@ class VRSyncConnection {
         void connect();
         bool send(string message);
         void startInterface(int port, VRSyncNodePtr snode);
+
+        string getStatus();
 
         static string base64_encode(unsigned char const* buf, UInt32 bufLen);
         static vector<unsigned char> base64_decode(string const& encoded_string);
