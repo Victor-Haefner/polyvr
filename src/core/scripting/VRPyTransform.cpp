@@ -99,7 +99,7 @@ PyMethodDef VRPyTransform::methods[] = {
     {"changedSince", PyWrapOpt(Transform, changedSince2, "Check if change occured since frame, flag includes frame", "1", bool, unsigned int, bool ) },
     {"setWorldDir", PyWrap(Transform, setWorldDir, "Set the direction in world coordinates", void, Vec3d ) },
     {"setWorldUp", PyWrap(Transform, setWorldUp, "Set the up vector in world coordinates", void, Vec3d ) },
-    {"applyTransformation", PyWrap(Transform, applyTransformation, "Apply a transformation to the mesh - applyTransformation( pose )", void, PosePtr ) },
+    {"applyTransformation", PyWrapOpt(Transform, applyTransformation, "Apply a transformation to the mesh - applyTransformation( pose )", "0", void, PosePtr ) },
 #ifndef WITHOUT_BULLET
     {"physicalize", PyWrapOpt(Transform, physicalize, "physicalize subtree - physicalize( bool physicalized , bool dynamic , str shape, float shape param )\n\tshape can be: ['Box', 'Sphere', 'Convex', 'Concave', 'ConvexDecomposed']", "0", void, bool, bool, string, float ) },
     {"setConvexDecompositionParameters", PyWrap(Transform, setConvexDecompositionParameters, "Set parameters for the convex decomposition, set before physicalize: compacityWeight (0.1), volumeWeight (0.0), NClusters (2), NVerticesPerCH (100), concavity (100), addExtraDistPoints (false), addNeighboursDistPoints (false), addFacesPoints (false) ", void, float, float, float, float, float, bool, bool, bool ) },

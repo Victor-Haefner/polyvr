@@ -141,6 +141,13 @@ GtkWidget* addScale(string ID, float min, float max, float step) {
     return p;
 }
 
+GtkWidget* addSpacer(int height) {
+    auto b = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+    auto l = gtk_separator_new(GTK_ORIENTATION_HORIZONTAL);
+    gtk_box_pack_start(GTK_BOX(b), l, false, true, height*0.5);
+    return b;
+}
+
 GtkWidget* addFixed(string ID) {
     auto p = gtk_fixed_new();
     VRGuiBuilder::get()->reg_widget(p, ID);
@@ -221,9 +228,13 @@ GtkWidget* addRadiobutton(string ID, string label, GtkWidget* groupWidget) {
     return n;
 }
 
-GtkWidget* addEntry(string ID) {
+GtkWidget* addEntry(string ID, int Nwidth = 0) {
     auto n = gtk_entry_new();
     VRGuiBuilder::get()->reg_widget(n, ID);
+    if (Nwidth > 0) {
+        gtk_entry_set_width_chars(GTK_ENTRY(n), Nwidth);
+        gtk_widget_set_halign(n, GTK_ALIGN_CENTER);
+    }
     return n;
 }
 
@@ -231,6 +242,17 @@ GtkWidget* addDrawingArea(string ID) {
     auto n = gtk_drawing_area_new();
     VRGuiBuilder::get()->reg_widget(n, ID);
     return n;
+}
+
+GtkWidget* addColorChooser(string ID) {
+    auto f = gtk_frame_new(0);
+    auto n = gtk_drawing_area_new();
+    VRGuiBuilder::get()->reg_widget(n, ID);
+    gtk_container_add(GTK_CONTAINER(f), n);
+    gtk_widget_set_size_request(n, 50, 30);
+    gtk_widget_set_halign(f, GTK_ALIGN_CENTER);
+    gtk_widget_set_valign(f, GTK_ALIGN_CENTER);
+    return f;
 }
 
 GtkWidget* addCombobox(string ID, string mID) {
@@ -507,20 +529,6 @@ void VRGuiBuilder::buildBaseUI() {
     gtk_box_pack_start(GTK_BOX(vbox4), checkbutton34, false, true, 0);
     gtk_box_pack_start(GTK_BOX(vbox4), checkbutton36, false, true, 0);
     gtk_window_set_transient_for(GTK_WINDOW(advanced_start), GTK_WINDOW(window1));
-
-    /* ---------- new project dialog ---------------------- */ // deprecated
-    /*auto NewProject = addDialog("NewProject");
-    auto dialog_vbox3 = gtk_dialog_get_content_area(GTK_DIALOG(NewProject));
-    auto dialog_action_area3 = gtk_dialog_get_action_area(GTK_DIALOG(NewProject));
-    auto label52 = addLabel("label52", "New Poject:");
-    auto entry49 = addEntry("entry49");
-    auto button14 = addButton("button14", "Cancel");
-    auto button15 = addButton("button15", "Start");
-    gtk_box_pack_start(GTK_BOX(dialog_vbox3), label52, true, true, 0);
-    gtk_box_pack_start(GTK_BOX(dialog_vbox3), entry49, true, true, 0);
-    gtk_box_pack_start(GTK_BOX(dialog_action_area3), button14, false, true, 0);
-    gtk_box_pack_start(GTK_BOX(dialog_action_area3), button15, false, true, 0);
-    gtk_window_set_transient_for(GTK_WINDOW(NewProject), GTK_WINDOW(window1));*/
 
     cout << " build recorder dialog" << endl;
     /* ---------- recorder ---------------------- */  // TODO: to test!
@@ -1301,19 +1309,19 @@ void VRGuiBuilder::buildBaseUI() {
 
     /* ---------- VR Scene - general ---------------------- */
     auto label87 = addLabel("label87", "Background:");
-    auto bg_solid = addDrawingArea("bg_solid");
+    auto bg_solid = addColorChooser("bg_solid");
     auto radiobutton3 = addRadiobutton("radiobutton3", "Solid", 0);
     auto radiobutton4 = addRadiobutton("radiobutton4", "Image", radiobutton3);
     auto radiobutton5 = addRadiobutton("radiobutton5", "Skybox", radiobutton3);
     auto radiobutton18 = addRadiobutton("radiobutton18", "Sky", radiobutton3);
     auto label88 = addLabel("label88", "Path:");
     auto entry42 = addEntry("entry42");
-    auto entry14 = addEntry("entry14");
+    auto entry14 = addEntry("entry14", 4);
     auto button18 = addImgButton("button18", "gtk-directory");
-    auto label_2 = addLabel("label_2", "Physics:");
+    auto spacer = addSpacer(20);
 
-    gtk_grid_attach(GTK_GRID(table30), label87, 0,0,2,1);
-    gtk_grid_attach(GTK_GRID(table30), bg_solid, 2,0,2,1);
+    gtk_grid_attach(GTK_GRID(table30), label87, 0,0,1,1);
+    gtk_grid_attach(GTK_GRID(table30), bg_solid, 1,0,1,1);
     gtk_grid_attach(GTK_GRID(table30), radiobutton3, 0,1,1,1);
     gtk_grid_attach(GTK_GRID(table30), radiobutton4, 1,1,1,1);
     gtk_grid_attach(GTK_GRID(table30), radiobutton5, 2,1,1,1);
@@ -1322,18 +1330,19 @@ void VRGuiBuilder::buildBaseUI() {
     gtk_grid_attach(GTK_GRID(table30), entry42, 1,2,1,1);
     gtk_grid_attach(GTK_GRID(table30), entry14, 2,2,1,1);
     gtk_grid_attach(GTK_GRID(table30), button18, 3,2,1,1);
-    gtk_grid_attach(GTK_GRID(table30), label_2, 0,3,4,1);
-    gtk_widget_set_size_request(bg_solid, 50, 30);
+    gtk_grid_attach(GTK_GRID(table30), spacer, 0,3,4,1);
 
+    auto label_2 = addLabel("label_2", "Physics:");
     auto checkbutton_1 = addCheckbutton("checkbutton_1", "Gravity:");
-    auto entry43 = addEntry("entry43");
-    auto entry47 = addEntry("entry47");
-    auto entry58 = addEntry("entry58");
+    auto entry43 = addEntry("entry43", 4);
+    auto entry47 = addEntry("entry47", 4);
+    auto entry58 = addEntry("entry58", 4);
+    auto spacer2 = addSpacer(20);
     auto label_01 = addLabel("label_01", "Rendering:");
-    auto checkbutton_01 = addCheckbutton("checkbutton_01", "Frustum culling:");
-    auto checkbutton_02 = addCheckbutton("checkbutton_02", "Occlusion culling:");
-    auto checkbutton_2 = addCheckbutton("checkbutton_2", "Two sided:");
-    auto checkbutton_3 = addCheckbutton("checkbutton_3", "Deferred rendering:");
+    auto checkbutton_01 = addCheckbutton("checkbutton_01", "Frustum culling");
+    auto checkbutton_02 = addCheckbutton("checkbutton_02", "Occlusion culling");
+    auto checkbutton_2 = addCheckbutton("checkbutton_2", "Two sided");
+    auto checkbutton_3 = addCheckbutton("checkbutton_3", "Deferred rendering");
     auto hbuttonbox7 = addGrid("hbuttonbox7");
     auto radiobutton13 = addRadiobutton("radiobutton13", "rendered", 0);
     auto radiobutton14 = addRadiobutton("radiobutton14", "positions", radiobutton13);
@@ -1341,16 +1350,18 @@ void VRGuiBuilder::buildBaseUI() {
     auto radiobutton16 = addRadiobutton("radiobutton16", "diffuse", radiobutton13);
     auto radiobutton17 = addRadiobutton("radiobutton17", "ambient", radiobutton13);
 
-    gtk_grid_attach(GTK_GRID(table30), checkbutton_1, 0,4,1,1);
-    gtk_grid_attach(GTK_GRID(table30), entry43, 1,4,1,1);
-    gtk_grid_attach(GTK_GRID(table30), entry47, 2,4,1,1);
-    gtk_grid_attach(GTK_GRID(table30), entry58, 3,4,1,1);
-    gtk_grid_attach(GTK_GRID(table30), label_01, 0,6,4,1);
-    gtk_grid_attach(GTK_GRID(table30), checkbutton_01, 0,7,2,1);
-    gtk_grid_attach(GTK_GRID(table30), checkbutton_02, 2,7,2,1);
-    gtk_grid_attach(GTK_GRID(table30), checkbutton_2, 0,8,2,1);
-    gtk_grid_attach(GTK_GRID(table30), checkbutton_3, 2,8,2,1);
-    gtk_grid_attach(GTK_GRID(table30), hbuttonbox7, 0,9,4,1);
+    gtk_grid_attach(GTK_GRID(table30), label_2, 0,4,1,1);
+    gtk_grid_attach(GTK_GRID(table30), checkbutton_1, 0,5,1,1);
+    gtk_grid_attach(GTK_GRID(table30), entry43, 1,5,1,1);
+    gtk_grid_attach(GTK_GRID(table30), entry47, 2,5,1,1);
+    gtk_grid_attach(GTK_GRID(table30), entry58, 3,5,1,1);
+    gtk_grid_attach(GTK_GRID(table30), spacer2, 0,6,4,1);
+    gtk_grid_attach(GTK_GRID(table30), label_01, 0,7,1,1);
+    gtk_grid_attach(GTK_GRID(table30), checkbutton_01, 0,8,2,1);
+    gtk_grid_attach(GTK_GRID(table30), checkbutton_02, 2,8,2,1);
+    gtk_grid_attach(GTK_GRID(table30), checkbutton_2, 0,9,2,1);
+    gtk_grid_attach(GTK_GRID(table30), checkbutton_3, 2,9,2,1);
+    gtk_grid_attach(GTK_GRID(table30), hbuttonbox7, 0,10,4,1);
     gtk_grid_attach(GTK_GRID(hbuttonbox7), radiobutton13, 0,0,1,1);
     gtk_grid_attach(GTK_GRID(hbuttonbox7), radiobutton14, 1,0,1,1);
     gtk_grid_attach(GTK_GRID(hbuttonbox7), radiobutton15, 2,0,1,1);
@@ -1368,22 +1379,24 @@ void VRGuiBuilder::buildBaseUI() {
     auto checkbutton_7 = addCheckbutton("checkbutton_7", "Marker");
     auto checkbutton_6 = addCheckbutton("checkbutton_6", "HMD distortion");
     auto checkbutton_8 = addCheckbutton("checkbutton_8", "FXAA");
+    auto spacer3 = addSpacer(20);
     auto label_1 = addLabel("label_1", "Export OSG:");
     auto button22 = addButton("button22", "dump");
 
-    gtk_grid_attach(GTK_GRID(table30), checkbutton_4, 0,10,4,1);
-    gtk_grid_attach(GTK_GRID(table30), label121, 0,11,2,1);
-    gtk_grid_attach(GTK_GRID(table30), hscale1, 2,11,2,1);
-    gtk_grid_attach(GTK_GRID(table30), label122, 0,12,2,1);
-    gtk_grid_attach(GTK_GRID(table30), hscale2, 2,12,2,1);
-    gtk_grid_attach(GTK_GRID(table30), label123, 0,13,2,1);
-    gtk_grid_attach(GTK_GRID(table30), hscale3, 2,13,2,1);
-    gtk_grid_attach(GTK_GRID(table30), checkbutton_5, 0,14,2,1);
-    gtk_grid_attach(GTK_GRID(table30), checkbutton_7, 2,14,2,1);
-    gtk_grid_attach(GTK_GRID(table30), checkbutton_6, 0,15,2,1);
-    gtk_grid_attach(GTK_GRID(table30), checkbutton_8, 2,15,2,1);
-    gtk_grid_attach(GTK_GRID(table30), label_1, 0,16,2,1);
-    gtk_grid_attach(GTK_GRID(table30), button22, 2,16,2,1);
+    gtk_grid_attach(GTK_GRID(table30), checkbutton_4, 0,11,4,1);
+    gtk_grid_attach(GTK_GRID(table30), label121, 0,12,2,1);
+    gtk_grid_attach(GTK_GRID(table30), hscale1, 2,12,2,1);
+    gtk_grid_attach(GTK_GRID(table30), label122, 0,13,2,1);
+    gtk_grid_attach(GTK_GRID(table30), hscale2, 2,13,2,1);
+    gtk_grid_attach(GTK_GRID(table30), label123, 0,14,2,1);
+    gtk_grid_attach(GTK_GRID(table30), hscale3, 2,14,2,1);
+    gtk_grid_attach(GTK_GRID(table30), checkbutton_5, 0,15,2,1);
+    gtk_grid_attach(GTK_GRID(table30), checkbutton_7, 2,15,2,1);
+    gtk_grid_attach(GTK_GRID(table30), checkbutton_6, 0,16,2,1);
+    gtk_grid_attach(GTK_GRID(table30), checkbutton_8, 2,16,2,1);
+    gtk_grid_attach(GTK_GRID(table30), spacer3, 0,17,4,1);
+    gtk_grid_attach(GTK_GRID(table30), label_1, 0,18,2,1);
+    gtk_grid_attach(GTK_GRID(table30), button22, 2,18,2,1);
 
     /* ---------- VR Scene - scenegraph ---------------------- */
     auto hpaned3 = addPaned("hpaned3", GTK_ORIENTATION_HORIZONTAL);
@@ -1563,11 +1576,11 @@ void VRGuiBuilder::buildBaseUI() {
     auto label60 = addLabel("label60", "matName");
     auto checkbutton3 = addCheckbutton("checkbutton3", "Lit");
     auto label67 = addLabel("label67", "Diffuse:");
-    auto mat_diffuse = addDrawingArea("mat_diffuse");
+    auto mat_diffuse = addColorChooser("mat_diffuse");
     auto label71 = addLabel("label71", "Specular:");
-    auto mat_specular = addDrawingArea("mat_specular");
+    auto mat_specular = addColorChooser("mat_specular");
     auto label72 = addLabel("label72", "Ambient:");
-    auto mat_ambient = addDrawingArea("mat_ambient");
+    auto mat_ambient = addColorChooser("mat_ambient");
     auto label58 = addLabel("label58", "Pointsize:");
     auto entry35 = addEntry("entry35");
     auto checkbutton5 = addCheckbutton("checkbutton5", "Texture:");
@@ -1577,9 +1590,6 @@ void VRGuiBuilder::buildBaseUI() {
     auto label166 = addLabel("label166", "Channels:");
     auto label167 = addLabel("label167", " ");
 
-    gtk_widget_set_size_request(mat_diffuse, 50, 30);
-    gtk_widget_set_size_request(mat_specular, 50, 30);
-    gtk_widget_set_size_request(mat_ambient, 50, 30);
     gtk_grid_attach(GTK_GRID(table23), label59, 0,0,1,1);
     gtk_grid_attach(GTK_GRID(table23), label60, 1,0,1,1);
     gtk_grid_attach(GTK_GRID(table23), checkbutton3, 2,0,1,1);
@@ -1659,12 +1669,9 @@ void VRGuiBuilder::buildBaseUI() {
     auto label101 = addLabel("label101", "Light Colors (D,A,S):");
 
     auto hbox9 = addBox("hbox9", GTK_ORIENTATION_HORIZONTAL);
-    auto light_diff = addDrawingArea("light_diff");
-    auto light_amb = addDrawingArea("light_amb");
-    auto light_spec = addDrawingArea("light_spec");
-    gtk_widget_set_size_request(light_diff, 50, 30);
-    gtk_widget_set_size_request(light_amb, 50, 30);
-    gtk_widget_set_size_request(light_spec, 50, 30);
+    auto light_diff = addColorChooser("light_diff");
+    auto light_amb = addColorChooser("light_amb");
+    auto light_spec = addColorChooser("light_spec");
     gtk_box_pack_start(GTK_BOX(hbox9), light_diff, false, true, 0);
     gtk_box_pack_start(GTK_BOX(hbox9), light_amb, false, true, 0);
     gtk_box_pack_start(GTK_BOX(hbox9), light_spec, false, true, 0);
@@ -1672,8 +1679,7 @@ void VRGuiBuilder::buildBaseUI() {
     auto checkbutton32 = addCheckbutton("checkbutton32", "shadow");
     auto combobox22 = addCombobox("combobox22", "shadow_types");
     auto label95 = addLabel("label95", "Shadow color:");
-    auto shadow_col = addDrawingArea("shadow_col");
-    gtk_widget_set_size_request(shadow_col, 50, 30);
+    auto shadow_col = addColorChooser("shadow_col");
     auto checkbutton2 = addCheckbutton("checkbutton2", "shadow volume:");
     auto entry36 = addEntry("entry36");
     gtk_entry_set_text(GTK_ENTRY(entry36), "10");

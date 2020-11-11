@@ -323,6 +323,7 @@ template<> int toValue(stringstream& ss, Pose& po) {
 }
 
 template<> int toValue(stringstream& ss, PosePtr& po) {
+    if (ss.str() == "0") return true;
     Vec3d p,d,u;
     toValue(ss, p);
     toValue(ss, d);

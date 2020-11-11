@@ -61,7 +61,7 @@ template<typename T> int toValue(stringstream& s, T& t);
 template<typename T> int toValue(stringstream& s, vector<std::shared_ptr<T>>& t) { return true; }
 
 template<typename T> int toValue(stringstream& s, std::shared_ptr<T>& t) {
-    if (s.str() != "0") cout << "Warning in toValue<shared_ptr<T>> (toString.h): ignore data '" << s.str() << "'" << endl;
+    if (s.str() != "0") { cout << "Warning in toValue<shared_ptr<T>> (toString.h): ignore data '" << s.str() << "'" << endl; return false; }
     t = 0;
     return true;
 }
@@ -81,6 +81,7 @@ template<typename T> int toValue(string s, vector<T>& t) {
     return true;
 }
 
+template<typename T> int toValue(string s, vector<std::shared_ptr<T>>& t) { return true; }
 template<typename T> int toValue(string s, vector<vector<T>>& t) { return true; } // not implemented
 template<typename T, typename U> int toValue(string s, map<T, U>& t) { return true; } // not implemented
 template<class T>    T   toValue(string s) { T t; toValue(s,t); return t; }
