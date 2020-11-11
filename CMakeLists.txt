@@ -466,6 +466,7 @@ target_sources(polyvr PRIVATE src/core/setup/windows/VRGlutWindow.cpp)
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
 target_sources(polyvr PRIVATE src/core/setup/windows/VRGtkWindow.cpp) # needs GTK
 target_sources(polyvr PRIVATE src/core/setup/windows/VRMultiWindow.cpp)
+target_sources(polyvr PRIVATE src/core/setup/windows/VRHeadMountedDisplay.cpp)
 endif()
 target_sources(polyvr PRIVATE src/core/setup/windows/VRViewManager.cpp)
 target_sources(polyvr PRIVATE src/core/setup/VRSetupManager.cpp)

@@ -380,38 +380,7 @@ CMainApplication::CMainApplication(int argc, char* argv[])
 	, m_bShowCubes(true)
 {
 	app = this;
-
-	for (int i = 1; i < argc; i++)
-	{
-		if (!stricmp(argv[i], "-gldebug"))
-		{
-			m_bDebugOpenGL = true;
-		}
-		else if (!stricmp(argv[i], "-verbose"))
-		{
-			m_bVerbose = true;
-		}
-		else if (!stricmp(argv[i], "-novblank"))
-		{
-			m_bVblank = false;
-		}
-		else if (!stricmp(argv[i], "-noglfinishhack"))
-		{
-			m_bGlFinishHack = false;
-		}
-		else if (!stricmp(argv[i], "-noprintf"))
-		{
-			g_bPrintf = false;
-		}
-		else if (!stricmp(argv[i], "-cubevolume") && (argc > i + 1) && (*argv[i + 1] != '-'))
-		{
-			m_iSceneVolumeInit = atoi(argv[i + 1]);
-			i++;
-		}
-	}
-	// other initialization tasks are done in BInit
 	memset(m_rDevClassChar, 0, sizeof(m_rDevClassChar));
-
 	glutInit(&argc, argv);
 };
 
@@ -1298,7 +1267,7 @@ bool CMainApplication::SetupStereoRenderTargets() {
 }
 
 void CMainApplication::RenderStereoTargets() {
-	glClearColor(0.0f, 0.0f, 1.0f, 1.0f);
+	glClearColor(0.4f, 0.8f, 1.0f, 1.0f);
 	/*glEnable(GL_MULTISAMPLE);
 
 	// Left Eye
@@ -1312,9 +1281,7 @@ void CMainApplication::RenderStereoTargets() {
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, leftEyeDesc.m_nRenderFramebufferId);
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, leftEyeDesc.m_nResolveFramebufferId);
 
-	glBlitFramebuffer(0, 0, m_nRenderWidth, m_nRenderHeight, 0, 0, m_nRenderWidth, m_nRenderHeight,
-		GL_COLOR_BUFFER_BIT,
-		GL_LINEAR);
+	glBlitFramebuffer(0, 0, m_nRenderWidth, m_nRenderHeight, 0, 0, m_nRenderWidth, m_nRenderHeight, GL_COLOR_BUFFER_BIT, GL_LINEAR);
 
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
@@ -1332,9 +1299,7 @@ void CMainApplication::RenderStereoTargets() {
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, rightEyeDesc.m_nRenderFramebufferId);
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, rightEyeDesc.m_nResolveFramebufferId);
 
-	glBlitFramebuffer(0, 0, m_nRenderWidth, m_nRenderHeight, 0, 0, m_nRenderWidth, m_nRenderHeight,
-		GL_COLOR_BUFFER_BIT,
-		GL_LINEAR);
+	glBlitFramebuffer(0, 0, m_nRenderWidth, m_nRenderHeight, 0, 0, m_nRenderWidth, m_nRenderHeight, GL_COLOR_BUFFER_BIT, GL_LINEAR);
 
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);*/
@@ -1415,8 +1380,7 @@ void CMainApplication::RenderCompanionWindow() {
 }
 
 Matrix CMainApplication::GetHMDMatrixProjectionEye(vr::Hmd_Eye nEye) {
-	if (!m_pHMD)
-		return Matrix();
+	if (!m_pHMD) return Matrix();
 
 	vr::HmdMatrix44_t mat = m_pHMD->GetProjectionMatrix(nEye, m_fNearClip, m_fFarClip);
 
@@ -1429,8 +1393,7 @@ Matrix CMainApplication::GetHMDMatrixProjectionEye(vr::Hmd_Eye nEye) {
 }
 
 Matrix CMainApplication::GetHMDMatrixPoseEye(vr::Hmd_Eye nEye) {
-	if (!m_pHMD)
-		return Matrix();
+	if (!m_pHMD) return Matrix();
 
 	vr::HmdMatrix34_t matEyeRight = m_pHMD->GetEyeToHeadTransform(nEye);
 	Matrix matrixObj(
