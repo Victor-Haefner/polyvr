@@ -1,8 +1,10 @@
 
-//#include <GL/glew.h>
+#include <OpenSG/OSGConfig.h>
+#include <OpenSG/OSGGL.h>
+#include <OpenSG/OSGGLEXT.h>
+#include <OpenSG/OSGGLFuncProtos.h>
+
 #include <GL/glut.h>
-#include <GL/gl.h>
-#include <GL/glu.h>
 #include <stdio.h>
 #include <string>
 #include <vector>
@@ -40,6 +42,14 @@ void ThreadSleep(unsigned long nMilliseconds)
 #endif
 }
 
+void checkGLError(string point) {
+	cout << "checkGLError: " << point << endl;
+	GLenum err;
+	while ((err = glGetError()) != GL_NO_ERROR) {
+		std::cout << err << endl;
+	}
+}
+
 void DumpDevice(const DISPLAY_DEVICE& dd, size_t nSpaceCount) {
 	printf("%*sDevice Name: %s\n", nSpaceCount, "", dd.DeviceName);
 	printf("%*sDevice String: %s\n", nSpaceCount, "", dd.DeviceString);
@@ -67,25 +77,15 @@ void listSystemDevices() {
 	cout << endl;
 }
 
-class CGLRenderModel
-{
-public:
-	CGLRenderModel(const std::string& sRenderModelName);
-	~CGLRenderModel();
+// ------------------------------ texture
+#define RED 255,0,0,255
+#define GRE 0,255,0,255
+#define BLU 0,0,255,255
 
-	bool BInit(const vr::RenderModel_t& vrModel, const vr::RenderModel_TextureMap_t& vrDiffuseTexture);
-	void Cleanup();
-	void Draw();
-	const std::string& GetName() const { return m_sModelName; }
-
-private:
-	GLuint m_glVertBuffer;
-	GLuint m_glIndexBuffer;
-	GLuint m_glVertArray;
-	GLuint m_glTexture;
-	GLsizei m_unVertexCount;
-	std::string m_sModelName;
-};
+int texSize = 16;
+vector<unsigned char> image;
+unsigned int textureID;
+// ------------------------------
 
 static bool g_bPrintf = true;
 
@@ -108,16 +108,13 @@ public:
 	void ProcessVREvent(const vr::VREvent_t& event);
 	void RenderFrame();
 
-	bool SetupTexturemaps();
+	void SetupTexturemaps();
 
 	void SetupScene();
 	void AddCubeToScene(Matrix mat, std::vector<float>& vertdata);
 	void AddCubeVertex(float fl0, float fl1, float fl2, float fl3, float fl4, std::vector<float>& vertdata);
 
-	void RenderControllerAxes();
-
 	bool SetupStereoRenderTargets();
-	void SetupCompanionWindow();
 	void SetupCameras();
 
 	void RenderStereoTargets();
@@ -133,8 +130,6 @@ public:
 
 	GLuint CompileGLShader(const char* pchShaderName, const char* pchVertexShader, const char* pchFragmentShader);
 	bool CreateAllShaders();
-
-	CGLRenderModel* FindOrLoadRenderModel(const char* pchRenderModelName);
 
 private:
 	bool m_bDebugOpenGL;
@@ -154,7 +149,6 @@ private:
 		vr::VRActionHandle_t m_actionPose = vr::k_ulInvalidActionHandle;
 		vr::VRActionHandle_t m_actionHaptic = vr::k_ulInvalidActionHandle;
 		Matrix m_rmat4Pose;
-		CGLRenderModel* m_pRenderModel = nullptr;
 		std::string m_sRenderModelName;
 		bool m_bShowController;
 	};
@@ -255,8 +249,6 @@ private: // OpenGL bookkeeping
 	UInt32 m_nRenderWidth;
 	UInt32 m_nRenderHeight;
 
-	std::vector< CGLRenderModel* > m_vecRenderModels;
-
 	vr::VRActionHandle_t m_actionHideCubes = vr::k_ulInvalidActionHandle;
 	vr::VRActionHandle_t m_actionHideThisController = vr::k_ulInvalidActionHandle;
 	vr::VRActionHandle_t m_actionTriggerHaptic = vr::k_ulInvalidActionHandle;
@@ -353,6 +345,7 @@ CMainApplication* app = 0;
 
 void display() {
 	if (app) app->RenderFrame();
+	glutPostRedisplay();
 }
 
 //-----------------------------------------------------------------------------
@@ -566,28 +559,12 @@ void APIENTRY DebugCallback(GLenum source, GLenum type, GLuint id, GLenum severi
 //          If failure occurred in a module other than shaders, the function
 //          may return true or throw an error. 
 //-----------------------------------------------------------------------------
-bool CMainApplication::BInitGL()
-{
-	/*if (m_bDebugOpenGL)
-	{
-		glDebugMessageCallback((GLDEBUGPROC)DebugCallback, nullptr);
-		glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
-		glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
-	}*/
-
-	cout << "  create shaders" << endl;
-	//if (!CreateAllShaders()) return false;
-
-	cout << "  setup textures" << endl;
-	//SetupTexturemaps();
+bool CMainApplication::BInitGL() {
+	SetupTexturemaps();
 	cout << "  setup scene" << endl;
 	//SetupScene();
-	cout << "  setup cameras" << endl;
 	SetupCameras();
-	cout << "  setup render targets" << endl;
 	SetupStereoRenderTargets();
-	cout << "  setup companion window" << endl;
-	SetupCompanionWindow();
 
 	return true;
 }
@@ -621,12 +598,6 @@ void CMainApplication::Shutdown()
 		vr::VR_Shutdown();
 		m_pHMD = NULL;
 	}
-
-	for (std::vector< CGLRenderModel* >::iterator i = m_vecRenderModels.begin(); i != m_vecRenderModels.end(); i++)
-	{
-		delete (*i);
-	}
-	m_vecRenderModels.clear();
 
 	/*if (m_pContext) {
 		if (m_bDebugOpenGL)
@@ -766,32 +737,6 @@ bool CMainApplication::HandleInput() {
 		}
 	}
 
-	for (EHand eHand = Left; eHand <= Right; ((int&)eHand)++)
-	{
-		vr::InputPoseActionData_t poseData;
-		if (vr::VRInput()->GetPoseActionDataForNextFrame(m_rHand[eHand].m_actionPose, vr::TrackingUniverseStanding, &poseData, sizeof(poseData), vr::k_ulInvalidInputValueHandle) != vr::VRInputError_None
-			|| !poseData.bActive || !poseData.pose.bPoseIsValid)
-		{
-			m_rHand[eHand].m_bShowController = false;
-		}
-		else
-		{
-			m_rHand[eHand].m_rmat4Pose = ConvertSteamVRMatrixToMatrix(poseData.pose.mDeviceToAbsoluteTracking);
-
-			vr::InputOriginInfo_t originInfo;
-			if (vr::VRInput()->GetOriginTrackedDeviceInfo(poseData.activeOrigin, &originInfo, sizeof(originInfo)) == vr::VRInputError_None
-				&& originInfo.trackedDeviceIndex != vr::k_unTrackedDeviceIndexInvalid)
-			{
-				std::string sRenderModelName = GetTrackedDeviceString(originInfo.trackedDeviceIndex, vr::Prop_RenderModelName_String);
-				if (sRenderModelName != m_rHand[eHand].m_sRenderModelName)
-				{
-					m_rHand[eHand].m_pRenderModel = FindOrLoadRenderModel(sRenderModelName.c_str());
-					m_rHand[eHand].m_sRenderModelName = sRenderModelName;
-				}
-			}
-		}
-	}
-
 	return bRet;
 }
 
@@ -800,6 +745,7 @@ bool CMainApplication::HandleInput() {
 //-----------------------------------------------------------------------------
 
 void CMainApplication::RunMainLoop() {
+	cout << " start glut main loop" << endl;
 	glutMainLoop();
 
 	/*bool bQuit = false;
@@ -838,36 +784,38 @@ void CMainApplication::ProcessVREvent(const vr::VREvent_t& event)
 	}
 }
 
-
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
-void CMainApplication::RenderFrame()
-{
+void CMainApplication::RenderFrame() {
+	//cout << "render frame" << endl;
 	// for now as fast as possible
-	if (m_pHMD)
-	{
-		RenderControllerAxes();
+	if (m_pHMD) {
 		RenderStereoTargets();
 		RenderCompanionWindow();
 
-		vr::Texture_t leftEyeTexture = { (void*)(uintptr_t)leftEyeDesc.m_nResolveTextureId, vr::TextureType_OpenGL, vr::ColorSpace_Gamma };
+		//cout << " submit to compositor left" << endl;
+		vr::Texture_t leftEyeTexture = { (void*)(uintptr_t)textureID, vr::TextureType_OpenGL, vr::ColorSpace_Gamma };
+		//vr::Texture_t leftEyeTexture = { (void*)(uintptr_t)leftEyeDesc.m_nResolveTextureId, vr::TextureType_OpenGL, vr::ColorSpace_Gamma };
 		vr::VRCompositor()->Submit(vr::Eye_Left, &leftEyeTexture);
-		vr::Texture_t rightEyeTexture = { (void*)(uintptr_t)rightEyeDesc.m_nResolveTextureId, vr::TextureType_OpenGL, vr::ColorSpace_Gamma };
+		//cout << " submit to compositor right" << endl;
+		vr::Texture_t rightEyeTexture = { (void*)(uintptr_t)textureID, vr::TextureType_OpenGL, vr::ColorSpace_Gamma };
+		//vr::Texture_t rightEyeTexture = { (void*)(uintptr_t)rightEyeDesc.m_nResolveTextureId, vr::TextureType_OpenGL, vr::ColorSpace_Gamma };
 		vr::VRCompositor()->Submit(vr::Eye_Right, &rightEyeTexture);
 	}
 
-	if (m_bVblank && m_bGlFinishHack)
-	{
+	if (m_bVblank && m_bGlFinishHack) {
 		//$ HACKHACK. From gpuview profiling, it looks like there is a bug where two renders and a present
 		// happen right before and after the vsync causing all kinds of jittering issues. This glFinish()
 		// appears to clear that up. Temporary fix while I try to get nvidia to investigate this problem.
 		// 1/29/2014 mikesart
+		//cout << " glFinish" << endl;
 		glFinish();
 	}
 
 	// SwapWindow
 	{
+		//cout << " swap buffer" << endl;
 		glutSwapBuffers();
 	}
 
@@ -875,6 +823,7 @@ void CMainApplication::RenderFrame()
 	{
 		// We want to make sure the glFinish waits for the entire present to complete, not just the submission
 		// of the command. So, we do a clear here right here so the glFinish will wait fully for the swap.
+		//cout << " glClear" << endl;
 		glClearColor(1, 0, 0, 1);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	}
@@ -882,7 +831,9 @@ void CMainApplication::RenderFrame()
 	// Flush and wait for swap.
 	if (m_bVblank)
 	{
+		//cout << " glFlush" << endl;
 		glFlush();
+		//cout << " glFinish" << endl;
 		glFinish();
 	}
 
@@ -895,7 +846,9 @@ void CMainApplication::RenderFrame()
 		dprintf("PoseCount:%d(%s) Controllers:%d\n", m_iValidPoseCount, m_strPoseClasses.c_str(), m_iTrackedControllerCount);
 	}
 
+	//cout << " update HMD matrix" << endl;
 	UpdateHMDMatrixPose();
+	//cout << " render frame done" << endl;
 }
 
 
@@ -1118,37 +1071,38 @@ bool CMainApplication::CreateAllShaders()
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
-bool CMainApplication::SetupTexturemaps() {
-	/*std::string strFullPath = absolute("cube_texture.png");
+void CMainApplication::SetupTexturemaps() {
+	cout << "  setup textures" << endl;
 
-	std::vector<unsigned char> imageRGBA;
-	unsigned nImageWidth, nImageHeight;
-	unsigned nError = lodepng::decode(imageRGBA, nImageWidth, nImageHeight, strFullPath.c_str());
+	glGenTextures(1, &textureID);
+	glBindTexture(GL_TEXTURE_2D, textureID);
 
-	if (nError != 0)
-		return false;
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-	glGenTextures(1, &m_iTexture);
-	glBindTexture(GL_TEXTURE_2D, m_iTexture);
+	image = {
+		BLU, GRE, RED, GRE,BLU, GRE, RED, GRE,BLU, GRE, RED, GRE,BLU, GRE, RED, GRE,
+		GRE, RED, GRE, RED,GRE, RED, GRE, RED,GRE, RED, GRE, RED,GRE, RED, GRE, RED,
+		RED, GRE, RED, GRE,GRE, RED, GRE, RED,GRE, RED, GRE, RED,GRE, RED, GRE, RED,
+		GRE, RED, GRE, RED,GRE, RED, GRE, RED,GRE, RED, GRE, RED,GRE, RED, GRE, RED,
+		RED, GRE, RED, GRE,GRE, RED, GRE, RED,GRE, RED, GRE, RED,GRE, RED, GRE, RED,
+		GRE, RED, GRE, RED,GRE, RED, GRE, RED,GRE, RED, GRE, RED,GRE, RED, GRE, RED,
+		RED, GRE, RED, GRE,GRE, RED, GRE, RED,GRE, RED, GRE, RED,GRE, RED, GRE, RED,
+		GRE, RED, GRE, RED,GRE, RED, GRE, RED,GRE, RED, GRE, RED,GRE, RED, GRE, RED,
+		RED, GRE, RED, GRE,GRE, RED, GRE, RED,GRE, RED, GRE, RED,GRE, RED, GRE, RED,
+		GRE, RED, GRE, RED,GRE, RED, GRE, RED,GRE, RED, GRE, RED,GRE, RED, GRE, RED,
+		RED, GRE, RED, GRE,GRE, RED, GRE, RED,GRE, RED, GRE, RED,GRE, RED, GRE, RED,
+		GRE, RED, GRE, RED,GRE, RED, GRE, RED,GRE, RED, GRE, RED,GRE, RED, GRE, RED,
+		RED, GRE, RED, GRE,GRE, RED, GRE, RED,GRE, RED, GRE, RED,GRE, RED, GRE, RED,
+		GRE, RED, GRE, RED,GRE, RED, GRE, RED,GRE, RED, GRE, RED,GRE, RED, GRE, RED,
+		RED, GRE, RED, GRE,GRE, RED, GRE, RED,GRE, RED, GRE, RED,GRE, RED, GRE, RED,
+		GRE, RED, GRE, RED,GRE, RED, GRE, RED,GRE, RED, GRE, RED,GRE, RED, GRE, RED,
+	};
 
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, nImageWidth, nImageHeight,
-		0, GL_RGBA, GL_UNSIGNED_BYTE, &imageRGBA[0]);
-
-	glGenerateMipmap(GL_TEXTURE_2D);
-
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-
-	GLfloat fLargest;
-	glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &fLargest);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, fLargest);
-
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, texSize, texSize, 0, GL_RGBA, GL_UNSIGNED_BYTE, &image[0]);
 	glBindTexture(GL_TEXTURE_2D, 0);
-
-	return (m_iTexture != 0);*/
-	return false;
 }
 
 
@@ -1286,103 +1240,8 @@ void CMainApplication::AddCubeToScene(Matrix mat, std::vector<float>& vertdata)
 	AddCubeVertex(F[0], F[1], F[2], 0, 1, vertdata);
 }
 
-
-//-----------------------------------------------------------------------------
-// Purpose: Draw all of the controllers as X/Y/Z lines
-//-----------------------------------------------------------------------------
-void CMainApplication::RenderControllerAxes() {
-	// Don't attempt to update controllers if input is not available
-	/*if (!m_pHMD->IsInputAvailable()) return;
-
-	std::vector<float> vertdataarray;
-
-	m_uiControllerVertcount = 0;
-	m_iTrackedControllerCount = 0;
-
-	for (EHand eHand = Left; eHand <= Right; ((int&)eHand)++)
-	{
-		if (!m_rHand[eHand].m_bShowController)
-			continue;
-
-		const Matrix& mat = m_rHand[eHand].m_rmat4Pose;
-
-		Vec4f center = mat * Vec4f(0, 0, 0, 1);
-
-		for (int i = 0; i < 3; ++i)
-		{
-			Vec3f color(0, 0, 0);
-			Vec4f point(0, 0, 0, 1);
-			point[i] += 0.05f;  // offset in X, Y, Z
-			color[i] = 1.0;  // R, G, B
-			point = mat * point;
-			vertdataarray.push_back(center[0]);
-			vertdataarray.push_back(center[1]);
-			vertdataarray.push_back(center[2]);
-
-			vertdataarray.push_back(color[0]);
-			vertdataarray.push_back(color[1]);
-			vertdataarray.push_back(color[2]);
-
-			vertdataarray.push_back(point[0]);
-			vertdataarray.push_back(point[1]);
-			vertdataarray.push_back(point[2]);
-
-			vertdataarray.push_back(color[0]);
-			vertdataarray.push_back(color[1]);
-			vertdataarray.push_back(color[2]);
-
-			m_uiControllerVertcount += 2;
-		}
-
-		Vec4f start = mat * Vec4f(0, 0, -0.02f, 1);
-		Vec4f end = mat * Vec4f(0, 0, -39.f, 1);
-		Vec3f color(.92f, .92f, .71f);
-
-		vertdataarray.push_back(start[0]); vertdataarray.push_back(start[1]); vertdataarray.push_back(start[2]);
-		vertdataarray.push_back(color[0]); vertdataarray.push_back(color[1]); vertdataarray.push_back(color[2]);
-
-		vertdataarray.push_back(end[0]); vertdataarray.push_back(end[1]); vertdataarray.push_back(end[2]);
-		vertdataarray.push_back(color[0]); vertdataarray.push_back(color[1]); vertdataarray.push_back(color[2]);
-		m_uiControllerVertcount += 2;
-	}
-
-	// Setup the VAO the first time through.
-	if (m_unControllerVAO == 0)
-	{
-		glGenVertexArrays(1, &m_unControllerVAO);
-		glBindVertexArray(m_unControllerVAO);
-
-		glGenBuffers(1, &m_glControllerVertBuffer);
-		glBindBuffer(GL_ARRAY_BUFFER, m_glControllerVertBuffer);
-
-		GLuint stride = 2 * 3 * sizeof(float);
-		uintptr_t offset = 0;
-
-		glEnableVertexAttribArray(0);
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, (const void*)offset);
-
-		offset += sizeof(Vec3f);
-		glEnableVertexAttribArray(1);
-		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, stride, (const void*)offset);
-
-		glBindVertexArray(0);
-	}
-
-	glBindBuffer(GL_ARRAY_BUFFER, m_glControllerVertBuffer);
-
-	// set vertex data if we have some
-	if (vertdataarray.size() > 0)
-	{
-		//$ TODO: Use glBufferSubData for this...
-		glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vertdataarray.size(), &vertdataarray[0], GL_STREAM_DRAW);
-	}*/
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
 void CMainApplication::SetupCameras() {
+	cout << "  setup cameras" << endl;
 	m_mat4ProjectionLeft = GetHMDMatrixProjectionEye(vr::Eye_Left);
 	m_mat4ProjectionRight = GetHMDMatrixProjectionEye(vr::Eye_Right);
 	m_mat4eyePosLeft = GetHMDMatrixPoseEye(vr::Eye_Left);
@@ -1395,121 +1254,50 @@ void CMainApplication::SetupCameras() {
 //          Returns false if the setup failed.
 //-----------------------------------------------------------------------------
 bool CMainApplication::CreateFrameBuffer(int nWidth, int nHeight, FramebufferDesc& framebufferDesc) {
-	/*cout << "  CreateFrameBuffer" << endl;
-	glGenFramebuffers(1, &framebufferDesc.m_nRenderFramebufferId);
+	cout << "  CreateFrameBuffer" << endl;
+	/*glGenFramebuffers(1, &framebufferDesc.m_nRenderFramebufferId);
 	glBindFramebuffer(GL_FRAMEBUFFER, framebufferDesc.m_nRenderFramebufferId);
 
-	cout << "   B1" << endl;
 	glGenRenderbuffers(1, &framebufferDesc.m_nDepthBufferId);
 	glBindRenderbuffer(GL_RENDERBUFFER, framebufferDesc.m_nDepthBufferId);
 	glRenderbufferStorageMultisample(GL_RENDERBUFFER, 4, GL_DEPTH_COMPONENT, nWidth, nHeight);
 	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, framebufferDesc.m_nDepthBufferId);
 
-	cout << "   B2" << endl;
 	glGenTextures(1, &framebufferDesc.m_nRenderTextureId);
 	glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, framebufferDesc.m_nRenderTextureId);
 	glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 4, GL_RGBA8, nWidth, nHeight, true);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, framebufferDesc.m_nRenderTextureId, 0);
 
-	cout << "   B3" << endl;
 	glGenFramebuffers(1, &framebufferDesc.m_nResolveFramebufferId);
 	glBindFramebuffer(GL_FRAMEBUFFER, framebufferDesc.m_nResolveFramebufferId);
 
-	cout << "   B4" << endl;
 	glGenTextures(1, &framebufferDesc.m_nResolveTextureId);
 	glBindTexture(GL_TEXTURE_2D, framebufferDesc.m_nResolveTextureId);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, nWidth, nHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, framebufferDesc.m_nResolveTextureId, 0);
-
-	cout << "   B5" << endl;
+	
 	// check FBO status
 	GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-	if (status != GL_FRAMEBUFFER_COMPLETE)
-	{
-		return false;
-	}
+	if (status != GL_FRAMEBUFFER_COMPLETE) return false;
 
-	cout << "   B6" << endl;
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	*/
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);*/
 	return true;
 }
 
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-bool CMainApplication::SetupStereoRenderTargets()
-{
+bool CMainApplication::SetupStereoRenderTargets() {
+	cout << "  setup render targets" << endl;
 	if (!m_pHMD) return false;
 
 	m_pHMD->GetRecommendedRenderTargetSize(&m_nRenderWidth, &m_nRenderHeight);
 	cout << "  HMD recomended render size: " << m_nRenderWidth << " " << m_nRenderHeight << endl;
 	CreateFrameBuffer(m_nRenderWidth, m_nRenderHeight, leftEyeDesc);
 	CreateFrameBuffer(m_nRenderWidth, m_nRenderHeight, rightEyeDesc);
-
 	return true;
 }
 
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-void CMainApplication::SetupCompanionWindow()
-{
-	/*if (!m_pHMD) return;
-
-	std::vector<VertexDataWindow> vVerts;
-
-	// left eye verts
-	vVerts.push_back(VertexDataWindow(Vec2f(-1, -1), Vec2f(0, 1)));
-	vVerts.push_back(VertexDataWindow(Vec2f(0, -1), Vec2f(1, 1)));
-	vVerts.push_back(VertexDataWindow(Vec2f(-1, 1), Vec2f(0, 0)));
-	vVerts.push_back(VertexDataWindow(Vec2f(0, 1), Vec2f(1, 0)));
-
-	// right eye verts
-	vVerts.push_back(VertexDataWindow(Vec2f(0, -1), Vec2f(0, 1)));
-	vVerts.push_back(VertexDataWindow(Vec2f(1, -1), Vec2f(1, 1)));
-	vVerts.push_back(VertexDataWindow(Vec2f(0, 1), Vec2f(0, 0)));
-	vVerts.push_back(VertexDataWindow(Vec2f(1, 1), Vec2f(1, 0)));
-
-	GLushort vIndices[] = { 0, 1, 3,   0, 3, 2,   4, 5, 7,   4, 7, 6 };
-	m_uiCompanionWindowIndexSize = _countof(vIndices);
-
-	glGenVertexArrays(1, &m_unCompanionWindowVAO);
-	glBindVertexArray(m_unCompanionWindowVAO);
-
-	glGenBuffers(1, &m_glCompanionWindowIDVertBuffer);
-	glBindBuffer(GL_ARRAY_BUFFER, m_glCompanionWindowIDVertBuffer);
-	glBufferData(GL_ARRAY_BUFFER, vVerts.size() * sizeof(VertexDataWindow), &vVerts[0], GL_STATIC_DRAW);
-
-	glGenBuffers(1, &m_glCompanionWindowIDIndexBuffer);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_glCompanionWindowIDIndexBuffer);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_uiCompanionWindowIndexSize * sizeof(GLushort), &vIndices[0], GL_STATIC_DRAW);
-
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(VertexDataWindow), (void*)offsetof(VertexDataWindow, position));
-
-	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(VertexDataWindow), (void*)offsetof(VertexDataWindow, texCoord));
-
-	glBindVertexArray(0);
-
-	glDisableVertexAttribArray(0);
-	glDisableVertexAttribArray(1);
-
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);*/
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-void CMainApplication::RenderStereoTargets()
-{
+void CMainApplication::RenderStereoTargets() {
 	glClearColor(0.0f, 0.0f, 1.0f, 1.0f);
 	/*glEnable(GL_MULTISAMPLE);
 
@@ -1552,93 +1340,81 @@ void CMainApplication::RenderStereoTargets()
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);*/
 }
 
+void drawSide(float x, float y, float z, float ux, float uy, float uz, float vx, float vy, float vz) {
+	glBegin(GL_QUADS);
+	glTexCoord2f(0.0, 0.0);  glVertex3f(x - ux - vx, y - uy - vy, z - uz - vz);
+	glTexCoord2f(0.0, 1.0);  glVertex3f(x - ux + vx, y - uy + vy, z - uz + vz);
+	glTexCoord2f(1.0, 1.0);  glVertex3f(x + ux + vx, y + uy + vy, z + uz + vz);
+	glTexCoord2f(1.0, 0.0);  glVertex3f(x + ux - vx, y + uy - vy, z + uz - vz);
+	glEnd();
+}
 
-//-----------------------------------------------------------------------------
-// Purpose: Renders a scene with respect to nEye.
-//-----------------------------------------------------------------------------
+void drawCube(float x, float y, float z) {
+	float s = 0.2;
+	drawSide(x - s, y, z, 0, 0, s, 0, s, 0);
+	drawSide(x + s, y, z, 0, 0, -s, 0, s, 0);
+	drawSide(x, y - s, z, 0, 0, s, s, 0, 0);
+	drawSide(x, y + s, z, 0, 0, -s, -s, 0, 0);
+	drawSide(x, y, z - s, s, 0, 0, 0, s, 0);
+	drawSide(x, y, z + s, -s, 0, 0, 0, s, 0);
+}
+
 void CMainApplication::RenderScene(vr::Hmd_Eye nEye) {
-	glClearColor(1.0, 0.2, 1.0, 1.0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glEnable(GL_DEPTH_TEST);
 
-	/*if (m_bShowCubes)
-	{
-		glUseProgram(m_unSceneProgramID);
-		glUniformMatrix4fv(m_nSceneMatrixLocation, 1, GL_FALSE, GetCurrentViewProjectionMatrix(nEye).getValues());
-		glBindVertexArray(m_unSceneVAO);
-		glBindTexture(GL_TEXTURE_2D, m_iTexture);
-		glDrawArrays(GL_TRIANGLES, 0, m_uiVertcount);
-		glBindVertexArray(0);
+	glMatrixMode(GL_MODELVIEW);
+	glPushMatrix();
+
+	if (m_bShowCubes) {
+		glMultMatrixf(GetCurrentViewProjectionMatrix(nEye).getValues());
+
+		glBindTexture(GL_TEXTURE_2D, textureID);
+		glEnable(GL_TEXTURE_2D);
+
+		for (int i = -5; i < 5; i++) {
+			for (int j = -5; j < 5; j++) {
+				for (int k = -5; k < 5; k++) {
+					drawCube(i, j, k);
+				}
+			}
+		}
+
+		glDisable(GL_TEXTURE_2D);
+		glBindTexture(GL_TEXTURE_2D, 0);
 	}
 
-	bool bIsInputAvailable = m_pHMD->IsInputAvailable();
-
-	if (bIsInputAvailable)
-	{
-		// draw the controller axis lines
-		glUseProgram(m_unControllerTransformProgramID);
-		glUniformMatrix4fv(m_nControllerMatrixLocation, 1, GL_FALSE, GetCurrentViewProjectionMatrix(nEye).getValues());
-		glBindVertexArray(m_unControllerVAO);
-		glDrawArrays(GL_LINES, 0, m_uiControllerVertcount);
-		glBindVertexArray(0);
-	}
-
-	// ----- Render Model rendering -----
-	glUseProgram(m_unRenderModelProgramID);
-
-	for (EHand eHand = Left; eHand <= Right; ((int&)eHand)++)
-	{
-		if (!m_rHand[eHand].m_bShowController || !m_rHand[eHand].m_pRenderModel)
-			continue;
-
-		const Matrix& matDeviceToTracking = m_rHand[eHand].m_rmat4Pose;
-		Matrix matMVP = GetCurrentViewProjectionMatrix(nEye);
-		matMVP.mult(matDeviceToTracking);
-		glUniformMatrix4fv(m_nRenderModelMatrixLocation, 1, GL_FALSE, matMVP.getValues());
-		m_rHand[eHand].m_pRenderModel->Draw();
-	}
-
-	glUseProgram(0);*/
+	glPopMatrix();
 }
 
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-void CMainApplication::RenderCompanionWindow()
-{
-	/*glDisable(GL_DEPTH_TEST);
+void CMainApplication::RenderCompanionWindow() {
+	glDisable(GL_DEPTH_TEST);
+	glEnable(GL_TEXTURE_2D);
 	glViewport(0, 0, m_nCompanionWindowWidth, m_nCompanionWindowHeight);
 
-	glBindVertexArray(m_unCompanionWindowVAO);
-	glUseProgram(m_unCompanionWindowProgramID);
+	glBindTexture(GL_TEXTURE_2D, textureID);
+	//glBindTexture(GL_TEXTURE_2D, leftEyeDesc.m_nResolveTextureId);
+	glBegin(GL_QUADS);
+	glTexCoord2f(0.0, 0.0);  glVertex3f(-1, -1, 0.0);
+	glTexCoord2f(0.0, 1.0);  glVertex3f(-1,  1, 0.0);
+	glTexCoord2f(1.0, 1.0);  glVertex3f( 0,  1, 0.0);
+	glTexCoord2f(1.0, 0.0);  glVertex3f( 0, -1, 0.0);
+	glEnd();
 
-	// render left eye (first half of index array )
-	glBindTexture(GL_TEXTURE_2D, leftEyeDesc.m_nResolveTextureId);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glDrawElements(GL_TRIANGLES, m_uiCompanionWindowIndexSize / 2, GL_UNSIGNED_SHORT, 0);
+	glBindTexture(GL_TEXTURE_2D, textureID);
+	//glBindTexture(GL_TEXTURE_2D, rightEyeDesc.m_nResolveTextureId);
+	glBegin(GL_QUADS);
+	glTexCoord2f(0.0, 0.0);  glVertex3f(0, -1, 0.0);
+	glTexCoord2f(0.0, 1.0);  glVertex3f(0,  1, 0.0);
+	glTexCoord2f(1.0, 1.0);  glVertex3f(1,  1, 0.0);
+	glTexCoord2f(1.0, 0.0);  glVertex3f(1, -1, 0.0);
+	glEnd();
 
-	// render right eye (second half of index array )
-	glBindTexture(GL_TEXTURE_2D, rightEyeDesc.m_nResolveTextureId);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glDrawElements(GL_TRIANGLES, m_uiCompanionWindowIndexSize / 2, GL_UNSIGNED_SHORT, (const void*)(uintptr_t)(m_uiCompanionWindowIndexSize));
-
-	glBindVertexArray(0);
-	glUseProgram(0);*/
+	glDisable(GL_TEXTURE_2D);
+	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-
-//-----------------------------------------------------------------------------
-// Purpose: Gets a Matrix Projection Eye with respect to nEye.
-//-----------------------------------------------------------------------------
-Matrix CMainApplication::GetHMDMatrixProjectionEye(vr::Hmd_Eye nEye)
-{
+Matrix CMainApplication::GetHMDMatrixProjectionEye(vr::Hmd_Eye nEye) {
 	if (!m_pHMD)
 		return Matrix();
 
@@ -1652,12 +1428,7 @@ Matrix CMainApplication::GetHMDMatrixProjectionEye(vr::Hmd_Eye nEye)
 	);
 }
 
-
-//-----------------------------------------------------------------------------
-// Purpose: Gets an HMDMatrixPoseEye with respect to nEye.
-//-----------------------------------------------------------------------------
-Matrix CMainApplication::GetHMDMatrixPoseEye(vr::Hmd_Eye nEye)
-{
+Matrix CMainApplication::GetHMDMatrixPoseEye(vr::Hmd_Eye nEye) {
 	if (!m_pHMD)
 		return Matrix();
 
@@ -1673,11 +1444,6 @@ Matrix CMainApplication::GetHMDMatrixPoseEye(vr::Hmd_Eye nEye)
 	return matrixObj;
 }
 
-
-//-----------------------------------------------------------------------------
-// Purpose: Gets a Current View Projection Matrix with respect to nEye,
-//          which may be an Eye_Left or an Eye_Right.
-//-----------------------------------------------------------------------------
 Matrix CMainApplication::GetCurrentViewProjectionMatrix(vr::Hmd_Eye nEye) {
 	Matrix matMVP;
 	if (nEye == vr::Eye_Left) {
@@ -1692,122 +1458,37 @@ Matrix CMainApplication::GetCurrentViewProjectionMatrix(vr::Hmd_Eye nEye) {
 	return matMVP;
 }
 
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-void CMainApplication::UpdateHMDMatrixPose()
-{
-	if (!m_pHMD)
-		return;
+void CMainApplication::UpdateHMDMatrixPose() {
+	if (!m_pHMD) return;
 
 	vr::VRCompositor()->WaitGetPoses(m_rTrackedDevicePose, vr::k_unMaxTrackedDeviceCount, NULL, 0);
 
 	m_iValidPoseCount = 0;
 	m_strPoseClasses = "";
-	for (int nDevice = 0; nDevice < vr::k_unMaxTrackedDeviceCount; ++nDevice)
-	{
-		if (m_rTrackedDevicePose[nDevice].bPoseIsValid)
-		{
+	for (int nDevice = 0; nDevice < vr::k_unMaxTrackedDeviceCount; ++nDevice) {
+		if (m_rTrackedDevicePose[nDevice].bPoseIsValid) {
 			m_iValidPoseCount++;
 			m_rmat4DevicePose[nDevice] = ConvertSteamVRMatrixToMatrix(m_rTrackedDevicePose[nDevice].mDeviceToAbsoluteTracking);
-			if (m_rDevClassChar[nDevice] == 0)
-			{
-				switch (m_pHMD->GetTrackedDeviceClass(nDevice))
-				{
-				case vr::TrackedDeviceClass_Controller:        m_rDevClassChar[nDevice] = 'C'; break;
-				case vr::TrackedDeviceClass_HMD:               m_rDevClassChar[nDevice] = 'H'; break;
-				case vr::TrackedDeviceClass_Invalid:           m_rDevClassChar[nDevice] = 'I'; break;
-				case vr::TrackedDeviceClass_GenericTracker:    m_rDevClassChar[nDevice] = 'G'; break;
-				case vr::TrackedDeviceClass_TrackingReference: m_rDevClassChar[nDevice] = 'T'; break;
-				default:                                       m_rDevClassChar[nDevice] = '?'; break;
+			if (m_rDevClassChar[nDevice] == 0) {
+				switch (m_pHMD->GetTrackedDeviceClass(nDevice)) {
+					case vr::TrackedDeviceClass_Controller:        m_rDevClassChar[nDevice] = 'C'; break;
+					case vr::TrackedDeviceClass_HMD:               m_rDevClassChar[nDevice] = 'H'; break;
+					case vr::TrackedDeviceClass_Invalid:           m_rDevClassChar[nDevice] = 'I'; break;
+					case vr::TrackedDeviceClass_GenericTracker:    m_rDevClassChar[nDevice] = 'G'; break;
+					case vr::TrackedDeviceClass_TrackingReference: m_rDevClassChar[nDevice] = 'T'; break;
+					default:                                       m_rDevClassChar[nDevice] = '?'; break;
 				}
 			}
 			m_strPoseClasses += m_rDevClassChar[nDevice];
 		}
 	}
 
-	if (m_rTrackedDevicePose[vr::k_unTrackedDeviceIndex_Hmd].bPoseIsValid)
-	{
+	if (m_rTrackedDevicePose[vr::k_unTrackedDeviceIndex_Hmd].bPoseIsValid) {
 		m_mat4HMDPose = m_rmat4DevicePose[vr::k_unTrackedDeviceIndex_Hmd];
 		m_mat4HMDPose.invert();
 	}
 }
 
-
-//-----------------------------------------------------------------------------
-// Purpose: Finds a render model we've already loaded or loads a new one
-//-----------------------------------------------------------------------------
-CGLRenderModel* CMainApplication::FindOrLoadRenderModel(const char* pchRenderModelName)
-{
-	CGLRenderModel* pRenderModel = NULL;
-	for (std::vector< CGLRenderModel* >::iterator i = m_vecRenderModels.begin(); i != m_vecRenderModels.end(); i++)
-	{
-		if (!stricmp((*i)->GetName().c_str(), pchRenderModelName))
-		{
-			pRenderModel = *i;
-			break;
-		}
-	}
-
-	// load the model if we didn't find one
-	if (!pRenderModel)
-	{
-		vr::RenderModel_t* pModel;
-		vr::EVRRenderModelError error;
-		while (1)
-		{
-			error = vr::VRRenderModels()->LoadRenderModel_Async(pchRenderModelName, &pModel);
-			if (error != vr::VRRenderModelError_Loading)
-				break;
-
-			ThreadSleep(1);
-		}
-
-		if (error != vr::VRRenderModelError_None)
-		{
-			dprintf("Unable to load render model %s - %s\n", pchRenderModelName, vr::VRRenderModels()->GetRenderModelErrorNameFromEnum(error));
-			return NULL; // move on to the next tracked device
-		}
-
-		vr::RenderModel_TextureMap_t* pTexture;
-		while (1)
-		{
-			error = vr::VRRenderModels()->LoadTexture_Async(pModel->diffuseTextureId, &pTexture);
-			if (error != vr::VRRenderModelError_Loading)
-				break;
-
-			ThreadSleep(1);
-		}
-
-		if (error != vr::VRRenderModelError_None)
-		{
-			dprintf("Unable to load render texture id:%d for render model %s\n", pModel->diffuseTextureId, pchRenderModelName);
-			vr::VRRenderModels()->FreeRenderModel(pModel);
-			return NULL; // move on to the next tracked device
-		}
-
-		pRenderModel = new CGLRenderModel(pchRenderModelName);
-		if (!pRenderModel->BInit(*pModel, *pTexture))
-		{
-			dprintf("Unable to create GL model from render model %s\n", pchRenderModelName);
-			delete pRenderModel;
-			pRenderModel = NULL;
-		}
-		else
-		{
-			m_vecRenderModels.push_back(pRenderModel);
-		}
-		vr::VRRenderModels()->FreeRenderModel(pModel);
-		vr::VRRenderModels()->FreeTexture(pTexture);
-	}
-	return pRenderModel;
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose: Converts a SteamVR matrix to our local matrix class
-//-----------------------------------------------------------------------------
 Matrix CMainApplication::ConvertSteamVRMatrixToMatrix(const vr::HmdMatrix34_t& matPose) {
 	Matrix matrixObj(
 		matPose.m[0][0], matPose.m[1][0], matPose.m[2][0], 0.0,
@@ -1817,105 +1498,6 @@ Matrix CMainApplication::ConvertSteamVRMatrixToMatrix(const vr::HmdMatrix34_t& m
 	);
 	return matrixObj;
 }
-
-
-//-----------------------------------------------------------------------------
-// Purpose: Create/destroy GL Render Models
-//-----------------------------------------------------------------------------
-CGLRenderModel::CGLRenderModel(const std::string& sRenderModelName) : m_sModelName(sRenderModelName) {
-	m_glIndexBuffer = 0;
-	m_glVertArray = 0;
-	m_glVertBuffer = 0;
-	m_glTexture = 0;
-}
-
-
-CGLRenderModel::~CGLRenderModel() {
-	Cleanup();
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose: Allocates and populates the GL resources for a render model
-//-----------------------------------------------------------------------------
-bool CGLRenderModel::BInit(const vr::RenderModel_t& vrModel, const vr::RenderModel_TextureMap_t& vrDiffuseTexture) {
-	// create and bind a VAO to hold state for this model
-	/*glGenVertexArrays(1, &m_glVertArray);
-	glBindVertexArray(m_glVertArray);
-
-	// Populate a vertex buffer
-	glGenBuffers(1, &m_glVertBuffer);
-	glBindBuffer(GL_ARRAY_BUFFER, m_glVertBuffer);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vr::RenderModel_Vertex_t) * vrModel.unVertexCount, vrModel.rVertexData, GL_STATIC_DRAW);
-
-	// Identify the components in the vertex buffer
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(vr::RenderModel_Vertex_t), (void*)offsetof(vr::RenderModel_Vertex_t, vPosition));
-	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(vr::RenderModel_Vertex_t), (void*)offsetof(vr::RenderModel_Vertex_t, vNormal));
-	glEnableVertexAttribArray(2);
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(vr::RenderModel_Vertex_t), (void*)offsetof(vr::RenderModel_Vertex_t, rfTextureCoord));
-
-	// Create and populate the index buffer
-	glGenBuffers(1, &m_glIndexBuffer);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_glIndexBuffer);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint16_t) * vrModel.unTriangleCount * 3, vrModel.rIndexData, GL_STATIC_DRAW);
-
-	glBindVertexArray(0);
-
-	// create and populate the texture
-	glGenTextures(1, &m_glTexture);
-	glBindTexture(GL_TEXTURE_2D, m_glTexture);
-
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, vrDiffuseTexture.unWidth, vrDiffuseTexture.unHeight,
-		0, GL_RGBA, GL_UNSIGNED_BYTE, vrDiffuseTexture.rubTextureMapData);
-
-	// If this renders black ask McJohn what's wrong.
-	glGenerateMipmap(GL_TEXTURE_2D);
-
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-
-	GLfloat fLargest;
-	glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &fLargest);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, fLargest);
-
-	glBindTexture(GL_TEXTURE_2D, 0);
-
-	m_unVertexCount = vrModel.unTriangleCount * 3;*/
-
-	return true;
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose: Frees the GL resources for a render model
-//-----------------------------------------------------------------------------
-void CGLRenderModel::Cleanup() {
-	/*if (m_glVertBuffer) {
-		glDeleteBuffers(1, &m_glIndexBuffer);
-		glDeleteVertexArrays(1, &m_glVertArray);
-		glDeleteBuffers(1, &m_glVertBuffer);
-		m_glIndexBuffer = 0;
-		m_glVertArray = 0;
-		m_glVertBuffer = 0;
-	}*/
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose: Draws the render model
-//-----------------------------------------------------------------------------
-void CGLRenderModel::Draw() {
-	/*glBindVertexArray(m_glVertArray);
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, m_glTexture);
-	glDrawElements(GL_TRIANGLES, m_unVertexCount, GL_UNSIGNED_SHORT, 0);
-	glBindVertexArray(0);*/
-}
-
 
 void startViveTest1(int argc, char** argv) {
 	cout << "Start Vive test" << endl;
