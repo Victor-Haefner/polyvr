@@ -245,8 +245,15 @@ void findTestImg(unsigned int& tID) {
 	if (!scene) return;
 	auto obj = dynamic_pointer_cast<VRGeometry>( scene->get("img") );
 	if (!obj) return;
-	auto tChunk = obj->getMaterial()->getTextureObjChunk();
-	auto win = VRSetup::getCurrent()->getWindow(0)->getOSGWindow();
+	auto mat = obj->getMaterial();
+	if (!mat) return;
+	auto tChunk = mat->getTextureObjChunk();
+	if (!tChunk) return;
+	auto setup = VRSetup::getCurrent();
+	if (!setup) return;
+	auto vrwin = setup->getWindow("screen");
+	if (!vrwin) return;
+	auto win = vrwin->getOSGWindow();
 	if (!win) return;
 	unsigned int texID = win->getGLObjectId(tChunk->getGLId());
 	if (texID != tID) {
@@ -258,14 +265,14 @@ void findTestImg(unsigned int& tID) {
 void VRHeadMountedDisplay::render(bool fromThread) {
 	if (fromThread || fboData == 0) return;
 
-	setScene(); // TODO: put this in callback when new scene
-	fboData->win->render(fboData->ract);
+	//setScene(); // TODO: put this in callback when new scene
+	//fboData->win->render(fboData->ract);
 
 	if (m_pHMD) {
 		RenderStereoTargets();
 		//cout << "render to HMD" << endl;
+		findTestImg(testTextureID);
 		auto textureID = testTextureID;
-		//findTestImg(textureID);
 		//auto textureID = fboData->win->getGLObjectId( fboData->fboTex->getGLId() );
 		vr::Texture_t leftEyeTexture = { (void*)(uintptr_t)textureID, vr::TextureType_OpenGL, vr::ColorSpace_Gamma };
 		//vr::Texture_t leftEyeTexture = { (void*)(uintptr_t)leftEyeDesc.m_nResolveTextureId, vr::TextureType_OpenGL, vr::ColorSpace_Gamma };
@@ -313,7 +320,16 @@ void VRHeadMountedDisplay::SetupTexturemaps() {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-	testImage = {
+	testTexSize = 1024;
+	for (int i = 0; i < testTexSize; i++) {
+		for (int j = 0; j < testTexSize; j++) {
+			if (i == j) { testImage.push_back(0); testImage.push_back(0); testImage.push_back(255); testImage.push_back(255); }
+			else if (i%2 == 0) { testImage.push_back(0); testImage.push_back(255); testImage.push_back(0); testImage.push_back(255); }
+			else { testImage.push_back(255); testImage.push_back(0); testImage.push_back(0); testImage.push_back(255); }
+		}
+	}
+
+	/*testImage = {
 		BLU, GRE, RED, GRE,BLU, GRE, RED, GRE,BLU, GRE, RED, GRE,BLU, GRE, RED, GRE,
 		GRE, BLU, GRE, RED,GRE, RED, GRE, RED,GRE, RED, GRE, RED,GRE, RED, GRE, RED,
 		RED, GRE, BLU, GRE,GRE, RED, GRE, RED,GRE, RED, GRE, RED,GRE, RED, GRE, RED,
@@ -330,7 +346,7 @@ void VRHeadMountedDisplay::SetupTexturemaps() {
 		GRE, RED, GRE, RED,GRE, RED, GRE, RED,GRE, RED, GRE, RED,GRE, BLU, GRE, RED,
 		RED, GRE, RED, GRE,GRE, RED, GRE, RED,GRE, RED, GRE, RED,GRE, RED, BLU, RED,
 		GRE, RED, GRE, RED,GRE, RED, GRE, RED,GRE, RED, GRE, RED,GRE, RED, GRE, BLU,
-	};
+	};*/
 
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, testTexSize, testTexSize, 0, GL_RGBA, GL_UNSIGNED_BYTE, &testImage[0]);
 	glBindTexture(GL_TEXTURE_2D, 0);
