@@ -81,7 +81,6 @@ public:
 
 	void Shutdown();
 
-	bool HandleInput();
 	void RenderFrame();
 
 	void SetupTexturemaps();
@@ -90,10 +89,8 @@ public:
 	void AddCubeToScene(Matrix mat, std::vector<float>& vertdata);
 	void AddCubeVertex(float fl0, float fl1, float fl2, float fl3, float fl4, std::vector<float>& vertdata);
 
-	bool SetupStereoRenderTargets();
 	void SetupCameras();
 
-	void RenderStereoTargets();
 	void RenderCompanionWindow();
 	void RenderScene(vr::Hmd_Eye nEye);
 
@@ -393,7 +390,6 @@ bool CMainApplication::BInitGL() {
 	cout << "  setup scene" << endl;
 	//SetupScene();
 	SetupCameras();
-	SetupStereoRenderTargets();
 	return true;
 }
 
@@ -420,39 +416,11 @@ void CMainApplication::Shutdown() {
 	}
 }
 
-bool CMainApplication::HandleInput() {
-	bool bRet = false;
-
-	// Process SteamVR events
-	vr::VREvent_t event;
-	while (m_pHMD->PollNextEvent(&event, sizeof(event)));
-
-	// Process SteamVR action state
-	// UpdateActionState is called each frame to update the state of the actions themselves. The application
-	// controls which action sets are active with the provided array of VRActiveActionSet_t structs.
-	vr::VRActiveActionSet_t actionSet = { 0 };
-	actionSet.ulActionSet = m_actionsetDemo;
-	vr::VRInput()->UpdateActionState(&actionSet, sizeof(actionSet), 1);
-
-	vr::InputAnalogActionData_t analogData;
-	if (vr::VRInput()->GetAnalogActionData(m_actionAnalongInput, &analogData, sizeof(analogData), vr::k_ulInvalidInputValueHandle) == vr::VRInputError_None && analogData.bActive) {
-		m_vAnalogValue[0] = analogData.x;
-		m_vAnalogValue[1] = analogData.y;
-	}
-
-	m_rHand[Left].m_bShowController = true;
-	m_rHand[Right].m_bShowController = true;
-	return bRet;
-}
-
 void CMainApplication::RenderFrame() {
-	RenderStereoTargets();
 	RenderCompanionWindow();
 
 	vr::Texture_t leftEyeTexture = { (void*)(uintptr_t)textureID, vr::TextureType_OpenGL, vr::ColorSpace_Gamma };
-	//vr::Texture_t leftEyeTexture = { (void*)(uintptr_t)leftEyeDesc.m_nResolveTextureId, vr::TextureType_OpenGL, vr::ColorSpace_Gamma };
 	vr::Texture_t rightEyeTexture = { (void*)(uintptr_t)textureID, vr::TextureType_OpenGL, vr::ColorSpace_Gamma };
-	//vr::Texture_t rightEyeTexture = { (void*)(uintptr_t)rightEyeDesc.m_nResolveTextureId, vr::TextureType_OpenGL, vr::ColorSpace_Gamma };
 
 	vr::VRCompositor()->Submit(vr::Eye_Left, &leftEyeTexture);
 	vr::VRCompositor()->Submit(vr::Eye_Right, &rightEyeTexture);
@@ -510,143 +478,12 @@ void CMainApplication::SetupCameras() {
 	m_mat4eyePosRight = GetHMDMatrixPoseEye(vr::Eye_Right);
 }
 
-bool CMainApplication::CreateFrameBuffer(int nWidth, int nHeight, FramebufferDesc& framebufferDesc) {
-	cout << "  CreateFrameBuffer" << endl;
-	/*glGenFramebuffers(1, &framebufferDesc.m_nRenderFramebufferId);
-	glBindFramebuffer(GL_FRAMEBUFFER, framebufferDesc.m_nRenderFramebufferId);
-
-	glGenRenderbuffers(1, &framebufferDesc.m_nDepthBufferId);
-	glBindRenderbuffer(GL_RENDERBUFFER, framebufferDesc.m_nDepthBufferId);
-	glRenderbufferStorageMultisample(GL_RENDERBUFFER, 4, GL_DEPTH_COMPONENT, nWidth, nHeight);
-	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, framebufferDesc.m_nDepthBufferId);
-
-	glGenTextures(1, &framebufferDesc.m_nRenderTextureId);
-	glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, framebufferDesc.m_nRenderTextureId);
-	glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 4, GL_RGBA8, nWidth, nHeight, true);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, framebufferDesc.m_nRenderTextureId, 0);
-
-	glGenFramebuffers(1, &framebufferDesc.m_nResolveFramebufferId);
-	glBindFramebuffer(GL_FRAMEBUFFER, framebufferDesc.m_nResolveFramebufferId);
-
-	glGenTextures(1, &framebufferDesc.m_nResolveTextureId);
-	glBindTexture(GL_TEXTURE_2D, framebufferDesc.m_nResolveTextureId);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, nWidth, nHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, framebufferDesc.m_nResolveTextureId, 0);
-	
-	// check FBO status
-	GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-	if (status != GL_FRAMEBUFFER_COMPLETE) return false;
-
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);*/
-	return true;
-}
-
-bool CMainApplication::SetupStereoRenderTargets() {
-	cout << "  setup render targets" << endl;
-	if (!m_pHMD) return false;
-
-	m_pHMD->GetRecommendedRenderTargetSize(&m_nRenderWidth, &m_nRenderHeight);
-	cout << "  HMD recomended render size: " << m_nRenderWidth << " " << m_nRenderHeight << endl;
-	CreateFrameBuffer(m_nRenderWidth, m_nRenderHeight, leftEyeDesc);
-	CreateFrameBuffer(m_nRenderWidth, m_nRenderHeight, rightEyeDesc);
-	return true;
-}
-
-void CMainApplication::RenderStereoTargets() {
-	glClearColor(0.4f, 0.8f, 1.0f, 1.0f);
-	/*glEnable(GL_MULTISAMPLE);
-
-	// Left Eye
-	glBindFramebuffer(GL_FRAMEBUFFER, leftEyeDesc.m_nRenderFramebufferId);
-	glViewport(0, 0, m_nRenderWidth, m_nRenderHeight);
-	RenderScene(vr::Eye_Left);
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-	glDisable(GL_MULTISAMPLE);
-
-	glBindFramebuffer(GL_READ_FRAMEBUFFER, leftEyeDesc.m_nRenderFramebufferId);
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, leftEyeDesc.m_nResolveFramebufferId);
-
-	glBlitFramebuffer(0, 0, m_nRenderWidth, m_nRenderHeight, 0, 0, m_nRenderWidth, m_nRenderHeight, GL_COLOR_BUFFER_BIT, GL_LINEAR);
-
-	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-
-	glEnable(GL_MULTISAMPLE);
-
-	// Right Eye
-	glBindFramebuffer(GL_FRAMEBUFFER, rightEyeDesc.m_nRenderFramebufferId);
-	glViewport(0, 0, m_nRenderWidth, m_nRenderHeight);
-	RenderScene(vr::Eye_Right);
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-	glDisable(GL_MULTISAMPLE);
-
-	glBindFramebuffer(GL_READ_FRAMEBUFFER, rightEyeDesc.m_nRenderFramebufferId);
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, rightEyeDesc.m_nResolveFramebufferId);
-
-	glBlitFramebuffer(0, 0, m_nRenderWidth, m_nRenderHeight, 0, 0, m_nRenderWidth, m_nRenderHeight, GL_COLOR_BUFFER_BIT, GL_LINEAR);
-
-	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);*/
-}
-
-void drawSide(float x, float y, float z, float ux, float uy, float uz, float vx, float vy, float vz) {
-	glBegin(GL_QUADS);
-	glTexCoord2f(0.0, 0.0);  glVertex3f(x - ux - vx, y - uy - vy, z - uz - vz);
-	glTexCoord2f(0.0, 1.0);  glVertex3f(x - ux + vx, y - uy + vy, z - uz + vz);
-	glTexCoord2f(1.0, 1.0);  glVertex3f(x + ux + vx, y + uy + vy, z + uz + vz);
-	glTexCoord2f(1.0, 0.0);  glVertex3f(x + ux - vx, y + uy - vy, z + uz - vz);
-	glEnd();
-}
-
-void drawCube(float x, float y, float z) {
-	float s = 0.2;
-	drawSide(x - s, y, z, 0, 0, s, 0, s, 0);
-	drawSide(x + s, y, z, 0, 0, -s, 0, s, 0);
-	drawSide(x, y - s, z, 0, 0, s, s, 0, 0);
-	drawSide(x, y + s, z, 0, 0, -s, -s, 0, 0);
-	drawSide(x, y, z - s, s, 0, 0, 0, s, 0);
-	drawSide(x, y, z + s, -s, 0, 0, 0, s, 0);
-}
-
-void CMainApplication::RenderScene(vr::Hmd_Eye nEye) {
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glEnable(GL_DEPTH_TEST);
-
-	glMatrixMode(GL_MODELVIEW);
-	glPushMatrix();
-
-	if (m_bShowCubes) {
-		glMultMatrixf(GetCurrentViewProjectionMatrix(nEye).getValues());
-
-		glBindTexture(GL_TEXTURE_2D, textureID);
-		glEnable(GL_TEXTURE_2D);
-
-		for (int i = -5; i < 5; i++) {
-			for (int j = -5; j < 5; j++) {
-				for (int k = -5; k < 5; k++) {
-					drawCube(i, j, k);
-				}
-			}
-		}
-
-		glDisable(GL_TEXTURE_2D);
-		glBindTexture(GL_TEXTURE_2D, 0);
-	}
-
-	glPopMatrix();
-}
-
 void CMainApplication::RenderCompanionWindow() {
 	glDisable(GL_DEPTH_TEST);
 	glEnable(GL_TEXTURE_2D);
 	glViewport(0, 0, m_nCompanionWindowWidth, m_nCompanionWindowHeight);
 
 	glBindTexture(GL_TEXTURE_2D, textureID);
-	//glBindTexture(GL_TEXTURE_2D, leftEyeDesc.m_nResolveTextureId);
 	glBegin(GL_QUADS);
 	glTexCoord2f(0.0, 0.0);  glVertex3f(-1, -1, 0.0);
 	glTexCoord2f(0.0, 1.0);  glVertex3f(-1,  1, 0.0);
@@ -655,7 +492,6 @@ void CMainApplication::RenderCompanionWindow() {
 	glEnd();
 
 	glBindTexture(GL_TEXTURE_2D, textureID);
-	//glBindTexture(GL_TEXTURE_2D, rightEyeDesc.m_nResolveTextureId);
 	glBegin(GL_QUADS);
 	glTexCoord2f(0.0, 0.0);  glVertex3f(0, -1, 0.0);
 	glTexCoord2f(0.0, 1.0);  glVertex3f(0,  1, 0.0);
