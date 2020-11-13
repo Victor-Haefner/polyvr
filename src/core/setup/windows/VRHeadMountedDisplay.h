@@ -19,8 +19,10 @@ using namespace std;
 OSG_BEGIN_NAMESPACE;
 
 class VRHeadMountedDisplay : public std::enable_shared_from_this<VRHeadMountedDisplay> {
-	private:
+	public:
 		struct FBOData;
+
+	private:
 		FBOData* fboData = 0;
 
 		bool valid = false;

@@ -66,8 +66,8 @@ bool VRHeadMountedDisplay::checkDeviceAttached() {
 }
 
 struct VRHeadMountedDisplay::FBOData {
-	int fboWidth = 256;
-	int fboHeight = 256;
+	int fboWidth = 1024;
+	int fboHeight = 1024;
 	FrameBufferObjectRefPtr fbo;
 	TextureObjChunkRefPtr   fboTex;
 	ImageRefPtr             fboTexImg;
@@ -87,18 +87,18 @@ void VRHeadMountedDisplay::initFBO() {
 	fboData->fboTex = TextureObjChunk::create();
 	fboData->fboTex->setMinFilter(GL_NEAREST);
 	fboData->fboTex->setMagFilter(GL_NEAREST);
-	fboData->fboTex->setWrapS(GL_REPEAT);
-	fboData->fboTex->setWrapT(GL_REPEAT);
-	//fboData->fboTex->setWrapS(GL_CLAMP_TO_EDGE);
-	//fboData->fboTex->setWrapT(GL_CLAMP_TO_EDGE);
+	//fboData->fboTex->setWrapS(GL_REPEAT);
+	//fboData->fboTex->setWrapT(GL_REPEAT);
+	fboData->fboTex->setWrapS(GL_CLAMP_TO_EDGE);
+	fboData->fboTex->setWrapT(GL_CLAMP_TO_EDGE);
 
 	fboData->fboTexImg = Image::create();
-	//fboData->fboTexImg->set(Image::OSG_RGBA_PF, fboData->fboWidth, fboData->fboHeight);
-	fboData->fboTexImg->set(Image::OSG_RGBA_PF, fboData->fboWidth, fboData->fboHeight, 1, 0, 0, 0, 0, Image::OSG_UINT8_IMAGEDATA);
+	fboData->fboTexImg->set(Image::OSG_RGBA_PF, fboData->fboWidth, fboData->fboHeight);
+	//fboData->fboTexImg->set(Image::OSG_RGBA_PF, fboData->fboWidth, fboData->fboHeight, 1, 0, 0, 0, 0, Image::OSG_UINT8_IMAGEDATA);
 	//fboData->fboTexImg->set(Image::OSG_RGBA_PF, testTexSize, testTexSize, 1, 0, 0, 0, &testImage[0], Image::OSG_UINT8_IMAGEDATA);
 	// glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, testTexSize, testTexSize, 0, GL_RGBA, GL_UNSIGNED_BYTE, &testImage[0]);
 	fboData->fboTex->setImage(fboData->fboTexImg);
-	fboData->fboTex->setInternalFormat(Image::OSG_UINT8_IMAGEDATA);
+	//fboData->fboTex->setInternalFormat(Image::OSG_UINT8_IMAGEDATA);
 
 
 
@@ -134,8 +134,8 @@ void VRHeadMountedDisplay::initFBO() {
 	fboData->fbo->setHeight(fboData->fboHeight);
 	fboData->fbo->setPostProcessOnDeactivate(true);
 
-	//texBuf->setReadBack(true);
-	//texDBuf->setReadBack(true);
+	texBuf->setReadBack(true);
+	texDBuf->setReadBack(true);
 
 	fboData->ract = RenderAction::create();
 	fboData->win = PassiveWindow::create();
@@ -151,6 +151,7 @@ void VRHeadMountedDisplay::setScene() {
 	if (!scene) return;
 	VRCameraPtr cam = scene->getActiveCamera();
 	if (cam == fboData->cam) return;
+	cout << " --- VRHeadMountedDisplay::setScene " << endl;
 	VRObjectPtr root = VRScene::getCurrent()->getRoot();
 	BackgroundRecPtr bg = VRScene::getCurrent()->getBackground();
 	fboData->cam = cam;
@@ -262,16 +263,16 @@ void findTestImg(unsigned int& tID) {
 	}
 }
 
-void replaceTexGLID(unsigned int& tID, TextureObjChunkRecPtr& tChunk) {
-	if (!tChunk) return;
-	auto setup = VRSetup::getCurrent();
+void replaceTexGLID(unsigned int& tID, VRHeadMountedDisplay::FBOData* fboData) {
+	if (!fboData->fboTex || !fboData->win) return;
+	/*auto setup = VRSetup::getCurrent();
 	if (!setup) return;
 	auto vrwin = setup->getWindow("screen");
 	if (!vrwin) return;
 	auto win = vrwin->getOSGWindow();
-	if (!win) return;
-	unsigned int texID = win->getGLObjectId(tChunk->getGLId());
-	if (texID != tID) {
+	if (!win) return;*/
+	unsigned int texID = fboData->win->getGLObjectId(fboData->fboTex->getGLId());
+	if (texID != tID && texID > 0) {
 		tID = texID;
 		cout << " --- YAY " << tID << endl;
 	}
@@ -283,13 +284,18 @@ void VRHeadMountedDisplay::render(bool fromThread) {
 	setScene(); // TODO: put this in callback when new scene
 	fboData->win->render(fboData->ract);
 
+
+	ImageMTRecPtr img = Image::create();
+	img->set(fboData->fboTexImg);
+	img->write("tmp.png");
+
 	if (m_pHMD) {
 		RenderStereoTargets();
 		//cout << "render to HMD" << endl;
 		//findTestImg(testTextureID);
-		replaceTexGLID(testTextureID, fboData->fboTex);
+		replaceTexGLID(testTextureID, fboData);
+		//testTextureID = fboData->win->getGLObjectId( fboData->fboTex->getGLId() );
 		auto textureID = testTextureID;
-		//auto textureID = fboData->win->getGLObjectId( fboData->fboTex->getGLId() );
 		vr::Texture_t leftEyeTexture = { (void*)(uintptr_t)textureID, vr::TextureType_OpenGL, vr::ColorSpace_Gamma };
 		//vr::Texture_t leftEyeTexture = { (void*)(uintptr_t)leftEyeDesc.m_nResolveTextureId, vr::TextureType_OpenGL, vr::ColorSpace_Gamma };
 		vr::VRCompositor()->Submit(vr::Eye_Left, &leftEyeTexture);
