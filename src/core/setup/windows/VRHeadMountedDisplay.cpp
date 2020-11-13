@@ -262,16 +262,32 @@ void findTestImg(unsigned int& tID) {
 	}
 }
 
+void replaceTexGLID(unsigned int& tID, TextureObjChunkRecPtr& tChunk) {
+	if (!tChunk) return;
+	auto setup = VRSetup::getCurrent();
+	if (!setup) return;
+	auto vrwin = setup->getWindow("screen");
+	if (!vrwin) return;
+	auto win = vrwin->getOSGWindow();
+	if (!win) return;
+	unsigned int texID = win->getGLObjectId(tChunk->getGLId());
+	if (texID != tID) {
+		tID = texID;
+		cout << " --- YAY " << tID << endl;
+	}
+}
+
 void VRHeadMountedDisplay::render(bool fromThread) {
 	if (fromThread || fboData == 0) return;
 
-	//setScene(); // TODO: put this in callback when new scene
-	//fboData->win->render(fboData->ract);
+	setScene(); // TODO: put this in callback when new scene
+	fboData->win->render(fboData->ract);
 
 	if (m_pHMD) {
 		RenderStereoTargets();
 		//cout << "render to HMD" << endl;
-		findTestImg(testTextureID);
+		//findTestImg(testTextureID);
+		replaceTexGLID(testTextureID, fboData->fboTex);
 		auto textureID = testTextureID;
 		//auto textureID = fboData->win->getGLObjectId( fboData->fboTex->getGLId() );
 		vr::Texture_t leftEyeTexture = { (void*)(uintptr_t)textureID, vr::TextureType_OpenGL, vr::ColorSpace_Gamma };
