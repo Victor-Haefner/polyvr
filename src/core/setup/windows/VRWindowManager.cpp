@@ -27,6 +27,7 @@
 #include "VRGlutWindow.h"
 #ifndef WASM
 #include "VRMultiWindow.h"
+#include "VRHeadMountedDisplay.h"
 #endif
 
 #ifndef WITHOUT_GTK
@@ -65,6 +66,14 @@ RenderActionRefPtr VRWindowManager::getRenderAction() { return ract; }
 
 VRWindowPtr VRWindowManager::addGlutWindow(string name) {
     VRGlutWindowPtr win = VRGlutWindow::create();
+    win->setName(name);
+    win->setAction(ract);
+    windows[win->getName()] = win;
+    return win;
+}
+
+VRWindowPtr VRWindowManager::addHMD(string name) {
+    VRHeadMountedDisplayPtr win = VRHeadMountedDisplay::create();
     win->setName(name);
     win->setAction(ract);
     windows[win->getName()] = win;
@@ -210,9 +219,12 @@ void VRWindowManager::updateWindows() {
         if (!wait()) return false;
         /** let the windows merge the change lists, sync and clear **/
         if (!wait()) return false;
+        for (auto w : getWindows()) {
 #ifndef WITHOUT_GTK
-        for (auto w : getWindows() ) if (auto win = dynamic_pointer_cast<VRGtkWindow>(w.second)) win->render();
+            if (auto win = dynamic_pointer_cast<VRGtkWindow>(w.second)) win->render();
 #endif
+            if (auto win = dynamic_pointer_cast<VRHeadMountedDisplay>(w.second)) win->render();
+        }
 #else
         commitChanges();
 
@@ -310,6 +322,11 @@ void VRWindowManager::load(XMLElementPtr node) {
 
         if (type == "2") {
             win = addGtkWindow(name, "glarea", msaa);
+            win->load(el);
+        }
+
+        if (type == "3") {
+            win = addHMD(name);
             win->load(el);
         }
     }

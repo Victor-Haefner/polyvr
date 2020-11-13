@@ -22,6 +22,8 @@ class VRHeadMountedDisplay : public VRWindow {
 	private:
 		bool valid = false;
 
+		HDC glDevice;
+		HGLRC glContext;
 		vr::IVRSystem* m_pHMD;
 
 		string m_strDriver = "No Driver";
@@ -65,7 +67,7 @@ class VRHeadMountedDisplay : public VRWindow {
 		static VRHeadMountedDisplayPtr create();
 		VRHeadMountedDisplayPtr ptr();
 
-		void render();
+		void render(bool fromThread = false);
 };
 
 OSG_END_NAMESPACE;

@@ -14,9 +14,7 @@
 #include "core/utils/VRProgress.h"
 #include "core/utils/xml.h"
 #include "core/networking/VRPing.h"
-#ifndef WASM
-#include "core/setup/tracking/Vive.h"
-#endif
+
 #include "core/objects/VRTransform.h"
 #include "core/objects/VRCamera.h"
 #include "core/objects/object/VRObjectT.h"
@@ -46,10 +44,6 @@ VRSetup::VRSetup(string name) {
     setup_cam->setAcceptRoot(false);
     user = 0;
     tracking = "None";
-
-#ifndef WITHOUT_VIVE
-    vive = shared_ptr<Vive>( new Vive() );
-#endif
 
     setup_layer = VRVisualLayer::getLayer("Setup", "setup.png",1);
     stats_layer = VRVisualLayer::getLayer("Statistics", "stats.png",1);
@@ -135,9 +129,6 @@ void VRSetup::updateTracking() {
 #endif
 #ifndef WITHOUT_VRPN
     VRPN::update();
-#endif
-#ifndef WITHOUT_VIVE
-    vive->update();
 #endif
     for (auto view : getViews()) view->updateMirror();
 }

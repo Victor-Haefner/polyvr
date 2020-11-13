@@ -13,13 +13,13 @@ using namespace OSG;
 #define GRE 0,255,0,255
 #define BLU 0,0,255,255
 
-int texSize = 16;
-vector<unsigned char> image;
-unsigned int textureID;
+int testTexSize = 16;
+vector<unsigned char> testImage;
+unsigned int testTextureID;
 // ------------------------------
 
 
-std::string GetTrackedDeviceString(vr::TrackedDeviceIndex_t unDevice, vr::TrackedDeviceProperty prop, vr::TrackedPropertyError* peError = NULL) {
+std::string GetViveDeviceString(vr::TrackedDeviceIndex_t unDevice, vr::TrackedDeviceProperty prop, vr::TrackedPropertyError* peError = NULL) {
 	UInt32 unRequiredBufferLen = vr::VRSystem()->GetStringTrackedDeviceProperty(unDevice, prop, NULL, 0, peError);
 	if (unRequiredBufferLen == 0) return "";
 
@@ -32,10 +32,36 @@ std::string GetTrackedDeviceString(vr::TrackedDeviceIndex_t unDevice, vr::Tracke
 
 VRHeadMountedDisplay::VRHeadMountedDisplay() {
     cout << "VRHeadMountedDisplay: New Window" << endl;
+	type = 3;
 
 	m_rTrackedDevicePose.resize(vr::k_unMaxTrackedDeviceCount);
 	m_rmat4DevicePose.resize(vr::k_unMaxTrackedDeviceCount);
 	m_rDevClassChar.resize(vr::k_unMaxTrackedDeviceCount);
+
+	PIXELFORMATDESCRIPTOR pfd = {
+		sizeof(PIXELFORMATDESCRIPTOR),
+		1,
+		PFD_DRAW_TO_BITMAP | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER,    // Flags
+		PFD_TYPE_RGBA,        // The kind of framebuffer. RGBA or palette.
+		32,                   // Colordepth of the framebuffer.
+		0, 0, 0, 0, 0, 0,
+		0,
+		0,
+		0,
+		0, 0, 0, 0,
+		24,                   // Number of bits for the depthbuffer
+		8,                    // Number of bits for the stencilbuffer
+		0,                    // Number of Aux buffers in the framebuffer.
+		PFD_MAIN_PLANE,
+		0,
+		0, 0, 0
+	};
+
+	int pixFormat = ChoosePixelFormat(glDevice, &pfd);
+	SetPixelFormat(glDevice, pixFormat, &pfd);
+
+	glContext = wglCreateContext(glDevice);
+	wglMakeCurrent(glDevice, glContext);
 
 	vr::EVRInitError eError = vr::VRInitError_None;
 	m_pHMD = vr::VR_Init(&eError, vr::VRApplication_Scene);
@@ -46,8 +72,8 @@ VRHeadMountedDisplay::VRHeadMountedDisplay() {
 		return;
 	}
 
-	m_strDriver = GetTrackedDeviceString(vr::k_unTrackedDeviceIndex_Hmd, vr::Prop_TrackingSystemName_String);
-	m_strDisplay = GetTrackedDeviceString(vr::k_unTrackedDeviceIndex_Hmd, vr::Prop_SerialNumber_String);
+	m_strDriver = GetViveDeviceString(vr::k_unTrackedDeviceIndex_Hmd, vr::Prop_TrackingSystemName_String);
+	m_strDisplay = GetViveDeviceString(vr::k_unTrackedDeviceIndex_Hmd, vr::Prop_SerialNumber_String);
 
 
 	m_mat4ProjectionLeft = GetHMDMatrixProjectionEye(vr::Eye_Left);
@@ -68,11 +94,12 @@ VRHeadMountedDisplay::VRHeadMountedDisplay() {
 
 	SetupTexturemaps();
 
+	wglMakeCurrent(0, 0);
 	valid = true;
 }
 
 VRHeadMountedDisplay::~VRHeadMountedDisplay() {
-	;
+	cout << "~VRHeadMountedDisplay" << endl;
 }
 
 VRHeadMountedDisplayPtr VRHeadMountedDisplay::ptr() { return static_pointer_cast<VRHeadMountedDisplay>(shared_from_this()); }
@@ -117,19 +144,25 @@ void VRHeadMountedDisplay::RenderStereoTargets() {
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);*/
 }
 
-void VRHeadMountedDisplay::render() {
+void VRHeadMountedDisplay::render(bool fromThread) {
+	if (fromThread) return;
+
+	wglMakeCurrent(glDevice, glContext);
+
 	if (m_pHMD) {
 		RenderStereoTargets();
-
-		vr::Texture_t leftEyeTexture = { (void*)(uintptr_t)textureID, vr::TextureType_OpenGL, vr::ColorSpace_Gamma };
+		//cout << "render to HMD" << endl;
+		vr::Texture_t leftEyeTexture = { (void*)(uintptr_t)testTextureID, vr::TextureType_OpenGL, vr::ColorSpace_Gamma };
 		//vr::Texture_t leftEyeTexture = { (void*)(uintptr_t)leftEyeDesc.m_nResolveTextureId, vr::TextureType_OpenGL, vr::ColorSpace_Gamma };
 		vr::VRCompositor()->Submit(vr::Eye_Left, &leftEyeTexture);
-		vr::Texture_t rightEyeTexture = { (void*)(uintptr_t)textureID, vr::TextureType_OpenGL, vr::ColorSpace_Gamma };
+		vr::Texture_t rightEyeTexture = { (void*)(uintptr_t)testTextureID, vr::TextureType_OpenGL, vr::ColorSpace_Gamma };
 		//vr::Texture_t rightEyeTexture = { (void*)(uintptr_t)rightEyeDesc.m_nResolveTextureId, vr::TextureType_OpenGL, vr::ColorSpace_Gamma };
 		vr::VRCompositor()->Submit(vr::Eye_Right, &rightEyeTexture);
 	}
 
 	glFinish();
+
+	wglMakeCurrent(0, 0);
 
 	// SwapWindow
 	//glutSwapBuffers();
@@ -173,17 +206,17 @@ void VRHeadMountedDisplay::loadActionSettings() {
 }
 
 void VRHeadMountedDisplay::SetupTexturemaps() {
-	cout << "  setup texture" << endl;
+	cout << "  setup HMD test texture" << endl;
 
-	glGenTextures(1, &textureID);
-	glBindTexture(GL_TEXTURE_2D, textureID);
+	glGenTextures(1, &testTextureID);
+	glBindTexture(GL_TEXTURE_2D, testTextureID);
 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-	image = {
+	testImage = {
 		BLU, GRE, RED, GRE,BLU, GRE, RED, GRE,BLU, GRE, RED, GRE,BLU, GRE, RED, GRE,
 		GRE, RED, GRE, RED,GRE, RED, GRE, RED,GRE, RED, GRE, RED,GRE, RED, GRE, RED,
 		RED, GRE, RED, GRE,GRE, RED, GRE, RED,GRE, RED, GRE, RED,GRE, RED, GRE, RED,
@@ -202,7 +235,7 @@ void VRHeadMountedDisplay::SetupTexturemaps() {
 		GRE, RED, GRE, RED,GRE, RED, GRE, RED,GRE, RED, GRE, RED,GRE, RED, GRE, RED,
 	};
 
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, texSize, texSize, 0, GL_RGBA, GL_UNSIGNED_BYTE, &image[0]);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, testTexSize, testTexSize, 0, GL_RGBA, GL_UNSIGNED_BYTE, &testImage[0]);
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
