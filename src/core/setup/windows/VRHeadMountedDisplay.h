@@ -67,6 +67,8 @@ class VRHeadMountedDisplay : public VRWindow {
 		static VRHeadMountedDisplayPtr create();
 		VRHeadMountedDisplayPtr ptr();
 
+		void initHMD();
+
 		void render(bool fromThread = false);
 };
 

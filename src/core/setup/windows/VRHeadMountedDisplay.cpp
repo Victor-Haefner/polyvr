@@ -31,14 +31,12 @@ std::string GetViveDeviceString(vr::TrackedDeviceIndex_t unDevice, vr::TrackedDe
 }
 
 VRHeadMountedDisplay::VRHeadMountedDisplay() {
-    cout << "VRHeadMountedDisplay: New Window" << endl;
+	cout << "VRHeadMountedDisplay: New Window" << endl;
 	type = 3;
+}
 
-	m_rTrackedDevicePose.resize(vr::k_unMaxTrackedDeviceCount);
-	m_rmat4DevicePose.resize(vr::k_unMaxTrackedDeviceCount);
-	m_rDevClassChar.resize(vr::k_unMaxTrackedDeviceCount);
-
-	PIXELFORMATDESCRIPTOR pfd = {
+void initOpenGLContext() {
+	/*PIXELFORMATDESCRIPTOR pfd = {
 		sizeof(PIXELFORMATDESCRIPTOR),
 		1,
 		PFD_DRAW_TO_BITMAP | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER,    // Flags
@@ -61,7 +59,16 @@ VRHeadMountedDisplay::VRHeadMountedDisplay() {
 	SetPixelFormat(glDevice, pixFormat, &pfd);
 
 	glContext = wglCreateContext(glDevice);
-	wglMakeCurrent(glDevice, glContext);
+	wglMakeCurrent(glDevice, glContext);*/
+}
+
+void VRHeadMountedDisplay::initHMD() {
+	cout << "VRHeadMountedDisplay: init" << endl;
+
+	m_rTrackedDevicePose.resize(vr::k_unMaxTrackedDeviceCount);
+	m_rmat4DevicePose.resize(vr::k_unMaxTrackedDeviceCount);
+	m_rDevClassChar.resize(vr::k_unMaxTrackedDeviceCount);
+
 
 	vr::EVRInitError eError = vr::VRInitError_None;
 	m_pHMD = vr::VR_Init(&eError, vr::VRApplication_Scene);
@@ -90,11 +97,11 @@ VRHeadMountedDisplay::VRHeadMountedDisplay() {
 		return;
 	}
 
-	loadActionSettings();
+	//loadActionSettings();
 
 	SetupTexturemaps();
 
-	wglMakeCurrent(0, 0);
+	//wglMakeCurrent(0, 0);
 	valid = true;
 }
 
@@ -147,7 +154,7 @@ void VRHeadMountedDisplay::RenderStereoTargets() {
 void VRHeadMountedDisplay::render(bool fromThread) {
 	if (fromThread) return;
 
-	wglMakeCurrent(glDevice, glContext);
+	//wglMakeCurrent(glDevice, glContext);
 
 	if (m_pHMD) {
 		RenderStereoTargets();
@@ -160,9 +167,10 @@ void VRHeadMountedDisplay::render(bool fromThread) {
 		vr::VRCompositor()->Submit(vr::Eye_Right, &rightEyeTexture);
 	}
 
+	glFlush();
 	glFinish();
 
-	wglMakeCurrent(0, 0);
+	//wglMakeCurrent(0, 0);
 
 	// SwapWindow
 	//glutSwapBuffers();

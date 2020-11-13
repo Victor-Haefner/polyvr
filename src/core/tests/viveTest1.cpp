@@ -66,50 +66,34 @@ class HMD_utils {
 // ------------------------------
 
 class CMainApplication {
-private:
-	int texSize = 16;
-	vector<unsigned char> image;
-	unsigned int textureID;
+	private:
+		int texSize = 16;
+		vector<unsigned char> image;
+		unsigned int textureID;
 
-public:
-	CMainApplication(int argc, char* argv[]);
-	virtual ~CMainApplication();
+		int m_pCompanionWindow;
+		vr::IVRSystem* m_pHMD;
 
-	bool BInit();
+	public:
+		CMainApplication(int argc, char* argv[]);
+		virtual ~CMainApplication();
 
-	void Shutdown();
+		bool Init();
+		void SetupTexturemaps();
+		void SetupCameras();
+		void Shutdown();
 
-	void RenderFrame();
+		void RenderFrame();
+		void RenderCompanionWindow();
 
-	void SetupTexturemaps();
-
-	void SetupScene();
-	void AddCubeToScene(Matrix mat, std::vector<float>& vertdata);
-	void AddCubeVertex(float fl0, float fl1, float fl2, float fl3, float fl4, std::vector<float>& vertdata);
-
-	void SetupCameras();
-
-	void RenderCompanionWindow();
-	void RenderScene(vr::Hmd_Eye nEye);
-
-	Matrix GetHMDMatrixProjectionEye(vr::Hmd_Eye nEye);
-	Matrix GetHMDMatrixPoseEye(vr::Hmd_Eye nEye);
-	Matrix GetCurrentViewProjectionMatrix(vr::Hmd_Eye nEye);
-	void UpdateHMDMatrixPose();
-
-	Matrix ConvertSteamVRMatrixToMatrix(const vr::HmdMatrix34_t& matPose);
-
-	GLuint CompileGLShader(const char* pchShaderName, const char* pchVertexShader, const char* pchFragmentShader);
-	bool CreateAllShaders();
+		Matrix GetHMDMatrixProjectionEye(vr::Hmd_Eye nEye);
+		Matrix GetHMDMatrixPoseEye(vr::Hmd_Eye nEye);
 
 private:
-	bool m_bDebugOpenGL;
-	bool m_bVerbose;
 	bool m_bPerf;
 	bool m_bVblank;
 	bool m_bGlFinishHack;
 
-	vr::IVRSystem* m_pHMD;
 	std::string m_strDriver;
 	std::string m_strDisplay;
 	vr::TrackedDevicePose_t m_rTrackedDevicePose[vr::k_unMaxTrackedDeviceCount];
@@ -130,15 +114,10 @@ private:
 	};
 	ControllerInfo_t m_rHand[2];
 
-private: // SDL bookkeeping
-	//SDL_Window* m_pCompanionWindow;
-	int m_pCompanionWindow;
+private: // OpenGL bookkeeping
 	UInt32 m_nCompanionWindowWidth;
 	UInt32 m_nCompanionWindowHeight;
 
-	//SDL_GLContext m_pContext;
-
-private: // OpenGL bookkeeping
 	int m_iTrackedControllerCount;
 	int m_iTrackedControllerCount_Last;
 	int m_iValidPoseCount;
@@ -149,20 +128,10 @@ private: // OpenGL bookkeeping
 	std::string m_strPoseClasses;                            // what classes we saw poses for this frame
 	char m_rDevClassChar[vr::k_unMaxTrackedDeviceCount];   // for each device, a character representing its class
 
-	int m_iSceneVolumeWidth;
-	int m_iSceneVolumeHeight;
-	int m_iSceneVolumeDepth;
-	float m_fScaleSpacing;
-	float m_fScale;
-
 	int m_iSceneVolumeInit;                                  // if you want something other than the default 20x20x20
 
 	float m_fNearClip;
 	float m_fFarClip;
-
-	GLuint m_iTexture;
-
-	unsigned int m_uiVertcount;
 
 	GLuint m_glSceneVertBuffer;
 	GLuint m_unSceneVAO;
@@ -244,8 +213,6 @@ CMainApplication::CMainApplication(int argc, char* argv[])
 	, m_unControllerTransformProgramID(0)
 	, m_unRenderModelProgramID(0)
 	, m_pHMD(NULL)
-	, m_bDebugOpenGL(false)
-	, m_bVerbose(false)
 	, m_bPerf(false)
 	, m_bVblank(false)
 	, m_bGlFinishHack(true)
@@ -283,12 +250,8 @@ std::string GetTrackedDeviceString(vr::TrackedDeviceIndex_t unDevice, vr::Tracke
 	return sResult;
 }
 
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-bool CMainApplication::BInit() {
-	cout << "CMainApplication::BInit" << endl;
+bool CMainApplication::Init() {
+	cout << "CMainApplication::Init" << endl;
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_STENCIL_TEST);
 	glutInitDisplayMode(GLUT_RGBA | GLUT_DEPTH | GLUT_DOUBLE | GLUT_STENCIL | GLUT_MULTISAMPLE);
@@ -311,39 +274,15 @@ bool CMainApplication::BInit() {
 	glutInitWindowSize(m_nCompanionWindowWidth, m_nCompanionWindowHeight);
 	m_pCompanionWindow = glutCreateWindow("PolyVR");
 
-	/*m_pContext = SDL_GL_CreateContext(m_pCompanionWindow);
-	if (m_pContext == NULL) {
-		printf("%s - OpenGL context could not be created! SDL Error: %s\n", __FUNCTION__, SDL_GetError());
-		return false;
-	}*/
-
-	glGetError(); // to clear the error caused deep in GLEW
-
-
-	m_strDriver = "No Driver";
-	m_strDisplay = "No Display";
-
 	m_strDriver = GetTrackedDeviceString(vr::k_unTrackedDeviceIndex_Hmd, vr::Prop_TrackingSystemName_String);
 	m_strDisplay = GetTrackedDeviceString(vr::k_unTrackedDeviceIndex_Hmd, vr::Prop_SerialNumber_String);
-
 	std::string strWindowTitle = "hellovr - " + m_strDriver + " " + m_strDisplay;
 	glutSetWindowTitle(strWindowTitle.c_str());
 	glutDisplayFunc(display);
 	cout << " " << strWindowTitle << endl;
 
-	// cube array
-	m_iSceneVolumeWidth = m_iSceneVolumeInit;
-	m_iSceneVolumeHeight = m_iSceneVolumeInit;
-	m_iSceneVolumeDepth = m_iSceneVolumeInit;
-
-	m_fScale = 0.3f;
-	m_fScaleSpacing = 4.0f;
-
 	m_fNearClip = 0.1f;
 	m_fFarClip = 30.0f;
-
-	m_iTexture = 0;
-	m_uiVertcount = 0;
 
 	cout << " init GL assets" << endl;
 	SetupTexturemaps();
@@ -354,25 +293,6 @@ bool CMainApplication::BInit() {
 		printf("Compositor initialization failed. See log file for details\n");
 		return false;
 	}
-
-	string actionManifest = absolute("src\\core\\tests\\vive_actions.json");
-	cout << " init vr input actions, manifest: " << actionManifest << endl;
-	vr::VRInput()->SetActionManifestPath(actionManifest.c_str());
-
-	vr::VRInput()->GetActionHandle("/actions/demo/in/HideCubes", &m_actionHideCubes);
-	vr::VRInput()->GetActionHandle("/actions/demo/in/HideThisController", &m_actionHideThisController);
-	vr::VRInput()->GetActionHandle("/actions/demo/in/TriggerHaptic", &m_actionTriggerHaptic);
-	vr::VRInput()->GetActionHandle("/actions/demo/in/AnalogInput", &m_actionAnalongInput);
-
-	vr::VRInput()->GetActionSetHandle("/actions/demo", &m_actionsetDemo);
-
-	vr::VRInput()->GetActionHandle("/actions/demo/out/Haptic_Left", &m_rHand[Left].m_actionHaptic);
-	vr::VRInput()->GetInputSourceHandle("/user/hand/left", &m_rHand[Left].m_source);
-	vr::VRInput()->GetActionHandle("/actions/demo/in/Hand_Left", &m_rHand[Left].m_actionPose);
-
-	vr::VRInput()->GetActionHandle("/actions/demo/out/Haptic_Right", &m_rHand[Right].m_actionHaptic);
-	vr::VRInput()->GetInputSourceHandle("/user/hand/right", &m_rHand[Right].m_source);
-	vr::VRInput()->GetActionHandle("/actions/demo/in/Hand_Right", &m_rHand[Right].m_actionPose);
 
 	cout << " init done" << endl;
 	return true;
@@ -391,23 +311,19 @@ void CMainApplication::Shutdown() {
 }
 
 void CMainApplication::RenderFrame() {
-	RenderCompanionWindow();
-
 	vr::Texture_t leftEyeTexture = { (void*)(uintptr_t)textureID, vr::TextureType_OpenGL, vr::ColorSpace_Gamma };
 	vr::Texture_t rightEyeTexture = { (void*)(uintptr_t)textureID, vr::TextureType_OpenGL, vr::ColorSpace_Gamma };
 
 	vr::VRCompositor()->Submit(vr::Eye_Left, &leftEyeTexture);
 	vr::VRCompositor()->Submit(vr::Eye_Right, &rightEyeTexture);
 
-	glFinish();
-	glutSwapBuffers();
-	glClearColor(1, 0, 0, 1);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	//RenderCompanionWindow();
+	//glutSwapBuffers(); // only relevant for glut window
 
 	glFlush();
 	glFinish();
 
-	UpdateHMDMatrixPose();
+	vr::VRCompositor()->WaitGetPoses(m_rTrackedDevicePose, vr::k_unMaxTrackedDeviceCount, NULL, 0);
 }
 
 void CMainApplication::SetupTexturemaps() {
@@ -502,61 +418,6 @@ Matrix CMainApplication::GetHMDMatrixPoseEye(vr::Hmd_Eye nEye) {
 	);
 
 	matrixObj.invert();
-	return matrixObj;
-}
-
-Matrix CMainApplication::GetCurrentViewProjectionMatrix(vr::Hmd_Eye nEye) {
-	Matrix matMVP;
-	if (nEye == vr::Eye_Left) {
-		matMVP.mult(m_mat4ProjectionLeft);
-		matMVP.mult(m_mat4eyePosLeft);
-	} else if (nEye == vr::Eye_Right) {
-		matMVP.mult(m_mat4ProjectionRight);
-		matMVP.mult(m_mat4eyePosRight);
-	}
-
-	matMVP.mult(m_mat4HMDPose);
-	return matMVP;
-}
-
-void CMainApplication::UpdateHMDMatrixPose() {
-	if (!m_pHMD) return;
-
-	vr::VRCompositor()->WaitGetPoses(m_rTrackedDevicePose, vr::k_unMaxTrackedDeviceCount, NULL, 0);
-
-	m_iValidPoseCount = 0;
-	m_strPoseClasses = "";
-	for (int nDevice = 0; nDevice < vr::k_unMaxTrackedDeviceCount; ++nDevice) {
-		if (m_rTrackedDevicePose[nDevice].bPoseIsValid) {
-			m_iValidPoseCount++;
-			m_rmat4DevicePose[nDevice] = ConvertSteamVRMatrixToMatrix(m_rTrackedDevicePose[nDevice].mDeviceToAbsoluteTracking);
-			if (m_rDevClassChar[nDevice] == 0) {
-				switch (m_pHMD->GetTrackedDeviceClass(nDevice)) {
-					case vr::TrackedDeviceClass_Controller:        m_rDevClassChar[nDevice] = 'C'; break;
-					case vr::TrackedDeviceClass_HMD:               m_rDevClassChar[nDevice] = 'H'; break;
-					case vr::TrackedDeviceClass_Invalid:           m_rDevClassChar[nDevice] = 'I'; break;
-					case vr::TrackedDeviceClass_GenericTracker:    m_rDevClassChar[nDevice] = 'G'; break;
-					case vr::TrackedDeviceClass_TrackingReference: m_rDevClassChar[nDevice] = 'T'; break;
-					default:                                       m_rDevClassChar[nDevice] = '?'; break;
-				}
-			}
-			m_strPoseClasses += m_rDevClassChar[nDevice];
-		}
-	}
-
-	if (m_rTrackedDevicePose[vr::k_unTrackedDeviceIndex_Hmd].bPoseIsValid) {
-		m_mat4HMDPose = m_rmat4DevicePose[vr::k_unTrackedDeviceIndex_Hmd];
-		m_mat4HMDPose.invert();
-	}
-}
-
-Matrix CMainApplication::ConvertSteamVRMatrixToMatrix(const vr::HmdMatrix34_t& matPose) {
-	Matrix matrixObj(
-		matPose.m[0][0], matPose.m[1][0], matPose.m[2][0], 0.0,
-		matPose.m[0][1], matPose.m[1][1], matPose.m[2][1], 0.0,
-		matPose.m[0][2], matPose.m[1][2], matPose.m[2][2], 0.0,
-		matPose.m[0][3], matPose.m[1][3], matPose.m[2][3], 1.0f
-	);
 	return matrixObj;
 }
 
