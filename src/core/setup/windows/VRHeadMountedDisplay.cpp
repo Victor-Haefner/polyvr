@@ -1,10 +1,31 @@
 #include "VRHeadMountedDisplay.h"
+#include "core/scene/VRScene.h"
+#include "core/objects/object/VRObject.h"
+#include "core/objects/geometry/VRGeometry.h"
+#include "core/objects/material/VRMaterial.h"
+#include "core/objects/VRCamera.h"
+#include "core/objects/OSGCamera.h"
+#include "core/objects/OSGObject.h"
+
+#include "core/setup/VRSetup.h"
+#include "core/setup/windows/VRWindow.h"
 
 #include <openvr.h>
 #include <iostream>
 
 #include <OpenSG/OSGMatrix.h>
 #include <OpenSG/OSGVector.h>
+
+#include <OpenSG/OSGGLEXT.h>
+#include <OpenSG/OSGFrameBufferObject.h>
+#include <OpenSG/OSGTextureBuffer.h>
+#include <OpenSG/OSGRenderBuffer.h>
+#include <OpenSG/OSGTextureObjChunk.h>
+#include <OpenSG/OSGTextureEnvChunk.h>
+
+#include <OpenSG/OSGPassiveWindow.h>
+#include <OpenSG/OSGRenderAction.h>
+#include <OpenSG/OSGFBOViewport.h>
 
 using namespace OSG;
 
@@ -32,8 +53,110 @@ std::string GetViveDeviceString(vr::TrackedDeviceIndex_t unDevice, vr::TrackedDe
 
 VRHeadMountedDisplay::VRHeadMountedDisplay() {}
 
+VRHeadMountedDisplay::~VRHeadMountedDisplay() {
+	cout << "~VRHeadMountedDisplay" << endl;
+	if (fboData) delete fboData;
+}
+
+VRHeadMountedDisplayPtr VRHeadMountedDisplay::ptr() { return static_pointer_cast<VRHeadMountedDisplay>(shared_from_this()); }
+VRHeadMountedDisplayPtr VRHeadMountedDisplay::create() { return VRHeadMountedDisplayPtr(new VRHeadMountedDisplay()); }
+
 bool VRHeadMountedDisplay::checkDeviceAttached() {
 	return vr::VR_IsHmdPresent();
+}
+
+struct VRHeadMountedDisplay::FBOData {
+	int fboWidth = 256;
+	int fboHeight = 256;
+	FrameBufferObjectRefPtr fbo;
+	TextureObjChunkRefPtr   fboTex;
+	ImageRefPtr             fboTexImg;
+	TextureObjChunkRefPtr   fboDTex;
+	ImageRefPtr             fboDTexImg;
+
+	RenderActionRefPtr		ract;
+	WindowMTRecPtr			win;
+	FBOViewportRecPtr		fboView;
+
+	VRCameraPtr cam;
+};
+
+void VRHeadMountedDisplay::initFBO() {
+	fboData = new FBOData();
+
+	fboData->fboTex = TextureObjChunk::create();
+	fboData->fboTex->setMinFilter(GL_NEAREST);
+	fboData->fboTex->setMagFilter(GL_NEAREST);
+	fboData->fboTex->setWrapS(GL_REPEAT);
+	fboData->fboTex->setWrapT(GL_REPEAT);
+	//fboData->fboTex->setWrapS(GL_CLAMP_TO_EDGE);
+	//fboData->fboTex->setWrapT(GL_CLAMP_TO_EDGE);
+
+	fboData->fboTexImg = Image::create();
+	//fboData->fboTexImg->set(Image::OSG_RGBA_PF, fboData->fboWidth, fboData->fboHeight);
+	fboData->fboTexImg->set(Image::OSG_RGBA_PF, fboData->fboWidth, fboData->fboHeight, 1, 0, 0, 0, 0, Image::OSG_UINT8_IMAGEDATA);
+	//fboData->fboTexImg->set(Image::OSG_RGBA_PF, testTexSize, testTexSize, 1, 0, 0, 0, &testImage[0], Image::OSG_UINT8_IMAGEDATA);
+	// glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, testTexSize, testTexSize, 0, GL_RGBA, GL_UNSIGNED_BYTE, &testImage[0]);
+	fboData->fboTex->setImage(fboData->fboTexImg);
+	fboData->fboTex->setInternalFormat(Image::OSG_UINT8_IMAGEDATA);
+
+
+
+	TextureBufferRefPtr texBuf = TextureBuffer::create();
+	texBuf->setTexture(fboData->fboTex);
+
+	fboData->fboDTexImg = Image::create();
+	fboData->fboDTexImg->set(Image::OSG_RGBA_PF, fboData->fboWidth, fboData->fboHeight);
+	fboData->fboDTex = TextureObjChunk::create();
+	fboData->fboDTex->setImage(fboData->fboDTexImg);
+	fboData->fboDTex->setMinFilter(GL_NEAREST);
+	fboData->fboDTex->setMagFilter(GL_NEAREST);
+	fboData->fboDTex->setWrapS(GL_CLAMP_TO_EDGE);
+	fboData->fboDTex->setWrapT(GL_CLAMP_TO_EDGE);
+	fboData->fboDTex->setExternalFormat(GL_DEPTH_COMPONENT);
+	fboData->fboDTex->setInternalFormat(GL_DEPTH_COMPONENT24); //24/32
+	fboData->fboDTex->setCompareMode(GL_NONE);
+	fboData->fboDTex->setCompareFunc(GL_LEQUAL);
+	fboData->fboDTex->setDepthMode(GL_INTENSITY);
+	TextureBufferRefPtr texDBuf = TextureBuffer::create();
+	texDBuf->setTexture(fboData->fboDTex);
+
+	RenderBufferRefPtr depthBuf = RenderBuffer::create();
+	depthBuf->setInternalFormat(GL_DEPTH_COMPONENT24);
+
+	fboData->fbo = FrameBufferObject::create();
+	fboData->fbo->setColorAttachment(texBuf, 0);
+	//data->fbo->setColorAttachment(texDBuf, 1);
+	fboData->fbo->setDepthAttachment(texDBuf); //HERE depthBuf/texDBuf
+	fboData->fbo->editMFDrawBuffers()->push_back(GL_DEPTH_ATTACHMENT_EXT);
+	fboData->fbo->editMFDrawBuffers()->push_back(GL_COLOR_ATTACHMENT0_EXT);
+	fboData->fbo->setWidth(fboData->fboWidth);
+	fboData->fbo->setHeight(fboData->fboHeight);
+	fboData->fbo->setPostProcessOnDeactivate(true);
+
+	//texBuf->setReadBack(true);
+	//texDBuf->setReadBack(true);
+
+	fboData->ract = RenderAction::create();
+	fboData->win = PassiveWindow::create();
+	fboData->fboView = FBOViewport::create();
+	fboData->fboView->setFrameBufferObject(fboData->fbo);
+
+	fboData->win->addPort(fboData->fboView);
+	fboData->fboView->setSize(0, 0, 1, 1);
+}
+
+void VRHeadMountedDisplay::setScene() {
+	auto scene = VRScene::getCurrent();
+	if (!scene) return;
+	VRCameraPtr cam = scene->getActiveCamera();
+	if (cam == fboData->cam) return;
+	VRObjectPtr root = VRScene::getCurrent()->getRoot();
+	BackgroundRecPtr bg = VRScene::getCurrent()->getBackground();
+	fboData->cam = cam;
+	fboData->fboView->setBackground(bg);
+	fboData->fboView->setCamera(cam->getCam()->cam);
+	fboData->fboView->setRoot(root->getNode()->node);
 }
 
 void VRHeadMountedDisplay::initHMD() {
@@ -62,6 +185,8 @@ void VRHeadMountedDisplay::initHMD() {
 	m_mat4eyePosRight = GetHMDMatrixPoseEye(vr::Eye_Right);
 
 	m_pHMD->GetRecommendedRenderTargetSize(&m_nRenderWidth, &m_nRenderHeight);
+	SetupTexturemaps();
+	initFBO();
 	//CreateFrameBuffer(m_nRenderWidth, m_nRenderHeight, leftEyeDesc);
 	//CreateFrameBuffer(m_nRenderWidth, m_nRenderHeight, rightEyeDesc);
 
@@ -72,18 +197,9 @@ void VRHeadMountedDisplay::initHMD() {
 
 	//loadActionSettings();
 
-	SetupTexturemaps();
 
-	//wglMakeCurrent(0, 0);
 	valid = true;
 }
-
-VRHeadMountedDisplay::~VRHeadMountedDisplay() {
-	cout << "~VRHeadMountedDisplay" << endl;
-}
-
-VRHeadMountedDisplayPtr VRHeadMountedDisplay::ptr() { return static_pointer_cast<VRHeadMountedDisplay>(shared_from_this()); }
-VRHeadMountedDisplayPtr VRHeadMountedDisplay::create() { return VRHeadMountedDisplayPtr(new VRHeadMountedDisplay()); }
 
 void VRHeadMountedDisplay::RenderStereoTargets() {
 	glClearColor(0.4f, 0.8f, 1.0f, 1.0f);
@@ -124,18 +240,37 @@ void VRHeadMountedDisplay::RenderStereoTargets() {
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);*/
 }
 
-void VRHeadMountedDisplay::render(bool fromThread) {
-	if (fromThread) return;
+void findTestImg(unsigned int& tID) {
+	auto scene = VRScene::getCurrent();
+	if (!scene) return;
+	auto obj = dynamic_pointer_cast<VRGeometry>( scene->get("img") );
+	if (!obj) return;
+	auto tChunk = obj->getMaterial()->getTextureObjChunk();
+	auto win = VRSetup::getCurrent()->getWindow(0)->getOSGWindow();
+	if (!win) return;
+	unsigned int texID = win->getGLObjectId(tChunk->getGLId());
+	if (texID != tID) {
+		tID = texID;
+		cout << " --- YAY " << tID << endl;
+	}
+}
 
-	//wglMakeCurrent(glDevice, glContext);
+void VRHeadMountedDisplay::render(bool fromThread) {
+	if (fromThread || fboData == 0) return;
+
+	setScene(); // TODO: put this in callback when new scene
+	fboData->win->render(fboData->ract);
 
 	if (m_pHMD) {
 		RenderStereoTargets();
 		//cout << "render to HMD" << endl;
-		vr::Texture_t leftEyeTexture = { (void*)(uintptr_t)testTextureID, vr::TextureType_OpenGL, vr::ColorSpace_Gamma };
+		auto textureID = testTextureID;
+		//findTestImg(textureID);
+		//auto textureID = fboData->win->getGLObjectId( fboData->fboTex->getGLId() );
+		vr::Texture_t leftEyeTexture = { (void*)(uintptr_t)textureID, vr::TextureType_OpenGL, vr::ColorSpace_Gamma };
 		//vr::Texture_t leftEyeTexture = { (void*)(uintptr_t)leftEyeDesc.m_nResolveTextureId, vr::TextureType_OpenGL, vr::ColorSpace_Gamma };
 		vr::VRCompositor()->Submit(vr::Eye_Left, &leftEyeTexture);
-		vr::Texture_t rightEyeTexture = { (void*)(uintptr_t)testTextureID, vr::TextureType_OpenGL, vr::ColorSpace_Gamma };
+		vr::Texture_t rightEyeTexture = { (void*)(uintptr_t)textureID, vr::TextureType_OpenGL, vr::ColorSpace_Gamma };
 		//vr::Texture_t rightEyeTexture = { (void*)(uintptr_t)rightEyeDesc.m_nResolveTextureId, vr::TextureType_OpenGL, vr::ColorSpace_Gamma };
 		vr::VRCompositor()->Submit(vr::Eye_Right, &rightEyeTexture);
 	}
@@ -143,26 +278,7 @@ void VRHeadMountedDisplay::render(bool fromThread) {
 	glFlush();
 	glFinish();
 
-	//wglMakeCurrent(0, 0);
-
-	// SwapWindow
-	//glutSwapBuffers();
-
-	// Clear
-	/*glClearColor(1, 0, 0, 1);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-	glFlush();
-	glFinish();*/
-
-	// Spew out the controller and pose count whenever they change.
-	/*if (m_iTrackedControllerCount != m_iTrackedControllerCount_Last || m_iValidPoseCount != m_iValidPoseCount_Last) {
-		m_iValidPoseCount_Last = m_iValidPoseCount;
-		m_iTrackedControllerCount_Last = m_iTrackedControllerCount;
-		dprintf("PoseCount:%d(%s) Controllers:%d\n", m_iValidPoseCount, m_strPoseClasses.c_str(), m_iTrackedControllerCount);
-	}*/
-
-	UpdateHMDMatrixPose();
+	UpdateHMDMatrixPose(); // maybe put this in front
 }
 
 void VRHeadMountedDisplay::loadActionSettings() {
@@ -199,21 +315,21 @@ void VRHeadMountedDisplay::SetupTexturemaps() {
 
 	testImage = {
 		BLU, GRE, RED, GRE,BLU, GRE, RED, GRE,BLU, GRE, RED, GRE,BLU, GRE, RED, GRE,
-		GRE, RED, GRE, RED,GRE, RED, GRE, RED,GRE, RED, GRE, RED,GRE, RED, GRE, RED,
-		RED, GRE, RED, GRE,GRE, RED, GRE, RED,GRE, RED, GRE, RED,GRE, RED, GRE, RED,
-		GRE, RED, GRE, RED,GRE, RED, GRE, RED,GRE, RED, GRE, RED,GRE, RED, GRE, RED,
-		RED, GRE, RED, GRE,GRE, RED, GRE, RED,GRE, RED, GRE, RED,GRE, RED, GRE, RED,
-		GRE, RED, GRE, RED,GRE, RED, GRE, RED,GRE, RED, GRE, RED,GRE, RED, GRE, RED,
-		RED, GRE, RED, GRE,GRE, RED, GRE, RED,GRE, RED, GRE, RED,GRE, RED, GRE, RED,
-		GRE, RED, GRE, RED,GRE, RED, GRE, RED,GRE, RED, GRE, RED,GRE, RED, GRE, RED,
-		RED, GRE, RED, GRE,GRE, RED, GRE, RED,GRE, RED, GRE, RED,GRE, RED, GRE, RED,
-		GRE, RED, GRE, RED,GRE, RED, GRE, RED,GRE, RED, GRE, RED,GRE, RED, GRE, RED,
-		RED, GRE, RED, GRE,GRE, RED, GRE, RED,GRE, RED, GRE, RED,GRE, RED, GRE, RED,
-		GRE, RED, GRE, RED,GRE, RED, GRE, RED,GRE, RED, GRE, RED,GRE, RED, GRE, RED,
-		RED, GRE, RED, GRE,GRE, RED, GRE, RED,GRE, RED, GRE, RED,GRE, RED, GRE, RED,
-		GRE, RED, GRE, RED,GRE, RED, GRE, RED,GRE, RED, GRE, RED,GRE, RED, GRE, RED,
-		RED, GRE, RED, GRE,GRE, RED, GRE, RED,GRE, RED, GRE, RED,GRE, RED, GRE, RED,
-		GRE, RED, GRE, RED,GRE, RED, GRE, RED,GRE, RED, GRE, RED,GRE, RED, GRE, RED,
+		GRE, BLU, GRE, RED,GRE, RED, GRE, RED,GRE, RED, GRE, RED,GRE, RED, GRE, RED,
+		RED, GRE, BLU, GRE,GRE, RED, GRE, RED,GRE, RED, GRE, RED,GRE, RED, GRE, RED,
+		GRE, RED, GRE, BLU,GRE, RED, GRE, RED,GRE, RED, GRE, RED,GRE, RED, GRE, RED,
+		RED, GRE, RED, GRE,BLU, RED, GRE, RED,GRE, RED, GRE, RED,GRE, RED, GRE, RED,
+		GRE, RED, GRE, RED,GRE, BLU, GRE, RED,GRE, RED, GRE, RED,GRE, RED, GRE, RED,
+		RED, GRE, RED, GRE,GRE, RED, BLU, RED,GRE, RED, GRE, RED,GRE, RED, GRE, RED,
+		GRE, RED, GRE, RED,GRE, RED, GRE, BLU,GRE, RED, GRE, RED,GRE, RED, GRE, RED,
+		RED, GRE, RED, GRE,GRE, RED, GRE, RED,BLU, RED, GRE, RED,GRE, RED, GRE, RED,
+		GRE, RED, GRE, RED,GRE, RED, GRE, RED,GRE, BLU, GRE, RED,GRE, RED, GRE, RED,
+		RED, GRE, RED, GRE,GRE, RED, GRE, RED,GRE, RED, BLU, RED,GRE, RED, GRE, RED,
+		GRE, RED, GRE, RED,GRE, RED, GRE, RED,GRE, RED, GRE, BLU,GRE, RED, GRE, RED,
+		RED, GRE, RED, GRE,GRE, RED, GRE, RED,GRE, RED, GRE, RED,BLU, RED, GRE, RED,
+		GRE, RED, GRE, RED,GRE, RED, GRE, RED,GRE, RED, GRE, RED,GRE, BLU, GRE, RED,
+		RED, GRE, RED, GRE,GRE, RED, GRE, RED,GRE, RED, GRE, RED,GRE, RED, BLU, RED,
+		GRE, RED, GRE, RED,GRE, RED, GRE, RED,GRE, RED, GRE, RED,GRE, RED, GRE, BLU,
 	};
 
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, testTexSize, testTexSize, 0, GL_RGBA, GL_UNSIGNED_BYTE, &testImage[0]);

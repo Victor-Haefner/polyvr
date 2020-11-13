@@ -20,6 +20,9 @@ OSG_BEGIN_NAMESPACE;
 
 class VRHeadMountedDisplay : public std::enable_shared_from_this<VRHeadMountedDisplay> {
 	private:
+		struct FBOData;
+		FBOData* fboData = 0;
+
 		bool valid = false;
 		vr::IVRSystem* m_pHMD;
 
@@ -53,6 +56,8 @@ class VRHeadMountedDisplay : public std::enable_shared_from_this<VRHeadMountedDi
 		Matrix ConvertSteamVRMatrixToMatrix(const vr::HmdMatrix34_t& matPose);
 
 		void loadActionSettings();
+		void initFBO();
+		void setScene();
 
 		void RenderStereoTargets();
 		void SetupTexturemaps();

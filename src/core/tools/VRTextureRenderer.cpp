@@ -89,7 +89,7 @@ void VRTextureRenderer::test() {
     flagScene->addChild(NodeRefPtr(makeNodeFor(flagGeo)));
 
     auto scene = VRScene::getCurrent();
-    auto hlight = scene->getRoot()->find("Headlight");
+    auto hlight = scene->getRoot()->find("light");
     hlight->addChild( OSGObject::create(flagScene) );
 }
 
