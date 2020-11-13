@@ -76,8 +76,6 @@ public:
 	virtual ~CMainApplication();
 
 	bool BInit();
-	bool BInitGL();
-	bool BInitCompositor();
 
 	void Shutdown();
 
@@ -347,18 +345,13 @@ bool CMainApplication::BInit() {
 	m_iTexture = 0;
 	m_uiVertcount = 0;
 
-	// 		m_MillisecondsTimer.start(1, this);
-	// 		m_SecondsTimer.start(1000, this);
-
-	cout << " init GL" << endl;
-	if (!BInitGL()) {
-		cout << "Unable to initialize OpenGL!" << endl;		
-		return false;
-	}
+	cout << " init GL assets" << endl;
+	SetupTexturemaps();
+	SetupCameras();
 
 	cout << " init compositor" << endl;
-	if (!BInitCompositor()) {
-		cout << "Failed to initialize VR Compositor!" << endl;
+	if (!vr::VRCompositor()) {
+		printf("Compositor initialization failed. See log file for details\n");
 		return false;
 	}
 
@@ -382,25 +375,6 @@ bool CMainApplication::BInit() {
 	vr::VRInput()->GetActionHandle("/actions/demo/in/Hand_Right", &m_rHand[Right].m_actionPose);
 
 	cout << " init done" << endl;
-	return true;
-}
-
-bool CMainApplication::BInitGL() {
-	SetupTexturemaps();
-	cout << "  setup scene" << endl;
-	//SetupScene();
-	SetupCameras();
-	return true;
-}
-
-bool CMainApplication::BInitCompositor() {
-	vr::EVRInitError peError = vr::VRInitError_None;
-
-	if (!vr::VRCompositor()) {
-		printf("Compositor initialization failed. See log file for details\n");
-		return false;
-	}
-
 	return true;
 }
 
