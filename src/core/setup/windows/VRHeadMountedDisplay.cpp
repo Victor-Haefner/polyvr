@@ -30,36 +30,10 @@ std::string GetViveDeviceString(vr::TrackedDeviceIndex_t unDevice, vr::TrackedDe
 	return sResult;
 }
 
-VRHeadMountedDisplay::VRHeadMountedDisplay() {
-	cout << "VRHeadMountedDisplay: New Window" << endl;
-	type = 3;
-}
+VRHeadMountedDisplay::VRHeadMountedDisplay() {}
 
-void initOpenGLContext() {
-	/*PIXELFORMATDESCRIPTOR pfd = {
-		sizeof(PIXELFORMATDESCRIPTOR),
-		1,
-		PFD_DRAW_TO_BITMAP | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER,    // Flags
-		PFD_TYPE_RGBA,        // The kind of framebuffer. RGBA or palette.
-		32,                   // Colordepth of the framebuffer.
-		0, 0, 0, 0, 0, 0,
-		0,
-		0,
-		0,
-		0, 0, 0, 0,
-		24,                   // Number of bits for the depthbuffer
-		8,                    // Number of bits for the stencilbuffer
-		0,                    // Number of Aux buffers in the framebuffer.
-		PFD_MAIN_PLANE,
-		0,
-		0, 0, 0
-	};
-
-	int pixFormat = ChoosePixelFormat(glDevice, &pfd);
-	SetPixelFormat(glDevice, pixFormat, &pfd);
-
-	glContext = wglCreateContext(glDevice);
-	wglMakeCurrent(glDevice, glContext);*/
+bool VRHeadMountedDisplay::checkDeviceAttached() {
+	return vr::VR_IsHmdPresent();
 }
 
 void VRHeadMountedDisplay::initHMD() {
@@ -68,7 +42,6 @@ void VRHeadMountedDisplay::initHMD() {
 	m_rTrackedDevicePose.resize(vr::k_unMaxTrackedDeviceCount);
 	m_rmat4DevicePose.resize(vr::k_unMaxTrackedDeviceCount);
 	m_rDevClassChar.resize(vr::k_unMaxTrackedDeviceCount);
-
 
 	vr::EVRInitError eError = vr::VRInitError_None;
 	m_pHMD = vr::VR_Init(&eError, vr::VRApplication_Scene);

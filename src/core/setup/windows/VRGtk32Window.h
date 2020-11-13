@@ -45,7 +45,8 @@ VRGtkWindow::VRGtkWindow(GtkDrawingArea* da, string msaa) {
     connect_signal<bool, GdkEventKey*>(drawArea, bind(&VRGtkWindow::on_key, this, PL::_1), "key_release_event");
     cout << "  VRGtkWindow init done" << endl;
 
-    hmd = VRHeadMountedDisplay::create();
+    if (VRHeadMountedDisplay::checkDeviceAttached())
+        hmd = VRHeadMountedDisplay::create();
 }
 
 void VRGtkWindow::clear(Color3f c) {

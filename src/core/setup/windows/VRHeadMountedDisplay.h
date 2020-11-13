@@ -5,25 +5,22 @@
 #include <OpenSG/OSGMatrix.h>
 #include <string>
 #include <vector>
-#include "VRWindow.h"
+
+#include "../VRSetupFwd.h"
 
 namespace vr {
 	class IVRSystem;
 	struct HmdMatrix34_t;
 	class TrackedDevicePose_t;
-
 	enum EVREye;
 }
 
 using namespace std;
 OSG_BEGIN_NAMESPACE;
 
-class VRHeadMountedDisplay : public VRWindow {
+class VRHeadMountedDisplay : public std::enable_shared_from_this<VRHeadMountedDisplay> {
 	private:
 		bool valid = false;
-
-		HDC glDevice;
-		HGLRC glContext;
 		vr::IVRSystem* m_pHMD;
 
 		string m_strDriver = "No Driver";
@@ -66,6 +63,8 @@ class VRHeadMountedDisplay : public VRWindow {
 
 		static VRHeadMountedDisplayPtr create();
 		VRHeadMountedDisplayPtr ptr();
+
+		static bool checkDeviceAttached();
 
 		void initHMD();
 

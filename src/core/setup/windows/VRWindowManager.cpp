@@ -72,14 +72,6 @@ VRWindowPtr VRWindowManager::addGlutWindow(string name) {
     return win;
 }
 
-VRWindowPtr VRWindowManager::addHMD(string name) {
-    VRHeadMountedDisplayPtr win = VRHeadMountedDisplay::create();
-    win->setName(name);
-    win->setAction(ract);
-    windows[win->getName()] = win;
-    return win;
-}
-
 VRWindowPtr VRWindowManager::addMultiWindow(string name) {
 #ifndef WASM
     VRMultiWindowPtr win = VRMultiWindow::create();
@@ -322,11 +314,6 @@ void VRWindowManager::load(XMLElementPtr node) {
 
         if (type == "2") {
             win = addGtkWindow(name, "glarea", msaa);
-            win->load(el);
-        }
-
-        if (type == "3") {
-            win = addHMD(name);
             win->load(el);
         }
     }
