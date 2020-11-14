@@ -29,6 +29,8 @@
 #include <OpenSG/OSGPassiveWindow.h>
 #include <OpenSG/OSGRenderAction.h>
 #include <OpenSG/OSGFBOViewport.h>
+#include <OpenSG/OSGMatrixCameraDecorator.h>
+#include <OpenSG/OSGMatrixCamera.h>
 
 using namespace OSG;
 
@@ -69,8 +71,6 @@ bool VRHeadMountedDisplay::checkDeviceAttached() {
 }
 
 struct VRHeadMountedDisplay::FBOData {
-	int fboWidth = 1024;
-	int fboHeight = 1024;
 	FrameBufferObjectRefPtr fbo;
 	TextureObjChunkRefPtr   fboTex;
 	ImageRefPtr             fboTexImg;
@@ -96,7 +96,7 @@ void VRHeadMountedDisplay::initFBO() {
 	fboData->fboTex->setWrapT(GL_CLAMP_TO_EDGE);
 
 	fboData->fboTexImg = Image::create();
-	fboData->fboTexImg->set(Image::OSG_RGBA_PF, fboData->fboWidth, fboData->fboHeight);
+	fboData->fboTexImg->set(Image::OSG_RGBA_PF, m_nRenderWidth, m_nRenderHeight);
 	//fboData->fboTexImg->set(Image::OSG_RGBA_PF, fboData->fboWidth, fboData->fboHeight, 1, 0, 0, 0, 0, Image::OSG_UINT8_IMAGEDATA);
 	//fboData->fboTexImg->set(Image::OSG_RGBA_PF, testTexSize, testTexSize, 1, 0, 0, 0, &testImage[0], Image::OSG_UINT8_IMAGEDATA);
 	// glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, testTexSize, testTexSize, 0, GL_RGBA, GL_UNSIGNED_BYTE, &testImage[0]);
@@ -109,7 +109,7 @@ void VRHeadMountedDisplay::initFBO() {
 	texBuf->setTexture(fboData->fboTex);
 
 	fboData->fboDTexImg = Image::create();
-	fboData->fboDTexImg->set(Image::OSG_RGBA_PF, fboData->fboWidth, fboData->fboHeight);
+	fboData->fboDTexImg->set(Image::OSG_RGBA_PF, m_nRenderWidth, m_nRenderHeight);
 	fboData->fboDTex = TextureObjChunk::create();
 	fboData->fboDTex->setImage(fboData->fboDTexImg);
 	fboData->fboDTex->setMinFilter(GL_NEAREST);
@@ -133,8 +133,8 @@ void VRHeadMountedDisplay::initFBO() {
 	fboData->fbo->setDepthAttachment(texDBuf); //HERE depthBuf/texDBuf
 	fboData->fbo->editMFDrawBuffers()->push_back(GL_DEPTH_ATTACHMENT_EXT);
 	fboData->fbo->editMFDrawBuffers()->push_back(GL_COLOR_ATTACHMENT0_EXT);
-	fboData->fbo->setWidth(fboData->fboWidth);
-	fboData->fbo->setHeight(fboData->fboHeight);
+	fboData->fbo->setWidth(m_nRenderWidth);
+	fboData->fbo->setHeight(m_nRenderHeight);
 	fboData->fbo->setPostProcessOnDeactivate(true);
 
 	texBuf->setReadBack(true);
@@ -153,6 +153,10 @@ void VRHeadMountedDisplay::initTexRenderer() {
 	//renderer = VRTextureRenderer::create();
 	
 }
+
+// TODO
+//  - camera matrix decorator
+//  - left and right eye
 
 void VRHeadMountedDisplay::setScene() {
 	auto scene = VRScene::getCurrent();
@@ -174,17 +178,21 @@ void VRHeadMountedDisplay::setScene() {
 	cout << " --- VRHeadMountedDisplay::setScene renderer" << endl;
 	root->addChild(renderer);
 
+	MatrixCameraRecPtr mcam = MatrixCamera::create();
+	mcam->setBeacon(cam->getCam()->cam->getBeacon());
+	mcam->setUseBeacon(true);
+	Matrix mL = m_mat4ProjectionLeft;
+	//mL.mult(m_mat4eyePosLeft);
+	mcam->setProjectionMatrix(mL);
+	mcam->setNear(0.1);
+	mcam->setFar(1000);
+	//mcam->setNear(cam->getCam()->cam->getNear());
+	//mcam->setFar(cam->getCam()->cam->getFar());
+	//mcam->getModelviewMatrix(); // needed or set by beacon?
 
-	//auto cam = VRCamera::create("cam");
-	auto li = VRLight::create("sun");
-	auto lib = VRLightBeacon::create("sun_b");
-	li->setBeacon(lib);
-	renderer->setup(cam, 1024, 1024, true);
+	renderer->setup(cam, m_nRenderWidth, m_nRenderHeight, true);
+	renderer->setStageCam(OSGCamera::create(mcam));
 	renderer->updateBackground();
-	//li->addChild(cam);
-	li->addChild(lib);
-	renderer->addChild(li);
-	//cam->addChild(lib);
 	renderer->addLink(root->getChild(0));
 }
 
@@ -370,62 +378,28 @@ void VRHeadMountedDisplay::SetupTexturemaps() {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-	testTexSize = 1024;
-	for (int i = 0; i < testTexSize; i++) {
-		for (int j = 0; j < testTexSize; j++) {
+	for (int i = 0; i < m_nRenderHeight; i++) {
+		for (int j = 0; j < m_nRenderWidth; j++) {
 			if (i == j) { testImage.push_back(0); testImage.push_back(0); testImage.push_back(255); testImage.push_back(255); }
 			else if (i%2 == 0) { testImage.push_back(0); testImage.push_back(255); testImage.push_back(0); testImage.push_back(255); }
 			else { testImage.push_back(255); testImage.push_back(0); testImage.push_back(0); testImage.push_back(255); }
 		}
 	}
 
-	/*testImage = {
-		BLU, GRE, RED, GRE,BLU, GRE, RED, GRE,BLU, GRE, RED, GRE,BLU, GRE, RED, GRE,
-		GRE, BLU, GRE, RED,GRE, RED, GRE, RED,GRE, RED, GRE, RED,GRE, RED, GRE, RED,
-		RED, GRE, BLU, GRE,GRE, RED, GRE, RED,GRE, RED, GRE, RED,GRE, RED, GRE, RED,
-		GRE, RED, GRE, BLU,GRE, RED, GRE, RED,GRE, RED, GRE, RED,GRE, RED, GRE, RED,
-		RED, GRE, RED, GRE,BLU, RED, GRE, RED,GRE, RED, GRE, RED,GRE, RED, GRE, RED,
-		GRE, RED, GRE, RED,GRE, BLU, GRE, RED,GRE, RED, GRE, RED,GRE, RED, GRE, RED,
-		RED, GRE, RED, GRE,GRE, RED, BLU, RED,GRE, RED, GRE, RED,GRE, RED, GRE, RED,
-		GRE, RED, GRE, RED,GRE, RED, GRE, BLU,GRE, RED, GRE, RED,GRE, RED, GRE, RED,
-		RED, GRE, RED, GRE,GRE, RED, GRE, RED,BLU, RED, GRE, RED,GRE, RED, GRE, RED,
-		GRE, RED, GRE, RED,GRE, RED, GRE, RED,GRE, BLU, GRE, RED,GRE, RED, GRE, RED,
-		RED, GRE, RED, GRE,GRE, RED, GRE, RED,GRE, RED, BLU, RED,GRE, RED, GRE, RED,
-		GRE, RED, GRE, RED,GRE, RED, GRE, RED,GRE, RED, GRE, BLU,GRE, RED, GRE, RED,
-		RED, GRE, RED, GRE,GRE, RED, GRE, RED,GRE, RED, GRE, RED,BLU, RED, GRE, RED,
-		GRE, RED, GRE, RED,GRE, RED, GRE, RED,GRE, RED, GRE, RED,GRE, BLU, GRE, RED,
-		RED, GRE, RED, GRE,GRE, RED, GRE, RED,GRE, RED, GRE, RED,GRE, RED, BLU, RED,
-		GRE, RED, GRE, RED,GRE, RED, GRE, RED,GRE, RED, GRE, RED,GRE, RED, GRE, BLU,
-	};*/
-
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, testTexSize, testTexSize, 0, GL_RGBA, GL_UNSIGNED_BYTE, &testImage[0]);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_nRenderWidth, m_nRenderHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, &testImage[0]);
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 Matrix VRHeadMountedDisplay::GetHMDMatrixProjectionEye(vr::Hmd_Eye nEye) {
 	if (!m_pHMD) return Matrix();
-
 	vr::HmdMatrix44_t mat = m_pHMD->GetProjectionMatrix(nEye, m_fNearClip, m_fFarClip);
-
-	return Matrix(
-		mat.m[0][0], mat.m[1][0], mat.m[2][0], mat.m[3][0],
-		mat.m[0][1], mat.m[1][1], mat.m[2][1], mat.m[3][1],
-		mat.m[0][2], mat.m[1][2], mat.m[2][2], mat.m[3][2],
-		mat.m[0][3], mat.m[1][3], mat.m[2][3], mat.m[3][3]
-	);
+	return ConvertMatrix(mat);
 }
 
 Matrix VRHeadMountedDisplay::GetHMDMatrixPoseEye(vr::Hmd_Eye nEye) {
 	if (!m_pHMD) return Matrix();
-
 	vr::HmdMatrix34_t matEyeRight = m_pHMD->GetEyeToHeadTransform(nEye);
-	Matrix matrixObj(
-		matEyeRight.m[0][0], matEyeRight.m[1][0], matEyeRight.m[2][0], 0.0,
-		matEyeRight.m[0][1], matEyeRight.m[1][1], matEyeRight.m[2][1], 0.0,
-		matEyeRight.m[0][2], matEyeRight.m[1][2], matEyeRight.m[2][2], 0.0,
-		matEyeRight.m[0][3], matEyeRight.m[1][3], matEyeRight.m[2][3], 1.0f
-	);
-
+	Matrix matrixObj = ConvertMatrix(matEyeRight);
 	matrixObj.invert();
 	return matrixObj;
 }
@@ -455,7 +429,7 @@ void VRHeadMountedDisplay::UpdateHMDMatrixPose() {
 	for (int nDevice = 0; nDevice < vr::k_unMaxTrackedDeviceCount; ++nDevice) {
 		if (m_rTrackedDevicePose[nDevice].bPoseIsValid) {
 			m_iValidPoseCount++;
-			m_rmat4DevicePose[nDevice] = ConvertSteamVRMatrixToMatrix(m_rTrackedDevicePose[nDevice].mDeviceToAbsoluteTracking);
+			m_rmat4DevicePose[nDevice] = ConvertMatrix(m_rTrackedDevicePose[nDevice].mDeviceToAbsoluteTracking);
 			if (m_rDevClassChar[nDevice] == 0) {
 				switch (m_pHMD->GetTrackedDeviceClass(nDevice)) {
 				case vr::TrackedDeviceClass_Controller:        m_rDevClassChar[nDevice] = 'C'; break;
@@ -476,12 +450,22 @@ void VRHeadMountedDisplay::UpdateHMDMatrixPose() {
 	}
 }
 
-Matrix VRHeadMountedDisplay::ConvertSteamVRMatrixToMatrix(const vr::HmdMatrix34_t& matPose) {
+Matrix VRHeadMountedDisplay::ConvertMatrix(const vr::HmdMatrix34_t& mat) {
 	Matrix matrixObj(
-		matPose.m[0][0], matPose.m[1][0], matPose.m[2][0], 0.0,
-		matPose.m[0][1], matPose.m[1][1], matPose.m[2][1], 0.0,
-		matPose.m[0][2], matPose.m[1][2], matPose.m[2][2], 0.0,
-		matPose.m[0][3], matPose.m[1][3], matPose.m[2][3], 1.0f
+		mat.m[0][0], mat.m[0][1], mat.m[0][2], mat.m[0][3],
+		mat.m[1][0], mat.m[1][1], mat.m[1][2], mat.m[1][3],
+		mat.m[2][0], mat.m[2][1], mat.m[2][2], mat.m[2][3],
+		0, 0, 0, 1
+	);
+	return matrixObj;
+}
+
+Matrix VRHeadMountedDisplay::ConvertMatrix(const vr::HmdMatrix44_t& mat) {
+	Matrix matrixObj(
+		mat.m[0][0], mat.m[0][1], mat.m[0][2], mat.m[0][3],
+		mat.m[1][0], mat.m[1][1], mat.m[1][2], mat.m[1][3],
+		mat.m[2][0], mat.m[2][1], mat.m[2][2], mat.m[2][3],
+		mat.m[3][0], mat.m[3][1], mat.m[3][2], mat.m[3][3]
 	);
 	return matrixObj;
 }

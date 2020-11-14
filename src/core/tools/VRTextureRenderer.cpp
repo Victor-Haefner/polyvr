@@ -225,6 +225,7 @@ void VRTextureRenderer::setup(VRCameraPtr c, int width, int height, bool alpha) 
 #endif
 }
 
+void VRTextureRenderer::setStageCam(OSGCameraPtr cam) { data->stage->setCamera(cam->cam); }
 VRMaterialPtr VRTextureRenderer::getMaterial() { return mat; }
 VRCameraPtr VRTextureRenderer::getCamera() { return cam; }
 

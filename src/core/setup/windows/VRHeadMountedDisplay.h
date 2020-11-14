@@ -58,7 +58,8 @@ class VRHeadMountedDisplay : public std::enable_shared_from_this<VRHeadMountedDi
 		Matrix GetHMDMatrixPoseEye(vr::EVREye nEye);
 		Matrix GetCurrentViewProjectionMatrix(vr::EVREye nEye);
 		void UpdateHMDMatrixPose();
-		Matrix ConvertSteamVRMatrixToMatrix(const vr::HmdMatrix34_t& matPose);
+		Matrix ConvertMatrix(const vr::HmdMatrix34_t& mat);
+		Matrix ConvertMatrix(const vr::HmdMatrix44_t& mat);
 
 		void findTestImg(unsigned int& tID);
 		void loadActionSettings();
