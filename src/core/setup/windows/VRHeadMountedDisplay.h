@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "../VRSetupFwd.h"
+#include "core/tools/VRToolsFwd.h"
 
 namespace vr {
 	class IVRSystem;
@@ -24,6 +25,8 @@ class VRHeadMountedDisplay : public std::enable_shared_from_this<VRHeadMountedDi
 
 	private:
 		FBOData* fboData = 0;
+
+		VRTextureRendererPtr renderer;
 
 		bool valid = false;
 		vr::IVRSystem* m_pHMD;
@@ -57,7 +60,9 @@ class VRHeadMountedDisplay : public std::enable_shared_from_this<VRHeadMountedDi
 		void UpdateHMDMatrixPose();
 		Matrix ConvertSteamVRMatrixToMatrix(const vr::HmdMatrix34_t& matPose);
 
+		void findTestImg(unsigned int& tID);
 		void loadActionSettings();
+		void initTexRenderer();
 		void initFBO();
 		void setScene();
 
