@@ -285,9 +285,9 @@ void VRHeadMountedDisplay::render(bool fromThread) {
 	fboData->win->render(fboData->ract);
 
 
-	ImageMTRecPtr img = Image::create();
+	/*ImageMTRecPtr img = Image::create();
 	img->set(fboData->fboTexImg);
-	img->write("tmp.png");
+	img->write("tmp.png");*/
 
 	if (m_pHMD) {
 		RenderStereoTargets();
