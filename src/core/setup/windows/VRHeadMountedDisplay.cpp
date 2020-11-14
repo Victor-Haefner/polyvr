@@ -42,6 +42,8 @@ using namespace OSG;
 int testTexSize = 16;
 vector<unsigned char> testImage;
 unsigned int testTextureID;
+unsigned int texIDL;
+unsigned int texIDR;
 // ------------------------------
 
 
@@ -173,27 +175,44 @@ void VRHeadMountedDisplay::setScene() {
 		fboData->fboView->setRoot(root->getNode()->node);
 	}
 
-	if (!renderer) renderer = VRTextureRenderer::create();
-	if (renderer->getParent() == root) return;
+	if (!rendererL) rendererL = VRTextureRenderer::create();
+	if (!rendererR) rendererR = VRTextureRenderer::create();
+	if (rendererL->getParent() == root && rendererR->getParent() == root) return;
 	cout << " --- VRHeadMountedDisplay::setScene renderer" << endl;
-	root->addChild(renderer);
+	root->addChild(rendererL);
+	root->addChild(rendererR);
 
-	MatrixCameraRecPtr mcam = MatrixCamera::create();
-	mcam->setBeacon(cam->getCam()->cam->getBeacon());
-	mcam->setUseBeacon(true);
+	auto setupMatrixCam = [&](Matrix& m) {
+		MatrixCameraRecPtr mcam = MatrixCamera::create();
+		mcam->setBeacon(cam->getCam()->cam->getBeacon());
+		mcam->setUseBeacon(true);
+		mcam->setProjectionMatrix(m);
+		mcam->setNear(0.1);
+		mcam->setFar(1000);
+		//mcam->setNear(cam->getCam()->cam->getNear());
+		//mcam->setFar(cam->getCam()->cam->getFar());
+		//mcam->getModelviewMatrix(); // needed or set by beacon?
+		return mcam;
+	};
+
+
 	Matrix mL = m_mat4ProjectionLeft;
-	//mL.mult(m_mat4eyePosLeft);
-	mcam->setProjectionMatrix(mL);
-	mcam->setNear(0.1);
-	mcam->setFar(1000);
-	//mcam->setNear(cam->getCam()->cam->getNear());
-	//mcam->setFar(cam->getCam()->cam->getFar());
-	//mcam->getModelviewMatrix(); // needed or set by beacon?
+	mL.mult(m_mat4eyePosLeft);
+	Matrix mR = m_mat4ProjectionRight;
+	mR.mult(m_mat4eyePosRight);
 
-	renderer->setup(cam, m_nRenderWidth, m_nRenderHeight, true);
-	renderer->setStageCam(OSGCamera::create(mcam));
-	renderer->updateBackground();
-	renderer->addLink(root->getChild(0));
+	auto mcamL = setupMatrixCam(mL);
+	auto mcamR = setupMatrixCam(mR);
+
+	rendererL->setup(cam, m_nRenderWidth, m_nRenderHeight, true);
+	rendererL->setStageCam(OSGCamera::create(mcamL));
+	rendererL->updateBackground();
+	rendererL->addLink(root->getChild(0));
+
+	rendererR->setup(cam, m_nRenderWidth, m_nRenderHeight, true);
+	rendererR->setStageCam(OSGCamera::create(mcamR));
+	rendererR->updateBackground();
+	rendererR->addLink(root->getChild(0));
 }
 
 void VRHeadMountedDisplay::initHMD() {
@@ -278,7 +297,7 @@ void VRHeadMountedDisplay::RenderStereoTargets() {
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);*/
 }
 
-void VRHeadMountedDisplay::findTestImg(unsigned int& tID) {
+void VRHeadMountedDisplay::findTestImg(VRTextureRendererPtr renderer, unsigned int& tID) {
 	auto scene = VRScene::getCurrent();
 	if (!scene || !renderer) return;
 	/*auto obj = dynamic_pointer_cast<VRGeometry>( scene->get("cube") );
@@ -330,12 +349,13 @@ void VRHeadMountedDisplay::render(bool fromThread) {
 
 	if (m_pHMD) {
 		RenderStereoTargets();
-		findTestImg(testTextureID);
+		findTestImg(rendererL, texIDL);
+		findTestImg(rendererR, texIDR);
 		//replaceTexGLID(testTextureID, fboData);
-		vr::Texture_t leftEyeTexture = { (void*)(uintptr_t)testTextureID, vr::TextureType_OpenGL, vr::ColorSpace_Gamma };
+		vr::Texture_t leftEyeTexture = { (void*)(uintptr_t)texIDL, vr::TextureType_OpenGL, vr::ColorSpace_Gamma };
 		//vr::Texture_t leftEyeTexture = { (void*)(uintptr_t)leftEyeDesc.m_nResolveTextureId, vr::TextureType_OpenGL, vr::ColorSpace_Gamma };
 		vr::VRCompositor()->Submit(vr::Eye_Left, &leftEyeTexture);
-		vr::Texture_t rightEyeTexture = { (void*)(uintptr_t)testTextureID, vr::TextureType_OpenGL, vr::ColorSpace_Gamma };
+		vr::Texture_t rightEyeTexture = { (void*)(uintptr_t)texIDR, vr::TextureType_OpenGL, vr::ColorSpace_Gamma };
 		//vr::Texture_t rightEyeTexture = { (void*)(uintptr_t)rightEyeDesc.m_nResolveTextureId, vr::TextureType_OpenGL, vr::ColorSpace_Gamma };
 		vr::VRCompositor()->Submit(vr::Eye_Right, &rightEyeTexture);
 	}
@@ -372,6 +392,9 @@ void VRHeadMountedDisplay::SetupTexturemaps() {
 
 	glGenTextures(1, &testTextureID);
 	glBindTexture(GL_TEXTURE_2D, testTextureID);
+
+	texIDL = testTextureID;
+	texIDR = testTextureID;
 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);

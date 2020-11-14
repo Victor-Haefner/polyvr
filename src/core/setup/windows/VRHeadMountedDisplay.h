@@ -12,6 +12,7 @@
 namespace vr {
 	class IVRSystem;
 	struct HmdMatrix34_t;
+	struct HmdMatrix44_t;
 	class TrackedDevicePose_t;
 	enum EVREye;
 }
@@ -26,7 +27,8 @@ class VRHeadMountedDisplay : public std::enable_shared_from_this<VRHeadMountedDi
 	private:
 		FBOData* fboData = 0;
 
-		VRTextureRendererPtr renderer;
+		VRTextureRendererPtr rendererL;
+		VRTextureRendererPtr rendererR;
 
 		bool valid = false;
 		vr::IVRSystem* m_pHMD;
@@ -61,7 +63,7 @@ class VRHeadMountedDisplay : public std::enable_shared_from_this<VRHeadMountedDi
 		Matrix ConvertMatrix(const vr::HmdMatrix34_t& mat);
 		Matrix ConvertMatrix(const vr::HmdMatrix44_t& mat);
 
-		void findTestImg(unsigned int& tID);
+		void findTestImg(VRTextureRendererPtr renderer, unsigned int& tID);
 		void loadActionSettings();
 		void initTexRenderer();
 		void initFBO();
