@@ -178,8 +178,8 @@ void VRHeadMountedDisplay::setScene() {
 		fboData->fboView->setRoot(root->getNode()->node);
 	}*/
 
-	if (!rendererL) rendererL = VRTextureRenderer::create();
-	if (!rendererR) rendererR = VRTextureRenderer::create();
+	if (!rendererL) rendererL = VRTextureRenderer::create("hmdL", false);
+	if (!rendererR) rendererR = VRTextureRenderer::create("hmdR", false);
 	if (rendererL->getParent() == root && rendererR->getParent() == root) return;
 	cout << " --- VRHeadMountedDisplay::setScene renderer" << endl;
 	root->addChild(rendererL);
