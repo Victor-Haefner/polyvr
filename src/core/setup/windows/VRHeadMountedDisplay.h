@@ -54,6 +54,7 @@ class VRHeadMountedDisplay : public std::enable_shared_from_this<VRHeadMountedDi
 		Matrix4d m_mat4eyePosRight;
 
 		void addController(int devID);
+		void handleInput();
 
 		Matrix4d GetHMDMatrixProjectionEye(vr::EVREye nEye);
 		Matrix4d GetHMDMatrixPoseEye(vr::EVREye nEye);

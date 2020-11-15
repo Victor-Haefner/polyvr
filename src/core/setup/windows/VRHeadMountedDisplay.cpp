@@ -207,6 +207,7 @@ void VRHeadMountedDisplay::render(bool fromThread) {
 	glFinish();
 
 	UpdateHMDMatrixPose(); // update transformations for next rendering
+	handleInput();
 }
 
 void VRHeadMountedDisplay::loadActionSettings() {
@@ -285,6 +286,29 @@ void VRHeadMountedDisplay::addController(int devID) {
 		//scene->setActiveNavigation("FlyWalk");
 		dev->clearDynTrees();
 		dev->addDynTree(scene->getRoot());
+	}
+}
+
+int mapButton(int b) {
+	if (b == 33) return 0;
+	if (b == 32) return 3;
+	return b;
+}
+
+void VRHeadMountedDisplay::handleInput() {
+	vr::VREvent_t event;
+	while (m_pHMD->PollNextEvent(&event, sizeof(event))) {
+		auto devID = event.trackedDeviceIndex;
+		if (!devices.count(devID)) continue;
+		auto data = event.data;
+
+		if (event.eventType == vr::VREvent_ButtonPress) {
+			devices[devID]->change_button(mapButton(data.controller.button), true);
+		}
+
+		if (event.eventType == vr::VREvent_ButtonUnpress) {
+			devices[devID]->change_button(mapButton(data.controller.button), false);
+		}
 	}
 }
 
