@@ -13,6 +13,7 @@
 #include "core/setup/VRSetup.h"
 #include "core/setup/windows/VRWindow.h"
 #include "core/setup/windows/VRGtkWindow.h"
+#include "core/setup/devices/VRFlystick.h"
 
 #include <openvr.h>
 #include <iostream>
@@ -103,11 +104,11 @@ void VRHeadMountedDisplay::setScene() {
 	root->addChild(fboData->rendererL);
 	root->addChild(fboData->rendererR);
 
-	auto setupMatrixCam = [&](Matrix& m) {
+	auto setupMatrixCam = [&](Matrix4d& m) {
 		MatrixCameraRecPtr mcam = MatrixCamera::create();
 		mcam->setBeacon(cam->getCam()->cam->getBeacon());
 		//mcam->setUseBeacon(true);
-		mcam->setProjectionMatrix(m);
+		mcam->setProjectionMatrix(toMatrix4f(m));
 		mcam->setNear(m_fNearClip);
 		mcam->setFar(m_fFarClip);
 		//mcam->setNear(cam->getCam()->cam->getNear());
@@ -116,9 +117,9 @@ void VRHeadMountedDisplay::setScene() {
 		return mcam;
 	};
 
-	Matrix mL = m_mat4ProjectionLeft;
+	Matrix4d mL = m_mat4ProjectionLeft;
 	mL.mult(m_mat4eyePosLeft);
-	Matrix mR = m_mat4ProjectionRight;
+	Matrix4d mR = m_mat4ProjectionRight;
 	mR.mult(m_mat4eyePosRight);
 
 	fboData->mcamL = setupMatrixCam(mL);
@@ -140,7 +141,6 @@ void VRHeadMountedDisplay::initHMD() {
 
 	m_rTrackedDevicePose.resize(vr::k_unMaxTrackedDeviceCount);
 	m_rmat4DevicePose.resize(vr::k_unMaxTrackedDeviceCount);
-	m_rDevClassChar.resize(vr::k_unMaxTrackedDeviceCount);
 
 	vr::EVRInitError eError = vr::VRInitError_None;
 	m_pHMD = vr::VR_Init(&eError, vr::VRApplication_Scene);
@@ -206,13 +206,7 @@ void VRHeadMountedDisplay::render(bool fromThread) {
 	glFlush();
 	glFinish();
 
-	// update transformations for next rendering
-	UpdateHMDMatrixPose();
-	Matrix mcW = toMatrix4f(fboData->rendererL->getCamera()->getWorldMatrix());
-	Matrix mvm = m_mat4HMDPose;
-	mvm.mult(mcW);
-	fboData->mcamL->setModelviewMatrix(mvm);
-	fboData->mcamR->setModelviewMatrix(mvm);
+	UpdateHMDMatrixPose(); // update transformations for next rendering
 }
 
 void VRHeadMountedDisplay::loadActionSettings() {
@@ -262,51 +256,77 @@ void VRHeadMountedDisplay::SetupTexturemaps() {
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-Matrix VRHeadMountedDisplay::GetHMDMatrixProjectionEye(vr::Hmd_Eye nEye) {
-	if (!m_pHMD) return Matrix();
+Matrix4d VRHeadMountedDisplay::GetHMDMatrixProjectionEye(vr::Hmd_Eye nEye) {
+	if (!m_pHMD) return Matrix4d();
 	vr::HmdMatrix44_t mat = m_pHMD->GetProjectionMatrix(nEye, m_fNearClip, m_fFarClip);
 	return convertMatrix(mat);
 }
 
-Matrix VRHeadMountedDisplay::GetHMDMatrixPoseEye(vr::Hmd_Eye nEye) {
-	if (!m_pHMD) return Matrix();
+Matrix4d VRHeadMountedDisplay::GetHMDMatrixPoseEye(vr::Hmd_Eye nEye) {
+	if (!m_pHMD) return Matrix4d();
 	vr::HmdMatrix34_t matEyeRight = m_pHMD->GetEyeToHeadTransform(nEye);
-	Matrix matrixObj = convertMatrix(matEyeRight);
+	Matrix4d matrixObj = convertMatrix(matEyeRight);
 	matrixObj.invert();
 	return matrixObj;
+}
+
+void VRHeadMountedDisplay::addController(int devID) {
+	cout << "HMD addController " << devID << endl;
+	auto dev = VRFlystick::create();
+	auto ent = dev->editBeacon();
+	devices[devID] = dev;
+
+	auto setup = VRSetup::getCurrent();
+	if (setup) setup->addDevice(dev);
+
+	auto scene = VRScene::getCurrent();
+	if (scene) {
+		scene->initFlyWalk(scene->getActiveCamera(), dev);
+		//scene->setActiveNavigation("FlyWalk");
+		dev->clearDynTrees();
+		dev->addDynTree(scene->getRoot());
+	}
 }
 
 void VRHeadMountedDisplay::UpdateHMDMatrixPose() {
 	if (!m_pHMD) return;
 
 	vr::VRCompositor()->WaitGetPoses(&m_rTrackedDevicePose[0], vr::k_unMaxTrackedDeviceCount, NULL, 0);
+	Matrix4d mcW = fboData->rendererL->getCamera()->getWorldMatrix();
+
+	auto transformPose = [&](Matrix4d& m, bool global) {
+		m.invert();
+		if (global) m.mult(mcW);
+	};
 
 	m_iValidPoseCount = 0;
-	for (int nDevice = 0; nDevice < vr::k_unMaxTrackedDeviceCount; ++nDevice) {
-		if (m_rTrackedDevicePose[nDevice].bPoseIsValid) {
+	for (int devID = 0; devID < vr::k_unMaxTrackedDeviceCount; devID++) {
+		if (m_rTrackedDevicePose[devID].bPoseIsValid) {
 			m_iValidPoseCount++;
-			m_rmat4DevicePose[nDevice] = convertMatrix(m_rTrackedDevicePose[nDevice].mDeviceToAbsoluteTracking);
-			if (m_rDevClassChar[nDevice] == 0) {
-				switch (m_pHMD->GetTrackedDeviceClass(nDevice)) {
-				case vr::TrackedDeviceClass_Controller:        m_rDevClassChar[nDevice] = 'C'; break;
-				case vr::TrackedDeviceClass_HMD:               m_rDevClassChar[nDevice] = 'H'; break;
-				case vr::TrackedDeviceClass_Invalid:           m_rDevClassChar[nDevice] = 'I'; break;
-				case vr::TrackedDeviceClass_GenericTracker:    m_rDevClassChar[nDevice] = 'G'; break;
-				case vr::TrackedDeviceClass_TrackingReference: m_rDevClassChar[nDevice] = 'T'; break;
-				default:                                       m_rDevClassChar[nDevice] = '?'; break;
-				}
+			m_rmat4DevicePose[devID] = convertMatrix(m_rTrackedDevicePose[devID].mDeviceToAbsoluteTracking);
+			auto devType = m_pHMD->GetTrackedDeviceClass(devID);
+
+			if (devType == vr::TrackedDeviceClass_Controller) {
+				if (!devices.count(devID)) addController(devID);
+				Matrix4d m = m_rmat4DevicePose[devID];
+				transformPose(m, false);
+				devices[devID]->getBeacon()->setMatrix(m);
 			}
 		}
 	}
 
 	if (m_rTrackedDevicePose[vr::k_unTrackedDeviceIndex_Hmd].bPoseIsValid) {
-		m_mat4HMDPose = m_rmat4DevicePose[vr::k_unTrackedDeviceIndex_Hmd];
-		m_mat4HMDPose.invert();
+		Matrix4d mvm = m_rmat4DevicePose[vr::k_unTrackedDeviceIndex_Hmd];
+		transformPose(mvm, true);
+
+		auto mvmf = toMatrix4f(mvm);
+		fboData->mcamL->setModelviewMatrix(mvmf);
+		fboData->mcamR->setModelviewMatrix(mvmf);
 	}
 }
 
-Matrix VRHeadMountedDisplay::convertMatrix(const vr::HmdMatrix34_t& mat) {
-	return Matrix(
+Matrix4d VRHeadMountedDisplay::convertMatrix(const vr::HmdMatrix34_t& mat) {
+	return Matrix4d(
 		mat.m[0][0], mat.m[0][1], mat.m[0][2], mat.m[0][3],
 		mat.m[1][0], mat.m[1][1], mat.m[1][2], mat.m[1][3],
 		mat.m[2][0], mat.m[2][1], mat.m[2][2], mat.m[2][3],
@@ -314,8 +334,8 @@ Matrix VRHeadMountedDisplay::convertMatrix(const vr::HmdMatrix34_t& mat) {
 	);
 }
 
-Matrix VRHeadMountedDisplay::convertMatrix(const vr::HmdMatrix44_t& mat) {
-	return Matrix(
+Matrix4d VRHeadMountedDisplay::convertMatrix(const vr::HmdMatrix44_t& mat) {
+	return Matrix4d(
 		mat.m[0][0], mat.m[0][1], mat.m[0][2], mat.m[0][3],
 		mat.m[1][0], mat.m[1][1], mat.m[1][2], mat.m[1][3],
 		mat.m[2][0], mat.m[2][1], mat.m[2][2], mat.m[2][3],

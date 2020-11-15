@@ -5,8 +5,10 @@
 #include <OpenSG/OSGMatrix.h>
 #include <string>
 #include <vector>
+#include <map>
 
 #include "../VRSetupFwd.h"
+#include "core/utils/VRDeviceFwd.h"
 #include "core/tools/VRToolsFwd.h"
 
 namespace vr {
@@ -40,23 +42,24 @@ class VRHeadMountedDisplay : public std::enable_shared_from_this<VRHeadMountedDi
 		UInt32 m_nRenderHeight;
 
 		vector<vr::TrackedDevicePose_t> m_rTrackedDevicePose;
-		vector<Matrix> m_rmat4DevicePose;
-		vector<char> m_rDevClassChar;
+		vector<Matrix4d> m_rmat4DevicePose;
+		map<int, VRDevicePtr> devices;
 
 		int m_iValidPoseCount = 0;
 		int m_iValidPoseCount_Last = -1;
 
-		Matrix m_mat4HMDPose;
-		Matrix m_mat4ProjectionLeft;
-		Matrix m_mat4ProjectionRight;
-		Matrix m_mat4eyePosLeft;
-		Matrix m_mat4eyePosRight;
+		Matrix4d m_mat4ProjectionLeft;
+		Matrix4d m_mat4ProjectionRight;
+		Matrix4d m_mat4eyePosLeft;
+		Matrix4d m_mat4eyePosRight;
 
-		Matrix GetHMDMatrixProjectionEye(vr::EVREye nEye);
-		Matrix GetHMDMatrixPoseEye(vr::EVREye nEye);
+		void addController(int devID);
+
+		Matrix4d GetHMDMatrixProjectionEye(vr::EVREye nEye);
+		Matrix4d GetHMDMatrixPoseEye(vr::EVREye nEye);
 		void UpdateHMDMatrixPose();
-		Matrix convertMatrix(const vr::HmdMatrix34_t& mat);
-		Matrix convertMatrix(const vr::HmdMatrix44_t& mat);
+		Matrix4d convertMatrix(const vr::HmdMatrix34_t& mat);
+		Matrix4d convertMatrix(const vr::HmdMatrix44_t& mat);
 
 		void updateTexID(VRTextureRendererPtr renderer, unsigned int& tID);
 		void loadActionSettings();
