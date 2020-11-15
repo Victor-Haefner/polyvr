@@ -214,8 +214,10 @@ void VRWindowManager::updateWindows() {
         for (auto w : getWindows()) {
 #ifndef WITHOUT_GTK
             if (auto win = dynamic_pointer_cast<VRGtkWindow>(w.second)) win->render();
-#endif
+#ifndef WITHOUT_OPENVR
             if (auto win = dynamic_pointer_cast<VRHeadMountedDisplay>(w.second)) win->render();
+#endif
+#endif
         }
 #else
         commitChanges();

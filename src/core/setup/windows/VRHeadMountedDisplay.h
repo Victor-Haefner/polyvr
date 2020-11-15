@@ -16,7 +16,6 @@ namespace vr {
 	struct HmdMatrix34_t;
 	struct HmdMatrix44_t;
 	class TrackedDevicePose_t;
-	enum EVREye;
 }
 
 using namespace std;
@@ -56,8 +55,8 @@ class VRHeadMountedDisplay : public std::enable_shared_from_this<VRHeadMountedDi
 		void addController(int devID);
 		void handleInput();
 
-		Matrix4d GetHMDMatrixProjectionEye(vr::EVREye nEye);
-		Matrix4d GetHMDMatrixPoseEye(vr::EVREye nEye);
+		Matrix4d GetHMDMatrixProjectionEye(unsigned int nEye);
+		Matrix4d GetHMDMatrixPoseEye(unsigned int nEye);
 		void UpdateHMDMatrixPose();
 		Matrix4d convertMatrix(const vr::HmdMatrix34_t& mat);
 		Matrix4d convertMatrix(const vr::HmdMatrix44_t& mat);
