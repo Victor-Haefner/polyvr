@@ -60,7 +60,6 @@ class VRGtkWindow : public VRWindow {
         static VRGtkWindowPtr create(_GtkDrawingArea* da, string msaa);
         VRGtkWindowPtr ptr();
 
-        PassiveWindowMTRecPtr getOSGWindow();
         void render(bool fromThread = false);
         void clear(Color3f c);
 

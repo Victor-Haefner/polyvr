@@ -45,7 +45,6 @@ class VRHeadMountedDisplay : public std::enable_shared_from_this<VRHeadMountedDi
 
 		int m_iValidPoseCount = 0;
 		int m_iValidPoseCount_Last = -1;
-		string m_strPoseClasses = "";
 
 		Matrix m_mat4HMDPose;
 		Matrix m_mat4ProjectionLeft;
@@ -59,7 +58,7 @@ class VRHeadMountedDisplay : public std::enable_shared_from_this<VRHeadMountedDi
 		Matrix convertMatrix(const vr::HmdMatrix34_t& mat);
 		Matrix convertMatrix(const vr::HmdMatrix44_t& mat);
 
-		void findTestImg(VRTextureRendererPtr renderer, unsigned int& tID);
+		void updateTexID(VRTextureRendererPtr renderer, unsigned int& tID);
 		void loadActionSettings();
 		void initTexRenderer();
 		void initFBO();

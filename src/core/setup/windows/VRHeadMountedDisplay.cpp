@@ -12,6 +12,7 @@
 
 #include "core/setup/VRSetup.h"
 #include "core/setup/windows/VRWindow.h"
+#include "core/setup/windows/VRGtkWindow.h"
 
 #include <openvr.h>
 #include <iostream>
@@ -170,32 +171,24 @@ void VRHeadMountedDisplay::initHMD() {
 	}
 
 	//loadActionSettings();
-
-
 	valid = true;
 }
 
-void VRHeadMountedDisplay::findTestImg(VRTextureRendererPtr renderer, unsigned int& tID) {
+void VRHeadMountedDisplay::updateTexID(VRTextureRendererPtr renderer, unsigned int& tID) {
 	auto scene = VRScene::getCurrent();
 	if (!scene || !renderer) return;
-	/*auto obj = dynamic_pointer_cast<VRGeometry>( scene->get("cube") );
-	if (!obj) return;
-	auto mat = obj->getMaterial();*/
 	auto mat = renderer->getMaterial();
 	if (!mat) return;
 	auto tChunk = mat->getTextureObjChunk();
 	if (!tChunk) return;
 	auto setup = VRSetup::getCurrent();
 	if (!setup) return;
-	auto vrwin = setup->getWindow("screen");
+	auto vrwin = setup->getEditorWindow();
 	if (!vrwin) return;
 	auto win = vrwin->getOSGWindow();
 	if (!win) return;
 	unsigned int texID = win->getGLObjectId(tChunk->getGLId());
-	if (texID != tID && texID > 0) {
-		tID = texID;
-		cout << " --- YAY " << texID << endl;
-	}
+	if (texID != tID && texID > 0) tID = texID;
 }
 
 void VRHeadMountedDisplay::render(bool fromThread) {
@@ -203,8 +196,8 @@ void VRHeadMountedDisplay::render(bool fromThread) {
 
 	setScene(); // TODO: put this in callback when new scene
 
-	findTestImg(fboData->rendererL, texIDL);
-	findTestImg(fboData->rendererR, texIDR);
+	updateTexID(fboData->rendererL, texIDL);
+	updateTexID(fboData->rendererR, texIDR);
 	vr::Texture_t leftEyeTexture  = { (void*)(uintptr_t)texIDL, vr::TextureType_OpenGL, vr::ColorSpace_Gamma };
 	vr::Texture_t rightEyeTexture = { (void*)(uintptr_t)texIDR, vr::TextureType_OpenGL, vr::ColorSpace_Gamma };
 	vr::VRCompositor()->Submit(vr::Eye_Left , &leftEyeTexture);
@@ -289,7 +282,6 @@ void VRHeadMountedDisplay::UpdateHMDMatrixPose() {
 	vr::VRCompositor()->WaitGetPoses(&m_rTrackedDevicePose[0], vr::k_unMaxTrackedDeviceCount, NULL, 0);
 
 	m_iValidPoseCount = 0;
-	m_strPoseClasses = "";
 	for (int nDevice = 0; nDevice < vr::k_unMaxTrackedDeviceCount; ++nDevice) {
 		if (m_rTrackedDevicePose[nDevice].bPoseIsValid) {
 			m_iValidPoseCount++;
@@ -304,7 +296,6 @@ void VRHeadMountedDisplay::UpdateHMDMatrixPose() {
 				default:                                       m_rDevClassChar[nDevice] = '?'; break;
 				}
 			}
-			m_strPoseClasses += m_rDevClassChar[nDevice];
 		}
 	}
 

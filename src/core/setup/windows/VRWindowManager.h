@@ -34,7 +34,6 @@ class VRWindowManager {
         VRWindowPtr addGlutWindow  (string name);
         VRWindowPtr addGtkWindow   (string name, string glarea = "glarea", string msaa = "x4");
         VRWindowPtr addMultiWindow (string name);
-        VRWindowPtr addHMD(string name);
         void removeWindow   (string name);
 
         void setWindowView(string name, VRViewPtr view);
