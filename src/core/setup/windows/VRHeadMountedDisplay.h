@@ -27,9 +27,6 @@ class VRHeadMountedDisplay : public std::enable_shared_from_this<VRHeadMountedDi
 	private:
 		FBOData* fboData = 0;
 
-		VRTextureRendererPtr rendererL;
-		VRTextureRendererPtr rendererR;
-
 		bool valid = false;
 		vr::IVRSystem* m_pHMD;
 
@@ -58,10 +55,9 @@ class VRHeadMountedDisplay : public std::enable_shared_from_this<VRHeadMountedDi
 
 		Matrix GetHMDMatrixProjectionEye(vr::EVREye nEye);
 		Matrix GetHMDMatrixPoseEye(vr::EVREye nEye);
-		Matrix GetCurrentViewProjectionMatrix(vr::EVREye nEye);
 		void UpdateHMDMatrixPose();
-		Matrix ConvertMatrix(const vr::HmdMatrix34_t& mat);
-		Matrix ConvertMatrix(const vr::HmdMatrix44_t& mat);
+		Matrix convertMatrix(const vr::HmdMatrix34_t& mat);
+		Matrix convertMatrix(const vr::HmdMatrix44_t& mat);
 
 		void findTestImg(VRTextureRendererPtr renderer, unsigned int& tID);
 		void loadActionSettings();
