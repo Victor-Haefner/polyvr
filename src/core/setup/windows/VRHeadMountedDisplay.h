@@ -64,8 +64,6 @@ class VRHeadMountedDisplay : public std::enable_shared_from_this<VRHeadMountedDi
 		void initTexRenderer();
 		void initFBO();
 		void setScene();
-
-		void RenderStereoTargets();
 		void SetupTexturemaps();
 
 	public:

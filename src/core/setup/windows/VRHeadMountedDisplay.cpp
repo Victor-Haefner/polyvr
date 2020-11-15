@@ -175,10 +175,6 @@ void VRHeadMountedDisplay::initHMD() {
 	valid = true;
 }
 
-void VRHeadMountedDisplay::RenderStereoTargets() {
-	glClearColor(0.4f, 0.8f, 1.0f, 1.0f);
-}
-
 void VRHeadMountedDisplay::findTestImg(VRTextureRendererPtr renderer, unsigned int& tID) {
 	auto scene = VRScene::getCurrent();
 	if (!scene || !renderer) return;
@@ -203,29 +199,27 @@ void VRHeadMountedDisplay::findTestImg(VRTextureRendererPtr renderer, unsigned i
 }
 
 void VRHeadMountedDisplay::render(bool fromThread) {
-	if (fromThread || fboData == 0) return;
+	if (fromThread || !fboData  || !m_pHMD) return;
 
 	setScene(); // TODO: put this in callback when new scene
 
-	if (m_pHMD) {
-		RenderStereoTargets();
-		findTestImg(fboData->rendererL, texIDL);
-		findTestImg(fboData->rendererR, texIDR);
-		Matrix mcW = toMatrix4f(fboData->rendererL->getCamera()->getWorldMatrix());
-		Matrix mvm = m_mat4HMDPose;
-		mvm.mult(mcW);
-		fboData->mcamL->setModelviewMatrix(mvm);
-		fboData->mcamR->setModelviewMatrix(mvm);
-		vr::Texture_t leftEyeTexture  = { (void*)(uintptr_t)texIDL, vr::TextureType_OpenGL, vr::ColorSpace_Gamma };
-		vr::Texture_t rightEyeTexture = { (void*)(uintptr_t)texIDR, vr::TextureType_OpenGL, vr::ColorSpace_Gamma };
-		vr::VRCompositor()->Submit(vr::Eye_Left , &leftEyeTexture);
-		vr::VRCompositor()->Submit(vr::Eye_Right, &rightEyeTexture);
-	}
+	findTestImg(fboData->rendererL, texIDL);
+	findTestImg(fboData->rendererR, texIDR);
+	vr::Texture_t leftEyeTexture  = { (void*)(uintptr_t)texIDL, vr::TextureType_OpenGL, vr::ColorSpace_Gamma };
+	vr::Texture_t rightEyeTexture = { (void*)(uintptr_t)texIDR, vr::TextureType_OpenGL, vr::ColorSpace_Gamma };
+	vr::VRCompositor()->Submit(vr::Eye_Left , &leftEyeTexture);
+	vr::VRCompositor()->Submit(vr::Eye_Right, &rightEyeTexture);
 
 	glFlush();
 	glFinish();
 
-	UpdateHMDMatrixPose(); // maybe put this in front
+	// update transformations for next rendering
+	UpdateHMDMatrixPose();
+	Matrix mcW = toMatrix4f(fboData->rendererL->getCamera()->getWorldMatrix());
+	Matrix mvm = m_mat4HMDPose;
+	mvm.mult(mcW);
+	fboData->mcamL->setModelviewMatrix(mvm);
+	fboData->mcamR->setModelviewMatrix(mvm);
 }
 
 void VRHeadMountedDisplay::loadActionSettings() {
