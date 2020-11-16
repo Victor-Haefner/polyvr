@@ -13,7 +13,12 @@ VRGtkWindow::VRGtkWindow(GtkDrawingArea* da, string msaa) {
     auto mode = (GdkGLConfigMode)(GDK_GL_MODE_RGBA | GDK_GL_MODE_DOUBLE | GDK_GL_MODE_DEPTH | GDK_GL_MODE_STENCIL | GDK_GL_MODE_MULTISAMPLE);
     if (VROptions::get()->getOption<bool>("active_stereo"))
         mode = (GdkGLConfigMode)(GDK_GL_MODE_RGBA | GDK_GL_MODE_DOUBLE | GDK_GL_MODE_DEPTH | GDK_GL_MODE_STENCIL | GDK_GL_MODE_MULTISAMPLE | GDK_GL_MODE_STEREO);
+
     GdkGLConfig* glConfigMode = gdk_gl_config_new_by_mode(mode, MSAA);
+    if (!glConfigMode) {
+        mode = (GdkGLConfigMode)(GDK_GL_MODE_RGBA | GDK_GL_MODE_DOUBLE | GDK_GL_MODE_DEPTH | GDK_GL_MODE_STENCIL); // try without multisampling
+        glConfigMode = gdk_gl_config_new_by_mode(mode, 0);
+    }
 
     cout << "  glConfigMode: " << glConfigMode << endl;
 
