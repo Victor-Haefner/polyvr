@@ -108,14 +108,18 @@ void VRGtkWindow::on_realize() {
     win->init();
     GtkAllocation a;
     gtk_widget_get_allocation(widget, &a);
-    cout << " call resize to " << a.width << " x " << a.height << endl;
+    cout << " on realize resize to " << a.width << " x " << a.height << endl;
     resize(a.width, a.height);
-    gtk_widget_end_gl(widget, false);
+    gtk_widget_end_gl(widget, true);
 }
 
 bool VRGtkWindow::on_expose(CairoContext* event) {
     if (initialExpose) {
         gtk_widget_begin_gl(widget);
+        GtkAllocation a;
+        gtk_widget_get_allocation(widget, &a);
+        cout << " on initial expose resize to " << a.width << " x " << a.height << endl;
+        resize(a.width, a.height);
         glClearColor(0.2, 0.2, 0.2, 1.0);
         glClear(GL_COLOR_BUFFER_BIT);
         gtk_widget_end_gl(widget, true);
