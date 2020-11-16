@@ -674,7 +674,7 @@ void VRGuiScene::on_edit_primitive_params(const char* path_string, const char* n
     string prim = getComboboxText("combobox21");
     string args;
 
-    VRGuiTreeView tree_view("treeview12", true);
+    VRGuiTreeView tree_view("treeview12");
     tree_view.setSelectedStringValue(1, new_text);
 
     auto store = VRGuiBuilder::get()->get_object("primitive_opts");

@@ -4,12 +4,12 @@
 
 #include <gtk/gtk.h>
 
-VRGuiTreeView::VRGuiTreeView(string name, bool lstore) : VRGuiWidget(name), hasListStore(lstore) {
+VRGuiTreeView::VRGuiTreeView(string name) : VRGuiWidget(name) {
     auto widget = VRGuiBuilder::get()->get_widget(name);
     init(widget);
 }
 
-VRGuiTreeView::VRGuiTreeView(_GtkWidget* widget, bool lstore) : VRGuiWidget(widget), hasListStore(lstore) {
+VRGuiTreeView::VRGuiTreeView(_GtkWidget* widget) : VRGuiWidget(widget) {
     init(widget);
 }
 
@@ -21,6 +21,7 @@ void VRGuiTreeView::init(_GtkWidget* widget) {
     tree_view = GTK_TREE_VIEW(widget);
     tree_model = (GtkTreeModel*)gtk_tree_view_get_model(tree_view);
     selection = new GtkTreeIter();
+    hasListStore = GTK_IS_LIST_STORE(tree_model);
 }
 
 bool VRGuiTreeView::hasSelection() {
@@ -43,8 +44,8 @@ void VRGuiTreeView::selectRow(GtkTreePath* p, GtkTreeViewColumn* c) {
 }
 
 void VRGuiTreeView::setValue(GtkTreeIter* itr, int column, void* data) {
-    if (hasListStore) gtk_list_store_set((GtkListStore*)tree_model, itr, column, data, -1);
-    else gtk_tree_store_set((GtkTreeStore*)tree_model, itr, column, data, -1);
+    if (hasListStore) gtk_list_store_set(GTK_LIST_STORE(tree_model), itr, column, data, -1);
+    else gtk_tree_store_set(GTK_TREE_STORE(tree_model), itr, column, data, -1);
 }
 
 void VRGuiTreeView::setStringValue(GtkTreeIter* itr, int column, string data) {

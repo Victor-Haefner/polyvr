@@ -257,15 +257,15 @@ void VRHeadMountedDisplay::SetupTexturemaps() {
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-Matrix4d VRHeadMountedDisplay::GetHMDMatrixProjectionEye(vr::Hmd_Eye nEye) {
+Matrix4d VRHeadMountedDisplay::GetHMDMatrixProjectionEye(unsigned int nEye) {
 	if (!m_pHMD) return Matrix4d();
-	vr::HmdMatrix44_t mat = m_pHMD->GetProjectionMatrix(nEye, m_fNearClip, m_fFarClip);
+	vr::HmdMatrix44_t mat = m_pHMD->GetProjectionMatrix(vr::EVREye(nEye), m_fNearClip, m_fFarClip);
 	return convertMatrix(mat);
 }
 
-Matrix4d VRHeadMountedDisplay::GetHMDMatrixPoseEye(vr::Hmd_Eye nEye) {
+Matrix4d VRHeadMountedDisplay::GetHMDMatrixPoseEye(unsigned int nEye) {
 	if (!m_pHMD) return Matrix4d();
-	vr::HmdMatrix34_t matEyeRight = m_pHMD->GetEyeToHeadTransform(nEye);
+	vr::HmdMatrix34_t matEyeRight = m_pHMD->GetEyeToHeadTransform(vr::EVREye(nEye));
 	Matrix4d matrixObj = convertMatrix(matEyeRight);
 	matrixObj.invert();
 	return matrixObj;

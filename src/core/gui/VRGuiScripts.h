@@ -84,7 +84,7 @@ class VRGuiScripts {
         void on_name_edited(const char* path, const char* new_name);
         void on_script_changed();
         bool on_any_key_event(_GdkEventKey*);
-        bool on_any_event(_GdkEvent*);
+        void on_any_event(_GdkEvent*);
 
         void on_select_trigger();
         void on_trigger_edited(const char* new_name, _GtkTreeIter* new_iter);

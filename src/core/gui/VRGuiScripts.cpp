@@ -385,7 +385,7 @@ void VRGuiScripts::on_select_trigger() {
 
     //pixbuf pressed?
     string col_name = tree_view.getSelectedColumnName();
-    if (col_name != "") return;
+    if (col_name != " ") return;
 
     // get key
     string device = tree_view.getSelectedStringValue(1);
@@ -410,10 +410,8 @@ bool VRGuiScripts::on_any_key_event(GdkEventKey* event) {
     return true;
 }
 
-bool VRGuiScripts::on_any_event(GdkEvent* event) {
-    int t = event->type;
-    if (t == GDK_KEY_PRESS) return on_any_key_event((GdkEventKey*)event);
-    return false;
+void VRGuiScripts::on_any_event(GdkEvent* event) {
+    if (event->type == GDK_KEY_PRESS) on_any_key_event((GdkEventKey*)event);
 }
 
 void VRGuiScripts::on_name_edited(const char* path, const char* new_name) {
@@ -558,8 +556,9 @@ void VRGuiScripts::on_trigger_edited(const char* new_name, GtkTreeIter* new_iter
 
     // set the cell with new type
     auto combo_list = (GtkListStore*)VRGuiBuilder::get()->get_object("ScriptTrigger");
-    gchar *t;
+    gchar* t = 0;
     gtk_tree_model_get((GtkTreeModel*)combo_list, (GtkTreeIter*)new_iter, 0, &t, -1);
+    if (!t) return;
     string type = string(t);
     tree_view.setSelectedStringValue(0, type);
 
@@ -1057,7 +1056,7 @@ VRGuiScripts::VRGuiScripts() {
     // trigger tree_view
     auto tree_view = VRGuiBuilder::get()->get_widget("treeview14");
     gtk_widget_add_events(tree_view, (int)GDK_KEY_PRESS_MASK);
-    connect_signal<bool, GdkEvent*>(tree_view, bind(&VRGuiScripts::on_any_event, this, PL::_1), "event");
+    connect_signal<void, GdkEvent*>(tree_view, bind(&VRGuiScripts::on_any_event, this, PL::_1), "event-after");
     connect_signal<bool, GdkEventKey*>(tree_view, bind(&VRGuiScripts::on_any_key_event, this, PL::_1), "key_press_event");
 
     setTreeviewSelectCallback("treeview14", bind(&VRGuiScripts::on_select_trigger, this) );
