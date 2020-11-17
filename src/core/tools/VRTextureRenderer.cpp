@@ -89,11 +89,11 @@ void VRTextureRenderer::test() {
     flagScene->addChild(NodeRefPtr(makeNodeFor(flagGeo)));
 
     auto scene = VRScene::getCurrent();
-    auto hlight = scene->getRoot()->find("Headlight");
+    auto hlight = scene->getRoot()->find("light");
     hlight->addChild( OSGObject::create(flagScene) );
 }
 
-VRTextureRenderer::VRTextureRenderer(string name) : VRObject(name) {
+VRTextureRenderer::VRTextureRenderer(string name, bool readback) : VRObject(name) {
     data = new Data();
 
     data->fboTex = TextureObjChunk::create();
@@ -137,8 +137,10 @@ VRTextureRenderer::VRTextureRenderer(string name) : VRObject(name) {
     data->fbo->setHeight(data->fboHeight);
     data->fbo->setPostProcessOnDeactivate(true);
 
-    texBuf->setReadBack(true);
-    texDBuf->setReadBack(true);
+    if (readback) {
+        texBuf->setReadBack(true);
+        texDBuf->setReadBack(true);
+    }
 
     mat = VRMaterial::create("VRTextureRenderer");
     mat->setTexture(data->fboTex, 0);
@@ -168,8 +170,8 @@ VRTextureRenderer::VRTextureRenderer(string name) : VRObject(name) {
 
 VRTextureRenderer::~VRTextureRenderer() { delete data; }
 
-VRTextureRendererPtr VRTextureRenderer::create(string name) {
-    auto tg = VRTextureRendererPtr( new VRTextureRenderer(name) );
+VRTextureRendererPtr VRTextureRenderer::create(string name, bool readback) {
+    auto tg = VRTextureRendererPtr( new VRTextureRenderer(name, readback) );
     TRinstances.push_back(tg);
     return tg;
 }
@@ -225,6 +227,7 @@ void VRTextureRenderer::setup(VRCameraPtr c, int width, int height, bool alpha) 
 #endif
 }
 
+void VRTextureRenderer::setStageCam(OSGCameraPtr cam) { data->stage->setCamera(cam->cam); }
 VRMaterialPtr VRTextureRenderer::getMaterial() { return mat; }
 VRCameraPtr VRTextureRenderer::getCamera() { return cam; }
 

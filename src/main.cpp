@@ -10,6 +10,3 @@ int main(int argc, char **argv) {
 	std::cout << "PolyVR main returns" << std::endl;
 }
 
-
-
-

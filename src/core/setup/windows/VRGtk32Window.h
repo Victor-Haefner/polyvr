@@ -1,5 +1,7 @@
 #include "core/gui/gtkglext/gtk/gtkgl.h"
 
+#include "core/setup/windows/VRHeadMountedDisplay.h"
+
 VRGtkWindow::VRGtkWindow(GtkDrawingArea* da, string msaa) {
     cout << " -= VRGtkWindow init =-" << endl;
     type = 2;
@@ -11,7 +13,12 @@ VRGtkWindow::VRGtkWindow(GtkDrawingArea* da, string msaa) {
     auto mode = (GdkGLConfigMode)(GDK_GL_MODE_RGBA | GDK_GL_MODE_DOUBLE | GDK_GL_MODE_DEPTH | GDK_GL_MODE_STENCIL | GDK_GL_MODE_MULTISAMPLE);
     if (VROptions::get()->getOption<bool>("active_stereo"))
         mode = (GdkGLConfigMode)(GDK_GL_MODE_RGBA | GDK_GL_MODE_DOUBLE | GDK_GL_MODE_DEPTH | GDK_GL_MODE_STENCIL | GDK_GL_MODE_MULTISAMPLE | GDK_GL_MODE_STEREO);
+
     GdkGLConfig* glConfigMode = gdk_gl_config_new_by_mode(mode, MSAA);
+    if (!glConfigMode) {
+        mode = (GdkGLConfigMode)(GDK_GL_MODE_RGBA | GDK_GL_MODE_DOUBLE | GDK_GL_MODE_DEPTH | GDK_GL_MODE_STENCIL); // try without multisampling
+        glConfigMode = gdk_gl_config_new_by_mode(mode, 0);
+    }
 
     cout << "  glConfigMode: " << glConfigMode << endl;
 
@@ -42,6 +49,11 @@ VRGtkWindow::VRGtkWindow(GtkDrawingArea* da, string msaa) {
     connect_signal<bool, GdkEventKey*>(drawArea, bind(&VRGtkWindow::on_key, this, PL::_1), "key_press_event");
     connect_signal<bool, GdkEventKey*>(drawArea, bind(&VRGtkWindow::on_key, this, PL::_1), "key_release_event");
     cout << "  VRGtkWindow init done" << endl;
+
+#ifndef WITHOUT_OPENVR
+    if (VRHeadMountedDisplay::checkDeviceAttached())
+        hmd = VRHeadMountedDisplay::create();
+#endif
 }
 
 void VRGtkWindow::clear(Color3f c) {
@@ -68,6 +80,9 @@ void VRGtkWindow::render(bool fromThread) {
     GdkWindow* drawable = gtk_widget_get_window(widget);
     if (drawable) {
         gtk_widget_begin_gl(widget);
+#ifndef WITHOUT_OPENVR
+        if (hmd) hmd->render();
+#endif
         GtkAllocation a;
         gtk_widget_get_allocation(widget, &a);
         resize(a.width, a.height);
@@ -87,17 +102,24 @@ void VRGtkWindow::on_realize() {
     cout << "VRGtkWindow::on_realize, init OSG window" << endl;
     initialExpose = true;
     gtk_widget_begin_gl(widget);
+#ifndef WITHOUT_OPENVR
+    if (hmd) hmd->initHMD();
+#endif
     win->init();
     GtkAllocation a;
     gtk_widget_get_allocation(widget, &a);
-    cout << " call resize to " << a.width << " x " << a.height << endl;
+    cout << " on realize resize to " << a.width << " x " << a.height << endl;
     resize(a.width, a.height);
-    gtk_widget_end_gl(widget, false);
+    gtk_widget_end_gl(widget, true);
 }
 
 bool VRGtkWindow::on_expose(CairoContext* event) {
     if (initialExpose) {
         gtk_widget_begin_gl(widget);
+        GtkAllocation a;
+        gtk_widget_get_allocation(widget, &a);
+        cout << " on initial expose resize to " << a.width << " x " << a.height << endl;
+        resize(a.width, a.height);
         glClearColor(0.2, 0.2, 0.2, 1.0);
         glClear(GL_COLOR_BUFFER_BIT);
         gtk_widget_end_gl(widget, true);

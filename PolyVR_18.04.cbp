@@ -94,6 +94,7 @@
 			<Add option="-DGDK_GL_COMPILATION" />
 			<Add option="-DGTK_GL_COMPILATION" />
 			<Add option="-DGTK_SOURCE_COMPILATION" />
+			<Add option="-DWITHOUT_OPENVR" />
 			<Add directory="/usr/include/pango-1.0" />
 			<Add directory="/usr/include/glib-2.0" />
 			<Add directory="/usr/lib64/glib-2.0/include" />

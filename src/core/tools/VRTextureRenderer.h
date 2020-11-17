@@ -35,12 +35,13 @@ class VRTextureRenderer : public VRObject {
         void test();
 
     public:
-        VRTextureRenderer(string name);
+        VRTextureRenderer(string name, bool readback = true);
         ~VRTextureRenderer();
 
-        static VRTextureRendererPtr create(string name = "textureRenderer");
+        static VRTextureRendererPtr create(string name = "textureRenderer", bool readback = true);
 
         void setup(VRCameraPtr cam, int width, int height, bool alpha = false);
+        void setStageCam(OSGCameraPtr cam);
         void setMaterialSubstitutes(map<VRMaterial*, VRMaterialPtr> substitutes, CHANNEL c);
         void setBackground(Color3f c, float a = 0);
         void updateBackground();

@@ -32,6 +32,7 @@ class VRGtkWindow : public VRWindow {
     private:
 		_GtkDrawingArea* drawArea = 0;
         _GtkWidget* widget = 0;
+        VRHeadMountedDisplayPtr hmd = 0;
         PassiveWindowMTRecPtr win;
         bool initialExpose = true;
         bool isRealized = false;
@@ -59,7 +60,6 @@ class VRGtkWindow : public VRWindow {
         static VRGtkWindowPtr create(_GtkDrawingArea* da, string msaa);
         VRGtkWindowPtr ptr();
 
-        PassiveWindowMTRecPtr getOSGWindow();
         void render(bool fromThread = false);
         void clear(Color3f c);
 

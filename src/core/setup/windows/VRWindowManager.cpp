@@ -27,6 +27,7 @@
 #include "VRGlutWindow.h"
 #ifndef WASM
 #include "VRMultiWindow.h"
+#include "VRHeadMountedDisplay.h"
 #endif
 
 #ifndef WITHOUT_GTK
@@ -210,9 +211,14 @@ void VRWindowManager::updateWindows() {
         if (!wait()) return false;
         /** let the windows merge the change lists, sync and clear **/
         if (!wait()) return false;
+        for (auto w : getWindows()) {
 #ifndef WITHOUT_GTK
-        for (auto w : getWindows() ) if (auto win = dynamic_pointer_cast<VRGtkWindow>(w.second)) win->render();
+            if (auto win = dynamic_pointer_cast<VRGtkWindow>(w.second)) win->render();
+#ifndef WITHOUT_OPENVR
+            if (auto win = dynamic_pointer_cast<VRHeadMountedDisplay>(w.second)) win->render();
 #endif
+#endif
+        }
 #else
         commitChanges();
 

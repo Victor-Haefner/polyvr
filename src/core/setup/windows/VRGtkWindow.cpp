@@ -29,6 +29,7 @@ namespace PL = std::placeholders;
 
 VRGtkWindow::~VRGtkWindow() {
     win = NULL;
+    if (hmd) hmd.reset();
 }
 
 VRGtkWindowPtr VRGtkWindow::ptr() { return static_pointer_cast<VRGtkWindow>( shared_from_this() ); }

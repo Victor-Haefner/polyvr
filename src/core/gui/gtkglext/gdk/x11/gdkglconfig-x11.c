@@ -307,8 +307,8 @@ gdk_x11_gl_config_impl_new_common (GdkGLConfig *glconfig,
   return glconfig;
 
 err_glXChooseVisual:
+  printf("gdk_x11_gl_config_impl_new_common err_glXChooseVisual\n");
   g_free(glx_attrib_list);
-err_glx_attrib_list_from_attrib_list:
   return NULL;
 }
 
