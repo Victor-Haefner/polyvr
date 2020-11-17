@@ -212,6 +212,7 @@ void VRWindowManager::updateWindows() {
         /** let the windows merge the change lists, sync and clear **/
         if (!wait()) return false;
         for (auto w : getWindows()) {
+            if (auto win = dynamic_pointer_cast<VRGlutWindow>(w.second)) win->render();
 #ifndef WITHOUT_GTK
             if (auto win = dynamic_pointer_cast<VRGtkWindow>(w.second)) win->render();
 #ifndef WITHOUT_OPENVR

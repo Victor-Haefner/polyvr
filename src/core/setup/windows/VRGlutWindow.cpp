@@ -31,8 +31,8 @@ VRGlutWindow::VRGlutWindow() {
     cout << "Glut: New Window" << endl;
     type = 1;
 
-    int width = 20;
-    int height = 10;
+    int width = 800;//20;
+    int height = 600;//10;
 
     initGlut();
 
@@ -95,6 +95,11 @@ void VRGlutWindow::onKeyboard(int c, int s, int x, int y) {
 
 void VRGlutWindow::onKeyboard_special(int c, int s, int x, int y) {
     if (auto k = getKeyboard()) k->keyboard_special(c, s, x, y);
+}
+
+void VRGlutWindow::render(bool fromThread) {
+    if (fromThread) return;
+    VRWindow::render();
 }
 
 OSG_END_NAMESPACE;
