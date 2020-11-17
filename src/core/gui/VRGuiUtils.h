@@ -141,6 +141,7 @@ string askUserPass(string msg);
 OSG::Color4f chooseColor(string drawable, OSG::Color4f current);
 void setColorChooser(string drawable, function<void(_GdkEventButton*)> sig);
 void setColorChooserColor(string drawable, OSG::Color3f col);
+void setColorChooserColor(GtkWidget* drawable, OSG::Color3f col);
 
 _GtkImage* loadGTKIcon(_GtkImage* img, string path, int w, int h);
 
