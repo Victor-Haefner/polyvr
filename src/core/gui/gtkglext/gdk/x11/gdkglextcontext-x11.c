@@ -16,8 +16,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA.
  */
 
-#include "../gdkglcontext.h"
-#include "gdkglcontext-x11.h"
+#include "../gdkglextcontext.h"
+#include "gdkglextcontext-x11.h"
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -32,29 +32,29 @@
 
 typedef struct _GdkGLConfig   GdkGLConfig;
 
-static void          gdk_gl_context_insert (GdkGLContext *glcontext);
-static void          gdk_gl_context_remove (GdkGLContext *glcontext);
-static GdkGLContext *gdk_gl_context_lookup (GLXContext    glxcontext);
+static void          gdk_glext_context_insert (GdkGLExtContext *glextcontext);
+static void          gdk_glext_context_remove (GdkGLExtContext *glextcontext);
+static GdkGLExtContext *gdk_glext_context_lookup (GLXContext    glxcontext);
 
-static gboolean       _gdk_x11_gl_context_impl_copy             (GdkGLContext  *glcontext,
-                                                                 GdkGLContext  *src,
+static gboolean       _gdk_x11_glext_context_impl_copy             (GdkGLExtContext  *glextcontext,
+                                                                 GdkGLExtContext  *src,
                                                                  unsigned long  mask);
-static GdkGLDrawable* _gdk_x11_gl_context_impl_get_gl_drawable  (GdkGLContext *glcontext);
-static GdkGLConfig*   _gdk_x11_gl_context_impl_get_gl_config    (GdkGLContext *glcontext);
-static GdkGLContext*  _gdk_x11_gl_context_impl_get_share_list   (GdkGLContext *glcontext);
-static gboolean       _gdk_x11_gl_context_impl_is_direct        (GdkGLContext *glcontext);
-static int            _gdk_x11_gl_context_impl_get_render_type  (GdkGLContext *glcontext);
-static gboolean       _gdk_x11_gl_context_impl_make_current     (GdkGLContext  *glcontext,
+static GdkGLDrawable* _gdk_x11_glext_context_impl_get_gl_drawable  (GdkGLExtContext *glextcontext);
+static GdkGLConfig*   _gdk_x11_glext_context_impl_get_gl_config    (GdkGLExtContext *glextcontext);
+static GdkGLExtContext*  _gdk_x11_glext_context_impl_get_share_list   (GdkGLExtContext *glextcontext);
+static gboolean       _gdk_x11_glext_context_impl_is_direct        (GdkGLExtContext *glextcontext);
+static int            _gdk_x11_glext_context_impl_get_render_type  (GdkGLExtContext *glextcontext);
+static gboolean       _gdk_x11_glext_context_impl_make_current     (GdkGLExtContext  *glextcontext,
                                                                  GdkGLDrawable *draw,
                                                                  GdkGLDrawable *read);
-static GLXContext     _gdk_x11_gl_context_impl_get_glxcontext   (GdkGLContext *glcontext);
+static GLXContext     _gdk_x11_glext_context_impl_get_glxcontext   (GdkGLExtContext *glextcontext);
 
-G_DEFINE_TYPE (GdkGLContextImplX11,             \
-               gdk_gl_context_impl_x11,         \
-               GDK_TYPE_GL_CONTEXT_IMPL)
+G_DEFINE_TYPE (GdkGLExtContextImplX11,             \
+               gdk_glext_context_impl_x11,         \
+               GDK_TYPE_GLEXT_CONTEXT_IMPL)
 
 static void
-gdk_gl_context_impl_x11_init (GdkGLContextImplX11 *self)
+gdk_glext_context_impl_x11_init (GdkGLExtContextImplX11 *self)
 {
   GDK_GL_NOTE_FUNC_PRIVATE ();
 
@@ -70,9 +70,9 @@ gdk_gl_context_impl_x11_init (GdkGLContextImplX11 *self)
 }
 
 void
-_gdk_gl_context_destroy (GdkGLContext *glcontext)
+_gdk_glext_context_destroy (GdkGLExtContext *glextcontext)
 {
-  GdkGLContextImplX11 *impl = GDK_GL_CONTEXT_IMPL_X11 (glcontext->impl);
+  GdkGLExtContextImplX11 *impl = GDK_GLEXT_CONTEXT_IMPL_X11 (glextcontext->impl);
   Display *xdisplay;
 
   GDK_GL_NOTE_FUNC_PRIVATE ();
@@ -80,7 +80,7 @@ _gdk_gl_context_destroy (GdkGLContext *glcontext)
   if (impl->is_destroyed)
     return;
 
-  gdk_gl_context_remove (glcontext);
+  gdk_glext_context_remove (glextcontext);
 
   xdisplay = GDK_GL_CONFIG_XDISPLAY (impl->glconfig);
 
@@ -120,68 +120,68 @@ _gdk_gl_context_destroy (GdkGLContext *glcontext)
 }
 
 static void
-gdk_gl_context_impl_x11_finalize (GObject *object)
+gdk_glext_context_impl_x11_finalize (GObject *object)
 {
-  GdkGLContextImplX11 *impl = GDK_GL_CONTEXT_IMPL_X11 (object);
+  GdkGLExtContextImplX11 *impl = GDK_GLEXT_CONTEXT_IMPL_X11 (object);
 
   GDK_GL_NOTE_FUNC_PRIVATE ();
 
-  _gdk_gl_context_destroy (GDK_GL_CONTEXT (object));
+  _gdk_glext_context_destroy (GDK_GLEXT_CONTEXT (object));
 
   g_object_unref (G_OBJECT (impl->glconfig));
 
   if (impl->share_list != NULL)
     g_object_unref (G_OBJECT (impl->share_list));
 
-  G_OBJECT_CLASS (gdk_gl_context_impl_x11_parent_class)->finalize (object);
+  G_OBJECT_CLASS (gdk_glext_context_impl_x11_parent_class)->finalize (object);
 }
 
 static void
-gdk_gl_context_impl_x11_class_init (GdkGLContextImplX11Class *klass)
+gdk_glext_context_impl_x11_class_init (GdkGLExtContextImplX11Class *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
   GDK_GL_NOTE_FUNC_PRIVATE ();
 
-  klass->get_glxcontext = _gdk_x11_gl_context_impl_get_glxcontext;
+  klass->get_glxcontext = _gdk_x11_glext_context_impl_get_glxcontext;
 
-  klass->parent_class.copy_gl_context_impl = _gdk_x11_gl_context_impl_copy;
-  klass->parent_class.get_gl_drawable = _gdk_x11_gl_context_impl_get_gl_drawable;
-  klass->parent_class.get_gl_config   = _gdk_x11_gl_context_impl_get_gl_config;
-  klass->parent_class.get_share_list  = _gdk_x11_gl_context_impl_get_share_list;
-  klass->parent_class.is_direct       = _gdk_x11_gl_context_impl_is_direct;
-  klass->parent_class.get_render_type = _gdk_x11_gl_context_impl_get_render_type;
-  klass->parent_class.make_current    = _gdk_x11_gl_context_impl_make_current;
+  klass->parent_class.copy_glext_context_impl = _gdk_x11_glext_context_impl_copy;
+  klass->parent_class.get_gl_drawable = _gdk_x11_glext_context_impl_get_gl_drawable;
+  klass->parent_class.get_gl_config   = _gdk_x11_glext_context_impl_get_gl_config;
+  klass->parent_class.get_share_list  = _gdk_x11_glext_context_impl_get_share_list;
+  klass->parent_class.is_direct       = _gdk_x11_glext_context_impl_is_direct;
+  klass->parent_class.get_render_type = _gdk_x11_glext_context_impl_get_render_type;
+  klass->parent_class.make_current    = _gdk_x11_glext_context_impl_make_current;
   klass->parent_class.make_uncurrent  = NULL;
 
-  object_class->finalize = gdk_gl_context_impl_x11_finalize;
+  object_class->finalize = gdk_glext_context_impl_x11_finalize;
 }
 
-static GdkGLContextImpl *
-gdk_x11_gl_context_impl_new_common (GdkGLContext  *glcontext,
+static GdkGLExtContextImpl *
+gdk_x11_glext_context_impl_new_common (GdkGLExtContext  *glextcontext,
                                     GdkGLConfig   *glconfig,
-                                    GdkGLContext  *share_list,
+                                    GdkGLExtContext  *share_list,
                                     int            render_type,
                                     GLXContext     glxcontext,
                                     gboolean       is_foreign)
 {
-  GdkGLContextImpl    *impl;
-  GdkGLContextImplX11 *x11_impl;
+  GdkGLExtContextImpl    *impl;
+  GdkGLExtContextImplX11 *x11_impl;
 
   Display *xdisplay;
 
   GDK_GL_NOTE_FUNC_PRIVATE ();
 
   /*
-   * Instantiate the GdkGLContextImplX11 object.
+   * Instantiate the GdkGLExtContextImplX11 object.
    */
 
-  impl = g_object_new (GDK_TYPE_GL_CONTEXT_IMPL_X11, NULL);
-  x11_impl = GDK_GL_CONTEXT_IMPL_X11 (impl);
+  impl = g_object_new (GDK_TYPE_GLEXT_CONTEXT_IMPL_X11, NULL);
+  x11_impl = GDK_GLEXT_CONTEXT_IMPL_X11 (impl);
 
   x11_impl->glxcontext = glxcontext;
 
-  if (share_list != NULL && GDK_IS_GL_CONTEXT (share_list))
+  if (share_list != NULL && GDK_IS_GLEXT_CONTEXT (share_list))
     {
       x11_impl->share_list = share_list;
       g_object_ref (G_OBJECT (x11_impl->share_list));
@@ -206,27 +206,27 @@ gdk_x11_gl_context_impl_new_common (GdkGLContext  *glcontext,
 
   x11_impl->is_destroyed = FALSE;
 
-  glcontext->impl = impl;
+  glextcontext->impl = impl;
 
   /*
    * Insert into the GL context hash table.
    */
 
-  gdk_gl_context_insert (glcontext);
+  gdk_glext_context_insert (glextcontext);
 
   return impl;
 }
 
 /*< private >*/
-GdkGLContextImpl *
-_gdk_x11_gl_context_impl_new (GdkGLContext  *glcontext,
+GdkGLExtContextImpl *
+_gdk_x11_glext_context_impl_new (GdkGLExtContext  *glextcontext,
                               GdkGLDrawable *gldrawable,
-                              GdkGLContext  *share_list,
+                              GdkGLExtContext  *share_list,
                               gboolean       direct,
                               int            render_type)
 {
   GdkGLConfig *glconfig;
-  GdkGLContextImplX11 *share_impl = NULL;
+  GdkGLExtContextImplX11 *share_impl = NULL;
   GLXContext share_glxcontext = NULL;
 
   Display *xdisplay;
@@ -244,15 +244,15 @@ _gdk_x11_gl_context_impl_new (GdkGLContext  *glcontext,
   xdisplay = GDK_GL_CONFIG_XDISPLAY (glconfig); // segfault
   xvinfo = GDK_GL_CONFIG_XVINFO (glconfig);
 
-  if (share_list != NULL && GDK_IS_GL_CONTEXT (share_list))
+  if (share_list != NULL && GDK_IS_GLEXT_CONTEXT (share_list))
     {
-      share_impl = GDK_GL_CONTEXT_IMPL_X11 (share_list->impl);
+      share_impl = GDK_GLEXT_CONTEXT_IMPL_X11 (share_list->impl);
       share_glxcontext = share_impl->glxcontext;
     }
 
   GDK_GL_NOTE_FUNC_IMPL ("glXCreateContext");
 
-  if (_gdk_gl_context_force_indirect)
+  if (_gdk_glext_context_force_indirect)
     {
       GDK_GL_NOTE (MISC, g_message (" -- Force indirect"));
 
@@ -277,10 +277,10 @@ _gdk_x11_gl_context_impl_new (GdkGLContext  *glcontext,
     g_message (" -- Context: visual id = 0x%lx", xvinfo->visualid));
 
   /*
-   * Instantiate the GdkGLContextImplX11 object.
+   * Instantiate the GdkGLExtContextImplX11 object.
    */
 
-  return gdk_x11_gl_context_impl_new_common (glcontext,
+  return gdk_x11_glext_context_impl_new_common (glextcontext,
                                              glconfig,
                                              share_list,
                                              render_type,
@@ -288,10 +288,10 @@ _gdk_x11_gl_context_impl_new (GdkGLContext  *glcontext,
                                              FALSE);
 }
 
-GdkGLContextImpl *
-_gdk_x11_gl_context_impl_new_from_glxcontext (GdkGLContext *glcontext,
+GdkGLExtContextImpl *
+_gdk_x11_glext_context_impl_new_from_glxcontext (GdkGLExtContext *glextcontext,
                                               GdkGLConfig  *glconfig,
-                                              GdkGLContext *share_list,
+                                              GdkGLExtContext *share_list,
                                               GLXContext    glxcontext)
 {
   GDK_GL_NOTE_FUNC ();
@@ -300,10 +300,10 @@ _gdk_x11_gl_context_impl_new_from_glxcontext (GdkGLContext *glcontext,
   g_return_val_if_fail (glxcontext != NULL, NULL);
 
   /*
-   * Instantiate the GdkGLContextImplX11 object.
+   * Instantiate the GdkGLExtContextImplX11 object.
    */
 
-  return gdk_x11_gl_context_impl_new_common (glcontext,
+  return gdk_x11_glext_context_impl_new_common (glextcontext,
                                              glconfig,
                                              share_list,
                                              GDK_GL_RGBA_TYPE,
@@ -312,8 +312,8 @@ _gdk_x11_gl_context_impl_new_from_glxcontext (GdkGLContext *glcontext,
 }
 
 static gboolean
-_gdk_x11_gl_context_impl_copy (GdkGLContext  *glcontext,
-                               GdkGLContext  *src,
+_gdk_x11_glext_context_impl_copy (GdkGLExtContext  *glextcontext,
+                               GdkGLExtContext  *src,
                                unsigned long  mask)
 {
   GLXContext dst_glxcontext, src_glxcontext;
@@ -321,18 +321,18 @@ _gdk_x11_gl_context_impl_copy (GdkGLContext  *glcontext,
 
   GDK_GL_NOTE_FUNC ();
 
-  g_return_val_if_fail (GDK_IS_X11_GL_CONTEXT (glcontext), FALSE);
-  g_return_val_if_fail (GDK_IS_X11_GL_CONTEXT (src), FALSE);
+  g_return_val_if_fail (GDK_IS_X11_GLEXT_CONTEXT (glextcontext), FALSE);
+  g_return_val_if_fail (GDK_IS_X11_GLEXT_CONTEXT (src), FALSE);
 
-  dst_glxcontext = GDK_GL_CONTEXT_GLXCONTEXT (glcontext);
+  dst_glxcontext = GDK_GLEXT_CONTEXT_GLXCONTEXT (glextcontext);
   if (dst_glxcontext == NULL)
     return FALSE;
 
-  src_glxcontext = GDK_GL_CONTEXT_GLXCONTEXT (src);
+  src_glxcontext = GDK_GLEXT_CONTEXT_GLXCONTEXT (src);
   if (src_glxcontext == NULL)
     return FALSE;
 
-  glconfig = GDK_GL_CONTEXT_IMPL_X11 (glcontext->impl)->glconfig;
+  glconfig = GDK_GLEXT_CONTEXT_IMPL_X11 (glextcontext->impl)->glconfig;
 
   gdk_error_trap_push ();
 
@@ -345,10 +345,10 @@ _gdk_x11_gl_context_impl_copy (GdkGLContext  *glcontext,
 
 /*< private >*/
 void
-_gdk_x11_gl_context_impl_set_gl_drawable (GdkGLContext  *glcontext,
+_gdk_x11_glext_context_impl_set_gl_drawable (GdkGLExtContext  *glextcontext,
                                           GdkGLDrawable *gldrawable)
 {
-  GdkGLContextImplX11 *impl = GDK_GL_CONTEXT_IMPL_X11 (glcontext->impl);
+  GdkGLExtContextImplX11 *impl = GDK_GLEXT_CONTEXT_IMPL_X11 (glextcontext->impl);
 
   GDK_GL_NOTE_FUNC_PRIVATE ();
 
@@ -374,10 +374,10 @@ _gdk_x11_gl_context_impl_set_gl_drawable (GdkGLContext  *glcontext,
 /* currently unused. */
 /*
 void
-_gdk_gl_context_set_gl_drawable_read (GdkGLContext  *glcontext,
+_gdk_glext_context_set_gl_drawable_read (GdkGLExtContext  *glextcontext,
                                       GdkGLDrawable *gldrawable_read)
 {
-  GdkGLContextImplX11 *impl = GDK_GL_CONTEXT_IMPL_X11 (glcontext);
+  GdkGLExtContextImplX11 *impl = GDK_GLEXT_CONTEXT_IMPL_X11 (glextcontext);
 
   GDK_GL_NOTE_FUNC_PRIVATE ();
 
@@ -401,47 +401,47 @@ _gdk_gl_context_set_gl_drawable_read (GdkGLContext  *glcontext,
 */
 
 static GdkGLDrawable *
-_gdk_x11_gl_context_impl_get_gl_drawable (GdkGLContext *glcontext)
+_gdk_x11_glext_context_impl_get_gl_drawable (GdkGLExtContext *glextcontext)
 {
-  g_return_val_if_fail (GDK_IS_X11_GL_CONTEXT (glcontext), NULL);
+  g_return_val_if_fail (GDK_IS_X11_GLEXT_CONTEXT (glextcontext), NULL);
 
-  return GDK_GL_CONTEXT_IMPL_X11 (glcontext->impl)->gldrawable;
+  return GDK_GLEXT_CONTEXT_IMPL_X11 (glextcontext->impl)->gldrawable;
 }
 
 static GdkGLConfig *
-_gdk_x11_gl_context_impl_get_gl_config (GdkGLContext *glcontext)
+_gdk_x11_glext_context_impl_get_gl_config (GdkGLExtContext *glextcontext)
 {
-  g_return_val_if_fail (GDK_IS_X11_GL_CONTEXT (glcontext), NULL);
+  g_return_val_if_fail (GDK_IS_X11_GLEXT_CONTEXT (glextcontext), NULL);
 
-  return GDK_GL_CONTEXT_IMPL_X11 (glcontext->impl)->glconfig;
+  return GDK_GLEXT_CONTEXT_IMPL_X11 (glextcontext->impl)->glconfig;
 }
 
-static GdkGLContext *
-_gdk_x11_gl_context_impl_get_share_list (GdkGLContext *glcontext)
+static GdkGLExtContext *
+_gdk_x11_glext_context_impl_get_share_list (GdkGLExtContext *glextcontext)
 {
-  g_return_val_if_fail (GDK_IS_X11_GL_CONTEXT (glcontext), NULL);
+  g_return_val_if_fail (GDK_IS_X11_GLEXT_CONTEXT (glextcontext), NULL);
 
-  return GDK_GL_CONTEXT_IMPL_X11 (glcontext->impl)->share_list;
+  return GDK_GLEXT_CONTEXT_IMPL_X11 (glextcontext->impl)->share_list;
 }
 
 static gboolean
-_gdk_x11_gl_context_impl_is_direct (GdkGLContext *glcontext)
+_gdk_x11_glext_context_impl_is_direct (GdkGLExtContext *glextcontext)
 {
-  g_return_val_if_fail (GDK_IS_X11_GL_CONTEXT (glcontext), FALSE);
+  g_return_val_if_fail (GDK_IS_X11_GLEXT_CONTEXT (glextcontext), FALSE);
 
-  return GDK_GL_CONTEXT_IMPL_X11 (glcontext->impl)->is_direct;
+  return GDK_GLEXT_CONTEXT_IMPL_X11 (glextcontext->impl)->is_direct;
 }
 
 static int
-_gdk_x11_gl_context_impl_get_render_type (GdkGLContext *glcontext)
+_gdk_x11_glext_context_impl_get_render_type (GdkGLExtContext *glextcontext)
 {
-  g_return_val_if_fail (GDK_IS_X11_GL_CONTEXT (glcontext), 0);
+  g_return_val_if_fail (GDK_IS_X11_GLEXT_CONTEXT (glextcontext), 0);
 
-  return GDK_GL_CONTEXT_IMPL_X11 (glcontext->impl)->render_type;
+  return GDK_GLEXT_CONTEXT_IMPL_X11 (glextcontext->impl)->render_type;
 }
 
 static gboolean
-_gdk_x11_gl_context_impl_make_current (GdkGLContext  *glcontext,
+_gdk_x11_glext_context_impl_make_current (GdkGLExtContext  *glextcontext,
                                        GdkGLDrawable *draw,
                                        GdkGLDrawable *read)
 {
@@ -452,7 +452,7 @@ _gdk_x11_gl_context_impl_make_current (GdkGLContext  *glcontext,
   Window glxwindow;
   GLXContext glxcontext;
 
-  g_return_val_if_fail (GDK_IS_X11_GL_CONTEXT (glcontext), FALSE);
+  g_return_val_if_fail (GDK_IS_X11_GLEXT_CONTEXT (glextcontext), FALSE);
   g_return_val_if_fail (GDK_IS_X11_GL_WINDOW (draw), FALSE);
 
   glwindow = GDK_GL_WINDOW(draw);
@@ -460,7 +460,7 @@ _gdk_x11_gl_context_impl_make_current (GdkGLContext  *glcontext,
   glconfig = x11_impl->glconfig;
   window = gdk_gl_window_get_window(glwindow);
   glxwindow = x11_impl->glxwindow;
-  glxcontext = GDK_GL_CONTEXT_GLXCONTEXT (glcontext);
+  glxcontext = GDK_GLEXT_CONTEXT_GLXCONTEXT (glextcontext);
 
   if (glxwindow == None || glxcontext == NULL)
     return FALSE;
@@ -477,15 +477,15 @@ _gdk_x11_gl_context_impl_make_current (GdkGLContext  *glcontext,
   if (!glXMakeCurrent (GDK_GL_CONFIG_XDISPLAY (glconfig), glxwindow, glxcontext))
     {
       g_warning ("glXMakeCurrent() failed");
-      _gdk_x11_gl_context_impl_set_gl_drawable (glcontext, NULL);
+      _gdk_x11_glext_context_impl_set_gl_drawable (glextcontext, NULL);
       /* currently unused. */
-      /* _gdk_gl_context_set_gl_drawable_read (glcontext, NULL); */
+      /* _gdk_glext_context_set_gl_drawable_read (glextcontext, NULL); */
       return FALSE;
     }
 
-  _gdk_x11_gl_context_impl_set_gl_drawable (glcontext, draw);
+  _gdk_x11_glext_context_impl_set_gl_drawable (glextcontext, draw);
   /* currently unused. */
-  /* _gdk_gl_context_set_gl_drawable_read (glcontext, read); */
+  /* _gdk_glext_context_set_gl_drawable_read (glextcontext, read); */
 
   if (_GDK_GL_CONFIG_AS_SINGLE_MODE (glconfig))
     {
@@ -502,10 +502,10 @@ _gdk_x11_gl_context_impl_make_current (GdkGLContext  *glcontext,
   return TRUE;
 }
 
-GdkGLContext *
-_gdk_x11_gl_context_impl_get_current (void)
+GdkGLExtContext *
+_gdk_x11_glext_context_impl_get_current (void)
 {
-  static GdkGLContext *current = NULL;
+  static GdkGLExtContext *current = NULL;
   GLXContext glxcontext;
 
   GDK_GL_NOTE_FUNC ();
@@ -515,36 +515,36 @@ _gdk_x11_gl_context_impl_get_current (void)
   if (glxcontext == NULL)
     return NULL;
 
-  if (current && GDK_GL_CONTEXT_GLXCONTEXT (current) == glxcontext)
+  if (current && GDK_GLEXT_CONTEXT_GLXCONTEXT (current) == glxcontext)
     return current;
 
-  current = gdk_gl_context_lookup (glxcontext);
+  current = gdk_glext_context_lookup (glxcontext);
 
   return current;
 }
 
 GLXContext
-_gdk_x11_gl_context_impl_get_glxcontext (GdkGLContext *glcontext)
+_gdk_x11_glext_context_impl_get_glxcontext (GdkGLExtContext *glextcontext)
 {
-  g_return_val_if_fail (GDK_IS_X11_GL_CONTEXT (glcontext), NULL);
+  g_return_val_if_fail (GDK_IS_X11_GLEXT_CONTEXT (glextcontext), NULL);
 
-  return GDK_GL_CONTEXT_IMPL_X11 (glcontext->impl)->glxcontext;
+  return GDK_GLEXT_CONTEXT_IMPL_X11 (glextcontext->impl)->glxcontext;
 }
 
 /*
- * GdkGLContext hash table.
+ * GdkGLExtContext hash table.
  */
 
-static GHashTable *gl_context_ht = NULL;
+static GHashTable *glext_context_ht = NULL;
 
 static void
-gdk_gl_context_insert (GdkGLContext *glcontext)
+gdk_glext_context_insert (GdkGLExtContext *glextcontext)
 {
-  GdkGLContextImplX11 *impl;
+  GdkGLExtContextImplX11 *impl;
 
   GDK_GL_NOTE_FUNC_PRIVATE ();
 
-  if (gl_context_ht == NULL)
+  if (glext_context_ht == NULL)
     {
       GDK_GL_NOTE (MISC, g_message (" -- Create GL context hash table."));
 
@@ -552,44 +552,44 @@ gdk_gl_context_insert (GdkGLContext *glcontext)
          specification. We assume that it is a pointer as NULL values
          are specified for this type---this is consistent with the SGI
          and Mesa GLX implementations. */
-      gl_context_ht = g_hash_table_new (g_direct_hash,
+      glext_context_ht = g_hash_table_new (g_direct_hash,
                                         g_direct_equal);
     }
 
-  impl = GDK_GL_CONTEXT_IMPL_X11 (glcontext->impl);
+  impl = GDK_GLEXT_CONTEXT_IMPL_X11 (glextcontext->impl);
 
-  g_hash_table_insert (gl_context_ht, impl->glxcontext, glcontext);
+  g_hash_table_insert (glext_context_ht, impl->glxcontext, glextcontext);
 }
 
 static void
-gdk_gl_context_remove (GdkGLContext *glcontext)
+gdk_glext_context_remove (GdkGLExtContext *glextcontext)
 {
-  GdkGLContextImplX11 *impl;
+  GdkGLExtContextImplX11 *impl;
 
   GDK_GL_NOTE_FUNC_PRIVATE ();
 
-  if (gl_context_ht == NULL)
+  if (glext_context_ht == NULL)
     return;
 
-  impl = GDK_GL_CONTEXT_IMPL_X11 (glcontext->impl);
+  impl = GDK_GLEXT_CONTEXT_IMPL_X11 (glextcontext->impl);
 
-  g_hash_table_remove (gl_context_ht, impl->glxcontext);
+  g_hash_table_remove (glext_context_ht, impl->glxcontext);
 
-  if (g_hash_table_size (gl_context_ht) == 0)
+  if (g_hash_table_size (glext_context_ht) == 0)
     {
       GDK_GL_NOTE (MISC, g_message (" -- Destroy GL context hash table."));
-      g_hash_table_destroy (gl_context_ht);
-      gl_context_ht = NULL;
+      g_hash_table_destroy (glext_context_ht);
+      glext_context_ht = NULL;
     }
 }
 
-static GdkGLContext *
-gdk_gl_context_lookup (GLXContext glxcontext)
+static GdkGLExtContext *
+gdk_glext_context_lookup (GLXContext glxcontext)
 {
   GDK_GL_NOTE_FUNC_PRIVATE ();
 
-  if (gl_context_ht == NULL)
+  if (glext_context_ht == NULL)
     return NULL;
 
-  return g_hash_table_lookup (gl_context_ht, glxcontext);
+  return g_hash_table_lookup (glext_context_ht, glxcontext);
 }

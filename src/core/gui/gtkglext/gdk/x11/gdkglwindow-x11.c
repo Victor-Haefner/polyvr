@@ -25,13 +25,13 @@
 #include "gdkglx.h"
 #include "gdkglprivate-x11.h"
 #include "gdkglconfig-x11.h"
-#include "gdkglcontext-x11.h"
+#include "gdkglextcontext-x11.h"
 #include "gdkglwindow-x11.h"
 
 #include "../gdkglquery.h"
 
-static GdkGLContext *_gdk_x11_gl_window_impl_create_gl_context  (GdkGLWindow  *glwindow,
-                                                                 GdkGLContext *share_list,
+static GdkGLExtContext *_gdk_x11_gl_window_impl_create_glext_context  (GdkGLWindow  *glwindow,
+                                                                 GdkGLExtContext *share_list,
                                                                  gboolean      direct,
                                                                  int           render_type);
 static gboolean     _gdk_x11_gl_window_impl_is_double_buffered  (GdkGLWindow  *glwindow);
@@ -117,7 +117,7 @@ gdk_gl_window_impl_x11_class_init (GdkGLWindowImplX11Class *klass)
 
   klass->get_glxwindow = _gdk_x11_gl_window_impl_get_glxwindow;
 
-  klass->parent_class.create_gl_context      = _gdk_x11_gl_window_impl_create_gl_context;
+  klass->parent_class.create_glext_context      = _gdk_x11_gl_window_impl_create_glext_context;
   klass->parent_class.is_double_buffered     = _gdk_x11_gl_window_impl_is_double_buffered;
   klass->parent_class.swap_buffers           = _gdk_x11_gl_window_impl_swap_buffers;
   klass->parent_class.wait_gl                = _gdk_x11_gl_window_impl_wait_gl;
@@ -176,30 +176,30 @@ _gdk_x11_gl_window_impl_new (GdkGLWindow *glwindow,
   return glwindow;
 }
 
-static GdkGLContext *
-_gdk_x11_gl_window_impl_create_gl_context (GdkGLWindow  *glwindow,
-                                           GdkGLContext *share_list,
+static GdkGLExtContext *
+_gdk_x11_gl_window_impl_create_glext_context (GdkGLWindow  *glwindow,
+                                           GdkGLExtContext *share_list,
                                            gboolean      direct,
                                            int           render_type)
 {
-  GdkGLContext *glcontext;
-  GdkGLContextImpl *impl;
+  GdkGLExtContext *glextcontext;
+  GdkGLExtContextImpl *impl;
 
-  glcontext = g_object_new(GDK_TYPE_X11_GL_CONTEXT, NULL);
+  glextcontext = g_object_new(GDK_TYPE_X11_GLEXT_CONTEXT, NULL);
 
-  g_return_val_if_fail(glcontext != NULL, NULL);
+  g_return_val_if_fail(glextcontext != NULL, NULL);
 
-  impl = _gdk_x11_gl_context_impl_new(glcontext,
+  impl = _gdk_x11_glext_context_impl_new(glextcontext,
                                       GDK_GL_DRAWABLE(glwindow),
                                       share_list,
                                       direct,
                                       render_type);
   if (impl == NULL)
-    g_object_unref(glcontext);
+    g_object_unref(glextcontext);
 
   g_return_val_if_fail(impl != NULL, NULL);
 
-  return glcontext;
+  return glextcontext;
 }
 
 static gboolean

@@ -30,7 +30,7 @@
 #define __GDKGLX_H_INSIDE__
 
 #include "gdkx11glconfig.h"
-#include "gdkx11glcontext.h"
+#include "gdkx11glextcontext.h"
 #include "gdkx11glquery.h"
 #include "gdkx11glwindow.h"
 
