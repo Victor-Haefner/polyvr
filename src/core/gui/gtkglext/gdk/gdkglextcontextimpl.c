@@ -23,37 +23,37 @@
 #include <gdk/gdk.h>            /* for gdk_error_trap_(push|pop) () */
 
 #include "gdkgldebug.h"
-#include "gdkglcontextimpl.h"
+#include "gdkglextcontextimpl.h"
 
-G_DEFINE_TYPE (GdkGLContextImpl, gdk_gl_context_impl, G_TYPE_OBJECT);
+G_DEFINE_TYPE (GdkGLExtContextImpl, gdk_glext_context_impl, G_TYPE_OBJECT);
 
 static void
-gdk_gl_context_impl_init (GdkGLContextImpl *self)
+gdk_glext_context_impl_init (GdkGLExtContextImpl *self)
 {
   GDK_GL_NOTE_FUNC_PRIVATE ();
 }
 
 static void
-gdk_gl_context_impl_finalize (GObject *object)
+gdk_glext_context_impl_finalize (GObject *object)
 {
   GDK_GL_NOTE_FUNC_PRIVATE ();
 
-  G_OBJECT_CLASS (gdk_gl_context_impl_parent_class)->finalize (object);
+  G_OBJECT_CLASS (gdk_glext_context_impl_parent_class)->finalize (object);
 }
 
 static void
-gdk_gl_context_impl_class_init (GdkGLContextImplClass *klass)
+gdk_glext_context_impl_class_init (GdkGLExtContextImplClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
   GDK_GL_NOTE_FUNC_PRIVATE ();
 
-  klass->copy_gl_context_impl = NULL;
+  klass->copy_glext_context_impl = NULL;
   klass->get_gl_drawable = NULL;
   klass->get_gl_config = NULL;
   klass->get_share_list = NULL;
   klass->is_direct = NULL;
   klass->get_render_type = NULL;
 
-  object_class->finalize = gdk_gl_context_impl_finalize;
+  object_class->finalize = gdk_glext_context_impl_finalize;
 }

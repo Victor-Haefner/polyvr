@@ -31,7 +31,7 @@
 #include "gdkglinit.h"
 #include "gdkglquery.h"
 #include "gdkglconfig.h"
-#include "gdkglcontext.h"
+#include "gdkglextcontext.h"
 #include "gdkgldrawable.h"
 #include "gdkglwindow.h"
 

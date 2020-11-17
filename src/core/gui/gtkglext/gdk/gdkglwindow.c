@@ -28,8 +28,8 @@
 #include "gdkglwindow.h"
 #include "gdkglwindowimpl.h"
 
-static GdkGLContext *_gdk_gl_window_create_gl_context   (GdkGLDrawable *gldrawable,
-                                                         GdkGLContext  *share_list,
+static GdkGLExtContext *_gdk_gl_window_create_glext_context   (GdkGLDrawable *gldrawable,
+                                                         GdkGLExtContext  *share_list,
                                                          gboolean       direct,
                                                          int            render_type);
 static gboolean      _gdk_gl_window_is_double_buffered  (GdkGLDrawable *gldrawable);
@@ -85,7 +85,7 @@ gdk_gl_window_gl_drawable_interface_init (GdkGLDrawableClass *iface)
 {
   GDK_GL_NOTE_FUNC_PRIVATE ();
 
-  iface->create_gl_context  = _gdk_gl_window_create_gl_context;
+  iface->create_glext_context  = _gdk_gl_window_create_glext_context;
   iface->is_double_buffered = _gdk_gl_window_is_double_buffered;
   iface->swap_buffers       = _gdk_gl_window_swap_buffers;
   iface->wait_gl            = _gdk_gl_window_wait_gl;
@@ -93,9 +93,9 @@ gdk_gl_window_gl_drawable_interface_init (GdkGLDrawableClass *iface)
   iface->get_gl_config      = _gdk_gl_window_get_gl_config;
 }
 
-static GdkGLContext *
-_gdk_gl_window_create_gl_context  (GdkGLDrawable *gldrawable,
-                                   GdkGLContext  *share_list,
+static GdkGLExtContext *
+_gdk_gl_window_create_glext_context  (GdkGLDrawable *gldrawable,
+                                   GdkGLExtContext  *share_list,
                                    gboolean       direct,
                                    int            render_type)
 {
@@ -105,7 +105,7 @@ _gdk_gl_window_create_gl_context  (GdkGLDrawable *gldrawable,
 
   glwindow = GDK_GL_WINDOW (gldrawable);
 
-  return GDK_GL_WINDOW_IMPL_GET_CLASS (glwindow->impl)->create_gl_context (glwindow,
+  return GDK_GL_WINDOW_IMPL_GET_CLASS (glwindow->impl)->create_glext_context (glwindow,
                                                                            share_list,
                                                                            direct,
                                                                            render_type);

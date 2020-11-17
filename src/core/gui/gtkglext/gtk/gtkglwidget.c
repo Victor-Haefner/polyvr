@@ -20,7 +20,7 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#include "../gdk/gdkglcontext.h"
+#include "../gdk/gdkglextcontext.h"
 #include "gtkglprivate.h"
 #include "gtkglwidget.h"
 
@@ -32,11 +32,11 @@
 typedef struct
 {
   GdkGLConfig *glconfig;
-  GdkGLContext *share_list;
+  GdkGLExtContext *share_list;
   gboolean direct;
   int render_type;
 
-  GdkGLContext *glcontext;
+  GdkGLExtContext *glextcontext;
 
   gulong unrealize_handler;
 
@@ -154,10 +154,10 @@ gtk_gl_widget_unrealize (GtkWidget       *widget,
    * Destroy OpenGL rendering context.
    */
 
-  if (private->glcontext != NULL)
+  if (private->glextcontext != NULL)
     {
-      g_object_unref (private->glcontext);
-      private->glcontext = NULL;
+      g_object_unref (private->glextcontext);
+      private->glextcontext = NULL;
     }
 
   /*
@@ -239,7 +239,7 @@ gl_widget_private_destroy (GLWidgetPrivate *private)
  * gtk_widget_set_gl_capability:
  * @widget: the #GtkWidget to be used as the rendering area.
  * @glconfig: a #GdkGLConfig.
- * @share_list: (allow-none): the #GdkGLContext with which to share display lists and texture
+ * @share_list: (allow-none): the #GdkGLExtContext with which to share display lists and texture
  *              objects. NULL indicates that no sharing is to take place.
  * @direct: whether rendering is to be done with a direct connection to
  *          the graphics system.
@@ -253,7 +253,7 @@ gl_widget_private_destroy (GLWidgetPrivate *private)
 gboolean
 gtk_widget_set_gl_capability (GtkWidget    *widget,
                               GdkGLConfig  *glconfig,
-                              GdkGLContext *share_list,
+                              GdkGLExtContext *share_list,
                               gboolean      direct,
                               int           render_type)
 {
@@ -333,7 +333,7 @@ gtk_widget_set_gl_capability (GtkWidget    *widget,
   private->glconfig = glconfig;
   g_object_ref (G_OBJECT (private->glconfig));
 
-  if (share_list != NULL && GDK_IS_GL_CONTEXT (share_list))
+  if (share_list != NULL && GDK_IS_GLEXT_CONTEXT (share_list))
     {
       private->share_list = share_list;
       g_object_ref (G_OBJECT (private->share_list));
@@ -346,7 +346,7 @@ gtk_widget_set_gl_capability (GtkWidget    *widget,
   private->direct = direct;
   private->render_type = render_type;
 
-  private->glcontext = NULL;
+  private->glextcontext = NULL;
 
   private->unrealize_handler = 0;
 
@@ -419,28 +419,28 @@ gtk_widget_get_gl_config (GtkWidget *widget)
 }
 
 /**
- * gtk_widget_create_gl_context:
+ * gtk_widget_create_glext_context:
  * @widget: a #GtkWidget.
- * @share_list: (allow-none): the #GdkGLContext with which to share display lists and texture
+ * @share_list: (allow-none): the #GdkGLExtContext with which to share display lists and texture
  *              objects. NULL indicates that no sharing is to take place.
  * @direct: whether rendering is to be done with a direct connection to
  *          the graphics system.
  * @render_type: GDK_GL_RGBA_TYPE.
  *
- * Creates a new #GdkGLContext with the appropriate #GdkGLDrawable
+ * Creates a new #GdkGLExtContext with the appropriate #GdkGLDrawable
  * for this widget. The GL context must be freed when you're
- * finished with it. See also gtk_widget_get_gl_context().
+ * finished with it. See also gtk_widget_get_glext_context().
  *
- * Return value: the new #GdkGLContext.
+ * Return value: the new #GdkGLExtContext.
  **/
-GdkGLContext *
-gtk_widget_create_gl_context (GtkWidget    *widget,
-                              GdkGLContext *share_list,
+GdkGLExtContext *
+gtk_widget_create_glext_context (GtkWidget    *widget,
+                              GdkGLExtContext *share_list,
                               gboolean      direct,
                               int           render_type)
 {
   GdkGLDrawable *gldrawable;
-  GdkGLContext *glcontext;
+  GdkGLExtContext *glextcontext;
 
   GTK_GL_NOTE_FUNC ();
 
@@ -455,34 +455,34 @@ gtk_widget_create_gl_context (GtkWidget    *widget,
    * Create OpenGL rendering context.
    */
 
-  glcontext = gdk_gl_context_new (gldrawable,
+  glextcontext = gdk_glext_context_new (gldrawable,
                                   share_list,
                                   direct,
                                   render_type);
-  if (glcontext == NULL)
+  if (glextcontext == NULL)
     {
-      g_warning ("cannot create GdkGLContext\n");
+      g_warning ("cannot create GdkGLExtContext\n");
       return NULL;
     }
 
-  return glcontext;
+  return glextcontext;
 }
 
 /**
- * gtk_widget_get_gl_context:
+ * gtk_widget_get_glext_context:
  * @widget: a #GtkWidget.
  *
- * Returns the #GdkGLContext with the appropriate #GdkGLDrawable
+ * Returns the #GdkGLExtContext with the appropriate #GdkGLDrawable
  * for this widget. Unlike the GL context returned by
- * gtk_widget_create_gl_context(),  this context is owned by the widget.
+ * gtk_widget_create_glext_context(),  this context is owned by the widget.
  *
- * #GdkGLContext is needed for the function gdk_gl_drawable_begin,
+ * #GdkGLExtContext is needed for the function gdk_gl_drawable_begin,
  * or for sharing display lists (see gtk_widget_set_gl_capability()).
  *
- * Return value: the #GdkGLContext.
+ * Return value: the #GdkGLExtContext.
  **/
-GdkGLContext *
-gtk_widget_get_gl_context (GtkWidget *widget)
+GdkGLExtContext *
+gtk_widget_get_glext_context (GtkWidget *widget)
 {
   GLWidgetPrivate *private;
 
@@ -493,13 +493,13 @@ gtk_widget_get_gl_context (GtkWidget *widget)
   if (private == NULL)
     return NULL;
 
-  if (private->glcontext == NULL)
-    private->glcontext = gtk_widget_create_gl_context (widget,
+  if (private->glextcontext == NULL)
+    private->glextcontext = gtk_widget_create_glext_context (widget,
                                                        private->share_list,
                                                        private->direct,
                                                        private->render_type);
 
-  return private->glcontext;
+  return private->glextcontext;
 }
 
 /**
@@ -522,15 +522,15 @@ gtk_widget_get_gl_window (GtkWidget *widget)
 gboolean
 gtk_widget_begin_gl(GtkWidget *widget)
 {
-  GdkGLContext *glcontext;
+  GdkGLExtContext *glextcontext;
   GdkGLWindow  *glwindow;
 
   g_return_val_if_fail (GTK_IS_WIDGET (widget), FALSE);
 
-  glcontext = gtk_widget_get_gl_context (widget);
+  glextcontext = gtk_widget_get_glext_context (widget);
   glwindow  = gtk_widget_get_gl_window (widget);
 
-  return gdk_gl_context_make_current(glcontext, GDK_GL_DRAWABLE (glwindow), GDK_GL_DRAWABLE (glwindow));
+  return gdk_glext_context_make_current(glextcontext, GDK_GL_DRAWABLE (glwindow), GDK_GL_DRAWABLE (glwindow));
 }
 
 void
@@ -550,5 +550,5 @@ gtk_widget_end_gl(GtkWidget *widget, gboolean do_swap)
         glFlush ();
     }
 
-  gdk_gl_context_release_current();
+  gdk_glext_context_release_current();
 }

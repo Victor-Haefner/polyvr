@@ -33,12 +33,12 @@ void _gdk_win32_gl_print_pfd (PIXELFORMATDESCRIPTOR *pfd);
 
 /* currently unused. */
 /*
-void _gdk_gl_context_set_gl_drawable_read (GdkGLContext  *glcontext,
+void _gdk_glext_context_set_gl_drawable_read (GdkGLExtContext  *glextcontext,
                                            GdkGLDrawable *gldrawable_read);
 */
 
-#define GDK_GL_CONTEXT_IS_DESTROYED(glcontext) \
-  ( ((GdkGLContextImplWin32 *) (glcontext->impl))->is_destroyed )
+#define GDK_GLEXT_CONTEXT_IS_DESTROYED(glextcontext) \
+  ( ((GdkGLExtContextImplWin32 *) (glextcontext->impl))->is_destroyed )
 
 #define GDK_GL_WINDOW_IS_DESTROYED(glwindow) \
   ( ((GdkGLWindowImplWin32 *) (glwindow->impl))->is_destroyed )

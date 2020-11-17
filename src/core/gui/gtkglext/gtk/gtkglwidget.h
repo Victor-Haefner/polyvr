@@ -31,7 +31,7 @@ G_BEGIN_DECLS
 
 gboolean      gtk_widget_set_gl_capability (GtkWidget    *widget,
                                             GdkGLConfig  *glconfig,
-                                            GdkGLContext *share_list,
+                                            GdkGLExtContext *share_list,
                                             gboolean      direct,
                                             int           render_type);
 
@@ -40,12 +40,12 @@ gboolean      gtk_widget_is_gl_capable     (GtkWidget    *widget);
 
 GdkGLConfig  *gtk_widget_get_gl_config     (GtkWidget    *widget);
 
-GdkGLContext *gtk_widget_create_gl_context (GtkWidget    *widget,
-                                            GdkGLContext *share_list,
+GdkGLExtContext *gtk_widget_create_glext_context (GtkWidget    *widget,
+                                            GdkGLExtContext *share_list,
                                             gboolean      direct,
                                             int           render_type);
 
-GdkGLContext *gtk_widget_get_gl_context    (GtkWidget    *widget);
+GdkGLExtContext *gtk_widget_get_glext_context    (GtkWidget    *widget);
 
 GdkGLWindow  *gtk_widget_get_gl_window     (GtkWidget    *widget);
 

@@ -20,64 +20,64 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#include "../gdkglcontext.h"
+#include "../gdkglextcontext.h"
 #include "../gdkgldebug.h"
 #include "gdkglwin32.h"
 
-#include "gdkwin32glcontext.h"
-#include "gdkglcontext-win32.h"
+#include "gdkwin32glextcontext.h"
+#include "gdkglextcontext-win32.h"
 
-struct _GdkWin32GLContext
+struct _GdkWin32GLExtContext
 {
-  GdkGLContext parent;
+  GdkGLExtContext parent;
 };
 
-struct _GdkWin32GLContextClass
+struct _GdkWin32GLExtContextClass
 {
-  GdkGLContextClass parent_class;
+  GdkGLExtContextClass parent_class;
 };
 
-G_DEFINE_TYPE (GdkWin32GLContext, gdk_win32_gl_context, GDK_TYPE_GL_CONTEXT);
+G_DEFINE_TYPE (GdkWin32GLExtContext, gdk_win32_glext_context, GDK_TYPE_GLEXT_CONTEXT);
 
 static void
-gdk_win32_gl_context_init (GdkWin32GLContext *self)
+gdk_win32_glext_context_init (GdkWin32GLExtContext *self)
 {
   GDK_GL_NOTE_FUNC_PRIVATE ();
 }
 
 static void
-gdk_win32_gl_context_finalize (GObject *object)
+gdk_win32_glext_context_finalize (GObject *object)
 {
   GDK_GL_NOTE_FUNC_PRIVATE ();
 
-  G_OBJECT_CLASS (gdk_win32_gl_context_parent_class)->finalize (object);
+  G_OBJECT_CLASS (gdk_win32_glext_context_parent_class)->finalize (object);
 }
 
 static void
-gdk_win32_gl_context_class_init (GdkWin32GLContextClass *klass)
+gdk_win32_glext_context_class_init (GdkWin32GLExtContextClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
   GDK_GL_NOTE_FUNC_PRIVATE ();
 
-  object_class->finalize = gdk_win32_gl_context_finalize;
+  object_class->finalize = gdk_win32_glext_context_finalize;
 }
 
-GdkGLContext *
-gdk_win32_gl_context_foreign_new (GdkGLConfig  *glconfig,
-                                  GdkGLContext *share_list,
+GdkGLExtContext *
+gdk_win32_glext_context_foreign_new (GdkGLConfig  *glconfig,
+                                  GdkGLExtContext *share_list,
                                   HGLRC         hglrc)
 {
-  GdkGLContext *glcontext;
-  GdkGLContextImpl *impl;
+  GdkGLExtContext *glextcontext;
+  GdkGLExtContextImpl *impl;
 
   GDK_GL_NOTE_FUNC ();
 
-  glcontext = g_object_new(GDK_TYPE_WIN32_GL_CONTEXT, NULL);
+  glextcontext = g_object_new(GDK_TYPE_WIN32_GLEXT_CONTEXT, NULL);
 
-  g_return_val_if_fail(glcontext != NULL, NULL);
+  g_return_val_if_fail(glextcontext != NULL, NULL);
 
-  impl = _gdk_win32_gl_context_impl_new_from_hglrc (glcontext,
+  impl = _gdk_win32_glext_context_impl_new_from_hglrc (glextcontext,
                                                     glconfig,
                                                     share_list,
                                                     hglrc);
@@ -86,13 +86,13 @@ gdk_win32_gl_context_foreign_new (GdkGLConfig  *glconfig,
 
   g_return_val_if_fail(impl != NULL, NULL);
 
-  return glcontext;
+  return glextcontext;
 }
 
 HGLRC
-gdk_win32_gl_context_get_hglrc (GdkGLContext *glcontext)
+gdk_win32_glext_context_get_hglrc (GdkGLExtContext *glextcontext)
 {
-  g_return_val_if_fail (GDK_IS_WIN32_GL_CONTEXT (glcontext), NULL);
+  g_return_val_if_fail (GDK_IS_WIN32_GLEXT_CONTEXT (glextcontext), NULL);
 
-  return GDK_GL_CONTEXT_IMPL_WIN32_CLASS (glcontext->impl)->get_hglrc(glcontext);
+  return GDK_GLEXT_CONTEXT_IMPL_WIN32_CLASS (glextcontext->impl)->get_hglrc(glextcontext);
 }
