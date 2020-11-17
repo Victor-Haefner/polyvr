@@ -40,7 +40,7 @@ VRGtkWindow::VRGtkWindow(GtkDrawingArea* da, string msaa) {
     win->setSize(width, height);
 
     connect_signal<void>(drawArea, bind(&VRGtkWindow::on_realize, this), "realize");
-    connect_signal<bool, CairoContext*>(drawArea, bind(&VRGtkWindow::on_expose, this, PL::_1), "draw");
+    connect_signal<bool, _cairo*>(drawArea, bind(&VRGtkWindow::on_expose, this, PL::_1), "draw");
     connect_signal<void, GdkRectangle*>(drawArea, bind(&VRGtkWindow::on_resize, this, PL::_1), "size_allocate");
     connect_signal<bool, GdkEventScroll*>(drawArea, bind(&VRGtkWindow::on_scroll, this, PL::_1), "scroll_event");
     connect_signal<bool, GdkEventButton*>(drawArea, bind(&VRGtkWindow::on_button, this, PL::_1), "button_press_event");
@@ -113,7 +113,18 @@ void VRGtkWindow::on_realize() {
     gtk_widget_end_gl(widget, true);
 }
 
-bool VRGtkWindow::on_expose(CairoContext* event) {
+void drawBackground(GtkWidget* widget, _cairo* cr) {
+    auto context = gtk_widget_get_style_context(widget);
+    int width = gtk_widget_get_allocated_width(widget);
+    int height = gtk_widget_get_allocated_height(widget);
+    gtk_render_background(context, cr, 0, 0, width, height);
+
+    cairo_set_source_rgb(cr, 0.2, 1.0, 1.0);
+    cairo_rectangle(cr, 0, 0, width, height);
+    cairo_fill(cr);
+}
+
+bool VRGtkWindow::on_expose(_cairo* cr) {
     if (initialExpose) {
         gtk_widget_begin_gl(widget);
         GtkAllocation a;
@@ -125,5 +136,6 @@ bool VRGtkWindow::on_expose(CairoContext* event) {
         gtk_widget_end_gl(widget, true);
         initialExpose = false;
     }
+    //drawBackground(widget, cr);
     return true;
 }
