@@ -23,8 +23,8 @@ namespace PL = std::placeholders;
 #if GTK_MAJOR_VERSION == 2
 #include "VRGtk2Window.h"
 #else
-//#include "VRGtk3Window.h"
-#include "VRGtk32Window.h"
+#include "VRGtk3Window.h"
+//#include "VRGtk32Window.h"
 #endif
 
 VRGtkWindow::~VRGtkWindow() {

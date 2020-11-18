@@ -1,7 +1,13 @@
 
+#include "core/setup/windows/VRHeadMountedDisplay.h"
+
+#include <GL/GLU.h>
+
 VRGtkWindow::VRGtkWindow(GtkDrawingArea* da, string msaa) {
     cout << " --------------------- VRGtkWindow::VRGtkWindow -------------- " << endl;
     type = 2;
+
+    g_setenv("GDK_GL_LEGACY", "1", true);
 
     GtkWidget* box = gtk_widget_get_parent((GtkWidget*)da);
     gtk_container_remove(GTK_CONTAINER(box), (GtkWidget*)da);
@@ -22,6 +28,7 @@ VRGtkWindow::VRGtkWindow(GtkDrawingArea* da, string msaa) {
     gtk_gl_area_set_has_depth_buffer((GtkGLArea*)widget, true);
     gtk_gl_area_set_has_stencil_buffer((GtkGLArea*)widget, true);
     gtk_gl_area_set_required_version((GtkGLArea*)widget, 4,4);
+    gtk_gl_area_set_use_es((GtkGLArea*)widget, false);
 
     gtk_widget_show_all(widget);
     gtk_widget_add_events(widget, (GdkEventMask)GDK_VISIBILITY_NOTIFY_MASK);
@@ -40,13 +47,18 @@ VRGtkWindow::VRGtkWindow(GtkDrawingArea* da, string msaa) {
     connect_signal<void>(widget, bind(&VRGtkWindow::on_realize, this), "realize");
     connect_signal<bool, GdkGLContext*>(widget, bind(&VRGtkWindow::on_render , this, PL::_1), "render" );
 
-    /*connect_signal<void, GdkRectangle*>(drawArea, bind(&VRGtkWindow::on_resize, this, PL::_1), "size_allocate");
-    connect_signal<void, GdkEventScroll*>(drawArea, bind(&VRGtkWindow::on_scroll, this, PL::_1), "scroll_event");
-    connect_signal<void, GdkEventButton*>(drawArea, bind(&VRGtkWindow::on_button, this, PL::_1), "button_press_event");
-    connect_signal<void, GdkEventButton*>(drawArea, bind(&VRGtkWindow::on_button, this, PL::_1), "button_release_event");
-    connect_signal<void, GdkEventMotion*>(drawArea, bind(&VRGtkWindow::on_motion, this, PL::_1), "motion_notify_event");
-    connect_signal<void, GdkEventKey*>(drawArea, bind(&VRGtkWindow::on_key, this, PL::_1), "key_press_event");
-    connect_signal<void, GdkEventKey*>(drawArea, bind(&VRGtkWindow::on_key, this, PL::_1), "key_release_event");*/
+    connect_signal<void, GdkRectangle*>(widget, bind(&VRGtkWindow::on_resize, this, PL::_1), "size_allocate");
+    connect_signal<void, GdkEventScroll*>(widget, bind(&VRGtkWindow::on_scroll, this, PL::_1), "scroll_event");
+    connect_signal<void, GdkEventButton*>(widget, bind(&VRGtkWindow::on_button, this, PL::_1), "button_press_event");
+    connect_signal<void, GdkEventButton*>(widget, bind(&VRGtkWindow::on_button, this, PL::_1), "button_release_event");
+    connect_signal<void, GdkEventMotion*>(widget, bind(&VRGtkWindow::on_motion, this, PL::_1), "motion_notify_event");
+    connect_signal<void, GdkEventKey*>(widget, bind(&VRGtkWindow::on_key, this, PL::_1), "key_press_event");
+    connect_signal<void, GdkEventKey*>(widget, bind(&VRGtkWindow::on_key, this, PL::_1), "key_release_event");
+
+#ifndef WITHOUT_OPENVR
+    if (VRHeadMountedDisplay::checkDeviceAttached())
+        hmd = VRHeadMountedDisplay::create();
+#endif
 }
 
 void VRGtkWindow::clear(Color3f c) {
@@ -69,6 +81,10 @@ void VRGtkWindow::render(bool fromThread) {
     if (!active || !content || !isRealized) return;
     gtk_gl_area_queue_render((GtkGLArea*)widget);
     VRGuiManager::get()->updateGtk();
+
+#ifndef WITHOUT_OPENVR
+    if (hmd) hmd->render();
+#endif
     return;
 
 
@@ -106,6 +122,95 @@ void VRGtkWindow::render(bool fromThread) {
     profiler->regStop(pID);
 }
 
+// ------------------------------ texture
+#define RED 255,0,0
+#define GRE 0,255,0
+#define BLU 0,0,255
+
+int texSize = 4;
+vector<unsigned char> image;
+unsigned int textureID;
+// ------------------------------
+
+GLfloat light_diffuse[] = { 1.0, 1.0, 1.0, 1.0 };  /* Red diffuse light. */
+GLfloat light_position[] = { 1.0, 1.0, 1.0, 0.0 };  /* Infinite light location. */
+GLfloat n[6][3] = {  /* Normals for the 6 faces of a cube. */
+  {-1.0, 0.0, 0.0}, {0.0, 1.0, 0.0}, {1.0, 0.0, 0.0},
+  {0.0, -1.0, 0.0}, {0.0, 0.0, 1.0}, {0.0, 0.0, -1.0} };
+GLint faces[6][4] = {  /* Vertex indices for the 6 faces of a cube. */
+  {0, 1, 2, 3}, {3, 2, 6, 7}, {7, 6, 5, 4},
+  {4, 5, 1, 0}, {5, 6, 2, 1}, {7, 4, 0, 3} };
+GLfloat v[8][3];  /* Will be filled in with X,Y,Z vertexes. */
+
+void initBoxTest(void) {
+    /* Setup cube vertex data. */
+    v[0][0] = v[1][0] = v[2][0] = v[3][0] = -1;
+    v[4][0] = v[5][0] = v[6][0] = v[7][0] = 1;
+    v[0][1] = v[1][1] = v[4][1] = v[5][1] = -1;
+    v[2][1] = v[3][1] = v[6][1] = v[7][1] = 1;
+    v[0][2] = v[3][2] = v[4][2] = v[7][2] = 1;
+    v[1][2] = v[2][2] = v[5][2] = v[6][2] = -1;
+
+    /* Enable a single OpenGL light. */
+    glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);
+    glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+    glEnable(GL_LIGHT0);
+    glEnable(GL_LIGHTING);
+
+    /* Use depth buffering for hidden surface elimination. */
+    glEnable(GL_DEPTH_TEST);
+
+    /* Setup the view of the cube. */
+    glMatrixMode(GL_PROJECTION);
+    gluPerspective( /* field of view in degree */ 40.0,
+        /* aspect ratio */ 1.0,
+        /* Z near */ 1.0, /* Z far */ 10.0);
+    glMatrixMode(GL_MODELVIEW);
+    gluLookAt(0.0, 0.0, 5.0,  /* eye is at (0,0,5) */
+        0.0, 0.0, 0.0,      /* center is at (0,0,0) */
+        0.0, 1.0, 0.);      /* up is in positive Y direction */
+
+      /* Adjust cube position to be asthetic angle. */
+    glTranslatef(0.0, 0.0, -1.0);
+    glRotatef(60, 1.0, 0.0, 0.0);
+    glRotatef(-20, 0.0, 0.0, 1.0);
+
+    // texture
+    glGenTextures(1, &textureID);
+    glBindTexture(GL_TEXTURE_2D, textureID);
+
+    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    image = {
+        BLU, GRE, RED, GRE,
+        GRE, RED, GRE, RED,
+        RED, GRE, RED, GRE,
+        GRE, RED, GRE, RED,
+    };
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, texSize, texSize, 0, GL_RGB, GL_UNSIGNED_BYTE, &image[0]);
+}
+
+void drawBox(void) {
+    int i;
+    glBindTexture(GL_TEXTURE_2D, textureID);
+    glEnable(GL_TEXTURE_2D);
+
+    for (i = 0; i < 6; i++) {
+        glBegin(GL_QUADS);
+        glNormal3fv(&n[i][0]);
+        glTexCoord2f(0.0, 0.0);  glVertex3fv(&v[faces[i][0]][0]);
+        glTexCoord2f(1.0, 0.0);  glVertex3fv(&v[faces[i][1]][0]);
+        glTexCoord2f(1.0, 1.0);  glVertex3fv(&v[faces[i][2]][0]);
+        glTexCoord2f(0.0, 1.0);  glVertex3fv(&v[faces[i][3]][0]);
+        glEnd();
+    }
+    glDisable(GL_TEXTURE_2D);
+}
+
 bool VRGtkWindow::on_render(GdkGLContext* glcontext) {
     //cout << " --------------------- VRGtkWindow::on_render -------------- " << endl;
     glEnable(GL_DEPTH_TEST);
@@ -116,6 +221,7 @@ bool VRGtkWindow::on_render(GdkGLContext* glcontext) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     win->render(ract);
+    //drawBox();
 
     glFlush();
     return true;
@@ -130,10 +236,17 @@ void VRGtkWindow::on_realize() {
         return;
     }
     win->init();
+#ifndef WITHOUT_OPENVR
+    if (hmd) hmd->initHMD();
+#endif
+    initBoxTest();
     GtkAllocation a;
     gtk_widget_get_allocation(widget, &a);
     resize(a.width, a.height);
     isRealized = true;
+
+    GdkGLContext* context = gtk_gl_area_get_context((GtkGLArea*)widget);
+    cout << "gdk_gl_context_is_legacy: " << gdk_gl_context_is_legacy(context) << endl;
     return;
 }
 

@@ -13,6 +13,9 @@ VRGtkWindow::VRGtkWindow(GtkDrawingArea* da, string msaa) {
     auto mode = (GdkGLConfigMode)(GDK_GL_MODE_RGBA | GDK_GL_MODE_DOUBLE | GDK_GL_MODE_DEPTH | GDK_GL_MODE_STENCIL | GDK_GL_MODE_MULTISAMPLE);
     if (VROptions::get()->getOption<bool>("active_stereo"))
         mode = (GdkGLConfigMode)(GDK_GL_MODE_RGBA | GDK_GL_MODE_DOUBLE | GDK_GL_MODE_DEPTH | GDK_GL_MODE_STENCIL | GDK_GL_MODE_MULTISAMPLE | GDK_GL_MODE_STEREO);
+    
+    // for debugging
+    mode = (GdkGLConfigMode)(GDK_GL_MODE_RGB | GDK_GL_MODE_DOUBLE | GDK_GL_MODE_DEPTH);
 
     GdkGLConfig* glConfigMode = gdk_gl_config_new_by_mode(mode, MSAA);
     if (!glConfigMode) {
@@ -22,7 +25,9 @@ VRGtkWindow::VRGtkWindow(GtkDrawingArea* da, string msaa) {
 
     cout << "  glConfigMode: " << glConfigMode << endl;
 
-    bool r = gtk_widget_set_gl_capability(widget,glConfigMode,NULL,true,GDK_GL_RGBA_TYPE);
+    bool r = gtk_widget_set_gl_capability(widget, glConfigMode, NULL, true, GDK_GL_RGBA_TYPE);
+
+    //bool r = gtk_widget_set_gl_capability(widget,glConfigMode,NULL,true,GDK_GL_RGBA_TYPE);
     cout << "  gtk_widget_set_gl_capability: " << r << endl;
 
     gtk_widget_show_all(widget);
