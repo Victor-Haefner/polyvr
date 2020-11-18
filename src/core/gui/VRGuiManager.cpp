@@ -127,6 +127,7 @@ VRGuiManager::VRGuiManager() {
 
     fkt = VRFunction<VRDeviceWeakPtr>::create("GUI_updateNav", bind(&VRGuiNav::update, g_nav) );
     VRGuiSignals::get()->getSignal("scene_changed")->add( fkt );
+    VRGuiSignals::get()->getSignal("navpresets_changed")->add( fkt );
     guiSignalCbs.push_back(fkt);
 
     /*fkt = VRFunction<VRDeviceWeakPtr>::create("GUI_updateSem", bind(&VRGuiSemantics::updateOntoList, g_sem) );

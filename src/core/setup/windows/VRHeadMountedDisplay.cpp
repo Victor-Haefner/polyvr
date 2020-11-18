@@ -14,6 +14,7 @@
 #include "core/setup/windows/VRWindow.h"
 #include "core/setup/windows/VRGtkWindow.h"
 #include "core/setup/devices/VRFlystick.h"
+#include "core/gui/VRGuiManager.h"
 
 #include <openvr.h>
 #include <iostream>
@@ -283,9 +284,13 @@ void VRHeadMountedDisplay::addController(int devID) {
 	auto scene = VRScene::getCurrent();
 	if (scene) {
 		scene->initFlyWalk(scene->getActiveCamera(), dev);
-		//scene->setActiveNavigation("FlyWalk");
+		scene->setActiveNavigation("FlyWalk");
 		dev->clearDynTrees();
 		dev->addDynTree(scene->getRoot());
+
+#ifndef WITHOUT_GTK
+		VRGuiManager::get()->broadcast("navpresets_changed");
+#endif
 	}
 }
 
@@ -309,6 +314,17 @@ void VRHeadMountedDisplay::handleInput() {
 		if (event.eventType == vr::VREvent_ButtonUnpress) {
 			devices[devID]->change_button(mapButton(data.controller.button), false);
 		}
+	}
+
+	for (auto dev : devices) {
+		int devID = dev.first;
+		vr::VRControllerState_t state;
+		m_pHMD->GetControllerState(devID, &state, sizeof(state));
+		float x = state.rAxis[0].x;
+		float y = state.rAxis[0].y;
+
+		if (abs(x) > abs(y))	dev.second->change_slider(10, x);
+		else					dev.second->change_slider(11, y);
 	}
 }
 

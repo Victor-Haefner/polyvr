@@ -79,10 +79,6 @@ void VRGtkWindow::render(bool fromThread) {
     if (!active || !content || !isRealized) return;
     gtk_gl_area_queue_render((GtkGLArea*)widget);
     VRGuiManager::get()->updateGtk();
-
-#ifndef WITHOUT_OPENVR
-    if (hmd) hmd->render();
-#endif
     return;
 
 
@@ -129,6 +125,10 @@ bool VRGtkWindow::on_render(GdkGLContext* glcontext) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     win->render(ract);
+
+#ifndef WITHOUT_OPENVR
+    if (hmd) hmd->render();
+#endif
 
     glFlush();
     return true;
