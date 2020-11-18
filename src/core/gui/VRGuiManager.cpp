@@ -66,6 +66,7 @@ VRGuiManager::VRGuiManager() {
 
     int argc = 0;
     gtk_disable_setlocale();
+    setenv("GDK_GL", "legacy", 1); // linux legacy gl
     gtk_init(&argc, 0);
 
     //gtk_window_set_interactive_debugging(true);
