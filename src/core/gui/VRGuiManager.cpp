@@ -79,6 +79,8 @@ VRGuiManager::VRGuiManager() {
     //gtk_gl_init(&argc, NULL);
     VRGuiBuilder::get(standalone);
 
+    gtkUpdateCb = VRThreadCb::create("gtk update", bind(&VRGuiManager::updateGtkThreaded, this, placeholders::_1));
+
     if (standalone) {
         cout << " start in standalone mode\n";
         VRSetupManager::get()->load("Desktop", "setup/Desktop.xml");
@@ -147,7 +149,6 @@ VRGuiManager::VRGuiManager() {
     gtk_window_maximize(top);
     gtk_widget_show_all((GtkWidget*)top);
 
-    gtkUpdateCb = VRThreadCb::create( "gtk update", bind(&VRGuiManager::updateGtkThreaded, this, placeholders::_1) );
     cout << " done" << endl;
 }
 

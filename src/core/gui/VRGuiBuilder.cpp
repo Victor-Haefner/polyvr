@@ -389,8 +389,10 @@ GtkWidget* addVectorFrame(string ID, string fID) {
 void VRGuiBuilder::buildMinimalUI() {
     cout << "VRGuiBuilder buildMinimalUI.." << endl;
     auto window1 = addWindow("window1", "PolyVR");
+    auto a_vbox = addBox("a_vbox", GTK_ORIENTATION_VERTICAL);
     auto glarea = addDrawingArea("glarea");
-    gtk_container_add(GTK_CONTAINER(window1), glarea);
+    gtk_box_pack_start(GTK_BOX(a_vbox), glarea, false, true, 0);
+    gtk_container_add(GTK_CONTAINER(window1), a_vbox);
     cout << " ..building all widgets done!" << endl;
 }
 
