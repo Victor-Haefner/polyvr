@@ -263,6 +263,7 @@ void VRGuiFile::setFile(string file) {
 
 void VRGuiFile::gotoPath(string path) {
     cout << "VRGuiFile::gotoPath " << path << endl;
+    if (!exists(path)) path = "./";
     if (dialog == 0) init();
     if (!useCustomWidget) {
         gtk_file_chooser_set_current_folder((GtkFileChooser*)dialog, path.c_str());
