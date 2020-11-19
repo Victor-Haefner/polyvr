@@ -73,59 +73,40 @@ void VRGtkWindow::render(bool fromThread) {
     if (fromThread) return;
     PLock( VRGuiManager::get()->guiMutex() );
     if (!active || !content || !isRealized) return;
+
+    /*GtkAllocation a;
+    gtk_widget_get_allocation(widget, &a);
+    resize(a.width, a.height);*/
+
     gtk_gl_area_queue_render((GtkGLArea*)widget);
-    VRGuiManager::get()->updateGtk();
-    return;
-
-
-    if (fromThread) return;
-    PLock( VRGuiManager::get()->guiMutex() );
-    if (!active || !content || !isRealized) return;
-    cout << " -------------------------- VRGtkWindow::render " << endl;
-    auto profiler = VRProfiler::get();
-    int pID = profiler->regStart("gtk window render");
-    //GdkWindow* drawable = widget->window;
-    //if (drawable) {
-        //GdkGLContext* glcontext = gtk_gl_area_get_context((GtkGLArea*)widget);
-        gtk_gl_area_make_current((GtkGLArea*)widget);
-        gtk_gl_area_attach_buffers((GtkGLArea*)widget);
-
-        glEnable(GL_DEPTH_TEST);
-        glEnable(GL_BLEND);
-        //GdkGLDrawable* gldrawable = gtk_widget_get_gl_drawable (widget);
-        //gdk_gl_drawable_gl_begin (gldrawable, glcontext);
-        GtkAllocation a;
-        gtk_widget_get_allocation(widget, &a);
-        resize(a.width, a.height);
-
-        glClearColor(0.2, 0.2, 0.2, 1.0);
-        glClear(GL_COLOR_BUFFER_BIT);
-
-        VRTimer t1; t1.start();
-        if (active && content) win->render(ract);
-        VRGlobals::RENDER_FRAME_RATE.update(t1);
-        VRTimer t2; t2.start();
-        //gdk_gl_drawable_swap_buffers (gldrawable);
-        VRGlobals::SWAPB_FRAME_RATE.update(t2);
-        //gdk_gl_drawable_gl_end (gldrawable);
-    //}
-    profiler->regStop(pID);
 }
 
 bool VRGtkWindow::on_render(GdkGLContext* glcontext) {
-    //cout << " --------------------- VRGtkWindow::on_render -------------- " << endl;
+    auto profiler = VRProfiler::get();
+    int pID = profiler->regStart("gtk window render");
+
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
     
     glClearColor(0.2, 0.2, 0.2, 1.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    VRTimer t1; t1.start();
+    if (active && content) {
 #ifndef WITHOUT_OPENVR
-    if (hmd) hmd->render();
+        if (hmd) hmd->render();
 #endif
-    win->render(ract);
+        win->render(ract);
+    }
+    VRGlobals::RENDER_FRAME_RATE.update(t1);
+
+    //VRTimer t2; t2.start();
+    //gdk_gl_drawable_swap_buffers (gldrawable);
+    //VRGlobals::SWAPB_FRAME_RATE.update(t2);
 
     glFlush();
+
+    profiler->regStop(pID);
     return true;
 }
 

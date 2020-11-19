@@ -122,23 +122,31 @@ bool VRGuiEditor::on_editor_shortkey( GdkEventKey* e ) {
         gtk_source_buffer_end_not_undoable_action(sourceBuffer);
     };
 
+    auto triggerCB = [&](string name) {
+        cout << "VRGuiEditor::on_editor_shortkey trigger " << name << endl;
+        if (!keyBindings.count(name)) return;
+        if (!keyBindings[name]) return;
+        (*keyBindings[name])();
+        cout << " VRGuiEditor::on_editor_shortkey trigger " << name << " done" << endl;
+    };
+
     if (e->keyval == 102) {// f
-        if (keyBindings.count("find")) (*keyBindings["find"])();
+        triggerCB("find");
         return true;
     }
 
     if (e->keyval == 119) {// w
-        if (keyBindings.count("wipe")) (*keyBindings["wipe"])();
+        triggerCB("wipe");
         return true;
     }
 
     if (e->keyval == 115) {// s
-        if (keyBindings.count("save")) (*keyBindings["save"])();
+        triggerCB("save");
         return true;
     }
 
     if (e->keyval == 101) {// e
-        if (keyBindings.count("exec")) (*keyBindings["exec"])();
+        triggerCB("exec");
         return true;
     }
 
