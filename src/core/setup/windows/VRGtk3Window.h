@@ -120,15 +120,14 @@ bool VRGtkWindow::on_render(GdkGLContext* glcontext) {
     //cout << " --------------------- VRGtkWindow::on_render -------------- " << endl;
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
-
+    
     glClearColor(0.2, 0.2, 0.2, 1.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    win->render(ract);
 
 #ifndef WITHOUT_OPENVR
     if (hmd) hmd->render();
 #endif
+    win->render(ract);
 
     glFlush();
     return true;
