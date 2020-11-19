@@ -206,6 +206,16 @@ void CEF::resize() {
     if (init) reload();
 }
 
+vector<CEFPtr> CEF::getInstances() {
+    vector<CEFPtr> res;
+    for (auto i : instances) {
+        auto cef = i.lock();
+        if (!cef) continue;
+        res.push_back(cef);
+    }
+    return res;
+}
+
 void CEF::reloadScripts(string path) {
     for (auto i : instances) {
         auto cef = i.lock();
@@ -226,6 +236,7 @@ void CEF::setAspectRatio(float a) { aspect = a; resize(); }
 // dev callbacks:
 
 void CEF::addMouse(VRDevicePtr dev, VRObjectPtr obj, int lb, int rb, int wu, int wd) {
+    if (!obj) obj = this->obj.lock();
     if (dev == 0 || obj == 0) return;
     this->obj = obj;
 

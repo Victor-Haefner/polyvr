@@ -14,7 +14,9 @@
 #include "core/setup/windows/VRWindow.h"
 #include "core/setup/windows/VRGtkWindow.h"
 #include "core/setup/devices/VRFlystick.h"
+#include "core/scripting/VRScript.h"
 #include "core/gui/VRGuiManager.h"
+#include "addons/CEF/CEF.h"
 
 #include <openvr.h>
 #include <iostream>
@@ -287,6 +289,9 @@ void VRHeadMountedDisplay::addController(int devID) {
 		scene->setActiveNavigation("FlyWalk");
 		dev->clearDynTrees();
 		dev->addDynTree(scene->getRoot());
+
+		for (auto cef : CEF::getInstances()) cef->addMouse(dev, 0, 0, -1, -1, -1);
+		for (auto script : scene->getScripts()) script.second->updateDeviceTrigger();
 
 #ifndef WITHOUT_GTK
 		VRGuiManager::get()->broadcast("navpresets_changed");

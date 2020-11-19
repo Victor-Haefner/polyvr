@@ -101,6 +101,7 @@ class CEF {
         string getSite();
         void resize();
 
+        static vector< shared_ptr<CEF> > getInstances();
         static void reloadScripts(string path);
         static void shutdown();
 };

@@ -646,6 +646,11 @@ void VRScript::changeTrigKey(string name, int key) { clean(); if (auto t = getTr
 void VRScript::changeTrigState(string name, string state) { clean(); if (auto t = getTrig(name)) t->state = state; update(); }
 bool VRScript::hasTrigger(string type) { for (auto t : trigs) if (t->trigger == type) return true; return false; }
 
+void VRScript::updateDeviceTrigger() { // TODO: optimize
+    clean();
+    update();
+}
+
 void VRScript::remTrigger(string name) {
     if (auto t = getTrig(name)) {
         clean();
