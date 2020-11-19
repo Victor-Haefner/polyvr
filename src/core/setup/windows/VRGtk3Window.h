@@ -7,11 +7,7 @@ VRGtkWindow::VRGtkWindow(GtkDrawingArea* da, string msaa) {
 
     g_setenv("GDK_GL_LEGACY", "1", true); // windows
 
-    GtkWidget* box = gtk_widget_get_parent((GtkWidget*)da);
-    gtk_container_remove(GTK_CONTAINER(box), (GtkWidget*)da);
-
-    widget = gtk_gl_area_new();
-    gtk_box_pack_start(GTK_BOX(box), widget, true, true, 0);
+    widget = GTK_WIDGET(da);
     if (gtk_widget_get_realized(widget)) cout << "Warning: glarea is realized!\n";
 
     /*int MSAA = toInt(subString(msaa,1,-1));

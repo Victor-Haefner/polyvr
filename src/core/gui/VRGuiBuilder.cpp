@@ -386,11 +386,18 @@ GtkWidget* addVectorFrame(string ID, string fID) {
     return f;
 }
 
+GtkWidget* addGLWidget() {
+    //auto glarea = gtk_drawing_area_new();
+    auto glarea = gtk_gl_area_new();
+    VRGuiBuilder::get()->reg_widget(glarea, "glarea");
+    return glarea;
+}
+
 void VRGuiBuilder::buildMinimalUI() {
     cout << "VRGuiBuilder buildMinimalUI.." << endl;
     auto window1 = addWindow("window1", "PolyVR");
     auto a_vbox = addBox("a_vbox", GTK_ORIENTATION_VERTICAL);
-    auto glarea = addDrawingArea("glarea");
+    auto glarea = addGLWidget();
     gtk_box_pack_start(GTK_BOX(a_vbox), glarea, false, true, 0);
     gtk_container_add(GTK_CONTAINER(window1), a_vbox);
     cout << " ..building all widgets done!" << endl;
@@ -456,7 +463,7 @@ void VRGuiBuilder::buildBaseUI() {
 
     /* ---------- right core section ---------------------- */
     auto hbox1 = addBox("hbox1", GTK_ORIENTATION_HORIZONTAL);
-    auto glarea = addDrawingArea("glarea");
+    auto glarea = addGLWidget();
     auto label5 = addLabel("label5", "Camera:");
     auto label45 = addLabel("label45", "Navigation:");
     auto combobox4 = addCombobox("combobox4", "cameras");
