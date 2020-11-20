@@ -154,6 +154,7 @@ bool VRGtkWindow::on_motion(GdkEventMotion * event) {
 }
 
 bool VRGtkWindow::on_key(GdkEventKey *event) {
+    //cout << "VRGtkWindow::on_key " << event->keyval << endl;
     if (event->keyval >= 65470 && event->keyval <= 65481) return false; //F keys
     //VRKeyboard::get()->keyboard(event->keyval, 0, 0); // TODO: check the values!!
 	//printf("\n KEY: %i %i %i\n", event->keyval, event->type, event->state);
