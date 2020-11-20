@@ -220,7 +220,11 @@ struct VRMatData {
 
     template<typename T>
     void clearChunk(T& c) {
-        if (c) { mat->subChunk(c); c = 0; }
+        if (c) { 
+            mat->subChunk(c); 
+            c = 0;
+            mat->subAttachment(c);
+        }
     }
 };
 }
@@ -1020,6 +1024,7 @@ void VRMaterial::clearTransparency(bool user_override) {
     if (force_transparency && !user_override && !deferred) return;
     auto md = mats[activePass];
     md->clearChunk(md->blendChunk);
+    md->colChunk->setDiffuse(toColor4f(getDiffuse(), 1.0));
     //md->clearChunk(md->depthChunk); // messes with depth tests ?
 }
 
