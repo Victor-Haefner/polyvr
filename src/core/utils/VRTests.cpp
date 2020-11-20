@@ -5,7 +5,7 @@
 #include "core/objects/OSGObject.h"
 #include "core/objects/geometry/OSGGeometry.h"
 #include "core/objects/geometry/VRGeometry.h"
-#ifndef WITHOUT_BULLET
+#ifndef WITHOUT_VIRTUOSE
 #include "core/setup/devices/VRHaptic.h"
 #endif
 #include "core/utils/toString.h"
@@ -111,7 +111,7 @@ void VRRunTest(string test) {
     if (test == "vrpn_client") vrpn_client();
     if (test == "vrpn_server") vrpn_server();
 #endif
-#ifndef WITHOUT_BULLET
+#ifndef WITHOUT_VIRTUOSE
     if (test == "haptic1") VRHaptic::runTest1();
 #endif
     if (startsWith(test, "debugFields")) debugFields( subString(test, 12, test.size()-12) );

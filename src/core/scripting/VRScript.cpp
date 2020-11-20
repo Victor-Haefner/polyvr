@@ -18,7 +18,7 @@
 #ifndef WITHOUT_MTOUCH
 #include "VRPyMultiTouch.h"
 #endif
-#ifndef WITHOUT_BULLET
+#ifndef WITHOUT_VIRTUOSE
 #include "VRPyHaptic.h"
 #endif
 #include "VRPyMobile.h"
@@ -234,7 +234,7 @@ PyObject* VRScript::getPyObj(argPtr a) {
 #ifndef WITHOUT_MTOUCH
     else if (a->type == "VRPyMultiTouchType") return VRPyMultiTouch::fromSharedPtr(((VRMultiTouch*)a->ptr)->ptr());
 #endif
-#ifndef WITHOUT_BULLET
+#ifndef WITHOUT_VIRTUOSE
     else if (a->type == "VRPyHapticType") return VRPyHaptic::fromSharedPtr(((VRHaptic*)a->ptr)->ptr());
 #endif
     else if (a->type == "VRPyServerType") return VRPyServer::fromSharedPtr(((VRServer*)a->ptr)->ptr());

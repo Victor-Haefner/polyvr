@@ -115,7 +115,9 @@
 #endif
 
 #ifndef WITHOUT_BULLET
+#ifndef WITHOUT_VIRTUOSE
 #include "VRPyHaptic.h"
+#endif
 #include "addons/Bullet/Particles/VRPyParticles.h"
 #include "addons/Bullet/Fluids/VRPyFluids.h"
 #include "addons/Bullet/CarDynamics/VRPyCarDynamics.h"
@@ -316,12 +318,16 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
 
 #ifndef WITHOUT_BULLET
     sm->registerModule<VRPyCollision>("Collision", pModVR);
+#ifndef WITHOUT_VIRTUOSE
     sm->registerModule<VRPyHaptic>("Haptic", pModVR, VRPyDevice::typeRef);
+#endif
     sm->registerModule<VRPyParticles>("Particles", pModVR, VRPyGeometry::typeRef);
     sm->registerModule<VRPyFluids>("Fluids", pModVR, VRPyParticles::typeRef);
     sm->registerModule<VRPyMetaBalls>("MetaBalls", pModVR, VRPyObject::typeRef);
     sm->registerModule<VRPyCarDynamics>("CarDynamics", pModVR, VRPyObject::typeRef);
+#ifndef WITHOUT_AV
     sm->registerModule<VRPyCarSound>("CarSound", pModVR);
+#endif
     sm->registerModule<VRPyDriver>("Driver", pModVR);
     sm->registerModule<VRPyTrafficSimulation>("TrafficSimulation", pModVR, VRPyObject::typeRef);
 #endif

@@ -15,7 +15,7 @@
 #include "VRFlystick.h"
 #endif
 
-#ifndef WITHOUT_BULLET
+#ifndef WITHOUT_VIRTUOSE
 #include "VRHaptic.h"
 #endif
 
@@ -134,7 +134,7 @@ void VRDeviceManager::load(XMLElementPtr node) {
             dev = k;
         }
 
-#ifndef WITHOUT_BULLET
+#ifndef WITHOUT_VIRTUOSE
         if (type == "haptic") {
             VRHapticPtr h = VRHaptic::create();
             h->load(el);

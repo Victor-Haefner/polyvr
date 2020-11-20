@@ -22,6 +22,7 @@
 #include <BulletSoftBody/btSoftBodyHelpers.h>
 #include <BulletSoftBody/btSoftRigidDynamicsWorld.h>
 
+#ifndef _WIN32
 #include <HACD/hacdCircularList.h>
 #include <HACD/hacdVector.h>
 #include <HACD/hacdICHull.h>
@@ -30,6 +31,7 @@
 
 #include <ConvexDecomposition/cd_wavefront.h>
 #include <ConvexDecomposition/ConvexBuilder.h>
+#endif
 #include <boost/thread/recursive_mutex.hpp>
 
 using namespace OSG;
@@ -771,6 +773,7 @@ btCollisionShape* VRPhysics::getCompoundShape() {
     return shape;
 }
 
+#ifndef _WIN32
 class MyConvexDecomposition : public ConvexDecomposition::ConvexDecompInterface {
     public:
         btAlignedObjectArray<btConvexHullShape*> m_convexShapes;
@@ -793,6 +796,7 @@ class MyConvexDecomposition : public ConvexDecomposition::ConvexDecompInterface 
             m_convexShapes.push_back(convexShape);
         }
 };
+#endif
 
 void VRPhysics::setConvexDecompositionParameters(float cw, float vw, float nc, float nv, float c, bool aedp, bool andp, bool afp) {
     compacityWeight = cw;
@@ -806,6 +810,7 @@ void VRPhysics::setConvexDecompositionParameters(float cw, float vw, float nc, f
 }
 
 btCollisionShape* VRPhysics::getHACDShape() {
+#ifndef _WIN32
     OSG::VRGeometryPtr obj = dynamic_pointer_cast<OSG::VRGeometry>( vr_obj.lock() );
     if (!obj) { cout << "Warning in getHACDShape: not a geometry!"; return 0; }
 
@@ -891,6 +896,9 @@ btCollisionShape* VRPhysics::getHACDShape() {
     }
 
     return shape;
+#else
+    return 0;
+#endif
 }
 
 void VRPhysics::setCustomShape(btCollisionShape* shape) { customShape = shape; physicsShape = "Custom"; }

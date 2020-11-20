@@ -17,7 +17,7 @@
 #include "core/objects/geometry/VRPrimitive.h"
 #include "core/setup/devices/VRKeyboard.h"
 #include "core/setup/devices/VRFlystick.h"
-#ifndef WITHOUT_BULLET
+#ifndef WITHOUT_VIRTUOSE
 #include "core/setup/devices/VRHaptic.h"
 #endif
 #include "core/setup/devices/VRServer.h"
@@ -182,7 +182,7 @@ void VRGuiSetup::updateObjectData() {
         setTextEntry("entry40", toString(t->ID));
     }
 
-#ifndef WITHOUT_BULLET
+#ifndef WITHOUT_VIRTUOSE
     if (selected_type == "haptic") {
         setWidgetVisibility("expander20", true, true);
         device = true;
@@ -1005,7 +1005,7 @@ void VRGuiSetup::on_netslave_start_clicked() {
     updateObjectData();
 }
 
-#ifndef WITHOUT_BULLET
+#ifndef WITHOUT_VIRTUOSE
 void VRGuiSetup::on_haptic_ip_edited() {
     if (guard) return;
     VRHaptic* dev = (VRHaptic*)selected_object;
@@ -1071,7 +1071,7 @@ void VRGuiSetup::on_leap_dir_edit(Vec3d v) {
     VRGuiWidget("toolbutton12").setSensitivity(true);
 }
 
-#ifndef WITHOUT_BULLET
+#ifndef WITHOUT_VIRTUOSE
 void VRGuiSetup::on_change_haptic_type() {
     if (guard) return;
     VRHaptic* dev = (VRHaptic*)selected_object;
@@ -1204,7 +1204,7 @@ VRGuiSetup::VRGuiSetup() {
 #endif
     menu->appendItem("SM_AddDevMenu", "Leap", bind( &VRGuiSetup::on_menu_add_device<VRLeap>, this) );
     menu->appendItem("SM_AddDevMenu", "Keyboard", bind( &VRGuiSetup::on_menu_add_device<VRKeyboard>, this) );
-#ifndef WITHOUT_BULLET
+#ifndef WITHOUT_VIRTUOSE
     menu->appendItem("SM_AddDevMenu", "Haptic", bind( &VRGuiSetup::on_menu_add_device<VRHaptic>, this) );
 #endif
     menu->appendItem("SM_AddDevMenu", "Server", bind( &VRGuiSetup::on_menu_add_device<VRServer>, this) );
@@ -1273,7 +1273,7 @@ VRGuiSetup::VRGuiSetup() {
     setEntryCallback("entry29", bind( &VRGuiSetup::on_displays_edit_offset, this) );
     setEntryCallback("entry30", bind( &VRGuiSetup::on_displays_edit_offset, this) );
     setEntryCallback("entry31", bind( &VRGuiSetup::on_displays_edit_offset, this) );
-#ifndef WITHOUT_BULLET
+#ifndef WITHOUT_VIRTUOSE
     setEntryCallback("entry8", bind( &VRGuiSetup::on_haptic_ip_edited, this) );
 #endif
     setEntryCallback("entry28", bind( &VRGuiSetup::on_leap_host_edited, this) );
@@ -1304,11 +1304,11 @@ VRGuiSetup::VRGuiSetup() {
     setComboboxCallback("combobox13", bind( &VRGuiSetup::on_window_device_changed, this) );
     setComboboxCallback("combobox15", bind( &VRGuiSetup::on_window_msaa_changed, this) );
     setComboboxCallback("combobox18", bind( &VRGuiSetup::on_change_view_user, this) );
-#ifndef WITHOUT_BULLET
+#ifndef WITHOUT_VIRTUOSE
     setComboboxCallback("combobox25", bind( &VRGuiSetup::on_change_haptic_type, this) );
 #endif
 
-#ifndef WITHOUT_BULLET
+#ifndef WITHOUT_VIRTUOSE
     fillStringListstore("liststore8", VRHaptic::getDevTypes() );
 #endif
 #ifndef WITHOUT_MTOUCH
