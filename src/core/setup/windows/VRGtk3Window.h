@@ -18,10 +18,10 @@ VRGtkWindow::VRGtkWindow(GtkDrawingArea* da, string msaa) {
     gtk_widget_set_gl_capability(widget,glConfigMode,NULL,true,GDK_GL_RGBA_TYPE);*/
 
     gtk_gl_area_set_auto_render((GtkGLArea*)widget, false);
-    gtk_gl_area_set_has_alpha((GtkGLArea*)widget, true);
+    gtk_gl_area_set_has_alpha((GtkGLArea*)widget, false); // with alpha, transparent materials induce artifacts
     gtk_gl_area_set_has_depth_buffer((GtkGLArea*)widget, true);
     gtk_gl_area_set_has_stencil_buffer((GtkGLArea*)widget, true);
-    gtk_gl_area_set_required_version((GtkGLArea*)widget, 4,4);
+    //gtk_gl_area_set_required_version((GtkGLArea*)widget, 4,4);
     gtk_gl_area_set_use_es((GtkGLArea*)widget, false);
 
     gtk_widget_show_all(widget);
