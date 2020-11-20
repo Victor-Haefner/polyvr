@@ -297,18 +297,19 @@ GtkWidget* addTreeview(string ID, string mID, GtkTreeModel* m) {
     return n;
 }
 
-GtkWidget* addExpander(string ID, string label) {
+GtkWidget* addExpander(string ID, string label, GtkWidget* child) {
+    auto f = gtk_frame_new(NULL);
     auto n = gtk_expander_new(label.c_str());
     VRGuiBuilder::get()->reg_widget(n, ID);
-    return n;
+    gtk_container_add(GTK_CONTAINER(n), child);
+    gtk_container_add(GTK_CONTAINER(f), n);
+    return f;
 }
 
 GtkWidget* appendExpander(string ID, string label, string gID, GtkWidget* box) {
-    auto n = gtk_expander_new(label.c_str());
-    VRGuiBuilder::get()->reg_widget(n, ID);
-    gtk_box_pack_start(GTK_BOX(box), n, false, true, 0);
     auto g = addGrid(gID);
-    gtk_container_add(GTK_CONTAINER(n), g);
+    auto n = addExpander(ID, label, g);
+    gtk_box_pack_start(GTK_BOX(box), n, false, true, 0);
     return g;
 }
 
@@ -1149,15 +1150,6 @@ void VRGuiBuilder::buildBaseUI() {
     gtk_tree_view_column_add_attribute(treeviewcolumn14, cellrenderertext47, "text", 7);
     gtk_tree_view_append_column(GTK_TREE_VIEW(treeview5), treeviewcolumn14);
 
-    auto expander19 = addExpander("expander19", "Options");
-    auto expander17 = addExpander("expander17", "Triggers");
-    auto expander18 = addExpander("expander18", "Arguments");
-    auto scrolledwindow4 = addScrolledWindow("scrolledwindow4");
-    gtk_grid_attach(GTK_GRID(table15), expander19, 0,0,2,1);
-    gtk_grid_attach(GTK_GRID(table15), expander17, 0,1,2,1);
-    gtk_grid_attach(GTK_GRID(table15), expander18, 0,2,2,1);
-    gtk_grid_attach(GTK_GRID(table15), scrolledwindow4, 0,3,2,1);
-
     auto table32 = addGrid("table32");
     auto label32 = addLabel("label32", "Type:");
     auto combobox1 = addCombobox("combobox1", "liststore6");
@@ -1165,7 +1157,6 @@ void VRGuiBuilder::buildBaseUI() {
     auto combobox10 = addCombobox("combobox10", "liststore10");
     auto label33 = addLabel("label33", "Server:");
     auto combobox24 = addCombobox("combobox24", "liststore7");
-    gtk_container_add(GTK_CONTAINER(expander19), table32);
     gtk_grid_attach(GTK_GRID(table32), label32, 0,0,1,1);
     gtk_grid_attach(GTK_GRID(table32), combobox1, 1,0,1,1);
     gtk_grid_attach(GTK_GRID(table32), label148, 0,1,1,1);
@@ -1178,7 +1169,6 @@ void VRGuiBuilder::buildBaseUI() {
     auto treeview14 = addTreeview("treeview14", "triggers", GTK_TREE_MODEL(triggers));
     auto button23 = addImgButton("button23", "gtk-add");
     auto button24 = addImgButton("button24", "gtk-remove");
-    gtk_container_add(GTK_CONTAINER(expander17), hbox3);
     gtk_grid_attach(GTK_GRID(hbox3), treeview14, 0,0,1,2);
     gtk_grid_attach(GTK_GRID(hbox3), button23, 1,0,1,1);
     gtk_grid_attach(GTK_GRID(hbox3), button24, 1,1,1,1);
@@ -1209,11 +1199,19 @@ void VRGuiBuilder::buildBaseUI() {
     auto treeview7 = addTreeview("treeview7", "liststore2", GTK_TREE_MODEL(liststore2));
     auto button12 = addImgButton("button12", "gtk-add");
     auto button13 = addImgButton("button13", "gtk-remove");
-    gtk_container_add(GTK_CONTAINER(expander18), hbox13);
     gtk_grid_attach(GTK_GRID(hbox13), treeview7, 0,0,1,2);
     gtk_grid_attach(GTK_GRID(hbox13), button12, 1,0,1,1);
     gtk_grid_attach(GTK_GRID(hbox13), button13, 1,1,1,1);
     gtk_widget_set_hexpand(treeview7, true);
+
+    auto expander19 = addExpander("expander19", "Options", table32);
+    auto expander17 = addExpander("expander17", "Triggers", hbox3);
+    auto expander18 = addExpander("expander18", "Arguments", hbox13);
+    auto scrolledwindow4 = addScrolledWindow("scrolledwindow4");
+    gtk_grid_attach(GTK_GRID(table15), expander19, 0, 0, 2, 1);
+    gtk_grid_attach(GTK_GRID(table15), expander17, 0, 1, 2, 1);
+    gtk_grid_attach(GTK_GRID(table15), expander18, 0, 2, 2, 1);
+    gtk_grid_attach(GTK_GRID(table15), scrolledwindow4, 0, 3, 2, 1);
 
     addTreeviewTextcolumn(treeview7, "Name", "cellrenderertext2", 0, true);
     auto treeviewcolumn16 = addTreecolumn("treeviewcolumn16", "Type");

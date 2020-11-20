@@ -50,23 +50,23 @@ using namespace std;
 //  add(name); add(user);
 
 void VRGuiSetup::closeAllExpander() {
-    setWidgetVisibility("expander3", false);
-    setWidgetVisibility("expander4", false);
-    setWidgetVisibility("expander5", false);
-    setWidgetVisibility("expander6", false);
-    setWidgetVisibility("expander7", false);
-    setWidgetVisibility("expander8", false);
-    setWidgetVisibility("expander20", false);
-    setWidgetVisibility("expander21", false);
-    setWidgetVisibility("expander22", false);
-    setWidgetVisibility("expander23", false);
-    setWidgetVisibility("expander24", false);
-    setWidgetVisibility("expander25", false);
-    setWidgetVisibility("expander26", false);
-    setWidgetVisibility("expander28", false);
-    setWidgetVisibility("expander29", false);
-    setWidgetVisibility("expander30", false);
-    setWidgetVisibility("expander31", false);
+    setWidgetVisibility("expander3", false, true);
+    setWidgetVisibility("expander4", false, true);
+    setWidgetVisibility("expander5", false, true);
+    setWidgetVisibility("expander6", false, true);
+    setWidgetVisibility("expander7", false, true);
+    setWidgetVisibility("expander8", false, true);
+    setWidgetVisibility("expander20", false, true);
+    setWidgetVisibility("expander21", false, true);
+    setWidgetVisibility("expander22", false, true);
+    setWidgetVisibility("expander23", false, true);
+    setWidgetVisibility("expander24", false, true);
+    setWidgetVisibility("expander25", false, true);
+    setWidgetVisibility("expander26", false, true);
+    setWidgetVisibility("expander28", false, true);
+    setWidgetVisibility("expander29", false, true);
+    setWidgetVisibility("expander30", false, true);
+    setWidgetVisibility("expander31", false, true);
 }
 
 void VRGuiSetup::updateObjectData() {
@@ -76,13 +76,13 @@ void VRGuiSetup::updateObjectData() {
     current_scene = VRScene::getCurrent();
 
     if (selected_type == "window") {
-        setWidgetVisibility("expander3", true);
+        setWidgetVisibility("expander3", true, true);
 
         VRWindow* win = (VRWindow*)selected_object;
         setToggleButton("checkbutton7", win->isActive());
 
         if (win->hasType(0)) { // multiwindow
-            setWidgetVisibility("expander24", true);
+            setWidgetVisibility("expander24", true, true);
             VRMultiWindow* mwin = (VRMultiWindow*)win;
             int nx, ny;
             nx = mwin->getNXTiles();
@@ -112,8 +112,8 @@ void VRGuiSetup::updateObjectData() {
             }
         }
 
-        if (win->hasType(1)) setWidgetVisibility("expander23", true);
-        if (win->hasType(2)) setWidgetVisibility("expander22", true); // GTK
+        if (win->hasType(1)) setWidgetVisibility("expander23", true, true);
+        if (win->hasType(2)) setWidgetVisibility("expander22", true, true); // GTK
 
         // mouse
         string name = "None";
@@ -126,7 +126,7 @@ void VRGuiSetup::updateObjectData() {
     }
 
     if (selected_type == "view") {
-        setWidgetVisibility("expander8", true);
+        setWidgetVisibility("expander8", true, true);
 
         VRView* view = (VRView*)selected_object;
 
@@ -160,16 +160,16 @@ void VRGuiSetup::updateObjectData() {
     }
 
     if (selected_type == "vrpn_device") {
-        setWidgetVisibility("expander4", true);
-        setWidgetVisibility("expander7", true);
+        setWidgetVisibility("expander4", true, true);
+        setWidgetVisibility("expander7", true, true);
         device = true;
         VRPN_device* t = (VRPN_device*)selected_object;
         setTextEntry("entry50", t->address);
     }
 
     if (selected_type == "vrpn_tracker") {
-        setWidgetVisibility("expander4", true);
-        setWidgetVisibility("expander7", true);
+        setWidgetVisibility("expander4", true, true);
+        setWidgetVisibility("expander7", true, true);
         VRPN_device* t = (VRPN_device*)selected_object;
         setTextEntry("entry50", t->address);
         tVRPNAxisEntry.set(t->translate_axis);
@@ -177,14 +177,14 @@ void VRGuiSetup::updateObjectData() {
     }
 
     if (selected_type == "art_device") {
-        setWidgetVisibility("expander5", true);
+        setWidgetVisibility("expander5", true, true);
         ART_device* t = (ART_device*)selected_object;
         setTextEntry("entry40", toString(t->ID));
     }
 
 #ifndef WITHOUT_BULLET
     if (selected_type == "haptic") {
-        setWidgetVisibility("expander20", true);
+        setWidgetVisibility("expander20", true, true);
         device = true;
         VRHaptic* t = (VRHaptic*)selected_object;
         setTextEntry("entry8", t->getIP());
@@ -196,14 +196,14 @@ void VRGuiSetup::updateObjectData() {
 
 #ifndef WITHOUT_MTOUCH
     if (selected_type == "multitouch") {
-        setWidgetVisibility("expander30", true);
+        setWidgetVisibility("expander30", true, true);
         VRMultiTouch* t = (VRMultiTouch*)selected_object;
         setCombobox("combobox12", getListStorePos("liststore11", t->getDevice()) );
     }
 #endif
 
     if (selected_type == "leap") {
-        setWidgetVisibility("expander31", true);
+        setWidgetVisibility("expander31", true, true);
         VRLeap* t = (VRLeap*)selected_object;
         setTextEntry("entry28", t->getAddress());
         setLabel("label157", t->getConnectionStatus());
@@ -234,7 +234,7 @@ void VRGuiSetup::updateObjectData() {
     if (selected_type == "section" && setup) {
 #ifndef WITHOUT_ART
         if (selected_name == "ART") {
-            setWidgetVisibility("expander6", true);
+            setWidgetVisibility("expander6", true, true);
             setTextEntry("entry39", toString(setup->getARTPort()));
             setToggleButton("checkbutton24", setup->getARTActive());
 
@@ -245,14 +245,14 @@ void VRGuiSetup::updateObjectData() {
 
 #ifndef WITHOUT_VRPN
         if (selected_name == "VRPN") {
-            setWidgetVisibility("expander7", true);
+            setWidgetVisibility("expander7", true, true);
             setTextEntry("entry13", toString(setup->getVRPNPort()));
             setToggleButton("checkbutton25", setup->getVRPNActive());
         }
 #endif
 
         if (selected_name == "Displays") {
-            setWidgetVisibility("expander28", true);
+            setWidgetVisibility("expander28", true, true);
             Vec3d o = setup->getDisplaysOffset();
             setTextEntry("entry29", toString(o[0]));
             setTextEntry("entry30", toString(o[1]));
@@ -264,7 +264,7 @@ void VRGuiSetup::updateObjectData() {
         VRDevice* dev = (VRDevice*)selected_object;
         VRIntersection ins = dev->getLastIntersection();
 
-        setWidgetVisibility("expander21", true);
+        setWidgetVisibility("expander21", true, true);
         setLabel("label93", dev->getName());
         if (setup) fillStringListstore("dev_types_list", setup->getDeviceTypes());
         setCombobox("combobox26", getListStorePos("dev_types_list", dev->getType()) );
@@ -276,7 +276,7 @@ void VRGuiSetup::updateObjectData() {
     }
 
     if (selected_type == "node") {
-        setWidgetVisibility("expander25", true);
+        setWidgetVisibility("expander25", true, true);
         VRNetworkNode* n = (VRNetworkNode*)selected_object;
         setTextEntry("entry15", n->getAddress());
         setTextEntry("entry20", n->getUser());
@@ -288,7 +288,7 @@ void VRGuiSetup::updateObjectData() {
     }
 
     if (selected_type == "slave") {
-        setWidgetVisibility("expander26", true);
+        setWidgetVisibility("expander26", true, true);
         VRNetworkSlave* n = (VRNetworkSlave*)selected_object;
         setLabel("label138", n->getConnectionIdentifier());
         setLabel("label132", n->getStatMulticast());
@@ -307,7 +307,7 @@ void VRGuiSetup::updateObjectData() {
     }
 
     if (selected_type == "script") {
-        setWidgetVisibility("expander29", true);
+        setWidgetVisibility("expander29", true, true);
         VRScript* script = (VRScript*)selected_object;
         editor->setCore(script->getHead() + script->getCore());
         auto trigs = script->getTriggers();

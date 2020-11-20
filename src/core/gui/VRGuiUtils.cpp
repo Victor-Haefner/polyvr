@@ -54,8 +54,9 @@ void setWidgetSensitivity(string table, bool b) {
     gtk_widget_set_sensitive(w, b);
 }
 
-void setWidgetVisibility(string table, bool b) {
+void setWidgetVisibility(string table, bool b, bool p) {
     GtkWidget* w = VRGuiBuilder::get()->get_widget(table);
+    if (p) w = gtk_widget_get_parent(w);
     if (b) gtk_widget_show(w);
     else   gtk_widget_hide(w);
 }
