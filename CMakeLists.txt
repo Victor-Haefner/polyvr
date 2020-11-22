@@ -166,7 +166,10 @@ endfunction()
 
 function(FIND_COLLADA)
 	if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-		set(LINKER_FLAGS ${LINKER_FLAGS} collada-dom2.5-dp-vc140-mt PARENT_SCOPE)
+		set(INCLUDE_DIRS ${INCLUDE_DIRS} "${DISK}:/usr/include/Collada" PARENT_SCOPE)
+		set(LIB_DIRS ${LIB_DIRS} "${DISK}:/usr/lib/collada" PARENT_SCOPE)
+		set(LINKER_FLAGS ${LINKER_FLAGS} collada-dom2.5-dp-vc100-mt colladadom141 PARENT_SCOPE)
+		add_definitions( -DDOM_DYNAMIC )
 	endif()
 endfunction()
 

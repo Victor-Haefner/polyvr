@@ -8,6 +8,7 @@
 #include <OpenSG/OSGPrimeMaterial.h>
 #include <OpenSG/OSGNameAttachment.h>
 #include <OpenSG/OSGVector.h>
+#include <OpenSG/OSGSceneFileHandler.h>
 
 #ifdef __EMSCRIPTEN__
 #include <OpenSG/OSGPNGImageFileType.h>
@@ -398,6 +399,21 @@ void initOSGImporter() {
 }
 #endif
 
+void printOSGImportCapabilities() {
+    auto h = SceneFileHandler::the();
+
+    std::list<const Char8*> suffixList;
+    h->getSuffixList(suffixList, SceneFileType::OSG_READ_SUPPORTED);
+    cout << "OSG read formats:" << endl;
+    for (auto s : suffixList) cout << " " << s;
+    cout << endl;
+
+    h->getSuffixList(suffixList, SceneFileType::OSG_WRITE_SUPPORTED);
+    cout << "OSG write formats:" << endl;
+    for (auto s : suffixList) cout << " " << s;
+    cout << endl;
+}
+
 void testGLCapabilities() {
     cout << "Check OpenGL capabilities:" << endl;
     cout << " OpenGL vendor: " << VRRenderManager::getGLVendor() << endl;
@@ -446,6 +462,8 @@ void PolyVR::init(int argc, char **argv) {
     OSG::preloadSharedObject("OSGImageFileIO");
     osgInit(argc,argv);
     cout << "  ..done" << endl << endl;
+
+    printOSGImportCapabilities();
 
 #ifndef WITHOUT_SHARED_MEMORY
     try {
