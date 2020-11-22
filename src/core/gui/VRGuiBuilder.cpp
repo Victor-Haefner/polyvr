@@ -1346,6 +1346,8 @@ void VRGuiBuilder::buildBaseUI() {
     auto entry58 = addEntry("entry58", 4);
     auto spacer2 = addSpacer(20);
     auto label_01 = addLabel("label_01", "Rendering:");
+    auto tfpsLabel = addLabel("tfpsLabel", "Target FPS:");
+    auto tfpsCombobox = addCombobox("tfpsCombobox", "tfps");
     auto checkbutton_01 = addCheckbutton("checkbutton_01", "Frustum culling");
     auto checkbutton_02 = addCheckbutton("checkbutton_02", "Occlusion culling");
     auto checkbutton_2 = addCheckbutton("checkbutton_2", "Two sided");
@@ -1364,11 +1366,13 @@ void VRGuiBuilder::buildBaseUI() {
     gtk_grid_attach(GTK_GRID(table30), entry58, 3,5,1,1);
     gtk_grid_attach(GTK_GRID(table30), spacer2, 0,6,4,1);
     gtk_grid_attach(GTK_GRID(table30), label_01, 0,7,1,1);
-    gtk_grid_attach(GTK_GRID(table30), checkbutton_01, 0,8,2,1);
-    gtk_grid_attach(GTK_GRID(table30), checkbutton_02, 2,8,2,1);
-    gtk_grid_attach(GTK_GRID(table30), checkbutton_2, 0,9,2,1);
-    gtk_grid_attach(GTK_GRID(table30), checkbutton_3, 2,9,2,1);
-    gtk_grid_attach(GTK_GRID(table30), hbuttonbox7, 0,10,4,1);
+    gtk_grid_attach(GTK_GRID(table30), tfpsLabel, 0,8,2,1);
+    gtk_grid_attach(GTK_GRID(table30), tfpsCombobox, 2,8,2,1);
+    gtk_grid_attach(GTK_GRID(table30), checkbutton_01, 0,9,2,1);
+    gtk_grid_attach(GTK_GRID(table30), checkbutton_02, 2,9,2,1);
+    gtk_grid_attach(GTK_GRID(table30), checkbutton_2, 0,10,2,1);
+    gtk_grid_attach(GTK_GRID(table30), checkbutton_3, 2,10,2,1);
+    gtk_grid_attach(GTK_GRID(table30), hbuttonbox7, 0,11,4,1);
     gtk_grid_attach(GTK_GRID(hbuttonbox7), radiobutton13, 0,0,1,1);
     gtk_grid_attach(GTK_GRID(hbuttonbox7), radiobutton14, 1,0,1,1);
     gtk_grid_attach(GTK_GRID(hbuttonbox7), radiobutton15, 2,0,1,1);
@@ -1390,20 +1394,20 @@ void VRGuiBuilder::buildBaseUI() {
     auto label_1 = addLabel("label_1", "Export OSG:");
     auto button22 = addButton("button22", "dump");
 
-    gtk_grid_attach(GTK_GRID(table30), checkbutton_4, 0,11,4,1);
-    gtk_grid_attach(GTK_GRID(table30), label121, 0,12,2,1);
-    gtk_grid_attach(GTK_GRID(table30), hscale1, 2,12,2,1);
-    gtk_grid_attach(GTK_GRID(table30), label122, 0,13,2,1);
-    gtk_grid_attach(GTK_GRID(table30), hscale2, 2,13,2,1);
-    gtk_grid_attach(GTK_GRID(table30), label123, 0,14,2,1);
-    gtk_grid_attach(GTK_GRID(table30), hscale3, 2,14,2,1);
-    gtk_grid_attach(GTK_GRID(table30), checkbutton_5, 0,15,2,1);
-    gtk_grid_attach(GTK_GRID(table30), checkbutton_7, 2,15,2,1);
-    gtk_grid_attach(GTK_GRID(table30), checkbutton_6, 0,16,2,1);
-    gtk_grid_attach(GTK_GRID(table30), checkbutton_8, 2,16,2,1);
-    gtk_grid_attach(GTK_GRID(table30), spacer3, 0,17,4,1);
-    gtk_grid_attach(GTK_GRID(table30), label_1, 0,18,2,1);
-    gtk_grid_attach(GTK_GRID(table30), button22, 2,18,2,1);
+    gtk_grid_attach(GTK_GRID(table30), checkbutton_4, 0,12,4,1);
+    gtk_grid_attach(GTK_GRID(table30), label121, 0,13,2,1);
+    gtk_grid_attach(GTK_GRID(table30), hscale1, 2,13,2,1);
+    gtk_grid_attach(GTK_GRID(table30), label122, 0,14,2,1);
+    gtk_grid_attach(GTK_GRID(table30), hscale2, 2,14,2,1);
+    gtk_grid_attach(GTK_GRID(table30), label123, 0,15,2,1);
+    gtk_grid_attach(GTK_GRID(table30), hscale3, 2,15,2,1);
+    gtk_grid_attach(GTK_GRID(table30), checkbutton_5, 0,16,2,1);
+    gtk_grid_attach(GTK_GRID(table30), checkbutton_7, 2,16,2,1);
+    gtk_grid_attach(GTK_GRID(table30), checkbutton_6, 0,17,2,1);
+    gtk_grid_attach(GTK_GRID(table30), checkbutton_8, 2,17,2,1);
+    gtk_grid_attach(GTK_GRID(table30), spacer3, 0,18,4,1);
+    gtk_grid_attach(GTK_GRID(table30), label_1, 0,19,2,1);
+    gtk_grid_attach(GTK_GRID(table30), button22, 2,19,2,1);
 
     /* ---------- VR Scene - scenegraph ---------------------- */
     auto hpaned3 = addPaned("hpaned3", GTK_ORIENTATION_HORIZONTAL);

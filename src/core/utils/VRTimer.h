@@ -7,8 +7,8 @@
 class VRTimer {
     private:
         struct timer {
-            int total = 0;
-            int start = 0;
+            double total = 0;
+            double start = 0;
         };
 
         timer single;
@@ -18,15 +18,15 @@ class VRTimer {
     public:
         VRTimer();
         void start();
-        int stop();
+        double stop();
         void reset();
 
         void start(std::string t);
-        int stop(std::string t);
+        double stop(std::string t);
         void print();
 
         static void emitBeacon(std::string);
-        static int getBeacon(std::string);
+        static double getBeacon(std::string);
 };
 
 #endif // VRTIMER_H_INCLUDED

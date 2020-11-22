@@ -262,6 +262,25 @@ void VRSceneManager::updateScene() {
     current->update();
 }
 
+// todo, put the time stuff in VRSystem or VRUtils?
+typedef std::chrono::high_resolution_clock clock;
+template <typename T>
+using duration = std::chrono::duration<T, std::milli>;
+
+void VRSceneManager::doFrameSleep(double tFrame) {
+    double fps = targetFPS;                    // frames per second
+    double fT = 1000.0 / fps;             // target frame duration in ms
+    double sT = max(fT - tFrame, 0.0);    // time to sleep
+    if (sT <= 0) return;
+    static constexpr duration<double> MinSleepDuration(0);
+    clock::time_point start = clock::now();
+    while (duration<double>(clock::now() - start).count() < sT) {
+        std::this_thread::sleep_for(MinSleepDuration);
+    }
+}
+
+void VRSceneManager::setTargetFPS(double fps) { targetFPS = fps;  }
+
 void VRSceneManager::update() {
     // statistics
     auto profiler = VRProfiler::get();
@@ -326,9 +345,7 @@ void VRSceneManager::update() {
     VRGlobals::FRAME_RATE.fps = fps;
     VRTimer t7; t7.start();
     int pID2 = profiler->regStart("frame sleep");
-    int T = max(16-timer.stop(),0);
-    if (T > 0) osgSleep(T);
-
+    doFrameSleep(timer.stop());
     profiler->regStop(pID2);
     VRGlobals::SLEEP_FRAME_RATE.update(t7);
     VRGlobals::UPDATE_LOOP7.update(timer);

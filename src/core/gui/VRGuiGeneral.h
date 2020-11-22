@@ -37,6 +37,7 @@ class VRGuiGeneral {
         bool setSSAOnoise( int st, double d );
 
         // other
+        void on_tfps_changed();
         void dumpOSG();
 
     public:

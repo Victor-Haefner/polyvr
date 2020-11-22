@@ -41,6 +41,15 @@ VRGuiGeneral::VRGuiGeneral() {
     setRadioButtonCallback("radiobutton14", bind(&VRGuiGeneral::toggleDRendChannel, this));
     setRadioButtonCallback("radiobutton15", bind(&VRGuiGeneral::toggleDRendChannel, this));
     setRadioButtonCallback("radiobutton16", bind(&VRGuiGeneral::toggleDRendChannel, this));
+
+    fillStringListstore("tfps", { "60", "75", "90", "120", "144" });
+    setCombobox("tfpsCombobox", 0);
+    setComboboxCallback("tfpsCombobox", bind(&VRGuiGeneral::on_tfps_changed, this) );
+}
+
+void VRGuiGeneral::on_tfps_changed() {
+    float fps = toFloat(getComboboxText("tfpsCombobox"));
+    VRSceneManager::get()->setTargetFPS(fps);
 }
 
 bool VRGuiGeneral::setSSAOradius( int st, double d ) {
