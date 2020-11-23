@@ -19,6 +19,8 @@ class VRGuiSignals {
         static VRGuiSignals* get();
 
         VRSignalPtr getSignal(string name);
+
+        void clear();
 };
 
 OSG_END_NAMESPACE

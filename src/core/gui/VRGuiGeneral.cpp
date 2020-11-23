@@ -129,6 +129,7 @@ void VRGuiGeneral::setMode() {
 
     setWidgetSensitivity("entry14", t == VRBackground::SKYBOX);
     setWidgetSensitivity("entry42", t == VRBackground::SKYBOX || t == VRBackground::IMAGE);
+    setWidgetSensitivity("button18", t == VRBackground::SKYBOX || t == VRBackground::IMAGE);
 }
 
 void VRGuiGeneral::toggleDeferredShader() {

@@ -16,4 +16,8 @@ VRSignalPtr VRGuiSignals::getSignal(string name) {
     return signals[name];
 }
 
+void VRGuiSignals::clear() {
+    signals.clear();
+}
+
 OSG_END_NAMESPACE

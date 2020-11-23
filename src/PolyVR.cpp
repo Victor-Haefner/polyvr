@@ -58,6 +58,7 @@
 #include "core/utils/coreDumpHandler.h"
 #ifndef WITHOUT_GTK
 #include "core/gui/VRGuiManager.h"
+#include "core/gui/VRGuiSignals.h"
 #endif
 #include "core/networking/VRMainInterface.h"
 #ifndef WITHOUT_SHARED_MEMORY
@@ -139,6 +140,7 @@ PolyVR::~PolyVR() {
 
     pvr = 0;
 
+    VRGuiSignals::get()->clear();
     scene_mgr->closeScene();
     VRSetup::getCurrent()->stopWindows();
     scene_mgr->stopAllThreads();
