@@ -1030,7 +1030,32 @@ void OSMMap::readSHAPE(string path) {
 #endif // WITHOUT_GDAL
 }
 
-void OSMMap::readGML(string path) {
+Vec2d OSMMap::convertGKtoLatLon(double northing, double easting, int EPSG_Code) {
+#ifndef WITHOUT_GDAL
+#if GDAL_VERSION_NUM >= GDAL_COMPUTE_VERSION(2,0,0)
+    GDALAllRegister();
+    OGRSpatialReference source, target;
+
+    source.importFromEPSG(EPSG_Code);
+    target.importFromEPSG(4326);
+
+    OGRPoint p;
+    p.setX(easting);
+    p.setY(northing);
+    p.assignSpatialReference(&source);
+
+    p.transformTo(&target);
+
+    //cout << " new " << p.getX() << " | " << p.getY();
+    return Vec2d(p.getY(), p.getX());
+#endif // GDAL_VERSION_NUM
+#endif // WITHOUT_GDAL
+#ifdef WITHOUT_GDAL
+    return Vec2d(0.0,0.0);
+#endif // WITHOUT_GDAL
+}
+
+void OSMMap::readGML(string path, int EPSG_Code) {
 #ifndef WITHOUT_GDAL
     cout << "OSMMap::readGML path " << path << endl;
     cout << "  GDAL Version Nr:" << GDAL_VERSION_NUM << endl;
@@ -1086,28 +1111,6 @@ void OSMMap::readGML(string path) {
 
 // GDALOpenEx is available since GDAL 2.0
 #if GDAL_VERSION_NUM >= GDAL_COMPUTE_VERSION(2,0,0)
-
-    auto GKtoLatLon = [&](double northing, double easting) {
-        GDALAllRegister();
-
-        OGRSpatialReference source, target;
-
-        source.importFromEPSG(31467);
-        target.importFromEPSG(4326);
-
-        OGRPoint p;
-        p.setX(easting);
-        p.setY(northing);
-        p.assignSpatialReference(&source);
-
-        p.transformTo(&target);
-
-        // transformed coordinates
-        //cout << " new " << p.getX() << " | " << p.getY();
-
-        return Vec2d(p.getY(), p.getX());
-    };
-
     string workingpath = "GMLAS:"+path;
 
     GDALAllRegister();
@@ -1171,7 +1174,7 @@ void OSMMap::readGML(string path) {
                     for (auto eachPoint : eachPoly) {
                         nodeID++;
                         string strNID = to_string(nodeID);
-                        Vec2d latlon = GKtoLatLon(eachPoint[0],eachPoint[1]);
+                        Vec2d latlon = convertGKtoLatLon(eachPoint[0], eachPoint[1], EPSG_Code);
                         OSMNodePtr node = OSMNodePtr( new OSMNode(strNID, latlon[0], latlon[1] ) );
                         refsForWays.push_back(strNID);
                         nodes[node->id] = node;

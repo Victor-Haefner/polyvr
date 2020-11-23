@@ -217,9 +217,9 @@ void VRWorldGenerator::addOSMMap(string path, double subN, double subE, double s
     processOSMMap(subN, subE, subSize);
 }
 
-void VRWorldGenerator::addGML(string path) {
+void VRWorldGenerator::addGML(string path, int EPSG_Code) {
     auto newgmlMap = OSMMap::create();
-    newgmlMap->readGML(path);
+    newgmlMap->readGML(path, EPSG_Code);
     gmlMap = newgmlMap;
     processGMLfromOSM();
 }
@@ -908,6 +908,7 @@ void VRWorldGenerator::processGMLfromOSM(){
     auto mat = VRMaterial::create("GMLMaterial");
     mat->setPointSize(15);
     addChild(GMLGeometries);
+    int counter = 0;
 
     for (auto wayItr : gmlMap->getWays()) { // use way->id to filter for debugging!
         auto& way = wayItr.second;
@@ -935,11 +936,13 @@ void VRWorldGenerator::processGMLfromOSM(){
 #endif
         patch->updateNormals();
         GMLGeometries->addChild(patch);
+        counter++;
 
         for (auto tag : way->tags) {
             //cout << tag.first << " " << tag.second << endl;
         }
     }
+    cout << "  generated: " << counter << " geometries"<< endl;
     //addChild();
 }
 
