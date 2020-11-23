@@ -401,6 +401,10 @@ void VRGuiBuilder::buildMinimalUI() {
     auto glarea = addGLWidget();
     gtk_box_pack_start(GTK_BOX(a_vbox), glarea, false, true, 0);
     gtk_container_add(GTK_CONTAINER(window1), a_vbox);
+    gtk_widget_set_hexpand(glarea, true);
+    gtk_widget_set_vexpand(glarea, true);
+    gtk_widget_set_hexpand(a_vbox, true);
+    gtk_widget_set_vexpand(a_vbox, true);
     cout << " ..building all widgets done!" << endl;
 }
 
