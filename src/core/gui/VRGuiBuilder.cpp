@@ -1363,6 +1363,10 @@ void VRGuiBuilder::buildBaseUI() {
     auto radiobutton16 = addRadiobutton("radiobutton16", "diffuse", radiobutton13);
     auto radiobutton17 = addRadiobutton("radiobutton17", "ambient", radiobutton13);
 
+    gtk_widget_set_sensitive(entry42, false);
+    gtk_widget_set_sensitive(entry14, false);
+    gtk_widget_set_sensitive(button18, false);
+
     gtk_grid_attach(GTK_GRID(table30), label_2, 0,4,1,1);
     gtk_grid_attach(GTK_GRID(table30), checkbutton_1, 0,5,1,1);
     gtk_grid_attach(GTK_GRID(table30), entry43, 1,5,1,1);

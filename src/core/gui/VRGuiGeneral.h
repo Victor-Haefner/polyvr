@@ -19,6 +19,8 @@ class VRGuiGeneral {
         void setExtension();
         void setPath();
         void setMode();
+        void openBGpath();
+        void on_bg_path_choose();
 
         // rendering signals
         void toggleFrustumCulling();

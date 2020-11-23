@@ -1,6 +1,7 @@
 #include <gtk/gtk.h>
 #include "VRGuiGeneral.h"
 #include "VRGuiUtils.h"
+#include "VRGuiFile.h"
 
 #include <OpenSG/OSGSceneFileHandler.h>
 #include "core/scene/VRScene.h"
@@ -36,6 +37,7 @@ VRGuiGeneral::VRGuiGeneral() {
     setColorChooser("bg_solid", bind(&VRGuiGeneral::setColor, this, placeholders::_1) );
     setEntryCallback("entry42", bind(&VRGuiGeneral::setPath, this));
     setEntryCallback("entry14", bind(&VRGuiGeneral::setExtension, this));
+    setButtonCallback("button18", bind(&VRGuiGeneral::openBGpath, this));
     setButtonCallback("button22", bind(&VRGuiGeneral::dumpOSG, this));
     setRadioButtonCallback("radiobutton13", bind(&VRGuiGeneral::toggleDRendChannel, this));
     setRadioButtonCallback("radiobutton14", bind(&VRGuiGeneral::toggleDRendChannel, this));
@@ -45,6 +47,18 @@ VRGuiGeneral::VRGuiGeneral() {
     fillStringListstore("tfps", { "60", "75", "90", "120", "144" });
     setCombobox("tfpsCombobox", 0);
     setComboboxCallback("tfpsCombobox", bind(&VRGuiGeneral::on_tfps_changed, this) );
+}
+
+void VRGuiGeneral::on_bg_path_choose() {
+    string path = VRGuiFile::getPath();
+    setTextEntry("entry42", path);
+    setPath();
+}
+
+void VRGuiGeneral::openBGpath() {
+    VRGuiFile::gotoPath("./");
+    VRGuiFile::setCallbacks(bind(&VRGuiGeneral::on_bg_path_choose, this));
+    VRGuiFile::open("Open", GTK_FILE_CHOOSER_ACTION_OPEN, "Choose image");
 }
 
 void VRGuiGeneral::on_tfps_changed() {
@@ -129,7 +143,7 @@ void VRGuiGeneral::setMode() {
 
     setWidgetSensitivity("entry14", t == VRBackground::SKYBOX);
     setWidgetSensitivity("entry42", t == VRBackground::SKYBOX || t == VRBackground::IMAGE);
-    setWidgetSensitivity("button18", t == VRBackground::SKYBOX || t == VRBackground::IMAGE);
+    setWidgetSensitivity("button18", t == VRBackground::IMAGE);
 }
 
 void VRGuiGeneral::toggleDeferredShader() {
