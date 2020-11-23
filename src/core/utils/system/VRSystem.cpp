@@ -108,6 +108,20 @@ long long getTime() {
     return chrono::duration_cast<chrono::microseconds>(elapsed).count();
 }
 
+template <typename T>
+using duration = std::chrono::duration<T, std::milli>;
+
+void doFrameSleep(double tFrame, double fps) {
+    double fT = 1000.0 / fps;             // target frame duration in ms
+    double sT = max(fT - tFrame, 0.0);    // time to sleep
+    if (sT <= 0) return;
+    static constexpr duration<double> MinSleepDuration(0);
+    std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
+    while (duration<double>(std::chrono::high_resolution_clock::now() - start).count() < sT) {
+        std::this_thread::sleep_for(MinSleepDuration);
+    }
+}
+
 void fileReplaceStrings(string filePath, string oldString, string newString) {
     auto escapeSpecialChar = [&](string& str, char c1, const string& c2) {
         vector<size_t> positions; // get all singe quote positions to escape

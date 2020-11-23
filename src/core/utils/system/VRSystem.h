@@ -28,6 +28,7 @@ void fileReplaceStrings(string filePath, string oldString, string newString);
 
 void initTime();
 long long getTime();
+void doFrameSleep(double tFrame, double fps);
 
 
 #endif // VRSYSTEM_H_INCLUDED

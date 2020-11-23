@@ -26,7 +26,6 @@ class VRSceneManager : public VRThreadManager, public VRCallbackManager, public 
 
         double targetFPS = 60.0;
 
-        void doFrameSleep(double tFrame);
         void searchExercisesAndFavorites();
 
     public:
