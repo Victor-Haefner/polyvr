@@ -43,6 +43,7 @@ string absolute(string path) { return boost::filesystem::absolute(path).string()
 
 bool isFile(string path) { return boost::filesystem::is_regular_file(path); }
 bool isFolder(string path) { return boost::filesystem::is_directory(path); }
+bool isSamePath(string path1, string path2) { return boost::filesystem::equivalent(path1, path2); }
 
 string getFileName(string path, bool withExtension) {
     string fname;

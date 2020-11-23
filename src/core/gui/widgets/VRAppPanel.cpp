@@ -20,7 +20,7 @@ VRAppPanelPtr VRAppPanel::ptr() { return shared_from_this(); }
 
 VRAppLauncherPtr VRAppPanel::addLauncher(string path, string timestamp, VRGuiContextMenu* menu, VRAppManager* mgr, bool write_protected, bool favorite, string table) {
     if (!exists(path)) return 0;
-    if (apps.count(path)) return apps[path];
+    if (auto l = getLauncher(path)) return l;
     auto app = VRAppLauncher::create(ptr());
     app->path = path;
     app->lastStarted = timestamp;
@@ -81,7 +81,15 @@ void VRAppPanel::setGuiState(VRAppLauncherPtr e, bool running, bool noLauncherSc
     }
 }
 
-void VRAppPanel::remLauncher(string path) { apps.erase(path); }
-VRAppLauncherPtr VRAppPanel::getLauncher(string path) { return apps.count(path) ? apps[path] : 0; }
+void VRAppPanel::remLauncher(string path) {
+    if (auto l = getLauncher(path)) apps.erase(l->path);
+}
+
+VRAppLauncherPtr VRAppPanel::getLauncher(string path) {
+    for (auto a : apps) {
+        if (isSamePath(a.first, path)) return a.second;
+    }
+    return 0;
+}
 
 map<string, VRAppLauncherPtr> VRAppPanel::getLaunchers() { return apps; }
