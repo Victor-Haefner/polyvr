@@ -377,6 +377,7 @@ void VRAppManager::update() {
         cout << " .. no scene" << endl;
         if (current_demo) current_demo->running = false;
         setGuiState(current_demo);
+        current_demo = 0;
         return;
     }
 
@@ -393,6 +394,7 @@ void VRAppManager::update() {
         cout << "  .. to not running, set ui state accordingly" << endl;
         current_demo->running = false;
         setGuiState(current_demo);
+        current_demo = 0;
         return;
     }
 
