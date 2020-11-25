@@ -89,6 +89,7 @@
 #include "addons/Engineering/Factory/VRPyProduction.h"
 #include "addons/Engineering/Factory/VRPyAMLLoader.h"
 #include "addons/Engineering/Mechanics/VRPyMechanism.h"
+#include "addons/Engineering/Machining/VRPyMachining.h"
 #include "addons/Engineering/VRPyNumberingEngine.h"
 #include "addons/Semantics/Segmentation/VRPySegmentation.h"
 #include "addons/Semantics/Segmentation/VRPyAdjacencyGraph.h"
@@ -231,6 +232,8 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPySegmentation>("Segmentation", pModVR);
     sm->registerModule<VRPyAdjacencyGraph>("AdjacencyGraph", pModVR);
     sm->registerModule<VRPyMechanism>("Mechanism", pModVR, VRPyObject::typeRef);
+    sm->registerModule<VRPyMachiningCode>("MachiningCode", pModVR);
+    sm->registerModule<VRPyCartesianKinematics>("CartesianKinematics", pModVR);
     sm->registerModule<VRPyNumberingEngine>("NumberingEngine", pModVR, VRPyGeometry::typeRef);
     sm->registerModule<VRPySkeleton>("Skeleton", pModVR, VRPyObject::typeRef);
     sm->registerModule<VRPyCharacter>("Character", pModVR, VRPyObject::typeRef);

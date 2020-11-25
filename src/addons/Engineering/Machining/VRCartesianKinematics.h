@@ -1,9 +1,11 @@
 #ifndef VRCARTESIANKINEMATICS_H_INCLUDED
 #define VRCARTESIANKINEMATICS_H_INCLUDED
 
-#include <memory>
+#include <OpenSG/OSGConfig.h>
+#include "../VREngineeringFwd.h"
 
-using namespace std
+using namespace std;
+OSG_BEGIN_NAMESPACE;
 
 class VRCartesianKinematics : public std::enable_shared_from_this<VRCartesianKinematics> {
 	private:
@@ -11,8 +13,10 @@ class VRCartesianKinematics : public std::enable_shared_from_this<VRCartesianKin
 		VRCartesianKinematics();
 		~VRCartesianKinematics();
 
-		VRCartesianKinematicsPtr create();
+		static VRCartesianKinematicsPtr create();
 		VRCartesianKinematicsPtr ptr();
-}
+};
+
+OSG_END_NAMESPACE;
 
 #endif VRCARTESIANKINEMATICS_H_INCLUDED

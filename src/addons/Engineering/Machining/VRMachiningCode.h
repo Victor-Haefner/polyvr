@@ -1,9 +1,14 @@
 #ifndef VRMACHININGCODE_H_INCLUDED
 #define VRMACHININGCODE_H_INCLUDED
 
-#include <memory>
+#include <string>
 
-using namespace std
+#include <OpenSG/OSGConfig.h>
+
+#include "../VREngineeringFwd.h"
+
+using namespace std;
+OSG_BEGIN_NAMESPACE;
 
 class VRMachiningCode : public std::enable_shared_from_this<VRMachiningCode> {
 	private:
@@ -11,8 +16,12 @@ class VRMachiningCode : public std::enable_shared_from_this<VRMachiningCode> {
 		VRMachiningCode();
 		~VRMachiningCode();
 
-		VRMachiningCodePtr create();
+		static VRMachiningCodePtr create();
 		VRMachiningCodePtr ptr();
-}
+
+		void readGCode(string path);
+};
+
+OSG_END_NAMESPACE;
 
 #endif VRMACHININGCODE_H_INCLUDED
