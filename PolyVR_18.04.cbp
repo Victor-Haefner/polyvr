@@ -366,6 +366,16 @@
 		<Unit filename="src/addons/Engineering/Factory/VRPyLogistics.h" />
 		<Unit filename="src/addons/Engineering/Factory/VRPyProduction.cpp" />
 		<Unit filename="src/addons/Engineering/Factory/VRPyProduction.h" />
+		<Unit filename="src/addons/Engineering/Machining/VRCartesianKinematics.cpp" />
+		<Unit filename="src/addons/Engineering/Machining/VRCartesianKinematics.h" />
+		<Unit filename="src/addons/Engineering/Machining/VRMachiningCode.cpp" />
+		<Unit filename="src/addons/Engineering/Machining/VRMachiningCode.h" />
+		<Unit filename="src/addons/Engineering/Machining/VRMachiningKinematics.cpp" />
+		<Unit filename="src/addons/Engineering/Machining/VRMachiningKinematics.h" />
+		<Unit filename="src/addons/Engineering/Machining/VRMachiningSimulation.cpp" />
+		<Unit filename="src/addons/Engineering/Machining/VRMachiningSimulation.h" />
+		<Unit filename="src/addons/Engineering/Machining/VRPyMachining.cpp" />
+		<Unit filename="src/addons/Engineering/Machining/VRPyMachining.h" />
 		<Unit filename="src/addons/Engineering/Mechanics/VRMechanism.cpp" />
 		<Unit filename="src/addons/Engineering/Mechanics/VRMechanism.h" />
 		<Unit filename="src/addons/Engineering/Mechanics/VRPyMechanism.cpp" />

@@ -17,7 +17,7 @@ class VRMachiningKinematics : public std::enable_shared_from_this<VRMachiningKin
 
 		VRMachiningKinematicsPtr ptr();
 
-		virtual void setEndEffector(PosePtr pose) = 0;
+		virtual void setEndEffector(PosePtr pose);
 };
 
 OSG_END_NAMESPACE;
