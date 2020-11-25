@@ -825,6 +825,8 @@ target_sources(polyvr PRIVATE src/addons/Engineering/CSG/VRPyCSG.cpp)
 target_sources(polyvr PRIVATE src/addons/Engineering/CSG/CSGGeometryBis.cpp)
 #target_sources(polyvr PRIVATE src/addons/Engineering/CSG/GTSGeometry.cpp) # deprecated
 target_sources(polyvr PRIVATE src/addons/Engineering/VRPyRobotArm.cpp)
+target_sources(polyvr PRIVATE src/addons/Engineering/Machining/VRMachiningCode.cpp)
+target_sources(polyvr PRIVATE src/addons/Engineering/Machining/VRCartesianKinematics.cpp)
 target_sources(polyvr PRIVATE src/addons/Engineering/Milling/VRMillingCuttingToolProfile.cpp)
 target_sources(polyvr PRIVATE src/addons/Engineering/Milling/VRMillingMachine.cpp)
 target_sources(polyvr PRIVATE src/addons/Engineering/Milling/VRMillingWorkPiece.cpp)
