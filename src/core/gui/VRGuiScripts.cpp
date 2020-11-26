@@ -1068,7 +1068,7 @@ VRGuiScripts::VRGuiScripts() {
     editor->addKeyBinding("save", VRUpdateCb::create("saveCb", bind(&VRGuiScripts::on_save_clicked, this)));
     editor->addKeyBinding("exec", VRUpdateCb::create("execCb", bind(&VRGuiScripts::on_exec_clicked, this)));
     connect_signal<void>(editor->getSourceBuffer(), bind(&VRGuiScripts::on_buffer_changed, this), "changed");
-    connect_signal<void, GdkEvent*>(editor->getEditor(), bind(&VRGuiScripts::on_focus_out_changed, this, PL::_1), "focus-out-event");
+    //connect_signal<void, GdkEvent*>(editor->getEditor(), bind(&VRGuiScripts::on_focus_out_changed, this, PL::_1), "focus-out-event");
 
     setEntryCallback("entry10", bind(&VRGuiScripts::on_find_diag_find_clicked, this), false, false);
 
