@@ -299,12 +299,28 @@ pair<GtkWidget*,GtkWidget*> addTreeview(string ID, string mID, GtkTreeModel* m) 
     return make_pair(n,f);
 }
 
+void on_expander_activate(GtkExpander* expander, gpointer user_data) {
+    bool open = !gtk_expander_get_expanded(expander);
+    GList* children = gtk_container_get_children(GTK_CONTAINER(expander));
+
+    for (GList* elem = children; elem; elem = elem->next) {
+        GtkWidget* w = GTK_WIDGET(elem->data);
+        if (open) gtk_widget_show(w);
+        else gtk_widget_hide(w);
+    }
+
+    // fix to allways show label
+    auto lbl = gtk_expander_get_label_widget(expander);
+    gtk_widget_show(lbl);
+}
+
 GtkWidget* addExpander(string ID, string label, GtkWidget* child) {
     auto f = gtk_frame_new(NULL);
     auto n = gtk_expander_new(label.c_str());
     VRGuiBuilder::get()->reg_widget(n, ID);
     gtk_container_add(GTK_CONTAINER(n), child);
     gtk_container_add(GTK_CONTAINER(f), n);
+    g_signal_connect(n, "activate", (GCallback)on_expander_activate, NULL); // to fix the bug where the collapsed expander content still gets mouse signals
     return f;
 }
 
@@ -1221,10 +1237,10 @@ void VRGuiBuilder::buildBaseUI() {
     auto expander17 = addExpander("expander17", "Triggers", hbox3);
     auto expander18 = addExpander("expander18", "Arguments", hbox13);
     auto scrolledwindow4 = addScrolledWindow("scrolledwindow4");
-    gtk_grid_attach(GTK_GRID(table15), expander19, 0, 0, 2, 1);
-    gtk_grid_attach(GTK_GRID(table15), expander17, 0, 1, 2, 1);
-    gtk_grid_attach(GTK_GRID(table15), expander18, 0, 2, 2, 1);
-    gtk_grid_attach(GTK_GRID(table15), scrolledwindow4, 0, 3, 2, 1);
+    gtk_grid_attach(GTK_GRID(table15), expander19, 0, 0, 1, 1);
+    gtk_grid_attach(GTK_GRID(table15), expander17, 0, 1, 1, 1);
+    gtk_grid_attach(GTK_GRID(table15), expander18, 0, 2, 1, 1);
+    gtk_grid_attach(GTK_GRID(table15), scrolledwindow4, 0, 3, 1, 1);
 
     addTreeviewTextcolumn(treeview7, "Name", "cellrenderertext2", 0, true);
     auto treeviewcolumn16 = addTreecolumn("treeviewcolumn16", "Type");
