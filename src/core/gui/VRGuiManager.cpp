@@ -109,7 +109,7 @@ VRGuiManager::VRGuiManager() {
     g_scene->updateTreeView();
 
 
-    VRDeviceCbPtr fkt;
+    VRDeviceCbPtr fkt; // TODO: all those signals are not properly connected to, the fkt binding is destroyed when going out of scope
 
     auto editor = g_sc->getEditor();
     editor->addKeyBinding("wipe", VRUpdateCb::create("wipeCb", bind(&VRGuiBits::wipeConsoles, g_bits)));

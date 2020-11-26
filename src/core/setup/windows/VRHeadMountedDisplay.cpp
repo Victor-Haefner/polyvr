@@ -16,6 +16,7 @@
 #include "core/setup/devices/VRFlystick.h"
 #include "core/scripting/VRScript.h"
 #include "core/gui/VRGuiManager.h"
+#include "core/gui/VRGuiSignals.h"
 #include "addons/CEF/CEF.h"
 
 #include <openvr.h>
@@ -63,7 +64,11 @@ std::string GetViveDeviceString(vr::TrackedDeviceIndex_t unDevice, vr::TrackedDe
 	return sResult;
 }
 
-VRHeadMountedDisplay::VRHeadMountedDisplay() {}
+VRHeadMountedDisplay::VRHeadMountedDisplay() {
+	onCameraChanged = VRDeviceCb::create("GUI_updateSceneViewer", bind(&VRHeadMountedDisplay::updateCamera, this));
+	VRGuiSignals::get()->getSignal("camera_changed")->add(onCameraChanged);
+	VRGuiSignals::get()->getSignal("camera_near_far_changed")->add(onCameraChanged);
+}
 
 VRHeadMountedDisplay::~VRHeadMountedDisplay() {
 	cout << "~VRHeadMountedDisplay" << endl;
@@ -93,6 +98,28 @@ void VRHeadMountedDisplay::initTexRenderer() {
 	
 }
 
+void VRHeadMountedDisplay::updateCamera() {
+	if (!fboData) return;
+	cout << "VRHeadMountedDisplay::updateCamera" << endl;
+	VRCameraPtr cam = VRScene::getCurrent()->getActiveCamera();
+	float f = cam->getFar();
+	float n = cam->getNear();
+	fboData->mcamL->setNear(n);
+	fboData->mcamL->setFar (f);
+	fboData->mcamR->setNear(n);
+	fboData->mcamR->setFar (f);
+	m_fNearClip = n;
+	m_fFarClip = f;
+	m_mat4ProjectionLeft = GetHMDMatrixProjectionEye(vr::Eye_Left);
+	m_mat4ProjectionRight = GetHMDMatrixProjectionEye(vr::Eye_Right);
+	Matrix4d mL = m_mat4ProjectionLeft;
+	mL.mult(m_mat4eyePosLeft);
+	Matrix4d mR = m_mat4ProjectionRight;
+	mR.mult(m_mat4eyePosRight);
+	fboData->mcamL->setProjectionMatrix(toMatrix4f(mL));
+	fboData->mcamR->setProjectionMatrix(toMatrix4f(mR));
+}
+
 void VRHeadMountedDisplay::setScene() {
 	auto scene = VRScene::getCurrent();
 	if (!scene) return;
@@ -116,9 +143,6 @@ void VRHeadMountedDisplay::setScene() {
 		mcam->setProjectionMatrix(toMatrix4f(m));
 		mcam->setNear(m_fNearClip);
 		mcam->setFar(m_fFarClip);
-		//mcam->setNear(cam->getCam()->cam->getNear());
-		//mcam->setFar(cam->getCam()->cam->getFar());
-		//mcam->setModelviewMatrix(); // needed or set by beacon?
 		return mcam;
 	};
 
