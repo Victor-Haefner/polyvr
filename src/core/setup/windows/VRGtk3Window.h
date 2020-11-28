@@ -33,7 +33,7 @@ VRGtkWindow::VRGtkWindow(GtkDrawingArea* da, string msaa) {
     //gl_area_set_required_version((GLArea*)widget, 4,4);
     gl_area_set_use_es((GLArea*)widget, false);
 
-    g_signal_connect(widget, "create-context", (GCallback)onCreateGLContext, NULL);
+    //g_signal_connect(widget, "create-context", (GCallback)onCreateGLContext, NULL);
 
     gtk_widget_show_all(widget);
     gtk_widget_add_events(widget, (GdkEventMask)GDK_VISIBILITY_NOTIFY_MASK);
@@ -109,7 +109,6 @@ void checkMultiSampling() { // multisampling has to be defined on frame buffer c
 }
 
 bool VRGtkWindow::on_render(GdkGLContext* glcontext) {
-    cout << " --------------------- VRGtkWindow::on_render -------------- " << endl;
     auto profiler = VRProfiler::get();
     int pID = profiler->regStart("gtk window render");
 
@@ -138,7 +137,6 @@ bool VRGtkWindow::on_render(GdkGLContext* glcontext) {
     glFlush();
 
     profiler->regStop(pID);
-    cout << "      VRGtkWindow::on_render done" << endl;
     return true;
 }
 

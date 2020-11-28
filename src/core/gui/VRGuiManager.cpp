@@ -203,10 +203,8 @@ VRConsoleWidgetPtr VRGuiManager::getConsole(string t) {
 }
 
 void VRGuiManager::updateGtk() {
-    cout << "VRGuiManager::updateGtk" << endl;
     PLock( guiMutex() );
     while( gtk_events_pending() ) gtk_main_iteration_do(false);
-    cout << " VRGuiManager::updateGtk done" << endl;
 }
 
 void VRGuiManager::updateGtkThreaded(VRThreadWeakPtr t) {

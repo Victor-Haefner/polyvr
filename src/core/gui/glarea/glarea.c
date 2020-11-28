@@ -335,7 +335,6 @@ gl_area_get_property (GObject    *gobject,
 static void
 gl_area_realize (GtkWidget *widget)
 {
-    printf("gl_area_realize\n\r");
   GLArea *area = GL_AREA (widget);
   GLAreaPrivate *priv = gl_area_get_instance_private (area);
   GtkAllocation allocation;
@@ -363,6 +362,7 @@ gl_area_realize (GtkWidget *widget)
   g_clear_error (&priv->error);
   priv->context = NULL;
   g_signal_emit (area, area_signals[CREATE_CONTEXT], 0, &priv->context);
+
 
   /* In case the signal failed, but did not set an error */
   /*if (priv->context == NULL && priv->error == NULL)
@@ -392,7 +392,6 @@ gl_area_notify (GObject    *object,
 static GdkGLContext *
 gl_area_real_create_context (GLArea *area)
 {
-    printf("gl_area_real_create_context\n\r");
   GLAreaPrivate *priv = gl_area_get_instance_private (area);
   GtkWidget *widget = GTK_WIDGET (area);
   GError *error = NULL;
@@ -406,8 +405,6 @@ gl_area_real_create_context (GLArea *area)
       g_clear_error (&error);
       return NULL;
     }
-
-  initGLFunctions();
 
   gdk_gl_context_set_use_es (context, priv->use_es);
   gdk_gl_context_set_required_version (context,
@@ -423,13 +420,15 @@ gl_area_real_create_context (GLArea *area)
       return NULL;
     }
 
+  gdk_gl_context_make_current(context);
+  initGLFunctions();
+
   return context;
 }
 
 static void
 gl_area_resize (GLArea *area, int width, int height)
 {
-    printf("gl_area_resize\n\r");
   glViewport (0, 0, width, height);
 }
 
@@ -439,7 +438,6 @@ gl_area_resize (GLArea *area, int width, int height)
 static void
 gl_area_ensure_buffers (GLArea *area)
 {
-    printf("gl_area_ensure_buffers\n\r");
   GLAreaPrivate *priv = gl_area_get_instance_private (area);
   GtkWidget *widget = GTK_WIDGET (area);
 
@@ -503,7 +501,6 @@ gl_area_ensure_buffers (GLArea *area)
 static void
 gl_area_allocate_buffers (GLArea *area)
 {
-    printf("gl_area_allocate_buffers\n\r");
   GLAreaPrivate *priv = gl_area_get_instance_private (area);
   GtkWidget *widget = GTK_WIDGET (area);
   int scale, width, height;
@@ -570,7 +567,6 @@ gl_area_allocate_buffers (GLArea *area)
 void
 gl_area_attach_buffers (GLArea *area)
 {
-    printf("gl_area_attach_buffers\n\r");
   GLAreaPrivate *priv = gl_area_get_instance_private (area);
 
   g_return_if_fail (IS_GL_AREA (area));
@@ -676,7 +672,6 @@ gl_area_unrealize (GtkWidget *widget)
 static void
 gl_area_map (GtkWidget *widget)
 {
-    printf("gl_area_map\n\r");
   GLArea *area = GL_AREA (widget);
   GLAreaPrivate *priv = gl_area_get_instance_private (area);
 
@@ -702,7 +697,6 @@ static void
 gl_area_size_allocate (GtkWidget     *widget,
                            GtkAllocation *allocation)
 {
-    printf("gl_area_size_allocate\n\r");
   GLArea *area = GL_AREA (widget);
   GLAreaPrivate *priv = gl_area_get_instance_private (area);
 
@@ -748,7 +742,6 @@ static gboolean
 gl_area_draw (GtkWidget *widget,
                   cairo_t   *cr)
 {
-    printf("gl_area_draw\n\r");
   GLArea *area = GL_AREA (widget);
   GLAreaPrivate *priv = gl_area_get_instance_private (area);
   gboolean unused;
@@ -914,7 +907,6 @@ _marshal_OBJECT__VOID(GClosure* closure,
 static void
 gl_area_class_init (GLAreaClass *klass)
 {
-    printf("gl_area_class_init\n\r");
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GtkWidgetClass *widget_class = GTK_WIDGET_CLASS (klass);
 
@@ -1144,7 +1136,6 @@ gl_area_class_init (GLAreaClass *klass)
 static void
 gl_area_init (GLArea *area)
 {
-    printf("gl_area_init\n\r");
   GLAreaPrivate *priv = gl_area_get_instance_private (area);
 
   gtk_widget_set_has_window (GTK_WIDGET (area), FALSE);
@@ -1164,11 +1155,9 @@ gl_area_init (GLArea *area)
  *
  * Since: 3.16
  */
-GtkWidget *
+GtkWidget*
 gl_area_new (void) {
-    printf("gl_area_new\n"); fflush(stdout);
-    auto obj = g_object_new (TYPE_GL_AREA, NULL);
-    printf(" gl_area_new obj %p\n", obj); fflush(stdout);
+    GtkWidget* obj = g_object_new (TYPE_GL_AREA, NULL);
     return obj;
 }
 
