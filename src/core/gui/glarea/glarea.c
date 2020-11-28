@@ -514,37 +514,37 @@ gl_area_allocate_buffers (GLArea *area)
 
   if (priv->texture)
     {
-      //glBindTexture (GL_TEXTURE_2D_MULTISAMPLE, priv->texture);
-      glBindTexture(GL_TEXTURE_2D, priv->texture);
+      glBindTexture (GL_TEXTURE_2D_MULTISAMPLE, priv->texture);
+      /*glBindTexture(GL_TEXTURE_2D, priv->texture);
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);*/
 
       if (gdk_gl_context_get_use_es (priv->context))
-        glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-        //glTexImage2DMultisample (GL_TEXTURE_2D_MULTISAMPLE, 8, GL_RGBA8, width, height, GL_FALSE);
+        //glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+        glTexImage2DMultisample (GL_TEXTURE_2D_MULTISAMPLE, 8, GL_RGBA8, width, height, GL_FALSE);
       else
-        glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_BGRA, GL_UNSIGNED_BYTE, NULL);
-        //glTexImage2DMultisample (GL_TEXTURE_2D_MULTISAMPLE, 8, GL_RGBA8, width, height, GL_FALSE);
+        //glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_BGRA, GL_UNSIGNED_BYTE, NULL);
+        glTexImage2DMultisample (GL_TEXTURE_2D_MULTISAMPLE, 8, GL_RGBA8, width, height, GL_FALSE);
     }
 	
   if (priv->render_buffer)
     {
       glBindRenderbuffer (GL_RENDERBUFFER, priv->render_buffer);
-      glRenderbufferStorage (GL_RENDERBUFFER, GL_RGB8, width, height);
-      //glRenderbufferStorageMultisample (GL_RENDERBUFFER, 8, GL_RGB8, width, height);
+      //glRenderbufferStorage (GL_RENDERBUFFER, GL_RGB8, width, height);
+      glRenderbufferStorageMultisample (GL_RENDERBUFFER, 8, GL_RGB8, width, height);
     }
 
   if (priv->has_depth_buffer || priv->has_stencil_buffer)
     {
       glBindRenderbuffer (GL_RENDERBUFFER, priv->depth_stencil_buffer);
       if (priv->has_stencil_buffer)
-        glRenderbufferStorage (GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
-        //glRenderbufferStorageMultisample(GL_RENDERBUFFER, 8, GL_DEPTH24_STENCIL8, width, height);
+        //glRenderbufferStorage (GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
+        glRenderbufferStorageMultisample(GL_RENDERBUFFER, 8, GL_DEPTH24_STENCIL8, width, height);
       else
-        glRenderbufferStorage (GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, width, height);
-        //glRenderbufferStorageMultisample(GL_RENDERBUFFER, 8, GL_DEPTH_COMPONENT24, width, height);
+        //glRenderbufferStorage (GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, width, height);
+        glRenderbufferStorageMultisample(GL_RENDERBUFFER, 8, GL_DEPTH_COMPONENT24, width, height);
     }
 
   priv->needs_render = TRUE;
@@ -584,8 +584,8 @@ gl_area_attach_buffers (GLArea *area)
   glBindFramebuffer (GL_FRAMEBUFFER_EXT, priv->frame_buffer);
 
   if (priv->texture)
-    glFramebufferTexture2D (GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, priv->texture, 0);
-    //glFramebufferTexture2D(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D_MULTISAMPLE, priv->texture, 0);
+    //glFramebufferTexture2D (GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, priv->texture, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D_MULTISAMPLE, priv->texture, 0);
   else if (priv->render_buffer)
     glFramebufferRenderbuffer (GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT,
                                   GL_RENDERBUFFER_EXT, priv->render_buffer);
