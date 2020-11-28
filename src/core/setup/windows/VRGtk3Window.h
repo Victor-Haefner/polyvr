@@ -87,22 +87,6 @@ void VRGtkWindow::render(bool fromThread) {
     gl_area_queue_render((GLArea*)widget);
 }
 
-typedef void (__stdcall PFNGLBINDFRAMEBUFFER) (GLuint program);
-PFNGLBINDFRAMEBUFFER* glBindFramebuffer;
-
-void checkMultiSampling() { // multisampling has to be defined on frame buffer creation
-    glBindFramebuffer = (PFNGLBINDFRAMEBUFFER*)wglGetProcAddress("glBindFramebuffer");
-
-    (*glBindFramebuffer)(0);
-
-    GLint hasMultisampling, Nsamples;
-    glGetIntegerv(GL_SAMPLE_BUFFERS, &hasMultisampling);
-    glGetIntegerv(GL_SAMPLES, &Nsamples);
-    cout << "VRGtkWindow::on_render " << hasMultisampling << " " << Nsamples << endl;
-
-    (*glBindFramebuffer)(1);
-}
-
 bool VRGtkWindow::on_render(GdkGLContext* glcontext) {
     auto profiler = VRProfiler::get();
     int pID = profiler->regStart("gtk window render");
@@ -110,8 +94,6 @@ bool VRGtkWindow::on_render(GdkGLContext* glcontext) {
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
     glEnable(GL_MULTISAMPLE);
-
-    //checkMultiSampling();
 
     glClearColor(0.2, 0.2, 0.2, 1.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

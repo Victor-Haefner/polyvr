@@ -584,6 +584,10 @@
 		<Unit filename="src/core/gui/VRGuiVectorEntry.cpp" />
 		<Unit filename="src/core/gui/VRGuiVectorEntry.h" />
 		<Unit filename="src/core/gui/elements/VRGuiButton.h" />
+		<Unit filename="src/core/gui/glarea/glarea.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/core/gui/glarea/glarea.h" />
 		<Unit filename="src/core/gui/gtkglext/gdk/gdkgl.h" />
 		<Unit filename="src/core/gui/gtkglext/gdk/gdkglconfig.c">
 			<Option compilerVar="CC" />

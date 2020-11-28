@@ -32,21 +32,23 @@
 #include <gobject/gvalue.h>
 #include <gobject/gsignal.h>
 
+#ifdef _WIN32
 #include <windows.h>
 #include <GL/GL.h>
+#define APIENTRY __stdcall
 
-typedef void(__stdcall _glBindFramebuffer) (GLenum target, GLuint framebuffer);
-typedef void(__stdcall _glBindRenderbuffer) (GLenum target, GLuint renderbuffer);
-typedef void(__stdcall _glGenFramebuffers) (GLsizei n, GLuint* ids);
-typedef void(__stdcall _glGenRenderbuffers) (GLsizei n, GLuint* ids);
-typedef void(__stdcall _glDeleteRenderbuffers) (GLsizei n, GLuint* renderbuffers);
-typedef void(__stdcall _glDeleteFramebuffers) (GLsizei n, GLuint* framebuffers);
-typedef void(__stdcall _glTexImage2DMultisample) (GLenum target, GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height, GLboolean fixedsamplelocations);
-typedef void(__stdcall _glRenderbufferStorageMultisample) (GLenum target, GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height);
-typedef void(__stdcall _glRenderbufferStorage) (GLenum target, GLenum internalformat, GLsizei width, GLsizei height);
-typedef void(__stdcall _glFramebufferTexture2D) (GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level);
-typedef void(__stdcall _glFramebufferRenderbuffer) (GLenum target, GLenum attachment, GLenum renderbuffertarget, GLuint renderbuffer);
-typedef GLenum(__stdcall _glCheckFramebufferStatus) (GLenum target);
+typedef void(APIENTRY _glBindFramebuffer) (GLenum target, GLuint framebuffer);
+typedef void(APIENTRY _glBindRenderbuffer) (GLenum target, GLuint renderbuffer);
+typedef void(APIENTRY _glGenFramebuffers) (GLsizei n, GLuint* ids);
+typedef void(APIENTRY _glGenRenderbuffers) (GLsizei n, GLuint* ids);
+typedef void(APIENTRY _glDeleteRenderbuffers) (GLsizei n, GLuint* renderbuffers);
+typedef void(APIENTRY _glDeleteFramebuffers) (GLsizei n, GLuint* framebuffers);
+typedef void(APIENTRY _glTexImage2DMultisample) (GLenum target, GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height, GLboolean fixedsamplelocations);
+typedef void(APIENTRY _glRenderbufferStorageMultisample) (GLenum target, GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height);
+typedef void(APIENTRY _glRenderbufferStorage) (GLenum target, GLenum internalformat, GLsizei width, GLsizei height);
+typedef void(APIENTRY _glFramebufferTexture2D) (GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level);
+typedef void(APIENTRY _glFramebufferRenderbuffer) (GLenum target, GLenum attachment, GLenum renderbuffertarget, GLuint renderbuffer);
+typedef GLenum(APIENTRY _glCheckFramebufferStatus) (GLenum target);
 _glBindFramebuffer* glBindFramebuffer = 0;
 _glBindRenderbuffer* glBindRenderbuffer = 0;
 _glGenFramebuffers* glGenFramebuffers = 0;
@@ -74,6 +76,11 @@ void initGLFunctions() {
     glFramebufferRenderbuffer = (_glFramebufferRenderbuffer*)wglGetProcAddress("glFramebufferRenderbuffer");
     glCheckFramebufferStatus = (_glCheckFramebufferStatus*)wglGetProcAddress("glCheckFramebufferStatus");
 }
+#else
+#include <GL/gl.h>
+//#define APIENTRY GLAPIENTRY
+void initGLFunctions() {}
+#endif
 
 #define GL_RENDERBUFFER                                  0x8D41
 #define GL_TEXTURE_2D_MULTISAMPLE                    0x9100
@@ -533,7 +540,7 @@ gl_area_allocate_buffers (GLArea *area)
           else glTexImage2DMultisample (GL_TEXTURE_2D_MULTISAMPLE, priv->samples, GL_RGBA8, width, height, GL_FALSE);
       }
     }
-	
+
   if (priv->render_buffer)
     {
       glBindRenderbuffer (GL_RENDERBUFFER, priv->render_buffer);
@@ -1054,7 +1061,7 @@ gl_area_class_init (GLAreaClass *klass)
   gobject_class->notify = gl_area_notify;
 
   g_object_class_install_properties (gobject_class, LAST_PROP, obj_props);
-  
+
   /**
    * GLArea::render:
    * @area: the #GLArea that emitted the signal
@@ -1440,7 +1447,7 @@ gl_area_get_has_stencil_buffer (GLArea *area)
   return priv->has_stencil_buffer;
 }
 
-gboolean
+guint
 gl_area_get_samples (GLArea *area)
 {
   GLAreaPrivate *priv = gl_area_get_instance_private (area);
