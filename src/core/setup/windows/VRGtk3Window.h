@@ -1,5 +1,14 @@
 
+
 #include "core/setup/windows/VRHeadMountedDisplay.h"
+#include "core/gui/glarea/glarea.h"
+
+GdkGLContext* onCreateGLContext(GLArea* area, gpointer user_data) {
+    GdkWindow* window = gtk_widget_get_window(GTK_WIDGET(area));
+    GdkGLContext* context = gdk_window_create_gl_context(window, NULL);
+    cout << "onCreateGLContext " << context << endl;
+    return context;
+}
 
 VRGtkWindow::VRGtkWindow(GtkDrawingArea* da, string msaa) {
     cout << " --------------------- VRGtkWindow::VRGtkWindow -------------- " << endl;
@@ -17,12 +26,14 @@ VRGtkWindow::VRGtkWindow(GtkDrawingArea* da, string msaa) {
     GdkGLConfig* glConfigMode = gdk_gl_config_new_by_mode(mode, MSAA);
     gtk_widget_set_gl_capability(widget,glConfigMode,NULL,true,GDK_GL_RGBA_TYPE);*/
 
-    gtk_gl_area_set_auto_render((GtkGLArea*)widget, false);
-    gtk_gl_area_set_has_alpha((GtkGLArea*)widget, false); // with alpha, transparent materials induce artifacts
-    gtk_gl_area_set_has_depth_buffer((GtkGLArea*)widget, true);
-    gtk_gl_area_set_has_stencil_buffer((GtkGLArea*)widget, true);
-    //gtk_gl_area_set_required_version((GtkGLArea*)widget, 4,4);
-    gtk_gl_area_set_use_es((GtkGLArea*)widget, false);
+    gl_area_set_auto_render((GLArea*)widget, false);
+    gl_area_set_has_alpha((GLArea*)widget, false); // with alpha, transparent materials induce artifacts
+    gl_area_set_has_depth_buffer((GLArea*)widget, true);
+    gl_area_set_has_stencil_buffer((GLArea*)widget, true);
+    //gl_area_set_required_version((GLArea*)widget, 4,4);
+    gl_area_set_use_es((GLArea*)widget, false);
+
+    g_signal_connect(widget, "create-context", (GCallback)onCreateGLContext, NULL);
 
     gtk_widget_show_all(widget);
     gtk_widget_add_events(widget, (GdkEventMask)GDK_VISIBILITY_NOTIFY_MASK);
@@ -78,16 +89,36 @@ void VRGtkWindow::render(bool fromThread) {
     gtk_widget_get_allocation(widget, &a);
     resize(a.width, a.height);*/
 
-    gtk_gl_area_queue_render((GtkGLArea*)widget);
+    gl_area_queue_render((GLArea*)widget);
+}
+
+typedef void (__stdcall PFNGLBINDFRAMEBUFFER) (GLuint program);
+PFNGLBINDFRAMEBUFFER* glBindFramebuffer;
+
+void checkMultiSampling() { // multisampling has to be defined on frame buffer creation
+    glBindFramebuffer = (PFNGLBINDFRAMEBUFFER*)wglGetProcAddress("glBindFramebuffer");
+
+    (*glBindFramebuffer)(0);
+
+    GLint hasMultisampling, Nsamples;
+    glGetIntegerv(GL_SAMPLE_BUFFERS, &hasMultisampling);
+    glGetIntegerv(GL_SAMPLES, &Nsamples);
+    cout << "VRGtkWindow::on_render " << hasMultisampling << " " << Nsamples << endl;
+
+    (*glBindFramebuffer)(1);
 }
 
 bool VRGtkWindow::on_render(GdkGLContext* glcontext) {
+    cout << " --------------------- VRGtkWindow::on_render -------------- " << endl;
     auto profiler = VRProfiler::get();
     int pID = profiler->regStart("gtk window render");
 
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
-    
+    glEnable(GL_MULTISAMPLE);
+
+    //checkMultiSampling();
+
     glClearColor(0.2, 0.2, 0.2, 1.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -107,14 +138,15 @@ bool VRGtkWindow::on_render(GdkGLContext* glcontext) {
     glFlush();
 
     profiler->regStop(pID);
+    cout << "      VRGtkWindow::on_render done" << endl;
     return true;
 }
 
 void VRGtkWindow::on_realize() {
     cout << " --------------------- VRGtkWindow::on_realize -------------- " << endl;
     initialExpose = true;
-    gtk_gl_area_make_current(GTK_GL_AREA(widget));
-    if (gtk_gl_area_get_error(GTK_GL_AREA(widget)) != NULL) {
+    gl_area_make_current(GL_AREA(widget));
+    if (gl_area_get_error(GL_AREA(widget)) != NULL) {
         printf("VRGtkWindow::on_realize - failed to initialize buffers\n");
         return;
     }
@@ -127,7 +159,7 @@ void VRGtkWindow::on_realize() {
     resize(a.width, a.height);
     isRealized = true;
 
-    GdkGLContext* context = gtk_gl_area_get_context((GtkGLArea*)widget);
+    GdkGLContext* context = gl_area_get_context((GLArea*)widget);
     cout << "gdk_gl_context_is_legacy: " << gdk_gl_context_is_legacy(context) << endl;
     return;
 }

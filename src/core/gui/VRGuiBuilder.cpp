@@ -2,6 +2,7 @@
 
 #include "VRGuiBuilder.h"
 #include "VRGuiFile.h"
+#include "glarea/glarea.h"
 #include "core/utils/system/VRSystem.h"
 
 #include <iostream>
@@ -407,8 +408,11 @@ GtkWidget* addVectorFrame(string ID, string fID) {
 
 GtkWidget* addGLWidget() {
     //auto glarea = gtk_drawing_area_new();
-    auto glarea = gtk_gl_area_new();
+    //auto glarea = gtk_gl_area_new();
+    auto glarea = gl_area_new();
     VRGuiBuilder::get()->reg_widget(glarea, "glarea");
+    gtk_widget_set_hexpand(glarea, true);
+    gtk_widget_set_vexpand(glarea, true);
     return glarea;
 }
 
@@ -419,8 +423,6 @@ void VRGuiBuilder::buildMinimalUI() {
     auto glarea = addGLWidget();
     gtk_box_pack_start(GTK_BOX(a_vbox), glarea, false, true, 0);
     gtk_container_add(GTK_CONTAINER(window1), a_vbox);
-    gtk_widget_set_hexpand(glarea, true);
-    gtk_widget_set_vexpand(glarea, true);
     gtk_widget_set_hexpand(a_vbox, true);
     gtk_widget_set_vexpand(a_vbox, true);
     cout << " ..building all widgets done!" << endl;
@@ -503,7 +505,6 @@ void VRGuiBuilder::buildBaseUI() {
     gtk_box_pack_start(GTK_BOX(hbox1), combobox9, false, true, 0);
     gtk_box_pack_start(GTK_BOX(hbox1), hseparator6, false, true, 0);
     gtk_box_pack_start(GTK_BOX(hbox1), toolbar6, false, true, 0);
-    gtk_widget_set_vexpand(glarea, true);
 
     auto togglebutton1 = addToggleToolButton("togglebutton1", "gtk-leave-fullscreen", toolbar6);
 
