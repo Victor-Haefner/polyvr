@@ -19,19 +19,14 @@ VRGtkWindow::VRGtkWindow(GtkDrawingArea* da, string msaa) {
     widget = GTK_WIDGET(da);
     if (gtk_widget_get_realized(widget)) cout << "Warning: glarea is realized!\n";
 
-    /*int MSAA = toInt(subString(msaa,1,-1));
-    auto mode = (GdkGLConfigMode)(GDK_GL_MODE_RGBA | GDK_GL_MODE_DOUBLE | GDK_GL_MODE_DEPTH | GDK_GL_MODE_STENCIL | GDK_GL_MODE_MULTISAMPLE);
-    if (VROptions::get()->getOption<bool>("active_stereo"))
-        mode = (GdkGLConfigMode)(GDK_GL_MODE_RGBA | GDK_GL_MODE_DOUBLE | GDK_GL_MODE_DEPTH | GDK_GL_MODE_STENCIL | GDK_GL_MODE_MULTISAMPLE | GDK_GL_MODE_STEREO);
-    GdkGLConfig* glConfigMode = gdk_gl_config_new_by_mode(mode, MSAA);
-    gtk_widget_set_gl_capability(widget,glConfigMode,NULL,true,GDK_GL_RGBA_TYPE);*/
-
+    int MSAA = toInt(subString(msaa, 1, -1));
     gl_area_set_auto_render((GLArea*)widget, false);
     gl_area_set_has_alpha((GLArea*)widget, false); // with alpha, transparent materials induce artifacts
     gl_area_set_has_depth_buffer((GLArea*)widget, true);
     gl_area_set_has_stencil_buffer((GLArea*)widget, true);
     //gl_area_set_required_version((GLArea*)widget, 4,4);
     gl_area_set_use_es((GLArea*)widget, false);
+    gl_area_set_samples((GLArea*)widget, MSAA);
 
     //g_signal_connect(widget, "create-context", (GCallback)onCreateGLContext, NULL);
 

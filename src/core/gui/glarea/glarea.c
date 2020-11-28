@@ -207,6 +207,7 @@ typedef struct {
   guint texture;
   guint depth_stencil_buffer;
 
+  guint samples;
   gboolean has_alpha;
   gboolean has_depth_buffer;
   gboolean has_stencil_buffer;
@@ -514,37 +515,42 @@ gl_area_allocate_buffers (GLArea *area)
 
   if (priv->texture)
     {
-      glBindTexture (GL_TEXTURE_2D_MULTISAMPLE, priv->texture);
-      /*glBindTexture(GL_TEXTURE_2D, priv->texture);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);*/
+      if (priv->samples > 0) {
+          glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, priv->texture);
+      } else {
+          glBindTexture(GL_TEXTURE_2D, priv->texture);
+          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+      }
 
-      if (gdk_gl_context_get_use_es (priv->context))
-        //glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-        glTexImage2DMultisample (GL_TEXTURE_2D_MULTISAMPLE, 8, GL_RGBA8, width, height, GL_FALSE);
-      else
-        //glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_BGRA, GL_UNSIGNED_BYTE, NULL);
-        glTexImage2DMultisample (GL_TEXTURE_2D_MULTISAMPLE, 8, GL_RGBA8, width, height, GL_FALSE);
+      if (gdk_gl_context_get_use_es(priv->context)) {
+          if (priv->samples == 0) glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+          else glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, priv->samples, GL_RGBA8, width, height, GL_FALSE);
+      } else {
+          if (priv->samples == 0) glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_BGRA, GL_UNSIGNED_BYTE, NULL);
+          else glTexImage2DMultisample (GL_TEXTURE_2D_MULTISAMPLE, priv->samples, GL_RGBA8, width, height, GL_FALSE);
+      }
     }
 	
   if (priv->render_buffer)
     {
       glBindRenderbuffer (GL_RENDERBUFFER, priv->render_buffer);
-      //glRenderbufferStorage (GL_RENDERBUFFER, GL_RGB8, width, height);
-      glRenderbufferStorageMultisample (GL_RENDERBUFFER, 8, GL_RGB8, width, height);
+      if (priv->samples == 0) glRenderbufferStorage (GL_RENDERBUFFER, GL_RGB8, width, height);
+      else glRenderbufferStorageMultisample (GL_RENDERBUFFER, priv->samples, GL_RGB8, width, height);
     }
 
   if (priv->has_depth_buffer || priv->has_stencil_buffer)
     {
       glBindRenderbuffer (GL_RENDERBUFFER, priv->depth_stencil_buffer);
-      if (priv->has_stencil_buffer)
-        //glRenderbufferStorage (GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
-        glRenderbufferStorageMultisample(GL_RENDERBUFFER, 8, GL_DEPTH24_STENCIL8, width, height);
-      else
-        //glRenderbufferStorage (GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, width, height);
-        glRenderbufferStorageMultisample(GL_RENDERBUFFER, 8, GL_DEPTH_COMPONENT24, width, height);
+      if (priv->has_stencil_buffer) {
+        if (priv->samples == 0) glRenderbufferStorage (GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
+        else glRenderbufferStorageMultisample(GL_RENDERBUFFER, priv->samples, GL_DEPTH24_STENCIL8, width, height);
+      } else {
+        if (priv->samples == 0) glRenderbufferStorage (GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, width, height);
+        else glRenderbufferStorageMultisample(GL_RENDERBUFFER, priv->samples, GL_DEPTH_COMPONENT24, width, height);
+      }
     }
 
   priv->needs_render = TRUE;
@@ -583,12 +589,12 @@ gl_area_attach_buffers (GLArea *area)
 
   glBindFramebuffer (GL_FRAMEBUFFER_EXT, priv->frame_buffer);
 
-  if (priv->texture)
-    //glFramebufferTexture2D (GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, priv->texture, 0);
-    glFramebufferTexture2D(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D_MULTISAMPLE, priv->texture, 0);
-  else if (priv->render_buffer)
-    glFramebufferRenderbuffer (GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT,
-                                  GL_RENDERBUFFER_EXT, priv->render_buffer);
+  if (priv->texture) {
+      if (priv->samples == 0) glFramebufferTexture2D (GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, priv->texture, 0);
+      else glFramebufferTexture2D(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D_MULTISAMPLE, priv->texture, 0);
+  } else if (priv->render_buffer) {
+    glFramebufferRenderbuffer (GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_RENDERBUFFER_EXT, priv->render_buffer);
+  }
 
   if (priv->depth_stencil_buffer)
     {
@@ -1434,6 +1440,16 @@ gl_area_get_has_stencil_buffer (GLArea *area)
   return priv->has_stencil_buffer;
 }
 
+gboolean
+gl_area_get_samples (GLArea *area)
+{
+  GLAreaPrivate *priv = gl_area_get_instance_private (area);
+
+  g_return_val_if_fail (IS_GL_AREA (area), FALSE);
+
+  return priv->samples;
+}
+
 /**
  * gl_area_set_has_stencil_buffer:
  * @area: a #GLArea
@@ -1460,6 +1476,22 @@ gl_area_set_has_stencil_buffer (GLArea *area,
       priv->has_stencil_buffer = has_stencil_buffer;
 
       g_object_notify (G_OBJECT (area), "has-stencil-buffer");
+
+      priv->have_buffers = FALSE;
+    }
+}
+
+void
+gl_area_set_samples (GLArea *area,
+                                    guint   samples)
+{
+  GLAreaPrivate *priv = gl_area_get_instance_private (area);
+
+  g_return_if_fail (IS_GL_AREA (area));
+
+  if (priv->samples != samples)
+    {
+      priv->samples = samples;
 
       priv->have_buffers = FALSE;
     }

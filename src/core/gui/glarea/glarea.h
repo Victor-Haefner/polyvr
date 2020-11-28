@@ -107,6 +107,10 @@ gboolean        gl_area_get_has_stencil_buffer      (GLArea    *area);
 void            gl_area_set_has_stencil_buffer      (GLArea    *area,
                                                          gboolean      has_stencil_buffer);
 
+guint gl_area_get_samples(GLArea* area);
+
+void gl_area_set_samples(GLArea* area, guint samples);
+
 gboolean        gl_area_get_auto_render             (GLArea    *area);
 
 void            gl_area_set_auto_render             (GLArea    *area,
