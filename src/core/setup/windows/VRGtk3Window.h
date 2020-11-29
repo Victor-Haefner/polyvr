@@ -2,6 +2,7 @@
 
 #include "core/setup/windows/VRHeadMountedDisplay.h"
 #include "core/gui/glarea/glarea.h"
+#include "core/gui/VRGuiBuilder.h"
 
 GdkGLContext* onCreateGLContext(GLArea* area, gpointer user_data) {
     GdkWindow* window = gtk_widget_get_window(GTK_WIDGET(area));
@@ -136,6 +137,16 @@ void VRGtkWindow::on_realize() {
 
     GdkGLContext* context = gl_area_get_context((GLArea*)widget);
     cout << "gdk_gl_context_is_legacy: " << gdk_gl_context_is_legacy(context) << endl;
+
+    // trigger redraw of all widgets because of black glitch (TODO)
+    /*auto window = VRGuiBuilder::get()->get_widget("window1");
+    //for auto
+    //gtk_widget_show_all(window);
+    gtk_widget_queue_draw(window);
+    while (g_main_context_pending(NULL)) {
+        g_main_context_iteration(NULL,FALSE);
+    }*/
+
     return;
 }
 
