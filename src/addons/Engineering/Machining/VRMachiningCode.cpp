@@ -29,7 +29,11 @@ void VRMachiningCode::translate(Vec3d vec_0, Vec3d vec_1, double v) { // G01 tra
 	double L = vecf.length();
 	double T = L / v * 1000;
 	if (T * (skippedSteps + 1) > 1.0 / 60) {
-		Instruction i = { 0, vecf, vec_0, T };
+		Instruction i;
+		i.G = 0;
+		i.d = vecf;
+		i.p0 = vec_0;
+		i.T = T;
 		instructions.push_back(i);
 		skippedSteps = 0;
 	} else skippedSteps += 1;
@@ -80,12 +84,12 @@ void VRMachiningCode::readGCode(string path, double speedMultiplier) {
 		for (auto i : splitString(code)) {
 			params[i[0]] = toFloat(subString(i, 1, i.size()-1));
 		}
-		
+
 		if (!params.count('V')) params['V'] = 50; // standard speed
 		if (!params.count('G')) params['G'] = 1; // standard movement
 
 		double v = 1.0;
-		
+
 		if (params['G'] < 4) { // get speed
 			vec1 = vec0;
 			v = params['V']*speedMultiplier;
