@@ -870,8 +870,13 @@ void OSMMap::readFile(string path) {
     cout << "  loaded " << ways.size() << " ways, " << nodes.size() << " nodes and " << relations.size() << " relations" << endl;
     cout << "  secs needed: " << t2 << endl;
 }
-
+void OSMMap::checkGDAL(){
+#ifdef WITHOUT_GDAL
+    cout << "OSMMap - WITHOUT_GDAL" << endl;
+#endif // WITHOUT_GDAL
+}
 void OSMMap::readGEOJSON(string path) {
+    checkGDAL();
 #ifndef WITHOUT_GDAL
     auto coordsFromString = [&](string inB) {
         //string has format: "lon lat"
@@ -1008,6 +1013,7 @@ void OSMMap::readGEOJSON(string path) {
 }
 
 void OSMMap::readSHAPE(string path) {
+    checkGDAL();
 #ifndef WITHOUT_GDAL
 #if GDAL_VERSION_NUM >= GDAL_COMPUTE_VERSION(2,3,0)
 #elif GDAL_VERSION_NUM >= GDAL_COMPUTE_VERSION(2,0,0)
@@ -1031,6 +1037,7 @@ void OSMMap::readSHAPE(string path) {
 }
 
 Vec2d OSMMap::convertGKtoLatLon(double northing, double easting, int EPSG_Code) {
+    checkGDAL();
 #ifndef WITHOUT_GDAL
 #if GDAL_VERSION_NUM >= GDAL_COMPUTE_VERSION(2,0,0)
     GDALAllRegister();
@@ -1056,6 +1063,7 @@ Vec2d OSMMap::convertGKtoLatLon(double northing, double easting, int EPSG_Code) 
 }
 
 void OSMMap::readGML(string path, int EPSG_Code) {
+    checkGDAL();
 #ifndef WITHOUT_GDAL
     cout << "OSMMap::readGML path " << path << endl;
     cout << "  GDAL Version Nr:" << GDAL_VERSION_NUM << endl;

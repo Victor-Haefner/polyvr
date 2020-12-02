@@ -94,6 +94,7 @@ class OSMMap {
         void writeBounds(XMLElementPtr parent);
 
         int filterFileStreaming(string path, vector<pair<string, string>> whitelist);
+        void checkGDAL();
 
     public:
         OSMMap();
