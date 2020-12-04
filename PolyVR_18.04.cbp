@@ -200,7 +200,6 @@
 			<Add option="-lOSGWindowGLUT" />
 			<Add option="-lOSGWindowX" />
 			<Add option="-lcollada14dom" />
-			<Add option="-lepoxy" />
 			<Add option="-lGLU" />
 			<Add option="-lGL" />
 			<Add option="-lSM" />
