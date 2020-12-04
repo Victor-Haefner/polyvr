@@ -77,9 +77,405 @@ void initGLFunctions() {
     glCheckFramebufferStatus = (_glCheckFramebufferStatus*)wglGetProcAddress("glCheckFramebufferStatus");
 }
 #else
+#define __GDKX_H_INSIDE__
+#include <gdk/x11/gdkx11glcontext.h>
+#include <epoxy/glx.h>
 #include <GL/gl.h>
+#include <GL/glx.h>
 //#define APIENTRY GLAPIENTRY
 void initGLFunctions() {}
+
+struct _GdkX11GLContext {
+    GObject parent_instance;
+
+    GLXContext glx_context;
+    GLXFBConfig glx_config;
+    GLXDrawable drawable;
+
+    guint is_attached : 1;
+    guint is_direct : 1;
+    guint do_frame_sync : 1;
+
+    guint do_blit_swap : 1;
+};
+
+typedef enum {
+  GDK_RENDERING_MODE_SIMILAR = 0,
+  GDK_RENDERING_MODE_IMAGE,
+  GDK_RENDERING_MODE_RECORDING
+} GdkRenderingMode;
+
+
+
+typedef struct {
+  GObject parent_instance;
+
+  void *impl; /* window-system-specific delegate object */  // GdkWindowImpl*
+
+  GdkWindow *parent;
+  GdkWindow *transient_for;
+  GdkVisual *visual;
+
+  gpointer user_data;
+
+  gint x;
+  gint y;
+
+  GdkEventMask event_mask;
+  guint8 window_type;
+
+  guint8 depth;
+  guint8 resize_count;
+
+  gint8 toplevel_window_type;
+
+  GList *filters;
+  GList *children;
+  GList children_list_node;
+  GList *native_children;
+
+
+  cairo_pattern_t *background;
+
+  struct {
+    cairo_surface_t *surface;
+
+    cairo_region_t *region;
+    cairo_region_t *flushed_region;
+    cairo_region_t *need_blend_region;
+
+    gboolean surface_needs_composite;
+    gboolean use_gl;
+  } current_paint;
+  GdkGLContext *gl_paint_context;
+
+  cairo_region_t *update_area;
+  guint update_freeze_count;
+  /* This is the update_area that was in effect when the current expose
+     started. It may be smaller than the expose area if we'e painting
+     more than we have to, but it represents the "true" damage. */
+  cairo_region_t *active_update_area;
+  /* We store the old expose areas to support buffer-age optimizations */
+  cairo_region_t *old_updated_area[2];
+
+  GdkWindowState old_state;
+  GdkWindowState state;
+
+  guint8 alpha;
+  guint8 fullscreen_mode;
+
+  guint input_only : 1;
+  guint pass_through : 1;
+  guint modal_hint : 1;
+  guint composited : 1;
+  guint has_alpha_background : 1;
+
+  guint destroyed : 2;
+
+  guint accept_focus : 1;
+  guint focus_on_map : 1;
+  guint shaped : 1;
+  guint support_multidevice : 1;
+  guint synthesize_crossing_event_queued : 1;
+  guint effective_visibility : 2;
+  guint visibility : 2; /* The visibility wrt the toplevel (i.e. based on clip_region) */
+  guint native_visibility : 2; /* the native visibility of a impl windows */
+  guint viewable : 1; /* mapped and all parents mapped */
+  guint applied_shape : 1;
+  guint in_update : 1;
+  guint geometry_dirty : 1;
+  guint event_compression : 1;
+  guint frame_clock_events_paused : 1;
+
+  /* The GdkWindow that has the impl, ref:ed if another window.
+   * This ref is required to keep the wrapper of the impl window alive
+   * for as long as any GdkWindow references the impl. */
+  void *impl_window; // GdkWindow*
+
+  guint update_and_descendants_freeze_count;
+
+  gint abs_x, abs_y; /* Absolute offset in impl */
+  gint width, height;
+  gint shadow_top;
+  gint shadow_left;
+  gint shadow_right;
+  gint shadow_bottom;
+
+  guint num_offscreen_children;
+
+  /* The clip region is the part of the window, in window coordinates
+     that is fully or partially (i.e. semi transparently) visible in
+     the window hierarchy from the toplevel and down */
+  cairo_region_t *clip_region;
+
+  GdkCursor *cursor;
+  GHashTable *device_cursor;
+
+  cairo_region_t *shape;
+  cairo_region_t *input_shape;
+
+  GList *devices_inside;
+  GHashTable *device_events;
+
+  GHashTable *source_event_masks;
+  gulong device_added_handler_id;
+  gulong device_changed_handler_id;
+
+  GdkFrameClock *frame_clock; /* NULL to use from parent or default */
+  GdkWindowInvalidateHandlerFunc invalidate_handler;
+
+  GdkDrawingContext *drawing_context;
+
+  cairo_region_t *opaque_region;
+} _GdkWindow;
+
+typedef struct {
+  GObject parent_instance;
+
+  /*< private >*/
+  GdkVisualType type;
+  gint depth;
+  GdkByteOrder byte_order;
+  gint colormap_size;
+  gint bits_per_rgb;
+
+  guint32 red_mask;
+  guint32 green_mask;
+  guint32 blue_mask;
+
+  GdkScreen *screen;
+} _GdkVisual;
+
+typedef struct {
+  _GdkVisual visual;
+
+  Visual *xvisual;
+  Colormap colormap;
+} _GdkX11Visual;
+
+typedef struct {
+  GObject parent_instance;
+
+  cairo_font_options_t *font_options;
+  gdouble resolution; /* pixels/points scale factor for fonts */
+  guint resolution_set : 1; /* resolution set through public API */
+  guint closed : 1;
+} _GdkScreen;
+
+typedef struct {
+  _GdkScreen parent_instance;
+
+  GdkDisplay *display;
+  Display *xdisplay;
+  Screen *xscreen;
+  Window xroot_window;
+  GdkWindow *root_window;
+  gint screen_num;
+
+  gint width;
+  gint height;
+
+  gint window_scale;
+  gboolean fixed_window_scale;
+
+  /* Xft resources for the display, used for default values for
+   * the Xft/ XSETTINGS
+   */
+  gint xft_hintstyle;
+  gint xft_rgba;
+  gint xft_dpi;
+
+  /* Window manager */
+  long last_wmspec_check_time;
+  Window wmspec_check_window;
+  char *window_manager_name;
+
+  /* X Settings */
+  GdkWindow *xsettings_manager_window;
+  Atom xsettings_selection_atom;
+  GHashTable *xsettings; /* string of GDK settings name => GValue */
+
+  /* TRUE if wmspec_check_window has changed since last
+   * fetch of _NET_SUPPORTED
+   */
+  guint need_refetch_net_supported : 1;
+  /* TRUE if wmspec_check_window has changed since last
+   * fetch of window manager name
+   */
+  guint need_refetch_wm_name : 1;
+  guint is_composited : 1;
+  guint xft_init : 1; /* Whether we've intialized these values yet */
+  guint xft_antialias : 1;
+  guint xft_hinting : 1;
+
+  /* Visual Part */
+  gint nvisuals;
+  GdkVisual **visuals;
+  GdkVisual *system_visual;
+  gint available_depths[7];
+  GdkVisualType available_types[6];
+  gint16 navailable_depths;
+  gint16 navailable_types;
+  GHashTable *visual_hash;
+  GdkVisual *rgba_visual;
+
+  /* cache for window->translate vfunc */
+  GC subwindow_gcs[32];
+} _GdkX11Screen;
+
+typedef struct {
+  GObject parent_instance;
+
+  GList *queued_events;
+  GList *queued_tail;
+
+  /* Information for determining if the latest button click
+   * is part of a double-click or triple-click
+   */
+  GHashTable *multiple_click_info;
+
+  guint event_pause_count;       /* How many times events are blocked */
+
+  guint closed             : 1;  /* Whether this display has been closed */
+
+  GArray *touch_implicit_grabs;
+  GHashTable *device_grabs;
+  GHashTable *motion_hint_info;
+  GdkDeviceManager *device_manager;
+  GList *input_devices; /* Deprecated, only used to keep gdk_display_list_devices working */
+
+  GHashTable *pointers_info;  /* GdkPointerWindowInfo for each device */
+  guint32 last_event_time;    /* Last reported event time from server */
+
+  guint double_click_time;  /* Maximum time between clicks in msecs */
+  guint double_click_distance;   /* Maximum distance between clicks in pixels */
+
+  guint has_gl_extension_texture_non_power_of_two : 1;
+  guint has_gl_extension_texture_rectangle : 1;
+
+  guint debug_updates     : 1;
+  guint debug_updates_set : 1;
+
+  GdkRenderingMode rendering_mode;
+
+  GList *seats;
+} m_GdkDisplay;
+
+typedef struct {
+  m_GdkDisplay parent_instance;
+  Display *xdisplay;
+  GdkScreen *screen;
+  GList *screens;
+
+  GSource *event_source;
+
+  gint grab_count;
+
+  /* Keyboard related information */
+  gint xkb_event_type;
+  gboolean use_xkb;
+
+  /* Whether we were able to turn on detectable-autorepeat using
+   * XkbSetDetectableAutorepeat. If FALSE, we'll fall back
+   * to checking the next event with XPending().
+   */
+  gboolean have_xkb_autorepeat;
+
+  GdkKeymap *keymap;
+  guint      keymap_serial;
+
+  gboolean have_xfixes;
+  gint xfixes_event_base;
+
+  gboolean have_xcomposite;
+  gboolean have_xdamage;
+  gint xdamage_event_base;
+
+  gboolean have_randr12;
+  gboolean have_randr13;
+  gboolean have_randr15;
+  gint xrandr_event_base;
+
+  /* If the SECURITY extension is in place, whether this client holds
+   * a trusted authorization and so is allowed to make various requests
+   * (grabs, properties etc.) Otherwise always TRUE.
+   */
+  gboolean trusted_client;
+
+  /* drag and drop information */
+  GdkDragContext *current_dest_drag;
+
+  /* Mapping to/from virtual atoms */
+  GHashTable *atom_from_virtual;
+  GHashTable *atom_to_virtual;
+
+  /* Session Management leader window see ICCCM */
+  Window leader_window;
+  GdkWindow *leader_gdk_window;
+  gboolean leader_window_title_set;
+
+  /* List of functions to go from extension event => X window */
+  GSList *event_types;
+
+  /* X ID hashtable */
+  GHashTable *xid_ht;
+
+  /* translation queue */
+  GQueue *translate_queue;
+
+  /* input GdkWindow list */
+  GList *input_windows;
+
+  GPtrArray *monitors;
+  int primary_monitor;
+
+  /* Startup notification */
+  gchar *startup_notification_id;
+
+  /* Time of most recent user interaction. */
+  gulong user_time;
+
+  /* Sets of atoms for DND */
+  guint base_dnd_atoms_precached : 1;
+  guint xdnd_atoms_precached : 1;
+  guint motif_atoms_precached : 1;
+  guint use_sync : 1;
+
+  guint have_shapes : 1;
+  guint have_input_shapes : 1;
+  gint shape_event_base;
+
+  /* The offscreen window that has the pointer in it (if any) */
+  GdkWindow *active_offscreen_window;
+
+  GSList *error_traps;
+
+  gint wm_moveresize_button;
+
+  /* GLX information */
+  gint glx_version;
+  gint glx_error_base;
+  gint glx_event_base;
+
+  /* Translation between X server time and system-local monotonic time */
+  gint64 server_time_query_time;
+  gint64 server_time_offset;
+
+  guint server_time_is_monotonic_time : 1;
+
+  guint have_glx : 1;
+
+  /* GLX extensions we check */
+  guint has_glx_swap_interval : 1;
+  guint has_glx_create_context : 1;
+  guint has_glx_texture_from_pixmap : 1;
+  guint has_glx_video_sync : 1;
+  guint has_glx_buffer_age : 1;
+  guint has_glx_sync_control : 1;
+  guint has_glx_multisample : 1;
+  guint has_glx_visual_rating : 1;
+  guint has_glx_create_es2_context : 1;
+} _GdkX11Display;
 #endif
 
 #define GL_RENDERBUFFER                                  0x8D41
@@ -93,112 +489,6 @@ void initGLFunctions() {}
 #define GL_DEPTH_ATTACHMENT_EXT                             0x8D00
 #define GL_STENCIL_ATTACHMENT_EXT                           0x8D20
 #define GL_BGRA                           0x80E1
-
-/**
- * SECTION:gtkglarea
- * @Title: GLArea
- * @Short_description: A widget for custom drawing with OpenGL
- *
- * #GLArea is a widget that allows drawing with OpenGL.
- *
- * #GLArea sets up its own #GdkGLContext for the window it creates, and
- * creates a custom GL framebuffer that the widget will do GL rendering onto.
- * It also ensures that this framebuffer is the default GL rendering target
- * when rendering.
- *
- * In order to draw, you have to connect to the #GLArea::render signal,
- * or subclass #GLArea and override the @GLAreaClass.render() virtual
- * function.
- *
- * The #GLArea widget ensures that the #GdkGLContext is associated with
- * the widget's drawing area, and it is kept updated when the size and
- * position of the drawing area changes.
- *
- * ## Drawing with GLArea ##
- *
- * The simplest way to draw using OpenGL commands in a #GLArea is to
- * create a widget instance and connect to the #GLArea::render signal:
- *
- * |[<!-- language="C" -->
- *   // create a GLArea instance
- *   GtkWidget *gl_area = gl_area_new ();
- *
- *   // connect to the "render" signal
- *   g_signal_connect (gl_area, "render", G_CALLBACK (render), NULL);
- * ]|
- *
- * The `render()` function will be called when the #GLArea is ready
- * for you to draw its content:
- *
- * |[<!-- language="C" -->
- *   static gboolean
- *   render (GLArea *area, GdkGLContext *context)
- *   {
- *     // inside this function it's safe to use GL; the given
- *     // #GdkGLContext has been made current to the drawable
- *     // surface used by the #GLArea and the viewport has
- *     // already been set to be the size of the allocation
- *
- *     // we can start by clearing the buffer
- *     glClearColor (0, 0, 0, 0);
- *     glClear (GL_COLOR_BUFFER_BIT);
- *
- *     // draw your object
- *     draw_an_object ();
- *
- *     // we completed our drawing; the draw commands will be
- *     // flushed at the end of the signal emission chain, and
- *     // the buffers will be drawn on the window
- *     return TRUE;
- *   }
- * ]|
- *
- * If you need to initialize OpenGL state, e.g. buffer objects or
- * shaders, you should use the #GtkWidget::realize signal; you
- * can use the #GtkWidget::unrealize signal to clean up. Since the
- * #GdkGLContext creation and initialization may fail, you will
- * need to check for errors, using gl_area_get_error(). An example
- * of how to safely initialize the GL state is:
- *
- * |[<!-- language="C" -->
- *   static void
- *   on_realize (GtkGLarea *area)
- *   {
- *     // We need to make the context current if we want to
- *     // call GL API
- *     gl_area_make_current (area);
- *
- *     // If there were errors during the initialization or
- *     // when trying to make the context current, this
- *     // function will return a #GError for you to catch
- *     if (gl_area_get_error (area) != NULL)
- *       return;
- *
- *     // You can also use gl_area_set_error() in order
- *     // to show eventual initialization errors on the
- *     // GLArea widget itself
- *     GError *internal_error = NULL;
- *     init_buffer_objects (&error);
- *     if (error != NULL)
- *       {
- *         gl_area_set_error (area, error);
- *         g_error_free (error);
- *         return;
- *       }
- *
- *     init_shaders (&error);
- *     if (error != NULL)
- *       {
- *         gl_area_set_error (area, error);
- *         g_error_free (error);
- *         return;
- *       }
- *   }
- * ]|
- *
- * If you need to change the options for creating the #GdkGLContext
- * you should use the #GLArea::create-context signal.
- */
 
 typedef struct {
   GdkGLContext *context;
@@ -397,17 +687,257 @@ gl_area_notify (GObject    *object,
     G_OBJECT_CLASS (gl_area_parent_class)->notify (object, pspec);
 }
 
+gboolean _gdk_x11_screen_init_gl (GdkScreen* screen) {
+  GdkDisplay *display = gdk_screen_get_display (screen);
+  _GdkX11Display *display_x11 = (_GdkX11Display*)display;
+  int error_base, event_base;
+  int screen_num;
+
+  if (display_x11->have_glx) return TRUE;
+  Display* dpy = display_x11->xdisplay;
+  printf("_gdk_x11_screen_init_gl %p %p %p %p\n", screen, display, display_x11, dpy);
+  if (!glXQueryExtension (dpy, &error_base, &event_base)) return FALSE;
+
+  screen_num = ((_GdkX11Screen*)screen)->screen_num;
+  display_x11->have_glx = TRUE;
+
+  display_x11->glx_version = epoxy_glx_version (dpy, screen_num);
+  display_x11->glx_error_base = error_base;
+  display_x11->glx_event_base = event_base;
+
+  display_x11->has_glx_create_context = epoxy_has_glx_extension (dpy, screen_num, "GLX_ARB_create_context_profile");
+  display_x11->has_glx_create_es2_context = epoxy_has_glx_extension (dpy, screen_num, "GLX_EXT_create_context_es2_profile");
+  display_x11->has_glx_swap_interval = epoxy_has_glx_extension (dpy, screen_num, "GLX_SGI_swap_control");
+  display_x11->has_glx_texture_from_pixmap = epoxy_has_glx_extension (dpy, screen_num, "GLX_EXT_texture_from_pixmap");
+  display_x11->has_glx_video_sync = epoxy_has_glx_extension (dpy, screen_num, "GLX_SGI_video_sync");
+  display_x11->has_glx_buffer_age = epoxy_has_glx_extension (dpy, screen_num, "GLX_EXT_buffer_age");
+  display_x11->has_glx_sync_control = epoxy_has_glx_extension (dpy, screen_num, "GLX_OML_sync_control");
+  display_x11->has_glx_multisample = epoxy_has_glx_extension (dpy, screen_num, "GLX_ARB_multisample");
+  display_x11->has_glx_visual_rating = epoxy_has_glx_extension (dpy, screen_num, "GLX_EXT_visual_rating");
+
+  /*GDK_NOTE (OPENGL,
+            g_message ("GLX version %d.%d found\n"
+                       " - Vendor: %s\n"
+                       " - Checked extensions:\n"
+                       "\t* GLX_ARB_create_context_profile: %s\n"
+                       "\t* GLX_EXT_create_context_es2_profile: %s\n"
+                       "\t* GLX_SGI_swap_control: %s\n"
+                       "\t* GLX_EXT_texture_from_pixmap: %s\n"
+                       "\t* GLX_SGI_video_sync: %s\n"
+                       "\t* GLX_EXT_buffer_age: %s\n"
+                       "\t* GLX_OML_sync_control: %s",
+                     display_x11->glx_version / 10,
+                     display_x11->glx_version % 10,
+                     glXGetClientString (dpy, GLX_VENDOR),
+                     display_x11->has_glx_create_context ? "yes" : "no",
+                     display_x11->has_glx_create_es2_context ? "yes" : "no",
+                     display_x11->has_glx_swap_interval ? "yes" : "no",
+                     display_x11->has_glx_texture_from_pixmap ? "yes" : "no",
+                     display_x11->has_glx_video_sync ? "yes" : "no",
+                     display_x11->has_glx_buffer_age ? "yes" : "no",
+                     display_x11->has_glx_sync_control ? "yes" : "no"));*/
+
+  return TRUE;
+}
+
+#define MAX_GLX_ATTRS   30
+
+static gboolean find_fbconfig_for_visual(GdkDisplay* display, GdkVisual* visual, GLXFBConfig* fb_config_out, GError** error) {
+  static int attrs[MAX_GLX_ATTRS];
+  _GdkX11Display *display_x11 = (_GdkX11Display*)display;
+  Display* dpy = display_x11->xdisplay;
+  GLXFBConfig *configs;
+  int n_configs, i;
+  gboolean use_rgba;
+  gboolean retval = FALSE;
+  _GdkX11Visual *visual_x11 = (_GdkX11Visual*)visual;
+  VisualID xvisual_id = XVisualIDFromVisual(visual_x11->xvisual);
+
+  i = 0;
+  attrs[i++] = GLX_DRAWABLE_TYPE;
+  attrs[i++] = GLX_WINDOW_BIT;
+
+  attrs[i++] = GLX_RENDER_TYPE;
+  attrs[i++] = GLX_RGBA_BIT;
+
+  attrs[i++] = GLX_DOUBLEBUFFER;
+  attrs[i++] = GL_TRUE;
+
+  attrs[i++] = GLX_RED_SIZE;
+  attrs[i++] = 1;
+  attrs[i++] = GLX_GREEN_SIZE;
+  attrs[i++] = 1;
+  attrs[i++] = GLX_BLUE_SIZE;
+  attrs[i++] = 1;
+
+  use_rgba = (visual == gdk_screen_get_rgba_visual (gdk_display_get_default_screen (display)));
+  if (use_rgba) {
+      attrs[i++] = GLX_ALPHA_SIZE;
+      attrs[i++] = 1;
+    } else {
+      attrs[i++] = GLX_ALPHA_SIZE;
+      attrs[i++] = GLX_DONT_CARE;
+    }
+
+  attrs[i++] = None;
+
+  g_assert (i < MAX_GLX_ATTRS);
+
+  configs = glXChooseFBConfig (dpy, DefaultScreen (dpy), attrs, &n_configs);
+  if (configs == NULL || n_configs == 0) {
+      //g_set_error_literal (error, GDK_GL_ERROR, GDK_GL_ERROR_UNSUPPORTED_FORMAT, _("No available configurations for the given pixel format"));
+      return FALSE;
+    }
+
+  for (i = 0; i < n_configs; i++) {
+      XVisualInfo *visinfo;
+
+      visinfo = glXGetVisualFromFBConfig (dpy, configs[i]);
+      if (visinfo == NULL)
+        continue;
+
+      if (visinfo->visualid != xvisual_id) {
+          XFree (visinfo);
+          continue;
+        }
+
+      if (fb_config_out != NULL) *fb_config_out = configs[i];
+
+      XFree (visinfo);
+      retval = TRUE;
+      goto out;
+    }
+
+  //g_set_error (error, GDK_GL_ERROR, GDK_GL_ERROR_UNSUPPORTED_FORMAT, _("No available configurations for the given RGBA pixel format"));
+
+out:
+  XFree (configs);
+
+  return retval;
+}
+
+/*GdkGLContext* _gdk_x11_window_create_gl_context(_GdkWindow* window, GError** error) {
+    //GdkGLContext* paint_context = gdk_window_get_paint_gl_context(window, error);
+    _GdkWindow* impl_window = (_GdkWindow*)(window->impl_window);
+    GdkGLContext* paint_context = impl_window->gl_paint_context;
+
+
+
+    GdkDisplay* display = gdk_window_get_display (impl_window);
+
+    if (!_gdk_x11_screen_init_gl (gdk_window_get_screen (impl_window))) {
+        g_set_error_literal(error, GDK_GL_ERROR, GDK_GL_ERROR_NOT_AVAILABLE, "No GL implementation is available");
+        return NULL;
+    }
+
+    GLXFBConfig config;
+    GdkVisual* visual = gdk_window_get_visual (impl_window);
+    if (!find_fbconfig_for_visual(display, visual, &config, error)) return NULL;
+
+    GdkX11GLContext* context = g_object_new(GDK_TYPE_X11_GL_CONTEXT, "display", display, "window", impl_window, "shared-context", paint_context, NULL);
+    context->glx_config = config;
+    context->is_attached = FALSE;
+    return (GdkGLContext*)context;
+}*/
+
+GdkGLContext * _gdk_x11_window_create_gl_context (GdkWindow    *window, gboolean      attached, GdkGLContext *share, GError      **error) {
+    printf("_gdk_x11_window_create_gl_context\n");
+  GdkDisplay *display;
+  GdkX11GLContext *context;
+  GdkVisual *visual;
+  GLXFBConfig config;
+
+  display = gdk_window_get_display (window);
+
+  if (!_gdk_x11_screen_init_gl (gdk_window_get_screen (window))) {
+    printf("_gdk_x11_window_create_gl_context failed 1!\n");
+      //g_set_error_literal (error, GDK_GL_ERROR, GDK_GL_ERROR_NOT_AVAILABLE, "No GL implementation is available");
+      return NULL;
+    }
+
+  visual = gdk_window_get_visual (window);
+  if (!find_fbconfig_for_visual (display, visual, &config, error)) {
+    printf("_gdk_x11_window_create_gl_context failed 2!\n");
+    return NULL;
+    }
+
+  context = g_object_new (GDK_TYPE_X11_GL_CONTEXT, "display", display, "window", window, "shared-context", share, NULL);
+
+  context->glx_config = config;
+  context->is_attached = attached;
+
+  return GDK_GL_CONTEXT (context);
+}
+
+GdkGLContext * _gdk_window_get_paint_gl_context (_GdkWindow  *window, GError    **error) {
+  GError *internal_error = NULL;
+
+  /*if (_gdk_gl_flags & GDK_GL_DISABLE) {
+      g_set_error_literal (error, GDK_GL_ERROR, GDK_GL_ERROR_NOT_AVAILABLE, "GL support disabled via GDK_DEBUG");
+      return NULL;
+    }*/
+
+  _GdkWindow* impl_window = (_GdkWindow*)(window->impl_window);
+
+  if (impl_window->gl_paint_context == NULL) {
+      //GdkWindowImplClass *impl_class = GDK_WINDOW_IMPL_GET_CLASS (window->impl);
+
+      /*if (impl_class->create_gl_context == NULL) {
+          g_set_error_literal (error, GDK_GL_ERROR, GDK_GL_ERROR_NOT_AVAILABLE, "The current backend does not support OpenGL");
+          return NULL;
+        }*/
+
+      impl_window->gl_paint_context = _gdk_x11_window_create_gl_context(impl_window, TRUE, NULL, &internal_error);
+      //impl_window->gl_paint_context = impl_class->create_gl_context (impl_window, TRUE, NULL, &internal_error);
+    }
+
+  if (internal_error != NULL) {
+      g_propagate_error (error, internal_error);
+      g_clear_object (&(impl_window->gl_paint_context));
+      return NULL;
+    }
+
+  gdk_gl_context_realize (impl_window->gl_paint_context, &internal_error);
+  if (internal_error != NULL) {
+      g_propagate_error (error, internal_error);
+      g_clear_object (&(impl_window->gl_paint_context));
+      return NULL;
+    }
+
+  return impl_window->gl_paint_context;
+}
+
+GdkGLContext* _gdk_window_create_gl_context (_GdkWindow* window, GError** error) {
+    printf("_gdk_window_create_gl_context\n");
+  g_return_val_if_fail (GDK_IS_WINDOW (window), NULL);
+  g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+
+  GdkGLContext* paint_context = _gdk_window_get_paint_gl_context (window, error);
+  //_GdkWindow* impl_window = (_GdkWindow*)(window->impl_window);
+  //GdkGLContext* paint_context = impl_window->gl_paint_context;
+  if (paint_context == NULL) {
+    printf("_gdk_window_create_gl_context failed, no paint_context!\n");
+    //return NULL;
+  }
+
+  //return GDK_WINDOW_IMPL_GET_CLASS (window->impl)->create_gl_context (window->impl_window, FALSE, paint_context, error);
+  return _gdk_x11_window_create_gl_context (window->impl_window, FALSE, paint_context, error);
+}
+
 static GdkGLContext *
 gl_area_real_create_context (GLArea *area)
 {
+    printf("gl_area_real_create_context\n");
   GLAreaPrivate *priv = gl_area_get_instance_private (area);
   GtkWidget *widget = GTK_WIDGET (area);
   GError *error = NULL;
   GdkGLContext *context;
 
-  context = gdk_window_create_gl_context (gtk_widget_get_window (widget), &error); // TODO: this line induces the black widgets bug
+  //context = gdk_window_create_gl_context (gtk_widget_get_window (widget), &error); // TODO: this line induces the black widgets bug
+  context = _gdk_window_create_gl_context (gtk_widget_get_window (widget), &error); // TODO: this line induces the black widgets bug
   if (error != NULL)
     {
+        printf(" !-!-! gl_area_real_create_context failed!\n");
       gl_area_set_error (area, error);
       g_clear_object (&context);
       g_clear_error (&error);
