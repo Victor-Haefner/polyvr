@@ -410,7 +410,7 @@ void _gdk_x11_window_invalidate_for_new_frame (_GdkWindow *window, cairo_region_
     {
       cairo_rectangle_int_t whole_window = { 0, 0, gdk_window_get_width (window), gdk_window_get_height (window) };
 
-      if (gdk_gl_context_has_framebuffer_blit (window->gl_paint_context) &&
+      if (_gdk_gl_context_has_framebuffer_blit (window->gl_paint_context) &&
           cairo_region_contains_rectangle (update_area, &whole_window) != CAIRO_REGION_OVERLAP_IN)
         {
           context_x11->do_blit_swap = TRUE;
