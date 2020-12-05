@@ -387,7 +387,6 @@ void _gdk_x11_window_invalidate_for_new_frame (_GdkWindow *window, cairo_region_
   cairo_rectangle_int_t window_rect;
   GdkDisplay *display = gdk_window_get_display (window);
   _GdkX11Display *display_x11 = (_GdkX11Display*) (display);
-  //Display *dpy = gdk_x11_display_get_xdisplay (display);
   Display* dpy = display_x11->xdisplay;
   gboolean invalidate_all;
 

@@ -185,9 +185,21 @@ GtkWidget* addNotebook(string ID) {
 }
 
 void add1ToPaned(GtkWidget* p, GtkWidget* w) {
-    GtkWidget* v = gtk_scrolled_window_new(0,0);
-    gtk_container_add(GTK_CONTAINER(v), w);
-    gtk_paned_pack1(GTK_PANED(p), v, true, true);
+    //GtkWidget* v = gtk_scrolled_window_new(0,0);
+    //gtk_container_add(GTK_CONTAINER(v), w);
+    /*if (useLayout) {
+        GtkWidget* v = gtk_layout_new(0,0);
+        gtk_container_add(GTK_CONTAINER(v), w);
+        w = v;
+    }*/
+    gtk_paned_pack1(GTK_PANED(p), w, true, true);
+}
+
+// TODO: wrong signature
+void onPanedMove(GtkPaned* widget, GdkEvent* event, GtkWidget* content) {
+    int p = gtk_paned_get_position(widget);
+    int h = gtk_widget_get_allocated_height(GTK_WIDGET(widget));
+    gtk_widget_set_size_request(content, p, h);
 }
 
 void add2ToPaned(GtkWidget* p, GtkWidget* w) {
@@ -477,7 +489,6 @@ void VRGuiBuilder::buildBaseUI() {
     auto vpaned1 = addPaned("vpaned1", GTK_ORIENTATION_VERTICAL);
     auto vbox5 = addBox("vbox5", GTK_ORIENTATION_VERTICAL);
     auto hbox15 = addBox("hbox15", GTK_ORIENTATION_HORIZONTAL);
-    add1ToPaned(hpaned1, notebook1);
     add2ToPaned(hpaned1, vpaned1);
     add1ToPaned(vpaned1, vbox5);
     add2ToPaned(vpaned1, hbox15);
@@ -485,6 +496,13 @@ void VRGuiBuilder::buildBaseUI() {
     gtk_widget_set_vexpand(vbox5, true);
     gtk_paned_set_position(GTK_PANED(vpaned1), 120);
     gtk_paned_set_wide_handle(GTK_PANED(vpaned1), true);
+
+    GtkWidget* layout = gtk_layout_new(0,0);
+    GtkWidget* viewport = gtk_viewport_new(0,0);
+    gtk_container_add(GTK_CONTAINER(viewport), notebook1);
+    gtk_container_add(GTK_CONTAINER(layout), viewport);
+    gtk_paned_pack1(GTK_PANED(hpaned1), layout, true, true);
+    g_signal_connect(hpaned1, "notify::position", (GCallback)onPanedMove, notebook1);
 
     /* ---------- right core section ---------------------- */
     auto hbox1 = addBox("hbox1", GTK_ORIENTATION_HORIZONTAL);
@@ -526,16 +544,17 @@ void VRGuiBuilder::buildBaseUI() {
     auto hbox16 = addBox("hbox16", GTK_ORIENTATION_HORIZONTAL);
     auto notebook2 = addNotebook("notebook2");
     auto label171 = addLabel("label171", "search:");
-    auto appSearch = addEntry("appSearch");
+    auto appSearch = addEntry("appSearch", 35);
     auto scrolledwindow9 = addScrolledWindow("scrolledwindow9");
     auto scrolledwindow10 = addScrolledWindow("scrolledwindow10");
     auto viewport1 = addViewport("viewport1");
     auto viewport4 = addViewport("viewport4");
     auto favorites_tab = addGrid("favorites_tab");
     auto examples_tab = addGrid("examples_tab");
+    gtk_widget_set_halign(appSearch, GTK_ALIGN_START);
     gtk_box_pack_start(GTK_BOX(vbox3), hbox16, false, true, 0);
     gtk_box_pack_start(GTK_BOX(vbox3), notebook2, true, true, 0);
-    gtk_box_pack_start(GTK_BOX(hbox16), label171, false, true, 0);
+    gtk_box_pack_start(GTK_BOX(hbox16), label171, false, true, 5);
     gtk_box_pack_start(GTK_BOX(hbox16), appSearch, true, true, 0);
     addNotebookPage(notebook2, scrolledwindow9, "Favorites");
     addNotebookPage(notebook2, scrolledwindow10, "Examples");
