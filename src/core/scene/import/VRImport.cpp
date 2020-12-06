@@ -178,8 +178,10 @@ void VRImport::LoadJob::load(VRThreadWeakPtr tw) {
         if (ext == ".xyz") { loadXYZ(path, res, options); return; }
         if (ext == ".ply") { loadPly(path, res); return; }
         //if (ext == ".step" || ext == ".stp" || ext == ".STEP" || ext == ".STP") { VRSTEP step; step.load(path, res, options); }
-#ifdef WITH_STEP
+#ifndef WITHOUT_STEP
         if (ext == ".step" || ext == ".stp" || ext == ".STEP" || ext == ".STP") { loadSTEPCascade(path, res); return; }
+#endif
+#ifndef WITHOUT_IFC
 		if (ext == ".ifc") { loadIFC(path, res); return; }
 #endif
         if (ext == ".wrl" && preset == "SOLIDWORKS-VRML2") { VRFactory f; if (f.loadVRML(path, progress, res, thread)); else preset = "OSG"; }

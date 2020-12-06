@@ -89,7 +89,6 @@
 			<Add option="-DWITH_SHADOW_VOLUME" />
 			<Add option="-DWITH_OPCUA" />
 			<Add option="-DWITH_CLUSTERING_FIX" />
-			<Add option="-DWITH_STEP" />
 			<Add option="-DCEF18" />
 			<Add option="-DGDK_GL_COMPILATION" />
 			<Add option="-DGTK_GL_COMPILATION" />
