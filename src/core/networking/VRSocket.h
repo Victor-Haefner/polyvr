@@ -45,17 +45,17 @@ class VRSocket : public VRName {
         string tcp_msg;
         HTTP_args* http_args;
         VRSignalPtr sig;
-        int port;
+        int port = -1;
         string IP;
         string type;
         string callback;
         string signal;
-        int threadID;
-        bool run;
-        unsigned int socketID;
+        int threadID = -1;
+        bool run = false;
+        unsigned int socketID = 0;
         VRMessageCbWeakPtr tcp_fkt;
-        VRHTTP_cb* http_fkt;
-        HTTPServer* http_serv;
+        VRHTTP_cb* http_fkt = 0;
+        HTTPServer* http_serv = 0;
 
         void trigger();
 

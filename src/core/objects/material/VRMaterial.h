@@ -35,6 +35,7 @@ class VRMaterial : public VRObject {
     public:
         static map<string, VRMaterialWeakPtr> materials;
         static map<MaterialMTRecPtr, VRMaterialWeakPtr> materialsByPtr;
+        static map<size_t, size_t> fieldContainerMap;
 
         void setup();
 
@@ -133,6 +134,7 @@ class VRMaterial : public VRObject {
         void setStencilBuffer(bool clear, float value, float mask, int func, int opFail, int opZFail, int opPass);
 
         bool isWireFrame();
+        bool doesIgnoreMeshColors();
 
         Color3f getDiffuse();
         Color3f getSpecular();

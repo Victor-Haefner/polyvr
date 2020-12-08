@@ -94,11 +94,6 @@ class HTTPServer {
             delete data;
         }
 
-        void loop(VRThreadWeakPtr wt) {
-            if (server) mg_mgr_poll(server, 100);
-            if (auto t = wt.lock()) if (t->control_flag == false) return;
-        }
-
         bool initServer(VRHTTP_cb* fkt, int port) {
             data->cb = fkt;
             server = new mg_mgr();
@@ -140,13 +135,24 @@ class HTTPServer {
             }
         }
 
+        void loop(VRThreadWeakPtr wt) {
+            if (server) mg_mgr_poll(server, 100);
+            //if (auto t = wt.lock()) if (t->control_flag == false) return;
+        }
+
         void close() {
+            //cout << "  HTTPServer::close" << endl;
             if (server) {
-                VRSceneManager::get()->stopThread(threadID);
+                //cout << "   HTTPServer::close stop thread " << threadID << endl;
+                auto sm = VRSceneManager::get();
+                if (sm) sm->stopThread(threadID);
+                //cout << "   HTTPServer::close mg_mgr_free server" << endl;
                 mg_mgr_free(server);
+                //cout << "   HTTPServer::close delete server" << endl;
                 delete server;
             }
             server = 0;
+            //cout << "   HTTPServer::close done" << endl;
         }
 
         void websocket_send(int id, string message) {
@@ -322,12 +328,18 @@ VRSocket::VRSocket(string name) {
 }
 
 VRSocket::~VRSocket() {
+    cout << " VRSocket::~VRSocket " << name << ", " << run << endl;
     run = false;
+    cout << "  http_serv->close" << endl;
     if (http_serv) http_serv->close();
     //shutdown(socketID, SHUT_RDWR);
+    cout << "  sm->stopThread " << threadID << endl;
     if (auto sm = VRSceneManager::get()) sm->stopThread(threadID);
+    cout << "  delete http_args" << endl;
     if (http_args) delete http_args;
+    cout << "  delete http_serv" << endl;
     if (http_serv) delete http_serv;
+    cout << "  ~VRSocket done" << endl;
 }
 
 std::shared_ptr<VRSocket> VRSocket::create(string name) { return std::shared_ptr<VRSocket>(new VRSocket(name)); }

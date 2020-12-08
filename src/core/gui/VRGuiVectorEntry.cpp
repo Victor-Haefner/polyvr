@@ -1,11 +1,8 @@
+#include <gtk/gtk.h>
 #include "VRGuiVectorEntry.h"
 #include "core/utils/toString.h"
 #include "VRGuiUtils.h"
-
-#include <gtk/gtkentry.h>
-#include <gtk/gtkhbox.h>
-#include <gtk/gtklabel.h>
-#include <gtk/gtkvseparator.h>
+#include "VRGuiBuilder.h"
 
 VRGuiVectorEntry::VRGuiVectorEntry() {
     ex = ey = ez = 0;
@@ -29,7 +26,7 @@ bool VRGuiVectorEntry::proxy2D(GdkEventFocus* focus, function<void(OSG::Vec2d&)>
 }
 
 void VRGuiVectorEntry::init(string placeholder, string label,  function<void(OSG::Vec3d&)> sig) {
-    auto ph = getGUIBuilder()->get_widget(placeholder.c_str());
+    auto ph = VRGuiBuilder::get()->get_widget(placeholder.c_str());
     auto frame = gtk_widget_get_parent(ph);
     gtk_container_remove((GtkContainer*)frame, ph);
 
@@ -48,17 +45,20 @@ void VRGuiVectorEntry::init(string placeholder, string label,  function<void(OSG
     gtk_widget_set_size_request((GtkWidget*)ex, 50, -1);
     gtk_widget_set_size_request((GtkWidget*)ey, 50, -1);
     gtk_widget_set_size_request((GtkWidget*)ez, 50, -1);
+    gtk_entry_set_width_chars(ex, 5);
+    gtk_entry_set_width_chars(ey, 5);
+    gtk_entry_set_width_chars(ez, 5);
 
     auto s1 = gtk_vseparator_new();
     auto s2 = gtk_vseparator_new();
     auto s3 = gtk_vseparator_new();
 
     gtk_box_pack_start((GtkBox*)hb, lbl, true, true, 2);
-    gtk_box_pack_start((GtkBox*)hb, s1, true, true, 0);
+    gtk_box_pack_start((GtkBox*)hb, s1, false, true, 0);
     gtk_box_pack_start((GtkBox*)hb, (GtkWidget*)ex, true, true, 0);
-    gtk_box_pack_start((GtkBox*)hb, s2, true, true, 0);
+    gtk_box_pack_start((GtkBox*)hb, s2, false, true, 0);
     gtk_box_pack_start((GtkBox*)hb, (GtkWidget*)ey, true, true, 0);
-    gtk_box_pack_start((GtkBox*)hb, s3, true, true, 0);
+    gtk_box_pack_start((GtkBox*)hb, s3, false, true, 0);
     gtk_box_pack_start((GtkBox*)hb, (GtkWidget*)ez, true, true, 0);
     gtk_widget_show_all(frame);
 
@@ -74,7 +74,7 @@ void VRGuiVectorEntry::init(string placeholder, string label,  function<void(OSG
 }
 
 void VRGuiVectorEntry::init2D(string placeholder, string label,  function<void(OSG::Vec2d&)> sig) {
-    auto ph = getGUIBuilder()->get_widget(placeholder.c_str());
+    auto ph = VRGuiBuilder::get()->get_widget(placeholder.c_str());
     auto frame = gtk_widget_get_parent(ph);
     gtk_container_remove((GtkContainer*)frame, ph);
 

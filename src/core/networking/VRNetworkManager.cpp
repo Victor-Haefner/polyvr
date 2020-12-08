@@ -16,7 +16,9 @@ VRNetworkManager::VRNetworkManager() {
     storeMap("Socket", &sockets);
 }
 
-VRNetworkManager::~VRNetworkManager() {}
+VRNetworkManager::~VRNetworkManager() {
+    cout << "VRNetworkManager::~VRNetworkManager" << endl;
+}
 
 VRSocketPtr VRNetworkManager::getSocket(int port) {
     for (auto s : sockets) if(s.second->getPort() == port) return s.second;

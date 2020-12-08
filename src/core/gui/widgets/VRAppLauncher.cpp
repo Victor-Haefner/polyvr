@@ -1,3 +1,4 @@
+#include <gtk/gtk.h>
 #include "VRAppLauncher.h"
 #include "../VRDemos.h"
 #include "../VRGuiUtils.h"
@@ -10,17 +11,6 @@
 #include "core/gui/VRGuiContextMenu.h"
 
 #include <iostream>
-#include <gtk/gtkimage.h>
-#include <gdk/gdkpixbuf.h>
-#include <gtk/gtksettings.h>
-#include <gtk/gtkstock.h>
-#include <gtk/gtkcontainer.h>
-#include <gtk/gtkframe.h>
-#include <gtk/gtkeventbox.h>
-#include <gtk/gtkhbox.h>
-#include <gtk/gtkvbox.h>
-#include <gtk/gtklabel.h>
-#include <gtk/gtkbutton.h>
 
 using namespace OSG;
 
@@ -36,7 +26,7 @@ void VRAppLauncher::updatePixmap() {
     if (imgScene == 0) return;
     if ( !exists( pxm_path ) ) return;
     try {
-        loadGTKIcon(imgScene, pxm_path, 100, 75);
+        loadGTKIcon(imgScene, pxm_path, 100, 60);
     } catch (...) { cout << "Warning: Caught exception in VRAppManager::updatePixmap, ignoring.."; }
 }
 
@@ -84,7 +74,7 @@ void VRAppLauncher::setup(VRGuiContextMenu* menu, VRAppManager* mgr) {
     // prep icons
     imgPlay = (GtkImage*)gtk_image_new_from_stock(GTK_STOCK_MEDIA_PLAY, GTK_ICON_SIZE_BUTTON);
     imgOpts = loadGTKIcon(0, rpath+"/ressources/gui/opts20.png", 20, 20);
-    imgScene = loadGTKIcon(0, rpath+"/ressources/gui/default_scene.png", 100, 75);
+    imgScene = loadGTKIcon(0, rpath+"/ressources/gui/default_scene.png", 100, 60);
     imgLock = loadGTKIcon(0, rpath+"/ressources/gui/lock20.png", 20, 20);
     imgUnlock = loadGTKIcon(0, rpath+"/ressources/gui/unlock20.png", 20, 20);
     g_object_ref(imgLock); // increase ref count
@@ -114,11 +104,11 @@ void VRAppLauncher::setup(VRGuiContextMenu* menu, VRAppManager* mgr) {
     // build widget
     gtk_box_pack_start((GtkBox*)vb2, (GtkWidget*)butOpts, false, false, 0);
     gtk_box_pack_end((GtkBox*)vb2, (GtkWidget*)butLock, false, false, 0);
-    gtk_box_pack_start((GtkBox*)hb, (GtkWidget*)imgScene, false, false, 10);
-    gtk_box_pack_end((GtkBox*)hb, (GtkWidget*)butPlay, false, false, 5);
-    gtk_box_pack_end((GtkBox*)hb, (GtkWidget*)vb2, false, false, 5);
-    gtk_box_pack_start((GtkBox*)vb, (GtkWidget*)label, false, false, 5);
-    gtk_box_pack_start((GtkBox*)vb, (GtkWidget*)hb, false, false, 5);
+    gtk_box_pack_start((GtkBox*)hb, (GtkWidget*)imgScene, false, false, 3);
+    gtk_box_pack_end((GtkBox*)hb, (GtkWidget*)butPlay, false, false, 3);
+    gtk_box_pack_end((GtkBox*)hb, (GtkWidget*)vb2, false, false, 3);
+    gtk_box_pack_start((GtkBox*)vb, (GtkWidget*)label, false, false, 3);
+    gtk_box_pack_start((GtkBox*)vb, (GtkWidget*)hb, false, false, 3);
     if (lastStarted != "") gtk_box_pack_start((GtkBox*)vb, (GtkWidget*)timestamp, false, false, 2);
     gtk_container_add((GtkContainer*)widget, (GtkWidget*)ebox);
     gtk_container_add((GtkContainer*)ebox, (GtkWidget*)vb);

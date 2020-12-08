@@ -3,7 +3,7 @@
 //#include <GL/glut.h>
 //#include <OpenSG/OSGBaseInitFunctions.h>
 #ifndef WITHOUT_GTK
-#include <gdk/gdkevents.h>
+#include <gdk/gdk.h>
 #endif
 
 using namespace OSG;
@@ -24,6 +24,9 @@ VRKeyboardPtr VRKeyboard::create() {
 }
 
 VRKeyboardPtr VRKeyboard::ptr() { return static_pointer_cast<VRKeyboard>( shared_from_this() ); }
+
+bool VRKeyboard::shiftDown() { return (b_state(65505) == 1 || b_state(65506) == 1); } // Shift left and right
+bool VRKeyboard::ctrlDown()  { return (b_state(65507) == 1 || b_state(65508) == 1); } // Ctrl  left and right
 
 #ifndef WITHOUT_GTK
 void VRKeyboard::setGtkEvent(_GdkEventKey* event) { gdk_event = event; }

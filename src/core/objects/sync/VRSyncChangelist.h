@@ -19,6 +19,7 @@ ptrFwd(VRSyncChangelist);
 class VRSyncChangelist {
     private:
         vector<FieldContainerRecPtr> justCreated; //IDs of the currently created nodes/children
+        vector<unsigned char> CLdata;
 
     public:
         VRSyncChangelist();
@@ -31,12 +32,15 @@ class VRSyncChangelist {
         void broadcastChangeList(VRSyncNodePtr syncNode, OSGChangeList* cl, bool doDelete = false);
 
         string getChangeType(UInt32 uiEntryDesc);
-        string copySceneState(VRSyncNodePtr syncNode);
+        void broadcastSceneState(VRSyncNodePtr syncNode);
 
         vector<UInt32> getFCChildren(FieldContainer* fcPtr, BitVector fieldMask);
         void filterFieldMask(VRSyncNodePtr syncNode, FieldContainer* fc, SerialEntry& sentry);
         void serialize_entry(VRSyncNodePtr syncNode, ContainerChangeEntry* entry, vector<unsigned char>& data, UInt32 syncNodeID);
         string serialize(VRSyncNodePtr syncNode, ChangeList* clist);
+
+        void fixNullChildren(FieldContainerRecPtr fcPtr, UInt32 fieldMask);
+        void fixNullCore(FieldContainerRecPtr fcPtr, UInt32 fieldMask);
 
         void handleChildrenChange(VRSyncNodePtr syncNode, FieldContainerRecPtr fcPtr, SerialEntry& sentry, map<UInt32, vector<UInt32>>& parentToChildren);
         void handleCoreChange(VRSyncNodePtr syncNode, FieldContainerRecPtr fcPtr, SerialEntry& sentry);
@@ -44,9 +48,10 @@ class VRSyncChangelist {
         FieldContainerRecPtr getOrCreate(VRSyncNodePtr syncNode, UInt32& id, SerialEntry& sentry, map<UInt32, vector<UInt32>>& parentToChildren);
         void printDeserializedData(vector<SerialEntry>& entries, map<UInt32, vector<UInt32>>& parentToChildren, map<UInt32, vector<unsigned char>>& fcData);
         void handleRemoteEntries(VRSyncNodePtr syncNode, vector<SerialEntry>& entries, map<UInt32, vector<UInt32>>& parentToChildren, map<UInt32, vector<unsigned char>>& fcData);
-        void deserializeEntries(string& data, vector<SerialEntry>& entries, map<UInt32, vector<UInt32>>& parentToChildren, map<UInt32, vector<unsigned char>>& fcData);
+        void deserializeEntries(vector<unsigned char>& data, vector<SerialEntry>& entries, map<UInt32, vector<UInt32>>& parentToChildren, map<UInt32, vector<unsigned char>>& fcData);
         void deserializeChildrenData(vector<unsigned char>& childrenData, map<UInt32,vector<UInt32>>& parentToChildren);
-        void deserializeAndApply(VRSyncNodePtr syncNode, string& data);
+        void deserializeAndApply(VRSyncNodePtr syncNode);
+        void gatherChangelistData(VRSyncNodePtr syncNode, string& data);
 };
 
 OSG_END_NAMESPACE;

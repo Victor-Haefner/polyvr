@@ -20,6 +20,8 @@ class VROptions {
         }
 
     public:
+        ~VROptions();
+
         int argc;
         char** argv;
         bpo::options_description desc;

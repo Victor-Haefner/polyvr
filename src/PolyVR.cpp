@@ -8,6 +8,7 @@
 #include <OpenSG/OSGPrimeMaterial.h>
 #include <OpenSG/OSGNameAttachment.h>
 #include <OpenSG/OSGVector.h>
+#include <OpenSG/OSGSceneFileHandler.h>
 
 #ifdef __EMSCRIPTEN__
 #include <OpenSG/OSGPNGImageFileType.h>
@@ -57,6 +58,7 @@
 #include "core/utils/coreDumpHandler.h"
 #ifndef WITHOUT_GTK
 #include "core/gui/VRGuiManager.h"
+#include "core/gui/VRGuiSignals.h"
 #endif
 #include "core/networking/VRMainInterface.h"
 #ifndef WITHOUT_SHARED_MEMORY
@@ -82,8 +84,16 @@
 #include <termios.h>
 #endif
 
+#ifdef _WIN32
+extern "C" {
+    _declspec(dllexport) DWORD NvOptimusEnablement = 0x00000001; // tells an optimus system to run PolyVR in high performance mode
+}
+#endif
+
 OSG_BEGIN_NAMESPACE;
 using namespace std;
+
+PolyVR* pvr = 0;
 
 void printFieldContainer(int maxID = -1) {
     int N = FieldContainerFactory::the()->getNumTotalContainers();
@@ -116,12 +126,61 @@ void printFieldContainer(int maxID = -1) {
 }
 
 PolyVR::PolyVR() {}
-PolyVR::~PolyVR() {}
 
-PolyVR* PolyVR::get() {
-    static PolyVR* pvr = new PolyVR();
-    return pvr;
+PolyVR::~PolyVR() {
+    cout << "PolyVR::~PolyVR" << endl;
+#ifndef WITHOUT_SHARED_MEMORY
+    try {
+        VRSharedMemory sm("PolyVR_System");
+        int* i = sm.addObject<int>("identifier");
+        *i = 0;
+    }
+    catch (...) {}
+#endif
+
+    pvr = 0;
+
+    VRGuiSignals::get()->clear();
+    scene_mgr->closeScene();
+    VRSetup::getCurrent()->stopWindows();
+    scene_mgr->stopAllThreads();
+    setup_mgr->closeSetup();
+
+
+    monitor.reset();
+    gui_mgr.reset();
+    main_interface.reset();
+    loader.reset();
+    setup_mgr.reset();
+    scene_mgr.reset();
+    sound_mgr.reset();
+    options.reset();
+
+    cout << " terminated all polyvr modules" << endl;
+#ifndef WASM
+    printFieldContainer();
+#endif
+
+    cout << "call osgExit" << endl;
+    osgExit();
+
+    /*#ifdef WASM
+        cout << "call emscripten_force_exit" << endl;
+        emscripten_force_exit(0);
+    #else
+        cout << "call exit" << endl;
+        std::exit(0);
+    #endif*/
 }
+
+shared_ptr<PolyVR> PolyVR::create() {
+    if (!pvr) {
+        pvr = new PolyVR();
+        return shared_ptr<PolyVR>(pvr);
+    } else return 0;
+}
+
+PolyVR* PolyVR::get() { return pvr; }
 
 #ifdef WASM
 typedef const char* CSTR;
@@ -135,41 +194,9 @@ EMSCRIPTEN_KEEPALIVE void PolyVR_triggerScript(const char* name, CSTR* params, i
 #endif
 
 void PolyVR::shutdown() {
+    if (!pvr) return;
     cout << "PolyVR::shutdown" << endl;
-#ifndef WITHOUT_SHARED_MEMORY
-    try {
-        VRSharedMemory sm("PolyVR_System");
-        int* i = sm.addObject<int>("identifier");
-        *i = 0;
-    } catch(...) {}
-#endif
-
-    auto pvr = get();
-    pvr->scene_mgr->closeScene();
-    VRSetup::getCurrent()->stopWindows();
-    pvr->scene_mgr->stopAllThreads();
-    pvr->setup_mgr->closeSetup();
-
-/*
-    pvr->monitor.reset();
-    pvr->gui_mgr.reset();
-    pvr->main_interface.reset();
-    pvr->loader.reset();
-    pvr->setup_mgr.reset();
-    pvr->scene_mgr.reset();
-    pvr->sound_mgr.reset();
-    pvr->options.reset();*/
-
-    delete pvr;
-#ifndef WASM
-    printFieldContainer();
-#endif
-    osgExit();
-#ifdef WASM
-    emscripten_force_exit(0);
-#else
-    std::exit(0);
-#endif
+    pvr->doLoop = false;
 }
 
 void printNextOSGID(int i) {
@@ -374,6 +401,30 @@ void initOSGImporter() {
 }
 #endif
 
+void printOSGImportCapabilities() {
+    auto h = SceneFileHandler::the();
+
+    std::list<const Char8*> suffixList;
+    h->getSuffixList(suffixList, SceneFileType::OSG_READ_SUPPORTED);
+    cout << "OSG read formats:" << endl;
+    for (auto s : suffixList) cout << " " << s;
+    cout << endl;
+
+    h->getSuffixList(suffixList, SceneFileType::OSG_WRITE_SUPPORTED);
+    cout << "OSG write formats:" << endl;
+    for (auto s : suffixList) cout << " " << s;
+    cout << endl;
+}
+
+void testGLCapabilities() {
+    cout << "Check OpenGL capabilities:" << endl;
+    cout << " OpenGL vendor: " << VRRenderManager::getGLVendor() << endl;
+    cout << " OpenGL version: " << VRRenderManager::getGLVersion() << endl;
+    cout << " GLSL version: " << VRRenderManager::getGLSLVersion() << endl;
+    cout << " has geometry shader: " << VRRenderManager::hasGeomShader() << endl;
+    cout << " has tesselation shader: " << VRRenderManager::hasTessShader() << endl;
+}
+
 void PolyVR::init(int argc, char **argv) {
     cout << "Init PolyVR" << endl << endl;
     initTime();
@@ -406,16 +457,6 @@ void PolyVR::init(int argc, char **argv) {
     options->parse(argc,argv);
     checkProcessesAndSockets();
 
-    //GLUT
-    cout << " init GLUT";
-    glutInit(&argc, argv);
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_STENCIL_TEST);
-    if (VROptions::get()->getOption<bool>("active_stereo"))
-        glutInitDisplayMode(GLUT_RGBA | GLUT_DEPTH | GLUT_DOUBLE | GLUT_STEREO | GLUT_STENCIL | GLUT_MULTISAMPLE);
-    else glutInitDisplayMode(GLUT_RGBA | GLUT_DEPTH | GLUT_DOUBLE | GLUT_STENCIL | GLUT_MULTISAMPLE);
-    cout << " ..done " << endl;
-
     //OSG
     cout << " init OSG" << endl;
     ChangeList::setReadWriteDefault();
@@ -423,6 +464,8 @@ void PolyVR::init(int argc, char **argv) {
     OSG::preloadSharedObject("OSGImageFileIO");
     osgInit(argc,argv);
     cout << "  ..done" << endl << endl;
+
+    printOSGImportCapabilities();
 
 #ifndef WITHOUT_SHARED_MEMORY
     try {
@@ -459,6 +502,8 @@ void PolyVR::init(int argc, char **argv) {
     //string app = options->getOption<string>("application");
     //if (app != "") VRSceneManager::get()->loadScene(app);
     removeFile("setup/.startup"); // remove startup failsafe
+
+    testGLCapabilities();
 }
 
 void PolyVR::update() {
@@ -483,7 +528,8 @@ void glutUpdate() {
 void PolyVR::run() {
     cout << endl << "Start main loop" << endl << endl;
 #ifndef WASM
-    while(true) update(); // default
+    doLoop = true;
+    while(doLoop) update(); // default
 #else
     // WASM needs to control the main loop
     glutIdleFunc(glutPostRedisplay);
@@ -530,17 +576,7 @@ char getch() {
 }
 #else
 TCHAR getch() {
-	DWORD mode, cc;
-	HANDLE h = GetStdHandle(STD_INPUT_HANDLE);
-	if (h == NULL) {
-		return 0; // console not found
-	}
-	GetConsoleMode(h, &mode);
-	SetConsoleMode(h, mode & ~(ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT));
-	TCHAR c = 0;
-	ReadConsole(h, &c, 1, &cc, NULL);
-	SetConsoleMode(h, mode);
-	return c;
+	return getchar();
 }
 #endif
 

@@ -24,8 +24,8 @@ class VRGuiTreeView : public VRGuiWidget {
         void init(_GtkWidget* widget);
 
     public:
-        VRGuiTreeView(string name, bool hasListStore = false);
-        VRGuiTreeView(_GtkWidget* widget, bool hasListStore = false);
+        VRGuiTreeView(string name);
+        VRGuiTreeView(_GtkWidget* widget);
         ~VRGuiTreeView();
 
         bool hasSelection();

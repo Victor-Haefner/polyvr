@@ -4,7 +4,7 @@
 #ifndef WITHOUT_MTOUCH
 #include "VRPyMultiTouch.h"
 #endif
-#ifndef WITHOUT_BULLET
+#ifndef WITHOUT_VIRTUOSE
 #include "VRPyHaptic.h"
 #endif
 #include "addons/LeapMotion/VRPyLeap.h"
@@ -74,7 +74,7 @@ PyObject* VRPyDevice::fromSharedPtr(VRDevicePtr dev) {
 #endif
     else if (type == "leap") return VRPyLeap::fromSharedPtr( static_pointer_cast<VRLeap>(dev) );
     else if (type == "server") return VRPyServer::fromSharedPtr( static_pointer_cast<VRServer>(dev) );
-#ifndef WITHOUT_BULLET
+#ifndef WITHOUT_VIRTUOSE
     else if (type == "haptic") return VRPyHaptic::fromSharedPtr( static_pointer_cast<VRHaptic>(dev) );
 #endif
     else if (type == "keyboard") return VRPyBaseT<VRDevice>::fromSharedPtr( dev );

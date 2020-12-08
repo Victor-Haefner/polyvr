@@ -55,7 +55,7 @@ class VRThreadManager {
 
     public:
         VRThreadManager();
-        ~VRThreadManager();
+        virtual ~VRThreadManager();
 
         int initThread(VRThreadCbPtr f, string name, bool loop = false, int aspect = 0);
         VRThreadPtr getThread(int id);

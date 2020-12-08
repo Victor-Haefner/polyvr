@@ -1,5 +1,7 @@
 #include "CarDynamics.h"
+#ifndef WITHOUT_AV
 #include "CarSound/CarSound.h"
+#endif
 #include "core/scene/VRScene.h"
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/geometry/VRPhysics.h"
@@ -89,7 +91,9 @@ VRCarDynamics::VRCarDynamics(string name) : VRObject(name) {
 
     setPersistency(0);
 	initPhysics();
+#ifndef WITHOUT_AV
 	carSound = VRCarSound::create();
+#endif
 
     store("type", &type);
     storeObj("engine", engine);
@@ -421,7 +425,9 @@ void VRCarDynamics::updateEngine() {
     }
 
     updateSpeedAndAcceleration();
+#ifndef WITHOUT_AV
     carSound->play(engine->rpm);
+#endif
 
 	//auto D1 = timer.stop("D1");
 	//if (D1 > 3) cout << "   TTT " << D1 << endl;

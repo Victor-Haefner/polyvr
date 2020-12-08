@@ -691,6 +691,8 @@ PyMethodDef VRPyDatarow::methods[] = {
     {"append", PyWrap2( Datarow, append, "Add value", void, double ) },
     {"set", PyWrap2( Datarow, set, "Set ith value", void, double, int ) },
     {"get", PyWrap2( Datarow, get, "Get ith value", double, int ) },
+    {"asList", PyWrap2( Datarow, getDataCpy, "Get as list", vector<double> ) },
+    {"fromList", PyWrap2( Datarow, setData, "Set from list", void, vector<double>& ) },
     {"length", PyWrap2( Datarow, length, "Get data size", size_t ) },
     {"resize", PyWrap2( Datarow, resize, "Resize data with value", void, int, double ) },
     {"add", PyWrap2( Datarow, add, "Add all elements of other datarow", void, DatarowPtr ) },

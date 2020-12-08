@@ -19,6 +19,8 @@ class VRGuiGeneral {
         void setExtension();
         void setPath();
         void setMode();
+        void openBGpath();
+        void on_bg_path_choose();
 
         // rendering signals
         void toggleFrustumCulling();
@@ -37,6 +39,7 @@ class VRGuiGeneral {
         bool setSSAOnoise( int st, double d );
 
         // other
+        void on_tfps_changed();
         void dumpOSG();
 
     public:

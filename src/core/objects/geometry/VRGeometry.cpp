@@ -12,6 +12,7 @@
 #include <OpenSG/OSGTypedGeoIntegralProperty.h>
 #include <OpenSG/OSGTypedGeoVectorProperty.h>
 #include <OpenSG/OSGSceneFileHandler.h>
+#include <OpenSG/OSGNameAttachment.h>
 
 #include <OpenSG/OSGTriangleIterator.h>
 #include "core/scene/import/VRImport.h"
@@ -245,7 +246,10 @@ void VRGeometry::setMesh(OSGGeometryPtr geo, Reference ref, bool keep_material) 
 }
 
 void VRGeometry::setMesh(OSGGeometryPtr g) {
-    if (!g) g = OSGGeometry::create( Geometry::create() );
+    if (!g) {
+        g = OSGGeometry::create( Geometry::create() );
+        OSG::setName(g->geo, getName()+"_newMesh");
+    }
     Reference ref;
     ref.type = CODE;
     setMesh(g, ref);
@@ -275,6 +279,7 @@ void VRGeometry::create(int type, vector<Vec3d> pos, vector<Vec3d> norms, vector
     bool doTex = (texs.size() == pos.size());
 
     GeoUInt8PropertyMTRecPtr      Type = GeoUInt8Property::create();
+    OSG::setName(Type, "VRGeometry_simple_setup_geo_type");
     GeoUInt32PropertyMTRecPtr     Length = GeoUInt32Property::create();
     GeoPnt3fPropertyMTRecPtr      Pos = GeoPnt3fProperty::create();
     GeoVec3fPropertyMTRecPtr      Norms = GeoVec3fProperty::create();
@@ -288,13 +293,13 @@ void VRGeometry::create(int type, vector<Vec3d> pos, vector<Vec3d> norms, vector
     Length->addValue(inds.size());
 
     //positionen und Normalen
-    for(unsigned int i=0;i<pos.size();i++) {
+    for (unsigned int i=0;i<pos.size();i++) {
             Pos->addValue(pos[i]);
             Norms->addValue(norms[i]);
             if (doTex) Tex->addValue(texs[i]);
     }
 
-    for(unsigned int i=0;i<inds.size();i++) {
+    for (unsigned int i=0;i<inds.size();i++) {
             Indices->addValue(inds[i]);
     }
 
@@ -303,6 +308,7 @@ void VRGeometry::create(int type, vector<Vec3d> pos, vector<Vec3d> norms, vector
     Mat->setSpecular(Color3f(0.1, 0.1, 0.1));
 
     GeometryMTRecPtr geo = Geometry::create();
+    OSG::setName(geo, "simpleMesh");
     geo->setTypes(Type);
     geo->setLengths(Length);
     geo->setIndices(Indices);
@@ -328,6 +334,7 @@ void VRGeometry::setPositions(GeoVectorProperty* Pos) {
     if (!meshSet) setMesh();
     //if (Pos->size() == 1) Pos->addValue(Pnt3d()); // hack to avoid the single point bug
     mesh->geo->setPositions(Pos);
+    mesh->geo->addAttachment(Pos, 0);
     meshChanged();
 }
 
@@ -340,6 +347,7 @@ void VRGeometry::setColor(string c) {
 void VRGeometry::setType(int t) {
     if (!meshSet) setMesh();
     GeoUInt8PropertyMTRecPtr Type = GeoUInt8Property::create();
+    OSG::setName(Type, "VRGeometry_setType_type");
     Type->addValue(t);
     setTypes(Type);
 }
@@ -482,8 +490,8 @@ void VRGeometry::flipNormals() {
 
 int VRGeometry::getLastMeshChange() { return lastMeshChange; }
 
-void VRGeometry::setTypes(GeoIntegralProperty* types) { if (!meshSet) setMesh(); mesh->geo->setTypes(types); }
-void VRGeometry::setNormals(GeoVectorProperty* Norms) { if (!meshSet) setMesh(); mesh->geo->setNormals(Norms); }
+void VRGeometry::setTypes(GeoIntegralProperty* types) { if (!meshSet) setMesh(); mesh->geo->setTypes(types); mesh->geo->addAttachment(types, 1); }
+void VRGeometry::setNormals(GeoVectorProperty* Norms) { if (!meshSet) setMesh(); mesh->geo->setNormals(Norms); mesh->geo->addAttachment(Norms, 2); }
 
 void VRGeometry::fixColorMapping() {
     mesh->geo->setIndex(mesh->geo->getIndex(Geometry::PositionsIndex), Geometry::ColorsIndex);
@@ -492,6 +500,7 @@ void VRGeometry::fixColorMapping() {
 void VRGeometry::setColors(GeoVectorProperty* Colors, bool fixMapping) {
     if (!meshSet) setMesh();
     mesh->geo->setColors(Colors);
+    mesh->geo->addAttachment(Colors, 3);
     if (Colors && mesh->geo->getPositions()) {
         auto N1 = mesh->geo->getPositions()->size();
         auto N2 = Colors->size();
@@ -561,7 +570,7 @@ void VRGeometry::remColors(bool copyGeometry) {
     //checkGeo(mesh->geo);
 }
 
-void VRGeometry::setLengths(GeoIntegralProperty* lengths) { if (!meshSet) setMesh(); mesh->geo->setLengths(lengths); }
+void VRGeometry::setLengths(GeoIntegralProperty* lengths) { if (!meshSet) setMesh(); mesh->geo->setLengths(lengths); mesh->geo->addAttachment(lengths, 4); }
 void VRGeometry::setTexCoords(GeoVectorProperty* Tex, int i, bool fixMapping) {
     if (!meshSet) setMesh();
     if (i == 0) mesh->geo->setTexCoords(Tex);
@@ -573,6 +582,7 @@ void VRGeometry::setTexCoords(GeoVectorProperty* Tex, int i, bool fixMapping) {
     if (i == 6) mesh->geo->setTexCoords6(Tex);
     if (i == 7) mesh->geo->setTexCoords7(Tex);
     if (fixMapping) mesh->geo->setIndex(mesh->geo->getIndex(Geometry::PositionsIndex), Geometry::TexCoordsIndex);
+    mesh->geo->addAttachment(Tex, 5*10+i);
 }
 
 void VRGeometry::setPositionalTexCoords(float scale, int i, Vec3i format) {
@@ -606,9 +616,10 @@ void VRGeometry::setIndices(GeoIntegralProperty* Indices, bool doLengths) {
     if (!mesh->geo->getLengths() || doLengths) {
         GeoUInt32PropertyMTRecPtr Length = GeoUInt32Property::create();
         Length->addValue(Indices->size());
-        mesh->geo->setLengths(Length);
+        setLengths(Length);
     }
     mesh->geo->setIndices(Indices);
+    mesh->geo->addAttachment(Indices, 6);
 }
 
 int VRGeometry::size() {
@@ -991,21 +1002,11 @@ void VRGeometry::setMaterial(VRMaterialPtr mat) {
 
     if (auto m = mesh->geo->getMaterial()) mesh->geo->subAttachment(m);
     mesh->geo->setMaterial(mat->getMaterial()->mat);
-    mesh->geo->addAttachment(mat->getMaterial()->mat);
+    mesh->geo->addAttachment(mat->getMaterial()->mat, 9);
 #ifdef WASM
     mat->updateOGL2Shader();
 #endif
 }
-
-/*void VRGeometry::setMaterial(MaterialMTRecPtr mat) {
-    if (!meshSet) return;
-    if (mat == 0) return;
-
-    if (this->mat == 0) this->mat = VRMaterial::create("mat");
-    this->mat->setMaterial(mat);
-
-    setMaterial(this->mat);
-}*/
 
 VRMaterialPtr VRGeometry::getMaterial() { return mat; }
 

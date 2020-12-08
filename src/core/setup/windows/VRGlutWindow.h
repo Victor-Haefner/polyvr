@@ -20,6 +20,10 @@ class VRGlutWindow : public VRWindow {
         static VRGlutWindowPtr create();
         VRGlutWindowPtr ptr();
 
+        static void initGlut();
+
+        void render(bool fromThread = false);
+
         void save(XMLElementPtr node);
         void load(XMLElementPtr node);
 

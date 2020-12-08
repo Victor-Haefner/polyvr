@@ -24,6 +24,8 @@ class VRSceneManager : public VRThreadManager, public VRCallbackManager, public 
         VRSignalPtr on_scene_close = 0;
         VRThreadCbPtr sceneUpdateCb;
 
+        double targetFPS = 60.0;
+
         void searchExercisesAndFavorites();
 
     public:
@@ -32,8 +34,6 @@ class VRSceneManager : public VRThreadManager, public VRCallbackManager, public 
 
         static VRSceneManagerPtr create();
         static VRSceneManager* get();
-
-
 
         void setScene(VRScenePtr s);
         void newEmptyScene(string name);
@@ -59,6 +59,8 @@ class VRSceneManager : public VRThreadManager, public VRCallbackManager, public 
         void updateSceneThread(VRThreadWeakPtr tw);
         void updateScene();
         void update();
+
+        void setTargetFPS(double fps);
 };
 
 OSG_END_NAMESPACE;

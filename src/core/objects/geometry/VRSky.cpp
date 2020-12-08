@@ -315,7 +315,7 @@ string VRSky::skyVP =
 "#version 400 compatibility\n"
 #endif
 GLSL(
-#ifdef __EMSCRIPTEN__
+\n#ifdef __EMSCRIPTEN__\n
 varying vec3 norm;
 varying vec4 pos;
 varying vec2 tcs;
@@ -325,7 +325,7 @@ attribute vec4 osg_Vertex;
 attribute vec3 osg_Normal;
 attribute vec2 osg_MultiTexCoord0;
 uniform mat4 extInvMat;
-#else
+\n#else\n
 out vec3 norm;
 out vec4 pos;
 out vec2 tcs;
@@ -334,18 +334,18 @@ out mat4 mFragInv;
 in vec4 osg_Vertex;
 in vec3 osg_Normal;
 in vec2 osg_MultiTexCoord0;
-#endif
+\n#endif\n
 
 uniform int c1; // test input
 
 void main() {
-#ifdef __EMSCRIPTEN__
+\n#ifdef __EMSCRIPTEN__\n
 	mFragInv = extInvMat;
-#else
+\n#else\n
 	mFragInv = gl_ModelViewProjectionMatrix;
 	mFragInv[3] = vec4(0,0,0,mFragInv[3][3]);
 	mFragInv = inverse(mFragInv);
-#endif
+\n#endif\n
 
 	pos = osg_Vertex * 0.5;
 	pos.z = 0.5; // try to fix stereo
@@ -362,21 +362,21 @@ string VRSky::skyFP =
 "#extension GL_EXT_frag_depth : enable\n"
 #endif
 GLSL(
-#ifdef __EMSCRIPTEN__
+\n#ifdef __EMSCRIPTEN__\n
 precision mediump float;
-#endif
+\n#endif\n
 
-#ifndef __EMSCRIPTEN__
+\n#ifndef __EMSCRIPTEN__\n
 in vec3 norm;
 in vec4 pos;
 in vec2 tcs;
 in mat4 mFragInv;
-#else
+\n#else\n
 varying vec3 norm;
 varying vec4 pos;
 varying vec2 tcs;
 varying mat4 mFragInv;
-#endif
+\n#endif\n
 
 vec3 fragDir;
 vec4 color;
@@ -498,13 +498,13 @@ float computeCloudLuminance() {\n
 
 void addCloudLayer(float height, vec2 offset, float density, float luminance) {\n
 	vec2 uv = cloudScale * sphereIntersect(height) + offset;
-#ifdef __EMSCRIPTEN__
+\n#ifdef __EMSCRIPTEN__\n
 	float cloud = texture2D(tex, uv).x;
 	float noise = 0.9 + 0.1*texture2D(tex, uv * 4.0).x;
-#else
+\n#else\n
 	float cloud = texture(tex, uv).x;
 	float noise = 0.9 + 0.1*texture(tex, uv * 4.0).x;
-#endif
+\n#endif\n
 
 	cloud = smoothstep(0.0, 1.0, (1.0 - density) * cloud);
 	vec3 c = mix(cloudColor.xyz, color.xyz, 1.0 - luminance);
@@ -580,11 +580,11 @@ void main() {\n
 	addGround();
 
 	gl_FragColor = color;
-#ifdef __EMSCRIPTEN__
+\n#ifdef __EMSCRIPTEN__\n
 	gl_FragDepthEXT = 1.0; // depth is infinite at 1.0? behind all else (check)
-#else
+\n#else\n
 	gl_FragDepth = 1.0; // depth is infinite at 1.0? behind all else (check)
-#endif
+\n#endif\n
 
 	// vertical line for testing
 	//if (real_fragDir.x < 0.01 && real_fragDir.x > 0) gl_FragColor = vec4(0,0,0,1);

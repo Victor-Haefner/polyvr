@@ -4,7 +4,9 @@
 #include "core/scripting/VRPyBase.h"
 #include "core/objects/object/VRObject.h"
 #include "CarDynamics.h"
+#ifndef WITHOUT_AV
 #include "CarSound/CarSound.h"
+#endif
 #include "VRDriver.h"
 
 struct VRPyCarDynamics : VRPyBaseT<OSG::VRCarDynamics> {
@@ -40,9 +42,11 @@ struct VRPyCarDynamics : VRPyBaseT<OSG::VRCarDynamics> {
     static PyObject* setType(VRPyCarDynamics* self, PyObject* args);
 };
 
+#ifndef WITHOUT_AV
 struct VRPyCarSound : VRPyBaseT<OSG::VRCarSound> {
     static PyMethodDef methods[];
 };
+#endif
 
 struct VRPyDriver : VRPyBaseT<OSG::VRDriver> {
     static PyMethodDef methods[];

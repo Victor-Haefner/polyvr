@@ -277,7 +277,10 @@ void VRObject::disableCore() { osg->node->setCore( Group::create() ); }
 void VRObject::enableCore() { osg->node->setCore( core->core ); }
 
 void VRObject::wrapOSG(OSGObjectPtr node) {
+    if (!node || !getNode()) return;
+    if (!node->node) return;
     getNode()->node = node->node;
+    if (!core || !node->node->getCore()) return;
     core->core = node->node->getCore();
 }
 
@@ -335,7 +338,7 @@ void VRObject::switchParent(VRObjectPtr new_p, int place) {
     //cout << "VRObject::switchParent of: " << getName() << "  new parent: " << new_p->getName() << " destroyed? " << destroyed << endl;
     if (destroyed) { cout << "VRObject::switchParent ERROR: object is marked as destroyed!" << endl; return; }
     if (new_p == ptr()) return;
-    if (new_p == 0) { cout << "VRObject::switchParent ERROR: new parent is 0!" << endl; return; }
+    if (new_p == 0) { getParent()->subChild(ptr(), true); return; }
 
     if (getParent() == 0) { new_p->addChild(ptr(), true, place); return; }
     if (getParent() == new_p && place == childIndex) { return; }

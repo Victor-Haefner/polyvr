@@ -1,17 +1,20 @@
-#include "VRMolecule.h"
 #include "VRAtom.h"
+#include "VRMolecule.h"
 #include "VRMoleculeMat.h"
 
 #include "core/objects/material/VRMaterial.h"
+#include "core/objects/material/OSGMaterial.h"
 #include "core/objects/VRTransform.h"
 #include "core/objects/geometry/VRGeoData.h"
+#include "core/objects/geometry/OSGGeometry.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRGlobals.h"
 #include "core/utils/system/VRSystem.h"
-#include "addons/Engineering/VRNumberingEngine.h"
+#include "core/tools/VRAnnotationEngine.h"
 
 #include <OpenSG/OSGGeoProperties.h>
 #include <OpenSG/OSGQuaternion.h>
+#include <OpenSG/OSGMaterial.h>
 
 using namespace OSG;
 
@@ -25,17 +28,18 @@ VRMolecule::VRMolecule(string name) : VRGeometry(name) {
     bonds_geo = VRGeometry::create("bonds");
     coords_geo = VRGeometry::create("coords");
 
-    labels = VRNumberingEngine::create();
+    // TODO: not working with syncnodes
+    /*labels = VRAnnotationEngine::create();
     labels->setBillboard(true);
-    labels->setOnTop(false);
-    labels->setSize(0.1);
+    //labels->setOnTop(false);
+    labels->setSize(0.1);*/
 }
 
 VRMoleculePtr VRMolecule::create(string name) {
     auto ptr = VRMoleculePtr(new VRMolecule(name) );
-    ptr->addChild(ptr->bonds_geo);
-    ptr->addChild(ptr->coords_geo);
-    ptr->addChild(ptr->labels);
+    if (ptr->bonds_geo) ptr->addChild(ptr->bonds_geo);
+    if (ptr->coords_geo) ptr->addChild(ptr->coords_geo);
+    if (ptr->labels) ptr->addChild(ptr->labels);
     return ptr;
 }
 
@@ -69,7 +73,7 @@ void VRMolecule::connectAtom(int ID, int t) {
     if (atoms.count(ID) == 0) return;
     VRAtom* at = atoms[ID];
     if (at->full) return;
-    connectAtom(at, t, true);
+    connectAtom(at, t, false);
 }
 
 void VRMolecule::remAtom(int ID) {
@@ -111,10 +115,11 @@ void VRMolecule::updateGeo() {
     }
 
     atomsData.apply(ptr());
-    bondsData.apply(bonds_geo);
+    if (bonds_geo) bondsData.apply(bonds_geo);
 
     material = VRMoleculeMat::create();
     material->apply(ptr(), bonds_geo);
+    coords_geo->setMaterial(material->getCoordsMaterial()); // avoids sync warning
 
     updateLabels();
     updateCoords();
@@ -382,6 +387,7 @@ void VRMolecule::showLabels(bool b) { if (doLabels == b) return; doLabels = b; u
 void VRMolecule::showCoords(bool b) { if (doCoords == b) return; doCoords = b; updateCoords(); }
 
 void VRMolecule::updateCoords() {
+    if (!coords_geo) return;
     coords_geo->hide();
     if (!doCoords) return;
 
@@ -427,15 +433,17 @@ void VRMolecule::updateCoords() {
 }
 
 void VRMolecule::updateLabels() {
+    if (!labels) return;
     labels->clear();
     if (!doLabels) return;
 
-    labels->add(Vec3d(), atoms.size(), 0, 0);
+    //labels->add(Vec3d(), atoms.size(), 0, 0);
+    labels->add(Vec3d(), toString(atoms.size()));
 
     int i=0;
     for (auto a : atoms) {
         Vec3d p = Vec3d(a.second->getTransformation()[3]);
-        labels->set(i++, p, a.first);
+        labels->set(i++, p, toString(a.first));
     }
 }
 

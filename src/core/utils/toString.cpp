@@ -49,10 +49,13 @@ template<> string toString(const short& i) { stringstream ss; ss << i; return ss
 template<> string toString(const unsigned short& i) { stringstream ss; ss << i; return ss.str(); }
 template<> string toString(const int& i) { stringstream ss; ss << i; return ss.str(); }
 template<> string toString(const long& i) { stringstream ss; ss << i; return ss.str(); }
+template<> string toString(const unsigned long& i) { stringstream ss; ss << i; return ss.str(); } // sometimes same as size_t ?
 template<> string toString(const signed char& i) { stringstream ss; ss << i; return ss.str(); }
 template<> string toString(const unsigned char& i) { stringstream ss; ss << int(i); return ss.str(); }
 template<> string toString(const voidPtr& i) { stringstream ss; ss << i; return ss.str(); }
+#ifdef _WIN32
 template<> string toString(const size_t& i) { stringstream ss; ss << i; return ss.str(); }
+#endif
 template<> string toString(const unsigned int& i) { stringstream ss; ss << long(i); return ss.str(); }
 
 #ifdef _WIN32
@@ -320,6 +323,7 @@ template<> int toValue(stringstream& ss, Pose& po) {
 }
 
 template<> int toValue(stringstream& ss, PosePtr& po) {
+    if (ss.str() == "0") return true;
     Vec3d p,d,u;
     toValue(ss, p);
     toValue(ss, d);

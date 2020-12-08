@@ -27,7 +27,7 @@ class VRMolecule : public VRGeometry {
 
         VRGeometryPtr bonds_geo = 0;
         VRGeometryPtr coords_geo = 0;
-        VRNumberingEnginePtr labels = 0;
+        VRAnnotationEnginePtr labels = 0;
         bool doLabels = false;
         bool doCoords = false;
         VRMoleculeMatPtr material;

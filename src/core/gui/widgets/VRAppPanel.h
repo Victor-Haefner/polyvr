@@ -6,7 +6,7 @@
 #include "core/utils/VRName.h"
 
 class VRGuiContextMenu;
-struct _GtkTable;
+struct _GtkWidget;
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -17,16 +17,16 @@ ptrFwd(VRAppManager);
 
 class VRAppPanel : public std::enable_shared_from_this<VRAppPanel>, public VRName {
     private:
-        _GtkTable* table = 0;
+        _GtkWidget* table = 0;
         map<string, VRAppLauncherPtr> apps;
 
     public:
-        VRAppPanel(string name, _GtkTable* table);
+        VRAppPanel(string name, _GtkWidget* table);
         ~VRAppPanel();
-        static VRAppPanelPtr create(string name, _GtkTable* table);
+        static VRAppPanelPtr create(string name, _GtkWidget* table);
         VRAppPanelPtr ptr();
 
-        _GtkTable* getTable();
+        _GtkWidget* getTable();
 
         VRAppLauncherPtr addLauncher(string path, string timestamp, VRGuiContextMenu* menu, VRAppManager* mgr, bool write_protected, bool favorite, string table);
         void remLauncher(string path);

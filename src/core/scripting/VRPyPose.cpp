@@ -43,6 +43,7 @@ PyMethodDef VRPyPose::methods[] = {
     {"multLeft", PyWrap2(Pose, multLeft, "Transform back a vector", PosePtr, PosePtr ) },
     {"multRight", PyWrap2(Pose, multRight, "Transform back a vector", PosePtr, PosePtr ) },
     {"invert", PyWrap2(Pose, invert, "Invert pose", void ) },
+    {"toString", PyWrap2(Pose, toString, "As string", string ) },
     {NULL}
 };
 

@@ -11,7 +11,8 @@
 
 struct _GtkNotebook;
 struct _GtkToggleToolButton;
-struct _GtkNotebookPage;
+struct _GtkWidget;
+struct _GdkEventKey;
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -43,9 +44,8 @@ class VRGuiBits {
         void on_about_clicked();
         void on_internal_clicked();
 
-        void on_new_cancel_clicked();
         void on_internal_close_clicked();
-        void on_console_switch(_GtkNotebookPage* page, unsigned int page_num);
+        void on_console_switch(_GtkWidget* page, unsigned int page_num);
 
     public:
         VRGuiBits();
@@ -56,9 +56,10 @@ class VRGuiBits {
         void update_terminals();
 
         void toggleDock();
-        bool toggleFullscreen(GdkEventKey* k);
-        bool toggleWidgets(GdkEventKey* k);
-        bool toggleStereo(GdkEventKey* k);
+        void toggleFullscreen();
+        void toggleWidgets();
+        void toggleStereo();
+        bool pressFKey(_GdkEventKey* k);
 
         void update();
         void wipeConsoles();

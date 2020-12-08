@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
 
+ This file is part of GtkSourceView
+
  Author: Andrew Johnson <acjgenius@earthlink.net>
  Copyright (C) 2004 Andrew Johnson <acjgenius@earthlink.net>
  Copyright (C) 2005 Thierry Moisan <thierryn@videotron.ca>
@@ -40,19 +42,19 @@
 
   <definitions>
 
-    <context id="string" style-ref="string">
+    <context id="string" style-ref="string" class="string" class-disabled="no-spell-check">
       <start>[uUrR]?'</start>
       <end>'</end>
     </context>
 
-    <context id="line-comment" style-ref="comment" end-at-line-end="true">
+    <context id="line-comment" style-ref="comment" end-at-line-end="true" class="comment" class-disabled="no-spell-check">
       <start>//</start>
       <include>
         <context ref="def:in-comment"/>
       </include>
     </context>
 
-    <context id="block-comment-1" style-ref="comment">
+    <context id="block-comment-1" style-ref="comment" class="comment" class-disabled="no-spell-check">
       <start>\(\*</start>
       <end>\*\)</end>
       <include>
@@ -60,7 +62,7 @@
       </include>
     </context>
 
-    <context id="block-comment-2" style-ref="comment">
+    <context id="block-comment-2" style-ref="comment" class="comment" class-disabled="no-spell-check">
       <start>\{</start>
       <end>\}</end>
       <include>
@@ -101,11 +103,14 @@
       <keyword>else</keyword>
       <keyword>is</keyword>
       <keyword>and</keyword>
+      <keyword>and_then</keyword>
       <keyword>not</keyword>
       <keyword>or</keyword>
+      <keyword>or_else</keyword>
       <keyword>xor</keyword>
       <keyword>shr</keyword>
       <keyword>shl</keyword>
+      <keyword>otherwise</keyword>
     </context>
 
     <context id="math-operators" style-ref="keyword">
@@ -128,6 +133,8 @@
       <keyword>except</keyword>
       <keyword>finally</keyword>
       <keyword>raise</keyword>
+      <keyword>downto</keyword>
+      <keyword>in</keyword>
     </context>
 
     <context id="type-class-and-object-keywords" style-ref="keyword">
@@ -156,6 +163,30 @@
       <keyword>As</keyword>
       <keyword>self</keyword>
       <keyword>Inherited</keyword>
+      <keyword>Forward</keyword>
+      <keyword>Implements</keyword>
+      <keyword>varargs</keyword>
+      <keyword>far</keyword>
+      <keyword>near</keyword>
+      <keyword>absolute</keyword>
+      <keyword>all</keyword>
+      <keyword>asm</keyword>
+      <keyword>attribute</keyword>
+      <keyword>bindable</keyword>
+      <keyword>export</keyword>
+      <keyword>exports</keyword>
+      <keyword>external</keyword>
+      <keyword>file</keyword>
+      <keyword>goto</keyword>
+      <keyword>import</keyword>
+      <keyword>interrupt</keyword>
+      <keyword>published</keyword>
+      <keyword>qualified</keyword>
+      <keyword>resident</keyword>
+      <keyword>restricted</keyword>
+      <keyword>segment</keyword>
+      <keyword>set</keyword>
+      <keyword>value</keyword>
     </context>
 
     <context id="builtin-types" style-ref="type">
@@ -165,6 +196,8 @@
       <keyword>Real</keyword>
       <keyword>Boolean</keyword>
       <keyword>Pointer</keyword>
+      <keyword>Byte</keyword>
+      <keyword>LongInt</keyword>
     </context>
 
     <context id="builtin-functions" style-ref="keyword">
@@ -185,6 +218,7 @@
       <keyword>odd</keyword>
       <keyword>eof</keyword>
       <keyword>eoln</keyword>
+      <keyword>pow</keyword>
     </context>
 
     <context id="builtin-values" style-ref="keyword">
@@ -209,7 +243,7 @@
       </match>
     </context>
 
-    <context id="pascal">
+    <context id="pascal" class="no-spell-check">
       <include>
         <context ref="string"/>
         <context ref="line-comment"/>

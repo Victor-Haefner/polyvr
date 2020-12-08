@@ -15,6 +15,7 @@ size_t Datarow::length() { return data.size(); }
 
 void Datarow::setData(vector<double>& d) { data = d; }
 vector<double>& Datarow::getData() { return data; }
+vector<double> Datarow::getDataCpy() { return data; }
 
 void Datarow::append(double d) { data.push_back(d); }
 void Datarow::resize(int N, double v) { data = vector<double>(N, v); }

@@ -8,13 +8,12 @@
 #include "core/utils/VRFunctionFwd.h"
 #include "core/scripting/VRScriptFwd.h"
 
-#include <gtk/gtktreemodel.h>
-
 struct _GtkSourceLanguage;
 struct _GtkTable;
 struct _GtkTreeView;
 struct _GtkListStore;
 struct _GdkEventKey;
+struct _GtkTreeIter;
 union _GdkEvent;
 
 OSG_BEGIN_NAMESPACE;
@@ -57,15 +56,15 @@ class VRGuiScripts {
         _GtkListStore* import_liststore1;
         _GtkListStore* import_liststore2;
         map<string, VRScriptPtr> import_scripts;
-        vector<pair<VRScriptWeakPtr, GtkTreeIter>> scriptRows;
+        vector<pair<VRScriptWeakPtr, _GtkTreeIter>> scriptRows;
 
         string docs_filter;
         map<int, group> groups;
 
         void initEditor();
         void printViewerLanguages();
-        void setGroupListRow(GtkTreeIter* itr, group& g);
-        void setScriptListRow(GtkTreeIter* itr, VRScriptPtr script, bool onlyTime = false);
+        void setGroupListRow(_GtkTreeIter* itr, group& g);
+        void setScriptListRow(_GtkTreeIter* itr, VRScriptPtr script, bool onlyTime = false);
 
         void on_new_clicked();
         void on_addSep_clicked();
@@ -85,14 +84,14 @@ class VRGuiScripts {
         void on_name_edited(const char* path, const char* new_name);
         void on_script_changed();
         bool on_any_key_event(_GdkEventKey*);
-        bool on_any_event(_GdkEvent*);
+        void on_any_event(_GdkEvent*);
 
         void on_select_trigger();
-        void on_trigger_edited(const char* new_name, GtkTreeIter* new_iter);
-        void on_trigdev_edited(const char* new_name, GtkTreeIter* new_iter);
+        void on_trigger_edited(const char* new_name, _GtkTreeIter* new_iter);
+        void on_trigdev_edited(const char* new_name, _GtkTreeIter* new_iter);
         void on_trigparam_edited(const char* path, const char* new_name);
         void on_trigkey_edited(const char* path, const char* new_name);
-        void on_trigstate_edited(const char* new_name, GtkTreeIter* new_iter);
+        void on_trigstate_edited(const char* new_name, _GtkTreeIter* new_iter);
         void on_trigadd_clicked();
         void on_trigrem_clicked();
 
@@ -107,7 +106,7 @@ class VRGuiScripts {
         void on_argrem_clicked();
         void on_argname_edited(const char* path, const char* new_name);
         void on_argval_edited(const char* path, const char* new_name);
-        void on_argtype_edited(const char* new_name, GtkTreeIter* new_iter);
+        void on_argtype_edited(const char* new_name, _GtkTreeIter* new_iter);
 
         void on_diag_import_select_1();
         void on_diag_import_select_2();

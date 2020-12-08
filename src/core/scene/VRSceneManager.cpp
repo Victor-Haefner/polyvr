@@ -60,7 +60,11 @@ VRSceneManager::~VRSceneManager() {
 }
 
 VRSceneManagerPtr VRSceneManager::create() { return VRSceneManagerPtr( new VRSceneManager()); }
-VRSceneManager* VRSceneManager::get() { return main_instance; }
+
+VRSceneManager* VRSceneManager::get() {
+    if (main_instance == 0) cout << " -- Warning! VRSceneManager::get called during shutdown!" << endl;
+    return main_instance;
+}
 
 void VRSceneManager::loadScene(string path, bool write_protected, string encryptionKey) {
     if (!exists(path)) { cout << "VRSceneManager, loadScene: " << path << " not found" << endl; return; }
@@ -172,9 +176,11 @@ VRSignalPtr VRSceneManager::getSignal_on_scene_load() { return on_scene_load; }
 VRSignalPtr VRSceneManager::getSignal_on_scene_close() { return on_scene_close; }
 
 void VRSceneManager::setScene(VRScenePtr scene) {
+	cout << "VRSceneManager::setScene " << scene << endl;
     if (!scene) return;
     current = scene;
-    VRSetup::getCurrent()->setScene(scene);
+    auto setup = VRSetup::getCurrent();
+    if (setup) setup->setScene(scene);
     scene->setActiveCamera();
     VRProfiler::get()->setActive(true);
 
@@ -183,6 +189,7 @@ void VRSceneManager::setScene(VRScenePtr scene) {
 #ifndef WITHOUT_GTK
     VRGuiSignals::get()->getSignal("scene_changed")->triggerPtr<VRDevice>(); // update gui
 #endif
+	cout << " VRSceneManager::setScene done" << endl;
 }
 
 void VRSceneManager::storeFavorites() {
@@ -251,9 +258,11 @@ void VRSceneManager::updateSceneThread(VRThreadWeakPtr tw) {
 
 void VRSceneManager::updateScene() {
     if (!current) return;
-    VRSetup::getCurrent()->updateActivatedSignals();
+    if (auto setup = VRSetup::getCurrent()) setup->updateActivatedSignals();
     current->update();
 }
+
+void VRSceneManager::setTargetFPS(double fps) { targetFPS = fps;  }
 
 void VRSceneManager::update() {
     // statistics
@@ -319,9 +328,7 @@ void VRSceneManager::update() {
     VRGlobals::FRAME_RATE.fps = fps;
     VRTimer t7; t7.start();
     int pID2 = profiler->regStart("frame sleep");
-    int T = max(16-timer.stop(),0);
-    if (T > 0) osgSleep(T);
-
+    doFrameSleep(timer.stop(), targetFPS);
     profiler->regStop(pID2);
     VRGlobals::SLEEP_FRAME_RATE.update(t7);
     VRGlobals::UPDATE_LOOP7.update(timer);

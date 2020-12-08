@@ -63,6 +63,17 @@ void VRSprite::updateGeo() {
         getMaterial()->setFrontBackModes(GL_FILL, GL_NONE);
     }
     data.apply(ptr());
+
+    if (usingShaders) { // update billboard data
+        GeoVec2fPropertyMTRecPtr tcs = GeoVec2fProperty::create();
+        GeoVectorPropertyMTRecPtr pos = getMesh()->geo->getPositions();
+        for (int i = 0; i < 4; i++) {
+            Pnt3f p = pos->getValue<Pnt3f>(i);
+            tcs->addValue(Vec2f(p[0], p[1]));
+            pos->setValue(Pnt3f(), i);
+        }
+        setTexCoords(tcs, 1);
+    }
 }
 
 VRTexturePtr VRSprite::setText(string l, float res, Color4f c1, Color4f c2, int ol, Color4f oc, string font) {
@@ -81,17 +92,22 @@ void VRSprite::webOpen(string path, int res, float ratio) {
     mat->setLit(false);
     web = CEF::create();
 
-    VRDevicePtr mouse = VRSetup::getCurrent()->getDevice("mouse");
-    VRDevicePtr keyboard = VRSetup::getCurrent()->getDevice("keyboard");
-    VRDevicePtr flystick = VRSetup::getCurrent()->getDevice("flystick");
-    VRDevicePtr multitouch = VRSetup::getCurrent()->getDevice("multitouch");
-
     web->setMaterial(mat);
     web->open(path);
-    if (mouse) web->addMouse(mouse, ptr(), 0, 2, 3, 4);
-    if (flystick) web->addMouse(flystick, ptr(), 0, -1, -1, -1);
-    if (multitouch) web->addMouse(multitouch, ptr(), 0, 2, 3, 4);
-    if (keyboard) web->addKeyboard(keyboard);
+
+    auto setup = VRSetup::getCurrent();
+    if (setup) {
+        VRDevicePtr mouse = setup->getDevice("mouse");
+        VRDevicePtr keyboard = setup->getDevice("keyboard");
+        VRDevicePtr flystick = setup->getDevice("flystick");
+        VRDevicePtr multitouch = setup->getDevice("multitouch");
+
+        if (mouse) web->addMouse(mouse, ptr(), 0, 2, 3, 4);
+        if (flystick) web->addMouse(flystick, ptr(), 0, -1, -1, -1);
+        if (multitouch) web->addMouse(multitouch, ptr(), 0, 2, 3, 4);
+        if (keyboard) web->addKeyboard(keyboard);
+    }
+
     web->setResolution(res);
     web->setAspectRatio(ratio);
     updateGeo();
@@ -199,48 +215,48 @@ uniform float doBillboard;
 uniform float doScreensize;
 uniform vec2 OSGViewportSize;
 
-#ifdef __EMSCRIPTEN__
+\n#ifdef __EMSCRIPTEN__\n
 uniform mat4 OSGModelViewProjectionMatrix;
 uniform mat4 OSGModelViewMatrix;
 uniform mat4 OSGProjectionMatrix;
-#endif
+\n#endif\n
 
 void main( void ) {
     if (doBillboard < 0.5) {
 		if (doScreensize < 0.5) {
 			vec4 v = osg_Vertex;
 			v.xy += osg_MultiTexCoord1.xy;
-#ifdef __EMSCRIPTEN__
+\n#ifdef __EMSCRIPTEN__\n
 			gl_Position = OSGModelViewProjectionMatrix * v;
-#else
+\n#else\n
 			gl_Position = gl_ModelViewProjectionMatrix * v;
-#endif
+\n#endif\n
 		} else {
 			vec4 v = osg_Vertex;
-#ifdef __EMSCRIPTEN__
+\n#ifdef __EMSCRIPTEN__\n
 			vec4 k = OSGModelViewProjectionMatrix * v;
-#else
+\n#else\n
 			vec4 k = gl_ModelViewProjectionMatrix * v;
-#endif
+\n#endif\n
 		    k.xyz = k.xyz/k.w;
 		    k.w = 1.0;
     		float a = OSGViewportSize.y/OSGViewportSize.x;
     		vec4 d = vec4(osg_MultiTexCoord1.x*a, osg_MultiTexCoord1.y,0,0);
-#ifdef __EMSCRIPTEN__
+\n#ifdef __EMSCRIPTEN__\n
 		    gl_Position = k + OSGModelViewProjectionMatrix * d * 0.1;
-#else
+\n#else\n
 		    gl_Position = k + gl_ModelViewProjectionMatrix * d * 0.1;
-#endif
+\n#endif\n
         }
     } else if (doBillboard < 1.5) {
         float a = OSGViewportSize.y/OSGViewportSize.x;
         vec4 d = vec4(osg_MultiTexCoord1.x*a, osg_MultiTexCoord1.y,0,0);
         vec4 v = osg_Vertex;
-#ifdef __EMSCRIPTEN__
+\n#ifdef __EMSCRIPTEN__\n
 		vec4 k = OSGModelViewProjectionMatrix * v;
-#else
+\n#else\n
 		vec4 k = gl_ModelViewProjectionMatrix * v;
-#endif
+\n#endif\n
 		if (doScreensize > 0.5) {
     		d *= 0.1;
 		    k.xyz = k.xyz/k.w;
@@ -254,25 +270,25 @@ void main( void ) {
         vec4 k;
 		if (doScreensize > 0.5) {
     		d *= 0.1;
-#ifdef __EMSCRIPTEN__
+\n#ifdef __EMSCRIPTEN__\n
 			k = OSGModelViewProjectionMatrix * v;
-#else
+\n#else\n
 			k = gl_ModelViewProjectionMatrix * v;
-#endif
+\n#endif\n
 		    k.xyz = k.xyz/k.w;
 		    k.w = 1.0;
-#ifdef __EMSCRIPTEN__
+\n#ifdef __EMSCRIPTEN__\n
 		    k += OSGModelViewProjectionMatrix * vec4(0, osg_MultiTexCoord1.y, 0, 0) * 0.1;
-#else
+\n#else\n
 		    k += gl_ModelViewProjectionMatrix * vec4(0, osg_MultiTexCoord1.y, 0, 0) * 0.1;
-#endif
+\n#endif\n
 		} else {
 			v.y += osg_MultiTexCoord1.y;
-#ifdef __EMSCRIPTEN__
+\n#ifdef __EMSCRIPTEN__\n
 			k = OSGModelViewProjectionMatrix * v;
-#else
+\n#else\n
 			k = gl_ModelViewProjectionMatrix * v;
-#endif
+\n#endif\n
 		}
     	gl_Position = k + d;
     }
@@ -283,9 +299,9 @@ void main( void ) {
 
 string VRSprite::spriteShaderFP =
 GLSL(
-#ifdef __EMSCRIPTEN__
+\n#ifdef __EMSCRIPTEN__\n
 precision mediump float;
-#endif
+\n#endif\n
 uniform sampler2D texture;
 
 varying vec2 texCoord;

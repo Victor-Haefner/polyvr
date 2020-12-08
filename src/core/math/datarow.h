@@ -23,6 +23,7 @@ class Datarow {
 
         void setData(vector<double>& data);
         vector<double>& getData();
+        vector<double> getDataCpy();
 
         void append(double d);
         void set(double d, int i);

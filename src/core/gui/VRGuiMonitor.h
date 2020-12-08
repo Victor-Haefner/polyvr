@@ -6,7 +6,7 @@
 
 #include "core/utils/VRProfiler.h"
 
-struct _GtkDrawingArea;
+struct _GtkWidget;
 struct _GdkEventExpose;
 struct _GdkEventButton;
 struct _cairo;
@@ -16,8 +16,8 @@ using namespace std;
 
 class VRGuiMonitor {
     private:
-        _GtkDrawingArea* da = 0;
-        _cairo* cr = 0;
+        _GtkWidget* darea = 0;
+        _cairo* context = 0;
 
         map<string, Vec3d> color_map;
         Vec3d getColor(string name);
@@ -33,7 +33,7 @@ class VRGuiMonitor {
         void draw_timeline(int N0, int N1, int DN, int w, int h, int h0, int selection);
         void draw_call(int x0, int y0, int w, int h, string name);
         void draw_text(string txt, int x, int y);
-        bool draw(_GdkEventExpose* e);
+        bool draw(_cairo* e);
 
         bool on_button(_GdkEventButton* e);
 

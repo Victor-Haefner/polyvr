@@ -1,5 +1,7 @@
+#include <gtk/gtk.h>
 #include "VRGuiScripts.h"
 #include "VRGuiUtils.h"
+#include "VRGuiBuilder.h"
 #include "VRGuiFile.h"
 #include "VRGuiBits.h"
 #include "VRGuiManager.h"
@@ -12,16 +14,7 @@
 #include "core/utils/xml.h"
 #include "wrapper/VRGuiTreeView.h"
 
-#include <gtk/gtktextview.h>
-#include <gtk/gtktreemodel.h>
-#include <gtk/gtktreestore.h>
-#include <gtk/gtkwindow.h>
-#include <gtk/gtkscrolledwindow.h>
-#include <gtk/gtkliststore.h>
-#include <gtk/gtkfilechooser.h>
-#include <gtk/gtktreeview.h>
-#include <gtk/gtktable.h>
-#include <gtk/gtkcellrenderertext.h>
+#include <iostream>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -43,11 +36,11 @@ VRScriptPtr VRGuiScripts::getSelectedScript() {
 }
 
 void VRGuiScripts::setGroupListRow(GtkTreeIter* itr, group& g) {
-    auto store = (GtkTreeStore*)getGUIBuilder()->get_object("script_tree");
+    auto store = (GtkTreeStore*)VRGuiBuilder::get()->get_object("script_tree");
     gtk_tree_store_set (store, itr,
                         0, g.name.c_str(),
                         1, "#FFFFFF",
-                        2, "#444444",
+                        2, "#666666",
                         3, "",
                         4, "#666666",
                         5, "#FFFFFF",
@@ -98,7 +91,7 @@ void VRGuiScripts::setScriptListRow(GtkTreeIter* itr, VRScriptPtr script, bool o
     else if (exec_time >= 0) time = toString( exec_time ) + " ms";
 
     auto getUserFocus = []() {
-        auto win1 = (GtkWindow*)getGUIBuilder()->get_widget("window1");
+        auto win1 = (GtkWindow*)VRGuiBuilder::get()->get_widget("window1");
         GtkWidget* wdg = gtk_window_get_focus(win1);
         if (!wdg) return "";
         auto wn = gtk_widget_get_name(wdg);
@@ -118,7 +111,7 @@ void VRGuiScripts::setScriptListRow(GtkTreeIter* itr, VRScriptPtr script, bool o
         Nfound = toString(Nf);
     }
 
-    auto store = (GtkTreeStore*)getGUIBuilder()->get_object("script_tree");
+    auto store = (GtkTreeStore*)VRGuiBuilder::get()->get_object("script_tree");
     if (onlyTime) gtk_tree_store_set (store, itr,
                         3, time.c_str(),
                         4, tfg.c_str(),
@@ -324,7 +317,7 @@ void VRGuiScripts::on_select_script() { // selected a script
     editor->setCore(script->getScript());
 
     // update arguments liststore
-    auto args = (GtkListStore*)getGUIBuilder()->get_object("liststore2");
+    auto args = (GtkListStore*)VRGuiBuilder::get()->get_object("liststore2");
     gtk_list_store_clear(args);
 
     GtkTreeIter row;
@@ -338,7 +331,7 @@ void VRGuiScripts::on_select_script() { // selected a script
     }
 
     // update trigger liststore
-    auto trigs = (GtkListStore*)getGUIBuilder()->get_object("triggers");
+    auto trigs = (GtkListStore*)VRGuiBuilder::get()->get_object("triggers");
     gtk_list_store_clear(trigs);
     for (auto t : script->getTriggers()) {
         string key = toString(t->key);
@@ -392,7 +385,7 @@ void VRGuiScripts::on_select_trigger() {
 
     //pixbuf pressed?
     string col_name = tree_view.getSelectedColumnName();
-    if (col_name != "") return;
+    if (col_name != " ") return;
 
     // get key
     string device = tree_view.getSelectedStringValue(1);
@@ -417,10 +410,8 @@ bool VRGuiScripts::on_any_key_event(GdkEventKey* event) {
     return true;
 }
 
-bool VRGuiScripts::on_any_event(GdkEvent* event) {
-    int t = event->type;
-    if (t == GDK_KEY_PRESS) return on_any_key_event((GdkEventKey*)event);
-    return false;
+void VRGuiScripts::on_any_event(GdkEvent* event) {
+    if (event->type == GDK_KEY_PRESS) on_any_key_event((GdkEventKey*)event);
 }
 
 void VRGuiScripts::on_name_edited(const char* path, const char* new_name) {
@@ -545,7 +536,7 @@ void VRGuiScripts::on_argtype_edited(const char* new_name, GtkTreeIter* new_iter
     if (!tree_view.hasSelection()) return;
 
     // set the cell with new type
-    auto combo_list = (GtkListStore*)getGUIBuilder()->get_object("arg_types");
+    auto combo_list = (GtkListStore*)VRGuiBuilder::get()->get_object("arg_types");
     gchar *t;
     gtk_tree_model_get((GtkTreeModel*)combo_list, (GtkTreeIter*)new_iter, 0, &t, -1);
     string type = string(t);
@@ -564,9 +555,10 @@ void VRGuiScripts::on_trigger_edited(const char* new_name, GtkTreeIter* new_iter
     if (!tree_view.hasSelection()) return;
 
     // set the cell with new type
-    auto combo_list = (GtkListStore*)getGUIBuilder()->get_object("ScriptTrigger");
-    gchar *t;
+    auto combo_list = (GtkListStore*)VRGuiBuilder::get()->get_object("ScriptTrigger");
+    gchar* t = 0;
     gtk_tree_model_get((GtkTreeModel*)combo_list, (GtkTreeIter*)new_iter, 0, &t, -1);
+    if (!t) return;
     string type = string(t);
     tree_view.setSelectedStringValue(0, type);
 
@@ -583,7 +575,7 @@ void VRGuiScripts::on_trigdev_edited(const char* new_name, GtkTreeIter* new_iter
     if (!tree_view.hasSelection()) return;
 
     // set the cell with new type
-    auto combo_list = (GtkListStore*)getGUIBuilder()->get_object("ScriptTriggerDevices");
+    auto combo_list = (GtkListStore*)VRGuiBuilder::get()->get_object("ScriptTriggerDevices");
     gchar *t;
     gtk_tree_model_get((GtkTreeModel*)combo_list, (GtkTreeIter*)new_iter, 0, &t, -1);
     string type = string(t);
@@ -632,7 +624,7 @@ void VRGuiScripts::on_trigstate_edited(const char* new_name, GtkTreeIter* new_it
     if (!tree_view.hasSelection()) return;
 
     // set the cell with new type
-    auto combo_list = (GtkListStore*)getGUIBuilder()->get_object("ScriptTriggerStates");
+    auto combo_list = (GtkListStore*)VRGuiBuilder::get()->get_object("ScriptTriggerStates");
     gchar *t;
     gtk_tree_model_get((GtkTreeModel*)combo_list, (GtkTreeIter*)new_iter, 0, &t, -1);
     string type = string(t);
@@ -650,18 +642,18 @@ void VRGuiScripts::on_trigstate_edited(const char* new_name, GtkTreeIter* new_it
 // help dialog
 
 void VRGuiScripts::on_help_close_clicked() {
-    auto diag = getGUIBuilder()->get_widget("pybindings-docs");
+    auto diag = VRGuiBuilder::get()->get_widget("pybindings-docs");
     gtk_widget_hide(diag);
 }
 
 void VRGuiScripts::on_help_clicked() {
     VRGuiScripts::updateDocumentation();
 
-    auto tb  = getGUIBuilder()->get_object("pydoc");
+    auto tb  = VRGuiBuilder::get()->get_object("pydoc");
     gtk_text_buffer_set_text((GtkTextBuffer*)tb, "", 0);
 
-    auto diag = getGUIBuilder()->get_widget("pybindings-docs");
-    gtk_widget_show(diag);
+    auto diag = VRGuiBuilder::get()->get_widget("pybindings-docs");
+    gtk_widget_show_all(diag);
 
     //diag->deiconify();
     //diag->raise();
@@ -672,7 +664,7 @@ void VRGuiScripts::on_help_clicked() {
 }
 
 void VRGuiScripts::updateDocumentation() {
-    auto store = (GtkTreeStore*)getGUIBuilder()->get_object("bindings");
+    auto store = (GtkTreeStore*)VRGuiBuilder::get()->get_object("bindings");
     gtk_tree_store_clear(store);
 
     auto scene = VRScene::getCurrent();
@@ -682,7 +674,7 @@ void VRGuiScripts::updateDocumentation() {
     map<string, map<string, map<string, bool> > > data;
     map<string, map<string, map<string, bool> > > filtered;
 
-    auto sameChar = [](char c1, char c2) { return std::toupper(c1) == std::toupper(c2); };
+    auto sameChar = [](char c1, char c2) { return std::toupper(c1, std::locale()) == std::toupper(c2, std::locale()); };
 
     auto contain = [&](const string& s, const string& i) {
         return bool( search( s.begin(), s.end(), i.begin(), i.end(), sameChar ) != s.end() );
@@ -765,7 +757,7 @@ void VRGuiScripts::on_select_help() {
 
     auto scene = VRScene::getCurrent();
     if (scene == 0) return;
-    auto tb = (GtkTextBuffer*)getGUIBuilder()->get_object("pydoc");
+    auto tb = (GtkTextBuffer*)VRGuiBuilder::get()->get_object("pydoc");
     gtk_text_buffer_set_text(tb, "", 0);
 
     if (type == "class") {
@@ -809,8 +801,8 @@ void VRGuiScripts::focusScript(string name, int line, int column) {
     setNotebookPage("notebook1", 2);
     setNotebookPage("notebook3", 3);
 
-    auto store = (GtkTreeStore*)getGUIBuilder()->get_object("script_tree");
-    auto tree_view = (GtkTreeView*)getGUIBuilder()->get_object("treeview5");
+    auto store = (GtkTreeStore*)VRGuiBuilder::get()->get_object("script_tree");
+    auto tree_view = (GtkTreeView*)VRGuiBuilder::get()->get_widget("treeview5");
 
     auto selectScript = [&](GtkTreeIter* itr) {
         string n = VRGuiTreeView((GtkWidget*)tree_view).getStringValue(itr, 0);
@@ -936,6 +928,7 @@ void VRGuiScripts::on_change_server() {
 // --------------------------
 
 void VRGuiScripts::on_scene_changed() {
+	cout << "VRGuiScripts::on_scene_changed" << endl;
     groups.clear();
 }
 
@@ -946,11 +939,12 @@ void VRGuiScripts::update() {
 }
 
 void VRGuiScripts::updateList() {
+	cout << "VRGuiScripts::updateList" << endl;
     auto scene = VRScene::getCurrent();
     if (scene == 0) return;
 
     // update script list
-    auto store = (GtkTreeStore*)getGUIBuilder()->get_object("script_tree");
+    auto store = (GtkTreeStore*)VRGuiBuilder::get()->get_object("script_tree");
     gtk_tree_store_clear(store);
 
     auto oldpages = pages;
@@ -1023,7 +1017,7 @@ bool VRGuiScripts_on_editor_select(GtkWidget* widget, GdkEvent* event, VRGuiScri
 }
 
 bool VRGuiScripts::on_help_close_frame_clicked(GdkEvent* event) {
-    auto diag = getGUIBuilder()->get_widget("pybindings-docs");
+    auto diag = VRGuiBuilder::get()->get_widget("pybindings-docs");
     gtk_widget_hide(diag);
     return true;
 }
@@ -1060,9 +1054,9 @@ VRGuiScripts::VRGuiScripts() {
     setComboboxCallback("combobox24", bind(&VRGuiScripts::on_change_server, this) );
 
     // trigger tree_view
-    auto tree_view = getGUIBuilder()->get_widget("treeview14");
+    auto tree_view = VRGuiBuilder::get()->get_widget("treeview14");
     gtk_widget_add_events(tree_view, (int)GDK_KEY_PRESS_MASK);
-    connect_signal<bool, GdkEvent*>(tree_view, bind(&VRGuiScripts::on_any_event, this, PL::_1), "event");
+    connect_signal<void, GdkEvent*>(tree_view, bind(&VRGuiScripts::on_any_event, this, PL::_1), "event-after");
     connect_signal<bool, GdkEventKey*>(tree_view, bind(&VRGuiScripts::on_any_key_event, this, PL::_1), "key_press_event");
 
     setTreeviewSelectCallback("treeview14", bind(&VRGuiScripts::on_select_trigger, this) );

@@ -18,7 +18,7 @@
 #ifndef WITHOUT_MTOUCH
 #include "VRPyMultiTouch.h"
 #endif
-#ifndef WITHOUT_BULLET
+#ifndef WITHOUT_VIRTUOSE
 #include "VRPyHaptic.h"
 #endif
 #include "VRPyMobile.h"
@@ -51,7 +51,7 @@ void updateArgPtr(VRScript::argPtr a) {
     }
     if (t == "VRPyDeviceType" || t == "VRPyMouseType" || t == "VRPyHapticType" || t == "VRPyServerType") {
         auto setup = VRSetup::getCurrent();
-        a->ptr = (void*)setup->getDevice(a->val).get();
+        if (setup) a->ptr = (void*)setup->getDevice(a->val).get();
         return;
     }
 
@@ -97,8 +97,10 @@ void VRScript::clean() {
 
 void VRScript::update() {
     if (type == "HTML") {
-        VRServerPtr mob = dynamic_pointer_cast<VRServer>( VRSetup::getCurrent()->getDevice(server) );
-        if (mob) mob->addWebSite(getName(), core);
+        if (VRSetup::getCurrent()) {
+            VRServerPtr mob = dynamic_pointer_cast<VRServer>( VRSetup::getCurrent()->getDevice(server) );
+            if (mob) mob->addWebSite(getName(), core);
+        }
     }
 
     auto scene = VRScene::getCurrent();
@@ -117,7 +119,9 @@ void VRScript::update() {
         }
 
         if (t->trigger == "on_device") {
-            VRDevicePtr dev = VRSetup::getCurrent()->getDevice(t->dev);
+            auto s = VRSetup::getCurrent();
+            if (!s) continue;
+            VRDevicePtr dev = s->getDevice(t->dev);
             int state = -1;
             if (t->state == "Released") state = 0;
             if (t->state == "Pressed") state = 1;
@@ -230,7 +234,7 @@ PyObject* VRScript::getPyObj(argPtr a) {
 #ifndef WITHOUT_MTOUCH
     else if (a->type == "VRPyMultiTouchType") return VRPyMultiTouch::fromSharedPtr(((VRMultiTouch*)a->ptr)->ptr());
 #endif
-#ifndef WITHOUT_BULLET
+#ifndef WITHOUT_VIRTUOSE
     else if (a->type == "VRPyHapticType") return VRPyHaptic::fromSharedPtr(((VRHaptic*)a->ptr)->ptr());
 #endif
     else if (a->type == "VRPyServerType") return VRPyServer::fromSharedPtr(((VRServer*)a->ptr)->ptr());
@@ -641,6 +645,11 @@ void VRScript::changeTrigParams(string name, string params) { clean(); if (auto 
 void VRScript::changeTrigKey(string name, int key) { clean(); if (auto t = getTrig(name)) t->key = key; update(); }
 void VRScript::changeTrigState(string name, string state) { clean(); if (auto t = getTrig(name)) t->state = state; update(); }
 bool VRScript::hasTrigger(string type) { for (auto t : trigs) if (t->trigger == type) return true; return false; }
+
+void VRScript::updateDeviceTrigger() { // TODO: optimize
+    clean();
+    update();
+}
 
 void VRScript::remTrigger(string name) {
     if (auto t = getTrig(name)) {

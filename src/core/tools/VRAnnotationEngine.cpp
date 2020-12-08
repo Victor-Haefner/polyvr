@@ -423,30 +423,30 @@ attribute vec2 osg_MultiTexCoord0;
 uniform float doBillboard;
 uniform vec2 OSGViewportSize;
 
-#ifdef __EMSCRIPTEN__
+\n#ifdef __EMSCRIPTEN__\n
 uniform mat4 OSGModelViewProjectionMatrix;
 uniform mat4 OSGModelViewMatrix;
 uniform mat4 OSGProjectionMatrix;
-#endif
+\n#endif\n
 
 void main( void ) {
     if (doBillboard < 0.5) {
-#ifdef __EMSCRIPTEN__
+\n#ifdef __EMSCRIPTEN__\n
         gl_Position = OSGModelViewProjectionMatrix * (osg_Vertex + osg_Normal);
-#else
+\n#else\n
         gl_Position = gl_ModelViewProjectionMatrix * (osg_Vertex + osg_Normal);
-#endif
+\n#endif\n
     } else {
         float a = OSGViewportSize.y/OSGViewportSize.x;
         vec4 norm = osg_Normal;
         norm.x = norm.x*a;
         norm.z = 0.0;
         norm.w = 0.0;
-#ifdef __EMSCRIPTEN__
+\n#ifdef __EMSCRIPTEN__\n
         gl_Position = OSGModelViewProjectionMatrix * osg_Vertex + norm;
-#else
+\n#else\n
         gl_Position = gl_ModelViewProjectionMatrix * osg_Vertex + norm;
-#endif
+\n#endif\n
     }
     texCoord = osg_MultiTexCoord0;
 }
@@ -454,9 +454,9 @@ void main( void ) {
 
 string VRAnnotationEngine::fp_es2 =
 GLSL(
-#ifdef __EMSCRIPTEN__
+\n#ifdef __EMSCRIPTEN__\n
 precision mediump float;
-#endif
+\n#endif\n
 uniform sampler2D texture;
 
 varying vec2 texCoord;
