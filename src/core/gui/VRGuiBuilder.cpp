@@ -602,6 +602,7 @@ void VRGuiBuilder::buildBaseUI() {
     gtk_box_pack_start(GTK_BOX(hbox20), label150, true, true, 0);
     gtk_box_pack_start(GTK_BOX(hbox20), entry27, true, true, 0);
     gtk_window_set_transient_for(GTK_WINDOW(recorder), GTK_WINDOW(window1));
+    gtk_widget_show_all(dialog_vbox15);
 
     cout << " build about dialog" << endl;
     /* ---------- about dialog ---------------------- */
