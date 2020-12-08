@@ -66,23 +66,46 @@ string toString(OpcUa::Variant const& v) {
     uint8_t type = uint8_t(v.Type());
 
     if (v.IsArray()) {
-        if (type == 0) return res;
-        if (type == 1) res = toString(v.As< vector<bool> >());
-        if (type == 2) res = toString(v.As< vector<signed char> >());
-        if (type == 3) res = toString(v.As< vector<unsigned char> >());
-        if (type == 4) res = toString(v.As< vector<int16_t> >());
-        if (type == 5) res = toString(v.As< vector<uint16_t> >());
-        if (type == 6) res = toString(v.As< vector<int32_t> >());
-        if (type == 7) res = toString(v.As< vector<uint32_t> >());
-        if (type == 8) res = toString(v.As< vector<int64_t> >());
-        if (type == 9) res = toString(v.As< vector<uint64_t> >());
-        if (type == 10) res = toString(v.As< vector<float> >());
-        if (type == 11) res = toString(v.As< vector<double> >());
-        if (type == 12) res = toString(v.As< vector<string> >());
+        try {
+            if (type == 0) return res;
+            if (type == 1) res = toString(v.As< vector<bool> >());
+            if (type == 2) res = toString(v.As< vector<signed char> >());
+            if (type == 3) res = toString(v.As< vector<unsigned char> >());
+            if (type == 4) res = toString(v.As< vector<int16_t> >());
+            if (type == 5) res = toString(v.As< vector<uint16_t> >());
+            if (type == 6) res = toString(v.As< vector<int32_t> >());
+            if (type == 7) res = toString(v.As< vector<uint32_t> >());
+            if (type == 8) res = toString(v.As< vector<int64_t> >());
+            if (type == 9) res = toString(v.As< vector<uint64_t> >());
+            if (type == 10) res = toString(v.As< vector<float> >());
+            if (type == 11) res = toString(v.As< vector<double> >());
+            if (type == 12) res = toString(v.As< vector<string> >());
+        } catch(...) { cout << "OPCUA Error: toString of vector Variant failed, type: " << type << endl; }
     }
 
     if (v.IsScalar()) {
-        try { res = v.As<string>(); } catch(...) {}
+        try {
+            if (type == 0) return res;
+            if (type == 1) res = toString(v.As< bool >());
+            if (type == 2) res = toString(v.As< signed char >());
+            if (type == 3) res = toString(v.As< unsigned char >());
+            if (type == 4) res = toString(v.As< int16_t >());
+            if (type == 5) res = toString(v.As< uint16_t >());
+            if (type == 6) res = toString(v.As< int32_t >());
+            if (type == 7) res = toString(v.As< uint32_t >());
+            if (type == 8) res = toString(v.As< int64_t >());
+            if (type == 9) res = toString(v.As< uint64_t >());
+            if (type == 10) res = toString(v.As< float >());
+            if (type == 11) res = toString(v.As< double >());
+            if (type == 12) res = toString(v.As< string >());
+
+            if (type == 17) res = toString(v.As< NodeId >().GetIntegerIdentifier());
+            if (type == 20) res = toString(v.As< QualifiedName >().Name);
+            if (type == 21) res = toString(v.As< LocalizedText >().Text);
+            if (type == 24) res = toString(v.As< Variant >());
+        } catch(...) { cout << "OPCUA Error: toString of scalar Variant failed, type: " << type << endl; }
+
+        /*try { res = v.As<string>(); } catch(...) {}
         try { res = toString(v.As<float>()); } catch(...) {}
         try { res = toString(v.As<double>()); } catch(...) {}
         try { res = toString(v.As<int>()); } catch(...) {}
@@ -103,7 +126,7 @@ string toString(OpcUa::Variant const& v) {
         try { res = v.As<LocalizedText>().Text; } catch(...) {}
         try { res = v.As<QualifiedName>().Name; } catch(...) {}
         try { res = toString(v.As<Variant>()); } catch(...) {}
-        //try { res = toString(v.As<DiagnosticInfo>()); } catch(...) {}
+        //try { res = toString(v.As<DiagnosticInfo>()); } catch(...) {}*/
     }
 
     return res;
@@ -238,8 +261,10 @@ void VROPCUANode::setVector(vector<string> values) {
             //if (type == 23) { data_value v; toValue(value,v); node->SetValue( Variant(v) ); }
             //if (type == 24) { variant v; toValue(value,v); node->SetValue( Variant(v) ); }
             //if (type == 25) { diagnostic_info v; toValue(value,v); node->SetValue( Variant(v) ); }
-        } catch(const std::exception& ex) {
+        } catch(const exception& ex) {
             cout << "VROPCUANode::setVector ERROR: " << ex.what() << ", var type: " << typeToString(nodeType) << " self name: " << name() << ", vector length: " << values.size() << endl;
+        } catch(...) {
+            cout << "VROPCUANode::setVector ERROR: var type: " << typeToString(nodeType) << ", self name: " << name() << ", vector length: " << values.size() << endl;
         }
     }
 }
@@ -281,8 +306,10 @@ void VROPCUANode::set(string value) {
             //if (type == 23) { data_value v; toValue(value,v); node->SetValue( Variant(v) ); }
             //if (type == 24) { variant v; toValue(value,v); node->SetValue( Variant(v) ); }
             //if (type == 25) { diagnostic_info v; toValue(value,v); node->SetValue( Variant(v) ); }
-        } catch(const std::exception& ex) {
+        } catch(const exception& ex) {
             cout << "VROPCUANode::set ERROR: " << ex.what() << ", var type: " << typeToString(nodeType) << ", self name: " << name() << ", value to set: " << value << endl;
+        } catch(...) {
+            cout << "VROPCUANode::set ERROR: var type: " << typeToString(nodeType) << ", self name: " << name() << ", value to set: " << value << endl;
         }
     }
 }
