@@ -303,7 +303,7 @@ GtkWidget* addCheckbutton(string ID, string label) {
     return n;
 }
 
-pair<GtkWidget*,GtkWidget*> addTreeview(string ID, string mID, GtkTreeModel* m, bool hscroll = false) {
+pair<GtkWidget*,GtkWidget*> addTreeview(string ID, string mID, GtkTreeModel* m, bool hscroll = false, bool vscroll = true) {
     auto f = gtk_frame_new(NULL);
     auto w = gtk_scrolled_window_new(0,0);
     auto n = gtk_tree_view_new_with_model(m);
@@ -312,7 +312,9 @@ pair<GtkWidget*,GtkWidget*> addTreeview(string ID, string mID, GtkTreeModel* m, 
     gtk_container_add(GTK_CONTAINER(f), w);
     gtk_container_add(GTK_CONTAINER(w), n);
     gtk_widget_set_vexpand(f, true);
-    if (!hscroll) gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(w), GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
+    auto hp = hscroll ? GTK_POLICY_AUTOMATIC : GTK_POLICY_NEVER;
+    auto vp = vscroll ? GTK_POLICY_AUTOMATIC : GTK_POLICY_NEVER;
+    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(w), hp, vp);
     return make_pair(n,f);
 }
 
@@ -1210,7 +1212,7 @@ void VRGuiBuilder::buildBaseUI() {
 
     auto hbox3 = addGrid("hbox3");
     auto triggers = gtk_list_store_new(7, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_POINTER, G_TYPE_STRING);
-    auto treeview14_and_frame = addTreeview("treeview14", "triggers", GTK_TREE_MODEL(triggers));
+    auto treeview14_and_frame = addTreeview("treeview14", "triggers", GTK_TREE_MODEL(triggers), false, false);
     auto treeview14 = treeview14_and_frame.first;
     auto button23 = addImgButton("button23", "gtk-add");
     auto button24 = addImgButton("button24", "gtk-remove");
@@ -1218,6 +1220,7 @@ void VRGuiBuilder::buildBaseUI() {
     gtk_grid_attach(GTK_GRID(hbox3), button23, 1,0,1,1);
     gtk_grid_attach(GTK_GRID(hbox3), button24, 1,1,1,1);
     gtk_widget_set_hexpand(treeview14, true);
+    gtk_widget_set_vexpand(treeview14_and_frame.second, false);
 
     auto treeviewcolumn27 = addTreecolumn("treeviewcolumn27", "Trigger");
     auto treeviewcolumn28 = addTreecolumn("treeviewcolumn28", "Device");
@@ -1241,7 +1244,7 @@ void VRGuiBuilder::buildBaseUI() {
 
     auto hbox13 = addGrid("hbox13");
     auto liststore2 = gtk_list_store_new(4, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_POINTER, G_TYPE_STRING);
-    auto treeview7_and_frame = addTreeview("treeview7", "liststore2", GTK_TREE_MODEL(liststore2));
+    auto treeview7_and_frame = addTreeview("treeview7", "liststore2", GTK_TREE_MODEL(liststore2), false, false);
     auto treeview7 = treeview7_and_frame.first;
     auto button12 = addImgButton("button12", "gtk-add");
     auto button13 = addImgButton("button13", "gtk-remove");
@@ -1249,6 +1252,7 @@ void VRGuiBuilder::buildBaseUI() {
     gtk_grid_attach(GTK_GRID(hbox13), button12, 1,0,1,1);
     gtk_grid_attach(GTK_GRID(hbox13), button13, 1,1,1,1);
     gtk_widget_set_hexpand(treeview7, true);
+    gtk_widget_set_vexpand(treeview7_and_frame.second, false);
 
     auto expander19 = addExpander("expander19", "Options", table32);
     auto expander17 = addExpander("expander17", "Triggers", hbox3);
