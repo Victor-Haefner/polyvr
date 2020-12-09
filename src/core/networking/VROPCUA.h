@@ -19,6 +19,7 @@ class VROPCUANode : public std::enable_shared_from_this<VROPCUANode> {
         shared_ptr<OpcUa::Node> node = 0;
 
         uint8_t nodeType = 0;
+        bool isValid = false;
         bool isScalar = true;
         bool isArray = false;
 
@@ -32,6 +33,7 @@ class VROPCUANode : public std::enable_shared_from_this<VROPCUANode> {
         string name();
         string value();
         string type();
+        bool valid();
         vector<VROPCUANodePtr> getChildren();
 
         VROPCUANodePtr getChild(int i);
