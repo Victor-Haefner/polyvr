@@ -303,12 +303,16 @@ GtkWidget* addCheckbutton(string ID, string label) {
     return n;
 }
 
-pair<GtkWidget*,GtkWidget*> addTreeview(string ID, string mID, GtkTreeModel* m) {
+pair<GtkWidget*,GtkWidget*> addTreeview(string ID, string mID, GtkTreeModel* m, bool hscroll = false) {
     auto f = gtk_frame_new(NULL);
+    auto w = gtk_scrolled_window_new(0,0);
     auto n = gtk_tree_view_new_with_model(m);
     VRGuiBuilder::get()->reg_widget(n, ID);
     VRGuiBuilder::get()->reg_object(G_OBJECT(m), mID);
-    gtk_container_add(GTK_CONTAINER(f), n);
+    gtk_container_add(GTK_CONTAINER(f), w);
+    gtk_container_add(GTK_CONTAINER(w), n);
+    gtk_widget_set_vexpand(f, true);
+    if (!hscroll) gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(w), GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
     return make_pair(n,f);
 }
 
@@ -672,7 +676,6 @@ void VRGuiBuilder::buildBaseUI() {
 
     auto table47 = addGrid("table47");
     auto scrolledwindow1 = addScrolledWindow("scrolledwindow1");
-    auto scrolledwindow13 = addScrolledWindow("scrolledwindow13");
     auto viewport5 = addViewport("viewport5");
     auto profiler_area = addDrawingArea("profiler_area");
     auto label163 = addLabel("label163", "frame:");
@@ -683,9 +686,11 @@ void VRGuiBuilder::buildBaseUI() {
     auto Tframe = addLabel("Tframe", "0 ms");
     auto Nchanges = addLabel("Nchanges", "0");
     auto Ncreated = addLabel("Ncreated", "0");
+    auto prof_fkts = gtk_list_store_new(3, G_TYPE_STRING, G_TYPE_UINT, G_TYPE_STRING);
+    auto treeview15_and_frame = addTreeview("treeview15", "prof_fkts", GTK_TREE_MODEL(prof_fkts));
     gtk_grid_attach(GTK_GRID(table31), table47, 0,0,1,1);
     gtk_grid_attach(GTK_GRID(table31), scrolledwindow1, 1,0,1,2);
-    gtk_grid_attach(GTK_GRID(table31), scrolledwindow13, 0,1,1,1);
+    gtk_grid_attach(GTK_GRID(table31), treeview15_and_frame.second, 0,1,1,1);
     gtk_container_add(GTK_CONTAINER(scrolledwindow1), viewport5);
     gtk_container_add(GTK_CONTAINER(viewport5), profiler_area);
     gtk_grid_attach(GTK_GRID(table47), label163, 0,0,1,1);
@@ -696,15 +701,11 @@ void VRGuiBuilder::buildBaseUI() {
     gtk_grid_attach(GTK_GRID(table47), Tframe, 1,1,1,1);
     gtk_grid_attach(GTK_GRID(table47), Nchanges, 1,2,1,1);
     gtk_grid_attach(GTK_GRID(table47), Ncreated, 1,3,1,1);
-    gtk_widget_set_hexpand(scrolledwindow13, false);
     gtk_widget_set_hexpand(scrolledwindow1, true);
     gtk_widget_set_hexpand(profiler_area, true);
     gtk_widget_set_vexpand(profiler_area, true);
 
-    auto prof_fkts = gtk_list_store_new(3, G_TYPE_STRING, G_TYPE_UINT, G_TYPE_STRING);
-    auto treeview15_and_frame = addTreeview("treeview15", "prof_fkts", GTK_TREE_MODEL(prof_fkts));
     auto treeview15 = treeview15_and_frame.first;
-    gtk_container_add(GTK_CONTAINER(scrolledwindow13), treeview15_and_frame.second);
     gtk_widget_set_vexpand(treeview15, true);
     addTreeviewTextcolumn(treeview15, "function", "cellrenderertext30", 0);
     addTreeviewTextcolumn(treeview15, "time (μs)", "cellrenderertext48", 1);
@@ -1159,16 +1160,12 @@ void VRGuiBuilder::buildBaseUI() {
     /* ---------- VR Scene -scripting ---------------------- */
     auto toolbar3 = addToolbar("toolbar3", GTK_ICON_SIZE_LARGE_TOOLBAR, GTK_ORIENTATION_HORIZONTAL);
     auto script_tree = gtk_tree_store_new(9, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_INT);
-    auto scrolledwindow5 = addScrolledWindow("scrolledwindow5");
     auto treeview5_and_frame = addTreeview("treeview5", "script_tree", GTK_TREE_MODEL(script_tree));
     auto treeview5 = treeview5_and_frame.first;
     auto table15 = addGrid("table15");
     gtk_grid_attach(GTK_GRID(table14), toolbar3, 0,0,2,1);
-    gtk_grid_attach(GTK_GRID(table14), scrolledwindow5, 0,1,1,1);
+    gtk_grid_attach(GTK_GRID(table14), treeview5_and_frame.second, 0,1,1,1);
     gtk_grid_attach(GTK_GRID(table14), table15, 1,1,1,1);
-    gtk_container_add(GTK_CONTAINER(scrolledwindow5), treeview5_and_frame.second);
-    gtk_widget_set_hexpand(scrolledwindow5, false);
-    gtk_scrolled_window_set_propagate_natural_width(GTK_SCROLLED_WINDOW(scrolledwindow5), true);
 
     auto toolbutton6 = addToolButton("toolbutton6", "gtk-new", toolbar3);
     auto toolbutton20 = addToolButton("toolbutton20", "gtk-indent", toolbar3);
@@ -1285,7 +1282,6 @@ void VRGuiBuilder::buildBaseUI() {
     auto table40 = addGrid("table40");
     auto image49 = addStockImage("image49", "gtk-find", GTK_ICON_SIZE_SMALL_TOOLBAR);
     auto entry25 = addEntry("entry25");
-    auto scrolledwindow8 = addScrolledWindow("scrolledwindow8");
     auto bindings = gtk_tree_store_new(5, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING);
     auto treeview3_and_frame = addTreeview("treeview3", "bindings", GTK_TREE_MODEL(bindings));
     auto treeview3 = treeview3_and_frame.first;
@@ -1295,8 +1291,7 @@ void VRGuiBuilder::buildBaseUI() {
     add1ToPaned(hpaned2, table40);
     gtk_grid_attach(GTK_GRID(table40), image49, 0,0,1,1);
     gtk_grid_attach(GTK_GRID(table40), entry25, 1,0,1,1);
-    gtk_grid_attach(GTK_GRID(table40), scrolledwindow8, 0,1,2,1);
-    gtk_container_add(GTK_CONTAINER(scrolledwindow8), treeview3_and_frame.second);
+    gtk_grid_attach(GTK_GRID(table40), treeview3_and_frame.second, 0,1,2,1);
     add2ToPaned(hpaned2, scrolledwindow7);
     gtk_container_add(GTK_CONTAINER(scrolledwindow7), textview1);
 
@@ -1467,8 +1462,7 @@ void VRGuiBuilder::buildBaseUI() {
     /* ---------- VR Scene - scenegraph ---------------------- */
     auto hpaned3 = addPaned("hpaned3", GTK_ORIENTATION_HORIZONTAL);
     auto scenegraph = gtk_tree_store_new(6, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_INT);
-    auto scrolledwindow2 = addScrolledWindow("scrolledwindow2");
-    auto treeview6_and_frame = addTreeview("treeview6", "scenegraph", GTK_TREE_MODEL(scenegraph));
+    auto treeview6_and_frame = addTreeview("treeview6", "scenegraph", GTK_TREE_MODEL(scenegraph), true);
     auto treeview6 = treeview6_and_frame.first;
     auto table11 = addBox("table11", GTK_ORIENTATION_VERTICAL);
     auto button17 = addImgButton("button17", "gtk-refresh");
@@ -1478,8 +1472,7 @@ void VRGuiBuilder::buildBaseUI() {
     gtk_grid_attach(GTK_GRID(scenegraph_tab), current_object_lab, 1,0,1,1);
     gtk_grid_attach(GTK_GRID(scenegraph_tab), checkbutton16, 2,0,1,1);
     gtk_grid_attach(GTK_GRID(scenegraph_tab), hpaned3, 0,1,3,1);
-    gtk_container_add(GTK_CONTAINER(scrolledwindow2), treeview6_and_frame.second);
-    add1ToPaned(hpaned3, scrolledwindow2);
+    add1ToPaned(hpaned3, treeview6_and_frame.second);
     add2ToPaned(hpaned3, table11);
     gtk_widget_set_hexpand(treeview6, true);
     gtk_widget_set_vexpand(treeview6, true);
