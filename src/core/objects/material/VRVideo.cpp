@@ -3,7 +3,9 @@
 
 #include <OpenSG/OSGImage.h>
 #include "core/utils/toString.h"
+#include "core/utils/VRFunction.h"
 #include "core/objects/material/VRTexture.h"
+#include "core/objects/VRAnimation.h"
 
 extern "C" {
     #include <libavcodec/avcodec.h>
@@ -76,11 +78,11 @@ void VRVideo::open(string f) {
 
     NStreams = getNStreams();
 
-    cout << " VRVideo::open " << f << endl;
-    cout << "  VRVideo::open " << NStreams << " streams" << endl;
+    cout << " VRVideo::open " << f << ", "<< NStreams << " streams" << endl;
 
     AVFrame* vFrame = av_frame_alloc(); // Allocate video frame
     AVFrame* rgbFrame = av_frame_alloc();
+    vector<UInt8> osgFrame;
 
     frames.clear();
     for (int i=0; i<NStreams; i++) {
@@ -106,28 +108,37 @@ void VRVideo::open(string f) {
             if(valid == 0) continue;
 
             FlipFrame(vFrame);
-
             width = vFrame->width;
             height = vFrame->height;
 
-            AVPixelFormat pf = AVPixelFormat(vFrame->format);
             if (!swsContext) {
+                AVPixelFormat pf = AVPixelFormat(vFrame->format);
                 swsContext = sws_getContext(width, height, pf, width, height, AV_PIX_FMT_RGB24, SWS_BILINEAR, NULL, NULL, NULL);
 
                 rgbFrame->format = AV_PIX_FMT_RGB24;
                 rgbFrame->width = width;
                 rgbFrame->height = height;
                 if (av_frame_get_buffer(rgbFrame, 0) < 0) { cout << "  Error in VRVideo, av_frame_get_buffer failed!" << endl; continue; }
+
+                osgFrame.resize(width*height*3, 0);
             }
 
             int rgbH = sws_scale(swsContext, vFrame->data, vFrame->linesize, 0, height, rgbFrame->data, rgbFrame->linesize);
             if (rgbH < 0) { cout << "  Error in VRVideo, sws_scale failed!" << endl; continue; }
+            int rgbW = rgbFrame->linesize[0]/3;
 
-            auto data = (const uint8_t *)rgbFrame->data[0];
+            osgFrame.resize(width*height*3, 0);
+
+            auto data1 = (uint8_t*)rgbFrame->data[0];
+            auto data2 = (uint8_t*)&osgFrame[0];
+            for (int y = 0; y<height; y++) {
+                int k1 = y*width*3;
+                int k2 = y*rgbW*3;
+                memcpy(&data2[k1], &data1[k2], width*3);
+            }
 
             VRTexturePtr img = VRTexture::create();
-            img->getImage()->set(Image::OSG_RGB_PF, rgbFrame->linesize[0]/3, rgbH, 1, 1, 1, 0.0, data, Image::OSG_UINT8_IMAGEDATA, true, 1);
-
+            img->getImage()->set(Image::OSG_RGB_PF, width, height, 1, 1, 1, 0.0, data2, Image::OSG_UINT8_IMAGEDATA, true, 1);
             frames[stream][frame] = img;
             frame++;
         }
@@ -153,9 +164,20 @@ void VRVideo::showFrame(int stream, int frame) {
     if (auto m = material.lock()) m->setTexture(getFrame(stream,frame));
 }
 
+void VRVideo::frameUpdate(float t, int stream, int N) {
+    showFrame(stream, t*N);
+}
+
 void VRVideo::play(int stream, float t0, float t1, float v) {
-    cout << "\nPLAY\n";
-    showFrame(stream, 0);
+    if (!anim) anim = VRAnimation::create();
+    int N = getNFrames(stream);
+    float T = N/24.0;
+
+    animCb = VRAnimCb::create("videoCB", bind(&VRVideo::frameUpdate, this, placeholders::_1, stream, N));
+    anim->setCallback(animCb);
+    anim->setDuration(T); // 24 fps
+    anim->start();
+    cout << "video, play stream" << stream << ", duration: " << T << endl;
 }
 
 VRTexturePtr VRVideo::getFrame(int stream, int i) { if (frames[stream].count(i) == 0) return 0; return frames[stream][i]; }

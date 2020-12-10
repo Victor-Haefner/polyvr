@@ -21,6 +21,8 @@ class VRVideo : public VRStorage {
         int NStreams;
 
         VRMaterialWeakPtr material;
+        VRAnimationPtr anim;
+        VRAnimCbPtr animCb;
 
         AVFormatContext* vFile;
         AVCodecContext* vCodec;
@@ -28,6 +30,7 @@ class VRVideo : public VRStorage {
 
         int getNStreams();
         int getStream(int j);
+        void frameUpdate(float t, int stream, int N);
 
     public:
         VRVideo(VRMaterialPtr mat);
