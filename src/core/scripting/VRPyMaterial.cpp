@@ -15,6 +15,8 @@ simpleVRPyType(Video, 0);
 #ifndef WITHOUT_AV
 PyMethodDef VRPyVideo::methods[] = {
     {"play", PyWrapOpt(Video, play, "Play video", "0|0|-1|1", void, int, float, float, float ) },
+    {"getNFrames", PyWrapOpt(Video, getNFrames, "Get frame count of stream", "0", size_t, int ) },
+    {"showFrame", PyWrap(Video, showFrame, "Show a specific frame of a stream (stream, frame)", void, int, int ) },
     {NULL}  /* Sentinel */
 };
 #endif

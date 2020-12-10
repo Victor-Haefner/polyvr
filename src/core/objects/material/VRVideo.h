@@ -37,11 +37,12 @@ class VRVideo : public VRStorage {
 
         void open(string f);
         void close();
+        void showFrame(int stream, int frame);
         void play(int stream, float t0, float t1, float v);
 
+        size_t getNFrames(int stream);
         VRTexturePtr getFrame(int stream, int i);
         VRTexturePtr getFrame(int stream, float t);
-        int getNFrames();
 };
 
 OSG_END_NAMESPACE;
