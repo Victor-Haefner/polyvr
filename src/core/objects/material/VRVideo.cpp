@@ -58,11 +58,6 @@ int VRVideo::getStream(int j) {
 }
 
 void FlipFrame(AVFrame* pFrame) {
-    /*for (int i = 0; i < 4; i++) {
-        pFrame->data[i] += pFrame->linesize[i] * (pFrame->height-1);
-        pFrame->linesize[i] = -pFrame->linesize[i];
-    }*/
-
     for (int i = 0; i < 4; i++) {
         if (i) {
             pFrame->data[i] += pFrame->linesize[i] * ((pFrame->height >> 1)-1);
@@ -70,13 +65,6 @@ void FlipFrame(AVFrame* pFrame) {
             pFrame->data[i] += pFrame->linesize[i] * (pFrame->height-1);
         }
         pFrame->linesize[i] = -pFrame->linesize[i];
-    }
-}
-
-void UnflipFrame(AVFrame* pFrame) {
-    for (int i = 0; i < 4; i++) {
-        pFrame->linesize[i] = -pFrame->linesize[i];
-        pFrame->data[i] -= pFrame->linesize[i] * (pFrame->height-1);
     }
 }
 
@@ -91,11 +79,8 @@ void VRVideo::open(string f) {
     cout << " VRVideo::open " << f << endl;
     cout << "  VRVideo::open " << NStreams << " streams" << endl;
 
-#ifdef OLD_LIBAV
-    vFrame = avcodec_alloc_frame(); // Allocate video frame
-#else
-    vFrame = av_frame_alloc(); // Allocate video frame
-#endif
+    AVFrame* vFrame = av_frame_alloc(); // Allocate video frame
+    AVFrame* rgbFrame = av_frame_alloc();
 
     frames.clear();
     for (int i=0; i<NStreams; i++) {
@@ -109,7 +94,7 @@ void VRVideo::open(string f) {
         if(c == 0) { fprintf(stderr, "Unsupported codec!\n"); return; } // Codec not found
         if(avcodec_open2(vCodec, c, &optionsDict)<0) return; // Could not open codec
 
-        //SwsContext* swsContext = sws_getContext(vCodec->width, vCodec->height, AV_PIX_FMT_YUV420P, vCodec->width, vCodec->height, AV_PIX_FMT_RGB24, SWS_BILINEAR, NULL, NULL, NULL);
+        SwsContext* swsContext = 0;
 
         cout << "  VRVideo::open stream " << i << endl;
         int valid=0;
@@ -126,29 +111,30 @@ void VRVideo::open(string f) {
             height = vFrame->height;
 
             AVPixelFormat pf = AVPixelFormat(vFrame->format);
-            SwsContext* swsContext = sws_getContext(width, height, pf, width, height, AV_PIX_FMT_RGB24, SWS_BILINEAR, NULL, NULL, NULL);
+            if (!swsContext) {
+                swsContext = sws_getContext(width, height, pf, width, height, AV_PIX_FMT_RGB24, SWS_BILINEAR, NULL, NULL, NULL);
 
-            AVFrame* rgbFrame = av_frame_alloc();
-            rgbFrame->format = AV_PIX_FMT_RGB24;
-            rgbFrame->width = width;
-            rgbFrame->height = height;
-            if (av_frame_get_buffer(rgbFrame, 0) < 0) { cout << "  Error in VRVideo, av_frame_get_buffer failed!" << endl; continue; }
-            int rgbH = sws_scale(swsContext, vFrame->data, vFrame->linesize, 0, height, rgbFrame->data, rgbFrame->linesize);
-
-            if (rgbH < 0) {
-                cout << "  Error in VRVideo, sws_scale failed!" << endl;
-                continue;
+                rgbFrame->format = AV_PIX_FMT_RGB24;
+                rgbFrame->width = width;
+                rgbFrame->height = height;
+                if (av_frame_get_buffer(rgbFrame, 0) < 0) { cout << "  Error in VRVideo, av_frame_get_buffer failed!" << endl; continue; }
             }
+
+            int rgbH = sws_scale(swsContext, vFrame->data, vFrame->linesize, 0, height, rgbFrame->data, rgbFrame->linesize);
+            if (rgbH < 0) { cout << "  Error in VRVideo, sws_scale failed!" << endl; continue; }
 
             auto data = (const uint8_t *)rgbFrame->data[0];
 
             VRTexturePtr img = VRTexture::create();
-            img->getImage()->set(Image::OSG_RGB_PF, rgbFrame->linesize[0]/3, height, 1, 1, 1, 0.0, (const uint8_t *)rgbFrame->data[0], Image::OSG_UINT8_IMAGEDATA, true, 1); // TODO: try to change true to false
+            img->getImage()->set(Image::OSG_RGB_PF, rgbFrame->linesize[0]/3, rgbH, 1, 1, 1, 0.0, data, Image::OSG_UINT8_IMAGEDATA, true, 1);
 
             frames[stream][frame] = img;
             frame++;
         }
     }
+
+    av_frame_free(&vFrame);
+    av_frame_free(&rgbFrame);
 }
 
 void VRVideo::close() {

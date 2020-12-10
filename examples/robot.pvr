@@ -3,8 +3,14 @@
   <Objects>
     <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" visible="1">
       <Object ambient="0.3 0.3 0.3 1" base_name="light" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" shadowVolume="1e+06 1e+06 1e+06 -1e+06 -1e+06 -1e+06 1" specular="0.1 0.1 0.1 1" type="Light" visible="1">
-        <Object accept_root="1" aspect="1" at="0.35 0.0487648 0.112284" at_dir="0" base_name="Default" far="512" fov="1.0472" from="0.0735507 0.607718 -0.816706" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
+        <Object accept_root="1" aspect="1" at="0.35 0.0487648 0.112284" at_dir="0" base_name="Default" far="512" fov="1.0472" from="-0.431183 1.05686 -0.939467" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
+          <attachments>
+            <Node base_name="transform" name_space="VRAttachment" name_suffix="0" persistency="666" value=""/>
+          </attachments>
           <Object at="0 0 -1" at_dir="0" base_name="Headlight_beacon" from="0 0 0" light="light" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" up="0 1 0" visible="1">
+            <attachments>
+              <Node base_name="transform" name_space="VRAttachment" name_suffix="0" persistency="666" value=""/>
+            </attachments>
             <constraint persistency="666"/>
           </Object>
           <constraint persistency="666"/>
@@ -37,7 +43,7 @@
 	VR.scene = VR.Object('scene', 'light')
 	
 	
-	VR.robot = VR.RobotArm()
+	VR.robot = VR.RobotArm("kuka")
 	VR.robot.showAnalytics(1)
 	
 	arm = VR.loadGeometry('robotArm.dae')	
