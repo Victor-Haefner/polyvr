@@ -167,6 +167,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyPointCloud>("PointCloud", pModVR, VRPyTransform::typeRef);
 #ifndef WITHOUT_AV
     sm->registerModule<VRPySound>("Sound", pModVR);
+    sm->registerModule<VRPyVideo>("Video", pModVR);
     sm->registerModule<VRPySoundManager>("SoundManager", pModVR);
     sm->registerModule<VRPyRecorder>("Recorder", pModVR);
 #endif

@@ -2,6 +2,7 @@
 #include "VRMaterial.h"
 
 #include <OpenSG/OSGImage.h>
+#include "core/utils/toString.h"
 #include "core/objects/material/VRTexture.h"
 
 extern "C" {
@@ -12,7 +13,11 @@ extern "C" {
 
 #include <string>
 
-VRVideo::VRVideo(OSG::VRMaterialPtr mat) {
+using namespace OSG;
+
+template<> string typeName(const VRVideo& o) { return "Video"; }
+
+VRVideo::VRVideo(VRMaterialPtr mat) {
     material = mat;
 
     vFile = 0;
@@ -28,7 +33,9 @@ VRVideo::VRVideo(OSG::VRMaterialPtr mat) {
     close();
 }
 
-VRVideo::~VRVideo() {;}
+VRVideo::~VRVideo() {}
+
+VRVideoPtr VRVideo::create(VRMaterialPtr mat) { return VRVideoPtr( new VRVideo(mat) ); }
 
 int VRVideo::getNStreams() {
     if (vFile == 0) return 0;
@@ -58,6 +65,9 @@ void VRVideo::open(string f) {
 
     NStreams = getNStreams();
 
+    cout << " VRVideo::open " << f << endl;
+    cout << "  VRVideo::open " << NStreams << " streams" << endl;
+
 #ifdef OLD_LIBAV
     vFrame = avcodec_alloc_frame(); // Allocate video frame
 #else
@@ -79,6 +89,7 @@ void VRVideo::open(string f) {
         width = vCodec->width;
         height = vCodec->height;
 
+        cout << "  VRVideo::open stream " << i << " w,h " << width << " " << height << endl;
         int valid=0;
         int frame=0;
         for(AVPacket packet; av_read_frame(vFile, &packet)>=0; av_free_packet(&packet) ) { // read stream
@@ -87,10 +98,19 @@ void VRVideo::open(string f) {
             avcodec_decode_video2(vCodec, vFrame, &valid, &packet); // Decode video frame
             if(valid == 0) continue;
 
-            OSG::VRTexturePtr img = OSG::VRTexture::create();
+            VRTexturePtr img = VRTexture::create();
             //img->setData(vFrame->data);
+            //vFrame->
 
-            img->getImage()->set(OSG::Image::OSG_RGB_PF, width, height, 1, 1, 1, 0.0, (const uint8_t *)vFrame->data, OSG::Image::OSG_UINT8_IMAGEDATA, true, 1); // TODO: try to change true to false
+            AVPixelFormat pf = AVPixelFormat(vFrame->format);
+            AVColorSpace cs = vFrame->colorspace;
+
+            // TODO: unpack YUV: https://en.wikipedia.org/wiki/YUV#Y%E2%80%B2UV420p_(and_Y%E2%80%B2V12_or_YV12)_to_RGB888_conversion
+            //  maybe libav has something to do this!
+
+            cout << "   VRVideo::open img " << bool(pf == AV_PIX_FMT_YUV420P) << " " << bool(cs == AVCOL_SPC_UNSPECIFIED) << " w,h " << vFrame->width << " " << vFrame->height << endl;
+
+            img->getImage()->set(Image::OSG_RGB_PF, vFrame->width, vFrame->height, 1, 1, 1, 0.0, (const uint8_t *)vFrame->data, Image::OSG_UINT8_IMAGEDATA, true, 1); // TODO: try to change true to false
 
             frames[stream][frame] = img;
             frame++;
@@ -110,9 +130,9 @@ void VRVideo::close() {
 
 void VRVideo::play(int stream, float t0, float t1, float v) {
     cout << "\nPLAY\n";
-    material->setTexture(getFrame(stream,0));
+    if (auto m = material.lock()) m->setTexture(getFrame(stream,0));
 }
 
-OSG::VRTexturePtr VRVideo::getFrame(int stream, int i) { if (frames[stream].count(i) == 0) return 0; return frames[stream][i]; }
-OSG::VRTexturePtr VRVideo::getFrame(int stream, float t) { return frames[stream][(int)t*getNFrames()]; }
+VRTexturePtr VRVideo::getFrame(int stream, int i) { if (frames[stream].count(i) == 0) return 0; return frames[stream][i]; }
+VRTexturePtr VRVideo::getFrame(int stream, float t) { return frames[stream][(int)t*getNFrames()]; }
 int VRVideo::getNFrames() { return frames.size(); }
