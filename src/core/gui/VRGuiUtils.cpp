@@ -388,36 +388,31 @@ void setNotebookPage(string nb, int p) {
 }
 
 OSG::VRTexturePtr takeSnapshot() {
-    GtkDrawingArea* drawArea = (GtkDrawingArea*)VRGuiBuilder::get()->get_widget("glarea");
-    GdkWindow* src = gtk_widget_get_window((GtkWidget*)drawArea); // 24 bits per pixel ( src->get_depth() )
-#if GTK_MAJOR_VERSION == 2
-    int w, h;
-    gdk_drawable_get_size(src, &w, &h);
-#else
-    int w = gdk_window_get_width(src);
-    int h = gdk_window_get_height(src);
-#endif
+    GtkWidget* drawArea = VRGuiBuilder::get()->get_widget("glarea");
+    GdkWindow* src = gtk_widget_get_window(drawArea); // 24 bits per pixel ( src->get_depth() )
+
+    GtkAllocation a;
+    gtk_widget_get_allocation(drawArea, &a);
+    int w = a.width;
+    int h = a.height;
+
     w -= w%4; h -= h%4;
 
-#if GTK_MAJOR_VERSION == 2
-    GdkColormap* cm = gdk_drawable_get_colormap(src);
-    GdkImage* img = gdk_drawable_get_image(src, 0, 0, w, h);
-    GdkPixbuf* pxb = gdk_pixbuf_get_from_image(NULL, img, cm, 0,0,0,0,w,h);
-#else
-    GdkPixbuf* pxb = gdk_pixbuf_get_from_window(src, 0,0,w,h);
-#endif
+    GdkPixbuf* pxb = gdk_pixbuf_get_from_window(src, a.x,a.y,w,h);
 
     OSG::ImageMTRecPtr res = OSG::Image::create();
     //Image::set(pixFormat, width, height, depth, mipmapcount, framecount, framedelay, data, type, aloc, sidecount);
     res->set(OSG::Image::OSG_RGB_PF, w, h, 1, 0, 1, 0, (const unsigned char*)gdk_pixbuf_get_pixels(pxb), OSG::Image::OSG_UINT8_IMAGEDATA, true, 1);
+    //cout << "takeSnapshot1 " << drawArea << " " << VRGuiBuilder::get()->get_widget("hbox1") << " " << VRGuiBuilder::get()->get_widget("vbox5") << endl;
+    //cout << "takeSnapshot2 " << src << " " << src2 << " " << src3 << endl;
     return OSG::VRTexture::create(res);
 }
 
 void saveSnapshot(string path) {
     cout << "saveSnapshot " << path << endl;
     if (!exists(getFolderName(path))) return;
-    GtkDrawingArea* drawArea = (GtkDrawingArea*)VRGuiBuilder::get()->get_widget("glarea");
-    GdkWindow* src = gtk_widget_get_window((GtkWidget*)drawArea);
+    GtkWidget* drawArea = VRGuiBuilder::get()->get_widget("glarea");
+    GdkWindow* src = gtk_widget_get_window(drawArea);
     int w = gdk_window_get_width(src);
     int h = gdk_window_get_height(src);
     int smin = min(w, h);

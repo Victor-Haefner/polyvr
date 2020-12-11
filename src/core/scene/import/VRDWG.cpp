@@ -563,6 +563,8 @@ void process_object(Dwg_Object* obj, DWGContext& data) {
     string dxfname = obj->dxfname ? obj->dxfname : "";
     data.entityHistogram[dxfname] += 1;
 
+    //cout << "process_object " << obj->type << endl;
+
     switch (obj->type) {
         case DWG_TYPE_LINE: process_LINE(obj, data); break;
         case DWG_TYPE_INSERT: process_INSERT(obj, data); break;
@@ -675,6 +677,8 @@ void loadDWG(string path, VRTransformPtr res, map<string, string> options) {
     bool doSplitByColors = false;
     if (options.count("doSplitByColors"))
         toValue(options["doSplitByColors"], doSplitByColors);
+
+    cout << " got " << data.layers.size() << " layers" << endl;
 
     for (auto& l : data.layers) {
         Dwg_Object_LAYER* layer = l.first;
