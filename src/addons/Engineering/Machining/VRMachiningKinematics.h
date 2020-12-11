@@ -22,4 +22,4 @@ class VRMachiningKinematics : public std::enable_shared_from_this<VRMachiningKin
 
 OSG_END_NAMESPACE;
 
-#endif VRMACHININGKINEMATICS_H_INCLUDED
+#endif //VRMACHININGKINEMATICS_H_INCLUDED

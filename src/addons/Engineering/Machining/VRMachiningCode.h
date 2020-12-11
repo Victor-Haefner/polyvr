@@ -47,4 +47,4 @@ class VRMachiningCode : public std::enable_shared_from_this<VRMachiningCode> {
 
 OSG_END_NAMESPACE;
 
-#endif VRMACHININGCODE_H_INCLUDED
+#endif //VRMACHININGCODE_H_INCLUDED

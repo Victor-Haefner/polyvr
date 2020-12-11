@@ -30,4 +30,4 @@ class VRCartesianKinematics : public VRMachiningKinematics {
 
 OSG_END_NAMESPACE;
 
-#endif VRCARTESIANKINEMATICS_H_INCLUDED
+#endif //VRCARTESIANKINEMATICS_H_INCLUDED

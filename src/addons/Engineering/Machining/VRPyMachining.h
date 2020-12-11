@@ -22,4 +22,4 @@ struct VRPyCartesianKinematics : VRPyBaseT<OSG::VRCartesianKinematics> {
     static PyMethodDef methods[];
 };
 
-#endif VRPYMACHINING_H_INCLUDED
+#endif //VRPYMACHINING_H_INCLUDED

@@ -21,6 +21,20 @@ using namespace OSG;
 template<> string typeName(const VROPCUA& t) { return "OPCUA"; }
 template<> string typeName(const VROPCUANode& t) { return "OPCUANode"; }
 
+class SubClient : public SubscriptionHandler {
+    public:
+        map<uint8_t, Variant> values;
+
+        SubClient() {}
+        ~SubClient() {}
+
+        static shared_ptr<SubClient> create() { return shared_ptr<SubClient>( new SubClient() ); }
+
+        void DataChange(uint32_t handle, const OpcUa::Node& node, const Variant& val, AttributeId attr) override {
+            //cout << "Received DataChange event handle: " << handle << ", val: " << ::toString(val) << endl;
+            values[handle] = val;
+        }
+};
 
 string VROPCUANode::typeToString(uint8_t v) {
     if (v == 0) return "null";
@@ -50,14 +64,6 @@ string VROPCUANode::typeToString(uint8_t v) {
     if (v == 24) return "variant";
     if (v == 25) return "diagnostic_info";
     return "none";
-}
-
-
-vector<OpcUa::Variant> MyMethod(NodeId context, vector<OpcUa::Variant> arguments) {
-    cout << "MyMethod called! " << endl;
-    vector<OpcUa::Variant> result;
-    result.push_back(Variant(static_cast<uint8_t>(0)));
-    return result;
 }
 
 string toString(OpcUa::Variant const& v) {
@@ -145,10 +151,7 @@ void printTree(OpcUa::Node& node, string offset = "") {
     for (OpcUa::Node child : node.GetChildren()) printTree(child, offset+" ");
 }
 
-
-
-
-VROPCUANode::VROPCUANode(shared_ptr<OpcUa::Node> n) : node(n) {
+VROPCUANode::VROPCUANode(shared_ptr<OpcUa::Node> n, shared_ptr<SubClient> sclient, shared_ptr<OpcUa::Subscription> subs) : node(n), subscriptionClient(sclient), subscription(subs) {
     const Variant& V = node->GetValue();
     try {
         nodeType = uint8_t(V.Type());
@@ -162,7 +165,7 @@ VROPCUANode::VROPCUANode(shared_ptr<OpcUa::Node> n) : node(n) {
 
 VROPCUANode::~VROPCUANode() {}
 
-VROPCUANodePtr VROPCUANode::create(OpcUa::Node& node) { return VROPCUANodePtr( new VROPCUANode( shared_ptr<OpcUa::Node>(new OpcUa::Node(node)) ) ); }
+VROPCUANodePtr VROPCUANode::create(OpcUa::Node& node, shared_ptr<SubClient> sclient, shared_ptr<OpcUa::Subscription> subs) { return VROPCUANodePtr( new VROPCUANode( shared_ptr<OpcUa::Node>(new OpcUa::Node(node)), sclient, subs ) ); }
 
 string VROPCUANode::ID() {
     auto nID = node->GetId();
@@ -182,6 +185,9 @@ string VROPCUANode::type() {
 }
 
 string VROPCUANode::value() {
+    if (subscriptionClient && subscriptionClient->values.count(subHandle)) {
+        return ::toString(subscriptionClient->values[subHandle]);
+    }
     Variant v = node->GetValue();
     return ::toString(v);
 }
@@ -189,7 +195,7 @@ string VROPCUANode::value() {
 vector<VROPCUANodePtr> VROPCUANode::getChildren() {
     vector<VROPCUANodePtr> res;
     for (OpcUa::Node child : node->GetChildren()) {
-        auto n = VROPCUANode::create(child);
+        auto n = VROPCUANode::create(child, subscriptionClient, subscription);
         if (n->valid()) res.push_back(n);
     }
     return res;
@@ -201,19 +207,13 @@ VROPCUANodePtr VROPCUANode::getChildByName(string name) {
     VROPCUANodePtr res = 0;
     try {
         auto n = node->GetChild(name);
-        res = VROPCUANode::create(n);
+        res = VROPCUANode::create(n, subscriptionClient, subscription);
     } catch(...) {
         cout << "WARNING, node " << VROPCUANode::name() << " " << node->ToString() << " has no child named " << name << endl;
         for (auto c : getChildren()) cout << " child: " << c->node->ToString() << endl;
         return 0;
     }
     return res->valid() ? res : 0;
-
-    for (auto child : getChildren()) {
-        if (child->name() == name) return child;
-    }
-    cout << "WARNING, node " << VROPCUANode::name() << " has no child named " << name << endl;
-    return 0;
 }
 
 VROPCUANodePtr VROPCUANode::getChildAtPath(string path) {
@@ -314,6 +314,16 @@ void VROPCUANode::set(string value) {
     }
 }
 
+void VROPCUANode::subscribe() {
+    try {
+        subHandle = subscription->SubscribeDataChange(*node);
+        cout << "VROPCUANode::subscribe to " << name() << endl;
+    } catch(const exception& e) {
+        cout << "VROPCUANode::subscribe failed with exception: " << e.what() << endl;
+    } catch(...) {
+        cout << "VROPCUANode::subscribe failed with unknown exception" << endl;
+    }
+}
 
 
 VROPCUA::VROPCUA() {}
@@ -321,21 +331,32 @@ VROPCUA::~VROPCUA() {}
 
 VROPCUAPtr VROPCUA::create() { return VROPCUAPtr( new VROPCUA() ); }
 
-class SubClient : public SubscriptionHandler {
-    void DataChange(uint32_t handle, const OpcUa::Node & node, const Variant & val, AttributeId attr) override {
-        cout << "Received DataChange event for Node " << node << endl;
-    }
-};
-
 VROPCUANodePtr VROPCUA::connect(string address) {
     string endpoint = address;
     cout << "OPCUA: connect to " << endpoint << endl;
     if (client) client->Disconnect();
     client = shared_ptr<OpcUa::UaClient>( new OpcUa::UaClient(0) );
+
     try { client->Connect(endpoint); }
-    catch(...) { return 0;}
+    catch(...) { return 0; }
+
+    subscriptionClient = SubClient::create();
+    subscription = client->CreateSubscription(100, *subscriptionClient);
+
     OpcUa::Node objects = client->GetObjectsNode();
-    return VROPCUANode::create( objects );
+    return VROPCUANode::create( objects, subscriptionClient, subscription );
+}
+
+
+
+
+/** ------------- test server ------------- **/
+
+vector<OpcUa::Variant> MyMethod(NodeId context, vector<OpcUa::Variant> arguments) {
+    cout << "MyMethod called! " << endl;
+    vector<OpcUa::Variant> result;
+    result.push_back(Variant(static_cast<uint8_t>(0)));
+    return result;
 }
 
 void startTestServerT() {
@@ -361,9 +382,9 @@ void startTestServerT() {
 
     //Uncomment following to subscribe to datachange events inside server
 
-    SubClient clt;
+    /*SubClient clt;
     auto sub = server.CreateSubscription(100, clt);
-    sub->SubscribeDataChange(myvar);
+    sub->SubscribeDataChange(myvar);*/
 
 
     //Now write values to address space and send events so clients can have some fun

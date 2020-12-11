@@ -52,7 +52,7 @@ appendTo "$classPath.h" "};"
 appendTo "$classPath.h" ""
 appendTo "$classPath.h" "OSG_END_NAMESPACE;"
 appendTo "$classPath.h" ""
-appendTo "$classPath.h" "#endif ${CLASSNAME}_H_INCLUDED"
+appendTo "$classPath.h" "#endif //${CLASSNAME}_H_INCLUDED"
 
 appendTo "$classPath.cpp" "#include \"$className.h\""
 appendTo "$classPath.cpp" ""

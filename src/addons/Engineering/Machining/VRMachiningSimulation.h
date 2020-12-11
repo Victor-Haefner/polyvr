@@ -48,4 +48,4 @@ class VRMachiningSimulation : public std::enable_shared_from_this<VRMachiningSim
 
 OSG_END_NAMESPACE;
 
-#endif VRMACHININGSIMULATION_H_INCLUDED
+#endif // VRMACHININGSIMULATION_H_INCLUDED
