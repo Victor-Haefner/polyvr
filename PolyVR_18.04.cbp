@@ -201,6 +201,7 @@
 			<Add option="-lcollada14dom" />
 			<Add option="-lGLU" />
 			<Add option="-lGL" />
+			<Add option="-lepoxy" />
 			<Add option="-lSM" />
 			<Add option="-lICE" />
 			<Add option="-lX11" />
