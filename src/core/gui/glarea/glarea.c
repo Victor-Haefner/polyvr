@@ -754,8 +754,6 @@ static GParamSpec *obj_props[LAST_PROP] = { NULL, };
 enum {
   RENDER,
   RESIZE,
-  CREATE_CONTEXT,
-
   LAST_SIGNAL
 };
 
@@ -768,109 +766,89 @@ G_DEFINE_TYPE_WITH_PRIVATE (GLArea, gl_area, GTK_TYPE_WIDGET)
 static void gl_area_get_property(GObject* gobject, guint prop_id, GValue* value, GParamSpec* pspec) {}
 static void gl_area_set_property (GObject* gobject, guint prop_id, const GValue* value, GParamSpec* pspec) {}
 
-static void
-gl_area_dispose (GObject *gobject)
-{
-  GLArea *area = GL_AREA (gobject);
-  GLAreaPrivate *priv = gl_area_get_instance_private (area);
-
-  g_clear_object (&priv->context);
-
-  G_OBJECT_CLASS (gl_area_parent_class)->dispose (gobject);
-}
-
-static void
-gl_area_realize (GtkWidget *widget)
-{
-  GLArea *area = GL_AREA (widget);
-  GLAreaPrivate *priv = gl_area_get_instance_private (area);
-  GtkAllocation allocation;
-  GdkWindowAttr attributes;
-  gint attributes_mask;
-
-  GTK_WIDGET_CLASS (gl_area_parent_class)->realize (widget);
-
-  gtk_widget_get_allocation (widget, &allocation);
-
-  attributes.window_type = GDK_WINDOW_CHILD;
-  attributes.x = allocation.x;
-  attributes.y = allocation.y;
-  attributes.width = allocation.width;
-  attributes.height = allocation.height;
-  attributes.wclass = GDK_INPUT_ONLY;
-  attributes.event_mask = gtk_widget_get_events (widget);
-
-  attributes_mask = GDK_WA_X | GDK_WA_Y;
-
-  priv->event_window = gdk_window_new (gtk_widget_get_parent_window (widget),
-                                       &attributes, attributes_mask);
-  gtk_widget_register_window (widget, priv->event_window);
-
-  g_clear_error (&priv->error);
-  priv->context = NULL;
-  g_signal_emit (area, area_signals[CREATE_CONTEXT], 0, &priv->context);
-
-
-  /* In case the signal failed, but did not set an error */
-  /*if (priv->context == NULL && priv->error == NULL)
-    g_set_error_literal (&priv->error, GDK_GL_ERROR,
-                         GDK_GL_ERROR_NOT_AVAILABLE,
-                         _("OpenGL context creation failed"));*/
-
-  priv->needs_resize = TRUE;
-}
-
-static void
-gl_area_notify (GObject    *object,
-                    GParamSpec *pspec)
-{
-  if (strcmp (pspec->name, "scale-factor") == 0)
-    {
-      GLArea *area = GL_AREA (object);
-      GLAreaPrivate *priv = gl_area_get_instance_private (area);
-
-      priv->needs_resize = TRUE;
-    }
-
-  if (G_OBJECT_CLASS (gl_area_parent_class)->notify)
-    G_OBJECT_CLASS (gl_area_parent_class)->notify (object, pspec);
+static void gl_area_dispose(GObject *gobject) {
+    GLArea *area = GL_AREA (gobject);
+    GLAreaPrivate *priv = gl_area_get_instance_private (area);
+    g_clear_object (&priv->context);
+    G_OBJECT_CLASS (gl_area_parent_class)->dispose (gobject);
 }
 
 static GdkGLContext* gl_area_real_create_context(GLArea *area) {
     printf("gl_area_real_create_context\n");
-  GLAreaPrivate *priv = gl_area_get_instance_private (area);
-  GtkWidget *widget = GTK_WIDGET (area);
-  GError *error = NULL;
-  GdkGLContext *context;
+    GLAreaPrivate *priv = gl_area_get_instance_private (area);
+    GtkWidget *widget = GTK_WIDGET (area);
+    GError *error = NULL;
+    GdkGLContext *context;
 
 #ifndef _WIN32
-  override_x11_window_invalidate_for_new_frame( gtk_widget_get_window (widget) );
+    override_x11_window_invalidate_for_new_frame( gtk_widget_get_window (widget) );
 #endif
 
-  context = gdk_window_create_gl_context (gtk_widget_get_window (widget), &error);
-  if (error != NULL) {
-      gl_area_set_error (area, error);
-      g_clear_object (&context);
-      g_clear_error (&error);
-      return NULL;
+    context = gdk_window_create_gl_context (gtk_widget_get_window (widget), &error);
+    if (error != NULL) {
+        gl_area_set_error (area, error);
+        g_clear_object (&context);
+        g_clear_error (&error);
+        return NULL;
     }
 
-  gdk_gl_context_set_use_es (context, 0);
-  gdk_gl_context_set_required_version (context, 3, 2);
+    gdk_gl_context_set_use_es (context, 0);
+    gdk_gl_context_set_required_version (context, 3, 2);
 
-  gdk_gl_context_realize (context, &error);
-  if (error != NULL) {
-      gl_area_set_error (area, error);
-      g_clear_object (&context);
-      g_clear_error (&error);
-      return NULL;
+    gdk_gl_context_realize (context, &error);
+    if (error != NULL) {
+        gl_area_set_error (area, error);
+        g_clear_object (&context);
+        g_clear_error (&error);
+        return NULL;
     }
 
-  gdk_gl_context_make_current(context);
-  initGLFunctions();
+    gdk_gl_context_make_current(context);
+    initGLFunctions();
 
-  return context;
+    return context;
 }
+
+static void gl_area_realize (GtkWidget *widget) {
+    GLArea *area = GL_AREA (widget);
+    GLAreaPrivate *priv = gl_area_get_instance_private (area);
+    GtkAllocation allocation;
+    GdkWindowAttr attributes;
+    gint attributes_mask;
+
+    GTK_WIDGET_CLASS (gl_area_parent_class)->realize (widget);
+
+    gtk_widget_get_allocation (widget, &allocation);
+
+    attributes.window_type = GDK_WINDOW_CHILD;
+    attributes.x = allocation.x;
+    attributes.y = allocation.y;
+    attributes.width = allocation.width;
+    attributes.height = allocation.height;
+    attributes.wclass = GDK_INPUT_ONLY;
+    attributes.event_mask = gtk_widget_get_events (widget);
+
+    attributes_mask = GDK_WA_X | GDK_WA_Y;
+
+    priv->event_window = gdk_window_new (gtk_widget_get_parent_window (widget), &attributes, attributes_mask);
+    gtk_widget_register_window (widget, priv->event_window);
+
+    g_clear_error (&priv->error);
+    priv->context = gl_area_real_create_context(area);
+    priv->needs_resize = TRUE;
+}
+
+static void gl_area_notify(GObject* object, GParamSpec* pspec) {
+    if (strcmp (pspec->name, "scale-factor") == 0) {
+        GLArea *area = GL_AREA (object);
+        GLAreaPrivate *priv = gl_area_get_instance_private (area);
+        priv->needs_resize = TRUE;
+    }
+
+    if (G_OBJECT_CLASS (gl_area_parent_class)->notify)
+        G_OBJECT_CLASS (gl_area_parent_class)->notify (object, pspec);
+}
+
 
 static void gl_area_resize (GLArea *area, int width, int height) {
     glViewport (0, 0, width, height);
@@ -1057,11 +1035,6 @@ static gboolean gl_area_draw(GtkWidget* widget, cairo_t* cr) {
     return TRUE;
 }
 
-static gboolean create_context_accumulator (GSignalInvocationHint *ihint, GValue *return_accu, const GValue *handler_return, gpointer data) {
-    g_value_copy (handler_return, return_accu);
-    return g_value_get_object (handler_return) == NULL;
-}
-
 gboolean _boolean_handled_accumulator(GSignalInvocationHint* ihint, GValue* return_accu, const GValue* handler_return, gpointer dummy) {
     gboolean continue_emission;
     gboolean signal_handled;
@@ -1083,22 +1056,17 @@ void _marshal_VOID__INT_INT(GClosure* closure,
     gpointer      marshal_data)
 {
     typedef void (*GMarshalFunc_VOID__INT_INT) (gpointer data1,
-        gint arg1,
-        gint arg2,
-        gpointer data2);
+        gint arg1, gint arg2, gpointer data2);
     GCClosure* cc = (GCClosure*)closure;
     gpointer data1, data2;
     GMarshalFunc_VOID__INT_INT callback;
 
     g_return_if_fail(n_param_values == 3);
 
-    if (G_CCLOSURE_SWAP_DATA(closure))
-    {
+    if (G_CCLOSURE_SWAP_DATA(closure)) {
         data1 = closure->data;
         data2 = g_value_peek_pointer(param_values + 0);
-    }
-    else
-    {
+    } else {
         data1 = g_value_peek_pointer(param_values + 0);
         data2 = closure->data;
     }
@@ -1110,209 +1078,32 @@ void _marshal_VOID__INT_INT(GClosure* closure,
         data2);
 }
 
-
-void _marshal_OBJECT__VOID(GClosure* closure,
-    GValue* return_value,
-    guint         n_param_values,
-    const GValue* param_values,
-    gpointer      invocation_hint G_GNUC_UNUSED,
-    gpointer      marshal_data)
-{
-    typedef GObject* (*GMarshalFunc_OBJECT__VOID) (gpointer data1,
-        gpointer data2);
-    GCClosure* cc = (GCClosure*)closure;
-    gpointer data1, data2;
-    GMarshalFunc_OBJECT__VOID callback;
-    GObject* v_return;
-
-    g_return_if_fail(return_value != NULL);
-    g_return_if_fail(n_param_values == 1);
-
-    if (G_CCLOSURE_SWAP_DATA(closure))
-    {
-        data1 = closure->data;
-        data2 = g_value_peek_pointer(param_values + 0);
-    }
-    else
-    {
-        data1 = g_value_peek_pointer(param_values + 0);
-        data2 = closure->data;
-    }
-    callback = (GMarshalFunc_OBJECT__VOID)(marshal_data ? marshal_data : cc->callback);
-
-    v_return = callback(data1,
-        data2);
-
-    g_value_take_object(return_value, v_return);
-}
-
-#define P_(String) (String)
 #define I_(string) g_intern_static_string(string)
 
-static void
-gl_area_class_init (GLAreaClass *klass)
-{
-  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
-  GtkWidgetClass *widget_class = GTK_WIDGET_CLASS (klass);
+static void gl_area_class_init (GLAreaClass *klass) {
+    GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+    GtkWidgetClass *widget_class = GTK_WIDGET_CLASS (klass);
 
-  klass->resize = gl_area_resize;
-  klass->create_context = gl_area_real_create_context;
+    klass->resize = gl_area_resize;
+    klass->create_context = gl_area_real_create_context;
 
-  widget_class->realize = gl_area_realize;
-  widget_class->unrealize = gl_area_unrealize;
-  widget_class->map = gl_area_map;
-  widget_class->unmap = gl_area_unmap;
-  widget_class->size_allocate = gl_area_size_allocate;
-  widget_class->draw = gl_area_draw;
+    widget_class->realize = gl_area_realize;
+    widget_class->unrealize = gl_area_unrealize;
+    widget_class->map = gl_area_map;
+    widget_class->unmap = gl_area_unmap;
+    widget_class->size_allocate = gl_area_size_allocate;
+    widget_class->draw = gl_area_draw;
 
-  gtk_widget_class_set_accessible_role (widget_class, ATK_ROLE_DRAWING_AREA);
+    gtk_widget_class_set_accessible_role (widget_class, ATK_ROLE_DRAWING_AREA);
 
-  /**
-   * GLArea:context:
-   *
-   * The #GdkGLContext used by the #GLArea widget.
-   *
-   * The #GLArea widget is responsible for creating the #GdkGLContext
-   * instance. If you need to render with other kinds of buffers (stencil,
-   * depth, etc), use render buffers.
-   *
-   * Since: 3.16
-   */
-  obj_props[PROP_CONTEXT] =
-    g_param_spec_object ("context",
-                         P_("Context"),
-                         P_("The GL context"),
-                         GDK_TYPE_GL_CONTEXT,
-                         G_PARAM_READABLE |
-                         G_PARAM_STATIC_STRINGS);
+    gobject_class->set_property = gl_area_set_property;
+    gobject_class->get_property = gl_area_get_property;
+    gobject_class->dispose = gl_area_dispose;
+    gobject_class->notify = gl_area_notify;
 
-  /**
-   * GLArea:auto-render:
-   *
-   * If set to %TRUE the #GLArea::render signal will be emitted every time
-   * the widget draws. This is the default and is useful if drawing the widget
-   * is faster.
-   *
-   * If set to %FALSE the data from previous rendering is kept around and will
-   * be used for drawing the widget the next time, unless the window is resized.
-   * In order to force a rendering gl_area_queue_render() must be called.
-   * This mode is useful when the scene changes seldomly, but takes a long time
-   * to redraw.
-   *
-   * Since: 3.16
-   */
+    g_object_class_install_properties (gobject_class, LAST_PROP, obj_props);
 
-#define GTK_PARAM_READWRITE G_PARAM_READWRITE|G_PARAM_STATIC_NAME|G_PARAM_STATIC_NICK|G_PARAM_STATIC_BLURB
-
-  obj_props[PROP_AUTO_RENDER] =
-    g_param_spec_boolean ("auto-render",
-                          P_("Auto render"),
-                          P_("Whether the GLArea renders on each redraw"),
-                          TRUE,
-                          GTK_PARAM_READWRITE |
-                          G_PARAM_STATIC_STRINGS |
-                          G_PARAM_EXPLICIT_NOTIFY);
-
-  /**
-   * GLArea:has-alpha:
-   *
-   * If set to %TRUE the buffer allocated by the widget will have an alpha channel
-   * component, and when rendering to the window the result will be composited over
-   * whatever is below the widget.
-   *
-   * If set to %FALSE there will be no alpha channel, and the buffer will fully
-   * replace anything below the widget.
-   *
-   * Since: 3.16
-   */
-  obj_props[PROP_HAS_ALPHA] =
-    g_param_spec_boolean ("has-alpha",
-                          P_("Has alpha"),
-                          P_("Whether the color buffer has an alpha component"),
-                          FALSE,
-                          GTK_PARAM_READWRITE |
-                          G_PARAM_STATIC_STRINGS |
-                          G_PARAM_EXPLICIT_NOTIFY);
-
-  /**
-   * GLArea:has-depth-buffer:
-   *
-   * If set to %TRUE the widget will allocate and enable a depth buffer for the
-   * target framebuffer.
-   *
-   * Since: 3.16
-   */
-  obj_props[PROP_HAS_DEPTH_BUFFER] =
-    g_param_spec_boolean ("has-depth-buffer",
-                          P_("Has depth buffer"),
-                          P_("Whether a depth buffer is allocated"),
-                          FALSE,
-                          GTK_PARAM_READWRITE |
-                          G_PARAM_STATIC_STRINGS |
-                          G_PARAM_EXPLICIT_NOTIFY);
-
-  /**
-   * GLArea:has-stencil-buffer:
-   *
-   * If set to %TRUE the widget will allocate and enable a stencil buffer for the
-   * target framebuffer.
-   *
-   * Since: 3.16
-   */
-  obj_props[PROP_HAS_STENCIL_BUFFER] =
-    g_param_spec_boolean ("has-stencil-buffer",
-                          P_("Has stencil buffer"),
-                          P_("Whether a stencil buffer is allocated"),
-                          FALSE,
-                          GTK_PARAM_READWRITE |
-                          G_PARAM_STATIC_STRINGS |
-                          G_PARAM_EXPLICIT_NOTIFY);
-
-  /**
-   * GLArea:use-es:
-   *
-   * If set to %TRUE the widget will try to create a #GdkGLContext using
-   * OpenGL ES instead of OpenGL.
-   *
-   * See also: gdk_gl_context_set_use_es()
-   *
-   * Since: 3.22
-   */
-  obj_props[PROP_USE_ES] =
-    g_param_spec_boolean ("use-es",
-                          P_("Use OpenGL ES"),
-                          P_("Whether the context uses OpenGL or OpenGL ES"),
-                          FALSE,
-                          GTK_PARAM_READWRITE |
-                          G_PARAM_STATIC_STRINGS |
-                          G_PARAM_EXPLICIT_NOTIFY);
-
-  gobject_class->set_property = gl_area_set_property;
-  gobject_class->get_property = gl_area_get_property;
-  gobject_class->dispose = gl_area_dispose;
-  gobject_class->notify = gl_area_notify;
-
-  g_object_class_install_properties (gobject_class, LAST_PROP, obj_props);
-
-  /**
-   * GLArea::render:
-   * @area: the #GLArea that emitted the signal
-   * @context: the #GdkGLContext used by @area
-   *
-   * The ::render signal is emitted every time the contents
-   * of the #GLArea should be redrawn.
-   *
-   * The @context is bound to the @area prior to emitting this function,
-   * and the buffers are painted to the window once the emission terminates.
-   *
-   * Returns: %TRUE to stop other handlers from being invoked for the event.
-   *   %FALSE to propagate the event further.
-   *
-   * Since: 3.16
-   */
-
-  area_signals[RENDER] =
-    g_signal_new (I_("render"),
+    area_signals[RENDER] = g_signal_new (I_("render"),
                   G_TYPE_FROM_CLASS (gobject_class),
                   G_SIGNAL_RUN_LAST,
                   G_STRUCT_OFFSET (GLAreaClass, render),
@@ -1321,41 +1112,13 @@ gl_area_class_init (GLAreaClass *klass)
                   G_TYPE_BOOLEAN, 1,
                   GDK_TYPE_GL_CONTEXT);
 
-  /**
-   * GLArea::resize:
-   * @area: the #GLArea that emitted the signal
-   * @width: the width of the viewport
-   * @height: the height of the viewport
-   *
-   * The ::resize signal is emitted once when the widget is realized, and
-   * then each time the widget is changed while realized. This is useful
-   * in order to keep GL state up to date with the widget size, like for
-   * instance camera properties which may depend on the width/height ratio.
-   *
-   * The GL context for the area is guaranteed to be current when this signal
-   * is emitted.
-   *
-   * The default handler sets up the GL viewport.
-   *
-   * Since: 3.16
-   */
-  area_signals[RESIZE] =
-    g_signal_new (I_("resize"),
+    area_signals[RESIZE] = g_signal_new (I_("resize"),
                   G_TYPE_FROM_CLASS (klass),
                   G_SIGNAL_RUN_LAST,
                   G_STRUCT_OFFSET (GLAreaClass, resize),
                   NULL, NULL,
                   _marshal_VOID__INT_INT,
                   G_TYPE_NONE, 2, G_TYPE_INT, G_TYPE_INT);
-
-    area_signals[CREATE_CONTEXT] =
-    g_signal_new (I_("create-context"),
-                  G_TYPE_FROM_CLASS (klass),
-                  G_SIGNAL_RUN_LAST,
-                  G_STRUCT_OFFSET (GLAreaClass, create_context),
-                  create_context_accumulator, NULL,
-                  _marshal_OBJECT__VOID,
-                  GDK_TYPE_GL_CONTEXT, 0);
 }
 
 static void gl_area_init (GLArea *area) {
