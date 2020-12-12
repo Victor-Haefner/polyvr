@@ -3,7 +3,7 @@
   <Objects>
     <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" visible="1">
       <Object ambient="0.3 0.3 0.3 1" base_name="Headlight" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" shadowVolume="1e+06 1e+06 1e+06 -1e+06 -1e+06 -1e+06 1" specular="0.1 0.1 0.1 1" type="Light" visible="1">
-        <Object accept_root="1" aspect="1" at="0.915227 -0.0254144 0" at_dir="0" base_name="Default" far="250" fov="1.0472" from="-0.320536 0.355755 1.88169" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
+        <Object accept_root="1" aspect="1" at="0.915227 -0.0254144 0" at_dir="0" base_name="Default" far="250" fov="1.0472" from="-0.378469 0.732347 1.72201" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
           <attachments>
             <Node base_name="transform" name_space="VRAttachment" name_suffix="0" persistency="666" value=""/>
           </attachments>
@@ -22,7 +22,7 @@
           </attachments>
           <constraint persistency="666"/>
         </Object>
-        <Object at="-0.484496 1.5 -0.460611" at_dir="1" base_name="Cone" from="-0.484496 0.5 -0.460611" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" sourceparam="Cone 0.1 0.05 16 1 1" sourcetype="3" type="Geometry" up="0.384496 0 0.460611" visible="1">
+        <Object at="-0.696179 1.5 -0.0676103" at_dir="1" base_name="Cone" from="-0.696179 0.5 -0.0676103" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" sourceparam="Cone 0.1 0.05 16 1 1" sourcetype="3" type="Geometry" up="0.596179 0 0.0676103" visible="1">
           <attachments>
             <Node base_name="geometry" name_space="VRAttachment" name_suffix="0" persistency="666" value=""/>
             <Node base_name="transform" name_space="VRAttachment" name_suffix="0" persistency="666" value=""/>
@@ -79,6 +79,7 @@
 		def addGear(params):
 			g = VR.Geometry('gear')
 			g.setPrimitive(' '.join([str(i) for i in params]))
+			g.setColor('white')
 			VR.mechanism.addChild(g)
 			return g
 		
@@ -148,7 +149,7 @@
     <Script base_name="screenshot" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	import VR
-	return
+	#return
 	sc = VR.getSetup().getView(0).grab()
 	m = VR.getRoot().find('info').getMaterial()
 	m.setTexture(sc)

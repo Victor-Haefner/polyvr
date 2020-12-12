@@ -4,6 +4,8 @@
 #include "core/gui/glarea/glarea.h"
 #include "core/gui/VRGuiBuilder.h"
 
+#include <OpenSG/OSGFrameBufferObject.h>
+
 GdkGLContext* onCreateGLContext(GLArea* area, gpointer user_data) {
     GdkWindow* window = gtk_widget_get_window(GTK_WIDGET(area));
     GdkGLContext* context = gdk_window_create_gl_context(window, NULL);
@@ -98,7 +100,13 @@ bool VRGtkWindow::on_render(GdkGLContext* glcontext) {
 #ifndef WITHOUT_OPENVR
         if (hmd) hmd->render();
 #endif
+#ifdef OSG_hasOuterFBO
+        FrameBufferObject::outerFBO = 1;
         win->render(ract);
+        FrameBufferObject::outerFBO = 0;
+#else
+        win->render(ract);
+#endif
     }
     VRGlobals::RENDER_FRAME_RATE.update(t1);
 

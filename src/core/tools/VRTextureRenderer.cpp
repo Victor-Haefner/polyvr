@@ -127,13 +127,9 @@ VRTextureRenderer::VRTextureRenderer(string name, bool readback) : VRObject(name
     RenderBufferRefPtr depthBuf = RenderBuffer::create();
     depthBuf->setInternalFormat(GL_DEPTH_COMPONENT24);
 
-#ifdef _WIN32
-    FrameBufferObject::outerFBO = 1;
-#endif
     data->fbo = FrameBufferObject::create();
     data->fbo->setColorAttachment(texBuf, 0);
-    //data->fbo->setColorAttachment(texDBuf, 1);
-    data->fbo->setDepthAttachment(texDBuf); //HERE depthBuf/texDBuf
+    data->fbo->setDepthAttachment(texDBuf);
     data->fbo->editMFDrawBuffers()->push_back(GL_DEPTH_ATTACHMENT_EXT);
     data->fbo->editMFDrawBuffers()->push_back(GL_COLOR_ATTACHMENT0_EXT);
     data->fbo->setWidth (data->fboWidth );
