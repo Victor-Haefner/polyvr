@@ -1413,8 +1413,7 @@ gdk_window_get_unscaled_size (_GdkWindow *window,
 }
 
 
-void _gdk_cairo_draw_from_gl(cairo_t* cr, _GdkWindow* window, int source,
-                        int buffer_scale, int x, int y, int width, int height) {
+void _gdk_cairo_draw_from_gl(cairo_t* cr, _GdkWindow* window, int source, int buffer_scale, int x, int y, int width, int height) {
   _GdkWindow* impl_window = window->impl_window;
   int window_scale = gdk_window_get_scale_factor (impl_window);
 
@@ -1430,19 +1429,16 @@ void _gdk_cairo_draw_from_gl(cairo_t* cr, _GdkWindow* window, int source,
   GdkGLContextPaintData* paint_data = gdk_gl_context_get_paint_data (paint_context);
 
   if (paint_data->tmp_framebuffer == 0) glGenFramebuffersEXT (1, &paint_data->tmp_framebuffer);
-
   glBindRenderbuffer(GL_RENDERBUFFER, source);
 
   cairo_matrix_t matrix;
   cairo_get_matrix (cr, &matrix);
-
   int dx = matrix.x0;
   int dy = matrix.y0;
 
-  if (gdk_gl_context_has_framebuffer_blit(paint_context) && clip_region != NULL) {
-      int unscaled_window_height;
-      int i;
+  printf("_gdk_cairo_draw_from_gl %i %i %i\n", dx, dy, window_scale);
 
+  if (gdk_gl_context_has_framebuffer_blit(paint_context) && clip_region != NULL) {
       /* Create a framebuffer with the source renderbuffer and
          make it the current target for reads */
       guint framebuffer = paint_data->tmp_framebuffer;
@@ -1453,6 +1449,7 @@ void _gdk_cairo_draw_from_gl(cairo_t* cr, _GdkWindow* window, int source,
       /* Translate to impl coords */
       cairo_region_translate (clip_region, dx, dy);
       glEnable (GL_SCISSOR_TEST);
+      int unscaled_window_height;
       gdk_window_get_unscaled_size (impl_window, NULL, &unscaled_window_height);
 
       /* We can use glDrawBuffer on OpenGL only; on GLES 2.0 we are already
@@ -1474,7 +1471,7 @@ void _gdk_cairo_draw_from_gl(cairo_t* cr, _GdkWindow* window, int source,
 
 #define FLIP_Y(_y) (unscaled_window_height - (_y))
 
-      for (i = 0; i < cairo_region_num_rectangles (clip_region); i++) {
+      for (int i = 0; i < cairo_region_num_rectangles (clip_region); i++) {
           cairo_rectangle_int_t clip_rect, dest;
 
           cairo_region_get_rectangle (clip_region, i, &clip_rect);
