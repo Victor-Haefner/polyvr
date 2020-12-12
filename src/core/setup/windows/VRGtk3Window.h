@@ -22,7 +22,7 @@ VRGtkWindow::VRGtkWindow(GtkDrawingArea* da, string msaa) {
     widget = GTK_WIDGET(da);
     if (gtk_widget_get_realized(widget)) cout << "Warning: glarea is realized!\n";
 
-    int MSAA = toInt(subString(msaa, 1, -1));
+    int MSAA = 0; //toInt(subString(msaa, 1, -1));
     gl_area_set_samples((GLArea*)widget, MSAA);
 
     //g_signal_connect(widget, "create-context", (GCallback)onCreateGLContext, NULL);
@@ -56,6 +56,10 @@ VRGtkWindow::VRGtkWindow(GtkDrawingArea* da, string msaa) {
     if (VRHeadMountedDisplay::checkDeviceAttached())
         hmd = VRHeadMountedDisplay::create();
 #endif
+}
+
+void VRGtkWindow::setBlitID(int ID, int bType) {
+    gl_area_set_blit_id((GLArea*)widget, ID, bType);
 }
 
 void VRGtkWindow::clear(Color3f c) {

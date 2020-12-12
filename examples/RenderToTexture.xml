@@ -22,7 +22,7 @@
           </attachments>
           <constraint persistency="666"/>
         </Object>
-        <Object at="-0.696179 1.5 -0.0676103" at_dir="1" base_name="Cone" from="-0.696179 0.5 -0.0676103" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" sourceparam="Cone 0.1 0.05 16 1 1" sourcetype="3" type="Geometry" up="0.596179 0 0.0676103" visible="1">
+        <Object at="0.126294 1.5 0.55569" at_dir="1" base_name="Cone" from="0.126294 0.5 0.55569" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" sourceparam="Cone 0.1 0.05 16 1 1" sourcetype="3" type="Geometry" up="-0.226294 0 -0.55569" visible="1">
           <attachments>
             <Node base_name="geometry" name_space="VRAttachment" name_suffix="0" persistency="666" value=""/>
             <Node base_name="transform" name_space="VRAttachment" name_suffix="0" persistency="666" value=""/>
@@ -143,6 +143,8 @@
 	crep.setFrom(VR.rcam.getFrom())
 	crep.setUp(VR.rcam.getDir())
 	crep.setDir([0,1,0])
+
+	VR.find('bla').test()
 </core>
       <trig type="on_timeout" dev="" state="Pressed" param="0" key="0" base_name="trigger" name_space="__global__" name_suffix="1" persistency="666"/>
     </Script>

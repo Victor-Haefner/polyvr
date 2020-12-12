@@ -730,6 +730,8 @@ typedef struct {
     guint depth_stencil_buffer;
 
     guint samples;
+    guint blitID;
+    guint blitType;
 
     gboolean needs_resize;
     gboolean needs_render;
@@ -1025,10 +1027,8 @@ static gboolean gl_area_draw(GtkWidget* widget, cairo_t* cr) {
 
         priv->needs_render = FALSE;
 
-        gl_area_make_current (area);
-        gl_area_attach_buffers (area); // in case they have been unbound for frame rendering etc..
-
-        gdk_cairo_draw_from_gl (cr, gtk_widget_get_window (widget), priv->render_buffer, GL_RENDERBUFFER, scale, 0, 0, w, h);
+        //gdk_cairo_draw_from_gl (cr, gtk_widget_get_window (widget), priv->render_buffer, GL_RENDERBUFFER, scale, 0, 0, w, h);
+        gdk_cairo_draw_from_gl (cr, gtk_widget_get_window (widget), priv->blitID, priv->blitType, scale, 0, 0, w, h);
         gl_area_make_current (area);
     } else g_warning ("fb setup not supported");
 
@@ -1126,6 +1126,9 @@ static void gl_area_init (GLArea *area) {
     gtk_widget_set_has_window (GTK_WIDGET (area), FALSE);
     gtk_widget_set_app_paintable (GTK_WIDGET (area), TRUE);
     priv->needs_render = TRUE;
+    priv->blitID = 0;
+    priv->blitType = GL_RENDERBUFFER;
+    priv->samples = 0;
 }
 
 GtkWidget* gl_area_new (void) {
@@ -1160,6 +1163,13 @@ void gl_area_set_samples (GLArea *area, guint samples) {
         priv->samples = samples;
         priv->have_buffers = FALSE;
     }
+}
+
+void gl_area_set_blit_id (GLArea *area, guint ID, guint bType) {
+    GLAreaPrivate *priv = gl_area_get_instance_private (area);
+    g_return_if_fail (IS_GL_AREA (area));
+    priv->blitID = ID;
+    priv->blitType = bType;
 }
 
 void gl_area_queue_render (GLArea *area) {

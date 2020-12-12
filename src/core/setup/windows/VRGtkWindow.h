@@ -63,6 +63,8 @@ class VRGtkWindow : public VRWindow {
         void render(bool fromThread = false);
         void clear(Color3f c);
 
+        void setBlitID(int ID, int bType);
+
         void setCursor(string c);
 
         void save(XMLElementPtr node);

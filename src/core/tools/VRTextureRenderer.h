@@ -32,7 +32,6 @@ class VRTextureRenderer : public VRObject {
 
         void setChannelSubstitutes(CHANNEL c);
         void resetChannelSubstitutes();
-        void test();
 
     public:
         VRTextureRenderer(string name, bool readback = false);
@@ -55,6 +54,8 @@ class VRTextureRenderer : public VRObject {
         VRMaterialPtr createTextureLod(VRObjectPtr scene, PosePtr cam, int res, float aspect, float fov, Color3f bg);
 
         static void updateSceneBackground();
+
+        void test();
 };
 
 OSG_END_NAMESPACE;

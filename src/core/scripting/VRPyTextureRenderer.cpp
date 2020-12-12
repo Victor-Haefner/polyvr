@@ -19,6 +19,7 @@ PyMethodDef VRPyTextureRenderer::methods[] = {
     {"renderOnce", PyWrapOpt(TextureRenderer, renderOnce, "Render once", "RENDER", VRTexturePtr, VRTextureRenderer::CHANNEL) },
     {"getCamera", PyWrap(TextureRenderer, getCamera, "Get camera", VRCameraPtr) },
     {"createCubeMaps", PyWrap(TextureRenderer, createCubeMaps, "Create cube maps, front, back, left, right, up, down", vector<VRTexturePtr>, VRTransformPtr) },
+    {"test", PyWrap(TextureRenderer, test, "test", void) },
     {NULL}  /* Sentinel */
 };
 

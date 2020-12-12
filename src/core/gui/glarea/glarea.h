@@ -32,7 +32,8 @@ GType gl_area_get_type (void) G_GNUC_CONST;
 GtkWidget *     gl_area_new                         (void);
 
 guint gl_area_get_samples(GLArea* area);
-void gl_area_set_samples(GLArea* area, guint samples);
+void  gl_area_set_samples(GLArea* area, guint samples);
+void  gl_area_set_blit_id(GLArea* area, guint ID, guint bType);
 
 void            gl_area_queue_render                (GLArea    *area);
 GdkGLContext *  gl_area_get_context                 (GLArea    *area);

@@ -3,6 +3,7 @@
 #include <OpenSG/OSGImageForeground.h>
 #include <OpenSG/OSGSimpleGeometry.h>
 #include <OpenSG/OSGMultiPassMaterial.h>
+#include <OpenSG/OSGFBOViewport.h>
 
 #include "core/math/pose.h"
 #include "core/utils/VRRate.h"
@@ -114,16 +115,34 @@ void VRView::setViewports() {//create && set size of viewports
     lView_act = active_stereo ? StereoBufferViewportMTRecPtr(StereoBufferViewport::create()) : 0;
     rView_act = active_stereo ? StereoBufferViewportMTRecPtr(StereoBufferViewport::create()) : 0;
 
+    bool useFBO = false;
+
     //no stereo
+    if (!active_stereo && useFBO) {
+        //vFBO
+    }
+
+    auto createFBOViewport = [&]() {
+        auto fbov = FBOViewport::create();
+        //fbov->setFrameBufferObject(vFBO);
+        return fbov;
+    };
+
     if (!stereo && !active_stereo) {
-        lView = Viewport::create();
+        if (useFBO) lView = createFBOViewport();
+        else lView = Viewport::create();
         lView->setSize(p[0], p[1], p[2], p[3]);
         rView = 0;
     }
 
     if (stereo && !active_stereo) {
-        lView = Viewport::create();
-        rView = Viewport::create();
+        if (useFBO) {
+            lView = createFBOViewport();
+            rView = createFBOViewport();
+        } else {
+            lView = Viewport::create();
+            rView = Viewport::create();
+        }
         // left bottom right top
         lView->setSize(p[0], p[1], (p[0]+p[2])*0.5, p[3]);
         rView->setSize((p[0]+p[2])*0.5, p[1], p[2], p[3]);
