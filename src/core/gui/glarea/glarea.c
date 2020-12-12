@@ -1413,89 +1413,47 @@ gdk_window_get_unscaled_size (_GdkWindow *window,
 }
 
 
-void
-_gdk_cairo_draw_from_gl (cairo_t              *cr,
-                        _GdkWindow            *window,
-                        int                   source,
-                        int                   source_type,
-                        int                   buffer_scale,
-                        int                   x,
-                        int                   y,
-                        int                   width,
-                        int                   height)
-{
-  GdkGLContext *paint_context;
-  cairo_surface_t *image;
-  cairo_matrix_t matrix;
-  int dx, dy, window_scale;
-  gboolean trivial_transform;
-  cairo_surface_t *group_target;
-  _GdkWindow *direct_window, *impl_window;
-  guint framebuffer;
-  int alpha_size = 0;
-  cairo_region_t *clip_region;
-  GdkGLContextPaintData *paint_data;
+void _gdk_cairo_draw_from_gl(cairo_t* cr, _GdkWindow* window, int source,
+                        int buffer_scale, int x, int y, int width, int height) {
+  _GdkWindow* impl_window = window->impl_window;
+  int window_scale = gdk_window_get_scale_factor (impl_window);
 
-  impl_window = window->impl_window;
-
-  window_scale = gdk_window_get_scale_factor (impl_window);
-
-  paint_context = gdk_window_get_paint_gl_context (window, NULL);
-  if (paint_context == NULL)
-    {
+  GdkGLContext* paint_context = gdk_window_get_paint_gl_context (window, NULL);
+  if (paint_context == NULL) {
       g_warning ("gdk_cairo_draw_gl_render_buffer failed - no paint context");
       return;
-    }
+  }
 
-  clip_region = gdk_cairo_region_from_clip (cr);
+  cairo_region_t* clip_region = gdk_cairo_region_from_clip (cr);
 
   gdk_gl_context_make_current (paint_context);
-  paint_data = gdk_gl_context_get_paint_data (paint_context);
+  GdkGLContextPaintData* paint_data = gdk_gl_context_get_paint_data (paint_context);
 
-  printf("_gdk_cairo_draw_from_gl %i %p %p\n", window_scale, impl_window, paint_context);
+  if (paint_data->tmp_framebuffer == 0) glGenFramebuffersEXT (1, &paint_data->tmp_framebuffer);
 
-  if (paint_data->tmp_framebuffer == 0)
-    glGenFramebuffersEXT (1, &paint_data->tmp_framebuffer);
+  glBindRenderbuffer(GL_RENDERBUFFER, source);
 
-  if (source_type == GL_RENDERBUFFER)
-    {
-      glBindRenderbuffer (GL_RENDERBUFFER, source);
-      glGetRenderbufferParameteriv (GL_RENDERBUFFER, GL_RENDERBUFFER_ALPHA_SIZE,  &alpha_size);
-    }
-
-  group_target = cairo_get_group_target (cr);
-  //direct_window = cairo_surface_get_user_data (group_target, &direct_key);
-
+  cairo_matrix_t matrix;
   cairo_get_matrix (cr, &matrix);
 
-  dx = matrix.x0;
-  dy = matrix.y0;
-
-  //printf("_gdk_cairo_draw_from_gl %i %i %p %p\n", dx, dy, group_target, direct_window);
-  printf("_gdk_cairo_draw_from_gl %i %i %p\n", dx, dy, group_target);
+  int dx = matrix.x0;
+  int dy = matrix.y0;
 
   /* Trivial == integer-only translation */
-  trivial_transform =
+  gboolean trivial_transform =
     (double)dx == matrix.x0 && (double)dy == matrix.y0 &&
     matrix.xx == 1.0 && matrix.xy == 0.0 &&
     matrix.yx == 0.0 && matrix.yy == 1.0;
 
-  /* For direct paint of non-alpha renderbuffer, we can
-     just do a bitblit */
-  if (source_type == GL_RENDERBUFFER &&
-      alpha_size == 0 &&
-      //direct_window != NULL &&
-      //direct_window->current_paint.use_gl &&
-      gdk_gl_context_has_framebuffer_blit (paint_context) &&
-      trivial_transform &&
-      clip_region != NULL)
-    {
+  printf("_gdk_cairo_draw_from_gl trivial_transform %i", trivial_transform);
+
+  if (gdk_gl_context_has_framebuffer_blit (paint_context) && trivial_transform && clip_region != NULL) {
       int unscaled_window_height;
       int i;
 
       /* Create a framebuffer with the source renderbuffer and
          make it the current target for reads */
-      framebuffer = paint_data->tmp_framebuffer;
+      guint framebuffer = paint_data->tmp_framebuffer;
       glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, framebuffer);
       glFramebufferRenderbufferEXT (GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT,
                                     GL_RENDERBUFFER_EXT, source);
@@ -1621,7 +1579,8 @@ static gboolean gl_area_draw(GtkWidget* widget, cairo_t* cr) {
 
         //gdk_cairo_draw_from_gl (cr, gtk_widget_get_window (widget), priv->render_buffer, GL_RENDERBUFFER, scale, 0, 0, w, h);
         if (priv->blitID == 0) priv->blitID = priv->render_buffer;
-        _gdk_cairo_draw_from_gl (cr, gtk_widget_get_window (widget), priv->blitID, priv->blitType, scale, 0, 0, w, h);
+        //gdk_cairo_draw_from_gl (cr, gtk_widget_get_window (widget), priv->blitID, priv->blitType, scale, 0, 0, w, h);
+        _gdk_cairo_draw_from_gl (cr, gtk_widget_get_window (widget), priv->blitID, scale, 0, 0, w, h);
         gl_area_make_current (area);
     } else g_warning ("fb setup not supported");
 
