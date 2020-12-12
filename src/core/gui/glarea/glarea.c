@@ -716,42 +716,37 @@ void override_x11_window_invalidate_for_new_frame(_GdkWindow* window) {
 #define GL_BGRA                           0x80E1
 
 typedef struct {
-  GdkGLContext *context;
-  GdkWindow *event_window;
-  GError *error;
+    GdkGLContext *context;
+    GdkWindow *event_window;
+    GError *error;
 
-  gboolean have_buffers;
+    gboolean have_buffers;
 
-  int required_gl_version;
+    int required_gl_version;
 
-  guint frame_buffer;
-  guint render_buffer;
-  guint texture;
-  guint depth_stencil_buffer;
+    guint frame_buffer;
+    guint render_buffer;
+    guint texture;
+    guint depth_stencil_buffer;
 
-  guint samples;
-  gboolean has_alpha;
-  gboolean has_depth_buffer;
-  gboolean has_stencil_buffer;
+    guint samples;
 
-  gboolean needs_resize;
-  gboolean needs_render;
-  gboolean auto_render;
-  gboolean use_es;
+    gboolean needs_resize;
+    gboolean needs_render;
 } GLAreaPrivate;
 
 enum {
-  PROP_0,
+    PROP_0,
 
-  PROP_CONTEXT,
-  PROP_HAS_ALPHA,
-  PROP_HAS_DEPTH_BUFFER,
-  PROP_HAS_STENCIL_BUFFER,
-  PROP_USE_ES,
+    PROP_CONTEXT,
+    PROP_HAS_ALPHA,
+    PROP_HAS_DEPTH_BUFFER,
+    PROP_HAS_STENCIL_BUFFER,
+    PROP_USE_ES,
 
-  PROP_AUTO_RENDER,
+    PROP_AUTO_RENDER,
 
-  LAST_PROP
+    LAST_PROP
 };
 
 static GParamSpec *obj_props[LAST_PROP] = { NULL, };
@@ -770,6 +765,9 @@ static guint area_signals[LAST_SIGNAL] = { 0, };
 
 G_DEFINE_TYPE_WITH_PRIVATE (GLArea, gl_area, GTK_TYPE_WIDGET)
 
+static void gl_area_get_property(GObject* gobject, guint prop_id, GValue* value, GParamSpec* pspec) {}
+static void gl_area_set_property (GObject* gobject, guint prop_id, const GValue* value, GParamSpec* pspec) {}
+
 static void
 gl_area_dispose (GObject *gobject)
 {
@@ -779,80 +777,6 @@ gl_area_dispose (GObject *gobject)
   g_clear_object (&priv->context);
 
   G_OBJECT_CLASS (gl_area_parent_class)->dispose (gobject);
-}
-
-static void
-gl_area_set_property (GObject      *gobject,
-                          guint         prop_id,
-                          const GValue *value,
-                          GParamSpec   *pspec)
-{
-  GLArea *self = GL_AREA (gobject);
-
-  switch (prop_id)
-    {
-    case PROP_AUTO_RENDER:
-      gl_area_set_auto_render (self, g_value_get_boolean (value));
-      break;
-
-    case PROP_HAS_ALPHA:
-      gl_area_set_has_alpha (self, g_value_get_boolean (value));
-      break;
-
-    case PROP_HAS_DEPTH_BUFFER:
-      gl_area_set_has_depth_buffer (self, g_value_get_boolean (value));
-      break;
-
-    case PROP_HAS_STENCIL_BUFFER:
-      gl_area_set_has_stencil_buffer (self, g_value_get_boolean (value));
-      break;
-
-    case PROP_USE_ES:
-      gl_area_set_use_es (self, g_value_get_boolean (value));
-      break;
-
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (gobject, prop_id, pspec);
-    }
-}
-
-static void
-gl_area_get_property (GObject    *gobject,
-                          guint       prop_id,
-                          GValue     *value,
-                          GParamSpec *pspec)
-{
-  GLAreaPrivate *priv = gl_area_get_instance_private (GL_AREA (gobject));
-
-  switch (prop_id)
-    {
-    case PROP_AUTO_RENDER:
-      g_value_set_boolean (value, priv->auto_render);
-      break;
-
-    case PROP_HAS_ALPHA:
-      g_value_set_boolean (value, priv->has_alpha);
-      break;
-
-    case PROP_HAS_DEPTH_BUFFER:
-      g_value_set_boolean (value, priv->has_depth_buffer);
-      break;
-
-    case PROP_HAS_STENCIL_BUFFER:
-      g_value_set_boolean (value, priv->has_stencil_buffer);
-      break;
-
-    case PROP_CONTEXT:
-      g_value_set_object (value, priv->context);
-      break;
-
-    case PROP_USE_ES:
-      g_value_set_boolean (value, priv->use_es);
-      break;
-
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (gobject, prop_id, pspec);
-    }
 }
 
 static void
@@ -931,10 +855,8 @@ static GdkGLContext* gl_area_real_create_context(GLArea *area) {
       return NULL;
     }
 
-  gdk_gl_context_set_use_es (context, priv->use_es);
-  gdk_gl_context_set_required_version (context,
-                                       priv->required_gl_version / 10,
-                                       priv->required_gl_version % 10);
+  gdk_gl_context_set_use_es (context, 0);
+  gdk_gl_context_set_required_version (context, 3, 2);
 
   gdk_gl_context_realize (context, &error);
   if (error != NULL) {
@@ -990,11 +912,9 @@ static void gl_area_allocate_buffers (GLArea *area) {
         else glRenderbufferStorageMultisample (GL_RENDERBUFFER, priv->samples, GL_RGB8, width, height);
     }
 
-    if (priv->has_depth_buffer || priv->has_stencil_buffer) {
-        glBindRenderbuffer (GL_RENDERBUFFER, priv->depth_stencil_buffer);
-        if (priv->samples == 0) glRenderbufferStorage (GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
-        else glRenderbufferStorageMultisample(GL_RENDERBUFFER, priv->samples, GL_DEPTH24_STENCIL8, width, height);
-    }
+    glBindRenderbuffer (GL_RENDERBUFFER, priv->depth_stencil_buffer);
+    if (priv->samples == 0) glRenderbufferStorage (GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
+    else glRenderbufferStorageMultisample(GL_RENDERBUFFER, priv->samples, GL_DEPTH24_STENCIL8, width, height);
 
     priv->needs_render = TRUE;
 }
@@ -1109,8 +1029,7 @@ static gboolean gl_area_draw(GtkWidget* widget, cairo_t* cr) {
     gl_area_make_current (area);
     gl_area_attach_buffers (area);
 
-    if (priv->has_depth_buffer) glEnable (GL_DEPTH_TEST);
-    else glDisable (GL_DEPTH_TEST);
+    glEnable (GL_DEPTH_TEST);
 
     scale = gtk_widget_get_scale_factor (widget);
     w = gtk_widget_get_allocated_width (widget) * scale;
@@ -1118,7 +1037,7 @@ static gboolean gl_area_draw(GtkWidget* widget, cairo_t* cr) {
 
     status = glCheckFramebufferStatus (GL_FRAMEBUFFER_EXT);
     if (status == GL_FRAMEBUFFER_COMPLETE_EXT) {
-        if (priv->needs_render || priv->auto_render) {
+        if (priv->needs_render) {
             if (priv->needs_resize) {
                 g_signal_emit (area, area_signals[RESIZE], 0, w, h, NULL);
                 priv->needs_resize = FALSE;
@@ -1429,27 +1348,7 @@ gl_area_class_init (GLAreaClass *klass)
                   _marshal_VOID__INT_INT,
                   G_TYPE_NONE, 2, G_TYPE_INT, G_TYPE_INT);
 
-  /**
-   * GLArea::create-context:
-   * @area: the #GLArea that emitted the signal
-   * @error: (allow-none): location to store error information on failure
-   *
-   * The ::create-context signal is emitted when the widget is being
-   * realized, and allows you to override how the GL context is
-   * created. This is useful when you want to reuse an existing GL
-   * context, or if you want to try creating different kinds of GL
-   * options.
-   *
-   * If context creation fails then the signal handler can use
-   * gl_area_set_error() to register a more detailed error
-   * of how the construction failed.
-   *
-   * Returns: (transfer full): a newly created #GdkGLContext;
-   *     the #GLArea widget will take ownership of the returned value.
-   *
-   * Since: 3.16
-   */
-  area_signals[CREATE_CONTEXT] =
+    area_signals[CREATE_CONTEXT] =
     g_signal_new (I_("create-context"),
                   G_TYPE_FROM_CLASS (klass),
                   G_SIGNAL_RUN_LAST,
@@ -1459,494 +1358,69 @@ gl_area_class_init (GLAreaClass *klass)
                   GDK_TYPE_GL_CONTEXT, 0);
 }
 
-static void
-gl_area_init (GLArea *area)
-{
-  GLAreaPrivate *priv = gl_area_get_instance_private (area);
-
-  gtk_widget_set_has_window (GTK_WIDGET (area), FALSE);
-  gtk_widget_set_app_paintable (GTK_WIDGET (area), TRUE);
-
-  priv->auto_render = TRUE;
-  priv->needs_render = TRUE;
-  priv->required_gl_version = 0;
+static void gl_area_init (GLArea *area) {
+    GLAreaPrivate *priv = gl_area_get_instance_private (area);
+    gtk_widget_set_has_window (GTK_WIDGET (area), FALSE);
+    gtk_widget_set_app_paintable (GTK_WIDGET (area), TRUE);
+    priv->needs_render = TRUE;
 }
 
-/**
- * gl_area_new:
- *
- * Creates a new #GLArea widget.
- *
- * Returns: (transfer full): the newly created #GLArea
- *
- * Since: 3.16
- */
-GtkWidget*
-gl_area_new (void) {
+GtkWidget* gl_area_new (void) {
     GtkWidget* obj = g_object_new (TYPE_GL_AREA, NULL);
     return obj;
 }
 
-/**
- * gl_area_set_error:
- * @area: a #GLArea
- * @error: (allow-none): a new #GError, or %NULL to unset the error
- *
- * Sets an error on the area which will be shown instead of the
- * GL rendering. This is useful in the #GLArea::create-context
- * signal if GL context creation fails.
- *
- * Since: 3.16
- */
-void
-gl_area_set_error (GLArea    *area,
-                       const GError *error)
-{
-  GLAreaPrivate *priv = gl_area_get_instance_private (area);
-
-  g_return_if_fail (IS_GL_AREA (area));
-
-  g_clear_error (&priv->error);
-  if (error)
-    priv->error = g_error_copy (error);
+void gl_area_set_error (GLArea    *area, const GError *error) {
+    GLAreaPrivate *priv = gl_area_get_instance_private (area);
+    g_return_if_fail (IS_GL_AREA (area));
+    g_clear_error (&priv->error);
+    if (error) priv->error = g_error_copy (error);
 }
 
-/**
- * gl_area_get_error:
- * @area: a #GLArea
- *
- * Gets the current error set on the @area.
- *
- * Returns: (nullable) (transfer none): the #GError or %NULL
- *
- * Since: 3.16
- */
-GError *
-gl_area_get_error (GLArea *area)
-{
-  GLAreaPrivate *priv = gl_area_get_instance_private (area);
-
-  g_return_val_if_fail (IS_GL_AREA (area), NULL);
-
-  return priv->error;
+GError* gl_area_get_error (GLArea *area) {
+    GLAreaPrivate *priv = gl_area_get_instance_private (area);
+    g_return_val_if_fail (IS_GL_AREA (area), NULL);
+    return priv->error;
 }
 
-/**
- * gl_area_set_use_es:
- * @area: a #GLArea
- * @use_es: whether to use OpenGL or OpenGL ES
- *
- * Sets whether the @area should create an OpenGL or an OpenGL ES context.
- *
- * You should check the capabilities of the #GdkGLContext before drawing
- * with either API.
- *
- * Since: 3.22
- */
-void
-gl_area_set_use_es (GLArea *area,
-                        gboolean   use_es)
-{
-  GLAreaPrivate *priv = gl_area_get_instance_private (area);
+guint gl_area_get_samples (GLArea *area) {
+    GLAreaPrivate *priv = gl_area_get_instance_private (area);
+    g_return_val_if_fail (IS_GL_AREA (area), FALSE);
+    return priv->samples;
+}
 
-  g_return_if_fail (IS_GL_AREA (area));
-  g_return_if_fail (!gtk_widget_get_realized (GTK_WIDGET (area)));
+void gl_area_set_samples (GLArea *area, guint samples) {
+    GLAreaPrivate *priv = gl_area_get_instance_private (area);
+    g_return_if_fail (IS_GL_AREA (area));
 
-  use_es = !!use_es;
-
-  if (priv->use_es != use_es)
-    {
-      priv->use_es = use_es;
-
-      g_object_notify_by_pspec (G_OBJECT (area), obj_props[PROP_USE_ES]);
+    if (priv->samples != samples) {
+        priv->samples = samples;
+        priv->have_buffers = FALSE;
     }
 }
 
-/**
- * gl_area_get_use_es:
- * @area: a #GLArea
- *
- * Retrieves the value set by gl_area_set_use_es().
- *
- * Returns: %TRUE if the #GLArea should create an OpenGL ES context
- *   and %FALSE otherwise
- *
- * Since: 3.22
- */
-gboolean
-gl_area_get_use_es (GLArea *area)
-{
-  GLAreaPrivate *priv = gl_area_get_instance_private (area);
-
-  g_return_val_if_fail (IS_GL_AREA (area), FALSE);
-
-  return priv->use_es;
+void gl_area_queue_render (GLArea *area) {
+    GLAreaPrivate *priv = gl_area_get_instance_private (area);
+    g_return_if_fail (IS_GL_AREA (area));
+    priv->needs_render = TRUE;
+    gtk_widget_queue_draw (GTK_WIDGET (area));
 }
 
-/**
- * gl_area_set_required_version:
- * @area: a #GLArea
- * @major: the major version
- * @minor: the minor version
- *
- * Sets the required version of OpenGL to be used when creating the context
- * for the widget.
- *
- * This function must be called before the area has been realized.
- *
- * Since: 3.16
- */
-void
-gl_area_set_required_version (GLArea *area,
-                                  gint       major,
-                                  gint       minor)
-{
-  GLAreaPrivate *priv = gl_area_get_instance_private (area);
-
-  g_return_if_fail (IS_GL_AREA (area));
-  g_return_if_fail (!gtk_widget_get_realized (GTK_WIDGET (area)));
-
-  priv->required_gl_version = major * 10 + minor;
+GdkGLContext* gl_area_get_context (GLArea *area) {
+    GLAreaPrivate *priv = gl_area_get_instance_private (area);
+    g_return_val_if_fail (IS_GL_AREA (area), NULL);
+    return priv->context;
 }
 
-/**
- * gl_area_get_required_version:
- * @area: a #GLArea
- * @major: (out): return location for the required major version
- * @minor: (out): return location for the required minor version
- *
- * Retrieves the required version of OpenGL set
- * using gl_area_set_required_version().
- *
- * Since: 3.16
- */
-void
-gl_area_get_required_version (GLArea *area,
-                                  gint      *major,
-                                  gint      *minor)
-{
-  GLAreaPrivate *priv = gl_area_get_instance_private (area);
+void gl_area_make_current (GLArea *area) {
+    GLAreaPrivate *priv = gl_area_get_instance_private (area);
+    GtkWidget *widget;
 
-  g_return_if_fail (IS_GL_AREA (area));
+    g_return_if_fail (IS_GL_AREA (area));
 
-  if (major != NULL)
-    *major = priv->required_gl_version / 10;
-  if (minor != NULL)
-    *minor = priv->required_gl_version % 10;
-}
+    widget = GTK_WIDGET (area);
 
-/**
- * gl_area_get_has_alpha:
- * @area: a #GLArea
- *
- * Returns whether the area has an alpha component.
- *
- * Returns: %TRUE if the @area has an alpha component, %FALSE otherwise
- *
- * Since: 3.16
- */
-gboolean
-gl_area_get_has_alpha (GLArea *area)
-{
-  GLAreaPrivate *priv = gl_area_get_instance_private (area);
+    g_return_if_fail (gtk_widget_get_realized (widget));
 
-  g_return_val_if_fail (IS_GL_AREA (area), FALSE);
-
-  return priv->has_alpha;
-}
-
-/**
- * gl_area_set_has_alpha:
- * @area: a #GLArea
- * @has_alpha: %TRUE to add an alpha component
- *
- * If @has_alpha is %TRUE the buffer allocated by the widget will have
- * an alpha channel component, and when rendering to the window the
- * result will be composited over whatever is below the widget.
- *
- * If @has_alpha is %FALSE there will be no alpha channel, and the
- * buffer will fully replace anything below the widget.
- *
- * Since: 3.16
- */
-void
-gl_area_set_has_alpha (GLArea *area,
-                           gboolean   has_alpha)
-{
-  GLAreaPrivate *priv = gl_area_get_instance_private (area);
-
-  g_return_if_fail (IS_GL_AREA (area));
-
-  has_alpha = !!has_alpha;
-
-  if (priv->has_alpha != has_alpha)
-    {
-      priv->has_alpha = has_alpha;
-
-      g_object_notify (G_OBJECT (area), "has-alpha");
-
-      gl_area_delete_buffers (area);
-    }
-}
-
-/**
- * gl_area_get_has_depth_buffer:
- * @area: a #GLArea
- *
- * Returns whether the area has a depth buffer.
- *
- * Returns: %TRUE if the @area has a depth buffer, %FALSE otherwise
- *
- * Since: 3.16
- */
-gboolean
-gl_area_get_has_depth_buffer (GLArea *area)
-{
-  GLAreaPrivate *priv = gl_area_get_instance_private (area);
-
-  g_return_val_if_fail (IS_GL_AREA (area), FALSE);
-
-  return priv->has_depth_buffer;
-}
-
-/**
- * gl_area_set_has_depth_buffer:
- * @area: a #GLArea
- * @has_depth_buffer: %TRUE to add a depth buffer
- *
- * If @has_depth_buffer is %TRUE the widget will allocate and
- * enable a depth buffer for the target framebuffer. Otherwise
- * there will be none.
- *
- * Since: 3.16
- */
-void
-gl_area_set_has_depth_buffer (GLArea *area,
-                                  gboolean   has_depth_buffer)
-{
-  GLAreaPrivate *priv = gl_area_get_instance_private (area);
-
-  g_return_if_fail (IS_GL_AREA (area));
-
-  has_depth_buffer = !!has_depth_buffer;
-
-  if (priv->has_depth_buffer != has_depth_buffer)
-    {
-      priv->has_depth_buffer = has_depth_buffer;
-
-      g_object_notify (G_OBJECT (area), "has-depth-buffer");
-
-      priv->have_buffers = FALSE;
-    }
-}
-
-/**
- * gl_area_get_has_stencil_buffer:
- * @area: a #GLArea
- *
- * Returns whether the area has a stencil buffer.
- *
- * Returns: %TRUE if the @area has a stencil buffer, %FALSE otherwise
- *
- * Since: 3.16
- */
-gboolean
-gl_area_get_has_stencil_buffer (GLArea *area)
-{
-  GLAreaPrivate *priv = gl_area_get_instance_private (area);
-
-  g_return_val_if_fail (IS_GL_AREA (area), FALSE);
-
-  return priv->has_stencil_buffer;
-}
-
-guint
-gl_area_get_samples (GLArea *area)
-{
-  GLAreaPrivate *priv = gl_area_get_instance_private (area);
-
-  g_return_val_if_fail (IS_GL_AREA (area), FALSE);
-
-  return priv->samples;
-}
-
-/**
- * gl_area_set_has_stencil_buffer:
- * @area: a #GLArea
- * @has_stencil_buffer: %TRUE to add a stencil buffer
- *
- * If @has_stencil_buffer is %TRUE the widget will allocate and
- * enable a stencil buffer for the target framebuffer. Otherwise
- * there will be none.
- *
- * Since: 3.16
- */
-void
-gl_area_set_has_stencil_buffer (GLArea *area,
-                                    gboolean   has_stencil_buffer)
-{
-  GLAreaPrivate *priv = gl_area_get_instance_private (area);
-
-  g_return_if_fail (IS_GL_AREA (area));
-
-  has_stencil_buffer = !!has_stencil_buffer;
-
-  if (priv->has_stencil_buffer != has_stencil_buffer)
-    {
-      priv->has_stencil_buffer = has_stencil_buffer;
-
-      g_object_notify (G_OBJECT (area), "has-stencil-buffer");
-
-      priv->have_buffers = FALSE;
-    }
-}
-
-void
-gl_area_set_samples (GLArea *area,
-                                    guint   samples)
-{
-  GLAreaPrivate *priv = gl_area_get_instance_private (area);
-
-  g_return_if_fail (IS_GL_AREA (area));
-
-  if (priv->samples != samples)
-    {
-      priv->samples = samples;
-
-      priv->have_buffers = FALSE;
-    }
-}
-
-/**
- * gl_area_queue_render:
- * @area: a #GLArea
- *
- * Marks the currently rendered data (if any) as invalid, and queues
- * a redraw of the widget, ensuring that the #GLArea::render signal
- * is emitted during the draw.
- *
- * This is only needed when the gl_area_set_auto_render() has
- * been called with a %FALSE value. The default behaviour is to
- * emit #GLArea::render on each draw.
- *
- * Since: 3.16
- */
-void
-gl_area_queue_render (GLArea *area)
-{
-  GLAreaPrivate *priv = gl_area_get_instance_private (area);
-
-  g_return_if_fail (IS_GL_AREA (area));
-
-  priv->needs_render = TRUE;
-
-  gtk_widget_queue_draw (GTK_WIDGET (area));
-}
-
-
-/**
- * gl_area_get_auto_render:
- * @area: a #GLArea
- *
- * Returns whether the area is in auto render mode or not.
- *
- * Returns: %TRUE if the @area is auto rendering, %FALSE otherwise
- *
- * Since: 3.16
- */
-gboolean
-gl_area_get_auto_render (GLArea *area)
-{
-  GLAreaPrivate *priv = gl_area_get_instance_private (area);
-
-  g_return_val_if_fail (IS_GL_AREA (area), FALSE);
-
-  return priv->auto_render;
-}
-
-/**
- * gl_area_set_auto_render:
- * @area: a #GLArea
- * @auto_render: a boolean
- *
- * If @auto_render is %TRUE the #GLArea::render signal will be
- * emitted every time the widget draws. This is the default and is
- * useful if drawing the widget is faster.
- *
- * If @auto_render is %FALSE the data from previous rendering is kept
- * around and will be used for drawing the widget the next time,
- * unless the window is resized. In order to force a rendering
- * gl_area_queue_render() must be called. This mode is useful when
- * the scene changes seldomly, but takes a long time to redraw.
- *
- * Since: 3.16
- */
-void
-gl_area_set_auto_render (GLArea *area,
-                             gboolean   auto_render)
-{
-  GLAreaPrivate *priv = gl_area_get_instance_private (area);
-
-  g_return_if_fail (IS_GL_AREA (area));
-
-  auto_render = !!auto_render;
-
-  if (priv->auto_render != auto_render)
-    {
-      priv->auto_render = auto_render;
-
-      g_object_notify (G_OBJECT (area), "auto-render");
-
-      if (auto_render)
-        gtk_widget_queue_draw (GTK_WIDGET (area));
-    }
-}
-
-/**
- * gl_area_get_context:
- * @area: a #GLArea
- *
- * Retrieves the #GdkGLContext used by @area.
- *
- * Returns: (transfer none): the #GdkGLContext
- *
- * Since: 3.16
- */
-GdkGLContext *
-gl_area_get_context (GLArea *area)
-{
-  GLAreaPrivate *priv = gl_area_get_instance_private (area);
-
-  g_return_val_if_fail (IS_GL_AREA (area), NULL);
-
-  return priv->context;
-}
-
-/**
- * gl_area_make_current:
- * @area: a #GLArea
- *
- * Ensures that the #GdkGLContext used by @area is associated with
- * the #GLArea.
- *
- * This function is automatically called before emitting the
- * #GLArea::render signal, and doesn't normally need to be called
- * by application code.
- *
- * Since: 3.16
- */
-void
-gl_area_make_current (GLArea *area)
-{
-  GLAreaPrivate *priv = gl_area_get_instance_private (area);
-  GtkWidget *widget;
-
-  g_return_if_fail (IS_GL_AREA (area));
-
-  widget = GTK_WIDGET (area);
-
-  g_return_if_fail (gtk_widget_get_realized (widget));
-
-  if (priv->context != NULL)
-    gdk_gl_context_make_current (priv->context);
+    if (priv->context != NULL) gdk_gl_context_make_current (priv->context);
 }
