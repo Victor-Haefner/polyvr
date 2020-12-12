@@ -1,32 +1,7 @@
-/* GTK - The GIMP Toolkit
- *
- * gtkglarea.c: A GL drawing area
- *
- * Copyright © 2014  Emmanuele Bassi
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library. If not, see <http://www.gnu.org/licenses/>.
- */
-
-//#include "config.h"
-
 #define GTK_COMPILATION
 
 #include "glarea.h"
-//#include <gtk/gtkintl.h>
 #include <gtk/gtkstylecontext.h>
-//#include <gtk/gtkmarshalers.h>
-//#include <gtk/gtkprivate.h>
 #include <gtk/gtkrender.h>
 #include <gobject/gtype.h>
 #include <gobject/gvalue.h>
@@ -79,7 +54,6 @@ void initGLFunctions() {
 #else
 #include <GL/gl.h>
 #include <GL/glx.h>
-//#define APIENTRY GLAPIENTRY
 void initGLFunctions() {}
 
 typedef struct {
@@ -938,9 +912,7 @@ gl_area_notify (GObject    *object,
     G_OBJECT_CLASS (gl_area_parent_class)->notify (object, pspec);
 }
 
-static GdkGLContext *
-gl_area_real_create_context (GLArea *area)
-{
+static GdkGLContext* gl_area_real_create_context(GLArea *area) {
     printf("gl_area_real_create_context\n");
   GLAreaPrivate *priv = gl_area_get_instance_private (area);
   GtkWidget *widget = GTK_WIDGET (area);
@@ -952,8 +924,7 @@ gl_area_real_create_context (GLArea *area)
 #endif
 
   context = gdk_window_create_gl_context (gtk_widget_get_window (widget), &error);
-  if (error != NULL)
-    {
+  if (error != NULL) {
       gl_area_set_error (area, error);
       g_clear_object (&context);
       g_clear_error (&error);
@@ -966,8 +937,7 @@ gl_area_real_create_context (GLArea *area)
                                        priv->required_gl_version % 10);
 
   gdk_gl_context_realize (context, &error);
-  if (error != NULL)
-    {
+  if (error != NULL) {
       gl_area_set_error (area, error);
       g_clear_object (&context);
       g_clear_error (&error);
@@ -980,399 +950,197 @@ gl_area_real_create_context (GLArea *area)
   return context;
 }
 
-static void
-gl_area_resize (GLArea *area, int width, int height)
-{
-  glViewport (0, 0, width, height);
+static void gl_area_resize (GLArea *area, int width, int height) {
+    glViewport (0, 0, width, height);
 }
 
-/*
- * Creates all the buffer objects needed for rendering the scene
- */
-static void
-gl_area_ensure_buffers (GLArea *area)
-{
-  GLAreaPrivate *priv = gl_area_get_instance_private (area);
-  GtkWidget *widget = GTK_WIDGET (area);
+static void gl_area_ensure_buffers (GLArea *area) {
+    GLAreaPrivate *priv = gl_area_get_instance_private (area);
+    GtkWidget *widget = GTK_WIDGET (area);
 
-  gtk_widget_realize (widget);
+    gtk_widget_realize (widget);
 
-  if (priv->context == NULL)
-    return;
+    if (priv->context == NULL) return;
+    if (priv->have_buffers) return;
 
-  if (priv->have_buffers)
-    return;
+    priv->have_buffers = TRUE;
 
-  priv->have_buffers = TRUE;
+    glGenFramebuffers (1, &priv->frame_buffer);
 
-  glGenFramebuffers (1, &priv->frame_buffer);
+    if (priv->render_buffer == 0) glGenRenderbuffers (1, &priv->render_buffer);
+    if (priv->depth_stencil_buffer == 0) glGenRenderbuffers (1, &priv->depth_stencil_buffer);
 
-  if (priv->has_alpha)
-    {
-      /* For alpha we use textures as that is required for blending to work */
-      if (priv->texture == 0)
-        glGenTextures (1, &priv->texture);
-
-      /* Delete old render buffer if any */
-      if (priv->render_buffer != 0)
-        {
-          glDeleteRenderbuffers(1, &priv->render_buffer);
-          priv->render_buffer = 0;
-        }
-    }
-  else
-    {
-    /* For non-alpha we use render buffers so we can blit instead of texture the result */
-      if (priv->render_buffer == 0)
-        glGenRenderbuffers (1, &priv->render_buffer);
-
-      /* Delete old texture if any */
-      if (priv->texture != 0)
-        {
-          glDeleteTextures(1, &priv->texture);
-          priv->texture = 0;
-        }
-    }
-
-  if ((priv->has_depth_buffer || priv->has_stencil_buffer))
-    {
-      if (priv->depth_stencil_buffer == 0)
-        glGenRenderbuffers (1, &priv->depth_stencil_buffer);
-    }
-  else if (priv->depth_stencil_buffer != 0)
-    {
-      /* Delete old depth/stencil buffer */
-      glDeleteRenderbuffers (1, &priv->depth_stencil_buffer);
-      priv->depth_stencil_buffer = 0;
-    }
-
-  gl_area_allocate_buffers (area);
+    gl_area_allocate_buffers (area);
 }
 
-/*
- * Allocates space of the right type and size for all the buffers
- */
-static void
-gl_area_allocate_buffers (GLArea *area)
-{
-  GLAreaPrivate *priv = gl_area_get_instance_private (area);
-  GtkWidget *widget = GTK_WIDGET (area);
-  int scale, width, height;
+static void gl_area_allocate_buffers (GLArea *area) {
+    GLAreaPrivate *priv = gl_area_get_instance_private (area);
+    GtkWidget *widget = GTK_WIDGET (area);
+    int scale, width, height;
 
-  if (priv->context == NULL)
-    return;
+    if (priv->context == NULL) return;
 
-  scale = gtk_widget_get_scale_factor (widget);
-  width = gtk_widget_get_allocated_width (widget) * scale;
-  height = gtk_widget_get_allocated_height (widget) * scale;
+    scale = gtk_widget_get_scale_factor (widget);
+    width = gtk_widget_get_allocated_width (widget) * scale;
+    height = gtk_widget_get_allocated_height (widget) * scale;
 
-  if (priv->texture)
-    {
-      if (priv->samples > 0) {
-          glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, priv->texture);
-      } else {
-          glBindTexture(GL_TEXTURE_2D, priv->texture);
-          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-      }
-
-      if (gdk_gl_context_get_use_es(priv->context)) {
-          if (priv->samples == 0) glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-          else glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, priv->samples, GL_RGBA8, width, height, GL_FALSE);
-      } else {
-          if (priv->samples == 0) glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_BGRA, GL_UNSIGNED_BYTE, NULL);
-          else glTexImage2DMultisample (GL_TEXTURE_2D_MULTISAMPLE, priv->samples, GL_RGBA8, width, height, GL_FALSE);
-      }
+    if (priv->render_buffer) {
+        glBindRenderbuffer (GL_RENDERBUFFER, priv->render_buffer);
+        if (priv->samples == 0) glRenderbufferStorage (GL_RENDERBUFFER, GL_RGB8, width, height);
+        else glRenderbufferStorageMultisample (GL_RENDERBUFFER, priv->samples, GL_RGB8, width, height);
     }
 
-  if (priv->render_buffer)
-    {
-      glBindRenderbuffer (GL_RENDERBUFFER, priv->render_buffer);
-      if (priv->samples == 0) glRenderbufferStorage (GL_RENDERBUFFER, GL_RGB8, width, height);
-      else glRenderbufferStorageMultisample (GL_RENDERBUFFER, priv->samples, GL_RGB8, width, height);
-    }
-
-  if (priv->has_depth_buffer || priv->has_stencil_buffer)
-    {
-      glBindRenderbuffer (GL_RENDERBUFFER, priv->depth_stencil_buffer);
-      if (priv->has_stencil_buffer) {
+    if (priv->has_depth_buffer || priv->has_stencil_buffer) {
+        glBindRenderbuffer (GL_RENDERBUFFER, priv->depth_stencil_buffer);
         if (priv->samples == 0) glRenderbufferStorage (GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
         else glRenderbufferStorageMultisample(GL_RENDERBUFFER, priv->samples, GL_DEPTH24_STENCIL8, width, height);
-      } else {
-        if (priv->samples == 0) glRenderbufferStorage (GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, width, height);
-        else glRenderbufferStorageMultisample(GL_RENDERBUFFER, priv->samples, GL_DEPTH_COMPONENT24, width, height);
-      }
     }
 
-  priv->needs_render = TRUE;
+    priv->needs_render = TRUE;
 }
 
-/**
- * gl_area_attach_buffers:
- * @area: a #GLArea
- *
- * Ensures that the @area framebuffer object is made the current draw
- * and read target, and that all the required buffers for the @area
- * are created and bound to the frambuffer.
- *
- * This function is automatically called before emitting the
- * #GLArea::render signal, and doesn't normally need to be called
- * by application code.
- *
- * Since: 3.16
- */
-void
-gl_area_attach_buffers (GLArea *area)
-{
-  GLAreaPrivate *priv = gl_area_get_instance_private (area);
+void gl_area_attach_buffers (GLArea *area) {
+    GLAreaPrivate *priv = gl_area_get_instance_private (area);
 
-  g_return_if_fail (IS_GL_AREA (area));
+    g_return_if_fail (IS_GL_AREA (area));
 
-  if (priv->context == NULL)
-    return;
+    if (priv->context == NULL) return;
 
-  gl_area_make_current (area);
+    gl_area_make_current (area);
 
-  if (!priv->have_buffers)
-    gl_area_ensure_buffers (area);
-  else if (priv->needs_resize)
-    gl_area_allocate_buffers (area);
+    if (!priv->have_buffers) gl_area_ensure_buffers (area);
+    else if (priv->needs_resize) gl_area_allocate_buffers (area);
 
-  glBindFramebuffer (GL_FRAMEBUFFER_EXT, priv->frame_buffer);
+    glBindFramebuffer (GL_FRAMEBUFFER_EXT, priv->frame_buffer);
 
-  if (priv->texture) {
-      if (priv->samples == 0) glFramebufferTexture2D (GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, priv->texture, 0);
-      else glFramebufferTexture2D(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D_MULTISAMPLE, priv->texture, 0);
-  } else if (priv->render_buffer) {
-    glFramebufferRenderbuffer (GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_RENDERBUFFER_EXT, priv->render_buffer);
-  }
+    glFramebufferRenderbuffer (GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT,  GL_RENDERBUFFER_EXT, priv->render_buffer);
+    glFramebufferRenderbuffer (GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT,   GL_RENDERBUFFER_EXT, priv->depth_stencil_buffer);
+    glFramebufferRenderbuffer (GL_FRAMEBUFFER_EXT, GL_STENCIL_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, priv->depth_stencil_buffer);
+}
 
-  if (priv->depth_stencil_buffer)
-    {
-      if (priv->has_depth_buffer)
-        glFramebufferRenderbuffer (GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT,
-                                      GL_RENDERBUFFER_EXT, priv->depth_stencil_buffer);
-      if (priv->has_stencil_buffer)
-        glFramebufferRenderbuffer (GL_FRAMEBUFFER_EXT, GL_STENCIL_ATTACHMENT_EXT,
-                                      GL_RENDERBUFFER_EXT, priv->depth_stencil_buffer);
+static void gl_area_delete_buffers (GLArea *area) {
+    GLAreaPrivate *priv = gl_area_get_instance_private (area);
+
+    if (priv->context == NULL) return;
+
+    priv->have_buffers = FALSE;
+
+    if (priv->render_buffer != 0) {
+        glDeleteRenderbuffers (1, &priv->render_buffer);
+        priv->render_buffer = 0;
+    }
+
+    if (priv->depth_stencil_buffer != 0) {
+        glDeleteRenderbuffers (1, &priv->depth_stencil_buffer);
+        priv->depth_stencil_buffer = 0;
+    }
+
+    if (priv->frame_buffer != 0) {
+        glBindFramebuffer (GL_FRAMEBUFFER_EXT, 0);
+        glDeleteFramebuffers (1, &priv->frame_buffer);
+        priv->frame_buffer = 0;
     }
 }
 
-static void
-gl_area_delete_buffers (GLArea *area)
-{
-  GLAreaPrivate *priv = gl_area_get_instance_private (area);
+static void gl_area_unrealize (GtkWidget *widget) {
+    GLArea *area = GL_AREA (widget);
+    GLAreaPrivate *priv = gl_area_get_instance_private (area);
 
-  if (priv->context == NULL)
-    return;
-
-  priv->have_buffers = FALSE;
-
-  if (priv->render_buffer != 0)
-    {
-      glDeleteRenderbuffers (1, &priv->render_buffer);
-      priv->render_buffer = 0;
-    }
-
-  if (priv->texture != 0)
-    {
-      glDeleteTextures(1, &priv->texture);
-      priv->texture = 0;
-    }
-
-  if (priv->depth_stencil_buffer != 0)
-    {
-      glDeleteRenderbuffers (1, &priv->depth_stencil_buffer);
-      priv->depth_stencil_buffer = 0;
-    }
-
-  if (priv->frame_buffer != 0)
-    {
-      glBindFramebuffer (GL_FRAMEBUFFER_EXT, 0);
-      glDeleteFramebuffers (1, &priv->frame_buffer);
-      priv->frame_buffer = 0;
-    }
-}
-
-static void
-gl_area_unrealize (GtkWidget *widget)
-{
-  GLArea *area = GL_AREA (widget);
-  GLAreaPrivate *priv = gl_area_get_instance_private (area);
-
-  if (priv->context != NULL)
-    {
-      if (priv->have_buffers)
-        {
-          gl_area_make_current (area);
-          gl_area_delete_buffers (area);
+    if (priv->context != NULL) {
+        if (priv->have_buffers) {
+            gl_area_make_current (area);
+            gl_area_delete_buffers (area);
         }
 
-      /* Make sure to unset the context if current */
-      if (priv->context == gdk_gl_context_get_current ())
-        gdk_gl_context_clear_current ();
+        /* Make sure to unset the context if current */
+        if (priv->context == gdk_gl_context_get_current()) gdk_gl_context_clear_current ();
     }
 
-  g_clear_object (&priv->context);
-  g_clear_error (&priv->error);
+    g_clear_object (&priv->context);
+    g_clear_error (&priv->error);
 
-  if (priv->event_window != NULL)
-    {
-      gtk_widget_unregister_window (widget, priv->event_window);
-      gdk_window_destroy (priv->event_window);
-      priv->event_window = NULL;
+    if (priv->event_window != NULL) {
+        gtk_widget_unregister_window (widget, priv->event_window);
+        gdk_window_destroy (priv->event_window);
+        priv->event_window = NULL;
     }
 
-  GTK_WIDGET_CLASS (gl_area_parent_class)->unrealize (widget);
+    GTK_WIDGET_CLASS (gl_area_parent_class)->unrealize (widget);
 }
 
-static void
-gl_area_map (GtkWidget *widget)
-{
-  GLArea *area = GL_AREA (widget);
-  GLAreaPrivate *priv = gl_area_get_instance_private (area);
-
-  if (priv->event_window != NULL)
-    gdk_window_show (priv->event_window);
-
-  GTK_WIDGET_CLASS (gl_area_parent_class)->map (widget);
+static void gl_area_map (GtkWidget *widget) {
+    GLArea *area = GL_AREA (widget);
+    GLAreaPrivate *priv = gl_area_get_instance_private (area);
+    if (priv->event_window != NULL) gdk_window_show (priv->event_window);
+    GTK_WIDGET_CLASS (gl_area_parent_class)->map (widget);
 }
 
-static void
-gl_area_unmap (GtkWidget *widget)
-{
-  GLArea *area = GL_AREA (widget);
-  GLAreaPrivate *priv = gl_area_get_instance_private (area);
-
-  if (priv->event_window != NULL)
-    gdk_window_hide (priv->event_window);
-
-  GTK_WIDGET_CLASS (gl_area_parent_class)->unmap (widget);
+static void gl_area_unmap (GtkWidget *widget) {
+    GLArea *area = GL_AREA (widget);
+    GLAreaPrivate *priv = gl_area_get_instance_private (area);
+    if (priv->event_window != NULL) gdk_window_hide (priv->event_window);
+    GTK_WIDGET_CLASS (gl_area_parent_class)->unmap (widget);
 }
 
-static void
-gl_area_size_allocate (GtkWidget     *widget,
-                           GtkAllocation *allocation)
-{
-  GLArea *area = GL_AREA (widget);
-  GLAreaPrivate *priv = gl_area_get_instance_private (area);
+static void gl_area_size_allocate(GtkWidget* widget, GtkAllocation *allocation) {
+    GLArea *area = GL_AREA (widget);
+    GLAreaPrivate *priv = gl_area_get_instance_private (area);
 
-  GTK_WIDGET_CLASS (gl_area_parent_class)->size_allocate (widget, allocation);
+    GTK_WIDGET_CLASS (gl_area_parent_class)->size_allocate (widget, allocation);
 
-  if (gtk_widget_get_realized (widget))
-    {
-      if (priv->event_window != NULL)
-        gdk_window_move_resize (priv->event_window,
-                                allocation->x,
-                                allocation->y,
-                                allocation->width,
-                                allocation->height);
+    if (gtk_widget_get_realized (widget)) {
+        if (priv->event_window != NULL) gdk_window_move_resize(priv->event_window,
+                                allocation->x, allocation->y, allocation->width, allocation->height);
 
-      priv->needs_resize = TRUE;
+        priv->needs_resize = TRUE;
     }
 }
 
-static void
-gl_area_draw_error_screen (GLArea *area,
-                               cairo_t   *cr,
-                               gint       width,
-                               gint       height)
-{
-  GLAreaPrivate *priv = gl_area_get_instance_private (area);
-  PangoLayout *layout;
-  int layout_height;
+static gboolean gl_area_draw(GtkWidget* widget, cairo_t* cr) {
+    GLArea *area = GL_AREA (widget);
+    GLAreaPrivate *priv = gl_area_get_instance_private (area);
+    gboolean unused;
+    int w, h, scale;
+    GLenum status;
 
-  layout = gtk_widget_create_pango_layout (GTK_WIDGET (area),
-                                           priv->error->message);
-  pango_layout_set_width (layout, width * PANGO_SCALE);
-  pango_layout_set_alignment (layout, PANGO_ALIGN_CENTER);
-  pango_layout_get_pixel_size (layout, NULL, &layout_height);
-  gtk_render_layout (gtk_widget_get_style_context (GTK_WIDGET (area)),
-                     cr,
-                     0, (height - layout_height) / 2,
-                     layout);
+    if (priv->error != NULL) return FALSE;
+    if (priv->context == NULL) return FALSE;
 
-  g_object_unref (layout);
-}
+    gl_area_make_current (area);
+    gl_area_attach_buffers (area);
 
-static gboolean
-gl_area_draw (GtkWidget *widget,
-                  cairo_t   *cr)
-{
-  GLArea *area = GL_AREA (widget);
-  GLAreaPrivate *priv = gl_area_get_instance_private (area);
-  gboolean unused;
-  int w, h, scale;
-  GLenum status;
+    if (priv->has_depth_buffer) glEnable (GL_DEPTH_TEST);
+    else glDisable (GL_DEPTH_TEST);
 
-  if (priv->error != NULL)
-    {
-      gl_area_draw_error_screen (area,
-                                     cr,
-                                     gtk_widget_get_allocated_width (widget),
-                                     gtk_widget_get_allocated_height (widget));
-      return FALSE;
-    }
+    scale = gtk_widget_get_scale_factor (widget);
+    w = gtk_widget_get_allocated_width (widget) * scale;
+    h = gtk_widget_get_allocated_height (widget) * scale;
 
-  if (priv->context == NULL)
-    return FALSE;
-
-  gl_area_make_current (area);
-
-  gl_area_attach_buffers (area);
-
- if (priv->has_depth_buffer)
-   glEnable (GL_DEPTH_TEST);
- else
-   glDisable (GL_DEPTH_TEST);
-
-  scale = gtk_widget_get_scale_factor (widget);
-  w = gtk_widget_get_allocated_width (widget) * scale;
-  h = gtk_widget_get_allocated_height (widget) * scale;
-
-  status = glCheckFramebufferStatus (GL_FRAMEBUFFER_EXT);
-  if (status == GL_FRAMEBUFFER_COMPLETE_EXT)
-    {
-      if (priv->needs_render || priv->auto_render)
-        {
-          if (priv->needs_resize)
-            {
-              g_signal_emit (area, area_signals[RESIZE], 0, w, h, NULL);
-              priv->needs_resize = FALSE;
+    status = glCheckFramebufferStatus (GL_FRAMEBUFFER_EXT);
+    if (status == GL_FRAMEBUFFER_COMPLETE_EXT) {
+        if (priv->needs_render || priv->auto_render) {
+            if (priv->needs_resize) {
+                g_signal_emit (area, area_signals[RESIZE], 0, w, h, NULL);
+                priv->needs_resize = FALSE;
             }
-
-          g_signal_emit (area, area_signals[RENDER], 0, priv->context, &unused);
+            g_signal_emit (area, area_signals[RENDER], 0, priv->context, &unused);
         }
 
-      priv->needs_render = FALSE;
+        priv->needs_render = FALSE;
 
-      gdk_cairo_draw_from_gl (cr,
-                              gtk_widget_get_window (widget),
-                              priv->texture ? priv->texture : priv->render_buffer,
-                              priv->texture ? GL_TEXTURE : GL_RENDERBUFFER,
-                              scale, 0, 0, w, h);
-      gl_area_make_current (area);
-    }
-  else
-    {
-      g_warning ("fb setup not supported");
-    }
+        gl_area_make_current (area);
+        gl_area_attach_buffers (area); // in case they have been unbound for frame rendering etc..
 
-  return TRUE;
+        gdk_cairo_draw_from_gl (cr, gtk_widget_get_window (widget), priv->render_buffer, GL_RENDERBUFFER, scale, 0, 0, w, h);
+        gl_area_make_current (area);
+    } else g_warning ("fb setup not supported");
+
+    return TRUE;
 }
 
-static gboolean
-create_context_accumulator (GSignalInvocationHint *ihint,
-                            GValue *return_accu,
-                            const GValue *handler_return,
-                            gpointer data)
-{
-  g_value_copy (handler_return, return_accu);
-
-  /* stop after the first handler returning a valid object */
-  return g_value_get_object (handler_return) == NULL;
+static gboolean create_context_accumulator (GSignalInvocationHint *ihint, GValue *return_accu, const GValue *handler_return, gpointer data) {
+    g_value_copy (handler_return, return_accu);
+    return g_value_get_object (handler_return) == NULL;
 }
 
 gboolean _boolean_handled_accumulator(GSignalInvocationHint* ihint, GValue* return_accu, const GValue* handler_return, gpointer dummy) {
@@ -1424,8 +1192,7 @@ void _marshal_VOID__INT_INT(GClosure* closure,
 }
 
 
-void
-_marshal_OBJECT__VOID(GClosure* closure,
+void _marshal_OBJECT__VOID(GClosure* closure,
     GValue* return_value,
     guint         n_param_values,
     const GValue* param_values,
