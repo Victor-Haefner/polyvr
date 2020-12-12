@@ -930,11 +930,10 @@ static void gl_area_dispose(GObject *gobject) {
 gboolean gdk_x11_screen_init_gl (GdkScreen *screen) {
     GdkDisplay *display = gdk_screen_get_display (screen);
     _GdkX11Display *display_x11 = (_GdkX11Display*)display;
-    Display *dpy;
     int error_base, event_base;
 
     if (display_x11->have_glx) return TRUE;
-    dpy = gdk_x11_display_get_xdisplay (display);
+    Display* dpy = display_x11->xdisplay;
     if (!glXQueryExtension (dpy, &error_base, &event_base)) return FALSE;
     int screen_num = ((_GdkX11Screen*)screen)->screen_num;
 
@@ -1070,7 +1069,7 @@ GdkGLContext* gdk_window_get_paint_gl_context(_GdkWindow* window, GError** error
           return NULL;
         }
 
-      iwindow->gl_paint_context = impl_class->create_gl_context (iwindow, TRUE, NULL, &internal_error);
+      iwindow->gl_paint_context = x11_window_create_gl_context (iwindow, TRUE, NULL, &internal_error);
     }
 
   if (internal_error != NULL) {
