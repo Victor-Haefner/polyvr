@@ -1439,15 +1439,7 @@ void _gdk_cairo_draw_from_gl(cairo_t* cr, _GdkWindow* window, int source,
   int dx = matrix.x0;
   int dy = matrix.y0;
 
-  /* Trivial == integer-only translation */
-  gboolean trivial_transform =
-    (double)dx == matrix.x0 && (double)dy == matrix.y0 &&
-    matrix.xx == 1.0 && matrix.xy == 0.0 &&
-    matrix.yx == 0.0 && matrix.yy == 1.0;
-
-  printf("_gdk_cairo_draw_from_gl trivial_transform %i", trivial_transform);
-
-  if (gdk_gl_context_has_framebuffer_blit (paint_context) && trivial_transform && clip_region != NULL) {
+  if (gdk_gl_context_has_framebuffer_blit(paint_context) && clip_region != NULL) {
       int unscaled_window_height;
       int i;
 
@@ -1455,43 +1447,34 @@ void _gdk_cairo_draw_from_gl(cairo_t* cr, _GdkWindow* window, int source,
          make it the current target for reads */
       guint framebuffer = paint_data->tmp_framebuffer;
       glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, framebuffer);
-      glFramebufferRenderbufferEXT (GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT,
-                                    GL_RENDERBUFFER_EXT, source);
+      glFramebufferRenderbufferEXT (GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_RENDERBUFFER_EXT, source);
       glBindFramebufferEXT (GL_DRAW_FRAMEBUFFER_EXT, 0);
 
       /* Translate to impl coords */
       cairo_region_translate (clip_region, dx, dy);
-
       glEnable (GL_SCISSOR_TEST);
-
       gdk_window_get_unscaled_size (impl_window, NULL, &unscaled_window_height);
 
       /* We can use glDrawBuffer on OpenGL only; on GLES 2.0 we are already
        * double buffered so we don't need it...
        */
-      if (!gdk_gl_context_get_use_es (paint_context))
-        glDrawBuffer (GL_BACK);
-      else
-        {
+      if (!gdk_gl_context_get_use_es (paint_context)) glDrawBuffer (GL_BACK);
+      else {
           int maj, min;
-
           gdk_gl_context_get_version (paint_context, &maj, &min);
 
           /* ... but on GLES 3.0 we can use the vectorized glDrawBuffers
            * call.
            */
-          if ((maj * 100 + min) >= 300)
-            {
+          if ((maj * 100 + min) >= 300) {
               static const GLenum buffers[] = { GL_BACK };
-
               glDrawBuffers (G_N_ELEMENTS (buffers), buffers);
             }
         }
 
 #define FLIP_Y(_y) (unscaled_window_height - (_y))
 
-      for (i = 0; i < cairo_region_num_rectangles (clip_region); i++)
-        {
+      for (i = 0; i < cairo_region_num_rectangles (clip_region); i++) {
           cairo_rectangle_int_t clip_rect, dest;
 
           cairo_region_get_rectangle (clip_region, i, &clip_rect);
@@ -1500,16 +1483,14 @@ void _gdk_cairo_draw_from_gl(cairo_t* cr, _GdkWindow* window, int source,
           clip_rect.width *= window_scale;
           clip_rect.height *= window_scale;
 
-          glScissor (clip_rect.x, FLIP_Y (clip_rect.y + clip_rect.height),
-                     clip_rect.width, clip_rect.height);
+          glScissor (clip_rect.x, FLIP_Y (clip_rect.y + clip_rect.height), clip_rect.width, clip_rect.height);
 
           dest.x = dx * window_scale;
           dest.y = dy * window_scale;
           dest.width = width * window_scale / buffer_scale;
           dest.height = height * window_scale / buffer_scale;
 
-          if (gdk_rectangle_intersect (&clip_rect, &dest, &dest))
-            {
+          if (gdk_rectangle_intersect (&clip_rect, &dest, &dest)) {
               int clipped_src_x = x + (dest.x - dx * window_scale);
               int clipped_src_y = y + (height - dest.height - (dest.y - dy * window_scale));
               glBlitFramebufferEXT(clipped_src_x, clipped_src_y,
@@ -1517,8 +1498,7 @@ void _gdk_cairo_draw_from_gl(cairo_t* cr, _GdkWindow* window, int source,
                                    dest.x, FLIP_Y(dest.y + dest.height),
                                    dest.x + dest.width, FLIP_Y(dest.y),
                                    GL_COLOR_BUFFER_BIT, GL_NEAREST);
-              if (impl_window->current_paint.flushed_region)
-                {
+              if (impl_window->current_paint.flushed_region) {
                   cairo_rectangle_int_t flushed_rect;
 
                   flushed_rect.x = dest.x / window_scale;
@@ -1526,20 +1506,16 @@ void _gdk_cairo_draw_from_gl(cairo_t* cr, _GdkWindow* window, int source,
                   flushed_rect.width = (dest.x + dest.width + window_scale - 1) / window_scale - flushed_rect.x;
                   flushed_rect.height = (dest.y + dest.height + window_scale - 1) / window_scale - flushed_rect.y;
 
-                  cairo_region_union_rectangle (impl_window->current_paint.flushed_region,
-                                                &flushed_rect);
-                  cairo_region_subtract_rectangle (impl_window->current_paint.need_blend_region,
-                                                   &flushed_rect);
+                  cairo_region_union_rectangle (impl_window->current_paint.flushed_region, &flushed_rect);
+                  cairo_region_subtract_rectangle (impl_window->current_paint.need_blend_region, &flushed_rect);
                 }
             }
         }
 
       glDisable (GL_SCISSOR_TEST);
-
       glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, 0);
 
 #undef FLIP_Y
-
     }
 
 out:
