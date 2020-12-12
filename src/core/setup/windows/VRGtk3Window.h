@@ -5,6 +5,7 @@
 #include "core/gui/VRGuiBuilder.h"
 
 #include <OpenSG/OSGFrameBufferObject.h>
+#include <OpenSG/OSGRenderBuffer.h>
 
 GdkGLContext* onCreateGLContext(GLArea* area, gpointer user_data) {
     GdkWindow* window = gtk_widget_get_window(GTK_WIDGET(area));
@@ -89,6 +90,15 @@ void VRGtkWindow::render(bool fromThread) {
 }
 
 bool VRGtkWindow::on_render(GdkGLContext* glcontext) {
+    auto win = getOSGWindow();
+    auto fbo = getViews()[0]->getFBO();
+    if (fbo) {
+        FrameBufferAttachment* fba = fbo->getColorAttachments(0);
+        RenderBuffer* rb = dynamic_cast<RenderBuffer*>(fba);
+        int bID = win->getGLObjectId( rb->getGLId() );
+        setBlitID(bID, GL_RENDERBUFFER);
+    }
+
     auto profiler = VRProfiler::get();
     int pID = profiler->regStart("gtk window render");
 

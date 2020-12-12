@@ -77,6 +77,8 @@ OSG_END_NAMESPACE;
 vector<VRTextureRendererWeakPtr> TRinstances;
 
 void VRTextureRenderer::test() {
+    return;
+
     auto gtkwin = VRSetup::getCurrent()->getEditorWindow();
     auto win = gtkwin->getOSGWindow();
     int tID = win->getGLObjectId(data->fboTex->getGLId());

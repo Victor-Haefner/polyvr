@@ -1028,6 +1028,7 @@ static gboolean gl_area_draw(GtkWidget* widget, cairo_t* cr) {
         priv->needs_render = FALSE;
 
         //gdk_cairo_draw_from_gl (cr, gtk_widget_get_window (widget), priv->render_buffer, GL_RENDERBUFFER, scale, 0, 0, w, h);
+        if (priv->blitID == 0) priv->blitID = priv->render_buffer;
         gdk_cairo_draw_from_gl (cr, gtk_widget_get_window (widget), priv->blitID, priv->blitType, scale, 0, 0, w, h);
         gl_area_make_current (area);
     } else g_warning ("fb setup not supported");
@@ -1166,8 +1167,11 @@ void gl_area_set_samples (GLArea *area, guint samples) {
 }
 
 void gl_area_set_blit_id (GLArea *area, guint ID, guint bType) {
-    GLAreaPrivate *priv = gl_area_get_instance_private (area);
     g_return_if_fail (IS_GL_AREA (area));
+    GLAreaPrivate *priv = gl_area_get_instance_private (area);
+    if (priv->blitID == ID && priv->blitType == bType) return;
+    printf("gl_area_set_blit_id %i\n", ID);
+
     priv->blitID = ID;
     priv->blitType = bType;
 }

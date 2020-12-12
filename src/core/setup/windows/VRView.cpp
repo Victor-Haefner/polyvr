@@ -4,6 +4,7 @@
 #include <OpenSG/OSGSimpleGeometry.h>
 #include <OpenSG/OSGMultiPassMaterial.h>
 #include <OpenSG/OSGFBOViewport.h>
+#include <OpenSG/OSGRenderBuffer.h>
 
 #include "core/math/pose.h"
 #include "core/utils/VRRate.h"
@@ -103,6 +104,7 @@ void VRView::setViewports() {//create && set size of viewports
     if (window && rView) window->subPortByObj(rView);
     lView = 0;
     rView = 0;
+    vFBO = 0;
 
     Vec4d p = position;
     p[1] = 1-position[3]; // invert y
@@ -119,12 +121,24 @@ void VRView::setViewports() {//create && set size of viewports
 
     //no stereo
     if (!active_stereo && useFBO) {
-        //vFBO
+        RenderBufferRefPtr colBuf   = RenderBuffer::create();
+        RenderBufferRefPtr depthBuf = RenderBuffer::create();
+        colBuf->setInternalFormat(GL_RGB8);
+        depthBuf->setInternalFormat(GL_DEPTH_COMPONENT24);
+
+        vFBO = FrameBufferObject::create();
+        vFBO->setColorAttachment(colBuf, 0);
+        vFBO->setDepthAttachment(depthBuf);
+        vFBO->editMFDrawBuffers()->push_back(GL_DEPTH_ATTACHMENT_EXT);
+        vFBO->editMFDrawBuffers()->push_back(GL_COLOR_ATTACHMENT0_EXT);
+        vFBO->setWidth (1471);
+        vFBO->setHeight(598);
+        vFBO->setPostProcessOnDeactivate(true);
     }
 
     auto createFBOViewport = [&]() {
         auto fbov = FBOViewport::create();
-        //fbov->setFrameBufferObject(vFBO);
+        fbov->setFrameBufferObject(vFBO);
         return fbov;
     };
 
@@ -190,6 +204,8 @@ void VRView::setBG() {
         if (renderingR) renderingR->setBackground(background);
     }
 }
+
+FrameBufferObjectMTRecPtr VRView::getFBO() { return vFBO; }
 
 void VRView::setDecorators() {//set decorators, only if projection true
     if (projection) { // put in setProjection fkt

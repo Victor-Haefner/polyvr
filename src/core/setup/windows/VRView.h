@@ -3,6 +3,7 @@
 
 #include <OpenSG/OSGProjectionCameraDecorator.h>
 #include <OpenSG/OSGSolidBackground.h>
+#include <OpenSG/OSGFrameBufferObject.h>
 #include <OpenSG/OSGStereoBufferViewport.h>
 #include <OpenSG/OSGSimpleStatisticsForeground.h>
 #include <OpenSG/OSGGrabForeground.h>
@@ -76,6 +77,7 @@ class VRView : public std::enable_shared_from_this<VRView> {
         Matrix4d mirrorMatrix;
 
         //stereo viewports
+        FrameBufferObjectMTRecPtr vFBO;
         ViewportMTRecPtr lView;//used also for non stereo
         ViewportMTRecPtr rView;
         //active stereo
@@ -168,6 +170,7 @@ class VRView : public std::enable_shared_from_this<VRView> {
         ViewportMTRecPtr getViewportR();
         VRRenderStudioPtr getRenderingL();
         VRRenderStudioPtr getRenderingR();
+        FrameBufferObjectMTRecPtr getFBO();
 
         void swapEyes(bool b);
         bool eyesInverted();
