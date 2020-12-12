@@ -400,10 +400,10 @@ typedef struct {
   GdkGLContextPaintData *paint_data;
 } GdkGLContextPrivate;
 
-GdkGLContextPrivate* gdk_gl_context_get_instance_private(GdkGLContext* context) {
-    return ( (GdkGLContextPrivate *) ((char *) context
-              + g_type_class_get_instance_private_offset(
-                          ((GTypeInstance *)context)->g_class )));
+static inline GdkGLContextPrivate* gdk_gl_context_get_instance_private(GdkGLContext* context) {
+	gpointer klass = g_type_class_ref(GDK_TYPE_GL_CONTEXT);
+	gint privOffset = g_type_class_get_instance_private_offset(klass);
+	return (G_STRUCT_MEMBER_P(context, privOffset));
 }
 
 gboolean _gdk_gl_context_has_framebuffer_blit (GdkGLContext *context) {
@@ -1065,7 +1065,6 @@ GdkGLContext* gdk_window_get_paint_gl_context(_GdkWindow* window, GError** error
 
       if (impl_class->create_gl_context == NULL) {
           g_set_error_literal (error, GDK_GL_ERROR, GDK_GL_ERROR_NOT_AVAILABLE, "The current backend does not support OpenGL");
-          printf(" gdk_window_get_paint_gl_context failed, no impl_class->create_gl_context!\n");
           return NULL;
         }
 
@@ -1075,7 +1074,6 @@ GdkGLContext* gdk_window_get_paint_gl_context(_GdkWindow* window, GError** error
   if (internal_error != NULL) {
       g_propagate_error (error, internal_error);
       g_clear_object (&(iwindow->gl_paint_context));
-          printf(" gdk_window_get_paint_gl_context failed, internal_error set\n");
       return NULL;
     }
 
@@ -1083,9 +1081,8 @@ GdkGLContext* gdk_window_get_paint_gl_context(_GdkWindow* window, GError** error
   if (internal_error != NULL) {
       g_propagate_error (error, internal_error);
       g_clear_object (&(iwindow->gl_paint_context));
-          printf(" gdk_window_get_paint_gl_context failed, gdk_gl_context_realize failed\n");
       return NULL;
-    }
+  }
 
   return iwindow->gl_paint_context;
 }
@@ -1093,6 +1090,8 @@ GdkGLContext* gdk_window_get_paint_gl_context(_GdkWindow* window, GError** error
 GdkGLContext* _gdk_window_create_gl_context (_GdkWindow* window, GError** error) {
   g_return_val_if_fail (GDK_IS_WINDOW (window), NULL);
   g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+
+  //return x11_window_create_gl_context(window->impl_window, TRUE, NULL, error);
 
   GdkGLContext* paint_context = gdk_window_get_paint_gl_context (window, error);
   if (paint_context == NULL) return NULL;
@@ -1323,6 +1322,279 @@ static void gl_area_size_allocate(GtkWidget* widget, GtkAllocation *allocation) 
 
         priv->needs_resize = TRUE;
     }
+}
+
+static cairo_user_data_key_t direct_key;
+
+cairo_region_t *
+gdk_cairo_region_from_clip (cairo_t *cr)
+{
+  cairo_rectangle_list_t *rectangles;
+  cairo_region_t *region;
+  int i;
+
+  rectangles = cairo_copy_clip_rectangle_list (cr);
+
+  if (rectangles->status != CAIRO_STATUS_SUCCESS)
+    return NULL;
+
+  region = cairo_region_create ();
+  for (i = 0; i < rectangles->num_rectangles; i++)
+    {
+      cairo_rectangle_int_t clip_rect;
+      cairo_rectangle_t *rect;
+
+      rect = &rectangles->rectangles[i];
+
+      /* Here we assume clip rects are ints for direct targets, which
+         is true for cairo */
+      clip_rect.x = (int)rect->x;
+      clip_rect.y = (int)rect->y;
+      clip_rect.width = (int)rect->width;
+      clip_rect.height = (int)rect->height;
+
+      cairo_region_union_rectangle (region, &clip_rect);
+    }
+
+  cairo_rectangle_list_destroy (rectangles);
+
+  return region;
+}
+
+GdkGLContextPaintData *
+gdk_gl_context_get_paint_data (GdkGLContext *context)
+{
+
+  GdkGLContextPrivate *priv = gdk_gl_context_get_instance_private (context);
+
+  if (priv->paint_data == NULL)
+    {
+      priv->paint_data = g_new0 (GdkGLContextPaintData, 1);
+      priv->paint_data->is_legacy = priv->is_legacy;
+      priv->paint_data->use_es = priv->use_es;
+    }
+
+  return priv->paint_data;
+}
+
+gboolean
+gdk_gl_context_has_framebuffer_blit (GdkGLContext *context)
+{
+  GdkGLContextPrivate *priv = gdk_gl_context_get_instance_private (context);
+
+  return priv->has_gl_framebuffer_blit;
+}
+
+void
+gdk_window_get_unscaled_size (_GdkWindow *window,
+                              int *unscaled_width,
+                              int *unscaled_height)
+{
+  _GdkWindowImplClass *impl_class;
+  gint scale;
+
+  g_return_if_fail (GDK_IS_WINDOW (window));
+
+  if (window->impl_window == window)
+    {
+        //impl_class = GDK_WINDOW_IMPL_GET_CLASS (window->impl);
+        impl_class = getGdkWindowImplClass();
+        impl_class->get_unscaled_size (window, unscaled_width, unscaled_height);
+        return;
+    }
+
+  scale = gdk_window_get_scale_factor (window);
+
+  if (unscaled_width)
+    *unscaled_width = window->width * scale;
+
+  if (unscaled_height)
+    *unscaled_height = window->height * scale;
+}
+
+
+void
+_gdk_cairo_draw_from_gl (cairo_t              *cr,
+                        _GdkWindow            *window,
+                        int                   source,
+                        int                   source_type,
+                        int                   buffer_scale,
+                        int                   x,
+                        int                   y,
+                        int                   width,
+                        int                   height)
+{
+  GdkGLContext *paint_context;
+  cairo_surface_t *image;
+  cairo_matrix_t matrix;
+  int dx, dy, window_scale;
+  gboolean trivial_transform;
+  cairo_surface_t *group_target;
+  _GdkWindow *direct_window, *impl_window;
+  guint framebuffer;
+  int alpha_size = 0;
+  cairo_region_t *clip_region;
+  GdkGLContextPaintData *paint_data;
+
+  impl_window = window->impl_window;
+
+  window_scale = gdk_window_get_scale_factor (impl_window);
+
+  paint_context = gdk_window_get_paint_gl_context (window, NULL);
+  if (paint_context == NULL)
+    {
+      g_warning ("gdk_cairo_draw_gl_render_buffer failed - no paint context");
+      return;
+    }
+
+  clip_region = gdk_cairo_region_from_clip (cr);
+
+  gdk_gl_context_make_current (paint_context);
+  paint_data = gdk_gl_context_get_paint_data (paint_context);
+
+  if (paint_data->tmp_framebuffer == 0)
+    glGenFramebuffersEXT (1, &paint_data->tmp_framebuffer);
+
+  if (source_type == GL_RENDERBUFFER)
+    {
+      glBindRenderbuffer (GL_RENDERBUFFER, source);
+      glGetRenderbufferParameteriv (GL_RENDERBUFFER, GL_RENDERBUFFER_ALPHA_SIZE,  &alpha_size);
+    }
+  else if (source_type == GL_TEXTURE)
+    {
+      glBindTexture (GL_TEXTURE_2D, source);
+
+      if (gdk_gl_context_get_use_es (paint_context))
+        alpha_size = 1;
+      else
+        glGetTexLevelParameteriv (GL_TEXTURE_2D, 0, GL_TEXTURE_ALPHA_SIZE,  &alpha_size);
+    }
+  else
+    {
+      g_warning ("Unsupported gl source type %d\n", source_type);
+      return;
+    }
+
+  group_target = cairo_get_group_target (cr);
+  direct_window = cairo_surface_get_user_data (group_target, &direct_key);
+
+  cairo_get_matrix (cr, &matrix);
+
+  dx = matrix.x0;
+  dy = matrix.y0;
+
+  /* Trivial == integer-only translation */
+  trivial_transform =
+    (double)dx == matrix.x0 && (double)dy == matrix.y0 &&
+    matrix.xx == 1.0 && matrix.xy == 0.0 &&
+    matrix.yx == 0.0 && matrix.yy == 1.0;
+
+  /* For direct paint of non-alpha renderbuffer, we can
+     just do a bitblit */
+  if (source_type == GL_RENDERBUFFER &&
+      alpha_size == 0 &&
+      direct_window != NULL &&
+      direct_window->current_paint.use_gl &&
+      gdk_gl_context_has_framebuffer_blit (paint_context) &&
+      trivial_transform &&
+      clip_region != NULL)
+    {
+      int unscaled_window_height;
+      int i;
+
+      /* Create a framebuffer with the source renderbuffer and
+         make it the current target for reads */
+      framebuffer = paint_data->tmp_framebuffer;
+      glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, framebuffer);
+      glFramebufferRenderbufferEXT (GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT,
+                                    GL_RENDERBUFFER_EXT, source);
+      glBindFramebufferEXT (GL_DRAW_FRAMEBUFFER_EXT, 0);
+
+      /* Translate to impl coords */
+      cairo_region_translate (clip_region, dx, dy);
+
+      glEnable (GL_SCISSOR_TEST);
+
+      gdk_window_get_unscaled_size (impl_window, NULL, &unscaled_window_height);
+
+      /* We can use glDrawBuffer on OpenGL only; on GLES 2.0 we are already
+       * double buffered so we don't need it...
+       */
+      if (!gdk_gl_context_get_use_es (paint_context))
+        glDrawBuffer (GL_BACK);
+      else
+        {
+          int maj, min;
+
+          gdk_gl_context_get_version (paint_context, &maj, &min);
+
+          /* ... but on GLES 3.0 we can use the vectorized glDrawBuffers
+           * call.
+           */
+          if ((maj * 100 + min) >= 300)
+            {
+              static const GLenum buffers[] = { GL_BACK };
+
+              glDrawBuffers (G_N_ELEMENTS (buffers), buffers);
+            }
+        }
+
+#define FLIP_Y(_y) (unscaled_window_height - (_y))
+
+      for (i = 0; i < cairo_region_num_rectangles (clip_region); i++)
+        {
+          cairo_rectangle_int_t clip_rect, dest;
+
+          cairo_region_get_rectangle (clip_region, i, &clip_rect);
+          clip_rect.x *= window_scale;
+          clip_rect.y *= window_scale;
+          clip_rect.width *= window_scale;
+          clip_rect.height *= window_scale;
+
+          glScissor (clip_rect.x, FLIP_Y (clip_rect.y + clip_rect.height),
+                     clip_rect.width, clip_rect.height);
+
+          dest.x = dx * window_scale;
+          dest.y = dy * window_scale;
+          dest.width = width * window_scale / buffer_scale;
+          dest.height = height * window_scale / buffer_scale;
+
+          if (gdk_rectangle_intersect (&clip_rect, &dest, &dest))
+            {
+              int clipped_src_x = x + (dest.x - dx * window_scale);
+              int clipped_src_y = y + (height - dest.height - (dest.y - dy * window_scale));
+              glBlitFramebufferEXT(clipped_src_x, clipped_src_y,
+                                   (clipped_src_x + dest.width), (clipped_src_y + dest.height),
+                                   dest.x, FLIP_Y(dest.y + dest.height),
+                                   dest.x + dest.width, FLIP_Y(dest.y),
+                                   GL_COLOR_BUFFER_BIT, GL_NEAREST);
+              if (impl_window->current_paint.flushed_region)
+                {
+                  cairo_rectangle_int_t flushed_rect;
+
+                  flushed_rect.x = dest.x / window_scale;
+                  flushed_rect.y = dest.y / window_scale;
+                  flushed_rect.width = (dest.x + dest.width + window_scale - 1) / window_scale - flushed_rect.x;
+                  flushed_rect.height = (dest.y + dest.height + window_scale - 1) / window_scale - flushed_rect.y;
+
+                  cairo_region_union_rectangle (impl_window->current_paint.flushed_region,
+                                                &flushed_rect);
+                  cairo_region_subtract_rectangle (impl_window->current_paint.need_blend_region,
+                                                   &flushed_rect);
+                }
+            }
+        }
+
+      glDisable (GL_SCISSOR_TEST);
+
+      glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, 0);
+
+#undef FLIP_Y
+
+    }
+
+out:
+  if (clip_region) cairo_region_destroy (clip_region);
 }
 
 static gboolean gl_area_draw(GtkWidget* widget, cairo_t* cr) {
