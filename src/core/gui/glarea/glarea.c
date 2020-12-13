@@ -1413,6 +1413,9 @@ gdk_window_get_unscaled_size (_GdkWindow *window,
 }
 
 
+
+#define FLIP_Y(_y) (unscaled_window_height - (_y))
+
 void _gdk_cairo_draw_from_gl(cairo_t* cr, _GdkWindow* window, int source, int buffer_scale, int x, int y, int width, int height) {
   _GdkWindow* impl_window = window->impl_window;
   int window_scale = gdk_window_get_scale_factor (impl_window);
@@ -1452,24 +1455,7 @@ void _gdk_cairo_draw_from_gl(cairo_t* cr, _GdkWindow* window, int source, int bu
       int unscaled_window_height;
       gdk_window_get_unscaled_size (impl_window, NULL, &unscaled_window_height);
 
-      /* We can use glDrawBuffer on OpenGL only; on GLES 2.0 we are already
-       * double buffered so we don't need it...
-       */
-      if (!gdk_gl_context_get_use_es (paint_context)) glDrawBuffer (GL_BACK);
-      else {
-          int maj, min;
-          gdk_gl_context_get_version (paint_context, &maj, &min);
-
-          /* ... but on GLES 3.0 we can use the vectorized glDrawBuffers
-           * call.
-           */
-          if ((maj * 100 + min) >= 300) {
-              static const GLenum buffers[] = { GL_BACK };
-              glDrawBuffers (G_N_ELEMENTS (buffers), buffers);
-            }
-        }
-
-#define FLIP_Y(_y) (unscaled_window_height - (_y))
+      glDrawBuffer(GL_BACK);
 
       for (int i = 0; i < cairo_region_num_rectangles (clip_region); i++) {
           cairo_rectangle_int_t clip_rect, dest;
@@ -1511,12 +1497,168 @@ void _gdk_cairo_draw_from_gl(cairo_t* cr, _GdkWindow* window, int source, int bu
 
       glDisable (GL_SCISSOR_TEST);
       glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, 0);
-
-#undef FLIP_Y
     }
 
-out:
-  if (clip_region) cairo_region_destroy (clip_region);
+    if (clip_region) cairo_region_destroy (clip_region);
+}
+
+cairo_region_t* clip_region;
+int window_scale;
+int unscaled_window_height, dx, dy;
+cairo_rectangle_int_t clip_rect, dest;
+GdkGLContext* paint_context;
+GdkGLContextPaintData* paint_data;
+_GdkWindow* impl_window;
+
+void cairo_draw_begin(cairo_t* cr, _GdkWindow* window, int source, int buffer_scale, int x, int y, int width, int height) {
+  impl_window = window->impl_window;
+  window_scale = gdk_window_get_scale_factor (impl_window);
+
+  paint_context = gdk_window_get_paint_gl_context (window, NULL);
+  if (paint_context == NULL) {
+      g_warning ("gdk_cairo_draw_gl_render_buffer failed - no paint context");
+      return;
+  }
+
+  clip_region = gdk_cairo_region_from_clip (cr);
+
+  gdk_gl_context_make_current (paint_context);
+  paint_data = gdk_gl_context_get_paint_data (paint_context);
+
+  if (paint_data->tmp_framebuffer == 0) glGenFramebuffersEXT (1, &paint_data->tmp_framebuffer);
+  glBindRenderbuffer(GL_RENDERBUFFER, source);
+
+  cairo_matrix_t matrix;
+  cairo_get_matrix (cr, &matrix);
+  dx = matrix.x0;
+  dy = matrix.y0;
+
+  printf("_gdk_cairo_draw_from_gl %i %i %i\n", dx, dy, window_scale);
+}
+
+void cairo_draw_buffer(cairo_t* cr, _GdkWindow* window, int source, int buffer_scale, int x, int y, int width, int height) {
+
+  if (gdk_gl_context_has_framebuffer_blit(paint_context) && clip_region != NULL) {
+      /* Create a framebuffer with the source renderbuffer and
+         make it the current target for reads */
+      guint framebuffer = paint_data->tmp_framebuffer;
+      glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, framebuffer);
+      glFramebufferRenderbufferEXT (GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_RENDERBUFFER_EXT, source);
+      glBindFramebufferEXT (GL_DRAW_FRAMEBUFFER_EXT, 0);
+
+      /* Translate to impl coords */
+      cairo_region_translate (clip_region, dx, dy);
+      glEnable (GL_SCISSOR_TEST);
+      int unscaled_window_height;
+      gdk_window_get_unscaled_size (impl_window, NULL, &unscaled_window_height);
+
+      glDrawBuffer(GL_BACK);
+
+      for (int i = 0; i < cairo_region_num_rectangles (clip_region); i++) {
+          cairo_rectangle_int_t clip_rect, dest;
+
+          cairo_region_get_rectangle (clip_region, i, &clip_rect);
+          clip_rect.x *= window_scale;
+          clip_rect.y *= window_scale;
+          clip_rect.width *= window_scale;
+          clip_rect.height *= window_scale;
+
+          glScissor (clip_rect.x, FLIP_Y (clip_rect.y + clip_rect.height), clip_rect.width, clip_rect.height);
+
+          dest.x = dx * window_scale;
+          dest.y = dy * window_scale;
+          dest.width = width * window_scale / buffer_scale;
+          dest.height = height * window_scale / buffer_scale;
+
+          if (gdk_rectangle_intersect (&clip_rect, &dest, &dest)) {
+              int clipped_src_x = x + (dest.x - dx * window_scale);
+              int clipped_src_y = y + (height - dest.height - (dest.y - dy * window_scale));
+              glBlitFramebufferEXT(clipped_src_x, clipped_src_y,
+                                   (clipped_src_x + dest.width), (clipped_src_y + dest.height),
+                                   dest.x, FLIP_Y(dest.y + dest.height),
+                                   dest.x + dest.width, FLIP_Y(dest.y),
+                                   GL_COLOR_BUFFER_BIT, GL_NEAREST);
+              if (impl_window->current_paint.flushed_region) {
+                  cairo_rectangle_int_t flushed_rect;
+
+                  flushed_rect.x = dest.x / window_scale;
+                  flushed_rect.y = dest.y / window_scale;
+                  flushed_rect.width = (dest.x + dest.width + window_scale - 1) / window_scale - flushed_rect.x;
+                  flushed_rect.height = (dest.y + dest.height + window_scale - 1) / window_scale - flushed_rect.y;
+
+                  cairo_region_union_rectangle (impl_window->current_paint.flushed_region, &flushed_rect);
+                  cairo_region_subtract_rectangle (impl_window->current_paint.need_blend_region, &flushed_rect);
+                }
+            }
+        }
+
+      glDisable (GL_SCISSOR_TEST);
+      glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, 0);
+    }
+
+    if (clip_region) cairo_region_destroy (clip_region);
+}
+
+void cairo_draw_end(cairo_t* cr, _GdkWindow* window, int source, int buffer_scale, int x, int y, int width, int height) {
+    _GdkWindow* impl_window = window->impl_window;
+
+
+        //if (gdk_rectangle_intersect (&clip_rect, &dest, &dest)) {
+            if (impl_window->current_paint.flushed_region) {
+                  cairo_rectangle_int_t flushed_rect;
+
+                  flushed_rect.x = dest.x / window_scale;
+                  flushed_rect.y = dest.y / window_scale;
+                  flushed_rect.width = (dest.x + dest.width + window_scale - 1) / window_scale - flushed_rect.x;
+                  flushed_rect.height = (dest.y + dest.height + window_scale - 1) / window_scale - flushed_rect.y;
+
+                  cairo_region_union_rectangle (impl_window->current_paint.flushed_region, &flushed_rect);
+                  cairo_region_subtract_rectangle (impl_window->current_paint.need_blend_region, &flushed_rect);
+            }
+        //}
+    //}
+
+    glDisable (GL_SCISSOR_TEST);
+    glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, 0);
+
+    if (clip_region) cairo_region_destroy (clip_region);
+}
+
+
+static gboolean _gl_area_draw(GtkWidget* widget, cairo_t* cr) {
+    GLArea *area = GL_AREA (widget);
+    GLAreaPrivate *priv = gl_area_get_instance_private (area);
+    gboolean unused;
+
+    if (priv->error != NULL) return FALSE;
+    if (priv->context == NULL) return FALSE;
+
+    gl_area_make_current(area);
+    gl_area_attach_buffers (area);
+
+    glEnable (GL_DEPTH_TEST);
+
+    int scale = gtk_widget_get_scale_factor (widget);
+    int w = gtk_widget_get_allocated_width (widget) * scale;
+    int h = gtk_widget_get_allocated_height (widget) * scale;
+
+
+    if (priv->needs_render) {
+        if (priv->needs_resize) {
+            g_signal_emit (area, area_signals[RESIZE], 0, w, h, NULL);
+            priv->needs_resize = FALSE;
+        }
+        g_signal_emit (area, area_signals[RENDER], 0, priv->context, &unused);
+    }
+
+    cairo_draw_begin(cr, gtk_widget_get_window (widget), priv->blitID, scale, 0, 0, w, h);
+    cairo_draw_buffer(cr, gtk_widget_get_window (widget), priv->blitID, scale, 0, 0, w, h);
+    cairo_draw_end(cr, gtk_widget_get_window (widget), priv->blitID, scale, 0, 0, w, h);
+    gl_area_make_current (area);
+    priv->needs_render = FALSE;
+    //_gdk_cairo_draw_from_gl (cr, gtk_widget_get_window (widget), priv->render_buffer, scale, 0, 0, w, h);
+
+    return TRUE;
 }
 
 static gboolean gl_area_draw(GtkWidget* widget, cairo_t* cr) {
@@ -1550,10 +1692,9 @@ static gboolean gl_area_draw(GtkWidget* widget, cairo_t* cr) {
 
         priv->needs_render = FALSE;
 
-        //gdk_cairo_draw_from_gl (cr, gtk_widget_get_window (widget), priv->render_buffer, GL_RENDERBUFFER, scale, 0, 0, w, h);
-        if (priv->blitID == 0) priv->blitID = priv->render_buffer;
-        //gdk_cairo_draw_from_gl (cr, gtk_widget_get_window (widget), priv->blitID, priv->blitType, scale, 0, 0, w, h);
-        _gdk_cairo_draw_from_gl (cr, gtk_widget_get_window (widget), priv->blitID, scale, 0, 0, w, h);
+        cairo_draw_begin (cr, gtk_widget_get_window (widget), priv->render_buffer, scale, 0, 0, w, h);
+        cairo_draw_buffer (cr, gtk_widget_get_window (widget), priv->render_buffer, scale, 0, 0, w, h);
+        //_gdk_cairo_draw_from_gl (cr, gtk_widget_get_window (widget), priv->render_buffer, scale, 0, 0, w, h);
         gl_area_make_current (area);
     } else g_warning ("fb setup not supported");
 
