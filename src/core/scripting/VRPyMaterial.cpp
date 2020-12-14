@@ -10,6 +10,16 @@
 using namespace OSG;
 
 simpleVRPyType(Material, New_VRObjects_ptr);
+simpleVRPyType(Video, 0);
+
+#ifndef WITHOUT_AV
+PyMethodDef VRPyVideo::methods[] = {
+    {"play", PyWrapOpt(Video, play, "Play video", "0|0|-1|1", void, int, float, float, float ) },
+    {"getNFrames", PyWrapOpt(Video, getNFrames, "Get frame count of stream", "0", size_t, int ) },
+    {"showFrame", PyWrap(Video, showFrame, "Show a specific frame of a stream (stream, frame)", void, int, int ) },
+    {NULL}  /* Sentinel */
+};
+#endif
 
 PyMethodDef VRPyMaterial::methods[] = {
     {"getAmbient", PyWrap(Material, getAmbient, "Returns the ambient color", Color3f ) },
@@ -82,6 +92,9 @@ PyMethodDef VRPyMaterial::methods[] = {
     {"getGeometryShader", PyWrap( Material, getGeometryShader, "Get geometry shader", string ) },
     {"getTessControlShader", PyWrap( Material, getTessControlShader, "Get tesselation control shader", string ) },
     {"getTessEvaluationShader", PyWrap( Material, getTessEvaluationShader, "Get tesselation evaluation shader", string ) },
+
+    {"setVideo", PyWrap( Material, setVideo, "Set video as texture", VRVideoPtr, string ) },
+    {"getVideo", PyWrap( Material, getVideo, "Get video", VRVideoPtr ) },
 
     {"diff", PyWrap( Material, diff, "Returns a diff report with another material", string, VRMaterialPtr ) },
     {NULL}  /* Sentinel */

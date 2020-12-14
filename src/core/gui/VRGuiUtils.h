@@ -76,7 +76,7 @@ void connect_signal(T1* widget, T2 bin, string event, bool after = false) {
 }
 
 void clearContainer(_GtkWidget* container);
-void setWidgetVisibility(string e, bool b);
+void setWidgetVisibility(string e, bool b, bool p = false);
 void setWidgetSensitivity(string e, bool b);
 void disableDestroyDiag(GtkWidget* widget, bool hide = true);
 void disableDestroyDiag(string diag, bool hide = true);
@@ -141,6 +141,7 @@ string askUserPass(string msg);
 OSG::Color4f chooseColor(string drawable, OSG::Color4f current);
 void setColorChooser(string drawable, function<void(_GdkEventButton*)> sig);
 void setColorChooserColor(string drawable, OSG::Color3f col);
+void setColorChooserColor(GtkWidget* drawable, OSG::Color3f col);
 
 _GtkImage* loadGTKIcon(_GtkImage* img, string path, int w, int h);
 

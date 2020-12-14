@@ -21,6 +21,20 @@ using namespace OSG;
 template<> string typeName(const VROPCUA& t) { return "OPCUA"; }
 template<> string typeName(const VROPCUANode& t) { return "OPCUANode"; }
 
+class SubClient : public SubscriptionHandler {
+    public:
+        map<uint8_t, Variant> values;
+
+        SubClient() {}
+        ~SubClient() {}
+
+        static shared_ptr<SubClient> create() { return shared_ptr<SubClient>( new SubClient() ); }
+
+        void DataChange(uint32_t handle, const OpcUa::Node& node, const Variant& val, AttributeId attr) override {
+            //cout << "Received DataChange event handle: " << handle << ", val: " << ::toString(val) << endl;
+            values[handle] = val;
+        }
+};
 
 string VROPCUANode::typeToString(uint8_t v) {
     if (v == 0) return "null";
@@ -52,37 +66,52 @@ string VROPCUANode::typeToString(uint8_t v) {
     return "none";
 }
 
-
-vector<OpcUa::Variant> MyMethod(NodeId context, vector<OpcUa::Variant> arguments) {
-    cout << "MyMethod called! " << endl;
-    vector<OpcUa::Variant> result;
-    result.push_back(Variant(static_cast<uint8_t>(0)));
-    return result;
-}
-
 string toString(OpcUa::Variant const& v) {
     //if (v.IsNul()) return "None";
     string res = "None";
     uint8_t type = uint8_t(v.Type());
 
     if (v.IsArray()) {
-        if (type == 0) return res;
-        if (type == 1) res = toString(v.As< vector<bool> >());
-        if (type == 2) res = toString(v.As< vector<signed char> >());
-        if (type == 3) res = toString(v.As< vector<unsigned char> >());
-        if (type == 4) res = toString(v.As< vector<int16_t> >());
-        if (type == 5) res = toString(v.As< vector<uint16_t> >());
-        if (type == 6) res = toString(v.As< vector<int32_t> >());
-        if (type == 7) res = toString(v.As< vector<uint32_t> >());
-        if (type == 8) res = toString(v.As< vector<int64_t> >());
-        if (type == 9) res = toString(v.As< vector<uint64_t> >());
-        if (type == 10) res = toString(v.As< vector<float> >());
-        if (type == 11) res = toString(v.As< vector<double> >());
-        if (type == 12) res = toString(v.As< vector<string> >());
+        try {
+            if (type == 0) return res;
+            if (type == 1) res = toString(v.As< vector<bool> >());
+            if (type == 2) res = toString(v.As< vector<signed char> >());
+            if (type == 3) res = toString(v.As< vector<unsigned char> >());
+            if (type == 4) res = toString(v.As< vector<int16_t> >());
+            if (type == 5) res = toString(v.As< vector<uint16_t> >());
+            if (type == 6) res = toString(v.As< vector<int32_t> >());
+            if (type == 7) res = toString(v.As< vector<uint32_t> >());
+            if (type == 8) res = toString(v.As< vector<int64_t> >());
+            if (type == 9) res = toString(v.As< vector<uint64_t> >());
+            if (type == 10) res = toString(v.As< vector<float> >());
+            if (type == 11) res = toString(v.As< vector<double> >());
+            if (type == 12) res = toString(v.As< vector<string> >());
+        } catch(...) { cout << "OPCUA Error: toString of vector Variant failed, type: " << type << endl; }
     }
 
     if (v.IsScalar()) {
-        try { res = v.As<string>(); } catch(...) {}
+        try {
+            if (type == 0) return res;
+            if (type == 1) res = toString(v.As< bool >());
+            if (type == 2) res = toString(v.As< signed char >());
+            if (type == 3) res = toString(v.As< unsigned char >());
+            if (type == 4) res = toString(v.As< int16_t >());
+            if (type == 5) res = toString(v.As< uint16_t >());
+            if (type == 6) res = toString(v.As< int32_t >());
+            if (type == 7) res = toString(v.As< uint32_t >());
+            if (type == 8) res = toString(v.As< int64_t >());
+            if (type == 9) res = toString(v.As< uint64_t >());
+            if (type == 10) res = toString(v.As< float >());
+            if (type == 11) res = toString(v.As< double >());
+            if (type == 12) res = toString(v.As< string >());
+
+            if (type == 17) res = toString(v.As< NodeId >().GetIntegerIdentifier());
+            if (type == 20) res = toString(v.As< QualifiedName >().Name);
+            if (type == 21) res = toString(v.As< LocalizedText >().Text);
+            if (type == 24) res = toString(v.As< Variant >());
+        } catch(...) { cout << "OPCUA Error: toString of scalar Variant failed, type: " << type << endl; }
+
+        /*try { res = v.As<string>(); } catch(...) {}
         try { res = toString(v.As<float>()); } catch(...) {}
         try { res = toString(v.As<double>()); } catch(...) {}
         try { res = toString(v.As<int>()); } catch(...) {}
@@ -103,7 +132,7 @@ string toString(OpcUa::Variant const& v) {
         try { res = v.As<LocalizedText>().Text; } catch(...) {}
         try { res = v.As<QualifiedName>().Name; } catch(...) {}
         try { res = toString(v.As<Variant>()); } catch(...) {}
-        //try { res = toString(v.As<DiagnosticInfo>()); } catch(...) {}
+        //try { res = toString(v.As<DiagnosticInfo>()); } catch(...) {}*/
     }
 
     return res;
@@ -122,19 +151,21 @@ void printTree(OpcUa::Node& node, string offset = "") {
     for (OpcUa::Node child : node.GetChildren()) printTree(child, offset+" ");
 }
 
-
-
-
-VROPCUANode::VROPCUANode(shared_ptr<OpcUa::Node> n) : node(n) {
+VROPCUANode::VROPCUANode(shared_ptr<OpcUa::Node> n, shared_ptr<SubClient> sclient, shared_ptr<OpcUa::Subscription> subs) : node(n), subscriptionClient(sclient), subscription(subs) {
     const Variant& V = node->GetValue();
-    nodeType = uint8_t(V.Type());
-    isScalar = V.IsScalar();
-    isArray = V.IsArray();
+    try {
+        nodeType = uint8_t(V.Type());
+        isScalar = V.IsScalar();
+        isArray = V.IsArray();
+        isValid = true;
+    } catch(exception e) {
+        cout << "Warning, VROPCUANode failed with exception: " << e.what() << endl;
+    }
 }
 
 VROPCUANode::~VROPCUANode() {}
 
-VROPCUANodePtr VROPCUANode::create(OpcUa::Node& node) { return VROPCUANodePtr( new VROPCUANode( shared_ptr<OpcUa::Node>(new OpcUa::Node(node)) ) ); }
+VROPCUANodePtr VROPCUANode::create(OpcUa::Node& node, shared_ptr<SubClient> sclient, shared_ptr<OpcUa::Subscription> subs) { return VROPCUANodePtr( new VROPCUANode( shared_ptr<OpcUa::Node>(new OpcUa::Node(node)), sclient, subs ) ); }
 
 string VROPCUANode::ID() {
     auto nID = node->GetId();
@@ -146,6 +177,7 @@ string VROPCUANode::ID() {
 }
 
 string VROPCUANode::name() { return node->GetBrowseName().Name; }
+bool VROPCUANode::valid() { return isValid; }
 
 string VROPCUANode::type() {
     VariantType type = node->GetValue().Type();
@@ -153,24 +185,35 @@ string VROPCUANode::type() {
 }
 
 string VROPCUANode::value() {
+    if (subscriptionClient && subscriptionClient->values.count(subHandle)) {
+        return ::toString(subscriptionClient->values[subHandle]);
+    }
     Variant v = node->GetValue();
     return ::toString(v);
 }
 
 vector<VROPCUANodePtr> VROPCUANode::getChildren() {
     vector<VROPCUANodePtr> res;
-    for (OpcUa::Node child : node->GetChildren()) res.push_back( VROPCUANode::create(child) );
+    for (OpcUa::Node child : node->GetChildren()) {
+        auto n = VROPCUANode::create(child, subscriptionClient, subscription);
+        if (n->valid()) res.push_back(n);
+    }
     return res;
 }
 
 VROPCUANodePtr VROPCUANode::getChild(int i) { return getChildren()[i]; }
 
 VROPCUANodePtr VROPCUANode::getChildByName(string name) {
-    for (auto child : getChildren()) {
-        if (child->name() == name) return child;
+    VROPCUANodePtr res = 0;
+    try {
+        auto n = node->GetChild(name);
+        res = VROPCUANode::create(n, subscriptionClient, subscription);
+    } catch(...) {
+        cout << "WARNING, node " << VROPCUANode::name() << " " << node->ToString() << " has no child named " << name << endl;
+        for (auto c : getChildren()) cout << " child: " << c->node->ToString() << endl;
+        return 0;
     }
-    cout << "WARNING, node " << VROPCUANode::name() << " has no child named " << name << endl;
-    return 0;
+    return res->valid() ? res : 0;
 }
 
 VROPCUANodePtr VROPCUANode::getChildAtPath(string path) {
@@ -189,34 +232,40 @@ void VROPCUANode::setVector(vector<string> values) {
     }
 
     if (isArray) {
-        auto type = nodeType;
-        if (type == 0) return;
-        else if (type == 1) { vector<bool> v; bool f; for (auto s : values) { toValue(s,f); v.push_back(f); } node->SetValue( Variant(v) ); }
-        else if (type == 2) { vector<signed char> v; signed char f; for (auto s : values) { toValue(s,f); v.push_back(f); } node->SetValue( Variant(v) ); }
-        else if (type == 3) { vector<unsigned char> v; unsigned char f; for (auto s : values) { toValue(s,f); v.push_back(f); } node->SetValue( Variant(v) ); }
-        else if (type == 4) { vector<int16_t> v; int16_t f; for (auto s : values) { toValue(s,f); v.push_back(f); } node->SetValue( Variant(v) ); }
-        else if (type == 5) { vector<uint16_t> v; uint16_t f; for (auto s : values) { toValue(s,f); v.push_back(f); } node->SetValue( Variant(v) ); }
-        else if (type == 6) { vector<int32_t> v; int32_t f; for (auto s : values) { toValue(s,f); v.push_back(f); } node->SetValue( Variant(v) ); }
-        else if (type == 7) { vector<uint32_t> v; uint32_t f; for (auto s : values) { toValue(s,f); v.push_back(f); } node->SetValue( Variant(v) ); }
-        else if (type == 8) { vector<int64_t> v; int64_t f; for (auto s : values) { toValue(s,f); v.push_back(f); } node->SetValue( Variant(v) ); }
-        else if (type == 9) { vector<uint64_t> v; uint64_t f; for (auto s : values) { toValue(s,f); v.push_back(f); } node->SetValue( Variant(v) ); }
-        else if (type == 10) { vector<float> v; float f; for (auto s : values) { toValue(s,f); v.push_back(f); } node->SetValue( Variant(v) ); }
-        else if (type == 11) { vector<double> v; double f; for (auto s : values) { toValue(s,f); v.push_back(f); } node->SetValue( Variant(v) ); }
-        else if (type == 12) { vector<string> v; string f; for (auto s : values) { toValue(s,f); v.push_back(f); } node->SetValue( Variant(v) ); }
-        else if (type > 12) cout << "VROPCUANode::setVector ERROR: type " << typeToString(type) << " not supported!\n";
-        //if (type == 13) { date_time v; toValue(value,v); node->SetValue( Variant(v) ); }
-        //if (type == 14) { guid v; toValue(value,v); node->SetValue( Variant(v) ); }
-        //if (type == 15) { byte_string v; toValue(value,v); node->SetValue( Variant(v) ); }
-        //if (type == 16) { xml_element v; toValue(value,v); node->SetValue( Variant(v) ); }
-        //if (type == 17) { node_id v; toValue(value,v); node->SetValue( Variant(v) ); }
-        //if (type == 18) { expanded_node_id v; toValue(value,v); node->SetValue( Variant(v) ); }
-        //if (type == 19) { status_code v; toValue(value,v); node->SetValue( Variant(v) ); }
-        //if (type == 20) { qualified_name v; toValue(value,v); node->SetValue( Variant(v) ); }
-        //if (type == 21) { localized_text v; toValue(value,v); node->SetValue( Variant(v) ); }
-        //if (type == 22) { extension_object v; toValue(value,v); node->SetValue( Variant(v) ); }
-        //if (type == 23) { data_value v; toValue(value,v); node->SetValue( Variant(v) ); }
-        //if (type == 24) { variant v; toValue(value,v); node->SetValue( Variant(v) ); }
-        //if (type == 25) { diagnostic_info v; toValue(value,v); node->SetValue( Variant(v) ); }
+        try {
+            auto type = nodeType;
+            if (type == 0) return;
+            else if (type == 1) { vector<bool> v; bool f; for (auto s : values) { toValue(s,f); v.push_back(f); } node->SetValue( Variant(v) ); }
+            else if (type == 2) { vector<signed char> v; signed char f; for (auto s : values) { toValue(s,f); v.push_back(f); } node->SetValue( Variant(v) ); }
+            else if (type == 3) { vector<unsigned char> v; unsigned char f; for (auto s : values) { toValue(s,f); v.push_back(f); } node->SetValue( Variant(v) ); }
+            else if (type == 4) { vector<int16_t> v; int16_t f; for (auto s : values) { toValue(s,f); v.push_back(f); } node->SetValue( Variant(v) ); }
+            else if (type == 5) { vector<uint16_t> v; uint16_t f; for (auto s : values) { toValue(s,f); v.push_back(f); } node->SetValue( Variant(v) ); }
+            else if (type == 6) { vector<int32_t> v; int32_t f; for (auto s : values) { toValue(s,f); v.push_back(f); } node->SetValue( Variant(v) ); }
+            else if (type == 7) { vector<uint32_t> v; uint32_t f; for (auto s : values) { toValue(s,f); v.push_back(f); } node->SetValue( Variant(v) ); }
+            else if (type == 8) { vector<int64_t> v; int64_t f; for (auto s : values) { toValue(s,f); v.push_back(f); } node->SetValue( Variant(v) ); }
+            else if (type == 9) { vector<uint64_t> v; uint64_t f; for (auto s : values) { toValue(s,f); v.push_back(f); } node->SetValue( Variant(v) ); }
+            else if (type == 10) { vector<float> v; float f; for (auto s : values) { toValue(s,f); v.push_back(f); } node->SetValue( Variant(v) ); }
+            else if (type == 11) { vector<double> v; double f; for (auto s : values) { toValue(s,f); v.push_back(f); } node->SetValue( Variant(v) ); }
+            else if (type == 12) { vector<string> v; string f; for (auto s : values) { toValue(s,f); v.push_back(f); } node->SetValue( Variant(v) ); }
+            else if (type > 12) cout << "VROPCUANode::setVector ERROR: type " << typeToString(type) << " not supported!\n";
+            //if (type == 13) { date_time v; toValue(value,v); node->SetValue( Variant(v) ); }
+            //if (type == 14) { guid v; toValue(value,v); node->SetValue( Variant(v) ); }
+            //if (type == 15) { byte_string v; toValue(value,v); node->SetValue( Variant(v) ); }
+            //if (type == 16) { xml_element v; toValue(value,v); node->SetValue( Variant(v) ); }
+            //if (type == 17) { node_id v; toValue(value,v); node->SetValue( Variant(v) ); }
+            //if (type == 18) { expanded_node_id v; toValue(value,v); node->SetValue( Variant(v) ); }
+            //if (type == 19) { status_code v; toValue(value,v); node->SetValue( Variant(v) ); }
+            //if (type == 20) { qualified_name v; toValue(value,v); node->SetValue( Variant(v) ); }
+            //if (type == 21) { localized_text v; toValue(value,v); node->SetValue( Variant(v) ); }
+            //if (type == 22) { extension_object v; toValue(value,v); node->SetValue( Variant(v) ); }
+            //if (type == 23) { data_value v; toValue(value,v); node->SetValue( Variant(v) ); }
+            //if (type == 24) { variant v; toValue(value,v); node->SetValue( Variant(v) ); }
+            //if (type == 25) { diagnostic_info v; toValue(value,v); node->SetValue( Variant(v) ); }
+        } catch(const exception& ex) {
+            cout << "VROPCUANode::setVector ERROR: " << ex.what() << ", var type: " << typeToString(nodeType) << " self name: " << name() << ", vector length: " << values.size() << endl;
+        } catch(...) {
+            cout << "VROPCUANode::setVector ERROR: var type: " << typeToString(nodeType) << ", self name: " << name() << ", vector length: " << values.size() << endl;
+        }
     }
 }
 
@@ -228,38 +277,53 @@ void VROPCUANode::set(string value) {
     }
 
     if (isScalar) {
-        auto type = nodeType;
-        if (type == 0) return;
-        else if (type == 1) { bool v; toValue(value,v); node->SetValue( Variant(v) ); }
-        else if (type == 2) { signed char v; toValue(value,v); node->SetValue( Variant(v) ); }
-        else if (type == 3) { unsigned char v; toValue(value,v); node->SetValue( Variant(v) ); }
-        else if (type == 4) { int16_t v; toValue(value,v); node->SetValue( Variant(v) ); }
-        else if (type == 5) { uint16_t v; toValue(value,v); node->SetValue( Variant(v) ); }
-        else if (type == 6) { int32_t v; toValue(value,v); node->SetValue( Variant(v) ); }
-        else if (type == 7) { uint32_t v; toValue(value,v); node->SetValue( Variant(v) ); }
-        else if (type == 8) { int64_t v; toValue(value,v); node->SetValue( Variant(v) ); }
-        else if (type == 9) { uint64_t v; toValue(value,v); node->SetValue( Variant(v) ); }
-        else if (type == 10) { float v; toValue(value,v); node->SetValue( Variant(v) ); }
-        else if (type == 11) { double v; toValue(value,v); node->SetValue( Variant(v) ); }
-        else if (type == 12) { string v; toValue(value,v); node->SetValue( Variant(v) ); }
-        else if (type > 12) cout << "VROPCUANode::set ERROR: type " << typeToString(type) << " not supported!\n";
-        //if (type == 13) { date_time v; toValue(value,v); node->SetValue( Variant(v) ); }
-        //if (type == 14) { guid v; toValue(value,v); node->SetValue( Variant(v) ); }
-        //if (type == 15) { byte_string v; toValue(value,v); node->SetValue( Variant(v) ); }
-        //if (type == 16) { xml_element v; toValue(value,v); node->SetValue( Variant(v) ); }
-        //if (type == 17) { node_id v; toValue(value,v); node->SetValue( Variant(v) ); }
-        //if (type == 18) { expanded_node_id v; toValue(value,v); node->SetValue( Variant(v) ); }
-        //if (type == 19) { status_code v; toValue(value,v); node->SetValue( Variant(v) ); }
-        //if (type == 20) { qualified_name v; toValue(value,v); node->SetValue( Variant(v) ); }
-        //if (type == 21) { localized_text v; toValue(value,v); node->SetValue( Variant(v) ); }
-        //if (type == 22) { extension_object v; toValue(value,v); node->SetValue( Variant(v) ); }
-        //if (type == 23) { data_value v; toValue(value,v); node->SetValue( Variant(v) ); }
-        //if (type == 24) { variant v; toValue(value,v); node->SetValue( Variant(v) ); }
-        //if (type == 25) { diagnostic_info v; toValue(value,v); node->SetValue( Variant(v) ); }
-        return;
+        try {
+            auto type = nodeType;
+            if (type == 0) return;
+            else if (type == 1) { bool v; toValue(value,v); node->SetValue( Variant(v) ); }
+            else if (type == 2) { signed char v; toValue(value,v); node->SetValue( Variant(v) ); }
+            else if (type == 3) { unsigned char v; toValue(value,v); node->SetValue( Variant(v) ); }
+            else if (type == 4) { int16_t v; toValue(value,v); node->SetValue( Variant(v) ); }
+            else if (type == 5) { uint16_t v; toValue(value,v); node->SetValue( Variant(v) ); }
+            else if (type == 6) { int32_t v; toValue(value,v); node->SetValue( Variant(v) ); }
+            else if (type == 7) { uint32_t v; toValue(value,v); node->SetValue( Variant(v) ); }
+            else if (type == 8) { int64_t v; toValue(value,v); node->SetValue( Variant(v) ); }
+            else if (type == 9) { uint64_t v; toValue(value,v); node->SetValue( Variant(v) ); }
+            else if (type == 10) { float v; toValue(value,v); node->SetValue( Variant(v) ); }
+            else if (type == 11) { double v; toValue(value,v); node->SetValue( Variant(v) ); }
+            else if (type == 12) { string v; toValue(value,v); node->SetValue( Variant(v) ); }
+            else if (type > 12) cout << "VROPCUANode::set ERROR: type " << typeToString(type) << " not supported!\n";
+            //if (type == 13) { date_time v; toValue(value,v); node->SetValue( Variant(v) ); }
+            //if (type == 14) { guid v; toValue(value,v); node->SetValue( Variant(v) ); }
+            //if (type == 15) { byte_string v; toValue(value,v); node->SetValue( Variant(v) ); }
+            //if (type == 16) { xml_element v; toValue(value,v); node->SetValue( Variant(v) ); }
+            //if (type == 17) { node_id v; toValue(value,v); node->SetValue( Variant(v) ); }
+            //if (type == 18) { expanded_node_id v; toValue(value,v); node->SetValue( Variant(v) ); }
+            //if (type == 19) { status_code v; toValue(value,v); node->SetValue( Variant(v) ); }
+            //if (type == 20) { qualified_name v; toValue(value,v); node->SetValue( Variant(v) ); }
+            //if (type == 21) { localized_text v; toValue(value,v); node->SetValue( Variant(v) ); }
+            //if (type == 22) { extension_object v; toValue(value,v); node->SetValue( Variant(v) ); }
+            //if (type == 23) { data_value v; toValue(value,v); node->SetValue( Variant(v) ); }
+            //if (type == 24) { variant v; toValue(value,v); node->SetValue( Variant(v) ); }
+            //if (type == 25) { diagnostic_info v; toValue(value,v); node->SetValue( Variant(v) ); }
+        } catch(const exception& ex) {
+            cout << "VROPCUANode::set ERROR: " << ex.what() << ", var type: " << typeToString(nodeType) << ", self name: " << name() << ", value to set: " << value << endl;
+        } catch(...) {
+            cout << "VROPCUANode::set ERROR: var type: " << typeToString(nodeType) << ", self name: " << name() << ", value to set: " << value << endl;
+        }
     }
 }
 
+void VROPCUANode::subscribe() {
+    try {
+        subHandle = subscription->SubscribeDataChange(*node);
+        cout << "VROPCUANode::subscribe to " << name() << endl;
+    } catch(const exception& e) {
+        cout << "VROPCUANode::subscribe failed with exception: " << e.what() << endl;
+    } catch(...) {
+        cout << "VROPCUANode::subscribe failed with unknown exception" << endl;
+    }
+}
 
 
 VROPCUA::VROPCUA() {}
@@ -267,21 +331,32 @@ VROPCUA::~VROPCUA() {}
 
 VROPCUAPtr VROPCUA::create() { return VROPCUAPtr( new VROPCUA() ); }
 
-class SubClient : public SubscriptionHandler {
-    void DataChange(uint32_t handle, const OpcUa::Node & node, const Variant & val, AttributeId attr) override {
-        cout << "Received DataChange event for Node " << node << endl;
-    }
-};
-
 VROPCUANodePtr VROPCUA::connect(string address) {
     string endpoint = address;
     cout << "OPCUA: connect to " << endpoint << endl;
     if (client) client->Disconnect();
     client = shared_ptr<OpcUa::UaClient>( new OpcUa::UaClient(0) );
+
     try { client->Connect(endpoint); }
-    catch(...) { return 0;}
+    catch(...) { return 0; }
+
+    subscriptionClient = SubClient::create();
+    subscription = client->CreateSubscription(100, *subscriptionClient);
+
     OpcUa::Node objects = client->GetObjectsNode();
-    return VROPCUANode::create( objects );
+    return VROPCUANode::create( objects, subscriptionClient, subscription );
+}
+
+
+
+
+/** ------------- test server ------------- **/
+
+vector<OpcUa::Variant> MyMethod(NodeId context, vector<OpcUa::Variant> arguments) {
+    cout << "MyMethod called! " << endl;
+    vector<OpcUa::Variant> result;
+    result.push_back(Variant(static_cast<uint8_t>(0)));
+    return result;
 }
 
 void startTestServerT() {
@@ -307,9 +382,9 @@ void startTestServerT() {
 
     //Uncomment following to subscribe to datachange events inside server
 
-    SubClient clt;
+    /*SubClient clt;
     auto sub = server.CreateSubscription(100, clt);
-    sub->SubscribeDataChange(myvar);
+    sub->SubscribeDataChange(myvar);*/
 
 
     //Now write values to address space and send events so clients can have some fun

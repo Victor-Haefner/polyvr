@@ -54,7 +54,6 @@ void drawBox(void) {
 }
 
 void display(void) {
-    cout << "display" << endl;
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   drawBox();
   glutSwapBuffers();
@@ -123,12 +122,24 @@ void reshape(int w, int h) {
     glMatrixMode(GL_MODELVIEW);*/
 }
 
+string glGetParam(GLenum e) {
+    const char* s = (const char*)glGetString(e);
+    return s ? string(s) : "";
+}
+
+void testGLCapabilities() {
+    cout << "Check OpenGL capabilities:" << endl;
+    cout << " OpenGL vendor: " << glGetParam(GL_VENDOR) << endl;
+    cout << " OpenGL version: " << glGetParam(GL_VERSION) << endl;
+}
+
 void runGlutTest(int argc, char **argv) {
   glutInit(&argc, argv);
   glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
   glutCreateWindow("glut test");
   glutDisplayFunc(display);
   glutReshapeFunc(reshape);
+  testGLCapabilities();
   init();
   glutMainLoop();
 }

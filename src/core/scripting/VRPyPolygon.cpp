@@ -5,9 +5,17 @@
 using namespace OSG;
 
 template<> PyObject* VRPyTypeCaster::cast(const VRPolygon& p) { return VRPyPolygon::fromObject(p); }
+template<> PyObject* VRPyTypeCaster::cast(const Frustum& p) { return VRPyFrustum::fromObject(p); }
 template<> bool toValue(PyObject* o, VRPolygon& v) { if (!VRPyPolygon::check(o)) return 0; v = *((VRPyPolygon*)o)->objPtr; return 1; }
+template<> bool toValue(PyObject* o, Frustum& v) { if (!VRPyFrustum::check(o)) return 0; v = *((VRPyFrustum*)o)->objPtr; return 1; }
 
 newPyType(VRPolygon, Polygon, New_ptr);
+newPyType(Frustum, Frustum, New_ptr);
+
+PyMethodDef VRPyFrustum::methods[] = {
+    {"isInside", PyWrap2(Frustum, isInside, "Check if point in frustum", bool, Vec3d) },
+    {NULL}  /* Sentinel */
+};
 
 PyMethodDef VRPyPolygon::methods[] = {
     {"addPoint", (PyCFunction)VRPyPolygon::addPoint, METH_VARARGS, "Add a point - addPoint([x,y])" },

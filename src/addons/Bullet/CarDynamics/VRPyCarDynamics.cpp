@@ -5,19 +5,25 @@
 #include "core/scripting/VRPyPose.h"
 #include "core/scripting/VRPyPath.h"
 #include "core/scripting/VRPySound.h"
+#ifndef WITHOUT_AV
 #include "CarSound/CarSound.h"
+#endif
 
 using namespace OSG;
 
 simpleVRPyType(CarDynamics, New_named_ptr);
+#ifndef WITHOUT_AV
 simpleVRPyType(CarSound, New_ptr);
+#endif
 simpleVRPyType(Driver, New_ptr);
 
+#ifndef WITHOUT_AV
 PyMethodDef VRPyCarSound::methods[] = {
     {"play", PyWrap(CarSound, play, "play, feed RPM", void, float) },
     {"loadSoundFile", PyWrap(CarSound, loadSoundFile, "load ressources", void, string) },
     {NULL}  /* Sentinel */
 };
+#endif
 
 PyMethodDef VRPyCarDynamics::methods[] = {
     {"update", PyWrap(CarDynamics, update, "Update vehicle physics input, throttle {0,1}, break {0,1}, steering {-1,1}, clutch {0,1}, gear", void, float, float, float, float, int) },
@@ -42,15 +48,18 @@ PyMethodDef VRPyCarDynamics::methods[] = {
     {"isRunning", (PyCFunction)VRPyCarDynamics::isRunning, METH_NOARGS, "Is car engine running - bool isRunning()" },
     {"getGear", (PyCFunction)VRPyCarDynamics::getGear, METH_NOARGS, "Get car gear" },
     {"setIgnition", (PyCFunction)VRPyCarDynamics::setIgnition, METH_VARARGS, "Set ignition - setIgnition(bool)" },
+#ifndef WITHOUT_AV
     {"loadCarSound", (PyCFunction)VRPyCarDynamics::loadCarSound, METH_VARARGS, "Load car sound dataset - loadCarSound(filename)" },
     {"toggleCarSound", (PyCFunction)VRPyCarDynamics::toggleCarSound, METH_VARARGS, "toggle car sound - toggleCarSound(bool)" },
     {"getCarSound", (PyCFunction)VRPyCarDynamics::getCarSound, METH_NOARGS, "Get car sound - getCarSound()" },
     {"carSoundIsLoaded", (PyCFunction)VRPyCarDynamics::carSoundIsLoaded, METH_NOARGS, "Query if audio data has been loaded - carSoundIsLoaded()" },
     {"setFade", (PyCFunction)VRPyCarDynamics::setFade, METH_VARARGS, "Set car sound fade - setFade( flt fade, flt duration )" },
+#endif
     {"setType", (PyCFunction)VRPyCarDynamics::setType, METH_VARARGS, "Set car sound fade - setType( int type )\n\ttype can be 0 (simple), 1 (automatic), 2 (semiautomatic), 3 (manual)" },
     {NULL}  /* Sentinel */
 };
 
+#ifndef WITHOUT_AV
 PyObject* VRPyCarDynamics::loadCarSound(VRPyCarDynamics* self, PyObject* args) {
     const char* t = 0;
     if (! PyArg_ParseTuple(args, "s", &t)) return NULL;
@@ -73,18 +82,19 @@ PyObject* VRPyCarDynamics::carSoundIsLoaded(VRPyCarDynamics* self) {
     return PyInt_FromLong(self->objPtr->getCarSound()->isLoaded());
 }
 
-PyObject* VRPyCarDynamics::setType(VRPyCarDynamics* self, PyObject* args) {
-    int t;
-    if (! PyArg_ParseTuple(args, "i", &t)) return NULL;
-    self->objPtr->setType( OSG::VRCarDynamics::TYPE(t) );
-    Py_RETURN_TRUE;
-}
-
 PyObject* VRPyCarDynamics::setFade(VRPyCarDynamics* self, PyObject* args) {
     float f, d;
     if (! PyArg_ParseTuple(args, "ff", &d, &f)) return NULL;
     self->objPtr->getCarSound()->setFade(f);
     self->objPtr->getCarSound()->setDuration(d);
+    Py_RETURN_TRUE;
+}
+#endif
+
+PyObject* VRPyCarDynamics::setType(VRPyCarDynamics* self, PyObject* args) {
+    int t;
+    if (!PyArg_ParseTuple(args, "i", &t)) return NULL;
+    self->objPtr->setType(OSG::VRCarDynamics::TYPE(t));
     Py_RETURN_TRUE;
 }
 

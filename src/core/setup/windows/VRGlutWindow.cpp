@@ -1,6 +1,7 @@
 #include <OpenSG/OSGGLUT.h>
 
 #include "VRGlutWindow.h"
+#include "core/utils/VROptions.h"
 
 #include "../devices/VRMouse.h"
 #include "../devices/VRKeyboard.h"
@@ -30,8 +31,10 @@ VRGlutWindow::VRGlutWindow() {
     cout << "Glut: New Window" << endl;
     type = 1;
 
-    int width = 20;
-    int height = 10;
+    int width = 800;//20;
+    int height = 600;//10;
+
+    initGlut();
 
     glutInitWindowSize(width, height);
     winID = glutCreateWindow("PolyVR");
@@ -61,6 +64,20 @@ VRGlutWindow::~VRGlutWindow() {
 VRGlutWindowPtr VRGlutWindow::ptr() { return static_pointer_cast<VRGlutWindow>( shared_from_this() ); }
 VRGlutWindowPtr VRGlutWindow::create() { return VRGlutWindowPtr(new VRGlutWindow() ); }
 
+void VRGlutWindow::initGlut() {
+    static bool glutInititated = false;
+    if (glutInititated) return;
+    glutInititated = true;
+    cout << " init GLUT";
+    glutInit(&VROptions::get()->argc, VROptions::get()->argv);
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_STENCIL_TEST);
+    if (VROptions::get()->getOption<bool>("active_stereo"))
+        glutInitDisplayMode(GLUT_RGBA | GLUT_DEPTH | GLUT_DOUBLE | GLUT_STEREO | GLUT_STENCIL | GLUT_MULTISAMPLE);
+    else glutInitDisplayMode(GLUT_RGBA | GLUT_DEPTH | GLUT_DOUBLE | GLUT_STENCIL | GLUT_MULTISAMPLE);
+    cout << " ..done " << endl;
+}
+
 void VRGlutWindow::save(XMLElementPtr node) { VRWindow::save(node); }
 void VRGlutWindow::load(XMLElementPtr node) { VRWindow::load(node); }
 
@@ -78,6 +95,11 @@ void VRGlutWindow::onKeyboard(int c, int s, int x, int y) {
 
 void VRGlutWindow::onKeyboard_special(int c, int s, int x, int y) {
     if (auto k = getKeyboard()) k->keyboard_special(c, s, x, y);
+}
+
+void VRGlutWindow::render(bool fromThread) {
+    if (fromThread) return;
+    VRWindow::render();
 }
 
 OSG_END_NAMESPACE;

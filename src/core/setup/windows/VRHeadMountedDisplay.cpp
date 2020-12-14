@@ -14,6 +14,10 @@
 #include "core/setup/windows/VRWindow.h"
 #include "core/setup/windows/VRGtkWindow.h"
 #include "core/setup/devices/VRFlystick.h"
+#include "core/scripting/VRScript.h"
+#include "core/gui/VRGuiManager.h"
+#include "core/gui/VRGuiSignals.h"
+#include "addons/CEF/CEF.h"
 
 #include <openvr.h>
 #include <iostream>
@@ -60,7 +64,11 @@ std::string GetViveDeviceString(vr::TrackedDeviceIndex_t unDevice, vr::TrackedDe
 	return sResult;
 }
 
-VRHeadMountedDisplay::VRHeadMountedDisplay() {}
+VRHeadMountedDisplay::VRHeadMountedDisplay() {
+	onCameraChanged = VRDeviceCb::create("GUI_updateSceneViewer", bind(&VRHeadMountedDisplay::updateCamera, this));
+	VRGuiSignals::get()->getSignal("camera_changed")->add(onCameraChanged);
+	VRGuiSignals::get()->getSignal("camera_near_far_changed")->add(onCameraChanged);
+}
 
 VRHeadMountedDisplay::~VRHeadMountedDisplay() {
 	cout << "~VRHeadMountedDisplay" << endl;
@@ -90,6 +98,28 @@ void VRHeadMountedDisplay::initTexRenderer() {
 	
 }
 
+void VRHeadMountedDisplay::updateCamera() {
+	if (!fboData) return;
+	cout << "VRHeadMountedDisplay::updateCamera" << endl;
+	VRCameraPtr cam = VRScene::getCurrent()->getActiveCamera();
+	float f = cam->getFar();
+	float n = cam->getNear();
+	fboData->mcamL->setNear(n);
+	fboData->mcamL->setFar (f);
+	fboData->mcamR->setNear(n);
+	fboData->mcamR->setFar (f);
+	m_fNearClip = n;
+	m_fFarClip = f;
+	m_mat4ProjectionLeft = GetHMDMatrixProjectionEye(vr::Eye_Left);
+	m_mat4ProjectionRight = GetHMDMatrixProjectionEye(vr::Eye_Right);
+	Matrix4d mL = m_mat4ProjectionLeft;
+	mL.mult(m_mat4eyePosLeft);
+	Matrix4d mR = m_mat4ProjectionRight;
+	mR.mult(m_mat4eyePosRight);
+	fboData->mcamL->setProjectionMatrix(toMatrix4f(mL));
+	fboData->mcamR->setProjectionMatrix(toMatrix4f(mR));
+}
+
 void VRHeadMountedDisplay::setScene() {
 	auto scene = VRScene::getCurrent();
 	if (!scene) return;
@@ -99,6 +129,8 @@ void VRHeadMountedDisplay::setScene() {
 
 	if (!fboData->rendererL) fboData->rendererL = VRTextureRenderer::create("hmdL", false);
 	if (!fboData->rendererR) fboData->rendererR = VRTextureRenderer::create("hmdR", false);
+	fboData->rendererL->setPersistency(0);
+	fboData->rendererR->setPersistency(0);
 	if (fboData->rendererL->getParent() == root && fboData->rendererR->getParent() == root) return;
 	cout << " --- VRHeadMountedDisplay::setScene renderer" << endl;
 	root->addChild(fboData->rendererL);
@@ -111,9 +143,6 @@ void VRHeadMountedDisplay::setScene() {
 		mcam->setProjectionMatrix(toMatrix4f(m));
 		mcam->setNear(m_fNearClip);
 		mcam->setFar(m_fFarClip);
-		//mcam->setNear(cam->getCam()->cam->getNear());
-		//mcam->setFar(cam->getCam()->cam->getFar());
-		//mcam->setModelviewMatrix(); // needed or set by beacon?
 		return mcam;
 	};
 
@@ -283,9 +312,16 @@ void VRHeadMountedDisplay::addController(int devID) {
 	auto scene = VRScene::getCurrent();
 	if (scene) {
 		scene->initFlyWalk(scene->getActiveCamera(), dev);
-		//scene->setActiveNavigation("FlyWalk");
+		scene->setActiveNavigation("FlyWalk");
 		dev->clearDynTrees();
 		dev->addDynTree(scene->getRoot());
+
+		for (auto cef : CEF::getInstances()) cef->addMouse(dev, 0, 0, -1, -1, -1);
+		for (auto script : scene->getScripts()) script.second->updateDeviceTrigger();
+
+#ifndef WITHOUT_GTK
+		VRGuiManager::get()->broadcast("navpresets_changed");
+#endif
 	}
 }
 
@@ -309,6 +345,17 @@ void VRHeadMountedDisplay::handleInput() {
 		if (event.eventType == vr::VREvent_ButtonUnpress) {
 			devices[devID]->change_button(mapButton(data.controller.button), false);
 		}
+	}
+
+	for (auto dev : devices) {
+		int devID = dev.first;
+		vr::VRControllerState_t state;
+		m_pHMD->GetControllerState(devID, &state, sizeof(state));
+		float x = state.rAxis[0].x;
+		float y = state.rAxis[0].y;
+
+		if (abs(x) > abs(y))	dev.second->change_slider(10, x);
+		else					dev.second->change_slider(11, y);
 	}
 }
 

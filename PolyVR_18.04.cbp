@@ -89,7 +89,6 @@
 			<Add option="-DWITH_SHADOW_VOLUME" />
 			<Add option="-DWITH_OPCUA" />
 			<Add option="-DWITH_CLUSTERING_FIX" />
-			<Add option="-DWITH_STEP" />
 			<Add option="-DCEF18" />
 			<Add option="-DGDK_GL_COMPILATION" />
 			<Add option="-DGTK_GL_COMPILATION" />
@@ -202,6 +201,7 @@
 			<Add option="-lcollada14dom" />
 			<Add option="-lGLU" />
 			<Add option="-lGL" />
+			<Add option="-lepoxy" />
 			<Add option="-lSM" />
 			<Add option="-lICE" />
 			<Add option="-lX11" />
@@ -366,6 +366,16 @@
 		<Unit filename="src/addons/Engineering/Factory/VRPyLogistics.h" />
 		<Unit filename="src/addons/Engineering/Factory/VRPyProduction.cpp" />
 		<Unit filename="src/addons/Engineering/Factory/VRPyProduction.h" />
+		<Unit filename="src/addons/Engineering/Machining/VRCartesianKinematics.cpp" />
+		<Unit filename="src/addons/Engineering/Machining/VRCartesianKinematics.h" />
+		<Unit filename="src/addons/Engineering/Machining/VRMachiningCode.cpp" />
+		<Unit filename="src/addons/Engineering/Machining/VRMachiningCode.h" />
+		<Unit filename="src/addons/Engineering/Machining/VRMachiningKinematics.cpp" />
+		<Unit filename="src/addons/Engineering/Machining/VRMachiningKinematics.h" />
+		<Unit filename="src/addons/Engineering/Machining/VRMachiningSimulation.cpp" />
+		<Unit filename="src/addons/Engineering/Machining/VRMachiningSimulation.h" />
+		<Unit filename="src/addons/Engineering/Machining/VRPyMachining.cpp" />
+		<Unit filename="src/addons/Engineering/Machining/VRPyMachining.h" />
 		<Unit filename="src/addons/Engineering/Mechanics/VRMechanism.cpp" />
 		<Unit filename="src/addons/Engineering/Mechanics/VRMechanism.h" />
 		<Unit filename="src/addons/Engineering/Mechanics/VRPyMechanism.cpp" />
@@ -574,6 +584,10 @@
 		<Unit filename="src/core/gui/VRGuiVectorEntry.cpp" />
 		<Unit filename="src/core/gui/VRGuiVectorEntry.h" />
 		<Unit filename="src/core/gui/elements/VRGuiButton.h" />
+		<Unit filename="src/core/gui/glarea/glarea.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/core/gui/glarea/glarea.h" />
 		<Unit filename="src/core/gui/gtkglext/gdk/gdkgl.h" />
 		<Unit filename="src/core/gui/gtkglext/gdk/gdkglconfig.c">
 			<Option compilerVar="CC" />
@@ -583,13 +597,7 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/core/gui/gtkglext/gdk/gdkglconfigimpl.h" />
-		<Unit filename="src/core/gui/gtkglext/gdk/gdkglcontext.c">
-			<Option compilerVar="CC" />
-		</Unit>
 		<Unit filename="src/core/gui/gtkglext/gdk/gdkglcontext.h" />
-		<Unit filename="src/core/gui/gtkglext/gdk/gdkglcontextimpl.c">
-			<Option compilerVar="CC" />
-		</Unit>
 		<Unit filename="src/core/gui/gtkglext/gdk/gdkglcontextimpl.h" />
 		<Unit filename="src/core/gui/gtkglext/gdk/gdkgldebug.h" />
 		<Unit filename="src/core/gui/gtkglext/gdk/gdkgldefs.h" />
@@ -597,6 +605,14 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/core/gui/gtkglext/gdk/gdkgldrawable.h" />
+		<Unit filename="src/core/gui/gtkglext/gdk/gdkglextcontext.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/core/gui/gtkglext/gdk/gdkglextcontext.h" />
+		<Unit filename="src/core/gui/gtkglext/gdk/gdkglextcontextimpl.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/core/gui/gtkglext/gdk/gdkglextcontextimpl.h" />
 		<Unit filename="src/core/gui/gtkglext/gdk/gdkglinit.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -633,10 +649,11 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/core/gui/gtkglext/gdk/x11/gdkglconfig-x11.h" />
-		<Unit filename="src/core/gui/gtkglext/gdk/x11/gdkglcontext-x11.c">
+		<Unit filename="src/core/gui/gtkglext/gdk/x11/gdkglcontext-x11.h" />
+		<Unit filename="src/core/gui/gtkglext/gdk/x11/gdkglextcontext-x11.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/core/gui/gtkglext/gdk/x11/gdkglcontext-x11.h" />
+		<Unit filename="src/core/gui/gtkglext/gdk/x11/gdkglextcontext-x11.h" />
 		<Unit filename="src/core/gui/gtkglext/gdk/x11/gdkglprivate-x11.h" />
 		<Unit filename="src/core/gui/gtkglext/gdk/x11/gdkglquery-x11.c">
 			<Option compilerVar="CC" />
@@ -651,10 +668,11 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/core/gui/gtkglext/gdk/x11/gdkx11glconfig.h" />
-		<Unit filename="src/core/gui/gtkglext/gdk/x11/gdkx11glcontext.c">
+		<Unit filename="src/core/gui/gtkglext/gdk/x11/gdkx11glcontext.h" />
+		<Unit filename="src/core/gui/gtkglext/gdk/x11/gdkx11glextcontext.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/core/gui/gtkglext/gdk/x11/gdkx11glcontext.h" />
+		<Unit filename="src/core/gui/gtkglext/gdk/x11/gdkx11glextcontext.h" />
 		<Unit filename="src/core/gui/gtkglext/gdk/x11/gdkx11glquery.h" />
 		<Unit filename="src/core/gui/gtkglext/gdk/x11/gdkx11glwindow.c">
 			<Option compilerVar="CC" />

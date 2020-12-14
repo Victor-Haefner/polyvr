@@ -7,7 +7,7 @@ using namespace std;
 VRTimer::VRTimer() { start(); }
 
 void VRTimer::start() { single.start = getTime()*1e-3; }
-int VRTimer::stop() { return getTime()*1e-3- single.start; }
+double VRTimer::stop() { return getTime()*1e-3- single.start; }
 void VRTimer::reset() { start(); }
 
 map<string, VRTimer::timer> VRTimer::beacons = map<string, VRTimer::timer>();
@@ -17,7 +17,7 @@ void VRTimer::start(string t) {
     timers[t].start = getTime()*1e-3;
 }
 
-int VRTimer::stop(string t) {
+double VRTimer::stop(string t) {
     timers[t].total += getTime()*1e-3 - timers[t].start;
     return timers[t].total;
 }
@@ -39,10 +39,10 @@ void VRTimer::emitBeacon(string b) {
     }
 }
 
-int VRTimer::getBeacon(string b) {
+double VRTimer::getBeacon(string b) {
     if (!beacons.count(b)) beacons[b] = timer();
-    int t = getTime()*1e-3;
-    int res = t - beacons[b].start;
+    double t = getTime()*1e-3;
+    double res = t - beacons[b].start;
     beacons[b].start = t;
     return res;
 }

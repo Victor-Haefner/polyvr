@@ -66,6 +66,9 @@ VRGuiManager::VRGuiManager() {
 
     int argc = 0;
     gtk_disable_setlocale();
+#ifndef _WIN32
+    setenv("GDK_GL", "legacy", 1); // linux legacy gl
+#endif
     gtk_init(&argc, 0);
 
     //gtk_window_set_interactive_debugging(true);
@@ -75,6 +78,8 @@ VRGuiManager::VRGuiManager() {
 
     //gtk_gl_init(&argc, NULL);
     VRGuiBuilder::get(standalone);
+
+    gtkUpdateCb = VRThreadCb::create("gtk update", bind(&VRGuiManager::updateGtkThreaded, this, placeholders::_1));
 
     if (standalone) {
         cout << " start in standalone mode\n";
@@ -104,7 +109,7 @@ VRGuiManager::VRGuiManager() {
     g_scene->updateTreeView();
 
 
-    VRDeviceCbPtr fkt;
+    VRDeviceCbPtr fkt; // TODO: all those signals are not properly connected to, the fkt binding is destroyed when going out of scope
 
     auto editor = g_sc->getEditor();
     editor->addKeyBinding("wipe", VRUpdateCb::create("wipeCb", bind(&VRGuiBits::wipeConsoles, g_bits)));
@@ -122,6 +127,7 @@ VRGuiManager::VRGuiManager() {
 
     fkt = VRFunction<VRDeviceWeakPtr>::create("GUI_updateNav", bind(&VRGuiNav::update, g_nav) );
     VRGuiSignals::get()->getSignal("scene_changed")->add( fkt );
+    VRGuiSignals::get()->getSignal("navpresets_changed")->add( fkt );
     guiSignalCbs.push_back(fkt);
 
     /*fkt = VRFunction<VRDeviceWeakPtr>::create("GUI_updateSem", bind(&VRGuiSemantics::updateOntoList, g_sem) );
@@ -144,7 +150,6 @@ VRGuiManager::VRGuiManager() {
     gtk_window_maximize(top);
     gtk_widget_show_all((GtkWidget*)top);
 
-    gtkUpdateCb = VRThreadCb::create( "gtk update", bind(&VRGuiManager::updateGtkThreaded, this, placeholders::_1) );
     cout << " done" << endl;
 }
 

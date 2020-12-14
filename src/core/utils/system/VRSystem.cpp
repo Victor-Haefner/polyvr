@@ -9,6 +9,7 @@
 #ifndef _WIN32
 #include <unistd.h>
 #endif
+#include <thread>
 #include <chrono>
 
 void printBacktrace() {
@@ -43,6 +44,7 @@ string absolute(string path) { return boost::filesystem::absolute(path).string()
 
 bool isFile(string path) { return boost::filesystem::is_regular_file(path); }
 bool isFolder(string path) { return boost::filesystem::is_directory(path); }
+bool isSamePath(string path1, string path2) { return boost::filesystem::equivalent(path1, path2); }
 
 string getFileName(string path, bool withExtension) {
     string fname;
@@ -106,6 +108,20 @@ void initTime() {
 long long getTime() {
     auto elapsed = chrono::high_resolution_clock::now() - globalStartTime;
     return chrono::duration_cast<chrono::microseconds>(elapsed).count();
+}
+
+template <typename T>
+using duration = std::chrono::duration<T, std::milli>;
+
+void doFrameSleep(double tFrame, double fps) {
+    double fT = 1000.0 / fps;             // target frame duration in ms
+    double sT = max(fT - tFrame, 0.0);    // time to sleep
+    if (sT <= 0) return;
+    static constexpr duration<double> MinSleepDuration(0);
+    std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
+    while (duration<double>(std::chrono::high_resolution_clock::now() - start).count() < sT) {
+        std::this_thread::sleep_for(MinSleepDuration);
+    }
 }
 
 void fileReplaceStrings(string filePath, string oldString, string newString) {

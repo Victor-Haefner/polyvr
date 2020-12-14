@@ -203,8 +203,23 @@ float VRCamera::getFar() { return farClipPlaneCoeff; }
 float VRCamera::getOrthoSize() { return orthoSize; }
 void VRCamera::setAspect(float a) { aspect = a; setup(); }
 void VRCamera::setFov(float f) { fov = f; setup(); }
-void VRCamera::setNear(float a) { nearClipPlaneCoeff = a; setup(); }
-void VRCamera::setFar(float f) { farClipPlaneCoeff = f; setup(); }
+
+void VRCamera::setNear(float a) { 
+    nearClipPlaneCoeff = a; 
+    setup();
+#ifndef WITHOUT_GTK
+    VRGuiManager::broadcast("camera_near_far_changed");
+#endif
+}
+
+void VRCamera::setFar(float f) { 
+    farClipPlaneCoeff = f; 
+    setup(); 
+#ifndef WITHOUT_GTK
+    VRGuiManager::broadcast("camera_near_far_changed");
+#endif
+}
+
 void VRCamera::setOrthoSize(float f) { orthoSize = f; setup(); }
 void VRCamera::setProjection(string p) {
     if (p == "perspective"); // TODO

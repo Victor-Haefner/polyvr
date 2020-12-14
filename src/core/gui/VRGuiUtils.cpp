@@ -54,8 +54,9 @@ void setWidgetSensitivity(string table, bool b) {
     gtk_widget_set_sensitive(w, b);
 }
 
-void setWidgetVisibility(string table, bool b) {
+void setWidgetVisibility(string table, bool b, bool p) {
     GtkWidget* w = VRGuiBuilder::get()->get_widget(table);
+    if (p) w = gtk_widget_get_parent(w);
     if (b) gtk_widget_show(w);
     else   gtk_widget_hide(w);
 }
@@ -344,16 +345,19 @@ bool drawBG(GtkWidget *widget, cairo_t *cr, gpointer col) {
     return false;
 }
 
-void setColorChooserColor(string drawable, OSG::Color3f col) {
+void setColorChooserColor(GtkWidget* drawable, OSG::Color3f col) {
     GdkColor c;
     c.pixel = 0;
     c.red = col[0]*65535;
     c.green = col[1]*65535;
     c.blue = col[2]*65535;
 
-    GtkDrawingArea* darea = (GtkDrawingArea*)VRGuiBuilder::get()->get_widget(drawable);
-    gtk_widget_modify_bg((GtkWidget*)darea, GTK_STATE_NORMAL, &c);
-    g_signal_connect(G_OBJECT(darea), "draw", G_CALLBACK(drawBG), NULL);
+    gtk_widget_modify_bg(drawable, GTK_STATE_NORMAL, &c);
+    g_signal_connect(G_OBJECT(drawable), "draw", G_CALLBACK(drawBG), NULL);
+}
+
+void setColorChooserColor(string drawable, OSG::Color3f col) {
+    setColorChooserColor(VRGuiBuilder::get()->get_widget(drawable), col);
 }
 
 void setCellRendererCombo(string treeviewcolumn, string combolist, int col, function<void(const char*, GtkTreeIter*)> fkt) {
@@ -384,55 +388,41 @@ void setNotebookPage(string nb, int p) {
 }
 
 OSG::VRTexturePtr takeSnapshot() {
-    GtkDrawingArea* drawArea = (GtkDrawingArea*)VRGuiBuilder::get()->get_widget("glarea");
-    GdkWindow* src = gtk_widget_get_window((GtkWidget*)drawArea); // 24 bits per pixel ( src->get_depth() )
-#if GTK_MAJOR_VERSION == 2
-    int w, h;
-    gdk_drawable_get_size(src, &w, &h);
-#else
-    int w = gdk_window_get_width(src);
-    int h = gdk_window_get_height(src);
-#endif
+    GtkWidget* drawArea = VRGuiBuilder::get()->get_widget("glarea");
+    GdkWindow* src = gtk_widget_get_window(drawArea); // 24 bits per pixel ( src->get_depth() )
+
+    GtkAllocation a;
+    gtk_widget_get_allocation(drawArea, &a);
+    int w = a.width;
+    int h = a.height;
+
     w -= w%4; h -= h%4;
 
-#if GTK_MAJOR_VERSION == 2
-    GdkColormap* cm = gdk_drawable_get_colormap(src);
-    GdkImage* img = gdk_drawable_get_image(src, 0, 0, w, h);
-    GdkPixbuf* pxb = gdk_pixbuf_get_from_image(NULL, img, cm, 0,0,0,0,w,h);
-#else
-    GdkPixbuf* pxb = gdk_pixbuf_get_from_window(src, 0,0,w,h);
-#endif
+    GdkPixbuf* pxb = gdk_pixbuf_get_from_window(src, a.x,a.y,w,h);
 
     OSG::ImageMTRecPtr res = OSG::Image::create();
     //Image::set(pixFormat, width, height, depth, mipmapcount, framecount, framedelay, data, type, aloc, sidecount);
     res->set(OSG::Image::OSG_RGB_PF, w, h, 1, 0, 1, 0, (const unsigned char*)gdk_pixbuf_get_pixels(pxb), OSG::Image::OSG_UINT8_IMAGEDATA, true, 1);
+    //cout << "takeSnapshot1 " << drawArea << " " << VRGuiBuilder::get()->get_widget("hbox1") << " " << VRGuiBuilder::get()->get_widget("vbox5") << endl;
+    //cout << "takeSnapshot2 " << src << " " << src2 << " " << src3 << endl;
     return OSG::VRTexture::create(res);
 }
 
 void saveSnapshot(string path) {
+    cout << "saveSnapshot " << path << endl;
     if (!exists(getFolderName(path))) return;
-    GtkDrawingArea* drawArea = (GtkDrawingArea*)VRGuiBuilder::get()->get_widget("glarea");
-    GdkWindow* src = gtk_widget_get_window((GtkWidget*)drawArea);
-#if GTK_MAJOR_VERSION == 2
-    int w, h;
-    gdk_drawable_get_size(src, &w, &h);
-#else
+    GtkWidget* drawArea = VRGuiBuilder::get()->get_widget("glarea");
+    GdkWindow* src = gtk_widget_get_window(drawArea);
     int w = gdk_window_get_width(src);
     int h = gdk_window_get_height(src);
-#endif
     int smin = min(w, h);
     int u = max(0.0, w*0.5 - smin*0.5);
     int v = max(0.0, h*0.5 - smin*0.5);
 
-#if GTK_MAJOR_VERSION == 2
-    GdkColormap* cm = gdk_drawable_get_colormap(src);
-    GdkImage* img = gdk_drawable_get_image(src, 0, 0, w, h);
-    GdkPixbuf* pxb = gdk_pixbuf_get_from_image(NULL, img, cm, u, v,0,0,smin, smin);
-#else
     GdkPixbuf* pxb = gdk_pixbuf_get_from_window(src, u,v,smin,smin);
-#endif
     pxb = gdk_pixbuf_scale_simple(pxb, 128, 128, GDK_INTERP_HYPER);
     gdk_pixbuf_save(pxb, path.c_str(), "png", 0, 0, NULL);
+    cout << " saveSnapshot done " << path << endl;
 }
 
 void saveScene(string path, bool saveas, string encryptionKey) {

@@ -34,7 +34,7 @@ G_BEGIN_DECLS
 typedef void (*GdkGLProc)(void);
 
 typedef struct _GdkGLConfig   GdkGLConfig;
-typedef struct _GdkGLContext  GdkGLContext;
+typedef struct _GdkGLExtContext  GdkGLExtContext;
 
 typedef struct _GdkGLDrawable GdkGLDrawable;
 

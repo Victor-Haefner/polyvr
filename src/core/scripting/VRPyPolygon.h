@@ -2,6 +2,7 @@
 #define VRPYPOLYGON_H_INCLUDED
 
 #include "core/math/polygon.h"
+#include "core/math/frustum.h"
 #include "core/scripting/VRPyBase.h"
 
 struct VRPyPolygon : VRPyBaseT<OSG::VRPolygon> {
@@ -16,6 +17,10 @@ struct VRPyPolygon : VRPyBaseT<OSG::VRPolygon> {
     static PyObject* clear(VRPyPolygon* self);
     static PyObject* getConvexHull(VRPyPolygon* self);
     static PyObject* getRandomPoints(VRPyPolygon* self, PyObject *args);
+};
+
+struct VRPyFrustum : VRPyBaseT<OSG::Frustum> {
+    static PyMethodDef methods[];
 };
 
 #endif // VRPYPOLYGON_H_INCLUDED

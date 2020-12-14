@@ -143,9 +143,10 @@ class VRGuiSetup {
         void on_leap_pos_edit(Vec3d v);
         void on_leap_up_edit(Vec3d v);
         void on_leap_dir_edit(Vec3d v);
-
+#ifndef WITHOUT_VIRTUOSE
         void on_haptic_ip_edited();
         void on_change_haptic_type();
+#endif
         void on_toggle_dev_cross();
 
         void on_netnode_edited();

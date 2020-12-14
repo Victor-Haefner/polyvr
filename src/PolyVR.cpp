@@ -8,6 +8,7 @@
 #include <OpenSG/OSGPrimeMaterial.h>
 #include <OpenSG/OSGNameAttachment.h>
 #include <OpenSG/OSGVector.h>
+#include <OpenSG/OSGSceneFileHandler.h>
 
 #ifdef __EMSCRIPTEN__
 #include <OpenSG/OSGPNGImageFileType.h>
@@ -57,6 +58,7 @@
 #include "core/utils/coreDumpHandler.h"
 #ifndef WITHOUT_GTK
 #include "core/gui/VRGuiManager.h"
+#include "core/gui/VRGuiSignals.h"
 #endif
 #include "core/networking/VRMainInterface.h"
 #ifndef WITHOUT_SHARED_MEMORY
@@ -138,6 +140,7 @@ PolyVR::~PolyVR() {
 
     pvr = 0;
 
+    VRGuiSignals::get()->clear();
     scene_mgr->closeScene();
     VRSetup::getCurrent()->stopWindows();
     scene_mgr->stopAllThreads();
@@ -398,6 +401,21 @@ void initOSGImporter() {
 }
 #endif
 
+void printOSGImportCapabilities() {
+    auto h = SceneFileHandler::the();
+
+    std::list<const Char8*> suffixList;
+    h->getSuffixList(suffixList, SceneFileType::OSG_READ_SUPPORTED);
+    cout << "OSG read formats:" << endl;
+    for (auto s : suffixList) cout << " " << s;
+    cout << endl;
+
+    h->getSuffixList(suffixList, SceneFileType::OSG_WRITE_SUPPORTED);
+    cout << "OSG write formats:" << endl;
+    for (auto s : suffixList) cout << " " << s;
+    cout << endl;
+}
+
 void testGLCapabilities() {
     cout << "Check OpenGL capabilities:" << endl;
     cout << " OpenGL vendor: " << VRRenderManager::getGLVendor() << endl;
@@ -439,16 +457,6 @@ void PolyVR::init(int argc, char **argv) {
     options->parse(argc,argv);
     checkProcessesAndSockets();
 
-    //GLUT
-    cout << " init GLUT";
-    glutInit(&argc, argv);
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_STENCIL_TEST);
-    if (VROptions::get()->getOption<bool>("active_stereo"))
-        glutInitDisplayMode(GLUT_RGBA | GLUT_DEPTH | GLUT_DOUBLE | GLUT_STEREO | GLUT_STENCIL | GLUT_MULTISAMPLE);
-    else glutInitDisplayMode(GLUT_RGBA | GLUT_DEPTH | GLUT_DOUBLE | GLUT_STENCIL | GLUT_MULTISAMPLE);
-    cout << " ..done " << endl;
-
     //OSG
     cout << " init OSG" << endl;
     ChangeList::setReadWriteDefault();
@@ -456,6 +464,8 @@ void PolyVR::init(int argc, char **argv) {
     OSG::preloadSharedObject("OSGImageFileIO");
     osgInit(argc,argv);
     cout << "  ..done" << endl << endl;
+
+    printOSGImportCapabilities();
 
 #ifndef WITHOUT_SHARED_MEMORY
     try {

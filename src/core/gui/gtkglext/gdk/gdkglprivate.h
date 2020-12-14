@@ -41,7 +41,7 @@ void _gdk_gl_print_gl_info (void);
 
 /* Internal globals */
 
-extern gboolean _gdk_gl_context_force_indirect;
+extern gboolean _gdk_glext_context_force_indirect;
 
 G_END_DECLS
 

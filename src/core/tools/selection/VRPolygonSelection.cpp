@@ -53,15 +53,29 @@ void VRPolygonSelection::clear() {
     closed = false;
 }
 
+bool inFrustum(Frustum& f, Vec3f p) {
+    auto planes = f.getPlanes();
+    for (unsigned int i=0; i<planes.size(); i++) {
+        float d = planes[i].distance(p);
+        if ( d < 0 ) return false;
+    }
+    return true;
+}
+
 bool VRPolygonSelection::objSelected(VRGeometryPtr geo) {
     if (!closed) return false;
     auto bbox = geo->getBoundingbox();
     Vec3d p0 = origin.pos();
+    Vec3f c = Vec3f(bbox->center());
+    if (!inFrustum(convex_hull, c)) return false;
+    for (auto f : convex_decomposition ) if (inFrustum(f, c)) return true;
     for (auto d : selection.getEdges()) {
         if ( bbox->intersectedBy( Line(Pnt3f(p0),Vec3f(d)) ) ) return true;
     }
     return false;
 }
+
+Frustum VRPolygonSelection::getSelectionFrustum() { return selection; }
 
 bool VRPolygonSelection::partialSelected(VRGeometryPtr geo) {
     if (!closed) return false;
@@ -73,22 +87,12 @@ bool VRPolygonSelection::partialSelected(VRGeometryPtr geo) {
 
 bool VRPolygonSelection::vertSelected(Vec3d p) {
     if (!closed) return false;
-
-    auto inFrustum = [&](frustum& f) {
-        auto planes = f.getPlanes();
-        for (unsigned int i=0; i<planes.size(); i++) {
-            float d = planes[i].distance(Vec3f(p));
-            if ( d < 0 ) return false;
-        }
-        return true;
-    };
-
-    if (!inFrustum(convex_hull)) return false;
-    for (auto f : convex_decomposition ) if (inFrustum(f)) return true;
+    if (!inFrustum(convex_hull, Vec3f(p))) return false;
+    for (auto f : convex_decomposition ) if (inFrustum(f, Vec3f(p))) return true;
     return false;
 }
 
-void VRPolygonSelection::updateShape(frustum f) {
+void VRPolygonSelection::updateShape(Frustum f) {
     int N = f.getEdges().size();
     if (N <= 1) return;
 
@@ -105,9 +109,11 @@ void VRPolygonSelection::updateShape(frustum f) {
     GeoUInt32PropertyMTRecPtr lengths = GeoUInt32Property::create();
     GeoUInt32PropertyMTRecPtr types = GeoUInt32Property::create();
 
+    cout << "updateShape" << endl;
     for (auto e : f.getEdges()) {
         pos->addValue(p0+e*Near);
         pos->addValue(p0+e*Far);
+        cout << " p0 " << p0 << " e " << e << " nf " << Near << " " << Far << endl;
     }
 
     // near

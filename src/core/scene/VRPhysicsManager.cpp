@@ -106,6 +106,7 @@ void VRPhysicsManager::prepareObjects() {
 }
 
 void VRPhysicsManager::updatePhysics( VRThreadWeakPtr wthread) {
+    VRTimer timer; timer.start();
     long long dt,t0,t1,t2,t3;
     t1 = getTime();
     auto thread = wthread.lock();
@@ -125,12 +126,14 @@ void VRPhysicsManager::updatePhysics( VRThreadWeakPtr wthread) {
         }
     }
 
-    t2 = getTime();
-    dt = t2-t1;
-    if (dt < 0) dt = 0;
+    //t2 = getTime();
+    //dt = t2-t1;
+   // if (dt < 0) dt = 0;
 
     //sleep up to 500 fps
-    if (dt < PHYSICS_THREAD_TIMESTEP_MS * 1000) this_thread::sleep_for(chrono::microseconds(PHYSICS_THREAD_TIMESTEP_MS * 1000 -dt));
+    //double pfT = PHYSICS_THREAD_TIMESTEP_MS * 1000;
+    doFrameSleep(timer.stop(), 500);
+    //if (dt < pfT) this_thread::sleep_for(chrono::microseconds(pfT -dt));
     t3 = getTime();
 
     if (active) {

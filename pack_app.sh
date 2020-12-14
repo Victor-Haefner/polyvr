@@ -1,9 +1,12 @@
 #!/bin/bash
 
+#./pack_app.sh PolyVR
+#./pack_app.sh FinancialFolder conceptV1.pvr /c/Users/Victor/Projects/financialocean
+#./pack_app.sh PoscarViewer poscarImport.pvr /c/Users/Victor/Projects/surfacechemistry
 
-appName=$1 #"FinancialFolder"
-appProject=$2 #"conceptV1.pvr"
-appFolder=$3 #"/c/Users/Victor/Projects/financialocean"
+appName=$1
+appProject=$2
+appFolder=$3
 
 pckFolder="packages/"$appName
 
@@ -38,6 +41,9 @@ cp -r "$redistPath"/* $pckFolder/engine/libs/
 cp -r "$redistPath2" $pckFolder/engine/libs/
 cp -r /c/usr/lib/opensg/* $pckFolder/engine/libs/
 cp -r /c/usr/lib/cef/* $pckFolder/engine/libs/
+cp -r /c/usr/lib/oce/* $pckFolder/engine/libs/
+cp -r /c/usr/lib/openvr/* $pckFolder/engine/libs/
+cp -r /c/usr/lib/collada/* $pckFolder/engine/libs/
 cp -r "$vcpkgLibs"/* $pckFolder/engine/libs/
 
 

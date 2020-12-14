@@ -32,13 +32,12 @@ class VRTextureRenderer : public VRObject {
 
         void setChannelSubstitutes(CHANNEL c);
         void resetChannelSubstitutes();
-        void test();
 
     public:
-        VRTextureRenderer(string name, bool readback = true);
+        VRTextureRenderer(string name, bool readback = false);
         ~VRTextureRenderer();
 
-        static VRTextureRendererPtr create(string name = "textureRenderer", bool readback = true);
+        static VRTextureRendererPtr create(string name = "textureRenderer", bool readback = false);
 
         void setup(VRCameraPtr cam, int width, int height, bool alpha = false);
         void setStageCam(OSGCameraPtr cam);
@@ -55,6 +54,8 @@ class VRTextureRenderer : public VRObject {
         VRMaterialPtr createTextureLod(VRObjectPtr scene, PosePtr cam, int res, float aspect, float fov, Color3f bg);
 
         static void updateSceneBackground();
+
+        void test();
 };
 
 OSG_END_NAMESPACE;

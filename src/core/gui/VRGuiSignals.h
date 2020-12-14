@@ -4,6 +4,7 @@
 #include <OpenSG/OSGConfig.h>
 #include "core/utils/VRDeviceFwd.h"
 #include <string>
+#include <vector>
 #include <map>
 
 OSG_BEGIN_NAMESPACE;
@@ -18,7 +19,10 @@ class VRGuiSignals {
     public:
         static VRGuiSignals* get();
 
+        vector<string> getSignals();
         VRSignalPtr getSignal(string name);
+
+        void clear();
 };
 
 OSG_END_NAMESPACE

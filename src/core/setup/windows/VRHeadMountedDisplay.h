@@ -8,6 +8,7 @@
 #include <map>
 
 #include "../VRSetupFwd.h"
+#include "core/utils/VRFunctionFwd.h"
 #include "core/utils/VRDeviceFwd.h"
 #include "core/tools/VRToolsFwd.h"
 
@@ -52,6 +53,8 @@ class VRHeadMountedDisplay : public std::enable_shared_from_this<VRHeadMountedDi
 		Matrix4d m_mat4eyePosLeft;
 		Matrix4d m_mat4eyePosRight;
 
+		VRDeviceCbPtr onCameraChanged;
+
 		void addController(int devID);
 		void handleInput();
 
@@ -67,6 +70,8 @@ class VRHeadMountedDisplay : public std::enable_shared_from_this<VRHeadMountedDi
 		void initFBO();
 		void setScene();
 		void SetupTexturemaps();
+
+		void updateCamera();
 
 	public:
 		VRHeadMountedDisplay();

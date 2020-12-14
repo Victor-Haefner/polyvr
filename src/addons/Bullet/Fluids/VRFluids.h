@@ -65,8 +65,8 @@ class VRFluids : public VRParticles {
         inline float kernel_visc(btVector3 distance_vector, float area) /*__attribute__((always_inline))*/;
         inline float kernel_visc_laplacian(btVector3 distance_vector, float area) /*__attribute__((always_inline))*/;
 
-        inline void sph_calc_properties(SphParticle* p) __attribute__((always_inline));
-        inline void sph_calc_forces(SphParticle* p) __attribute__((always_inline));
+        inline void sph_calc_properties(SphParticle* p) /*__attribute__((always_inline))*/;
+        inline void sph_calc_forces(SphParticle* p) /*__attribute__((always_inline))*/;
 
         void setFunctions(int from, int to) override;
         void disableFunctions() override;

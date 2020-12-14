@@ -106,6 +106,7 @@ class VRScript : public std::enable_shared_from_this<VRScript>, public VRName {
         VRScriptPtr ptr();
 
         void clean();
+        void updateDeviceTrigger();
 
         void setName(string n);
         void setFunction(PyObject* _fkt);

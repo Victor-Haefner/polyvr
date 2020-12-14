@@ -16,4 +16,14 @@ VRSignalPtr VRGuiSignals::getSignal(string name) {
     return signals[name];
 }
 
+vector<string> VRGuiSignals::getSignals() {
+    vector<string> res;
+    for (auto s : signals) res.push_back(s.first);
+    return res;
+}
+
+void VRGuiSignals::clear() {
+    signals.clear();
+}
+
 OSG_END_NAMESPACE

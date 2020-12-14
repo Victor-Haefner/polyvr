@@ -371,19 +371,21 @@ void VRAppManager::on_search() {
 }
 
 void VRAppManager::update() {
-	cout << "VRAppManager::update" << endl;
+	cout << "VRAppManager::update " << endl;
     auto scene = VRScene::getCurrent();
     if (scene == 0) {
         cout << " .. no scene" << endl;
         if (current_demo) current_demo->running = false;
         setGuiState(current_demo);
+        current_demo = 0;
         return;
     }
 
     string sPath = scene->getPath();
+
     if (current_demo) {
-        cout << " .. current_demo set" << endl;
-        if (current_demo->path == sPath) {
+        cout << " .. current_demo is set" << endl;
+        if (isSamePath(current_demo->path, sPath)) {
             current_demo->running = true;
             cout << "  .. to running, set ui state accordingly" << endl;
             setGuiState(current_demo);
@@ -392,6 +394,7 @@ void VRAppManager::update() {
         cout << "  .. to not running, set ui state accordingly" << endl;
         current_demo->running = false;
         setGuiState(current_demo);
+        current_demo = 0;
         return;
     }
 
@@ -407,7 +410,7 @@ void VRAppManager::update() {
         return;
     }
 
-    noLauncherScene = true;
+    //noLauncherScene = true;
 
     if (noLauncherScene) {
         cout << " .. noLauncherScene set, set ui state accordingly" << endl;

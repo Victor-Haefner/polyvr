@@ -28,8 +28,8 @@ G_BEGIN_DECLS
 void _gdk_x11_gl_print_glx_info (Display *xdisplay,
                                  int      screen_num);
 
-#define GDK_GL_CONTEXT_IS_DESTROYED(glcontext) \
-  ( ((GdkGLContextImplX11 *) (glcontext->impl))->is_destroyed )
+#define GDK_GLEXT_CONTEXT_IS_DESTROYED(glextcontext) \
+  ( ((GdkGLExtContextImplX11 *) (glextcontext->impl))->is_destroyed )
 
 #define GDK_GL_WINDOW_IS_DESTROYED(glwindow) \
   ( ((GdkGLWindowImplX11 *) (glwindow->impl))->is_destroyed )

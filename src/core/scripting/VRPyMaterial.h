@@ -2,10 +2,12 @@
 #define VRPYMATERIAL_H_INCLUDED
 
 #include "core/objects/material/VRMaterial.h"
+#ifndef WITHOUT_AV
+#include "core/objects/material/VRVideo.h"
+#endif
 #include "VRPyBase.h"
 
 struct VRPyMaterial : VRPyBaseT<OSG::VRMaterial> {
-    static PyMemberDef members[];
     static PyMethodDef methods[];
 
     static PyObject* addPass(VRPyMaterial* self);
@@ -50,5 +52,11 @@ struct VRPyMaterial : VRPyBaseT<OSG::VRMaterial> {
     static PyObject* setShaderParameter(VRPyMaterial* self, PyObject* args);
     static PyObject* setDefaultVertexShader(VRPyMaterial* self);
 };
+
+#ifndef WITHOUT_AV
+struct VRPyVideo : VRPyBaseT<OSG::VRVideo> {
+    static PyMethodDef methods[];
+};
+#endif
 
 #endif // VRPYMATERIAL_H_INCLUDED

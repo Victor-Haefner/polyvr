@@ -22,7 +22,7 @@ struct _GdkEventKey;
 
 struct _GtkGLArea;
 struct _GdkGLContext;
-struct CairoContext;
+struct _cairo;
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -47,7 +47,7 @@ class VRGtkWindow : public VRWindow {
         bool on_expose(_GdkEventExpose* e);
         void on_realize();
 #else
-        bool on_expose(CairoContext* e);
+        bool on_expose(_cairo* e);
         _GdkGLContext* glcontext = 0;
         void on_realize();
         bool on_render(_GdkGLContext* glcontext);
@@ -62,6 +62,8 @@ class VRGtkWindow : public VRWindow {
 
         void render(bool fromThread = false);
         void clear(Color3f c);
+
+        void setBlitID(int ID, int bType);
 
         void setCursor(string c);
 

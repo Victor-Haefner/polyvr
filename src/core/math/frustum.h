@@ -3,13 +3,14 @@
 
 #include "polygon.h"
 #include "pose.h"
+#include "VRMathFwd.h"
 #include <OpenSG/OSGLine.h>
 #include <OpenSG/OSGPlane.h>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-class frustum {
+class Frustum {
     private:
         Pose trans;
         vector<Vec3d> directions;
@@ -18,10 +19,16 @@ class frustum {
         Vec2d near_far;
 
         void computeProfile();
-        frustum fromProfile(VRPolygon p, Pose t);
+        Frustum fromProfile(VRPolygon p, Pose t);
+
+        bool inFrustumPlanes(Vec3f p);
 
     public:
-        frustum();
+        Frustum();
+        ~Frustum();
+
+        static FrustumPtr create();
+
         void setPose(Pose trans);
         Pose getPose();
         void setNearFar(Vec2d near_far);
@@ -30,11 +37,13 @@ class frustum {
         int size();
         void clear();
 
-        frustum getConvexHull();
-        vector< frustum > getConvexDecomposition();
+        Frustum getConvexHull();
+        vector< Frustum > getConvexDecomposition();
         vector< Plane > getPlanes();
         vector< Plane > getNearFarPlanes();
         vector< Vec3d > getEdges();
+
+        bool isInside(Vec3d p);
 
         string toString();
         static void runTest();

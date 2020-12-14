@@ -86,7 +86,7 @@ struct VRMatData {
     ShaderProgramMTRecPtr gProgram;
     ShaderProgramMTRecPtr tcProgram;
     ShaderProgramMTRecPtr teProgram;
-    VRVideo* video = 0;
+    VRVideoPtr video;
     bool deferred = false;
     bool tmpDeferredShdr = false;
     bool tmpOGLESShdr = false;
@@ -104,9 +104,7 @@ struct VRMatData {
     string tessControlScript;
     string tessEvalScript;
 
-    ~VRMatData() {
-        if (video) delete video;
-    }
+    ~VRMatData() {}
 
     void regChunk(StateChunkMTRecPtr chunk, int unit, int attachmentID) {
         mat->addChunk(chunk, unit);
@@ -220,7 +218,11 @@ struct VRMatData {
 
     template<typename T>
     void clearChunk(T& c) {
-        if (c) { mat->subChunk(c); c = 0; }
+        if (c) {
+            mat->subChunk(c);
+            c = 0;
+            mat->subAttachment(c);
+        }
     }
 };
 }
@@ -906,15 +908,16 @@ bool VRMaterial::isWireFrame() {
 #endif
 }
 
-void VRMaterial::setVideo(string vid_path) {
+VRVideoPtr VRMaterial::setVideo(string vid_path) {
 #ifndef WITHOUT_AV
     auto md = mats[activePass];
-    if (md->video == 0) md->video = new VRVideo( ptr() );
+    if (md->video == 0) md->video = VRVideo::create( ptr() );
     md->video->open(vid_path);
 #endif
+    return md->video;
 }
 
-VRVideo* VRMaterial::getVideo() { return mats[activePass]->video; }
+VRVideoPtr VRMaterial::getVideo() { return mats[activePass]->video; }
 
 void VRMaterial::toggleMaterial(string mat1, string mat2, bool b){
     if (b) setTexture(mat1);
@@ -1020,6 +1023,7 @@ void VRMaterial::clearTransparency(bool user_override) {
     if (force_transparency && !user_override && !deferred) return;
     auto md = mats[activePass];
     md->clearChunk(md->blendChunk);
+    md->colChunk->setDiffuse(toColor4f(getDiffuse(), 1.0));
     //md->clearChunk(md->depthChunk); // messes with depth tests ?
 }
 
@@ -1440,7 +1444,7 @@ string VRMaterial::diffPass(VRMaterialPtr m, int pass) {
     if (either(p1->tcProgram, p2->tcProgram)) res += "\ndiff on tcProgram|"+toString(bool(p1->tcProgram))+"|"+toString(bool(p2->tcProgram));
     if (either(p1->teProgram, p2->teProgram)) res += "\ndiff on teProgram|"+toString(bool(p1->teProgram))+"|"+toString(bool(p2->teProgram));
 
-    if (either(p1->video, p2->video)) res += "\ndiff on video|"+toString(bool(p1->video))+"|"+toString(bool(p2->video));
+    if (either(bool(p1->video), bool(p2->video))) res += "\ndiff on video|"+toString(bool(p1->video))+"|"+toString(bool(p2->video));
     if (either(p1->deferred, p2->deferred)) res += "\ndiff on deferred|"+toString(bool(p1->deferred))+"|"+toString(bool(p2->deferred));
     if (either(p1->tmpDeferredShdr, p2->tmpDeferredShdr)) res += "\ndiff on tmpDeferredShdr|"+toString(bool(p1->tmpDeferredShdr))+"|"+toString(bool(p2->tmpDeferredShdr));
     if (either(p1->tmpOGLESShdr, p2->tmpOGLESShdr)) res += "\ndiff on tmpOGLESShdr|"+toString(bool(p1->tmpOGLESShdr))+"|"+toString(bool(p2->tmpOGLESShdr));

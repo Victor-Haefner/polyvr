@@ -13,8 +13,6 @@
 #include "core/objects/object/VRObject.h"
 #include "core/objects/VRObjectFwd.h"
 
-class VRVideo;
-
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
@@ -104,8 +102,8 @@ class VRMaterial : public VRObject {
         void setMappingBeacon(VRObjectPtr obj, int unit = 0);
         void setMappingPlanes(Vec4d p1, Vec4d p2, Vec4d p3, Vec4d p4, int unit = 0);
         void setQRCode(string s, Vec3d fg, Vec3d bg, int offset);
-        void setVideo(string vid_path);
-        VRVideo* getVideo();
+        VRVideoPtr setVideo(string vid_path);
+        VRVideoPtr getVideo();
 
         void toggleMaterial(string mat1, string mat2, bool b);
 

@@ -62,6 +62,12 @@ string normPath(string p) {
 }
 
 void VRBackgroundBase::updateSkyTextures() {
+    if (path == "") return;
+    if (!exists(path + "_back" + format)) {
+        cout << " Error in updateSkyTextures: '" << path + "_back" + format << "' not found" << endl;
+        return;
+    }
+
     string tmp;
 
     tmp = path + "_back" + format;
@@ -89,6 +95,12 @@ void VRBackgroundBase::initSky() {
 }
 
 void VRBackgroundBase::updateImgTexture() {
+    if (path == "") return;
+    if (!exists(path)) {
+        cout << " Error in updateImgTexture: '" << path << "' not found" << endl;
+        return;
+    }
+
     skyImgs[6]->read(normPath(path).c_str());
 }
 

@@ -6,13 +6,20 @@
 namespace OSG {
 
 ptrFwd(CSGGeometry);
+
+ptrFwd(VRMachiningSimulation);
+ptrFwd(VRMachiningCode);
+ptrFwd(VRMachiningKinematics);
+ptrFwd(VRCartesianKinematics);
 ptrFwd(VRMillingWorkPiece);
 ptrFwd(VRMillingCuttingToolProfile);
+
 ptrFwd(VRAtom);
 ptrFwd(VRBond);
 ptrFwd(VRMolecule);
 ptrFwd(VRMoleculeMat);
 ptrFwd(VRCrystal);
+
 ptrFwd(VRAMLLoader);
 
 }

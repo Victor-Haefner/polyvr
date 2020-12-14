@@ -262,6 +262,8 @@ void VRSceneManager::updateScene() {
     current->update();
 }
 
+void VRSceneManager::setTargetFPS(double fps) { targetFPS = fps;  }
+
 void VRSceneManager::update() {
     // statistics
     auto profiler = VRProfiler::get();
@@ -326,9 +328,7 @@ void VRSceneManager::update() {
     VRGlobals::FRAME_RATE.fps = fps;
     VRTimer t7; t7.start();
     int pID2 = profiler->regStart("frame sleep");
-    int T = max(16-timer.stop(),0);
-    if (T > 0) osgSleep(T);
-
+    doFrameSleep(timer.stop(), targetFPS);
     profiler->regStop(pID2);
     VRGlobals::SLEEP_FRAME_RATE.update(t7);
     VRGlobals::UPDATE_LOOP7.update(timer);

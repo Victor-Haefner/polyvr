@@ -1,11 +1,22 @@
 #include "VRGDAL.h"
 
+/*#define SIZEOF_UNSIGNED_LONG 4
+#define SIZEOF_VOIDP 8
+#define HAVE_LONG_LONG 1*/
+
 #include <math.h>
 #include <iostream>
+#ifndef _WIN32
 #include <gdal/gdal.h>
 #include <gdal/gdal_priv.h>
 #include <gdal/gdal_version.h>
 #include <gdal/ogrsf_frmts.h>
+#else
+#include <gdal.h>
+#include <gdal_priv.h>
+#include <gdal_version.h>
+#include <ogrsf_frmts.h>
+#endif
 #include <OpenSG/OSGVector.h>
 #include <OpenSG/OSGImage.h>
 #include "core/objects/geometry/VRGeoData.h"
@@ -293,8 +304,8 @@ void divideTiffIntoChunks(string pathIn, string pathOut, double minLat, double m
     cout << "Sy " << y2lat_m(adfGeoTransform[5]) << " Sx " << x2lon_m(adfGeoTransform[1]) << endl;
     */
 
-    for (uint yy = 0; yy < bordersY.size()-1; yy++){
-        for (uint xx = 0; xx < bordersX.size()-1; xx++) {
+    for (unsigned int yy = 0; yy < bordersY.size()-1; yy++){
+        for (unsigned int xx = 0; xx < bordersX.size()-1; xx++) {
             if ( bordersY[yy] < latBeg  && bordersX[xx] > lonBeg && bordersY[yy+1] > latEnd  && bordersX[xx+1] < lonEnd ) {
                 cout << " within bounds " << xx << "-" << yy << " | " << bordersY[yy] << " " << bordersX[xx] << " | " << bordersY[yy+1] << " " << bordersX[xx+1] << endl;
                 double xxA = lon2x_m(bordersX[xx]);

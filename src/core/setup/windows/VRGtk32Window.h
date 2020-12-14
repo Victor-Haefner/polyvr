@@ -10,19 +10,24 @@ VRGtkWindow::VRGtkWindow(GtkDrawingArea* da, string msaa) {
     if (gtk_widget_get_realized(widget)) cout << " --- !!! Warning: glarea is realized!\n";
 
     int MSAA = toInt(subString(msaa,1,-1));
-    auto mode = (GdkGLConfigMode)(GDK_GL_MODE_RGBA | GDK_GL_MODE_DOUBLE | GDK_GL_MODE_DEPTH | GDK_GL_MODE_STENCIL | GDK_GL_MODE_MULTISAMPLE);
+    auto mode = (GdkGLConfigMode)(GDK_GL_MODE_RGB | GDK_GL_MODE_DOUBLE | GDK_GL_MODE_DEPTH | GDK_GL_MODE_STENCIL | GDK_GL_MODE_MULTISAMPLE);
     if (VROptions::get()->getOption<bool>("active_stereo"))
-        mode = (GdkGLConfigMode)(GDK_GL_MODE_RGBA | GDK_GL_MODE_DOUBLE | GDK_GL_MODE_DEPTH | GDK_GL_MODE_STENCIL | GDK_GL_MODE_MULTISAMPLE | GDK_GL_MODE_STEREO);
+        mode = (GdkGLConfigMode)(GDK_GL_MODE_RGB | GDK_GL_MODE_DOUBLE | GDK_GL_MODE_DEPTH | GDK_GL_MODE_STENCIL | GDK_GL_MODE_MULTISAMPLE | GDK_GL_MODE_STEREO);
+    
+    // for debugging
+    //mode = (GdkGLConfigMode)(GDK_GL_MODE_RGB | GDK_GL_MODE_DOUBLE | GDK_GL_MODE_DEPTH);
 
     GdkGLConfig* glConfigMode = gdk_gl_config_new_by_mode(mode, MSAA);
     if (!glConfigMode) {
-        mode = (GdkGLConfigMode)(GDK_GL_MODE_RGBA | GDK_GL_MODE_DOUBLE | GDK_GL_MODE_DEPTH | GDK_GL_MODE_STENCIL); // try without multisampling
+        mode = (GdkGLConfigMode)(GDK_GL_MODE_RGB | GDK_GL_MODE_DOUBLE | GDK_GL_MODE_DEPTH | GDK_GL_MODE_STENCIL); // try without multisampling
         glConfigMode = gdk_gl_config_new_by_mode(mode, 0);
     }
 
     cout << "  glConfigMode: " << glConfigMode << endl;
 
-    bool r = gtk_widget_set_gl_capability(widget,glConfigMode,NULL,true,GDK_GL_RGBA_TYPE);
+    bool r = gtk_widget_set_gl_capability(widget, glConfigMode, NULL, true, GDK_GL_RGBA_TYPE);
+
+    //bool r = gtk_widget_set_gl_capability(widget,glConfigMode,NULL,true,GDK_GL_RGBA_TYPE);
     cout << "  gtk_widget_set_gl_capability: " << r << endl;
 
     gtk_widget_show_all(widget);
@@ -40,7 +45,7 @@ VRGtkWindow::VRGtkWindow(GtkDrawingArea* da, string msaa) {
     win->setSize(width, height);
 
     connect_signal<void>(drawArea, bind(&VRGtkWindow::on_realize, this), "realize");
-    connect_signal<bool, CairoContext*>(drawArea, bind(&VRGtkWindow::on_expose, this, PL::_1), "draw");
+    connect_signal<bool, _cairo*>(drawArea, bind(&VRGtkWindow::on_expose, this, PL::_1), "draw");
     connect_signal<void, GdkRectangle*>(drawArea, bind(&VRGtkWindow::on_resize, this, PL::_1), "size_allocate");
     connect_signal<bool, GdkEventScroll*>(drawArea, bind(&VRGtkWindow::on_scroll, this, PL::_1), "scroll_event");
     connect_signal<bool, GdkEventButton*>(drawArea, bind(&VRGtkWindow::on_button, this, PL::_1), "button_press_event");
@@ -113,7 +118,18 @@ void VRGtkWindow::on_realize() {
     gtk_widget_end_gl(widget, true);
 }
 
-bool VRGtkWindow::on_expose(CairoContext* event) {
+void drawBackground(GtkWidget* widget, _cairo* cr) {
+    auto context = gtk_widget_get_style_context(widget);
+    int width = gtk_widget_get_allocated_width(widget);
+    int height = gtk_widget_get_allocated_height(widget);
+    gtk_render_background(context, cr, 0, 0, width, height);
+
+    cairo_set_source_rgb(cr, 0.2, 1.0, 1.0);
+    cairo_rectangle(cr, 0, 0, width, height);
+    cairo_fill(cr);
+}
+
+bool VRGtkWindow::on_expose(_cairo* cr) {
     if (initialExpose) {
         gtk_widget_begin_gl(widget);
         GtkAllocation a;
@@ -125,5 +141,6 @@ bool VRGtkWindow::on_expose(CairoContext* event) {
         gtk_widget_end_gl(widget, true);
         initialExpose = false;
     }
+    //drawBackground(widget, cr);
     return true;
 }

@@ -23,7 +23,7 @@
 #include <gdk/gdk.h>
 
 #include "gdkglprivate.h"
-#include "gdkglcontext.h"
+#include "gdkglextcontext.h"
 #include "gdkgldrawable.h"
 
 GType

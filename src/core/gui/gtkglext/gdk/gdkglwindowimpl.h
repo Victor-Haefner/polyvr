@@ -39,8 +39,8 @@ typedef struct _GdkGLWindowImplClass
 {
   GObjectClass parent_class;
 
-  GdkGLContext* (*create_gl_context)      (GdkGLWindow  *gldrawable,
-                                           GdkGLContext *share_list,
+  GdkGLExtContext* (*create_glext_context)      (GdkGLWindow  *gldrawable,
+                                           GdkGLExtContext *share_list,
                                            gboolean      direct,
                                            int           render_type);
   gboolean      (*is_double_buffered)     (GdkGLWindow *glwindow);

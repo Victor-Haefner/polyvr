@@ -53,8 +53,8 @@ void main( void ) {
 	if (r > 1.0) discard;
 
 	float f = 1.2 - (1.0-sqrt(1.0-r))/(r);
-	vec4 amb = vec4(0.2);
-	gl_FragColor = Color*f + amb;
+	float amb = 0.2;
+	gl_FragColor = vec4(Color.x * f +amb, Color.y * f + amb, Color.z*f + amb, 1.0);
 }
 );
 
@@ -136,8 +136,8 @@ void main( void ) {
 	if (r > 1.0) discard;
 
 	float f = 1.2 - (1.0-sqrt(1.0-r))/(r);
-	vec4 amb = vec4(0.2);
-	gl_FragColor = Color*f + amb;
+	float amb = 0.2;
+	gl_FragColor = vec4(Color.x * f + amb, Color.y * f + amb, Color.z * f + amb, 1.0);
 }
 );
 
