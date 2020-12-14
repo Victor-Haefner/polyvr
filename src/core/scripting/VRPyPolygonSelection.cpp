@@ -47,12 +47,13 @@ template<> PyTypeObject VRPyBaseT<OSG::VRPolygonSelection>::type = {
 };
 
 PyMethodDef VRPyPolygonSelection::methods[] = {
-    {"clear", (PyCFunction)VRPyPolygonSelection::clear, METH_NOARGS, "add to the PatchSelection - add(object)" },
-    {"setOrigin", (PyCFunction)VRPyPolygonSelection::setOrigin, METH_VARARGS, "add to the PatchSelection - add(object)" },
-    {"addEdge", (PyCFunction)VRPyPolygonSelection::addEdge, METH_VARARGS, "add to the PatchSelection - add(object)" },
-    {"close", (PyCFunction)VRPyPolygonSelection::close, METH_VARARGS, "add to the PatchSelection - add(object)" },
-    {"isClosed", (PyCFunction)VRPyPolygonSelection::isClosed, METH_NOARGS, "add to the PatchSelection - add(object)" },
-    {"getShape", (PyCFunction)VRPyPolygonSelection::getShape, METH_NOARGS, "add to the PatchSelection - add(object)" },
+    {"clear", (PyCFunction)VRPyPolygonSelection::clear, METH_NOARGS, "Clear everything" },
+    {"setOrigin", (PyCFunction)VRPyPolygonSelection::setOrigin, METH_VARARGS, "Set origin pose for selection" },
+    {"addEdge", (PyCFunction)VRPyPolygonSelection::addEdge, METH_VARARGS, "Add edge to selection" },
+    {"close", (PyCFunction)VRPyPolygonSelection::close, METH_VARARGS, "Close selection" },
+    {"isClosed", (PyCFunction)VRPyPolygonSelection::isClosed, METH_NOARGS, "Check if selection is closed" },
+    {"getShape", (PyCFunction)VRPyPolygonSelection::getShape, METH_NOARGS, "Get selection visual" },
+    {"getSelectionFrustum", PyWrap(PolygonSelection, getSelectionFrustum, "Get selection frustum", OSG::Frustum) },
     {NULL}  /* Sentinel */
 };
 

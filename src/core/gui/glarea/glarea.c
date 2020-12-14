@@ -1439,7 +1439,7 @@ void _gdk_cairo_draw_from_gl(cairo_t* cr, _GdkWindow* window, int source, int bu
   int dx = matrix.x0;
   int dy = matrix.y0;
 
-  printf("_gdk_cairo_draw_from_gl %i %i %i\n", dx, dy, window_scale);
+  //printf("_gdk_cairo_draw_from_gl %i %i %i\n", dx, dy, window_scale);
 
   if (gdk_gl_context_has_framebuffer_blit(paint_context) && clip_region != NULL) {
       /* Create a framebuffer with the source renderbuffer and
@@ -1533,7 +1533,7 @@ void cairo_draw_begin(cairo_t* cr, _GdkWindow* window, int source, int buffer_sc
   dx = matrix.x0;
   dy = matrix.y0;
 
-  printf("_gdk_cairo_draw_from_gl %i %i %i\n", dx, dy, window_scale);
+  //printf("_gdk_cairo_draw_from_gl %i %i %i\n", dx, dy, window_scale);
 }
 
 void cairo_draw_buffer(cairo_t* cr, _GdkWindow* window, int source, int buffer_scale, int x, int y, int width, int height) {

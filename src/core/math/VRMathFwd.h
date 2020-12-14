@@ -14,6 +14,7 @@ ptrFwd(Path);
 ptrFwd(Datarow);
 ptrFwd(Pose);
 ptrFwd(VRPolygon);
+ptrFwd(Frustum);
 ptrFwd(Patch);
 ptrFwd(Graph);
 ptrFwd(Octree);

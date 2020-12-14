@@ -196,6 +196,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyPathFinding>("PathFinding", pModVR);
     sm->registerModule<VRPyBoundingbox>("Boundingbox", pModVR);
     sm->registerModule<VRPyPolygon>("Polygon", pModVR);
+    sm->registerModule<VRPyFrustum>("Frustum", pModVR);
 #ifndef WITHOUT_GLU_TESS
     sm->registerModule<VRPyTriangulator>("Triangulator", pModVR);
 #endif

@@ -13,9 +13,9 @@ using namespace std;
 class VRPolygonSelection : public VRSelection {
     private:
         Pose origin;
-        frustum selection;
-        frustum convex_hull;
-        vector<frustum> convex_decomposition;
+        Frustum selection;
+        Frustum convex_hull;
+        vector<Frustum> convex_decomposition;
         bool closed = false;
         VRGeometryPtr shape;
 
@@ -23,7 +23,7 @@ class VRPolygonSelection : public VRSelection {
         bool objSelected(VRGeometryPtr geo);
         bool partialSelected(VRGeometryPtr geo);
 
-        void updateShape(frustum f);
+        void updateShape(Frustum f);
 
     public:
         VRPolygonSelection();
@@ -37,6 +37,8 @@ class VRPolygonSelection : public VRSelection {
 
         bool isClosed();
         VRGeometryPtr getShape();
+
+        Frustum getSelectionFrustum();
 };
 
 OSG_END_NAMESPACE;
