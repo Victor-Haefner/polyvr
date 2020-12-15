@@ -391,6 +391,9 @@ GLSL(
 varying vec3 tcs;
 varying vec3 normal;
 varying vec4 position;
+varying float gl_ClipDistance[1];
+uniform vec4 clipPlane;
+uniform mat4 OSGWorldMatrix;
 
 attribute vec4 osg_Vertex;
 attribute vec4 osg_Normal;
@@ -401,7 +404,10 @@ void main( void ) {
     tcs = osg_Normal.xyz;
     normal = gl_NormalMatrix * osg_Normal.xyz;
     position = gl_ModelViewMatrix*osg_Vertex;
-    gl_Position = gl_ModelViewProjectionMatrix*osg_Vertex;
+    gl_Position = gl_ModelViewProjectionMatrix*osg_Vertex;\n
+
+    vec4 pos = OSGWorldMatrix*osg_Vertex;
+    gl_ClipDistance[0] = dot(pos, clipPlane);\n
 }
 );
 
