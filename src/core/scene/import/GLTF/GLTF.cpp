@@ -1712,20 +1712,7 @@ class GLTFLoader : public GLTFUtils {
                         }
                         if (accessorIndices.componentType != 5121 && accessorIndices.componentType != 5122 && accessorIndices.componentType != 5125 && accessorIndices.componentType != 5123) { cout << "GLTF-LOADER: data type of TRIANGLE INDICES unknwon: " << accessorIndices.componentType << endl; }
                     }
-                    if (primitive.mode == 5) { /*TRIANGLE STRIP*/ cout << "GLTF-LOADER: not implemented TRIANGLE STRIP" << endl;}
-                    if (primitive.mode == 6) { /*TRAINGLE FAN*/ cout << "GLTF-LOADER: not implemented fTRAINGLE FAN" << endl;}
-                }   else {
-                    if (primitive.mode == 0) { /*POINTS*/
-                        pointsOnly = true;
-                        for (long i = nUpTo; i < nPos; i++) gdata.pushPoint(i);
-                    }
-                    if (primitive.mode == 1) { /*LINE*/ cout << "GLTF-LOADER: not implemented LINE" << endl; }
-                    if (primitive.mode == 2) { /*LINE LOOP*/ cout << "GLTF-LOADER: not implemented LINE LOOP" << endl; }
-                    if (primitive.mode == 3) { /*LINE STRIP*/ cout << "GLTF-LOADER: not implemented LINE STRIP" << endl; }
-                    if (primitive.mode == 4) { /*TRIANGLES*/
-                        for (long i = 0; i < n/3; i++) gdata.pushTri(nUpTo+i*3+0,nUpTo+i*3+1,nUpTo+i*3+2);
-                    }
-                    if (primitive.mode == 5) { /*TRIANGLE STRIP*/  /*TRIANGLE STRIP*/
+                    if (primitive.mode == 5) { /*TRIANGLE STRIP*/
                         if (accessorIndices.componentType == 5121) {
                             const unsigned char* indices   = reinterpret_cast<const unsigned char*>(&bufferInd.data[bufferViewIndices.byteOffset + accessorIndices.byteOffset]);
                             for (size_t i = 0; i < accessorIndices.count-2; ++i) {
@@ -1769,6 +1756,19 @@ class GLTFLoader : public GLTFUtils {
                         if (accessorIndices.componentType != 5121 && accessorIndices.componentType != 5122 && accessorIndices.componentType != 5125 && accessorIndices.componentType != 5123) { cout << "GLTF-LOADER: data type of TRIANGLE SRIP INDICES unknwon: " << accessorIndices.componentType << endl; }
                     }
                     if (primitive.mode == 6) { /*TRAINGLE FAN*/ cout << "GLTF-LOADER: not implemented fTRAINGLE FAN" << endl;}
+                }   else {
+                    if (primitive.mode == 0) { /*POINTS*/
+                        pointsOnly = true;
+                        for (long i = nUpTo; i < nPos; i++) gdata.pushPoint(i);
+                    }
+                    if (primitive.mode == 1) { /*LINE*/ cout << "GLTF-LOADER: not implemented LINE" << endl; }
+                    if (primitive.mode == 2) { /*LINE LOOP*/ cout << "GLTF-LOADER: not implemented LINE LOOP" << endl; }
+                    if (primitive.mode == 3) { /*LINE STRIP*/ cout << "GLTF-LOADER: not implemented LINE STRIP" << endl; }
+                    if (primitive.mode == 4) { /*TRIANGLES*/
+                        for (long i = 0; i < n/3; i++) gdata.pushTri(nUpTo+i*3+0,nUpTo+i*3+1,nUpTo+i*3+2);
+                    }
+                    if (primitive.mode == 5) { /*TRIANGLE STRIP*/ cout << "GLTF-LOADER: not implemented TRIANGLE STRIP" << endl; }
+                    if (primitive.mode == 6) { /*TRAINGLE FAN*/ cout << "GLTF-LOADER: not implemented TRAINGLE FAN" << endl;}
                 }
                 //cout << meshID << " " << gdata.size() << " --- " << n <<  endl;
                 //cout << "prim with v " << n << " : " << primitive.mode <<  endl;
