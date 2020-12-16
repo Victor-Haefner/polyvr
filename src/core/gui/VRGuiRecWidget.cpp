@@ -55,6 +55,7 @@ VRGuiRecWidget::VRGuiRecWidget() {
     setComboboxCallback("resolutions", bind(&VRGuiRecWidget::on_res_changed, this));
     setComboboxCallback("codecs", bind(&VRGuiRecWidget::on_codec_changed, this));
     setEntryCallback("entry27", bind(&VRGuiRecWidget::on_bitrate_changed, this));
+    setCheckButtonCallback("doVSyncCB", bind(&VRGuiRecWidget::on_toggle_vsync, this));
 
     gtk_widget_show_all((GtkWidget*)box);
     updateCb = VRUpdateCb::create("recorder widget", bind(&VRGuiRecWidget::update, this) );
@@ -69,6 +70,12 @@ VRGuiRecWidget::~VRGuiRecWidget() {}
 void VRGuiRecWidget::on_codec_changed() {
 #ifndef WITHOUT_AV
 	rec->setCodec( getComboboxText("codecs") );
+#endif
+}
+
+void VRGuiRecWidget::on_toggle_vsync() {
+#ifndef WITHOUT_AV
+	rec->enableVSync( getCheckButtonState("doVSyncCB") );
 #endif
 }
 

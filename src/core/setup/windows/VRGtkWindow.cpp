@@ -184,6 +184,10 @@ void VRGtkWindow::on_resize(GdkRectangle* allocation) {
     resize(allocation->width, allocation->height);
 }
 
+void VRGtkWindow::enableVSync(bool b) {
+    gl_area_set_vsync( GL_AREA(widget), b );
+}
+
 void printGLversion() {
     //const GLubyte* renderer = glGetString (GL_RENDERER); // get renderer string
     const GLubyte* version = glGetString (GL_VERSION); // version as a string

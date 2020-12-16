@@ -57,6 +57,7 @@ class VRGtkWindow : public VRWindow {
         void clear(Color3f c);
 
         void forceSize(int W, int H);
+        void enableVSync(bool b);
 
         void setBlitID(int ID, int bType);
 

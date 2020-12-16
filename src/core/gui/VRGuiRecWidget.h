@@ -24,6 +24,7 @@ class VRGuiRecWidget {
         void on_res_changed();
         void on_codec_changed();
         void on_bitrate_changed();
+        void on_toggle_vsync();
 
         void update();
         void buttonHandler(int i);

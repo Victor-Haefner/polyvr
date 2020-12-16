@@ -1831,6 +1831,16 @@ void gl_area_set_samples (GLArea *area, guint samples) {
     }
 }
 
+void gl_area_set_vsync(GLArea* area, gboolean b) {
+    if (b) {
+        auto res = glXSwapIntervalSGI(1);
+        printf(" gl_area_set_vsync %i\n", res);
+    } else {
+        auto res = glXSwapIntervalSGI(0);
+        printf(" gl_area_set_vsync %i\n", res);
+    }
+}
+
 void gl_area_set_blit_id (GLArea *area, guint ID, guint bType) {
     g_return_if_fail (IS_GL_AREA (area));
     GLAreaPrivate *priv = gl_area_get_instance_private (area);

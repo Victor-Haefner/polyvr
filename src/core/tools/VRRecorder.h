@@ -55,6 +55,7 @@ class VRRecorder {
         string getCodec();
 
         void setViewResolution(string res);
+        void enableVSync(bool b);
 
         void setView(int i);
         void capture();

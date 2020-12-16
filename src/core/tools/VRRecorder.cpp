@@ -166,6 +166,12 @@ void VRRecorder::setViewResolution(string res) {
     if (res == "240p")  w->forceSize(320, 240);
 }
 
+void VRRecorder::enableVSync(bool b) {
+    cout << "VRRecorder::enableVSync " << b << endl;
+    auto w = VRSetup::getCurrent()->getEditorWindow();
+    w->enableVSync(b);
+}
+
 void VRRecorder::clear() {
     for (auto f : captures) delete f;
     captures.clear();
