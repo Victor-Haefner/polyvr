@@ -1492,6 +1492,7 @@ void VRGuiBuilder::buildBaseUI() {
     gtk_widget_set_size_request(treeview6, 300, -1);
     gtk_tree_view_set_reorderable(GTK_TREE_VIEW(treeview6), true);
     gtk_widget_set_hexpand(current_object_lab, true);
+    gtk_paned_set_position(GTK_PANED(hpaned3), 300);
 
     auto treeviewcolumn10 = addTreecolumn("treeviewcolumn10", "Object");
     auto cellrenderertext8 = addCellrenderer("cellrenderertext8", treeviewcolumn10);
@@ -1639,12 +1640,13 @@ void VRGuiBuilder::buildBaseUI() {
     /* ---------- VR Scene - scenegraph geometry ---------------------- */
     auto label55 = addLabel("label55", "Data:");
     auto geodata = gtk_list_store_new(3, G_TYPE_STRING, G_TYPE_INT, G_TYPE_INT);
-    auto treeview9_and_frame = addTreeview("treeview9", "geodata", GTK_TREE_MODEL(geodata));
+    auto treeview9_and_frame = addTreeview("treeview9", "geodata", GTK_TREE_MODEL(geodata), false, false);
     auto treeview9 = treeview9_and_frame.first;
     addTreeviewTextcolumn(treeview9, "Datatype", "cellrenderertext22", 0);
     addTreeviewTextcolumn(treeview9, "N", "cellrenderertext52", 1);
     gtk_grid_attach(GTK_GRID(table17), label55, 0,0,1,1);
     gtk_grid_attach(GTK_GRID(table17), treeview9_and_frame.second, 0,1,1,1);
+    gtk_widget_set_vexpand(treeview9_and_frame.second, false);
 
     /* ---------- VR Scene - scenegraph material ---------------------- */
     auto label59 = addLabel("label59", "Name:");
@@ -1687,13 +1689,15 @@ void VRGuiBuilder::buildBaseUI() {
     auto checkbutton28 = addCheckbutton("checkbutton28", "Primitive:");
     auto combobox21 = addCombobox("combobox21", "prim_list");
     auto primitive_opts = gtk_list_store_new(2, G_TYPE_STRING, G_TYPE_STRING);
-    auto treeview12_and_frame = addTreeview("treeview12", "primitive_opts", GTK_TREE_MODEL(primitive_opts));
+    auto treeview12_and_frame = addTreeview("treeview12", "primitive_opts", GTK_TREE_MODEL(primitive_opts), false, false);
     auto treeview12 = treeview12_and_frame.first;
     addTreeviewTextcolumn(treeview12, "Parameter", "cellrenderertext32", 0);
     addTreeviewTextcolumn(treeview12, "Value", "cellrenderertext33", 1, true);
     gtk_grid_attach(GTK_GRID(table29), checkbutton28, 0,0,1,1);
     gtk_grid_attach(GTK_GRID(table29), combobox21, 1,0,1,1);
     gtk_grid_attach(GTK_GRID(table29), treeview12_and_frame.second, 0,1,2,1);
+    gtk_widget_set_vexpand(treeview12_and_frame.second, false);
+
 
     /* ---------- VR Scene - scenegraph camera ---------------------- */
     auto checkbutton17 = addCheckbutton("checkbutton17", "accept setup root");
