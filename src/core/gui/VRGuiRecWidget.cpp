@@ -46,10 +46,13 @@ VRGuiRecWidget::VRGuiRecWidget() {
     addButton(GTK_STOCK_FLOPPY, 3);
     addButton(GTK_STOCK_REFRESH, 4);
 
+    fillStringListstore("resList", VRRecorder::getResList());
     fillStringListstore("codecList", VRRecorder::getCodecList());
+    setCombobox("resolutions", getListStorePos("resList", "custom"));
     setCombobox("codecs", getListStorePos("codecList", rec->getCodec()));
     setTextEntry("entry27", toString(rec->getBitrate()));
 
+    setComboboxCallback("resolutions", bind(&VRGuiRecWidget::on_res_changed, this));
     setComboboxCallback("codecs", bind(&VRGuiRecWidget::on_codec_changed, this));
     setEntryCallback("entry27", bind(&VRGuiRecWidget::on_bitrate_changed, this));
 
@@ -66,6 +69,12 @@ VRGuiRecWidget::~VRGuiRecWidget() {}
 void VRGuiRecWidget::on_codec_changed() {
 #ifndef WITHOUT_AV
 	rec->setCodec( getComboboxText("codecs") );
+#endif
+}
+
+void VRGuiRecWidget::on_res_changed() {
+#ifndef WITHOUT_AV
+	rec->setViewResolution( getComboboxText("resolutions") );
 #endif
 }
 

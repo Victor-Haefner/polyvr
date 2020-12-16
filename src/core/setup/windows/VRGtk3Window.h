@@ -14,13 +14,13 @@ GdkGLContext* onCreateGLContext(GLArea* area, gpointer user_data) {
     return context;
 }
 
-VRGtkWindow::VRGtkWindow(GtkDrawingArea* da, string msaa) {
+VRGtkWindow::VRGtkWindow(GtkWidget* area, string msaa) {
     cout << " --------------------- VRGtkWindow::VRGtkWindow -------------- " << endl;
     type = 2;
 
     g_setenv("GDK_GL_LEGACY", "1", true); // windows
 
-    widget = GTK_WIDGET(da);
+    widget = area;
     if (gtk_widget_get_realized(widget)) cout << "Warning: glarea is realized!\n";
 
     int MSAA = toInt(subString(msaa, 1, -1));

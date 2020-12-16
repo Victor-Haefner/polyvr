@@ -54,6 +54,8 @@ class VRRecorder {
         void setCodec(string c);
         string getCodec();
 
+        void setViewResolution(string res);
+
         void setView(int i);
         void capture();
         void compile(string path);
@@ -76,6 +78,7 @@ class VRRecorder {
         weak_ptr<VRFunction<bool> > getToggleCallback();
 
         static vector<string> getCodecList();
+        static vector<string> getResList();
 };
 
 OSG_END_NAMESPACE;

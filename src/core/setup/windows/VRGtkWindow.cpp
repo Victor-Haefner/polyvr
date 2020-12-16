@@ -33,7 +33,7 @@ VRGtkWindow::~VRGtkWindow() {
 }
 
 VRGtkWindowPtr VRGtkWindow::ptr() { return static_pointer_cast<VRGtkWindow>( shared_from_this() ); }
-VRGtkWindowPtr VRGtkWindow::create(GtkDrawingArea* da, string msaa) { return shared_ptr<VRGtkWindow>(new VRGtkWindow(da, msaa) ); }
+VRGtkWindowPtr VRGtkWindow::create(GtkWidget* da, string msaa) { return shared_ptr<VRGtkWindow>(new VRGtkWindow(da, msaa) ); }
 
 void VRGtkWindow::setCursor(string c) {
     GdkWindow* win = gtk_widget_get_window(widget);
@@ -188,6 +188,19 @@ void printGLversion() {
     //const GLubyte* renderer = glGetString (GL_RENDERER); // get renderer string
     const GLubyte* version = glGetString (GL_VERSION); // version as a string
     cout << "Supported OpenGL version: " << version << endl;
+}
+
+void VRGtkWindow::forceSize(int W, int H) {
+    // get paned and move them
+    auto ph = VRGuiBuilder::get()->get_widget("hpaned1");
+    auto pv = VRGuiBuilder::get()->get_widget("vpaned1");
+    int w = getSize()[0];
+    int h = getSize()[1];
+    int px = gtk_paned_get_position(GTK_PANED(ph));
+    int py = gtk_paned_get_position(GTK_PANED(pv));
+    gtk_paned_set_position(GTK_PANED(ph), px-(W-w));
+    gtk_paned_set_position(GTK_PANED(pv), py+(H-h));
+    cout << "VRGtkWindow::forceSize " << Vec2i(W,H) << " " << Vec2i(w,h) << endl;
 }
 
 void VRGtkWindow::save(XMLElementPtr node) { VRWindow::save(node); }

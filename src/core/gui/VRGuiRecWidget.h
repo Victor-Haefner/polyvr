@@ -21,6 +21,7 @@ class VRGuiRecWidget {
         _GtkDialog* diag = 0;
         _GtkLabel* lbl = 0;
 
+        void on_res_changed();
         void on_codec_changed();
         void on_bitrate_changed();
 
