@@ -1536,6 +1536,19 @@ void cairo_draw_begin(cairo_t* cr, _GdkWindow* window, int source, int buffer_sc
   //printf("_gdk_cairo_draw_from_gl %i %i %i\n", dx, dy, window_scale);
 }
 
+void cairo_render_buffer(int x, int y, int height) {
+
+    //return
+
+    int clipped_src_x = x + (dest.x - dx * window_scale);
+    int clipped_src_y = y + (height - dest.height - (dest.y - dy * window_scale));
+    glBlitFramebufferEXT(clipped_src_x, clipped_src_y,
+                       (clipped_src_x + dest.width), (clipped_src_y + dest.height),
+                       dest.x, FLIP_Y(dest.y + dest.height),
+                       dest.x + dest.width, FLIP_Y(dest.y),
+                       GL_COLOR_BUFFER_BIT, GL_NEAREST);
+}
+
 void cairo_draw_buffer(cairo_t* cr, _GdkWindow* window, int source, int buffer_scale, int x, int y, int width, int height) {
 
   if (gdk_gl_context_has_framebuffer_blit(paint_context) && clip_region != NULL) {
@@ -1549,14 +1562,11 @@ void cairo_draw_buffer(cairo_t* cr, _GdkWindow* window, int source, int buffer_s
       /* Translate to impl coords */
       cairo_region_translate (clip_region, dx, dy);
       glEnable (GL_SCISSOR_TEST);
-      int unscaled_window_height;
       gdk_window_get_unscaled_size (impl_window, NULL, &unscaled_window_height);
 
       glDrawBuffer(GL_BACK);
 
       for (int i = 0; i < cairo_region_num_rectangles (clip_region); i++) {
-          cairo_rectangle_int_t clip_rect, dest;
-
           cairo_region_get_rectangle (clip_region, i, &clip_rect);
           clip_rect.x *= window_scale;
           clip_rect.y *= window_scale;
@@ -1571,13 +1581,7 @@ void cairo_draw_buffer(cairo_t* cr, _GdkWindow* window, int source, int buffer_s
           dest.height = height * window_scale / buffer_scale;
 
           if (gdk_rectangle_intersect (&clip_rect, &dest, &dest)) {
-              int clipped_src_x = x + (dest.x - dx * window_scale);
-              int clipped_src_y = y + (height - dest.height - (dest.y - dy * window_scale));
-              glBlitFramebufferEXT(clipped_src_x, clipped_src_y,
-                                   (clipped_src_x + dest.width), (clipped_src_y + dest.height),
-                                   dest.x, FLIP_Y(dest.y + dest.height),
-                                   dest.x + dest.width, FLIP_Y(dest.y),
-                                   GL_COLOR_BUFFER_BIT, GL_NEAREST);
+              cairo_render_buffer(x, y, height);
               if (impl_window->current_paint.flushed_region) {
                   cairo_rectangle_int_t flushed_rect;
 
