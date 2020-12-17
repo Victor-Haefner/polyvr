@@ -442,18 +442,15 @@ void _gdk_x11_window_invalidate_for_new_frame (_GdkWindow *window, cairo_region_
         {
           context_x11->do_blit_swap = TRUE;
         }
-      else
-        invalidate_all = TRUE;
+      else invalidate_all = TRUE;
     }
   else
     {
-      if (buffer_age == 0) invalidate_all = TRUE; // fixed black widgets here and above
+      if (buffer_age <= 1) invalidate_all = TRUE; // fixed black widgets here and above
       if (buffer_age >= 2)
         {
-          if (window->old_updated_area[0])
-            cairo_region_union (update_area, window->old_updated_area[0]);
-          else
-            invalidate_all = TRUE;
+          if (window->old_updated_area[0]) cairo_region_union (update_area, window->old_updated_area[0]);
+          else invalidate_all = TRUE;
         }
       if (buffer_age >= 3)
         {
@@ -1536,9 +1533,108 @@ void cairo_draw_begin(cairo_t* cr, _GdkWindow* window, int source, int buffer_sc
   //printf("_gdk_cairo_draw_from_gl %i %i %i\n", dx, dy, window_scale);
 }
 
-void cairo_render_buffer(int x, int y, int height) {
+// ------------------------------ texture
+#define RED 255,0,0
+#define GRE 0,255,0
+#define BLU 0,0,255
 
-    //return
+int texSize = 4;
+//vector<unsigned char> image;
+//unsigned int textureID;
+// ------------------------------
+
+GLfloat light_diffuse[] = {1.0, 1.0, 1.0, 1.0};  /* Red diffuse light. */
+GLfloat light_position[] = {1.0, 1.0, 1.0, 0.0};  /* Infinite light location. */
+GLfloat n[6][3] = {  /* Normals for the 6 faces of a cube. */
+  {-1.0, 0.0, 0.0}, {0.0, 1.0, 0.0}, {1.0, 0.0, 0.0},
+  {0.0, -1.0, 0.0}, {0.0, 0.0, 1.0}, {0.0, 0.0, -1.0} };
+GLint faces[6][4] = {  /* Vertex indices for the 6 faces of a cube. */
+  {0, 1, 2, 3}, {3, 2, 6, 7}, {7, 6, 5, 4},
+  {4, 5, 1, 0}, {5, 6, 2, 1}, {7, 4, 0, 3} };
+GLfloat v[8][3];  /* Will be filled in with X,Y,Z vertexes. */
+
+void initBox(void) {
+    static int doOnce = 0;
+    if (doOnce == 1) return;
+    doOnce = 1;
+
+  /* Setup cube vertex data. */
+  v[0][0] = v[1][0] = v[2][0] = v[3][0] = -1;
+  v[4][0] = v[5][0] = v[6][0] = v[7][0] = 1;
+  v[0][1] = v[1][1] = v[4][1] = v[5][1] = -1;
+  v[2][1] = v[3][1] = v[6][1] = v[7][1] = 1;
+  v[0][2] = v[3][2] = v[4][2] = v[7][2] = 1;
+  v[1][2] = v[2][2] = v[5][2] = v[6][2] = -1;
+
+  /* Enable a single OpenGL light. */
+  glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);
+  glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+  glEnable(GL_LIGHT0);
+  glEnable(GL_LIGHTING);
+
+  /* Use depth buffering for hidden surface elimination. */
+  //glEnable(GL_DEPTH_TEST);
+
+  /* Setup the view of the cube. */
+  glMatrixMode(GL_PROJECTION);
+  gluPerspective( /* field of view in degree */ 40.0,
+    /* aspect ratio */ 1.0,
+    /* Z near */ 1.0, /* Z far */ 10.0);
+  glMatrixMode(GL_MODELVIEW);
+  gluLookAt(0.0, 0.0, 5.0,  /* eye is at (0,0,5) */
+    0.0, 0.0, 0.0,      /* center is at (0,0,0) */
+    0.0, 1.0, 0.);      /* up is in positive Y direction */
+
+  /* Adjust cube position to be asthetic angle. */
+  glTranslatef(0.0, 0.0, -1.0);
+  glRotatef(60, 1.0, 0.0, 0.0);
+  glRotatef(-20, 0.0, 0.0, 1.0);
+}
+
+void drawBox(void) {
+  int i;
+  //glBindTexture(GL_TEXTURE_2D, textureID);
+  //glEnable(GL_TEXTURE_2D);
+
+  for (i = 0; i < 6; i++) {
+    glBegin(GL_QUADS);
+    glNormal3fv(&n[i][0]);
+    /*glTexCoord2f(0.0, 0.0);  glVertex3fv(&v[faces[i][0]][0]);
+    glTexCoord2f(1.0, 0.0);  glVertex3fv(&v[faces[i][1]][0]);
+    glTexCoord2f(1.0, 1.0);  glVertex3fv(&v[faces[i][2]][0]);
+    glTexCoord2f(0.0, 1.0);  glVertex3fv(&v[faces[i][3]][0]);*/
+    glColor4f(0.0, 0.0, 1.0, 1.0);  glVertex3fv(&v[faces[i][0]][0]);
+    glColor4f(1.0, 0.0, 1.0, 1.0);  glVertex3fv(&v[faces[i][1]][0]);
+    glColor4f(1.0, 1.0, 1.0, 1.0);  glVertex3fv(&v[faces[i][2]][0]);
+    glColor4f(0.0, 1.0, 1.0, 1.0);  glVertex3fv(&v[faces[i][3]][0]);
+    glEnd();
+  }
+  //glDisable(GL_TEXTURE_2D);
+}
+
+void drawTriangle(void) {
+    glBegin(GL_TRIANGLES);
+	glColor3f(1, 0, 0); // red
+	glVertex2f(-0.8, -0.8);
+	glColor3f(0, 1, 0); // green
+	glVertex2f(0.8, -0.8);
+	glColor3f(0, 0, 1); // blue
+	glVertex2f(0, 0.9);
+	glEnd();
+}
+
+void cairo_render_buffer(int x, int y, int height) {
+    /*glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+
+    glClearColor(1.0, 0.2, 1.0, 1.0);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    //glClear(GL_COLOR_BUFFER_BIT);
+    //initBox();
+    //drawBox();
+    drawTriangle();
+    printf(" cairo_render_buffer %i %i %i\n", glIsEnabled(GL_LIGHTING), glIsEnabled(GL_TEXTURE_2D), glIsEnabled(GL_DEPTH_TEST));
+    return;*/
 
     int clipped_src_x = x + (dest.x - dx * window_scale);
     int clipped_src_y = y + (height - dest.height - (dest.y - dy * window_scale));
@@ -1550,7 +1646,7 @@ void cairo_render_buffer(int x, int y, int height) {
 }
 
 void cairo_draw_buffer(cairo_t* cr, _GdkWindow* window, int source, int buffer_scale, int x, int y, int width, int height) {
-
+  printf("cairo_draw_buffer\n");
   if (gdk_gl_context_has_framebuffer_blit(paint_context) && clip_region != NULL) {
       /* Create a framebuffer with the source renderbuffer and
          make it the current target for reads */
@@ -1603,34 +1699,9 @@ void cairo_draw_buffer(cairo_t* cr, _GdkWindow* window, int source, int buffer_s
     if (clip_region) cairo_region_destroy (clip_region);
 }
 
-void cairo_draw_end(cairo_t* cr, _GdkWindow* window, int source, int buffer_scale, int x, int y, int width, int height) {
-    _GdkWindow* impl_window = window->impl_window;
-
-
-        //if (gdk_rectangle_intersect (&clip_rect, &dest, &dest)) {
-            if (impl_window->current_paint.flushed_region) {
-                  cairo_rectangle_int_t flushed_rect;
-
-                  flushed_rect.x = dest.x / window_scale;
-                  flushed_rect.y = dest.y / window_scale;
-                  flushed_rect.width = (dest.x + dest.width + window_scale - 1) / window_scale - flushed_rect.x;
-                  flushed_rect.height = (dest.y + dest.height + window_scale - 1) / window_scale - flushed_rect.y;
-
-                  cairo_region_union_rectangle (impl_window->current_paint.flushed_region, &flushed_rect);
-                  cairo_region_subtract_rectangle (impl_window->current_paint.need_blend_region, &flushed_rect);
-            }
-        //}
-    //}
-
-    glDisable (GL_SCISSOR_TEST);
-    glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, 0);
-
-    if (clip_region) cairo_region_destroy (clip_region);
-}
-
-
 static gboolean _gl_area_draw(GtkWidget* widget, cairo_t* cr) {
     GLArea *area = GL_AREA (widget);
+    //gtk_widget_set_double_buffered (widget, FALSE);
     GLAreaPrivate *priv = gl_area_get_instance_private (area);
     gboolean unused;
 
@@ -1640,7 +1711,7 @@ static gboolean _gl_area_draw(GtkWidget* widget, cairo_t* cr) {
     gl_area_make_current(area);
     gl_area_attach_buffers (area);
 
-    glEnable (GL_DEPTH_TEST);
+    //glEnable (GL_DEPTH_TEST);
 
     int scale = gtk_widget_get_scale_factor (widget);
     int w = gtk_widget_get_allocated_width (widget) * scale;
@@ -1667,6 +1738,7 @@ static gboolean _gl_area_draw(GtkWidget* widget, cairo_t* cr) {
 
 static gboolean gl_area_draw(GtkWidget* widget, cairo_t* cr) {
     GLArea *area = GL_AREA (widget);
+    gtk_widget_set_double_buffered (widget, FALSE);
     GLAreaPrivate *priv = gl_area_get_instance_private (area);
     gboolean unused;
     int w, h, scale;
