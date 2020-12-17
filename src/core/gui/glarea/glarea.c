@@ -10,6 +10,11 @@
 #include <gobject/gvalue.h>
 #include <gobject/gsignal.h>
 
+#define SET_DEBUG_BREAK_POINT(P,N) \
+static int debugBreakPoint##P = 0; \
+if (debugBreakPoint##P == N) return; \
+debugBreakPoint##P += 1;
+
 #ifdef _WIN32
 #include <windows.h>
 #include <GL/GL.h>
@@ -418,6 +423,8 @@ void _gdk_x11_window_invalidate_for_new_frame (_GdkWindow *window, cairo_region_
   Display* dpy = display_x11->xdisplay;
   gboolean invalidate_all;
 
+  //SET_DEBUG_BREAK_POINT(A,1)
+
   /* Minimal update is ok if we're not drawing with gl */
   if (window->gl_paint_context == NULL) return;
 
@@ -444,25 +451,21 @@ void _gdk_x11_window_invalidate_for_new_frame (_GdkWindow *window, cairo_region_
         }
       else invalidate_all = TRUE;
     }
-  else
-    {
-      if (buffer_age <= 1) invalidate_all = TRUE; // fixed black widgets here and above
-      if (buffer_age >= 2)
-        {
+  else {
+      if (buffer_age == 0) invalidate_all = TRUE; // fixed black widgets here and above
+      if (buffer_age >= 1) {
           if (window->old_updated_area[0]) cairo_region_union (update_area, window->old_updated_area[0]);
           else invalidate_all = TRUE;
         }
-      if (buffer_age >= 3)
-        {
-          if (window->old_updated_area[1])
-            cairo_region_union (update_area, window->old_updated_area[1]);
-          else
-            invalidate_all = TRUE;
+      if (buffer_age >= 2) {
+          if (window->old_updated_area[1]) cairo_region_union (update_area, window->old_updated_area[1]);
+          else invalidate_all = TRUE;
         }
     }
 
-  if (invalidate_all)
-    {
+    printf("window_invalidate %i %i %i\n", buffer_age, invalidate_all, context_x11->do_blit_swap);
+
+  if (invalidate_all) {
       window_rect.x = 0;
       window_rect.y = 0;
       window_rect.width = gdk_window_get_width (window);
@@ -472,7 +475,6 @@ void _gdk_x11_window_invalidate_for_new_frame (_GdkWindow *window, cairo_region_
          buffer is fully up-to-date for the swapbuffer */
       cairo_region_union_rectangle (update_area, &window_rect);
     }
-
 }
 
 typedef struct {
@@ -1053,6 +1055,8 @@ GdkGLContext* x11_window_create_gl_context(GdkWindow* window, gboolean attached,
   return GDK_GL_CONTEXT (context);
 }
 
+GdkGLContext* theSecondContext = 0;
+
 GdkGLContext* gdk_window_get_paint_gl_context(_GdkWindow* window, GError** error) {
   GError *internal_error = NULL;
 
@@ -1066,6 +1070,7 @@ GdkGLContext* gdk_window_get_paint_gl_context(_GdkWindow* window, GError** error
         }
 
       iwindow->gl_paint_context = x11_window_create_gl_context (iwindow, TRUE, NULL, &internal_error);
+      theSecondContext = x11_window_create_gl_context (iwindow, TRUE, NULL, &internal_error);
     }
 
   if (internal_error != NULL) {
@@ -1076,9 +1081,17 @@ GdkGLContext* gdk_window_get_paint_gl_context(_GdkWindow* window, GError** error
 
   gdk_gl_context_realize (iwindow->gl_paint_context, &internal_error);
   if (internal_error != NULL) {
+        printf("setting the gl_paint_context context failed!\n");
       g_propagate_error (error, internal_error);
       g_clear_object (&(iwindow->gl_paint_context));
       return NULL;
+  }
+
+  gdk_gl_context_realize (theSecondContext, &internal_error);
+  if (internal_error != NULL) {
+        printf("setting the second context failed!\n");
+      g_propagate_error (error, internal_error);
+      g_clear_object (&(theSecondContext));
   }
 
   return iwindow->gl_paint_context;
@@ -1511,7 +1524,8 @@ void cairo_draw_begin(cairo_t* cr, _GdkWindow* window, int source, int buffer_sc
   impl_window = window->impl_window;
   window_scale = gdk_window_get_scale_factor (impl_window);
 
-  paint_context = gdk_window_get_paint_gl_context (window, NULL);
+  //paint_context = gdk_window_get_paint_gl_context (window, NULL);
+  paint_context = theSecondContext;
   if (paint_context == NULL) {
       g_warning ("gdk_cairo_draw_gl_render_buffer failed - no paint context");
       return;
@@ -1614,27 +1628,38 @@ void drawBox(void) {
 
 void drawTriangle(void) {
     glBegin(GL_TRIANGLES);
-	glColor3f(1, 0, 0); // red
-	glVertex2f(-0.8, -0.8);
-	glColor3f(0, 1, 0); // green
-	glVertex2f(0.8, -0.8);
-	glColor3f(0, 0, 1); // blue
-	glVertex2f(0, 0.9);
+	glColor3f(1, 0, 0); glVertex2f(-0.8, -0.8);
+	glColor3f(0, 1, 0); glVertex2f(0.8, -0.8);
+	glColor3f(0, 0, 1); glVertex2f(0, 0.9);
 	glEnd();
 }
 
-void cairo_render_buffer(int x, int y, int height) {
-    /*glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+void cairo_render_buffer(int x, int y, int width, int height) {
+    //glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+
+    //glPushAttrib(GL_VIEWPORT_BIT);
+    glPushAttrib(GL_ALL_ATTRIB_BITS);
+    glPushClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS);
+
+    glViewport (dest.x, unscaled_window_height-dest.y-dest.height, dest.width, dest.height);
 
     glClearColor(1.0, 0.2, 1.0, 1.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
 
     //glClear(GL_COLOR_BUFFER_BIT);
     //initBox();
     //drawBox();
     drawTriangle();
-    printf(" cairo_render_buffer %i %i %i\n", glIsEnabled(GL_LIGHTING), glIsEnabled(GL_TEXTURE_2D), glIsEnabled(GL_DEPTH_TEST));
-    return;*/
+
+    GLenum err = glGetError();
+
+    glPopClientAttrib();
+    glPopAttrib();
+    //glViewport (0, 0, dest.width, dest.height);
+
+    printf(" cairo_render_buffer %i %i %i %i\n", glIsEnabled(GL_LIGHTING), glIsEnabled(GL_TEXTURE_2D), glIsEnabled(GL_DEPTH_TEST), err);
+    return;
 
     int clipped_src_x = x + (dest.x - dx * window_scale);
     int clipped_src_y = y + (height - dest.height - (dest.y - dy * window_scale));
@@ -1661,6 +1686,7 @@ void cairo_draw_buffer(cairo_t* cr, _GdkWindow* window, int source, int buffer_s
       gdk_window_get_unscaled_size (impl_window, NULL, &unscaled_window_height);
 
       glDrawBuffer(GL_BACK);
+      //glDrawBuffer(GL_NONE);
 
       for (int i = 0; i < cairo_region_num_rectangles (clip_region); i++) {
           cairo_region_get_rectangle (clip_region, i, &clip_rect);
@@ -1677,7 +1703,7 @@ void cairo_draw_buffer(cairo_t* cr, _GdkWindow* window, int source, int buffer_s
           dest.height = height * window_scale / buffer_scale;
 
           if (gdk_rectangle_intersect (&clip_rect, &dest, &dest)) {
-              cairo_render_buffer(x, y, height);
+              cairo_render_buffer(x, y, width, height);
               if (impl_window->current_paint.flushed_region) {
                   cairo_rectangle_int_t flushed_rect;
 
@@ -1737,6 +1763,8 @@ static gboolean _gl_area_draw(GtkWidget* widget, cairo_t* cr) {
 }
 
 static gboolean gl_area_draw(GtkWidget* widget, cairo_t* cr) {
+    //SET_DEBUG_BREAK_POINT(B,1)
+
     GLArea *area = GL_AREA (widget);
     gtk_widget_set_double_buffered (widget, FALSE);
     GLAreaPrivate *priv = gl_area_get_instance_private (area);
@@ -1750,7 +1778,7 @@ static gboolean gl_area_draw(GtkWidget* widget, cairo_t* cr) {
     gl_area_make_current (area);
     gl_area_attach_buffers (area);
 
-    glEnable (GL_DEPTH_TEST);
+    //glEnable (GL_DEPTH_TEST);
 
     scale = gtk_widget_get_scale_factor (widget);
     w = gtk_widget_get_allocated_width (widget) * scale;
@@ -1768,8 +1796,8 @@ static gboolean gl_area_draw(GtkWidget* widget, cairo_t* cr) {
 
         priv->needs_render = FALSE;
 
-        cairo_draw_begin (cr, gtk_widget_get_window (widget), priv->render_buffer, scale, 0, 0, w, h);
-        cairo_draw_buffer (cr, gtk_widget_get_window (widget), priv->render_buffer, scale, 0, 0, w, h);
+        cairo_draw_begin (cr, gtk_widget_get_window(widget), priv->render_buffer, scale, 0, 0, w, h);
+        cairo_draw_buffer(cr, gtk_widget_get_window(widget), priv->render_buffer, scale, 0, 0, w, h);
         //_gdk_cairo_draw_from_gl (cr, gtk_widget_get_window (widget), priv->render_buffer, scale, 0, 0, w, h);
         gl_area_make_current (area);
     } else g_warning ("fb setup not supported");
