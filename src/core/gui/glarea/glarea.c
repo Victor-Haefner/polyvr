@@ -956,8 +956,8 @@ gboolean gdk_x11_screen_init_gl (GdkScreen *screen) {
 
 #define MAX_GLX_ATTRS   30
 
-static gboolean find_fbconfig_for_visual (GdkDisplay* display, GdkVisual* visual, GLXFBConfig* fb_config_out, GError** error) {
-  static int attrs[MAX_GLX_ATTRS];
+static gboolean find_fbconfig_for_visual (GdkDisplay* display, GdkVisual* visual, GLXFBConfig* fb_config_out, gboolean full, GError** error) {
+
   _GdkX11Display *display_x11 = (_GdkX11Display*)display;
   Display* dpy = display_x11->xdisplay;
   GLXFBConfig *configs;
@@ -968,6 +968,8 @@ static gboolean find_fbconfig_for_visual (GdkDisplay* display, GdkVisual* visual
   _GdkX11Visual *visual_x11 = (_GdkX11Visual*)visual;
   VisualID xvisual_id = XVisualIDFromVisual(visual_x11->xvisual);
 
+  /*
+    static int attrs[MAX_GLX_ATTRS];
   i = 0;
   attrs[i++] = GLX_DRAWABLE_TYPE;
   attrs[i++] = GLX_WINDOW_BIT;
@@ -996,22 +998,79 @@ static gboolean find_fbconfig_for_visual (GdkDisplay* display, GdkVisual* visual
 
   attrs[i++] = None;
 
-  g_assert (i < MAX_GLX_ATTRS);
+  g_assert (i < MAX_GLX_ATTRS);*/
 
-  configs = glXChooseFBConfig (dpy, DefaultScreen (dpy), attrs, &n_configs);
+  if (full) {
+      /*static int attrs[] = {
+          GLX_DRAWABLE_TYPE   , GLX_WINDOW_BIT,
+          GLX_RENDER_TYPE     , GLX_RGBA_BIT,
+          GLX_DOUBLEBUFFER    , GL_TRUE,
+          GLX_RED_SIZE        , 8,
+          GLX_GREEN_SIZE      , 8,
+          GLX_BLUE_SIZE       , 8,
+          GLX_ALPHA_SIZE      , GLX_DONT_CARE,
+          GLX_X_VISUAL_TYPE   , GLX_TRUE_COLOR,
+          GLX_X_RENDERABLE    , GL_TRUE,
+          GLX_DEPTH_SIZE      , 24,
+          GLX_STENCIL_SIZE    , 8,
+          GLX_SAMPLE_BUFFERS  , 1,
+          GLX_SAMPLES         , 4,
+          None
+        };*/
+
+      static int attrs[] = {
+          GLX_DRAWABLE_TYPE   , GLX_WINDOW_BIT,
+          GLX_RENDER_TYPE     , GLX_RGBA_BIT,
+          GLX_DOUBLEBUFFER    , GL_TRUE,
+          GLX_RED_SIZE        , 1,
+          GLX_GREEN_SIZE      , 1,
+          GLX_BLUE_SIZE       , 1,
+          GLX_ALPHA_SIZE      , GLX_DONT_CARE,
+          None
+        };
+
+    /*
+      GLX_RGBA, GLX_USE_GL,
+      */
+        configs = glXChooseFBConfig (dpy, DefaultScreen (dpy), attrs, &n_configs);
+  } else {
+
+        static int attrs[] = {
+          GLX_DRAWABLE_TYPE   , GLX_WINDOW_BIT,
+          GLX_RENDER_TYPE     , GLX_RGBA_BIT,
+          GLX_DOUBLEBUFFER    , GL_TRUE,
+          GLX_RED_SIZE        , 1,
+          GLX_GREEN_SIZE      , 1,
+          GLX_BLUE_SIZE       , 1,
+          GLX_ALPHA_SIZE      , GLX_DONT_CARE,
+          None
+        };
+        configs = glXChooseFBConfig (dpy, DefaultScreen (dpy), attrs, &n_configs);
+    }
+
   if (configs == NULL || n_configs == 0) {
+      printf("AAAAAAA, glXChooseFBConfig failed!\n");
       g_set_error_literal (error, GDK_GL_ERROR, GDK_GL_ERROR_UNSUPPORTED_FORMAT, "No available configurations for the given pixel format");
       return FALSE;
+  }
+
+  if (full) {
+      *fb_config_out = configs[0];
+      retval = TRUE;
+      goto out;
   }
 
   for (i = 0; i < n_configs; i++)  {
       XVisualInfo *visinfo;
 
       visinfo = glXGetVisualFromFBConfig (dpy, configs[i]);
-      if (visinfo == NULL)
+      if (visinfo == NULL) {
+        //printf("pff, glXGetVisualFromFBConfig failed!\n");
         continue;
+      }
 
       if (visinfo->visualid != xvisual_id) {
+          //printf("huh, visinfo->visualid != xvisual_id! %i %i\n", visinfo->visualid, xvisual_id);
           XFree (visinfo);
           continue;
       }
@@ -1030,7 +1089,7 @@ out:
   return retval;
 }
 
-GdkGLContext* x11_window_create_gl_context(GdkWindow* window, gboolean attached, GdkGLContext *share, GError**error) {
+GdkGLContext* x11_window_create_gl_context(GdkWindow* window, gboolean attached, GdkGLContext *share, gboolean full, GError**error) {
   GLXFBConfig config;
 
   GdkDisplay* display = gdk_window_get_display (window);
@@ -1041,7 +1100,7 @@ GdkGLContext* x11_window_create_gl_context(GdkWindow* window, gboolean attached,
   }
 
   GdkVisual* visual = gdk_window_get_visual (window);
-  if (!find_fbconfig_for_visual (display, visual, &config, error)) return NULL;
+  if (!find_fbconfig_for_visual (display, visual, &config, full, error)) return NULL;
 
   _GdkX11GLContext* context = g_object_new (GDK_TYPE_X11_GL_CONTEXT,
                           "display", display,
@@ -1069,8 +1128,8 @@ GdkGLContext* gdk_window_get_paint_gl_context(_GdkWindow* window, GError** error
           return NULL;
         }
 
-      iwindow->gl_paint_context = x11_window_create_gl_context (iwindow, TRUE, NULL, &internal_error);
-      theSecondContext = x11_window_create_gl_context (iwindow, TRUE, NULL, &internal_error);
+      iwindow->gl_paint_context = x11_window_create_gl_context (iwindow, TRUE, NULL, FALSE, &internal_error);
+      theSecondContext = x11_window_create_gl_context (iwindow, TRUE, NULL, TRUE, &internal_error);
     }
 
   if (internal_error != NULL) {
@@ -1107,7 +1166,7 @@ GdkGLContext* _gdk_window_create_gl_context (_GdkWindow* window, GError** error)
   if (paint_context == NULL) return NULL;
 
   //return x11_window_create_gl_context(window->impl_window, TRUE, NULL, error);
-  return x11_window_create_gl_context (window->impl_window, FALSE, paint_context, error);
+  return x11_window_create_gl_context (window->impl_window, FALSE, paint_context, FALSE, error);
 }
 
 static GdkGLContext* gl_area_real_create_context(GLArea *area) {
@@ -1521,6 +1580,7 @@ GdkGLContextPaintData* paint_data;
 _GdkWindow* impl_window;
 
 void cairo_draw_begin(cairo_t* cr, _GdkWindow* window, int source, int buffer_scale, int x, int y, int width, int height) {
+  if (glGetError() != GL_NO_ERROR) printf(" gl error on cairo_draw_begin beg\n");
   impl_window = window->impl_window;
   window_scale = gdk_window_get_scale_factor (impl_window);
 
@@ -1534,10 +1594,12 @@ void cairo_draw_begin(cairo_t* cr, _GdkWindow* window, int source, int buffer_sc
   clip_region = gdk_cairo_region_from_clip (cr);
 
   gdk_gl_context_make_current (paint_context);
+  if (glGetError() != GL_NO_ERROR) printf(" gl error on gdk_gl_context_make_current\n");
   paint_data = gdk_gl_context_get_paint_data (paint_context);
 
-  if (paint_data->tmp_framebuffer == 0) glGenFramebuffersEXT (1, &paint_data->tmp_framebuffer);
+  /*if (paint_data->tmp_framebuffer == 0) glGenFramebuffersEXT (1, &paint_data->tmp_framebuffer);
   glBindRenderbuffer(GL_RENDERBUFFER, source);
+  if (glGetError() != GL_NO_ERROR) printf(" gl error on glBindRenderbuffer\n");*/
 
   cairo_matrix_t matrix;
   cairo_get_matrix (cr, &matrix);
@@ -1574,20 +1636,20 @@ void initBox(void) {
 
   /* Setup cube vertex data. */
   v[0][0] = v[1][0] = v[2][0] = v[3][0] = -1;
-  v[4][0] = v[5][0] = v[6][0] = v[7][0] = 1;
+  v[4][0] = v[5][0] = v[6][0] = v[7][0] =  1;
   v[0][1] = v[1][1] = v[4][1] = v[5][1] = -1;
-  v[2][1] = v[3][1] = v[6][1] = v[7][1] = 1;
-  v[0][2] = v[3][2] = v[4][2] = v[7][2] = 1;
+  v[2][1] = v[3][1] = v[6][1] = v[7][1] =  1;
+  v[0][2] = v[3][2] = v[4][2] = v[7][2] =  1;
   v[1][2] = v[2][2] = v[5][2] = v[6][2] = -1;
 
   /* Enable a single OpenGL light. */
-  glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);
+  /*glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);
   glLightfv(GL_LIGHT0, GL_POSITION, light_position);
   glEnable(GL_LIGHT0);
-  glEnable(GL_LIGHTING);
+  glEnable(GL_LIGHTING);*/
 
   /* Use depth buffering for hidden surface elimination. */
-  //glEnable(GL_DEPTH_TEST);
+  glEnable(GL_DEPTH_TEST);
 
   /* Setup the view of the cube. */
   glMatrixMode(GL_PROJECTION);
@@ -1606,11 +1668,10 @@ void initBox(void) {
 }
 
 void drawBox(void) {
-  int i;
   //glBindTexture(GL_TEXTURE_2D, textureID);
   //glEnable(GL_TEXTURE_2D);
 
-  for (i = 0; i < 6; i++) {
+  for (int i = 0; i < 6; i++) {
     glBegin(GL_QUADS);
     glNormal3fv(&n[i][0]);
     /*glTexCoord2f(0.0, 0.0);  glVertex3fv(&v[faces[i][0]][0]);
@@ -1638,19 +1699,26 @@ void cairo_render_buffer(int x, int y, int width, int height) {
     //glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
 
     //glPushAttrib(GL_VIEWPORT_BIT);
+    if (glGetError() != GL_NO_ERROR) printf("  gl error -4\n");
     glPushAttrib(GL_ALL_ATTRIB_BITS);
+    if (glGetError() != GL_NO_ERROR) printf("  gl error -3\n");
     glPushClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS);
+    if (glGetError() != GL_NO_ERROR) printf("  gl error -2\n");
 
     glViewport (dest.x, unscaled_window_height-dest.y-dest.height, dest.width, dest.height);
+    if (glGetError() != GL_NO_ERROR) printf("  gl error -1\n");
 
     glClearColor(1.0, 0.2, 1.0, 1.0);
+    if (glGetError() != GL_NO_ERROR) printf("  gl error 0\n");
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-
-    //glClear(GL_COLOR_BUFFER_BIT);
-    //initBox();
-    //drawBox();
-    drawTriangle();
+    if (glGetError() != GL_NO_ERROR) printf("  gl error 1\n");
+    initBox();
+    if (glGetError() != GL_NO_ERROR) printf("  gl error 2\n");
+    drawBox();
+    if (glGetError() != GL_NO_ERROR) printf("  gl error 3\n");
+    //drawTriangle();
+    //g_signal_emit (area, area_signals[RENDER], 0, priv->context, &unused);
 
     GLenum err = glGetError();
 
@@ -1671,21 +1739,27 @@ void cairo_render_buffer(int x, int y, int width, int height) {
 }
 
 void cairo_draw_buffer(cairo_t* cr, _GdkWindow* window, int source, int buffer_scale, int x, int y, int width, int height) {
+    if (glGetError() != GL_NO_ERROR) printf(" gl error on cairo_draw_buffer beg\n");
   printf("cairo_draw_buffer\n");
   if (gdk_gl_context_has_framebuffer_blit(paint_context) && clip_region != NULL) {
       /* Create a framebuffer with the source renderbuffer and
          make it the current target for reads */
-      guint framebuffer = paint_data->tmp_framebuffer;
+      /*guint framebuffer = paint_data->tmp_framebuffer;
       glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, framebuffer);
+      if (glGetError() != GL_NO_ERROR) printf(" gl error on glBindFramebufferEXT\n");
       glFramebufferRenderbufferEXT (GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_RENDERBUFFER_EXT, source);
+      if (glGetError() != GL_NO_ERROR) printf(" gl error on glFramebufferRenderbufferEXT\n");
       glBindFramebufferEXT (GL_DRAW_FRAMEBUFFER_EXT, 0);
+      if (glGetError() != GL_NO_ERROR) printf(" gl error on glBindFramebufferEXT\n");*/
 
       /* Translate to impl coords */
       cairo_region_translate (clip_region, dx, dy);
       glEnable (GL_SCISSOR_TEST);
+      if (glGetError() != GL_NO_ERROR) printf(" gl error on glEnable GL_SCISSOR_TEST\n");
       gdk_window_get_unscaled_size (impl_window, NULL, &unscaled_window_height);
 
       glDrawBuffer(GL_BACK);
+      if (glGetError() != GL_NO_ERROR) printf(" gl error on glDrawBuffer GL_BACK\n");
       //glDrawBuffer(GL_NONE);
 
       for (int i = 0; i < cairo_region_num_rectangles (clip_region); i++) {
@@ -1696,6 +1770,7 @@ void cairo_draw_buffer(cairo_t* cr, _GdkWindow* window, int source, int buffer_s
           clip_rect.height *= window_scale;
 
           glScissor (clip_rect.x, FLIP_Y (clip_rect.y + clip_rect.height), clip_rect.width, clip_rect.height);
+          if (glGetError() != GL_NO_ERROR) printf(" gl error on glScissor\n");
 
           dest.x = dx * window_scale;
           dest.y = dy * window_scale;
@@ -1764,6 +1839,7 @@ static gboolean _gl_area_draw(GtkWidget* widget, cairo_t* cr) {
 
 static gboolean gl_area_draw(GtkWidget* widget, cairo_t* cr) {
     //SET_DEBUG_BREAK_POINT(B,1)
+    if (glGetError() != GL_NO_ERROR) printf(" gl error on gl_area_draw beg\n");
 
     GLArea *area = GL_AREA (widget);
     gtk_widget_set_double_buffered (widget, FALSE);
@@ -1776,7 +1852,9 @@ static gboolean gl_area_draw(GtkWidget* widget, cairo_t* cr) {
     if (priv->context == NULL) return FALSE;
 
     gl_area_make_current (area);
+    if (glGetError() != GL_NO_ERROR) printf(" gl error on gl_area_make_current\n");
     gl_area_attach_buffers (area);
+    if (glGetError() != GL_NO_ERROR) printf(" gl error on gl_area_attach_buffers\n");
 
     //glEnable (GL_DEPTH_TEST);
 
@@ -1786,7 +1864,7 @@ static gboolean gl_area_draw(GtkWidget* widget, cairo_t* cr) {
 
     status = glCheckFramebufferStatus (GL_FRAMEBUFFER_EXT);
     if (status == GL_FRAMEBUFFER_COMPLETE_EXT) {
-        if (priv->needs_render) {
+        /*if (priv->needs_render) {
             if (priv->needs_resize) {
                 g_signal_emit (area, area_signals[RESIZE], 0, w, h, NULL);
                 priv->needs_resize = FALSE;
@@ -1794,7 +1872,7 @@ static gboolean gl_area_draw(GtkWidget* widget, cairo_t* cr) {
             g_signal_emit (area, area_signals[RENDER], 0, priv->context, &unused);
         }
 
-        priv->needs_render = FALSE;
+        priv->needs_render = FALSE;*/
 
         cairo_draw_begin (cr, gtk_widget_get_window(widget), priv->render_buffer, scale, 0, 0, w, h);
         cairo_draw_buffer(cr, gtk_widget_get_window(widget), priv->render_buffer, scale, 0, 0, w, h);
