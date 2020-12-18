@@ -1727,13 +1727,15 @@ void drawTriangle(void) {
 	glEnd();
 }
 
-void cairo_render_buffer(int x, int y, int width, int height) {
+void cairo_render_buffer(GLArea* area, int x, int y, int width, int height) {
+    GLAreaPrivate *priv = gl_area_get_instance_private (area);
+    gboolean unused;
     //glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
 
     //glPushAttrib(GL_VIEWPORT_BIT);
     //glPushAttrib(GL_ALL_ATTRIB_BITS);
     //glPushClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS);
-    initBox();
+    //initBox();
 
     glViewport (dest.x, unscaled_window_height-dest.y-dest.height, dest.width, dest.height);
     glMatrixMode(GL_PROJECTION);
@@ -1750,9 +1752,9 @@ void cairo_render_buffer(int x, int y, int width, int height) {
     glClearColor(1.0, 0.2, 1.0, 1.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    drawBox();
+    //drawBox();
     //drawTriangle();
-    //g_signal_emit (area, area_signals[RENDER], 0, priv->context, &unused);
+    g_signal_emit(area, area_signals[RENDER], 0, priv->context, &unused);
 
     GLenum err = glGetError();
 
@@ -1772,7 +1774,7 @@ void cairo_render_buffer(int x, int y, int width, int height) {
                        GL_COLOR_BUFFER_BIT, GL_NEAREST);
 }
 
-void cairo_draw_buffer(cairo_t* cr, _GdkWindow* window, int source, int buffer_scale, int x, int y, int width, int height) {
+void cairo_draw_buffer(cairo_t* cr, GLArea* area, _GdkWindow* window, int source, int buffer_scale, int x, int y, int width, int height) {
     if (glGetError() != GL_NO_ERROR) printf(" gl error on cairo_draw_buffer beg\n");
   printf("cairo_draw_buffer\n");
   if (gdk_gl_context_has_framebuffer_blit(paint_context) && clip_region != NULL) {
@@ -1812,7 +1814,7 @@ void cairo_draw_buffer(cairo_t* cr, _GdkWindow* window, int source, int buffer_s
           dest.height = height * window_scale / buffer_scale;
 
           if (gdk_rectangle_intersect (&clip_rect, &dest, &dest)) {
-              cairo_render_buffer(x, y, width, height);
+              cairo_render_buffer(area, x, y, width, height);
               if (impl_window->current_paint.flushed_region) {
                   cairo_rectangle_int_t flushed_rect;
 
@@ -1862,7 +1864,7 @@ static gboolean _gl_area_draw(GtkWidget* widget, cairo_t* cr) {
     }
 
     cairo_draw_begin(cr, gtk_widget_get_window (widget), priv->blitID, scale, 0, 0, w, h);
-    cairo_draw_buffer(cr, gtk_widget_get_window (widget), priv->blitID, scale, 0, 0, w, h);
+    cairo_draw_buffer(cr, area, gtk_widget_get_window (widget), priv->blitID, scale, 0, 0, w, h);
     cairo_draw_end(cr, gtk_widget_get_window (widget), priv->blitID, scale, 0, 0, w, h);
     gl_area_make_current (area);
     priv->needs_render = FALSE;
@@ -1909,7 +1911,7 @@ static gboolean gl_area_draw(GtkWidget* widget, cairo_t* cr) {
         priv->needs_render = FALSE;*/
 
         cairo_draw_begin (cr, gtk_widget_get_window(widget), priv->render_buffer, scale, 0, 0, w, h);
-        cairo_draw_buffer(cr, gtk_widget_get_window(widget), priv->render_buffer, scale, 0, 0, w, h);
+        cairo_draw_buffer(cr, area, gtk_widget_get_window(widget), priv->render_buffer, scale, 0, 0, w, h);
         //_gdk_cairo_draw_from_gl (cr, gtk_widget_get_window (widget), priv->render_buffer, scale, 0, 0, w, h);
         gl_area_make_current (area);
     } else g_warning ("fb setup not supported");
