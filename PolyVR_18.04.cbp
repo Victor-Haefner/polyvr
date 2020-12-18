@@ -588,6 +588,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/core/gui/glarea/glarea.h" />
+		<Unit filename="src/core/gui/glarea/glgdk.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/core/gui/glarea/glgdk.h" />
 		<Unit filename="src/core/gui/gtkglext/gdk/gdkgl.h" />
 		<Unit filename="src/core/gui/gtkglext/gdk/gdkglconfig.c">
 			<Option compilerVar="CC" />

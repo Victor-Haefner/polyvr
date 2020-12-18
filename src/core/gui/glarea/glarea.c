@@ -954,63 +954,76 @@ gboolean gdk_x11_screen_init_gl (GdkScreen *screen) {
     return TRUE;
 }
 
-#define MAX_GLX_ATTRS   30
+static GdkVisual* get_full_gl_visual(GdkDisplay* display) {
+    _GdkX11Display *display_x11 = (_GdkX11Display*)display;
+    Display* dpy = display_x11->xdisplay;
+    GLXFBConfig* configs;
+    int n_configs, i;
+    gboolean use_rgba;
 
-static gboolean find_fbconfig_for_visual (GdkDisplay* display, GdkVisual* visual, GLXFBConfig* fb_config_out, gboolean full, GError** error) {
+    static int attrsF[] = {
+      GLX_DRAWABLE_TYPE   , GLX_WINDOW_BIT,
+      GLX_RENDER_TYPE     , GLX_RGBA_BIT,
+      GLX_DOUBLEBUFFER    , GL_TRUE,
+      GLX_X_VISUAL_TYPE   , GLX_TRUE_COLOR,
+      GLX_X_RENDERABLE    , GL_TRUE,
+      GLX_RED_SIZE        , 8,
+      GLX_GREEN_SIZE      , 8,
+      GLX_BLUE_SIZE       , 8,
+      GLX_ALPHA_SIZE      , GLX_DONT_CARE,
+      GLX_DEPTH_SIZE      , 24,
+      GLX_STENCIL_SIZE    , 8,
+      GLX_SAMPLE_BUFFERS  , 1,
+      GLX_SAMPLES         , 4,
+      None
+    };
 
-  _GdkX11Display *display_x11 = (_GdkX11Display*)display;
-  Display* dpy = display_x11->xdisplay;
-  GLXFBConfig *configs;
-  int n_configs, i;
-  gboolean use_rgba;
-  gboolean retval = FALSE;
+    configs = glXChooseFBConfig (dpy, DefaultScreen (dpy), attrsF, &n_configs);
+    printf(" creating context with FULL specs, found %i configs\n", n_configs);
 
-  _GdkX11Visual *visual_x11 = (_GdkX11Visual*)visual;
-  VisualID xvisual_id = XVisualIDFromVisual(visual_x11->xvisual);
+    GdkVisual* res = 0;
 
-  /*
-    static int attrs[MAX_GLX_ATTRS];
-  i = 0;
-  attrs[i++] = GLX_DRAWABLE_TYPE;
-  attrs[i++] = GLX_WINDOW_BIT;
+    if (configs == NULL || n_configs == 0) {
+        printf("AAAAAAA, glXChooseFBConfig failed!\n");
+        return res;
+    }
 
-  attrs[i++] = GLX_RENDER_TYPE;
-  attrs[i++] = GLX_RGBA_BIT;
+    for (i = 0; i < n_configs; i++)  {
+        XVisualInfo* visinfo;
 
-  attrs[i++] = GLX_DOUBLEBUFFER;
-  attrs[i++] = GL_TRUE;
+        visinfo = glXGetVisualFromFBConfig(dpy, configs[i]);
+        if (visinfo == NULL) continue;
 
-  attrs[i++] = GLX_RED_SIZE;
-  attrs[i++] = 1;
-  attrs[i++] = GLX_GREEN_SIZE;
-  attrs[i++] = 1;
-  attrs[i++] = GLX_BLUE_SIZE;
-  attrs[i++] = 1;
+        Visual* v = visinfo->visual; // TODO
+        XFree (visinfo);
+    }
 
-  use_rgba = (visual == gdk_screen_get_rgba_visual (gdk_display_get_default_screen (display)));
-  if (use_rgba) {
-      attrs[i++] = GLX_ALPHA_SIZE;
-      attrs[i++] = 1;
-  } else {
-      attrs[i++] = GLX_ALPHA_SIZE;
-      attrs[i++] = GLX_DONT_CARE;
-  }
+    XFree (configs);
+    return res;
+}
 
-  attrs[i++] = None;
+static gboolean find_fbconfig_for_visual (GdkDisplay* display, _GdkVisual* visual, GLXFBConfig* fb_config_out, gboolean full, GError** error) {
+    _GdkX11Display *display_x11 = (_GdkX11Display*)display;
+    Display* dpy = display_x11->xdisplay;
+    GLXFBConfig *configs;
+    int n_configs, i;
+    gboolean use_rgba;
+    gboolean retval = FALSE;
 
-  g_assert (i < MAX_GLX_ATTRS);*/
+    _GdkX11Visual *visual_x11 = (_GdkX11Visual*)visual;
+    VisualID xvisual_id = XVisualIDFromVisual(visual_x11->xvisual);
 
-  if (full) {
-      /*static int attrs[] = {
+    if (full) {
+        /*static int attrsF[] = {
           GLX_DRAWABLE_TYPE   , GLX_WINDOW_BIT,
           GLX_RENDER_TYPE     , GLX_RGBA_BIT,
           GLX_DOUBLEBUFFER    , GL_TRUE,
+          GLX_X_VISUAL_TYPE   , GLX_TRUE_COLOR,
+          GLX_X_RENDERABLE    , GL_TRUE,
           GLX_RED_SIZE        , 8,
           GLX_GREEN_SIZE      , 8,
           GLX_BLUE_SIZE       , 8,
           GLX_ALPHA_SIZE      , GLX_DONT_CARE,
-          GLX_X_VISUAL_TYPE   , GLX_TRUE_COLOR,
-          GLX_X_RENDERABLE    , GL_TRUE,
           GLX_DEPTH_SIZE      , 24,
           GLX_STENCIL_SIZE    , 8,
           GLX_SAMPLE_BUFFERS  , 1,
@@ -1018,7 +1031,7 @@ static gboolean find_fbconfig_for_visual (GdkDisplay* display, GdkVisual* visual
           None
         };*/
 
-      static int attrs[] = {
+        static int attrsF[] = {
           GLX_DRAWABLE_TYPE   , GLX_WINDOW_BIT,
           GLX_RENDER_TYPE     , GLX_RGBA_BIT,
           GLX_DOUBLEBUFFER    , GL_TRUE,
@@ -1026,15 +1039,13 @@ static gboolean find_fbconfig_for_visual (GdkDisplay* display, GdkVisual* visual
           GLX_GREEN_SIZE      , 1,
           GLX_BLUE_SIZE       , 1,
           GLX_ALPHA_SIZE      , GLX_DONT_CARE,
+          GLX_DEPTH_SIZE      , 1,
           None
         };
 
-    /*
-      GLX_RGBA, GLX_USE_GL,
-      */
-        configs = glXChooseFBConfig (dpy, DefaultScreen (dpy), attrs, &n_configs);
-  } else {
-
+        configs = glXChooseFBConfig (dpy, DefaultScreen (dpy), attrsF, &n_configs);
+        printf(" creating context with FULL specs, found %i configs\n", n_configs);
+    } else {
         static int attrs[] = {
           GLX_DRAWABLE_TYPE   , GLX_WINDOW_BIT,
           GLX_RENDER_TYPE     , GLX_RGBA_BIT,
@@ -1046,34 +1057,32 @@ static gboolean find_fbconfig_for_visual (GdkDisplay* display, GdkVisual* visual
           None
         };
         configs = glXChooseFBConfig (dpy, DefaultScreen (dpy), attrs, &n_configs);
+        printf(" creating context with minimum specs, found %i configs\n", n_configs);
     }
 
-  if (configs == NULL || n_configs == 0) {
+    if (configs == NULL || n_configs == 0) {
       printf("AAAAAAA, glXChooseFBConfig failed!\n");
       g_set_error_literal (error, GDK_GL_ERROR, GDK_GL_ERROR_UNSUPPORTED_FORMAT, "No available configurations for the given pixel format");
       return FALSE;
-  }
-
-  if (full) {
-      *fb_config_out = configs[0];
-      retval = TRUE;
-      goto out;
-  }
+    }
 
   for (i = 0; i < n_configs; i++)  {
       XVisualInfo *visinfo;
 
       visinfo = glXGetVisualFromFBConfig (dpy, configs[i]);
-      if (visinfo == NULL) {
-        //printf("pff, glXGetVisualFromFBConfig failed!\n");
-        continue;
-      }
+      if (visinfo == NULL) continue;
 
-      if (visinfo->visualid != xvisual_id) {
-          //printf("huh, visinfo->visualid != xvisual_id! %i %i\n", visinfo->visualid, xvisual_id);
-          XFree (visinfo);
-          continue;
-      }
+        int depth_size = 0;
+        glXGetConfig(dpy, visinfo, GLX_DEPTH_SIZE, &depth_size);
+
+        printf("visual depth %i %i %i %i %i\n", visinfo->depth, visual->depth, visinfo->visualid, xvisual_id, depth_size);
+      //if (!full) {
+          if (visinfo->visualid != xvisual_id) {
+              printf("huh, visinfo->visualid != xvisual_id! %i %i\n", visinfo->visualid, xvisual_id);
+              XFree (visinfo);
+              continue;
+          }
+      //}
 
       if (fb_config_out != NULL) *fb_config_out = configs[i];
 
@@ -1082,7 +1091,12 @@ static gboolean find_fbconfig_for_visual (GdkDisplay* display, GdkVisual* visual
       goto out;
   }
 
-  g_set_error (error, GDK_GL_ERROR, GDK_GL_ERROR_UNSUPPORTED_FORMAT, "No available configurations for the given RGBA pixel format");
+  if (full) {
+      if (fb_config_out != NULL) *fb_config_out = configs[0];
+      retval = TRUE;
+  }
+
+  //g_set_error (error, GDK_GL_ERROR, GDK_GL_ERROR_UNSUPPORTED_FORMAT, "No available configurations for the given RGBA pixel format");
 
 out:
   XFree (configs);
@@ -1099,8 +1113,9 @@ GdkGLContext* x11_window_create_gl_context(GdkWindow* window, gboolean attached,
       return NULL;
   }
 
-  GdkVisual* visual = gdk_window_get_visual (window);
+  _GdkVisual* visual = gdk_window_get_visual (window);
   if (!find_fbconfig_for_visual (display, visual, &config, full, error)) return NULL;
+  printf("visual depth %i\n", visual->depth);
 
   _GdkX11GLContext* context = g_object_new (GDK_TYPE_X11_GL_CONTEXT,
                           "display", display,
@@ -1209,6 +1224,7 @@ static GdkGLContext* gl_area_real_create_context(GLArea *area) {
 }
 
 static void gl_area_realize (GtkWidget *widget) {
+    printf("gl_area_realize\n");
     GLArea *area = GL_AREA (widget);
     GLAreaPrivate *priv = gl_area_get_instance_private (area);
     GtkAllocation allocation;
@@ -1226,6 +1242,14 @@ static void gl_area_realize (GtkWidget *widget) {
     attributes.height = allocation.height;
     attributes.wclass = GDK_INPUT_ONLY;
     attributes.event_mask = gtk_widget_get_events (widget);
+
+    /*_GdkWindow* window = gtk_widget_get_window(widget);
+    _GdkWindow* iwindow = window->impl_window;
+    GdkDisplay* display = gdk_window_get_display (iwindow);
+    attributes.visual = get_full_gl_visual(display);*/
+
+    //attributes.visual = gdk_visual_get_best_with_depth(24);
+    //attributes_mask = GDK_WA_X | GDK_WA_Y | GDK_WA_VISUAL;
 
     attributes_mask = GDK_WA_X | GDK_WA_Y;
 
@@ -1650,11 +1674,13 @@ void initBox(void) {
 
   /* Use depth buffering for hidden surface elimination. */
   glEnable(GL_DEPTH_TEST);
+  glDepthMask(GL_TRUE);
+  glDepthFunc(GL_LESS);
 
   /* Setup the view of the cube. */
   glMatrixMode(GL_PROJECTION);
   gluPerspective( /* field of view in degree */ 40.0,
-    /* aspect ratio */ 1.0,
+    /* aspect ratio */ 2.0,
     /* Z near */ 1.0, /* Z far */ 10.0);
   glMatrixMode(GL_MODELVIEW);
   gluLookAt(0.0, 0.0, 5.0,  /* eye is at (0,0,5) */
@@ -1699,31 +1725,33 @@ void cairo_render_buffer(int x, int y, int width, int height) {
     //glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
 
     //glPushAttrib(GL_VIEWPORT_BIT);
-    if (glGetError() != GL_NO_ERROR) printf("  gl error -4\n");
-    glPushAttrib(GL_ALL_ATTRIB_BITS);
-    if (glGetError() != GL_NO_ERROR) printf("  gl error -3\n");
-    glPushClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS);
-    if (glGetError() != GL_NO_ERROR) printf("  gl error -2\n");
+    //glPushAttrib(GL_ALL_ATTRIB_BITS);
+    //glPushClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS);
+    initBox();
 
     glViewport (dest.x, unscaled_window_height-dest.y-dest.height, dest.width, dest.height);
-    if (glGetError() != GL_NO_ERROR) printf("  gl error -1\n");
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    gluPerspective(40.0, 2.0, 1.0, 10.0);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    gluLookAt(0.0, 0.0, 5.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.);
+    glTranslatef(0.0, 0.0, -1.0);
+    glRotatef(60, 1.0, 0.0, 0.0);
+    static float angle = 0.0; angle += 0.1;
+    glRotatef(-20+angle, 0.0, 0.0, 1.0);
 
     glClearColor(1.0, 0.2, 1.0, 1.0);
-    if (glGetError() != GL_NO_ERROR) printf("  gl error 0\n");
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    if (glGetError() != GL_NO_ERROR) printf("  gl error 1\n");
-    initBox();
-    if (glGetError() != GL_NO_ERROR) printf("  gl error 2\n");
     drawBox();
-    if (glGetError() != GL_NO_ERROR) printf("  gl error 3\n");
     //drawTriangle();
     //g_signal_emit (area, area_signals[RENDER], 0, priv->context, &unused);
 
     GLenum err = glGetError();
 
-    glPopClientAttrib();
-    glPopAttrib();
+    //glPopClientAttrib();
+    //glPopAttrib();
     //glViewport (0, 0, dest.width, dest.height);
 
     printf(" cairo_render_buffer %i %i %i %i\n", glIsEnabled(GL_LIGHTING), glIsEnabled(GL_TEXTURE_2D), glIsEnabled(GL_DEPTH_TEST), err);
