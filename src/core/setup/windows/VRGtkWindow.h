@@ -5,16 +5,10 @@
 
 #include <OpenSG/OSGPassiveWindow.h>
 
-#if GTK_MAJOR_VERSION == 2
-#define GDKRECTANGLE _GdkRectangle
-#else
-#define GDKRECTANGLE _cairo_rectangle_int
-#endif
-
 struct _GtkWidget;
 struct _GdkEventScroll;
 struct _GdkEventExpose;
-struct GDKRECTANGLE;
+struct _cairo_rectangle_int;
 struct _GdkEventButton;
 struct _GdkEventMotion;
 struct _GdkEventKey;
@@ -37,7 +31,7 @@ class VRGtkWindow : public VRWindow {
         bool isRealized = false;
 
         bool on_scroll(_GdkEventScroll* e);
-        void on_resize(GDKRECTANGLE* a);
+        void on_resize(_cairo_rectangle_int* a);
         bool on_button(_GdkEventButton* e);
         bool on_motion(_GdkEventMotion* e);
         bool on_key(_GdkEventKey* e);

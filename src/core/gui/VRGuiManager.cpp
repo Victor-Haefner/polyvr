@@ -70,9 +70,8 @@ VRGuiManager::VRGuiManager() {
 #ifndef _WIN32
     setenv("GDK_GL", "legacy", 1); // linux legacy gl
 #endif
-    gtk_init(&argc, 0);
+    gtk_init_check(&argc, 0);
     replace_gl_visuals();
-    //glgtk_init_check(&argc, 0);
 
     GdkDisplay* display = gdk_display_get_default();
     GdkScreen* screen = gdk_display_get_default_screen(display);

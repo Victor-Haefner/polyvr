@@ -115,9 +115,9 @@ bool VRGtkWindow::on_render(GdkGLContext* glcontext) {
         if (hmd) hmd->render();
 #endif
 #ifdef OSG_hasOuterFBO
-        FrameBufferObject::outerFBO = 1;
+        //FrameBufferObject::outerFBO = 1;
         win->render(ract);
-        FrameBufferObject::outerFBO = 0;
+        //FrameBufferObject::outerFBO = 0;
 #else
         win->render(ract);
 #endif
