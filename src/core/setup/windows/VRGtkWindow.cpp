@@ -181,24 +181,19 @@ bool VRGtkWindow::on_scroll(GdkEventScroll * event) {
 
 void VRGtkWindow::on_resize(GdkRectangle* allocation) {
     initialExpose = true;
-    resize(allocation->width, allocation->height);
 
     auto clipping = gl_area_get_clipping(GL_AREA(widget));
 
     //cout << " on_resize " << Vec2i(allocation->x, allocation->y) << " " << Vec2i(allocation->width, allocation->height) << endl;
-    cout << " on_resize " << Vec4i(clipping.x, clipping.y, clipping.w, clipping.h) << " " << Vec2i(clipping.W, clipping.H) << endl;
-// on_resize 384, 139, 1471, 598 1056, 1855
-//  on_resize 0.363636, 0.0749326, 1.75663, 0.397305
-
+    //cout << " on_resize " << Vec4i(clipping.x, clipping.y, clipping.w, clipping.h) << " " << Vec2i(clipping.W, clipping.H) << endl;
 
     double x1 = double(clipping.x           )/clipping.W;
     double y1 = double(clipping.y           )/clipping.H;
     double x2 = double(clipping.x+clipping.w)/clipping.W;
     double y2 = double(clipping.y+clipping.h)/clipping.H;
+    //cout << "  on_resize " << Vec4d(x1,y1,x2,y2) << endl;
 
-    cout << "  on_resize " << Vec4d(x1,y1,x2,y2) << endl;
-
-    //return;
+    resize(allocation->width, allocation->height);
     _win->resize(clipping.W, clipping.H);
     for (auto vw : views) {
         if (auto v = vw.lock()) v->setPosition(Vec4d(x1,y1,x2,y2));

@@ -1652,7 +1652,7 @@ void drawTriangle(void) {
 	glEnd();
 }
 
-void cairo_render_buffer(GLArea* area, int x, int y, int width, int height) {
+void glarea_render(GLArea* area) {
     //drawBox();
     //drawTriangle();
 
@@ -1661,7 +1661,6 @@ void cairo_render_buffer(GLArea* area, int x, int y, int width, int height) {
     GLAreaPrivate* priv = gl_area_get_instance_private (area);
     priv->clipping.x = dest.x;
     priv->clipping.y = dest.y;
-    //priv->clipping.y = unscaled_window_height-dest.y-dest.height;
     priv->clipping.w = dest.width;
     priv->clipping.h = dest.height;
     priv->clipping.W = unscaled_window_width;
@@ -1670,7 +1669,7 @@ void cairo_render_buffer(GLArea* area, int x, int y, int width, int height) {
     gboolean unused;
     if (priv->needs_render) {
         if (priv->needs_resize) {
-            g_signal_emit (area, area_signals[RESIZE], 0, width, height, NULL);
+            g_signal_emit (area, area_signals[RESIZE], 0, 0, 0, NULL);
             priv->needs_resize = FALSE;
         }
         g_signal_emit (area, area_signals[RENDER], 0, priv->context, &unused);
@@ -1682,16 +1681,6 @@ void cairo_draw_buffer(cairo_t* cr, GLArea* area, _GdkWindow* window, int source
     if (glGetError() != GL_NO_ERROR) printf(" gl error on cairo_draw_buffer beg\n");
   //printf("cairo_draw_buffer\n");
   if (gdk_gl_context_has_framebuffer_blit(paint_context) && clip_region != NULL) {
-      /* Create a framebuffer with the source renderbuffer and
-         make it the current target for reads */
-      /*guint framebuffer = paint_data->tmp_framebuffer;
-      glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, framebuffer);
-      if (glGetError() != GL_NO_ERROR) printf(" gl error on glBindFramebufferEXT\n");
-      glFramebufferRenderbufferEXT (GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_RENDERBUFFER_EXT, source);
-      if (glGetError() != GL_NO_ERROR) printf(" gl error on glFramebufferRenderbufferEXT\n");
-      glBindFramebufferEXT (GL_DRAW_FRAMEBUFFER_EXT, 0);
-      if (glGetError() != GL_NO_ERROR) printf(" gl error on glBindFramebufferEXT\n");*/
-
       /* Translate to impl coords */
       cairo_region_translate (clip_region, dx, dy);
       glEnable (GL_SCISSOR_TEST);
@@ -1700,7 +1689,6 @@ void cairo_draw_buffer(cairo_t* cr, GLArea* area, _GdkWindow* window, int source
 
       glDrawBuffer(GL_BACK);
       if (glGetError() != GL_NO_ERROR) printf(" gl error on glDrawBuffer GL_BACK\n");
-      //glDrawBuffer(GL_NONE);
 
       for (int i = 0; i < cairo_region_num_rectangles (clip_region); i++) {
           cairo_region_get_rectangle (clip_region, i, &clip_rect);
@@ -1718,7 +1706,7 @@ void cairo_draw_buffer(cairo_t* cr, GLArea* area, _GdkWindow* window, int source
           dest.height = height * window_scale / buffer_scale;
 
           if (gdk_rectangle_intersect (&clip_rect, &dest, &dest)) {
-              cairo_render_buffer(area, x, y, width, height);
+              glarea_render(area);
               if (impl_window->current_paint.flushed_region) {
                   cairo_rectangle_int_t flushed_rect;
 
@@ -1733,8 +1721,7 @@ void cairo_draw_buffer(cairo_t* cr, GLArea* area, _GdkWindow* window, int source
             }
         }
 
-      glDisable (GL_SCISSOR_TEST);
-      glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, 0);
+        glDisable(GL_SCISSOR_TEST);
     }
 
     if (clip_region) cairo_region_destroy (clip_region);

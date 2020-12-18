@@ -103,7 +103,7 @@ bool VRGtkWindow::on_render(GdkGLContext* glcontext) {
     int pID = profiler->regStart("gtk window render");
 
     glEnable(GL_DEPTH_TEST);
-    glEnable(GL_BLEND);
+    //glEnable(GL_BLEND);
     glEnable(GL_MULTISAMPLE);
 
     glClearColor(0.2, 0.2, 0.2, 1.0);
