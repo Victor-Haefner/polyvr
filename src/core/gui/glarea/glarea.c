@@ -1073,9 +1073,13 @@ static gboolean find_fbconfig_for_visual (GdkDisplay* display, _GdkVisual* visua
       if (visinfo == NULL) continue;
 
         int depth_size = 0;
+        int sample_buffers = 0;
+        int samples = 0;
         glXGetConfig(dpy, visinfo, GLX_DEPTH_SIZE, &depth_size);
+        glXGetConfig(dpy, visinfo, GLX_SAMPLE_BUFFERS, &sample_buffers);
+        glXGetConfig(dpy, visinfo, GLX_SAMPLES, &samples);
 
-        printf("visual depth %i %i %i %i %i\n", visinfo->depth, visual->depth, visinfo->visualid, xvisual_id, depth_size);
+        printf("visual %i, depth %i, hasMS %i, samples %i\n", visinfo->visualid, depth_size, sample_buffers, samples);
       //if (!full) {
           if (visinfo->visualid != xvisual_id) {
               printf("huh, visinfo->visualid != xvisual_id! %i %i\n", visinfo->visualid, xvisual_id);
@@ -1676,6 +1680,8 @@ void initBox(void) {
   glEnable(GL_DEPTH_TEST);
   glDepthMask(GL_TRUE);
   glDepthFunc(GL_LESS);
+
+  glEnable( GL_MULTISAMPLE );
 
   /* Setup the view of the cube. */
   glMatrixMode(GL_PROJECTION);
