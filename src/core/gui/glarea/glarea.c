@@ -1014,7 +1014,7 @@ static gboolean find_fbconfig_for_visual (GdkDisplay* display, _GdkVisual* visua
     VisualID xvisual_id = XVisualIDFromVisual(visual_x11->xvisual);
 
     if (full) {
-        /*static int attrsF[] = {
+        static int attrsF[] = {
           GLX_DRAWABLE_TYPE   , GLX_WINDOW_BIT,
           GLX_RENDER_TYPE     , GLX_RGBA_BIT,
           GLX_DOUBLEBUFFER    , GL_TRUE,
@@ -1029,9 +1029,9 @@ static gboolean find_fbconfig_for_visual (GdkDisplay* display, _GdkVisual* visua
           GLX_SAMPLE_BUFFERS  , 1,
           GLX_SAMPLES         , 4,
           None
-        };*/
+        };
 
-        static int attrsF[] = {
+        /*static int attrsF[] = {
           GLX_DRAWABLE_TYPE   , GLX_WINDOW_BIT,
           GLX_RENDER_TYPE     , GLX_RGBA_BIT,
           GLX_DOUBLEBUFFER    , GL_TRUE,
@@ -1041,7 +1041,7 @@ static gboolean find_fbconfig_for_visual (GdkDisplay* display, _GdkVisual* visua
           GLX_ALPHA_SIZE      , GLX_DONT_CARE,
           GLX_DEPTH_SIZE      , 1,
           None
-        };
+        };*/
 
         configs = glXChooseFBConfig (dpy, DefaultScreen (dpy), attrsF, &n_configs);
         printf(" creating context with FULL specs, found %i configs\n", n_configs);
