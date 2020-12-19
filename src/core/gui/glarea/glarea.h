@@ -46,7 +46,6 @@ GLClipping gl_area_get_clipping(GLArea* area);
 void            gl_area_queue_render                (GLArea    *area);
 GdkGLContext *  gl_area_get_context                 (GLArea    *area);
 void            gl_area_make_current                (GLArea    *area);
-void            gl_area_attach_buffers              (GLArea    *area);
 void            gl_area_set_error                   (GLArea    *area, const GError *error);
 GError *        gl_area_get_error                   (GLArea    *area);
 
