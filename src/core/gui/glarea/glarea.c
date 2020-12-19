@@ -1172,13 +1172,10 @@ GdkGLContext* _gdk_window_create_gl_context (_GdkWindow* window, GError** error)
   g_return_val_if_fail (GDK_IS_WINDOW (window), NULL);
   g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
-  //return x11_window_create_gl_context(window->impl_window, TRUE, NULL, error);
-
   GdkGLContext* paint_context = gdk_window_get_paint_gl_context (window, error);
   if (paint_context == NULL) return NULL;
 
-  //return x11_window_create_gl_context(window->impl_window, TRUE, NULL, error);
-  return x11_window_create_gl_context (window->impl_window, FALSE, paint_context, FALSE, error);
+  return x11_window_create_gl_context(window->impl_window, TRUE, NULL, TRUE, error);
 }
 
 static GdkGLContext* gl_area_real_create_context(GLArea *area) {
@@ -1241,7 +1238,6 @@ static void gl_area_realize (GtkWidget *widget) {
     attributes.event_mask = gtk_widget_get_events (widget);
 
     _GdkWindow* window = gtk_widget_get_window(widget);
-    _GdkWindow* iwindow = window->impl_window;
 
     attributes_mask = GDK_WA_X | GDK_WA_Y;
 
@@ -1250,7 +1246,7 @@ static void gl_area_realize (GtkWidget *widget) {
 
     g_clear_error (&priv->error);
     priv->context = gl_area_real_create_context(area);
-    priv->theSecondContext = x11_window_create_gl_context(iwindow, TRUE, NULL, TRUE, NULL);
+    //priv->theSecondContext = x11_window_create_gl_context(window->impl_window, TRUE, NULL, TRUE, NULL);
     priv->needs_resize = TRUE;
 }
 
@@ -1534,7 +1530,8 @@ void cairo_draw(cairo_t* cr, GLArea* area, _GdkWindow* window, int source, int b
   impl_window = window->impl_window;
   window_scale = gdk_window_get_scale_factor (impl_window);
   clip_region = gdk_cairo_region_from_clip (cr);
-  gdk_gl_context_make_current(priv->theSecondContext);
+  gdk_gl_context_make_current(priv->context);
+  //gdk_gl_context_make_current(priv->theSecondContext);
   if (glGetError() != GL_NO_ERROR) printf(" gl error on gdk_gl_context_make_current\n");
   cairo_matrix_t matrix;
   cairo_get_matrix (cr, &matrix);
