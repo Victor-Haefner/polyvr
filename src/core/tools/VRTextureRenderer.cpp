@@ -77,15 +77,6 @@ OSG_END_NAMESPACE;
 vector<VRTextureRendererWeakPtr> TRinstances;
 
 void VRTextureRenderer::test() {
-    return;
-
-    auto gtkwin = VRSetup::getCurrent()->getEditorWindow();
-    auto win = gtkwin->getOSGWindow();
-    int tID = win->getGLObjectId(data->fboTex->getGLId());
-    cout << "VRTextureRenderer texBuf GL ID " << tID << endl;
-    gtkwin->setBlitID(tID, GL_TEXTURE);
-    return;
-
     NodeRefPtr     flagScene = makeCoredNode<Group>();
     GeometryRefPtr flagGeo   = makePlaneGeo(4, 2, 1, 1);
     flagGeo->setDlistCache(false);

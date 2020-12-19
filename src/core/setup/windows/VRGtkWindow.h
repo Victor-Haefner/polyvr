@@ -53,8 +53,6 @@ class VRGtkWindow : public VRWindow {
         void forceSize(int W, int H);
         void enableVSync(bool b);
 
-        void setBlitID(int ID, int bType);
-
         void setCursor(string c);
 
         void save(XMLElementPtr node);

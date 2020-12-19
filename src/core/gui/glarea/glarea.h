@@ -37,9 +37,6 @@ GType gl_area_get_type (void) G_GNUC_CONST;
 
 GtkWidget *     gl_area_new                         (void);
 
-guint gl_area_get_samples(GLArea* area);
-void  gl_area_set_samples(GLArea* area, guint samples);
-void  gl_area_set_blit_id(GLArea* area, guint ID, guint bType);
 void  gl_area_set_vsync(GLArea* area, gboolean b);
 GLClipping gl_area_get_clipping(GLArea* area);
 

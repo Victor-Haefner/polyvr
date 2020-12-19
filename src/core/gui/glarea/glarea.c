@@ -401,8 +401,6 @@ typedef struct {
   guint is_legacy : 1;
 
   int use_es;
-
-  GdkGLContextPaintData *paint_data;
 } GdkGLContextPrivate;
 
 static inline GdkGLContextPrivate* gdk_gl_context_get_instance_private(GdkGLContext* context) {
@@ -411,69 +409,54 @@ static inline GdkGLContextPrivate* gdk_gl_context_get_instance_private(GdkGLCont
 	return (G_STRUCT_MEMBER_P(context, privOffset));
 }
 
-gboolean _gdk_gl_context_has_framebuffer_blit (GdkGLContext *context) {
-    GdkGLContextPrivate *priv = gdk_gl_context_get_instance_private (context);
-    return priv->has_gl_framebuffer_blit;
-}
-
 void _gdk_x11_window_invalidate_for_new_frame (_GdkWindow *window, cairo_region_t *update_area) {
-  cairo_rectangle_int_t window_rect;
-  GdkDisplay *display = gdk_window_get_display (window);
-  _GdkX11Display *display_x11 = (_GdkX11Display*) (display);
-  Display* dpy = display_x11->xdisplay;
-  gboolean invalidate_all;
+    cairo_rectangle_int_t window_rect;
+    GdkDisplay *display = gdk_window_get_display (window);
+    _GdkX11Display *display_x11 = (_GdkX11Display*) (display);
+    Display* dpy = display_x11->xdisplay;
+    gboolean invalidate_all;
 
-  //SET_DEBUG_BREAK_POINT(A,1)
+    //SET_DEBUG_BREAK_POINT(A,1)
 
-  /* Minimal update is ok if we're not drawing with gl */
-  if (window->gl_paint_context == NULL) return;
+    /* Minimal update is ok if we're not drawing with gl */
+    if (window->gl_paint_context == NULL) return;
 
-  _GdkX11GLContext* context_x11 = (_GdkX11GLContext*) (window->gl_paint_context);
+    _GdkX11GLContext* context_x11 = (_GdkX11GLContext*) (window->gl_paint_context);
 
-  unsigned int buffer_age = 0;
+    unsigned int buffer_age = 0;
 
-  context_x11->do_blit_swap = FALSE;
+    context_x11->do_blit_swap = FALSE;
 
-  if (display_x11->has_glx_buffer_age) {
-      gdk_gl_context_make_current (window->gl_paint_context);
-      glXQueryDrawable(dpy, context_x11->drawable, GLX_BACK_BUFFER_AGE_EXT, &buffer_age);
+    if (display_x11->has_glx_buffer_age) {
+        gdk_gl_context_make_current (window->gl_paint_context);
+        glXQueryDrawable(dpy, context_x11->drawable, GLX_BACK_BUFFER_AGE_EXT, &buffer_age);
     }
 
-  invalidate_all = FALSE;
-  if (buffer_age >= 4) // fixed black widgets here and below
-    {
-      cairo_rectangle_int_t whole_window = { 0, 0, gdk_window_get_width (window), gdk_window_get_height (window) };
-
-      if (_gdk_gl_context_has_framebuffer_blit (window->gl_paint_context) &&
-          cairo_region_contains_rectangle (update_area, &whole_window) != CAIRO_REGION_OVERLAP_IN)
-        {
-          context_x11->do_blit_swap = TRUE;
+    invalidate_all = FALSE;
+    if (buffer_age >= 4) {
+        cairo_rectangle_int_t whole_window = { 0, 0, gdk_window_get_width (window), gdk_window_get_height (window) };
+        invalidate_all = TRUE;
+    } else {
+        if (buffer_age == 0) invalidate_all = TRUE; // fixed black widgets here and above
+        if (buffer_age >= 1) {
+            if (window->old_updated_area[0]) cairo_region_union (update_area, window->old_updated_area[0]);
+            else invalidate_all = TRUE;
         }
-      else invalidate_all = TRUE;
-    }
-  else {
-      if (buffer_age == 0) invalidate_all = TRUE; // fixed black widgets here and above
-      if (buffer_age >= 1) {
-          if (window->old_updated_area[0]) cairo_region_union (update_area, window->old_updated_area[0]);
-          else invalidate_all = TRUE;
-        }
-      if (buffer_age >= 2) {
-          if (window->old_updated_area[1]) cairo_region_union (update_area, window->old_updated_area[1]);
-          else invalidate_all = TRUE;
+        if (buffer_age >= 2) {
+            if (window->old_updated_area[1]) cairo_region_union (update_area, window->old_updated_area[1]);
+            else invalidate_all = TRUE;
         }
     }
 
-    //printf("window_invalidate %i %i %i\n", buffer_age, invalidate_all, context_x11->do_blit_swap);
+    if (invalidate_all) {
+        window_rect.x = 0;
+        window_rect.y = 0;
+        window_rect.width = gdk_window_get_width (window);
+        window_rect.height = gdk_window_get_height (window);
 
-  if (invalidate_all) {
-      window_rect.x = 0;
-      window_rect.y = 0;
-      window_rect.width = gdk_window_get_width (window);
-      window_rect.height = gdk_window_get_height (window);
-
-      /* If nothing else is known, repaint everything so that the back
+        /* If nothing else is known, repaint everything so that the back
          buffer is fully up-to-date for the swapbuffer */
-      cairo_region_union_rectangle (update_area, &window_rect);
+        cairo_region_union_rectangle (update_area, &window_rect);
     }
 }
 
@@ -871,21 +854,7 @@ typedef struct {
     GdkWindow *event_window;
     GError *error;
 
-    gboolean have_buffers;
-
-    int required_gl_version;
-
-    guint frame_buffer;
-    guint render_buffer;
-    guint texture;
-    guint depth_stencil_buffer;
-
-    guint samples;
-    guint blitID;
-    guint blitType;
-
     GLClipping clipping;
-
     gboolean needs_resize;
     gboolean needs_render;
 } GLAreaPrivate;
@@ -1072,21 +1041,10 @@ static gboolean find_fbconfig_for_visual (GdkDisplay* display, _GdkVisual* visua
       visinfo = glXGetVisualFromFBConfig (dpy, configs[i]);
       if (visinfo == NULL) continue;
 
-        int depth_size = 0;
-        int sample_buffers = 0;
-        int samples = 0;
-        glXGetConfig(dpy, visinfo, GLX_DEPTH_SIZE, &depth_size);
-        glXGetConfig(dpy, visinfo, GLX_SAMPLE_BUFFERS, &sample_buffers);
-        glXGetConfig(dpy, visinfo, GLX_SAMPLES, &samples);
-
-        printf("visual %i, depth %i, hasMS %i, samples %i\n", visinfo->visualid, depth_size, sample_buffers, samples);
-      //if (!full) {
-          if (visinfo->visualid != xvisual_id) {
-              printf("huh, visinfo->visualid != xvisual_id! %i %i\n", visinfo->visualid, xvisual_id);
-              XFree (visinfo);
-              continue;
-          }
-      //}
+      if (visinfo->visualid != xvisual_id) {
+          XFree (visinfo);
+          continue;
+      }
 
       if (fb_config_out != NULL) *fb_config_out = configs[i];
 
@@ -1348,30 +1306,6 @@ gdk_cairo_region_from_clip (cairo_t *cr)
   return region;
 }
 
-GdkGLContextPaintData *
-gdk_gl_context_get_paint_data (GdkGLContext *context)
-{
-
-  GdkGLContextPrivate *priv = gdk_gl_context_get_instance_private (context);
-
-  if (priv->paint_data == NULL)
-    {
-      priv->paint_data = g_new0 (GdkGLContextPaintData, 1);
-      priv->paint_data->is_legacy = priv->is_legacy;
-      priv->paint_data->use_es = priv->use_es;
-    }
-
-  return priv->paint_data;
-}
-
-gboolean
-gdk_gl_context_has_framebuffer_blit (GdkGLContext *context)
-{
-  GdkGLContextPrivate *priv = gdk_gl_context_get_instance_private (context);
-
-  return priv->has_gl_framebuffer_blit;
-}
-
 void
 gdk_window_get_unscaled_size (_GdkWindow *window,
                               int *unscaled_width,
@@ -1429,7 +1363,7 @@ void glarea_render(GLArea* area) {
     priv->needs_render = FALSE;
 }
 
-void cairo_draw(cairo_t* cr, GLArea* area, _GdkWindow* window, int source, int buffer_scale, int x, int y, int width, int height) {
+void cairo_draw(cairo_t* cr, GLArea* area, _GdkWindow* window, int scale, int x, int y, int width, int height) {
   if (glGetError() != GL_NO_ERROR) printf(" gl error on cairo_draw_begin beg\n");
   GLAreaPrivate* priv = gl_area_get_instance_private (area);
   impl_window = window->impl_window;
@@ -1456,8 +1390,8 @@ void cairo_draw(cairo_t* cr, GLArea* area, _GdkWindow* window, int source, int b
 
           dest.x = dx * window_scale;
           dest.y = dy * window_scale;
-          dest.width = width * window_scale / buffer_scale;
-          dest.height = height * window_scale / buffer_scale;
+          dest.width = width * window_scale / scale;
+          dest.height = height * window_scale / scale;
 
           if (gdk_rectangle_intersect (&clip_rect, &dest, &dest)) {
               glarea_render(area);
@@ -1501,7 +1435,7 @@ static gboolean gl_area_draw(GtkWidget* widget, cairo_t* cr) {
     scale = gtk_widget_get_scale_factor (widget);
     w = gtk_widget_get_allocated_width (widget) * scale;
     h = gtk_widget_get_allocated_height (widget) * scale;
-    cairo_draw(cr, area, gtk_widget_get_window(widget), priv->render_buffer, scale, 0, 0, w, h);
+    cairo_draw(cr, area, gtk_widget_get_window(widget), scale, 0, 0, w, h);
 
     return TRUE;
 }
@@ -1597,9 +1531,6 @@ static void gl_area_init (GLArea *area) {
     gtk_widget_set_has_window (GTK_WIDGET (area), FALSE);
     gtk_widget_set_app_paintable (GTK_WIDGET (area), TRUE);
     priv->needs_render = TRUE;
-    priv->blitID = 0;
-    priv->blitType = GL_RENDERBUFFER;
-    priv->samples = 0;
     priv->clipping.x = priv->clipping.y = 0;
     priv->clipping.w = priv->clipping.h = 100;
     priv->clipping.W = priv->clipping.H = 100;
@@ -1623,25 +1554,9 @@ GError* gl_area_get_error (GLArea *area) {
     return priv->error;
 }
 
-guint gl_area_get_samples (GLArea *area) {
-    GLAreaPrivate *priv = gl_area_get_instance_private (area);
-    g_return_val_if_fail (IS_GL_AREA (area), FALSE);
-    return priv->samples;
-}
-
 GLClipping gl_area_get_clipping(GLArea* area) {
     GLAreaPrivate* priv = gl_area_get_instance_private (area);
     return priv->clipping;
-}
-
-void gl_area_set_samples (GLArea *area, guint samples) {
-    GLAreaPrivate *priv = gl_area_get_instance_private (area);
-    g_return_if_fail (IS_GL_AREA (area));
-
-    if (priv->samples != samples) {
-        priv->samples = samples;
-        priv->have_buffers = FALSE;
-    }
 }
 
 void gl_area_set_vsync(GLArea* area, gboolean b) {
@@ -1652,16 +1567,6 @@ void gl_area_set_vsync(GLArea* area, gboolean b) {
         auto res = glXSwapIntervalSGI(0);
         printf(" gl_area_set_vsync %i\n", res);
     }
-}
-
-void gl_area_set_blit_id (GLArea *area, guint ID, guint bType) {
-    g_return_if_fail (IS_GL_AREA (area));
-    GLAreaPrivate *priv = gl_area_get_instance_private (area);
-    if (priv->blitID == ID && priv->blitType == bType) return;
-    printf("gl_area_set_blit_id %i\n", ID);
-
-    priv->blitID = ID;
-    priv->blitType = bType;
 }
 
 void gl_area_queue_render (GLArea *area) {
