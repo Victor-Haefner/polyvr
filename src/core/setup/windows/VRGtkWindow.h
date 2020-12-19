@@ -40,6 +40,8 @@ class VRGtkWindow : public VRWindow {
         void on_realize();
         bool on_render(_GdkGLContext* glcontext);
 
+        Vec2i rebaseMousePosition(int x, int y);
+
     public:
         VRGtkWindow(_GtkWidget* glarea, string msaa);
         ~VRGtkWindow();

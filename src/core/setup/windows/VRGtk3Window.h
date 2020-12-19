@@ -73,6 +73,11 @@ void VRGtkWindow::clear(Color3f c) {
     }*/
 }
 
+Vec2i VRGtkWindow::rebaseMousePosition(int x, int y) {
+    auto clipping = gl_area_get_clipping(GL_AREA(widget));
+    return Vec2i(clipping.x+x, clipping.y+y);
+}
+
 void VRGtkWindow::render(bool fromThread) {
     if (fromThread) return;
     PLock( VRGuiManager::get()->guiMutex() );

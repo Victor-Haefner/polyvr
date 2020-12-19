@@ -132,7 +132,8 @@ bool VRGtkWindow::on_button(GdkEventButton* event) {
     if (event->type == GDK_BUTTON_PRESS) state = 0;
 
     if (getMouse() == 0) return false;
-    getMouse()->mouse(event->button -1,state ,event->x ,event->y);
+    auto p = rebaseMousePosition(event->x, event->y);
+    getMouse()->mouse(event->button -1,state ,p[0] ,p[1]);
 
 	/*printf("\nbutton: %i %i", event->button, event->type);
 	printf("\n   x : %f", event->x);
@@ -144,7 +145,8 @@ bool VRGtkWindow::on_button(GdkEventButton* event) {
 bool VRGtkWindow::on_motion(GdkEventMotion * event) {
     //gtk_widget_grab_focus((GtkWidget*)drawArea->gobj());
     if (getMouse() == 0) return false;
-    getMouse()->motion(event->x ,event->y);
+    auto p = rebaseMousePosition(event->x ,event->y);
+    getMouse()->motion(p[0] ,p[1]);
 
 	/*printf("\nevent: %i", event->type);
 	printf("\n   x : %f", event->x);
@@ -174,7 +176,8 @@ bool VRGtkWindow::on_scroll(GdkEventScroll * event) {
     if (button == 999) return false;
 
     if (getMouse() == 0) return false;
-    getMouse()->mouse(button, 0 ,event->x ,event->y);
+    auto p = rebaseMousePosition(event->x ,event->y);
+    getMouse()->mouse(button, 0 ,p[0] ,p[1]);
 
     return true;
 }
