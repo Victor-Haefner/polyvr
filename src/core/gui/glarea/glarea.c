@@ -923,54 +923,6 @@ gboolean gdk_x11_screen_init_gl (GdkScreen *screen) {
     return TRUE;
 }
 
-static GdkVisual* get_full_gl_visual(GdkDisplay* display) {
-    _GdkX11Display *display_x11 = (_GdkX11Display*)display;
-    Display* dpy = display_x11->xdisplay;
-    GLXFBConfig* configs;
-    int n_configs, i;
-    gboolean use_rgba;
-
-    static int attrsF[] = {
-      GLX_DRAWABLE_TYPE   , GLX_WINDOW_BIT,
-      GLX_RENDER_TYPE     , GLX_RGBA_BIT,
-      GLX_DOUBLEBUFFER    , GL_TRUE,
-      GLX_X_VISUAL_TYPE   , GLX_TRUE_COLOR,
-      GLX_X_RENDERABLE    , GL_TRUE,
-      GLX_RED_SIZE        , 8,
-      GLX_GREEN_SIZE      , 8,
-      GLX_BLUE_SIZE       , 8,
-      GLX_ALPHA_SIZE      , GLX_DONT_CARE,
-      GLX_DEPTH_SIZE      , 24,
-      GLX_STENCIL_SIZE    , 8,
-      GLX_SAMPLE_BUFFERS  , 1,
-      GLX_SAMPLES         , 4,
-      None
-    };
-
-    configs = glXChooseFBConfig (dpy, DefaultScreen (dpy), attrsF, &n_configs);
-    printf(" creating context with FULL specs, found %i configs\n", n_configs);
-
-    GdkVisual* res = 0;
-
-    if (configs == NULL || n_configs == 0) {
-        printf("AAAAAAA, glXChooseFBConfig failed!\n");
-        return res;
-    }
-
-    for (i = 0; i < n_configs; i++)  {
-        XVisualInfo* visinfo;
-
-        visinfo = glXGetVisualFromFBConfig(dpy, configs[i]);
-        if (visinfo == NULL) continue;
-
-        Visual* v = visinfo->visual; // TODO
-        XFree (visinfo);
-    }
-
-    XFree (configs);
-    return res;
-}
-
 static gboolean find_fbconfig_for_visual (GdkDisplay* display, _GdkVisual* visual, GLXFBConfig* fb_config_out, gboolean full, GError** error) {
     _GdkX11Display *display_x11 = (_GdkX11Display*)display;
     Display* dpy = display_x11->xdisplay;
