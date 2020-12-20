@@ -1,13 +1,9 @@
 #ifndef __GL_GDK_H__
 #define __GL_GDK_H__
 
-#define GTK_COMPILATION
-
-#include <gtk/gtkwidget.h>
+#include <glib/gmacros.h>
 
 G_BEGIN_DECLS
-
-gboolean glgtk_init_check (int* argc, char*** argv);
 
 void replace_gl_visuals();
 

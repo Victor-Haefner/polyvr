@@ -1217,7 +1217,9 @@ static void gl_area_notify(GObject* object, GParamSpec* pspec) {
 
 
 static void gl_area_resize (GLArea *area, int width, int height) {
-    glViewport (0, 0, width, height);
+    GLAreaPrivate *priv = gl_area_get_instance_private (area);
+    priv->needs_resize = TRUE;
+    //gtk_widget_queue_draw(GTK_WIDGET(area));
 }
 
 static void gl_area_unrealize (GtkWidget *widget) {
@@ -1345,22 +1347,23 @@ _GdkWindow* impl_window;
 
 void glarea_render(GLArea* area) {
     GLAreaPrivate* priv = gl_area_get_instance_private (area);
-    priv->clipping.x = dest.x;
-    priv->clipping.y = dest.y;
-    priv->clipping.w = dest.width;
-    priv->clipping.h = dest.height;
-    priv->clipping.W = unscaled_window_width;
-    priv->clipping.H = unscaled_window_height;
 
-    gboolean unused;
-    if (priv->needs_render) {
-        if (priv->needs_resize) {
-            g_signal_emit (area, area_signals[RESIZE], 0, 0, 0, NULL);
-            priv->needs_resize = FALSE;
-        }
-        g_signal_emit (area, area_signals[RENDER], 0, priv->context, &unused);
+    if (priv->needs_resize) {
+        priv->clipping.x = dest.x;
+        priv->clipping.y = dest.y;
+        priv->clipping.w = dest.width;
+        priv->clipping.h = dest.height;
+        priv->clipping.W = unscaled_window_width;
+        priv->clipping.H = unscaled_window_height;
+        g_signal_emit (area, area_signals[RESIZE], 0, 0, 0, NULL);
+        priv->needs_resize = FALSE;
     }
-    priv->needs_render = FALSE;
+
+    if (priv->needs_render) {
+        gboolean unused;
+        g_signal_emit (area, area_signals[RENDER], 0, priv->context, &unused);
+        priv->needs_render = FALSE;
+    }
 }
 
 void cairo_draw(cairo_t* cr, GLArea* area, _GdkWindow* window, int scale, int x, int y, int width, int height) {
