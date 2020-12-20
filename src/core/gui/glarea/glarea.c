@@ -1,7 +1,13 @@
 #define GTK_COMPILATION
 #define GDK_COMPILATION
 
+#ifdef _WIN32
+#include <gdk/win32/gdkwin32glcontext.h>
+#include <windows.h>
+#include <epoxy/wgl.h>
+#else
 #include <gdk/x11/gdkx11glcontext.h>
+#endif
 
 #include "glarea.h"
 #include <gtk/gtkstylecontext.h>
@@ -10,56 +16,530 @@
 #include <gobject/gvalue.h>
 #include <gobject/gsignal.h>
 
-#define SET_DEBUG_BREAK_POINT(P,N) \
-static int debugBreakPoint##P = 0; \
-if (debugBreakPoint##P == N) return; \
-debugBreakPoint##P += 1;
 
-#ifdef _WIN32
-#include <windows.h>
-#include <GL/GL.h>
-#define APIENTRY __stdcall
+typedef enum {
+    GDK_RENDERING_MODE_SIMILAR = 0,
+    GDK_RENDERING_MODE_IMAGE,
+    GDK_RENDERING_MODE_RECORDING
+} GdkRenderingMode;
 
-typedef void(APIENTRY _glBindFramebuffer) (GLenum target, GLuint framebuffer);
-typedef void(APIENTRY _glBindRenderbuffer) (GLenum target, GLuint renderbuffer);
-typedef void(APIENTRY _glGenFramebuffers) (GLsizei n, GLuint* ids);
-typedef void(APIENTRY _glGenRenderbuffers) (GLsizei n, GLuint* ids);
-typedef void(APIENTRY _glDeleteRenderbuffers) (GLsizei n, GLuint* renderbuffers);
-typedef void(APIENTRY _glDeleteFramebuffers) (GLsizei n, GLuint* framebuffers);
-typedef void(APIENTRY _glTexImage2DMultisample) (GLenum target, GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height, GLboolean fixedsamplelocations);
-typedef void(APIENTRY _glRenderbufferStorageMultisample) (GLenum target, GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height);
-typedef void(APIENTRY _glRenderbufferStorage) (GLenum target, GLenum internalformat, GLsizei width, GLsizei height);
-typedef void(APIENTRY _glFramebufferTexture2D) (GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level);
-typedef void(APIENTRY _glFramebufferRenderbuffer) (GLenum target, GLenum attachment, GLenum renderbuffertarget, GLuint renderbuffer);
-typedef GLenum(APIENTRY _glCheckFramebufferStatus) (GLenum target);
-_glBindFramebuffer* glBindFramebuffer = 0;
-_glBindRenderbuffer* glBindRenderbuffer = 0;
-_glGenFramebuffers* glGenFramebuffers = 0;
-_glGenRenderbuffers* glGenRenderbuffers = 0;
-_glDeleteRenderbuffers* glDeleteRenderbuffers = 0;
-_glDeleteFramebuffers* glDeleteFramebuffers = 0;
-_glTexImage2DMultisample* glTexImage2DMultisample = 0;
-_glRenderbufferStorageMultisample* glRenderbufferStorageMultisample = 0;
-_glRenderbufferStorage* glRenderbufferStorage = 0;
-_glFramebufferTexture2D* glFramebufferTexture2D = 0;
-_glFramebufferRenderbuffer* glFramebufferRenderbuffer = 0;
-_glCheckFramebufferStatus* glCheckFramebufferStatus = 0;
+typedef struct {
+    GObject parent_instance;
 
-void initGLFunctions() {
-    glBindFramebuffer = (_glBindFramebuffer*)wglGetProcAddress("glBindFramebuffer");
-    glBindRenderbuffer = (_glBindRenderbuffer*)wglGetProcAddress("glBindRenderbuffer");
-    glGenFramebuffers = (_glGenFramebuffers*)wglGetProcAddress("glGenFramebuffers");
-    glGenRenderbuffers = (_glGenRenderbuffers*)wglGetProcAddress("glGenRenderbuffers");
-    glDeleteRenderbuffers = (_glDeleteRenderbuffers*)wglGetProcAddress("glDeleteRenderbuffers");
-    glDeleteFramebuffers = (_glDeleteFramebuffers*)wglGetProcAddress("glDeleteFramebuffers");
-    glTexImage2DMultisample = (_glTexImage2DMultisample*)wglGetProcAddress("glTexImage2DMultisample");
-    glRenderbufferStorageMultisample = (_glRenderbufferStorageMultisample*)wglGetProcAddress("glRenderbufferStorageMultisample");
-    glRenderbufferStorage = (_glRenderbufferStorage*)wglGetProcAddress("glRenderbufferStorage");
-    glFramebufferTexture2D = (_glFramebufferTexture2D*)wglGetProcAddress("glFramebufferTexture2D");
-    glFramebufferRenderbuffer = (_glFramebufferRenderbuffer*)wglGetProcAddress("glFramebufferRenderbuffer");
-    glCheckFramebufferStatus = (_glCheckFramebufferStatus*)wglGetProcAddress("glCheckFramebufferStatus");
+    void* impl; /* window-system-specific delegate object */  // GdkWindowImpl*
+
+    GdkWindow* parent;
+    GdkWindow* transient_for;
+    GdkVisual* visual;
+
+    gpointer user_data;
+
+    gint x;
+    gint y;
+
+    GdkEventMask event_mask;
+    guint8 window_type;
+
+    guint8 depth;
+    guint8 resize_count;
+
+    gint8 toplevel_window_type;
+
+    GList* filters;
+    GList* children;
+    GList children_list_node;
+    GList* native_children;
+
+
+    cairo_pattern_t* background;
+
+    struct {
+        cairo_surface_t* surface;
+
+        cairo_region_t* region;
+        cairo_region_t* flushed_region;
+        cairo_region_t* need_blend_region;
+
+        gboolean surface_needs_composite;
+        gboolean use_gl;
+    } current_paint;
+    GdkGLContext* gl_paint_context;
+
+    cairo_region_t* update_area;
+    guint update_freeze_count;
+    /* This is the update_area that was in effect when the current expose
+       started. It may be smaller than the expose area if we'e painting
+       more than we have to, but it represents the "true" damage. */
+    cairo_region_t* active_update_area;
+    /* We store the old expose areas to support buffer-age optimizations */
+    cairo_region_t* old_updated_area[2];
+
+    GdkWindowState old_state;
+    GdkWindowState state;
+
+    guint8 alpha;
+    guint8 fullscreen_mode;
+
+    guint input_only : 1;
+    guint pass_through : 1;
+    guint modal_hint : 1;
+    guint composited : 1;
+    guint has_alpha_background : 1;
+
+    guint destroyed : 2;
+
+    guint accept_focus : 1;
+    guint focus_on_map : 1;
+    guint shaped : 1;
+    guint support_multidevice : 1;
+    guint synthesize_crossing_event_queued : 1;
+    guint effective_visibility : 2;
+    guint visibility : 2; /* The visibility wrt the toplevel (i.e. based on clip_region) */
+    guint native_visibility : 2; /* the native visibility of a impl windows */
+    guint viewable : 1; /* mapped and all parents mapped */
+    guint applied_shape : 1;
+    guint in_update : 1;
+    guint geometry_dirty : 1;
+    guint event_compression : 1;
+    guint frame_clock_events_paused : 1;
+
+    /* The GdkWindow that has the impl, ref:ed if another window.
+     * This ref is required to keep the wrapper of the impl window alive
+     * for as long as any GdkWindow references the impl. */
+    void* impl_window; // GdkWindow*
+
+    guint update_and_descendants_freeze_count;
+
+    gint abs_x, abs_y; /* Absolute offset in impl */
+    gint width, height;
+    gint shadow_top;
+    gint shadow_left;
+    gint shadow_right;
+    gint shadow_bottom;
+
+    guint num_offscreen_children;
+
+    /* The clip region is the part of the window, in window coordinates
+       that is fully or partially (i.e. semi transparently) visible in
+       the window hierarchy from the toplevel and down */
+    cairo_region_t* clip_region;
+
+    GdkCursor* cursor;
+    GHashTable* device_cursor;
+
+    cairo_region_t* shape;
+    cairo_region_t* input_shape;
+
+    GList* devices_inside;
+    GHashTable* device_events;
+
+    GHashTable* source_event_masks;
+    gulong device_added_handler_id;
+    gulong device_changed_handler_id;
+
+    GdkFrameClock* frame_clock; /* NULL to use from parent or default */
+    GdkWindowInvalidateHandlerFunc invalidate_handler;
+
+    GdkDrawingContext* drawing_context;
+
+    cairo_region_t* opaque_region;
+} _GdkWindow;
+
+typedef struct {
+    GObjectClass parent_class;
+
+    cairo_surface_t*
+        (*ref_cairo_surface)    (GdkWindow* window);
+    cairo_surface_t*
+        (*create_similar_image_surface) (GdkWindow* window,
+            cairo_format_t  format,
+            int             width,
+            int             height);
+
+    void         (*show)                 (GdkWindow* window,
+        gboolean         already_mapped);
+    void         (*hide)                 (GdkWindow* window);
+    void         (*withdraw)             (GdkWindow* window);
+    void         (*raise)                (GdkWindow* window);
+    void         (*lower)                (GdkWindow* window);
+    void         (*restack_under)        (GdkWindow* window,
+        GList* native_siblings);
+    void         (*restack_toplevel)     (GdkWindow* window,
+        GdkWindow* sibling,
+        gboolean        above);
+
+    void         (*move_resize)          (GdkWindow* window,
+        gboolean         with_move,
+        gint             x,
+        gint             y,
+        gint             width,
+        gint             height);
+    void         (*move_to_rect)         (GdkWindow* window,
+        const GdkRectangle* rect,
+        GdkGravity       rect_anchor,
+        GdkGravity       window_anchor,
+        GdkAnchorHints   anchor_hints,
+        gint             rect_anchor_dx,
+        gint             rect_anchor_dy);
+    void         (*set_background)       (GdkWindow* window,
+        cairo_pattern_t* pattern);
+
+    GdkEventMask(*get_events)           (GdkWindow* window);
+    void         (*set_events)           (GdkWindow* window,
+        GdkEventMask     event_mask);
+
+    gboolean(*reparent)             (GdkWindow* window,
+        GdkWindow* new_parent,
+        gint             x,
+        gint             y);
+
+    void         (*set_device_cursor)    (GdkWindow* window,
+        GdkDevice* device,
+        GdkCursor* cursor);
+
+    void         (*get_geometry)         (GdkWindow* window,
+        gint* x,
+        gint* y,
+        gint* width,
+        gint* height);
+    void         (*get_root_coords)      (GdkWindow* window,
+        gint             x,
+        gint             y,
+        gint* root_x,
+        gint* root_y);
+    gboolean(*get_device_state)     (GdkWindow* window,
+        GdkDevice* device,
+        gdouble* x,
+        gdouble* y,
+        GdkModifierType* mask);
+    gboolean(*begin_paint)           (GdkWindow* window);
+    void        (*end_paint)             (GdkWindow* window);
+
+    cairo_region_t* (*get_shape)        (GdkWindow* window);
+    cairo_region_t* (*get_input_shape)  (GdkWindow* window);
+    void         (*shape_combine_region) (GdkWindow* window,
+        const cairo_region_t* shape_region,
+        gint             offset_x,
+        gint             offset_y);
+    void         (*input_shape_combine_region) (GdkWindow* window,
+        const cairo_region_t* shape_region,
+        gint             offset_x,
+        gint             offset_y);
+
+    /* Called before processing updates for a window. This gives the windowing
+     * layer a chance to save the region for later use in avoiding duplicate
+     * exposes.
+     */
+    void     (*queue_antiexpose)     (GdkWindow* window,
+        cairo_region_t* update_area);
+
+    /* Called to do the windowing system specific part of gdk_window_destroy(),
+     *
+     * window: The window being destroyed
+     * recursing: If TRUE, then this is being called because a parent
+     *     was destroyed. This generally means that the call to the windowing
+     *     system to destroy the window can be omitted, since it will be
+     *     destroyed as a result of the parent being destroyed.
+     *     Unless @foreign_destroy
+     * foreign_destroy: If TRUE, the window or a parent was destroyed by some
+     *     external agency. The window has already been destroyed and no
+     *     windowing system calls should be made. (This may never happen
+     *     for some windowing systems.)
+     */
+    void         (*destroy)              (GdkWindow* window,
+        gboolean         recursing,
+        gboolean         foreign_destroy);
+
+
+    /* Called when gdk_window_destroy() is called on a foreign window
+     * or an ancestor of the foreign window. It should generally reparent
+     * the window out of it's current heirarchy, hide it, and then
+     * send a message to the owner requesting that the window be destroyed.
+     */
+    void         (*destroy_foreign)       (GdkWindow* window);
+
+    /* optional */
+    gboolean(*beep)                 (GdkWindow* window);
+
+    void         (*focus)                (GdkWindow* window,
+        guint32          timestamp);
+    void         (*set_type_hint)        (GdkWindow* window,
+        GdkWindowTypeHint hint);
+    GdkWindowTypeHint(*get_type_hint)   (GdkWindow* window);
+    void         (*set_modal_hint)       (GdkWindow* window,
+        gboolean   modal);
+    void         (*set_skip_taskbar_hint) (GdkWindow* window,
+        gboolean   skips_taskbar);
+    void         (*set_skip_pager_hint)  (GdkWindow* window,
+        gboolean   skips_pager);
+    void         (*set_urgency_hint)     (GdkWindow* window,
+        gboolean   urgent);
+    void         (*set_geometry_hints)   (GdkWindow* window,
+        const GdkGeometry* geometry,
+        GdkWindowHints     geom_mask);
+    void         (*set_title)            (GdkWindow* window,
+        const gchar* title);
+    void         (*set_role)             (GdkWindow* window,
+        const gchar* role);
+    void         (*set_startup_id)       (GdkWindow* window,
+        const gchar* startup_id);
+    void         (*set_transient_for)    (GdkWindow* window,
+        GdkWindow* parent);
+    void         (*get_frame_extents)    (GdkWindow* window,
+        GdkRectangle* rect);
+    void         (*set_override_redirect) (GdkWindow* window,
+        gboolean override_redirect);
+    void         (*set_accept_focus)     (GdkWindow* window,
+        gboolean accept_focus);
+    void         (*set_focus_on_map)     (GdkWindow* window,
+        gboolean focus_on_map);
+    void         (*set_icon_list)        (GdkWindow* window,
+        GList* pixbufs);
+    void         (*set_icon_name)        (GdkWindow* window,
+        const gchar* name);
+    void         (*iconify)              (GdkWindow* window);
+    void         (*deiconify)            (GdkWindow* window);
+    void         (*stick)                (GdkWindow* window);
+    void         (*unstick)              (GdkWindow* window);
+    void         (*maximize)             (GdkWindow* window);
+    void         (*unmaximize)           (GdkWindow* window);
+    void         (*fullscreen)           (GdkWindow* window);
+    void         (*fullscreen_on_monitor) (GdkWindow* window, gint monitor);
+    void         (*apply_fullscreen_mode) (GdkWindow* window);
+    void         (*unfullscreen)         (GdkWindow* window);
+    void         (*set_keep_above)       (GdkWindow* window,
+        gboolean   setting);
+    void         (*set_keep_below)       (GdkWindow* window,
+        gboolean   setting);
+    GdkWindow* (*get_group)            (GdkWindow* window);
+    void         (*set_group)            (GdkWindow* window,
+        GdkWindow* leader);
+    void         (*set_decorations)      (GdkWindow* window,
+        GdkWMDecoration decorations);
+    gboolean(*get_decorations)      (GdkWindow* window,
+        GdkWMDecoration* decorations);
+    void         (*set_functions)        (GdkWindow* window,
+        GdkWMFunction functions);
+    void         (*begin_resize_drag)    (GdkWindow* window,
+        GdkWindowEdge  edge,
+        GdkDevice* device,
+        gint           button,
+        gint           root_x,
+        gint           root_y,
+        guint32        timestamp);
+    void         (*begin_move_drag)      (GdkWindow* window,
+        GdkDevice* device,
+        gint       button,
+        gint       root_x,
+        gint       root_y,
+        guint32    timestamp);
+    void         (*enable_synchronized_configure) (GdkWindow* window);
+    void         (*configure_finished)   (GdkWindow* window);
+    void         (*set_opacity)          (GdkWindow* window,
+        gdouble    opacity);
+    void         (*set_composited)       (GdkWindow* window,
+        gboolean   composited);
+    void         (*destroy_notify)       (GdkWindow* window);
+    GdkDragProtocol(*get_drag_protocol) (GdkWindow* window,
+        GdkWindow** target);
+    void         (*register_dnd)         (GdkWindow* window);
+    GdkDragContext* (*drag_begin)        (GdkWindow* window,
+        GdkDevice* device,
+        GList* targets,
+        gint       x_root,
+        gint       y_root);
+
+    void         (*process_updates_recurse) (GdkWindow* window,
+        cairo_region_t* region);
+
+    void         (*sync_rendering)          (GdkWindow* window);
+    gboolean(*simulate_key)            (GdkWindow* window,
+        gint            x,
+        gint            y,
+        guint           keyval,
+        GdkModifierType modifiers,
+        GdkEventType    event_type);
+    gboolean(*simulate_button)         (GdkWindow* window,
+        gint            x,
+        gint            y,
+        guint           button,
+        GdkModifierType modifiers,
+        GdkEventType    event_type);
+
+    gboolean(*get_property)            (GdkWindow* window,
+        GdkAtom         property,
+        GdkAtom         type,
+        gulong          offset,
+        gulong          length,
+        gint            pdelete,
+        GdkAtom* actual_type,
+        gint* actual_format,
+        gint* actual_length,
+        guchar** data);
+    void         (*change_property)         (GdkWindow* window,
+        GdkAtom         property,
+        GdkAtom         type,
+        gint            format,
+        GdkPropMode     mode,
+        const guchar* data,
+        gint            n_elements);
+    void         (*delete_property)         (GdkWindow* window,
+        GdkAtom         property);
+
+    gint(*get_scale_factor)       (GdkWindow* window);
+    void         (*get_unscaled_size)      (GdkWindow* window,
+        int* unscaled_width,
+        int* unscaled_height);
+
+    void         (*set_opaque_region)      (GdkWindow* window,
+        cairo_region_t* region);
+    void         (*set_shadow_width)       (GdkWindow* window,
+        gint            left,
+        gint            right,
+        gint            top,
+        gint            bottom);
+    gboolean(*show_window_menu)       (GdkWindow* window,
+        GdkEvent* event);
+    GdkGLContext* (*create_gl_context)      (GdkWindow* window,
+        gboolean        attached,
+        GdkGLContext* share,
+        GError** error);
+    gboolean(*realize_gl_context)     (GdkWindow* window,
+        GdkGLContext* context,
+        GError** error);
+    void         (*invalidate_for_new_frame)(GdkWindow* window,
+        cairo_region_t* update_area);
+
+    GdkDrawingContext* (*create_draw_context)  (GdkWindow* window,
+        const cairo_region_t* region);
+    void               (*destroy_draw_context) (GdkWindow* window,
+        GdkDrawingContext* context);
+} _GdkWindowImplClass;
+
+typedef struct {
+    GObject parent_instance;
+
+    cairo_font_options_t* font_options;
+    gdouble resolution; /* pixels/points scale factor for fonts */
+    guint resolution_set : 1; /* resolution set through public API */
+    guint closed : 1;
+} _GdkScreen;
+
+typedef struct {
+    GObject parent_instance;
+
+    GList* queued_events;
+    GList* queued_tail;
+
+    /* Information for determining if the latest button click
+     * is part of a double-click or triple-click
+     */
+    GHashTable* multiple_click_info;
+
+    guint event_pause_count;       /* How many times events are blocked */
+
+    guint closed : 1;  /* Whether this display has been closed */
+
+    GArray* touch_implicit_grabs;
+    GHashTable* device_grabs;
+    GHashTable* motion_hint_info;
+    GdkDeviceManager* device_manager;
+    GList* input_devices; /* Deprecated, only used to keep gdk_display_list_devices working */
+
+    GHashTable* pointers_info;  /* GdkPointerWindowInfo for each device */
+    guint32 last_event_time;    /* Last reported event time from server */
+
+    guint double_click_time;  /* Maximum time between clicks in msecs */
+    guint double_click_distance;   /* Maximum distance between clicks in pixels */
+
+    guint has_gl_extension_texture_non_power_of_two : 1;
+    guint has_gl_extension_texture_rectangle : 1;
+
+    guint debug_updates : 1;
+    guint debug_updates_set : 1;
+
+    GdkRenderingMode rendering_mode;
+
+    GList* seats;
+} _GdkDisplay;
+
+typedef struct {
+    guint program;
+    guint position_location;
+    guint uv_location;
+    guint map_location;
+    guint flip_location;
+} GdkGLContextProgram;
+
+typedef struct {
+    guint vertex_array_object;
+    guint tmp_framebuffer;
+    guint tmp_vertex_buffer;
+
+    GdkGLContextProgram texture_2d_quad_program;
+    GdkGLContextProgram texture_rect_quad_program;
+
+    GdkGLContextProgram* current_program;
+
+    guint is_legacy : 1;
+    guint use_es : 1;
+} GdkGLContextPaintData;
+
+typedef struct {
+    GdkDisplay* display;
+    GdkWindow* window;
+    GdkGLContext* shared_context;
+
+    int major;
+    int minor;
+    int gl_version;
+
+    guint realized : 1;
+    guint use_texture_rectangle : 1;
+    guint has_gl_framebuffer_blit : 1;
+    guint has_frame_terminator : 1;
+    guint has_unpack_subimage : 1;
+    guint extensions_checked : 1;
+    guint debug_enabled : 1;
+    guint forward_compatible : 1;
+    guint is_legacy : 1;
+
+    int use_es;
+} GdkGLContextPrivate;
+
+typedef struct {
+    GObject parent_instance;
+
+    /*< private >*/
+    GdkVisualType type;
+    gint depth;
+    GdkByteOrder byte_order;
+    gint colormap_size;
+    gint bits_per_rgb;
+
+    guint32 red_mask;
+    guint32 green_mask;
+    guint32 blue_mask;
+
+    GdkScreen* screen;
+} _GdkVisual;
+
+static inline GdkGLContextPrivate* gdk_gl_context_get_instance_private(GdkGLContext* context) {
+    gpointer klass = g_type_class_ref(GDK_TYPE_GL_CONTEXT);
+    gint privOffset = g_type_class_get_instance_private_offset(klass);
+    return (G_STRUCT_MEMBER_P(context, privOffset));
 }
+
+_GdkWindowImplClass* getGdkWindowImplClass() {
+#ifndef _WIN32
+    GType* t = g_type_from_name("GdkWindowImplX11");
 #else
+    GType* t = g_type_from_name("GdkWindowImplWin32");
+#endif
+    return g_type_class_ref(t);
+}
+
+#ifndef _WIN32
 #include <GL/gl.h>
 #include <GL/glx.h>
 void initGLFunctions() {}
@@ -77,174 +557,8 @@ typedef struct {
     guint do_blit_swap : 1;
 } _GdkX11GLContext;
 
-typedef enum {
-  GDK_RENDERING_MODE_SIMILAR = 0,
-  GDK_RENDERING_MODE_IMAGE,
-  GDK_RENDERING_MODE_RECORDING
-} GdkRenderingMode;
-
 typedef struct {
-  GObject parent_instance;
-
-  void* impl; /* window-system-specific delegate object */  // GdkWindowImpl*
-
-  GdkWindow *parent;
-  GdkWindow *transient_for;
-  GdkVisual *visual;
-
-  gpointer user_data;
-
-  gint x;
-  gint y;
-
-  GdkEventMask event_mask;
-  guint8 window_type;
-
-  guint8 depth;
-  guint8 resize_count;
-
-  gint8 toplevel_window_type;
-
-  GList *filters;
-  GList *children;
-  GList children_list_node;
-  GList *native_children;
-
-
-  cairo_pattern_t *background;
-
-  struct {
-    cairo_surface_t *surface;
-
-    cairo_region_t *region;
-    cairo_region_t *flushed_region;
-    cairo_region_t *need_blend_region;
-
-    gboolean surface_needs_composite;
-    gboolean use_gl;
-  } current_paint;
-  GdkGLContext *gl_paint_context;
-
-  cairo_region_t *update_area;
-  guint update_freeze_count;
-  /* This is the update_area that was in effect when the current expose
-     started. It may be smaller than the expose area if we'e painting
-     more than we have to, but it represents the "true" damage. */
-  cairo_region_t *active_update_area;
-  /* We store the old expose areas to support buffer-age optimizations */
-  cairo_region_t *old_updated_area[2];
-
-  GdkWindowState old_state;
-  GdkWindowState state;
-
-  guint8 alpha;
-  guint8 fullscreen_mode;
-
-  guint input_only : 1;
-  guint pass_through : 1;
-  guint modal_hint : 1;
-  guint composited : 1;
-  guint has_alpha_background : 1;
-
-  guint destroyed : 2;
-
-  guint accept_focus : 1;
-  guint focus_on_map : 1;
-  guint shaped : 1;
-  guint support_multidevice : 1;
-  guint synthesize_crossing_event_queued : 1;
-  guint effective_visibility : 2;
-  guint visibility : 2; /* The visibility wrt the toplevel (i.e. based on clip_region) */
-  guint native_visibility : 2; /* the native visibility of a impl windows */
-  guint viewable : 1; /* mapped and all parents mapped */
-  guint applied_shape : 1;
-  guint in_update : 1;
-  guint geometry_dirty : 1;
-  guint event_compression : 1;
-  guint frame_clock_events_paused : 1;
-
-  /* The GdkWindow that has the impl, ref:ed if another window.
-   * This ref is required to keep the wrapper of the impl window alive
-   * for as long as any GdkWindow references the impl. */
-  void *impl_window; // GdkWindow*
-
-  guint update_and_descendants_freeze_count;
-
-  gint abs_x, abs_y; /* Absolute offset in impl */
-  gint width, height;
-  gint shadow_top;
-  gint shadow_left;
-  gint shadow_right;
-  gint shadow_bottom;
-
-  guint num_offscreen_children;
-
-  /* The clip region is the part of the window, in window coordinates
-     that is fully or partially (i.e. semi transparently) visible in
-     the window hierarchy from the toplevel and down */
-  cairo_region_t *clip_region;
-
-  GdkCursor *cursor;
-  GHashTable *device_cursor;
-
-  cairo_region_t *shape;
-  cairo_region_t *input_shape;
-
-  GList *devices_inside;
-  GHashTable *device_events;
-
-  GHashTable *source_event_masks;
-  gulong device_added_handler_id;
-  gulong device_changed_handler_id;
-
-  GdkFrameClock *frame_clock; /* NULL to use from parent or default */
-  GdkWindowInvalidateHandlerFunc invalidate_handler;
-
-  GdkDrawingContext *drawing_context;
-
-  cairo_region_t *opaque_region;
-} _GdkWindow;
-
-typedef struct {
-  GObject parent_instance;
-
-  GList *queued_events;
-  GList *queued_tail;
-
-  /* Information for determining if the latest button click
-   * is part of a double-click or triple-click
-   */
-  GHashTable *multiple_click_info;
-
-  guint event_pause_count;       /* How many times events are blocked */
-
-  guint closed             : 1;  /* Whether this display has been closed */
-
-  GArray *touch_implicit_grabs;
-  GHashTable *device_grabs;
-  GHashTable *motion_hint_info;
-  GdkDeviceManager *device_manager;
-  GList *input_devices; /* Deprecated, only used to keep gdk_display_list_devices working */
-
-  GHashTable *pointers_info;  /* GdkPointerWindowInfo for each device */
-  guint32 last_event_time;    /* Last reported event time from server */
-
-  guint double_click_time;  /* Maximum time between clicks in msecs */
-  guint double_click_distance;   /* Maximum distance between clicks in pixels */
-
-  guint has_gl_extension_texture_non_power_of_two : 1;
-  guint has_gl_extension_texture_rectangle : 1;
-
-  guint debug_updates     : 1;
-  guint debug_updates_set : 1;
-
-  GdkRenderingMode rendering_mode;
-
-  GList *seats;
-} m_GdkDisplay;
-
-typedef struct {
-  m_GdkDisplay parent_instance;
+  _GdkDisplay parent_instance;
   Display *xdisplay;
   GdkScreen *screen;
   GList *screens;
@@ -359,56 +673,6 @@ typedef struct {
   guint has_glx_create_es2_context : 1;
 } _GdkX11Display;
 
-typedef struct {
-  guint program;
-  guint position_location;
-  guint uv_location;
-  guint map_location;
-  guint flip_location;
-} GdkGLContextProgram;
-
-typedef struct {
-  guint vertex_array_object;
-  guint tmp_framebuffer;
-  guint tmp_vertex_buffer;
-
-  GdkGLContextProgram texture_2d_quad_program;
-  GdkGLContextProgram texture_rect_quad_program;
-
-  GdkGLContextProgram *current_program;
-
-  guint is_legacy : 1;
-  guint use_es : 1;
-} GdkGLContextPaintData;
-
-typedef struct {
-  GdkDisplay *display;
-  GdkWindow *window;
-  GdkGLContext *shared_context;
-
-  int major;
-  int minor;
-  int gl_version;
-
-  guint realized : 1;
-  guint use_texture_rectangle : 1;
-  guint has_gl_framebuffer_blit : 1;
-  guint has_frame_terminator : 1;
-  guint has_unpack_subimage : 1;
-  guint extensions_checked : 1;
-  guint debug_enabled : 1;
-  guint forward_compatible : 1;
-  guint is_legacy : 1;
-
-  int use_es;
-} GdkGLContextPrivate;
-
-static inline GdkGLContextPrivate* gdk_gl_context_get_instance_private(GdkGLContext* context) {
-	gpointer klass = g_type_class_ref(GDK_TYPE_GL_CONTEXT);
-	gint privOffset = g_type_class_get_instance_private_offset(klass);
-	return (G_STRUCT_MEMBER_P(context, privOffset));
-}
-
 void _gdk_x11_window_invalidate_for_new_frame (_GdkWindow *window, cairo_region_t *update_area) {
     cairo_rectangle_int_t window_rect;
     GdkDisplay *display = gdk_window_get_display (window);
@@ -459,286 +723,6 @@ void _gdk_x11_window_invalidate_for_new_frame (_GdkWindow *window, cairo_region_
         cairo_region_union_rectangle (update_area, &window_rect);
     }
 }
-
-typedef struct {
-  GObjectClass parent_class;
-
-  cairo_surface_t *
-               (* ref_cairo_surface)    (GdkWindow       *window);
-  cairo_surface_t *
-               (* create_similar_image_surface) (GdkWindow *     window,
-                                                 cairo_format_t  format,
-                                                 int             width,
-                                                 int             height);
-
-  void         (* show)                 (GdkWindow       *window,
-					 gboolean         already_mapped);
-  void         (* hide)                 (GdkWindow       *window);
-  void         (* withdraw)             (GdkWindow       *window);
-  void         (* raise)                (GdkWindow       *window);
-  void         (* lower)                (GdkWindow       *window);
-  void         (* restack_under)        (GdkWindow       *window,
-					 GList           *native_siblings);
-  void         (* restack_toplevel)     (GdkWindow       *window,
-					 GdkWindow       *sibling,
-					 gboolean        above);
-
-  void         (* move_resize)          (GdkWindow       *window,
-                                         gboolean         with_move,
-                                         gint             x,
-                                         gint             y,
-                                         gint             width,
-                                         gint             height);
-  void         (* move_to_rect)         (GdkWindow       *window,
-                                         const GdkRectangle *rect,
-                                         GdkGravity       rect_anchor,
-                                         GdkGravity       window_anchor,
-                                         GdkAnchorHints   anchor_hints,
-                                         gint             rect_anchor_dx,
-                                         gint             rect_anchor_dy);
-  void         (* set_background)       (GdkWindow       *window,
-                                         cairo_pattern_t *pattern);
-
-  GdkEventMask (* get_events)           (GdkWindow       *window);
-  void         (* set_events)           (GdkWindow       *window,
-                                         GdkEventMask     event_mask);
-
-  gboolean     (* reparent)             (GdkWindow       *window,
-                                         GdkWindow       *new_parent,
-                                         gint             x,
-                                         gint             y);
-
-  void         (* set_device_cursor)    (GdkWindow       *window,
-                                         GdkDevice       *device,
-                                         GdkCursor       *cursor);
-
-  void         (* get_geometry)         (GdkWindow       *window,
-                                         gint            *x,
-                                         gint            *y,
-                                         gint            *width,
-                                         gint            *height);
-  void         (* get_root_coords)      (GdkWindow       *window,
-					 gint             x,
-					 gint             y,
-                                         gint            *root_x,
-                                         gint            *root_y);
-  gboolean     (* get_device_state)     (GdkWindow       *window,
-                                         GdkDevice       *device,
-                                         gdouble         *x,
-                                         gdouble         *y,
-                                         GdkModifierType *mask);
-  gboolean    (* begin_paint)           (GdkWindow       *window);
-  void        (* end_paint)             (GdkWindow       *window);
-
-  cairo_region_t * (* get_shape)        (GdkWindow       *window);
-  cairo_region_t * (* get_input_shape)  (GdkWindow       *window);
-  void         (* shape_combine_region) (GdkWindow       *window,
-                                         const cairo_region_t *shape_region,
-                                         gint             offset_x,
-                                         gint             offset_y);
-  void         (* input_shape_combine_region) (GdkWindow       *window,
-					       const cairo_region_t *shape_region,
-					       gint             offset_x,
-					       gint             offset_y);
-
-  /* Called before processing updates for a window. This gives the windowing
-   * layer a chance to save the region for later use in avoiding duplicate
-   * exposes.
-   */
-  void     (* queue_antiexpose)     (GdkWindow       *window,
-                                     cairo_region_t  *update_area);
-
-/* Called to do the windowing system specific part of gdk_window_destroy(),
- *
- * window: The window being destroyed
- * recursing: If TRUE, then this is being called because a parent
- *     was destroyed. This generally means that the call to the windowing
- *     system to destroy the window can be omitted, since it will be
- *     destroyed as a result of the parent being destroyed.
- *     Unless @foreign_destroy
- * foreign_destroy: If TRUE, the window or a parent was destroyed by some
- *     external agency. The window has already been destroyed and no
- *     windowing system calls should be made. (This may never happen
- *     for some windowing systems.)
- */
-  void         (* destroy)              (GdkWindow       *window,
-					 gboolean         recursing,
-					 gboolean         foreign_destroy);
-
-
- /* Called when gdk_window_destroy() is called on a foreign window
-  * or an ancestor of the foreign window. It should generally reparent
-  * the window out of it's current heirarchy, hide it, and then
-  * send a message to the owner requesting that the window be destroyed.
-  */
-  void         (*destroy_foreign)       (GdkWindow       *window);
-
-  /* optional */
-  gboolean     (* beep)                 (GdkWindow       *window);
-
-  void         (* focus)                (GdkWindow       *window,
-					 guint32          timestamp);
-  void         (* set_type_hint)        (GdkWindow       *window,
-					 GdkWindowTypeHint hint);
-  GdkWindowTypeHint (* get_type_hint)   (GdkWindow       *window);
-  void         (* set_modal_hint)       (GdkWindow *window,
-					 gboolean   modal);
-  void         (* set_skip_taskbar_hint) (GdkWindow *window,
-					  gboolean   skips_taskbar);
-  void         (* set_skip_pager_hint)  (GdkWindow *window,
-					 gboolean   skips_pager);
-  void         (* set_urgency_hint)     (GdkWindow *window,
-					 gboolean   urgent);
-  void         (* set_geometry_hints)   (GdkWindow         *window,
-					 const GdkGeometry *geometry,
-					 GdkWindowHints     geom_mask);
-  void         (* set_title)            (GdkWindow   *window,
-					 const gchar *title);
-  void         (* set_role)             (GdkWindow   *window,
-					 const gchar *role);
-  void         (* set_startup_id)       (GdkWindow   *window,
-					 const gchar *startup_id);
-  void         (* set_transient_for)    (GdkWindow *window,
-					 GdkWindow *parent);
-  void         (* get_frame_extents)    (GdkWindow    *window,
-					 GdkRectangle *rect);
-  void         (* set_override_redirect) (GdkWindow *window,
-					  gboolean override_redirect);
-  void         (* set_accept_focus)     (GdkWindow *window,
-					 gboolean accept_focus);
-  void         (* set_focus_on_map)     (GdkWindow *window,
-					 gboolean focus_on_map);
-  void         (* set_icon_list)        (GdkWindow *window,
-					 GList     *pixbufs);
-  void         (* set_icon_name)        (GdkWindow   *window,
-					 const gchar *name);
-  void         (* iconify)              (GdkWindow *window);
-  void         (* deiconify)            (GdkWindow *window);
-  void         (* stick)                (GdkWindow *window);
-  void         (* unstick)              (GdkWindow *window);
-  void         (* maximize)             (GdkWindow *window);
-  void         (* unmaximize)           (GdkWindow *window);
-  void         (* fullscreen)           (GdkWindow *window);
-  void         (* fullscreen_on_monitor) (GdkWindow *window, gint monitor);
-  void         (* apply_fullscreen_mode) (GdkWindow *window);
-  void         (* unfullscreen)         (GdkWindow *window);
-  void         (* set_keep_above)       (GdkWindow *window,
-					 gboolean   setting);
-  void         (* set_keep_below)       (GdkWindow *window,
-					 gboolean   setting);
-  GdkWindow *  (* get_group)            (GdkWindow *window);
-  void         (* set_group)            (GdkWindow *window,
-					 GdkWindow *leader);
-  void         (* set_decorations)      (GdkWindow      *window,
-					 GdkWMDecoration decorations);
-  gboolean     (* get_decorations)      (GdkWindow       *window,
-					 GdkWMDecoration *decorations);
-  void         (* set_functions)        (GdkWindow    *window,
-					 GdkWMFunction functions);
-  void         (* begin_resize_drag)    (GdkWindow     *window,
-                                         GdkWindowEdge  edge,
-                                         GdkDevice     *device,
-                                         gint           button,
-                                         gint           root_x,
-                                         gint           root_y,
-                                         guint32        timestamp);
-  void         (* begin_move_drag)      (GdkWindow *window,
-                                         GdkDevice     *device,
-                                         gint       button,
-                                         gint       root_x,
-                                         gint       root_y,
-                                         guint32    timestamp);
-  void         (* enable_synchronized_configure) (GdkWindow *window);
-  void         (* configure_finished)   (GdkWindow *window);
-  void         (* set_opacity)          (GdkWindow *window,
-					 gdouble    opacity);
-  void         (* set_composited)       (GdkWindow *window,
-                                         gboolean   composited);
-  void         (* destroy_notify)       (GdkWindow *window);
-  GdkDragProtocol (* get_drag_protocol) (GdkWindow *window,
-                                         GdkWindow **target);
-  void         (* register_dnd)         (GdkWindow *window);
-  GdkDragContext * (*drag_begin)        (GdkWindow *window,
-                                         GdkDevice *device,
-                                         GList     *targets,
-                                         gint       x_root,
-                                         gint       y_root);
-
-  void         (*process_updates_recurse) (GdkWindow      *window,
-                                           cairo_region_t *region);
-
-  void         (*sync_rendering)          (GdkWindow      *window);
-  gboolean     (*simulate_key)            (GdkWindow      *window,
-                                           gint            x,
-                                           gint            y,
-                                           guint           keyval,
-                                           GdkModifierType modifiers,
-                                           GdkEventType    event_type);
-  gboolean     (*simulate_button)         (GdkWindow      *window,
-                                           gint            x,
-                                           gint            y,
-                                           guint           button,
-                                           GdkModifierType modifiers,
-                                           GdkEventType    event_type);
-
-  gboolean     (*get_property)            (GdkWindow      *window,
-                                           GdkAtom         property,
-                                           GdkAtom         type,
-                                           gulong          offset,
-                                           gulong          length,
-                                           gint            pdelete,
-                                           GdkAtom        *actual_type,
-                                           gint           *actual_format,
-                                           gint           *actual_length,
-                                           guchar        **data);
-  void         (*change_property)         (GdkWindow      *window,
-                                           GdkAtom         property,
-                                           GdkAtom         type,
-                                           gint            format,
-                                           GdkPropMode     mode,
-                                           const guchar   *data,
-                                           gint            n_elements);
-  void         (*delete_property)         (GdkWindow      *window,
-                                           GdkAtom         property);
-
-  gint         (* get_scale_factor)       (GdkWindow      *window);
-  void         (* get_unscaled_size)      (GdkWindow      *window,
-                                           int            *unscaled_width,
-                                           int            *unscaled_height);
-
-  void         (* set_opaque_region)      (GdkWindow      *window,
-                                           cairo_region_t *region);
-  void         (* set_shadow_width)       (GdkWindow      *window,
-                                           gint            left,
-                                           gint            right,
-                                           gint            top,
-                                           gint            bottom);
-  gboolean     (* show_window_menu)       (GdkWindow      *window,
-                                           GdkEvent       *event);
-  GdkGLContext *(*create_gl_context)      (GdkWindow      *window,
-					   gboolean        attached,
-                                           GdkGLContext   *share,
-                                           GError        **error);
-  gboolean     (* realize_gl_context)     (GdkWindow      *window,
-                                           GdkGLContext   *context,
-                                           GError        **error);
-  void         (*invalidate_for_new_frame)(GdkWindow      *window,
-                                           cairo_region_t *update_area);
-
-  GdkDrawingContext *(* create_draw_context)  (GdkWindow            *window,
-                                               const cairo_region_t *region);
-  void               (* destroy_draw_context) (GdkWindow            *window,
-                                               GdkDrawingContext    *context);
-} _GdkWindowImplClass;
-
-typedef struct {
-  GObject parent_instance;
-
-  cairo_font_options_t *font_options;
-  gdouble resolution; /* pixels/points scale factor for fonts */
-  guint resolution_set : 1; /* resolution set through public API */
-  guint closed : 1;
-} _GdkScreen;
 
 typedef struct {
   _GdkScreen parent_instance;
@@ -802,52 +786,122 @@ typedef struct {
 } _GdkX11Screen;
 
 typedef struct {
-  GObject parent_instance;
-
-  /*< private >*/
-  GdkVisualType type;
-  gint depth;
-  GdkByteOrder byte_order;
-  gint colormap_size;
-  gint bits_per_rgb;
-
-  guint32 red_mask;
-  guint32 green_mask;
-  guint32 blue_mask;
-
-  GdkScreen *screen;
-} _GdkVisual;
-
-typedef struct {
   _GdkVisual visual;
 
   Visual *xvisual;
   Colormap colormap;
 } _GdkX11Visual;
 
-_GdkWindowImplClass* getGdkWindowImplClass() {
-    GType* t = g_type_from_name("GdkWindowImplX11");
-    return g_type_class_ref(t);
-}
-
 void override_x11_window_invalidate_for_new_frame(_GdkWindow* window) {
     _GdkWindowImplClass* impl_class = getGdkWindowImplClass();
     impl_class->invalidate_for_new_frame = _gdk_x11_window_invalidate_for_new_frame;
     g_type_class_unref(impl_class);
 }
-#endif
+#else
+typedef enum _GdkWin32ProcessDpiAwareness {
+    PROCESS_DPI_UNAWARE = 0,
+    PROCESS_SYSTEM_DPI_AWARE = 1,
+    PROCESS_PER_MONITOR_DPI_AWARE = 2
+} GdkWin32ProcessDpiAwareness;
 
-#define GL_RENDERBUFFER                                  0x8D41
-#define GL_TEXTURE_2D_MULTISAMPLE                    0x9100
-#define GL_DEPTH24_STENCIL8                              0x88F0
-#define GL_DEPTH_COMPONENT24              0x81A6
-#define GL_FRAMEBUFFER_EXT                                  0x8D40
-#define GL_COLOR_ATTACHMENT0_EXT                            0x8CE0
-#define GL_FRAMEBUFFER_COMPLETE_EXT                         0x8CD5
-#define GL_RENDERBUFFER_EXT                                 0x8D41
-#define GL_DEPTH_ATTACHMENT_EXT                             0x8D00
-#define GL_STENCIL_ATTACHMENT_EXT                           0x8D20
-#define GL_BGRA                           0x80E1
+typedef enum _GdkWin32MonitorDpiType
+{
+    MDT_EFFECTIVE_DPI = 0,
+    MDT_ANGULAR_DPI = 1,
+    MDT_RAW_DPI = 2,
+    MDT_DEFAULT = MDT_EFFECTIVE_DPI
+} GdkWin32MonitorDpiType;
+
+typedef HRESULT(WINAPI* funcSetProcessDpiAwareness) (GdkWin32ProcessDpiAwareness value);
+typedef HRESULT(WINAPI* funcGetProcessDpiAwareness) (HANDLE                       handle,
+    GdkWin32ProcessDpiAwareness* awareness);
+typedef HRESULT(WINAPI* funcGetDpiForMonitor)       (HMONITOR                monitor,
+    GdkWin32MonitorDpiType  dpi_type,
+    UINT* dpi_x,
+    UINT* dpi_y);
+
+typedef struct _GdkWin32ShcoreFuncs
+{
+    HMODULE hshcore;
+    funcSetProcessDpiAwareness setDpiAwareFunc;
+    funcGetProcessDpiAwareness getDpiAwareFunc;
+    funcGetDpiForMonitor getDpiForMonitorFunc;
+} GdkWin32ShcoreFuncs;
+
+typedef BOOL(WINAPI* funcSetProcessDPIAware) (void);
+typedef BOOL(WINAPI* funcIsProcessDPIAware)  (void);
+
+typedef struct _GdkWin32User32DPIFuncs
+{
+    funcSetProcessDPIAware setDpiAwareFunc;
+    funcIsProcessDPIAware isDpiAwareFunc;
+} GdkWin32User32DPIFuncs;
+
+typedef struct Win32CursorTheme {
+    GHashTable* named_cursors;
+} _Win32CursorTheme;
+
+typedef struct {
+    _GdkDisplay display;
+
+    GdkScreen* screen;
+
+    _Win32CursorTheme* cursor_theme;
+    gchar* cursor_theme_name;
+    int cursor_theme_size;
+    GHashTable* cursor_cache;
+
+    HWND hwnd;
+    HWND clipboard_hwnd;
+
+    /* WGL/OpenGL Items */
+    guint have_wgl : 1;
+    guint gl_version;
+    HDC gl_hdc;
+    HWND gl_hwnd;
+
+    GPtrArray* monitors;
+
+    guint hasWglARBCreateContext : 1;
+    guint hasWglEXTSwapControl : 1;
+    guint hasWglOMLSyncControl : 1;
+    guint hasWglARBPixelFormat : 1;
+    guint hasWglARBmultisample : 1;
+
+    /* HiDPI Items */
+    guint have_at_least_win81 : 1;
+    GdkWin32ProcessDpiAwareness dpi_aware_type;
+    guint has_fixed_scale : 1;
+    guint window_scale;
+
+    GdkWin32ShcoreFuncs shcore_funcs;
+    GdkWin32User32DPIFuncs user32_dpi_funcs;
+} _GdkWin32Display;
+
+typedef struct 
+{
+    GObject parent_instance;
+
+    /* WGL Context Items */
+    HGLRC hglrc;
+    HDC gl_hdc;
+    guint need_alpha_bits : 1;
+
+    /* other items */
+    guint is_attached : 1;
+    guint do_frame_sync : 1;
+    guint do_blit_swap : 1;
+} _GdkWin32GLContext;
+
+typedef struct
+{
+    ATOM wc_atom;
+    HWND hwnd;
+    HDC hdc;
+    HGLRC hglrc;
+    gboolean inited;
+} GdkWGLDummy;
+#endif
 
 typedef struct {
     GdkGLContext* context;
@@ -895,6 +949,7 @@ static void gl_area_dispose(GObject *gobject) {
     G_OBJECT_CLASS (gl_area_parent_class)->dispose (gobject);
 }
 
+#ifndef _WIN32
 gboolean gdk_x11_screen_init_gl (GdkScreen *screen) {
     GdkDisplay *display = gdk_screen_get_display (screen);
     _GdkX11Display *display_x11 = (_GdkX11Display*)display;
@@ -1043,6 +1098,297 @@ GdkGLContext* x11_window_create_gl_context(GdkWindow* window, gboolean attached,
   return GDK_GL_CONTEXT (context);
 }
 
+#else
+
+static void
+_get_dummy_window_hwnd(GdkWGLDummy* dummy)
+{
+    WNDCLASSEX dummy_wc;
+
+    memset(&dummy_wc, 0, sizeof(WNDCLASSEX));
+
+    dummy_wc.cbSize = sizeof(WNDCLASSEX);
+    dummy_wc.style = CS_OWNDC;
+    dummy_wc.lpfnWndProc = (WNDPROC)DefWindowProc;
+    dummy_wc.cbClsExtra = 0;
+    dummy_wc.cbWndExtra = 0;
+    dummy_wc.hInstance = GetModuleHandle(NULL);
+    dummy_wc.hIcon = 0;
+    dummy_wc.hCursor = NULL;
+    dummy_wc.hbrBackground = 0;
+    dummy_wc.lpszMenuName = 0;
+    dummy_wc.lpszClassName = "dummy";
+    dummy_wc.hIconSm = 0;
+
+    dummy->wc_atom = RegisterClassEx(&dummy_wc);
+
+    dummy->hwnd =
+        CreateWindowEx(WS_EX_APPWINDOW,
+            MAKEINTATOM(dummy->wc_atom),
+            "",
+            WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN | WS_CLIPSIBLINGS,
+            0,
+            0,
+            0,
+            0,
+            NULL,
+            NULL,
+            GetModuleHandle(NULL),
+            NULL);
+}
+
+static void
+_destroy_dummy_gl_context(GdkWGLDummy dummy)
+{
+    if (dummy.hglrc != NULL)
+    {
+        if (wglGetCurrentContext() == dummy.hglrc)
+            wglMakeCurrent(NULL, NULL);
+        wglDeleteContext(dummy.hglrc);
+        dummy.hglrc = NULL;
+    }
+    if (dummy.hdc != NULL)
+    {
+        DeleteDC(dummy.hdc);
+        dummy.hdc = NULL;
+    }
+    if (dummy.hwnd != NULL)
+    {
+        DestroyWindow(dummy.hwnd);
+        dummy.hwnd = NULL;
+    }
+    if (dummy.wc_atom != 0)
+    {
+        UnregisterClass(MAKEINTATOM(dummy.wc_atom), GetModuleHandle(NULL));
+        dummy.wc_atom = 0;
+    }
+    dummy.inited = FALSE;
+}
+
+#define PIXEL_ATTRIBUTES 19
+
+static gint
+_get_wgl_pfd(HDC                    hdc,
+    const gboolean         need_alpha_bits,
+    PIXELFORMATDESCRIPTOR* pfd,
+    _GdkWin32Display* display)
+{
+    gint best_pf = 0;
+
+    pfd->nSize = sizeof(PIXELFORMATDESCRIPTOR);
+
+    if (display != NULL && display->hasWglARBPixelFormat)
+    {
+        GdkWGLDummy dummy;
+        UINT num_formats;
+        gint colorbits = GetDeviceCaps(hdc, BITSPIXEL);
+        guint extra_fields = 1;
+        gint i = 0;
+        int pixelAttribs[PIXEL_ATTRIBUTES];
+        int alpha_idx = 0;
+
+        if (display->hasWglARBmultisample)
+        {
+            /* 2 pairs of values needed for multisampling/AA support */
+            extra_fields += 2 * 2;
+        }
+
+        /* Update PIXEL_ATTRIBUTES above if any groups are added here! */
+        /* one group contains a value pair for both pixelAttribs and pixelAttribsNoAlpha */
+        pixelAttribs[i] = WGL_DRAW_TO_WINDOW_ARB;
+        pixelAttribs[i++] = GL_TRUE;
+
+        pixelAttribs[i++] = WGL_SUPPORT_OPENGL_ARB;
+        pixelAttribs[i++] = GL_TRUE;
+
+        pixelAttribs[i++] = WGL_DOUBLE_BUFFER_ARB;
+        pixelAttribs[i++] = GL_TRUE;
+
+        pixelAttribs[i++] = WGL_ACCELERATION_ARB;
+        pixelAttribs[i++] = WGL_FULL_ACCELERATION_ARB;
+
+        pixelAttribs[i++] = WGL_PIXEL_TYPE_ARB;
+        pixelAttribs[i++] = WGL_TYPE_RGBA_ARB;
+
+        pixelAttribs[i++] = WGL_COLOR_BITS_ARB;
+        pixelAttribs[i++] = colorbits;
+
+        /* end of "Update PIXEL_ATTRIBUTES above if any groups are added here!" */
+
+        if (display->hasWglARBmultisample)
+        {
+            pixelAttribs[i++] = WGL_SAMPLE_BUFFERS_ARB;
+            pixelAttribs[i++] = 1;
+
+            pixelAttribs[i++] = WGL_SAMPLES_ARB;
+            pixelAttribs[i++] = 8;
+        }
+
+        pixelAttribs[i++] = WGL_ALPHA_BITS_ARB;
+
+        /* track the spot where the alpha bits are, so that we can clear it if needed */
+        alpha_idx = i;
+
+        pixelAttribs[i++] = 8;
+        pixelAttribs[i++] = 0; /* end of pixelAttribs */
+
+        memset(&dummy, 0, sizeof(GdkWGLDummy));
+
+        /* acquire and cache dummy Window (HWND & HDC) and
+         * dummy GL Context, we need it for wglChoosePixelFormatARB()
+         */
+        best_pf = _gdk_init_dummy_context(&dummy, need_alpha_bits);
+
+        if (best_pf == 0 || !wglMakeCurrent(dummy.hdc, dummy.hglrc))
+            return 0;
+
+        wglChoosePixelFormatARB(hdc,
+            pixelAttribs,
+            NULL,
+            1,
+            &best_pf,
+            &num_formats);
+
+        if (best_pf == 0)
+        {
+            if (!need_alpha_bits)
+            {
+                pixelAttribs[alpha_idx] = 0;
+                pixelAttribs[alpha_idx + 1] = 0;
+
+                /* give another chance if need_alpha_bits is FALSE,
+                 * meaning we prefer to have an alpha channel anyways
+                 */
+                wglChoosePixelFormatARB(hdc,
+                    pixelAttribs,
+                    NULL,
+                    1,
+                    &best_pf,
+                    &num_formats);
+
+            }
+        }
+
+        wglMakeCurrent(NULL, NULL);
+        _destroy_dummy_gl_context(dummy);
+    }
+    else
+    {
+        pfd->nVersion = 1;
+        pfd->dwFlags = PFD_SUPPORT_OPENGL | PFD_DRAW_TO_WINDOW | PFD_DOUBLEBUFFER;
+        pfd->iPixelType = PFD_TYPE_RGBA;
+        pfd->cColorBits = GetDeviceCaps(hdc, BITSPIXEL);
+        pfd->cAlphaBits = 8;
+        pfd->dwLayerMask = PFD_MAIN_PLANE;
+
+        best_pf = ChoosePixelFormat(hdc, pfd);
+
+        if (best_pf == 0)
+            /* give another chance if need_alpha_bits is FALSE,
+             * meaning we prefer to have an alpha channel anyways
+             */
+            if (!need_alpha_bits)
+            {
+                pfd->cAlphaBits = 0;
+                best_pf = ChoosePixelFormat(hdc, pfd);
+            }
+    }
+
+    return best_pf;
+}
+
+static gint _gdk_init_dummy_context(GdkWGLDummy* dummy, const gboolean  need_alpha_bits) {
+    PIXELFORMATDESCRIPTOR pfd;
+    gboolean set_pixel_format_result = FALSE;
+    gint best_idx = 0;
+
+    _get_dummy_window_hwnd(dummy);
+
+    dummy->hdc = GetDC(dummy->hwnd);
+    memset(&pfd, 0, sizeof(PIXELFORMATDESCRIPTOR));
+
+    best_idx = _get_wgl_pfd(dummy->hdc, need_alpha_bits, &pfd, NULL);
+
+    if (best_idx != 0) set_pixel_format_result = SetPixelFormat(dummy->hdc, best_idx, &pfd);
+    if (best_idx == 0 || !set_pixel_format_result) return 0;
+
+    dummy->hglrc = wglCreateContext(dummy->hdc);
+    if (dummy->hglrc == NULL) return 0;
+
+    dummy->inited = TRUE;
+
+    return best_idx;
+}
+
+gboolean _gdk_win32_display_init_gl(GdkDisplay* display, const gboolean need_alpha_bits) {
+    _GdkWin32Display* display_win32 = (_GdkWin32Display*)display;
+    gint best_idx = 0;
+    GdkWGLDummy dummy;
+
+    if (display_win32->have_wgl)
+        return TRUE;
+
+    memset(&dummy, 0, sizeof(GdkWGLDummy));
+
+    /* acquire and cache dummy Window (HWND & HDC) and
+     * dummy GL Context, it is used to query functions
+     * and used for other stuff as well
+     */
+    best_idx = _gdk_init_dummy_context(&dummy, need_alpha_bits);
+
+    if (best_idx == 0 || !wglMakeCurrent(dummy.hdc, dummy.hglrc))
+        return FALSE;
+
+    display_win32->have_wgl = TRUE;
+    display_win32->gl_version = epoxy_gl_version();
+
+    display_win32->hasWglARBCreateContext =
+        epoxy_has_wgl_extension(dummy.hdc, "WGL_ARB_create_context");
+    display_win32->hasWglEXTSwapControl =
+        epoxy_has_wgl_extension(dummy.hdc, "WGL_EXT_swap_control");
+    display_win32->hasWglOMLSyncControl =
+        epoxy_has_wgl_extension(dummy.hdc, "WGL_OML_sync_control");
+    display_win32->hasWglARBPixelFormat =
+        epoxy_has_wgl_extension(dummy.hdc, "WGL_ARB_pixel_format");
+    display_win32->hasWglARBmultisample =
+        epoxy_has_wgl_extension(dummy.hdc, "WGL_ARB_multisample");
+
+    wglMakeCurrent(NULL, NULL);
+    _destroy_dummy_gl_context(dummy);
+
+    return TRUE;
+}
+
+GdkGLContext* win32_window_create_gl_context(GdkWindow* window, gboolean attached, GdkGLContext* share, gboolean full, GError** error) {
+    GdkDisplay* display = gdk_window_get_display(window);
+    _GdkWin32Display* display_win32 = (_GdkWin32Display*)display;
+    _GdkWin32GLContext* context = NULL;
+    GdkVisual* visual = gdk_window_get_visual(window);
+
+    gboolean need_alpha_bits = (visual == gdk_screen_get_rgba_visual(gdk_display_get_default_screen(display)));
+    printf("----- win32_window_create_gl_context need_alpha_bits %i\n", need_alpha_bits);
+
+    if (!_gdk_win32_display_init_gl(display, need_alpha_bits)) {
+        g_set_error_literal(error, GDK_GL_ERROR, GDK_GL_ERROR_NOT_AVAILABLE, "No GL implementation is available");
+        return NULL;
+    }
+
+    HWND hwnd = gdk_win32_window_get_handle(window);
+    HDC hdc  = GetDC(hwnd);
+
+    display_win32->gl_hdc = hdc;
+    display_win32->gl_hwnd = hwnd;
+
+    context = g_object_new(GDK_TYPE_WIN32_GL_CONTEXT, "display", display, "window", window, "shared-context", share, NULL);
+    context->need_alpha_bits = need_alpha_bits;
+    context->gl_hdc = hdc;
+    context->is_attached = attached;
+
+    return GDK_GL_CONTEXT(context);
+}
+
+#endif
+
 GdkGLContext* gdk_window_get_paint_gl_context(_GdkWindow* window, GError** error) {
   GError *internal_error = NULL;
 
@@ -1054,8 +1400,11 @@ GdkGLContext* gdk_window_get_paint_gl_context(_GdkWindow* window, GError** error
           g_set_error_literal (error, GDK_GL_ERROR, GDK_GL_ERROR_NOT_AVAILABLE, "The current backend does not support OpenGL");
           return NULL;
         }
-
+#ifdef _WIN32
+      iwindow->gl_paint_context = win32_window_create_gl_context(iwindow, TRUE, NULL, FALSE, &internal_error);
+#else
       iwindow->gl_paint_context = x11_window_create_gl_context (iwindow, TRUE, NULL, FALSE, &internal_error);
+#endif
     }
 
   if (internal_error != NULL) {
@@ -1082,7 +1431,11 @@ GdkGLContext* _gdk_window_create_gl_context (_GdkWindow* window, GError** error)
   GdkGLContext* paint_context = gdk_window_get_paint_gl_context (window, error);
   if (paint_context == NULL) return NULL;
 
+#ifdef _WIN32
+  return win32_window_create_gl_context(window->impl_window, TRUE, NULL, TRUE, error);
+#else
   return x11_window_create_gl_context(window->impl_window, TRUE, NULL, TRUE, error);
+#endif
 }
 
 static GdkGLContext* gl_area_real_create_context(GLArea *area) {
@@ -1119,7 +1472,6 @@ static GdkGLContext* gl_area_real_create_context(GLArea *area) {
     }
 
     gdk_gl_context_make_current(context);
-    initGLFunctions();
 
     return context;
 }
@@ -1515,6 +1867,7 @@ GLClipping gl_area_get_clipping(GLArea* area) {
 }
 
 void gl_area_set_vsync(GLArea* area, gboolean b) {
+#ifndef _WIN32
     if (b) {
         auto res = glXSwapIntervalSGI(1);
         printf(" gl_area_set_vsync %i\n", res);
@@ -1522,6 +1875,7 @@ void gl_area_set_vsync(GLArea* area, gboolean b) {
         auto res = glXSwapIntervalSGI(0);
         printf(" gl_area_set_vsync %i\n", res);
     }
+#endif
 }
 
 void gl_area_queue_render (GLArea *area) {

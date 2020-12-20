@@ -909,8 +909,8 @@ bool VRMaterial::isWireFrame() {
 }
 
 VRVideoPtr VRMaterial::setVideo(string vid_path) {
-#ifndef WITHOUT_AV
     auto md = mats[activePass];
+#ifndef WITHOUT_AV
     if (md->video == 0) md->video = VRVideo::create( ptr() );
     md->video->open(vid_path);
 #endif

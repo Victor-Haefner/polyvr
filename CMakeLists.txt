@@ -162,7 +162,7 @@ endfunction()
 
 function(FIND_GTK)
 	if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-		set(LINKER_FLAGS ${LINKER_FLAGS} gtk-3.0 gdk-3.0 atk-1.0 pango-1.0 pangocairo-1.0 cairo cairo-gobject gdk_pixbuf-2.0 gmodule-2.0 glib-2.0 gobject-2.0 gthread-2.0 libintl gio-2.0 PARENT_SCOPE)
+		set(LINKER_FLAGS ${LINKER_FLAGS} gtk-3.0 gdk-3.0 atk-1.0 pango-1.0 pangocairo-1.0 cairo cairo-gobject gdk_pixbuf-2.0 gmodule-2.0 glib-2.0 gobject-2.0 gthread-2.0 libintl gio-2.0 epoxy PARENT_SCOPE)
 	endif()
 endfunction()
 

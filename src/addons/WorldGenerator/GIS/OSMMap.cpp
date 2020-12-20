@@ -5,10 +5,18 @@
 #include "core/utils/xml.h"
 
 #ifndef WITHOUT_GDAL
+
+#ifndef _WIN32
 #include <gdal/gdal.h>
 #include <gdal/gdal_priv.h>
 #include <gdal/gdal_version.h>
 #include <gdal/ogrsf_frmts.h>
+#else
+#include <gdal.h>
+#include <gdal_priv.h>
+#include <gdal_version.h>
+#include <ogrsf_frmts.h>
+#endif
 
 // define needed before including proj_api.h !!
 #define ACCEPT_USE_OF_DEPRECATED_PROJ_API_H
