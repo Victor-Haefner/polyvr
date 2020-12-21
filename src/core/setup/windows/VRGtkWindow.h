@@ -54,6 +54,7 @@ class VRGtkWindow : public VRWindow {
 
         void forceSize(int W, int H);
         void enableVSync(bool b);
+        void doResize();
 
         void setCursor(string c);
 

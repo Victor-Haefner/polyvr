@@ -53,6 +53,8 @@ VRGtkWindow::VRGtkWindow(GtkWidget* area, string msaa) {
     connect_signal<void, GdkEventKey*>(widget, bind(&VRGtkWindow::on_key, this, PL::_1), "key_press_event");
     connect_signal<void, GdkEventKey*>(widget, bind(&VRGtkWindow::on_key, this, PL::_1), "key_release_event");
 
+    gl_area_trigger_resize(GL_AREA(widget));
+
 #ifndef WITHOUT_OPENVR
     if (VRHeadMountedDisplay::checkDeviceAttached())
         hmd = VRHeadMountedDisplay::create();

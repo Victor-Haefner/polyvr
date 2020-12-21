@@ -213,6 +213,12 @@ void printGLversion() {
     cout << "Supported OpenGL version: " << version << endl;
 }
 
+void VRGtkWindow::doResize() {
+    GdkRectangle a;
+    gtk_widget_get_allocation(widget, &a);
+    on_resize(&a);
+}
+
 void VRGtkWindow::forceSize(int W, int H) {
     // get paned and move them
     auto ph = VRGuiBuilder::get()->get_widget("hpaned1");

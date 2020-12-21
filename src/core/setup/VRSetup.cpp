@@ -158,6 +158,7 @@ void VRSetup::setScene(VRScenePtr scene) {
     for (auto dev : getDevices()) dev.second->setCamera(cam);
     for (auto w : getWindows()) w.second->setContent(true);
     for (auto s : scripts) scene->addScript(s.second);
+    getEditorWindow()->doResize();
 
     //scene->initDevices();
 }
