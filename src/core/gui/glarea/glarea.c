@@ -2291,7 +2291,7 @@ static GdkGLContext* gl_area_real_create_context(GLArea *area) {
 
     override_window_invalidate_for_new_frame(gtk_widget_get_window(widget));
 #ifdef _WIN32
-    override_win32_gl_context_realize();
+    //override_win32_gl_context_realize();
 #endif
 
     //context = gdk_window_create_gl_context (gtk_widget_get_window (widget), &error);
@@ -2747,5 +2747,7 @@ void gl_area_make_current (GLArea *area) {
     g_return_if_fail (IS_GL_AREA (area));
     GtkWidget* widget = GTK_WIDGET (area);
     g_return_if_fail (gtk_widget_get_realized (widget));
+    if (glGetError() != GL_NO_ERROR) printf(" gl error on gdk_gl_context_make_current bevore\n");
     if (priv->context != NULL) gdk_gl_context_make_current (priv->context);
+    if (glGetError() != GL_NO_ERROR) printf(" gl error on gdk_gl_context_make_current after\n");
 }

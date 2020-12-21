@@ -265,6 +265,7 @@ void VRSceneManager::updateScene() {
 void VRSceneManager::setTargetFPS(double fps) { targetFPS = fps;  }
 
 void VRSceneManager::update() {
+    //cout << "VRSceneManager::update" << endl;
     // statistics
     auto profiler = VRProfiler::get();
     profiler->swap();
@@ -334,6 +335,7 @@ void VRSceneManager::update() {
     VRGlobals::UPDATE_LOOP7.update(timer);
     if (current) current->blockScriptThreads();
     profiler->regStop(pID1);
+    //cout << " VRSceneManager::update done" << endl;
 }
 
 OSG_END_NAMESPACE

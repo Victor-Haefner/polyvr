@@ -20,6 +20,7 @@
 #include "core/setup/devices/VRSignalT.h"
 
 #include "glarea/glgdk.h"
+#include "glarea/glarea.h"
 #include <gtk/gtk.h>
 #if GTK_MAJOR_VERSION == 2
 #include <gtk/gtkglinit.h>
@@ -73,6 +74,8 @@ VRGuiManager::VRGuiManager() {
     gtk_init_check(&argc, 0);
 #ifndef _WIN32
     replace_gl_visuals();
+#else
+    override_win32_gl_context_realize();
 #endif
 
     GdkDisplay* display = gdk_display_get_default();

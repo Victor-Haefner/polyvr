@@ -84,11 +84,6 @@ void VRGtkWindow::render(bool fromThread) {
     if (fromThread) return;
     PLock( VRGuiManager::get()->guiMutex() );
     if (!active || !content || !isRealized) return;
-
-    /*GtkAllocation a;
-    gtk_widget_get_allocation(widget, &a);
-    resize(a.width, a.height);*/
-
     gl_area_queue_render((GLArea*)widget);
 }
 
@@ -108,13 +103,9 @@ bool VRGtkWindow::on_render(GdkGLContext* glcontext) {
 #ifndef WITHOUT_OPENVR
         if (hmd) hmd->render();
 #endif
-#ifdef OSG_hasOuterFBO
-        //FrameBufferObject::outerFBO = 1;
+        //cout << "   VRGtkWindow::on_render win" << endl;
         win->render(ract);
-        //FrameBufferObject::outerFBO = 0;
-#else
-        win->render(ract);
-#endif
+        //cout << "   VRGtkWindow::on_render win done" << endl;
     }
     VRGlobals::RENDER_FRAME_RATE.update(t1);
 

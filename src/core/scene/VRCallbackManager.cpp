@@ -109,7 +109,7 @@ void VRCallbackManager::updateCallbacks() {
     for (auto fl : updateFktPtrs) for (auto f : *fl.second) cbsPtr.push_back(f);
 
     for (auto cb : cbsPtr) { // trigger all callbacks
-        if ( auto scb = cb.lock()) (*scb)();
+        if (auto scb = cb.lock()) (*scb)();
     }
 
     vector<job> delayedJobs;

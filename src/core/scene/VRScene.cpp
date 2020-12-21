@@ -217,12 +217,14 @@ void VRScene::showLights(bool b) { for (auto be : VRLightBeacon::getAll()) be.lo
 void VRScene::showCameras(bool b) { for (auto c : VRCamera::getAll()) if (auto sp = c.lock()) sp->showCamGeo(b); }
 
 void VRScene::update() {
+    //cout << " VRScene::update" << endl;
     //Vec3d min,max;
     //root->getNode()->updateVolume();
     //root->getNode()->getVolume().getBounds( min, max );
     ThreadManagerUpdate();
     updateCallbacks();
     VRTransform::updateConstraints();
+    //cout << "  VRScene::update done" << endl;
 }
 
 void VRScene::updateLoadingProgress(VRThreadWeakPtr t) {

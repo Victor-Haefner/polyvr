@@ -77,6 +77,7 @@ OSG_END_NAMESPACE;
 vector<VRTextureRendererWeakPtr> TRinstances;
 
 void VRTextureRenderer::test() {
+    return;
     NodeRefPtr     flagScene = makeCoredNode<Group>();
     GeometryRefPtr flagGeo   = makePlaneGeo(4, 2, 1, 1);
     flagGeo->setDlistCache(false);

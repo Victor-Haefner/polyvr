@@ -110,6 +110,7 @@ void VRLight::setup_after() {
     VRObjectPtr tmp = root->find(beacon_name);
     if (tmp) setBeacon( static_pointer_cast<VRLightBeacon>(tmp) );
     else cout << "  !! could not find light beacon: " << root << " " << this << endl;
+    cout << " done" << endl;
 }
 
 VRObjectPtr VRLight::copy(vector<VRObjectPtr> children) {
