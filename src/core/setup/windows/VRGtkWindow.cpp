@@ -216,6 +216,7 @@ void printGLversion() {
 void VRGtkWindow::doResize() {
     GdkRectangle a;
     gtk_widget_get_allocation(widget, &a);
+    gl_area_trigger_resize(GL_AREA(widget));
     on_resize(&a);
 }
 

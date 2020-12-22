@@ -16,6 +16,7 @@
 #include <gobject/gvalue.h>
 #include <gobject/gsignal.h>
 
+gboolean global_invalidate = TRUE;
 
 typedef enum {
     GDK_RENDERING_MODE_SIMILAR = 0,
@@ -1749,17 +1750,29 @@ void _gdk_win32_window_invalidate_for_new_frame(_GdkWindow* window, cairo_region
     _GdkWin32GLContext* context_win32;
     cairo_rectangle_int_t whole_window = { 0, 0, gdk_window_get_width(window), gdk_window_get_height(window) };
 
+    //printf("invalidate_for_new_frame win: %d %d %d %d\n", 0, 0, gdk_window_get_width(window), gdk_window_get_height(window));
+    //printf("invalidate_for_new_frame %d %d %d %d\n", update_area->);
+    //cairo_region_get_rectangle()
+
+
     /* Minimal update is ok if we're not drawing with gl */
     if (window->gl_paint_context == NULL) return;
+
+    //static gboolean once = FALSE;
+    //if (once) return; once = TRUE;
 
     context_win32 = GDK_WIN32_GL_CONTEXT(window->gl_paint_context);
     context_win32->do_blit_swap = FALSE;
 
     //if (gdk_gl_context_has_framebuffer_blit(window->gl_paint_context) && cairo_region_contains_rectangle(update_area, &whole_window) != CAIRO_REGION_OVERLAP_IN) {
     //    context_win32->do_blit_swap = TRUE;
-    //} else invalidate_all = TRUE;
+    if (cairo_region_contains_rectangle(update_area, &whole_window) != CAIRO_REGION_OVERLAP_IN) {
+        invalidate_all = FALSE;
+    } else invalidate_all = TRUE;
 
-    if (invalidate_all) {
+    if (invalidate_all || global_invalidate) {
+        printf("invalidate_for_new_frame %i %i\n", invalidate_all, global_invalidate);
+        global_invalidate = FALSE;
         window_rect.x = 0;
         window_rect.y = 0;
         window_rect.width = gdk_window_get_width(window);
@@ -2497,6 +2510,7 @@ _GdkWindow* impl_window;
 void gl_area_trigger_resize(GLArea* area) {
     GLAreaPrivate* priv = gl_area_get_instance_private(area);
     priv->needs_resize = TRUE;
+    global_invalidate = TRUE;
 }
 
 void glarea_render(GLArea* area) {
