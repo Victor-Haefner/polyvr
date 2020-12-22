@@ -45,7 +45,7 @@ VRGtkWindow::VRGtkWindow(GtkWidget* area, string msaa) {
     connect_signal<void>(widget, bind(&VRGtkWindow::on_realize, this), "realize");
     connect_signal<bool, GdkGLContext*>(widget, bind(&VRGtkWindow::on_render , this, PL::_1), "render" );
 
-    connect_signal<void, GdkRectangle*>(widget, bind(&VRGtkWindow::on_resize, this, PL::_1), "size_allocate");
+    connect_signal<void, int, int>(widget, bind(&VRGtkWindow::on_resize, this, PL::_1, PL::_2), "resize");
     connect_signal<void, GdkEventScroll*>(widget, bind(&VRGtkWindow::on_scroll, this, PL::_1), "scroll_event");
     connect_signal<void, GdkEventButton*>(widget, bind(&VRGtkWindow::on_button, this, PL::_1), "button_press_event");
     connect_signal<void, GdkEventButton*>(widget, bind(&VRGtkWindow::on_button, this, PL::_1), "button_release_event");

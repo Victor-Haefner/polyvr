@@ -31,7 +31,7 @@ class VRGtkWindow : public VRWindow {
         bool isRealized = false;
 
         bool on_scroll(_GdkEventScroll* e);
-        void on_resize(_cairo_rectangle_int* a);
+        void on_resize(int w, int h);
         bool on_button(_GdkEventButton* e);
         bool on_motion(_GdkEventMotion* e);
         bool on_key(_GdkEventKey* e);

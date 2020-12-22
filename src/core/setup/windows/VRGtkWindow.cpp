@@ -182,7 +182,7 @@ bool VRGtkWindow::on_scroll(GdkEventScroll * event) {
     return true;
 }
 
-void VRGtkWindow::on_resize(GdkRectangle* allocation) {
+void VRGtkWindow::on_resize(int w, int h) {
     initialExpose = true;
 
     auto clipping = gl_area_get_clipping(GL_AREA(widget));
@@ -196,7 +196,7 @@ void VRGtkWindow::on_resize(GdkRectangle* allocation) {
     double y2 = double(clipping.y+clipping.h)/clipping.H;
     //cout << "  on_resize " << Vec4d(x1,y1,x2,y2) << endl;
 
-    resize(allocation->width, allocation->height);
+    resize(clipping.w, clipping.h);
     _win->resize(clipping.W, clipping.H);
     for (auto vw : views) {
         if (auto v = vw.lock()) v->setPosition(Vec4d(x1,y1,x2,y2));
@@ -214,10 +214,8 @@ void printGLversion() {
 }
 
 void VRGtkWindow::doResize() {
-    GdkRectangle a;
-    gtk_widget_get_allocation(widget, &a);
     gl_area_trigger_resize(GL_AREA(widget));
-    on_resize(&a);
+    on_resize(0,0);
 }
 
 void VRGtkWindow::forceSize(int W, int H) {
@@ -230,7 +228,7 @@ void VRGtkWindow::forceSize(int W, int H) {
     int py = gtk_paned_get_position(GTK_PANED(pv));
     gtk_paned_set_position(GTK_PANED(ph), px-(W-w));
     gtk_paned_set_position(GTK_PANED(pv), py+(H-h));
-    cout << "VRGtkWindow::forceSize " << Vec2i(W,H) << " " << Vec2i(w,h) << endl;
+    //cout << "VRGtkWindow::forceSize " << Vec2i(W,H) << " " << Vec2i(w,h) << endl;
 }
 
 void VRGtkWindow::save(XMLElementPtr node) { VRWindow::save(node); }

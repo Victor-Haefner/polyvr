@@ -893,7 +893,7 @@ typedef struct {
     GdkWin32User32DPIFuncs user32_dpi_funcs;
 } _GdkWin32Display;
 
-typedef struct 
+typedef struct
 {
     GObject parent_instance;
 
@@ -2526,6 +2526,7 @@ void glarea_render(GLArea* area) {
         priv->clipping.H = unscaled_window_height;
         g_signal_emit (area, area_signals[RESIZE], 0, 0, 0, NULL);
         priv->needs_resize = FALSE;
+        priv->needs_render = TRUE;
     }
 
     if (priv->needs_render) {
