@@ -1,8 +1,14 @@
+
+#ifdef _WIN32
+#include "core/math/lapack/lapacke.h"
+#else
+#include <lapacke.h>
+#define dgeev LAPACKE_dgeev_work
+#endif
+
 #include "PCA.h"
 #include "core/utils/toString.h"
 
-#include <lapacke.h>
-#define dgeev LAPACKE_dgeev_work
 
 using namespace OSG;
 
@@ -50,7 +56,8 @@ Matrix4d PCA::computeCovMatrix() {
 }
 
 Matrix4d PCA::computeEigenvectors(Matrix4d m) {
-    int n = 3, lda = 3, ldvl = 3, ldvr = 3, info, lwork;
+    int n = 3, lda = 3, ldvl = 3, ldvr = 3;
+    int info, lwork;
     double wkopt;
     double* work;
     double wr[3], wi[3], vl[9], vr[9];
@@ -58,12 +65,16 @@ Matrix4d PCA::computeEigenvectors(Matrix4d m) {
 
     //LAPACK_COL_MAJOR LAPACK_ROW_MAJOR
 
+#ifdef _WIN32
+    info = dgeev(LAPACK_COL_MAJOR, 'V', 'V', n, a, lda, wr, wi, vl, ldvl, vr, ldvr);
+#else
     lwork = -1;
     info = dgeev( LAPACK_COL_MAJOR, 'V', 'V', n, a, lda, wr, wi, vl, ldvl, vr, ldvr, &wkopt, lwork);
     lwork = (int)wkopt;
     work = new double[lwork];
     info = dgeev( LAPACK_COL_MAJOR, 'V', 'V', n, a, lda, wr, wi, vl, ldvl, vr, ldvr,  work, lwork);
     delete work;
+#endif
 
     if ( info > 0 ) { cout << "Warning: computeEigenvalues failed!\n"; return Matrix4d(); } // Check for convergence
 

@@ -224,6 +224,18 @@ function(FIND_CRYPTOPP)
 	endif()
 endfunction()
 
+function(FIND_AV)
+	if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+		set(LINKER_FLAGS ${LINKER_FLAGS} OpenAL32 avformat avresample avcodec swscale avutil PARENT_SCOPE) # TODO
+	endif()
+endfunction()
+
+function(FIND_LAPACKE)
+	if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+		set(LINKER_FLAGS ${LINKER_FLAGS} lapack openblas PARENT_SCOPE) # TODO
+	endif()
+endfunction()
+
 function(SETUP_VARS)
 	if(CMAKE_SYSTEM_NAME STREQUAL "Emscripten")
 		add_definitions( -DOSG_OGL_ES2 )
@@ -260,6 +272,7 @@ function(SETUP_VARS)
 		add_definitions( -DWITHOUT_SHARED_MEMORY )
 		add_definitions( -DWITHOUT_HDLC )
 		add_definitions( -DWITHOUT_VIVE )
+		add_definitions( -DWITHOUT_FFTW )
 	endif()
 	if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
 		#add_definitions( -DOSG_OGL_ES2 )
@@ -270,10 +283,10 @@ function(SETUP_VARS)
 		#add_definitions( -DWITHOUT_CRYPTOPP )
 		add_definitions( -DWITHOUT_VRPN )
 		#add_definitions( -DWITHOUT_ART )
-		add_definitions( -DWITHOUT_AV )
+		#add_definitions( -DWITHOUT_AV )
 		add_definitions( -DWITHOUT_VTK )
 		#add_definitions( -DWITHOUT_CEF )
-		add_definitions( -DWITHOUT_LAPACKE_BLAS )
+		#add_definitions( -DWITHOUT_LAPACKE_BLAS )
 		#add_definitions( -DWITHOUT_CGAL )
 		add_definitions( -DWITHOUT_JSONCPP )
 		add_definitions( -DWITHOUT_OPCUA )
@@ -296,6 +309,8 @@ function(SETUP_VARS)
 		add_definitions( -DWITHOUT_SHARED_MEMORY )
 		add_definitions( -DWITHOUT_HDLC )
 		add_definitions( -DWITHOUT_VIVE )
+		add_definitions( -DWITHOUT_FFTW )
+		
 		add_definitions( -DHAVE_SNPRINTF )
 		add_definitions( -DGDK_GL_LEGACY=1 )
 		add_definitions( -DGDK_GL_COMPILATION )
@@ -314,6 +329,8 @@ FIND_BULLET()
 FIND_COLLADA()
 FIND_CURL()
 FIND_CRYPTOPP()
+FIND_AV()
+FIND_LAPACKE()
 FIND_SSH()
 FIND_PNG()
 FIND_JPG()
@@ -341,7 +358,7 @@ target_sources(polyvr PRIVATE src/PolyVR.cpp)
 
 if(TRUE) # ok
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-#target_sources(polyvr PRIVATE src/core/math/PCA.cpp) # needs lapacke/blas
+target_sources(polyvr PRIVATE src/core/math/PCA.cpp) # needs lapacke/blas
 endif()
 target_sources(polyvr PRIVATE src/core/math/VRStateMachine.cpp)
 target_sources(polyvr PRIVATE src/core/math/coordinates.cpp)
@@ -359,14 +376,14 @@ endif()
 target_sources(polyvr PRIVATE src/core/math/kinematics/VRConstraint.cpp)
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
 target_sources(polyvr PRIVATE src/core/math/VRConvexHull.cpp) # needs cgal
-#target_sources(polyvr PRIVATE src/core/math/SingularValueDecomposition.cpp) # needs lapacke/blas
+target_sources(polyvr PRIVATE src/core/math/SingularValueDecomposition.cpp) # needs lapacke/blas
 endif()
 target_sources(polyvr PRIVATE src/core/math/polygon.cpp)
 target_sources(polyvr PRIVATE src/core/math/pose.cpp)
 target_sources(polyvr PRIVATE src/core/math/frustum.cpp)
 target_sources(polyvr PRIVATE src/core/math/Expression.cpp)
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-#target_sources(polyvr PRIVATE src/core/math/Eigendecomposition.cpp) # needs lapacke/blas
+target_sources(polyvr PRIVATE src/core/math/Eigendecomposition.cpp) # needs lapacke/blas
 endif()
 target_sources(polyvr PRIVATE src/core/math/patch.cpp)
 target_sources(polyvr PRIVATE src/core/math/path.cpp)
@@ -451,9 +468,11 @@ target_sources(polyvr PRIVATE src/core/scene/VRAnimationManager.cpp)
 target_sources(polyvr PRIVATE src/core/scene/VRSceneLoader.cpp)
 target_sources(polyvr PRIVATE src/core/scene/VRCallbackManager.cpp)
 target_sources(polyvr PRIVATE src/core/scene/VRSceneManager.cpp)
-#target_sources(polyvr PRIVATE src/core/scene/sound/VRSound.cpp) # needs libav
-#target_sources(polyvr PRIVATE src/core/scene/sound/VRSoundUtils.cpp) # needs libav
-#target_sources(polyvr PRIVATE src/core/scene/sound/VRSoundManager.cpp) # needs libav
+if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+target_sources(polyvr PRIVATE src/core/scene/sound/VRSound.cpp) # needs libav
+target_sources(polyvr PRIVATE src/core/scene/sound/VRSoundUtils.cpp) # needs libav
+target_sources(polyvr PRIVATE src/core/scene/sound/VRSoundManager.cpp) # needs libav
+endif()
 endif()
 
 if(TRUE) # ok
@@ -482,7 +501,9 @@ target_sources(polyvr PRIVATE src/core/scripting/VRPyJointTool.cpp)
 target_sources(polyvr PRIVATE src/core/scripting/VRPyObjectManager.cpp)
 target_sources(polyvr PRIVATE src/core/scripting/VRPyColorChooser.cpp)
 target_sources(polyvr PRIVATE src/core/scripting/VRPyPath.cpp)
-#target_sources(polyvr PRIVATE src/core/scripting/VRPySound.cpp) # needs libav
+if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+target_sources(polyvr PRIVATE src/core/scripting/VRPySound.cpp) # needs libav
+endif()
 #target_sources(polyvr PRIVATE src/core/scripting/VRPyNetworking.cpp) # needs ioctl
 target_sources(polyvr PRIVATE src/core/scripting/VRPySprite.cpp)
 target_sources(polyvr PRIVATE src/core/scripting/VRPySky.cpp)
@@ -495,7 +516,9 @@ target_sources(polyvr PRIVATE src/core/scripting/VRPyMaterial.cpp)
 target_sources(polyvr PRIVATE src/core/scripting/VRPyNavPreset.cpp)
 target_sources(polyvr PRIVATE src/core/scripting/VRPyGeometry.cpp)
 target_sources(polyvr PRIVATE src/core/scripting/VRPyTextureRenderer.cpp)
-#target_sources(polyvr PRIVATE src/core/scripting/VRPyRecorder.cpp) # needs AV
+if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+target_sources(polyvr PRIVATE src/core/scripting/VRPyRecorder.cpp) # needs AV
+endif()
 target_sources(polyvr PRIVATE src/core/scripting/VRPyLight.cpp)
 target_sources(polyvr PRIVATE src/core/scripting/VRPyAnnotationEngine.cpp)
 target_sources(polyvr PRIVATE src/core/scripting/VRPyStateMachine.cpp)
@@ -702,7 +725,9 @@ target_sources(polyvr PRIVATE src/core/tools/VRText.cpp) # needs pango cairo
 target_sources(polyvr PRIVATE src/core/tools/VRMenu.cpp)
 target_sources(polyvr PRIVATE src/core/tools/VRKinematictool.cpp)
 target_sources(polyvr PRIVATE src/core/tools/VRPathtool.cpp)
-#target_sources(polyvr PRIVATE src/core/tools/VRRecorder.cpp) # needs av
+if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+target_sources(polyvr PRIVATE src/core/tools/VRRecorder.cpp) # needs av
+endif()
 #target_sources(polyvr PRIVATE src/core/tools/VRQRCode.cpp) # needs qrencode
 target_sources(polyvr PRIVATE src/core/tools/VRColorChooser.cpp)
 target_sources(polyvr PRIVATE src/core/tools/VRConstructionKit.cpp)
@@ -742,7 +767,9 @@ target_sources(polyvr PRIVATE src/core/objects/material/VRShader.cpp)
 target_sources(polyvr PRIVATE src/core/objects/material/VRTexture.cpp)
 target_sources(polyvr PRIVATE src/core/objects/material/VRTextureGenerator.cpp)
 target_sources(polyvr PRIVATE src/core/objects/material/VRTextureMosaic.cpp)
-#target_sources(polyvr PRIVATE src/core/objects/material/VRVideo.cpp) # needs libav
+if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+target_sources(polyvr PRIVATE src/core/objects/material/VRVideo.cpp) # needs libav
+endif()
 endif()
 
 if(TRUE) # ok
@@ -923,7 +950,9 @@ target_sources(polyvr PRIVATE src/addons/Bullet/Fluids/VRPyFluids.cpp)
 target_sources(polyvr PRIVATE src/addons/Bullet/Fluids/VRFluids.cpp)
 target_sources(polyvr PRIVATE src/addons/Bullet/SoftBody/SoftBody.cpp)
 endif()
-#target_sources(polyvr PRIVATE src/addons/Bullet/CarDynamics/CarSound/CarSound.cpp)
+if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+target_sources(polyvr PRIVATE src/addons/Bullet/CarDynamics/CarSound/CarSound.cpp)
+endif()
 target_sources(polyvr PRIVATE src/addons/SimViDekont/VRPySimViDekont.cpp)
 target_sources(polyvr PRIVATE src/addons/SimViDekont/SimViDekont.cpp)
 target_sources(polyvr PRIVATE src/addons/WorldGenerator/GIS/GISWorld.cpp)

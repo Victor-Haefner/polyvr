@@ -1,8 +1,13 @@
+#ifdef _WIN32
+#include "core/math/lapack/lapacke.h"
+#else
+#include <lapacke.h>
+#define dgesvd LAPACKE_dgesvd_work
+#endif
+
 #include "SingularValueDecomposition.h"
 #include "Eigendecomposition.h"
 
-#include <lapacke.h>
-#define dgesvd LAPACKE_dgesvd_work
 
 using namespace OSG;
 
@@ -38,22 +43,27 @@ SingularValueDecomposition::SingularValueDecomposition(Matrix4d H, bool verbose)
 
     /* Locals */
 
-    int ml = LAPACK_ROW_MAJOR, m = 3, n = 3, lda = 3, ldu = 3, ldv = 3, info, lwork;
+    const int ml = LAPACK_ROW_MAJOR, m = 3, n = 3, lda = 3, ldu = 3, ldv = 3;
+    int info, lwork;
     double wkopt;
     double* work;
     /* Local arrays */
-    double s[n], u[ldu*m], v[ldv*n];
+    double s[n], u[ldu*m], v[ldv*n], superb[2];
     double a[lda*n] = {
         H[0][0],  H[1][0], H[2][0],
         H[0][1],  H[1][1], H[2][1],
         H[0][2],  H[1][2], H[2][2]
     };
 
+#ifdef _WIN32
+    info = dgesvd(ml, 'a', 'a', m, n, a, lda, s, u, ldu, v, ldv, superb);
+#else
     lwork = -1;
     info = dgesvd( ml, 'a', 'a', m, n, a, lda, s, u, ldu, v, ldv, &wkopt, lwork );
     lwork = (int)wkopt;
     work = (double*)malloc( lwork*sizeof(double) );
     info = dgesvd( ml, 'a', 'a', m, n, a, lda, s, u, ldu, v, ldv, work, lwork );
+#endif
     if( info > 0 ) { printf( "The algorithm computing SVD failed to converge.\n" ); }
 
     S.setScale(Vec3d(s[0], s[1], s[2]));

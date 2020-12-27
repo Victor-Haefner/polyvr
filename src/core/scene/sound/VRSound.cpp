@@ -22,8 +22,10 @@ extern "C" {
 #include <AL/alc.h>
 #include <AL/alext.h>
 
-#include <fstream>
+#ifndef WITHOUT_FFTW
 #include <fftw3.h>
+#endif
+#include <fstream>
 #include <map>
 #include <climits>
 
@@ -425,6 +427,7 @@ void VRSound::synthesize(float Ac, float wc, float pc, float Am, float wm, float
 }
 
 vector<short> VRSound::synthSpectrum(vector<double> spectrum, uint sample_rate, float duration, float fade_factor, bool returnBuffer) {
+#ifndef WITHOUT_FFTW
     if (!initiated) initiate();
 
     /* --- fade in/out curve ---
@@ -519,6 +522,9 @@ vector<short> VRSound::synthSpectrum(vector<double> spectrum, uint sample_rate, 
 
     playBuffer(samples, sample_rate);
     return returnBuffer ? samples : vector<short>();
+#else
+    return vector<short>();
+#endif
 }
 
 vector<short> VRSound::synthBuffer(vector<Vec2d> freqs1, vector<Vec2d> freqs2, float duration) {
