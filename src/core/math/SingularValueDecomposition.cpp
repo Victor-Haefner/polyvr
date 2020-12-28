@@ -1,12 +1,12 @@
+#include "SingularValueDecomposition.h"
+#include "Eigendecomposition.h"
+
 #ifdef _WIN32
 #include "core/math/lapack/lapacke.h"
 #else
 #include <lapacke.h>
 #define dgesvd LAPACKE_dgesvd_work
 #endif
-
-#include "SingularValueDecomposition.h"
-#include "Eigendecomposition.h"
 
 
 using namespace OSG;
@@ -48,7 +48,7 @@ SingularValueDecomposition::SingularValueDecomposition(Matrix4d H, bool verbose)
     double wkopt;
     double* work;
     /* Local arrays */
-    double s[n], u[ldu*m], v[ldv*n], superb[2];
+    double s[n], u[ldu*m], v[ldv*n];
     double a[lda*n] = {
         H[0][0],  H[1][0], H[2][0],
         H[0][1],  H[1][1], H[2][1],
@@ -56,6 +56,7 @@ SingularValueDecomposition::SingularValueDecomposition(Matrix4d H, bool verbose)
     };
 
 #ifdef _WIN32
+    double superb[2];
     info = dgesvd(ml, 'a', 'a', m, n, a, lda, s, u, ldu, v, ldv, superb);
 #else
     lwork = -1;

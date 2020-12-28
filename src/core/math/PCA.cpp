@@ -1,3 +1,5 @@
+#include "PCA.h"
+#include "core/utils/toString.h"
 
 #ifdef _WIN32
 #include "core/math/lapack/lapacke.h"
@@ -5,9 +7,6 @@
 #include <lapacke.h>
 #define dgeev LAPACKE_dgeev_work
 #endif
-
-#include "PCA.h"
-#include "core/utils/toString.h"
 
 
 using namespace OSG;

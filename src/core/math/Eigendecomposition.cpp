@@ -1,3 +1,5 @@
+#include "Eigendecomposition.h"
+
 #ifdef _WIN32
 #include "core/math/lapack/lapacke.h"
 #else
@@ -5,7 +7,6 @@
 #define dgeev LAPACKE_dgeev_work
 #endif
 
-#include "Eigendecomposition.h"
 
 using namespace OSG;
 

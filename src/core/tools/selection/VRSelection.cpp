@@ -1,3 +1,11 @@
+#include "VRSelection.h"
+#include "core/objects/geometry/VRGeometry.h"
+#include "core/objects/geometry/OSGGeometry.h"
+#include "core/math/boundingbox.h"
+#include "core/utils/toString.h"
+
+#include <OpenSG/OSGGeometry.h>
+
 #ifndef WITHOUT_LAPACKE_BLAS
 #ifdef _WIN32
 #include "core/math/lapack/lapacke.h"
@@ -6,14 +14,6 @@
 #define dgeev LAPACKE_dgeev_work
 #endif
 #endif
-
-#include "VRSelection.h"
-#include "core/objects/geometry/VRGeometry.h"
-#include "core/objects/geometry/OSGGeometry.h"
-#include "core/math/boundingbox.h"
-#include "core/utils/toString.h"
-
-#include <OpenSG/OSGGeometry.h>
 
 using namespace OSG;
 
