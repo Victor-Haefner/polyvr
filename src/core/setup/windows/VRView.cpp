@@ -11,9 +11,7 @@
 #include "core/utils/toString.h"
 #include "core/utils/VRGlobals.h"
 #include "core/utils/xml.h"
-#ifndef WITHOUT_PANGO_CAIRO
 #include "core/tools/VRText.h"
-#endif
 #include "core/setup/VRSetup.h"
 #ifndef WITHOUT_GTK
 #include "core/gui/VRGuiUtils.h"
@@ -46,7 +44,6 @@ bool onBox(int i, int j, int c) {
 string VRView::getName() { return name; }
 
 void VRView::setMaterial() {
-#ifndef WITHOUT_PANGO_CAIRO
     ImageMTRecPtr img = Image::create();
 
     Color3f bg  = Color3f(0.5, 0.7, 0.95);
@@ -96,7 +93,6 @@ void VRView::setMaterial() {
 
     viewGeoMat->setTexture(VRTexture::create(img));
     viewGeoMat->setLit(false);
-#endif
 }
 
 void VRView::setViewports() {//create && set size of viewports

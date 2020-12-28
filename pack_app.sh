@@ -42,6 +42,7 @@ cp -r "$redistPath2" $pckFolder/engine/libs/
 cp -r /c/usr/lib/opensg/* $pckFolder/engine/libs/
 cp -r /c/usr/lib/cef/* $pckFolder/engine/libs/
 cp -r /c/usr/lib/oce/* $pckFolder/engine/libs/
+cp -r /c/usr/lib/ifc/* $pckFolder/engine/libs/
 cp -r /c/usr/lib/openvr/* $pckFolder/engine/libs/
 cp -r /c/usr/lib/collada/* $pckFolder/engine/libs/
 cp -r "$vcpkgLibs"/* $pckFolder/engine/libs/
