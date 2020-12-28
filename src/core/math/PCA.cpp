@@ -1,5 +1,8 @@
 #include "PCA.h"
 #include "core/utils/toString.h"
+#include "core/objects/object/VRObject.h"
+#include "core/objects/geometry/VRGeometry.h"
+#include "core/objects/geometry/OSGGeometry.h"
 
 #ifdef _WIN32
 #include "core/math/lapack/lapacke.h"
@@ -24,8 +27,10 @@ Vec3d PCA::computeCentroid() {
 
 Matrix4d PCA::computeCovMatrix() {
     Vec3d center = computeCentroid();
-    int N = pnts.size();
     Matrix4d res(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0); // 3x3?
+
+
+    int N = pnts.size();
 
     for (auto& pg : pnts) {
         Vec3d p = pg - center;
@@ -63,7 +68,6 @@ Matrix4d PCA::computeEigenvectors(Matrix4d m) {
     double a[9] = { m[0][0], m[1][0], m[2][0], m[0][1], m[1][1], m[2][1], m[0][2], m[1][2], m[2][2] };
 
     //LAPACK_COL_MAJOR LAPACK_ROW_MAJOR
-
 #ifdef _WIN32
     info = dgeev(LAPACK_COL_MAJOR, 'V', 'V', n, a, lda, wr, wi, vl, ldvl, vr, ldvr);
 #else
@@ -104,7 +108,20 @@ PCAPtr PCA::create() { return PCAPtr( new PCA() ); }
 
 void PCA::add(Vec3d p) { pnts.push_back(p); }
 int PCA::size() { return pnts.size(); }
+void PCA::clear() { pnts.clear(); }
 
+void PCA::addMesh(VRObjectPtr obj) {
+    for (auto child : obj->getChildren(true, "Geometry", true)) {
+        auto geo = dynamic_pointer_cast<VRGeometry>(child);
+        Matrix4d M = geo->getMatrixTo(obj);
+        auto positions = geo->getMesh()->geo->getPositions();
+        for (int i=0; i<positions->size(); i++) {
+            Pnt3d p = Pnt3d(positions->getValue<Pnt3f>(i));
+            M.mult(p,p);
+            pnts.push_back(Vec3d(p));
+        }
+    }
+}
 
 
 

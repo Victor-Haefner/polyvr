@@ -3,6 +3,7 @@
 
 #include "core/math/VRMathFwd.h"
 #include "core/math/pose.h"
+#include "core/objects/VRObjectFwd.h"
 #include <OpenSG/OSGMatrix.h>
 
 using namespace std;
@@ -23,7 +24,9 @@ class PCA {
 
         Pose compute();
         void add(Vec3d p);
+        void addMesh(VRObjectPtr obj);
         int size();
+        void clear();
 };
 
 OSG_END_NAMESPACE;
