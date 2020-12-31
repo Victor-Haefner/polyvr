@@ -1,6 +1,7 @@
 #include "VRSound.h"
 #include "VRSoundUtils.h"
 #include "core/math/path.h"
+#include "core/math/fft.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRFunction.h"
 #include "VRSoundManager.h"
@@ -22,9 +23,6 @@ extern "C" {
 #include <AL/alc.h>
 #include <AL/alext.h>
 
-#ifndef WITHOUT_FFTW
-#include <fftw3.h>
-#endif
 #include <fstream>
 #include <map>
 #include <climits>
@@ -427,7 +425,6 @@ void VRSound::synthesize(float Ac, float wc, float pc, float Am, float wm, float
 }
 
 vector<short> VRSound::synthSpectrum(vector<double> spectrum, uint sample_rate, float duration, float fade_factor, bool returnBuffer) {
-#ifndef WITHOUT_FFTW
     if (!initiated) initiate();
 
     /* --- fade in/out curve ---
@@ -443,16 +440,15 @@ vector<short> VRSound::synthSpectrum(vector<double> spectrum, uint sample_rate, 
     uint fade = min(fade_factor * sample_rate, duration * sample_rate); // number of samples to fade at beginning and end
 
     // transform spectrum back to time domain using fftw3
-    vector<double> out(sample_rate);
-    //vector<double> out(buf_size);
-    // create plan
-    fftw_plan ifft;
-    //out = (double *) malloc(size*sizeof(double));
+    FFT fft;
+    vector<double> out = fft.transform(spectrum, sample_rate);
 
+    /*
+    vector<double> out(sample_rate);
+    fftw_plan ifft;
     ifft = fftw_plan_r2r_1d(sample_rate, &spectrum[0], &out[0], FFTW_DHT, FFTW_ESTIMATE);   //Setup fftw plan for ifft
-    //ifft = fftw_plan_r2r_1d(buf_size, &spectrum[0], &out[0], FFTW_DHT, FFTW_ESTIMATE);
     fftw_execute(ifft); // is output normalized?
-    fftw_destroy_plan(ifft);
+    fftw_destroy_plan(ifft);*/
 
     vector<short> samples(buf_size);
     for(uint i=0; i<buf_size; ++i) {
@@ -522,9 +518,6 @@ vector<short> VRSound::synthSpectrum(vector<double> spectrum, uint sample_rate, 
 
     playBuffer(samples, sample_rate);
     return returnBuffer ? samples : vector<short>();
-#else
-    return vector<short>();
-#endif
 }
 
 vector<short> VRSound::synthBuffer(vector<Vec2d> freqs1, vector<Vec2d> freqs2, float duration) {

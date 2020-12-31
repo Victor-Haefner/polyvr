@@ -2,6 +2,7 @@
 #define VRMECHANISM_H_INCLUDED
 
 #include <vector>
+#include "VRMechanismFwd.h"
 #include "core/math/OSGMathFwd.h"
 #include "core/objects/geometry/VRGeometry.h"
 
@@ -188,7 +189,7 @@ class VRMechanism : public VRObject {
     public:
         VRMechanism();
         ~VRMechanism();
-        static shared_ptr<VRMechanism> create();
+        static VRMechanismPtr create();
 
         void clear();
         void add(VRTransformPtr part, VRTransformPtr trans = 0);
@@ -199,8 +200,6 @@ class VRMechanism : public VRObject {
         void updateNeighbors();
         void updateVisuals();
 };
-
-typedef shared_ptr<VRMechanism> VRMechanismPtr;
 
 OSG_END_NAMESPACE;
 
