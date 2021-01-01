@@ -23,6 +23,8 @@ class VRGearSegmentation {
         vector<GearVertex> gearVertices;
         map<int, int> matchedPlanes;
 
+        bool same(double x, double y, double eps);
+
         void computeAxis();
         void computePolarVertices();
         void computePlanes();
@@ -38,11 +40,20 @@ class VRGearSegmentation {
         static VRGearSegmentationPtr create();
 
         void analyse(VRObjectPtr obj);
+        void runTest();
+        void printResults();
+
 
         Vec3d getAxis();
+
         int getNGears();
-        vector<double> getPlanePositions();
         vector<double> getGearParams(int i);
+
+        int getNPlanes();
+        double getPlanePosition(int i);
+        vector<Vec2d> getPlaneContour(int i);
+        vector<double> getPlaneSineGuess(int i);
+        vector<double> getPlaneSineApprox(int i);
 };
 
 OSG_END_NAMESPACE;

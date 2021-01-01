@@ -234,6 +234,8 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPySegmentation>("Segmentation", pModVR);
     sm->registerModule<VRPyAdjacencyGraph>("AdjacencyGraph", pModVR);
     sm->registerModule<VRPyMechanism>("Mechanism", pModVR, VRPyObject::typeRef);
+    sm->registerModule<VRPyGearSegmentation>("GearSegmentation", pModVR);
+    sm->registerModule<VRPyAxleSegmentation>("AxleSegmentation", pModVR);
     sm->registerModule<VRPyMachiningSimulation>("MachiningSimulation", pModVR);
     sm->registerModule<VRPyMachiningCode>("MachiningCode", pModVR);
     sm->registerModule<VRPyMachiningKinematics>("MachiningKinematics", pModVR);

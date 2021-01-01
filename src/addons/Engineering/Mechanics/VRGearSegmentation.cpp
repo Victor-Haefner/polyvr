@@ -23,6 +23,7 @@ struct PolarCoords {
         dir0 = p0 - a*a.dot(p0);
         dir0.normalize();
         dir1 = dir0.cross(a);
+        dir1.normalize();
     }
 };
 
@@ -57,11 +58,13 @@ struct GearVertex {
     }
 
 	Vec2d computeProfile(PolarCoords& coords) {
-        Vec3d o = getOrthogonal(coords.axis);
-        Vec3d o2 = o.cross(coords.axis);
+        //Vec3d o = getOrthogonal(coords.axis);
+        //Vec3d o2 = o.cross(coords.axis);
         Vec3d p = vertex;
+        Vec3d o = coords.dir0;
+        Vec3d o2 = coords.dir1;
 
-        p = p-o*o.dot(p);
+        p = p - o*o.dot(p);
         return Vec2d(coords.axis.dot(p), o2.dot(p));
     }
 
@@ -85,15 +88,17 @@ struct VertexPlane {
     vector<VertexRing> rings;
     vector<Vec2d> contour; // resampled and in polar coords
     double profMin = 1e6;
-    double profMax = 0;
+    double profMax = -1e6;
 
+    vector<double> guess;
     vector<double> sineFitParams; // A, w, p, c -> A sin ( w t + p ) +c
     double sineFitFreq = 0;
 
     void computeProfileMinMax() {
         for (auto& v : vertices) {
-            profMin = min(profMin, v.profileCoords[1]);
-            profMax = max(profMin, v.profileCoords[1]);
+            double x = v.profileCoords[1];
+            profMin = min(profMin, x);
+            profMax = max(profMax, x);
         }
     }
 };
@@ -137,8 +142,7 @@ void VRGearSegmentation::computeAxis() {
 }
 
 
-bool same(double x, double y) { return (abs(x-y) < 1); }
-bool samePlane(double x, double y) { return (abs(x-y) < 1.3); }
+bool VRGearSegmentation::same(double x, double y, double eps) { return (abs(x-y) < eps); } // TODO: multiply eps with object scale
 
 void VRGearSegmentation::computePolarVertices() {
 	auto geos = obj->getChildren(true, "Geometry", true); // gear vertices
@@ -164,7 +168,7 @@ void VRGearSegmentation::computePolarVertices() {
 
 void VRGearSegmentation::computePlanes() {
     auto sortCB = [](const GearVertex& a, const GearVertex& b) -> bool {
-        return a.profileCoords[0] > b.profileCoords[0];
+        return a.profileCoords[0] < b.profileCoords[0];
     };
 
     sort(gearVertices.begin(), gearVertices.end(), sortCB);
@@ -178,7 +182,7 @@ void VRGearSegmentation::computePlanes() {
         planes[x].vertices.push_back( gearVertices[i] );
         planes[x].position = gearVertices[i].profileCoords[0];
 
-        bool b1 = same(gearVertices[i].profileCoords[0], gearVertices[i+1].profileCoords[0]);
+        bool b1 = same(gearVertices[i].profileCoords[0], gearVertices[i+1].profileCoords[0], 1e-3);
         if (!b1) planes.push_back( VertexPlane() );
     }
     int x = planes.size()-1;
@@ -194,14 +198,14 @@ void VRGearSegmentation::groupPlanes() {
     int size = planes.size();
     for (int i=0; i<size; i++) {
         for (int j=i+1; j<size; j++) {
-            if (same(planes[i].profMax, planes[j].profMax)) matchedPlanes[i] = j;
+            if (same(planes[i].profMax, planes[j].profMax, 1e-3)) matchedPlanes[i] = j;
         }
     }
 }
 
 void VRGearSegmentation::computeRings() {
     auto sortCB = [](const GearVertex& a, const GearVertex& b) -> bool {
-        return a.radius > b.radius;
+        return a.radius < b.radius;
     };
 
 	for (auto& plane : planes) {
@@ -216,7 +220,7 @@ void VRGearSegmentation::computeRings() {
             GearVertex& v2 = plane.vertices[i+1];
             plane.rings[x].vertices.push_back(v1);
             plane.rings[x].radius = v1.radius;
-			bool b1 = same(v1.radius, v2.radius);
+			bool b1 = same(v1.radius, v2.radius, 1e-3);
 			if (!b1) plane.rings.push_back(VertexRing());
         }
         int x = plane.rings.size()-1;
@@ -228,25 +232,28 @@ void VRGearSegmentation::computeRings() {
 
 void VRGearSegmentation::computeContours() {
     auto sortCB = [](const GearVertex& a, const GearVertex& b) -> bool {
-        return a.polarCoords[0] > b.polarCoords[0];
+        return a.polarCoords[0] < b.polarCoords[0];
     };
 
 	for (auto& plane : planes) {
         double R0 = plane.rings[0].radius;
         vector<GearVertex> outerVertices;
+        auto vLast = plane.vertices[0];
         for (auto& v : plane.vertices) {
-            if (same(v.radius, R0)) continue; // ignore inner radius
+            if (same(v.radius, R0, 1e-3)) continue; // ignore inner radius
+            //if (same(v.polarCoords[0], vLast.polarCoords[0], 1e-3)) continue; // ignore same angles
             outerVertices.push_back(v);
+            vLast = v;
         }
         sort(outerVertices.begin(), outerVertices.end(), sortCB); // sort by angles
 
 		double di = -3.2;
 		double d = 0.01;
-		for (unsigned int i=0; i<outerVertices.size()-1; i++) {
-            double a1 = outerVertices[i].polarCoords[0];
-            double r1 = outerVertices[i].polarCoords[1];
-            double a2 = outerVertices[i+1].polarCoords[0];
-            double r2 = outerVertices[i+1].polarCoords[1];
+		for (unsigned int i=1; i<outerVertices.size(); i++) {
+            double a1 = outerVertices[i-1].polarCoords[0];
+            double r1 = outerVertices[i-1].polarCoords[1];
+            double a2 = outerVertices[i].polarCoords[0];
+            double r2 = outerVertices[i].polarCoords[1];
 			while (di < a1) di += d;
 			if (di > a2) continue;
 			while (di < a2) {
@@ -303,64 +310,70 @@ struct FunctorSine {
     // the sine function
     int operator() (const VectorXd &p, VectorXd &f) const {
         for (int i = 0; i < values(); i++) f[i] = Y[i] - (p[0] * sin(p[1]*X[i] + p[2]) + p[3]);
+        //for (int i = 0; i < values(); i++) f[i] = (p[0] * sin(p[1]*X[i] + p[2]) + p[3]);
         return 0;
     }
+
+    /*
+    a*x + d             -> a
+    a sin(b x + c) + d  -> a cos(b x + c) b
+    a sin(x + c) + d    -> a cos(b x + c)
+    a*x + d             -> a
+    */
 
     // jacoby matrices, contains the partial derivatives
     int df(const VectorXd &p, MatrixXd &jac) const {
         for (int i = 0; i < values(); i++) {
             jac(i,0) = -sin(p[1]*X[i] + p[2]);
-            jac(i,1) = -cos(p[1]*X[i] + p[2])*X[i];
-            jac(i,2) = -cos(p[1]*X[i] + p[2]);
+            jac(i,1) = -p[0] * cos(p[1]*X[i] + p[2])*X[i];
+            jac(i,2) = -p[0] * cos(p[1]*X[i] + p[2]);
             jac(i,3) = -1;
         }
         return 0;
     }
 };
 
-vector<double> sine_fit(vector<double> X, vector<double> Y, vector<double> initial_guess) {
-    // the following starting values provide a rough fit.
-    VectorXd x = Map<VectorXd>(&initial_guess[0], initial_guess.size());
-
-    // do the computation
-    FunctorSine functor(X,Y);
-    LevenbergMarquardt<FunctorSine> lm(functor);
-    lm.minimize(x);
-
-    vector<double> res( x.data(), x.data() + 4 );
-    return res;
-}
-
 const double pi = 3.14159;
 
 void VRGearSegmentation::computeSineApprox() {
     //Fit sin to the input time sequence, and store fitting parameters "amp", "omega", "phase", "offset", "freq", "period" and "fitfunc")
-
     for (auto& plane : planes) {
-        vector<double> tt, yy;
+        if (plane.contour.size() < 3) continue;
 
+        vector<double> X, Y;
         for (auto& p : plane.contour) {
-            tt.push_back(p[0]+pi);
-            yy.push_back(p[1]);
+            X.push_back(p[0]+pi);
+            Y.push_back(p[1]);
         }
 
-		double guess_offset = calcMean(yy);
-		double guess_amp = calcMeanDeviation(yy, guess_offset) * sqrt(2);
+		double guess_offset = calcMean(Y);
+		double guess_amp = calcMeanDeviation(Y, guess_offset) * sqrt(2); // TODO: check this
 
         FFT fft;
-        auto ff = fft.freq(tt.size(), tt[1]-tt[0]);
-        auto Fyy = fft.transform(yy, yy.size());
-
+        auto ff = fft.freq(X.size(), X[1]-X[0]);
+        auto Fyy = fft.transform(Y, Y.size());
         int FyyMaxPos = getArgMax(Fyy, 1); // excluding the zero frequency "peak", which is related to offset
-
 		double guess_freq = abs(ff[FyyMaxPos+1]);
 
-		vector<double> guess = {guess_amp, 2*pi*guess_freq, 0, guess_offset};
-		//function< double(double, const vector<double>&) > sinfunc = [](double t, const vector<double>& p) -> double { return p[0] * sin(p[1]*t + p[2]) + p[3]; }; // t, A, w, p, c
-        plane.sineFitParams = sine_fit(tt, yy, guess);
+		plane.guess = {guess_amp, 2*pi*guess_freq, -1.1, guess_offset}; // TODO: get an approx for 3rd param!
+		VectorXd x = Map<VectorXd>(&plane.guess[0], plane.guess.size());
+
+        // do the computation
+        FunctorSine functor(X,Y);
+        LevenbergMarquardt<FunctorSine> lm(functor);
+        lm.parameters.factor = 100; // 100
+        lm.parameters.maxfev = 100*(x.size()+1); // 400
+        lm.parameters.ftol = 1e-6; // eps
+        lm.parameters.xtol = 1e-6; // eps
+        lm.parameters.gtol = 0; // 0
+        lm.parameters.epsfcn = 0; // 0
+        int info = lm.minimize(x);
+        //int info = lm.lmder1(x,1e-5);
+
+        cout << "VRGearSegmentation::computeSineApprox minimize info: " << info << ", itrs: " << Vec2i(lm.nfev, lm.njev) << ", norm: " << Vec2d(lm.fnorm, lm.gnorm) << endl;
+
+        plane.sineFitParams = vector<double>( x.data(), x.data() + 4 );
 		plane.sineFitFreq = plane.sineFitParams[1]/(2*pi);
-		//return {"amp": A, "omega": w, "phase": p, "offset": c, "freq": f, "period": 1./f, "fitfunc": fitfunc, "maxcov": numpy.max(pcov), "rawres": (guess,popt,pcov)}
-        //print( "Amplitude=%(amp)s, Angular freq.=%(omega)s, phase=%(phase)s, offset=%(offset)s, Max. Cov.=%(maxcov)s" % res )
     }
 }
 
@@ -369,8 +382,11 @@ void VRGearSegmentation::computeGearParams() {
         VertexPlane& plane1 = planes[match.first];
         VertexPlane& plane2 = planes[match.second];
 
-        double rmin = plane1.profMin;
-        double rmax = plane1.profMax;
+        if (plane1.sineFitParams.size() == 0) continue;
+        if (plane2.sineFitParams.size() == 0) continue;
+
+        double rmin = plane1.rings[0].radius;
+        double rmax = plane1.rings[ plane1.rings.size()-1 ].radius;
 
 		double r1 = rmax - 2*abs(plane1.sineFitParams[0]);
 		double ts = rmax - r1;
@@ -400,14 +416,58 @@ void VRGearSegmentation::analyse(VRObjectPtr o) {
 
 Vec3d VRGearSegmentation::getAxis() { return axis; }
 int VRGearSegmentation::getNGears() { return gears.size(); }
-
-vector<double> VRGearSegmentation::getPlanePositions() {
-    vector<double> res;
-    for (auto& p : planes) res.push_back(p.position);
-    return res;
-}
+int VRGearSegmentation::getNPlanes() { return planes.size(); }
 
 vector<double> VRGearSegmentation::getGearParams(int i) {
     return gears[i];
 }
 
+double VRGearSegmentation::getPlanePosition(int i) { return planes[i].position; }
+vector<Vec2d> VRGearSegmentation::getPlaneContour(int i) { return planes[i].contour; }
+vector<double> VRGearSegmentation::getPlaneSineGuess(int i) { return planes[i].guess; }
+vector<double> VRGearSegmentation::getPlaneSineApprox(int i) { return planes[i].sineFitParams; }
+
+void VRGearSegmentation::printResults() {
+    if (!obj) return;
+    cout << "Gear segmentation - " << obj->getName() << ", N gear vertices: " << gearVertices.size() << endl;
+    cout << " axis: " << axis << ", r1: " << r1 << ", r2: " << r2 << endl;
+    cout << " N planes: " << planes.size() << ", isMultiGear: " << isMultiGear << endl;
+    for (auto p : planes) {
+        cout << "  plane at " << p.position << ", min/max: " << Vec2d(p.profMin, p.profMax) << ", N vertices: " << p.vertices.size() << ", N rings: " << p.rings.size() << ", N contour: " << p.contour.size() << endl;
+        cout << "   guess: " << p.guess[0] << " sin( " << p.guess[1] << " x + " << p.guess[2] << " ) + " << p.guess[3] << endl;
+        cout << "   sine: " << p.sineFitParams[0] << " sin( " << p.sineFitParams[1] << " x + " << p.sineFitParams[2] << " ) + " << p.sineFitParams[3] << endl;
+        for (auto r : p.rings) {
+            cout << "   ring at " << r.radius << ", N vertices: " << r.vertices.size() << endl;
+        }
+    }
+    cout << matchedPlanes.size() << " matched planes: " << endl;
+    for (auto m : matchedPlanes) cout << "  " << m.first << ":" << m.second << endl;
+    cout << " N gears: " << gears.size() << endl;
+    for (auto g : gears) {
+        cout << "  gear params: ";
+        for (auto v : g) cout << v << " ";
+        cout << endl;
+    }
+}
+
+void VRGearSegmentation::runTest() {
+    cout << "Start VRGearSegmentation test" << endl;
+    auto g = VRGeometry::create("testGeo");
+    g->setPrimitive("Gear 0.6 0.01 0.05 12 0.02 0"); // width hole pitch N_teeth teeth_size bevel
+    //g->setDir(Vec3d(1,0,0));
+    //g->applyTransformation();
+    analyse(g);
+    printResults();
+
+    auto p = gears[0];
+
+    cout << "Test results:" << endl;
+    cout << " hole: " << p[0] << " (0.01)" << endl;
+    cout << " pitch: " << p[4] << " (0.05)" << endl;
+    cout << " Nteeth: " << p[5] << " (12)" << endl;
+    cout << " Lteeth: " << p[3] << " (0.02)" << endl;
+
+
+    //               rmin,    r1,      R,       ts,         pitch,   Nteeth, width, offset
+    // gear params: -0.105092 0.104932 0.105012 0.000159588 0.010046 66      0.6    0
+}

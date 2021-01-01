@@ -24,8 +24,14 @@ PyMethodDef VRPyGearSegmentation::methods[] = {
     {"analyse", PyWrap(GearSegmentation, analyse, "Analyse object to get gear parameters", void, VRObjectPtr) },
     {"getAxis", PyWrap(GearSegmentation, getAxis, "Get rotation axis", Vec3d) },
     {"getNGears", PyWrap(GearSegmentation, getNGears, "Get number of gears", int) },
-    {"getPlanePositions", PyWrap(GearSegmentation, getPlanePositions, "Get all planes", vector<double>) },
+    {"getNPlanes", PyWrap(GearSegmentation, getNPlanes, "Get number of planes", int) },
     {"getGearParams", PyWrap(GearSegmentation, getGearParams, "Get ith gear params", vector<double>, int) },
+    {"getPlanePosition", PyWrap(GearSegmentation, getPlanePosition, "Get plane position along axis", double, int) },
+    {"getPlaneContour", PyWrap(GearSegmentation, getPlaneContour, "Get plane contour", vector<Vec2d>, int) },
+    {"getPlaneSineGuess", PyWrap(GearSegmentation, getPlaneSineGuess, "Get plane sine guess params", vector<double>, int) },
+    {"getPlaneSineApprox", PyWrap(GearSegmentation, getPlaneSineApprox, "Get plane sine fit params", vector<double>, int) },
+    {"runTest", PyWrap(GearSegmentation, runTest, "Run test, output in console", void) },
+    {"printResults", PyWrap(GearSegmentation, printResults, "Output results to console", void) },
     {NULL}  /* Sentinel */
 };
 
