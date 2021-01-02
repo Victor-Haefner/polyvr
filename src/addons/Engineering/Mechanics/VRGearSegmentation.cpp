@@ -139,6 +139,9 @@ void VRGearSegmentation::computeAxis() {
     }
 
 	axis.normalize();
+
+	cout << "VRGearSegmentation::computeAxis 1: " << res.scale() << "; " << res.dir() << "; " << res.x() << "; " << res.up() << endl;
+	cout << "VRGearSegmentation::computeAxis 2: " << axis << "; " << r1 << "; " << r2 << endl;
 }
 
 
@@ -150,14 +153,20 @@ void VRGearSegmentation::computePolarVertices() {
 	vector<Vec3d> pos;
 	for (auto g : geos) {
         auto geo = dynamic_pointer_cast<VRGeometry>(g);
+        Matrix4d M = geo->getMatrixTo(obj);
+        M.invert();
 		auto positions = geo->getMesh()->geo->getPositions();
 		for (unsigned int i=0; i<positions->size(); i++) {
-            pos.push_back(Vec3d(positions->getValue<Pnt3f>(i)));
+            Pnt3d p = Pnt3d(positions->getValue<Pnt3f>(i));
+            M.mult(p, p);
+            pos.push_back(Vec3d(p));
         }
 		geo->makeUnique();
     }
 
     PolarCoords coords(axis, pos[0]);
+    coords.dir0 = r2;
+    coords.dir1 = r1;
 
 	for (auto p : pos) {
 		GearVertex v(p);
@@ -180,14 +189,21 @@ void VRGearSegmentation::computePlanes() {
         int x = planes.size()-1;
         gearVertices[i].setPlaneIndex(x);
         planes[x].vertices.push_back( gearVertices[i] );
-        planes[x].position = gearVertices[i].profileCoords[0];
+        //planes[x].position = gearVertices[i].profileCoords[0];
 
-        bool b1 = same(gearVertices[i].profileCoords[0], gearVertices[i+1].profileCoords[0], 1e-3);
+        bool b1 = same(gearVertices[i].profileCoords[0], gearVertices[i+1].profileCoords[0], planeEps);
         if (!b1) planes.push_back( VertexPlane() );
     }
     int x = planes.size()-1;
     gearVertices[N].setPlaneIndex(x);
     planes[x].vertices.push_back( gearVertices[N] );
+
+    for (auto& plane : planes) {
+        int N = plane.vertices.size();
+        double p = 0;
+        for (auto& v : plane.vertices) p += v.profileCoords[0];
+        plane.position = p/N;
+    }
 }
 
 void VRGearSegmentation::groupPlanes() {
@@ -198,7 +214,7 @@ void VRGearSegmentation::groupPlanes() {
     int size = planes.size();
     for (int i=0; i<size; i++) {
         for (int j=i+1; j<size; j++) {
-            if (same(planes[i].profMax, planes[j].profMax, 1e-3)) matchedPlanes[i] = j;
+            if (same(planes[i].profMax, planes[j].profMax, matchEps)) matchedPlanes[i] = j;
         }
     }
 }
@@ -220,7 +236,7 @@ void VRGearSegmentation::computeRings() {
             GearVertex& v2 = plane.vertices[i+1];
             plane.rings[x].vertices.push_back(v1);
             plane.rings[x].radius = v1.radius;
-			bool b1 = same(v1.radius, v2.radius, 1e-3);
+			bool b1 = same(v1.radius, v2.radius, ringEps);
 			if (!b1) plane.rings.push_back(VertexRing());
         }
         int x = plane.rings.size()-1;
@@ -240,7 +256,7 @@ void VRGearSegmentation::computeContours() {
         vector<GearVertex> outerVertices;
         auto vLast = plane.vertices[0];
         for (auto& v : plane.vertices) {
-            if (same(v.radius, R0, 1e-3)) continue; // ignore inner radius
+            if (same(v.radius, R0, ringEps)) continue; // ignore inner radius
             //if (same(v.polarCoords[0], vLast.polarCoords[0], 1e-3)) continue; // ignore same angles
             outerVertices.push_back(v);
             vLast = v;
@@ -310,7 +326,6 @@ struct FunctorSine {
     // the sine function
     int operator() (const VectorXd &p, VectorXd &f) const {
         for (int i = 0; i < values(); i++) f[i] = Y[i] - (p[0] * sin(p[1]*X[i] + p[2]) + p[3]);
-        //for (int i = 0; i < values(); i++) f[i] = (p[0] * sin(p[1]*X[i] + p[2]) + p[3]);
         return 0;
     }
 
@@ -347,15 +362,21 @@ void VRGearSegmentation::computeSineApprox() {
         }
 
 		double guess_offset = calcMean(Y);
-		double guess_amp = calcMeanDeviation(Y, guess_offset) * sqrt(2); // TODO: check this
+		double guess_amp = calcMeanDeviation(Y, guess_offset) * sqrt(2);
 
+        //TODO: check the fft, the result is pretty bad..
+        double Df = X[X.size()-1] - X[0];
+        Df = 2*pi*(2*pi/Df);
         FFT fft;
-        auto ff = fft.freq(X.size(), X[1]-X[0]);
-        auto Fyy = fft.transform(Y, Y.size());
+        vector<double> ff = fft.freq(X.size(), X[1]-X[0]);
+        vector<double> Fyy = fft.transform(Y, Y.size());
         int FyyMaxPos = getArgMax(Fyy, 1); // excluding the zero frequency "peak", which is related to offset
-		double guess_freq = abs(ff[FyyMaxPos+1]);
+		double guess_freq = abs(ff[FyyMaxPos]);
 
-		plane.guess = {guess_amp, 2*pi*guess_freq, -1.1, guess_offset}; // TODO: get an approx for 3rd param!
+		cout << "fft freq params: (" << X.size() << ", " << X[1]-X[0] << ")"<< endl;
+		cout << "fft results, peak at: " << FyyMaxPos << ", " << ff[FyyMaxPos] << ", Df: " << Vec2d(2*pi, Df) << endl;
+
+		plane.guess = {guess_amp, Df*guess_freq, 0, guess_offset}; //
 		VectorXd x = Map<VectorXd>(&plane.guess[0], plane.guess.size());
 
         // do the computation
@@ -375,6 +396,12 @@ void VRGearSegmentation::computeSineApprox() {
         plane.sineFitParams = vector<double>( x.data(), x.data() + 4 );
 		plane.sineFitFreq = plane.sineFitParams[1]/(2*pi);
     }
+}
+
+void VRGearSegmentation::setBinSizes(double pe, double me, double re) {
+    planeEps = pe;
+    matchEps = me;
+    ringEps = re;
 }
 
 void VRGearSegmentation::computeGearParams() {
@@ -415,6 +442,7 @@ void VRGearSegmentation::analyse(VRObjectPtr o) {
 }
 
 Vec3d VRGearSegmentation::getAxis() { return axis; }
+PosePtr VRGearSegmentation::getPolarCoords() { return Pose::create(Vec3d(0,0,0), axis, r1); }
 int VRGearSegmentation::getNGears() { return gears.size(); }
 int VRGearSegmentation::getNPlanes() { return planes.size(); }
 
@@ -426,6 +454,12 @@ double VRGearSegmentation::getPlanePosition(int i) { return planes[i].position; 
 vector<Vec2d> VRGearSegmentation::getPlaneContour(int i) { return planes[i].contour; }
 vector<double> VRGearSegmentation::getPlaneSineGuess(int i) { return planes[i].guess; }
 vector<double> VRGearSegmentation::getPlaneSineApprox(int i) { return planes[i].sineFitParams; }
+
+vector<Vec2d> VRGearSegmentation::getPlaneVertices(int i) {
+    vector<Vec2d> vp;
+    for (auto& v : planes[i].vertices) vp.push_back(v.polarCoords);
+    return vp;
+}
 
 void VRGearSegmentation::printResults() {
     if (!obj) return;

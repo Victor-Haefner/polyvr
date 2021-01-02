@@ -4,6 +4,7 @@
 #include <OpenSG/OSGVector.h>
 #include "core/objects/geometry/VRPrimitive.h"
 #include "core/objects/VRObjectFwd.h"
+#include "core/math/VRMathFwd.h"
 #include "VRMechanismFwd.h"
 
 OSG_BEGIN_NAMESPACE;
@@ -24,6 +25,9 @@ class VRGearSegmentation {
         map<int, int> matchedPlanes;
 
         bool same(double x, double y, double eps);
+        double planeEps = 1e-3;
+        double matchEps = 1e-3;
+        double ringEps = 1e-3;
 
         void computeAxis();
         void computePolarVertices();
@@ -39,18 +43,21 @@ class VRGearSegmentation {
         ~VRGearSegmentation();
         static VRGearSegmentationPtr create();
 
+        void setBinSizes(double planeEps, double matchEps, double ringEps);
+
         void analyse(VRObjectPtr obj);
         void runTest();
         void printResults();
 
-
         Vec3d getAxis();
+        PosePtr getPolarCoords();
 
         int getNGears();
         vector<double> getGearParams(int i);
 
         int getNPlanes();
         double getPlanePosition(int i);
+        vector<Vec2d> getPlaneVertices(int i);
         vector<Vec2d> getPlaneContour(int i);
         vector<double> getPlaneSineGuess(int i);
         vector<double> getPlaneSineApprox(int i);

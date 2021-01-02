@@ -82,15 +82,16 @@ Matrix4d PCA::computeEigenvectors(Matrix4d m) {
     if ( info > 0 ) { cout << "Warning: computeEigenvalues failed!\n"; return Matrix4d(); } // Check for convergence
 
     Vec3i o(0,1,2);
-    if (wr[0] > wr[1]) swap(o[0], o[1]);
-    if (wr[1] > wr[2]) swap(o[1], o[2]);
-    if (wr[0] > wr[1]) swap(o[0], o[1]);
+    if (wr[o[0]] < wr[o[1]]) swap(o[0], o[1]);
+    if (wr[o[1]] < wr[o[2]]) swap(o[1], o[2]);
+    if (wr[o[0]] < wr[o[1]]) swap(o[0], o[1]);
+    cout << " pca reorder: " << o << ",  ew: " << Vec3d(wr[0], wr[1], wr[2]) << " -> " << Vec3d(wr[o[0]], wr[o[1]], wr[o[2]]) << endl;
 
     Matrix4d res;
-    res[0] = Vec4d(vl[o[2]*3], vl[o[2]*3+1], vl[o[2]*3+2], 0);
+    res[0] = Vec4d(vl[o[0]*3], vl[o[0]*3+1], vl[o[0]*3+2], 0);
     res[1] = Vec4d(vl[o[1]*3], vl[o[1]*3+1], vl[o[1]*3+2], 0);
-    res[2] = Vec4d(vl[o[0]*3], vl[o[0]*3+1], vl[o[0]*3+2], 0);
-    res[3] = Vec4d(wr[o[2]], wr[o[1]], wr[o[0]], 0);
+    res[2] = Vec4d(vl[o[2]*3], vl[o[2]*3+1], vl[o[2]*3+2], 0);
+    res[3] = Vec4d(wr[o[0]], wr[o[1]], wr[o[2]], 0);
     return res;
 }
 
@@ -114,6 +115,7 @@ void PCA::addMesh(VRObjectPtr obj) {
     for (auto child : obj->getChildren(true, "Geometry", true)) {
         auto geo = dynamic_pointer_cast<VRGeometry>(child);
         Matrix4d M = geo->getMatrixTo(obj);
+        M.invert();
         auto positions = geo->getMesh()->geo->getPositions();
         for (int i=0; i<positions->size(); i++) {
             Pnt3d p = Pnt3d(positions->getValue<Pnt3f>(i));
