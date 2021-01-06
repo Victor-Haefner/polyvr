@@ -1415,6 +1415,22 @@ Color3f VRMaterial::toColor(string c) {
         colorMap["white"] = Color3f(1,1,1);
     }
 
+    auto conv = [](char c1, char c2) {
+        if (c1 >= 'A' && c1 <= 'F') c1 -= ('A'-'a');
+        if (c2 >= 'A' && c2 <= 'F') c2 -= ('A'-'a');
+        int C1 = c1-'0';
+        int C2 = c2-'0';
+        if (c1 >= 'a' && c1 <= 'f') C1 = (c1-'a')+10;
+        if (c2 >= 'a' && c2 <= 'f') C2 = (c2-'a')+10;
+        return (C1*16+C2)/256.0;
+    };
+
+    if (c[0] == '#') {
+        if (c.size() == 4) return Color3f(conv(c[1],'a'), conv(c[2],'a'), conv(c[3],'a'));
+        if (c.size() == 7) return Color3f(conv(c[1],c[2]), conv(c[3],c[4]), conv(c[5],c[6]));
+        return Color3f();
+    }
+
     return colorMap.count(c) ? colorMap[c] : Color3f();
 }
 
