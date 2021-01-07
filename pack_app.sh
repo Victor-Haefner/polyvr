@@ -12,7 +12,7 @@ pckFolder="packages/"$appName
 
 pyPath="/c/usr/vcpkg/installed/x64-windows/share/python2/Lib"
 redistPath="/c/Program Files (x86)/Windows Kits/10/Redist/ucrt/DLLs/x64"
-redistPath2="/c/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Redist/MSVC/14.27.29016/x64/Microsoft.VC142.CRT/vcruntime140_1.dll"
+redistPath2="/c/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Redist/MSVC/14.28.29325/x64/Microsoft.VC142.CRT/vcruntime140_1.dll"
 vcpkgLibs="/c/usr/vcpkg/installed/x64-windows/lib"
 
 if [ ! -e $pckFolder ]; then
