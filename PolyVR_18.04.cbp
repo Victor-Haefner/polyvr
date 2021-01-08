@@ -1584,6 +1584,8 @@
 		<Unit filename="src/core/utils/VRProgress.h" />
 		<Unit filename="src/core/utils/VRRate.cpp" />
 		<Unit filename="src/core/utils/VRRate.h" />
+		<Unit filename="src/core/utils/VRSpreadsheet.cpp" />
+		<Unit filename="src/core/utils/VRSpreadsheet.h" />
 		<Unit filename="src/core/utils/VRStorage.cpp" />
 		<Unit filename="src/core/utils/VRStorage.h" />
 		<Unit filename="src/core/utils/VRStorage_template.h" />

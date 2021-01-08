@@ -4,7 +4,7 @@
 #include <iostream>
 #include <OpenSG/OSGVector.h>
 
-#include "XML.h"
+#include "xml.h"
 #include "system/VRSystem.h"
 #include "zipper/unzipper.h"
 
