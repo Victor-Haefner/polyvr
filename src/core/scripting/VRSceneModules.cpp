@@ -273,6 +273,10 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyLeap>("Leap", pModVR, VRPyDevice::typeRef);
     sm->registerModule<VRPyLeapFrame>("LeapFrame", pModVR);
 
+    sm->registerModule<VRPyXML>("XML", pModVR);
+    sm->registerModule<VRPyXMLElement>("XMLElement", pModVR);
+    sm->registerModule<VRPySpreadsheet>("Spreadsheet", pModVR);
+
 #ifndef WITHOUT_CGAL
 	sm->registerModule<VRPyCSG>("CSGGeometry", pModVR, VRPyGeometry::typeRef);
 #endif

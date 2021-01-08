@@ -559,6 +559,9 @@ simplePyType(Octree, VRPyOctree::New );
 simplePyType(PCA, New_ptr);
 #endif
 simplePyType(Patch, New_ptr);
+simplePyType(XML, New_ptr);
+simplePyType(XMLElement, 0);
+simpleVRPyType(Spreadsheet, New_ptr);
 
 template<> PyTypeObject VRPyBaseT<Datarow>::type = {
     PyObject_HEAD_INIT(NULL)
@@ -796,5 +799,41 @@ PyMethodDef VRPyPatch::methods[] = {
     {NULL}  /* Sentinel */
 };
 
+PyMethodDef VRPyXML::methods[] = {
+    {"read", PyWrapOpt2(XML, read, "Read file", "1", void, string, bool) },
+    {"parse", PyWrapOpt2(XML, parse, "Parse xml string", "1", void, string, bool) },
+    {"write", PyWrap2(XML, write, "Write data to file", void, string) },
+    {"toString", PyWrap2(XML, toString, "Return data as string", string) },
+    {"getRoot", PyWrap2(XML, getRoot, "Return data root node", XMLElementPtr) },
+    {"newRoot", PyWrap2(XML, newRoot, "Create new root node (name, ns_uri, ns_prefix)", XMLElementPtr, string, string, string) },
+    {"printTree", PyWrapOpt2(XML, printTree, "Print subtree to console", "", void, XMLElementPtr, string) },
+    {NULL}  /* Sentinel */
+};
 
+typedef map<string, string> ssDict;
 
+PyMethodDef VRPyXMLElement::methods[] = {
+    {"getName", PyWrap2(XMLElement, getName, "Return element name", string) },
+    {"getNameSpace", PyWrap2(XMLElement, getNameSpace, "Return element namespace", string) },
+    {"getText", PyWrap2(XMLElement, getText, "Return element text", string) },
+    {"hasText", PyWrap2(XMLElement, hasText, "Check if element has text", bool) },
+    {"setText", PyWrap2(XMLElement, setText, "Set element text", void, string) },
+    {"getAttribute", PyWrap2(XMLElement, getAttribute, "Get attribute value", string, string) },
+    {"getAttributes", PyWrap2(XMLElement, getAttributes, "Get attributes as dictionary", ssDict) },
+    {"hasAttribute", PyWrap2(XMLElement, hasAttribute, "Return if element has an attribute", bool, string) },
+    {"setAttribute", PyWrap2(XMLElement, setAttribute, "Set an attribute (name, value)", void, string, string) },
+    {"getChildren", PyWrapOpt2(XMLElement, getChildren, "Get children, optional element name", "", vector<XMLElementPtr>, string) },
+    {"getChild", PyWrap2(XMLElement, getChild, "Get child by name", XMLElementPtr, string) },
+    {"addChild", PyWrap2(XMLElement, addChild, "Add child element", XMLElementPtr, string) },
+    {"print", PyWrap2(XMLElement, print, "Print to console", void) },
+    {NULL}  /* Sentinel */
+};
+
+PyMethodDef VRPySpreadsheet::methods[] = {
+    {"read", PyWrap(Spreadsheet, read, "Read file", void, string) },
+    {"getSheets", PyWrap(Spreadsheet, getSheets, "Get list of sheet names", vector<string>) },
+    {"getNColumns", PyWrap(Spreadsheet, getNColumns, "Get N columns of sheet", size_t, string) },
+    {"getNRows", PyWrap(Spreadsheet, getNRows, "Get N rows of sheet", size_t, string) },
+    {"getCell", PyWrap(Spreadsheet, getCell, "Get cell content (sheet, column, row)", string, string, size_t, size_t) },
+    {NULL}  /* Sentinel */
+};

@@ -11,7 +11,7 @@
 
 namespace xmlpp{ class Element; }
 
-ptrFctFwd(VRStore, XMLElementPtr);
+ptrFctFwd(VRStore, OSG::XMLElementPtr);
 ptrFctFwd(VRStorageFactory, OSG::VRStoragePtr&);
 ptrFctFwd(VRStorage, OSG::VRStorageContextPtr&);
 

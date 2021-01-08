@@ -860,6 +860,7 @@ target_sources(polyvr PRIVATE src/core/utils/toString.cpp)
 target_sources(polyvr PRIVATE src/core/utils/VRCallbackWrapper.cpp)
 target_sources(polyvr PRIVATE src/core/utils/VRChangeList.cpp)
 target_sources(polyvr PRIVATE src/core/utils/VRDoublebuffer.cpp)
+target_sources(polyvr PRIVATE src/core/utils/VRSpreadsheet.cpp)
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
 target_sources(polyvr PRIVATE src/core/utils/VREncryption.cpp) # needs cryptopp
 target_sources(polyvr PRIVATE src/core/utils/VRPDF.cpp)
