@@ -188,6 +188,7 @@ class VRView : public std::enable_shared_from_this<VRView> {
         void update();
         void reset();
         void testUpdate();
+        void updateStatsEngine();
 
         void setFotoMode(bool b);
         VRTexturePtr grab();

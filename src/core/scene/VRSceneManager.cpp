@@ -5,6 +5,7 @@
 
 #include "core/setup/VRSetup.h"
 #include "core/setup/windows/VRWindow.h"
+#include "core/setup/windows/VRView.h"
 #include "core/utils/VRRate.h"
 #include "core/utils/VRProfiler.h"
 #include "core/utils/coreDumpHandler.h"
@@ -329,13 +330,19 @@ void VRSceneManager::update() {
     VRGlobals::FRAME_RATE.fps = fps;
     VRTimer t7; t7.start();
     int pID2 = profiler->regStart("frame sleep");
+//#ifndef WASM
     doFrameSleep(timer.stop(), targetFPS);
+//#endif
     profiler->regStop(pID2);
     VRGlobals::SLEEP_FRAME_RATE.update(t7);
     VRGlobals::UPDATE_LOOP7.update(timer);
     if (current) current->blockScriptThreads();
     profiler->regStop(pID1);
     //cout << " VRSceneManager::update done" << endl;
+
+#ifdef WASM
+    VRSetup::getCurrent()->getView(0)->updateStatsEngine();
+#endif
 }
 
 OSG_END_NAMESPACE

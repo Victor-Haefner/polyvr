@@ -188,6 +188,7 @@ PolyVR* PolyVR::get() { return pvr; }
 typedef const char* CSTR;
 EMSCRIPTEN_KEEPALIVE void PolyVR_shutdown() { PolyVR::shutdown(); }
 EMSCRIPTEN_KEEPALIVE void PolyVR_reloadScene() { VRSceneManager::get()->reloadScene(); }
+EMSCRIPTEN_KEEPALIVE void PolyVR_showStats() { VRSetup::getCurrent()->showViewStats(0,1); }
 EMSCRIPTEN_KEEPALIVE void PolyVR_triggerScript(const char* name, CSTR* params, int N) {
     vector<string> sparams;
     for (int i=0; i<N; i++) sparams.push_back(string(params[i]));
@@ -204,35 +205,6 @@ void PolyVR::shutdown() {
 void printNextOSGID(int i) {
     NodeRefPtr n = Node::create();
     cout << "next OSG ID: " << n->getId() << " at maker " << i << endl;
-}
-
-void display(void) {
-	/*static float f = 0;
-	static float d = 1;
-	f += d*0.005;
-	if (abs(f) > 1) d *= -1;
-
-	//background->setColor(Color3f(1,f,-f));
-	Matrix m;
-	m.setTransform( Vec3f(), Quaternion( OSG::Vec3f(0,1,0), f ) );
-	trans->setMatrix(m);
-
-	if (window) {
-		commitChanges();
-		window->render(renderAction);
-	}*/
-}
-
-void idle(void) {
-	glutPostRedisplay();
-}
-
-void reshape(int w, int h) {
-	//cout << "glut reshape " << glutGetWindow() << endl;
-	/*if (window) {
-		window->resize(w, h);
-		glutPostRedisplay();
-	}*/
 }
 
 #ifdef WASM
@@ -442,13 +414,6 @@ void PolyVR::init(int argc, char **argv) {
     osgInit(argc,argv);
     initOSGImporter();
     cout << "  ..done" << endl;
-
-    //GLUT
-    cout << " init GLUT";
-    glutInit(&argc, argv);
-	glutInitWindowSize(300, 300);
-    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH | GLUT_MULTISAMPLE);
-    cout << " ..done " << endl << endl;
 
     PrimeMaterialRecPtr pMat = OSG::getDefaultMaterial();
     OSG::setName(pMat, "default_material");
