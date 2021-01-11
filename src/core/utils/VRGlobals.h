@@ -15,9 +15,14 @@ class VRGlobals {
         typedef OSG::StatElemDesc<OSG::StatIntElem> StatRate;
 
         struct FPS {
-            Int ms;
-            Int fps;
+            Int ms = 0;
+            Int fps = 0;
+            Int min_fps = 0;
+            Int max_fps = 0;
             StatRate statFPS;
+
+            int pointer = 0;
+            vector<Int> history;
 
             FPS(Int ms, Int fps, string s1, string s2);
 

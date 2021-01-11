@@ -188,7 +188,7 @@ PolyVR* PolyVR::get() { return pvr; }
 typedef const char* CSTR;
 EMSCRIPTEN_KEEPALIVE void PolyVR_shutdown() { PolyVR::shutdown(); }
 EMSCRIPTEN_KEEPALIVE void PolyVR_reloadScene() { VRSceneManager::get()->reloadScene(); }
-EMSCRIPTEN_KEEPALIVE void PolyVR_showStats() { VRSetup::getCurrent()->showViewStats(0,1); }
+EMSCRIPTEN_KEEPALIVE void PolyVR_showStats() { VRSetup::getCurrent()->toggleViewStats(0); }
 EMSCRIPTEN_KEEPALIVE void PolyVR_triggerScript(const char* name, CSTR* params, int N) {
     vector<string> sparams;
     for (int i=0; i<N; i++) sparams.push_back(string(params[i]));
