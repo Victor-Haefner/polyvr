@@ -140,7 +140,9 @@ PolyVR::~PolyVR() {
 
     pvr = 0;
 
+#ifndef WITHOUT_GTK
     VRGuiSignals::get()->clear();
+#endif
     scene_mgr->closeScene();
     VRSetup::getCurrent()->stopWindows();
     scene_mgr->stopAllThreads();

@@ -94,7 +94,9 @@ PyMethodDef VRSceneGlobals::methods[] = {
 
 PyObject* VRSceneGlobals::setWindowTitle(VRSceneGlobals* self, PyObject* args) {
     string name = parseString(args);
+#ifndef WITHOUT_GTK
     VRGuiManager::get()->setWindowTitle(name);
+#endif
     Py_RETURN_TRUE;
 }
 

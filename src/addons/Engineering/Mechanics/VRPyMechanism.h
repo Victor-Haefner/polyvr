@@ -10,6 +10,7 @@ struct VRPyMechanism : VRPyBaseT<OSG::VRMechanism> {
     static PyMethodDef methods[];
 };
 
+#ifndef WITHOUT_EIGEN
 struct VRPyGearSegmentation : VRPyBaseT<OSG::VRGearSegmentation> {
     static PyMethodDef methods[];
 };
@@ -17,5 +18,6 @@ struct VRPyGearSegmentation : VRPyBaseT<OSG::VRGearSegmentation> {
 struct VRPyAxleSegmentation : VRPyBaseT<OSG::VRAxleSegmentation> {
     static PyMethodDef methods[];
 };
+#endif
 
 #endif // VRPYMECHANISM_H_INCLUDED

@@ -6,8 +6,10 @@
 using namespace OSG;
 
 simpleVRPyType(Mechanism, New_ptr);
+#ifndef WITHOUT_EIGEN
 simpleVRPyType(GearSegmentation, New_ptr);
 simpleVRPyType(AxleSegmentation, New_ptr);
+#endif
 
 PyMethodDef VRPyMechanism::methods[] = {
     {"add", PyWrapOpt(Mechanism, add, "Add part to mechanism - add(P)", "0", void, VRTransformPtr, VRTransformPtr ) },
@@ -20,6 +22,7 @@ PyMethodDef VRPyMechanism::methods[] = {
     {NULL}  /* Sentinel */
 };
 
+#ifndef WITHOUT_EIGEN
 PyMethodDef VRPyGearSegmentation::methods[] = {
     {"analyse", PyWrap(GearSegmentation, analyse, "Analyse object to get gear parameters", void, VRObjectPtr) },
     {"setBinSizes", PyWrap(GearSegmentation, setBinSizes, "Set comparison eps for plane, plane match and radius", void, double, double, double) },
@@ -44,4 +47,5 @@ PyMethodDef VRPyAxleSegmentation::methods[] = {
     {"analyse", PyWrap(AxleSegmentation, analyse, "Analyse object to get axis parameters", void, VRObjectPtr) },
     {NULL}  /* Sentinel */
 };
+#endif
 

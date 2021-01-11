@@ -113,46 +113,15 @@ void VRView::setViewports() {//create && set size of viewports
     lView_act = active_stereo ? StereoBufferViewportMTRecPtr(StereoBufferViewport::create()) : 0;
     rView_act = active_stereo ? StereoBufferViewportMTRecPtr(StereoBufferViewport::create()) : 0;
 
-    bool useFBO = false;
-
-    //no stereo
-    if (!active_stereo && useFBO) {
-        RenderBufferRefPtr colBuf   = RenderBuffer::create();
-        RenderBufferRefPtr depthBuf = RenderBuffer::create();
-        colBuf->setInternalFormat(GL_RGB8);
-        depthBuf->setInternalFormat(GL_DEPTH_COMPONENT24);
-
-        vFBO = FrameBufferObject::create();
-        vFBO->setColorAttachment(colBuf, 0);
-        vFBO->setDepthAttachment(depthBuf);
-        vFBO->editMFDrawBuffers()->push_back(GL_DEPTH_ATTACHMENT_EXT);
-        vFBO->editMFDrawBuffers()->push_back(GL_COLOR_ATTACHMENT0_EXT);
-        vFBO->setWidth (1471);
-        vFBO->setHeight(598);
-        vFBO->setPostProcessOnDeactivate(true);
-    }
-
-    auto createFBOViewport = [&]() {
-        auto fbov = FBOViewport::create();
-        fbov->setFrameBufferObject(vFBO);
-        return fbov;
-    };
-
     if (!stereo && !active_stereo) {
-        if (useFBO) lView = createFBOViewport();
-        else lView = Viewport::create();
+        lView = Viewport::create();
         lView->setSize(p[0], p[1], p[2], p[3]);
         rView = 0;
     }
 
     if (stereo && !active_stereo) {
-        if (useFBO) {
-            lView = createFBOViewport();
-            rView = createFBOViewport();
-        } else {
-            lView = Viewport::create();
-            rView = Viewport::create();
-        }
+        lView = Viewport::create();
+        rView = Viewport::create();
         // left bottom right top
         lView->setSize(p[0], p[1], (p[0]+p[2])*0.5, p[3]);
         rView->setSize((p[0]+p[2])*0.5, p[1], p[2], p[3]);
