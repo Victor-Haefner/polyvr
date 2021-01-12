@@ -99,7 +99,9 @@ string VRSceneManager::getOriginalWorkdir() { return original_workdir; }
 
 void VRSceneManager::closeScene() {
     if (current == 0) return;
+#ifndef WASM
     VRProfiler::get()->setActive(false);
+#endif
     on_scene_close->triggerPtr<VRDevice>();
     current = 0;
 
@@ -183,7 +185,9 @@ void VRSceneManager::setScene(VRScenePtr scene) {
     auto setup = VRSetup::getCurrent();
     if (setup) setup->setScene(scene);
     scene->setActiveCamera();
+#ifndef WASM
     VRProfiler::get()->setActive(true);
+#endif
 
     on_scene_load->triggerPtr<VRDevice>();
 

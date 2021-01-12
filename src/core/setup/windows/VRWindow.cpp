@@ -99,9 +99,13 @@ void VRWindow::update( weak_ptr<VRThread>  wt) {
 
         auto wait = [&]() {
             waitingAtBarrier = true;
+#ifndef WASM
             int pID = VRProfiler::get()->regStart("window barrier "+getName());
+#endif
             barrier->enter(active_window_count+1);
+#ifndef WASM
             VRProfiler::get()->regStop(pID);
+#endif
             waitingAtBarrier = false;
             if (stopping) return true;
             return false;

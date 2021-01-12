@@ -389,7 +389,7 @@ void VRView::showStats(bool b) {
         statsEngine->setSize(0.1);
         statsEngine->setFrom(Vec3d(-1.1,0.8,-1.5));
         real_root->addChild(statsEngine);
-        statsEngine->set(1, Vec3d(0,0,0), "Rendering Statistics, TBI");
+        statsEngine->set(0, Vec3d(0,0,0), "Rendering Statistics, TBI");
     }
     statsEngine->setVisible(b);
 #endif
@@ -403,10 +403,11 @@ void VRView::updateStatsEngine() {
     float d = -0.13;
     auto ract = VRSetup::getCurrent()->getRenderAction();
 
-    for (int i=0; i<20; i++) statsEngine->set(i, Vec3d(0,i*d,0), "A");
-    return;
+    //statsEngine->set(0, Vec3d(0,0,0), "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
+    /*for (int i=0; i<30; i++) statsEngine->setLine(i, Vec3d(0,i*d,0), "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", true);
+    return;*/
 
-    statsEngine->set(1, Vec3d(0,0,0), "Performance:");
+    statsEngine->set(0, Vec3d(0,0,0), "Performance:");
     statsEngine->set(2, Vec3d(0,d,0), " application FPS: "+toString(VRGlobals::FRAME_RATE.fps));
 
     statsEngine->set(3, Vec3d(0,2*d,0), "  main loop P1 (1ts GTK)  : "+toString(VRGlobals::UPDATE_LOOP1.fps));
