@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # example:
 #  ./addClass.sh addons/Engineering/Machining/MachiningCode
