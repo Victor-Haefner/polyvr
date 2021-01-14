@@ -1,6 +1,9 @@
 #include "VRRestResponse.h"
+#include "core/utils/toString.h"
 
 using namespace OSG;
+
+template<> string typeName(const VRRestResponse& p) { return "RestResponse"; }
 
 VRRestResponse::VRRestResponse() {}
 VRRestResponse::~VRRestResponse() {}

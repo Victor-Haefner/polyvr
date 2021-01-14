@@ -29,10 +29,10 @@ string VRMapManager::getMap(double N, double E, double S) {
 
     string filename = vault+"/"+sS+"/N"+sN+"E"+sE+"S"+sS+".hgt";  // "/%.3f/N%.3fE%.3fS%.3f.hgt' % (S, N, E, S)
     //cout << " filename: " << filename << endl;
-    if (exists(filename) && 0) return filename;
+    if (exists(filename)) return filename;
 
     string req = server+"Topology_GetMap.php?N="+sN+"&E="+sE+"&S="+sS;  // N=%.3f&E=%.3f&S=%.3f" % (N,E,S)
-    //cout << " request: " << req << endl;
+    cout << " VRMapManager request: " << req << endl;
 
     // launch get request
     if (!client) client = VRRestClient::create();

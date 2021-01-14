@@ -1,6 +1,9 @@
 #include "VRRestServer.h"
+#include "core/utils/toString.h"
 
 using namespace OSG;
+
+template<> string typeName(const VRRestServer& p) { return "RestServer"; }
 
 VRRestServer::VRRestServer() {}
 VRRestServer::~VRRestServer() {}

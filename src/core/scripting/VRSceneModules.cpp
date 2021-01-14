@@ -191,6 +191,9 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
 #ifndef WITHOUT_HDLC
     sm->registerModule<VRPyHDLC>("HDLC", pModVR);
 #endif
+    sm->registerModule<VRPyRestResponse>("RestResponse", pModVR);
+    sm->registerModule<VRPyRestClient>("RestClient", pModVR);
+    sm->registerModule<VRPyRestServer>("RestServer", pModVR);
     sm->registerModule<VRPyState>("State", pModVR);
     sm->registerModule<VRPyGraphLayout>("GraphLayout", pModVR);
     sm->registerModule<VRPyPathFinding>("PathFinding", pModVR);
