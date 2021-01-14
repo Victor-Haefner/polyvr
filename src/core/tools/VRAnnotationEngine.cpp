@@ -96,6 +96,7 @@ bool VRAnnotationEngine::checkUIn(int i) {
 
 void VRAnnotationEngine::resize(Label& l, Vec3d p, int N) {
     int eN = l.entries.size();
+    if (N == eN) return;
 
 #ifndef OSG_OGL_ES2
     if (hasGS) {
@@ -110,7 +111,8 @@ void VRAnnotationEngine::resize(Label& l, Vec3d p, int N) {
             data->pushPoint();
             l.entries[eN+i] = pN+i;
         }
-    } else {
+    }
+    else {
 #endif
         for (int i=0; i<eN; i++) data->setVert(l.entries[i], Vec3d(), Vec3d(), Vec2d()); // clear old buffer
 
@@ -139,6 +141,90 @@ int VRAnnotationEngine::add(Vec3d p, string s) {
     return i;
 }
 
+void VRAnnotationEngine::setLine(int i, Vec3d p, string str, bool ascii) {
+    while (i >= (int)labels.size()) labels.push_back(Label());
+
+    auto& l = labels[i];
+    if (l.str == str) return;
+
+    int Ngraphemes;
+    vector<string> graphemes;
+    //vector<string> old_graphemes;
+    if (!ascii) {
+        Ngraphemes = VRText::countGraphemes(str);
+        graphemes = VRText::splitGraphemes(str);
+        //old_graphemes = VRText::splitGraphemes(l.str);
+    } else {
+        Ngraphemes = str.size();
+        graphemes = vector<string>(Ngraphemes);
+        //old_graphemes = vector<string>(l.str.size());
+        for (int i=0; i<Ngraphemes; i++) graphemes[i] = str[i];
+        //for (int i=0; i<l.str.size(); i++) old_graphemes[i] = l.str[i];
+    }
+
+#ifndef OSG_OGL_ES2
+    if (hasGS) {
+        int N = ceil(Ngraphemes/3.0); // number of points, 3 chars per point
+        resize(l,p,N + 4); // plus 4 bounding points
+
+        for (int j=0; j<N; j++) {
+            char c[] = {0,0,0};
+            for (int k = 0; k<3; k++) {
+                if (j*3+k < (int)graphemes.size()) {
+                    string grapheme = graphemes[j*3+k];
+                    c[k] = characterIDs[grapheme];
+                }
+            }
+            float f = c[0] + c[1]*256 + c[2]*256*256;
+            int k = l.entries[j];
+            data->setVert(k, p, Vec3d(f,0,j));
+        }
+
+        // bounding points to avoid word clipping
+        data->setVert(l.entries[N], p+Vec3d(-0.25*size, -0.5*size, 0), Vec3d(0,0,-1));
+        data->setVert(l.entries[N+1], p+Vec3d(-0.25*size,  0.5*size, 0), Vec3d(0,0,-1));
+        data->setVert(l.entries[N+2], p+Vec3d((Ngraphemes-0.25)*size, -0.5*size, 0), Vec3d(0,0,-1));
+        data->setVert(l.entries[N+3], p+Vec3d((Ngraphemes-0.25)*size,  0.5*size, 0), Vec3d(0,0,-1));
+    }
+    else {
+#endif
+        int N = Ngraphemes;
+
+        resize(l,p,N*4);
+        float H = size*0.5;
+        float D = charTexSize*0.5;
+        float P = texPadding;
+
+        Vec3d orientationX = -orientationDir.cross(orientationUp);
+
+        for (int j=0; j<N; j++) {
+            string grapheme = graphemes[j];
+            /*if (j < old_graphemes.size()) {
+                if (old_graphemes[j] == grapheme) continue;
+            }*/
+
+            char c = characterIDs[grapheme] - 1;
+            float u1 = P+c*D*2;
+            float u2 = P+(c+1)*D*2;
+            float X = H*2*j;
+
+            Vec3d n1 = orientationX*(-H+X) + orientationUp*(H*2);
+            Vec3d n2 = orientationX*( H+X) + orientationUp*(H*2);
+            Vec3d n3 = orientationX*( H+X) - orientationUp*(H*2);
+            Vec3d n4 = orientationX*(-H+X) - orientationUp*(H*2);
+
+            data->setVert(l.entries[j*4+0], p, n1, Vec2d(u1,1));
+            data->setVert(l.entries[j*4+1], p, n2, Vec2d(u2,1));
+            data->setVert(l.entries[j*4+2], p, n3, Vec2d(u2,0));
+            data->setVert(l.entries[j*4+3], p, n4, Vec2d(u1,0));
+        }
+#ifndef OSG_OGL_ES2
+    }
+#endif
+
+    l.str = str;
+}
+
 void VRAnnotationEngine::set(int i0, Vec3d p0, string txt) {
     auto strings = splitString(txt, '\n');
     int Nlines = strings.size();
@@ -148,65 +234,7 @@ void VRAnnotationEngine::set(int i0, Vec3d p0, string txt) {
         p[1] -= y*size;
         int i = i0+y;
         if (i < 0) return;
-        while (i >= (int)labels.size()) labels.push_back(Label());
-        int Ngraphemes = VRText::countGraphemes(str);
-        auto graphemes = VRText::splitGraphemes(str);
-        auto& l = labels[i];
-
-#ifndef OSG_OGL_ES2
-        if (hasGS) {
-            int N = ceil(Ngraphemes/3.0); // number of points, 3 chars per point
-            resize(l,p,N + 4); // plus 4 bounding points
-
-            for (int j=0; j<N; j++) {
-                char c[] = {0,0,0};
-                for (int k = 0; k<3; k++) {
-                    if (j*3+k < (int)graphemes.size()) {
-                        string grapheme = graphemes[j*3+k];
-                        c[k] = characterIDs[grapheme];
-                    }
-                }
-                float f = c[0] + c[1]*256 + c[2]*256*256;
-                int k = l.entries[j];
-                data->setVert(k, p, Vec3d(f,0,j));
-            }
-
-            // bounding points to avoid word clipping
-            data->setVert(l.entries[N], p+Vec3d(-0.25*size, -0.5*size, 0), Vec3d(0,0,-1));
-            data->setVert(l.entries[N+1], p+Vec3d(-0.25*size,  0.5*size, 0), Vec3d(0,0,-1));
-            data->setVert(l.entries[N+2], p+Vec3d((Ngraphemes-0.25)*size, -0.5*size, 0), Vec3d(0,0,-1));
-            data->setVert(l.entries[N+3], p+Vec3d((Ngraphemes-0.25)*size,  0.5*size, 0), Vec3d(0,0,-1));
-        } else {
-#endif
-            int N = Ngraphemes;
-
-            resize(l,p,N*4);
-            float H = size*0.5;
-            float D = charTexSize*0.5;
-            float P = texPadding;
-
-            Vec3d orientationX = -orientationDir.cross(orientationUp);
-
-            for (int j=0; j<N; j++) {
-                string grapheme = graphemes[j];
-                char c = characterIDs[grapheme] - 1;
-                float u1 = P+c*D*2;
-                float u2 = P+(c+1)*D*2;
-                float X = H*2*j;
-
-                Vec3d n1 = orientationX*(-H+X) + orientationUp*(H*2);
-                Vec3d n2 = orientationX*( H+X) + orientationUp*(H*2);
-                Vec3d n3 = orientationX*( H+X) - orientationUp*(H*2);
-                Vec3d n4 = orientationX*(-H+X) - orientationUp*(H*2);
-
-                data->setVert(l.entries[j*4+0], p, n1, Vec2d(u1,1));
-                data->setVert(l.entries[j*4+1], p, n2, Vec2d(u2,1));
-                data->setVert(l.entries[j*4+2], p, n3, Vec2d(u2,0));
-                data->setVert(l.entries[j*4+3], p, n4, Vec2d(u1,0));
-            }
-#ifndef OSG_OGL_ES2
-        }
-#endif
+        setLine(i, p, str);
     }
 }
 
@@ -422,31 +450,46 @@ attribute vec2 osg_MultiTexCoord0;
 
 uniform float doBillboard;
 uniform vec2 OSGViewportSize;
-
-\n#ifdef __EMSCRIPTEN__\n
+\n
+#ifdef __EMSCRIPTEN__
+\n
 uniform mat4 OSGModelViewProjectionMatrix;
 uniform mat4 OSGModelViewMatrix;
 uniform mat4 OSGProjectionMatrix;
-\n#endif\n
+\n
+#endif
+\n
 
 void main( void ) {
     if (doBillboard < 0.5) {
-\n#ifdef __EMSCRIPTEN__\n
+\n
+#ifdef __EMSCRIPTEN__
+\n
         gl_Position = OSGModelViewProjectionMatrix * (osg_Vertex + osg_Normal);
-\n#else\n
+\n
+#else
+\n
         gl_Position = gl_ModelViewProjectionMatrix * (osg_Vertex + osg_Normal);
-\n#endif\n
+\n
+#endif
+\n
     } else {
         float a = OSGViewportSize.y/OSGViewportSize.x;
         vec4 norm = osg_Normal;
         norm.x = norm.x*a;
         norm.z = 0.0;
         norm.w = 0.0;
-\n#ifdef __EMSCRIPTEN__\n
+\n
+#ifdef __EMSCRIPTEN__
+\n
         gl_Position = OSGModelViewProjectionMatrix * osg_Vertex + norm;
-\n#else\n
+\n
+#else
+\n
         gl_Position = gl_ModelViewProjectionMatrix * osg_Vertex + norm;
-\n#endif\n
+\n
+#endif
+\n
     }
     texCoord = osg_MultiTexCoord0;
 }
@@ -454,9 +497,13 @@ void main( void ) {
 
 string VRAnnotationEngine::fp_es2 =
 GLSL(
-\n#ifdef __EMSCRIPTEN__\n
+\n
+#ifdef __EMSCRIPTEN__
+\n
 precision mediump float;
-\n#endif\n
+\n
+#endif
+\n
 uniform sampler2D texture;
 
 varying vec2 texCoord;

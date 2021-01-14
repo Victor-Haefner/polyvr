@@ -593,22 +593,29 @@ void VRGuiBuilder::buildBaseUI() {
     auto recorder = addDialog("recorder");
     auto dialog_vbox15 = gtk_dialog_get_content_area(GTK_DIALOG(recorder));
     auto dialog_action_area15 = gtk_dialog_get_action_area(GTK_DIALOG(recorder));
-    auto hbox21 = addBox("hbox21", GTK_ORIENTATION_HORIZONTAL);
-    auto hbox20 = addBox("hbox20", GTK_ORIENTATION_HORIZONTAL);
+    auto recGrid = addGrid("recGrid");
     auto label149 = addLabel("label149", "Idle");
+    auto labelRes = addLabel("labelRes", "resolution:");
     auto label151 = addLabel("label151", "codec:");
     auto label150 = addLabel("label150", "bitrate multiplier:");
     auto codecs = addCombobox("codecs", "codecList");
+    auto resolutions = addCombobox("resolutions", "resList");
+    auto doVSync = addCheckbutton("doVSyncCB", "VSync");
     auto entry27 = addEntry("entry27");
-    gtk_box_pack_start(GTK_BOX(dialog_vbox15), label149, true, true, 0);
-    gtk_box_pack_start(GTK_BOX(dialog_vbox15), hbox21, true, true, 0);
-    gtk_box_pack_start(GTK_BOX(dialog_vbox15), hbox20, true, true, 0);
-    gtk_box_pack_start(GTK_BOX(hbox21), label151, true, true, 0);
-    gtk_box_pack_start(GTK_BOX(hbox21), codecs, true, true, 0);
-    gtk_box_pack_start(GTK_BOX(hbox20), label150, true, true, 0);
-    gtk_box_pack_start(GTK_BOX(hbox20), entry27, true, true, 0);
+    gtk_box_pack_start(GTK_BOX(dialog_vbox15), label149, true, true, 5);
+    gtk_box_pack_start(GTK_BOX(dialog_vbox15), recGrid, true, true, 0);
+    gtk_grid_attach(GTK_GRID(recGrid), labelRes, 0,0,1,1);
+    gtk_grid_attach(GTK_GRID(recGrid), label151, 0,1,1,1);
+    gtk_grid_attach(GTK_GRID(recGrid), label150, 0,2,1,1);
+    gtk_grid_attach(GTK_GRID(recGrid), resolutions, 1,0,1,1);
+    gtk_grid_attach(GTK_GRID(recGrid), codecs, 1,1,2,1);
+    gtk_grid_attach(GTK_GRID(recGrid), entry27, 1,2,2,1);
+    gtk_grid_attach(GTK_GRID(recGrid), doVSync, 2,0,1,1);
     gtk_window_set_transient_for(GTK_WINDOW(recorder), GTK_WINDOW(window1));
     gtk_widget_show_all(dialog_vbox15);
+    gtk_label_set_xalign(GTK_LABEL(labelRes), 0);
+    gtk_label_set_xalign(GTK_LABEL(label151), 0);
+    gtk_label_set_xalign(GTK_LABEL(label150), 0);
 
     cout << " build about dialog" << endl;
     /* ---------- about dialog ---------------------- */
@@ -1283,6 +1290,7 @@ void VRGuiBuilder::buildBaseUI() {
     gtk_box_pack_start(GTK_BOX(dialog_vbox6), hpaned2, false, true, 0);
     gtk_window_set_transient_for(GTK_WINDOW(pybindings_docs), GTK_WINDOW(window1));
     gtk_widget_set_size_request(pybindings_docs, 800, 600);
+    gtk_paned_set_position(GTK_PANED(hpaned2), 200);
 
     auto table40 = addGrid("table40");
     auto image49 = addStockImage("image49", "gtk-find", GTK_ICON_SIZE_SMALL_TOOLBAR);
@@ -1484,6 +1492,7 @@ void VRGuiBuilder::buildBaseUI() {
     gtk_widget_set_size_request(treeview6, 300, -1);
     gtk_tree_view_set_reorderable(GTK_TREE_VIEW(treeview6), true);
     gtk_widget_set_hexpand(current_object_lab, true);
+    gtk_paned_set_position(GTK_PANED(hpaned3), 300);
 
     auto treeviewcolumn10 = addTreecolumn("treeviewcolumn10", "Object");
     auto cellrenderertext8 = addCellrenderer("cellrenderertext8", treeviewcolumn10);
@@ -1631,12 +1640,13 @@ void VRGuiBuilder::buildBaseUI() {
     /* ---------- VR Scene - scenegraph geometry ---------------------- */
     auto label55 = addLabel("label55", "Data:");
     auto geodata = gtk_list_store_new(3, G_TYPE_STRING, G_TYPE_INT, G_TYPE_INT);
-    auto treeview9_and_frame = addTreeview("treeview9", "geodata", GTK_TREE_MODEL(geodata));
+    auto treeview9_and_frame = addTreeview("treeview9", "geodata", GTK_TREE_MODEL(geodata), false, false);
     auto treeview9 = treeview9_and_frame.first;
     addTreeviewTextcolumn(treeview9, "Datatype", "cellrenderertext22", 0);
     addTreeviewTextcolumn(treeview9, "N", "cellrenderertext52", 1);
     gtk_grid_attach(GTK_GRID(table17), label55, 0,0,1,1);
     gtk_grid_attach(GTK_GRID(table17), treeview9_and_frame.second, 0,1,1,1);
+    gtk_widget_set_vexpand(treeview9_and_frame.second, false);
 
     /* ---------- VR Scene - scenegraph material ---------------------- */
     auto label59 = addLabel("label59", "Name:");
@@ -1679,13 +1689,15 @@ void VRGuiBuilder::buildBaseUI() {
     auto checkbutton28 = addCheckbutton("checkbutton28", "Primitive:");
     auto combobox21 = addCombobox("combobox21", "prim_list");
     auto primitive_opts = gtk_list_store_new(2, G_TYPE_STRING, G_TYPE_STRING);
-    auto treeview12_and_frame = addTreeview("treeview12", "primitive_opts", GTK_TREE_MODEL(primitive_opts));
+    auto treeview12_and_frame = addTreeview("treeview12", "primitive_opts", GTK_TREE_MODEL(primitive_opts), false, false);
     auto treeview12 = treeview12_and_frame.first;
     addTreeviewTextcolumn(treeview12, "Parameter", "cellrenderertext32", 0);
     addTreeviewTextcolumn(treeview12, "Value", "cellrenderertext33", 1, true);
     gtk_grid_attach(GTK_GRID(table29), checkbutton28, 0,0,1,1);
     gtk_grid_attach(GTK_GRID(table29), combobox21, 1,0,1,1);
     gtk_grid_attach(GTK_GRID(table29), treeview12_and_frame.second, 0,1,2,1);
+    gtk_widget_set_vexpand(treeview12_and_frame.second, false);
+
 
     /* ---------- VR Scene - scenegraph camera ---------------------- */
     auto checkbutton17 = addCheckbutton("checkbutton17", "accept setup root");

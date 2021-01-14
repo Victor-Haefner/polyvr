@@ -20,6 +20,10 @@ void VRViewManager::showViewStats(int i, bool b) {
     if (checkView(i)) views[i]->showStats(b);
 }
 
+void VRViewManager::toggleViewStats(int i) {
+    if (checkView(i)) views[i]->toggleStats();
+}
+
 VRViewManager::VRViewManager() {
     cout << "Init VRViewManager\n";
     //this->view_root = view_root;

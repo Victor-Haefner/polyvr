@@ -15,6 +15,12 @@ G_BEGIN_DECLS
 typedef struct _GLArea               GLArea;
 typedef struct _GLAreaClass          GLAreaClass;
 
+typedef struct {
+    int x, y;
+    int w, h;
+    int W, H;
+} GLClipping;
+
 struct _GLArea {
     GtkWidget parent_instance;
 };
@@ -31,14 +37,15 @@ GType gl_area_get_type (void) G_GNUC_CONST;
 
 GtkWidget *     gl_area_new                         (void);
 
-guint gl_area_get_samples(GLArea* area);
-void  gl_area_set_samples(GLArea* area, guint samples);
-void  gl_area_set_blit_id(GLArea* area, guint ID, guint bType);
+void  gl_area_set_vsync(GLArea* area, gboolean b);
+GLClipping gl_area_get_clipping(GLArea* area);
+void gl_area_trigger_resize(GLArea* area);
+
+void override_win32_gl_context_realize();
 
 void            gl_area_queue_render                (GLArea    *area);
 GdkGLContext *  gl_area_get_context                 (GLArea    *area);
 void            gl_area_make_current                (GLArea    *area);
-void            gl_area_attach_buffers              (GLArea    *area);
 void            gl_area_set_error                   (GLArea    *area, const GError *error);
 GError *        gl_area_get_error                   (GLArea    *area);
 

@@ -3,6 +3,7 @@
 
 #include <OpenSG/OSGConfig.h>
 #include "core/math/OSGMathFwd.h"
+#include "core/utils/VRFunctionFwd.h"
 
 #include <list>
 
@@ -19,10 +20,12 @@ class VRClipPlane : public VRGeometry {
         vector<VRMaterialPtr> mats;
         VRObjectPtr tree = 0;
         bool active = false;
+        VRUpdateCbPtr clipShaderUpdate = 0;
 
         Vec4d getEquation();
         void activate();
         void deactivate();
+        void updateShader();
 
     public:
         VRClipPlane(string name);

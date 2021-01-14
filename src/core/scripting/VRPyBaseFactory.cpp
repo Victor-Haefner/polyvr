@@ -34,6 +34,7 @@ template<> bool toValue(PyObject* o, bool& v) { if (!PyNumber_Check(o)) return 0
 template<> bool toValue(PyObject* o, char& v) { if (!PyNumber_Check(o)) return 0; v = PyInt_AsLong(o); return 1; }
 template<> bool toValue(PyObject* o, unsigned char& v) { if (!PyNumber_Check(o)) return 0; v = PyInt_AsLong(o); return 1; }
 template<> bool toValue(PyObject* o, unsigned int& v) { if (!PyInt_Check(o)) return 0; v = PyInt_AsLong(o); return 1; }
+template<> bool toValue(PyObject* o, size_t& v) { if (!PyInt_Check(o)) return 0; v = PyInt_AsLong(o); return 1; }
 template<> bool toValue(PyObject* o, float& v) { if (!PyNumber_Check(o)) return 0; v = PyFloat_AsDouble(o); return 1; }
 template<> bool toValue(PyObject* o, double& v) { if (!PyNumber_Check(o)) return 0; v = PyFloat_AsDouble(o); return 1; }
 

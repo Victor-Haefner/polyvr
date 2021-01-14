@@ -35,6 +35,7 @@ class VRAnnotationEngine : public VRGeometry {
         struct Label {
             Vec3d pos;
             vector<int> entries;
+            string str;
         };
 
         vector<Label> labels;
@@ -55,6 +56,7 @@ class VRAnnotationEngine : public VRGeometry {
 
         void clear();
         void set(int i, Vec3d p, string s);
+        void setLine(int i, Vec3d p, string s, bool ascii = false);
         int add(Vec3d p, string s);
 
         void setSize(float f);

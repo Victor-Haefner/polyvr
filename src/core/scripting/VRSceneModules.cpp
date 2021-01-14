@@ -234,6 +234,10 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPySegmentation>("Segmentation", pModVR);
     sm->registerModule<VRPyAdjacencyGraph>("AdjacencyGraph", pModVR);
     sm->registerModule<VRPyMechanism>("Mechanism", pModVR, VRPyObject::typeRef);
+#ifndef WITHOUT_EIGEN
+    sm->registerModule<VRPyGearSegmentation>("GearSegmentation", pModVR);
+    sm->registerModule<VRPyAxleSegmentation>("AxleSegmentation", pModVR);
+#endif
     sm->registerModule<VRPyMachiningSimulation>("MachiningSimulation", pModVR);
     sm->registerModule<VRPyMachiningCode>("MachiningCode", pModVR);
     sm->registerModule<VRPyMachiningKinematics>("MachiningKinematics", pModVR);
@@ -271,6 +275,10 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyLeap>("Leap", pModVR, VRPyDevice::typeRef);
     sm->registerModule<VRPyLeapFrame>("LeapFrame", pModVR);
 
+    sm->registerModule<VRPyXML>("XML", pModVR);
+    sm->registerModule<VRPyXMLElement>("XMLElement", pModVR);
+    sm->registerModule<VRPySpreadsheet>("Spreadsheet", pModVR);
+
 #ifndef WITHOUT_CGAL
 	sm->registerModule<VRPyCSG>("CSGGeometry", pModVR, VRPyGeometry::typeRef);
 #endif
@@ -304,6 +312,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyRoadNetwork>("RoadNetwork", pModWorldGenerator, VRPyRoadBase::typeRef, "WorldGenerator");
     sm->registerModule<VRPyTrafficSigns>("TrafficSigns", pModWorldGenerator, VRPyRoadBase::typeRef, "WorldGenerator");
     sm->registerModule<VRPyDistrict>("District", pModWorldGenerator, 0, "WorldGenerator");
+    sm->registerModule<VRPyMapManager>("MapManager", pModVR, 0, "WorldGenerator");
     sm->registerModule<VRPyOSMMap>("OSMMap", pModVR, 0, "WorldGenerator");
     sm->registerModule<VRPyOSMRelation>("OSMRelation", pModVR, VRPyOSMBase::typeRef, "WorldGenerator");
     sm->registerModule<VRPyOSMWay>("OSMWay", pModVR, VRPyOSMBase::typeRef, "WorldGenerator");

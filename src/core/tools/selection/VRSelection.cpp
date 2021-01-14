@@ -6,14 +6,13 @@
 
 #include <OpenSG/OSGGeometry.h>
 
-/* not compiling?
-install liblapacke-dev
-sudo apt-get install liblapacke-dev
-*/
-
 #ifndef WITHOUT_LAPACKE_BLAS
+#ifdef _WIN32
+#include "core/math/lapack/lapacke.h"
+#else
 #include <lapacke.h>
 #define dgeev LAPACKE_dgeev_work
+#endif
 #endif
 
 using namespace OSG;
@@ -218,13 +217,16 @@ Matrix4d VRSelection::computeEigenvectors(Matrix4d m) {
     double a[9] = { m[0][0], m[1][0], m[2][0], m[0][1], m[1][1], m[2][1], m[0][2], m[1][2], m[2][2] };
 
     //LAPACK_COL_MAJOR LAPACK_ROW_MAJOR
-
+#ifdef _WIN32
+    info = dgeev(LAPACK_COL_MAJOR, 'V', 'V', n, a, lda, wr, wi, vl, ldvl, vr, ldvr);
+#else
     lwork = -1;
     info = dgeev( LAPACK_COL_MAJOR, 'V', 'V', n, a, lda, wr, wi, vl, ldvl, vr, ldvr, &wkopt, lwork);
     lwork = (int)wkopt;
     work = new double[lwork];
     info = dgeev( LAPACK_COL_MAJOR, 'V', 'V', n, a, lda, wr, wi, vl, ldvl, vr, ldvr,  work, lwork);
     delete work;
+#endif
 
     if ( info > 0 ) { cout << "Warning: computeEigenvalues failed!\n"; return Matrix4d(); } // Check for convergence
 

@@ -4,6 +4,7 @@
 #include "core/scripting/VRPyBase.h"
 #include "VRWorldGenerator.h"
 #include "GIS/OSMMap.h"
+#include "GIS/VRMapManager.h"
 #include "roads/VRAsphalt.h"
 #include "roads/VRRoadNetwork.h"
 #include "roads/VRRoad.h"
@@ -40,6 +41,10 @@ struct VRPyRoadNetwork : VRPyBaseT<OSG::VRRoadNetwork> {
 };
 
 struct VRPyDistrict : VRPyBaseT<OSG::VRDistrict> {
+    static PyMethodDef methods[];
+};
+
+struct VRPyMapManager : VRPyBaseT<OSG::VRMapManager> {
     static PyMethodDef methods[];
 };
 

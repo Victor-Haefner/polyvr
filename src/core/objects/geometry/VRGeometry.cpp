@@ -1,6 +1,7 @@
 #include "VRGeometry.h"
 #include "VRGeoData.h"
 #include <sstream>
+#include <thread>
 
 #include <OpenSG/OSGSimpleMaterial.h>
 #include <OpenSG/OSGSimpleGeometry.h>        // Methods to create simple geos.
@@ -1110,7 +1111,7 @@ void VRGeometry::readSharedMemory(string segment, string object) {
     int sm_state = sm.getObject<int>(object+"_state");
     while (sm.getObject<int>(object+"_state") == sm_state) {
         cout << "VRGeometry::readSharedMemory: waiting for data: " << sm_state << endl;
-        sleep(1);
+        std::this_thread::sleep_for(chrono::milliseconds(1));
     }
 
     // read buffer

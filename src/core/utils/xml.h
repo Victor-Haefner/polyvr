@@ -3,12 +3,15 @@
 
 #include <string>
 #include <map>
+#include <OpenSG/OSGConfig.h>
 #include "VRUtilsFwd.h"
 
 using namespace std;
 
 struct _xmlDoc;
 struct _xmlNode;
+
+OSG_BEGIN_NAMESPACE;
 
 class XMLElement {
     private:
@@ -105,5 +108,7 @@ class XML {
 
         friend class XMLElement;
 };
+
+OSG_END_NAMESPACE;
 
 #endif // XML_H_INCLUDED

@@ -483,6 +483,7 @@ GeometryMTRecPtr VRScrewThread::make() {
 
     return geo;
 }
+
 GeometryMTRecPtr VRGear::make() {
     GeoUInt8PropertyMTRecPtr      Type = GeoUInt8Property::create();
     GeoUInt32PropertyMTRecPtr     Length = GeoUInt32Property::create();
@@ -498,7 +499,7 @@ GeometryMTRecPtr VRGear::make() {
 
     //positionen und Normalen
     r1 -= ts*0.5;
-    float a[4], s[4], c[4];
+    float a[6], s[6], c[6];
     float z = width*0.5;
     float b = z*tan(bevel);
     float bt = ts*cos(bevel);
@@ -506,27 +507,27 @@ GeometryMTRecPtr VRGear::make() {
     Vec3d n;
     int iN = 0;
     for(int i=0; i<tN; i++) {
-        for (int j=0; j<4; j++) a[j] = 2*Pi*(i+j/6.)/tN;
-        for (int j=0; j<4; j++) { c[j] = cos(a[j]); s[j] = sin(a[j]); }
+        for (int j=0; j<6; j++) a[j] = 2*Pi*(i+j/6.)/tN;
+        for (int j=0; j<6; j++) { c[j] = cos(a[j]); s[j] = sin(a[j]); }
 
         iN = Pos->size();
         Pos->addValue(Vec3d(c[0]*r0, s[0]*r0, -z)); // 0
         Pos->addValue(Vec3d(c[0]*(r1-b), s[0]*(r1-b), -z)); // 1
-        Pos->addValue(Vec3d(c[0]*(r1-b+bt*0.5), s[0]*(r1-b+bt*0.5), -z+bz*0.5)); // 2
-        Pos->addValue(Vec3d(c[1]*(r1-b+bt), s[1]*(r1-b+bt), -z+bz)); // 3
-        Pos->addValue(Vec3d(c[2]*(r1-b+bt), s[2]*(r1-b+bt), -z+bz)); // 4
-        Pos->addValue(Vec3d(c[3]*(r1-b+bt*0.5), s[3]*(r1-b+bt*0.5), -z+bz*0.5)); // 5
-        Pos->addValue(Vec3d(c[3]*(r1-b), s[3]*(r1-b), -z)); // 6
-        Pos->addValue(Vec3d(c[3]*r0, s[3]*r0, -z)); // 7
+        Pos->addValue(Vec3d(c[1]*(r1-b+bt*0.5), s[1]*(r1-b+bt*0.5), -z+bz*0.5)); // 2
+        Pos->addValue(Vec3d(c[2]*(r1-b+bt), s[2]*(r1-b+bt), -z+bz)); // 3
+        Pos->addValue(Vec3d(c[3]*(r1-b+bt), s[3]*(r1-b+bt), -z+bz)); // 4
+        Pos->addValue(Vec3d(c[4]*(r1-b+bt*0.5), s[4]*(r1-b+bt*0.5), -z+bz*0.5)); // 5
+        Pos->addValue(Vec3d(c[5]*(r1-b), s[5]*(r1-b), -z)); // 6
+        Pos->addValue(Vec3d(c[5]*r0, s[5]*r0, -z)); // 7
 
         Pos->addValue(Vec3d(c[0]*r0, s[0]*r0, z)); // 8
         Pos->addValue(Vec3d(c[0]*(r1+b), s[0]*(r1+b), z)); // 9
-        Pos->addValue(Vec3d(c[0]*(r1+b+bt*0.5), s[0]*(r1+b+bt*0.5), z+bz*0.5)); // 10
-        Pos->addValue(Vec3d(c[1]*(r1+b+bt), s[1]*(r1+b+bt), z+bz)); // 11
-        Pos->addValue(Vec3d(c[2]*(r1+b+bt), s[2]*(r1+b+bt), z+bz)); // 12
-        Pos->addValue(Vec3d(c[3]*(r1+b+bt*0.5), s[3]*(r1+b+bt*0.5), z+bz*0.5)); // 13
-        Pos->addValue(Vec3d(c[3]*(r1+b), s[3]*(r1+b), z)); // 14
-        Pos->addValue(Vec3d(c[3]*r0, s[3]*r0, z)); // 15
+        Pos->addValue(Vec3d(c[1]*(r1+b+bt*0.5), s[1]*(r1+b+bt*0.5), z+bz*0.5)); // 10
+        Pos->addValue(Vec3d(c[2]*(r1+b+bt), s[2]*(r1+b+bt), z+bz)); // 11
+        Pos->addValue(Vec3d(c[3]*(r1+b+bt), s[3]*(r1+b+bt), z+bz)); // 12
+        Pos->addValue(Vec3d(c[4]*(r1+b+bt*0.5), s[4]*(r1+b+bt*0.5), z+bz*0.5)); // 13
+        Pos->addValue(Vec3d(c[5]*(r1+b), s[5]*(r1+b), z)); // 14
+        Pos->addValue(Vec3d(c[5]*r0, s[5]*r0, z)); // 15
 
         for (int j=0; j<8; j++) { n = Vec3d(0,0,-1); Norms->addValue(n); }
         for (int j=0; j<8; j++) { n = Vec3d(0,0,1); Norms->addValue(n); }
@@ -585,45 +586,45 @@ GeometryMTRecPtr VRGear::make() {
     // sides
     int iNs = Pos->size();
     for(int i=0; i<tN; i++) {
-        for (int j=0; j<4; j++) a[j] = 2*Pi*(i+j/6.)/tN;
-        for (int j=0; j<4; j++) { c[j] = cos(a[j]); s[j] = sin(a[j]); }
+        for (int j=0; j<6; j++) a[j] = 2*Pi*(i+j/6.)/tN;
+        for (int j=0; j<6; j++) { c[j] = cos(a[j]); s[j] = sin(a[j]); }
 
         iN = Pos->size();
         Pos->addValue(Vec3d(c[0]*r0, s[0]*r0, -z)); // 0
         Pos->addValue(Vec3d(c[0]*(r1-b), s[0]*(r1-b), -z)); // 1
-        Pos->addValue(Vec3d(c[0]*(r1-b+bt*0.5), s[0]*(r1-b+bt*0.5), -z+bz*0.5)); // 2
-        Pos->addValue(Vec3d(c[1]*(r1-b+bt), s[1]*(r1-b+bt), -z+bz)); // 3
-        Pos->addValue(Vec3d(c[2]*(r1-b+bt), s[2]*(r1-b+bt), -z+bz)); // 4
-        Pos->addValue(Vec3d(c[3]*(r1-b+bt*0.5), s[3]*(r1-b+bt*0.5), -z+bz*0.5)); // 5
-        Pos->addValue(Vec3d(c[3]*(r1-b), s[3]*(r1-b), -z)); // 6
-        Pos->addValue(Vec3d(c[3]*r0, s[3]*r0, -z)); // 7
+        Pos->addValue(Vec3d(c[1]*(r1-b+bt*0.5), s[1]*(r1-b+bt*0.5), -z+bz*0.5)); // 2
+        Pos->addValue(Vec3d(c[2]*(r1-b+bt), s[2]*(r1-b+bt), -z+bz)); // 3
+        Pos->addValue(Vec3d(c[3]*(r1-b+bt), s[3]*(r1-b+bt), -z+bz)); // 4
+        Pos->addValue(Vec3d(c[4]*(r1-b+bt*0.5), s[4]*(r1-b+bt*0.5), -z+bz*0.5)); // 5
+        Pos->addValue(Vec3d(c[5]*(r1-b), s[5]*(r1-b), -z)); // 6
+        Pos->addValue(Vec3d(c[5]*r0, s[5]*r0, -z)); // 7
 
         Pos->addValue(Vec3d(c[0]*r0, s[0]*r0, z)); // 8
         Pos->addValue(Vec3d(c[0]*(r1+b), s[0]*(r1+b), z)); // 9
-        Pos->addValue(Vec3d(c[0]*(r1+b+bt*0.5), s[0]*(r1+b+bt*0.5), z+bz*0.5)); // 10
-        Pos->addValue(Vec3d(c[1]*(r1+b+bt), s[1]*(r1+b+bt), z+bz)); // 11
-        Pos->addValue(Vec3d(c[2]*(r1+b+bt), s[2]*(r1+b+bt), z+bz)); // 12
-        Pos->addValue(Vec3d(c[3]*(r1+b+bt*0.5), s[3]*(r1+b+bt*0.5), z+bz*0.5)); // 13
-        Pos->addValue(Vec3d(c[3]*(r1+b), s[3]*(r1+b), z)); // 14
-        Pos->addValue(Vec3d(c[3]*r0, s[3]*r0, z)); // 15
+        Pos->addValue(Vec3d(c[1]*(r1+b+bt*0.5), s[1]*(r1+b+bt*0.5), z+bz*0.5)); // 10
+        Pos->addValue(Vec3d(c[2]*(r1+b+bt), s[2]*(r1+b+bt), z+bz)); // 11
+        Pos->addValue(Vec3d(c[3]*(r1+b+bt), s[3]*(r1+b+bt), z+bz)); // 12
+        Pos->addValue(Vec3d(c[4]*(r1+b+bt*0.5), s[4]*(r1+b+bt*0.5), z+bz*0.5)); // 13
+        Pos->addValue(Vec3d(c[5]*(r1+b), s[5]*(r1+b), z)); // 14
+        Pos->addValue(Vec3d(c[5]*r0, s[5]*r0, z)); // 15
 
         n = Vec3d(-c[0], -s[0], 0); n.normalize(); Norms->addValue(n);
         n = Vec3d(c[0]+s[0], -c[0]+s[0], 0); n.normalize(); Norms->addValue(n);
-        n = Vec3d(s[0], -c[0], 0); n.normalize(); Norms->addValue(n);
-        n = Vec3d(c[1]+s[1], -c[1]+s[1], 0); n.normalize(); Norms->addValue(n);
-        n = Vec3d(c[2]-s[2], c[2]+s[2], 0); n.normalize(); Norms->addValue(n);
-        n = Vec3d(-s[3], c[3], 0); n.normalize(); Norms->addValue(n);
+        n = Vec3d(s[1], -c[1], 0); n.normalize(); Norms->addValue(n);
+        n = Vec3d(c[2]+s[2], -c[2]+s[2], 0); n.normalize(); Norms->addValue(n);
         n = Vec3d(c[3]-s[3], c[3]+s[3], 0); n.normalize(); Norms->addValue(n);
-        n = Vec3d(-c[3], -s[3], 0); n.normalize(); Norms->addValue(n);
+        n = Vec3d(-s[4], c[4], 0); n.normalize(); Norms->addValue(n);
+        n = Vec3d(c[5]-s[5], c[5]+s[5], 0); n.normalize(); Norms->addValue(n);
+        n = Vec3d(-c[5], -s[5], 0); n.normalize(); Norms->addValue(n);
 
         n = Vec3d(-c[0], -s[0], 0); n.normalize(); Norms->addValue(n);
         n = Vec3d(c[0]+s[0], -c[0]+s[0], 0); n.normalize(); Norms->addValue(n);
-        n = Vec3d(s[0], -c[0], 0); n.normalize(); Norms->addValue(n);
-        n = Vec3d(c[1]+s[1], -c[1]+s[1], 0); n.normalize(); Norms->addValue(n);
-        n = Vec3d(c[2]-s[2], c[2]+s[2], 0); n.normalize(); Norms->addValue(n);
-        n = Vec3d(-s[3], c[3], 0); n.normalize(); Norms->addValue(n);
+        n = Vec3d(s[1], -c[1], 0); n.normalize(); Norms->addValue(n);
+        n = Vec3d(c[2]+s[2], -c[2]+s[2], 0); n.normalize(); Norms->addValue(n);
         n = Vec3d(c[3]-s[3], c[3]+s[3], 0); n.normalize(); Norms->addValue(n);
-        n = Vec3d(-c[3], -s[3], 0); n.normalize(); Norms->addValue(n);
+        n = Vec3d(-s[4], c[4], 0); n.normalize(); Norms->addValue(n);
+        n = Vec3d(c[5]-s[5], c[5]+s[5], 0); n.normalize(); Norms->addValue(n);
+        n = Vec3d(-c[5], -s[5], 0); n.normalize(); Norms->addValue(n);
 
         Indices->addValue(iN+0); // B1
         Indices->addValue(iN+8);

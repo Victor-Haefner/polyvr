@@ -8,9 +8,6 @@
 #include "VRFwdDeclTemplate.h"
 
 
-ptrFwd(XMLElement);
-ptrFwd(XML);
-
 ptrTemplateFwd(VRCallbackWrapper, VRCallbackStrWrapper, std::string);
 ptrTemplateFwd(VRCallbackWrapper, VRCallbackPyWrapper, PyObject*);
 
@@ -19,6 +16,9 @@ namespace OSG {
     ptrFwd(VRProgress);
     ptrFwd(VREncryption);
     ptrFwd(VRPDF);
+    ptrFwd(XMLElement);
+    ptrFwd(XML);
+    ptrFwd(VRSpreadsheet);
 }
 
 #endif // VRUTILSFWD_H_INCLUDED

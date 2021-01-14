@@ -1,5 +1,6 @@
 #include "VRView.h"
 #include <OpenSG/OSGRenderAction.h>
+#include <OpenSG/OSGStatTimeElem.h>
 #include <OpenSG/OSGImageForeground.h>
 #include <OpenSG/OSGSimpleGeometry.h>
 #include <OpenSG/OSGMultiPassMaterial.h>
@@ -11,9 +12,7 @@
 #include "core/utils/toString.h"
 #include "core/utils/VRGlobals.h"
 #include "core/utils/xml.h"
-#ifndef WITHOUT_PANGO_CAIRO
 #include "core/tools/VRText.h"
-#endif
 #include "core/setup/VRSetup.h"
 #ifndef WITHOUT_GTK
 #include "core/gui/VRGuiUtils.h"
@@ -46,7 +45,6 @@ bool onBox(int i, int j, int c) {
 string VRView::getName() { return name; }
 
 void VRView::setMaterial() {
-#ifndef WITHOUT_PANGO_CAIRO
     ImageMTRecPtr img = Image::create();
 
     Color3f bg  = Color3f(0.5, 0.7, 0.95);
@@ -96,7 +94,6 @@ void VRView::setMaterial() {
 
     viewGeoMat->setTexture(VRTexture::create(img));
     viewGeoMat->setLit(false);
-#endif
 }
 
 void VRView::setViewports() {//create && set size of viewports
@@ -117,46 +114,15 @@ void VRView::setViewports() {//create && set size of viewports
     lView_act = active_stereo ? StereoBufferViewportMTRecPtr(StereoBufferViewport::create()) : 0;
     rView_act = active_stereo ? StereoBufferViewportMTRecPtr(StereoBufferViewport::create()) : 0;
 
-    bool useFBO = false;
-
-    //no stereo
-    if (!active_stereo && useFBO) {
-        RenderBufferRefPtr colBuf   = RenderBuffer::create();
-        RenderBufferRefPtr depthBuf = RenderBuffer::create();
-        colBuf->setInternalFormat(GL_RGB8);
-        depthBuf->setInternalFormat(GL_DEPTH_COMPONENT24);
-
-        vFBO = FrameBufferObject::create();
-        vFBO->setColorAttachment(colBuf, 0);
-        vFBO->setDepthAttachment(depthBuf);
-        vFBO->editMFDrawBuffers()->push_back(GL_DEPTH_ATTACHMENT_EXT);
-        vFBO->editMFDrawBuffers()->push_back(GL_COLOR_ATTACHMENT0_EXT);
-        vFBO->setWidth (1471);
-        vFBO->setHeight(598);
-        vFBO->setPostProcessOnDeactivate(true);
-    }
-
-    auto createFBOViewport = [&]() {
-        auto fbov = FBOViewport::create();
-        fbov->setFrameBufferObject(vFBO);
-        return fbov;
-    };
-
     if (!stereo && !active_stereo) {
-        if (useFBO) lView = createFBOViewport();
-        else lView = Viewport::create();
+        lView = Viewport::create();
         lView->setSize(p[0], p[1], p[2], p[3]);
         rView = 0;
     }
 
     if (stereo && !active_stereo) {
-        if (useFBO) {
-            lView = createFBOViewport();
-            rView = createFBOViewport();
-        } else {
-            lView = Viewport::create();
-            rView = Viewport::create();
-        }
+        lView = Viewport::create();
+        rView = Viewport::create();
         // left bottom right top
         lView->setSize(p[0], p[1], (p[0]+p[2])*0.5, p[3]);
         rView->setSize((p[0]+p[2])*0.5, p[1], p[2], p[3]);
@@ -361,7 +327,6 @@ void VRView::showStats(bool b) {
         statsFg->addElement(VRGlobals::UPDATE_LOOP6.statFPS, "  main update loop point 6 FPS (after second Gtk update): %d");
         statsFg->addElement(VRGlobals::UPDATE_LOOP7.statFPS, "  main update loop point 7 FPS (end of loop iteration)  : %d");
         statsFg->addElement(VRGlobals::SLEEP_FRAME_RATE.statFPS, " application sleep FPS: %d");
-        statsFg->addElement(VRGlobals::SLEEP_FRAME_RATE.statFPS, " application sleep FPS: %d");
         statsFg->addElement(VRGlobals::SCRIPTS_FRAME_RATE.statFPS, "  script FPS: %d");
         statsFg->addElement(VRGlobals::WINDOWS_FRAME_RATE.statFPS, "  distributed windows FPS: %d");
         statsFg->addElement(VRGlobals::GTK1_FRAME_RATE.statFPS, " GTK devices FPS: %d");
@@ -421,12 +386,54 @@ void VRView::showStats(bool b) {
 #else
     if (b && statsEngine == 0) {
         statsEngine = VRAnnotationEngine::create();
-        statsEngine->set(1, Vec3d(-0.5,0,-3), "Rendering Statistics, TBI");
+        statsEngine->setSize(0.1);
+        statsEngine->setFrom(Vec3d(-1.1,0.8,-1.5));
         real_root->addChild(statsEngine);
+        statsEngine->set(0, Vec3d(0,0,0), "Rendering Statistics, TBI");
     }
     statsEngine->setVisible(b);
 #endif
     doStats = b;
+}
+
+void VRView::updateStatsEngine() {
+#ifdef WASM
+    if (!statsEngine) return;
+    if (!doStats) return;
+    float d = -0.13;
+    auto ract = VRSetup::getCurrent()->getRenderAction();
+
+    //statsEngine->set(0, Vec3d(0,0,0), "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
+    /*for (int i=0; i<30; i++) statsEngine->setLine(i, Vec3d(0,i*d,0), "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", true);
+    return;*/
+
+    statsEngine->set(0, Vec3d(0,0,0), "Performance:");
+    statsEngine->set(2, Vec3d(0,d,0), " application FPS: "+toString(VRGlobals::FRAME_RATE.fps));
+
+    statsEngine->set(3, Vec3d(0,2*d,0), "  main loop P1 (1ts GTK)  : "+toString(VRGlobals::UPDATE_LOOP1.fps));
+    statsEngine->set(4, Vec3d(0,3*d,0), "  main loop P2 (callbacks): "+toString(VRGlobals::UPDATE_LOOP2.fps));
+    statsEngine->set(5, Vec3d(0,4*d,0), "  main loop P3 (hardware) : "+toString(VRGlobals::UPDATE_LOOP3.fps));
+    statsEngine->set(6, Vec3d(0,5*d,0), "  main loop P4 (scene)    : "+toString(VRGlobals::UPDATE_LOOP4.fps));
+    statsEngine->set(7, Vec3d(0,6*d,0), "  main loop P5 (remote)   : "+toString(VRGlobals::UPDATE_LOOP5.fps));
+    statsEngine->set(8, Vec3d(0,7*d,0), "  main loop P6 (2nd GTK)  : "+toString(VRGlobals::UPDATE_LOOP6.fps));
+    statsEngine->set(9, Vec3d(0,8*d,0), "  main loop P7 (full loop): "+toString(VRGlobals::UPDATE_LOOP7.fps));
+
+    statsEngine->set(10, Vec3d(0, 9*d,0), " sleep  FPS: "+toString(VRGlobals::SLEEP_FRAME_RATE.fps));
+    statsEngine->set(11, Vec3d(0,10*d,0), " script FPS: "+toString(VRGlobals::SCRIPTS_FRAME_RATE.fps));
+    statsEngine->set(12, Vec3d(0,11*d,0), " render FPS: "+toString(VRGlobals::WINDOWS_FRAME_RATE.fps)+", "+toString(VRGlobals::WINDOWS_FRAME_RATE.min_fps)+"-"+toString(VRGlobals::WINDOWS_FRAME_RATE.max_fps));
+    statsEngine->set(13, Vec3d(0,12*d,0), " GTK1   FPS: "+toString(VRGlobals::GTK1_FRAME_RATE.fps));
+    statsEngine->set(14, Vec3d(0,13*d,0), " GTK2   FPS: "+toString(VRGlobals::GTK2_FRAME_RATE.fps));
+
+    //statsEngine->set(15, Vec3d(0,14*d,0), " render FPS: "+toString(VRGlobals::RENDER_FRAME_RATE.fps));
+    statsEngine->set(16, Vec3d(0,15*d,0), " b swap FPS: "+toString(VRGlobals::SWAPB_FRAME_RATE.fps));
+    if (ract) statsEngine->set(17, Vec3d(0,16*d,0), " frame trav count: "+toString(ract->getFrameTravCount()));
+    //statsEngine->set(17, Vec3d(0,16*d,0), " draw   FPS: "+toString(RenderAction::statDrawTime.getDescription()));
+    //statsEngine->set(18, Vec3d(0,17*d,0), " trav   FPS: "+toString(RenderAction::statTravTime.getDescription()));
+
+    statsEngine->set(19, Vec3d(0,18*d,0), " scene mgr  FPS: "+toString(VRGlobals::SMCALLBACKS_FRAME_RATE.fps));
+    statsEngine->set(20, Vec3d(0,19*d,0), " setup devs FPS: "+toString(VRGlobals::SETUP_FRAME_RATE.fps));
+    statsEngine->set(21, Vec3d(0,20*d,0), " physics    FPS: "+toString(VRGlobals::PHYSICS_FRAME_RATE.fps));
+#endif
 }
 
 void VRView::showViewGeo(bool b) {

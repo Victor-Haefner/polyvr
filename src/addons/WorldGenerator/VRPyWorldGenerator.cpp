@@ -38,6 +38,8 @@ simpleVRPyType(District, New_ptr);
 simpleVRPyType(Asphalt, New_ptr);
 simpleVRPyType(TrafficSigns, New_ptr);
 
+simpleVRPyType(MapManager, New_ptr);
+
 simplePyType(OSMMap, New_ptr);
 simplePyType(OSMRelation, 0);
 simplePyType(OSMWay, 0);
@@ -204,6 +206,12 @@ PyMethodDef VRPyTrafficSigns::methods[] = {
     {NULL}  /* Sentinel */
 };
 
+PyMethodDef VRPyMapManager::methods[] = {
+    {"setServer", PyWrap( MapManager, setServer, "Set server address", void, string ) },
+    {"setVault", PyWrap( MapManager, setVault, "Set local path to store map files", void, string ) },
+    {"getMap", PyWrap( MapManager, getMap, "Get local file path, retreive file from server if necessary", string, double, double, double ) },
+    {NULL}  /* Sentinel */
+};
 
 
 

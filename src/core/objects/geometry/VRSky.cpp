@@ -315,7 +315,9 @@ string VRSky::skyVP =
 "#version 400 compatibility\n"
 #endif
 GLSL(
-\n#ifdef __EMSCRIPTEN__\n
+\n
+#ifdef __EMSCRIPTEN__
+\n
 varying vec3 norm;
 varying vec4 pos;
 varying vec2 tcs;
@@ -325,7 +327,9 @@ attribute vec4 osg_Vertex;
 attribute vec3 osg_Normal;
 attribute vec2 osg_MultiTexCoord0;
 uniform mat4 extInvMat;
-\n#else\n
+\n
+#else
+\n
 out vec3 norm;
 out vec4 pos;
 out vec2 tcs;
@@ -334,18 +338,26 @@ out mat4 mFragInv;
 in vec4 osg_Vertex;
 in vec3 osg_Normal;
 in vec2 osg_MultiTexCoord0;
-\n#endif\n
+\n
+#endif
+\n
 
 uniform int c1; // test input
 
 void main() {
-\n#ifdef __EMSCRIPTEN__\n
+\n
+#ifdef __EMSCRIPTEN__
+\n
 	mFragInv = extInvMat;
-\n#else\n
+\n
+#else
+\n
 	mFragInv = gl_ModelViewProjectionMatrix;
 	mFragInv[3] = vec4(0,0,0,mFragInv[3][3]);
 	mFragInv = inverse(mFragInv);
-\n#endif\n
+\n
+#endif
+\n
 
 	pos = osg_Vertex * 0.5;
 	pos.z = 0.5; // try to fix stereo
@@ -362,21 +374,31 @@ string VRSky::skyFP =
 "#extension GL_EXT_frag_depth : enable\n"
 #endif
 GLSL(
-\n#ifdef __EMSCRIPTEN__\n
+\n
+#ifdef __EMSCRIPTEN__
+\n
 precision mediump float;
-\n#endif\n
+\n
+#endif
+\n
 
-\n#ifndef __EMSCRIPTEN__\n
+\n
+#ifndef __EMSCRIPTEN__
+\n
 in vec3 norm;
 in vec4 pos;
 in vec2 tcs;
 in mat4 mFragInv;
-\n#else\n
+\n
+#else
+\n
 varying vec3 norm;
 varying vec4 pos;
 varying vec2 tcs;
 varying mat4 mFragInv;
-\n#endif\n
+\n
+#endif
+\n
 
 vec3 fragDir;
 vec4 color;
@@ -498,13 +520,19 @@ float computeCloudLuminance() {\n
 
 void addCloudLayer(float height, vec2 offset, float density, float luminance) {\n
 	vec2 uv = cloudScale * sphereIntersect(height) + offset;
-\n#ifdef __EMSCRIPTEN__\n
+\n
+#ifdef __EMSCRIPTEN__
+\n
 	float cloud = texture2D(tex, uv).x;
 	float noise = 0.9 + 0.1*texture2D(tex, uv * 4.0).x;
-\n#else\n
+\n
+#else
+\n
 	float cloud = texture(tex, uv).x;
 	float noise = 0.9 + 0.1*texture(tex, uv * 4.0).x;
-\n#endif\n
+\n
+#endif
+\n
 
 	cloud = smoothstep(0.0, 1.0, (1.0 - density) * cloud);
 	vec3 c = mix(cloudColor.xyz, color.xyz, 1.0 - luminance);
@@ -580,11 +608,17 @@ void main() {\n
 	addGround();
 
 	gl_FragColor = color;
-\n#ifdef __EMSCRIPTEN__\n
+\n
+#ifdef __EMSCRIPTEN__
+\n
 	gl_FragDepthEXT = 1.0; // depth is infinite at 1.0? behind all else (check)
-\n#else\n
+\n
+#else
+\n
 	gl_FragDepth = 1.0; // depth is infinite at 1.0? behind all else (check)
-\n#endif\n
+\n
+#endif
+\n
 
 	// vertical line for testing
 	//if (real_fragDir.x < 0.01 && real_fragDir.x > 0) gl_FragColor = vec4(0,0,0,1);

@@ -12,6 +12,9 @@ namespace OSG {
     ptrFwd(VRHDLC);
     ptrFwd(VRTCPServer);
     ptrFwd(VRTCPClient);
+    ptrFwd(VRRestServer);
+    ptrFwd(VRRestClient);
+    ptrFwd(VRRestResponse);
 }
 
 #endif // VRNETWORKINGFWD_H_INCLUDED

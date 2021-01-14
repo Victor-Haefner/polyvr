@@ -1,6 +1,10 @@
 #include "VREncryption.h"
 #include "core/utils/toString.h"
 
+#ifdef _WIN32
+using namespace CryptoPP;
+#endif
+
 using namespace OSG;
 
 template<> string typeName(const VREncryption& t) { return "Encryption"; }
