@@ -27,7 +27,8 @@ string VRMapManager::getMap(double N, double E, double S) {
     string sE = toString(E,3);
     string sS = toString(S,3);
 
-    string filename = vault+"/"+sS+"/N"+sN+"E"+sE+"S"+sS+".hgt";  // "/%.3f/N%.3fE%.3fS%.3f.hgt' % (S, N, E, S)
+    string folder = vault+"/"+sS;
+    string filename = folder+"/N"+sN+"E"+sE+"S"+sS+".hgt";  // "/%.3f/N%.3fE%.3fS%.3f.hgt' % (S, N, E, S)
     //cout << " filename: " << filename << endl;
     if (exists(filename)) return filename;
 
@@ -38,9 +39,11 @@ string VRMapManager::getMap(double N, double E, double S) {
     if (!client) client = VRRestClient::create();
     auto response = client->get(req);
     //cout << " response: " << response->getStatus() << endl;
-    //cout << " response: " << response->getData() << endl;
+    cout << " map data response, data size: " << response->getData().size() << endl;
+    cout << " store map data in: " << filename << endl;
 
     // store result in file 'filename'
+    if (!exists(folder)) makedir(folder);
     ofstream f;
     f.open(filename);
     f << response->getData();

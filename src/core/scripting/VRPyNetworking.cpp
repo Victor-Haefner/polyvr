@@ -4,11 +4,14 @@
 
 using namespace OSG;
 
+#ifndef WITHOUT_HDLC
 simpleVRPyType(HDLC, New_ptr);
+#endif
 simpleVRPyType(RestResponse, 0);
 simpleVRPyType(RestClient, New_ptr);
 simpleVRPyType(RestServer, New_ptr);
 
+#ifndef WITHOUT_HDLC
 PyMethodDef VRPyHDLC::methods[] = {
     {"setCallback", PyWrap(HDLC, setCallback, "Set callback", void, VRHDLCCbPtr) },
     {"isIdle", PyWrap(HDLC, isIdle, "Stop animation", bool) },
@@ -27,6 +30,7 @@ PyMethodDef VRPyHDLC::methods[] = {
     {"getLastInput", PyWrap(HDLC, getLastInput, "Stop animation", size_t) },
     {NULL}  /* Sentinel */
 };
+#endif
 
 PyMethodDef VRPyRestResponse::methods[] = {
     {NULL}  /* Sentinel */

@@ -1,6 +1,7 @@
 #ifndef VRRESTRESPONSE_H_INCLUDED
 #define VRRESTRESPONSE_H_INCLUDED
 
+#include <string>
 #include <OpenSG/OSGConfig.h>
 #include "../VRNetworkingFwd.h"
 

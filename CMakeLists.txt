@@ -13,6 +13,7 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Emscripten")
 
 	#set(LINKER_FLAGS "${LINKER_FLAGS} -s ALLOW_MEMORY_GROWTH=1 -s EXIT_RUNTIME=1 -s DISABLE_EXCEPTION_CATCHING=0 -g")
 	set(LINKER_FLAGS "${LINKER_FLAGS} -s ALLOW_MEMORY_GROWTH=1 -s EXIT_RUNTIME=1 -s DISABLE_EXCEPTION_CATCHING=0 -s TOTAL_MEMORY=33554432")
+	set(LINKER_FLAGS "${LINKER_FLAGS} -s EXTRA_EXPORTED_RUNTIME_METHODS=['lengthBytesUTF8','stringToUTF8','UTF8ToString']")
 
 	add_definitions( -DWASM=1 )
 	add_definitions( -DGLUT_glut_LIBRARY=1 )
@@ -453,6 +454,9 @@ endif()
 target_sources(polyvr PRIVATE src/core/networking/VRPing.cpp)
 target_sources(polyvr PRIVATE src/core/networking/tcp/VRTCPClient.cpp)
 target_sources(polyvr PRIVATE src/core/networking/tcp/VRTCPServer.cpp)
+target_sources(polyvr PRIVATE src/core/networking/rest/VRRestResponse.cpp)
+target_sources(polyvr PRIVATE src/core/networking/rest/VRRestClient.cpp)
+target_sources(polyvr PRIVATE src/core/networking/rest/VRRestServer.cpp)
 endif()
 
 if(TRUE) # ok
@@ -548,7 +552,7 @@ target_sources(polyvr PRIVATE src/core/scripting/VRPyPath.cpp)
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
 target_sources(polyvr PRIVATE src/core/scripting/VRPySound.cpp) # needs libav
 endif()
-#target_sources(polyvr PRIVATE src/core/scripting/VRPyNetworking.cpp) # needs ioctl
+target_sources(polyvr PRIVATE src/core/scripting/VRPyNetworking.cpp)
 target_sources(polyvr PRIVATE src/core/scripting/VRPySprite.cpp)
 target_sources(polyvr PRIVATE src/core/scripting/VRPySky.cpp)
 target_sources(polyvr PRIVATE src/core/scripting/VRPyPolygonSelection.cpp)
@@ -1010,6 +1014,7 @@ target_sources(polyvr PRIVATE src/addons/SimViDekont/VRPySimViDekont.cpp)
 target_sources(polyvr PRIVATE src/addons/SimViDekont/SimViDekont.cpp)
 target_sources(polyvr PRIVATE src/addons/WorldGenerator/GIS/GISWorld.cpp)
 target_sources(polyvr PRIVATE src/addons/WorldGenerator/GIS/OSMMap.cpp)
+target_sources(polyvr PRIVATE src/addons/WorldGenerator/GIS/VRMapManager.cpp)
 target_sources(polyvr PRIVATE src/addons/WorldGenerator/weather/VRRain.cpp)
 #target_sources(polyvr PRIVATE src/addons/WorldGenerator/weather/VRPyRain.cpp) # to delete
 target_sources(polyvr PRIVATE src/addons/WorldGenerator/weather/VRRainCarWindshield.cpp)

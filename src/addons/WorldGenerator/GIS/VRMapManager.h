@@ -1,6 +1,7 @@
 #ifndef VRMAPMANAGER_H_INCLUDED
 #define VRMAPMANAGER_H_INCLUDED
 
+#include <string>
 #include <OpenSG/OSGConfig.h>
 #include "core/networking/VRNetworkingFwd.h"
 #include "GISFwd.h"
