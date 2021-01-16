@@ -120,6 +120,7 @@
 			<Add directory="/usr/include/IFC" />
 			<Add directory="/usr/include/vtk-7.1/" />
 			<Add directory="/usr/include/OPCUA" />
+			<Add directory="/usr/include/DWG" />
 		</Compiler>
 		<Linker>
 			<Add option="-lTKernel" />
@@ -274,6 +275,7 @@
 			<Add option="-lssl" />
 			<Add option="-lcrypto" />
 			<Add option="-lxml2" />
+			<Add option="-lredwg" />
 			<Add option="-Wl,-rpath=/usr/lib/x86_64-linux-gnu:/usr/lib/OCE" />
 			<Add directory="/usr/lib/virtuose" />
 			<Add directory="/usr/lib/opensg" />
@@ -284,6 +286,7 @@
 			<Add directory="/usr/lib/IFC" />
 			<Add directory="/usr/lib/OPCUA" />
 			<Add directory="/usr/lib/OCE" />
+			<Add directory="/usr/lib/DWG" />
 		</Linker>
 		<ExtraCommands>
 			<Add after='/bin/bash -c &quot;cp -u -p ressources/cef/icudtl.dat bin/Debug/ 2&gt;/dev/null&quot;' />
@@ -356,10 +359,14 @@
 		<Unit filename="src/addons/Engineering/CSG/PolyhedronBuilder.h" />
 		<Unit filename="src/addons/Engineering/CSG/VRPyCSG.cpp" />
 		<Unit filename="src/addons/Engineering/CSG/VRPyCSG.h" />
+		<Unit filename="src/addons/Engineering/Chemistry/VRAtom.cpp" />
+		<Unit filename="src/addons/Engineering/Chemistry/VRAtom.h" />
 		<Unit filename="src/addons/Engineering/Chemistry/VRCrystal.cpp" />
 		<Unit filename="src/addons/Engineering/Chemistry/VRCrystal.h" />
 		<Unit filename="src/addons/Engineering/Chemistry/VRMolecule.cpp" />
 		<Unit filename="src/addons/Engineering/Chemistry/VRMolecule.h" />
+		<Unit filename="src/addons/Engineering/Chemistry/VRMoleculeMat.cpp" />
+		<Unit filename="src/addons/Engineering/Chemistry/VRMoleculeMat.h" />
 		<Unit filename="src/addons/Engineering/Chemistry/VRPyMolecule.cpp" />
 		<Unit filename="src/addons/Engineering/Chemistry/VRPyMolecule.h" />
 		<Unit filename="src/addons/Engineering/Factory/VRAMLLoader.cpp" />
@@ -610,6 +617,8 @@
 		<Unit filename="src/core/math/Eigendecomposition.h" />
 		<Unit filename="src/core/math/Expression.cpp" />
 		<Unit filename="src/core/math/Expression.h" />
+		<Unit filename="src/core/math/Layer2D.cpp" />
+		<Unit filename="src/core/math/Layer2D.h" />
 		<Unit filename="src/core/math/OSGMathFwd.cpp" />
 		<Unit filename="src/core/math/Octree.cpp" />
 		<Unit filename="src/core/math/Octree.h" />
@@ -685,6 +694,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/core/networking/mongoose/mongoose.h" />
+		<Unit filename="src/core/networking/tcp/VRTCPClient.cpp" />
+		<Unit filename="src/core/networking/tcp/VRTCPClient.h" />
+		<Unit filename="src/core/networking/tcp/VRTCPServer.cpp" />
+		<Unit filename="src/core/networking/tcp/VRTCPServer.h" />
 		<Unit filename="src/core/objects/OSGCamera.cpp" />
 		<Unit filename="src/core/objects/OSGCamera.h" />
 		<Unit filename="src/core/objects/OSGObject.cpp" />
@@ -850,6 +863,8 @@
 		<Unit filename="src/core/scene/import/STEP/VRSTEP.h" />
 		<Unit filename="src/core/scene/import/VRCOLLADA.cpp" />
 		<Unit filename="src/core/scene/import/VRCOLLADA.h" />
+		<Unit filename="src/core/scene/import/VRDWG.cpp" />
+		<Unit filename="src/core/scene/import/VRDWG.h" />
 		<Unit filename="src/core/scene/import/VRDXF.cpp" />
 		<Unit filename="src/core/scene/import/VRDXF.h" />
 		<Unit filename="src/core/scene/import/VRExport.cpp" />
@@ -974,6 +989,8 @@
 		<Unit filename="src/core/scripting/VRPyObject.h" />
 		<Unit filename="src/core/scripting/VRPyObjectManager.cpp" />
 		<Unit filename="src/core/scripting/VRPyObjectManager.h" />
+		<Unit filename="src/core/scripting/VRPyPDF.cpp" />
+		<Unit filename="src/core/scripting/VRPyPDF.h" />
 		<Unit filename="src/core/scripting/VRPyPatchSelection.cpp" />
 		<Unit filename="src/core/scripting/VRPyPatchSelection.h" />
 		<Unit filename="src/core/scripting/VRPyPath.cpp" />
@@ -1180,6 +1197,8 @@
 		<Unit filename="src/core/utils/VRName.h" />
 		<Unit filename="src/core/utils/VROptions.cpp" />
 		<Unit filename="src/core/utils/VROptions.h" />
+		<Unit filename="src/core/utils/VRPDF.cpp" />
+		<Unit filename="src/core/utils/VRPDF.h" />
 		<Unit filename="src/core/utils/VRProfiler.cpp" />
 		<Unit filename="src/core/utils/VRProfiler.h" />
 		<Unit filename="src/core/utils/VRProgress.cpp" />

@@ -45,6 +45,7 @@ struct OSMNode : OSMBase {
     OSMNode(XMLElementPtr e);
     string toString();
     Vec2d getPosition();
+    Vec3d getPosition3();
     void writeTo(XMLElementPtr e);
 };
 
@@ -63,12 +64,14 @@ struct OSMWay : OSMBase {
 struct OSMRelation : OSMBase {
     vector<string> ways;
     vector<string> nodes;
+    vector<string> relations; //not OSM, but for GML
 
     OSMRelation(string id);
     OSMRelation(XMLElementPtr e, map<string, bool>& invalidIDs);
     string toString();
     vector<string> getWays();
     vector<string> getNodes();
+    vector<string> getRelations(); //not OSM, but for GML
     void writeTo(XMLElementPtr e);
 };
 
@@ -91,6 +94,7 @@ class OSMMap {
         void writeBounds(XMLElementPtr parent);
 
         int filterFileStreaming(string path, vector<pair<string, string>> whitelist);
+        void checkGDAL();
 
     public:
         OSMMap();
@@ -101,10 +105,12 @@ class OSMMap {
         static OSMMapPtr loadMap(string filepath);
         static OSMMapPtr parseMap(string filepath);
 
+        Vec2d convertGKtoLatLon(double northing, double easting, int EPSG_Code);
+
         void readFile(string path);
         void readGEOJSON(string path);
         void readSHAPE(string path);
-        void readGML(string path);
+        void readGML(string path, int EPSG_Code = 31467);
         void writeFile(string path);
         int readFileStreaming(string path);
         void filterFileStreaming(string path, vector<vector<string>> wl);

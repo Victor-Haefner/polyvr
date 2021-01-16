@@ -11,6 +11,7 @@
 #include "core/objects/VRTransform.h"
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/geometry/VRGeoData.h"
+#include "core/objects/geometry/VRStroke.h"
 #ifndef WITHOUT_BULLET
 #include "core/objects/geometry/VRSpatialCollisionManager.h"
 #endif
@@ -216,9 +217,10 @@ void VRWorldGenerator::addOSMMap(string path, double subN, double subE, double s
     processOSMMap(subN, subE, subSize);
 }
 
-void VRWorldGenerator::addGML(string path) {
-    auto gmlMap = OSMMap::create();
-    gmlMap->readGML(path);
+void VRWorldGenerator::addGML(string path, int EPSG_Code) {
+    auto newgmlMap = OSMMap::create();
+    newgmlMap->readGML(path, EPSG_Code);
+    gmlMap = newgmlMap;
     processGMLfromOSM();
 }
 
@@ -227,6 +229,8 @@ void VRWorldGenerator::readOSMMap(string path){
 }
 
 OSMMapPtr VRWorldGenerator::getOSMMap() { return osmMap; }
+
+OSMMapPtr VRWorldGenerator::getGMLMap() { return gmlMap; }
 
 void VRWorldGenerator::addTerrainsToLOD(){
     cout << "VRWorldGenerator::addTerrainsToLOD" << endl;
@@ -897,32 +901,48 @@ void VRWorldGenerator::processOSMMap(double subN, double subE, double subSize) {
 }
 
 void VRWorldGenerator::processGMLfromOSM(){
-    //auto res = gmlMap->getWays();
-    //auto nodes = gmlMap->getNodes();
+    if (!gmlMap) return;
+    cout << "VRWorldGenerator::processGMLfromOSM" << endl;
 
-    return;
+    auto GMLGeometries = VRObject::create("GMLGeometries");
+    auto mat = VRMaterial::create("GMLMaterial");
+    mat->setPointSize(15);
+    addChild(GMLGeometries);
+    int counter = 0;
+
     for (auto wayItr : gmlMap->getWays()) { // use way->id to filter for debugging!
         auto& way = wayItr.second;
-        //if (!wayInSubarea(way)) continue;
 
-        //auto poly = VRPolygon::create();
-        cout << " polygon:";
-        vector<Vec3d> pnts;
+        auto poly = VRPolygon::create();
+
+        int nID = 0;
         for (auto pID : way->nodes) {
             auto node = gmlMap->getNode(pID);
             if (!node) continue;
-            Vec3d pos = Vec3d( node->lat, node->elevation, node->lon );
-            pnts.push_back(pos);
-            //poly->addPoint(pos);
-            cout << " " << pos;
+            auto p = planet->fromLatLongElevationPose(node->lat, node->lon, node->elevation, true, true)->pos();
+            poly->addPoint( p );
+            nID++;
         }
-        cout << endl;
+        if (poly->size() == 0) continue;
+        poly->close();
+        if (!poly->isCCW()) poly->reverseOrder();
 
-        //tg.drawPolygon(poly, Color4f(1,1,1,1));
+        auto patch = VRGeometry::create("polygonGML");
+        patch->hide("SHADOW");
+#ifndef WITHOUT_GLU_TESS
+        Triangulator tri;
+        tri.add(*poly);
+        patch->merge( tri.compute() );
+#endif
+        patch->updateNormals();
+        GMLGeometries->addChild(patch);
+        counter++;
 
         for (auto tag : way->tags) {
+            //cout << tag.first << " " << tag.second << endl;
         }
     }
+    cout << "  generated: " << counter << " geometries"<< endl;
     //addChild();
 }
 
