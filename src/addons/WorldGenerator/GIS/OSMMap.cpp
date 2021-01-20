@@ -5,10 +5,18 @@
 #include "core/utils/xml.h"
 
 #ifndef WITHOUT_GDAL
+
+#ifndef _WIN32
 #include <gdal/gdal.h>
 #include <gdal/gdal_priv.h>
 #include <gdal/gdal_version.h>
 #include <gdal/ogrsf_frmts.h>
+#else
+#include <gdal.h>
+#include <gdal_priv.h>
+#include <gdal_version.h>
+#include <ogrsf_frmts.h>
+#endif
 
 // define needed before including proj_api.h !!
 #define ACCEPT_USE_OF_DEPRECATED_PROJ_API_H
@@ -672,6 +680,8 @@ string OSMNode::toString() {
 
 Vec2d OSMNode::getPosition() { return Vec2d(lat, lon); }
 
+Vec3d OSMNode::getPosition3() { return Vec3d(lat, lon, elevation); }
+
 string OSMWay::toString() {
     string res = OSMBase::toString() + " nodes:";
     for (auto n : nodes) res += " " + n;
@@ -703,6 +713,7 @@ string OSMRelation::toString() {
 
 vector<string> OSMRelation::getNodes() { return nodes; }
 vector<string> OSMRelation::getWays() { return ways; }
+vector<string> OSMRelation::getRelations() { return relations; }
 
 bool OSMBase::hasTag(const string& t) {
     return tags.count(t) > 0;
@@ -867,8 +878,13 @@ void OSMMap::readFile(string path) {
     cout << "  loaded " << ways.size() << " ways, " << nodes.size() << " nodes and " << relations.size() << " relations" << endl;
     cout << "  secs needed: " << t2 << endl;
 }
-
+void OSMMap::checkGDAL(){
+#ifdef WITHOUT_GDAL
+    cout << "OSMMap - WITHOUT_GDAL" << endl;
+#endif // WITHOUT_GDAL
+}
 void OSMMap::readGEOJSON(string path) {
+    checkGDAL();
 #ifndef WITHOUT_GDAL
     auto coordsFromString = [&](string inB) {
         //string has format: "lon lat"
@@ -1005,6 +1021,7 @@ void OSMMap::readGEOJSON(string path) {
 }
 
 void OSMMap::readSHAPE(string path) {
+    checkGDAL();
 #ifndef WITHOUT_GDAL
 #if GDAL_VERSION_NUM >= GDAL_COMPUTE_VERSION(2,3,0)
 #elif GDAL_VERSION_NUM >= GDAL_COMPUTE_VERSION(2,0,0)
@@ -1027,28 +1044,37 @@ void OSMMap::readSHAPE(string path) {
 #endif // WITHOUT_GDAL
 }
 
-void OSMMap::readGML(string path) {
+Vec2d OSMMap::convertGKtoLatLon(double northing, double easting, int EPSG_Code) {
+    checkGDAL();
+#ifndef WITHOUT_GDAL
+#if GDAL_VERSION_NUM >= GDAL_COMPUTE_VERSION(2,0,0)
+    GDALAllRegister();
+    OGRSpatialReference source, target;
+
+    source.importFromEPSG(EPSG_Code);
+    target.importFromEPSG(4326);
+
+    OGRPoint p;
+    p.setX(easting);
+    p.setY(northing);
+    p.assignSpatialReference(&source);
+
+    p.transformTo(&target);
+
+    //cout << " new " << p.getX() << " | " << p.getY();
+    return Vec2d(p.getY(), p.getX());
+#endif // GDAL_VERSION_NUM
+#endif // WITHOUT_GDAL
+#ifdef WITHOUT_GDAL
+    return Vec2d(0.0,0.0);
+#endif // WITHOUT_GDAL
+}
+
+void OSMMap::readGML(string path, int EPSG_Code) {
+    checkGDAL();
 #ifndef WITHOUT_GDAL
     cout << "OSMMap::readGML path " << path << endl;
     cout << "  GDAL Version Nr:" << GDAL_VERSION_NUM << endl;
-
-    auto toLatLon = [&](string rechts, string hoch) {
-        double lat = 0;
-        double lon = 0;
-        double x,y;
-
-        x = double( toFloat(rechts) );
-        y = double( toFloat(hoch) );
-        //if (rechts.substr(0,1) == "3") { rechts = rechts.substr(1,rechts.length()-1); cout << "Zone 3: " << rechts << "-" << hoch << endl; }
-        //if (toFloat(rechts) < 500000) lon = 3*3 - double(toFloat(rechts))*360.0/40000000.0;
-        //if (toFloat(rechts) > 500000) lon = 3*3 + double(toFloat(rechts))*360.0/40000000.0;
-        //lat = double(toFloat(hoch))*360.0/40000000.0;//double(toFloat(hoch))40000 km / 360
-        //lat = double(toFloat(hoch))*360.0/40000000.0;//double(toFloat(hoch))40000 km / 360
-        if (toFloat(rechts) < 500000) lat = -(500000.0-double( toFloat(rechts) ));
-        else lat = double( toFloat(rechts) );
-        lon = y;
-        return Vec2d(lat,lon);
-    };
 
     auto coordsFromString = [&](string inB) {
         //string has format: "x y z"
@@ -1056,9 +1082,8 @@ void OSMMap::readGML(string path) {
         int at2 = inB.find_first_of(" ",at1+1);
         string rechtswert = inB.substr(0, at1).c_str();
         string hochwert = inB.substr(at1+1, at2-(at1+1)).c_str();
-        Vec2d latlon = toLatLon(rechtswert,hochwert);
         double elevation = toFloat( inB.substr(at2+1, inB.length()-(at2+1)).c_str() );
-        return Vec3d(latlon[0],latlon[1],elevation);
+        return Vec3d( atof(hochwert.c_str()), atof(rechtswert.c_str()), elevation);
     };
 
     auto multicoordsFromString = [&](string inB){
@@ -1113,18 +1138,30 @@ void OSMMap::readGML(string path) {
 
     layercount = poDS->GetLayerCount();
     int featureCounter = 0;
+    map<string,string> pkIDs;
+    map<string,map<string,string>> pkIDtoTags;
     for (int i = 0; i < layercount; i++) {
+        bool nlnG = true;
         OGRLayer  *poLayer = poDS->GetLayer(i);
         OGRFeature *poFeature;
         poLayer->ResetReading();
+        int localCounter = 0;
         while( (poFeature = poLayer->GetNextFeature()) != NULL ) {
+            localCounter++;
             OGRFeatureDefn *poFDefn = poLayer->GetLayerDefn();
             map<string, string> tags;
             //cout << " --- " << endl;
             for( int iField = 0; iField < poFDefn->GetFieldCount(); iField++ ) {
                 OGRFieldDefn *poFieldDefn = poFDefn->GetFieldDefn( iField );
                 tags[poFieldDefn->GetNameRef()] = poFeature->GetFieldAsString(iField);
+                //if (poFieldDefn->GetNameRef() == "ogr_pkid") pkIDs[poFeature->GetFieldAsString(iField)] = poLayer->GetName();
                 //cout << poFieldDefn->GetNameRef() << "-" << poFeature->GetFieldAsString(iField) << endl;
+            }
+
+            for (auto each:tags) {
+                if (each.first == "ogr_pkid") {
+                    pkIDtoTags[each.second] = tags;
+                }
             }
 
             OGRGeometry *poGeometry;
@@ -1139,35 +1176,110 @@ void OSMMap::readGML(string path) {
                 poGeometry->exportToWkt(&wkt_tmp);
                 vector<vector<Vec3d>> multiPoly = multipolyFromString(wkt_tmp);
                 vector<string> refsForWays;
+                string wID = "";
+
+                for (auto each:tags) {
+                    if (each.first == "ogr_pkid") {
+                        pkIDs[each.second] = poLayer->GetName();
+                        wID = each.second;
+                    }
+                }
+
                 for (auto eachPoly : multiPoly) {
                     refsForWays.clear();
                     for (auto eachPoint : eachPoly) {
                         nodeID++;
                         string strNID = to_string(nodeID);
-                        OSMNodePtr node = OSMNodePtr( new OSMNode(strNID, eachPoint[0], eachPoint[1] ) );
+                        Vec2d latlon = convertGKtoLatLon(eachPoint[0], eachPoint[1], EPSG_Code);
+                        OSMNodePtr node = OSMNodePtr( new OSMNode(strNID, latlon[0], latlon[1] ) );
                         refsForWays.push_back(strNID);
                         nodes[node->id] = node;
                         node->elevation = eachPoint[2];
                         //bounds->update(Vec3d(eachPoint[1],eachPoint[0],0));
                         //cout << eachPoint << " ";
                     }
-                    wayID++;
-                    string strWID = to_string(wayID);
-                    OSMWayPtr way = OSMWayPtr( new OSMWay(strWID) );
+                    //wayID++;
+                    //string strWID = to_string(wayID);
+                    OSMWayPtr way = OSMWayPtr( new OSMWay(wID) );
                     way->nodes = refsForWays;
                     way->tags = tags;
                     ways[way->id] = way;
+                    nlnG = false;
                 }
                 //cout << endl;
                 //cout << i <<  " F: "<< featureCounter << endl;
             }
             else {
                 //printf( "no point or multipolygon geometry\n" );
+                cout << poLayer->GetName() << " = ";
+                for (auto each:tags) {
+                    cout << each.first << ":" << each.second << " ";
+                    if (each.first == "ogr_pkid") pkIDs[each.second] = poLayer->GetName();
+                }
+                cout << endl;
+
+                ///TODO: implement everything else as relations
+                if ( tags.count("texcoordlist_texturecoordinates") ){
+
+                }
+                if ( tags.count("") ){
+
+                }
+                if ( tags.count("") ){
+
+                }
+                if ( tags.count("") ){
+
+                }
+                /*Relations:
+                Building - a gathering of polygons
+                Building bounded by - gathering of polygons
+                Textures - materials and links to material as gathering for polygons (ways)
+                TextureCoordinates - meta data of polygons (ways)
+                */
             }
             featureCounter++;
         }
+
+        if (nlnG && localCounter>0) {
+            //cout << poLayer->GetName() << endl;
+            cout << "------new Layer------" << poLayer->GetName() << endl;
+        }
         //OGRFeature::DestroyFeature( poFeature );
     }
+    for (auto each : pkIDs) {
+        if (each.second == "texcoordlist") {}
+        if (each.second == "texcoordlist_texturecoordinates") { cout << "COORDINATES---" << each.first << " type: " << each.second << endl; }
+        if (each.second == "building_name") {}
+        if (each.second == "x3dmaterial") { cout << "MATERIAL---" << each.first << " type: " << each.second << endl; }
+        if (each.second == "parameterizedtexture") { cout << "URI HERE---" << each.first << " type: " << each.second << endl; }
+        if (each.second == "parameterizedtexture_target") {}
+        //cout << each.first << " type: " << each.second << endl;
+    }
+
+    for (auto outer : pkIDtoTags) {
+        if (outer.second.count("imageuri")) {
+            cout << "found imageuri: " << outer.second["imageuri"] << endl;
+            if (outer.second.count("imageuri")) {
+                //cout << "" << endl;
+            }
+        }
+
+        if (pkIDs[outer.first] == "parameterizedtexture_target") {
+            //cout << "found everything" << endl;
+            cout << " TCL " << outer.second["_textureparameterization_texcoordlist_pkid"] << " -- ";
+            cout << " Par " << outer.second["parent_ogr_pkid"] << " -- ";
+            cout << " uri " << outer.second["uri"];
+        }
+        for (auto inner : outer.second) {
+
+            /*for (auto each : inner) {
+                if (each.first == "target uri") { }
+                if (each.first == "") { }
+            }*/
+        }
+    }
+
     mapType = "GML";
     GDALClose(poDS);
     cout << "Layers: " << layercount << " Features: " << featureCounter << endl;

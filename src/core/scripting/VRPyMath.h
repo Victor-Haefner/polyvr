@@ -11,6 +11,8 @@
 #include "core/math/patch.h"
 #include "core/math/datarow.h"
 #include "core/math/OSGMathFwd.h"
+#include "core/utils/xml.h"
+#include "core/utils/VRSpreadsheet.h"
 #include <OpenSG/OSGMatrix.h>
 #include <OpenSG/OSGLine.h>
 
@@ -146,6 +148,18 @@ struct VRPyDatarow : VRPyBaseT<OSG::Datarow> {
 
     static PyObject* iter(PyObject *self) ;
     static PyObject* iternext(PyObject *self) ;
+};
+
+struct VRPyXML : VRPyBaseT<OSG::XML> {
+    static PyMethodDef methods[];
+};
+
+struct VRPyXMLElement : VRPyBaseT<OSG::XMLElement> {
+    static PyMethodDef methods[];
+};
+
+struct VRPySpreadsheet : VRPyBaseT<OSG::VRSpreadsheet> {
+    static PyMethodDef methods[];
 };
 
 #endif // VRPYMATH_H_INCLUDED

@@ -10,7 +10,10 @@
 using namespace OSG;
 
 simpleVRPyType(Material, New_VRObjects_ptr);
+
+#ifndef WITHOUT_AV
 simpleVRPyType(Video, 0);
+#endif
 
 #ifndef WITHOUT_AV
 PyMethodDef VRPyVideo::methods[] = {
@@ -93,8 +96,10 @@ PyMethodDef VRPyMaterial::methods[] = {
     {"getTessControlShader", PyWrap( Material, getTessControlShader, "Get tesselation control shader", string ) },
     {"getTessEvaluationShader", PyWrap( Material, getTessEvaluationShader, "Get tesselation evaluation shader", string ) },
 
+#ifndef WITHOUT_AV
     {"setVideo", PyWrap( Material, setVideo, "Set video as texture", VRVideoPtr, string ) },
     {"getVideo", PyWrap( Material, getVideo, "Get video", VRVideoPtr ) },
+#endif
 
     {"diff", PyWrap( Material, diff, "Returns a diff report with another material", string, VRMaterialPtr ) },
     {NULL}  /* Sentinel */

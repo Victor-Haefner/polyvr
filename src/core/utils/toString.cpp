@@ -176,6 +176,9 @@ template<> string typeName(const voidPtr& t) { return "pointer"; }
 template<> string typeName(const string& t) { return "string"; }
 template<> string typeName(const int& t) { return "int"; }
 template<> string typeName(const unsigned int& t) { return "int"; }
+//#ifdef _WIN32
+template<> string typeName(const size_t& t) { return "int"; }
+//#endif
 template<> string typeName(const float& t) { return "float"; }
 template<> string typeName(const double& t) { return "double"; }
 template<> string typeName(const bool& t) { return "bool"; }
@@ -216,6 +219,9 @@ template<> int toValue(stringstream& ss, bool& v) { return ssToVal(ss, v); }
 template<> int toValue(stringstream& ss, char& v) { return ssToVal(ss, v); }
 template<> int toValue(stringstream& ss, signed char& v) { return ssToVal(ss, v); }
 template<> int toValue(stringstream& ss, unsigned char& v) { return ssToVal(ss, v); }
+#ifdef _WIN32
+template<> int toValue(stringstream& ss, size_t& v) { return ssToVal(ss, v); }
+#endif
 template<> int toValue(stringstream& ss, short& v) { return ssToVal(ss, v); }
 template<> int toValue(stringstream& ss, unsigned short& v) { return ssToVal(ss, v); }
 template<> int toValue(stringstream& ss, int& v) { return ssToVal(ss, v); }

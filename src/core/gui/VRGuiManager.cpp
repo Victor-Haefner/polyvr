@@ -19,6 +19,8 @@
 #include "core/setup/devices/VRDevice.h"
 #include "core/setup/devices/VRSignalT.h"
 
+#include "glarea/glgdk.h"
+#include "glarea/glarea.h"
 #include <gtk/gtk.h>
 #if GTK_MAJOR_VERSION == 2
 #include <gtk/gtkglinit.h>
@@ -69,7 +71,21 @@ VRGuiManager::VRGuiManager() {
 #ifndef _WIN32
     setenv("GDK_GL", "legacy", 1); // linux legacy gl
 #endif
-    gtk_init(&argc, 0);
+    gtk_init_check(&argc, 0);
+#ifndef _WIN32
+    replace_gl_visuals();
+#else
+    override_win32_gl_context_realize();
+#endif
+
+    GdkDisplay* display = gdk_display_get_default();
+    GdkScreen* screen = gdk_display_get_default_screen(display);
+    GdkVisual* visual = gdk_screen_get_system_visual(screen);
+    int depth = gdk_visual_get_depth(visual);
+
+    /*int depth_size = 0;
+    glXGetConfig(dpy, visinfo, GLX_DEPTH_SIZE, &depth_size);*/
+    cout << " gdk system visual: depth size " << depth << endl;
 
     //gtk_window_set_interactive_debugging(true);
 

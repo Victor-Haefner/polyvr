@@ -1,5 +1,7 @@
 #include "VRClipPlane.h"
 #include "core/objects/material/VRMaterial.h"
+#include "core/objects/material/VRMaterialT.h"
+#include "core/scene/VRScene.h"
 #include "core/setup/VRSetup.h"
 
 #include <OpenSG/OSGMatrix.h>
@@ -23,6 +25,9 @@ VRClipPlane::VRClipPlane(string name) : VRGeometry(name) {
     m->setLit(false);
     m->setDiffuse(Color3f(1,1,1));
     m->setLineWidth(3);
+
+    clipShaderUpdate = VRUpdateCb::create("clipShaderUpdate", bind(&VRClipPlane::updateShader, this));
+    VRScene::getCurrent()->addUpdateFkt(clipShaderUpdate);
 }
 
 VRClipPlane::~VRClipPlane() {
@@ -39,6 +44,19 @@ VRClipPlanePtr VRClipPlane::create(string name) {
         dev->addDynTree(p, -1);
     }
     return p;
+}
+
+// see shader usage example in VRPlanet shader
+void VRClipPlane::updateShader() {
+    if (!active) return;
+
+    Vec4f plane = Vec4f(getEquation());
+
+    for (auto& m : mats) {
+        if (!m->getShaderProgram()) continue;
+        m->setShaderParameter("clipPlane", plane);
+        m->enableShaderParameter("OSGWorldMatrix");
+    }
 }
 
 void VRClipPlane::setSize(float W, float H) {
@@ -65,8 +83,8 @@ void VRClipPlane::setActive(bool a) {
     else deactivate();
 }
 
-Vec4d VRClipPlane::getEquation() { // not used, but may come in handy
-    Vec4d plane = Vec4d(0.0, -1.0, 0.0, 0.0);
+Vec4d VRClipPlane::getEquation() {
+    Vec4d plane = Vec4d(0,0,-1,0);
     Matrix4d m = getWorldMatrix();
     m.mult(plane,plane);
     plane[3] = -plane.dot(m[3]);//n*r

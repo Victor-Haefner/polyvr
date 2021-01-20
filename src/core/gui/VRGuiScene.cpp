@@ -865,7 +865,7 @@ void VRGuiScene::on_drag_end(GdkDragContext* dc) {
     auto dest = dragDest.lock();
     if (dest == 0) return;
     if (act == 0) return;
-    VRObjectPtr obj = getSelected();
+    VRObjectPtr obj = dragObj.lock();
     if (obj == 0) return;
     obj->switchParent(dest, dragPos);
 
@@ -879,15 +879,17 @@ void VRGuiScene::on_drag_beg(GdkDragContext* dc) {
     //cout << "\nDRAG BEGIN " << dc->get_selection() << endl;
 }
 
-void VRGuiScene::on_drag_data_receive(GdkDragContext* dc, int x, int y, GtkSelectionData* sd, guint i3, guint i4) {
+void VRGuiScene::on_drag_data_receive(GdkDragContext* dc, int x, int y, GtkSelectionData* sd, guint info, guint time) {
     GtkTreePath* path = 0;
     GtkTreeViewDropPosition pos; // enum
     gtk_tree_view_get_drag_dest_row(tree_view, &path, &pos);
     if (path == 0) return;
 
     dragDest.reset();
+    dragObj.reset();
     VRObjectPtr obj = getSelected();
     if (obj == 0) return;
+    dragObj = obj;
 
     dragPath = gtk_tree_path_to_string(path);
     dragPos = 0;

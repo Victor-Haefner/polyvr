@@ -33,7 +33,7 @@ VRGtkWindow::~VRGtkWindow() {
 }
 
 VRGtkWindowPtr VRGtkWindow::ptr() { return static_pointer_cast<VRGtkWindow>( shared_from_this() ); }
-VRGtkWindowPtr VRGtkWindow::create(GtkDrawingArea* da, string msaa) { return shared_ptr<VRGtkWindow>(new VRGtkWindow(da, msaa) ); }
+VRGtkWindowPtr VRGtkWindow::create(GtkWidget* da, string msaa) { return shared_ptr<VRGtkWindow>(new VRGtkWindow(da, msaa) ); }
 
 void VRGtkWindow::setCursor(string c) {
     GdkWindow* win = gtk_widget_get_window(widget);
@@ -132,7 +132,8 @@ bool VRGtkWindow::on_button(GdkEventButton* event) {
     if (event->type == GDK_BUTTON_PRESS) state = 0;
 
     if (getMouse() == 0) return false;
-    getMouse()->mouse(event->button -1,state ,event->x ,event->y);
+    auto p = rebaseMousePosition(event->x, event->y);
+    getMouse()->mouse(event->button -1,state ,p[0] ,p[1]);
 
 	/*printf("\nbutton: %i %i", event->button, event->type);
 	printf("\n   x : %f", event->x);
@@ -144,7 +145,8 @@ bool VRGtkWindow::on_button(GdkEventButton* event) {
 bool VRGtkWindow::on_motion(GdkEventMotion * event) {
     //gtk_widget_grab_focus((GtkWidget*)drawArea->gobj());
     if (getMouse() == 0) return false;
-    getMouse()->motion(event->x ,event->y);
+    auto p = rebaseMousePosition(event->x ,event->y);
+    getMouse()->motion(p[0] ,p[1]);
 
 	/*printf("\nevent: %i", event->type);
 	printf("\n   x : %f", event->x);
@@ -174,20 +176,59 @@ bool VRGtkWindow::on_scroll(GdkEventScroll * event) {
     if (button == 999) return false;
 
     if (getMouse() == 0) return false;
-    getMouse()->mouse(button, 0 ,event->x ,event->y);
+    auto p = rebaseMousePosition(event->x ,event->y);
+    getMouse()->mouse(button, 0 ,p[0] ,p[1]);
 
     return true;
 }
 
-void VRGtkWindow::on_resize(GdkRectangle* allocation) {
+void VRGtkWindow::on_resize(int w, int h) {
     initialExpose = true;
-    resize(allocation->width, allocation->height);
+
+    auto clipping = gl_area_get_clipping(GL_AREA(widget));
+
+    //cout << " on_resize " << Vec2i(allocation->x, allocation->y) << " " << Vec2i(allocation->width, allocation->height) << endl;
+    //cout << " on_resize " << Vec4i(clipping.x, clipping.y, clipping.w, clipping.h) << " " << Vec2i(clipping.W, clipping.H) << endl;
+
+    double x1 = double(clipping.x           )/clipping.W;
+    double y1 = double(clipping.y           )/clipping.H;
+    double x2 = double(clipping.x+clipping.w)/clipping.W;
+    double y2 = double(clipping.y+clipping.h)/clipping.H;
+    //cout << "  on_resize " << Vec4d(x1,y1,x2,y2) << endl;
+
+    resize(clipping.w, clipping.h);
+    _win->resize(clipping.W, clipping.H);
+    for (auto vw : views) {
+        if (auto v = vw.lock()) v->setPosition(Vec4d(x1,y1,x2,y2));
+    }
+}
+
+void VRGtkWindow::enableVSync(bool b) {
+    gl_area_set_vsync( GL_AREA(widget), b );
 }
 
 void printGLversion() {
     //const GLubyte* renderer = glGetString (GL_RENDERER); // get renderer string
     const GLubyte* version = glGetString (GL_VERSION); // version as a string
     cout << "Supported OpenGL version: " << version << endl;
+}
+
+void VRGtkWindow::doResize() {
+    gl_area_trigger_resize(GL_AREA(widget));
+    on_resize(0,0);
+}
+
+void VRGtkWindow::forceSize(int W, int H) {
+    // get paned and move them
+    auto ph = VRGuiBuilder::get()->get_widget("hpaned1");
+    auto pv = VRGuiBuilder::get()->get_widget("vpaned1");
+    int w = getSize()[0];
+    int h = getSize()[1];
+    int px = gtk_paned_get_position(GTK_PANED(ph));
+    int py = gtk_paned_get_position(GTK_PANED(pv));
+    gtk_paned_set_position(GTK_PANED(ph), px-(W-w));
+    gtk_paned_set_position(GTK_PANED(pv), py+(H-h));
+    //cout << "VRGtkWindow::forceSize " << Vec2i(W,H) << " " << Vec2i(w,h) << endl;
 }
 
 void VRGtkWindow::save(XMLElementPtr node) { VRWindow::save(node); }

@@ -32,6 +32,8 @@
 //								Added pageSize to E57FileHeader
 //								Changed Version to 1.0
 
+#define NOMINMAX // windows defines min / max macros! ..how stupid!
+
 #if defined(WIN32)
 #  if defined(_MSC_VER)
 #    include <io.h>
@@ -95,6 +97,11 @@ using std::max;
 //#include <xercesc/util/TransService.hpp>
 
 #include "core/utils/xml.h"
+using OSG::XML;
+using OSG::XMLElement;
+using OSG::XMLAttribute;
+using OSG::XMLStreamHandler;
+using OSG::XMLInputStream;
 
 #define XMLCh uint16_t
 #define XMLSize_t size_t

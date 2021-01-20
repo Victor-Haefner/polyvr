@@ -51,6 +51,7 @@ string loadGeometryDoc =
 "\n\t\topts['pointSize'] = 5"
 "\n\t\topts['lod1'] = [5, 20]"
 "\n\t\topts['lod2'] = [10, 200]"
+"\n\t\topts['xyzNoColor'] = 0"
 ;
 
 PyMethodDef VRSceneGlobals::methods[] = {
@@ -94,7 +95,9 @@ PyMethodDef VRSceneGlobals::methods[] = {
 
 PyObject* VRSceneGlobals::setWindowTitle(VRSceneGlobals* self, PyObject* args) {
     string name = parseString(args);
+#ifndef WITHOUT_GTK
     VRGuiManager::get()->setWindowTitle(name);
+#endif
     Py_RETURN_TRUE;
 }
 

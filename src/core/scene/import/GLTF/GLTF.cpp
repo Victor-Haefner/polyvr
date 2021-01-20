@@ -1167,6 +1167,10 @@ class GLTFLoader : public GLTFUtils {
         map<int, vector<int>> childrenPerMesh;
         map<int, VRMaterialPtr> materials;
         map<int, VRTexturePtr> textures;
+        vector<Vec3d> tangentsVec;
+        vector<Vec2d> tangentsUVs;
+        int texSizeX = 0;
+        int texSizeY = 0;
         size_t sceneID = -1;
         size_t nodeID = -1;
         size_t meshID = -1;
@@ -1530,7 +1534,10 @@ class GLTFLoader : public GLTFUtils {
             img->getImage()->set( pf, dims[0], dims[1], dims[2], 1, 1, 0, (const UInt8*)image.image.data(), f);
             //if (components == 4) setTexture(img, true);
             //if (components == 3) setTexture(img, false);
-
+            if (texSizeX == 0) {
+                texSizeX = width;
+                texSizeY = height;
+            }
             textures[texID] = img;
         }
 
@@ -1608,6 +1615,24 @@ class GLTFLoader : public GLTFUtils {
                     }
                 }
 
+#ifdef HANDLE_PBR_MATERIAL
+                if (primitive.attributes.count("TANGENT")) {
+                    const tinygltf::Accessor& accessorT = model.accessors[primitive.attributes["TANGENT"]];
+                    const tinygltf::BufferView& bufferViewT = model.bufferViews[accessorT.bufferView];
+                    const tinygltf::Buffer& bufferT = model.buffers[bufferViewT.buffer];
+                    const float* tangents   = reinterpret_cast<const float*>(&bufferT.data[bufferViewT.byteOffset + accessorT.byteOffset]);
+                    if (accessorT.componentType == 5126) {
+                        for (size_t i = 0; i < accessorT.count; ++i) {
+                            Vec3d tan;
+                            if (bufferViewT.byteStride > 12) { tan = Vec3d( tangents[i * (bufferViewT.byteStride/4) + 0], tangents[i * (bufferViewT.byteStride/4) + 1], tangents[i * (bufferViewT.byteStride/4) + 2] ); }
+                            else tan = Vec3d( tangents[i * 3 + 0], tangents[i * 3 + 1], tangents[i * 3 + 2] );
+                            //gdata.pushTangent(tan);
+                            tangentsVec.push_back(tan);
+                        }
+                    }
+                }
+#endif // HANDLE_PBR_MATERIAL
+
                 if (primitive.attributes.count("COLOR_0")){
                     const tinygltf::Accessor& accessorColor = model.accessors[primitive.attributes["COLOR_0"]];
                     const tinygltf::BufferView& bufferViewCO = model.bufferViews[accessorColor.bufferView];
@@ -1630,6 +1655,7 @@ class GLTFLoader : public GLTFUtils {
                         for (size_t i = 0; i < accessorTexUV.count; ++i) {
                             Vec2d UV = Vec2d( UVs[i*2 + 0], UVs[i*2 + 1] );
                             if (firstPrim) gdata.pushTexCoord(UV);
+                            tangentsUVs.push_back(UV);
                         }
                     }
                 }
@@ -1712,7 +1738,49 @@ class GLTFLoader : public GLTFUtils {
                         }
                         if (accessorIndices.componentType != 5121 && accessorIndices.componentType != 5122 && accessorIndices.componentType != 5125 && accessorIndices.componentType != 5123) { cout << "GLTF-LOADER: data type of TRIANGLE INDICES unknwon: " << accessorIndices.componentType << endl; }
                     }
-                    if (primitive.mode == 5) { /*TRIANGLE STRIP*/ cout << "GLTF-LOADER: not implemented TRIANGLE STRIP" << endl;}
+                    if (primitive.mode == 5) { /*TRIANGLE STRIP*/
+                        if (accessorIndices.componentType == 5121) {
+                            const unsigned char* indices   = reinterpret_cast<const unsigned char*>(&bufferInd.data[bufferViewIndices.byteOffset + accessorIndices.byteOffset]);
+                            for (size_t i = 0; i < accessorIndices.count-2; ++i) {
+                                if (i%2) {
+                                    gdata.pushTri(nUpTo+indices[i+1],nUpTo+indices[i+0],nUpTo+indices[i+2]);
+                                } else {
+                                    gdata.pushTri(nUpTo+indices[i+0],nUpTo+indices[i+1],nUpTo+indices[i+2]);
+                                }
+                            }
+                        }
+                        if (accessorIndices.componentType == 5122) {
+                            const unsigned short* indices   = reinterpret_cast<const unsigned short*>(&bufferInd.data[bufferViewIndices.byteOffset + accessorIndices.byteOffset]);
+                            for (size_t i = 0; i < accessorIndices.count-2; ++i)  {
+                                if (i%2) {
+                                    gdata.pushTri(nUpTo+indices[i+1],nUpTo+indices[i+0],nUpTo+indices[i+2]);
+                                } else {
+                                    gdata.pushTri(nUpTo+indices[i+0],nUpTo+indices[i+1],nUpTo+indices[i+2]);
+                                }
+                            }
+                        }
+                        if (accessorIndices.componentType == 5123) {
+                            const short* indices   = reinterpret_cast<const short*>(&bufferInd.data[bufferViewIndices.byteOffset + accessorIndices.byteOffset]);
+                            for (size_t i = 0; i < accessorIndices.count-2; ++i)  {
+                                if (i%2) {
+                                    gdata.pushTri(nUpTo+indices[i+1],nUpTo+indices[i+0],nUpTo+indices[i+2]);
+                                } else {
+                                    gdata.pushTri(nUpTo+indices[i+0],nUpTo+indices[i+1],nUpTo+indices[i+2]);
+                                }
+                            }
+                        }
+                        if (accessorIndices.componentType == 5125) {
+                            const unsigned int* indices   = reinterpret_cast<const unsigned int*>(&bufferInd.data[bufferViewIndices.byteOffset + accessorIndices.byteOffset]);
+                            for (size_t i = 0; i < accessorIndices.count-2; ++i)  {
+                                if (i%2) {
+                                    gdata.pushTri(nUpTo+indices[i+1],nUpTo+indices[i+0],nUpTo+indices[i+2]);
+                                } else {
+                                    gdata.pushTri(nUpTo+indices[i+0],nUpTo+indices[i+1],nUpTo+indices[i+2]);
+                                }
+                            }
+                        }
+                        if (accessorIndices.componentType != 5121 && accessorIndices.componentType != 5122 && accessorIndices.componentType != 5125 && accessorIndices.componentType != 5123) { cout << "GLTF-LOADER: data type of TRIANGLE SRIP INDICES unknwon: " << accessorIndices.componentType << endl; }
+                    }
                     if (primitive.mode == 6) { /*TRAINGLE FAN*/ cout << "GLTF-LOADER: not implemented fTRAINGLE FAN" << endl;}
                 }   else {
                     if (primitive.mode == 0) { /*POINTS*/
@@ -1725,16 +1793,47 @@ class GLTFLoader : public GLTFUtils {
                     if (primitive.mode == 4) { /*TRIANGLES*/
                         for (long i = 0; i < n/3; i++) gdata.pushTri(nUpTo+i*3+0,nUpTo+i*3+1,nUpTo+i*3+2);
                     }
-                    if (primitive.mode == 5) { /*TRIANGLE STRIP*/ cout << "GLTF-LOADER: not implemented TRIANGLE STRIP" << endl;}
-                    if (primitive.mode == 6) { /*TRAINGLE FAN*/ cout << "GLTF-LOADER: not implemented fTRAINGLE FAN" << endl;}
+                    if (primitive.mode == 5) { /*TRIANGLE STRIP*/ cout << "GLTF-LOADER: not implemented TRIANGLE STRIP" << endl; }
+                    if (primitive.mode == 6) { /*TRAINGLE FAN*/ cout << "GLTF-LOADER: not implemented TRAINGLE FAN" << endl;}
                 }
                 //cout << meshID << " " << gdata.size() << " --- " << n <<  endl;
                 //cout << "prim with v " << n << " : " << primitive.mode <<  endl;
+
+
+#ifdef HANDLE_PBR_MATERIAL
+                //MAKE TEXTURE FOR TANGENTS
+                VRTexturePtr img = VRTexture::create();
+                Vec3i dims = Vec3i(texSizeX, texSizeY, 1);
+                const auto size = 3 * dims[0] * dims[1] * 8;
+
+                int pf = Image::OSG_RGB_PF;
+                int f = Image::OSG_UINT8_IMAGEDATA;
+                unsigned char* data = new unsigned char[size];
+                img->getImage()->set( pf, dims[0], dims[1], dims[2], 1, 1, 0, (const UInt8*)data, f);
+
+                for ( int i = 0; i < tangentsVec.size(); i++ ) {
+                    int x = int( tangentsUVs[i][0]*float(dims[0]) );
+                    int y = int( tangentsUVs[i][1]*float(dims[1]) );
+                    float r = tangentsVec[i][0];
+                    float g = tangentsVec[i][1];
+                    float b = tangentsVec[i][2];
+                    float a = 1;
+                    img->setPixel(Vec3i(x,y,1), Color4f(r,g,b,a));
+                    //cout << i << "::" << x << " " << y << "--" << tangentsUVs[i][0]*float(dims[0]) << endl;
+                }
+#endif // HANDLE_PBR_MATERIAL
+
                 if (firstPrim) {
                     node->matID = primitive.material;
                     if (materials.count(primitive.material)) {
                         node->material = materials[primitive.material];
                         if (pointsOnly) materials[primitive.material]->setLit(false);
+#ifdef HANDLE_PBR_MATERIAL
+                        if (tangentsVec.size() > 0) {
+                            materials[primitive.material]->setShaderParameter("u_TangentSampler",4);
+                            materials[primitive.material]->setTexture(img, true, 4);
+                        }
+#endif // HANDLE_PBR_MATERIAL
                     }
                     firstPrim = false;
                 }

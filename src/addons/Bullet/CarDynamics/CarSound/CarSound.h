@@ -51,7 +51,7 @@ class VRCarSound {
         void print();
         const vector<double>& getSpectrum(const float rpm);
         void readFile(string filename);
-        const uint getRes();
+        const unsigned int getRes();
         const bool isLoaded();
         const float getMinRPM();
         const float getMaxRPM();

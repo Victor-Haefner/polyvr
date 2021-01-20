@@ -404,6 +404,7 @@ void VRGuiBits::update() { // scene changed
 
     updateVisualLayer();
     update_ward = false;
+    cout << " VRGuiBits::update done" << endl;
 }
 
 void VRGuiBits::wipeConsoles() {

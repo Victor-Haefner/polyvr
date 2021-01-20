@@ -19,6 +19,7 @@ using namespace std;
 class VRGuiScene {
     private:
         VRObjectWeakPtr dragDest;
+        VRObjectWeakPtr dragObj;
         string dragPath;
         int dragPos = 0;
         bool transformModeLocal = true;

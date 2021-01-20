@@ -71,11 +71,12 @@ class VRWorldGenerator : public VRTransform {
         void addAsset( string name, VRTransformPtr geo );
         void addMaterial( string name, VRMaterialPtr mat );
         void addOSMMap(string path, double subN = -1, double subE = -1, double subSize = -1);
-        void addGML(string path);
+        void addGML(string path, int EPSG_Code = 31467);
         void readOSMMap(string path);
         void reloadOSMMap(double subN = -1, double subE = -1, double subSize = -1);
         void clear();
         OSMMapPtr getOSMMap();
+        OSMMapPtr getGMLMap();
 
         //getLODTerrain();
         void setupLOD(int layers);

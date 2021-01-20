@@ -13,6 +13,8 @@
 #include "core/objects/material/VRTextureGenerator.h"
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/geometry/VRSky.h"
+#include "core/setup/VRSetup.h"
+#include "core/setup/windows/VRGtkWindow.h"
 #include "core/scene/VRScene.h"
 #include "core/scene/rendering/VRDefShading.h"
 #include "core/math/boundingbox.h"
@@ -75,6 +77,7 @@ OSG_END_NAMESPACE;
 vector<VRTextureRendererWeakPtr> TRinstances;
 
 void VRTextureRenderer::test() {
+    return;
     NodeRefPtr     flagScene = makeCoredNode<Group>();
     GeometryRefPtr flagGeo   = makePlaneGeo(4, 2, 1, 1);
     flagGeo->setDlistCache(false);
@@ -127,13 +130,9 @@ VRTextureRenderer::VRTextureRenderer(string name, bool readback) : VRObject(name
     RenderBufferRefPtr depthBuf = RenderBuffer::create();
     depthBuf->setInternalFormat(GL_DEPTH_COMPONENT24);
 
-#ifdef _WIN32
-    FrameBufferObject::outerFBO = 1;
-#endif
     data->fbo = FrameBufferObject::create();
     data->fbo->setColorAttachment(texBuf, 0);
-    //data->fbo->setColorAttachment(texDBuf, 1);
-    data->fbo->setDepthAttachment(texDBuf); //HERE depthBuf/texDBuf
+    data->fbo->setDepthAttachment(texDBuf);
     data->fbo->editMFDrawBuffers()->push_back(GL_DEPTH_ATTACHMENT_EXT);
     data->fbo->editMFDrawBuffers()->push_back(GL_COLOR_ATTACHMENT0_EXT);
     data->fbo->setWidth (data->fboWidth );

@@ -7,6 +7,24 @@ VRGlobals::FPS::FPS(Int ms, Int fps, string s1, string s2) : ms(ms), fps(fps), s
 void VRGlobals::FPS::update(VRTimer& t) {
     ms = t.stop();
     fps = round(1000.0/max(ms,1lu));
+
+    static const int N = 60;
+    if (history.size() < N) history.push_back(ms);
+    else { history[pointer] = ms; pointer++; }
+    if (pointer >= N) pointer = 0;
+
+    /*int MS = 0;
+    for (auto m : history) MS += m;
+    mfps = round(1000.0*N/max(MS,1));*/
+
+    Int mi = 1e6;
+    Int ma = 1;
+    for (auto m : history) {
+        ma = max(ma, m);
+        mi = max(min(mi, m),1ul);
+    }
+    min_fps = round(1000.0/ma);
+    max_fps = round(1000.0/mi);
 }
 
 VRGlobals::Int VRGlobals::CURRENT_FRAME = 0;

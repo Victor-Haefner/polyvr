@@ -1,4 +1,8 @@
 
+#ifdef _WIN32
+#define __STDC_CONSTANT_MACROS
+#endif
+
 extern "C" {
 #include <libavresample/avresample.h>
 #include <libavutil/mathematics.h>
@@ -14,15 +18,9 @@ extern "C" {
 #include "../VRScene.h"
 #include "core/utils/VRFunction.h"
 
-#if _WIN32
-#include <al.h>
-#include <alc.h>
-#include <alext.h>
-#else
 #include <AL/al.h>
 #include <AL/alc.h>
 #include <AL/alext.h>
-#endif
 
 #include <thread>
 #include <boost/thread/mutex.hpp>

@@ -5,22 +5,14 @@
 
 #include <OpenSG/OSGPassiveWindow.h>
 
-#if GTK_MAJOR_VERSION == 2
-#define GDKRECTANGLE _GdkRectangle
-#else
-#define GDKRECTANGLE _cairo_rectangle_int
-#endif
-
-struct _GtkDrawingArea;
 struct _GtkWidget;
 struct _GdkEventScroll;
 struct _GdkEventExpose;
-struct GDKRECTANGLE;
+struct _cairo_rectangle_int;
 struct _GdkEventButton;
 struct _GdkEventMotion;
 struct _GdkEventKey;
 
-struct _GtkGLArea;
 struct _GdkGLContext;
 struct _cairo;
 
@@ -30,38 +22,39 @@ using namespace std;
 
 class VRGtkWindow : public VRWindow {
     private:
-		_GtkDrawingArea* drawArea = 0;
+		_GtkWidget* area = 0;
         _GtkWidget* widget = 0;
+        _GdkGLContext* glcontext = 0;
         VRHeadMountedDisplayPtr hmd = 0;
         PassiveWindowMTRecPtr win;
         bool initialExpose = true;
         bool isRealized = false;
 
         bool on_scroll(_GdkEventScroll* e);
-        void on_resize(GDKRECTANGLE* a);
+        void on_resize(int w, int h);
         bool on_button(_GdkEventButton* e);
         bool on_motion(_GdkEventMotion* e);
         bool on_key(_GdkEventKey* e);
 
-#if GTK_MAJOR_VERSION == 2
-        bool on_expose(_GdkEventExpose* e);
-        void on_realize();
-#else
         bool on_expose(_cairo* e);
-        _GdkGLContext* glcontext = 0;
         void on_realize();
         bool on_render(_GdkGLContext* glcontext);
-#endif
+
+        Vec2i rebaseMousePosition(int x, int y);
 
     public:
-        VRGtkWindow(_GtkDrawingArea* glarea, string msaa);
+        VRGtkWindow(_GtkWidget* glarea, string msaa);
         ~VRGtkWindow();
 
-        static VRGtkWindowPtr create(_GtkDrawingArea* da, string msaa);
+        static VRGtkWindowPtr create(_GtkWidget* da, string msaa);
         VRGtkWindowPtr ptr();
 
         void render(bool fromThread = false);
         void clear(Color3f c);
+
+        void forceSize(int W, int H);
+        void enableVSync(bool b);
+        void doResize();
 
         void setCursor(string c);
 

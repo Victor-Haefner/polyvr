@@ -4,6 +4,9 @@
 #include "core/gui/glarea/glarea.h"
 #include "core/gui/VRGuiBuilder.h"
 
+#include <OpenSG/OSGFrameBufferObject.h>
+#include <OpenSG/OSGRenderBuffer.h>
+
 GdkGLContext* onCreateGLContext(GLArea* area, gpointer user_data) {
     GdkWindow* window = gtk_widget_get_window(GTK_WIDGET(area));
     GdkGLContext* context = gdk_window_create_gl_context(window, NULL);
@@ -11,23 +14,17 @@ GdkGLContext* onCreateGLContext(GLArea* area, gpointer user_data) {
     return context;
 }
 
-VRGtkWindow::VRGtkWindow(GtkDrawingArea* da, string msaa) {
+VRGtkWindow::VRGtkWindow(GtkWidget* area, string msaa) {
     cout << " --------------------- VRGtkWindow::VRGtkWindow -------------- " << endl;
     type = 2;
 
     g_setenv("GDK_GL_LEGACY", "1", true); // windows
 
-    widget = GTK_WIDGET(da);
+    widget = area;
     if (gtk_widget_get_realized(widget)) cout << "Warning: glarea is realized!\n";
 
     int MSAA = toInt(subString(msaa, 1, -1));
-    gl_area_set_auto_render((GLArea*)widget, false);
-    gl_area_set_has_alpha((GLArea*)widget, false); // with alpha, transparent materials induce artifacts
-    gl_area_set_has_depth_buffer((GLArea*)widget, true);
-    gl_area_set_has_stencil_buffer((GLArea*)widget, true);
-    //gl_area_set_required_version((GLArea*)widget, 4,4);
-    gl_area_set_use_es((GLArea*)widget, false);
-    gl_area_set_samples((GLArea*)widget, MSAA);
+    //gl_area_set_samples((GLArea*)widget, MSAA); // TODO: pass the samples somehow
 
     //g_signal_connect(widget, "create-context", (GCallback)onCreateGLContext, NULL);
 
@@ -48,13 +45,15 @@ VRGtkWindow::VRGtkWindow(GtkDrawingArea* da, string msaa) {
     connect_signal<void>(widget, bind(&VRGtkWindow::on_realize, this), "realize");
     connect_signal<bool, GdkGLContext*>(widget, bind(&VRGtkWindow::on_render , this, PL::_1), "render" );
 
-    connect_signal<void, GdkRectangle*>(widget, bind(&VRGtkWindow::on_resize, this, PL::_1), "size_allocate");
+    connect_signal<void, int, int>(widget, bind(&VRGtkWindow::on_resize, this, PL::_1, PL::_2), "resize");
     connect_signal<void, GdkEventScroll*>(widget, bind(&VRGtkWindow::on_scroll, this, PL::_1), "scroll_event");
     connect_signal<void, GdkEventButton*>(widget, bind(&VRGtkWindow::on_button, this, PL::_1), "button_press_event");
     connect_signal<void, GdkEventButton*>(widget, bind(&VRGtkWindow::on_button, this, PL::_1), "button_release_event");
     connect_signal<void, GdkEventMotion*>(widget, bind(&VRGtkWindow::on_motion, this, PL::_1), "motion_notify_event");
     connect_signal<void, GdkEventKey*>(widget, bind(&VRGtkWindow::on_key, this, PL::_1), "key_press_event");
     connect_signal<void, GdkEventKey*>(widget, bind(&VRGtkWindow::on_key, this, PL::_1), "key_release_event");
+
+    gl_area_trigger_resize(GL_AREA(widget));
 
 #ifndef WITHOUT_OPENVR
     if (VRHeadMountedDisplay::checkDeviceAttached())
@@ -76,15 +75,15 @@ void VRGtkWindow::clear(Color3f c) {
     }*/
 }
 
+Vec2i VRGtkWindow::rebaseMousePosition(int x, int y) {
+    auto clipping = gl_area_get_clipping(GL_AREA(widget));
+    return Vec2i(clipping.x+x, clipping.y+y);
+}
+
 void VRGtkWindow::render(bool fromThread) {
     if (fromThread) return;
     PLock( VRGuiManager::get()->guiMutex() );
     if (!active || !content || !isRealized) return;
-
-    /*GtkAllocation a;
-    gtk_widget_get_allocation(widget, &a);
-    resize(a.width, a.height);*/
-
     gl_area_queue_render((GLArea*)widget);
 }
 
@@ -93,7 +92,7 @@ bool VRGtkWindow::on_render(GdkGLContext* glcontext) {
     int pID = profiler->regStart("gtk window render");
 
     glEnable(GL_DEPTH_TEST);
-    glEnable(GL_BLEND);
+    //glEnable(GL_BLEND);
     glEnable(GL_MULTISAMPLE);
 
     glClearColor(0.2, 0.2, 0.2, 1.0);
@@ -104,7 +103,9 @@ bool VRGtkWindow::on_render(GdkGLContext* glcontext) {
 #ifndef WITHOUT_OPENVR
         if (hmd) hmd->render();
 #endif
+        //cout << "   VRGtkWindow::on_render win" << endl;
         win->render(ract);
+        //cout << "   VRGtkWindow::on_render win done" << endl;
     }
     VRGlobals::RENDER_FRAME_RATE.update(t1);
 
@@ -137,16 +138,6 @@ void VRGtkWindow::on_realize() {
 
     GdkGLContext* context = gl_area_get_context((GLArea*)widget);
     cout << "gdk_gl_context_is_legacy: " << gdk_gl_context_is_legacy(context) << endl;
-
-    // trigger redraw of all widgets because of black glitch (TODO)
-    /*auto window = VRGuiBuilder::get()->get_widget("window1");
-    //for auto
-    //gtk_widget_show_all(window);
-    gtk_widget_queue_draw(window);
-    while (g_main_context_pending(NULL)) {
-        g_main_context_iteration(NULL,FALSE);
-    }*/
-
     return;
 }
 

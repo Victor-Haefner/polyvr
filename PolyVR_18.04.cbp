@@ -117,6 +117,7 @@
 			<Add directory="/usr/include/OPCUA" />
 			<Add directory="/usr/include/DWG" />
 			<Add directory="/usr/include/libxml2" />
+			<Add directory="/usr/include/eigen3" />
 		</Compiler>
 		<Linker>
 			<Add option="-lTKV3d" />
@@ -201,6 +202,7 @@
 			<Add option="-lcollada14dom" />
 			<Add option="-lGLU" />
 			<Add option="-lGL" />
+			<Add option="-lepoxy" />
 			<Add option="-lSM" />
 			<Add option="-lICE" />
 			<Add option="-lX11" />
@@ -375,8 +377,13 @@
 		<Unit filename="src/addons/Engineering/Machining/VRMachiningSimulation.h" />
 		<Unit filename="src/addons/Engineering/Machining/VRPyMachining.cpp" />
 		<Unit filename="src/addons/Engineering/Machining/VRPyMachining.h" />
+		<Unit filename="src/addons/Engineering/Mechanics/VRAxleSegmentation.cpp" />
+		<Unit filename="src/addons/Engineering/Mechanics/VRAxleSegmentation.h" />
+		<Unit filename="src/addons/Engineering/Mechanics/VRGearSegmentation.cpp" />
+		<Unit filename="src/addons/Engineering/Mechanics/VRGearSegmentation.h" />
 		<Unit filename="src/addons/Engineering/Mechanics/VRMechanism.cpp" />
 		<Unit filename="src/addons/Engineering/Mechanics/VRMechanism.h" />
+		<Unit filename="src/addons/Engineering/Mechanics/VRMechanismFwd.h" />
 		<Unit filename="src/addons/Engineering/Mechanics/VRPyMechanism.cpp" />
 		<Unit filename="src/addons/Engineering/Mechanics/VRPyMechanism.h" />
 		<Unit filename="src/addons/Engineering/Milling/VRMillingCuttingToolProfile.cpp" />
@@ -470,6 +477,8 @@
 		<Unit filename="src/addons/WorldGenerator/GIS/GISWorld.h" />
 		<Unit filename="src/addons/WorldGenerator/GIS/OSMMap.cpp" />
 		<Unit filename="src/addons/WorldGenerator/GIS/OSMMap.h" />
+		<Unit filename="src/addons/WorldGenerator/GIS/VRMapManager.cpp" />
+		<Unit filename="src/addons/WorldGenerator/GIS/VRMapManager.h" />
 		<Unit filename="src/addons/WorldGenerator/VRPyWorldGenerator.cpp" />
 		<Unit filename="src/addons/WorldGenerator/VRPyWorldGenerator.h" />
 		<Unit filename="src/addons/WorldGenerator/VRWorldGenerator.cpp" />
@@ -587,6 +596,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/core/gui/glarea/glarea.h" />
+		<Unit filename="src/core/gui/glarea/glgdk.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/core/gui/glarea/glgdk.h" />
 		<Unit filename="src/core/gui/gtkglext/gdk/gdkgl.h" />
 		<Unit filename="src/core/gui/gtkglext/gdk/gdkglconfig.c">
 			<Option compilerVar="CC" />
@@ -1010,6 +1023,8 @@
 		<Unit filename="src/core/math/datarow.h" />
 		<Unit filename="src/core/math/equation.cpp" />
 		<Unit filename="src/core/math/equation.h" />
+		<Unit filename="src/core/math/fft.cpp" />
+		<Unit filename="src/core/math/fft.h" />
 		<Unit filename="src/core/math/field.h" />
 		<Unit filename="src/core/math/frustum.cpp" />
 		<Unit filename="src/core/math/frustum.h" />
@@ -1063,6 +1078,12 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/core/networking/mongoose/mongoose.h" />
+		<Unit filename="src/core/networking/rest/VRRestClient.cpp" />
+		<Unit filename="src/core/networking/rest/VRRestClient.h" />
+		<Unit filename="src/core/networking/rest/VRRestResponse.cpp" />
+		<Unit filename="src/core/networking/rest/VRRestResponse.h" />
+		<Unit filename="src/core/networking/rest/VRRestServer.cpp" />
+		<Unit filename="src/core/networking/rest/VRRestServer.h" />
 		<Unit filename="src/core/networking/tcp/VRTCPClient.cpp" />
 		<Unit filename="src/core/networking/tcp/VRTCPClient.h" />
 		<Unit filename="src/core/networking/tcp/VRTCPServer.cpp" />
@@ -1571,6 +1592,8 @@
 		<Unit filename="src/core/utils/VRProgress.h" />
 		<Unit filename="src/core/utils/VRRate.cpp" />
 		<Unit filename="src/core/utils/VRRate.h" />
+		<Unit filename="src/core/utils/VRSpreadsheet.cpp" />
+		<Unit filename="src/core/utils/VRSpreadsheet.h" />
 		<Unit filename="src/core/utils/VRStorage.cpp" />
 		<Unit filename="src/core/utils/VRStorage.h" />
 		<Unit filename="src/core/utils/VRStorage_template.h" />

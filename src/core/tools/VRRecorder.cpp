@@ -1,5 +1,6 @@
 #include "VRRecorder.h"
 #include "core/setup/windows/VRView.h"
+#include "core/setup/windows/VRGtkWindow.h"
 #include "core/setup/VRSetup.h"
 #include "core/scene/VRSceneManager.h"
 #include "core/objects/object/VRObject.h"
@@ -150,6 +151,25 @@ vector<string> VRRecorder::getCodecList() {
     vector<string> res;
     for (auto c : codecs) res.push_back(c.first);
     return res;
+}
+
+vector<string> VRRecorder::getResList() {
+    //return { "custom", "1080p", "720p", "480p", "240p" };
+    return { "custom", "720p", "480p", "240p" };
+}
+
+void VRRecorder::setViewResolution(string res) {
+    auto w = VRSetup::getCurrent()->getEditorWindow();
+    if (res == "1080p") w->forceSize(1920, 1080);
+    if (res == "720p")  w->forceSize(1280, 720);
+    if (res == "480p")  w->forceSize(640, 480);
+    if (res == "240p")  w->forceSize(320, 240);
+}
+
+void VRRecorder::enableVSync(bool b) {
+    cout << "VRRecorder::enableVSync " << b << endl;
+    auto w = VRSetup::getCurrent()->getEditorWindow();
+    w->enableVSync(b);
 }
 
 void VRRecorder::clear() {

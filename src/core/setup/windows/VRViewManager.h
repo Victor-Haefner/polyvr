@@ -31,6 +31,7 @@ class VRViewManager {
         void setViewBackground(BackgroundMTRecPtr bg, int i = -1);
 
         void updateViews();
+        void toggleViewStats(int i);
         void showViewStats(int i, bool b);
         void showViewportGeos(bool b);
 

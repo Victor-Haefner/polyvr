@@ -4,8 +4,14 @@
 
 using namespace OSG;
 
+#ifndef WITHOUT_HDLC
 simpleVRPyType(HDLC, New_ptr);
+#endif
+simpleVRPyType(RestResponse, 0);
+simpleVRPyType(RestClient, New_ptr);
+simpleVRPyType(RestServer, New_ptr);
 
+#ifndef WITHOUT_HDLC
 PyMethodDef VRPyHDLC::methods[] = {
     {"setCallback", PyWrap(HDLC, setCallback, "Set callback", void, VRHDLCCbPtr) },
     {"isIdle", PyWrap(HDLC, isIdle, "Stop animation", bool) },
@@ -22,5 +28,20 @@ PyMethodDef VRPyHDLC::methods[] = {
     {"pauseSend", PyWrap(HDLC, pauseSend, "Stop animation", void, int) },
     {"pauseReceive", PyWrap(HDLC, pauseReceive, "Stop animation", void, int) },
     {"getLastInput", PyWrap(HDLC, getLastInput, "Stop animation", size_t) },
+    {NULL}  /* Sentinel */
+};
+#endif
+
+PyMethodDef VRPyRestResponse::methods[] = {
+    {NULL}  /* Sentinel */
+};
+
+PyMethodDef VRPyRestClient::methods[] = {
+    {"get", PyWrapOpt(RestClient, get, "Start GET request, (uri, timeout == 2)", "2", VRRestResponsePtr, string, int) },
+    {"test", PyWrap(RestClient, test, "Run test, output in console", void) },
+    {NULL}  /* Sentinel */
+};
+
+PyMethodDef VRPyRestServer::methods[] = {
     {NULL}  /* Sentinel */
 };

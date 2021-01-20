@@ -159,6 +159,7 @@ struct VRGear : public VRPrimitive {
     float teeth_size = 0.05;
     float bevel = 0;
     int teeth_number = 32;
+    float offset = 0;
 
     VRGear();
     VRGear(float width, float hole, float pitch, int N_teeth, float teeth_size, float bevel);

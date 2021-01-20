@@ -508,6 +508,18 @@ void VRTransform::setOrientation(Vec3d dir, Vec3d up) {
     setDir(dir);
 }
 
+void VRTransform::setOrientationQuat(Quaterniond q) {
+    //if (isNan(q)) return;
+    Matrix4d m;
+    m.setRotate(q);
+    m.setTranslate(getFrom());
+    setMatrix(m);
+}
+
+void VRTransform::setOrientationQuat(Vec4d vecq) {
+    setOrientationQuat(Quaterniond(vecq[0],vecq[1],vecq[2],vecq[3]));
+}
+
 void VRTransform::setTransform(Vec3d from, Vec3d dir, Vec3d up) {
     if (isNan(from) || isNan(dir) || isNan(up)) return;
     if (from == _from && dir == _dir && up == _up) return;

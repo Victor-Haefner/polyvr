@@ -4,6 +4,7 @@
 #include <vector>
 #include <OpenSG/OSGMatrix.h>
 #include <OpenSG/OSGLine.h>
+#include <OpenSG/OSGQuaternion.h>
 
 #include "object/VRObject.h"
 #include "core/objects/VRObjectFwd.h"
@@ -115,6 +116,8 @@ class VRTransform : public VRObject {
         void setScale(float s);
         void setScale(Vec3d s);
         void setOrientation(Vec3d dir, Vec3d up);
+        void setOrientationQuat(Quaterniond q);
+        void setOrientationQuat(Vec4d vecq);
         void setEuler(Vec3d euler);
         void setEulerDegree(Vec3d euler);
         void setTransform(Vec3d p, Vec3d d = Vec3d(0,0,-1), Vec3d u = Vec3d(0,1,0));

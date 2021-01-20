@@ -177,7 +177,7 @@ void VRCarSound::loadSoundFile(string filename) {
 }
 
 void VRCarSound::play(float rpm) {
-    if (active and sound) {
+    if (active && sound) {
         if (!isLoaded()) { cout << "No spectrum data loaded" << endl; return; }
         auto clamp = [](float& v, float a, float b) { return min(b,max(a,v)); };
         clamp(rpm, minRPM, maxRPM);
