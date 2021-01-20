@@ -311,6 +311,10 @@ void VROPCUANode::set(string value) {
         } catch(...) {
             cout << "VROPCUANode::set ERROR: var type: " << typeToString(nodeType) << ", self name: " << name() << ", value to set: " << value << endl;
         }
+
+        if (subscriptionClient && subscriptionClient->values.count(subHandle)) {
+            subscriptionClient->values[subHandle] = node->GetValue();
+        }
     }
 }
 
