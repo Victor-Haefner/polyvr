@@ -1201,7 +1201,7 @@ _set_pixformat_for_hdc(HDC              hdc,
     /* one is only allowed to call SetPixelFormat(), and so ChoosePixelFormat()
      * one single time per window HDC
      */
-    *best_idx = _get_wgl_pfd(hdc, need_alpha_bits, &pfd, display);
+    *best_idx = vr_get_wgl_pfd(hdc, need_alpha_bits, &pfd, display);
     if (*best_idx != 0)
         set_pixel_format_result = SetPixelFormat(hdc, *best_idx, &pfd);
 
@@ -1684,15 +1684,12 @@ _gdk_win32_gl_context_realize(GdkGLContext* context, GError** error) {
      * A legacy context cannot be shared with core profile ones, so this means we
      * must stick to a legacy context if the shared context is a legacy context
      */
-    if (share != NULL && gdk_gl_context_is_legacy(share))
-        legacy_bit = TRUE;
+    if (share != NULL && gdk_gl_context_is_legacy(share)) legacy_bit = TRUE;
 
-    if (debug_bit)
-        flags |= WGL_CONTEXT_DEBUG_BIT_ARB;
-    if (compat_bit)
-        flags |= WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB;
+    if (debug_bit) flags |= WGL_CONTEXT_DEBUG_BIT_ARB;
+    if (compat_bit) flags |= WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB;
 
-    //printf(" - - - _gdk_win32_gl_context_realize %i %i %i %i %i %i\n", legacy_bit, debug_bit, compat_bit, glver_major, glver_minor, context_win32->need_alpha_bits);
+    printf(" - - - _gdk_win32_gl_context_realize %i %i %i %i %i %i\n", legacy_bit, debug_bit, compat_bit, glver_major, glver_minor, context_win32->need_alpha_bits);
 
     hglrc = _create_gl_context(context_win32->gl_hdc,
         share,
@@ -2048,23 +2045,33 @@ static void _destroy_dummy_gl_context(GdkWGLDummy dummy) {
 
 #define PIXEL_ATTRIBUTES 19
 
-static gint _get_wgl_pfd(HDC hdc, const gboolean need_alpha_bits, PIXELFORMATDESCRIPTOR* pfd, _GdkWin32Display* display) {
+static gint vr_get_dummy_wgl_pfd(HDC hdc, PIXELFORMATDESCRIPTOR* pfd) {
+    printf("   get minimal GL Context\n");
+
+    gint best_pf = 0;
+    pfd->nSize = sizeof(PIXELFORMATDESCRIPTOR);
+    pfd->nVersion = 1;
+    pfd->dwFlags = PFD_SUPPORT_OPENGL | PFD_DRAW_TO_WINDOW | PFD_DOUBLEBUFFER;
+    pfd->iPixelType = PFD_TYPE_RGBA;
+    pfd->cColorBits = GetDeviceCaps(hdc, BITSPIXEL);
+    pfd->cAlphaBits = 0;
+    pfd->dwLayerMask = PFD_MAIN_PLANE;
+    best_pf = ChoosePixelFormat(hdc, pfd);
+
+    printf("    chose minimal pixel format: %i\n", best_pf);
+    return best_pf;
+}
+
+static gint vr_get_wgl_pfd(HDC hdc, const gboolean need_alpha_bits, PIXELFORMATDESCRIPTOR* pfd, _GdkWin32Display* display) {
+    printf("   vr_get_wgl_pfd, get complete GL Context\n");
     gint best_pf = 0;
 
     pfd->nSize = sizeof(PIXELFORMATDESCRIPTOR);
 
-    if (display != NULL && display->hasWglARBPixelFormat) {
+    if (display->hasWglARBPixelFormat) {
         GdkWGLDummy dummy;
         UINT num_formats;
         gint colorbits = GetDeviceCaps(hdc, BITSPIXEL);
-        guint extra_fields = 1;
-        gint i = 0;
-        int alpha_idx = 0;
-
-        if (display->hasWglARBmultisample) {
-            /* 2 pairs of values needed for multisampling/AA support */
-            extra_fields += 2 * 2;
-        }
 
         int pixelAttribs[] = {
             WGL_DRAW_TO_WINDOW_ARB,     GL_TRUE,
@@ -2080,89 +2087,24 @@ static gint _get_wgl_pfd(HDC hdc, const gboolean need_alpha_bits, PIXELFORMATDES
             0
         };
 
-        /* Update PIXEL_ATTRIBUTES above if any groups are added here! */
-        /* one group contains a value pair for both pixelAttribs and pixelAttribsNoAlpha */
-        /*int pixelAttribs[PIXEL_ATTRIBUTES];
-        pixelAttribs[i] = WGL_DRAW_TO_WINDOW_ARB;
-        pixelAttribs[i++] = GL_TRUE;
-
-        pixelAttribs[i++] = WGL_SUPPORT_OPENGL_ARB;
-        pixelAttribs[i++] = GL_TRUE;
-
-        pixelAttribs[i++] = WGL_DOUBLE_BUFFER_ARB;
-        pixelAttribs[i++] = GL_TRUE;
-
-        pixelAttribs[i++] = WGL_ACCELERATION_ARB;
-        pixelAttribs[i++] = WGL_FULL_ACCELERATION_ARB;
-
-        pixelAttribs[i++] = WGL_PIXEL_TYPE_ARB;
-        pixelAttribs[i++] = WGL_TYPE_RGBA_ARB;
-
-        pixelAttribs[i++] = WGL_COLOR_BITS_ARB;
-        pixelAttribs[i++] = colorbits;
-
-        if (display->hasWglARBmultisample) {
-            printf("   -- yay, multisampling!\n");
-            pixelAttribs[i++] = WGL_SAMPLE_BUFFERS_ARB;
-            pixelAttribs[i++] = 1;
-
-            pixelAttribs[i++] = WGL_SAMPLES_ARB;
-            pixelAttribs[i++] = 8;
-        }
-
-        pixelAttribs[i++] = WGL_ALPHA_BITS_ARB;
-
-        // track the spot where the alpha bits are, so that we can clear it if needed
-        alpha_idx = i;
-
-        pixelAttribs[i++] = 8;
-        pixelAttribs[i++] = 0; */
-
+        // acquire and cache dummy Window (HWND & HDC) and dummy GL Context, we need it for wglChoosePixelFormatARB()
         memset(&dummy, 0, sizeof(GdkWGLDummy));
-
-        /* acquire and cache dummy Window (HWND & HDC) and
-         * dummy GL Context, we need it for wglChoosePixelFormatARB()
-         */
         best_pf = _gdk_init_dummy_context(&dummy, need_alpha_bits);
         if (best_pf == 0 || !wglMakeCurrent(dummy.hdc, dummy.hglrc)) return 0;
 
         wglChoosePixelFormatARB(hdc, pixelAttribs, NULL, 1, &best_pf, &num_formats);
-
-        /*if (best_pf == 0)  {
-            if (!need_alpha_bits) {
-                pixelAttribs[alpha_idx] = 0;
-                pixelAttribs[alpha_idx + 1] = 0;
-                wglChoosePixelFormatARB(hdc, pixelAttribs, NULL, 1, &best_pf, &num_formats);
-            }
-        }*/
-
         wglMakeCurrent(NULL, NULL);
         _destroy_dummy_gl_context(dummy);
     } else {
-        pfd->nVersion = 1;
-        pfd->dwFlags = PFD_SUPPORT_OPENGL | PFD_DRAW_TO_WINDOW | PFD_DOUBLEBUFFER;
-        pfd->iPixelType = PFD_TYPE_RGBA;
-        pfd->cColorBits = GetDeviceCaps(hdc, BITSPIXEL);
-        pfd->cAlphaBits = 8;
-        pfd->dwLayerMask = PFD_MAIN_PLANE;
-
-        best_pf = ChoosePixelFormat(hdc, pfd);
-
-        if (best_pf == 0)
-            /* give another chance if need_alpha_bits is FALSE,
-             * meaning we prefer to have an alpha channel anyways
-             */
-            if (!need_alpha_bits)
-            {
-                pfd->cAlphaBits = 0;
-                best_pf = ChoosePixelFormat(hdc, pfd);
-            }
+        printf(" --= WARNING! on ARB, get fallback GL Context! ..good luck! =--\n");
+        best_pf = vr_get_dummy_wgl_pfd(hdc, pfd);
     }
 
+    printf("   chose pixel format: %i\n", best_pf);
     return best_pf;
 }
 
-static gint _gdk_init_dummy_context(GdkWGLDummy* dummy, const gboolean  need_alpha_bits) {
+static gint _gdk_init_dummy_context(GdkWGLDummy* dummy, const gboolean need_alpha_bits) {
     PIXELFORMATDESCRIPTOR pfd;
     gboolean set_pixel_format_result = FALSE;
     gint best_idx = 0;
@@ -2172,7 +2114,7 @@ static gint _gdk_init_dummy_context(GdkWGLDummy* dummy, const gboolean  need_alp
     dummy->hdc = GetDC(dummy->hwnd);
     memset(&pfd, 0, sizeof(PIXELFORMATDESCRIPTOR));
 
-    best_idx = _get_wgl_pfd(dummy->hdc, need_alpha_bits, &pfd, NULL);
+    best_idx = vr_get_dummy_wgl_pfd(dummy->hdc, &pfd);
 
     if (best_idx != 0) set_pixel_format_result = SetPixelFormat(dummy->hdc, best_idx, &pfd);
     if (best_idx == 0 || !set_pixel_format_result) return 0;
