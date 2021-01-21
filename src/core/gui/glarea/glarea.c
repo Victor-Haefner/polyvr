@@ -900,7 +900,6 @@ typedef struct
     /* WGL Context Items */
     HGLRC hglrc;
     HDC gl_hdc;
-    guint need_alpha_bits : 1;
 
     /* other items */
     guint is_attached : 1;
@@ -1190,24 +1189,18 @@ typedef struct {
 } _GdkWindowImplWin32;
 
 static gboolean
-_set_pixformat_for_hdc(HDC              hdc,
-    gint* best_idx,
-    const gboolean   need_alpha_bits,
-    _GdkWin32Display* display)
-{
+_set_pixformat_for_hdc(HDC hdc, gint* best_idx, _GdkWin32Display* display) {
     PIXELFORMATDESCRIPTOR pfd;
     gboolean set_pixel_format_result = FALSE;
 
     /* one is only allowed to call SetPixelFormat(), and so ChoosePixelFormat()
      * one single time per window HDC
      */
-    *best_idx = vr_get_wgl_pfd(hdc, need_alpha_bits, &pfd, display);
-    if (*best_idx != 0)
-        set_pixel_format_result = SetPixelFormat(hdc, *best_idx, &pfd);
+    *best_idx = vr_get_wgl_pfd(hdc, &pfd, display);
+    if (*best_idx != 0) set_pixel_format_result = SetPixelFormat(hdc, *best_idx, &pfd);
 
     /* ChoosePixelFormat() or SetPixelFormat() failed, bail out */
-    if (*best_idx == 0 || !set_pixel_format_result)
-        return FALSE;
+    if (*best_idx == 0 || !set_pixel_format_result) return FALSE;
 
     return TRUE;
 }
@@ -1662,13 +1655,8 @@ _gdk_win32_gl_context_realize(GdkGLContext* context, GError** error) {
     _GdkWindowImplWin32* impl = (_GdkWindowImplWin32*)window->impl;
     _GdkWin32Display* win32_display = (_GdkWin32Display*)gdk_window_get_display(window);
 
-    if (!_set_pixformat_for_hdc(context_win32->gl_hdc,
-        &pixel_format,
-        context_win32->need_alpha_bits,
-        win32_display))
-    {
-        g_set_error_literal(error, GDK_GL_ERROR,
-            GDK_GL_ERROR_UNSUPPORTED_FORMAT, "No available configurations for the given pixel format");
+    if (!_set_pixformat_for_hdc(context_win32->gl_hdc, &pixel_format, win32_display)) {
+        g_set_error_literal(error, GDK_GL_ERROR, GDK_GL_ERROR_UNSUPPORTED_FORMAT, "No available configurations for the given pixel format");
         return FALSE;
     }
 
@@ -1689,7 +1677,7 @@ _gdk_win32_gl_context_realize(GdkGLContext* context, GError** error) {
     if (debug_bit) flags |= WGL_CONTEXT_DEBUG_BIT_ARB;
     if (compat_bit) flags |= WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB;
 
-    printf(" - - - _gdk_win32_gl_context_realize %i %i %i %i %i %i\n", legacy_bit, debug_bit, compat_bit, glver_major, glver_minor, context_win32->need_alpha_bits);
+    printf(" - - - _gdk_win32_gl_context_realize %i %i %i %i %i\n", legacy_bit, debug_bit, compat_bit, glver_major, glver_minor);
 
     hglrc = _create_gl_context(context_win32->gl_hdc,
         share,
@@ -2062,7 +2050,7 @@ static gint vr_get_dummy_wgl_pfd(HDC hdc, PIXELFORMATDESCRIPTOR* pfd) {
     return best_pf;
 }
 
-static gint vr_get_wgl_pfd(HDC hdc, const gboolean need_alpha_bits, PIXELFORMATDESCRIPTOR* pfd, _GdkWin32Display* display) {
+static gint vr_get_wgl_pfd(HDC hdc, PIXELFORMATDESCRIPTOR* pfd, _GdkWin32Display* display) {
     printf("   vr_get_wgl_pfd, get complete GL Context\n");
     gint best_pf = 0;
 
@@ -2075,7 +2063,7 @@ static gint vr_get_wgl_pfd(HDC hdc, const gboolean need_alpha_bits, PIXELFORMATD
 
         // acquire and cache dummy Window (HWND & HDC) and dummy GL Context, we need it for wglChoosePixelFormatARB()
         memset(&dummy, 0, sizeof(GdkWGLDummy));
-        best_pf = _gdk_init_dummy_context(&dummy, need_alpha_bits);
+        best_pf = _gdk_init_dummy_context(&dummy);
         if (best_pf == 0 || !wglMakeCurrent(dummy.hdc, dummy.hglrc)) return 0;
 
         int pixelAttribsFull[] = {
@@ -2126,7 +2114,7 @@ static gint vr_get_wgl_pfd(HDC hdc, const gboolean need_alpha_bits, PIXELFORMATD
     return best_pf;
 }
 
-static gint _gdk_init_dummy_context(GdkWGLDummy* dummy, const gboolean need_alpha_bits) {
+static gint _gdk_init_dummy_context(GdkWGLDummy* dummy) {
     PIXELFORMATDESCRIPTOR pfd;
     gboolean set_pixel_format_result = FALSE;
     gint best_idx = 0;
@@ -2149,7 +2137,7 @@ static gint _gdk_init_dummy_context(GdkWGLDummy* dummy, const gboolean need_alph
     return best_idx;
 }
 
-gboolean _gdk_win32_display_init_gl(GdkDisplay* display, const gboolean need_alpha_bits) {
+gboolean _gdk_win32_display_init_gl(GdkDisplay* display) {
     _GdkWin32Display* display_win32 = (_GdkWin32Display*)display;
     gint best_idx = 0;
     GdkWGLDummy dummy;
@@ -2162,7 +2150,7 @@ gboolean _gdk_win32_display_init_gl(GdkDisplay* display, const gboolean need_alp
      * dummy GL Context, it is used to query functions
      * and used for other stuff as well
      */
-    best_idx = _gdk_init_dummy_context(&dummy, need_alpha_bits);
+    best_idx = _gdk_init_dummy_context(&dummy);
 
     if (best_idx == 0 || !wglMakeCurrent(dummy.hdc, dummy.hglrc)) return FALSE;
 
@@ -2187,9 +2175,7 @@ GdkGLContext* win32_window_create_gl_context(GdkWindow* window, gboolean attache
     _GdkWin32GLContext* context = NULL;
     GdkVisual* visual = gdk_window_get_visual(window);
 
-    gboolean need_alpha_bits = (visual == gdk_screen_get_rgba_visual(gdk_display_get_default_screen(display)));
-
-    if (!_gdk_win32_display_init_gl(display, need_alpha_bits)) {
+    if (!_gdk_win32_display_init_gl(display)) {
         g_set_error_literal(error, GDK_GL_ERROR, GDK_GL_ERROR_NOT_AVAILABLE, "No GL implementation is available");
         return NULL;
     }
@@ -2201,7 +2187,6 @@ GdkGLContext* win32_window_create_gl_context(GdkWindow* window, gboolean attache
     display_win32->gl_hwnd = hwnd;
 
     context = g_object_new(GDK_TYPE_WIN32_GL_CONTEXT, "display", display, "window", window, "shared-context", share, NULL);
-    context->need_alpha_bits = need_alpha_bits;
     context->gl_hdc = hdc;
     context->is_attached = attached;
 
