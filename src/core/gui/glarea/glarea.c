@@ -1768,7 +1768,7 @@ void _gdk_win32_window_invalidate_for_new_frame(_GdkWindow* window, cairo_region
     } else invalidate_all = TRUE;
 
     if (invalidate_all || global_invalidate) {
-        printf("invalidate_for_new_frame %i %i\n", invalidate_all, global_invalidate);
+        //printf("invalidate_for_new_frame %i %i\n", invalidate_all, global_invalidate);
         global_invalidate = FALSE;
         window_rect.x = 0;
         window_rect.y = 0;
@@ -2073,7 +2073,12 @@ static gint vr_get_wgl_pfd(HDC hdc, const gboolean need_alpha_bits, PIXELFORMATD
         UINT num_formats;
         gint colorbits = GetDeviceCaps(hdc, BITSPIXEL);
 
-        int pixelAttribs[] = {
+        // acquire and cache dummy Window (HWND & HDC) and dummy GL Context, we need it for wglChoosePixelFormatARB()
+        memset(&dummy, 0, sizeof(GdkWGLDummy));
+        best_pf = _gdk_init_dummy_context(&dummy, need_alpha_bits);
+        if (best_pf == 0 || !wglMakeCurrent(dummy.hdc, dummy.hglrc)) return 0;
+
+        int pixelAttribsFull[] = {
             WGL_DRAW_TO_WINDOW_ARB,     GL_TRUE,
             WGL_SUPPORT_OPENGL_ARB,     GL_TRUE,
             WGL_DOUBLE_BUFFER_ARB,      GL_TRUE,
@@ -2087,12 +2092,29 @@ static gint vr_get_wgl_pfd(HDC hdc, const gboolean need_alpha_bits, PIXELFORMATD
             0
         };
 
-        // acquire and cache dummy Window (HWND & HDC) and dummy GL Context, we need it for wglChoosePixelFormatARB()
-        memset(&dummy, 0, sizeof(GdkWGLDummy));
-        best_pf = _gdk_init_dummy_context(&dummy, need_alpha_bits);
-        if (best_pf == 0 || !wglMakeCurrent(dummy.hdc, dummy.hglrc)) return 0;
+        int pixelAttribsMin[] = {
+            WGL_DRAW_TO_WINDOW_ARB,     GL_TRUE,
+            WGL_SUPPORT_OPENGL_ARB,     GL_TRUE,
+            WGL_DOUBLE_BUFFER_ARB,      GL_TRUE,
+            WGL_ACCELERATION_ARB,       WGL_FULL_ACCELERATION_ARB,
+            WGL_PIXEL_TYPE_ARB,         WGL_TYPE_RGBA_ARB,
+            WGL_COLOR_BITS_ARB,         colorbits,
+            WGL_DEPTH_BITS_ARB,         24,
+            WGL_STENCIL_BITS_ARB,       8,
+            0
+        };
 
-        wglChoosePixelFormatARB(hdc, pixelAttribs, NULL, 1, &best_pf, &num_formats);
+        bool validPF = wglChoosePixelFormatARB(hdc, pixelAttribsFull, NULL, 1, &best_pf, &num_formats);
+        if (!validPF) {
+            printf(" --= WARNING! full pixel attribs failed, trying without multisampling =--\n");
+            validPF = wglChoosePixelFormatARB(hdc, pixelAttribsMin, NULL, 1, &best_pf, &num_formats);
+        }
+
+        if (!validPF) {
+            printf(" --= WARNING! no working pixel attribs, get fallback GL Context! ..good luck! =--\n");
+            best_pf = vr_get_dummy_wgl_pfd(hdc, pfd);
+        }
+
         wglMakeCurrent(NULL, NULL);
         _destroy_dummy_gl_context(dummy);
     } else {
