@@ -458,7 +458,6 @@ target_sources(polyvr PRIVATE src/core/networking/rest/VRRestResponse.cpp)
 target_sources(polyvr PRIVATE src/core/networking/rest/VRRestClient.cpp)
 target_sources(polyvr PRIVATE src/core/networking/rest/VRRestServer.cpp)
 endif()
-
 if(TRUE) # ok
 target_sources(polyvr PRIVATE src/core/scene/VRObjectGroupManager.cpp)
 target_sources(polyvr PRIVATE src/core/scene/VRThreadManager.cpp)

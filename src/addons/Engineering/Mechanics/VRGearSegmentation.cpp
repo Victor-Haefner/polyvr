@@ -466,15 +466,24 @@ void VRGearSegmentation::computeGearParams(int fN) {
 
 void VRGearSegmentation::analyse(VRObjectPtr o) {
     obj = o;
-
+    cout << "VRGearSegmentation::analyse " << o->getName() << endl;
+    cout << "  computeAxis" << endl;
     computeAxis();          // main orientation of gear, also its rotation axis
+    cout << "  computePolarVertices" << endl;
     computePolarVertices(); // compute gear vertices which include the polar coordinates
+    cout << "  computePlanes" << endl;
     computePlanes();        // compute the different planes the gear is made out of
+    cout << "  groupPlanes" << endl;
     groupPlanes();          // match similar planes to each other
+    cout << "  computeRings" << endl;
     computeRings();         // separate the verices of each plane in rings, vertices with similar radius
+    cout << "  computeContours" << endl;
     computeContours();      // use outer rings to compute the contour of the gear, also resamples the contour
+    cout << "  computeSineApprox" << endl;
     computeSineApprox();    // compute a sine approximation of the contours
+    cout << "  computeGearParams" << endl;
     computeGearParams(fftFreqSel);
+    cout << "   analysis done" << endl;
 }
 
 Vec3d VRGearSegmentation::getAxis() { return axis; }

@@ -18,7 +18,13 @@ Eigendecomposition::Eigendecomposition(Matrix4d m, bool verbose) {
 
     //LAPACK_COL_MAJOR LAPACK_ROW_MAJOR
 #ifdef _WIN32
-    info = dgeev(LAPACK_COL_MAJOR, 'V', 'V', n, a, lda, wr, wi, vl, ldvl, vr, ldvr);
+    //info = dgeev(LAPACK_COL_MAJOR, 'V', 'V', n, a, lda, wr, wi, vl, ldvl, vr, ldvr);
+    lwork = -1;
+    dgeev("Vectors", "Vectors", &n, a, &lda, wr, wi, vl, &ldvl, vr, &ldvr, &wkopt, &lwork, &info);
+    lwork = (int)wkopt;
+    work = new double[lwork];
+    dgeev("Vectors", "Vectors", &n, a, &lda, wr, wi, vl, &ldvl, vr, &ldvr, work, &lwork, &info);
+    delete work;
 #else
     lwork = -1;
     info = dgeev( LAPACK_COL_MAJOR, 'V', 'V', n, a, lda, wr, wi, vl, ldvl, vr, ldvr, &wkopt, lwork);

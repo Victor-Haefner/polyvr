@@ -42,7 +42,7 @@ Matrix4d PCA::computeCovMatrix() {
         res[1][2] += p[1]*p[2];
     }
 
-    cout << "VRSelection::computeCovMatrix " << center << " " << N << endl;
+    cout << "PCA::computeCovMatrix " << center << " " << N << endl;
 
     for (int i=0; i<3; i++)
         for (int j=i; j<3; j++) res[i][j] *= 1.0/N;
@@ -59,17 +59,40 @@ Matrix4d PCA::computeCovMatrix() {
     return res;
 }
 
+void PCA::test() {
+/*#ifdef _WIN32
+    lapack_int n = 3, lda = 3, ldvl = 3, ldvr = 3;
+    double wr[3], wi[3], vl[9], vr[9];
+    double a[9] = { 0,1,2,3,4,5,6,7,8 };
+
+    //LAPACK_COL_MAJOR LAPACK_ROW_MAJOR
+    cout << " PCA::computeEigenvectors, run dgeev test on:" << endl << a[0] << " " << a[1] << " " << a[2] << " " << a[3] << " " << a[4] << " " << a[5] << " " << a[6] << " " << a[7] << " " << a[8] << endl;
+
+    lapack_int info = dgeev(LAPACK_COL_MAJOR, 'V', 'V', n, a, lda, wr, wi, vl, ldvl, vr, ldvr);
+    cout << "   dgeev test done" << endl;
+#endif*/
+}
+
 Matrix4d PCA::computeEigenvectors(Matrix4d m) {
-    int n = 3, lda = 3, ldvl = 3, ldvr = 3;
-    int info, lwork;
+    //test();
+
+    lapack_int n = 3, lda = 3, ldvl = 3, ldvr = 3;
+    lapack_int info, lwork;
     double wkopt;
     double* work;
     double wr[3], wi[3], vl[9], vr[9];
     double a[9] = { m[0][0], m[1][0], m[2][0], m[0][1], m[1][1], m[2][1], m[0][2], m[1][2], m[2][2] };
 
     //LAPACK_COL_MAJOR LAPACK_ROW_MAJOR
+    cout << " PCA::computeEigenvectors, run dgeev on:" << endl << m[0][0] <<" "<< m[1][0] << " " << m[2][0] << " " << m[0][1] << " " << m[1][1] << " " << m[2][1] << " " << m[0][2] << " " << m[1][2] << " " << m[2][2] << endl;
 #ifdef _WIN32
-    info = dgeev(LAPACK_COL_MAJOR, 'V', 'V', n, a, lda, wr, wi, vl, ldvl, vr, ldvr);
+    //info = dgeev(LAPACK_COL_MAJOR, 'V', 'V', n, a, lda, wr, wi, vl, ldvl, vr, ldvr);
+    lwork = -1;
+    dgeev("Vectors", "Vectors", &n, a, &lda, wr, wi, vl, &ldvl, vr, &ldvr, &wkopt, &lwork, &info);
+    lwork = (int)wkopt;
+    work = new double[lwork];
+    dgeev("Vectors", "Vectors", &n, a, &lda, wr, wi, vl, &ldvl, vr, &ldvr, work, &lwork, &info);
+    delete work;
 #else
     lwork = -1;
     info = dgeev( LAPACK_COL_MAJOR, 'V', 'V', n, a, lda, wr, wi, vl, ldvl, vr, ldvr, &wkopt, lwork);
@@ -78,6 +101,7 @@ Matrix4d PCA::computeEigenvectors(Matrix4d m) {
     info = dgeev( LAPACK_COL_MAJOR, 'V', 'V', n, a, lda, wr, wi, vl, ldvl, vr, ldvr,  work, lwork);
     delete work;
 #endif
+    cout << "   dgeev done" << endl;
 
     if ( info > 0 ) { cout << "Warning: computeEigenvalues failed!\n"; return Matrix4d(); } // Check for convergence
 

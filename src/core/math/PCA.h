@@ -27,6 +27,8 @@ class PCA {
         void addMesh(VRObjectPtr obj);
         int size();
         void clear();
+
+        void test();
 };
 
 OSG_END_NAMESPACE;

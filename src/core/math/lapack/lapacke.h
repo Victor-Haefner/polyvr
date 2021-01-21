@@ -4,16 +4,18 @@
 #define LAPACK_ROW_MAJOR               101
 #define LAPACK_COL_MAJOR               102
 
-extern "C" {
-    int dgeev_(int matrix_layout, char jobvl, char jobvr,
-        int n, double* a, int lda, double* wr,
-        double* wi, double* vl, int ldvl, double* vr,
-        int ldvr);
+#define lapack_int int
 
-    int dgesvd_(int matrix_layout, char jobu, char jobvt,
-        int m, int n, double* a,
-        int lda, double* s, double* u, int ldu,
-        double* vt, int ldvt, double* superb);
+extern "C" {
+    void dgeev_(char* jobvl, char* jobvr, lapack_int* n, double* a,
+        lapack_int* lda, double* wr, double* wi, double* vl,
+        lapack_int* ldvl, double* vr, lapack_int* ldvr, double* work,
+        lapack_int* lwork, lapack_int* info);
+
+    void dgesvd_(char* jobu, char* jobvt, lapack_int* m, lapack_int* n,
+        double* a, lapack_int* lda, double* s, double* u,
+        lapack_int* ldu, double* vt, lapack_int* ldvt, double* work,
+        lapack_int* lwork, lapack_int* info);
 }
 
 #define dgeev dgeev_

@@ -43,27 +43,35 @@ SingularValueDecomposition::SingularValueDecomposition(Matrix4d H, bool verbose)
 
     /* Locals */
 
-    const int ml = LAPACK_ROW_MAJOR, m = 3, n = 3, lda = 3, ldu = 3, ldv = 3;
+    const int ml = LAPACK_ROW_MAJOR;
+    int m = 3, n = 3, lda = 3, ldu = 3, ldv = 3;
     int info, lwork;
     double wkopt;
     double* work;
     /* Local arrays */
-    double s[n], u[ldu*m], v[ldv*n];
-    double a[lda*n] = {
+    double s[3], u[9], v[9];
+    double a[9] = {
         H[0][0],  H[1][0], H[2][0],
         H[0][1],  H[1][1], H[2][1],
         H[0][2],  H[1][2], H[2][2]
     };
 
 #ifdef _WIN32
-    double superb[2];
-    info = dgesvd(ml, 'a', 'a', m, n, a, lda, s, u, ldu, v, ldv, superb);
+    //double superb[2];
+    //info = dgesvd(ml, 'a', 'a', m, n, a, lda, s, u, ldu, v, ldv, superb);
+    lwork = -1;
+    dgesvd("All", "All", &m, &n, a, &lda, s, u, &ldu, v, &ldv, &wkopt, &lwork, &info);
+    lwork = (int)wkopt;
+    work = new double[lwork];
+    dgesvd("All", "All", &m, &n, a, &lda, s, u, &ldu, v, &ldv, work, &lwork, &info);
+    delete work;
 #else
     lwork = -1;
     info = dgesvd( ml, 'a', 'a', m, n, a, lda, s, u, ldu, v, ldv, &wkopt, lwork );
     lwork = (int)wkopt;
     work = (double*)malloc( lwork*sizeof(double) );
     info = dgesvd( ml, 'a', 'a', m, n, a, lda, s, u, ldu, v, ldv, work, lwork );
+    free((void*)work);
 #endif
     if( info > 0 ) { printf( "The algorithm computing SVD failed to converge.\n" ); }
 
@@ -80,7 +88,6 @@ SingularValueDecomposition::SingularValueDecomposition(Matrix4d H, bool verbose)
                     v[1], v[4], v[7], 0,
                     v[2], v[5], v[8], 0,
                     0, 0, 0, 1);
-    free( (void*)work );
 }
 
 Matrix4d SingularValueDecomposition::check() { // M = U S Vt
