@@ -74,8 +74,6 @@ VRGuiManager::VRGuiManager() {
     gtk_init_check(&argc, 0);
 #ifndef _WIN32
     replace_gl_visuals();
-#else
-    //override_win32_gl_context_realize();
 #endif
 
     GdkDisplay* display = gdk_display_get_default();

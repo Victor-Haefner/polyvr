@@ -1364,10 +1364,7 @@ _gdk_win32_window_lacks_wm_decorations(_GdkWindow* window)
     return !has_any_decorations;
 }
 
-static gboolean
-get_effective_window_decorations(_GdkWindow* window,
-    GdkWMDecoration* decoration)
-{
+static gboolean get_effective_window_decorations(_GdkWindow* window, GdkWMDecoration* decoration) {
     _GdkWindowImplWin32* impl;
 
     impl = (_GdkWindowImplWin32*)window->impl;
@@ -1453,26 +1450,18 @@ get_effective_window_decorations(_GdkWindow* window,
     return FALSE;
 }
 
-static void
-update_single_bit(LONG* style,
-    gboolean all,
-    int      gdk_bit,
-    int      style_bit)
-{
+static void update_single_bit(LONG* style, gboolean all, int gdk_bit, int style_bit) {
     /* all controls the interpretation of gdk_bit -- if all is TRUE,
      * gdk_bit indicates whether style_bit is off; if all is FALSE, gdk
      * bit indicate whether style_bit is on
      */
-    if ((!all && gdk_bit) || (all && !gdk_bit))
-        *style |= style_bit;
-    else
-        *style &= ~style_bit;
+    if ((!all && gdk_bit) || (all && !gdk_bit)) *style |= style_bit;
+    else *style &= ~style_bit;
 }
 
 #define SWP_NOZORDER_SPECIFIED HWND_TOP
 
-void
-_gdk_win32_window_update_style_bits(_GdkWindow* window) {
+void _gdk_win32_window_update_style_bits(_GdkWindow* window) {
     _GdkWindowImplWin32* impl = (_GdkWindowImplWin32*)window->impl;
     GdkWMDecoration decorations;
     LONG old_style, new_style, old_exstyle, new_exstyle;
@@ -1594,17 +1583,12 @@ _gdk_win32_window_update_style_bits(_GdkWindow* window) {
         flags);
 }
 
-void
-gdk_gl_context_set_is_legacy(GdkGLContext* context,
-    gboolean      is_legacy)
-{
+void gdk_gl_context_set_is_legacy(GdkGLContext* context, gboolean is_legacy) {
     GdkGLContextPrivate* priv = gdk_gl_context_get_instance_private(context);
-
     priv->is_legacy = !!is_legacy;
 }
 
-gboolean
-vr_gdk_win32_gl_context_realize(GdkGLContext* context, GError** error) {
+gboolean vr_gdk_win32_gl_context_realize(GdkGLContext* context, GError** error) {
     GdkGLContext* share = gdk_gl_context_get_shared_context(context);
     _GdkWin32GLContext* context_win32 = GDK_WIN32_GL_CONTEXT(context);
 
@@ -1684,41 +1668,39 @@ gdk_gl_context_has_framebuffer_blit(GdkGLContext* context)
     return priv->has_gl_framebuffer_blit;
 }
 
+void analyseCairoRegion(cairo_region_t* r, cairo_region_overlap_t winOverlap) {
+    int N = cairo_region_num_rectangles(r);
+    printf("analyse cairo region with %i rectangles, window overlap: %i (in, out, part)\n", N, winOverlap);
+    cairo_rectangle_int_t rec;
+    for (int i=0; i<N; i++) {
+        cairo_region_get_rectangle(r, i, &rec);
+        printf(" rectangle %i %i %i %i\n", rec.x, rec.y, rec.width, rec.height);
+    }
+}
+
 void _gdk_win32_window_invalidate_for_new_frame(_GdkWindow* window, cairo_region_t* update_area) {
-    cairo_rectangle_int_t window_rect;
-    gboolean invalidate_all = TRUE;
-    _GdkWin32GLContext* context_win32;
-    cairo_rectangle_int_t whole_window = { 0, 0, gdk_window_get_width(window), gdk_window_get_height(window) };
+    if (window->gl_paint_context == NULL) return; // Minimal update is ok if we're not drawing with gl
 
-    //printf("invalidate_for_new_frame win: %d %d %d %d\n", 0, 0, gdk_window_get_width(window), gdk_window_get_height(window));
-    //printf("invalidate_for_new_frame %d %d %d %d\n", update_area->);
-    //cairo_region_get_rectangle()
-
-
-    /* Minimal update is ok if we're not drawing with gl */
-    if (window->gl_paint_context == NULL) return;
-
-    //static gboolean once = FALSE;
-    //if (once) return; once = TRUE;
-
-    context_win32 = GDK_WIN32_GL_CONTEXT(window->gl_paint_context);
+    _GdkWin32GLContext* context_win32 = GDK_WIN32_GL_CONTEXT(window->gl_paint_context);
     context_win32->do_blit_swap = FALSE;
 
-    //if (gdk_gl_context_has_framebuffer_blit(window->gl_paint_context) && cairo_region_contains_rectangle(update_area, &whole_window) != CAIRO_REGION_OVERLAP_IN) {
-    //    context_win32->do_blit_swap = TRUE;
-    if (cairo_region_contains_rectangle(update_area, &whole_window) != CAIRO_REGION_OVERLAP_IN) {
-        invalidate_all = FALSE;
-    } else invalidate_all = TRUE;
+    cairo_rectangle_int_t whole_window = { 0, 0, gdk_window_get_width(window), gdk_window_get_height(window) };
+    /*gboolean invalidate_all = FALSE;
+    cairo_region_overlap_t overlap = cairo_region_contains_rectangle(update_area, &whole_window);
+    if (overlap == CAIRO_REGION_OVERLAP_IN) invalidate_all = TRUE;*/
 
-    if (invalidate_all || global_invalidate) {
-        //printf("invalidate_for_new_frame %i %i\n", invalidate_all, global_invalidate);
+    //analyseCairoRegion(update_area, overlap);
+
+    if (global_invalidate) { // when resizing
+        cairo_region_union_rectangle(update_area, &whole_window);
         global_invalidate = FALSE;
-        window_rect.x = 0;
-        window_rect.y = 0;
-        window_rect.width = gdk_window_get_width(window);
-        window_rect.height = gdk_window_get_height(window);
-        cairo_region_union_rectangle(update_area, &window_rect);
     }
+
+    static cairo_rectangle_int_t lastRegion = { 0, 0, 0, 0 }; // to avoid flickering just remeber and update last region too..
+    cairo_rectangle_int_t extends;
+    cairo_region_get_extents(update_area, &extends);
+    cairo_region_union_rectangle(update_area, &lastRegion); 
+    lastRegion = extends;
 }
 
 #endif
