@@ -940,8 +940,7 @@ void OSMMap::readGEOJSON(string path) {
     int wayID = -1;
     int layercount = -1;
     VRTimer t; t.start();
-#if GDAL_VERSION_NUM >= GDAL_COMPUTE_VERSION(2,3,0)
-#elif GDAL_VERSION_NUM >= GDAL_COMPUTE_VERSION(2,0,0)
+#if GDAL_VERSION_NUM >= GDAL_COMPUTE_VERSION(2,0,0)
     GDALAllRegister();
     GDALDataset* poDS = (GDALDataset *) GDALOpenEx( path.c_str(), GDAL_OF_VECTOR, NULL, NULL, NULL  );
     //GDALDataset* poDS = (GDALDataset *) GDALOpen( path.c_str(), GA_ReadOnly );
@@ -1023,8 +1022,7 @@ void OSMMap::readGEOJSON(string path) {
 void OSMMap::readSHAPE(string path) {
     checkGDAL();
 #ifndef WITHOUT_GDAL
-#if GDAL_VERSION_NUM >= GDAL_COMPUTE_VERSION(2,3,0)
-#elif GDAL_VERSION_NUM >= GDAL_COMPUTE_VERSION(2,0,0)
+#if GDAL_VERSION_NUM >= GDAL_COMPUTE_VERSION(2,0,0)
     VRTimer t; t.start();
     GDALAllRegister();
     GDALDataset* poDS = (GDALDataset *) GDALOpenEx( path.c_str(), GDAL_OF_VECTOR, NULL, NULL, NULL  );
