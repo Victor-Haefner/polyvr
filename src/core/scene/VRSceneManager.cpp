@@ -148,6 +148,7 @@ void VRSceneManager::newEmptyScene(string path) {
 }
 
 void VRSceneManager::newScene(string path) {
+    cout << "VRSceneManager::newScene at " << path << endl;
     if (exists(path)) path = canonical(path);
     newEmptyScene(path);
 

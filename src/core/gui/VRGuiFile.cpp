@@ -69,7 +69,6 @@ void VRGuiFile::init() {
         gtk_box_pack_start(GTK_BOX(dialog_vbox), pathEntry, false, true, 0);
         gtk_box_pack_start(GTK_BOX(dialog_vbox), fileEntry, false, true, 0);
         gtk_box_pack_start(GTK_BOX(dialog_vbox), scrolledWindow, true, true, 0);
-        connect_signal<void>(pathEntry, bind(VRGuiFile::on_edit_path_entry, (_GtkEntry*)pathEntry), "activate");
 
         auto c = gtk_tree_view_column_new();
         auto r = gtk_cell_renderer_text_new();
@@ -96,6 +95,8 @@ void VRGuiFile::init() {
     } else {
         connect_signal<void>(treeview, bind(VRGuiFile::select), "cursor_changed");
         connect_signal<void, GtkTreePath*, GtkTreeViewColumn*>(treeview, bind(VRGuiFile::activate, placeholders::_1, placeholders::_2), "row_activated");
+        connect_signal<void>(pathEntry, bind(VRGuiFile::on_edit_path_entry, (_GtkEntry*)pathEntry), "activate");
+        setEntryCallback(fileEntry, bind(VRGuiFile::on_filename_edited), false, true, true);
     }
 
     connect_signal<void>(button3, bind(&VRGuiFile::close), "clicked");
@@ -150,6 +151,11 @@ void VRGuiFile::on_toggle_cache_override(GtkCheckButton* b) {
 void VRGuiFile::on_edit_path_entry(GtkEntry* e) {
     auto p = gtk_entry_get_text(e);
     gotoPath(p?p:"");
+}
+
+void VRGuiFile::on_filename_edited() {
+    auto p = gtk_entry_get_text(GTK_ENTRY(fileEntry));
+    selection = p?p:"";
 }
 
 void VRGuiFile::on_edit_import_scale(GtkEntry* e) {
@@ -258,6 +264,7 @@ void VRGuiFile::setFile(string file) {
         gtk_file_chooser_set_current_name((GtkFileChooser*)dialog, file.c_str());
     } else {
         gtk_entry_set_text(GTK_ENTRY(fileEntry), file.c_str());
+        selection = file;
     }
 }
 

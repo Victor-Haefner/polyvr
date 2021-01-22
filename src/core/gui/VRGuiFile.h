@@ -45,6 +45,7 @@ class VRGuiFile {
         static void on_edit_import_scale(_GtkEntry* e);
         static void on_change_preset(_GtkComboBox* b);
         static void on_edit_path_entry(_GtkEntry* e);
+        static void on_filename_edited();
 
     public:
         static void open(string button, int action, string title);
