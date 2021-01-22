@@ -1205,55 +1205,34 @@ _set_pixformat_for_hdc(HDC hdc, gint* best_idx, _GdkWin32Display* display) {
     return TRUE;
 }
 
-static HGLRC
-_create_gl_context_with_attribs(HDC           hdc,
-    HGLRC         hglrc_base,
-    GdkGLContext* share,
-    int           flags,
-    int           major,
-    int           minor,
-    gboolean* is_legacy)
-{
+static HGLRC vr_create_gl_context_with_attribs(HDC hdc, HGLRC hglrc_base, int flags, int major, int minor) {
     HGLRC hglrc;
     _GdkWin32GLContext* context_win32;
 
-    /* if we have wglCreateContextAttribsARB(), create a
-    * context with the compatibility profile if a legacy
-    * context is requested, or when we go into fallback mode
-    */
-    int profile = *is_legacy ? WGL_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB :
-        WGL_CONTEXT_CORE_PROFILE_BIT_ARB;
+    printf("vr_create_gl_context_with_attribs %i %i\n", major, minor);
+
+    //major = 3;
+    //minor = 0;
 
     int attribs[] = {
-      WGL_CONTEXT_PROFILE_MASK_ARB,   profile,
-      WGL_CONTEXT_MAJOR_VERSION_ARB, *is_legacy ? 3 : major,
-      WGL_CONTEXT_MINOR_VERSION_ARB, *is_legacy ? 0 : minor,
-      WGL_CONTEXT_FLAGS_ARB,          flags,
+      WGL_CONTEXT_PROFILE_MASK_ARB,  WGL_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB,
+      WGL_CONTEXT_MAJOR_VERSION_ARB, major,
+      WGL_CONTEXT_MINOR_VERSION_ARB, minor,
+      WGL_CONTEXT_FLAGS_ARB,         flags,
       0
     };
 
-    if (share != NULL)
-        context_win32 = GDK_WIN32_GL_CONTEXT(share);
-
-    hglrc = wglCreateContextAttribsARB(hdc,
-        share != NULL ? context_win32->hglrc : NULL,
-        attribs);
-
+    hglrc = wglCreateContextAttribsARB(hdc, NULL, attribs);
     return hglrc;
 }
 
-static gboolean
-_ensure_legacy_gl_context(HDC           hdc,
-    HGLRC         hglrc_legacy, GdkGLContext* share) {
+static gboolean _ensure_legacy_gl_context(HDC hdc, HGLRC hglrc_legacy, GdkGLContext* share) {
     _GdkWin32GLContext* context_win32;
 
-    if (!wglMakeCurrent(hdc, hglrc_legacy))
-        return FALSE;
+    if (!wglMakeCurrent(hdc, hglrc_legacy)) return FALSE;
 
-    if (share != NULL)
-    {
+    if (share != NULL) {
         context_win32 = GDK_WIN32_GL_CONTEXT(share);
-
         return wglShareLists(hglrc_legacy, context_win32->hglrc);
     }
 
@@ -1284,19 +1263,12 @@ _create_gl_context(HDC           hdc,
     {
         HGLRC hglrc;
 
-        if (!wglMakeCurrent(hdc, hglrc_base))
-        {
+        if (!wglMakeCurrent(hdc, hglrc_base)) {
             success = FALSE;
             goto gl_fail;
         }
 
-        hglrc = _create_gl_context_with_attribs(hdc,
-            hglrc_base,
-            share,
-            flags,
-            major,
-            minor,
-            is_legacy);
+        hglrc = vr_create_gl_context_with_attribs(hdc, hglrc_base, flags, major, minor);
 
         /* return the legacy context we have if it could be setup properly, in case the 3.0+ context creation failed */
         if (hglrc == NULL)
@@ -1304,12 +1276,7 @@ _create_gl_context(HDC           hdc,
             if (!(*is_legacy))
             {
                 /* If we aren't using a legacy context in the beginning, try again with a compatibility profile 3.0 context */
-                hglrc = _create_gl_context_with_attribs(hdc,
-                    hglrc_base,
-                    share,
-                    flags,
-                    0, 0,
-                    is_legacy);
+                hglrc = vr_create_gl_context_with_attribs(hdc, hglrc_base, flags, 3, 0);
 
                 *is_legacy = TRUE;
             }
@@ -2060,6 +2027,8 @@ static gint vr_get_wgl_pfd(HDC hdc, PIXELFORMATDESCRIPTOR* pfd, _GdkWin32Display
         GdkWGLDummy dummy;
         UINT num_formats;
         gint colorbits = GetDeviceCaps(hdc, BITSPIXEL);
+
+        printf("     device colorbits: %i\n", colorbits);
 
         // acquire and cache dummy Window (HWND & HDC) and dummy GL Context, we need it for wglChoosePixelFormatARB()
         memset(&dummy, 0, sizeof(GdkWGLDummy));
