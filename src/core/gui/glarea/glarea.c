@@ -1997,7 +1997,7 @@ static gint vr_get_dummy_wgl_pfd(HDC hdc, PIXELFORMATDESCRIPTOR* pfd) {
     pfd->dwFlags = PFD_SUPPORT_OPENGL | PFD_DRAW_TO_WINDOW | PFD_DOUBLEBUFFER;
     pfd->iPixelType = PFD_TYPE_RGBA;
     pfd->cColorBits = GetDeviceCaps(hdc, BITSPIXEL);
-    pfd->cAlphaBits = 0;
+    pfd->cAlphaBits = 8; // important, if set to 0 the window might get translucent on some systems
     pfd->dwLayerMask = PFD_MAIN_PLANE;
     best_pf = ChoosePixelFormat(hdc, pfd);
 
@@ -2005,14 +2005,12 @@ static gint vr_get_dummy_wgl_pfd(HDC hdc, PIXELFORMATDESCRIPTOR* pfd) {
     return best_pf;
 }
 
-#define PIXEL_ATTRIBUTES 19
-
 static gint old_get_wgl_pfd(HDC hdc, PIXELFORMATDESCRIPTOR* pfd, _GdkWin32Display* display) {
     gint best_pf = 0;
 
     pfd->nSize = sizeof(PIXELFORMATDESCRIPTOR);
 
-    if (display != NULL && display->hasWglARBPixelFormat) {
+    if (display->hasWglARBPixelFormat) {
         GdkWGLDummy dummy;
         UINT num_formats;
         gint colorbits = GetDeviceCaps(hdc, BITSPIXEL);
@@ -2021,8 +2019,7 @@ static gint old_get_wgl_pfd(HDC hdc, PIXELFORMATDESCRIPTOR* pfd, _GdkWin32Displa
         int pixelAttribs[PIXEL_ATTRIBUTES];
         int alpha_idx = 0;
 
-        if (display->hasWglARBmultisample)
-        {
+        if (display->hasWglARBmultisample) {
             /* 2 pairs of values needed for multisampling/AA support */
             extra_fields += 2 * 2;
         }
@@ -2049,8 +2046,7 @@ static gint old_get_wgl_pfd(HDC hdc, PIXELFORMATDESCRIPTOR* pfd, _GdkWin32Displa
 
         /* end of "Update PIXEL_ATTRIBUTES above if any groups are added here!" */
 
-        if (display->hasWglARBmultisample)
-        {
+        if (display->hasWglARBmultisample) {
             pixelAttribs[i++] = WGL_SAMPLE_BUFFERS_ARB;
             pixelAttribs[i++] = 1;
 
@@ -2073,59 +2069,18 @@ static gint old_get_wgl_pfd(HDC hdc, PIXELFORMATDESCRIPTOR* pfd, _GdkWin32Displa
          */
         best_pf = _gdk_init_dummy_context(&dummy, 0);
 
-        if (best_pf == 0 || !wglMakeCurrent(dummy.hdc, dummy.hglrc))
-            return 0;
+        if (best_pf == 0 || !wglMakeCurrent(dummy.hdc, dummy.hglrc)) return 0;
 
-        wglChoosePixelFormatARB(hdc,
-            pixelAttribs,
-            NULL,
-            1,
-            &best_pf,
-            &num_formats);
+        wglChoosePixelFormatARB(hdc, pixelAttribs, NULL, 1, &best_pf, &num_formats);
 
-        if (best_pf == 0)
-        {
-            if (!0)
-            {
-                pixelAttribs[alpha_idx] = 0;
-                pixelAttribs[alpha_idx + 1] = 0;
-
-                /* give another chance if need_alpha_bits is FALSE,
-                 * meaning we prefer to have an alpha channel anyways
-                 */
-                wglChoosePixelFormatARB(hdc,
-                    pixelAttribs,
-                    NULL,
-                    1,
-                    &best_pf,
-                    &num_formats);
-
-            }
+        if (best_pf == 0) {
+            pixelAttribs[alpha_idx] = 0;
+            pixelAttribs[alpha_idx + 1] = 0;
+            wglChoosePixelFormatARB(hdc, pixelAttribs, NULL, 1, &best_pf, &num_formats);
         }
 
         wglMakeCurrent(NULL, NULL);
         _destroy_dummy_gl_context(dummy);
-    }
-    else
-    {
-        pfd->nVersion = 1;
-        pfd->dwFlags = PFD_SUPPORT_OPENGL | PFD_DRAW_TO_WINDOW | PFD_DOUBLEBUFFER;
-        pfd->iPixelType = PFD_TYPE_RGBA;
-        pfd->cColorBits = GetDeviceCaps(hdc, BITSPIXEL);
-        pfd->cAlphaBits = 8;
-        pfd->dwLayerMask = PFD_MAIN_PLANE;
-
-        best_pf = ChoosePixelFormat(hdc, pfd);
-
-        if (best_pf == 0)
-            /* give another chance if need_alpha_bits is FALSE,
-             * meaning we prefer to have an alpha channel anyways
-             */
-            if (!0)
-            {
-                pfd->cAlphaBits = 0;
-                best_pf = ChoosePixelFormat(hdc, pfd);
-            }
     }
 
     return best_pf;
@@ -2199,41 +2154,7 @@ static gint vr_get_wgl_pfd(HDC hdc, PIXELFORMATDESCRIPTOR* pfd, _GdkWin32Display
     return best_pf;
 }
 
-static gint
-old_gdk_init_dummy_context(GdkWGLDummy* dummy,
-    const gboolean  need_alpha_bits)
-{
-    PIXELFORMATDESCRIPTOR pfd;
-    gboolean set_pixel_format_result = FALSE;
-    gint best_idx = 0;
-
-    _get_dummy_window_hwnd(dummy);
-
-    dummy->hdc = GetDC(dummy->hwnd);
-    memset(&pfd, 0, sizeof(PIXELFORMATDESCRIPTOR));
-
-    best_idx = old_get_wgl_pfd(dummy->hdc, &pfd, NULL);
-
-    if (best_idx != 0)
-        set_pixel_format_result = SetPixelFormat(dummy->hdc,
-            best_idx,
-            &pfd);
-
-    if (best_idx == 0 || !set_pixel_format_result)
-        return 0;
-
-    dummy->hglrc = wglCreateContext(dummy->hdc);
-    if (dummy->hglrc == NULL)
-        return 0;
-
-    dummy->inited = TRUE;
-
-    return best_idx;
-}
-
 static gint _gdk_init_dummy_context(GdkWGLDummy* dummy) {
-    return old_gdk_init_dummy_context(dummy, 0);
-
     PIXELFORMATDESCRIPTOR pfd;
     gboolean set_pixel_format_result = FALSE;
     gint best_idx = 0;
@@ -2243,8 +2164,7 @@ static gint _gdk_init_dummy_context(GdkWGLDummy* dummy) {
     dummy->hdc = GetDC(dummy->hwnd);
     memset(&pfd, 0, sizeof(PIXELFORMATDESCRIPTOR));
 
-    best_idx = old_get_wgl_pfd(dummy->hdc, &pfd, NULL);
-    //best_idx = vr_get_dummy_wgl_pfd(dummy->hdc, &pfd);
+    best_idx = vr_get_dummy_wgl_pfd(dummy->hdc, &pfd);
 
     if (best_idx != 0) set_pixel_format_result = SetPixelFormat(dummy->hdc, best_idx, &pfd);
     if (best_idx == 0 || !set_pixel_format_result) return 0;
