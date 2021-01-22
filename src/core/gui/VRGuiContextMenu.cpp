@@ -49,5 +49,5 @@ void VRGuiContextMenu::connectWidget(string menu, GtkWidget* widget) {
     gtk_widget_add_events(widget, (int)GDK_BUTTON_RELEASE_MASK);
 
     function<void(GdkEventButton*)> sig = bind( &VRGuiContextMenu::on_widget_rightclick, this, placeholders::_1, menu );
-    connect_signal(widget, sig, "button_release_event");
+    connect_signal(widget, sig, "button_release_event", true);
 }

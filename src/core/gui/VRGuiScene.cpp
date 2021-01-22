@@ -1265,7 +1265,7 @@ VRGuiScene::VRGuiScene() { // TODO: reduce callbacks with templated functions
     connect_signal<void, GdkDragContext*>((GtkWidget*)tree_view, bind(&VRGuiScene::on_drag_beg, this, placeholders::_1), "drag_begin" );
     connect_signal<void, GdkDragContext*>((GtkWidget*)tree_view, bind(&VRGuiScene::on_drag_end, this, placeholders::_1), "drag_end" );
     connect_signal<void, GdkDragContext*, int, int, GtkSelectionData*, guint, guint>((GtkWidget*)tree_view, bind(&VRGuiScene::on_drag_data_receive, this, placeholders::_1, placeholders::_2, placeholders::_3, placeholders::_4, placeholders::_5, placeholders::_6), "drag_data_received" );
-
+    
     setCellRendererCallback("cellrenderertext7", bind(&VRGuiScene::on_edit_object_name, this, placeholders::_1, placeholders::_2) );
     setCellRendererCallback("cellrenderertext4", bind(&VRGuiScene::on_edit_distance, this, placeholders::_1, placeholders::_2) );
     setCellRendererCallback("cellrenderertext33", bind(&VRGuiScene::on_edit_primitive_params, this, placeholders::_1, placeholders::_2) );
