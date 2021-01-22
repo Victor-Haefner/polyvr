@@ -1197,7 +1197,7 @@ _set_pixformat_for_hdc(HDC hdc, gint* best_idx, _GdkWin32Display* display) {
     /* one is only allowed to call SetPixelFormat(), and so ChoosePixelFormat()
      * one single time per window HDC
      */
-    *best_idx = old_get_wgl_pfd(hdc, &pfd, display); // vr_get_wgl_pfd
+    *best_idx = vr_get_wgl_pfd(hdc, &pfd, display); // vr_get_wgl_pfd
     if (*best_idx != 0) set_pixel_format_result = SetPixelFormat(hdc, *best_idx, &pfd);
 
     /* ChoosePixelFormat() or SetPixelFormat() failed, bail out */
@@ -2005,87 +2005,6 @@ static gint vr_get_dummy_wgl_pfd(HDC hdc, PIXELFORMATDESCRIPTOR* pfd) {
     return best_pf;
 }
 
-static gint old_get_wgl_pfd(HDC hdc, PIXELFORMATDESCRIPTOR* pfd, _GdkWin32Display* display) {
-    gint best_pf = 0;
-
-    pfd->nSize = sizeof(PIXELFORMATDESCRIPTOR);
-
-    if (display->hasWglARBPixelFormat) {
-        GdkWGLDummy dummy;
-        UINT num_formats;
-        gint colorbits = GetDeviceCaps(hdc, BITSPIXEL);
-        guint extra_fields = 1;
-        gint i = 0;
-        int pixelAttribs[PIXEL_ATTRIBUTES];
-        int alpha_idx = 0;
-
-        if (display->hasWglARBmultisample) {
-            /* 2 pairs of values needed for multisampling/AA support */
-            extra_fields += 2 * 2;
-        }
-
-        /* Update PIXEL_ATTRIBUTES above if any groups are added here! */
-        /* one group contains a value pair for both pixelAttribs and pixelAttribsNoAlpha */
-        pixelAttribs[i] = WGL_DRAW_TO_WINDOW_ARB;
-        pixelAttribs[i++] = GL_TRUE;
-
-        pixelAttribs[i++] = WGL_SUPPORT_OPENGL_ARB;
-        pixelAttribs[i++] = GL_TRUE;
-
-        pixelAttribs[i++] = WGL_DOUBLE_BUFFER_ARB;
-        pixelAttribs[i++] = GL_TRUE;
-
-        pixelAttribs[i++] = WGL_ACCELERATION_ARB;
-        pixelAttribs[i++] = WGL_FULL_ACCELERATION_ARB;
-
-        pixelAttribs[i++] = WGL_PIXEL_TYPE_ARB;
-        pixelAttribs[i++] = WGL_TYPE_RGBA_ARB;
-
-        pixelAttribs[i++] = WGL_COLOR_BITS_ARB;
-        pixelAttribs[i++] = colorbits;
-
-        /* end of "Update PIXEL_ATTRIBUTES above if any groups are added here!" */
-
-        if (display->hasWglARBmultisample) {
-            pixelAttribs[i++] = WGL_SAMPLE_BUFFERS_ARB;
-            pixelAttribs[i++] = 1;
-
-            pixelAttribs[i++] = WGL_SAMPLES_ARB;
-            pixelAttribs[i++] = 8;
-        }
-
-        pixelAttribs[i++] = WGL_ALPHA_BITS_ARB;
-
-        /* track the spot where the alpha bits are, so that we can clear it if needed */
-        alpha_idx = i;
-
-        pixelAttribs[i++] = 8;
-        pixelAttribs[i++] = 0; /* end of pixelAttribs */
-
-        memset(&dummy, 0, sizeof(GdkWGLDummy));
-
-        /* acquire and cache dummy Window (HWND & HDC) and
-         * dummy GL Context, we need it for wglChoosePixelFormatARB()
-         */
-        best_pf = _gdk_init_dummy_context(&dummy, 0);
-
-        if (best_pf == 0 || !wglMakeCurrent(dummy.hdc, dummy.hglrc)) return 0;
-
-        wglChoosePixelFormatARB(hdc, pixelAttribs, NULL, 1, &best_pf, &num_formats);
-
-        if (best_pf == 0) {
-            pixelAttribs[alpha_idx] = 0;
-            pixelAttribs[alpha_idx + 1] = 0;
-            wglChoosePixelFormatARB(hdc, pixelAttribs, NULL, 1, &best_pf, &num_formats);
-        }
-
-        wglMakeCurrent(NULL, NULL);
-        _destroy_dummy_gl_context(dummy);
-    }
-
-    return best_pf;
-}
-
 static gint vr_get_wgl_pfd(HDC hdc, PIXELFORMATDESCRIPTOR* pfd, _GdkWin32Display* display) {
     printf("   vr_get_wgl_pfd, get complete GL Context\n");
     gint best_pf = 0;
@@ -2111,7 +2030,7 @@ static gint vr_get_wgl_pfd(HDC hdc, PIXELFORMATDESCRIPTOR* pfd, _GdkWin32Display
             WGL_ACCELERATION_ARB,       WGL_FULL_ACCELERATION_ARB,
             WGL_PIXEL_TYPE_ARB,         WGL_TYPE_RGBA_ARB,
             WGL_COLOR_BITS_ARB,         colorbits,
-            WGL_ALPHA_BITS_ARB,         0,
+            WGL_ALPHA_BITS_ARB,         8, // important, if set to 0 the window might get translucent on some systems
             WGL_DEPTH_BITS_ARB,         24,
             WGL_STENCIL_BITS_ARB,       8,
             WGL_SAMPLE_BUFFERS_ARB,     1,
@@ -2126,7 +2045,7 @@ static gint vr_get_wgl_pfd(HDC hdc, PIXELFORMATDESCRIPTOR* pfd, _GdkWin32Display
             WGL_ACCELERATION_ARB,       WGL_FULL_ACCELERATION_ARB,
             WGL_PIXEL_TYPE_ARB,         WGL_TYPE_RGBA_ARB,
             WGL_COLOR_BITS_ARB,         colorbits,
-            WGL_ALPHA_BITS_ARB,         0,
+            WGL_ALPHA_BITS_ARB,         8, // important, if set to 0 the window might get translucent on some systems
             WGL_DEPTH_BITS_ARB,         24,
             WGL_STENCIL_BITS_ARB,       8,
             0
