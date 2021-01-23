@@ -696,7 +696,7 @@ vector<string> OSMWay::getNodes(float downSampleRate) {
     vector<string> res;
     res.push_back(nodes[0]); // force first node!
 
-    for (int i=0; i<nodes.size(); i++) {
+    for (size_t i=0; i<nodes.size(); i++) {
         float k = i*downSampleRate;
         int N = res.size();
         if (N < k) res.push_back(nodes[i]);
@@ -922,7 +922,7 @@ void OSMMap::readGEOJSON(string path) {
     auto multipolyFromString = [&](string in) {
         vector<vector<Vec2d>> res;
         int at1 = in.find_first_of("(((") + 3;
-        int at2 = 1;
+        //int at2 = 1;
         int at3 = in.find_first_of(")))");
         int at4 = in.find_first_of(")");
         if (at3 != at4) {
@@ -968,7 +968,7 @@ void OSMMap::readGEOJSON(string path) {
             poGeometry = poFeature->GetGeometryRef();
             if( poGeometry != NULL && wkbFlatten(poGeometry->getGeometryType()) == wkbPoint ) {
                 //OGRPoint *poPoint = poGeometry->toPoint();
-                OGRPoint *poPoint = (OGRPoint *) poGeometry;
+                //OGRPoint *poPoint = (OGRPoint *) poGeometry;
                 char *wkt_tmp = nullptr;
                 poGeometry->exportToWkt(&wkt_tmp);
                 Vec2d latlon = latlonFromPointString(wkt_tmp);
@@ -980,7 +980,7 @@ void OSMMap::readGEOJSON(string path) {
                 //bounds->update(Vec3d(latlon[1],latlon[0],0));
             }
             else if ( poGeometry != NULL && wkbFlatten(poGeometry->getGeometryType()) == wkbMultiPolygon ) {
-                OGRMultiPolygon* poMPoly = (OGRMultiPolygon *) poGeometry;
+                //OGRMultiPolygon* poMPoly = (OGRMultiPolygon *) poGeometry;
                 char *wkt_tmp = nullptr;
                 poGeometry->exportToWkt(&wkt_tmp);
                 vector<vector<Vec2d>> multiPoly = multipolyFromString(wkt_tmp);
@@ -1031,8 +1031,8 @@ void OSMMap::readSHAPE(string path) {
     cout << "OSMMap::readSHAPE path " << path << endl;
     printf( "  Driver: %s/%s\n", poDS->GetDriver()->GetDescription(), poDS->GetDriver()->GetMetadataItem( GDAL_DMD_LONGNAME ) );
 
-    int nodeID = -1;
-    int wayID = -1;
+    //int nodeID = -1;
+    //int wayID = -1;
 
     GDALClose(poDS);
     auto t2 = t.stop()/1000.0;
@@ -1107,7 +1107,7 @@ void OSMMap::readGML(string path, int EPSG_Code) {
     auto multipolyFromString = [&](string in) {
         vector<vector<Vec3d>> res;
         int at1 = in.find_first_of("(((") + 3;
-        int at2 = 1;
+        //int at2 = 1;
         int at3 = in.find_first_of(")))");
         int at4 = in.find_first_of(")");
         if (at3 != at4) {
@@ -1119,7 +1119,7 @@ void OSMMap::readGML(string path, int EPSG_Code) {
     };
 
     int nodeID = -1;
-    int wayID = -1;
+    //int wayID = -1;
     int layercount = -1;
     VRTimer t; t.start();
 
@@ -1169,7 +1169,7 @@ void OSMMap::readGML(string path, int EPSG_Code) {
             }
             else if ( poGeometry != NULL && wkbFlatten(poGeometry->getGeometryType()) == wkbMultiPolygon ) {
                 //cout << " multipolygon" << endl;
-                OGRMultiPolygon* poMPoly = (OGRMultiPolygon *) poGeometry;
+                //OGRMultiPolygon* poMPoly = (OGRMultiPolygon *) poGeometry;
                 char *wkt_tmp = nullptr;
                 poGeometry->exportToWkt(&wkt_tmp);
                 vector<vector<Vec3d>> multiPoly = multipolyFromString(wkt_tmp);

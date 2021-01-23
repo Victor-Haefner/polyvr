@@ -89,8 +89,6 @@ void VRMolecule::updateGeo() {
 
     float r_scale = 0.6;
 
-    int i=0;
-    int j=0;
     for (auto a : atoms) {
         PeriodicTableEntry aP = a.second->getParams();
         atomsData.pushVert( Pnt3d(a.second->getTransformation()[3]), Vec3d(0, r_scale*aP.radius, 0), aP.color );

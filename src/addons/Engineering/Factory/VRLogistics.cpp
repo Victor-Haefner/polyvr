@@ -203,10 +203,10 @@ void FTransporter::update(float dt) {
 	s1 = FNode::FREE;
 
     //cout << "\n Transport id " << getID() << flush;
-    int test_id = -1;
+    //int test_id = -1;
 
     // state machine
-    for (int i=0; i<nodes.size(); i++) {
+    for (size_t i=0; i<nodes.size(); i++) {
         n2 = n1;
         int nID = nodes[nodes.size()-1-i];
         n1 = net->getNode(nID);
@@ -222,23 +222,23 @@ void FTransporter::update(float dt) {
         (s1 == FNode::CONTAINER) ? c1 = dynamic_pointer_cast<FContainer>(o1) : c1 = 0;
         (s2 == FNode::CONTAINER) ? c2 = dynamic_pointer_cast<FContainer>(o2) : c2 = 0;
 
-        if (o1 == 0) continue; /* nothing here to do */                                     if (getID() == test_id) cout << "\n Node content " << o1->getID() << " ,reserved?" << flush;
-        if (s2 == FNode::RESERVED) continue; /* next node reserved*/                        if (getID() == test_id) cout << "\n Product there? " << flush;
+        if (o1 == 0) continue; /* nothing here to do */                                     //if (getID() == test_id) cout << "\n Node content " << o1->getID() << " ,reserved?" << flush;
+        if (s2 == FNode::RESERVED) continue; /* next node reserved*/                        //if (getID() == test_id) cout << "\n Product there? " << flush;
 
-        if (p2) continue; /* no place at next node */                                       if (getID() == test_id) cout << "\n Container there? " << flush;
-        if (c2) if (c2->isFull()) continue; /* no place in container*/                      if (getID() == test_id) cout << "\n Next node has place for a product " << flush;
+        if (p2) continue; /* no place at next node */                                       //if (getID() == test_id) cout << "\n Container there? " << flush;
+        if (c2) if (c2->isFull()) continue; /* no place in container*/                      //if (getID() == test_id) cout << "\n Next node has place for a product " << flush;
 
         switch(transport_type) {
-            case PRODUCT:                                                                   if (getID() == test_id) cout << "\n Transport product, container? " << flush;
-                if (t1 == FObject::CONTAINER) {                                             if (getID() == test_id) cout << "\n  yes, is container empty? " << flush;
-                    if (c1->isEmpty()) continue; /* nothing to do, empty container */       if (getID() == test_id) cout << "\n  no, get object from container " << flush;
+            case PRODUCT:                                                                   //if (getID() == test_id) cout << "\n Transport product, container? " << flush;
+                if (t1 == FObject::CONTAINER) {                                             //if (getID() == test_id) cout << "\n  yes, is container empty? " << flush;
+                    if (c1->isEmpty()) continue; /* nothing to do, empty container */       //if (getID() == test_id) cout << "\n  no, get object from container " << flush;
                     o1 = c1->pop();
                     c1 = 0;
                     p1 = dynamic_pointer_cast<FProduct>(o1);
                     t1 = o1->getType();
                 }
 
-                if (t1 == FObject::PRODUCT) {                                               if (getID() == test_id) cout << "\n  a product, move it! " << flush;
+                if (t1 == FObject::PRODUCT) {                                               //if (getID() == test_id) cout << "\n  a product, move it! " << flush;
                     if (n1->get() == o1) n1->set(0);
                     cargo[n2] = o1;
                     if(c2 == 0) n2->setState(FNode::RESERVED);
@@ -246,17 +246,17 @@ void FTransporter::update(float dt) {
                 }
                 continue;
 
-            case CONTAINER_FULL:                                                            if (getID() == test_id) cout << "\n Transport full container, container?" << flush;
-                if (c1 == 0) continue;                                                      if (getID() == test_id) cout << "\n  found container, full? " << flush;
-                if (!c1->isFull()) continue; /* wait until container is full*/              if (getID() == test_id) cout << "\n  yes, move it! " << flush;
+            case CONTAINER_FULL:                                                            //if (getID() == test_id) cout << "\n Transport full container, container?" << flush;
+                if (c1 == 0) continue;                                                      //if (getID() == test_id) cout << "\n  found container, full? " << flush;
+                if (!c1->isFull()) continue; /* wait until container is full*/              //if (getID() == test_id) cout << "\n  yes, move it! " << flush;
                 n1->set(0);
                 n2->setState(FNode::RESERVED);
                 cargo[n2] = c1;
                 continue;
 
-            case CONTAINER_EMPTY:                                                           if (getID() == test_id) cout << "\n Transport empty container, container?" << flush;
-                if (c1 == 0) continue;                                                      if (getID() == test_id) cout << "\n  found container, empty? " << flush;
-                if (!c1->isEmpty()) continue; /* wait until container is empty*/            if (getID() == test_id) cout << "\n  yes, move it! " << flush;
+            case CONTAINER_EMPTY:                                                           //if (getID() == test_id) cout << "\n Transport empty container, container?" << flush;
+                if (c1 == 0) continue;                                                      //if (getID() == test_id) cout << "\n  found container, empty? " << flush;
+                if (!c1->isEmpty()) continue; /* wait until container is empty*/            //if (getID() == test_id) cout << "\n  yes, move it! " << flush;
                 n1->set(0);
                 n2->setState(FNode::RESERVED);
                 cargo[n2] = c1;

@@ -27,24 +27,20 @@ VRGuiRecWidget::VRGuiRecWidget() {
 
     GtkButtonBox* box = (GtkButtonBox*)gtk_dialog_get_action_area(diag);
 
-#if GTK_MAJOR_VERSION == 2
-    gtk_button_box_set_child_size(box, 20, -1);
-#endif
-
     auto addButton = [&](const char* icon, int signal) {
         auto but = (GtkButton*)gtk_button_new();
 		gtk_widget_set_size_request((GtkWidget*)but, 20, -1);
-        GtkWidget* img = gtk_image_new_from_stock(icon, GTK_ICON_SIZE_BUTTON);
+        GtkWidget* img = gtk_image_new_from_icon_name(icon, GTK_ICON_SIZE_BUTTON);
         gtk_container_add((GtkContainer*)but, img);
         gtk_container_add((GtkContainer*)box, (GtkWidget*)but);
         function<void()> sig = bind(&VRGuiRecWidget::buttonHandler, this, signal);
         connect_signal((GtkWidget*)but, sig, "clicked");
     };
 
-    addButton(GTK_STOCK_MEDIA_RECORD, 1);
-    addButton(GTK_STOCK_MEDIA_PAUSE, 2);
-    addButton(GTK_STOCK_FLOPPY, 3);
-    addButton(GTK_STOCK_REFRESH, 4);
+    addButton("media-record", 1);
+    addButton("media-playback-pause", 2);
+    addButton("gtk-floppy", 3);
+    addButton("view-refresh", 4);
 
     fillStringListstore("resList", VRRecorder::getResList());
     fillStringListstore("codecList", VRRecorder::getCodecList());

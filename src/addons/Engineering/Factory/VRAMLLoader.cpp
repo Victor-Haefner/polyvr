@@ -98,7 +98,7 @@ void VRAMLLoader::read(string path) {
                     if (!vf) break; // Attribute "Value" missing: Keep default value.
                     else if (vn == "length") length = toFloat(vf->getText());
                     else if (vn == "height") height = toFloat(vf->getText());
-                    else if (vn == "width") width = toFloat(vf->getText());
+                    else if (vn == "width")  width  = toFloat(vf->getText());
                 }
             }
 
@@ -115,6 +115,7 @@ void VRAMLLoader::read(string path) {
                             else if (vnn == "z") wSpace[0][2] = toFloat(vf->getText());
                         }
                     }
+
                     if (vn == "size") {
                         for (auto val : vec->getChildren("Attribute")) {
                             string vnn = val->getAttribute("Name");
@@ -122,7 +123,7 @@ void VRAMLLoader::read(string path) {
                             if (!vf) break; // Attribute "Value" missing: Keep default value.
                             else if (vnn == "length") wSpace[1][0] = toFloat(vf->getText());
                             else if (vnn == "height") wSpace[1][1] = toFloat(vf->getText());
-                            else if (vnn == "width") wSpace[1][2] = toFloat(vf->getText());
+                            else if (vnn == "width")  wSpace[1][2] = toFloat(vf->getText());
                         }
                     }
                 }

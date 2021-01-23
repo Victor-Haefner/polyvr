@@ -531,7 +531,7 @@ vector<VREntityPtr> VRReasoner::process(string strQuery, VROntologyPtr onto) {
         queryHash = newHash;
 
         if (newHash.size() != tmpHash.size()) return false;
-        for (int i=0; i<newHash.size(); i++) if (newHash[i] != tmpHash[i]) return false;
+        for (size_t i=0; i<newHash.size(); i++) if (newHash[i] != tmpHash[i]) return false;
         return true;
     };
 

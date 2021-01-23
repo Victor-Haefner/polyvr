@@ -155,7 +155,7 @@ VRGeometryPtr VRProcessLayout::newWidget(VRProcessNodePtr n, float height) {
     int wrapN = 12;
     if (n->type == MESSAGE || n->type == TRANSITION) wrapN = 22;
     string l = n->label;
-    int lineN = wrapString(l, wrapN);
+    /*int lineN =*/ wrapString(l, wrapN);
 
     auto w = VRAnnotationEngine::create("ProcessElement");
     w->setBillboard(true);
@@ -182,13 +182,13 @@ void VRProcessLayout::setProcess(VRProcessPtr p) {
 
     process = p;
 
-    auto constrainHandles = [&](VRPathtoolPtr tool) {
+    /*auto constrainHandles = [&](VRPathtoolPtr tool) {
         for (auto h : tool->getHandles()) {
             auto c = h->getConstraint();
             c->setReferential( ptr() );
             c->lock({1,3,5});
         }
-    };
+    };*/
 
     auto g = VRGeometry::create("asd");
     g->setPrimitive("Box 0.00001 0.00001 0.00001 1 1 1");

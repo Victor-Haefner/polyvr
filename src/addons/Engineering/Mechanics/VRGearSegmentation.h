@@ -55,16 +55,16 @@ class VRGearSegmentation {
         Vec3d getAxis();
         PosePtr getPolarCoords();
 
-        int getNGears();
-        vector<double> getGearParams(int i);
-        VRGeometryPtr createGear(int i);
+        size_t getNGears();
+        vector<double> getGearParams(size_t i);
+        VRGeometryPtr createGear(size_t i);
 
-        int getNPlanes();
-        double getPlanePosition(int i);
-        vector<Vec2d> getPlaneVertices(int i);
-        vector<Vec2d> getPlaneContour(int i);
-        vector<double> getPlaneSineGuess(int i, int sf);
-        vector<double> getPlaneSineApprox(int i, int sf);
+        size_t getNPlanes();
+        double getPlanePosition(size_t i);
+        vector<Vec2d> getPlaneVertices(size_t i);
+        vector<Vec2d> getPlaneContour(size_t i);
+        vector<double> getPlaneSineGuess(size_t i, size_t sf);
+        vector<double> getPlaneSineApprox(size_t i, size_t sf);
 };
 
 OSG_END_NAMESPACE;
