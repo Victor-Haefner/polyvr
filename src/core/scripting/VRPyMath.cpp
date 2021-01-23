@@ -658,7 +658,7 @@ Py_ssize_t VRPyDatarow::len(PyObject* self) {
 
 PyObject* VRPyDatarow::getItem(PyObject* self, Py_ssize_t i) {
     auto v = ((VRPyDatarow*)self)->objPtr;
-    if (i < 0 || i >= v->length()) {
+    if (i < 0 || i >= (int)v->length()) {
         setErr("VRPyDatarow::getItem, index i not in range [0-"+toString(v->length())+"] ("+toString(int(i))+")");
         return NULL;
     }
@@ -667,7 +667,7 @@ PyObject* VRPyDatarow::getItem(PyObject* self, Py_ssize_t i) {
 
 int VRPyDatarow::setItem(PyObject* self, Py_ssize_t i, PyObject* val) {
     auto v = ((VRPyDatarow*)self)->objPtr;
-    if (i < 0 || i >= v->length()) {
+    if (i < 0 || i >= (int)v->length()) {
         setErr("VRPyDatarow::setItem, index i not in range [0-"+toString(v->length())+"] ("+toString(int(i))+")");
         return -1;
     }

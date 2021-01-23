@@ -1310,7 +1310,7 @@ VRPointCloudPtr VRGeometry::convertToPointCloud(map<string, string> options) {
         sort(edges.begin(), edges.end(), [] (Edge left, Edge right) -> bool {return left.length < right.length;});
         if (edges[0].pnts.size() == 0) continue;
 
-        float area = edges[0].length * edges[1].length / 2;
+        //float area = edges[0].length * edges[1].length / 2;
         auto mappedPoints = mapPoints(edges[0].pnts, edges[2].pnts);
         for (auto& match : mappedPoints) addPointsOnEdge(data, resolution, get<0>(match), get<1>(match), false);
     }

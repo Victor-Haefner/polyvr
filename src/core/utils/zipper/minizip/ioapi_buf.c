@@ -69,7 +69,7 @@ typedef struct ourstream_s {
 #  define print_buf(o,s,f,...) print_buf_internal(o,s,f,__VA_ARGS__);
 #else
 #  define print_buf(o,s,f,...)
-#endif 
+#endif
 
 void print_buf_internal(voidpf opaque, voidpf stream, char *format, ...)
 {
@@ -154,7 +154,7 @@ long fflush_buf (opaque, stream)
     uInt bytesToWrite = streamio->writeBufferLength;
     uInt bytesLeftToWrite = streamio->writeBufferLength;
     int bytesWritten = 0;
-    
+
     while (bytesLeftToWrite > 0)
     {
         if (bufio->filefunc64.zwrite_file != NULL)
@@ -289,7 +289,7 @@ uLong ZCALLBACK fwrite_buf_func (opaque, stream, buf, size)
 
             continue;
         }
-        
+
         memcpy(streamio->writeBuffer + streamio->writeBufferPos, (char *)buf + (bytesToWrite - bytesLeftToWrite), bytesToCopy);
 
         print_buf(opaque, stream, "write copy [remaining %d write %d:%d len %d]\n", bytesToCopy, bytesToWrite, bytesLeftToWrite, streamio->writeBufferLength);
@@ -380,7 +380,7 @@ int fseek_buf_internal_func (opaque, stream, offset, origin)
                 {
                     streamio->readBufferPos += (uLong)offset;
                     return 0;
-                } 
+                }
                 offset -= (streamio->readBufferLength - streamio->readBufferPos);
                 streamio->position += offset;
             }
@@ -465,7 +465,7 @@ int ZCALLBACK fclose_buf_func (opaque, stream)
         print_buf(opaque, stream, "write efficency %.02f%%\n", (streamio->writeBufferHits / ((float)streamio->writeBufferHits + streamio->writeBufferMisses)) * 100);
     if (bufio->filefunc64.zclose_file != NULL)
         retVal = bufio->filefunc64.zclose_file(bufio->filefunc64.opaque, streamio->stream);
-    else 
+    else
         retVal = bufio->filefunc.zclose_file(bufio->filefunc.opaque, streamio->stream);
     free(streamio);
     return retVal;

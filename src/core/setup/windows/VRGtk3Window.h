@@ -23,7 +23,7 @@ VRGtkWindow::VRGtkWindow(GtkWidget* area, string msaa) {
     widget = area;
     if (gtk_widget_get_realized(widget)) cout << "Warning: glarea is realized!\n";
 
-    int MSAA = toInt(subString(msaa, 1, -1));
+    //int MSAA = toInt(subString(msaa, 1, -1));
     //gl_area_set_samples((GLArea*)widget, MSAA); // TODO: pass the samples somehow
 
     //g_signal_connect(widget, "create-context", (GCallback)onCreateGLContext, NULL);

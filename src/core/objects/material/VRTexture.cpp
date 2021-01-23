@@ -426,7 +426,7 @@ void VRTexture::downsize() {
 
 void VRTexture::mixColor(Color4f c, float a) {
     size_t N = getNPixel();
-    for (int i=0; i<N; i++) {
+    for (size_t i=0; i<N; i++) {
         Color4f p = getPixel(i);
         setPixel(i, p*(1-a) + c*a);
     }

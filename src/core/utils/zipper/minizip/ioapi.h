@@ -120,7 +120,7 @@ typedef struct zlib_filefunc_def_s
 
 typedef ZPOS64_T (ZCALLBACK *tell64_file_func)    OF((voidpf opaque, voidpf stream));
 typedef long     (ZCALLBACK *seek64_file_func)    OF((voidpf opaque, voidpf stream, ZPOS64_T offset, int origin));
-typedef voidpf   (ZCALLBACK *open64_file_func)    OF((voidpf opaque, const void* filename, int mode));
+typedef voidpf   (ZCALLBACK *open64_file_func)    OF((voidpf opaque, const char* filename, int mode));
 typedef voidpf   (ZCALLBACK *opendisk64_file_func)OF((voidpf opaque, voidpf stream, int number_disk, int mode));
 
 typedef struct zlib_filefunc64_def_s

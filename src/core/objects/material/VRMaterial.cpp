@@ -1082,8 +1082,8 @@ void regVProgramVars(ShaderProgram* vp) {
     ShaderProgramVariables* vars = vp->getVariables();
     const MFUnrecShaderValueVariablePtr* mfvvars = vars->getMFVariables();
     const MFUnrecChildShaderProcVariablePtr* mfpvars = vars->getMFProceduralVariables();
-    for (int i=0; i < mfvvars->size(); i++) VRMaterial::fieldContainerMap[(*mfvvars)[i]->getId()] = vp->getId();
-    for (int i=0; i < mfpvars->size(); i++) VRMaterial::fieldContainerMap[(*mfpvars)[i]->getId()] = vp->getId();
+    for (size_t i=0; i < mfvvars->size(); i++) VRMaterial::fieldContainerMap[(*mfvvars)[i]->getId()] = vp->getId();
+    for (size_t i=0; i < mfpvars->size(); i++) VRMaterial::fieldContainerMap[(*mfpvars)[i]->getId()] = vp->getId();
 }
 
 void VRMaterial::initShaderChunk() {

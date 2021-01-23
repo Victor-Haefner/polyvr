@@ -673,7 +673,7 @@ Vec3d getClosestOnTriangle(Vec3d p, Vec3d& n, const Vec3d& p1, const Vec3d& p2, 
 
 PosePtr Patch::getClosestPose(Vec3d p) {
     float dmin = 1e6;
-    float _3 = 1.0/3;
+    //float _3 = 1.0/3;
     PosePtr Dmin = Pose::create();
     auto obj = object.lock();
     if (obj) {
@@ -705,7 +705,7 @@ PosePtr Patch::getClosestPose(Vec3d p) {
 
 Vec3d Patch::getClosestPoint(Vec3d p) {
     float dmin = 1e6;
-    float _3 = 1.0/3;
+    //float _3 = 1.0/3;
     Vec3d Dmin;
     auto obj = object.lock();
     if (obj) {

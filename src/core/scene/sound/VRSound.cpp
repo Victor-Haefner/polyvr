@@ -259,7 +259,7 @@ void VRSound::playFrame() {
         if (interrupt || avrf < 0) {
             if (al->packet.data) {
                 //cout << "  free packet" << endl;
-                av_free_packet(&al->packet);
+                av_packet_unref(&al->packet);
             }
             //cout << "  free frame" << endl;
             av_free(al->frame);
@@ -370,7 +370,7 @@ void VRSound::playLocally() {
         } // while packet.size > 0
     }
 
-    if (al->packet.data) av_free_packet(&al->packet);
+    if (al->packet.data) av_packet_unref(&al->packet);
     av_free(al->frame);
 }
 

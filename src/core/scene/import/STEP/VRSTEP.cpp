@@ -591,31 +591,31 @@ void VRSTEP::open(string file) {
 }
 
 void VRSTEP::explore(VRSTEP::Node* node, int parent) {
-    int ID = -1;
+    //int ID = -1;
     string name, type;
 
     if (node->entity) {
         name = string(node->entity->EntityName()) + (node->entity->IsComplex() ? " (C)" : "");
-        ID = node->entity->STEPfile_id;
+        //ID = node->entity->STEPfile_id;
         type = node->type;
     }
 
     else if (node->aggregate) {
         name = node->a_name;
-        ID = 0;//node->select->STEPfile_id;
+        //ID = 0;//node->select->STEPfile_id;
         type = node->type;
     }
 
     else if (node->select) {
         name = node->a_name;
-        ID = 0;//node->select->STEPfile_id;
+        //ID = 0;//node->select->STEPfile_id;
         type = node->type;
     }
 
     else if(parent) {
         name = node->a_name;
         type = node->a_val;
-        ID = 0;
+        //ID = 0;
     }
 
     // huh?

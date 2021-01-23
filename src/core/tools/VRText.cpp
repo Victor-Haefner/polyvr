@@ -63,8 +63,8 @@ class FTRenderer {
 
         static vector<pair<unsigned long, string>> getGraphemes(const string& utf8) {
             vector<pair<unsigned long, string>> unicode;
-            for (int i=0; i<utf8.size();) {
-                int i0 = i;
+            for (size_t i=0; i<utf8.size();) {
+                size_t i0 = i;
                 unsigned long uni;
                 size_t todo;
                 unsigned char ch = utf8[i++];
@@ -97,7 +97,7 @@ class FTRenderer {
             int maxO = 0;
 
             //cout << "computeLayout " << graphemes.size() << endl;
-            for ( int n = 0; n < graphemes.size(); n++ ) {
+            for ( size_t n = 0; n < graphemes.size(); n++ ) {
                 FT_ULong cUL = graphemes[n].first; // load glyph image into the slot (erase previous one)
                 error = FT_Load_Char( face, cUL, FT_LOAD_RENDER );
                 if (error) { cout << "FT_Load_Char " << cUL << " failed! " << error << endl; continue; } // ignore errors
@@ -126,7 +126,7 @@ class FTRenderer {
             FT_Stroker_Set(stroker, style.outline * 64, FT_STROKER_LINECAP_ROUND, FT_STROKER_LINEJOIN_ROUND, 0);
 
             //cout << "drawOutline " << endl;
-            for ( int n = 0; n < graphemes.size(); n++ ) {
+            for ( size_t n = 0; n < graphemes.size(); n++ ) {
                 FT_ULong cUL = graphemes[n].first; // load glyph image into the slot (erase previous one)
                 FT_Set_Transform( face, &matrix, &pen );
                 //error = FT_Load_Glyph(face, cUL, FT_LOAD_DEFAULT);
@@ -157,7 +157,7 @@ class FTRenderer {
             pen.y = 0;
 
             //cout << "drawGraphemes " << endl;
-            for ( int n = 0; n < graphemes.size(); n++ ) {
+            for ( size_t n = 0; n < graphemes.size(); n++ ) {
                 FT_ULong cUL = graphemes[n].first; // load glyph image into the slot (erase previous one)
                 FT_Set_Transform( face, &matrix, &pen );
                 error = FT_Load_Char( face, cUL, FT_LOAD_RENDER );

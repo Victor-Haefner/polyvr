@@ -209,8 +209,8 @@ VRTexturePtr loadGeoRasterData(string path, bool shout) {
         int nXSize = band->GetXSize();
         int nYSize = band->GetYSize();
         vector<float> line(nXSize*nYSize);
-        band->RasterIO( GF_Read, 0, (i-1)*nYSize, nXSize, nYSize, &line[0], nXSize, nYSize, GDT_Float32, 0, 0 );
-        data.insert(data.end(), line.begin(), line.end());
+        CPLErr err = band->RasterIO( GF_Read, 0, (i-1)*nYSize, nXSize, nYSize, &line[0], nXSize, nYSize, GDT_Float32, 0, 0 );
+        if (err == CE_None) data.insert(data.end(), line.begin(), line.end());
     }
 
     int sizeX = poDS->GetRasterXSize();
@@ -331,10 +331,11 @@ void divideTiffIntoChunks(string pathIn, string pathOut, double minLat, double m
                 for (int y = 0; y < sizeY; y++) {
                     for (int x = 0; x < sizeX; x++) {
                         vector<char> pix(3);
-                        poDS->GetRasterBand(1)->RasterIO( GF_Read, xpA+x, ypB-y, 1, 1, &pix[0], 1, 1, GDT_Byte, 0, 0 );
-                        poDS->GetRasterBand(2)->RasterIO( GF_Read, xpA+x, ypB-y, 1, 1, &pix[1], 1, 1, GDT_Byte, 0, 0 );
-                        poDS->GetRasterBand(3)->RasterIO( GF_Read, xpA+x, ypB-y, 1, 1, &pix[2], 1, 1, GDT_Byte, 0, 0 );
-                        data.insert(data.end(), pix.begin(), pix.end());
+                        CPLErr err;
+                        err = poDS->GetRasterBand(1)->RasterIO( GF_Read, xpA+x, ypB-y, 1, 1, &pix[0], 1, 1, GDT_Byte, 0, 0 );
+                        err = poDS->GetRasterBand(2)->RasterIO( GF_Read, xpA+x, ypB-y, 1, 1, &pix[1], 1, 1, GDT_Byte, 0, 0 );
+                        err = poDS->GetRasterBand(3)->RasterIO( GF_Read, xpA+x, ypB-y, 1, 1, &pix[2], 1, 1, GDT_Byte, 0, 0 );
+                        if (err == CE_None) data.insert(data.end(), pix.begin(), pix.end());
                     }
                 }
 
@@ -385,7 +386,8 @@ void writeGeoRasterData(string path, VRTexturePtr tex, double geoTransform[6], s
             auto fC = tex->getPixelVec(pI)[0];
             yRow[x] = fC;
         }
-        poBand->RasterIO( GF_Write, 0, y, sizeX, 1, yRow, sizeX, 1, GDT_Float32, 0, 0 );
+        CPLErr err = poBand->RasterIO( GF_Write, 0, y, sizeX, 1, yRow, sizeX, 1, GDT_Float32, 0, 0 );
+        if (err != CE_None) break;
     }
     /* Once we're done, close properly the dataset */
     CPLFree(yRow);

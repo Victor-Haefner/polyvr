@@ -68,7 +68,7 @@ class VRFrame {
             pktData = new char[pktSize];
             memcpy(pktData, pkt.data, pktSize);
 
-            av_free_packet(&pkt);
+            av_packet_unref(&pkt);
             capture = 0;
         }
 
@@ -280,7 +280,7 @@ void VRRecorder::compile(string path) {
 
         if (got_output) {
             fwrite(pkt.data, 1, pkt.size, f);
-            av_free_packet(&pkt);
+            av_packet_unref(&pkt);
         }
     }
 

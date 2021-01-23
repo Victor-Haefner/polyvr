@@ -301,8 +301,8 @@ DeferredShadingStageMTRecPtr VRDefShading::getOSGStage() { return dsStage; }
 
 // file containing vertex shader code for the light type
 const std::string& VRDefShading::getLightVPFile(LightTypeE lightType) {
+    if (lightType == 10) return dsFogVPFile;
     switch(lightType) {
-        case 10: return dsFogVPFile;
         case LightEngine::Directional: return dsDirLightVPFile;
         case LightEngine::Point: return dsPointLightVPFile;
         case LightEngine::Spot: return dsSpotLightVPFile;
@@ -316,8 +316,8 @@ const std::string& VRDefShading::getLightVPFile(LightTypeE lightType) {
 // file containing fragment shader code for the light type
 const std::string& VRDefShading::getLightFPFile(LightTypeE lightType, ShadowTypeE shadowType) {
     bool ds = (shadowType != ST_NONE);
+    if (lightType == 10) return dsFogFPFile;
     switch(lightType) {
-        case 10: return dsFogFPFile;
         case LightEngine::Directional: return ds ? dsDirLightShadowFPFile : dsDirLightFPFile;
         case LightEngine::Point: return ds ? dsPointLightShadowFPFile : dsPointLightFPFile;
         case LightEngine::Spot: return ds ? dsSpotLightShadowFPFile : dsSpotLightFPFile;

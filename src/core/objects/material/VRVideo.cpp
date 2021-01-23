@@ -101,7 +101,7 @@ void VRVideo::open(string f) {
         cout << "  VRVideo::open stream " << i << endl;
         int valid=0;
         int frame=0;
-        for(AVPacket packet; av_read_frame(vFile, &packet)>=0; av_free_packet(&packet) ) { // read stream
+        for(AVPacket packet; av_read_frame(vFile, &packet)>=0; av_packet_unref(&packet) ) { // read stream
             if(packet.stream_index != stream) continue;
 
             avcodec_decode_video2(vCodec, vFrame, &valid, &packet); // Decode video frame

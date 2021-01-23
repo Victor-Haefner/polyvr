@@ -339,7 +339,7 @@ struct GLTFNNode : GLTFNode{
     }
 
     void applyAnimations() {
-        auto slerp3d = [&](Vec3d v0, Vec3d v1, double t) { return v0 + (v1-v0)*t; };
+        /*auto slerp3d = [&](Vec3d v0, Vec3d v1, double t) { return v0 + (v1-v0)*t; };
 
         auto animTranslationLinearCB = [&](OSG::VRTransformPtr o, float duration, float t) {
             if (animationTimestampsTra.size() > 0){
@@ -701,7 +701,7 @@ struct GLTFNNode : GLTFNode{
 
         VRTransformPtr t = dynamic_pointer_cast<VRTransform>(obj);
         //for (auto c : children) c->applyAnimations();
-        //return t;
+        //return t;*/
     }
 
     bool applyAnimationFrame(float maxDuration, float tIn) {
@@ -1293,10 +1293,10 @@ class GLTFLoader : public GLTFUtils {
             bool bsF = false;
             bool mtF = false;
             bool rfF = false;
-            bool emF = false;
+            //bool emF = false;
             bool alphaBlend = false;
-            bool alphaMask = false;
-            bool alphaOpaque = false;
+            //bool alphaMask = false;
+            //bool alphaOpaque = false;
             bool singleFace = false;
             for (const auto &content : gltfMaterial.values) {
                 if (content.first == "baseColorTexture") {
@@ -1309,7 +1309,7 @@ class GLTFLoader : public GLTFUtils {
                 if (content.first == "baseColorFactor") bsF = true;
                 if (content.first == "metallicFactor") mtF = true;
                 if (content.first == "roughnessFactor") rfF = true;
-                if (content.first == "emissiveFactor") emF = true;
+                //if (content.first == "emissiveFactor") emF = true;
             }
             for (const auto &content : gltfMaterial.additionalValues) {
                 if (content.first == "normalTexture") {
@@ -1520,7 +1520,7 @@ class GLTFLoader : public GLTFUtils {
             int bits = image.bits;
             //cout << texID << " " << gltfTexture.source << " components " << components << " width " << width << " height " << height << " bits " << bits  << endl;
 
-            const auto size = components * width * height * bits; //sizeof(unsigned char);
+            //const auto size = components * width * height * bits; //sizeof(unsigned char);
             //unsigned char* data = new unsigned char[size];
             //char* data = new char[size];
             //memcpy(data, image.image.data(), size);
@@ -1882,10 +1882,10 @@ class GLTFLoader : public GLTFUtils {
             vector<Vec4d> rotation;
             vector<Vec3d> scale;
             vector<float> weights;
-            int nodeID = -1;
+            //int nodeID = -1;
             vector<bool> transf = {false, false, false};
             vector<int> tempAnimNodeIDs;
-            float maxDuration;
+            float maxDuration = 0;
 
             for (tinygltf::AnimationChannel each: gltfAnimation.channels) {
                 //if (nodeID >= 0 && nodeID != each.target_node) cout << "GLTFLOADER::WARNING IN ANIMATIONS: more than one node in animation channels" << endl;

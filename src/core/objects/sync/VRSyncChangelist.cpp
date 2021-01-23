@@ -371,8 +371,8 @@ void VRSyncChangelist::fixNullChildren(FieldContainerRecPtr fcPtr, UInt32 fieldM
     if (!(fieldMask & Node::ChildrenFieldMask)) return;
     if (!fcPtr->getType().isNode()) return;
     NodeRecPtr node = dynamic_pointer_cast<Node>(fcPtr);
-    vector<int> toRemove;
-    for (int i=0; i<node->getNChildren(); i++) {
+    vector<size_t> toRemove;
+    for (size_t i=0; i<node->getNChildren(); i++) {
         if (node->getChild(i) == 0) toRemove.push_back(i);
     }
     for (auto i : toRemove) node->subChild(i);
@@ -406,7 +406,7 @@ void VRSyncChangelist::handleRemoteEntries(VRSyncNodePtr syncNode, vector<Serial
         if (sentry.syncNodeID >= 0 && sentry.syncNodeID <= 2) {
             syncNode->replaceContainerMapping(sentry.syncNodeID, sentry.localId);
         }
-        
+
         UInt32 id = syncNode->getRemoteToLocalID(sentry.localId);// map remote id to local id if exist (otherwise id = -1)
         //cout << " --- getRemoteToLocalID: " << sentry.localId << " to " << id << " syncNode: " << syncNode->getName() << ", syncNodeID: " << sentry.syncNodeID << endl;
         FieldContainerRecPtr fcPtr = getOrCreate(syncNode, id, sentry, parentToChildren); // Field Container to apply changes to
@@ -610,7 +610,7 @@ void VRSyncChangelist::filterFieldMask(VRSyncNodePtr syncNode, FieldContainer* f
         sentry.fieldMask &= ~Node::CoreFieldMask; // remove core field change!
     }
 
-    FieldContainerFactoryBase* factory = FieldContainerFactory::the();
+    //FieldContainerFactoryBase* factory = FieldContainerFactory::the();
     if (dynamic_cast<Geometry*>(fc)) {
         sentry.fieldMask &= ~Geometry::ClassicGLIdFieldMask;
         sentry.fieldMask &= ~Geometry::AttGLIdFieldMask;

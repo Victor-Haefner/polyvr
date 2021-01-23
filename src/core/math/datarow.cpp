@@ -22,13 +22,13 @@ void Datarow::resize(int N, double v) { data = vector<double>(N, v); }
 
 void Datarow::set(double d, int i) {
     if (i < 0) i += length();
-    if (i < 0 || i >= length()) return;
+    if (i < 0 || i >= (int)length()) return;
     data[i] = d;
 }
 
 double Datarow::get(int i) {
     if (i < 0) i += length();
-    if (i < 0 || i >= length()) return 0;
+    if (i < 0 || i >= (int)length()) return 0;
     return data[i];
 }
 
@@ -42,7 +42,7 @@ void Datarow::add(DatarowPtr d) {
 
 void Datarow::insert(int i, double v) {
     if (i < 0) i += length();
-    if (i < 0 || i >= length()) return;
+    if (i < 0 || i >= (int)length()) return;
     data.insert(data.begin() + i, v);
 }
 
@@ -65,7 +65,7 @@ double Datarow::getPCT(int i) {
 
 DatarowPtr Datarow::getPCTs() {
     auto res = create();
-    for (int i=1; i<length(); i++) res->append( getPCT(i) );
+    for (size_t i=1; i<length(); i++) res->append( getPCT(i) );
     return res;
 }
 
@@ -78,7 +78,7 @@ double Datarow::getLogRet(int i) {
 
 DatarowPtr Datarow::getLogRets() {
     auto res = create();
-    for (int i=1; i<length(); i++) res->append( getLogRet(i) );
+    for (size_t i=1; i<length(); i++) res->append( getLogRet(i) );
     return res;
 }
 

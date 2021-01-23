@@ -78,8 +78,8 @@ void VRNavPreset::deactivate() {
     for (auto& b : bindings) b.clearSignal();
 }
 
-void VRNavPreset::setBindingState(int i, bool b) {
-    if (i < 0 || i >= bindings.size()) return;
+void VRNavPreset::setBindingState(size_t i, bool b) {
+    if (i >= bindings.size()) return;
     bindings[i].active = b;
     if (active) {
         deactivate();

@@ -40,10 +40,6 @@ _GtkWidget* VRAppPanel::getTable() { return table; }
 
 void VRAppPanel::fillTable(string t, int& i) {
     int x,y;
-    GtkAttachOptions optsH = GtkAttachOptions(GTK_FILL|GTK_EXPAND);
-    GtkAttachOptions optsV = GTK_SHRINK;
-    //GtkAttachOptions optsV = GtkAttachOptions(0);
-
     for (auto d : apps) {
         if (d.second->table != t) continue;
         if (d.second->widget == 0) continue;
@@ -51,11 +47,7 @@ void VRAppPanel::fillTable(string t, int& i) {
         GtkWidget* w = (GtkWidget*)d.second->widget;
         x = i%2;
         y = i/2;
-#if GTK_MAJOR_VERSION == 2
-        gtk_table_attach(GTK_TABLE(table), w, x, x+1, y, y+1, optsH, optsV, 10, 10);
-#else
         gtk_grid_attach(GTK_GRID(table), w, x, y, 1, 1);
-#endif
         i++;
     }
     gtk_widget_show(table);

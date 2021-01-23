@@ -20,12 +20,7 @@ using namespace OSG;
 using namespace std;
 namespace PL = std::placeholders;
 
-#if GTK_MAJOR_VERSION == 2
-#include "VRGtk2Window.h"
-#else
 #include "VRGtk3Window.h"
-//#include "VRGtk32Window.h"
-#endif
 
 VRGtkWindow::~VRGtkWindow() {
     win = NULL;
@@ -119,11 +114,9 @@ void VRGtkWindow::setCursor(string c) {
     if (c == "WATCH") cursor = GDK_WATCH;
     if (c == "XTERM") cursor = GDK_XTERM;
 
-    auto cur = gdk_cursor_new(cursor);
+    GdkDisplay* defaultDisplay = gdk_display_get_default();
+    auto cur = gdk_cursor_new_for_display(defaultDisplay, cursor);
     gdk_window_set_cursor(win, cur);
-#if GTK_MAJOR_VERSION == 2
-    gdk_cursor_destroy(cur);
-#endif
 }
 
 bool VRGtkWindow::on_button(GdkEventButton* event) {

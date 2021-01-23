@@ -141,7 +141,7 @@ void PCA::addMesh(VRObjectPtr obj) {
         Matrix4d M = geo->getMatrixTo(obj);
         M.invert();
         auto positions = geo->getMesh()->geo->getPositions();
-        for (int i=0; i<positions->size(); i++) {
+        for (size_t i=0; i<positions->size(); i++) {
             Pnt3d p = Pnt3d(positions->getValue<Pnt3f>(i));
             M.mult(p,p);
             pnts.push_back(Vec3d(p));

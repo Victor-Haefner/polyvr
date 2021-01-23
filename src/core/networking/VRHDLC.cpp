@@ -109,6 +109,7 @@ vector<unsigned char> VRSerial::read() {
 void VRSerial::write(vector<unsigned char> data) {
     string s = asString(data);
     size_t r = ::write (fd, s.c_str(), s.size());
+    if (r < 0) return; // only to get rid of the warning..
 }
 
 bool VRSerial::good() {

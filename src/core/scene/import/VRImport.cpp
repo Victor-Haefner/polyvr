@@ -296,20 +296,20 @@ VRObjectPtr VRImport::OSGConstruct(NodeMTRecPtr n, VRObjectPtr parent, string na
             tmp->addAttachment("collada_name", name);
         }
     }
-    
+
     else if (t_name == "MaterialGroup") { // highly inefficient! is there a reason to support this??
         tmp = parent;
         /*tmp_m = VRMaterial::create(name);
         tmp = tmp_m;
         tmp->setCore(OSGCore::create(core), "Material");*/
     }
-    
+
     else if (t_name == "DistanceLOD") {
         DistanceLOD* lod = dynamic_cast<DistanceLOD*>(n->getCore());
         tmp_l = VRLod::create(name);
         tmp_l->setCenter(Vec3d(lod->getCenter()));
         auto dists = lod->getMFRange();
-        for (int i=0; i<dists->size(); i++) tmp_l->addDistance(lod->getRange(i));
+        for (size_t i=0; i<dists->size(); i++) tmp_l->addDistance(lod->getRange(i));
         tmp_l->setCore(OSGCore::create(core), "Lod");
         tmp = tmp_l;
     }

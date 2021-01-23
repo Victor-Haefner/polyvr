@@ -478,7 +478,7 @@ void gtk_list_store_clear_debug(GtkListStore *list_store) {
 void fillStringListstore(string ls, vector<string> list) {
     GtkListStore* store = GTK_LIST_STORE( VRGuiBuilder::get()->get_object(ls) );
     if (!store) { cout << "ERROR: liststore " << ls << " not found!" << endl; return; }
-	int number_of_rows = gtk_tree_model_iter_n_children(GTK_TREE_MODEL(store), NULL);
+	//int number_of_rows = gtk_tree_model_iter_n_children(GTK_TREE_MODEL(store), NULL);
 	gtk_list_store_clear_debug(store);
     for (unsigned int i=0; i<list.size(); i++) {
         GtkTreeIter iter;

@@ -316,7 +316,7 @@ list<VRScript::argPtr> VRScript::getArguments() {
 }
 
 void VRScript::setArguments(vector<string> vals) {
-    int i=0;
+    size_t i=0;
     for (auto a : args) {
         if (i >= vals.size()) return;
         a->val = vals[i];

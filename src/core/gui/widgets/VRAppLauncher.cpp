@@ -33,7 +33,7 @@ void VRAppLauncher::updatePixmap() {
 void VRAppLauncher::setState(int state) {
     bool running = false;
     bool sensitive = true;
-    const char* stock_id = GTK_STOCK_MEDIA_PLAY;
+    const char* stock_id = "media-playback-start";
 
     if (state == 0) {} // default state, launcher is ready to start an app
 
@@ -41,12 +41,12 @@ void VRAppLauncher::setState(int state) {
 
     if (state == 2) { // launcher is ready to stop application
         running = true;
-        stock_id = GTK_STOCK_MEDIA_STOP;
+        stock_id = "media-playback-stop";
     }
 
     this->running = running;
     if (widget) gtk_widget_set_sensitive((GtkWidget*)widget, sensitive);
-    if (imgPlay) gtk_image_set_from_stock(imgPlay, stock_id, GTK_ICON_SIZE_BUTTON);
+    if (imgPlay) gtk_image_set_from_icon_name(imgPlay, stock_id, GTK_ICON_SIZE_BUTTON);
 }
 
 void VRAppLauncher::toggle_lock() {
@@ -72,7 +72,7 @@ void VRAppLauncher::setup(VRGuiContextMenu* menu, VRAppManager* mgr) {
     string rpath = VRSceneManager::get()->getOriginalWorkdir();
 
     // prep icons
-    imgPlay = (GtkImage*)gtk_image_new_from_stock(GTK_STOCK_MEDIA_PLAY, GTK_ICON_SIZE_BUTTON);
+    imgPlay = (GtkImage*)gtk_image_new_from_icon_name("media-playback-start", GTK_ICON_SIZE_BUTTON);
     imgOpts = loadGTKIcon(0, rpath+"/ressources/gui/opts20.png", 20, 20);
     imgScene = loadGTKIcon(0, rpath+"/ressources/gui/default_scene.png", 100, 60);
     imgLock = loadGTKIcon(0, rpath+"/ressources/gui/lock20.png", 20, 20);
@@ -84,16 +84,18 @@ void VRAppLauncher::setup(VRGuiContextMenu* menu, VRAppManager* mgr) {
     widget = (GtkFrame*)gtk_frame_new("");
     g_object_ref(widget); // increase ref count
     GtkEventBox* ebox = (GtkEventBox*)gtk_event_box_new();
-    GtkHBox* hb  = (GtkHBox*)gtk_hbox_new(false, 0);
-    GtkVBox* vb  = (GtkVBox*)gtk_vbox_new(false, 0);
-    GtkVBox* vb2 = (GtkVBox*)gtk_vbox_new(false, 0);
+    auto hb  = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
+    auto vb  = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+    auto vb2 = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
     label = (GtkLabel*)gtk_label_new(path.c_str());
     timestamp = (GtkLabel*)gtk_label_new(lastStarted.c_str());
     butPlay = (GtkButton*)gtk_button_new();
     butOpts = (GtkButton*)gtk_button_new();
     butLock = (GtkButton*)gtk_button_new();
-    gtk_misc_set_alignment((GtkMisc*)label,     0.5, 0.5);
-    gtk_misc_set_alignment((GtkMisc*)timestamp, 0.5, 0.5);
+    gtk_widget_set_halign((GtkWidget*)label, GTK_ALIGN_CENTER);
+    gtk_widget_set_valign((GtkWidget*)label, GTK_ALIGN_CENTER);
+    gtk_widget_set_halign((GtkWidget*)timestamp, GTK_ALIGN_CENTER);
+    gtk_widget_set_valign((GtkWidget*)timestamp, GTK_ALIGN_CENTER);
     gtk_label_set_ellipsize(label, PANGO_ELLIPSIZE_START);
     gtk_label_set_max_width_chars(label, 20);
     gtk_widget_set_tooltip_text((GtkWidget*)butPlay, "Play/Stop");

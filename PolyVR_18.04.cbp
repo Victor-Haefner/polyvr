@@ -601,51 +601,21 @@
 		</Unit>
 		<Unit filename="src/core/gui/glarea/glgdk.h" />
 		<Unit filename="src/core/gui/gtkglext/gdk/gdkgl.h" />
-		<Unit filename="src/core/gui/gtkglext/gdk/gdkglconfig.c">
-			<Option compilerVar="CC" />
-		</Unit>
 		<Unit filename="src/core/gui/gtkglext/gdk/gdkglconfig.h" />
-		<Unit filename="src/core/gui/gtkglext/gdk/gdkglconfigimpl.c">
-			<Option compilerVar="CC" />
-		</Unit>
 		<Unit filename="src/core/gui/gtkglext/gdk/gdkglconfigimpl.h" />
 		<Unit filename="src/core/gui/gtkglext/gdk/gdkglcontext.h" />
 		<Unit filename="src/core/gui/gtkglext/gdk/gdkglcontextimpl.h" />
 		<Unit filename="src/core/gui/gtkglext/gdk/gdkgldebug.h" />
 		<Unit filename="src/core/gui/gtkglext/gdk/gdkgldefs.h" />
-		<Unit filename="src/core/gui/gtkglext/gdk/gdkgldrawable.c">
-			<Option compilerVar="CC" />
-		</Unit>
 		<Unit filename="src/core/gui/gtkglext/gdk/gdkgldrawable.h" />
-		<Unit filename="src/core/gui/gtkglext/gdk/gdkglextcontext.c">
-			<Option compilerVar="CC" />
-		</Unit>
 		<Unit filename="src/core/gui/gtkglext/gdk/gdkglextcontext.h" />
-		<Unit filename="src/core/gui/gtkglext/gdk/gdkglextcontextimpl.c">
-			<Option compilerVar="CC" />
-		</Unit>
 		<Unit filename="src/core/gui/gtkglext/gdk/gdkglextcontextimpl.h" />
-		<Unit filename="src/core/gui/gtkglext/gdk/gdkglinit.c">
-			<Option compilerVar="CC" />
-		</Unit>
 		<Unit filename="src/core/gui/gtkglext/gdk/gdkglinit.h" />
 		<Unit filename="src/core/gui/gtkglext/gdk/gdkglprivate.h" />
-		<Unit filename="src/core/gui/gtkglext/gdk/gdkglquery.c">
-			<Option compilerVar="CC" />
-		</Unit>
 		<Unit filename="src/core/gui/gtkglext/gdk/gdkglquery.h" />
 		<Unit filename="src/core/gui/gtkglext/gdk/gdkgltokens.h" />
 		<Unit filename="src/core/gui/gtkglext/gdk/gdkgltypes.h" />
-		<Unit filename="src/core/gui/gtkglext/gdk/gdkglversion.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/core/gui/gtkglext/gdk/gdkglwindow.c">
-			<Option compilerVar="CC" />
-		</Unit>
 		<Unit filename="src/core/gui/gtkglext/gdk/gdkglwindow.h" />
-		<Unit filename="src/core/gui/gtkglext/gdk/gdkglwindowimpl.c">
-			<Option compilerVar="CC" />
-		</Unit>
 		<Unit filename="src/core/gui/gtkglext/gdk/gdkglwindowimpl.h" />
 		<Unit filename="src/core/gui/gtkglext/gdk/win32/gdkglconfig-win32.h" />
 		<Unit filename="src/core/gui/gtkglext/gdk/win32/gdkglcontext-win32.h" />
@@ -657,53 +627,23 @@
 		<Unit filename="src/core/gui/gtkglext/gdk/win32/gdkwin32glcontext.h" />
 		<Unit filename="src/core/gui/gtkglext/gdk/win32/gdkwin32glquery.h" />
 		<Unit filename="src/core/gui/gtkglext/gdk/win32/gdkwin32glwindow.h" />
-		<Unit filename="src/core/gui/gtkglext/gdk/x11/gdkglconfig-x11.c">
-			<Option compilerVar="CC" />
-		</Unit>
 		<Unit filename="src/core/gui/gtkglext/gdk/x11/gdkglconfig-x11.h" />
 		<Unit filename="src/core/gui/gtkglext/gdk/x11/gdkglcontext-x11.h" />
-		<Unit filename="src/core/gui/gtkglext/gdk/x11/gdkglextcontext-x11.c">
-			<Option compilerVar="CC" />
-		</Unit>
 		<Unit filename="src/core/gui/gtkglext/gdk/x11/gdkglextcontext-x11.h" />
 		<Unit filename="src/core/gui/gtkglext/gdk/x11/gdkglprivate-x11.h" />
-		<Unit filename="src/core/gui/gtkglext/gdk/x11/gdkglquery-x11.c">
-			<Option compilerVar="CC" />
-		</Unit>
 		<Unit filename="src/core/gui/gtkglext/gdk/x11/gdkglquery-x11.h" />
-		<Unit filename="src/core/gui/gtkglext/gdk/x11/gdkglwindow-x11.c">
-			<Option compilerVar="CC" />
-		</Unit>
 		<Unit filename="src/core/gui/gtkglext/gdk/x11/gdkglwindow-x11.h" />
 		<Unit filename="src/core/gui/gtkglext/gdk/x11/gdkglx.h" />
-		<Unit filename="src/core/gui/gtkglext/gdk/x11/gdkx11glconfig.c">
-			<Option compilerVar="CC" />
-		</Unit>
 		<Unit filename="src/core/gui/gtkglext/gdk/x11/gdkx11glconfig.h" />
 		<Unit filename="src/core/gui/gtkglext/gdk/x11/gdkx11glcontext.h" />
-		<Unit filename="src/core/gui/gtkglext/gdk/x11/gdkx11glextcontext.c">
-			<Option compilerVar="CC" />
-		</Unit>
 		<Unit filename="src/core/gui/gtkglext/gdk/x11/gdkx11glextcontext.h" />
 		<Unit filename="src/core/gui/gtkglext/gdk/x11/gdkx11glquery.h" />
-		<Unit filename="src/core/gui/gtkglext/gdk/x11/gdkx11glwindow.c">
-			<Option compilerVar="CC" />
-		</Unit>
 		<Unit filename="src/core/gui/gtkglext/gdk/x11/gdkx11glwindow.h" />
 		<Unit filename="src/core/gui/gtkglext/gtk/gtkgl.h" />
 		<Unit filename="src/core/gui/gtkglext/gtk/gtkgldebug.h" />
 		<Unit filename="src/core/gui/gtkglext/gtk/gtkgldefs.h" />
-		<Unit filename="src/core/gui/gtkglext/gtk/gtkglinit.c">
-			<Option compilerVar="CC" />
-		</Unit>
 		<Unit filename="src/core/gui/gtkglext/gtk/gtkglinit.h" />
 		<Unit filename="src/core/gui/gtkglext/gtk/gtkglprivate.h" />
-		<Unit filename="src/core/gui/gtkglext/gtk/gtkglversion.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/core/gui/gtkglext/gtk/gtkglwidget.c">
-			<Option compilerVar="CC" />
-		</Unit>
 		<Unit filename="src/core/gui/gtkglext/gtk/gtkglwidget.h" />
 		<Unit filename="src/core/gui/gtksourceview/GtkSource.metadata.in" />
 		<Unit filename="src/core/gui/gtksourceview/completion-providers/words/gtksourcecompletionwords.c">

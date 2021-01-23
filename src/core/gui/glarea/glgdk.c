@@ -283,103 +283,35 @@ visual_compatible (const _GdkVisual *a, const _GdkVisual *b)
     a->bits_per_rgb == b->bits_per_rgb;
 }
 
-static GdkVisual *
-pick_better_visual_for_gl (_GdkX11Screen *x11_screen, struct glvisualinfo *gl_info, _GdkVisual *compatible) {
+static _GdkVisual* pick_better_visual_for_gl(_GdkX11Screen* x11_screen, struct glvisualinfo* gl_info, _GdkVisual* compatible) {
     printf(" try to pick_better_visual_for_gl\n");
-  _GdkVisual *visual;
-  int i;
-  gboolean want_alpha = FALSE;
+    _GdkVisual *visual;
+    int i;
 
-  /* First look for "perfect match", i.e:
-   * supports gl
-   * double buffer
-   * alpha iff visual is an rgba visual
-   * no unnecessary stuff
-   */
-#ifdef NOPE
-  for (i = 0; i < x11_screen->nvisuals; i++) {
-      visual = x11_screen->visuals[i];
-      if (visual_compatible (visual, compatible) &&
-          gl_info[i].supports_gl &&
-          gl_info[i].double_buffer &&
-          !gl_info[i].stereo &&
-          (want_alpha ? (gl_info[i].alpha_size > 0) : (gl_info[i].alpha_size == 0)) &&
-          (gl_info[i].depth_size == 0) &&
-          (gl_info[i].stencil_size == 0) &&
-          (gl_info[i].num_multisample == 0) &&
-          (gl_info[i].visual_caveat == GLX_NONE_EXT)) {
-              printf(" pick_better_visual_for_gl 1\n");
+    for (i = 0; i < x11_screen->nvisuals; i++) {
+        visual = (_GdkVisual*)x11_screen->visuals[i];
+        if (gl_info[i].stereo || !gl_info[i].supports_gl) continue;
+        //printf(" %i %i %i %i\n", i, visual_compatible(visual, compatible), gl_info[i].double_buffer, gl_info[i].num_multisample);
+        if (visual_compatible (visual, compatible) && gl_info[i].double_buffer && (gl_info[i].num_multisample >= 4) ) {
+            printf(" pick_better_visual_for_gl 4\n");
             return visual;
         }
     }
 
-  if (!want_alpha) {
-      /* Next, allow alpha even if we don't want it: */
-      for (i = 0; i < x11_screen->nvisuals; i++)
-        {
-          visual = x11_screen->visuals[i];
-          if (visual_compatible (visual, compatible) &&
-              gl_info[i].supports_gl &&
-              gl_info[i].double_buffer &&
-              !gl_info[i].stereo &&
-              (gl_info[i].depth_size == 0) &&
-              (gl_info[i].stencil_size == 0) &&
-              (gl_info[i].num_multisample == 0) &&
-              (gl_info[i].visual_caveat == GLX_NONE_EXT)) {
-              printf(" pick_better_visual_for_gl 2\n");
-                return visual;
-            }
-        }
-    }
-
-  /* Next, allow depth and stencil buffers: */
-  for (i = 0; i < x11_screen->nvisuals; i++)
-    {
-      visual = x11_screen->visuals[i];
-      if (visual_compatible (visual, compatible) &&
-          gl_info[i].supports_gl &&
-          gl_info[i].double_buffer &&
-          !gl_info[i].stereo &&
-          (gl_info[i].num_multisample == 0) &&
-          (gl_info[i].visual_caveat == GLX_NONE_EXT)) {
-              printf(" pick_better_visual_for_gl 3\n");
-            return visual;
-        }
-    }
-#endif
-
-  /* Next, allow multisample: */
-  for (i = 0; i < x11_screen->nvisuals; i++) {
-      visual = x11_screen->visuals[i];
-      if (gl_info[i].stereo || !gl_info[i].supports_gl) continue;
-      printf(" %i %i %i %i\n", i, visual_compatible(visual, compatible), gl_info[i].double_buffer, gl_info[i].num_multisample);
-      if (visual_compatible (visual, compatible) &&
-          gl_info[i].double_buffer &&
-          (gl_info[i].num_multisample >= 4)
-          // && (gl_info[i].visual_caveat == GLX_NONE_EXT))
-          ) {
-              printf(" pick_better_visual_for_gl 4\n");
-            return visual;
-        }
-    }
-
-  printf("  failed! return compatible visual..\n");
-  return compatible;
+    printf("  failed! return compatible visual..\n");
+    return compatible;
 }
+
+gboolean gdk_x11_screen_init_gl(_GdkScreen*);
 
 void glgdk_x11_screen_update_visuals_for_gl (_GdkScreen *screen) {
   printf("glgdk_x11_screen_update_visuals_for_gl\n");
-  _GdkX11Screen *x11_screen;
-  _GdkDisplay *display;
-  _GdkX11Display *display_x11;
-  Display *dpy;
-  struct glvisualinfo *gl_info;
-  int i;
+  struct glvisualinfo* gl_info;
 
-  x11_screen = GDK_X11_SCREEN (screen);
-  display = x11_screen->display;
-  display_x11 = GDK_X11_DISPLAY (display);
-  dpy = gdk_x11_display_get_xdisplay (display);
+  _GdkX11Screen* x11_screen = (_GdkX11Screen*)GDK_X11_SCREEN (screen);
+  GdkDisplay* display = x11_screen->display;
+  _GdkX11Display* display_x11 = (_GdkX11Display*)GDK_X11_DISPLAY(display);
+  Display* dpy = gdk_x11_display_get_xdisplay (display);
 
   if (!gdk_x11_screen_init_gl (screen)) {
       printf(" gdk_x11_screen_init_gl failed!\n");
@@ -388,7 +320,7 @@ void glgdk_x11_screen_update_visuals_for_gl (_GdkScreen *screen) {
 
   gl_info = g_new0 (struct glvisualinfo, x11_screen->nvisuals);
 
-  for (i = 0; i < x11_screen->nvisuals; i++) {
+  for (int i = 0; i < x11_screen->nvisuals; i++) {
       XVisualInfo *visual_list;
       XVisualInfo visual_template;
       int nxvisuals;
@@ -418,9 +350,9 @@ void glgdk_x11_screen_update_visuals_for_gl (_GdkScreen *screen) {
       XFree (visual_list);
     }
 
-  x11_screen->system_visual = pick_better_visual_for_gl (x11_screen, gl_info, x11_screen->system_visual);
+  x11_screen->system_visual = (GdkVisual*)pick_better_visual_for_gl (x11_screen, gl_info, (_GdkVisual*)x11_screen->system_visual);
   if (x11_screen->rgba_visual)
-    x11_screen->rgba_visual = pick_better_visual_for_gl (x11_screen, gl_info, x11_screen->rgba_visual);
+    x11_screen->rgba_visual = (GdkVisual*)pick_better_visual_for_gl (x11_screen, gl_info, (_GdkVisual*)x11_screen->rgba_visual);
 
   g_free (gl_info);
 }
@@ -428,5 +360,5 @@ void glgdk_x11_screen_update_visuals_for_gl (_GdkScreen *screen) {
 void replace_gl_visuals() {
     GdkDisplay* display = gdk_display_get_default();
     GdkScreen* screen = gdk_display_get_default_screen(display);
-    glgdk_x11_screen_update_visuals_for_gl(screen);
+    glgdk_x11_screen_update_visuals_for_gl((_GdkScreen*)screen);
 }

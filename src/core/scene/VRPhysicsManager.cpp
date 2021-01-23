@@ -107,7 +107,7 @@ void VRPhysicsManager::prepareObjects() {
 
 void VRPhysicsManager::updatePhysics( VRThreadWeakPtr wthread) {
     VRTimer timer; timer.start();
-    long long dt,t0,t1,t2,t3;
+    long long dt,t0,t1,t3;
     t1 = getTime();
     auto thread = wthread.lock();
 

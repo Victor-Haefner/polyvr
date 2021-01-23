@@ -54,7 +54,7 @@ class VRNavPreset : public VRName {
 
         void activate();
         void deactivate();
-        void setBindingState(int i, bool b);
+        void setBindingState(size_t i, bool b);
 
         void addKeyBinding(VRNavBinding b);
         vector<VRNavBinding>& getBindings();

@@ -429,10 +429,10 @@ void process_LWPOLYLINE(Dwg_Object* obj, DWGContext& data) {
     bool vis = !obj->tio.entity->invisible;
     if (!vis) return;
 
-    int N = line->num_points-1;
+    size_t N = line->num_points-1;
     if (line->flag & 512) N++; // closed
 
-    for (int i=0; i<N; i++) {
+    for (size_t i=0; i<N; i++) {
         auto p1_2D = line->points[i];
         auto p2_2D = line->points[(i+1)%line->num_points];
         BITCODE_3BD p1 = {p1_2D.x, p1_2D.y, 0};
