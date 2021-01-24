@@ -729,7 +729,7 @@ void _gdk_x11_window_invalidate_for_new_frame (_GdkWindow *window, cairo_region_
         }
     }
 
-    if (invalidate_all) {
+    if (invalidate_all || global_invalidate) {
         window_rect.x = 0;
         window_rect.y = 0;
         window_rect.width = gdk_window_get_width ((GdkWindow*)window);
@@ -738,6 +738,7 @@ void _gdk_x11_window_invalidate_for_new_frame (_GdkWindow *window, cairo_region_
         /* If nothing else is known, repaint everything so that the back
          buffer is fully up-to-date for the swapbuffer */
         cairo_region_union_rectangle (update_area, &window_rect);
+        global_invalidate = FALSE;
     }
 }
 
