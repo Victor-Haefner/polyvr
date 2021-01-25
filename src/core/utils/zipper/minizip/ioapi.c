@@ -104,7 +104,7 @@ static long    ZCALLBACK fseek64_file_func OF((voidpf opaque, voidpf stream, ZPO
 static int     ZCALLBACK fclose_file_func OF((voidpf opaque, voidpf stream));
 static int     ZCALLBACK ferror_file_func OF((voidpf opaque, voidpf stream));
 
-typedef struct 
+typedef struct
 {
     FILE *file;
     int filenameLength;
@@ -143,7 +143,7 @@ static voidpf ZCALLBACK fopen_file_func (voidpf opaque, const char* filename, in
     return file;
 }
 
-static voidpf ZCALLBACK fopen64_file_func (voidpf opaque, const void* filename, int mode)
+static voidpf ZCALLBACK fopen64_file_func (voidpf opaque, const char* filename, int mode)
 {
     FILE* file = NULL;
     const char* mode_fopen = NULL;
@@ -156,8 +156,8 @@ static voidpf ZCALLBACK fopen64_file_func (voidpf opaque, const void* filename, 
 
     if ((filename != NULL) && (mode_fopen != NULL))
     {
-        file = FOPEN_FUNC((const char*)filename, mode_fopen);
-        return file_build_ioposix(file, (const char*)filename);
+        file = FOPEN_FUNC(filename, mode_fopen);
+        return file_build_ioposix(file, filename);
     }
     return file;
 }
@@ -176,7 +176,7 @@ static voidpf ZCALLBACK fopendisk64_file_func (voidpf opaque, voidpf stream, int
     strncpy(diskFilename, ioposix->filename, ioposix->filenameLength);
     for (i = ioposix->filenameLength - 1; i >= 0; i -= 1)
     {
-        if (diskFilename[i] != '.') 
+        if (diskFilename[i] != '.')
             continue;
         snprintf(&diskFilename[i], ioposix->filenameLength - i, ".z%02d", number_disk + 1);
         break;
@@ -201,7 +201,7 @@ static voidpf ZCALLBACK fopendisk_file_func (voidpf opaque, voidpf stream, int n
     strncpy(diskFilename, ioposix->filename, ioposix->filenameLength);
     for (i = ioposix->filenameLength - 1; i >= 0; i -= 1)
     {
-        if (diskFilename[i] != '.') 
+        if (diskFilename[i] != '.')
             continue;
         snprintf(&diskFilename[i], ioposix->filenameLength - i, ".z%02d", number_disk + 1);
         break;
