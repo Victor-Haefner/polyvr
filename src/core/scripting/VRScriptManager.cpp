@@ -472,22 +472,43 @@ void VRScriptManager::importTemplate(string n) {
     VRScriptPtr script = VRScript::create(t.name);
     if (t.type == "shaders") script->setType("GLSL");
     if (t.type == "websites") script->setType("HTML");
+
+    for (auto& tr : t.trigs) {
+        auto tri = script->addTrigger();
+        tri->trigger = tr.trigger;
+        tri->param = tr.param;
+        tri->dev = tr.dev;
+        tri->key = tr.key;
+        tri->state = tr.state;
+    }
+    script->updateDeviceTrigger();
+
     script->setCore(t.core);
     addScript( script );
 }
 
 void VRScriptManager::initTemplates() {
-    auto addTemplate = [&](string type, string name, string core) -> VRScriptTemplate& {
+    auto addTemplate = [&](string type, string name, string core) {
         VRScriptTemplate s;
         s.name = name;
         s.type = type;
         s.core = core;
         templates[name] = s;
-        return templates[name];
+    };
+
+    auto addTrigger = [&](string name, string t, string p = "", string d = "none", int k = 0, string s = "Pressed") {
+        VRScript::trig tr;
+        tr.trigger = t;
+        tr.param = p;
+        tr.dev = d;
+        tr.key = k;
+        tr.state = s;
+        templates[name].trigs.push_back(tr);
     };
 
     if (templates.size() == 0) {
         addTemplate("scripts", "onClick", "\timport VR\n\n\tif dev.intersect():\n\t\ti = dev.getIntersected()\n\t\tp = dev.getIntersection()\n\t\tprint i.getName(), p");
+        addTrigger("onClick", "on_device", "0", "mouse");
         addTemplate("scripts", "hudInit", hudInit);
         addTemplate("scripts", "hudHandler", hudHandler);
         addTemplate("websites", "hudSite", hudSite);
