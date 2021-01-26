@@ -16,6 +16,11 @@ VRMachiningCodePtr VRMachiningCode::ptr() { return static_pointer_cast<VRMachini
 void VRMachiningCode::reset() { pointer = 0; }
 size_t VRMachiningCode::length() { return instructions.size() - pointer; }
 
+void VRMachiningCode::clear() {
+    instructions.clear();
+    reset();
+}
+
 VRMachiningCode::Instruction VRMachiningCode::next() {
 	if (pointer <= instructions.size()) return instructions[pointer++];
 	return Instruction();

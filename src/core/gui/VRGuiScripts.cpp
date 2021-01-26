@@ -639,11 +639,103 @@ void VRGuiScripts::on_trigstate_edited(const char* new_name, GtkTreeIter* new_it
     on_save_clicked();
 }
 
+// templates dialog
+
+void VRGuiScripts::on_template_clicked() {
+    VRGuiScripts::updateTemplates();
+
+    auto tb  = VRGuiBuilder::get()->get_object("scripttemplates");
+    gtk_text_buffer_set_text((GtkTextBuffer*)tb, "", 0);
+
+    showDialog("scriptTemplates");
+    VRGuiWidget("tentry1").grabFocus();
+}
+
+void VRGuiScripts::updateTemplates() {
+    auto store = (GtkTreeStore*)VRGuiBuilder::get()->get_object("templates");
+    gtk_tree_store_clear(store);
+
+    auto scene = VRScene::getCurrent();
+    if (scene == 0) return;
+
+    auto templates = scene->getTemplates();
+
+    // apply filter
+    auto sameChar = [](char c1, char c2) { return std::toupper(c1, std::locale()) == std::toupper(c2, std::locale()); };
+
+    auto contain = [&](const string& s, const string& i) {
+        return bool( search( s.begin(), s.end(), i.begin(), i.end(), sameChar ) != s.end() );
+    };
+
+    map<string, vector<string>> filtered;
+    if (templ_filter != "") {
+        for (auto tv : templates) {
+            for (auto t : tv.second) {
+                bool s = contain(t, templ_filter);
+                if (s) filtered[tv.first].push_back(t);
+            }
+        }
+    } else filtered = templates;
+
+    auto setRow = [&](GtkTreeIter* itr, string label) {
+        gtk_tree_store_set(store, itr,  0, label.c_str(), -1);
+    };
+
+    GtkTreeIter itr0, itr1;
+    for (auto tv : filtered) {
+        gtk_tree_store_append(store, &itr0, NULL);
+        setRow(&itr0, tv.first);
+        for (auto t : tv.second) {
+            gtk_tree_store_append(store, &itr1, &itr0);
+            setRow(&itr1, t);
+        }
+    }
+
+    if (templ_filter != "") VRGuiTreeView("ttreeview1").expandAll();
+}
+
+void VRGuiScripts::on_select_templ() {
+    VRGuiTreeView tree_view("ttreeview1");
+    if (!tree_view.hasSelection()) return;
+
+    auto scene = VRScene::getCurrent();
+    if (scene == 0) return;
+
+    // get selected object
+    string templ  = tree_view.getSelectedStringValue(0);
+
+    string core = scene->getTemplateCore(templ);
+
+    auto tb = (GtkTextBuffer*)VRGuiBuilder::get()->get_object("scripttemplates");
+    gtk_text_buffer_set_text(tb, core.c_str(), core.size());
+}
+
+void VRGuiScripts::on_templ_close_clicked() { hideDialog("scriptTemplates"); }
+
+void VRGuiScripts::on_templ_import_clicked() {
+    hideDialog("scriptTemplates");
+
+    VRGuiTreeView tree_view("ttreeview1");
+    if (!tree_view.hasSelection()) return;
+
+    auto scene = VRScene::getCurrent();
+    if (scene == 0) return;
+
+    // get selected object
+    string templ = tree_view.getSelectedStringValue(0);
+    scene->importTemplate(templ);
+    updateList();
+}
+
+void VRGuiScripts::on_templ_filter_edited() {
+    templ_filter = getTextEntry("tentry1");
+    updateTemplates();
+}
+
 // help dialog
 
 void VRGuiScripts::on_help_close_clicked() {
-    auto diag = VRGuiBuilder::get()->get_widget("pybindings-docs");
-    gtk_widget_hide(diag);
+    hideDialog("pybindings-docs");
 }
 
 void VRGuiScripts::on_help_clicked() {
@@ -652,14 +744,7 @@ void VRGuiScripts::on_help_clicked() {
     auto tb  = VRGuiBuilder::get()->get_object("pydoc");
     gtk_text_buffer_set_text((GtkTextBuffer*)tb, "", 0);
 
-    auto diag = VRGuiBuilder::get()->get_widget("pybindings-docs");
-    gtk_widget_show_all(diag);
-
-    //diag->deiconify();
-    //diag->raise();
-    //diag->show();
-    //diag->activate_focus();
-
+    showDialog("pybindings-docs");
     VRGuiWidget("entry25").grabFocus();
 }
 
@@ -735,15 +820,6 @@ void VRGuiScripts::updateDocumentation() {
 
     if (docs_filter != "") VRGuiTreeView("treeview3").expandAll();
 }
-
-/*class VRGuiScripts_HelpColumns : public Gtk::TreeModelColumnRecord {
-    public:
-        VRGuiScripts_HelpColumns() { add(obj); add(type); add(cla); add(mod); }
-        Gtk::TreeModelColumn<Glib::ustring> obj;    0
-        Gtk::TreeModelColumn<Glib::ustring> type;   1
-        Gtk::TreeModelColumn<Glib::ustring> cla;    2
-        Gtk::TreeModelColumn<Glib::ustring> mod;    3
-};*/
 
 void VRGuiScripts::on_select_help() {
     VRGuiTreeView tree_view("treeview3");
@@ -1029,6 +1105,7 @@ VRGuiScripts::VRGuiScripts() {
     disableDestroyDiag("find_dialog");
 
     setToolButtonCallback("toolbutton6", bind(&VRGuiScripts::on_new_clicked, this) );
+    setToolButtonCallback("toolbutton29", bind(&VRGuiScripts::on_template_clicked, this) );
     setToolButtonCallback("toolbutton7", bind(&VRGuiScripts::on_save_clicked, this) );
     setToolButtonCallback("toolbutton8", bind(&VRGuiScripts::on_exec_clicked, this) );
     setToolButtonCallback("toolbutton9", bind(&VRGuiScripts::on_del_clicked, this) );
@@ -1044,6 +1121,8 @@ VRGuiScripts::VRGuiScripts() {
     setButtonCallback("button23", bind(&VRGuiScripts::on_trigadd_clicked, this) );
     setButtonCallback("button24", bind(&VRGuiScripts::on_trigrem_clicked, this) );
     setButtonCallback("button16", bind(&VRGuiScripts::on_help_close_clicked, this) );
+    setButtonCallback("tbutton1", bind(&VRGuiScripts::on_templ_close_clicked, this) );
+    setButtonCallback("tbutton2", bind(&VRGuiScripts::on_templ_import_clicked, this) );
     setButtonCallback("button28", bind(&VRGuiScripts::on_find_diag_cancel_clicked, this) );
     setButtonCallback("button29", bind(&VRGuiScripts::on_find_diag_find_clicked, this) );
 
@@ -1062,6 +1141,7 @@ VRGuiScripts::VRGuiScripts() {
     setTreeviewSelectCallback("treeview14", bind(&VRGuiScripts::on_select_trigger, this) );
     setTreeviewSelectCallback("treeview5", bind(&VRGuiScripts::on_select_script, this) );
     setTreeviewSelectCallback("treeview3", bind(&VRGuiScripts::on_select_help, this) );
+    setTreeviewSelectCallback("ttreeview1", bind(&VRGuiScripts::on_select_templ, this) );
 
     editor = shared_ptr<VRGuiEditor>( new VRGuiEditor("scrolledwindow4") );
     editor->addKeyBinding("find", VRUpdateCb::create("findCb", bind(&VRGuiScripts::on_find_clicked, this)));
@@ -1150,6 +1230,7 @@ VRGuiScripts::VRGuiScripts() {
 
     // documentation widget
     setEntryCallback("entry25", bind(&VRGuiScripts::on_doc_filter_edited, this), true);
+    setEntryCallback("tentry1", bind(&VRGuiScripts::on_templ_filter_edited, this), true);
 }
 
 OSG_END_NAMESPACE;

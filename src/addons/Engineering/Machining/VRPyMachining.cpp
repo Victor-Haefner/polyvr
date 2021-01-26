@@ -18,7 +18,8 @@ PyMethodDef VRPyMachiningSimulation::methods[] = {
 };
 
 PyMethodDef VRPyMachiningCode::methods[] = {
-    {"readGCode", PyWrap(MachiningCode, readGCode, "Read G code from file, path and speedMultiplier", void, string, double) },
+    {"readGCode", PyWrap(MachiningCode, readGCode, "Read G code from file, appends instructions, path and speedMultiplier", void, string, double) },
+    {"clear", PyWrap(MachiningCode, clear, "Clear instructions", void) },
     {NULL}  /* Sentinel */
 };
 

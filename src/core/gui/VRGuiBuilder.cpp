@@ -1178,6 +1178,7 @@ void VRGuiBuilder::buildBaseUI() {
     gtk_grid_attach(GTK_GRID(table14), table15, 1,1,1,1);
 
     auto toolbutton6 = addToolButton("toolbutton6", "gtk-new", toolbar3);
+    auto toolbutton29 = addToolButton("toolbutton29", "gtk-paste", toolbar3);
     auto toolbutton20 = addToolButton("toolbutton20", "gtk-indent", toolbar3);
     auto toolbutton22 = addToolButton("toolbutton22", "gtk-open", toolbar3);
     auto toolbutton9 = addToolButton("toolbutton9", "gtk-delete", toolbar3);
@@ -1277,6 +1278,40 @@ void VRGuiBuilder::buildBaseUI() {
     addTreeviewTextcolumn(treeview7, "Value", "cellrenderertext14", 1, true);
     auto arg_types = gtk_list_store_new(1, G_TYPE_STRING);
     VRGuiBuilder::reg_object(G_OBJECT(arg_types), "arg_types");
+
+    /* ---------- Script templates ---------------------- */
+    auto templates_docs = addDialog("scriptTemplates");
+    auto tdialog_vbox = gtk_dialog_get_content_area(GTK_DIALOG(templates_docs));
+    auto tdialog_area = gtk_dialog_get_action_area(GTK_DIALOG(templates_docs));
+    auto tbutton1 = addButton("tbutton1", "Close");
+    auto tbutton2 = addButton("tbutton2", "Import");
+    auto tlabel1 = addLabel("tlabel1", "PolyVR Script Templates");
+    auto thpaned1 = addPaned("thpaned1", GTK_ORIENTATION_HORIZONTAL);
+    gtk_box_pack_start(GTK_BOX(tdialog_area), tbutton1, false, true, 0);
+    gtk_box_pack_start(GTK_BOX(tdialog_area), tbutton2, false, true, 0);
+    gtk_box_pack_start(GTK_BOX(tdialog_vbox), tlabel1, false, true, 0);
+    gtk_box_pack_start(GTK_BOX(tdialog_vbox), thpaned1, false, true, 0);
+    gtk_window_set_transient_for(GTK_WINDOW(templates_docs), GTK_WINDOW(window1));
+    gtk_widget_set_size_request(templates_docs, 800, 600);
+    gtk_paned_set_position(GTK_PANED(thpaned1), 200);
+
+    auto ttable1 = addGrid("ttable1");
+    auto timage1 = addStockImage("timage1", "gtk-find", GTK_ICON_SIZE_SMALL_TOOLBAR);
+    auto tentry1 = addEntry("tentry1");
+    auto templates = gtk_tree_store_new(1, G_TYPE_STRING);
+    auto ttreeview1_and_frame = addTreeview("ttreeview1", "templates", GTK_TREE_MODEL(templates));
+    auto ttreeview1 = ttreeview1_and_frame.first;
+    auto tscrolledwindow1 = addScrolledWindow("tscrolledwindow1");
+    auto ttextview1 = addTextview("ttextview1", "scripttemplates");
+    gtk_widget_set_hexpand(ttreeview1, true);
+    add1ToPaned(thpaned1, ttable1);
+    gtk_grid_attach(GTK_GRID(ttable1), timage1, 0,0,1,1);
+    gtk_grid_attach(GTK_GRID(ttable1), tentry1, 1,0,1,1);
+    gtk_grid_attach(GTK_GRID(ttable1), ttreeview1_and_frame.second, 0,1,2,1);
+    add2ToPaned(thpaned1, tscrolledwindow1);
+    gtk_container_add(GTK_CONTAINER(tscrolledwindow1), ttextview1);
+
+    addTreeviewTextcolumn(ttreeview1, "Templates", "tcellrenderertext1", 0);
 
     /* ---------- Py Docs ---------------------- */
     auto pybindings_docs = addDialog("pybindings-docs");

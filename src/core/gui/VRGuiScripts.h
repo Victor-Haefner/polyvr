@@ -59,6 +59,7 @@ class VRGuiScripts {
         vector<pair<VRScriptWeakPtr, _GtkTreeIter>> scriptRows;
 
         string docs_filter;
+        string templ_filter;
         map<int, group> groups;
 
         void initEditor();
@@ -67,6 +68,7 @@ class VRGuiScripts {
         void setScriptListRow(_GtkTreeIter* itr, VRScriptPtr script, bool onlyTime = false);
 
         void on_new_clicked();
+        void on_template_clicked();
         void on_addSep_clicked();
         void on_save_clicked();
         void on_exec_clicked();
@@ -101,6 +103,12 @@ class VRGuiScripts {
         void on_help_close_clicked();
         void on_doc_filter_edited();
         bool on_help_close_frame_clicked(_GdkEvent* event);
+
+        void updateTemplates();
+        void on_select_templ();
+        void on_templ_close_clicked();
+        void on_templ_import_clicked();
+        void on_templ_filter_edited();
 
         void on_argadd_clicked();
         void on_argrem_clicked();

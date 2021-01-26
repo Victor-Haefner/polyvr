@@ -42,6 +42,7 @@ class VRMachiningCode : public std::enable_shared_from_this<VRMachiningCode> {
 		void reset();
 		Instruction next();
 
+		void clear();
 		void readGCode(string path, double speedMultiplier);
 };
 

@@ -410,4 +410,33 @@ void VRScriptManager::triggerOnImport() { // deprecated
     }
 }
 
+void VRScriptManager::importTemplate(string t) {
+    string core = getTemplateCore(t);
+    auto s = newScript(t, core);
+}
+
+map<string, vector<string>> VRScriptManager::getTemplates() {
+    static map<string, vector<string>> templates;
+    if (templates.size() == 0) {
+        auto& scripts = templates["scripts"];
+        auto& websites = templates["websites"];
+        auto& shaders = templates["shaders"];
+
+        scripts.push_back("onClick");
+        websites.push_back("HUDElement");
+        shaders.push_back("test");
+    }
+    return templates;
+}
+
+string VRScriptManager::getTemplateCore(string t) {
+    static map<string, string> templates;
+    if (templates.size() == 0) {
+        templates["onClick"] = "\timport VR\n\tif dev.intersect():\n\t\ti = dev.getIntersected()\n\t\tp = dev.getIntersection()\n\t\tprint i.getName(), p";
+        templates["HUDElement"] = "test website template";
+        templates["test"] = "test shader template";
+    }
+    return templates[t];
+}
+
 OSG_END_NAMESPACE

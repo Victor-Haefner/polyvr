@@ -64,6 +64,10 @@ class VRScriptManager : public VRStorage, public VRPyBase {
         string getPyVRDescription(string mod, string type);
         string getPyVRMethodDoc(string mod, string type, string method);
 
+        map<string, vector<string>> getTemplates();
+        string getTemplateCore(string t);
+        void importTemplate(string t);
+
         PyObject* getPyModule(string name);
         PyObject* getGlobalModule();
         PyObject* getGlobalDict();
