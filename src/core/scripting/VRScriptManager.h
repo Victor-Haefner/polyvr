@@ -16,6 +16,7 @@ OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 class VRScript;
+class VRScriptTemplate;
 
 class VRScriptManager : public VRStorage, public VRPyBase {
     protected:
@@ -28,11 +29,13 @@ class VRScriptManager : public VRStorage, public VRPyBase {
         map<string, map<string, PyTypeObject*> > moduleTypes;
         map<string, VRScriptPtr> scripts;
         map<string, VRSignalPtr> triggers;
+        map<string, VRScriptTemplate> templates;
         map<string, vector<string>> importedScripts;
         PyThreadState* pyThreadState = 0;
 
         void test();
         void initPyModules();
+        void initTemplates();
         void update();
 
     public:

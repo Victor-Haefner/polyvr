@@ -18,6 +18,8 @@
 #include <algorithm>
 #include <memory>
 
+#define TEMPLATE(core) #core
+
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
@@ -410,33 +412,100 @@ void VRScriptManager::triggerOnImport() { // deprecated
     }
 }
 
-void VRScriptManager::importTemplate(string t) {
-    string core = getTemplateCore(t);
-    auto s = newScript(t, core);
+string hudSite = TEMPLATE(
+<!DOCTYPE html>\n
+<html>\n\n
+
+<head>\n
+\t<style type="text/css">\n
+\t\tbutton {\n
+\t\t\tfont-size:20vh;\n
+\t\t\twidth:60vw;\n
+\t\t\theight:60vh;\n
+\t\t}\n
+\t</style>\n
+\t<script>\n
+\t\tvar websocket = new WebSocket('ws://localhost:5500');\n
+\t\twebsocket.onopen = function() { send('register|hud'); };\n
+\t\twebsocket.onerror = function(e) {};\n
+\t\twebsocket.onmessage = function(m) { if(m.data) handle(m.data); };\n
+\t\twebsocket.onclose = function(e) {};\n\n
+
+\t\tfunction send(m) { websocket.send(m); };\n
+\t\tfunction handle(m) { console.log(m); };\n
+\t</script>\n
+</head>\n\n
+
+<body>\n
+\t<button onclick="send('message from hud')">send message</button>\n
+</body>\n
+</html>
+);
+
+string hudInit = TEMPLATE(
+\timport VR\n\n
+\ts = VR.Sprite('site')\n
+\tw = 0.5\n
+\th = 0.3\n
+\ts.setSize(w,h)\n
+\ts.webOpen('http://localhost:5500/hudSite', 400, w/h)\n
+\tVR.scene.addChild(s)\n
+);
+
+string hudHandler = TEMPLATE(
+\timport VR\n\n
+\tm = dev.getMessage()\n
+\tprint m\n
+);
+
+struct VRScriptTemplate {
+    string name;
+    string type;
+    string core;
+    vector<VRScript::trig> trigs;
+    vector<VRScript::arg>  args;
+};
+
+void VRScriptManager::importTemplate(string n) {
+    if (!templates.count(n)) return;
+    auto& t = templates[n];
+    VRScriptPtr script = VRScript::create(t.name);
+    if (t.type == "shaders") script->setType("GLSL");
+    if (t.type == "websites") script->setType("HTML");
+    script->setCore(t.core);
+    addScript( script );
+}
+
+void VRScriptManager::initTemplates() {
+    auto addTemplate = [&](string type, string name, string core) -> VRScriptTemplate& {
+        VRScriptTemplate s;
+        s.name = name;
+        s.type = type;
+        s.core = core;
+        templates[name] = s;
+        return templates[name];
+    };
+
+    if (templates.size() == 0) {
+        addTemplate("scripts", "onClick", "\timport VR\n\n\tif dev.intersect():\n\t\ti = dev.getIntersected()\n\t\tp = dev.getIntersection()\n\t\tprint i.getName(), p");
+        addTemplate("scripts", "hudInit", hudInit);
+        addTemplate("scripts", "hudHandler", hudHandler);
+        addTemplate("websites", "hudSite", hudSite);
+        addTemplate("shaders", "test", "test shader template");
+    }
 }
 
 map<string, vector<string>> VRScriptManager::getTemplates() {
-    static map<string, vector<string>> templates;
-    if (templates.size() == 0) {
-        auto& scripts = templates["scripts"];
-        auto& websites = templates["websites"];
-        auto& shaders = templates["shaders"];
-
-        scripts.push_back("onClick");
-        websites.push_back("HUDElement");
-        shaders.push_back("test");
-    }
-    return templates;
+    initTemplates();
+    map<string, vector<string>> res;
+    for (auto& t : templates) res[t.second.type].push_back(t.first);
+    return res;
 }
 
 string VRScriptManager::getTemplateCore(string t) {
-    static map<string, string> templates;
-    if (templates.size() == 0) {
-        templates["onClick"] = "\timport VR\n\tif dev.intersect():\n\t\ti = dev.getIntersected()\n\t\tp = dev.getIntersection()\n\t\tprint i.getName(), p";
-        templates["HUDElement"] = "test website template";
-        templates["test"] = "test shader template";
-    }
-    return templates[t];
+    initTemplates();
+    if (!templates.count(t)) return "";
+    return templates[t].core;
 }
 
 OSG_END_NAMESPACE
