@@ -55,6 +55,7 @@ PyMethodDef VRPyDevice::methods[] = {
     {"getIntersectionNormal", PyWrap(Device, getIntersectionNormal, "Get normal at intersection point", Vec3d ) },
     {"getIntersectionUV", PyWrap(Device, getIntersectionUV, "Get uv at intersection point", Vec2d ) },
     {"getIntersectionTriangle", PyWrap(Device, getIntersectionTriangle, "Get triangle at intersection point", Vec3i ) },
+    {"getIntersectionID", PyWrap(Device, getIntersectionID, "Get custom intersection ID", int ) },
     {"addIntersection", PyWrapOpt( Device, addIntersection, "Add device intersection node, (node, priority = 0)", "0", void, VRObjectPtr, int ) },
     {"remIntersection", PyWrap( Device, remIntersection, "Remove device intersection node.", void, VRObjectPtr ) },
     {"getDragged", PyWrap( Device, getDragged, "Get dragged object.", VRTransformPtr ) },

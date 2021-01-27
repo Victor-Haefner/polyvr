@@ -36,9 +36,12 @@ class VRAnnotationEngine : public VRGeometry {
         map<string, int> characterIDs;
 
         struct Label {
+            int ID;
             Vec3d pos;
             vector<int> entries;
             string str;
+
+            Label(int id);
         };
 
         vector<Label> labels;
@@ -69,6 +72,8 @@ class VRAnnotationEngine : public VRGeometry {
         void setBillboard(bool b);
         void setScreensize(bool b);
         void setOrientation(Vec3d d, Vec3d u);
+
+        string getLabel(int i);
 
         virtual bool applyIntersectionAction(Action* ia);
 };

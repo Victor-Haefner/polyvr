@@ -85,7 +85,6 @@ VRIntersection VRIntersect::intersectRay(VRObjectWeakPtr wtree, Line ray, bool s
 
     ins.ray = ray;
     ins.hit = iAct.didHit();
-    //cout << "VRIntersect::intersectRay " << ray << " " << ins.hit << endl;
     if (ins.hit) {
         ins.object = tree->find(OSGObject::create(iAct.getHitObject()->getParent()));
         if (auto sp = ins.object.lock()) ins.name = sp->getName();
@@ -99,6 +98,7 @@ VRIntersection VRIntersect::intersectRay(VRObjectWeakPtr wtree, Line ray, bool s
         ins.triangle = iAct.getHitTriangle();
         ins.triangleVertices = VRIntersect_computeVertices(ins, iAct.getHitObject());
         ins.texel = VRIntersect_computeTexel(ins, iAct.getHitObject());
+        ins.customID = iAct.getHitLine();
         lastIntersection = ins;
         ins.time = now;
     } else {

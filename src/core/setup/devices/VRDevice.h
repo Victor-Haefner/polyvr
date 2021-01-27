@@ -92,6 +92,7 @@ class VRDevice : public std::enable_shared_from_this<VRDevice>, public VRName, p
         Vec2d getIntersectionUV();
         Line  getIntersectionRay();
         VRObjectPtr getIntersected();
+        int getIntersectionID();
 
         void addIntersection(VRObjectPtr obj, int priority = 0);
         void remIntersection(VRObjectPtr obj);

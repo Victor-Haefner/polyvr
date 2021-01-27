@@ -94,6 +94,10 @@ void VRAnnotationEngine::setColor(Color4f c) { fg = c; updateTexture(); }
 void VRAnnotationEngine::setBackground(Color4f c) { bg = c; updateTexture(); }
 void VRAnnotationEngine::setOutline(int r, Color4f c) { oradius = r; oc = c; updateTexture(); }
 
+string VRAnnotationEngine::getLabel(int i) {
+    return labels[i].str;
+}
+
 bool VRAnnotationEngine::applyIntersectionAction(Action* action) {
     if (!mesh || !mesh->geo) return false;
 
@@ -124,25 +128,42 @@ bool VRAnnotationEngine::applyIntersectionAction(Action* action) {
 
         if (doScreensize) {
             Vec3d D = Vec3d(P0) - camPose->pos();
-            double Dc = D.length();
             D.normalize();
-            P0 = Pnt3d(camPose->pos() + D);//P0*1.0/Dc;
+            P0 = Pnt3d(camPose->pos() + D); // essentially move the point to be at 1 from camera, TODO: might not work with head tracking!
         }
 
-        double d = (P0[2]-l0[2])/ld[2]; // all labels are in z+k=0 plane
-        Pnt3d lh = l0 + ld*d;
-        Vec3d Pp = lh - P0;
-        if (Pp[1] < -h*0.5) continue;
-        if (Pp[1] >  h*0.5) continue;
+        Vec3d Pp;
+        Pnt3d lh;
+        double X, Y;
+        if (doBillboard) { // labels are facing camera
+            Vec3d n = -camPose->dir();
+            double d = Vec3d(P0-l0).dot(n)/ld.dot(n);
+            lh = l0 + ld*d;
+            Pp = lh - P0;
+            X = Pp.dot(camPose->x());
+            Y = Pp.dot(camPose->up());
+            //cout << "applyIntersectionAction n:" << n << "  d:" << d << "  P0:" << P0 << " lh:" << lh << " Pp:" << Pp << "  " << Vec2d(X/(w*((N-4)*3-0.5)),Y/(h*0.5)) << endl;
+            //cout << " applyIntersectionAction Nw: " << ((N-4)*3-0.5) << "  W:" << w*((N-4)*3-0.5) << " w:" << w << endl;
+        } else {
+            double d = (P0[2]-l0[2])/ld[2]; // all labels are in z+k=0 plane
+            lh = l0 + ld*d;
+            Pp = lh - P0;
+            X = Pp[0];
+            Y = Pp[1];
+        }
 
-        if (Pp[0] < -w*0.5) continue;
-        if (Pp[0] >  w*((N-4)*3-0.5) ) continue;
+        if (Y < -h*0.5) continue;
+        if (Y >  h*0.5) continue;
+
+        if (X < -w*0.5) continue;
+        if (X >  w*((N-4)*3-0.5) ) continue;
         //cout << "VRAnnotationEngine::applyIntersectionAction " << N << " -> " << (N-4)*3 << " -> " << ((N-4)*3-0.5) << " " << Pp[0] << " " << w << " -> " << w*((N-4)*3-0.5) << endl;
 
         // label hit!
         Vec3f norm(0,1,0);
         Real32 t = l0.dist( lh );
-        ia->setHit(t, ia->getActNode(), 0, norm, -1);
+        ia->setHit(t, ia->getActNode(), 0, norm, l.ID);
+        //cout << "VRAnnotationEngine::applyIntersectionAction ID: " << l.ID << " " << l.str << endl;
         return true;
     }
 
@@ -201,8 +222,10 @@ int VRAnnotationEngine::add(Vec3d p, string s) {
     return i;
 }
 
+VRAnnotationEngine::Label::Label(int id) : ID(id) {}
+
 void VRAnnotationEngine::setLine(int i, Vec3d p, string str, bool ascii) {
-    while (i >= (int)labels.size()) labels.push_back(Label());
+    while (i >= (int)labels.size()) labels.push_back(Label(labels.size()));
 
     auto& l = labels[i];
     if (l.str == str) return;
@@ -341,6 +364,7 @@ GLSL(
 varying vec4 vertex;
 varying vec3 normal;
 varying mat4 MVP;
+varying mat4 P;
 varying vec2 texCoord;
 
 attribute vec4 osg_Vertex;
@@ -351,6 +375,7 @@ void main( void ) {
     gl_Position = gl_ModelViewProjectionMatrix*osg_Vertex;
     normal = osg_Normal.xyz;
     MVP = gl_ModelViewProjectionMatrix;
+    P = gl_ProjectionMatrix;
     texCoord = vec2(0,0);
 }
 );
@@ -404,6 +429,7 @@ uniform vec2 OSGViewportSize;
 in vec4 vertex[];
 in vec3 normal[];
 in mat4 MVP[];
+in mat4 P[];
 out vec2 texCoord;
 out vec4 geomPos;
 out vec3 geomNorm;
@@ -448,15 +474,14 @@ void emitQuad(in float offset, in vec4 tc) {
         p3 = p+MVP[0]*transform( sx+ox, sy);
         p4 = p+MVP[0]*transform( sx+ox,-sy);
     } else {
-        float a = OSGViewportSize.y/OSGViewportSize.x;
-        p1 = p+transform(-sx*a+ox*a,-sy);
-        p2 = p+transform(-sx*a+ox*a, sy);
-        p3 = p+transform( sx*a+ox*a, sy);
-        p4 = p+transform( sx*a+ox*a,-sy);
-        v1 = vertex[0]+transform(-sx*a+ox*a,-sy);
-        v2 = vertex[0]+transform(-sx*a+ox*a, sy);
-        v3 = vertex[0]+transform( sx*a+ox*a, sy);
-        v4 = vertex[0]+transform( sx*a+ox*a,-sy);
+        p1 = p+P[0]*transform(-sx+ox,-sy);
+        p2 = p+P[0]*transform(-sx+ox, sy);
+        p3 = p+P[0]*transform( sx+ox, sy);
+        p4 = p+P[0]*transform( sx+ox,-sy);
+        v1 = vertex[0]+P[0]*transform(-sx+ox,-sy);
+        v2 = vertex[0]+P[0]*transform(-sx+ox, sy);
+        v3 = vertex[0]+P[0]*transform( sx+ox, sy);
+        v4 = vertex[0]+P[0]*transform( sx+ox,-sy);
     }
 
     emitVertex(p1, vec2(tc[0], tc[2]), v1);

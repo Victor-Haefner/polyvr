@@ -37,6 +37,7 @@ struct VRIntersection {
     Vec3d normal;
     Vec2d texel;
     int triangle;
+    int customID;
     Vec3i triangleVertices;
 
     VRObjectPtr getIntersected();
