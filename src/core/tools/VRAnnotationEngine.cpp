@@ -5,7 +5,9 @@
 #include "core/objects/material/VRTexture.h"
 #include "core/objects/geometry/VRGeoData.h"
 #include "core/objects/geometry/OSGGeometry.h"
+#include "core/objects/VRCamera.h"
 #include "core/tools/VRText.h"
+#include "core/math/pose.h"
 #include "core/utils/toString.h"
 #include "core/scene/VRScene.h"
 
@@ -108,11 +110,25 @@ bool VRAnnotationEngine::applyIntersectionAction(Action* action) {
     double h = size;
     double w = size;
 
+    PosePtr camPose;
+    if (doScreensize || doBillboard) {
+        auto cam = VRScene::getCurrent()->getActiveCamera();
+        camPose = getPoseTo(cam);
+    }
+
     for (auto& l : labels) {
         int N = l.entries.size();
         if (N == 0) continue;
 
         Pnt3d P0 = data->getPosition(l.entries[0]);
+
+        if (doScreensize) {
+            Vec3d D = Vec3d(P0) - camPose->pos();
+            double Dc = D.length();
+            D.normalize();
+            P0 = Pnt3d(camPose->pos() + D);//P0*1.0/Dc;
+        }
+
         double d = (P0[2]-l0[2])/ld[2]; // all labels are in z+k=0 plane
         Pnt3d lh = l0 + ld*d;
         Vec3d Pp = lh - P0;
@@ -121,6 +137,7 @@ bool VRAnnotationEngine::applyIntersectionAction(Action* action) {
 
         if (Pp[0] < -w*0.5) continue;
         if (Pp[0] >  w*((N-4)*3-0.5) ) continue;
+        //cout << "VRAnnotationEngine::applyIntersectionAction " << N << " -> " << (N-4)*3 << " -> " << ((N-4)*3-0.5) << " " << Pp[0] << " " << w << " -> " << w*((N-4)*3-0.5) << endl;
 
         // label hit!
         Vec3f norm(0,1,0);
@@ -281,9 +298,9 @@ void VRAnnotationEngine::set(int i0, Vec3d p0, string txt) {
     }
 }
 
-void VRAnnotationEngine::setSize(float f) { mat->setShaderParameter("size", Real32(f)); size = f; }
-void VRAnnotationEngine::setBillboard(bool b) { mat->setShaderParameter("doBillboard", Real32(b)); }
-void VRAnnotationEngine::setScreensize(bool b) { mat->setShaderParameter("screen_size", Real32(b)); }
+void VRAnnotationEngine::setSize(float f) { size = f; mat->setShaderParameter("size", Real32(f)); }
+void VRAnnotationEngine::setBillboard(bool b) { doBillboard = b; mat->setShaderParameter("doBillboard", Real32(b)); }
+void VRAnnotationEngine::setScreensize(bool b) { doScreensize= b; mat->setShaderParameter("screen_size", Real32(b)); }
 
 void VRAnnotationEngine::setOrientation(Vec3d d, Vec3d u) {
     orientationUp = u;

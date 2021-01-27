@@ -17,6 +17,9 @@ class VRAnnotationEngine : public VRGeometry {
         float oradius = 3;
         float size = 0.2;
 
+        bool doBillboard = false;
+        bool doScreensize = false;
+
         Vec3d orientationUp;
         Vec3d orientationDir;
 

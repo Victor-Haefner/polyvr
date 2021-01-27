@@ -172,7 +172,19 @@ class transIntersectionProxy : public Transform {
     public:
         Action::ResultE intersectEnter(Action* action) {
             auto ia = dynamic_cast<VRIntersectAction*>(action);
-            if (ia->skipVolume()) return Action::Continue;
+            if (ia->skipVolume()) { // use code from Transform::intersectAction
+                IntersectAction *ia = dynamic_cast<IntersectAction *>(action);
+                Matrix m  = this->getMatrix();
+                m.invert();
+                Pnt3f pos;
+                Vec3f dir;
+                m.multFull(ia->getLine().getPosition (), pos);
+                m.mult    (ia->getLine().getDirection(), dir);
+                Real32 length = dir.length();
+                ia->setLine(Line(pos, dir), ia->getMaxDist());
+                ia->scale(length);
+                return Action::Continue;
+            }
             return Transform::intersectEnter(action);
         }
 };
