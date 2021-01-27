@@ -85,7 +85,7 @@ class VRDevice : public std::enable_shared_from_this<VRDevice>, public VRName, p
         void setBeacon(VRTransformPtr, int i = 0);
         void setDnD(bool b);
 
-        bool intersect2(VRObjectPtr subtreeRoot = 0, bool force = 0, VRTransformPtr caster = 0, Vec3d dir = Vec3d(0,0,-1));
+        bool intersect2(VRObjectPtr subtreeRoot = 0, bool force = 0, VRTransformPtr caster = 0, Vec3d dir = Vec3d(0,0,-1), bool skipVols = false);
         Pnt3d getIntersectionPoint();
         Vec3i getIntersectionTriangle();
         Vec3d getIntersectionNormal();

@@ -39,14 +39,16 @@ PyMethodDef VRPyDevice::methods[] = {
     {"intersect", PyWrapOpt(Device, intersect2, "Attempts to intersect the device beacon with the scene - \n"
                                                                     "bool intersect(Object scene, bool force, DeviceBeacon beacon, Vec3 dir)\n\n"
                                                                     "  return: True, if intersection successful, otherwise False\n\n"
-                                                                    "  scene:  [optional] default=VR.Scene()\n"
+                                                                    "  scene:  [optional] default=None (scene root)\n"
                                                                     "          Specifies object in scene graph which is checked incl. its children.\n\n"
                                                                     "  force:  [optional] default=False\n"
                                                                     "          Forces reevaluation of intersect, if False existing intersection from same frame can be used.\n\n"
-                                                                    "  beacon: [optional] default=device.getBeacon()\n"
-                                                                    "          Specifies which beacon of the device will be intersected, in case of multiple beacons (Multitouch).\n\n"
+                                                                    "  beacon: [optional] default=None (device beacon)\n"
+                                                                    "          Specifies which transform node is used to cast the intersection ray.\n\n"
                                                                     "  dir:    [optional] default=[0,0,-1]\n"
-                                                                    "          Direction of intersection ray in beacon coordinates", "0|0|0|0 0 -1", bool, VRObjectPtr, bool, VRTransformPtr, Vec3d ) },
+                                                                    "          Direction of intersection ray in beacon coordinates.\n\n"
+                                                                    "  skipVolumes: [optional] default=False\n"
+                                                                    "          Skip volumes of object and transform nodes.", "0|0|0|0 0 -1|0", bool, VRObjectPtr, bool, VRTransformPtr, Vec3d, bool ) },
     {"getIntersected", PyWrap(Device, getIntersected, "Get device intersected object.", VRObjectPtr ) },
     {"getIntersection", PyWrap(Device, getIntersectionPoint, "Get device intersection point", Pnt3d ) },
     {"getIntersectionRay", PyWrap(Device, getIntersectionRay, "Get intersection ray", Line ) },

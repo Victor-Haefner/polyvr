@@ -4,6 +4,7 @@
 #include <OpenSG/OSGConfig.h>
 #include "core/math/OSGMathFwd.h"
 #include <OpenSG/OSGLine.h>
+#include <OpenSG/OSGIntersectAction.h>
 #include <vector>
 #include <map>
 
@@ -13,6 +14,17 @@
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
+
+class VRIntersectAction : public IntersectAction {
+    private:
+        bool doSkipVolumes = false;
+
+    public:
+        VRIntersectAction() {}
+
+        void setSkipVolumes(bool b) { doSkipVolumes = b; }
+        bool skipVolume() { return doSkipVolumes; }
+};
 
 struct VRIntersection {
     Line ray;
@@ -55,7 +67,7 @@ class VRIntersect {
         map< int, map<VRObject*, VRObjectWeakPtr> > dynTrees;
 
         void initIntersect(VRDevicePtr dev);
-        VRIntersection intersectRay(VRObjectWeakPtr tree, Line ray);
+        VRIntersection intersectRay(VRObjectWeakPtr tree, Line ray, bool skipVols = false);
 
         virtual void dragCB(VRTransformWeakPtr caster, VRObjectWeakPtr tree, VRDeviceWeakPtr dev = VRDevicePtr(0));
 
@@ -63,7 +75,7 @@ class VRIntersect {
         VRIntersect();
         ~VRIntersect();
 
-        VRIntersection intersect(VRObjectWeakPtr wtree, bool force = false, VRTransformPtr caster = 0, Vec3d dir = Vec3d(0,0,-1));
+        VRIntersection intersect(VRObjectWeakPtr wtree, bool force = false, VRTransformPtr caster = 0, Vec3d dir = Vec3d(0,0,-1), bool skipVols = false);
         void drag(VRIntersection i, VRTransformWeakPtr caster);
         void drop(VRDeviceWeakPtr dev = VRDevicePtr(0), VRTransformWeakPtr beacon = VRTransformPtr(0));
         VRDeviceCbPtr addDrag(VRTransformWeakPtr caster, VRObjectWeakPtr tree);

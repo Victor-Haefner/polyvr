@@ -4,9 +4,12 @@
 #include "core/objects/material/VRMaterialT.h"
 #include "core/objects/material/VRTexture.h"
 #include "core/objects/geometry/VRGeoData.h"
+#include "core/objects/geometry/OSGGeometry.h"
 #include "core/tools/VRText.h"
 #include "core/utils/toString.h"
 #include "core/scene/VRScene.h"
+
+#include <OpenSG/OSGIntersectAction.h>
 
 #define GLSL(shader) #shader
 
@@ -88,6 +91,46 @@ VRObjectPtr VRAnnotationEngine::copy(vector<VRObjectPtr> children) {
 void VRAnnotationEngine::setColor(Color4f c) { fg = c; updateTexture(); }
 void VRAnnotationEngine::setBackground(Color4f c) { bg = c; updateTexture(); }
 void VRAnnotationEngine::setOutline(int r, Color4f c) { oradius = r; oc = c; updateTexture(); }
+
+bool VRAnnotationEngine::applyIntersectionAction(Action* action) {
+    if (!mesh || !mesh->geo) return false;
+
+
+    IntersectAction* ia = dynamic_cast<IntersectAction*>(action);
+
+    auto ia_line = ia->getLine();
+    Pnt3d l0 = Pnt3d(ia_line.getPosition());
+    Vec3d ld = Vec3d(ia_line.getDirection());
+    Pnt3d lh = Pnt3d(ia->getHitPoint());
+
+    // TODO: convert ray in engine coord system!
+
+    double h = size;
+    double w = size;
+
+    for (auto& l : labels) {
+        int N = l.entries.size();
+        if (N == 0) continue;
+
+        Pnt3d P0 = data->getPosition(l.entries[0]);
+        double d = (P0[2]-l0[2])/ld[2]; // all labels are in z+k=0 plane
+        Pnt3d lh = l0 + ld*d;
+        Vec3d Pp = lh - P0;
+        if (Pp[1] < -h*0.5) continue;
+        if (Pp[1] >  h*0.5) continue;
+
+        if (Pp[0] < -w*0.5) continue;
+        if (Pp[0] >  w*((N-4)*3-0.5) ) continue;
+
+        // label hit!
+        Vec3f norm(0,1,0);
+        Real32 t = l0.dist( lh );
+        ia->setHit(t, ia->getActNode(), 0, norm, -1);
+        return true;
+    }
+
+	return VRGeometry::applyIntersectionAction(action); // fallback
+}
 
 bool VRAnnotationEngine::checkUIn(int i) {
     if (i < 0 || i > (int)data->size()) return true;

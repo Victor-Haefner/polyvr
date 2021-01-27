@@ -68,23 +68,7 @@ Vec3i VRIntersect_computeVertices(VRIntersection& ins, NodeMTRecPtr node) {
     return Vec3i(iter.getPositionIndex(0), iter.getPositionIndex(1), iter.getPositionIndex(2));
 }
 
-class VRIntersectAction : public IntersectAction {
-    private:
-        /*Action::ResultE GeoInstancer::intersectEnter(Action  *action) {
-            if(_sfBaseGeometry.getValue() == NULL) return Action::Continue;
-            return _sfBaseGeometry.getValue()->intersectEnter(action);
-            return Action::Continue;
-        }*/
-
-    public:
-        VRIntersectAction() {
-            // TODO: check OSG::Geometry::intersectEnter
-
-            //IntersectAction::registerEnterDefault( getClassType(), reinterpret_cast<Action::Callback>(&GeoInstancer::intersectEnter));
-        }
-};
-
-VRIntersection VRIntersect::intersectRay(VRObjectWeakPtr wtree, Line ray) {
+VRIntersection VRIntersect::intersectRay(VRObjectWeakPtr wtree, Line ray, bool skipVols) {
     VRIntersection ins;
     auto tree = wtree.lock();
     if (!tree) return ins;
@@ -94,7 +78,7 @@ VRIntersection VRIntersect::intersectRay(VRObjectWeakPtr wtree, Line ray) {
     unsigned int now = VRGlobals::CURRENT_FRAME;
 
     VRIntersectAction iAct;
-    //IntersectActionRefPtr iAct = IntersectAction::create();
+    iAct.setSkipVolumes(skipVols);
     iAct.setTravMask(8);
     iAct.setLine(ray);
     iAct.apply(tree->getNode()->node);
@@ -134,7 +118,7 @@ VRIntersection VRIntersect::intersectRay(VRObjectWeakPtr wtree, Line ray) {
 * @param caster: beacon which should be used for intersection (for use of multiple beacons with multitouch)
 * @param dir: local ray casting vector
 */
-VRIntersection VRIntersect::intersect(VRObjectWeakPtr wtree, bool force, VRTransformPtr caster, Vec3d dir) {
+VRIntersection VRIntersect::intersect(VRObjectWeakPtr wtree, bool force, VRTransformPtr caster, Vec3d dir, bool skipVols) {
     vector<VRObjectPtr> trees;
     if (auto sp = wtree.lock()) trees.push_back(sp);
     else for (auto grp : dynTrees) {
@@ -157,7 +141,7 @@ VRIntersection VRIntersect::intersect(VRObjectWeakPtr wtree, bool force, VRTrans
         }
 
         Line ray = caster->castRay(t, dir);
-        auto ins_tmp = intersectRay(t, ray);
+        auto ins_tmp = intersectRay(t, ray, skipVols);
         //if (force) cout << ray.getPosition()[1] << " " << caster->getWorldPosition()[1] << endl;
         if (ins_tmp.hit) return ins_tmp;
         else ins.ray = ray;

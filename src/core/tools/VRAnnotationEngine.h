@@ -66,6 +66,8 @@ class VRAnnotationEngine : public VRGeometry {
         void setBillboard(bool b);
         void setScreensize(bool b);
         void setOrientation(Vec3d d, Vec3d u);
+
+        virtual bool applyIntersectionAction(Action* ia);
 };
 
 OSG_END_NAMESPACE;

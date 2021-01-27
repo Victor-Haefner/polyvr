@@ -444,12 +444,16 @@ string hudSite = TEMPLATE(
 
 string hudInit = TEMPLATE(
 \timport VR\n\n
-\ts = VR.Sprite('site')\n
-\tw = 0.5\n
-\th = 0.3\n
-\ts.setSize(w,h)\n
-\ts.webOpen('http://localhost:5500/hudSite', 400, w/h)\n
-\tVR.scene.addChild(s)\n
+\tdef addHud(site,w,h,x,y,parent):\n
+\t\ts = VR.Sprite('site')\n
+\t\ts.setSize(w,h)\n
+\t\ts.webOpen('http://localhost:5500/'+site, 400, w/h)\n
+\t\ts.setFrom([x,y,-2])\n
+\t\tparent.addChild(s)\n\n
+\tif hasattr(VR, 'hud'): VR.hud.destroy()\n
+\tVR.hud = VR.Object('hud')\n
+\tVR.find('Default').addChild(VR.hud)\n\n
+\taddHud( 'husSite', 0.5,0.5, 0,1, VR.hud )\n
 );
 
 string hudHandler = TEMPLATE(
@@ -511,6 +515,7 @@ void VRScriptManager::initTemplates() {
         addTrigger("onClick", "on_device", "0", "mouse");
         addTemplate("scripts", "hudInit", hudInit);
         addTemplate("scripts", "hudHandler", hudHandler);
+        addTrigger("hudHandler", "on_device", "0", "server1", -1, "Released");
         addTemplate("websites", "hudSite", hudSite);
         addTemplate("shaders", "test", "test shader template");
     }

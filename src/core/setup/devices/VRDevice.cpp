@@ -171,8 +171,8 @@ void VRDevice::drag(VRObjectPtr obj, int bID) {
 
 void VRDevice::drop(int bID) { VRIntersect::drop( VRDevicePtr(0), getBeacon(bID) ); }
 
-bool VRDevice::intersect2(VRObjectPtr subtreeRoot, bool force, VRTransformPtr caster, Vec3d dir) {
-    OSG::VRIntersection ins = VRIntersect::intersect(subtreeRoot, force, caster, dir);
+bool VRDevice::intersect2(VRObjectPtr subtreeRoot, bool force, VRTransformPtr caster, Vec3d dir, bool skipVols) {
+    OSG::VRIntersection ins = VRIntersect::intersect(subtreeRoot, force, caster, dir, skipVols);
     return ins.hit;
 }
 

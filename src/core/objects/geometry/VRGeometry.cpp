@@ -37,6 +37,8 @@
 #include <OpenSG/OSGIntersectAction.h>
 #include <OpenSG/OSGLineIterator.h>
 #include <OpenSG/OSGSimpleAttachment.h>
+#include <OpenSG/OSGGroup.h>
+#include <OpenSG/OSGTransform.h>
 
 template<> string typeName(const OSG::VRGeometry& t) { return "Geometry"; }
 
@@ -157,6 +159,24 @@ class geoIntersectionProxy : public Geometry {
         }
 };
 
+class groupIntersectionProxy : public Group {
+    public:
+        Action::ResultE intersectEnter(Action* action) {
+            auto ia = dynamic_cast<VRIntersectAction*>(action);
+            if (ia->skipVolume()) return Action::Continue;
+            return Group::intersectEnter(action);
+        }
+};
+
+class transIntersectionProxy : public Transform {
+    public:
+        Action::ResultE intersectEnter(Action* action) {
+            auto ia = dynamic_cast<VRIntersectAction*>(action);
+            if (ia->skipVolume()) return Action::Continue;
+            return Transform::intersectEnter(action);
+        }
+};
+
 bool VRGeometry::applyIntersectionAction(Action* action) {
     if (!mesh || !mesh->geo) return false;
     auto proxy = (geoIntersectionProxy*)mesh->geo.get();
@@ -175,6 +195,8 @@ VRGeometry::VRGeometry(string name) : VRTransform(name) {
     regStorageSetupFkt( VRStorageCb::create("geometry_update", bind(&VRGeometry::setup, this, _1)) );
 
     // override intersect action callbacks for geometry
+    IntersectAction::registerEnterDefault( Group::getClassType(), reinterpret_cast<Action::Callback>(&groupIntersectionProxy::intersectEnter));
+    IntersectAction::registerEnterDefault( Transform::getClassType(), reinterpret_cast<Action::Callback>(&transIntersectionProxy::intersectEnter));
     IntersectAction::registerEnterDefault( Geometry::getClassType(), reinterpret_cast<Action::Callback>(&geoIntersectionProxy::intersectEnter));
 }
 
