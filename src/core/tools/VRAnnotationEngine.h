@@ -36,7 +36,8 @@ class VRAnnotationEngine : public VRGeometry {
         map<string, int> characterIDs;
 
         struct Label {
-            int ID;
+            int ID = -1;
+            int Ngraphemes = -1;
             Vec3d pos;
             vector<int> entries;
             string str;

@@ -158,7 +158,7 @@ bool VRAnnotationEngine::applyIntersectionAction(Action* action) {
         if (Y >  h*0.5) continue;
 
         if (X < -w*0.5) continue;
-        if (X >  w*((N-4)*3-0.5) ) continue;
+        if (X >  w*(l.Ngraphemes-0.5) ) continue;
         didHit = true;
         //cout << "VRAnnotationEngine::applyIntersectionAction " << N << " -> " << (N-4)*3 << " -> " << ((N-4)*3-0.5) << " " << Pp[0] << " " << w << " -> " << w*((N-4)*3-0.5) << endl;
 
@@ -236,24 +236,23 @@ void VRAnnotationEngine::setLine(int i, Vec3d p, string str, bool ascii) {
     auto& l = labels[i];
     if (l.str == str) return;
 
-    int Ngraphemes;
     vector<string> graphemes;
     //vector<string> old_graphemes;
     if (!ascii) {
-        Ngraphemes = VRText::countGraphemes(str);
+        l.Ngraphemes = VRText::countGraphemes(str);
         graphemes = VRText::splitGraphemes(str);
         //old_graphemes = VRText::splitGraphemes(l.str);
     } else {
-        Ngraphemes = str.size();
-        graphemes = vector<string>(Ngraphemes);
+        l.Ngraphemes = str.size();
+        graphemes = vector<string>(l.Ngraphemes);
         //old_graphemes = vector<string>(l.str.size());
-        for (int i=0; i<Ngraphemes; i++) graphemes[i] = str[i];
+        for (int i=0; i<l.Ngraphemes; i++) graphemes[i] = str[i];
         //for (int i=0; i<l.str.size(); i++) old_graphemes[i] = l.str[i];
     }
 
 #ifndef OSG_OGL_ES2
     if (hasGS) {
-        int N = ceil(Ngraphemes/3.0); // number of points, 3 chars per point
+        int N = ceil(l.Ngraphemes/3.0); // number of points, 3 chars per point
         resize(l,p,N + 4); // plus 4 bounding points
 
         for (int j=0; j<N; j++) {
@@ -272,12 +271,12 @@ void VRAnnotationEngine::setLine(int i, Vec3d p, string str, bool ascii) {
         // bounding points to avoid word clipping
         data->setVert(l.entries[N], p+Vec3d(-0.25*size, -0.5*size, 0), Vec3d(0,0,-1));
         data->setVert(l.entries[N+1], p+Vec3d(-0.25*size,  0.5*size, 0), Vec3d(0,0,-1));
-        data->setVert(l.entries[N+2], p+Vec3d((Ngraphemes-0.25)*size, -0.5*size, 0), Vec3d(0,0,-1));
-        data->setVert(l.entries[N+3], p+Vec3d((Ngraphemes-0.25)*size,  0.5*size, 0), Vec3d(0,0,-1));
+        data->setVert(l.entries[N+2], p+Vec3d((l.Ngraphemes-0.25)*size, -0.5*size, 0), Vec3d(0,0,-1));
+        data->setVert(l.entries[N+3], p+Vec3d((l.Ngraphemes-0.25)*size,  0.5*size, 0), Vec3d(0,0,-1));
     }
     else {
 #endif
-        int N = Ngraphemes;
+        int N = l.Ngraphemes;
 
         resize(l,p,N*4);
         float H = size*0.5;
