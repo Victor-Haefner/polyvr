@@ -113,6 +113,8 @@ bool VRAnnotationEngine::applyIntersectionAction(Action* action) {
 
     double h = size;
     double w = size;
+    bool didHit = false;
+    Real32 T = 1e6;
 
     PosePtr camPose;
     if (doScreensize || doBillboard) {
@@ -157,17 +159,21 @@ bool VRAnnotationEngine::applyIntersectionAction(Action* action) {
 
         if (X < -w*0.5) continue;
         if (X >  w*((N-4)*3-0.5) ) continue;
+        didHit = true;
         //cout << "VRAnnotationEngine::applyIntersectionAction " << N << " -> " << (N-4)*3 << " -> " << ((N-4)*3-0.5) << " " << Pp[0] << " " << w << " -> " << w*((N-4)*3-0.5) << endl;
 
         // label hit!
-        Vec3f norm(0,1,0);
         Real32 t = l0.dist( lh );
-        ia->setHit(t, ia->getActNode(), 0, norm, l.ID);
-        //cout << "VRAnnotationEngine::applyIntersectionAction ID: " << l.ID << " " << l.str << endl;
-        return true;
+        if (t < T) {
+            T = t;
+            Vec3f norm(0,1,0);
+            ia->setHit(t, ia->getActNode(), 0, norm, l.ID);
+            //cout << "VRAnnotationEngine::applyIntersectionAction ID: " << l.ID << " " << l.str << endl;
+        }
     }
 
-	return VRGeometry::applyIntersectionAction(action); // fallback
+    if (didHit) return true;
+	else return VRGeometry::applyIntersectionAction(action); // fallback
 }
 
 bool VRAnnotationEngine::checkUIn(int i) {
