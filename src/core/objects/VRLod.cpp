@@ -2,6 +2,7 @@
 #include "geometry/VRGeometry.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRFunction.h"
+#include "core/utils/VRStorage_template.h"
 #include "core/objects/object/OSGCore.h"
 
 #include <OpenSG/OSGDistanceLOD.h>
@@ -13,27 +14,27 @@ template<> string typeName(const VRLod& t) { return "Lod"; }
 
 
 VRLod::VRLod(string name) : VRObject(name) {
-    center = new Vec3d;
     lod = DistanceLOD::create();
     setCore(OSGCore::create(lod), "Lod");
 
-    store("center", center);
+    store("center", &center);
+    store("scale", &scale);
     store("distances", &distances_string);
     regStorageSetupFkt( VRStorageCb::create("lod setup", bind(&VRLod::loadSetup, this, placeholders::_1)) );
 }
 
-VRLod::~VRLod() {
-    delete center;
-}
+VRLod::~VRLod() {}
 
 VRLodPtr VRLod::create(string name) { return shared_ptr<VRLod>(new VRLod(name) ); }
 VRLodPtr VRLod::ptr() { return static_pointer_cast<VRLod>( shared_from_this() ); }
 
-void VRLod::setCenter(Vec3d c) { *center = c; setup(); }
+void VRLod::setCenter(Vec3d c) { center = c; setup(); }
+void VRLod::setScale(double s) { scale = s; setup(); }
 void VRLod::setDecimate(bool b, int N) { decimate = b; decimateNumber = N; setup(); }
 void VRLod::setDistance(unsigned int i, float dist) { distances[i] = dist; setup(); }
 void VRLod::addDistance(float dist) { setDistance(distances.size(), dist); }
-Vec3d VRLod::getCenter() { return *center; }
+Vec3d VRLod::getCenter() { return center; }
+double VRLod::getScale() { return scale; }
 bool VRLod::getDecimate() { return decimate; }
 int VRLod::getDecimateNumber() { return decimateNumber; }
 
@@ -104,9 +105,9 @@ void VRLod::setup() {
 
     MFReal32* dists = lod->editMFRange();
     dists->resize(distances.size(), 0);
-    for (auto d : distances) (*dists)[d.first] = d.second;
+    for (auto d : distances) (*dists)[d.first] = d.second*scale;
 
-    lod->setCenter(Pnt3f(*center));
+    lod->setCenter(Pnt3f(center));
 }
 
 void VRLod::addEmpty() {

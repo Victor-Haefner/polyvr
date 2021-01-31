@@ -4,6 +4,7 @@
 #include "core/objects/object/VRObject.h"
 #include "core/math/OSGMathFwd.h"
 #include <OpenSG/OSGSField.h>
+#include <OpenSG/OSGVector.h>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -14,7 +15,8 @@ class VRLod : public VRObject {
     private:
         DistanceLODRecPtr lod;
         bool decimate = false;
-        Vec3d* center = 0;
+        Vec3d center;
+        double scale = 1.0;
         string distances_string;
         unsigned int decimateNumber = 0;
         map<unsigned int, float> distances;
@@ -38,6 +40,8 @@ class VRLod : public VRObject {
 
         void setCenter(Vec3d c);
         Vec3d getCenter();
+        void setScale(double s);
+        double getScale();
         void setDistance(unsigned int i, float dist);
         void addDistance(float dist);
         vector<float> getDistances();

@@ -9,6 +9,7 @@ simpleVRPyType(LodLeaf, 0);
 
 PyMethodDef VRPyLod::methods[] = {
 	{"setCenter", PyWrap( Lod, setCenter, "Set the center from which the LOD distance is calculated", void, Vec3d) },
+	{"setScale", PyWrap( Lod, setScale, "Set a value to scale the distances", void, double) },
 	{"setDistance", PyWrap( Lod, setDistance, "Set the distance at which the specified LOD stage should be shown", void, unsigned int, float) },
     {NULL}  /* Sentinel */
 };
