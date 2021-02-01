@@ -140,6 +140,7 @@ void VRBackground::setBackground(TYPE t) {
         case SOLID:
             base->bg = base->sbg;
             base->sbg->setColor(base->color);
+            //base->sbg->setAlpha(0.1); // just a test
             break;
         case IMAGE:
             base->bg = base->tbg;
