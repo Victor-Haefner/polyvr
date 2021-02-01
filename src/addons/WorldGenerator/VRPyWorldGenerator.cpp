@@ -40,6 +40,8 @@ simpleVRPyType(TrafficSigns, New_ptr);
 
 simpleVRPyType(MapManager, New_ptr);
 
+simpleVRPyType(Atlas, New_ptr);
+
 simplePyType(OSMMap, New_ptr);
 simplePyType(OSMRelation, 0);
 simplePyType(OSMWay, 0);
@@ -203,6 +205,11 @@ PyMethodDef VRPyTrafficSigns::methods[] = {
     {"getTextureMosaic", PyWrap( TrafficSigns, getTextureMosaic, "returns textureMosaic", VRTextureMosaicPtr ) },
     {"reloadShader", PyWrap( TrafficSigns, reloadShader, "reloads shader", void ) },
     //{"setMegaTexture", PyWrap( TrafficSigns, setMegaTexture, "sets textureMosaic", void, VRTextureMosaicPtr ) },
+    {NULL}  /* Sentinel */
+};
+
+PyMethodDef VRPyAtlas::methods[] = {
+    {"test", PyWrap( Atlas, test, "test function", void ) },
     {NULL}  /* Sentinel */
 };
 
