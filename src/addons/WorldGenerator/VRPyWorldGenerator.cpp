@@ -210,6 +210,7 @@ PyMethodDef VRPyTrafficSigns::methods[] = {
 
 PyMethodDef VRPyAtlas::methods[] = {
     {"test", PyWrap( Atlas, test, "test function", void ) },
+    {"setup", PyWrap( Atlas, setup, "setup function", VRTransformPtr, void ) },
     {NULL}  /* Sentinel */
 };
 
