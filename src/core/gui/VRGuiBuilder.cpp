@@ -841,7 +841,7 @@ void VRGuiBuilder::buildBaseUI() {
     auto entry33 = addEntry("entry33");
     auto label39 = addLabel("label39", "Ny:");
     auto entry34 = addEntry("entry34");
-    auto serverlist = gtk_tree_store_new(3, G_TYPE_INT, G_TYPE_INT, G_TYPE_STRING);
+    auto serverlist = gtk_list_store_new(3, G_TYPE_INT, G_TYPE_INT, G_TYPE_STRING);
     auto treeview1_and_frame = addTreeview("treeview1", "serverlist", GTK_TREE_MODEL(serverlist));
     auto treeview1 = treeview1_and_frame.first;
     auto fixed8 = addFixed("fixed8");
