@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Setup>
   <Displays globalOffset="0 0 0">
-    <Window active="1" type="2" width="1317" height="848" name="local" mouse="mouse" keyboard="keyboard">
-      <View stereo="0" active_stereo="0" projection="0" eye_inverted="0" eye_separation="0.06" position="0 0 1 1" center="0 0 0" normal="0 0 1" user_pos="0 0 0" up="0 1 0" size="2 1" shear="0 0" warp="0 0" vsize="1317 848" mirror="0" mirrorPos="0 0 0" mirrorNorm="0 0 1" user=""/>
+    <Window active="1" type="2" width="1527" height="528" name="local" msaa="x4" mouse="mouse" keyboard="keyboard">
+      <View stereo="0" active_stereo="0" projection="0" eye_inverted="0" eye_separation="0.06" position="0.204687 0.173077 1 0.680769" center="0 0 0" normal="0 0 1" user_pos="0 0 0" up="0 1 0" size="2 1" shear="0 0" warp="0 0" vsize="1527 528" mirror="0" mirrorPos="0 0 0" mirrorNorm="0 0 1" user=""/>
     </Window>
-    <Window active="1" type="0" width="300" height="300" name="remote" mouse="None" keyboard="None" Nx="1" Ny="1" ConnType="Multicast">
-      <View stereo="0" active_stereo="0" projection="1" eye_inverted="0" eye_separation="0.06" position="0 0 1 1" center="0 0 0" normal="0 0 1" user_pos="0 0 2" up="0 1 0" size="1 1" shear="0 0" warp="0 0" vsize="1700 1080" mirror="1" mirrorPos="0 0 0" mirrorNorm="1 0 0" user=""/>
+    <Window active="1" type="0" width="300" height="300" name="remote" msaa="x4" mouse="None" keyboard="None" Nx="1" Ny="1" ConnType="Multicast">
+      <View stereo="0" active_stereo="0" projection="0" eye_inverted="0" eye_separation="0.06" position="0 0 1 1" center="0 0 0" normal="0 0 1" user_pos="0 0 2" up="0 1 0" size="1 1" shear="0 0" warp="0 0" vsize="1700 1080" mirror="1" mirrorPos="0 0 0" mirrorNorm="1 0 0" user=""/>
       <Server Address="L1"/>
     </Window>
   </Displays>
@@ -15,10 +15,10 @@
     <Device base_name="server1" name="server1" name_space="__global__" name_suffix="0" persistency="666" type="server"/>
   </Devices>
   <TrackingART active="0" axis="0 1 2" offset="0 0 0" persistency="666" port="5000" up=""/>
-  <TrackingVRPN active="1" persistency="666" port="3883" verbose="0"/>
+  <TrackingVRPN/>
   <Network base_name="Network" name_space="Manager" name_suffix="0" persistency="666">
-    <Node address="127.0.0.1" base_name="Node" name_space="NetworkNode" name_suffix="0" persistency="666" slavePath="/home/victor/Projects/PolyVR" user="victor" ID="0">
-      <Node active_stereo="0" autostart="1" base_name="L1" connection_type="Multicast" display=":0.0" fullscreen="0" name_space="NetworkNode" name_suffix="0" persistency="666" port="3000" ID="0"/>
+    <Node address="localhost" base_name="Node" name_space="NetworkNode" name_suffix="0" persistency="666" slavePath="C:/Users/Victor/Projects/polyvr-packaging/windows2/repositories/polyvr" user="victor" ID="0">
+      <Node active_stereo="0" autostart="1" base_name="L1" connection_type="Multicast" display=":0.0" fullscreen="0" name_space="NetworkNode" name_suffix="0" persistency="666" port="3000" startupDelay="10" ID="0"/>
     </Node>
   </Network>
   <Scripts/>

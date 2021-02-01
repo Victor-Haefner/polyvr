@@ -83,17 +83,19 @@ BUT! ..this requires root rights, thus cannot be used :(
 
 bool VRPing::start(std::string address, int timeout) {
     int max_attempts = 1;
-    std::string command = "ping -c " + toString(max_attempts) + " " + address + " 2>&1";
 
+#ifdef _WIN32
+    std::string command = "ping -n " + toString(max_attempts) + " " + address + " 2>&1";
+    int code = system(command.c_str());
+    return (code == 0);
+#else
+    std::string command = "ping -c " + toString(max_attempts) + " " + address + " 2>&1";
     FILE* in;
     char buff[512];
-#ifndef _WIN32
     if (!(in = popen(command.c_str(), "r"))) return false;
     while (fgets(buff, sizeof(buff), in)!=NULL) ;
     int code =  pclose(in);
 	return (code == 0);
-#else
-	return false;
 #endif
 }
 
