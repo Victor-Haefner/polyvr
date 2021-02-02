@@ -1103,6 +1103,7 @@ namespace PL = std::placeholders;
 VRGuiScripts::VRGuiScripts() {
     disableDestroyDiag("pybindings-docs");
     disableDestroyDiag("find_dialog");
+    disableDestroyDiag("scriptTemplates");
 
     setToolButtonCallback("toolbutton6", bind(&VRGuiScripts::on_new_clicked, this) );
     setToolButtonCallback("toolbutton29", bind(&VRGuiScripts::on_template_clicked, this) );
