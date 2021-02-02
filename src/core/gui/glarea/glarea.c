@@ -1702,12 +1702,50 @@ void _gdk_win32_window_invalidate_for_new_frame(_GdkWindow* window, cairo_region
     lastRegion = extends;
 }
 
+/*static void _gdk_win32_window_set_opacity(_GdkWindow* window, gdouble opacity) {
+    printf(" +-+-+-++-- _gdk_win32_window_set_opacity %d\n", opacity);
+
+    LONG exstyle;
+    typedef BOOL(WINAPI* PFN_SetLayeredWindowAttributes) (HWND, COLORREF, BYTE, DWORD);
+    PFN_SetLayeredWindowAttributes setLayeredWindowAttributes = NULL;
+
+    g_return_if_fail(GDK_IS_WINDOW(window));
+
+    if (!WINDOW_IS_TOPLEVEL(window) || GDK_WINDOW_DESTROYED(window))
+        return;
+
+    if (opacity < 0)
+        opacity = 0;
+    else if (opacity > 1)
+        opacity = 1;
+
+    _GdkWindowImplWin32* impl = (_GdkWindowImplWin32*)window->impl;
+
+    impl->layered_opacity = opacity;
+
+    if (impl->layered) return;
+
+    exstyle = GetWindowLong(gdk_win32_window_get_handle(window), GWL_EXSTYLE);
+
+    if (!(exstyle & WS_EX_LAYERED)) SetWindowLong(gdk_win32_window_get_handle(window), GWL_EXSTYLE, exstyle | WS_EX_LAYERED);
+
+    setLayeredWindowAttributes = (PFN_SetLayeredWindowAttributes)GetProcAddress(GetModuleHandle("user32.dll"), "SetLayeredWindowAttributes");
+
+    if (setLayeredWindowAttributes) {
+        setLayeredWindowAttributes(gdk_win32_window_get_handle(window),
+            0,
+            opacity * 0xff,
+            LWA_ALPHA);
+    }
+}*/
+
 #endif
 
 void override_window_invalidate_for_new_frame(_GdkWindow* window) {
     _GdkWindowImplClass* impl_class = getGdkWindowImplClass();
 #ifdef _WIN32
     impl_class->invalidate_for_new_frame = _gdk_win32_window_invalidate_for_new_frame;
+    //impl_class->set_opacity = _gdk_win32_window_set_opacity;
 #else
     impl_class->invalidate_for_new_frame = _gdk_x11_window_invalidate_for_new_frame;
 #endif
@@ -1980,9 +2018,11 @@ static gint vr_get_dummy_wgl_pfd(HDC hdc, PIXELFORMATDESCRIPTOR* pfd) {
     pfd->nVersion = 1;
     pfd->dwFlags = PFD_SUPPORT_OPENGL | PFD_DRAW_TO_WINDOW | PFD_DOUBLEBUFFER;
     pfd->iPixelType = PFD_TYPE_RGBA;
+    //pfd->iPixelType = PFD_TYPE_COLORINDEX;
     pfd->cColorBits = GetDeviceCaps(hdc, BITSPIXEL);
     pfd->cAlphaBits = 8; // important, if set to 0 the window might get translucent on some systems
     pfd->dwLayerMask = PFD_MAIN_PLANE;
+    //pfd->dwLayerMask = PFD_OVERLAY_PLANE;
     best_pf = ChoosePixelFormat(hdc, pfd);
 
     printf("    chose minimal pixel format: %i\n", best_pf);
@@ -2014,13 +2054,15 @@ static gint vr_get_wgl_pfd(HDC hdc, PIXELFORMATDESCRIPTOR* pfd, _GdkWin32Display
             WGL_ACCELERATION_ARB,       WGL_FULL_ACCELERATION_ARB,
             WGL_PIXEL_TYPE_ARB,         WGL_TYPE_RGBA_ARB,
             WGL_COLOR_BITS_ARB,         colorbits,
-            WGL_ALPHA_BITS_ARB,         8, // important, if set to 0 the window might get translucent on some systems
+            //WGL_ALPHA_BITS_ARB,         0, // important, if set to 0 the window might get translucent on some systems
             WGL_DEPTH_BITS_ARB,         24,
             WGL_STENCIL_BITS_ARB,       8,
             WGL_SAMPLE_BUFFERS_ARB,     1,
             WGL_SAMPLES_ARB,            8,
             0
         };
+
+        printf(" --- === --- pixelAttribsFull %i %i\n", colorbits, 0);
 
         int pixelAttribsMin[] = {
             WGL_DRAW_TO_WINDOW_ARB,     GL_TRUE,
@@ -2029,7 +2071,7 @@ static gint vr_get_wgl_pfd(HDC hdc, PIXELFORMATDESCRIPTOR* pfd, _GdkWin32Display
             WGL_ACCELERATION_ARB,       WGL_FULL_ACCELERATION_ARB,
             WGL_PIXEL_TYPE_ARB,         WGL_TYPE_RGBA_ARB,
             WGL_COLOR_BITS_ARB,         colorbits,
-            WGL_ALPHA_BITS_ARB,         8, // important, if set to 0 the window might get translucent on some systems
+            //WGL_ALPHA_BITS_ARB,         8, // important, if set to 0 the window might get translucent on some systems
             WGL_DEPTH_BITS_ARB,         24,
             WGL_STENCIL_BITS_ARB,       8,
             0

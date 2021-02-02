@@ -72,6 +72,7 @@ class VRNetworkNode : public VRManager<VRNetworkSlave>, public std::enable_share
         string stat_ssh_key = "none";
         string stat_path = "none";
 
+        bool isLocal();
         void initSlaves();
         void update();
 

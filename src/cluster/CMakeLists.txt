@@ -2,8 +2,13 @@ cmake_minimum_required (VERSION 3.0)
 
 project(VRServer)
 
-include_directories("C:/opensg/include" "C:/freeglut" "C:/boost")
-link_directories("C:/opensg" "C:/freeglut" "C:/boost/lib64-msvc-14.1")
+set(DISK "C")
+if(EXISTS "D:/usr/vcpkg")
+	set(DISK "D")
+endif()
+
+include_directories("${DISK}:/usr/include" "${DISK}:/usr/vcpkg/installed/x64-windows/include" "${DISK}:/usr/vcpkg/installed/x64-windows/include/boost")
+link_directories("${DISK}:/usr/lib/opensg" "${DISK}:/usr/vcpkg/installed/x64-windows/lib")
 
 add_executable(VRServer VRServer.cpp)
 target_link_libraries(VRServer OSGBase )
@@ -29,4 +34,4 @@ target_link_libraries(VRServer OSGWindowGLUT )
 target_link_libraries(VRServer freeglut )
 #target_link_libraries(VRServer Xmu )
 #target_link_libraries(VRServer Xi)
-target_link_libraries(VRServer boost_system-vc141-mt-1_65_1)
+target_link_libraries(VRServer boost_system-vc140-mt boost_filesystem-vc140-mt)

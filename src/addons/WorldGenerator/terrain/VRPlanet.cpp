@@ -464,7 +464,9 @@ void applyLightning() {
 	vec4  diffuse = gl_LightSource[0].diffuse * NdotL * color;
 	float NdotHV = max(dot(n, normalize(gl_LightSource[0].halfVector.xyz)),0.0);
 	vec4  specular = gl_LightSource[0].specular * pow( NdotHV, gl_FrontMaterial.shininess );
-	gl_FragColor = diffuse + ambient;// + specular;
+    vec4 c = diffuse + ambient;
+    c[3] = 1.0;
+    gl_FragColor = c;// diffuse + ambient;// + specular;
 	//gl_FragColor = ambient + diffuse + specular;
 	//gl_FragColor = vec4(gl_LightSource[0].position.xyz,1);
 }
@@ -479,7 +481,7 @@ void main( void ) {
 	vec4 c2 = texture2D(tex, vec2(u2,v));
 	float s = clamp( (tcs.x+1)*0.3, 0, 1 );
 	color = mix(c2, c1, u0);
-	if (isLit != 0) applyLightning();
+    if (isLit != 0) applyLightning();
 	else gl_FragColor = color;
 }
 );
