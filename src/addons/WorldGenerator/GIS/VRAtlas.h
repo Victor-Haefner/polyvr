@@ -7,6 +7,7 @@
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/scene/VRSceneManager.h"
 #include "core/objects/VRTransform.h"
+#include "../terrain/VRTerrain.h"
 #include "GISFwd.h"
 
 using namespace std;
@@ -19,6 +20,7 @@ class VRAtlas : public std::enable_shared_from_this<VRAtlas>  {
         VRUpdateCbPtr updatePtr;
         void update();
         VRGeometryPtr generatePatch(string id);
+        VRTerrainPtr generateTerrain(string id, float edgeLength);
 
     public:
         VRAtlas();
