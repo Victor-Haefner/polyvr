@@ -33,11 +33,14 @@ PyMethodDef VRPyHDLC::methods[] = {
 #endif
 
 PyMethodDef VRPyRestResponse::methods[] = {
+    {"getStatus", PyWrap(RestResponse, getStatus, "Get response status", string) },
+    {"getData", PyWrap(RestResponse, getData, "Get response content", string) },
     {NULL}  /* Sentinel */
 };
 
 PyMethodDef VRPyRestClient::methods[] = {
     {"get", PyWrapOpt(RestClient, get, "Start GET request, (uri, timeout == 2)", "2", VRRestResponsePtr, string, int) },
+    {"getAsync", PyWrapOpt(RestClient, getAsync, "Start async GET request, (uri, callback, timeout == 2)", "2", void, string, VRRestCbPtr, int) },
     {"test", PyWrap(RestClient, test, "Run test, output in console", void) },
     {NULL}  /* Sentinel */
 };
