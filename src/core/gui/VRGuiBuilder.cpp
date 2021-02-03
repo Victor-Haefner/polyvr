@@ -164,17 +164,19 @@ GtkWidget* addToolbar(string ID, GtkIconSize iSize, GtkOrientation o) {
     return p;
 }
 
-GtkToolItem* addToolButton(string ID, string stock, GtkWidget* bar) {
+GtkToolItem* addToolButton(string ID, string stock, GtkWidget* bar, string tooltip) {
     auto item = gtk_tool_button_new_from_stock(stock.c_str());
     VRGuiBuilder::get()->reg_widget(GTK_WIDGET(item), ID);
     gtk_toolbar_insert(GTK_TOOLBAR(bar), item, -1);
+    gtk_widget_set_tooltip_text(GTK_WIDGET(item), tooltip.c_str());
     return item;
 }
 
-GtkToolItem* addToggleToolButton(string ID, string stock, GtkWidget* bar) {
+GtkToolItem* addToggleToolButton(string ID, string stock, GtkWidget* bar, string tooltip) {
     auto item = gtk_toggle_tool_button_new_from_stock(stock.c_str());
     VRGuiBuilder::get()->reg_widget(GTK_WIDGET(item), ID);
     gtk_toolbar_insert(GTK_TOOLBAR(bar), item, -1);
+    gtk_widget_set_tooltip_text(GTK_WIDGET(item), tooltip.c_str());
     return item;
 }
 
@@ -479,16 +481,16 @@ void VRGuiBuilder::buildBaseUI() {
     gtk_widget_set_hexpand(label13, true);
     gtk_widget_set_hexpand(label24, true);
 
-    auto toolbutton1 = addToolButton("toolbutton1", "gtk-new", toolbar1);
-    auto toolbutton21 = addToolButton("toolbutton21", "gtk-open", toolbar1);
-    auto toolbutton4 = addToolButton("toolbutton4", "gtk-save", toolbar1);
-    auto toolbutton5 = addToolButton("toolbutton5", "gtk-save-as", toolbar1);
-    auto toolbutton50 = addToolButton("toolbutton50", "gtk-go-up", toolbar1);
-    auto toolbutton28 = addToolButton("toolbutton28", "gtk-stop", toolbar1);
-    auto toolbutton3 = addToolButton("toolbutton3", "gtk-quit", toolbar1);
-    auto toolbutton17 = addToolButton("toolbutton17", "gtk-about", toolbar1);
-    auto toolbutton18 = addToolButton("toolbutton18", "gtk-paste", toolbar1);
-    auto toolbutton26 = addToolButton("toolbutton26", "gtk-fullscreen", toolbar1);
+    auto toolbutton1 = addToolButton("toolbutton1", "gtk-new", toolbar1, "New Scene");
+    auto toolbutton21 = addToolButton("toolbutton21", "gtk-open", toolbar1, "Open Scene or Model");
+    auto toolbutton4 = addToolButton("toolbutton4", "gtk-save", toolbar1, "Save Scene");
+    auto toolbutton5 = addToolButton("toolbutton5", "gtk-save-as", toolbar1, "Save Scene as New File");
+    auto toolbutton50 = addToolButton("toolbutton50", "gtk-go-up", toolbar1, "Deploy");
+    auto toolbutton28 = addToolButton("toolbutton28", "gtk-stop", toolbar1, "Close Scene");
+    auto toolbutton3 = addToolButton("toolbutton3", "gtk-quit", toolbar1, "Quit PolyVR");
+    auto toolbutton17 = addToolButton("toolbutton17", "gtk-about", toolbar1, "About");
+    auto toolbutton18 = addToolButton("toolbutton18", "gtk-paste", toolbar1, "Profiler");
+    auto toolbutton26 = addToolButton("toolbutton26", "gtk-fullscreen", toolbar1, "Fullscreen");
 
     cout << " build core section" << endl;
     /* ---------- core section ---------------------- */
@@ -531,13 +533,13 @@ void VRGuiBuilder::buildBaseUI() {
     gtk_box_pack_start(GTK_BOX(hbox1), hseparator6, false, true, 0);
     gtk_box_pack_start(GTK_BOX(hbox1), toolbar6, false, true, 0);
 
-    auto togglebutton1 = addToggleToolButton("togglebutton1", "gtk-leave-fullscreen", toolbar6);
+    auto togglebutton1 = addToggleToolButton("togglebutton1", "gtk-leave-fullscreen", toolbar6, "Undock 3D View");
 
     auto toolbar7 = addToolbar("toolbar7", GTK_ICON_SIZE_LARGE_TOOLBAR, GTK_ORIENTATION_VERTICAL);
-    auto toolbutton24 = addToolButton("toolbutton24", "gtk-clear", toolbar7);
-    auto toolbutton25 = addToolButton("toolbutton25", "gtk-go-down", toolbar7);
-    auto network_verbose = addToggleToolButton("network_verbose", "gtk-network", toolbar7);
-    auto pause_terminal = addToggleToolButton("pause_terminal", "gtk-media-pause", toolbar7);
+    auto toolbutton24 = addToolButton("toolbutton24", "gtk-clear", toolbar7, "Clear Consoles");
+    auto toolbutton25 = addToolButton("toolbutton25", "gtk-go-down", toolbar7, "Go to Bottom");
+    auto network_verbose = addToggleToolButton("network_verbose", "gtk-network", toolbar7, "Show Network Logs");
+    auto pause_terminal = addToggleToolButton("pause_terminal", "gtk-media-pause", toolbar7, "Pause Console Printing");
     gtk_box_pack_end(GTK_BOX(hbox15), toolbar7, false, true, 0);
 
     /* ---------- left core section ---------------------- */
@@ -734,10 +736,10 @@ void VRGuiBuilder::buildBaseUI() {
     gtk_grid_attach(GTK_GRID(table6), treeview2_and_frame.second, 0,2,1,1);
     gtk_grid_attach(GTK_GRID(table6), scrolledwindow6, 1,2,1,1);
 
-    auto toolbutton10 = addToolButton("toolbutton10", "gtk-new", toolbar4);
-    auto toolbutton11 = addToolButton("toolbutton11", "gtk-delete", toolbar4);
-    auto toolbutton12 = addToolButton("toolbutton12", "gtk-save", toolbar4);
-    auto toolbutton19 = addToggleToolButton("toolbutton19", "gtk-orientation-portrait", toolbar4);
+    auto toolbutton10 = addToolButton("toolbutton10", "gtk-new", toolbar4, "New Setup");
+    auto toolbutton11 = addToolButton("toolbutton11", "gtk-delete", toolbar4, "Remove Component");
+    auto toolbutton12 = addToolButton("toolbutton12", "gtk-save", toolbar4, "Save Setup");
+    auto toolbutton19 = addToggleToolButton("toolbutton19", "gtk-orientation-portrait", toolbar4, "Mono Mode");
 
     GtkTreeViewColumn* treeviewcolumn2 = gtk_tree_view_column_new();
     gtk_tree_view_column_set_title(treeviewcolumn2, "Setup");
@@ -1178,17 +1180,17 @@ void VRGuiBuilder::buildBaseUI() {
     gtk_grid_attach(GTK_GRID(table14), treeview5_and_frame.second, 0,1,1,1);
     gtk_grid_attach(GTK_GRID(table14), table15, 1,1,1,1);
 
-    auto toolbutton6 = addToolButton("toolbutton6", "gtk-new", toolbar3);
-    auto toolbutton29 = addToolButton("toolbutton29", "gtk-paste", toolbar3);
-    auto toolbutton20 = addToolButton("toolbutton20", "gtk-indent", toolbar3);
-    auto toolbutton22 = addToolButton("toolbutton22", "gtk-open", toolbar3);
-    auto toolbutton9 = addToolButton("toolbutton9", "gtk-delete", toolbar3);
-    auto toolbutton7 = addToolButton("toolbutton7", "gtk-save", toolbar3);
-    auto toolbutton8 = addToolButton("toolbutton8", "gtk-execute", toolbar3);
-    auto toolbutton23 = addToolButton("toolbutton23", "gtk-find", toolbar3);
-    auto toolbutton16 = addToolButton("toolbutton16", "gtk-help", toolbar3);
-    auto toggletoolbutton1 = addToggleToolButton("toggletoolbutton1", "gtk-sort-ascending", toolbar3);
-    auto toggletoolbutton2 = addToggleToolButton("toggletoolbutton2", "gtk-media-pause", toolbar3);
+    auto toolbutton6 = addToolButton("toolbutton6", "gtk-new", toolbar3, "New Script");
+    auto toolbutton29 = addToolButton("toolbutton29", "gtk-paste", toolbar3, "Script Templates");
+    auto toolbutton20 = addToolButton("toolbutton20", "gtk-indent", toolbar3, "New Group");
+    auto toolbutton22 = addToolButton("toolbutton22", "gtk-open", toolbar3, "Import Script From Scene");
+    auto toolbutton9 = addToolButton("toolbutton9", "gtk-delete", toolbar3, "Delete Script");
+    auto toolbutton7 = addToolButton("toolbutton7", "gtk-save", toolbar3, "Save Script");
+    auto toolbutton8 = addToolButton("toolbutton8", "gtk-execute", toolbar3, "Execute Script");
+    auto toolbutton23 = addToolButton("toolbutton23", "gtk-find", toolbar3, "Search");
+    auto toolbutton16 = addToolButton("toolbutton16", "gtk-help", toolbar3, "Documentation");
+    auto toggletoolbutton1 = addToggleToolButton("toggletoolbutton1", "gtk-sort-ascending", toolbar3, "Show Performance");
+    auto toggletoolbutton2 = addToggleToolButton("toggletoolbutton2", "gtk-media-pause", toolbar3, "Pause Script Execution");
 
     GtkTreeViewColumn* treeviewcolumn14 = gtk_tree_view_column_new();
     gtk_tree_view_column_set_title(treeviewcolumn14, "Script");
