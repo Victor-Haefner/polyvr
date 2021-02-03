@@ -16,6 +16,10 @@ class VRMapManager : public std::enable_shared_from_this<VRMapManager> {
 
         VRRestClientPtr client;
 
+        void storeFile(const string& filename, const string& data);
+        string constructFilename(double N, double E, double S);
+        void requestFile(string filename, double N, double E, double S);
+
 	public:
 		VRMapManager();
 		~VRMapManager();

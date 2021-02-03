@@ -22,16 +22,37 @@ void VRMapManager::setServer(string s) { server = s; }
 void VRMapManager::setVault(string v) { vault = v; }
 
 string VRMapManager::getMap(double N, double E, double S) {
-    //cout << "VRMapManager::getMap " << Vec3d(N, E, S) << endl;
+    string filename = constructFilename(N,E,S);
+    if (exists(filename)) return filename;
+    else requestFile(filename, N,E,S);
+    return filename;
+}
+
+// --= utilities =--
+
+void VRMapManager::storeFile(const string& filename, const string& data) {
+    ofstream f;
+    f.open(filename);
+    f << data;
+    f.close();
+}
+
+string VRMapManager::constructFilename(double N, double E, double S) {
+    //cout << "VRMapManager::constructFilename " << Vec3d(N, E, S) << endl;
     string sN = toString(N,3);
     string sE = toString(E,3);
     string sS = toString(S,3);
 
     string folder = vault+"/"+sS;
-    string filename = folder+"/N"+sN+"E"+sE+"S"+sS+".hgt";  // "/%.3f/N%.3fE%.3fS%.3f.hgt' % (S, N, E, S)
-    //cout << " filename: " << filename << endl;
-    if (exists(filename)) return filename;
+    string filename = folder+"/N"+sN+"E"+sE+"S"+sS+".hgt";
+    if (!exists(folder)) makedir(folder);
+    return filename;
+}
 
+void VRMapManager::requestFile(string filename, double N, double E, double S) {
+    string sN = toString(N,3);
+    string sE = toString(E,3);
+    string sS = toString(S,3);
     string req = server+"Topology_GetMap.php?N="+sN+"&E="+sE+"&S="+sS;  // N=%.3f&E=%.3f&S=%.3f" % (N,E,S)
     cout << " VRMapManager request: " << req << endl;
 
@@ -43,10 +64,5 @@ string VRMapManager::getMap(double N, double E, double S) {
     cout << " store map data in: " << filename << endl;
 
     // store result in file 'filename'
-    if (!exists(folder)) makedir(folder);
-    ofstream f;
-    f.open(filename);
-    f << response->getData();
-    f.close();
-    return filename;
+    storeFile(filename, response->getData());
 }

@@ -43,6 +43,7 @@ class VRGuiBits {
         void on_quit_clicked();
         void on_about_clicked();
         void on_internal_clicked();
+        void on_fullscreen_clicked();
 
         void on_internal_close_clicked();
         void on_console_switch(_GtkWidget* page, unsigned int page_num);

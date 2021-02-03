@@ -488,6 +488,7 @@ void VRGuiBuilder::buildBaseUI() {
     auto toolbutton3 = addToolButton("toolbutton3", "gtk-quit", toolbar1);
     auto toolbutton17 = addToolButton("toolbutton17", "gtk-about", toolbar1);
     auto toolbutton18 = addToolButton("toolbutton18", "gtk-paste", toolbar1);
+    auto toolbutton26 = addToolButton("toolbutton26", "gtk-fullscreen", toolbar1);
 
     cout << " build core section" << endl;
     /* ---------- core section ---------------------- */
