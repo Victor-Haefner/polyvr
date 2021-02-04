@@ -29,19 +29,28 @@ class VRAtlas : public std::enable_shared_from_this<VRAtlas>  {
             Patch();
             ~Patch();
         };
+        struct Level {
+            int LODlvl;
+            Vec3d currentOrigin = Vec3d(0,0,0);
+            int type;
+            vector<vector<Patch>> patches;
+            Level(int t, int lvl);
+            Level();
+            ~Level();
+        };
         struct Layout {
             int currentLODlvl = 0;
             int currentMaxLODlvl = 0;
-            Vec3d currentOrigin = Vec3d(0,0,0);
-            list<vector<Patch>> rings;
-            vector<Patch> innerQuad;
-            vector<Patch> innerRing;
-            vector<Patch> outerRing;
+            Vec3d origin = Vec3d(0,0,0);
+            list<Level> levels;
+            Level innerQuad;
+            Level innerRing;
+            Level outerRing;
             list<Patch> toDestroy;
             list<Patch> toGenerate;
         };
         float size = 64.0;
-        int LODMax = 3;
+        int LODMax = 0;
         int patchcount = 0;
 
         string filepath;
@@ -49,9 +58,12 @@ class VRAtlas : public std::enable_shared_from_this<VRAtlas>  {
         VRUpdateCbPtr updatePtr;
         Layout layout;
         void update();
-        void shiftLayout();
         void downSize();
         void upSize();
+        void shiftLayoutEast(Level& lev);
+        void shiftLayoutWest(Level& lev);
+        void shiftLayoutNorth(Level& lev);
+        void shiftLayoutSouth(Level& lev);
         void addInnerQuad(int lvl);
         void addInnerRing(int lvl);
         void addOuterRing(int lvl);
