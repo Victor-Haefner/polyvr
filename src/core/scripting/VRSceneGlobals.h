@@ -41,6 +41,7 @@ class VRSceneGlobals: public VRPyBase {
 		static PyObject* getFrame(VRSceneGlobals* self);
 		static PyObject* getScript(VRSceneGlobals* self, PyObject *args);
 		static PyObject* importScene(VRSceneGlobals* self, PyObject *args);
+		static PyObject* getActiveCamera(VRSceneGlobals* self);
 		static PyObject* testDWGArcs(VRSceneGlobals* self);
 		static PyObject* setWindowTitle(VRSceneGlobals* self, PyObject* args);
 };
