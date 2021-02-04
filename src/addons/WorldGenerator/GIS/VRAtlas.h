@@ -31,6 +31,7 @@ class VRAtlas : public std::enable_shared_from_this<VRAtlas>  {
         };
         struct Level {
             int LODlvl;
+            float edgeLength;
             Vec3d currentOrigin = Vec3d(0,0,0);
             int type;
             vector<vector<Patch>> patches;
@@ -48,6 +49,16 @@ class VRAtlas : public std::enable_shared_from_this<VRAtlas>  {
             Level outerRing;
             list<Patch> toDestroy;
             list<Patch> toGenerate;
+            void shiftEastIns(Level& lev);
+            void shiftEastOut(Level& lev);
+            void shiftWestIns(Level& lev);
+            void shiftWestOut(Level& lev);
+            void shiftNorthIns(Level& lev);
+            void shiftNorthOut(Level& lev);
+            void shiftSouthIns(Level& lev);
+            void shiftSouthOut(Level& lev);
+            Layout();
+            ~Layout();
         };
         float size = 64.0;
         int LODMax = 0;
@@ -60,15 +71,11 @@ class VRAtlas : public std::enable_shared_from_this<VRAtlas>  {
         void update();
         void downSize();
         void upSize();
-        void shiftLayoutEast(Level& lev);
-        void shiftLayoutWest(Level& lev);
-        void shiftLayoutNorth(Level& lev);
-        void shiftLayoutSouth(Level& lev);
         void addInnerQuad(int lvl);
         void addInnerRing(int lvl);
         void addOuterRing(int lvl);
         VRGeometryPtr generatePatch(string id);
-        VRTerrainPtr generateTerrain(string id, int lvl, float edgeLength);
+        VRTerrainPtr generateTerrain(string id, int lvlh);
 
     public:
         VRAtlas();
