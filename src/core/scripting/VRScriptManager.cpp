@@ -462,6 +462,16 @@ string hudHandler = TEMPLATE(
 \tprint m\n
 );
 
+string restClient = TEMPLATE(
+\timport VR\n\n
+\tif not hasattr(VR, 'client'): VR.client = VR.RestClient()\n\n
+\tdef cb(r):\n
+\t\tprint 'async: ' + r.getData()\n\n
+\tVR.client.getAsync("http://reqbin.com/echo/get/json", cb)\n\n
+\tres = VR.client.get("http://reqbin.com/echo/get/json")\n
+\tprint 'sync: ' + res.getData()\n
+);
+
 struct VRScriptTemplate {
     string name;
     string type;
@@ -517,7 +527,8 @@ void VRScriptManager::initTemplates() {
         addTemplate("scripts", "hudHandler", hudHandler);
         addTrigger("hudHandler", "on_device", "0", "server1", -1, "Released");
         addTemplate("websites", "hudSite", hudSite);
-        addTemplate("shaders", "test", "test shader template");
+        addTemplate("shaders", "test", "TODO");
+        addTemplate("scripts", "restClient", restClient);
     }
 }
 
