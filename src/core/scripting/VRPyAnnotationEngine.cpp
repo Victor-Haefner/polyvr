@@ -7,6 +7,7 @@ simpleVRPyType(AnnotationEngine, New_VRObjects_ptr);
 
 PyMethodDef VRPyAnnotationEngine::methods[] = {
     {"set", PyWrap( AnnotationEngine, set,"Set label - set(int i, [x,y,z] pos, str val)", void, int, Vec3d, string ) },
+    {"add", PyWrap( AnnotationEngine, add,"Append label - id add([x,y,z] pos, str val)", int, Vec3d, string ) },
     {"clear", PyWrap( AnnotationEngine, clear, "Clear numbers", void ) },
     {"setSize", PyWrap( AnnotationEngine, setSize, "Set font height - setSize( float )", void, float ) },
     {"setColor", PyWrap( AnnotationEngine, setColor, "Set font color - setColor( [r,g,b,a] )", void, Color4f ) },
