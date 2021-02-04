@@ -14,6 +14,9 @@ PyMethodDef VRPyCamera::methods[] = {
     {"setFov", PyWrap(Camera, setFov, "Set camera field of view", void, float) },
     {"setNear", PyWrap(Camera, setNear, "Set camera near clipping", void, float) },
     {"setFar", PyWrap(Camera, setFar, "Set camera far clipping", void, float) },
+    {"getFov", PyWrap(Camera, getFov, "Get camera field of view", float) },
+    {"getNear", PyWrap(Camera, getNear, "Get camera near clipping", float) },
+    {"getFar", PyWrap(Camera, getFar, "Get camera far clipping", float) },
     {"setType", PyWrap(Camera, setType, "Set camera type, 0 for perspective and 1 for orthographic projection", void, int) },
     {NULL}  /* Sentinel */
 };

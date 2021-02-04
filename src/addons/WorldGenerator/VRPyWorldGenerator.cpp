@@ -217,7 +217,7 @@ PyMethodDef VRPyAtlas::methods[] = {
 PyMethodDef VRPyMapManager::methods[] = {
     {"setServer", PyWrap( MapManager, setServer, "Set server address", void, string ) },
     {"setVault", PyWrap( MapManager, setVault, "Set local path to store map files", void, string ) },
-    {"getMap", PyWrap( MapManager, getMap, "Get local file path, retreive file from server if necessary", string, double, double, double ) },
+    {"getMap", PyWrap( MapManager, getMap, "Get map file path, retreives file from server if necessary, async if given a callback 'def cb(str):', (N, E, S, callback)", string, double, double, double, VRMessageCbPtr ) },
     {NULL}  /* Sentinel */
 };
 

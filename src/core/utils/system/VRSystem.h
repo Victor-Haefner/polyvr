@@ -22,7 +22,7 @@ string getFolderName(string path);
 
 vector<string> openFolder(string folder);
 
-int systemCall(string cmd);
+string systemCall(string cmd);
 bool compileCodeblocksProject(string path);
 
 void fileReplaceStrings(string filePath, string oldString, string newString);

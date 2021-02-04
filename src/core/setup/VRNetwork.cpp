@@ -120,6 +120,10 @@ bool VRNetworkNode::hasFile(string path) {
     return b;
 }
 
+bool VRNetworkNode::isLocal() {
+    return (address == "localhost" || address == "127.0.0.1");
+}
+
 void VRNetworkNode::update() {
 #ifndef WITHOUT_SSH
     stat_node = "ok";
@@ -129,12 +133,14 @@ void VRNetworkNode::update() {
 
     VRPing p;
     if ( !p.start(address, 1) ) { stat_node = "not reachable"; return; }
-    if ( !p.start(address, "22", 1) ) { stat_node = "no ssh, install with sudo apt install ssh"; return; }
 
-    auto ssh = VRSSHSession::open(address, user);
-    stat_ssh = ssh->getStat();
-    stat_ssh_key = ssh->getKeyStat();
-    if (stat_ssh != "ok") { stat_path = "no ssh access"; return; }
+    if (!isLocal()) {
+        if (!p.start(address, "22", 1)) { stat_node = "no ssh, install with sudo apt install ssh"; return; }
+        auto ssh = VRSSHSession::open(address, user);
+        stat_ssh = ssh->getStat();
+        stat_ssh_key = ssh->getKeyStat();
+        if (stat_ssh != "ok") { stat_path = "no ssh access"; return; }
+    }
 
     if (!hasFile(slavePath + "/src/cluster/start")) stat_path = "PolyVR root directory not found";
     else if (!hasFile(slavePath + "/src/cluster/VRServer")) stat_path = "Slave not compiled, execute " + slavePath + "/src/cluster/setup";
@@ -143,8 +149,13 @@ void VRNetworkNode::update() {
 }
 
 string VRNetworkNode::execCmd(string cmd, bool read) {
+    if (stat_node != "ok" ) return "";
+    if (isLocal()) {
+        cout << "execCmd " << cmd << endl;
+        return systemCall(cmd);
+    }
 #ifndef WITHOUT_SSH
-    if (stat_node != "ok" || stat_ssh != "ok") return "";
+    if (stat_ssh != "ok") return "";
     auto ssh = VRSSHSession::open(address, user);
     return ssh->exec_cmd(cmd, read);
 #else
@@ -173,10 +184,6 @@ void VRNetworkSlave::start() {
     if (!node) return;
     //if (!exists(path + "VRServer")) { stat = "no slave exec. VRServer in src/cluster/"; return; } // TODO: check on remote!
 
-    string disp = "export DISPLAY=\"" + display + "\" && ";
-    string pipes = " > /dev/null 2> /dev/null < /dev/null &";
-    string script = node->getSlavePath() + "/src/cluster/start";
-    //string pipes = " > /dev/null 2> /dev/null < /dev/null"; // TODO: without & it returns the correct code, but it also makes the app stuck!
     string args;
     if (!fullscreen) args += " -w";
     if (active_stereo) args += " -A";
@@ -184,7 +191,21 @@ void VRNetworkSlave::start() {
     if (connection_type == "SockPipeline") args += " -p " + node->getAddress() + ":" + toString(port);
     if (connection_type == "StreamSock") args += " " + node->getAddress() + ":" + toString(port);
 
+#ifdef _WIN32
+    string disp = " -display \\.\DISPLAY"+display+" ";
+    string pipes = ""; // TODO: maybe needed?
+    string script = node->getSlavePath() + "/src/cluster/start-win.bat";
+    string geometry = " -geometry 800x600+200+200 "; // TODO: add window offset and size as parameters in UI 
+    stat = node->execCmd(script + args + geometry + disp + pipes, false);
+    //stat = node->execCmd(script, false);
+#else
+    string disp = "export DISPLAY=\"" + display + "\" && ";
+    string pipes = " > /dev/null 2> /dev/null < /dev/null &";
+    string script = node->getSlavePath() + "/src/cluster/start";
+    //string pipes = " > /dev/null 2> /dev/null < /dev/null"; // TODO: without & it returns the correct code, but it also makes the app stuck!
     stat = node->execCmd(disp + script + args + pipes, false);
+#endif
+
     update();
 }
 

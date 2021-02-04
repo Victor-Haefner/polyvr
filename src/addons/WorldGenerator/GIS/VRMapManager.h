@@ -4,6 +4,7 @@
 #include <string>
 #include <OpenSG/OSGConfig.h>
 #include "core/networking/VRNetworkingFwd.h"
+#include "core/utils/VRFunctionFwd.h"
 #include "GISFwd.h"
 
 using namespace std;
@@ -16,6 +17,10 @@ class VRMapManager : public std::enable_shared_from_this<VRMapManager> {
 
         VRRestClientPtr client;
 
+        void storeFile(const string& filename, const string& data);
+        string constructFilename(double N, double E, double S);
+        void requestFile(string filename, double N, double E, double S, VRMessageCbPtr cb);
+
 	public:
 		VRMapManager();
 		~VRMapManager();
@@ -26,7 +31,7 @@ class VRMapManager : public std::enable_shared_from_this<VRMapManager> {
 		void setServer(string s);
 		void setVault(string v);
 
-		string getMap(double N, double E, double S);
+		string getMap(double N, double E, double S, VRMessageCbPtr cb);
 };
 
 OSG_END_NAMESPACE;

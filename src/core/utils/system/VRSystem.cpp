@@ -85,8 +85,38 @@ vector<string> openFolder(string folder) {
     return res;
 }
 
-int systemCall(string cmd) {
-    return system(cmd.c_str());
+/*string exec(const char* cmd) {
+    array<char, 128> buffer;
+    string result;
+    unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd, "r"), pclose);
+    if (!pipe) return "";
+    while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
+        result += buffer.data();
+    }
+    return result;
+}*/
+
+std::string ssystem(const char* command) {
+    char tmpname[L_tmpnam];
+    std::tmpnam(tmpname);
+    std::string scommand = command;
+    std::string cmd = scommand + " >> " + tmpname;
+    std::system(cmd.c_str());
+    std::ifstream file(tmpname, std::ios::in | std::ios::binary);
+    std::string result;
+    if (file) {
+        while (!file.eof()) result.push_back(file.get())
+            ;
+        file.close();
+    }
+    remove(tmpname);
+    return result;
+}
+
+string systemCall(string cmd) {
+    //cmd += " > callO"
+    return ssystem(cmd.c_str());
+    //return system(cmd.c_str());
 }
 
 bool compileCodeblocksProject(string path) {
@@ -94,7 +124,8 @@ bool compileCodeblocksProject(string path) {
     string cmd = "codeblocks --no-ipc --no-splash-screen --target='Release' --build ";
     cmd += path;
     cout << "compile codeblocks project: " << cmd << endl;
-    return systemCall(cmd) == 0;
+    systemCall(cmd);
+    return true;
 }
 
 typedef chrono::time_point<chrono::high_resolution_clock, chrono::nanoseconds> timePoint;

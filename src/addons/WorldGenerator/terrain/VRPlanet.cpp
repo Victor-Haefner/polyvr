@@ -416,7 +416,7 @@ void VRPlanet::remPin(int ID) {}// metaGeo->remove(ID); } // TODO
 // shader --------------------------
 
 string VRPlanet::surfaceVP =
-"#version 120\n"
+"#version 130\n"
 GLSL(
 varying vec3 tcs;
 varying vec3 normal;

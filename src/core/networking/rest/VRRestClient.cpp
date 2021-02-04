@@ -1,8 +1,13 @@
 #include "VRRestClient.h"
 #include "VRRestResponse.h"
 #include "core/utils/toString.h"
+#include "core/utils/system/VRSystem.h"
+#include "core/utils/VRFunction.h"
+#include "core/scene/VRScene.h"
 
 #include <iostream>
+#include <future>
+#include <boost/thread/recursive_mutex.hpp>
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
@@ -10,9 +15,21 @@
 #include <curl/curl.h>
 #endif
 
+typedef boost::recursive_mutex::scoped_lock PLock;
+static boost::recursive_mutex VRRestClientMtx;
+
 using namespace OSG;
 
 template<> string typeName(const VRRestClient& p) { return "RestClient"; }
+
+struct VRRestClient::RestPromise {
+    future<void> f;
+    //RestPromise(future<void>& F) : f(F) {}
+
+    bool ready() {
+        return (f.wait_for(chrono::seconds(0)) == future_status::ready);
+    }
+};
 
 VRRestClient::VRRestClient() {}
 VRRestClient::~VRRestClient() {}
@@ -69,11 +86,46 @@ VRRestResponsePtr VRRestClient::get(string uri, int timeoutSecs) {
     //cout << " response: " << response->getData() << endl;
 }
 
+void VRRestClient::getAsync(string uri, VRRestCbPtr cb, int timeoutSecs) {
+    auto job = [&](string uri, VRRestCbPtr cb, int timeoutSecs) -> void { // executed in async thread
+        auto res = get(uri, timeoutSecs);
+        auto fkt = VRUpdateCb::create("getAsync-finish", bind(&VRRestClient::finishAsync, this, cb, res));
+        auto s = VRScene::getCurrent();
+        if (s) s->queueJob(fkt);
+    };
+
+    future<void> f = async(launch::async, job, uri, cb, timeoutSecs);
+    PLock lock(VRRestClientMtx);
+    auto p = shared_ptr<RestPromise>(new RestPromise() );
+    p->f = move(f);
+    promises.push_back( p );
+}
+
+void VRRestClient::finishAsync(VRRestCbPtr cb, VRRestResponsePtr res) { // executed in main thread
+    (*cb)(res);
+
+    PLock lock(VRRestClientMtx);
+    auto i = promises.begin();
+    while (i != promises.end()) {
+        if ((*i)->ready()) promises.erase(i++);
+        else i++;
+    }
+}
+
 void VRRestClient::test() {
     string req = "http://reqbin.com/echo/get/json";
     cout << " Start REST GET request test.." << endl;
     auto res = get(req);
-    cout << " response: " << res->getStatus() << endl;
-    cout << " response: " << res->getData() << endl;
-}
+    cout << "   response: " << res->getStatus() << endl;
+    cout << "   response: " << res->getData() << endl;
 
+    cout << " Start REST ASYNC GET request test.." << endl;
+    auto cb = [&](VRRestResponsePtr res) {
+        cout << "  async response at " << getTime() << endl;
+        cout << "   async response: " << res->getStatus() << endl;
+        cout << "   async response: " << res->getData() << endl;
+    };
+    cout << "  async request at " << getTime() << endl;
+    getAsync(req, VRRestCb::create("asyncGet", cb));
+    cout << "  async request done at " << getTime() << endl;
+}

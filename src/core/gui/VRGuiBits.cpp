@@ -141,6 +141,12 @@ void VRGuiBits::on_about_clicked() {
     gtk_dialog_run(diag);
 }
 
+void VRGuiBits::on_fullscreen_clicked() {
+    toggleWidgets();
+    notifyUser("To Exit Fullscreen..", "Press both, F11 and F12");
+    toggleFullscreen();
+}
+
 void VRGuiBits::on_internal_clicked() {
     auto diag = VRGuiBuilder::get()->get_widget("dialog2");
     gtk_widget_show_all(diag);
@@ -281,6 +287,7 @@ VRGuiBits::VRGuiBits() {
     setToolButtonCallback("toolbutton3", bind(&VRGuiBits::on_quit_clicked, this));
     setToolButtonCallback("toolbutton17", bind(&VRGuiBits::on_about_clicked, this));
     setToolButtonCallback("toolbutton18", bind(&VRGuiBits::on_internal_clicked, this));
+    setToolButtonCallback("toolbutton26", bind(&VRGuiBits::on_fullscreen_clicked, this));
 
     setButtonCallback("button21", bind(&VRGuiBits::on_internal_close_clicked, this));
 
