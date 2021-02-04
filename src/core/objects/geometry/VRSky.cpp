@@ -607,6 +607,7 @@ void main() {\n
 	addSun();
 	addGround();
 
+    color[3] = 1.0;
 	gl_FragColor = color;
 \n
 #ifdef __EMSCRIPTEN__

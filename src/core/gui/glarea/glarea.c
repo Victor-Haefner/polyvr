@@ -2054,7 +2054,7 @@ static gint vr_get_wgl_pfd(HDC hdc, PIXELFORMATDESCRIPTOR* pfd, _GdkWin32Display
             WGL_ACCELERATION_ARB,       WGL_FULL_ACCELERATION_ARB,
             WGL_PIXEL_TYPE_ARB,         WGL_TYPE_RGBA_ARB,
             WGL_COLOR_BITS_ARB,         colorbits,
-            //WGL_ALPHA_BITS_ARB,         0, // important, if set to 0 the window might get translucent on some systems
+            WGL_ALPHA_BITS_ARB,         8, // important, if set to 0 the window might get translucent on some systems
             WGL_DEPTH_BITS_ARB,         24,
             WGL_STENCIL_BITS_ARB,       8,
             WGL_SAMPLE_BUFFERS_ARB,     1,
@@ -2071,7 +2071,7 @@ static gint vr_get_wgl_pfd(HDC hdc, PIXELFORMATDESCRIPTOR* pfd, _GdkWin32Display
             WGL_ACCELERATION_ARB,       WGL_FULL_ACCELERATION_ARB,
             WGL_PIXEL_TYPE_ARB,         WGL_TYPE_RGBA_ARB,
             WGL_COLOR_BITS_ARB,         colorbits,
-            //WGL_ALPHA_BITS_ARB,         8, // important, if set to 0 the window might get translucent on some systems
+            WGL_ALPHA_BITS_ARB,         8, // important, if set to 0 the window might get translucent on some systems
             WGL_DEPTH_BITS_ARB,         24,
             WGL_STENCIL_BITS_ARB,       8,
             0
