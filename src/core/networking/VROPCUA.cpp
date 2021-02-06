@@ -335,15 +335,24 @@ VROPCUA::~VROPCUA() {}
 
 VROPCUAPtr VROPCUA::create() { return VROPCUAPtr( new VROPCUA() ); }
 
+/*class VRUaClient : public OpcUa::UaClient { // override timeout
+    public:
+        VRUaClient() : OpcUa::UaClient(0) {
+            DefaultTimeout = 1;
+        }
+};*/
+
 VROPCUANodePtr VROPCUA::connect(string address) {
     string endpoint = address;
     cout << "OPCUA: connect to " << endpoint << endl;
     if (client) client->Disconnect();
-    client = shared_ptr<OpcUa::UaClient>( new OpcUa::UaClient(0) );
+    client = shared_ptr<OpcUa::UaClient>( new OpcUa::UaClient() );
+    //client = shared_ptr<VRUaClient>( new VRUaClient() );
 
-    try { client->Connect(endpoint); }
-    catch(...) { return 0; }
+    try { cout << " try connection" << endl; client->Connect(endpoint); }
+    catch(...) { cout << " connection failed!" << endl; return 0; }
 
+    cout << " connected sucessfully!" << endl;
     subscriptionClient = SubClient::create();
     subscription = client->CreateSubscription(100, *subscriptionClient);
 
