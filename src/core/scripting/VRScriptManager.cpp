@@ -453,7 +453,7 @@ string hudInit = TEMPLATE(
 \tif hasattr(VR, 'hud'): VR.hud.destroy()\n
 \tVR.hud = VR.Object('hud')\n
 \tVR.find('Default').addChild(VR.hud)\n\n
-\taddHud( 'husSite', 0.5,0.5, 0,1, VR.hud )\n
+\taddHud( 'hudSite', 0.5,0.5, 0,1, VR.hud )\n
 );
 
 string hudHandler = TEMPLATE(
