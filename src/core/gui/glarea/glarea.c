@@ -1977,17 +1977,15 @@ static void _destroy_dummy_gl_context(GdkWGLDummy dummy) {
 static gint vr_get_dummy_wgl_pfd(HDC hdc, PIXELFORMATDESCRIPTOR* pfd) {
     printf("   get minimal GL Context\n");
 
-    gint best_pf = 0;
     pfd->nSize = sizeof(PIXELFORMATDESCRIPTOR);
     pfd->nVersion = 1;
     pfd->dwFlags = PFD_SUPPORT_OPENGL | PFD_DRAW_TO_WINDOW | PFD_DOUBLEBUFFER;
     pfd->iPixelType = PFD_TYPE_RGBA;
-    //pfd->iPixelType = PFD_TYPE_COLORINDEX;
-    pfd->cColorBits = GetDeviceCaps(hdc, BITSPIXEL);
-    pfd->cAlphaBits = 8; // important, if set to 0 the window might get translucent on some systems
+    pfd->cColorBits = 32;// GetDeviceCaps(hdc, BITSPIXEL);
+    pfd->cDepthBits = 24;
+    pfd->cStencilBits = 8;
     pfd->dwLayerMask = PFD_MAIN_PLANE;
-    //pfd->dwLayerMask = PFD_OVERLAY_PLANE;
-    best_pf = ChoosePixelFormat(hdc, pfd);
+    gint best_pf = ChoosePixelFormat(hdc, pfd);
 
     printf("    chose minimal pixel format: %i\n", best_pf);
     return best_pf;
@@ -2017,8 +2015,8 @@ static gint vr_get_wgl_pfd(HDC hdc, PIXELFORMATDESCRIPTOR* pfd, _GdkWin32Display
             WGL_DOUBLE_BUFFER_ARB,      GL_TRUE,
             WGL_ACCELERATION_ARB,       WGL_FULL_ACCELERATION_ARB,
             WGL_PIXEL_TYPE_ARB,         WGL_TYPE_RGBA_ARB,
-            WGL_COLOR_BITS_ARB,         colorbits,
-            WGL_ALPHA_BITS_ARB,         8, // important, if set to 0 the window might get translucent on some systems
+            WGL_COLOR_BITS_ARB,         32,
+            //WGL_ALPHA_BITS_ARB,         8, // important, if set to 0 the window might get translucent on some systems
             WGL_DEPTH_BITS_ARB,         24,
             WGL_STENCIL_BITS_ARB,       8,
             WGL_SAMPLE_BUFFERS_ARB,     1,
@@ -2034,8 +2032,8 @@ static gint vr_get_wgl_pfd(HDC hdc, PIXELFORMATDESCRIPTOR* pfd, _GdkWin32Display
             WGL_DOUBLE_BUFFER_ARB,      GL_TRUE,
             WGL_ACCELERATION_ARB,       WGL_FULL_ACCELERATION_ARB,
             WGL_PIXEL_TYPE_ARB,         WGL_TYPE_RGBA_ARB,
-            WGL_COLOR_BITS_ARB,         colorbits,
-            WGL_ALPHA_BITS_ARB,         8, // important, if set to 0 the window might get translucent on some systems
+            WGL_COLOR_BITS_ARB,         32,
+            //WGL_ALPHA_BITS_ARB,         8, // important, if set to 0 the window might get translucent on some systems
             WGL_DEPTH_BITS_ARB,         24,
             WGL_STENCIL_BITS_ARB,       8,
             0
