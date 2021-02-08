@@ -646,22 +646,6 @@ void VRGuiBuilder::buildBaseUI() {
     gtk_about_dialog_set_logo(aboutdialog1, logo);
     gtk_window_set_transient_for(GTK_WINDOW(aboutdialog1), GTK_WINDOW(window1));
 
-// TODO: fix GSettings schema under windows!
-    /* ---------- file open dialog ---------------------- */
-/*#ifndef _WIN32
-    cout << " build file open dialog" << endl;
-    auto file_dialog = GTK_FILE_CHOOSER_DIALOG(gtk_file_chooser_dialog_new("Open File", GTK_WINDOW(window1), GTK_FILE_CHOOSER_ACTION_SAVE, "Cancel", 0, "Open", 0, 0));
-    auto dialog_action_area1 = gtk_dialog_get_action_area(GTK_DIALOG(file_dialog));
-    auto buttons = gtk_container_get_children(GTK_CONTAINER(dialog_action_area1));
-    auto button3 = g_list_nth_data(buttons, 0);
-    auto button9 = g_list_nth_data(buttons, 1);
-    reg_widget(GTK_WIDGET(file_dialog), "file_dialog");
-    reg_widget(GTK_WIDGET(button3), "button3");
-    reg_widget(GTK_WIDGET(button9), "button9");
-#endif
-    auto fileOpenPresets = gtk_list_store_new(1, G_TYPE_STRING);
-    reg_object(G_OBJECT(fileOpenPresets), "fileOpenPresets");*/
-
     cout << " build internal monitor dialog" << endl;
     /* ---------- internal monitor ---------------------- */
     auto dialog2 = addDialog("dialog2");

@@ -1841,52 +1841,18 @@ static gboolean find_fbconfig_for_visual (GdkDisplay* display, _GdkVisual* visua
     _GdkX11Visual *visual_x11 = (_GdkX11Visual*)visual;
     VisualID xvisual_id = XVisualIDFromVisual(visual_x11->xvisual);
 
-    if (full) {
-        static int attrsF[] = {
-          GLX_DRAWABLE_TYPE   , GLX_WINDOW_BIT,
-          GLX_RENDER_TYPE     , GLX_RGBA_BIT,
-          GLX_DOUBLEBUFFER    , GL_TRUE,
-          GLX_X_VISUAL_TYPE   , GLX_TRUE_COLOR,
-          GLX_X_RENDERABLE    , GL_TRUE,
-          GLX_RED_SIZE        , 8,
-          GLX_GREEN_SIZE      , 8,
-          GLX_BLUE_SIZE       , 8,
-          GLX_ALPHA_SIZE      , GLX_DONT_CARE,
-          GLX_DEPTH_SIZE      , 24,
-          GLX_STENCIL_SIZE    , 8,
-          GLX_SAMPLE_BUFFERS  , 1,
-          GLX_SAMPLES         , 4,
-          None
-        };
-
-        /*static int attrsF[] = {
-          GLX_DRAWABLE_TYPE   , GLX_WINDOW_BIT,
-          GLX_RENDER_TYPE     , GLX_RGBA_BIT,
-          GLX_DOUBLEBUFFER    , GL_TRUE,
-          GLX_RED_SIZE        , 1,
-          GLX_GREEN_SIZE      , 1,
-          GLX_BLUE_SIZE       , 1,
-          GLX_ALPHA_SIZE      , GLX_DONT_CARE,
-          GLX_DEPTH_SIZE      , 1,
-          None
-        };*/
-
-        configs = glXChooseFBConfig (dpy, DefaultScreen (dpy), attrsF, &n_configs);
-        printf(" creating context with FULL specs, found %i configs\n", n_configs);
-    } else {
-        static int attrs[] = {
-          GLX_DRAWABLE_TYPE   , GLX_WINDOW_BIT,
-          GLX_RENDER_TYPE     , GLX_RGBA_BIT,
-          GLX_DOUBLEBUFFER    , GL_TRUE,
-          GLX_RED_SIZE        , 1,
-          GLX_GREEN_SIZE      , 1,
-          GLX_BLUE_SIZE       , 1,
-          GLX_ALPHA_SIZE      , GLX_DONT_CARE,
-          None
-        };
-        configs = glXChooseFBConfig (dpy, DefaultScreen (dpy), attrs, &n_configs);
-        printf(" creating context with minimum specs, found %i configs\n", n_configs);
-    }
+    static int attrs[] = { // those do not matter as we only want to find the config with ID xvisual_id
+      GLX_DRAWABLE_TYPE   , GLX_WINDOW_BIT,
+      GLX_RENDER_TYPE     , GLX_RGBA_BIT,
+      GLX_DOUBLEBUFFER    , GL_TRUE,
+      GLX_RED_SIZE        , 1,
+      GLX_GREEN_SIZE      , 1,
+      GLX_BLUE_SIZE       , 1,
+      GLX_ALPHA_SIZE      , GLX_DONT_CARE,
+      None
+    };
+    configs = glXChooseFBConfig (dpy, DefaultScreen (dpy), attrs, &n_configs);
+    printf(" creating context with minimum specs, found %i configs\n", n_configs);
 
     if (configs == NULL || n_configs == 0) {
       printf("AAAAAAA, glXChooseFBConfig failed!\n");
@@ -1894,12 +1860,14 @@ static gboolean find_fbconfig_for_visual (GdkDisplay* display, _GdkVisual* visua
       return FALSE;
     }
 
-  for (i = 0; i < n_configs; i++)  {
+    for (i = 0; i < n_configs; i++)  {
       XVisualInfo *visinfo;
 
       visinfo = glXGetVisualFromFBConfig (dpy, configs[i]);
       if (visinfo == NULL) continue;
 
+
+      //printf(" search visualid %i =? %i\n", visinfo->visualid, xvisual_id);
       if (visinfo->visualid != xvisual_id) {
           XFree (visinfo);
           continue;
@@ -1910,18 +1878,14 @@ static gboolean find_fbconfig_for_visual (GdkDisplay* display, _GdkVisual* visua
       XFree (visinfo);
       retval = TRUE;
       goto out;
-  }
+    }
 
-  if (full) {
-      if (fb_config_out != NULL) *fb_config_out = configs[0];
-      retval = TRUE;
-  }
-
-  //g_set_error (error, GDK_GL_ERROR, GDK_GL_ERROR_UNSUPPORTED_FORMAT, "No available configurations for the given RGBA pixel format");
+    printf("Error, find_fbconfig_for_visual failed? tried to find %i\n", xvisual_id);
+    //g_set_error (error, GDK_GL_ERROR, GDK_GL_ERROR_UNSUPPORTED_FORMAT, "No available configurations for the given RGBA pixel format");
 
 out:
-  XFree (configs);
-  return retval;
+    XFree (configs);
+    return retval;
 }
 
 GdkGLContext* x11_window_create_gl_context(GdkWindow* window, gboolean attached, GdkGLContext *share, gboolean full, GError**error) {
