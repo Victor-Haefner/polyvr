@@ -83,8 +83,12 @@ void VRGuiFile::init() {
         dialog = gtk_file_chooser_dialog_new("Open File", GTK_WINDOW(window1), GTK_FILE_CHOOSER_ACTION_SAVE, "Cancel", 0, "Open", 0, 0);
         auto dialog_action_area1 = gtk_dialog_get_action_area(GTK_DIALOG(dialog));
         auto buttons = gtk_container_get_children(GTK_CONTAINER(dialog_action_area1));
-        button3 = GTK_WIDGET(g_list_nth_data(buttons, 0));
-        button9 = GTK_WIDGET(g_list_nth_data(buttons, 1));
+        if (!buttons) {
+            auto header = gtk_dialog_get_header_bar(GTK_DIALOG(dialog));
+            buttons = gtk_container_get_children(GTK_CONTAINER(header));
+        }
+        button3 = GTK_WIDGET(g_list_nth_data(buttons, 1));
+        button9 = GTK_WIDGET(g_list_nth_data(buttons, 2));
     }
 
     if (!useCustomWidget) {
