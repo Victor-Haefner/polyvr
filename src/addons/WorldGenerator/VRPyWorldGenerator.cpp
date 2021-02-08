@@ -89,7 +89,7 @@ PyMethodDef VRPyOSMMap::methods[] = {
     {"readGEOJSON", PyWrap2( OSMMap, readGEOJSON, "reads a GEOJSON file and makes a readable OSM object", void, string ) },
     //{"readSHAPE", PyWrap2( OSMMap, readSHAPE, "reads a SHAPE file and makes a readable OSM object", void, string ) },
     {"readGML", PyWrapOpt2( OSMMap, readGML, "reads a GML file and makes a readable OSM object - input: path to file, EPSG Code", "31467",void, string, int ) },
-    {"convertGKtoLatLon", PyWrap2( OSMMap, convertGKtoLatLon, "convert Gauß Krüger lat lon - input: northing, easting, EPSG Code", Vec2d, double, double, int) },
+    {"convertCoords", PyWrap2( OSMMap, convertCoords, "convert coords between geo formats input: northing, easting, use EPSG Code as source/target formats e.g. \n     LatLon: 4326 \n     Gauß Krüger: 31467 \n     UTM 32N: 25832", Vec2d, double, double, int, int) },
     {"writeFile", PyWrap2( OSMMap, writeFile, "writeFile ", void, string ) },
     {"filterFileStreaming", PyWrap2( OSMMap, filterFileStreaming, "filter OSM file with whitelist via stream - input path, whitelist", void, string, vector<vector<string>> ) },
     {"readFileStreaming", PyWrap2( OSMMap, readFileStreaming, "reads OSM file via stream, builds map ", int, string ) },
