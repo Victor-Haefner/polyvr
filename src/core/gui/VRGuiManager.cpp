@@ -161,7 +161,9 @@ VRGuiManager::VRGuiManager() {
     gtk_window_maximize(top);
     gtk_widget_show_all((GtkWidget*)top);
 
+#ifdef _WIN32
     disableBlur(gtk_widget_get_window(GTK_WIDGET(top)));
+#endif
     cout << " done" << endl;
 }
 
