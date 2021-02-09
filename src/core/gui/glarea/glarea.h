@@ -42,6 +42,8 @@ GLClipping gl_area_get_clipping(GLArea* area);
 void gl_area_trigger_resize(GLArea* area);
 
 void override_win32_gl_context_realize();
+void override_win32_create_window(gboolean reset);
+void disableBlur(GdkWindow* window);
 
 void            gl_area_queue_render                (GLArea    *area);
 GdkGLContext *  gl_area_get_context                 (GLArea    *area);

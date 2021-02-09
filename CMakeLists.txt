@@ -41,7 +41,7 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
 	set(LIB_DIRS ${LIB_DIRS} "${DISK}:/usr/vcpkg/installed/x64-windows/lib")
 	set(INCLUDE_DIRS ${INCLUDE_DIRS} "${DISK}:/usr/vcpkg/installed/x64-windows/include")
 	set(INCLUDE_DIRS ${INCLUDE_DIRS} "${DISK}:/usr/include")
-	set(LINKER_FLAGS ${LINKER_FLAGS} wininet.lib)
+	set(LINKER_FLAGS ${LINKER_FLAGS} wininet.lib dwmapi.lib)
 endif()
 
 function(FIND_ZLIB)

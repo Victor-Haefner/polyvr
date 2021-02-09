@@ -80,7 +80,17 @@ _GtkObject* VRGuiBuilder::get_object(string name) {
 }
 
 GtkWidget* addWindow(string ID, string name) {
+    // TODO: tried to foce call new_window_impl but this only gets called on_realize, maybe force it here?
+    /*GtkWidget* testw = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    gtk_widget_realize(testw);
+    gtk_window_close(GTK_WINDOW(testw));
+    override_win32_create_window(FALSE);*/
+
     GtkWidget* w = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    /*gtk_widget_realize(w);
+    disableBlur( gtk_widget_get_window(w) );*/
+    cout << "addWindow " << ID << " " << name << endl;
+
     VRGuiBuilder::get()->reg_widget(w, ID);
     gtk_window_set_title(GTK_WINDOW(w), name.c_str());
     return w;
@@ -448,9 +458,20 @@ void VRGuiBuilder::buildMinimalUI() {
     cout << " ..building all widgets done!" << endl;
 }
 
+gboolean on_window_expose(GtkWidget* widget, GdkEventExpose* event) {
+    cout << " --- on_window_expose ---" << endl;
+    return FALSE;
+}
+
 void VRGuiBuilder::buildBaseUI() {
-    cout << "VRGuiBuilder buildBaseUI.." << endl;
     auto window1 = addWindow("window1", "PolyVR");
+
+    //gtk_window_set_opacity(GTK_WINDOW(window1), 0.999); // test to debug opacity issues
+    //gtk_widget_set_app_paintable(window1, true); // make gtk not draw the window background
+    //gtk_widget_set_double_buffered(window1, false);
+    //gdk_window_set_composited(gtk_widget_get_window(window1), true);
+    //g_signal_connect(G_OBJECT(window1), "expose-event", G_CALLBACK(on_window_expose), NULL);
+    //g_signal_connect_after(G_OBJECT(window1), "expose-event", G_CALLBACK(on_window_expose), NULL);
 
     auto main_frame = addGrid("main_frame");
     gtk_container_add(GTK_CONTAINER(window1), main_frame);
