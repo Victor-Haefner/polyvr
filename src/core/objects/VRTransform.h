@@ -202,6 +202,7 @@ class VRTransform : public VRObject {
         void attach(VRTransformPtr a, VRConstraintPtr c, VRConstraintPtr s = 0);
         void detachJoint(VRTransformPtr a);
         Vec3d getConstraintAngleWith(VRTransformPtr t, bool rotationOrPosition);
+        void setSpringParameters(VRTransformPtr a, int dof, float stiffnes, float damping);
 
         virtual void updateChange();
         void setup(VRStorageContextPtr context);

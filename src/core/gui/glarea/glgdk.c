@@ -271,9 +271,7 @@ struct glvisualinfo {
   int visual_caveat;
 };
 
-static gboolean
-visual_compatible (const _GdkVisual *a, const _GdkVisual *b)
-{
+static gboolean visual_compatible (const _GdkVisual *a, const _GdkVisual *b) {
   return a->type == b->type &&
     a->depth == b->depth &&
     a->red_mask == b->red_mask &&
@@ -288,14 +286,50 @@ static _GdkVisual* pick_better_visual_for_gl(_GdkX11Screen* x11_screen, struct g
     _GdkVisual *visual;
     int i;
 
+    // wish for:
+    /*static int attrsF1[] = {
+          GLX_DRAWABLE_TYPE   , GLX_WINDOW_BIT,     k
+          GLX_RENDER_TYPE     , GLX_RGBA_BIT,       k
+          GLX_DOUBLEBUFFER    , GL_TRUE,            k
+          GLX_X_VISUAL_TYPE   , GLX_TRUE_COLOR,     k
+          GLX_X_RENDERABLE    , GL_TRUE,            k
+          GLX_RED_SIZE        , 8,
+          GLX_GREEN_SIZE      , 8,
+          GLX_BLUE_SIZE       , 8,
+          GLX_ALPHA_SIZE      , GLX_DONT_CARE,      k
+          GLX_DEPTH_SIZE      , 24,                 k
+          GLX_STENCIL_SIZE    , 8,                  k
+          GLX_SAMPLE_BUFFERS  , 1,                  k
+          GLX_SAMPLES         , 4,                  k
+          None
+        };*/
+
     for (i = 0; i < x11_screen->nvisuals; i++) {
         visual = (_GdkVisual*)x11_screen->visuals[i];
         if (gl_info[i].stereo || !gl_info[i].supports_gl) continue;
+        if (!gl_info[i].double_buffer) continue;
+        if (gl_info[i].depth_size < 24) continue;
+        if (gl_info[i].stencil_size < 8) continue;
+        if (!visual_compatible (visual, compatible)) continue;
         //printf(" %i %i %i %i\n", i, visual_compatible(visual, compatible), gl_info[i].double_buffer, gl_info[i].num_multisample);
-        if (visual_compatible (visual, compatible) && gl_info[i].double_buffer && (gl_info[i].num_multisample >= 4) ) {
-            printf(" pick_better_visual_for_gl 4\n");
+        if (gl_info[i].num_multisample >= 4) {
+            printf(" pick better visual with multisampling %i\n", i);
             return visual;
         }
+    }
+
+    printf("  warning! retry without multisampling..\n");
+
+    // retry without multisampling
+    for (i = 0; i < x11_screen->nvisuals; i++) {
+        visual = (_GdkVisual*)x11_screen->visuals[i];
+        if (gl_info[i].stereo || !gl_info[i].supports_gl) continue;
+        if (!gl_info[i].double_buffer) continue;
+        if (gl_info[i].depth_size < 24) continue;
+        if (gl_info[i].stencil_size < 8) continue;
+        if (!visual_compatible (visual, compatible)) continue;
+        printf(" pick better visual without multisampling %i\n", i);
+        return visual;
     }
 
     printf("  failed! return compatible visual..\n");

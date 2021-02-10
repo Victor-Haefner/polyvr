@@ -1362,3 +1362,16 @@ void VRPhysics::updateConstraints() {
     for (auto j : joints) updateConstraint(j.first);
     for (auto j : joints2) j.first->updateConstraint(this);
 }
+
+void VRPhysics::setSpringParameters(VRPhysics* p, int dof, float stiffnes, float damping) {
+    if (body == 0 || p == 0) return;
+    if (p->body == 0) return;
+    if (joints.count(p) == 0) return;
+
+    PLock lock(VRPhysics_mtx());
+    VRPhysicsJoint* joint = joints[p];
+    if (!joint->btJoint) return;
+    joint->btJoint->enableSpring(dof, true);
+    joint->btJoint->setStiffness(dof, stiffnes);
+    joint->btJoint->setDamping(dof, damping);
+}

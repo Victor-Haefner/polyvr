@@ -1001,6 +1001,12 @@ void VRTransform::detachJoint(VRTransformPtr b) { // TODO, remove joints
 #endif
 }
 
+void VRTransform::setSpringParameters(VRTransformPtr b, int dof, float stiffnes, float damping) {
+#ifndef WITHOUT_BULLET
+    if (auto p = getPhysics()) p->setSpringParameters(b->getPhysics(), dof, stiffnes, damping);
+#endif
+}
+
 Vec3d VRTransform::getConstraintAngleWith(VRTransformPtr t, bool rotationOrPosition) {
     Vec3d a;
 #ifndef WITHOUT_BULLET

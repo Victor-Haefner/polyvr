@@ -4,6 +4,8 @@
 #ifdef _WIN32
 #include <gdk/win32/gdkwin32glcontext.h>
 #include <windows.h>
+#include <windowsx.h>
+#include <dwmapi.h>
 #include <epoxy/wgl.h>
 #else
 #include <gdk/x11/gdkx11glcontext.h>
@@ -1652,11 +1654,21 @@ gboolean vr_gdk_win32_gl_context_realize(GdkGLContext* context, GError** error) 
     return TRUE;
 }
 
+void disableBlur(_GdkWindow* window) {
+    _GdkWindowImplWin32* impl = (_GdkWindowImplWin32*)(window->impl);
+    HWND thiswindow = impl->handle;
+    DWM_BLURBEHIND blur_behind;
+    memset(&blur_behind, 0, sizeof(blur_behind));
+    blur_behind.dwFlags = DWM_BB_ENABLE;
+    blur_behind.fEnable = FALSE;
+    DwmEnableBlurBehindWindow(thiswindow, &blur_behind);
+}
+
 void override_win32_gl_context_realize() {
     GType glc_type = gdk_win32_gl_context_get_type();
-    _GdkGLContextClass* klass = (_GdkGLContextClass*)g_type_class_ref(glc_type);
-    klass->realize = vr_gdk_win32_gl_context_realize;
-    g_type_class_unref(klass);
+    _GdkGLContextClass* gklass = (_GdkGLContextClass*)g_type_class_ref(glc_type);
+    gklass->realize = vr_gdk_win32_gl_context_realize;
+    g_type_class_unref(gklass);
 }
 
 gboolean
@@ -1682,6 +1694,8 @@ void _gdk_win32_window_invalidate_for_new_frame(_GdkWindow* window, cairo_region
 
     _GdkWin32GLContext* context_win32 = GDK_WIN32_GL_CONTEXT(window->gl_paint_context);
     context_win32->do_blit_swap = FALSE;
+
+    //printf("gl needs alpha %i\n", context_win32->need_alpha_bits);
 
     cairo_rectangle_int_t whole_window = { 0, 0, gdk_window_get_width(window), gdk_window_get_height(window) };
     /*gboolean invalidate_all = FALSE;
@@ -1841,52 +1855,18 @@ static gboolean find_fbconfig_for_visual (GdkDisplay* display, _GdkVisual* visua
     _GdkX11Visual *visual_x11 = (_GdkX11Visual*)visual;
     VisualID xvisual_id = XVisualIDFromVisual(visual_x11->xvisual);
 
-    if (full) {
-        static int attrsF[] = {
-          GLX_DRAWABLE_TYPE   , GLX_WINDOW_BIT,
-          GLX_RENDER_TYPE     , GLX_RGBA_BIT,
-          GLX_DOUBLEBUFFER    , GL_TRUE,
-          GLX_X_VISUAL_TYPE   , GLX_TRUE_COLOR,
-          GLX_X_RENDERABLE    , GL_TRUE,
-          GLX_RED_SIZE        , 8,
-          GLX_GREEN_SIZE      , 8,
-          GLX_BLUE_SIZE       , 8,
-          GLX_ALPHA_SIZE      , GLX_DONT_CARE,
-          GLX_DEPTH_SIZE      , 24,
-          GLX_STENCIL_SIZE    , 8,
-          GLX_SAMPLE_BUFFERS  , 1,
-          GLX_SAMPLES         , 4,
-          None
-        };
-
-        /*static int attrsF[] = {
-          GLX_DRAWABLE_TYPE   , GLX_WINDOW_BIT,
-          GLX_RENDER_TYPE     , GLX_RGBA_BIT,
-          GLX_DOUBLEBUFFER    , GL_TRUE,
-          GLX_RED_SIZE        , 1,
-          GLX_GREEN_SIZE      , 1,
-          GLX_BLUE_SIZE       , 1,
-          GLX_ALPHA_SIZE      , GLX_DONT_CARE,
-          GLX_DEPTH_SIZE      , 1,
-          None
-        };*/
-
-        configs = glXChooseFBConfig (dpy, DefaultScreen (dpy), attrsF, &n_configs);
-        printf(" creating context with FULL specs, found %i configs\n", n_configs);
-    } else {
-        static int attrs[] = {
-          GLX_DRAWABLE_TYPE   , GLX_WINDOW_BIT,
-          GLX_RENDER_TYPE     , GLX_RGBA_BIT,
-          GLX_DOUBLEBUFFER    , GL_TRUE,
-          GLX_RED_SIZE        , 1,
-          GLX_GREEN_SIZE      , 1,
-          GLX_BLUE_SIZE       , 1,
-          GLX_ALPHA_SIZE      , GLX_DONT_CARE,
-          None
-        };
-        configs = glXChooseFBConfig (dpy, DefaultScreen (dpy), attrs, &n_configs);
-        printf(" creating context with minimum specs, found %i configs\n", n_configs);
-    }
+    static int attrs[] = { // those do not matter as we only want to find the config with ID xvisual_id
+      GLX_DRAWABLE_TYPE   , GLX_WINDOW_BIT,
+      GLX_RENDER_TYPE     , GLX_RGBA_BIT,
+      GLX_DOUBLEBUFFER    , GL_TRUE,
+      GLX_RED_SIZE        , 1,
+      GLX_GREEN_SIZE      , 1,
+      GLX_BLUE_SIZE       , 1,
+      GLX_ALPHA_SIZE      , GLX_DONT_CARE,
+      None
+    };
+    configs = glXChooseFBConfig (dpy, DefaultScreen (dpy), attrs, &n_configs);
+    printf(" creating context with minimum specs, found %i configs\n", n_configs);
 
     if (configs == NULL || n_configs == 0) {
       printf("AAAAAAA, glXChooseFBConfig failed!\n");
@@ -1894,12 +1874,14 @@ static gboolean find_fbconfig_for_visual (GdkDisplay* display, _GdkVisual* visua
       return FALSE;
     }
 
-  for (i = 0; i < n_configs; i++)  {
+    for (i = 0; i < n_configs; i++)  {
       XVisualInfo *visinfo;
 
       visinfo = glXGetVisualFromFBConfig (dpy, configs[i]);
       if (visinfo == NULL) continue;
 
+
+      //printf(" search visualid %i =? %i\n", visinfo->visualid, xvisual_id);
       if (visinfo->visualid != xvisual_id) {
           XFree (visinfo);
           continue;
@@ -1910,18 +1892,14 @@ static gboolean find_fbconfig_for_visual (GdkDisplay* display, _GdkVisual* visua
       XFree (visinfo);
       retval = TRUE;
       goto out;
-  }
+    }
 
-  if (full) {
-      if (fb_config_out != NULL) *fb_config_out = configs[0];
-      retval = TRUE;
-  }
-
-  //g_set_error (error, GDK_GL_ERROR, GDK_GL_ERROR_UNSUPPORTED_FORMAT, "No available configurations for the given RGBA pixel format");
+    printf("Error, find_fbconfig_for_visual failed? tried to find %i\n", xvisual_id);
+    //g_set_error (error, GDK_GL_ERROR, GDK_GL_ERROR_UNSUPPORTED_FORMAT, "No available configurations for the given RGBA pixel format");
 
 out:
-  XFree (configs);
-  return retval;
+    XFree (configs);
+    return retval;
 }
 
 GdkGLContext* x11_window_create_gl_context(GdkWindow* window, gboolean attached, GdkGLContext *share, gboolean full, GError**error) {
@@ -2013,17 +1991,15 @@ static void _destroy_dummy_gl_context(GdkWGLDummy dummy) {
 static gint vr_get_dummy_wgl_pfd(HDC hdc, PIXELFORMATDESCRIPTOR* pfd) {
     printf("   get minimal GL Context\n");
 
-    gint best_pf = 0;
     pfd->nSize = sizeof(PIXELFORMATDESCRIPTOR);
     pfd->nVersion = 1;
     pfd->dwFlags = PFD_SUPPORT_OPENGL | PFD_DRAW_TO_WINDOW | PFD_DOUBLEBUFFER;
     pfd->iPixelType = PFD_TYPE_RGBA;
-    //pfd->iPixelType = PFD_TYPE_COLORINDEX;
-    pfd->cColorBits = GetDeviceCaps(hdc, BITSPIXEL);
-    pfd->cAlphaBits = 8; // important, if set to 0 the window might get translucent on some systems
+    pfd->cColorBits = 32;// GetDeviceCaps(hdc, BITSPIXEL);
+    pfd->cDepthBits = 24;
+    pfd->cStencilBits = 8;
     pfd->dwLayerMask = PFD_MAIN_PLANE;
-    //pfd->dwLayerMask = PFD_OVERLAY_PLANE;
-    best_pf = ChoosePixelFormat(hdc, pfd);
+    gint best_pf = ChoosePixelFormat(hdc, pfd);
 
     printf("    chose minimal pixel format: %i\n", best_pf);
     return best_pf;
@@ -2053,8 +2029,8 @@ static gint vr_get_wgl_pfd(HDC hdc, PIXELFORMATDESCRIPTOR* pfd, _GdkWin32Display
             WGL_DOUBLE_BUFFER_ARB,      GL_TRUE,
             WGL_ACCELERATION_ARB,       WGL_FULL_ACCELERATION_ARB,
             WGL_PIXEL_TYPE_ARB,         WGL_TYPE_RGBA_ARB,
-            WGL_COLOR_BITS_ARB,         colorbits,
-            WGL_ALPHA_BITS_ARB,         8, // important, if set to 0 the window might get translucent on some systems
+            WGL_COLOR_BITS_ARB,         32,
+            //WGL_ALPHA_BITS_ARB,         8, // important, if set to 0 the window might get translucent on some systems
             WGL_DEPTH_BITS_ARB,         24,
             WGL_STENCIL_BITS_ARB,       8,
             WGL_SAMPLE_BUFFERS_ARB,     1,
@@ -2070,8 +2046,8 @@ static gint vr_get_wgl_pfd(HDC hdc, PIXELFORMATDESCRIPTOR* pfd, _GdkWin32Display
             WGL_DOUBLE_BUFFER_ARB,      GL_TRUE,
             WGL_ACCELERATION_ARB,       WGL_FULL_ACCELERATION_ARB,
             WGL_PIXEL_TYPE_ARB,         WGL_TYPE_RGBA_ARB,
-            WGL_COLOR_BITS_ARB,         colorbits,
-            WGL_ALPHA_BITS_ARB,         8, // important, if set to 0 the window might get translucent on some systems
+            WGL_COLOR_BITS_ARB,         32,
+            //WGL_ALPHA_BITS_ARB,         8, // important, if set to 0 the window might get translucent on some systems
             WGL_DEPTH_BITS_ARB,         24,
             WGL_STENCIL_BITS_ARB,       8,
             0
@@ -2178,6 +2154,188 @@ GdkGLContext* win32_window_create_gl_context(GdkWindow* window, gboolean attache
     return GDK_GL_CONTEXT(context);
 }
 
+
+/*static void
+gdk_window_begin_paint_internal(_GdkWindow* window, const cairo_region_t* region) {
+    GdkRectangle clip_box;
+    double sx, sy;
+    gboolean needs_surface;
+    cairo_content_t surface_content;
+
+    if (GDK_WINDOW_DESTROYED(window) ||
+        !gdk_window_has_impl(window))
+        return;
+
+    if (window->current_paint.surface != NULL)
+    {
+        g_warning("A paint operation on the window is alredy in progress. "
+            "This is not allowed.");
+        return;
+    }
+
+    _GdkWindowImplClass* impl_class = getGdkWindowImplClass();
+
+    needs_surface = TRUE;
+    if (impl_class->begin_paint)
+        needs_surface = impl_class->begin_paint(window);
+
+    window->current_paint.region = cairo_region_copy(region);
+    cairo_region_intersect(window->current_paint.region, window->clip_region);
+    cairo_region_get_extents(window->current_paint.region, &clip_box);
+
+    window->current_paint.flushed_region = cairo_region_create();
+    window->current_paint.need_blend_region = cairo_region_create();
+
+    surface_content = gdk_window_get_content(window);
+
+    _GdkWindow* iwindow = (_GdkWindow*)window->impl_window;
+    window->current_paint.use_gl = iwindow->gl_paint_context != NULL;
+
+    if (window->current_paint.use_gl)
+    {
+        GdkGLContext* context;
+
+        int ww = gdk_window_get_width(window) * gdk_window_get_scale_factor(window);
+        int wh = gdk_window_get_height(window) * gdk_window_get_scale_factor(window);
+
+        context = gdk_window_get_paint_gl_context(window, NULL);
+        if (context == NULL)
+        {
+            g_warning("gl rendering failed, context: %p", context);
+            window->current_paint.use_gl = FALSE;
+        }
+        else
+        {
+            gdk_gl_context_make_current(context);
+            // With gl we always need a surface to combine the gl drawing with the native drawing.
+            needs_surface = TRUE;
+            // Also, we need the surface to include alpha
+            surface_content = CAIRO_CONTENT_COLOR_ALPHA;
+
+            // Initial setup
+            glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+            glDisable(GL_DEPTH_TEST);
+            glDisable(GL_BLEND);
+            glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+
+            glViewport(0, 0, ww, wh);
+        }
+    }
+
+    if (needs_surface)
+    {
+        window->current_paint.surface = gdk_window_create_similar_surface(window,
+            surface_content,
+            MAX(clip_box.width, 1),
+            MAX(clip_box.height, 1));
+        sx = sy = 1;
+        cairo_surface_get_device_scale(window->current_paint.surface, &sx, &sy);
+        cairo_surface_set_device_offset(window->current_paint.surface, -clip_box.x * sx, -clip_box.y * sy);
+        gdk_cairo_surface_mark_as_direct(window->current_paint.surface, window);
+
+        window->current_paint.surface_needs_composite = TRUE;
+    }
+    else
+    {
+        window->current_paint.surface = gdk_window_ref_impl_surface(window);
+        window->current_paint.surface_needs_composite = FALSE;
+    }
+
+    if (!cairo_region_is_empty(window->current_paint.region))
+        gdk_window_clear_backing_region(window);
+}
+
+static void gdk_window_end_paint_internal(_GdkWindow* window) {
+    _GdkWindow* composited;
+    GdkRectangle clip_box = { 0, };
+    cairo_t* cr;
+
+    if (GDK_WINDOW_DESTROYED(window) ||
+        !gdk_window_has_impl(window))
+        return;
+
+    if (window->current_paint.surface == NULL)
+    {
+        g_warning(G_STRLOC": no preceding call to gdk_window_begin_draw_frame(), see documentation");
+        return;
+    }
+
+    _GdkWindowImplClass* impl_class = getGdkWindowImplClass();
+
+    if (impl_class->end_paint)
+        impl_class->end_paint(window);
+
+    if (window->current_paint.surface_needs_composite)
+    {
+        cairo_surface_t* surface;
+
+        cairo_region_get_extents(window->current_paint.region, &clip_box);
+
+        if (window->current_paint.use_gl)
+        {
+            cairo_region_t* opaque_region = cairo_region_copy(window->current_paint.region);
+            cairo_region_subtract(opaque_region, window->current_paint.flushed_region);
+            cairo_region_subtract(opaque_region, window->current_paint.need_blend_region);
+
+            gdk_gl_context_make_current(window->gl_paint_context);
+
+            if (!cairo_region_is_empty(opaque_region))
+                gdk_gl_texture_from_surface(window->current_paint.surface,
+                    opaque_region);
+            if (!cairo_region_is_empty(window->current_paint.need_blend_region))
+            {
+                glEnable(GL_BLEND);
+                gdk_gl_texture_from_surface(window->current_paint.surface,
+                    window->current_paint.need_blend_region);
+                glDisable(GL_BLEND);
+            }
+
+            cairo_region_destroy(opaque_region);
+
+            gdk_gl_context_end_frame(window->gl_paint_context,
+                window->current_paint.region,
+                window->active_update_area);
+        }
+        else
+        {
+            surface = gdk_window_ref_impl_surface(window);
+            cr = cairo_create(surface);
+
+            cairo_set_source_surface(cr, window->current_paint.surface, 0, 0);
+            gdk_cairo_region(cr, window->current_paint.region);
+            cairo_clip(cr);
+
+            cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
+            cairo_paint(cr);
+
+            cairo_destroy(cr);
+
+            cairo_surface_flush(surface);
+            cairo_surface_destroy(surface);
+        }
+    }
+
+    gdk_window_free_current_paint(window);
+
+    // find a composited window in our hierarchy to signal its
+    // parent to redraw, calculating the clip box as we go...
+    // stop if parent becomes NULL since then we'd have nowhere
+    // to draw (ie: 'composited' will always be non-NULL here).
+    for (composited = window; composited->parent; composited = composited->parent) {
+        clip_box.x += composited->x;
+        clip_box.y += composited->y;
+
+        _GdkWindow* parent = composited->parent;
+        clip_box.width = MIN(clip_box.width, parent->width - clip_box.x);
+        clip_box.height = MIN(clip_box.height, parent->height - clip_box.y);
+
+        if (composited->composited) {
+            gdk_window_invalidate_rect(GDK_WINDOW(composited->parent), &clip_box, FALSE);
+            break;
+        }
+    }
+}*/
+
 #endif
 
 GdkGLContext* gdk_window_get_paint_gl_context(_GdkWindow* window, GError** error) {
@@ -2237,9 +2395,9 @@ static GdkGLContext* gl_area_real_create_context(GLArea *area) {
     GdkGLContext *context;
 
     override_window_invalidate_for_new_frame((_GdkWindow*)gtk_widget_get_window(widget));
-#ifdef _WIN32
+/*#ifdef _WIN32 // in GuiManager
     override_win32_gl_context_realize();
-#endif
+#endif*/
 
     //context = gdk_window_create_gl_context (gtk_widget_get_window (widget), &error);
     context = _gdk_window_create_gl_context((_GdkWindow*)gtk_widget_get_window (widget), &error);
@@ -2436,8 +2594,8 @@ void gl_area_trigger_resize(GLArea* area) {
 void glarea_render(GLArea* area) {
     GLAreaPrivate* priv = gl_area_get_instance_private (area);
 
-    if (priv->needs_resize) {
-    //if (priv->needs_resize || priv->clipping.w != dest.width || priv->clipping.h != dest.height) {
+    //if (priv->needs_resize) { // insufficient, when reducing the width, when getting small its not called anymore??
+    if (priv->needs_resize || priv->clipping.w != dest.width || priv->clipping.h != dest.height) {
         priv->clipping.x = dest.x;
         priv->clipping.y = dest.y;
         priv->clipping.w = dest.width;

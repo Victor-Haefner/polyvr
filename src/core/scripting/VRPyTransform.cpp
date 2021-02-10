@@ -85,6 +85,7 @@ PyMethodDef VRPyTransform::methods[] = {
     {"getConstraint", PyWrap(Transform, getConstraint, "Get the constraints object - constraint getConstraint()", VRConstraintPtr ) },
     {"attach", PyWrapOpt(Transform, attach, "Attach another object using a joint constraint and a spring constraint", "0", void, VRTransformPtr, VRConstraintPtr, VRConstraintPtr ) },
     {"detachJoint", PyWrap(Transform, detachJoint, "Remove all joints to given transform created by 'attach'", void, VRTransformPtr ) },
+    {"setSpringParameters", PyWrap(Transform, setSpringParameters, "Set joint spring parameters", void, VRTransformPtr, int, float, float ) },
     {"animate", PyWrapOpt(Transform, animate, "Animate object along a path, duration [s], offset [s], doOrient, doLoop) )", "1|0|0", VRAnimationPtr, PathPtr, float, float, bool, bool, PathPtr ) },
     {"getAnimations", PyWrap(Transform, getAnimations, "Return all animations associated to the object", vector<VRAnimationPtr> ) },
     {"stopAnimation", PyWrap(Transform, stopAnimation, "Stop any running animation of this object", void ) },

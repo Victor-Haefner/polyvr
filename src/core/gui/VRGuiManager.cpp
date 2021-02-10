@@ -69,6 +69,8 @@ VRGuiManager::VRGuiManager() {
     gtk_init_check(&argc, 0);
 #ifndef _WIN32
     replace_gl_visuals();
+#else
+    override_win32_gl_context_realize();
 #endif
 
     GdkDisplay* display = gdk_display_get_default();
@@ -159,6 +161,9 @@ VRGuiManager::VRGuiManager() {
     gtk_window_maximize(top);
     gtk_widget_show_all((GtkWidget*)top);
 
+#ifdef _WIN32
+    disableBlur(gtk_widget_get_window(GTK_WIDGET(top)));
+#endif
     cout << " done" << endl;
 }
 
