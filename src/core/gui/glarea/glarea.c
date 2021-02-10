@@ -2594,8 +2594,8 @@ void gl_area_trigger_resize(GLArea* area) {
 void glarea_render(GLArea* area) {
     GLAreaPrivate* priv = gl_area_get_instance_private (area);
 
-    if (priv->needs_resize) {
-    //if (priv->needs_resize || priv->clipping.w != dest.width || priv->clipping.h != dest.height) {
+    //if (priv->needs_resize) { // insufficient, when reducing the width, when getting small its not called anymore??
+    if (priv->needs_resize || priv->clipping.w != dest.width || priv->clipping.h != dest.height) {
         priv->clipping.x = dest.x;
         priv->clipping.y = dest.y;
         priv->clipping.w = dest.width;
