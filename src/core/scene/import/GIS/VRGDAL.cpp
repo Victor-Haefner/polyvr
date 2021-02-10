@@ -24,6 +24,8 @@
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/material/VRTexture.h"
 #include "core/objects/VRTransform.h"
+#include "core/utils/toString.h"
+#include <string>
 
 OSG_BEGIN_NAMESPACE;
 
@@ -348,6 +350,171 @@ void divideTiffIntoChunks(string pathIn, string pathOut, double minLat, double m
             else { /*cout << " out of bounds " << xx << "-" << yy << " | " << bordersY[yy] << " " << bordersX[xx] << " | " << bordersY[yy+1] << " " << bordersX[xx+1] << endl;*/ }
         }
     }
+    GDALClose(poDS);
+}
+
+void divideTiffIntoChunksEPSG(string pathIn, string pathOut, double minEasting, double maxEasting, double minNorthing, double maxNorthing, double pixelResolution, double chunkResolution, bool debug) {
+    //cout << " gdal - " << pathIn << pathOut << endl;
+    cout << "VRGDAL::divideTiffIntoChunksEPSG" << endl;
+    GDALAllRegister();
+    GDALDataset* poDS = (GDALDataset *) GDALOpen( pathIn.c_str(), GA_ReadOnly );
+    if( poDS == NULL ) { printf( "Open failed.\n" ); return; }
+
+    // general information
+    double adfGeoTransform[6];
+    printf( "Driver: %s/%s\n", poDS->GetDriver()->GetDescription(), poDS->GetDriver()->GetMetadataItem( GDAL_DMD_LONGNAME ) );
+    printf( "Size is %dx%dx%d\n", poDS->GetRasterXSize(), poDS->GetRasterYSize(), poDS->GetRasterCount() );
+    //if( poDS->GetProjectionRef()  != NULL ) { printf( "Projection is `%s'\n", poDS->GetProjectionRef() ); }
+    if( poDS->GetGeoTransform( adfGeoTransform ) == CE_None ) {  }
+
+    cout << " filepath: " << pathIn << endl;
+    //cout << " bandCount: " << poDS->GetRasterCount() << endl;
+    GDALRasterBand* poBand = poDS->GetRasterBand( 1 );
+    auto rasterDataType = poBand->GetRasterDataType();
+    //cout << " bandType: " << rasterDataType << endl;
+    if ( rasterDataType != 6 && poDS->GetRasterCount() > 1) {
+        GDALClose(poDS);
+        cout << "ERROR: VRGDAL::DIVIDER OF CHUNKS - only implemented for FLOAT32, single RASTERBAND" << endl;
+        return;
+    }
+
+    double xBeg = adfGeoTransform[0];
+    double yBeg = adfGeoTransform[3];
+    double xEnd = adfGeoTransform[0] + poDS->GetRasterXSize()*adfGeoTransform[1];
+    double yEnd = adfGeoTransform[3] + poDS->GetRasterYSize()*adfGeoTransform[5];
+
+    Vec2d upperLeft = Vec2d(xBeg,yBeg);
+    Vec2d lowerLeft = Vec2d(xBeg,yEnd);
+    Vec2d upperRight = Vec2d(xEnd,yBeg);
+    Vec2d lowerRight = Vec2d(xEnd,yEnd);
+    if (debug && false) {
+        cout << "eastBeg " << to_string(xBeg) << endl;
+        cout << "eastEnd " << to_string(xEnd) << endl;
+        cout << "northBeg " << to_string(yBeg) << endl;
+        cout << "northEnd " << to_string(yEnd) << endl;
+    }
+    vector<double> bordersX;
+    vector<double> bordersY;
+
+    if (minEasting < xBeg || maxNorthing > yBeg) {
+        GDALClose(poDS);
+        cout << "ERROR: VRGDAL::divideTiffIntoChunksEPSG - parameters out of bounds" << endl;
+        if (minEasting < xBeg)  cout << "  minEasting too small" << endl;
+        if (maxNorthing > yBeg)  cout << "  maxNorthing too big" << endl;
+        return;
+    }
+    if (maxEasting > xEnd || minNorthing < yEnd){
+        cout << "WARNING: VRGDAL::divideTiffIntoChunksEPSG - maxEasting or minNorthing out of geoTIFF's bounds" << endl;
+        if (maxEasting > xEnd)  cout << "  maxEasting too big" << endl;
+        if (minNorthing > yEnd)  cout << "  minNorthing too small" << endl;
+    }
+
+    double currentX = minEasting;
+    double currentY = maxNorthing;
+    while (currentX <= xEnd && currentX + chunkResolution <= xEnd ) {
+        bordersX.push_back(currentX);
+        currentX += chunkResolution;
+    }
+    while (currentY >= yEnd && currentY - chunkResolution >= yEnd) {
+        bordersY.push_back(currentY);
+        currentY -= chunkResolution;
+    }
+
+    cout << "Borders: E:"<< bordersX.size() << " N:"<< bordersY.size() << " Sum:"<< bordersX.size() * bordersY.size() << endl;
+
+    if (debug) {
+        GDALClose(poDS);
+        cout << "ERROR: VRGDAL::divideTiffIntoChunksEPSG - TESTMODE, WILL NOT EXECUTE" << endl;
+        return;
+    }
+    int nOffsetX = int((bordersX[0]-xBeg)/adfGeoTransform[1]);
+    int nOffsetY = int((bordersY[0]-yBeg)/adfGeoTransform[5]);
+    cout << "nOffsetX:" << nOffsetX << " nOffsetY:" << nOffsetY << endl;
+
+    int factorX = pixelResolution/adfGeoTransform[1];
+    int factorY = pixelResolution/-adfGeoTransform[5];
+    cout << " factorX:" << factorX << " factorY:" << factorY << endl;
+    int sizeX = int(chunkResolution/pixelResolution)+1;
+    int sizeY = int(chunkResolution/pixelResolution)+1;
+    int sizeOrignalX = factorX * sizeX;
+    int sizeOrignalY = factorY * sizeY;
+    cout << " oX:" << sizeOrignalX << " oY:" << sizeOrignalY << endl;
+    cout << " rX:" << sizeX << " rY:" << sizeY << endl;
+    int xChSize = bordersX.size();
+    int yChSize = bordersY.size();
+    int fractions = 0;
+
+    for (int yCh = 0; yCh < yChSize; yCh ++){
+        for (int xCh = 0; xCh < xChSize; xCh ++){
+            string sRes = to_string(chunkResolution);
+            int sAt = sRes.length();
+            if (sRes.find(".")) {
+                if (sRes.find(".")+fractions <= sRes.length()) sAt = sRes.find(".")+fractions;
+            }
+            string savePath = pathOut + "/dgm_E32"+to_string(bordersX[xCh]).substr(0,8)+"_N"+to_string(bordersY[yCh]).substr(0,9)+"_S"+to_string(chunkResolution).substr(0,sAt)+".tif";
+            //cout << "writeGeoRasterData at " << savePath << " - X: "  << sizeX << " Y: " << sizeY << endl;
+
+            //auto band = getBand(i); TODO: solve possibility of multiple bands existing
+            ///READDATA:
+            vector<vector<float>> originalData;
+            for (int yy = 0; yy < sizeOrignalY; yy++){
+                vector<float> line(sizeOrignalX);
+                int nXOff = nOffsetX + xCh*(sizeOrignalX-1); //The pixel offset to the top left corner of the region of the band to be accessed. This would be zero to start from the left side.
+                int nYOff = nOffsetY + yCh*(sizeOrignalY-1) + yy; //The line offset to the top left corner of the region of the band to be accessed. This would be zero to start from the top.
+                CPLErr err = poBand->RasterIO( GF_Read, nXOff, nYOff, sizeOrignalX, 1, &line[0], sizeOrignalX, 1, rasterDataType, 0, 0 );
+                if (err == CE_None) originalData.push_back(line);
+            }
+            ///DOWNSAMPLE:
+            vector<float> data;
+            for (int y = 0; y < sizeY; y++){
+                for (int x = 0; x < sizeX; x++){
+                    float nPixel = 0.0;
+                        for (int v = y*factorY; v < (y+1)*factorY; v++){
+                            for (int u = x*factorX; u < (x+1)*factorX; u++){
+                                nPixel += originalData[v][u];
+                            }
+                        }
+                        nPixel = nPixel / (factorX * factorY);
+                        //if (nPixel > -3e38 && nPixel != 0.0) cout << to_string(nPixel) << endl;
+                    data.push_back(nPixel);
+                }
+            }
+            const char *pszFormat = "GTiff";
+            GDALDriver *poDriver;
+            poDriver = GetGDALDriverManager()->GetDriverByName(pszFormat);
+            if( poDriver == NULL )
+                return;
+
+            GDALDataset *poDstDS;
+            char **papszOptions = NULL;
+            poDstDS = poDriver->Create( savePath.c_str(), sizeX, sizeY, 1, rasterDataType, papszOptions );
+            GDALRasterBand *newpoBand;
+            newpoBand = poDstDS->GetRasterBand(1);
+
+            string projWkt = poDS->GetProjectionRef();
+            poDstDS->SetProjection( projWkt.c_str() );
+
+            double newGeoTransform[6];
+            newGeoTransform[0] = bordersX[xCh];//adfGeoTransform[0];//xBeg;
+            newGeoTransform[1] = adfGeoTransform[1];
+            newGeoTransform[2] = 0.0;
+            newGeoTransform[3] = bordersY[yCh];//adfGeoTransform[3];//yBeg;
+            newGeoTransform[4] = 0.0;
+            newGeoTransform[5] = adfGeoTransform[5];
+            poDstDS->SetGeoTransform( newGeoTransform );
+            //cout << " origX:" << to_string(newGeoTransform[0]) << " origY:" << to_string(newGeoTransform[3]) << endl;
+
+            float *yRow = (float*) CPLMalloc(sizeof(float)*sizeY);
+            for (int y = 0; y < sizeY; y++){
+                for (int x = 0; x < sizeX; x++) {
+                    yRow[x] = data[y*sizeX+x];
+                }
+                CPLErr newerr = newpoBand->RasterIO( GF_Write, 0, y, sizeX, 1, yRow, sizeX, 1, GDT_Float32, 0, 0 );
+            }
+            GDALClose( (GDALDatasetH) poDstDS );
+        }
+    }
+
     GDALClose(poDS);
 }
 

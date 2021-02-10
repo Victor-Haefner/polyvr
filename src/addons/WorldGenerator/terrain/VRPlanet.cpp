@@ -176,9 +176,14 @@ PosePtr VRPlanet::getSurfacePose( double north, double east, bool local, bool se
 }
 
 void VRPlanet::divideTIFF(string pathIn, string pathOut, double minLat, double maxLat, double minLon, double maxLon, double res) {
-    //cout << "hello " << pathIn << " - " << pathOut << endl;
 #ifndef WITHOUT_GDAL
     divideTiffIntoChunks(pathIn, pathOut, minLat, maxLat, minLon, maxLon, res);
+#endif
+}
+
+void VRPlanet::divideTIFFEPSG(string pathIn, string pathOut, double minEasting, double maxEasting, double minNorthing, double maxNorthing, double pixelResolution, double chunkResolution, bool debug = false) {
+#ifndef WITHOUT_GDAL
+    divideTiffIntoChunksEPSG(pathIn, pathOut, minEasting, maxEasting, minNorthing, maxNorthing, pixelResolution, chunkResolution, debug);
 #endif
 }
 

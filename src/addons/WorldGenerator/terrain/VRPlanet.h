@@ -75,6 +75,7 @@ class VRPlanet : public VRTransform {
         void setLit(bool b);
 
         void divideTIFF(string pathIn, string pathOut, double minLat, double maxLat, double minLon, double maxLon, double res);
+        void divideTIFFEPSG(string pathIn, string pathOut, double minNorthing, double minEasting, double maxNorthing, double maxEasting, double pixelResolution,double chunkResolution, bool debug);
 
         void setRotation(double rDays);
         void setInclination(double I);
