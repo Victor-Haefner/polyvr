@@ -116,7 +116,7 @@ void testSync(int t) {
 /// --------------------------------------------------
 
 VRTransformPtr VRImport::load(string path, VRObjectPtr parent, bool useCache, string preset, bool thread, map<string, string> options, bool useBinaryCache) {
-    cout << "VRImport::load " << path << " " << preset << endl;
+    cout << "VRImport::load " << path << ", with preset: " << preset << ", useCache: " << useCache << endl;
     if (ihr_flag) if (fileSize(path) > 3e7) return 0;
     setlocale(LC_ALL, "C");
 
@@ -358,7 +358,7 @@ VRGeometryPtr VRImport::loadGeometry(string file, string object, string preset, 
     file = unrepSpaces(file);
     object = unrepSpaces(object);
 
-    if (cache.count(file) == 0) load(file, 0, false, preset, thread);
+    if (cache.count(file) == 0) load(file, 0, true, preset, thread); // set useCache to true, else this wont work obviously..
 
     if (cache.count(file) == 0) {
         cout << "VRImport::loadGeometry - Warning: " << file << " not in cache" << endl;
