@@ -99,11 +99,13 @@ void VRTrafficSigns::addSign(string type, PosePtr pose) {
     sign->setMaterial(baseMaterial);
     pole->setMaterial(baseMaterialPole);
     auto signID = getVecID(type);
-    auto coords = megaTex->getChunkUVasVector(signID);
-    GeoVectorPropertyRecPtr tc = GeoVec2fProperty::create();
-    //cout << toString(coords) << endl;
-    for (auto vec : coords) tc->addValue(vec);
-    sign->setTexCoords(tc);
+    if (megaTex) {
+        auto coords = megaTex->getChunkUVasVector(signID);
+        GeoVectorPropertyRecPtr tc = GeoVec2fProperty::create();
+        //cout << toString(coords) << endl;
+        for (auto vec : coords) tc->addValue(vec);
+        sign->setTexCoords(tc);
+    }
     auto pose1 = sign->getPose();
     pose1->setPos(pose1->pos() + pose->pos() - pose->dir()*0.01);
     pose1->setDir(pose->dir());

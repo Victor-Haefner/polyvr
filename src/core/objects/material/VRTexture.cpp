@@ -341,6 +341,7 @@ Color4f VRTexture::getPixel(int i) {
 }
 
 Vec3i VRTexture::getSize() {
+    if (!img) return Vec3i();
     int w = img->getWidth();
     int h = img->getHeight();
     int d = img->getDepth();
