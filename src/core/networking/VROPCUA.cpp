@@ -21,21 +21,6 @@ using namespace OSG;
 template<> string typeName(const VROPCUA& t) { return "OPCUA"; }
 template<> string typeName(const VROPCUANode& t) { return "OPCUANode"; }
 
-class SubClient : public SubscriptionHandler {
-    public:
-        map<uint8_t, Variant> values;
-
-        SubClient() {}
-        ~SubClient() {}
-
-        static shared_ptr<SubClient> create() { return shared_ptr<SubClient>( new SubClient() ); }
-
-        void DataChange(uint32_t handle, const OpcUa::Node& node, const Variant& val, AttributeId attr) override {
-            //cout << "Received DataChange event handle: " << handle << ", val: " << ::toString(val) << endl;
-            values[handle] = val;
-        }
-};
-
 string VROPCUANode::typeToString(uint8_t v) {
     if (v == 0) return "null";
     if (v == 1) return "boolean";
@@ -146,6 +131,26 @@ string toString(OpcUa::Node& n) {
     return res;
 }
 
+struct OPCVal {
+    Variant val;
+    string sval;
+};
+
+class SubClient : public SubscriptionHandler {
+    public:
+        map<uint8_t, OPCVal> values;
+
+        SubClient() {}
+        ~SubClient() {}
+
+        static shared_ptr<SubClient> create() { return shared_ptr<SubClient>( new SubClient() ); }
+
+        void DataChange(uint32_t handle, const OpcUa::Node& node, const Variant& val, AttributeId attr) override {
+            //cout << "Received DataChange event handle: " << handle << ", val: " << ::toString(val) << endl;
+            values[handle] = { val , ::toString(val) };
+        }
+};
+
 void printTree(OpcUa::Node& node, string offset = "") {
     cout << offset << "opcua node: " << toString(node) << endl;
     for (OpcUa::Node child : node.GetChildren()) printTree(child, offset+" ");
@@ -186,7 +191,7 @@ string VROPCUANode::type() {
 
 string VROPCUANode::value() {
     if (subscriptionClient && subscriptionClient->values.count(subHandle)) {
-        return ::toString(subscriptionClient->values[subHandle]);
+        return subscriptionClient->values[subHandle].sval;
     }
     Variant v = node->GetValue();
     return ::toString(v);
@@ -277,6 +282,12 @@ void VROPCUANode::set(string value) {
     }
 
     if (isScalar) {
+        if (subscriptionClient && subscriptionClient->values.count(subHandle)) {
+            if (subscriptionClient->values[subHandle].sval == value) return;
+        }
+
+        //cout << " ----- " << name() << " " << ID() << " " << value <<  " b1 " << subHandle << " b2 " << subscriptionClient->values.count(subHandle) << endl;
+
         try {
             auto type = nodeType;
             if (type == 0) return;
@@ -313,7 +324,7 @@ void VROPCUANode::set(string value) {
         }
 
         if (subscriptionClient && subscriptionClient->values.count(subHandle)) {
-            subscriptionClient->values[subHandle] = node->GetValue();
+            subscriptionClient->values[subHandle] = { node->GetValue(), value };
         }
     }
 }
