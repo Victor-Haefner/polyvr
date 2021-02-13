@@ -197,7 +197,7 @@ void VRStorage::load_int_map2_cb(map<int, T>* mt, string tag, bool under, VRStor
 
 template<typename T>
 void VRStorage::save_obj_vec_cb(vector<std::shared_ptr<T> >* v, string tag, bool under, VRStorageCbParams p) {
-    cout << "storeObjVec " << tag << " " << v->size() << endl;
+    //cout << "storeObjVec " << tag << " " << v->size() << endl;
     if (under) p.e = p.e->addChild(tag);
     for (auto t : *v) t->saveUnder(p.e, p.p);
 }
@@ -284,7 +284,7 @@ void VRStorage::load_vec_vec_cb(vector<vector<T>>* v, string tag, VRStorageCbPar
 
 template<typename T>
 void VRStorage::save_obj_cb(std::shared_ptr<T>* v, string tag, VRStorageCbParams p) {
-    cout << " storeObj " << tag << " " << endl;
+    //cout << " storeObj " << tag << " " << endl;
     if (*v) (*v)->saveUnder(p.e, p.p, tag);
 }
 

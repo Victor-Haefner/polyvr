@@ -396,7 +396,7 @@ void VRImport::Cache::setup(VRTransformPtr root) {
     for (auto c : root->getChildren(true)) objects[c->getName()] = c;
     //for (auto c : root->getChildren(true)) objects[c->getBaseName()] = c; // not a valid option as basename is not unique! SW VRML import does not provide unique names
 
-    root->setNameSpace("VRImportCache");
+    root->setNameSpace("VRImportCache"); // maybe try a unique namespace (use the path)?
     for (auto o : root->getChildren(true) ) o->setNameSpace("VRImportCache");
 }
 

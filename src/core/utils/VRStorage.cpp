@@ -81,7 +81,7 @@ XMLElementPtr VRStorage::saveUnder(XMLElementPtr e, int p, string t) {
     string tag = type;
     if (t != "") tag = t;
     if (e == 0) return 0;
-    cout << "saveUnder " << t << " (" << p << "," << persistency << ") " << (persistency <= p) << " " << getDescription() << endl;
+    //cout << "saveUnder " << t << " (" << p << "," << persistency << ") " << (persistency <= p) << " " << getDescription() << endl;
     if (persistency <= p) return 0;
     e = e->addChild(tag);
     save(e, p);
