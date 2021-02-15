@@ -37,10 +37,11 @@ class VRVideo : public VRStorage {
         AVFrame* nFrame = 0;
         vector<UInt8> osgFrame;
         SwsContext* swsContext = 0;
+        AVPacket* packet = 0;
 
         int getNStreams();
         int getStream(int j);
-        VRTexturePtr convertFrame(AVPacket* packet);
+        VRTexturePtr convertNextFrame();
         void frameUpdate(float t, int stream, int N);
 
     public:
@@ -50,7 +51,6 @@ class VRVideo : public VRStorage {
         static VRVideoPtr create(VRMaterialPtr mat);
 
         void open(string f);
-        void close();
         void showFrame(int stream, int frame);
         void play(int stream, float t0, float t1, float v);
 

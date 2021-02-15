@@ -28,16 +28,20 @@ VRVideo::VRVideo(VRMaterialPtr mat) {
     NStreams = 0;
 
     av_register_all(); // Register all formats && codecs
-
-    // test
-    const char* file = "~/Videos/drop.avi";
-    open(file);
-    close();
 }
 
 VRVideo::~VRVideo() {
     if (anim) anim->stop();
     if (vFrame) av_frame_free(&vFrame);
+    if (nFrame) av_frame_free(&nFrame);
+    if (vCodec) avcodec_close(vCodec); // Close the codec
+    if (vFile) avformat_close_input(&vFile); // Close the video file
+    if (packet) delete packet;
+
+    vFrame = 0;
+    vCodec = 0;
+    vFile = 0;
+    packet = 0;
 }
 
 VRVideoPtr VRVideo::create(VRMaterialPtr mat) { return VRVideoPtr( new VRVideo(mat) ); }
@@ -95,7 +99,7 @@ int getNColors(AVPixelFormat pfmt) {
     return 3;
 }
 
-VRTexturePtr VRVideo::convertFrame(AVPacket* packet) {
+VRTexturePtr VRVideo::convertNextFrame() {
     int valid = 0;
     avcodec_decode_video2(vCodec, vFrame, &valid, packet); // Decode video frame
     if (valid == 0) return 0;
@@ -168,9 +172,10 @@ void VRVideo::open(string f) {
 
         cout << "  VRVideo::open stream " << i << endl;
         int frame=0;
-        for (AVPacket packet; av_read_frame(vFile, &packet)>=0; av_packet_unref(&packet) ) { // read stream
-            if (packet.stream_index != stream) continue;
-            auto img = convertFrame(&packet);
+        if (!packet) packet = new AVPacket();
+        for (; av_read_frame(vFile, packet)>=0; av_packet_unref(packet) ) { // read stream
+            if (packet->stream_index != stream) continue;
+            auto img = convertNextFrame();
             if (!img) continue;
             frames[stream][frame] = img;
             frame++;
@@ -178,16 +183,6 @@ void VRVideo::open(string f) {
     }
 
     av_frame_free(&nFrame);
-}
-
-void VRVideo::close() {
-    if (vFrame) av_free(vFrame); // Free the YUV frame
-    if (vCodec) avcodec_close(vCodec); // Close the codec
-    if (vFile) avformat_close_input(&vFile); // Close the video file
-
-    vFrame = 0;
-    vCodec = 0;
-    vFile = 0;
 }
 
 size_t VRVideo::getNFrames(int stream) { return frames[stream].size(); }
