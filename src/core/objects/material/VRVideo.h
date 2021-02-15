@@ -4,12 +4,15 @@
 #include "core/objects/VRObjectFwd.h"
 #include "core/utils/VRStorage.h"
 #include <OpenSG/OSGConfig.h>
+#include <OpenSG/OSGBaseTypes.h>
 
 using namespace std;
 
 class AVFormatContext;
 class AVCodecContext;
+class AVPacket;
 class AVFrame;
+class SwsContext;
 
 OSG_BEGIN_NAMESPACE;
 
@@ -20,16 +23,24 @@ class VRVideo : public VRStorage {
         int height;
         int NStreams;
 
+        int currentFrame = 0;
+        int cachedFrameMin = 0;
+        int cachedFrameMax = 0;
+
         VRMaterialWeakPtr material;
         VRAnimationPtr anim;
         VRAnimCbPtr animCb;
 
-        AVFormatContext* vFile;
-        AVCodecContext* vCodec;
-        AVFrame* vFrame;
+        AVFormatContext* vFile = 0;
+        AVCodecContext* vCodec = 0;
+        AVFrame* vFrame = 0;
+        AVFrame* nFrame = 0;
+        vector<UInt8> osgFrame;
+        SwsContext* swsContext = 0;
 
         int getNStreams();
         int getStream(int j);
+        VRTexturePtr convertFrame(AVPacket* packet);
         void frameUpdate(float t, int stream, int N);
 
     public:
