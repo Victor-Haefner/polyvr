@@ -3,6 +3,7 @@
 
 #include "core/objects/VRObjectFwd.h"
 #include "core/utils/VRStorage.h"
+#include "core/scene/sound/VRSoundFwd.h"
 #include <OpenSG/OSGConfig.h>
 #include <OpenSG/OSGBaseTypes.h>
 #include <boost/thread/mutex.hpp>
@@ -27,10 +28,12 @@ class VRVideo : public VRStorage {
             ~Stream();
         };
 
-        map<int, Stream> streams; // streams[stream]
+        VRSoundPtr audio;
+
+        map<int, Stream> vStreams; // streams[stream]
+        vector<int> aStreams;
         int width = 0;
         int height = 0;
-        int NStreams = 0;
 
         double start_time = 0;
         double duration = 0;
