@@ -5,6 +5,7 @@
 #include "core/utils/VRStorage.h"
 #include <OpenSG/OSGConfig.h>
 #include <OpenSG/OSGBaseTypes.h>
+#include <boost/thread/mutex.hpp>
 
 using namespace std;
 
@@ -18,10 +19,17 @@ OSG_BEGIN_NAMESPACE;
 
 class VRVideo : public VRStorage {
     private:
-        map<int, map<int, VRTexturePtr> > frames; // frames[stream, frame]
-        int width;
-        int height;
-        int NStreams;
+        struct Stream {
+            AVCodecContext* vCodec = 0;
+            map<int, VRTexturePtr> frames;
+
+            ~Stream();
+        };
+
+        map<int, Stream> streams; // streams[stream]
+        int width = 0;
+        int height = 0;
+        int NStreams = 0;
 
         int currentFrame = 0;
         int cachedFrameMin = 0;
@@ -32,16 +40,17 @@ class VRVideo : public VRStorage {
         VRAnimCbPtr animCb;
 
         AVFormatContext* vFile = 0;
-        AVCodecContext* vCodec = 0;
         AVFrame* vFrame = 0;
         AVFrame* nFrame = 0;
         vector<UInt8> osgFrame;
         SwsContext* swsContext = 0;
         AVPacket* packet = 0;
 
+        boost::mutex mutex;
+
         int getNStreams();
         int getStream(int j);
-        VRTexturePtr convertNextFrame();
+        VRTexturePtr convertFrame(int stream, AVPacket* packet);
         void frameUpdate(float t, int stream, int N);
 
     public:

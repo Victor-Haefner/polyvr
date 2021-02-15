@@ -14,6 +14,9 @@ extern "C" {
 }
 
 #include <string>
+#include <boost/thread/recursive_mutex.hpp>
+
+typedef boost::recursive_mutex::scoped_lock PLock;
 
 using namespace OSG;
 
@@ -21,12 +24,6 @@ template<> string typeName(const VRVideo& o) { return "Video"; }
 
 VRVideo::VRVideo(VRMaterialPtr mat) {
     material = mat;
-
-    vFile = 0;
-    vCodec = 0;
-    vFrame = 0;
-    NStreams = 0;
-
     av_register_all(); // Register all formats && codecs
 }
 
@@ -34,14 +31,15 @@ VRVideo::~VRVideo() {
     if (anim) anim->stop();
     if (vFrame) av_frame_free(&vFrame);
     if (nFrame) av_frame_free(&nFrame);
-    if (vCodec) avcodec_close(vCodec); // Close the codec
     if (vFile) avformat_close_input(&vFile); // Close the video file
-    if (packet) delete packet;
 
     vFrame = 0;
-    vCodec = 0;
     vFile = 0;
-    packet = 0;
+}
+
+VRVideo::Stream::~Stream() {
+    if (vCodec) avcodec_close(vCodec); // Close the codec
+    vCodec = 0;
 }
 
 VRVideoPtr VRVideo::create(VRMaterialPtr mat) { return VRVideoPtr( new VRVideo(mat) ); }
@@ -99,8 +97,9 @@ int getNColors(AVPixelFormat pfmt) {
     return 3;
 }
 
-VRTexturePtr VRVideo::convertNextFrame() {
+VRTexturePtr VRVideo::convertFrame(int stream, AVPacket* packet) {
     int valid = 0;
+    auto vCodec = streams[stream].vCodec;
     avcodec_decode_video2(vCodec, vFrame, &valid, packet); // Decode video frame
     if (valid == 0) return 0;
 
@@ -158,11 +157,13 @@ void VRVideo::open(string f) {
     if (!vFrame) vFrame = av_frame_alloc(); // Allocate video frame
     if (!nFrame) nFrame = av_frame_alloc(); // Allocate video frame
 
-    frames.clear();
+    streams.clear();
     for (int i=0; i<NStreams; i++) {
         int stream = getStream(i);
-        vCodec = vFile->streams[stream]->codec;
+        auto vCodec = vFile->streams[stream]->codec;
         if (vCodec == 0) continue;
+        streams[stream] = Stream();
+        streams[stream].vCodec = vCodec;
 
         // Find the decoder for the video stream
         AVDictionary* optionsDict = 0;
@@ -172,23 +173,24 @@ void VRVideo::open(string f) {
 
         cout << "  VRVideo::open stream " << i << endl;
         int frame=0;
-        if (!packet) packet = new AVPacket();
-        for (; av_read_frame(vFile, packet)>=0; av_packet_unref(packet) ) { // read stream
-            if (packet->stream_index != stream) continue;
-            auto img = convertNextFrame();
+        for (AVPacket packet; av_read_frame(vFile, &packet)>=0; av_packet_unref(&packet) ) { // read stream
+            if (packet.stream_index != stream) continue;
+            auto img = convertFrame(stream, &packet);
             if (!img) continue;
-            frames[stream][frame] = img;
+            streams[stream].frames[frame] = img;
             frame++;
         }
     }
-
-    av_frame_free(&nFrame);
 }
 
-size_t VRVideo::getNFrames(int stream) { return frames[stream].size(); }
+size_t VRVideo::getNFrames(int stream) { return streams[stream].frames.size(); }
 
 void VRVideo::showFrame(int stream, int frame) {
-    if (auto m = material.lock()) m->setTexture(getFrame(stream,frame));
+    PLock(mutex);
+    currentFrame = frame;
+    auto f = getFrame(stream,frame);
+    if (!f) return;
+    if (auto m = material.lock()) m->setTexture(f);
 }
 
 void VRVideo::frameUpdate(float t, int stream, int N) {
@@ -209,5 +211,5 @@ void VRVideo::play(int stream, float t0, float t1, float v) {
     cout << "video, play stream" << stream << ", start offset: " << O << ", duration: " << T << endl;
 }
 
-VRTexturePtr VRVideo::getFrame(int stream, int i) { if (frames[stream].count(i) == 0) return 0; return frames[stream][i]; }
-VRTexturePtr VRVideo::getFrame(int stream, float t) { return frames[stream][(int)t*getNFrames(stream)]; }
+VRTexturePtr VRVideo::getFrame(int stream, int i) { if (streams[stream].frames.count(i) == 0) return 0; return streams[stream].frames[i]; }
+VRTexturePtr VRVideo::getFrame(int stream, float t) { return streams[stream].frames[(int)t*getNFrames(stream)]; }
