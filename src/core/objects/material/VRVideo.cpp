@@ -70,6 +70,28 @@ void FlipFrame(AVFrame* pFrame) {
     }
 }
 
+int getNColors(AVPixelFormat pfmt) {
+    if (pfmt == AV_PIX_FMT_NONE) return 0;
+    if (pfmt == AV_PIX_FMT_YUV420P) return 3;
+    if (pfmt == AV_PIX_FMT_YUYV422) return 3;
+    if (pfmt == AV_PIX_FMT_RGB24) return 3;
+    if (pfmt == AV_PIX_FMT_BGR24) return 3;
+    if (pfmt == AV_PIX_FMT_YUV422P) return 3;
+    if (pfmt == AV_PIX_FMT_YUV444P) return 3;
+    if (pfmt == AV_PIX_FMT_YUV410P) return 1;
+    if (pfmt == AV_PIX_FMT_YUV411P) return 1;
+    if (pfmt == AV_PIX_FMT_GRAY8) return 1;
+    if (pfmt == AV_PIX_FMT_MONOWHITE) return 1;
+    if (pfmt == AV_PIX_FMT_MONOBLACK) return 1;
+    if (pfmt == AV_PIX_FMT_PAL8) return 3;
+    if (pfmt == AV_PIX_FMT_YUVJ420P) return 3;
+    if (pfmt == AV_PIX_FMT_YUVJ422P) return 3;
+    if (pfmt == AV_PIX_FMT_YUVJ444P) return 3;
+    // ...
+
+    return 3;
+}
+
 void VRVideo::open(string f) {
     // open file
     if(avformat_open_input(&vFile, f.c_str(), NULL, NULL)!=0) return; // Couldn't open file
@@ -81,7 +103,7 @@ void VRVideo::open(string f) {
     cout << " VRVideo::open " << f << ", "<< NStreams << " streams" << endl;
 
     AVFrame* vFrame = av_frame_alloc(); // Allocate video frame
-    AVFrame* rgbFrame = av_frame_alloc();
+    AVFrame* nFrame = av_frame_alloc();
     vector<UInt8> osgFrame;
 
     frames.clear();
@@ -110,42 +132,48 @@ void VRVideo::open(string f) {
             FlipFrame(vFrame);
             width = vFrame->width;
             height = vFrame->height;
+            AVPixelFormat pf = AVPixelFormat(vFrame->format);
 
-            if (!swsContext) {
-                AVPixelFormat pf = AVPixelFormat(vFrame->format);
-                swsContext = sws_getContext(width, height, pf, width, height, AV_PIX_FMT_RGB24, SWS_BILINEAR, NULL, NULL, NULL);
-
-                rgbFrame->format = AV_PIX_FMT_RGB24;
-                rgbFrame->width = width;
-                rgbFrame->height = height;
-                if (av_frame_get_buffer(rgbFrame, 0) < 0) { cout << "  Error in VRVideo, av_frame_get_buffer failed!" << endl; continue; }
-
-                osgFrame.resize(width*height*3, 0);
+            int Ncols = getNColors(pf);
+            if (Ncols == 0) {
+                cout << "ERROR: stream has no colors!" << endl;
+                continue;
             }
 
-            int rgbH = sws_scale(swsContext, vFrame->data, vFrame->linesize, 0, height, rgbFrame->data, rgbFrame->linesize);
+            if (!swsContext) {
+                if (Ncols == 1) nFrame->format = AV_PIX_FMT_GRAY8;
+                if (Ncols == 3) nFrame->format = AV_PIX_FMT_RGB24;
+
+                swsContext = sws_getContext(width, height, pf, width, height, AVPixelFormat(nFrame->format), SWS_BILINEAR, NULL, NULL, NULL);
+                nFrame->width = width;
+                nFrame->height = height;
+                if (av_frame_get_buffer(nFrame, 0) < 0) { cout << "  Error in VRVideo, av_frame_get_buffer failed!" << endl; continue; }
+            }
+
+            int rgbH = sws_scale(swsContext, vFrame->data, vFrame->linesize, 0, height, nFrame->data, nFrame->linesize);
             if (rgbH < 0) { cout << "  Error in VRVideo, sws_scale failed!" << endl; continue; }
-            int rgbW = rgbFrame->linesize[0]/3;
+            int rgbW = nFrame->linesize[0]/Ncols;
 
             osgFrame.resize(width*height*3, 0);
 
-            auto data1 = (uint8_t*)rgbFrame->data[0];
+            auto data1 = (uint8_t*)nFrame->data[0];
             auto data2 = (uint8_t*)&osgFrame[0];
             for (int y = 0; y<height; y++) {
-                int k1 = y*width*3;
-                int k2 = y*rgbW*3;
-                memcpy(&data2[k1], &data1[k2], width*3);
+                int k1 = y*width*Ncols;
+                int k2 = y*rgbW*Ncols;
+                memcpy(&data2[k1], &data1[k2], width*Ncols);
             }
 
             VRTexturePtr img = VRTexture::create();
-            img->getImage()->set(Image::OSG_RGB_PF, width, height, 1, 1, 1, 0.0, data2, Image::OSG_UINT8_IMAGEDATA, true, 1);
+            if (Ncols == 1) img->getImage()->set(Image::OSG_L_PF, width, height, 1, 1, 1, 0.0, data2, Image::OSG_UINT8_IMAGEDATA, true, 1);
+            if (Ncols == 3) img->getImage()->set(Image::OSG_RGB_PF, width, height, 1, 1, 1, 0.0, data2, Image::OSG_UINT8_IMAGEDATA, true, 1);
             frames[stream][frame] = img;
             frame++;
         }
     }
 
     av_frame_free(&vFrame);
-    av_frame_free(&rgbFrame);
+    av_frame_free(&nFrame);
 }
 
 void VRVideo::close() {
@@ -171,13 +199,15 @@ void VRVideo::frameUpdate(float t, int stream, int N) {
 void VRVideo::play(int stream, float t0, float t1, float v) {
     if (!anim) anim = VRAnimation::create();
     int N = getNFrames(stream);
-    float T = N/24.0;
+
+    double T = vFile->duration   * 1e-6;
+    double O = vFile->start_time * 1e-6;
 
     animCb = VRAnimCb::create("videoCB", bind(&VRVideo::frameUpdate, this, placeholders::_1, stream, N));
     anim->setCallback(animCb);
-    anim->setDuration(T); // 24 fps
-    anim->start();
-    cout << "video, play stream" << stream << ", duration: " << T << endl;
+    anim->setDuration(T);
+    anim->start(O);
+    cout << "video, play stream" << stream << ", start offset: " << O << ", duration: " << T << endl;
 }
 
 VRTexturePtr VRVideo::getFrame(int stream, int i) { if (frames[stream].count(i) == 0) return 0; return frames[stream][i]; }
