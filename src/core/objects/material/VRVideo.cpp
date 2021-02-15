@@ -29,6 +29,7 @@ VRVideo::VRVideo(VRMaterialPtr mat) {
 }
 
 VRVideo::~VRVideo() {
+    cout << "VRVideo::~VRVideo " << endl;
     if (anim) anim->stop();
     if (vFrame) av_frame_free(&vFrame);
     if (nFrame) av_frame_free(&nFrame);
@@ -39,6 +40,7 @@ VRVideo::~VRVideo() {
 }
 
 VRVideo::Stream::~Stream() {
+    cout << " VRVideo::Stream::~Stream " << endl;
     if (vCodec) avcodec_close(vCodec); // Close the codec
     vCodec = 0;
 }
@@ -49,7 +51,7 @@ int VRVideo::getNStreams() {
     if (vFile == 0) return 0;
 
     int k = 0;
-    for(int i=0; i<(int)vFile->nb_streams; i++) if(vFile->streams[i]->codec->codec_type == AVMEDIA_TYPE_VIDEO) k++;
+    for (int i=0; i<(int)vFile->nb_streams; i++) if(vFile->streams[i]->codec->codec_type == AVMEDIA_TYPE_VIDEO) k++;
     return k;
 }
 
@@ -99,11 +101,17 @@ int getNColors(AVPixelFormat pfmt) {
 }
 
 VRTexturePtr VRVideo::convertFrame(int stream, AVPacket* packet) {
-    if (!streams.count(stream)) return 0;
+    if (!streams.count(stream)) {
+        cout << "VRVideo::convertFrame ARG1" << endl;
+        return 0;
+    }
     int valid = 0;
     auto vCodec = streams[stream].vCodec;
     avcodec_decode_video2(vCodec, vFrame, &valid, packet); // Decode video frame
-    if (valid == 0) return 0;
+    if (valid == 0) {
+        cout << "VRVideo::convertFrame ARG2" << endl;
+        return 0;
+    }
 
     FlipFrame(vFrame);
     int width = vFrame->width;
@@ -177,39 +185,37 @@ void VRVideo::open(string f) {
         AVCodec* c = avcodec_find_decoder(vCodec->codec_id);
         if (c == 0) { fprintf(stderr, "Unsupported codec!\n"); return; } // Codec not found
         if (avcodec_open2(vCodec, c, &optionsDict)<0) return; // Could not open codec
-
-        loadSomeFrames(stream); // cache first frames
     }
 
-    cacheSize = 200;
-    worker = VRThreadCb::create( "video cache", bind(&VRVideo::cacheFrames, this) );
-    wThreadID = VRScene::getCurrent()->initThread(worker, "video cache", false, 0);
-    //VRScene::getCurrent()->waitThread(wThreadID);
+    worker = VRThreadCb::create( "video cache", bind(&VRVideo::cacheFrames, this, placeholders::_1) );
+    wThreadID = VRScene::getCurrent()->initThread(worker, "video cache", true, 0);
 }
 
-void VRVideo::cacheFrames() {
+void VRVideo::cacheFrames(VRThreadWeakPtr t) {
     {
         PLock(mutex);
-        for (auto s : streams) loadSomeFrames(s.first);
+        for (auto& s : streams) loadSomeFrames(s.first);
     }
-    osgSleep(10);
+    osgSleep(1);
 }
 
 void VRVideo::loadSomeFrames(int stream) {
-    int N = currentFrame;
+    int currentF = currentFrame;
 
-    for (AVPacket packet; av_read_frame(vFile, &packet)>=0; av_packet_unref(&packet) ) { // read stream
+    if (cachedFrameMax-currentF >= cacheSize) return;
+
+    for (AVPacket packet; av_read_frame(vFile, &packet)>=0; av_packet_unref(&packet)) { // read stream
         if (packet.stream_index != stream) continue;
         auto img = convertFrame(stream, &packet);
         if (!img) continue;
         streams[stream].frames[cachedFrameMax] = img;
         cachedFrameMax++;
-        if (cachedFrameMax-N >= cacheSize) return;
+        if (cachedFrameMax-currentF >= cacheSize) { av_packet_unref(&packet); break; }
     }
 
     vector<int> toRemove;
     for (auto f : streams[stream].frames) { // read stream
-        if (f.first < N) toRemove.push_back(f.first);
+        if (f.first < currentF) toRemove.push_back(f.first);
     }
 
     for (auto r : toRemove) streams[stream].frames.erase(r);
@@ -220,8 +226,9 @@ size_t VRVideo::getNFrames(int stream) { return streams[stream].frames.size(); }
 void VRVideo::showFrame(int stream, int frame) {
     PLock(mutex);
     currentFrame = frame;
-    auto f = getFrame(stream,frame);
+    auto f = getFrame(stream, frame);
     if (!f) return;
+    //cout << " showFrame " << stream << " " << frame << " " << f->getSize() << " " << cachedFrameMax << endl;
     if (auto m = material.lock()) m->setTexture(f);
 }
 

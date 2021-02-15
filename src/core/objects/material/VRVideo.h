@@ -35,9 +35,8 @@ class VRVideo : public VRStorage {
         double start_time = 0;
         double duration = 0;
 
-        int cacheSize = 10;
+        int cacheSize = 100;
         int currentFrame = 0;
-        int cachedFrameMin = 0;
         int cachedFrameMax = 0;
 
         VRMaterialWeakPtr material;
@@ -60,7 +59,7 @@ class VRVideo : public VRStorage {
         VRTexturePtr convertFrame(int stream, AVPacket* packet);
         void frameUpdate(float t, int stream);
         void loadSomeFrames(int stream);
-        void cacheFrames();
+        void cacheFrames(VRThreadWeakPtr t);
 
     public:
         VRVideo(VRMaterialPtr mat);
