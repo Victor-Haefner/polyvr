@@ -22,6 +22,7 @@ class VRVideo : public VRStorage {
         struct Stream {
             AVCodecContext* vCodec = 0;
             map<int, VRTexturePtr> frames;
+            double fps = 0;
 
             ~Stream();
         };
@@ -31,6 +32,10 @@ class VRVideo : public VRStorage {
         int height = 0;
         int NStreams = 0;
 
+        double start_time = 0;
+        double duration = 0;
+
+        int cacheSize = 10;
         int currentFrame = 0;
         int cachedFrameMin = 0;
         int cachedFrameMax = 0;
@@ -47,11 +52,15 @@ class VRVideo : public VRStorage {
         AVPacket* packet = 0;
 
         boost::mutex mutex;
+        VRThreadCbPtr worker;
+        int wThreadID = 0;
 
         int getNStreams();
         int getStream(int j);
         VRTexturePtr convertFrame(int stream, AVPacket* packet);
-        void frameUpdate(float t, int stream, int N);
+        void frameUpdate(float t, int stream);
+        void loadSomeFrames(int stream);
+        void cacheFrames();
 
     public:
         VRVideo(VRMaterialPtr mat);
