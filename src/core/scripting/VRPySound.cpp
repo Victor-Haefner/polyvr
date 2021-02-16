@@ -14,7 +14,7 @@ PyMethodDef VRPySound::methods[] = {
     {"setPath", PyWrap(Sound, setPath, "Stop sound", void, string ) },
     {"setLoop", PyWrap(Sound, setLoop, "Stop sound", void, bool ) },
     {"setPitch", PyWrap(Sound, setPitch, "Stop sound", void, float ) },
-    {"setGain", PyWrap(Sound, setGain, "Stop sound", void, float ) },
+    {"setVolume", PyWrap(Sound, setVolume, "Set sound volume, try setting master volume on soundmanager", void, float ) },
     {"setUser", PyWrap(Sound, setUser, "Stop sound", void, Vec3d, Vec3d ) },
     {"isRunning", PyWrap(Sound, isRunning, "Check if sound is running", bool) },
     {"synthesize", PyWrap(Sound, synthesize, "synthesize( Ac, wc, pc, Am, wm, pm, T)\t\n A,w,p are the amplitude, frequency and phase, c and m are the carrier sinusoid and modulator sinusoid, T is the packet duration in seconds", void, float, float, float, float, float, float, float) },

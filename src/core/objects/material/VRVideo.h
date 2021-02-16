@@ -20,20 +20,22 @@ OSG_BEGIN_NAMESPACE;
 
 class VRVideo : public VRStorage {
     private:
-        struct Stream {
+        struct VStream {
             AVCodecContext* vCodec = 0;
             map<int, VRTexturePtr> frames;
             double fps = 0;
-
-            ~Stream();
+            ~VStream();
         };
 
-        VRSoundPtr audio;
+        struct AStream {
+            VRSoundPtr audio;
+        };
 
-        map<int, Stream> vStreams; // streams[stream]
-        vector<int> aStreams;
+        map<int, VStream> vStreams;
+        map<int, AStream> aStreams;
         int width = 0;
         int height = 0;
+        float volume = 1.0;
 
         double start_time = 0;
         double duration = 0;
@@ -73,6 +75,8 @@ class VRVideo : public VRStorage {
         void open(string f);
         void showFrame(int stream, int frame);
         void play(int stream, float t0, float t1, float v);
+
+        void setVolume(float v);
 
         size_t getNFrames(int stream);
         VRTexturePtr getFrame(int stream, int i);

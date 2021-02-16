@@ -8,10 +8,25 @@
 #include "VRSoundFwd.h"
 #include "core/utils/VRFunctionFwd.h"
 
+struct ALCdevice_struct;
+struct ALCcontext_struct;
+
 using namespace std;
 OSG_BEGIN_NAMESPACE;
 
 struct VRSoundChannel;
+
+struct VRSoundContext {
+    ALCdevice_struct* device = 0;
+    ALCcontext_struct* context = 0;
+
+    VRSoundContext();
+    ~VRSoundContext();
+    static VRSoundContextPtr create();
+
+    void makeCurrent();
+    void enumerateDevices();
+};
 
 class VRSoundManager {
 public:

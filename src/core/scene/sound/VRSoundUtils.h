@@ -7,17 +7,21 @@ typedef int ALenum;
 std::string toString(ALenum a);
 
 #define ALCHECK(x) { \
-x; \
 ALenum error = alGetError(); \
 if (error != AL_NO_ERROR) { \
-        fprintf(stderr, "\nRuntime error: %s got %s at %s:%d", #x, toString(error).c_str(), __FILE__, __LINE__); \
+        fprintf(stderr, " Prior runtime error: before executing %s got %s at %s:%d\n", #x, toString(error).c_str(), __FILE__, __LINE__); \
+} \
+x; \
+error = alGetError(); \
+if (error != AL_NO_ERROR) { \
+        fprintf(stderr, "Runtime error: %s got %s at %s:%d\n", #x, toString(error).c_str(), __FILE__, __LINE__); \
 } }
 
 #define ALCHECK_BREAK(x) { \
 x; \
 ALenum error = alGetError(); \
 if (error != AL_NO_ERROR) { \
-        fprintf(stderr, "\nRuntime error: %s got %s at %s:%d", #x, toString(error).c_str(), __FILE__, __LINE__); \
+        fprintf(stderr, "Runtime error: %s got %s at %s:%d\n", #x, toString(error).c_str(), __FILE__, __LINE__); \
         break; \
 } }
 

@@ -8,6 +8,7 @@
 #include "core/objects/VRAnimation.h"
 #include "core/scene/VRScene.h"
 #include "core/scene/sound/VRSound.h"
+#include "core/scene/sound/VRSoundManager.h"
 
 extern "C" {
     #include <libavcodec/avcodec.h>
@@ -40,7 +41,7 @@ VRVideo::~VRVideo() {
     vFile = 0;
 }
 
-VRVideo::Stream::~Stream() {
+VRVideo::VStream::~VStream() {
     cout << " VRVideo::Stream::~Stream " << endl;
     if (vCodec) avcodec_close(vCodec); // Close the codec
     vCodec = 0;
@@ -164,27 +165,36 @@ void VRVideo::open(string f) {
     vStreams.clear();
     aStreams.clear();
     for (int i=0; i<(int)vFile->nb_streams; i++) {
-        auto vStream = vFile->streams[i];
-        auto vCodec = vStream->codec;
-        if (vCodec == 0) continue;
+        AVStream* avStream = vFile->streams[i];
+        AVCodecContext* avCodec = avStream->codec;
+        if (avCodec == 0) continue;
 
-        bool isVideo = (vCodec->codec_type == AVMEDIA_TYPE_VIDEO);
-        bool isAudio = (vCodec->codec_type == AVMEDIA_TYPE_AUDIO);
+        bool isVideo = (avCodec->codec_type == AVMEDIA_TYPE_VIDEO);
+        bool isAudio = (avCodec->codec_type == AVMEDIA_TYPE_AUDIO);
 
         if (isVideo) {
-            vStreams[i] = Stream();
-            vStreams[i].vCodec = vCodec;
-            vStreams[i].fps = av_q2d(vStream->avg_frame_rate);
+            vStreams[i] = VStream();
+            vStreams[i].vCodec = avCodec;
+            vStreams[i].fps = av_q2d(avStream->avg_frame_rate);
 
             // Find the decoder for the video stream
             AVDictionary* optionsDict = 0;
-            AVCodec* c = avcodec_find_decoder(vCodec->codec_id);
+            AVCodec* c = avcodec_find_decoder(avCodec->codec_id);
             if (c == 0) { fprintf(stderr, "Unsupported codec!\n"); return; } // Codec not found
-            if (avcodec_open2(vCodec, c, &optionsDict)<0) return; // Could not open codec
+            if (avcodec_open2(avCodec, c, &optionsDict)<0) return; // Could not open codec
         }
 
         if (isAudio) {
-            aStreams.push_back(isAudio);
+            aStreams[i] = AStream();
+            aStreams[i].audio = VRSound::create();
+            aStreams[i].audio->setVolume(volume);
+
+            // Find the decoder for the audio stream
+            AVDictionary* optionsDict = 0;
+            AVCodec* c = avcodec_find_decoder(avCodec->codec_id);
+            if (c == 0) { fprintf(stderr, "Unsupported codec!\n"); continue; } // Codec not found
+            if (avcodec_open2(avCodec, c, &optionsDict)<0) continue; // Could not open codec
+            aStreams[i].audio->setCodec(avCodec, vFile);
         }
     }
 
@@ -202,11 +212,16 @@ void VRVideo::cacheFrames(VRThreadWeakPtr t) {
 
 void VRVideo::loadSomeFrames(int stream) {
     int currentF = currentFrame;
-
     if (cachedFrameMax-currentF >= cacheSize) return;
 
     for (AVPacket packet; av_read_frame(vFile, &packet)>=0; av_packet_unref(&packet)) { // read stream
-        if (packet.stream_index != stream) continue;
+        if (packet.stream_index != stream) {
+            if (aStreams.count(packet.stream_index)) {
+                aStreams[packet.stream_index].audio->queuePacket(&packet);
+            }
+            continue;
+        }
+
         auto img = convertFrame(stream, &packet);
         if (!img) continue;
         vStreams[stream].frames[cachedFrameMax] = img;
@@ -220,6 +235,11 @@ void VRVideo::loadSomeFrames(int stream) {
     }
 
     for (auto r : toRemove) vStreams[stream].frames.erase(r);
+}
+
+void VRVideo::setVolume(float v) {
+    volume = v;
+    for (auto& a : aStreams) a.second.audio->setVolume(v);
 }
 
 size_t VRVideo::getNFrames(int stream) { return vStreams[stream].frames.size(); }
