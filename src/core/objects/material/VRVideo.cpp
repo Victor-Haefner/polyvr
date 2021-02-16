@@ -214,7 +214,7 @@ void VRVideo::loadSomeFrames() {
     int currentF = currentFrame;
     if (cachedFrameMax-currentF >= cacheSize) return;
 
-    for (AVPacket packet; av_read_frame(vFile, &packet)>=0; av_packet_unref(&packet)) { // read stream
+    for (AVPacket packet; av_read_frame(vFile, &packet)>=0; av_packet_unref(&packet)) { // read packets
         int stream = packet.stream_index;
 
         if (aStreams.count(stream)) {
@@ -230,7 +230,7 @@ void VRVideo::loadSomeFrames() {
         }
     }
 
-    for (auto& s : vStreams) {
+    for (auto& s : vStreams) { // cleanup cache
         vector<int> toRemove;
         for (auto f : s.second.frames) { // read stream
             if (f.first < currentF) toRemove.push_back(f.first);

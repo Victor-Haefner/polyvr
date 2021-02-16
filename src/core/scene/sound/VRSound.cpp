@@ -262,7 +262,8 @@ void VRSound::setCodec(AVCodecContext* codec, AVFormatContext* context) {
     initiated = true;
 }
 
-void VRSound::queuePacket(AVPacket* packet) {
+vector<pair<ALbyte*, int>> VRSound::extractPacket(AVPacket* packet) {
+    vector<pair<ALbyte*, int>> res;
     //cout << "VRSound::queuePacket, alIsSource1: " << bool(alIsSource(source) == AL_TRUE) << endl;
     while (packet->size > 0) { // Decodes audio data from `packet` into the frame
         if (interrupt) { cout << "interrupt sound\n"; break; }
@@ -283,23 +284,33 @@ void VRSound::queuePacket(AVPacket* packet) {
                 frameData = (ALbyte *)av_malloc(data_size*sizeof(uint8_t));
                 avresample_convert( al->resampler, (uint8_t **)&frameData, linesize, al->frame->nb_samples, (uint8_t **)al->frame->data, al->frame->linesize[0], al->frame->nb_samples);
             } else frameData = (ALbyte*)al->frame->data[0];
-
-            ALint val = -1;
-            ALuint bufid = getFreeBufferID();
-
-            //cout << " alBufferData source: " << source << " bufid: " << bufid << " format: " << al->format << " data_size: " << data_size << " frequency: " << frequency << endl;
-
-            ALCHECK( alBufferData(bufid, al->format, frameData, data_size, frequency));
-            ALCHECK( alSourceQueueBuffers(source, 1, &bufid));
-            ALCHECK( alGetSourcei(source, AL_SOURCE_STATE, &val));
-            //cout << "  source playing? " << bool(val == AL_PLAYING) << endl;
-            if (val != AL_PLAYING) ALCHECK( alSourcePlay(source));
+            res.push_back(make_pair(frameData, data_size));
         }
 
         //There may be more than one frame of audio data inside the packet.
         packet->size -= len;
         packet->data += len;
     } // while packet.size > 0
+    return res;
+}
+
+void VRSound::queuePacket(AVPacket* packet) {
+    for (auto data : extractPacket(packet)) {
+        if (interrupt) { cout << "interrupt sound\n"; break; }
+        ALint val = -1;
+        ALuint bufid = getFreeBufferID();
+
+        ALbyte* frameData = data.first;
+        int data_size = data.second;
+
+        //cout << " alBufferData source: " << source << " bufid: " << bufid << " format: " << al->format << " data_size: " << data_size << " frequency: " << frequency << endl;
+
+        ALCHECK( alBufferData(bufid, al->format, frameData, data_size, frequency));
+        ALCHECK( alSourceQueueBuffers(source, 1, &bufid));
+        ALCHECK( alGetSourcei(source, AL_SOURCE_STATE, &val));
+        //cout << "  source playing? " << bool(val == AL_PLAYING) << endl;
+        if (val != AL_PLAYING) ALCHECK( alSourcePlay(source));
+    }
 }
 
 void VRSound::playFrame() {

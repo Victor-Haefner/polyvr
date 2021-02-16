@@ -13,6 +13,8 @@ class AVPacket;
 class AVCodecContext;
 class AVFormatContext;
 
+typedef signed char ALbyte;
+
 using namespace std;
 OSG_BEGIN_NAMESPACE;
 
@@ -76,6 +78,7 @@ class VRSound {
         void recycleBuffer();
         unsigned int getFreeBufferID();
         void setCodec(AVCodecContext* codec, AVFormatContext* context);
+        vector<pair<ALbyte*, int>> extractPacket(AVPacket* packet);
         void queuePacket(AVPacket* packet);
 
         // carrier amplitude, carrier frequency, carrier phase, modulation amplitude, modulation frequency, modulation phase, packet duration
