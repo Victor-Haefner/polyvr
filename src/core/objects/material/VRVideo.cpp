@@ -203,11 +203,8 @@ void VRVideo::open(string f) {
 }
 
 void VRVideo::cacheFrames(VRThreadWeakPtr t) {
-    {
-        PLock(mutex);
-        loadSomeFrames();
-    }
-    osgSleep(1);
+    PLock(mutex);
+    loadSomeFrames();
 }
 
 void VRVideo::loadSomeFrames() {
@@ -266,7 +263,7 @@ void VRVideo::showFrame(int stream, int frame) {
     PLock(mutex);
     currentFrame = frame;
 
-    cout << " showFrame " << frame;
+    //cout << " showFrame " << frame;
 
     // video, just jump to frame
     auto f = getFrame(stream, frame);
