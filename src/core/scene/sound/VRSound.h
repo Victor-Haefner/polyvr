@@ -79,6 +79,7 @@ class VRSound {
         unsigned int getFreeBufferID();
         void setCodec(AVCodecContext* codec, AVFormatContext* context);
         vector<pair<ALbyte*, int>> extractPacket(AVPacket* packet);
+        void queueFrameData(ALbyte* frameData, int data_size);
         void queuePacket(AVPacket* packet);
 
         // carrier amplitude, carrier frequency, carrier phase, modulation amplitude, modulation frequency, modulation phase, packet duration

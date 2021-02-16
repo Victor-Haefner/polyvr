@@ -16,19 +16,25 @@ class AVPacket;
 class AVFrame;
 class SwsContext;
 
+typedef signed char ALbyte;
+
 OSG_BEGIN_NAMESPACE;
 
 class VRVideo : public VRStorage {
     private:
         struct VStream {
             AVCodecContext* vCodec = 0;
-            map<int, VRTexturePtr> frames;
+            map< int, VRTexturePtr > frames;
             double fps = 0;
+            int cachedFrameMax = 0;
             ~VStream();
         };
 
         struct AStream {
             VRSoundPtr audio;
+            map< int, vector<pair<ALbyte*, int>> > frames;
+            int lastFrameQueued = 0;
+            int cachedFrameMax = 0;
         };
 
         map<int, VStream> vStreams;
@@ -41,8 +47,8 @@ class VRVideo : public VRStorage {
         double duration = 0;
 
         int cacheSize = 100;
+        int audioQueue = 40;
         int currentFrame = 0;
-        int cachedFrameMax = 0;
 
         VRMaterialWeakPtr material;
         VRAnimationPtr anim;

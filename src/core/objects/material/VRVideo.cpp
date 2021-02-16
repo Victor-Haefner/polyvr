@@ -212,22 +212,37 @@ void VRVideo::cacheFrames(VRThreadWeakPtr t) {
 
 void VRVideo::loadSomeFrames() {
     int currentF = currentFrame;
-    if (cachedFrameMax-currentF >= cacheSize) return;
+
+    bool doReturn = true;
+    for (auto& s : vStreams) if (s.second.cachedFrameMax-currentF < cacheSize) doReturn = false;
+    //for (auto& s : aStreams) if (s.second.cachedFrameMax-currentF < cacheSize) doReturn = false;
+    if (doReturn) return;
 
     for (AVPacket packet; av_read_frame(vFile, &packet)>=0; av_packet_unref(&packet)) { // read packets
         int stream = packet.stream_index;
 
         if (aStreams.count(stream)) {
-            aStreams[stream].audio->queuePacket(&packet);
+            auto a = aStreams[stream].audio;
+            auto data = a->extractPacket(&packet);
+            aStreams[stream].frames[aStreams[stream].cachedFrameMax] = data;
+            aStreams[stream].cachedFrameMax++;
+            /*for (auto d : a->extractPacket(&packet)) {
+                a->queueFrameData(d.first, d.second);
+            }*/
         }
 
         if (vStreams.count(stream)) {
             auto img = convertFrame(stream, &packet);
             if (!img) continue;
-            vStreams[stream].frames[cachedFrameMax] = img;
-            cachedFrameMax++;
-            if (cachedFrameMax-currentF >= cacheSize) { av_packet_unref(&packet); break; }
+            vStreams[stream].frames[vStreams[stream].cachedFrameMax] = img;
+            vStreams[stream].cachedFrameMax++;
         }
+
+        // break if all streams are sufficiently cached
+        bool doBreak = true;
+        for (auto& s : vStreams) if (s.second.cachedFrameMax-currentF < cacheSize) doBreak = false;
+        //for (auto& s : aStreams) if (s.second.cachedFrameMax-currentF < cacheSize) doBreak = false;
+        if (doBreak) { av_packet_unref(&packet); break; }
     }
 
     for (auto& s : vStreams) { // cleanup cache
@@ -250,10 +265,28 @@ size_t VRVideo::getNFrames(int stream) { return vStreams[stream].frames.size(); 
 void VRVideo::showFrame(int stream, int frame) {
     PLock(mutex);
     currentFrame = frame;
+
+    cout << " showFrame " << frame;
+
+    // video, just jump to frame
     auto f = getFrame(stream, frame);
-    if (!f) return;
-    //cout << " showFrame " << stream << " " << frame << " " << f->getSize() << " " << cachedFrameMax << endl;
-    if (auto m = material.lock()) m->setTexture(f);
+    if (f) {
+        //cout << " showFrame " << stream << " " << frame << " " << f->getSize() << " " << cachedFrameMax << endl;
+        if (auto m = material.lock()) m->setTexture(f);
+    }
+
+    // audio, queue until current frame
+    for (auto& s : aStreams) { // just pick first audio stream if any..
+        int I0 = s.second.lastFrameQueued;
+        int I1 = s.second.cachedFrameMax; //min(frame+audioQueue, s.second.cachedFrameMax);
+        //cout << ", queue audio: " << I0 << " -> " << I1 << ", queued buffers: " << s.second.audio->getQueuedBuffer() << endl;
+        for (int i=I0; i<I1; i++) {
+            for (auto& d : s.second.frames[i]) {
+                s.second.audio->queueFrameData(d.first, d.second);
+            }
+        }
+        s.second.lastFrameQueued = I1;
+    }
 }
 
 void VRVideo::frameUpdate(float t, int stream) {
@@ -273,6 +306,7 @@ void VRVideo::play(int stream, float t0, float t1, float v) {
 }
 
 VRTexturePtr VRVideo::getFrame(int stream, int i) {
+    if (vStreams.count(stream) == 0) return 0;
     if (vStreams[stream].frames.count(i) == 0) return 0;
     return vStreams[stream].frames[i];
 }
