@@ -205,36 +205,39 @@ void VRVideo::open(string f) {
 void VRVideo::cacheFrames(VRThreadWeakPtr t) {
     {
         PLock(mutex);
-        for (auto& s : vStreams) loadSomeFrames(s.first);
+        loadSomeFrames();
     }
     osgSleep(1);
 }
 
-void VRVideo::loadSomeFrames(int stream) {
+void VRVideo::loadSomeFrames() {
     int currentF = currentFrame;
     if (cachedFrameMax-currentF >= cacheSize) return;
 
     for (AVPacket packet; av_read_frame(vFile, &packet)>=0; av_packet_unref(&packet)) { // read stream
-        if (packet.stream_index != stream) {
-            if (aStreams.count(packet.stream_index)) {
-                aStreams[packet.stream_index].audio->queuePacket(&packet);
-            }
-            continue;
+        int stream = packet.stream_index;
+
+        if (aStreams.count(stream)) {
+            aStreams[stream].audio->queuePacket(&packet);
         }
 
-        auto img = convertFrame(stream, &packet);
-        if (!img) continue;
-        vStreams[stream].frames[cachedFrameMax] = img;
-        cachedFrameMax++;
-        if (cachedFrameMax-currentF >= cacheSize) { av_packet_unref(&packet); break; }
+        if (vStreams.count(stream)) {
+            auto img = convertFrame(stream, &packet);
+            if (!img) continue;
+            vStreams[stream].frames[cachedFrameMax] = img;
+            cachedFrameMax++;
+            if (cachedFrameMax-currentF >= cacheSize) { av_packet_unref(&packet); break; }
+        }
     }
 
-    vector<int> toRemove;
-    for (auto f : vStreams[stream].frames) { // read stream
-        if (f.first < currentF) toRemove.push_back(f.first);
-    }
+    for (auto& s : vStreams) {
+        vector<int> toRemove;
+        for (auto f : s.second.frames) { // read stream
+            if (f.first < currentF) toRemove.push_back(f.first);
+        }
 
-    for (auto r : toRemove) vStreams[stream].frames.erase(r);
+        for (auto r : toRemove) s.second.frames.erase(r);
+    }
 }
 
 void VRVideo::setVolume(float v) {

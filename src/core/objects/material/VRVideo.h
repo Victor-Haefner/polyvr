@@ -63,7 +63,7 @@ class VRVideo : public VRStorage {
         int getStream(int j);
         VRTexturePtr convertFrame(int stream, AVPacket* packet);
         void frameUpdate(float t, int stream);
-        void loadSomeFrames(int stream);
+        void loadSomeFrames();
         void cacheFrames(VRThreadWeakPtr t);
 
     public:
