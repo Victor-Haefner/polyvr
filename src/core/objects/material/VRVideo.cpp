@@ -223,9 +223,6 @@ void VRVideo::loadSomeFrames() {
             auto data = a->extractPacket(&packet);
             aStreams[stream].frames[aStreams[stream].cachedFrameMax] = data;
             aStreams[stream].cachedFrameMax++;
-            /*for (auto d : a->extractPacket(&packet)) {
-                a->queueFrameData(d.first, d.second);
-            }*/
         }
 
         if (vStreams.count(stream)) {
