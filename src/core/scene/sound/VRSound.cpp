@@ -90,6 +90,7 @@ void VRSound::stop() { interrupt = true; loop = false; }
 
 void VRSound::close() {
     cout << " !!! VRSound::close !!!" << endl;
+    stop();
     if (source) ALCHECK( alDeleteSources(1u, &source));
     if (buffers && Nbuffers) ALCHECK( alDeleteBuffers(Nbuffers, buffers));
     if (al->context) avformat_close_input(&al->context);
@@ -97,6 +98,7 @@ void VRSound::close() {
     al->context = 0;
     al->resampler = 0;
     init = 0;
+    cout << "  VRSound::close done" << endl;
 }
 
 void VRSound::reset() { al->state = AL_STOPPED; }
@@ -237,10 +239,8 @@ bool VRSound::initiate() {
     return true;
 }
 
-void VRSound::setCodec(AVCodecContext* codec, AVFormatContext* context) {
+void VRSound::initWithCodec(AVCodecContext* codec) {
     al->state = AL_STOPPED;
-
-    al->context = context;
     al->resampler = 0;
     al->codec = codec;
 
@@ -251,7 +251,6 @@ void VRSound::setCodec(AVCodecContext* codec, AVFormatContext* context) {
 #else
         al->frame = av_frame_alloc(); // Allocate frame
 #endif
-
 
     ALCHECK( alGenBuffers(Nbuffers, buffers) );
     for (uint i=0; i<Nbuffers; i++) free_buffers.push_back(buffers[i]);

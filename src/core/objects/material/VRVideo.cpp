@@ -33,18 +33,26 @@ VRVideo::VRVideo(VRMaterialPtr mat) {
 VRVideo::~VRVideo() {
     cout << "VRVideo::~VRVideo " << endl;
     if (anim) anim->stop();
+    if (wThreadID >= 0) VRScene::getCurrent()->stopThread(wThreadID, 1000);
     if (vFrame) av_frame_free(&vFrame);
     if (nFrame) av_frame_free(&nFrame);
     if (vFile) avformat_close_input(&vFile); // Close the video file
+    cout << " VRVideo::~VRVideo done" << endl;
 
     vFrame = 0;
     vFile = 0;
 }
 
 VRVideo::VStream::~VStream() {
-    cout << " VRVideo::Stream::~Stream " << endl;
+    cout << " VRVideo::VStream::~VStream " << endl;
     if (vCodec) avcodec_close(vCodec); // Close the codec
     vCodec = 0;
+}
+
+VRVideo::AStream::~AStream() {
+    cout << " VRVideo::AStream::~AStream " << endl;
+    if (audio) audio->close(); // Close the codec
+    audio = 0;
 }
 
 VRVideoPtr VRVideo::create(VRMaterialPtr mat) { return VRVideoPtr( new VRVideo(mat) ); }
@@ -95,17 +103,11 @@ int getNColors(AVPixelFormat pfmt) {
 }
 
 VRTexturePtr VRVideo::convertFrame(int stream, AVPacket* packet) {
-    if (!vStreams.count(stream)) {
-        cout << "VRVideo::convertFrame ARG1" << endl;
-        return 0;
-    }
+    if (!vStreams.count(stream)) return 0;
     int valid = 0;
     auto vCodec = vStreams[stream].vCodec;
     avcodec_decode_video2(vCodec, vFrame, &valid, packet); // Decode video frame
-    if (valid == 0) {
-        cout << "VRVideo::convertFrame ARG2" << endl;
-        return 0;
-    }
+    if (valid == 0) return 0;
 
     FlipFrame(vFrame);
     int width = vFrame->width;
@@ -194,7 +196,7 @@ void VRVideo::open(string f) {
             AVCodec* c = avcodec_find_decoder(avCodec->codec_id);
             if (c == 0) { fprintf(stderr, "Unsupported codec!\n"); continue; } // Codec not found
             if (avcodec_open2(avCodec, c, &optionsDict)<0) continue; // Could not open codec
-            aStreams[i].audio->setCodec(avCodec, vFile);
+            aStreams[i].audio->initWithCodec(avCodec);
         }
     }
 

@@ -77,7 +77,7 @@ class VRSound {
         int getQueuedBuffer();
         void recycleBuffer();
         unsigned int getFreeBufferID();
-        void setCodec(AVCodecContext* codec, AVFormatContext* context);
+        void initWithCodec(AVCodecContext* codec);
         vector<pair<ALbyte*, int>> extractPacket(AVPacket* packet);
         void queueFrameData(ALbyte* frameData, int data_size);
         void queuePacket(AVPacket* packet);

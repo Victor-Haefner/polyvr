@@ -35,6 +35,7 @@ class VRVideo : public VRStorage {
             map< int, vector<pair<ALbyte*, int>> > frames;
             int lastFrameQueued = 0;
             int cachedFrameMax = 0;
+            ~AStream();
         };
 
         map<int, VStream> vStreams;
@@ -63,7 +64,7 @@ class VRVideo : public VRStorage {
 
         boost::mutex mutex;
         VRThreadCbPtr worker;
-        int wThreadID = 0;
+        int wThreadID = -1;
 
         int getNStreams();
         int getStream(int j);
