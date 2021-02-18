@@ -268,7 +268,10 @@ void VRVideo::showFrame(int stream, int frame) {
     auto f = getFrame(stream, frame);
     if (f) {
         //cout << " showFrame " << stream << " " << frame << " " << f->getSize() << " " << cachedFrameMax << endl;
-        if (auto m = material.lock()) m->setTexture(f);
+        if (auto m = material.lock()) {
+            m->setTexture(f);
+            m->setMagMinFilter(GL_LINEAR, GL_LINEAR);
+        }
     }
 
     // audio, queue until current frame
