@@ -74,7 +74,8 @@ void VRStorage::setOverrideCallbacks(bool b) { overrideCallbacks = b; }
 void VRStorage::save(XMLElementPtr e, int p) {
     if (e == 0) return;
     if (persistency <= p) return;
-    for (auto s : storage) (*s.second.f2)({e, p});
+    VRStorageCbParams sp = {e, p};
+    for (auto s : storage) (*s.second.f2)(sp);
 }
 
 XMLElementPtr VRStorage::saveUnder(XMLElementPtr e, int p, string t) {

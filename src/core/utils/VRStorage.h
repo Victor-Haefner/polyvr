@@ -13,7 +13,7 @@ namespace xmlpp{ class Element; }
 
 struct VRStorageCbParams {
     OSG::XMLElementPtr e;
-    int p = 0;
+    int p; // dont add '= 0', wont compile with initialiser list on older compilers..
 };
 
 ptrFctFwd(VRStore, VRStorageCbParams);
