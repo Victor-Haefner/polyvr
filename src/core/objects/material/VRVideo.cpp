@@ -258,11 +258,28 @@ void VRVideo::setVolume(float v) {
 
 size_t VRVideo::getNFrames(int stream) { return vStreams[stream].frames.size(); }
 
+void VRVideo::pause() {
+    if (anim) anim->pause();
+    for (auto& a : aStreams)
+        if (a.second.audio) a.second.audio->pause();
+}
+
+void VRVideo::resume() {
+    if (anim) anim->resume();
+    for (auto& a : aStreams)
+        if (a.second.audio) a.second.audio->resume();
+}
+
+bool VRVideo::isPaused() {
+    if (anim) return anim->isPaused();
+    return false;
+}
+
 void VRVideo::showFrame(int stream, int frame) {
     PLock(mutex);
     currentFrame = frame;
 
-    //cout << " showFrame " << frame;
+    //cout << " showFrame " << frame << endl;
 
     // video, just jump to frame
     auto f = getFrame(stream, frame);

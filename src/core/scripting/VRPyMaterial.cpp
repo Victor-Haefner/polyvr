@@ -18,6 +18,9 @@ simpleVRPyType(Video, 0);
 #ifndef WITHOUT_AV
 PyMethodDef VRPyVideo::methods[] = {
     {"play", PyWrapOpt(Video, play, "Play video", "0|0|-1|1", void, int, float, float, float ) },
+    {"pause", PyWrap(Video, pause, "Pause video", void ) },
+    {"resume", PyWrap(Video, resume, "Resume video after pause", void ) },
+    {"isPaused", PyWrap(Video, isPaused, "Check if paused", bool ) },
     {"setVolume", PyWrap(Video, setVolume, "Set video volume, master volume can be set with soundmanager", void, float ) },
     {"getNFrames", PyWrapOpt(Video, getNFrames, "Get frame count of stream", "0", size_t, int ) },
     {"showFrame", PyWrap(Video, showFrame, "Show a specific frame of a stream (stream, frame)", void, int, int ) },

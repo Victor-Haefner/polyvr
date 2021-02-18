@@ -14,6 +14,7 @@
 #include "core/objects/object/OSGCore.h"
 #include "core/objects/geometry/OSGGeometry.h"
 #include "core/objects/geometry/VRGeometry.h"
+#include "core/objects/VRAnimation.h"
 #ifndef WITHOUT_BULLET
 #include "core/objects/geometry/VRPhysics.h"
 #endif

@@ -2,6 +2,7 @@
 #include "VRAnimationManagerT.h"
 
 #include <vector>
+#include "core/objects/VRAnimation.h"
 #include "core/utils/VRFunction.h"
 #include "core/utils/system/VRSystem.h"
 

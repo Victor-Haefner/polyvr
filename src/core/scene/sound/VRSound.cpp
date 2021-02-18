@@ -88,6 +88,18 @@ bool VRSound::isRunning() {
 }
 void VRSound::stop() { interrupt = true; loop = false; }
 
+void VRSound::pause() {
+    ALint val = -1;
+    ALCHECK( alGetSourcei(source, AL_SOURCE_STATE, &val));
+    if (val == AL_PLAYING) ALCHECK( alSourcePause(source));
+}
+
+void VRSound::resume() {
+    ALint val = -1;
+    ALCHECK( alGetSourcei(source, AL_SOURCE_STATE, &val));
+    if (val != AL_PLAYING) ALCHECK( alSourcePlay(source));
+}
+
 void VRSound::close() {
     cout << " !!! VRSound::close !!!" << endl;
     stop();

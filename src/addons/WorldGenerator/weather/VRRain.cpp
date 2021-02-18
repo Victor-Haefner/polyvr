@@ -11,6 +11,7 @@
 #include "core/objects/VRCamera.h"
 #include "core/objects/VRLight.h"
 #include "core/objects/VRLightBeacon.h"
+#include "core/objects/VRAnimation.h"
 
 #include <math.h>
 #include <random>

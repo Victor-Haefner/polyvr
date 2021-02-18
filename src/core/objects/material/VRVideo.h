@@ -83,6 +83,9 @@ class VRVideo : public VRStorage {
         void showFrame(int stream, int frame);
         void play(int stream, float t0, float t1, float v);
 
+        void pause();
+        void resume();
+        bool isPaused();
         void setVolume(float v);
 
         size_t getNFrames(int stream);

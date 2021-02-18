@@ -67,6 +67,8 @@ class VRSound {
 
         void play();
         void stop();
+        void pause();
+        void resume();
         void close();
         void reset();
         void updateSource();

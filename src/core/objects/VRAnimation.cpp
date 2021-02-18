@@ -29,6 +29,7 @@ void VRAnimation::start(float offset) {
 
 void VRAnimation::stop() { run = false; }
 bool VRAnimation::isActive() { return run; }
+bool VRAnimation::isPaused() { return paused; }
 
 void VRAnimation::setUnownedCallback(VRAnimCbPtr fkt) {
     setCallback(fkt);
@@ -59,9 +60,12 @@ void VRAnimation::setDuration(float T) {
 }
 
 bool VRAnimation::update(float current_time) {
+    update_time = current_time;
     if (!run) return false;
+    if (paused) return true;
 
-    t = current_time - start_time - offset;
+    t = update_time - start_time - offset;
+    if (accum_pause_time > 0) t -= accum_pause_time;
     if (t < 0) return true;
 
     if (duration > 0.00001) t /= duration;
@@ -76,7 +80,24 @@ bool VRAnimation::update(float current_time) {
         return true;
     }
 
+    cout << " t: " << t << endl;
+
     if (interp) interp->update(t);
     return true;
 }
 
+void VRAnimation::pause() {
+    if (!run) return;
+    if (paused) return;
+    paused = true;
+    pause_time = update_time;
+    cout << "pause" << endl;
+}
+
+void VRAnimation::resume() {
+    if (!run) return;
+    if (!paused) return;
+    accum_pause_time += update_time - pause_time;
+    paused = false;
+    cout << "resume" << endl;
+}
