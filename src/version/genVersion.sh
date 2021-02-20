@@ -2,7 +2,7 @@
 
 cID=$(git rev-parse HEAD)
 cTi=$(git log -1 --format="%at" | xargs -I{} date -d @{} +%d.%m.%Y_%H:%M:%S)
-echo $cID, $cTi
+#echo $cID, $cTi
 
 if [ -f version.h ]; then
     rm version.h
