@@ -15,6 +15,10 @@
 					<Add option="-O2" />
 					<Add option="-g" />
 				</Compiler>
+				<ExtraCommands>
+					<Add before="src/version/genVersion.sh" />
+					<Mode after="always" />
+				</ExtraCommands>
 			</Target>
 			<Target title="Release">
 				<Option output="bin/Release/VRFramework" prefix_auto="1" extension_auto="1" />

@@ -476,15 +476,19 @@ void VRGuiBuilder::buildBaseUI() {
     auto banner = addImage("banner", "ressources/gui/logo4.png");
     auto label13 = addLabel("label13", "VR Setup:");
     auto label24 = addLabel("label24", "Scene:");
-    auto fixed41 = addFixed("fixed41");
+    auto lblversion = addLabel("lblversion", "");
     auto toolbar1 = addToolbar("toolbar1", GTK_ICON_SIZE_DIALOG, GTK_ORIENTATION_HORIZONTAL);
     gtk_grid_attach(GTK_GRID(table20), toolbar1, 0,0,1,1);
     gtk_grid_attach(GTK_GRID(table20), label13, 1,0,1,1);
-    gtk_grid_attach(GTK_GRID(table20), fixed41, 0,1,1,1);
+    gtk_grid_attach(GTK_GRID(table20), lblversion, 0,1,1,1);
     gtk_grid_attach(GTK_GRID(table20), label24, 1,1,1,1);
     gtk_grid_attach(GTK_GRID(table20), banner, 2,0,1,2);
     gtk_widget_set_hexpand(label13, true);
     gtk_widget_set_hexpand(label24, true);
+    PangoFontDescription* font_desc = pango_font_description_from_string("Sans 6");
+    gtk_widget_modify_font(lblversion, font_desc);
+    //gtk_label_set_justify(GTK_LABEL(lblversion), GTK_JUSTIFY_LEFT);
+    gtk_widget_set_halign(lblversion, GTK_ALIGN_START);
 
     auto toolbutton1 = addToolButton("toolbutton1", "gtk-new", toolbar1, "New Scene");
     auto toolbutton21 = addToolButton("toolbutton21", "gtk-open", toolbar1, "Open Scene or Model");
