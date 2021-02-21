@@ -228,6 +228,7 @@ void VRVideo::loadSomeFrames() {
         if (aStreams.count(stream)) {
             auto a = aStreams[stream].audio;
             auto data = a->extractPacket(&packet);
+            PLock lock(osgMutex);
             aStreams[stream].frames[aStreams[stream].cachedFrameMax] = data;
             aStreams[stream].cachedFrameMax++;
         }
@@ -237,6 +238,7 @@ void VRVideo::loadSomeFrames() {
             auto img = convertFrame(stream, &packet);
             cout << "  converted the frame!" << endl;
             if (!img) continue;
+            PLock lock(osgMutex);
             vStreams[stream].frames[vStreams[stream].cachedFrameMax] = img;
             vStreams[stream].cachedFrameMax++;
         }
