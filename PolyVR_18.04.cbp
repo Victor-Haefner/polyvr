@@ -1593,6 +1593,7 @@
 		<Unit filename="src/core/utils/zipper/zipper.cpp" />
 		<Unit filename="src/core/utils/zipper/zipper.h" />
 		<Unit filename="src/main.cpp" />
+		<Unit filename="src/version/version.cpp" />
 		<Extensions>
 			<code_completion />
 			<debugger />

@@ -22,7 +22,6 @@
 #include "core/tools/VRRecorder.h"
 #include "core/utils/VRLogger.h"
 #include "core/setup/devices/VRSignal.h"
-#include "version/version.h"
 #include "VRGuiManager.h"
 
 #include <iostream>
@@ -296,7 +295,7 @@ VRGuiBits::VRGuiBits() {
     setToolButtonCallback("network_verbose", bind(&VRGuiBits::toggleVerbose, this, "network" ) );
 
     setLabel("label24", "Project: None");
-    setLabel("lblversion", " V: "PVR_COMMIT_ID" "PVR_COMMIT_TIME);
+    setLabel("lblversion", getVersionString());
 
     disableDestroyDiag("aboutdialog1");
     disableDestroyDiag("dialog2");
