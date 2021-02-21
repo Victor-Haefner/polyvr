@@ -17,6 +17,7 @@ extern "C" {
 }
 
 #include <string>
+#include <thread>
 #include <boost/thread/recursive_mutex.hpp>
 
 typedef boost::recursive_mutex::scoped_lock PLock;
@@ -26,6 +27,7 @@ using namespace OSG;
 template<> string typeName(const VRVideo& o) { return "Video"; }
 
 VRVideo::VRVideo(VRMaterialPtr mat) {
+    //avMutex = new boost::mutex();
     material = mat;
     av_register_all(); // Register all formats && codecs
 }
@@ -37,6 +39,7 @@ VRVideo::~VRVideo() {
     if (vFrame) av_frame_free(&vFrame);
     if (nFrame) av_frame_free(&nFrame);
     if (vFile) avformat_close_input(&vFile); // Close the video file
+    //if (avMutex) delete avMutex;
     cout << " VRVideo::~VRVideo done" << endl;
 
     vFrame = 0;
@@ -204,20 +207,22 @@ void VRVideo::open(string f) {
     wThreadID = VRScene::getCurrent()->initThread(worker, "video cache", true, 0);
 }
 
-void VRVideo::cacheFrames(VRThreadWeakPtr t) {
-    PLock(mutex);
-    loadSomeFrames();
-}
+void VRVideo::cacheFrames(VRThreadWeakPtr t) { loadSomeFrames(); }
 
 void VRVideo::loadSomeFrames() {
+    PLock lock(avMutex);
+
     int currentF = currentFrame;
 
     bool doReturn = true;
     for (auto& s : vStreams) if (s.second.cachedFrameMax-currentF < cacheSize) doReturn = false;
     //for (auto& s : aStreams) if (s.second.cachedFrameMax-currentF < cacheSize) doReturn = false;
+    cout << "LF " << currentF << ", return? " << doReturn << endl;
     if (doReturn) return;
 
     for (AVPacket packet; av_read_frame(vFile, &packet)>=0; av_packet_unref(&packet)) { // read packets
+        if (interruptCaching) break;
+
         int stream = packet.stream_index;
 
         if (aStreams.count(stream)) {
@@ -228,7 +233,9 @@ void VRVideo::loadSomeFrames() {
         }
 
         if (vStreams.count(stream)) {
+            cout << " v frame0: " << currentF << " N: " << vStreams[stream].cachedFrameMax-currentF << "/" << cacheSize << endl;
             auto img = convertFrame(stream, &packet);
+            cout << "  converted the frame!" << endl;
             if (!img) continue;
             vStreams[stream].frames[vStreams[stream].cachedFrameMax] = img;
             vStreams[stream].cachedFrameMax++;
@@ -242,6 +249,7 @@ void VRVideo::loadSomeFrames() {
     }
 
     for (auto& s : vStreams) { // cleanup cache
+        if (interruptCaching) break;
         vector<int> toRemove;
         for (auto f : s.second.frames) { // read stream
             if (f.first < currentF) toRemove.push_back(f.first);
@@ -249,6 +257,8 @@ void VRVideo::loadSomeFrames() {
 
         for (auto r : toRemove) s.second.frames.erase(r);
     }
+
+    interruptCaching = false;
 }
 
 void VRVideo::setVolume(float v) {
@@ -256,7 +266,33 @@ void VRVideo::setVolume(float v) {
     for (auto& a : aStreams) a.second.audio->setVolume(v);
 }
 
-size_t VRVideo::getNFrames(int stream) { return vStreams[stream].frames.size(); }
+size_t VRVideo::getNFrames(int stream) {
+    auto& s = vStreams[stream];
+    return s.fps * duration;
+}
+
+float VRVideo::getDuration() { return duration; }
+
+void VRVideo::goTo(float t) { // TODO
+    PLock lock(avMutex);
+
+    t = 0;
+
+    if (anim) anim->goTo(t);
+
+    int64_t timestamp = t; // TODO
+
+    cout << " goTo " << t << endl;
+    for (int i=0; i<(int)vFile->nb_streams; i++) {
+        av_seek_frame(vFile, i, timestamp, 0);
+        vStreams[i].frames.clear();
+        vStreams[i].cachedFrameMax = 0; // TODO
+
+        interruptCaching = true; // TODO
+        currentFrame = 0; // TODO
+    }
+    cout << "  goTo done" << endl;
+}
 
 void VRVideo::pause() {
     if (anim) anim->pause();
@@ -276,20 +312,18 @@ bool VRVideo::isPaused() {
 }
 
 void VRVideo::showFrame(int stream, int frame) {
-    PLock(mutex);
+    PLock lock(osgMutex);
     currentFrame = frame;
-
-    //cout << " showFrame " << frame << endl;
 
     // video, just jump to frame
     auto f = getFrame(stream, frame);
     if (f) {
-        //cout << " showFrame " << stream << " " << frame << " " << f->getSize() << " " << cachedFrameMax << endl;
+        //cout << " showFrame " << frame << " " << f->getSize() << " threadID: " << this_thread::get_id() << endl;
         if (auto m = material.lock()) {
             m->setTexture(f);
             m->setMagMinFilter(GL_LINEAR, GL_LINEAR);
         }
-    }
+    } //else cout << " showFrame, none found " << frame << endl;
 
     // audio, queue until current frame
     for (auto& s : aStreams) { // just pick first audio stream if any..
@@ -306,7 +340,7 @@ void VRVideo::showFrame(int stream, int frame) {
 }
 
 void VRVideo::frameUpdate(float t, int stream) {
-    PLock(mutex);
+    PLock lock(osgMutex);
     int i = vStreams[stream].fps * duration * t;
     showFrame(stream, i);
 }

@@ -24,6 +24,8 @@ PyMethodDef VRPyVideo::methods[] = {
     {"setVolume", PyWrap(Video, setVolume, "Set video volume, master volume can be set with soundmanager", void, float ) },
     {"getNFrames", PyWrapOpt(Video, getNFrames, "Get frame count of stream", "0", size_t, int ) },
     {"showFrame", PyWrap(Video, showFrame, "Show a specific frame of a stream (stream, frame)", void, int, int ) },
+    {"getDuration", PyWrap(Video, getDuration, "Get total duration", float ) },
+    {"goTo", PyWrap(Video, goTo, "Go to position t [0.0, 1.0]", void, float ) },
     {NULL}  /* Sentinel */
 };
 #endif

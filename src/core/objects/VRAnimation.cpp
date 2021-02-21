@@ -65,7 +65,6 @@ bool VRAnimation::update(float current_time) {
     if (paused) return true;
 
     t = update_time - start_time - offset;
-    if (accum_pause_time > 0) t -= accum_pause_time;
     if (t < 0) return true;
 
     if (duration > 0.00001) t /= duration;
@@ -80,10 +79,17 @@ bool VRAnimation::update(float current_time) {
         return true;
     }
 
-    cout << " t: " << t << endl;
+    //cout << " t: " << t << endl;
 
     if (interp) interp->update(t);
     return true;
+}
+
+void VRAnimation::goTo(float f) {
+    if (run) {
+        start_time -= (f-t) * duration;
+    } else { // TODOt dt = (f-t) * duration;
+    }
 }
 
 void VRAnimation::pause() {
@@ -97,7 +103,7 @@ void VRAnimation::pause() {
 void VRAnimation::resume() {
     if (!run) return;
     if (!paused) return;
-    accum_pause_time += update_time - pause_time;
+    start_time += update_time - pause_time;
     paused = false;
     cout << "resume" << endl;
 }

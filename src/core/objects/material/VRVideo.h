@@ -6,7 +6,7 @@
 #include "core/scene/sound/VRSoundFwd.h"
 #include <OpenSG/OSGConfig.h>
 #include <OpenSG/OSGBaseTypes.h>
-#include <boost/thread/mutex.hpp>
+#include <boost/thread/recursive_mutex.hpp>
 
 using namespace std;
 
@@ -50,6 +50,7 @@ class VRVideo : public VRStorage {
         int cacheSize = 100;
         int audioQueue = 40;
         int currentFrame = 0;
+        bool interruptCaching = false;
 
         VRMaterialWeakPtr material;
         VRAnimationPtr anim;
@@ -62,7 +63,8 @@ class VRVideo : public VRStorage {
         SwsContext* swsContext = 0;
         AVPacket* packet = 0;
 
-        boost::mutex mutex;
+        boost::recursive_mutex avMutex;
+        boost::recursive_mutex osgMutex;
         VRThreadCbPtr worker;
         int wThreadID = -1;
 
@@ -86,8 +88,10 @@ class VRVideo : public VRStorage {
         void pause();
         void resume();
         bool isPaused();
+        void goTo(float t);
         void setVolume(float v);
 
+        float getDuration();
         size_t getNFrames(int stream);
         VRTexturePtr getFrame(int stream, int i);
         VRTexturePtr getFrame(int stream, float t);
