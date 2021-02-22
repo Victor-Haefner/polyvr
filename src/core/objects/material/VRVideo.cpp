@@ -106,11 +106,16 @@ int getNColors(AVPixelFormat pfmt) {
 }
 
 VRTexturePtr VRVideo::convertFrame(int stream, AVPacket* packet) {
-    if (!vStreams.count(stream)) return 0;
+    if (!vStreams.count(stream)) { cout << " unknown stream " << stream << endl; return 0; }
     int valid = 0;
     auto vCodec = vStreams[stream].vCodec;
-    avcodec_decode_video2(vCodec, vFrame, &valid, packet); // Decode video frame
-    if (valid == 0) return 0;
+    int r = avcodec_decode_video2(vCodec, vFrame, &valid, packet); // Decode video frame
+
+    if (valid == 0 || r < 0) {
+        cout << " avcodec_decode_video2 failed with " << r << endl;
+        // TODO: print packet data
+        return 0;
+    }
 
     FlipFrame(vFrame);
     int width = vFrame->width;
@@ -118,10 +123,7 @@ VRTexturePtr VRVideo::convertFrame(int stream, AVPacket* packet) {
     AVPixelFormat pf = AVPixelFormat(vFrame->format);
 
     int Ncols = getNColors(pf);
-    if (Ncols == 0) {
-        cout << "ERROR: stream has no colors!" << endl;
-        return 0;
-    }
+    if (Ncols == 0) { cout << "ERROR: stream has no colors!" << endl; return 0; }
 
     if (swsContext == 0) {
         if (Ncols == 1) nFrame->format = AV_PIX_FMT_GRAY8;
@@ -189,7 +191,7 @@ void VRVideo::open(string f) {
             if (avcodec_open2(avCodec, c, &optionsDict)<0) return; // Could not open codec
         }
 
-        if (isAudio) {
+        if (isAudio && 0) {
             aStreams[i] = AStream();
             aStreams[i].audio = VRSound::create();
             aStreams[i].audio->setVolume(volume);
@@ -217,7 +219,7 @@ void VRVideo::loadSomeFrames() {
     bool doReturn = true;
     for (auto& s : vStreams) if (s.second.cachedFrameMax-currentF < cacheSize) doReturn = false;
     //for (auto& s : aStreams) if (s.second.cachedFrameMax-currentF < cacheSize) doReturn = false;
-    cout << "LF " << currentF << ", return? " << doReturn << endl;
+    //cout << "LF " << currentF << ", return? " << doReturn << endl;
     if (doReturn) return;
 
     for (AVPacket packet; av_read_frame(vFile, &packet)>=0; av_packet_unref(&packet)) { // read packets
@@ -234,10 +236,10 @@ void VRVideo::loadSomeFrames() {
         }
 
         if (vStreams.count(stream)) {
-            cout << " v frame0: " << currentF << " N: " << vStreams[stream].cachedFrameMax-currentF << "/" << cacheSize << endl;
+            //cout << " v frame0: " << currentF << " N: " << vStreams[stream].cachedFrameMax << endl;
             auto img = convertFrame(stream, &packet);
-            cout << "  converted the frame!" << endl;
             if (!img) continue;
+            //cout << "  converted the frame!" << endl;
             PLock lock(osgMutex);
             vStreams[stream].frames[vStreams[stream].cachedFrameMax] = img;
             vStreams[stream].cachedFrameMax++;
@@ -286,7 +288,8 @@ void VRVideo::goTo(float t) { // TODO
 
     cout << " goTo " << t << endl;
     for (int i=0; i<(int)vFile->nb_streams; i++) {
-        av_seek_frame(vFile, i, timestamp, 0);
+        int r = av_seek_frame(vFile, i, timestamp, AVSEEK_FLAG_BACKWARD);
+        if (r < 0) cout << "AAAAAAAA, av_seek_frame failed!!" << endl;
         vStreams[i].frames.clear();
         vStreams[i].cachedFrameMax = 0; // TODO
 
