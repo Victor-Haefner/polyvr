@@ -13,6 +13,9 @@ ptrFwd(VRMachiningKinematics);
 ptrFwd(VRCartesianKinematics);
 ptrFwd(VRMillingWorkPiece);
 ptrFwd(VRMillingCuttingToolProfile);
+ptrFwd(VRPipeSystem);
+ptrFwd(VRPipeSegment);
+ptrFwd(VRPipeNode);
 
 ptrFwd(VRAtom);
 ptrFwd(VRBond);

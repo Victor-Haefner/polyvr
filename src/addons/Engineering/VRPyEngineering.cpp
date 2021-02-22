@@ -1,4 +1,4 @@
-#include "VRPyRobotArm.h"
+#include "VRPyEngineering.h"
 #include "core/scripting/VRPyBaseT.h"
 #include "core/scripting/VRPyTypeCaster.h"
 #include "core/scripting/VRPyGeometry.h"
@@ -6,7 +6,19 @@
 
 using namespace OSG;
 
+simpleVRPyType(NumberingEngine, New_VRObjects_ptr);
 simpleVRPyType(RobotArm, New_named_ptr);
+simpleVRPyType(PipeSystem, New_ptr);
+
+PyMethodDef VRPyPipeSystem::methods[] = {
+    {NULL}
+};
+
+PyMethodDef VRPyNumberingEngine::methods[] = {
+    {"set", PyWrapOpt( NumberingEngine, set, "Set number: ID, pos, number, decimal places, groupID", "2|0", void, int, Vec3d, float, int, int ) },
+    {"clear", PyWrap( NumberingEngine, clear, "Clear numbers", void ) },
+    {NULL}
+};
 
 PyMethodDef VRPyRobotArm::methods[] = {
     {"showAnalytics", PyWrap(RobotArm, showAnalytics, "Shows a visualization of the analytic model", void, bool ) },

@@ -405,11 +405,13 @@
 		<Unit filename="src/addons/Engineering/VREngineeringFwd.h" />
 		<Unit filename="src/addons/Engineering/VRNumberingEngine.cpp" />
 		<Unit filename="src/addons/Engineering/VRNumberingEngine.h" />
+		<Unit filename="src/addons/Engineering/VRPipeSystem.cpp" />
+		<Unit filename="src/addons/Engineering/VRPipeSystem.h" />
 		<Unit filename="src/addons/Engineering/VRProfile.cpp" />
 		<Unit filename="src/addons/Engineering/VRProfile.h" />
-		<Unit filename="src/addons/Engineering/VRPyNumberingEngine.cpp" />
+		<Unit filename="src/addons/Engineering/VRPyEngineering.cpp" />
+		<Unit filename="src/addons/Engineering/VRPyEngineering.h" />
 		<Unit filename="src/addons/Engineering/VRPyNumberingEngine.h" />
-		<Unit filename="src/addons/Engineering/VRPyRobotArm.cpp" />
 		<Unit filename="src/addons/Engineering/VRPyRobotArm.h" />
 		<Unit filename="src/addons/Engineering/VRRobotArm.cpp" />
 		<Unit filename="src/addons/Engineering/VRRobotArm.h" />
