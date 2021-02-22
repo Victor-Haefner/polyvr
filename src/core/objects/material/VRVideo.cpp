@@ -191,7 +191,7 @@ void VRVideo::open(string f) {
             if (avcodec_open2(avCodec, c, &optionsDict)<0) return; // Could not open codec
         }
 
-        if (isAudio && 0) {
+        if (isAudio) {
             aStreams[i] = AStream();
             aStreams[i].audio = VRSound::create();
             aStreams[i].audio->setVolume(volume);
