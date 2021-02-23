@@ -29,8 +29,10 @@ class VRPipeSegment {
 
         static VRPipeSegmentPtr create(float radius, float length);
 
-        void mixPressure(float& pressure, float otherVolume, float dt);
-        void addPressure(float performance, float dt);
+        void handleTank(float& pressure, float otherVolume, float dt);
+        void handleValve(float area, VRPipeSegmentPtr other, float dt);
+
+        void addMass(float m);
 };
 
 class VRPipeNode {

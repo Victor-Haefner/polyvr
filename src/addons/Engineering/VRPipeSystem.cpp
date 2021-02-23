@@ -14,7 +14,7 @@ using namespace OSG;
 
 template<> string typeName(const VRPipeSystem& m) { return "PipeSystem"; }
 
-float gasSpeed = 10;
+float gasSpeed = 300;
 
 
 // Pipe Segment ----
@@ -28,29 +28,38 @@ VRPipeSegment::~VRPipeSegment() {}
 
 VRPipeSegmentPtr VRPipeSegment::create(float radius, float length) { return VRPipeSegmentPtr( new VRPipeSegment(radius, length) ); }
 
-void VRPipeSegment::mixPressure(float& pressure, float otherVolume, float dt) {
-    float dP = this->pressure - pressure;
-    lastPressureDelta = 0;
-    if (abs(dP) < 1e-3) {
-        pressure += dP*0.5;
-        this->pressure -= dP*0.5;
-        return;
-    }
-
-    float dV = dP*area*dt*gasSpeed; // volume delta through the pipe section area
-    if (volume-dV < 0) dV = volume;
-    float newP = this->pressure*(volume-dV)/volume;
-    lastPressureDelta = newP-this->pressure;
-    this->pressure += lastPressureDelta;
-    pressure *= (otherVolume+dV)/otherVolume;
-    //cout << "mixPressure pipe: " << this->pressure << ", tank: " << pressure << " V: " << otherVolume << endl;
+void VRPipeSegment::addMass(float m) {
+    lastPressureDelta = m/volume;
+    pressure += lastPressureDelta;
 }
 
-void VRPipeSegment::addPressure(float performance, float dt) {
-    float dV = performance*dt; // volume delta from pump
-    float newP = this->pressure*(volume+dV)/volume;
-    lastPressureDelta = newP-this->pressure;
-    this->pressure += lastPressureDelta;
+void VRPipeSegment::handleTank(float& otherPressure, float otherVolume, float dt) {
+    float dP = pressure - otherPressure;
+    float m = dP*area*dt*gasSpeed; // mass through the pipe section area
+
+    if (dP > 0) { // mass is going out of pipe
+        m = min(m, pressure*volume); // not more than available!
+    } else { // mass going out of tank
+        m = min(m, otherPressure*otherVolume); // not more than available!
+    }
+
+    addMass(-m);
+    otherPressure = otherPressure + m/otherVolume;
+    //cout << "handleTank " << dP << " " << pressure << " " << otherPressure << endl;
+}
+
+void VRPipeSegment::handleValve(float area, VRPipeSegmentPtr other, float dt) {
+    float dP = pressure - other->pressure;
+    float m = dP*area*dt*gasSpeed; // mass through the valve opening
+
+    if (dP > 0) { // mass is going out of pipe
+        m = min(m, pressure*volume); // not more than available!
+    } else { // mass going out of other
+        m = min(m, other->pressure*other->volume); // not more than available!
+    }
+
+    addMass(-m);
+    other->addMass(m);
 }
 
 
@@ -115,81 +124,75 @@ vector<VRPipeSegmentPtr> VRPipeSystem::getOutPipes(int nID) {
 }
 
 void VRPipeSystem::update() {
-    float dt = 1.0/60; // TODO: use animation
+    int subSteps = 10;
+    float dT = 1.0/60; // TODO: use animation
+    float dt = dT/subSteps; // TODO: use animation
 
-    for (auto n : nodes) { // traverse nodes, change pressure in segments
-        int nID = n.first;
-        auto node = n.second;
-        auto entity = node->entity;
+    for (int i=0; i<subSteps; i++) {
 
-        if (entity->is_a("Tank")) {
-            float tankVolume = entity->getValue("volume", 0.0);
-            float tankPressure = entity->getValue("pressure", 1.0);
-            for (auto p : getPipes(nID)) p->mixPressure(tankPressure, tankVolume, dt);
-            entity->set("pressure", toString(tankPressure));
-            continue;
-        }
+        for (auto n : nodes) { // traverse nodes, change pressure in segments
+            int nID = n.first;
+            auto node = n.second;
+            auto entity = node->entity;
 
-        if (entity->is_a("Pump")) {
-            float pumpPerformance = entity->getValue("performance", 0.0);
-            for (auto p : getInPipes(nID))  p->addPressure(-pumpPerformance, dt);
-            for (auto p : getOutPipes(nID)) p->addPressure( pumpPerformance, dt);
-            continue;
-        }
-
-        if (entity->is_a("Valve")) {
-            bool valveState = entity->getValue("state", false);
-            float valveRadius = entity->getValue("radius", 0.0);
-            if (valveState == 0) continue; // valve closed
-            auto pipes = getPipes(nID);
-            if (pipes.size() != 2) continue;
-
-            auto pipe1 = pipes[0];
-            auto pipe2 = pipes[1];
-            float dP = pipe2->pressure - pipe1->pressure;
-            pipe1->lastPressureDelta = 0;
-            pipe2->lastPressureDelta = 0;
-            if (abs(dP) < 1e-3) {
-                pipe1->pressure += dP*0.5;
-                pipe2->pressure -= dP*0.5;
+            if (entity->is_a("Tank")) {
+                float tankVolume = entity->getValue("volume", 0.0);
+                float tankPressure = entity->getValue("pressure", 1.0);
+                for (auto p : getPipes(nID)) p->handleTank(tankPressure, tankVolume, dt);
+                entity->set("pressure", toString(tankPressure));
                 continue;
             }
 
-            float area = valveRadius*valveRadius*Pi;
-            float dV = dP*area*dt*gasSpeed; // volume delta through the pipe section area
-            float newP1 = pipe1->pressure*(pipe1->volume+dV)/pipe1->volume;
-            float newP2 = pipe2->pressure*(pipe2->volume-dV)/pipe2->volume;
-            pipe1->lastPressureDelta = newP1-pipe1->pressure;
-            pipe2->lastPressureDelta = newP2-pipe2->pressure;
-            pipe1->pressure += pipe1->lastPressureDelta;
-            pipe2->pressure += pipe2->lastPressureDelta;
-            //cout << " valve dV: " << pipe1->lastPressureDelta << " " << pipe2->lastPressureDelta << endl;
-            continue;
-        }
+            if (entity->is_a("Pump")) {
+                /*float pumpPerformance = entity->getValue("performance", 0.0);
+                for (auto p : getInPipes(nID))  p->addPressure(-pumpPerformance, dt);
+                for (auto p : getOutPipes(nID)) p->addPressure( pumpPerformance, dt);*/
+                continue;
+            }
 
-        if (entity->is_a("Outlet")) {
-            float outletRadius = entity->getValue("radius", 0.0);
-            auto pipes = getPipes(nID);
-            if (pipes.size() != 1) continue;
-            auto pipe = pipes[0];
+            if (entity->is_a("Valve")) {
+                bool valveState = entity->getValue("state", false);
+                float valveRadius = entity->getValue("radius", 0.0);
+                if (valveState == 0) continue; // valve closed
+                auto pipes = getPipes(nID);
+                if (pipes.size() != 2) continue;
 
-            float area = outletRadius*outletRadius*Pi;
-            pipe->pressure -= (pipe->pressure-1.0)*area*dt;
-            continue;
+                auto pipe1 = pipes[0];
+                auto pipe2 = pipes[1];
+                float area = valveRadius*valveRadius*Pi;
+                pipe1->handleValve(area, pipe2, dt);
+                continue;
+            }
+
+            if (entity->is_a("Outlet")) {
+                float outletRadius = entity->getValue("radius", 0.0);
+                auto pipes = getPipes(nID);
+                if (pipes.size() != 1) continue;
+                auto pipe = pipes[0];
+
+                float area = outletRadius*outletRadius*Pi;
+                pipe->pressure -= (pipe->pressure-1.0)*area*dt;
+                continue;
+            }
         }
     }
 
-
+    float totalMass = 0;
     for (auto n : nodes) { // print some stats
         auto entity = n.second->entity;
         float P = entity->getValue("pressure", 1.0);
         float V = entity->getValue("volume", 1.0);
         if (entity->is_a("Tank")) cout << " tank: P " << P << " V " << V << endl;
+        totalMass += P*V;
     }
 
     for (auto s : segments) { // print some stats
-        cout << " pipe: P " << s.second->pressure << " V " << s.second->volume << endl;
+        float P = s.second->pressure;
+        float V = s.second->volume;
+        cout << " pipe: P " << P << " V " << V << endl;
+        totalMass += P*V;
     }
+    cout << " total mass: " << totalMass << endl;
 
     updateVisual();
 }
@@ -256,13 +259,16 @@ void VRPipeSystem::updateVisual() {
     int i=0;
 
     for (auto& s : segments) {
-        Color3f c(0,0,1);
+        Color3f c1(0,0,1);
+        Color3f c2(0,0,1);
 
         auto p = s.second->lastPressureDelta;
-        if (abs(p) > 1e-5) {
-            if (p > 0) c = Color3f(1, 0, 0);
-            if (p < 0) c = Color3f(0, 1, 0);
-        }
+        if (p > 0) c2 = Color3f(1, 0, 0);
+        if (p < 0) c2 = Color3f(0, 1, 0);
+
+        float t = abs(p/s.second->pressure * 100.0);
+        if (t > 1) t = 1;
+        Color3f c = c2*t + c1*(1-t);
 
         data.setColor(i, c); i++;
         data.setColor(i, c); i++;
