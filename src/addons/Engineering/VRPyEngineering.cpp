@@ -11,6 +11,10 @@ simpleVRPyType(RobotArm, New_named_ptr);
 simpleVRPyType(PipeSystem, New_ptr);
 
 PyMethodDef VRPyPipeSystem::methods[] = {
+    {"addNode", PyWrap( PipeSystem, addNode, "Add node, type can be [Tank, Valve, Outlet, Pump]", int, PosePtr, string, map<string, string> ) },
+    {"addSegment", PyWrap( PipeSystem, addSegment, "Add segment between nodes (radius, length, n1, n2)", int, float, float, int, int ) },
+    {"setDoVisual", PyWrap( PipeSystem, setDoVisual, "Enable visual", void, bool ) },
+    {"setValve", PyWrap( PipeSystem, setValve, "Set valve state", void, int, bool ) },
     {NULL}
 };
 

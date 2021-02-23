@@ -6,6 +6,8 @@
 #include <OpenSG/OSGConfig.h>
 #include "VREngineeringFwd.h"
 #include "core/math/VRMathFwd.h"
+#include "core/utils/VRFunctionFwd.h"
+#include "core/objects/geometry/VRGeometry.h"
 #include "addons/Semantics/VRSemanticsFwd.h"
 
 using namespace std;
@@ -19,6 +21,7 @@ class VRPipeSegment {
         float volume = 0;
 
         float pressure = 1.0;
+        float lastPressureDelta = 0.0;
 
     public:
         VRPipeSegment(float radius, float length);
@@ -33,6 +36,7 @@ class VRPipeSegment {
 class VRPipeNode {
     public:
         VREntityPtr entity;
+        float lastPressureDelta = 0.0;
 
     public:
         VRPipeNode(VREntityPtr entity);
@@ -41,10 +45,14 @@ class VRPipeNode {
         static VRPipeNodePtr create(VREntityPtr entity);
 };
 
-class VRPipeSystem : public std::enable_shared_from_this<VRPipeSystem> {
+class VRPipeSystem : public VRGeometry {
 	private:
         GraphPtr graph;
         VROntologyPtr ontology;
+
+        VRUpdateCbPtr updateCb;
+
+        bool doVisual = false;
 
         map<int, VRPipeNodePtr> nodes;
         map<int, VRPipeSegmentPtr> segments;
@@ -62,11 +70,16 @@ class VRPipeSystem : public std::enable_shared_from_this<VRPipeSystem> {
 		static VRPipeSystemPtr create();
 		VRPipeSystemPtr ptr();
 
-		int addNode(string type);
+		int addNode(PosePtr pos, string type, map<string, string> params);
 		int addSegment(float radius, float length, int n1, int n2);
 
+		void setDoVisual(bool b);
+
 		void update();
+		void updateVisual();
 		VROntologyPtr getOntology();
+
+		void setValve(int nID, bool b);
 };
 
 OSG_END_NAMESPACE;

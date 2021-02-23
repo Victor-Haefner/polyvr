@@ -1,5 +1,9 @@
 #include "VRPipeSystem.h"
 #include "core/utils/toString.h"
+#include "core/utils/VRFunction.h"
+#include "core/objects/geometry/VRGeoData.h"
+#include "core/objects/material/VRMaterial.h"
+#include "core/scene/VRScene.h"
 #include "core/math/graph.h"
 
 #include "addons/Semantics/Reasoning/VROntology.h"
@@ -9,6 +13,8 @@
 using namespace OSG;
 
 template<> string typeName(const VRPipeSystem& m) { return "PipeSystem"; }
+
+float gasSpeed = 10;
 
 
 // Pipe Segment ----
@@ -24,15 +30,27 @@ VRPipeSegmentPtr VRPipeSegment::create(float radius, float length) { return VRPi
 
 void VRPipeSegment::mixPressure(float& pressure, float otherVolume, float dt) {
     float dP = this->pressure - pressure;
-    if (abs(dP) < 1e-3) return;
-    float dV = dP*area*dt; // volume delta through the pipe section area
-    this->pressure *= (volume+dV)/volume;
+    lastPressureDelta = 0;
+    if (abs(dP) < 1e-3) {
+        pressure += dP*0.5;
+        this->pressure -= dP*0.5;
+        return;
+    }
+
+    float dV = dP*area*dt*gasSpeed; // volume delta through the pipe section area
+    if (volume-dV < 0) dV = volume;
+    float newP = this->pressure*(volume-dV)/volume;
+    lastPressureDelta = newP-this->pressure;
+    this->pressure += lastPressureDelta;
     pressure *= (otherVolume+dV)/otherVolume;
+    //cout << "mixPressure pipe: " << this->pressure << ", tank: " << pressure << " V: " << otherVolume << endl;
 }
 
 void VRPipeSegment::addPressure(float performance, float dt) {
     float dV = performance*dt; // volume delta from pump
-    this->pressure *= (volume+dV)/volume;
+    float newP = this->pressure*(volume+dV)/volume;
+    lastPressureDelta = newP-this->pressure;
+    this->pressure += lastPressureDelta;
 }
 
 
@@ -46,8 +64,12 @@ VRPipeNodePtr VRPipeNode::create(VREntityPtr entity) { return VRPipeNodePtr( new
 
 // Pipe System ----
 
-VRPipeSystem::VRPipeSystem() {
+VRPipeSystem::VRPipeSystem() : VRGeometry("pipeSystem") {
+    graph = Graph::create();
     initOntology();
+
+    updateCb = VRUpdateCb::create("pipesSimUpdate", bind(&VRPipeSystem::update, this) );
+    VRScene::getCurrent()->addUpdateFkt(updateCb);
 }
 
 VRPipeSystem::~VRPipeSystem() {}
@@ -57,10 +79,11 @@ VRPipeSystemPtr VRPipeSystem::ptr() { return static_pointer_cast<VRPipeSystem>(s
 
 VROntologyPtr VRPipeSystem::getOntology() { return ontology; }
 
-int VRPipeSystem::addNode(string type) {
+int VRPipeSystem::addNode(PosePtr pos, string type, map<string, string> params) {
     auto e = ontology->addEntity("pipeNode", type);
     auto n = VRPipeNode::create(e);
-    int nID = graph->addNode();
+    for (auto& p : params) e->set(p.first, p.second);
+    int nID = graph->addNode(pos);
     nodes[nID] = n;
     return nID;
 }
@@ -124,11 +147,23 @@ void VRPipeSystem::update() {
             auto pipe1 = pipes[0];
             auto pipe2 = pipes[1];
             float dP = pipe2->pressure - pipe1->pressure;
-            if (dP < 1e-3) continue;
+            pipe1->lastPressureDelta = 0;
+            pipe2->lastPressureDelta = 0;
+            if (abs(dP) < 1e-3) {
+                pipe1->pressure += dP*0.5;
+                pipe2->pressure -= dP*0.5;
+                continue;
+            }
 
             float area = valveRadius*valveRadius*Pi;
-            pipe1->pressure -= dP*area*dt;
-            pipe2->pressure += dP*area*dt;
+            float dV = dP*area*dt*gasSpeed; // volume delta through the pipe section area
+            float newP1 = pipe1->pressure*(pipe1->volume+dV)/pipe1->volume;
+            float newP2 = pipe2->pressure*(pipe2->volume-dV)/pipe2->volume;
+            pipe1->lastPressureDelta = newP1-pipe1->pressure;
+            pipe2->lastPressureDelta = newP2-pipe2->pressure;
+            pipe1->pressure += pipe1->lastPressureDelta;
+            pipe2->pressure += pipe2->lastPressureDelta;
+            //cout << " valve dV: " << pipe1->lastPressureDelta << " " << pipe2->lastPressureDelta << endl;
             continue;
         }
 
@@ -143,6 +178,20 @@ void VRPipeSystem::update() {
             continue;
         }
     }
+
+
+    for (auto n : nodes) { // print some stats
+        auto entity = n.second->entity;
+        float P = entity->getValue("pressure", 1.0);
+        float V = entity->getValue("volume", 1.0);
+        if (entity->is_a("Tank")) cout << " tank: P " << P << " V " << V << endl;
+    }
+
+    for (auto s : segments) { // print some stats
+        cout << " pipe: P " << s.second->pressure << " V " << s.second->volume << endl;
+    }
+
+    updateVisual();
 }
 
 void VRPipeSystem::initOntology() {
@@ -159,4 +208,75 @@ void VRPipeSystem::initOntology() {
     Valve->addProperty("state", "bool");
 }
 
+void VRPipeSystem::setDoVisual(bool b) { doVisual = b; }
+
+void VRPipeSystem::setValve(int nID, bool b) { nodes[nID]->entity->set("state", toString(b)); }
+
+void VRPipeSystem::updateVisual() {
+    if (!doVisual) return;
+
+    VRGeoData data(ptr());
+    auto s = data.size();
+
+    if (s == 0) {
+        Vec3d norm(0,1,0);
+        Color3f white(1,1,1);
+
+        for (auto& s : segments) {
+            auto edge = graph->getEdge(s.first);
+
+            auto p1 = graph->getPosition(edge.from);
+            auto p2 = graph->getPosition(edge.to);
+
+            data.pushVert(p1->pos(), norm, white);
+            data.pushVert(p2->pos(), norm, white);
+            data.pushLine();
+        }
+
+        for (auto& n : nodes) {
+            auto p = graph->getPosition(n.first);
+            data.pushVert(p->pos(), norm, white);
+            data.pushPoint();
+        }
+
+        auto m = VRMaterial::create("pipes");
+        m->setLineWidth(5);
+        m->setLit(0);
+        m->addPass();
+        m->setPointSize(10);
+        m->setLit(0);
+        setMaterial(m);
+
+        cout << "apply data: " << data.size() << endl;
+        data.apply(ptr());
+    }
+
+    // update system state
+
+    int i=0;
+
+    for (auto& s : segments) {
+        Color3f c(0,0,1);
+
+        auto p = s.second->lastPressureDelta;
+        if (abs(p) > 1e-5) {
+            if (p > 0) c = Color3f(1, 0, 0);
+            if (p < 0) c = Color3f(0, 1, 0);
+        }
+
+        data.setColor(i, c); i++;
+        data.setColor(i, c); i++;
+    }
+
+    for (auto& n : nodes) {
+        Color3f c(1,1,0);
+
+        if (n.second->entity->is_a("Valve")) {
+            s = n.second->entity->getValue("state", false);
+            c = s ? Color3f(0,1,0) : Color3f(1,0,0);
+        }
+
+        data.setColor(i, c); i++;
+    }
+}
 
