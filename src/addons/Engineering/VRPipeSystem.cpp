@@ -50,6 +50,7 @@ void VRPipeSegment::handleTank(float& otherPressure, float otherVolume, float dt
 
 void VRPipeSegment::handleValve(float area, VRPipeSegmentPtr other, float dt) {
     float dP = pressure - other->pressure;
+    area = min(area, min(this->area, other->area));
     float m = dP*area*dt*gasSpeed; // mass through the valve opening
 
     if (dP > 0) { // mass is going out of pipe
@@ -58,6 +59,13 @@ void VRPipeSegment::handleValve(float area, VRPipeSegmentPtr other, float dt) {
         m = min(m, other->pressure*other->volume); // not more than available!
     }
 
+    addMass(-m);
+    other->addMass(m);
+}
+
+void VRPipeSegment::handlePump(float performance, VRPipeSegmentPtr other, float dt) {
+    float m = performance*dt;
+    m = min(m, pressure*volume); // pump out not more than available!
     addMass(-m);
     other->addMass(m);
 }
@@ -143,10 +151,27 @@ void VRPipeSystem::update() {
                 continue;
             }
 
+            if (entity->is_a("Junction")) { // just averages pressures, TODO: compute mass exchange with timestep
+                auto pipes = getPipes(nID);
+                float commonMass = 0;
+                float commonVolume = 0;
+                for (auto p : pipes) {
+                    commonMass += p->pressure*p->volume;
+                    commonVolume += p->volume;
+                }
+                float avrgPressure = commonMass/commonVolume;
+                for (auto p : pipes) p->pressure = avrgPressure;
+                continue;
+            }
+
             if (entity->is_a("Pump")) {
-                /*float pumpPerformance = entity->getValue("performance", 0.0);
-                for (auto p : getInPipes(nID))  p->addPressure(-pumpPerformance, dt);
-                for (auto p : getOutPipes(nID)) p->addPressure( pumpPerformance, dt);*/
+                auto pipes = getPipes(nID);
+                if (pipes.size() != 2) continue;
+                auto pipe1 = pipes[0];
+                auto pipe2 = pipes[1];
+
+                float pumpPerformance = entity->getValue("performance", 0.0);
+                pipe1->handlePump(pumpPerformance, pipe2, dt);
                 continue;
             }
 
@@ -202,6 +227,7 @@ void VRPipeSystem::initOntology() {
     auto Tank = ontology->addConcept("Tank");
     auto Pump = ontology->addConcept("Pump");
     auto Outlet = ontology->addConcept("Outlet");
+    auto Junction = ontology->addConcept("Junction");
     auto Valve = ontology->addConcept("Valve", "Outlet");
 
     Tank->addProperty("pressure", "float");

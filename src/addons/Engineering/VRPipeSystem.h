@@ -31,6 +31,7 @@ class VRPipeSegment {
 
         void handleTank(float& pressure, float otherVolume, float dt);
         void handleValve(float area, VRPipeSegmentPtr other, float dt);
+        void handlePump(float performance, VRPipeSegmentPtr other, float dt);
 
         void addMass(float m);
 };
