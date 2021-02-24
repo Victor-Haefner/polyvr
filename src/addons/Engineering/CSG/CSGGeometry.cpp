@@ -1,3 +1,8 @@
+#define XSTR(x) STR(x)
+#define STR(x) #x
+
+#pragma message "The value of ABC: " XSTR(__cplusplus)
+
 #include "CSGGeometry.h"
 #include "CGALTypedefs.h"
 #include "PolyhedronBuilder.h"

@@ -13,6 +13,7 @@
 				<Option compiler="gcc" />
 				<Compiler>
 					<Add option="-O2" />
+					<Add option="-std=c++14" />
 					<Add option="-g" />
 				</Compiler>
 			</Target>
@@ -23,6 +24,7 @@
 				<Option compiler="gcc" />
 				<Compiler>
 					<Add option="-O2" />
+					<Add option="-std=c++14" />
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
@@ -35,7 +37,7 @@
 			<Add option="-fPIC" />
 			<Add option="`pkg-config gtk+-3.0 --cflags`" />
 			<Add option="`pkg-config gmodule-2.0 --cflags`" />
-			<Add option="`pkg-config python --cflags`" />
+			<Add option="`pkg-config python2 --cflags`" />
 			<Add option="-fopenmp" />
 			<Add option="-use_readonly_const" />
 			<Add option="-Wno-deprecated" />
@@ -118,6 +120,7 @@
 			<Add directory="/usr/include/DWG" />
 			<Add directory="/usr/include/libxml2" />
 			<Add directory="/usr/include/eigen3" />
+			<Add directory="/usr/include/python2.7" />
 		</Compiler>
 		<Linker>
 			<Add option="-lTKV3d" />
@@ -153,7 +156,7 @@
 			<Add option="`pkg-config gtk+-3.0 --libs`" />
 			<Add option="`pkg-config gmodule-2.0 --libs`" />
 			<Add option="`pkg-config bullet --libs`" />
-			<Add option="`pkg-config python --libs`" />
+			<Add option="`pkg-config python2 --libs`" />
 			<Add option="`pkg-config vte --libs`" />
 			<Add option="-ljsoncpp" />
 			<Add option="-lvrpn" />
@@ -1592,7 +1595,6 @@
 		<Unit filename="src/core/utils/zipper/zipper.cpp" />
 		<Unit filename="src/core/utils/zipper/zipper.h" />
 		<Unit filename="src/main.cpp" />
-		<Unit filename="src/version/version.cpp" />
 		<Extensions />
 	</Project>
 </CodeBlocks_project_file>
