@@ -28,7 +28,9 @@ fi
 
 echo " copy polyvr"
 mkdir $pckFolder/engine
+mkdir $pckFolder/engine/src
 cp -r build/Release/* $pckFolder/engine/
+cp -r src/cluster $pckFolder/engine/src/cluster
 cp -r ressources $pckFolder/engine/ressources
 cp -r setup $pckFolder/engine/setup
 cp -r shader $pckFolder/engine/shader
