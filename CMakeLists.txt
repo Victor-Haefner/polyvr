@@ -6,10 +6,12 @@ project(PolyVR)
 
 message( "Configuring for system name / version: " ${CMAKE_SYSTEM_NAME} " / " ${CMAKE_SYSTEM_VERSION} )
 
+if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
 add_custom_target(
     versionTarget
-    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/src/version/genVersion.sh
+    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/src/version/genVersion.bat
 )
+endif()
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Emscripten")
 	# debugging flags:
