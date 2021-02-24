@@ -173,6 +173,7 @@ void printTree(OpcUa::Node& node, string offset = "") {
 }
 
 VROPCUANode::VROPCUANode(shared_ptr<OpcUa::Node> n, shared_ptr<SubClient> sclient, shared_ptr<OpcUa::Subscription> subs) : node(n), subscriptionClient(sclient), subscription(subs) {
+    if (!n) return;
     const Variant& V = node->GetValue();
     try {
         nodeType = uint8_t(V.Type());

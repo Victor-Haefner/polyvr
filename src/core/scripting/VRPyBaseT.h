@@ -49,7 +49,7 @@ PyObject* VRPyTypeCaster::cast(const std::weak_ptr<X>& e) { \
 \
 template<> \
 string typeName(const X& e) { \
-    return " ## Y ## "; \
+    return #Y; \
 };
 
 #define simpleVRPyType( X, NEWfkt ) newPyType( VR ## X , X , NEWfkt )
