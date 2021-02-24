@@ -28,8 +28,6 @@ extern "C" {
 
 using namespace OSG;
 
-template<> string typeName(const VRSoundManager& o) { return "SoundManager"; }
-
 namespace OSG {
 string toString(ALenum error) {
     if(error == AL_INVALID_NAME) return "Invalid name";

@@ -10,8 +10,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const VRName& t) { return "Name"; }
-
 
 struct VRNamePool {
     list<pair<int,int>> ranges; // ranges of suffixes

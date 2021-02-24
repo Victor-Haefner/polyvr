@@ -26,8 +26,6 @@
 using namespace OSG;
 using namespace std;
 
-template<> string typeName(const VRRenderStudio& o) { return "RenderStudio"; }
-
 /**
 
 Rendering stages

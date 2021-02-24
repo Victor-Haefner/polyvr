@@ -24,8 +24,6 @@ typedef __u64 mstime_t;
 
 using namespace OSG;
 
-template<> string typeName(const VRMultiTouch& t) { return "MultiTouch"; }
-
 
 VRMultiTouch::Touch::Touch(int k) : key(k) {}
 

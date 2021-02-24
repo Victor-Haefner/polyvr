@@ -13,7 +13,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const VRSnappingEngine& o) { return "SnappingEngine"; }
 template<> string typeName(const VRSnappingEngine::PRESET& o) { return "VRSnappingEngine::PRESET"; }
 template<> string typeName(const VRSnappingEngine::Type& o) { return "VRSnappingEngine::Type"; }
 template<> string typeName(const VRSnappingEngine::EventSnap& o) { return "VRSnappingEngine::EventSnap"; }

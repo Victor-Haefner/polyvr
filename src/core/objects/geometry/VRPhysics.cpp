@@ -36,7 +36,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const VRCollision& c) { return "Collision"; }
 typedef boost::recursive_mutex::scoped_lock PLock;
 
 boost::recursive_mutex& VRPhysics_mtx() {

@@ -13,8 +13,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const VRRoad& t) { return "Road"; }
-
 
 VRRoad::VRRoad() : VRRoadBase("Road") {}
 VRRoad::~VRRoad() {}

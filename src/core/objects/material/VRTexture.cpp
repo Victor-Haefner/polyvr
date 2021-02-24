@@ -8,8 +8,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const VRTexture& t) { return "Texture"; }
-
 VRTexture::VRTexture() { img = Image::create(); }
 VRTexture::VRTexture(ImageMTRecPtr img) { this->img = img; }
 VRTexture::~VRTexture() {}

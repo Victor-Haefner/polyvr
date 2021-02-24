@@ -41,7 +41,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const VRTextureRenderer& o) { return "VRTextureRenderer"; }
 template<> string typeName(const VRTextureRenderer::CHANNEL& o) { return "VRTextureRenderer::CHANNEL"; }
 
 template<> int toValue(stringstream& ss, VRTextureRenderer::CHANNEL& e) {

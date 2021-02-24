@@ -33,8 +33,6 @@ typedef boost::recursive_mutex::scoped_lock PLock;
 
 using namespace OSG;
 
-template<> string typeName(const VRTerrain& t) { return "Terrain"; }
-
 
 VREmbankment::VREmbankment(PathPtr p1, PathPtr p2, PathPtr p3, PathPtr p4) : VRGeometry("embankment"), p1(p1), p2(p2), p3(p3), p4(p4) {
     for (auto p : p1->getPoints()) { auto pos = p.pos(); area.addPoint(Vec2d(pos[0],pos[2])); };

@@ -3,8 +3,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const VRRestServer& p) { return "RestServer"; }
-
 VRRestServer::VRRestServer() {}
 VRRestServer::~VRRestServer() {}
 

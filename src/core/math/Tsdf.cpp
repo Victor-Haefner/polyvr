@@ -6,8 +6,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const TSDF& t) { return "TSDF"; }
-
 TSDF::TSDF(Vec3i s) {
     size = new Vec3i(s);
     size_t N = s[0]*s[1]*s[2];

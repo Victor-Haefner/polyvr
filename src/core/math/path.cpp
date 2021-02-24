@@ -7,8 +7,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const Path& p) { return "Path"; }
-
 Path::Path(int d) : degree(d) {
     storeVec("points", points);
     storeVec("point_colors", point_colors);

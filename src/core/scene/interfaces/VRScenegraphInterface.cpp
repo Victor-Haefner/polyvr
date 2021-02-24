@@ -17,8 +17,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const VRScenegraphInterface& o) { return "ScenegraphInterface"; }
-
 namespace OSG {
     struct VRScenegraphInterface::Mate {
         VRTransformPtr a0;

@@ -10,8 +10,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const Triangulator& o) { return "Triangulator"; }
-
 
 Triangulator* current_triangulator;
 vector<Vec3d> tmpVertices;

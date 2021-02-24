@@ -10,8 +10,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const VRConstructionKit& t) { return "ConstructionKit"; }
-
 
 VRConstructionKit::VRConstructionKit() {
     snapping = VRSnappingEngine::create();

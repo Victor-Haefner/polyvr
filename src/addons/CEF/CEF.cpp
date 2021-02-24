@@ -18,8 +18,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const CEF& o) { return "CEF"; }
-
 vector< weak_ptr<CEF> > instances;
 bool cef_gl_init = false;
 
@@ -382,7 +380,7 @@ void CEF::keyboard(VRDeviceWeakPtr d) {
     if (windows_key_code == VKEY_RETURN) kev.unmodified_character = '\r'; else
     kev.unmodified_character = static_cast<int>(gdk_keyval_to_unicode(event->keyval));
 
-    if (kev.modifiers & EVENTFLAG_CONTROL_DOWN) kev.character = GetControlCharacter(windows_key_code, kev.modifiers & EVENTFLAG_SHIFT_DOWN); 
+    if (kev.modifiers & EVENTFLAG_CONTROL_DOWN) kev.character = GetControlCharacter(windows_key_code, kev.modifiers & EVENTFLAG_SHIFT_DOWN);
     else kev.character = kev.unmodified_character;
 
     if (event->type == GDK_KEY_PRESS) {

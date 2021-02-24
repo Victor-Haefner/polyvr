@@ -28,8 +28,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const VRLight& t) { return "Light"; }
-
 
 VRLight::VRLight(string name) : VRObject(name) {
     DirectionalLightMTRecPtr d_light = DirectionalLight::create();

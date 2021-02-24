@@ -28,8 +28,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const VRSetup& o) { return "Setup"; }
-
 
 VRSetup::VRSetup(string name) {
     cout << "Init VRSetup " << name << endl;

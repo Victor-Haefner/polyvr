@@ -15,9 +15,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const VRNavigator& t) { return "Navigator"; }
-template<> string typeName(const VRNavPreset& t) { return "NavPreset"; }
-
 
 #define sign(x) (( x >> 31 ) | ( (unsigned int)( -x ) >> 31 ))
 

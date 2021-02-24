@@ -80,8 +80,6 @@ void printGeoGLIDs(Geometry* geo) {
         ) << endl;
 }
 
-template<> string typeName(const VRSyncNode& o) { return "SyncNode"; }
-
 ThreadRefPtr applicationThread;
 
 VRSyncNode::VRSyncNode(string name) : VRTransform(name) {

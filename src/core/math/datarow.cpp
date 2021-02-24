@@ -4,8 +4,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const Datarow& p) { return "Datarow"; }
-
 Datarow::Datarow() {}
 Datarow::~Datarow() {}
 

@@ -12,7 +12,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const VRConstraint& t) { return "Constraint"; }
 template<> string typeName(const VRConstraint::TCMode& o) { return "Constraint mode"; }
 template<> int toValue(stringstream& s, VRConstraint::TCMode& t) { return 0; } // TODO
 

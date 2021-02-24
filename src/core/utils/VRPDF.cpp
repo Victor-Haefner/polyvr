@@ -12,8 +12,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const VRPDF& p) { return "PDF"; }
-
 VRPDF::VRPDF(string path) {
     //cairo_surface_t* surface = cairo_pdf_surface_create(path.c_str(), W*res, H*res);
     surface = cairo_pdf_surface_create(path.c_str(), 0, 0);

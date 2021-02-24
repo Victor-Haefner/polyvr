@@ -7,8 +7,6 @@ using namespace CryptoPP;
 
 using namespace OSG;
 
-template<> string typeName(const VREncryption& t) { return "Encryption"; }
-
 
 VREncryption::VREncryption() {}
 VREncryption::~VREncryption() {}

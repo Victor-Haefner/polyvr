@@ -19,8 +19,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const VRAnnotationEngine& t) { return "AnnotationEngine"; }
-
 bool hasGS = false;
 
 VRAnnotationEngine::VRAnnotationEngine(string name, bool init) : VRGeometry(name) {

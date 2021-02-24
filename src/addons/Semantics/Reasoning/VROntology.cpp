@@ -26,8 +26,6 @@ std::cout << x << std::endl;
 
 using namespace OSG;
 
-template<> string typeName(const VROntology& o) { return "Ontology"; }
-
 VROntology::VROntology(string name) {
     setStorageType("Ontology");
     setPersistency(0);

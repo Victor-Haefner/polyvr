@@ -14,8 +14,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const PCA& t) { return "PCA"; }
-
 Vec3d PCA::computeCentroid() {
     Vec3d res;
     int N = pnts.size();

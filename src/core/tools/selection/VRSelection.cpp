@@ -17,8 +17,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const VRSelection& t) { return "Selection"; }
-
 VRSelection::VRSelection() { clear(); }
 
 VRSelectionPtr VRSelection::create() { return VRSelectionPtr( new VRSelection() ); }

@@ -15,8 +15,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const VRSkeleton& m) { return "Skeleton"; }
-
 
 VRSkeleton::Configuration::Configuration(string n) { setNameSpace("skConfig"); setName(n); }
 VRSkeleton::Configuration::~Configuration() {}

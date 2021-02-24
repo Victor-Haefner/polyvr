@@ -16,8 +16,6 @@ const double pi = 3.14159265359;
 
 using namespace OSG;
 
-template<> string typeName(const VRPlanet& t) { return "Planet"; }
-
 VRPlanet::VRPlanet(string name) : VRTransform(name) {}
 VRPlanet::~VRPlanet() {}
 

@@ -35,9 +35,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const VRWorldGenerator& t) { return "WorldGenerator"; }
-template<> string typeName(const VRWorldGenerator::VRUserGenCb& t) { return "WorldGenerator Callback"; }
-
 
 VRWorldGenerator::VRWorldGenerator() : VRTransform("WorldGenerator") {}
 

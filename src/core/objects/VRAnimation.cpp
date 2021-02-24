@@ -6,8 +6,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const VRAnimation& t) { return "Animation"; }
-
 
 VRAnimation::interpolator::~interpolator() {;}
 

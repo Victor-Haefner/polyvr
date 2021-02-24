@@ -12,8 +12,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const VRPipeSystem& m) { return "PipeSystem"; }
-
 double gasSpeed = 300;
 
 

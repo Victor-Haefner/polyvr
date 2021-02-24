@@ -6,8 +6,6 @@ const double pi = 3.14159265359;
 
 using namespace OSG;
 
-template<> string typeName(const VROrbit& t) { return "Orbit"; }
-
 double VROrbit::toRad(double deg) { return pi*deg/180; }
 
 VROrbit::VROrbit() {}

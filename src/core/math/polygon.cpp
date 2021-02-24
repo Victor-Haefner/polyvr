@@ -19,11 +19,7 @@ typedef std::list<CGALPolygon> CGALPolyList;
 
 using namespace OSG;
 
-template<> string typeName(const VRPolygon& o) { return "Polygon"; }
-
-template<> int toValue(stringstream& ss, VRPolygon& box) {
-    return 0;
-}
+template<> int toValue(stringstream& ss, VRPolygon& p) { return 0; }
 
 #ifndef WITHOUT_CGAL
 CGALPolygon toCGALVRPolygon(VRPolygon p) {

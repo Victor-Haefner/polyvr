@@ -4,8 +4,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const VRMillingWorkPiece& o) { return "MillingWorkPiece"; }
-
 VRMillingWorkPiece::VRMillingWorkPiece(string name) : VRGeometry(name), rootElement(nullptr) {
 	type = "MillingWorkPiece";
 	uFkt = VRUpdateCb::create("MillingWorkPiece-update", bind(&VRMillingWorkPiece::update, this));

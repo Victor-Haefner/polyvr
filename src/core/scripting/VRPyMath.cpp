@@ -563,6 +563,8 @@ simplePyType(XML, New_ptr);
 simplePyType(XMLElement, 0);
 simpleVRPyType(Spreadsheet, New_ptr);
 
+template<> string typeName(const Datarow& p) { return "Datarow"; }
+
 template<> PyTypeObject VRPyBaseT<Datarow>::type = {
     PyObject_HEAD_INIT(NULL)
     0,                         /*ob_size*/

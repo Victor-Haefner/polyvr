@@ -18,8 +18,6 @@
 using namespace OSG;
 using namespace boost::filesystem;
 
-template<> string typeName(const VRFactory& m) { return "Factory"; }
-
 VRFactory::VRFactory() {}
 
 string repSpaces(string s) {
