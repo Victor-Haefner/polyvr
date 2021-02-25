@@ -2603,6 +2603,7 @@ void glarea_render(GLArea* area) {
         priv->clipping.W = unscaled_window_width;
         priv->clipping.H = unscaled_window_height;
         g_signal_emit (area, area_signals[RESIZE], 0, 0, 0, NULL);
+        global_invalidate = TRUE;
         priv->needs_resize = FALSE;
         priv->needs_render = TRUE;
     }
