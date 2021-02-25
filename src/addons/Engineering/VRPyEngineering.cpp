@@ -11,10 +11,16 @@ simpleVRPyType(RobotArm, New_named_ptr);
 simpleVRPyType(PipeSystem, New_ptr);
 
 PyMethodDef VRPyPipeSystem::methods[] = {
-    {"addNode", PyWrap( PipeSystem, addNode, "Add node, type can be [Tank, Valve, Outlet, Pump]", int, PosePtr, string, map<string, string> ) },
-    {"addSegment", PyWrap( PipeSystem, addSegment, "Add segment between nodes (radius, length, n1, n2)", int, double, double, int, int ) },
+    {"addNode", PyWrap( PipeSystem, addNode, "Add node, type can be [Tank, Valve, Outlet, Pump]", int, string, PosePtr, string, map<string, string> ) },
+    {"addSegment", PyWrap( PipeSystem, addSegment, "Add segment between nodes (radius, n1, n2)", int, double, int, int ) },
     {"setDoVisual", PyWrap( PipeSystem, setDoVisual, "Enable visual", void, bool ) },
-    {"setValve", PyWrap( PipeSystem, setValve, "Set valve state", void, int, bool ) },
+    {"getNode", PyWrap( PipeSystem, getNode, "Get node ID by name", int, string ) },
+    {"getSegment", PyWrap( PipeSystem, getSegment, "Get segment ID by its node IDs", int, int, int ) },
+    {"getSegmentPressure", PyWrap( PipeSystem, getSegmentPressure, "Get segment pressure", double, int ) },
+    {"getTankPressure", PyWrap( PipeSystem, getTankPressure, "Get tank pressure", double, string ) },
+    {"setValve", PyWrap( PipeSystem, setValve, "Set valve state", void, string, bool ) },
+    {"setPump", PyWrap( PipeSystem, setPump, "Set pump performance", void, string, double ) },
+    {"setTankPressure", PyWrap( PipeSystem, setTankPressure, "Set tank pressure", void, string, double ) },
     {NULL}
 };
 

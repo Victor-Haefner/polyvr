@@ -96,17 +96,24 @@ VRPipeSystemPtr VRPipeSystem::ptr() { return static_pointer_cast<VRPipeSystem>(s
 
 VROntologyPtr VRPipeSystem::getOntology() { return ontology; }
 
-int VRPipeSystem::addNode(PosePtr pos, string type, map<string, string> params) {
-    auto e = ontology->addEntity("pipeNode", type);
+int VRPipeSystem::addNode(string name, PosePtr pos, string type, map<string, string> params) {
+    auto e = ontology->addEntity(name, type);
     auto n = VRPipeNode::create(e);
     for (auto& p : params) e->set(p.first, p.second);
     int nID = graph->addNode(pos);
     nodes[nID] = n;
+    nodesByName[name] = nID;
     return nID;
 }
 
-int VRPipeSystem::addSegment(double radius, double length, int n1, int n2) {
+int VRPipeSystem::getNode(string name) { return nodesByName[name]; }
+int VRPipeSystem::getSegment(int n1, int n2) { return graph->getEdgeID(n1, n2); }
+
+int VRPipeSystem::addSegment(double radius, int n1, int n2) {
     int sID = graph->connect(n1, n2);
+    auto p1 = graph->getPosition(n1)->pos();
+    auto p2 = graph->getPosition(n2)->pos();
+    double length = (p2-p1).length();
     auto s = VRPipeSegment::create(radius, length);
     segments[sID] = s;
     return sID;
@@ -239,7 +246,12 @@ void VRPipeSystem::initOntology() {
 
 void VRPipeSystem::setDoVisual(bool b) { doVisual = b; }
 
-void VRPipeSystem::setValve(int nID, bool b) { nodes[nID]->entity->set("state", toString(b)); }
+double VRPipeSystem::getSegmentPressure(int i) { return segments[i]->pressure; }
+double VRPipeSystem::getTankPressure(string n) { return nodes[nodesByName[n]]->entity->getValue("pressure", 1.0); }
+
+void VRPipeSystem::setValve(string n, bool b)  { nodes[nodesByName[n]]->entity->set("state", toString(b)); }
+void VRPipeSystem::setPump(string n, double p) { nodes[nodesByName[n]]->entity->set("performance", toString(p)); }
+void VRPipeSystem::setTankPressure(string n, double p) { nodes[nodesByName[n]]->entity->set("pressure", toString(p)); }
 
 void VRPipeSystem::updateVisual() {
     if (!doVisual) return;
@@ -301,11 +313,20 @@ void VRPipeSystem::updateVisual() {
     }
 
     for (auto& n : nodes) {
-        Color3f c(1,1,0);
+        Color3f c(0.4,0.4,0.4);
 
         if (n.second->entity->is_a("Valve")) {
-            s = n.second->entity->getValue("state", false);
+            bool s = n.second->entity->getValue("state", false);
             c = s ? Color3f(0,1,0) : Color3f(1,0,0);
+        }
+
+        if (n.second->entity->is_a("Junction")) {
+            c = Color3f(0.2,0.4,1);
+        }
+
+        if (n.second->entity->is_a("Pump")) {
+            double p = n.second->entity->getValue("performance", 0.0);
+            c = p>1e-3 ? Color3f(1,1,0) : Color3f(1,0.5,0);
         }
 
         data.setColor(i, c); i++;

@@ -58,6 +58,7 @@ class VRPipeSystem : public VRGeometry {
         bool doVisual = false;
 
         map<int, VRPipeNodePtr> nodes;
+        map<string, int> nodesByName;
         map<int, VRPipeSegmentPtr> segments;
 
         void initOntology();
@@ -73,8 +74,10 @@ class VRPipeSystem : public VRGeometry {
 		static VRPipeSystemPtr create();
 		VRPipeSystemPtr ptr();
 
-		int addNode(PosePtr pos, string type, map<string, string> params);
-		int addSegment(double radius, double length, int n1, int n2);
+		int addNode(string name, PosePtr pos, string type, map<string, string> params);
+		int addSegment(double radius, int n1, int n2);
+		int getNode(string name);
+		int getSegment(int n1, int n2);
 
 		void setDoVisual(bool b);
 
@@ -82,7 +85,12 @@ class VRPipeSystem : public VRGeometry {
 		void updateVisual();
 		VROntologyPtr getOntology();
 
-		void setValve(int nID, bool b);
+		double getSegmentPressure(int i);
+		double getTankPressure(string n);
+
+		void setValve(string n, bool b);
+		void setPump(string n, double p);
+		void setTankPressure(string n, double p);
 };
 
 OSG_END_NAMESPACE;
