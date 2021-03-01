@@ -105,11 +105,12 @@ void parseOSGVec(string& data, V& v) {
     while (ss >> f) v->addValue(f);
 }
 
-template<class T, class U, typename V>
+// T2 allows to pass type double because stringstreams may fail to convert scientific notations to float
+template<class T, class U, class T2, typename V>
 void parseOSGVec2(string& data, V& v) {
     int N = sizeof(U)/sizeof(T);
     stringstream ss(data);
-    T f;
+    T2 f;
     U u;
     int i=0;
     while (ss >> f) {
@@ -120,6 +121,10 @@ void parseOSGVec2(string& data, V& v) {
             v->addValue(u);
         }
     }
+
+	if (ss.fail()) {
+		cout << " parseOSGVec2 failed!" << endl;
+	}
 }
 
 VRObjectPtr VRScenegraphInterface::getObject(string objID) {
@@ -1070,7 +1075,7 @@ void VRScenegraphInterface::handle(string msg) {
             if (geo && m.size() > 3) {
                 GeoPnt3fPropertyMTRecPtr pos = GeoPnt3fProperty::create();
                 replace( m[3].begin(), m[3].end(), ',', '.');
-                parseOSGVec2<float, Pnt3f>(m[3], pos);
+                parseOSGVec2<float, Pnt3f, double>(m[3], pos);
                 geo->setPositions(pos);
                 //cout << "set geo positions " << geo->getName() << "  " << pos->size() << endl;
             }
@@ -1080,9 +1085,9 @@ void VRScenegraphInterface::handle(string msg) {
             if (geo && m.size() > 3) {
                 GeoVec3fPropertyMTRecPtr norms = GeoVec3fProperty::create();
                 replace( m[3].begin(), m[3].end(), ',', '.');
-                parseOSGVec2<float, Vec3f>(m[3], norms);
+                parseOSGVec2<float, Vec3f, double>(m[3], norms);
                 geo->setNormals(norms);
-                //cout << "set geo normals " << geo->getName() << "  " << norms->size() << endl;
+                //cout << "set geo normals " << geo->getName() << "  " << norms->size() << "  " << m[3].size() << endl;
             }
 		}
 
@@ -1090,7 +1095,7 @@ void VRScenegraphInterface::handle(string msg) {
             if (geo && m.size() > 3) {
                 GeoColor4fPropertyMTRecPtr cols = GeoColor4fProperty::create();
                 replace( m[3].begin(), m[3].end(), ',', '.');
-                parseOSGVec2<float, Color4f>(m[3], cols);
+                parseOSGVec2<float, Color4f, double>(m[3], cols);
                 geo->setColors(cols);
                 //cout << "set geo colors " << geo->getName() << "  " << cols->size() << endl;
             }
