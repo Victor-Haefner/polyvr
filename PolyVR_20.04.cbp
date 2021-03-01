@@ -178,7 +178,6 @@
 			<Add option="-lvtkParallelCore-7.1" />
 			<Add option="-lvtkCommonDataModel-7.1" />
 			<Add option="-lvirtuose" />
-			<Add option="-lCGAL" />
 			<Add option="-lgdal" />
 			<Add option="-lgmp" />
 			<Add option="-lmpfr" />
@@ -1595,6 +1594,8 @@
 		<Unit filename="src/core/utils/zipper/zipper.cpp" />
 		<Unit filename="src/core/utils/zipper/zipper.h" />
 		<Unit filename="src/main.cpp" />
+		<Unit filename="src/version/version.cpp" />
+		<Unit filename="src/version/version.h" />
 		<Extensions />
 	</Project>
 </CodeBlocks_project_file>
