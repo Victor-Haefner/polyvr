@@ -212,6 +212,9 @@ PyMethodDef VRPyAtlas::methods[] = {
     {"test", PyWrap( Atlas, test, "test function", void ) },
     {"toggleUpdater", PyWrap( Atlas, toggleUpdater, "toggles updated fct", void ) },
     {"setup", PyWrap( Atlas, setup, "setup function", VRTransformPtr, void ) },
+    {"setCoordOrigin", PyWrap( Atlas, setCoordOrigin, "setCoordOrigin - East, North - uses EPSG UTM 32N: 25832 for now", void, double, double ) },
+    {"setBoundary", PyWrap( Atlas, setBoundary, "setBoundary - (double minEast, double maxEast, double minNorth, double maxNorth)", void, double, double, double, double ) },
+    {"setServerURL", PyWrap( Atlas, setServerURL, "sets remote Server URL", void, string ) },
     {NULL}  /* Sentinel */
 };
 

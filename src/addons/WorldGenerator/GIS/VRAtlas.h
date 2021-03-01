@@ -20,10 +20,21 @@ class VRAtlas : public std::enable_shared_from_this<VRAtlas>  {
             INNERRING = 1,
             OUTERRING = 2
         };
+        struct Boundary {
+            double minEast = 0.0;
+            double maxEast = 0.0;
+            double minNorth = 0.0;
+            double maxNorth = 0.0;
+
+            Boundary(double minEast, double maxEast, double minNorth, double maxNorth);
+            Boundary();
+            ~Boundary();
+        };
         struct Patch {
             string id;
             int LODlvl;
             VRTerrainPtr terrain;
+            Vec2d coords = Vec2d(0,0);
 
             Patch(string sid, int lvl, VRTerrainPtr ter);
             Patch();
@@ -32,6 +43,7 @@ class VRAtlas : public std::enable_shared_from_this<VRAtlas>  {
         struct Level {
             int LODlvl;
             float edgeLength;
+            Vec2i shift = Vec2i(0,0);
             Vec3d currentOrigin = Vec3d(0,0,0);
             int type;
             vector<vector<Patch>> patches;
@@ -49,24 +61,29 @@ class VRAtlas : public std::enable_shared_from_this<VRAtlas>  {
             Level outerRing;
             list<Patch> toDestroy;
             list<Patch> toGenerate;
-            void shiftEastIns(Level& lev);
-            void shiftEastOut(Level& lev);
-            void shiftWestIns(Level& lev);
-            void shiftWestOut(Level& lev);
-            void shiftNorthIns(Level& lev);
-            void shiftNorthOut(Level& lev);
-            void shiftSouthIns(Level& lev);
-            void shiftSouthOut(Level& lev);
+            void shiftEastIns(Level& lev, list<Level>::iterator it);
+            void shiftEastOut(Level& lev, list<Level>::iterator it);
+            void shiftWestIns(Level& lev, list<Level>::iterator it);
+            void shiftWestOut(Level& lev, list<Level>::iterator it);
+            void shiftNorthIns(Level& lev, list<Level>::iterator it);
+            void shiftNorthOut(Level& lev, list<Level>::iterator it);
+            void shiftSouthIns(Level& lev, list<Level>::iterator it);
+            void shiftSouthOut(Level& lev, list<Level>::iterator it);
             Layout();
             ~Layout();
         };
-        float size = 64.0;
+        float size = 100.0;
+        float LODviewHeight = 500.0;
+        Vec2d atlasOrigin = Vec2d(0.0,0.0);
+        Boundary bounds;
         int LODMax = 0;
         int patchcount = 0;
+        bool stop = false;
 
         string filepath;
         VRTransformPtr atlas;
         VRUpdateCbPtr updatePtr;
+        string serverURL = "";
         Layout layout;
         void update();
         void downSize();
@@ -84,7 +101,11 @@ class VRAtlas : public std::enable_shared_from_this<VRAtlas>  {
 		//VRAtlasPtr ptr();
 
         VRTransformPtr setup();
+        void setCoordOrigin(double east, double north);
+        void setBoundary(double minEast, double maxEast, double minNorth, double maxNorth);
+        void setServerURL(string url);
         void test();
+        void toggleUpdater();
 };
 
 OSG_END_NAMESPACE;
