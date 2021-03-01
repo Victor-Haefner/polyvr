@@ -15,8 +15,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const VRHaptic& t) { return "Haptic"; }
-
 
 VRHaptic::VRHaptic() : VRDevice("haptic") {
     addBeacon();

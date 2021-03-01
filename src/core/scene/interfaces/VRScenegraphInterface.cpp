@@ -6,6 +6,7 @@
 #include "core/utils/VRFunction.h"
 #include "core/utils/toString.h"
 #include "core/objects/geometry/VRGeometry.h"
+#include "core/objects/geometry/VRGeoData.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/tools/selection/VRSelector.h"
 #include "core/math/kinematics/VRConstraint.h"
@@ -16,8 +17,6 @@
 #include <OpenSG/OSGGeoProperties.h>
 
 using namespace OSG;
-
-template<> string typeName(const VRScenegraphInterface& o) { return "ScenegraphInterface"; }
 
 namespace OSG {
     struct VRScenegraphInterface::Mate {
@@ -1067,6 +1066,7 @@ void VRScenegraphInterface::handle(string msg) {
 		}
 
 		if (m[1] == "positions") {
+			//cout << "set geo positions " << obj << " " << trans << " " << geo << endl;
             if (geo && m.size() > 3) {
                 GeoPnt3fPropertyMTRecPtr pos = GeoPnt3fProperty::create();
                 replace( m[3].begin(), m[3].end(), ',', '.');
@@ -1099,8 +1099,8 @@ void VRScenegraphInterface::handle(string msg) {
 		if (m[1] == "indices") {
             if (geo && m.size() > 3) {
                 //cout << "set geo indices " << geo->getName() << endl;
-                GeoUInt8PropertyMTRecPtr types = GeoUInt8Property::create();;
-                GeoUInt32PropertyMTRecPtr lengths = GeoUInt32Property::create();;
+                GeoUInt8PropertyMTRecPtr types = GeoUInt8Property::create();
+                GeoUInt32PropertyMTRecPtr lengths = GeoUInt32Property::create();
                 GeoUInt32PropertyMTRecPtr indices = GeoUInt32Property::create();
                 parseOSGVec<int>(m[3], indices);
                 types->addValue(GL_TRIANGLES);
@@ -1108,7 +1108,10 @@ void VRScenegraphInterface::handle(string msg) {
                 geo->setTypes(types);
                 geo->setLengths(lengths);
                 geo->setIndices(indices);
-                geo->setMeshVisibility(1);
+                geo->setMeshVisibility(0);
+
+				VRGeoData tester(geo);
+				if (tester.valid() && tester.validIndices()) geo->setMeshVisibility(1);
             }
 		}
 

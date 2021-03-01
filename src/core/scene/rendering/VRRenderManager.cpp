@@ -15,8 +15,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const VRRenderManager& o) { return "RenderManager"; }
-
 
 VRRenderManager::VRRenderManager() {
     root = VRObject::create("Root");

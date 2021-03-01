@@ -18,8 +18,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const VRRain& t) { return "Rain"; }
-
 
 /*	Python usage example:
 	def initRain():

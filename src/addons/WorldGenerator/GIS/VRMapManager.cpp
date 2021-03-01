@@ -11,8 +11,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const VRMapManager& p) { return "MapManager"; }
-
 VRMapManager::VRMapManager() {}
 VRMapManager::~VRMapManager() {}
 

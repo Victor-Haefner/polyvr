@@ -12,8 +12,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const VRNumberingEngine& m) { return "NumberingEngine"; }
-
 VRNumberingEngine::VRNumberingEngine(string name) : VRGeometry(name) {
     group g;
     groups.push_back(g);

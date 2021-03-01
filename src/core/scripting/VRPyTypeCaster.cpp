@@ -42,7 +42,7 @@ template<> PyObject* VRPyTypeCaster::cast(const VRObjectPtr& obj) {
     else if (type == "Object") return VRPyObject::fromSharedPtr( static_pointer_cast<VRObject>(obj) );
     else if (type == "Sprite") return VRPySprite::fromSharedPtr( static_pointer_cast<VRSprite>(obj) );
 #ifndef WITHOUT_CGAL
-    else if (type == "CSGGeometry") return VRPyCSG::fromSharedPtr( static_pointer_cast<CSGGeometry>(obj) );
+    else if (type == "CSGGeometry") return VRPyCSGGeometry::fromSharedPtr( static_pointer_cast<CSGGeometry>(obj) );
 #endif
     else if (type == "Stroke") return VRPyStroke::fromSharedPtr( static_pointer_cast<VRStroke>(obj) );
     else if (type == "Material") return VRPyMaterial::fromSharedPtr( static_pointer_cast<VRMaterial>(obj) );

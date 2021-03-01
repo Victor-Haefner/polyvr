@@ -23,8 +23,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const VRSprite& o) { return "Sprite"; }
-
 
 VRSprite::VRSprite (string name, bool alpha, float w, float h) : VRGeometry(name) {
     width = w;

@@ -12,8 +12,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const VRJointTool& t) { return "JointTool"; }
-
 
 VRJointTool::VRJointTool(string name) : VRGeometry(name) {
     type = "JointTool";

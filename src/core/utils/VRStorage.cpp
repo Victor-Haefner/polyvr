@@ -7,8 +7,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const VRStorage& o) { return "Storage"; }
-
 
 VRStorageContextPtr VRStorageContext::create(bool onlyReload) {
     auto c = VRStorageContextPtr( new VRStorageContext() );

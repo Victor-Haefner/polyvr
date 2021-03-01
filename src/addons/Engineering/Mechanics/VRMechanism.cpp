@@ -17,8 +17,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const VRMechanism& m) { return "Mechanism"; }
-
 
 /**
 

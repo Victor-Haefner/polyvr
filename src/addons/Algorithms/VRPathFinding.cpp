@@ -8,8 +8,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const VRPathFinding& o) { return "PathFinding"; }
-
 VRPathFinding::Position::Position(int nID) : nID(nID) {}
 VRPathFinding::Position::Position(int eID, float t) : eID(eID), t(t) {}
 

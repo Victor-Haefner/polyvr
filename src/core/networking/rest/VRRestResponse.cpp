@@ -3,8 +3,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const VRRestResponse& p) { return "RestResponse"; }
-
 VRRestResponse::VRRestResponse() {}
 VRRestResponse::~VRRestResponse() {}
 

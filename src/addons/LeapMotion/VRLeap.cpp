@@ -13,8 +13,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const VRLeap& o) { return "Leap"; }
-
 Vec3d VRLeapHistory::add(Vec3d v, float f) { // TODO
     return v;
 

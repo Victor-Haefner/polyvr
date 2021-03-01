@@ -3,8 +3,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const Frustum& o) { return "Frustum"; }
-
 Frustum::Frustum() {}
 Frustum::~Frustum() {}
 

@@ -4,8 +4,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const VRProgress& t) { return "Progress"; }
-
 
 VRProgress::VRProgress(string title, int max, Mode m) { setup(title, max, m); }
 

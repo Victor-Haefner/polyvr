@@ -14,8 +14,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const VRServer& t) { return "Server"; }
-
 
 VRServer::VRServer(int port) : VRDevice("server") {
     addBeacon();

@@ -18,8 +18,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const VRRoadIntersection& t) { return "RoadIntersection"; }
-
 
 VRRoadIntersection::RoadFront::RoadFront(VRRoadPtr road) : road(road) {}
 

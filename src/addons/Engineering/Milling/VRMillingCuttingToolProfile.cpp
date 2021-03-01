@@ -5,8 +5,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const VRMillingCuttingToolProfile& o) { return "MillingCuttingToolProfile"; }
-
 VRMillingCuttingToolProfile::VRMillingCuttingToolProfile() {}
 VRMillingCuttingToolProfile::~VRMillingCuttingToolProfile() {}
 

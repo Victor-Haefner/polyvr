@@ -7,8 +7,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const VRAMLLoader& t) { return "VRAMLLoader"; }
-
 VRAMLLoader::VRAMLLoader() {}
 VRAMLLoader::~VRAMLLoader() {}
 

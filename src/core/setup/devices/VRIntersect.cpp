@@ -15,8 +15,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const VRIntersection& p) { return "Intersection"; }
-
 VRObjectPtr VRIntersection::getIntersected() { return object.lock(); }
 Pnt3d VRIntersection::getIntersection() { return point; }
 

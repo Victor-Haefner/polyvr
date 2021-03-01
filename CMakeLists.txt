@@ -6,7 +6,13 @@ project(PolyVR)
 
 message( "Configuring for system name / version: " ${CMAKE_SYSTEM_NAME} " / " ${CMAKE_SYSTEM_VERSION} )
 
-  
+if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+add_custom_target(
+    versionTarget
+    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/src/version/genVersion.bat
+)
+endif()
+
 if(CMAKE_SYSTEM_NAME STREQUAL "Emscripten")
 	# debugging flags:
 	#  -g -s ASSERTIONS=1
@@ -396,6 +402,7 @@ add_executable(polyvr src/main.cpp)
 target_sources(polyvr PRIVATE src/PolyVR.cpp)
 
 if(TRUE) # ok
+target_sources(polyvr PRIVATE src/version/version.cpp)
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
 target_sources(polyvr PRIVATE src/core/math/PCA.cpp) # needs lapacke/blas
 endif()
@@ -909,7 +916,6 @@ target_sources(polyvr PRIVATE src/addons/CaveKeeper/CKOctree.cpp)
 target_sources(polyvr PRIVATE src/addons/CaveKeeper/VRPyCaveKeeper.cpp)
 target_sources(polyvr PRIVATE src/addons/Engineering/VRNumberingEngine.cpp)
 target_sources(polyvr PRIVATE src/addons/Engineering/VRProfile.cpp)
-target_sources(polyvr PRIVATE src/addons/Engineering/VRPyNumberingEngine.cpp)
 target_sources(polyvr PRIVATE src/addons/Engineering/Factory/network.cpp)
 target_sources(polyvr PRIVATE src/addons/Engineering/Factory/VRLogistics.cpp)
 target_sources(polyvr PRIVATE src/addons/Engineering/Factory/VRPyAMLLoader.cpp)
@@ -928,7 +934,7 @@ target_sources(polyvr PRIVATE src/addons/Engineering/CSG/VRPyCSG.cpp)
 target_sources(polyvr PRIVATE src/addons/Engineering/CSG/CSGGeometryBis.cpp)
 #target_sources(polyvr PRIVATE src/addons/Engineering/CSG/GTSGeometry.cpp) # deprecated
 endif()
-target_sources(polyvr PRIVATE src/addons/Engineering/VRPyRobotArm.cpp)
+target_sources(polyvr PRIVATE src/addons/Engineering/VRPyEngineering.cpp)
 target_sources(polyvr PRIVATE src/addons/Engineering/Machining/VRMachiningSimulation.cpp)
 target_sources(polyvr PRIVATE src/addons/Engineering/Machining/VRMachiningCode.cpp)
 target_sources(polyvr PRIVATE src/addons/Engineering/Machining/VRMachiningKinematics.cpp)
@@ -947,6 +953,7 @@ target_sources(polyvr PRIVATE src/addons/Engineering/Mechanics/VRGearSegmentatio
 target_sources(polyvr PRIVATE src/addons/Engineering/Mechanics/VRAxleSegmentation.cpp) # needs eigen
 endif()
 target_sources(polyvr PRIVATE src/addons/Engineering/VRRobotArm.cpp)
+target_sources(polyvr PRIVATE src/addons/Engineering/VRPipeSystem.cpp)
 target_sources(polyvr PRIVATE src/addons/Engineering/Chemistry/VRPyMolecule.cpp)
 target_sources(polyvr PRIVATE src/addons/Engineering/Chemistry/VRMolecule.cpp)
 target_sources(polyvr PRIVATE src/addons/Engineering/Chemistry/VRMoleculeMat.cpp)
@@ -1041,6 +1048,7 @@ target_sources(polyvr PRIVATE src/addons/Algorithms/VRPathFinding.cpp)
 target_sources(polyvr PRIVATE src/addons/Algorithms/VRGraphLayout.cpp)
 endif()
 
+add_dependencies(polyvr versionTarget)
 target_compile_options(polyvr PRIVATE ${COMPILER_FLAGS})
 target_link_libraries(polyvr PRIVATE ${LINKER_FLAGS})
 

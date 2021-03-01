@@ -4,8 +4,6 @@
 #include "core/utils/VRFunction.h"
 #include "core/scene/VRSceneManager.h"
 
-template<> string typeName(const OSG::VRDevice& t) { return "Device"; }
-
 OSG_BEGIN_NAMESPACE;
 
 VRDevice::VRDevice(string _type) : VRAvatar(_type) {

@@ -8,8 +8,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const VRCartesianKinematics& t) { return "CartesianKinematics"; }
-
 VRCartesianKinematics::VRCartesianKinematics() {}
 VRCartesianKinematics::~VRCartesianKinematics() {}
 

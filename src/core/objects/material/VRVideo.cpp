@@ -24,8 +24,6 @@ typedef boost::recursive_mutex::scoped_lock PLock;
 
 using namespace OSG;
 
-template<> string typeName(const VRVideo& o) { return "Video"; }
-
 VRVideo::VRVideo(VRMaterialPtr mat) {
     //avMutex = new boost::mutex();
     material = mat;

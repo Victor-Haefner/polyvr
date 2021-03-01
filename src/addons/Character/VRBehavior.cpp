@@ -3,8 +3,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const VRBehavior& m) { return "Behavior"; }
-
 /*VRBehavior::Action::Action(string n) { setNameSpace("bhAction"); setName(n); }
 VRBehavior::Action::~Action() {}
 VRBehavior::ActionPtr VRBehavior::Action::create(string n) { return ActionPtr(new Action(n) ); }

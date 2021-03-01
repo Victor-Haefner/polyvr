@@ -14,8 +14,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const VRReasoner& o) { return "Reasoner"; }
-
 bool VRReasoner::verbGui = true;
 bool VRReasoner::verbConsole = true;
 string VRReasoner::pre = "  ?!?  ";

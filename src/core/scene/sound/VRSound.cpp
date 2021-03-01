@@ -32,8 +32,6 @@ VRGuiManager::get()->getConsole( "Errors" )->write( x+"\n" );
 
 using namespace OSG;
 
-template<> string typeName(const VRSound& o) { return "Sound"; }
-
 string avErrToStr(const int& e) {
     char buf[100];
     int N = 100;

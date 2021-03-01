@@ -20,8 +20,6 @@ static boost::recursive_mutex VRRestClientMtx;
 
 using namespace OSG;
 
-template<> string typeName(const VRRestClient& p) { return "RestClient"; }
-
 struct VRRestClient::RestPromise {
     future<void> f;
     //RestPromise(future<void>& F) : f(F) {}

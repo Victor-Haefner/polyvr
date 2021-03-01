@@ -14,8 +14,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const VRMouse& t) { return "Mouse"; }
-
 
 VRMouse::VRMouse() : VRDevice("mouse") { addBeacon(); }
 VRMouse::~VRMouse() {}

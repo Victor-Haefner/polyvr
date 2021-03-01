@@ -59,8 +59,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const VRMaterial& o) { return "Material"; }
-
 namespace OSG {
 struct VRMatData {
     ChunkMaterialMTRecPtr mat;

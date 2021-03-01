@@ -9,8 +9,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const VRProcessEngine& o) { return "ProcessEngine"; }
-
 // ----------- process engine prerequisites --------------
 
 bool VRProcessEngine::Inventory::hasMessage(Message m) {

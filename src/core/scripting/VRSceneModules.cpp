@@ -283,7 +283,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPySpreadsheet>("Spreadsheet", pModVR);
 
 #ifndef WITHOUT_CGAL
-	sm->registerModule<VRPyCSG>("CSGGeometry", pModVR, VRPyGeometry::typeRef);
+	sm->registerModule<VRPyCSGGeometry>("CSGGeometry", pModVR, VRPyGeometry::typeRef);
 #endif
 	sm->registerModule<VRPySimViDekont>("SimViDekont", pModVR);
 

@@ -5,9 +5,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const OSG::VRLodLeaf& t) { return "LodLeaf"; }
-template<> string typeName(const OSG::VRLodTree& t) { return "LodTree"; }
-
 VRLodLeaf::VRLodLeaf(string name, OctreeNode* o, int l) : VRObject(name), oLeaf(o), lvl(l) {}
 VRLodLeaf::~VRLodLeaf() {}
 VRLodLeafPtr VRLodLeaf::ptr() { return static_pointer_cast<VRLodLeaf>( shared_from_this() ); }

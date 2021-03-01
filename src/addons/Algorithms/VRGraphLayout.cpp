@@ -4,8 +4,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const VRGraphLayout& o) { return "GraphLayout"; }
-
 VRGraphLayout::VRGraphLayout() {}
 
 VRGraphLayoutPtr VRGraphLayout::create() { return VRGraphLayoutPtr( new VRGraphLayout() ); }

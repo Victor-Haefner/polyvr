@@ -25,8 +25,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const VRTrafficSigns& t) { return "TrafficSigns"; }
-
 
 VRTrafficSigns::VRTrafficSigns() : VRRoadBase("TrafficSigns") {}
 VRTrafficSigns::~VRTrafficSigns() {}

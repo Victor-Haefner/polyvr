@@ -10,8 +10,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const VRLod& t) { return "Lod"; }
-
 
 VRLod::VRLod(string name) : VRObject(name) {
     lod = DistanceLOD::create();

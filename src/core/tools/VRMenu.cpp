@@ -7,8 +7,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const VRMenu& t) { return "Menu"; }
-
 VRMenu::VRMenu(string path) : VRGeometry("menu") {
     type = "Menu";
     group = getName();

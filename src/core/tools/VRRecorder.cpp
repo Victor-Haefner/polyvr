@@ -24,8 +24,6 @@ extern "C" {
 
 using namespace OSG;
 
-template<> string typeName(const VRRecorder& o) { return "Recorder"; }
-
 namespace OSG {
 class VRFrame {
     public:

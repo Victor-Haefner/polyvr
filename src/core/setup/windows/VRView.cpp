@@ -33,8 +33,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const VRView& o) { return "View"; }
-
 
 bool onBox(int i, int j, int c) {
     if(abs(i) > c || abs(j) > c) return false;

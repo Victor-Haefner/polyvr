@@ -47,8 +47,6 @@ void erase(vector<T>& v, const T& t) {
     v.erase(remove(v.begin(), v.end(), t), v.end());
 }
 
-template<> string typeName(const OSG::VRTrafficSimulation& t) { return "TrafficSimulation"; }
-
 
 VRTrafficSimulation::Vehicle::Vehicle(Graph::position p, int type) : pos(p), type(type) {
     setDefaults();

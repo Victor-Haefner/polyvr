@@ -8,8 +8,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const VRMillingMachine& m) { return "MillingMachine"; }
-
 VRMillingMachine::VRMillingMachine() {
     pos = new Vec3d();
     http = new VRSocket("milling machine");

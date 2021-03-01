@@ -13,9 +13,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const OctreeNode& p) { return "OctreeNode"; }
-template<> string typeName(const Octree& p) { return "Octree"; }
-
 OctreeNode::OctreeNode(OctreePtr tree, float res, float s, int lvl) : resolution(res), size(s), level(lvl) { this->tree = tree; }
 OctreeNode::~OctreeNode() {
     for (auto c : children) if (c) delete c;

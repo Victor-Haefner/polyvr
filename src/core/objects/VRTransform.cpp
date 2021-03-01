@@ -29,8 +29,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const VRTransform& t) { return "Transform"; }
-
 
 VRTransform::VRTransform(string name, bool doOpt) : VRObject(name) {
     doOptimizations = doOpt; // doOpt; // TODO: this is disabled for developing the sync

@@ -34,8 +34,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const VRScript& t) { return "Script"; }
-
 
 void updateArgPtr(VRScript::argPtr a) {
     string t = a->type;

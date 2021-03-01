@@ -10,8 +10,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const VRLightBeacon& o) { return "LightBeacon"; }
-
 VRMaterialPtr getLightGeoMat() {
     VRMaterialPtr mat = VRMaterial::create("light_geo_mat");
     mat->setAmbient(Color3f(0.7, 0.7, 0.7));

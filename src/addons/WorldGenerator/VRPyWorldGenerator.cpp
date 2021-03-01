@@ -12,6 +12,8 @@
 
 using namespace OSG;
 
+template<> string typeName(const VRWorldGenerator::OsmEntity& e) { return "OsmEntity"; }
+
 template<> PyObject* VRPyTypeCaster::cast(const VRWorldGenerator::OsmEntity& e) {
     PyObject* epy = PyTuple_New(2);
     PyTuple_SetItem(epy, 0, VRPyTypeCaster::cast(e.pnts));

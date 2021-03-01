@@ -18,8 +18,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const VRMolecule& m) { return "Molecule"; }
-
 VRBond::VRBond(int t, int s, VRAtom* a2, VRAtom* a1) { type = t; atom1 = a1; atom2 = a2; slot = s; }
 VRBond::VRBond() {}
 

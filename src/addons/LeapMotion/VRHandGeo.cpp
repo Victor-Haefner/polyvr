@@ -8,8 +8,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const VRHandGeo& o) { return "HandGeo"; }
-
 VRHandGeo::VRHandGeo(string name) : VRGeometry(name), bones(5) {
     //setPrimitive("Box", "0.05 0.01 0.06 1 1 1"); // palm geometry
     for (int i = 0; i < 5; ++i) {
