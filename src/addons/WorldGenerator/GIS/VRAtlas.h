@@ -56,7 +56,10 @@ class VRAtlas : public std::enable_shared_from_this<VRAtlas>  {
             int currentLODlvl = 0;
             int currentMaxLODlvl = 0;
             Vec3d origin = Vec3d(0,0,0);
+            Vec2d coordOrigin = Vec2d(0,0);
             list<Level> levels;
+            string localPathOrtho = "";
+            string localPathHeight = "";
             Level innerQuad;
             Level innerRing;
             Level outerRing;
@@ -71,6 +74,7 @@ class VRAtlas : public std::enable_shared_from_this<VRAtlas>  {
             void shiftSouthIns(Level& lev, list<Level>::iterator it);
             void shiftSouthOut(Level& lev, list<Level>::iterator it);
             void setCoords(Patch& pat, Vec3d co3);
+            void reset(Vec3d camPos);
             Layout();
             ~Layout();
         };
@@ -109,6 +113,7 @@ class VRAtlas : public std::enable_shared_from_this<VRAtlas>  {
         void setBoundary(double minEast, double maxEast, double minNorth, double maxNorth);
         void setServerURL(string url);
         void setLocalPaths(string ortho, string height);
+        Vec3d getLocalPos(double east, double north);
         void test();
         void toggleUpdater();
 };

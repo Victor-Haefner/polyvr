@@ -8,6 +8,7 @@
 #include "core/objects/geometry/VRGeoData.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/material/VRTexture.h"
+#include "core/utils/system/VRSystem.h"
 
 #ifndef WITHOUT_GDAL
 #include "core/scene/import/GIS/VRGDAL.h"
@@ -17,6 +18,7 @@
 #include <list>
 #include <fstream>
 #include <cmath>
+#include <string>
 
 using namespace OSG;
 
@@ -45,23 +47,66 @@ VRAtlas::Layout::~Layout() {}
 
 
 void VRAtlas::Layout::setCoords(Patch& pat, Vec3d co3) {
-    pat.coords = Vec2d(co3[0],co3[2]);
+    pat.coords = coordOrigin + Vec2d(co3[0],-co3[2]);
     float nSize = pat.edgeLength;
     Vec3d pos = co3 + Vec3d(nSize*0.5,0,nSize*0.5);
     pat.terrain->setTransform(pos);
 
+    auto cut = [&](string in) {
+        int sAt = in.length();
+        if (in.find(".")) {
+            sAt = in.find(".");
+        }
+        return in.substr(0,sAt);
+    };
+
     string pathOrtho = "data/test64x64.jpg";
     string pathHeight = "data/testW64x64.jpg";
 
-    VRTexturePtr heightIMG = VRTexture::create();
-    heightIMG->read(pathHeight);
+    string east = cut( to_string(pat.coords[0]) );
+    string north = cut( to_string(pat.coords[1]) );
 
+    string fileOrtho = "fdop20_32" + east + "_" + north + "_rgbi_" + cut(to_string(pat.edgeLength)) + ".jpg";
+    string fileHeight = "dgm_E32" + east + ".5_N" + north + ".5_S"+ cut(to_string(pat.edgeLength)) + ".tif";
+    //cout << fileOrtho << " --- " << fileHeight << " --- " << toString(pos) << endl;
+
+    string tmp1 = localPathOrtho + "/" + cut(to_string(pat.edgeLength)) + "/" + fileOrtho;
+    string tmp2 = localPathHeight + "/" + cut(to_string(pat.edgeLength)) + "/" + fileHeight;
+    if ( exists(tmp1) ) pathOrtho = tmp1;
     pat.terrain->paintHeights(pathOrtho);
-    pat.terrain->setMap( heightIMG, 3 );
+    //cout << tmp1 << "-----" << tmp2 << endl;
+    //if ( exists(tmp1) ) cout << "found " << tmp1 << endl; else cout << " not found " << tmp1 << endl;
+    if ( exists(tmp2) ) {
+        pat.terrain->loadMap( tmp2 );
+    } else {
+        VRTexturePtr heightIMG = VRTexture::create();
+        heightIMG->read(pathHeight);
+        pat.terrain->setMap( heightIMG, 3 );
+    }
+}
+
+void VRAtlas::Layout::reset(Vec3d camPos) {
+    Vec3d pos = Vec3d(coordOrigin[0],0,coordOrigin[2]);
+
+    innerQuad.currentOrigin = pos;
+    for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 4; j++) {
+            pos = Vec3d(0,0,0);
+            auto patch = innerQuad.patches[i][j];
+            setCoords(patch,pos);
+        }
+    }
+    for (int i = 0; i < 8; i++) {
+        for (int j = 0; j < innerRing.patches[i].size(); j++) {
+            pos = Vec3d(0,0,0);
+            auto patch = innerRing.patches[i][j];
+            setCoords(patch,pos);
+        }
+    }
 }
 
 void VRAtlas::Layout::shiftEastIns(Level& lev, list<Level>::iterator it) {
-    cout << " VRAtlas::need to shift EAST inside:" << endl;
+    //cout << " VRAtlas::need to shift EAST inside:" << endl;
     int lvl = lev.LODlvl;
     float nSize = lev.edgeLength;
     Vec3d east = Vec3d(1,0,0);
@@ -74,7 +119,7 @@ void VRAtlas::Layout::shiftEastIns(Level& lev, list<Level>::iterator it) {
 }
 
 void VRAtlas::Layout::shiftEastOut(Level& lev, list<Level>::iterator it) {
-    cout << " VRAtlas::need to shift EAST outside:" << endl;
+    //cout << " VRAtlas::need to shift EAST outside:" << endl;
     int lvl = lev.LODlvl;
     float nSize = lev.edgeLength;
     Vec3d east = Vec3d(1,0,0);
@@ -120,9 +165,9 @@ void VRAtlas::Layout::shiftEastOut(Level& lev, list<Level>::iterator it) {
             for (int j = 0; j < 8; j++){
                 auto patch = lev.patches[i][j];
                 //patch.terrain->setTransform(lev.currentOrigin + Vec3d((i-4)*nSize+nSize*0.5,0,(j-4+6)*nSize+nSize*0.5));
-                patch.terrain->setTransform(lev.currentOrigin + Vec3d((i+6-4)*nSize+nSize*0.5,0,(j-4)*nSize+nSize*0.5));
-                ///TODO: swap textures and heightmap
-                //patch.terrain->paintHeights("data/test64x64Invert.jpg");
+                //patch.terrain->setTransform(lev.currentOrigin + Vec3d((i+6-4)*nSize+nSize*0.5,0,(j-4)*nSize+nSize*0.5));
+                Vec3d nPos = lev.currentOrigin + Vec3d((i+6-4)*nSize,0,(j-4)*nSize);
+                setCoords(patch,nPos);
             }
         }
         for (int i = 0; i < 2; i++) {
@@ -137,7 +182,7 @@ void VRAtlas::Layout::shiftEastOut(Level& lev, list<Level>::iterator it) {
 }
 
 void VRAtlas::Layout::shiftWestIns(Level& lev, list<Level>::iterator it) {
-    cout << " VRAtlas::need to shift WEST inside:" << endl;
+    //cout << " VRAtlas::need to shift WEST inside:" << endl;
     int lvl = lev.LODlvl;
     float nSize = lev.edgeLength;
     Vec3d east = Vec3d(1,0,0);
@@ -149,7 +194,7 @@ void VRAtlas::Layout::shiftWestIns(Level& lev, list<Level>::iterator it) {
 }
 
 void VRAtlas::Layout::shiftWestOut(Level& lev, list<Level>::iterator it) {
-    cout << " VRAtlas::need to shift WEST outside:" << endl;
+    //cout << " VRAtlas::need to shift WEST outside:" << endl;
     int lvl = lev.LODlvl;
     float nSize = lev.edgeLength;
     Vec3d east = Vec3d(1,0,0);
@@ -189,10 +234,10 @@ void VRAtlas::Layout::shiftWestOut(Level& lev, list<Level>::iterator it) {
         for (int i = 7; i >= 6; i--) { //transfer patches ownership to next bigger ring
             for (int j = 0; j < 8; j++){
                 auto patch = lev.patches[i][j];
+                Vec3d nPos = lev.currentOrigin + Vec3d((i-6-4)*nSize,0,(j-4)*nSize);
+                setCoords(patch,nPos);
                 //patch.terrain->setTransform(lev.currentOrigin + Vec3d((i-4)*nSize+nSize*0.5,0,(j-4+6)*nSize+nSize*0.5));
-                patch.terrain->setTransform(lev.currentOrigin + Vec3d((i-6-4)*nSize+nSize*0.5,0,(j-4)*nSize+nSize*0.5));
-                ///TODO: swap textures and heightmap
-                //patch.terrain->paintHeights("data/test64x64Invert.jpg");
+                //patch.terrain->setTransform(lev.currentOrigin + Vec3d((i-6-4)*nSize+nSize*0.5,0,(j-4)*nSize+nSize*0.5));
             }
         }
         for (int i = 0; i < 2; i++) {
@@ -207,7 +252,7 @@ void VRAtlas::Layout::shiftWestOut(Level& lev, list<Level>::iterator it) {
 }
 
 void VRAtlas::Layout::shiftNorthIns(Level& lev, list<Level>::iterator it) {
-    cout << " VRAtlas::need to shift NORTH inside:" << endl;
+    //cout << " VRAtlas::need to shift NORTH inside:" << endl;
     int lvl = lev.LODlvl;
     float nSize = lev.edgeLength;
     Vec3d north = Vec3d(0,0,-1);
@@ -219,7 +264,7 @@ void VRAtlas::Layout::shiftNorthIns(Level& lev, list<Level>::iterator it) {
 }
 
 void VRAtlas::Layout::shiftNorthOut(Level& lev, list<Level>::iterator it) {
-    cout << " VRAtlas::need to shift NORTH outside:" << endl;
+    //cout << " VRAtlas::need to shift NORTH outside:" << endl;
     int lvl = lev.LODlvl;
     float nSize = lev.edgeLength;
     Vec3d north = Vec3d(0,0,-1);
@@ -264,10 +309,10 @@ void VRAtlas::Layout::shiftNorthOut(Level& lev, list<Level>::iterator it) {
                 auto patch = lev.patches[i].back();
                 innerRing.patches[i].insert(innerRing.patches[i].begin(),patch);
                 innerRing.patches[i].pop_back();
+                Vec3d nPos = lev.currentOrigin + Vec3d((i-4)*nSize,0,(j-4)*nSize);
+                setCoords(patch,nPos);
                 //patch.terrain->setTransform(lev.currentOrigin + Vec3d((i-4)*nSize+nSize*0.5,0,(j-4+6)*nSize+nSize*0.5));
-                patch.terrain->setTransform(lev.currentOrigin + Vec3d((i-4)*nSize+nSize*0.5,0,(j-4)*nSize+nSize*0.5));
-                ///TODO: swap textures and heightmap
-                //patch.terrain->paintHeights("data/test64x64Invert.jpg");
+                //patch.terrain->setTransform(lev.currentOrigin + Vec3d((i-4)*nSize+nSize*0.5,0,(j-4)*nSize+nSize*0.5
             }
         }
         auto it = levels.begin();
@@ -278,6 +323,7 @@ void VRAtlas::Layout::shiftNorthOut(Level& lev, list<Level>::iterator it) {
 }
 
 void VRAtlas::Layout::shiftSouthIns(Level& lev, list<Level>::iterator it) {
+    //cout << " VRAtlas::need to shift SOUTH  inside: " << lev.type << " " << lev.shift[1] << endl;
     int lvl = lev.LODlvl;
     float nSize = lev.edgeLength;
     Vec3d north = Vec3d(0,0,-1);
@@ -296,9 +342,9 @@ void VRAtlas::Layout::shiftSouthIns(Level& lev, list<Level>::iterator it) {
             for (int j = 0; j < lev.patches[i].size(); j++) {
                 if (checkOR(i,j)) {
                     auto patch = lev.patches[i][j];
-                    patch.terrain->setTransform(lev.currentOrigin + Vec3d((i-4)*nSize+nSize*0.5,0,(-1 + lev.shift[1])*nSize+nSize*0.5));
-                    ///TODO: swap textures and heightmap
-                    //patch.terrain->paintHeights("data/test64x64Invert.jpg");
+                    Vec3d nPos = lev.currentOrigin + Vec3d((i-4)*nSize,0,(-1 + lev.shift[1])*nSize);
+                    setCoords(patch,nPos);
+                    //patch.terrain->setTransform(lev.currentOrigin + Vec3d((i-4)*nSize+nSize*0.5,0,(-1 + lev.shift[1])*nSize+nSize*0.5));
                 }
             }
         }
@@ -308,10 +354,10 @@ void VRAtlas::Layout::shiftSouthIns(Level& lev, list<Level>::iterator it) {
             shiftSouthOut(nextLvl, it);
         }
     }
-    cout << " VRAtlas::need to shift SOUTH  inside: " << lev.type << " " << lev.shift[1] << endl;
 }
 
 void VRAtlas::Layout::shiftSouthOut(Level& lev, list<Level>::iterator it) {
+    //cout << " VRAtlas::need to shift SOUTH outside: " << lev.type << endl;
     int lvl = lev.LODlvl;
     float nSize = lev.edgeLength;
     Vec3d north = Vec3d(0,0,-1);
@@ -355,9 +401,9 @@ void VRAtlas::Layout::shiftSouthOut(Level& lev, list<Level>::iterator it) {
                 auto patch = lev.patches[i].front();
                 innerRing.patches[i].push_back(patch);
                 innerRing.patches[i].erase(innerRing.patches[i].begin());
-                patch.terrain->setTransform(lev.currentOrigin + Vec3d((i-4)*nSize+nSize*0.5,0,(j-4+6)*nSize+nSize*0.5));
-                ///TODO: swap textures and heightmap
-                //patch.terrain->paintHeights("data/test64x64Invert.jpg");
+                //patch.terrain->setTransform(lev.currentOrigin + Vec3d((i-4)*nSize+nSize*0.5,0,(j-4+6)*nSize+nSize*0.5));
+                Vec3d nPos = lev.currentOrigin + Vec3d((i-4)*nSize,0,(j-4+6)*nSize);
+                setCoords(patch,nPos);
             }
         }
         auto it = levels.begin();
@@ -372,9 +418,9 @@ void VRAtlas::Layout::shiftSouthOut(Level& lev, list<Level>::iterator it) {
                 auto patch = lev.patches[i].front();
                 innerRing.patches[i].push_back(patch);
                 innerRing.patches[i].erase(innerRing.patches[i].begin());
-                patch.terrain->setTransform(lev.currentOrigin + Vec3d((i-4)*nSize+nSize*0.5,0,(j-4+6)*nSize+nSize*0.5));
-                ///TODO: swap textures and heightmap
-                //patch.terrain->paintHeights("data/test64x64Invert.jpg");
+                //patch.terrain->setTransform(lev.currentOrigin + Vec3d((i-4)*nSize+nSize*0.5,0,(j-4+6)*nSize+nSize*0.5));
+                Vec3d nPos = lev.currentOrigin + Vec3d((i-4)*nSize,0,(j-4+6)*nSize);
+                setCoords(patch,nPos);
             }
         }
         it++;
@@ -402,7 +448,6 @@ void VRAtlas::Layout::shiftSouthOut(Level& lev, list<Level>::iterator it) {
         lev.patches.erase(lev.patches.begin());
         lev.patches.push_back(n2);
     }*/
-    cout << " VRAtlas::need to shift SOUTH outside: " << lev.type << endl;
 }
 
 void VRAtlas::test() {
@@ -468,8 +513,6 @@ VRGeometryPtr VRAtlas::generatePatch(string id) {
 }
 
 void VRAtlas::update() {
-    if (stop) return;
-    if (patchcount == 0) return;
     auto defCam = VRScene::getCurrent()->getActiveCamera();
     auto defCamPos = defCam->getWorldPosition();//defCam->getFrom();
     int tmp = layout.currentLODlvl;
@@ -479,6 +522,7 @@ void VRAtlas::update() {
     Vec3d camToOrigin = defCamPos - layout.innerQuad.currentOrigin;
     float height = camToOrigin.dot(vUp);
 
+    if (stop) return;
     //float dis = (defCamPos - layout.currentOrigin).length();
     /*
     float upperbound = LODviewHeight * pow(2.0, float(tmp));
@@ -492,8 +536,7 @@ void VRAtlas::update() {
         downSize();
         defCam->setNear(0.001*lowerbound);
         defCam->setFar(200*lowerbound);
-    }
-    */
+    }*/
 
     auto checkShift = [&](Level& lev){
         bool shifted = false;
@@ -502,10 +545,10 @@ void VRAtlas::update() {
         float boundaryOut = 2*lev.edgeLength;
         float east = camToOrigin.dot(vEast);
         float north = camToOrigin.dot(vNorth);
-        if (east > boundaryOut) { cout << "need shiftEastOut" << endl; layout.shiftEastOut(lev, layout.levels.begin()); }
-        if (east <-boundaryOut) { cout << "need shiftWestOut" << endl; layout.shiftWestOut(lev, layout.levels.begin()); }
-        if (north > boundaryOut) { cout << "need shiftNorthOut" << endl; layout.shiftNorthOut(lev, layout.levels.begin()); }
-        if (north < -boundaryOut) { cout << "need shiftSouthOut" << endl; layout.shiftSouthOut(lev, layout.levels.begin()); }
+        if (east > boundaryOut) { layout.shiftEastOut(lev, layout.levels.begin()); }
+        if (east <-boundaryOut) { layout.shiftWestOut(lev, layout.levels.begin()); }
+        if (north > boundaryOut) { layout.shiftNorthOut(lev, layout.levels.begin()); }
+        if (north < -boundaryOut) { layout.shiftSouthOut(lev, layout.levels.begin()); }
         //if (east > boundaryIns || east <-boundary || north > boundary || north <-boundary) shifted = true;
         return shifted;
     };
@@ -669,6 +712,11 @@ void VRAtlas::setBoundary(double minEast, double maxEast, double minNorth, doubl
 void VRAtlas::setServerURL(string url) { serverURL = url; }
 void VRAtlas::setLocalPaths(string ortho, string height) { localPathOrtho = ortho; localPathHeight = height; }
 
+Vec3d VRAtlas::getLocalPos(double east, double north) {
+    Vec3d pos = Vec3d(east - atlasOrigin[0],0, - (north - atlasOrigin[1]) );
+    return pos;
+}
+
 VRTransformPtr VRAtlas::setup() {
     cout << "VRAtlas::setup" << endl;
 
@@ -684,16 +732,21 @@ VRTransformPtr VRAtlas::setup() {
 
     addInnerQuad(0);
     addInnerRing(0);
-/*
+
     for (int i = 0; i < LODMax; i++){
         layout.currentMaxLODlvl++;
         addOuterRing(layout.currentMaxLODlvl);
     }
-*/
+
     //geo.setTransform(Vec3d(0,0,0));
 
     //Vec3d nor;
     //gdata.pushNorm(nor);
+
+
+    layout.localPathOrtho = localPathOrtho;
+    layout.localPathHeight = localPathHeight;
+    layout.coordOrigin = atlasOrigin;
 
     return atlas;
 }
