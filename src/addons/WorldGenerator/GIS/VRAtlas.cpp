@@ -70,10 +70,13 @@ void VRAtlas::Layout::setCoords(Patch& pat, Vec3d co3) {
     string fileHeight = "dgm_E32" + east + ".5_N" + north + ".5_S"+ cut(to_string(pat.edgeLength)) + ".tif";
     //cout << fileOrtho << " --- " << fileHeight << " --- " << toString(pos) << endl;
 
+    Color4f mixColor = Color4f(1,1,1,1);
+    float mixAmount = 0.25*pat.LODlvl;
+
     string tmp1 = localPathOrtho + "/" + cut(to_string(pat.edgeLength)) + "/" + fileOrtho;
     string tmp2 = localPathHeight + "/" + cut(to_string(pat.edgeLength)) + "/" + fileHeight;
     if ( exists(tmp1) ) pathOrtho = tmp1;
-    pat.terrain->paintHeights(pathOrtho);
+    pat.terrain->paintHeights(pathOrtho, mixColor, mixAmount );
     //cout << tmp1 << "-----" << tmp2 << endl;
     //if ( exists(tmp1) ) cout << "found " << tmp1 << endl; else cout << " not found " << tmp1 << endl;
     if ( exists(tmp2) ) {
@@ -97,9 +100,9 @@ void VRAtlas::Layout::reset(Vec3d camPos) {
         }
     }
     for (int i = 0; i < 8; i++) {
-        for (int j = 0; j < innerRing.patches[i].size(); j++) {
+        for (int j = 0; j < levels.front().patches[0].size(); j++) {
             pos = Vec3d(0,0,0);
-            auto patch = innerRing.patches[i][j];
+            auto patch = levels.front().patches[i][j];
             setCoords(patch,pos);
         }
     }
@@ -136,7 +139,7 @@ void VRAtlas::Layout::shiftEastOut(Level& lev, list<Level>::iterator it) {
             for (int j = 0; j < 4; j++) {
                 if (i < 2) {
                     Patch nPatch = lev.patches[i][j];
-                    innerRing.patches[i+2].insert(innerRing.patches[i+2].begin()+2+j,nPatch);
+                    levels.front().patches[i+2].insert(levels.front().patches[i+2].begin()+2+j,nPatch);
                 }
             }
         }
@@ -144,7 +147,7 @@ void VRAtlas::Layout::shiftEastOut(Level& lev, list<Level>::iterator it) {
         for (int i = 0; i < 2; i++) {
             lev.patches.erase(lev.patches.begin());
         }
-        shiftEastOut(innerRing, it);
+        shiftEastOut(levels.front(), it);
     }
 
     if (lev.type == INNERRING) {
@@ -164,20 +167,18 @@ void VRAtlas::Layout::shiftEastOut(Level& lev, list<Level>::iterator it) {
         for (int i = 0; i < 2; i++) { //transfer patches ownership to next bigger ring
             for (int j = 0; j < 8; j++){
                 auto patch = lev.patches[i][j];
-                //patch.terrain->setTransform(lev.currentOrigin + Vec3d((i-4)*nSize+nSize*0.5,0,(j-4+6)*nSize+nSize*0.5));
-                //patch.terrain->setTransform(lev.currentOrigin + Vec3d((i+6-4)*nSize+nSize*0.5,0,(j-4)*nSize+nSize*0.5));
                 Vec3d nPos = lev.currentOrigin + Vec3d((i+6-4)*nSize,0,(j-4)*nSize);
                 setCoords(patch,nPos);
             }
         }
         for (int i = 0; i < 2; i++) {
             auto col = lev.patches.front();
-            innerRing.patches.push_back(col);
-            innerRing.patches.erase(innerRing.patches.begin());
+            lev.patches.push_back(col);
+            lev.patches.erase(lev.patches.begin());
         }
         auto it = levels.begin();
         it++;
-        //shiftSouthIns(*it, it);
+        shiftEastIns(*it, it);
     }
 }
 
@@ -187,9 +188,34 @@ void VRAtlas::Layout::shiftWestIns(Level& lev, list<Level>::iterator it) {
     float nSize = lev.edgeLength;
     Vec3d east = Vec3d(1,0,0);
 
+    bool outer = false;
+    auto checkOR = [&](int a, int b){
+        if ( a >= 2 && a < lev.patches.size() - 2 && b == 1 - lev.shift[0] ) return true;
+        return false;
+    };
     if (lev.type == INNERQUAD) { return; }
-    else {
+    if (lev.type == OUTERRING && lev.LODlvl != currentMaxLODlvl) {
+        //move patches on outer ring
+        lev.shift[0]--;
+        if (lev.shift[0] < -1) outer = true;
+        if (lev.shift[0] == -2) { lev.shift[0] = 0; }
+        vector<Patch> col;
+        for (int j = 0; j < 4; j++) {
+            auto patch = lev.patches[ 2+lev.shift[0] ][j];
+            col.push_back(patch);
+            Vec3d nPos = lev.currentOrigin + Vec3d((lev.shift[0]-4)*nSize,0,(-3 - lev.shift[0])*nSize);
+            setCoords(patch,nPos);
+        }
+        //lev.patches[ 6-lev.shift[0] ].insert(lev.patches[ 6-lev.shift[0] ].begin()+lev.shift[1],col);
 
+                    //Vec3d nPos = lev.currentOrigin + Vec3d((i-4)*nSize,0,(-3 - lev.shift[0])*nSize);
+                    //setCoords(patch,nPos);
+                    //patch.terrain->setTransform(lev.currentOrigin + Vec3d((i-4)*nSize+nSize*0.5,0,(-1 + lev.shift[1])*nSize+nSize*0.5));
+        if (outer) {
+            it++;
+            auto nextLvl = *it;
+            shiftEastOut(nextLvl, it);
+        }
     }
 }
 
@@ -206,7 +232,7 @@ void VRAtlas::Layout::shiftWestOut(Level& lev, list<Level>::iterator it) {
             for (int j = 0; j < 4; j++) {
                 if (i >= 2) {
                     Patch nPatch = lev.patches[i][j];
-                    innerRing.patches[i+2].insert(innerRing.patches[i+2].begin()+2+j,nPatch);
+                    levels.front().patches[i+2].insert(levels.front().patches[i+2].begin()+2+j,nPatch);
                 }
             }
         }
@@ -214,7 +240,7 @@ void VRAtlas::Layout::shiftWestOut(Level& lev, list<Level>::iterator it) {
         for (int i = 2; i < 4; i++) {
             lev.patches.pop_back();
         }
-        shiftWestOut(innerRing, it);
+        shiftWestOut(levels.front(), it);
     }
 
     if (lev.type == INNERRING) {
@@ -236,8 +262,6 @@ void VRAtlas::Layout::shiftWestOut(Level& lev, list<Level>::iterator it) {
                 auto patch = lev.patches[i][j];
                 Vec3d nPos = lev.currentOrigin + Vec3d((i-6-4)*nSize,0,(j-4)*nSize);
                 setCoords(patch,nPos);
-                //patch.terrain->setTransform(lev.currentOrigin + Vec3d((i-4)*nSize+nSize*0.5,0,(j-4+6)*nSize+nSize*0.5));
-                //patch.terrain->setTransform(lev.currentOrigin + Vec3d((i-6-4)*nSize+nSize*0.5,0,(j-4)*nSize+nSize*0.5));
             }
         }
         for (int i = 0; i < 2; i++) {
@@ -247,7 +271,7 @@ void VRAtlas::Layout::shiftWestOut(Level& lev, list<Level>::iterator it) {
         }
         auto it = levels.begin();
         it++;
-        //shiftSouthIns(*it, it);
+        shiftWestIns(*it, it);
     }
 }
 
@@ -257,9 +281,30 @@ void VRAtlas::Layout::shiftNorthIns(Level& lev, list<Level>::iterator it) {
     float nSize = lev.edgeLength;
     Vec3d north = Vec3d(0,0,-1);
 
+    bool outer = false;
+    auto checkP = [&](int a, int b){
+        if ( a >= 2 && a < lev.patches.size() - 2 && b == 2 - lev.shift[1] ) return true;
+        return false;
+    };
     if (lev.type == INNERQUAD) { return; }
-    else {
-
+    if (lev.type == OUTERRING && lev.LODlvl != currentMaxLODlvl) {
+        //move patches on outer ring
+        lev.shift[1]++;
+        if (lev.shift[1] > 1) outer = true;
+        for (int i = 0; i < lev.patches.size(); i++) {
+            for (int j = 0; j < lev.patches[i].size(); j++) {
+                if (checkP(i,j)) {
+                    auto patch = lev.patches[i][j];
+                    Vec3d nPos = lev.currentOrigin + Vec3d((i-4)*nSize,0,(2 - lev.shift[1])*nSize);
+                    setCoords(patch,nPos);
+                }
+            }
+        }
+        //if (lev.shift[1] == 2) lev.shift[1]=0;
+        if (outer) {
+            auto& nextLvl = *it;
+            shiftNorthOut(nextLvl, it);
+        }
     }
 }
 
@@ -281,7 +326,7 @@ void VRAtlas::Layout::shiftNorthOut(Level& lev, list<Level>::iterator it) {
             for (int j = 0; j < 4; j++) {
                 if (j >= 2) {
                     Patch nPatch = lev.patches[i][j];
-                    innerRing.patches[i+2].insert(innerRing.patches[i+2].begin()+2,nPatch);
+                    levels.front().patches[i+2].insert(levels.front().patches[i+2].begin()+2,nPatch);
                 }
             }
         }
@@ -289,7 +334,7 @@ void VRAtlas::Layout::shiftNorthOut(Level& lev, list<Level>::iterator it) {
         for (int i = 0; i < 4; i++) {
             for (int j = 2; j < 4; j++) lev.patches[i].erase(lev.patches[i].end());
         }
-        shiftNorthOut(innerRing, it);
+        shiftNorthOut(levels.front(), it);
     }
 
     if (lev.type == INNERRING) {
@@ -307,17 +352,15 @@ void VRAtlas::Layout::shiftNorthOut(Level& lev, list<Level>::iterator it) {
         for (int i = 0; i < lev.patches.size(); i++) { //transfer patches ownership to next bigger ring
             for (int j = 1; j >= 0; j--) {
                 auto patch = lev.patches[i].back();
-                innerRing.patches[i].insert(innerRing.patches[i].begin(),patch);
-                innerRing.patches[i].pop_back();
+                lev.patches[i].insert(lev.patches[i].begin(),patch);
+                lev.patches[i].pop_back();
                 Vec3d nPos = lev.currentOrigin + Vec3d((i-4)*nSize,0,(j-4)*nSize);
                 setCoords(patch,nPos);
-                //patch.terrain->setTransform(lev.currentOrigin + Vec3d((i-4)*nSize+nSize*0.5,0,(j-4+6)*nSize+nSize*0.5));
-                //patch.terrain->setTransform(lev.currentOrigin + Vec3d((i-4)*nSize+nSize*0.5,0,(j-4)*nSize+nSize*0.5
             }
         }
         auto it = levels.begin();
         it++;
-        //shiftSouthIns(*it, it);
+        shiftNorthIns(*it, it);
     }
 
 }
@@ -327,30 +370,27 @@ void VRAtlas::Layout::shiftSouthIns(Level& lev, list<Level>::iterator it) {
     int lvl = lev.LODlvl;
     float nSize = lev.edgeLength;
     Vec3d north = Vec3d(0,0,-1);
-    bool southOut = false;
+    bool outer = false;
     auto checkOR = [&](int a, int b){
-        if ( a >= 2 && a < lev.patches.size() - 2 && b == lev.patches[a].size() - 1 + lev.shift[1] ) return true;
+        if ( a >= 2 && a < lev.patches.size() - 2 && b == 1 - lev.shift[1] ) return true;
         return false;
     };
     if (lev.type == INNERQUAD) { return; }
-    if (lev.type == OUTERRING && lev.LODlvl != currentMaxLODlvl) {
+    if (lev.type == OUTERRING) {
         //move patches on outer ring
-        if (lev.shift[1] < 0) southOut = true;
         lev.shift[1]--;
-        if (lev.shift[1] == -2) lev.shift[1]=0;
+        if (lev.shift[1] < -1) outer = true;
         for (int i = 0; i < lev.patches.size(); i++) {
             for (int j = 0; j < lev.patches[i].size(); j++) {
                 if (checkOR(i,j)) {
                     auto patch = lev.patches[i][j];
-                    Vec3d nPos = lev.currentOrigin + Vec3d((i-4)*nSize,0,(-1 + lev.shift[1])*nSize);
+                    Vec3d nPos = lev.currentOrigin + Vec3d((i-4)*nSize,0,(-3 - lev.shift[1])*nSize);
                     setCoords(patch,nPos);
-                    //patch.terrain->setTransform(lev.currentOrigin + Vec3d((i-4)*nSize+nSize*0.5,0,(-1 + lev.shift[1])*nSize+nSize*0.5));
                 }
             }
         }
-        if (southOut) {
-            it++;
-            auto nextLvl = *it;
+        if (outer) {
+            auto& nextLvl = *it;
             shiftSouthOut(nextLvl, it);
         }
     }
@@ -373,7 +413,8 @@ void VRAtlas::Layout::shiftSouthOut(Level& lev, list<Level>::iterator it) {
             for (int j = 0; j < 4; j++) {
                 if (j < 2) {
                     Patch nPatch = lev.patches[i][j];
-                    innerRing.patches[i+2].insert(innerRing.patches[i+2].begin()+2,nPatch);
+                    auto& lll = *it;
+                    lll.patches[i+2].insert( lll.patches[i+2].begin()+2,nPatch );
                 }
             }
         }
@@ -381,7 +422,7 @@ void VRAtlas::Layout::shiftSouthOut(Level& lev, list<Level>::iterator it) {
         for (int i = 0; i < 4; i++) {
             for (int j = 0; j < 2; j++) lev.patches[i].erase(lev.patches[i].begin());
         }
-        shiftSouthOut(innerRing, it);
+        shiftSouthOut(levels.front(), it);
     }
 
     if (lev.type == INNERRING) {
@@ -399,37 +440,38 @@ void VRAtlas::Layout::shiftSouthOut(Level& lev, list<Level>::iterator it) {
         for (int i = 0; i < lev.patches.size(); i++) { //transfer patches ownership to next bigger ring
             for (int j = 0; j < 2; j++) {
                 auto patch = lev.patches[i].front();
-                innerRing.patches[i].push_back(patch);
-                innerRing.patches[i].erase(innerRing.patches[i].begin());
-                //patch.terrain->setTransform(lev.currentOrigin + Vec3d((i-4)*nSize+nSize*0.5,0,(j-4+6)*nSize+nSize*0.5));
+                lev.patches[i].push_back(patch);
+                lev.patches[i].erase(lev.patches[i].begin());
                 Vec3d nPos = lev.currentOrigin + Vec3d((i-4)*nSize,0,(j-4+6)*nSize);
                 setCoords(patch,nPos);
             }
         }
         auto it = levels.begin();
         it++;
-        //shiftSouthIns(*it, it);
+        shiftSouthIns(*it, it);
     }
 
-    if (lev.type == OUTERRING && lev.LODlvl != currentMaxLODlvl) {
+    if (lev.type == OUTERRING) {
         //move patches on outer ring
         for (int i = 0; i < lev.patches.size(); i++) {
             for (int j = 0; j < 2; j++) {
                 auto patch = lev.patches[i].front();
-                innerRing.patches[i].push_back(patch);
-                innerRing.patches[i].erase(innerRing.patches[i].begin());
-                //patch.terrain->setTransform(lev.currentOrigin + Vec3d((i-4)*nSize+nSize*0.5,0,(j-4+6)*nSize+nSize*0.5));
-                Vec3d nPos = lev.currentOrigin + Vec3d((i-4)*nSize,0,(j-4+6)*nSize);
+                lev.patches[i].erase(lev.patches[i].begin());
+                lev.patches[i].push_back(patch);
+                Vec3d nPos = lev.currentOrigin + Vec3d((i-4)*nSize,0,(j+2)*nSize);
                 setCoords(patch,nPos);
             }
         }
-        it++;
-        auto nextLvl = *it;
-        shiftSouthIns(nextLvl, it);
+        lev.shift[1]=0;
+        if (lev.LODlvl != currentMaxLODlvl) {
+            it++;
+            auto& nextLvl = *it;
+            shiftSouthIns(nextLvl, it);
+        }
     }
-    /*
+
     if (lev.type != INNERQUAD && lev.LODlvl == currentMaxLODlvl){
-        vector<Patch> n1 = lev.patches.front();
+        /*vector<Patch> n1 = lev.patches.front();
         int i = 0;
         int j = 6;
         for (auto each : n1) {
@@ -446,17 +488,25 @@ void VRAtlas::Layout::shiftSouthOut(Level& lev, list<Level>::iterator it) {
             i++;
         }
         lev.patches.erase(lev.patches.begin());
-        lev.patches.push_back(n2);
-    }*/
+        lev.patches.push_back(n2);*/
+    }
 }
 
 void VRAtlas::test() {
     cout << "VRAtlas::test" << endl;
     auto lev = layout.innerQuad;
-    for (int i = 0; i < lev.patches.size(); i++) {
+    /*for (int i = 0; i < lev.patches.size(); i++) {
         for (int j = 0; j < lev.patches[i].size(); j++) {
             lev.patches[i][j].terrain->paintHeights("data/test64x64Invert.jpg");
         }
+    }*/
+    cout << " innerQuad: " << toString( layout.innerQuad.currentOrigin ) << " shift: " << toString( layout.innerQuad.shift ) << endl;
+    cout << " innerRing: " << toString( layout.levels.front().currentOrigin ) << " shift: " << toString( layout.levels.front().shift ) << endl;
+
+    string ff = " ";
+    for (auto& each : layout.levels) {
+        ff += " ";
+        cout << ff  << each.LODlvl << "--" << each.type << "--" << toString( each.currentOrigin ) <<  " shift: " << toString( each.shift ) << endl;
     }
 }
 
@@ -467,7 +517,7 @@ void VRAtlas::toggleUpdater() {
 VRTerrainPtr VRAtlas::generateTerrain(string id, int lvl){
     string pathOrtho = "data/test64x64.jpg";
     string pathHeight = "data/testW64x64.jpg";
-    string name = "testTer" + id;
+    string name = "Terrain_" + id;
     //VRTexturePtr heightIMG = loadGeoRasterData(pathHeight, false);
     VRTexturePtr heightIMG = VRTexture::create();
     float edgeLength = size*float(pow(2,lvl));
@@ -491,7 +541,7 @@ VRTerrainPtr VRAtlas::generateTerrain(string id, int lvl){
 
 VRGeometryPtr VRAtlas::generatePatch(string id) {
     VRGeoData gdata = VRGeoData();
-    string name = "testGeo" + id;
+    string name = "Geo_" + id;
     Vec3d origin = Vec3d(0,0,0);
     Vec3d pos0 = origin;
     float l = 1;
@@ -539,7 +589,6 @@ void VRAtlas::update() {
     }*/
 
     auto checkShift = [&](Level& lev){
-        bool shifted = false;
         Vec3d camToOrigin = defCamPos - lev.currentOrigin;
         float boundaryIns =   lev.edgeLength;
         float boundaryOut = 2*lev.edgeLength;
@@ -549,14 +598,10 @@ void VRAtlas::update() {
         if (east <-boundaryOut) { layout.shiftWestOut(lev, layout.levels.begin()); }
         if (north > boundaryOut) { layout.shiftNorthOut(lev, layout.levels.begin()); }
         if (north < -boundaryOut) { layout.shiftSouthOut(lev, layout.levels.begin()); }
-        //if (east > boundaryIns || east <-boundary || north > boundary || north <-boundary) shifted = true;
-        return shifted;
     };
 
+    checkShift(layout.innerQuad);
 
-    if ( checkShift(layout.innerQuad) ) {
-        cout << "shifted inner Quad" << endl;
-    }
     //cout << tmp << "---"  << dis << "---"  << 500.0 * pow(2.0, float(tmp)) << "---"  << 500.0 * ( pow(2.0, float(tmp)) -1) << "---" << endl;
 
     if (layout.toDestroy.size() > 0){
@@ -576,12 +621,11 @@ void VRAtlas::downSize() {
     for (auto eachRow : layout.innerQuad.patches) {
         for (auto each : eachRow) layout.toDestroy.push_back(each);
     }
-    for (auto eachRow : layout.outerRing.patches) {
+    for (auto eachRow : layout.levels.back().patches) {
         for (auto each : eachRow) layout.toDestroy.push_back(each);
     }
     layout.levels.pop_back(); //outerRing;
-    layout.outerRing = layout.levels.back();
-    layout.innerRing.type = OUTERRING;
+    layout.levels.front().type = OUTERRING;
     //make new innerGrid and new innerRing
     addInnerQuad(layout.currentLODlvl);
     addInnerRing(layout.currentLODlvl);
@@ -596,12 +640,11 @@ void VRAtlas::upSize() {
     for (auto eachRow : layout.innerQuad.patches) {
         for (auto each : eachRow) layout.toDestroy.push_back(each);
     }
-    for (auto eachRow : layout.innerRing.patches) {
+    for (auto eachRow : layout.levels.front().patches) {
         for (auto each : eachRow) layout.toDestroy.push_back(each);
     }
     layout.levels.pop_front(); //innerRing
-    layout.innerRing = layout.levels.front();
-    layout.innerRing.type = INNERRING;
+    layout.levels.front().type = INNERRING;
     //make new innerGrid and outerRing
     addInnerQuad(layout.currentLODlvl);
     addOuterRing(layout.currentMaxLODlvl);
@@ -624,10 +667,12 @@ void VRAtlas::addInnerQuad(int lvl) {
                 string id = "LOD_" + toString(lvl) + "_" + toString(fac) + "_" + toString(i) + toString(j);
                 auto ter = generateTerrain( id , lvl );
                 atlas->addChild(ter);
-                ter->setTransform(Vec3d((i-4)*nSize+nSize*0.5,0,(j-4)*nSize+nSize*0.5));
+                Vec3d pos = Vec3d((i-4)*nSize,0,(j-4)*nSize);
                 Patch p = Patch(id, lvl, ter);
                 p.coords = atlasOrigin + Vec2d((i-4)*nSize,(j-4)*nSize);
                 p.edgeLength = nSize;
+
+                layout.setCoords(p,pos);
                 col.push_back(p);
                 patchcount++;
             }
@@ -657,17 +702,18 @@ void VRAtlas::addInnerRing(int lvl) {
                 string id = "LOD_" + toString(lvl) + "_" + toString(fac) + "_" + toString(i) + toString(j);
                 auto ter = generateTerrain( id , lvl );
                 atlas->addChild(ter);
-                ter->setTransform(Vec3d((i-4)*nSize+nSize*0.5,0,(j-4)*nSize+nSize*0.5));
+                Vec3d pos = Vec3d((i-4)*nSize,0,(j-4)*nSize);
                 Patch p = Patch(id, lvl, ter);
                 p.coords = atlasOrigin + Vec2d((i-4)*nSize,(j-4)*nSize);
                 p.edgeLength = nSize;
+
+                layout.setCoords(p,pos);
                 col.push_back(p);
                 patchcount++;
             }
         }
         lev.patches.push_back(col);
     }
-    layout.innerRing = lev;
     layout.levels.push_front(lev);
     //cout << 8*nSize << "m InnerRing " << endl;
 }
@@ -692,10 +738,12 @@ void VRAtlas::addOuterRing(int lvl) {
                 string id = "LOD_" + toString(lvl) + "_" + toString(fac) + "_" + toString(i) + toString(j);
                 auto ter = generateTerrain( id , lvl );
                 atlas->addChild(ter);
-                ter->setTransform(Vec3d((i-4)*nSize+nSize*0.5,0,(j-4)*nSize+nSize*0.5));
+                Vec3d pos = Vec3d((i-4)*nSize,0,(j-4)*nSize);
                 Patch p = Patch(id, lvl, ter);
                 p.coords = atlasOrigin + Vec2d((i-4)*nSize,(j-4)*nSize);
                 p.edgeLength = nSize;
+
+                layout.setCoords(p,pos);
                 row.push_back(p);
                 patchcount++;
             }
@@ -703,7 +751,6 @@ void VRAtlas::addOuterRing(int lvl) {
         lev.patches.push_back(row);
     }
     layout.levels.push_back(lev);
-    layout.outerRing = lev;
     //cout << 8*nSize << "m OuterRing" << endl;
 }
 
@@ -723,7 +770,7 @@ VRTransformPtr VRAtlas::setup() {
     updatePtr = VRUpdateCb::create("atlas update", bind(&VRAtlas::update, this));
     VRScene::getCurrent()->addUpdateFkt(updatePtr);
 
-    atlas = VRTransform::create("testTransform");
+    atlas = VRTransform::create("AtlasTransform");
 
     auto geo = generatePatch("000");
     atlas->addChild(geo);

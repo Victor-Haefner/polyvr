@@ -61,8 +61,8 @@ class VRAtlas : public std::enable_shared_from_this<VRAtlas>  {
             string localPathOrtho = "";
             string localPathHeight = "";
             Level innerQuad;
-            Level innerRing;
-            Level outerRing;
+            //Level* innerRing;
+            //Level* outerRing;
             list<Patch> toDestroy;
             list<Patch> toGenerate;
             void shiftEastIns(Level& lev, list<Level>::iterator it);
