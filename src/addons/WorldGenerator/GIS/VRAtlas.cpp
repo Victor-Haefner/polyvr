@@ -44,10 +44,11 @@ VRAtlas::Layout::Layout() {}
 VRAtlas::Layout::~Layout() {}
 
 
-VRAtlas::Layout::setCoords(Patch& pat, Vec3d co3) {
-    pat->coords = Vec2d(co3[0],co3[2]);
+void VRAtlas::Layout::setCoords(Patch& pat, Vec3d co3) {
+    pat.coords = Vec2d(co3[0],co3[2]);
+    float nSize = pat.edgeLength;
     Vec3d pos = co3 + Vec3d(nSize*0.5,0,nSize*0.5);
-    pat->terrain->setTransform(pos);
+    pat.terrain->setTransform(pos);
 
     string pathOrtho = "data/test64x64.jpg";
     string pathHeight = "data/testW64x64.jpg";
@@ -55,8 +56,8 @@ VRAtlas::Layout::setCoords(Patch& pat, Vec3d co3) {
     VRTexturePtr heightIMG = VRTexture::create();
     heightIMG->read(pathHeight);
 
-    pat->terrain->paintHeights(pathOrtho);
-    pat->terrain->setMap( heightIMG, 3 );
+    pat.terrain->paintHeights(pathOrtho);
+    pat.terrain->setMap( heightIMG, 3 );
 }
 
 void VRAtlas::Layout::shiftEastIns(Level& lev, list<Level>::iterator it) {
@@ -583,6 +584,7 @@ void VRAtlas::addInnerQuad(int lvl) {
                 ter->setTransform(Vec3d((i-4)*nSize+nSize*0.5,0,(j-4)*nSize+nSize*0.5));
                 Patch p = Patch(id, lvl, ter);
                 p.coords = atlasOrigin + Vec2d((i-4)*nSize,(j-4)*nSize);
+                p.edgeLength = nSize;
                 col.push_back(p);
                 patchcount++;
             }
@@ -615,6 +617,7 @@ void VRAtlas::addInnerRing(int lvl) {
                 ter->setTransform(Vec3d((i-4)*nSize+nSize*0.5,0,(j-4)*nSize+nSize*0.5));
                 Patch p = Patch(id, lvl, ter);
                 p.coords = atlasOrigin + Vec2d((i-4)*nSize,(j-4)*nSize);
+                p.edgeLength = nSize;
                 col.push_back(p);
                 patchcount++;
             }
@@ -649,6 +652,7 @@ void VRAtlas::addOuterRing(int lvl) {
                 ter->setTransform(Vec3d((i-4)*nSize+nSize*0.5,0,(j-4)*nSize+nSize*0.5));
                 Patch p = Patch(id, lvl, ter);
                 p.coords = atlasOrigin + Vec2d((i-4)*nSize,(j-4)*nSize);
+                p.edgeLength = nSize;
                 row.push_back(p);
                 patchcount++;
             }
@@ -663,7 +667,7 @@ void VRAtlas::addOuterRing(int lvl) {
 void VRAtlas::setCoordOrigin(double east, double north) { atlasOrigin = Vec2d(east,north); }
 void VRAtlas::setBoundary(double minEast, double maxEast, double minNorth, double maxNorth) { bounds = Boundary(minEast, maxEast, minNorth, maxNorth); }
 void VRAtlas::setServerURL(string url) { serverURL = url; }
-void VRAtlas::setLocalPaths(string ortho, string height); { localPathOrtho = ortho; localPathHeight = height; }
+void VRAtlas::setLocalPaths(string ortho, string height) { localPathOrtho = ortho; localPathHeight = height; }
 
 VRTransformPtr VRAtlas::setup() {
     cout << "VRAtlas::setup" << endl;
