@@ -69,6 +69,7 @@ class VRAtlas : public std::enable_shared_from_this<VRAtlas>  {
             void shiftNorthOut(Level& lev, list<Level>::iterator it);
             void shiftSouthIns(Level& lev, list<Level>::iterator it);
             void shiftSouthOut(Level& lev, list<Level>::iterator it);
+            void setCoords(Patch& pat, Vec3d co3);
             Layout();
             ~Layout();
         };
@@ -84,6 +85,8 @@ class VRAtlas : public std::enable_shared_from_this<VRAtlas>  {
         VRTransformPtr atlas;
         VRUpdateCbPtr updatePtr;
         string serverURL = "";
+        string localPathOrtho = "";
+        string localPathHeight = "";
         Layout layout;
         void update();
         void downSize();
@@ -104,6 +107,7 @@ class VRAtlas : public std::enable_shared_from_this<VRAtlas>  {
         void setCoordOrigin(double east, double north);
         void setBoundary(double minEast, double maxEast, double minNorth, double maxNorth);
         void setServerURL(string url);
+        void setLocalPaths(string ortho, string height);
         void test();
         void toggleUpdater();
 };
