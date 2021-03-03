@@ -28,6 +28,7 @@ VRSSHSession::VRSSHSession(string a, string u) {
     if (stat != "ok") return;
 
     stat = auth_user();
+    if (stat == "ok") getRemoteOS();
 }
 
 VRSSHSession::~VRSSHSession() {
@@ -183,15 +184,28 @@ void VRSSHSession::distrib_key() {
     int rc = libssh2_userauth_password(session, user.c_str(), pw.c_str());
     if (rc < 0) { stat_key = lastError(5); return; }
 
+    if (os == "") getRemoteOS();
+
     stat_key = checkLocalKeyPair();
     if (stat_key != "ok") return;
 
     string pkey = getenv("HOME") + keyFolder + pubKeyPath;
     ifstream file(pkey.c_str());
     string key_data((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+    key_data.pop_back(); // remove newline char
     file.close();
 
-    stat_key = exec_cmd("echo \"" + key_data + "\" >> ~/.ssh/authorized_keys");
+    if (os == "nix") stat_key = exec_cmd("echo \"" + key_data + "\" >> ~/.ssh/authorized_keys");
+    if (os == "win") stat_key = exec_cmd("echo|set /p=\"" + key_data + "\" > .ssh/authorized_keys");
+}
+
+string VRSSHSession::getRemoteOS() {
+    //cout << "SSH test remote OS: " << user + "@" + address << endl;
+    auto test1 = exec_cmd("printf 'pvr-os-detection'");
+    if (test1 == "pvr-os-detection") os = "nix";
+    else os = "win";
+    //cout << " result, remote OS is: " << os << endl;
+    return os;
 }
 
 VRSSHSession::operator bool() const { return (stat == "ok"); }

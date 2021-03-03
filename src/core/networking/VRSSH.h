@@ -23,6 +23,8 @@ class VRSSHSession {
         string address;
         string user;
 
+        string os = "";
+
         string keyFolder = "/.ssh/";
         string privKeyPath = "id_rsa";
         string pubKeyPath = "id_rsa.pub";
@@ -38,6 +40,7 @@ class VRSSHSession {
 
         static shared_ptr<VRSSHSession> open(string a, string u);
 
+        string getRemoteOS();
         string verify_knownhost();
         string auth_user();
         string connect_session();

@@ -115,8 +115,13 @@ void VRNetworkNode::stopSlaves() {
 }
 
 bool VRNetworkNode::hasFile(string path) {
-    string res = execCmd("ls "+path, true);
+    string cmd = "";
+    if (os == "nix" || os == "") cmd = "ls "+path;
+    if (os == "win") cmd = "if exist \""+path+"\" echo|set /p=\""+path+"\"";
+    string res = execCmd(cmd, true);
     bool b = res.substr(0, path.size()) == path;
+    //cout << "os: " << os << endl;
+    //cout << "hasFile: " << endl << res << endl << " -> " << b << endl;
     return b;
 }
 
@@ -140,12 +145,23 @@ void VRNetworkNode::update() {
         stat_ssh = ssh->getStat();
         stat_ssh_key = ssh->getKeyStat();
         if (stat_ssh != "ok") { stat_path = "no ssh access"; return; }
+        getRemoteOS();
     }
 
+    string sExe = "VRServer";
+    if (os == "win") sExe += ".exe";
+
     if (!hasFile(slavePath + "/src/cluster/start")) stat_path = "PolyVR root directory not found";
-    else if (!hasFile(slavePath + "/src/cluster/VRServer")) stat_path = "Slave not compiled, execute " + slavePath + "/src/cluster/setup";
+    else if (!hasFile(slavePath + "/src/cluster/"+sExe)) stat_path = "Slave not compiled, execute " + slavePath + "/src/cluster/setup";
     else stat_path = "ok";
 #endif
+}
+
+string VRNetworkNode::getRemoteOS() {
+    if (stat_ssh != "ok") return "";
+    auto ssh = VRSSHSession::open(address, user);
+    os = ssh->getRemoteOS();
+    return os;
 }
 
 string VRNetworkNode::execCmd(string cmd, bool read) {
@@ -191,21 +207,30 @@ void VRNetworkSlave::start() {
     if (connection_type == "SockPipeline") args += " -p " + node->getAddress() + ":" + toString(port);
     if (connection_type == "StreamSock") args += " " + node->getAddress() + ":" + toString(port);
 
-#ifdef _WIN32
-    string disp = " -display \\.\DISPLAY"+display+" ";
-    string pipes = ""; // TODO: maybe needed?
-    string script = node->getSlavePath() + "/src/cluster/start-win.bat";
-    string geometry = " -geometry 800x600+200+200 "; // TODO: add window offset and size as parameters in UI 
-    stat = node->execCmd(script + args + geometry + disp + pipes, false);
-    //stat = node->execCmd(script, false);
-#else
-    string disp = "export DISPLAY=\"" + display + "\" && ";
-    string pipes = " > /dev/null 2> /dev/null < /dev/null &";
-    string script = node->getSlavePath() + "/src/cluster/start";
-    //string pipes = " > /dev/null 2> /dev/null < /dev/null"; // TODO: without & it returns the correct code, but it also makes the app stuck!
-    stat = node->execCmd(disp + script + args + pipes, false);
-#endif
+    string os = node->getRemoteOS();
 
+    string cmd = "";
+    if (os == "nix") {
+        string disp = "export DISPLAY=\"" + display + "\" && ";
+        string pipes = " > /dev/null 2> /dev/null < /dev/null &";
+        string script = node->getSlavePath() + "/src/cluster/start";
+        //string pipes = " > /dev/null 2> /dev/null < /dev/null"; // TODO: without & it returns the correct code, but it also makes the app stuck!
+        cmd = disp + script + args + pipes;
+    }
+
+#ifdef _WIN32
+    if (true) { // TODO: work on windows master to windows/linux slave
+#else
+    if (os == "win") {
+#endif
+        string disp = " -display \\.\DISPLAY"+display+" ";
+        string pipes = ""; // TODO: maybe needed?
+        string script = node->getSlavePath() + "/src/cluster/start-win.bat";
+        string geometry = " -geometry 800x600+200+200 "; // TODO: add window offset and size as parameters in UI
+        cmd = script + args + geometry + disp + pipes;
+    }
+
+    stat = node->execCmd(cmd, false);
     update();
 }
 
