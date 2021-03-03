@@ -246,20 +246,23 @@ GtkTreeIter getComboboxIter(string cbn) {
     return i;
 }
 
-void notifyUser(string msg1, string msg2) {
+GtkMessageDialog* basicDialog(string msg, GtkButtonsType buttons) {
     GtkDialogFlags flags = GTK_DIALOG_MODAL;
-    GtkMessageDialog* dialog = (GtkMessageDialog*)gtk_message_dialog_new(0, flags, GTK_MESSAGE_WARNING, GTK_BUTTONS_OK, "%s", msg1.c_str());
-    gtk_message_dialog_format_secondary_text(dialog, "%s", msg2.c_str());
+    GtkMessageDialog* dialog = (GtkMessageDialog*)gtk_message_dialog_new(0, flags, GTK_MESSAGE_WARNING, buttons, "%s", msg.c_str());
     gtk_window_set_deletable((GtkWindow*)dialog, false);
+    return dialog;
+}
+
+void notifyUser(string msg1, string msg2) {
+    GtkMessageDialog* dialog = basicDialog(msg1, GTK_BUTTONS_OK);
+    gtk_message_dialog_format_secondary_text(dialog, "%s", msg2.c_str());
     gtk_dialog_run((GtkDialog*)dialog);
     gtk_widget_destroy ((GtkWidget*)dialog);
 }
 
 bool askUser(string msg1, string msg2) {
-    GtkDialogFlags flags = GTK_DIALOG_MODAL;
-    GtkMessageDialog* dialog = (GtkMessageDialog*)gtk_message_dialog_new(0, flags, GTK_MESSAGE_WARNING, GTK_BUTTONS_OK_CANCEL, "%s", msg1.c_str());
+    GtkMessageDialog* dialog = basicDialog(msg1, GTK_BUTTONS_OK_CANCEL);
     gtk_message_dialog_format_secondary_text(dialog, "%s", msg2.c_str());
-    gtk_window_set_deletable((GtkWindow*)dialog, false);
 
     bool res = false;
     if (gtk_dialog_run((GtkDialog*)dialog) == GTK_RESPONSE_OK) res = true;
@@ -267,35 +270,32 @@ bool askUser(string msg1, string msg2) {
     return res;
 }
 
-string askUserInput(string msg) {
-    GtkDialogFlags flags = GTK_DIALOG_MODAL;
-    GtkMessageDialog* dialog = (GtkMessageDialog*)gtk_message_dialog_new(0, flags, GTK_MESSAGE_WARNING, GTK_BUTTONS_OK_CANCEL, "%s", msg.c_str());
-    gtk_window_set_deletable((GtkWindow*)dialog, false);
-
+GtkEntry* addDialogEntry(GtkMessageDialog* dialog) {
     GtkEntry* entry = (GtkEntry*)gtk_entry_new();
     GtkVBox* vb = (GtkVBox*)gtk_dialog_get_content_area((GtkDialog*)dialog);
     gtk_box_pack_end((GtkBox*)vb, (GtkWidget*)entry, false, false, 0);
     gtk_widget_show((GtkWidget*)entry);
+    return entry;
+}
 
+string runEntryDialog(GtkMessageDialog* dialog, GtkEntry* entry) {
     string res = "";
     if (gtk_dialog_run((GtkDialog*)dialog) == GTK_RESPONSE_OK) res = gtk_entry_get_text(entry);
     gtk_widget_destroy ((GtkWidget*)dialog);
     return res;
 }
 
+string askUserInput(string msg) {
+    GtkMessageDialog* dialog = basicDialog(msg, GTK_BUTTONS_OK_CANCEL);
+    GtkEntry* entry = addDialogEntry(dialog);
+    return runEntryDialog(dialog, entry);
+}
+
 string askUserPass(string msg) {
-    GtkDialogFlags flags = GTK_DIALOG_MODAL;
-    GtkMessageDialog* dialog = (GtkMessageDialog*)gtk_message_dialog_new(0, flags, GTK_MESSAGE_WARNING, GTK_BUTTONS_OK_CANCEL, "%s", msg.c_str());
-    gtk_window_set_deletable((GtkWindow*)dialog, false);
-
-    GtkEntry* entry = (GtkEntry*)gtk_entry_new();
-    GtkVBox* vb = (GtkVBox*)gtk_dialog_get_content_area((GtkDialog*)dialog);
-    gtk_box_pack_end((GtkBox*)vb, (GtkWidget*)entry, false, false, 0);
+    GtkMessageDialog* dialog = basicDialog(msg, GTK_BUTTONS_OK_CANCEL);
+    GtkEntry* entry = addDialogEntry(dialog);
     gtk_entry_set_visibility(entry, false);
-    gtk_widget_show((GtkWidget*)entry);
-
-    if (gtk_dialog_run((GtkDialog*)dialog) == GTK_RESPONSE_OK) return gtk_entry_get_text(entry);
-    return "";
+    return runEntryDialog(dialog, entry);
 }
 
 OSG::Color4f chooseColor(string drawable, OSG::Color4f current) {
