@@ -66,7 +66,13 @@ class VRNetworkNode : public VRManager<VRNetworkSlave>, public std::enable_share
         string address = "localhost";
         string user = "user";
         string slavePath = "";
-        string os = "";
+
+        // local os if connecting to localhost
+        #ifdef _WIN32
+        string os = "win";
+        #else
+        string os = "nix";
+        #endif
 
         string stat_node = "none";
         string stat_ssh = "none";

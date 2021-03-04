@@ -158,6 +158,7 @@ void VRNetworkNode::update() {
 }
 
 string VRNetworkNode::getRemoteOS() {
+    if (isLocal()) return os;
     if (stat_ssh != "ok") return "";
     auto ssh = VRSSHSession::open(address, user);
     os = ssh->getRemoteOS();
@@ -223,7 +224,7 @@ void VRNetworkSlave::start() {
 #else
     if (os == "win") {
 #endif
-        string disp = " -display \\.\DISPLAY"+display+" ";
+        string disp = " -display \\\\.\\DISPLAY"+display+" ";
         string pipes = ""; // TODO: maybe needed?
         string script = node->getSlavePath() + "/src/cluster/start-win.bat";
         string geometry = " -geometry 800x600+200+200 "; // TODO: add window offset and size as parameters in UI
