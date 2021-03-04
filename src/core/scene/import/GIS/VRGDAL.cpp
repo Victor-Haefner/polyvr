@@ -187,7 +187,7 @@ VRTexturePtr loadGeoRasterData(string path, bool shout) {
     if (shout) printf( "Size is %dx%dx%d\n", poDS->GetRasterXSize(), poDS->GetRasterYSize(), poDS->GetRasterCount() );
     if( poDS->GetProjectionRef()  != NULL ) { if (shout) printf( "Projection is `%s'\n", poDS->GetProjectionRef() ); }
     if( poDS->GetGeoTransform( adfGeoTransform ) == CE_None ) {
-        if (!shout) printf( "loadGeoRasterData Origin = (%.6f,%.6f)\n", adfGeoTransform[0], adfGeoTransform[3] );
+        //if (!shout) printf( "loadGeoRasterData Origin = (%.6f,%.6f)\n", adfGeoTransform[0], adfGeoTransform[3] );
         if (shout) printf( "Origin = (%.6f,%.6f)\n", adfGeoTransform[0], adfGeoTransform[3] );
         if (shout) printf( "Pixel Size = (%.6f,%.6f)\n", adfGeoTransform[1], adfGeoTransform[5] );
     }

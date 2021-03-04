@@ -13,7 +13,7 @@ PyMethodDef VRPyTerrain::methods[] = {
     {"setWaterLevel", PyWrap(Terrain, setWaterLevel, "Set the water level", void, float ) },
     {"setLit", PyWrap(Terrain, setLit, "Set lit or not", void, bool ) },
     {"setAtmosphericEffect", PyWrap(Terrain, setAtmosphericEffect, "Set the atmospheric density and color", void, float, Color3f ) },
-    {"loadMap", PyWrapOpt(Terrain, loadMap, "Load height map", "3", void, string, int ) },
+    {"loadMap", PyWrapOpt(Terrain, loadMap, "Load height map opt parameters ( path, channel = 3, consoleOutputEnabled = 1 )", "3|1", void, string, int, bool ) },
     {"setMap", PyWrapOpt(Terrain, setMap, "Set height map", "3", void, VRTexturePtr, int ) },
     {"getMap", PyWrap(Terrain, getMap, "Get height map", VRTexturePtr ) },
     {"physicalize", PyWrap(Terrain, physicalize, "Physicalize terrain", void, bool ) },

@@ -79,6 +79,9 @@ void VRAtlas::Layout::setCoords(Patch& pat, Vec3d co3) {
         if ( exists(tmp1) ) {
             pathOrtho = tmp1;
             mixAmount = 0;
+
+            //mixColor = Color4f(0,1,0,1);
+            //mixAmount = 0.3*pat.LODlvl;
         }
         else {
             mixColor = Color4f(1,1,1,0);
@@ -90,7 +93,7 @@ void VRAtlas::Layout::setCoords(Patch& pat, Vec3d co3) {
     //cout << tmp1 << "-----" << tmp2 << endl;
     //if ( exists(tmp1) ) cout << "found " << tmp1 << endl; else cout << " not found " << tmp1 << endl;
     if ( exists(tmp2) ) {
-        pat.terrain->loadMap( tmp2 );
+        pat.terrain->loadMap( tmp2, 3, false );
     } else {
         VRTexturePtr heightIMG = VRTexture::create();
         heightIMG->read(pathHeight);

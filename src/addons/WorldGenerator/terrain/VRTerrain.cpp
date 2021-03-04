@@ -596,10 +596,10 @@ Vec3d VRTerrain::getNormal( Vec3d p ) { // TODO!!
     return n;
 }
 
-void VRTerrain::loadMap( string path, int channel ) {
+void VRTerrain::loadMap( string path, int channel, bool shout ) {
 #ifndef WITHOUT_GDAL
-    cout << "   ----------- VRTerrain::loadMap " << path << " " << channel << endl ;
-    auto tex = loadGeoRasterData(path);
+    if (shout) cout << "   ----------- VRTerrain::loadMap " << path << " " << channel << endl ;
+    auto tex = loadGeoRasterData(path, shout);
     setMap(tex, channel);
 #endif
 }
