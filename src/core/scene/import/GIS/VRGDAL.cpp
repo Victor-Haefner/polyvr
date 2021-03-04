@@ -411,22 +411,17 @@ void divideTiffIntoChunksEPSG(string pathIn, string pathOut, double minEasting, 
 
     double currentX = minEasting;
     double currentY = maxNorthing;
-    while (currentX <= xEnd && currentX + chunkResolution <= xEnd ) {
+    while (currentX <= xEnd && currentX + 2*chunkResolution <= xEnd ) {
         bordersX.push_back(currentX);
         currentX += chunkResolution;
     }
-    while (currentY >= yEnd && currentY - chunkResolution >= yEnd) {
+    while (currentY >= yEnd && currentY - 2*chunkResolution >= yEnd) {
         bordersY.push_back(currentY);
         currentY -= chunkResolution;
     }
 
     cout << "Borders: E:"<< bordersX.size() << " N:"<< bordersY.size() << " Sum:"<< bordersX.size() * bordersY.size() << endl;
 
-    if (debug) {
-        GDALClose(poDS);
-        cout << "ERROR: VRGDAL::divideTiffIntoChunksEPSG - TESTMODE, WILL NOT EXECUTE" << endl;
-        return;
-    }
     int nOffsetX = int((bordersX[0]-xBeg)/adfGeoTransform[1]);
     int nOffsetY = int((bordersY[0]-yBeg)/adfGeoTransform[5]);
     cout << "nOffsetX:" << nOffsetX << " nOffsetY:" << nOffsetY << endl;
@@ -444,6 +439,12 @@ void divideTiffIntoChunksEPSG(string pathIn, string pathOut, double minEasting, 
     int yChSize = bordersY.size();
     int fractions = 0;
 
+    if (debug) {
+        GDALClose(poDS);
+        cout << "WARNING: VRGDAL::divideTiffIntoChunksEPSG - TESTMODE, WILL NOT EXECUTE" << endl;
+        return;
+    }
+
     for (int yCh = 0; yCh < yChSize; yCh ++){
         for (int xCh = 0; xCh < xChSize; xCh ++){
             string sRes = to_string(chunkResolution);
@@ -459,8 +460,8 @@ void divideTiffIntoChunksEPSG(string pathIn, string pathOut, double minEasting, 
             vector<vector<float>> originalData;
             for (int yy = 0; yy < sizeOrignalY; yy++){
                 vector<float> line(sizeOrignalX);
-                int nXOff = nOffsetX + xCh*(sizeOrignalX-1); //The pixel offset to the top left corner of the region of the band to be accessed. This would be zero to start from the left side.
-                int nYOff = nOffsetY + yCh*(sizeOrignalY-1) + yy; //The line offset to the top left corner of the region of the band to be accessed. This would be zero to start from the top.
+                int nXOff = nOffsetX + xCh*(sizeOrignalX-factorX); //The pixel offset to the top left corner of the region of the band to be accessed. This would be zero to start from the left side.
+                int nYOff = nOffsetY + yCh*(sizeOrignalY-factorY) + yy; //The line offset to the top left corner of the region of the band to be accessed. This would be zero to start from the top.
                 CPLErr err = poBand->RasterIO( GF_Read, nXOff, nYOff, sizeOrignalX, 1, &line[0], sizeOrignalX, 1, rasterDataType, 0, 0 );
                 if (err == CE_None) originalData.push_back(line);
             }
