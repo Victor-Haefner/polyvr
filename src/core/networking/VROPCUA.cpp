@@ -17,7 +17,6 @@
 // choose which one to use:
 //#include <opc/ua/client/client.h>
 #include "VROPCUAclient.h"
-#include "VROPCUAvariant.h"
 
 using namespace OpcUa;
 using namespace OSG;
