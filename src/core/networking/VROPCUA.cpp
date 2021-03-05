@@ -191,7 +191,7 @@ VROPCUANode::VROPCUANode(shared_ptr<OpcUa::Node> n, shared_ptr<SubClient> sclien
         isValid = true;
     } catch(const exception& e) {
         cout << "Warning, VROPCUANode failed with exception: " << e.what() << endl;
-        try {
+        /*try {
             OpcUa::ExtensionObject eObj = V.As<OpcUa::ExtensionObject>();
             nodeType = uint8_t(VariantType::EXTENSION_OBJECT);
             isScalar = false;
@@ -224,7 +224,7 @@ VROPCUANode::VROPCUANode(shared_ptr<OpcUa::Node> n, shared_ptr<SubClient> sclien
             }
         } catch (const exception& e) {
             cout << " Warning, VROPCUANode failed again (...) with exception: " << e.what() << endl;
-        }
+        }*/
     }
 }
 

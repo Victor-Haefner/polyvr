@@ -137,6 +137,28 @@ bool Compare(const Variant & lhs, const Variant & rhs)
   return lhs.As<T>() == rhs.As<T>();
 }
 
+template<>
+bool Compare<OpcUa::ExtensionObject>(const Variant & lhs, const Variant & rhs)
+{
+  OpcUa::ExtensionObject eObjl = lhs.As<OpcUa::ExtensionObject>();
+  OpcUa::ExtensionObject eObjr = rhs.As<OpcUa::ExtensionObject>();
+  return (eObjl.TypeId == eObjr.TypeId) && (eObjl.Encoding == eObjr.Encoding) && (eObjl.Body == eObjr.Body);
+}
+
+template<>
+bool Compare<std::vector<OpcUa::ExtensionObject>>(const Variant & lhs, const Variant & rhs)
+{
+  std::vector<OpcUa::ExtensionObject> eObjsl = lhs.As<std::vector<OpcUa::ExtensionObject>>();
+  std::vector<OpcUa::ExtensionObject> eObjsr = rhs.As<std::vector<OpcUa::ExtensionObject>>();
+  if (eObjsl.size() != eObjsr.size()) return false;
+  for (size_t i=0; i<eObjsl.size(); i++) {
+     auto eObjl = eObjsl[i];
+     auto eObjr = eObjsr[i];
+     if (eObjl.TypeId != eObjr.TypeId || eObjl.Encoding != eObjr.Encoding || !(eObjl.Body == eObjr.Body)) return false;
+  }
+  return true;
+}
+
 bool Variant::operator== (const Variant & var) const
 {
   if (Value.empty() ^ var.Value.empty())
@@ -289,7 +311,13 @@ bool Variant::operator== (const Variant & var) const
   else if (t == typeid(std::vector<DiagnosticInfo>))
     { return Compare<std::vector<DiagnosticInfo>>(*this, var); }
 
-  throw std::logic_error(std::string("3Unknown variant type '") + t.name() + std::string("'."));
+  else if (t == typeid(ExtensionObject))
+    { return Compare<ExtensionObject>(*this, var); }
+
+  else if (t == typeid(std::vector<ExtensionObject>))
+    { return Compare<std::vector<ExtensionObject>>(*this, var); }
+
+  throw std::logic_error(std::string("Unknown variant type '") + t.name() + std::string("' in Variant comparison."));
 }
 
 bool Variant::IsScalar() const
@@ -407,7 +435,7 @@ VariantType Variant::Type() const
   else if (t == typeid(ExtensionObject) || t == typeid(std::vector<ExtensionObject>))
     { return VariantType::EXTENSION_OBJECT; }
 
-  throw std::runtime_error(std::string("2Unknown variant type '") + t.name() + "'.");
+  throw std::runtime_error(std::string("Unknown variant type '") + t.name() + "' in Variant Type().");
 }
 
 
@@ -550,17 +578,20 @@ void Variant::Visit(VariantVisitor & visitor) const
 
   else if (t == typeid(ExtensionObject))
     {
-        std::cout << " -- visit ExtensionObject " << this << std::endl;
-        //OpcUa::ExtensionObject eObj = As<OpcUa::ExtensionObject>();
         OpcUa::ExtensionObject eObj = any_cast<ExtensionObject>(Value);
-        std::cout << " -- visit ExtensionObject " << eObj.TypeId.GetEncodingValue() << std::endl;
         visitor.Visit(eObj.Body);
-        //visitor.Visit(any_cast<ExtensionObject>(Value));
-        std::cout << " -- visit ExtensionObject done"  << std::endl;
+    }
+
+  else if (t == typeid(std::vector<ExtensionObject>))
+    {
+        auto eObjs = any_cast<std::vector<ExtensionObject>>(Value);
+        std::vector<OpcUa::ByteString> bodies;
+        for (auto eObj : eObjs) bodies.push_back(eObj.Body);
+        visitor.Visit(bodies);
     }
 
   else
-    { throw std::runtime_error(std::string("1Unknown variant type '") + t.name() + "'."); }
+    { throw std::runtime_error(std::string("Unknown variant type '") + t.name() + "' in Variant visit."); }
 }
 
 ObjectId VariantTypeToDataType(VariantType vt)
