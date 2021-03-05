@@ -110,6 +110,7 @@ void VRNetwork::stopSlaves() {
 
 void VRNetworkNode::stopSlaves() {
     string script = getSlavePath() + "/src/cluster/stop";
+    if (os == "win") script = getSlavePath() + "/src/cluster/stop-win.bat";
     execCmd(script);
     update();
 }
@@ -152,7 +153,7 @@ void VRNetworkNode::update() {
     if (os == "win") sExe += ".exe";
 
     if (!hasFile(slavePath + "/src/cluster/start")) stat_path = "PolyVR root directory not found";
-    else if (!hasFile(slavePath + "/src/cluster/"+sExe)) stat_path = "Slave not compiled, execute " + slavePath + "/src/cluster/setup";
+    else if (!hasFile(slavePath + "/src/cluster/"+sExe)) stat_path = "Slave not compiled, on Ubuntu execute " + slavePath + "/src/cluster/setup";
     else stat_path = "ok";
 #endif
 }
@@ -168,7 +169,7 @@ string VRNetworkNode::getRemoteOS() {
 string VRNetworkNode::execCmd(string cmd, bool read) {
     if (stat_node != "ok" ) return "";
     if (isLocal()) {
-        cout << "execCmd " << cmd << endl;
+        cout << "exec local: " << cmd << endl;
         return systemCall(cmd);
     }
 #ifndef WITHOUT_SSH
@@ -219,16 +220,13 @@ void VRNetworkSlave::start() {
         cmd = disp + script + args + pipes;
     }
 
-#ifdef _WIN32
-    if (true) { // TODO: work on windows master to windows/linux slave
-#else
     if (os == "win") {
-#endif
-        string disp = " -display \\\\.\\DISPLAY"+display+" ";
+        //string disp = " -display \\\\.\\DISPLAY"+display+" "; // needed?
         string pipes = ""; // TODO: maybe needed?
-        string script = node->getSlavePath() + "/src/cluster/start-win.bat";
+        string script = node->getSlavePath() + "/src/cluster/start-win-ssh.bat";
+        if (node->isLocal()) script = node->getSlavePath() + "/src/cluster/start-win.bat";
         string geometry = " -geometry 800x600+200+200 "; // TODO: add window offset and size as parameters in UI
-        cmd = script + args + geometry + disp + pipes;
+        cmd = script + args + geometry + pipes;
     }
 
     stat = node->execCmd(cmd, false);
