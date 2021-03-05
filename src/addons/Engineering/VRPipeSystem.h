@@ -61,6 +61,7 @@ class VRPipeSystem : public VRGeometry {
         map<string, int> nodesByName;
         map<int, VRPipeSegmentPtr> segments;
 
+        void printSystem();
         void initOntology();
 
         vector<VRPipeSegmentPtr> getPipes(int nID);

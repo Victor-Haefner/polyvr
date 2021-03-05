@@ -31,6 +31,7 @@ class VROPCUANode : public std::enable_shared_from_this<VROPCUANode> {
         bool isValid = false;
         bool isScalar = true;
         bool isArray = false;
+        bool isStruct = false;
         bool isSubscribed = false;
 
     public:

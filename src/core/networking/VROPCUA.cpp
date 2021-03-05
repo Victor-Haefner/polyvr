@@ -13,7 +13,11 @@
 #include <opc/ua/protocol/variant.h>
 #include <opc/ua/subscription.h>
 #include <opc/ua/server/server.h>
-#include <opc/ua/client/client.h>
+
+// choose which one to use:
+//#include <opc/ua/client/client.h>
+#include "VROPCUAclient.h"
+#include "VROPCUAvariant.h"
 
 using namespace OpcUa;
 using namespace OSG;
@@ -172,6 +176,11 @@ void printTree(OpcUa::Node& node, string offset = "") {
     for (OpcUa::Node child : node.GetChildren()) printTree(child, offset+" ");
 }
 
+class TrojanNode : public OpcUa::Node {
+    public:
+        Services::SharedPtr getServer() { return Server; }
+};
+
 VROPCUANode::VROPCUANode(shared_ptr<OpcUa::Node> n, shared_ptr<SubClient> sclient, shared_ptr<OpcUa::Subscription> subs) : node(n), subscriptionClient(sclient), subscription(subs) {
     if (!n) return;
     const Variant& V = node->GetValue();
@@ -180,8 +189,42 @@ VROPCUANode::VROPCUANode(shared_ptr<OpcUa::Node> n, shared_ptr<SubClient> sclien
         isScalar = V.IsScalar();
         isArray = V.IsArray();
         isValid = true;
-    } catch(exception e) {
+    } catch(const exception& e) {
         cout << "Warning, VROPCUANode failed with exception: " << e.what() << endl;
+        try {
+            OpcUa::ExtensionObject eObj = V.As<OpcUa::ExtensionObject>();
+            nodeType = uint8_t(VariantType::EXTENSION_OBJECT);
+            isScalar = false;
+            isArray = false;
+            isStruct = true;
+            isValid = false;
+            NodeId nID = eObj.TypeId;
+            cout  << " found ExtensionObject of type ID: " << nID.GetStringIdentifier() << endl;
+
+            if (nID.GetStringIdentifier() == "TE_\"pDRIVE_MX_d\".\"FURD_DATA100\"") {
+                ByteString& bs = eObj.Body;
+                auto& data = bs.Data;
+                data[8] = 0b11101100;
+                data[9] = 0b01000000;
+                cout << "  set test bytes 8 and 9 to " << int(data[8]) << " " << int(data[9]) << ", data size: " << data.size() << endl;
+
+                auto trojanNode = static_pointer_cast<TrojanNode>(n);
+
+                  Variant var(eObj);
+                  DataValue dval(var);
+
+                  WriteValue attribute;
+                  attribute.NodeId = node->GetId();
+                  attribute.AttributeId = AttributeId::Value;
+                  attribute.Value = dval;
+                  cout << "  try writing data.." << int(DATA_VALUE) << " " << int(dval.Encoding) << endl;
+                  std::vector<StatusCode> codes = trojanNode->getServer()->Attributes()->Write(std::vector<WriteValue>(1, attribute));
+
+                  //node->SetValue( dval );
+            }
+        } catch (const exception& e) {
+            cout << " Warning, VROPCUANode failed again (...) with exception: " << e.what() << endl;
+        }
     }
 }
 

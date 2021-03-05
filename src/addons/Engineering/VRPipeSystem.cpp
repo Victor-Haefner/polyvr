@@ -138,6 +138,25 @@ vector<VRPipeSegmentPtr> VRPipeSystem::getOutPipes(int nID) {
     return res;
 }
 
+void VRPipeSystem::printSystem() {
+    double totalEnergy = 0;
+    for (auto n : nodes) { // print some stats
+        auto entity = n.second->entity;
+        double P = entity->getValue("pressure", 1.0);
+        double V = entity->getValue("volume", 1.0);
+        if (entity->is_a("Tank")) cout << " tank: P " << P << " V " << V << endl;
+        totalEnergy += P*V;
+    }
+
+    for (auto s : segments) { // print some stats
+        double P = s.second->pressure;
+        double V = s.second->volume;
+        cout << " pipe: P " << P << " V " << V << endl;
+        totalEnergy += P*V;
+    }
+    cout << " total energy: " << totalEnergy << endl;
+}
+
 void VRPipeSystem::update() {
     int subSteps = 10;
     double dT = 1.0/60; // TODO: use animation
@@ -209,23 +228,7 @@ void VRPipeSystem::update() {
         }
     }
 
-    double totalEnergy = 0;
-    for (auto n : nodes) { // print some stats
-        auto entity = n.second->entity;
-        double P = entity->getValue("pressure", 1.0);
-        double V = entity->getValue("volume", 1.0);
-        if (entity->is_a("Tank")) cout << " tank: P " << P << " V " << V << endl;
-        totalEnergy += P*V;
-    }
-
-    for (auto s : segments) { // print some stats
-        double P = s.second->pressure;
-        double V = s.second->volume;
-        cout << " pipe: P " << P << " V " << V << endl;
-        totalEnergy += P*V;
-    }
-    cout << " total energy: " << totalEnergy << endl;
-
+    //printSystem();
     updateVisual();
 }
 

@@ -1003,6 +1003,8 @@
 		<Unit filename="src/core/networking/VRNetworkingFwd.h" />
 		<Unit filename="src/core/networking/VROPCUA.cpp" />
 		<Unit filename="src/core/networking/VROPCUA.h" />
+		<Unit filename="src/core/networking/VROPCUAclient.cpp" />
+		<Unit filename="src/core/networking/VROPCUAclient.h" />
 		<Unit filename="src/core/networking/VRPing.cpp" />
 		<Unit filename="src/core/networking/VRPing.h" />
 		<Unit filename="src/core/networking/VRProtocol.cpp" />
