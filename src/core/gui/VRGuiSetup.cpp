@@ -299,6 +299,7 @@ void VRGuiSetup::updateObjectData() {
         setTextEntry("entry19", n->getDisplay());
         setTextEntry("entry22", toString(n->getPort()));
         setTextEntry("entry37", toString(n->getStartupDelay()));
+        setTextEntry("entry38", toString(n->getGeometry()));
 
         string ct = n->getConnectionType();
         if (ct == "Multicast") setToggleButton("radiobutton10", 1);
@@ -1016,8 +1017,15 @@ void VRGuiSetup::on_netslave_edited() {
     string ct = "StreamSock";
     if ( getRadioButtonState("radiobutton10") ) ct = "Multicast";
     if ( getRadioButtonState("radiobutton11") ) ct = "SockPipeline";
-    n->set(ct, getCheckButtonState("checkbutton29"), getCheckButtonState("checkbutton41"),
-           getCheckButtonState("checkbutton42"), getTextEntry("entry19"), toInt( getTextEntry("entry22") ), toInt( getTextEntry("entry37") ) );
+
+    bool fullscreen = getCheckButtonState("checkbutton29");
+    bool astereo = getCheckButtonState("checkbutton41");
+    bool astart = getCheckButtonState("checkbutton42");
+    string display = getTextEntry("entry19");
+    int port = toInt( getTextEntry("entry22") );
+    int delay = toInt( getTextEntry("entry37") );
+    string geometry = getTextEntry("entry38");
+    n->set(ct, fullscreen, astereo, astart, display, port, delay, geometry);
     VRGuiWidget("toolbutton12").setSensitivity(true);
     updateObjectData();
 }
@@ -1308,6 +1316,7 @@ VRGuiSetup::VRGuiSetup() {
     setEntryCallback("entry19", bind( &VRGuiSetup::on_netslave_edited, this) );
     setEntryCallback("entry22", bind( &VRGuiSetup::on_netslave_edited, this) );
     setEntryCallback("entry37", bind( &VRGuiSetup::on_netslave_edited, this) );
+    setEntryCallback("entry38", bind( &VRGuiSetup::on_netslave_edited, this) );
 
     setButtonCallback("button6", bind( &VRGuiSetup::on_netnode_key_clicked, this) );
     setButtonCallback("button1", bind( &VRGuiSetup::on_netslave_start_clicked, this) );

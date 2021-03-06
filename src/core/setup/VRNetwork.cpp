@@ -192,6 +192,7 @@ VRNetworkSlave::VRNetworkSlave(string name) {
     store("autostart", &autostart);
     store("port", &port);
     store("startupDelay", &startupDelay);
+    store("geometry", &geometry);
 }
 
 VRNetworkSlave::~VRNetworkSlave() {}
@@ -225,8 +226,8 @@ void VRNetworkSlave::start() {
         string pipes = ""; // TODO: maybe needed?
         string script = node->getSlavePath() + "/src/cluster/start-win-ssh.bat";
         if (node->isLocal()) script = node->getSlavePath() + "/src/cluster/start-win.bat";
-        string geometry = " -geometry 800x600+200+200 "; // TODO: add window offset and size as parameters in UI
-        cmd = script + args + geometry + pipes;
+        string geo = " -geometry "+geometry+" "; // TODO: add window offset and size as parameters in UI
+        cmd = script + args + geo + pipes;
     }
 
     stat = node->execCmd(cmd, false);
@@ -241,7 +242,7 @@ void VRNetworkSlave::stop() {
 
 void VRNetworkSlave::setNode(VRNetworkNodePtr n) { node = n; }
 
-void VRNetworkSlave::set(string ct, bool fs, bool as, bool au, string a, int p, int d) {
+void VRNetworkSlave::set(string ct, bool fs, bool as, bool au, string a, int p, int d, string g) {
     connection_type = ct;
     fullscreen = fs;
     active_stereo = as;
@@ -249,6 +250,7 @@ void VRNetworkSlave::set(string ct, bool fs, bool as, bool au, string a, int p, 
     display = a;
     port = p;
     startupDelay = d;
+    geometry = g;
     update();
 }
 
@@ -264,6 +266,7 @@ bool VRNetworkSlave::getActiveStereo() { return active_stereo; }
 bool VRNetworkSlave::getAutostart() { return autostart; }
 int VRNetworkSlave::getPort() { return port; }
 int VRNetworkSlave::getStartupDelay() { return startupDelay; }
+string VRNetworkSlave::getGeometry() { return geometry; }
 
 void VRNetworkSlave::setDisplay(string a) { display = a; update(); }
 void VRNetworkSlave::setConnectionType(string b) { connection_type = b; update(); }

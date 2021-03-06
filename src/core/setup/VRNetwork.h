@@ -19,6 +19,7 @@ class VRNetworkSlave : public VRName {
         string stat;
         VRNetworkNodePtr node;
 
+        string geometry = "512x512+0+0";
         string display = ":0.0";
         string connection_type = "Multicast";
         int port = 3000;
@@ -36,7 +37,7 @@ class VRNetworkSlave : public VRName {
         void setup(VRStorageContextPtr context);
 
         void setNode(VRNetworkNodePtr n);
-        void set(string ct, bool fs, bool as, bool au, string a, int p, int d);
+        void set(string ct, bool fs, bool as, bool au, string a, int p, int d, string g);
 
         void start();
         void stop();
@@ -51,6 +52,7 @@ class VRNetworkSlave : public VRName {
         bool getAutostart();
         int getPort();
         int getStartupDelay();
+        string getGeometry();
 
         void setDisplay(string a);
         void setConnectionType(string ct);
