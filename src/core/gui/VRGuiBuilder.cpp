@@ -732,6 +732,7 @@ void VRGuiBuilder::buildBaseUI() {
     auto toolbutton10 = addToolButton("toolbutton10", "gtk-new", toolbar4, "New Setup");
     auto toolbutton11 = addToolButton("toolbutton11", "gtk-delete", toolbar4, "Remove Component");
     auto toolbutton12 = addToolButton("toolbutton12", "gtk-save", toolbar4, "Save Setup");
+    auto toolbutton13 = addToolButton("toolbutton13", "gtk-save-as", toolbar4, "Save Setup As..");
     auto toolbutton19 = addToggleToolButton("toolbutton19", "gtk-orientation-portrait", toolbar4, "Mono Mode");
 
     GtkTreeViewColumn* treeviewcolumn2 = gtk_tree_view_column_new();

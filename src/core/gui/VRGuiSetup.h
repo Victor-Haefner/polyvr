@@ -65,6 +65,8 @@ class VRGuiSetup {
         void on_treeview_select();
         void on_name_edited(const char* path, const char* new_name);
         void on_save_clicked();
+        void on_save_as_clicked();
+        void on_diag_save_as_clicked();
         void on_del_clicked();
         void on_new_clicked();
         void on_foto_clicked();

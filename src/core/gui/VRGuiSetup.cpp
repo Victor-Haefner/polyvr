@@ -375,12 +375,36 @@ void VRGuiSetup::on_del_clicked() { //TODO, should delete setup
     b->set_sensitive(false);*/
 }
 
-
 void VRGuiSetup::on_save_clicked() {
     if (auto s = current_setup.lock()) {
         s->save(setupDir() + s->getName() + ".xml");
         setWidgetSensitivity("toolbutton12", false);
     }
+}
+
+void VRGuiSetup::on_diag_save_as_clicked() {
+    guard = true;
+    string path = VRGuiFile::getPath();
+    if (path == "") return;
+
+    if (auto s = current_setup.lock()) {
+        s->save(path);
+        string name = s->getName();
+        ofstream f("setup/.local"); f.write(name.c_str(), name.size()); f.close();
+        setWidgetSensitivity("toolbutton12", false);
+    }
+
+    updateSetupList();
+    updateSetup();
+    guard = false;
+}
+
+void VRGuiSetup::on_save_as_clicked() {
+    VRGuiFile::setCallbacks( bind(&VRGuiSetup::on_diag_save_as_clicked, this) );
+    VRGuiFile::gotoPath( setupDir() );
+    VRGuiFile::setFile( "mySetup.pvr" );
+    VRGuiFile::clearFilter();
+    VRGuiFile::open( "Save As..", GTK_FILE_CHOOSER_ACTION_SAVE, "Save Setup As.." );
 }
 
 // setup list
@@ -1222,6 +1246,7 @@ VRGuiSetup::VRGuiSetup() {
     setToolButtonCallback("toolbutton10", bind( &VRGuiSetup::on_new_clicked, this) );
     setToolButtonCallback("toolbutton11", bind( &VRGuiSetup::on_del_clicked, this) );
     setToolButtonCallback("toolbutton12", bind( &VRGuiSetup::on_save_clicked, this) );
+    setToolButtonCallback("toolbutton13", bind( &VRGuiSetup::on_save_as_clicked, this) );
     setToolButtonCallback("toolbutton19", bind( &VRGuiSetup::on_foto_clicked, this) );
     //setToolButtonCallback("toolbutton27", bind( &VRGuiSetup::on_script_save_clicked, this) );
     //setToolButtonCallback("toolbutton26", bind( &VRGuiSetup::on_script_exec_clicked, this) );
@@ -1570,8 +1595,8 @@ void VRGuiSetup::updateSetupList() {
     string dir = setupDir();
     if (!VRGuiFile::exists(dir)) { cerr << "Error: no local directory setup\n"; return; }
 
-    string local, def;
-    if (!getSetupEntries(dir, local, def)) { cerr << "Error: no setup file found\n"; return; }
+    string local, defaul;
+    if (!getSetupEntries(dir, local, defaul)) { cerr << "Error: no setup file found\n"; return; }
 
     auto splitFileName = [&](string& name, string& ending) {
         int N = name.size();
@@ -1595,6 +1620,7 @@ void VRGuiSetup::updateSetupList() {
     auto setActive = [&](string n) {
         int i = 0;
         for(string name : VRGuiFile::listDir(dir)) {
+            if (n == name) { active = i; break; }
             if (!splitFileName(name, ending)) continue;
             if (n == name) { active = i; break; }
             i++;
@@ -1603,8 +1629,8 @@ void VRGuiSetup::updateSetupList() {
 
     setActive(local);
     if (active < 0) {
-        cout << "Setup " << local << " not found. Load default: " << def << endl;
-        setActive(def);
+        cout << "Setup " << local << " not found. Load default: " << defaul << endl;
+        setActive(defaul);
     }
     setCombobox("combobox6", active);
 }
