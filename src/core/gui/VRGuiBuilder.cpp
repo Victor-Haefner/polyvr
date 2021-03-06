@@ -1118,7 +1118,7 @@ void VRGuiBuilder::buildBaseUI() {
     auto checkbutton41 = addCheckbutton("checkbutton41", "active stereo");
     auto checkbutton29 = addCheckbutton("checkbutton29", "fullscreen");
     auto label140 = addLabel("label140", "port: ");
-    auto entry22 = addEntry("entry22");
+    auto entry22 = addEntry("entry22", 5);
 
     auto label139 = addLabel("label139", "Connection type:");
     auto radiobutton10 = addRadiobutton("radiobutton10", "", 0);
@@ -1126,9 +1126,11 @@ void VRGuiBuilder::buildBaseUI() {
     auto radiobutton12 = addRadiobutton("radiobutton12", "", radiobutton10);
 
     auto label133 = addLabel("label133", "local display:");
-    auto entry19 = addEntry("entry19");
+    auto entry19 = addEntry("entry19", 6);
     auto label173 = addLabel("label173", "startup delay: ");
-    auto entry37 = addEntry("entry37");
+    auto entry37 = addEntry("entry37", 4);
+    auto label175 = addLabel("label175", "geometry ('512x512+0+0'): ");
+    auto entry38 = addEntry("entry38", 20);
 
     gtk_grid_attach(GTK_GRID(table37), label131, 0,0,1,1);
     gtk_grid_attach(GTK_GRID(table37), label138, 1,0,2,1);
@@ -1152,6 +1154,8 @@ void VRGuiBuilder::buildBaseUI() {
     gtk_grid_attach(GTK_GRID(table37), entry19, 1,4,1,1);
     gtk_grid_attach(GTK_GRID(table37), label173, 2,4,1,1);
     gtk_grid_attach(GTK_GRID(table37), entry37, 3,4,1,1);
+    gtk_grid_attach(GTK_GRID(table37), label175, 0,5,2,1);
+    gtk_grid_attach(GTK_GRID(table37), entry38, 2,5,2,1);
 
     /* ---------- VR Setup - scripts ---------------------- */
     // TODO or deprecated?
