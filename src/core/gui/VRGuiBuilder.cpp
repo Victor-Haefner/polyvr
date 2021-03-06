@@ -722,12 +722,18 @@ void VRGuiBuilder::buildBaseUI() {
     auto treeview2_and_frame = addTreeview("treeview2", "setupTree", GTK_TREE_MODEL(setupTree));
     auto treeview2 = treeview2_and_frame.first;
     auto toolbar4 = addToolbar("toolbar4", GTK_ICON_SIZE_LARGE_TOOLBAR, GTK_ORIENTATION_HORIZONTAL);
+    auto combobox6Box = addBox("combobox6Box", GTK_ORIENTATION_HORIZONTAL);
     auto combobox6 = addCombobox("combobox6", "setups");
+    auto combobox6Pad = addFixed("combobox6Pad");
     auto scrolledwindow6 = addScrolledWindow("scrolledwindow6");
     gtk_grid_attach(GTK_GRID(table6), toolbar4, 0,0,2,1);
-    gtk_grid_attach(GTK_GRID(table6), combobox6, 0,1,2,1);
+    gtk_grid_attach(GTK_GRID(table6), combobox6Box, 0,1,2,1);
     gtk_grid_attach(GTK_GRID(table6), treeview2_and_frame.second, 0,2,1,1);
     gtk_grid_attach(GTK_GRID(table6), scrolledwindow6, 1,2,1,1);
+    gtk_box_pack_start(GTK_BOX(combobox6Box), combobox6, false, true, 0);
+    gtk_box_pack_start(GTK_BOX(combobox6Box), combobox6Pad, true, true, 0);
+
+
 
     auto toolbutton10 = addToolButton("toolbutton10", "gtk-new", toolbar4, "New Setup");
     auto toolbutton11 = addToolButton("toolbutton11", "gtk-delete", toolbar4, "Remove Component");
