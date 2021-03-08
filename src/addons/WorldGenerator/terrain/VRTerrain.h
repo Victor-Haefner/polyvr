@@ -50,6 +50,8 @@ class VRTerrain : public VRGeometry, public VRWorldModule {
         double grid = 64;
         double LODfac = 1.0;
         bool localMesh = false;
+        bool useHeightoffset = false;
+        float heightoffset = 0.0;
         VRTexturePtr heigthsTex;
         VRMaterialPtr mat;
         shared_ptr<vector<float>> physicsHeightBuffer;
@@ -106,6 +108,9 @@ class VRTerrain : public VRGeometry, public VRWorldModule {
         Vec2d getTexCoord( Vec2d p );
         double getHeight( Vec2d p, bool useEmbankments = true );
         Vec3d getNormal( Vec3d p );
+
+        void setHeightOffset(bool enab);
+        double getHeightOffset();
 
         Vec3d elevatePoint( Vec3d p, float offset = 0, bool useEmbankments = true );
         void elevatePose( PosePtr p, float offset = 0 );

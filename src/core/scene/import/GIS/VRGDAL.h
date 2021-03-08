@@ -9,7 +9,7 @@
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-VRTexturePtr loadGeoRasterData(string path, bool shout = true);
+VRTexturePtr loadGeoRasterData(string path, bool shout = true, float *heightoffset = NULL);
 
 void loadPDF(string path, VRTransformPtr res);
 void loadSHP(string path, VRTransformPtr res);

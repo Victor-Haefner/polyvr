@@ -49,8 +49,6 @@ VRAtlas::Layout::~Layout() {}
 void VRAtlas::Layout::setCoords(Patch& pat, Vec3d co3) {
     pat.coords = coordOrigin + Vec2d(co3[0],-co3[2]);
     float nSize = pat.edgeLength;
-    Vec3d pos = co3 + Vec3d(nSize*0.5,0,nSize*0.5);
-    pat.terrain->setTransform(pos);
 
     auto cut = [&](string in) {
         int sAt = in.length();
@@ -93,12 +91,17 @@ void VRAtlas::Layout::setCoords(Patch& pat, Vec3d co3) {
     //cout << tmp1 << "-----" << tmp2 << endl;
     //if ( exists(tmp1) ) cout << "found " << tmp1 << endl; else cout << " not found " << tmp1 << endl;
     if ( exists(tmp2) ) {
+        pat.terrain->setHeightOffset(true);
         pat.terrain->loadMap( tmp2, 3, false );
+        pat.localHeightoffset = pat.terrain->getHeightOffset();
     } else {
         VRTexturePtr heightIMG = VRTexture::create();
         heightIMG->read(pathHeight);
         pat.terrain->setMap( heightIMG, 3 );
     }
+
+    Vec3d pos = co3 + Vec3d(nSize*0.5,pat.localHeightoffset,nSize*0.5);
+    pat.terrain->setTransform(pos);
 }
 
 void VRAtlas::Layout::reset(Vec3d camPos) {
