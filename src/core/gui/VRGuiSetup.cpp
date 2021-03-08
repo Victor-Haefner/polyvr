@@ -441,9 +441,9 @@ void VRGuiSetup::on_name_edited(const char* path, const char* new_name) {
     // VRGuiSetup_ModelColumns cols;
     //  add(name); add(type); add(obj);
     VRGuiTreeView tree_view("treeview2");
-    string name  = tree_view.getStringValue(selected_row, 0);
-    string type  = tree_view.getStringValue(selected_row, 1);
-    gpointer obj = tree_view.getValue(selected_row, 2);
+    string name  = tree_view.getSelectedStringValue(0);
+    string type  = tree_view.getSelectedStringValue(1);
+    gpointer obj = tree_view.getSelectedValue(2);
 
     // update key in map
     if (auto s = current_setup.lock()) {
@@ -455,7 +455,7 @@ void VRGuiSetup::on_name_edited(const char* path, const char* new_name) {
         if (type == "slave") ((VRNetworkSlave*)obj)->setName(new_name);
     }
 
-    tree_view.setStringValue(selected_row, 0, name);
+    tree_view.setSelectedStringValue(0, name);
     updateSetup();
 }
 
@@ -568,7 +568,10 @@ void VRGuiSetup::on_menu_add_network_node() {
 }
 
 void VRGuiSetup::on_menu_add_network_slave() {
-    if (selected_type != "node") return;
+    if (selected_type != "node") {
+        notifyUser("Please select a network node to add a slave.", "(Right click the node to add the slave to)");
+        return;
+    }
     VRNetworkNode* n = (VRNetworkNode*)selected_object;
     n->add("Slave");
     updateSetup();
@@ -597,10 +600,12 @@ void VRGuiSetup::on_toggle_display_active() {
     //cout << "\nToggleActive " << name << " " << b << endl;
     win->setActive(b);
 
-    string bg = "#FFFFFF";
-    if (!b) bg = "#FFDDDD";
-    auto tree_store = (GtkTreeStore*)VRGuiBuilder::get()->get_object("setupTree");
-    setTreeRow(tree_store, selected_row, win->getName().c_str(), "window", (gpointer)win, "#000000", bg);
+    // TODO
+    //string bg = "#FFFFFF";
+    //if (!b) bg = "#FFDDDD";
+    //VRGuiTreeView tree_view("treeview2");
+    //auto tree_store = (GtkTreeStore*)VRGuiBuilder::get()->get_object("setupTree");
+    //setTreeRow(tree_store, selected_row, win->getName().c_str(), "window", (gpointer)win, "#000000", bg);
     VRGuiWidget("toolbutton12").setSensitivity(true);
 }
 

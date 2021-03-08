@@ -21,7 +21,6 @@ using namespace std;
 
 class VRGuiSetup {
     private:
-        _GtkTreeIter* selected_row = 0;
         _GtkTreeIter* parent_row = 0;
         gpointer selected_object;
         gpointer selected_object_parent;
