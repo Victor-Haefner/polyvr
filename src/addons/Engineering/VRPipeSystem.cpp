@@ -251,6 +251,7 @@ void VRPipeSystem::setDoVisual(bool b) { doVisual = b; }
 
 double VRPipeSystem::getSegmentPressure(int i) { return segments[i]->pressure; }
 double VRPipeSystem::getTankPressure(string n) { return nodes[nodesByName[n]]->entity->getValue("pressure", 1.0); }
+double VRPipeSystem::getPump(string n) { nodes[nodesByName[n]]->entity->getValue("performance", 0.0); }
 
 void VRPipeSystem::setValve(string n, bool b)  { nodes[nodesByName[n]]->entity->set("state", toString(b)); }
 void VRPipeSystem::setPump(string n, double p) { nodes[nodesByName[n]]->entity->set("performance", toString(p)); }
@@ -298,18 +299,25 @@ void VRPipeSystem::updateVisual() {
     // update system state
 
     int i=0;
-
     for (auto& s : segments) {
-        Color3f c1(0,0,1);
+        float pdelta = s.second->lastPressureDelta; // last written delta, not the correct one
+        float pressure = s.second->pressure;
+
+        // show pdelta
+        /*Color3f c1(0,0,1);
         Color3f c2(0,0,1);
-
-        auto p = s.second->lastPressureDelta;
-        if (p > 0) c2 = Color3f(1, 0, 0);
-        if (p < 0) c2 = Color3f(0, 1, 0);
-
-        double t = abs(p/s.second->pressure * 100.0);
+        if (pdelta > 0) c2 = Color3f(1, 0, 0);
+        if (pdelta < 0) c2 = Color3f(0, 1, 0);
+        double t = abs(pdelta/pressure * 100.0);
         if (t > 1) t = 1;
-        Color3f c = c2*t + c1*(1-t);
+        Color3f c = c2*t + c1*(1-t);*/
+
+        // show pressure
+        float S = 1.0/2; // color scale above 1 bar
+        float t = 1.0 - pressure; // around 1 bar
+        Color3f c;
+        if (t > 0) c = Color3f(0, 0, 1-t); // below 1 bar
+        else c = Color3f(-t*S, 0, 1+t*S);
 
         data.setColor(i, c); i++;
         data.setColor(i, c); i++;

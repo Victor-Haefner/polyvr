@@ -61,7 +61,6 @@ class VRPipeSystem : public VRGeometry {
         map<string, int> nodesByName;
         map<int, VRPipeSegmentPtr> segments;
 
-        void printSystem();
         void initOntology();
 
         vector<VRPipeSegmentPtr> getPipes(int nID);
@@ -88,10 +87,13 @@ class VRPipeSystem : public VRGeometry {
 
 		double getSegmentPressure(int i);
 		double getTankPressure(string n);
+		double getPump(string n);
 
 		void setValve(string n, bool b);
 		void setPump(string n, double p);
 		void setTankPressure(string n, double p);
+
+        void printSystem();
 };
 
 OSG_END_NAMESPACE;
