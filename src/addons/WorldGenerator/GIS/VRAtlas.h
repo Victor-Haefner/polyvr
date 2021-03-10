@@ -45,6 +45,7 @@ class VRAtlas : public std::enable_shared_from_this<VRAtlas>  {
             int LODlvl;
             float edgeLength;
             Vec2i shift = Vec2i(0,0);
+            Vec2d coordOrigin = Vec2d(0,0);
             Vec3d currentOrigin = Vec3d(0,0,0);
             int type;
             vector<vector<Patch>> patches;
@@ -96,9 +97,9 @@ class VRAtlas : public std::enable_shared_from_this<VRAtlas>  {
         void update();
         void downSize();
         void upSize();
-        void addInnerQuad(int lvl);
-        void addInnerRing(int lvl);
-        void addOuterRing(int lvl);
+        void addInnerQuad(int lvl, Vec2d nOrigin);
+        void addInnerRing(int lvl, Vec2d nOrigin);
+        void addOuterRing(int lvl, Vec2d nOrigin);
         VRGeometryPtr generatePatch(string id);
         VRTerrainPtr generateTerrain(string id, int lvlh);
 
