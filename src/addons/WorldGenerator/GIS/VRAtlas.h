@@ -36,6 +36,7 @@ class VRAtlas : public std::enable_shared_from_this<VRAtlas>  {
             VRTerrainPtr terrain;
             Vec2d coords = Vec2d(0,0);
             float edgeLength;
+            float localHeightoffset = 0.0;
 
             Patch(string sid, int lvl, VRTerrainPtr ter);
             Patch();

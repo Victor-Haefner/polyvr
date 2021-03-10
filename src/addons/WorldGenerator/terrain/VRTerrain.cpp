@@ -185,6 +185,7 @@ void VRTerrain::setMap( VRTexturePtr t, int channel ) {
     mat->setTexture(heigthsTex);
     mat->clearTransparency();
 	mat->setShaderParameter("channel", channel);
+	mat->setShaderParameter("heightoffset", heightoffset);
     mat->setTextureParams(GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR, GL_MODULATE, GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
     mat->clearTransparency();
     updateTexelSize();
@@ -599,9 +600,25 @@ Vec3d VRTerrain::getNormal( Vec3d p ) { // TODO!!
 void VRTerrain::loadMap( string path, int channel, bool shout ) {
 #ifndef WITHOUT_GDAL
     if (shout) cout << "   ----------- VRTerrain::loadMap " << path << " " << channel << endl ;
-    auto tex = loadGeoRasterData(path, shout);
-    setMap(tex, channel);
+    if (useHeightoffset) {
+        heightoffset = 0.0;
+        auto tex = loadGeoRasterData(path, shout, &heightoffset);
+        setMap(tex, channel);
+    } else {
+        auto tex = loadGeoRasterData(path, shout);
+        setMap(tex, channel);
+    }
 #endif
+}
+
+void VRTerrain::setHeightOffset( bool enab ) {
+#ifndef WITHOUT_GDAL
+    useHeightoffset = enab;
+#endif
+}
+
+double VRTerrain::getHeightOffset() {
+    return heightoffset;
 }
 
 void VRTerrain::flatten(vector<Vec2d> perimeter, float h) {
@@ -750,6 +767,7 @@ uniform sampler2D tex;
 uniform float heightScale;
 uniform int local;
 uniform int channel;
+uniform float heightoffset = 0.0;
 uniform mat4 OSGModelViewProjectionMatrix;
 
 void main(void) {
@@ -765,8 +783,9 @@ void main(void) {
     if (channel == 2) height = texData.b;
     if (channel == 3) height = texData.a;
     vec4 tePosition = osg_Vertex;
-    if (local > 0) tePosition.xyz += osg_Normal * height * heightScale;
-    else tePosition.y = height * heightScale;
+    float nheight = height - heightoffset;
+    if (local > 0) tePosition.xyz += osg_Normal * nheight * heightScale;
+    else tePosition.y = nheight * heightScale;
 
 #ifdef __EMSCRIPTEN__
     gl_Position = OSGModelViewProjectionMatrix * tePosition;
@@ -904,6 +923,7 @@ const vec3 light = vec3(-1,-1,-0.5);
 uniform vec2 texelSize;
 uniform vec2 texel;
 uniform int doHeightTextures;
+uniform float heightoffset = 0.0;
 uniform float waterLevel;
 uniform int isLit;
 uniform vec3 atmoColor;
@@ -975,8 +995,9 @@ void main( void ) {
             vec4 cG3 = texture(texGravel, tc*17);
             vec4 cG4 = texture(texGravel, tc);
             vec4 cG = mix(cG0,mix(cG1,mix(cG2,mix(cG3,cG4,0.5),0.5),0.5),0.5);
-            if (height < waterLevel) color = vec4(0.2,0.4,1,1);
-            else color = mix(cG, cW, min(cW3.r*0.1*max(height,0),1));
+            float nheight = height - heightoffset;
+            if (nheight < waterLevel) color = vec4(0.2,0.4,1,1);
+            else color = mix(cG, cW, min(cW3.r*0.1*max(nheight,0),1));
             color = mix(color, vec4(atmoColor,1), clamp(atmoThickness*length(pos.xyz), 0.0, 0.9)); // atmospheric effects
         } else {
             tc.y = 1-tc.y;
@@ -1051,6 +1072,7 @@ out vec4 vertex;
 uniform float heightScale;
 uniform int local = 0;
 uniform int channel;
+uniform float heightoffset = 0.0;
 uniform sampler2D texture;
 
 void main() {
@@ -1069,8 +1091,9 @@ void main() {
     vec3 d = mix(tcNormal[3], tcNormal[2], u);
     vec3 teNormal = mix(c, d, v);
     height = heightScale * texture2D(texture, gl_TexCoord[0].xy)[channel];
-    if (local > 0) tePosition += teNormal*height;
-    else tePosition.y = height;
+    float nheight = (height - heightoffset);
+    if (local > 0) tePosition += teNormal*nheight;
+    else tePosition.y = nheight;
     pos = gl_ModelViewProjectionMatrix * vec4(tePosition, 1);
     vertex = gl_ModelViewMatrix * vec4(tePosition, 1);
     gl_Position = pos;

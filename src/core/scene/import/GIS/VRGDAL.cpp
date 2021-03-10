@@ -176,7 +176,7 @@ void loadTIFF(string path, VRTransformPtr res) {
     res->addChild( g );
 }
 
-VRTexturePtr loadGeoRasterData(string path, bool shout) {
+VRTexturePtr loadGeoRasterData(string path, bool shout, float *heightoffset) {
     GDALAllRegister();
     GDALDataset* poDS = (GDALDataset *) GDALOpen( path.c_str(), GA_ReadOnly );
     if( poDS == NULL ) { printf( "Open failed.\n" ); return 0; }
@@ -202,6 +202,7 @@ VRTexturePtr loadGeoRasterData(string path, bool shout) {
         adfMinMax[0] = poBand->GetMinimum( &bGotMin );
         adfMinMax[1] = poBand->GetMaximum( &bGotMax );
         if( ! (bGotMin && bGotMax) ) GDALComputeRasterMinMax((GDALRasterBandH)poBand, TRUE, adfMinMax);
+        if (heightoffset) if (adfMinMax[0] > -100000) *heightoffset += float( adfMinMax[0] ); //sloppy offset, min often = NO DATA VALUE
         return poBand;
     };
 
@@ -217,6 +218,7 @@ VRTexturePtr loadGeoRasterData(string path, bool shout) {
 
     int sizeX = poDS->GetRasterXSize();
     int sizeY = poDS->GetRasterYSize();
+    if (heightoffset && poDS->GetRasterCount() > 0) *heightoffset /= poDS->GetRasterCount();
     GDALClose(poDS);
 
     auto t = VRTexture::create();
