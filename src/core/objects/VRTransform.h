@@ -236,7 +236,7 @@ class VRTransform : public VRObject {
         void setCenterOfMass(Vec3d g);
         Vec3d getCenterOfMass();
         void setGhost(bool g);
-        void setDamping(float ld, float ad);
+        void setDamping(float ld, float ad, bool fast = false);
 
         bool getPhysicsDynamic();
         void setPhysicsDynamic(bool b);

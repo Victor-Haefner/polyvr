@@ -251,7 +251,7 @@ void VRPipeSystem::setDoVisual(bool b) { doVisual = b; }
 
 double VRPipeSystem::getSegmentPressure(int i) { return segments[i]->pressure; }
 double VRPipeSystem::getTankPressure(string n) { return nodes[nodesByName[n]]->entity->getValue("pressure", 1.0); }
-double VRPipeSystem::getPump(string n) { nodes[nodesByName[n]]->entity->getValue("performance", 0.0); }
+double VRPipeSystem::getPump(string n) { return nodes[nodesByName[n]]->entity->getValue("performance", 0.0); }
 
 void VRPipeSystem::setValve(string n, bool b)  { nodes[nodesByName[n]]->entity->set("state", toString(b)); }
 void VRPipeSystem::setPump(string n, double p) { nodes[nodesByName[n]]->entity->set("performance", toString(p)); }

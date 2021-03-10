@@ -214,7 +214,7 @@ class VRPhysics : public VRStorage {
         Vec3d getLinearVelocity();
         Vec3d getAngularVelocity();
         btMatrix3x3 getInertiaTensor();
-        void setDamping(float lin,float ang);
+        void setDamping(float lin, float ang, bool fast = false);
 
         void setCenterOfMass(Vec3d com);
 
