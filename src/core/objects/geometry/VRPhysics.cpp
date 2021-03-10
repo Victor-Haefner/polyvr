@@ -1210,7 +1210,7 @@ void VRPhysics::addTorque(OSG::Vec3d i) {
    torqueJob.push_back(i);
 }
 
-void VRPhysics::addConstantForce(OSG::Vec3d i) { PLock lock(VRPhysics_mtx()); constantForce = toBtVector3(i); cout << constantForce << "\n"; }
+void VRPhysics::addConstantForce(OSG::Vec3d i) { PLock lock(VRPhysics_mtx()); constantForce = toBtVector3(i); }
 void VRPhysics::addConstantTorque(OSG::Vec3d i) { PLock lock(VRPhysics_mtx()); constantTorque = toBtVector3(i); }
 
 OSG::Vec3d VRPhysics::getLinearVelocity() {
