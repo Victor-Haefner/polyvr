@@ -33,6 +33,7 @@ class VRAtlas : public std::enable_shared_from_this<VRAtlas>  {
         struct Patch {
             string id;
             int LODlvl;
+            int type;
             VRTerrainPtr terrain;
             Vec2d coords = Vec2d(0,0);
             float edgeLength;
@@ -60,6 +61,7 @@ class VRAtlas : public std::enable_shared_from_this<VRAtlas>  {
             Vec3d origin = Vec3d(0,0,0);
             Vec2d coordOrigin = Vec2d(0,0);
             list<Level> levels;
+            bool debugMode = false;
             string localPathOrtho = "";
             string localPathHeight = "";
             Level innerQuad;
@@ -67,15 +69,16 @@ class VRAtlas : public std::enable_shared_from_this<VRAtlas>  {
             //Level* outerRing;
             list<Patch> toDestroy;
             list<Patch> toGenerate;
-            void shiftEastIns(Level& lev, list<Level>::iterator it);
+            void shiftEastIns(Level& lev, list<Level>::iterator it, bool traverse = true);
             void shiftEastOut(Level& lev, list<Level>::iterator it);
-            void shiftWestIns(Level& lev, list<Level>::iterator it);
+            void shiftWestIns(Level& lev, list<Level>::iterator it, bool traverse = true);
             void shiftWestOut(Level& lev, list<Level>::iterator it);
-            void shiftNorthIns(Level& lev, list<Level>::iterator it);
+            void shiftNorthIns(Level& lev, list<Level>::iterator it, bool traverse = true);
             void shiftNorthOut(Level& lev, list<Level>::iterator it);
-            void shiftSouthIns(Level& lev, list<Level>::iterator it);
+            void shiftSouthIns(Level& lev, list<Level>::iterator it, bool traverse = true);
             void shiftSouthOut(Level& lev, list<Level>::iterator it);
-            void setCoords(Patch& pat, Vec3d co3);
+            void setCoords(Patch& pat, Vec3d co3, int p_type);
+            void repaint();
             void reset(Vec3d camPos);
             Layout();
             ~Layout();
@@ -94,6 +97,7 @@ class VRAtlas : public std::enable_shared_from_this<VRAtlas>  {
         string serverURL = "";
         string localPathOrtho = "";
         string localPathHeight = "";
+        bool debugMode = false;
         Layout layout;
         void update();
         void downSize();
@@ -115,6 +119,8 @@ class VRAtlas : public std::enable_shared_from_this<VRAtlas>  {
         void setBoundary(double minEast, double maxEast, double minNorth, double maxNorth);
         void setServerURL(string url);
         void setLocalPaths(string ortho, string height);
+        //void setParameters();
+        void setDebug(bool mode);
         Vec3d getLocalPos(double east, double north);
         void test();
         void toggleUpdater();

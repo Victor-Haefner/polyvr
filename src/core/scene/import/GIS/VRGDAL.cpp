@@ -202,7 +202,7 @@ VRTexturePtr loadGeoRasterData(string path, bool shout, float *heightoffset) {
         adfMinMax[0] = poBand->GetMinimum( &bGotMin );
         adfMinMax[1] = poBand->GetMaximum( &bGotMax );
         if( ! (bGotMin && bGotMax) ) GDALComputeRasterMinMax((GDALRasterBandH)poBand, TRUE, adfMinMax);
-        if (heightoffset) if (adfMinMax[0] > -100000) *heightoffset += float( adfMinMax[0] ); //sloppy offset, min often = NO DATA VALUE
+        if (heightoffset) if (adfMinMax[0] > -100000) *heightoffset += (float( adfMinMax[0] ) +float( adfMinMax[1] ))/2.0; //sloppy offset, min often = NO DATA VALUE
         return poBand;
     };
 
