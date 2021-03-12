@@ -409,7 +409,7 @@ OSG::VRTexturePtr takeSnapshot() {
 }
 
 void saveSnapshot(string path) {
-    cout << "saveSnapshot " << path << endl;
+    //cout << "saveSnapshot " << path << endl;
     if (!exists(getFolderName(path))) return;
     GtkWidget* drawArea = VRGuiBuilder::get()->get_widget("glarea");
     GdkWindow* src = gtk_widget_get_window(drawArea);
@@ -422,7 +422,7 @@ void saveSnapshot(string path) {
     GdkPixbuf* pxb = gdk_pixbuf_get_from_window(src, u,v,smin,smin);
     pxb = gdk_pixbuf_scale_simple(pxb, 128, 128, GDK_INTERP_HYPER);
     gdk_pixbuf_save(pxb, path.c_str(), "png", 0, 0, NULL);
-    cout << " saveSnapshot done " << path << endl;
+    //cout << " saveSnapshot done " << path << endl;
 }
 
 void saveScene(string path, bool saveas, string encryptionKey) {
