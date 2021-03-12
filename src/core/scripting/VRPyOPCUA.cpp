@@ -12,7 +12,7 @@ PyMethodDef VRPyOPCUANode::methods[] = {
     {"type", PyWrap( OPCUANode, type, "Get node type", string ) },
     {"ID", PyWrap( OPCUANode, ID, "Get node ID", string ) },
     {"getChildren", PyWrap( OPCUANode, getChildren, "Get node children", vector<VROPCUANodePtr> ) },
-    {"set", PyWrap( OPCUANode, set, "Set node value", void, string ) },
+    {"set", PyWrapOpt( OPCUANode, set, "Set node value", "1", void, string, bool ) },
     {"setVector", PyWrap( OPCUANode, setVector, "Set node array value", void, vector<string> ) },
     {"getChild", PyWrap( OPCUANode, getChild, "Get child i", VROPCUANodePtr, int ) },
     {"getChildByName", PyWrap( OPCUANode, getChildByName, "Get child by name", VROPCUANodePtr, string ) },

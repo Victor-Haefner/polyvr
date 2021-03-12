@@ -3,8 +3,10 @@
 
 #include "VRNetworkingFwd.h"
 #include "core/utils/VRFunctionFwd.h"
+
 #include <vector>
 #include <OpenSG/OSGConfig.h>
+#include <boost/thread/recursive_mutex.hpp>
 
 namespace OpcUa {
     class Node;
@@ -25,6 +27,7 @@ class VROPCUANode : public std::enable_shared_from_this<VROPCUANode> {
         shared_ptr<SubClient> subscriptionClient = 0;
         shared_ptr<OpcUa::Subscription> subscription = 0;
         VROPCUANodeCbPtr callback;
+        VROPCUAWeakPtr opc;
 
         string opcValue;
         uint8_t nodeType = 0;
@@ -34,11 +37,14 @@ class VROPCUANode : public std::enable_shared_from_this<VROPCUANode> {
         bool isStruct = false;
         bool isSubscribed = false;
 
+        void setOPCval(string v);
+        void delegateSet(string v);
+
     public:
-        VROPCUANode(shared_ptr<OpcUa::Node> node = 0, shared_ptr<SubClient> sclient = 0, shared_ptr<OpcUa::Subscription> subs = 0);
+        VROPCUANode(shared_ptr<OpcUa::Node> node = 0, VROPCUAPtr opc = 0);
         ~VROPCUANode();
 
-        static VROPCUANodePtr create(OpcUa::Node& node, shared_ptr<SubClient> sclient, shared_ptr<OpcUa::Subscription> subs);
+        static VROPCUANodePtr create(OpcUa::Node& node, VROPCUAPtr o);
 
         VROPCUANodePtr ptr();
 
@@ -54,7 +60,7 @@ class VROPCUANode : public std::enable_shared_from_this<VROPCUANode> {
         VROPCUANodePtr getChildByName(string name);
         VROPCUANodePtr getChildAtPath(string path); // Names separated by '.'
 
-        void set(string value);
+        void set(string value, bool blocking = true);
         void setVector(vector<string> values);
 
         void subscribe(VROPCUANodeCbPtr cb);
@@ -63,20 +69,33 @@ class VROPCUANode : public std::enable_shared_from_this<VROPCUANode> {
         static string typeToString(uint8_t v);
 };
 
-class VROPCUA {
+class VROPCUA : public std::enable_shared_from_this<VROPCUA> {
     private:
         shared_ptr<OpcUa::UaClient> client = 0;
         shared_ptr<SubClient> subscriptionClient = 0;
         shared_ptr<OpcUa::Subscription> subscription = 0;
+
+        boost::recursive_mutex commMtx;
+        map<VROPCUANode*, pair<VROPCUANodePtr, string> > commQueue; // deferred variable setters
+        VRThreadCbPtr commCallback;
         VRThreadCbPtr server;
+
+        void processCommQueue();
+        void startCommProcessing();
 
     public:
         VROPCUA();
         ~VROPCUA();
 
         static VROPCUAPtr create();
+        VROPCUAPtr ptr();
 
         VROPCUANodePtr connect(string address);
+
+        shared_ptr<SubClient> getSubscriptionClient();
+        shared_ptr<OpcUa::Subscription> getSubscription();
+
+        void queueSet(VROPCUANodePtr n, string v);
 
         void setupTestServer();
 };

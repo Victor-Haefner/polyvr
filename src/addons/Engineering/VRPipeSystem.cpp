@@ -300,7 +300,7 @@ void VRPipeSystem::updateVisual() {
 
     int i=0;
     for (auto& s : segments) {
-        float pdelta = s.second->lastPressureDelta; // last written delta, not the correct one
+        //float pdelta = s.second->lastPressureDelta; // last written delta, not the correct one
         float pressure = s.second->pressure;
 
         // show pdelta
