@@ -78,7 +78,16 @@ Vec3d Pose::up() { return data.size() > 2 ? data[2] : Vec3d(); }
 Vec3d Pose::x() { return data.size() > 2 ? data[1].cross(data[2]) : Vec3d(); } // vector to the right
 Vec3d Pose::scale() { return data.size() > 3 ? data[3] : Vec3d(1,1,1); }
 
-void Pose::translate(const Vec3d& p) { setPos(pos()+p); }
+void Pose::translate(const Vec3d& p) { data[0] += p; }
+void Pose::move(double x) { data[0] += data[1]*x; }
+
+void Pose::rotate(double a, const Vec3d& d) {
+    Vec3d v = d;
+    v.normalize();
+    Quaterniond q(v, a);
+    q.multVec(data[1],data[1]);
+    q.multVec(data[2],data[2]);
+}
 
 Matrix4d Pose::asMatrix() const {
     Matrix4d m;
