@@ -310,6 +310,10 @@ void VRPlanet::rebuild() {
         sphereMat = VRMaterial::create("planet");
         sphereMat->setVertexShader(surfaceVP, "planet surface VS");
         sphereMat->setFragmentShader(surfaceFP, "planet surface FS");
+        sphereMat->enableShaderParameter("OSGModelViewMatrix");
+        sphereMat->enableShaderParameter("OSGProjectionMatrix");
+        sphereMat->enableShaderParameter("OSGInvWorldMatrix");
+        sphereMat->enableShaderParameter("OSGInvViewMatrix");
         setLit(false);
     }
 
@@ -416,23 +420,28 @@ void VRPlanet::remPin(int ID) {}// metaGeo->remove(ID); } // TODO
 string VRPlanet::surfaceVP =
 "#version 130\n"
 GLSL(
-varying vec3 tcs;
-varying vec3 normal;
-varying vec4 position;
-varying float gl_ClipDistance[1];
+out vec3 tcs;
+out vec3 normal;
+out vec4 position;
+out float gl_ClipDistance[1];
 uniform vec4 clipPlane;
 uniform mat4 OSGWorldMatrix;
+uniform mat4 OSGModelViewMatrix;
+uniform mat4 OSGProjectionMatrix;
+uniform mat4 OSGInvViewMatrix;
+uniform mat4 OSGInvWorldMatrix;
 
-attribute vec4 osg_Vertex;
-attribute vec4 osg_Normal;
-attribute vec4 osg_Color;
-attribute vec3 osg_MultiTexCoords0;
+in vec4 osg_Vertex;
+in vec4 osg_Normal;
+in vec4 osg_Color;
+in vec3 osg_MultiTexCoords0;
 
 void main( void ) {
     tcs = osg_Normal.xyz;
-    normal = gl_NormalMatrix * osg_Normal.xyz;
-    position = gl_ModelViewMatrix*osg_Vertex;
-    gl_Position = gl_ModelViewProjectionMatrix*osg_Vertex;\n
+    mat3 normMat = mat3( transpose(OSGInvViewMatrix*OSGInvWorldMatrix) );\n
+    normal = normMat * osg_Normal.xyz;
+    position = OSGModelViewMatrix*osg_Vertex;
+    gl_Position = OSGProjectionMatrix*OSGModelViewMatrix*osg_Vertex;\n
 
     vec4 pos = OSGWorldMatrix*osg_Vertex;
     gl_ClipDistance[0] = dot(pos, clipPlane);\n
@@ -467,6 +476,7 @@ void applyLightning() {
     gl_FragColor = c;// diffuse + ambient;// + specular;
 	//gl_FragColor = ambient + diffuse + specular;
 	//gl_FragColor = vec4(gl_LightSource[0].position.xyz,1);
+	//gl_FragColor = vec4(n.xyz,1);
 }
 
 void main( void ) {
