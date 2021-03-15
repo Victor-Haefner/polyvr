@@ -40,8 +40,8 @@ template<> PyTypeObject VRPyBaseT<Vec2d>::type = {
     0,		               /* tp_clear */
     0,		               /* tp_richcompare */
     0,		               /* tp_weaklistoffset */
-    0,		               /* tp_iter */
-    0,		               /* tp_iternext */
+    VRPyVec2f::iter,		               /* tp_iter */
+    VRPyVec2f::iternext,		               /* tp_iternext */
     VRPyVec2f::methods,             /* tp_methods */
     0,                      /* tp_members */
     0,                         /* tp_getset */
@@ -228,6 +228,26 @@ PyObject* VRPyVec2f::getSlice(PyObject* self, Py_ssize_t ilow, Py_ssize_t ihigh)
     return toPyObject(v2);
 }
 
+PyObject* VRPyVec2f::iter(PyObject *self) {
+    Py_INCREF(self);
+    auto p = (VRPyVec2f*)self;
+    p->itr = 0;
+    return self;
+}
+
+PyObject* VRPyVec2f::iternext(PyObject *self) {
+    auto p = (VRPyVec2f*)self;
+    Vec2d v = ((VRPyVec2f*)self)->v;
+    if (p->itr < 2) {
+        int i = p->itr;
+        (p->itr)++;
+        return PyFloat_FromDouble(v[i]);
+    } else {
+        PyErr_SetNone(PyExc_StopIteration);
+        return NULL;
+    }
+}
+
 
 template<> PyTypeObject VRPyBaseT<Vec3d>::type = {
     PyObject_HEAD_INIT(NULL)
@@ -256,8 +276,8 @@ template<> PyTypeObject VRPyBaseT<Vec3d>::type = {
     0,		               /* tp_clear */
     0,		               /* tp_richcompare */
     0,		               /* tp_weaklistoffset */
-    0,		               /* tp_iter */
-    0,		               /* tp_iternext */
+    VRPyVec3f::iter,		               /* tp_iter */
+    VRPyVec3f::iternext,		               /* tp_iternext */
     VRPyVec3f::methods,             /* tp_methods */
     0,                      /* tp_members */
     0,                         /* tp_getset */
@@ -429,6 +449,26 @@ PyObject* VRPyVec3f::getItem(PyObject* self, Py_ssize_t i) {
     }
     Vec3d v = ((VRPyVec3f*)self)->v;
     return PyFloat_FromDouble(v[i]);
+}
+
+PyObject* VRPyVec3f::iter(PyObject *self) {
+    Py_INCREF(self);
+    auto p = (VRPyVec3f*)self;
+    p->itr = 0;
+    return self;
+}
+
+PyObject* VRPyVec3f::iternext(PyObject *self) {
+    auto p = (VRPyVec3f*)self;
+    Vec3d v = ((VRPyVec3f*)self)->v;
+    if (p->itr < 3) {
+        int i = p->itr;
+        (p->itr)++;
+        return PyFloat_FromDouble(v[i]);
+    } else {
+        PyErr_SetNone(PyExc_StopIteration);
+        return NULL;
+    }
 }
 
 int VRPyVec3f::setItem(PyObject* self, Py_ssize_t i, PyObject* val) {

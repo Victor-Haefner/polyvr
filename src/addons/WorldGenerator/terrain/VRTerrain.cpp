@@ -200,7 +200,8 @@ void VRTerrain::paintHeights(string woods, string gravel) {
 
 void VRTerrain::paintHeights(string path, Color4f mCol, float mAmount) {
     mat->setTexture(path, 0, 3);
-    if (mAmount > 0) mat->getTexture(3)->mixColor(mCol, mAmount);
+    if (mAmount > 0 )
+        if (auto t = mat->getTexture(3)) t->mixColor(mCol, mAmount);
     mat->setShaderParameter("texPic", 3);
     mat->setShaderParameter("doHeightTextures", 2);
     mat->clearTransparency();

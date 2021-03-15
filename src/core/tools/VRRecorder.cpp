@@ -140,6 +140,8 @@ void VRRecorder::capture() {
 
     if (!frame) initFrame();
 
+    //f->capture->write("pics/pic-" + toString(captures.size()-1) + toString(f->timestamp) + ".png");
+
     f->transcode(frame, codec_context, sws_context, captures.size()-1);
 }
 

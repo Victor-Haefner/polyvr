@@ -27,6 +27,7 @@ struct VRPyMath {
 
 struct VRPyVec2f : VRPyBaseT<OSG::Vec2d> {
     OSG::Vec2d v;
+    size_t itr = 0;
 
     static PyMethodDef methods[];
     static PyNumberMethods nMethods;
@@ -54,10 +55,14 @@ struct VRPyVec2f : VRPyBaseT<OSG::Vec2d> {
     static PyObject* getItem(PyObject* self, Py_ssize_t i);
     static int setItem(PyObject* self, Py_ssize_t i, PyObject* val);
     static PyObject* getSlice(PyObject* self, Py_ssize_t i0, Py_ssize_t i1);
+
+    static PyObject* iter(PyObject *self) ;
+    static PyObject* iternext(PyObject *self) ;
 };
 
 struct VRPyVec3f : VRPyBaseT<OSG::Vec3d> {
     OSG::Vec3d v;
+    size_t itr = 0;
 
     static PyMethodDef methods[];
     static PyNumberMethods nMethods;
@@ -87,6 +92,9 @@ struct VRPyVec3f : VRPyBaseT<OSG::Vec3d> {
     static PyObject* getItem(PyObject* self, Py_ssize_t i);
     static int setItem(PyObject* self, Py_ssize_t i, PyObject* val);
     static PyObject* getSlice(PyObject* self, Py_ssize_t i0, Py_ssize_t i1);
+
+    static PyObject* iter(PyObject *self) ;
+    static PyObject* iternext(PyObject *self) ;
 };
 
 struct VRPyLine : VRPyBaseT<OSG::Line> {

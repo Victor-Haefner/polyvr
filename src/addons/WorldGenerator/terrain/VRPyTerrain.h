@@ -5,6 +5,7 @@
 #include "VRTerrain.h"
 #include "VRPlanet.h"
 #include "VROrbit.h"
+#include "../GIS/VRMapManager.h"
 
 struct VRPyTerrain : VRPyBaseT<OSG::VRTerrain> {
     static PyMethodDef methods[];
@@ -15,6 +16,14 @@ struct VRPyPlanet : VRPyBaseT<OSG::VRPlanet> {
 };
 
 struct VRPyOrbit : VRPyBaseT<OSG::VROrbit> {
+    static PyMethodDef methods[];
+};
+
+struct VRPyMapManager : VRPyBaseT<OSG::VRMapManager> {
+    static PyMethodDef methods[];
+};
+
+struct VRPyMapDescriptor : VRPyBaseT<OSG::VRMapDescriptor> {
     static PyMethodDef methods[];
 };
 

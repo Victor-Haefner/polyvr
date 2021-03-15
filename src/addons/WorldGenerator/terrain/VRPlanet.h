@@ -22,6 +22,7 @@ class VRPlanet : public VRTransform {
         map<Vec2i, VRWorldGeneratorPtr> sectors;
         map<string, OSMMapPtr> osmMaps;
         Vec2d originCoords = Vec2d(-1,-1);
+        bool localized = false;
         VRTransformPtr origin;
         VRLodPtr lod;
         VRObjectPtr anchor;
@@ -33,6 +34,8 @@ class VRPlanet : public VRTransform {
         void rebuild();
         void setupMetaGeo();
         Vec2i toSID(double north, double east);
+
+        void localizeSector(VRWorldGeneratorPtr s);
 
     public:
         VRPlanet(string name);

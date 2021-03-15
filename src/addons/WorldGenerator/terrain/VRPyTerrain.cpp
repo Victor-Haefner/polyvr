@@ -7,6 +7,8 @@ using namespace OSG;
 simpleVRPyType(Terrain, New_VRObjects_ptr);
 simpleVRPyType(Planet, New_VRObjects_ptr);
 simpleVRPyType(Orbit, New_ptr);
+simpleVRPyType(MapManager, New_ptr);
+simpleVRPyType(MapDescriptor, 0);
 
 PyMethodDef VRPyTerrain::methods[] = {
     {"setParameters", PyWrapOpt(Terrain, setParameters, "Set the terrain parameters, size, resolution, height scale, water level", "1|0|0.0001|0.7 0.9 1|1", void, Vec2d, double, double, float, float, Color3f, bool ) },
@@ -73,6 +75,19 @@ PyMethodDef VRPyOrbit::methods[] = {
     {"getTarget", PyWrap(Orbit, getTarget, "Get target", VRObjectPtr ) },
     {"setTrail", PyWrap(Orbit, setTrail, "Set trail", void, VRObjectPtr ) },
     {"getTrail", PyWrap(Orbit, getTrail, "Get trail", VRObjectPtr ) },
+    {NULL}  /* Sentinel */
+};
+
+PyMethodDef VRPyMapManager::methods[] = {
+    {"setServer", PyWrap( MapManager, setServer, "Set server address", void, string ) },
+    {"setVault", PyWrap( MapManager, setVault, "Set local path to store map files", void, string ) },
+    {"getMap", PyWrap( MapManager, getMap, "Get map file path, retreives file from server if necessary, async if given a callback 'def cb(str):', (N, E, S, callback)", string, double, double, double, VRMapCbPtr ) },
+    {NULL}  /* Sentinel */
+};
+
+PyMethodDef VRPyMapDescriptor::methods[] = {
+    {"getMap", PyWrap( MapDescriptor, getMap, "Get ith map filename", string, int ) },
+    {"getParameters", PyWrap( MapDescriptor, getParameters, "Get chunk parameters, N, E, S", Vec3d ) },
     {NULL}  /* Sentinel */
 };
 

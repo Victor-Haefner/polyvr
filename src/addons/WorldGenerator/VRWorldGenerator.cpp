@@ -229,7 +229,7 @@ OSMMapPtr VRWorldGenerator::getOSMMap() { return osmMap; }
 
 OSMMapPtr VRWorldGenerator::getGMLMap() { return gmlMap; }
 
-void VRWorldGenerator::addTerrainsToLOD(){
+void VRWorldGenerator::addTerrainsToLOD() {
     cout << "VRWorldGenerator::addTerrainsToLOD" << endl;
     //auto nLevel = lodLevels.size();
     auto nTerrains = terrains.size();
@@ -337,6 +337,8 @@ void VRWorldGenerator::setupLODTerrain(string pathMap, string pathPaint, float s
     addTerrain(1.0, 0);
     addTerrain(0.5, 1);
     addTerrain(0.05, 2);
+
+    addTerrainsToLOD();
 #endif
 }
 
