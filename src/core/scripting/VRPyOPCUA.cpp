@@ -17,7 +17,9 @@ PyMethodDef VRPyOPCUANode::methods[] = {
     {"getChild", PyWrap( OPCUANode, getChild, "Get child i", VROPCUANodePtr, int ) },
     {"getChildByName", PyWrap( OPCUANode, getChildByName, "Get child by name", VROPCUANodePtr, string ) },
     {"getChildAtPath", PyWrap( OPCUANode, getChildAtPath, "Get child at path, the path are the names connected with '.'", VROPCUANodePtr, string ) },
-    {"subscribe", PyWrap( OPCUANode, subscribe, "Subscribe to the magic segfault", void, VROPCUANodeCbPtr ) },
+    {"subscribe", PyWrap( OPCUANode, subscribe, "Subscribe to OPCUA server", void, VROPCUANodeCbPtr ) },
+    {"isSubscribed", PyWrap( OPCUANode, isSubscribed, "Returns if subscribed to server", bool ) },
+    {"test", PyWrap( OPCUANode, test, "A test ..duh", string ) },
     {NULL}  /* Sentinel */
 };
 

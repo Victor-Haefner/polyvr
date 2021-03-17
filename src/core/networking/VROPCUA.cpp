@@ -203,16 +203,27 @@ VROPCUANodePtr VROPCUANode::ptr() { return shared_from_this(); }
 shared_ptr<OpcUa::Node> VROPCUANode::getOpcNode() { return node; }
 
 string VROPCUANode::ID() {
-    auto nID = node->GetId();
-    if (nID.IsInteger()) return toString(nID.GetIntegerIdentifier());
-    if (nID.IsString()) return toString(nID.GetStringIdentifier());
-    if (nID.IsBinary()) return "binary ID unsupported"; //toString(nID.GetBinaryIdentifier());
-    if (nID.IsGuid()) return "guid ID unsupported"; //toString(nID.GetGuidIdentifier());
-    return "unknown";
+    if (nodeID == "") {
+        auto nID = node->GetId();
+        if (nID.IsInteger()) nodeID = toString(nID.GetIntegerIdentifier());
+        if (nID.IsString()) nodeID = toString(nID.GetStringIdentifier());
+        if (nID.IsBinary()) nodeID = "binary ID unsupported"; //toString(nID.GetBinaryIdentifier());
+        if (nID.IsGuid()) nodeID = "guid ID unsupported"; //toString(nID.GetGuidIdentifier());
+        if (nodeID == "") nodeID = "unknown";
+    }
+    return nodeID;
 }
 
-string VROPCUANode::name() { return node->GetBrowseName().Name; }
+string VROPCUANode::name() {
+    if (nodeName == "") nodeName = node->GetBrowseName().Name;
+    return nodeName;
+}
+
 bool VROPCUANode::valid() { return isValid; }
+
+string VROPCUANode::test() {
+    return "duh";
+}
 
 string VROPCUANode::type() {
     VariantType type = node->GetValue().Type();
@@ -220,11 +231,13 @@ string VROPCUANode::type() {
 }
 
 string VROPCUANode::value() {
-    if (isSubscribed) return opcValue;
+    if (isSubbed) return opcValue;
     Variant v = node->GetValue();
     opcValue = ::toString(v);
     return opcValue;
 }
+
+bool VROPCUANode::isSubscribed() { return isSubbed; }
 
 vector<VROPCUANodePtr> VROPCUANode::getChildren() {
     vector<VROPCUANodePtr> res;
@@ -317,8 +330,7 @@ void VROPCUANode::delegateSet(string val) {
 }
 
 void VROPCUANode::setOPCval(string val) {
-
-    //cout << " ----- " << name() << " " << ID() << " " << val <<  " b1 " << subHandle << " b2 " << subscriptionClient->values.count(subHandle) << endl;
+    //if (name() == "Sim_SR_Drehz_AE_Z") cout << " ----- " << name() << " " << ID() << " " << val << endl;
 
     try {
         auto type = nodeType;
@@ -364,7 +376,7 @@ void VROPCUANode::set(string val, bool blocking) {
     }
 
     if (isScalar) {
-        if (opcValue == val && isSubscribed) return;
+        if (opcValue == val && isSubbed) return;
         opcValue = val;
         if (blocking) setOPCval(val);
         else delegateSet(val);
@@ -374,7 +386,7 @@ void VROPCUANode::set(string val, bool blocking) {
 void VROPCUANode::subscribe(VROPCUANodeCbPtr cb) {
     callback = cb;
     subscriptionClient->registerNode(ptr(), subscription);
-    isSubscribed = true;
+    isSubbed = true;
 }
 
 
@@ -424,11 +436,12 @@ void VROPCUA::processCommQueue() {
 
     {
         PLock lock(commMtx);
+        //if (commQueue.size() > 0) cout << " processCommQueue " << commQueue.size() << endl;
         commQueueCopy = commQueue;
         commQueue.clear();
     }
 
-    for (auto& d : commQueueCopy) d.second.first->set(d.second.second);
+    for (auto& d : commQueueCopy) d.second.first->setOPCval(d.second.second);
     this_thread::sleep_for(chrono::milliseconds(1));
 }
 

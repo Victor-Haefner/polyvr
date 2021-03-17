@@ -29,15 +29,16 @@ class VROPCUANode : public std::enable_shared_from_this<VROPCUANode> {
         VROPCUANodeCbPtr callback;
         VROPCUAWeakPtr opc;
 
+        string nodeName;
+        string nodeID;
         string opcValue;
         uint8_t nodeType = 0;
         bool isValid = false;
         bool isScalar = true;
         bool isArray = false;
         bool isStruct = false;
-        bool isSubscribed = false;
+        bool isSubbed = false;
 
-        void setOPCval(string v);
         void delegateSet(string v);
 
     public:
@@ -62,9 +63,13 @@ class VROPCUANode : public std::enable_shared_from_this<VROPCUANode> {
 
         void set(string value, bool blocking = true);
         void setVector(vector<string> values);
+        void setOPCval(string v);
 
         void subscribe(VROPCUANodeCbPtr cb);
+        bool isSubscribed();
         void updateValue(string val);
+
+        string test();
 
         static string typeToString(uint8_t v);
 };

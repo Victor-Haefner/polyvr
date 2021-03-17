@@ -81,7 +81,10 @@ void KeepAliveThread::Run()
 
             LOG_DEBUG(Logger, "keep_alive_thread     | read a variable from address space to keep session open");
             NodeToRead.GetValue();
-        } catch(...) { cout << "ARGH, lost OPC connection or what?" << endl; break; }
+        } catch(...) {
+            cout << "ARGH, lost OPC connection in KeepAliveThread" << endl;
+            break;
+        }
     }
 
     Running = false;
