@@ -18,7 +18,8 @@
  ******************************************************************************/
 
 #include <iostream>
-#include <opc/ua/client/client.h>
+#include "VROPCUAclient.h"
+//#include <opc/ua/client/client.h>
 
 #include <opc/common/uri_facade.h>
 #include <opc/ua/client/remote_connection.h>
@@ -113,6 +114,8 @@ void KeepAliveThread::Stop()
     }
 }
 
+bool KeepAliveThread::isRunning() { return Running; }
+
 UaClient::UaClient(bool debug) : KeepAlive(nullptr) {
     cout << endl << " --------------------- UaClient::UaClient  ----------------------" << endl << endl;
     Logger = spdlog::get("UaClient");
@@ -121,6 +124,8 @@ UaClient::UaClient(bool debug) : KeepAlive(nullptr) {
     else Logger->set_level(spdlog::level::info);
     KeepAlive.SetLogger(Logger);
 }
+
+bool UaClient::isRunning() { return KeepAlive.isRunning(); }
 
 std::vector<EndpointDescription> UaClient::GetServerEndpoints(const std::string & endpoint)
 {

@@ -46,6 +46,7 @@ public:
   void Stop();
 
   void SetLogger(const Common::Logger::SharedPtr & logger) { Logger = logger; }
+  bool isRunning();
 
 private:
   void Run();
@@ -103,6 +104,8 @@ public:
   // abort communication with OPC-UA server, close all threads and subcsriptions
   // Like Disconnect() but without CloseSession() call, which is not possible on faulty connection anyway
   void Abort();
+
+  bool isRunning();
 
   /// @brief  Connect to server and get endpoints
   std::vector<EndpointDescription> GetServerEndpoints(const std::string & endpoint);

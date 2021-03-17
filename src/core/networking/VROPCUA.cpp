@@ -390,12 +390,24 @@ void VROPCUANode::subscribe(VROPCUANodeCbPtr cb) {
 }
 
 
-VROPCUA::VROPCUA() { startCommProcessing(); }
+VROPCUA::VROPCUA() {
+    startCommProcessing();
+    watchdogCb = VRUpdateCb::create( "OPCUA watchdog", bind(&VROPCUA::watchdog, this) );
+    VRScene::getCurrent()->addUpdateFkt(watchdogCb);
+}
+
 VROPCUA::~VROPCUA() {}
 
 VROPCUAPtr VROPCUA::create() { return VROPCUAPtr( new VROPCUA() ); }
 
 VROPCUAPtr VROPCUA::ptr() { return shared_from_this(); }
+
+void VROPCUA::watchdog() {
+    if (!client->isRunning()) {
+        cout << "VROPCUA::watchdog ARF ARF ARF" << endl;
+        client->Abort();
+    }
+}
 
 /*class VRUaClient : public OpcUa::UaClient { // override timeout
     public:
