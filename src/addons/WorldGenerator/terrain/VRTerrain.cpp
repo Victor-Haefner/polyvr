@@ -217,40 +217,11 @@ void VRTerrain::updateTexelSize() {
 	mat->setShaderParameter("texelSize", texelSize);
 }
 
-void VRTerrain::curveMesh(VRPlanetPtr planet, Vec2d coords, PosePtr p, PosePtr newPinv) {
-    auto grid = getGrid();
-    auto size = getSize();
+void VRTerrain::curveMesh(VRPlanetPtr p, Vec2d c, PosePtr s) {
     setLocalized(true);
-    Vec2i gridN = Vec2i(round(size[0]*1.0/grid-0.5), round(size[1]*1.0/grid-0.5));
-    if (gridN[0] < 1) gridN[0] = 1;
-    if (gridN[1] < 1) gridN[1] = 1;
-    vector<vector<vector<Vec3d>>> completeMesh;
-
-    double sectorSize = planet->getSectorSize();
-
-    int t1 = 0;
-    int t2 = 0;
-    for (int i =0; i <= gridN[1]; i++) {
-        vector<vector<Vec3d>> row;
-        t1++;
-        t2 = 0;
-        for (int j =0; j <= gridN[0]; j++) {
-            t2++;
-            vector<Vec3d> posNorm;
-            //Vertex conversion from global to local patch coordinates
-            auto poseVertexGlobal = planet->fromLatLongPose(coords[0]+sectorSize*(1.0-double(i)/double(gridN[1])), coords[2]+j*sectorSize/gridN[0]);
-            auto poseVertexOrigin = p->multRight(poseVertexGlobal);
-            auto poseVertexLocalInPatch = newPinv->multRight(poseVertexOrigin);
-            auto posVertexLocalInPatch = poseVertexLocalInPatch->pos();
-            auto upVertexLocalInPatch = poseVertexLocalInPatch->up();
-            posNorm.push_back(posVertexLocalInPatch);
-            posNorm.push_back(upVertexLocalInPatch);
-            row.push_back(posNorm);
-        }
-        completeMesh.push_back(row);
-    }
-    cout << "n,e ___: " << t1 << " -- " << t2 << " " << grid << " " << size << endl;
-    setMeshTer(completeMesh);
+    VRPlanetWeakPtr planet = p;
+    Vec2d planetCoords = c;
+    PosePtr pSectorInv = s;
 }
 
 void VRTerrain::setupGeo() {
@@ -268,30 +239,45 @@ void VRTerrain::setupGeo() {
     //cout << toString(gridN) << "-- "  << toString(size) << "-- "  << toString(texel) << "-- "  << toString(tcChunk) << "-- "  << toString(texSize) << endl;
 
 	VRGeoData geo;
-	if (localMesh) {
+    auto planet = this->planet.lock();
+	if (localMesh && planet) {
         mat->setShaderParameter("local",1);
-        if (meshTer.size() > 0) {
-            int t1 = 0;
-            int t2 = 0;
+        double sectorSize = planet->getSectorSize();
 
-            tcChunk = Vec2d((1.0-texel[0])/(meshTer[0].size()-1), (1.0-texel[1])/(meshTer.size()-1));
-            for (unsigned int i=0; i+1 < meshTer[0].size(); i++) {
-                t1++;
-                t2 = 0;
-                double tcx1 = texel[0]*0.5 + i*tcChunk[0];
-                double tcx2 = tcx1 + tcChunk[0];
-                for (unsigned int j =0; j+1 < meshTer.size(); j++) {
-                    t2++;
-                    double tcy1 = texel[1]*0.5 + j*tcChunk[1];
-                    double tcy2 = tcy1 + tcChunk[1];
-                    geo.pushVert(meshTer[j][i][0], meshTer[j][i][1], Vec2d(tcx1,tcy1));
-                    geo.pushVert(meshTer[j+1][i][0], meshTer[j+1][i][1], Vec2d(tcx1,tcy2));
-                    geo.pushVert(meshTer[j+1][i+1][0], meshTer[j+1][i+1][1], Vec2d(tcx2,tcy2));
-                    geo.pushVert(meshTer[j][i+1][0], meshTer[j][i+1][1], Vec2d(tcx2,tcy1));
-                    geo.pushQuad();
-                }
+        int t1 = 0;
+        int t2 = 0;
+
+        map<Vec2i, PosePtr> cache;
+
+        auto getPose = [&](int i, int j) {
+            if (cache.count(Vec2i(i,j))) return cache[Vec2i(i,j)];
+            auto p = planet->fromLatLongPose(planetCoords[0]+sectorSize*(1.0-double(j)/double(gridN[1])), planetCoords[2]+i*sectorSize/gridN[0]);
+            p = pSectorInv->multRight(p);
+            cache[Vec2i(i,j)] = p;
+            return p;
+        };
+
+        for (int i =0; i < gridN[0]; i++) {
+            t1++;
+            t2 = 0;
+            double tcx1 = texel[0]*0.5 + i*tcChunk[0];
+            double tcx2 = tcx1 + tcChunk[0];
+            for (int j =0; j < gridN[1]; j++) {
+                t2++;
+                double tcy1 = texel[1]*0.5 + j*tcChunk[1];
+                double tcy2 = tcy1 + tcChunk[1];
+
+                auto pI0J0 = getPose(i,j);
+                auto pI0J1 = getPose(i,j+1);
+                auto pI1J1 = getPose(i+1,j+1);
+                auto pI1J0 = getPose(i+1,j);
+
+                geo.pushVert(pI0J0->pos(), pI0J0->up(), Vec2d(tcx1,tcy1));
+                geo.pushVert(pI0J1->pos(), pI0J1->up(), Vec2d(tcx1,tcy2));
+                geo.pushVert(pI1J1->pos(), pI1J1->up(), Vec2d(tcx2,tcy2));
+                geo.pushVert(pI1J0->pos(), pI1J0->up(), Vec2d(tcx2,tcy1));
+                geo.pushQuad();
             }
-            geo.apply(ptr());
         }
 	} else {
         int old1 = 0;
@@ -317,8 +303,9 @@ void VRTerrain::setupGeo() {
                 geo.pushQuad();
             }
         }
-        geo.apply(ptr());
 	}
+
+    if (geo.size() > 0) geo.apply(ptr());
 
 #if __EMSCRIPTEN__// TODO: directly create triangles above!
     convertToTriangles();

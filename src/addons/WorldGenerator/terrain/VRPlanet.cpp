@@ -46,14 +46,13 @@ void VRPlanet::localizeSector(VRWorldGeneratorPtr sector) {
 
     Vec2d plI = sector->getPlanetCoords() + Vec2d(1,1)*sectorSize*0.5;
     auto pSector = fromLatLongPose(plI[0], plI[1]);
-    auto p = origin->getPose();
-    auto newP = p->multRight(pSector);
+    auto newP = origin->getPose()->multRight(pSector);
     sector->setPose(newP);
-    auto newPinv = newP;
-    newPinv->invert();
+
+    pSector->invert();
 
     for (auto terrain : sector->getTerrains()) {
-        terrain->curveMesh(ptr(), sector->getPlanetCoords(), p, newPinv);
+        terrain->curveMesh(ptr(), sector->getPlanetCoords(), pSector);
         terrain->setupGeo();
     }
 }

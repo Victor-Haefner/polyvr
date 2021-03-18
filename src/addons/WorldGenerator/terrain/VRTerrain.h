@@ -54,6 +54,10 @@ class VRTerrain : public VRGeometry, public VRWorldModule {
         VRMaterialPtr mat;
         shared_ptr<vector<float>> physicsHeightBuffer;
 
+        VRPlanetWeakPtr planet;
+        Vec2d planetCoords;
+        PosePtr pSectorInv;
+
         map<string, VREmbankmentPtr> embankments;
         vector<Vec3d> edgePoints;
         vector<vector<vector<Vec3d>>> meshTer;
@@ -79,7 +83,7 @@ class VRTerrain : public VRGeometry, public VRWorldModule {
 
         void setParameters( Vec2d size, double resolution, double heightScale, float w = 0, float aT = 1e-4, Color3f aC = Color3f(0.7,0.9,1), bool isLit = true);
         void setLocalized(bool in);
-        void curveMesh(VRPlanetPtr planet, Vec2d coords, PosePtr p, PosePtr newPinv);
+        void curveMesh(VRPlanetPtr planet, Vec2d coords, PosePtr pSInv);
         void setMeshTer(vector<vector<vector<Vec3d>>> in);
         void setWaterLevel(float w);
         void setLit(bool isLit);
