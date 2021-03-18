@@ -295,6 +295,7 @@ VRGuiBits::VRGuiBits() {
     setToolButtonCallback("network_verbose", bind(&VRGuiBits::toggleVerbose, this, "network" ) );
 
     setLabel("label24", "Project: None");
+    //setLabel("lblversion", getVersionString()); // in about dialog
 
     disableDestroyDiag("aboutdialog1");
     disableDestroyDiag("dialog2");
@@ -319,6 +320,8 @@ VRGuiBits::VRGuiBits() {
     auths[authors.size()] = NULL;
     gtk_about_dialog_set_authors(diag, auths);
     free(auths);
+
+    gtk_about_dialog_set_version(diag, getVersionString());
 
     // window fullscreen
     GtkWidget* win = VRGuiBuilder::get()->get_widget("window1");

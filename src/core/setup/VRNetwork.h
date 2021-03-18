@@ -19,6 +19,7 @@ class VRNetworkSlave : public VRName {
         string stat;
         VRNetworkNodePtr node;
 
+        string geometry = "512x512+0+0";
         string display = ":0.0";
         string connection_type = "Multicast";
         int port = 3000;
@@ -36,7 +37,7 @@ class VRNetworkSlave : public VRName {
         void setup(VRStorageContextPtr context);
 
         void setNode(VRNetworkNodePtr n);
-        void set(string ct, bool fs, bool as, bool au, string a, int p, int d);
+        void set(string ct, bool fs, bool as, bool au, string a, int p, int d, string g);
 
         void start();
         void stop();
@@ -51,6 +52,7 @@ class VRNetworkSlave : public VRName {
         bool getAutostart();
         int getPort();
         int getStartupDelay();
+        string getGeometry();
 
         void setDisplay(string a);
         void setConnectionType(string ct);
@@ -67,12 +69,18 @@ class VRNetworkNode : public VRManager<VRNetworkSlave>, public std::enable_share
         string user = "user";
         string slavePath = "";
 
+        // local os if connecting to localhost
+        #ifdef _WIN32
+        string os = "win";
+        #else
+        string os = "nix";
+        #endif
+
         string stat_node = "none";
         string stat_ssh = "none";
         string stat_ssh_key = "none";
         string stat_path = "none";
 
-        bool isLocal();
         void initSlaves();
         void update();
 
@@ -100,6 +108,8 @@ class VRNetworkNode : public VRManager<VRNetworkSlave>, public std::enable_share
         void setSlavePath(string);
         void set(string a, string u, string p);
 
+        bool isLocal();
+        string getRemoteOS();
         bool hasFile(string path);
         void distributeKey();
         string execCmd(string cmd, bool read = true);

@@ -11,8 +11,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const VRRobotArm& m) { return "RobotArm"; }
-
 VRRobotArm::VRRobotArm(string type) : type(type) {
     lastPose = Pose::create();
     angles.resize(N,0);

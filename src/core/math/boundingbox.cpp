@@ -9,8 +9,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const Boundingbox& o) { return "Boundingbox"; }
-
 Boundingbox::Boundingbox() { clear(); }
 
 BoundingboxPtr Boundingbox::create() { return BoundingboxPtr(new Boundingbox()); }

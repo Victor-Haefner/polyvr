@@ -14,6 +14,7 @@ extern "C" {
 
 #include "VRSoundManager.h"
 #include "VRSound.h"
+#include "VRSoundUtils.h"
 #include "../VRSceneManager.h"
 #include "../VRScene.h"
 #include "core/utils/VRFunction.h"
@@ -27,8 +28,6 @@ extern "C" {
 
 using namespace OSG;
 
-template<> string typeName(const VRSoundManager& o) { return "SoundManager"; }
-
 namespace OSG {
 string toString(ALenum error) {
     if(error == AL_INVALID_NAME) return "Invalid name";
@@ -40,50 +39,49 @@ string toString(ALenum error) {
 }
 }
 
-struct VRSoundContext {
-    ALCdevice* device = 0;
-    ALCcontext* context = 0;
+VRSoundContext::VRSoundContext() {
+    cout << " create new sound context!" << endl;
+    av_register_all();
+    device = alcOpenDevice(NULL);
+    if (!device) { cout << "VRSoundContext() > alcOpenDevice failed!\n"; return; }
 
-    VRSoundContext() {
-        av_register_all();
-        device = alcOpenDevice(NULL);
-        if (!device) { cout << "VRSoundContext() > alcOpenDevice failed!\n"; return; }
+    context = alcCreateContext(device, NULL);
+    makeCurrent();
 
-        context = alcCreateContext(device, NULL);
-        makeCurrent();
+    alGetError();
+    //enumerateDevices();
+}
 
-        alGetError();
-        //enumerateDevices();
+VRSoundContext::~VRSoundContext() {
+    cout << " !! ~VRSoundContext !!" << endl;
+    alcMakeContextCurrent(NULL);
+    alcDestroyContext(context);
+    alcCloseDevice(device);
+}
+
+VRSoundContextPtr VRSoundContext::create() { return VRSoundContextPtr( new VRSoundContext() ); }
+
+void VRSoundContext::makeCurrent() {
+    if (!alcMakeContextCurrent(context)) cout << "VRSoundContext() > alcMakeContextCurrent failed!\n";
+}
+
+void VRSoundContext::enumerateDevices() {
+    bool enumeration = alcIsExtensionPresent(NULL, "ALC_ENUMERATION_EXT");
+    if (enumeration) {
+        cout << "Enumerate OpenAL devices:\n";
+        cout << string( alcGetString(NULL, ALC_DEVICE_SPECIFIER) ) << endl;
     }
-
-    ~VRSoundContext() {
-        alcMakeContextCurrent(NULL);
-        alcDestroyContext(context);
-        alcCloseDevice(device);
-    }
-
-    void makeCurrent() {
-        if (!alcMakeContextCurrent(context)) cout << "VRSoundContext() > alcMakeContextCurrent failed!\n";
-    }
-
-    void enumerateDevices() {
-        bool enumeration = alcIsExtensionPresent(NULL, "ALC_ENUMERATION_EXT");
-        if (enumeration) {
-            cout << "Enumerate OpenAL devices:\n";
-            cout << string( alcGetString(NULL, ALC_DEVICE_SPECIFIER) ) << endl;
-        }
-    }
-};
+}
 
 namespace OSG {
 struct VRSoundChannel {
     bool running = true;
     std::thread* thread = 0;
-    VRSoundContext* context = 0;
     boost::mutex mutex;
     map<int, VRSoundPtr> current;
 
     VRSoundChannel() {
+        cout << " create new channel!" << endl;
         thread = new std::thread(bind(&VRSoundChannel::soundThread, this));
     }
 
@@ -99,7 +97,7 @@ struct VRSoundChannel {
     }
 
     void soundThread() {
-        context = new VRSoundContext();
+        auto context = VRSoundContext::create();
 
         while (running) {
             osgSleep(1);
@@ -117,8 +115,6 @@ struct VRSoundChannel {
 
             for (auto e : toErase) current.erase(e);
         }
-
-        if (context) delete context;
     }
 };
 }
@@ -136,8 +132,8 @@ VRSoundManager::~VRSoundManager() {
 
 VRSoundManagerPtr VRSoundManager::get() {
     static VRSoundManagerPtr instance;
-    if (instance && !instance->channel) instance->channel = new VRSoundChannel(); // delay init of channel
     if (!instance) instance = VRSoundManagerPtr( new VRSoundManager() );
+    if (instance && !instance->channel) instance->channel = new VRSoundChannel(); // delay init of channel
     return instance;
 }
 
@@ -166,9 +162,7 @@ VRSoundPtr VRSoundManager::getSound(string path) {
 }
 
 void VRSoundManager::setVolume(float volume) {
-    volume = max(volume, 0.f);
-    volume = min(volume, 1.f);
-    for (auto s : sounds) s.second->setGain(volume);
+    ALCHECK( alListenerf(AL_GAIN, volume) );
 }
 
 /*void VRSoundManager::updatePlayerPosition(Vec3d position, Vec3d forward) { }*/

@@ -43,6 +43,7 @@ string toString(const vector<double>& v, int d=-1);
 
 template<typename T> string typeName(const T& t);
 template<typename T> string typeName(const std::shared_ptr<T>& t) { return t ? typeName<T>(*t) : "null"; }
+template<typename T> string typeName(const std::weak_ptr<T>& t) { return t.lock() ? typeName<T>(*t.lock()) : "null"; }
 template<typename T> string typeName(const vector<T>& t) { return "list of "+typeName<T>(T()); }
 template<typename T> string typeName(const vector<std::shared_ptr<T>>& t) { return "list of "+typeName<T>(T()); }
 template<typename T> string typeName(const vector<vector<T>>& t) { return "list of lists of "+typeName<T>(T()); }
@@ -51,7 +52,9 @@ template<typename T, typename U> string typeName(const map<T,U>& t) { return "di
 
 string typeName(const std::shared_ptr<VRFunction<void>> t);
 template<typename T> string typeName(const std::shared_ptr<VRFunction<T>> t) { return "callback("+typeName<T>(T())+")"; }
+template<typename T, typename R> string typeName(const std::shared_ptr<VRFunction<T,R>> t) { return typeName<R>(R())+" callback("+typeName<T>(T())+")"; }
 template<typename T> string typeName(const std::shared_ptr<VRFunction<std::shared_ptr<T>>> t) { return "callback("+typeName<T>(T())+")"; }
+template<typename T> string typeName(const std::shared_ptr<VRFunction<std::weak_ptr<T>>> t) { return "callback("+typeName<T>(T())+")"; }
 template<typename T> string typeName(const std::shared_ptr<VRFunction<vector<T>>> t) { return "callback(list of "+typeName<T>(T())+")"; }
 template<typename T> string typeName(const std::shared_ptr<VRFunction<vector<std::shared_ptr<T>>>> t) { return "callback(list of "+typeName<T>(T())+")"; }
 template<typename T, typename U> string typeName(const std::shared_ptr<VRFunction<map<T,U>>> t) { return "callback(dictionary of "+typeName<T>(T()) + " to " + typeName<U>(U())+")"; }

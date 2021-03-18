@@ -6,8 +6,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const VRProperty& o) { return "Property"; }
-
 VRProperty::VRProperty(string name, string t) {
     setStorageType("Property");
     auto ns = setNameSpace("VRProperty");

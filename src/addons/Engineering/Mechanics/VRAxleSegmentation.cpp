@@ -3,8 +3,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const VRAxleSegmentation& m) { return "AxleSegmentation"; }
-
 VRAxleSegmentation::VRAxleSegmentation() {}
 VRAxleSegmentation::~VRAxleSegmentation() {}
 

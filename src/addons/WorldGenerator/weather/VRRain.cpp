@@ -11,13 +11,12 @@
 #include "core/objects/VRCamera.h"
 #include "core/objects/VRLight.h"
 #include "core/objects/VRLightBeacon.h"
+#include "core/objects/VRAnimation.h"
 
 #include <math.h>
 #include <random>
 
 using namespace OSG;
-
-template<> string typeName(const VRRain& t) { return "Rain"; }
 
 
 /*	Python usage example:

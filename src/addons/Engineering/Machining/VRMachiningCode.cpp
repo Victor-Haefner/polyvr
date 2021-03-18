@@ -5,8 +5,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const VRMachiningCode& t) { return "MachiningCode"; }
-
 VRMachiningCode::VRMachiningCode() {}
 VRMachiningCode::~VRMachiningCode() {}
 

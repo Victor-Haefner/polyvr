@@ -25,8 +25,6 @@ VRGuiManager::get()->getConsole( "Errors" )->write( x+"\n" );
 
 using namespace OSG;
 
-template<> string typeName(const VRHDLC& t) { return "HDLC"; }
-
 
 int VRSerial::set_interface_attribs (int fd, int speed, int parity) {
     /*struct termios tty;

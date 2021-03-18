@@ -14,6 +14,8 @@ struct _GtkToggleToolButton;
 struct _GtkWidget;
 struct _GdkEventKey;
 
+const char* getVersionString();
+
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 

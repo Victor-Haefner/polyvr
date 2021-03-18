@@ -8,8 +8,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const VRClipPlane& t) { return "ClipPlane"; }
-
 
 VRClipPlane::VRClipPlane(string name) : VRGeometry(name) {
     // init plane geometry

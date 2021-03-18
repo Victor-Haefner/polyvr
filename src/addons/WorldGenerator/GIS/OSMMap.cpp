@@ -40,12 +40,6 @@
 
 using namespace OSG;
 
-//template<> string typeName(const OSMMap& t) { return "OSMMap"; }
-template<> string typeName(const OSMMap& o) { return "OSMMap"; }
-template<> string typeName(const OSMRelation& o) { return "OSMRelation"; }
-template<> string typeName(const OSMWay& o) { return "OSMWay"; }
-template<> string typeName(const OSMNode& o) { return "OSMNode"; }
-template<> string typeName(const OSMBase& o) { return "OSMBase"; }
 
 OSG_BEGIN_NAMESPACE;
 

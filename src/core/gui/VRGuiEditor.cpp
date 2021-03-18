@@ -70,7 +70,7 @@ void VRGuiEditor::printViewerLanguages() {
 }
 
 bool VRGuiEditor::on_editor_shortkey( GdkEventKey* e ) {
-    cout << "VRGuiEditor::on_editor_shortkey " << e->keyval << endl;
+    //cout << "VRGuiEditor::on_editor_shortkey " << e->keyval << endl;
     if ( !(e->state & GDK_CONTROL_MASK) ) return false;
 
     auto getCurrentLine = [&]() {
@@ -123,11 +123,11 @@ bool VRGuiEditor::on_editor_shortkey( GdkEventKey* e ) {
     };
 
     auto triggerCB = [&](string name) {
-        cout << "VRGuiEditor::on_editor_shortkey trigger " << name << endl;
+        //cout << "VRGuiEditor::on_editor_shortkey trigger " << name << endl;
         if (!keyBindings.count(name)) return;
         if (!keyBindings[name]) return;
         (*keyBindings[name])();
-        cout << " VRGuiEditor::on_editor_shortkey trigger " << name << " done" << endl;
+        //cout << " VRGuiEditor::on_editor_shortkey trigger " << name << " done" << endl;
     };
 
     if (e->keyval == 102) {// f

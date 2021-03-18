@@ -59,8 +59,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const VRMaterial& o) { return "Material"; }
-
 namespace OSG {
 struct VRMatData {
     ChunkMaterialMTRecPtr mat;
@@ -1135,8 +1133,8 @@ void VRMaterial::initShaderChunk() {
 
     md->vProgram->createDefaulAttribMapping();
     md->vProgram->addOSGVariable("OSGViewportSize");
-	md->vProgram->addOSGVariable("OSGNormalMatrix");
-	md->vProgram->addOSGVariable("OSGModelViewProjectionMatrix");
+	md->vProgram->addOSGVariable("OSGNormalMatrix");                // only available with OpenSG OSG_OGL_COREONLY builds
+	md->vProgram->addOSGVariable("OSGModelViewProjectionMatrix");   // only available with OpenSG OSG_OGL_COREONLY builds
 	regVProgramVars(md->vProgram);
 }
 

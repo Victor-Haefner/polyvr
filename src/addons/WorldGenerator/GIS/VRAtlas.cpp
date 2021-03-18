@@ -22,7 +22,7 @@
 
 using namespace OSG;
 
-template<> string typeName(const VRAtlas& p) { return "Atlas"; }
+//template<> string typeName(const VRAtlas& p) { return "Atlas"; }
 
 VRAtlas::VRAtlas() {}
 VRAtlas::~VRAtlas() {}

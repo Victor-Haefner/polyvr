@@ -4,7 +4,6 @@
 #include <OpenSG/OSGConfig.h>
 #include <map>
 
-#include "core/objects/VRAnimation.h"
 #include "core/utils/VRFunctionFwd.h"
 #include "core/tools/VRToolsFwd.h"
 

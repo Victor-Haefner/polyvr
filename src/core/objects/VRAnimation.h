@@ -35,10 +35,13 @@ class VRAnimation : public VRName, public std::enable_shared_from_this<VRAnimati
 
         interpolator* interp = 0 ;
         float start_time = 0;
+        float update_time = 0;
+        float pause_time = 0;
         float duration = 0;
         float offset = 0;
         float t = 0;
         bool run = false;
+        bool paused = false;
         bool loop = false;
 
     public:
@@ -64,6 +67,11 @@ class VRAnimation : public VRName, public std::enable_shared_from_this<VRAnimati
         void start(float offset = 0);
         void stop();
         bool isActive();
+
+        void pause();
+        void resume();
+        bool isPaused();
+        void goTo(float t);
 
         bool update(float t);
 };

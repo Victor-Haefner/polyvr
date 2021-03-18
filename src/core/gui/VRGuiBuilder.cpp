@@ -476,15 +476,19 @@ void VRGuiBuilder::buildBaseUI() {
     auto banner = addImage("banner", "ressources/gui/logo4.png");
     auto label13 = addLabel("label13", "VR Setup:");
     auto label24 = addLabel("label24", "Scene:");
-    auto fixed41 = addFixed("fixed41");
+    auto lblversion = addLabel("lblversion", "");
     auto toolbar1 = addToolbar("toolbar1", GTK_ICON_SIZE_DIALOG, GTK_ORIENTATION_HORIZONTAL);
     gtk_grid_attach(GTK_GRID(table20), toolbar1, 0,0,1,1);
     gtk_grid_attach(GTK_GRID(table20), label13, 1,0,1,1);
-    gtk_grid_attach(GTK_GRID(table20), fixed41, 0,1,1,1);
+    gtk_grid_attach(GTK_GRID(table20), lblversion, 0,1,1,1);
     gtk_grid_attach(GTK_GRID(table20), label24, 1,1,1,1);
     gtk_grid_attach(GTK_GRID(table20), banner, 2,0,1,2);
     gtk_widget_set_hexpand(label13, true);
     gtk_widget_set_hexpand(label24, true);
+    PangoFontDescription* font_desc = pango_font_description_from_string("Sans 6");
+    gtk_widget_modify_font(lblversion, font_desc);
+    //gtk_label_set_justify(GTK_LABEL(lblversion), GTK_JUSTIFY_LEFT);
+    gtk_widget_set_halign(lblversion, GTK_ALIGN_START);
 
     auto toolbutton1 = addToolButton("toolbutton1", "gtk-new", toolbar1, "New Scene");
     auto toolbutton21 = addToolButton("toolbutton21", "gtk-open", toolbar1, "Open Scene or Model");
@@ -718,16 +722,23 @@ void VRGuiBuilder::buildBaseUI() {
     auto treeview2_and_frame = addTreeview("treeview2", "setupTree", GTK_TREE_MODEL(setupTree));
     auto treeview2 = treeview2_and_frame.first;
     auto toolbar4 = addToolbar("toolbar4", GTK_ICON_SIZE_LARGE_TOOLBAR, GTK_ORIENTATION_HORIZONTAL);
+    auto combobox6Box = addBox("combobox6Box", GTK_ORIENTATION_HORIZONTAL);
     auto combobox6 = addCombobox("combobox6", "setups");
+    auto combobox6Pad = addFixed("combobox6Pad");
     auto scrolledwindow6 = addScrolledWindow("scrolledwindow6");
     gtk_grid_attach(GTK_GRID(table6), toolbar4, 0,0,2,1);
-    gtk_grid_attach(GTK_GRID(table6), combobox6, 0,1,2,1);
+    gtk_grid_attach(GTK_GRID(table6), combobox6Box, 0,1,2,1);
     gtk_grid_attach(GTK_GRID(table6), treeview2_and_frame.second, 0,2,1,1);
     gtk_grid_attach(GTK_GRID(table6), scrolledwindow6, 1,2,1,1);
+    gtk_box_pack_start(GTK_BOX(combobox6Box), combobox6, false, true, 0);
+    gtk_box_pack_start(GTK_BOX(combobox6Box), combobox6Pad, true, true, 0);
+
+
 
     auto toolbutton10 = addToolButton("toolbutton10", "gtk-new", toolbar4, "New Setup");
     auto toolbutton11 = addToolButton("toolbutton11", "gtk-delete", toolbar4, "Remove Component");
     auto toolbutton12 = addToolButton("toolbutton12", "gtk-save", toolbar4, "Save Setup");
+    auto toolbutton13 = addToolButton("toolbutton13", "gtk-save-as", toolbar4, "Save Setup As..");
     auto toolbutton19 = addToggleToolButton("toolbutton19", "gtk-orientation-portrait", toolbar4, "Mono Mode");
 
     GtkTreeViewColumn* treeviewcolumn2 = gtk_tree_view_column_new();
@@ -1107,7 +1118,7 @@ void VRGuiBuilder::buildBaseUI() {
     auto checkbutton41 = addCheckbutton("checkbutton41", "active stereo");
     auto checkbutton29 = addCheckbutton("checkbutton29", "fullscreen");
     auto label140 = addLabel("label140", "port: ");
-    auto entry22 = addEntry("entry22");
+    auto entry22 = addEntry("entry22", 5);
 
     auto label139 = addLabel("label139", "Connection type:");
     auto radiobutton10 = addRadiobutton("radiobutton10", "", 0);
@@ -1115,9 +1126,11 @@ void VRGuiBuilder::buildBaseUI() {
     auto radiobutton12 = addRadiobutton("radiobutton12", "", radiobutton10);
 
     auto label133 = addLabel("label133", "local display:");
-    auto entry19 = addEntry("entry19");
+    auto entry19 = addEntry("entry19", 6);
     auto label173 = addLabel("label173", "startup delay: ");
-    auto entry37 = addEntry("entry37");
+    auto entry37 = addEntry("entry37", 4);
+    auto label175 = addLabel("label175", "geometry ('512x512+0+0'): ");
+    auto entry38 = addEntry("entry38", 20);
 
     gtk_grid_attach(GTK_GRID(table37), label131, 0,0,1,1);
     gtk_grid_attach(GTK_GRID(table37), label138, 1,0,2,1);
@@ -1141,6 +1154,8 @@ void VRGuiBuilder::buildBaseUI() {
     gtk_grid_attach(GTK_GRID(table37), entry19, 1,4,1,1);
     gtk_grid_attach(GTK_GRID(table37), label173, 2,4,1,1);
     gtk_grid_attach(GTK_GRID(table37), entry37, 3,4,1,1);
+    gtk_grid_attach(GTK_GRID(table37), label175, 0,5,2,1);
+    gtk_grid_attach(GTK_GRID(table37), entry38, 2,5,2,1);
 
     /* ---------- VR Setup - scripts ---------------------- */
     // TODO or deprecated?

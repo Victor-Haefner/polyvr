@@ -10,8 +10,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const VRCarSound& o) { return "CarSound"; }
-
 VRCarSound::VRCarSound() {
     sound = VRSound::create();
 }

@@ -12,6 +12,7 @@ string toString(ALenum a) {
         case AL_INVALID_VALUE: return "invalid value";
         case AL_INVALID_OPERATION: return "invalid operation";
         case AL_OUT_OF_MEMORY: return "out of memory";
+        default: return "unknown";
     }
     return "unknown";
 }

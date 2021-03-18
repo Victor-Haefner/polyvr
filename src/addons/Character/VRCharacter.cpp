@@ -10,8 +10,6 @@ const float Pi = 3.14159;
 
 using namespace OSG;
 
-template<> string typeName(const VRCharacter& m) { return "Character"; }
-
 VRCharacter::VRCharacter (string name) : VRGeometry(name) {}
 VRCharacter::~VRCharacter() {}
 

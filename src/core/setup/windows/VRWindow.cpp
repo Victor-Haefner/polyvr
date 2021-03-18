@@ -15,8 +15,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const VRWindow& o) { return "Window"; }
-
 unsigned int VRWindow::active_window_count = 0;
 
 VRWindow::VRWindow() : changeListStats("remote") {

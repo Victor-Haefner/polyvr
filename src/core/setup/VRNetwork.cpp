@@ -110,13 +110,19 @@ void VRNetwork::stopSlaves() {
 
 void VRNetworkNode::stopSlaves() {
     string script = getSlavePath() + "/src/cluster/stop";
+    if (os == "win") script = getSlavePath() + "/src/cluster/stop-win.bat";
     execCmd(script);
     update();
 }
 
 bool VRNetworkNode::hasFile(string path) {
-    string res = execCmd("ls "+path, true);
+    string cmd = "";
+    if (os == "nix" || os == "") cmd = "ls "+path;
+    if (os == "win") cmd = "if exist \""+path+"\" echo|set /p=\""+path+"\"";
+    string res = execCmd(cmd, true);
     bool b = res.substr(0, path.size()) == path;
+    //cout << "os: " << os << endl;
+    //cout << "hasFile: " << endl << res << endl << " -> " << b << endl;
     return b;
 }
 
@@ -140,18 +146,30 @@ void VRNetworkNode::update() {
         stat_ssh = ssh->getStat();
         stat_ssh_key = ssh->getKeyStat();
         if (stat_ssh != "ok") { stat_path = "no ssh access"; return; }
+        getRemoteOS();
     }
 
+    string sExe = "VRServer";
+    if (os == "win") sExe += ".exe";
+
     if (!hasFile(slavePath + "/src/cluster/start")) stat_path = "PolyVR root directory not found";
-    else if (!hasFile(slavePath + "/src/cluster/VRServer")) stat_path = "Slave not compiled, execute " + slavePath + "/src/cluster/setup";
+    else if (!hasFile(slavePath + "/src/cluster/"+sExe)) stat_path = "Slave not compiled, on Ubuntu execute " + slavePath + "/src/cluster/setup";
     else stat_path = "ok";
 #endif
+}
+
+string VRNetworkNode::getRemoteOS() {
+    if (isLocal()) return os;
+    if (stat_ssh != "ok") return "";
+    auto ssh = VRSSHSession::open(address, user);
+    os = ssh->getRemoteOS();
+    return os;
 }
 
 string VRNetworkNode::execCmd(string cmd, bool read) {
     if (stat_node != "ok" ) return "";
     if (isLocal()) {
-        cout << "execCmd " << cmd << endl;
+        cout << "exec local: " << cmd << endl;
         return systemCall(cmd);
     }
 #ifndef WITHOUT_SSH
@@ -174,6 +192,7 @@ VRNetworkSlave::VRNetworkSlave(string name) {
     store("autostart", &autostart);
     store("port", &port);
     store("startupDelay", &startupDelay);
+    store("geometry", &geometry);
 }
 
 VRNetworkSlave::~VRNetworkSlave() {}
@@ -191,21 +210,27 @@ void VRNetworkSlave::start() {
     if (connection_type == "SockPipeline") args += " -p " + node->getAddress() + ":" + toString(port);
     if (connection_type == "StreamSock") args += " " + node->getAddress() + ":" + toString(port);
 
-#ifdef _WIN32
-    string disp = " -display \\.\DISPLAY"+display+" ";
-    string pipes = ""; // TODO: maybe needed?
-    string script = node->getSlavePath() + "/src/cluster/start-win.bat";
-    string geometry = " -geometry 800x600+200+200 "; // TODO: add window offset and size as parameters in UI 
-    stat = node->execCmd(script + args + geometry + disp + pipes, false);
-    //stat = node->execCmd(script, false);
-#else
-    string disp = "export DISPLAY=\"" + display + "\" && ";
-    string pipes = " > /dev/null 2> /dev/null < /dev/null &";
-    string script = node->getSlavePath() + "/src/cluster/start";
-    //string pipes = " > /dev/null 2> /dev/null < /dev/null"; // TODO: without & it returns the correct code, but it also makes the app stuck!
-    stat = node->execCmd(disp + script + args + pipes, false);
-#endif
+    string os = node->getRemoteOS();
 
+    string cmd = "";
+    if (os == "nix") {
+        string disp = "export DISPLAY=\"" + display + "\" && ";
+        string pipes = " > /dev/null 2> /dev/null < /dev/null &";
+        string script = node->getSlavePath() + "/src/cluster/start";
+        //string pipes = " > /dev/null 2> /dev/null < /dev/null"; // TODO: without & it returns the correct code, but it also makes the app stuck!
+        cmd = disp + script + args + pipes;
+    }
+
+    if (os == "win") {
+        //string disp = " -display \\\\.\\DISPLAY"+display+" "; // needed?
+        string pipes = ""; // TODO: maybe needed?
+        string script = node->getSlavePath() + "/src/cluster/start-win-ssh.bat";
+        if (node->isLocal()) script = node->getSlavePath() + "/src/cluster/start-win.bat";
+        string geo = " -geometry "+geometry+" "; // TODO: add window offset and size as parameters in UI
+        cmd = script + args + geo + pipes;
+    }
+
+    stat = node->execCmd(cmd, false);
     update();
 }
 
@@ -217,7 +242,7 @@ void VRNetworkSlave::stop() {
 
 void VRNetworkSlave::setNode(VRNetworkNodePtr n) { node = n; }
 
-void VRNetworkSlave::set(string ct, bool fs, bool as, bool au, string a, int p, int d) {
+void VRNetworkSlave::set(string ct, bool fs, bool as, bool au, string a, int p, int d, string g) {
     connection_type = ct;
     fullscreen = fs;
     active_stereo = as;
@@ -225,6 +250,7 @@ void VRNetworkSlave::set(string ct, bool fs, bool as, bool au, string a, int p, 
     display = a;
     port = p;
     startupDelay = d;
+    geometry = g;
     update();
 }
 
@@ -240,6 +266,7 @@ bool VRNetworkSlave::getActiveStereo() { return active_stereo; }
 bool VRNetworkSlave::getAutostart() { return autostart; }
 int VRNetworkSlave::getPort() { return port; }
 int VRNetworkSlave::getStartupDelay() { return startupDelay; }
+string VRNetworkSlave::getGeometry() { return geometry; }
 
 void VRNetworkSlave::setDisplay(string a) { display = a; update(); }
 void VRNetworkSlave::setConnectionType(string b) { connection_type = b; update(); }

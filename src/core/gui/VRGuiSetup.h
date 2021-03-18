@@ -21,7 +21,6 @@ using namespace std;
 
 class VRGuiSetup {
     private:
-        _GtkTreeIter* selected_row = 0;
         _GtkTreeIter* parent_row = 0;
         gpointer selected_object;
         gpointer selected_object_parent;
@@ -65,6 +64,8 @@ class VRGuiSetup {
         void on_treeview_select();
         void on_name_edited(const char* path, const char* new_name);
         void on_save_clicked();
+        void on_save_as_clicked();
+        void on_diag_save_as_clicked();
         void on_del_clicked();
         void on_new_clicked();
         void on_foto_clicked();

@@ -86,9 +86,12 @@ void VRGuiFile::init() {
         if (!buttons) {
             auto header = gtk_dialog_get_header_bar(GTK_DIALOG(dialog));
             buttons = gtk_container_get_children(GTK_CONTAINER(header));
+            button3 = GTK_WIDGET(g_list_nth_data(buttons, 1));
+            button9 = GTK_WIDGET(g_list_nth_data(buttons, 2));
+        } else {
+            button3 = GTK_WIDGET(g_list_nth_data(buttons, 0));
+            button9 = GTK_WIDGET(g_list_nth_data(buttons, 1));
         }
-        button3 = GTK_WIDGET(g_list_nth_data(buttons, 1));
-        button9 = GTK_WIDGET(g_list_nth_data(buttons, 2));
     }
 
     if (!useCustomWidget) {

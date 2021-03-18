@@ -299,6 +299,7 @@ void VRGuiSetup::updateObjectData() {
         setTextEntry("entry19", n->getDisplay());
         setTextEntry("entry22", toString(n->getPort()));
         setTextEntry("entry37", toString(n->getStartupDelay()));
+        setTextEntry("entry38", toString(n->getGeometry()));
 
         string ct = n->getConnectionType();
         if (ct == "Multicast") setToggleButton("radiobutton10", 1);
@@ -375,12 +376,36 @@ void VRGuiSetup::on_del_clicked() { //TODO, should delete setup
     b->set_sensitive(false);*/
 }
 
-
 void VRGuiSetup::on_save_clicked() {
     if (auto s = current_setup.lock()) {
         s->save(setupDir() + s->getName() + ".xml");
         setWidgetSensitivity("toolbutton12", false);
     }
+}
+
+void VRGuiSetup::on_diag_save_as_clicked() {
+    guard = true;
+    string path = VRGuiFile::getPath();
+    if (path == "") return;
+
+    if (auto s = current_setup.lock()) {
+        s->save(path);
+        string name = s->getName();
+        ofstream f("setup/.local"); f.write(name.c_str(), name.size()); f.close();
+        setWidgetSensitivity("toolbutton12", false);
+    }
+
+    updateSetupList();
+    updateSetup();
+    guard = false;
+}
+
+void VRGuiSetup::on_save_as_clicked() {
+    VRGuiFile::setCallbacks( bind(&VRGuiSetup::on_diag_save_as_clicked, this) );
+    VRGuiFile::gotoPath( setupDir() );
+    VRGuiFile::setFile( "mySetup.pvr" );
+    VRGuiFile::clearFilter();
+    VRGuiFile::open( "Save As..", GTK_FILE_CHOOSER_ACTION_SAVE, "Save Setup As.." );
 }
 
 // setup list
@@ -416,9 +441,9 @@ void VRGuiSetup::on_name_edited(const char* path, const char* new_name) {
     // VRGuiSetup_ModelColumns cols;
     //  add(name); add(type); add(obj);
     VRGuiTreeView tree_view("treeview2");
-    string name  = tree_view.getStringValue(selected_row, 0);
-    string type  = tree_view.getStringValue(selected_row, 1);
-    gpointer obj = tree_view.getValue(selected_row, 2);
+    string name  = tree_view.getSelectedStringValue(0);
+    string type  = tree_view.getSelectedStringValue(1);
+    gpointer obj = tree_view.getSelectedValue(2);
 
     // update key in map
     if (auto s = current_setup.lock()) {
@@ -430,7 +455,7 @@ void VRGuiSetup::on_name_edited(const char* path, const char* new_name) {
         if (type == "slave") ((VRNetworkSlave*)obj)->setName(new_name);
     }
 
-    tree_view.setStringValue(selected_row, 0, name);
+    tree_view.setSelectedStringValue(0, name);
     updateSetup();
 }
 
@@ -543,7 +568,10 @@ void VRGuiSetup::on_menu_add_network_node() {
 }
 
 void VRGuiSetup::on_menu_add_network_slave() {
-    if (selected_type != "node") return;
+    if (selected_type != "node") {
+        notifyUser("Please select a network node to add a slave.", "(Right click the node to add the slave to)");
+        return;
+    }
     VRNetworkNode* n = (VRNetworkNode*)selected_object;
     n->add("Slave");
     updateSetup();
@@ -572,10 +600,12 @@ void VRGuiSetup::on_toggle_display_active() {
     //cout << "\nToggleActive " << name << " " << b << endl;
     win->setActive(b);
 
-    string bg = "#FFFFFF";
-    if (!b) bg = "#FFDDDD";
-    auto tree_store = (GtkTreeStore*)VRGuiBuilder::get()->get_object("setupTree");
-    setTreeRow(tree_store, selected_row, win->getName().c_str(), "window", (gpointer)win, "#000000", bg);
+    // TODO
+    //string bg = "#FFFFFF";
+    //if (!b) bg = "#FFDDDD";
+    //VRGuiTreeView tree_view("treeview2");
+    //auto tree_store = (GtkTreeStore*)VRGuiBuilder::get()->get_object("setupTree");
+    //setTreeRow(tree_store, selected_row, win->getName().c_str(), "window", (gpointer)win, "#000000", bg);
     VRGuiWidget("toolbutton12").setSensitivity(true);
 }
 
@@ -992,8 +1022,15 @@ void VRGuiSetup::on_netslave_edited() {
     string ct = "StreamSock";
     if ( getRadioButtonState("radiobutton10") ) ct = "Multicast";
     if ( getRadioButtonState("radiobutton11") ) ct = "SockPipeline";
-    n->set(ct, getCheckButtonState("checkbutton29"), getCheckButtonState("checkbutton41"),
-           getCheckButtonState("checkbutton42"), getTextEntry("entry19"), toInt( getTextEntry("entry22") ), toInt( getTextEntry("entry37") ) );
+
+    bool fullscreen = getCheckButtonState("checkbutton29");
+    bool astereo = getCheckButtonState("checkbutton41");
+    bool astart = getCheckButtonState("checkbutton42");
+    string display = getTextEntry("entry19");
+    int port = toInt( getTextEntry("entry22") );
+    int delay = toInt( getTextEntry("entry37") );
+    string geometry = getTextEntry("entry38");
+    n->set(ct, fullscreen, astereo, astart, display, port, delay, geometry);
     VRGuiWidget("toolbutton12").setSensitivity(true);
     updateObjectData();
 }
@@ -1222,6 +1259,7 @@ VRGuiSetup::VRGuiSetup() {
     setToolButtonCallback("toolbutton10", bind( &VRGuiSetup::on_new_clicked, this) );
     setToolButtonCallback("toolbutton11", bind( &VRGuiSetup::on_del_clicked, this) );
     setToolButtonCallback("toolbutton12", bind( &VRGuiSetup::on_save_clicked, this) );
+    setToolButtonCallback("toolbutton13", bind( &VRGuiSetup::on_save_as_clicked, this) );
     setToolButtonCallback("toolbutton19", bind( &VRGuiSetup::on_foto_clicked, this) );
     //setToolButtonCallback("toolbutton27", bind( &VRGuiSetup::on_script_save_clicked, this) );
     //setToolButtonCallback("toolbutton26", bind( &VRGuiSetup::on_script_exec_clicked, this) );
@@ -1283,6 +1321,7 @@ VRGuiSetup::VRGuiSetup() {
     setEntryCallback("entry19", bind( &VRGuiSetup::on_netslave_edited, this) );
     setEntryCallback("entry22", bind( &VRGuiSetup::on_netslave_edited, this) );
     setEntryCallback("entry37", bind( &VRGuiSetup::on_netslave_edited, this) );
+    setEntryCallback("entry38", bind( &VRGuiSetup::on_netslave_edited, this) );
 
     setButtonCallback("button6", bind( &VRGuiSetup::on_netnode_key_clicked, this) );
     setButtonCallback("button1", bind( &VRGuiSetup::on_netslave_start_clicked, this) );
@@ -1570,8 +1609,8 @@ void VRGuiSetup::updateSetupList() {
     string dir = setupDir();
     if (!VRGuiFile::exists(dir)) { cerr << "Error: no local directory setup\n"; return; }
 
-    string local, def;
-    if (!getSetupEntries(dir, local, def)) { cerr << "Error: no setup file found\n"; return; }
+    string local, defaul;
+    if (!getSetupEntries(dir, local, defaul)) { cerr << "Error: no setup file found\n"; return; }
 
     auto splitFileName = [&](string& name, string& ending) {
         int N = name.size();
@@ -1595,6 +1634,7 @@ void VRGuiSetup::updateSetupList() {
     auto setActive = [&](string n) {
         int i = 0;
         for(string name : VRGuiFile::listDir(dir)) {
+            if (n == name) { active = i; break; }
             if (!splitFileName(name, ending)) continue;
             if (n == name) { active = i; break; }
             i++;
@@ -1603,8 +1643,8 @@ void VRGuiSetup::updateSetupList() {
 
     setActive(local);
     if (active < 0) {
-        cout << "Setup " << local << " not found. Load default: " << def << endl;
-        setActive(def);
+        cout << "Setup " << local << " not found. Load default: " << defaul << endl;
+        setActive(defaul);
     }
     setCombobox("combobox6", active);
 }

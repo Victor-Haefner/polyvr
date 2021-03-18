@@ -13,8 +13,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const VRColorChooser& t) { return "ColorChooser"; }
-
 
 VRColorChooser::VRColorChooser() {
     mat = VRMaterial::create("color choose");

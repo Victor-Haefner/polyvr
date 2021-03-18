@@ -10,8 +10,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const VRSpreadsheet& p) { return "Spreadsheet"; }
-
 VRSpreadsheet::VRSpreadsheet() {}
 VRSpreadsheet::~VRSpreadsheet() {}
 

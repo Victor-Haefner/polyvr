@@ -1,4 +1,5 @@
 #include "VRAnimationManager.h"
+#include "core/objects/VRAnimation.h"
 #include "core/utils/VRFunction.h"
 
 OSG_BEGIN_NAMESPACE;

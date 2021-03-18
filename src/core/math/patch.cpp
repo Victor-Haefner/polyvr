@@ -12,8 +12,6 @@
 using namespace std;
 using namespace OSG;
 
-template<> string typeName(const OSG::Patch& t) { return "Patch"; }
-
 Patch::Patch() {}
 Patch::~Patch() {}
 PatchPtr Patch::create() { return PatchPtr(new Patch()); }

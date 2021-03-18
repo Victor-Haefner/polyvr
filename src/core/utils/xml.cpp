@@ -7,9 +7,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const XML& p) { return "XML"; }
-template<> string typeName(const XMLElement& p) { return "XMLElement"; }
-
 XMLElement::XMLElement(_xmlNode* node) : node(node) {}
 XMLElement::~XMLElement() {}
 

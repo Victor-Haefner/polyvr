@@ -44,8 +44,6 @@ const double pi = 2*acos(0.0);
 
 using namespace OSG;
 
-template<> string typeName(const VRRoadNetwork& o) { return "RoadNetwork"; }
-
 VRRoadNetwork::VRRoadNetwork() : VRRoadBase("RoadNetwork") {
     updateCb = VRUpdateCb::create( "roadNetworkUpdate", bind(&VRRoadNetwork::update, this) );
     VRScene::getCurrent()->addUpdateFkt(updateCb);

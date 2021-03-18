@@ -10,8 +10,6 @@
 using namespace OSG;
 using namespace Eigen;
 
-template<> string typeName(const VRGearSegmentation& m) { return "GearSegmentation"; }
-
 namespace OSG {
 struct PolarCoords {
     Vec3d axis;

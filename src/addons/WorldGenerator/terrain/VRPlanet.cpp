@@ -16,8 +16,6 @@ const double pi = 3.14159265359;
 
 using namespace OSG;
 
-template<> string typeName(const VRPlanet& t) { return "Planet"; }
-
 VRPlanet::VRPlanet(string name) : VRTransform(name) {}
 VRPlanet::~VRPlanet() {}
 
@@ -37,11 +35,31 @@ void VRPlanet::setInclination(double I) { inclination = I; }
 double VRPlanet::getRotation() { return rotation; }
 double VRPlanet::getInclination() { return inclination; }
 
+double VRPlanet::getSectorSize() { return sectorSize; }
+
 void VRPlanet::addMoon(VRTransformPtr t) { moons.push_back(t); }
 vector<VRTransformPtr> VRPlanet::getMoons() { return moons; }
 
+void VRPlanet::localizeSector(VRWorldGeneratorPtr sector) {
+    addChild(sector);
+    sector->setIdentity();
+
+    Vec2d plI = sector->getPlanetCoords() + Vec2d(1,1)*sectorSize*0.5;
+    auto pSector = fromLatLongPose(plI[0], plI[1]);
+    auto newP = origin->getPose()->multRight(pSector);
+    sector->setPose(newP);
+
+    pSector->invert();
+
+    for (auto terrain : sector->getTerrains()) {
+        terrain->curveMesh(ptr(), sector->getPlanetCoords(), pSector);
+        terrain->setupGeo();
+    }
+}
+
 void VRPlanet::localize(double north, double east) {
     cout << "VRPlanet::localize" << endl;
+    localized = true;
     originCoords = Vec2d(north, east);
     auto p = fromLatLongPose(north, east);
     auto localOrigin = p->pos();
@@ -59,71 +77,8 @@ void VRPlanet::localize(double north, double east) {
 
     for (auto s : sectors) {
         auto sector = s.second;
-        addChild(sector);
-        sector->setIdentity();
-
-        Vec2d plI = sector->getPlanetCoords() + Vec2d(1,1)*sectorSize*0.5;
-        auto pSector = fromLatLongPose(plI[0], plI[1]);
-        auto newP = p->multRight(pSector);
-        sector->setPose(newP);
-        auto newPinv = newP;
-        newPinv->invert();
-
-        for (auto terrain:sector->getTerrains()){
-            auto grid = terrain->getGrid();
-            //auto fac = terrain->getLODFactor();
-            auto size = terrain->getSize();
-            terrain->setLocalized(true);
-            Vec2i gridN = Vec2i(round(size[0]*1.0/grid-0.5), round(size[1]*1.0/grid-0.5));
-            //cout << " terrain " << grid << " " << size << endl;
-            if (gridN[0] < 1) gridN[0] = 1;
-            if (gridN[1] < 1) gridN[1] = 1;
-            vector<vector<vector<Vec3d>>> completeMesh;
-
-            int t1 = 0;
-            int t2 = 0;
-            for (int i =0; i <= gridN[1]; i++) {
-                vector<vector<Vec3d>> row;
-                t1++;
-                t2 = 0;
-                for (int j =0; j <= gridN[0]; j++) {
-                    t2++;
-                    vector<Vec3d> posNorm;
-                    //Vertex conversion from global to local patch coordinates
-                    auto poseVertexGlobal = fromLatLongPose(sector->getPlanetCoords()[0]+sectorSize*(1.0-double(i)/double(gridN[1])), sector->getPlanetCoords()[1]+j*sectorSize/gridN[0]);
-                    auto poseVertexOrigin = p->multRight(poseVertexGlobal);
-                    auto poseVertexLocalInPatch = newPinv->multRight(poseVertexOrigin);
-                    auto posVertexLocalInPatch = poseVertexLocalInPatch->pos();
-                    auto upVertexLocalInPatch = poseVertexLocalInPatch->up();
-                    posNorm.push_back(posVertexLocalInPatch);
-                    posNorm.push_back(upVertexLocalInPatch);
-                    row.push_back(posNorm);
-                }
-                completeMesh.push_back(row);
-            }
-            cout << "n,e ___: " << t1 << " -- " << t2 << " " << grid << " " << size << endl;
-            terrain->setMeshTer(completeMesh);
-            terrain->setupGeo();
-        }
-        sector->addTerrainsToLOD();
-        //cout << " SecNorth: " << fromLatLongNorth(plI[], plI[1]) << endl;
-        //cout << "VRPlanet::localize p " << p << " pSector: " << pSector << " localOrigin: " << localOrigin << endl;
-
-        /*
-        Vec2d size = sector->getTerrain()->getSize();
-        Vec2d p = sector->getPlanetCoords() + Vec2d(1,1)*sectorSize*0.5; // sector mid point
-        float X = p[0]-east;
-        float Y = north - p[1];
-        cout << "VRPlanet::localize p " << p << " P " << Vec2f(north, east) << " XY " << Vec2d(X, Y) << endl;
-        //cout << "VRPlanet::localize " << Y << " " << p[0]*sectorSize << " " << north << endl;
-        sector->translate(Vec3d(X*size[0]/sectorSize, 0, Y*size[1]/sectorSize));*/
+        localizeSector(sector);
     }
-
-    /*auto s = getSector(north, east);
-    if (s) {
-        s->setIdentity();
-        addChild(s);
-    } else cout << "Warning: VRPlanet::localize, no sector found at location " << Vec2d(north, east) << " !\n";*/
 }
 
 Vec2d VRPlanet::getSurfaceUV(double north, double east) {
@@ -317,6 +272,10 @@ void VRPlanet::rebuild() {
         sphereMat = VRMaterial::create("planet");
         sphereMat->setVertexShader(surfaceVP, "planet surface VS");
         sphereMat->setFragmentShader(surfaceFP, "planet surface FS");
+        sphereMat->enableShaderParameter("OSGModelViewMatrix");
+        sphereMat->enableShaderParameter("OSGProjectionMatrix");
+        sphereMat->enableShaderParameter("OSGInvWorldMatrix");
+        sphereMat->enableShaderParameter("OSGInvViewMatrix");
         setLit(false);
     }
 
@@ -371,6 +330,7 @@ VRWorldGeneratorPtr VRPlanet::addSector( double north, double east, bool local )
         ter->setParameters( size, 2, 1);
     }
     generator->setTerrainSize( size );
+    if (localized) localizeSector(generator);
     return generator;
 }
 
@@ -423,23 +383,28 @@ void VRPlanet::remPin(int ID) {}// metaGeo->remove(ID); } // TODO
 string VRPlanet::surfaceVP =
 "#version 130\n"
 GLSL(
-varying vec3 tcs;
-varying vec3 normal;
-varying vec4 position;
-varying float gl_ClipDistance[1];
+out vec3 tcs;
+out vec3 normal;
+out vec4 position;
+out float gl_ClipDistance[1];
 uniform vec4 clipPlane;
 uniform mat4 OSGWorldMatrix;
+uniform mat4 OSGModelViewMatrix;
+uniform mat4 OSGProjectionMatrix;
+uniform mat4 OSGInvViewMatrix;
+uniform mat4 OSGInvWorldMatrix;
 
-attribute vec4 osg_Vertex;
-attribute vec4 osg_Normal;
-attribute vec4 osg_Color;
-attribute vec3 osg_MultiTexCoords0;
+in vec4 osg_Vertex;
+in vec4 osg_Normal;
+in vec4 osg_Color;
+in vec3 osg_MultiTexCoords0;
 
 void main( void ) {
     tcs = osg_Normal.xyz;
-    normal = gl_NormalMatrix * osg_Normal.xyz;
-    position = gl_ModelViewMatrix*osg_Vertex;
-    gl_Position = gl_ModelViewProjectionMatrix*osg_Vertex;\n
+    mat3 normMat = mat3( transpose(OSGInvViewMatrix*OSGInvWorldMatrix) );\n
+    normal = normMat * osg_Normal.xyz;
+    position = OSGModelViewMatrix*osg_Vertex;
+    gl_Position = OSGProjectionMatrix*OSGModelViewMatrix*osg_Vertex;\n
 
     vec4 pos = OSGWorldMatrix*osg_Vertex;
     gl_ClipDistance[0] = dot(pos, clipPlane);\n
@@ -474,6 +439,7 @@ void applyLightning() {
     gl_FragColor = c;// diffuse + ambient;// + specular;
 	//gl_FragColor = ambient + diffuse + specular;
 	//gl_FragColor = vec4(gl_LightSource[0].position.xyz,1);
+	//gl_FragColor = vec4(n.xyz,1);
 }
 
 void main( void ) {

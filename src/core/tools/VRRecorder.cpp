@@ -24,8 +24,6 @@ extern "C" {
 
 using namespace OSG;
 
-template<> string typeName(const VRRecorder& o) { return "Recorder"; }
-
 namespace OSG {
 class VRFrame {
     public:
@@ -141,6 +139,8 @@ void VRRecorder::capture() {
     f->height = f->capture->getImage()->getHeight();
 
     if (!frame) initFrame();
+
+    //f->capture->write("pics/pic-" + toString(captures.size()-1) + toString(f->timestamp) + ".png");
 
     f->transcode(frame, codec_context, sws_context, captures.size()-1);
 }

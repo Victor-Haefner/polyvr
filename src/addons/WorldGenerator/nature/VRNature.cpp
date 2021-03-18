@@ -32,8 +32,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const OSG::VRNature& t) { return "Nature"; }
-
 // --------------------------------------------------------------------------------------------------
 
 VRNature::VRNature(string name) {

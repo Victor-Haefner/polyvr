@@ -42,11 +42,15 @@ PyObject* VRPyTypeCaster::cast(const std::shared_ptr<X>& e) { \
     return VRPy ## Y::fromSharedPtr(e); \
 };\
 \
-/*typedef X* X ## ptr ;\
 template<> \
-PyObject* VRPyTypeCaster::cast(const X ## ptr& e) { \
-    return VRPy ## Y::fromPtr(e); \
-};*/
+PyObject* VRPyTypeCaster::cast(const std::weak_ptr<X>& e) { \
+    return VRPy ## Y::fromSharedPtr(e.lock()); \
+};\
+\
+template<> \
+string typeName(const X& e) { \
+    return #Y; \
+};
 
 #define simpleVRPyType( X, NEWfkt ) newPyType( VR ## X , X , NEWfkt )
 #define simplePyType( X, NEWfkt ) newPyType( X , X , NEWfkt )

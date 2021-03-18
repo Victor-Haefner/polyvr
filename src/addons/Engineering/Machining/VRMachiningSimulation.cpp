@@ -10,8 +10,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const VRMachiningSimulation& t) { return "MachiningSimulation"; }
-
 VRMachiningSimulation::VRMachiningSimulation() {}
 VRMachiningSimulation::~VRMachiningSimulation() {}
 
@@ -50,7 +48,7 @@ void VRMachiningSimulation::runInstruction(float delay) {
 	VRMachiningCode::Instruction c = code->next();
 	eeD = c.d;
 	eeP0 = c.p0;
-	
+
 	anim = VRAnimation::create("MachiningAnim");
 	anim->setCallback( VRAnimCb::create( "MachiningAnim", bind(&VRMachiningSimulation::run, this, std::placeholders::_1) ) );
 	anim->setDuration(c.T);

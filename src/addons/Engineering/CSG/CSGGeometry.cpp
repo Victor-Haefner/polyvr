@@ -13,8 +13,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const CSGGeometry& o) { return "CSGGeometry"; }
-
 
 vector<string> CSGGeometry::getOperations() {
 	vector<string> ops;

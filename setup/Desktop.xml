@@ -13,7 +13,6 @@
   <TrackingART active="0" axis="0 1 2" offset="0 0 0" persistency="666" port="5000" up=""/>
   <TrackingVRPN/>
   <Network base_name="Network" name_space="Manager" name_suffix="0" persistency="666">
-    <Node address="localhost" base_name="Node" name_space="NetworkNode" name_suffix="0" persistency="666" slavePath="/home/administrator/Projects/polyvr/src/cluster/start" user="user" ID="0"/>
   </Network>
   <Scripts/>
 </Setup>

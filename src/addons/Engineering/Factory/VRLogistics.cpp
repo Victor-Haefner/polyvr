@@ -14,16 +14,6 @@
 using namespace std;
 using namespace OSG;
 
-template<> string typeName(const FNode& m) { return "FNode"; }
-template<> string typeName(const FObject& m) { return "FObject"; }
-template<> string typeName(const FProduct& m) { return "FProduct"; }
-template<> string typeName(const FContainer& m) { return "FContainer"; }
-template<> string typeName(const FNetwork& m) { return "FNetwork"; }
-template<> string typeName(const FPath& m) { return "FPath"; }
-template<> string typeName(const FTransporter& m) { return "FTransporter"; }
-template<> string typeName(const FLogistics& m) { return "FLogistics"; }
-
-
 FID::FID() { static int i = 0; i++; ID = i; }
 int FID::getID() { return ID; }
 void FID::setID(int i) { ID = i; }

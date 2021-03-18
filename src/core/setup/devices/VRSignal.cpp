@@ -9,8 +9,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const VRSignal& t) { return "Signal"; }
-
 
 VRSignal_base::VRSignal_base() {}
 VRSignal_base::~VRSignal_base() {}

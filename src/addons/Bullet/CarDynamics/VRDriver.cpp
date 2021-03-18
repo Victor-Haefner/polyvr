@@ -7,8 +7,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const VRDriver& o) { return "Driver"; }
-
 VRDriver::VRDriver() {
     auto scene = VRScene::getCurrent();
     updatePtr = VRUpdateCb::create("driver_update", bind(&VRDriver::update, this));

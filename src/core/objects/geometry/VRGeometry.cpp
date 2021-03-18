@@ -40,8 +40,6 @@
 #include <OpenSG/OSGGroup.h>
 #include <OpenSG/OSGTransform.h>
 
-template<> string typeName(const OSG::VRGeometry& t) { return "Geometry"; }
-
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 

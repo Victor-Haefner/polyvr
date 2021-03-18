@@ -36,7 +36,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const VRCollision& c) { return "Collision"; }
 typedef boost::recursive_mutex::scoped_lock PLock;
 
 boost::recursive_mutex& VRPhysics_mtx() {
@@ -122,7 +121,17 @@ void VRPhysics::setGhost(bool b) { ghost = b; update(); }
 bool VRPhysics::isGhost() { return ghost; }
 void VRPhysics::setSoft(bool b) { soft = b; update(); }
 bool VRPhysics::isSoft() { return soft; }
-void VRPhysics::setDamping(float lin, float ang) { linDamping = lin; angDamping = ang; update(); }
+
+void VRPhysics::setDamping(float lin, float ang, bool f) {
+    linDamping = lin;
+    angDamping = ang;
+    if (!f) update();
+    else {
+        PLock lock(VRPhysics_mtx());
+        body->setDamping(btScalar(linDamping), btScalar(angDamping));
+    }
+}
+
 OSG::Vec3d VRPhysics::getForce() { PLock lock(VRPhysics_mtx()); return toVec3d(constantForce); }
 OSG::Vec3d VRPhysics::getTorque() { PLock lock(VRPhysics_mtx()); return toVec3d(constantTorque); }
 
@@ -431,7 +440,7 @@ void VRPhysics::update() {
         body = new btRigidBody(rbInfo);
         if (useCallbacks) body->setCollisionFlags(body->getCollisionFlags() | btCollisionObject::CF_CUSTOM_MATERIAL_CALLBACK);
         body->setActivationState(activation_mode);
-        body->setDamping(btScalar(linDamping),btScalar(angDamping));
+        body->setDamping(btScalar(linDamping), btScalar(angDamping));
         world->addRigidBody(body, collisionGroup, collisionMask);
         body->setGravity(gravity);
         body->setFriction(friction);
@@ -1201,7 +1210,7 @@ void VRPhysics::addTorque(OSG::Vec3d i) {
    torqueJob.push_back(i);
 }
 
-void VRPhysics::addConstantForce(OSG::Vec3d i) { PLock lock(VRPhysics_mtx()); constantForce = toBtVector3(i); cout << constantForce << "\n"; }
+void VRPhysics::addConstantForce(OSG::Vec3d i) { PLock lock(VRPhysics_mtx()); constantForce = toBtVector3(i); }
 void VRPhysics::addConstantTorque(OSG::Vec3d i) { PLock lock(VRPhysics_mtx()); constantTorque = toBtVector3(i); }
 
 OSG::Vec3d VRPhysics::getLinearVelocity() {

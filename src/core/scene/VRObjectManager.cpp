@@ -5,8 +5,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const VRObjectManager& t) { return "ObjectManager"; }
-
 
 VRObjectManager::Entry::Entry(string name) {
     setName("ObjectManagerEntry");

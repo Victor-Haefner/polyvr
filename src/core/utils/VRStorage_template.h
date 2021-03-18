@@ -7,59 +7,61 @@ OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 template<typename T>
-void VRStorage::load_cb(T* t, string tag, XMLElementPtr e) {
-    if (!e->hasAttribute(tag)) return;
-    toValue( e->getAttribute(tag), *t);
+void VRStorage::load_cb(T* t, string tag, VRStorageCbParams p) {
+    if (!p.e->hasAttribute(tag)) return;
+    toValue( p.e->getAttribute(tag), *t);
 }
 
 template<typename T>
-void VRStorage::save_cb(T* t, string tag, XMLElementPtr e) {
-    if (t) e->setAttribute(tag, toString(*t));
+void VRStorage::save_cb(T* t, string tag, VRStorageCbParams p) {
+    if (t) p.e->setAttribute(tag, toString(*t));
 }
 
 template<typename T>
-void VRStorage::save_on_cb(T* t, string tag, XMLElementPtr e) {
+void VRStorage::save_on_cb(T* t, string tag, VRStorageCbParams p) {
     auto sp = t->lock();
     if (sp == 0) return;
-    e->setAttribute(tag, sp->getName());
+    p.e->setAttribute(tag, sp->getName());
 }
 
 template<typename T>
-void VRStorage::save_str_map_cb(map<string, T*>* mt, string tag, bool under, XMLElementPtr e) {
+void VRStorage::save_str_map_cb(map<string, T*>* mt, string tag, bool under, VRStorageCbParams p) {
     if (mt->size() == 0) return;
-    if (under) e = e->addChild(tag);
+    if (under) p.e = p.e->addChild(tag);
     for (auto t : *mt) {
-        auto ei = t.second->saveUnder(e);
+        auto ei = t.second->saveUnder(p.e, p.p);
+        //if (ei && t.second->overrideCallbacks) t.second->save(ei, p.p); // TODO: some classes like VRScript have a custom save method
         if (ei && t.second->overrideCallbacks) t.second->save(ei); // TODO: some classes like VRScript have a custom save method
     }
 }
 
 template<typename T>
-void VRStorage::save_str_objmap_cb(map<string, std::shared_ptr<T> >* mt, string tag, bool under, XMLElementPtr e) {
+void VRStorage::save_str_objmap_cb(map<string, std::shared_ptr<T> >* mt, string tag, bool under, VRStorageCbParams p) {
     if (mt->size() == 0) return;
-    if (under) e = e->addChild(tag);
+    if (under) p.e = p.e->addChild(tag);
     for (auto t : *mt) {
-        auto ei = t.second->saveUnder(e);
+        auto ei = t.second->saveUnder(p.e, p.p);
+        //if (ei && t.second->overrideCallbacks) t.second->save(ei, p.p); // TODO: some classes like VRScript have a custom save method
         if (ei && t.second->overrideCallbacks) t.second->save(ei); // TODO: some classes like VRScript have a custom save method
     }
 }
 
 template<typename T>
-void VRStorage::save_int_map_cb(map<int, T*>* mt, string tag, bool under, XMLElementPtr e) {
+void VRStorage::save_int_map_cb(map<int, T*>* mt, string tag, bool under, VRStorageCbParams p) {
     if (mt->size() == 0) return;
-    if (under) e = e->addChild(tag);
+    if (under) p.e = p.e->addChild(tag);
     for (auto t : *mt) {
-        auto ei = t.second->saveUnder(e);
+        auto ei = t.second->saveUnder(p.e, p.p);
         if (ei) ei->setAttribute("ID", toString(t.first));
     }
 }
 
 template<typename T>
-void VRStorage::save_int_map2_cb(map<int, T>* mt, string tag, bool under, XMLElementPtr e) {
+void VRStorage::save_int_map2_cb(map<int, T>* mt, string tag, bool under, VRStorageCbParams p) {
     if (mt->size() == 0) return;
-    if (under) e = e->addChild(tag);
+    if (under) p.e = p.e->addChild(tag);
     for (auto t : *mt) {
-        auto ei = e->addChild("e");
+        auto ei = p.e->addChild("e");
         if (ei) {
             ei->setAttribute("ID", toString(t.first));
             ei->setAttribute("data", toString(t.second));
@@ -68,21 +70,21 @@ void VRStorage::save_int_map2_cb(map<int, T>* mt, string tag, bool under, XMLEle
 }
 
 template<typename T>
-void VRStorage::save_int_objmap_cb(map<int, std::shared_ptr<T> >* mt, string tag, bool under, XMLElementPtr e) {
+void VRStorage::save_int_objmap_cb(map<int, std::shared_ptr<T> >* mt, string tag, bool under, VRStorageCbParams p) {
     if (mt->size() == 0) return;
-    if (under) e = e->addChild(tag);
+    if (under) p.e = p.e->addChild(tag);
     for (auto t : *mt) {
-        auto ei = t.second->saveUnder(e);
+        auto ei = t.second->saveUnder(p.e, p.p);
         if (ei) ei->setAttribute("ID", toString(t.first));
     }
 }
 
 template<typename T>
-void VRStorage::save_int_objumap_cb(unordered_map<int, std::shared_ptr<T> >* mt, string tag, bool under, XMLElementPtr e) {
+void VRStorage::save_int_objumap_cb(unordered_map<int, std::shared_ptr<T> >* mt, string tag, bool under, VRStorageCbParams p) {
     if (mt->size() == 0) return;
-    if (under) e = e->addChild(tag);
+    if (under) p.e = p.e->addChild(tag);
     for (auto t : *mt) {
-        auto ei = t.second->saveUnder(e);
+        auto ei = t.second->saveUnder(p.e, p.p);
         if (ei) ei->setAttribute("ID", toString(t.first));
     }
 }
@@ -90,10 +92,10 @@ void VRStorage::save_int_objumap_cb(unordered_map<int, std::shared_ptr<T> >* mt,
 int getID(XMLElementPtr el);
 
 template<typename T>
-void VRStorage::load_int_objmap_cb(map<int, std::shared_ptr<T> >* mt, string tag, bool under, XMLElementPtr e) {
-    if (under) e = e->getChild(tag);
-    if (!e) return;
-    for (auto el : e->getChildren()) {
+void VRStorage::load_int_objmap_cb(map<int, std::shared_ptr<T> >* mt, string tag, bool under, VRStorageCbParams p) {
+    if (under) p.e = p.e->getChild(tag);
+    if (!p.e) return;
+    for (auto el : p.e->getChildren()) {
         int ID = getID(el);
         if (ID < 0) { cout << "VRStorage::load_int_objmap_cb Error: object " << el->getName() << " in map '" << tag << "' has no attribute ID!\n"; return; }
         if (mt->count(ID) == 0) {
@@ -105,10 +107,10 @@ void VRStorage::load_int_objmap_cb(map<int, std::shared_ptr<T> >* mt, string tag
 }
 
 template<typename T>
-void VRStorage::load_int_objumap_cb(unordered_map<int, std::shared_ptr<T> >* mt, string tag, bool under, XMLElementPtr e) {
-    if (under) e = e->getChild(tag);
-    if (!e) return;
-    for (auto el : e->getChildren()) {
+void VRStorage::load_int_objumap_cb(unordered_map<int, std::shared_ptr<T> >* mt, string tag, bool under, VRStorageCbParams p) {
+    if (under) p.e = p.e->getChild(tag);
+    if (!p.e) return;
+    for (auto el : p.e->getChildren()) {
         int ID = getID(el);
         if (ID < 0) { cout << "VRStorage::load_int_objmap_cb Error: object " << el->getName() << " in map '" << tag << "' has no attribute ID!\n"; return; }
         if (mt->count(ID) == 0) {
@@ -120,10 +122,10 @@ void VRStorage::load_int_objumap_cb(unordered_map<int, std::shared_ptr<T> >* mt,
 }
 
 template<typename T>
-void VRStorage::load_str_objmap_cb(map<string, std::shared_ptr<T> >* mt, string tag, bool under, XMLElementPtr e) {
-    if (under) e = e->getChild(tag);
-    if (!e) return;
-    for (auto el : e->getChildren()) {
+void VRStorage::load_str_objmap_cb(map<string, std::shared_ptr<T> >* mt, string tag, bool under, VRStorageCbParams p) {
+    if (under) p.e = p.e->getChild(tag);
+    if (!p.e) return;
+    for (auto el : p.e->getChildren()) {
         string name = el->getName();
         if (el->hasAttribute("base_name")) name = el->getAttribute("base_name");
         auto t = T::create(name);
@@ -135,10 +137,10 @@ void VRStorage::load_str_objmap_cb(map<string, std::shared_ptr<T> >* mt, string 
 }
 
 template<typename T>
-void VRStorage::load_str_objumap_cb(unordered_map<string, std::shared_ptr<T> >* mt, string tag, bool under, XMLElementPtr e) {
-    if (under) e = e->getChild(tag);
-    if (!e) return;
-    for (auto el : e->getChildren()) {
+void VRStorage::load_str_objumap_cb(unordered_map<string, std::shared_ptr<T> >* mt, string tag, bool under, VRStorageCbParams p) {
+    if (under) p.e = p.e->getChild(tag);
+    if (!p.e) return;
+    for (auto el : p.e->getChildren()) {
         string name = el->getName();
         if (el->hasAttribute("base_name")) name = el->getAttribute("base_name");
         auto t = T::create(name);
@@ -150,10 +152,10 @@ void VRStorage::load_str_objumap_cb(unordered_map<string, std::shared_ptr<T> >* 
 }
 
 template<typename T>
-void VRStorage::load_str_map_cb(map<string, T*>* mt, string tag, bool under, XMLElementPtr e) {
-    if (under) e = e->getChild(tag);
-    if (!e) return;
-    for (auto el : e->getChildren()) {
+void VRStorage::load_str_map_cb(map<string, T*>* mt, string tag, bool under, VRStorageCbParams p) {
+    if (under) p.e = p.e->getChild(tag);
+    if (!p.e) return;
+    for (auto el : p.e->getChildren()) {
         string name = el->getName();
         if (el->hasAttribute("base_name")) name = el->getAttribute("base_name");
         T* o = new T(name);
@@ -166,10 +168,10 @@ void VRStorage::load_str_map_cb(map<string, T*>* mt, string tag, bool under, XML
 }
 
 template<typename T>
-void VRStorage::load_int_map_cb(map<int, T*>* mt, string tag, bool under, XMLElementPtr e) {
-    if (under) e = e->getChild(tag);
-    if (!e) return;
-    for (auto el : e->getChildren()) {
+void VRStorage::load_int_map_cb(map<int, T*>* mt, string tag, bool under, VRStorageCbParams p) {
+    if (under) p.e = p.e->getChild(tag);
+    if (!p.e) return;
+    for (auto el : p.e->getChildren()) {
         int ID = getID(el);
         if (mt->count(ID) == 0) {
             T* o = new T();
@@ -180,10 +182,10 @@ void VRStorage::load_int_map_cb(map<int, T*>* mt, string tag, bool under, XMLEle
 }
 
 template<typename T>
-void VRStorage::load_int_map2_cb(map<int, T>* mt, string tag, bool under, XMLElementPtr e) {
-    if (under) e = e->getChild(tag);
-    if (!e) return;
-    for (auto el : e->getChildren()) {
+void VRStorage::load_int_map2_cb(map<int, T>* mt, string tag, bool under, VRStorageCbParams p) {
+    if (under) p.e = p.e->getChild(tag);
+    if (!p.e) return;
+    for (auto el : p.e->getChildren()) {
         int ID = getID(el);
         if (mt->count(ID) == 0) {
             T o;
@@ -194,17 +196,18 @@ void VRStorage::load_int_map2_cb(map<int, T>* mt, string tag, bool under, XMLEle
 }
 
 template<typename T>
-void VRStorage::save_obj_vec_cb(vector<std::shared_ptr<T> >* v, string tag, bool under, XMLElementPtr e) {
-    if (under) e = e->addChild(tag);
-    for (auto t : *v) t->saveUnder(e);
+void VRStorage::save_obj_vec_cb(vector<std::shared_ptr<T> >* v, string tag, bool under, VRStorageCbParams p) {
+    //cout << "storeObjVec " << tag << " " << v->size() << endl;
+    if (under) p.e = p.e->addChild(tag);
+    for (auto t : *v) t->saveUnder(p.e, p.p);
 }
 
 template<typename T>
-void VRStorage::load_obj_vec_cb(vector<std::shared_ptr<T> >* v, string tag, bool under, XMLElementPtr e) {
-    if (e == 0) return;
-    if (under) e = e->getChild(tag);
-    if (e == 0) return;
-    auto children = e->getChildren();
+void VRStorage::load_obj_vec_cb(vector<std::shared_ptr<T> >* v, string tag, bool under, VRStorageCbParams p) {
+    if (p.e == 0) return;
+    if (under) p.e = p.e->getChild(tag);
+    if (p.e == 0) return;
+    auto children = p.e->getChildren();
     bool doReload = (v->size() == children.size());
     for (uint i=0; i<children.size(); i++) {
         auto el = children[i];
@@ -222,32 +225,32 @@ void VRStorage::load_obj_vec_cb(vector<std::shared_ptr<T> >* v, string tag, bool
 }
 
 template<typename T>
-void VRStorage::save_vec_cb(vector<T>* v, string tag, XMLElementPtr e) {
-    e = e->addChild(tag);
+void VRStorage::save_vec_cb(vector<T>* v, string tag, VRStorageCbParams p) {
+    p.e = p.e->addChild(tag);
     for (auto t : *v) {
-        auto e2 = e->addChild("e");
+        auto e2 = p.e->addChild("e");
         e2->setAttribute("val", toString(t));
     }
 }
 
 template<typename T>
-void VRStorage::save_vec_on_cb(vector<T>* v, string tag, XMLElementPtr e) {
-    e = e->addChild(tag);
+void VRStorage::save_vec_on_cb(vector<T>* v, string tag, VRStorageCbParams p) {
+    p.e = p.e->addChild(tag);
     for (auto t : *v) {
         auto sp = t.lock();
         if (sp == 0) continue;
-        auto e2 = e->addChild("e");
+        auto e2 = p.e->addChild("e");
         e2->setAttribute("val", sp->getName());
     }
 }
 
 template<typename T>
-void VRStorage::load_vec_cb(vector<T>* v, string tag, XMLElementPtr e) {
-    if (e == 0) return;
-    e = e->getChild(tag);
-    if (e == 0) return;
+void VRStorage::load_vec_cb(vector<T>* v, string tag, VRStorageCbParams p) {
+    if (p.e == 0) return;
+    p.e = p.e->getChild(tag);
+    if (p.e == 0) return;
     v->clear();
-    for (auto el : e->getChildren()) {
+    for (auto el : p.e->getChildren()) {
         if (!el->hasAttribute("val")) continue;
         T t;
         toValue( el->getAttribute("val"), t);
@@ -256,18 +259,18 @@ void VRStorage::load_vec_cb(vector<T>* v, string tag, XMLElementPtr e) {
 }
 
 template<typename T>
-void VRStorage::save_vec_vec_cb(vector<vector<T>>* v, string tag, XMLElementPtr e) {
-    e = e->addChild(tag);
-    for (auto t : *v) save_vec_cb(&t, tag, e);
+void VRStorage::save_vec_vec_cb(vector<vector<T>>* v, string tag, VRStorageCbParams p) {
+    p.e = p.e->addChild(tag);
+    for (auto t : *v) save_vec_cb(&t, tag, p.e);
 }
 
 template<typename T>
-void VRStorage::load_vec_vec_cb(vector<vector<T>>* v, string tag, XMLElementPtr e) {
-    if (e == 0) return;
-    e = e->getChild(tag);
-    if (e == 0) return;
+void VRStorage::load_vec_vec_cb(vector<vector<T>>* v, string tag, VRStorageCbParams p) {
+    if (p.e == 0) return;
+    p.e = p.e->getChild(tag);
+    if (p.e == 0) return;
     v->clear();
-    for (auto el : e->getChildren()) {
+    for (auto el : p.e->getChildren()) {
         v->push_back(vector<T>());
         vector<T>* vv = &v->at(v->size()-1);
         for (auto el2 : el->getChildren()) {
@@ -280,16 +283,17 @@ void VRStorage::load_vec_vec_cb(vector<vector<T>>* v, string tag, XMLElementPtr 
 }
 
 template<typename T>
-void VRStorage::save_obj_cb(std::shared_ptr<T>* v, string tag, XMLElementPtr e) {
-    if (*v) (*v)->saveUnder(e, 0, tag);
+void VRStorage::save_obj_cb(std::shared_ptr<T>* v, string tag, VRStorageCbParams p) {
+    //cout << " storeObj " << tag << " " << endl;
+    if (*v) (*v)->saveUnder(p.e, p.p, tag);
 }
 
 template<typename T>
-void VRStorage::load_obj_cb(std::shared_ptr<T>* v, string tag, XMLElementPtr e) {
-    e = e->getChild(tag);
-    if (!e) return;
+void VRStorage::load_obj_cb(std::shared_ptr<T>* v, string tag, VRStorageCbParams p) {
+    p.e = p.e->getChild(tag);
+    if (!p.e) return;
     if (!*v) *v = T::create();
-    (*v)->load(e);
+    (*v)->load(p.e);
 }
 
 template<typename T>

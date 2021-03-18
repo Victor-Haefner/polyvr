@@ -39,6 +39,8 @@ class Pose {
         Vec3d scale();
 
         void translate(const Vec3d& p);
+        void move(double x);
+        void rotate(double a, const Vec3d& d);
 
         Matrix4d asMatrix() const;
         void invert();

@@ -8,8 +8,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const VRTexture& t) { return "Texture"; }
-
 VRTexture::VRTexture() { img = Image::create(); }
 VRTexture::VRTexture(ImageMTRecPtr img) { this->img = img; }
 VRTexture::~VRTexture() {}
@@ -341,6 +339,7 @@ Color4f VRTexture::getPixel(int i) {
 }
 
 Vec3i VRTexture::getSize() {
+    if (!img) return Vec3i();
     int w = img->getWidth();
     int h = img->getHeight();
     int d = img->getDepth();

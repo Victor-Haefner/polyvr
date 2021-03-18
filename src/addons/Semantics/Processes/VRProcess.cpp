@@ -9,10 +9,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const VRProcess& o) { return "Process"; }
-template<> string typeName(const VRProcessNode& o) { return "ProcessNode"; }
-template<> string typeName(const VRProcessDiagram& o) { return "ProcessDiagram"; }
-
 
 VRProcessDiagram::VRProcessDiagram() {}
 VRProcessDiagram::~VRProcessDiagram() {}

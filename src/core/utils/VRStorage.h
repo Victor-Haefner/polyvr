@@ -11,7 +11,12 @@
 
 namespace xmlpp{ class Element; }
 
-ptrFctFwd(VRStore, OSG::XMLElementPtr);
+struct VRStorageCbParams {
+    OSG::XMLElementPtr e;
+    int p; // dont add '= 0', wont compile with initialiser list on older compilers..
+};
+
+ptrFctFwd(VRStore, VRStorageCbParams);
 ptrFctFwd(VRStorageFactory, OSG::VRStoragePtr&);
 ptrFctFwd(VRStorage, OSG::VRStorageContextPtr&);
 
@@ -43,36 +48,36 @@ class VRStorage {
 
         template<class T> static void typeFactoryCb(VRStoragePtr& s);
 
-        void save_strstr_map_cb(map<string, string>* t, string tag, XMLElementPtr e);
-        void load_strstr_map_cb(map<string, string>* t, string tag, XMLElementPtr e);
+        void save_strstr_map_cb(map<string, string>* t, string tag, VRStorageCbParams p);
+        void load_strstr_map_cb(map<string, string>* t, string tag, VRStorageCbParams p);
 
-        template<typename T> void save_cb(T* t, string tag, XMLElementPtr e);
-        template<typename T> void save_on_cb(T* t, string tag, XMLElementPtr e);
-        template<typename T> void load_cb(T* t, string tag, XMLElementPtr e);
-        template<typename T> void save_vec_cb(vector<T>* v, string tag, XMLElementPtr e);
-        template<typename T> void load_vec_cb(vector<T>* v, string tag, XMLElementPtr e);
-        template<typename T> void save_vec_vec_cb(vector<vector<T>>* v, string tag, XMLElementPtr e);
-        template<typename T> void load_vec_vec_cb(vector<vector<T>>* v, string tag, XMLElementPtr e);
-        template<typename T> void save_vec_on_cb(vector<T>* v, string tag, XMLElementPtr e);
-        template<typename T> void save_obj_vec_cb(vector<std::shared_ptr<T> >* v, string tag, bool under, XMLElementPtr e);
-        template<typename T> void load_obj_vec_cb(vector<std::shared_ptr<T> >* v, string tag, bool under, XMLElementPtr e);
-        template<typename T> void save_obj_cb(std::shared_ptr<T>* v, string tag, XMLElementPtr e);
-        template<typename T> void load_obj_cb(std::shared_ptr<T>* v, string tag, XMLElementPtr e);
+        template<typename T> void save_cb(T* t, string tag, VRStorageCbParams p);
+        template<typename T> void save_on_cb(T* t, string tag, VRStorageCbParams p);
+        template<typename T> void load_cb(T* t, string tag, VRStorageCbParams p);
+        template<typename T> void save_vec_cb(vector<T>* v, string tag, VRStorageCbParams p);
+        template<typename T> void load_vec_cb(vector<T>* v, string tag, VRStorageCbParams p);
+        template<typename T> void save_vec_vec_cb(vector<vector<T>>* v, string tag, VRStorageCbParams p);
+        template<typename T> void load_vec_vec_cb(vector<vector<T>>* v, string tag, VRStorageCbParams p);
+        template<typename T> void save_vec_on_cb(vector<T>* v, string tag, VRStorageCbParams p);
+        template<typename T> void save_obj_vec_cb(vector<std::shared_ptr<T> >* v, string tag, bool under, VRStorageCbParams p);
+        template<typename T> void load_obj_vec_cb(vector<std::shared_ptr<T> >* v, string tag, bool under, VRStorageCbParams p);
+        template<typename T> void save_obj_cb(std::shared_ptr<T>* v, string tag, VRStorageCbParams p);
+        template<typename T> void load_obj_cb(std::shared_ptr<T>* v, string tag, VRStorageCbParams p);
 
-        template<typename T> void save_str_map_cb(map<string, T*>* mt, string tag, bool under, XMLElementPtr e);
-        template<typename T> void save_int_map_cb(map<int, T*>* mt, string tag, bool under, XMLElementPtr e);
-        template<typename T> void save_int_map2_cb(map<int, T>* mt, string tag, bool under, XMLElementPtr e);
-        template<typename T> void save_str_objmap_cb(map<string, std::shared_ptr<T> >* mt, string tag, bool under, XMLElementPtr e);
-        template<typename T> void save_int_objmap_cb(map<int, std::shared_ptr<T> >* mt, string tag, bool under, XMLElementPtr e);
-        template<typename T> void save_str_objumap_cb(unordered_map<string, std::shared_ptr<T> >* mt, string tag, bool under, XMLElementPtr e);
-        template<typename T> void save_int_objumap_cb(unordered_map<int, std::shared_ptr<T> >* mt, string tag, bool under, XMLElementPtr e);
-        template<typename T> void load_str_map_cb(map<string, T*>* mt, string tag, bool under, XMLElementPtr e);
-        template<typename T> void load_int_map_cb(map<int, T*>* mt, string tag, bool under, XMLElementPtr e);
-        template<typename T> void load_int_map2_cb(map<int, T>* mt, string tag, bool under, XMLElementPtr e);
-        template<typename T> void load_str_objmap_cb(map<string, std::shared_ptr<T> >* mt, string tag, bool under, XMLElementPtr e);
-        template<typename T> void load_int_objmap_cb(map<int, std::shared_ptr<T> >* mt, string tag, bool under, XMLElementPtr e);
-        template<typename T> void load_str_objumap_cb(unordered_map<string, std::shared_ptr<T> >* mt, string tag, bool under, XMLElementPtr e);
-        template<typename T> void load_int_objumap_cb(unordered_map<int, std::shared_ptr<T> >* mt, string tag, bool under, XMLElementPtr e);
+        template<typename T> void save_str_map_cb(map<string, T*>* mt, string tag, bool under, VRStorageCbParams p);
+        template<typename T> void save_int_map_cb(map<int, T*>* mt, string tag, bool under, VRStorageCbParams p);
+        template<typename T> void save_int_map2_cb(map<int, T>* mt, string tag, bool under, VRStorageCbParams p);
+        template<typename T> void save_str_objmap_cb(map<string, std::shared_ptr<T> >* mt, string tag, bool under, VRStorageCbParams p);
+        template<typename T> void save_int_objmap_cb(map<int, std::shared_ptr<T> >* mt, string tag, bool under, VRStorageCbParams p);
+        template<typename T> void save_str_objumap_cb(unordered_map<string, std::shared_ptr<T> >* mt, string tag, bool under, VRStorageCbParams p);
+        template<typename T> void save_int_objumap_cb(unordered_map<int, std::shared_ptr<T> >* mt, string tag, bool under, VRStorageCbParams p);
+        template<typename T> void load_str_map_cb(map<string, T*>* mt, string tag, bool under, VRStorageCbParams p);
+        template<typename T> void load_int_map_cb(map<int, T*>* mt, string tag, bool under, VRStorageCbParams p);
+        template<typename T> void load_int_map2_cb(map<int, T>* mt, string tag, bool under, VRStorageCbParams p);
+        template<typename T> void load_str_objmap_cb(map<string, std::shared_ptr<T> >* mt, string tag, bool under, VRStorageCbParams p);
+        template<typename T> void load_int_objmap_cb(map<int, std::shared_ptr<T> >* mt, string tag, bool under, VRStorageCbParams p);
+        template<typename T> void load_str_objumap_cb(unordered_map<string, std::shared_ptr<T> >* mt, string tag, bool under, VRStorageCbParams p);
+        template<typename T> void load_int_objumap_cb(unordered_map<int, std::shared_ptr<T> >* mt, string tag, bool under, VRStorageCbParams p);
 
     public:
 

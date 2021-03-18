@@ -51,7 +51,6 @@ namespace OSG {
 }
 
 
-template<> string typeName(const FABRIK& k) { return "FABRIK"; }
 
 FABRIK::FABRIK() {}
 FABRIK::~FABRIK() {}

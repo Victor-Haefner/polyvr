@@ -10,8 +10,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const VRGeoPrimitive& t) { return "GeoPrimitive"; }
-
 
 VRGeoPrimitive::VRGeoPrimitive(string name) : VRTransform(name) {
     type = "GeoPrimitive";

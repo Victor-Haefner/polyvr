@@ -13,6 +13,7 @@
 #include "core/utils/VRVisualLayer.h"
 #include "core/utils/VRProgress.h"
 #include "core/utils/xml.h"
+#include "core/utils/system/VRSystem.h"
 #include "core/networking/VRPing.h"
 
 #include "core/objects/VRTransform.h"
@@ -27,8 +28,6 @@
 #include <OpenSG/OSGVisitSubTree.h>
 
 using namespace OSG;
-
-template<> string typeName(const VRSetup& o) { return "Setup"; }
 
 
 VRSetup::VRSetup(string name) {
@@ -251,8 +250,11 @@ void VRSetup::save(string file) {
         s.second->save(e);
     }
 
-    if (file == "") file = path;
-    if (file != "") xml.write(file);
+    if (file != "" && file != path) {
+        path = file;
+        setName( getFileName(file, true) );
+    }
+    xml.write(path);
 }
 
 void VRSetup::load(string file) {

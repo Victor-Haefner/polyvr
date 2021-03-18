@@ -228,7 +228,7 @@ template<> int toValue(stringstream& ss, int& v) { return ssToVal(ss, v); }
 template<> int toValue(stringstream& ss, unsigned int& v) { return ssToVal(ss, v); }
 template<> int toValue(stringstream& ss, long& v) { return ssToVal(ss, v); }
 template<> int toValue(stringstream& ss, unsigned long& v) { return ssToVal(ss, v); }
-template<> int toValue(stringstream& ss, float& v) { return ssToVal(ss, v); }
+template<> int toValue(stringstream& ss, float& v) { double d; auto r = ssToVal(ss, d); v = d; return r; } // use double because stringstreams may fail to convert scientific notations to float
 template<> int toValue(stringstream& ss, double& v) { return ssToVal(ss, v); }
 
 int   toInt  (string s) { return toValue<int  >(s); }

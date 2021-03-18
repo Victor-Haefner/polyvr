@@ -4,8 +4,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const VRMeasure& t) { return "Measure"; }
-
 
 VRMeasure::VRMeasure(string name) : VRAnalyticGeometry(name) {
     setLabelParams(0.05, true, true);

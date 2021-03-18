@@ -12,31 +12,33 @@
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/geometry/VRGeoData.h"
 #include "core/objects/geometry/VRStroke.h"
-#ifndef WITHOUT_BULLET
-#include "core/objects/geometry/VRSpatialCollisionManager.h"
-#endif
 #include "core/objects/material/VRMaterial.h"
+#include "core/objects/material/VRTexture.h"
 #include "core/objects/VRLodTree.h"
 #include "core/scene/VRObjectManager.h"
 #include "core/utils/toString.h"
+#include "core/utils/system/VRSystem.h"
 #include "core/utils/VRFunction.h"
 #include "core/utils/zipper/filesystem.h"
 #include "core/math/path.h"
+#include "addons/Semantics/Reasoning/VROntology.h"
+
+
+#ifndef WITHOUT_BULLET
+#include "core/objects/geometry/VRSpatialCollisionManager.h"
+#endif
+
 #ifndef WITHOUT_GLU_TESS
 #include "core/math/triangulator.h"
 #endif
-#include "addons/Semantics/Reasoning/VROntology.h"
+
 #ifndef WITHOUT_GDAL
 #include "core/scene/import/GIS/VRGDAL.h"
 #endif
-#include "core/objects/material/VRTexture.h"
 
 #define GLSL(shader) #shader
 
 using namespace OSG;
-
-template<> string typeName(const VRWorldGenerator& t) { return "WorldGenerator"; }
-template<> string typeName(const VRWorldGenerator::VRUserGenCb& t) { return "WorldGenerator Callback"; }
 
 
 VRWorldGenerator::VRWorldGenerator() : VRTransform("WorldGenerator") {}
@@ -232,7 +234,7 @@ OSMMapPtr VRWorldGenerator::getOSMMap() { return osmMap; }
 
 OSMMapPtr VRWorldGenerator::getGMLMap() { return gmlMap; }
 
-void VRWorldGenerator::addTerrainsToLOD(){
+void VRWorldGenerator::addTerrainsToLOD() {
     cout << "VRWorldGenerator::addTerrainsToLOD" << endl;
     //auto nLevel = lodLevels.size();
     auto nTerrains = terrains.size();
@@ -275,9 +277,7 @@ void VRWorldGenerator::setupLODTerrain(string pathMap, string pathPaint, float s
     string pathPaint1 = genPath(pathPaint, "_1", ".png");
     string pathPaint2 = genPath(pathPaint, "_2", ".png");
 
-    //cout << " newPathes: " << pathMap1 << endl;
-    //cout << " newPathes: " << pathMap2 << endl;
-    if ( FILESYSTEM::exist(pathMap1) && cache ) {
+    if ( exists(pathMap1) && cache ) {
         tex1 = loadGeoRasterData(pathMap1, false);
     } else {
         cout << "VRWorldGenerator::setupLODTerrain creating new downsized texture lvl1 at " << pathMap1 << endl;
@@ -289,7 +289,7 @@ void VRWorldGenerator::setupLODTerrain(string pathMap, string pathPaint, float s
         geoTransform[1] *= 2;
         writeGeoRasterData(pathMap1, tex1, geoTransform, params);
     }
-    if ( FILESYSTEM::exist(pathMap2) && cache ) {
+    if ( exists(pathMap2) && cache ) {
         tex2 = loadGeoRasterData(pathMap2, false);
     } else {
         cout << "VRWorldGenerator::setupLODTerrain creating new downsized texture lvl2 at " << pathMap2 << endl;
@@ -302,14 +302,14 @@ void VRWorldGenerator::setupLODTerrain(string pathMap, string pathPaint, float s
         geoTransform[1] *= 4;
         writeGeoRasterData(pathMap2, tex2, geoTransform, params2);
     }
-    if ( !FILESYSTEM::exist(pathPaint1) || !cache ) {
+    if ( !exists(pathPaint1) || !cache ) {
         cout << "VRWorldGenerator::setupLODTerrain creating new downsized sat texture lvl1 at " << pathPaint1 << endl;
         VRTexturePtr dsSatImg1 = VRTexture::create();
         dsSatImg1->read(pathPaint);
         dsSatImg1->downsize();
         dsSatImg1->write(pathPaint1);
     }
-    if ( !FILESYSTEM::exist(pathPaint2) || !cache ) {
+    if ( !exists(pathPaint2) || !cache ) {
         cout << "VRWorldGenerator::setupLODTerrain creating new downsized sat texture lvl2 at " << pathPaint2 << endl;
         VRTexturePtr dsSatImg2 = VRTexture::create();
         dsSatImg2->read(pathPaint);
@@ -320,13 +320,14 @@ void VRWorldGenerator::setupLODTerrain(string pathMap, string pathPaint, float s
 
     auto addTerrain = [&](double fac, int a) {
         auto terrain = VRTerrain::create("terrain"+toString(fac));
+
         fac*=0.8;
         terrain->setParameters (terrainSize, 2/fac, 1);
         VRTexturePtr texSc = tex;
         string satImg = pathPaint;
         if (a == 1) { texSc = tex1; satImg = pathPaint1; }
         if (a == 2) { texSc = tex2; satImg = pathPaint2; }
-        if ( !FILESYSTEM::exist(pathPaint2) ) satImg = pathPaint;
+        if ( !exists(pathPaint2) ) satImg = pathPaint;
     //if (mixAmount > 0) texSc->mixColor(mixColor, mixAmount);
         terrain->paintHeights( satImg, mixColor, mixAmount );
         //terrain->paintHeights( satImg, Color4f(1,0,1,1), 0.5 );
@@ -340,6 +341,8 @@ void VRWorldGenerator::setupLODTerrain(string pathMap, string pathPaint, float s
     addTerrain(1.0, 0);
     addTerrain(0.5, 1);
     addTerrain(0.05, 2);
+
+    addTerrainsToLOD();
 #endif
 }
 

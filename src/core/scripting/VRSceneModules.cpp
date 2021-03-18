@@ -90,7 +90,6 @@
 #include "addons/Engineering/Factory/VRPyAMLLoader.h"
 #include "addons/Engineering/Mechanics/VRPyMechanism.h"
 #include "addons/Engineering/Machining/VRPyMachining.h"
-#include "addons/Engineering/VRPyNumberingEngine.h"
 #include "addons/Semantics/Segmentation/VRPySegmentation.h"
 #include "addons/Semantics/Segmentation/VRPyAdjacencyGraph.h"
 #include "addons/Semantics/Processes/VRPyProcess.h"
@@ -98,7 +97,7 @@
 #include "addons/Engineering/Milling/VRPyMillingMachine.h"
 #include "addons/Engineering/Milling/VRPyMillingWorkPiece.h"
 #include "addons/Engineering/Milling/VRPyMillingCuttingToolProfile.h"
-#include "addons/Engineering/VRPyRobotArm.h"
+#include "addons/Engineering/VRPyEngineering.h"
 #include "addons/WorldGenerator/VRPyWorldGenerator.h"
 #include "addons/WorldGenerator/nature/VRPyNature.h"
 #include "addons/WorldGenerator/terrain/VRPyTerrain.h"
@@ -261,6 +260,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyMolecule>("Molecule", pModVR, VRPyGeometry::typeRef);
     sm->registerModule<VRPyCrystal>("Crystal", pModVR, VRPyMolecule::typeRef);
     sm->registerModule<VRPyRobotArm>("RobotArm", pModVR);
+    sm->registerModule<VRPyPipeSystem>("PipeSystem", pModVR, VRPyGeometry::typeRef);
     sm->registerModule<VRPyOntology>("Ontology", pModVR, VRPyName::typeRef);
     sm->registerModule<VRPyProcess>("Process", pModVR, VRPyName::typeRef);
     sm->registerModule<VRPyProcessNode>("ProcessNode", pModVR, VRPyName::typeRef);
@@ -283,7 +283,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPySpreadsheet>("Spreadsheet", pModVR);
 
 #ifndef WITHOUT_CGAL
-	sm->registerModule<VRPyCSG>("CSGGeometry", pModVR, VRPyGeometry::typeRef);
+	sm->registerModule<VRPyCSGGeometry>("CSGGeometry", pModVR, VRPyGeometry::typeRef);
 #endif
 	sm->registerModule<VRPySimViDekont>("SimViDekont", pModVR);
 
@@ -317,6 +317,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyDistrict>("District", pModWorldGenerator, 0, "WorldGenerator");
     sm->registerModule<VRPyMapManager>("MapManager", pModVR, 0, "WorldGenerator");
     sm->registerModule<VRPyAtlas>("Atlas", pModVR, 0, "WorldGenerator");
+    sm->registerModule<VRPyMapDescriptor>("MapDescriptor", pModVR, 0, "WorldGenerator");
     sm->registerModule<VRPyOSMMap>("OSMMap", pModVR, 0, "WorldGenerator");
     sm->registerModule<VRPyOSMRelation>("OSMRelation", pModVR, VRPyOSMBase::typeRef, "WorldGenerator");
     sm->registerModule<VRPyOSMWay>("OSMWay", pModVR, VRPyOSMBase::typeRef, "WorldGenerator");

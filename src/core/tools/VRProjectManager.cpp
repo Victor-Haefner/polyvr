@@ -8,8 +8,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const VRProjectManager& t) { return "ProjectManager"; }
-
 
 VRProjectManager::VRProjectManager() : VRObject("ProjectManager") {
     storage.storeMap("settings", settings);

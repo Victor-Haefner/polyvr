@@ -12,6 +12,8 @@
 
 using namespace OSG;
 
+template<> string typeName(const VRWorldGenerator::OsmEntity& e) { return "OsmEntity"; }
+
 template<> PyObject* VRPyTypeCaster::cast(const VRWorldGenerator::OsmEntity& e) {
     PyObject* epy = PyTuple_New(2);
     PyTuple_SetItem(epy, 0, VRPyTypeCaster::cast(e.pnts));
@@ -37,9 +39,6 @@ simpleVRPyType(RoadNetwork, New_ptr);
 simpleVRPyType(District, New_ptr);
 simpleVRPyType(Asphalt, New_ptr);
 simpleVRPyType(TrafficSigns, New_ptr);
-
-simpleVRPyType(MapManager, New_ptr);
-
 simpleVRPyType(Atlas, New_ptr);
 
 simplePyType(OSMMap, New_ptr);
@@ -220,15 +219,6 @@ PyMethodDef VRPyAtlas::methods[] = {
     {"setDebug", PyWrap( Atlas, setDebug, "toggling debug mode", void, bool ) },
     {NULL}  /* Sentinel */
 };
-
-PyMethodDef VRPyMapManager::methods[] = {
-    {"setServer", PyWrap( MapManager, setServer, "Set server address", void, string ) },
-    {"setVault", PyWrap( MapManager, setVault, "Set local path to store map files", void, string ) },
-    {"getMap", PyWrap( MapManager, getMap, "Get map file path, retreives file from server if necessary, async if given a callback 'def cb(str):', (N, E, S, callback)", string, double, double, double, VRMessageCbPtr ) },
-    {NULL}  /* Sentinel */
-};
-
-
 
 
 

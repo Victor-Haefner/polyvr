@@ -1,4 +1,4 @@
-#include "VRPyRobotArm.h"
+#include "VRPyEngineering.h"
 #include "core/scripting/VRPyBaseT.h"
 #include "core/scripting/VRPyTypeCaster.h"
 #include "core/scripting/VRPyGeometry.h"
@@ -6,7 +6,31 @@
 
 using namespace OSG;
 
+simpleVRPyType(NumberingEngine, New_VRObjects_ptr);
 simpleVRPyType(RobotArm, New_named_ptr);
+simpleVRPyType(PipeSystem, New_ptr);
+
+PyMethodDef VRPyPipeSystem::methods[] = {
+    {"addNode", PyWrap( PipeSystem, addNode, "Add node, type can be [Tank, Valve, Outlet, Pump]", int, string, PosePtr, string, map<string, string> ) },
+    {"addSegment", PyWrap( PipeSystem, addSegment, "Add segment between nodes (radius, n1, n2)", int, double, int, int ) },
+    {"setDoVisual", PyWrap( PipeSystem, setDoVisual, "Enable visual", void, bool ) },
+    {"getNode", PyWrap( PipeSystem, getNode, "Get node ID by name", int, string ) },
+    {"getSegment", PyWrap( PipeSystem, getSegment, "Get segment ID by its node IDs", int, int, int ) },
+    {"getSegmentPressure", PyWrap( PipeSystem, getSegmentPressure, "Get segment pressure", double, int ) },
+    {"getTankPressure", PyWrap( PipeSystem, getTankPressure, "Get tank pressure", double, string ) },
+    {"getPump", PyWrap( PipeSystem, getPump, "Get pump performance", double, string ) },
+    {"setPump", PyWrap( PipeSystem, setPump, "Set pump performance", void, string, double ) },
+    {"setValve", PyWrap( PipeSystem, setValve, "Set valve state", void, string, bool ) },
+    {"setTankPressure", PyWrap( PipeSystem, setTankPressure, "Set tank pressure", void, string, double ) },
+    {"printSystem", PyWrap( PipeSystem, printSystem, "Print system state to console", void ) },
+    {NULL}
+};
+
+PyMethodDef VRPyNumberingEngine::methods[] = {
+    {"set", PyWrapOpt( NumberingEngine, set, "Set number: ID, pos, number, decimal places, groupID", "2|0", void, int, Vec3d, float, int, int ) },
+    {"clear", PyWrap( NumberingEngine, clear, "Clear numbers", void ) },
+    {NULL}
+};
 
 PyMethodDef VRPyRobotArm::methods[] = {
     {"showAnalytics", PyWrap(RobotArm, showAnalytics, "Shows a visualization of the analytic model", void, bool ) },

@@ -9,6 +9,12 @@
 #include "VRSoundFwd.h"
 #include "core/utils/VRFunctionFwd.h"
 
+class AVPacket;
+class AVCodecContext;
+class AVFormatContext;
+
+typedef signed char ALbyte;
+
 using namespace std;
 OSG_BEGIN_NAMESPACE;
 
@@ -40,6 +46,7 @@ class VRSound {
         Vec3d* vel;
 
         void playBuffer(vector<short>& buffer, int sample_rate);
+        void updateSampleAndFormat();
 
     public:
         VRSound();
@@ -49,16 +56,19 @@ class VRSound {
         void setPath(string path);
         void setLoop(bool loop);
         void setPitch(float pitch);
-        void setGain(float gain);
+        void setVolume(float gain);
         void setUser(Vec3d p, Vec3d v);
         void setCallback(VRUpdateCbPtr callback);
 
         bool isRunning();
         int getState();
         string getPath();
+        void checkSource();
 
         void play();
         void stop();
+        void pause();
+        void resume();
         void close();
         void reset();
         void updateSource();
@@ -69,6 +79,10 @@ class VRSound {
         int getQueuedBuffer();
         void recycleBuffer();
         unsigned int getFreeBufferID();
+        void initWithCodec(AVCodecContext* codec);
+        vector<pair<ALbyte*, int>> extractPacket(AVPacket* packet);
+        void queueFrameData(ALbyte* frameData, int data_size);
+        void queuePacket(AVPacket* packet);
 
         // carrier amplitude, carrier frequency, carrier phase, modulation amplitude, modulation frequency, modulation phase, packet duration
         void synthesize(float Ac = 32760, float wc = 440, float pc = 0, float Am = 0, float wm = 0, float pm = 0, float T = 1);

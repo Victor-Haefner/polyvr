@@ -96,18 +96,26 @@ bool VRGtkWindow::on_render(GdkGLContext* glcontext) {
     //glEnable(GL_BLEND);
     //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_MULTISAMPLE);
-
     glClearColor(0.2, 0.2, 0.2, 1.0);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     VRTimer t1; t1.start();
     if (active && content) {
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
 #ifndef WITHOUT_OPENVR
         if (hmd) hmd->render();
 #endif
         //cout << "   VRGtkWindow::on_render win" << endl;
         win->render(ract);
         //cout << "   VRGtkWindow::on_render win done" << endl;
+    } else {
+        auto clipping = gl_area_get_clipping(GL_AREA(widget));
+        double Y = clipping.H-clipping.y-clipping.h;
+
+        glEnable(GL_SCISSOR_TEST);
+        glScissor(clipping.x, Y, clipping.w, clipping.h);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glDisable(GL_SCISSOR_TEST);
     }
     VRGlobals::RENDER_FRAME_RATE.update(t1);
 

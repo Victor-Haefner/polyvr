@@ -16,8 +16,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const VRTextureGenerator& o) { return "TextureGenerator"; }
-
 
 VRTextureGenerator::VRTextureGenerator() {}
 VRTextureGenerator::~VRTextureGenerator() {}

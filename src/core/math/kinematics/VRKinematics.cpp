@@ -7,7 +7,7 @@
 #include "core/math/pose.h"
 
 using namespace OSG;
-template<> string typeName(const VRKinematics& k) { return "VRKinematics"; }
+
 /**
 Kinematics structure
 

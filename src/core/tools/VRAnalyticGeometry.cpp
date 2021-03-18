@@ -13,8 +13,6 @@
 
 using namespace OSG;
 
-template<> string typeName(const VRAnalyticGeometry& t) { return "AnalyticGeometry"; }
-
 VRAnalyticGeometry::VRAnalyticGeometry(string name) : VRTransform(name) {
     ae = VRAnnotationEngine::create();
     vectorLinesGeometry = VRGeometry::create("AGLines");

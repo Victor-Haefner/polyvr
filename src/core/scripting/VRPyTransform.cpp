@@ -123,7 +123,7 @@ PyMethodDef VRPyTransform::methods[] = {
     {"setPhysicsActivationMode", PyWrap(Transform, setPhysicsActivationMode, "Set the physics activation mode of the physics object (normal:1 , no deactivation:4, stay deactivated: 5)", void, int ) },
     {"setPhysicalizeTree", PyWrap(Transform, setPhysicalizeTree, "Set to physicalize whole tree or just current node - setPhysicalizeTree( bool b )", void, bool ) },
     {"setGravity", PyWrap(Transform, setGravity, "set Gravity (Vector) of given physicalized object", void, Vec3d ) },
-    {"setDamping", PyWrap(Transform, setDamping, "sets the damping of this object. 1st param is the linear, 2nd the angular damping", void, float, float ) },
+    {"setDamping", PyWrapOpt(Transform, setDamping, "sets the damping of this object. (linear, angular, fast = False)", "0", void, float, float, bool ) },
     {"setCenterOfMass", PyWrap(Transform, setCenterOfMass, "Set a custom physics center of mass offset", void, Vec3d ) },
     {"getCenterOfMass", PyWrap(Transform, getCenterOfMass, "get physics center of mass offset", Vec3d ) },
     {"getPhysicsDynamic", PyWrap(Transform, getPhysicsDynamic, "get if dynamic physics object", bool ) },
