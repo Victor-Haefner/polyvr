@@ -219,10 +219,10 @@ void VRTerrain::updateTexelSize() {
 }
 
 void VRTerrain::curveMesh(VRPlanetPtr p, Vec2d c, PosePtr s) {
-    setLocalized(true);
-    VRPlanetWeakPtr planet = p;
-    Vec2d planetCoords = c;
-    PosePtr pSectorInv = s;
+    localMesh = true;
+    planet = p;
+    planetCoords = c;
+    pSectorInv = s;
 }
 
 void VRTerrain::setupGeo() {
@@ -240,10 +240,10 @@ void VRTerrain::setupGeo() {
     //cout << toString(gridN) << "-- "  << toString(size) << "-- "  << toString(texel) << "-- "  << toString(tcChunk) << "-- "  << toString(texSize) << endl;
 
 	VRGeoData geo;
-    auto planet = this->planet.lock();
-	if (localMesh && planet) {
+    auto pla = planet.lock();
+	if (localMesh && pla) {
         mat->setShaderParameter("local",1);
-        double sectorSize = planet->getSectorSize();
+        double sectorSize = pla->getSectorSize();
 
         int t1 = 0;
         int t2 = 0;
@@ -252,9 +252,13 @@ void VRTerrain::setupGeo() {
 
         auto getPose = [&](int i, int j) {
             if (cache.count(Vec2i(i,j))) return cache[Vec2i(i,j)];
-            auto p = planet->fromLatLongPose(planetCoords[0]+sectorSize*(1.0-double(j)/double(gridN[1])), planetCoords[2]+i*sectorSize/gridN[0]);
+            double N = planetCoords[0]+sectorSize*(1.0-double(j)/double(gridN[1]));
+            double E = planetCoords[1]+i*sectorSize/gridN[0];
+            auto p = pla->fromLatLongPose(N, E);
             p = pSectorInv->multRight(p);
             cache[Vec2i(i,j)] = p;
+            //if (i == 0) pla->addPin( "", N, E, 1000);
+            //cout << "  VRTerrain::setupGeo add pin " << N << " " << E << " " << pla->getName() << endl;
             return p;
         };
 
@@ -273,10 +277,10 @@ void VRTerrain::setupGeo() {
                 auto pI1J1 = getPose(i+1,j+1);
                 auto pI1J0 = getPose(i+1,j);
 
-                geo.pushVert(pI0J0->pos(), pI0J0->up(), Vec2d(tcx1,tcy1));
-                geo.pushVert(pI0J1->pos(), pI0J1->up(), Vec2d(tcx1,tcy2));
-                geo.pushVert(pI1J1->pos(), pI1J1->up(), Vec2d(tcx2,tcy2));
-                geo.pushVert(pI1J0->pos(), pI1J0->up(), Vec2d(tcx2,tcy1));
+                geo.pushVert(pI0J0->pos()*0.1, pI0J0->up(), Vec2d(tcx1,tcy1));
+                geo.pushVert(pI0J1->pos()*0.1, pI0J1->up(), Vec2d(tcx1,tcy2));
+                geo.pushVert(pI1J1->pos()*0.1, pI1J1->up(), Vec2d(tcx2,tcy2));
+                geo.pushVert(pI1J0->pos()*0.1, pI1J0->up(), Vec2d(tcx2,tcy1));
                 geo.pushQuad();
             }
         }
@@ -306,7 +310,10 @@ void VRTerrain::setupGeo() {
         }
 	}
 
-    if (geo.size() > 0) geo.apply(ptr());
+    if (geo.size() > 0) {
+        //cout << "  VRTerrain::setupGeo apply geo!! " << geo.size() << "  grid: " << gridN << endl;
+        geo.apply(ptr());
+    }
 
 #if __EMSCRIPTEN__// TODO: directly create triangles above!
     convertToTriangles();
