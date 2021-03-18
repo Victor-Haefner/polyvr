@@ -65,6 +65,7 @@ class VRPlanet : public VRTransform {
         PosePtr fromLatLongElevationPose(double north, double east, double elevation, bool local = false, bool sectorLocal = false );
 
         double getRadius();
+        double getSectorSize();
         Vec2d getSurfaceUV(double north, double east);
         //double getSurfaceHeight(double north, double east);
         PosePtr getSurfacePose(double north, double east, bool local = false, bool sectorLocal = false );

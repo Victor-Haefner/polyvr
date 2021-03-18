@@ -217,6 +217,42 @@ void VRTerrain::updateTexelSize() {
 	mat->setShaderParameter("texelSize", texelSize);
 }
 
+void VRTerrain::curveMesh(VRPlanetPtr planet, Vec2d coords, PosePtr p, PosePtr newPinv) {
+    auto grid = getGrid();
+    auto size = getSize();
+    setLocalized(true);
+    Vec2i gridN = Vec2i(round(size[0]*1.0/grid-0.5), round(size[1]*1.0/grid-0.5));
+    if (gridN[0] < 1) gridN[0] = 1;
+    if (gridN[1] < 1) gridN[1] = 1;
+    vector<vector<vector<Vec3d>>> completeMesh;
+
+    double sectorSize = planet->getSectorSize();
+
+    int t1 = 0;
+    int t2 = 0;
+    for (int i =0; i <= gridN[1]; i++) {
+        vector<vector<Vec3d>> row;
+        t1++;
+        t2 = 0;
+        for (int j =0; j <= gridN[0]; j++) {
+            t2++;
+            vector<Vec3d> posNorm;
+            //Vertex conversion from global to local patch coordinates
+            auto poseVertexGlobal = planet->fromLatLongPose(coords[0]+sectorSize*(1.0-double(i)/double(gridN[1])), coords[2]+j*sectorSize/gridN[0]);
+            auto poseVertexOrigin = p->multRight(poseVertexGlobal);
+            auto poseVertexLocalInPatch = newPinv->multRight(poseVertexOrigin);
+            auto posVertexLocalInPatch = poseVertexLocalInPatch->pos();
+            auto upVertexLocalInPatch = poseVertexLocalInPatch->up();
+            posNorm.push_back(posVertexLocalInPatch);
+            posNorm.push_back(upVertexLocalInPatch);
+            row.push_back(posNorm);
+        }
+        completeMesh.push_back(row);
+    }
+    cout << "n,e ___: " << t1 << " -- " << t2 << " " << grid << " " << size << endl;
+    setMeshTer(completeMesh);
+}
+
 void VRTerrain::setupGeo() {
     Vec2i gridN = Vec2i(round(size[0]*1.0/grid-0.5), round(size[1]*1.0/grid-0.5));
     if (gridN[0] < 1) gridN[0] = 1;
@@ -230,21 +266,15 @@ void VRTerrain::setupGeo() {
     Vec2d texel = Vec2d( 1.0/texSize[0], 1.0/texSize[1] );
 	Vec2d tcChunk = Vec2d((1.0-texel[0])/gridN[0], (1.0-texel[1])/gridN[1]);
     //cout << toString(gridN) << "-- "  << toString(size) << "-- "  << toString(texel) << "-- "  << toString(tcChunk) << "-- "  << toString(texSize) << endl;
-	//VRGeoData geo;
-	if (localMesh){
+
+	VRGeoData geo;
+	if (localMesh) {
         mat->setShaderParameter("local",1);
-        if (meshTer.size()>0){
-            VRGeoData geo;
+        if (meshTer.size() > 0) {
             int t1 = 0;
             int t2 = 0;
 
-            //texel = Vec2d( 1.0/(meshTer[0].size()-1), 1.0/(meshTer.size()-1) );
             tcChunk = Vec2d((1.0-texel[0])/(meshTer[0].size()-1), (1.0-texel[1])/(meshTer.size()-1));
-
-            //cout << "n,e TEX: " << gridN[1] << " -- " << gridN[0] << endl;
-            //cout << "n,e Mes: " << meshTer.size() << " -- " << meshTer[0].size() << endl;
-            //auto nN = meshTer.size()+1;
-            //auto nE = meshTer[0].size();
             for (unsigned int i=0; i+1 < meshTer[0].size(); i++) {
                 t1++;
                 t2 = 0;
@@ -252,24 +282,18 @@ void VRTerrain::setupGeo() {
                 double tcx2 = tcx1 + tcChunk[0];
                 for (unsigned int j =0; j+1 < meshTer.size(); j++) {
                     t2++;
-                    //cout << meshTer[a][b] ;
                     double tcy1 = texel[1]*0.5 + j*tcChunk[1];
                     double tcy2 = tcy1 + tcChunk[1];
-                    //auto n = (meshTer[nN-j][i+1]-meshTer[nN-j][i]).cross(meshTer[nN-(j+1)][i+1]-meshTer[nN-j][i]);
-                    //auto n = Vec3d(0,1,0);
                     geo.pushVert(meshTer[j][i][0], meshTer[j][i][1], Vec2d(tcx1,tcy1));
                     geo.pushVert(meshTer[j+1][i][0], meshTer[j+1][i][1], Vec2d(tcx1,tcy2));
                     geo.pushVert(meshTer[j+1][i+1][0], meshTer[j+1][i+1][1], Vec2d(tcx2,tcy2));
                     geo.pushVert(meshTer[j][i+1][0], meshTer[j][i+1][1], Vec2d(tcx2,tcy1));
                     geo.pushQuad();
                 }
-                //cout << endl;
             }
-            //cout << "n,e STE: " << t2 << " -- " << t1 << endl;
             geo.apply(ptr());
         }
 	} else {
-        VRGeoData geo;
         int old1 = 0;
         int old2 = 0;
         for (int i =0; i < gridN[0]; i++) {
@@ -291,13 +315,11 @@ void VRTerrain::setupGeo() {
                 geo.pushVert(Vec3d(px2,0,py2), Vec3d(0,1,0), Vec2d(tcx2,tcy2));
                 geo.pushVert(Vec3d(px2,0,py1), Vec3d(0,1,0), Vec2d(tcx2,tcy1));
                 geo.pushQuad();
-                //cout << toString(px1) << "|" << toString(py1) << " ## " << toString(px2) << "|" << toString(py2) << endl;
-                //if (tx1 < 0.01) cout << toString(px1) << "|" << toString(py1) << endl;
             }
         }
-        //cout << "n,e OLD: " << old2 << " -- " << old1 << endl;
         geo.apply(ptr());
 	}
+
 #if __EMSCRIPTEN__// TODO: directly create triangles above!
     convertToTriangles();
 #else

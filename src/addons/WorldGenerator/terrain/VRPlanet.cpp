@@ -35,6 +35,8 @@ void VRPlanet::setInclination(double I) { inclination = I; }
 double VRPlanet::getRotation() { return rotation; }
 double VRPlanet::getInclination() { return inclination; }
 
+double VRPlanet::getSectorSize() { return sectorSize; }
+
 void VRPlanet::addMoon(VRTransformPtr t) { moons.push_back(t); }
 vector<VRTransformPtr> VRPlanet::getMoons() { return moons; }
 
@@ -50,40 +52,8 @@ void VRPlanet::localizeSector(VRWorldGeneratorPtr sector) {
     auto newPinv = newP;
     newPinv->invert();
 
-    for (auto terrain : sector->getTerrains()){
-        auto grid = terrain->getGrid();
-        //auto fac = terrain->getLODFactor();
-        auto size = terrain->getSize();
-        terrain->setLocalized(true);
-        Vec2i gridN = Vec2i(round(size[0]*1.0/grid-0.5), round(size[1]*1.0/grid-0.5));
-        //cout << " terrain " << grid << " " << size << endl;
-        if (gridN[0] < 1) gridN[0] = 1;
-        if (gridN[1] < 1) gridN[1] = 1;
-        vector<vector<vector<Vec3d>>> completeMesh;
-
-        int t1 = 0;
-        int t2 = 0;
-        for (int i =0; i <= gridN[1]; i++) {
-            vector<vector<Vec3d>> row;
-            t1++;
-            t2 = 0;
-            for (int j =0; j <= gridN[0]; j++) {
-                t2++;
-                vector<Vec3d> posNorm;
-                //Vertex conversion from global to local patch coordinates
-                auto poseVertexGlobal = fromLatLongPose(sector->getPlanetCoords()[0]+sectorSize*(1.0-double(i)/double(gridN[1])), sector->getPlanetCoords()[1]+j*sectorSize/gridN[0]);
-                auto poseVertexOrigin = p->multRight(poseVertexGlobal);
-                auto poseVertexLocalInPatch = newPinv->multRight(poseVertexOrigin);
-                auto posVertexLocalInPatch = poseVertexLocalInPatch->pos();
-                auto upVertexLocalInPatch = poseVertexLocalInPatch->up();
-                posNorm.push_back(posVertexLocalInPatch);
-                posNorm.push_back(upVertexLocalInPatch);
-                row.push_back(posNorm);
-            }
-            completeMesh.push_back(row);
-        }
-        cout << "n,e ___: " << t1 << " -- " << t2 << " " << grid << " " << size << endl;
-        terrain->setMeshTer(completeMesh);
+    for (auto terrain : sector->getTerrains()) {
+        terrain->curveMesh(ptr(), sector->getPlanetCoords(), p, newPinv);
         terrain->setupGeo();
     }
 }
