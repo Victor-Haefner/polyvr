@@ -316,6 +316,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyTrafficSigns>("TrafficSigns", pModWorldGenerator, VRPyRoadBase::typeRef, "WorldGenerator");
     sm->registerModule<VRPyDistrict>("District", pModWorldGenerator, 0, "WorldGenerator");
     sm->registerModule<VRPyMapManager>("MapManager", pModVR, 0, "WorldGenerator");
+    sm->registerModule<VRPyAtlas>("Atlas", pModVR, 0, "WorldGenerator");
     sm->registerModule<VRPyMapDescriptor>("MapDescriptor", pModVR, 0, "WorldGenerator");
     sm->registerModule<VRPyOSMMap>("OSMMap", pModVR, 0, "WorldGenerator");
     sm->registerModule<VRPyOSMRelation>("OSMRelation", pModVR, VRPyOSMBase::typeRef, "WorldGenerator");

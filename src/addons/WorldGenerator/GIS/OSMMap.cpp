@@ -1036,15 +1036,15 @@ void OSMMap::readSHAPE(string path) {
 #endif // WITHOUT_GDAL
 }
 
-Vec2d OSMMap::convertGKtoLatLon(double northing, double easting, int EPSG_Code) {
+Vec2d OSMMap::convertCoords(double northing, double easting, int EPSG_Code_in, int EPSG_Code_out) {
     checkGDAL();
 #ifndef WITHOUT_GDAL
 #if GDAL_VERSION_NUM >= GDAL_COMPUTE_VERSION(2,0,0)
     GDALAllRegister();
     OGRSpatialReference source, target;
 
-    source.importFromEPSG(EPSG_Code);
-    target.importFromEPSG(4326);
+    source.importFromEPSG(EPSG_Code_in);
+    target.importFromEPSG(EPSG_Code_out); //4326 is lat lon
 
     OGRPoint p;
     p.setX(easting);
@@ -1182,7 +1182,7 @@ void OSMMap::readGML(string path, int EPSG_Code) {
                     for (auto eachPoint : eachPoly) {
                         nodeID++;
                         string strNID = to_string(nodeID);
-                        Vec2d latlon = convertGKtoLatLon(eachPoint[0], eachPoint[1], EPSG_Code);
+                        Vec2d latlon = convertCoords(eachPoint[0], eachPoint[1], EPSG_Code, EPSG_LATLON);
                         OSMNodePtr node = OSMNodePtr( new OSMNode(strNID, latlon[0], latlon[1] ) );
                         refsForWays.push_back(strNID);
                         nodes[node->id] = node;

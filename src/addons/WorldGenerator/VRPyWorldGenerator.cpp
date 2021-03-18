@@ -39,6 +39,7 @@ simpleVRPyType(RoadNetwork, New_ptr);
 simpleVRPyType(District, New_ptr);
 simpleVRPyType(Asphalt, New_ptr);
 simpleVRPyType(TrafficSigns, New_ptr);
+simpleVRPyType(Atlas, New_ptr);
 
 simplePyType(OSMMap, New_ptr);
 simplePyType(OSMRelation, 0);
@@ -87,7 +88,7 @@ PyMethodDef VRPyOSMMap::methods[] = {
     {"readGEOJSON", PyWrap2( OSMMap, readGEOJSON, "reads a GEOJSON file and makes a readable OSM object", void, string ) },
     //{"readSHAPE", PyWrap2( OSMMap, readSHAPE, "reads a SHAPE file and makes a readable OSM object", void, string ) },
     {"readGML", PyWrapOpt2( OSMMap, readGML, "reads a GML file and makes a readable OSM object - input: path to file, EPSG Code", "31467",void, string, int ) },
-    {"convertGKtoLatLon", PyWrap2( OSMMap, convertGKtoLatLon, "convert Gauß Krüger lat lon - input: northing, easting, EPSG Code", Vec2d, double, double, int) },
+    {"convertCoords", PyWrap2( OSMMap, convertCoords, "convert coords between geo formats input: northing, easting, use EPSG Code as source formats, target format \n     e.g. \n     LatLon: 4326 \n     Gauß Krüger: 31467 \n     UTM 32N: 25832", Vec2d, double, double, int, int) },
     {"writeFile", PyWrap2( OSMMap, writeFile, "writeFile ", void, string ) },
     {"filterFileStreaming", PyWrap2( OSMMap, filterFileStreaming, "filter OSM file with whitelist via stream - input path, whitelist", void, string, vector<vector<string>> ) },
     {"readFileStreaming", PyWrap2( OSMMap, readFileStreaming, "reads OSM file via stream, builds map ", int, string ) },
@@ -206,7 +207,18 @@ PyMethodDef VRPyTrafficSigns::methods[] = {
     {NULL}  /* Sentinel */
 };
 
-
+PyMethodDef VRPyAtlas::methods[] = {
+    {"test", PyWrap( Atlas, test, "test function", void ) },
+    {"toggleUpdater", PyWrap( Atlas, toggleUpdater, "toggles updated fct", void ) },
+    {"setup", PyWrap( Atlas, setup, "setup function", VRTransformPtr, void ) },
+    {"setCoordOrigin", PyWrap( Atlas, setCoordOrigin, "setCoordOrigin - East, North - uses EPSG UTM 32N: 25832 for now", void, double, double ) },
+    {"setBoundary", PyWrap( Atlas, setBoundary, "setBoundary - (double minEast, double maxEast, double minNorth, double maxNorth)", void, double, double, double, double ) },
+    {"setServerURL", PyWrap( Atlas, setServerURL, "sets remote Server URL", void, string ) },
+    {"setLocalPaths", PyWrap( Atlas, setLocalPaths, "sets local paths to dir of ( ortho, height ) pictures", void, string, string ) },
+    {"getLocalPos", PyWrap( Atlas, getLocalPos, "returns local position of coordinates use ( east, north ), EPSG UTM 32N: 25832", Vec3d, double, double ) },
+    {"setDebug", PyWrap( Atlas, setDebug, "toggling debug mode", void, bool ) },
+    {NULL}  /* Sentinel */
+};
 
 
 

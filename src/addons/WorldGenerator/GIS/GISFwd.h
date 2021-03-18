@@ -9,6 +9,7 @@ namespace OSG {
     ptrFwd(OSMWay);
     ptrFwd(OSMRelation);
     ptrFwd(VRMapManager);
+    ptrFwd(VRAtlas);
     ptrFwd(VRMapDescriptor);
 }
 

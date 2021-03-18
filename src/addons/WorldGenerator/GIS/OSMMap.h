@@ -77,6 +77,13 @@ struct OSMRelation : OSMBase {
 
 class OSMMap {
     private:
+        enum EPSGcoords {
+            EPSG_LATLON = 4326,                 //WGS-84, OSM data
+            EPSG_GAUSSKRUEGER_ZONE2 = 31466,
+            EPSG_GAUSSKRUEGER_ZONE3 = 31467,    //Karlsruhe
+            EPSG_UTM_32N = 25832,               //6° - 12° Ost
+            EPSG_UTM_33N = 25833
+        };
         string filepath;
         string mapType;
         BoundingboxPtr bounds;
@@ -105,7 +112,7 @@ class OSMMap {
         static OSMMapPtr loadMap(string filepath);
         static OSMMapPtr parseMap(string filepath);
 
-        Vec2d convertGKtoLatLon(double northing, double easting, int EPSG_Code);
+        Vec2d convertCoords(double north, double east, int EPSG_Code_in, int EPSG_Code_out);
 
         void readFile(string path);
         void readGEOJSON(string path);
