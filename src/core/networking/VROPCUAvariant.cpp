@@ -8,7 +8,7 @@
 /// http://www.gnu.org/licenses/lgpl.html)
 ///
 
-#include "VROPCUAvariant.h"
+//#include "VROPCUAvariant.h"
 //#include "binary_serialization.h"
 
 #include <opc/ua/protocol/binary/stream.h>
