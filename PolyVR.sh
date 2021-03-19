@@ -7,7 +7,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd $DIR
 
 if [ -e ./bin/Debug/VRFramework ]; then
-	export LD_LIBRARY_PATH=$libs && ./bin/Release/VRFramework $@
+	export LD_LIBRARY_PATH=$libs && ./bin/Debug/VRFramework $@
 else
 	export LD_LIBRARY_PATH=$libs && ./bin/Release/VRFramework $@
 fi

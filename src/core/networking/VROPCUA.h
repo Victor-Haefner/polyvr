@@ -80,6 +80,7 @@ class VROPCUA : public std::enable_shared_from_this<VROPCUA> {
         shared_ptr<SubClient> subscriptionClient = 0;
         shared_ptr<OpcUa::Subscription> subscription = 0;
 
+        string endpoint;
         VRUpdateCbPtr watchdogCb;
 
         boost::recursive_mutex commMtx;
