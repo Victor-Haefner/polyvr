@@ -117,14 +117,15 @@ void VREmbankment::createGeometry() {
 }
 
 
-VRTerrain::VRTerrain(string name) : VRGeometry(name) {
+VRTerrain::VRTerrain(string name, bool localized) : VRGeometry(name) {
     hide("SHADOW");
+    localMesh = localized;
 }
 
 VRTerrain::~VRTerrain() {}
 
-VRTerrainPtr VRTerrain::create(string name) {
-    auto t = VRTerrainPtr( new VRTerrain(name) );
+VRTerrainPtr VRTerrain::create(string name, bool localized) {
+    auto t = VRTerrainPtr( new VRTerrain(name, localized) );
     t->setupMat();
     return t;
 }
@@ -277,14 +278,14 @@ void VRTerrain::setupGeo() {
                 auto pI1J1 = getPose(i+1,j+1);
                 auto pI1J0 = getPose(i+1,j);
 
-                geo.pushVert(pI0J0->pos()*0.1, pI0J0->up(), Vec2d(tcx1,tcy1));
-                geo.pushVert(pI0J1->pos()*0.1, pI0J1->up(), Vec2d(tcx1,tcy2));
-                geo.pushVert(pI1J1->pos()*0.1, pI1J1->up(), Vec2d(tcx2,tcy2));
-                geo.pushVert(pI1J0->pos()*0.1, pI1J0->up(), Vec2d(tcx2,tcy1));
+                geo.pushVert(pI0J0->pos(), pI0J0->up(), Vec2d(tcx1,tcy1));
+                geo.pushVert(pI0J1->pos(), pI0J1->up(), Vec2d(tcx1,tcy2));
+                geo.pushVert(pI1J1->pos(), pI1J1->up(), Vec2d(tcx2,tcy2));
+                geo.pushVert(pI1J0->pos(), pI1J0->up(), Vec2d(tcx2,tcy1));
                 geo.pushQuad();
             }
         }
-	} else {
+	} else if (!localMesh) {
         int old1 = 0;
         int old2 = 0;
         for (int i =0; i < gridN[0]; i++) {

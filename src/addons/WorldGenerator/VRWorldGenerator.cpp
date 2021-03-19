@@ -319,7 +319,7 @@ void VRWorldGenerator::setupLODTerrain(string pathMap, string pathPaint, float s
     }
 
     auto addTerrain = [&](double fac, int a) {
-        auto terrain = VRTerrain::create("terrain"+toString(fac));
+        auto terrain = VRTerrain::create("terrain"+toString(fac), bool(planet));
 
         fac*=0.8;
         terrain->setParameters (terrainSize, 2/fac, 1);
@@ -343,6 +343,7 @@ void VRWorldGenerator::setupLODTerrain(string pathMap, string pathPaint, float s
     addTerrain(0.05, 2);
 
     addTerrainsToLOD();
+    if (planet) planet->localizeSector(ptr());
 #endif
 }
 
