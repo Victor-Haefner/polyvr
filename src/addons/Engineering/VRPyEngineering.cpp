@@ -18,10 +18,13 @@ PyMethodDef VRPyPipeSystem::methods[] = {
     {"getSegment", PyWrap( PipeSystem, getSegment, "Get segment ID by its node IDs", int, int, int ) },
     {"getSegmentPressure", PyWrap( PipeSystem, getSegmentPressure, "Get segment pressure", double, int ) },
     {"getTankPressure", PyWrap( PipeSystem, getTankPressure, "Get tank pressure", double, string ) },
+    {"getTankDensity", PyWrap( PipeSystem, getTankDensity, "Get tank density", double, string ) },
+    {"getTankVolume", PyWrap( PipeSystem, getTankVolume, "Get tank volume", double, string ) },
     {"getPump", PyWrap( PipeSystem, getPump, "Get pump performance", double, string ) },
     {"setPump", PyWrap( PipeSystem, setPump, "Set pump performance", void, string, double ) },
     {"setValve", PyWrap( PipeSystem, setValve, "Set valve state", void, string, bool ) },
     {"setTankPressure", PyWrap( PipeSystem, setTankPressure, "Set tank pressure", void, string, double ) },
+    {"setTankDensity", PyWrap( PipeSystem, setTankDensity, "Set tank density", void, string, double ) },
     {"printSystem", PyWrap( PipeSystem, printSystem, "Print system state to console", void ) },
     {NULL}
 };
