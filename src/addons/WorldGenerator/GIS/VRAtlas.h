@@ -97,6 +97,7 @@ class VRAtlas : public std::enable_shared_from_this<VRAtlas>  {
         string serverURL = "";
         string localPathOrtho = "";
         string localPathHeight = "";
+        VRGeometryPtr debugQuad;
         bool debugMode = false;
         Layout layout;
         void update();
