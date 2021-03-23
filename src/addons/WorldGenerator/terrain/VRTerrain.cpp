@@ -202,8 +202,10 @@ void VRTerrain::paintHeights(string woods, string gravel) {
 
 void VRTerrain::paintHeights(string path, Color4f mCol, float mAmount) {
     mat->setTexture(path, 0, 3);
-    if (mAmount > 0 )
-        if (auto t = mat->getTexture(3)) t->mixColor(mCol, mAmount);
+    //if (mAmount > 0 )
+    //    if (auto t = mat->getTexture(3)) t->mixColor(mCol, mAmount);
+    mat->setShaderParameter("mixColor", mCol);
+    mat->setShaderParameter("mixAmount", mAmount);
     mat->setShaderParameter("texPic", 3);
     mat->setShaderParameter("doHeightTextures", 2);
     mat->clearTransparency();
@@ -839,6 +841,8 @@ const ivec3 off = ivec3(-1,0,1);
 const vec3 light = vec3(-1,-1,-0.5);
 uniform vec2 texelSize;
 uniform int doHeightTextures;
+uniform vec4 mixColor;
+uniform float mixAmount;
 uniform float waterLevel;
 uniform int isLit;
 
@@ -847,11 +851,6 @@ in vec4 vertex;
 in float height;
 vec3 norm;
 vec4 color;
-
-vec3 mixColor(vec3 c1, vec3 c2, float t) {
-	t = clamp(t, 0.0, 1.0);
-	return mix(c1, c2, t);
-}
 
 vec3 getColor() {
 	return texture2D(tex, gl_TexCoord[0].xy).rgb;
@@ -919,6 +918,7 @@ void main( void ) {
         } else {
             tc.y = 1-tc.y;
             color = texture(texPic, tc);
+            color = mix(color, mixColor, mixAmount);
         }
 	}
 
@@ -939,6 +939,8 @@ const vec3 light = vec3(-1,-1,-0.5);
 uniform vec2 texelSize;
 uniform vec2 texel;
 uniform int doHeightTextures;
+uniform vec4 mixColor;
+uniform float mixAmount;
 uniform float heightoffset = 0.0;
 uniform float waterLevel;
 uniform int isLit;
@@ -950,11 +952,6 @@ in vec4 pos;
 in float height;
 vec3 norm;
 vec4 color;
-
-vec3 mixColor(vec3 c1, vec3 c2, float t) {
-	t = clamp(t, 0.0, 1.0);
-	return mix(c1, c2, t);
-}
 
 vec3 getColor() {
 	return texture2D(tex, gl_TexCoord[0].xy).rgb;
@@ -1018,6 +1015,7 @@ void main( void ) {
         } else {
             tc.y = 1-tc.y;
             color = texture(texPic, tc);
+            color = mix(color, mixColor, mixAmount);
         }
 	}
 
