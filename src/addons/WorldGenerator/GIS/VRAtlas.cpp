@@ -74,8 +74,16 @@ void VRAtlas::Layout::setCoords(Patch& pat, Vec3d co3, int p_type) {
 
     string tmp1 = localPathOrtho + "/" + cut(to_string(pat.edgeLength)) + "/" + fileOrtho;
     string tmp2 = localPathHeight + "/" + cut(to_string(pat.edgeLength)) + "/" + fileHeight;
+    bool checkOrthop = exists(tmp1);
+    bool checkHeight = exists(tmp2);
+    if (!checkHeight && !checkOrthop){
+        pat.terrain->setVisible(true);
+        return;
+    } else pat.terrain->setVisible(false);
+
+    if (pat.edgeLength > 2000) cout << fileOrtho << " -- " << checkOrthop << "|"<< checkHeight << " -- " << tmp1 << endl;
     if (localPathOrtho != ""){
-        if ( exists(tmp1) ) {
+        if ( checkOrthop ) {
             pathOrtho = tmp1;
             mixAmount = 0;
 
@@ -90,7 +98,7 @@ void VRAtlas::Layout::setCoords(Patch& pat, Vec3d co3, int p_type) {
     pat.terrain->paintHeights(pathOrtho, mixColor, mixAmount );
     //cout << tmp1 << "-----" << tmp2 << endl;
     //if ( exists(tmp1) ) cout << "found " << tmp1 << endl; else cout << " not found " << tmp1 << endl;
-    if ( exists(tmp2) ) {
+    if ( checkHeight ) {
         pat.terrain->setHeightOffset(true);
         pat.terrain->loadMap( tmp2, 3, false );
         pat.localHeightoffset = pat.terrain->getHeightOffset();
@@ -99,6 +107,9 @@ void VRAtlas::Layout::setCoords(Patch& pat, Vec3d co3, int p_type) {
         heightIMG->read(pathHeight);
         pat.terrain->setMap( heightIMG, 3 );
     }
+    /*if (!checkHeight && !checkOrthop) pat.terrain->setVisible(false);
+    else pat.terrain->setVisible(true);
+    if (debugMode) pat.terrain->setVisible(true);*/
 
     Vec3d pos = co3 + Vec3d(nSize*0.5,pat.localHeightoffset,nSize*0.5);
     pat.terrain->setTransform(pos);
@@ -143,7 +154,7 @@ void VRAtlas::Layout::repaint(){
 void VRAtlas::Layout::reset(Vec3d camPos) {
     Vec3d pos = Vec3d(coordOrigin[0],0,coordOrigin[2]);
 
-    cout << "trying to reset" << endl;
+    //cout << "trying to reset" << endl;
     return;
     innerQuad.currentOrigin = pos;
     for (int i = 0; i < 4; i++) {
