@@ -286,7 +286,7 @@ void VRGuiScripts::on_select_script() { // selected a script
         editor->getCursor(P.line, P.column);
         P.line++;
         P.column++;
-        //cout << "editor focus out, cursor at: " << selected << "  " << P.line << "  " << P.column << endl;
+        cout << "editor focus out, cursor at: " << selected << "  " << P.line << "  " << P.column << endl;
     }
 
     VRScriptPtr script = VRGuiScripts::getSelectedScript();
@@ -365,10 +365,8 @@ void VRGuiScripts::on_select_script() { // selected a script
     trigger_cbs = true;
 
     if (pages.count(selected)) {
-        editor->grabFocus();
         pagePos P2 = pages[selected];
-        editor->setCursor(P2.line, P2.column);
-        //cout << "editor grab focus on " << selected << "  " << P2.line << "  " << P2.column << endl;
+        editor->focus(P2.line, P2.column);
     }
 }
 
