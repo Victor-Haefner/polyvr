@@ -50,21 +50,21 @@ void VRMapManager::requestFile(string filename, double N, double E, double S, VR
     // launch get request
     if (!client) client = VRRestClient::create();
 
-    auto cb = [&](VRRestResponsePtr response, string filename, VRMapCbPtr mcb) {
+    auto cb = [](VRRestResponsePtr response, VRMapManager* mm, string filename, VRMapCbPtr mcb, double N, double E, double S) {
         //cout << " response: " << response->getStatus() << endl;
         cout << " map data response, data size: " << response->getData().size() << endl;
         cout << " store map data in: " << filename << endl;
 
         // store result in file 'filename'
-        storeFile(filename, response->getData());
+        mm->storeFile(filename, response->getData());
         auto data = VRMapDescriptor::create();
         data->setParameters(N, E, S);
         data->setMap(0, filename);
-        auto fkt = VRUpdateCb::create("map manager job", bind(&VRMapManager::triggerCB, this, mcb, data));
+        auto fkt = VRUpdateCb::create("map manager job", bind(&VRMapManager::triggerCB, mm, mcb, data));
         VRScene::getCurrent()->queueJob(fkt);
     };
 
-    if (mcb) client->getAsync(req, VRRestCb::create("asyncGet", bind(cb, placeholders::_1, filename, mcb)));
+    if (mcb) client->getAsync(req, VRRestCb::create("asyncGet", bind(cb, placeholders::_1, this, filename, mcb, N, E, S)));
     else     client->get(req);
 }
 
