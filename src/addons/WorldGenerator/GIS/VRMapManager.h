@@ -44,7 +44,9 @@ class VRMapManager : public std::enable_shared_from_this<VRMapManager> {
 
         void storeFile(const string& filename, const string& data);
         string constructFilename(double N, double E, double S);
-        void requestFile(string filename, double N, double E, double S, VRMapCbPtr cb);
+
+        void handleRequestAnswer(VRRestResponsePtr response, string filename, VRMapCbPtr mcb, double N, double E, double S, int mapType);
+        void requestFile(string script, string filename, double N, double E, double S, int mapType, VRMapCbPtr cb);
 
         void triggerCB(VRMapCbPtr mcb, VRMapDescriptorPtr data);
 

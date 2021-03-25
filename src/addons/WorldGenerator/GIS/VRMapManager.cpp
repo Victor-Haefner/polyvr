@@ -30,42 +30,42 @@ string VRMapManager::getMap(double N, double E, double S, VRMapCbPtr mcb) {
         }
         return filename;
     }
-    else requestFile(filename, N,E,S, mcb);
+    else requestFile("Topology_GetMap.php", filename, N,E,S, 0, mcb);
     return filename;
 }
 
 // --= utilities =--
 
-void VRMapManager::triggerCB(VRMapCbPtr mcb, VRMapDescriptorPtr data) {
-    (*mcb)(data);
+void VRMapManager::handleRequestAnswer(VRRestResponsePtr response, string filename, VRMapCbPtr mcb, double N, double E, double S, int mapType) {
+    //cout << " response: " << response->getStatus() << endl;
+    cout << " map data response, data size: " << response->getData().size() << endl;
+    cout << " store map data in: " << filename << endl;
+
+    // store result in file 'filename'
+    storeFile(filename, response->getData());
+    auto data = VRMapDescriptor::create();
+    data->setParameters(N, E, S);
+    data->setMap(mapType, filename);
+    auto fkt = VRUpdateCb::create("map manager job", bind(&VRMapManager::triggerCB, this, mcb, data));
+    VRScene::getCurrent()->queueJob(fkt);
 }
 
-void VRMapManager::requestFile(string filename, double N, double E, double S, VRMapCbPtr mcb) {
+void VRMapManager::requestFile(string script, string filename, double N, double E, double S, int mapType, VRMapCbPtr mcb) {
     string sN = toString(N,3);
     string sE = toString(E,3);
     string sS = toString(S,3);
-    string req = server+"Topology_GetMap.php?N="+sN+"&E="+sE+"&S="+sS;  // N=%.3f&E=%.3f&S=%.3f" % (N,E,S)
+    string req = server+script+"?N="+sN+"&E="+sE+"&S="+sS;  // N=%.3f&E=%.3f&S=%.3f" % (N,E,S)
     cout << " VRMapManager request: " << req << endl;
 
     // launch get request
     if (!client) client = VRRestClient::create();
 
-    auto cb = [](VRRestResponsePtr response, VRMapManager* mm, string filename, VRMapCbPtr mcb, double N, double E, double S) {
-        //cout << " response: " << response->getStatus() << endl;
-        cout << " map data response, data size: " << response->getData().size() << endl;
-        cout << " store map data in: " << filename << endl;
-
-        // store result in file 'filename'
-        mm->storeFile(filename, response->getData());
-        auto data = VRMapDescriptor::create();
-        data->setParameters(N, E, S);
-        data->setMap(0, filename);
-        auto fkt = VRUpdateCb::create("map manager job", bind(&VRMapManager::triggerCB, mm, mcb, data));
-        VRScene::getCurrent()->queueJob(fkt);
-    };
-
-    if (mcb) client->getAsync(req, VRRestCb::create("asyncGet", bind(cb, placeholders::_1, this, filename, mcb, N, E, S)));
+    if (mcb) client->getAsync(req, VRRestCb::create("asyncGet", bind(&VRMapManager::handleRequestAnswer, this, placeholders::_1, filename, mcb, N, E, S, mapType)));
     else     client->get(req);
+}
+
+void VRMapManager::triggerCB(VRMapCbPtr mcb, VRMapDescriptorPtr data) {
+    (*mcb)(data);
 }
 
 void VRMapManager::storeFile(const string& filename, const string& data) {
@@ -103,7 +103,11 @@ VRMapDescriptorPtr VRMapDescriptor::create(double n, double e, double s, string 
     return d;
 }
 
-string VRMapDescriptor::getMap(int i) { return layers[i]; }
+string VRMapDescriptor::getMap(int i) {
+    if (layers.count(i)) return layers[i];
+    return "";
+}
+
 Vec3d VRMapDescriptor::getParameters() { return Vec3d(N, E, S); }
 
 void VRMapDescriptor::setMap(int i, string s) { layers[i] = s; }
