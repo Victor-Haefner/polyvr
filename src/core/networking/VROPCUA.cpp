@@ -403,9 +403,12 @@ VROPCUAPtr VROPCUA::create() { return VROPCUAPtr( new VROPCUA() ); }
 VROPCUAPtr VROPCUA::ptr() { return shared_from_this(); }
 
 void VROPCUA::watchdog() {
+    if (endpoint == "") return;
     if (!client->isRunning()) {
-        cout << "VROPCUA::watchdog ARF ARF ARF" << endl;
-        client->Abort();
+        //cout << "VROPCUA::watchdog ARF ARF ARF" << endl;
+        //sleep(1);
+        //client->Abort();
+        //connect(endpoint);
     }
 }
 
@@ -420,10 +423,11 @@ shared_ptr<SubClient> VROPCUA::getSubscriptionClient() { return subscriptionClie
 shared_ptr<OpcUa::Subscription> VROPCUA::getSubscription() { return subscription; }
 
 VROPCUANodePtr VROPCUA::connect(string address) {
-    string endpoint = address;
+    bool doDebug = false;
+    endpoint = address;
     cout << "OPCUA: connect to " << endpoint << endl;
     if (client) client->Disconnect();
-    client = shared_ptr<OpcUa::UaClient>( new OpcUa::UaClient() );
+    client = shared_ptr<OpcUa::UaClient>( new OpcUa::UaClient(doDebug) );
     //client = shared_ptr<VRUaClient>( new VRUaClient() );
 
     try { cout << " try connection" << endl; client->Connect(endpoint); }
@@ -453,6 +457,7 @@ void VROPCUA::processCommQueue() {
         commQueue.clear();
     }
 
+    if (client && !client->isRunning()) return;
     for (auto& d : commQueueCopy) d.second.first->setOPCval(d.second.second);
     this_thread::sleep_for(chrono::milliseconds(1));
 }

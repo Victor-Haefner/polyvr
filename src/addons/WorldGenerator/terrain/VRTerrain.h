@@ -75,9 +75,9 @@ class VRTerrain : public VRGeometry, public VRWorldModule {
         void vrPhysicalize();
 
     public:
-        VRTerrain(string name);
+        VRTerrain(string name, bool localized = false);
         ~VRTerrain();
-        static VRTerrainPtr create(string name = "terrain");
+        static VRTerrainPtr create(string name = "terrain", bool localized = false);
         VRTerrainPtr ptr();
 
         void setSimpleNoise();

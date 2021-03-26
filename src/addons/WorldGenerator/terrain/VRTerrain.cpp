@@ -117,14 +117,15 @@ void VREmbankment::createGeometry() {
 }
 
 
-VRTerrain::VRTerrain(string name) : VRGeometry(name) {
+VRTerrain::VRTerrain(string name, bool localized) : VRGeometry(name) {
     hide("SHADOW");
+    localMesh = localized;
 }
 
 VRTerrain::~VRTerrain() {}
 
-VRTerrainPtr VRTerrain::create(string name) {
-    auto t = VRTerrainPtr( new VRTerrain(name) );
+VRTerrainPtr VRTerrain::create(string name, bool localized) {
+    auto t = VRTerrainPtr( new VRTerrain(name, localized) );
     t->setupMat();
     return t;
 }
@@ -201,8 +202,10 @@ void VRTerrain::paintHeights(string woods, string gravel) {
 
 void VRTerrain::paintHeights(string path, Color4f mCol, float mAmount) {
     mat->setTexture(path, 0, 3);
-    if (mAmount > 0 )
-        if (auto t = mat->getTexture(3)) t->mixColor(mCol, mAmount);
+    //if (mAmount > 0 )
+    //    if (auto t = mat->getTexture(3)) t->mixColor(mCol, mAmount);
+    mat->setShaderParameter("mixColor", mCol);
+    mat->setShaderParameter("mixAmount", mAmount);
     mat->setShaderParameter("texPic", 3);
     mat->setShaderParameter("doHeightTextures", 2);
     mat->clearTransparency();
@@ -219,10 +222,10 @@ void VRTerrain::updateTexelSize() {
 }
 
 void VRTerrain::curveMesh(VRPlanetPtr p, Vec2d c, PosePtr s) {
-    setLocalized(true);
-    VRPlanetWeakPtr planet = p;
-    Vec2d planetCoords = c;
-    PosePtr pSectorInv = s;
+    localMesh = true;
+    planet = p;
+    planetCoords = c;
+    pSectorInv = s;
 }
 
 void VRTerrain::setupGeo() {
@@ -240,10 +243,10 @@ void VRTerrain::setupGeo() {
     //cout << toString(gridN) << "-- "  << toString(size) << "-- "  << toString(texel) << "-- "  << toString(tcChunk) << "-- "  << toString(texSize) << endl;
 
 	VRGeoData geo;
-    auto planet = this->planet.lock();
-	if (localMesh && planet) {
+    auto pla = planet.lock();
+	if (localMesh && pla) {
         mat->setShaderParameter("local",1);
-        double sectorSize = planet->getSectorSize();
+        double sectorSize = pla->getSectorSize();
 
         int t1 = 0;
         int t2 = 0;
@@ -252,9 +255,13 @@ void VRTerrain::setupGeo() {
 
         auto getPose = [&](int i, int j) {
             if (cache.count(Vec2i(i,j))) return cache[Vec2i(i,j)];
-            auto p = planet->fromLatLongPose(planetCoords[0]+sectorSize*(1.0-double(j)/double(gridN[1])), planetCoords[2]+i*sectorSize/gridN[0]);
+            double N = planetCoords[0]+sectorSize*(1.0-double(j)/double(gridN[1]));
+            double E = planetCoords[1]+i*sectorSize/gridN[0];
+            auto p = pla->fromLatLongPose(N, E);
             p = pSectorInv->multRight(p);
             cache[Vec2i(i,j)] = p;
+            //if (i == 0) pla->addPin( "", N, E, 1000);
+            //cout << "  VRTerrain::setupGeo add pin " << N << " " << E << " " << pla->getName() << endl;
             return p;
         };
 
@@ -280,7 +287,7 @@ void VRTerrain::setupGeo() {
                 geo.pushQuad();
             }
         }
-	} else {
+	} else if (!localMesh) {
         int old1 = 0;
         int old2 = 0;
         for (int i =0; i < gridN[0]; i++) {
@@ -306,7 +313,10 @@ void VRTerrain::setupGeo() {
         }
 	}
 
-    if (geo.size() > 0) geo.apply(ptr());
+    if (geo.size() > 0) {
+        //cout << "  VRTerrain::setupGeo apply geo!! " << geo.size() << "  grid: " << gridN << endl;
+        geo.apply(ptr());
+    }
 
 #if __EMSCRIPTEN__// TODO: directly create triangles above!
     convertToTriangles();
@@ -831,6 +841,8 @@ const ivec3 off = ivec3(-1,0,1);
 const vec3 light = vec3(-1,-1,-0.5);
 uniform vec2 texelSize;
 uniform int doHeightTextures;
+uniform vec4 mixColor;
+uniform float mixAmount;
 uniform float waterLevel;
 uniform int isLit;
 
@@ -839,11 +851,6 @@ in vec4 vertex;
 in float height;
 vec3 norm;
 vec4 color;
-
-vec3 mixColor(vec3 c1, vec3 c2, float t) {
-	t = clamp(t, 0.0, 1.0);
-	return mix(c1, c2, t);
-}
 
 vec3 getColor() {
 	return texture2D(tex, gl_TexCoord[0].xy).rgb;
@@ -911,6 +918,7 @@ void main( void ) {
         } else {
             tc.y = 1-tc.y;
             color = texture(texPic, tc);
+            color = mix(color, mixColor, mixAmount);
         }
 	}
 
@@ -931,6 +939,8 @@ const vec3 light = vec3(-1,-1,-0.5);
 uniform vec2 texelSize;
 uniform vec2 texel;
 uniform int doHeightTextures;
+uniform vec4 mixColor;
+uniform float mixAmount;
 uniform float heightoffset = 0.0;
 uniform float waterLevel;
 uniform int isLit;
@@ -942,11 +952,6 @@ in vec4 pos;
 in float height;
 vec3 norm;
 vec4 color;
-
-vec3 mixColor(vec3 c1, vec3 c2, float t) {
-	t = clamp(t, 0.0, 1.0);
-	return mix(c1, c2, t);
-}
 
 vec3 getColor() {
 	return texture2D(tex, gl_TexCoord[0].xy).rgb;
@@ -1010,6 +1015,7 @@ void main( void ) {
         } else {
             tc.y = 1-tc.y;
             color = texture(texPic, tc);
+            color = mix(color, mixColor, mixAmount);
         }
 	}
 

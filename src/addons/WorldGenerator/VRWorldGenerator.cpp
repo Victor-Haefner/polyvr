@@ -246,7 +246,7 @@ void VRWorldGenerator::addTerrainsToLOD() {
 
 void VRWorldGenerator::setTerrainSize( Vec2d in ) { terrainSize = in; }
 
-void VRWorldGenerator::setupLODTerrain(string pathMap, string pathPaint, float scale, bool cache, bool isLit, Color4f mixColor, float mixAmount ) {
+void VRWorldGenerator::setupLODTerrain(string pathMap, string pathPaint, float detail, bool cache, bool isLit, Color4f mixColor, float mixAmount ) {
 #ifndef WITHOUT_GDAL
     cout << "VRWorldGenerator::setupLODTerrain" << endl;
     auto tex = loadGeoRasterData(pathMap, false);
@@ -319,15 +319,16 @@ void VRWorldGenerator::setupLODTerrain(string pathMap, string pathPaint, float s
     }
 
     auto addTerrain = [&](double fac, int a) {
-        auto terrain = VRTerrain::create("terrain"+toString(fac));
+        auto terrain = VRTerrain::create("terrain"+toString(fac), bool(planet));
 
-        fac*=0.8;
+        fac *= detail;
         terrain->setParameters (terrainSize, 2/fac, 1);
         VRTexturePtr texSc = tex;
         string satImg = pathPaint;
         if (a == 1) { texSc = tex1; satImg = pathPaint1; }
         if (a == 2) { texSc = tex2; satImg = pathPaint2; }
         if ( !exists(pathPaint2) ) satImg = pathPaint;
+
     //if (mixAmount > 0) texSc->mixColor(mixColor, mixAmount);
         terrain->paintHeights( satImg, mixColor, mixAmount );
         //terrain->paintHeights( satImg, Color4f(1,0,1,1), 0.5 );
@@ -343,6 +344,7 @@ void VRWorldGenerator::setupLODTerrain(string pathMap, string pathPaint, float s
     addTerrain(0.05, 2);
 
     addTerrainsToLOD();
+    if (planet) planet->localizeSector(ptr());
 #endif
 }
 

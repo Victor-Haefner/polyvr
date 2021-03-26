@@ -26,12 +26,14 @@ VRPipeSegment::~VRPipeSegment() {}
 
 VRPipeSegmentPtr VRPipeSegment::create(double radius, double length) { return VRPipeSegmentPtr( new VRPipeSegment(radius, length) ); }
 
-void VRPipeSegment::addEnergy(double m) {
+void VRPipeSegment::addEnergy(double m, double d) {
     lastPressureDelta = m/volume;
     pressure += lastPressureDelta;
+
+    if (m>0) density = (density * volume + m*d) / (volume + m); // only when adding material with different density
 }
 
-void VRPipeSegment::handleTank(double& otherPressure, double otherVolume, double dt) {
+void VRPipeSegment::handleTank(double& otherPressure, double otherVolume, double& otherDensity, double dt) {
     double dP = pressure - otherPressure;
     double m = dP*area*dt*gasSpeed; // energy through the pipe section area
 
@@ -41,8 +43,9 @@ void VRPipeSegment::handleTank(double& otherPressure, double otherVolume, double
         m = min(m, otherPressure*otherVolume); // not more than available!
     }
 
-    addEnergy(-m);
-    otherPressure = otherPressure + m/otherVolume;
+    addEnergy(-m, otherDensity);
+    otherPressure += m/otherVolume;
+    if (m>0) otherDensity = (otherDensity * otherVolume + m*density) / (otherVolume + m); // only when adding material with different density
     //cout << "handleTank " << dP << " " << pressure << " " << otherPressure << endl;
 }
 
@@ -57,16 +60,16 @@ void VRPipeSegment::handleValve(double area, VRPipeSegmentPtr other, double dt) 
         m = min(m, other->pressure*other->volume); // not more than available!
     }
 
-    addEnergy(-m);
-    other->addEnergy(m);
+    addEnergy(-m, other->density);
+    other->addEnergy(m, density);
 }
 
 void VRPipeSegment::handlePump(double performance, VRPipeSegmentPtr other, double dt) {
     double v = pressure/(other->pressure + pressure);
     double m = performance*dt/exp(1/v);
     m = min(m, pressure*volume); // pump out not more than available!
-    addEnergy(-m);
-    other->addEnergy(m);
+    addEnergy(-m, other->density);
+    other->addEnergy(m, density);
     //cout << " pump " << dP << " m " << m << " v " << v << endl;
 }
 
@@ -172,8 +175,10 @@ void VRPipeSystem::update() {
             if (entity->is_a("Tank")) {
                 double tankVolume = entity->getValue("volume", 0.0);
                 double tankPressure = entity->getValue("pressure", 1.0);
-                for (auto p : getPipes(nID)) p->handleTank(tankPressure, tankVolume, dt);
+                double tankDensity = entity->getValue("density", 1.0);
+                for (auto p : getPipes(nID)) p->handleTank(tankPressure, tankVolume, tankDensity, dt);
                 entity->set("pressure", toString(tankPressure));
+                entity->set("density", toString(tankDensity));
                 continue;
             }
 
@@ -181,12 +186,22 @@ void VRPipeSystem::update() {
                 auto pipes = getPipes(nID);
                 double commonEnergy = 0;
                 double commonVolume = 0;
+                double commonDensity = 0;
+
                 for (auto p : pipes) {
                     commonEnergy += p->pressure*p->volume;
                     commonVolume += p->volume;
+                    commonDensity += p->density*p->volume;
                 }
+
                 double avrgPressure = commonEnergy/commonVolume;
-                for (auto p : pipes) p->pressure = avrgPressure;
+                double avrgDensity = commonDensity/commonVolume;
+
+                for (auto p : pipes) {
+                    p->pressure = avrgPressure;
+                    p->density = avrgDensity;
+                }
+
                 continue;
             }
 
@@ -242,6 +257,7 @@ void VRPipeSystem::initOntology() {
 
     Tank->addProperty("pressure", "double");
     Tank->addProperty("volume", "double");
+    Tank->addProperty("density", "double");
     Pump->addProperty("performance", "double");
     Outlet->addProperty("radius", "double");
     Valve->addProperty("state", "bool");
@@ -251,11 +267,14 @@ void VRPipeSystem::setDoVisual(bool b) { doVisual = b; }
 
 double VRPipeSystem::getSegmentPressure(int i) { return segments[i]->pressure; }
 double VRPipeSystem::getTankPressure(string n) { return nodes[nodesByName[n]]->entity->getValue("pressure", 1.0); }
+double VRPipeSystem::getTankDensity(string n) { return nodes[nodesByName[n]]->entity->getValue("density", 1.0); }
+double VRPipeSystem::getTankVolume(string n) { return nodes[nodesByName[n]]->entity->getValue("volume", 1.0); }
 double VRPipeSystem::getPump(string n) { return nodes[nodesByName[n]]->entity->getValue("performance", 0.0); }
 
 void VRPipeSystem::setValve(string n, bool b)  { nodes[nodesByName[n]]->entity->set("state", toString(b)); }
 void VRPipeSystem::setPump(string n, double p) { nodes[nodesByName[n]]->entity->set("performance", toString(p)); }
 void VRPipeSystem::setTankPressure(string n, double p) { nodes[nodesByName[n]]->entity->set("pressure", toString(p)); }
+void VRPipeSystem::setTankDensity(string n, double p) { nodes[nodesByName[n]]->entity->set("density", toString(p)); }
 
 void VRPipeSystem::updateVisual() {
     if (!doVisual) return;
@@ -263,9 +282,12 @@ void VRPipeSystem::updateVisual() {
     VRGeoData data(ptr());
     auto s = data.size();
 
+    Vec3d dO = Vec3d(-0.1,-0.1,-0.1);
+
     if (s == 0) {
         Vec3d norm(0,1,0);
         Color3f white(1,1,1);
+        Color3f yellow(1,1,0);
 
         for (auto& s : segments) {
             auto edge = graph->getEdge(s.first);
@@ -275,6 +297,9 @@ void VRPipeSystem::updateVisual() {
 
             data.pushVert(p1->pos(), norm, white);
             data.pushVert(p2->pos(), norm, white);
+            data.pushLine();
+            data.pushVert(p1->pos()+dO, norm, yellow);
+            data.pushVert(p2->pos()+dO, norm, yellow);
             data.pushLine();
         }
 
@@ -302,6 +327,7 @@ void VRPipeSystem::updateVisual() {
     for (auto& s : segments) {
         //float pdelta = s.second->lastPressureDelta; // last written delta, not the correct one
         float pressure = s.second->pressure;
+        float density = s.second->density;
 
         // show pdelta
         /*Color3f c1(0,0,1);
@@ -321,6 +347,16 @@ void VRPipeSystem::updateVisual() {
 
         data.setColor(i, c); i++;
         data.setColor(i, c); i++;
+
+        // density
+        float D = 1.0; // color scale above 1
+        Color3f cd;
+        float d = 1.0 - density; // around 1
+        if (d > 0) cd = Color3f(1-d, 1-d, 0); // below 1
+        else cd = Color3f(1, 1, -d*D);
+
+        data.setColor(i, cd); i++;
+        data.setColor(i, cd); i++;
     }
 
     for (auto& n : nodes) {

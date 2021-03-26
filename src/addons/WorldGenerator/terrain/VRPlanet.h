@@ -35,8 +35,6 @@ class VRPlanet : public VRTransform {
         void setupMetaGeo();
         Vec2i toSID(double north, double east);
 
-        void localizeSector(VRWorldGeneratorPtr s);
-
     public:
         VRPlanet(string name);
         ~VRPlanet();
@@ -73,6 +71,7 @@ class VRPlanet : public VRTransform {
         Vec2d fromPosLatLong(Pnt3d p, bool local = false);
 
         void localize(double north, double east);
+        void localizeSector(VRWorldGeneratorPtr s);
 
         VRMaterialPtr getMaterial();
         void setupMaterial(string texture, bool isLit);

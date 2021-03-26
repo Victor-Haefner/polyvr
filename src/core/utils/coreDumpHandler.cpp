@@ -21,6 +21,7 @@ void testSignal(int sig) {
 
 #ifndef _WIN32
 extern "C" void coreDump(int sig) {
+    cout << "\n called PolyVR coreDump" << endl;
     static bool once = true;
     if (!once) signal(sig, NULL);
     else {

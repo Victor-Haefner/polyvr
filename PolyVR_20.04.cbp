@@ -482,6 +482,8 @@
 		<Unit filename="src/addons/WorldGenerator/GIS/GISWorld.h" />
 		<Unit filename="src/addons/WorldGenerator/GIS/OSMMap.cpp" />
 		<Unit filename="src/addons/WorldGenerator/GIS/OSMMap.h" />
+		<Unit filename="src/addons/WorldGenerator/GIS/VRAtlas.cpp" />
+		<Unit filename="src/addons/WorldGenerator/GIS/VRAtlas.h" />
 		<Unit filename="src/addons/WorldGenerator/GIS/VRMapManager.cpp" />
 		<Unit filename="src/addons/WorldGenerator/GIS/VRMapManager.h" />
 		<Unit filename="src/addons/WorldGenerator/VRPyWorldGenerator.cpp" />
@@ -601,6 +603,9 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/core/gui/glarea/glarea.h" />
+		<Unit filename="src/core/gui/glarea/glareaCommon.h" />
+		<Unit filename="src/core/gui/glarea/glareaLinux.h" />
+		<Unit filename="src/core/gui/glarea/glareaWin.h" />
 		<Unit filename="src/core/gui/glarea/glgdk.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -1005,6 +1010,8 @@
 		<Unit filename="src/core/networking/VRNetworkingFwd.h" />
 		<Unit filename="src/core/networking/VROPCUA.cpp" />
 		<Unit filename="src/core/networking/VROPCUA.h" />
+		<Unit filename="src/core/networking/VROPCUAclient.cpp" />
+		<Unit filename="src/core/networking/VROPCUAclient.h" />
 		<Unit filename="src/core/networking/VRPing.cpp" />
 		<Unit filename="src/core/networking/VRPing.h" />
 		<Unit filename="src/core/networking/VRProtocol.cpp" />

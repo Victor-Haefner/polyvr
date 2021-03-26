@@ -58,7 +58,6 @@ void VRPlanet::localizeSector(VRWorldGeneratorPtr sector) {
 }
 
 void VRPlanet::localize(double north, double east) {
-    cout << "VRPlanet::localize" << endl;
     localized = true;
     originCoords = Vec2d(north, east);
     auto p = fromLatLongPose(north, east);
@@ -330,7 +329,7 @@ VRWorldGeneratorPtr VRPlanet::addSector( double north, double east, bool local )
         ter->setParameters( size, 2, 1);
     }
     generator->setTerrainSize( size );
-    if (localized) localizeSector(generator);
+    //if (localized) localizeSector(generator);
     return generator;
 }
 

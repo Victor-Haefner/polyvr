@@ -81,8 +81,8 @@ PyMethodDef VRPyOrbit::methods[] = {
 
 PyMethodDef VRPyMapManager::methods[] = {
     {"setServer", PyWrap( MapManager, setServer, "Set server address", void, string ) },
-    {"setVault", PyWrap( MapManager, setVault, "Set local path to store map files", void, string ) },
-    {"getMap", PyWrap( MapManager, getMap, "Get map file path, retreives file from server if necessary, async if given a callback 'def cb(str):', (N, E, S, callback)", string, double, double, double, VRMapCbPtr ) },
+    {"addMapType", PyWrap( MapManager, addMapType, "Add map type (ID, local path to store map files, script name on server, file format)", void, int, string, string, string ) },
+    {"getMap", PyWrap( MapManager, getMap, "Get map file path, retreives file from server if necessary, async if given a callback 'def cb(str):', (N, E, S, callback)", VRMapDescriptorPtr, double, double, double, vector<int>, VRMapCbPtr ) },
     {NULL}  /* Sentinel */
 };
 
