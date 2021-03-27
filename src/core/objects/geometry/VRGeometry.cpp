@@ -623,8 +623,11 @@ void VRGeometry::setPositionalTexCoords(float scale, int i, Vec3i format) {
     GeoVectorPropertyRefPtr pos = mesh->geo->getPositions();
     GeoVec3fPropertyRefPtr tex = GeoVec3fProperty::create();
     if (!pos) return;
+    Matrix M = toMatrix4f(getWorldMatrix());
     for (unsigned int i=0; i<pos->size(); i++) {
-        auto p = Vec3d(pos->getValue<Pnt3f>(i))*scale;
+        Pnt3f P = pos->getValue<Pnt3f>(i);
+        M.mult(P,P);
+        auto p = Vec3d(P)*scale;
         tex->addValue(Vec3d(p[format[0]], p[format[1]], p[format[2]]));
     }
     setTexCoords(tex, i, 1);
