@@ -1749,13 +1749,13 @@ void VRGuiBuilder::buildBaseUI() {
     auto label104 = addLabel("label104", "Projection:");
     auto combobox23 = addCombobox("combobox23", "cam_proj");
     auto label105 = addLabel("label105", "Aspect:");
-    auto entry60 = addEntry("entry60");
+    auto entry60 = addEntry("entry60", 6);
     auto label106 = addLabel("label106", "Fov:");
-    auto entry61 = addEntry("entry61");
+    auto entry61 = addEntry("entry61", 6);
     auto label29 = addLabel("label29", "Near:");
-    auto entry6 = addEntry("entry6");
+    auto entry6 = addEntry("entry6", 6);
     auto label30 = addLabel("label30", "Far:");
-    auto entry7 = addEntry("entry7");
+    auto entry7 = addEntry("entry7", 6);
 
     gtk_grid_attach(GTK_GRID(table18), checkbutton17, 0,0,4,1);
     gtk_grid_attach(GTK_GRID(table18), label104, 0,1,2,1);
