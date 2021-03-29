@@ -24,6 +24,8 @@
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/material/VRTexture.h"
 #include "core/objects/VRTransform.h"
+#include "core/math/polygon.h"
+#include "core/math/triangulator.h"
 #include "core/utils/toString.h"
 #include <string>
 
@@ -42,7 +44,7 @@ void loadSHP(string path, VRTransformPtr res) {
 #endif
     if( poDS == NULL ) { printf( "Open failed.\n" ); return; }
 
-    VRGeoData data;
+    VRGeoDataPtr data = VRGeoData::create();
 
     auto toVec3d = [](OGRPoint& p) {
         return Vec3d( p.getX(), p.getZ(), -p.getY() );
@@ -54,8 +56,8 @@ void loadSHP(string path, VRTransformPtr res) {
         if (type == wkbPoint) {
             OGRPoint* pnt = (OGRPoint*) geo;
             //cout << "  point " << pos << endl;
-            data.pushVert( toVec3d(*pnt) );
-            data.pushPoint();
+            data->pushVert( toVec3d(*pnt) );
+            data->pushPoint();
             return;
         }
         if (type == wkbLineString) {
@@ -63,8 +65,8 @@ void loadSHP(string path, VRTransformPtr res) {
             //cout << "  polyline: (" << line->getNumPoints() << ")";
             for (int i=0; i<line->getNumPoints(); i++) {
                 line->getPoint(i, &pnt);
-                data.pushVert( toVec3d(pnt) );
-                if (i != 0) data.pushLine(); // TODO: add polylines to VRGeoData?
+                data->pushVert( toVec3d(pnt) );
+                if (i != 0) data->pushLine(); // TODO: add polylines to VRGeoData?
                 //cout << "  p " << pos;
             }
             //cout << endl;
@@ -74,28 +76,38 @@ void loadSHP(string path, VRTransformPtr res) {
             //cout << "  VRPolygon:" << endl;
             OGRPolygon* poly = (OGRPolygon*) geo;
             OGRLinearRing* ex = poly->getExteriorRing();
+
             //cout << "   outer bound:";
+            VRPolygon outer;
             for (int i=0; i<ex->getNumPoints(); i++) {
                 ex->getPoint(i, &pnt);
-                data.pushVert( toVec3d(pnt) );
-                if (i != 0) data.pushLine();
+                outer.addPoint(toVec3d(pnt));
+                //data->pushVert( toVec3d(pnt) );
+                //if (i != 0) data->pushLine();
                 //cout << "  p " << pos;
             }
             //cout << endl;
 
+            Triangulator t;
+            t.add(outer);
 
             for (int i=0; i<poly->getNumInteriorRings(); i++) {
                 OGRLinearRing* in = poly->getInteriorRing(i);
 
                 //cout << "   inner bound:";
+                VRPolygon inner;
                 for (int i=0; i<in->getNumPoints(); i++) {
                     in->getPoint(i, &pnt);
-                    data.pushVert( toVec3d(pnt) );
-                    if (i != 0) data.pushLine();
+                    inner.addPoint(toVec3d(pnt));
+                    //data->pushVert( toVec3d(pnt) );
+                    //if (i != 0) data->pushLine();
                     //cout << "  p " << pos;
                 }
+                t.add(inner, false);
                 //cout << endl;
             }
+
+            t.append(data);
             return;
         }
         cout << "loadSHP::handleGeometry WARNING: type " << type << " not handled!\n";
@@ -133,7 +145,7 @@ void loadSHP(string path, VRTransformPtr res) {
 	GDALClose(poDS);
 #endif
 
-    res->addChild( data.asGeometry(path) );
+    res->addChild( data->asGeometry(path) );
 }
 
 void loadTIFF(string path, VRTransformPtr res) {

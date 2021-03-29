@@ -35,7 +35,6 @@ class VRGeoData {
 
         bool isStripOrFan(int t);
         void extentType(int N);
-        void updateType(int t, int N);
 
     public:
         VRGeoData();
@@ -75,6 +74,8 @@ class VRGeoData {
         int pushVert(Pnt3d p, Vec3d n, Color4f c, Vec2d t);
         int pushVert(Pnt3d p, Vec3d n, Color3f c, Vec2d t, Vec2d t2);
         int pushVert(Pnt3d p, Vec3d n, Color4f c, Vec2d t, Vec2d t2);
+
+        void updateType(int t, int N);
 
         int pushType(int t);
         int pushLength(int l);
