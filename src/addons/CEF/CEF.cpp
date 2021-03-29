@@ -71,6 +71,23 @@ void CEF_handler::resize(int resolution, float aspect) {
     height = width/aspect;
 }
 
+void CEF_handler::OnLoadEnd( CefRefPtr< CefBrowser > browser, CefRefPtr< CefFrame > frame, int httpStatusCode ) {
+    if (!frame->IsMain()) return;
+    //cout << "CEF_handler::OnLoadEnd" << endl;
+}
+
+void CEF_handler::OnLoadError( CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, ErrorCode errorCode, const CefString& errorText, const CefString& failedUrl ) {
+    if (!frame->IsMain()) return;
+    cout << "CEF_handler::OnLoadError, failed to load '" << failedUrl.ToString() << "' with '" << errorText.ToString() << "'" << endl;
+}
+
+void CEF_handler::OnLoadStart( CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, TransitionType transition_type ) {
+    if (!frame->IsMain()) return;
+    //cout << "CEF_handler::OnLoadStart" << endl;
+}
+
+
+
 CEF_client::CEF_client() {
     handler = new CEF_handler();
 }
@@ -80,6 +97,7 @@ CEF_client::~CEF_client() {
 }
 
 CefRefPtr<CefRenderHandler> CEF_client::GetRenderHandler() { return handler; }
+CefRefPtr<CefLoadHandler> CEF_client::GetLoadHandler() { return handler; }
 CefRefPtr<CEF_handler> CEF_client::getHandler() { return handler; }
 CefRefPtr<CefContextMenuHandler> CEF_client::GetContextMenuHandler() { return handler; }
 
@@ -191,6 +209,7 @@ void CEF::open(string site) {
     this->site = site;
     if (browser) {
         browser->GetMainFrame()->LoadURL(site);
+        bool b = browser->IsLoading();
 #ifdef _WIN32
         browser->GetHost()->WasResized();
 #endif

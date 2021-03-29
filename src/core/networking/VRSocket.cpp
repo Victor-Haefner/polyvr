@@ -255,8 +255,8 @@ static void server_answer_to_connection_m(struct mg_connection *conn, int ev, vo
         if (v) VRLog::log("net", "HTTP Request\n");
         if (v) sad->print();
 
-        auto sendString = [&](string data) {
-            mg_send_head(conn, 200, data.size(), "Transfer-Encoding: chunked");
+        auto sendString = [&](string data, int code = 200) {
+            mg_send_head(conn, code, data.size(), "Transfer-Encoding: chunked");
             mg_send_http_chunk(conn, data.c_str(), data.size());
             mg_send_http_chunk(conn, "", 0);
         };
@@ -283,7 +283,7 @@ static void server_answer_to_connection_m(struct mg_connection *conn, int ev, vo
                 if (!exists( sad->path )) {
                     if (v) VRLog::wrn("net", "Did not find ressource: " + sad->path + "\n");
                     if (v) VRLog::log("net", "Send empty string\n");
-                    sendString("");
+                    sendString("<head><style>body{background:#f0f;color:white;font-size:50vh;font-weight:bold;display:flex;justify-content:center;align-items:center;width:100vw;height:100vh;margin:0;}</style></head><body>Not Found!</body>", 404);
                 }
                 else {
                     if (v) VRLog::log("net", "Serve ressource\n");

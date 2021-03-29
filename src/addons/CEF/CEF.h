@@ -6,6 +6,7 @@
 #include "include/cef_app.h"
 #include "include/cef_client.h"
 #include "include/cef_render_handler.h"
+#include "include/cef_load_handler.h"
 
 #include "core/utils/VRFunctionFwd.h"
 #include "core/objects/VRObjectFwd.h"
@@ -15,7 +16,7 @@ OSG_BEGIN_NAMESPACE;
 
 class VRDevice;
 
-class CEF_handler : public CefRenderHandler, public CefContextMenuHandler {
+class CEF_handler : public CefRenderHandler, public CefLoadHandler, public CefContextMenuHandler {
     private:
         VRTexturePtr image = 0;
         int width = 1024;
@@ -36,6 +37,10 @@ class CEF_handler : public CefRenderHandler, public CefContextMenuHandler {
         VRTexturePtr getImage();
         void resize(int resolution, float aspect);
 
+        void OnLoadEnd( CefRefPtr< CefBrowser > browser, CefRefPtr< CefFrame > frame, int httpStatusCode ) override;
+        void OnLoadError( CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, ErrorCode errorCode, const CefString& errorText, const CefString& failedUrl ) override;
+        void OnLoadStart( CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, TransitionType transition_type ) override;
+
         IMPLEMENT_REFCOUNTING(CEF_handler);
 };
 
@@ -49,6 +54,7 @@ class CEF_client : public CefClient {
 
         CefRefPtr<CEF_handler> getHandler();
         CefRefPtr<CefRenderHandler> GetRenderHandler();
+        CefRefPtr<CefLoadHandler> GetLoadHandler();
         CefRefPtr<CefContextMenuHandler> GetContextMenuHandler();
 
         IMPLEMENT_REFCOUNTING(CEF_client);
