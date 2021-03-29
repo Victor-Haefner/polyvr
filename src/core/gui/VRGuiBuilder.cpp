@@ -272,13 +272,17 @@ GtkWidget* addColorChooser(string ID) {
     return f;
 }
 
-GtkWidget* addCombobox(string ID, string mID) {
+GtkWidget* addCombobox(string ID, string mID, int width = 0) {
     GtkTreeModel* m = 0;
     if (VRGuiBuilder::get()->has_object(mID)) m = GTK_TREE_MODEL(VRGuiBuilder::get()->get_object(mID));
     else m = GTK_TREE_MODEL(gtk_list_store_new(1, G_TYPE_STRING, -1));
 
-    auto n = gtk_combo_box_new_with_model_and_entry(m);
-    //auto r = gtk_cell_renderer_text_new();
+    auto n = gtk_combo_box_new_with_model(m);
+
+    GtkCellRenderer* r = gtk_cell_renderer_text_new();
+    gtk_cell_layout_pack_start( GTK_CELL_LAYOUT(n), r, TRUE );
+    gtk_cell_layout_set_attributes( GTK_CELL_LAYOUT(n), r, "text", 0, NULL );
+
     gtk_combo_box_set_id_column(GTK_COMBO_BOX(n), 0);
     gtk_combo_box_set_entry_text_column(GTK_COMBO_BOX(n), 0);
     gtk_combo_box_set_button_sensitivity(GTK_COMBO_BOX(n), GTK_SENSITIVITY_ON);
@@ -1745,13 +1749,13 @@ void VRGuiBuilder::buildBaseUI() {
     auto label104 = addLabel("label104", "Projection:");
     auto combobox23 = addCombobox("combobox23", "cam_proj");
     auto label105 = addLabel("label105", "Aspect:");
-    auto entry60 = addEntry("entry60");
+    auto entry60 = addEntry("entry60", 6);
     auto label106 = addLabel("label106", "Fov:");
-    auto entry61 = addEntry("entry61");
+    auto entry61 = addEntry("entry61", 6);
     auto label29 = addLabel("label29", "Near:");
-    auto entry6 = addEntry("entry6");
+    auto entry6 = addEntry("entry6", 6);
     auto label30 = addLabel("label30", "Far:");
-    auto entry7 = addEntry("entry7");
+    auto entry7 = addEntry("entry7", 6);
 
     gtk_grid_attach(GTK_GRID(table18), checkbutton17, 0,0,4,1);
     gtk_grid_attach(GTK_GRID(table18), label104, 0,1,2,1);
@@ -1767,7 +1771,7 @@ void VRGuiBuilder::buildBaseUI() {
 
     /* ---------- VR Scene - scenegraph light ---------------------- */
     auto label100 = addLabel("label100", "Light type:");
-    auto combobox2 = addCombobox("combobox2", "light_types");
+    auto combobox2 = addCombobox("combobox2", "light_types", 10);
     auto checkbutton31 = addCheckbutton("checkbutton31", "on");
     auto label37 = addLabel("label37", "Light beacon:");
     auto button27 = addLabel("button27", "button");
@@ -1775,11 +1779,11 @@ void VRGuiBuilder::buildBaseUI() {
 
     auto hbox8 = addBox("hbox8", GTK_ORIENTATION_HORIZONTAL);
     auto label97 = addLabel("label97", "C:");
-    auto entry44 = addEntry("entry44");
+    auto entry44 = addEntry("entry44", 5);
     auto label98 = addLabel("label98", "L:");
-    auto entry45 = addEntry("entry45");
+    auto entry45 = addEntry("entry45", 5);
     auto label99 = addLabel("label99", "Q:");
-    auto entry46 = addEntry("entry46");
+    auto entry46 = addEntry("entry46", 5);
     gtk_box_pack_start(GTK_BOX(hbox8), label97, false, true, 0);
     gtk_box_pack_start(GTK_BOX(hbox8), entry44, true, true, 0);
     gtk_box_pack_start(GTK_BOX(hbox8), label98, false, true, 0);
@@ -1796,13 +1800,14 @@ void VRGuiBuilder::buildBaseUI() {
     gtk_box_pack_start(GTK_BOX(hbox9), light_diff, false, true, 0);
     gtk_box_pack_start(GTK_BOX(hbox9), light_amb, false, true, 0);
     gtk_box_pack_start(GTK_BOX(hbox9), light_spec, false, true, 0);
+    gtk_widget_set_halign(hbox9, GTK_ALIGN_CENTER);
 
     auto checkbutton32 = addCheckbutton("checkbutton32", "shadow");
-    auto combobox22 = addCombobox("combobox22", "shadow_types");
+    auto combobox22 = addCombobox("combobox22", "shadow_types", 10);
     auto label95 = addLabel("label95", "Shadow color:");
     auto shadow_col = addColorChooser("shadow_col");
     auto checkbutton2 = addCheckbutton("checkbutton2", "shadow volume:");
-    auto entry36 = addEntry("entry36");
+    auto entry36 = addEntry("entry36", 7);
     gtk_entry_set_text(GTK_ENTRY(entry36), "10");
     auto light_params = gtk_list_store_new(2, G_TYPE_STRING, G_TYPE_STRING);
     auto treeview13_and_frame = addTreeview("treeview13", "light_params", GTK_TREE_MODEL(light_params));

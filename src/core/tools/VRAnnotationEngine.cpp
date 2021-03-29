@@ -232,7 +232,8 @@ void VRAnnotationEngine::setLine(int i, Vec3d p, string str, bool ascii) {
     while (i >= (int)labels.size()) labels.push_back(Label(labels.size()));
 
     auto& l = labels[i];
-    if (l.str == str) return;
+    if (l.str == str && (l.pos-p).length() < 1e-6) return;
+    l.pos = p;
 
     vector<string> graphemes;
     //vector<string> old_graphemes;
