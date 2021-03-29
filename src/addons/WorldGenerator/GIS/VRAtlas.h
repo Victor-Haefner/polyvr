@@ -36,9 +36,15 @@ class VRAtlas : public std::enable_shared_from_this<VRAtlas>  {
             int type;
             VRTerrainPtr terrain;
             Vec2d coords = Vec2d(0,0);
+            Vec3d localPos = Vec3d(0,0,0);
             float edgeLength;
             float localHeightoffset = 0.0;
+            string orthoPic;
+            string heightPic;
+            bool recent = false;
+            bool active = false;
 
+            void paint();
             Patch(string sid, int lvl, VRTerrainPtr ter);
             Patch();
             ~Patch();
@@ -79,17 +85,21 @@ class VRAtlas : public std::enable_shared_from_this<VRAtlas>  {
             void shiftSouthOut(Level& lev, list<Level>::iterator it);
             void setCoords(Patch& pat, Vec3d co3, int p_type);
             void repaint();
+            void paintAll();
             void reset(Vec3d camPos);
             Layout();
             ~Layout();
         };
         float size = 100.0;
         float LODviewHeight = 500.0;
+        float scaling = 1.0;
         Vec2d atlasOrigin = Vec2d(0.0,0.0);
         Boundary bounds;
         int LODMax = 0;
         int patchcount = 0;
         bool stop = false;
+
+        bool isValid();
 
         string filepath;
         VRTransformPtr atlas;
@@ -120,8 +130,10 @@ class VRAtlas : public std::enable_shared_from_this<VRAtlas>  {
         void setBoundary(double minEast, double maxEast, double minNorth, double maxNorth);
         void setServerURL(string url);
         void setLocalPaths(string ortho, string height);
+        void setScale(float s);
         //void setParameters();
         void setDebug(bool mode);
+        void repaint();
         Vec3d getLocalPos(double east, double north);
         void test();
         void toggleUpdater();
