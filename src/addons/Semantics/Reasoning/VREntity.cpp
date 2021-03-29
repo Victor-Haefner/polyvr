@@ -15,14 +15,14 @@ VREntity::VREntity() {}
 VREntity::VREntity(string name, VROntologyPtr o, VRConceptPtr c) {
     ontology = o;
     //if (!o && c) ontology = c->ontology;
-    if (!o) cout << "Warning: VREntity::VREntity, no valid ontology passed!\n";
-    concepts.push_back(c);
+    //if (!o) cout << "Warning: VREntity::VREntity, no valid ontology passed!\n";
+    if (c) concepts.push_back(c);
 
     setStorageType("Entity");
     storeObjNames("concepts", &concepts, &conceptNames);
 
 
-    auto ns = setNameSpace("VREntity_"+o->getName());
+    auto ns = setNameSpace((o ? "VREntity_"+o->getName() : "VREntity"));
     ns->filterNameChars(".,",'_'); // filter path and math characters
     ns->setSeparator('_');
 
@@ -68,6 +68,7 @@ string VREntity::getConceptList() {
 
 VRPropertyPtr VREntity::getProperty(string name, bool warn) {
     for (auto c : getConcepts()) if (auto p = c->getProperty(name, 0)) return p;
+    if (!ontology.lock()) return VRProperty::create(name);
     if (warn) WARN("Warning in VREntity::getProperty: property " + name + " of " + toString() + " not found!");
     return 0;
 }

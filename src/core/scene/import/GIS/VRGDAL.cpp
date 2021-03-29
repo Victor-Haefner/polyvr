@@ -27,6 +27,7 @@
 #include "core/math/polygon.h"
 #include "core/math/triangulator.h"
 #include "core/utils/toString.h"
+#include "addons/Semantics/Reasoning/VREntity.h"
 #include <string>
 
 OSG_BEGIN_NAMESPACE;
@@ -44,13 +45,11 @@ void loadSHP(string path, VRTransformPtr res) {
 #endif
     if( poDS == NULL ) { printf( "Open failed.\n" ); return; }
 
-    VRGeoDataPtr data = VRGeoData::create();
-
     auto toVec3d = [](OGRPoint& p) {
         return Vec3d( p.getX(), p.getZ(), -p.getY() );
     };
 
-    auto handleGeometry = [&](OGRGeometry* geo) {
+    auto handleGeometry = [&](OGRGeometry* geo, VRGeoDataPtr data) {
         auto type = wkbFlatten(geo->getGeometryType());
         OGRPoint pnt;
         if (type == wkbPoint) {
@@ -117,24 +116,45 @@ void loadSHP(string path, VRTransformPtr res) {
     for (int i=0; i<poDS->GetLayerCount(); i++) {
         OGRLayer* poLayer = poDS->GetLayer(i);
         cout << " " << i << " " << poLayer->GetName() << endl;
+
         if (poLayer) {
             poLayer->ResetReading();
 
-            OGRFeature* poFeature;
+            OGRFeature* poFeature = 0;
             while( (poFeature = poLayer->GetNextFeature()) != NULL ) {
+                auto ent = VREntity::create("shape");
+
                 OGRFeatureDefn* poFDefn = poLayer->GetLayerDefn();
-                cout << "  fields:";
+                cout << "  fields: ";
                 for( int field = 0; field < poFDefn->GetFieldCount(); field++ ) {
                     OGRFieldDefn* poFieldDefn = poFDefn->GetFieldDefn( field );
+
+                    string name = poFieldDefn->GetNameRef();
+                    ent->set(name, poFeature->GetFieldAsString(field));
+
+                    cout << name;
+                    if ( poFieldDefn->GetType() == OFTInteger ) printf( "  %d, ", poFeature->GetFieldAsInteger(field) );
+                    if ( poFieldDefn->GetType() == OFTReal ) printf( "  %.3f, ", poFeature->GetFieldAsDouble(field) );
+                    if ( poFieldDefn->GetType() == OFTString ) printf( "  %s, ", poFeature->GetFieldAsString(field) );
+                }
+                cout << endl;
+                /*cout << "  geom fields:";
+                for( int field = 0; field < poFDefn->GetGeomFieldCount(); field++ ) {
+                    OGRGeomFieldDefn* poFieldDefn = poFDefn->GetGeomFieldDefn( field );
 
                     if ( poFieldDefn->GetType() == OFTInteger ) printf( "  %d,", poFeature->GetFieldAsInteger(field) );
                     if ( poFieldDefn->GetType() == OFTReal ) printf( "  %.3f,", poFeature->GetFieldAsDouble(field) );
                     if ( poFieldDefn->GetType() == OFTString ) printf( "  %s,", poFeature->GetFieldAsString(field) );
                 }
-                cout << endl;
+                cout << endl;*/
+
+                VRGeoDataPtr data = VRGeoData::create();
                 OGRGeometry* geo = poFeature->GetGeometryRef();
-                if (geo) handleGeometry(geo);
+                if (geo) handleGeometry(geo, data);
                 OGRFeature::DestroyFeature( poFeature );
+                auto vgeo = data->asGeometry("shape");
+                vgeo->setEntity(ent);
+                res->addChild( vgeo );
             }
         }
     }
@@ -144,8 +164,6 @@ void loadSHP(string path, VRTransformPtr res) {
 #else
 	GDALClose(poDS);
 #endif
-
-    res->addChild( data->asGeometry(path) );
 }
 
 void loadTIFF(string path, VRTransformPtr res) {

@@ -12,7 +12,6 @@ using namespace std;
 class Triangulator {
     public:
         VRGeoDataPtr geo;
-        int current_primitive = -1;
         int num_points = 0;
 
     private:

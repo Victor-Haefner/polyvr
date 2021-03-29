@@ -94,23 +94,6 @@ void tessEndCB() {
     int Nprim = Self->num_points;
 
     int Ni0 = Self->geo->getNIndices();
-    /*switch(Self->geo->current_primitive) {
-        case 0x0000: Nidx = Nprim; break; // GL_POINTS
-        case 0x0001: Nidx = Nprim; break; // GL_LINES
-        case 0x0002: Nidx = Nprim; break; // GL_LINE_LOOP
-        case 0x0003: Nidx = Nprim; break; // GL_LINE_STRIP
-        case 0x0004: Nidx = Nprim; break; // GL_TRIANGLES
-        case 0x0005: Nidx = Nprim; break; // GL_TRIANGLE_STRIP
-        case 0x0006: Nidx = Nprim; break; // GL_TRIANGLE_FAN
-        case 0x0007: Nidx = Nprim; break; // GL_QUADS
-        case 0x0008: Nidx = Nprim; break; // GL_QUAD_STRIP
-        case 0x0009: Nidx = Nprim; break; // GL_POLYGON
-    }*/
-
-    //if (Self->geo->current_primitive == 4) return;
-    //if (Self->geo->current_primitive == 5) return;
-
-    //cout << Nprim << " " << Self->geo->current_primitive << " " << Ni0 << endl;
     for (int i=0; i<Nprim; i++) Self->geo->pushIndex( Ni0 + i );
 
     Self->geo->pushLength(Nprim);
@@ -124,10 +107,9 @@ void tessVertexCB(const GLvoid *data) { // draw a vertex
     //Vec3d n(*(ptr+3), *(ptr+4), *(ptr+5));
 
     auto Self = current_triangulator;
-    Self->geo->pushVert(p, Vec3d(0,0,1));
-    Self->num_points += 1;
+    Self->geo->pushVert(p, Vec3d(0,1,0));
+    Self->num_points++;
     //Self->geo->pushVert(p, n);
-    //Self->geo->norms->addValue( n );
     //cout << "vert " << p << endl;
 }
 
@@ -167,18 +149,21 @@ void Triangulator::tessellate() {
     };
 
     vector<vector<Vec3d> > bounds;
-    for (auto b : outer_bounds) bounds.push_back( toSpace(b.get()) );
-    for (auto b : inner_bounds) bounds.push_back( toSpace(b.get()) );
-    for (auto b : outer_bounds) bounds.push_back( b.get3() );
-    for (auto b : inner_bounds) bounds.push_back( b.get3() );
+    for (auto b : outer_bounds) if (b.size2() > 2) bounds.push_back( toSpace(b.get()) );
+    for (auto b : inner_bounds) if (b.size2() > 2) bounds.push_back( toSpace(b.get()) );
+    for (auto b : outer_bounds) if (b.size3() > 2) bounds.push_back( b.get3() );
+    for (auto b : inner_bounds) if (b.size3() > 2) bounds.push_back( b.get3() );
 
-    gluTessBeginPolygon(tess, 0);
-    for (auto& b : bounds) {
-        gluTessBeginContour(tess);
-        for (auto& v : b) gluTessVertex(tess, &v[0], &v[0]);
-        gluTessEndContour(tess);
+    if (bounds.size() > 0) {
+        gluTessBeginPolygon(tess, 0);
+        for (auto& b : bounds) {
+            gluTessBeginContour(tess);
+            for (auto& v : b) gluTessVertex(tess, &v[0], &v[0]);
+            gluTessEndContour(tess);
+        }
+        gluTessEndPolygon(tess);
     }
-    gluTessEndPolygon(tess);
+
     //tmpVertices.clear();
     gluDeleteTess(tess);
 }

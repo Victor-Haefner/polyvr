@@ -93,6 +93,8 @@ void VRPolygon::addPoint(Vec3d p) { if (!closed) points3.push_back(p); }
 Vec2d VRPolygon::getPoint(int i) { return points[i]; }
 Vec3d VRPolygon::getPoint3(int i) { return points3[i]; }
 int VRPolygon::size() { return max( points.size(), points3.size() ); }
+int VRPolygon::size2() { return points.size(); }
+int VRPolygon::size3() { return points3.size(); }
 void VRPolygon::set(vector<Vec2d> vec) { for (auto v : vec) addPoint(v); }
 
 std::shared_ptr<VRPolygon> VRPolygon::create() { return std::shared_ptr<VRPolygon>( new VRPolygon() ); }

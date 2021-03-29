@@ -30,6 +30,8 @@ class VRPolygon {
         void remPoint3(int i);
         void close();
         int size();
+        int size2();
+        int size3();
         void clear();
 
         bool isConvex();
