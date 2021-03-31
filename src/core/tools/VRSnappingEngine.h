@@ -61,8 +61,11 @@ class VRSnappingEngine {
         OctreePtr positions = 0; // objects by positions
         VRUpdateCbPtr updatePtr;
 
+        VRTransformPtr ghostHost;
         VRTransformPtr ghostHook;
         VRMaterialPtr ghostMat;
+        VRObjectPtr ghostParent;
+        VRDevicePtr ghostDevice;
 
         float influence_radius = 1000;
         float distance_snap = 0.05;
@@ -74,6 +77,8 @@ class VRSnappingEngine {
         bool active = true;
 
         // update sub functions
+        void terminateGhost();
+        void updateGhost(VRDevicePtr dev, VRTransformPtr obj);
         void handleDraggedObject(VRDevicePtr dev, VRTransformPtr obj, VRTransformPtr gobj);
 
     public:

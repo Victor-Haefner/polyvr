@@ -2,6 +2,7 @@
 #include "core/objects/VRTransform.h"
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/object/VRObjectT.h"
+#include "core/objects/material/VRMaterial.h"
 #include "core/setup/devices/VRDevice.h"
 #include "core/setup/VRSetup.h"
 #include "core/scene/VRScene.h"
@@ -203,6 +204,67 @@ void VRSnappingEngine::addTree(VRObjectPtr obj, int group) {
 
 VRSignalPtr VRSnappingEngine::getSignalSnap() { return snapSignal; }
 
+void VRSnappingEngine::terminateGhost() {
+    Vec3d scale = ghostHost->getScale(); // conserve scale
+    ghostHost->setWorldMatrix(event->m);
+    ghostHost->setScale(scale);
+
+    ghostHook->clearLinks();
+    ghostParent->remLink(ghostMat);
+    ghostDevice = 0;
+    ghostParent = 0;
+    ghostHost = 0;
+}
+
+void VRSnappingEngine::updateGhost(VRDevicePtr dev, VRTransformPtr obj) {
+    if (!ghostHook) {
+        ghostHook = VRTransform::create("ghostHook");
+        ghostMat = VRMaterial::create("ghostMat");
+        ghostMat->setDiffuse(Color3f(0,0.5,1.0));
+        ghostMat->setTransparency(0.4);
+        ghostMat->ignoreMeshColors(true);
+        ghostMat->addChild(ghostHook);
+    }
+
+    if (ghostHost != obj) {
+        if (ghostHost) {
+            ghostHook->clearLinks();
+            ghostParent->remLink(ghostMat);
+        }
+
+        ghostHost = obj;
+        if (ghostHost) {
+            //ghostHost->getDragParent()->addLink(ghostMat);
+            ghostDevice = dev;
+            ghostParent = ghostHost->getParent();
+            ghostParent->addLink(ghostMat);
+            ghostHook->addLink(ghostHost);
+        }
+    }
+
+    if (!ghostHost) {
+        ghostDevice = 0;
+        ghostParent = 0;
+        return;
+    }
+
+    // Mg = Me = Mp * mg * mo
+    // mg = Mp_1 * Me * mo_1
+    Matrix4d Mpi, moi;
+    Matrix4d Mp = ghostHost->getWorldMatrix(true);
+    Mp.inverse(Mpi);
+    auto mo = ghostHost->getMatrix();
+    mo.inverse(moi);
+    auto Me = event->m;
+    auto mg = Me;
+    mg.multLeft(Mpi);
+    mg.mult(moi);
+
+    Vec3d scale = ghostHost->getScale(); // conserve scale
+    ghostHook->setMatrix(mg);
+    ghostHook->setScale(scale);
+}
+
 void VRSnappingEngine::handleDraggedObject(VRDevicePtr dev, VRTransformPtr obj, VRTransformPtr gobj) { // dragged object, dragged ghost object
     Matrix4d m = gobj->getWorldMatrix();
     Vec3d p = Vec3d(m[3]);
@@ -263,10 +325,17 @@ void VRSnappingEngine::handleDraggedObject(VRDevicePtr dev, VRTransformPtr obj, 
     }
 
     if (event->snap) {
-        Vec3d scale = obj->getScale(); // conserve scale
-        obj->setWorldMatrix(event->m);
-        obj->setScale(scale);
-    } else obj->setMatrix( gobj->getMatrix() );
+        if (!doGhosts) {
+            Vec3d scale = obj->getScale(); // conserve scale
+            obj->setWorldMatrix(event->m);
+            obj->setScale(scale);
+        } else {
+            updateGhost(dev, obj);
+        }
+    } else {
+        if (!doGhosts) obj->setMatrix( gobj->getMatrix() );
+        else updateGhost(0, 0);
+    }
 
     if (lastEvent != event->snap || lastEventID != event->snapID) {
         if (event->o1 == obj) {
@@ -285,6 +354,7 @@ void VRSnappingEngine::update() {
     for (auto dev : setup->getDevices()) { // get dragged objects
         VRTransformPtr obj = dev.second->getDraggedObject();
         VRTransformPtr gobj = dev.second->getDraggedGhost();
+        if (ghostDevice == dev.second && ghostHost && objects.count(obj) == 0) terminateGhost();
         if (obj == 0 || gobj == 0) continue;
         if (objects.count(obj) == 0) continue;
         handleDraggedObject(dev.second, obj, gobj);
