@@ -112,7 +112,6 @@ struct VRSnappingEngine::Rule {
 };
 
 VRSnappingEngine::VRSnappingEngine() {
-    hintGeo = VRGeometry::create("snapping_engine_hint");
     positions = Octree::create(0.1);
     event = new EventSnap();
     snapSignal = VRSignal::create();
@@ -155,6 +154,8 @@ VRSnappingEngine::Type VRSnappingEngine::typeFromStr(string t) {
 
 void VRSnappingEngine::setActive(bool b) { active = b; }
 bool VRSnappingEngine::isActive() { return active; }
+
+void VRSnappingEngine::enableGhosts(bool b) { doGhosts = b; }
 
 int VRSnappingEngine::addRule(Type t, Type o, PosePtr pt, PosePtr po, float d, int g, VRTransformPtr l) {
     Rule* r = new Rule(t,o,pt,po,d,g,l);
@@ -202,6 +203,79 @@ void VRSnappingEngine::addTree(VRObjectPtr obj, int group) {
 
 VRSignalPtr VRSnappingEngine::getSignalSnap() { return snapSignal; }
 
+void VRSnappingEngine::handleDraggedObject(VRDevicePtr dev, VRTransformPtr obj, VRTransformPtr gobj) { // dragged object, dragged ghost object
+    Matrix4d m = gobj->getWorldMatrix();
+    Vec3d p = Vec3d(m[3]);
+
+    bool lastEvent = event->snap;
+    int lastEventID = event->snapID;
+    event->snap = 0;
+    int snapID = -1;
+
+    double dmin = 1e9;
+
+    for (auto ri : rules) {
+        Rule* r = ri.second;
+        if (r->csys == obj) continue;
+        if (!r->checkGroup(obj)) continue;
+
+        if (anchors.count(obj)) {
+            for (auto a : anchors[obj]) {
+                Matrix4d maL = a->getMatrix();
+                Matrix4d maW = m; maW.mult(maL);
+                Vec3d pa = Vec3d(maW[3]);
+                maL.invert();
+
+                if (r->csys && anchors.count(r->csys)) { // TODO: not working yet!
+                    Matrix4d m2 = r->csys->getWorldMatrix();
+                    for (auto a : anchors[r->csys]) {
+                        Matrix4d ma2L = a->getMatrix();
+                        //Matrix4d ma2W = m; ma2W.mult(maL);
+                        //Vec3d pa2 = Vec3d(ma2W[3]);
+                        Vec3d pa2 = Vec3d(ma2L[3]);
+                        snapID++;
+                        if (!r->inRange(pa+pa2, dmin)) continue;
+
+                        r->snapP += pa2;
+                        Matrix4d mm = m;
+                        r->snap(mm);
+                        mm.mult(maL);
+                        //ma2L.invert();
+                        //mm.mult(ma2L);
+                        event->set(obj, r->csys, mm, dev, 1, snapID);
+                    }
+                } else {
+                    snapID++;
+                    if (!r->inRange(pa, dmin)) continue;
+                    Matrix4d mm = m;
+                    r->snap(mm);
+                    mm.mult(maL);
+                    event->set(obj, r->csys, mm, dev, 1, snapID);
+                }
+            }
+        } else {
+            snapID++;
+            if (!r->inRange(p, dmin)) continue;
+            Matrix4d mm = m;
+            r->snap(mm);
+            event->set(obj, r->csys, mm, dev, 1, snapID);
+        }
+    }
+
+    if (event->snap) {
+        Vec3d scale = obj->getScale(); // conserve scale
+        obj->setWorldMatrix(event->m);
+        obj->setScale(scale);
+    } else obj->setMatrix( gobj->getMatrix() );
+
+    if (lastEvent != event->snap || lastEventID != event->snapID) {
+        if (event->o1 == obj) {
+            snapSignal->trigger<EventSnap>(event);
+            for (auto cb : callbacks) (*cb)(*event);
+        }
+    }
+}
+
 void VRSnappingEngine::update() {
     if (!active) return;
 
@@ -213,86 +287,8 @@ void VRSnappingEngine::update() {
         VRTransformPtr gobj = dev.second->getDraggedGhost();
         if (obj == 0 || gobj == 0) continue;
         if (objects.count(obj) == 0) continue;
-
-        Matrix4d m = gobj->getWorldMatrix();
-        Vec3d p = Vec3d(m[3]);
-
-        bool lastEvent = event->snap;
-        int lastEventID = event->snapID;
-        event->snap = 0;
-        int snapID = -1;
-
-        double dmin = 1e9;
-
-        for (auto ri : rules) {
-            Rule* r = ri.second;
-            if (r->csys == obj) continue;
-            if (!r->checkGroup(obj)) continue;
-
-            if (anchors.count(obj)) {
-                for (auto a : anchors[obj]) {
-                    Matrix4d maL = a->getMatrix();
-                    Matrix4d maW = m; maW.mult(maL);
-                    Vec3d pa = Vec3d(maW[3]);
-                    maL.invert();
-
-                    if (r->csys && anchors.count(r->csys)) { // TODO: not working yet!
-                        Matrix4d m2 = r->csys->getWorldMatrix();
-                        for (auto a : anchors[r->csys]) {
-                            Matrix4d ma2L = a->getMatrix();
-                            //Matrix4d ma2W = m; ma2W.mult(maL);
-                            //Vec3d pa2 = Vec3d(ma2W[3]);
-                            Vec3d pa2 = Vec3d(ma2L[3]);
-                            snapID++;
-                            if (!r->inRange(pa+pa2, dmin)) continue;
-
-                            r->snapP += pa2;
-                            Matrix4d mm = m;
-                            r->snap(mm);
-                            mm.mult(maL);
-                            //ma2L.invert();
-                            //mm.mult(ma2L);
-                            event->set(obj, r->csys, mm, dev.second, 1, snapID);
-                        }
-                    } else {
-                        snapID++;
-                        if (!r->inRange(pa, dmin)) continue;
-                        Matrix4d mm = m;
-                        r->snap(mm);
-                        mm.mult(maL);
-                        event->set(obj, r->csys, mm, dev.second, 1, snapID);
-                    }
-                }
-            } else {
-                snapID++;
-                if (!r->inRange(p, dmin)) continue;
-                Matrix4d mm = m;
-                r->snap(mm);
-                event->set(obj, r->csys, mm, dev.second, 1, snapID);
-            }
-        }
-
-        if (event->snap) {
-            Vec3d scale = obj->getScale(); // conserve scale
-            obj->setWorldMatrix(event->m);
-            obj->setScale(scale);
-        } else obj->setMatrix( gobj->getMatrix() );
-
-        if (lastEvent != event->snap || lastEventID != event->snapID) {
-            if (event->o1 == obj) {
-                snapSignal->trigger<EventSnap>(event);
-                for (auto cb : callbacks) (*cb)(*event);
-            }
-        }
+        handleDraggedObject(dev.second, obj, gobj);
     }
-
-    // update geo
-    if (!hintGeo->isVisible()) return;
-}
-
-void VRSnappingEngine::setVisualHints(bool b) {
-    showHints = b;
-    hintGeo->setVisible(b);
 }
 
 void VRSnappingEngine::setPreset(PRESET preset) {

@@ -59,17 +59,22 @@ class VRSnappingEngine {
         map<VRTransformPtr, vector<VRTransformPtr> > anchors; // object anchors
         vector<VRSnapCbPtr> callbacks; // object anchors
         OctreePtr positions = 0; // objects by positions
-        VRGeometryPtr hintGeo = 0;
         VRUpdateCbPtr updatePtr;
+
+        VRTransformPtr ghostHook;
+        VRMaterialPtr ghostMat;
 
         float influence_radius = 1000;
         float distance_snap = 0.05;
-        bool showHints = false;
 
         EventSnap* event = 0;
         VRSignalPtr snapSignal = 0;
 
+        bool doGhosts = false;
         bool active = true;
+
+        // update sub functions
+        void handleDraggedObject(VRDevicePtr dev, VRTransformPtr obj, VRTransformPtr gobj);
 
     public:
         VRSnappingEngine();
@@ -85,6 +90,8 @@ class VRSnappingEngine {
         void setActive(bool b);
         bool isActive();
 
+        void enableGhosts(bool b);
+
         void addCallback(VRSnapCbPtr cb);
 
         int addRule(Type t, Type o, PosePtr pt, PosePtr po, float d, int g = 0, VRTransformPtr l = 0);
@@ -98,7 +105,6 @@ class VRSnappingEngine {
         void addTree(VRObjectPtr obj, int group = 0);
         void remObject(VRTransformPtr obj);
 
-        void setVisualHints(bool b = true);
         void setPreset(PRESET preset);
 
         void update();
