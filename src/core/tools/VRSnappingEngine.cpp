@@ -248,8 +248,6 @@ void VRSnappingEngine::updateGhost(VRDevicePtr dev, VRTransformPtr obj) {
         return;
     }
 
-    // Mg = Me = Mp * mg * mo
-    // mg = Mp_1 * Me * mo_1
     Matrix4d Mpi, moi;
     Matrix4d Mp = ghostHost->getWorldMatrix(true);
     Mp.inverse(Mpi);
@@ -257,16 +255,15 @@ void VRSnappingEngine::updateGhost(VRDevicePtr dev, VRTransformPtr obj) {
     Vec3d scale = ghostHost->getScale(); // conserve scale
     ghostHost->setScale(Vec3d(1,1,1));
     auto mo = ghostHost->getMatrix();
+    mo.inverse(moi);
     ghostHost->setScale(scale);
 
-    mo.inverse(moi);
-    auto Me = event->m;
-    auto mg = Me;
+    //    Mg = Me = Mp * mg * mo
+    // -> mg = Mp_1 * Me * mo_1
+    auto mg = event->m;
     mg.multLeft(Mpi);
     mg.mult(moi);
-
     ghostHook->setMatrix(mg);
-    //ghostHook->setScale(scale);
 }
 
 void VRSnappingEngine::handleDraggedObject(VRDevicePtr dev, VRTransformPtr obj, VRTransformPtr gobj) { // dragged object, dragged ghost object
