@@ -38,6 +38,12 @@ class VRSnappingEngine {
             PLANE_LOCAL
         };
 
+        struct Anchor {
+            VRTransformPtr a;
+            int grp = 0;
+            int snpgrp = 0;
+        };
+
         struct EventSnap {
             int snap = 0;
             int snapID = 0;
@@ -56,7 +62,7 @@ class VRSnappingEngine {
     private:
         map<int, Rule*> rules; // snapping rules, translation and orientation
         map<VRTransformPtr, Matrix4d> objects; // map objects to reference matrix
-        map<VRTransformPtr, vector<VRTransformPtr> > anchors; // object anchors
+        map<VRTransformPtr, vector<Anchor> > anchors; // object anchors
         vector<VRSnapCbPtr> callbacks; // object anchors
         OctreePtr positions = 0; // objects by positions
         VRUpdateCbPtr updatePtr;

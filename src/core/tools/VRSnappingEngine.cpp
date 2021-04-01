@@ -171,8 +171,12 @@ void VRSnappingEngine::remRule(int i) {
 }
 
 void VRSnappingEngine::addObjectAnchor(VRTransformPtr obj, VRTransformPtr a, int grp, int snpgrp) { // TODO: use grp and snpgrp
-    if (anchors.count(obj) == 0) anchors[obj] = vector<VRTransformPtr>();
-    anchors[obj].push_back(a);
+    if (anchors.count(obj) == 0) anchors[obj] = vector<Anchor>();
+    Anchor A;
+    A.a = a;
+    A.grp = grp;
+    A.snpgrp = snpgrp;
+    anchors[obj].push_back(A);
 }
 
 void VRSnappingEngine::clearObjectAnchors(VRTransformPtr obj) {
@@ -283,8 +287,8 @@ void VRSnappingEngine::handleDraggedObject(VRDevicePtr dev, VRTransformPtr obj, 
         if (!r->checkGroup(obj)) continue;
 
         if (anchors.count(obj)) {
-            for (auto a : anchors[obj]) { // check if anchor snapped
-                Matrix4d maL = a->getMatrix();
+            for (auto& A : anchors[obj]) { // check if anchor snapped
+                Matrix4d maL = A.a->getMatrix();
                 Matrix4d maW = m; maW.mult(maL);
                 Vec3d paW = Vec3d(maW[3]);
                 Matrix4d maLi;
@@ -292,8 +296,9 @@ void VRSnappingEngine::handleDraggedObject(VRDevicePtr dev, VRTransformPtr obj, 
 
                 if (r->csys && anchors.count(r->csys)) { // if local system has anchors, check for snap to them
                     Matrix4d m2 = r->csys->getWorldMatrix();
-                    for (auto a : anchors[r->csys]) {
-                        Matrix4d ma2L = a->getMatrix();
+                    for (auto& B : anchors[r->csys]) {
+                        if (A.snpgrp != B.grp) continue;
+                        Matrix4d ma2L = B.a->getMatrix();
                         //Matrix4d ma2W = m; ma2W.mult(maL);
                         //Vec3d pa2 = Vec3d(ma2W[3]);
                         Vec3d pa2 = Vec3d(ma2L[3]);
