@@ -69,6 +69,8 @@ class VRSnappingEngine {
 
         float influence_radius = 1000;
         float distance_snap = 0.05;
+        bool lastEvent = 0;
+        int lastEventID = 0;
 
         EventSnap* event = 0;
         VRSignalPtr snapSignal = 0;
@@ -80,6 +82,7 @@ class VRSnappingEngine {
         void terminateGhost();
         void updateGhost(VRDevicePtr dev, VRTransformPtr obj);
         void handleDraggedObject(VRDevicePtr dev, VRTransformPtr obj, VRTransformPtr gobj);
+        void postProcessEvent(VRDevicePtr dev, VRTransformPtr obj, VRTransformPtr gobj);
 
     public:
         VRSnappingEngine();
@@ -102,7 +105,7 @@ class VRSnappingEngine {
         int addRule(Type t, Type o, PosePtr pt, PosePtr po, float d, int g = 0, VRTransformPtr l = 0);
         void remRule(int i);
 
-        void addObjectAnchor(VRTransformPtr obj, VRTransformPtr a);
+        void addObjectAnchor(VRTransformPtr obj, VRTransformPtr a, int grp = 0, int snpgrp = 0);
         void clearObjectAnchors(VRTransformPtr obj);
         void remLocalRules(VRTransformPtr obj);
 

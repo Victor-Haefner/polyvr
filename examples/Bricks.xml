@@ -3,7 +3,7 @@
   <Objects>
     <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" visible="1">
       <Object ambient="0.3 0.3 0.3 1" base_name="Headlight" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" shadowVolume="1e+06 1e+06 1e+06 -1e+06 -1e+06 -1e+06 1" specular="0.1 0.1 0.1 1" type="Light" visible="1">
-        <Object accept_root="1" aspect="1" at="17.8036 24.3013 2.10903" at_dir="0" base_name="Default" far="250" fov="1.0472" from="23.692 24.7957 2.55006" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
+        <Object accept_root="1" aspect="1" at="23.1295 24.7481 2.22396" at_dir="0" base_name="Default" far="250" fov="1.0472" from="23.7951 25.031 2.10717" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
           <attachments>
             <Node base_name="transform" name_space="VRAttachment" name_suffix="0" persistency="666" value=""/>
           </attachments>
@@ -33,7 +33,9 @@
 		
 	if not hasattr(VR, 'kit'):
 		VR.kit = VR.ConstructionKit()
-		VR.a1_ID = VR.kit.addAnchorType(s*0.1, [1,1,1])	
+		VR.a1_ID = VR.kit.addAnchorType(s*0.1, [1,1,1])
+		se = VR.kit.getSnappingEngine()
+		se.enableGhosts(True)
 	
 	# create brick
 	g = VR.Geometry('brick')

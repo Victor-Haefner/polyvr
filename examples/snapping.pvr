@@ -3,7 +3,7 @@
   <Objects>
     <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" visible="1">
       <Object ambient="0.3 0.3 0.3 1" base_name="light" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" shadowVolume="1e+06 1e+06 1e+06 -1e+06 -1e+06 -1e+06 1" specular="0.1 0.1 0.1 1" type="Light" visible="1">
-        <Object accept_root="1" aspect="1" at="0.165326 0.136489 0.5" at_dir="0" base_name="Default" far="512" fov="1.0472" from="0.680276 1.70907 5.15801" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
+        <Object accept_root="1" aspect="1" at="-0.00317287 0.416195 0.5" at_dir="0" base_name="Default" far="512" fov="1.0472" from="-0.000627096 1.89243 9.11759" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
           <attachments>
             <Node base_name="transform" name_space="VRAttachment" name_suffix="0" persistency="666" value=""/>
           </attachments>
@@ -28,6 +28,9 @@
 	if hasattr(VR, 'scene'): VR.scene.destroy()
 	VR.scene = VR.Object('scene', 'light')
 	
+	VR.snapping = VR.SnappingEngine()
+	VR.snapping.enableGhosts(True)
+	
 	def addBlock(p, c):
 		box = VR.Geometry('block')
 		box.setPrimitive('Box 1 1 1 1 1 1')
@@ -35,19 +38,53 @@
 		box.setPose(p)
 		box.setPickable(True)
 		VR.scene.addChild(box)
+		VR.snapping.addObject(box, 0)
 		return box
 		
+	def addBrickAnchor(brick, pos):
+		a = VR.Transform('anchor')
+		a.setFrom(pos)
+		brick.addChild(a)
+		VR.snapping.addObjectAnchor(brick, a)
+	
+	def addBrick(p):
+		brick = VR.Geometry('brick')
+		brick.setPrimitive('Box 1 0.6 0.5 1 1 1')
+		brick.setColor('white')
+		brick.setFrom(p)
+		brick.setPickable(True)
+		VR.scene.addChild(brick)
+		VR.snapping.addObject(brick, 1) # put in grp 1 to only snap with other bricks
+		addBrickAnchor(brick, [-0.25, 0.3, 0])
+		addBrickAnchor(brick, [ 0.25, 0.3, 0])
+		addBrickAnchor(brick, [-0.25,-0.3, 0])
+		addBrickAnchor(brick, [ 0.25,-0.3, 0])
+		p = VR.Pose() # default pose
+		VR.snapping.addRule('POINT', 'POINT', p, p, 1.0, 1, brick)
+		
+		
+	# create scene
+	
 	b1 = addBlock(VR.Pose([0,0,0], [0,0,-1], [0,1,0]), 'red')
 	b2 = addBlock(VR.Pose([2,0,0], [0,0,-1], [0,1,0]), 'green')
 	b3 = addBlock(VR.Pose([0,2,0], [0,0,-1], [0,1,0]), 'orange')
 
-
-	p = VR.Pose()
-	VR.snapping = VR.SnappingEngine()
+	for i in range(1,5):
+		addBrick([-i*0.8-1,0,i])
 	
-	VR.snapping.enableGhosts(True)
 	
 	# add snapping rules
+	
+	# snap to global origin
+	p = VR.Pose() # default pose
+	VR.snapping.addRule('POINT', 'POINT', p, p, 1.2, 0)
+	
+	# snap on top of red cube
+	VR.snapping.addRule('POINT', 'POINT', VR.Pose([0,1.0,0]), p, 1.2, 0, b1)
+	
+	# snap right of red cube
+	VR.snapping.addRule('POINT', 'POINT', VR.Pose([1.0,0,0]), VR.Pose([0,0,0],[1,0,1]), 1.2, 0, b1)
+	
 	
 	# the first two parameters define the type of snapping, POINT, LINE or PLANE
 	#  the first is the translation snapping
@@ -65,24 +102,6 @@
 	# the sixth parameter is a group ID, the rule applies to the snapping objects in the same group
 	# the last parameter is optional and defines a local referential for the snapping rule
 	
-	# snap to global origin
-	VR.snapping.addRule('POINT', 'POINT', p, p, 1.2, 0)
-	
-	# snap on top of red cube
-	VR.snapping.addRule('POINT', 'POINT', VR.Pose([0,1.0,0]), p, 1.2, 0, b1)
-	
-	# snap right of red cube
-	VR.snapping.addRule('POINT', 'POINT', VR.Pose([1.0,0,0]), VR.Pose([0,0,0],[1,0,1]), 1.2, 0, b1)
-	
-	# TODO, make API nicer:
-	#VR.snapping.addSnapPlane(VR.Pose(), 0.2, 0)
-	#VR.snapping.addSnapPoint(VR.Pose([0.5,0,0]), 0.2, 0, b1)
-	
-	# TODO, allow to snap snappoint to snappoint, disables default origin snap
-	
-	VR.snapping.addObject(b1, 0)
-	VR.snapping.addObject(b2, 0)
-	VR.snapping.addObject(b3, 0)
 	
 </core>
       <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="0" persistency="666"/>
