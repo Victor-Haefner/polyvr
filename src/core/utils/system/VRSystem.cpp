@@ -1,4 +1,5 @@
 #include "VRSystem.h"
+#include "../VRTimer.h"
 #include <stdlib.h>
 #include <iostream>
 #include <boost/filesystem.hpp>
@@ -148,6 +149,19 @@ void doFrameSleep(double tFrame, double fps) {
     double fT = 1000.0 / fps;             // target frame duration in ms
     double sT = max(fT - tFrame, 0.0);    // time to sleep
     if (sT <= 0) return;
+
+    // efficient sleep
+    double precisionBuffer = 1.5;
+    if (sT-precisionBuffer > 0) {
+        VRTimer timer;
+        timer.start();
+        duration<double> T(sT-precisionBuffer);
+        std::this_thread::sleep_for(T);
+        sT = max(fT - tFrame - timer.stop(), 0.0); // remaining time to sleep
+        if (sT <= 0) return;
+    }
+
+    // precision sleep
     static constexpr duration<double> MinSleepDuration(0);
     std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
     while (duration<double>(std::chrono::high_resolution_clock::now() - start).count() < sT) {
