@@ -999,6 +999,7 @@ target_sources(polyvr PRIVATE src/addons/SimViDekont/VRPySimViDekont.cpp)
 target_sources(polyvr PRIVATE src/addons/SimViDekont/SimViDekont.cpp)
 target_sources(polyvr PRIVATE src/addons/WorldGenerator/GIS/GISWorld.cpp)
 target_sources(polyvr PRIVATE src/addons/WorldGenerator/GIS/OSMMap.cpp)
+target_sources(polyvr PRIVATE src/addons/WorldGenerator/GIS/VRAtlas.cpp)
 target_sources(polyvr PRIVATE src/addons/WorldGenerator/GIS/VRMapManager.cpp)
 target_sources(polyvr PRIVATE src/addons/WorldGenerator/weather/VRRain.cpp)
 #target_sources(polyvr PRIVATE src/addons/WorldGenerator/weather/VRPyRain.cpp) # to delete

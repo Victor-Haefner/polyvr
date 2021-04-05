@@ -161,8 +161,10 @@ void VRNetworkNode::update() {
 string VRNetworkNode::getRemoteOS() {
     if (isLocal()) return os;
     if (stat_ssh != "ok") return "";
+#ifndef WITHOUT_SSH
     auto ssh = VRSSHSession::open(address, user);
     os = ssh->getRemoteOS();
+#endif
     return os;
 }
 
