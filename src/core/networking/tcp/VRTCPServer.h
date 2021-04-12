@@ -25,7 +25,7 @@ class VRTCPServer {
 
         void onMessage( function<string(string)> f );
 
-        void listen(int port);
+        void listen(int port, string guard = "");
         void close();
 
         string getPublicIP();

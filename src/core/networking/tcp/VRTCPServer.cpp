@@ -27,6 +27,7 @@ class TCPServer {
         thread waiting;
         thread service;
         boost::asio::streambuf buffer;
+        string guard;
 
         function<string (string)> onMessageCb;
 
@@ -40,15 +41,21 @@ class TCPServer {
         }
 
         void read_handler(const boost::system::error_code& ec, size_t N) {
-            if (!ec && N > 7) {
+            //cout << "TCPServer, read_handler, got: " << N << endl;
+            if (ec) cout << "TCPServer, read_handler failed with: " << ec << endl;
+
+            size_t gN = guard.size();
+            if (!ec && N > gN) {
                 string data;
                 std::istream is(&buffer);
                 std::istreambuf_iterator<char> it(is);
-                copy_n( it, N-7, std::back_inserter<std::string>(data) );
-                for (int i=0; i<7; i++) it++;
+                copy_n( it, N-gN, std::back_inserter<std::string>(data) );
+                for (int i=0; i<gN; i++) it++;
                 //data += "\n";
+                //cout << "TCPServer, received: " << data << ", cb: " << endl;
                 if (onMessageCb) {
                     string answer = onMessageCb(data);
+                    //cout << " send answer: " << answer << endl;
                     if (answer.size() > 0) {
                         auto cb = boost::bind(&TCPServer::handle_write, this, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred);
                         boost::asio::async_write(socket, boost::asio::buffer(answer, answer.size()), cb);
@@ -59,7 +66,8 @@ class TCPServer {
         }
 
         void serve() {
-            boost::asio::async_read_until( socket, buffer, "TCPPVR\n", bind(&TCPServer::read_handler, this, std::placeholders::_1, std::placeholders::_2) );
+            if (guard == "") boost::asio::async_read( socket, buffer, boost::asio::transfer_at_least(1), bind(&TCPServer::read_handler, this, std::placeholders::_1, std::placeholders::_2) );
+            else boost::asio::async_read_until( socket, buffer, guard, bind(&TCPServer::read_handler, this, std::placeholders::_1, std::placeholders::_2) );
         }
 
         void waitFor() {
@@ -79,8 +87,9 @@ class TCPServer {
 
         void onMessage( function<string (string)> f ) { onMessageCb = f; }
 
-        void listen(int port) {
-            cout << "TCPServer listen on port " << port << endl;
+        void listen(int port, string guard) {
+            cout << "TCPServer listen on port " << port << ", guard: " << guard << endl;
+            this->guard = guard;
             if (!acceptor) acceptor = unique_ptr<tcp::acceptor>( new tcp::acceptor(io_service, tcp::endpoint(tcp::v4(), port)) );
             waitFor();
         }
@@ -100,7 +109,7 @@ VRTCPServer::~VRTCPServer() { delete server; }
 VRTCPServerPtr VRTCPServer::create() { return VRTCPServerPtr(new VRTCPServer()); }
 
 void VRTCPServer::onMessage( function<string(string)> f ) { server->onMessage(f); }
-void VRTCPServer::listen(int port) { this->port = port; server->listen(port); }
+void VRTCPServer::listen(int port, string guard) { this->port = port; server->listen(port, guard); }
 void VRTCPServer::close() { server->close(); }
 int VRTCPServer::getPort() { return port; }
 
@@ -125,7 +134,7 @@ string VRTCPServer::getPublicIP() {
     getsockname(sock, (sockaddr*) &name, &namelen);
 
     char addressBuffer[INET_ADDRSTRLEN];
-    inet_ntop(AF_INET, &name.sin_addr, addressBuffer, INET_ADDRSTRLEN); 
+    inet_ntop(AF_INET, &name.sin_addr, addressBuffer, INET_ADDRSTRLEN);
 #ifndef _WINDOWS
 	::close(sock);
 #else

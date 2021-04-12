@@ -833,7 +833,7 @@ void VRSyncNode::handleNewConnect(string data){
 
 void VRSyncNode::startInterface(int port) {
     server = VRTCPServer::create();
-    server->listen(port);
+    server->listen(port, "TCPPVR\n");
     server->onMessage( bind(&VRSyncNode::handleMessage, this, std::placeholders::_1) );
 }
 

@@ -57,13 +57,41 @@ PyMethodDef VRPyRestServer::methods[] = {
 #ifndef WITHOUT_TCP
 PyMethodDef VRPyTCPClient::methods[] = {
     {"connect", PyWrap(TCPClient, connect, "Connect to server", void, string, int) },
-    {"send", PyWrap(TCPClient, send, "Send message to server", void, const string&) },
+    {"send", PyWrapOpt(TCPClient, send, "Send message to server", "", void, const string&, string) },
+    {"onMessage", PyWrap(TCPClient, onMessage, "Set onMessage callback", void, function<void(string)>) },
     {NULL}  /* Sentinel */
 };
 
 PyMethodDef VRPyTCPServer::methods[] = {
-    {"listen", PyWrap(TCPServer, listen, "Listen on port", void, int) },
+    {"listen", PyWrapOpt(TCPServer, listen, "Listen on port", "", void, int, string) },
     {"close", PyWrap(TCPServer, close, "Close server", void) },
+    {"onMessage", PyWrap(TCPServer, onMessage, "Set onMessage callback", void, function<string(string)>) },
     {NULL}  /* Sentinel */
 };
+
+template<> bool toValue(PyObject* o, function<string(string)>& e) {
+    //if (!VRPyEntity::check(o)) return 0; // TODO: add checks!
+    Py_IncRef(o);
+	PyObject* args = PyTuple_New(1);
+    e = bind(VRPyBase::execPyCall<string, string>, o, args, placeholders::_1);
+    return 1;
+}
+
+template<> bool toValue(PyObject* o, function<void(string)>& e) {
+    //if (!VRPyEntity::check(o)) return 0; // TODO: add checks!
+    Py_IncRef(o);
+	PyObject* args = PyTuple_New(1);
+    e = bind(VRPyBase::execPyCallVoid<string>, o, args, placeholders::_1);
+    return 1;
+}
+
+template<> int toValue(stringstream& ss, function<string(string)>& e) { return 0; }
+template<> int toValue(stringstream& ss, function<void(string)>& e) { return 0; }
+
+template<> string typeName(const function<string(string)>& t) { return "string function(string)"; }
+template<> string typeName(const function<void(string)>& t) { return "void function(string)"; }
 #endif
+
+
+
+

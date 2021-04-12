@@ -1,4 +1,5 @@
 #include "VRTCPClient.h"
+#include "core/utils/toString.h"
 
 #include <boost/asio.hpp>
 
@@ -19,7 +20,11 @@ class TCPClient {
         boost::asio::io_service::work worker;
         tcp::socket socket;
         list<string> messages;
+        boost::asio::streambuf buffer;
         thread service;
+        string guard;
+
+        function<void (string)> onMessageCb;
 
         vector<boost::asio::ip::tcp::endpoint> uriToEndpoints(const string& uri) {
             boost::asio::ip::tcp::resolver resolver(io_service);
@@ -31,12 +36,33 @@ class TCPClient {
             return res;
         }
 
+        void read_handler(const boost::system::error_code& ec, size_t N) {
+            //cout << "TCPClient, read_handler, got: " << N << endl;
+            if (ec) cout << "TCPClient, read_handler failed with: " << ec << endl;
+
+            size_t gN = guard.size();
+            if (!ec && N > gN) {
+                string data;
+                std::istream is(&buffer);
+                std::istreambuf_iterator<char> it(is);
+                copy_n( it, N-gN, std::back_inserter<std::string>(data) );
+                for (int i=0; i<gN; i++) it++;
+                //data += "\n";
+                //cout << "TCPClient, received: " << data << ", cb: " << endl;
+                if (onMessageCb) onMessageCb(data);
+            } else {}
+        }
+
         void processQueue() {
             boost::asio::async_write(socket, boost::asio::buffer(messages.front().data(), messages.front().length()),
                                     [this](boost::system::error_code ec, size_t N) {
                     if (!ec) {
                         messages.pop_front();
                         if (!messages.empty()) processQueue();
+                        else {
+                            if (guard == "") boost::asio::async_read( socket, buffer, boost::asio::transfer_at_least(1), bind(&TCPClient::read_handler, this, std::placeholders::_1, std::placeholders::_2) );
+                            else boost::asio::async_read_until( socket, buffer, guard, bind(&TCPClient::read_handler, this, std::placeholders::_1, std::placeholders::_2) );
+                        }
                     } else {
                         cout << " tcp client write ERROR: " << ec << "  N: " << N << endl;
                         socket.close();
@@ -55,6 +81,8 @@ class TCPClient {
 
         ~TCPClient() { close(); }
 
+        void onMessage( function<void (string)> f ) { onMessageCb = f; }
+
         void close() {
             io_service.stop();
             socket.cancel();
@@ -64,15 +92,26 @@ class TCPClient {
         }
 
         void connect(string host, int port) {
-            socket.connect( tcp::endpoint( boost::asio::ip::address::from_string(host), port ));
+            cout << "TCPClient::connect to: " << host << ", on port " << port << endl;
+            try {
+                socket.connect( tcp::endpoint( boost::asio::ip::address::from_string(host), port ));
+            } catch(exception& e) {
+                cout << "TCPClient::connect failed with: " << e.what() << endl;
+            }
         }
 
         void connect(string uri) {
-            socket.connect( uriToEndpoints(uri)[0] );
+            cout << "TCPClient::connect to: " << uri << endl;
+            try {
+                socket.connect( uriToEndpoints(uri)[0] );
+            } catch(exception& e) {
+                cout << "TCPClient::connect failed with: " << e.what() << endl;
+            }
         }
 
-        void send(string msg) {
-            msg += "TCPPVR\n";
+        void send(string msg, string guard) {
+            this->guard = guard;
+            msg += guard;
             bool write_in_progress = !messages.empty();
             messages.push_back(msg);
             if (!write_in_progress) processQueue();
@@ -91,9 +130,10 @@ VRTCPClientPtr VRTCPClient::create() { return VRTCPClientPtr(new VRTCPClient());
 
 void VRTCPClient::connect(string host, int port) { client->connect(host, port); }
 void VRTCPClient::connect(string host) { client->connect(host); }
-void VRTCPClient::send(const string& message) { client->send(message); }
+void VRTCPClient::send(const string& message, string guard) { client->send(message, guard); }
 bool VRTCPClient::connected() { return client->connected(); }
 
+void VRTCPClient::onMessage( function<void(string)> f ) { client->onMessage(f); }
 
 
 
