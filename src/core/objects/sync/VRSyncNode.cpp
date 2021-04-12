@@ -867,7 +867,7 @@ void VRSyncNode::handleSelfmapRequest(string msg) {
 
     //UInt32 client = args->ws_id;
     string msg = args->ws_data;*/
-void VRSyncNode::handleMessage(string msg) {
+string VRSyncNode::handleMessage(string msg) {
     //cout << "VRSyncNode::handleMessage " << msg.size() << endl;
     //cout << msg << endl;
     VRUpdateCbPtr job = 0;
@@ -884,6 +884,7 @@ void VRSyncNode::handleMessage(string msg) {
     //else if (startsWith(msg, "warn|")) handleWarning(msg);
     else job = VRUpdateCb::create( "sync-handleCL", bind(&VRSyncChangelist::gatherChangelistData, changelist.get(), ptr(), msg) );
     if (job) VRScene::getCurrent()->queueJob( job );
+    return "";
 }
 
 //broadcast message to all remote nodes

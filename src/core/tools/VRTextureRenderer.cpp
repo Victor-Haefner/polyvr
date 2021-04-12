@@ -18,6 +18,7 @@
 #include "core/scene/VRScene.h"
 #include "core/scene/rendering/VRDefShading.h"
 #include "core/math/boundingbox.h"
+#include "core/networking/tcp/VRTCPServer.h"
 
 #include <OpenSG/OSGBackground.h>
 #include <OpenSG/OSGSimpleStage.h>
@@ -169,7 +170,7 @@ VRTextureRenderer::VRTextureRenderer(string name, bool readback) : VRObject(name
     updateBackground();
 }
 
-VRTextureRenderer::~VRTextureRenderer() { delete data; }
+VRTextureRenderer::~VRTextureRenderer() { stopServer(); delete data; }
 
 VRTextureRendererPtr VRTextureRenderer::create(string name, bool readback) {
     auto tg = VRTextureRendererPtr( new VRTextureRenderer(name, readback) );
@@ -413,4 +414,23 @@ vector<VRTexturePtr> VRTextureRenderer::createCubeMaps(VRTransformPtr focusObjec
     cam->setNear(Near);
     cam->setPose(pose);
     return {texFront, texBack, texLeft, texRight, texUp, texDown};
+}
+
+string VRTextureRenderer::startServer(int port) {
+    string uri;
+    server = VRTCPServer::create();
+    server->onMessage( bind(&VRTextureRenderer::serverCallback, this, _1) );
+    server->listen(port);
+    return uri;
+}
+
+void VRTextureRenderer::stopServer() {
+    if (!server) return;
+    server->close();
+    server.reset();
+}
+
+string VRTextureRenderer::serverCallback(string data) {
+    cout << "VRTextureRenderer::serverCallback, received: " << data << endl;
+    return "hello world!";
 }

@@ -1,6 +1,7 @@
 #include "VRTCPServer.h"
 
 #include <boost/asio.hpp>
+#include <boost/bind.hpp>
 
 #include <cstdlib>
 #include <iostream>
@@ -27,11 +28,15 @@ class TCPServer {
         thread service;
         boost::asio::streambuf buffer;
 
-        function<void (string)> onMessageCb;
+        function<string (string)> onMessageCb;
 
         template <typename Itr, typename Out>
         void copy_n(Itr it, size_t count, Out out) {
             for (size_t i=0; i<count; i++) out = *it++;
+        }
+
+        void handle_write(const boost::system::error_code& error, size_t bytes_transferred) {
+            // done cb;
         }
 
         void read_handler(const boost::system::error_code& ec, size_t N) {
@@ -42,7 +47,13 @@ class TCPServer {
                 copy_n( it, N-7, std::back_inserter<std::string>(data) );
                 for (int i=0; i<7; i++) it++;
                 //data += "\n";
-                if (onMessageCb) onMessageCb(data);
+                if (onMessageCb) {
+                    string answer = onMessageCb(data);
+                    if (answer.size() > 0) {
+                        auto cb = boost::bind(&TCPServer::handle_write, this, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred);
+                        boost::asio::async_write(socket, boost::asio::buffer(answer, answer.size()), cb);
+                    }
+                }
                 serve();
             } else {}
         }
@@ -66,9 +77,10 @@ class TCPServer {
 
         ~TCPServer() { close(); }
 
-        void onMessage( function<void (string)> f ) { onMessageCb = f; }
+        void onMessage( function<string (string)> f ) { onMessageCb = f; }
 
         void listen(int port) {
+            cout << "TCPServer listen on port " << port << endl;
             if (!acceptor) acceptor = unique_ptr<tcp::acceptor>( new tcp::acceptor(io_service, tcp::endpoint(tcp::v4(), port)) );
             waitFor();
         }
@@ -87,7 +99,7 @@ VRTCPServer::~VRTCPServer() { delete server; }
 
 VRTCPServerPtr VRTCPServer::create() { return VRTCPServerPtr(new VRTCPServer()); }
 
-void VRTCPServer::onMessage( function<void (string)> f ) { server->onMessage(f); }
+void VRTCPServer::onMessage( function<string(string)> f ) { server->onMessage(f); }
 void VRTCPServer::listen(int port) { this->port = port; server->listen(port); }
 void VRTCPServer::close() { server->close(); }
 int VRTCPServer::getPort() { return port; }

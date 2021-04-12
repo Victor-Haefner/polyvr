@@ -11,6 +11,11 @@ simpleVRPyType(RestResponse, 0);
 simpleVRPyType(RestClient, New_ptr);
 simpleVRPyType(RestServer, New_ptr);
 
+#ifndef WITHOUT_TCP
+simpleVRPyType(TCPClient, New_ptr);
+simpleVRPyType(TCPServer, New_ptr);
+#endif
+
 #ifndef WITHOUT_HDLC
 PyMethodDef VRPyHDLC::methods[] = {
     {"setCallback", PyWrap(HDLC, setCallback, "Set callback", void, VRHDLCCbPtr) },
@@ -48,3 +53,17 @@ PyMethodDef VRPyRestClient::methods[] = {
 PyMethodDef VRPyRestServer::methods[] = {
     {NULL}  /* Sentinel */
 };
+
+#ifndef WITHOUT_TCP
+PyMethodDef VRPyTCPClient::methods[] = {
+    {"connect", PyWrap(TCPClient, connect, "Connect to server", void, string, int) },
+    {"send", PyWrap(TCPClient, send, "Send message to server", void, const string&) },
+    {NULL}  /* Sentinel */
+};
+
+PyMethodDef VRPyTCPServer::methods[] = {
+    {"listen", PyWrap(TCPServer, listen, "Listen on port", void, int) },
+    {"close", PyWrap(TCPServer, close, "Close server", void) },
+    {NULL}  /* Sentinel */
+};
+#endif

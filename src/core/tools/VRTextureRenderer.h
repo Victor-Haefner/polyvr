@@ -5,6 +5,7 @@
 #include "core/objects/VRObjectFwd.h"
 #include "core/tools/VRToolsFwd.h"
 #include "core/objects/object/VRObject.h"
+#include "core/networking/VRNetworkingFwd.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -23,6 +24,7 @@ class VRTextureRenderer : public VRObject {
         VRMaterialPtr mat = 0;
         VRTexturePtr fbotex = 0;
         VRCameraPtr cam = 0;
+        VRTCPServerPtr server;
 
         void setChannelFP(string fp);
         void resetChannelFP();
@@ -32,6 +34,8 @@ class VRTextureRenderer : public VRObject {
 
         void setChannelSubstitutes(CHANNEL c);
         void resetChannelSubstitutes();
+
+        string serverCallback(string data);
 
     public:
         VRTextureRenderer(string name, bool readback = false);
@@ -52,6 +56,9 @@ class VRTextureRenderer : public VRObject {
         VRTexturePtr renderOnce(CHANNEL c = RENDER);
         vector<VRTexturePtr> createCubeMaps(VRTransformPtr focusObject);
         VRMaterialPtr createTextureLod(VRObjectPtr scene, PosePtr cam, int res, float aspect, float fov, Color3f bg);
+
+        string startServer(int port);
+        void stopServer();
 
         static void updateSceneBackground();
 

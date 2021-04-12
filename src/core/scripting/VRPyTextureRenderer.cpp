@@ -20,6 +20,8 @@ PyMethodDef VRPyTextureRenderer::methods[] = {
     {"getCamera", PyWrap(TextureRenderer, getCamera, "Get camera", VRCameraPtr) },
     {"createCubeMaps", PyWrap(TextureRenderer, createCubeMaps, "Create cube maps, front, back, left, right, up, down", vector<VRTexturePtr>, VRTransformPtr) },
     {"test", PyWrap(TextureRenderer, test, "test", void) },
+    {"startServer", PyWrap(TextureRenderer, startServer, "Start streaming server", string, int) },
+    {"stopServer", PyWrap(TextureRenderer, stopServer, "Stop streaming server", void) },
     {NULL}  /* Sentinel */
 };
 
