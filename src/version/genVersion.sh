@@ -5,7 +5,7 @@ P=`dirname $(readlink -f $0)`
 cID=$(git rev-parse HEAD)
 cTi=$(git log -1 --format="%at" | xargs -I{} date -d @{} +%d.%m.%Y_%H:%M:%S)
 
-echo " detected commit ID: %cID from %cTi"
+echo " detected commit ID: $cID from $cTi"
 
 vLine1="#define PVR_COMMIT_ID \"$cID\""
 vLine2="#define PVR_COMMIT_TIME \"$cTi\""
