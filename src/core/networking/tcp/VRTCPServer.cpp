@@ -42,6 +42,7 @@ class TCPServer {
 
         void read_handler(const boost::system::error_code& ec, size_t N) {
             //cout << "TCPServer, read_handler, got: " << N << endl;
+            //if (ec == boost::system::error_code(2)) return; // EOF
             if (ec) cout << "TCPServer, read_handler failed with: " << ec << endl;
 
             size_t gN = guard.size();

@@ -38,9 +38,13 @@
 #include <OpenSG/OSGRenderAction.h>
 #include <OpenSG/OSGSolidBackground.h>
 
+#include <boost/thread/recursive_mutex.hpp>
+
 #define GLSL(shader) #shader
 
 using namespace OSG;
+
+typedef boost::recursive_mutex::scoped_lock PLock;
 
 template<> string typeName(const VRTextureRenderer::CHANNEL& o) { return "VRTextureRenderer::CHANNEL"; }
 
@@ -61,6 +65,7 @@ struct VRTextureRenderer::Data {
     ImageRefPtr             fboTexImg;
     TextureObjChunkRefPtr   fboDTex;
     ImageRefPtr             fboDTexImg;
+    TextureBufferRefPtr     texBuf;
     SimpleStageRefPtr       stage;
 
     // render once ressources
@@ -108,8 +113,8 @@ VRTextureRenderer::VRTextureRenderer(string name, bool readback) : VRObject(name
     data->fboTex->setWrapS(GL_CLAMP_TO_EDGE);
     data->fboTex->setWrapT(GL_CLAMP_TO_EDGE);
 
-    TextureBufferRefPtr texBuf = TextureBuffer::create();
-    texBuf->setTexture(data->fboTex);
+    data->texBuf = TextureBuffer::create();
+    data->texBuf->setTexture(data->fboTex);
 
     data->fboDTexImg = Image::create();
     data->fboDTexImg->set(Image::OSG_RGB_PF, data->fboWidth, data->fboHeight);
@@ -131,7 +136,7 @@ VRTextureRenderer::VRTextureRenderer(string name, bool readback) : VRObject(name
     depthBuf->setInternalFormat(GL_DEPTH_COMPONENT24);
 
     data->fbo = FrameBufferObject::create();
-    data->fbo->setColorAttachment(texBuf, 0);
+    data->fbo->setColorAttachment(data->texBuf, 0);
     data->fbo->setDepthAttachment(texDBuf);
     data->fbo->editMFDrawBuffers()->push_back(GL_DEPTH_ATTACHMENT_EXT);
     data->fbo->editMFDrawBuffers()->push_back(GL_COLOR_ATTACHMENT0_EXT);
@@ -140,7 +145,7 @@ VRTextureRenderer::VRTextureRenderer(string name, bool readback) : VRObject(name
     data->fbo->setPostProcessOnDeactivate(true);
 
     if (readback) {
-        texBuf->setReadBack(true);
+        data->texBuf->setReadBack(true);
         texDBuf->setReadBack(true);
     }
 
@@ -227,6 +232,11 @@ void VRTextureRenderer::setup(VRCameraPtr c, int width, int height, bool alpha) 
 #ifndef WITHOUT_DEFERRED_RENDERING
     if (data->deferredStage) data->deferredStage->setDSCamera( cam->getCam() );
 #endif
+}
+
+void VRTextureRenderer::setReadback(bool readback) {
+    data->texBuf->setReadBack(readback);
+    //texDBuf->setReadBack(readback);
 }
 
 void VRTextureRenderer::setStageCam(OSGCameraPtr cam) { data->stage->setCamera(cam->cam); }
@@ -416,21 +426,65 @@ vector<VRTexturePtr> VRTextureRenderer::createCubeMaps(VRTransformPtr focusObjec
     return {texFront, texBack, texLeft, texRight, texUp, texDown};
 }
 
+void VRTextureRenderer::prepareTextureForStream() {
+    PLock lock(mtx);
+    mat->getTexture()->write("tmp2.jpeg");
+}
+
 string VRTextureRenderer::startServer(int port) {
     string uri;
     server = VRTCPServer::create();
     server->onMessage( bind(&VRTextureRenderer::serverCallback, this, _1) );
     server->listen(port);
+    updateCb = VRUpdateCb::create("texture renderer stream", bind(&VRTextureRenderer::prepareTextureForStream, this));
+    VRScene::getCurrent()->addUpdateFkt(updateCb);
     return uri;
 }
 
 void VRTextureRenderer::stopServer() {
     if (!server) return;
+    VRScene::getCurrent()->dropUpdateFkt(updateCb);
     server->close();
     server.reset();
 }
 
+string testReplyText =
+"HTTP/1.1 200 OK\n"
+"Date: Thu, 19 Feb 2009 12:27:04 GMT\n"
+"Server: Apache/2.2.3\n"
+"Last-Modified: Wed, 18 Jun 2003 16:05:58 GMT\n"
+"ETag: \"56d-9989200-1132c580\"\n"
+"Content-Type: text/html\n"
+"Content-Length: 15\n"
+"Accept-Ranges: bytes\n"
+"Connection: close\n"
+"\n"
+"sdfkjsdnbfkjbsf";
+
+string testReplyImg =
+"HTTP/1.1 200 OK\n"
+"Date: Thu, 19 Feb 2009 12:27:04 GMT\n"
+"Server: Apache/2.2.3\n"
+"Last-Modified: Fri, 10 Feb 2012 14:31:06 GMT\n"
+"ETag: \"56d-9989200-1132c580\"\n"
+"Content-Type: image/jpeg\n"
+"Connection: close\n"
+"Content-Length: ";
+
 string VRTextureRenderer::serverCallback(string data) {
+    PLock lock(mtx);
     cout << "VRTextureRenderer::serverCallback, received: " << data << endl;
-    return "hello world!";
+    //return testReplyText + "\r\n\0";
+
+
+    ifstream fin("tmp2.jpeg", ios::binary);
+    ostringstream ostrm;
+    ostrm << fin.rdbuf();
+
+    string imgData = ostrm.str();
+    size_t N = imgData.size();
+
+    testReplyImg += toString(N) + "\n\n";
+    //return testReplyImg + imgData + "\r\n\0";
+    return testReplyImg + imgData;
 }

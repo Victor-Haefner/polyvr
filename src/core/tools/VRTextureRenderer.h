@@ -2,6 +2,8 @@
 #define VRTEXTURERENDERER_H_INCLUDED
 
 #include <OpenSG/OSGColor.h>
+#include <boost/thread/recursive_mutex.hpp>
+
 #include "core/objects/VRObjectFwd.h"
 #include "core/tools/VRToolsFwd.h"
 #include "core/objects/object/VRObject.h"
@@ -25,6 +27,8 @@ class VRTextureRenderer : public VRObject {
         VRTexturePtr fbotex = 0;
         VRCameraPtr cam = 0;
         VRTCPServerPtr server;
+        VRUpdateCbPtr updateCb;
+        boost::recursive_mutex mtx;
 
         void setChannelFP(string fp);
         void resetChannelFP();
@@ -36,6 +40,7 @@ class VRTextureRenderer : public VRObject {
         void resetChannelSubstitutes();
 
         string serverCallback(string data);
+        void prepareTextureForStream();
 
     public:
         VRTextureRenderer(string name, bool readback = false);
@@ -44,6 +49,7 @@ class VRTextureRenderer : public VRObject {
         static VRTextureRendererPtr create(string name = "textureRenderer", bool readback = false);
 
         void setup(VRCameraPtr cam, int width, int height, bool alpha = false);
+        void setReadback(bool readback);
         void setStageCam(OSGCameraPtr cam);
         void setMaterialSubstitutes(map<VRMaterial*, VRMaterialPtr> substitutes, CHANNEL c);
         void setBackground(Color3f c, float a = 0);
