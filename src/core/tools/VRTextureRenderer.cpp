@@ -448,20 +448,7 @@ void VRTextureRenderer::stopServer() {
     server.reset();
 }
 
-string testReplyText =
-"HTTP/1.1 200 OK\n"
-"Date: Thu, 19 Feb 2009 12:27:04 GMT\n"
-"Server: Apache/2.2.3\n"
-"Last-Modified: Wed, 18 Jun 2003 16:05:58 GMT\n"
-"ETag: \"56d-9989200-1132c580\"\n"
-"Content-Type: text/html\n"
-"Content-Length: 15\n"
-"Accept-Ranges: bytes\n"
-"Connection: close\n"
-"\n"
-"sdfkjsdnbfkjbsf";
-
-string testReplyImg =
+const string restImgHeader =
 "HTTP/1.1 200 OK\n"
 "Date: Thu, 19 Feb 2009 12:27:04 GMT\n"
 "Server: Apache/2.2.3\n"
@@ -474,7 +461,6 @@ string testReplyImg =
 string VRTextureRenderer::serverCallback(string data) {
     PLock lock(mtx);
     //cout << "VRTextureRenderer::serverCallback, received: " << data << endl;
-    //return testReplyText + "\r\n\0";
 
     ifstream fin("tmp2.jpeg", ios::binary);
     ostringstream ostrm;
@@ -482,7 +468,5 @@ string VRTextureRenderer::serverCallback(string data) {
 
     string imgData = ostrm.str();
     size_t N = imgData.size();
-
-    string reply = testReplyImg + toString(N) + "\n\n" + imgData;
-    return reply;
+    return restImgHeader + toString(N) + "\n\n" + imgData;
 }

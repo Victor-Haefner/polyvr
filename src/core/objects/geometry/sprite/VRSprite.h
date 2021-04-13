@@ -37,7 +37,9 @@ class VRSprite : public VRGeometry {
         void setBillboard(int i);
         void setScreensize(bool b);
         void setDoubleSided(bool b);
+
         void webOpen(string path, int res, float ratio);
+        void webReload();
 
         Vec2d getSize();
         string getLabel();
