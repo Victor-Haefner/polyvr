@@ -30,7 +30,7 @@
 
 	def onServerMsg(m):
 		print 'server received:', m
-		return "heloo!"
+		return "heloo " + m + "!"
 	
 	def onClientMsg(m):
 		print 'client received:', m
@@ -43,7 +43,14 @@
 	VR.cli.onMessage(onClientMsg)
 	VR.cli.connect('127.0.0.1', 5678)
 	VR.cli.send('hohoho')
+
+
+	VR.cli2 = VR.TCPClient()
+	VR.cli2.onMessage(onClientMsg)
+	VR.cli2.connect('127.0.0.1', 5678)
+	VR.cli2.send('hahaha')
 </core>
+      <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="0" persistency="666"/>
     </Script>
   </Scripts>
   <Sockets persistency="666"/>
