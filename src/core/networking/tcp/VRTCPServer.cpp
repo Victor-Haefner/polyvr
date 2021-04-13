@@ -18,15 +18,79 @@ using namespace OSG;
 using namespace boost::asio;
 using ip::tcp;
 
+
+class Session {
+    public:
+        tcp::socket socket;
+        string guard;
+        boost::asio::streambuf buffer;
+        function<string (string)> onMessageCb;
+        //enum { max_length = 1024 };
+        //char data_[max_length];
+
+    public:
+        Session(boost::asio::io_service& io, string g, function<string (string)> cb)
+            : socket(io), guard(g), onMessageCb(cb) {
+            ;
+        }
+
+        ~Session() {
+            socket.cancel();
+            boost::system::error_code _error_code;
+            socket.shutdown(tcp::socket::shutdown_both, _error_code);
+        }
+
+        void start() {
+            /*socket.async_read_some(boost::asio::buffer(data_, max_length),
+                boost::bind(&Session::handle_read, this,
+                  boost::asio::placeholders::error,
+                  boost::asio::placeholders::bytes_transferred));*/
+
+            if (guard == "") boost::asio::async_read( socket, buffer, boost::asio::transfer_at_least(1), bind(&Session::read_handler, this, std::placeholders::_1, std::placeholders::_2) );
+            else boost::asio::async_read_until( socket, buffer, guard, bind(&Session::read_handler, this, std::placeholders::_1, std::placeholders::_2) );
+
+        }
+
+        void handle_write(const boost::system::error_code& error, size_t bytes_transferred) {
+            if (!error) start();
+            else delete this;
+        }
+
+        void read_handler(const boost::system::error_code& ec, size_t N) {
+            //cout << "Session, read_handler, got: " << N << endl;
+            //if (ec == boost::system::error_code(2)) return; // EOF
+            if (ec) cout << "Session, read_handler failed with: " << ec << endl;
+
+            size_t gN = guard.size();
+            if (!ec && N > gN) {
+                string data;
+                std::istream is(&buffer);
+                std::istreambuf_iterator<char> it(is);
+                copy_n( it, N-gN, std::back_inserter<std::string>(data) );
+                for (int i=0; i<=gN; i++) it++;
+                //data += "\n";
+                //cout << "Session, received: " << data << ", cb: " << endl;
+                if (onMessageCb) {
+                    string answer = onMessageCb(data);
+                    //cout << " send answer: " << answer << endl;
+                    if (answer.size() > 0) {
+                        auto cb = boost::bind(&Session::handle_write, this, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred);
+                        boost::asio::async_write(socket, boost::asio::buffer(answer, answer.size()), cb);
+                    } else start();
+                }
+            } else {}
+        }
+};
+
+
 class TCPServer {
     private:
         boost::asio::io_service io_service;
         boost::asio::io_service::work worker;
-        tcp::socket socket;
+        vector<Session*> sessions;
         unique_ptr<tcp::acceptor> acceptor;
         thread waiting;
         thread service;
-        boost::asio::streambuf buffer;
         string guard;
 
         function<string (string)> onMessageCb;
@@ -36,43 +100,10 @@ class TCPServer {
             for (size_t i=0; i<count; i++) out = *it++;
         }
 
-        void handle_write(const boost::system::error_code& error, size_t bytes_transferred) {
-            // done cb;
-        }
-
-        void read_handler(const boost::system::error_code& ec, size_t N) {
-            //cout << "TCPServer, read_handler, got: " << N << endl;
-            //if (ec == boost::system::error_code(2)) return; // EOF
-            if (ec) cout << "TCPServer, read_handler failed with: " << ec << endl;
-
-            size_t gN = guard.size();
-            if (!ec && N > gN) {
-                string data;
-                std::istream is(&buffer);
-                std::istreambuf_iterator<char> it(is);
-                copy_n( it, N-gN, std::back_inserter<std::string>(data) );
-                for (int i=0; i<gN; i++) it++;
-                //data += "\n";
-                //cout << "TCPServer, received: " << data << ", cb: " << endl;
-                if (onMessageCb) {
-                    string answer = onMessageCb(data);
-                    //cout << " send answer: " << answer << endl;
-                    if (answer.size() > 0) {
-                        auto cb = boost::bind(&TCPServer::handle_write, this, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred);
-                        boost::asio::async_write(socket, boost::asio::buffer(answer, answer.size()), cb);
-                    }
-                }
-                serve();
-            } else {}
-        }
-
-        void serve() {
-            if (guard == "") boost::asio::async_read( socket, buffer, boost::asio::transfer_at_least(1), bind(&TCPServer::read_handler, this, std::placeholders::_1, std::placeholders::_2) );
-            else boost::asio::async_read_until( socket, buffer, guard, bind(&TCPServer::read_handler, this, std::placeholders::_1, std::placeholders::_2) );
-        }
-
         void waitFor() {
-            acceptor->async_accept(socket, [this](boost::system::error_code ec) { if (!ec) serve(); /*waitFor();*/ });
+            Session* s = new Session(io_service, guard, onMessageCb);
+            sessions.push_back(s);
+            acceptor->async_accept(s->socket, [this,s](boost::system::error_code ec) { if (!ec) { s->start(); waitFor(); } });
         }
 
 		void run() {
@@ -80,7 +111,7 @@ class TCPServer {
 		}
 
     public:
-        TCPServer() : worker(io_service), socket(io_service) {
+        TCPServer() : worker(io_service) {
             service = thread([this](){ run(); });
         }
 
@@ -97,9 +128,7 @@ class TCPServer {
 
         void close() {
             io_service.stop();
-            socket.cancel();
-            boost::system::error_code _error_code;
-            socket.shutdown(tcp::socket::shutdown_both, _error_code);
+            for (auto s : sessions) delete s;
             if (service.joinable()) service.join();
         }
 };
