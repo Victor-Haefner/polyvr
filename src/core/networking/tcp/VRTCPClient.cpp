@@ -38,7 +38,7 @@ class TCPClient {
 
         void read_handler(const boost::system::error_code& ec, size_t N) {
             //cout << "TCPClient, read_handler, got: " << N << endl;
-            if (ec) cout << "TCPClient, read_handler failed with: " << ec << endl;
+            if (ec) cout << "TCPClient, read_handler failed with: " << ec.message() << endl;
 
             size_t gN = guard.size();
             if (!ec && N > gN) {

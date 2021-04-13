@@ -58,8 +58,8 @@ class Session {
 
         void read_handler(const boost::system::error_code& ec, size_t N) {
             //cout << "Session, read_handler, got: " << N << endl;
-            //if (ec == boost::system::error_code(2)) return; // EOF
-            if (ec) cout << "Session, read_handler failed with: " << ec << endl;
+            if (ec.value() == 2) { start(); return; } // EOF
+            if (ec) cout << "Session, read_handler failed with: " << ec.message() << endl;
 
             size_t gN = guard.size();
             if (!ec && N > gN) {

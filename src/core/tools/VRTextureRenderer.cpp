@@ -435,7 +435,7 @@ string VRTextureRenderer::startServer(int port) {
     string uri;
     server = VRTCPServer::create();
     server->onMessage( bind(&VRTextureRenderer::serverCallback, this, _1) );
-    server->listen(port);
+    server->listen(port, "\r\n\r\n");
     updateCb = VRUpdateCb::create("texture renderer stream", bind(&VRTextureRenderer::prepareTextureForStream, this));
     VRScene::getCurrent()->addUpdateFkt(updateCb);
     return uri;
@@ -473,9 +473,8 @@ string testReplyImg =
 
 string VRTextureRenderer::serverCallback(string data) {
     PLock lock(mtx);
-    cout << "VRTextureRenderer::serverCallback, received: " << data << endl;
+    //cout << "VRTextureRenderer::serverCallback, received: " << data << endl;
     //return testReplyText + "\r\n\0";
-
 
     ifstream fin("tmp2.jpeg", ios::binary);
     ostringstream ostrm;
@@ -484,7 +483,6 @@ string VRTextureRenderer::serverCallback(string data) {
     string imgData = ostrm.str();
     size_t N = imgData.size();
 
-    testReplyImg += toString(N) + "\n\n";
-    //return testReplyImg + imgData + "\r\n\0";
-    return testReplyImg + imgData;
+    string reply = testReplyImg + toString(N) + "\n\n" + imgData;
+    return reply;
 }
