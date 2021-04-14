@@ -22,9 +22,15 @@ class TCPClient {
         list<string> messages;
         boost::asio::streambuf buffer;
         thread service;
+        string guard;
+
+        // hole punching
+        boost::asio::io_service io_service_acc;
+        boost::asio::io_service io_service_con;
+        thread service_acc;
+        thread service_con;
         thread tunnelAccept;
         thread tunnelConnect;
-        string guard;
 
         function<void (string)> onMessageCb;
 
@@ -72,13 +78,9 @@ class TCPClient {
                 });
         }
 
-		void run() {
-			io_service.run();
-		}
-
     public:
         TCPClient() : worker(io_service), socket(io_service) {
-			service = thread([this]() { run(); });
+			service = thread([this]() { io_service.run(); });
         }
 
         ~TCPClient() { close(); }
@@ -130,18 +132,20 @@ class TCPClient {
 
             tunnelAccept = thread([this, lPort]() { acceptHolePunching(lPort); });
             tunnelConnect = thread([this, lIP, lPort, rIP, rPort]() { connectHolePunching(lIP, lPort, rIP, rPort); });
+			service_acc = thread([this]() { io_service_acc.run(); });
+			service_con = thread([this]() { io_service_con.run(); });
         }
 
         void acceptHolePunching(int port) {
             cout << "TCPClient::acceptHolePunching on " << port << endl;
             bool stop = false;
             boost::asio::ip::tcp::endpoint ep(boost::asio::ip::tcp::v4(), port);
-            boost::asio::ip::tcp::acceptor acceptor(io_service, ep.protocol());
+            boost::asio::ip::tcp::acceptor acceptor(io_service_acc, ep.protocol());
 
-            cout << " accept acceptor bind " << endl;
+            cout << " accept acceptor bind on endpoint " << ep << endl;
             boost::asio::socket_base::reuse_address reuseAddress(true);
-            acceptor.set_option(reuseAddress); //    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             boost::asio::detail::socket_option::boolean<SOL_SOCKET, SO_REUSEPORT> reusePort(true);
+            acceptor.set_option(reuseAddress); //    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             acceptor.set_option(reusePort); //    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
 
             boost::system::error_code ec;
@@ -154,15 +158,14 @@ class TCPClient {
 
             acceptor.listen(1); //    s.listen(1)
         //    s.settimeout(5)
-            boost::asio::ip::tcp::socket sock(io_service);//    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            boost::asio::ip::tcp::socket sock(io_service_acc);//    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
             while (!stop) {  //    while not STOP.is_set():
                 bool exception_caught = true;
                 try {  //        try:
-                    cout << " try accept" << endl;
+                    cout << " try accept on " << port << endl;
                     acceptor.accept(sock); //            conn, addr = s.accept()
-                    cout << "  accepted connection! " << endl;
-                    cout << "   connected to remote! " << endl;
+                    cout << "  --- accepted connection! ---" << endl;
                 }
                 catch (boost::system::error_code e) { //        except socket.timeout:
                     cout << "Exception at VRSyncConnection::connect2. Exception Nr. " << e.message() << endl;
@@ -180,15 +183,21 @@ class TCPClient {
             bool stop = false;
             boost::asio::ip::tcp::endpoint local_ep(boost::asio::ip::address::from_string(localIP), localPort);
 
+            boost::asio::ip::tcp::socket sock(io_service_con, local_ep.protocol());//    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
             cout << " connect acceptor bind " << endl;
-            boost::asio::ip::tcp::acceptor acceptor(io_service, local_ep.protocol());
             boost::asio::socket_base::reuse_address reuseAddress(true);
-            acceptor.set_option(reuseAddress); //    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             boost::asio::detail::socket_option::boolean<SOL_SOCKET, SO_REUSEPORT> reusePort(true);
-            acceptor.set_option(reusePort); //    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+            //boost::asio::ip::tcp::acceptor acceptor(io_service_con, local_ep.protocol());
+            //acceptor.set_option(reuseAddress); //    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            //acceptor.set_option(reusePort); //    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+
+            sock.set_option(reuseAddress);
+            sock.set_option(reusePort);
 
             boost::system::error_code ec;
-            acceptor.bind(local_ep, ec); //    s.bind(local_addr)
+            //acceptor.bind(local_ep, ec); //    s.bind(local_addr)
+            sock.bind(local_ep, ec);
 
             if (ec != 0) { //Handling Errors
                 std::cout << "Failed to bind the acceptor socket." << "Error code = " << ec.value() << ". Message: " << ec.message() << endl;
@@ -197,19 +206,18 @@ class TCPClient {
             auto remoteAddr = boost::asio::ip::address::from_string(remoteIP);
             boost::asio::ip::tcp::endpoint remote_ep(remoteAddr, remotePort);
 
-            boost::asio::ip::tcp::socket sock(io_service);//    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             while (!stop) { //while not STOP.is_set():
                 bool exception_caught = true;
                 try {//        try:
-                    cout << "VRTCPClient::connectHolePunching trying " << this << " " << remoteIP << endl;
+                    cout << "VRTCPClient::connectHolePunching trying " << this << " " << remoteIP << ":" << remotePort << endl;
                     sock.connect(remote_ep);//            s.connect(addr)
-                    cout << "VRTCPClient::connectHolePunching connect" << endl;
+                    cout << " --- VRTCPClient::connectHolePunching connect ---" << endl;
                     exception_caught = false;
-                }
-                catch (boost::system::error_code e) {//        except socket.error:
-                    cout << "Exception at VRSyncConnection::connect2. Exception Nr. " << e.message() << endl;
-                    continue;//            continue
+                } catch (boost::system::system_error& e) {
+                    //cout << "boost::system::system_error " << e.what() << endl; // mostly "No route to host", which is Ok
+                    continue;
                 } catch (...) {
+                    cout << "Unknown Exception raised!" << endl;
                     continue;
                 }
                 if (!exception_caught) {//        else:
