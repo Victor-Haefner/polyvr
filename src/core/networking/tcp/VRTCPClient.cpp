@@ -25,10 +25,6 @@ class TCPClient {
         string guard;
 
         // hole punching
-        boost::asio::io_service io_service_acc;
-        boost::asio::io_service io_service_con;
-        thread service_acc;
-        thread service_con;
         thread tunnelAccept;
         thread tunnelConnect;
 
@@ -127,20 +123,15 @@ class TCPClient {
 
         void connectToPeer(string lIP, int lPort, string rIP, int rPort) {
             cout << "TCPClient::connectToPeer " << lIP << ":" << lPort << ", to " << rIP << ":" << rPort << endl;
-            //acceptHolePunching(localPort);
-            //connectHolePunching(localIP, localPort, remoteIP, remotePort);
-
             tunnelAccept = thread([this, lPort]() { acceptHolePunching(lPort); });
             tunnelConnect = thread([this, lIP, lPort, rIP, rPort]() { connectHolePunching(lIP, lPort, rIP, rPort); });
-			service_acc = thread([this]() { io_service_acc.run(); });
-			service_con = thread([this]() { io_service_con.run(); });
-        }
+		}
 
         void acceptHolePunching(int port) {
             cout << "TCPClient::acceptHolePunching on " << port << endl;
             bool stop = false;
             boost::asio::ip::tcp::endpoint ep(boost::asio::ip::tcp::v4(), port);
-            boost::asio::ip::tcp::acceptor acceptor(io_service_acc, ep.protocol());
+            boost::asio::ip::tcp::acceptor acceptor(io_service, ep.protocol());
 
             cout << " accept acceptor bind on endpoint " << ep << endl;
             boost::asio::socket_base::reuse_address reuseAddress(true);
@@ -158,7 +149,7 @@ class TCPClient {
 
             acceptor.listen(1); //    s.listen(1)
         //    s.settimeout(5)
-            boost::asio::ip::tcp::socket sock(io_service_acc);//    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            boost::asio::ip::tcp::socket sock(io_service);//    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
             while (!stop) {  //    while not STOP.is_set():
                 bool exception_caught = true;
@@ -183,24 +174,19 @@ class TCPClient {
             bool stop = false;
             boost::asio::ip::tcp::endpoint local_ep(boost::asio::ip::address::from_string(localIP), localPort);
 
-            boost::asio::ip::tcp::socket sock(io_service_con, local_ep.protocol());//    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            boost::asio::ip::tcp::socket sock(io_service, local_ep.protocol());//    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-            cout << " connect acceptor bind " << endl;
+            cout << " connect socket bind " << endl;
             boost::asio::socket_base::reuse_address reuseAddress(true);
             boost::asio::detail::socket_option::boolean<SOL_SOCKET, SO_REUSEPORT> reusePort(true);
-            //boost::asio::ip::tcp::acceptor acceptor(io_service_con, local_ep.protocol());
-            //acceptor.set_option(reuseAddress); //    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            //acceptor.set_option(reusePort); //    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
-
-            sock.set_option(reuseAddress);
-            sock.set_option(reusePort);
+            sock.set_option(reuseAddress); //    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            sock.set_option(reusePort); //    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
 
             boost::system::error_code ec;
-            //acceptor.bind(local_ep, ec); //    s.bind(local_addr)
-            sock.bind(local_ep, ec);
+            sock.bind(local_ep, ec); //    s.bind(local_addr)
 
             if (ec != 0) { //Handling Errors
-                std::cout << "Failed to bind the acceptor socket." << "Error code = " << ec.value() << ". Message: " << ec.message() << endl;
+                std::cout << "Failed to bind the socket." << "Error code = " << ec.value() << ". Message: " << ec.message() << endl;
             }
 
             auto remoteAddr = boost::asio::ip::address::from_string(remoteIP);
@@ -221,7 +207,6 @@ class TCPClient {
                     continue;
                 }
                 if (!exception_caught) {//        else:
-                    cout << "VRTCPClient::connectHolePunching !exception_caught" << endl;
                     stop = true;//            STOP.set()
                 }
             }
