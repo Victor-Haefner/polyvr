@@ -21,6 +21,7 @@ class VRTCPClient {
 
         static VRTCPClientPtr create();
 
+        void onConnect( function<void(void)>   f );
         void onMessage( function<void(string)> f );
 
         void connect(string host, int port);

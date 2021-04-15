@@ -60,6 +60,7 @@ PyMethodDef VRPyTCPClient::methods[] = {
     {"connectToPeer", PyWrap(TCPClient, connectToPeer, "Connect to another client P2P using TCP tunneling (local IP, port, remote IP, port)", void, string, int, string, int) },
     {"send", PyWrapOpt(TCPClient, send, "Send message to server", "", void, const string&, string) },
     {"onMessage", PyWrap(TCPClient, onMessage, "Set onMessage callback", void, function<void(string)>) },
+    {"onConnect", PyWrap(TCPClient, onConnect, "Set onConnect callback", void, function<void(void)>) },
     {NULL}  /* Sentinel */
 };
 
@@ -86,11 +87,21 @@ template<> bool toValue(PyObject* o, function<void(string)>& e) {
     return 1;
 }
 
+template<> bool toValue(PyObject* o, function<void(void)>& e) {
+    //if (!VRPyEntity::check(o)) return 0; // TODO: add checks!
+    Py_IncRef(o);
+	PyObject* args = PyTuple_New(0);
+    e = bind(VRPyBase::execPyCallVoidVoid, o, args);
+    return 1;
+}
+
 template<> int toValue(stringstream& ss, function<string(string)>& e) { return 0; }
 template<> int toValue(stringstream& ss, function<void(string)>& e) { return 0; }
+template<> int toValue(stringstream& ss, function<void(void)>& e) { return 0; }
 
 template<> string typeName(const function<string(string)>& t) { return "string function(string)"; }
 template<> string typeName(const function<void(string)>& t) { return "void function(string)"; }
+template<> string typeName(const function<void(void)>& t) { return "void function()"; }
 #endif
 
 

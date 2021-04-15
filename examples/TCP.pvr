@@ -21,45 +21,94 @@
   <Cameras activeCam="Default" persistency="666"/>
   <Rendering deferred_rendering="0" fogColor="0.5 0.5 0.5 1" fogParams="0 0 100 0.1" frustum_culling="1" fxaa="0" hmdd="0" marker="0" occlusion_culling="0" persistency="666" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
   <Scripts persistency="666">
-    <Script base_name="Script" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
-      <core>
-	import VR
-
-
-	VR.cli.send('Jenny')
-	VR.cli2.send('Jimmy')
-</core>
-    </Script>
     <Script base_name="init" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	import VR
+	
+	
+	p2p = True # switch to try server/client or P2P
 
-	if hasattr(VR, 'scene'): VR.scene.destroy()
-	VR.scene = VR.Object('scene', 'light')
+	
+	if p2p: VR.startP2Pclients()
+	else:
+		VR.startServer(5678)
+		VR.startClients('127.0.0.1', 5678)
+
+	
+</core>
+      <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="0" persistency="666"/>
+    </Script>
+    <Script base_name="startClients" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+
+	def onClientMsg(m):
+		print 'client received:', m
+		
+	VR.cli1 = VR.TCPClient()
+	VR.cli1.onMessage(onClientMsg)
+	VR.cli1.connect(address, port)
+	VR.cli1.send('Tom')
+
+	VR.cli2 = VR.TCPClient()
+	VR.cli2.onMessage(onClientMsg)
+	VR.cli2.connect(address, port)
+	VR.cli2.send('Poli')
+</core>
+      <arg type="NoneType" value="None" base_name="address" name_space="startClients" name_suffix="0" persistency="666"/>
+      <arg type="NoneType" value="None" base_name="port" name_space="startClients" name_suffix="0" persistency="666"/>
+    </Script>
+    <Script base_name="startP2Pclients" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+
+	def onClientMsg(m):
+		print 'client received:', m
+		
+	def onClient1Connect():
+		print 'client 1 connected'
+		VR.cli1.send('Hello from client1')
+		
+	def onClient2Connect():
+		print 'client 2 connected'
+		VR.cli2.send('Hello from client2')
+		
+	VR.cli1 = VR.TCPClient()
+	VR.cli2 = VR.TCPClient()
+	VR.cli1.onMessage(onClientMsg)
+	VR.cli2.onMessage(onClientMsg)
+	VR.cli1.onConnect(onClient1Connect)
+	VR.cli2.onConnect(onClient2Connect)
+	
+	IPweb = "82.212.37.3"
+	IPloc = "192.168.188.190"
+	
+	VR.cli1.connectToPeer(IPloc, 11111, IPweb, 11112)
+	VR.cli2.connectToPeer(IPloc, 11112, IPweb, 11111)
+</core>
+    </Script>
+    <Script base_name="startServer" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
 
 	def onServerMsg(m):
 		print 'server received:', m
 		return "hello " + m + "!"
-	
-	def onClientMsg(m):
-		print 'client received:', m
-		
+
 	VR.serv = VR.TCPServer()
 	VR.serv.onMessage(onServerMsg)
-	VR.serv.listen(5678)
-	
-	VR.cli = VR.TCPClient()
-	VR.cli.onMessage(onClientMsg)
-	VR.cli.connect('127.0.0.1', 5678)
-	VR.cli.send('Tom')
-
-
-	VR.cli2 = VR.TCPClient()
-	VR.cli2.onMessage(onClientMsg)
-	VR.cli2.connect('127.0.0.1', 5678)
-	VR.cli2.send('Poli')
+	VR.serv.listen(port)
 </core>
-      <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="0" persistency="666"/>
+      <arg type="NoneType" value="None" base_name="port" name_space="startServer" name_suffix="0" persistency="666"/>
+    </Script>
+    <Script base_name="testSend" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+
+
+	VR.cli1.send('Jenny')
+	VR.cli2.send('Jimmy')
+</core>
     </Script>
   </Scripts>
   <Sockets persistency="666"/>
