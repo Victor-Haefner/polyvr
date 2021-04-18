@@ -865,7 +865,7 @@ void gdk_window_get_unscaled_size (_GdkWindow *window, int *unscaled_width, int 
 cairo_region_t* clip_region;
 int window_scale;
 int unscaled_window_width, unscaled_window_height, dx, dy;
-cairo_rectangle_int_t clip_rect, dest;
+cairo_rectangle_int_t clip_rect, dest, fdest;
 _GdkWindow* impl_window;
 
 void gl_area_trigger_resize(GLArea* area) {
@@ -928,15 +928,15 @@ void cairo_draw(cairo_t* cr, GLArea* area, _GdkWindow* window, int scale, int x,
           dest.width = width * window_scale / scale;
           dest.height = height * window_scale / scale;
 
-          if (gdk_rectangle_intersect (&clip_rect, &dest, &dest)) {
+          if (gdk_rectangle_intersect (&clip_rect, &dest, &fdest)) {
               glarea_render(area);
               if (impl_window->current_paint.flushed_region) {
                   cairo_rectangle_int_t flushed_rect;
 
-                  flushed_rect.x = dest.x / window_scale;
-                  flushed_rect.y = dest.y / window_scale;
-                  flushed_rect.width = (dest.x + dest.width + window_scale - 1) / window_scale - flushed_rect.x;
-                  flushed_rect.height = (dest.y + dest.height + window_scale - 1) / window_scale - flushed_rect.y;
+                  flushed_rect.x = fdest.x / window_scale;
+                  flushed_rect.y = fdest.y / window_scale;
+                  flushed_rect.width = (fdest.x + fdest.width + window_scale - 1) / window_scale - flushed_rect.x;
+                  flushed_rect.height = (fdest.y + fdest.height + window_scale - 1) / window_scale - flushed_rect.y;
 
                   cairo_region_union_rectangle (impl_window->current_paint.flushed_region, &flushed_rect);
                   cairo_region_subtract_rectangle (impl_window->current_paint.need_blend_region, &flushed_rect);

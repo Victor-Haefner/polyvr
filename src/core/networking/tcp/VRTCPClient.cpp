@@ -14,6 +14,11 @@ using namespace OSG;
 using namespace boost::asio;
 using ip::tcp;
 
+// SO_REUSEPORT is undeclared in windows ??
+#ifndef SO_REUSEPORT
+#define SO_REUSEPORT 15
+#endif
+
 class TCPClient {
     private:
         typedef shared_ptr<boost::asio::ip::tcp::socket> SocketPtr;
@@ -90,10 +95,14 @@ class TCPClient {
                 });
         }
 
+        void runService() { // needed because windows complains..
+            io_service.run();
+        }
+
     public:
         TCPClient() : worker(io_service) {
             socket = SocketPtr( new tcp::socket(io_service) );
-			service = thread([this]() { io_service.run(); });
+            service = thread([this]() { runService(); });
         }
 
         ~TCPClient() { close(); }
@@ -175,7 +184,7 @@ class TCPClient {
             acceptor.bind(ep, ec); //    s.bind(('', port))
 
             //Handling Errors
-            if (ec != 0) {
+            if (ec.value() != 0) {
                 std::cout << "Failed to bind the acceptor socket." << "Error code = " << ec.value() << ". Message: " << ec.message() << endl;
             }
 
@@ -202,7 +211,6 @@ class TCPClient {
         }
 
         void connectHolePunching(string localIP, int localPort, string remoteIP, int remotePort) {
-            sleep(1);
             //cout << "TCPClient::connectHolePunching from " << localIP << ":" << localPort << ", to " << remoteIP << ":" << remotePort << endl;
             bool stop = false;
             boost::asio::ip::tcp::endpoint local_ep(boost::asio::ip::address::from_string(localIP), localPort);
@@ -218,7 +226,7 @@ class TCPClient {
             boost::system::error_code ec;
             cSocket->bind(local_ep, ec); //    s.bind(local_addr)
 
-            if (ec != 0) { //Handling Errors
+            if (ec.value() != 0) { //Handling Errors
                 std::cout << "Failed to bind the socket." << "Error code = " << ec.value() << ". Message: " << ec.message() << endl;
             }
 
