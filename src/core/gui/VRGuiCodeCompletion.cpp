@@ -116,12 +116,7 @@ VRGuiCodeCompletion* VRGuiCodeCompletionNew () {
 	return (VRGuiCodeCompletion*) g_object_new (VRGuiCodeCompletionType, NULL);
 }
 
-#if GTK_MAJOR_VERSION == 2
-G_DEFINE_TYPE_WITH_CODE( VRGuiCodeCompletion, vr_code_completion, G_TYPE_OBJECT, G_ADD_PRIVATE(VRGuiCodeCompletion) G_IMPLEMENT_INTERFACE(GTK_TYPE_SOURCE_COMPLETION_PROVIDER, initInterface) )
-#else
-//G_DEFINE_TYPE_WITH_CODE(VRGuiCodeCompletion, vr_code_completion, G_TYPE_OBJECT, G_ADD_PRIVATE(VRGuiCodeCompletion) G_IMPLEMENT_INTERFACE(vr_code_completion_get_type(), initInterface))
 G_DEFINE_TYPE_WITH_CODE( VRGuiCodeCompletion, vr_code_completion, G_TYPE_OBJECT, G_ADD_PRIVATE(VRGuiCodeCompletion) G_IMPLEMENT_INTERFACE(GTK_SOURCE_TYPE_COMPLETION_PROVIDER, initInterface) )
-#endif
 
 
 
