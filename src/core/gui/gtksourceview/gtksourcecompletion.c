@@ -141,6 +141,23 @@ enum
 	PROP_PROPOSAL_PAGE_SIZE
 };
 
+typedef struct {
+    GtkWindow* main_window;
+    GtkGrid* vgrid_completion;
+    GtkSourceCompletionContainer* completion_container;
+    GtkTreeView* tree_view_proposals;
+    GtkTreeViewColumn* tree_view_column_icon;
+    GtkCellRendererPixbuf* cell_renderer_icon;
+    GtkTreeViewColumn* tree_view_column_proposal;
+    GtkCellRendererText* cell_renderer_proposal;
+    GtkTreeViewColumn* tree_view_column_accelerator;
+    GtkCellRendererText* cell_renderer_accelerator;
+    GtkGrid* bottom_bar;
+    GtkToggleButton* info_button;
+    GtkImage* selection_image;
+    GtkLabel* selection_label;
+} GtkSourceCompletionWidget;
+
 struct _GtkSourceCompletionPrivate
 {
 	GtkSourceCompletionInfo *main_window;
@@ -2020,10 +2037,7 @@ cell_icon_func (GtkTreeViewColumn *column,
 	}
 }
 
-static void
-init_tree_view (GtkSourceCompletion *completion,
-		GtkBuilder          *builder)
-{
+static void init_tree_view(GtkSourceCompletion* completion, GtkSourceCompletionWidget widget) {
 	GtkTreeSelection *selection;
 	GtkTreeViewColumn *column;
 	GtkCellRenderer *cell_renderer;
@@ -2031,7 +2045,7 @@ init_tree_view (GtkSourceCompletion *completion,
 	GdkRGBA* background_color = NULL;
 	GdkRGBA foreground_color;
 
-	completion->priv->tree_view_proposals = GTK_TREE_VIEW (gtk_builder_get_object (builder, "tree_view_proposals"));
+	completion->priv->tree_view_proposals = widget.tree_view_proposals;
 
 	g_signal_connect_swapped (completion->priv->tree_view_proposals,
 				  "row-activated",
@@ -2059,9 +2073,9 @@ init_tree_view (GtkSourceCompletion *completion,
 
 	/* Icon cell renderer */
 
-	cell_renderer = GTK_CELL_RENDERER (gtk_builder_get_object (builder, "cell_renderer_icon"));
+	cell_renderer = GTK_CELL_RENDERER (widget.cell_renderer_icon);
 
-	column = GTK_TREE_VIEW_COLUMN (gtk_builder_get_object (builder, "tree_view_column_icon"));
+	column = GTK_TREE_VIEW_COLUMN (widget.tree_view_column_icon);
 
 	/* We use a cell function instead of plain attributes for the icon since
 	 * the pixbuf renderer will not renderer any icon if pixbuf is set to NULL.
@@ -2103,10 +2117,10 @@ init_tree_view (GtkSourceCompletion *completion,
 
 	/* Proposal text cell renderer */
 
-	cell_renderer = GTK_CELL_RENDERER (gtk_builder_get_object (builder, "cell_renderer_proposal"));
+	cell_renderer = GTK_CELL_RENDERER (widget.cell_renderer_proposal);
 	completion->priv->cell_renderer_proposal = cell_renderer;
 
-	column = GTK_TREE_VIEW_COLUMN (gtk_builder_get_object (builder, "tree_view_column_proposal"));
+	column = GTK_TREE_VIEW_COLUMN (widget.tree_view_column_proposal);
 
 	gtk_tree_view_column_set_attributes (column, cell_renderer,
 					     "markup", GTK_SOURCE_COMPLETION_MODEL_COLUMN_MARKUP,
@@ -2121,9 +2135,9 @@ init_tree_view (GtkSourceCompletion *completion,
 
 	/* Accelerators cell renderer */
 
-	column = GTK_TREE_VIEW_COLUMN (gtk_builder_get_object (builder, "tree_view_column_accelerator"));
+	column = GTK_TREE_VIEW_COLUMN (widget.tree_view_column_accelerator);
 
-	cell_renderer = GTK_CELL_RENDERER (gtk_builder_get_object (builder, "cell_renderer_accelerator"));
+	cell_renderer = GTK_CELL_RENDERER (widget.cell_renderer_accelerator);
 
 	gtk_tree_view_column_set_attributes (column,
 					     cell_renderer,
@@ -2151,19 +2165,18 @@ init_tree_view (GtkSourceCompletion *completion,
 }
 
 static void
-init_main_window (GtkSourceCompletion *completion,
-		  GtkBuilder          *builder)
+init_main_window (GtkSourceCompletion *completion, GtkSourceCompletionWidget widget)
 {
 	if (completion->priv->view == NULL)
 	{
 		return;
 	}
 
-	completion->priv->main_window = GTK_SOURCE_COMPLETION_INFO (gtk_builder_get_object (builder, "main_window"));
-	completion->priv->info_button = GTK_TOGGLE_BUTTON (gtk_builder_get_object (builder, "info_button"));
-	completion->priv->selection_image = GTK_IMAGE (gtk_builder_get_object (builder, "selection_image"));
-	completion->priv->selection_label = GTK_LABEL (gtk_builder_get_object (builder, "selection_label"));
-	completion->priv->bottom_bar = GTK_WIDGET (gtk_builder_get_object (builder, "bottom_bar"));
+	completion->priv->main_window = GTK_SOURCE_COMPLETION_INFO (widget.main_window);
+	completion->priv->info_button = GTK_TOGGLE_BUTTON (widget.info_button);
+	completion->priv->selection_image = GTK_IMAGE (widget.selection_image);
+	completion->priv->selection_label = GTK_LABEL (widget.selection_label);
+	completion->priv->bottom_bar = GTK_WIDGET (widget.bottom_bar);
 
 	gtk_container_set_border_width (GTK_CONTAINER (completion->priv->main_window), 0);
 
@@ -2239,35 +2252,85 @@ connect_style_context (GtkSourceCompletion *completion)
 	style_context_changed (style_context, completion);
 }
 
+static GtkSourceCompletionWidget setup_widget() {
+    GtkSourceCompletionWidget widget;
+    widget.main_window = GTK_WINDOW(gtk_source_completion_info_new());
+    widget.vgrid_completion = GTK_GRID(gtk_grid_new());
+    widget.completion_container = GTK_SOURCE_COMPLETION_CONTAINER(_gtk_source_completion_container_new());
+
+    widget.tree_view_proposals = GTK_TREE_VIEW(gtk_tree_view_new());
+    widget.tree_view_column_icon = GTK_TREE_VIEW_COLUMN(gtk_tree_view_column_new());
+    widget.tree_view_column_proposal = GTK_TREE_VIEW_COLUMN(gtk_tree_view_column_new());
+    widget.tree_view_column_accelerator = GTK_TREE_VIEW_COLUMN(gtk_tree_view_column_new());
+    widget.cell_renderer_icon = GTK_CELL_RENDERER_PIXBUF(gtk_cell_renderer_pixbuf_new());
+    widget.cell_renderer_proposal = GTK_CELL_RENDERER_TEXT(gtk_cell_renderer_text_new());
+    widget.cell_renderer_accelerator = GTK_CELL_RENDERER_TEXT(gtk_cell_renderer_text_new());
+
+    widget.bottom_bar = GTK_GRID(gtk_grid_new());
+    widget.info_button = GTK_TOGGLE_BUTTON(gtk_toggle_button_new());
+    widget.selection_image = GTK_IMAGE(gtk_image_new());
+    widget.selection_label = GTK_LABEL(gtk_label_new(""));
+
+    // setup containers
+    gtk_window_set_type_hint(widget.main_window, GDK_WINDOW_TYPE_HINT_COMBO);
+    gtk_window_set_resizable(widget.main_window, FALSE);
+    gtk_window_set_skip_taskbar_hint(widget.main_window, TRUE);
+    gtk_window_set_skip_pager_hint(widget.main_window, TRUE);
+    gtk_window_set_accept_focus(widget.main_window, FALSE);
+    gtk_window_set_focus_on_map(widget.main_window, FALSE);
+    gtk_window_set_decorated(widget.main_window, FALSE);
+    gtk_window_set_mnemonics_visible(widget.main_window, FALSE);
+    gtk_container_add(GTK_CONTAINER(widget.main_window), GTK_WIDGET(widget.vgrid_completion));
+    gtk_orientable_set_orientation(GTK_ORIENTABLE(widget.vgrid_completion), GTK_ORIENTATION_VERTICAL);
+
+    // setup treeview
+    gtk_container_add(GTK_CONTAINER(widget.vgrid_completion), GTK_WIDGET(widget.completion_container));
+    gtk_widget_set_can_focus(GTK_WIDGET(widget.completion_container), FALSE);
+    gtk_container_add(GTK_CONTAINER(widget.completion_container), GTK_WIDGET(widget.tree_view_proposals));
+    gtk_tree_view_append_column(widget.tree_view_proposals, widget.tree_view_column_icon);
+    gtk_tree_view_append_column(widget.tree_view_proposals, widget.tree_view_column_proposal);
+    gtk_tree_view_append_column(widget.tree_view_proposals, widget.tree_view_column_accelerator);
+
+    gtk_tree_view_column_pack_end(widget.tree_view_column_icon, GTK_CELL_RENDERER(widget.cell_renderer_icon), FALSE);
+    gtk_tree_view_column_pack_end(widget.tree_view_column_proposal, GTK_CELL_RENDERER(widget.cell_renderer_proposal), TRUE);
+    gtk_tree_view_column_pack_end(widget.tree_view_column_accelerator, GTK_CELL_RENDERER(widget.cell_renderer_accelerator), FALSE);
+
+    gtk_widget_set_can_focus(GTK_WIDGET(widget.tree_view_proposals), FALSE);
+    gtk_widget_set_hexpand(GTK_WIDGET(widget.tree_view_proposals), TRUE);
+    gtk_widget_set_vexpand(GTK_WIDGET(widget.tree_view_proposals), TRUE);
+    gtk_tree_view_set_headers_visible(widget.tree_view_proposals, FALSE);
+    gtk_tree_view_set_enable_search(widget.tree_view_proposals, FALSE);
+    gtk_tree_view_set_show_expanders(widget.tree_view_proposals, FALSE);
+
+    // setup bottom bar
+    gtk_container_add(GTK_CONTAINER(widget.vgrid_completion), GTK_WIDGET(widget.bottom_bar));
+    gtk_orientable_set_orientation(GTK_ORIENTABLE(widget.bottom_bar), GTK_ORIENTATION_HORIZONTAL);
+
+    gtk_container_add(GTK_CONTAINER(widget.bottom_bar), GTK_WIDGET(widget.info_button));
+    gtk_container_add(GTK_CONTAINER(widget.bottom_bar), GTK_WIDGET(widget.selection_image));
+    gtk_container_add(GTK_CONTAINER(widget.bottom_bar), GTK_WIDGET(widget.selection_label));
+
+    gtk_widget_set_can_focus(GTK_WIDGET(widget.info_button), FALSE);
+    gtk_widget_set_tooltip_text(GTK_WIDGET(widget.info_button), "Show detailed proposal information");
+    gtk_button_set_relief(GTK_BUTTON(widget.info_button), GTK_RELIEF_NONE);
+    gtk_button_set_label(GTK_BUTTON(widget.info_button), "_Details…");
+    gtk_widget_set_halign(GTK_WIDGET(widget.selection_image), GTK_ALIGN_END);
+    gtk_widget_set_hexpand(GTK_WIDGET(widget.selection_image), TRUE);
+    gtk_widget_set_margin_start(GTK_WIDGET(widget.selection_label), 6);
+
+    gtk_widget_show_all(GTK_WIDGET(widget.main_window));
+    gtk_widget_hide(GTK_WIDGET(widget.main_window));
+    return widget;
+}
+
 static void
-gtk_source_completion_constructed (GObject *object)
-{
-	GtkSourceCompletion *completion = GTK_SOURCE_COMPLETION (object);
-	GError *error = NULL;
-	GtkBuilder *builder = gtk_builder_new ();
-	GtkSourceCompletionContainer *container = _gtk_source_completion_container_new ();
-	g_object_ref_sink (container);
-
-	//gtk_builder_set_translation_domain (builder, GETTEXT_PACKAGE);
-
-	/* GtkSourceCompletionContainer is a private type. */
-	gtk_builder_expose_object (builder, "completion_container", G_OBJECT (container));
-
-	gtk_builder_add_from_file (builder, "ressources/gui/gtksourcecompletion.ui", &error);
-
-	if (error != NULL)
-	{
-		g_error ("Error while loading the completion UI: %s", error->message);
-	}
-
-	init_tree_view (completion, builder);
-	init_main_window (completion, builder);
+gtk_source_completion_constructed (GObject *object) {
+	GtkSourceCompletion* completion = GTK_SOURCE_COMPLETION (object);
+    GtkSourceCompletionWidget widget = setup_widget();
+	init_tree_view (completion, widget);
+	init_main_window (completion, widget);
 	init_info_window (completion);
 	connect_style_context (completion);
-
-	g_object_unref (builder);
-	g_object_unref (container);
-
 	G_OBJECT_CLASS (gtk_source_completion_parent_class)->constructed (object);
 }
 
