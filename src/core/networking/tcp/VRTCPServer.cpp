@@ -1,4 +1,5 @@
 #include "VRTCPServer.h"
+#include "VRTCPUtils.h"
 
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
@@ -143,56 +144,9 @@ void VRTCPServer::listen(int port, string guard) { this->port = port; server->li
 void VRTCPServer::close() { server->close(); }
 int VRTCPServer::getPort() { return port; }
 
-//#ifndef _WINDOWS // under windows this only returns local network IP
 string VRTCPServer::getPublicIP() {
     if (publicIP != "") return publicIP;
-    int sock = socket(AF_INET, SOCK_DGRAM, 0);
-    assert(sock != -1);
-
-    const char* kGoogleDnsIp = "8.8.8.8";
-    uint16_t kDnsPort = 53;
-    struct sockaddr_in serv;
-    memset(&serv, 0, sizeof(serv));
-    serv.sin_family = AF_INET;
-    serv.sin_addr.s_addr = inet_addr(kGoogleDnsIp);
-    serv.sin_port = htons(kDnsPort);
-
-    connect(sock, (const sockaddr*) &serv, sizeof(serv));
-
-    sockaddr_in name;
-    socklen_t namelen = sizeof(name);
-    getsockname(sock, (sockaddr*) &name, &namelen);
-
-    char addressBuffer[INET_ADDRSTRLEN];
-    inet_ntop(AF_INET, &name.sin_addr, addressBuffer, INET_ADDRSTRLEN);
-#ifndef _WINDOWS
-	::close(sock);
-#else
-    closesocket(sock);
-#endif
-
-    publicIP = string(addressBuffer);
+    publicIP = VRTCPUtils::getPublicIP();
     return publicIP;
 }
-/*#else
-#include <windows.h>
-#include <wininet.h>
-#include <string>
-#include <iostream>
-string VRTCPServer::getPublicIP() {
-    if (publicIP != "") return publicIP;
-
-    HINTERNET net = InternetOpen("IP retriever", INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
-    HINTERNET conn = InternetOpenUrl(net, "http://myexternalip.com/raw", NULL, 0, INTERNET_FLAG_RELOAD, 0);
-
-    char buffer[4096];
-    DWORD read;
-
-    InternetReadFile(conn, buffer, sizeof(buffer) / sizeof(buffer[0]), &read);
-    InternetCloseHandle(net);
-
-    publicIP = std::string(buffer, read);
-    return publicIP;
-}
-#endif*/
 

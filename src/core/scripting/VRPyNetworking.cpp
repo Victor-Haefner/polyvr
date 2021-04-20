@@ -57,7 +57,7 @@ PyMethodDef VRPyRestServer::methods[] = {
 #ifndef WITHOUT_TCP
 PyMethodDef VRPyTCPClient::methods[] = {
     {"connect", PyWrap(TCPClient, connect, "Connect to server", void, string, int) },
-    {"connectToPeer", PyWrap(TCPClient, connectToPeer, "Connect to another client P2P using TCP tunneling (local IP, port, remote IP, port)", void, string, int, string, int) },
+    {"connectToPeer", PyWrap(TCPClient, connectToPeer, "Connect to another client P2P using TCP tunneling (local port, remote IP, remote port)", void, int, string, int) },
     {"send", PyWrapOpt(TCPClient, send, "Send message to server", "", void, const string&, string) },
     {"onMessage", PyWrap(TCPClient, onMessage, "Set onMessage callback", void, function<void(string)>) },
     {"onConnect", PyWrap(TCPClient, onConnect, "Set onConnect callback", void, function<void(void)>) },

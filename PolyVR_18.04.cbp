@@ -1037,6 +1037,8 @@
 		<Unit filename="src/core/networking/tcp/VRTCPClient.h" />
 		<Unit filename="src/core/networking/tcp/VRTCPServer.cpp" />
 		<Unit filename="src/core/networking/tcp/VRTCPServer.h" />
+		<Unit filename="src/core/networking/tcp/VRTCPUtils.cpp" />
+		<Unit filename="src/core/networking/tcp/VRTCPUtils.h" />
 		<Unit filename="src/core/objects/OSGCamera.cpp" />
 		<Unit filename="src/core/objects/OSGCamera.h" />
 		<Unit filename="src/core/objects/OSGObject.cpp" />
@@ -1599,6 +1601,9 @@
 		<Unit filename="src/core/utils/zipper/zipper.h" />
 		<Unit filename="src/main.cpp" />
 		<Unit filename="src/version/version.cpp" />
-		<Extensions />
+		<Extensions>
+			<code_completion />
+			<debugger />
+		</Extensions>
 	</Project>
 </CodeBlocks_project_file>

@@ -1,4 +1,5 @@
 #include "VRTCPClient.h"
+#include "VRTCPUtils.h"
 #include "core/utils/toString.h"
 
 #include <boost/asio.hpp>
@@ -148,8 +149,9 @@ class TCPClient {
             return socket->is_open();
         }
 
-        void connectToPeer(string lIP, int lPort, string rIP, int rPort) {
-            //cout << "TCPClient::connectToPeer " << lIP << ":" << lPort << ", to " << rIP << ":" << rPort << endl;
+        void connectToPeer(int lPort, string rIP, int rPort) {
+            string lIP = VRTCPUtils::getLocalIP();
+            cout << "TCPClient::connectToPeer " << lIP << ":" << lPort << ", to " << rIP << ":" << rPort << endl;
             tunnelAccept = thread([this, lPort]() { acceptHolePunching(lPort); });
             tunnelConnect = thread([this, lIP, lPort, rIP, rPort]() { connectHolePunching(lIP, lPort, rIP, rPort); });
 		}
@@ -157,7 +159,6 @@ class TCPClient {
 		void finalizeP2P() {
             //tunnelAccept.join(); // TODO
             //tunnelConnect.join();
-
             //cout << " p2p socket states: " << aSocket->is_open() << " " << cSocket->is_open() << endl;
 
             if (aSocket->is_open()) socket = aSocket;
@@ -200,7 +201,7 @@ class TCPClient {
                     //cout << "  --- accepted connection! ---" << endl;
                 }
                 catch (boost::system::system_error& e) { //        except socket.timeout:
-                    //cout << "Exception at VRSyncConnection::connect2. Exception Nr. " << e.message() << endl;
+                    cout << "Exception at VRSyncConnection::connect2. Exception Nr. " << e.what() << endl;
                     continue; //            continue
                 }
                 if (!exception_caught) { //        else:
@@ -211,6 +212,7 @@ class TCPClient {
         }
 
         void connectHolePunching(string localIP, int localPort, string remoteIP, int remotePort) {
+            //sleep(1);
             //cout << "TCPClient::connectHolePunching from " << localIP << ":" << localPort << ", to " << remoteIP << ":" << remotePort << endl;
             bool stop = false;
             boost::asio::ip::tcp::endpoint local_ep(boost::asio::ip::address::from_string(localIP), localPort);
@@ -227,7 +229,7 @@ class TCPClient {
             cSocket->bind(local_ep, ec); //    s.bind(local_addr)
 
             if (ec.value() != 0) { //Handling Errors
-                std::cout << "Failed to bind the socket." << "Error code = " << ec.value() << ". Message: " << ec.message() << endl;
+                std::cout << "Error in VRTCPClient::connectHolePunching, failed to bind the socket to " << local_ep << "! Error code = " << ec.value() << " (" << ec.message() << ")" << endl;
             }
 
             auto remoteAddr = boost::asio::ip::address::from_string(remoteIP);
@@ -241,7 +243,8 @@ class TCPClient {
                     //cout << " --- VRTCPClient::connectHolePunching connect ---" << endl;
                     exception_caught = false;
                 } catch (boost::system::system_error& e) {
-                    //cout << "boost::system::system_error " << e.what() << endl; // mostly "No route to host", which is Ok
+                    if (e.code().value() == 113) continue; // No route to host - is Ok
+                    cout << "boost::system::system_error " << e.what() << endl;
                     continue;
                 } catch (...) {
                     cout << "Unknown Exception raised!" << endl;
@@ -269,8 +272,8 @@ bool VRTCPClient::connected() { return client->connected(); }
 void VRTCPClient::onConnect( function<void(void)>   f ) { client->onConnect(f); }
 void VRTCPClient::onMessage( function<void(string)> f ) { client->onMessage(f); }
 
-void VRTCPClient::connectToPeer(string localIP, int localPort, string remoteIP, int remotePort) {
-    client->connectToPeer(localIP, localPort, remoteIP, remotePort);
+void VRTCPClient::connectToPeer(int localPort, string remoteIP, int remotePort) {
+    client->connectToPeer(localPort, remoteIP, remotePort);
 }
 
 
