@@ -1101,14 +1101,19 @@ VREntityPtr VRRoadIntersection::addTrafficLight( PosePtr p, string asset, Vec3d 
             box = dynamic_pointer_cast<VRGeometry>( geo->findFirst("Box") );
             caps = dynamic_pointer_cast<VRGeometry>( geo->findFirst("Caps") );
         }
-        red->makeUnique();
-        orange->makeUnique();
-        green->makeUnique();
-        red->setColors(0);
-        orange->setColors(0);
-        green->setColors(0);
-        checked = true;
-    } else {
+
+        if (red && orange && green) {
+            red->makeUnique();
+            orange->makeUnique();
+            green->makeUnique();
+            red->setColors(0);
+            orange->setColors(0);
+            green->setColors(0);
+            checked = true;
+        }
+    }
+
+    if (!checked) {
         box = VRGeometry::create("trafficLight");
         box->setPrimitive("Box 0.2 0.2 0.6 1 1 1");
         box->setColor("grey");
