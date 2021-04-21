@@ -136,7 +136,7 @@ void VRAtlas::Layout::paintAll(){
     }
 }
 
-void VRAtlas::Layout::repaint(){
+void VRAtlas::Layout::debugPaint(){
     string pathOrtho = "data/test64x64.jpg";
     string pathHeight = "data/testW64x64.jpg";
 
@@ -650,6 +650,30 @@ void VRAtlas::toggleUpdater() {
     stop = !stop;
 }
 
+void VRAtlas::resetJobQueue() {
+    patchQueue.clear();
+    for (auto patCol : layout.innerQuad.patches) {
+        for (auto pat: patCol) patchQueue.push_back(pat);
+    }
+
+    for (auto lev : layout.levels) {
+        for (auto patCol : lev.patches) {
+            for (auto pat : patCol) patchQueue.push_back(pat);
+        }
+    }
+}
+
+void VRAtlas::handleJobQueue() {
+    int patchesPerJob = 3;
+    for (int i = 0; i < patchesPerJob; i++) {
+        if (patchQueue.size() > 0) {
+            patchQueue.front().paint();
+            patchQueue.pop_front();
+        }
+    }
+    //repaint();
+}
+
 VRTerrainPtr VRAtlas::generateTerrain(string id, int lvl){
     string pathOrtho = "data/test64x64.jpg";
     string pathHeight = "data/testW64x64.jpg";
@@ -732,6 +756,12 @@ void VRAtlas::update() {
     };
 
     checkShift(layout.innerQuad);
+    if (lastPos == defCamPos) sinceLastMovement++;
+    if (shifted) {
+        sinceLastMovement = 0;
+        resetJobQueue();
+    }
+    lastPos = defCamPos;
     if (shifted) return;
 
     /*
@@ -759,7 +789,9 @@ void VRAtlas::update() {
     //cout << tmp << "---"  << dis << "---"  << 500.0 * pow(2.0, float(tmp)) << "---"  << 500.0 * ( pow(2.0, float(tmp)) -1) << "---" << endl;
 
     //cout << defCamPos << endl;
-    if (debugMode) layout.repaint();
+    //if (sinceLastMovement == 60) fillQueue();
+    if (sinceLastMovement > 20) handleJobQueue();
+    if (debugMode) layout.debugPaint();
 }
 
 void VRAtlas::downSize() {
