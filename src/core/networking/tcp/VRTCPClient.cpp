@@ -38,6 +38,7 @@ class TCPClient {
         thread tunnelRead;
         SocketPtr aSocket;
         SocketPtr cSocket;
+        bool stop = false;
 
         function<void (string)> onMessageCb;
         function<void (void)> onConnectCb;
@@ -112,11 +113,27 @@ class TCPClient {
         void onConnect( function<void (void)> f ) { onConnectCb = f; }
 
         void close() {
-            io_service.stop();
-            socket->cancel();
-            boost::system::error_code _error_code;
-            socket->shutdown(boost::asio::ip::tcp::socket::shutdown_both, _error_code);
+            stop = true;
+
+            try {
+                if (aSocket) aSocket->cancel();
+                if (cSocket) cSocket->cancel();
+                io_service.stop();
+                socket->cancel();
+                boost::system::error_code _error_code;
+                socket->shutdown(boost::asio::ip::tcp::socket::shutdown_both, _error_code);
+            } catch(...) {
+                ;
+            }
+
+            cout << "join service thread" << endl;
             if (service.joinable()) service.join();
+            cout << "join hp accept thread" << endl;
+            if (tunnelAccept.joinable()) tunnelAccept.join();
+            cout << "join hp connect thread" << endl;
+            if (tunnelConnect.joinable()) tunnelConnect.join();
+            cout << "join hp read thread" << endl;
+            if (tunnelRead.joinable()) tunnelRead.join();
         }
 
         void connect(string host, int port) {
@@ -157,12 +174,17 @@ class TCPClient {
 		}
 
 		void finalizeP2P() {
-            //tunnelAccept.join(); // TODO
-            //tunnelConnect.join();
             //cout << " p2p socket states: " << aSocket->is_open() << " " << cSocket->is_open() << endl;
 
-            if (aSocket->is_open()) socket = aSocket;
-            if (cSocket->is_open()) socket = cSocket;
+            if (aSocket->is_open()) { socket = aSocket; /*cSocket->cancel();*/ }
+            if (cSocket->is_open()) { socket = cSocket; /*aSocket->cancel();*/ }
+            aSocket.reset();
+            cSocket.reset();
+
+            cout << "finalizeP2P, close threads " << this << endl;
+            //tunnelAccept.join();
+            //tunnelConnect.join();
+            cout << " finalizeP2P, close threads done" << endl;
 
             tunnelRead = thread([this]() { while(true) read(true); });
 
@@ -171,7 +193,6 @@ class TCPClient {
 
         void acceptHolePunching(int port) {
             //cout << "TCPClient::acceptHolePunching on " << port << endl;
-            bool stop = false;
             boost::asio::ip::tcp::endpoint ep(boost::asio::ip::tcp::v4(), port);
             boost::asio::ip::tcp::acceptor acceptor(io_service, ep.protocol());
 
@@ -190,13 +211,13 @@ class TCPClient {
             }
 
             acceptor.listen(1); //    s.listen(1)
-        //    s.settimeout(5)
             aSocket = SocketPtr( new tcp::socket(io_service) );//    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            //    s.settimeout(5)
+
 
             while (!stop) {  //    while not STOP.is_set():
-                bool exception_caught = true;
                 try {  //        try:
-                    //cout << " try accept on " << port << endl;
+                    cout << " try accept on " << port << endl;
                     acceptor.accept(*aSocket); //            conn, addr = s.accept()
                     //cout << "  --- accepted connection! ---" << endl;
                 }
@@ -204,17 +225,15 @@ class TCPClient {
                     cout << "Exception at VRSyncConnection::connect2. Exception Nr. " << e.what() << endl;
                     continue; //            continue
                 }
-                if (!exception_caught) { //        else:
-                    stop = true; //            STOP.set()
-                    finalizeP2P();
-                }
+                //        else:
+                stop = true; //            STOP.set()
+                finalizeP2P();
             }
         }
 
         void connectHolePunching(string localIP, int localPort, string remoteIP, int remotePort) {
             //sleep(1);
             //cout << "TCPClient::connectHolePunching from " << localIP << ":" << localPort << ", to " << remoteIP << ":" << remotePort << endl;
-            bool stop = false;
             boost::asio::ip::tcp::endpoint local_ep(boost::asio::ip::address::from_string(localIP), localPort);
 
             cSocket = SocketPtr( new tcp::socket(io_service, local_ep.protocol()) );//    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -236,24 +255,20 @@ class TCPClient {
             boost::asio::ip::tcp::endpoint remote_ep(remoteAddr, remotePort);
 
             while (!stop) { //while not STOP.is_set():
-                bool exception_caught = true;
-                try {//        try:
+                try { //        try:
                     //cout << "VRTCPClient::connectHolePunching trying " << this << " " << remoteIP << ":" << remotePort << endl;
                     cSocket->connect(remote_ep);//            s.connect(addr)
                     //cout << " --- VRTCPClient::connectHolePunching connect ---" << endl;
-                    exception_caught = false;
                 } catch (boost::system::system_error& e) {
-                    if (e.code().value() == 113) continue; // No route to host - is Ok
-                    cout << "boost::system::system_error " << e.what() << endl;
+                    if (e.code().value() == 113) continue; // No route to host - is normal
+                    cout << "Error in VRTCPClient::connectHolePunching, boost::system::system_error " << e.what() << "(" << e.code().value() << ")" << endl;
                     continue;
                 } catch (...) {
                     cout << "Unknown Exception raised!" << endl;
                     continue;
                 }
-                if (!exception_caught) {//        else:
-                    stop = true;//            STOP.set()
-                    finalizeP2P();
-                }
+                stop = true;//            STOP.set()
+                finalizeP2P();
             }
         }
 };
