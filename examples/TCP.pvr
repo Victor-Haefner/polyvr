@@ -29,7 +29,9 @@
 	p2p = True # switch to try server/client or P2P
 
 	
-	if p2p: VR.startP2Pclients()
+	if p2p: 
+		VR.startP2Pclients()
+		VR.stackCall(VR.startP2Pclients, 2, [])
 	else:
 		VR.startServer(5678)
 		VR.startClients('127.0.0.1', 5678)
