@@ -118,13 +118,14 @@ class TCPClient {
         void onConnect( function<void (void)> f ) { onConnectCb = f; }
 
         void close() {
+            cout << "close TCP client" << endl;
             stop = true;
 
             try {
-                if (aSocket) aSocket->cancel();
-                if (cSocket) cSocket->cancel();
                 io_service.stop();
-                socket->cancel();
+                if (aSocket) aSocket->close();
+                if (cSocket) cSocket->close();
+                socket->close();
                 boost::system::error_code _error_code;
                 socket->shutdown(boost::asio::ip::tcp::socket::shutdown_both, _error_code);
             } catch(...) {
@@ -241,16 +242,18 @@ class TCPClient {
 
         void connectHolePunching(string localIP, int localPort, string remoteIP, int remotePort) {
             //sleep(1);
-            //cout << "TCPClient::connectHolePunching from " << localIP << ":" << localPort << ", to " << remoteIP << ":" << remotePort << endl;
+            cout << "TCPClient::connectHolePunching from " << localIP << ":" << localPort << ", to " << remoteIP << ":" << remotePort << endl;
             boost::asio::ip::tcp::endpoint local_ep(boost::asio::ip::address::from_string(localIP), localPort);
 
             cSocket = SocketPtr( new tcp::socket(io_service, local_ep.protocol()) );//    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-            //cout << " connect socket bind " << endl;
+            cout << " connect socket bind " << endl;
             boost::asio::socket_base::reuse_address reuseAddress(true);
             boost::asio::detail::socket_option::boolean<SOL_SOCKET, SO_REUSEPORT> reusePort(true);
             cSocket->set_option(reuseAddress); //    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+#ifndef _WIN32
             cSocket->set_option(reusePort); //    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+#endif
 
             boost::system::error_code ec;
             cSocket->bind(local_ep, ec); //    s.bind(local_addr)
@@ -264,16 +267,16 @@ class TCPClient {
 
             while (!stop) { //while not STOP.is_set():
                 try { //        try:
-                    //cout << "VRTCPClient::connectHolePunching trying " << this << " " << remoteIP << ":" << remotePort << endl;
+                    cout << "VRTCPClient::connectHolePunching trying " << this << " " << remoteIP << ":" << remotePort << endl;
                     cSocket->connect(remote_ep);//            s.connect(addr)
-                    //cout << " --- VRTCPClient::connectHolePunching connect ---" << endl;
+                    cout << " --- VRTCPClient::connectHolePunching connect ---" << endl;
                 } catch (boost::system::system_error& e) {
                     if (e.code().value() == 113) continue; // No route to host - is normal
                     cout << "Error in VRTCPClient::connectHolePunching, boost::system::system_error " << e.what() << "(" << e.code().value() << ")" << endl;
-                    continue;
+                    return;
                 } catch (...) {
                     cout << "Unknown Exception raised!" << endl;
-                    continue;
+                    return;
                 }
                 stop = true;//            STOP.set()
                 finalizeP2P();
