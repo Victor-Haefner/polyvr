@@ -215,6 +215,7 @@ PyMethodDef VRPyAtlas::methods[] = {
     {"setBoundary", PyWrap( Atlas, setBoundary, "setBoundary - (double minEast, double maxEast, double minNorth, double maxNorth)", void, double, double, double, double ) },
     {"setServerURL", PyWrap( Atlas, setServerURL, "sets remote Server URL", void, string ) },
     {"setLocalPaths", PyWrap( Atlas, setLocalPaths, "sets local paths to dir of ( ortho, height ) pictures", void, string, string ) },
+    {"setMapManager", PyWrap( Atlas, setMapManager, "Set map manager", void, VRMapManagerPtr ) },
     {"getLocalPos", PyWrap( Atlas, getLocalPos, "returns local position of coordinates use ( east, north ), EPSG UTM 32N: 25832", Vec3d, double, double ) },
     {"setDebug", PyWrap( Atlas, setDebug, "toggling debug mode", void, bool ) },
     {"setScale", PyWrap( Atlas, setScale, "set new scaling", void, float ) },

@@ -1,4 +1,5 @@
 #include "VRAtlas.h"
+#include "VRMapManager.h"
 
 #include "core/utils/toString.h"
 #include "core/scene/VRScene.h"
@@ -38,19 +39,29 @@ VRAtlas::Patch::Patch(string sid, int lvl, VRTerrainPtr ter) : id(sid), LODlvl(l
 VRAtlas::Patch::Patch() {}
 VRAtlas::Patch::~Patch() {}
 
+void VRAtlas::setMapManager(VRMapManagerPtr mgr) {
+    layout.mapMgr = mgr;
+}
+
 void VRAtlas::Patch::paint() {
     bool checkHeight = exists(heightPic);
     bool checkOrtho = exists(orthoPic);
-    if ( checkHeight && checkOrtho && !recent ) {
-        terrain->setVisible(true);
-        terrain->setHeightOffset(true);
-        terrain->loadMap( heightPic, 3, false );
-        terrain->paintHeights(orthoPic);//, mixColor, mixAmount );
-        localHeightoffset = terrain->getHeightOffset();
-        Vec3d pos = Vec3d(localPos[0],localHeightoffset,localPos[2]);
-        terrain->setTransform(pos);
-        recent = true;
-        //active = false;
+    if (!recent) {
+        if ( checkHeight && checkOrtho ) {
+            terrain->setVisible(true);
+            terrain->setHeightOffset(true);
+            terrain->loadMap( heightPic, 3, false );
+            terrain->paintHeights(orthoPic);//, mixColor, mixAmount );
+            localHeightoffset = terrain->getHeightOffset();
+            Vec3d pos = Vec3d(localPos[0],localHeightoffset,localPos[2]);
+            terrain->setTransform(pos);
+            recent = true;
+            //active = false;
+        } else {
+            /*if (mapMgr) {
+                mapMgr->getMap();
+            }*/
+        }
     } else {
         terrain->setVisible(false);
     /*
@@ -87,19 +98,30 @@ void VRAtlas::Layout::setCoords(Patch& pat, Vec3d co3, int p_type) {
     string pathOrtho = "data/test64x64.jpg";
     string pathHeight = "data/testW64x64.jpg";
 
-    string east = cut( to_string(pat.coords[0]) );
+    string east  = cut( to_string(pat.coords[0]) );
     string north = cut( to_string(pat.coords[1]) );
-
-    string fileOrtho = "fdop20_32" + east + "_" + north + "_rgbi_" + cut(to_string(pat.edgeLength)) + ".jpg";
-    string fileHeight = "dgm_E32" + east + ".5_N" + north + ".5_S"+ cut(to_string(pat.edgeLength)) + ".tif";
-    //cout << fileOrtho << " --- " << fileHeight << " --- " << toString(pos) << endl;
 
     Color4f mixColor = Color4f(0,1,0,0);
     float mixAmount = 1;
 
-    pat.orthoPic = localPathOrtho + "/" + cut(to_string(pat.edgeLength)) + "/" + fileOrtho;
-    pat.heightPic = localPathHeight + "/" + cut(to_string(pat.edgeLength)) + "/" + fileHeight;
-    pat.recent = false;
+    auto onMap = [this](VRMapDescriptorPtr desc) { if (desc->isComplete()) paintAll(); };
+    VRMapCbPtr cb = VRMapCb::create("atlasOnMap", onMap);
+
+    if (mapMgr) {
+        auto mdata = mapMgr->getMap(pat.coords[0], pat.coords[1], pat.edgeLength, {2,3}, cb); // NES, types, VRMapCbPtr
+
+        pat.orthoPic = localPathOrtho + "/" + mdata->getMap(2);
+        pat.heightPic = localPathHeight + "/" + mdata->getMap(3);
+        cout << "orthoPic: "  << pat.orthoPic  << endl;
+        cout << "heightPic: " << pat.heightPic << endl;
+    } else {
+        string fileOrtho = "fdop20_32" + east + "_" + north + "_rgbi_" + cut(to_string(pat.edgeLength)) + ".jpg";
+        string fileHeight = "dgm_E32" + east + ".5_N" + north + ".5_S"+ cut(to_string(pat.edgeLength)) + ".tif";
+        //cout << fileOrtho << " --- " << fileHeight << " --- " << toString(pos) << endl;
+        pat.orthoPic = localPathOrtho + "/" + cut(to_string(pat.edgeLength)) + "/" + fileOrtho;
+        pat.heightPic = localPathHeight + "/" + cut(to_string(pat.edgeLength)) + "/" + fileHeight;
+    }
+    //pat.recent = false;
 
     //if (pat.edgeLength > 2000) cout << fileOrtho << " -- " << checkOrthop << "|"<< checkHeight << " -- " << tmp1 << endl;
 
@@ -718,20 +740,30 @@ void VRAtlas::update() {
     if (Vec2d(east, north).length() > 2*layout.levels.back().edgeLength) layout.reset(defCamPos);
 
     bool shifted = false;
-    auto checkShift = [&](Level& lev){
+
+    auto needsShift = [&]()(Level& lev) {
         Vec3d camToOrigin = defCamPos - (lev.currentOrigin*scaling);
-        float boundaryIns =   lev.edgeLength*scaling;
         float boundaryOut = 2*lev.edgeLength*scaling;
         float east = camToOrigin.dot(vEast);
         float north = camToOrigin.dot(vNorth);
-        if (east > boundaryOut) { layout.shiftEastOut(lev, layout.levels.begin()); }
-        if (east <-boundaryOut) { layout.shiftWestOut(lev, layout.levels.begin()); }
-        if (north > boundaryOut) { layout.shiftNorthOut(lev, layout.levels.begin()); }
+        if (east > boundaryOut || east <-boundaryOut || north > boundaryOut || north < -boundaryOut) return true;
+        return false;
+    };
+
+    auto checkShift = [&](Level& lev) {
+        Vec3d camToOrigin = defCamPos - (lev.currentOrigin*scaling);
+        float boundaryOut = 2*lev.edgeLength*scaling;
+        float east = camToOrigin.dot(vEast);
+        float north = camToOrigin.dot(vNorth);
+        if (east >  boundaryOut)  { layout.shiftEastOut(lev,  layout.levels.begin()); }
+        if (east < -boundaryOut)  { layout.shiftWestOut(lev,  layout.levels.begin()); }
+        if (north >  boundaryOut) { layout.shiftNorthOut(lev, layout.levels.begin()); }
         if (north < -boundaryOut) { layout.shiftSouthOut(lev, layout.levels.begin()); }
-        if (east > boundaryOut || east <-boundaryOut || north > boundaryOut || north < -boundaryOut) shifted = true;
+        if (east > boundaryOut || east < -boundaryOut || north > boundaryOut || north < -boundaryOut) shifted = true;
     };
 
     checkShift(layout.innerQuad);
+    layout.steady = !needsShift(layout.innerQuad);
     if (shifted) return;
 
     /*

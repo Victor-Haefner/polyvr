@@ -71,6 +71,7 @@ class VRAtlas : public std::enable_shared_from_this<VRAtlas>  {
             string localPathOrtho = "";
             string localPathHeight = "";
             Level innerQuad;
+            VRMapManagerPtr mapMgr;
             //Level* innerRing;
             //Level* outerRing;
             list<Patch> toDestroy;
@@ -110,6 +111,7 @@ class VRAtlas : public std::enable_shared_from_this<VRAtlas>  {
         VRGeometryPtr debugQuad;
         bool debugMode = false;
         Layout layout;
+
         void update();
         void downSize();
         void upSize();
@@ -132,6 +134,7 @@ class VRAtlas : public std::enable_shared_from_this<VRAtlas>  {
         void setLocalPaths(string ortho, string height);
         void setScale(float s);
         //void setParameters();
+        void setMapManager(VRMapManagerPtr mgr);
         void setDebug(bool mode);
         void repaint();
         Vec3d getLocalPos(double east, double north);

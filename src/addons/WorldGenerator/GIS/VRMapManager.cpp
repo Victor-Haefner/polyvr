@@ -33,8 +33,8 @@ VRMapDescriptorPtr VRMapManager::getMap(double N, double E, double S, vector<int
 
     for (auto mapType : types) {
         string filename = constructFilename(N,E,S, mapType);
-        if (exists(filename)) data->setMap(mapType, filename);
-        else {
+        data->setMap(mapType, filename);
+        if (!exists(filename)) {
             requestFile(filename, N,E,S, mapType, types, mcb);
             if (!mcb) data->setMap(mapType, filename);
             else {
