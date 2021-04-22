@@ -132,6 +132,16 @@ int VRDefShading::addBuffer(int pformat, int ptype) {
     return dsStage->editMFPixelFormats()->size() - 1;
 }
 
+void VRDefShading::onResize() { // TODO: find out why this is needed when resizing the viewport
+    vpAmbient->readProgram(dsAmbientVPFile.c_str());
+    fpAmbient->readProgram(dsAmbientFPFile.c_str());
+    fpAmbient->subUniformVariable("channel");
+    fpAmbient->addUniformVariable<Int32>("channel", channel);
+    shAmbient->addShader(vpAmbient);
+    shAmbient->addShader(fpAmbient);
+    dsStage->setAmbientProgram(shAmbient);
+}
+
 void VRDefShading::reload() {
     vpAmbient->readProgram(dsAmbientVPFile.c_str());
     fpAmbient->readProgram(dsAmbientFPFile.c_str());
