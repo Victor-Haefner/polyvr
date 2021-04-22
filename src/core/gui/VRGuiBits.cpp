@@ -195,22 +195,22 @@ void VRGuiBits::toggleWidgets() {
     GtkWidget* win = VRGuiBuilder::get()->get_widget("window1");
     GtkWidget* hs1 = VRGuiBuilder::get()->get_widget("hseparator1");
     GtkWidget* tab = VRGuiBuilder::get()->get_widget("table20");
-    GtkWidget* nb1 = VRGuiBuilder::get()->get_widget("notebook1");
     GtkWidget* hb1 = VRGuiBuilder::get()->get_widget("hbox1");
     GtkWidget* hb2 = VRGuiBuilder::get()->get_widget("hbox15");
     GtkWidget* hp1 = VRGuiBuilder::get()->get_widget("hpaned1");
+    GtkWidget* hp1C1 = gtk_paned_get_child1(GTK_PANED(hp1));
 
     if (fs) {
-        //gtk_widget_hide(nb1);
-        gtk_paned_set_position(GTK_PANED(hp1), 0);
+        //gtk_paned_set_position(GTK_PANED(hp1), 0);
         gtk_paned_set_wide_handle(GTK_PANED(hp1), false);
         gtk_widget_hide(hb1);
         gtk_widget_hide(hb2);
         gtk_widget_hide(tab);
         gtk_widget_hide(hs1);
+        gtk_widget_hide(hp1C1);
     }
     else {
-        gtk_paned_set_position(GTK_PANED(hp1), 410);
+        //gtk_paned_set_position(GTK_PANED(hp1), 410);
         gtk_paned_set_wide_handle(GTK_PANED(hp1), true);
         gtk_widget_show_all(win);
     }
