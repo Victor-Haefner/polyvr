@@ -106,22 +106,27 @@ void VRDefShading::init() {
     // fbo -> TODO
     /*FrameBufferObjectRefPtr fbo = FrameBufferObject::create();
     ImageMTRecPtr img = Image::create();
-    fboTex = TextureObjChunk::create();
-    TextureBufferRefPtr texBuf = TextureBuffer::create();
+    RenderBufferRefPtr colorBuf = RenderBuffer::create();
     RenderBufferRefPtr depthBuf = RenderBuffer::create();
 
     fbo->editMFDrawBuffers()->push_back(GL_COLOR_ATTACHMENT0_EXT);
     fbo->setPostProcessOnDeactivate(true);
-    dsStage->setRenderTarget(fbo);
-    fboTex->setImage(img);
-    texBuf->setTexture(fboTex);
+    colorBuf->setImage(img);
+    colorBuf->setInternalFormat(GL_RGBA); // 16 24 32
     depthBuf->setInternalFormat(GL_DEPTH_COMPONENT24); // 16 24 32
-    fbo->setColorAttachment(texBuf, 0);
+    fbo->setColorAttachment(colorBuf, 0);
     fbo->setDepthAttachment(depthBuf);
 
     img->set(Image::OSG_RGBA_PF, 1200, 800);
     fbo->setWidth (1200);
-    fbo->setHeight(800);*/
+    fbo->setHeight(800);
+    fbo->setEnableMultiSample(true);
+    fbo->setColorSamples(4);
+    fbo->setCoverageSamples(4);
+    colorBuf->setColorSamples(4);
+    colorBuf->setCoverageSamples(4);
+
+    dsStage->setRenderTarget(fbo);*/
 
     initiated = true;
 }
@@ -133,12 +138,6 @@ int VRDefShading::addBuffer(int pformat, int ptype) {
 }
 
 void VRDefShading::onResize() { // TODO: find out why this is needed when resizing the viewport
-    vpAmbient->readProgram(dsAmbientVPFile.c_str());
-    fpAmbient->readProgram(dsAmbientFPFile.c_str());
-    fpAmbient->subUniformVariable("channel");
-    fpAmbient->addUniformVariable<Int32>("channel", channel);
-    shAmbient->addShader(vpAmbient);
-    shAmbient->addShader(fpAmbient);
     dsStage->setAmbientProgram(shAmbient);
 }
 

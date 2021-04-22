@@ -238,6 +238,8 @@ void VRLight::setupShadowEngines() {
     stsme->setOffsetFactor( 4.5f);
     stsme->setOffsetBias  (16.f );
     stsme->setForceTextureUnit(3);
+
+    //OSG::SimpleShadowMapEngine::getShadowTexChunk()
 #endif
 }
 

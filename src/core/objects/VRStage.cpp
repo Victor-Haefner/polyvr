@@ -48,6 +48,9 @@ void VRStage::initFBO() {
     fbo = FrameBufferObject::create();
     fbo->editMFDrawBuffers()->push_back(GL_COLOR_ATTACHMENT0_EXT);
     fbo->setPostProcessOnDeactivate(true);
+    fbo->setEnableMultiSample(true);
+    fbo->setColorSamples(4);
+    fbo->setCoverageSamples(4);
     stage->setRenderTarget(fbo);
 
     // color buffer

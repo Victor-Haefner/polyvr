@@ -82,7 +82,7 @@ VRGuiManager::VRGuiManager() {
     glXGetConfig(dpy, visinfo, GLX_DEPTH_SIZE, &depth_size);*/
     cout << " gdk system visual: depth size " << depth << endl;
 
-    gtk_window_set_interactive_debugging(true);
+    //gtk_window_set_interactive_debugging(true);
 
     addIconsPath("ressources/gui/icons");
     addSchemaPath("ressources/gui/schemas");
