@@ -35,6 +35,7 @@ class VRAtlas : public std::enable_shared_from_this<VRAtlas>  {
             int LODlvl;
             int type;
             VRTerrainPtr terrain;
+            VRMapManagerPtr mapMgr;
             Vec2d coords = Vec2d(0,0);
             Vec3d localPos = Vec3d(0,0,0);
             float edgeLength;
@@ -71,7 +72,7 @@ class VRAtlas : public std::enable_shared_from_this<VRAtlas>  {
             string localPathOrtho = "";
             string localPathHeight = "";
             Level innerQuad;
-            VRMapManagerPtr mapMgr;
+            bool steady = false;
             //Level* innerRing;
             //Level* outerRing;
             list<Patch> toDestroy;
@@ -85,7 +86,7 @@ class VRAtlas : public std::enable_shared_from_this<VRAtlas>  {
             void shiftSouthIns(Level& lev, list<Level>::iterator it, bool traverse = true);
             void shiftSouthOut(Level& lev, list<Level>::iterator it);
             void setCoords(Patch& pat, Vec3d co3, int p_type);
-            void repaint();
+            void debugPaint();
             void paintAll();
             void reset(Vec3d camPos);
             Layout();
@@ -99,6 +100,9 @@ class VRAtlas : public std::enable_shared_from_this<VRAtlas>  {
         int LODMax = 0;
         int patchcount = 0;
         bool stop = false;
+        bool justPainted = false;
+        deque<Patch> patchQueue;
+        VRMapManagerPtr mapMgr;
 
         bool isValid();
 
@@ -108,6 +112,8 @@ class VRAtlas : public std::enable_shared_from_this<VRAtlas>  {
         string serverURL = "";
         string localPathOrtho = "";
         string localPathHeight = "";
+        int sinceLastMovement = 0;
+        Vec3d lastPos = Vec3d(0,0,0);
         VRGeometryPtr debugQuad;
         bool debugMode = false;
         Layout layout;
@@ -118,6 +124,9 @@ class VRAtlas : public std::enable_shared_from_this<VRAtlas>  {
         void addInnerQuad(int lvl, Vec2d nOrigin);
         void addInnerRing(int lvl, Vec2d nOrigin);
         void addOuterRing(int lvl, Vec2d nOrigin);
+        void handleJobQueue();
+        void resetJobQueue();
+
         VRGeometryPtr generatePatch(string id);
         VRTerrainPtr generateTerrain(string id, int lvlh);
 

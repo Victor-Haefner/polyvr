@@ -20,20 +20,25 @@ VRMapManagerPtr VRMapManager::ptr() { return static_pointer_cast<VRMapManager>(s
 
 void VRMapManager::setServer(string s) { server = s; }
 
-void VRMapManager::addMapType(int ID, string vault, string servScript, string fileExt) {
+void VRMapManager::addMapType(int ID, string vault, string servScript, string fileExt, string format) {
     mapTypes[ID].ID = ID;
     mapTypes[ID].vault = vault;
     mapTypes[ID].servScript = servScript;
     mapTypes[ID].fileExt = fileExt;
+    mapTypes[ID].format = format;
 }
 
 VRMapDescriptorPtr VRMapManager::getMap(double N, double E, double S, vector<int> types, VRMapCbPtr mcb) {
     VRMapDescriptorPtr data = VRMapDescriptor::create(N,E,S);
-    cout << "VRMapManager::getMap " << Vec3d(N,E,S) << endl;
+    //cout << "VRMapManager::getMap " << Vec3d(N,E,S) << endl;
 
     for (auto mapType : types) {
         string filename = constructFilename(N,E,S, mapType);
         data->setMap(mapType, filename);
+    }
+
+    for (auto mapType : types) {
+        string filename = data->getMap(mapType);
         if (!exists(filename)) {
             requestFile(filename, N,E,S, mapType, types, mcb);
             if (!mcb) data->setMap(mapType, filename);
@@ -55,8 +60,8 @@ VRMapDescriptorPtr VRMapManager::getMap(double N, double E, double S, vector<int
 
 void VRMapManager::handleRequestAnswer(VRRestResponsePtr response, string filename, VRMapCbPtr mcb, double N, double E, double S, vector<int> types) {
     //cout << " response: " << response->getStatus() << endl;
-    cout << " map data response, data size: " << response->getData().size() << endl;
-    cout << " store map data in: " << filename << endl;
+    //cout << " map data response, data size: " << response->getData().size() << endl;
+    //cout << " store map data in: " << filename << endl;
 
     // store result in file 'filename'
     storeFile(filename, response->getData());
@@ -70,7 +75,8 @@ void VRMapManager::requestFile(string filename, double N, double E, double S, in
     string sS = toString(S,3);
 
     string script = mapTypes[mapType].servScript;
-    string req = server+script+"?N="+sN+"&E="+sE+"&S="+sS;  // N=%.3f&E=%.3f&S=%.3f" % (N,E,S)
+    string format = mapTypes[mapType].format;
+    string req = server+script+"?N="+sN+"&E="+sE+"&S="+sS+"&F="+format;  // N=%.3f&E=%.3f&S=%.3f" % (N,E,S)
     cout << " VRMapManager request: " << req << endl;
 
     // launch get request

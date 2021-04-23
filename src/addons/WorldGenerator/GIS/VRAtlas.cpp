@@ -40,37 +40,39 @@ VRAtlas::Patch::Patch() {}
 VRAtlas::Patch::~Patch() {}
 
 void VRAtlas::setMapManager(VRMapManagerPtr mgr) {
-    layout.mapMgr = mgr;
+    mapMgr = mgr;
 }
 
 void VRAtlas::Patch::paint() {
-    bool checkHeight = exists(heightPic);
-    bool checkOrtho = exists(orthoPic);
-    if (!recent) {
-        if ( checkHeight && checkOrtho ) {
+    //cout << "VRAtlas::Patch::paint " << coords << " " << mapMgr << endl;
+    auto onMap = [](VRMapDescriptorPtr desc, VRTerrainPtr terrain, Vec3d localPos) {
+        if (!desc->isComplete()) return;
+
+        string orthoPic = desc->getMap(2);
+        string heightPic = desc->getMap(3);
+
+        bool checkHeight = exists(heightPic);
+        bool checkOrtho = exists(orthoPic);
+        if ( checkHeight && checkOrtho && terrain) {
             terrain->setVisible(true);
             terrain->setHeightOffset(true);
             terrain->loadMap( heightPic, 3, false );
             terrain->paintHeights(orthoPic);//, mixColor, mixAmount );
-            localHeightoffset = terrain->getHeightOffset();
+            double localHeightoffset = terrain->getHeightOffset();
             Vec3d pos = Vec3d(localPos[0],localHeightoffset,localPos[2]);
             terrain->setTransform(pos);
-            recent = true;
-            //active = false;
-        } else {
-            /*if (mapMgr) {
-                mapMgr->getMap();
-            }*/
         }
-    } else {
-        terrain->setVisible(false);
-    /*
-        if (!active) {
-            terrain->setVisible(false);
-            active = true;
-        }
-    */
-        //cout << " ATLASSYSTEM: trying patch painting, failed: H:" << checkHeight << " - O:" << checkOrtho <<  " | " << heightPic << " | " << orthoPic << endl;
+    };
+
+    VRMapCbPtr cb = VRMapCb::create("atlasOnMap", bind(onMap, placeholders::_1, terrain, localPos));
+
+    if (mapMgr) {
+        auto mdata = mapMgr->getMap(coords[0], coords[1], edgeLength, {2,3}, cb); // NES, types, VRMapCbPtr
+
+        /*orthoPic = mdata->getMap(2);
+        heightPic = mdata->getMap(3);
+        cout << "orthoPic: "  << orthoPic  << endl;
+        cout << "heightPic: " << heightPic << endl;*/
     }
 }
 
@@ -104,23 +106,11 @@ void VRAtlas::Layout::setCoords(Patch& pat, Vec3d co3, int p_type) {
     Color4f mixColor = Color4f(0,1,0,0);
     float mixAmount = 1;
 
-    auto onMap = [this](VRMapDescriptorPtr desc) { if (desc->isComplete()) paintAll(); };
-    VRMapCbPtr cb = VRMapCb::create("atlasOnMap", onMap);
-
-    if (mapMgr) {
-        auto mdata = mapMgr->getMap(pat.coords[0], pat.coords[1], pat.edgeLength, {2,3}, cb); // NES, types, VRMapCbPtr
-
-        pat.orthoPic = localPathOrtho + "/" + mdata->getMap(2);
-        pat.heightPic = localPathHeight + "/" + mdata->getMap(3);
-        cout << "orthoPic: "  << pat.orthoPic  << endl;
-        cout << "heightPic: " << pat.heightPic << endl;
-    } else {
-        string fileOrtho = "fdop20_32" + east + "_" + north + "_rgbi_" + cut(to_string(pat.edgeLength)) + ".jpg";
-        string fileHeight = "dgm_E32" + east + ".5_N" + north + ".5_S"+ cut(to_string(pat.edgeLength)) + ".tif";
-        //cout << fileOrtho << " --- " << fileHeight << " --- " << toString(pos) << endl;
-        pat.orthoPic = localPathOrtho + "/" + cut(to_string(pat.edgeLength)) + "/" + fileOrtho;
-        pat.heightPic = localPathHeight + "/" + cut(to_string(pat.edgeLength)) + "/" + fileHeight;
-    }
+    string fileOrtho = "fdop20_32" + east + "_" + north + "_rgbi_" + cut(to_string(pat.edgeLength)) + ".jpg";
+    string fileHeight = "dgm_E32" + east + ".5_N" + north + ".5_S"+ cut(to_string(pat.edgeLength)) + ".tif";
+    //cout << fileOrtho << " --- " << fileHeight << " --- " << toString(pos) << endl;
+    pat.orthoPic = localPathOrtho + "/" + cut(to_string(pat.edgeLength)) + "/" + fileOrtho;
+    pat.heightPic = localPathHeight + "/" + cut(to_string(pat.edgeLength)) + "/" + fileHeight;
     //pat.recent = false;
 
     //if (pat.edgeLength > 2000) cout << fileOrtho << " -- " << checkOrthop << "|"<< checkHeight << " -- " << tmp1 << endl;
@@ -146,7 +136,8 @@ void VRAtlas::Layout::setCoords(Patch& pat, Vec3d co3, int p_type) {
     pat.localPos = pos;
 }
 
-void VRAtlas::Layout::paintAll(){
+void VRAtlas::Layout::paintAll() {
+    cout << "VRAtlas::Layout::paintAll " << innerQuad.patches.size() << endl;
     for (auto patCol : innerQuad.patches) {
         for (auto& pat: patCol) pat.paint();
     }
@@ -158,7 +149,7 @@ void VRAtlas::Layout::paintAll(){
     }
 }
 
-void VRAtlas::Layout::repaint(){
+void VRAtlas::Layout::debugPaint(){
     string pathOrtho = "data/test64x64.jpg";
     string pathHeight = "data/testW64x64.jpg";
 
@@ -672,6 +663,30 @@ void VRAtlas::toggleUpdater() {
     stop = !stop;
 }
 
+void VRAtlas::resetJobQueue() {
+    patchQueue.clear();
+    for (auto patCol : layout.innerQuad.patches) {
+        for (auto pat: patCol) patchQueue.push_back(pat);
+    }
+
+    for (auto lev : layout.levels) {
+        for (auto patCol : lev.patches) {
+            for (auto pat : patCol) patchQueue.push_back(pat);
+        }
+    }
+}
+
+void VRAtlas::handleJobQueue() {
+    int patchesPerJob = 3;
+    for (int i = 0; i < patchesPerJob; i++) {
+        if (patchQueue.size() > 0) {
+            patchQueue.front().paint();
+            patchQueue.pop_front();
+        }
+    }
+    //repaint();
+}
+
 VRTerrainPtr VRAtlas::generateTerrain(string id, int lvl){
     string pathOrtho = "data/test64x64.jpg";
     string pathHeight = "data/testW64x64.jpg";
@@ -741,7 +756,7 @@ void VRAtlas::update() {
 
     bool shifted = false;
 
-    auto needsShift = [&]()(Level& lev) {
+    auto needsShift = [&](Level& lev) {
         Vec3d camToOrigin = defCamPos - (lev.currentOrigin*scaling);
         float boundaryOut = 2*lev.edgeLength*scaling;
         float east = camToOrigin.dot(vEast);
@@ -764,6 +779,11 @@ void VRAtlas::update() {
 
     checkShift(layout.innerQuad);
     layout.steady = !needsShift(layout.innerQuad);
+    if (layout.steady) sinceLastMovement++;
+    if (shifted) {
+        sinceLastMovement = 0;
+        resetJobQueue();
+    }
     if (shifted) return;
 
     /*
@@ -791,7 +811,9 @@ void VRAtlas::update() {
     //cout << tmp << "---"  << dis << "---"  << 500.0 * pow(2.0, float(tmp)) << "---"  << 500.0 * ( pow(2.0, float(tmp)) -1) << "---" << endl;
 
     //cout << defCamPos << endl;
-    if (debugMode) layout.repaint();
+    //if (sinceLastMovement == 60) fillQueue();
+    if (sinceLastMovement > 20) handleJobQueue();
+    if (debugMode) layout.debugPaint();
 }
 
 void VRAtlas::downSize() {
@@ -864,6 +886,7 @@ void VRAtlas::addInnerQuad(int lvl, Vec2d nOrigin) {
                 auto ter = generateTerrain( id , lvl );
                 atlas->addChild(ter);
                 Patch p = Patch(id, lvl, ter);
+                p.mapMgr = mapMgr;
                 p.coords = nOrigin + Vec2d((i-4)*nSize,-(j-4)*nSize);
                 p.edgeLength = nSize;
                 Vec2d pRelative = p.coords - atlasOrigin;
@@ -902,6 +925,7 @@ void VRAtlas::addInnerRing(int lvl, Vec2d nOrigin) {
                 auto ter = generateTerrain( id , lvl );
                 atlas->addChild(ter);
                 Patch p = Patch(id, lvl, ter);
+                p.mapMgr = mapMgr;
                 p.coords = nOrigin + Vec2d((i-4)*nSize,-(j-4)*nSize);
                 p.edgeLength = nSize;
                 Vec2d pRelative = p.coords - atlasOrigin;
@@ -936,11 +960,12 @@ void VRAtlas::addOuterRing(int lvl, Vec2d nOrigin) {
     for (int i = 0; i < 8; i++){
         vector<Patch> row;
         for (int j = 0; j < 8; j++){
-            if (check(i,j)){
+            if (check(i,j)) {
                 string id = "LOD_" + toString(lvl) + "_" + toString(fac) + "_" + toString(i) + toString(j);
                 auto ter = generateTerrain( id , lvl );
                 atlas->addChild(ter);
                 Patch p = Patch(id, lvl, ter);
+                p.mapMgr = mapMgr;
                 p.coords = nOrigin + Vec2d((i-4)*nSize,-(j-4)*nSize);
                 p.edgeLength = nSize;
                 Vec2d pRelative = p.coords - atlasOrigin;

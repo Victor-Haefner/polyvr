@@ -46,6 +46,7 @@ class VRMapManager : public std::enable_shared_from_this<VRMapManager> {
             string vault;
             string servScript;
             string fileExt;
+            string format;
         };
 
         string server;
@@ -69,7 +70,7 @@ class VRMapManager : public std::enable_shared_from_this<VRMapManager> {
 		VRMapManagerPtr ptr();
 
 		void setServer(string address);
-		void addMapType(int ID, string vault, string servScript, string fileExt);
+		void addMapType(int ID, string vault, string servScript, string fileExt, string format);
 
 		VRMapDescriptorPtr getMap(double N, double E, double S, vector<int> types, VRMapCbPtr cb);
 };
