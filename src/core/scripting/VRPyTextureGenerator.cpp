@@ -16,6 +16,7 @@ PyMethodDef VRPyTextureGenerator::methods[] = {
     {"drawFill", PyWrap( TextureGenerator, drawFill, "Fill whole texture", void, Color4f ) },
     {"drawPixel", PyWrap( TextureGenerator, drawPixel, "Set a pixel color", void, Vec3i, Color4f ) },
     {"drawLine", PyWrap( TextureGenerator, drawLine, "Add a line in UV space", void, Vec3d, Vec3d, Color4f, float ) },
+    {"drawBox", PyWrap( TextureGenerator, drawBox, "Add a box in UV space", void, Vec3d, Vec3d, Color4f ) },
     {"drawPath", PyWrap( TextureGenerator, drawPath, "Add a path in UV space", void, PathPtr, Color4f, float ) },
     {"setSize", PyWrapOpt( TextureGenerator, setSize, "Set the size\n   set depth to 1 for 2D textures", "0", void, Vec3i, bool ) },
     {"getSize", PyWrap( TextureGenerator, getSize, "Get the size", Vec3i ) },

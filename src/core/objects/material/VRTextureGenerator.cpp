@@ -76,6 +76,15 @@ void VRTextureGenerator::drawPixel(Vec3i p, Color4f c) {
     layers.push_back(l);
 }
 
+void VRTextureGenerator::drawBox(Vec3d p1, Vec3d p2, Color4f c) {
+    Layer l;
+    l.type = BOX;
+    l.c31 = Vec3f(p1);
+    l.c32 = Vec3f(p2);
+    l.c41 = c;
+    layers.push_back(l);
+}
+
 void VRTextureGenerator::drawLine(Vec3d p1, Vec3d p2, Color4f c, float w) {
     Layer l;
     l.type = LINE;
@@ -262,6 +271,25 @@ void VRTextureGenerator::applyLine(T* data, Vec3d p1, Vec3d p2, Color4f c, float
 }
 
 template<typename T>
+void VRTextureGenerator::applyBox(T* data, Vec3d p1, Vec3d p2, Color4f c) {
+    auto upscale = [&](Vec3d& p) {
+        p = Vec3d(p[0]*width, p[1]*height, p[2]*depth);
+    };
+
+    upscale(p1);
+    upscale(p2);
+
+    for (int pi=p1[0]; pi<=p2[0]; pi++) {
+        for (int pj=p1[1]; pj<=p2[1]; pj++) {
+            for (int pk=p1[2]; pk<=p2[2]; pk++) {
+                Vec3i p(pi, pj, pk);
+                applyPixel(data, clamp(p), c);
+            }
+        }
+    }
+}
+
+template<typename T>
 void VRTextureGenerator::applyPath(T* data, PathPtr p, Color4f c, float w) {
     auto poses = p->getPoses();
     for (unsigned int i=1; i<poses.size(); i++) {
@@ -329,6 +357,7 @@ VRTexturePtr VRTextureGenerator::compose(int seed) { // TODO: optimise!
             if (l.type == PERLIN) VRPerlin::apply(data3, dims, l.amount, l.c31, l.c32);
             if (l.type == NORMALMAP) VRNormalmap::apply(data3, dims, l.amount);
             if (l.type == LINE) applyLine(data3, Vec3d(l.c31), Vec3d(l.c32), l.c41, l.amount);
+            if (l.type == BOX) applyBox(data3, Vec3d(l.c31), Vec3d(l.c32), l.c41);
             if (l.type == FILL) applyFill(data3, l.c41);
             if (l.type == PIXEL) applyPixel(data3, l.p1, l.c41);
             if (l.type == PATH) applyPath(data3, l.p, l.c41, l.amount);
@@ -340,6 +369,7 @@ VRTexturePtr VRTextureGenerator::compose(int seed) { // TODO: optimise!
             if (l.type == PERLIN) VRPerlin::apply(data4, dims, l.amount, l.c41, l.c42);
             if (l.type == NORMALMAP) VRNormalmap::apply(data4, dims, l.amount);
             if (l.type == LINE) applyLine(data4, Vec3d(l.c31), Vec3d(l.c32), l.c41, l.amount);
+            if (l.type == BOX) applyBox(data4, Vec3d(l.c31), Vec3d(l.c32), l.c41);
             if (l.type == FILL) applyFill(data4, l.c41);
             if (l.type == PIXEL) applyPixel(data4, l.p1, l.c41);
             if (l.type == PATH) applyPath(data4, l.p, l.c41, l.amount);
