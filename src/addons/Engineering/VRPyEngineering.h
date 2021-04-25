@@ -5,6 +5,7 @@
 #include "VRRobotArm.h"
 #include "VRPipeSystem.h"
 #include "VRNumberingEngine.h"
+#include "Space/VRRocketExhaust.h"
 
 struct VRPyNumberingEngine : VRPyBaseT<OSG::VRNumberingEngine> {
     static PyMethodDef methods[];
@@ -15,6 +16,10 @@ struct VRPyRobotArm : VRPyBaseT<OSG::VRRobotArm> {
 };
 
 struct VRPyPipeSystem : VRPyBaseT<OSG::VRPipeSystem> {
+    static PyMethodDef methods[];
+};
+
+struct VRPyRocketExhaust : VRPyBaseT<OSG::VRRocketExhaust> {
     static PyMethodDef methods[];
 };
 
