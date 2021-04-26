@@ -5,9 +5,9 @@ It packs common virtual reality features like clustering, tracking and scenegrap
 
 <h2>Requirements</h2>
 
-Ubuntu 16.04 LTS and derived distributions
-
 Ubuntu 18.04 LTS and derived distributions
+
+Ubuntu 20.04 LTS and derived distributions
 
 There are no special hardware requirements for basic usage.
 A decent graphics card from any main vendor is recommended.
@@ -25,7 +25,7 @@ clone this repository
  sudo ./install
 
 
-build the project in codeblocks with the project file polyvr/PolyVR.cbp.
+build the project in codeblocks with the project file polyvr/PolyVR_XX.04.cbp (XX is 16/18/20 corresponding to the ubuntu LTS version).
 Set the number of compilation processes to 5 or more depending on your CPU.
 The option is in Settings > Compiler... > Global compiler settings > Build options.
 

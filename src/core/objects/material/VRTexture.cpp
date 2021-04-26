@@ -46,20 +46,44 @@ void VRTexture::write(string path, bool doThread) {
     }
 }
 
+bool convertToUInt8(ImageMTRecPtr img) {
+    auto dtype = img->getDataType();
+    auto format = img->getPixelFormat();
+    Vec3i s = Vec3i(img->getWidth(), img->getHeight(), img->getDepth());
+
+    if (dtype == OSG::Image::OSG_FLOAT32_IMAGEDATA && format == OSG::Image::OSG_RGB_PF) {
+        size_t N = s[0]*s[1]*s[2];
+        Color3f* src = (Color3f*)img->getData();
+        vector<Color3ub> dst(N);
+        for (size_t i=0; i<N; i++) {
+            Color3f c = src[i];
+            UInt8 r = max(0.f,c[0])*255;
+            UInt8 g = max(0.f,c[1])*255;
+            UInt8 b = max(0.f,c[2])*255;
+            dst[i] = Color3ub(r,g,b);
+        }
+        img->set(format, s[0], s[1], s[2], 1, 1, 0, (UInt8*)&dst[0]);
+        return true;
+    }
+    return false;
+}
+
 void VRTexture::writeImage(ImageMTRecPtr img, string path) {
     //auto format = hasAlpha ? OSG::Image::OSG_RGBA_PF : OSG::Image::OSG_RGB_PF;
 
     //OSG::Image::OSG_FLOAT32_IMAGEDATA
     auto dtype = img->getDataType();
     if (dtype != OSG::Image::OSG_UINT8_IMAGEDATA) { // need to convert image data to write to file
+        cout << "convert image data from " << dtype << " to OSG::Image::OSG_UINT8_IMAGEDATA" << endl;
         ImageMTRecPtr img2 = Image::create();
         img2->set(img);
-        img2->convertDataTypeTo(OSG::Image::OSG_UINT8_IMAGEDATA);
+        if (!convertToUInt8(img2)) img2->convertDataTypeTo(OSG::Image::OSG_UINT8_IMAGEDATA);
         img = img2;
     }
 
     auto format = img->getPixelFormat();
     if (format == OSG::Image::OSG_A_PF) { // need to convert pixel data
+        cout << "convert pixel data from " << format << " to OSG::Image::OSG_RGB_PF" << endl;
         ImageMTRecPtr img2 = Image::create();
         img->reformat(OSG::Image::OSG_RGB_PF, img2);
         img = img2;

@@ -11,6 +11,11 @@ simpleVRPyType(RestResponse, 0);
 simpleVRPyType(RestClient, New_ptr);
 simpleVRPyType(RestServer, New_ptr);
 
+#ifndef WITHOUT_TCP
+simpleVRPyType(TCPClient, New_ptr);
+simpleVRPyType(TCPServer, New_ptr);
+#endif
+
 #ifndef WITHOUT_HDLC
 PyMethodDef VRPyHDLC::methods[] = {
     {"setCallback", PyWrap(HDLC, setCallback, "Set callback", void, VRHDLCCbPtr) },
@@ -48,3 +53,57 @@ PyMethodDef VRPyRestClient::methods[] = {
 PyMethodDef VRPyRestServer::methods[] = {
     {NULL}  /* Sentinel */
 };
+
+#ifndef WITHOUT_TCP
+PyMethodDef VRPyTCPClient::methods[] = {
+    {"connect", PyWrap(TCPClient, connect, "Connect to server", void, string, int) },
+    {"connectToPeer", PyWrap(TCPClient, connectToPeer, "Connect to another client P2P using TCP tunneling (local port, remote IP, remote port)", void, int, string, int) },
+    {"send", PyWrapOpt(TCPClient, send, "Send message to server", "", void, const string&, string) },
+    {"onMessage", PyWrap(TCPClient, onMessage, "Set onMessage callback", void, function<void(string)>) },
+    {"onConnect", PyWrap(TCPClient, onConnect, "Set onConnect callback", void, function<void(void)>) },
+    {NULL}  /* Sentinel */
+};
+
+PyMethodDef VRPyTCPServer::methods[] = {
+    {"listen", PyWrapOpt(TCPServer, listen, "Listen on port", "", void, int, string) },
+    {"close", PyWrap(TCPServer, close, "Close server", void) },
+    {"onMessage", PyWrap(TCPServer, onMessage, "Set onMessage callback", void, function<string(string)>) },
+    {NULL}  /* Sentinel */
+};
+
+template<> bool toValue(PyObject* o, function<string(string)>& e) {
+    //if (!VRPyEntity::check(o)) return 0; // TODO: add checks!
+    Py_IncRef(o);
+	PyObject* args = PyTuple_New(1);
+    e = bind(VRPyBase::execPyCall<string, string>, o, args, placeholders::_1);
+    return 1;
+}
+
+template<> bool toValue(PyObject* o, function<void(string)>& e) {
+    //if (!VRPyEntity::check(o)) return 0; // TODO: add checks!
+    Py_IncRef(o);
+	PyObject* args = PyTuple_New(1);
+    e = bind(VRPyBase::execPyCallVoid<string>, o, args, placeholders::_1);
+    return 1;
+}
+
+template<> bool toValue(PyObject* o, function<void(void)>& e) {
+    //if (!VRPyEntity::check(o)) return 0; // TODO: add checks!
+    Py_IncRef(o);
+	PyObject* args = PyTuple_New(0);
+    e = bind(VRPyBase::execPyCallVoidVoid, o, args);
+    return 1;
+}
+
+template<> int toValue(stringstream& ss, function<string(string)>& e) { return 0; }
+template<> int toValue(stringstream& ss, function<void(string)>& e) { return 0; }
+template<> int toValue(stringstream& ss, function<void(void)>& e) { return 0; }
+
+template<> string typeName(const function<string(string)>& t) { return "string function(string)"; }
+template<> string typeName(const function<void(string)>& t) { return "void function(string)"; }
+template<> string typeName(const function<void(void)>& t) { return "void function()"; }
+#endif
+
+
+
+

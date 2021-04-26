@@ -2,9 +2,15 @@
 <Scene base_name="snapping" name_space="Scene" name_suffix="0" persistency="666">
   <Objects>
     <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" visible="1">
-      <Object ambient="0.3 0.3 0.3 1" base_name="light" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" specular="0.1 0.1 0.1 1" type="Light" visible="1">
-        <Object accept_root="1" aspect="1" at="0 0 4.45" at_dir="0" base_name="Default" far="512" fov="1.0472" from="0 0 5.45" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
+      <Object ambient="0.3 0.3 0.3 1" base_name="light" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" shadowVolume="1e+06 1e+06 1e+06 -1e+06 -1e+06 -1e+06 1" specular="0.1 0.1 0.1 1" type="Light" visible="1">
+        <Object accept_root="1" aspect="1" at="0.357871 -0.035675 0.5" at_dir="0" base_name="Default" far="512" fov="1.0472" from="0.723859 3.03201 8.47422" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
+          <attachments>
+            <Node base_name="transform" name_space="VRAttachment" name_suffix="0" persistency="666" value=""/>
+          </attachments>
           <Object at="0 0 -1" at_dir="0" base_name="Headlight_beacon" from="0 0 0" light="light" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" up="0 1 0" visible="1">
+            <attachments>
+              <Node base_name="transform" name_space="VRAttachment" name_suffix="0" persistency="666" value=""/>
+            </attachments>
             <constraint persistency="666"/>
           </Object>
           <constraint persistency="666"/>
@@ -12,7 +18,8 @@
       </Object>
     </Object>
   </Objects>
-  <Rendering deferred_rendering="0" frustum_culling="1" fxaa="0" hmdd="0" marker="0" occlusion_culling="0" persistency="666" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
+  <Cameras activeCam="Default" persistency="666"/>
+  <Rendering deferred_rendering="0" fogColor="0.5 0.5 0.5 1" fogParams="0 0 100 0.1" frustum_culling="1" fxaa="0" hmdd="0" marker="0" occlusion_culling="0" persistency="666" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
   <Scripts persistency="666">
     <Script base_name="init" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
@@ -21,6 +28,9 @@
 	if hasattr(VR, 'scene'): VR.scene.destroy()
 	VR.scene = VR.Object('scene', 'light')
 	
+	VR.snapping = VR.SnappingEngine()
+	VR.snapping.enableGhosts(True)
+	
 	def addBlock(p, c):
 		box = VR.Geometry('block')
 		box.setPrimitive('Box 1 1 1 1 1 1')
@@ -28,34 +38,70 @@
 		box.setPose(p)
 		box.setPickable(True)
 		VR.scene.addChild(box)
+		VR.snapping.addObject(box, 0)
 		return box
 		
+	def addBrickAnchor(brick, pos, g, sg): # we use different g and sg for top and bottom anchors
+		a = VR.Transform('anchor')
+		a.setFrom(pos)
+		brick.addChild(a)
+		VR.snapping.addObjectAnchor(brick, a, g, sg)
+	
+	def addBrick(p):
+		brick = VR.Geometry('brick')
+		brick.setPrimitive('Box 1 0.6 0.5 1 1 1')
+		brick.setColor('white')
+		brick.setFrom(p)
+		brick.setPickable(True)
+		VR.scene.addChild(brick)
+		VR.snapping.addObject(brick, 1) # put in grp 1 to only snap with other bricks
+		addBrickAnchor(brick, [-0.25, 0.3, 0], 0, 1)
+		addBrickAnchor(brick, [ 0.25, 0.3, 0], 0, 1)
+		addBrickAnchor(brick, [-0.25,-0.3, 0], 1, 0)
+		addBrickAnchor(brick, [ 0.25,-0.3, 0], 1, 0)
+		p = VR.Pose() # default pose
+		VR.snapping.addRule('POINT', 'POINT', p, p, 1.0, 1, brick)
+		
+		
+	# create scene
+	
 	b1 = addBlock(VR.Pose([0,0,0], [0,0,-1], [0,1,0]), 'red')
 	b2 = addBlock(VR.Pose([2,0,0], [0,0,-1], [0,1,0]), 'green')
 	b3 = addBlock(VR.Pose([0,2,0], [0,0,-1], [0,1,0]), 'orange')
 
-
-	p = VR.Pose()
-	VR.snapping = VR.SnappingEngine()
+	for i in range(1,5):
+		addBrick([-i*0.8-1,0,i])
+	
+	
+	# add snapping rules
 	
 	# snap to global origin
+	p = VR.Pose() # default pose
 	VR.snapping.addRule('POINT', 'POINT', p, p, 1.2, 0)
 	
-	# snap above red cube
+	# snap on top of red cube
 	VR.snapping.addRule('POINT', 'POINT', VR.Pose([0,1.0,0]), p, 1.2, 0, b1)
 	
 	# snap right of red cube
 	VR.snapping.addRule('POINT', 'POINT', VR.Pose([1.0,0,0]), VR.Pose([0,0,0],[1,0,1]), 1.2, 0, b1)
 	
-	# TODO, make API nicer:
-	#VR.snapping.addSnapPlane(VR.Pose(), 0.2, 0)
-	#VR.snapping.addSnapPoint(VR.Pose([0.5,0,0]), 0.2, 0, b1)
 	
-	# TODO, allow to snap snappoint to snappoint, disables default origin snap
+	# the first two parameters define the type of snapping, POINT, LINE or PLANE
+	#  the first is the translation snapping
+	#  the second is the orientation snapping, only POINT is supported for now!
 	
-	VR.snapping.addObject(b1, 0)
-	VR.snapping.addObject(b2, 0)
-	VR.snapping.addObject(b3, 0)
+	# the next two parameters are poses that define the snapping positions
+	#  the first pose defines the translation primitive
+	#   for a POINT it defines the position
+	#   for a LINE it defines a line point and line direction
+	#   for a PLANE it defines a plane point and plane normal
+	#  the second pose defines the orientation primitive
+	#   for a POINT it defines a fixed orientation when snapping
+	
+	# the fifth parameter is the snapping distance
+	# the sixth parameter is a group ID, the rule applies to the snapping objects in the same group
+	# the last parameter is optional and defines a local referential for the snapping rule
+	
 	
 </core>
       <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="0" persistency="666"/>

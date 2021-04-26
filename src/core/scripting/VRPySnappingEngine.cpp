@@ -43,10 +43,11 @@ PyMethodDef VRPySnappingEngine::methods[] = {
     {"setPreset", PyWrap(SnappingEngine, setPreset, "Initiate the engine with a preset - setPreset(str preset)\n   preset can be: 'SNAP_BACK', 'SIMPLE_ALIGNMENT'", void, VRSnappingEngine::PRESET ) },
     {"addRule", PyWrapOpt(SnappingEngine, addRule, "Add snapping rule (Type1, Type2, Pose1, Pose2, snapDistance, group, snapReference), Type can be 'POINT', 'LINE' or 'PLANE'", "0|0", int, VRSnappingEngine::Type, VRSnappingEngine::Type, PosePtr, PosePtr, float, int, VRTransformPtr ) },
     {"remRule", PyWrap(SnappingEngine, remRule, "Remove a rule - remRule(int ID)", void, int ) },
-    {"addObjectAnchor", PyWrap(SnappingEngine, addObjectAnchor, "Remove a rule - addObjectAnchor(obj transform, obj anchor)", void, VRTransformPtr, VRTransformPtr ) },
+    {"addObjectAnchor", PyWrapOpt(SnappingEngine, addObjectAnchor, "Remove a rule - addObjectAnchor(obj transform, obj anchor)", "0|0", void, VRTransformPtr, VRTransformPtr, int, int ) },
     {"clearObjectAnchors", PyWrap(SnappingEngine, clearObjectAnchors, "Remove a rule - clearObjectAnchors(obj transform)", void, VRTransformPtr ) },
     {"remLocalRules", PyWrap(SnappingEngine, remLocalRules, "Remove all object relative rules - clearObjectAnchors(obj transform)", void, VRTransformPtr ) },
     {"addCallback", PyWrap(SnappingEngine, addCallback, "Set snap callback", void, VRSnappingEngine::VRSnapCbPtr ) },
+    {"enableGhosts", PyWrap(SnappingEngine, enableGhosts, "Set engine to show snapping ghosts", void, bool ) },
     {"setActive", PyWrap(SnappingEngine, setActive, "Set engine active or not", void, bool ) },
     {"isActive", PyWrap(SnappingEngine, isActive, "Returns if engine is active", bool ) },
     {NULL}  /* Sentinel */

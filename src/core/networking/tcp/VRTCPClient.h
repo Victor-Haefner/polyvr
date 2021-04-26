@@ -2,7 +2,9 @@
 #define VRTCPCLIENT_H_INCLUDED
 
 #include "../VRNetworkingFwd.h"
+
 #include <string>
+#include <functional>
 
 class TCPClient;
 
@@ -19,9 +21,13 @@ class VRTCPClient {
 
         static VRTCPClientPtr create();
 
+        void onConnect( function<void(void)>   f );
+        void onMessage( function<void(string)> f );
+
         void connect(string host, int port);
         void connect(string uri);
-        void send(const string& message);
+        void connectToPeer(int localPort, string remoteIP, int remotePort);
+        void send(const string& message, string guard = "");
         bool connected();
 };
 

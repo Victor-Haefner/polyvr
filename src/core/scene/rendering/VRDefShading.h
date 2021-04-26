@@ -82,6 +82,7 @@ class VRDefShading {
         void setDeferredShading(bool b);
         bool getDeferredShading();
         void reload();
+        void onResize();
 
         int addBuffer(int pformat, int ptype);
         void setDeferredChannel(int channel);

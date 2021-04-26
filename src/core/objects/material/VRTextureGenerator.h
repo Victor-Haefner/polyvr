@@ -15,6 +15,7 @@ enum GEN_TYPE {
     BRICKS,
     NORMALMAP,
     LINE,
+    BOX,
     FILL,
     PATH,
     POLYGON,
@@ -51,6 +52,7 @@ class VRTextureGenerator {
         void applyTexture(Color3f* data, VRTexturePtr t, float amount);
         void applyTexture(Color4f* data, VRTexturePtr t, float amount);
         template<typename T> void applyLine(T* data, Vec3d p1, Vec3d p2, Color4f c, float width);
+        template<typename T> void applyBox(T* data, Vec3d p1, Vec3d p2, Color4f c);
         template<typename T> void applyPath(T* data, PathPtr p, Color4f c, float width);
         template<typename T> void applyPolygon(T* data, VRPolygonPtr p, Color4f c, float height);
 
@@ -74,6 +76,7 @@ class VRTextureGenerator {
         void drawFill(Color4f c);
         void drawPixel(Vec3i p, Color4f c);
         void drawLine(Vec3d p1, Vec3d p2, Color4f c, float width);
+        void drawBox(Vec3d p1, Vec3d p2, Color4f c);
         void drawPath(PathPtr p, Color4f c, float width);
         void drawPolygon(VRPolygonPtr p, Color4f c, float height = 0);
 

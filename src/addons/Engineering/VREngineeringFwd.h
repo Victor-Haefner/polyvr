@@ -25,6 +25,8 @@ ptrFwd(VRCrystal);
 
 ptrFwd(VRAMLLoader);
 
+ptrFwd(VRRocketExhaust);
+
 }
 
 #endif // VRENGINEERINGFWD_H_INCLUDED

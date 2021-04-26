@@ -38,6 +38,12 @@ class VRSnappingEngine {
             PLANE_LOCAL
         };
 
+        struct Anchor {
+            VRTransformPtr a;
+            int grp = 0;
+            int snpgrp = 0;
+        };
+
         struct EventSnap {
             int snap = 0;
             int snapID = 0;
@@ -56,20 +62,33 @@ class VRSnappingEngine {
     private:
         map<int, Rule*> rules; // snapping rules, translation and orientation
         map<VRTransformPtr, Matrix4d> objects; // map objects to reference matrix
-        map<VRTransformPtr, vector<VRTransformPtr> > anchors; // object anchors
+        map<VRTransformPtr, vector<Anchor> > anchors; // object anchors
         vector<VRSnapCbPtr> callbacks; // object anchors
         OctreePtr positions = 0; // objects by positions
-        VRGeometryPtr hintGeo = 0;
         VRUpdateCbPtr updatePtr;
+
+        VRTransformPtr ghostHost;
+        VRTransformPtr ghostHook;
+        VRMaterialPtr ghostMat;
+        VRObjectPtr ghostParent;
+        VRDevicePtr ghostDevice;
 
         float influence_radius = 1000;
         float distance_snap = 0.05;
-        bool showHints = false;
+        bool lastEvent = 0;
+        int lastEventID = 0;
 
         EventSnap* event = 0;
         VRSignalPtr snapSignal = 0;
 
+        bool doGhosts = false;
         bool active = true;
+
+        // update sub functions
+        void terminateGhost();
+        void updateGhost(VRDevicePtr dev, VRTransformPtr obj);
+        void handleDraggedObject(VRDevicePtr dev, VRTransformPtr obj, VRTransformPtr gobj);
+        void postProcessEvent(VRDevicePtr dev, VRTransformPtr obj, VRTransformPtr gobj);
 
     public:
         VRSnappingEngine();
@@ -85,12 +104,14 @@ class VRSnappingEngine {
         void setActive(bool b);
         bool isActive();
 
+        void enableGhosts(bool b);
+
         void addCallback(VRSnapCbPtr cb);
 
         int addRule(Type t, Type o, PosePtr pt, PosePtr po, float d, int g = 0, VRTransformPtr l = 0);
         void remRule(int i);
 
-        void addObjectAnchor(VRTransformPtr obj, VRTransformPtr a);
+        void addObjectAnchor(VRTransformPtr obj, VRTransformPtr a, int grp = 0, int snpgrp = 0);
         void clearObjectAnchors(VRTransformPtr obj);
         void remLocalRules(VRTransformPtr obj);
 
@@ -98,7 +119,6 @@ class VRSnappingEngine {
         void addTree(VRObjectPtr obj, int group = 0);
         void remObject(VRTransformPtr obj);
 
-        void setVisualHints(bool b = true);
         void setPreset(PRESET preset);
 
         void update();

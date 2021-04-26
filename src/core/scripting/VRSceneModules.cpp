@@ -190,6 +190,10 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
 #ifndef WITHOUT_HDLC
     sm->registerModule<VRPyHDLC>("HDLC", pModVR);
 #endif
+#ifndef WITHOUT_TCP
+    sm->registerModule<VRPyTCPClient>("TCPClient", pModVR);
+    sm->registerModule<VRPyTCPServer>("TCPServer", pModVR);
+#endif
     sm->registerModule<VRPyRestResponse>("RestResponse", pModVR);
     sm->registerModule<VRPyRestClient>("RestClient", pModVR);
     sm->registerModule<VRPyRestServer>("RestServer", pModVR);
@@ -253,6 +257,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyRain>("Rain", pModVR, VRPyGeometry::typeRef);
     sm->registerModule<VRPyRainCarWindshield>("RainCarWindshield", pModVR, VRPyGeometry::typeRef);
     sm->registerModule<VRPyPlanet>("Planet", pModVR, VRPyTransform::typeRef);
+    sm->registerModule<VRPyRocketExhaust>("RocketExhaust", pModVR, VRPyGeometry::typeRef);
     sm->registerModule<VRPyOrbit>("Orbit", pModVR);
     sm->registerModule<VRPyMillingMachine>("MillingMachine", pModVR);
     sm->registerModule<VRPyMillingWorkPiece>("MillingWorkPiece", pModVR, VRPyGeometry::typeRef);

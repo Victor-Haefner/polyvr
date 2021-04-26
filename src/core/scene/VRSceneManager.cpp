@@ -271,105 +271,134 @@ void VRSceneManager::updateScene() {
 void VRSceneManager::setTargetFPS(double fps) { targetFPS = fps;  }
 
 void VRSceneManager::update() {
-    //cout << "VRSceneManager::update" << endl;
-    // statistics
-#ifndef WASM
-    auto profiler = VRProfiler::get();
-    profiler->swap();
-    int pID1 = profiler->regStart("frame");
-#endif
-    static VRRate FPS; int fps = FPS.getRate();
-    VRTimer timer; timer.start();
+    VRProfiler* profiler = 0;
+    VRTimer timer;
+    int fps = 0, pID1 = 0;
 
+    auto setupProfiling = [&]() {
 #ifndef WASM
-    int pID7 = profiler->regStart("frame gtk update");
+        profiler = VRProfiler::get();
+        profiler->swap();
+        pID1 = profiler->regStart("frame");
 #endif
-    VRTimer t1; t1.start();
+        static VRRate FPS;
+        fps = FPS.getRate();
+        timer.start();
+    };
+
+    auto doGTKUpdate = [&]() {
+#ifndef WASM
+        int pID7 = profiler->regStart("frame gtk update");
+#endif
+        VRTimer t1; t1.start();
 #ifndef WITHOUT_GTK
-    VRGuiManager::get()->updateGtk(); // update GUI
+        VRGuiManager::get()->updateGtk(); // update GUI
 #endif
-    VRGlobals::GTK1_FRAME_RATE.update(t1);
-    VRGlobals::UPDATE_LOOP1.update(timer);
+        VRGlobals::GTK1_FRAME_RATE.update(t1);
+        VRGlobals::UPDATE_LOOP1.update(timer);
 #ifndef WASM
-    profiler->regStop(pID7);
+        profiler->regStop(pID7);
+#endif
+    };
 
-    int pID6 = profiler->regStart("frame callbacks");
-#endif
-    VRTimer t4; t4.start();
-    updateCallbacks();
-    VRGlobals::SMCALLBACKS_FRAME_RATE.update(t4);
-    VRGlobals::UPDATE_LOOP2.update(timer);
+    auto doCallbacks = [&]() {
 #ifndef WASM
-    profiler->regStop(pID6);
+        int pID6 = profiler->regStart("frame callbacks");
+#endif
+        VRTimer t4; t4.start();
+        updateCallbacks();
+        VRGlobals::SMCALLBACKS_FRAME_RATE.update(t4);
+        VRGlobals::UPDATE_LOOP2.update(timer);
+#ifndef WASM
+        profiler->regStop(pID6);
+#endif
+    };
 
-    int pID5 = profiler->regStart("frame devices");
-#endif
-    VRTimer t5; t5.start();
-    if (auto setup = VRSetup::getCurrent()) {
-        setup->updateTracking(); // tracking
-        setup->updateDevices(); // device beacon update
-    }
+    auto doSetupUpdate = [&]() {
 #ifndef WASM
-    profiler->regStop(pID5);
+        int pID5 = profiler->regStart("frame devices");
 #endif
+        VRTimer t5; t5.start();
+        if (auto setup = VRSetup::getCurrent()) {
+            setup->updateTracking(); // tracking
+            setup->updateDevices(); // device beacon update
+        }
+#ifndef WASM
+        profiler->regStop(pID5);
+#endif
+        VRGlobals::SMCALLBACKS_FRAME_RATE.update(t5);
+        VRGlobals::UPDATE_LOOP3.update(timer);
+    };
 
-    VRGlobals::SMCALLBACKS_FRAME_RATE.update(t5);
-    VRGlobals::UPDATE_LOOP3.update(timer);
-
+    auto doSceneUpdate = [&]() {
 #ifndef WASM
-    int pID4 = profiler->regStart("frame scene");
+        int pID4 = profiler->regStart("frame scene");
 #endif
-    VRTimer t6; t6.start();
-    updateScene();
-    VRGlobals::SCRIPTS_FRAME_RATE.update(t6);
-    VRGlobals::UPDATE_LOOP4.update(timer);
+        VRTimer t6; t6.start();
+        updateScene();
+        VRGlobals::SCRIPTS_FRAME_RATE.update(t6);
+        VRGlobals::UPDATE_LOOP4.update(timer);
 #ifndef WASM
-    profiler->regStop(pID4);
-
-    int pID3 = profiler->regStart("frame draw");
+        profiler->regStop(pID4);
 #endif
-    if (auto setup = VRSetup::getCurrent()) {
-        VRTimer t2; t2.start();
-        setup->updateWindows(); // rendering
-        setup.reset(); // updateGtk may close application, reset setup to avoid memory leak
-        VRGlobals::WINDOWS_FRAME_RATE.update(t2);
-        VRGlobals::UPDATE_LOOP5.update(timer);
+    };
+
+    auto doRender = [&]() {
 #ifndef WASM
-        int pID31 = profiler->regStart("frame gtk update");
+        int pID3 = profiler->regStart("frame draw");
+#endif
+        if (auto setup = VRSetup::getCurrent()) {
+            VRTimer t2; t2.start();
+            setup->updateWindows(); // rendering
+            setup.reset(); // updateGtk may close application, reset setup to avoid memory leak
+            VRGlobals::WINDOWS_FRAME_RATE.update(t2);
+            VRGlobals::UPDATE_LOOP5.update(timer);
+#ifndef WASM
+            int pID31 = profiler->regStart("frame gtk update");
 #endif
 #ifndef WITHOUT_GTK
-        VRGuiManager::get()->updateGtk();
+            VRGuiManager::get()->updateGtk();
 #endif
 #ifndef WASM
-        profiler->regStop(pID31);
+            profiler->regStop(pID31);
 #endif
-        VRGlobals::UPDATE_LOOP6.update(timer);
-    }
+            VRGlobals::UPDATE_LOOP6.update(timer);
+        }
 #ifndef WASM
-    profiler->regStop(pID3);
+        profiler->regStop(pID3);
 #endif
+    };
 
-    // sleep
-    if (current) current->allowScriptThreads();
-    VRGlobals::CURRENT_FRAME++;
-    VRGlobals::FRAME_RATE.fps = fps;
-    VRTimer t7; t7.start();
+    auto doSleep = [&]() {
+        if (current) current->allowScriptThreads();
+        VRGlobals::CURRENT_FRAME++;
+        VRGlobals::FRAME_RATE.fps = fps;
+        VRTimer t7; t7.start();
 #ifndef WASM // main loop is controlled by wasm, no sleep needed here
-    int pID2 = profiler->regStart("frame sleep");
-    doFrameSleep(timer.stop(), targetFPS);
-    profiler->regStop(pID2);
+        int pID2 = profiler->regStart("frame sleep");
+        doFrameSleep(timer.stop(), targetFPS);
+        profiler->regStop(pID2);
 #endif
-    VRGlobals::SLEEP_FRAME_RATE.update(t7);
-    if (current) current->blockScriptThreads();
+        VRGlobals::SLEEP_FRAME_RATE.update(t7);
+        if (current) current->blockScriptThreads();
 #ifndef WASM
-    profiler->regStop(pID1);
+        profiler->regStop(pID1);
 #endif
-    //cout << " VRSceneManager::update done" << endl;
+        //cout << " VRSceneManager::update done" << endl;
 
 #ifdef WASM
-    VRSetup::getCurrent()->getView(0)->updateStatsEngine();
+        VRSetup::getCurrent()->getView(0)->updateStatsEngine();
 #endif
-    VRGlobals::UPDATE_LOOP7.update(timer);
+        VRGlobals::UPDATE_LOOP7.update(timer);
+    };
+
+    setupProfiling();
+    doGTKUpdate();
+    doCallbacks();
+    doSetupUpdate();
+    doSceneUpdate();
+    doRender();
+    doSleep();
 }
 
 OSG_END_NAMESPACE

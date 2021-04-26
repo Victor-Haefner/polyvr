@@ -112,6 +112,13 @@ void VRSprite::webOpen(string path, int res, float ratio) {
 #endif
 }
 
+void VRSprite::webReload() {
+#ifndef WITHOUT_CEF
+    if (!web) return;
+    web->reload();
+#endif
+}
+
 void VRSprite::setTexture(string path) {
     auto m = VRMaterial::create(path);
     m->setTexture(path);

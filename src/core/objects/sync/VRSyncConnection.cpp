@@ -114,7 +114,7 @@ void VRSyncConnection::connect() {
 }
 
 bool VRSyncConnection::send(string message) {
-    client->send(message);
+    client->send(message, "TCPPVR\n");
     return 1;
 }
 

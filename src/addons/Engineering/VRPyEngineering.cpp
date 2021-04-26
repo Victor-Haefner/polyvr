@@ -9,6 +9,7 @@ using namespace OSG;
 simpleVRPyType(NumberingEngine, New_VRObjects_ptr);
 simpleVRPyType(RobotArm, New_named_ptr);
 simpleVRPyType(PipeSystem, New_ptr);
+simpleVRPyType(RocketExhaust, New_VRObjects_ptr);
 
 PyMethodDef VRPyPipeSystem::methods[] = {
     {"addNode", PyWrap( PipeSystem, addNode, "Add node, type can be [Tank, Valve, Outlet, Pump]", int, string, PosePtr, string, map<string, string> ) },
@@ -61,4 +62,9 @@ PyMethodDef VRPyRobotArm::methods[] = {
     {"isMoving", PyWrap(RobotArm, isMoving, "Get animation status", bool) },
     {"setEventCallback", PyWrap(RobotArm, setEventCallback, "Set callback for move and stop events", void, VRMessageCbPtr) },
     {NULL}  /* Sentinel */
+};
+
+PyMethodDef VRPyRocketExhaust::methods[] = {
+    {"set", PyWrap( RocketExhaust, set, "Set exhaust amount, from 0.0 to 1.0", void, float ) },
+    {NULL}
 };

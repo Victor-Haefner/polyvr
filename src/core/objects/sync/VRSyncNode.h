@@ -114,7 +114,7 @@ class VRSyncNode : public VRTransform {
         void replaceContainerMapping(UInt32 ID1, UInt32 ID2);
 
         void startInterface(int port);
-        void handleMessage(string msg);
+        string handleMessage(string msg);
         void update();
         void broadcast(string message);
         size_t getContainerCount();

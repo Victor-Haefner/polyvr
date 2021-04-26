@@ -39,7 +39,20 @@ template<> bool toValue(PyObject* o, float& v) { if (!PyNumber_Check(o)) return 
 template<> bool toValue(PyObject* o, double& v) { if (!PyNumber_Check(o)) return 0; v = PyFloat_AsDouble(o); return 1; }
 
 template<> bool toValue(PyObject* o, string& v) {
-    if (!PyString_Check(o) && !PyUnicode_Check(o)) o = PyObject_Repr(o);
+    //cout << "toValue->string " << bool(o == Py_None) << " " << o << endl;
+    //cout << "toValue->string " << o->ob_type->tp_name << endl;
+    if (string(o->ob_type->tp_name) == "tuple") {
+        v = "(";
+        for (int i=0; i<PyTuple_GET_SIZE(o); i++) {
+            auto c = PyTuple_GET_ITEM(o, i);
+            if (i>0) v += ", ";
+            v += PyString_AsString(c);
+        }
+        v += ")";
+        return 1;
+    }
+
+    if (!PyString_Check(o) && !PyUnicode_Check(o)) o = PyObject_Repr(o); // may segfault with tuple!
     auto vc = PyString_AsString(o);
     v = vc?vc:"";
     return 1;

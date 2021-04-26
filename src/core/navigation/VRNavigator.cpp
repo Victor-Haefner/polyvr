@@ -271,9 +271,16 @@ void VRNavigator::orbit(VRDeviceWeakPtr _dev) {
         target->setAt(camAtRef);
         target->setFrom(camPos);
 	} else {
+        // TODO:
+        //  get reference at
+        //  virtually move that point -> thus moving the camera accordingly
+
+        Vec3d D = (camAtRef-camPanRef.pos());
+        double d = D.length();
+
         Vec3d x = camPanRef.x(); x.normalize();
         Vec3d u = x.cross( camPanRef.dir() ); u.normalize();
-        Vec3d delta = -mousePos[0]*x -mousePos[1]*u;
+        Vec3d delta = (-mousePos[0]*x -mousePos[1]*u)*d;
         camPos = camPanRef.pos() + delta;
         target->setAt(camAtRef + delta);
         target->setFrom(camPos);

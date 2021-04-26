@@ -327,6 +327,8 @@ void VRRenderStudio::setScene(VRObjectPtr r) {
 void VRRenderStudio::resize(Vec2i s) {
     if (hmdd) hmdd->setSize(s);
     if (fxaa) fxaa->setSize(s);
+    auto defShading = stages["shading"]->getRendering();
+    if (defShading) defShading->onResize();
 }
 
 VRObjectPtr VRRenderStudio::getSceneRoot() { return root_scene; }
