@@ -20,6 +20,7 @@ class VRPipeSegment {
         double area = 0;
         double volume = 0;
         double density = 1.0;
+        double flow = 0.0;
 
         double pressure = 1.0;
         double lastPressureDelta = 0.0;
@@ -90,6 +91,7 @@ class VRPipeSystem : public VRGeometry {
 		VROntologyPtr getOntology();
 
 		double getSegmentPressure(int i);
+		double getSegmentFlow(int i);
 		double getTankPressure(string n);
 		double getTankDensity(string n);
 		double getTankVolume(string n);
