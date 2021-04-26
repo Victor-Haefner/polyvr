@@ -30,7 +30,10 @@ void VRPipeSegment::addEnergy(double m, double d) {
     lastPressureDelta = m/volume;
     pressure += lastPressureDelta;
 
-    if (m>0) density = (density * volume + m*d) / (volume + m); // only when adding material with different density
+    if (m>0) { // only when adding material with different density
+        density = (density * volume + m*d) / (volume + m);
+        flow += m;
+    }
 }
 
 void VRPipeSegment::handleTank(double& otherPressure, double otherVolume, double& otherDensity, double dt) {
@@ -163,7 +166,11 @@ void VRPipeSystem::printSystem() {
 void VRPipeSystem::update() {
     int subSteps = 10;
     double dT = 1.0/60; // TODO: use animation
-    double dt = dT/subSteps; // TODO: use animation
+    double dt = dT/subSteps;
+
+    for (auto s : segments) { // reset pipe flow
+        s.second->flow = 0;
+    }
 
     for (int i=0; i<subSteps; i++) {
 
@@ -243,6 +250,11 @@ void VRPipeSystem::update() {
         }
     }
 
+
+    for (auto s : segments) { // normalize flow
+        s.second->flow /= dT;
+    }
+
     //printSystem();
     updateVisual();
 }
@@ -266,6 +278,7 @@ void VRPipeSystem::initOntology() {
 void VRPipeSystem::setDoVisual(bool b) { doVisual = b; }
 
 double VRPipeSystem::getSegmentPressure(int i) { return segments[i]->pressure; }
+double VRPipeSystem::getSegmentFlow(int i) { return segments[i]->flow; }
 double VRPipeSystem::getTankPressure(string n) { return nodes[nodesByName[n]]->entity->getValue("pressure", 1.0); }
 double VRPipeSystem::getTankDensity(string n) { return nodes[nodesByName[n]]->entity->getValue("density", 1.0); }
 double VRPipeSystem::getTankVolume(string n) { return nodes[nodesByName[n]]->entity->getValue("volume", 1.0); }

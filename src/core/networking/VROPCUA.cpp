@@ -275,6 +275,8 @@ VROPCUANodePtr VROPCUANode::getChildAtPath(string path) {
 }
 
 void VROPCUANode::setVector(vector<string> values) {
+    //cout << " VROPCUANode::setVector " << values.size() << endl;
+
     if (isScalar) {
         cout << "VROPCUANode::setVector ERROR: scalar not supported, use VROPCUANode::set!\n";
     }
@@ -282,6 +284,7 @@ void VROPCUANode::setVector(vector<string> values) {
     if (isArray) {
         try {
             auto type = nodeType;
+            //cout << "   VROPCUANode::setVector nodeType " << (int)nodeType << endl;
             if (type == 0) return;
             else if (type == 1) { vector<bool> v; bool f; for (auto s : values) { toValue(s,f); v.push_back(f); } node->SetValue( Variant(v) ); }
             else if (type == 2) { vector<signed char> v; signed char f; for (auto s : values) { toValue(s,f); v.push_back(f); } node->SetValue( Variant(v) ); }
