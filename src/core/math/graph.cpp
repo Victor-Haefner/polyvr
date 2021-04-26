@@ -66,6 +66,28 @@ void Graph::disconnect(int i, int j) {
     erase( getNode(j).inEdges, eID );
 }
 
+int Graph::split(int i, int eID) { // insert new node on top of i, keep the old edge!
+    PosePtr p = getPosition(i);
+    int j = addNode(p);
+
+    auto& ni = getNode(i);
+    auto& nj = getNode(j);
+
+    auto& e = getEdge(eID);
+    if (e.from == i) {
+        e.from = j;
+        erase( ni.outEdges, eID );
+        nj.outEdges.push_back(eID);
+    }
+    if (e.to == i) {
+        e.to = j;
+        erase( ni.inEdges, eID );
+        nj.inEdges.push_back(eID);
+    }
+
+    return j;
+}
+
 vector< Graph::edge > Graph::getInEdges(int i) {
     vector<edge> res;
     for (int e : getNode(i).inEdges) res.push_back(edges[e]);

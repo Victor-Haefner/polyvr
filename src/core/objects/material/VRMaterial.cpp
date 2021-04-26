@@ -1031,6 +1031,7 @@ void VRMaterial::setDepthTest(int d) {
         md->depthChunk = DepthChunk::create();
         md->regChunk(md->depthChunk, -2, 8);
     }
+    cout << "setDepthTest " << d << "  " << GL_ALWAYS << " " << GL_EQUAL << endl;
     md->depthChunk->setFunc(d); // GL_ALWAYS
 }
 

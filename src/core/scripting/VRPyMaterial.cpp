@@ -74,7 +74,7 @@ PyMethodDef VRPyMaterial::methods[] = {
                                                                         "\n\t setTexture([[r,g,b]], [xN, yN, zN], bool isFloat)"
                                                                         "\n\t setTexture([[r,g,b,a]], [xN, yN, zN], bool isFloat)" },
     {"setTextureType", (PyCFunction)VRPyMaterial::setTextureType, METH_VARARGS, "Set the texture type - setTexture(str type)\n types are: 'Normal, 'SphereEnv'" },
-    {"setStencilBuffer", (PyCFunction)VRPyMaterial::setStencilBuffer, METH_VARARGS, "Set the setStencilBuffer" },
+    {"setStencilBuffer", PyWrap(Material, setStencilBuffer, "Set the stencil buffer", void, bool, float, float, int, int, int, int) },
     {"setShaderParameter", (PyCFunction)VRPyMaterial::setShaderParameter, METH_VARARGS, "Set shader variable - setShaderParameter(str var, value)" },
     {"enableShaderParameter", PyWrap(Material, enableShaderParameter, "Enable OSG shader variable which can be one of"
         "\n\t { OSGWorldMatrix OSGInvWorldMatrix OSGTransInvWorldMatrix OSGCameraOrientation OSGCameraPosition OSGViewMatrix OSGInvViewMatrix"
@@ -156,15 +156,6 @@ PyObject* VRPyMaterial::setShaderParameter(VRPyMaterial* self, PyObject* args) {
 PyObject* VRPyMaterial::setSortKey(VRPyMaterial* self, PyObject* args) {
 	if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMaterial::setSortKey, C obj is invalid"); return NULL; }
 	self->objPtr->setSortKey( parseInt(args) );
-	Py_RETURN_TRUE;
-}
-
-PyObject* VRPyMaterial::setStencilBuffer(VRPyMaterial* self, PyObject* args) {
-	if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMaterial::setStencilBuffer, C obj is invalid"); return NULL; }
-	int c,v,m;
-	PyObject *o,*f1,*f2,*f3;
-    if (! PyArg_ParseTuple(args, "iiiOOOO", &c, &v, &m, &o, &f1, &f2, &f3)) return NULL;
-	self->objPtr->setStencilBuffer(c,v,m, toGLConst(o), toGLConst(f1), toGLConst(f2), toGLConst(f3));
 	Py_RETURN_TRUE;
 }
 

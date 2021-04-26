@@ -29,7 +29,6 @@ struct VRPyMaterial : VRPyBaseT<OSG::VRMaterial> {
     static PyObject* setShininess(VRPyMaterial* self, PyObject* args);
     static PyObject* setTexture(VRPyMaterial* self, PyObject* args);
     static PyObject* setTextureType(VRPyMaterial* self, PyObject* args);
-    static PyObject* setStencilBuffer(VRPyMaterial* self, PyObject* args);
     static PyObject* getTexture(VRPyMaterial* self, PyObject* args);
     static PyObject* setDepthTest(VRPyMaterial* self, PyObject* args);
     static PyObject* setFrontBackModes(VRPyMaterial* self, PyObject* args);

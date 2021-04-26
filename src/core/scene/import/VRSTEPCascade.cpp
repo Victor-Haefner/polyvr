@@ -197,15 +197,25 @@ class STEPLoader {
                 STEPCAFControl_Reader reader(on_update);
                 auto status = reader.ReadFile(path.c_str());
                 if (!status) { cout << "failed to read file" << endl; return; }
-                cout << "Number of roots in STEP file: " << reader.NbRootsForTransfer() << endl;
+                int Nroots = reader.NbRootsForTransfer();
+                cout << "Number of roots in STEP file: " << Nroots << endl;
                 reader.SetNameMode(true);
                 reader.SetMatMode(true);
                 reader.SetColorMode(true);
                 reader.SetLayerMode(true);
-                auto transferOk = reader.Transfer(aDoc);
-                cout << endl;
-                if (!transferOk) { cout << "failed to transfer to XDS doc" << endl; return; }
-                cout << "XCAF transfer ok " << endl;
+
+                int countTransfers = 0;
+                for (int i=1; i<=Nroots; i++) {
+                    cout << " transfer " << i << "/" << Nroots << endl;
+                    auto transferOk = reader.TransferOneRoot(i, aDoc);
+                    cout << endl;
+                    if (!transferOk) cout << "failed to transfer to XDS doc" << endl;
+                    else countTransfers++;
+                }
+
+                if (countTransfers < Nroots) cout << "Warning! failed to transfer come roots, model might be incomplete!" << endl;
+                if (countTransfers == 0) { cout << "Error! failed to transfer any root" << endl; return; }
+                cout << "XCAF transfers done " << endl;
 
                 Handle(XCAFDoc_ShapeTool) Assembly = XCAFDoc_DocumentTool::ShapeTool(aDoc->Main());
                 TDF_LabelSequence shapes;

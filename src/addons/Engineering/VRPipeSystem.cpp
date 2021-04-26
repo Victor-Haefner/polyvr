@@ -259,8 +259,27 @@ void VRPipeSystem::initOntology() {
     Tank->addProperty("volume", "double");
     Tank->addProperty("density", "double");
     Pump->addProperty("performance", "double");
+    Pump->addProperty("mode", "string");
     Outlet->addProperty("radius", "double");
     Valve->addProperty("state", "bool");
+}
+
+void VRPipeSystem::setNodePose(int nID, PosePtr p) {
+    graph->setPosition(nID, p);
+}
+
+void VRPipeSystem::insertSegment(int nID, int sID, float radius) {
+    int cID = disconnect(nID, sID);
+    addSegment(radius, nID, cID);
+}
+
+int VRPipeSystem::disconnect(int nID, int sID) {
+    int cID = graph->split(nID, sID);
+    auto e = ontology->addEntity("junction", "Junction");
+    auto n = VRPipeNode::create(e);
+    nodes[cID] = n;
+    nodesByName[name] = cID;
+    return cID;
 }
 
 void VRPipeSystem::setDoVisual(bool b) { doVisual = b; }

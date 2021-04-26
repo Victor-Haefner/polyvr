@@ -62,6 +62,7 @@ class Graph : public VRStorage {
 
         int connect(int i, int j, int c = SIMPLE);
         void disconnect(int i, int j);
+        int split(int i, int e);
         node& getNode(int i);
         edge& getEdge(int e);
         edge& getEdge(int n1, int n2);

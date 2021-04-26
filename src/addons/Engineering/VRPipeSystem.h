@@ -80,6 +80,9 @@ class VRPipeSystem : public VRGeometry {
 		int getNode(string name);
 		int getSegment(int n1, int n2);
 
+		void setNodePose(int nID, PosePtr p);
+        int disconnect(int nID, int sID);
+        void insertSegment(int nID, int sID, float radius);
 		void setDoVisual(bool b);
 
 		void update();
