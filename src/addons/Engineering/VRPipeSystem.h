@@ -25,6 +25,8 @@ class VRPipeSegment {
         double pressure = 1.0;
         double lastPressureDelta = 0.0;
 
+        double computeExchange(double hole, VRPipeSegmentPtr other, double dt);
+
     public:
         VRPipeSegment(double radius, double length);
         ~VRPipeSegment();
@@ -33,9 +35,11 @@ class VRPipeSegment {
 
         void handleTank(double& pressure, double otherVolume, double& otherDensity, double dt);
         void handleValve(double area, VRPipeSegmentPtr other, double dt);
-        void handlePump(double performance, VRPipeSegmentPtr other, double dt);
+        void handlePump(double performance, bool isOpen, VRPipeSegmentPtr other, double dt);
 
         void addEnergy(double m, double d);
+        void setLength(double l);
+        void computeGeometry();
 };
 
 class VRPipeNode {
@@ -58,6 +62,7 @@ class VRPipeSystem : public VRGeometry {
         VRUpdateCbPtr updateCb;
 
         bool doVisual = false;
+        bool rebuildMesh = true;
 
         map<int, VRPipeNodePtr> nodes;
         map<string, int> nodesByName;
@@ -83,13 +88,14 @@ class VRPipeSystem : public VRGeometry {
 
 		void setNodePose(int nID, PosePtr p);
         int disconnect(int nID, int sID);
-        void insertSegment(int nID, int sID, float radius);
+        int insertSegment(int nID, int sID, float radius);
 		void setDoVisual(bool b);
 
 		void update();
 		void updateVisual();
 		VROntologyPtr getOntology();
 
+		PosePtr getNodePose(int i);
 		double getSegmentPressure(int i);
 		double getSegmentFlow(int i);
 		double getTankPressure(string n);

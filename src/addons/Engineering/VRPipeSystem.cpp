@@ -18,13 +18,22 @@ double gasSpeed = 300;
 // Pipe Segment ----
 
 VRPipeSegment::VRPipeSegment(double radius, double length) : radius(radius), length(length) {
-    area = Pi*radius*radius;
-    volume = area*length;
+    computeGeometry();
 }
 
 VRPipeSegment::~VRPipeSegment() {}
 
 VRPipeSegmentPtr VRPipeSegment::create(double radius, double length) { return VRPipeSegmentPtr( new VRPipeSegment(radius, length) ); }
+
+void VRPipeSegment::setLength(double l) {
+    length = l;
+    computeGeometry();
+}
+
+void VRPipeSegment::computeGeometry() {
+    area = Pi*radius*radius;
+    volume = area*length;
+}
 
 void VRPipeSegment::addEnergy(double m, double d) {
     lastPressureDelta = m/volume;
@@ -52,10 +61,10 @@ void VRPipeSegment::handleTank(double& otherPressure, double otherVolume, double
     //cout << "handleTank " << dP << " " << pressure << " " << otherPressure << endl;
 }
 
-void VRPipeSegment::handleValve(double area, VRPipeSegmentPtr other, double dt) {
+double VRPipeSegment::computeExchange(double hole, VRPipeSegmentPtr other, double dt) {
     double dP = pressure - other->pressure;
-    area = min(area, min(this->area, other->area));
-    double m = dP*area*dt*gasSpeed; // energy through the valve opening
+    hole = min(hole, min(this->area, other->area));
+    double m = dP*hole*dt*gasSpeed; // energy through the opening
 
     if (dP > 0) { // energy is going out of pipe
         m = min(m, pressure*volume); // not more than available!
@@ -63,13 +72,19 @@ void VRPipeSegment::handleValve(double area, VRPipeSegmentPtr other, double dt) 
         m = min(m, other->pressure*other->volume); // not more than available!
     }
 
+    return m;
+}
+
+void VRPipeSegment::handleValve(double area, VRPipeSegmentPtr other, double dt) {
+    double m = computeExchange(area, other, dt);
     addEnergy(-m, other->density);
     other->addEnergy(m, density);
 }
 
-void VRPipeSegment::handlePump(double performance, VRPipeSegmentPtr other, double dt) {
+void VRPipeSegment::handlePump(double performance, bool isOpen, VRPipeSegmentPtr other, double dt) {
     double v = pressure/(other->pressure + pressure);
     double m = performance*dt/exp(1/v);
+    if (isOpen) m = max(m, computeExchange(area*0.1, other, dt)); // minimal flow if pump io open
     m = min(m, pressure*volume); // pump out not more than available!
     addEnergy(-m, other->density);
     other->addEnergy(m, density);
@@ -103,6 +118,7 @@ VRPipeSystemPtr VRPipeSystem::ptr() { return static_pointer_cast<VRPipeSystem>(s
 VROntologyPtr VRPipeSystem::getOntology() { return ontology; }
 
 int VRPipeSystem::addNode(string name, PosePtr pos, string type, map<string, string> params) {
+    rebuildMesh = true;
     auto e = ontology->addEntity(name, type);
     auto n = VRPipeNode::create(e);
     for (auto& p : params) e->set(p.first, p.second);
@@ -116,6 +132,7 @@ int VRPipeSystem::getNode(string name) { return nodesByName[name]; }
 int VRPipeSystem::getSegment(int n1, int n2) { return graph->getEdgeID(n1, n2); }
 
 int VRPipeSystem::addSegment(double radius, int n1, int n2) {
+    rebuildMesh = true;
     int sID = graph->connect(n1, n2);
     auto p1 = graph->getPosition(n1)->pos();
     auto p2 = graph->getPosition(n2)->pos();
@@ -219,7 +236,8 @@ void VRPipeSystem::update() {
                 auto pipe2 = pipes[1];
 
                 double pumpPerformance = entity->getValue("performance", 0.0);
-                pipe1->handlePump(pumpPerformance, pipe2, dt);
+                bool pumpIsOpen= entity->getValue("isOpen", false);
+                pipe1->handlePump(pumpPerformance, pumpIsOpen, pipe2, dt);
                 continue;
             }
 
@@ -271,21 +289,37 @@ void VRPipeSystem::initOntology() {
     Tank->addProperty("volume", "double");
     Tank->addProperty("density", "double");
     Pump->addProperty("performance", "double");
-    Pump->addProperty("mode", "string");
+    Pump->addProperty("isOpen", "bool");
     Outlet->addProperty("radius", "double");
     Valve->addProperty("state", "bool");
 }
 
 void VRPipeSystem::setNodePose(int nID, PosePtr p) {
     graph->setPosition(nID, p);
+
+    // update pipe lengths
+    for (auto e : graph->getInEdges (nID) ) {
+        double l = (graph->getPosition(e.from)->pos() - p->pos()).length();
+        auto pipe = segments[e.ID];
+        pipe->setLength(l);
+    }
+    for (auto e : graph->getOutEdges (nID) ) {
+        double l = (graph->getPosition(e.to)->pos() - p->pos()).length();
+        auto pipe = segments[e.ID];
+        pipe->setLength(l);
+    }
+
+    rebuildMesh = true;
 }
 
-void VRPipeSystem::insertSegment(int nID, int sID, float radius) {
+int VRPipeSystem::insertSegment(int nID, int sID, float radius) {
     int cID = disconnect(nID, sID);
     addSegment(radius, nID, cID);
+    return cID;
 }
 
 int VRPipeSystem::disconnect(int nID, int sID) {
+    rebuildMesh = true;
     int cID = graph->split(nID, sID);
     auto e = ontology->addEntity("junction", "Junction");
     auto n = VRPipeNode::create(e);
@@ -296,6 +330,7 @@ int VRPipeSystem::disconnect(int nID, int sID) {
 
 void VRPipeSystem::setDoVisual(bool b) { doVisual = b; }
 
+PosePtr VRPipeSystem::getNodePose(int i) { return graph->getPosition(i); }
 double VRPipeSystem::getSegmentPressure(int i) { return segments[i]->pressure; }
 double VRPipeSystem::getSegmentFlow(int i) { return segments[i]->flow; }
 double VRPipeSystem::getTankPressure(string n) { return nodes[nodesByName[n]]->entity->getValue("pressure", 1.0); }
@@ -312,11 +347,12 @@ void VRPipeSystem::updateVisual() {
     if (!doVisual) return;
 
     VRGeoData data(ptr());
-    auto s = data.size();
 
     Vec3d dO = Vec3d(-0.1,-0.1,-0.1);
 
-    if (s == 0) {
+    if (rebuildMesh) {
+        data.reset();
+        rebuildMesh = false;
         Vec3d norm(0,1,0);
         Color3f white(1,1,1);
         Color3f yellow(1,1,0);
