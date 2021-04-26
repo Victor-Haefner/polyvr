@@ -401,6 +401,8 @@
 		<Unit filename="src/addons/Engineering/Milling/VRPyMillingMachine.h" />
 		<Unit filename="src/addons/Engineering/Milling/VRPyMillingWorkPiece.cpp" />
 		<Unit filename="src/addons/Engineering/Milling/VRPyMillingWorkPiece.h" />
+		<Unit filename="src/addons/Engineering/Space/VRRocketExhaust.cpp" />
+		<Unit filename="src/addons/Engineering/Space/VRRocketExhaust.h" />
 		<Unit filename="src/addons/Engineering/VREngineeringFwd.h" />
 		<Unit filename="src/addons/Engineering/VRNumberingEngine.cpp" />
 		<Unit filename="src/addons/Engineering/VRNumberingEngine.h" />
@@ -1040,6 +1042,8 @@
 		<Unit filename="src/core/networking/tcp/VRTCPClient.h" />
 		<Unit filename="src/core/networking/tcp/VRTCPServer.cpp" />
 		<Unit filename="src/core/networking/tcp/VRTCPServer.h" />
+		<Unit filename="src/core/networking/tcp/VRTCPUtils.cpp" />
+		<Unit filename="src/core/networking/tcp/VRTCPUtils.h" />
 		<Unit filename="src/core/objects/OSGCamera.cpp" />
 		<Unit filename="src/core/objects/OSGCamera.h" />
 		<Unit filename="src/core/objects/OSGObject.cpp" />
