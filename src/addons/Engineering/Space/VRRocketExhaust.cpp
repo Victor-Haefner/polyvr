@@ -39,7 +39,7 @@ void VRRocketExhaust::update() {
 void VRRocketExhaust::set(float amount) {
     this->amount = amount;
 
-    int Nz = 32;
+    int Nz = 64;
     int Ns = 16;
     float Lmin = 1;
     float Lmax = 30;

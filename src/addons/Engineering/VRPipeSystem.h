@@ -22,10 +22,10 @@ class VRPipeSegment {
         double density = 1.0;
         double flow = 0.0;
 
-        double pressure = 1.0;
-        double lastPressureDelta = 0.0;
+        double pressure1 = 1.0;
+        double pressure2 = 1.0;
 
-        double computeExchange(double hole, VRPipeSegmentPtr other, double dt);
+        double computeExchange(double hole, VRPipeSegmentPtr other, double dt, bool p1);
 
     public:
         VRPipeSegment(double radius, double length);
@@ -33,11 +33,11 @@ class VRPipeSegment {
 
         static VRPipeSegmentPtr create(double radius, double length);
 
-        void handleTank(double& pressure, double otherVolume, double& otherDensity, double dt);
-        void handleValve(double area, VRPipeSegmentPtr other, double dt);
-        void handlePump(double performance, bool isOpen, VRPipeSegmentPtr other, double dt);
+        void handleTank(double& pressure, double otherVolume, double& otherDensity, double dt, bool p1);
+        void handleValve(double area, VRPipeSegmentPtr other, double dt, bool p1);
+        void handlePump(double performance, bool isOpen, VRPipeSegmentPtr other, double dt, bool p1);
 
-        void addEnergy(double m, double d);
+        void addEnergy(double m, double d, bool p1);
         void setLength(double l);
         void computeGeometry();
 };
