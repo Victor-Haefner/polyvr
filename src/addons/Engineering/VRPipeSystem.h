@@ -15,6 +15,7 @@ OSG_BEGIN_NAMESPACE;
 
 class VRPipeSegment {
     public:
+        int eID = 0;
         double radius = 0;
         double length = 0;
         double area = 0;
@@ -22,6 +23,7 @@ class VRPipeSegment {
         double density = 1.0;
         double flow = 0.0;
         double dFl = 0.0;
+        bool flowBlocked = false;
 
         double pressure1 = 1.0;
         double pressure2 = 1.0;
@@ -29,10 +31,10 @@ class VRPipeSegment {
         double computeExchange(double hole, VRPipeSegmentPtr other, double dt, bool p1);
 
     public:
-        VRPipeSegment(double radius, double length);
+        VRPipeSegment(int eID, double radius, double length);
         ~VRPipeSegment();
 
-        static VRPipeSegmentPtr create(double radius, double length);
+        static VRPipeSegmentPtr create(int eID, double radius, double length);
 
         void handleTank(double& pressure, double otherVolume, double& otherDensity, double dt, bool p1);
         void handleValve(double area, VRPipeSegmentPtr other, double dt, bool p1);

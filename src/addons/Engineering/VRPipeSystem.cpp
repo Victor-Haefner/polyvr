@@ -17,13 +17,13 @@ double gasSpeed = 300;
 
 // Pipe Segment ----
 
-VRPipeSegment::VRPipeSegment(double radius, double length) : radius(radius), length(length) {
+VRPipeSegment::VRPipeSegment(int eID, double radius, double length) : eID(eID), radius(radius), length(length) {
     computeGeometry();
 }
 
 VRPipeSegment::~VRPipeSegment() {}
 
-VRPipeSegmentPtr VRPipeSegment::create(double radius, double length) { return VRPipeSegmentPtr( new VRPipeSegment(radius, length) ); }
+VRPipeSegmentPtr VRPipeSegment::create(int eID, double radius, double length) { return VRPipeSegmentPtr( new VRPipeSegment(eID, radius, length) ); }
 
 void VRPipeSegment::setLength(double l) {
     length = l;
@@ -142,7 +142,7 @@ int VRPipeSystem::addSegment(double radius, int n1, int n2) {
     auto p1 = graph->getPosition(n1)->pos();
     auto p2 = graph->getPosition(n2)->pos();
     double length = (p2-p1).length();
-    auto s = VRPipeSegment::create(radius, length);
+    auto s = VRPipeSegment::create(sID, radius, length);
     segments[sID] = s;
     return sID;
 }
@@ -188,7 +188,7 @@ void VRPipeSystem::printSystem() {
 
 void VRPipeSystem::update() {
     //printSystem();
-    //sleep(1);
+    //sleep(3);
 
     int subSteps = 10;
     double dT = 1.0/60; // TODO: use animation
@@ -303,8 +303,41 @@ void VRPipeSystem::update() {
             double R = s.second->density * s.second->flow ; // friction
             double a = (F-R)/m; // accelleration
             s.second->dFl = a*dt*s.second->area;  // pipe flow change in m³ / s
+            s.second->flowBlocked = false;
         }
 
+        for (auto n : nodes) { // check for closed nodes
+            int nID = n.first;
+            auto entity = n.second->entity;
+
+            if (entity->is_a("Pump") || entity->is_a("Valve")) {
+                auto pipes = getPipes(nID);
+                if (pipes.size() != 2) continue;
+                auto pipe1 = pipes[0];
+                auto pipe2 = pipes[1];
+
+                bool closed = false;
+                if (entity->is_a("Pump")) {
+                    double pumpPerformance = entity->getValue("performance", 0.0);
+                    bool pumpIsOpen = entity->getValue("isOpen", false);
+                    closed = (pumpPerformance < 1e-3 && !pumpIsOpen);
+                }
+                if (entity->is_a("Valve")) {
+                    bool valveState = entity->getValue("state", false);
+                    closed = (valveState == 0);
+                }
+
+                if (closed) {
+                    pipe1->dFl = -pipe1->flow;
+                    pipe2->dFl = -pipe2->flow;
+                    pipe1->flowBlocked = true;
+                    pipe2->flowBlocked = true;
+                }
+            }
+        }
+
+
+        cout << "nodes" << endl;
         int itr = 0;
         bool flowCheck = true;
         while (flowCheck) { // check flow changes until nothing changed
@@ -315,46 +348,19 @@ void VRPipeSystem::update() {
                 int nID = n.first;
                 auto node = n.second;
                 auto entity = node->entity;
-
                 if (entity->is_a("Outlet")) continue; // does nothing to a flow
-
-                if (entity->is_a("Pump") || entity->is_a("Valve")) { // check for closed pumps and valves
-                    auto pipes = getPipes(nID);
-                    if (pipes.size() != 2) continue;
-                    auto pipe1 = pipes[0];
-                    auto pipe2 = pipes[1];
-
-                    bool closed = false;
-                    if (entity->is_a("Pump")) {
-                        double pumpPerformance = entity->getValue("performance", 0.0);
-                        bool pumpIsOpen = entity->getValue("isOpen", false);
-                        closed = (pumpPerformance < 1e-3 && !pumpIsOpen);
-                    }
-                    if (entity->is_a("Valve")) {
-                        bool valveState = entity->getValue("state", false);
-                        closed = (valveState == 0);
-                    }
-
-                    if (closed) {
-                        pipe1->dFl = -pipe1->flow;
-                        pipe2->dFl = -pipe2->flow;
-                        flowCheck = true;
-                        continue;
-                    }
-                }
-
 
                 vector<int> inFlowPipeIDs;
                 vector<int> outFlowPipeIDs;
                 for (auto e : graph->getInEdges(nID) ) {
                     auto pipe = segments[e.ID];
-                    if (pipe->dFl > 0) inFlowPipeIDs.push_back(e.ID);
-                    if (pipe->dFl < 0) outFlowPipeIDs.push_back(e.ID);
+                    if (pipe->flow + pipe->dFl > 0) inFlowPipeIDs.push_back(e.ID);
+                    if (pipe->flow + pipe->dFl < 0) outFlowPipeIDs.push_back(e.ID);
                 }
                 for (auto e : graph->getOutEdges(nID) ) {
                     auto pipe = segments[e.ID];
-                    if (pipe->dFl > 0) outFlowPipeIDs.push_back(e.ID);
-                    if (pipe->dFl < 0) inFlowPipeIDs.push_back(e.ID);
+                    if (pipe->flow + pipe->dFl > 0) outFlowPipeIDs.push_back(e.ID);
+                    if (pipe->flow + pipe->dFl < 0) inFlowPipeIDs.push_back(e.ID);
                 }
 
                 double maxInFlow = 0;
@@ -365,24 +371,37 @@ void VRPipeSystem::update() {
                 if (maxFlow > 1e-6) {
                     double inPart  = maxFlow/maxInFlow;
                     double outPart = maxFlow/maxOutFlow;
-                    for (auto eID :  inFlowPipeIDs ) segments[eID]->dFl *= inPart;
-                    for (auto eID : outFlowPipeIDs ) segments[eID]->dFl *= outPart;
-                    //for (auto eID :  inFlowPipeIDs ) segments[eID]->dFl = (segments[eID]->flow + segments[eID]->dFl)*inPart  - segments[eID]->flow;
-                    //for (auto eID : outFlowPipeIDs ) segments[eID]->dFl = (segments[eID]->flow + segments[eID]->dFl)*outPart - segments[eID]->flow;
+                    //for (auto eID :  inFlowPipeIDs ) segments[eID]->dFl *= inPart;
+                    //for (auto eID : outFlowPipeIDs ) segments[eID]->dFl *= outPart;
+                    for (auto eID :  inFlowPipeIDs ) segments[eID]->dFl = (segments[eID]->flow + segments[eID]->dFl)*inPart  - segments[eID]->flow;
+                    for (auto eID : outFlowPipeIDs ) segments[eID]->dFl = (segments[eID]->flow + segments[eID]->dFl)*outPart - segments[eID]->flow;
                     if (abs(inPart-1.0) > 1e-3 || abs(outPart-1.0) > 1e-3) flowCheck = true;
                 } else { // no flow
                     for (auto eID :  inFlowPipeIDs ) segments[eID]->dFl = -segments[eID]->flow;
                     for (auto eID : outFlowPipeIDs ) segments[eID]->dFl = -segments[eID]->flow;
                     flowCheck = true;
                 }
-                continue;
+
+                /*cout << " node " << entity->getName() << " Npipes: " << getPipes(nID).size();
+                for (auto p : getPipes(nID)) cout << ", " << p->eID << " flow: " << p->flow << "+" << p->dFl;
+                for (auto eID : inFlowPipeIDs) cout << ", in " << eID ;
+                for (auto eID : outFlowPipeIDs) cout << ", out " << eID ;
+                cout << endl;
+                cout << "  node " << entity->getName() << " Npipes: " << getPipes(nID).size() << ", Nin: " << inFlowPipeIDs.size() << ", Nout: " << outFlowPipeIDs.size();
+                cout << ", flow in: " << maxInFlow << ", flow out: " << maxOutFlow << endl;*/
             }
+            //break; // TODO: for testing!
         }
 
         cout << "flows" << endl;
         for (auto s : segments) { // add final flow accellerations
+            auto& e = graph->getEdge(s.first);
+            string n1 = nodes[e.from]->entity->getName();
+            string n2 = nodes[e.to]->entity->getName();
+
             s.second->flow += s.second->dFl;  // pipe flow change in m³ / s
-            cout << " flow +" << s.second->dFl << " -> " << s.second->flow << endl;
+            if (abs(s.second->dFl) > 1e-9 || 1)
+                cout << " flow +" << s.second->dFl << " -> " << s.second->flow << " (" << n1 << "->" << n2 << ") blocked? " << s.second->flowBlocked << endl;
         }
     }
 
@@ -396,7 +415,7 @@ void VRPipeSystem::initOntology() {
     auto Pump = ontology->addConcept("Pump");
     auto Outlet = ontology->addConcept("Outlet");
     auto Junction = ontology->addConcept("Junction");
-    auto Valve = ontology->addConcept("Valve", "Outlet");
+    auto Valve = ontology->addConcept("Valve");
 
     Tank->addProperty("pressure", "double");
     Tank->addProperty("volume", "double");
@@ -405,6 +424,7 @@ void VRPipeSystem::initOntology() {
     Pump->addProperty("isOpen", "bool");
     Outlet->addProperty("radius", "double");
     Valve->addProperty("state", "bool");
+    Valve->addProperty("radius", "double");
 }
 
 void VRPipeSystem::setNodePose(int nID, PosePtr p) {
