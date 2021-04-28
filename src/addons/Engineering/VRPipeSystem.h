@@ -21,6 +21,7 @@ class VRPipeSegment {
         double volume = 0;
         double density = 1.0;
         double flow = 0.0;
+        double dFl = 0.0;
 
         double pressure1 = 1.0;
         double pressure2 = 1.0;

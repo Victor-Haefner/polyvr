@@ -13,6 +13,7 @@ class Triangulator {
     public:
         VRGeoDataPtr geo;
         int num_points = 0;
+        bool addNormals = true;
 
     private:
         vector<VRPolygon> outer_bounds;
@@ -28,7 +29,7 @@ class Triangulator {
 
         void add(VRPolygon p, bool outer = true);
 
-        void append(VRGeoDataPtr data);
+        void append(VRGeoDataPtr data, bool addNormals);
         VRGeometryPtr compute();
 };
 

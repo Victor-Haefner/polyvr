@@ -74,7 +74,8 @@ VRGeometryPtr Triangulator::compute() {
     return geo ? geo->asGeometry("tessellation") : 0;
 }
 
-void Triangulator::append(VRGeoDataPtr data) {
+void Triangulator::append(VRGeoDataPtr data, bool aN) {
+    addNormals = aN;
     geo = data;
     tessellate();
     geo = 0;
@@ -107,7 +108,8 @@ void tessVertexCB(const GLvoid *data) { // draw a vertex
     //Vec3d n(*(ptr+3), *(ptr+4), *(ptr+5));
 
     auto Self = current_triangulator;
-    Self->geo->pushVert(p, Vec3d(0,1,0));
+    if (Self->addNormals) Self->geo->pushVert(p, Vec3d(0,1,0));
+    else Self->geo->pushVert(p);
     Self->num_points++;
     //Self->geo->pushVert(p, n);
     //cout << "vert " << p << endl;

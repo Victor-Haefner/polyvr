@@ -296,16 +296,93 @@ void VRPipeSystem::update() {
             s.second->pressure2 -= k;
         }
 
-        for (auto s : segments) { // compute flows
+        for (auto s : segments) { // compute flows accellerations
             double m = s.second->volume*s.second->density;
             double dP = s.second->pressure2 - s.second->pressure1; // compute pressure gradient
             double F = dP*s.second->area;
             double R = s.second->density * s.second->flow ; // friction
             double a = (F-R)/m; // accelleration
-            double dFl = a*dt*s.second->area;  // pipe flow change in m³ / s
-            s.second->flow += dFl;
-            //if (s.first == 0) cout << " flow i:" << s.first << " Fl:" << s.second->flow << " F:" << F << " R:" << R << " a:" << a << endl;
-            //sleep(1);
+            s.second->dFl = a*dt*s.second->area;  // pipe flow change in m³ / s
+        }
+
+        int itr = 0;
+        bool flowCheck = true;
+        while (flowCheck) { // check flow changes until nothing changed
+            itr++;
+            if (itr > 10) break;
+            flowCheck = false;
+            for (auto n : nodes) { // traverse nodes, change pressure in segments
+                int nID = n.first;
+                auto node = n.second;
+                auto entity = node->entity;
+
+                if (entity->is_a("Outlet")) continue; // does nothing to a flow
+
+                if (entity->is_a("Pump") || entity->is_a("Valve")) { // check for closed pumps and valves
+                    auto pipes = getPipes(nID);
+                    if (pipes.size() != 2) continue;
+                    auto pipe1 = pipes[0];
+                    auto pipe2 = pipes[1];
+
+                    bool closed = false;
+                    if (entity->is_a("Pump")) {
+                        double pumpPerformance = entity->getValue("performance", 0.0);
+                        bool pumpIsOpen = entity->getValue("isOpen", false);
+                        closed = (pumpPerformance < 1e-3 && !pumpIsOpen);
+                    }
+                    if (entity->is_a("Valve")) {
+                        bool valveState = entity->getValue("state", false);
+                        closed = (valveState == 0);
+                    }
+
+                    if (closed) {
+                        pipe1->dFl = -pipe1->flow;
+                        pipe2->dFl = -pipe2->flow;
+                        flowCheck = true;
+                        continue;
+                    }
+                }
+
+
+                vector<int> inFlowPipeIDs;
+                vector<int> outFlowPipeIDs;
+                for (auto e : graph->getInEdges(nID) ) {
+                    auto pipe = segments[e.ID];
+                    if (pipe->dFl > 0) inFlowPipeIDs.push_back(e.ID);
+                    if (pipe->dFl < 0) outFlowPipeIDs.push_back(e.ID);
+                }
+                for (auto e : graph->getOutEdges(nID) ) {
+                    auto pipe = segments[e.ID];
+                    if (pipe->dFl > 0) outFlowPipeIDs.push_back(e.ID);
+                    if (pipe->dFl < 0) inFlowPipeIDs.push_back(e.ID);
+                }
+
+                double maxInFlow = 0;
+                double maxOutFlow = 0;
+                for (auto eID : inFlowPipeIDs  ) maxInFlow  += abs(segments[eID]->flow + segments[eID]->dFl);
+                for (auto eID : outFlowPipeIDs ) maxOutFlow += abs(segments[eID]->flow + segments[eID]->dFl);
+                double maxFlow = min(maxInFlow, maxOutFlow);
+                if (maxFlow > 1e-6) {
+                    double inPart  = maxFlow/maxInFlow;
+                    double outPart = maxFlow/maxOutFlow;
+                    for (auto eID :  inFlowPipeIDs ) segments[eID]->dFl *= inPart;
+                    for (auto eID : outFlowPipeIDs ) segments[eID]->dFl *= outPart;
+                    //for (auto eID :  inFlowPipeIDs ) segments[eID]->dFl = (segments[eID]->flow + segments[eID]->dFl)*inPart  - segments[eID]->flow;
+                    //for (auto eID : outFlowPipeIDs ) segments[eID]->dFl = (segments[eID]->flow + segments[eID]->dFl)*outPart - segments[eID]->flow;
+                    if (abs(inPart-1.0) > 1e-3 || abs(outPart-1.0) > 1e-3) flowCheck = true;
+                } else { // no flow
+                    for (auto eID :  inFlowPipeIDs ) segments[eID]->dFl = -segments[eID]->flow;
+                    for (auto eID : outFlowPipeIDs ) segments[eID]->dFl = -segments[eID]->flow;
+                    flowCheck = true;
+                }
+                continue;
+            }
+        }
+
+        cout << "flows" << endl;
+        for (auto s : segments) { // add final flow accellerations
+            s.second->flow += s.second->dFl;  // pipe flow change in m³ / s
+            cout << " flow +" << s.second->dFl << " -> " << s.second->flow << endl;
         }
     }
 

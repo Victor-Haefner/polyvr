@@ -106,7 +106,7 @@ void loadSHP(string path, VRTransformPtr res) {
                 //cout << endl;
             }
 
-            t.append(data);
+            t.append(data, false);
             return;
         }
         cout << "loadSHP::handleGeometry WARNING: type " << type << " not handled!\n";

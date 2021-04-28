@@ -1245,13 +1245,20 @@ void VRGeometry::convertToTriangles() {
     TriangleIterator it(mesh->geo);
     VRGeoData data;
 
+    bool hasNormals = (mesh->geo->getNormals() != 0);
     bool hasColor = (mesh->geo->getColors() != 0);
     bool hasTexCoords = (mesh->geo->getTexCoords() != 0);
 
 	for (int i=0; !it.isAtEnd(); ++it, i++) {
-        data.pushVert(Pnt3d(it.getPosition(0)), Vec3d(it.getNormal(0)));
-        data.pushVert(Pnt3d(it.getPosition(1)), Vec3d(it.getNormal(1)));
-        data.pushVert(Pnt3d(it.getPosition(2)), Vec3d(it.getNormal(2)));
+        data.pushVert(Pnt3d(it.getPosition(0)));
+        data.pushVert(Pnt3d(it.getPosition(1)));
+        data.pushVert(Pnt3d(it.getPosition(2)));
+
+        if (hasNormals) {
+            data.pushNorm(Vec3d(it.getNormal(0)));
+            data.pushNorm(Vec3d(it.getNormal(1)));
+            data.pushNorm(Vec3d(it.getNormal(2)));
+        }
 
         if (hasColor) {
             data.pushColor(it.getColor(0));

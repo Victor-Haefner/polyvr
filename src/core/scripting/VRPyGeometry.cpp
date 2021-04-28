@@ -291,10 +291,11 @@ PyObject* VRPyGeometry::setTypes(VRPyGeometry* self, PyObject *args) {
 	for (int i = 0; i < pySize(typeList); i++) {
 		PyObject* pyType = PyList_GetItem(typeList, i);
 
-		string stype = PyString_AsString(pyType);
-		int type = toGLConst(stype);
+		int type = -1;
+		toValue(pyType, type);
+
 		if (type == -1) {
-			PyErr_SetString(err, (stype + " is not a valid type").c_str() );
+			PyErr_SetString(err, ("setTypes - list contains a not valid type at "+toString(i)).c_str() );
 			return NULL;
 		}
 
@@ -425,7 +426,7 @@ PyObject* VRPyGeometry::setIndices(VRPyGeometry* self, PyObject *args) {
         else
 #endif
         feed1D<GeoUInt32PropertyMTRecPtr>( vec, inds );
-        self->objPtr->setIndices(inds, true);
+        self->objPtr->setIndices(inds, false);
     } else if (ld == 2) {
         GeoUInt32PropertyMTRecPtr lengths = GeoUInt32Property::create();
         for(Py_ssize_t i = 0; i < PyList_Size(vec); i++) {
