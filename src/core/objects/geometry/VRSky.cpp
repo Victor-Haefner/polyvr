@@ -55,7 +55,7 @@ VRSky::VRSky() : VRGeometry("Sky") {
 	mat->setDiffuse(Color3f(1));
 
     setPosition(49.0069, 8.4037); // 49.0069° N, 8.4037° E Karlsruhe
-    setTime(0,12,120,2016);
+    setTime(0,8,120,2016);
     sunFromTime();
     setClouds(0.1, 1e-5, 3000, Vec2d(.002, .001), Color4f(1,1,1, 1.0));
 	setLuminance(1.75);
@@ -240,11 +240,12 @@ void VRSky::sunFromTime() {
     double y = cos_theta_s;
     double x = sin(phi_s)*sin_theta_s;
 
-    sunPos = Vec3f(x, y, z);
+    sunPos = Vec3f(-x, y, -z); // TODO: rotate here, might not be good?
     //cout << "kajshdgkajgs " << date.hour << " " << date.second << "   " << sunPos << endl;
 
     mat->setShaderParameter<float>("theta_s", theta_s);
     mat->setShaderParameter<Vec3f>("sunPos", sunPos);
+    //cout << "sun zenith angle: " << theta_s << ", at: " << date.hour << ":00" << endl;
 }
 
 void VRSky::setClouds(float density, float scale, float height, Vec2d vel, Color4f color) {
@@ -289,13 +290,8 @@ void VRSky::setLuminance(float t) {
     mat->setShaderParameter<Vec3f>("E", coeffsE);
 }
 
-int VRSky::getHour(){
-    return date.hour;
-}
-
-Vec3d VRSky::getSunPos(){
-    return Vec3d(sunPos[0],sunPos[1],sunPos[2]);
-}
+int VRSky::getHour() { return date.hour; }
+Vec3d VRSky::getSunPos(){ return Vec3d(sunPos); }
 
 void VRSky::reloadShader() {
     cout << "VRSky::reloadShader" << endl;
@@ -610,11 +606,11 @@ void main() {\n
 \n
 #ifdef __EMSCRIPTEN__
 \n
-	gl_FragDepthEXT = 1.0; // depth is infinite at 1.0? behind all else (check)
+	gl_FragDepthEXT = 1.0; // depth is infinite at 1.0
 \n
 #else
 \n
-	gl_FragDepth = 1.0; // depth is infinite at 1.0? behind all else (check)
+	gl_FragDepth = 1.0; // depth is infinite at 1.0
 \n
 #endif
 \n
