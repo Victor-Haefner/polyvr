@@ -6,6 +6,8 @@
 #include "core/utils/VRCallbackWrapper.h"
 #include "core/utils/VRCallbackWrapperT.h"
 
+bool PyVec_Check(PyObject* o, int N, char type);
+
 template<typename T> bool toValue(PyObject* o, T& b);
 
 template<typename T> bool toValue(PyObject* o, vector<T>& v) {

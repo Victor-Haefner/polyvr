@@ -145,11 +145,17 @@ PyObject* VRPyMaterial::getTexture(VRPyMaterial* self, PyObject* args) {
 }
 
 PyObject* VRPyMaterial::setShaderParameter(VRPyMaterial* self, PyObject* args) {
-	if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMaterial::setShaderParameter, C obj is invalid"); return NULL; }
-	PyStringObject* var;
-	int i=0;
-    if (! PyArg_ParseTuple(args, "Oi", &var, &i)) return NULL;
-	self->objPtr->setShaderParameter( PyString_AsString((PyObject*)var), i );
+    auto mPtr = self->objPtr;
+	if (mPtr == 0) { PyErr_SetString(err, "VRPyMaterial::setShaderParameter, C obj is invalid"); return NULL; }
+	PyStringObject* name;
+	PyObject* var;
+    if (! PyArg_ParseTuple(args, "OO", &name, &var)) return NULL;
+    string n = PyString_AsString((PyObject*)name);
+    if (PyInt_Check(var)) { int v; toValue(var,v); mPtr->setShaderParameter( n, v ); }
+    if (PyFloat_Check(var)) { float v; toValue(var,v); mPtr->setShaderParameter( n, v ); }
+    if (PyVec_Check(var, 2, 'f')) { Vec2f v; toValue(var,v); mPtr->setShaderParameter( n, v ); }
+    if (PyVec_Check(var, 3, 'f')) { Vec3f v; toValue(var,v); mPtr->setShaderParameter( n, v ); }
+    if (PyVec_Check(var, 4, 'f')) { Vec4f v; toValue(var,v); mPtr->setShaderParameter( n, v ); }
 	Py_RETURN_TRUE;
 }
 
