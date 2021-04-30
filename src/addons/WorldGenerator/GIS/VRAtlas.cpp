@@ -67,16 +67,16 @@ void VRAtlas::Patch::paint() {
         visible = true;
     };
 
-    auto onMap = [](VRMapDescriptorPtr desc, VRTerrainPtr terrain, Vec3d localPos) {
+    auto onMap = [](VRMapDescriptorPtr desc, VRTerrainPtr terrain, Vec3d localPos, bool& loaded) {
         if (!desc->isComplete()) return;
 
         string orthoPic = desc->getMap(2);
         string heightPic = desc->getMap(3);
-
         bool checkHeight = exists(heightPic);
         bool checkOrtho = exists(orthoPic);
+        terrain->setVisible(true);
+        if (loaded) return;
         if ( checkHeight && checkOrtho && terrain) {
-            terrain->setVisible(true);
             terrain->setHeightOffset(true);
             terrain->loadMap( heightPic, 3, false );
             terrain->paintHeights(orthoPic);//, mixColor, mixAmount );
@@ -84,12 +84,13 @@ void VRAtlas::Patch::paint() {
             Vec3d pos = Vec3d(localPos[0],localHeightoffset,localPos[2]);
             terrain->setTransform(pos);
         }
+        loaded = true;
     };
 
-    VRMapCbPtr cb = VRMapCb::create("atlasOnMap", bind(onMap, placeholders::_1, terrain, localPos));
+    VRMapCbPtr cb = VRMapCb::create("atlasOnMap", bind(onMap, placeholders::_1, terrain, localPos, loaded));
 
     if (mapMgr) {
-        auto mdata = mapMgr->getMap(coords[0], coords[1], edgeLength, {2,3}, cb); // NES, types, VRMapCbPtr
+        if (!loaded) auto mdata = mapMgr->getMap(coords[0], coords[1], edgeLength, {2,3}, cb); // NES, types, VRMapCbPtr
 
         /*orthoPic = mdata->getMap(2);
         heightPic = mdata->getMap(3);
@@ -218,6 +219,17 @@ void VRAtlas::handleJobQueue() {
                 allPatchesByID[sID].visible = false;
             }
             patchQueue.pop_front();
+        }
+    }
+    int patchesHidden = 0;
+    for (int i = 0; i < invisQueue.size(); i++){
+        string sID = invisQueue[i];
+        if (patchesHidden < patchesPerJob){
+            if (allPatchesByID[sID].allowedToDeload) {
+                allPatchesByID[sID].terrain->setVisible(0);
+                allPatchesByID[sID].visible = false;
+            }
+            patchesHidden++;
         }
     }
 }
@@ -484,7 +496,7 @@ VRTransformPtr VRAtlas::setup() {
     cout << "VRAtlas::setup" << endl;
     updatePtr = VRUpdateCb::create("atlas update", bind(&VRAtlas::update, this));
     VRScene::getCurrent()->addUpdateFkt(updatePtr);
-    debugQuad = generatePatch("innerQuadOrigin");
+    //debugQuad = generatePatch("innerQuadOrigin");
 
     atlas = VRTransform::create("AtlasTransform");
     atlas->setScale(Vec3d(scaling, scaling, scaling));

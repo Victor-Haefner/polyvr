@@ -43,6 +43,8 @@ class VRAtlas : public std::enable_shared_from_this<VRAtlas>  {
             string els;
             bool visible = false;
             bool visibleToBe = false;
+            bool allowedToDeload = false;
+            bool loaded = false;
 
             void paint();
             Patch(string sid, int lvl);
@@ -58,8 +60,8 @@ class VRAtlas : public std::enable_shared_from_this<VRAtlas>  {
         Boundary bounds;
         int LODMax = 0;
         bool stop = false;
-        //deque<Patch> patchQueue;
         deque<string> patchQueue;
+        deque<string> invisQueue;
         VRMapManagerPtr mapMgr;
 
         bool isValid();
