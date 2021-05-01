@@ -74,7 +74,14 @@ PyMethodDef VRPyMaterial::methods[] = {
                                                                         "\n\t setTexture([[r,g,b]], [xN, yN, zN], bool isFloat)"
                                                                         "\n\t setTexture([[r,g,b,a]], [xN, yN, zN], bool isFloat)" },
     {"setTextureType", (PyCFunction)VRPyMaterial::setTextureType, METH_VARARGS, "Set the texture type - setTexture(str type)\n types are: 'Normal, 'SphereEnv'" },
-    {"setStencilBuffer", PyWrap(Material, setStencilBuffer, "Set the stencil buffer", void, bool, float, float, int, int, int, int) },
+    {"setStencilBuffer", PyWrap(Material, setStencilBuffer
+        , "Use stencil buffer, (doClear, value, mask, func, opFail, opZFail, opPass)"
+        "\n\t doClear clears the buffer to 0"
+        "\n\t value and mask used for the test, the mask is ANDed with the value as well as the stored value in buffer"
+        "\n\t test function can be GL_NEVER, GL_LESS, GL_LEQUAL, GL_GREATER, GL_GEQUAL, GL_EQUAL, GL_NOTEQUAL, or GL_ALWAYS"
+        "\n\t opFail is the action taken when stencil test fails, opZFail when stencil test passes but depth test fails, and opPass if both tests pass"
+        "\n\t possible actions are: GL_KEEP, GL_ZERO, GL_REPLACE, GL_INCR, GL_INCR_WRAP, GL_DECR, GL_DECR_WRAP, and GL_INVERT"
+        , void, bool, float, float, int, int, int, int) },
     {"setShaderParameter", (PyCFunction)VRPyMaterial::setShaderParameter, METH_VARARGS, "Set shader variable - setShaderParameter(str var, value)" },
     {"enableShaderParameter", PyWrap(Material, enableShaderParameter, "Enable OSG shader variable which can be one of"
         "\n\t { OSGWorldMatrix OSGInvWorldMatrix OSGTransInvWorldMatrix OSGCameraOrientation OSGCameraPosition OSGViewMatrix OSGInvViewMatrix"
