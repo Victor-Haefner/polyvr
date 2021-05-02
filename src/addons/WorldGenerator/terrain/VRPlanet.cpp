@@ -233,7 +233,7 @@ Vec2d VRPlanet::fromLatLongSize(double north1, double east1, double north2, doub
     return Vec2d(abs(u),abs(v));
 }
 
-Vec2d VRPlanet::fromPosLatLong(Pnt3d p, bool local) { // TODO: increase resolution by enhancing getWorldMatrix
+Vec2d VRPlanet::fromPosLatLong(Pnt3d p, bool local, bool doOptimize) { // TODO: increase resolution by enhancing getWorldMatrix
     Pnt3d p1 = p;
     if (local) {
         auto m = origin->getWorldMatrix();
@@ -246,7 +246,7 @@ Vec2d VRPlanet::fromPosLatLong(Pnt3d p, bool local) { // TODO: increase resoluti
     double north = -toDeg(acos(n[1]))+90;
     double east = toDeg(atan2(-n[2], n[0]));
 
-    if (local) {
+    if (local && doOptimize) { // TODO, doesnt work well with scaled planet!
         // increase precision by 2D planar approximation
         Vec2d s = fromLatLongSize(north-0.5, east-0.5, north+0.5, east+0.5);
         Vec3d p2 = fromLatLongPosition(north, east, local);

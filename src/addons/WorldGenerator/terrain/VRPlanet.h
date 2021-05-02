@@ -68,7 +68,7 @@ class VRPlanet : public VRTransform {
         //double getSurfaceHeight(double north, double east);
         PosePtr getSurfacePose(double north, double east, bool local = false, bool sectorLocal = false );
 
-        Vec2d fromPosLatLong(Pnt3d p, bool local = false);
+        Vec2d fromPosLatLong(Pnt3d p, bool local = false, bool doOptimize = true);
 
         void localize(double north, double east);
         void localizeSector(VRWorldGeneratorPtr s);
