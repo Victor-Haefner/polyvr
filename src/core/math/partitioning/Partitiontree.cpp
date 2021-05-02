@@ -205,7 +205,7 @@ float PartitiontreeNode::getResolution() { return resolution; }
 void PartitiontreeNode::setResolution(float res) { resolution = res; }
 
 // sphere center, box center, sphere radius, box size
-bool sphere_box_intersect(Vec3d Ps, Vec3d Pb, float Rs, float Sb)  {
+bool PartitiontreeNode::sphere_box_intersect(Vec3d Ps, Vec3d Pb, float Rs, float Sb)  {
     float r2 = Rs * Rs;
     Vec3d diag(Sb*0.5, Sb*0.5, Sb*0.5);
     Vec3d Bmin = Pb - diag;
@@ -256,7 +256,7 @@ void PartitiontreeNode::findPointsInSphere(Vec3d p, float r, int d, vector<Vec3d
 }
 
 // box min, box max, octree box center, octree box size
-bool box_box_intersect(Vec3d min, Vec3d max, Vec3d Bpos, float Sb)  {
+bool PartitiontreeNode::box_box_intersect(Vec3d min, Vec3d max, Vec3d Bpos, float Sb)  {
     Vec3d Bdiag(Sb, Sb, Sb);
     Vec3d Bmin = Bpos - Bdiag*0.5;
     Vec3d Bmax = Bpos + Bdiag*0.5;

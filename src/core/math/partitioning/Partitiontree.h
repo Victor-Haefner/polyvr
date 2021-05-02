@@ -28,6 +28,8 @@ class PartitiontreeNode {
         vector<Vec3d> points;
 
         Vec3d lvljumpCenter(float s2, Vec3d rp);
+        bool sphere_box_intersect(Vec3d Ps, Vec3d Pb, float Rs, float Sb);
+        bool box_box_intersect(Vec3d min, Vec3d max, Vec3d Bpos, float Sb);
 
     public:
         PartitiontreeNode(PartitiontreePtr tree, float resolution, float size = 10, int level = 0);
