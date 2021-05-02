@@ -1,7 +1,7 @@
 #include "VRCamera.h"
 #include "OSGCamera.h"
 #include "core/utils/toString.h"
-#include "core/math/boundingbox.h"
+#include "core/math/partitioning/boundingbox.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/material/OSGMaterial.h"
 #include "core/objects/OSGObject.h"

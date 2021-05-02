@@ -1,40 +1,42 @@
-#ifndef OCTREE_H_INCLUDED_COLL
-#define OCTREE_H_INCLUDED_COLL
+#ifndef PARTITIONTREE_H_INCLUDED_COLL
+#define PARTITIONTREE_H_INCLUDED_COLL
 
 #include <stdlib.h>
 #include <vector>
 #include <OpenSG/OSGConfig.h>
 #include "core/math/OSGMathFwd.h"
-#include "VRMathFwd.h"
+#include "core/math/VRMathFwd.h"
 #include "boundingbox.h"
 
 using namespace std;
 
 OSG_BEGIN_NAMESPACE
 
-class OctreeNode {
-    private:
+class PartitiontreeNode {
+    protected:
         float resolution = 0.1;
         float size = 10;
         int level = 0;
 
         Vec3d center;
 
-        OctreeWeakPtr tree;
-        OctreeNode* parent = 0;
-        OctreeNode* children[8] = {0,0,0,0,0,0,0,0};
+        PartitiontreeWeakPtr tree;
+        PartitiontreeNode* parent = 0;
+        PartitiontreeNode* children[8] = {0,0,0,0,0,0,0,0};
 
         vector<void*> data;
         vector<Vec3d> points;
 
-    public:
-        OctreeNode(OctreePtr tree, float resolution, float size = 10, int level = 0);
-        ~OctreeNode();
+        Vec3d lvljumpCenter(float s2, Vec3d rp);
 
-        OctreeNode* getParent();
-        OctreeNode* getRoot();
-        vector<OctreeNode*> getAncestry();
-        void set(OctreeNode* node, Vec3d p, void* data);
+    public:
+        PartitiontreeNode(PartitiontreePtr tree, float resolution, float size = 10, int level = 0);
+        ~PartitiontreeNode();
+
+        PartitiontreeNode* getParent();
+        PartitiontreeNode* getRoot();
+        vector<PartitiontreeNode*> getAncestry();
+        void set(PartitiontreeNode* node, Vec3d p, void* data);
         float getSize();
         float getResolution();
         Vec3d getCenter();
@@ -42,18 +44,18 @@ class OctreeNode {
 
         void setResolution(float res);
 
-        OctreeNode* add(Vec3d p, void* data, int targetLevel = -1, bool checkPosition = true, int partitionLimit = -1);
-        OctreeNode* get(Vec3d p, bool checkPosition = true);
+        PartitiontreeNode* add(Vec3d p, void* data, int targetLevel = -1, bool checkPosition = true, int partitionLimit = -1);
+        PartitiontreeNode* get(Vec3d p, bool checkPosition = true);
 
         void remData(void* data);
         //void clear();
 
         bool isLeaf();
 
-        vector<OctreeNode*> getChildren();
-        vector<OctreeNode*> getSubtree();
-        vector<OctreeNode*> getLeafs();
-        vector<OctreeNode*> getPathTo(Vec3d p);
+        vector<PartitiontreeNode*> getChildren();
+        vector<PartitiontreeNode*> getSubtree();
+        vector<PartitiontreeNode*> getLeafs();
+        vector<PartitiontreeNode*> getPathTo(Vec3d p);
 
         vector<void*> getData();
         vector<void*> getAllData();
@@ -70,7 +72,7 @@ class OctreeNode {
             data.clear();
         }
 
-        //void destroy(OctreeNode* guard);
+        //void destroy(PartitiontreeNode* guard);
         void findInSphere(Vec3d p, float r, int d, vector<void*>& res);
         void findPointsInSphere(Vec3d p, float r, int d, vector<Vec3d>& res, bool getAll);
         void findInBox(const Boundingbox& b, int d, vector<void*>& res);
@@ -81,27 +83,27 @@ class OctreeNode {
         string toString(int indent = 0);
 };
 
-class Octree : public std::enable_shared_from_this<Octree> {
-    private:
+class Partitiontree : public std::enable_shared_from_this<Partitiontree> {
+    protected:
         float resolution = 0.1;
         float firstSize = 10;
-        OctreeNode* root = 0;
+        PartitiontreeNode* root = 0;
 
-        Octree(float resolution, float size = 10, string name = "");
+        Partitiontree(float resolution, float size = 10, string name = "");
 
     public:
         string name;
 
     public:
-        ~Octree();
-        static OctreePtr create(float resolution, float size = 10, string name = "");
-        OctreePtr ptr();
+        ~Partitiontree();
+        static PartitiontreePtr create(float resolution, float size = 10, string name = "");
+        PartitiontreePtr ptr();
 
-        OctreeNode* getRoot();
+        PartitiontreeNode* getRoot();
         void addBox(const Boundingbox& b, void* data, int targetLevel = -1, bool checkPosition = true);
-        OctreeNode* add(Vec3d p, void* data, int targetLevel = -1, bool checkPosition = true, int partitionLimit = -1);
-        OctreeNode* get(Vec3d p, bool checkPosition = true);
-        vector<OctreeNode*> getAllLeafs();
+        PartitiontreeNode* add(Vec3d p, void* data, int targetLevel = -1, bool checkPosition = true, int partitionLimit = -1);
+        PartitiontreeNode* get(Vec3d p, bool checkPosition = true);
+        vector<PartitiontreeNode*> getAllLeafs();
 
         void setResolution(float res);
         float getSize();
@@ -125,4 +127,4 @@ class Octree : public std::enable_shared_from_this<Octree> {
 
 OSG_END_NAMESPACE
 
-#endif // OCTREE_H_INCLUDED
+#endif // PARTITIONTREE_H_INCLUDED

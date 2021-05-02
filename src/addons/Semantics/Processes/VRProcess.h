@@ -4,7 +4,7 @@
 #include "../VRSemanticsFwd.h"
 #include "core/utils/VRName.h"
 #include "core/math/VRMathFwd.h"
-#include "core/math/graph.h"
+#include "core/math/partitioning/graph.h"
 
 #include <string>
 

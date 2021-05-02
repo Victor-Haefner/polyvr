@@ -2,7 +2,7 @@
 #define VRGRAPHLAYOUT_H_INCLUDED
 
 #include "VRAlgorithmsFwd.h"
-#include "core/math/graph.h"
+#include "core/math/partitioning/graph.h"
 
 #include "core/math/OSGMathFwd.h"
 #include <map>

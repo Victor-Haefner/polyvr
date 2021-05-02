@@ -1,7 +1,7 @@
 #include "VRSkeleton.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRFunction.h"
-#include "core/math/graph.h"
+#include "core/math/partitioning/graph.h"
 #include "core/math/Eigendecomposition.h"
 #ifndef WITHOUT_LAPACKE_BLAS
 #include "core/math/SingularValueDecomposition.h"

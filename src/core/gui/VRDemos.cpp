@@ -12,7 +12,7 @@
 #include "core/scene/import/VRImport.h"
 #include "core/objects/VRTransform.h"
 #include "core/objects/VRCamera.h"
-#include "core/math/boundingbox.h"
+#include "core/math/partitioning/boundingbox.h"
 #include "core/scene/VRProjectsList.h"
 #include "core/setup/devices/VRSignal.h"
 #include "core/utils/system/VRSystem.h"

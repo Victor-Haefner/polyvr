@@ -1,9 +1,9 @@
 #ifndef FRUSTUM_H_INCLUDED
 #define FRUSTUM_H_INCLUDED
 
-#include "polygon.h"
-#include "pose.h"
-#include "VRMathFwd.h"
+#include "core/math/polygon.h"
+#include "core/math/pose.h"
+#include "core/math/VRMathFwd.h"
 #include <OpenSG/OSGLine.h>
 #include <OpenSG/OSGPlane.h>
 

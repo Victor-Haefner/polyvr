@@ -1,4 +1,4 @@
-#include "Octree.h"
+#include "Partitiontree.h"
 #include <cmath>
 #include <algorithm>
 #include <iostream>
@@ -13,12 +13,12 @@
 
 using namespace OSG;
 
-OctreeNode::OctreeNode(OctreePtr tree, float res, float s, int lvl) : resolution(res), size(s), level(lvl) { this->tree = tree; }
-OctreeNode::~OctreeNode() {
+PartitiontreeNode::PartitiontreeNode(PartitiontreePtr tree, float res, float s, int lvl) : resolution(res), size(s), level(lvl) { this->tree = tree; }
+PartitiontreeNode::~PartitiontreeNode() {
     for (auto c : children) if (c) delete c;
 }
 
-int OctreeNode::getOctant(Vec3d p) {
+int PartitiontreeNode::getOctant(Vec3d p) {
     Vec3d rp = p - center;
 
     int o = 0;
@@ -28,7 +28,7 @@ int OctreeNode::getOctant(Vec3d p) {
     return o;
 }
 
-Vec3d lvljumpCenter(float s2, Vec3d rp) {
+Vec3d PartitiontreeNode::lvljumpCenter(float s2, Vec3d rp) {
     Vec3d c(s2,s2,s2);
     if (rp[0] < 0) c[0]-=s2*2;
     if (rp[1] < 0) c[1]-=s2*2;
@@ -36,14 +36,14 @@ Vec3d lvljumpCenter(float s2, Vec3d rp) {
     return c;
 }
 
-bool OctreeNode::inBox(Vec3d p, Vec3d c, float size) {
+bool PartitiontreeNode::inBox(Vec3d p, Vec3d c, float size) {
     if (abs(2*p[0] - 2*c[0]) > size) return false;
     if (abs(2*p[1] - 2*c[1]) > size) return false;
     if (abs(2*p[2] - 2*c[2]) > size) return false;
     return true;
 }
 
-OctreeNode* OctreeNode::get(Vec3d p, bool checkPosition) {
+PartitiontreeNode* PartitiontreeNode::get(Vec3d p, bool checkPosition) {
     if ( !inBox(p, center, size) && checkPosition ) {
         if (parent) return parent->get(p, true);
         else return 0;
@@ -61,11 +61,11 @@ OctreeNode* OctreeNode::get(Vec3d p, bool checkPosition) {
 // checkPosition avoids parent/child cycles due to float error
 // partitionLimit sets a max amount of data points, tree is subdivided if necessary!
 
-OctreeNode* OctreeNode::add(Vec3d pos, void* dat, int targetLevel, bool checkPosition, int partitionLimit) {
+PartitiontreeNode* PartitiontreeNode::add(Vec3d pos, void* dat, int targetLevel, bool checkPosition, int partitionLimit) {
     Vec3d rpos = pos - center;
 
     auto createParent = [&]() {
-        parent = new OctreeNode(tree.lock(), resolution, 2*size, level+1);
+        parent = new PartitiontreeNode(tree.lock(), resolution, 2*size, level+1);
         parent->center = center + lvljumpCenter(size*0.5, rpos);
         int o = parent->getOctant(center);
         parent->children[o] = this;
@@ -73,7 +73,7 @@ OctreeNode* OctreeNode::add(Vec3d pos, void* dat, int targetLevel, bool checkPos
     };
 
     auto createChild = [&](int octant) {
-        children[octant] = new OctreeNode(tree.lock(), resolution, size*0.5, level-1);
+        children[octant] = new PartitiontreeNode(tree.lock(), resolution, size*0.5, level-1);
         Vec3d c = center + lvljumpCenter(size*0.25, rpos);
         children[octant]->center = c;
         children[octant]->parent = this;
@@ -122,28 +122,28 @@ OctreeNode* OctreeNode::add(Vec3d pos, void* dat, int targetLevel, bool checkPos
     return this;
 }
 
-void OctreeNode::set(OctreeNode* node, Vec3d p, void* d) { node->data.clear(); node->points.clear(); node->data.push_back(d); node->points.push_back(p); }
+void PartitiontreeNode::set(PartitiontreeNode* node, Vec3d p, void* d) { node->data.clear(); node->points.clear(); node->data.push_back(d); node->points.push_back(p); }
 
-vector<OctreeNode*> OctreeNode::getAncestry() {
-    vector<OctreeNode*> res;
+vector<PartitiontreeNode*> PartitiontreeNode::getAncestry() {
+    vector<PartitiontreeNode*> res;
     auto p = parent;
     while (p) { res.push_back(p); p = p->parent; }
     return res;
 }
 
-vector<OctreeNode*> OctreeNode::getChildren() {
-    return vector<OctreeNode*>(children, children+8);
+vector<PartitiontreeNode*> PartitiontreeNode::getChildren() {
+    return vector<PartitiontreeNode*>(children, children+8);
 }
 
-bool OctreeNode::isLeaf() {
+bool PartitiontreeNode::isLeaf() {
     //return points.size() > 0;
     if ( resolution < size ) return false;
     for (int i=0; i<8; i++) if (children[i]) return false;
     return true;
 }
 
-vector<OctreeNode*> OctreeNode::getPathTo(Vec3d p) {
-    vector<OctreeNode*> res;
+vector<PartitiontreeNode*> PartitiontreeNode::getPathTo(Vec3d p) {
+    vector<PartitiontreeNode*> res;
     auto o = get(p);
     if (!o) return res;
 
@@ -156,7 +156,7 @@ vector<OctreeNode*> OctreeNode::getPathTo(Vec3d p) {
     return res;
 }
 
-void gatherSubtree(OctreeNode* o, vector<OctreeNode*>& res, bool leafs) {
+void gatherSubtree(PartitiontreeNode* o, vector<PartitiontreeNode*>& res, bool leafs) {
     for (auto c : o->getChildren()) {
         if (c) {
             if (leafs) {
@@ -167,42 +167,42 @@ void gatherSubtree(OctreeNode* o, vector<OctreeNode*>& res, bool leafs) {
     }
 }
 
-vector<OctreeNode*> OctreeNode::getSubtree() {
-    vector<OctreeNode*> res;
+vector<PartitiontreeNode*> PartitiontreeNode::getSubtree() {
+    vector<PartitiontreeNode*> res;
     res.push_back(this);
     gatherSubtree(this, res, false);
     return res;
 }
 
-vector<OctreeNode*> OctreeNode::getLeafs() {
-    vector<OctreeNode*> res;
+vector<PartitiontreeNode*> PartitiontreeNode::getLeafs() {
+    vector<PartitiontreeNode*> res;
     if (isLeaf()) res.push_back(this);
     gatherSubtree(this, res, true);
     return res;
 }
 
-vector<Vec3d> OctreeNode::getPoints() { return points; }
+vector<Vec3d> PartitiontreeNode::getPoints() { return points; }
 
-Vec3d OctreeNode::getCenter() { return center; }
-Vec3d OctreeNode::getLocalCenter() {
+Vec3d PartitiontreeNode::getCenter() { return center; }
+Vec3d PartitiontreeNode::getLocalCenter() {
     if (parent) return center - parent->center;
     else return center;
 }
 
-void OctreeNode::remData(void* d) {
+void PartitiontreeNode::remData(void* d) {
     data.erase(std::remove(data.begin(), data.end(), d), data.end());
 }
 
-int OctreeNode::dataSize() { return data.size(); }
-void* OctreeNode::getData(int i) { return data[i]; }
-Vec3d OctreeNode::getPoint(int i) { return points[i]; }
+int PartitiontreeNode::dataSize() { return data.size(); }
+void* PartitiontreeNode::getData(int i) { return data[i]; }
+Vec3d PartitiontreeNode::getPoint(int i) { return points[i]; }
 
-OctreeNode* OctreeNode::getParent() { return parent; }
-OctreeNode* OctreeNode::getRoot() { auto o = this; while(o->parent) o = o->parent; return o; }
+PartitiontreeNode* PartitiontreeNode::getParent() { return parent; }
+PartitiontreeNode* PartitiontreeNode::getRoot() { auto o = this; while(o->parent) o = o->parent; return o; }
 
-float OctreeNode::getSize() { return size; }
-float OctreeNode::getResolution() { return resolution; }
-void OctreeNode::setResolution(float res) { resolution = res; }
+float PartitiontreeNode::getSize() { return size; }
+float PartitiontreeNode::getResolution() { return resolution; }
+void PartitiontreeNode::setResolution(float res) { resolution = res; }
 
 // sphere center, box center, sphere radius, box size
 bool sphere_box_intersect(Vec3d Ps, Vec3d Pb, float Rs, float Sb)  {
@@ -220,7 +220,7 @@ bool sphere_box_intersect(Vec3d Ps, Vec3d Pb, float Rs, float Sb)  {
     return dmin <= r2;
 }
 
-void OctreeNode::findInSphere(Vec3d p, float r, int d, vector<void*>& res) { // TODO: optimize!!
+void PartitiontreeNode::findInSphere(Vec3d p, float r, int d, vector<void*>& res) { // TODO: optimize!!
     if (!sphere_box_intersect(p, center, r, size)) return;
 
     float r2 = r*r;
@@ -235,7 +235,7 @@ void OctreeNode::findInSphere(Vec3d p, float r, int d, vector<void*>& res) { // 
     }
 }
 
-void OctreeNode::findPointsInSphere(Vec3d p, float r, int d, vector<Vec3d>& res, bool getAll) { // TODO: optimize!!
+void PartitiontreeNode::findPointsInSphere(Vec3d p, float r, int d, vector<Vec3d>& res, bool getAll) { // TODO: optimize!!
     if (!sphere_box_intersect(p, center, r, size)) return;
 
     float r2 = r*r;
@@ -269,7 +269,7 @@ bool box_box_intersect(Vec3d min, Vec3d max, Vec3d Bpos, float Sb)  {
     return (abs(diff[0]) <= ABdiag[0]) && (abs(diff[1]) <= ABdiag[1]) && (abs(diff[2]) <= ABdiag[2]);
 }
 
-void OctreeNode::findInBox(const Boundingbox& b, int d, vector<void*>& res) { // TODO: optimize!!
+void PartitiontreeNode::findInBox(const Boundingbox& b, int d, vector<void*>& res) { // TODO: optimize!!
     if (!box_box_intersect(b.min(), b.max(), center, size)) return;
 
     for (unsigned int i=0; i<data.size(); i++) {
@@ -282,7 +282,7 @@ void OctreeNode::findInBox(const Boundingbox& b, int d, vector<void*>& res) { //
     }
 }
 
-string OctreeNode::toString(int indent) {
+string PartitiontreeNode::toString(int indent) {
     auto pToStr = [](void* p) {
         const void * address = static_cast<const void*>(p);
         std::stringstream ss;
@@ -298,16 +298,16 @@ string OctreeNode::toString(int indent) {
     return res;
 }
 
-void OctreeNode::print(int indent) {
+void PartitiontreeNode::print(int indent) {
     cout << toString(indent) << flush;
     for (int i=0; i<8; i++) {
         if (children[i] != 0) children[i]->print(indent+1);
     }
 }
 
-vector<void*> OctreeNode::getData() { return data; }
+vector<void*> PartitiontreeNode::getData() { return data; }
 
-vector<void*> OctreeNode::getAllData() {
+vector<void*> PartitiontreeNode::getAllData() {
     vector<void*> res;
     for (auto c : getSubtree()) {
         auto d = c->getData();
@@ -317,30 +317,30 @@ vector<void*> OctreeNode::getAllData() {
 }
 
 
-Octree::Octree(float res, float s, string n) : resolution(res), firstSize(s), name(n) { if (s < res) firstSize = res; }
-Octree::~Octree() { if (root) delete root; }
+Partitiontree::Partitiontree(float res, float s, string n) : resolution(res), firstSize(s), name(n) { if (s < res) firstSize = res; }
+Partitiontree::~Partitiontree() { if (root) delete root; }
 
-OctreePtr Octree::create(float resolution, float size, string n) {
-    auto o = OctreePtr( new Octree(resolution, size, n) );
+PartitiontreePtr Partitiontree::create(float resolution, float size, string n) {
+    auto o = PartitiontreePtr( new Partitiontree(resolution, size, n) );
     o->clear();
     return o;
 }
 
-OctreePtr Octree::ptr() { return shared_from_this(); }
+PartitiontreePtr Partitiontree::ptr() { return shared_from_this(); }
 
-float Octree::getSize() { return root->getSize(); }
-void Octree::setResolution(float res) { resolution = res; root->setResolution(res); }
-void Octree::clear() { if (root) delete root; root = new OctreeNode(ptr(), resolution, firstSize, 0); }
+float Partitiontree::getSize() { return root->getSize(); }
+void Partitiontree::setResolution(float res) { resolution = res; root->setResolution(res); }
+void Partitiontree::clear() { if (root) delete root; root = new PartitiontreeNode(ptr(), resolution, firstSize, 0); }
 
-OctreeNode* Octree::get(Vec3d p, bool checkPosition) { return root->get(p, checkPosition); }
+PartitiontreeNode* Partitiontree::get(Vec3d p, bool checkPosition) { return root->get(p, checkPosition); }
 
-vector<OctreeNode*> Octree::getAllLeafs() { return root->getRoot()->getLeafs(); }
+vector<PartitiontreeNode*> Partitiontree::getAllLeafs() { return root->getRoot()->getLeafs(); }
 
-OctreeNode* Octree::add(Vec3d p, void* data, int targetLevel, bool checkPosition, int partitionLimit) {
+PartitiontreeNode* Partitiontree::add(Vec3d p, void* data, int targetLevel, bool checkPosition, int partitionLimit) {
     return getRoot()->add(p, data, targetLevel, checkPosition, partitionLimit);
 }
 
-void Octree::addBox(const Boundingbox& b, void* d, int targetLevel, bool checkPosition) {
+void Partitiontree::addBox(const Boundingbox& b, void* d, int targetLevel, bool checkPosition) {
     const Vec3d min = b.min();
     const Vec3d max = b.max();
     add(min, d, targetLevel, checkPosition);
@@ -353,29 +353,29 @@ void Octree::addBox(const Boundingbox& b, void* d, int targetLevel, bool checkPo
     add(Vec3d(min[0],max[1],max[2]), d, targetLevel, checkPosition);
 }
 
-OctreeNode* Octree::getRoot() { return root; }
-void Octree::updateRoot() { while (auto p = root->getParent()) root = p; }
+PartitiontreeNode* Partitiontree::getRoot() { return root; }
+void Partitiontree::updateRoot() { while (auto p = root->getParent()) root = p; }
 
-vector<void*> Octree::getAllData() { return getRoot()->getAllData(); }
+vector<void*> Partitiontree::getAllData() { return getRoot()->getAllData(); }
 
-vector<void*> Octree::radiusSearch(Vec3d p, float r, int d) {
+vector<void*> Partitiontree::radiusSearch(Vec3d p, float r, int d) {
     vector<void*> res;
     getRoot()->findInSphere(p, r, d, res);
     return res;
 }
-vector<Vec3d> Octree::radiusPointSearch(Vec3d p, float r, int d, bool getAll) {
+vector<Vec3d> Partitiontree::radiusPointSearch(Vec3d p, float r, int d, bool getAll) {
     vector<Vec3d> res;
     getRoot()->findPointsInSphere(p, r, d, res, getAll);
     return res;
 }
 
-vector<void*> Octree::boxSearch(const Boundingbox& b, int d) {
+vector<void*> Partitiontree::boxSearch(const Boundingbox& b, int d) {
     vector<void*> res;
     getRoot()->findInBox(b, d, res);
     return res;
 }
 
-void Octree::test() {
+void Partitiontree::test() {
     int Nv = 100000;
     float sMax = 4;
     Vec3d p(1,2,3);
@@ -417,7 +417,7 @@ void Octree::test() {
     // validate results
 
     if (radSearchRes_brute.size() != radSearchRes_tree.size()) {
-        cout << "\nOctreeNode test failed: result vector has wrong length " << radSearchRes_brute.size() << " " << radSearchRes_tree.size() << " !";
+        cout << "\nPartitiontreeNode test failed: result vector has wrong length " << radSearchRes_brute.size() << " " << radSearchRes_tree.size() << " !";
         return;
     }
 
@@ -426,17 +426,17 @@ void Octree::test() {
 
     for (unsigned int i=0; i<radSearchRes_brute.size(); i++) {
         if (radSearchRes_tree[i] != radSearchRes_brute[i]) {
-            cout << "\nOctreeNode test failed: mismatching test data!" << radSearchRes_tree[i] << "  " << radSearchRes_brute[i];
+            cout << "\nPartitiontreeNode test failed: mismatching test data!" << radSearchRes_tree[i] << "  " << radSearchRes_brute[i];
             return;
         }
     }
 
-    cout << "\nOctreeNode test passed with " << radSearchRes_tree.size() << " found Vec3fs!\n";
+    cout << "\nPartitiontreeNode test passed with " << radSearchRes_tree.size() << " found Vec3fs!\n";
 }
 
-VRGeometryPtr Octree::getVisualization(bool onlyLeafes) {
+VRGeometryPtr Partitiontree::getVisualization(bool onlyLeafes) {
     VRGeoData data;
-    vector<OctreeNode*> nodes;
+    vector<PartitiontreeNode*> nodes;
     if (!onlyLeafes) {
         nodes = root->getRoot()->getSubtree();
         nodes.push_back(root);

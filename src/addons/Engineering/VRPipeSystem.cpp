@@ -4,7 +4,7 @@
 #include "core/objects/geometry/VRGeoData.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/scene/VRScene.h"
-#include "core/math/graph.h"
+#include "core/math/partitioning/graph.h"
 
 #include "addons/Semantics/Reasoning/VROntology.h"
 #include "addons/Semantics/Reasoning/VREntity.h"

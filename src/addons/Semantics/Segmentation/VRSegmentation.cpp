@@ -3,7 +3,7 @@
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/geometry/OSGGeometry.h"
 #include "core/objects/material/VRMaterial.h"
-#include "core/math/Octree.h"
+#include "core/math/partitioning/Octree.h"
 #include <OpenSG/OSGGeometry.h>
 #include <OpenSG/OSGGeoProperties.h>
 #include <OpenSG/OSGGeoFunctions.h>

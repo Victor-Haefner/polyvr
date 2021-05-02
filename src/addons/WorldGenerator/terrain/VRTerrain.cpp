@@ -7,7 +7,7 @@
 #include "core/objects/geometry/VRGeoData.h"
 #include "core/objects/geometry/OSGGeometry.h"
 #include "core/utils/VRFunction.h"
-#include "core/math/boundingbox.h"
+#include "core/math/partitioning/boundingbox.h"
 #include "core/math/polygon.h"
 #include "core/math/triangulator.h"
 #include "core/math/pose.h"

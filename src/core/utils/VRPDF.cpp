@@ -1,7 +1,7 @@
 #include "VRPDF.h"
 #include "core/utils/toString.h"
 #include "core/math/pose.h"
-#include "core/math/boundingbox.h"
+#include "core/math/partitioning/boundingbox.h"
 #include "core/math/Layer2D.h"
 #include "core/objects/object/VRObject.h"
 #include "core/objects/geometry/VRGeometry.h"
