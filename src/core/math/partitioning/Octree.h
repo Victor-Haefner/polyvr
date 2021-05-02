@@ -15,13 +15,9 @@ OSG_BEGIN_NAMESPACE
 
 class OctreeNode : public PartitiontreeNode {
     private:
-        Vec3d center;
-
         OctreeWeakPtr tree;
         OctreeNode* parent = 0;
         OctreeNode* children[8] = {0,0,0,0,0,0,0,0};
-
-        vector<Vec3d> points;
 
     public:
         OctreeNode(OctreePtr tree, float resolution, float size = 10, int level = 0);

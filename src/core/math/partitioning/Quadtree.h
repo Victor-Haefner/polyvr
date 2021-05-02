@@ -15,13 +15,9 @@ OSG_BEGIN_NAMESPACE
 
 class QuadtreeNode : public PartitiontreeNode {
     private:
-        Vec3d center;
-
         QuadtreeWeakPtr tree;
         QuadtreeNode* parent = 0;
         QuadtreeNode* children[8] = {0,0,0,0,0,0,0,0};
-
-        vector<Vec3d> points;
 
     public:
         QuadtreeNode(QuadtreePtr tree, float resolution, float size = 10, int level = 0);
