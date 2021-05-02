@@ -13,7 +13,7 @@
 
 using namespace OSG;
 
-QuadtreeNode::QuadtreeNode(QuadtreePtr tree, float res, float s, int lvl) : resolution(res), size(s), level(lvl) { this->tree = tree; }
+QuadtreeNode::QuadtreeNode(QuadtreePtr tree, float res, float s, int lvl) : PartitiontreeNode(tree, res, s, lvl) { this->tree = tree; }
 QuadtreeNode::~QuadtreeNode() {
     for (auto c : children) if (c) delete c;
 }
@@ -309,7 +309,7 @@ vector<void*> QuadtreeNode::getAllData() {
 }
 
 
-Quadtree::Quadtree(float res, float s, string n) : resolution(res), firstSize(s), name(n) { if (s < res) firstSize = res; }
+Quadtree::Quadtree(float res, float s, string n) : Partitiontree(res, s, n) {}
 Quadtree::~Quadtree() { if (root) delete root; }
 
 QuadtreePtr Quadtree::create(float resolution, float size, string n) {
@@ -318,7 +318,7 @@ QuadtreePtr Quadtree::create(float resolution, float size, string n) {
     return o;
 }
 
-QuadtreePtr Quadtree::ptr() { return shared_from_this(); }
+QuadtreePtr Quadtree::ptr() { return static_pointer_cast<Quadtree>(shared_from_this()); }
 
 float Quadtree::getSize() { return root->getSize(); }
 void Quadtree::setResolution(float res) { resolution = res; root->setResolution(res); }

@@ -13,7 +13,7 @@
 
 using namespace OSG;
 
-OctreeNode::OctreeNode(OctreePtr tree, float res, float s, int lvl) : resolution(res), size(s), level(lvl) { this->tree = tree; }
+OctreeNode::OctreeNode(OctreePtr tree, float res, float s, int lvl) : PartitiontreeNode(tree, res, s, lvl) { this->tree = tree; }
 OctreeNode::~OctreeNode() {
     for (auto c : children) if (c) delete c;
 }
@@ -309,7 +309,7 @@ vector<void*> OctreeNode::getAllData() {
 }
 
 
-Octree::Octree(float res, float s, string n) : resolution(res), firstSize(s), name(n) { if (s < res) firstSize = res; }
+Octree::Octree(float res, float s, string n) : Partitiontree(res, s, n) {}
 Octree::~Octree() { if (root) delete root; }
 
 OctreePtr Octree::create(float resolution, float size, string n) {
@@ -318,7 +318,7 @@ OctreePtr Octree::create(float resolution, float size, string n) {
     return o;
 }
 
-OctreePtr Octree::ptr() { return shared_from_this(); }
+OctreePtr Octree::ptr() { return static_pointer_cast<Octree>(shared_from_this()); }
 
 float Octree::getSize() { return root->getSize(); }
 void Octree::setResolution(float res) { resolution = res; root->setResolution(res); }
