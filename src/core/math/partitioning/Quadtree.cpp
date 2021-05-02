@@ -18,23 +18,6 @@ QuadtreeNode::~QuadtreeNode() {
     for (auto c : children) if (c) delete c;
 }
 
-int QuadtreeNode::getOctant(Vec3d p) {
-    Vec3d rp = p - center;
-
-    int o = 0;
-    if (rp[0] < 0) o+=1;
-    if (rp[1] < 0) o+=2;
-    if (rp[2] < 0) o+=4;
-    return o;
-}
-
-bool QuadtreeNode::inBox(Vec3d p, Vec3d c, float size) {
-    if (abs(2*p[0] - 2*c[0]) > size) return false;
-    if (abs(2*p[1] - 2*c[1]) > size) return false;
-    if (abs(2*p[2] - 2*c[2]) > size) return false;
-    return true;
-}
-
 QuadtreeNode* QuadtreeNode::get(Vec3d p, bool checkPosition) {
     if ( !inBox(p, center, size) && checkPosition ) {
         if (parent) return parent->get(p, true);
@@ -229,22 +212,6 @@ void QuadtreeNode::findInBox(const Boundingbox& b, int d, vector<void*>& res) { 
     for (int i=0; i<8; i++) {
         if (children[i]) children[i]->findInBox(b, d, res);
     }
-}
-
-string QuadtreeNode::toString(int indent) {
-    auto pToStr = [](void* p) {
-        const void * address = static_cast<const void*>(p);
-        std::stringstream ss;
-        ss << address;
-        return ss.str();
-    };
-
-    string res = "\nOc ";
-    for (int i=0; i<indent; i++) res += " ";
-    res += "size: " + ::toString(size) + " center: " + ::toString(center);
-    if (data.size() > 0) res += "\n";
-    for (unsigned int i=0; i<data.size(); i++) if(data[i]) res += " " + pToStr(data[i]);
-    return res;
 }
 
 void QuadtreeNode::print(int indent) {

@@ -47,11 +47,8 @@ class QuadtreeNode : public PartitiontreeNode {
         void findInSphere(Vec3d p, float r, int d, vector<void*>& res);
         void findPointsInSphere(Vec3d p, float r, int d, vector<Vec3d>& res, bool getAll);
         void findInBox(const Boundingbox& b, int d, vector<void*>& res);
-        int getOctant(Vec3d p);
-        bool inBox(Vec3d p, Vec3d c, float size);
 
         void print(int indent = 0);
-        string toString(int indent = 0);
 };
 
 class Quadtree : public Partitiontree {
