@@ -27,18 +27,10 @@ class QuadtreeNode : public PartitiontreeNode {
         QuadtreeNode* getRoot();
         vector<QuadtreeNode*> getAncestry();
         void set(QuadtreeNode* node, Vec3d p, void* data);
-        float getSize();
-        float getResolution();
-        Vec3d getCenter();
         Vec3d getLocalCenter();
-
-        void setResolution(float res);
 
         QuadtreeNode* add(Vec3d p, void* data, int targetLevel = -1, bool checkPosition = true, int partitionLimit = -1);
         QuadtreeNode* get(Vec3d p, bool checkPosition = true);
-
-        void remData(void* data);
-        //void clear();
 
         bool isLeaf();
 
@@ -47,20 +39,9 @@ class QuadtreeNode : public PartitiontreeNode {
         vector<QuadtreeNode*> getLeafs();
         vector<QuadtreeNode*> getPathTo(Vec3d p);
 
-        vector<void*> getData();
         vector<void*> getAllData();
-        vector<Vec3d> getPoints();
 
         int dataSize();
-        void* getData(int i);
-        Vec3d getPoint(int i);
-
-        template<class T>
-        void delContent() {
-            for (void* o : data) delete (T*)o;
-            points.clear();
-            data.clear();
-        }
 
         //void destroy(QuadtreeNode* guard);
         void findInSphere(Vec3d p, float r, int d, vector<void*>& res);

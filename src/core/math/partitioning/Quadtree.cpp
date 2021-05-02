@@ -13,7 +13,7 @@
 
 using namespace OSG;
 
-QuadtreeNode::QuadtreeNode(QuadtreePtr tree, float res, float s, int lvl) : PartitiontreeNode(tree, res, s, lvl) { this->tree = tree; }
+QuadtreeNode::QuadtreeNode(QuadtreePtr tree, float res, float s, int lvl) : PartitiontreeNode(res, s, lvl) { this->tree = tree; }
 QuadtreeNode::~QuadtreeNode() {
     for (auto c : children) if (c) delete c;
 }
@@ -173,28 +173,15 @@ vector<QuadtreeNode*> QuadtreeNode::getLeafs() {
     return res;
 }
 
-vector<Vec3d> QuadtreeNode::getPoints() { return points; }
-
-Vec3d QuadtreeNode::getCenter() { return center; }
 Vec3d QuadtreeNode::getLocalCenter() {
     if (parent) return center - parent->center;
     else return center;
 }
 
-void QuadtreeNode::remData(void* d) {
-    data.erase(std::remove(data.begin(), data.end(), d), data.end());
-}
-
 int QuadtreeNode::dataSize() { return data.size(); }
-void* QuadtreeNode::getData(int i) { return data[i]; }
-Vec3d QuadtreeNode::getPoint(int i) { return points[i]; }
 
 QuadtreeNode* QuadtreeNode::getParent() { return parent; }
 QuadtreeNode* QuadtreeNode::getRoot() { auto o = this; while(o->parent) o = o->parent; return o; }
-
-float QuadtreeNode::getSize() { return size; }
-float QuadtreeNode::getResolution() { return resolution; }
-void QuadtreeNode::setResolution(float res) { resolution = res; }
 
 void QuadtreeNode::findInSphere(Vec3d p, float r, int d, vector<void*>& res) { // TODO: optimize!!
     if (!sphere_box_intersect(p, center, r, size)) return;
@@ -266,8 +253,6 @@ void QuadtreeNode::print(int indent) {
         if (children[i] != 0) children[i]->print(indent+1);
     }
 }
-
-vector<void*> QuadtreeNode::getData() { return data; }
 
 vector<void*> QuadtreeNode::getAllData() {
     vector<void*> res;

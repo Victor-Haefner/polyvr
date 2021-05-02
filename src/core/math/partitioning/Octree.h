@@ -27,18 +27,10 @@ class OctreeNode : public PartitiontreeNode {
         OctreeNode* getRoot();
         vector<OctreeNode*> getAncestry();
         void set(OctreeNode* node, Vec3d p, void* data);
-        float getSize();
-        float getResolution();
-        Vec3d getCenter();
         Vec3d getLocalCenter();
-
-        void setResolution(float res);
 
         OctreeNode* add(Vec3d p, void* data, int targetLevel = -1, bool checkPosition = true, int partitionLimit = -1);
         OctreeNode* get(Vec3d p, bool checkPosition = true);
-
-        void remData(void* data);
-        //void clear();
 
         bool isLeaf();
 
@@ -47,20 +39,9 @@ class OctreeNode : public PartitiontreeNode {
         vector<OctreeNode*> getLeafs();
         vector<OctreeNode*> getPathTo(Vec3d p);
 
-        vector<void*> getData();
         vector<void*> getAllData();
-        vector<Vec3d> getPoints();
 
         int dataSize();
-        void* getData(int i);
-        Vec3d getPoint(int i);
-
-        template<class T>
-        void delContent() {
-            for (void* o : data) delete (T*)o;
-            points.clear();
-            data.clear();
-        }
 
         //void destroy(OctreeNode* guard);
         void findInSphere(Vec3d p, float r, int d, vector<void*>& res);

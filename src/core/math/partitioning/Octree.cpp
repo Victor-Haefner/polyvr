@@ -13,7 +13,7 @@
 
 using namespace OSG;
 
-OctreeNode::OctreeNode(OctreePtr tree, float res, float s, int lvl) : PartitiontreeNode(tree, res, s, lvl) { this->tree = tree; }
+OctreeNode::OctreeNode(OctreePtr tree, float res, float s, int lvl) : PartitiontreeNode(res, s, lvl) { this->tree = tree; }
 OctreeNode::~OctreeNode() {
     for (auto c : children) if (c) delete c;
 }
@@ -173,28 +173,15 @@ vector<OctreeNode*> OctreeNode::getLeafs() {
     return res;
 }
 
-vector<Vec3d> OctreeNode::getPoints() { return points; }
-
-Vec3d OctreeNode::getCenter() { return center; }
 Vec3d OctreeNode::getLocalCenter() {
     if (parent) return center - parent->center;
     else return center;
 }
 
-void OctreeNode::remData(void* d) {
-    data.erase(std::remove(data.begin(), data.end(), d), data.end());
-}
-
 int OctreeNode::dataSize() { return data.size(); }
-void* OctreeNode::getData(int i) { return data[i]; }
-Vec3d OctreeNode::getPoint(int i) { return points[i]; }
 
 OctreeNode* OctreeNode::getParent() { return parent; }
 OctreeNode* OctreeNode::getRoot() { auto o = this; while(o->parent) o = o->parent; return o; }
-
-float OctreeNode::getSize() { return size; }
-float OctreeNode::getResolution() { return resolution; }
-void OctreeNode::setResolution(float res) { resolution = res; }
 
 void OctreeNode::findInSphere(Vec3d p, float r, int d, vector<void*>& res) { // TODO: optimize!!
     if (!sphere_box_intersect(p, center, r, size)) return;
@@ -266,8 +253,6 @@ void OctreeNode::print(int indent) {
         if (children[i] != 0) children[i]->print(indent+1);
     }
 }
-
-vector<void*> OctreeNode::getData() { return data; }
 
 vector<void*> OctreeNode::getAllData() {
     vector<void*> res;
