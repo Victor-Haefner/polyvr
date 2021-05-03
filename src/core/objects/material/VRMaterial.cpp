@@ -522,14 +522,14 @@ void VRMaterial::setActivePass(int i) {
     activePass = i;
 }
 
-void VRMaterial::setStencilBuffer(bool clear, float value, float mask, int func, int opFail, int opZFail, int opPass) {
+void VRMaterial::setStencilBuffer(bool clear, int value, int mask, int func, int opFail, int opZFail, int opPass) {
     auto md = mats[activePass];
     if (md->stencilChunk == 0) { md->stencilChunk = StencilChunk::create(); md->regChunk(md->stencilChunk, -2, 18); }
-
     md->stencilChunk->setClearBuffer(clear);
     md->stencilChunk->setStencilFunc(func);
     md->stencilChunk->setStencilValue(value);
-    md->stencilChunk->setStencilMask(mask);
+    if (mask < 0) md->stencilChunk->setStencilMask(mask);
+    else md->stencilChunk->setStencilMask(UInt32(-1));
     md->stencilChunk->setStencilOpFail(opFail);
     md->stencilChunk->setStencilOpZFail(opZFail);
     md->stencilChunk->setStencilOpZPass(opPass);
