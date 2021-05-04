@@ -46,10 +46,13 @@ VRSetup::VRSetup(string name) {
 
     setup_layer = VRVisualLayer::getLayer("Setup", "setup.png",1);
     stats_layer = VRVisualLayer::getLayer("Statistics", "stats.png",1);
+    stencil_layer = VRVisualLayer::getLayer("Stencil", "stencil.png",1);
     layer_setup_toggle = VRFunction<bool>::create("showSetup", bind(&VRSetup::showSetup, this, _1) );
     layer_stats_toggle = VRFunction<bool>::create("showStats", bind(&VRSetup::showStats, this, _1) );
+    layer_stencil_toggle = VRFunction<bool>::create("showStencil", bind(&VRSetup::showStencil, this, _1) );
     setup_layer->setCallback( layer_setup_toggle );
     stats_layer->setCallback( layer_stats_toggle );
+    stencil_layer->setCallback( layer_stencil_toggle );
 
     network = VRNetworkPtr( new VRNetwork() );
 }
@@ -66,6 +69,11 @@ void VRSetup::showStats(bool b) {
     auto w = getEditorWindow();
     for (auto v : w->getViews()) v->showStats(b);
 #endif
+}
+
+void VRSetup::showStencil(bool b) {
+    auto s = VRScene::getCurrent();
+    if (s) s->setStencil(b);
 }
 
 VRScriptPtr VRSetup::addScript(string name) { auto s = VRScript::create(name); scripts[s->getName()] = s; return s; }

@@ -243,8 +243,27 @@ void VRRenderStudio::initMarker(VRMaterialPtr mat) {
 }
 
 void VRRenderStudio::initStencilViewer(VRMaterialPtr mat) { // TODO: many passes with different stencils!
-    mat->setLit(false);
-    mat->setSortKey(100);
+    string shdrDir = VRSceneManager::get()->getOriginalWorkdir() + "/shader/DeferredShading/";
+
+    for (int i=-5; i<=5; i++) {
+        Color3f c;
+        if (i == 0) c = Color3f(0,0,1);
+        if (i < 0)  c = Color3f(-i*0.2,0,0);
+        if (i > 0)  c = Color3f( 0,i*0.2,0);
+        if (i == -5)c = Color3f( 1,0,1);
+        if (i ==  5)c = Color3f( 1,1,0);
+
+        if (i > -5) mat->addPass();
+        mat->setLit(false);
+        mat->enableTransparency(true);
+        mat->setSortKey(100);
+        mat->readVertexShader(shdrDir + "Marker.vp.glsl");
+        mat->readFragmentShader(shdrDir + "Stencil.fp.glsl");
+        mat->setDiffuse(c);
+        if (i == -5) mat->setStencilBuffer(0, i, -1, GL_GEQUAL, GL_KEEP, GL_KEEP, GL_KEEP);
+        else if (i == 5) mat->setStencilBuffer(0, i, -1, GL_LEQUAL, GL_KEEP, GL_KEEP, GL_KEEP);
+        else mat->setStencilBuffer(0, i, -1, GL_EQUAL, GL_KEEP, GL_KEEP, GL_KEEP);
+    }
 }
 
 void VRRenderStudio::addLight(VRLightPtr l) {
@@ -348,6 +367,7 @@ VRObjectPtr VRRenderStudio::getRoot() { return root_system; }
 bool VRRenderStudio::getSSAO() { return do_ssao; }
 bool VRRenderStudio::getHMDD() { return do_hmdd; }
 bool VRRenderStudio::getMarker() { return do_marker; }
+bool VRRenderStudio::getStencil() { return do_stencil; }
 bool VRRenderStudio::getFXAA() { return do_fxaa; }
 bool VRRenderStudio::getDefferedShading() { return deferredRendering; }
 
@@ -366,6 +386,7 @@ void VRRenderStudio::setSSAOnoise(int k) { ssao_noise = k; update(); }
 void VRRenderStudio::setCalib(bool b) { calib = b; update(); }
 void VRRenderStudio::setHMDD(bool b) { do_hmdd = b; update(); }
 void VRRenderStudio::setMarker(bool b) { do_marker = b; update(); }
+void VRRenderStudio::setStencil(bool b) { do_stencil = b; update(); }
 void VRRenderStudio::setFXAA(bool b) { do_fxaa = b; update(); }
 void VRRenderStudio::setHMDDeye(float e) { hmdd->setHMDDparams(e); }
 

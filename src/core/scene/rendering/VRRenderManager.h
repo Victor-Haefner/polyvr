@@ -24,6 +24,7 @@ class VRRenderManager : public VRStorage {
         bool calib = false;
         bool do_hmdd = false;
         bool do_marker = false;
+        bool do_stencil = false;
         bool do_fxaa = false;
         int ssao_kernel = 4;
         int ssao_noise = 4;
@@ -65,6 +66,7 @@ class VRRenderManager : public VRStorage {
         bool getSSAO();
         bool getHMDD();
         bool getMarker();
+        bool getStencil();
         bool getCalib();
         bool getFXAA();
 
@@ -78,6 +80,7 @@ class VRRenderManager : public VRStorage {
         void setCalib(bool b);
         void setHMDD(bool b);
         void setMarker(bool b);
+        void setStencil(bool b);
         void setFXAA(bool b);
 
         void update();

@@ -103,6 +103,8 @@ class VRRenderStudio : public VRStorage {
         bool getHMDD();
         void setMarker(bool b);
         bool getMarker();
+        void setStencil(bool b);
+        bool getStencil();
         void setFXAA(bool b);
         bool getFXAA();
 
