@@ -57,6 +57,7 @@ VRRenderStudio::VRRenderStudio(EYE e) {
     addStage("blurX", "blurY");
     addStage("ssao", "blurX");
     addStage("marker");
+    addStage("stencilviewer");
     addStage("calibration");
     addStage("hmdd");
     addStage("fxaa");
@@ -160,9 +161,11 @@ void VRRenderStudio::init(VRObjectPtr root) {
 #endif
     initCalib( stages["calibration"]->getMaterial() );
     initMarker( stages["marker"]->getMaterial() );
+    initStencilViewer( stages["stencilviewer"]->getMaterial() );
 
     stages["calibration"]->getTop()->setVolumeCheck(false);
     stages["marker"]->getTop()->setVolumeCheck(false);
+    stages["stencilviewer"]->getTop()->setVolumeCheck(false);
 
     if (root) setScene(root);
     update();
@@ -193,6 +196,7 @@ void VRRenderStudio::update() {
     stages["hmdd"]->setActive(false, do_hmdd);
     stages["fxaa"]->setActive(false, do_fxaa);
     stages["marker"]->setActive(false, do_marker);
+    stages["stencilviewer"]->setActive(false, do_stencil);
     if (hmdd) hmdd->setActive(do_hmdd);
     if (fxaa) fxaa->setActive(do_fxaa);
 }
@@ -221,6 +225,8 @@ void VRRenderStudio::initDSProxy(VRMaterialPtr mat) {
 void VRRenderStudio::initCalib(VRMaterialPtr mat) {
     string shdrDir = VRSceneManager::get()->getOriginalWorkdir() + "/shader/DeferredShading/";
     mat->setLit(false);
+    mat->enableTransparency(true);
+    mat->setSortKey(100);
     mat->readVertexShader(shdrDir + "Calib.vp.glsl");
     mat->readFragmentShader(shdrDir + "Calib.fp.glsl");
     mat->setShaderParameter<int>("grid", 64);
@@ -231,8 +237,14 @@ void VRRenderStudio::initMarker(VRMaterialPtr mat) {
     string shdrDir = VRSceneManager::get()->getOriginalWorkdir() + "/shader/DeferredShading/";
     mat->setLit(false);
     mat->enableTransparency(true);
+    mat->setSortKey(100);
     mat->readVertexShader(shdrDir + "Marker.vp.glsl");
     mat->readFragmentShader(shdrDir + "Marker.fp.glsl");
+}
+
+void VRRenderStudio::initStencilViewer(VRMaterialPtr mat) { // TODO: many passes with different stencils!
+    mat->setLit(false);
+    mat->setSortKey(100);
 }
 
 void VRRenderStudio::addLight(VRLightPtr l) {
@@ -327,8 +339,8 @@ void VRRenderStudio::setScene(VRObjectPtr r) {
 void VRRenderStudio::resize(Vec2i s) {
     if (hmdd) hmdd->setSize(s);
     if (fxaa) fxaa->setSize(s);
-    auto defShading = stages["shading"]->getRendering();
-    if (defShading) defShading->onResize();
+    if (auto m = stages["marker"]->getRendering()) m->onResize();
+    if (auto ds = stages["shading"]->getRendering()) ds->onResize();
 }
 
 VRObjectPtr VRRenderStudio::getSceneRoot() { return root_scene; }

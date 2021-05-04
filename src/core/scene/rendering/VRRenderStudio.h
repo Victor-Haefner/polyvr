@@ -33,6 +33,7 @@ class VRRenderStudio : public VRStorage {
         bool do_hmdd = false;
         bool do_marker = false;
         bool do_fxaa = false;
+        bool do_stencil = false;
         int ssao_kernel = 4;
         int ssao_noise = 4;
         float ssao_radius = 0.02;
@@ -46,6 +47,7 @@ class VRRenderStudio : public VRStorage {
         void initDSProxy(VRMaterialPtr mat);
         void initCalib(VRMaterialPtr mat);
         void initMarker(VRMaterialPtr mat);
+        void initStencilViewer(VRMaterialPtr mat);
 
     protected:
         shared_ptr<VRSSAO> ssao;
