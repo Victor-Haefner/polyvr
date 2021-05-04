@@ -61,6 +61,10 @@ void VRAtlas::Patch::paint() {
             double localHeightoffset = terrain->getHeightOffset();
             Vec3d pos = Vec3d(localPos[0],localHeightoffset,localPos[2]);
             terrain->setTransform(pos);
+
+            auto mt = terrain->getMaterial();
+            mt->setSortKey(2);
+            mt->setStencilBuffer(false, 1, -1, GL_ALWAYS, GL_KEEP, GL_KEEP, GL_KEEP);
         }
     };
 
