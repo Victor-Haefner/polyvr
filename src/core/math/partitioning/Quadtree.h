@@ -17,7 +17,7 @@ class QuadtreeNode : public PartitiontreeNode {
     private:
         QuadtreeWeakPtr tree;
         QuadtreeNode* parent = 0;
-        QuadtreeNode* children[8] = {0,0,0,0,0,0,0,0};
+        QuadtreeNode* children[4] = {0,0,0,0};
 
     public:
         QuadtreeNode(QuadtreePtr tree, float resolution, float size = 10, int level = 0);
@@ -42,6 +42,10 @@ class QuadtreeNode : public PartitiontreeNode {
         vector<void*> getAllData();
 
         int dataSize();
+
+        int getQuadrant(Vec3d p);
+        Vec3d lvljumpCenter(float s2, Vec3d rp);
+        bool inBox(Vec3d p, Vec3d c, float size);
 
         //void destroy(QuadtreeNode* guard);
         void findInSphere(Vec3d p, float r, int d, vector<void*>& res);

@@ -23,7 +23,6 @@ class PartitiontreeNode {
         vector<void*> data;
         vector<Vec3d> points;
 
-        Vec3d lvljumpCenter(float s2, Vec3d rp);
         bool sphere_box_intersect(Vec3d Ps, Vec3d Pb, float Rs, float Sb);
         bool box_box_intersect(Vec3d min, Vec3d max, Vec3d Bpos, float Sb);
 
@@ -52,9 +51,6 @@ class PartitiontreeNode {
             points.clear();
             data.clear();
         }
-
-        int getOctant(Vec3d p);
-        bool inBox(Vec3d p, Vec3d c, float size);
 
         string toString(int indent = 0);
 };

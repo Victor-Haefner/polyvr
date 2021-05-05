@@ -25,7 +25,7 @@ QuadtreeNode* QuadtreeNode::get(Vec3d p, bool checkPosition) {
     }
 
     if (size > resolution) {
-        int o = getOctant(p);
+        int o = getQuadrant(p);
         if (!children[o]) return this;
         return children[o]->get(p, false);
     }
@@ -42,7 +42,7 @@ QuadtreeNode* QuadtreeNode::add(Vec3d pos, void* dat, int targetLevel, bool chec
     auto createParent = [&]() {
         parent = new QuadtreeNode(tree.lock(), resolution, 2*size, level+1);
         parent->center = center + lvljumpCenter(size*0.5, rpos);
-        int o = parent->getOctant(center);
+        int o = parent->getQuadrant(center);
         parent->children[o] = this;
         tree.lock()->updateRoot();
     };
@@ -77,7 +77,7 @@ QuadtreeNode* QuadtreeNode::add(Vec3d pos, void* dat, int targetLevel, bool chec
     }
 
     if (!reachedTargetLevel()) {
-        int o = getOctant(pos);
+        int o = getQuadrant(pos);
         if (!children[o]) createChild(o);
         return children[o]->add(pos, dat, targetLevel, false, partitionLimit);
     }
@@ -97,6 +97,28 @@ QuadtreeNode* QuadtreeNode::add(Vec3d pos, void* dat, int targetLevel, bool chec
     return this;
 }
 
+int QuadtreeNode::getQuadrant(Vec3d p) {
+    Vec3d rp = p - center;
+
+    int q = 0;
+    if (rp[0] < 0) q+=1;
+    if (rp[2] < 0) q+=2;
+    return q;
+}
+
+Vec3d QuadtreeNode::lvljumpCenter(float s2, Vec3d rp) {
+    Vec3d c(s2,0,s2);
+    if (rp[0] < 0) c[0]-=s2*2;
+    if (rp[2] < 0) c[2]-=s2*2;
+    return c;
+}
+
+bool QuadtreeNode::inBox(Vec3d p, Vec3d c, float size) {
+    if (abs(2*p[0] - 2*c[0]) > size) return false;
+    if (abs(2*p[2] - 2*c[2]) > size) return false;
+    return true;
+}
+
 void QuadtreeNode::set(QuadtreeNode* node, Vec3d p, void* d) { node->data.clear(); node->points.clear(); node->data.push_back(d); node->points.push_back(p); }
 
 vector<QuadtreeNode*> QuadtreeNode::getAncestry() {
@@ -107,13 +129,13 @@ vector<QuadtreeNode*> QuadtreeNode::getAncestry() {
 }
 
 vector<QuadtreeNode*> QuadtreeNode::getChildren() {
-    return vector<QuadtreeNode*>(children, children+8);
+    return vector<QuadtreeNode*>(children, children+4);
 }
 
 bool QuadtreeNode::isLeaf() {
     //return points.size() > 0;
     if ( resolution < size ) return false;
-    for (int i=0; i<8; i++) if (children[i]) return false;
+    for (int i=0; i<4; i++) if (children[i]) return false;
     return true;
 }
 
@@ -176,7 +198,7 @@ void QuadtreeNode::findInSphere(Vec3d p, float r, int d, vector<void*>& res) { /
     }
 
     if (level == d && d != -1) return;
-    for (int i=0; i<8; i++) {
+    for (int i=0; i<4; i++) {
         if (children[i]) children[i]->findInSphere(p, r, d, res);
     }
 }
@@ -193,7 +215,7 @@ void QuadtreeNode::findPointsInSphere(Vec3d p, float r, int d, vector<Vec3d>& re
     }
 
     if (level == d && d != -1) return;
-    for (int i=0; i<8; i++) {
+    for (int i=0; i<4; i++) {
         if (children[i]) {
             children[i]->findPointsInSphere(p, r, d, res, getAll);
             if (!getAll && res.size() > 0) return;
@@ -209,14 +231,14 @@ void QuadtreeNode::findInBox(const Boundingbox& b, int d, vector<void*>& res) { 
     }
 
     if (level == d && d != -1) return;
-    for (int i=0; i<8; i++) {
+    for (int i=0; i<4; i++) {
         if (children[i]) children[i]->findInBox(b, d, res);
     }
 }
 
 void QuadtreeNode::print(int indent) {
     cout << toString(indent) << flush;
-    for (int i=0; i<8; i++) {
+    for (int i=0; i<4; i++) {
         if (children[i] != 0) children[i]->print(indent+1);
     }
 }
@@ -258,13 +280,9 @@ void Quadtree::addBox(const Boundingbox& b, void* d, int targetLevel, bool check
     const Vec3d min = b.min();
     const Vec3d max = b.max();
     add(min, d, targetLevel, checkPosition);
-    add(Vec3d(max[0],min[1],min[2]), d, targetLevel, checkPosition);
-    add(Vec3d(max[0],min[1],max[2]), d, targetLevel, checkPosition);
-    add(Vec3d(min[0],min[1],max[2]), d, targetLevel, checkPosition);
+    add(Vec3d(max[0],0,min[2]), d, targetLevel, checkPosition);
+    add(Vec3d(min[0],0,max[2]), d, targetLevel, checkPosition);
     add(max, d, targetLevel, checkPosition);
-    add(Vec3d(max[0],max[1],min[2]), d, targetLevel, checkPosition);
-    add(Vec3d(min[0],max[1],min[2]), d, targetLevel, checkPosition);
-    add(Vec3d(min[0],max[1],max[2]), d, targetLevel, checkPosition);
 }
 
 QuadtreeNode* Quadtree::getRoot() { return root; }
@@ -359,20 +377,11 @@ VRGeometryPtr Quadtree::getVisualization(bool onlyLeafes) {
     for (auto c : nodes) {
         Pnt3d p = c->getCenter();
         float s = c->getSize()*0.499;
-        int ruf = data.pushVert(p + Vec3d( 1, 1, 1)*s);
-        int luf = data.pushVert(p + Vec3d(-1, 1, 1)*s);
-        int rub = data.pushVert(p + Vec3d( 1, 1,-1)*s);
-        int lub = data.pushVert(p + Vec3d(-1, 1,-1)*s);
-        int rdf = data.pushVert(p + Vec3d( 1,-1, 1)*s);
-        int ldf = data.pushVert(p + Vec3d(-1,-1, 1)*s);
-        int rdb = data.pushVert(p + Vec3d( 1,-1,-1)*s);
-        int ldb = data.pushVert(p + Vec3d(-1,-1,-1)*s);
+        int ruf = data.pushVert(p + Vec3d( 1, 0, 1)*s);
+        int luf = data.pushVert(p + Vec3d(-1, 0, 1)*s);
+        int rub = data.pushVert(p + Vec3d( 1, 0,-1)*s);
+        int lub = data.pushVert(p + Vec3d(-1, 0,-1)*s);
         data.pushQuad(ruf, luf, lub, rub); // side up
-        data.pushQuad(rdf, ldf, ldb, rdb); // side down
-        data.pushQuad(luf, lub, ldb, ldf); // side left
-        data.pushQuad(ruf, rub, rdb, rdf); // side right
-        data.pushQuad(rub, lub, ldb, rdb); // side behind
-        data.pushQuad(ruf, luf, ldf, rdf); // side front
     }
 
     auto g = data.asGeometry("octree");

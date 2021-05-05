@@ -16,31 +16,6 @@ using namespace OSG;
 PartitiontreeNode::PartitiontreeNode(float res, float s, int lvl) : resolution(res), size(s), level(lvl) { ; }
 PartitiontreeNode::~PartitiontreeNode() {}
 
-int PartitiontreeNode::getOctant(Vec3d p) {
-    Vec3d rp = p - center;
-
-    int o = 0;
-    if (rp[0] < 0) o+=1;
-    if (rp[1] < 0) o+=2;
-    if (rp[2] < 0) o+=4;
-    return o;
-}
-
-Vec3d PartitiontreeNode::lvljumpCenter(float s2, Vec3d rp) {
-    Vec3d c(s2,s2,s2);
-    if (rp[0] < 0) c[0]-=s2*2;
-    if (rp[1] < 0) c[1]-=s2*2;
-    if (rp[2] < 0) c[2]-=s2*2;
-    return c;
-}
-
-bool PartitiontreeNode::inBox(Vec3d p, Vec3d c, float size) {
-    if (abs(2*p[0] - 2*c[0]) > size) return false;
-    if (abs(2*p[1] - 2*c[1]) > size) return false;
-    if (abs(2*p[2] - 2*c[2]) > size) return false;
-    return true;
-}
-
 // checkPosition avoids parent/child cycles due to float error
 // partitionLimit sets a max amount of data points, tree is subdivided if necessary!
 

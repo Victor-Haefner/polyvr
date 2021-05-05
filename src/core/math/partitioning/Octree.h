@@ -43,6 +43,10 @@ class OctreeNode : public PartitiontreeNode {
 
         int dataSize();
 
+        int getOctant(Vec3d p);
+        Vec3d lvljumpCenter(float s2, Vec3d rp);
+        bool inBox(Vec3d p, Vec3d c, float size);
+
         //void destroy(OctreeNode* guard);
         void findInSphere(Vec3d p, float r, int d, vector<void*>& res);
         void findPointsInSphere(Vec3d p, float r, int d, vector<Vec3d>& res, bool getAll);
