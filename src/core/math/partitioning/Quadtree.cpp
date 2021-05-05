@@ -189,11 +189,14 @@ QuadtreeNode* QuadtreeNode::getParent() { return parent; }
 QuadtreeNode* QuadtreeNode::getRoot() { auto o = this; while(o->parent) o = o->parent; return o; }
 
 void QuadtreeNode::findInSphere(Vec3d p, float r, int d, vector<void*>& res) { // TODO: optimize!!
+    p[1] = 0;
     if (!sphere_box_intersect(p, center, r, size)) return;
 
     float r2 = r*r;
     for (unsigned int i=0; i<data.size(); i++) {
-        if ((points[i]-p).squareLength() <= r2)
+        auto p2 = points[i];
+        p2[1] = 0;
+        if ((p2-p).squareLength() <= r2)
             res.push_back(data[i]);
     }
 
@@ -204,11 +207,14 @@ void QuadtreeNode::findInSphere(Vec3d p, float r, int d, vector<void*>& res) { /
 }
 
 void QuadtreeNode::findPointsInSphere(Vec3d p, float r, int d, vector<Vec3d>& res, bool getAll) { // TODO: optimize!!
+    p[1] = 0;
     if (!sphere_box_intersect(p, center, r, size)) return;
 
     float r2 = r*r;
     for (unsigned int i=0; i<data.size(); i++) {
-        if ((points[i]-p).squareLength() <= r2) {
+        auto p2 = points[i];
+        p2[1] = 0;
+        if ((p2-p).squareLength() <= r2) {
             res.push_back(points[i]);
             if (!getAll) return;
         }
