@@ -43,6 +43,7 @@ class VRLod : public VRObject {
         void setScale(double s);
         double getScale();
         void setDistance(unsigned int i, float dist);
+        float getDistance(unsigned int i);
         void addDistance(float dist);
         vector<float> getDistances();
 

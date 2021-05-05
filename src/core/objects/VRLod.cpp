@@ -34,6 +34,7 @@ void VRLod::addDistance(float dist) { setDistance(distances.size(), dist); }
 Vec3d VRLod::getCenter() { return center; }
 double VRLod::getScale() { return scale; }
 bool VRLod::getDecimate() { return decimate; }
+float VRLod::getDistance(unsigned int i) { return distances[i]; }
 int VRLod::getDecimateNumber() { return decimateNumber; }
 
 void VRLod::loadSetup(VRStorageContextPtr context) {
