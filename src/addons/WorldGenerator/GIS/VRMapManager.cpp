@@ -38,7 +38,7 @@ VRMapDescriptorPtr VRMapManager::getMap(double N, double E, double S, vector<int
     }
 
     for (auto mapType : types) {
-        string filename = data->getMap(mapType);
+        string filename = data->getMapPath(mapType);
         if (!exists(filename)) {
             requestFile(filename, N,E,S, mapType, types, mcb);
             if (!mcb) data->setMap(mapType, filename);
@@ -127,14 +127,19 @@ VRMapDescriptorPtr VRMapDescriptor::create(double n, double e, double s) {
     return d;
 }
 
-string VRMapDescriptor::getMap(int i) {
-    if (layers.count(i)) return layers[i];
+VRTexturePtr VRMapDescriptor::getMap(int i) {
+    if (layers.count(i)) return layers[i].tex;
+    return 0;
+}
+
+string VRMapDescriptor::getMapPath(int i) {
+    if (layers.count(i)) return layers[i].path;
     return "";
 }
 
 Vec3d VRMapDescriptor::getParameters() { return Vec3d(N, E, S); }
 
-void VRMapDescriptor::setMap(int i, string s) { layers[i] = s; }
+void VRMapDescriptor::setMap(int i, string s) { layers[i].path = s; }
 void VRMapDescriptor::setParameters(double n, double e, double s) { N = n; E = e; S = s; }
 
 void VRMapDescriptor::setCompleteness(bool c) { complete = c; }

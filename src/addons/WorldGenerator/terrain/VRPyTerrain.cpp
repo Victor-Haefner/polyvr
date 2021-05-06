@@ -87,7 +87,8 @@ PyMethodDef VRPyMapManager::methods[] = {
 };
 
 PyMethodDef VRPyMapDescriptor::methods[] = {
-    {"getMap", PyWrap( MapDescriptor, getMap, "Get ith map filename", string, int ) },
+    {"getMap", PyWrap( MapDescriptor, getMap, "Get ith map texture", VRTexturePtr, int ) },
+    {"getMapPath", PyWrap( MapDescriptor, getMapPath, "Get ith map path", string, int ) },
     {"getParameters", PyWrap( MapDescriptor, getParameters, "Get chunk parameters, N, E, S", Vec3d ) },
     {NULL}  /* Sentinel */
 };

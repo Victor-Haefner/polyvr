@@ -48,8 +48,8 @@ void VRAtlas::Patch::paint() {
     auto onMap = [](VRMapDescriptorPtr desc, VRTerrainPtr terrain, Vec3d localPos) {
         if (!desc->isComplete()) return;
 
-        string orthoPic = desc->getMap(2);
-        string heightPic = desc->getMap(3);
+        string orthoPic = desc->getMapPath(2);
+        string heightPic = desc->getMapPath(3);
 
         bool checkHeight = exists(heightPic);
         bool checkOrtho = exists(orthoPic);
