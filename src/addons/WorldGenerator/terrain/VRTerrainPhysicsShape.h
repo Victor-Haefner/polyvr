@@ -2,7 +2,7 @@
 #define VRTERRAINPHYSICSSHAPE_H_INCLUDED
 
 #include "../VRWorldGeneratorFwd.h"
-#include "core/math/boundingbox.h"
+#include "core/math/partitioning/boundingbox.h"
 #include <vector>
 #include <memory>
 #include <OpenSG/OSGConfig.h>

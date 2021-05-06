@@ -6,7 +6,7 @@
 #include "core/objects/OSGObject.h"
 #include "core/utils/VRGlobals.h"
 #include "core/tools/VRAnalyticGeometry.h"
-#include "core/math/boundingbox.h"
+#include "core/math/partitioning/boundingbox.h"
 #include "core/scene/VRScene.h"
 #include "addons/LeapMotion/VRHandGeo.h"
 #include <boost/thread/recursive_mutex.hpp>

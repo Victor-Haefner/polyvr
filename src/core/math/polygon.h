@@ -3,7 +3,7 @@
 
 #include "core/math/OSGMathFwd.h"
 #include <OpenSG/OSGMatrix.h>
-#include "boundingbox.h"
+#include "partitioning/boundingbox.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;

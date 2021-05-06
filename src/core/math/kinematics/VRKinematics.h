@@ -6,7 +6,7 @@
 
 #include "core/objects/VRTransform.h"
 #include "core/math/VRMathFwd.h"
-#include "core/math/graph.h"
+#include "core/math/partitioning/graph.h"
 
 
 using namespace std;

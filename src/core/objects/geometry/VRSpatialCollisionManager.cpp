@@ -1,6 +1,6 @@
 #include "VRSpatialCollisionManager.h"
-#include "core/math/boundingbox.h"
-#include "core/math/Octree.h"
+#include "core/math/partitioning/boundingbox.h"
+#include "core/math/partitioning/Octree.h"
 #include "core/math/pose.h"
 #include "core/objects/geometry/OSGGeometry.h"
 #include "core/objects/geometry/VRPhysics.h"

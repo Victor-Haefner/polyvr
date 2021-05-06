@@ -7,7 +7,7 @@
 #include "addons/Semantics/Reasoning/VRProperty.h"
 #include "addons/Semantics/Reasoning/VRReasoner.h"
 #include "core/utils/toString.h"
-#include "core/math/graph.h"
+#include "core/math/partitioning/graph.h"
 
 #include "core/scene/VRScene.h"
 #include "core/scene/VRSemanticManager.h"

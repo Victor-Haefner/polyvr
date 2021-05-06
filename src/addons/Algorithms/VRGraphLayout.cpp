@@ -1,5 +1,5 @@
 #include "VRGraphLayout.h"
-#include "core/math/Octree.h"
+#include "core/math/partitioning/Octree.h"
 #include "core/utils/toString.h"
 
 using namespace OSG;

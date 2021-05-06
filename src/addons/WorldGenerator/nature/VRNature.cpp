@@ -19,10 +19,10 @@
 #include "core/objects/material/VRTextureMosaic.h"
 #include "core/objects/VRLod.h"
 #include "core/objects/VRLodTree.h"
-#include "core/math/Octree.h"
+#include "core/math/partitioning/Octree.h"
 #include "core/math/pose.h"
 #include "core/math/polygon.h"
-#include "core/math/boundingbox.h"
+#include "core/math/partitioning/boundingbox.h"
 #ifndef WITHOUT_GLU_TESS
 #include "core/math/triangulator.h"
 #endif

@@ -1,5 +1,5 @@
 #include "CKOctree.h"
-#include "core/math/Octree.h"
+#include "core/math/partitioning/Octree.h"
 
 OSG_BEGIN_NAMESPACE
 using namespace std;

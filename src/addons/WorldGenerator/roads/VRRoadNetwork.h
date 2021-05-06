@@ -5,7 +5,7 @@
 #include "VRRoadBase.h"
 #include "addons/Semantics/VRSemanticsFwd.h"
 #include "addons/WorldGenerator/VRWorldGeneratorFwd.h"
-#include "core/math/graph.h"
+#include "core/math/partitioning/graph.h"
 #include "core/math/VRMathFwd.h"
 #include "core/objects/object/VRObject.h"
 

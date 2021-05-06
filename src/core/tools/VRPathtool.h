@@ -11,7 +11,7 @@
 #include "core/utils/VRFunctionFwd.h"
 #include "core/tools/VRToolsFwd.h"
 #include "core/objects/VRTransform.h"
-#include "core/math/graph.h"
+#include "core/math/partitioning/graph.h"
 #include "core/math/VRMathFwd.h"
 
 using namespace std;

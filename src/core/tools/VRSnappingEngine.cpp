@@ -6,7 +6,7 @@
 #include "core/setup/devices/VRDevice.h"
 #include "core/setup/VRSetup.h"
 #include "core/scene/VRScene.h"
-#include "core/math/Octree.h"
+#include "core/math/partitioning/Octree.h"
 #include "core/math/pose.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRDoublebuffer.h"

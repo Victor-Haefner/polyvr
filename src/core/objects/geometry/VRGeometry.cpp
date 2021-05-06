@@ -26,7 +26,7 @@
 #include "core/objects/object/VRObjectT.h"
 #include "core/objects/OSGObject.h"
 #include "core/objects/VRPointCloud.h"
-#include "core/math/Octree.h"
+#include "core/math/partitioning/Octree.h"
 #include "core/tools/selection/VRSelection.h"
 #ifndef WITHOUT_SHARED_MEMORY
 #include "core/networking/VRSharedMemory.h"

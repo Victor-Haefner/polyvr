@@ -49,7 +49,7 @@ PyMethodDef VRPyPlanet::methods[] = {
     {"remPin", PyWrap(Planet, remPin, "Remove a pin: ID", void, int) },
     {"fromLatLongPosition", PyWrapOpt(Planet, fromLatLongPosition, "Get Position on planet based on lat and long, optionally local", "0", Vec3d, double, double, bool) },
     {"fromLatLongNormal", PyWrapOpt(Planet, fromLatLongNormal, "Get Normal on planet based on lat and long, optionally local", "0", Vec3d, double, double, bool) },
-    {"fromPosLatLong", PyWrapOpt(Planet, fromPosLatLong, "Convert space position to lat and long, optionally local", "0", Vec2d, Pnt3d, bool) },
+    {"fromPosLatLong", PyWrapOpt(Planet, fromPosLatLong, "Convert space position to lat and long, optionally local", "0|1", Vec2d, Pnt3d, bool, bool) },
     {"localize", PyWrap(Planet, localize, "Center the planet origin on a sector", void, double, double) },
     {"divideTIFF", PyWrap(Planet, divideTIFF, "loads sat images as .tif, dividing into .png chunks - string pathIn, string pathOut, double minLat, double maxLat, double minLon, double maxLon, double resolution \n        pathOut only placeholder right now, new files are saved in project directory", void, string, string, double, double, double, double, double) },
     {"divideTIFFEPSG", PyWrap(Planet, divideTIFFEPSG, "loads images as .tif, dividing into .tif chunks - string pathIn, string pathOut, double minEasting, double maxEasting, double minNorthing, double maxNorthing, double pixelResolution, double chunkResolution", void, string, string, double, double, double, double, double, double, bool) },

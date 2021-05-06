@@ -5,8 +5,8 @@
 #include "core/objects/geometry/OSGGeometry.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/VRLod.h"
-#include "core/math/Octree.h"
-#include "core/math/boundingbox.h"
+#include "core/math/partitioning/Octree.h"
+#include "core/math/partitioning/boundingbox.h"
 
 #include <iostream>
 #include <fstream>

@@ -1,6 +1,6 @@
 #include "OSMMap.h"
 #include "core/utils/toString.h"
-#include "core/math/boundingbox.h"
+#include "core/math/partitioning/boundingbox.h"
 #include "core/utils/VRTimer.h"
 #include "core/utils/xml.h"
 

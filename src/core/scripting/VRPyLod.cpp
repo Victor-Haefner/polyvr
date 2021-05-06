@@ -11,6 +11,9 @@ PyMethodDef VRPyLod::methods[] = {
 	{"setCenter", PyWrap( Lod, setCenter, "Set the center from which the LOD distance is calculated", void, Vec3d) },
 	{"setScale", PyWrap( Lod, setScale, "Set a value to scale the distances", void, double) },
 	{"setDistance", PyWrap( Lod, setDistance, "Set the distance at which the specified LOD stage should be shown", void, unsigned int, float) },
+	{"getCenter", PyWrap( Lod, getCenter, "Get LOD center", Vec3d) },
+	{"getScale", PyWrap( Lod, getScale, "Get LOD scale", double) },
+	{"getDistance", PyWrap( Lod, getDistance, "Get LOd ith distance", float, unsigned int) },
     {NULL}  /* Sentinel */
 };
 

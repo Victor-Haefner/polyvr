@@ -1,7 +1,7 @@
 #ifndef VRPYBOUNDINGBOX_H_INCLUDED
 #define VRPYBOUNDINGBOX_H_INCLUDED
 
-#include "core/math/boundingbox.h"
+#include "core/math/partitioning/boundingbox.h"
 #include "core/scripting/VRPyBase.h"
 
 struct VRPyBoundingbox : VRPyBaseT<OSG::Boundingbox> {

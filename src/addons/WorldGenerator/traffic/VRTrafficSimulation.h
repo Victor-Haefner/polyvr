@@ -6,7 +6,7 @@
 #include "addons/WorldGenerator/VRWorldGeneratorFwd.h"
 #include "core/math/VRMathFwd.h"
 #include "core/math/pose.h"
-#include "core/math/graph.h"
+#include "core/math/partitioning/graph.h"
 #include "core/objects/object/VRObject.h"
 #include "core/tools/VRProjectManager.h"
 #ifndef WITHOUT_BULLET

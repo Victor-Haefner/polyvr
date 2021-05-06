@@ -6,7 +6,7 @@ using namespace OSG;
 simpleVRPyType(Mouse, 0);
 
 PyMethodDef VRPyMouse::methods[] = {
-    {"setCursor", (PyCFunction)VRPyMouse::setCursor, METH_VARARGS, "Set the mouse cursor - setCursor(str cursor)\n\tcursor can be: 'WATCH', 'PLUS', ...  \n\tsee here for more: http://www.pygtk.org/pygtk2reference/class-gdkcursor.html" },
+    {"setCursor", (PyCFunction)VRPyMouse::setCursor, METH_VARARGS, "Set the mouse cursor - setCursor(str cursor)\n\tcursor can be: 'WATCH', 'PLUS', ...  \n\tsee here for more: https://developer.gnome.org/gdk3/stable/gdk3-Cursors.html#GdkCursorType" },
     {NULL}  /* Sentinel */
 };
 

@@ -13,7 +13,7 @@
 #include "core/objects/geometry/VRGeoData.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/utils/toString.h"
-#include "core/math/boundingbox.h"
+#include "core/math/partitioning/boundingbox.h"
 #include "core/math/Layer2D.h"
 #include "core/math/pose.h"
 #include "core/tools/VRAnnotationEngine.h"

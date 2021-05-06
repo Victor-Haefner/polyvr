@@ -74,7 +74,14 @@ PyMethodDef VRPyMaterial::methods[] = {
                                                                         "\n\t setTexture([[r,g,b]], [xN, yN, zN], bool isFloat)"
                                                                         "\n\t setTexture([[r,g,b,a]], [xN, yN, zN], bool isFloat)" },
     {"setTextureType", (PyCFunction)VRPyMaterial::setTextureType, METH_VARARGS, "Set the texture type - setTexture(str type)\n types are: 'Normal, 'SphereEnv'" },
-    {"setStencilBuffer", PyWrap(Material, setStencilBuffer, "Set the stencil buffer", void, bool, float, float, int, int, int, int) },
+    {"setStencilBuffer", PyWrap(Material, setStencilBuffer
+        , "Use stencil buffer, (doClear, value, mask, func, opFail, opZFail, opPass)"
+        "\n\t doClear clears the buffer to 0"
+        "\n\t value and mask used for the test, the mask is ANDed with the value as well as the stored value in buffer, set mask to -1 to disable it"
+        "\n\t test function can be GL_NEVER, GL_LESS, GL_LEQUAL, GL_GREATER, GL_GEQUAL, GL_EQUAL, GL_NOTEQUAL, or GL_ALWAYS"
+        "\n\t opFail is the action taken when stencil test fails, opZFail when stencil test passes but depth test fails, and opPass if both tests pass"
+        "\n\t possible actions are: GL_KEEP, GL_ZERO, GL_REPLACE, GL_INCR, GL_INCR_WRAP, GL_DECR, GL_DECR_WRAP, and GL_INVERT"
+        , void, bool, int, int, int, int, int, int) },
     {"setShaderParameter", (PyCFunction)VRPyMaterial::setShaderParameter, METH_VARARGS, "Set shader variable - setShaderParameter(str var, value)" },
     {"enableShaderParameter", PyWrap(Material, enableShaderParameter, "Enable OSG shader variable which can be one of"
         "\n\t { OSGWorldMatrix OSGInvWorldMatrix OSGTransInvWorldMatrix OSGCameraOrientation OSGCameraPosition OSGViewMatrix OSGInvViewMatrix"
@@ -145,11 +152,17 @@ PyObject* VRPyMaterial::getTexture(VRPyMaterial* self, PyObject* args) {
 }
 
 PyObject* VRPyMaterial::setShaderParameter(VRPyMaterial* self, PyObject* args) {
-	if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMaterial::setShaderParameter, C obj is invalid"); return NULL; }
-	PyStringObject* var;
-	int i=0;
-    if (! PyArg_ParseTuple(args, "Oi", &var, &i)) return NULL;
-	self->objPtr->setShaderParameter( PyString_AsString((PyObject*)var), i );
+    auto mPtr = self->objPtr;
+	if (mPtr == 0) { PyErr_SetString(err, "VRPyMaterial::setShaderParameter, C obj is invalid"); return NULL; }
+	PyStringObject* name;
+	PyObject* var;
+    if (! PyArg_ParseTuple(args, "OO", &name, &var)) return NULL;
+    string n = PyString_AsString((PyObject*)name);
+    if (PyInt_Check(var)) { int v; toValue(var,v); mPtr->setShaderParameter( n, v ); }
+    if (PyFloat_Check(var)) { float v; toValue(var,v); mPtr->setShaderParameter( n, v ); }
+    if (PyVec_Check(var, 2, 'f')) { Vec2f v; toValue(var,v); mPtr->setShaderParameter( n, v ); }
+    if (PyVec_Check(var, 3, 'f')) { Vec3f v; toValue(var,v); mPtr->setShaderParameter( n, v ); }
+    if (PyVec_Check(var, 4, 'f')) { Vec4f v; toValue(var,v); mPtr->setShaderParameter( n, v ); }
 	Py_RETURN_TRUE;
 }
 

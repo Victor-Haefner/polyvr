@@ -6,7 +6,7 @@
 #include "core/objects/geometry/VRStroke.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/utils/toString.h"
-#include "core/math/graph.h"
+#include "core/math/partitioning/graph.h"
 #include "addons/Algorithms/VRPathFinding.h"
 
 #include <OpenSG/OSGMatrixUtility.h>
