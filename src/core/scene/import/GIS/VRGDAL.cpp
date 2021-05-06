@@ -258,8 +258,10 @@ VRTexturePtr loadGeoRasterData(string path, bool shout, float *heightoffset) {
     return t;
 }
 
-VRTexturePtr processGeoRasterData(string data, bool shout, float *heightoffset) {
-    // TODO
+VRTexturePtr processGeoRasterData(string data, string driver, bool shout, float *heightoffset) { // TODO
+	GDALDriverManager *poDM = GetGDALDriverManager();
+	GDALDriver *poDriver = poDM->GetDriverByName("GTiff");
+	//GDALDataset *poDS = poDriver->pfnOpen(&oOpenInfo);
 }
 
 void divideTiffIntoChunks(string pathIn, string pathOut, double minLat, double maxLat, double minLon, double maxLon, double res) {
