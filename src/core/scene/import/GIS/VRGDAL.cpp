@@ -258,6 +258,10 @@ VRTexturePtr loadGeoRasterData(string path, bool shout, float *heightoffset) {
     return t;
 }
 
+VRTexturePtr processGeoRasterData(string data, bool shout, float *heightoffset) {
+    // TODO
+}
+
 void divideTiffIntoChunks(string pathIn, string pathOut, double minLat, double maxLat, double minLon, double maxLon, double res) {
     //cout << " gdal - " << pathIn << pathOut << endl;
     GDALAllRegister();

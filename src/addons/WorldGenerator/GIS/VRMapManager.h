@@ -79,7 +79,7 @@ class VRMapManager : public std::enable_shared_from_this<VRMapManager> {
 		void setServer(string address);
 		void addMapType(int ID, string vault, string servScript, string fileExt, string format);
 
-		VRMapDescriptorPtr getMap(double N, double E, double S, vector<int> types, VRMapCbPtr cb);
+		VRMapDescriptorPtr getMap(double N, double E, double S, vector<int> types, VRMapCbPtr cb, bool doCache = true);
 };
 
 OSG_END_NAMESPACE;

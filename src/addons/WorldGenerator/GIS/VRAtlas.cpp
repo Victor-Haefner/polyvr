@@ -65,6 +65,9 @@ void VRAtlas::Patch::paint() {
             auto mt = terrain->getMaterial();
             mt->setSortKey(2);
             mt->setStencilBuffer(false, 1, -1, GL_ALWAYS, GL_KEEP, GL_KEEP, GL_KEEP);
+
+            removeFile(orthoPic);
+            removeFile(heightPic);
         }
     };
 

@@ -28,7 +28,7 @@ void VRMapManager::addMapType(int ID, string vault, string servScript, string fi
     mapTypes[ID].format = format;
 }
 
-VRMapDescriptorPtr VRMapManager::getMap(double N, double E, double S, vector<int> types, VRMapCbPtr mcb) {
+VRMapDescriptorPtr VRMapManager::getMap(double N, double E, double S, vector<int> types, VRMapCbPtr mcb, bool doCache) {
     VRMapDescriptorPtr data = VRMapDescriptor::create(N,E,S);
     //cout << "VRMapManager::getMap " << Vec3d(N,E,S) << endl;
 
@@ -65,6 +65,7 @@ void VRMapManager::handleRequestAnswer(VRRestResponsePtr response, string filena
 
     // store result in file 'filename'
     storeFile(filename, response->getData());
+
     if (!exists(filename)) { cout << "VRMapManager Warning! store file '" << filename << "' failed!" << endl; return; }
     if (mcb) getMap(N, E, S, types, mcb);
 }

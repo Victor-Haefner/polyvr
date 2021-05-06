@@ -211,6 +211,17 @@ void VRTerrain::paintHeights(string path, Color4f mCol, float mAmount) {
     mat->clearTransparency();
 }
 
+void VRTerrain::paintHeights(VRTexturePtr tex, Color4f mCol, float mAmount) {
+    mat->setTexture(tex, 0, 3);
+    //if (mAmount > 0 )
+    //    if (auto t = mat->getTexture(3)) t->mixColor(mCol, mAmount);
+    mat->setShaderParameter("mixColor", mCol);
+    mat->setShaderParameter("mixAmount", mAmount);
+    mat->setShaderParameter("texPic", 3);
+    mat->setShaderParameter("doHeightTextures", 2);
+    mat->clearTransparency();
+}
+
 void VRTerrain::updateTexelSize() {
     if (!heigthsTex) return;
     Vec3i s = heigthsTex->getSize();
