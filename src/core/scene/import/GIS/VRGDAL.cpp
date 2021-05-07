@@ -262,6 +262,7 @@ VRTexturePtr processGeoRasterData(string data, string driver, bool shout, float 
 	GDALDriverManager *poDM = GetGDALDriverManager();
 	GDALDriver *poDriver = poDM->GetDriverByName("GTiff");
 	//GDALDataset *poDS = poDriver->pfnOpen(&oOpenInfo);
+    return 0;
 }
 
 void divideTiffIntoChunks(string pathIn, string pathOut, double minLat, double maxLat, double minLon, double maxLon, double res) {
