@@ -135,6 +135,7 @@ void FABRIK::addConstraint(int j, Vec4d angles) {
     joints[j].patchSurface = joints[j].patch->fromFullQuad(p, normals, handles, N, true);
 }
 
+/** move joint j towards the target position by amount t **/
 Vec3d FABRIK::movePointTowards(int j, Vec3d target, float t) {
     auto interp = [](Vec3d& a, Vec3d& b, float t) {
         return a*t + b*(1-t);
@@ -146,77 +147,23 @@ Vec3d FABRIK::movePointTowards(int j, Vec3d target, float t) {
     return pOld;
 };
 
+/** move joint j1 to get a distance d to j2, update the up vector of j1, also consider the constraints **/
 Vec3d FABRIK::moveToDistance(int j1, int j2, float d, bool constrained) {
     auto& J1 = joints[j1];
     auto& J2 = joints[j2];
 
     Vec3d pOld = J1.p->pos();
-    Vec3d D = J1.p->pos() - J2.p->pos();
 
     if (J2.constrained && constrained) {
-        PosePtr pP = J2.patch->getClosestPose(pOld);
-        // TODO: transform pP!
+        auto pI = J2.p->transformInv(pOld);
+        PosePtr pP = J2.patch->getClosestPose(pI);
+        pP = J2.p->multRight(pP);
         float t = (pP->pos() - pOld).dot(pP->dir());
-        if (t > 0) {
-            J1.p->setPos( pP->pos() );
-            D = J1.p->pos() - J2.p->pos();
-        }
-
-        /*Vec3d cU = J2.p->up(); cU.normalize();
-        Vec3d cX = J2.p->x();  cX.normalize();
-        Vec3d cD =-J2.p->dir();cD.normalize();
-        float y = D.dot(cU);
-        float x = D.dot(cX);
-        //float h = D.dot(cD);
-
-        float a = atan2(y,x);
-        if (a < 0) a += 2*Pi;
-        auto angles = J2.constraintAngles;
-
-        float A = 0, B = 0, a1 = 0, a2 = 0;
-        if (a >= 0      && a <  Pi*0.5) { A = angles[0]; B = angles[1]; a1 = 0;      a2 = Pi*0.5; }
-        if (a >= Pi*0.5 && a <  Pi*1.0) { A = angles[1]; B = angles[2]; a1 = Pi*0.5; a2 = Pi*1.0; }
-        if (a >= Pi*1.0 && a <  Pi*1.5) { A = angles[2]; B = angles[3]; a1 = Pi*1.0; a2 = Pi*1.5; }
-        if (a >= Pi*1.5 && a <= Pi*2.0) { A = angles[3]; B = angles[0]; a1 = Pi*1.5; a2 = 0; }
-
-        Vec3d v1 = Vec3d(sin(A)*cos(a1), sin(A)*sin(a1), cos(A));
-        Vec3d v2 = Vec3d(sin(B)*cos(a2), sin(B)*sin(a2), cos(B));
-        v1 = J2.p->transform(v1, false);
-        v2 = J2.p->transform(v2, false);
-
-        Vec3d pN = v1.cross(v2); pN.normalize();
-        Vec3d p0 = J2.p->pos();
-
-        Vec3d p = J1.p->pos();
-        float t = pN.dot(p-p0);
-        Vec3d pP = p - pN*t; // projection on plane
-
-        J2.debugPnt1 = p0 + v1*0.1 + v2*0.1;
-        J2.debugPnt2 = p;
-
-        if (t < 0) {
-            Vec3d pn1 = (pP - p0).cross(v1);
-            Vec3d pn2 = (pP - p0).cross(v2);
-            float f1 = pn1.dot(pN);
-            float f2 = pn2.dot(pN);
-            Vec3d kN1 = pN.cross(v1); kN1.normalize();
-            Vec3d kN2 = pN.cross(v2); kN2.normalize();
-
-            Vec3d eP1 = pP - kN1 * kN1.dot(pP - p0);
-            Vec3d eP2 = pP - kN2 * kN2.dot(pP - p0);
-            J2.debugPnt1 = eP1;
-            J2.debugPnt2 = eP2;
-
-            if (f1 > 0) pP = eP1;
-            if (f2 < 0) pP = eP2;
-
-            J1.p->setPos( pP );
-
-            D = J1.p->pos() - J2.p->pos();
-            cout << " xy " << Vec2d(x,y) << ", a " << a << "  t " << t << " p " << p << ", " << f1 << ", " << f2 << "   " << J1.ID << endl;
-        }*/
+        cout << "FAB t: " << t << ", d: " << pP->dir() << endl;
+        if (t < 0) J1.p->setPos( pP->pos() );
     }
 
+    Vec3d D = J1.p->pos() - J2.p->pos();
     float L = D.length();
     float li = d / L;
     movePointTowards(j1, J2.p->pos(), li);

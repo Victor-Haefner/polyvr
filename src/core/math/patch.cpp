@@ -647,6 +647,7 @@ Vec3d getClosestOnTriangle(Vec3d p, Vec3d& n, const Vec3d& p1, const Vec3d& p2, 
     Vec3d d31 = p1-p3;
     Vec3d d23 = p3-p2;
     n = d23.cross(d12);
+    n.normalize();
 
     float u12 = projectEdge(p, p1, d12);
     float u31 = projectEdge(p, p3, d31);
@@ -665,7 +666,6 @@ Vec3d getClosestOnTriangle(Vec3d p, Vec3d& n, const Vec3d& p1, const Vec3d& p2, 
     if ( u31 <=1 && u31 >= 0 && !abovePlane( p,p3,n31 )) return p3 + d31*u31;
 
     // return projected point on triangle
-    n.normalize();
     return p - (p-p1).dot(n)*n;
 }
 
