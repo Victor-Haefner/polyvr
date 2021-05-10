@@ -19,14 +19,19 @@ class FABRIK {
         struct Chain;
         struct step;
 
+        bool doConstraints = true;
+        bool doSprings = true;
+
         map<int, Joint> joints;
         map<string, Chain> chains;
         vector<step> executionQueue;
 
         float tolerance = 0.01;
 
+        void applyConstraint(int j);
+        void applySpring(int j, float d);
         Vec3d movePointTowards(int j, Vec3d target, float t);
-        Vec3d moveToDistance(int j1, int j2, float d, bool constrained = false);
+        Vec3d moveToDistance(int j1, int j2, float d, bool constrained = false, bool fwd = true);
         void updateExecutionQueue();
 
     public:
@@ -43,6 +48,7 @@ class FABRIK {
         vector<int> getChainJoints(string name);
 
         void addConstraint(int j, Vec4d angles);
+        void addSpring(int j, Vec3d anchor);
 
         void forward(Chain& chain);
         void backward(Chain& chain);
@@ -53,6 +59,9 @@ class FABRIK {
         void iterateChain(string chain);
 
         void visualize(VRGeometryPtr geo);
+
+        void setDoConstraints(bool b);
+        void setDoSprings(bool b);
 };
 
 OSG_END_NAMESPACE;
