@@ -94,8 +94,8 @@ void VRMapManager::triggerCB(VRMapCbPtr mcb, VRMapDescriptorPtr data) {
 void VRMapManager::storeFile(const string& filename, const string& data) {
     if (data == "") return;
     ofstream f;
-    f.open(filename);
-    f << data;
+    f.open(filename, std::ios_base::binary);
+    f.write(&data[0], data.size()); // force binary mode, else windows will mess with f** cariage returns!
     f.close();
 }
 
