@@ -380,6 +380,7 @@ void VRPhysics::setDynamic(bool b, bool fast) {
             body->setMassProps(0, btVector3(0,0,0));
             body->setCollisionFlags(body->getCollisionFlags() |  btCollisionObject::CF_STATIC_OBJECT);
         } else {
+            updateTransformation(vr_obj.lock());
             body->setMassProps(mass, inertia);
             body->setCollisionFlags(body->getCollisionFlags() & ~btCollisionObject::CF_STATIC_OBJECT);
         }
@@ -1108,10 +1109,11 @@ void VRPhysics::updateVisualGeo() {
 }
 
 void VRPhysics::updateTransformation(OSG::VRTransformPtr trans) {
+    if (!trans) return;
     PLock lock(VRPhysics_mtx());
     //static VRRate FPS; int fps = FPS.getRate(); cout << "VRPhysics::updateTransformation " << fps << endl;
     auto bt = fromVRTransform(trans, scale, CoMOffset);
-    if (body) { body->setWorldTransform(bt); body->activate(); }
+    if (body) { body->setWorldTransform(bt); resetForces(); body->activate(); }
     if (ghost_body) { ghost_body->setWorldTransform(bt); ghost_body->activate(); }
     if (visShape && visShape->isVisible()) visShape->setWorldMatrix( getTransformation() );
 }
@@ -1187,7 +1189,8 @@ void VRPhysics::applyImpulse(OSG::Vec3d i) {
     if (mass == 0) return;
     PLock lock(VRPhysics_mtx());
     i *= 1.0/mass;
-    body->setLinearVelocity(toBtVector3(i));
+    //body->setLinearVelocity(toBtVector3(i));
+    body->applyCentralImpulse(toBtVector3(i));
 }
 
 void VRPhysics::applyTorqueImpulse(OSG::Vec3d i) {
