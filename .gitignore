@@ -20,6 +20,7 @@ src/cluster/clusterserver
 src/cluster/clusterclient
 src/version/version.h
 examples/tmp_pics/
+examples/GPUCache
 extras/python/Leap/*.pyc
 extras/python/Myo/*.pyc
 examples/vals*.dat
