@@ -483,7 +483,7 @@ void VRAtlas::Layout::shiftNorthOut(Level& lev, list<Level>::iterator it) {
         }
         //erase patches in inner quad
         for (int i = 0; i < 4; i++) {
-            for (int j = 2; j < 4; j++) lev.patches[i].erase(lev.patches[i].end());
+            for (int j = 2; j < 4; j++) lev.patches[i].erase(lev.patches[i].end()-1);
         }
         shiftNorthOut(levels.front(), it);
     }
