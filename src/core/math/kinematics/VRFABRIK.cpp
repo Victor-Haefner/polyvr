@@ -198,7 +198,7 @@ Vec3d FABRIK::computeConstraintDelta(int j) {
 }
 
 void FABRIK::applyInverseConstraint(int j) { // moves a joint to make its child respect its own constraint
-    if (j == 2) cout << " applyInverseConstraint " << j << ", " << doConstraints << endl;
+    //if (j == 2) cout << " applyInverseConstraint " << j << ", " << doConstraints << endl;
 
     Joint& J = joints[j];
     if (!J.constrained || !doConstraints) return;
@@ -214,39 +214,19 @@ void FABRIK::applyConstraint(int j) { // moves a joint to respect its parent con
     if (J1.in.size() == 0) return;
     Joint& J2 = joints[J1.in[0]]; // parent
 
-    if (j == 2) cout << " applyConstraint " << j << " -> " << J1.in[0] << ", " << J2.constrained << " " << doConstraints << endl;
+    //if (j == 2) cout << " applyConstraint " << j << " -> " << J1.in[0] << ", " << J2.constrained << " " << doConstraints << endl;
     Vec3d cDelta = computeConstraintDelta(j);
     J1.p->translate(cDelta);
-    /*if (J2.constrained && doConstraints) {
-        Vec3d pOld = J1.p->pos();
-        auto pI = J2.p->transformInv(pOld);
-        PosePtr pP = J2.patch->getClosestPose(pI);
-
-        pP = J2.p->multRight(pP);
-        Vec3d D = pP->dir();
-        float t = (pP->pos() - pOld).dot(D);
-
-        if (t < 0) {
-            //Vec3d p = J1.p->pos() + D*t;
-            Vec3d p = pP->pos();
-            J1.p->setPos( p );
-            J1.constrainFired = true;
-        }
-
-        J1.debugPnt1 = pP->pos();
-        J1.debugPnt2 = pP->pos() + D*0.05;
-        if (j == 2) cout << J1.ID << " -> " << J2.ID << " t: " << t << " d: " << D << endl;
-    }*/
 }
 
 void FABRIK::applySpring(int j, float d) {
-    if (j == 2) cout << " applySpring " << j << endl;
+    //if (j == 2) cout << " applySpring " << j << endl;
     Joint& J1 = joints[j];
     if (J1.in.size() == 0) return;
     Joint& J2 = joints[J1.in[0]]; // TODO: handle multiple in!
 
     // test spring force
-    if (j == 2) cout << " applySpring " << j << " -> " << J1.in[0] << ", " << J2.springed << " " << doSprings << endl;
+    //if (j == 2) cout << " applySpring " << j << " -> " << J1.in[0] << ", " << J2.springed << " " << doSprings << endl;
     if (J2.springed && doSprings) {
         auto pS = Pose::create(J2.springAnchor);
         pS = J2.p->multRight(pS);
@@ -258,7 +238,7 @@ void FABRIK::applySpring(int j, float d) {
         Vec3d p1 = J1.p->pos();
         Vec3d ps = pS->pos();
         J1.p->setPos( p1 + (ps-p1)*ts);
-        if (j == 2) cout << " applySpring " << j << " " << p1 << " -> " << ps << " -> " << p1 + (ps-p1)*ts << endl;
+        //if (j == 2) cout << " applySpring " << j << " " << p1 << " -> " << ps << " -> " << p1 + (ps-p1)*ts << endl;
     }
 }
 
@@ -289,7 +269,7 @@ void FABRIK::updateJointOrientation(int j) {
 
 /** move joint j1 to get a distance d to j2, update the up vector of j1, also consider the constraints **/
 Vec3d FABRIK::moveToDistance(int j1, int j2, float d, bool fwd) {
-    if (j1 == 2) cout << " moveToDistance " << j1 << " -> " << j2 << " " << fwd << endl;
+    //if (j1 == 2) cout << " moveToDistance " << j1 << " -> " << j2 << " " << fwd << endl;
 
     Joint& J1 = joints[j1];
     Joint& J2 = joints[j2];
@@ -408,7 +388,7 @@ void FABRIK::iterate() {
     for (auto& j : joints) j.second.constrainFired = false;
 
     for (int i=0; i<10; i++) {
-        cout << "exec FABRIK iteration " << i << " " << doSprings << endl;
+        //cout << "exec FABRIK iteration " << i << " " << doSprings << endl;
 
         for (auto j : executionQueue) {
             //cout << "doJob: " << j.chain << ", " << j.joint << " -> " << j.base << ", " << string(j.fwd?"forward":"backward") << endl;

@@ -20,7 +20,7 @@ class FABRIK {
         struct step;
 
         bool doConstraints = true;
-        bool doSprings = true;
+        bool doSprings = false;
 
         map<int, Joint> joints;
         map<string, Chain> chains;
