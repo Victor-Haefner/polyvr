@@ -75,6 +75,7 @@ void FABRIK::setJoint(int ID, PosePtr p) {
 PosePtr FABRIK::getJointPose(int ID) { return joints[ID].p; }
 
 void FABRIK::addChain(string name, vector<int> joints) {
+    chainOrder.push_back(name);
     Chain c;
     c.name = name;
     c.joints = joints;
@@ -189,7 +190,8 @@ void FABRIK::applyConstraint(int j) {
         pP = J2.p->multRight(pP);*/
 
         if (t < 0) {
-            Vec3d p = J1.p->pos() + D*t; // pP->pos()
+            //Vec3d p = J1.p->pos() + D*t;
+            Vec3d p = pP->pos();
             J1.p->setPos( p );
             J1.constrainFired = true;
         }
@@ -201,22 +203,25 @@ void FABRIK::applyConstraint(int j) {
 }
 
 void FABRIK::applySpring(int j, float d) {
+    cout << " applySpring " << j << endl;
     Joint& J1 = joints[j];
     if (J1.in.size() == 0) return;
     Joint& J2 = joints[J1.in[0]]; // TODO: handle multiple in!
 
     // test spring force
+    cout << " applySpring " << j << " -> " << J1.in[0] << J2.springed << " " << doSprings << endl;
     if (J2.springed && doSprings) {
         auto pS = Pose::create(J2.springAnchor);
         pS = J2.p->multRight(pS);
 
-        Vec3d D = J1.p->pos() - J2.p->pos();
+        //Vec3d D = J1.p->pos() - J2.p->pos();
         //float ts = abs(D.length()/d - 1.0)*0.5;
         float ts = 0.5;
 
         Vec3d p1 = J1.p->pos();
         Vec3d ps = pS->pos();
         J1.p->setPos( p1 + (ps-p1)*ts);
+        cout << " applySpring " << j << " " << p1 << " -> " << ps << " -> " << p1 + (ps-p1)*ts << endl;
     }
 }
 
@@ -247,12 +252,14 @@ void FABRIK::updateJointOrientation(int j) {
 
 /** move joint j1 to get a distance d to j2, update the up vector of j1, also consider the constraints **/
 Vec3d FABRIK::moveToDistance(int j1, int j2, float d, bool constrained, bool fwd) {
+    cout << " moveToDistance " << j1 << " -> " << j2 << " " << fwd << endl;
+
     Joint& J1 = joints[j1];
     Joint& J2 = joints[j2];
 
     Vec3d pOld = J1.p->pos();
 
-    if (constrained) applyConstraint(j1);
+    if (fwd) if (constrained) applyConstraint(j1);
     if (!fwd) applySpring(j1, d);
 
     // move to distance
@@ -283,8 +290,8 @@ void FABRIK::updateExecutionQueue() {
 
     map<int, string> splits;
 
-    for (auto& c : chains) {
-        auto& chain = c.second;
+    for (auto& cName : chainOrder) {
+        auto& chain = chains[cName];
 
         int ee = chain.joints.back();
         int b = 0;
@@ -304,23 +311,6 @@ void FABRIK::updateExecutionQueue() {
                 break;
             }
         }
-
-        /*for (int i=chain.joints.size()-1; i>=0; i--) {
-            int jID = chain.joints[i];
-            auto& J = joints[jID];
-            int i1 = chain.distances.size()-1;
-            int i2 = max(i,1);
-
-            if (J.out.size() > 1 || J.target) {
-                cout << " add step: " << jID << " " << jID << " " << i1 << " " << i2 << " " << chain.name << endl;
-                executionQueue.push_back( step(jID, jID, i1, i2, chain.name, J.target, false, true) );
-            }
-
-            if (J.out.size() > 1) {
-                splits[jID] = chain.name;
-                break;
-            }
-        }*/
     }
 
     for (auto s : splits) {
@@ -380,7 +370,7 @@ void FABRIK::iterate() {
     for (auto& j : joints) j.second.constrainFired = false;
 
     for (int i=0; i<10; i++) {
-        //cout << "exec FABRIK iteration " << i << endl;
+        cout << "exec FABRIK iteration " << i << " " << doSprings << endl;
 
         for (auto j : executionQueue) {
             //cout << "doJob: " << j.chain << ", " << j.joint << " -> " << j.base << ", " << string(j.fwd?"forward":"backward") << endl;

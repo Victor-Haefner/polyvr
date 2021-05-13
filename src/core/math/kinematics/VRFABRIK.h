@@ -24,6 +24,7 @@ class FABRIK {
 
         map<int, Joint> joints;
         map<string, Chain> chains;
+        vector<string> chainOrder;
         vector<step> executionQueue;
 
         float tolerance = 0.01;
