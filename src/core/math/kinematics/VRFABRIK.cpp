@@ -350,21 +350,14 @@ void FABRIK::updateExecutionQueue() {
 void FABRIK::iterate() {
     auto checkConvergence = [&]() {
         for (auto& c : chains) {
-            /*for (auto jID : c.second.joints) {
+            for (auto jID : c.second.joints) {
                 auto& J = joints[jID];
                 if (!J.target) continue;
                 auto targetPos = J.target->pos();
                 float distTarget = (J.p->pos()-targetPos).length();
                 //cout << "convergence: " << distTarget << ", " << distTarget/tolerance << endl;
                 if (distTarget > tolerance) return false;
-            }*/
-
-            int ee = c.second.joints.back();
-            if (!joints[ee].target) continue;
-            auto targetPos = joints[ee].target->pos();
-            float distTarget = (joints[ee].p->pos()-targetPos).length();
-            //cout << "convergence: " << distTarget << ", " << distTarget/tolerance << endl;
-            if (distTarget > tolerance) return false;
+            }
         }
         return true;
     };
