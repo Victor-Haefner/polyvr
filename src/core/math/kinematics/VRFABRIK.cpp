@@ -24,6 +24,7 @@ namespace OSG {
         vector<int> out;
         PosePtr target;
         bool constrained = false;
+        bool constrainFired = false;
         Vec4d constraintAngles;
         Vec3d debugPnt1, debugPnt2;
         PatchPtr patch;
@@ -190,6 +191,7 @@ void FABRIK::applyConstraint(int j) {
         if (t < 0) {
             Vec3d p = J1.p->pos() + D*t; // pP->pos()
             J1.p->setPos( p );
+            J1.constrainFired = true;
         }
 
         J1.debugPnt1 = pP->pos();
@@ -218,25 +220,13 @@ void FABRIK::applySpring(int j, float d) {
     }
 }
 
-/** move joint j1 to get a distance d to j2, update the up vector of j1, also consider the constraints **/
-Vec3d FABRIK::moveToDistance(int j1, int j2, float d, bool constrained, bool fwd) {
-    Joint& J1 = joints[j1];
-    Joint& J2 = joints[j2];
-
-    Vec3d pOld = J1.p->pos();
-
-    // TODO: extend constraints with a preferred position, implement something like a spring to pull towards that preferred position a bit
-
-    if (constrained) applyConstraint(j1);
-    if (!fwd) applySpring(j1, d);
-
-    // move to distance
-    Vec3d D = J1.p->pos() - J2.p->pos();
-    float L = D.length();
-    float li = d / L;
-    movePointTowards(j1, J2.p->pos(), li);
+void FABRIK::updateJointOrientation(int j) {
+    Joint& J1 = joints[j];
+    if (J1.in.size() == 0) return;
+    Joint& J2 = joints[J1.in[0]]; // TODO: handle multiple in!
 
     // update joint direction
+    Vec3d D = J1.p->pos() - J2.p->pos();
     Vec3d nD = -D;
     nD.normalize();
     J1.p->setDir(nD);
@@ -253,6 +243,25 @@ Vec3d FABRIK::moveToDistance(int j1, int j2, float d, bool constrained, bool fwd
     //if (J1.ID == 2) cout << " J" << J1.ID << ", u1/u2: " << J1.p->up() << " / " << J2.p->up() << " (" << J1.p->up().length() << "/" << J2.p->up().length() << ")" << endl;
     if (u1.length() > 0.9) J1.p->setUp(u1);
     else J1.p->makeUpOrthogonal();
+}
+
+/** move joint j1 to get a distance d to j2, update the up vector of j1, also consider the constraints **/
+Vec3d FABRIK::moveToDistance(int j1, int j2, float d, bool constrained, bool fwd) {
+    Joint& J1 = joints[j1];
+    Joint& J2 = joints[j2];
+
+    Vec3d pOld = J1.p->pos();
+
+    if (constrained) applyConstraint(j1);
+    if (!fwd) applySpring(j1, d);
+
+    // move to distance
+    Vec3d D = J1.p->pos() - J2.p->pos();
+    float L = D.length();
+    float li = d / L;
+    movePointTowards(j1, J2.p->pos(), li);
+
+    updateJointOrientation(j1);
     return pOld;
 }
 
@@ -368,6 +377,8 @@ void FABRIK::iterate() {
 
     map<int,vector<Vec3d>> knotPositions;
 
+    for (auto& j : joints) j.second.constrainFired = false;
+
     for (int i=0; i<10; i++) {
         //cout << "exec FABRIK iteration " << i << endl;
 
@@ -460,11 +471,14 @@ void FABRIK::visualize(VRGeometryPtr geo) {
         }
     }
 
-    // targets
+    // constrain points
     for (auto j : joints) {
-        data.pushVert(j.second.debugPnt1, Vec3d(0,0,0), Color3f(0,1,0));
+        Color3f c = Color3f(0,1,1);
+        if (j.second.constrainFired) c = Color3f(1,0,0);
+
+        data.pushVert(j.second.debugPnt1, Vec3d(0,0,0), c);
         data.pushPoint();
-        data.pushVert(j.second.debugPnt2, Vec3d(0,0,0), Color3f(0,1,1));
+        data.pushVert(j.second.debugPnt2, Vec3d(0,0,0), c);
         data.pushPoint();
     }
 

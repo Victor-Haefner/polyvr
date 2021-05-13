@@ -30,6 +30,7 @@ class FABRIK {
 
         void applyConstraint(int j);
         void applySpring(int j, float d);
+        void updateJointOrientation(int j);
         Vec3d movePointTowards(int j, Vec3d target, float t);
         Vec3d moveToDistance(int j1, int j2, float d, bool constrained = false, bool fwd = true);
         void updateExecutionQueue();

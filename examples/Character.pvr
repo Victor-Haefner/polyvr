@@ -3,7 +3,7 @@
   <Objects>
     <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" visible="1">
       <Object ambient="0.3 0.3 0.3 1" base_name="light" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" shadowVolume="1e+06 1e+06 1e+06 -1e+06 -1e+06 -1e+06 1" specular="0.1 0.1 0.1 1" type="Light" visible="1">
-        <Object accept_root="1" aspect="1" at="0.123799 0.354772 0.350397" at_dir="0" base_name="Default" far="512" fov="1.0472" from="1.58613 1.02582 0.290974" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
+        <Object accept_root="1" aspect="1" at="0.123799 0.354772 0.350397" at_dir="0" base_name="Default" far="512" fov="1.0472" from="1.60511 0.805973 0.267601" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
           <attachments>
             <Node base_name="transform" name_space="VRAttachment" name_suffix="0" persistency="666" value=""/>
           </attachments>
@@ -371,7 +371,7 @@
 </core>
       <trig type="on_timeout" dev="" state="Pressed" param="0" key="0" base_name="trigger" name_space="__global__" name_suffix="9" persistency="666"/>
     </Script>
-    <Script base_name="updateArm" group="version3" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+    <Script base_name="updateTargets" group="version3" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	import VR
 	from math import sin, cos
@@ -399,6 +399,18 @@
 		
 	setTarget(3, VR.target1)  # ankle
 	setTarget(4, VR.target2)  # foot
+
+
+
+	# lift knee
+	if not hasattr(VR, 'state'): VR.state = 1
+	
+	p = VR.target1.getFrom()
+	p += [0,0.01*VR.state,0.01*VR.state]
+	VR.target1.setFrom(p)
+	
+	if p[1] &gt; 0.3: VR.state = -1*0.1
+	if p[1] &lt; 0.0: VR.state =  1*0.1
 </core>
       <trig type="on_timeout" dev="" state="Pressed" param="0" key="0" base_name="trigger" name_space="__global__" name_suffix="7" persistency="666"/>
     </Script>
