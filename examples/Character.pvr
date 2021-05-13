@@ -3,7 +3,7 @@
   <Objects>
     <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" visible="1">
       <Object ambient="0.3 0.3 0.3 1" base_name="light" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" shadowVolume="1e+06 1e+06 1e+06 -1e+06 -1e+06 -1e+06 1" specular="0.1 0.1 0.1 1" type="Light" visible="1">
-        <Object accept_root="1" aspect="1" at="-0.182321 0.542516 -0.225998" at_dir="0" base_name="Default" far="512" fov="1.0472" from="1.71972 0.456577 0.136843" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
+        <Object accept_root="1" aspect="1" at="0.123799 0.354772 0.350397" at_dir="0" base_name="Default" far="512" fov="1.0472" from="1.58613 1.02582 0.290974" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
           <attachments>
             <Node base_name="transform" name_space="VRAttachment" name_suffix="0" persistency="666" value=""/>
           </attachments>
@@ -149,7 +149,8 @@
 		VR.fabrik.addJoint(i+3, VR.Pose([w,0,0], [0,1,0], [0,0,1]))
 		VR.fabrik.addJoint(i+4, VR.Pose([w,-0.2,0], [0,1,0], [0,0,1]))
 		#VR.fabrik.addChain(n, [0,i+1,i+2,i+3,i+4])
-		VR.fabrik.addChain(n, [i+1,i+2,i+3,i+4])
+		VR.fabrik.addChain(n, [i+1,i+2,i+3])
+		VR.fabrik.addChain(n+'_foot', [i+3,i+4])
 		
 		#a1, a2 = 0.1,2.0
 		a1, a2 = 0.4,2.0
@@ -376,18 +377,28 @@
 	from math import sin, cos
 	#return
 	
-	if not hasattr(VR, 'target1'): 
-		VR.target1 = VR.Geometry('target1', 'light')
-		VR.target1.setPrimitive('Box 0.05 0.05 0.05 1 1 1')
-		VR.target1.setPickable(1)
-		#VR.target1.setFrom([0,0,VR.armL*0.5])
-		VR.target1.setFrom([0.2,0,0.2])
+	def getTarget(name, p0, parent):
+		if hasattr(VR, name): 
+			t = getattr(VR, name)
+			if t: return t
+		t = VR.Geometry(name, 'light')
+		if parent: parent.addChild(t)
+		t.setPrimitive('Box 0.05 0.05 0.05 1 1 1')
+		t.setPickable(1)
+		t.setWorldFrom(p0)
+		return t
 		
-	#VR.target1.setFrom([0,0,VR.armL*0.5])
+	def setTarget(jID, t):
+		VR.fabrik.setTarget(jID, t.getWorldPose())
 		
-	#VR.fabrik.setTarget(VR.armN-1, VR.target1.getWorldPose())
-	VR.fabrik.setTarget(4, VR.target1.getWorldPose()) # foot tip
-	#VR.fabrik.setTarget(3, VR.target1.getWorldPose()) # ankle
+	#VR.target1 = getTarget('target1', [0,0,VR.armL*0.5], None)
+	#setTarget(VR.armN-1, VR.target1)  # ankle
+	
+	VR.target1 = getTarget('target1', [0.2,0,0], None)
+	VR.target2 = getTarget('target2', [0.2,0,0.2], VR.target1)
+		
+	setTarget(3, VR.target1)  # ankle
+	setTarget(4, VR.target2)  # foot
 </core>
       <trig type="on_timeout" dev="" state="Pressed" param="0" key="0" base_name="trigger" name_space="__global__" name_suffix="7" persistency="666"/>
     </Script>

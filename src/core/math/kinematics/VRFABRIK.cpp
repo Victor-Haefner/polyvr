@@ -187,7 +187,11 @@ void FABRIK::applyConstraint(int j) {
         float t = (pP->pos() - pI).dot(D);
         pP = J2.p->multRight(pP);*/
 
-        if (t < 0) J1.p->setPos( pP->pos() );
+        if (t < 0) {
+            Vec3d p = J1.p->pos() + D*t; // pP->pos()
+            J1.p->setPos( p );
+        }
+
         J1.debugPnt1 = pP->pos();
         J1.debugPnt2 = pP->pos() + D*0.05;
         //cout << J1.ID << " -> " << J2.ID << " t: " << t << " d: " << D << endl;
@@ -266,7 +270,7 @@ void FABRIK::setTarget(int i, PosePtr p) {
 void FABRIK::updateExecutionQueue() {
     executionQueue.clear();
 
-    cout << "FABRIK::updateExecutionQueue" << endl;
+    //cout << "FABRIK::updateExecutionQueue" << endl;
 
     map<int, string> splits;
 
@@ -286,9 +290,9 @@ void FABRIK::updateExecutionQueue() {
             if (J.out.size() > 1) splits[b] = chain.name;
 
             if (J.out.size() > 1 || i == 0) {
-            cout << " add step: " << ee << " " << b << " " << i1 << " " << i2 << " " << chain.name << endl;
-            executionQueue.push_back( step(ee, b, i1, i2, chain.name, joints[ee].target, false, true) );
-             break;
+                //cout << " add step: " << ee << " " << b << " " << i1 << " " << i2 << " " << chain.name << endl;
+                executionQueue.push_back( step(ee, b, i1, i2, chain.name, joints[ee].target, false, true) );
+                break;
             }
         }
 
