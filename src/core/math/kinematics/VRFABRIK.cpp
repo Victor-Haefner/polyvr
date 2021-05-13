@@ -104,33 +104,44 @@ void FABRIK::addSpring(int j, Vec3d anchor) {
     joints[j].springAnchor = anchor;
 }
 
+
+string quatStr(Quaterniond& q) {
+    double a; Vec3d d;
+    q.getValueAsAxisRad(d,a);
+    return "(" + toString(d) + ") " + toString(a);
+};
+
 void FABRIK::addConstraint(int j, Vec4d angles) {
     joints[j].constrained = true;
     joints[j].constraintAngles = angles;
     joints[j].patch = Patch::create();
 
-    float x1 = angles[2];
-    float x2 = angles[0];
-    float y1 = angles[1];
-    float y2 = angles[3];
+    float xm = (angles[0] - angles[2])*0.5;
+    float ym = (angles[1] - angles[3])*0.5;
+
+    float x1 = angles[2] + xm;
+    float x2 = angles[0] - xm;
+    float y1 = angles[1] - ym;
+    float y2 = angles[3] + ym;
+
+    cout << "addConstraint " << angles << " -> M " << Vec2f(xm, ym) << " XY " << Vec4f(x1,x2,y1,y2) << endl;
 
     float K = -0.3;
     float N = 8;
     float R = 0.1;
 
     Vec3d p0 (0,0,0);
-    /*Vec3d px1(-sin(x1)*s, cos(x1)*s,          0);
-    Vec3d px2( sin(x2)*s, cos(x2)*s,          0);
-    Vec3d py1(         0, cos(y1)*s, -sin(y1)*s);
-    Vec3d py2(         0, cos(y2)*s,  sin(y2)*s);*/
 
     Vec3d px1 = Vec3d( -sin(x1),        0, cos(x1) )*R;
     Vec3d px2 = Vec3d(  sin(x2),        0, cos(x2) )*R;
     Vec3d py1 = Vec3d(        0,  sin(y1), cos(y1) )*R;
     Vec3d py2 = Vec3d(        0, -sin(y2), cos(y2) )*R;
 
-
     vector<Vec3d> p = {px2, py2, px1, py1};
+
+    Quaterniond Rp = Quaterniond(Vec3d(0,-1,0), xm);
+    Rp.mult( Quaterniond(Vec3d(-1,0,0), ym) );
+    for (auto& P : p) Rp.multVec(P,P);
 
     Vec3d t1 = (p[2]-p[0])*0.25;
     Vec3d t2 = (p[1]-p[3])*0.25;
@@ -235,7 +246,7 @@ Vec3d FABRIK::moveToDistance(int j1, int j2, float d, bool constrained, bool fwd
     Quaterniond q(u1, u2);
     q.multVec(u1, u1);
     u1.normalize();
-    if (J1.ID == 2) cout << " J" << J1.ID << ", u1/u2: " << J1.p->up() << " / " << J2.p->up() << " (" << J1.p->up().length() << "/" << J2.p->up().length() << ")" << endl;
+    //if (J1.ID == 2) cout << " J" << J1.ID << ", u1/u2: " << J1.p->up() << " / " << J2.p->up() << " (" << J1.p->up().length() << "/" << J2.p->up().length() << ")" << endl;
     if (u1.length() > 0.9) J1.p->setUp(u1);
     else J1.p->makeUpOrthogonal();
     return pOld;
@@ -275,11 +286,28 @@ void FABRIK::updateExecutionQueue() {
             if (J.out.size() > 1) splits[b] = chain.name;
 
             if (J.out.size() > 1 || i == 0) {
-                //cout << " add step: " << ee << " " << b << " " << i1 << " " << i2 << " " << chain.name << endl;
-                executionQueue.push_back( step(ee, b, i1, i2, chain.name, joints[ee].target, false, true) );
-                break;
+            cout << " add step: " << ee << " " << b << " " << i1 << " " << i2 << " " << chain.name << endl;
+            executionQueue.push_back( step(ee, b, i1, i2, chain.name, joints[ee].target, false, true) );
+             break;
             }
         }
+
+        /*for (int i=chain.joints.size()-1; i>=0; i--) {
+            int jID = chain.joints[i];
+            auto& J = joints[jID];
+            int i1 = chain.distances.size()-1;
+            int i2 = max(i,1);
+
+            if (J.out.size() > 1 || J.target) {
+                cout << " add step: " << jID << " " << jID << " " << i1 << " " << i2 << " " << chain.name << endl;
+                executionQueue.push_back( step(jID, jID, i1, i2, chain.name, J.target, false, true) );
+            }
+
+            if (J.out.size() > 1) {
+                splits[jID] = chain.name;
+                break;
+            }
+        }*/
     }
 
     for (auto s : splits) {
@@ -322,6 +350,15 @@ void FABRIK::updateExecutionQueue() {
 void FABRIK::iterate() {
     auto checkConvergence = [&]() {
         for (auto& c : chains) {
+            /*for (auto jID : c.second.joints) {
+                auto& J = joints[jID];
+                if (!J.target) continue;
+                auto targetPos = J.target->pos();
+                float distTarget = (J.p->pos()-targetPos).length();
+                //cout << "convergence: " << distTarget << ", " << distTarget/tolerance << endl;
+                if (distTarget > tolerance) return false;
+            }*/
+
             int ee = c.second.joints.back();
             if (!joints[ee].target) continue;
             auto targetPos = joints[ee].target->pos();
@@ -335,7 +372,7 @@ void FABRIK::iterate() {
     map<int,vector<Vec3d>> knotPositions;
 
     for (int i=0; i<10; i++) {
-        cout << "exec FABRIK iteration " << i << endl;
+        //cout << "exec FABRIK iteration " << i << endl;
 
         for (auto j : executionQueue) {
             //cout << "doJob: " << j.chain << ", " << j.joint << " -> " << j.base << ", " << string(j.fwd?"forward":"backward") << endl;
@@ -432,6 +469,16 @@ void FABRIK::visualize(VRGeometryPtr geo) {
         data.pushPoint();
         data.pushVert(j.second.debugPnt2, Vec3d(0,0,0), Color3f(0,1,1));
         data.pushPoint();
+    }
+
+    // spring anchors
+    for (auto j : joints) {
+        if (j.second.springed) {
+            auto p = j.second.p->transform(j.second.springAnchor);
+            data.pushVert(j.second.p->pos(), Vec3d(0,0,0), Color3f(0,0,1));
+            data.pushVert(p, Vec3d(0,0,0), Color3f(0,0,1));
+            data.pushLine();
+        }
     }
 
     data.apply(geo);

@@ -715,7 +715,6 @@ PosePtr Patch::getClosestPose(Vec3d p) {
         }
     }
 
-    cout << " --- a " << a << endl;
     return Dmin;
 }
 
