@@ -3,7 +3,7 @@
   <Objects>
     <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" visible="1">
       <Object ambient="0.3 0.3 0.3 1" base_name="light" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" shadowVolume="1e+06 1e+06 1e+06 -1e+06 -1e+06 -1e+06 1" specular="0.1 0.1 0.1 1" type="Light" visible="1">
-        <Object accept_root="1" aspect="1" at="0.123799 0.354772 0.350397" at_dir="0" base_name="Default" far="512" fov="1.0472" from="1.61055 0.776112 0.479818" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
+        <Object accept_root="1" aspect="1" at="-0.12815 -4.76837e-07 -0.169869" at_dir="0" base_name="Default" far="512" fov="1.0472" from="-1.91911 2.57756 6.9808" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
           <attachments>
             <Node base_name="transform" name_space="VRAttachment" name_suffix="0" persistency="666" value=""/>
           </attachments>
@@ -139,6 +139,8 @@
 	import VR
 
 	# setup
+	if hasattr(VR, 'character'): VR.character.destroy()
+	VR.character = VR.Geometry('character', 'light')
 	VR.fabrik = VR.FABRIK()
 		
 	VR.fabrik.addJoint(0, VR.Pose([0,1.2,0], [0,1,0], [0,0,1]))
@@ -156,8 +158,8 @@
 		a1, a2 = 0.4,2.0
 		VR.fabrik.addConstraint(i+2, [a1,0,a1,a2]) # knee
 		VR.fabrik.addConstraint(i+3, [a1,a2,a1,a1]) # ankle
-		VR.fabrik.addSpring(i+2, [0,-0.5,0]) # knee
-		VR.fabrik.addSpring(i+3, [0, 0.2,0]) # ankle
+		#VR.fabrik.addSpring(i+2, [0,-0.5,0]) # knee
+		#VR.fabrik.addSpring(i+3, [0, 0.2,0]) # ankle
 		
 		VR.fabrik.setTarget(i+4, VR.Pose([w,-0.01,0.2]))
 		VR.fabrik.setTarget(i+3, VR.Pose([w,0,0]))
@@ -187,8 +189,12 @@
 
 	# visu
 	if not hasattr(VR, 'visu'):
-		VR.visu = VR.Geometry('fabrik', 'light')
+		VR.visu = VR.Geometry('fabrik')
+	VR.character.addChild(VR.visu)
+	#VR.visu.setTransform([0,0,0], [0,0,1], [0,1,0])
 	VR.fabrik.visualize(VR.visu)
+	
+	VR.makeFloor()
 </core>
       <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="4" persistency="666"/>
     </Script>
@@ -228,6 +234,19 @@
 	import VR
 </core>
     </Script>
+    <Script base_name="makeFloor" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+
+
+
+	if hasattr(VR, 'floor'): VR.floor.destroy()
+	VR.floor = VR.Geometry('floor', 'light')
+	VR.floor.setPrimitive('Box 10 2 10')
+	VR.floor.setFrom([0,-1,0])
+	VR.floor.setColor('blue')
+</core>
+    </Script>
     <Script base_name="makeStep" group="version3" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	import VR
@@ -249,6 +268,101 @@
 	a.setDuration(3)
 	a.start()
 </core>
+    </Script>
+    <Script base_name="moveTo" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+	from math import sin, cos, pi
+	
+	class walkCycle:
+		def __init__(self, t1, t2, x):
+			self.state = 0
+			self.t1 = t1
+			self.t2 = t2
+			self.a = 0
+			self.x = x
+			self.other = None
+			
+		def advance(self, d):
+			if self.state == 0: # on ground
+				self.t1.move(d) # move back
+			if self.state == 1:
+				self.a += d*10 # step arc angle
+				tp = self.t1.getFrom()
+				tp[0] = 0
+				p0 = [self.x, sin(self.a)*tp.length(), -cos(self.a)*tp.length()]
+				self.t1.setFrom(p0)
+				#print self.a
+				if self.a &gt;= pi:
+					self.a = 0
+					self.state = 0
+					self.other.state = 1
+		
+	class moveParams:
+		def __init__(self):
+			self.leftCycle = walkCycle(VR.target1, VR.target2, 0.2)
+			self.rightCycle = walkCycle(VR.target3, VR.target4, -0.2)
+			self.leftCycle.other = self.rightCycle
+			self.rightCycle.other = self.leftCycle
+			self.leftCycle.state = 1
+			
+			VR.target1.setFrom([ 0.2,0,0.2])
+			VR.target3.setFrom([-0.2,0,0.2])
+			
+	def advanceWalkCycle(d):
+		VR.mParams.leftCycle.advance(d)
+		VR.mParams.rightCycle.advance(d)
+	
+	def pathWalk(t):
+		p = VR.mParams.path.getPose(t)
+		p.setDir(-p.dir())
+		#print t, p.pos()
+		p0 = VR.character.getPose()
+		VR.character.setPose(p)
+		D = p.pos()-p0.pos()
+		advanceWalkCycle(D.length())
+
+
+	def moveTo(p1):
+		p0 = VR.character.getPose()
+		p0.setDir(-p0.dir().normalized())
+		D = p1-p0.pos()
+		pm = p0.pos()+D.length()*0.5*p0.dir()
+		d = (p1-pm).normalized()
+	
+		path = VR.Path()
+		path.addPoint2(p0)
+		path.addPoint(p1, d)
+		path.compute(32)
+		
+		VR.mParams = moveParams()
+		VR.mParams.path = path
+		
+
+		if hasattr(VR, 'walkPath'): VR.walkPath.destroy()
+		VR.walkPath = VR.Stroke('floor', 'light')
+		VR.walkPath.setPath(path)
+		VR.walkPath.strokeProfile([[0,0.1,0]], 0,0,0)
+		
+		m = VR.Material('mat')
+		m.setLineWidth(3)
+		VR.walkPath.setMaterial(m)
+		
+		if hasattr(VR, 'walkAnim'): VR.walkAnim.stop()
+		VR.walkAnim = VR.Animation('walkAnim')
+		VR.walkAnim.setCallback(pathWalk)
+		VR.walkAnim.setDuration(path.getLength()*2)
+		VR.walkAnim.start()
+		
+
+
+	if dev.intersect(VR.floor):
+		p = dev.getIntersection()
+		moveTo(p)
+		
+	
+</core>
+      <trig type="on_device" dev="mouse" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="11" persistency="666"/>
     </Script>
     <Script base_name="proto" group="version1" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
@@ -389,34 +503,39 @@
 		return t
 		
 	def setTarget(jID, t):
-		VR.fabrik.setTarget(jID, t.getWorldPose())
+		VR.fabrik.setTarget(jID, VR.character.getPoseTo(t))
 		
 	#VR.target1 = getTarget('target1', [0,0,VR.armL*0.5], None)
 	#setTarget(VR.armN-1, VR.target1)  # ankle
 	
-	VR.target1 = getTarget('target1', [0.2,0,0], None)
+	VR.target1 = getTarget('target1', [0.2,0,0], VR.character)
 	VR.target2 = getTarget('target2', [0.2,0,0.2], VR.target1)
+	VR.target3 = getTarget('target3', [-0.2,0,0], VR.character)
+	VR.target4 = getTarget('target4', [-0.2,0,0.2], VR.target3)
 		
 	setTarget(3, VR.target1)  # ankle
 	setTarget(4, VR.target2)  # foot
+	setTarget(7, VR.target3)  # ankle
+	setTarget(8, VR.target4)  # foot
 
 
 
 	# lift knee
-	if not hasattr(VR, 'state'): VR.state = 1
-	
-	p = VR.target1.getFrom()
-	p += [0,0.01*VR.state,0.01*VR.state]
-	VR.target1.setFrom(p)
-	
-	if p[1] &gt; 0.3: VR.state = -1*0.5
-	if p[1] &lt; 0.0: VR.state =  1*0.5
+	if 0:
+		if not hasattr(VR, 'state'): VR.state = 1
+		
+		p = VR.target1.getFrom()
+		p += [0,0.01*VR.state,0.01*VR.state*0]
+		VR.target1.setFrom(p)
+		
+		if p[1] &gt; 0.3: VR.state = -1*0.5
+		if p[1] &lt; 0.0: VR.state =  1*0.5
 </core>
       <trig type="on_timeout" dev="" state="Pressed" param="0" key="0" base_name="trigger" name_space="__global__" name_suffix="7" persistency="666"/>
     </Script>
   </Scripts>
   <Sockets persistency="666"/>
-  <Background color="0.417746 0.417746 0.417746" format=".png" path="" persistency="666" type="0"/>
+  <Background color="0.837095 0.912032 0.323781" format=".png" path="" persistency="666" type="0"/>
   <Navigation active="Orbit" persistency="666"/>
   <Materials persistency="666"/>
   <Semantics persistency="666"/>
