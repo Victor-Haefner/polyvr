@@ -117,6 +117,8 @@ class VRSkeleton : public VRGeometry {
 
         static VRSkeletonPtr create();
 
+        FABRIKPtr getKinematics();
+
         int addBone(PosePtr pose, float length, string name);
         int addJoint(int bone1, int bone2, VRConstraintPtr constraint, string name, Color3f col = Color3f(1,1,1));
         void setEndEffector(string label, int bone);

@@ -5,6 +5,7 @@
 #include "core/math/Eigendecomposition.h"
 #include "core/math/equation.h"
 #include "core/math/VRKabschAlgorithm.h"
+#include "core/math/kinematics/VRFABRIK.h"
 #include "core/objects/geometry/VRGeoData.h"
 #include "core/objects/material/VRMaterial.h"
 #include "addons/Algorithms/VRPathFinding.h"
@@ -23,11 +24,14 @@ void VRSkeleton::Configuration::setPose(int i, Vec3d p) { joints[i] = p; }
 
 VRSkeleton::VRSkeleton() {
     armature = Graph::create();
+    fabrik = FABRIK::create();
 }
 
 VRSkeleton::~VRSkeleton() {}
 
 VRSkeletonPtr VRSkeleton::create() { return VRSkeletonPtr(new VRSkeleton() ); }
+
+FABRIKPtr VRSkeleton::getKinematics() { return fabrik; }
 
 void VRSkeleton::clear() {
     bones.clear();
@@ -685,19 +689,6 @@ void VRSkeleton::resolveSystem(string bone) {
     }
 }
 
-void VRSkeleton::simStep() {
-    if (simCB) {
-        (*simCB)();
-        return;
-    }
-
-    cout << "simStep" << endl;
-    //applyFABRIK("handLeft");
-    //applyFABRIK("handRight");
-
-    for (auto e : ChainDataMap) applyFABRIK(e.first);
-    for (auto e : SystemDataMap) resolveSystem(e.first);
-}
 
 vector<int> VRSkeleton::getBonesChain(string endEffector) {
     int e = endEffectors[endEffector].boneID;
@@ -824,7 +815,7 @@ void VRSkeleton::resolveKinematics() {
     //updateJointPositions();
     //setupChains();
     updateChains();
-    simStep();
+    if (fabrik) fabrik->iterate();
     updateBones();
     mixOrientations();
     updateGeometry();
@@ -906,59 +897,13 @@ vector<VRSkeleton::Joint> VRSkeleton::getChain(string endEffector) {
 }
 
 void VRSkeleton::move(string endEffector, PosePtr pose) {
-    //KabschAlgorithm::test();
-    //return;
-
     endEffectors[endEffector].target = pose;
     resolveKinematics();
 }
 
 map<string, VRSkeleton::EndEffector> VRSkeleton::getEndEffectors() { return endEffectors; }
 
-/* working on constrained FABRIK
 
-
-TODOs
-- update dir and up when moving system joints
-    - systems are a big problem!
-        - dir and up only per chain?, nope because a joint with constraint needs an orientation..
-        - IDEA:
-            - each chain rotates the joint directions
-            - after the chains, fix the systems
-            - after that, go through each system joint and compute the rotation induced by all through bones connected joints!
-                - first only inner system
-- resolve constraints for x and up vectors
-
-
-
-
-- joint is
-    - position
-    - constraint
-    - prev bone
-    - next bone
-
-- arm chain
-    joints:            waist    shoulder    elbow    wrist
-    bones :     abdomen--|--back----|---uArm--|--lArm--|--hand
-
-    1) doFabrik FB on joints
-        - new wrist position
-        - move elbow towards wrist to satisfy lArm length
-        - project shoulder cone generated from orientation constraint
-        - move shoulder towards elbow to satisfy uArm length
-
-
-- interprete constraint:
-    - define dir1 and dir2 for each joint
-    - dot between dir1 and dir2 corresponds to rotation around x
-    - define up1 and up2 for each joint
-    - dot between up1 and up2 corresponds to rotation around z
-    - compute those vectors based on
-        - vectors between joint positions
-        - reference positions of each joint
-
-*/
 
 
 
