@@ -210,13 +210,8 @@ void FABRIK::applyInverseConstraint(int j) { // moves a joint to make its child 
 }
 
 void FABRIK::applyConstraint(int j) { // moves a joint to respect its parent constraint
-    Joint& J1 = joints[j];
-    if (J1.in.size() == 0) return;
-    Joint& J2 = joints[J1.in[0]]; // parent
-
-    //if (j == 2) cout << " applyConstraint " << j << " -> " << J1.in[0] << ", " << J2.constrained << " " << doConstraints << endl;
     Vec3d cDelta = computeConstraintDelta(j);
-    J1.p->translate(cDelta);
+    joints[j].p->translate(cDelta);
 }
 
 void FABRIK::applySpring(int j, float d) {
@@ -508,9 +503,6 @@ void FABRIK::visualize(VRGeometryPtr geo) {
 
 
     // constraints
-    VRGeoData cones;
-    double R = 0.1;
-
     for (auto j : joints) {
         if (!j.second.constrained) continue;
         geo->addChild(j.second.patchSurface);
@@ -518,18 +510,6 @@ void FABRIK::visualize(VRGeometryPtr geo) {
         surf->setPose( j.second.p );
     }
 }
-
-
-/*
-
-TODO: implement constraints with bigger angles
-
-if
-
-up of root is allways given
-
-
-*/
 
 
 

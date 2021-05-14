@@ -2,7 +2,7 @@
 #define VRFABRIK_H_INCLUDED
 
 #include <map>
-#include "core/math/OSGMathFwd.h"
+#include "core/math/VRMathFwd.h"
 
 #include "core/utils/VRFwdDeclTemplate.h"
 #include "core/math/pose.h"
@@ -10,8 +10,6 @@
 
 using namespace std;
 OSG_BEGIN_NAMESPACE;
-
-ptrFwd(FABRIK);
 
 class FABRIK {
     private:

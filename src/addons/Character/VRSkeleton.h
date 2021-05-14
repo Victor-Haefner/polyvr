@@ -77,7 +77,7 @@ class VRSkeleton : public VRGeometry {
         typedef shared_ptr<Configuration> ConfigurationPtr;
 
     private:
-
+        FABRIKPtr fabrik;
         GraphPtr armature;
         map<int, Bone > bones;
         map<int, Joint> joints;
