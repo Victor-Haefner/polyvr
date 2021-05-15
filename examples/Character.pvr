@@ -204,22 +204,16 @@
 			if t: return t
 		t = VR.Pose(p0)
 		return t
-		
-	def setTarget(jID, t):
-		VR.fabrik.setTarget(jID, t)
-		
-	#VR.target1 = getTarget('target1', [0,0,VR.armL*0.5], None)
-	#setTarget(VR.armN-1, VR.target1)  # ankle
 	
 	VR.target1 = getTarget('target1', [0.2,0,0])
 	VR.target2 = getTarget('target2', [0.2,0,0.2])
 	VR.target3 = getTarget('target3', [-0.2,0,0])
 	VR.target4 = getTarget('target4', [-0.2,0,0.2])
 		
-	setTarget(3, VR.target1)  # ankle
-	setTarget(4, VR.target2)  # foot
-	setTarget(7, VR.target3)  # ankle
-	setTarget(8, VR.target4)  # foot
+	VR.fabrik.setTarget(3, VR.target1)  # ankle
+	VR.fabrik.setTarget(4, VR.target2)  # foot
+	VR.fabrik.setTarget(7, VR.target3)  # ankle
+	VR.fabrik.setTarget(8, VR.target4)  # foot
 	
 	VR.character.update()
 </core>

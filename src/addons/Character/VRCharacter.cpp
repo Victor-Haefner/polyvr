@@ -24,7 +24,7 @@ void VRCharacter::addBehavior(VRBehaviorPtr b) { behaviors[b->getName()] = b; }
 
 void VRCharacter::move(string endEffector, PosePtr pose) {
     if (!skeleton) return;
-    skeleton->move(endEffector, pose);
+    //skeleton->move(endEffector, pose);
 }
 
 void VRCharacter::update() {

@@ -61,6 +61,8 @@ FABRIK::~FABRIK() {}
 
 FABRIKPtr FABRIK::create() { return FABRIKPtr( new FABRIK() ); }
 
+size_t FABRIK::size() { return joints.size(); }
+
 void FABRIK::addJoint(int ID, PosePtr p) {
     Joint j;
     j.ID = ID;

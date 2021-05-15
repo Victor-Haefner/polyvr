@@ -42,6 +42,8 @@ class FABRIK {
 
         static FABRIKPtr create();
 
+        size_t size();
+
         void addJoint(int ID, PosePtr p);
         void setJoint(int ID, PosePtr p);
         PosePtr getJointPose(int ID);
