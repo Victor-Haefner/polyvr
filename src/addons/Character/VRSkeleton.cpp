@@ -56,6 +56,12 @@ void VRSkeleton::addConstraint(string name, Vec4d angles) {
 void VRSkeleton::addTarget(string name, PosePtr p) {
     if (!joints.count(name)) return;
     fabrik->setTarget(joints[name], p);
+    targets[name] = p;
+}
+
+PosePtr VRSkeleton::getTarget(string name) {
+    if (!targets.count(name)) return 0;
+    return targets[name];
 }
 
 void VRSkeleton::resolveKinematics() {

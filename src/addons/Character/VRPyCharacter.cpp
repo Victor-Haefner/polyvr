@@ -17,6 +17,7 @@ PyMethodDef VRPyBehavior::methods[] = {
 
 PyMethodDef VRPySkeleton::methods[] = {
     {"getKinematics", PyWrap( Skeleton, getKinematics, "Get internal FABRIK solver", FABRIKPtr ) },
+    {"getTarget", PyWrap( Skeleton, getTarget, "Get joint target by name", PosePtr, string ) },
     {NULL}  /* Sentinel */
 };
 

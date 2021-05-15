@@ -130,8 +130,15 @@
 		
 	class moveParams:
 		def __init__(self):
-			self.leftCycle = walkCycle(VR.target1, VR.target2, 0.2)
-			self.rightCycle = walkCycle(VR.target3, VR.target4, -0.2)
+			s = VR.character.getSkeleton()
+	
+			aL = s.getTarget('ankleL')
+			tL = s.getTarget('toesL')
+			aR = s.getTarget('ankleR')
+			tR = s.getTarget('toesR')
+	
+			self.leftCycle = walkCycle(aL, tL, 0.2)
+			self.rightCycle = walkCycle(aR, tR, -0.2)
 			self.leftCycle.other = self.rightCycle
 			self.rightCycle.other = self.leftCycle
 			self.leftCycle.state = 1
@@ -196,24 +203,6 @@
     <Script base_name="update" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	import VR
-	from math import sin, cos
-	
-	def getTarget(name, p0):
-		if hasattr(VR, name): 
-			t = getattr(VR, name)
-			if t: return t
-		t = VR.Pose(p0)
-		return t
-	
-	VR.target1 = getTarget('target1', [0.2,0,0])
-	VR.target2 = getTarget('target2', [0.2,0,0.2])
-	VR.target3 = getTarget('target3', [-0.2,0,0])
-	VR.target4 = getTarget('target4', [-0.2,0,0.2])
-		
-	VR.fabrik.setTarget(3, VR.target1)  # ankle
-	VR.fabrik.setTarget(4, VR.target2)  # foot
-	VR.fabrik.setTarget(7, VR.target3)  # ankle
-	VR.fabrik.setTarget(8, VR.target4)  # foot
 	
 	VR.character.update()
 </core>

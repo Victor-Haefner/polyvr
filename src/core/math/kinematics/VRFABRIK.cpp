@@ -292,10 +292,8 @@ void FABRIK::backward(Chain& chain) {}
 void FABRIK::chainIteration(Chain& chain) {}
 
 void FABRIK::setTarget(int i, PosePtr p) {
-    if (!joints[i].target) {
-        joints[i].target = p;
-        updateExecutionQueue();
-    } else *joints[i].target = *p;
+    joints[i].target = p;
+    updateExecutionQueue();
 }
 
 void FABRIK::updateExecutionQueue() {

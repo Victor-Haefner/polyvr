@@ -32,6 +32,7 @@ class VRSkeleton : public VRGeometry {
     private:
         FABRIKPtr fabrik;
         map<string, int> joints;
+        map<string, PosePtr> targets;
 
     public:
         VRSkeleton();
@@ -45,6 +46,8 @@ class VRSkeleton : public VRGeometry {
         void addChain(string name, vector<int> jIDs);
         void addConstraint(string name, Vec4d angles);
         void addTarget(string name, PosePtr p);
+
+        PosePtr getTarget(string name);
 
         void clear();
         void setupSimpleHumanoid();
