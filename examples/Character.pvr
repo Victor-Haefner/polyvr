@@ -3,7 +3,7 @@
   <Objects>
     <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" visible="1">
       <Object ambient="0.3 0.3 0.3 1" base_name="light" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" shadowVolume="1e+06 1e+06 1e+06 -1e+06 -1e+06 -1e+06 1" specular="0.1 0.1 0.1 1" type="Light" visible="1">
-        <Object accept_root="1" aspect="1" at="-0.12815 -4.76837e-07 -0.169869" at_dir="0" base_name="Default" far="512" fov="1.0472" from="0.570641 3.77134 2.81531" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
+        <Object accept_root="1" aspect="1" at="-0.12815 -4.76837e-07 -0.169869" at_dir="0" base_name="Default" far="512" fov="1.0472" from="-3.32152 2.01142 2.89268" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
           <attachments>
             <Node base_name="transform" name_space="VRAttachment" name_suffix="0" persistency="666" value=""/>
           </attachments>
@@ -110,17 +110,23 @@
 		def advance(self, d):
 			if self.state == 0: # on ground
 				self.t1.move(d) # move back
+				self.t2.move(d) # move back
 			if self.state == 1:
 				self.a += d*10 # step arc angle
-				tp = self.t1.getFrom()
+				tp = self.t1.pos()
 				tp[0] = 0
 				p0 = [self.x, sin(self.a)*tp.length(), -cos(self.a)*tp.length()]
-				self.t1.setFrom(p0)
+				self.t1.setPos(p0)
+				self.t2.setPos([p0[0], p0[1], p0[2]+0.2])
 				#print self.a
 				if self.a &gt;= pi:
 					self.a = 0
 					self.state = 0
 					self.other.state = 1
+					
+		def setStartPositions(self):
+			self.t1.setPos([self.x,0,0.2])
+			self.t2.setPos([self.x,0,0.4])
 		
 	class moveParams:
 		def __init__(self):
@@ -130,12 +136,9 @@
 			self.rightCycle.other = self.leftCycle
 			self.leftCycle.state = 1
 			
-			VR.target1.setFrom([ 0.2,0,0.2])
-			VR.target3.setFrom([-0.2,0,0.2])
+			self.leftCycle.setStartPositions()
+			self.rightCycle.setStartPositions()
 			
-	def advanceWalkCycle(d):
-		VR.mParams.leftCycle.advance(d)
-		VR.mParams.rightCycle.advance(d)
 	
 	def pathWalk(t):
 		p = VR.mParams.path.getPose(t)
@@ -144,7 +147,9 @@
 		p0 = VR.character.getPose()
 		VR.character.setPose(p)
 		D = p.pos()-p0.pos()
-		advanceWalkCycle(D.length())
+		d = D.length()
+		VR.mParams.leftCycle.advance(d)
+		VR.mParams.rightCycle.advance(d)
 
 
 	def moveTo(p1):
@@ -193,27 +198,23 @@
 	import VR
 	from math import sin, cos
 	
-	def getTarget(name, p0, parent):
+	def getTarget(name, p0):
 		if hasattr(VR, name): 
 			t = getattr(VR, name)
 			if t: return t
-		t = VR.Geometry(name, 'light')
-		if parent: parent.addChild(t)
-		t.setPrimitive('Box 0.05 0.05 0.05 1 1 1')
-		t.setPickable(1)
-		t.setWorldFrom(p0)
+		t = VR.Pose(p0)
 		return t
 		
 	def setTarget(jID, t):
-		VR.fabrik.setTarget(jID, VR.character.getPoseTo(t))
+		VR.fabrik.setTarget(jID, t)
 		
 	#VR.target1 = getTarget('target1', [0,0,VR.armL*0.5], None)
 	#setTarget(VR.armN-1, VR.target1)  # ankle
 	
-	VR.target1 = getTarget('target1', [0.2,0,0], VR.character)
-	VR.target2 = getTarget('target2', [0.2,0,0.2], VR.target1)
-	VR.target3 = getTarget('target3', [-0.2,0,0], VR.character)
-	VR.target4 = getTarget('target4', [-0.2,0,0.2], VR.target3)
+	VR.target1 = getTarget('target1', [0.2,0,0])
+	VR.target2 = getTarget('target2', [0.2,0,0.2])
+	VR.target3 = getTarget('target3', [-0.2,0,0])
+	VR.target4 = getTarget('target4', [-0.2,0,0.2])
 		
 	setTarget(3, VR.target1)  # ankle
 	setTarget(4, VR.target2)  # foot
