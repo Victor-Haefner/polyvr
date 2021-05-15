@@ -4,6 +4,8 @@
 #include "core/objects/geometry/VRGeometry.h"
 #include "VRCharacterFwd.h"
 
+struct WalkMotion;
+
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
@@ -12,7 +14,11 @@ class VRCharacter : public VRGeometry {
         VRSkeletonPtr skeleton;
         map<string, VRBehaviorPtr> behaviors;
         VRUpdateCbPtr updateCb;
+        VRAnimationPtr walkAnim;
+        WalkMotion* motion = 0;
         //map<string, VRBehavior::ActionPtr> actions;
+        void update();
+        void pathWalk(float t);
 
     public:
         VRCharacter(string name );
@@ -25,12 +31,12 @@ class VRCharacter : public VRGeometry {
         VRSkeletonPtr getSkeleton();
 
         void move(string endEffector, PosePtr pose);
+        PathPtr moveTo(Vec3d p);
 
         void addBehavior(VRBehaviorPtr b);
         //void addAction(VRBehavior::ActionPtr a);
 
         void simpleSetup();
-        void update();
 };
 
 OSG_END_NAMESPACE;
