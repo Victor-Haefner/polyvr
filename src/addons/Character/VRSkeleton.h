@@ -86,12 +86,6 @@ class VRSkeleton : public VRGeometry {
         map<string, ChainData> ChainDataMap;
         map<string, SystemData> SystemDataMap;
 
-        VRUpdateCbPtr simCB; // sim override
-
-        VRGeometryPtr jointsGeo;
-        VRGeometryPtr constraintsGeo;
-        VRGeometryPtr angleProjGeo;
-
         string pQuat(Quaterniond& q);
         void initMaterial(); // skeleton visualisation
         void updateJointPositions();
@@ -106,8 +100,6 @@ class VRSkeleton : public VRGeometry {
         void rotateJoints(int i1, int i2, Quaterniond& R, ChainData& chain);
 
         double computeAngleProjection(double l, double g, double d1, double d2);
-        void simStep();
-        void resolveKinematics();
         void mixOrientations();
         void updateBones();
 
@@ -135,12 +127,12 @@ class VRSkeleton : public VRGeometry {
 
         void move(string endEffector, PosePtr pose);
 
-        void overrideSim(VRUpdateCbPtr cb);
         map<string, EndEffector> getEndEffectors();
         vector<Joint> getChain(string endEffector);
         vector<int> getBonesChain(string endEffector);
         vector<int> getJointsChain(vector<int>& chainedBones);
 
+        void resolveKinematics();
         void resolveSystem(string bone);
         void applyFABRIK(string EE);
 };

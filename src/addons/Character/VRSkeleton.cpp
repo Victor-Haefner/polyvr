@@ -22,7 +22,7 @@ VRSkeleton::ConfigurationPtr VRSkeleton::Configuration::create(string n) { retur
 void VRSkeleton::Configuration::setPose(int i, Vec3d p) { joints[i] = p; }
 
 
-VRSkeleton::VRSkeleton() {
+VRSkeleton::VRSkeleton() : VRGeometry("skeleton") {
     armature = Graph::create();
     fabrik = FABRIK::create();
 }
@@ -128,103 +128,18 @@ void VRSkeleton::setupGeometry() {
     mS->setLineWidth(2);
     mS->setPointSize(4);
     setMaterial(mS);
-
-    jointsGeo = VRGeometry::create("joints");
-    addChild(jointsGeo);
-    auto mJ = VRMaterial::get("skeletonJoints");
-    mJ->setLit(0);
-    mJ->setPointSize(15);
-    mJ->setZOffset(1,1);
-	jointsGeo->setMaterial(mJ);
-
-    constraintsGeo = VRGeometry::create("constraints");
-    addChild(constraintsGeo);
-    auto mC = VRMaterial::get("constraints");
-    mC->setLit(0);
-    mC->setLineWidth(2);
-    mC->setWireFrame(1);
-	constraintsGeo->setMaterial(mC);
-
-    angleProjGeo = VRGeometry::create("angleProj");
-    addChild(angleProjGeo);
-    auto mA = VRMaterial::get("angleProj");
-    mA->setLit(0);
-    mA->setLineWidth(2);
-    mA->setWireFrame(1);
-	angleProjGeo->setMaterial(mA);
-
 	updateGeometry();
 }
 
 void VRSkeleton::updateGeometry() {
-    VRGeoData geo;
+    fabrik->visualize(ptr());
+    /*VRGeoData geo;
     asGeometry(geo);
-    geo.apply( ptr() );
-
-    // joints
-    VRGeoData geo2;
-    for (auto j : joints) {
-        geo2.pushVert(j.second.pos, Vec3d(0,1,0), j.second.col);
-		geo2.pushPoint();
-    }
-
-    // endeffectors
-    for (auto e : endEffectors) {
-        if (!e.second.target) continue;
-        auto& joint = joints[ e.second.jointID ];
-        Vec3d p = e.second.target->transform( joint.constraint->getReferenceB()->pos() );
-        geo2.pushVert(p, Vec3d(0,1,0), Color3f(1,0.5,0.2));
-		geo2.pushPoint();
-    }
-    geo2.apply( jointsGeo );
-
-    // TODO
-    // constraints
-    VRGeoData geo3;
-    Color3f col1(0.6,0.8,1.0);
-    Color3f col2(0.8,0.6,1.0);
-    Color3f col3(1.0,0.8,0.5);
-
-    for (auto& c : ChainDataMap) {
-        for (unsigned int i=0; i<c.second.joints.size(); i++) {
-            int jID = c.second.joints[i];
-            //if (joints[jID].name != "waist") continue;
-            //if (c.second.name != "handLeft") continue;
-
-            Vec3d p = joints[jID].pos;
-            JointOrientation& o = c.second.orientations[jID];
-
-            Vec3d d = o.dir1;
-            geo3.pushVert(p, Vec3d(0,1,0), col1);
-            geo3.pushVert(p + d*0.2, Vec3d(0,1,0), col1);
-            geo3.pushLine();
-
-            d = o.dir2;
-            geo3.pushVert(p, Vec3d(0,1,0), col2);
-            geo3.pushVert(p + d*0.2, Vec3d(0,1,0), col2);
-            geo3.pushLine();
-
-            Vec3d u = o.up1;
-            geo3.pushVert(p, Vec3d(0,1,0), col3);
-            geo3.pushVert(p + u*0.2, Vec3d(0,1,0), col3);
-            geo3.pushLine();
-
-            u = o.up2;
-            geo3.pushVert(p, Vec3d(0,1,0), col3);
-            geo3.pushVert(p + u*0.2, Vec3d(0,1,0), col3);
-            geo3.pushLine();
-        }
-    }
-
-    geo3.apply( constraintsGeo );
-
+    geo.apply( ptr() );*/
 }
 
 void VRSkeleton::setupSimpleHumanoid() {
     clear();
-
-
-
 
 	fabrik->addJoint(0, Pose::create(Vec3d(0,1.2,0), Vec3d(0,1,0), Vec3d(0,0,1)));
 
@@ -268,73 +183,7 @@ void VRSkeleton::setupSimpleHumanoid() {
 	fabrik->setTarget(18, Pose::create(Vec3d(0.1,1.8,0)));
 	fabrik->setTarget(18, Pose::create(Vec3d(-0.1,1.8,0)));
 
-
-
-
-
-
-
-    auto ballJoint = [&](PosePtr offsetA, PosePtr offsetB) {
-        auto joint = VRConstraint::create();
-        for (int i=3; i<6; i++) joint->setMinMax(i, -Pi*0.5, Pi*0.5);
-        joint->setReferenceA(offsetA);
-        joint->setReferenceB(offsetB);
-        return joint;
-    };
-
-    auto hingeJoint = [&](PosePtr offsetA, PosePtr offsetB) {
-        auto joint = VRConstraint::create();
-        joint->setMinMax(5, 0, Pi*0.5);
-        joint->setReferenceA(offsetA);
-        joint->setReferenceB(offsetB);
-        return joint;
-    };
-
-    // spine
-    auto waist = ballJoint(Pose::create(Vec3d(0,0,0.15), Vec3d(0,0,1)), Pose::create(Vec3d(0,0,-0.2)));
-    auto neck  = ballJoint(Pose::create(Vec3d(0,0,0.2), Vec3d(0,0,1)), Pose::create(Vec3d(0,0,-0.1)));
-    int abdomen = addBone(Pose::create(Vec3d(0,1.15,0),Vec3d(0,-1,0),Vec3d(0,0,-1)), 0.3, "abdomen");
-    int back    = addBone(Pose::create(Vec3d(0,1.5,0),Vec3d(0,-1,0),Vec3d(0,0,-1)), 0.4, "back");
-    int head    = addBone(Pose::create(Vec3d(0,1.8,0),Vec3d(0,-1,0),Vec3d(0,0,-1)), 0.2, "head");
-    addJoint(abdomen, back, waist, "waist");
-    addJoint(back, head, neck, "neck");
-    setEndEffector("head", head);
-
-    // legs
-    auto ankle = ballJoint(Pose::create(Vec3d(0,0,-0.25)), Pose::create(Vec3d(0,0,0.1), Vec3d(0,0,1)));
-    auto knee  = hingeJoint(Pose::create(Vec3d(0,0,-0.25)), Pose::create(Vec3d(0,0,0.25), Vec3d(0,0,1)));
-    for (auto i : {-0.16,0.16}) {
-        string side = i < 0 ? "Left" : "Right";
-        Color3f sc = i < 0 ? Color3f(1,0,0) : Color3f(0,0,1);
-        auto hip = ballJoint(Pose::create(Vec3d(i,0,-0.15), Vec3d(i*4,0,0)), Pose::create(Vec3d(0,0,0.25), Vec3d(0,0,1)));
-        int foot     = addBone(Pose::create(Vec3d(i,0,-0.1),Vec3d(0,0,-1),Vec3d(0,1,0)), 0.2, "foot"+side);
-        int lowerLeg = addBone(Pose::create(Vec3d(i,0.25,0),Vec3d(0,-1,0),Vec3d(0,0,-1)), 0.5, "lLeg"+side);
-        int upperLeg = addBone(Pose::create(Vec3d(i,0.75,0),Vec3d(0,-1,0),Vec3d(0,0,-1)), 0.5, "uLeg"+side);
-        addJoint(abdomen, upperLeg, hip, "hip"+side, sc);
-        addJoint(upperLeg, lowerLeg, knee, "knee"+side, sc);
-        addJoint(lowerLeg, foot, ankle, "ankle"+side, sc);
-        setEndEffector("foot"+side, foot);
-    }
-
-    // arms
-    auto wrist = ballJoint(Pose::create(Vec3d(0,0,-0.15)), Pose::create(Vec3d(0,0,0.05), Vec3d(0,0,1)));
-    auto elbow = hingeJoint(Pose::create(Vec3d(0,0,-0.15)), Pose::create(Vec3d(0,0,0.15), Vec3d(0,0,1)));
-    for (auto i : {-0.2,0.2}) {
-        string side = i < 0 ? "Left" : "Right";
-        Color3f sc = i < 0 ? Color3f(1,0,0) : Color3f(0,0,1);
-        auto shoulder = ballJoint( Pose::create(Vec3d(i,0,0.2), Vec3d(i*5,0,0)), Pose::create(Vec3d(0,0,0.15), Vec3d(0,0,1)));
-        int hand     = addBone(Pose::create(Vec3d(i,1.05,0),Vec3d(0,-1,0),Vec3d(0,0,-1)), 0.1, "hand"+side);
-        int lowerArm = addBone(Pose::create(Vec3d(i,1.25,0) ,Vec3d(0,-1,0),Vec3d(0,0,-1)), 0.3, "lArm"+side);
-        int upperArm = addBone(Pose::create(Vec3d(i,1.55,0) ,Vec3d(0,-1,0),Vec3d(0,0,-1)), 0.3, "uArm"+side);
-        addJoint(back, upperArm, shoulder, "shoulder"+side, sc);
-        addJoint(upperArm, lowerArm, elbow, "elbow"+side, sc);
-        addJoint(lowerArm, hand, wrist, "wrist"+side, sc);
-        setEndEffector("hand"+side, hand);
-    }
-
-    setRootBone(abdomen);
-    updateJointPositions();
-    setupChains();
+	updateGeometry();
 }
 
 void VRSkeleton::updateJointPositions() {
@@ -360,8 +209,6 @@ vector<int> VRSkeleton::getBoneJoints(int bone) {
 }
 
 Vec3d& VRSkeleton::jointPos(int j) { return joints[j].pos; };
-
-void VRSkeleton::overrideSim(VRUpdateCbPtr cb) { simCB = cb; }
 
 
 /*
@@ -409,39 +256,6 @@ double VRSkeleton::computeAngleProjection(double l, double g, double d1, double 
     int resN = eq.solve(x1,x2,x3);
     double d = x1;
     if (abs(x1) > abs(x2)) d = x2;
-
-    //d = x2;
-
-    if (1) { // debug
-        Vec3d n(0,1,0);
-        Vec3d O(0,2.5,0);
-
-        double x = atan( sin(l)/(d/d1 - cos(l)) );
-        double y = g-x;
-        //double y = atan( sin(l)/(d/d2 - cos(l)) );
-        double dx = d1*sin(x+l)/sin(x);
-        double dy = d2*sin(y+l)/sin(y);
-
-        VRGeoData geo;
-        int i1 = geo.pushVert(O, n, Color3f(1,1,0));
-        int i2 = geo.pushVert(O+Vec3d(0,-d,0), n, Color3f(1,1,0));
-        int i3 = geo.pushVert(O+Vec3d(-sin(l),-cos(l),0)*d1, n, Color3f(1,0,0));
-        int i4 = geo.pushVert(O+Vec3d( sin(l),-cos(l),0)*d2, n, Color3f(0,1,0));
-        int i5 = geo.pushVert(O+Vec3d(0,-dx,0), n, Color3f(1,0,0));
-        int i6 = geo.pushVert(O+Vec3d(0,-dy,0), n, Color3f(0,1,0));
-        geo.pushLine(i1,i2);
-        geo.pushLine(i1,i3);
-        geo.pushLine(i1,i4);
-        geo.pushLine(i3,i5);
-        geo.pushLine(i4,i6);
-        geo.apply(angleProjGeo);
-
-        cout << "  ct: " << 2*l << " -> " << 2*Pi-g << " " << tan(g) << " " << sin(l) << " " << endl;
-        cout << "  ct: " << C << " " << cosA << " " << d1 << " " << d2 << " " << endl;
-        cout << "  ct: " << 1 << " " << b << " " << c << " " << endl;
-        cout << "  ct: " << resN << " " << x1 << " " << x2 << " " << x3 << endl;
-    }
-
     return d;
 }
 

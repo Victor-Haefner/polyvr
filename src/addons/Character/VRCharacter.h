@@ -13,8 +13,6 @@ class VRCharacter : public VRGeometry {
         map<string, VRBehaviorPtr> behaviors;
         //map<string, VRBehavior::ActionPtr> actions;
 
-        void updateGeo();
-
     public:
         VRCharacter(string name );
         ~VRCharacter();
@@ -31,8 +29,7 @@ class VRCharacter : public VRGeometry {
         //void addAction(VRBehavior::ActionPtr a);
 
         void simpleSetup();
-
-        void overrideSim(VRUpdateCbPtr cb);
+        void update();
 };
 
 OSG_END_NAMESPACE;

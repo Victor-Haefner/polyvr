@@ -27,6 +27,10 @@ void VRCharacter::move(string endEffector, PosePtr pose) {
     skeleton->move(endEffector, pose);
 }
 
+void VRCharacter::update() {
+    skeleton->resolveKinematics();
+}
+
 void VRCharacter::simpleSetup() {
     auto s = VRSkeleton::create();
     s->setupSimpleHumanoid();
@@ -52,11 +56,6 @@ void VRCharacter::simpleSetup() {
     stomp_L->addConfiguration( lifted_leg_L );
     stomp_L->addConfiguration( stretched_leg_L );
     addAction(stomp_L);*/
-}
-
-void VRCharacter::overrideSim(VRUpdateCbPtr cb) {
-    if (!skeleton) return;
-    skeleton->overrideSim(cb);
 }
 
 /** TODO
