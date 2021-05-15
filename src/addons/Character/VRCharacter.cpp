@@ -4,13 +4,19 @@
 #include "core/objects/geometry/VRGeoData.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/utils/toString.h"
+#include "core/utils/VRFunction.h"
+#include "core/scene/VRScene.h"
 #include <math.h>
 
 const float Pi = 3.14159;
 
 using namespace OSG;
 
-VRCharacter::VRCharacter (string name) : VRGeometry(name) {}
+VRCharacter::VRCharacter (string name) : VRGeometry(name) {
+    updateCb = VRUpdateCb::create("character-update", bind(&VRCharacter::update, this));
+    VRScene::getCurrent()->addUpdateFkt(updateCb);
+}
+
 VRCharacter::~VRCharacter() {}
 
 VRCharacterPtr VRCharacter::create(string name) { return VRCharacterPtr(new VRCharacter(name) ); }

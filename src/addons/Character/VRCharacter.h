@@ -11,6 +11,7 @@ class VRCharacter : public VRGeometry {
     private:
         VRSkeletonPtr skeleton;
         map<string, VRBehaviorPtr> behaviors;
+        VRUpdateCbPtr updateCb;
         //map<string, VRBehavior::ActionPtr> actions;
 
     public:

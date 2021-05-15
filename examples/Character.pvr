@@ -47,8 +47,6 @@
 	if hasattr(VR, 'character'): VR.character.destroy()
 	VR.character = VR.Character('character', 'light')
 	VR.character.simpleSetup()
-	
-	VR.fabrik = VR.character.getSkeleton().getKinematics()
 </core>
       <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="4" persistency="666"/>
     </Script>
@@ -199,14 +197,6 @@
 	
 </core>
       <trig type="on_device" dev="mouse" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="11" persistency="666"/>
-    </Script>
-    <Script base_name="update" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
-      <core>
-	import VR
-	
-	VR.character.update()
-</core>
-      <trig type="on_timeout" dev="" state="Pressed" param="0" key="0" base_name="trigger" name_space="__global__" name_suffix="9" persistency="666"/>
     </Script>
   </Scripts>
   <Sockets persistency="666"/>
