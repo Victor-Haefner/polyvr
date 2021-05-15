@@ -69,6 +69,31 @@ void VRSkeleton::resolveKinematics() {
     updateGeometry();
 }
 
+vector<VRSkeleton::Bone> VRSkeleton::getBones() {
+    vector<VRSkeleton::Bone> res;
+
+    for (auto c : fabrik->getChains()) {
+        auto joints = fabrik->getChainJoints(c);
+        for (int i=1; i<joints.size(); i++) {
+            auto p1 = fabrik->getJointPose(joints[i-1]);
+            auto p2 = fabrik->getJointPose(joints[i]);
+            Bone b;
+            b.p1 = p1->pos();
+            b.p2 = p2->pos();
+            b.dir = b.p2-b.p1;
+            b.dir.normalize();
+            b.up = p1->up();
+            b.up.normalize();
+            b.length = (b.p2-b.p1).length();
+
+
+            res.push_back(b);
+        }
+    }
+
+    return res;
+}
+
 void VRSkeleton::setupSimpleHumanoid() {
     clear();
 
@@ -111,6 +136,7 @@ void VRSkeleton::setupSimpleHumanoid() {
 	addChain("head", {0,headID,neckID});
 	addTarget("neck", Pose::create(Vec3d(0,1.8,0)));
 
+    fabrik->iterate();
 	updateGeometry();
 }
 

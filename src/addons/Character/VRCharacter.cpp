@@ -1,5 +1,6 @@
 #include "VRCharacter.h"
 #include "VRSkeleton.h"
+#include "VRSkin.h"
 #include "VRBehavior.h"
 #include "core/objects/geometry/VRGeoData.h"
 #include "core/objects/material/VRMaterial.h"
@@ -34,7 +35,8 @@ void VRCharacter::move(string endEffector, PosePtr pose) {
 }
 
 void VRCharacter::update() {
-    skeleton->resolveKinematics();
+    if (skeleton) skeleton->resolveKinematics();
+    if (skin) skin->updateBoneTexture();
 }
 
 void VRCharacter::simpleSetup() {
@@ -55,13 +57,22 @@ void VRCharacter::simpleSetup() {
     auto lifted_leg_L = VRSkeleton::Configuration::create("lifted_leg_L");
 
 
+    VRGeoData hullData; // TODO: create test hull
+    for (auto& bone : s->getBones()) {
+        Vec3d p = (bone.p1+bone.p2)*0.5;
+        Vec3d n = bone.up;
+        Vec3d u = bone.dir;
+        Vec2d s = Vec2d(0.1, bone.length);
+        hullData.pushQuad(p,n,u,s,true);
+        cout << "   test hull quad: " << p << " / "  << n << " / " << u << " / " << s << endl;
+    }
 
-    // actions
-    /*auto stomp_L = VRBehavior::Action::create("stomp_L");
-    stomp_L->addConfiguration( stretched_leg_L );
-    stomp_L->addConfiguration( lifted_leg_L );
-    stomp_L->addConfiguration( stretched_leg_L );
-    addAction(stomp_L);*/
+    auto hull = hullData.asGeometry("hull");
+    addChild(hull);
+
+    skin = VRSkin::create(s);
+    skin->computeMapping(hull);
+    hull->setMaterial( skin->getMaterial() );
 }
 
 

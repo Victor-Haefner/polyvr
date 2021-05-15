@@ -12,6 +12,7 @@ using namespace std;
 class VRCharacter : public VRGeometry {
     private:
         VRSkeletonPtr skeleton;
+        VRSkinPtr skin;
         map<string, VRBehaviorPtr> behaviors;
         VRUpdateCbPtr updateCb;
         VRAnimationPtr walkAnim;

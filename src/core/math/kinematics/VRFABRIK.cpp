@@ -101,6 +101,7 @@ void FABRIK::addChain(string name, vector<int> joints) {
     updateExecutionQueue();
 }
 
+vector<string> FABRIK::getChains() { return chainOrder; }
 vector<int> FABRIK::getChainJoints(string name) { return chains[name].joints; }
 
 void FABRIK::addSpring(int j, Vec3d anchor) {

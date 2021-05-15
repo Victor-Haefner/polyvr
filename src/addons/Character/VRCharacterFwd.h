@@ -7,6 +7,7 @@ namespace OSG {
     ptrFwd(VRCharacter);
     ptrFwd(VRSkeleton);
     ptrFwd(VRBehavior);
+    ptrFwd(VRSkin);
 }
 
 #endif // VRCHARACTERFWD_H_INCLUDED

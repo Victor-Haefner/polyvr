@@ -49,6 +49,7 @@ class FABRIK {
         PosePtr getJointPose(int ID);
 
         void addChain(string name, vector<int> joints);
+        vector<string> getChains();
         vector<int> getChainJoints(string name);
 
         void addConstraint(int j, Vec4d angles);

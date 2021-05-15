@@ -27,6 +27,14 @@ class VRSkeleton : public VRGeometry {
             Configuration interpolate(Configuration& other);
         };
 
+        struct Bone {
+            Vec3d p1;
+            Vec3d p2;
+            Vec3d dir;
+            Vec3d up;
+            float length = 0;
+        };
+
         typedef shared_ptr<Configuration> ConfigurationPtr;
 
     private:
@@ -48,6 +56,7 @@ class VRSkeleton : public VRGeometry {
         void addTarget(string name, PosePtr p);
 
         PosePtr getTarget(string name);
+        vector<Bone> getBones();
 
         void clear();
         void setupSimpleHumanoid();
