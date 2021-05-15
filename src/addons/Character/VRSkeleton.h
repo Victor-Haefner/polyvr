@@ -43,6 +43,8 @@ class VRSkeleton : public VRGeometry {
 
         int addJoint(string name, PosePtr p);
         void addChain(string name, vector<int> jIDs);
+        void addConstraint(string name, Vec4d angles);
+        void addTarget(string name, PosePtr p);
 
         void clear();
         void setupSimpleHumanoid();

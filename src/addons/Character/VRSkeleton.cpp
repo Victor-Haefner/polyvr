@@ -48,6 +48,73 @@ void VRSkeleton::addChain(string name, vector<int> jIDs) {
     fabrik->addChain(name, jIDs);
 }
 
+void VRSkeleton::addConstraint(string name, Vec4d angles) {
+    if (!joints.count(name)) return;
+    fabrik->addConstraint(joints[name], angles);
+}
+
+void VRSkeleton::addTarget(string name, PosePtr p) {
+    if (!joints.count(name)) return;
+    fabrik->setTarget(joints[name], p);
+}
+
+void VRSkeleton::resolveKinematics() {
+    if (fabrik) fabrik->iterate();
+    updateGeometry();
+}
+
+void VRSkeleton::setupSimpleHumanoid() {
+    clear();
+
+    int coreID = addJoint("core", Pose::create(Vec3d(0,1.2,0), Vec3d(0,1,0), Vec3d(0,0,1)));
+
+	auto addLeg = [&](string side, float w, int i) {
+		int hipID = addJoint("hip"+side, Pose::create(Vec3d(w,1.0,0), Vec3d(0,1,0), Vec3d(0,0,1)));
+		int kneeID = addJoint("knee"+side, Pose::create(Vec3d(w,0.5,0), Vec3d(0,1,0), Vec3d(0,0,1)));
+		int ankleID = addJoint("ankle"+side, Pose::create(Vec3d(w,0,0), Vec3d(0,1,0), Vec3d(0,0,1)));
+		int toesID = addJoint("toes"+side, Pose::create(Vec3d(w,-0.2,0), Vec3d(0,1,0), Vec3d(0,0,1)));
+
+		addChain("foot"+side, {ankleID,toesID});
+		addChain("leg"+side, {hipID,kneeID,ankleID});
+
+		float a1 = 0.4; // 0.1
+		float a2 = 2.0;
+		addConstraint("knee"+side, Vec4d(a1,0,a1,a2)); // knee
+		addConstraint("ankle"+side, Vec4d(a1,a2,a1,a1)); // ankle
+
+		addTarget("ankle"+side, Pose::create(Vec3d(w,0,0)));
+		addTarget("toes"+side, Pose::create(Vec3d(w,-0.01,0.2)));
+    };
+
+	auto addArm = [&](string side, float w, int i) {
+		int shoulderID = addJoint("shoulder"+side, Pose::create(Vec3d(w,1.5,0)));
+		int elbowID = addJoint("elbow"+side, Pose::create(Vec3d(w,1.2,0)));
+		int wristID = addJoint("wrist"+side, Pose::create(Vec3d(w,0.9,0)));
+		int handID = addJoint("hand"+side, Pose::create(Vec3d(w,0.8,0)));
+		addChain("arm"+side, {0,shoulderID,elbowID,wristID,handID});
+		addTarget("hand"+side, Pose::create(Vec3d(w,0.8,0)));
+    };
+
+	addLeg("L", 0.2, 0);
+	addLeg("R",-0.2, 4);
+	addArm("L", 0.3, 8);
+	addArm("R",-0.3,12);
+
+	int headID = addJoint("head", Pose::create(Vec3d(0,1.6,0)));
+	int neckID = addJoint("neck", Pose::create(Vec3d(0,1.8,0)));
+	addChain("head", {0,headID,neckID});
+	addTarget("neck", Pose::create(Vec3d(0,1.8,0)));
+
+	updateGeometry();
+}
+
+void VRSkeleton::updateGeometry() {
+    fabrik->visualize(ptr());
+    /*VRGeoData geo;
+    asGeometry(geo);
+    geo.apply( ptr() );*/
+}
+
 void VRSkeleton::asGeometry(VRGeoData& data) {
     Vec3d n(1,0,0);
     Color3f red(1,0,0);
@@ -93,62 +160,6 @@ void VRSkeleton::setupGeometry() {
 	updateGeometry();
 }
 
-void VRSkeleton::resolveKinematics() {
-    if (fabrik) fabrik->iterate();
-    updateGeometry();
-}
-
-void VRSkeleton::updateGeometry() {
-    fabrik->visualize(ptr());
-    /*VRGeoData geo;
-    asGeometry(geo);
-    geo.apply( ptr() );*/
-}
-
-void VRSkeleton::setupSimpleHumanoid() {
-    clear();
-
-    int coreID = addJoint("core", Pose::create(Vec3d(0,1.2,0), Vec3d(0,1,0), Vec3d(0,0,1)));
-
-	auto addLeg = [&](string n, float w, int i) {
-		int hipID = addJoint("hip", Pose::create(Vec3d(w,1.0,0), Vec3d(0,1,0), Vec3d(0,0,1)));
-		int kneeID = addJoint("knee", Pose::create(Vec3d(w,0.5,0), Vec3d(0,1,0), Vec3d(0,0,1)));
-		int ankleID = addJoint("ankle", Pose::create(Vec3d(w,0,0), Vec3d(0,1,0), Vec3d(0,0,1)));
-		int toesID = addJoint("toes", Pose::create(Vec3d(w,-0.2,0), Vec3d(0,1,0), Vec3d(0,0,1)));
-
-		addChain(n+"_foot", {ankleID,toesID});
-		addChain(n, {hipID,kneeID,ankleID});
-
-		float a1 = 0.4; // 0.1
-		float a2 = 2.0;
-		fabrik->addConstraint(kneeID, Vec4d(a1,0,a1,a2)); // knee
-		fabrik->addConstraint(ankleID, Vec4d(a1,a2,a1,a1)); // ankle
-
-		fabrik->setTarget(ankleID, Pose::create(Vec3d(w,0,0)));
-		fabrik->setTarget(toesID, Pose::create(Vec3d(w,-0.01,0.2)));
-    };
-
-	auto addArm = [&](string n, float w, int i) {
-		int shoulderID = addJoint("shoulder", Pose::create(Vec3d(w,1.5,0)));
-		int elbowID = addJoint("elbow", Pose::create(Vec3d(w,1.2,0)));
-		int wristID = addJoint("wrist", Pose::create(Vec3d(w,0.9,0)));
-		int handID = addJoint("hand", Pose::create(Vec3d(w,0.8,0)));
-		addChain(n, {0,shoulderID,elbowID,wristID,handID});
-		fabrik->setTarget(handID, Pose::create(Vec3d(w,0.8,0)));
-    };
-
-	addLeg("leg1", 0.2, 0);
-	addLeg("leg2",-0.2, 4);
-	addArm("arm1", 0.3, 8);
-	addArm("arm2",-0.3,12);
-
-	int headID = addJoint("head", Pose::create(Vec3d(0,1.6,0)));
-	int neckID = addJoint("neck", Pose::create(Vec3d(0,1.8,0)));
-	addChain("head", {0,headID,neckID});
-	fabrik->setTarget(neckID, Pose::create(Vec3d(0,1.8,0)));
-
-	updateGeometry();
-}
 
 
 
