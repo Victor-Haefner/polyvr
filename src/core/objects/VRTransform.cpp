@@ -1107,6 +1107,7 @@ void VRTransform::setGravity(Vec3d g) { if (auto p = getPhysics()) p->setGravity
 void VRTransform::setCenterOfMass(Vec3d g) { if (auto p = getPhysics()) p->setCenterOfMass(g); }
 void VRTransform::setGhost(bool g) { if (auto p = getPhysics()) p->setGhost(g); }
 void VRTransform::setDamping(float ld, float ad, bool f) { if (auto p = getPhysics()) p->setDamping(ld, ad, f); }
+void VRTransform::resetForces() { if (auto p = getPhysics()) p->resetForces(); }
 
 Vec3d VRTransform::getForce() { if (auto p = getPhysics()) return p->getForce(); else return Vec3d(); }
 Vec3d VRTransform::getTorque() { if (auto p = getPhysics()) return p->getTorque(); else return Vec3d(); }

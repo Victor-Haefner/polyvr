@@ -128,6 +128,7 @@ PyMethodDef VRPyTransform::methods[] = {
     {"getCenterOfMass", PyWrap(Transform, getCenterOfMass, "get physics center of mass offset", Vec3d ) },
     {"getPhysicsDynamic", PyWrap(Transform, getPhysicsDynamic, "get if dynamic physics object", bool ) },
     {"setPhysicsDynamic", PyWrap(Transform, setPhysicsDynamic, "set if dynamic physics object", void, bool ) },
+    {"resetForces", PyWrap(Transform, resetForces, "Reset velocity and forces to zero", void ) },
 #endif
     {NULL}  /* Sentinel */
 };
