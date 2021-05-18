@@ -10,6 +10,8 @@ uniform int grid;
 uniform int isRightEye;
 uniform vec2 OSGViewportSize;
 
+in vec2 coords;
+
 bool inRect(vec2 p, vec2 mi, vec2 ma) {
     if (p[0] < mi[0] || p[1] < mi[1]) return false;
     if (p[0] > ma[0] || p[1] > ma[1]) return false;
@@ -50,7 +52,7 @@ vec4 drawMarker(vec2 p, int m, vec2 pos, float size, vec4 fg, vec4 bg) {
 
 void main(void) {
     ivec2 s = ivec2(OSGViewportSize.xy);
-    ivec2 p = ivec2(gl_FragCoord.xy);
+    ivec2 p = ivec2(coords.xy*s.xy);
 
     vec4 white = vec4(1.0);
     vec4 black = vec4(0.0, 0.0, 0.0, 1.0);

@@ -5,7 +5,7 @@
 #include "core/scene/VRObjectManager.h"
 #include "core/objects/object/VRObject.h"
 #include "core/math/VRMathFwd.h"
-#include "core/math/Octree.h"
+#include "core/math/partitioning/Octree.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;

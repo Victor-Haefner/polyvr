@@ -1,6 +1,6 @@
 #include "CSGGeometry.h"
 #include "CGALTypedefs.h"
-#include "core/math/Octree.h"
+#include "core/math/partitioning/Octree.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/geometry/OSGGeometry.h"
 

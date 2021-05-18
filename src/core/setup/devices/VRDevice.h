@@ -19,7 +19,7 @@ class VRDevice : public std::enable_shared_from_this<VRDevice>, public VRName, p
         Vec2d speed;
 
         map< string, VRSignalPtr > callbacks; //all callbacks
-        map<VRSignal*, VRSignalPtr> activatedSignals;
+        map<VRSignal*, pair<VRSignalPtr,int>> activatedSignals;
         map<VRSignal*, VRDeviceCbPtr> deactivationCallbacks;
         map<int, int> BStates;//states of buttons
         map<int, float> SStates;//states of slider
@@ -53,7 +53,7 @@ class VRDevice : public std::enable_shared_from_this<VRDevice>, public VRName, p
         void change_button(int key, int state);
         void change_slider(int key, float state);
 
-        void addUpdateSignal(VRSignalPtr sig);
+        void addUpdateSignal(VRSignalPtr sig, int key);
         void remUpdateSignal(VRSignalPtr sig, VRDeviceWeakPtr dev);
         void updateSignals();
 

@@ -101,11 +101,6 @@ class VRPhysics : public VRStorage {
         bool addNeighboursDistPoints = false;
         bool addFacesPoints = false;
 
-        vector<Vec3d> torqueJob;
-        vector<Vec3d> forceJob;
-        vector<Vec3d> torqueJob2;
-        vector<Vec3d> forceJob2;
-
         string comType = "geometric";
         Vec3d CoMOffset; // center of mass offset
         Vec3d CoMOffset_custom; // center of mass offset
@@ -113,7 +108,6 @@ class VRPhysics : public VRStorage {
         map<VRPhysics*, VRPhysicsJoint*> joints ;
         map<VRPhysics*, VRPhysicsJoint*> joints2;
 
-        /** total force & torque added by addForce() or addTorque() in this frame **/
         btVector3 constantForce = btVector3(0,0,0);
         btVector3 constantTorque = btVector3(0,0,0);
 
@@ -198,17 +192,13 @@ class VRPhysics : public VRStorage {
         void resetForces();
         void applyImpulse(Vec3d i);
         void applyTorqueImpulse(Vec3d i);
-        /** requests a force, which is handled in the physics thread later**/
-        void addForce(Vec3d i);
-        void addTorque(Vec3d i);
 
         void addConstantForce(Vec3d i);
         void addConstantTorque(Vec3d i);
         float getConstraintAngle(VRPhysics *to, int axis);
         void deleteConstraints(VRPhysics* with);
-        /**get the requested total force in this frame **/
+
         Vec3d getForce();
-        /** get requested total torque**/
         Vec3d getTorque();
 
         Vec3d getLinearVelocity();

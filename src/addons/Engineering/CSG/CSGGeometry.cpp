@@ -5,7 +5,7 @@
 #include "core/objects/geometry/OSGGeometry.h"
 #include "core/objects/geometry/VRGeoData.h"
 #include "core/objects/material/VRMaterial.h"
-#include "core/math/Octree.h"
+#include "core/math/partitioning/Octree.h"
 #include "core/math/pose.h"
 #include "core/utils/toString.h"
 

@@ -17,7 +17,7 @@
 #include "core/setup/windows/VRGtkWindow.h"
 #include "core/scene/VRScene.h"
 #include "core/scene/rendering/VRDefShading.h"
-#include "core/math/boundingbox.h"
+#include "core/math/partitioning/boundingbox.h"
 #include "core/networking/tcp/VRTCPServer.h"
 
 #include <OpenSG/OSGBackground.h>

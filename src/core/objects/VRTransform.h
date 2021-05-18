@@ -238,11 +238,13 @@ class VRTransform : public VRObject {
         void setGhost(bool g);
         void setDamping(float ld, float ad, bool fast = false);
 
+        void resetForces();
         bool getPhysicsDynamic();
         void setPhysicsDynamic(bool b);
 
         Vec3d getForce();
         Vec3d getTorque();
+        Vec3d getVelocity();
 #endif
 };
 

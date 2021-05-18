@@ -1,5 +1,5 @@
 #include "VRPathFinding.h"
-#include "core/math/graph.h"
+#include "core/math/partitioning/graph.h"
 #include "core/math/path.h"
 #include "core/utils/toString.h"
 

@@ -337,8 +337,8 @@ void virtuose::updateVirtMechPost() {
 			Vec3d frc = Vec3d( f[1], f[2], f[0] ); // position +1 +2 +0
 			Vec3d trqu = Vec3d( f[4], f[5], f[3] ); // rotation +4 +5 +3    (x-Achse am haptik: force[4])(y-Achse am haptik: force[5])(z-Achse am haptik: force[3])
 			totalForce = frc;
-            attached->getPhysics()->addForce(frc);
-            attached->getPhysics()->addTorque(trqu);
+            attached->getPhysics()->addConstantForce(frc);
+            attached->getPhysics()->addConstantTorque(trqu);
         }
     }
 }

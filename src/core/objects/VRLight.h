@@ -2,7 +2,7 @@
 #define VRLIGHT_H_INCLUDED
 
 #include "core/objects/object/VRObject.h"
-#include "core/math/boundingbox.h"
+#include "core/math/partitioning/boundingbox.h"
 #include <OpenSG/OSGSField.h>
 #include <OpenSG/OSGColor.h>
 

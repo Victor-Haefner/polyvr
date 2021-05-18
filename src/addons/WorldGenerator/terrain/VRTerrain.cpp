@@ -7,7 +7,7 @@
 #include "core/objects/geometry/VRGeoData.h"
 #include "core/objects/geometry/OSGGeometry.h"
 #include "core/utils/VRFunction.h"
-#include "core/math/boundingbox.h"
+#include "core/math/partitioning/boundingbox.h"
 #include "core/math/polygon.h"
 #include "core/math/triangulator.h"
 #include "core/math/pose.h"
@@ -202,6 +202,17 @@ void VRTerrain::paintHeights(string woods, string gravel) {
 
 void VRTerrain::paintHeights(string path, Color4f mCol, float mAmount) {
     mat->setTexture(path, 0, 3);
+    //if (mAmount > 0 )
+    //    if (auto t = mat->getTexture(3)) t->mixColor(mCol, mAmount);
+    mat->setShaderParameter("mixColor", mCol);
+    mat->setShaderParameter("mixAmount", mAmount);
+    mat->setShaderParameter("texPic", 3);
+    mat->setShaderParameter("doHeightTextures", 2);
+    mat->clearTransparency();
+}
+
+void VRTerrain::paintHeights(VRTexturePtr tex, Color4f mCol, float mAmount) {
+    mat->setTexture(tex, 0, 3);
     //if (mAmount > 0 )
     //    if (auto t = mat->getTexture(3)) t->mixColor(mCol, mAmount);
     mat->setShaderParameter("mixColor", mCol);
@@ -523,13 +534,21 @@ bool VRTerrain::applyIntersectionAction(Action* action) {
     return true;
 }
 
+Vec2d VRTerrain::getTexCoord( Vec2d p ) {
+    auto texSize = heigthsTex->getSize();
+    Vec2d texel = Vec2d( 1.0/texSize[0], 1.0/texSize[1] );
+
+    double u = (1.0-texel[0])*p[0]/size[0] + 0.5;
+    double v = (1.0-texel[1])*p[1]/size[1] + 0.5;
+    return Vec2d(u,v);
+}
+
 Vec2d VRTerrain::toUVSpace(Vec2d p) {
+    Vec2d uv = getTexCoord(p);
     int W = heigthsTex->getSize()[0]-1;
     int H = heigthsTex->getSize()[1]-1;
-    double u = (p[0]/size[0] + 0.5)*W;
-    double v = (p[1]/size[1] + 0.5)*H;
-    return Vec2d(u,v);
-};
+    return Vec2d(uv[0]*W, uv[1]*H);
+}
 
 Vec2d VRTerrain::fromUVSpace(Vec2d uv) {
     int W = heigthsTex->getSize()[0]-1;
@@ -537,12 +556,6 @@ Vec2d VRTerrain::fromUVSpace(Vec2d uv) {
     double x = ((uv[0])/W-0.5)*size[0];
     double z = ((uv[1])/H-0.5)*size[1];
     return Vec2d(x,z);
-};
-
-Vec2d VRTerrain::getTexCoord( Vec2d p ) {
-    double u = p[0]/size[0] + 0.5;
-    double v = p[1]/size[1] + 0.5;
-    return Vec2d(u,v);
 }
 
 double VRTerrain::getHeight(Vec2d p, bool useEmbankments) {
@@ -924,6 +937,11 @@ void main( void ) {
 
 	if (isLit == 1) applyBlinnPhong();
 	else gl_FragColor = color;//mix(color, vec4(1,1,1,1), 0.2);
+
+	/*vec2 uv = gl_TexCoord[0].xy;
+	uv *= 50.0;
+	uv -= floor(uv);
+	gl_FragColor = vec4(uv, 0, 1);*/
 }
 );
 

@@ -70,8 +70,9 @@ void VRAtlas::Patch::paint() {
     auto onMap = [](VRMapDescriptorPtr desc, VRTerrainPtr terrain, Vec3d localPos, bool& loaded) {
         if (!desc->isComplete()) return;
 
-        string orthoPic = desc->getMap(2);
-        string heightPic = desc->getMap(3);
+        string orthoPic = desc->getMapPath(2);
+        string heightPic = desc->getMapPath(3);
+
         bool checkHeight = exists(heightPic);
         bool checkOrtho = exists(orthoPic);
         terrain->setVisible(true);
@@ -83,6 +84,13 @@ void VRAtlas::Patch::paint() {
             double localHeightoffset = terrain->getHeightOffset();
             Vec3d pos = Vec3d(localPos[0],localHeightoffset,localPos[2]);
             terrain->setTransform(pos);
+
+            auto mt = terrain->getMaterial();
+            mt->setSortKey(2);
+            mt->setStencilBuffer(false, 1, -1, GL_ALWAYS, GL_KEEP, GL_KEEP, GL_KEEP);
+
+            removeFile(orthoPic);
+            removeFile(heightPic);
         }
         loaded = true;
     };

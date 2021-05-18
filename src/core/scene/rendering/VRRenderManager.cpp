@@ -67,6 +67,7 @@ void VRRenderManager::update() {
             rendering->setCalib(calib);
             rendering->setHMDD(do_hmdd);
             rendering->setMarker(do_marker);
+            rendering->setStencil(do_stencil);
             rendering->setFXAA(do_fxaa);
         }
 
@@ -80,6 +81,7 @@ void VRRenderManager::update() {
             rendering->setCalib(calib);
             rendering->setHMDD(do_hmdd);
             rendering->setMarker(do_marker);
+            rendering->setStencil(do_stencil);
             rendering->setFXAA(do_fxaa);
         }
     }
@@ -120,6 +122,7 @@ bool VRRenderManager::getDefferedShading() { return deferredRendering; }
 bool VRRenderManager::getSSAO() { return do_ssao; }
 bool VRRenderManager::getHMDD() { return do_hmdd; }
 bool VRRenderManager::getMarker() { return do_marker; }
+bool VRRenderManager::getStencil() { return do_stencil; }
 bool VRRenderManager::getCalib() { return calib; }
 bool VRRenderManager::getFXAA() { return do_fxaa; }
 
@@ -186,6 +189,7 @@ void VRRenderManager::setSSAOnoise(int k) { ssao_noise = k; update(); }
 void VRRenderManager::setCalib(bool b) { calib = b; update(); }
 void VRRenderManager::setHMDD(bool b) { do_hmdd = b; update(); }
 void VRRenderManager::setMarker(bool b) { do_marker = b; update(); }
+void VRRenderManager::setStencil(bool b) { do_stencil = b; update(); }
 void VRRenderManager::setFXAA(bool b) { do_fxaa = b; update(); }
 
 string glParam(GLenum e) {

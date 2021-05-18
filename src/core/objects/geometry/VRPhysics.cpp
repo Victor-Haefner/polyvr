@@ -139,10 +139,6 @@ void VRPhysics::prepareStep() {
     if (soft || !body) return;
     auto f = constantForce;
     auto t = constantTorque;
-    for (auto j : forceJob) { f += toBtVector3(j); forceJob2.push_back(j); }
-    for (auto j : torqueJob) { t += toBtVector3(j); torqueJob2.push_back(j); }
-    forceJob.clear();
-    torqueJob.clear();
     if (f.length2() > 0) body->applyCentralForce(f);
     if (t.length2() > 0) body->applyTorque(t);
 }
@@ -380,6 +376,7 @@ void VRPhysics::setDynamic(bool b, bool fast) {
             body->setMassProps(0, btVector3(0,0,0));
             body->setCollisionFlags(body->getCollisionFlags() |  btCollisionObject::CF_STATIC_OBJECT);
         } else {
+            updateTransformation(vr_obj.lock());
             body->setMassProps(mass, inertia);
             body->setCollisionFlags(body->getCollisionFlags() & ~btCollisionObject::CF_STATIC_OBJECT);
         }
@@ -1108,10 +1105,11 @@ void VRPhysics::updateVisualGeo() {
 }
 
 void VRPhysics::updateTransformation(OSG::VRTransformPtr trans) {
+    if (!trans) return;
     PLock lock(VRPhysics_mtx());
     //static VRRate FPS; int fps = FPS.getRate(); cout << "VRPhysics::updateTransformation " << fps << endl;
     auto bt = fromVRTransform(trans, scale, CoMOffset);
-    if (body) { body->setWorldTransform(bt); body->activate(); }
+    if (body) { body->setWorldTransform(bt); resetForces(); body->activate(); }
     if (ghost_body) { ghost_body->setWorldTransform(bt); ghost_body->activate(); }
     if (visShape && visShape->isVisible()) visShape->setWorldMatrix( getTransformation() );
 }
@@ -1187,7 +1185,7 @@ void VRPhysics::applyImpulse(OSG::Vec3d i) {
     if (mass == 0) return;
     PLock lock(VRPhysics_mtx());
     i *= 1.0/mass;
-    body->setLinearVelocity(toBtVector3(i));
+    body->applyCentralImpulse(toBtVector3(i));
 }
 
 void VRPhysics::applyTorqueImpulse(OSG::Vec3d i) {
@@ -1196,18 +1194,6 @@ void VRPhysics::applyTorqueImpulse(OSG::Vec3d i) {
     PLock lock(VRPhysics_mtx());
     //body->setAngularVelocity(btVector3(i[0]/mass, i[1]/mass, i[2]/mass));
     body->applyTorqueImpulse(toBtVector3(i));
-}
-
-void VRPhysics::addForce(OSG::Vec3d i) {
-   if (body == 0 || mass == 0) return;
-   PLock lock(VRPhysics_mtx());
-   forceJob.push_back(i);
-}
-
-void VRPhysics::addTorque(OSG::Vec3d i) {
-   if (body == 0 || mass == 0) return;
-   PLock lock(VRPhysics_mtx());
-   torqueJob.push_back(i);
 }
 
 void VRPhysics::addConstantForce(OSG::Vec3d i) { PLock lock(VRPhysics_mtx()); constantForce = toBtVector3(i); }

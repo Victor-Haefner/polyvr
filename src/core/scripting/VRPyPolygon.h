@@ -2,7 +2,7 @@
 #define VRPYPOLYGON_H_INCLUDED
 
 #include "core/math/polygon.h"
-#include "core/math/frustum.h"
+#include "core/math/partitioning/frustum.h"
 #include "core/scripting/VRPyBase.h"
 
 struct VRPyPolygon : VRPyBaseT<OSG::VRPolygon> {

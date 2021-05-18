@@ -28,7 +28,7 @@ void VRMapManager::addMapType(int ID, string vault, string servScript, string fi
     mapTypes[ID].format = format;
 }
 
-VRMapDescriptorPtr VRMapManager::getMap(double N, double E, double S, vector<int> types, VRMapCbPtr mcb) {
+VRMapDescriptorPtr VRMapManager::getMap(double N, double E, double S, vector<int> types, VRMapCbPtr mcb, bool doCache) {
     VRMapDescriptorPtr data = VRMapDescriptor::create(N,E,S);
     //cout << "VRMapManager::getMap " << Vec3d(N,E,S) << endl;
 
@@ -38,7 +38,7 @@ VRMapDescriptorPtr VRMapManager::getMap(double N, double E, double S, vector<int
     }
 
     for (auto mapType : types) {
-        string filename = data->getMap(mapType);
+        string filename = data->getMapPath(mapType);
         if (!exists(filename)) {
             requestFile(filename, N,E,S, mapType, types, mcb);
             if (!mcb) data->setMap(mapType, filename);
@@ -65,6 +65,7 @@ void VRMapManager::handleRequestAnswer(VRRestResponsePtr response, string filena
 
     // store result in file 'filename'
     storeFile(filename, response->getData());
+
     if (!exists(filename)) { cout << "VRMapManager Warning! store file '" << filename << "' failed!" << endl; return; }
     if (mcb) getMap(N, E, S, types, mcb);
 }
@@ -93,8 +94,8 @@ void VRMapManager::triggerCB(VRMapCbPtr mcb, VRMapDescriptorPtr data) {
 void VRMapManager::storeFile(const string& filename, const string& data) {
     if (data == "") return;
     ofstream f;
-    f.open(filename);
-    f << data;
+    f.open(filename, std::ios_base::binary);
+    f.write(&data[0], data.size()); // force binary mode, else windows will mess with f** cariage returns!
     f.close();
 }
 
@@ -127,14 +128,19 @@ VRMapDescriptorPtr VRMapDescriptor::create(double n, double e, double s) {
     return d;
 }
 
-string VRMapDescriptor::getMap(int i) {
-    if (layers.count(i)) return layers[i];
+VRTexturePtr VRMapDescriptor::getMap(int i) {
+    if (layers.count(i)) return layers[i].tex;
+    return 0;
+}
+
+string VRMapDescriptor::getMapPath(int i) {
+    if (layers.count(i)) return layers[i].path;
     return "";
 }
 
 Vec3d VRMapDescriptor::getParameters() { return Vec3d(N, E, S); }
 
-void VRMapDescriptor::setMap(int i, string s) { layers[i] = s; }
+void VRMapDescriptor::setMap(int i, string s) { layers[i].path = s; }
 void VRMapDescriptor::setParameters(double n, double e, double s) { N = n; E = e; S = s; }
 
 void VRMapDescriptor::setCompleteness(bool c) { complete = c; }

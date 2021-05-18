@@ -1,6 +1,6 @@
 #include "VRPySpatialCollisionManager.h"
 #include "core/scripting/VRPyBaseT.h"
-#include "core/math/boundingbox.h"
+#include "core/math/partitioning/boundingbox.h"
 #include "core/objects/geometry/VRPhysics.h"
 
 using namespace OSG;

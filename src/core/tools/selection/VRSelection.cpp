@@ -1,7 +1,7 @@
 #include "VRSelection.h"
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/geometry/OSGGeometry.h"
-#include "core/math/boundingbox.h"
+#include "core/math/partitioning/boundingbox.h"
 #include "core/utils/toString.h"
 
 #include <OpenSG/OSGGeometry.h>

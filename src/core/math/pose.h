@@ -44,6 +44,7 @@ class Pose {
 
         Matrix4d asMatrix() const;
         void invert();
+        PosePtr inverse();
         Vec3d transform(const Vec3d& p, bool doTranslate = true);
         Vec3d transformInv(const Vec3d& p);
 

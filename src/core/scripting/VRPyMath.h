@@ -3,8 +3,9 @@
 
 #include "VRPyObject.h"
 #include "core/math/Expression.h"
-#include "core/math/Tsdf.h"
-#include "core/math/Octree.h"
+#include "core/math/partitioning/Tsdf.h"
+#include "core/math/partitioning/Octree.h"
+#include "core/math/partitioning/Quadtree.h"
 #ifndef WITHOUT_LAPACKE_BLAS
 #include "core/math/PCA.h"
 #endif
@@ -18,6 +19,7 @@
 
 PyObject* toPyObject(const OSG::Vec2d& v);
 PyObject* toPyObject(const OSG::Vec3d& v);
+PyObject* toPyObject(const OSG::Color3f& v);
 
 struct VRPyMath {
     static PyMethodDef methods[];
@@ -125,8 +127,26 @@ struct VRPyTSDF : VRPyBaseT<OSG::TSDF> {
     static PyObject* New(PyTypeObject *type, PyObject *args, PyObject *kwds);
 };
 
+struct VRPyPartitiontreeNode : VRPyBaseT<OSG::PartitiontreeNode> {
+    static PyMethodDef methods[];
+};
+
+struct VRPyQuadtreeNode : VRPyBaseT<OSG::QuadtreeNode> {
+    static PyMethodDef methods[];
+};
+
 struct VRPyOctreeNode : VRPyBaseT<OSG::OctreeNode> {
     static PyMethodDef methods[];
+};
+
+struct VRPyPartitiontree : VRPyBaseT<OSG::Partitiontree> {
+    static PyMethodDef methods[];
+};
+
+struct VRPyQuadtree : VRPyBaseT<OSG::Quadtree> {
+    static PyMethodDef methods[];
+
+    static PyObject* New(PyTypeObject *type, PyObject *args, PyObject *kwds);
 };
 
 struct VRPyOctree : VRPyBaseT<OSG::Octree> {

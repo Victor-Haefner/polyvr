@@ -4,7 +4,7 @@
 #include <vector>
 #include "core/math/OSGMathFwd.h"
 #include "core/math/VRMathFwd.h"
-#include "core/math/boundingbox.h"
+#include "core/math/partitioning/boundingbox.h"
 #include "core/math/pose.h"
 #include "core/utils/VRStorage.h"
 

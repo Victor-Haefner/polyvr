@@ -177,10 +177,10 @@ void CEF::initiate() {
 
 #ifdef _WIN32
     //requestContext = CefRequestContext::CreateContext(handler.get());
-    browser = CefBrowserHost::CreateBrowserSync(win, client, "www.google.de", browser_settings, 0, 0);
+    browser = CefBrowserHost::CreateBrowserSync(win, client, "", browser_settings, 0, 0);
     browser->GetHost()->WasResized();
 #else
-    browser = CefBrowserHost::CreateBrowserSync(win, client, "www.google.de", browser_settings, 0);
+    browser = CefBrowserHost::CreateBrowserSync(win, client, "", browser_settings, 0);
 #endif
 }
 
@@ -209,7 +209,7 @@ void CEF::open(string site) {
     this->site = site;
     if (browser) {
         browser->GetMainFrame()->LoadURL(site);
-        bool b = browser->IsLoading();
+        //bool b = browser->IsLoading();
 #ifdef _WIN32
         browser->GetHost()->WasResized();
 #endif

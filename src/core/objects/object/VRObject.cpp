@@ -5,7 +5,7 @@
 #include "../VRTransform.h"
 
 #include "core/math/pose.h"
-#include "core/math/boundingbox.h"
+#include "core/math/partitioning/boundingbox.h"
 #include "core/utils/VRGlobals.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRFunction.h"

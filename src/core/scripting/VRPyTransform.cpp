@@ -120,6 +120,7 @@ PyMethodDef VRPyTransform::methods[] = {
     {"applyConstantTorque", PyWrap(Transform, applyConstantTorque, "Apply a constant torque on the physics object", void, Vec3d ) },
     {"getForce", PyWrap(Transform, getForce, "get the total force put on this transform during this frame", Vec3d ) },
     {"getTorque", PyWrap(Transform, getTorque, "get the total torque put on this transform during this frame", Vec3d ) },
+    {"getVelocity", PyWrap(Transform, getVelocity, "get the velocity", Vec3d ) },
     {"setPhysicsActivationMode", PyWrap(Transform, setPhysicsActivationMode, "Set the physics activation mode of the physics object (normal:1 , no deactivation:4, stay deactivated: 5)", void, int ) },
     {"setPhysicalizeTree", PyWrap(Transform, setPhysicalizeTree, "Set to physicalize whole tree or just current node - setPhysicalizeTree( bool b )", void, bool ) },
     {"setGravity", PyWrap(Transform, setGravity, "set Gravity (Vector) of given physicalized object", void, Vec3d ) },
@@ -128,6 +129,7 @@ PyMethodDef VRPyTransform::methods[] = {
     {"getCenterOfMass", PyWrap(Transform, getCenterOfMass, "get physics center of mass offset", Vec3d ) },
     {"getPhysicsDynamic", PyWrap(Transform, getPhysicsDynamic, "get if dynamic physics object", bool ) },
     {"setPhysicsDynamic", PyWrap(Transform, setPhysicsDynamic, "set if dynamic physics object", void, bool ) },
+    {"resetForces", PyWrap(Transform, resetForces, "Reset velocity and forces to zero", void ) },
 #endif
     {NULL}  /* Sentinel */
 };

@@ -39,7 +39,6 @@ void Patch::bezVRPolygon<S>::initVRPolygon() {
     }
 }
 
-
 Vec3d Patch::projectInPlane(Vec3d v, Vec3d n, bool keep_length, bool normalize) {
     if (normalize) n.normalize();
     float l;
@@ -55,6 +54,23 @@ Vec3d Patch::reflectInPlane(Vec3d v, Vec3d n) {
     float k = v.dot(n);
     v -= n*(k*2);
     return v;
+}
+
+VRMaterialPtr Patch::setupMaterial(bool wire) {
+    int m = wire ? GL_LINE : GL_FILL;
+
+    auto mat = VRMaterial::get("subPatchMat");
+    mat->setActivePass(0);
+    mat->setFrontBackModes(GL_NONE, m);
+    mat->setDiffuse(Color3f(0.2,0.2,1));
+    mat->setAmbient(Color3f(0.2, 0.2, 0.1));
+    mat->setLit(0);
+    mat->setActivePass(1);
+    mat->setFrontBackModes(m, GL_NONE);
+    mat->setDiffuse(Color3f(0,1,0));
+    mat->setAmbient(Color3f(0.4, 0.4, 0.2));
+    mat->setLit(0);
+    return mat;
 }
 
 VRGeometryPtr Patch::makeTrianglePlane(int N, bool wire) {
@@ -78,14 +94,8 @@ VRGeometryPtr Patch::makeTrianglePlane(int N, bool wire) {
         k += N+1-i;
     }
 
-    auto mat = VRMaterial::get("subPatchMat");
-    mat->setDiffuse(Color3f(0,1,0));
-    mat->setAmbient(Color3f(0.4, 0.4, 0.2));
-    mat->setLit(0);
-    if (wire) mat->setWireFrame(true);
-
     auto geo = data.asGeometry("subpatch");
-    geo->setMaterial(mat);
+    geo->setMaterial(setupMaterial(wire));
     return geo;
 }
 
@@ -104,20 +114,21 @@ VRGeometryPtr Patch::makeQuadPlane(int N, bool wire) {
     int k = 0;
     for(int i=0;i<N;i++) {
         for(int j=0;j<N;j++) {
-            data.pushQuad(k+j, k+j+1, k+j+N+2, k+j+N+1);
-            //if (j != N-1-i) data.pushQuad(k+j+1, k+j+N-i+2, k+j+N-i+1);
+            if ((i == 0 || i == N-1) && (j == 0 || j == N-1)) { // corners
+                if ((i+1)*(j+1) == N) {
+                    data.pushTri(k+j, k+j+1, k+j+N+1);
+                    data.pushTri(k+j+N+1, k+j+1, k+j+N+2);
+                } else {
+                    data.pushTri(k+j, k+j+1, k+j+N+2);
+                    data.pushTri(k+j, k+j+N+2, k+j+N+1);
+                }
+            } else data.pushQuad(k+j, k+j+1, k+j+N+2, k+j+N+1);
         }
         k += N+1;
     }
 
-    auto mat = VRMaterial::get("subPatchMat");
-    mat->setDiffuse(Color3f(0,1,0));
-    mat->setAmbient(Color3f(0.4, 0.4, 0.2));
-    mat->setLit(0);
-    if (wire) mat->setWireFrame(true);
-
     auto geo = data.asGeometry("subpatch");
-    geo->setMaterial(mat);
+    geo->setMaterial(setupMaterial(wire));
     return geo;
 }
 
@@ -647,6 +658,7 @@ Vec3d getClosestOnTriangle(Vec3d p, Vec3d& n, const Vec3d& p1, const Vec3d& p2, 
     Vec3d d31 = p1-p3;
     Vec3d d23 = p3-p2;
     n = d23.cross(d12);
+    n.normalize();
 
     float u12 = projectEdge(p, p1, d12);
     float u31 = projectEdge(p, p3, d31);
@@ -665,12 +677,12 @@ Vec3d getClosestOnTriangle(Vec3d p, Vec3d& n, const Vec3d& p1, const Vec3d& p2, 
     if ( u31 <=1 && u31 >= 0 && !abovePlane( p,p3,n31 )) return p3 + d31*u31;
 
     // return projected point on triangle
-    n.normalize();
     return p - (p-p1).dot(n)*n;
 }
 
 PosePtr Patch::getClosestPose(Vec3d p) {
     float dmin = 1e6;
+    float a = 0;
     //float _3 = 1.0/3;
     PosePtr Dmin = Pose::create();
     auto obj = object.lock();
@@ -685,9 +697,13 @@ PosePtr Patch::getClosestPose(Vec3d p) {
                 Vec3d p1 = Vec3d( it.getPosition(1) );
                 Vec3d p2 = Vec3d( it.getPosition(2) );
 
+                a = (p1-p0).dot(p2-p0)/(p1-p0).length()/(p2-p0).length();
+                if (abs(a) > 0.99) continue; // ignore very flat triangles!
+
                 //Vec3d pn = (p0+p1+p2)*_3; // approx with triangle center
                 Vec3d n;
                 Vec3d pn = getClosestOnTriangle(p,n,p0,p1,p2);
+
 
                 float d = (p-pn).length();
                 if (d < dmin) {
@@ -698,6 +714,7 @@ PosePtr Patch::getClosestPose(Vec3d p) {
             }
         }
     }
+
     return Dmin;
 }
 

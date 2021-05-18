@@ -13,34 +13,9 @@
 
 using namespace OSG;
 
-OctreeNode::OctreeNode(OctreePtr tree, float res, float s, int lvl) : resolution(res), size(s), level(lvl) { this->tree = tree; }
+OctreeNode::OctreeNode(OctreePtr tree, float res, float s, int lvl) : PartitiontreeNode(res, s, lvl) { this->tree = tree; }
 OctreeNode::~OctreeNode() {
     for (auto c : children) if (c) delete c;
-}
-
-int OctreeNode::getOctant(Vec3d p) {
-    Vec3d rp = p - center;
-
-    int o = 0;
-    if (rp[0] < 0) o+=1;
-    if (rp[1] < 0) o+=2;
-    if (rp[2] < 0) o+=4;
-    return o;
-}
-
-Vec3d lvljumpCenter(float s2, Vec3d rp) {
-    Vec3d c(s2,s2,s2);
-    if (rp[0] < 0) c[0]-=s2*2;
-    if (rp[1] < 0) c[1]-=s2*2;
-    if (rp[2] < 0) c[2]-=s2*2;
-    return c;
-}
-
-bool OctreeNode::inBox(Vec3d p, Vec3d c, float size) {
-    if (abs(2*p[0] - 2*c[0]) > size) return false;
-    if (abs(2*p[1] - 2*c[1]) > size) return false;
-    if (abs(2*p[2] - 2*c[2]) > size) return false;
-    return true;
 }
 
 OctreeNode* OctreeNode::get(Vec3d p, bool checkPosition) {
@@ -122,6 +97,31 @@ OctreeNode* OctreeNode::add(Vec3d pos, void* dat, int targetLevel, bool checkPos
     return this;
 }
 
+int OctreeNode::getOctant(Vec3d p) {
+    Vec3d rp = p - center;
+
+    int o = 0;
+    if (rp[0] < 0) o+=1;
+    if (rp[1] < 0) o+=2;
+    if (rp[2] < 0) o+=4;
+    return o;
+}
+
+Vec3d OctreeNode::lvljumpCenter(float s2, Vec3d rp) {
+    Vec3d c(s2,s2,s2);
+    if (rp[0] < 0) c[0]-=s2*2;
+    if (rp[1] < 0) c[1]-=s2*2;
+    if (rp[2] < 0) c[2]-=s2*2;
+    return c;
+}
+
+bool OctreeNode::inBox(Vec3d p, Vec3d c, float size) {
+    if (abs(2*p[0] - 2*c[0]) > size) return false;
+    if (abs(2*p[1] - 2*c[1]) > size) return false;
+    if (abs(2*p[2] - 2*c[2]) > size) return false;
+    return true;
+}
+
 void OctreeNode::set(OctreeNode* node, Vec3d p, void* d) { node->data.clear(); node->points.clear(); node->data.push_back(d); node->points.push_back(p); }
 
 vector<OctreeNode*> OctreeNode::getAncestry() {
@@ -181,44 +181,15 @@ vector<OctreeNode*> OctreeNode::getLeafs() {
     return res;
 }
 
-vector<Vec3d> OctreeNode::getPoints() { return points; }
-
-Vec3d OctreeNode::getCenter() { return center; }
 Vec3d OctreeNode::getLocalCenter() {
     if (parent) return center - parent->center;
     else return center;
 }
 
-void OctreeNode::remData(void* d) {
-    data.erase(std::remove(data.begin(), data.end(), d), data.end());
-}
-
 int OctreeNode::dataSize() { return data.size(); }
-void* OctreeNode::getData(int i) { return data[i]; }
-Vec3d OctreeNode::getPoint(int i) { return points[i]; }
 
 OctreeNode* OctreeNode::getParent() { return parent; }
 OctreeNode* OctreeNode::getRoot() { auto o = this; while(o->parent) o = o->parent; return o; }
-
-float OctreeNode::getSize() { return size; }
-float OctreeNode::getResolution() { return resolution; }
-void OctreeNode::setResolution(float res) { resolution = res; }
-
-// sphere center, box center, sphere radius, box size
-bool sphere_box_intersect(Vec3d Ps, Vec3d Pb, float Rs, float Sb)  {
-    float r2 = Rs * Rs;
-    Vec3d diag(Sb*0.5, Sb*0.5, Sb*0.5);
-    Vec3d Bmin = Pb - diag;
-    Vec3d Bmax = Pb + diag;
-    float dmin = 0;
-    if( Ps[0] < Bmin[0] ) dmin += ( Ps[0] - Bmin[0] )*( Ps[0] - Bmin[0] );
-    else if( Ps[0] > Bmax[0] ) dmin += ( Ps[0] - Bmax[0] )*( Ps[0] - Bmax[0] );
-    if( Ps[1] < Bmin[1] ) dmin += ( Ps[1] - Bmin[1] )*( Ps[1] - Bmin[1] );
-    else if( Ps[1] > Bmax[1] ) dmin += ( Ps[1] - Bmax[1] )*( Ps[1] - Bmax[1] );
-    if( Ps[2] < Bmin[2] ) dmin += ( Ps[2] - Bmin[2] )*( Ps[2] - Bmin[2] );
-    else if( Ps[2] > Bmax[2] ) dmin += ( Ps[2] - Bmax[2] )*( Ps[2] - Bmax[2] );
-    return dmin <= r2;
-}
 
 void OctreeNode::findInSphere(Vec3d p, float r, int d, vector<void*>& res) { // TODO: optimize!!
     if (!sphere_box_intersect(p, center, r, size)) return;
@@ -255,20 +226,6 @@ void OctreeNode::findPointsInSphere(Vec3d p, float r, int d, vector<Vec3d>& res,
     }
 }
 
-// box min, box max, octree box center, octree box size
-bool box_box_intersect(Vec3d min, Vec3d max, Vec3d Bpos, float Sb)  {
-    Vec3d Bdiag(Sb, Sb, Sb);
-    Vec3d Bmin = Bpos - Bdiag*0.5;
-    Vec3d Bmax = Bpos + Bdiag*0.5;
-
-    Vec3d Apos = (max + min)*0.5;
-    Vec3d Adiag = max-min;
-
-    Vec3d diff = (Apos-Bpos)*2;
-    Vec3d ABdiag = Adiag+Bdiag;
-    return (abs(diff[0]) <= ABdiag[0]) && (abs(diff[1]) <= ABdiag[1]) && (abs(diff[2]) <= ABdiag[2]);
-}
-
 void OctreeNode::findInBox(const Boundingbox& b, int d, vector<void*>& res) { // TODO: optimize!!
     if (!box_box_intersect(b.min(), b.max(), center, size)) return;
 
@@ -282,30 +239,12 @@ void OctreeNode::findInBox(const Boundingbox& b, int d, vector<void*>& res) { //
     }
 }
 
-string OctreeNode::toString(int indent) {
-    auto pToStr = [](void* p) {
-        const void * address = static_cast<const void*>(p);
-        std::stringstream ss;
-        ss << address;
-        return ss.str();
-    };
-
-    string res = "\nOc ";
-    for (int i=0; i<indent; i++) res += " ";
-    res += "size: " + ::toString(size) + " center: " + ::toString(center);
-    if (data.size() > 0) res += "\n";
-    for (unsigned int i=0; i<data.size(); i++) if(data[i]) res += " " + pToStr(data[i]);
-    return res;
-}
-
 void OctreeNode::print(int indent) {
     cout << toString(indent) << flush;
     for (int i=0; i<8; i++) {
         if (children[i] != 0) children[i]->print(indent+1);
     }
 }
-
-vector<void*> OctreeNode::getData() { return data; }
 
 vector<void*> OctreeNode::getAllData() {
     vector<void*> res;
@@ -317,7 +256,7 @@ vector<void*> OctreeNode::getAllData() {
 }
 
 
-Octree::Octree(float res, float s, string n) : resolution(res), firstSize(s), name(n) { if (s < res) firstSize = res; }
+Octree::Octree(float res, float s, string n) : Partitiontree(res, s, n) {}
 Octree::~Octree() { if (root) delete root; }
 
 OctreePtr Octree::create(float resolution, float size, string n) {
@@ -326,7 +265,7 @@ OctreePtr Octree::create(float resolution, float size, string n) {
     return o;
 }
 
-OctreePtr Octree::ptr() { return shared_from_this(); }
+OctreePtr Octree::ptr() { return static_pointer_cast<Octree>(shared_from_this()); }
 
 float Octree::getSize() { return root->getSize(); }
 void Octree::setResolution(float res) { resolution = res; root->setResolution(res); }

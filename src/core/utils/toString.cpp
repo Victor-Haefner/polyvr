@@ -1,7 +1,7 @@
 #include "toString.h"
 #include "core/math/VRMathFwd.h"
 #include "core/math/pose.h"
-#include "core/math/boundingbox.h"
+#include "core/math/partitioning/boundingbox.h"
 #include "core/utils/VRFunctionFwd.h"
 
 #include <OpenSG/OSGColor.h>

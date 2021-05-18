@@ -81,6 +81,9 @@ template<> bool toValue(PyObject* o, Color4f& v) {
     return 0;
 }
 
+template<> bool toValue(PyObject* o, Vec2f& v) { if (!PyVec_Check(o, 2, 'f')) return 0; v = Vec2f(VRPyBase::parseVec2dList(o)); return 1; }
+template<> bool toValue(PyObject* o, Vec3f& v) { if (!PyVec_Check(o, 3, 'f')) return 0; v = Vec3f(VRPyBase::parseVec3dList(o)); return 1; }
+template<> bool toValue(PyObject* o, Vec4f& v) { if (!PyVec_Check(o, 4, 'f')) return 0; v = Vec4f(VRPyBase::parseVec4dList(o)); return 1; }
 template<> bool toValue(PyObject* o, Vec2d& v) { if (!PyVec_Check(o, 2, 'f')) return 0; v = VRPyBase::parseVec2dList(o); return 1; }
 template<> bool toValue(PyObject* o, Vec3d& v) { if (!PyVec_Check(o, 3, 'f')) return 0; v = VRPyBase::parseVec3dList(o); return 1; }
 template<> bool toValue(PyObject* o, Vec4d& v) { if (!PyVec_Check(o, 4, 'f')) return 0; v = VRPyBase::parseVec4dList(o); return 1; }

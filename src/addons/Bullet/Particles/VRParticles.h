@@ -5,7 +5,7 @@
 #include <OpenSG/OSGGeoProperties.h>
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/utils/VRFunctionFwd.h"
-#include "core/math/Octree.h"
+#include "core/math/partitioning/Octree.h"
 #include "VRParticle.h"
 #include "VREmitter.h"
 

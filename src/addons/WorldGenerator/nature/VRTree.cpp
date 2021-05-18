@@ -9,7 +9,7 @@
 #include "core/objects/VRLod.h"
 #include "core/scene/VRScene.h"
 #include "core/scene/VRSceneManager.h"
-#include "core/math/boundingbox.h"
+#include "core/math/partitioning/boundingbox.h"
 #ifndef WITHOUT_LAPACKE_BLAS
 #include "core/math/VRConvexHull.h"
 #endif

@@ -49,7 +49,7 @@ PyMethodDef VRPyPlanet::methods[] = {
     {"remPin", PyWrap(Planet, remPin, "Remove a pin: ID", void, int) },
     {"fromLatLongPosition", PyWrapOpt(Planet, fromLatLongPosition, "Get Position on planet based on lat and long, optionally local", "0", Vec3d, double, double, bool) },
     {"fromLatLongNormal", PyWrapOpt(Planet, fromLatLongNormal, "Get Normal on planet based on lat and long, optionally local", "0", Vec3d, double, double, bool) },
-    {"fromPosLatLong", PyWrapOpt(Planet, fromPosLatLong, "Convert space position to lat and long, optionally local", "0", Vec2d, Pnt3d, bool) },
+    {"fromPosLatLong", PyWrapOpt(Planet, fromPosLatLong, "Convert space position to lat and long, optionally local", "0|1", Vec2d, Pnt3d, bool, bool) },
     {"localize", PyWrap(Planet, localize, "Center the planet origin on a sector", void, double, double) },
     {"divideTIFF", PyWrap(Planet, divideTIFF, "loads sat images as .tif, dividing into .png chunks - string pathIn, string pathOut, double minLat, double maxLat, double minLon, double maxLon, double resolution \n        pathOut only placeholder right now, new files are saved in project directory", void, string, string, double, double, double, double, double) },
     {"divideTIFFEPSG", PyWrap(Planet, divideTIFFEPSG, "loads images as .tif, dividing into .tif chunks - string pathIn, string pathOut, double minEasting, double maxEasting, double minNorthing, double maxNorthing, double pixelResolution, double chunkResolution", void, string, string, double, double, double, double, double, double, bool) },
@@ -82,12 +82,13 @@ PyMethodDef VRPyOrbit::methods[] = {
 PyMethodDef VRPyMapManager::methods[] = {
     {"setServer", PyWrap( MapManager, setServer, "Set server address", void, string ) },
     {"addMapType", PyWrap( MapManager, addMapType, "Add map type (ID, local path to store map files, script name on server, local filename ending, remote filename format)", void, int, string, string, string, string ) },
-    {"getMap", PyWrap( MapManager, getMap, "Get map file path, retreives file from server if necessary, async if given a callback 'def cb(str):', (N, E, S, callback)", VRMapDescriptorPtr, double, double, double, vector<int>, VRMapCbPtr ) },
+    {"getMap", PyWrapOpt( MapManager, getMap, "Get map file path, retreives file from server if necessary, async if given a callback 'def cb(str):', (N, E, S, callback, doStore)", "1", VRMapDescriptorPtr, double, double, double, vector<int>, VRMapCbPtr, bool ) },
     {NULL}  /* Sentinel */
 };
 
 PyMethodDef VRPyMapDescriptor::methods[] = {
-    {"getMap", PyWrap( MapDescriptor, getMap, "Get ith map filename", string, int ) },
+    {"getMap", PyWrap( MapDescriptor, getMap, "Get ith map texture", VRTexturePtr, int ) },
+    {"getMapPath", PyWrap( MapDescriptor, getMapPath, "Get ith map path", string, int ) },
     {"getParameters", PyWrap( MapDescriptor, getParameters, "Get chunk parameters, N, E, S", Vec3d ) },
     {NULL}  /* Sentinel */
 };

@@ -6,7 +6,7 @@
 #include <OpenSG/OSGGeoProperties.h>
 #include <OpenSG/OSGSimpleMaterial.h>
 #include "core/objects/geometry/VRGeometry.h"
-#include "core/math/Octree.h"
+#include "core/math/partitioning/Octree.h"
 #include "VRMillingCuttingToolProfile.h"
 #include "addons/Engineering/VREngineeringFwd.h"
 
