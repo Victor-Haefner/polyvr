@@ -336,6 +336,7 @@ VRPyVec3f* toPyVec3f(const Vec3d& v) {
 }
 
 PyObject* toPyObject(const Vec3d& v) { return (PyObject*)toPyVec3f(v); }
+PyObject* toPyObject(const Color3f& v) { return (PyObject*)toPyVec3f(Vec3d(v)); }
 
 PyObject* VRPyVec3f::fromVector(OSG::Vec3d v) { return toPyObject(v); }
 
