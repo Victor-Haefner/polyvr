@@ -197,9 +197,8 @@ class VRPhysics : public VRStorage {
         void addConstantTorque(Vec3d i);
         float getConstraintAngle(VRPhysics *to, int axis);
         void deleteConstraints(VRPhysics* with);
-        /**get the requested total force in this frame **/
+
         Vec3d getForce();
-        /** get requested total torque**/
         Vec3d getTorque();
 
         Vec3d getLinearVelocity();
