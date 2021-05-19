@@ -667,15 +667,22 @@ void VRGuiBuilder::buildBaseUI() {
     auto button21 = addButton("button21", "Close");
     auto label92 = addLabel("label92", "System monitor");
     auto notebook4 = addNotebook("notebook4");
-    auto fixed18 = addFixed("fixed18");
+    auto systemGrid = addGrid("systemGrid");
     auto table31 = addGrid("table31");
     gtk_widget_set_size_request(dialog2, 1024, 600);
     gtk_box_pack_start(GTK_BOX(dialog_action_area10), button21, false, true, 0);
     gtk_box_pack_start(GTK_BOX(dialog_vbox10), label92, false, true, 0);
     gtk_box_pack_start(GTK_BOX(dialog_vbox10), notebook4, true, true, 0);
     gtk_window_set_transient_for(GTK_WINDOW(dialog2), GTK_WINDOW(window1));
-    addNotebookPage(notebook4, fixed18, "General");
+    addNotebookPage(notebook4, systemGrid, "System");
     addNotebookPage(notebook4, table31, "Profiler");
+
+    auto tview = addTextview("systemSum", "systemSumBuf");
+    gtk_grid_attach(GTK_GRID(systemGrid), tview, 0,0,1,1);
+    gtk_widget_set_hexpand(tview, true);
+    gtk_widget_set_vexpand(tview, true);
+    gtk_text_view_set_editable(GTK_TEXT_VIEW(tview), false);
+    gtk_text_view_set_cursor_visible(GTK_TEXT_VIEW(tview), false);
 
     auto liststore4 = gtk_list_store_new(2, G_TYPE_STRING, G_TYPE_STRING);
     auto treeview10_and_frame = addTreeview("treeview10", "liststore4", GTK_TREE_MODEL(liststore4));

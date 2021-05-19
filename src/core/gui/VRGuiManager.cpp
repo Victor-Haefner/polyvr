@@ -179,6 +179,10 @@ VRGuiManager::~VRGuiManager() {
     if (mtx) delete mtx;
 }
 
+void VRGuiManager::updateSystemInfo() {
+    g_mon->updateSystemInfo();
+}
+
 void VRGuiManager::startThreadedUpdate() {
     if (gtkUpdateThreadID != -1) return;
     updateGtk();

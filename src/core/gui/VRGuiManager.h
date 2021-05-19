@@ -45,6 +45,8 @@ class VRGuiManager {
         void startThreadedUpdate();
         void wakeWindow();
 
+        void updateSystemInfo();
+
         _GtkWindow* newWindow();
         void remWindow(_GtkWindow* w);
 
