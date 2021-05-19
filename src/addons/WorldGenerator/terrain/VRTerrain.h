@@ -125,8 +125,9 @@ class VRTerrain : public VRGeometry, public VRWorldModule {
         void projectTangent( Vec3d& t, Vec3d p);
 
         void flatten(vector<Vec2d> perimeter, float h);
-        void paintHeights(string woods, string gravel);
+        void paintHeights( string woods, string gravel );
         void paintHeights( string path, Color4f mCol = Color4f(1,1,1,1), float mAmount = 0 );
+        void paintHeights( VRTexturePtr tex, Color4f mCol = Color4f(1,1,1,1), float mAmount = 0 );
         void addEmbankment(string ID, PathPtr p1, PathPtr p2, PathPtr p3, PathPtr p4);
 
         vector<Vec3d> probeHeight( Vec2d p);

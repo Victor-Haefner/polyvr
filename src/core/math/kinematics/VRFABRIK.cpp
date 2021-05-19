@@ -24,10 +24,14 @@ namespace OSG {
         vector<int> out;
         PosePtr target;
         bool constrained = false;
+        bool constrainFired = false;
         Vec4d constraintAngles;
         Vec3d debugPnt1, debugPnt2;
         PatchPtr patch;
         VRObjectPtr patchSurface;
+
+        bool springed = false;
+        Vec3d springAnchor;
     };
 
     struct FABRIK::Chain {
@@ -57,6 +61,8 @@ FABRIK::~FABRIK() {}
 
 FABRIKPtr FABRIK::create() { return FABRIKPtr( new FABRIK() ); }
 
+size_t FABRIK::size() { return joints.size(); }
+
 void FABRIK::addJoint(int ID, PosePtr p) {
     Joint j;
     j.ID = ID;
@@ -71,6 +77,7 @@ void FABRIK::setJoint(int ID, PosePtr p) {
 PosePtr FABRIK::getJointPose(int ID) { return joints[ID].p; }
 
 void FABRIK::addChain(string name, vector<int> joints) {
+    chainOrder.push_back(name);
     Chain c;
     c.name = name;
     c.joints = joints;
@@ -94,35 +101,52 @@ void FABRIK::addChain(string name, vector<int> joints) {
     updateExecutionQueue();
 }
 
+vector<string> FABRIK::getChains() { return chainOrder; }
 vector<int> FABRIK::getChainJoints(string name) { return chains[name].joints; }
+
+void FABRIK::addSpring(int j, Vec3d anchor) {
+    joints[j].springed = true;
+    joints[j].springAnchor = anchor;
+}
+
+
+string quatStr(Quaterniond& q) {
+    double a; Vec3d d;
+    q.getValueAsAxisRad(d,a);
+    return "(" + toString(d) + ") " + toString(a);
+};
 
 void FABRIK::addConstraint(int j, Vec4d angles) {
     joints[j].constrained = true;
     joints[j].constraintAngles = angles;
     joints[j].patch = Patch::create();
 
-    float x1 = angles[2];
-    float x2 = angles[0];
-    float y1 = angles[1];
-    float y2 = angles[3];
+    float xm = (angles[0] - angles[2])*0.5;
+    float ym = (angles[1] - angles[3])*0.5;
+
+    float x1 = angles[2] + xm;
+    float x2 = angles[0] - xm;
+    float y1 = angles[1] - ym;
+    float y2 = angles[3] + ym;
+
+    cout << "addConstraint " << angles << " -> M " << Vec2f(xm, ym) << " XY " << Vec4f(x1,x2,y1,y2) << endl;
 
     float K = -0.3;
     float N = 8;
     float R = 0.1;
 
     Vec3d p0 (0,0,0);
-    /*Vec3d px1(-sin(x1)*s, cos(x1)*s,          0);
-    Vec3d px2( sin(x2)*s, cos(x2)*s,          0);
-    Vec3d py1(         0, cos(y1)*s, -sin(y1)*s);
-    Vec3d py2(         0, cos(y2)*s,  sin(y2)*s);*/
 
     Vec3d px1 = Vec3d( -sin(x1),        0, cos(x1) )*R;
     Vec3d px2 = Vec3d(  sin(x2),        0, cos(x2) )*R;
     Vec3d py1 = Vec3d(        0,  sin(y1), cos(y1) )*R;
     Vec3d py2 = Vec3d(        0, -sin(y2), cos(y2) )*R;
 
-
     vector<Vec3d> p = {px2, py2, px1, py1};
+
+    Quaterniond Rp = Quaterniond(Vec3d(0,-1,0), xm);
+    Rp.mult( Quaterniond(Vec3d(-1,0,0), ym) );
+    for (auto& P : p) Rp.multVec(P,P);
 
     Vec3d t1 = (p[2]-p[0])*0.25;
     Vec3d t2 = (p[1]-p[3])*0.25;
@@ -135,6 +159,7 @@ void FABRIK::addConstraint(int j, Vec4d angles) {
     joints[j].patchSurface = joints[j].patch->fromFullQuad(p, normals, handles, N, true);
 }
 
+/** move joint j towards the target position by amount t **/
 Vec3d FABRIK::movePointTowards(int j, Vec3d target, float t) {
     auto interp = [](Vec3d& a, Vec3d& b, float t) {
         return a*t + b*(1-t);
@@ -146,82 +171,82 @@ Vec3d FABRIK::movePointTowards(int j, Vec3d target, float t) {
     return pOld;
 };
 
-Vec3d FABRIK::moveToDistance(int j1, int j2, float d, bool constrained) {
-    auto& J1 = joints[j1];
-    auto& J2 = joints[j2];
+void FABRIK::setDoConstraints(bool b) { doConstraints = b; }
+void FABRIK::setDoSprings(bool b) { doSprings = b; }
+
+Vec3d FABRIK::computeConstraintDelta(int j) {
+    if (!doConstraints) return Vec3d();
+    Joint& J1 = joints[j];
+    if (J1.in.size() == 0) return Vec3d();
+    Joint& J2 = joints[J1.in[0]]; // TODO: handle multiple in!
+    if (!J2.constrained) return Vec3d();
 
     Vec3d pOld = J1.p->pos();
-    Vec3d D = J1.p->pos() - J2.p->pos();
+    auto pI = J2.p->transformInv(pOld);
+    PosePtr pP = J2.patch->getClosestPose(pI);
 
-    if (J2.constrained && constrained) {
-        PosePtr pP = J2.patch->getClosestPose(pOld);
-        // TODO: transform pP!
-        float t = (pP->pos() - pOld).dot(pP->dir());
-        if (t > 0) {
-            J1.p->setPos( pP->pos() );
-            D = J1.p->pos() - J2.p->pos();
-        }
+    pP = J2.p->multRight(pP);
+    Vec3d D = pP->dir();
+    float t = (pP->pos() - pOld).dot(D);
 
-        /*Vec3d cU = J2.p->up(); cU.normalize();
-        Vec3d cX = J2.p->x();  cX.normalize();
-        Vec3d cD =-J2.p->dir();cD.normalize();
-        float y = D.dot(cU);
-        float x = D.dot(cX);
-        //float h = D.dot(cD);
+    J1.debugPnt1 = pP->pos();
+    J1.debugPnt2 = pP->pos() + D*0.05;
 
-        float a = atan2(y,x);
-        if (a < 0) a += 2*Pi;
-        auto angles = J2.constraintAngles;
+    if (t >= 0) return Vec3d();
+    J1.constrainFired = true;
 
-        float A = 0, B = 0, a1 = 0, a2 = 0;
-        if (a >= 0      && a <  Pi*0.5) { A = angles[0]; B = angles[1]; a1 = 0;      a2 = Pi*0.5; }
-        if (a >= Pi*0.5 && a <  Pi*1.0) { A = angles[1]; B = angles[2]; a1 = Pi*0.5; a2 = Pi*1.0; }
-        if (a >= Pi*1.0 && a <  Pi*1.5) { A = angles[2]; B = angles[3]; a1 = Pi*1.0; a2 = Pi*1.5; }
-        if (a >= Pi*1.5 && a <= Pi*2.0) { A = angles[3]; B = angles[0]; a1 = Pi*1.5; a2 = 0; }
+    //Vec3d p = J1.p->pos() + D*t;
+    Vec3d p = pP->pos();
+    return p - pOld;
+}
 
-        Vec3d v1 = Vec3d(sin(A)*cos(a1), sin(A)*sin(a1), cos(A));
-        Vec3d v2 = Vec3d(sin(B)*cos(a2), sin(B)*sin(a2), cos(B));
-        v1 = J2.p->transform(v1, false);
-        v2 = J2.p->transform(v2, false);
+void FABRIK::applyInverseConstraint(int j) { // moves a joint to make its child respect its own constraint
+    //if (j == 2) cout << " applyInverseConstraint " << j << ", " << doConstraints << endl;
 
-        Vec3d pN = v1.cross(v2); pN.normalize();
-        Vec3d p0 = J2.p->pos();
+    Joint& J = joints[j];
+    if (!J.constrained || !doConstraints) return;
+    if (J.out.size() == 0) return;
+    Joint& J2 = joints[J.out[0]]; // child
 
-        Vec3d p = J1.p->pos();
-        float t = pN.dot(p-p0);
-        Vec3d pP = p - pN*t; // projection on plane
+    Vec3d cDelta = computeConstraintDelta(J2.ID);
+    J.p->translate(-cDelta);
+}
 
-        J2.debugPnt1 = p0 + v1*0.1 + v2*0.1;
-        J2.debugPnt2 = p;
+void FABRIK::applyConstraint(int j) { // moves a joint to respect its parent constraint
+    Vec3d cDelta = computeConstraintDelta(j);
+    joints[j].p->translate(cDelta);
+}
 
-        if (t < 0) {
-            Vec3d pn1 = (pP - p0).cross(v1);
-            Vec3d pn2 = (pP - p0).cross(v2);
-            float f1 = pn1.dot(pN);
-            float f2 = pn2.dot(pN);
-            Vec3d kN1 = pN.cross(v1); kN1.normalize();
-            Vec3d kN2 = pN.cross(v2); kN2.normalize();
+void FABRIK::applySpring(int j, float d) {
+    //if (j == 2) cout << " applySpring " << j << endl;
+    Joint& J1 = joints[j];
+    if (J1.in.size() == 0) return;
+    Joint& J2 = joints[J1.in[0]]; // TODO: handle multiple in!
 
-            Vec3d eP1 = pP - kN1 * kN1.dot(pP - p0);
-            Vec3d eP2 = pP - kN2 * kN2.dot(pP - p0);
-            J2.debugPnt1 = eP1;
-            J2.debugPnt2 = eP2;
+    // test spring force
+    //if (j == 2) cout << " applySpring " << j << " -> " << J1.in[0] << ", " << J2.springed << " " << doSprings << endl;
+    if (J2.springed && doSprings) {
+        auto pS = Pose::create(J2.springAnchor);
+        pS = J2.p->multRight(pS);
 
-            if (f1 > 0) pP = eP1;
-            if (f2 < 0) pP = eP2;
+        //Vec3d D = J1.p->pos() - J2.p->pos();
+        //float ts = abs(D.length()/d - 1.0)*0.5;
+        float ts = 0.5;
 
-            J1.p->setPos( pP );
-
-            D = J1.p->pos() - J2.p->pos();
-            cout << " xy " << Vec2d(x,y) << ", a " << a << "  t " << t << " p " << p << ", " << f1 << ", " << f2 << "   " << J1.ID << endl;
-        }*/
+        Vec3d p1 = J1.p->pos();
+        Vec3d ps = pS->pos();
+        J1.p->setPos( p1 + (ps-p1)*ts);
+        //if (j == 2) cout << " applySpring " << j << " " << p1 << " -> " << ps << " -> " << p1 + (ps-p1)*ts << endl;
     }
+}
 
-    float L = D.length();
-    float li = d / L;
-    movePointTowards(j1, J2.p->pos(), li);
+void FABRIK::updateJointOrientation(int j) {
+    Joint& J1 = joints[j];
+    if (J1.in.size() == 0) return;
+    Joint& J2 = joints[J1.in[0]]; // TODO: handle multiple in!
 
     // update joint direction
+    Vec3d D = J1.p->pos() - J2.p->pos();
     Vec3d nD = -D;
     nD.normalize();
     J1.p->setDir(nD);
@@ -235,7 +260,31 @@ Vec3d FABRIK::moveToDistance(int j1, int j2, float d, bool constrained) {
     Quaterniond q(u1, u2);
     q.multVec(u1, u1);
     u1.normalize();
-    J1.p->setUp(u1);
+    //if (J1.ID == 2) cout << " J" << J1.ID << ", u1/u2: " << J1.p->up() << " / " << J2.p->up() << " (" << J1.p->up().length() << "/" << J2.p->up().length() << ")" << endl;
+    if (u1.length() > 0.9) J1.p->setUp(u1);
+    else J1.p->makeUpOrthogonal();
+}
+
+/** move joint j1 to get a distance d to j2, update the up vector of j1, also consider the constraints **/
+Vec3d FABRIK::moveToDistance(int j1, int j2, float d, bool fwd) {
+    //if (j1 == 2) cout << " moveToDistance " << j1 << " -> " << j2 << " " << fwd << endl;
+
+    Joint& J1 = joints[j1];
+    Joint& J2 = joints[j2];
+
+    Vec3d pOld = J1.p->pos();
+
+    if (fwd) applyConstraint(j1);
+    else applyInverseConstraint(j1);
+    if (!fwd) applySpring(j1, d);
+
+    // move to distance
+    Vec3d D = J1.p->pos() - J2.p->pos();
+    float L = D.length();
+    float li = d / L;
+    movePointTowards(j1, J2.p->pos(), li);
+
+    updateJointOrientation(j1);
     return pOld;
 }
 
@@ -244,21 +293,19 @@ void FABRIK::backward(Chain& chain) {}
 void FABRIK::chainIteration(Chain& chain) {}
 
 void FABRIK::setTarget(int i, PosePtr p) {
-    if (!joints[i].target) {
-        joints[i].target = p;
-        updateExecutionQueue();
-    } else *joints[i].target = *p;
+    joints[i].target = p;
+    updateExecutionQueue();
 }
 
 void FABRIK::updateExecutionQueue() {
     executionQueue.clear();
 
-    cout << "FABRIK::updateExecutionQueue" << endl;
+    //cout << "FABRIK::updateExecutionQueue" << endl;
 
     map<int, string> splits;
 
-    for (auto& c : chains) {
-        auto& chain = c.second;
+    for (auto& cName : chainOrder) {
+        auto& chain = chains[cName];
 
         int ee = chain.joints.back();
         int b = 0;
@@ -320,20 +367,24 @@ void FABRIK::updateExecutionQueue() {
 void FABRIK::iterate() {
     auto checkConvergence = [&]() {
         for (auto& c : chains) {
-            int ee = c.second.joints.back();
-            if (!joints[ee].target) continue;
-            auto targetPos = joints[ee].target->pos();
-            float distTarget = (joints[ee].p->pos()-targetPos).length();
-            //cout << "convergence: " << distTarget << ", " << distTarget/tolerance << endl;
-            if (distTarget > tolerance) return false;
+            for (auto jID : c.second.joints) {
+                auto& J = joints[jID];
+                if (!J.target) continue;
+                auto targetPos = J.target->pos();
+                float distTarget = (J.p->pos()-targetPos).length();
+                //cout << "convergence: " << distTarget << ", " << distTarget/tolerance << endl;
+                if (distTarget > tolerance) return false;
+            }
         }
         return true;
     };
 
     map<int,vector<Vec3d>> knotPositions;
 
+    for (auto& j : joints) j.second.constrainFired = false;
+
     for (int i=0; i<10; i++) {
-        cout << "exec FABRIK iteration " << i << endl;
+        //cout << "exec FABRIK iteration " << i << " " << doSprings << endl;
 
         for (auto j : executionQueue) {
             //cout << "doJob: " << j.chain << ", " << j.joint << " -> " << j.base << ", " << string(j.fwd?"forward":"backward") << endl;
@@ -360,7 +411,7 @@ void FABRIK::iterate() {
             } else {
                 movePointTowards(j.joint, targetPos, 0);
                 for (int i = j.i1; i >= j.i2; i--) { // bis Nj-2 bis 1
-                    auto pOld = moveToDistance(chain.joints[i], chain.joints[i+1], chain.distances[i], true);
+                    auto pOld = moveToDistance(chain.joints[i], chain.joints[i+1], chain.distances[i], false);
                 }
             }
 
@@ -413,6 +464,7 @@ void FABRIK::visualize(VRGeometryPtr geo) {
         data.pushVert(j.second.p->pos(), Vec3d(0,0,0), Color3f(0,1,0));
         data.pushVert(j.second.p->pos()+j.second.p->dir()*0.05, Vec3d(0,0,0), Color3f(0,1,0));
         data.pushLine();
+        //if (j.second.ID == 2) cout << "vis: " << j.second.p->dir() << ",   " << j.second.p->up() << endl;
     }
 
     // targets
@@ -423,12 +475,25 @@ void FABRIK::visualize(VRGeometryPtr geo) {
         }
     }
 
-    // targets
+    // constrain points
     for (auto j : joints) {
-        data.pushVert(j.second.debugPnt1, Vec3d(0,0,0), Color3f(0,1,0));
+        Color3f c = Color3f(0,1,1);
+        if (j.second.constrainFired) c = Color3f(1,0,0);
+
+        data.pushVert(j.second.debugPnt1, Vec3d(0,0,0), c);
         data.pushPoint();
-        data.pushVert(j.second.debugPnt2, Vec3d(0,0,0), Color3f(0,1,1));
+        data.pushVert(j.second.debugPnt2, Vec3d(0,0,0), c);
         data.pushPoint();
+    }
+
+    // spring anchors
+    for (auto j : joints) {
+        if (j.second.springed) {
+            auto p = j.second.p->transform(j.second.springAnchor);
+            data.pushVert(j.second.p->pos(), Vec3d(0,0,0), Color3f(0,0,1));
+            data.pushVert(p, Vec3d(0,0,0), Color3f(0,0,1));
+            data.pushLine();
+        }
     }
 
     data.apply(geo);
@@ -439,109 +504,13 @@ void FABRIK::visualize(VRGeometryPtr geo) {
 
 
     // constraints
-    VRGeoData cones;
-    double R = 0.1;
-
     for (auto j : joints) {
         if (!j.second.constrained) continue;
         geo->addChild(j.second.patchSurface);
         auto surf = dynamic_pointer_cast<VRGeometry>( j.second.patchSurface->getChild(0) );
         surf->setPose( j.second.p );
-        /*Pnt3d P0 = Pnt3d(j.second.p->pos());
-        int v0ID = cones.pushVert(P0, Vec3d(0,0,-1));
-        cout << "constraint of joint " << j.first << endl;
-        auto angles = j.second.constraintAngles;
-
-        float a0 = 0, a1 = Pi*0.5, a2 = Pi*1.0, a3 = Pi*1.5;
-        Vec3d v0 = Vec3d(sin(angles[0])*cos(a0), sin(angles[0])*sin(a0), cos(angles[0]))*R;
-        Vec3d v1 = Vec3d(sin(angles[1])*cos(a1), sin(angles[1])*sin(a1), cos(angles[1]))*R;
-        Vec3d v2 = Vec3d(sin(angles[2])*cos(a2), sin(angles[2])*sin(a2), cos(angles[2]))*R;
-        Vec3d v3 = Vec3d(sin(angles[3])*cos(a3), sin(angles[3])*sin(a3), cos(angles[3]))*R;
-
-        v0 = j.second.p->transform(v0, false);
-        v1 = j.second.p->transform(v1, false);
-        v2 = j.second.p->transform(v2, false);
-        v3 = j.second.p->transform(v3, false);
-
-        int vID0 = cones.pushVert(P0 + v0, v0);
-        int vID1 = cones.pushVert(P0 + v1, v1);
-        int vID2 = cones.pushVert(P0 + v2, v2);
-        int vID3 = cones.pushVert(P0 + v3, v3);
-
-        cones.pushTri(v0ID, vID0, vID1);
-        cones.pushTri(v0ID, vID1, vID2);
-        cones.pushTri(v0ID, vID2, vID3);
-        cones.pushTri(v0ID, vID3, vID0);*/
-
-        continue;
-
-        for (int i=0; i<=32; i++) {
-            float a = 2*Pi*i/32.0;
-            auto angles = j.second.constraintAngles;
-            float A = 0, B = 0;
-
-            if (a >= 0      && a <  Pi*0.5) { A = angles[0]; B = angles[1]; }
-            if (a >= Pi*0.5 && a <  Pi*1.0) { A = angles[2]; B = angles[1]; }
-            if (a >= Pi*1.0 && a <  Pi*1.5) { A = angles[2]; B = angles[3]; }
-            if (a >= Pi*1.5 && a <= Pi*2.0) { A = angles[0]; B = angles[3]; }
-
-            float x = R*tan(A)*cos(a);
-            float y = R*tan(B)*sin(a);
-            Vec3d v = Vec3d(x,y,R);
-            Vec3d n = Vec3d(x,y,0);
-
-            /*float t = 0;
-            if (a >= 0      && a <  Pi*0.5) { t = a/Pi/0.5;          A = angles[0]; B = angles[1]; }
-            if (a >= Pi*0.5 && a <  Pi*1.0) { t = (a-Pi*0.5)/Pi/0.5; A = angles[1]; B = angles[2]; }
-            if (a >= Pi*1.0 && a <  Pi*1.5) { t = (a-Pi*1.0)/Pi/0.5; A = angles[2]; B = angles[3]; }
-            if (a >= Pi*1.5 && a <= Pi*2.0) { t = (a-Pi*1.5)/Pi/0.5; A = angles[3]; B = angles[0]; }
-
-            Vec3d v1 = Vec3d(sin(A)*cos(a), sin(A)*sin(a), cos(A))*R;
-            Vec3d v2 = Vec3d(sin(B)*cos(a), sin(B)*sin(a), cos(B))*R;
-            Vec3d d = v2-v1;
-            Vec3d k = v1.cross(d); k.normalize();
-
-
-            if (a >= 0      && a <  Pi*0.5) { A = angles[0]; B = angles[1]; }
-            if (a >= Pi*0.5 && a <  Pi*1.0) { A = angles[2]; B = angles[1]; }
-            if (a >= Pi*1.0 && a <  Pi*1.5) { A = angles[2]; B = angles[3]; }
-            if (a >= Pi*1.5 && a <= Pi*2.0) { A = angles[0]; B = angles[3]; }
-
-            float x = R*tan(A)*cos(a);
-            float y = R*tan(B)*sin(a);
-            Vec3d v = Vec3d(x,y,R);
-
-
-
-            float f = t*Pi*0.5;
-            Vec3d v = v1 * (1-t) + v2 * t;
-            //float f = v1.enclosedAngle(v2);
-            //Vec3d v = v1*cos(t*f) + k.cross(v1)*sin(t*f) + k*k.cross(v1)*(1-cos(t*f));
-            Vec3d n = v; n.normalize();*/
-
-            /*v = j.second.p->transform(v, false);
-            n = j.second.p->transform(n, false);
-            int vID = cones.pushVert(P0 + v, n);
-            if (i > 0) cones.pushTri(v0ID, vID, vID-1);*/
-            //cout << " a " << a << ", tf " << Vec2f(0,f) << ", AB " << Vec2f(A,B) << ", v " << v << endl;
-        }
     }
-
-    //auto cgeo = cones.asGeometry("kcones");
-    //geo->addChild(cgeo);
 }
-
-
-/*
-
-TODO: implement constraints with bigger angles
-
-if
-
-up of root is allways given
-
-
-*/
 
 
 

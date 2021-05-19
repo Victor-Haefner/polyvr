@@ -38,6 +38,7 @@ class Patch {
         Vec3d projectInPlane(Vec3d v, Vec3d n, bool keep_length, bool normalize);
         Vec3d reflectInPlane(Vec3d v, Vec3d n);
 
+        VRMaterialPtr setupMaterial(bool wire);
         VRGeometryPtr makeTrianglePlane(int N, bool wire = false);
         VRGeometryPtr makeQuadPlane(int N, bool wire = false);
 

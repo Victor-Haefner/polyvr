@@ -25,6 +25,8 @@ ptrFwd(Octree);
 ptrFwd(OctreeNode);
 ptrFwd(Triangulator);
 ptrFwd(VRKinematics);
+ptrFwd(VRKabschAlgorithm);
+ptrFwd(FABRIK);
 ptrFwd(Expression);
 ptrFwd(MathExpression);
 ptrFwd(TSDF);

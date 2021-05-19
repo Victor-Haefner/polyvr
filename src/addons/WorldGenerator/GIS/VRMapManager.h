@@ -6,6 +6,7 @@
 #include <OpenSG/OSGVector.h>
 #include "core/networking/VRNetworkingFwd.h"
 #include "core/utils/VRFunctionFwd.h"
+#include "core/objects/VRObjectFwd.h"
 #include "GISFwd.h"
 
 using namespace std;
@@ -16,7 +17,12 @@ ptrFctFwd( VRMap, VRMapDescriptorPtr );
 
 class VRMapDescriptor {
     private:
-        map<int, string> layers;
+        struct Layer {
+            string path;
+            VRTexturePtr tex;
+        };
+
+        map<int, Layer> layers;
         double N = 0;
         double E = 0;
         double S = 0;
@@ -29,7 +35,8 @@ class VRMapDescriptor {
 		static VRMapDescriptorPtr create();
 		static VRMapDescriptorPtr create(double n, double e, double s);
 
-		string getMap(int i);
+		VRTexturePtr getMap(int i);
+		string getMapPath(int i);
 		Vec3d getParameters();
 
 		void setMap(int i, string s);
@@ -72,7 +79,7 @@ class VRMapManager : public std::enable_shared_from_this<VRMapManager> {
 		void setServer(string address);
 		void addMapType(int ID, string vault, string servScript, string fileExt, string format);
 
-		VRMapDescriptorPtr getMap(double N, double E, double S, vector<int> types, VRMapCbPtr cb);
+		VRMapDescriptorPtr getMap(double N, double E, double S, vector<int> types, VRMapCbPtr cb, bool doCache = true);
 };
 
 OSG_END_NAMESPACE;

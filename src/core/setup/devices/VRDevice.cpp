@@ -49,26 +49,31 @@ void VRDevice::triggerSignal(int key, int state) {
     VRSignalPtr sig = signalExist(key, state);
     if (sig) {
         sig->triggerPtr<VRDevice>();
-        if (sig->doUpdate()) addUpdateSignal(sig);
+        if (sig->doUpdate()) addUpdateSignal(sig, key);
     }
 }
 
 VRSignalPtr VRDevice::getToEdgeSignal() { return 0; }
 VRSignalPtr VRDevice::getFromEdgeSignal() { return 0; }
 
-void VRDevice::addUpdateSignal(VRSignalPtr sig) {
-    activatedSignals[sig.get()] = sig;
+void VRDevice::addUpdateSignal(VRSignalPtr sig, int key) {
+    activatedSignals[sig.get()] = make_pair(sig, key);
 }
 
 void VRDevice::remUpdateSignal(VRSignalPtr sig, VRDeviceWeakPtr dev) {
     auto k = sig.get();
     if (activatedSignals.count(k) == 0) return;
-    activatedSignals[k]->triggerPtr<VRDevice>();
+    activatedSignals[k].first->triggerPtr<VRDevice>();
     activatedSignals.erase(k);
 }
 
 void VRDevice::updateSignals() {
-    for (auto a : activatedSignals) a.second->triggerPtr<VRDevice>();
+    auto k = sig_key;
+    for (auto a : activatedSignals) {
+        sig_key = a.second.second;
+        a.second.first->triggerPtr<VRDevice>();
+    }
+    sig_key = k;
 }
 
 void VRDevice::clearSignals() {
@@ -140,7 +145,7 @@ string VRDevice::getMessage() { return message; }
 void VRDevice::setMessage(string s) { message = s; }
 
 void VRDevice::b_state(int key, int* b_state) { if (BStates.count(key)) *b_state = BStates[key]; }
-int VRDevice::b_state(int key) { if (BStates.count(key)) return BStates[key]; else return -1; }
+int VRDevice::b_state(int key) { if (BStates.count(key)) return BStates[key]; else return 0; } // returning -1 is bad as it evaluates to true
 
 void VRDevice::s_state(int key, float* s_state) { if (SStates.count(key)) *s_state = SStates[key];}
 float VRDevice::s_state(int key) { if (SStates.count(key)) return SStates[key]; else return 0; }

@@ -1099,17 +1099,19 @@ void VRTransform::setCollisionShape(string s, float f) { if (auto p = getPhysics
 void VRTransform::setPhysicsActivationMode(int m) { if (auto p = getPhysics()) p->setActivationMode(m); }
 void VRTransform::applyImpulse(Vec3d i) { if (auto p = getPhysics()) p->applyImpulse(i); }
 void VRTransform::applyTorqueImpulse(Vec3d i) { if (auto p = getPhysics()) p->applyTorqueImpulse(i); }
-void VRTransform::applyForce(Vec3d f) { if (auto p = getPhysics()) p->addForce(f); }
+void VRTransform::applyForce(Vec3d f) { if (auto p = getPhysics()) p->addConstantForce(f); }
 void VRTransform::applyConstantForce(Vec3d f) { if (auto p = getPhysics()) p->addConstantForce(f); }
-void VRTransform::applyTorque(Vec3d f) { if (auto p = getPhysics()) p->addTorque(f); }
+void VRTransform::applyTorque(Vec3d f) { if (auto p = getPhysics()) p->addConstantTorque(f); }
 void VRTransform::applyConstantTorque(Vec3d f) { if (auto p = getPhysics()) p->addConstantTorque(f); }
 void VRTransform::setGravity(Vec3d g) { if (auto p = getPhysics()) p->setGravity(g); }
 void VRTransform::setCenterOfMass(Vec3d g) { if (auto p = getPhysics()) p->setCenterOfMass(g); }
 void VRTransform::setGhost(bool g) { if (auto p = getPhysics()) p->setGhost(g); }
 void VRTransform::setDamping(float ld, float ad, bool f) { if (auto p = getPhysics()) p->setDamping(ld, ad, f); }
+void VRTransform::resetForces() { if (auto p = getPhysics()) p->resetForces(); }
 
 Vec3d VRTransform::getForce() { if (auto p = getPhysics()) return p->getForce(); else return Vec3d(); }
 Vec3d VRTransform::getTorque() { if (auto p = getPhysics()) return p->getTorque(); else return Vec3d(); }
+Vec3d VRTransform::getVelocity() { if (auto p = getPhysics()) return p->getLinearVelocity(); else return Vec3d(); }
 Vec3d VRTransform::getCenterOfMass() { if (auto p = getPhysics()) return p->getCenterOfMass(); else return Vec3d(); }
 #endif
 

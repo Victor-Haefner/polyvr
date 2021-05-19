@@ -28,88 +28,19 @@ class VRSkeleton : public VRGeometry {
         };
 
         struct Bone {
-            string name;
-            Pose pose;
-            float length;
-        };
-
-        struct JointOrientation {
-            Vec3d dir1;
-            Vec3d dir2;
-            Vec3d up1;
-            Vec3d up2;
-        };
-
-        struct Joint {
-            string name;
-            Color3f col;
-            Vec3d pos;
-            int bone1;
-            int bone2;
-            vector<string> chains;
-            map<string, int> chainIDs;
-            VRConstraintPtr constraint;
-        };
-
-        struct EndEffector {
-            string name;
-            int boneID = -1;
-            int jointID = -1;
-            PosePtr target;
-        };
-
-        struct ChainData {
-            string name;
-            vector<int> chainedBones;
-            vector<int> joints;
-            map<int, JointOrientation> orientations;
-            vector<float> distances;
-            Vec3d targetPos;
-            float Dtarget;
-        };
-
-        struct SystemData {
-            int bone;
-            vector<int> joints;
-            map<int,map<int,float>> distances;
+            Vec3d p1;
+            Vec3d p2;
+            Vec3d dir;
+            Vec3d up;
+            float length = 0;
         };
 
         typedef shared_ptr<Configuration> ConfigurationPtr;
 
     private:
-
-        GraphPtr armature;
-        map<int, Bone > bones;
-        map<int, Joint> joints;
-        int rootBone = -1;
-        map<string, EndEffector> endEffectors;
-        map<string, ChainData> ChainDataMap;
-        map<string, SystemData> SystemDataMap;
-
-        VRUpdateCbPtr simCB; // sim override
-
-        VRGeometryPtr jointsGeo;
-        VRGeometryPtr constraintsGeo;
-        VRGeometryPtr angleProjGeo;
-
-        string pQuat(Quaterniond& q);
-        void initMaterial(); // skeleton visualisation
-        void updateJointPositions();
-        void setupChains();
-        void updateChains();
-        vector<int> getBoneJoints(int bone);
-        Vec3d& jointPos(int j);
-
-        Quaterniond getVecRotation(int i1, int i2, Vec3d dOld);
-        Quaterniond getRotation(int i1, int i2, Vec3d pOld);
-        Quaterniond getRotation(int i1, int i2, Vec3d pOld1, Vec3d pOld2);
-        void rotateJoints(int i1, int i2, Quaterniond& R, ChainData& chain);
-
-        double computeAngleProjection(double l, double g, double d1, double d2);
-        void simStep();
-        void resolveKinematics();
-        void mixOrientations();
-        void updateBones();
+        FABRIKPtr fabrik;
+        map<string, int> joints;
+        map<string, PosePtr> targets;
 
     public:
         VRSkeleton();
@@ -117,12 +48,15 @@ class VRSkeleton : public VRGeometry {
 
         static VRSkeletonPtr create();
 
-        int addBone(PosePtr pose, float length, string name);
-        int addJoint(int bone1, int bone2, VRConstraintPtr constraint, string name, Color3f col = Color3f(1,1,1));
-        void setEndEffector(string label, int bone);
-        void setRootBone(int bone);
+        FABRIKPtr getKinematics();
 
-        map<int, Vec3d> getJointsPositions();
+        int addJoint(string name, PosePtr p);
+        void addChain(string name, vector<int> jIDs);
+        void addConstraint(string name, Vec4d angles);
+        void addTarget(string name, PosePtr p);
+
+        PosePtr getTarget(string name);
+        vector<Bone> getBones();
 
         void clear();
         void setupSimpleHumanoid();
@@ -131,16 +65,7 @@ class VRSkeleton : public VRGeometry {
         void setupGeometry();
         void updateGeometry();
 
-        void move(string endEffector, PosePtr pose);
-
-        void overrideSim(VRUpdateCbPtr cb);
-        map<string, EndEffector> getEndEffectors();
-        vector<Joint> getChain(string endEffector);
-        vector<int> getBonesChain(string endEffector);
-        vector<int> getJointsChain(vector<int>& chainedBones);
-
-        void resolveSystem(string bone);
-        void applyFABRIK(string EE);
+        void resolveKinematics();
 };
 
 OSG_END_NAMESPACE;

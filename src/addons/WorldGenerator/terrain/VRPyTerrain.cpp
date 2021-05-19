@@ -82,12 +82,13 @@ PyMethodDef VRPyOrbit::methods[] = {
 PyMethodDef VRPyMapManager::methods[] = {
     {"setServer", PyWrap( MapManager, setServer, "Set server address", void, string ) },
     {"addMapType", PyWrap( MapManager, addMapType, "Add map type (ID, local path to store map files, script name on server, local filename ending, remote filename format)", void, int, string, string, string, string ) },
-    {"getMap", PyWrap( MapManager, getMap, "Get map file path, retreives file from server if necessary, async if given a callback 'def cb(str):', (N, E, S, callback)", VRMapDescriptorPtr, double, double, double, vector<int>, VRMapCbPtr ) },
+    {"getMap", PyWrapOpt( MapManager, getMap, "Get map file path, retreives file from server if necessary, async if given a callback 'def cb(str):', (N, E, S, callback, doStore)", "1", VRMapDescriptorPtr, double, double, double, vector<int>, VRMapCbPtr, bool ) },
     {NULL}  /* Sentinel */
 };
 
 PyMethodDef VRPyMapDescriptor::methods[] = {
-    {"getMap", PyWrap( MapDescriptor, getMap, "Get ith map filename", string, int ) },
+    {"getMap", PyWrap( MapDescriptor, getMap, "Get ith map texture", VRTexturePtr, int ) },
+    {"getMapPath", PyWrap( MapDescriptor, getMapPath, "Get ith map path", string, int ) },
     {"getParameters", PyWrap( MapDescriptor, getParameters, "Get chunk parameters, N, E, S", Vec3d ) },
     {NULL}  /* Sentinel */
 };

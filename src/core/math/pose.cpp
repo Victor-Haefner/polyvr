@@ -117,6 +117,18 @@ void Pose::invert() {
     set(Vec3d(m[3]), Vec3d(-m[2])*1.0/s3, Vec3d(m[1])*1.0/s2, Vec3d(s1,s2,s3));
 }
 
+PosePtr Pose::inverse() {
+    Matrix4d m = asMatrix();
+    m.invert();
+    //set(Vec3d(m[3]), Vec3d(-m[2]), Vec3d(m[1]));
+    float s1 = m[0].length();
+    float s2 = m[1].length();
+    float s3 = m[2].length();
+    auto p = create();
+    p->set(Vec3d(m[3]), Vec3d(-m[2])*1.0/s3, Vec3d(m[1])*1.0/s2, Vec3d(s1,s2,s3));
+    return p;
+}
+
 bool Pose::operator == (const Pose& other) const {
     return asMatrix() == other.asMatrix();
 }

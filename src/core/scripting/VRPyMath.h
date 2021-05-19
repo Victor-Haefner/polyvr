@@ -19,6 +19,7 @@
 
 PyObject* toPyObject(const OSG::Vec2d& v);
 PyObject* toPyObject(const OSG::Vec3d& v);
+PyObject* toPyObject(const OSG::Color3f& v);
 
 struct VRPyMath {
     static PyMethodDef methods[];

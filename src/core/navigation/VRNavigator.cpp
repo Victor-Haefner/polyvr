@@ -248,6 +248,7 @@ void VRNavigator::orbit(VRDeviceWeakPtr _dev) {
     }
 
     state = dev->b_state(dev->key());
+    //state = dev->b_state(1);
     //if (state < 0) return;
     //cout << "orbit state " << dev->key() << " " << state << endl;
 

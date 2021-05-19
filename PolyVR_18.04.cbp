@@ -334,6 +334,8 @@
 		<Unit filename="src/addons/Character/VRPyCharacter.h" />
 		<Unit filename="src/addons/Character/VRSkeleton.cpp" />
 		<Unit filename="src/addons/Character/VRSkeleton.h" />
+		<Unit filename="src/addons/Character/VRSkin.cpp" />
+		<Unit filename="src/addons/Character/VRSkin.h" />
 		<Unit filename="src/addons/Engineering/CSG/CGALTypedefs.h" />
 		<Unit filename="src/addons/Engineering/CSG/CSGGeometry.cpp" />
 		<Unit filename="src/addons/Engineering/CSG/CSGGeometry.h" />
@@ -955,6 +957,8 @@
 		<Unit filename="src/core/math/SingularValueDecomposition.h" />
 		<Unit filename="src/core/math/VRConvexHull.cpp" />
 		<Unit filename="src/core/math/VRConvexHull.h" />
+		<Unit filename="src/core/math/VRKabschAlgorithm.cpp" />
+		<Unit filename="src/core/math/VRKabschAlgorithm.h" />
 		<Unit filename="src/core/math/VRMathFwd.h" />
 		<Unit filename="src/core/math/VRStateMachine.cpp" />
 		<Unit filename="src/core/math/VRStateMachine.h" />
