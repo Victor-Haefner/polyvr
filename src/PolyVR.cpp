@@ -462,6 +462,7 @@ void PolyVR::init(int argc, char **argv) {
 
 #ifndef WITHOUT_GTK
     gui_mgr = shared_ptr<VRGuiManager>(VRGuiManager::get());
+    gui_mgr->updateSystemInfo();
 #endif
 
     loader = shared_ptr<VRSceneLoader>(VRSceneLoader::get());
