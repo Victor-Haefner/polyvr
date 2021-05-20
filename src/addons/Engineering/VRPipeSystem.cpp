@@ -1,5 +1,6 @@
 #include "VRPipeSystem.h"
 #include "core/utils/toString.h"
+#include "core/utils/isNan.h"
 #include "core/utils/VRFunction.h"
 #include "core/objects/geometry/VRGeoData.h"
 #include "core/objects/material/VRMaterial.h"
