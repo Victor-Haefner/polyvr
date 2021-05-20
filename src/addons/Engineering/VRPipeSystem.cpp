@@ -297,7 +297,7 @@ void VRPipeSystem::update() {
         }
 
         for (auto s : segments) { // compute flows accellerations
-            double m = s.second->volume*s.second->density;
+            double m = max(s.second->volume*s.second->density, 0.001); // make sure m doesnt drop to 0
             double dP = s.second->pressure2 - s.second->pressure1; // compute pressure gradient
             double F = dP*s.second->area;
             double R = s.second->density * s.second->flow ; // friction
@@ -337,7 +337,7 @@ void VRPipeSystem::update() {
         }
 
 
-        cout << "nodes" << endl;
+        //cout << "nodes" << endl;
         int itr = 0;
         bool flowCheck = true;
         while (flowCheck) { // check flow changes until nothing changed
@@ -393,15 +393,16 @@ void VRPipeSystem::update() {
             //break; // TODO: for testing!
         }
 
-        cout << "flows" << endl;
+        //cout << "flows" << endl;
         for (auto s : segments) { // add final flow accellerations
             auto& e = graph->getEdge(s.first);
             string n1 = nodes[e.from]->entity->getName();
             string n2 = nodes[e.to]->entity->getName();
 
+            if (isNan(s.second->dFl)) s.second->dFl = 0;
             s.second->flow += s.second->dFl;  // pipe flow change in m³ / s
-            if (abs(s.second->dFl) > 1e-9 || 1)
-                cout << " flow +" << s.second->dFl << " -> " << s.second->flow << " (" << n1 << "->" << n2 << ") blocked? " << s.second->flowBlocked << endl;
+            //if (abs(s.second->dFl) > 1e-9 || 1)
+            //    cout << " flow +" << s.second->dFl << " -> " << s.second->flow << " (" << n1 << "->" << n2 << ") blocked? " << s.second->flowBlocked << endl;
         }
     }
 
