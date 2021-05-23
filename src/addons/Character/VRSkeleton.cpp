@@ -78,6 +78,7 @@ vector<VRSkeleton::Bone> VRSkeleton::getBones() {
             auto p1 = fabrik->getJointPose(joints[i-1]);
             auto p2 = fabrik->getJointPose(joints[i]);
             Bone b;
+            b.ID = res.size();
             b.p1 = p1->pos();
             b.p2 = p2->pos();
             b.dir = b.p2-b.p1;
@@ -85,8 +86,6 @@ vector<VRSkeleton::Bone> VRSkeleton::getBones() {
             b.up = p1->up();
             b.up.normalize();
             b.length = (b.p2-b.p1).length();
-
-
             res.push_back(b);
         }
     }

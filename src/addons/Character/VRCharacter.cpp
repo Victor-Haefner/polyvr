@@ -47,16 +47,8 @@ void VRCharacter::simpleSetup() {
     s->setupGeometry(); // visualize skeleton
     addChild(s);
 
-    // leg configurations
-    auto stretched_leg_L = VRSkeleton::Configuration::create("stretched_leg_L");
-    stretched_leg_L->setPose(6,Vec3d());
-    stretched_leg_L->setPose(7,Vec3d());
-    stretched_leg_L->setPose(8,Vec3d());
-    stretched_leg_L->setPose(9,Vec3d());
 
-    auto lifted_leg_L = VRSkeleton::Configuration::create("lifted_leg_L");
-
-
+    vector<vector<pair<int, float>>> mapping;
     VRGeoData hullData; // TODO: create test hull
     for (auto& bone : s->getBones()) {
         Vec3d p = (bone.p1+bone.p2)*0.5;
@@ -66,18 +58,11 @@ void VRCharacter::simpleSetup() {
         hullData.pushQuad(p,n,u,s,true);
         hullData.pushQuad(p,n.cross(u),u,s,true);
         cout << "   test hull quad: " << p << " / "  << n << " / " << u << " / " << s << endl;
+        for (int i=0; i<8; i++) mapping.push_back( { make_pair(bone.ID, 1.0f) } );
     }
 
     auto hull = hullData.asGeometry("hull");
     addChild(hull);
-
-    VRGeoData data(hull);
-    vector<vector<pair<int, float>>> mapping;
-    mapping.resize(data.size());
-    for (int i=0; i<data.size(); i++) {
-        int bID = floor(i*0.125);
-        mapping[i] = { make_pair(bID, 1.0f) };
-    }
 
     skin = VRSkin::create(s);
     skin->setMapping(mapping);
