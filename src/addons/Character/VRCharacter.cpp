@@ -64,6 +64,7 @@ void VRCharacter::simpleSetup() {
         Vec3d u = bone.dir;
         Vec2d s = Vec2d(0.1, bone.length);
         hullData.pushQuad(p,n,u,s,true);
+        hullData.pushQuad(p,n.cross(u),u,s,true);
         cout << "   test hull quad: " << p << " / "  << n << " / " << u << " / " << s << endl;
     }
 
@@ -154,7 +155,7 @@ void VRCharacter::pathWalk(float t) {
     motion->rightCycle.advance(d);
 }
 
-PathPtr VRCharacter::moveTo(Vec3d p1) {
+PathPtr VRCharacter::moveTo(Vec3d p1, float speed) {
     auto p0 = getPose();
     Vec3d d = -p0->dir();
     d.normalize();
@@ -173,11 +174,13 @@ PathPtr VRCharacter::moveTo(Vec3d p1) {
 
     if (walkAnim) walkAnim->stop();
     if (motion) delete motion;
+    if (abs(speed) < 1e-2) return 0;
+
     motion = new WalkMotion(getSkeleton(), path); // TODO
 
     walkAnim = VRAnimation::create("walkAnim");
     walkAnim->setCallback(VRAnimCb::create("walkAnim", bind(&VRCharacter::pathWalk, this, placeholders::_1) ));
-    walkAnim->setDuration(path->getLength()*2);
+    walkAnim->setDuration(path->getLength()/abs(speed));
     walkAnim->start();
 
     return path;
