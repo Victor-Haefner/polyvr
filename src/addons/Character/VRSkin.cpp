@@ -81,10 +81,10 @@ void VRSkin::updateBoneTexture() {
         auto& bone0 = bone0s[i];
         Vec3d p0 = (bone0.p1 + bone0.p2)*0.5;
         Vec3d p  = (bone.p1 + bone.p2)*0.5;
-        auto m0 = Pose(p0, bone0.dir, bone0.up).asMatrix();
-        m0.invert();
+        auto m0i = Pose(p0, bone0.dir, bone0.up).asMatrix();
+        m0i.invert();
         auto m = Pose(p, bone.dir, bone.up).asMatrix();
-        m.multLeft(m0);
+        m.mult(m0i);
 
         writeVec3(i,0,p0);
         writeVec4(i,1,m[0]);
@@ -135,12 +135,14 @@ void main(void) {
         vec4 m2 = texelFetch(texBones, ivec2(bID,3), 0).rgba;
         vec4 m3 = texelFetch(texBones, ivec2(bID,4), 0).rgba;
 
-        mat4 M = mat4(m0[0],m1[0],m2[0],m3[0],
-                      m0[1],m1[1],m2[1],m3[1],
-                      m0[2],m1[2],m2[2],m3[2],
-                      m0[3],m1[3],m2[3],m3[3]);
+        mat4 M = mat4(m0[0],m0[1],m0[2],m0[3],
+                      m1[0],m1[1],m1[2],m1[3],
+                      m2[0],m2[1],m2[2],m2[3],
+                      m3[0],m3[1],m3[2],m3[3]);
 
         vec3 p2 = p0 + ( M*vec4(pv-p0,1.0) ).xyz;
+
+        p2 = ( M*vec4(pv,1.0) ).xyz;
 
         d = (p2-pv)*t;
 	}
