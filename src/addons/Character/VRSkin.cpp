@@ -18,6 +18,8 @@ VRSkin::VRSkin(VRSkeletonPtr s) : skeleton(s) {
 
     material->setVertexShader(skinning_vp, "skinningVP");
     material->setFragmentShader(skinning_fp, "skinningFP");
+
+    bone0s = skeleton->getBones();
 }
 
 VRSkin::~VRSkin() {}
@@ -27,43 +29,41 @@ VRSkinPtr VRSkin::ptr() { return static_pointer_cast<VRSkin>(shared_from_this())
 
 VRMaterialPtr VRSkin::getMaterial() { return material; }
 
-void VRSkin::computeMapping(VRGeometryPtr hull) { // TODO: switch to texture if multiple bones are needed
-    cout << "computeMapping!" << endl;
-    map<int, int> mapping;
+void VRSkin::setMapping(vector<vector<pair<int, float>>> m) { mapping = m; updateMappingTexture(); }
 
-    bone0s = skeleton->getBones();
-
+void VRSkin::applyMapping(VRGeometryPtr hull) {
     VRGeoData data(hull);
 
     for (int i=0; i<data.size(); i++) {
-        Pnt3d p = data.getPosition(i);
-        int bID = floor(i*0.125); // TODO, this is just a test..
-        mapping[i] = bID;
-        data.setTexCoord(i, Vec2d(i+0.1,bID+0.1));
+        data.setTexCoord(i, Vec2d(i+0.1,0));
     }
+}
 
+void VRSkin::updateMappingTexture() {
     auto tg = VRTextureGenerator::create();
-    tg->setSize(Vec3i(data.size(),16,1), false);
+    tg->setSize(Vec3i(mapping.size(),16,1), false);
     tg->drawFill(Color4f(0,0,0,1));
 
-    for (auto m : mapping) {
-        int vID = m.first;
-        tg->drawPixel( Vec3i(vID, 0, 0), Color4f(1, 0, 0, 1) ); // parameters, [Nbones, 0, 0, 1]
-        float t = 1;
-        //if (!(vID%4 > 1)) t = 0;
-        tg->drawPixel( Vec3i(vID, 1, 0), Color4f(m.second, t, 0, 1) ); // per bone, [bID, t, 0, 1]
+    for (size_t vID = 0; vID < mapping.size(); vID++) {
+        auto& vMapping = mapping[vID];
+        size_t Nb = vMapping.size();
+        tg->drawPixel( Vec3i(vID, 0, 0), Color4f(Nb, 0, 0, 1) ); // parameters, [Nbones, 0, 0, 1]
+        for (size_t mID = 0; mID < Nb; mID++) {
+            int bID = vMapping[mID].first;
+            float t = vMapping[mID].second;
+            tg->drawPixel( Vec3i(vID, 1+mID, 0), Color4f(bID, t, 0, 1) ); // per bone, [bID, t, 0, 1]
+        }
     }
 
     material->setTexture(tg->compose(0), false, 1);
     material->setMagMinFilter(GL_LINEAR, GL_LINEAR, 1);
     material->setShaderParameter("texMapping", 1);
-
-    updateBoneTexture();
 }
 
 void VRSkin::updateBoneTexture() {
     auto bones = skeleton->getBones();
     int Nb = bones.size();
+    if (bone0s.size() != Nb) bone0s = bones;
 
     auto tg = VRTextureGenerator::create();
     tg->setSize(Vec3i(Nb,8,1), true);
@@ -76,7 +76,7 @@ void VRSkin::updateBoneTexture() {
         tg->drawPixel( Vec3i(i, j, 0), Color4f(v[0], v[1], v[2], v[3]) );
     };
 
-    for (int i=0; i<bones.size(); i++) {
+    for (size_t i=0; i<bones.size(); i++) {
         auto& bone  = bones[i];
         auto& bone0 = bone0s[i];
         Vec3d p0 = (bone0.p1 + bone0.p2)*0.5;

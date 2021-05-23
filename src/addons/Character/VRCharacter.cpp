@@ -71,8 +71,17 @@ void VRCharacter::simpleSetup() {
     auto hull = hullData.asGeometry("hull");
     addChild(hull);
 
+    VRGeoData data(hull);
+    vector<vector<pair<int, float>>> mapping;
+    mapping.resize(data.size());
+    for (int i=0; i<data.size(); i++) {
+        int bID = floor(i*0.125);
+        mapping[i] = { make_pair(bID, 1.0f) };
+    }
+
     skin = VRSkin::create(s);
-    skin->computeMapping(hull);
+    skin->setMapping(mapping);
+    skin->applyMapping(hull);
     hull->setMaterial( skin->getMaterial() );
 }
 
