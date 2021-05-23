@@ -44,14 +44,22 @@ void VRSkin::updateMappingTexture() {
     tg->setSize(Vec3i(mapping.size(),16,1), false);
     tg->drawFill(Color4f(0,0,0,1));
 
+    cout << "updateMappingTexture" << endl;
+
     for (size_t vID = 0; vID < mapping.size(); vID++) {
         auto& vMapping = mapping[vID];
         size_t Nb = vMapping.size();
-        tg->drawPixel( Vec3i(vID, 0, 0), Color4f(Nb, 0, 0, 1) ); // parameters, [Nbones, 0, 0, 1]
+        tg->drawPixel( Vec3i(vID, 0, 0), Color4f(Nb+0.1, 0, 0, 1) ); // parameters, [Nbones, 0, 0, 1]
+
+        cout << " vID: " << vID << " (" << Nb << ")" << endl;
+
         for (size_t mID = 0; mID < Nb; mID++) {
             int bID = vMapping[mID].first;
             float t = vMapping[mID].second;
             tg->drawPixel( Vec3i(vID, 1+mID, 0), Color4f(bID, t, 0, 1) ); // per bone, [bID, t, 0, 1]
+
+            cout << "  bID: " << bID << ", t: " << t << endl;
+
         }
     }
 
@@ -125,7 +133,7 @@ void main(void) {
 
 	vec3 d = vec3(0.0);
 	for (int i=0; i<Nb; i++) {
-        vec4 b1 = texelFetch(texMapping, ivec2(vID,1), 0);
+        vec4 b1 = texelFetch(texMapping, ivec2(vID,i+1), 0);
         int bID = int(b1.x);
         float t = b1.y;
 
@@ -146,6 +154,10 @@ void main(void) {
 	gl_Position = gl_ModelViewProjectionMatrix * pos;
 	color = osg_Color;
 	norm = osg_Normal;
+
+	if (Nb == 1) color = vec4(1,0,0,1);
+	if (Nb == 2) color = vec4(0,1,0,1);
+	if (Nb >  2) color = vec4(1,1,0,1);
 }
 );
 

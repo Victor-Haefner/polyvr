@@ -50,7 +50,9 @@ void VRCharacter::simpleSetup() {
 
     vector<vector<pair<int, float>>> mapping;
     VRGeoData hullData; // TODO: create test hull
-    for (auto& bone : s->getBones()) {
+    auto bones = s->getBones();
+    for (size_t bID = 0; bID < bones.size(); bID++) {
+        auto& bone = bones[bID];
         Vec3d p = (bone.p1+bone.p2)*0.5;
         Vec3d n = bone.up;
         Vec3d u = bone.dir;
@@ -58,7 +60,29 @@ void VRCharacter::simpleSetup() {
         hullData.pushQuad(p,n,u,s,true);
         hullData.pushQuad(p,n.cross(u),u,s,true);
         cout << "   test hull quad: " << p << " / "  << n << " / " << u << " / " << s << endl;
-        for (int i=0; i<8; i++) mapping.push_back( { make_pair(bone.ID, 1.0f) } );
+
+        // create skin mapping
+        size_t mI = mapping.size();
+
+        float t1 = 1.0;
+        float t2 = 1.0;
+        if (!bone.isStart) t1 = 0.5;
+        if (!bone.isEnd) t2 = 0.5;
+
+        for (int i=0; i<2; i++) mapping.push_back( { make_pair(bone.ID, t1) } );
+        for (int i=0; i<2; i++) mapping.push_back( { make_pair(bone.ID, t2) } );
+        for (int i=0; i<2; i++) mapping.push_back( { make_pair(bone.ID, t1) } );
+        for (int i=0; i<2; i++) mapping.push_back( { make_pair(bone.ID, t2) } );
+
+        if (!bone.isStart) {
+            auto& boneL = bones[bID-1];
+            for (int i : {0,1,4,5}) mapping[mI+i].push_back( make_pair(boneL.ID, 0.5) );
+        }
+
+        if (!bone.isEnd) {
+            auto& boneL = bones[bID+1];
+            for (int i : {2,3,6,7}) mapping[mI+i].push_back( make_pair(boneL.ID, 0.5) );
+        }
     }
 
     auto hull = hullData.asGeometry("hull");
