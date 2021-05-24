@@ -58,14 +58,14 @@ void VRSkin::updateMappingTexture() {
         size_t Nb = vMapping.size();
         tg->drawPixel( Vec3i(vID, 0, 0), Color4f(Nb+0.1, 0, 0, 1) ); // parameters, [Nbones, 0, 0, 1]
 
-        cout << " vID: " << vID << " (" << Nb << ")" << endl;
+        //cout << " vID: " << vID << " (" << Nb << ")" << endl;
 
         for (size_t mID = 0; mID < Nb; mID++) {
             int bID = vMapping[mID].first;
             float t = vMapping[mID].second;
             tg->drawPixel( Vec3i(vID, 1+mID, 0), Color4f(bID, t, 0, 1) ); // per bone, [bID, t, 0, 1]
 
-            cout << "  bID: " << bID << ", t: " << t << endl;
+            //cout << "  bID: " << bID << ", t: " << t << endl;
 
         }
     }

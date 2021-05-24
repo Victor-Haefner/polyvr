@@ -55,11 +55,10 @@ void VRCharacter::simpleSetup() {
         auto& bone = bones[bID];
         Vec3d p = (bone.p1+bone.p2)*0.5;
         Vec3d n = bone.up;
-        Vec3d u = bone.dir;
-        Vec2d s = Vec2d(0.1, bone.length);
-        hullData.pushQuad(p,n,u,s,true);
-        hullData.pushQuad(p,n.cross(u),u,s,true);
-        cout << "   test hull quad: " << p << " / "  << n << " / " << u << " / " << s << endl;
+        Vec3d u = -bone.dir;
+        Vec3d s = Vec3d(0.1, bone.length, 0.1);
+        hullData.pushBox(p,n,u,s,true);
+        cout << "   test hull quad: " << p << " / "  << n << " / " << u << " / " << s << "    " << u.dot(n) << endl;
 
         // create skin mapping
         size_t mI = skin->mapSize();
@@ -67,21 +66,19 @@ void VRCharacter::simpleSetup() {
         float t1 = 1.0;
         float t2 = 1.0;
         if (!bone.isStart) t1 = 0.5;
-        if (!bone.isEnd) t2 = 0.5;
+        if (!bone.isEnd)   t2 = 0.5;
 
-        for (int i=0; i<2; i++) skin->addMap(bone.ID, t1);
-        for (int i=0; i<2; i++) skin->addMap(bone.ID, t2);
-        for (int i=0; i<2; i++) skin->addMap(bone.ID, t1);
-        for (int i=0; i<2; i++) skin->addMap(bone.ID, t2);
+        for (int i=0; i<4; i++) skin->addMap(bone.ID, t1);
+        for (int i=0; i<4; i++) skin->addMap(bone.ID, t2);
 
         if (!bone.isStart) {
             auto& boneL = bones[bID-1];
-            for (int i : {0,1,4,5}) skin->addMap(boneL.ID, 0.5, mI+i);
+            for (int i : {0,1,2,3}) skin->addMap(boneL.ID, 0.5, mI+i);
         }
 
         if (!bone.isEnd) {
             auto& boneL = bones[bID+1];
-            for (int i : {2,3,6,7}) skin->addMap(boneL.ID, 0.5, mI+i);
+            for (int i : {4,5,6,7}) skin->addMap(boneL.ID, 0.5, mI+i);
         }
     }
 
