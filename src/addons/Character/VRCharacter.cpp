@@ -57,7 +57,38 @@ void VRCharacter::simpleSetup() {
         Vec3d n = bone.up;
         Vec3d u = -bone.dir;
         Vec3d s = Vec3d(0.1, bone.length, 0.1);
-        hullData.pushBox(p,n,u,s,true);
+
+        bool isFoot  = bool(bID == 0 || bID == 3);
+        bool isAnkle = bool(bID == 2 || bID == 5);
+
+        if (isFoot) { // feet
+            Vec3d x = n.cross(u) * s[0]*0.5;
+            u[1] = 0;
+            u *= s[0]*0.5;
+
+            Vec3d pH1 = bone.p1;
+            Vec3d pH2 = bone.p1 - Vec3d(0,0.05,0);
+
+            int v11 = hullData.pushVert(pH1 - x + u, n, Vec2d(0,0));
+            int v12 = hullData.pushVert(pH1 + x + u, n, Vec2d(1,0));
+            int v13 = hullData.pushVert(pH1 + x - u, n, Vec2d(1,1));
+            int v14 = hullData.pushVert(pH1 - x - u, n, Vec2d(0,1));
+
+            x *= 1.2;
+            u *= 1.2;
+
+            int v21 = hullData.pushVert(pH2 - x + u, n, Vec2d(0,0));
+            int v22 = hullData.pushVert(pH2 + x + u, n, Vec2d(1,0));
+            int v23 = hullData.pushVert(bone.p2 + x, u, Vec2d(1,1));
+            int v24 = hullData.pushVert(bone.p2 - x, u, Vec2d(0,1));
+
+            hullData.pushQuad(v11, v12, v13, v14);
+            hullData.pushQuad(v21, v22, v23, v24);
+            hullData.pushQuad(v11, v12, v22, v21);
+            hullData.pushQuad(v12, v13, v23, v22);
+            hullData.pushQuad(v13, v14, v24, v23);
+            hullData.pushQuad(v14, v11, v21, v24);
+        } else hullData.pushBox(p,n,u,s,true);
         cout << "   test hull quad: " << p << " / "  << n << " / " << u << " / " << s << "    " << u.dot(n) << endl;
 
         // create skin mapping
@@ -65,21 +96,17 @@ void VRCharacter::simpleSetup() {
 
         float t1 = 1.0;
         float t2 = 1.0;
-        if (!bone.isStart) t1 = 0.5;
-        if (!bone.isEnd)   t2 = 0.5;
+        if (!bone.isStart || isFoot ) t1 = 0.5;
+        if (!bone.isEnd   || isAnkle) t2 = 0.5;
 
         for (int i=0; i<4; i++) skin->addMap(bone.ID, t1);
         for (int i=0; i<4; i++) skin->addMap(bone.ID, t2);
 
-        if (!bone.isStart) {
-            auto& boneL = bones[bID-1];
-            for (int i : {0,1,2,3}) skin->addMap(boneL.ID, 0.5, mI+i);
-        }
+        if (isFoot)  for (int i : {0,1,2,3}) skin->addMap(bones[bID+1].ID, 0.5, mI+i);
+        if (isAnkle) for (int i : {4,5,6,7}) skin->addMap(bones[bID-1].ID, 0.5, mI+i);
 
-        if (!bone.isEnd) {
-            auto& boneL = bones[bID+1];
-            for (int i : {4,5,6,7}) skin->addMap(boneL.ID, 0.5, mI+i);
-        }
+        if (!bone.isStart) for (int i : {0,1,2,3}) skin->addMap(bones[bID-1].ID, 0.5, mI+i);
+        if (!bone.isEnd)   for (int i : {4,5,6,7}) skin->addMap(bones[bID+1].ID, 0.5, mI+i);
     }
 
     skin->updateBoneTexture();
