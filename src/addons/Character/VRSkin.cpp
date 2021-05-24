@@ -31,6 +31,11 @@ VRMaterialPtr VRSkin::getMaterial() { return material; }
 
 void VRSkin::setMapping(vector<vector<pair<int, float>>> m) { mapping = m; updateMappingTexture(); }
 
+void VRSkin::addMap(int bID, float t, int vID) {
+    if (vID < 0) mapping.push_back( { make_pair(bID, t) } );
+    else if (vID < mapping.size()) mapping[vID].push_back( make_pair(bID, t) );
+}
+
 void VRSkin::applyMapping(VRGeometryPtr hull) {
     VRGeoData data(hull);
 
@@ -38,6 +43,8 @@ void VRSkin::applyMapping(VRGeometryPtr hull) {
         data.setTexCoord(i, Vec2d(i+0.1,0));
     }
 }
+
+size_t VRSkin::mapSize() { return mapping.size(); }
 
 void VRSkin::updateMappingTexture() {
     auto tg = VRTextureGenerator::create();

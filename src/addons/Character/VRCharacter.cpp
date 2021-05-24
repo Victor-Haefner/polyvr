@@ -47,8 +47,8 @@ void VRCharacter::simpleSetup() {
     s->setupGeometry(); // visualize skeleton
     addChild(s);
 
+    skin = VRSkin::create(s);
 
-    vector<vector<pair<int, float>>> mapping;
     VRGeoData hullData; // TODO: create test hull
     auto bones = s->getBones();
     for (size_t bID = 0; bID < bones.size(); bID++) {
@@ -62,34 +62,33 @@ void VRCharacter::simpleSetup() {
         cout << "   test hull quad: " << p << " / "  << n << " / " << u << " / " << s << endl;
 
         // create skin mapping
-        size_t mI = mapping.size();
+        size_t mI = skin->mapSize();
 
         float t1 = 1.0;
         float t2 = 1.0;
         if (!bone.isStart) t1 = 0.5;
         if (!bone.isEnd) t2 = 0.5;
 
-        for (int i=0; i<2; i++) mapping.push_back( { make_pair(bone.ID, t1) } );
-        for (int i=0; i<2; i++) mapping.push_back( { make_pair(bone.ID, t2) } );
-        for (int i=0; i<2; i++) mapping.push_back( { make_pair(bone.ID, t1) } );
-        for (int i=0; i<2; i++) mapping.push_back( { make_pair(bone.ID, t2) } );
+        for (int i=0; i<2; i++) skin->addMap(bone.ID, t1);
+        for (int i=0; i<2; i++) skin->addMap(bone.ID, t2);
+        for (int i=0; i<2; i++) skin->addMap(bone.ID, t1);
+        for (int i=0; i<2; i++) skin->addMap(bone.ID, t2);
 
         if (!bone.isStart) {
             auto& boneL = bones[bID-1];
-            for (int i : {0,1,4,5}) mapping[mI+i].push_back( make_pair(boneL.ID, 0.5) );
+            for (int i : {0,1,4,5}) skin->addMap(boneL.ID, 0.5, mI+i);
         }
 
         if (!bone.isEnd) {
             auto& boneL = bones[bID+1];
-            for (int i : {2,3,6,7}) mapping[mI+i].push_back( make_pair(boneL.ID, 0.5) );
+            for (int i : {2,3,6,7}) skin->addMap(boneL.ID, 0.5, mI+i);
         }
     }
 
+    skin->updateBoneTexture();
+    skin->updateMappingTexture();
     auto hull = hullData.asGeometry("hull");
     addChild(hull);
-
-    skin = VRSkin::create(s);
-    skin->setMapping(mapping);
     skin->applyMapping(hull);
     hull->setMaterial( skin->getMaterial() );
 }
