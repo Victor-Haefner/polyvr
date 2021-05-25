@@ -70,17 +70,17 @@ void VRCharacter::simpleSetup() {
             Vec3d pH2 = bone.p1 - Vec3d(0,0.05,0);
 
             int v11 = hullData.pushVert(pH1 - x + u, n, Vec2d(0,0));
-            int v12 = hullData.pushVert(pH1 + x + u, n, Vec2d(1,0));
+            int v12 = hullData.pushVert(pH1 - x - u, n, Vec2d(0,1));
             int v13 = hullData.pushVert(pH1 + x - u, n, Vec2d(1,1));
-            int v14 = hullData.pushVert(pH1 - x - u, n, Vec2d(0,1));
+            int v14 = hullData.pushVert(pH1 + x + u, n, Vec2d(1,0));
 
             x *= 1.2;
             u *= 1.2;
 
             int v21 = hullData.pushVert(pH2 - x + u, n, Vec2d(0,0));
-            int v22 = hullData.pushVert(pH2 + x + u, n, Vec2d(1,0));
+            int v22 = hullData.pushVert(bone.p2 - x, u, Vec2d(0,1));
             int v23 = hullData.pushVert(bone.p2 + x, u, Vec2d(1,1));
-            int v24 = hullData.pushVert(bone.p2 - x, u, Vec2d(0,1));
+            int v24 = hullData.pushVert(pH2 + x + u, n, Vec2d(1,0));
 
             hullData.pushQuad(v11, v12, v13, v14);
             hullData.pushQuad(v21, v22, v23, v24);
@@ -102,8 +102,8 @@ void VRCharacter::simpleSetup() {
         for (int i=0; i<4; i++) skin->addMap(bone.ID, t1);
         for (int i=0; i<4; i++) skin->addMap(bone.ID, t2);
 
-        if (isFoot)  for (int i : {0,1,2,3}) skin->addMap(bones[bID+1].ID, 0.5, mI+i);
-        if (isAnkle) for (int i : {4,5,6,7}) skin->addMap(bones[bID-1].ID, 0.5, mI+i);
+        if (isFoot)  for (int i : {0,1,2,3}) skin->addMap(bones[bID+2].ID, 0.5, mI+i);
+        if (isAnkle) for (int i : {4,5,6,7}) skin->addMap(bones[bID-2].ID, 0.5, mI+i);
 
         if (!bone.isStart) for (int i : {0,1,2,3}) skin->addMap(bones[bID-1].ID, 0.5, mI+i);
         if (!bone.isEnd)   for (int i : {4,5,6,7}) skin->addMap(bones[bID+1].ID, 0.5, mI+i);
@@ -112,6 +112,7 @@ void VRCharacter::simpleSetup() {
     skin->updateBoneTexture();
     skin->updateMappingTexture();
     auto hull = hullData.asGeometry("hull");
+    hull->updateNormals(true);
     addChild(hull);
     skin->applyMapping(hull);
     hull->setMaterial( skin->getMaterial() );
