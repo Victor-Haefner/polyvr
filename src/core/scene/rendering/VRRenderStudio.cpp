@@ -358,8 +358,10 @@ void VRRenderStudio::setScene(VRObjectPtr r) {
 void VRRenderStudio::resize(Vec2i s) {
     if (hmdd) hmdd->setSize(s);
     if (fxaa) fxaa->setSize(s);
+#ifndef WITHOUT_DEFERRED_RENDERING
     if (auto m = stages["marker"]->getRendering()) m->onResize();
     if (auto ds = stages["shading"]->getRendering()) ds->onResize();
+#endif
 }
 
 VRObjectPtr VRRenderStudio::getSceneRoot() { return root_scene; }

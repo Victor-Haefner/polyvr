@@ -34,8 +34,10 @@ bool exists(string path) { return boost::filesystem::exists(path); }
 bool makedir(string path) {
     bool res = false;
     if (path == "") return true;
+#ifndef WASM
     try { res = boost::filesystem::create_directory(path); }
     catch(...) { cout << "ERROR: makedir failed when trying to create directory '" + path + "'" << endl; }
+#endif
     return res;
 }
 
