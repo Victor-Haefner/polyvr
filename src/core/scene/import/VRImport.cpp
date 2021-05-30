@@ -184,8 +184,11 @@ void VRImport::LoadJob::load(VRThreadWeakPtr tw) {
 #ifndef WITHOUT_IFC
 		if (ext == ".ifc") { loadIFC(path, res); return; }
 #endif
-        if (ext == ".wrl" && preset == "SOLIDWORKS-VRML2") { VRFactory f; if (f.loadVRML(path, progress, res, thread)); else preset = "OSG"; }
-        if (ext == ".wrl" && preset == "PVR") { loadVRML(path, res, progress, thread); }
+        if (preset == "PVR" || preset == "SOLIDWORKS-VRML2") {
+            if (ext != ".wrl") preset = "OSG";
+            if (ext == ".wrl" && preset == "SOLIDWORKS-VRML2") { VRFactory f; if (f.loadVRML(path, progress, res, thread)); else preset = "OSG"; }
+            if (ext == ".wrl" && preset == "PVR") { loadVRML(path, res, progress, thread); }
+        }
 #ifndef WASM
 #ifndef WITHOUT_VTK
         if (ext == ".vtk") { loadVtk(path, res); return; }
@@ -204,7 +207,8 @@ void VRImport::LoadJob::load(VRThreadWeakPtr tw) {
 #endif
 #endif
         if (ext == ".gltf" || ext == ".glb") { loadGLTF(path, res, progress, thread); return; }
-        if (preset == "OSG" || preset == "COLLADA") osgLoad(path, res);
+        if (ext == ".osb" || ext == ".osg") { osgLoad(path, res); return; }
+        if (preset == "OSG" || preset == "COLLADA") osgLoad(path, res); // fallback
 #ifndef WITHOUT_COLLADA
         if (preset == "COLLADA") loadCollada(path, res);
 #endif
