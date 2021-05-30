@@ -238,16 +238,18 @@ void VRScriptManager::initPyModules() {
     cout << " initPyModules" << endl;
     modOut = 0;
     modErr = 0;
-    #if defined(WASM) || defined(WIN32)
+#if defined(WASM) || defined(WIN32)
     Py_NoSiteFlag = 1;
-    #endif
+#endif
     Py_Initialize();
     cout << "  Py_Initialize done" << endl;
     char* argv[1];
     argv[0] = (char*)"PolyVR";
     PySys_SetArgv(1, argv);
+#ifndef WASM
     PyEval_InitThreads();
     cout << "  PyEval_InitThreads done" << endl;
+#endif
     VRPyBase::err = PyErr_NewException((char *)"VR.Error", NULL, NULL);
 
     pGlobal = PyDict_New();
