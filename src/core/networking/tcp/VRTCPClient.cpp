@@ -175,8 +175,9 @@ class TCPClient {
         void connectToPeer(int lPort, string rIP, int rPort) {
             string lIP = VRTCPUtils::getLocalIP();
             cout << "TCPClient::connectToPeer " << lIP << ":" << lPort << ", to " << rIP << ":" << rPort << endl;
-            //tunnelAccept = thread([this, lPort]() { acceptHolePunching(lPort); }); // needed??? if yes, then TODO: fix close (timeout)!
+            tunnelAccept = thread([this, lPort]() { acceptHolePunching(lPort); }); // needed??? if yes, then TODO: fix close (timeout)!
             tunnelConnect = thread([this, lIP, lPort, rIP, rPort]() { connectHolePunching(lIP, lPort, rIP, rPort); });
+            tunnelAccept.detach(); // TODO: implement timeout or other abort method to control that thread!
 		}
 
 		void finalizeP2P() {
@@ -278,7 +279,8 @@ class TCPClient {
                     cout << " --- VRTCPClient::connectHolePunching connect ---" << endl;
                 } catch (boost::system::system_error& e) {
                     if (e.code().value() == 113) continue; // No route to host - is normal
-                    cout << "Error in VRTCPClient::connectHolePunching, boost::system::system_error " << e.what() << "(" << e.code().value() << ")" << endl;
+                    //if (e.code().value() == 111) continue; // Connection refused - very bad!
+                    cout << "Error in VRTCPClient::connectHolePunching socket->connect, boost::system::system_error " << e.what() << "(" << e.code().value() << ")" << endl;
                     return;
                 } catch (...) {
                     cout << "Unknown Exception raised!" << endl;
