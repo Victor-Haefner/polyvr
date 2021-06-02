@@ -1,4 +1,6 @@
 #include "VRTCPUtils.h"
+#include "core/networking/rest/VRRestClient.h"
+#include "core/networking/rest/VRRestResponse.h"
 
 #include <boost/asio.hpp>
 #include <iostream>
@@ -24,8 +26,15 @@ string VRTCPUtils::getLocalIP() {
     return lIP;
 }
 
-string VRTCPUtils::getPublicIP() {
-    int sock = socket(AF_INET, SOCK_DGRAM, 0);
+string VRTCPUtils::getPublicIP(bool cached) {
+    static string cachedIP = "";
+    if (cached && cachedIP != "") return cachedIP;
+    auto cli = VRRestClient::create();
+    VRRestResponsePtr res = cli->get("http://api.ipify.org/", 20);
+    cachedIP = res->getData();
+    return cachedIP;
+
+    /*int sock = socket(AF_INET, SOCK_DGRAM, 0);
     assert(sock != -1);
 
     const char* kGoogleDnsIp = "8.8.8.8";
@@ -50,5 +59,5 @@ string VRTCPUtils::getPublicIP() {
     closesocket(sock);
 #endif
 
-    return string(addressBuffer);
+    return string(addressBuffer);*/
 }

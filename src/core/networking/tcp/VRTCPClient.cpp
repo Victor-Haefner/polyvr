@@ -259,10 +259,16 @@ class TCPClient {
             cSocket->bind(local_ep, ec); //    s.bind(local_addr)
 
             if (ec.value() != 0) { //Handling Errors
-                std::cout << "Error in VRTCPClient::connectHolePunching, failed to bind the socket to " << local_ep << "! Error code = " << ec.value() << " (" << ec.message() << ")" << endl;
+                cout << "Error in VRTCPClient::connectHolePunching, failed to bind the socket to " << local_ep << "! Error code = " << ec.value() << " (" << ec.message() << ")" << endl;
             }
 
-            auto remoteAddr = boost::asio::ip::address::from_string(remoteIP);
+            boost::asio::ip::address remoteAddr;
+            try {
+                remoteAddr = boost::asio::ip::address::from_string(remoteIP);
+            } catch(...) {
+                cout << "Error in VRTCPClient::connectHolePunching, failed to parse remote IP '" << remoteIP << "'" << endl;
+                return;
+            }
             boost::asio::ip::tcp::endpoint remote_ep(remoteAddr, remotePort);
 
             while (!stop) { //while not STOP.is_set():
@@ -302,5 +308,6 @@ void VRTCPClient::connectToPeer(int localPort, string remoteIP, int remotePort) 
     client->connectToPeer(localPort, remoteIP, remotePort);
 }
 
+string VRTCPClient::getPublicIP(bool cached) { return VRTCPUtils::getPublicIP(cached); }
 
 
