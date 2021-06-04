@@ -34,10 +34,12 @@ extern "C" void coreDump(int sig) {
 #endif
 
 void clearDumpFiles() {
+#ifndef WASM
     remove(dumpFile); // in /tmp
 
     string file = boost::filesystem::current_path().string()+"/core";
     remove(file.c_str()); // in current folder
+#endif
 }
 
 void enableCoreDump(bool b) {
