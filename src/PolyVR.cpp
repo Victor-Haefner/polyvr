@@ -57,6 +57,7 @@
 #include "core/scene/VRSceneManager.h"
 #include "core/scene/VRScene.h"
 #include "core/setup/VRSetupManager.h"
+#include "core/scripting/VRScript.h"
 #include "core/utils/VRInternalMonitor.h"
 #include "core/utils/coreDumpHandler.h"
 #ifndef WITHOUT_GTK
@@ -192,11 +193,39 @@ typedef const char* CSTR;
 EMSCRIPTEN_KEEPALIVE void PolyVR_shutdown() { PolyVR::shutdown(); }
 EMSCRIPTEN_KEEPALIVE void PolyVR_reloadScene() { VRSceneManager::get()->reloadScene(); }
 EMSCRIPTEN_KEEPALIVE void PolyVR_showStats() { VRSetup::getCurrent()->toggleViewStats(0); }
-EMSCRIPTEN_KEEPALIVE void PolyVR_triggerScript(const char* name, CSTR* params, int N) {
+EMSCRIPTEN_KEEPALIVE int PolyVR_getNScripts() { auto s = VRScene::getCurrent(); return s ? s->getNScripts() : 0; }
+
+EMSCRIPTEN_KEEPALIVE void PolyVR_triggerScript(CSTR name, CSTR* params, int N) {
+    string Name = string(name);
     vector<string> sparams;
     for (int i=0; i<N; i++) sparams.push_back(string(params[i]));
-    VRScene::getCurrent()->triggerScript(string(name), sparams);
+    auto s = VRScene::getCurrent();
+    if (s) s->triggerScript(Name, sparams);
 }
+
+EMSCRIPTEN_KEEPALIVE CSTR PolyVR_getIthScriptName(int i) {
+    auto s = VRScene::getCurrent();
+    static string name = "";
+    name = s ? s->getIthScriptName(i) : "";
+    return name.c_str();
+}
+
+EMSCRIPTEN_KEEPALIVE CSTR PolyVR_getScriptCore(CSTR name) {
+    string Name = string(name);
+    auto s = VRScene::getCurrent();
+    auto script = s ? s->getScript(Name) : 0;
+    static string core = "";
+    core = script ? script->getScript() : "";
+    return core.c_str();
+}
+
+EMSCRIPTEN_KEEPALIVE void PolyVR_setScriptCore(CSTR name, CSTR core) {
+    string Name = string(name);
+    string Core = string(core);
+    auto s = VRScene::getCurrent();
+    if (s) s->updateScript(name, core);
+}
+
 #endif
 
 void PolyVR::shutdown() {

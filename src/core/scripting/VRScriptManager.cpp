@@ -84,6 +84,17 @@ VRScriptManager::~VRScriptManager() {
     VRPyBase::err = 0;
 }
 
+int VRScriptManager::getNScripts() { return scripts.size(); }
+
+string VRScriptManager::getIthScriptName(int i) {
+    int k = 0;
+    for (auto s : scripts) {
+        if (k == i) return s.first;
+        k++;
+    }
+    return "";
+}
+
 void VRScriptManager::pauseScripts(bool b) {
     for (auto s : scripts) s.second->enable(!b);
 }

@@ -56,6 +56,8 @@ class VRScriptManager : public VRStorage, public VRPyBase {
 
         void triggerScript(string name, vector<string> params = vector<string>());
 
+        int getNScripts();
+        string getIthScriptName(int i);
         VRScriptPtr getScript(string name);
         map<string, VRScriptPtr> getScripts();
 
