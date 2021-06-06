@@ -1140,6 +1140,7 @@ void VRMaterial::initShaderChunk() {
 
 void VRMaterial::enableShaderParameter(string name) {
     auto md = mats[activePass];
+    if (!md->vProgram) return;
     md->vProgram->addOSGVariable(name.c_str());
 	regVProgramVars(md->vProgram);
 }

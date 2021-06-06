@@ -24,6 +24,7 @@ class PolyVR {
         VROptionsPtr options;
 
         bool doLoop = false;
+        bool initiated = false;
 
         void checkProcessesAndSockets();
 

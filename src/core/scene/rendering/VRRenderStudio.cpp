@@ -243,6 +243,7 @@ void VRRenderStudio::initMarker(VRMaterialPtr mat) {
 }
 
 void VRRenderStudio::initStencilViewer(VRMaterialPtr mat) { // TODO: many passes with different stencils!
+#ifndef WASM // TODO: no wasm support for multiple passes yet!
     string shdrDir = VRSceneManager::get()->getOriginalWorkdir() + "/shader/DeferredShading/";
 
     for (int i=-5; i<=5; i++) {
@@ -264,6 +265,7 @@ void VRRenderStudio::initStencilViewer(VRMaterialPtr mat) { // TODO: many passes
         else if (i == 5) mat->setStencilBuffer(0, i, -1, GL_LEQUAL, GL_KEEP, GL_KEEP, GL_KEEP);
         else mat->setStencilBuffer(0, i, -1, GL_EQUAL, GL_KEEP, GL_KEEP, GL_KEEP);
     }
+#endif
 }
 
 void VRRenderStudio::addLight(VRLightPtr l) {

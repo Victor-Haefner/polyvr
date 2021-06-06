@@ -130,7 +130,11 @@ string VRScene::getFile() {
 
 string VRScene::getWorkdir() {
     int n = path.find_last_of("\\/");
+#ifdef WASM
+    if (n == -1) return "/";
+#else
     if (n == -1) return ".";
+#endif
     string wdir = path.substr(0, n);
     //cout << "getWorkdir from path " << path << " which is " << wdir << endl;
     return wdir;
