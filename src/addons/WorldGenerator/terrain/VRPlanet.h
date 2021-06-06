@@ -26,6 +26,7 @@ class VRPlanet : public VRTransform {
         VRTransformPtr origin;
         VRLodPtr lod;
         VRObjectPtr anchor;
+        VRObjectPtr sectorParent;
         VRMaterialPtr sphereMat;
 
         vector<VRTransformPtr> moons;

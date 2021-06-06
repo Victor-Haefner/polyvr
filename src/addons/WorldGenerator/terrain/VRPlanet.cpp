@@ -41,7 +41,12 @@ void VRPlanet::addMoon(VRTransformPtr t) { moons.push_back(t); }
 vector<VRTransformPtr> VRPlanet::getMoons() { return moons; }
 
 void VRPlanet::localizeSector(VRWorldGeneratorPtr sector) {
-    addChild(sector);
+    if (!sectorParent) {
+        sectorParent = VRObject::create("sectors");
+        addChild(sectorParent);
+    }
+
+    sectorParent->addChild(sector);
     sector->setIdentity();
 
     Vec2d plI = sector->getPlanetCoords() + Vec2d(1,1)*sectorSize*0.5;
