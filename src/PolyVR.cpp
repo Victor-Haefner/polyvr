@@ -226,6 +226,76 @@ EMSCRIPTEN_KEEPALIVE void PolyVR_setScriptCore(CSTR name, CSTR core) {
     if (s) s->updateScript(name, core);
 }
 
+EMSCRIPTEN_KEEPALIVE int PolyVR_getNScriptTriggers(CSTR name) {
+    string Name = string(name);
+    auto s = VRScene::getCurrent();
+    auto script = s ? s->getScript(Name) : 0;
+    return script->getTriggers().size();
+}
+
+EMSCRIPTEN_KEEPALIVE CSTR PolyVR_getScriptType(CSTR name) {
+    string Name = string(name);
+    auto s = VRScene::getCurrent();
+    auto script = s ? s->getScript(Name) : 0;
+    static string type;
+    type = script->getType();
+    return type.c_str();
+}
+
+EMSCRIPTEN_KEEPALIVE void PolyVR_setScriptType(CSTR name, CSTR type) {
+    string Name = string(name);
+    string Type = string(type);
+    auto s = VRScene::getCurrent();
+    auto script = s ? s->getScript(Name) : 0;
+    script->setType(Type);
+}
+
+EMSCRIPTEN_KEEPALIVE CSTR PolyVR_getScriptIthTrigger(CSTR name, int i) {
+    string Name = string(name);
+    auto s = VRScene::getCurrent();
+    auto script = s ? s->getScript(Name) : 0;
+    auto trigs = script->getTriggers();
+    auto it = trigs.begin();
+    advance(it, i);
+    auto t = *it;
+
+    string key = toString(t->key);
+    if (t->dev == "keyboard" && t->key > 32 && t->key < 127) {
+        char kc = t->key;
+        key = kc;
+    }
+
+    static string data = "";
+    data = t->trigger;
+    data += "|" + t->param;
+    data += "|" + t->dev;
+    data += "|" + key;
+    data += "|" + t->state;
+    return data.c_str();
+}
+
+EMSCRIPTEN_KEEPALIVE int PolyVR_getNScriptArguments(CSTR name) {
+    string Name = string(name);
+    auto s = VRScene::getCurrent();
+    auto script = s ? s->getScript(Name) : 0;
+    return script->getArguments().size();
+}
+
+EMSCRIPTEN_KEEPALIVE CSTR PolyVR_getScriptIthArgument(CSTR name, int i) {
+    string Name = string(name);
+    auto s = VRScene::getCurrent();
+    auto script = s ? s->getScript(Name) : 0;
+    auto args = script->getArguments();
+    auto it = args.begin();
+    advance(it, i);
+    auto a = *it;
+
+    static string data = "";
+    data = a->getName();
+    data += "|" + a->val;
+    return data.c_str();
+}
+
 #endif
 
 void PolyVR::shutdown() {
