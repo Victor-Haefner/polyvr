@@ -195,6 +195,12 @@ EMSCRIPTEN_KEEPALIVE void PolyVR_reloadScene() { VRSceneManager::get()->reloadSc
 EMSCRIPTEN_KEEPALIVE void PolyVR_showStats() { VRSetup::getCurrent()->toggleViewStats(0); }
 EMSCRIPTEN_KEEPALIVE int PolyVR_getNScripts() { auto s = VRScene::getCurrent(); return s ? s->getNScripts() : 0; }
 
+VRScriptPtr getScript(CSTR name) {
+    string Name = string(name);
+    auto s = VRScene::getCurrent();
+    return s ? s->getScript(Name) : 0;
+}
+
 EMSCRIPTEN_KEEPALIVE void PolyVR_triggerScript(CSTR name, CSTR* params, int N) {
     string Name = string(name);
     vector<string> sparams;
@@ -211,9 +217,7 @@ EMSCRIPTEN_KEEPALIVE CSTR PolyVR_getIthScriptName(int i) {
 }
 
 EMSCRIPTEN_KEEPALIVE CSTR PolyVR_getScriptCore(CSTR name) {
-    string Name = string(name);
-    auto s = VRScene::getCurrent();
-    auto script = s ? s->getScript(Name) : 0;
+    auto script = getScript(name);
     static string core = "";
     core = script ? script->getScript() : "";
     return core.c_str();
@@ -226,46 +230,51 @@ EMSCRIPTEN_KEEPALIVE void PolyVR_setScriptCore(CSTR name, CSTR core) {
     if (s) s->updateScript(name, core);
 }
 
-EMSCRIPTEN_KEEPALIVE int PolyVR_getNScriptTriggers(CSTR name) {
-    string Name = string(name);
-    auto s = VRScene::getCurrent();
-    auto script = s ? s->getScript(Name) : 0;
-    return script->getTriggers().size();
-}
-
 EMSCRIPTEN_KEEPALIVE CSTR PolyVR_getScriptType(CSTR name) {
-    string Name = string(name);
-    auto s = VRScene::getCurrent();
-    auto script = s ? s->getScript(Name) : 0;
+    auto script = getScript(name);
     static string type;
-    type = script->getType();
+    type = script ? script->getType() : "";
     return type.c_str();
 }
 
 EMSCRIPTEN_KEEPALIVE void PolyVR_setScriptType(CSTR name, CSTR type) {
-    string Name = string(name);
     string Type = string(type);
-    auto s = VRScene::getCurrent();
-    auto script = s ? s->getScript(Name) : 0;
-    script->setType(Type);
+    auto script = getScript(name);
+    if (script) script->setType(Type);
 }
 
-EMSCRIPTEN_KEEPALIVE CSTR PolyVR_getScriptIthTrigger(CSTR name, int i) {
-    string Name = string(name);
-    auto s = VRScene::getCurrent();
-    auto script = s ? s->getScript(Name) : 0;
+EMSCRIPTEN_KEEPALIVE int PolyVR_getNScriptTriggers(CSTR name) {
+    auto script = getScript(name);
+    return script ? script->getTriggers().size() : 0;
+}
+
+VRScript::trigPtr getIthTrig(VRScriptPtr script, int i) {
     auto trigs = script->getTriggers();
     auto it = trigs.begin();
     advance(it, i);
-    auto t = *it;
+    return *it;
+}
 
+VRScript::argPtr getIthArg(VRScriptPtr script, int i) {
+    auto args = script->getArguments();
+    auto it = args.begin();
+    advance(it, i);
+    return *it;
+}
+
+EMSCRIPTEN_KEEPALIVE CSTR PolyVR_getScriptIthTrigger(CSTR name, int i) {
+    auto script = getScript(name);
+    static string data = "";
+    data = "";
+    if (!script) return data.c_str();
+
+    auto t = getIthTrig(script, i);
     string key = toString(t->key);
     if (t->dev == "keyboard" && t->key > 32 && t->key < 127) {
         char kc = t->key;
         key = kc;
     }
 
-    static string data = "";
     data = t->trigger;
     data += "|" + t->param;
     data += "|" + t->dev;
@@ -275,25 +284,93 @@ EMSCRIPTEN_KEEPALIVE CSTR PolyVR_getScriptIthTrigger(CSTR name, int i) {
 }
 
 EMSCRIPTEN_KEEPALIVE int PolyVR_getNScriptArguments(CSTR name) {
-    string Name = string(name);
-    auto s = VRScene::getCurrent();
-    auto script = s ? s->getScript(Name) : 0;
-    return script->getArguments().size();
+    auto script = getScript(name);
+    return script ? script->getArguments().size() : 0;
 }
 
 EMSCRIPTEN_KEEPALIVE CSTR PolyVR_getScriptIthArgument(CSTR name, int i) {
-    string Name = string(name);
-    auto s = VRScene::getCurrent();
-    auto script = s ? s->getScript(Name) : 0;
-    auto args = script->getArguments();
-    auto it = args.begin();
-    advance(it, i);
-    auto a = *it;
-
+    auto script = getScript(name);
     static string data = "";
+    data = "";
+    if (!script) return data.c_str();
+
+    auto a = getIthArg(script, i);
     data = a->getName();
     data += "|" + a->val;
     return data.c_str();
+}
+
+EMSCRIPTEN_KEEPALIVE void PolyVR_addScriptArgument(CSTR name) {
+    auto script = getScript(name);
+    if (script) script->addArgument();
+}
+
+EMSCRIPTEN_KEEPALIVE void PolyVR_addScriptTrigger(CSTR name) {
+    auto script = getScript(name);
+    if (script) script->addTrigger();
+}
+
+EMSCRIPTEN_KEEPALIVE void PolyVR_remScriptIthArgument(CSTR name, int i) {
+    auto script = getScript(name);
+    if (!script) return;
+    auto a = getIthArg(script, i);
+    script->remArgument(a->getName());
+}
+
+EMSCRIPTEN_KEEPALIVE void PolyVR_remScriptIthTrigger(CSTR name, int i) {
+    auto script = getScript(name);
+    if (!script) return;
+    auto t = getIthTrig(script, i);
+    script->remTrigger(t->getName());
+}
+
+EMSCRIPTEN_KEEPALIVE void PolyVR_setScriptIthTriggerType(CSTR name, int i, CSTR type) {
+    auto script = getScript(name);
+    if (!script) return;
+    auto t = getIthTrig(script, i);
+    script->changeTrigger(t->getName(), string(type));
+}
+
+EMSCRIPTEN_KEEPALIVE void PolyVR_setScriptIthTriggerParam(CSTR name, int i, CSTR param) {
+    auto script = getScript(name);
+    if (!script) return;
+    auto t = getIthTrig(script, i);
+    script->changeTrigParams(t->getName(), string(param));
+}
+
+EMSCRIPTEN_KEEPALIVE void PolyVR_setScriptIthTriggerDevice(CSTR name, int i, CSTR device) {
+    auto script = getScript(name);
+    if (!script) return;
+    auto t = getIthTrig(script, i);
+    script->changeTrigDev(t->getName(), string(device));
+}
+
+EMSCRIPTEN_KEEPALIVE void PolyVR_setScriptIthTriggerKey(CSTR name, int i, int key) {
+    auto script = getScript(name);
+    if (!script) return;
+    auto t = getIthTrig(script, i);
+    script->changeTrigKey(t->getName(), key);
+}
+
+EMSCRIPTEN_KEEPALIVE void PolyVR_setScriptIthTriggerState(CSTR name, int i, CSTR state) {
+    auto script = getScript(name);
+    if (!script) return;
+    auto t = getIthTrig(script, i);
+    script->changeTrigState(t->getName(), string(state));
+}
+
+EMSCRIPTEN_KEEPALIVE void PolyVR_setScriptIthArgumentVar(CSTR name, int i, CSTR var) {
+    auto script = getScript(name);
+    if (!script) return;
+    auto a = getIthArg(script, i);
+    script->changeArgName(a->getName(), string(var));
+}
+
+EMSCRIPTEN_KEEPALIVE void PolyVR_setScriptIthArgumentVal(CSTR name, int i, CSTR val) {
+    auto script = getScript(name);
+    if (!script) return;
+    auto a = getIthArg(script, i);
+    script->changeArgValue(a->getName(), string(val));
 }
 
 #endif
