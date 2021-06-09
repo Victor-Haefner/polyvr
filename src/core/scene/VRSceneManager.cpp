@@ -40,7 +40,11 @@ VRSceneManager* main_instance = 0;
 VRSceneManager::VRSceneManager() {
     cout << "Init VRSceneManager..";
     main_instance = this;
+#ifdef WASM
+    original_workdir = "/";
+#else
 	original_workdir = boost::filesystem::current_path().string();
+#endif
 	examples = VRProjectsList::create();
 	projects = VRProjectsList::create();
     searchExercisesAndFavorites();
@@ -68,10 +72,10 @@ VRSceneManager* VRSceneManager::get() {
 }
 
 void VRSceneManager::loadScene(string path, bool write_protected, string encryptionKey) {
+    cout << "VRSceneManager, loadScene: " << path << endl;
     if (!exists(path)) { cout << "VRSceneManager, loadScene: " << path << " not found" << endl; return; }
     path = canonical(path);
     if (current) if (current->getPath() == path) return;
-    cout << "VRSceneManager, loadScene: " << path << endl;
 
     newEmptyScene(path);
     bool success = VRSceneLoader::get()->loadScene(path, encryptionKey);
@@ -130,9 +134,13 @@ void VRSceneManager::reloadScene() {
 }
 
 void VRSceneManager::setWorkdir(string path) {
+    cout << "VRSceneManager::setWorkdir: " << path << endl;
 	if (path == "") return;
 	if (exists(path)) path = canonical(path);
-	boost::filesystem::current_path(path);
+
+    boost::system::error_code ec;
+	boost::filesystem::current_path(path, ec);
+    //cout << " VRSceneManager::setWorkdir A4 err: " << ec.message() << " " << BOOST_LIB_VERSION << endl;
 	clearDumpFiles();
 }
 

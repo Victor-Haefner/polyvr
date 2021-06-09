@@ -36,13 +36,16 @@ VRGlutWindow::VRGlutWindow() {
 
     initGlut();
 
+    cout << " Glut create window" << endl;
     glutInitWindowSize(width, height);
     winID = glutCreateWindow("PolyVR");
+    cout << "  window ID: " << winID << endl;
 
     GLUTWindowMTRecPtr win = GLUTWindow::create();
     _win = win;
     win->setGlutId(winID);
     win->setSize(width, height);
+    cout << "  init OpenSG GLUT window" << endl;
     win->init();
 
     glutWindows[winID] = this;
@@ -54,6 +57,7 @@ VRGlutWindow::VRGlutWindow() {
     glutSpecialUpFunc(glutSpecialUp);
     glutMotionFunc(glutMotion);
     glutMouseFunc(glutMouse);
+    cout << " Glut window initiated" << endl;
 }
 
 VRGlutWindow::~VRGlutWindow() {

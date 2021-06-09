@@ -13,8 +13,13 @@
 #ifdef __EMSCRIPTEN__
 #include <OpenSG/OSGPNGImageFileType.h>
 #include <OpenSG/OSGJPGImageFileType.h>
-
 #include <OpenSG/OSGNFIOSceneFileType.h>
+#include <OpenSG/OSGTypedGeoVectorProperty.h>
+#include <OpenSG/OSGTypedGeoIntegralProperty.h>
+#endif
+
+// deprecated?
+#if 0
 #include <OpenSG/OSGOSBChunkBlockElement.h>
 #include <OpenSG/OSGOSBChunkMaterialElement.h>
 #include <OpenSG/OSGOSBCubeTextureChunkElement.h>
@@ -45,8 +50,6 @@
 #include <OpenSG/OSGOSBGeoPropertyConversionElement.h>
 #include <OpenSG/OSGOSBTypedGeoIntegralPropertyElement.h>
 #include <OpenSG/OSGOSBTypedGeoVectorPropertyElement.h>
-#include <OpenSG/OSGTypedGeoVectorProperty.h>
-#include <OpenSG/OSGTypedGeoIntegralProperty.h>
 #endif
 
 #include "PolyVR.h"
@@ -54,6 +57,7 @@
 #include "core/scene/VRSceneManager.h"
 #include "core/scene/VRScene.h"
 #include "core/setup/VRSetupManager.h"
+#include "core/scripting/VRScript.h"
 #include "core/utils/VRInternalMonitor.h"
 #include "core/utils/coreDumpHandler.h"
 #ifndef WITHOUT_GTK
@@ -143,10 +147,10 @@ PolyVR::~PolyVR() {
 #ifndef WITHOUT_GTK
     VRGuiSignals::get()->clear();
 #endif
-    scene_mgr->closeScene();
-    VRSetup::getCurrent()->stopWindows();
-    scene_mgr->stopAllThreads();
-    setup_mgr->closeSetup();
+    if (scene_mgr) scene_mgr->closeScene();
+    if (auto setup = VRSetup::getCurrent()) setup->stopWindows();
+    if (scene_mgr) scene_mgr->stopAllThreads();
+    if (setup_mgr) setup_mgr->closeSetup();
 
 
     monitor.reset();
@@ -189,11 +193,186 @@ typedef const char* CSTR;
 EMSCRIPTEN_KEEPALIVE void PolyVR_shutdown() { PolyVR::shutdown(); }
 EMSCRIPTEN_KEEPALIVE void PolyVR_reloadScene() { VRSceneManager::get()->reloadScene(); }
 EMSCRIPTEN_KEEPALIVE void PolyVR_showStats() { VRSetup::getCurrent()->toggleViewStats(0); }
-EMSCRIPTEN_KEEPALIVE void PolyVR_triggerScript(const char* name, CSTR* params, int N) {
+EMSCRIPTEN_KEEPALIVE int PolyVR_getNScripts() { auto s = VRScene::getCurrent(); return s ? s->getNScripts() : 0; }
+
+VRScriptPtr getScript(CSTR name) {
+    string Name = string(name);
+    auto s = VRScene::getCurrent();
+    return s ? s->getScript(Name) : 0;
+}
+
+EMSCRIPTEN_KEEPALIVE void PolyVR_triggerScript(CSTR name, CSTR* params, int N) {
+    string Name = string(name);
     vector<string> sparams;
     for (int i=0; i<N; i++) sparams.push_back(string(params[i]));
-    VRScene::getCurrent()->triggerScript(string(name), sparams);
+    auto s = VRScene::getCurrent();
+    if (s) s->triggerScript(Name, sparams);
 }
+
+EMSCRIPTEN_KEEPALIVE CSTR PolyVR_getIthScriptName(int i) {
+    auto s = VRScene::getCurrent();
+    static string name = "";
+    name = s ? s->getIthScriptName(i) : "";
+    return name.c_str();
+}
+
+EMSCRIPTEN_KEEPALIVE CSTR PolyVR_getScriptCore(CSTR name) {
+    auto script = getScript(name);
+    static string core = "";
+    core = script ? script->getScript() : "";
+    return core.c_str();
+}
+
+EMSCRIPTEN_KEEPALIVE void PolyVR_setScriptCore(CSTR name, CSTR core) {
+    string Name = string(name);
+    string Core = string(core);
+    auto s = VRScene::getCurrent();
+    if (s) s->updateScript(name, core);
+}
+
+EMSCRIPTEN_KEEPALIVE CSTR PolyVR_getScriptType(CSTR name) {
+    auto script = getScript(name);
+    static string type;
+    type = script ? script->getType() : "";
+    return type.c_str();
+}
+
+EMSCRIPTEN_KEEPALIVE void PolyVR_setScriptType(CSTR name, CSTR type) {
+    string Type = string(type);
+    auto script = getScript(name);
+    if (script) script->setType(Type);
+}
+
+EMSCRIPTEN_KEEPALIVE int PolyVR_getNScriptTriggers(CSTR name) {
+    auto script = getScript(name);
+    return script ? script->getTriggers().size() : 0;
+}
+
+VRScript::trigPtr getIthTrig(VRScriptPtr script, int i) {
+    auto trigs = script->getTriggers();
+    auto it = trigs.begin();
+    advance(it, i);
+    return *it;
+}
+
+VRScript::argPtr getIthArg(VRScriptPtr script, int i) {
+    auto args = script->getArguments();
+    auto it = args.begin();
+    advance(it, i);
+    return *it;
+}
+
+EMSCRIPTEN_KEEPALIVE CSTR PolyVR_getScriptIthTrigger(CSTR name, int i) {
+    auto script = getScript(name);
+    static string data = "";
+    data = "";
+    if (!script) return data.c_str();
+
+    auto t = getIthTrig(script, i);
+    string key = toString(t->key);
+    if (t->dev == "keyboard" && t->key > 32 && t->key < 127) {
+        char kc = t->key;
+        key = kc;
+    }
+
+    data = t->trigger;
+    data += "|" + t->param;
+    data += "|" + t->dev;
+    data += "|" + key;
+    data += "|" + t->state;
+    return data.c_str();
+}
+
+EMSCRIPTEN_KEEPALIVE int PolyVR_getNScriptArguments(CSTR name) {
+    auto script = getScript(name);
+    return script ? script->getArguments().size() : 0;
+}
+
+EMSCRIPTEN_KEEPALIVE CSTR PolyVR_getScriptIthArgument(CSTR name, int i) {
+    auto script = getScript(name);
+    static string data = "";
+    data = "";
+    if (!script) return data.c_str();
+
+    auto a = getIthArg(script, i);
+    data = a->getName();
+    data += "|" + a->val;
+    return data.c_str();
+}
+
+EMSCRIPTEN_KEEPALIVE void PolyVR_addScriptArgument(CSTR name) {
+    auto script = getScript(name);
+    if (script) script->addArgument();
+}
+
+EMSCRIPTEN_KEEPALIVE void PolyVR_addScriptTrigger(CSTR name) {
+    auto script = getScript(name);
+    if (script) script->addTrigger();
+}
+
+EMSCRIPTEN_KEEPALIVE void PolyVR_remScriptIthArgument(CSTR name, int i) {
+    auto script = getScript(name);
+    if (!script) return;
+    auto a = getIthArg(script, i);
+    script->remArgument(a->getName());
+}
+
+EMSCRIPTEN_KEEPALIVE void PolyVR_remScriptIthTrigger(CSTR name, int i) {
+    auto script = getScript(name);
+    if (!script) return;
+    auto t = getIthTrig(script, i);
+    script->remTrigger(t->getName());
+}
+
+EMSCRIPTEN_KEEPALIVE void PolyVR_setScriptIthTriggerType(CSTR name, int i, CSTR type) {
+    auto script = getScript(name);
+    if (!script) return;
+    auto t = getIthTrig(script, i);
+    script->changeTrigger(t->getName(), string(type));
+}
+
+EMSCRIPTEN_KEEPALIVE void PolyVR_setScriptIthTriggerParam(CSTR name, int i, CSTR param) {
+    auto script = getScript(name);
+    if (!script) return;
+    auto t = getIthTrig(script, i);
+    script->changeTrigParams(t->getName(), string(param));
+}
+
+EMSCRIPTEN_KEEPALIVE void PolyVR_setScriptIthTriggerDevice(CSTR name, int i, CSTR device) {
+    auto script = getScript(name);
+    if (!script) return;
+    auto t = getIthTrig(script, i);
+    script->changeTrigDev(t->getName(), string(device));
+}
+
+EMSCRIPTEN_KEEPALIVE void PolyVR_setScriptIthTriggerKey(CSTR name, int i, int key) {
+    auto script = getScript(name);
+    if (!script) return;
+    auto t = getIthTrig(script, i);
+    script->changeTrigKey(t->getName(), key);
+}
+
+EMSCRIPTEN_KEEPALIVE void PolyVR_setScriptIthTriggerState(CSTR name, int i, CSTR state) {
+    auto script = getScript(name);
+    if (!script) return;
+    auto t = getIthTrig(script, i);
+    script->changeTrigState(t->getName(), string(state));
+}
+
+EMSCRIPTEN_KEEPALIVE void PolyVR_setScriptIthArgumentVar(CSTR name, int i, CSTR var) {
+    auto script = getScript(name);
+    if (!script) return;
+    auto a = getIthArg(script, i);
+    script->changeArgName(a->getName(), string(var));
+}
+
+EMSCRIPTEN_KEEPALIVE void PolyVR_setScriptIthArgumentVal(CSTR name, int i, CSTR val) {
+    auto script = getScript(name);
+    if (!script) return;
+    auto a = getIthArg(script, i);
+    script->changeArgValue(a->getName(), string(val));
+}
+
 #endif
 
 void PolyVR::shutdown() {
@@ -207,6 +386,7 @@ void printNextOSGID(int i) {
     cout << "next OSG ID: " << n->getId() << " at maker " << i << endl;
 }
 
+// deprecated?
 #ifdef WASM
 void initOSGImporter() {
     // init image formats
@@ -217,6 +397,8 @@ void initOSGImporter() {
     // init data formats
     cout << "  init data formats" << endl;
 	NFIOSceneFileType::the();
+
+#if 0
 	OSBElementFactory::the()->registerDefault(new OSBElementCreator<OSBGenericElement>());
 
 	OSBElementFactory::the()->registerElement("ChunkBlock", new OSBElementCreator<OSBChunkBlockElement>);
@@ -372,6 +554,7 @@ void initOSGImporter() {
     OSBElementFactory::the()->registerElement("GeoColor4NubProperty", new OSBElementCreator<OSBTypedGeoVectorPropertyElement<GeoColor4NubProperty>>);
     OSBElementFactory::the()->registerElement("GeoColor3fProperty", new OSBElementCreator<OSBTypedGeoVectorPropertyElement<GeoColor3fProperty>>);
     OSBElementFactory::the()->registerElement("GeoColor4fProperty", new OSBElementCreator<OSBTypedGeoVectorPropertyElement<GeoColor4fProperty>>);
+#endif
 }
 #endif
 
@@ -452,13 +635,15 @@ void PolyVR::init(int argc, char **argv) {
 #endif
 
     setup_mgr = VRSetupManager::create();
+    scene_mgr = VRSceneManager::create();
+    monitor = shared_ptr<VRInternalMonitor>(VRInternalMonitor::get());
+
 #ifdef WASM
     VRSetupManager::get()->load("Browser", "Browser.xml");
-#endif
-
-    scene_mgr = VRSceneManager::create();
+    cout << " Browser setup loaded!" << endl;
+#else
 	main_interface = shared_ptr<VRMainInterface>(VRMainInterface::get());
-    monitor = shared_ptr<VRInternalMonitor>(VRInternalMonitor::get());
+#endif
 
 #ifndef WITHOUT_GTK
     gui_mgr = shared_ptr<VRGuiManager>(VRGuiManager::get());
@@ -472,6 +657,8 @@ void PolyVR::init(int argc, char **argv) {
     removeFile("setup/.startup"); // remove startup failsafe
 
     testGLCapabilities();
+
+    initiated = true;
 }
 
 void PolyVR::update() {
@@ -494,6 +681,7 @@ void glutUpdate() {
 #endif
 
 void PolyVR::run() {
+    if (!initiated) return;
     cout << endl << "Start main loop" << endl << endl;
 #ifndef WASM
     doLoop = true;

@@ -248,7 +248,8 @@ void VRRobotArm::calcReverseKinematicsAubo(PosePtr p) {
         float a = u.enclosedAngle(v);
         Vec3d d = u.cross(v);
         float k = w.dot(d);
-        return a*boost::math::sign(k);
+        int s = k >= 0 ? 1 : -1;
+        return a*s;
     };
 
     angle_targets[3] = getAngle(P1-P2, pJ1-pJ2, P3-P2) - Pi*0.5;

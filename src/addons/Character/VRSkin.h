@@ -15,6 +15,7 @@ class VRSkin : public std::enable_shared_from_this<VRSkin> {
         VRSkeletonPtr skeleton;
         VRMaterialPtr material;
         vector<VRSkeleton::Bone> bone0s;
+        vector<vector<pair<int, float>>> mapping;
 
         static string skinning_vp;
         static string skinning_fp;
@@ -26,7 +27,12 @@ class VRSkin : public std::enable_shared_from_this<VRSkin> {
 		static VRSkinPtr create(VRSkeletonPtr s);
 		VRSkinPtr ptr();
 
-        void computeMapping(VRGeometryPtr hull);
+		void addMap(int bID, float t, int vID = -1);
+        void setMapping(vector<vector<pair<int, float>>> mapping);
+        void applyMapping(VRGeometryPtr hull);
+        size_t mapSize();
+
+        void updateMappingTexture();
         void updateBoneTexture();
 
         VRMaterialPtr getMaterial();

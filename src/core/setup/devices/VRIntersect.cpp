@@ -17,7 +17,7 @@ using namespace OSG;
 
 VRObjectPtr VRIntersection::getIntersected() { return object.lock(); }
 Pnt3d VRIntersection::getIntersection() { return point; }
-
+Line VRIntersection::getRay() { return ray; }
 
 Vec2d VRIntersect_computeTexel(VRIntersection& ins, NodeMTRecPtr node) {
     if (!ins.hit) return Vec2d(0,0);
@@ -83,6 +83,7 @@ VRIntersection VRIntersect::intersectRay(VRObjectWeakPtr wtree, Line ray, bool s
 
     ins.ray = ray;
     ins.hit = iAct.didHit();
+    //cout << "VRIntersect::intersectRay " << ray << " with " << tree->getName() << " hit? " << ins.hit << endl;
     if (ins.hit) {
         ins.object = tree->find(OSGObject::create(iAct.getHitObject()->getParent()));
         if (auto sp = ins.object.lock()) ins.name = sp->getName();

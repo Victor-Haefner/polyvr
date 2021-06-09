@@ -34,14 +34,30 @@ bool exists(string path) { return boost::filesystem::exists(path); }
 bool makedir(string path) {
     bool res = false;
     if (path == "") return true;
+#ifndef WASM
     try { res = boost::filesystem::create_directory(path); }
     catch(...) { cout << "ERROR: makedir failed when trying to create directory '" + path + "'" << endl; }
+#endif
     return res;
 }
 
 bool removeFile(string path) { return boost::filesystem::remove(path); }
-string canonical(string path) { return boost::filesystem::canonical(path).string(); }
-string absolute(string path) { return boost::filesystem::absolute(path).string(); }
+
+string canonical(string path) {
+#ifdef WASM
+    return path;
+#else
+    return boost::filesystem::canonical(path).string();
+#endif
+}
+
+string absolute(string path) {
+#ifdef WASM
+    return path;
+#else
+    return boost::filesystem::absolute(path).string();
+#endif
+}
 
 bool isFile(string path) { return boost::filesystem::is_regular_file(path); }
 bool isFolder(string path) { return boost::filesystem::is_directory(path); }

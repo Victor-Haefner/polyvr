@@ -47,31 +47,74 @@ void VRCharacter::simpleSetup() {
     s->setupGeometry(); // visualize skeleton
     addChild(s);
 
-    // leg configurations
-    auto stretched_leg_L = VRSkeleton::Configuration::create("stretched_leg_L");
-    stretched_leg_L->setPose(6,Vec3d());
-    stretched_leg_L->setPose(7,Vec3d());
-    stretched_leg_L->setPose(8,Vec3d());
-    stretched_leg_L->setPose(9,Vec3d());
-
-    auto lifted_leg_L = VRSkeleton::Configuration::create("lifted_leg_L");
-
+    skin = VRSkin::create(s);
 
     VRGeoData hullData; // TODO: create test hull
-    for (auto& bone : s->getBones()) {
+    auto bones = s->getBones();
+    for (size_t bID = 0; bID < bones.size(); bID++) {
+        auto& bone = bones[bID];
         Vec3d p = (bone.p1+bone.p2)*0.5;
         Vec3d n = bone.up;
-        Vec3d u = bone.dir;
-        Vec2d s = Vec2d(0.1, bone.length);
-        hullData.pushQuad(p,n,u,s,true);
-        cout << "   test hull quad: " << p << " / "  << n << " / " << u << " / " << s << endl;
+        Vec3d u = -bone.dir;
+        Vec3d s = Vec3d(0.1, bone.length, 0.1);
+
+        bool isFoot  = bool(bID == 0 || bID == 3);
+        bool isAnkle = bool(bID == 2 || bID == 5);
+
+        if (isFoot) { // feet
+            Vec3d x = n.cross(u) * s[0]*0.5;
+            u[1] = 0;
+            u *= s[0]*0.5;
+
+            Vec3d pH1 = bone.p1;
+            Vec3d pH2 = bone.p1 - Vec3d(0,0.05,0);
+
+            int v11 = hullData.pushVert(pH1 - x + u, n, Vec2d(0,0));
+            int v12 = hullData.pushVert(pH1 - x - u, n, Vec2d(0,1));
+            int v13 = hullData.pushVert(pH1 + x - u, n, Vec2d(1,1));
+            int v14 = hullData.pushVert(pH1 + x + u, n, Vec2d(1,0));
+
+            x *= 1.2;
+            u *= 1.2;
+
+            int v21 = hullData.pushVert(pH2 - x + u, n, Vec2d(0,0));
+            int v22 = hullData.pushVert(bone.p2 - x, u, Vec2d(0,1));
+            int v23 = hullData.pushVert(bone.p2 + x, u, Vec2d(1,1));
+            int v24 = hullData.pushVert(pH2 + x + u, n, Vec2d(1,0));
+
+            hullData.pushQuad(v11, v12, v13, v14);
+            hullData.pushQuad(v21, v22, v23, v24);
+            hullData.pushQuad(v11, v12, v22, v21);
+            hullData.pushQuad(v12, v13, v23, v22);
+            hullData.pushQuad(v13, v14, v24, v23);
+            hullData.pushQuad(v14, v11, v21, v24);
+        } else hullData.pushBox(p,n,u,s,true);
+        cout << "   test hull quad: " << p << " / "  << n << " / " << u << " / " << s << "    " << u.dot(n) << endl;
+
+        // create skin mapping
+        size_t mI = skin->mapSize();
+
+        float t1 = 1.0;
+        float t2 = 1.0;
+        if (!bone.isStart || isFoot ) t1 = 0.5;
+        if (!bone.isEnd   || isAnkle) t2 = 0.5;
+
+        for (int i=0; i<4; i++) skin->addMap(bone.ID, t1);
+        for (int i=0; i<4; i++) skin->addMap(bone.ID, t2);
+
+        if (isFoot)  for (int i : {0,1,2,3}) skin->addMap(bones[bID+2].ID, 0.5, mI+i);
+        if (isAnkle) for (int i : {4,5,6,7}) skin->addMap(bones[bID-2].ID, 0.5, mI+i);
+
+        if (!bone.isStart) for (int i : {0,1,2,3}) skin->addMap(bones[bID-1].ID, 0.5, mI+i);
+        if (!bone.isEnd)   for (int i : {4,5,6,7}) skin->addMap(bones[bID+1].ID, 0.5, mI+i);
     }
 
+    skin->updateBoneTexture();
+    skin->updateMappingTexture();
     auto hull = hullData.asGeometry("hull");
+    hull->updateNormals(true);
     addChild(hull);
-
-    skin = VRSkin::create(s);
-    skin->computeMapping(hull);
+    skin->applyMapping(hull);
     hull->setMaterial( skin->getMaterial() );
 }
 
@@ -154,7 +197,7 @@ void VRCharacter::pathWalk(float t) {
     motion->rightCycle.advance(d);
 }
 
-PathPtr VRCharacter::moveTo(Vec3d p1) {
+PathPtr VRCharacter::moveTo(Vec3d p1, float speed) {
     auto p0 = getPose();
     Vec3d d = -p0->dir();
     d.normalize();
@@ -173,11 +216,13 @@ PathPtr VRCharacter::moveTo(Vec3d p1) {
 
     if (walkAnim) walkAnim->stop();
     if (motion) delete motion;
+    if (abs(speed) < 1e-2) return 0;
+
     motion = new WalkMotion(getSkeleton(), path); // TODO
 
     walkAnim = VRAnimation::create("walkAnim");
     walkAnim->setCallback(VRAnimCb::create("walkAnim", bind(&VRCharacter::pathWalk, this, placeholders::_1) ));
-    walkAnim->setDuration(path->getLength()*2);
+    walkAnim->setDuration(path->getLength()/abs(speed));
     walkAnim->start();
 
     return path;

@@ -402,6 +402,34 @@ void VRGeoData::pushQuad(Vec3d p, Vec3d n, Vec3d u, Vec2d s, bool addInds) {
     if (addInds) pushQuad();
 }
 
+void VRGeoData::pushBox(Vec3d p, Vec3d n, Vec3d u, Vec3d s, bool addInds) { // TODO: the normals are bs
+    Vec3d x = -n.cross(u); x.normalize();
+
+    x *= s[0]*0.5;
+    u *= s[1]*0.5;
+    n *= s[2]*0.5;
+
+    int v11 = pushVert(p - x - n + u, n, Vec2d(0,0));
+    int v12 = pushVert(p + x - n + u, n, Vec2d(1,0));
+    int v13 = pushVert(p + x + n + u, n, Vec2d(1,1));
+    int v14 = pushVert(p - x + n + u, n, Vec2d(0,1));
+
+    int v21 = pushVert(p - x - n - u, n, Vec2d(0,0));
+    int v22 = pushVert(p + x - n - u, n, Vec2d(1,0));
+    int v23 = pushVert(p + x + n - u, n, Vec2d(1,1));
+    int v24 = pushVert(p - x + n - u, n, Vec2d(0,1));
+
+
+    if (addInds) {
+        pushQuad(v11, v12, v13, v14);
+        pushQuad(v21, v22, v23, v24);
+        pushQuad(v11, v12, v22, v21);
+        pushQuad(v12, v13, v23, v22);
+        pushQuad(v13, v14, v24, v23);
+        pushQuad(v14, v11, v21, v24);
+    }
+}
+
 int VRGeoData::pushVert(const VRGeoData& other, int i) {
     auto od = other.data;
     if (int(od->pos->size()) <= i) { cout << "VRGeoData::pushVert ERROR: invalid index " << i << endl; return 0; }

@@ -33,6 +33,9 @@ class VRSkeleton : public VRGeometry {
             Vec3d dir;
             Vec3d up;
             float length = 0;
+            size_t ID = 0;
+            bool isStart = false;
+            bool isEnd = false;
         };
 
         typedef shared_ptr<Configuration> ConfigurationPtr;

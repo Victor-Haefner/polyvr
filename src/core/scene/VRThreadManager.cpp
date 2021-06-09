@@ -84,7 +84,8 @@ void VRThreadManager::ThreadManagerUpdate() {
 }
 
 void VRThreadManager::stopAllThreads() {
-    cout << "VRThreadManager::stopAllThreads() " << threads.size() << endl;
+#ifndef WASM
+    cout << "VRThreadManager::stopAllThreads() N threads: " << threads.size() << endl;
     for (auto t : threads) t.second->control_flag = false;
 
     int count = 0;
@@ -102,7 +103,10 @@ void VRThreadManager::stopAllThreads() {
     }
 
     if (threads.size() > 0) cout << "VRThreadManager::stopAllThreads, kill " << threads.size() << " remaining threads!" << endl;
+    for (auto t : threads) t.second->std_thread->detach();
     threads.clear(); // kills remaining threads!
+    cout << " VRThreadManager all stopped " << endl;
+#endif
 }
 
 void VRThreadManager::stopThread(int id, int tries) {

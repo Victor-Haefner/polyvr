@@ -12,7 +12,7 @@ namespace OSG {
 class VRTCPUtils {
     public:
         static string getLocalIP();
-        static string getPublicIP();
+        static string getPublicIP(bool cached = false);
 };
 
 }

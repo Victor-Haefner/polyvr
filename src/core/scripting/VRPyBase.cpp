@@ -4,6 +4,14 @@
 
 #include <OpenSG/OSGImage.h>
 
+#ifdef WASM
+PyGILState_STATE PyGILState_Ensure() {
+	return PyGILState_STATE();
+}
+
+void PyGILState_Release(PyGILState_STATE state) {}
+#endif
+
 
 PyObject* VRPyBase::err = NULL;
 
