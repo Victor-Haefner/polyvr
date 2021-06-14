@@ -19,7 +19,7 @@
 #endif
 
 // deprecated?
-#if 0
+#ifdef __EMSCRIPTEN__
 #include <OpenSG/OSGOSBChunkBlockElement.h>
 #include <OpenSG/OSGOSBChunkMaterialElement.h>
 #include <OpenSG/OSGOSBCubeTextureChunkElement.h>
