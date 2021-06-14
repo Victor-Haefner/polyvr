@@ -398,7 +398,6 @@ void initOSGImporter() {
     cout << "  init data formats" << endl;
 	NFIOSceneFileType::the();
 
-#if 0
 	OSBElementFactory::the()->registerDefault(new OSBElementCreator<OSBGenericElement>());
 
 	OSBElementFactory::the()->registerElement("ChunkBlock", new OSBElementCreator<OSBChunkBlockElement>);
@@ -554,7 +553,6 @@ void initOSGImporter() {
     OSBElementFactory::the()->registerElement("GeoColor4NubProperty", new OSBElementCreator<OSBTypedGeoVectorPropertyElement<GeoColor4NubProperty>>);
     OSBElementFactory::the()->registerElement("GeoColor3fProperty", new OSBElementCreator<OSBTypedGeoVectorPropertyElement<GeoColor3fProperty>>);
     OSBElementFactory::the()->registerElement("GeoColor4fProperty", new OSBElementCreator<OSBTypedGeoVectorPropertyElement<GeoColor4fProperty>>);
-#endif
 }
 #endif
 
