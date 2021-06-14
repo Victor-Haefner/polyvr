@@ -186,6 +186,8 @@ void VRMouse::updatePosition(int x, int y) {
 
     editBeacon()->setDir(Vec3d(ray.getDirection()));
     editBeacon()->setFrom(Vec3d(ray.getPosition()));
+    updateBeacons();
+    //cout << "VRMouse::updatePosition " << Vec2i(x,y) << " -> " << editBeacon()->getName() << "  d: " << editBeacon()->getDir() << "  wd: " << editBeacon()->getWorldDirection() << endl;
 
     // TODO: This would be the better variant (compare VRMultitouch), but causes a compilation error where VRMultitouch does not.
 //    auto p = Pose::create(Vec3d(ray.getPosition()), Vec3d(ray.getDirection()));
@@ -219,20 +221,10 @@ void VRMouse::updatePosition(int x, int y) {
 * @param y: y coordinate of mouse pointer on screen
 */
 void VRMouse::mouse(int button, int state, int x, int y) {
-    auto sv = view.lock();
-    if (!sv) return;
-    ViewportMTRecPtr v = sv->getViewportL();
-    if (!v) return;
-    if (!v->getParent()) return;
-
-    float _x, _y;
-    v->calcNormalizedCoordinates(_x, _y, x, y);
-    change_slider(5, _x);
-    change_slider(6, _y);
-
-    updatePosition(x,y);
-    if (state) change_button(button,false);
-    else change_button(button,true);
+    motion(x,y);
+    //cout << "VRMouse::mouse " << Vec4i(button, state, x, y) << endl;
+    bool pressed = bool(state == 0);
+    change_button(button, pressed);
 }
 
 void VRMouse::motion(int x, int y) {
@@ -247,6 +239,7 @@ void VRMouse::motion(int x, int y) {
     change_slider(5,_x);
     change_slider(6,_y);
     updatePosition(x,y);
+    //cout << "VRMouse::motion " << Vec2i(x, y) << endl;
 }
 
 void VRMouse::setCamera(VRCameraPtr cam) { this->cam = cam; }

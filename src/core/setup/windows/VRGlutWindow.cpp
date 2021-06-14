@@ -93,10 +93,12 @@ void VRGlutWindow::save(XMLElementPtr node) { VRWindow::save(node); }
 void VRGlutWindow::load(XMLElementPtr node) { VRWindow::load(node); }
 
 void VRGlutWindow::onMouse(int b, int s, int x, int y) {
+    //cout << "VRGlutWindow::onMouse " << Vec4i(b, s, x, y) << endl;
     if (auto m = getMouse()) m->mouse(b, s, x, y);
 }
 
 void VRGlutWindow::onMotion(int x, int y) {
+    //cout << "VRGlutWindow::onMouse " << Vec2i(x, y) << endl;
     if (auto m = getMouse()) m->motion(x, y);
 }
 
