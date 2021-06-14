@@ -37,7 +37,7 @@ class VRRobotArm {
 
         list<job> job_queue;
 
-        int N = 5;
+        int N = 6;
         float grabDist = 0;
         float pathPos = 0;
         bool showModel = false;
@@ -90,13 +90,13 @@ class VRRobotArm {
         bool isMoving();
         void setEventCallback(VRMessageCbPtr mCb);
 
-        void moveTo(PosePtr p);
+        void moveTo(PosePtr p, bool local = false);
         void setAngles(vector<float> angles, bool force = false);
         void setGrab(float g);
         void toggleGrab();
 
         void grab(VRTransformPtr obj);
-        void drop();
+        VRTransformPtr drop();
 
         void setPath(PathPtr p, PathPtr po = 0);
         PathPtr getPath();

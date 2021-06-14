@@ -177,7 +177,7 @@ class TCPClient {
             cout << "TCPClient::connectToPeer " << lIP << ":" << lPort << ", to " << rIP << ":" << rPort << endl;
             tunnelAccept = thread([this, lPort]() { acceptHolePunching(lPort); }); // needed??? if yes, then TODO: fix close (timeout)!
             tunnelConnect = thread([this, lIP, lPort, rIP, rPort]() { connectHolePunching(lIP, lPort, rIP, rPort); });
-            tunnelAccept.detach(); // TODO: implement timeout or other abort method to control that thread!
+            //tunnelAccept.detach(); // TODO: implement timeout or other abort method to control that thread!
 		}
 
 		void finalizeP2P() {
@@ -208,10 +208,10 @@ class TCPClient {
             //cout << " accept acceptor bind on endpoint " << ep << endl;
             boost::asio::socket_base::reuse_address reuseAddress(true);
             boost::asio::detail::socket_option::boolean<SOL_SOCKET, SO_REUSEPORT> reusePort(true);
-            boost::asio::socket_base::enable_connection_aborted enable_abort(true);
+            //boost::asio::socket_base::enable_connection_aborted enable_abort(true);
             acceptor->set_option(reuseAddress); //    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             acceptor->set_option(reusePort); //    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
-            acceptor->set_option(enable_abort);
+            //acceptor->set_option(enable_abort);
 
             boost::system::error_code ec;
             acceptor->bind(ep, ec); //    s.bind(('', port))
@@ -278,8 +278,11 @@ class TCPClient {
                     cSocket->connect(remote_ep);//            s.connect(addr)
                     cout << " --- VRTCPClient::connectHolePunching connect ---" << endl;
                 } catch (boost::system::system_error& e) {
+                    //static int c = 0; c++;
+                    //if (c > 20) return;
+
                     if (e.code().value() == 113) continue; // No route to host - is normal
-                    //if (e.code().value() == 111) continue; // Connection refused - very bad!
+                    if (e.code().value() == 111) continue; // Connection refused - very bad!
                     cout << "Error in VRTCPClient::connectHolePunching socket->connect, boost::system::system_error " << e.what() << "(" << e.code().value() << ")" << endl;
                     return;
                 } catch (...) {
