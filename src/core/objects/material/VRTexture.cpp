@@ -68,6 +68,10 @@ bool convertToUInt8(ImageMTRecPtr img) {
     return false;
 }
 
+void VRTexture::convertToBytes() {
+    if (!convertToUInt8(img)) img->convertDataTypeTo(OSG::Image::OSG_UINT8_IMAGEDATA);
+}
+
 void VRTexture::writeImage(ImageMTRecPtr img, string path) {
     //auto format = hasAlpha ? OSG::Image::OSG_RGBA_PF : OSG::Image::OSG_RGB_PF;
 
