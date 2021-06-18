@@ -84,6 +84,7 @@ _xmlNode* getNextNode(_xmlNode* cur) {
 
 vector<XMLElementPtr> XMLElement::getChildren(string name) {
     vector<XMLElementPtr> res;
+    if (!node) return res;
     auto cnode = getNextNode( node->xmlChildrenNode );
     while (cnode) {
         if (cnode->type != XML_ELEMENT_NODE) continue;
