@@ -386,9 +386,9 @@ void VRPlanet::remPin(int ID) {}// metaGeo->remove(ID); } // TODO
 
 string VRPlanet::surfaceVP =
 #ifdef WASM
-"#version 130\n"
-#else
 "#version 120\n"
+#else
+"#version 130\n"
 #endif
 GLSL(
 #ifdef WASM
