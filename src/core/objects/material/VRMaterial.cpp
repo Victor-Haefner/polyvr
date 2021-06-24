@@ -342,10 +342,12 @@ string VRMaterial::constructShaderFP(VRMatDataPtr data, bool deferred, int force
     fp += "uniform vec4 mat_diffuse;\n";
     fp += "uniform vec4 mat_ambient;\n";
     fp += "uniform vec4 mat_specular;\n";
+    fp += "uniform vec3 glLightPosition;\n";
+    fp += "uniform vec3 glLightDirection;\n";
     if (texD == 2) fp += "uniform sampler2D tex0;\n";
     fp += "void main(void) {\n";
     fp += "  vec3  n = normalize(vertNorm);\n";
-    fp += "  vec3  light = normalize( vec3(0.8,1.0,0.5) );\n";
+    fp += "  vec3  light = normalize( -glLightDirection );\n";
     fp += "  float NdotL = max(dot( n, light ), 0.0);\n";
     if (texD == 2) fp += "  vec4 diffCol = texture2D(tex0, texCoord);\n";
 //    if (texD == 2) fp += "  vec4 diffCol = vec4(texCoord.x, texCoord.y, 0.0, 1.0);\n";
@@ -407,6 +409,8 @@ void VRMaterial::updateOGL2Parameters() {
     setShaderParameter("mat_ambient", Vec4f(a[0], a[1], a[2], 1.0));
     setShaderParameter("mat_diffuse", Vec4f(d[0], d[1], d[2], 1.0));
     setShaderParameter("mat_specular", Vec4f(s[0], s[1], s[2], 1.0));
+    setShaderParameter("glLightPosition", Vec3f(1.0, 3.0, 1.0));
+    setShaderParameter("glLightDirection", Vec3f(0.5, -1.0, 0.2));
     //setFrontBackModes(GL_NONE, GL_FILL);
 #endif
 }
@@ -1238,7 +1242,14 @@ void VRMaterial::setVertexShader(string s, string name) {
     auto m = mats[activePass];
 
 #ifdef WASM
-    s = "#define WEBGL\n" + s;
+    if (startsWith(s, "#version")) {
+	auto i = s.find('\n');
+	// this would be usefull, but webgl does not support any #version flag.. so just remove it
+	/*string s1 = s.substr(0,i);
+	string s2 = s.substr(i);
+	s = s1 + "\n#define WEBGL\n" + s2;*/
+	s = "#define WEBGL\n" + s.substr(i);
+    } else s = "#define WEBGL\n" + s;
 #endif
 
 #ifndef OSG_OGL_ES2
@@ -1266,9 +1277,16 @@ void VRMaterial::setVertexShader(string s, string name) {
 void VRMaterial::setFragmentShader(string s, string name, bool deferred) {
     initShaderChunk();
     auto m = mats[activePass];
+
 #ifdef WASM
-    if (!contains(s, "precision mediump"))
-        s = "#define WEBGL\nprecision mediump float;\n" + s;
+    if (startsWith(s, "#version")) {
+	auto i = s.find('\n');
+	s = s.substr(i);
+    }
+
+    if (!contains(s, "precision mediump")) s = "precision mediump float;\n" + s;
+ 
+    s = "#define WEBGL\n" + s;
 #endif
 
 #ifndef OSG_OGL_ES2
