@@ -385,23 +385,37 @@ void VRPlanet::remPin(int ID) {}// metaGeo->remove(ID); } // TODO
 // shader --------------------------
 
 string VRPlanet::surfaceVP =
+#ifdef WASM
 "#version 130\n"
+#else
+"#version 120\n"
+#endif
 GLSL(
+#ifdef WASM
+varying vec4 osg_Vertex;
+varying vec4 osg_Normal;
+varying vec4 osg_Color;
+varying vec3 osg_MultiTexCoords0;
+varying vec3 tcs;
+varying vec3 normal;
+varying vec4 position;
+#else
+in vec4 osg_Vertex;
+in vec4 osg_Normal;
+in vec4 osg_Color;
+in vec3 osg_MultiTexCoords0;
 out vec3 tcs;
 out vec3 normal;
 out vec4 position;
 out float gl_ClipDistance[1];
 uniform vec4 clipPlane;
+#endif
+
 uniform mat4 OSGWorldMatrix;
 uniform mat4 OSGModelViewMatrix;
 uniform mat4 OSGProjectionMatrix;
 uniform mat4 OSGInvViewMatrix;
 uniform mat4 OSGInvWorldMatrix;
-
-in vec4 osg_Vertex;
-in vec4 osg_Normal;
-in vec4 osg_Color;
-in vec3 osg_MultiTexCoords0;
 
 void main( void ) {
     tcs = osg_Normal.xyz;
@@ -411,7 +425,9 @@ void main( void ) {
     gl_Position = OSGProjectionMatrix*OSGModelViewMatrix*osg_Vertex;\n
 
     vec4 pos = OSGWorldMatrix*osg_Vertex;
+#ifndef WASM
     gl_ClipDistance[0] = dot(pos, clipPlane);\n
+#endif
 }
 );
 
