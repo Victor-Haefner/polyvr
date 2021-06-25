@@ -123,8 +123,8 @@
 	VR.cli2.onConnect(onClient2Connect)
 	
 	# get user list
-	#server = 'http://imi-dev.imi.kit.edu/web/PolyServ'
 	server = 'http://localhost/PolyServ'
+	tcpServ = '127.0.0.1' # has to be an IPv4
 	broker = VR.RestClient()
 	
 	users = {}
@@ -151,18 +151,12 @@
 	print addr1, port1
 	print addr2, port2
 	
-	#s = 'http://imi-dev.imi.kit.edu'
-	#s = '141.3.151.224'
-	s = '0.0.0.0'
-	VR.cli1.connect(s, port1)
-	VR.cli2.connect(s, port2)
+	VR.cli1.connect(tcpServ, port1)
+	VR.cli2.connect(tcpServ, port2)
 	
 	print 'send messages'
 	VR.cli1.send('message from client1')
 	VR.cli2.send('message from client2')
-	
-	
-	# with the local server, 0.0.0.0, it works, not yet with imi-dev
 </core>
     </Script>
     <Script base_name="startServer" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
