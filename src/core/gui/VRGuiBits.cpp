@@ -77,6 +77,7 @@ void VRGuiBits::on_web_export_clicked() {
     systemCall("cp -f \"" + folder + "/polyvr.wasm\" ./");
     systemCall("cp -f \"" + folder + "/polyvr.js\" ./");
     systemCall("cp -f \"" + folder + "/storage.js\" ./");
+    systemCall("cp -f \"" + folder + "/proxy.php\" ./");
     systemCall("cp -f \"" + folder + "/scanDir.php\" ./");
     systemCall("cp -f \"" + folder + "/Mono.ttf\" ./");
     systemCall("cp -f \"" + folder + "/Browser.xml\" ./");
