@@ -179,6 +179,20 @@ class HTTPServer {
         }
 };
 
+string processPHP(HTTP_args* sad) {
+    // copy php file and prepend something to simulate GET/POST parameters
+    systemCall("cp "+sad->path+" "+sad->path+"_tmp.php" );
+    string toPrepend = "parse_str($argv[1], $_GET); parse_str($argv[1], $_POST);";
+    systemCall("awk -i inplace 'NR==1{print; print \""+toPrepend+"\"} NR!=1' " + sad->path+"_tmp.php");
+
+    // execute php
+    string cmd = "php "+sad->path+"_tmp.php "+sad->paramsString;
+    string res = systemCall(cmd);
+    //cout << "processPHP: " << cmd << endl << res << endl;
+    systemCall("rm "+sad->path+"_tmp.php" );
+    return subString( res, 0, res.size()-1 );
+}
+
 static void server_answer_to_connection_m(struct mg_connection *conn, int ev, void *ev_data) {
     //VRLog::setTag("net",1);
     bool v = VRLog::tag("net");
@@ -246,6 +260,7 @@ static void server_answer_to_connection_m(struct mg_connection *conn, int ev, vo
 
         string params;
         if (hm->query_string.p) params = string(hm->query_string.p, hm->query_string.len);
+        sad->paramsString = params;
         for (auto pp : splitString(params, '&')) {
             vector<string> d = splitString(pp, '=');
             if (d.size() != 2) continue;
@@ -286,10 +301,15 @@ static void server_answer_to_connection_m(struct mg_connection *conn, int ev, vo
                     sendString("<head><style>body{background:#f0f;color:white;font-size:50vh;font-weight:bold;display:flex;justify-content:center;align-items:center;width:100vw;height:100vh;margin:0;}</style></head><body>Not Found!</body>", 404);
                 }
                 else {
-                    if (v) VRLog::log("net", "Serve ressource\n");
-                    mg_serve_http(conn, hm, s_http_server_opts);
-                    // mg_http_serve_file
-                    return;
+                    if (endsWith(sad->path, ".php", false)) {
+                        if (v) VRLog::log("net", "Serve PHP\n");
+                        sendString( processPHP(sad) );
+                    } else {
+                        if (v) VRLog::log("net", "Serve ressource\n");
+                        mg_serve_http(conn, hm, s_http_server_opts);
+                        // mg_http_serve_file
+                        return;
+                    }
                 }
             }
         }
