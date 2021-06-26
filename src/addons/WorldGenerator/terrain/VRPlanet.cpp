@@ -450,8 +450,7 @@ GLSL(
 uniform sampler2D tex;
 uniform int isLit;
 #ifdef WASM
-uniform vec3 glLightPosition;
-uniform vec3 glLightDirection;
+uniform vec4 glLightPosition;
 uniform vec4 mat_diffuse;
 uniform vec4 mat_ambient;
 uniform vec4 mat_specular;
@@ -475,7 +474,9 @@ void applyLightning() {
 	float NdotHV = max(dot(n, normalize(gl_LightSource[0].halfVector.xyz)),0.0);
 	vec4  specular = gl_LightSource[0].specular * pow( NdotHV, gl_FrontMaterial.shininess );
 #else
-	vec3  light = normalize( glLightPosition - position.xyz ); // point light
+	vec3  light;
+	if (glLightPosition.w < 0.5) light = normalize( -glLightPosition ); // dir light
+	else light = normalize( glLightPosition - position.xyz ); // pnt light
 	float NdotL = max(dot( n, light ), 0.0);
 	vec4  ambient = mat_ambient * color;
 	vec4  diffuse = mat_diffuse * NdotL * color;

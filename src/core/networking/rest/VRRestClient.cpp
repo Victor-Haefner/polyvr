@@ -84,7 +84,13 @@ VRRestResponsePtr VRRestClient::get(string uri, int timeoutSecs) {
     //cout << " response: " << response->getData() << endl;
 }
 
-void VRRestClient::getAsync(string uri, VRRestCbPtr cb, int timeoutSecs) {
+void VRRestClient::getAsync(string uri, VRRestCbPtr cb, int timeoutSecs) { // TODO: implement correctly for wasm
+#ifdef __EMSCRIPTEN__
+    auto res = get(uri, timeoutSecs);
+    auto fkt = VRUpdateCb::create("getAsync-finish", bind(&VRRestClient::finishAsync, this, cb, res));
+    auto s = VRScene::getCurrent();
+    if (s) s->queueJob(fkt);
+#else
     auto job = [&](string uri, VRRestCbPtr cb, int timeoutSecs) -> void { // executed in async thread
         auto res = get(uri, timeoutSecs);
         auto fkt = VRUpdateCb::create("getAsync-finish", bind(&VRRestClient::finishAsync, this, cb, res));
@@ -97,6 +103,7 @@ void VRRestClient::getAsync(string uri, VRRestCbPtr cb, int timeoutSecs) {
     auto p = shared_ptr<RestPromise>(new RestPromise() );
     p->f = move(f);
     promises.push_back( p );
+#endif
 }
 
 void VRRestClient::finishAsync(VRRestCbPtr cb, VRRestResponsePtr res) { // executed in main thread

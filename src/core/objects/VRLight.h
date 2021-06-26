@@ -109,6 +109,8 @@ class VRLight : public VRObject {
         LightMTRecPtr getLightCore();
         string getLightType();
 
+        void updateUniforms();
+
         static vector<string> getTypes();
         static vector<string> getShadowMapResolutions();
         static vector<string> getTypeParameter(string type);

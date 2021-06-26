@@ -47,14 +47,7 @@ VRLightBeaconPtr VRLightBeacon::create(string name) {
 #ifdef WASM
 void VRLightBeacon::updateTransformation() {
     VRTransform::updateTransformation();
- 
-    // TODO: move this somewhere central like VRScene, update all lights consistently, this now only works with a single light source
-    Vec3f p = Vec3f(getWorldPosition());
-    Vec3f d = Vec3f(getWorldDirection());
-    for (auto m : VRMaterial::getAll()) {
-        m->setShaderParameter("glLightPosition", p);
-        m->setShaderParameter("glLightDirection", d);
-    }
+    if (auto l = light.lock()) l->updateUniforms();
 }
 #endif
 

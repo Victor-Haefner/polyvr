@@ -239,6 +239,8 @@ VRMaterialPtr VRMaterial::create(string name) {
     auto p = VRMaterialPtr(new VRMaterial(name) );
     p->init();
     materials[p->getName()] = p;
+    MaterialMTRecPtr mat = p->getMaterial()->mat;
+    materialsByPtr[mat] = p;
 #ifdef OSG_OGL_ES2
     p->updateOGL2Shader(); // TODO: find a better place!
 #endif
@@ -293,13 +295,20 @@ string VRMaterial::constructShaderVP(VRMatDataPtr data) {
     vp += "attribute vec4 osg_Color;\n";
     if (texD == 2) vp += "attribute vec2 osg_MultiTexCoord0;\n";
     vp += "uniform mat4 OSGModelViewProjectionMatrix;\n";
+    vp += "uniform mat4 OSGModelViewMatrix;\n";
+    vp += "uniform mat4 OSGViewMatrix;\n";
     vp += "uniform mat4 OSGNormalMatrix;\n";
+    vp += "uniform vec4 glLightPosition;\n";
     vp += "varying vec4 vertPos;\n";
     vp += "varying vec3 vertNorm;\n";
+    vp += "varying vec4 lightPos;\n";
     vp += "varying vec4 color;\n";
 	if (texD == 2) vp += "varying vec2 texCoord;\n";
     vp += "void main(void) {\n";
+    vp += "  vertPos = OSGModelViewMatrix * osg_Vertex;\n";
     vp += "  vertNorm = (OSGNormalMatrix * vec4(osg_Normal,1.0)).xyz;\n";
+    vp += "  lightPos = OSGViewMatrix * glLightPosition;\n";
+    vp += "  lightPos.w = glLightPosition.w;\n";
     if (texD == 2) vp += "  texCoord = osg_MultiTexCoord0;\n";
     vp += "  color = osg_Color;\n";
     vp += "  gl_Position = OSGModelViewProjectionMatrix * osg_Vertex;\n";
@@ -335,19 +344,22 @@ string VRMaterial::constructShaderFP(VRMatDataPtr data, bool deferred, int force
     string fp;
 #ifdef OSG_OGL_ES2
     fp += "precision mediump float;\n";
+    fp += "varying vec4 vertPos;\n";
     fp += "varying vec3 vertNorm;\n";
     fp += "varying vec4 color;\n";
+    fp += "varying vec4 lightPos;\n";
 	if (texD == 2) fp += "varying vec2 texCoord;\n";
     fp += "uniform int isLit;\n";
     fp += "uniform vec4 mat_diffuse;\n";
     fp += "uniform vec4 mat_ambient;\n";
     fp += "uniform vec4 mat_specular;\n";
-    fp += "uniform vec3 glLightPosition;\n";
-    fp += "uniform vec3 glLightDirection;\n";
+    fp += "uniform vec4 glLightPosition;\n";
     if (texD == 2) fp += "uniform sampler2D tex0;\n";
     fp += "void main(void) {\n";
     fp += "  vec3  n = normalize(vertNorm);\n";
-    fp += "  vec3  light = normalize( -glLightDirection );\n";
+	fp += "  vec3  light;\n";
+	fp += "  if (lightPos.w < 0.5) light = normalize( -lightPos.xyz ); // dir light\n";
+	fp += "  else light = -normalize( lightPos.xyz - vertPos.xyz ); // pnt light\n";
     fp += "  float NdotL = max(dot( n, light ), 0.0);\n";
     if (texD == 2) fp += "  vec4 diffCol = texture2D(tex0, texCoord);\n";
 //    if (texD == 2) fp += "  vec4 diffCol = vec4(texCoord.x, texCoord.y, 0.0, 1.0);\n";
@@ -357,6 +369,7 @@ string VRMaterial::constructShaderFP(VRMatDataPtr data, bool deferred, int force
     fp += "  vec4  specular = mat_specular * 0.0;\n";
     fp += "  if (isLit == 0) gl_FragColor = mat_diffuse * diffCol;\n";
     fp += "  else gl_FragColor = ambient + diffuse + specular;\n";
+    //fp += "  gl_FragColor = vec4(dot( n, light ), dot( -n, light ), 0.0, 1.0);\n";
     fp += "}\n";
 #else
     fp += "#version 120\n";
@@ -370,7 +383,9 @@ string VRMaterial::constructShaderFP(VRMatDataPtr data, bool deferred, int force
     if (!deferred) {
         fp += "void applyLightning() {\n";
         fp += " vec3  n = normalize(vertNorm);\n";
-        fp += " vec3  light = normalize( gl_LightSource[0].position.xyz );\n";// directional light
+        fp += "  vec3  light;\n";
+        fp += "  if (gl_LightSource[0].position.w < 0.5) light = normalize( gl_LightSource[0].position.xyz ); // dir light\n";
+        fp += "  else light = normalize( gl_LightSource[0].position.xyz - vertPos.xyz ); // pnt light\n";
         fp += " float NdotL = max(dot( n, light ), 0.0);\n";
         fp += " vec4  ambient = gl_LightSource[0].ambient * color;\n";
         fp += " vec4  diffuse = gl_LightSource[0].diffuse * NdotL * color;\n";
@@ -409,8 +424,7 @@ void VRMaterial::updateOGL2Parameters() {
     setShaderParameter("mat_ambient", Vec4f(a[0], a[1], a[2], 1.0));
     setShaderParameter("mat_diffuse", Vec4f(d[0], d[1], d[2], 1.0));
     setShaderParameter("mat_specular", Vec4f(s[0], s[1], s[2], 1.0));
-    setShaderParameter("glLightPosition", Vec3f(1.0, 3.0, 1.0));
-    setShaderParameter("glLightDirection", Vec3f(0.5, -1.0, 0.2));
+    setShaderParameter("glLightPosition", Vec4f(0, 0, 0, 1)); // pnt light
     //setFrontBackModes(GL_NONE, GL_FILL);
 #endif
 }
@@ -1137,8 +1151,12 @@ void VRMaterial::initShaderChunk() {
 
     md->vProgram->createDefaulAttribMapping();
     md->vProgram->addOSGVariable("OSGViewportSize");
+#ifdef OSG_OGL_ES2
 	md->vProgram->addOSGVariable("OSGNormalMatrix");                // only available with OpenSG OSG_OGL_COREONLY builds
 	md->vProgram->addOSGVariable("OSGModelViewProjectionMatrix");   // only available with OpenSG OSG_OGL_COREONLY builds
+	md->vProgram->addOSGVariable("OSGModelViewMatrix");
+	md->vProgram->addOSGVariable("OSGViewMatrix");
+#endif
 	regVProgramVars(md->vProgram);
 }
 
@@ -1285,7 +1303,7 @@ void VRMaterial::setFragmentShader(string s, string name, bool deferred) {
     }
 
     if (!contains(s, "precision mediump")) s = "precision mediump float;\n" + s;
- 
+
     s = "#define WEBGL\n" + s;
 #endif
 
