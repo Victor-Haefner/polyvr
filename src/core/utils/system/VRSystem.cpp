@@ -1,6 +1,9 @@
 #include "VRSystem.h"
 #include "../VRTimer.h"
+#include "../toString.h"
 #include <stdlib.h>
+#include <sys/stat.h>
+#include <errno.h>
 #include <iostream>
 #include <boost/filesystem.hpp>
 #ifndef WITHOUT_EXECINFO
@@ -32,9 +35,22 @@ void printBacktrace() {
 bool exists(string path) { return boost::filesystem::exists(path); }
 
 bool makedir(string path) {
+    cout << "makedir: " << path << endl;
     bool res = false;
     if (path == "") return true;
-#ifndef WASM
+#ifdef WASM
+    auto folders = splitString(path, '/');
+    string tmp = "";
+    for (auto f : folders) {
+    	//cout << " folder: " << f << ", exists? " << exists(tmp+f) << endl;
+        if (!exists(tmp+f)) {
+	    //cout << "mkdir " << tmp+f << endl;
+	    int result = mkdir((tmp+f).c_str(), 0777);
+            if (result < 0) cout << " -> errno: " << errno << ", result: " << result << ", errno str: " << strerror(errno) << endl;
+	}
+        tmp += f+"/";
+    }
+#else
     try { res = boost::filesystem::create_directory(path); }
     catch(...) { cout << "ERROR: makedir failed when trying to create directory '" + path + "'" << endl; }
 #endif
