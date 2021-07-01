@@ -798,7 +798,7 @@ uniform sampler2D tex;
 uniform float heightScale;
 uniform int local;
 uniform int channel;
-uniform float heightoffset = 0.0;
+uniform float heightoffset;
 uniform mat4 OSGModelViewProjectionMatrix;
 
 void main(void) {
