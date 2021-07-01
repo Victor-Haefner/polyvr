@@ -54,15 +54,17 @@ class VRRobotArm {
         vector<float> lengths;
         vector<int> axis;
 
-        PosePtr getKukaPose();
-        PosePtr getAuboPose();
-        void calcReverseKinematicsKuka(PosePtr p);
-        void calcReverseKinematicsAubo(PosePtr p);
+        vector<float> calcReverseKinematicsKuka(PosePtr p);
+        vector<float> calcReverseKinematicsAubo(PosePtr p);
+        PosePtr calcForwardKinematicsKuka(vector<float> angles);
+        PosePtr calcForwardKinematicsAubo(vector<float> angles);
 
         void update();
+        PosePtr getLastPose();
         double convertAngle(double a, int i);
         void applyAngles();
-        void calcReverseKinematics(PosePtr p);
+        PosePtr calcForwardKinematics(vector<float> angles);
+        vector<float> calcReverseKinematics(PosePtr p);
         void animOnPath(float t);
         void addJob(job j);
 
@@ -90,6 +92,7 @@ class VRRobotArm {
         bool isMoving();
         void setEventCallback(VRMessageCbPtr mCb);
 
+        bool canReach(PosePtr p, bool local = false);
         void moveTo(PosePtr p, bool local = false);
         void setAngles(vector<float> angles, bool force = false);
         void setGrab(float g);
