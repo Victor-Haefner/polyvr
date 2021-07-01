@@ -42,22 +42,31 @@ size_t getOut(char *ptr, size_t size, size_t nmemb, VRRestResponse* res) {
 
 VRRestResponsePtr VRRestClient::get(string uri, int timeoutSecs) {
     auto res = VRRestResponse::create();
-// TODO: the response can contain binary data, the data pointer is thus not null terminated.. the size has to be prepended to the result!
 #ifdef __EMSCRIPTEN__
     char* data = (char*)EM_ASM_INT({
         var uri = Module.UTF8ToString($0);
 
         var uri2 = "proxy.php?uri="+encodeURIComponent(uri);
+	console.log(uri2);
         var request = new XMLHttpRequest();
         request.open("GET", uri2, false); // false means synchronously
+	request.overrideMimeType("text/plain; charset=x-user-defined");
         request.send();
 
-        const byteCount = (Module.lengthBytesUTF8(request.responseText) + 1); // +1 for 0 char?
+        const byteCount = request.responseText.length;
         const responsePtr = Module._malloc(byteCount+16); // 16 bytes for the prepended buffer size
         var byteCountStr = ("000000000000000" + byteCount).slice(-16);
         Module.stringToUTF8(byteCountStr, responsePtr, 17);
-        Module.stringToUTF8(request.responseText, responsePtr+16, byteCount);
 
+	function putOnHeap(str, outIdx, maxBytesToWrite) {
+		  var endIdx = outIdx + maxBytesToWrite;
+		  for (var i = 0; i < str.length; ++i) {
+			if (outIdx >= endIdx) break;
+		  	HEAPU8[outIdx++] = str.charCodeAt(i);
+		  }
+	}
+
+	putOnHeap(request.responseText, responsePtr+16, byteCount);
         return responsePtr;
     }, uri.c_str());
     size_t bufLength;
@@ -66,6 +75,7 @@ VRRestResponsePtr VRRestClient::get(string uri, int timeoutSecs) {
     res->setData( string(data+16, bufLength) );
     free(data);
     cout << "VRRestClient::get, got N bytes: " << bufLengthStr << ", -> " << bufLength << endl;
+    if (bufLength < 20) cout << " VRRestClient::get, got: " << res->getData() << endl;
 #else
     auto curl = curl_easy_init();
     curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1);
