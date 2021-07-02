@@ -48,6 +48,11 @@ void VRRobotArm::setAngleDirections(vector<int> dirs) { angle_directions = dirs;
 void VRRobotArm::setAxis(vector<int> axis) { this->axis = axis; }
 void VRRobotArm::setLengths(vector<float> lengths) { this->lengths = lengths; }
 vector<float> VRRobotArm::getAngles() { return angles; }
+vector<float> VRRobotArm::getTargetAngles() {
+    vector<float> res;
+    for (int i=0; i<N; i++) res.push_back(convertAngle(angle_targets[i], i));
+    return res;
+}
 
 double clamp(double f, double a = -1, double b = 1) { return f<a ? a : f>b ? b : f; }
 
@@ -376,16 +381,28 @@ void VRRobotArm::animOnPath(float t) {
     auto job = job_queue.front();
     anim->setDuration(job.d);
 
-    t += job.t0;
-    if (t >= job.t1 && !job.loop) { job_queue.pop_front(); anim->start(0); return; }
-    if (t >= job.t1 && job.loop) { anim->start(0); return; }
+    auto updateTargets = [&](float t) {
+        auto pose = job.p->getPose(t);
+        if (job.po) {
+            auto poseO = job.po->getPose(t);
+            pose->set(pose->pos(), poseO->dir(), poseO->up());
+        }
+        angle_targets = calcReverseKinematics(pose);
 
-    auto pose = job.p->getPose(t);
-    if (job.po) {
-        auto poseO = job.po->getPose(t);
-        pose->set(pose->pos(), poseO->dir(), poseO->up());
+        //cout << t << " " << pose->toString() << endl;
+        //for (auto a : angle_targets) cout << " " << a << endl;
+    };
+
+    t += job.t0;
+
+    if (t >= job.t1) { // finished
+        updateTargets(job.t1);
+        if (!job.loop) job_queue.pop_front(); // queue next job
+        anim->start(0); // restart animation
+        return;
     }
-    angle_targets = calcReverseKinematics(pose);
+
+    updateTargets(t);
 }
 
 void VRRobotArm::addJob(job j) {

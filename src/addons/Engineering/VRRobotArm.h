@@ -84,6 +84,7 @@ class VRRobotArm {
 
         vector<VRTransformPtr> getParts();
         vector<float> getAngles();
+        vector<float> getTargetAngles();
         PosePtr getPose();
 
         void move();
