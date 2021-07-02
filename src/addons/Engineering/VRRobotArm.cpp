@@ -241,7 +241,11 @@ vector<float> VRRobotArm::calcReverseKinematicsKuka(PosePtr p) {
     resultingAngles[4] = acos( av.dot(dir) );
     //cout << " a4 targt " << av.length() << " " << dir.length() << endl;
 
-    if (resultingAngles.size() > 4) resultingAngles[5] = acos( e1.dot(up) );
+    if (resultingAngles.size() > 4) {
+        float det = dir.dot( e1.cross(up) );
+        resultingAngles[5] = det < 0 ? -acos( e1.dot(up) ) : acos( e1.dot(up) );
+        //cout << "up: " << up << ", e1: " << e1 << ", a: " << resultingAngles[5] << endl;
+    }
 
 
     // analytics visualization ---------------------------------------------------------
