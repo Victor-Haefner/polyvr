@@ -96,6 +96,12 @@ string VRAnnotationEngine::getLabel(int i) {
     return labels[i].str;
 }
 
+map<int, string> VRAnnotationEngine::getLabels() {
+    map<int, string> res;
+    for (int i=0; i<labels.size(); i++) res[i] = labels[i].str;
+    return res;
+}
+
 bool VRAnnotationEngine::applyIntersectionAction(Action* action) {
     if (!mesh || !mesh->geo) return false;
 
