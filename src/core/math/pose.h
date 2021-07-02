@@ -31,6 +31,7 @@ class Pose {
         void setScale(const Vec3d& s);
         void makeUpOrthogonal();
         void makeDirOrthogonal();
+        void normalizeOrientationVectors();
 
         Vec3d pos();
         Vec3d dir();

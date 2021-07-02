@@ -383,13 +383,16 @@ void VRRobotArm::animOnPath(float t) {
 
     auto updateTargets = [&](float t) {
         auto pose = job.p->getPose(t);
+        pose->normalizeOrientationVectors();
         if (job.po) {
             auto poseO = job.po->getPose(t);
             pose->set(pose->pos(), poseO->dir(), poseO->up());
         }
         angle_targets = calcReverseKinematics(pose);
 
-        //cout << t << " " << pose->toString() << endl;
+        //auto fP = calcForwardKinematics(angle_targets);
+        //cout << " updateTargets, P: " << pose->toString() << endl;
+        //cout << "                F: " << fP->toString() << endl;
         //for (auto a : angle_targets) cout << " " << a << endl;
     };
 
@@ -466,7 +469,6 @@ void VRRobotArm::moveTo(PosePtr p2, bool local) {
         wpI->invert();
         p2 = p2->multLeft(wpI);
     }
-
     //p1->setUp(-p1->up());
     //p1->setUp(Vec3d(0,1,0));
 
@@ -476,6 +478,13 @@ void VRRobotArm::moveTo(PosePtr p2, bool local) {
     animPath->addPoint( *p1 );
     animPath->addPoint( *p2 );
     animPath->compute(2);
+
+    /*cout << "moveTo, p1: " << p1->toString() << endl;
+    cout << "moveTo, p2: " << p2->toString() << endl;
+    cout << "path pos:";  for (auto v : animPath->getPositions())  cout << " " << v; cout << endl;
+    cout << "path dirs:"; for (auto v : animPath->getDirections()) cout << " " << v; cout << endl;
+    cout << "path ups:"; for (auto v : animPath->getUpVectors()) cout << " " << v; cout << endl;*/
+
 
     //addJob( job(animPath, 0, 1, 2*animPath->getLength()) ); // TODO
     addJob( job(animPath) );

@@ -168,4 +168,8 @@ void Pose::makeDirOrthogonal() {
     setDir(d);
 }
 
+void Pose::normalizeOrientationVectors() {
+    data[1].normalize();
+    data[2].normalize();
+}
 
