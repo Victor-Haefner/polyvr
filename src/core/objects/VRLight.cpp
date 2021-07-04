@@ -143,10 +143,9 @@ VRObjectPtr VRLight::copy(vector<VRObjectPtr> children) {
     return light;
 }
 
-void VRLight::updateUniforms() {
-    // TODO: move this somewhere central like VRScene, update all lights consistently, this now only works with a single light source
+Vec4f VRLight::computePosition() {
     auto b = beacon.lock();
-    if (!b) return;
+    if (!b) return Vec4f();
 
     Vec4f position;
     if (lightType == "directional") {
@@ -157,7 +156,18 @@ void VRLight::updateUniforms() {
         position = Vec4f(p[0], p[1], p[2], 1.0);
     }
 
-    //cout << "  materials: " << VRMaterial::getAll().size() << endl;
+    return position;
+}
+
+void VRLight::updateMaterial(VRMaterialPtr m) {
+    auto position = computePosition();
+    m->setShaderParameter("glLightPosition", position);
+}
+
+void VRLight::updateUniforms() {
+    // TODO: move this somewhere central like VRScene, update all lights consistently, this now only works with a single light source
+    auto position = computePosition();
+
     for (auto m : VRMaterial::getAll()) {
         m->setShaderParameter("glLightPosition", position);
     }
