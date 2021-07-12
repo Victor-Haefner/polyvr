@@ -81,6 +81,7 @@ void VRGuiBits::on_web_export_clicked() {
     systemCall("cp -f \"" + folder + "/scanDir.php\" ./");
     systemCall("cp -f \"" + folder + "/Mono.ttf\" ./");
     systemCall("cp -f \"" + folder + "/Browser.xml\" ./");
+    systemCall("cp -f \"" + folder + "/proj.db\" ./");
 
     // generate html file
     systemCall("cp -f \"" + folder + "/polyvr.html\" ./"+projectName+".html");
