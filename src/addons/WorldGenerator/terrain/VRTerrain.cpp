@@ -240,6 +240,7 @@ void VRTerrain::curveMesh(VRPlanetPtr p, Vec2d c, PosePtr s) {
 }
 
 void VRTerrain::setupGeo() {
+    cout << "VRTerrain::setupGeo" << endl;
     Vec2i gridN = Vec2i(round(size[0]*1.0/grid-0.5), round(size[1]*1.0/grid-0.5));
     if (gridN[0] < 1) gridN[0] = 1;
     if (gridN[1] < 1) gridN[1] = 1;
@@ -253,9 +254,9 @@ void VRTerrain::setupGeo() {
 	Vec2d tcChunk = Vec2d((1.0-texel[0])/gridN[0], (1.0-texel[1])/gridN[1]);
     //cout << toString(gridN) << "-- "  << toString(size) << "-- "  << toString(texel) << "-- "  << toString(tcChunk) << "-- "  << toString(texSize) << endl;
 
-	VRGeoData geo;
+    VRGeoData geo;
     auto pla = planet.lock();
-	if (localMesh && pla) {
+    if (localMesh && pla) {
         mat->setShaderParameter("local",1);
         double sectorSize = pla->getSectorSize();
 
@@ -276,11 +277,13 @@ void VRTerrain::setupGeo() {
             return p;
         };
 
+        cout << "VRTerrain::setupGeo local grid: " << gridN[0] << " " << gridN[1] << endl;
         for (int i =0; i < gridN[0]; i++) {
             t1++;
             t2 = 0;
             double tcx1 = texel[0]*0.5 + i*tcChunk[0];
             double tcx2 = tcx1 + tcChunk[0];
+            cout << " i: " << i << "/" << gridN[0] << endl;
             for (int j =0; j < gridN[1]; j++) {
                 t2++;
                 double tcy1 = texel[1]*0.5 + j*tcChunk[1];
@@ -298,7 +301,7 @@ void VRTerrain::setupGeo() {
                 geo.pushQuad();
             }
         }
-	} else if (!localMesh) {
+    } else if (!localMesh) {
         int old1 = 0;
         int old2 = 0;
         for (int i =0; i < gridN[0]; i++) {
@@ -322,7 +325,7 @@ void VRTerrain::setupGeo() {
                 geo.pushQuad();
             }
         }
-	}
+    }
 
     if (geo.size() > 0) {
         //cout << "  VRTerrain::setupGeo apply geo!! " << geo.size() << "  grid: " << gridN << endl;
@@ -332,10 +335,11 @@ void VRTerrain::setupGeo() {
 #if __EMSCRIPTEN__// TODO: directly create triangles above!
     convertToTriangles();
 #else
-	setType(GL_PATCHES);
-	setPatchVertices(4);
+    setType(GL_PATCHES);
+    setPatchVertices(4);
 #endif
-	setMaterial(mat);
+    setMaterial(mat);
+    cout << "VRTerrain::setupGeo done" << endl;
 }
 
 vector<Vec3d> VRTerrain::probeHeight( Vec2d p ) {
@@ -487,6 +491,7 @@ void VRTerrain::setupMat() {
     mat->setFragmentShader(fragmentShader_es2, "terrainFSes2");
 #endif
 	mat->setShaderParameter("resolution", resolution);
+	mat->setShaderParameter("texture", 0);
 	mat->setShaderParameter("channel", 3);
 	mat->setShaderParameter("texel", texel);
 	mat->setShaderParameter("texelSize", texelSize);
@@ -794,29 +799,102 @@ varying vec4 vColor;
 varying vec4 vVertex;
 varying vec2 vTexCoord;
 
-uniform sampler2D tex;
+uniform sampler2D texture;
 uniform float heightScale;
 uniform int local;
 uniform int channel;
 uniform float heightoffset;
 uniform mat4 OSGModelViewProjectionMatrix;
 
+#ifdef __EMSCRIPTEN__
+// Denormalize 8-bit color channels to integers in the range 0 to 255.
+ivec4 floatsToBytes(vec4 inputFloats) {
+  ivec4 bytes = ivec4(inputFloats * 255.0);
+  return bytes.abgr;
+}
+
+// Break the four bytes down into an array of 32 bits.
+void bytesToBits(const in ivec4 bytes, out bool bits[32]) {
+  for (int channelIndex = 0; channelIndex < 4; ++channelIndex) {
+    float acc = float(bytes[channelIndex]);
+    for (int indexInByte = 7; indexInByte >= 0; --indexInByte) {
+      float powerOfTwo = exp2(float(indexInByte));
+      bool bit = acc >= powerOfTwo;
+      bits[channelIndex * 8 + (7 - indexInByte)] = bit;
+      acc = mod(acc, powerOfTwo);
+    }
+  }
+}
+
+// Compute the exponent of the 32-bit float.
+float getExponent(bool bits[32]) {
+  const int startIndex = 1;
+  const int bitStringLength = 8;
+  const int endBeforeIndex = startIndex + bitStringLength;
+  float acc = 0.0;
+  int pow2 = bitStringLength - 1;
+  for (int bitIndex = startIndex; bitIndex < endBeforeIndex; ++bitIndex) {
+    acc += float(bits[bitIndex]) * exp2(float(pow2--));
+  }
+  return acc;
+}
+
+// Compute the mantissa of the 32-bit float.
+float getMantissa(bool bits[32], bool subnormal) {
+  const int startIndex = 9;
+  const int bitStringLength = 23;
+  const int endBeforeIndex = startIndex + bitStringLength;
+  // Leading/implicit/hidden bit convention:
+  // If the number is not subnormal (with exponent 0), we add a leading 1 digit.
+  float acc = float(!subnormal) * exp2(float(bitStringLength));
+  int pow2 = bitStringLength - 1;
+  for (int bitIndex = startIndex; bitIndex < endBeforeIndex; ++bitIndex) {
+    acc += float(bits[bitIndex]) * exp2(float(pow2--));
+  }
+  return acc;
+}
+
+// Parse the float from its 32 bits.
+float bitsToFloat(bool bits[32]) {
+  float signBit = float(bits[0]) * -2.0 + 1.0;
+  float exponent = getExponent(bits);
+  bool subnormal = abs(exponent - 0.0) < 0.01;
+  float mantissa = getMantissa(bits, subnormal);
+  float exponentBias = 127.0;
+  return signBit * mantissa * exp2(exponent - exponentBias - 23.0);
+}
+
+// Decode a 32-bit float from the RGBA color channels of a texel.
+float rgbaToFloat(vec4 texelRGBA) {
+  ivec4 rgbaBytes = floatsToBytes(texelRGBA);
+  bool bits[32];
+  bytesToBits(rgbaBytes, bits);
+  return bitsToFloat(bits);
+}
+#endif
+
 void main(void) {
-	vVertex = osg_Vertex;
-	vNormal = osg_Normal;
+    vVertex = osg_Vertex;
+    vNormal = osg_Normal;
     vTexCoord = osg_MultiTexCoord0;
 
-    vec4 texData = texture2D(tex, osg_MultiTexCoord0);
+    vec4 texData = texture2D(texture, osg_MultiTexCoord0);
     vColor = texData;
     float height = texData.a;
+#ifdef __EMSCRIPTEN__
+    height = rgbaToFloat(texData);
+#else
     if (channel == 0) height = texData.r;
     if (channel == 1) height = texData.g;
     if (channel == 2) height = texData.b;
     if (channel == 3) height = texData.a;
+#endif
     vec4 tePosition = osg_Vertex;
-    float nheight = height - heightoffset;
+    //float nheight = osg_MultiTexCoord0.x * 10000.0;
+    float nheight = (height - heightoffset);//*100.0;
     if (local > 0) tePosition.xyz += osg_Normal * nheight * heightScale;
     else tePosition.y = nheight * heightScale;
+    //tePosition.y = nheight * heightScale;
 
 #ifdef __EMSCRIPTEN__
     gl_Position = OSGModelViewProjectionMatrix * tePosition;
@@ -831,15 +909,17 @@ GLSL(
 #ifdef __EMSCRIPTEN__
 precision mediump float;
 #endif
-uniform sampler2D texture;
+uniform sampler2D texPic;
 
 varying vec2 vTexCoord;
 varying vec4 vColor;
 
 void main( void ) {
     //gl_FragColor = vec4(1.0,0.0,0.0,1.0);
-    //gl_FragColor = vec4(vTexCoord.x,vTexCoord.y,0.0,1.0);
-    gl_FragColor = texture2D(texture, vTexCoord);
+    vec2 tc = vTexCoord;
+    tc.y = 1.0 - tc.y;
+    //gl_FragColor = vec4(tc.x,tc.y,0.0,1.0);
+    gl_FragColor = texture2D(texPic, tc);
 }
 );
 
