@@ -5,6 +5,8 @@
 #include "core/gui/VRGuiConsole.h"
 #endif
 #include "core/objects/VRTransform.h"
+#include "core/objects/VRLight.h"
+#include "core/objects/VRLightBeacon.h"
 #include "core/objects/object/OSGCore.h"
 #include "core/objects/OSGObject.h"
 #include "core/objects/material/VRTexture.h"
@@ -307,7 +309,8 @@ string VRMaterial::constructShaderVP(VRMatDataPtr data) {
     vp += "void main(void) {\n";
     vp += "  vertPos = OSGModelViewMatrix * osg_Vertex;\n";
     vp += "  vertNorm = (OSGNormalMatrix * vec4(osg_Normal,1.0)).xyz;\n";
-    vp += "  lightPos = OSGViewMatrix * glLightPosition;\n";
+    //vp += "  lightPos = OSGViewMatrix * glLightPosition;\n";
+    vp += "  lightPos = OSGViewMatrix * vec4(-5.0,-5.0,-5.0,1.0);\n";
     vp += "  lightPos.w = glLightPosition.w;\n";
     if (texD == 2) vp += "  texCoord = osg_MultiTexCoord0;\n";
     vp += "  color = osg_Color;\n";
@@ -353,13 +356,13 @@ string VRMaterial::constructShaderFP(VRMatDataPtr data, bool deferred, int force
     fp += "uniform vec4 mat_diffuse;\n";
     fp += "uniform vec4 mat_ambient;\n";
     fp += "uniform vec4 mat_specular;\n";
-    fp += "uniform vec4 glLightPosition;\n";
     if (texD == 2) fp += "uniform sampler2D tex0;\n";
     fp += "void main(void) {\n";
     fp += "  vec3  n = normalize(vertNorm);\n";
 	fp += "  vec3  light;\n";
-	fp += "  if (lightPos.w < 0.5) light = normalize( -lightPos.xyz ); // dir light\n";
-	fp += "  else light = -normalize( lightPos.xyz - vertPos.xyz ); // pnt light\n";
+	fp += "  light = normalize( vec3(0.2, 0.4, 1.0) );\n"; // dummy directional light source
+	//fp += "  if (lightPos.w < 0.5) light = normalize( -lightPos.xyz ); // dir light\n";  // TODO: fix the lights for WASM!
+	//fp += "  else light = -normalize( lightPos.xyz - vertPos.xyz ); // pnt light\n";
     fp += "  float NdotL = max(dot( n, light ), 0.0);\n";
     if (texD == 2) fp += "  vec4 diffCol = texture2D(tex0, texCoord);\n";
 //    if (texD == 2) fp += "  vec4 diffCol = vec4(texCoord.x, texCoord.y, 0.0, 1.0);\n";
@@ -424,7 +427,8 @@ void VRMaterial::updateOGL2Parameters() {
     setShaderParameter("mat_ambient", Vec4f(a[0], a[1], a[2], 1.0));
     setShaderParameter("mat_diffuse", Vec4f(d[0], d[1], d[2], 1.0));
     setShaderParameter("mat_specular", Vec4f(s[0], s[1], s[2], 1.0));
-    VRLightBeacon::getAll()[0]->getLight().lock()->updateMaterial(ptr());
+    auto lb = VRLightBeacon::getAll()[0].lock();
+    lb->getLight().lock()->updateMaterial(ptr());
     //setShaderParameter("glLightPosition", Vec4f(0, 0, 0, 1)); // pnt light
     //setFrontBackModes(GL_NONE, GL_FILL);
 #endif
