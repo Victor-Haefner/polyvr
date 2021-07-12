@@ -41,6 +41,7 @@ void VRPlanet::addMoon(VRTransformPtr t) { moons.push_back(t); }
 vector<VRTransformPtr> VRPlanet::getMoons() { return moons; }
 
 void VRPlanet::localizeSector(VRWorldGeneratorPtr sector) {
+    cout << "VRPlanet::localizeSector" << endl;
     if (!sectorParent) {
         sectorParent = VRObject::create("sectors");
         addChild(sectorParent);
@@ -60,6 +61,7 @@ void VRPlanet::localizeSector(VRWorldGeneratorPtr sector) {
         terrain->curveMesh(ptr(), sector->getPlanetCoords(), pSector);
         terrain->setupGeo();
     }
+    cout << "VRPlanet::localizeSector done" << endl;
 }
 
 void VRPlanet::localize(double north, double east) {
@@ -475,8 +477,8 @@ void applyLightning() {
 	vec4  specular = gl_LightSource[0].specular * pow( NdotHV, gl_FrontMaterial.shininess );
 #else
 	vec3  light;
-	if (glLightPosition.w < 0.5) light = normalize( -glLightPosition ); // dir light
-	else light = normalize( glLightPosition - position.xyz ); // pnt light
+	if (glLightPosition.w < 0.5) light = normalize( -glLightPosition.xyz ); // dir light
+	else light = normalize( glLightPosition.xyz - position.xyz ); // pnt light
 	float NdotL = max(dot( n, light ), 0.0);
 	vec4  ambient = mat_ambient * color;
 	vec4  diffuse = mat_diffuse * NdotL * color;
