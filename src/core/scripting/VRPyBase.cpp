@@ -4,6 +4,7 @@
 
 #include <OpenSG/OSGImage.h>
 
+
 #ifdef WASM
 PyGILState_STATE PyGILState_Ensure() {
 	return PyGILState_STATE();
@@ -254,9 +255,13 @@ int VRPyBase::toOSGConst(string s) {
     if (s == "I") return OSG::Image::OSG_I_PF;
     if (s == "L") return OSG::Image::OSG_L_PF;
     if (s == "LA") return OSG::Image::OSG_LA_PF;
+#ifdef __EMSCRIPTEN__
+    if (s == "R") return 0x1903;
+#else
     if (s == "R") return GL_RED;
     if (s == "G") return GL_GREEN;
     if (s == "B") return GL_BLUE;
+#endif
     if (s == "RGB") return OSG::Image::OSG_RGB_PF;
     if (s == "RGBA") return OSG::Image::OSG_RGBA_PF;
     if (s == "BGR") return OSG::Image::OSG_BGR_PF;
@@ -268,6 +273,7 @@ int VRPyBase::toOSGConst(string s) {
     if (s == "DEPTH") return OSG::Image::OSG_DEPTH_PF;
     if (s == "DEPTH_STENCIL") return OSG::Image::OSG_DEPTH_STENCIL_PF;
 
+    if (s == "R_FLT") return GL_R32F;
     if (s == "A_FLT") return GL_ALPHA32F_ARB;
     if (s == "L_FLT") return GL_LUMINANCE32F_ARB;
     if (s == "LA_FLT") return GL_LUMINANCE_ALPHA32F_ARB;
