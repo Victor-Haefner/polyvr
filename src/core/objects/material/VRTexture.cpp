@@ -22,6 +22,16 @@ void VRTexture::setInternalFormat(int ipf) { internal_format = ipf; }
 int VRTexture::getInternalFormat() { return internal_format; }
 ImageMTRecPtr VRTexture::getImage() { return img; }
 
+void VRTexture::setByteData(vector<char> data, Vec3i layout, int chanels, int Nmipmaps, int ipf) {
+    img->set( chanels, layout[0], layout[1], layout[2], Nmipmaps, 1, 0, (const uint8_t*)&data[0], Image::OSG_UINT8_IMAGEDATA, true, 1);
+    internal_format = ipf;
+}
+
+void VRTexture::setFloatData(vector<float> data, Vec3i layout, int chanels, int Nmipmaps, int ipf) {
+    img->set( chanels, layout[0], layout[1], layout[2], Nmipmaps, 1, 0, (const uint8_t*)&data[0], Image::OSG_FLOAT32_IMAGEDATA, true, 1);
+    internal_format = ipf;
+}
+
 void VRTexture::read(string path) {
     if (!img->read(path.c_str())) cout << " VRTexture::read from file '" << path << "' failed!" << endl;
 }

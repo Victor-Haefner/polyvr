@@ -169,7 +169,7 @@ void VRTerrain::setHeightScale(float s) { heightScale = s; mat->setShaderParamet
 void VRTerrain::setMap( VRTexturePtr t, int channel ) {
     PLock lock(mtx());
     if (!t) return;
-    if (t->getChannels() != 4) { // fix mono channels
+    /*if (t->getChannels() != 4) { // fix mono channels
         VRTextureGenerator tg;
         auto dim = t->getSize();
         tg.setSize(dim, true);
@@ -180,7 +180,7 @@ void VRTerrain::setMap( VRTexturePtr t, int channel ) {
                 heigthsTex->setPixel(Vec3i(i,j,0), Color4f(1.0,1.0,1.0,h));
             }
         }
-    } else heigthsTex = t;
+    } else*/ heigthsTex = t;
     mat->setTexture(heigthsTex);
     mat->clearTransparency();
 	mat->setShaderParameter("channel", channel);
@@ -1202,7 +1202,8 @@ void main() {
     vec3 c = mix(tcNormal[0], tcNormal[1], u);
     vec3 d = mix(tcNormal[3], tcNormal[2], u);
     vec3 teNormal = mix(c, d, v);
-    height = heightScale * texture2D(texture, gl_TexCoord[0].xy)[channel];
+    vec4 texData = texture2D(texture, gl_TexCoord[0].xy);
+    height = heightScale * texData[channel];
     float nheight = (height - heightoffset);
     if (local > 0) tePosition += teNormal*nheight;
     else tePosition.y = nheight;

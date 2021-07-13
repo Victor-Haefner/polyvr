@@ -340,7 +340,7 @@ void VRWorldGenerator::setupLODTerrain(string pathMap, string pathPaint, float d
         //if (mixAmount > 0) texSc->mixColor(mixColor, mixAmount);
         terrain->paintHeights( satImg, mixColor, mixAmount );
         //terrain->paintHeights( satImg, Color4f(1,0,1,1), 0.5 );
-        terrain->setMap( texSc, 3 );
+        terrain->setMap( texSc, 0 );
         terrain->setWorld( ptr() );
         terrain->setLODFactor(fac);
         terrain->setLit(isLit);

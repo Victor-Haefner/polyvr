@@ -253,13 +253,8 @@ VRTexturePtr loadGeoRasterData(string path, bool shout, float *heightoffset) {
     GDALClose(poDS);
 
     auto t = VRTexture::create();
-    auto img = t->getImage();
-#ifdef __EMSCRIPTEN__
-    img->set( Image::OSG_RGBA_PF, sizeX, sizeY, 1, 1, 1, 0, (const uint8_t*)&data[0], Image::OSG_UINT8_IMAGEDATA, true, 1);
-#else
-    img->set( Image::OSG_A_PF, sizeX, sizeY, 1, 1, 1, 0, (const uint8_t*)&data[0], Image::OSG_FLOAT32_IMAGEDATA, true, 1);
-    t->setInternalFormat(GL_ALPHA32F_ARB); // important for unclamped float
-#endif
+    t->setFloatData(data, Vec3i(sizeX,sizeY,1), Image::OSG_L_PF, 0, GL_LUMINANCE32F_ARB);
+    //t->setFloatData(data, Vec3i(sizeX,sizeY,1), Image::OSG_A_PF, 0, GL_ALPHA32F_ARB);
     cout << " loadGeoRasterData done" << endl;
     return t;
 }
