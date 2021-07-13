@@ -1267,11 +1267,10 @@ void VRMaterial::setVertexShader(string s, string name) {
 #ifdef WASM
     if (startsWith(s, "#version")) {
 	auto i = s.find('\n');
-	// this would be usefull, but webgl does not support any #version flag.. so just remove it
-	/*string s1 = s.substr(0,i);
+	string s1 = s.substr(0,i);
 	string s2 = s.substr(i);
-	s = s1 + "\n#define WEBGL\n" + s2;*/
-	s = "#define WEBGL\n" + s.substr(i);
+	s = s1 + "\n#define WEBGL\n" + s2;
+	//s = "#define WEBGL\n" + s.substr(i);
     } else s = "#define WEBGL\n" + s;
 #endif
 
@@ -1302,14 +1301,16 @@ void VRMaterial::setFragmentShader(string s, string name, bool deferred) {
     auto m = mats[activePass];
 
 #ifdef WASM
+    string vStr;
     if (startsWith(s, "#version")) {
 	auto i = s.find('\n');
+        vStr = s.substr(0,i);
 	s = s.substr(i);
     }
 
     if (!contains(s, "precision mediump")) s = "precision mediump float;\n" + s;
 
-    s = "#define WEBGL\n" + s;
+    s = vStr + "\n#define WEBGL\n" + s;
 #endif
 
 #ifndef OSG_OGL_ES2
