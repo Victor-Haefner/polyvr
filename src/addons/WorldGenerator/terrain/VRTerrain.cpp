@@ -870,12 +870,13 @@ vec4 color;
 const ivec3 off = ivec3(-1,0,1);
 
 void applyBlinnPhong() {
-#ifndef __EMSCRIPTEN__
+/*#ifndef __EMSCRIPTEN__
 	norm = normalize( gl_NormalMatrix * norm );
 #else
 	norm = normalize( (OSGNormalMatrix * vec4(norm,0.0)).xyz );
 #endif
-	vec3  light = normalize( vec3(1,5,2) ); // directional light
+	vec3  light = normalize( (OSGNormalMatrix * vec4(1.0,5.0,2.0,0.0)).xyz ); // directional light*/
+        vec3  light = normalize( vec3(1.0,5.0,2.0) ); // directional light in mesh coords
 	float NdotL = max(dot( norm, light ), 0.0);
 	vec4  ambient = vec4(0.5,0.5,0.5,1.0) * color;
 	vec4  diffuse = vec4(1.0,1.0,0.9,1.0) * NdotL * color;
