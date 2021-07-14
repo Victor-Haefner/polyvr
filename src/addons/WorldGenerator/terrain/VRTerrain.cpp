@@ -239,25 +239,21 @@ void VRTerrain::curveMesh(VRPlanetPtr p, Vec2d c, PosePtr s) {
     pSectorInv = s;
 }
 
-void VRTerrain::setupGeo() {
-    cout << "VRTerrain::setupGeo" << endl;
-    Vec2i gridN = Vec2i(round(size[0]*1.0/grid-0.5), round(size[1]*1.0/grid-0.5));
+void VRTerrain::createMesh(VRGeoData& geo, int res) {
+    Vec2i gridN = Vec2i(round(size[0]*1.0/res-0.5), round(size[1]*1.0/res-0.5));
     if (gridN[0] < 1) gridN[0] = 1;
     if (gridN[1] < 1) gridN[1] = 1;
     Vec2d gridS = size;
     gridS[0] /= gridN[0];
     gridS[1] /= gridN[1];
 
-    if (!heigthsTex) { cout << "VRTerrain::setupGeo -- no heigthsTex loaded" << endl; return; }
+    if (!heigthsTex) { cout << "VRTerrain::exportWebMesh -- no heigthsTex loaded" << endl; return; }
     auto texSize = heigthsTex->getSize();
     Vec2d texel = Vec2d( 1.0/texSize[0], 1.0/texSize[1] );
 	Vec2d tcChunk = Vec2d((1.0-texel[0])/gridN[0], (1.0-texel[1])/gridN[1]);
-    //cout << toString(gridN) << "-- "  << toString(size) << "-- "  << toString(texel) << "-- "  << toString(tcChunk) << "-- "  << toString(texSize) << endl;
 
-    VRGeoData geo;
     auto pla = planet.lock();
     if (localMesh && pla) {
-        mat->setShaderParameter("local",1);
         double sectorSize = pla->getSectorSize();
 
         int t1 = 0;
@@ -272,18 +268,14 @@ void VRTerrain::setupGeo() {
             auto p = pla->fromLatLongPose(N, E);
             p = pSectorInv->multRight(p);
             cache[Vec2i(i,j)] = p;
-            //if (i == 0) pla->addPin( "", N, E, 1000);
-            //cout << "  VRTerrain::setupGeo add pin " << N << " " << E << " " << pla->getName() << endl;
             return p;
         };
 
-        cout << "VRTerrain::setupGeo local grid: " << gridN[0] << " " << gridN[1] << endl;
         for (int i =0; i < gridN[0]; i++) {
             t1++;
             t2 = 0;
             double tcx1 = texel[0]*0.5 + i*tcChunk[0];
             double tcx2 = tcx1 + tcChunk[0];
-            cout << " i: " << i << "/" << gridN[0] << endl;
             for (int j =0; j < gridN[1]; j++) {
                 t2++;
                 double tcy1 = texel[1]*0.5 + j*tcChunk[1];
@@ -326,11 +318,23 @@ void VRTerrain::setupGeo() {
             }
         }
     }
+}
 
-    if (geo.size() > 0) {
-        //cout << "  VRTerrain::setupGeo apply geo!! " << geo.size() << "  grid: " << gridN << endl;
-        geo.apply(ptr());
-    }
+void VRTerrain::exportWebMesh(string path) { // this exported mesh is meant to be used in webassembly projects
+    cout << "VRTerrain::exportWebMesh" << endl;
+    VRGeoData geo;
+    createMesh(geo, resolution);
+    if (geo.size() == 0) return;
+    auto obj = geo.asGeometry( getBaseName() );
+    //obj->convertToTriangles();
+    obj->exportToFile(path);
+}
+
+void VRTerrain::setupGeo() {
+    cout << "VRTerrain::setupGeo" << endl;
+    VRGeoData geo;
+    createMesh(geo, grid);
+    if (geo.size() > 0) geo.apply(ptr());
 
 #if __EMSCRIPTEN__// TODO: directly create triangles above!
     convertToTriangles();
@@ -338,6 +342,8 @@ void VRTerrain::setupGeo() {
     setType(GL_PATCHES);
     setPatchVertices(4);
 #endif
+
+    if (localMesh && planet.lock()) mat->setShaderParameter("local",1);
     setMaterial(mat);
     cout << "VRTerrain::setupGeo done" << endl;
 }

@@ -70,6 +70,7 @@ class VRTerrain : public VRGeometry, public VRWorldModule {
         void updateTexelSize();
         //void setupGeo();
         void setupMat();
+        void createMesh(VRGeoData& geo, int res);
 
         void btPhysicalize();
         void vrPhysicalize();
@@ -131,6 +132,8 @@ class VRTerrain : public VRGeometry, public VRWorldModule {
         void addEmbankment(string ID, PathPtr p1, PathPtr p2, PathPtr p3, PathPtr p4);
 
         vector<Vec3d> probeHeight( Vec2d p);
+
+        void exportWebMesh(string path);
 
         void clear();
 };
