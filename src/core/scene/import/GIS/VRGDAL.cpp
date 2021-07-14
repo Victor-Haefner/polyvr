@@ -253,7 +253,7 @@ VRTexturePtr loadGeoRasterData(string path, bool shout, float *heightoffset) {
     GDALClose(poDS);
 
     auto t = VRTexture::create();
-    t->setFloatData(data, Vec3i(sizeX,sizeY,1), Image::OSG_R_PF, 0, GL_R32F_ARB);
+    t->setFloatData(data, Vec3i(sizeX,sizeY,1), Image::OSG_R_PF, 0, GL_R32F);
     //t->setFloatData(data, Vec3i(sizeX,sizeY,1), Image::OSG_A_PF, 0, GL_ALPHA32F_ARB);
     cout << " loadGeoRasterData done" << endl;
     return t;
