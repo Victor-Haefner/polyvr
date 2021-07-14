@@ -56,7 +56,7 @@ void VRAtlas::Patch::paint() {
         if ( checkHeight && checkOrtho && terrain) {
             terrain->setVisible(true);
             terrain->setHeightOffset(true);
-            terrain->loadMap( heightPic, 3, false );
+            terrain->loadMap( heightPic, 0, false );
             terrain->paintHeights(orthoPic);//, mixColor, mixAmount );
             double localHeightoffset = terrain->getHeightOffset();
             Vec3d pos = Vec3d(localPos[0],localHeightoffset,localPos[2]);
@@ -128,7 +128,7 @@ void VRAtlas::Layout::setCoords(Patch& pat, Vec3d co3, int p_type) {
     //if ( exists(tmp1) ) cout << "found " << tmp1 << endl; else cout << " not found " << tmp1 << endl;
     if ( checkHeight ) {
         pat.terrain->setHeightOffset(true);
-        pat.terrain->loadMap( tmp2, 3, false );
+        pat.terrain->loadMap( tmp2, 0, false );
         pat.localHeightoffset = pat.terrain->getHeightOffset();
     } else {
         VRTexturePtr heightIMG = VRTexture::create();

@@ -574,10 +574,10 @@ double VRTerrain::getHeight(Vec2d p, bool useEmbankments) {
     int i = round(uv[0]-0.5);
     int j = round(uv[1]-0.5);
 
-    double h00 = heigthsTex->getPixelVec(Vec3i(i,j,0))[3];
-    double h10 = heigthsTex->getPixelVec(Vec3i(i+1,j,0))[3];
-    double h01 = heigthsTex->getPixelVec(Vec3i(i,j+1,0))[3];
-    double h11 = heigthsTex->getPixelVec(Vec3i(i+1,j+1,0))[3];
+    double h00 = heigthsTex->getPixelVec(Vec3i(i,j,0))[0];
+    double h10 = heigthsTex->getPixelVec(Vec3i(i+1,j,0))[0];
+    double h01 = heigthsTex->getPixelVec(Vec3i(i,j+1,0))[0];
+    double h11 = heigthsTex->getPixelVec(Vec3i(i+1,j+1,0))[0];
 
     double u = uv[0]-i;
     double v = uv[1]-j;
