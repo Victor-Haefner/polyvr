@@ -789,17 +789,30 @@ void main(void) {
 );
 
 string VRTerrain::vertexShader_es2 =
+#ifdef __EMSCRIPTEN__
+"#version 300 es\n"
+#endif
 GLSL(
+
+#ifdef __EMSCRIPTEN__
+in vec4 osg_Vertex;
+in vec3 osg_Normal;
+in vec2 osg_MultiTexCoord0;
+out vec3 vNormal;
+out vec4 vColor;
+out vec4 vVertex;
+out vec2 vTexCoord;
+#else
 attribute vec4 osg_Vertex;
 attribute vec3 osg_Normal;
 attribute vec2 osg_MultiTexCoord0;
-
 varying vec3 vNormal;
 varying vec4 vColor;
 varying vec4 vVertex;
 varying vec2 vTexCoord;
+#endif
 
-uniform sampler2D texture;
+uniform sampler2D tex;
 uniform float heightScale;
 uniform int local;
 uniform int channel;
@@ -811,13 +824,9 @@ void main(void) {
     vNormal = osg_Normal;
     vTexCoord = osg_MultiTexCoord0;
 
-    vec4 texData = texture2D(texture, osg_MultiTexCoord0);
+    vec4 texData = texture(tex, osg_MultiTexCoord0);
     vColor = texData;
-    float height = texData.a;
-    if (channel == 0) height = texData.r;
-    if (channel == 1) height = texData.g;
-    if (channel == 2) height = texData.b;
-    if (channel == 3) height = texData.a;
+    float height = texData.r;
     vec4 tePosition = osg_Vertex;
     //float nheight = osg_MultiTexCoord0.x * 10000.0;
     float nheight = (height - heightoffset);//*100.0;
@@ -834,21 +843,70 @@ void main(void) {
 );
 
 string VRTerrain::fragmentShader_es2 =
+#ifdef __EMSCRIPTEN__
+"#version 300 es\n"
+#endif
 GLSL(
 #ifdef __EMSCRIPTEN__
 precision mediump float;
 #endif
+uniform sampler2D tex;
 uniform sampler2D texPic;
+uniform mat4 OSGNormalMatrix;
+uniform vec2 texelSize;
+uniform int isLit;
 
+#ifdef __EMSCRIPTEN__
+in vec2 vTexCoord;
+in vec4 vColor;
+out vec4 fragColor;
+#else
 varying vec2 vTexCoord;
 varying vec4 vColor;
+#endif
+
+vec3 norm;
+vec4 color;
+const ivec3 off = ivec3(-1,0,1);
+
+void applyBlinnPhong() {
+#ifndef __EMSCRIPTEN__
+	norm = normalize( gl_NormalMatrix * norm );
+#else
+	norm = normalize( (OSGNormalMatrix * vec4(norm,0.0)).xyz );
+#endif
+	vec3  light = normalize( vec3(1,5,2) ); // directional light
+	float NdotL = max(dot( norm, light ), 0.0);
+	vec4  ambient = vec4(0.5,0.5,0.5,1.0) * color;
+	vec4  diffuse = vec4(1.0,1.0,0.9,1.0) * NdotL * color;
+	fragColor = ambient + diffuse;
+	fragColor[3] = 1.0;
+}
+
+vec3 getNormal() {
+    vec2 tc = vTexCoord;
+    float s11 = texture(tex, tc).r;
+    float s01 = textureOffset(tex, tc, off.xy).r;
+    float s21 = textureOffset(tex, tc, off.zy).r;
+    float s10 = textureOffset(tex, tc, off.yx).r;
+    float s12 = textureOffset(tex, tc, off.yz).r;
+
+    vec2 r2 = 2.0*texelSize;
+    vec3 va = normalize(vec3(r2.x,s21-s01,0));
+    vec3 vb = normalize(vec3(   0,s12-s10,r2.y));
+    vec3 n = cross(vb,va);
+    return n;
+}
 
 void main( void ) {
-    //gl_FragColor = vec4(1.0,0.0,0.0,1.0);
     vec2 tc = vTexCoord;
     tc.y = 1.0 - tc.y;
-    //gl_FragColor = vec4(tc.x,tc.y,0.0,1.0);
-    gl_FragColor = texture2D(texPic, tc);
+    color = texture(texPic, tc);
+
+    if (isLit == 1) {
+        norm = getNormal();
+        applyBlinnPhong();
+    } else fragColor = color;
 }
 );
 
@@ -874,52 +932,38 @@ in float height;
 vec3 norm;
 vec4 color;
 
-vec3 getColor() {
-	return texture2D(tex, gl_TexCoord[0].xy).rgb;
-}
-
 void applyBlinnPhong() {
 	norm = normalize( gl_NormalMatrix * norm );
-	vec3  light = normalize( gl_LightSource[0].position.xyz );// directional light
+	vec3  light = normalize( gl_LightSource[0].position.xyz ); // directional light
 	float NdotL = max(dot( norm, light ), 0.0);
 	vec4  ambient = gl_LightSource[0].ambient * color;
 	vec4  diffuse = gl_LightSource[0].diffuse * NdotL * color;
 	float NdotHV = max(dot( norm, normalize(gl_LightSource[0].halfVector.xyz)),0.0);
 	vec4  specular = 0.25*gl_LightSource[0].specular * pow( NdotHV, gl_FrontMaterial.shininess );
-	gl_FragColor = ambient + diffuse + specular; //AGRAJAG
-    //gl_FragColor = mix(diffuse + specular, vec4(0.7,0.9,1,1), clamp(1e-4*length(pos.xyz), 0.0, 1.0)); // atmospheric effects
+	gl_FragColor = ambient + diffuse + specular;
 	gl_FragColor[3] = 1.0;
-	//gl_FragColor = vec4(1,0,0, 1);
 }
 
 vec3 getNormal() {
-	vec2 tc = gl_TexCoord[0].xy;
-    float s11 = texture(tex, tc).a;
-    float s01 = textureOffset(tex, tc, off.xy).a;
-    float s21 = textureOffset(tex, tc, off.zy).a;
-    float s10 = textureOffset(tex, tc, off.yx).a;
-    float s12 = textureOffset(tex, tc, off.yz).a;
+    vec2 tc = gl_TexCoord[0].xy;
+    float s11 = texture(tex, tc).r;
+    float s01 = textureOffset(tex, tc, off.xy).r;
+    float s21 = textureOffset(tex, tc, off.zy).r;
+    float s10 = textureOffset(tex, tc, off.yx).r;
+    float s12 = textureOffset(tex, tc, off.yz).r;
 
     vec2 r2 = 2.0*texelSize;
     vec3 va = normalize(vec3(r2.x,s21-s01,0));
     vec3 vb = normalize(vec3(   0,s12-s10,r2.y));
     vec3 n = cross(vb,va);
-	return n;
-}
-
-void applyBumpMap(vec4 b) {
-    float a = b.g*10;
-    norm += 0.1*vec3(cos(a),0,sin(a));
-    //norm.x += b.r*0.5;
-    //norm.z += (b.g-1.0)*1.0;
-    normalize(norm);
+    return n;
 }
 
 void main( void ) {
 	vec2 tc = gl_TexCoord[0].xy;
 	norm = getNormal();
 
-	if (doHeightTextures == 0) color = vec4(getColor(),1.0);
+	if (doHeightTextures == 0) color = vec4(texture2D(tex, tc).rgb, 1.0);
 	else {
         if (doHeightTextures == 1) {
             vec4 cW1 = texture(texWoods, tc*1077);
@@ -927,7 +971,6 @@ void main( void ) {
             vec4 cW3 = texture(texWoods, tc*17);
             vec4 cW4 = texture(texWoods, tc);
             vec4 cW = mix(cW1,mix(cW2,mix(cW3,cW4,0.5),0.5),0.5);
-            //applyBumpMap(cW3);
 
             vec4 cG0 = texture(texGravel, tc*10777);
             vec4 cG1 = texture(texGravel, tc*1077);
@@ -945,12 +988,7 @@ void main( void ) {
 	}
 
 	if (isLit == 1) applyBlinnPhong();
-	else gl_FragColor = color;//mix(color, vec4(1,1,1,1), 0.2);
-
-	/*vec2 uv = gl_TexCoord[0].xy;
-	uv *= 50.0;
-	uv -= floor(uv);
-	gl_FragColor = vec4(uv, 0, 1);*/
+	else gl_FragColor = color;
 }
 );
 
@@ -979,10 +1017,6 @@ in vec4 pos;
 in float height;
 vec3 norm;
 vec4 color;
-
-vec3 getColor() {
-	return texture2D(tex, gl_TexCoord[0].xy).rgb;
-}
 
 vec3 getNormal() {
 	vec2 tc = gl_TexCoord[0].xy;
@@ -1019,7 +1053,7 @@ void main( void ) {
 	vec2 tc = gl_TexCoord[0].xy;
 	norm = getNormal();
 
-	if (doHeightTextures == 0) color = vec4(getColor(),1.0);
+	if (doHeightTextures == 0) color = vec4( texture2D(tex, tc).rgb ,1.0);
 	else {
         if ( doHeightTextures == 1 ) {
             vec4 cW1 = texture(texWoods, tc*1077);
