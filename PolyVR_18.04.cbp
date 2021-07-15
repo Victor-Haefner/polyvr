@@ -1087,6 +1087,8 @@
 		<Unit filename="src/core/objects/geometry/VRGeometry.h" />
 		<Unit filename="src/core/objects/geometry/VRHandle.cpp" />
 		<Unit filename="src/core/objects/geometry/VRHandle.h" />
+		<Unit filename="src/core/objects/geometry/VRMultiGrid.cpp" />
+		<Unit filename="src/core/objects/geometry/VRMultiGrid.h" />
 		<Unit filename="src/core/objects/geometry/VRPhysics.cpp" />
 		<Unit filename="src/core/objects/geometry/VRPhysics.h" />
 		<Unit filename="src/core/objects/geometry/VRPrimitive.cpp" />
@@ -1319,6 +1321,8 @@
 		<Unit filename="src/core/scripting/VRPyMobile.h" />
 		<Unit filename="src/core/scripting/VRPyMouse.cpp" />
 		<Unit filename="src/core/scripting/VRPyMouse.h" />
+		<Unit filename="src/core/scripting/VRPyMultiGrid.cpp" />
+		<Unit filename="src/core/scripting/VRPyMultiGrid.h" />
 		<Unit filename="src/core/scripting/VRPyMultiTouch.cpp" />
 		<Unit filename="src/core/scripting/VRPyMultiTouch.h" />
 		<Unit filename="src/core/scripting/VRPyNamed.cpp" />
