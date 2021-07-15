@@ -15,7 +15,9 @@ void VRMultiGrid::clear() {
 }
 
 void VRMultiGrid::addGrid(Vec4d rect, Vec2d res) {
-    Grid g = { rect, res, -1, vector<int>() };
+    Grid g;
+    g.rect = rect;
+    g.res = res;
     grids.push_back(g);
 }
 
