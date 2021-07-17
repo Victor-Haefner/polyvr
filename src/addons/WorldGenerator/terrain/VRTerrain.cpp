@@ -6,6 +6,7 @@
 #include "core/objects/material/VRTextureGenerator.h"
 #include "core/objects/geometry/VRGeoData.h"
 #include "core/objects/geometry/OSGGeometry.h"
+#include "core/objects/geometry/VRMultiGrid.h"
 #include "core/utils/VRFunction.h"
 #include "core/math/partitioning/boundingbox.h"
 #include "core/math/polygon.h"
@@ -239,7 +240,7 @@ void VRTerrain::curveMesh(VRPlanetPtr p, Vec2d c, PosePtr s) {
     pSectorInv = s;
 }
 
-void VRTerrain::createMesh(VRGeoData& geo, int res) {
+void VRTerrain::createMesh(VRGeoData& geo, int res) { // TODO: use multigrid
     Vec2i gridN = Vec2i(round(size[0]*1.0/res-0.5), round(size[1]*1.0/res-0.5));
     if (gridN[0] < 1) gridN[0] = 1;
     if (gridN[1] < 1) gridN[1] = 1;

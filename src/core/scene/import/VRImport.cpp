@@ -1,6 +1,6 @@
 #include "VRImport.h"
 #ifndef WITHOUT_COLLADA
-#include "VRCOLLADA.h"
+#include "COLLADA/VRCOLLADA.h"
 #endif
 #include "VRPLY.h"
 #ifndef WASM
@@ -208,7 +208,7 @@ void VRImport::LoadJob::load(VRThreadWeakPtr tw) {
 #endif
         if (ext == ".gltf" || ext == ".glb") { loadGLTF(path, res, progress, thread); return; }
         if (ext == ".osb" || ext == ".osg") { osgLoad(path, res); return; }
-        if (preset == "OSG" || preset == "COLLADA") osgLoad(path, res); // fallback
+        if (preset == "OSG") osgLoad(path, res); // fallback
 #ifndef WITHOUT_COLLADA
         if (preset == "COLLADA") loadCollada(path, res);
 #endif
