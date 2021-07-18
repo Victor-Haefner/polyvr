@@ -85,7 +85,7 @@ class VRCOLLADA_Stream : public XMLStreamHandler {
 }
 
 void VRCOLLADA_Stream::startElement(const string& uri, const string& name, const string& qname, const map<string, XMLAttribute>& attributes) {
-    cout << "startElement " << name << " " << nodeStack.size() << endl;
+    //cout << "startElement " << name << " " << nodeStack.size() << endl;
     Node n;
     n.name = name;
     n.attributes = attributes;
@@ -109,18 +109,13 @@ void VRCOLLADA_Stream::startElement(const string& uri, const string& name, const
 
     if (name == "source") {
         currentSource = n.attributes["id"].val;
-        if (sources.count(currentSource)) cout << " -- AAAAAAAAAAAAAAAA" << endl;
         sources[currentSource] = Source();
-        cout << " new source " << currentSource << endl;
     }
 
     if (name == "accessor") {
-        cout << "  accessor " << currentSource << endl;
         if (currentSource != "") {
             sources[currentSource].count  = toValue<int>(n.attributes["count"].val);
             sources[currentSource].stride = toValue<int>(n.attributes["stride"].val);
-            cout << "   count " << sources[currentSource].count << endl;
-            cout << "   stride " << sources[currentSource].stride << endl;
         }
     }
 
@@ -140,12 +135,8 @@ void VRCOLLADA_Stream::startElement(const string& uri, const string& name, const
         if (sources.count(sourceID)) {
             auto& source = sources[sourceID];
 
-
-            cout << " " << type << " " << sourceID << " " << source.stride << " " << source.count << endl;
-
             if (currentGeoData) {
                 if (type == "POSITION" && source.stride == 3) {
-                    cout << "source position data: " << toString(source.data) << endl;
                     for (int i=0; i<source.count; i++) {
                         int k = i*source.stride;
                         Vec3d pos(source.data[k], source.data[k+1], source.data[k+2]);
@@ -154,7 +145,6 @@ void VRCOLLADA_Stream::startElement(const string& uri, const string& name, const
                 }
 
                 if (type == "NORMAL" && source.stride == 3) {
-                    cout << "source normal data: " << toString(source.data) << endl;
                     for (int i=0; i<source.count; i++) {
                         int k = i*source.stride;
                         Vec3d norm(source.data[k], source.data[k+1], source.data[k+2]);
@@ -163,7 +153,6 @@ void VRCOLLADA_Stream::startElement(const string& uri, const string& name, const
                 }
 
                 if (type == "TEXCOORD" && source.stride == 2) {
-                    cout << "source tc data: " << toString(source.data) << endl;
                     int tcSlot = toInt( n.attributes["set"].val );
                     for (int i=0; i<source.count; i++) {
                         int k = i*source.stride;
@@ -206,11 +195,9 @@ void VRCOLLADA_Stream::endElement(const string& uri, const string& name, const s
     auto node = nodeStack.top();
     nodeStack.pop();
 
-    if (name == "node") {
-        objStack.pop();
-    }
-
+    if (name == "node") objStack.pop();
     if (node.name == "effect") currentMaterial = 0;
+
     if (node.name == "geometry") {
         currentGeoData->apply(currentGeometry);
         currentGeometry = 0;
@@ -232,9 +219,7 @@ void VRCOLLADA_Stream::endElement(const string& uri, const string& name, const s
     }
 
     if (node.name == "float_array") {
-            cout << " --- " << currentSource << endl;
         if (currentSource != "") {
-            cout << " -- " << node.data << " -> " << toString(toValue<vector<float>>(node.data)) << endl;
             sources[currentSource].data = toValue<vector<float>>(node.data);
         }
     }
@@ -263,7 +248,7 @@ void VRCOLLADA_Stream::endElement(const string& uri, const string& name, const s
         }
     }
 
-    cout << "endElement " << name << " " << nodeStack.size() << endl;
+    //cout << "endElement " << name << " " << nodeStack.size() << endl;
 }
 
 void OSG::loadCollada(string path, VRObjectPtr root) {
