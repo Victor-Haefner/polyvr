@@ -1,4 +1,8 @@
 #include "VRCOLLADA.h"
+#include "VRCOLLADA_Material.h"
+#include "VRCOLLADA_Geometry.h"
+#include "VRCOLLADA_Kinematics.h"
+
 #include "core/scene/import/VRImportFwd.h"
 #include "core/utils/toString.h"
 #include "core/utils/xml.h"
@@ -47,9 +51,7 @@ class VRCOLLADA_Stream : public XMLStreamHandler {
 
         stack<Node> nodeStack;
 
-        map<string, VRMaterialPtr> library_effects;
         map<string, VRGeometryPtr> library_geometries;
-        VRMaterialPtr currentMaterial;
         VRGeometryPtr currentGeometry;
         VRGeoDataPtr currentGeoData;
         Primitive currentPrimitive;
@@ -60,6 +62,10 @@ class VRCOLLADA_Stream : public XMLStreamHandler {
 
         VRObjectPtr root;
         stack<VRObjectPtr> objStack;
+
+        VRCOLLADA_Material materials;
+        //VRCOLLADA_Geometry geometries;
+        //VRCOLLADA_Kinematics kinematics;
 
         string skipHash(const string& s) { return subString(s, 1, s.size()-1); }
 
@@ -91,12 +97,7 @@ void VRCOLLADA_Stream::startElement(const string& uri, const string& name, const
     n.attributes = attributes;
     nodeStack.push(n);
 
-    if (name == "effect") {
-        string id = n.attributes["id"].val;
-        auto m = VRMaterial::create();
-        library_effects[id] = m;
-        currentMaterial = m;
-    }
+    if (name == "effect") materials.newEffect( n.attributes["id"].val );
 
     if (name == "geometry") {
         string Name = n.attributes["name"].val;
@@ -196,7 +197,7 @@ void VRCOLLADA_Stream::endElement(const string& uri, const string& name, const s
     nodeStack.pop();
 
     if (name == "node") objStack.pop();
-    if (node.name == "effect") currentMaterial = 0;
+    if (node.name == "effect") materials.closeEffect();
 
     if (node.name == "geometry") {
         currentGeoData->apply(currentGeometry);
@@ -205,12 +206,7 @@ void VRCOLLADA_Stream::endElement(const string& uri, const string& name, const s
         sources.clear();
     }
 
-    if (node.name == "color") {
-        Color4f col = toValue<Color4f>(node.data);
-        string sid = node.attributes["sid"].val;
-        if (sid == "diffuse" && currentMaterial) currentMaterial->setDiffuse(Color3f(col[0], col[1], col[2]));
-        //if (sid == "emission" && currentMaterial) currentMaterial->setEmissive(col);
-    }
+    if (node.name == "color") materials.setColor(node.attributes["sid"].val, toValue<Color4f>(node.data));
 
     if (node.name == "float") {
         //float f = toValue<float>(node.data);
