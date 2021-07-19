@@ -348,11 +348,11 @@ void VRWorldGenerator::setupLODTerrain(string pathMap, string pathPaint, float d
     };
 
     cout << " VRWorldGenerator::setupLODTerrain add terrains" << endl;
-//#ifndef __EMSCRIPTEN__
     addTerrain(1.0, 0);
-    addTerrain(0.5, 1);
-//#endif
+#ifndef __EMSCRIPTEN__
+    addTerrain(0.25, 1);
     addTerrain(0.05, 2);
+#endif
 
     addTerrainsToLOD();
     if (planet) planet->localizeSector(ptr());

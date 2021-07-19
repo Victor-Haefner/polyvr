@@ -359,13 +359,14 @@ void VRTerrain::createMultiGrid(VRCameraPtr cam, int res) {
 	auto ray = pose->dir();*/
 
 	//double h = pos[1];
+	double e = 1e-3;
 
 #ifndef __EMSCRIPTEN__
 	Vec2d r1 = gridS;// * round(h*0.1+1);
 #else
-	Vec2d r1 = gridS*64.0;// * round(h*0.1+1);
+	Vec2d r1 = gridS*32.0;// * round(h*0.1+1);
 	Vec2d r2 = gridS;// * round(2 * (h*2.0+1));
-	Vec2d W = r1*2;
+	Vec2d W = r1*(2.0 - e);
 
 	double x = (N1+N2)*0.5;
 	double y = (E1+E2)*0.5;
@@ -373,21 +374,19 @@ void VRTerrain::createMultiGrid(VRCameraPtr cam, int res) {
 	/*auto intersectOffset = Vec2d(ray[0]*W[0], ray[2]*W[1]);
 	double x = pos[0] + intersectOffset[0];
 	double y = pos[2] + intersectOffset[1];*/
-	double e = 1e-5;
 
 	x -= x-floor(x/r1[0])*r1[0]; // x%r1
 	y -= y-floor(y/r1[1])*r1[1]; // y%r1
-	Vec2d L = W-Vec2d(e,e);
 
 	/*vector<double> params = {r1[0],r1[1],r2[0],r2[1],x,y};
 	if (oldMgParams == params) return;
 	oldMgParams = params;*/
-	cout << " - createMultiGrid gridS: " << gridS << " gridN: " << gridN << " xy " << Vec2d(x,y) << " r1 " << r1 << " r2 " << r2 << endl;
+	cout << " - createMultiGrid gridS: " << gridS << " gridN: " << gridN << " xy " << Vec2d(x,y) << " r1 " << r1 << " r2 " << r2 << " W " << W << endl;
 #endif
 
     mg.addGrid(Vec4d(N1,N2,E1,E2), Vec2d(r1[0],r1[1]));
 #ifdef __EMSCRIPTEN__
-    if (r2[0] < r1[0] && 2*L[0] < (N2-N1)) mg.addGrid(Vec4d(x-L[0], x+L[0], y-L[1], y+L[1]), Vec2d(r2[0],r2[1]));
+    if (r2[0] < r1[0] && W[0] < (N2-N1)) mg.addGrid(Vec4d(x-W[0], x+W[0], y-W[1], y+W[1]), Vec2d(r2[0],r2[1]));
 #endif
     mg.compute(ptr());
 
@@ -410,6 +409,7 @@ void VRTerrain::createMultiGrid(VRCameraPtr cam, int res) {
         data.setNorm(i, pose->up());
     }
     data.apply(ptr());
+    cout << " -- createMultiGrid " << positions->size() << endl;
 }
 
 void VRTerrain::setupGeo() {
