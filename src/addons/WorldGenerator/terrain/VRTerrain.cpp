@@ -332,7 +332,18 @@ void VRTerrain::exportWebMesh(string path) { // this exported mesh is meant to b
     obj->exportToFile(path);
 }
 
+Vec2d computeGridSpacing(Vec2d size, Vec2d gridSize, int res) {
+    Vec2i gridN = Vec2i(round(size[0]*1.0/res-0.5), round(size[1]*1.0/res-0.5));
+    if (gridN[0] < 1) gridN[0] = 1;
+    if (gridN[1] < 1) gridN[1] = 1;
+    Vec2d gridS = gridSize;
+    gridS[0] /= gridN[0];
+    gridS[1] /= gridN[1];
+    return gridS;
+}
+
 void VRTerrain::createMultiGrid(VRCameraPtr cam, int res) {
+    //res /= 64; // TODO: remove, just for testing!
     auto pla = planet.lock();
     if (!pla) return;
 
@@ -342,12 +353,8 @@ void VRTerrain::createMultiGrid(VRCameraPtr cam, int res) {
     double E1 = planetCoords[1];
     double E2 = planetCoords[1]+sectorSize;
 
-    Vec2i gridN = Vec2i(round(size[0]*1.0/res-0.5), round(size[1]*1.0/res-0.5));
-    if (gridN[0] < 1) gridN[0] = 1;
-    if (gridN[1] < 1) gridN[1] = 1;
-    Vec2d gridS = Vec2d(sectorSize, sectorSize);
-    gridS[0] /= gridN[0];
-    gridS[1] /= gridN[1];
+    Vec2d gridS1 = computeGridSpacing(size, Vec2d(sectorSize, sectorSize), res*32);
+    Vec2d gridS2 = computeGridSpacing(size, Vec2d(sectorSize, sectorSize), res);
 
     auto texSize = heigthsTex->getSize();
     Vec2d texel = Vec2d( 1.0/texSize[0], 1.0/texSize[1] );
@@ -359,14 +366,14 @@ void VRTerrain::createMultiGrid(VRCameraPtr cam, int res) {
 	auto ray = pose->dir();*/
 
 	//double h = pos[1];
-	double e = 1e-3;
+	double e = 1e-5;
 
 #ifndef __EMSCRIPTEN__
-	Vec2d r1 = gridS;// * round(h*0.1+1);
+	Vec2d r1 = gridS2;// * round(h*0.1+1);
 #else
-	Vec2d r1 = gridS*32.0;// * round(h*0.1+1);
-	Vec2d r2 = gridS;// * round(2 * (h*2.0+1));
-	Vec2d W = r1*(2.0 - e);
+	Vec2d r1 = gridS1;// * round(h*0.1+1);
+	Vec2d r2 = gridS2;// * round(2 * (h*2.0+1));
+	Vec2d W = r1*2;
 
 	double x = (N1+N2)*0.5;
 	double y = (E1+E2)*0.5;
@@ -377,16 +384,17 @@ void VRTerrain::createMultiGrid(VRCameraPtr cam, int res) {
 
 	x -= x-floor(x/r1[0])*r1[0]; // x%r1
 	y -= y-floor(y/r1[1])*r1[1]; // y%r1
+	Vec2d L = W-Vec2d(e,e);
 
 	/*vector<double> params = {r1[0],r1[1],r2[0],r2[1],x,y};
 	if (oldMgParams == params) return;
 	oldMgParams = params;*/
-	cout << " - createMultiGrid gridS: " << gridS << " gridN: " << gridN << " xy " << Vec2d(x,y) << " r1 " << r1 << " r2 " << r2 << " W " << W << endl;
+	cout << " - createMultiGrid gridS1: " << gridS1 << " gridS2: " << gridS2 << " xy " << Vec2d(x,y) << " r1 " << r1 << " r2 " << r2 << " W " << W << endl;
 #endif
 
     mg.addGrid(Vec4d(N1,N2,E1,E2), Vec2d(r1[0],r1[1]));
 #ifdef __EMSCRIPTEN__
-    if (r2[0] < r1[0] && W[0] < (N2-N1)) mg.addGrid(Vec4d(x-W[0], x+W[0], y-W[1], y+W[1]), Vec2d(r2[0],r2[1]));
+    if (r2[0] < r1[0] && 2*L[0] < (N2-N1)) mg.addGrid(Vec4d(x-L[0], x+L[0], y-L[1], y+L[1]), Vec2d(r2[0],r2[1]));
 #endif
     mg.compute(ptr());
 
