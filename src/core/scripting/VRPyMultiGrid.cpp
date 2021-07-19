@@ -8,7 +8,7 @@ simpleVRPyType(MultiGrid, New_VRObjects_ptr);
 
 PyMethodDef VRPyMultiGrid::methods[] = {
     {"addGrid", PyWrap(MultiGrid, addGrid, "Add a grid, rectangle, resolution, ([x0,x1,y0,y1], [rx,ry])", void, Vec4d, Vec2d) },
-    {"compute", PyWrap(MultiGrid, compute, "Compute geometry", bool) },
+    {"compute", PyWrapOpt(MultiGrid, compute, "Compute geometry", "0", bool, VRGeometryPtr) },
     {"clear", PyWrap(MultiGrid, clear, "Clear grids", void) },
     {NULL}  /* Sentinel */
 };

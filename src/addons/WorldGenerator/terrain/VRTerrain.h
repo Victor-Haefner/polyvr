@@ -56,6 +56,8 @@ class VRTerrain : public VRGeometry, public VRWorldModule {
         VRMaterialPtr mat;
         shared_ptr<vector<float>> physicsHeightBuffer;
 
+        vector<double> oldMgParams;
+
         VRPlanetWeakPtr planet;
         Vec2d planetCoords;
         PosePtr pSectorInv;
@@ -71,6 +73,7 @@ class VRTerrain : public VRGeometry, public VRWorldModule {
         //void setupGeo();
         void setupMat();
         void createMesh(VRGeoData& geo, int res);
+        void createMultiGrid(VRCameraPtr cam, int res);
 
         void btPhysicalize();
         void vrPhysicalize();

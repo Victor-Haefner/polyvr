@@ -28,7 +28,7 @@ class VRMultiGrid : public VRGeometry {
         void getOuterGrid();
         void computeTree();
         void computeGridGeo(int gridID, VRGeoData& data);
-        void computeGeo();
+        void computeGeo(VRGeometryPtr geo = 0);
 
 	public:
 		VRMultiGrid(string name);
@@ -38,7 +38,7 @@ class VRMultiGrid : public VRGeometry {
 		VRMultiGridPtr ptr();
 
 		void addGrid(Vec4d rect, Vec2d res);
-		bool compute();
+		bool compute(VRGeometryPtr geo = 0);
 		void clear();
 };
 

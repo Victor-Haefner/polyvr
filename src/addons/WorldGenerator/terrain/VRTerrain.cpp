@@ -7,6 +7,7 @@
 #include "core/objects/geometry/VRGeoData.h"
 #include "core/objects/geometry/OSGGeometry.h"
 #include "core/objects/geometry/VRMultiGrid.h"
+#include "core/objects/VRCamera.h"
 #include "core/utils/VRFunction.h"
 #include "core/math/partitioning/boundingbox.h"
 #include "core/math/polygon.h"
@@ -331,11 +332,92 @@ void VRTerrain::exportWebMesh(string path) { // this exported mesh is meant to b
     obj->exportToFile(path);
 }
 
+void VRTerrain::createMultiGrid(VRCameraPtr cam, int res) {
+    auto pla = planet.lock();
+    if (!pla) return;
+
+    double sectorSize = pla->getSectorSize();
+    double N1 = planetCoords[0];
+    double N2 = planetCoords[0]+sectorSize;
+    double E1 = planetCoords[1];
+    double E2 = planetCoords[1]+sectorSize;
+
+    Vec2i gridN = Vec2i(round(size[0]*1.0/res-0.5), round(size[1]*1.0/res-0.5));
+    if (gridN[0] < 1) gridN[0] = 1;
+    if (gridN[1] < 1) gridN[1] = 1;
+    Vec2d gridS = Vec2d(sectorSize, sectorSize);
+    gridS[0] /= gridN[0];
+    gridS[1] /= gridN[1];
+
+    auto texSize = heigthsTex->getSize();
+    Vec2d texel = Vec2d( 1.0/texSize[0], 1.0/texSize[1] );
+
+    VRMultiGrid mg("terrainGrid");
+	/*auto bb = getBoundingbox();
+	auto pose = getPoseTo(cam);
+	auto pos = pose->pos() - bb->center();
+	auto ray = pose->dir();*/
+
+	//double h = pos[1];
+
+#ifndef __EMSCRIPTEN__
+	Vec2d r1 = gridS;// * round(h*0.1+1);
+#else
+	Vec2d r1 = gridS*64.0;// * round(h*0.1+1);
+	Vec2d r2 = gridS;// * round(2 * (h*2.0+1));
+	Vec2d W = r1*2;
+
+	double x = (N1+N2)*0.5;
+	double y = (E1+E2)*0.5;
+
+	/*auto intersectOffset = Vec2d(ray[0]*W[0], ray[2]*W[1]);
+	double x = pos[0] + intersectOffset[0];
+	double y = pos[2] + intersectOffset[1];*/
+	double e = 1e-5;
+
+	x -= x-floor(x/r1[0])*r1[0]; // x%r1
+	y -= y-floor(y/r1[1])*r1[1]; // y%r1
+	Vec2d L = W-Vec2d(e,e);
+
+	/*vector<double> params = {r1[0],r1[1],r2[0],r2[1],x,y};
+	if (oldMgParams == params) return;
+	oldMgParams = params;*/
+	cout << " - createMultiGrid gridS: " << gridS << " gridN: " << gridN << " xy " << Vec2d(x,y) << " r1 " << r1 << " r2 " << r2 << endl;
+#endif
+
+    mg.addGrid(Vec4d(N1,N2,E1,E2), Vec2d(r1[0],r1[1]));
+#ifdef __EMSCRIPTEN__
+    if (r2[0] < r1[0] && 2*L[0] < (N2-N1)) mg.addGrid(Vec4d(x-L[0], x+L[0], y-L[1], y+L[1]), Vec2d(r2[0],r2[1]));
+#endif
+    mg.compute(ptr());
+
+    VRGeoData data(ptr());
+    auto positions = getMesh()->geo->getPositions();
+    for (size_t i=0; i<positions->size(); i++) {
+        Pnt3f pos = positions->getValue<Pnt3f>(i);
+        double N = pos[0];
+        double E = pos[2];
+
+        double tn = (N-N1)/(N2-N1);
+        double te = (E-E1)/(E2-E1);
+        double tcx = texel[0]*0.5 + te*(1.0-texel[0]);
+        double tcy = texel[1]*0.5 + tn*(1.0-texel[1]);
+        data.pushTexCoord(Vec2d(tcx, 1.0 - tcy));
+
+        auto pose = pla->fromLatLongPose(N, E);
+        pose = pSectorInv->multRight(pose);
+        data.setPos(i, pose->pos());
+        data.setNorm(i, pose->up());
+    }
+    data.apply(ptr());
+}
+
 void VRTerrain::setupGeo() {
     cout << "VRTerrain::setupGeo" << endl;
-    VRGeoData geo;
+    /*VRGeoData geo;
     createMesh(geo, grid);
-    if (geo.size() > 0) geo.apply(ptr());
+    if (geo.size() > 0) geo.apply(ptr());*/
+    createMultiGrid(0, grid);
 
 #if __EMSCRIPTEN__// TODO: directly create triangles above!
     convertToTriangles();

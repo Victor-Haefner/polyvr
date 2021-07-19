@@ -21,7 +21,7 @@ void VRMultiGrid::addGrid(Vec4d rect, Vec2d res) {
     grids.push_back(g);
 }
 
-bool VRMultiGrid::compute() {
+bool VRMultiGrid::compute(VRGeometryPtr geo) {
     if (checkForOverlap()) {
         cout << "VRMultiGrid::compute failed, grid overlap detected!" << endl;
         return false;
@@ -29,7 +29,7 @@ bool VRMultiGrid::compute() {
 
     getOuterGrid();
     computeTree();
-    computeGeo();
+    computeGeo(geo);
     return true;
 }
 
@@ -91,11 +91,11 @@ void VRMultiGrid::computeTree() {
     }
 }
 
-void VRMultiGrid::computeGeo() {
+void VRMultiGrid::computeGeo(VRGeometryPtr geo) {
     if (outerGrid == -1) return;
     VRGeoData data;
     computeGridGeo(outerGrid, data);
-    data.apply(ptr());
+    data.apply(geo ? geo : ptr());
 }
 
 bool VRMultiGrid::isInside(Grid& grid, const Vec3d& p) {
