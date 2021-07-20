@@ -343,7 +343,7 @@ Vec2d computeGridSpacing(Vec2d size, Vec2d gridSize, int res) {
 }
 
 void VRTerrain::createMultiGrid(VRCameraPtr cam, int res) {
-    res /= 64; // TODO: remove, just for testing!
+    //res /= 64; // TODO: remove, just for testing!
     auto pla = planet.lock();
     if (!pla) return;
 
