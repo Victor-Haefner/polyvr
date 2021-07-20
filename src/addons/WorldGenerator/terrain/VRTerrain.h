@@ -101,7 +101,7 @@ class VRTerrain : public VRGeometry, public VRWorldModule {
         Vec2f getTexelSize();
         Vec2d getSize();
         double getGrid();
-        void setupGeo();
+        void setupGeo(VRCameraPtr cam = 0);
         void setLODFactor(double in);
         double getLODFactor();
 

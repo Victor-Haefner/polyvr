@@ -343,9 +343,11 @@ Vec2d computeGridSpacing(Vec2d size, Vec2d gridSize, int res) {
 }
 
 void VRTerrain::createMultiGrid(VRCameraPtr cam, int res) {
-    //res /= 64; // TODO: remove, just for testing!
+    res /= 64; // TODO: remove, just for testing!
     auto pla = planet.lock();
     if (!pla) return;
+
+	auto modulo = [](const double& a, const double& b) { return a-floor(a/b)*b; };
 
     double sectorSize = pla->getSectorSize();
     double N1 = planetCoords[0];
@@ -353,50 +355,51 @@ void VRTerrain::createMultiGrid(VRCameraPtr cam, int res) {
     double E1 = planetCoords[1];
     double E2 = planetCoords[1]+sectorSize;
 
-    Vec2d gridS1 = computeGridSpacing(size, Vec2d(sectorSize, sectorSize), res*32);
-    Vec2d gridS2 = computeGridSpacing(size, Vec2d(sectorSize, sectorSize), res);
-
-    auto texSize = heigthsTex->getSize();
-    Vec2d texel = Vec2d( 1.0/texSize[0], 1.0/texSize[1] );
+    Vec2d r1 = computeGridSpacing(size, Vec2d(sectorSize, sectorSize), res*32);
 
     VRMultiGrid mg("terrainGrid");
-	/*auto bb = getBoundingbox();
-	auto pose = getPoseTo(cam);
-	auto pos = pose->pos() - bb->center();
-	auto ray = pose->dir();*/
+    mg.addGrid(Vec4d(N1,N2,E1,E2), Vec2d(r1[0],r1[1]));
 
-	//double h = pos[1];
-	double e = 1e-5;
+    Vec2d r2 = computeGridSpacing(size, Vec2d(sectorSize, sectorSize), res*8);
+    Vec2d r3 = r2/8.0;//computeGridSpacing(size, Vec2d(sectorSize, sectorSize), res);
 
-#ifndef __EMSCRIPTEN__
-	Vec2d r1 = gridS2;// * round(h*0.1+1);
-#else
-	Vec2d r1 = gridS1;// * round(h*0.1+1);
-	Vec2d r2 = gridS2;// * round(2 * (h*2.0+1));
-	Vec2d W = r1*2;
+	Vec2d L1 = r1*2;
+	Vec2d L2 = r2*2;
 
-	double x = (N1+N2)*0.5;
-	double y = (E1+E2)*0.5;
-
+    double x1 = (N1+N2)*0.5;
+    double y1 = (E1+E2)*0.5;
+	if (cam) {
+        Vec2d NE = pla->fromPosLatLong(cam->getWorldPose()->pos(), 1, 0);
+        x1 = NE[0];
+        y1 = NE[1];
+	}
 	/*auto intersectOffset = Vec2d(ray[0]*W[0], ray[2]*W[1]);
 	double x = pos[0] + intersectOffset[0];
 	double y = pos[2] + intersectOffset[1];*/
 
-	x -= x-floor(x/r1[0])*r1[0]; // x%r1
-	y -= y-floor(y/r1[1])*r1[1]; // y%r1
-	Vec2d L = W-Vec2d(e,e);
+	x1 -= modulo(x1,r1[0]); // x1%r1
+	y1 -= modulo(y1,r1[1]); // y1%r1
+	Vec4d rect1 = Vec4d(x1-L1[0], x1+L1[0], y1-L1[1], y1+L1[1]);
 
-	/*vector<double> params = {r1[0],r1[1],r2[0],r2[1],x,y};
-	if (oldMgParams == params) return;
-	oldMgParams = params;*/
-	cout << " - createMultiGrid gridS1: " << gridS1 << " gridS2: " << gridS2 << " xy " << Vec2d(x,y) << " r1 " << r1 << " r2 " << r2 << " W " << W << endl;
-#endif
+	double x2 = x1;
+	double y2 = y1;
+	//x2 -= modulo(x2-rect1[0],r2[0]); // x2%r2
+	//y2 -= modulo(y2-rect1[2],r2[1]); // y2%r2
+	Vec4d rect2 = Vec4d(x2-L2[0], x2+L2[0], y2-L2[1], y2+L2[1]);
 
-    mg.addGrid(Vec4d(N1,N2,E1,E2), Vec2d(r1[0],r1[1]));
-#ifdef __EMSCRIPTEN__
-    if (r2[0] < r1[0] && 2*L[0] < (N2-N1)) mg.addGrid(Vec4d(x-L[0], x+L[0], y-L[1], y+L[1]), Vec2d(r2[0],r2[1]));
-#endif
-    mg.compute(ptr());
+	cout << " - createMultiGrid r1: " << r1 << " r2: " << r2 << " r3: " << r3 << " xy " << Vec2d(x1,y1) << " L1 " << L1 << " L2 " << L2 << endl;
+
+//#ifdef __EMSCRIPTEN__
+    if (r2[0] < r1[0] && 2*L1[0] < (N2-N1) && x1-L1[0] > N1 && x1+L1[0] < N2) mg.addGrid(rect1, Vec2d(r2[0],r2[1]));
+    if (r3[0] < r2[0] && 2*L2[0] < 2*L1[0] && x2-L2[0] > N1 && x2+L2[0] < N2) mg.addGrid(rect2, Vec2d(r3[0],r3[1]));
+//#endif
+    if (!mg.compute(ptr())) {
+        cout << " Error in VRTerrain::createMultiGrid, compute failed! ..abort" << endl;
+        return;
+    }
+
+    auto texSize = heigthsTex->getSize();
+    Vec2d texel = Vec2d( 1.0/texSize[0], 1.0/texSize[1] );
 
     VRGeoData data(ptr());
     auto positions = getMesh()->geo->getPositions();
@@ -420,12 +423,12 @@ void VRTerrain::createMultiGrid(VRCameraPtr cam, int res) {
     cout << " -- createMultiGrid " << positions->size() << endl;
 }
 
-void VRTerrain::setupGeo() {
+void VRTerrain::setupGeo(VRCameraPtr cam) {
     cout << "VRTerrain::setupGeo" << endl;
     /*VRGeoData geo;
     createMesh(geo, grid);
     if (geo.size() > 0) geo.apply(ptr());*/
-    createMultiGrid(0, grid);
+    createMultiGrid(cam, grid);
 
 #if __EMSCRIPTEN__// TODO: directly create triangles above!
     convertToTriangles();

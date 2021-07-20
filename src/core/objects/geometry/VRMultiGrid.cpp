@@ -99,15 +99,15 @@ void VRMultiGrid::computeGeo(VRGeometryPtr geo) {
     data.apply(geo ? geo : ptr());
 }
 
-bool VRMultiGrid::isInside(Grid& grid, const Vec3d& p) {
-    if (p[0] < grid.rect[0] || p[0] > grid.rect[1]) return false;
-    if (p[2] < grid.rect[2] || p[2] > grid.rect[3]) return false;
+bool VRMultiGrid::isInside(Grid& grid, const Vec3d& p, double e) {
+    if (p[0] < grid.rect[0]-e || p[0] > grid.rect[1]+e) return false;
+    if (p[2] < grid.rect[2]-e || p[2] > grid.rect[3]+e) return false;
     return true;
 }
 
-bool VRMultiGrid::isInChild(Grid& grid, const Vec3d& p) {
+bool VRMultiGrid::isInChild(Grid& grid, const Vec3d& p, double e) {
     for (auto& c : grid.children) {
-        if (isInside(grids[c], p)) return true;
+        if (isInside(grids[c], p, e)) return true;
     }
     return false;
 }
@@ -116,8 +116,8 @@ void VRMultiGrid::computeGridGeo(int gridID, VRGeoData& data) {
     auto& grid = grids[gridID];
     for (auto& cID : grid.children) computeGridGeo(cID, data);
 
-    int Nx = ceil((grid.rect[1] - grid.rect[0]) / grid.res[0]);
-    int Ny = ceil((grid.rect[3] - grid.rect[2]) / grid.res[1]);
+    int Nx = round((grid.rect[1] - grid.rect[0]) / grid.res[0]);
+    int Ny = round((grid.rect[3] - grid.rect[2]) / grid.res[1]);
     double dx = (grid.rect[1] - grid.rect[0]) / Nx;
     double dy = (grid.rect[3] - grid.rect[2]) / Ny;
 
@@ -132,7 +132,7 @@ void VRMultiGrid::computeGridGeo(int gridID, VRGeoData& data) {
         lastRow = currentRow;
         currentRow.clear();
         for (int i=0; i<=Nx; i++) {
-            if (isInChild(grid, p)) {
+            if (isInChild(grid, p, -e)) {
                 currentRow.push_back(-1);
             } else {
                 int vID = data.pushVert(p,n);

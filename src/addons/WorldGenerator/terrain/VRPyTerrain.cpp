@@ -32,6 +32,7 @@ PyMethodDef VRPyTerrain::methods[] = {
     {"flatten", PyWrap(Terrain, flatten, "Flatten the area inside a perimeter", void, vector<Vec2d>, float ) },
     {"setHeightScale", PyWrap(Terrain, setHeightScale, "Set height scale", void, float ) },
     {"exportWebMesh", PyWrap(Terrain, exportWebMesh, "Export mesh for webassembly pojects", void, string ) },
+    {"setupGeo", PyWrapOpt(Terrain, setupGeo, "Computes terrain mesh, pass camera to optimize mesh", "0", void, VRCameraPtr ) },
     {NULL}  /* Sentinel */
 };
 
