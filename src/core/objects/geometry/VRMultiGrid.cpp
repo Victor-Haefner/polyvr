@@ -1,5 +1,6 @@
 #include "VRMultiGrid.h"
 #include "VRGeoData.h"
+#include "core/utils/toString.h"
 
 using namespace OSG;
 
@@ -105,11 +106,11 @@ bool VRMultiGrid::isInside(Grid& grid, const Vec3d& p, double e) {
     return true;
 }
 
-bool VRMultiGrid::isInChild(Grid& grid, const Vec3d& p, double e) {
+int VRMultiGrid::isInChild(Grid& grid, const Vec3d& p, double e) {
     for (auto& c : grid.children) {
-        if (isInside(grids[c], p, e)) return true;
+        if (isInside(grids[c], p, e)) return c;
     }
-    return false;
+    return -1;
 }
 
 void VRMultiGrid::computeGridGeo(int gridID, VRGeoData& data) {
@@ -125,28 +126,49 @@ void VRMultiGrid::computeGridGeo(int gridID, VRGeoData& data) {
     Vec3d p(grid.rect[0], 0, grid.rect[2]);
     int k = data.size();
 
-    vector<int> lastRow;
-    vector<int> currentRow;
+    vector<Vec2i> lastRow; // (vID, cID)
+    vector<Vec2i> currentRow;
 
     for (int j=0; j<=grid.Ny; j++) {
         lastRow = currentRow;
         currentRow.clear();
 
         for (int i=0; i<=grid.Nx; i++) {
-            if (isInChild(grid, p, -e)) {
-                currentRow.push_back(-1);
+            int cID = isInChild(grid, p, -e);
+            if (cID != -1) {
+                currentRow.push_back(Vec2i(-1, cID));
+                if (i > 0 && j > 0) { // check for frame
+                    int vUp = lastRow[i][0];
+                    int vLe = currentRow[i-1][0];
+                    if (vLe != -1 && vUp != 0) grid.frames[cID].push_back(lastRow[i-1][0]); // frame corner U L
+                    if (vUp != -1) grid.frames[cID].push_back(vUp); // frame U
+                    if (vLe != -1) grid.frames[cID].push_back(vLe); // frame L
+                }
             } else {
                 int vID = data.pushVert(p,n);
-                currentRow.push_back(vID);
-                if (i > 0 && j > 0) {
-                    int vID1 = currentRow[i-1];
-                    int vID2 = currentRow[i];
-                    int vID3 = lastRow[i];
-                    int vID4 = lastRow[i-1];
+                currentRow.push_back(Vec2i(vID, -1));
+                if (i > 0 && j > 0) { // check for quad and then frame
+                    int vID1 = currentRow[i-1][0];
+                    int vID2 = currentRow[i][0];
+                    int vID3 = lastRow[i][0];
+                    int vID4 = lastRow[i-1][0];
 
                     if (vID1 >= 0 && vID2 >= 0 && vID3 >= 0 && vID4 >= 0) {
                         data.pushQuad(vID1, vID2, vID3, vID4);
                     }
+
+                    // frame
+                    int vUpLe = lastRow[i-1][0];
+                    int vUp = lastRow[i][0];
+                    int vLe = currentRow[i-1][0];
+                    int cID = currentRow[i-1][1];
+                    if (vLe == -1 && vUpLe != -1) grid.frames[cID].push_back(vUp); // frame corner U R
+                    if (vLe == -1) grid.frames[cID].push_back(vID); // frame R
+                    cID = lastRow[i][1];
+                    if (vUpLe != -1 && vUp == -1) grid.frames[cID].push_back(vLe); // frame corner B L
+                    if (vUp == -1) grid.frames[cID].push_back(vID); // frame B
+                    cID = lastRow[i-1][1];
+                    if (vUpLe == -1 && vUp != -1 && vLe != -1) grid.frames[cID].push_back(vID); // frame corner B R
                 }
 
                 if (j == 0 || j == grid.Ny || i == 0 || i == grid.Nx)
@@ -158,6 +180,18 @@ void VRMultiGrid::computeGridGeo(int gridID, VRGeoData& data) {
         p[2] += dy;
         p[0] = grid.rect[0];
     }
+
+    for (auto& f : grid.frames) { // fill frame child gap
+        auto& frame = f.second;
+        auto& border = grids[f.first];
+
+        ; // TODO
+    }
+
+    cout << "Grid " << gridID << " geo, border: " << toString(grid.border) << endl;
+    cout << "           frames: " << grid.frames.size() << endl;
+    for (auto& f : grid.frames)
+    cout << "           child " << f.first << " frame: " << toString(f.second) << endl;
 }
 
 

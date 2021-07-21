@@ -19,6 +19,7 @@ class VRMultiGrid : public VRGeometry {
             int Nx = -1;
             int Ny = -1;
             vector<int> border;
+            map<int, vector<int>> frames;
         };
 
         vector<Grid> grids;
@@ -27,7 +28,7 @@ class VRMultiGrid : public VRGeometry {
 
         bool isInside(Grid& g1, Grid& g2);
         bool isInside(Grid& grid, const Vec3d& p, double e = 0);
-        bool isInChild(Grid& grid, const Vec3d& p, double e = 0);
+        int isInChild(Grid& grid, const Vec3d& p, double e = 0);
 
         bool checkForOverlap();
         void getOuterGrid();
