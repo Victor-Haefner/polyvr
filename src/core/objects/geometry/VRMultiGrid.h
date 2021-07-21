@@ -15,6 +15,10 @@ class VRMultiGrid : public VRGeometry {
             Vec2d res;
             int parent = -1;
             vector<int> children;
+
+            int Nx = -1;
+            int Ny = -1;
+            vector<int> border;
         };
 
         vector<Grid> grids;

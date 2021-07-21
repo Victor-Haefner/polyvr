@@ -116,10 +116,10 @@ void VRMultiGrid::computeGridGeo(int gridID, VRGeoData& data) {
     auto& grid = grids[gridID];
     for (auto& cID : grid.children) computeGridGeo(cID, data);
 
-    int Nx = round((grid.rect[1] - grid.rect[0]) / grid.res[0]);
-    int Ny = round((grid.rect[3] - grid.rect[2]) / grid.res[1]);
-    double dx = (grid.rect[1] - grid.rect[0]) / Nx;
-    double dy = (grid.rect[3] - grid.rect[2]) / Ny;
+    grid.Nx = round((grid.rect[1] - grid.rect[0]) / grid.res[0]);
+    grid.Ny = round((grid.rect[3] - grid.rect[2]) / grid.res[1]);
+    double dx = (grid.rect[1] - grid.rect[0]) / grid.Nx;
+    double dy = (grid.rect[3] - grid.rect[2]) / grid.Ny;
 
     Vec3d n(0,1,0);
     Vec3d p(grid.rect[0], 0, grid.rect[2]);
@@ -128,10 +128,11 @@ void VRMultiGrid::computeGridGeo(int gridID, VRGeoData& data) {
     vector<int> lastRow;
     vector<int> currentRow;
 
-    for (int j=0; j<=Ny; j++) {
+    for (int j=0; j<=grid.Ny; j++) {
         lastRow = currentRow;
         currentRow.clear();
-        for (int i=0; i<=Nx; i++) {
+
+        for (int i=0; i<=grid.Nx; i++) {
             if (isInChild(grid, p, -e)) {
                 currentRow.push_back(-1);
             } else {
@@ -147,6 +148,9 @@ void VRMultiGrid::computeGridGeo(int gridID, VRGeoData& data) {
                         data.pushQuad(vID1, vID2, vID3, vID4);
                     }
                 }
+
+                if (j == 0 || j == grid.Ny || i == 0 || i == grid.Nx)
+                    grid.border.push_back(vID);
             }
             k++;
             p[0] += dx;
