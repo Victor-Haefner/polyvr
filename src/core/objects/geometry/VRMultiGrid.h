@@ -10,16 +10,20 @@ OSG_BEGIN_NAMESPACE;
 
 class VRMultiGrid : public VRGeometry {
 	private:
+        struct Outline {
+            int Nx = -1;
+            int Ny = -1;
+            vector<int> vIDs;
+        };
+
         struct Grid {
             Vec4d rect;
             Vec2d res;
             int parent = -1;
             vector<int> children;
 
-            int Nx = -1;
-            int Ny = -1;
-            vector<int> border;
-            map<int, vector<int>> frames;
+            Outline border;
+            map<int, Outline> frames;
         };
 
         vector<Grid> grids;

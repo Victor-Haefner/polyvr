@@ -117,10 +117,10 @@ void VRMultiGrid::computeGridGeo(int gridID, VRGeoData& data) {
     auto& grid = grids[gridID];
     for (auto& cID : grid.children) computeGridGeo(cID, data);
 
-    grid.Nx = round((grid.rect[1] - grid.rect[0]) / grid.res[0]);
-    grid.Ny = round((grid.rect[3] - grid.rect[2]) / grid.res[1]);
-    double dx = (grid.rect[1] - grid.rect[0]) / grid.Nx;
-    double dy = (grid.rect[3] - grid.rect[2]) / grid.Ny;
+    grid.border.Nx = round((grid.rect[1] - grid.rect[0]) / grid.res[0]);
+    grid.border.Ny = round((grid.rect[3] - grid.rect[2]) / grid.res[1]);
+    double dx = (grid.rect[1] - grid.rect[0]) / grid.border.Nx;
+    double dy = (grid.rect[3] - grid.rect[2]) / grid.border.Ny;
 
     Vec3d n(0,1,0);
     Vec3d p(grid.rect[0], 0, grid.rect[2]);
@@ -129,20 +129,20 @@ void VRMultiGrid::computeGridGeo(int gridID, VRGeoData& data) {
     vector<Vec2i> lastRow; // (vID, cID)
     vector<Vec2i> currentRow;
 
-    for (int j=0; j<=grid.Ny; j++) {
+    for (int j=0; j<=grid.border.Ny; j++) {
         lastRow = currentRow;
         currentRow.clear();
 
-        for (int i=0; i<=grid.Nx; i++) {
+        for (int i=0; i<=grid.border.Nx; i++) {
             int cID = isInChild(grid, p, -e);
             if (cID != -1) {
                 currentRow.push_back(Vec2i(-1, cID));
                 if (i > 0 && j > 0) { // check for frame
                     int vUp = lastRow[i][0];
                     int vLe = currentRow[i-1][0];
-                    if (vLe != -1 && vUp != 0) grid.frames[cID].push_back(lastRow[i-1][0]); // frame corner U L
-                    if (vUp != -1) grid.frames[cID].push_back(vUp); // frame U
-                    if (vLe != -1) grid.frames[cID].push_back(vLe); // frame L
+                    if (vLe != -1 && vUp != -1) grid.frames[cID].vIDs.push_back(lastRow[i-1][0]); // frame corner U L
+                    if (vUp != -1) grid.frames[cID].vIDs.push_back(vUp); // frame U
+                    if (vLe != -1 && vUp == -1) grid.frames[cID].vIDs.push_back(vLe); // frame L
                 }
             } else {
                 int vID = data.pushVert(p,n);
@@ -162,17 +162,24 @@ void VRMultiGrid::computeGridGeo(int gridID, VRGeoData& data) {
                     int vUp = lastRow[i][0];
                     int vLe = currentRow[i-1][0];
                     int cID = currentRow[i-1][1];
-                    if (vLe == -1 && vUpLe != -1) grid.frames[cID].push_back(vUp); // frame corner U R
-                    if (vLe == -1) grid.frames[cID].push_back(vID); // frame R
+                    if (vLe == -1 && vUpLe != -1) {
+                        grid.frames[cID].Nx = grid.frames[cID].vIDs.size();
+                        grid.frames[cID].vIDs.push_back(vUp); // frame corner U R
+                        grid.frames[cID].vIDs.push_back(currentRow[i-grid.frames[cID].Nx][0]); // frame L, second row
+                    }
+                    if (vLe == -1) grid.frames[cID].vIDs.push_back(vID); // frame R
                     cID = lastRow[i][1];
-                    if (vUpLe != -1 && vUp == -1) grid.frames[cID].push_back(vLe); // frame corner B L
-                    if (vUp == -1) grid.frames[cID].push_back(vID); // frame B
+                    if (vUpLe != -1 && vUp == -1) grid.frames[cID].vIDs.push_back(vLe); // frame corner B L
+                    if (vUp == -1) grid.frames[cID].vIDs.push_back(vID); // frame B
                     cID = lastRow[i-1][1];
-                    if (vUpLe == -1 && vUp != -1 && vLe != -1) grid.frames[cID].push_back(vID); // frame corner B R
+                    if (vUpLe == -1 && vUp != -1 && vLe != -1) {
+                        grid.frames[cID].vIDs.push_back(vID); // frame corner B R
+                        grid.frames[cID].Ny = grid.frames[cID].vIDs.size()*0.5 - grid.frames[cID].Nx;
+                    }
                 }
 
-                if (j == 0 || j == grid.Ny || i == 0 || i == grid.Nx)
-                    grid.border.push_back(vID);
+                if (j == 0 || j == grid.border.Ny || i == 0 || i == grid.border.Nx)
+                    grid.border.vIDs.push_back(vID);
             }
             k++;
             p[0] += dx;
@@ -181,17 +188,124 @@ void VRMultiGrid::computeGridGeo(int gridID, VRGeoData& data) {
         p[0] = grid.rect[0];
     }
 
+    //cout << "process grid frames.." << endl;
     for (auto& f : grid.frames) { // fill frame child gap
-        auto& frame = f.second;
-        auto& border = grids[f.first];
+        auto& child = grids[f.first];
+        auto& border = child.border;
+        int borderNx = border.Nx;
+        int borderNy = border.Ny;
 
-        ; // TODO
+        // border vector positions of border corners
+        int borderCornerUL = 0;
+        int borderCornerUR = borderCornerUL+borderNx;
+        int borderCornerBL = borderCornerUR+1+(borderNy-1)*2;
+        int borderCornerBR = borderCornerBL+borderNx;
+        //cout << "  grid border corners " << Vec4i(borderCornerUL, borderCornerUR, borderCornerBL, borderCornerBR) << endl;
+
+
+        auto& frame = f.second;
+        int frameNx = frame.Nx;
+        int frameNy = frame.Ny;
+
+        // frame vector positions of frame corners
+        int frameCornerUL = 0;
+        int frameCornerUR = frameCornerUL+frameNx;
+        int frameCornerBL = frameCornerUR+1+(frameNy-1)*2;
+        int frameCornerBR = frameCornerBL+frameNx;
+        //cout << "  grid frame corners " << Vec4i(frameCornerUL, frameCornerUR, frameCornerBL, frameCornerBR) << endl;
+
+        double rnX = double(frameNx)/borderNx;
+        double rnY = double(frameNy)/borderNy;
+
+        auto stich = [](vector<int> edge1, vector<int> edge2, VRGeoData& data, double ratio) {
+            int bi = 0;
+            int fi = 0;
+            int lbi = bi;
+            int lfi = fi;
+            double bd = bi;
+            double fd = fi;
+            while (bi<edge1.size() && fi<edge2.size()) {
+                int vID1 = edge1[bi];
+                int vID3 = edge2[fi];
+                if (lbi < bi && lfi == fi) {
+                    int vID2 = edge1[bi-1];
+                    //data.pushTri(vID2, vID1, vID3);
+                    data.pushQuad(vID2, vID1, vID3, vID3);
+                    //cout << "    push tri " << Vec3i(vID2, vID1, vID3) << endl;
+                }
+                if (lfi < fi && lbi == bi) {
+                    int vID2 = edge2[fi-1];
+                    //data.pushTri(vID3, vID2, vID1);
+                    data.pushQuad(vID3, vID2, vID1, vID1);
+                    //cout << "    push tri " << Vec3i(vID3, vID2, vID1) << endl;
+                }
+                if (lbi < bi && lfi < fi) {
+                    int vID2 = edge1[bi-1];
+                    int vID4 = edge2[fi-1];
+                    //data.pushTri(vID2, vID1, vID4);
+                    //data.pushTri(vID1, vID3, vID4);
+                    data.pushQuad(vID2, vID1, vID3, vID4);
+                }
+
+                bd += min(1.0,1.0/ratio);
+                fd += min(1.0,ratio);
+                lbi = bi;
+                lfi = fi;
+                bi = round(bd);
+                fi = round(fd);
+                //cout << "     push tri " << Vec2d(bd, fd) << " -> " << Vec2i(bi, fi) << ", ratio " << ratio << endl;
+            }
+        };
+
+        // top seam
+        vector<int> borderTop;
+        vector<int> frameTop;
+        for (int i = 0; i <= borderNx; i++) borderTop.push_back(border.vIDs[borderCornerUL+i]);
+        for (int i = 0; i <= frameNx;  i++) frameTop.push_back(frame.vIDs[frameCornerUL+i]);
+        stich(borderTop, frameTop, data, rnX);
+
+        // bottom seam
+        vector<int> borderBottom;
+        vector<int> frameBottom;
+        for (int i = 0; i <= borderNx; i++) borderBottom.push_back(border.vIDs[borderCornerBL+i]);
+        for (int i = 0; i <= frameNx;  i++) frameBottom.push_back(frame.vIDs[frameCornerBL+i]);
+        stich(frameBottom, borderBottom, data, 1.0/rnX);
+
+        // left seam
+        vector<int> borderLeft;
+        vector<int> frameLeft;
+        for (int i = borderCornerUL; i <= borderCornerBL;) {
+            borderLeft.push_back(border.vIDs[i]);
+            if (i == 0) i += borderNx+1;
+            else i += 2;
+        }
+        for (int i = frameCornerUL; i <= frameCornerBL;) {
+            frameLeft.push_back(frame.vIDs[i]);
+            if (i == 0) i += frameNx+1;
+            else i += 2;
+        }
+        stich(frameLeft, borderLeft, data, 1.0/rnY);
+
+        // right seam
+        vector<int> borderRight;
+        vector<int> frameRight;
+        for (int i = borderCornerUR; i <= borderCornerBR;) {
+            borderRight.push_back(border.vIDs[i]);
+            if (i == borderCornerBR-borderNx-1) i = borderCornerBR;
+            else i += 2;
+        }
+        for (int i = frameCornerUR; i <= frameCornerBR;) {
+            frameRight.push_back(frame.vIDs[i]);
+            if (i == frameCornerBR-frameNx-1) i = frameCornerBR;
+            else i += 2;
+        }
+        stich(borderRight, frameRight, data, rnY);
     }
 
-    cout << "Grid " << gridID << " geo, border: " << toString(grid.border) << endl;
+    /*cout << "Grid " << gridID << " geo, border: " << toString(grid.border.vIDs) << ", Nxy " << Vec2i(grid.border.Nx, grid.border.Ny) << endl;
     cout << "           frames: " << grid.frames.size() << endl;
     for (auto& f : grid.frames)
-    cout << "           child " << f.first << " frame: " << toString(f.second) << endl;
+    cout << "           child " << f.first << " frame: " << toString(f.second.vIDs) << ", Nxy " << Vec2i(f.second.Nx, f.second.Ny) << endl;*/
 }
 
 

@@ -355,16 +355,24 @@ void VRTerrain::createMultiGrid(VRCameraPtr cam, int res) {
     double E1 = planetCoords[1];
     double E2 = planetCoords[1]+sectorSize;
 
-    Vec2d r1 = computeGridSpacing(size, Vec2d(sectorSize, sectorSize), res*32);
+#ifdef __EMSCRIPTEN__
+    double h = 1.0;
+    if (cam) h = 1.0 + cam->getWorldPosition()[1]*1e-3;
+    Vec2d r1 = computeGridSpacing(size, Vec2d(sectorSize, sectorSize), res*32*h);
+#else
+    Vec2d r1 = computeGridSpacing(size, Vec2d(sectorSize, sectorSize), res);
+#endif
+
 
     VRMultiGrid mg("terrainGrid");
     mg.addGrid(Vec4d(N1,N2,E1,E2), Vec2d(r1[0],r1[1]));
 
-    Vec2d r2 = computeGridSpacing(size, Vec2d(sectorSize, sectorSize), res*8);
+#ifdef __EMSCRIPTEN__
+    Vec2d r2 = r1/4.0;//computeGridSpacing(size, Vec2d(sectorSize, sectorSize), res*8);
     Vec2d r3 = r2/8.0;//computeGridSpacing(size, Vec2d(sectorSize, sectorSize), res);
 
-	Vec2d L1 = r1*2;
-	Vec2d L2 = r2*2;
+	Vec2d L1 = r1*2*0.9;
+	Vec2d L2 = r2*2*0.9;
 
     double x1 = (N1+N2)*0.5;
     double y1 = (E1+E2)*0.5;
@@ -373,9 +381,6 @@ void VRTerrain::createMultiGrid(VRCameraPtr cam, int res) {
         x1 = NE[0];
         y1 = NE[1];
 	}
-	/*auto intersectOffset = Vec2d(ray[0]*W[0], ray[2]*W[1]);
-	double x = pos[0] + intersectOffset[0];
-	double y = pos[2] + intersectOffset[1];*/
 
 	x1 -= modulo(x1,r1[0]); // x1%r1
 	y1 -= modulo(y1,r1[1]); // y1%r1
@@ -389,10 +394,9 @@ void VRTerrain::createMultiGrid(VRCameraPtr cam, int res) {
 
 	cout << " - createMultiGrid r1: " << r1 << " r2: " << r2 << " r3: " << r3 << " xy " << Vec2d(x1,y1) << " L1 " << L1 << " L2 " << L2 << endl;
 
-//#ifdef __EMSCRIPTEN__
     if (r2[0] < r1[0] && 2*L1[0] < (N2-N1) && x1-L1[0] > N1 && x1+L1[0] < N2) mg.addGrid(rect1, Vec2d(r2[0],r2[1]));
     if (r3[0] < r2[0] && 2*L2[0] < 2*L1[0] && x2-L2[0] > N1 && x2+L2[0] < N2) mg.addGrid(rect2, Vec2d(r3[0],r3[1]));
-//#endif
+#endif
     if (!mg.compute(ptr())) {
         cout << " Error in VRTerrain::createMultiGrid, compute failed! ..abort" << endl;
         return;
