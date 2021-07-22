@@ -42,7 +42,6 @@
 #include <OpenSG/OSGOSBTypedGeoIntegralPropertyElement.h>
 #include <OpenSG/OSGOSBTypedGeoVectorPropertyElement.h>
 
-
 typedef const char* CSTR;
 EMSCRIPTEN_KEEPALIVE void PolyVR_shutdown() { PolyVR::shutdown(); }
 EMSCRIPTEN_KEEPALIVE void PolyVR_reloadScene() { VRSceneManager::get()->reloadScene(); }
@@ -394,8 +393,10 @@ void initOSGImporter() {
     OSBElementFactory::the()->registerElement("GeoColor4fProperty", new OSBElementCreator<OSBTypedGeoVectorPropertyElement<GeoColor4fProperty>>);
 }
 
+OSG_BEGIN_NAMESPACE;
 void glutUpdate() {
     PolyVR::get()->update();
 }
+OSG_END_NAMESPACE;
 
 #endif // POLYVR_WASM_H_INCLUDED

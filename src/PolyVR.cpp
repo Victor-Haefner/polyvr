@@ -10,10 +10,6 @@
 #include <OpenSG/OSGVector.h>
 #include <OpenSG/OSGSceneFileHandler.h>
 
-#ifdef __EMSCRIPTEN__
-#include <PolyVR_WASM.h>
-#endif
-
 #include "PolyVR.h"
 
 #include "core/scene/VRSceneManager.h"
@@ -52,8 +48,12 @@ extern "C" {
 }
 #endif
 
-OSG_BEGIN_NAMESPACE;
+using namespace OSG;
 using namespace std;
+
+#ifdef __EMSCRIPTEN__
+#include <PolyVR_WASM.h>
+#endif
 
 PolyVR* pvr = 0;
 
@@ -355,6 +355,3 @@ void PolyVR::checkProcessesAndSockets() {
 #endif
     cout << endl;
 }
-
-
-OSG_END_NAMESPACE;
