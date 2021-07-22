@@ -38,6 +38,10 @@
 #include "core/gui/VRGuiFile.h"
 #endif
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#endif
+
 OSG_BEGIN_NAMESPACE;
 
 string loadGeometryDoc =
@@ -87,6 +91,7 @@ PyMethodDef VRSceneGlobals::methods[] = {
 	{"getActiveCamera", (PyCFunction)VRSceneGlobals::getActiveCamera, METH_NOARGS, "Get active camera" },
 	{"testDWGArcs", (PyCFunction)VRSceneGlobals::testDWGArcs, METH_NOARGS, "A test for DWG arcs tesselation" },
 	{"setWindowTitle", (PyCFunction)VRSceneGlobals::setWindowTitle, METH_VARARGS, "Set window title" },
+	{"sendToBrowser", (PyCFunction)VRSceneGlobals::sendToBrowser, METH_VARARGS, "Send message to browser, ment to be used when deployed as web application" },
     {NULL}  /* Sentinel */
 };
 
@@ -94,6 +99,21 @@ PyMethodDef VRSceneGlobals::methods[] = {
 // ==============
 // Python methods
 // ==============
+
+
+PyObject* VRSceneGlobals::sendToBrowser(VRSceneGlobals* self, PyObject* args) {
+    string msg = parseString(args);
+#ifdef __EMSCRIPTEN__
+    EM_ASM_INT({
+        var msg = Module.UTF8ToString($0);
+	//console.log("sendToBrowser "+msg);
+	if (typeof handleFromPolyVR === "function") { 
+	    handleFromPolyVR(msg);
+	}
+    }, msg.c_str());
+#endif
+    Py_RETURN_TRUE;
+}
 
 PyObject* VRSceneGlobals::setWindowTitle(VRSceneGlobals* self, PyObject* args) {
     string name = parseString(args);

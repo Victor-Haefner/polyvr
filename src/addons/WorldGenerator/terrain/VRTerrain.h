@@ -73,7 +73,7 @@ class VRTerrain : public VRGeometry, public VRWorldModule {
         //void setupGeo();
         void setupMat();
         void createMesh(VRGeoData& geo, int res);
-        void createMultiGrid(VRCameraPtr cam, int res);
+        bool createMultiGrid(VRCameraPtr cam, int res);
 
         void btPhysicalize();
         void vrPhysicalize();

@@ -342,10 +342,10 @@ Vec2d computeGridSpacing(Vec2d size, Vec2d gridSize, int res) {
     return gridS;
 }
 
-void VRTerrain::createMultiGrid(VRCameraPtr cam, int res) {
+bool VRTerrain::createMultiGrid(VRCameraPtr cam, int res) {
     //res /= 64; // TODO: remove, just for testing!
     auto pla = planet.lock();
-    if (!pla) return;
+    if (!pla) return false;
 
     auto modulo = [](const double& a, const double& b) { return a-floor(a/b)*b; };
     auto checkChange = [&](const vector<double>& v, double eps = 0) {
@@ -369,9 +369,9 @@ void VRTerrain::createMultiGrid(VRCameraPtr cam, int res) {
 	NE = pla->fromPosLatLong(camPose->pos(), 1, 0);
 	if (NE[0] < N1 || NE[0] > N2 || NE[1] < E1 || NE[1] > E2) { // cam not above terrain
             res *= 1e6;
-            if (!checkChange(vector<double>())) return;
+            if (!checkChange(vector<double>())) return false;
 	}
-        if (!checkChange(vector<double>({NE[0], NE[1]}))) return;
+        if (!checkChange(vector<double>({NE[0], NE[1]}))) return false;
     }
 
     double h = 1.0;
@@ -411,7 +411,7 @@ void VRTerrain::createMultiGrid(VRCameraPtr cam, int res) {
 #endif
     if (!mg.compute(ptr())) {
         cout << " Error in VRTerrain::createMultiGrid, compute failed! ..abort" << endl;
-        return;
+        return false;
     }
 
     auto texSize = heigthsTex->getSize();
@@ -437,6 +437,7 @@ void VRTerrain::createMultiGrid(VRCameraPtr cam, int res) {
     }
     data.apply(ptr());
     cout << " -- createMultiGrid " << positions->size() << endl;
+    return true;
 }
 
 void VRTerrain::setupGeo(VRCameraPtr cam) {
@@ -444,7 +445,7 @@ void VRTerrain::setupGeo(VRCameraPtr cam) {
     /*VRGeoData geo;
     createMesh(geo, grid);
     if (geo.size() > 0) geo.apply(ptr());*/
-    createMultiGrid(cam, grid);
+    if (!createMultiGrid(cam, grid)) return;
 
 #if __EMSCRIPTEN__// TODO: directly create triangles above!
     convertToTriangles();
