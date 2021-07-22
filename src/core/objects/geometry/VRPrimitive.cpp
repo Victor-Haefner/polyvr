@@ -323,10 +323,10 @@ GeometryMTRecPtr VRCylinder::make() {
         int rb0 = -1;
         for (auto v : ring) {
             v[1] = -height*0.5;
-            int vID = data.pushVert(Pnt3d(v), Vec3d(0,-1,0));
+            int vID = data.pushVert(Pnt3d(v), Vec3d(0,-1,0), Vec2d(0,0));
             if (rb0 < 0) rb0 = vID;
         }
-        int i0 = data.pushVert(p1, Vec3d(0,-1,0));
+        int i0 = data.pushVert(p1, Vec3d(0,-1,0), Vec2d(0,0));
         for (int i=0; i<Nsides; i++) data.pushTri(i0, rb0+i, rb0+(i+1)%Nsides);
     }
 
@@ -334,23 +334,25 @@ GeometryMTRecPtr VRCylinder::make() {
         int rt0 = -1;
         for (auto v : ring) {
             v[1] = height*0.5;
-            int vID = data.pushVert(Pnt3d(v), Vec3d(0,1,0));
+            int vID = data.pushVert(Pnt3d(v), Vec3d(0,1,0), Vec2d(0,1));
             if (rt0 < 0) rt0 = vID;
         }
-        int i0 = data.pushVert(p2, Vec3d(0,1,0));
+        int i0 = data.pushVert(p2, Vec3d(0,1,0), Vec2d(0,1));
         for (int i=0; i<Nsides; i++) data.pushTri(i0, rt0+(i+1)%Nsides, rt0+i);
     }
 
     if (doSides) {
         int rs0 = -1;
-        for (auto v : ring) {
+        for (int i=0; i<ring.size(); i++) {
+            auto v = ring[i];
+            double t = double(i)/(ring.size()-1);
             Vec3d n = v;
             n.normalize();
             v[1] = -height*0.5;
-            int vID = data.pushVert(Pnt3d(v), n);
+            int vID = data.pushVert(Pnt3d(v), n, Vec2d(t,0));
             if (rs0 < 0) rs0 = vID;
             v[1] =  height*0.5;
-            data.pushVert(Pnt3d(v), n);
+            data.pushVert(Pnt3d(v), n, Vec2d(t,1));
         }
         for (int i=0; i<Nsides; i++) data.pushQuad(rs0+2*i, rs0+2*i+1, rs0+2*((i+1)%Nsides)+1, rs0+2*((i+1)%Nsides));
     }
