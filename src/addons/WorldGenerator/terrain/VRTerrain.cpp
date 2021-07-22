@@ -347,7 +347,13 @@ void VRTerrain::createMultiGrid(VRCameraPtr cam, int res) {
     auto pla = planet.lock();
     if (!pla) return;
 
-	auto modulo = [](const double& a, const double& b) { return a-floor(a/b)*b; };
+    auto modulo = [](const double& a, const double& b) { return a-floor(a/b)*b; };
+    auto checkChange = [&](const vector<double>& v, double eps = 0) {
+        if (v.size() != oldMgParams.size()) { oldMgParams = v; return true; }
+        for (int i=0; i<v.size(); i++) 
+            if (abs(oldMgParams[i]-v[i]) > eps) { oldMgParams = v; return true; }
+        return false;
+    };
 
     double sectorSize = pla->getSectorSize();
     double N1 = planetCoords[0];
@@ -356,8 +362,20 @@ void VRTerrain::createMultiGrid(VRCameraPtr cam, int res) {
     double E2 = planetCoords[1]+sectorSize;
 
 #ifdef __EMSCRIPTEN__
+    Vec2d NE;
+    PosePtr camPose;
+    if (cam) {
+        camPose = cam->getWorldPose();
+	NE = pla->fromPosLatLong(camPose->pos(), 1, 0);
+	if (NE[0] < N1 || NE[0] > N2 || NE[1] < E1 || NE[1] > E2) { // cam not above terrain
+            res *= 1e6;
+            if (!checkChange(vector<double>())) return;
+	}
+        if (!checkChange(vector<double>({NE[0], NE[1]}))) return;
+    }
+
     double h = 1.0;
-    if (cam) h = 1.0 + cam->getWorldPosition()[1]*1e-3;
+    //if (cam) h = 1.0 + cam->getWorldPosition()[1]*1e-3;
     Vec2d r1 = computeGridSpacing(size, Vec2d(sectorSize, sectorSize), res*32*h);
 #else
     Vec2d r1 = computeGridSpacing(size, Vec2d(sectorSize, sectorSize), res);
@@ -371,31 +389,25 @@ void VRTerrain::createMultiGrid(VRCameraPtr cam, int res) {
     Vec2d r2 = r1/4.0;//computeGridSpacing(size, Vec2d(sectorSize, sectorSize), res*8);
     Vec2d r3 = r2/8.0;//computeGridSpacing(size, Vec2d(sectorSize, sectorSize), res);
 
-	Vec2d L1 = r1*2*0.9;
-	Vec2d L2 = r2*2*0.9;
+    Vec2d L1 = r1*2*0.9;
+    Vec2d L2 = r2*2*0.9;
 
-    double x1 = (N1+N2)*0.5;
-    double y1 = (E1+E2)*0.5;
-	if (cam) {
-        Vec2d NE = pla->fromPosLatLong(cam->getWorldPose()->pos(), 1, 0);
-        x1 = NE[0];
-        y1 = NE[1];
-	}
+    double x = (N1+N2)*0.5;
+    double y = (E1+E2)*0.5;
+    if (cam) {
+        x = NE[0] - camPose->dir()[2]*L2[0];
+        y = NE[1] + camPose->dir()[0]*L2[1];
+    }
 
-	x1 -= modulo(x1,r1[0]); // x1%r1
-	y1 -= modulo(y1,r1[1]); // y1%r1
-	Vec4d rect1 = Vec4d(x1-L1[0], x1+L1[0], y1-L1[1], y1+L1[1]);
+    x -= modulo(x,r1[0]); // x%r1
+    y -= modulo(y,r1[1]); // y%r1
+    Vec4d rect1 = Vec4d(x-L1[0], x+L1[0], y-L1[1], y+L1[1]);
+    Vec4d rect2 = Vec4d(x-L2[0], x+L2[0], y-L2[1], y+L2[1]);
 
-	double x2 = x1;
-	double y2 = y1;
-	//x2 -= modulo(x2-rect1[0],r2[0]); // x2%r2
-	//y2 -= modulo(y2-rect1[2],r2[1]); // y2%r2
-	Vec4d rect2 = Vec4d(x2-L2[0], x2+L2[0], y2-L2[1], y2+L2[1]);
+    cout << " - createMultiGrid r1: " << r1 << " r2: " << r2 << " r3: " << r3 << " xy " << Vec2d(x,y) << " L1 " << L1 << " L2 " << L2 << endl;
 
-	cout << " - createMultiGrid r1: " << r1 << " r2: " << r2 << " r3: " << r3 << " xy " << Vec2d(x1,y1) << " L1 " << L1 << " L2 " << L2 << endl;
-
-    if (r2[0] < r1[0] && 2*L1[0] < (N2-N1) && x1-L1[0] > N1 && x1+L1[0] < N2) mg.addGrid(rect1, Vec2d(r2[0],r2[1]));
-    if (r3[0] < r2[0] && 2*L2[0] < 2*L1[0] && x2-L2[0] > N1 && x2+L2[0] < N2) mg.addGrid(rect2, Vec2d(r3[0],r3[1]));
+    if (r2[0] < r1[0] && 2*L1[0] < (N2-N1) && x-L1[0] > N1 && x+L1[0] < N2) mg.addGrid(rect1, Vec2d(r2[0],r2[1]));
+    if (r3[0] < r2[0] && 2*L2[0] < 2*L1[0] && x-L2[0] > N1 && x+L2[0] < N2) mg.addGrid(rect2, Vec2d(r3[0],r3[1]));
 #endif
     if (!mg.compute(ptr())) {
         cout << " Error in VRTerrain::createMultiGrid, compute failed! ..abort" << endl;

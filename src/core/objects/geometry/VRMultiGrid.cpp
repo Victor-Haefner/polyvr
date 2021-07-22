@@ -218,6 +218,8 @@ void VRMultiGrid::computeGridGeo(int gridID, VRGeoData& data) {
         double rnY = double(frameNy)/borderNy;
 
         auto stich = [](vector<int> edge1, vector<int> edge2, VRGeoData& data, double ratio) {
+            //return;
+
             int bi = 0;
             int fi = 0;
             int lbi = bi;
