@@ -7,7 +7,9 @@
 #include "core/setup/windows/VRWindow.h"
 #include "core/setup/windows/VRView.h"
 #include "core/utils/VRRate.h"
+#ifndef WASM
 #include "core/utils/VRProfiler.h"
+#endif
 #include "core/utils/coreDumpHandler.h"
 #include "core/utils/system/VRSystem.h"
 #include "core/utils/VRTimer.h"
@@ -27,11 +29,13 @@
 
 #include <OpenSG/OSGSceneFileHandler.h>
 #include <boost/filesystem.hpp>
+#ifndef WASM
 #include <boost/thread/recursive_mutex.hpp>
+typedef boost::recursive_mutex::scoped_lock PLock;
+#endif
 #include <time.h>
 #include <thread>
 
-typedef boost::recursive_mutex::scoped_lock PLock;
 
 OSG_BEGIN_NAMESPACE
 
@@ -137,9 +141,10 @@ void VRSceneManager::setWorkdir(string path) {
     cout << "VRSceneManager::setWorkdir: " << path << endl;
 	if (path == "") return;
 	if (exists(path)) path = canonical(path);
-
+#ifndef __EMSCRIPTEN__
     boost::system::error_code ec;
 	boost::filesystem::current_path(path, ec);
+#endif
     //cout << " VRSceneManager::setWorkdir A4 err: " << ec.message() << " " << BOOST_LIB_VERSION << endl;
 	clearDumpFiles();
 }
@@ -279,7 +284,9 @@ void VRSceneManager::updateScene() {
 void VRSceneManager::setTargetFPS(double fps) { targetFPS = fps;  }
 
 void VRSceneManager::update() {
+#ifndef WASM
     VRProfiler* profiler = 0;
+#endif
     VRTimer timer;
     int fps = 0, pID1 = 0;
 
