@@ -23,10 +23,18 @@ class PolyVR {
         VRSoundManagerPtr sound_mgr;
         VROptionsPtr options;
 
+        int argc = 0;
+        char** argv = 0;
         bool doLoop = false;
         bool initiated = false;
 
         void checkProcessesAndSockets();
+
+        void initEnvironment();
+        void initOpenSG();
+        void initManagers();
+        void initUI();
+        void initFinalize();
 
     public:
         PolyVR();

@@ -181,10 +181,10 @@ void testGLCapabilities() {
     cout << " has tesselation shader: " << VRRenderManager::hasTessShader() << endl;
 }
 
-void PolyVR::init(int argc, char **argv) {
-    cout << "Init PolyVR" << endl << endl;
-    initTime();
+stack<VRUpdateCbPtr> initQueue;
 
+void PolyVR::initEnvironment() {
+    initTime();
     setlocale(LC_ALL, "C");
     options = shared_ptr<VROptions>(VROptions::get());
     options->parse(argc,argv);
@@ -195,7 +195,9 @@ void PolyVR::init(int argc, char **argv) {
     OSG::preloadSharedObject("OSGFileIO");
     OSG::preloadSharedObject("OSGImageFileIO");
 #endif
+}
 
+void PolyVR::initOpenSG() {
     cout << " init OSG" << endl;
     ChangeList::setReadWriteDefault();
     osgInit(argc,argv);
@@ -218,7 +220,9 @@ void PolyVR::init(int argc, char **argv) {
 
     PrimeMaterialRecPtr pMat = OSG::getDefaultMaterial();
     OSG::setName(pMat, "default_material");
+}
 
+void PolyVR::initManagers() {
 #ifndef WITHOUT_AV
     sound_mgr = VRSoundManager::get();
 #endif
@@ -226,7 +230,9 @@ void PolyVR::init(int argc, char **argv) {
     setup_mgr = VRSetupManager::create();
     scene_mgr = VRSceneManager::create();
     monitor = shared_ptr<VRInternalMonitor>(VRInternalMonitor::get());
+}
 
+void PolyVR::initUI() {
 #ifdef WASM
     VRSetupManager::get()->load("Browser", "Browser.xml");
     cout << " Browser setup loaded!" << endl;
@@ -240,14 +246,24 @@ void PolyVR::init(int argc, char **argv) {
 #endif
 
     loader = shared_ptr<VRSceneLoader>(VRSceneLoader::get());
+}
 
-    //string app = options->getOption<string>("application");
-    //if (app != "") VRSceneManager::get()->loadScene(app);
+void PolyVR::initFinalize() {
     removeFile("setup/.startup"); // remove startup failsafe
-
     testGLCapabilities();
-
     initiated = true;
+}
+
+void PolyVR::init(int argc, char **argv) {
+    this->argc = argc;
+    this->argv = argv;
+
+    cout << "Init PolyVR" << endl << endl;
+    initEnvironment();
+    initOpenSG();
+    initManagers();
+    initUI();
+    initFinalize();
 }
 
 void PolyVR::update() {
