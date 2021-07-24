@@ -280,6 +280,7 @@
 		<Unit filename="src/PolyVR.cpp" />
 		<Unit filename="src/PolyVR.h" />
 		<Unit filename="src/PolyVRFwd.h" />
+		<Unit filename="src/PolyVR_WASM.h" />
 		<Unit filename="src/addons/Algorithms/VRAlgorithmsFwd.h" />
 		<Unit filename="src/addons/Algorithms/VRGraphLayout.cpp" />
 		<Unit filename="src/addons/Algorithms/VRGraphLayout.h" />
@@ -1173,6 +1174,14 @@
 		<Unit filename="src/core/scene/VRSpaceWarper.h" />
 		<Unit filename="src/core/scene/VRThreadManager.cpp" />
 		<Unit filename="src/core/scene/VRThreadManager.h" />
+		<Unit filename="src/core/scene/import/COLLADA/VRCOLLADA.cpp" />
+		<Unit filename="src/core/scene/import/COLLADA/VRCOLLADA.h" />
+		<Unit filename="src/core/scene/import/COLLADA/VRCOLLADA_Geometry.cpp" />
+		<Unit filename="src/core/scene/import/COLLADA/VRCOLLADA_Geometry.h" />
+		<Unit filename="src/core/scene/import/COLLADA/VRCOLLADA_Kinematics.cpp" />
+		<Unit filename="src/core/scene/import/COLLADA/VRCOLLADA_Kinematics.h" />
+		<Unit filename="src/core/scene/import/COLLADA/VRCOLLADA_Material.cpp" />
+		<Unit filename="src/core/scene/import/COLLADA/VRCOLLADA_Material.h" />
 		<Unit filename="src/core/scene/import/E57/E57.cpp" />
 		<Unit filename="src/core/scene/import/E57/E57.h" />
 		<Unit filename="src/core/scene/import/E57/E57.reg" />
@@ -1213,8 +1222,6 @@
 		<Unit filename="src/core/scene/import/STEP/VRBRepUtils.h" />
 		<Unit filename="src/core/scene/import/STEP/VRSTEP.cpp" />
 		<Unit filename="src/core/scene/import/STEP/VRSTEP.h" />
-		<Unit filename="src/core/scene/import/VRCOLLADA.cpp" />
-		<Unit filename="src/core/scene/import/VRCOLLADA.h" />
 		<Unit filename="src/core/scene/import/VRDWG.cpp" />
 		<Unit filename="src/core/scene/import/VRDWG.h" />
 		<Unit filename="src/core/scene/import/VRDXF.cpp" />

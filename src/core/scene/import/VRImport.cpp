@@ -26,9 +26,6 @@
 #include <OpenSG/OSGComponentTransform.h>
 #include <OpenSG/OSGDistanceLOD.h>
 
-#include <boost/filesystem/path.hpp>
-#include <boost/filesystem/operations.hpp>
-
 #include "core/objects/OSGObject.h"
 #include "core/objects/object/OSGCore.h"
 #include "core/objects/VRTransform.h"
@@ -79,8 +76,7 @@ VRTransformPtr VRImport::prependTransform(VRObjectPtr o, string path) {
         if (o->getChild(0)->getType() == "Transform")
             return static_pointer_cast<VRTransform>(o->getChild(0));
 
-    boost::filesystem::path p(path);
-    auto trans = VRTransform::create( p.filename().string() );
+    auto trans = VRTransform::create( getFileName(path,0) );
     trans->addChild(o);
     return trans;
 }
@@ -167,8 +163,7 @@ void VRImport::LoadJob::load(VRThreadWeakPtr tw) {
     if (t) { t->syncFromMain(); thread = true; }
 
     auto loadSwitch = [&]() {
-        auto bpath = boost::filesystem::path(path);
-        string ext = bpath.extension().string();
+        string ext = getFileExtension(path);
 
         auto clist = Thread::getCurrentChangeList();
         int Ncr0 = clist->getNumCreated();
