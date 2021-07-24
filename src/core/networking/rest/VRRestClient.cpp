@@ -3,6 +3,7 @@
 #include "core/utils/toString.h"
 #include "core/utils/system/VRSystem.h"
 #include "core/utils/VRFunction.h"
+#include "core/utils/VRMutex.h"
 #include "core/scene/VRScene.h"
 
 #include <iostream>
@@ -11,15 +12,13 @@
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
 #else
-#include <boost/thread/recursive_mutex.hpp>
 #include <curl/curl.h>
-
-typedef boost::recursive_mutex::scoped_lock PLock;
-static boost::recursive_mutex VRRestClientMtx;
 #endif
 
 
 using namespace OSG;
+
+static VRMutex VRRestClientMtx;
 
 struct VRRestClient::RestPromise {
     future<void> f;
@@ -110,7 +109,7 @@ void VRRestClient::getAsync(string uri, VRRestCbPtr cb, int timeoutSecs) { // TO
     };
 
     future<void> f = async(launch::async, job, uri, cb, timeoutSecs);
-    PLock lock(VRRestClientMtx);
+    VRLock lock(VRRestClientMtx);
     auto p = shared_ptr<RestPromise>(new RestPromise() );
     p->f = move(f);
     promises.push_back( p );
@@ -121,7 +120,7 @@ void VRRestClient::finishAsync(VRRestCbPtr cb, VRRestResponsePtr res) { // execu
 #ifndef __EMSCRIPTEN__
     (*cb)(res);
 
-    PLock lock(VRRestClientMtx);
+    VRLock lock(VRRestClientMtx);
     auto i = promises.begin();
     while (i != promises.end()) {
         if ((*i)->ready()) promises.erase(i++);

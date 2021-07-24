@@ -21,7 +21,7 @@
 #include <OpenSG/OSGIntersectAction.h>
 #include <OpenSG/OSGGeoProperties.h>
 #include <OpenSG/OSGGeometry.h>
-#include <boost/thread/recursive_mutex.hpp>
+#include "core/utils/VRMutex.h"
 
 #ifndef WITHOUT_BULLET
 #include "core/objects/geometry/VRPhysics.h"
@@ -29,7 +29,7 @@
 #include <BulletCollision/CollisionShapes/btHeightfieldTerrainShape.h>
 #endif
 
-typedef boost::recursive_mutex::scoped_lock PLock;
+
 
 #define GLSL(shader) #shader
 
@@ -169,7 +169,7 @@ void VRTerrain::setAtmosphericEffect(float thickness, Color3f color) { mat->setS
 void VRTerrain::setHeightScale(float s) { heightScale = s; mat->setShaderParameter("heightScale", s); }
 
 void VRTerrain::setMap( VRTexturePtr t, int channel ) {
-    PLock lock(mtx());
+    VRLock lock(mtx());
     if (!t) return;
     /*if (t->getChannels() != 4) { // fix mono channels
         VRTextureGenerator tg;
@@ -350,7 +350,7 @@ bool VRTerrain::createMultiGrid(VRCameraPtr cam, int res) {
     auto modulo = [](const double& a, const double& b) { return a-floor(a/b)*b; };
     auto checkChange = [&](const vector<double>& v, double eps = 0) {
         if (v.size() != oldMgParams.size()) { oldMgParams = v; return true; }
-        for (int i=0; i<v.size(); i++) 
+        for (int i=0; i<v.size(); i++)
             if (abs(oldMgParams[i]-v[i]) > eps) { oldMgParams = v; return true; }
         return false;
     };
@@ -547,7 +547,7 @@ Boundingbox VRTerrain::getBoundingBox() {
 }
 
 void VRTerrain::setSimpleNoise() {
-    PLock lock(mtx());
+    VRLock lock(mtx());
     Color4f w(1,1,1,1);
     VRTextureGenerator tg;
     tg.setSize(Vec3i(128,128,1),true);
@@ -563,20 +563,20 @@ void VRTerrain::setSimpleNoise() {
     defaultMat->clearTransparency();
 }
 
-boost::recursive_mutex& VRTerrain::mtx() {
+VRMutex& VRTerrain::mtx() {
 #ifndef WITHOUT_BULLET
     auto scene = VRScene::getCurrent();
     if (scene) return scene->physicsMutex();
     else
 #endif
     {
-        static boost::recursive_mutex m;
+        static VRMutex m;
         return m;
     };
 }
 
 void VRTerrain::setHeightTexture(VRTexturePtr t) {
-    PLock lock(mtx());
+    VRLock lock(mtx());
     heigthsTex = t;
 }
 
@@ -776,7 +776,7 @@ double VRTerrain::getHeightOffset() {
 
 void VRTerrain::flatten(vector<Vec2d> perimeter, float h) {
     if (!heigthsTex) return;
-    PLock lock(mtx());
+    VRLock lock(mtx());
     VRPolygonPtr poly = VRPolygon::create();
     for (auto p : perimeter) poly->addPoint(p);
     poly->scale( Vec3d(1.0/size[0], 1, 1.0/size[1]) );

@@ -48,7 +48,7 @@ class VRLeap : public VRDevice {
         int port{6437};
         string connectionStatus{"not connected"};
         VRWebSocket webSocket;
-        boost::recursive_mutex* mutex = 0;
+        VRMutex* mutex = 0;
 
         bool transformed{false};
         PosePtr transformation;

@@ -30,8 +30,8 @@
 #include <OpenSG/OSGSceneFileHandler.h>
 #include <boost/filesystem.hpp>
 #ifndef WASM
-#include <boost/thread/recursive_mutex.hpp>
-typedef boost::recursive_mutex::scoped_lock PLock;
+#include "core/utils/VRMutex.h"
+
 #endif
 #include <time.h>
 #include <thread>

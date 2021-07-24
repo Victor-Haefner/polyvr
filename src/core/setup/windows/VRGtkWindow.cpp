@@ -2,7 +2,7 @@
 #include <gdk/gdk.h>
 #include "VRGtkWindow.h"
 #include "core/gui/VRGuiUtils.h"
-#include <boost/thread/recursive_mutex.hpp>
+#include "core/utils/VRMutex.h"
 
 #include "../devices/VRKeyboard.h"
 #include "../devices/VRMouse.h"
@@ -14,7 +14,7 @@
 #include "core/gui/VRGuiManager.h"
 
 
-typedef boost::recursive_mutex::scoped_lock PLock;
+
 
 using namespace OSG;
 using namespace std;

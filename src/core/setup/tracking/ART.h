@@ -66,7 +66,7 @@ class ART : public VRStorage {
         template<typename dev> void getMatrix(dev t, Matrix4d& m, bool doOffset = true);
         template<typename dev> void getMatrix(dev t, ART_devicePtr d);
 
-        boost::recursive_mutex* mutex = 0;
+        VRMutex* mutex = 0;
         void scan(int type = -1, int N = 0);
 
         void update_setup();

@@ -9,16 +9,16 @@
 #include <btBulletDynamicsCommon.h>
 #include <BulletSoftBody/btSoftRigidDynamicsWorld.h>
 
-typedef boost::recursive_mutex::scoped_lock BLock;
+
 
 using namespace std;
 using namespace OSG;
 
-boost::recursive_mutex& VRParticles::mtx() {
+VRMutex& VRParticles::mtx() {
     auto scene = OSG::VRScene::getCurrent();
     if (scene) return scene->physicsMutex();
     else {
-        static boost::recursive_mutex m;
+        static VRMutex m;
         return m;
     };
 }
@@ -31,7 +31,7 @@ VRParticles::VRParticles(string name, bool spawnParticles) : VRGeometry(name) {
 
 VRParticles::~VRParticles() {
     disableFunctions();
-    BLock lock(mtx());
+    VRLock lock(mtx());
     for (int i=0;i<N;i++) delete particles[i];
 }
 
@@ -40,7 +40,7 @@ shared_ptr<VRParticles> VRParticles::create(string name) { return shared_ptr<VRP
 void VRParticles::updateParticles(int b, int e) {
     if (e < 0) e = N;
 
-    BLock lock(mtx());
+    VRLock lock(mtx());
     for (int i=b; i < e; i++) {
         if (particles[i]->isActive) {
             auto p = particles[i]->body->getWorldTransform().getOrigin();
@@ -54,7 +54,7 @@ void VRParticles::setMass(float newMass, float variation) {
     int i;
     float result;
 
-    BLock lock(mtx());
+    VRLock lock(mtx());
     for (i=0; i<N; i++) {
         result = newMass;
         result += (2*variation) * ( ((float) rand()) / RAND_MAX );
@@ -67,7 +67,7 @@ void VRParticles::setMassByRadius(float massFor1mRadius) {
     int i;
     float result;
 
-    BLock lock(mtx());
+    VRLock lock(mtx());
     for (i=0; i<N; i++) {
         result = this->particles[i]->radius;
         this->particles[i]->mass = massFor1mRadius * pow(result, 3);
@@ -80,7 +80,7 @@ void VRParticles::setRadius(float newRadius, float variation) {
     int i;
     float result;
 
-    BLock lock(mtx());
+    VRLock lock(mtx());
     for (i=0; i<N; i++) {
         result = newRadius;
         result += (2 * variation * float(rand()) / RAND_MAX );
@@ -92,7 +92,7 @@ void VRParticles::setRadius(float newRadius, float variation) {
 void VRParticles::setAge(int newAge, int variation) {
     int i, result;
 
-    BLock lock(mtx());
+    VRLock lock(mtx());
     for (i=0; i<N; i++) {
         result = newAge;
         result += (2*variation) * (rand() / RAND_MAX);
@@ -104,7 +104,7 @@ void VRParticles::setAge(int newAge, int variation) {
 void VRParticles::setLifetime(int newLifetime, int variation) {
     int i, result;
 
-    BLock lock(mtx());
+    VRLock lock(mtx());
     for (i=0; i<N; i++) {
         result = newLifetime;
         result += (2*variation) * (rand() / RAND_MAX);
@@ -128,7 +128,7 @@ int VRParticles::spawnCuboid(Vec3d center, Vec3d size, float distance) {
     //auto btcenter = toBtVector3(center - size*0.5); // TODO -> refactor and test the whole function
     auto btcenter = toBtVector3(center);
     {
-        BLock lock(mtx());
+        VRLock lock(mtx());
         for (i = 0; i < numY && !done; i++) {
             posY = i * distance;
 
@@ -182,7 +182,7 @@ int VRParticles::setEmitter(Vec3d baseV, Vec3d dirV, int from, int to, int inter
 
     setFunctions(from, to);
     {
-        BLock lock(mtx());
+        VRLock lock(mtx());
         e->setActive(true);
     }
     printf("VRParticles::setEmitter(...from=%i, to=%i, interval=%i)\n", from, to, interval);

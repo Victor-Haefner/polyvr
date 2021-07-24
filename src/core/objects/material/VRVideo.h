@@ -6,7 +6,7 @@
 #include "core/scene/sound/VRSoundFwd.h"
 #include <OpenSG/OSGConfig.h>
 #include <OpenSG/OSGBaseTypes.h>
-#include <boost/thread/recursive_mutex.hpp>
+#include "core/utils/VRMutex.h"
 
 using namespace std;
 
@@ -63,8 +63,8 @@ class VRVideo : public VRStorage {
         SwsContext* swsContext = 0;
         AVPacket* packet = 0;
 
-        boost::recursive_mutex avMutex;
-        boost::recursive_mutex osgMutex;
+        VRMutex avMutex;
+        VRMutex osgMutex;
         VRThreadCbPtr worker;
         int wThreadID = -1;
 

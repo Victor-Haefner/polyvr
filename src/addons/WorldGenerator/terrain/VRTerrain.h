@@ -66,7 +66,7 @@ class VRTerrain : public VRGeometry, public VRWorldModule {
         vector<Vec3d> edgePoints;
         vector<vector<vector<Vec3d>>> meshTer;
 
-        boost::recursive_mutex& mtx(); // physics
+        VRMutex& mtx(); // physics
 
         void setHeightTexture(VRTexturePtr t);
         void updateTexelSize();

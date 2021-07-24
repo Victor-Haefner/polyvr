@@ -23,9 +23,9 @@
 #include "glarea/glarea.h"
 #include <gtk/gtk.h>
 
-#include <boost/thread/recursive_mutex.hpp>
+#include "core/utils/VRMutex.h"
 
-typedef boost::recursive_mutex::scoped_lock PLock;
+
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -58,7 +58,7 @@ void VRGuiManager::setWindowTitle(string title) {
 
 VRGuiManager::VRGuiManager() {
     cout << "Init VRGuiManager.." << endl;
-    mtx = new boost::recursive_mutex();
+    mtx = new VRMutex();
     standalone = VROptions::get()->getOption<bool>("standalone");
 
     int argc = 0;
@@ -189,7 +189,7 @@ void VRGuiManager::startThreadedUpdate() {
     gtkUpdateThreadID = VRSceneManager::get()->initThread(gtkUpdateCb, "gtk update", true, 1);
 }
 
-boost::recursive_mutex& VRGuiManager::guiMutex() { return *mtx; }
+VRMutex& VRGuiManager::guiMutex() { return *mtx; }
 
 VRGuiManager* VRGuiManager::get(bool init) {
     static VRGuiManager* instance = 0;
@@ -221,7 +221,7 @@ VRConsoleWidgetPtr VRGuiManager::getConsole(string t) {
 }
 
 void VRGuiManager::updateGtk() {
-    PLock( guiMutex() );
+    VRLock lock( guiMutex() );
     while( gtk_events_pending() ) gtk_main_iteration_do(false);
 }
 
