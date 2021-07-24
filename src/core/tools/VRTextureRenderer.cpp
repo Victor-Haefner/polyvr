@@ -18,7 +18,9 @@
 #include "core/scene/VRScene.h"
 #include "core/scene/rendering/VRDefShading.h"
 #include "core/math/partitioning/boundingbox.h"
+#ifndef __EMSCRIPTEN__
 #include "core/networking/tcp/VRTCPServer.h"
+#endif
 
 #include <OpenSG/OSGBackground.h>
 #include <OpenSG/OSGSimpleStage.h>
@@ -433,19 +435,23 @@ void VRTextureRenderer::prepareTextureForStream() {
 
 string VRTextureRenderer::startServer(int port) {
     string uri;
+#ifndef __EMSCRIPTEN__
     server = VRTCPServer::create();
     server->onMessage( bind(&VRTextureRenderer::serverCallback, this, _1) );
     server->listen(port, "\r\n\r\n");
     updateCb = VRUpdateCb::create("texture renderer stream", bind(&VRTextureRenderer::prepareTextureForStream, this));
     VRScene::getCurrent()->addUpdateFkt(updateCb);
+#endif
     return uri;
 }
 
 void VRTextureRenderer::stopServer() {
+#ifndef __EMSCRIPTEN__
     if (!server) return;
     VRScene::getCurrent()->dropUpdateFkt(updateCb);
     server->close();
     server.reset();
+#endif
 }
 
 const string restImgHeader =

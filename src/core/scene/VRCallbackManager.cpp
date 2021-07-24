@@ -1,13 +1,11 @@
 #include "VRCallbackManager.h"
 #include "core/utils/VRFunction.h"
+#include "core/utils/VRMutex.h"
 #include "core/utils/VRGlobals.h"
 #include "core/utils/system/VRSystem.h"
 #include "core/objects/object/VRObject.h"
 #include <iostream>
 #include <vector>
-#ifndef __EMSCRIPTEN__
-#include "core/utils/VRMutex.h"
-#endif
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;

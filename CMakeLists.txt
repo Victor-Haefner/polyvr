@@ -889,6 +889,7 @@ target_sources(polyvr PRIVATE src/core/utils/VRTests.cpp)
 target_sources(polyvr PRIVATE src/core/utils/VRTimer.cpp)
 target_sources(polyvr PRIVATE src/core/utils/VRUndoInterface.cpp)
 target_sources(polyvr PRIVATE src/core/utils/VRVisualLayer.cpp)
+target_sources(polyvr PRIVATE src/core/utils/VRMutex.cpp)
 target_sources(polyvr PRIVATE src/core/utils/xml.cpp)
 endif()
 

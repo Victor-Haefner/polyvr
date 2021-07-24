@@ -3,6 +3,7 @@
 
 #include <list>
 #include <map>
+#include <string>
 
 #include "core/utils/VRMutex.h"
 

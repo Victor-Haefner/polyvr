@@ -1,5 +1,7 @@
 #include "VRSocket.h"
+#ifndef __EMSCRIPTEN__
 #include "VRPing.h"
+#endif
 #include "mongoose/mongoose.h"
 #include "core/objects/object/VRObject.h"
 #include "core/scene/VRScene.h"
@@ -619,8 +621,12 @@ VRSignalPtr VRSocket::getSignal() { return sig; }
 int VRSocket::getPort() { return port; }
 
 bool VRSocket::ping(string IP, string port) {
+#ifndef __EMSCRIPTEN__
     VRPing ping;
     return ping.start(IP, port, 0);
+#else
+    return false;
+#endif
 }
 
 

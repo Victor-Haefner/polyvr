@@ -14,7 +14,9 @@
 #include "core/utils/VRProgress.h"
 #include "core/utils/xml.h"
 #include "core/utils/system/VRSystem.h"
+#ifndef __EMSCRIPTEN__
 #include "core/networking/VRPing.h"
+#endif
 
 #include "core/objects/VRTransform.h"
 #include "core/objects/VRCamera.h"
@@ -112,6 +114,7 @@ void updateLoadingLights(int p) {
 }
 
 void VRSetup::setupLESCCAVELights(VRScenePtr scene) {
+#if 0
     VRPing ping;
     bool lightAvailable = ping.start("192.168.100.55", "8000", 1);
 
@@ -132,6 +135,7 @@ void VRSetup::setupLESCCAVELights(VRScenePtr scene) {
         setLoadingLights(3,-1,1,0,0);
         setLoadingLights(4,-1,0,0,0);
     }// else p->setup("scene loading progress", 100, VRProgress::CONSOLE_M);
+#endif
 }
 
 void VRSetup::updateTracking() {
