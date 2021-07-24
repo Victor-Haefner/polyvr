@@ -427,8 +427,10 @@ vector<VRTexturePtr> VRTextureRenderer::createCubeMaps(VRTransformPtr focusObjec
 }
 
 void VRTextureRenderer::prepareTextureForStream() {
+#ifndef __EMSCRIPTEN__
     PLock lock(mtx);
     mat->getTexture()->write("tmp2.jpeg");
+#endif
 }
 
 string VRTextureRenderer::startServer(int port) {
@@ -459,7 +461,9 @@ const string restImgHeader =
 "Content-Length: ";
 
 string VRTextureRenderer::serverCallback(string data) {
+#ifndef __EMSCRIPTEN__
     PLock lock(mtx);
+#endif
     //cout << "VRTextureRenderer::serverCallback, received: " << data << endl;
 
     ifstream fin("tmp2.jpeg", ios::binary);

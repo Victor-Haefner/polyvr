@@ -2,7 +2,9 @@
 #define VRTEXTURERENDERER_H_INCLUDED
 
 #include <OpenSG/OSGColor.h>
+#ifndef __EMSCRIPTEN__
 #include <boost/thread/recursive_mutex.hpp>
+#endif
 
 #include "core/objects/VRObjectFwd.h"
 #include "core/tools/VRToolsFwd.h"
@@ -28,7 +30,9 @@ class VRTextureRenderer : public VRObject {
         VRCameraPtr cam = 0;
         VRTCPServerPtr server;
         VRUpdateCbPtr updateCb;
+#ifndef __EMSCRIPTEN__
         boost::recursive_mutex mtx;
+#endif
 
         void setChannelFP(string fp);
         void resetChannelFP();

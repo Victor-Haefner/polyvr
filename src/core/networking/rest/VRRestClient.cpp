@@ -7,16 +7,17 @@
 
 #include <iostream>
 #include <future>
-#include <boost/thread/recursive_mutex.hpp>
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
 #else
+#include <boost/thread/recursive_mutex.hpp>
 #include <curl/curl.h>
-#endif
 
 typedef boost::recursive_mutex::scoped_lock PLock;
 static boost::recursive_mutex VRRestClientMtx;
+#endif
+
 
 using namespace OSG;
 
@@ -117,6 +118,7 @@ void VRRestClient::getAsync(string uri, VRRestCbPtr cb, int timeoutSecs) { // TO
 }
 
 void VRRestClient::finishAsync(VRRestCbPtr cb, VRRestResponsePtr res) { // executed in main thread
+#ifndef __EMSCRIPTEN__
     (*cb)(res);
 
     PLock lock(VRRestClientMtx);
@@ -125,6 +127,7 @@ void VRRestClient::finishAsync(VRRestCbPtr cb, VRRestResponsePtr res) { // execu
         if ((*i)->ready()) promises.erase(i++);
         else i++;
     }
+#endif
 }
 
 void VRRestClient::test() {

@@ -468,11 +468,11 @@ target_sources(polyvr PRIVATE src/core/networking/VRSceneSync.cpp)
 #target_sources(polyvr PRIVATE src/core/networking/VRHDLC.cpp) # needs ioctl
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
 target_sources(polyvr PRIVATE src/core/networking/VRSSH.cpp) # needs libssh2
-endif()
 target_sources(polyvr PRIVATE src/core/networking/VRPing.cpp)
 target_sources(polyvr PRIVATE src/core/networking/tcp/VRTCPClient.cpp)
 target_sources(polyvr PRIVATE src/core/networking/tcp/VRTCPServer.cpp)
 target_sources(polyvr PRIVATE src/core/networking/tcp/VRTCPUtils.cpp)
+endif()
 target_sources(polyvr PRIVATE src/core/networking/rest/VRRestResponse.cpp)
 target_sources(polyvr PRIVATE src/core/networking/rest/VRRestClient.cpp)
 target_sources(polyvr PRIVATE src/core/networking/rest/VRRestServer.cpp)

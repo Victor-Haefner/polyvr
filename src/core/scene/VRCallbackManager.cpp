@@ -5,13 +5,20 @@
 #include "core/objects/object/VRObject.h"
 #include <iostream>
 #include <vector>
+#ifndef __EMSCRIPTEN__
 #include <boost/thread/recursive_mutex.hpp>
+#endif
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
+#ifndef __EMSCRIPTEN__
 typedef boost::recursive_mutex::scoped_lock PLock;
 boost::recursive_mutex mtx;
+#else
+typedef int PLock;
+#define mtx 0
+#endif
 
 VRCallbackManager::VRCallbackManager() { updateListsChanged = false; }
 VRCallbackManager::~VRCallbackManager() {
