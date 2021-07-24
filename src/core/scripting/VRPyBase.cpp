@@ -251,7 +251,11 @@ int VRPyBase::toGLConst(PyObject* o) { return toGLConst( PyString_AsString(o) );
 
 int VRPyBase::toOSGConst(string s) {
     // pixel formats
+#ifndef __EMSCRIPTEN__
     if (s == "R") return GL_RED;
+#else
+    if (s == "R") return OSG::Image::OSG_R_PF;
+#endif
     if (s == "A") return OSG::Image::OSG_A_PF;
     if (s == "I") return OSG::Image::OSG_I_PF;
     if (s == "L") return OSG::Image::OSG_L_PF;
