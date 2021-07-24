@@ -27,6 +27,10 @@
 #include <OpenSG/OSGNameAttachment.h>
 #include <OpenSG/OSGVisitSubTree.h>
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#endif
+
 using namespace OSG;
 
 
@@ -311,5 +315,17 @@ void VRSetup::makeTestCube() {
     cube->setFrom(Vec3d(0.1,0.1,-1));
     cube->setPickable(true);
     getRoot()->addChild(cube);
+}
+
+void VRSetup::sendToBrowser(const string& msg) {
+#ifdef __EMSCRIPTEN__
+    EM_ASM_INT({
+        var msg = Module.UTF8ToString($0);
+	//console.log("sendToBrowser "+msg);
+	if (typeof handleFromPolyVR === "function") {
+	    handleFromPolyVR(msg);
+	}
+    }, msg.c_str());
+#endif
 }
 

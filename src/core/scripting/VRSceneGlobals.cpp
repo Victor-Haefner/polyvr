@@ -38,10 +38,6 @@
 #include "core/gui/VRGuiFile.h"
 #endif
 
-#ifdef __EMSCRIPTEN__
-#include <emscripten.h>
-#endif
-
 OSG_BEGIN_NAMESPACE;
 
 string loadGeometryDoc =
@@ -104,13 +100,7 @@ PyMethodDef VRSceneGlobals::methods[] = {
 PyObject* VRSceneGlobals::sendToBrowser(VRSceneGlobals* self, PyObject* args) {
     string msg = parseString(args);
 #ifdef __EMSCRIPTEN__
-    EM_ASM_INT({
-        var msg = Module.UTF8ToString($0);
-	//console.log("sendToBrowser "+msg);
-	if (typeof handleFromPolyVR === "function") { 
-	    handleFromPolyVR(msg);
-	}
-    }, msg.c_str());
+    VRSetup::sendToBrowser(msg);
 #endif
     Py_RETURN_TRUE;
 }

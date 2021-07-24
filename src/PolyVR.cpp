@@ -181,8 +181,6 @@ void testGLCapabilities() {
     cout << " has tesselation shader: " << VRRenderManager::hasTessShader() << endl;
 }
 
-stack<VRUpdateCbPtr> initQueue;
-
 void PolyVR::initEnvironment() {
     initTime();
     setlocale(LC_ALL, "C");
@@ -259,14 +257,26 @@ void PolyVR::init(int argc, char **argv) {
     this->argv = argv;
 
     cout << "Init PolyVR" << endl << endl;
-    initEnvironment();
-    initOpenSG();
-    initManagers();
-    initUI();
-    initFinalize();
+    initQueue.push_back(VRUpdateCb::create( "init environment", bind(&PolyVR::initEnvironment, this)));
+    initQueue.push_back(VRUpdateCb::create( "init opensg", bind(&PolyVR::initOpenSG, this)));
+    initQueue.push_back(VRUpdateCb::create( "init managers", bind(&PolyVR::initManagers, this)));
+    initQueue.push_back(VRUpdateCb::create( "init ui", bind(&PolyVR::initUI, this)));
+    initQueue.push_back(VRUpdateCb::create( "init finalize", bind(&PolyVR::initFinalize, this)));
 }
 
 void PolyVR::update() {
+    if (initQueueItr != initQueue.end()) {
+        VRTimer t;
+        t.start();
+        VRUpdateCbPtr cp = *initQueueItr;
+        cout << "> init step: " << cp->name << endl;
+        (*cp)();
+        cout << "> init step: " << cp->name << " done after " << t.stop() << endl;
+        initQueueItr++;
+        VRSetup::sendToBrowser("setProgress|0.5|"+cp->name);
+        return;
+    }
+
     VRSceneManager::get()->update();
 
     if (VRGlobals::CURRENT_FRAME == 300) {
@@ -280,11 +290,12 @@ void PolyVR::update() {
 }
 
 void PolyVR::run() {
-    if (!initiated) return;
+    //if (!initiated) return;
     cout << endl << "Start main loop" << endl << endl;
+    initQueueItr = initQueue.begin();
 #ifndef WASM
     doLoop = true;
-    while(doLoop) update(); // default
+    while (doLoop) update();
 #else
     // WASM needs to control the main loop
     glutIdleFunc(glutPostRedisplay);

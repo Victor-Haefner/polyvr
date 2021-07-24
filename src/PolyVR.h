@@ -2,8 +2,10 @@
 #define VRFRAMEWORK_H_INCLUDED
 
 #include <OpenSG/OSGConfig.h>
+#include <list>
 
 #include "PolyVRFwd.h"
+#include "core/utils/VRFunctionFwd.h"
 #include "core/objects/VRObjectFwd.h"
 
 OSG_BEGIN_NAMESPACE;
@@ -27,6 +29,8 @@ class PolyVR {
         char** argv = 0;
         bool doLoop = false;
         bool initiated = false;
+        list<VRUpdateCbPtr> initQueue;
+        list<VRUpdateCbPtr>::iterator initQueueItr;
 
         void checkProcessesAndSockets();
 
