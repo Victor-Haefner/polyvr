@@ -41,7 +41,13 @@ void VRPlanet::addMoon(VRTransformPtr t) { moons.push_back(t); }
 vector<VRTransformPtr> VRPlanet::getMoons() { return moons; }
 
 void VRPlanet::localizeSector(VRWorldGeneratorPtr sector) {
-    addChild(sector);
+    cout << "VRPlanet::localizeSector" << endl;
+    if (!sectorParent) {
+        sectorParent = VRObject::create("sectors");
+        addChild(sectorParent);
+    }
+
+    sectorParent->addChild(sector);
     sector->setIdentity();
 
     Vec2d plI = sector->getPlanetCoords() + Vec2d(1,1)*sectorSize*0.5;
@@ -55,6 +61,7 @@ void VRPlanet::localizeSector(VRWorldGeneratorPtr sector) {
         terrain->curveMesh(ptr(), sector->getPlanetCoords(), pSector);
         terrain->setupGeo();
     }
+    cout << "VRPlanet::localizeSector done" << endl;
 }
 
 void VRPlanet::localize(double north, double east) {
@@ -382,21 +389,47 @@ void VRPlanet::remPin(int ID) {}// metaGeo->remove(ID); } // TODO
 string VRPlanet::surfaceVP =
 "#version 130\n"
 GLSL(
+#ifdef WASM
+varying vec4 osg_Vertex;
+varying vec4 osg_Normal;
+varying vec4 osg_Color;
+varying vec3 osg_MultiTexCoords0;
+varying vec3 tcs;
+varying vec3 normal;
+varying vec4 position;
+#else
+in vec4 osg_Vertex;
+in vec4 osg_Normal;
+in vec4 osg_Color;
+in vec3 osg_MultiTexCoords0;
 out vec3 tcs;
 out vec3 normal;
 out vec4 position;
 out float gl_ClipDistance[1];
 uniform vec4 clipPlane;
+#endif
+
 uniform mat4 OSGWorldMatrix;
 uniform mat4 OSGModelViewMatrix;
 uniform mat4 OSGProjectionMatrix;
 uniform mat4 OSGInvViewMatrix;
 uniform mat4 OSGInvWorldMatrix;
 
-in vec4 osg_Vertex;
-in vec4 osg_Normal;
-in vec4 osg_Color;
-in vec3 osg_MultiTexCoords0;
+#ifdef WASM
+mat4 transpose(mat4 m) {
+    vec4 i0 = m[0];
+    vec4 i1 = m[1];
+    vec4 i2 = m[2];
+    vec4 i3 = m[3];
+
+    return mat4(
+                 vec4(i0.x, i1.x, i2.x, i3.x),
+                 vec4(i0.y, i1.y, i2.y, i3.y),
+                 vec4(i0.z, i1.z, i2.z, i3.z),
+                 vec4(i0.w, i1.w, i2.w, i3.w)
+                 );
+}
+#endif
 
 void main( void ) {
     tcs = osg_Normal.xyz;
@@ -406,7 +439,9 @@ void main( void ) {
     gl_Position = OSGProjectionMatrix*OSGModelViewMatrix*osg_Vertex;\n
 
     vec4 pos = OSGWorldMatrix*osg_Vertex;
+#ifndef WASM
     gl_ClipDistance[0] = dot(pos, clipPlane);\n
+#endif
 }
 );
 
@@ -416,6 +451,12 @@ string VRPlanet::surfaceFP =
 GLSL(
 uniform sampler2D tex;
 uniform int isLit;
+#ifdef WASM
+uniform vec4 glLightPosition;
+uniform vec4 mat_diffuse;
+uniform vec4 mat_ambient;
+uniform vec4 mat_specular;
+#endif
 
 varying vec3 tcs;
 varying vec3 normal;
@@ -427,15 +468,26 @@ vec4 color;
 
 void applyLightning() {
 	vec3 n = normalize( normal);
+#ifndef WASM
 	vec3  light = normalize( gl_LightSource[0].position.xyz - position.xyz ); // point light
 	float NdotL = max(dot( n, light ), 0.0);
 	vec4  ambient = gl_LightSource[0].ambient * color;
 	vec4  diffuse = gl_LightSource[0].diffuse * NdotL * color;
 	float NdotHV = max(dot(n, normalize(gl_LightSource[0].halfVector.xyz)),0.0);
 	vec4  specular = gl_LightSource[0].specular * pow( NdotHV, gl_FrontMaterial.shininess );
-    vec4 c = diffuse + ambient;
-    c[3] = 1.0;
-    gl_FragColor = c;// diffuse + ambient;// + specular;
+#else
+	vec3  light;
+	if (glLightPosition.w < 0.5) light = normalize( -glLightPosition.xyz ); // dir light
+	else light = normalize( glLightPosition.xyz - position.xyz ); // pnt light
+	float NdotL = max(dot( n, light ), 0.0);
+	vec4  ambient = mat_ambient * color;
+	vec4  diffuse = mat_diffuse * NdotL * color;
+	vec4  specular = mat_specular * 0.0;
+#endif
+
+	vec4 c = diffuse + ambient;
+	c[3] = 1.0;
+	gl_FragColor = c;// diffuse + ambient;// + specular;
 	//gl_FragColor = ambient + diffuse + specular;
 	//gl_FragColor = vec4(gl_LightSource[0].position.xyz,1);
 	//gl_FragColor = vec4(n.xyz,1);
@@ -444,14 +496,14 @@ void applyLightning() {
 void main( void ) {
 	float r = length(tcs);
 	float v = 1.0 - acos( tcs.y / r )/pi;
-	float u0 = 1 - atan(abs(tcs.z), tcs.x)/pi;
+	float u0 = 1.0 - atan(abs(tcs.z), tcs.x)/pi;
 	float u1 = 0.5 - atan(tcs.z, tcs.x)/pi*0.5;
 	float u2 = 0.0 - atan(-tcs.z, -tcs.x)/pi*0.5;
 	vec4 c1 = texture2D(tex, vec2(u1,v));
 	vec4 c2 = texture2D(tex, vec2(u2,v));
-	float s = clamp( (tcs.x+1)*0.3, 0, 1 );
+	float s = clamp( (tcs.x+1.0)*0.3, 0.0, 1.0 );
 	color = mix(c2, c1, u0);
-    if (isLit != 0) applyLightning();
+	if (isLit != 0) applyLightning();
 	else gl_FragColor = color;
 }
 );

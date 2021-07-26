@@ -278,6 +278,7 @@
 		<Unit filename="src/PolyVR.cpp" />
 		<Unit filename="src/PolyVR.h" />
 		<Unit filename="src/PolyVRFwd.h" />
+		<Unit filename="src/PolyVR_WASM.h" />
 		<Unit filename="src/addons/Algorithms/VRAlgorithmsFwd.h" />
 		<Unit filename="src/addons/Algorithms/VRGraphLayout.cpp" />
 		<Unit filename="src/addons/Algorithms/VRGraphLayout.h" />
@@ -1087,6 +1088,8 @@
 		<Unit filename="src/core/objects/geometry/VRGeometry.h" />
 		<Unit filename="src/core/objects/geometry/VRHandle.cpp" />
 		<Unit filename="src/core/objects/geometry/VRHandle.h" />
+		<Unit filename="src/core/objects/geometry/VRMultiGrid.cpp" />
+		<Unit filename="src/core/objects/geometry/VRMultiGrid.h" />
 		<Unit filename="src/core/objects/geometry/VRPhysics.cpp" />
 		<Unit filename="src/core/objects/geometry/VRPhysics.h" />
 		<Unit filename="src/core/objects/geometry/VRPrimitive.cpp" />
@@ -1167,6 +1170,14 @@
 		<Unit filename="src/core/scene/VRSpaceWarper.h" />
 		<Unit filename="src/core/scene/VRThreadManager.cpp" />
 		<Unit filename="src/core/scene/VRThreadManager.h" />
+		<Unit filename="src/core/scene/import/COLLADA/VRCOLLADA.cpp" />
+		<Unit filename="src/core/scene/import/COLLADA/VRCOLLADA.h" />
+		<Unit filename="src/core/scene/import/COLLADA/VRCOLLADA_Geometry.cpp" />
+		<Unit filename="src/core/scene/import/COLLADA/VRCOLLADA_Geometry.h" />
+		<Unit filename="src/core/scene/import/COLLADA/VRCOLLADA_Kinematics.cpp" />
+		<Unit filename="src/core/scene/import/COLLADA/VRCOLLADA_Kinematics.h" />
+		<Unit filename="src/core/scene/import/COLLADA/VRCOLLADA_Material.cpp" />
+		<Unit filename="src/core/scene/import/COLLADA/VRCOLLADA_Material.h" />
 		<Unit filename="src/core/scene/import/E57/E57.cpp" />
 		<Unit filename="src/core/scene/import/E57/E57.h" />
 		<Unit filename="src/core/scene/import/E57/E57.reg" />
@@ -1207,8 +1218,6 @@
 		<Unit filename="src/core/scene/import/STEP/VRBRepUtils.h" />
 		<Unit filename="src/core/scene/import/STEP/VRSTEP.cpp" />
 		<Unit filename="src/core/scene/import/STEP/VRSTEP.h" />
-		<Unit filename="src/core/scene/import/VRCOLLADA.cpp" />
-		<Unit filename="src/core/scene/import/VRCOLLADA.h" />
 		<Unit filename="src/core/scene/import/VRDWG.cpp" />
 		<Unit filename="src/core/scene/import/VRDWG.h" />
 		<Unit filename="src/core/scene/import/VRDXF.cpp" />
@@ -1221,6 +1230,7 @@
 		<Unit filename="src/core/scene/import/VRIFC.h" />
 		<Unit filename="src/core/scene/import/VRImport.cpp" />
 		<Unit filename="src/core/scene/import/VRImport.h" />
+		<Unit filename="src/core/scene/import/VRImportFwd.h" />
 		<Unit filename="src/core/scene/import/VRML.cpp" />
 		<Unit filename="src/core/scene/import/VRML.h" />
 		<Unit filename="src/core/scene/import/VRPLY.cpp" />
@@ -1319,6 +1329,8 @@
 		<Unit filename="src/core/scripting/VRPyMobile.h" />
 		<Unit filename="src/core/scripting/VRPyMouse.cpp" />
 		<Unit filename="src/core/scripting/VRPyMouse.h" />
+		<Unit filename="src/core/scripting/VRPyMultiGrid.cpp" />
+		<Unit filename="src/core/scripting/VRPyMultiGrid.h" />
 		<Unit filename="src/core/scripting/VRPyMultiTouch.cpp" />
 		<Unit filename="src/core/scripting/VRPyMultiTouch.h" />
 		<Unit filename="src/core/scripting/VRPyNamed.cpp" />
@@ -1541,6 +1553,8 @@
 		<Unit filename="src/core/utils/VRLogger.h" />
 		<Unit filename="src/core/utils/VRManager.cpp" />
 		<Unit filename="src/core/utils/VRManager.h" />
+		<Unit filename="src/core/utils/VRMutex.cpp" />
+		<Unit filename="src/core/utils/VRMutex.h" />
 		<Unit filename="src/core/utils/VRName.cpp" />
 		<Unit filename="src/core/utils/VRName.h" />
 		<Unit filename="src/core/utils/VROptions.cpp" />

@@ -93,8 +93,13 @@ void VRMapManager::triggerCB(VRMapCbPtr mcb, VRMapDescriptorPtr data) {
 
 void VRMapManager::storeFile(const string& filename, const string& data) {
     if (data == "") return;
+    string folder = getFolderName(filename);
+    cout << "storeFile " << filename << " " << data.size() << endl;
+    makedir(folder);
+    if (!exists(folder)) { cout << "WARNING in VRMapManager::storeFile, folder '"+folder+"' does not exist!" << endl; return; }
     ofstream f;
     f.open(filename, std::ios_base::binary);
+    if (!f.is_open()) { cout << "WARNING in VRMapManager::storeFile, ofstream not open!" << endl; return; }
     f.write(&data[0], data.size()); // force binary mode, else windows will mess with f** cariage returns!
     f.close();
 }

@@ -27,7 +27,7 @@
 #include "addons/Semantics/Reasoning/VRProperty.h"
 #include "core/tools/VRAnnotationEngine.h"
 
-#include <boost/thread/recursive_mutex.hpp>
+#include "core/utils/VRMutex.h"
 #include <thread>
 
 #ifndef WITHOUT_GTK
@@ -40,7 +40,7 @@ cout << string(x) << endl;
 
 using namespace OSG;
 
-typedef boost::recursive_mutex::scoped_lock PLock;
+
 
 template<class T>
 void erase(vector<T>& v, const T& t) {
@@ -172,9 +172,9 @@ VRTrafficSimulation::VehicleTransform::VehicleTransform() {}
 VRTrafficSimulation::VehicleTransform::~VehicleTransform() {}
 
 VRTrafficSimulation::VRTrafficSimulation() : VRObject("TrafficSimulation") {
-    mtx = new boost::recursive_mutex();
-    mtx2 = new boost::recursive_mutex();
-    PLock lock(*mtx);
+    mtx = new VRMutex();
+    mtx2 = new VRMutex();
+    VRLock lock(*mtx);
 
     updateCb = VRUpdateCb::create( "traffic", bind(&VRTrafficSimulation::updateSimulation, this) );
     VRScene::getCurrent()->addUpdateFkt(updateCb);
@@ -332,7 +332,7 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
 
     timer.start("mainThread");
     if (vehicles.size() < 100) this_thread::sleep_for(chrono::microseconds(1));
-    PLock lock(*mtx);
+    VRLock lock(*mtx);
     if (vehicles.size() < 10) this_thread::sleep_for(chrono::microseconds(1600));
     //if (vehicles.size() < 50) this_thread::sleep_for(chrono::microseconds(600));
 
@@ -1455,7 +1455,7 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
     };
 
     auto updateUsers =[&](){
-        PLock lock(*mtx2);
+        VRLock lock(*mtx2);
         for (auto& u : users) {
             //Matrix4d m;
             //poseBuffer.read(m);
@@ -1465,7 +1465,7 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
     };
 
     auto updateVehicles =[&](){
-        PLock lock(*mtx2);
+        VRLock lock(*mtx2);
         for (auto& u : vehicles) {
             if (u.second.isUser) continue;
             if (u.second.simPose) u.second.simPose2 = *u.second.simPose;
@@ -1607,8 +1607,8 @@ void VRTrafficSimulation::updateSimulation() {
     VRTimer timer;
 
     timer.start("withLock");
-    //PLock lock(mtx);
-    PLock lock(*mtx2);
+    //VRLock lock(mtx);
+    VRLock lock(*mtx2);
     timer.start("withoutLock");
 
     updateTransforms();
@@ -1647,7 +1647,7 @@ void VRTrafficSimulation::loadSim(string path) {
 VRTransformPtr VRTrafficSimulation::getUser() { return vehicleTransformPool[userTransformsIDs[users[0].vID]].t; }
 
 void VRTrafficSimulation::addUser(VRTransformPtr t) {
-    PLock lock(*mtx);
+    VRLock lock(*mtx);
 
     auto v = Vehicle( Graph::position(0, 0.0), 1 );
     nID++;
@@ -1669,7 +1669,7 @@ void VRTrafficSimulation::addUser(VRTransformPtr t) {
 }
 
 bool VRTrafficSimulation::getUserCollisionState(int i) {
-    PLock lock(*mtx2);
+    VRLock lock(*mtx2);
     if ( i < 0 || i >= (int)users.size() ) { cout << "VRTrafficSimulation::getUserCollisionState " << i << " out of bounds" << endl; return false; }
     bool check = users[i].collisionDetectedExch;
     return check;
@@ -1684,7 +1684,7 @@ void VRTrafficSimulation::addVehicle(int roadID, float density, int type) {
 /** CHANGE LANE **/
 void VRTrafficSimulation::changeLane(int ID, int direction, bool forced) {
     if ( !laneChange ) return;
-    PLock lock(*mtx);
+    VRLock lock(*mtx);
 
     auto& v = vehicles[ID];
     if (v.behavior != 0) return;
@@ -1974,7 +1974,7 @@ void VRTrafficSimulation::updateVehicVision(){
     if (scene->getRoot()->find(vAnn)) scene->getRoot()->find(vAnn)->destroy();
     cout << "VRTrafficSimulation::updateVehicVision - " << isShowingVehicleVision << endl;
     if (!isShowingVehicleVision) return;
-    PLock lock(*mtx2);
+    VRLock lock(*mtx2);
     VRGeoData gg0;
     cout << "Vision: " << visionVecSaved.size();
     if (visionVecSaved.size()==0) return;
@@ -2077,7 +2077,7 @@ void VRTrafficSimulation::updateVehicIntersecs(){
     string vAnn = "vehicAnn";
     if (scene->getRoot()->find(vAnn)) scene->getRoot()->find(vAnn)->destroy();
     if (!isShowingMarkers) return;
-    PLock lock(*mtx2);
+    VRLock lock(*mtx2);
     auto vehicAnn = VRAnnotationEngine::create(vAnn);
     vehicAnn->setPersistency(0);
     vehicAnn->setBillboard(true);
@@ -2152,7 +2152,7 @@ string VRTrafficSimulation::getVehicleData(int ID){
     string res = "";
     string nl = "\n ";
 
-    PLock lock(*mtx2);
+    VRLock lock(*mtx2);
     if (!vehicles.count(ID)) return "no Vehicle with this ID found";
     auto v = vehicles[ID];
     res+= "VehicleID: " + toString(v.vID);
@@ -2309,7 +2309,7 @@ void VRTrafficSimulation::runVehicleDiagnostics(){
     string tarVelInfo = "Target Velocities: ";
     string maxAccel = "maxAcceleration: ";
 
-    PLock lock(*mtx);
+    VRLock lock(*mtx);
 
     auto fit = [&](int input) {
         string res = "";

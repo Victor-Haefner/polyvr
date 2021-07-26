@@ -14,7 +14,9 @@
 #include "core/utils/VRProgress.h"
 #include "core/utils/xml.h"
 #include "core/utils/system/VRSystem.h"
+#ifndef __EMSCRIPTEN__
 #include "core/networking/VRPing.h"
+#endif
 
 #include "core/objects/VRTransform.h"
 #include "core/objects/VRCamera.h"
@@ -26,6 +28,10 @@
 #include <OpenSG/OSGViewport.h>
 #include <OpenSG/OSGNameAttachment.h>
 #include <OpenSG/OSGVisitSubTree.h>
+
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#endif
 
 using namespace OSG;
 
@@ -108,6 +114,7 @@ void updateLoadingLights(int p) {
 }
 
 void VRSetup::setupLESCCAVELights(VRScenePtr scene) {
+#if 0
     VRPing ping;
     bool lightAvailable = ping.start("192.168.100.55", "8000", 1);
 
@@ -128,6 +135,7 @@ void VRSetup::setupLESCCAVELights(VRScenePtr scene) {
         setLoadingLights(3,-1,1,0,0);
         setLoadingLights(4,-1,0,0,0);
     }// else p->setup("scene loading progress", 100, VRProgress::CONSOLE_M);
+#endif
 }
 
 void VRSetup::updateTracking() {
@@ -311,5 +319,17 @@ void VRSetup::makeTestCube() {
     cube->setFrom(Vec3d(0.1,0.1,-1));
     cube->setPickable(true);
     getRoot()->addChild(cube);
+}
+
+void VRSetup::sendToBrowser(const string& msg) {
+#ifdef __EMSCRIPTEN__
+    EM_ASM_INT({
+        var msg = Module.UTF8ToString($0);
+	//console.log("sendToBrowser "+msg);
+	if (typeof handleFromPolyVR === "function") {
+	    handleFromPolyVR(msg);
+	}
+    }, msg.c_str());
+#endif
 }
 

@@ -175,8 +175,9 @@ class TCPClient {
         void connectToPeer(int lPort, string rIP, int rPort) {
             string lIP = VRTCPUtils::getLocalIP();
             cout << "TCPClient::connectToPeer " << lIP << ":" << lPort << ", to " << rIP << ":" << rPort << endl;
-            //tunnelAccept = thread([this, lPort]() { acceptHolePunching(lPort); }); // needed??? if yes, then TODO: fix close (timeout)!
+            tunnelAccept = thread([this, lPort]() { acceptHolePunching(lPort); }); // needed??? if yes, then TODO: fix close (timeout)!
             tunnelConnect = thread([this, lIP, lPort, rIP, rPort]() { connectHolePunching(lIP, lPort, rIP, rPort); });
+            //tunnelAccept.detach(); // TODO: implement timeout or other abort method to control that thread!
 		}
 
 		void finalizeP2P() {
@@ -207,10 +208,10 @@ class TCPClient {
             //cout << " accept acceptor bind on endpoint " << ep << endl;
             boost::asio::socket_base::reuse_address reuseAddress(true);
             boost::asio::detail::socket_option::boolean<SOL_SOCKET, SO_REUSEPORT> reusePort(true);
-            boost::asio::socket_base::enable_connection_aborted enable_abort(true);
+            //boost::asio::socket_base::enable_connection_aborted enable_abort(true);
             acceptor->set_option(reuseAddress); //    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             acceptor->set_option(reusePort); //    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
-            acceptor->set_option(enable_abort);
+            //acceptor->set_option(enable_abort);
 
             boost::system::error_code ec;
             acceptor->bind(ep, ec); //    s.bind(('', port))
@@ -259,10 +260,16 @@ class TCPClient {
             cSocket->bind(local_ep, ec); //    s.bind(local_addr)
 
             if (ec.value() != 0) { //Handling Errors
-                std::cout << "Error in VRTCPClient::connectHolePunching, failed to bind the socket to " << local_ep << "! Error code = " << ec.value() << " (" << ec.message() << ")" << endl;
+                cout << "Error in VRTCPClient::connectHolePunching, failed to bind the socket to " << local_ep << "! Error code = " << ec.value() << " (" << ec.message() << ")" << endl;
             }
 
-            auto remoteAddr = boost::asio::ip::address::from_string(remoteIP);
+            boost::asio::ip::address remoteAddr;
+            try {
+                remoteAddr = boost::asio::ip::address::from_string(remoteIP);
+            } catch(...) {
+                cout << "Error in VRTCPClient::connectHolePunching, failed to parse remote IP '" << remoteIP << "'" << endl;
+                return;
+            }
             boost::asio::ip::tcp::endpoint remote_ep(remoteAddr, remotePort);
 
             while (!stop) { //while not STOP.is_set():
@@ -271,8 +278,12 @@ class TCPClient {
                     cSocket->connect(remote_ep);//            s.connect(addr)
                     cout << " --- VRTCPClient::connectHolePunching connect ---" << endl;
                 } catch (boost::system::system_error& e) {
+                    //static int c = 0; c++;
+                    //if (c > 20) return;
+
                     if (e.code().value() == 113) continue; // No route to host - is normal
-                    cout << "Error in VRTCPClient::connectHolePunching, boost::system::system_error " << e.what() << "(" << e.code().value() << ")" << endl;
+                    if (e.code().value() == 111) continue; // Connection refused - very bad!
+                    cout << "Error in VRTCPClient::connectHolePunching socket->connect, boost::system::system_error " << e.what() << "(" << e.code().value() << ")" << endl;
                     return;
                 } catch (...) {
                     cout << "Unknown Exception raised!" << endl;
@@ -302,5 +313,6 @@ void VRTCPClient::connectToPeer(int localPort, string remoteIP, int remotePort) 
     client->connectToPeer(localPort, remoteIP, remotePort);
 }
 
+string VRTCPClient::getPublicIP(bool cached) { return VRTCPUtils::getPublicIP(cached); }
 
 

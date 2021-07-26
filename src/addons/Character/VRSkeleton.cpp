@@ -78,15 +78,16 @@ vector<VRSkeleton::Bone> VRSkeleton::getBones() {
             auto p1 = fabrik->getJointPose(joints[i-1]);
             auto p2 = fabrik->getJointPose(joints[i]);
             Bone b;
+            b.isStart = bool(i == 1);
+            b.isEnd = bool(i+1 == joints.size());
+            b.ID = res.size();
             b.p1 = p1->pos();
             b.p2 = p2->pos();
             b.dir = b.p2-b.p1;
             b.dir.normalize();
-            b.up = p1->up();
+            b.up = p2->up();
             b.up.normalize();
             b.length = (b.p2-b.p1).length();
-
-
             res.push_back(b);
         }
     }
@@ -102,8 +103,9 @@ void VRSkeleton::setupSimpleHumanoid() {
 	auto addLeg = [&](string side, float w, int i) {
 		int hipID = addJoint("hip"+side, Pose::create(Vec3d(w,1.0,0), Vec3d(0,1,0), Vec3d(0,0,1)));
 		int kneeID = addJoint("knee"+side, Pose::create(Vec3d(w,0.5,0), Vec3d(0,1,0), Vec3d(0,0,1)));
-		int ankleID = addJoint("ankle"+side, Pose::create(Vec3d(w,0,0), Vec3d(0,1,0), Vec3d(0,0,1)));
-		int toesID = addJoint("toes"+side, Pose::create(Vec3d(w,-0.2,0), Vec3d(0,1,0), Vec3d(0,0,1)));
+		int ankleID = addJoint("ankle"+side, Pose::create(Vec3d(w,0.05,0), Vec3d(0,1,0), Vec3d(0,0,1)));
+		//int toesID = addJoint("toes"+side, Pose::create(Vec3d(w,-0.2,0), Vec3d(0,1,0), Vec3d(0,0,1)));
+		int toesID = addJoint("toes"+side, Pose::create(Vec3d(w,0,0.2), Vec3d(0,0,1), Vec3d(0,1,0)));
 
 		addChain("foot"+side, {ankleID,toesID});
 		addChain("leg"+side, {hipID,kneeID,ankleID});
@@ -113,8 +115,8 @@ void VRSkeleton::setupSimpleHumanoid() {
 		addConstraint("knee"+side, Vec4d(a1,0,a1,a2)); // knee
 		addConstraint("ankle"+side, Vec4d(a1,a2,a1,a1)); // ankle
 
-		addTarget("ankle"+side, Pose::create(Vec3d(w,0,0)));
-		addTarget("toes"+side, Pose::create(Vec3d(w,-0.01,0.2)));
+		addTarget("ankle"+side, Pose::create(Vec3d(w,0.05,0)));
+		addTarget("toes"+side, Pose::create(Vec3d(w,0,0.2)));
     };
 
 	auto addArm = [&](string side, float w, int i) {

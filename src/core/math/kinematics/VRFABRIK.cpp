@@ -254,6 +254,7 @@ void FABRIK::updateJointOrientation(int j) {
     // update joint up vector
     //J1.p->makeUpOrthogonal();
     Vec3d u1 = J1.p->up();
+    Vec3d ur = u1;
     Vec3d u2 = J2.p->up();
     u1 -= nD * u1.dot(nD);
     u2 -= nD * u2.dot(nD);
@@ -261,8 +262,13 @@ void FABRIK::updateJointOrientation(int j) {
     q.multVec(u1, u1);
     u1.normalize();
     //if (J1.ID == 2) cout << " J" << J1.ID << ", u1/u2: " << J1.p->up() << " / " << J2.p->up() << " (" << J1.p->up().length() << "/" << J2.p->up().length() << ")" << endl;
-    if (u1.length() > 0.9) J1.p->setUp(u1);
-    else J1.p->makeUpOrthogonal();
+    if (u1.length() > 0.9) {
+        if (ur.dot(u1) < -0.5) u1 *= -1;
+        J1.p->setUp(u1);
+    } else {
+        J1.p->makeUpOrthogonal();
+        //J1.p->setUp(-J1.p->up());
+    }
 }
 
 /** move joint j1 to get a distance d to j2, update the up vector of j1, also consider the constraints **/

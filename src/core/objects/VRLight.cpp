@@ -2,6 +2,7 @@
 #include "core/utils/toString.h"
 #include "core/utils/VRStorage_template.h"
 #include "core/objects/material/VRTexture.h"
+#include "core/objects/material/VRMaterial.h"
 #include "core/scene/VRScene.h"
 #ifndef WITHOUT_IES
 #include "core/scene/import/VRIES.h"
@@ -140,6 +141,36 @@ VRObjectPtr VRLight::copy(vector<VRObjectPtr> children) {
     light->setShadowColor(shadowColor);
     light->setAttenuation(attenuation);
     return light;
+}
+
+Vec4f VRLight::computePosition() {
+    auto b = beacon.lock();
+    if (!b) return Vec4f();
+
+    Vec4f position;
+    if (lightType == "directional") {
+        Vec3d p = b->getWorldDirection();
+        position = Vec4f(p[0], p[1], p[2], 0.0);
+    } else {
+        Vec3d p = b->getWorldPosition();
+        position = Vec4f(p[0], p[1], p[2], 1.0);
+    }
+
+    return position;
+}
+
+void VRLight::updateMaterial(VRMaterialPtr m) {
+    auto position = computePosition();
+    m->setShaderParameter("glLightPosition", position);
+}
+
+void VRLight::updateUniforms() {
+    // TODO: move this somewhere central like VRScene, update all lights consistently, this now only works with a single light source
+    auto position = computePosition();
+
+    for (auto m : VRMaterial::getAll()) {
+        m->setShaderParameter("glLightPosition", position);
+    }
 }
 
 void VRLight::setType(string type) {

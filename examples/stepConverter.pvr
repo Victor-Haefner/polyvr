@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Scene base_name="stepConverter" name_space="Scene" name_suffix="0" persistency="666">
+  <Objects>
+    <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" visible="4294967295">
+      <Object ambient="0.3 0.3 0.3 1" base_name="light" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" shadowVolume="1e+06 1e+06 1e+06 -1e+06 -1e+06 -1e+06 1" specular="0.1 0.1 0.1 1" type="Light" visible="4294967295">
+        <Object accept_root="1" aspect="1" at="0 0 0" at_dir="0" base_name="Default" far="512" fov="1.0472" from="2.0995 2.21466 2.05288" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="4294967295">
+          <attachments>
+            <Node base_name="transform" name_space="VRAttachment" name_suffix="0" persistency="666" value=""/>
+          </attachments>
+          <Object at="0 0 -1" at_dir="1" base_name="Headlight_beacon" from="0 0 0" light="light" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" up="0 1 0" visible="4294967295">
+            <attachments>
+              <Node base_name="transform" name_space="VRAttachment" name_suffix="0" persistency="666" value=""/>
+            </attachments>
+            <constraint persistency="666"/>
+          </Object>
+          <constraint persistency="666"/>
+        </Object>
+      </Object>
+    </Object>
+  </Objects>
+  <Cameras activeCam="Default" persistency="666"/>
+  <Rendering deferred_rendering="0" fogColor="0.5 0.5 0.5 1" fogParams="0 0 100 0.1" frustum_culling="1" fxaa="0" hmdd="0" marker="0" occlusion_culling="0" persistency="666" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
+  <Scripts persistency="666">
+    <Script base_name="hudHandler" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+
+ 	m = dev.getMessage()
+ 	
+ 	def onLoad(path, scale, preset):
+ 		print 'load', path
+ 		VR.importFile(path)
+ 	
+ 	if m == 'open':
+ 		VR.openFileDialog(onLoad, 'Load', 'Load File', '.', '')
+ 		
+ 	if not VR.model: return
+ 		
+ 	if m == 'scale':
+ 		s = VR.model.getScale()[0]
+ 		if s &lt; 0.5: s = 1.0
+ 		else: s = 0.001
+ 		VR.model.setScale([s,s,s])
+
+ 	if m == 'rotate':
+ 		pi = 3.14159265359
+ 		s = VR.model.getScale()[0]
+ 		a = VR.model.getEuler()[0]
+ 		if a &gt; -pi*0.2: a = -pi*0.5
+ 		else: a = 0
+ 		VR.model.setEuler([a,0,0])
+ 		VR.model.setScale([s,s,s])
+ 		
+ 	if m == 'export':
+ 		i = VR.modelPath.rfind('.', 0)
+ 		path = VR.modelPath[:i]+'.osb'
+ 		print 'export to:', path
+ 		VR.model.exportToFile(path)
+</core>
+      <trig type="on_device" dev="server1" state="Released" param="0" key="-1" base_name="trigger" name_space="__global__" name_suffix="1" persistency="666"/>
+    </Script>
+    <Script base_name="hudInit" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+
+ 	def addHud(site,w,h,x,y,parent):
+ 		s = VR.Sprite('site')
+ 		s.setSize(w,h)
+ 		s.webOpen('http://localhost:5500/'+site, 400, w/h)
+ 		s.setFrom([x,y,-2])
+ 		s.getMaterial().setDepthTest('GL_ALWAYS')
+ 		parent.addChild(s)
+
+ 	if hasattr(VR, 'hud'): VR.hud.destroy()
+ 	VR.hud = VR.Object('hud')
+ 	VR.find('Default').addChild(VR.hud)
+
+ 	addHud( 'hudSite', 1,0.25, 0,-1, VR.hud )
+</core>
+    </Script>
+    <Script base_name="hudSite" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="HTML">
+      <core>
+&lt;!DOCTYPE html&gt;
+ &lt;html&gt;
+
+ &lt;head&gt;
+ 	&lt;style type="text/css"&gt;
+ 		body {
+ 			display: flex;
+ 			flex-direction: row;
+ 			margin: 0;
+ 			overflow: hidden;
+ 			
+ 		}
+ 	
+ 		button {
+ 			font-size:20vh;
+ 			width:25vw;
+ 			height:100vh;
+ 		}
+ 	&lt;/style&gt;
+ 	&lt;script&gt;
+ 		var websocket = new WebSocket('ws://localhost:5500');
+ 		websocket.onopen = function() { send('register|hud'); };
+ 		websocket.onerror = function(e) {};
+ 		websocket.onmessage = function(m) { if(m.data) handle(m.data); };
+ 		websocket.onclose = function(e) {};
+
+ 		function send(m) { websocket.send(m); };
+ 		function handle(m) { console.log(m); };
+ 	&lt;/script&gt;
+ &lt;/head&gt;
+
+ &lt;body&gt;
+ 	&lt;button onclick="send('open')"&gt;Open&lt;/button&gt;
+ 	&lt;button onclick="send('scale')"&gt;Scale&lt;/button&gt;
+ 	&lt;button onclick="send('rotate')"&gt;Rotate&lt;/button&gt;
+ 	&lt;button onclick="send('export')"&gt;Export&lt;/button&gt;
+ &lt;/body&gt;
+ &lt;/html&gt;
+</core>
+    </Script>
+    <Script base_name="importFile" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+	
+	if VR.model: VR.model.destroy()
+	VR.model = None
+
+	VR.modelPath = path
+	VR.model = VR.loadGeometry(path)
+	VR.scene.addChild(VR.model)
+	
+</core>
+      <arg type="NoneType" value="None" base_name="path" name_space="importFile" name_suffix="0" persistency="666"/>
+    </Script>
+    <Script base_name="init" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+
+	if hasattr(VR, 'scene'): VR.scene.destroy()
+	VR.scene = VR.Object('scene', 'light')
+
+	VR.model = None
+	
+	VR.setupFloor()
+	VR.hudInit()
+	
+</core>
+      <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="0" persistency="666"/>
+    </Script>
+    <Script base_name="setupFloor" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+
+
+	
+	def addPrimitive(name, params):
+		g = VR.Geometry(name)
+		g.setPrimitive(params)
+		VR.scene.addChild(g)
+		return g
+		
+	def addArrow(p, c):
+		a = addPrimitive('a', 'Arrow 0.8 0.2 0.1 0.1 0.01')
+		m = VR.Material('aXmat')
+		m.setLit(0)
+		m.setDiffuse(c)
+		m.setZOffset(-1,-1)
+		a.setMaterial(m)
+		a.setTransform(p, p, [0,1,0])
+		return a
+
+	floor = addPrimitive('floor', 'Plane 10 10 10 10')
+	floor.setTransform([0,0,0], [0,1,0], [0,0,1])
+	m = VR.Material('fMat')
+	m.setLit(0)
+	m.setWireFrame(1)
+	floor.setMaterial(m)
+	
+	addArrow([1,0,0], [1,0,0])
+	addArrow([0,0,1], [0,0,1])
+</core>
+    </Script>
+  </Scripts>
+  <Sockets persistency="666"/>
+  <Background color="0.573892 0.695766 0.762692" format=".png" path="" persistency="666" type="0"/>
+  <Navigation active="Orbit" persistency="666"/>
+  <Materials persistency="666"/>
+  <Semantics persistency="666"/>
+</Scene>

@@ -43,6 +43,8 @@ class VRGuiMonitor {
         VRGuiMonitor();
         void selectFrame();
         void redraw();
+
+        void updateSystemInfo();
 };
 
 OSG_END_NAMESPACE

@@ -283,11 +283,13 @@ void VRWorldGenerator::setupLODTerrain(string pathMap, string pathPaint, float d
         cout << "VRWorldGenerator::setupLODTerrain creating new downsized texture lvl1 at " << pathMap1 << endl;
         tex1 = loadGeoRasterData(pathMap, false);
         tex1->downsize();
+#ifndef __EMSCRIPTEN__
         string params[3];
         gTr = getGeoTransform(pathMap);
         for (int i = 0; i < 6; i++) geoTransform[i] = gTr[i];
         geoTransform[1] *= 2;
         writeGeoRasterData(pathMap1, tex1, geoTransform, params);
+#endif
     }
     if ( exists(pathMap2) && cache ) {
         tex2 = loadGeoRasterData(pathMap2, false);
@@ -296,12 +298,15 @@ void VRWorldGenerator::setupLODTerrain(string pathMap, string pathPaint, float d
         tex2 = loadGeoRasterData(pathMap, false);
         tex2->downsize();
         tex2->downsize();
+#ifndef __EMSCRIPTEN__
         string params2[3];
         gTr = getGeoTransform(pathMap);
         for (int i = 0; i < 6; i++) geoTransform[i] = gTr[i];
         geoTransform[1] *= 4;
         writeGeoRasterData(pathMap2, tex2, geoTransform, params2);
+#endif
     }
+#ifndef __EMSCRIPTEN__
     if ( !exists(pathPaint1) || !cache ) {
         cout << "VRWorldGenerator::setupLODTerrain creating new downsized sat texture lvl1 at " << pathPaint1 << endl;
         VRTexturePtr dsSatImg1 = VRTexture::create();
@@ -317,6 +322,7 @@ void VRWorldGenerator::setupLODTerrain(string pathMap, string pathPaint, float d
         dsSatImg2->downsize();
         dsSatImg2->write(pathPaint2);
     }
+#endif
 
     auto addTerrain = [&](double fac, int a) {
         auto terrain = VRTerrain::create("terrain"+toString(fac), bool(planet));
@@ -325,26 +331,32 @@ void VRWorldGenerator::setupLODTerrain(string pathMap, string pathPaint, float d
         terrain->setParameters (terrainSize, 2/fac, 1);
         VRTexturePtr texSc = tex;
         string satImg = pathPaint;
+#ifndef __EMSCRIPTEN__
         if (a == 1) { texSc = tex1; satImg = pathPaint1; }
         if (a == 2) { texSc = tex2; satImg = pathPaint2; }
         if ( !exists(pathPaint2) ) satImg = pathPaint;
+#endif
 
-    //if (mixAmount > 0) texSc->mixColor(mixColor, mixAmount);
+        //if (mixAmount > 0) texSc->mixColor(mixColor, mixAmount);
         terrain->paintHeights( satImg, mixColor, mixAmount );
         //terrain->paintHeights( satImg, Color4f(1,0,1,1), 0.5 );
-        terrain->setMap( texSc, 3 );
+        terrain->setMap( texSc, 0 );
         terrain->setWorld( ptr() );
         terrain->setLODFactor(fac);
         terrain->setLit(isLit);
         terrains.push_back(terrain);
     };
 
+    cout << " VRWorldGenerator::setupLODTerrain add terrains" << endl;
     addTerrain(1.0, 0);
-    addTerrain(0.5, 1);
+#ifndef __EMSCRIPTEN__
+    addTerrain(0.25, 1);
     addTerrain(0.05, 2);
+#endif
 
     addTerrainsToLOD();
     if (planet) planet->localizeSector(ptr());
+    cout << " VRWorldGenerator::setupLODTerrain done!" << endl;
 #endif
 }
 
@@ -367,12 +379,16 @@ void VRWorldGenerator::setupLOD(int layers){
         lod->addDistance(d);
     };
     ///TODO: make layer distance dependent of planet scale and radius
+#ifndef __EMSCRIPTEN__
     if ( layers == 1 ) { addLod( "wgenlvl0", 10000000.0, 1.0 ); }
     if ( layers > 1 ) {
         addLod( "wgenlvl0", 5000.0, 1.0 );
         addLod( "wgenlvl1", 15000.0, 0.5 );
         addLod( "wgenlvl2", 300000.0, 0.05);
     }
+#else
+    addLod( "wgenlvl0", 10000000.0, 0.05 );
+#endif
     auto anchor = VRObject::create("wgenAnchor");
     lodLevels.push_back(anchor);
     lodFactors.push_back(-1);

@@ -18,7 +18,9 @@
 #include "core/scene/VRScene.h"
 #include "core/scene/rendering/VRDefShading.h"
 #include "core/math/partitioning/boundingbox.h"
+#ifndef __EMSCRIPTEN__
 #include "core/networking/tcp/VRTCPServer.h"
+#endif
 
 #include <OpenSG/OSGBackground.h>
 #include <OpenSG/OSGSimpleStage.h>
@@ -38,13 +40,13 @@
 #include <OpenSG/OSGRenderAction.h>
 #include <OpenSG/OSGSolidBackground.h>
 
-#include <boost/thread/recursive_mutex.hpp>
+#include "core/utils/VRMutex.h"
 
 #define GLSL(shader) #shader
 
 using namespace OSG;
 
-typedef boost::recursive_mutex::scoped_lock PLock;
+
 
 template<> string typeName(const VRTextureRenderer::CHANNEL& o) { return "VRTextureRenderer::CHANNEL"; }
 
@@ -427,25 +429,29 @@ vector<VRTexturePtr> VRTextureRenderer::createCubeMaps(VRTransformPtr focusObjec
 }
 
 void VRTextureRenderer::prepareTextureForStream() {
-    PLock lock(mtx);
+    VRLock lock(mtx);
     mat->getTexture()->write("tmp2.jpeg");
 }
 
 string VRTextureRenderer::startServer(int port) {
     string uri;
+#ifndef __EMSCRIPTEN__
     server = VRTCPServer::create();
     server->onMessage( bind(&VRTextureRenderer::serverCallback, this, _1) );
     server->listen(port, "\r\n\r\n");
     updateCb = VRUpdateCb::create("texture renderer stream", bind(&VRTextureRenderer::prepareTextureForStream, this));
     VRScene::getCurrent()->addUpdateFkt(updateCb);
+#endif
     return uri;
 }
 
 void VRTextureRenderer::stopServer() {
+#ifndef __EMSCRIPTEN__
     if (!server) return;
     VRScene::getCurrent()->dropUpdateFkt(updateCb);
     server->close();
     server.reset();
+#endif
 }
 
 const string restImgHeader =
@@ -459,7 +465,7 @@ const string restImgHeader =
 "Content-Length: ";
 
 string VRTextureRenderer::serverCallback(string data) {
-    PLock lock(mtx);
+    VRLock lock(mtx);
     //cout << "VRTextureRenderer::serverCallback, received: " << data << endl;
 
     ifstream fin("tmp2.jpeg", ios::binary);

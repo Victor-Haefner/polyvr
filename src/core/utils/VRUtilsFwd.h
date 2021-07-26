@@ -19,6 +19,8 @@ namespace OSG {
     ptrFwd(XMLElement);
     ptrFwd(XML);
     ptrFwd(VRSpreadsheet);
+    ptrFwd(VRMutex);
+    ptrFwd(VRLock);
 }
 
 #endif // VRUTILSFWD_H_INCLUDED

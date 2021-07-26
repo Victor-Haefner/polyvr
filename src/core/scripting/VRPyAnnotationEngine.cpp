@@ -5,6 +5,8 @@
 using namespace OSG;
 simpleVRPyType(AnnotationEngine, New_VRObjects_ptr);
 
+typedef map<int, string> mapIntStr;
+
 PyMethodDef VRPyAnnotationEngine::methods[] = {
     {"set", PyWrap( AnnotationEngine, set,"Set label - set(int i, [x,y,z] pos, str val)", void, int, Vec3d, string ) },
     {"add", PyWrap( AnnotationEngine, add,"Append label - id add([x,y,z] pos, str val)", int, Vec3d, string ) },
@@ -16,6 +18,7 @@ PyMethodDef VRPyAnnotationEngine::methods[] = {
     {"setBillboard", PyWrap( AnnotationEngine, setBillboard, "Set billboard - setBillboard( bool )", void, bool ) },
     {"setScreensize", PyWrap( AnnotationEngine, setScreensize, "Set screensize mode", void, bool ) },
     {"setOrientation", PyWrap( AnnotationEngine, setOrientation, "Set sprite orientation, dir and up", void, Vec3d, Vec3d ) },
+    {"getLabels", PyWrap( AnnotationEngine, getLabels, "Get all labels", mapIntStr ) },
     {"getLabel", PyWrap( AnnotationEngine, getLabel, "Get ith label", string, int ) },
     {NULL}  /* Sentinel */
 };

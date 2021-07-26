@@ -3,7 +3,7 @@
 #include "core/objects/geometry/VRGeometry.h"
 #include "VRLeap.h"
 
-#include <boost/thread/mutex.hpp>
+#include "core/utils/VRMutex.h"
 
 OSG_BEGIN_NAMESPACE ;
 
@@ -29,8 +29,8 @@ private:
     void updateHandGeo();
 
     VRUpdateCbPtr updateCb;
+    VRMutex mutex;
 
-    boost::mutex mutex;
     bool isLeft{false};
     bool initialized{false};
     bool visible{false};

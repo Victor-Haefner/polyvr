@@ -7,7 +7,7 @@ using namespace std;
 VRTimer::VRTimer() { start(); }
 
 void VRTimer::start() { single.start = getTime()*1e-3; }
-double VRTimer::stop() { return getTime()*1e-3- single.start; }
+double VRTimer::stop() { double t = getTime()*1e-3; return max(0.0, t - single.start); }
 void VRTimer::reset() { start(); }
 
 map<string, VRTimer::timer> VRTimer::beacons = map<string, VRTimer::timer>();

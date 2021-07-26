@@ -42,6 +42,7 @@ struct VRIntersection {
 
     VRObjectPtr getIntersected();
     Pnt3d getIntersection();
+    Line getRay();
 };
 
 class VRIntersect {

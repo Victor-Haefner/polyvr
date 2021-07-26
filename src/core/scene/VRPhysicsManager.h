@@ -62,7 +62,7 @@ class VRPhysicsManager {
         VRVisualLayerPtr physics_visual_layer;
         VRMaterialPtr phys_mat = 0;
 
-        boost::recursive_mutex* mtx = 0;
+        VRMutex* mtx = 0;
         int fps = 500;
 
     protected:
@@ -90,7 +90,7 @@ class VRPhysicsManager {
 
         VRVisualLayerPtr getVisualLayer();
 
-        boost::recursive_mutex& physicsMutex();
+        VRMutex& physicsMutex();
 };
 
 OSG_END_NAMESPACE;

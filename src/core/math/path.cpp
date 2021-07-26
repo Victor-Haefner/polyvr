@@ -370,7 +370,8 @@ void Path::compute(int N) {
             uMid.normalize();
 
             cubicBezier    (_pts+(N-1)*i, N, p1.pos(), p2.pos(), h1, h2);
-            quadraticBezier(_drs+(N-1)*i, N, (h1-p1.pos())*3, (h2-h1)*3, (p2.pos()-h2)*3);
+            if (L > 1e-3) quadraticBezier(_drs+(N-1)*i, N, (h1-p1.pos())*3, (h2-h1)*3, (p2.pos()-h2)*3);
+            else linearBezier(_drs+(N-1)*i, N, p1.dir(), p2.dir());
             computeUpVectors(_ups+(N-1)*i, _drs+(N-1)*i, N, p1.up(), p2.up());
             //quadraticBezier(_ups+(N-1)*i, N, p1.up(), uMid, p2.up());
             linearBezier   (_cls+(N-1)*i, N, Vec3d(c1), Vec3d(c2));

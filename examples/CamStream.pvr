@@ -3,7 +3,7 @@
   <Objects>
     <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" visible="4294967295">
       <Object ambient="0.3 0.3 0.3 1" base_name="light" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" shadowVolume="1e+06 1e+06 1e+06 -1e+06 -1e+06 -1e+06 1" specular="0.1 0.1 0.1 1" type="Light" visible="4294967295">
-        <Object accept_root="1" aspect="1" at="0 0 0" at_dir="0" base_name="Default" far="512" fov="1.0472" from="0.357779 -2.53079 -3.77998" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="4294967295">
+        <Object accept_root="1" aspect="1" at="0 0 0" at_dir="0" base_name="Default" far="512" fov="1.0472" from="-2.39428 -1.84957 -3.41579" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="4294967295">
           <attachments>
             <Node base_name="transform" name_space="VRAttachment" name_suffix="0" persistency="666" value=""/>
           </attachments>
@@ -55,6 +55,32 @@
 	
 </core>
       <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="0" persistency="666"/>
+    </Script>
+    <Script base_name="site" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="HTML">
+      <core>
+&lt;html&gt;
+
+&lt;head&gt;
+	&lt;script&gt;
+	
+		function updateImage() {
+			console.log('updateImage');
+			var timestamp = new Date().getTime(); 
+			var img = document.getElementById('canvas');
+			img.src = 'http://localhost:5678?t='+timestamp;
+			setTimeout(updateImage, 1000);
+		}
+	&lt;/script&gt;
+&lt;/head&gt;
+
+&lt;body&gt;
+	&lt;img id='canvas' /&gt;
+	
+	&lt;script&gt;updateImage();&lt;/script&gt;
+&lt;/body&gt;
+
+&lt;/html&gt;
+</core>
     </Script>
     <Script base_name="updateSprite" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>

@@ -8,7 +8,7 @@
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-VRObjectPtr loadCollada(string path, VRObjectPtr objects);
+void loadCollada(string path, VRObjectPtr root);
 
 OSG_END_NAMESPACE;
 

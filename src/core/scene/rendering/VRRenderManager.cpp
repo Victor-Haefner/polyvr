@@ -178,6 +178,7 @@ void VRRenderManager::setMultisampling(bool b) {
     cout << "VRRenderManager::setMultisampling " << b << endl;
     if (b) glEnable(GL_MULTISAMPLE_ARB);
     else glDisable(GL_MULTISAMPLE_ARB);
+    cout << " VRRenderManager::setMultisampling done" << endl;
 #endif
 }
 
@@ -210,8 +211,13 @@ int VRRenderManager::getGLSLVersion() {
 
 string VRRenderManager::getGLVendor() { return glParam(GL_VENDOR); }
 string VRRenderManager::getGLVersion() { return glParam(GL_VERSION); }
+#ifndef __EMSCRIPTEN__
 bool VRRenderManager::hasGeomShader() { int v = getGLSLVersion(); return (v >= 150); }
 bool VRRenderManager::hasTessShader() { int v = getGLSLVersion(); return (v >= 400); }
+#else
+bool VRRenderManager::hasGeomShader() { return false; }
+bool VRRenderManager::hasTessShader() { return false; }
+#endif
 
 
 

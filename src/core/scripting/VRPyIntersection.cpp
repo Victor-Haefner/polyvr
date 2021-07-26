@@ -15,5 +15,6 @@ template<> int toValue(stringstream& ss, VRIntersection& v) { return 1; }
 PyMethodDef VRPyIntersection::methods[] = {
     {"getIntersected", PyWrap(Intersection, getIntersected, "Get intersected object", VRObjectPtr ) },
     {"getIntersection", PyWrap(Intersection, getIntersection, "Get intersection point", Pnt3d ) },
+    {"getRay", PyWrap(Intersection, getRay, "Get casted ray", Line ) },
     {NULL}  /* Sentinel */
 };

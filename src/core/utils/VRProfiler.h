@@ -3,7 +3,9 @@
 
 #include <list>
 #include <map>
-#include <boost/thread/mutex.hpp>
+#include <string>
+
+#include "core/utils/VRMutex.h"
 
 using namespace std;
 
@@ -34,7 +36,7 @@ class VRProfiler {
         bool active = true;
         map<unsigned long, int> threadIDs;
 
-        boost::mutex mutex;
+        OSG::VRMutex mutex;
 
         VRProfiler();
 

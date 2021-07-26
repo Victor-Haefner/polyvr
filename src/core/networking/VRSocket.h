@@ -25,6 +25,7 @@ struct HTTP_args {
     std::shared_ptr< map<string, string> > pages;
     std::shared_ptr< map<string, VRServerCbWeakPtr> > callbacks;
     string path;
+    string paramsString;
     bool websocket = false;
     string ws_data;
     int ws_id = -1;

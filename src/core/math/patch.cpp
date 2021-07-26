@@ -57,7 +57,11 @@ Vec3d Patch::reflectInPlane(Vec3d v, Vec3d n) {
 }
 
 VRMaterialPtr Patch::setupMaterial(bool wire) {
+#ifdef WASM
+    int m = GL_FILL;
+#else
     int m = wire ? GL_LINE : GL_FILL;
+#endif
 
     auto mat = VRMaterial::get("subPatchMat");
     mat->setActivePass(0);

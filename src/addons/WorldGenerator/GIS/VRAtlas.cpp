@@ -79,7 +79,7 @@ void VRAtlas::Patch::paint() {
         if (loaded) return;
         if ( checkHeight && checkOrtho && terrain) {
             terrain->setHeightOffset(true);
-            terrain->loadMap( heightPic, 3, false );
+            terrain->loadMap( heightPic, 0, false );
             terrain->paintHeights(orthoPic);//, mixColor, mixAmount );
             double localHeightoffset = terrain->getHeightOffset();
             Vec3d pos = Vec3d(localPos[0],localHeightoffset,localPos[2]);
@@ -143,6 +143,24 @@ void VRAtlas::setCoords(Patch& pat) {
     pat.heightPic = localPathHeight + "/" + els + "/" + fileHeight;
 
     Vec3d pos = Vec3d( pat.coords[0]-atlasOrigin[0], 0, - (pat.coords[1]-atlasOrigin[1]) ) + Vec3d(nSize*0.5,0,nSize*0.5);
+    /*
+    pat.terrain->paintHeights(pathOrtho, mixColor, mixAmount );
+    //cout << tmp1 << "-----" << tmp2 << endl;
+    //if ( exists(tmp1) ) cout << "found " << tmp1 << endl; else cout << " not found " << tmp1 << endl;
+    if ( checkHeight ) {
+        pat.terrain->setHeightOffset(true);
+        pat.terrain->loadMap( tmp2, 0, false );
+        pat.localHeightoffset = pat.terrain->getHeightOffset();
+    } else {
+        VRTexturePtr heightIMG = VRTexture::create();
+        heightIMG->read(pathHeight);
+        pat.terrain->setMap( heightIMG, 3 );
+    }*/
+    /*if (!checkHeight && !checkOrthop) pat.terrain->setVisible(false);
+    else pat.terrain->setVisible(true);
+    if (debugMode) pat.terrain->setVisible(true);*/
+
+    //Vec3d pos = co3 + Vec3d(nSize*0.5,0,nSize*0.5);
     pat.localPos = pos;
 }
 

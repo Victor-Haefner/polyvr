@@ -32,7 +32,7 @@ class VRCharacter : public VRGeometry {
         VRSkeletonPtr getSkeleton();
 
         void move(string endEffector, PosePtr pose);
-        PathPtr moveTo(Vec3d p);
+        PathPtr moveTo(Vec3d p, float s);
 
         void addBehavior(VRBehaviorPtr b);
         //void addAction(VRBehavior::ActionPtr a);

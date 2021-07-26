@@ -47,6 +47,8 @@ PyMethodDef VRPyPose::methods[] = {
     {"invert", PyWrap2(Pose, invert, "Invert pose", void ) },
     {"inverse", PyWrap2(Pose, inverse, "Returns inverse pose", PosePtr ) },
     {"toString", PyWrap2(Pose, toString, "As string", string ) },
+    {"makeDirOrthogonal", PyWrap2(Pose, makeDirOrthogonal, "Computes new dir vector", void ) },
+    {"makeUpOrthogonal", PyWrap2(Pose, makeUpOrthogonal, "Computes new up vector", void ) },
     {NULL}
 };
 

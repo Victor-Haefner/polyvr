@@ -18,13 +18,13 @@ extern "C" {
 #include "../VRSceneManager.h"
 #include "../VRScene.h"
 #include "core/utils/VRFunction.h"
+#include "core/utils/VRMutex.h"
 
 #include <AL/al.h>
 #include <AL/alc.h>
 #include <AL/alext.h>
 
 #include <thread>
-#include <boost/thread/mutex.hpp>
 
 using namespace OSG;
 
@@ -77,7 +77,7 @@ namespace OSG {
 struct VRSoundChannel {
     bool running = true;
     std::thread* thread = 0;
-    boost::mutex mutex;
+    VRMutex mutex;
     map<int, VRSoundPtr> current;
 
     VRSoundChannel() {
@@ -92,7 +92,7 @@ struct VRSoundChannel {
     }
 
     void add(VRSoundPtr sound) {
-        boost::mutex::scoped_lock lock(mutex);
+        VRLock lock(mutex);
         current[current.size()] = sound;
     }
 
@@ -101,7 +101,7 @@ struct VRSoundChannel {
 
         while (running) {
             osgSleep(1);
-            boost::mutex::scoped_lock lock(mutex);
+            VRLock lock(mutex);
             if (current.size() == 0) continue;
 
             vector<int> toErase;

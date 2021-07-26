@@ -6,15 +6,6 @@
 
 struct VRPySprite : VRPyBaseT<OSG::VRSprite> {
     static PyMethodDef methods[];
-
-    static PyObject* getText(VRPySprite* self);
-    static PyObject* getSize(VRPySprite* self);
-    static PyObject* setText(VRPySprite* self, PyObject* args);
-    static PyObject* setSize(VRPySprite* self, PyObject* args);
-    static PyObject* setTexture(VRPySprite* self, PyObject* args);
-    static PyObject* webOpen(VRPySprite* self, PyObject* args);
-    static PyObject* convertToCloth(VRPySprite* self);
-
 };
 
 #endif // VRPYSPRITE_H_INCLUDED

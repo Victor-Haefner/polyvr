@@ -59,6 +59,7 @@ PyMethodDef VRSceneGlobals::methods[] = {
 	{"loadGeometry", (PyCFunction)VRSceneGlobals::loadGeometry, METH_VARARGS|METH_KEYWORDS, loadGeometryDoc.c_str() },
 	{"exportToFile", (PyCFunction)VRSceneGlobals::exportToFile, METH_VARARGS, "Export a node ( object, path ), supported extensions: [wrl, wrz, obj, osb, osg, ply, gltf]" },
 	{"getLoadGeometryProgress", (PyCFunction)VRSceneGlobals::getLoadGeometryProgress, METH_VARARGS, "Return the progress object for geometry loading - getLoadGeometryProgress()" },
+	{"createPrimitive", (PyCFunction)VRSceneGlobals::createPrimitive, METH_VARARGS|METH_KEYWORDS, "Helper to create a geometric primitive (see setPrimitive for the params) with optional material or color - createPrimitive(name, params, [ parent, material, color] )" },
 	{"stackCall", (PyCFunction)VRSceneGlobals::stackCall, METH_VARARGS, "Schedules a call to a python function - stackCall( function, delay, [args] )" },
 	{"openFileDialog", (PyCFunction)VRSceneGlobals::openFileDialog, METH_VARARGS, "Open a file dialog - openFileDialog( onLoad, mode, title, default_path, filter )\n mode : {Save, Load, New, Create}" },
 	{"updateGui", (PyCFunction)VRSceneGlobals::updateGui, METH_NOARGS, "Update the gui" },
@@ -86,6 +87,7 @@ PyMethodDef VRSceneGlobals::methods[] = {
 	{"getActiveCamera", (PyCFunction)VRSceneGlobals::getActiveCamera, METH_NOARGS, "Get active camera" },
 	{"testDWGArcs", (PyCFunction)VRSceneGlobals::testDWGArcs, METH_NOARGS, "A test for DWG arcs tesselation" },
 	{"setWindowTitle", (PyCFunction)VRSceneGlobals::setWindowTitle, METH_VARARGS, "Set window title" },
+	{"sendToBrowser", (PyCFunction)VRSceneGlobals::sendToBrowser, METH_VARARGS, "Send message to browser, ment to be used when deployed as web application" },
     {NULL}  /* Sentinel */
 };
 
@@ -93,6 +95,15 @@ PyMethodDef VRSceneGlobals::methods[] = {
 // ==============
 // Python methods
 // ==============
+
+
+PyObject* VRSceneGlobals::sendToBrowser(VRSceneGlobals* self, PyObject* args) {
+    string msg = parseString(args);
+#ifdef __EMSCRIPTEN__
+    VRSetup::sendToBrowser(msg);
+#endif
+    Py_RETURN_TRUE;
+}
 
 PyObject* VRSceneGlobals::setWindowTitle(VRSceneGlobals* self, PyObject* args) {
     string name = parseString(args);
@@ -253,6 +264,38 @@ PyObject* VRSceneGlobals::loadGeometry(VRSceneGlobals* self, PyObject *args, PyO
     VRTransformPtr obj = VRImport::get()->load( path, prnt, cached, preset, threaded, options, useBinaryCache);
     if (obj == 0) { VRPyBase::setErr("Error: " + string(path) + " not loaded!"); return NULL; }
     obj->setPersistency(0);
+    return VRPyTypeCaster::cast(obj);
+}
+
+PyObject* VRSceneGlobals::createPrimitive(VRSceneGlobals* self, PyObject *args, PyObject *kwargs) {
+    const char* name = "";
+    const char* parameters = "";
+    PyObject* parent = 0;
+    PyObject* material = 0;
+    const char* color = "";
+
+    const char* kwlist[] = {"name", "parameters", "parent", "material", "color", NULL};
+    string format = "ss|OOs:createPrimitive";
+    if ( !PyArg_ParseTupleAndKeywords(args, kwargs, format.c_str(), (char**)kwlist, &name, &parameters, &parent, &material, &color) )  return NULL;
+
+
+    auto obj = VRGeometry::create(name);
+    obj->setPrimitive(parameters);
+
+    if (parent) {
+        VRObjectPtr p;
+        toValue(parent, p);
+        if (p) p->addChild(obj);
+    }
+
+    if (string(color) != "") obj->setColor(color);
+
+    if (material) {
+        VRMaterialPtr m;
+        toValue(material, m);
+        if (m) obj->setMaterial(m);
+    }
+
     return VRPyTypeCaster::cast(obj);
 }
 

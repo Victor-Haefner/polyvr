@@ -9,6 +9,7 @@
 #include "VRPyAnimation.h"
 #include "VRPySocket.h"
 #include "VRPySprite.h"
+#include "VRPyMultiGrid.h"
 #ifndef WITHOUT_AV
 #include "VRPySound.h"
 #include "VRPyRecorder.h"
@@ -163,6 +164,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyLodLeaf>("LodLeaf", pModVR, VRPyTransform::typeRef);
     sm->registerModule<VRPyLodTree>("LodTree", pModVR, VRPyObject::typeRef);
     sm->registerModule<VRPySprite>("Sprite", pModVR, VRPyGeometry::typeRef);
+    sm->registerModule<VRPyMultiGrid>("MultiGrid", pModVR, VRPyGeometry::typeRef);
     sm->registerModule<VRPyPointCloud>("PointCloud", pModVR, VRPyTransform::typeRef);
 #ifndef WITHOUT_AV
     sm->registerModule<VRPySound>("Sound", pModVR);

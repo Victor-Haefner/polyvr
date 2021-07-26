@@ -28,7 +28,7 @@ void VRFluids::setFunctions(int from, int to) {
     this->from = from;
     this->to = to;
     {
-        BLock lock(mtx());
+        VRLock lock(mtx());
         VRScenePtr scene = VRScene::getCurrent();
         if (!scene) {
             printf("VRFluids::setFunctions(): No scene found\n");
@@ -52,7 +52,7 @@ void VRFluids::setFunctions(int from, int to) {
 
 void VRFluids::disableFunctions() {
     {
-        BLock lock(mtx());
+        VRLock lock(mtx());
         VRScenePtr scene = VRScene::getCurrent();
         scene->dropUpdateFkt(fkt);
         scene->dropPhysicsUpdateFunction(fluidFkt, this->afterBullet);
@@ -62,7 +62,7 @@ void VRFluids::disableFunctions() {
 void VRFluids::updateParticles(int from, int to) {
     if (to < 0) to = N;
     {
-        BLock lock(mtx());
+        VRLock lock(mtx());
         for (int i=from; i < to; i++) {
             if (particles[i]->isActive) {
                 auto p = particles[i]->body->getWorldTransform().getOrigin();
@@ -90,7 +90,7 @@ void VRFluids::updateParticles(int from, int to) {
 inline void VRFluids::updateSPH(int from, int to) {
     {
         SphParticle* p;
-        BLock lock(mtx());
+        VRLock lock(mtx());
 
         // clear and fill octree
         ocparticles->clear();
@@ -142,7 +142,7 @@ inline void VRFluids::updateXSPH(int from, int to) {
     btVector3 force(0,0,0);
 
     {
-        BLock lock(mtx());
+        VRLock lock(mtx());
         //#pragma omp parallel for private(p) shared(from, to)
         for (int i=from; i < to; i++) {
             p = (SphParticle*) particles[i];
@@ -310,7 +310,7 @@ void VRFluids::setSphRadius(float newRadius) {
 
     int i;
     {
-        BLock lock(mtx());
+        VRLock lock(mtx());
         for (i=0; i<N; i++) {
             ((SphParticle*) particles[i])->sphArea = newRadius;
         }

@@ -6,6 +6,7 @@
 #include <vector>
 #include <map>
 #include "core/utils/VRFunctionFwd.h"
+#include "core/utils/VRUtilsFwd.h"
 #include "core/scripting/VRScriptFwd.h"
 #include "VRGuiFwd.h"
 
@@ -23,7 +24,7 @@ class VRGuiManager {
         VRThreadCbPtr gtkUpdateCb;
         int gtkUpdateThreadID = -1;
 	    vector<VRDeviceCbPtr> guiSignalCbs;
-        boost::recursive_mutex* mtx = 0;
+        VRMutex* mtx = 0;
 
 	    map<_GtkWindow*, _GtkWindow*> windows;
 
@@ -45,12 +46,14 @@ class VRGuiManager {
         void startThreadedUpdate();
         void wakeWindow();
 
+        void updateSystemInfo();
+
         _GtkWindow* newWindow();
         void remWindow(_GtkWindow* w);
 
         void setWindowTitle(string title);
 
-        boost::recursive_mutex& guiMutex();
+        VRMutex& guiMutex();
 };
 
 OSG_END_NAMESPACE;

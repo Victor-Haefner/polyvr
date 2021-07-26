@@ -155,7 +155,7 @@ class VRCarDynamics : public VRObject {
         void updateEngineRPM( float gearRPM, float deltaRPM, float throttleImpactOnRPM, float breakImpactOnRPM, float engineFriction, float coupling );
         void updateWheelForces( WheelPtr wheel, float eForce, float eBreak );
 
-        boost::recursive_mutex& mtx();
+        VRMutex& mtx();
         void initPhysics();
         void updateWheelGeos();
         void updateEngine();

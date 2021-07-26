@@ -3,7 +3,7 @@
   <Objects>
     <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" visible="4294967295">
       <Object ambient="0.3 0.3 0.3 1" base_name="light" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" shadowVolume="1e+06 1e+06 1e+06 -1e+06 -1e+06 -1e+06 1" specular="0.1 0.1 0.1 1" type="Light" visible="4294967295">
-        <Object accept_root="1" aspect="1" at="0 0 0" at_dir="0" base_name="Default" far="512" fov="1.0472" from="3 2 3" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="4294967295">
+        <Object accept_root="1" aspect="1" at="0 0 0" at_dir="0" base_name="Default" far="512" fov="1.0472" from="3.43828 2.29218 3.43828" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="4294967295">
           <attachments>
             <Node base_name="transform" name_space="VRAttachment" name_suffix="0" persistency="666" value=""/>
           </attachments>
@@ -21,20 +21,24 @@
   <Cameras activeCam="Default" persistency="666"/>
   <Rendering deferred_rendering="0" fogColor="0.5 0.5 0.5 1" fogParams="0 0 100 0.1" frustum_culling="1" fxaa="0" hmdd="0" marker="0" occlusion_culling="0" persistency="666" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
   <Scripts persistency="666">
+    <Script base_name="Script" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+
+
+	print VR.cli1.getPublicIP()
+</core>
+    </Script>
     <Script base_name="init" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	import VR
 	
 	
-	p2p = True # switch to try server/client or P2P
-
-	
-	if p2p: 
-		VR.startP2Pclients()
-		VR.stackCall(VR.startP2Pclients, 2, [])
-	else:
-		VR.startServer(5678)
-		VR.startClients('127.0.0.1', 5678)
+	# try the different tests 
+	#VR.startP2Pclients()
+	VR.startP2PwTurnclients()
+	#VR.startServer(5678)
+	#VR.startClients('127.0.0.1', 5678)
 
 	
 </core>
@@ -82,12 +86,77 @@
 	VR.cli1.onConnect(onClient1Connect)
 	VR.cli2.onConnect(onClient2Connect)
 	
-	remoteIP = "82.212.37.3"
+	remoteIP = VR.cli1.getPublicIP()
 	port1 = 11111
 	port2 = 11112
 	
+	print 'start P2P on this external IP:', remoteIP
+	print ' ports:', port1, 'and', port2
+	
 	VR.cli1.connectToPeer(port1, remoteIP, port2)
 	VR.cli2.connectToPeer(port2, remoteIP, port1)
+</core>
+    </Script>
+    <Script base_name="startP2PwTurnclients" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+
+	def onClient1Msg(m):
+		print 'client1 received:', m
+		
+	def onClient2Msg(m):
+		print 'client2 received:', m
+		
+	def onClient1Connect():
+		print 'client 1 connected'
+		VR.cli1.send('Hello from client1')
+		
+	def onClient2Connect():
+		print 'client 2 connected'
+		VR.cli2.send('Hello from client2')
+		
+	VR.cli1 = VR.TCPClient()
+	VR.cli2 = VR.TCPClient()
+	VR.cli1.onMessage(onClient1Msg)
+	VR.cli2.onMessage(onClient2Msg)
+	VR.cli1.onConnect(onClient1Connect)
+	VR.cli2.onConnect(onClient2Connect)
+	
+	# get user list
+	server = 'http://localhost/PolyServ'
+	tcpServ = '127.0.0.1' # has to be an IPv4
+	broker = VR.RestClient()
+	
+	users = {}
+	userList = broker.get(server+'/listUsers.php').getData()
+	
+	print 'get registerd users:'
+	for user in userList.split('\n'):
+		data = user.split('|')
+		if len(data) != 2: continue
+
+		name, uid = data
+		print ' ', uid, name
+		users[uid] = name
+		
+	# get connetion
+	uid1 = users.keys()[0]
+	uid2 = users.keys()[1]
+
+	addr1 = broker.get(server+'/getConnection.php?UID='+uid1+'&amp;UID2='+uid2).getData()
+	addr2 = broker.get(server+'/getConnection.php?UID='+uid2+'&amp;UID2='+uid1).getData()
+	
+	port1 = int(addr1.split(':')[0])
+	port2 = int(addr2.split(':')[0])
+	print addr1, port1
+	print addr2, port2
+	
+	VR.cli1.connect(tcpServ, port1)
+	VR.cli2.connect(tcpServ, port2)
+	
+	print 'send messages'
+	VR.cli1.send('message from client1')
+	VR.cli2.send('message from client2')
 </core>
     </Script>
     <Script base_name="startServer" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">

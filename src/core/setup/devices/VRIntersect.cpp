@@ -17,7 +17,7 @@ using namespace OSG;
 
 VRObjectPtr VRIntersection::getIntersected() { return object.lock(); }
 Pnt3d VRIntersection::getIntersection() { return point; }
-
+Line VRIntersection::getRay() { return ray; }
 
 Vec2d VRIntersect_computeTexel(VRIntersection& ins, NodeMTRecPtr node) {
     if (!ins.hit) return Vec2d(0,0);
@@ -83,6 +83,7 @@ VRIntersection VRIntersect::intersectRay(VRObjectWeakPtr wtree, Line ray, bool s
 
     ins.ray = ray;
     ins.hit = iAct.didHit();
+    //cout << "VRIntersect::intersectRay " << ray << " with " << tree->getName() << " hit? " << ins.hit << endl;
     if (ins.hit) {
         ins.object = tree->find(OSGObject::create(iAct.getHitObject()->getParent()));
         if (auto sp = ins.object.lock()) ins.name = sp->getName();
@@ -131,19 +132,22 @@ VRIntersection VRIntersect::intersect(VRObjectWeakPtr wtree, bool force, VRTrans
     unsigned int now = VRGlobals::CURRENT_FRAME;
     for (auto t : trees) {
         if (intersections.count(t.get())) {
-            auto ins_tmp = intersections[t.get()];
+            auto& ins_tmp = intersections[t.get()];
             if (ins_tmp.hit && ins_tmp.time == now && !force) {
                 ins = ins_tmp;
+                //cout << " use old intersection from " << now << endl;
                 break;
             }
         }
 
         Line ray = caster->castRay(t, dir);
-        auto ins_tmp = intersectRay(t, ray, skipVols);
+        //cout << "VRIntersect::intersect " << caster->getName() << " rDir: " << ray.getDirection() << " cDir: " << caster->getDir() << endl;
+        ins = intersectRay(t, ray, skipVols);
         //if (force) cout << ray.getPosition()[1] << " " << caster->getWorldPosition()[1] << endl;
-        if (ins_tmp.hit) return ins_tmp;
-        else ins.ray = ray;
+        if (ins.hit) break;
     }
+
+    //cout << " hit? " << ins.hit << ", " << ins.name << ", " << ins.point << endl;
     return ins;
 }
 

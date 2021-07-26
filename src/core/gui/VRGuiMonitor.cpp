@@ -4,6 +4,7 @@
 #include "VRGuiBuilder.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRGlobals.h"
+#include "core/scene/rendering/VRRenderManager.h"
 
 #include <functional>
 #include <cairo.h>
@@ -29,6 +30,22 @@ VRGuiMonitor::VRGuiMonitor() {
     connect_signal(darea, sig2, "button_release_event");
 
     setTreeviewSelectCallback("treeview15", sig3 );
+
+    updateSystemInfo();
+}
+
+void VRGuiMonitor::updateSystemInfo() {
+    auto bToS = [](bool b) -> string { return b ? "yes" : "no"; };
+
+    string data = "\n\tOpenGL capabilities:";
+    data += "\n\t\tOpenGL vendor: \t\t\t" + VRRenderManager::getGLVendor();
+    data += "\n\t\tOpenGL version: \t\t\t" + VRRenderManager::getGLVersion();
+    data += "\n\t\tGLSL version: \t\t\t\t" + toString(VRRenderManager::getGLSLVersion());
+    data += "\n\t\thas geometry shader: \t" + bToS(VRRenderManager::hasGeomShader());
+    data += "\n\t\thas tesselation shader: \t" + bToS(VRRenderManager::hasTessShader());
+
+    auto b = VRGuiBuilder::get();
+    gtk_text_buffer_set_text(GTK_TEXT_BUFFER(b->get_object("systemSumBuf")), data.c_str(), data.length());
 }
 
 bool VRGuiMonitor::on_button(GdkEventButton * event) {

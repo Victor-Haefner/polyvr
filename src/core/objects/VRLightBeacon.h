@@ -16,6 +16,10 @@ class VRLightBeacon : public VRTransform {
 
         VRObjectPtr copy(vector<VRObjectPtr> children);
 
+#ifdef WASM
+        void updateTransformation();
+#endif
+
     public:
         VRLightBeacon(string name);
         ~VRLightBeacon();

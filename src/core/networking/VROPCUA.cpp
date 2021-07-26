@@ -18,7 +18,7 @@
 //#include <opc/ua/client/client.h>
 #include "VROPCUAclient.h"
 
-typedef boost::recursive_mutex::scoped_lock PLock;
+
 
 using namespace OpcUa;
 using namespace OSG;
@@ -445,7 +445,7 @@ VROPCUANodePtr VROPCUA::connect(string address) {
 }
 
 void VROPCUA::queueSet(VROPCUANodePtr n, string v) {
-    PLock lock(commMtx);
+    VRLock lock(commMtx);
     commQueue[n.get()] = make_pair(n, v);
 }
 
@@ -454,7 +454,7 @@ void VROPCUA::processCommQueue() {
     map<VROPCUANode*, pair<VROPCUANodePtr, string> > commQueueCopy;
 
     {
-        PLock lock(commMtx);
+        VRLock lock(commMtx);
         //if (commQueue.size() > 0) cout << " processCommQueue " << commQueue.size() << endl;
         commQueueCopy = commQueue;
         commQueue.clear();

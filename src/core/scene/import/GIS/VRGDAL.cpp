@@ -207,6 +207,7 @@ void loadTIFF(string path, VRTransformPtr res) {
 }
 
 VRTexturePtr loadGeoRasterData(string path, bool shout, float *heightoffset) {
+    cout << "loadGeoRasterData " << path << endl;
     GDALAllRegister();
     GDALDataset* poDS = (GDALDataset *) GDALOpen( path.c_str(), GA_ReadOnly );
     if( poDS == NULL ) { printf( "Open failed.\n" ); return 0; }
@@ -252,9 +253,12 @@ VRTexturePtr loadGeoRasterData(string path, bool shout, float *heightoffset) {
     GDALClose(poDS);
 
     auto t = VRTexture::create();
-    t->setInternalFormat(GL_ALPHA32F_ARB); // important for unclamped float
-    auto img = t->getImage();
-    img->set( Image::OSG_A_PF, sizeX, sizeY, 1, 1, 1, 0, (const uint8_t*)&data[0], Image::OSG_FLOAT32_IMAGEDATA, true, 1);
+#ifndef __EMSCRIPTEN__
+    t->setFloatData(data, Vec3i(sizeX,sizeY,1), GL_RED, 0, GL_R32F);
+#else
+    t->setFloatData(data, Vec3i(sizeX,sizeY,1), Image::OSG_A_PF, 0, GL_ALPHA32F_ARB);
+#endif
+    cout << " loadGeoRasterData done" << endl;
     return t;
 }
 
@@ -559,46 +563,51 @@ void divideTiffIntoChunksEPSG(string pathIn, string pathOut, double minEasting, 
 }
 
 void writeGeoRasterData(string path, VRTexturePtr tex, double geoTransform[6], string params[3]) {
-    const char *pszFormat = "GTiff";
-    GDALDriver *poDriver;
-    poDriver = GetGDALDriverManager()->GetDriverByName(pszFormat);
-    if( poDriver == NULL )
-        return;
-    Vec3i texSize = tex->getSize();
-    int sizeX = texSize[0];
-    int sizeY = texSize[1];
-    cout << "writeGeoRasterData at " << path << " - X: "  << sizeX << " Y: " << sizeY << endl;
-    //double originLat = geoTransform[0];
-    //double originLon = geoTransform[3];
-    GDALDataset *poDstDS;
-    char **papszOptions = NULL;
-    poDstDS = poDriver->Create( path.c_str(), sizeX, sizeY, 1, GDT_Float32,
-                                papszOptions );
-    OGRSpatialReference oSRS;
-    char *pszSRS_WKT = NULL;
-    GDALRasterBand *poBand;
-    poDstDS->SetGeoTransform( geoTransform );
-    //TODO: CHANGE UTM and GeogCSM
-    oSRS.SetUTM( 11, TRUE );
-    oSRS.SetWellKnownGeogCS( "WGS84" );
-    oSRS.exportToWkt( &pszSRS_WKT );
-    poDstDS->SetProjection( pszSRS_WKT );
-    CPLFree( pszSRS_WKT );
-    poBand = poDstDS->GetRasterBand(1);
+    try {
+	    const char *pszFormat = "GTiff";
+	    GDALDriver *poDriver;
+	    poDriver = GetGDALDriverManager()->GetDriverByName(pszFormat);
+	    if( poDriver == NULL )
+		return;
+	    Vec3i texSize = tex->getSize();
+	    int sizeX = texSize[0];
+	    int sizeY = texSize[1];
+	    cout << "writeGeoRasterData at " << path << " - X: "  << sizeX << " Y: " << sizeY << endl;
+	    //double originLat = geoTransform[0];
+	    //double originLon = geoTransform[3];
+	    GDALDataset *poDstDS;
+	    char **papszOptions = NULL;
+	    poDstDS = poDriver->Create( path.c_str(), sizeX, sizeY, 1, GDT_Float32,
+		                        papszOptions );
+	    OGRSpatialReference oSRS;
+	    char *pszSRS_WKT = NULL;
+	    GDALRasterBand *poBand;
+	    poDstDS->SetGeoTransform( geoTransform );
+	    //TODO: CHANGE UTM and GeogCSM
+	    oSRS.SetUTM( 11, TRUE );
+	    oSRS.SetWellKnownGeogCS( "WGS84" );
+	    oSRS.exportToWkt( &pszSRS_WKT );
+	    poDstDS->SetProjection( pszSRS_WKT );
+	    CPLFree( pszSRS_WKT );
+	    poBand = poDstDS->GetRasterBand(1);
 
-    float *yRow = (float*) CPLMalloc(sizeof(float)*sizeY);
-    for (int y = 0; y < sizeY; y++){
-        for (int x = 0; x < sizeX; x++) {
-            Vec3i pI(x,y,0);
-            auto fC = tex->getPixelVec(pI)[0];
-            yRow[x] = fC;
-        }
-        CPLErr err = poBand->RasterIO( GF_Write, 0, y, sizeX, 1, yRow, sizeX, 1, GDT_Float32, 0, 0 );
-        if (err != CE_None) break;
+	    float *yRow = (float*) CPLMalloc(sizeof(float)*sizeY);
+	    for (int y = 0; y < sizeY; y++){
+		for (int x = 0; x < sizeX; x++) {
+		    Vec3i pI(x,y,0);
+		    auto fC = tex->getPixelVec(pI)[0];
+		    yRow[x] = fC;
+		}
+		CPLErr err = poBand->RasterIO( GF_Write, 0, y, sizeX, 1, yRow, sizeX, 1, GDT_Float32, 0, 0 );
+		if (err != CE_None) break;
+	    }
+	    /* Once we're done, close properly the dataset */
+	    CPLFree(yRow);
+	    GDALClose( (GDALDatasetH) poDstDS );
+	    cout << "writeGeoRasterData done\n" << endl;
+    } catch(...) {
+         cout << "writeGeoRasterData failed! GDAL threw exception!" << endl;
     }
-    /* Once we're done, close properly the dataset */
-    CPLFree(yRow);
-    GDALClose( (GDALDatasetH) poDstDS );
 }
 
 vector<double> getGeoTransform(string path) {

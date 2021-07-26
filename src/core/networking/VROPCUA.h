@@ -6,7 +6,7 @@
 
 #include <vector>
 #include <OpenSG/OSGConfig.h>
-#include <boost/thread/recursive_mutex.hpp>
+#include "core/utils/VRMutex.h"
 
 namespace OpcUa {
     class Node;
@@ -83,7 +83,7 @@ class VROPCUA : public std::enable_shared_from_this<VROPCUA> {
         string endpoint;
         VRUpdateCbPtr watchdogCb;
 
-        boost::recursive_mutex commMtx;
+        VRMutex commMtx;
         map<VROPCUANode*, pair<VROPCUANodePtr, string> > commQueue; // deferred variable setters
         VRThreadCbPtr commCallback;
         VRThreadCbPtr server;
