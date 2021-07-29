@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Scene base_name="hydraulics" name_space="Scene" name_suffix="0" persistency="666">
+  <Objects>
+    <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" visible="4294967295">
+      <Object ambient="0.3 0.3 0.3 1" base_name="light" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="directional" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="1" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" shadowVolume="1e+06 1e+06 1e+06 -1e+06 -1e+06 -1e+06 1" specular="0.1 0.1 0.1 1" type="Light" visible="4294967295">
+        <Object at="-0.5 -1 -0.4" at_dir="0" base_name="Headlight_beacon" from="0 0 0" light="light" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" up="0 1 0" visible="4294967295">
+          <attachments>
+            <Node base_name="transform" name_space="VRAttachment" name_suffix="0" persistency="666" value=""/>
+          </attachments>
+          <constraint persistency="666"/>
+        </Object>
+        <Object accept_root="1" aspect="1" at="0.8 1.59335 0.531076" at_dir="0" base_name="Default" far="512" fov="1.0472" from="6.48561 5.62578 3.61802" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="4294967295">
+          <attachments>
+            <Node base_name="transform" name_space="VRAttachment" name_suffix="0" persistency="666" value=""/>
+          </attachments>
+          <constraint persistency="666"/>
+        </Object>
+      </Object>
+    </Object>
+  </Objects>
+  <Cameras activeCam="Default" persistency="666"/>
+  <Rendering deferred_rendering="0" fogColor="0.5 0.5 0.5 1" fogParams="0 0 100 0.1" frustum_culling="1" fxaa="0" hmdd="0" marker="0" occlusion_culling="0" persistency="666" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
+  <Scripts persistency="666">
+    <Script base_name="init" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+
+	if hasattr(VR, 'scene'): VR.scene.destroy()
+	VR.scene = VR.Object('scene', 'light')
+
+	VR.setupEnvironment()
+	VR.setupExcavator()
+	VR.setupPhysics()
+	VR.setupHydraulics()
+</core>
+      <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="0" persistency="666"/>
+    </Script>
+    <Script base_name="setupEnvironment" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+
+
+	if hasattr(VR, 'environment'): VR.environment.destroy()
+	VR.environment = VR.Object('environment', 'light')
+	
+	floor = VR.Geometry('floor')
+	floor.setPrimitive('Box 10 1 10 10 1 10')
+	floor.setFrom([0,-0.5,0])
+	floor.setColor('#ffb')
+	VR.environment.addChild(floor)
+</core>
+    </Script>
+    <Script base_name="setupExcavator" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+	from VR.Math import Vec3
+
+	if hasattr(VR, 'excavator'): VR.excavator.destroy()
+	VR.excavator = VR.Object('excavator', 'light')
+	
+	yellow = VR.Material('yellow')
+	yellow.setDiffuse([1,1,0.1])
+	
+	def addPrimitive(name, params, pose, parent = None):
+		p = VR.Geometry(name)
+		p.setPrimitive(params)
+		p.setPose(pose)
+		p.setMaterial(yellow)
+		if not parent: parent = VR.excavator
+		parent.addChild(p)
+		return p
+		
+	def addDrive(x):
+		d = addPrimitive('drive', 'Box 0.5 0.8 2.5', VR.Pose([x,0.4,0]))
+		addPrimitive('cap', 'Cylinder 0.48 0.4 32', VR.Pose([0,0, 1.25], [0,1,0], [1,0,0]), d)
+		addPrimitive('cap', 'Cylinder 0.48 0.4 32', VR.Pose([0,0,-1.25], [0,1,0], [1,0,0]), d)
+		
+	def addArmSegment(parent, size, p1, p2, z1, z2, u):
+		d = Vec3(p2)-p1
+		l = d.length()
+		u = d.cross(u).cross(d).normalized()
+		path = VR.Path()
+		path.addPoint([0,0,0], [0,0,-1], [0,0,0], [0,1,0])
+		path.addPoint([0,0,-l], [0,0,-1], [0,0,0], [0,1,0])
+		path.compute(2)
+		stroke = VR.Stroke('arm')
+		stroke.setPath(path)
+		s = size
+		stroke.strokeProfile([[-s,-s,0], [-s*0.5,s,0], [s*0.5,s,0], [s,-s,0]], 1, 0, 0)
+		stroke.updateNormals(1)
+		stroke.setMaterial(yellow)
+		stroke.setTransform(p1, d.normalized(), u)
+		parent.addChild(stroke)
+		
+		# TODO add a cylinder by using a stroke and circular profile!
+		d = Vec3(z2)-z1
+		u = d.cross(u).cross(d).normalized()
+		l = d.length()*2.0/3.0
+		h = addPrimitive('hull', 'Cylinder '+str(l)+' 0.05 32', VR.Pose(d*0.333+z1, u,d), parent)
+		p = addPrimitive('piston', 'Cylinder '+str(l)+' 0.03 32', VR.Pose([0,l*0.333,0]), h)
+		
+		
+		return stroke
+		
+
+	addPrimitive('chassis', 'Box 1.5 0.5 1.5', VR.Pose([0,0.4,0]))
+	addDrive(1)
+	addDrive(-1)
+	
+	J = addPrimitive('joint', 'Cylinder 0.4 0.6 32', VR.Pose([0,0.7,0]))
+	addPrimitive('platform', 'Box 2 0.1 2', VR.Pose([0,0.2,0]), J)
+	addPrimitive('engine', 'Box 1.8 0.5 1.4', VR.Pose([0,0.5,-0.8]), J)
+	addPrimitive('cabin', 'Box 0.8 1.2 1', VR.Pose([0.4,0.8,0.4]), J)
+	
+	B = addPrimitive('armBase', 'Box 0.6 0.4 1', VR.Pose([-0.4,0.4,0.4]), J)
+	A1 = addArmSegment(B, 0.25, [0,0,0], [0,2,1], [0,0.2,-0.5], [0,2.2,0.85], [0,0,-1])
+	A2 = addArmSegment(A1, 0.15, [0,0,-2.2], [0,-2,-2.2], [0,-0.25,-1.8], [0,-2.0,-2.1], [0,0,1])
+	addPrimitive('spike', 'Cone 0.4 0.1 16', VR.Pose([0,0,-2.2], [0,-1,0], [0,0,-1]), A2)
+</core>
+    </Script>
+    <Script base_name="setupHydraulics" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+</core>
+    </Script>
+    <Script base_name="setupPhysics" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+</core>
+    </Script>
+  </Scripts>
+  <Sockets persistency="666"/>
+  <Background color="0.6 0.6 0.6" format=".png" path="" persistency="666" type="0"/>
+  <Navigation active="Orbit" persistency="666"/>
+  <Materials persistency="666"/>
+  <Semantics persistency="666"/>
+</Scene>
