@@ -385,9 +385,8 @@ VRTexturePtr VRTextureGenerator::compose(int seed) { // TODO: optimise!
     else            img->getImage()->set(format, width, height, depth, 0, 1, 0.0, (const uint8_t*)data3, dataType, true, 1);
 
 #ifdef __EMSCRIPTEN__ // define internal format for webgl
-    if (hasAlpha)   img->setInternalFormat(GL_RGBA);
-    else            img->setInternalFormat(GL_RGB);
-    img->convertToBytes();
+    if (hasAlpha)   img->setInternalFormat(GL_RGBA32F);
+    else            img->setInternalFormat(GL_RGB32F);
 #endif
 
     if (hasAlpha)   delete[] data4;
