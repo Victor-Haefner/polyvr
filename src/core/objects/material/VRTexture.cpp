@@ -195,6 +195,7 @@ void VRTexture::merge(VRTexturePtr other, Vec3d pos) {
 int VRTexture::getChannels() {
     if (!img) return 0;
     auto f = img->getPixelFormat();
+    if (f == GL_RED) return 1;
     if (f == Image::OSG_A_PF) return 1;
     if (f == Image::OSG_I_PF) return 1;
     if (f == Image::OSG_L_PF) return 1;
@@ -211,6 +212,7 @@ int VRTexture::getChannels() {
     if (f == Image::OSG_RGBA_PF) return 4;
     if (f == Image::OSG_RGBA_INTEGER_PF) return 4;
     if (f == Image::OSG_BGRA_INTEGER_PF) return 4;
+    cout << "Warning: VRTexture::getChannels, unknown pixel format " << f << endl;
     return 0;
 }
 
@@ -303,6 +305,13 @@ void VRTexture::clampToImage(Vec3i& p) {
     if (p[1] >= img->getHeight()) p[1] = img->getHeight()-1;
     if (p[2] < 0) p[2] = 0;
     if (p[2] >= img->getDepth()) p[2] = img->getDepth()-1;
+}
+
+vector<Color4f> VRTexture::getPixels() {
+    vector<Color4f> res;
+    size_t N = getNPixel();
+    for (size_t i=0; i<N; i++) res.push_back(getPixel(i));
+    return res;
 }
 
 Color4f VRTexture::getPixelVec(Vec3i p) {

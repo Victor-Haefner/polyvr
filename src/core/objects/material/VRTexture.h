@@ -42,6 +42,7 @@ class VRTexture : public std::enable_shared_from_this<VRTexture> {
         int getPixelByteN();
         int getPixelByteSize();
         size_t getNPixel();
+        vector<Color4f> getPixels();
         ImageMTRecPtr getImage();
 
         void convertToBytes();

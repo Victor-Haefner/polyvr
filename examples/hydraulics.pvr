@@ -2,14 +2,14 @@
 <Scene base_name="hydraulics" name_space="Scene" name_suffix="0" persistency="666">
   <Objects>
     <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" visible="4294967295">
-      <Object ambient="0.3 0.3 0.3 1" base_name="light" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="directional" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="1" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" shadowVolume="1e+06 1e+06 1e+06 -1e+06 -1e+06 -1e+06 1" specular="0.1 0.1 0.1 1" type="Light" visible="4294967295">
+      <Object ambient="0.3 0.3 0.3 1" base_name="light" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="directional" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="1" shadowColor="0.457664 0.457664 0.457664 1" shadowMapRes="2048" shadowVolume="1e+06 1e+06 1e+06 -1e+06 -1e+06 -1e+06 1" specular="0.1 0.1 0.1 1" type="Light" visible="4294967295">
         <Object at="-0.5 -1 -0.4" at_dir="0" base_name="Headlight_beacon" from="0 0 0" light="light" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" up="0 1 0" visible="4294967295">
           <attachments>
             <Node base_name="transform" name_space="VRAttachment" name_suffix="0" persistency="666" value=""/>
           </attachments>
           <constraint persistency="666"/>
         </Object>
-        <Object accept_root="1" aspect="1" at="0.8 1.59335 0.531076" at_dir="0" base_name="Default" far="512" fov="1.0472" from="6.48561 5.62578 3.61802" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="4294967295">
+        <Object accept_root="1" aspect="1" at="-0.735046 1.07028 0.571573" at_dir="0" base_name="Default" far="512" fov="1.0472" from="-10.5368 4.45722 1.43467" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="4294967295">
           <attachments>
             <Node base_name="transform" name_space="VRAttachment" name_suffix="0" persistency="666" value=""/>
           </attachments>
@@ -30,7 +30,7 @@
 
 	VR.setupEnvironment()
 	VR.setupExcavator()
-	VR.setupPhysics()
+	#VR.setupPhysics()
 	VR.setupHydraulics()
 </core>
       <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="0" persistency="666"/>
@@ -92,14 +92,12 @@
 		stroke.setTransform(p1, d.normalized(), u)
 		parent.addChild(stroke)
 		
-		# TODO add a cylinder by using a stroke and circular profile!
+		# cylinder
 		d = Vec3(z2)-z1
 		u = d.cross(u).cross(d).normalized()
 		l = d.length()*2.0/3.0
 		h = addPrimitive('hull', 'Cylinder '+str(l)+' 0.05 32', VR.Pose(d*0.333+z1, u,d), parent)
 		p = addPrimitive('piston', 'Cylinder '+str(l)+' 0.03 32', VR.Pose([0,l*0.333,0]), h)
-		
-		
 		return stroke
 		
 
@@ -126,6 +124,36 @@
     <Script base_name="setupPhysics" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	import VR
+	
+	# TODO: needs a flat hierarchy for the arm
+	
+	#VR.armSim = VR.Kinematics()
+	
+	VR.setPhysicsActive(0)
+	
+	armBase = VR.excavator.findFirst('armBase')
+	arm1 = armBase.getChild(0)
+	arm2 = arm1.getChild(0)
+	hulls = VR.excavator.findAll('hull')
+	
+	for a in [armBase, arm1, arm2]: a.setPhysicalizeTree(0)
+	armBase.physicalize(1, 0, 'Convex', 0)
+	arm1.physicalize(1, 1, 'Convex', 0)
+	arm2.physicalize(1, 1, 'Convex', 0)
+	
+	cj = VR.Constraint()
+	cj.free([3])
+	cs = VR.Constraint()
+	cj.setReference(arm1.getPose())
+	arm1.attach(armBase, cj, cs)
+	cj.setReference(arm2.getPose())
+	arm2.attach(arm1, cj, cs)
+
+	for hull in hulls:
+		piston = hull.getChild(0)
+		
+
+	VR.setPhysicsActive(1)
 </core>
     </Script>
   </Scripts>

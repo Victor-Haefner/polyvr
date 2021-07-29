@@ -442,10 +442,11 @@ bool VRTerrain::createMultiGrid(VRCameraPtr cam, int res) {
 
 void VRTerrain::setupGeo(VRCameraPtr cam) {
     cout << "VRTerrain::setupGeo" << endl;
-    /*VRGeoData geo;
-    createMesh(geo, grid);
-    if (geo.size() > 0) geo.apply(ptr());*/
-    if (!createMultiGrid(cam, grid)) return;
+    if (!planet.lock()) {
+        VRGeoData geo;
+        createMesh(geo, grid);
+        if (geo.size() > 0) geo.apply(ptr());
+    } else if (!createMultiGrid(cam, grid)) return;
 
 #if __EMSCRIPTEN__// TODO: directly create triangles above!
     convertToTriangles();
@@ -702,6 +703,7 @@ double VRTerrain::getHeight(Vec2d p, bool useEmbankments) {
             }
         }
     }
+
     return h;
 }
 
