@@ -117,7 +117,6 @@ void VRRestClient::getAsync(string uri, VRRestCbPtr cb, int timeoutSecs) { // TO
 }
 
 void VRRestClient::finishAsync(VRRestCbPtr cb, VRRestResponsePtr res) { // executed in main thread
-#ifndef __EMSCRIPTEN__
     (*cb)(res);
 
     VRLock lock(VRRestClientMtx);
@@ -126,7 +125,6 @@ void VRRestClient::finishAsync(VRRestCbPtr cb, VRRestResponsePtr res) { // execu
         if ((*i)->ready()) promises.erase(i++);
         else i++;
     }
-#endif
 }
 
 void VRRestClient::test() {

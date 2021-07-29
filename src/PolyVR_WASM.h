@@ -42,6 +42,8 @@
 #include <OpenSG/OSGOSBTypedGeoIntegralPropertyElement.h>
 #include <OpenSG/OSGOSBTypedGeoVectorPropertyElement.h>
 
+OSG_BEGIN_NAMESPACE;
+
 typedef const char* CSTR;
 EMSCRIPTEN_KEEPALIVE void PolyVR_shutdown() { PolyVR::shutdown(); }
 EMSCRIPTEN_KEEPALIVE void PolyVR_reloadScene() { VRSceneManager::get()->reloadScene(); }
@@ -225,6 +227,8 @@ EMSCRIPTEN_KEEPALIVE void PolyVR_setScriptIthArgumentVal(CSTR name, int i, CSTR 
     auto a = getIthArg(script, i);
     script->changeArgValue(a->getName(), string(val));
 }
+
+OSG_END_NAMESPACE;
 
 void initOSGImporter() {
     // init image formats
