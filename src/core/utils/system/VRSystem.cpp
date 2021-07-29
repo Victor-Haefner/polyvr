@@ -36,17 +36,22 @@ void printBacktrace() {
 #endif
 }
 
-bool exists(string path) { 
+bool exists(string path) {
 #ifdef WASM
-	struct stat buffer;   
-	return (stat (path.c_str(), &buffer) == 0); 
+	struct stat buffer;
+	return (stat (path.c_str(), &buffer) == 0);
 #else
 	return boost::filesystem::exists(path);
 #endif
 }
 
-bool isFile(string path) { return false; boost::filesystem::is_regular_file(path); }
-bool isFolder(string path) { return false; boost::filesystem::is_directory(path); }
+#ifdef WASM
+bool isFile(string path) { return false; }
+bool isFolder(string path) { return false; }
+#else
+bool isFile(string path) { return boost::filesystem::is_regular_file(path); }
+bool isFolder(string path) { return boost::filesystem::is_directory(path); }
+#endif
 
 bool makedir(string path) {
     cout << "makedir: " << path << endl;
@@ -71,7 +76,7 @@ bool makedir(string path) {
     return res;
 }
 
-bool removeFile(string path) { 
+bool removeFile(string path) {
 #ifdef WASM
     return bool(std::remove(path.c_str()) == 0);
 #else
@@ -95,11 +100,11 @@ string absolute(string path) {
 #endif
 }
 
-bool isSamePath(string path1, string path2) { 
+bool isSamePath(string path1, string path2) {
 #ifdef WASM
     return false;
 #else
-    return boost::filesystem::equivalent(path1, path2); 
+    return boost::filesystem::equivalent(path1, path2);
 #endif
 }
 
