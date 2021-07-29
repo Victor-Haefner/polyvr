@@ -193,6 +193,18 @@ void VRTerrain::setMap( VRTexturePtr t, int channel ) {
     setupGeo();
 }
 
+VRTexturePtr VRTerrain::getTexture() { return satTex; }
+
+void VRTerrain::setTexture(VRTexturePtr t, Color4f mCol, float mAmount) {
+    satTex = t;
+    mat->setTexture(satTex, 0, 3);
+    mat->setShaderParameter("mixColor", mCol);
+    mat->setShaderParameter("mixAmount", mAmount);
+    mat->setShaderParameter("texPic", 3);
+    mat->setShaderParameter("doHeightTextures", 2);
+    mat->clearTransparency();
+}
+
 void VRTerrain::paintHeights(string woods, string gravel) {
     mat->setTexture(woods, 0, 1);
     mat->setTexture(gravel, 0, 2);
@@ -214,14 +226,7 @@ void VRTerrain::paintHeights(string path, Color4f mCol, float mAmount) {
 }
 
 void VRTerrain::paintHeights(VRTexturePtr tex, Color4f mCol, float mAmount) {
-    mat->setTexture(tex, 0, 3);
-    //if (mAmount > 0 )
-    //    if (auto t = mat->getTexture(3)) t->mixColor(mCol, mAmount);
-    mat->setShaderParameter("mixColor", mCol);
-    mat->setShaderParameter("mixAmount", mAmount);
-    mat->setShaderParameter("texPic", 3);
-    mat->setShaderParameter("doHeightTextures", 2);
-    mat->clearTransparency();
+    setTexture(tex, mCol, mAmount);
 }
 
 void VRTerrain::updateTexelSize() {

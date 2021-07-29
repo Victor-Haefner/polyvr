@@ -53,6 +53,7 @@ class VRTerrain : public VRGeometry, public VRWorldModule {
         bool useHeightoffset = false;
         float heightoffset = 0.0;
         VRTexturePtr heigthsTex;
+        VRTexturePtr satTex;
         VRMaterialPtr mat;
         shared_ptr<vector<float>> physicsHeightBuffer;
 
@@ -95,9 +96,11 @@ class VRTerrain : public VRGeometry, public VRWorldModule {
         void setLit(bool isLit);
         void setAtmosphericEffect(float thickness, Color3f color);
         void setHeightScale(float s);
-        void setMap( VRTexturePtr tex, int channel = 3 );
-        void loadMap( string path, int channel = 3, bool shout = true );
+        void setMap( VRTexturePtr tex, int channel = 0 );
+        void setTexture( VRTexturePtr tex, Color4f mCol, float mAmount );
+        void loadMap( string path, int channel = 0, bool shout = true );
         VRTexturePtr getMap();
+        VRTexturePtr getTexture();
         Vec2f getTexelSize();
         Vec2d getSize();
         double getGrid();
