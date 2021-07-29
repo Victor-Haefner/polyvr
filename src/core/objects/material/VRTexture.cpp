@@ -195,7 +195,11 @@ void VRTexture::merge(VRTexturePtr other, Vec3d pos) {
 int VRTexture::getChannels() {
     if (!img) return 0;
     auto f = img->getPixelFormat();
+#ifdef __EMSCRIPTEN__
+    if (f == Image::OSG_R_PF) return 1;
+#else
     if (f == GL_RED) return 1;
+#endif
     if (f == Image::OSG_A_PF) return 1;
     if (f == Image::OSG_I_PF) return 1;
     if (f == Image::OSG_L_PF) return 1;
