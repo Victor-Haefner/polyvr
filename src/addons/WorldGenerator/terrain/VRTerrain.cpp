@@ -337,7 +337,7 @@ void VRTerrain::exportWebMesh(string path) { // this exported mesh is meant to b
     obj->exportToFile(path);
 }
 
-Vec2d computeGridSpacing(Vec2d size, Vec2d gridSize, int res) {
+Vec2d computeGridSpacing(Vec2d size, Vec2d gridSize, double res) {
     Vec2i gridN = Vec2i(round(size[0]*1.0/res-0.5), round(size[1]*1.0/res-0.5));
     if (gridN[0] < 1) gridN[0] = 1;
     if (gridN[1] < 1) gridN[1] = 1;
@@ -347,7 +347,7 @@ Vec2d computeGridSpacing(Vec2d size, Vec2d gridSize, int res) {
     return gridS;
 }
 
-bool VRTerrain::createMultiGrid(VRCameraPtr cam, int res) {
+bool VRTerrain::createMultiGrid(VRCameraPtr cam, double res) {
     auto modulo = [](const double& a, const double& b) { return a-floor(a/b)*b; };
     auto checkChange = [&](const vector<double>& v, double eps = 0) {
         if (v.size() != oldMgParams.size()) { oldMgParams = v; return true; }
@@ -386,7 +386,9 @@ bool VRTerrain::createMultiGrid(VRCameraPtr cam, int res) {
         if (!checkChange(vector<double>({NE[0], NE[1]}))) return false;
     }
 
-    Vec2d r1 = computeGridSpacing(size, Vec2d(sectorSizeX, sectorSizeY), res*32);
+    if (pla) res *= 32;
+    else res *= 64;
+    Vec2d r1 = computeGridSpacing(size, Vec2d(sectorSizeX, sectorSizeY), res);
 #else
     Vec2d r1 = computeGridSpacing(size, Vec2d(sectorSizeX, sectorSizeY), res);
 #endif
@@ -395,28 +397,30 @@ bool VRTerrain::createMultiGrid(VRCameraPtr cam, int res) {
     mg.addGrid(Vec4d(N1,N2,E1,E2), Vec2d(r1[0],r1[1]));
 
 #ifdef __EMSCRIPTEN__
-    Vec2d r2 = r1/4.0;
-    Vec2d r3 = r2/8.0;
+    if (pla) {
+	    Vec2d r2 = r1/4.0;
+	    Vec2d r3 = r2/8.0;
 
-    Vec2d L1 = r1*2*0.9;
-    Vec2d L2 = r2*2*0.9;
+	    Vec2d L1 = r1*2*0.9;
+	    Vec2d L2 = r2*2*0.9;
 
-    double x = (N1+N2)*0.5;
-    double y = (E1+E2)*0.5;
-    if (cam) {
-        x = NE[0] - camPose->dir()[2]*L2[0];
-        y = NE[1] + camPose->dir()[0]*L2[1];
+	    double x = (N1+N2)*0.5;
+	    double y = (E1+E2)*0.5;
+	    if (cam) {
+		x = NE[0] - camPose->dir()[2]*L2[0];
+		y = NE[1] + camPose->dir()[0]*L2[1];
+	    }
+
+	    x -= modulo(x,r1[0]); // x%r1
+	    y -= modulo(y,r1[1]); // y%r1
+	    Vec4d rect1 = Vec4d(x-L1[0], x+L1[0], y-L1[1], y+L1[1]);
+	    Vec4d rect2 = Vec4d(x-L2[0], x+L2[0], y-L2[1], y+L2[1]);
+
+	    cout << " - createMultiGrid r1: " << r1 << " r2: " << r2 << " r3: " << r3 << " xy " << Vec2d(x,y) << " L1 " << L1 << " L2 " << L2 << endl;
+
+	    if (r2[0] < r1[0] && 2*L1[0] < (N2-N1) && x-L1[0] > N1 && x+L1[0] < N2) mg.addGrid(rect1, Vec2d(r2[0],r2[1]));
+	    if (r3[0] < r2[0] && 2*L2[0] < 2*L1[0] && x-L2[0] > N1 && x+L2[0] < N2) mg.addGrid(rect2, Vec2d(r3[0],r3[1]));
     }
-
-    x -= modulo(x,r1[0]); // x%r1
-    y -= modulo(y,r1[1]); // y%r1
-    Vec4d rect1 = Vec4d(x-L1[0], x+L1[0], y-L1[1], y+L1[1]);
-    Vec4d rect2 = Vec4d(x-L2[0], x+L2[0], y-L2[1], y+L2[1]);
-
-    cout << " - createMultiGrid r1: " << r1 << " r2: " << r2 << " r3: " << r3 << " xy " << Vec2d(x,y) << " L1 " << L1 << " L2 " << L2 << endl;
-
-    if (r2[0] < r1[0] && 2*L1[0] < (N2-N1) && x-L1[0] > N1 && x+L1[0] < N2) mg.addGrid(rect1, Vec2d(r2[0],r2[1]));
-    if (r3[0] < r2[0] && 2*L2[0] < 2*L1[0] && x-L2[0] > N1 && x+L2[0] < N2) mg.addGrid(rect2, Vec2d(r3[0],r3[1]));
 #endif
     if (!mg.compute(ptr())) {
         cout << " Error in VRTerrain::createMultiGrid, compute failed! ..abort" << endl;
@@ -460,9 +464,7 @@ void VRTerrain::setupGeo(VRCameraPtr cam) {
     cout << "VRTerrain::setupGeo" << endl;
     if (!createMultiGrid(cam, grid)) return;
 
-#if __EMSCRIPTEN__// TODO: directly create triangles above!
-    convertToTriangles();
-#else
+#ifndef __EMSCRIPTEN__
     setType(GL_PATCHES);
     setPatchVertices(4);
 #endif
