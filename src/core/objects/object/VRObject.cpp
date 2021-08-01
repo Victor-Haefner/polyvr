@@ -155,6 +155,7 @@ VRObjectPtr VRObject::copy(vector<VRObjectPtr> children) {
     o->setVisibleMask(visibleMask);
     o->setPickable(pickable);
     o->setEntity(entity);
+    for (auto t : getTags()) o->addTag(t);
     return o;
 }
 

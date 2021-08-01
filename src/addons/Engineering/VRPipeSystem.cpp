@@ -127,6 +127,7 @@ int VRPipeSystem::addNode(string name, PosePtr pos, string type, map<string, str
     rebuildMesh = true;
     auto e = ontology->addEntity(name, type);
     auto n = VRPipeNode::create(e);
+    n->name = name;
     for (auto& p : params) e->set(p.first, p.second);
     int nID = graph->addNode(pos);
     nodes[nID] = n;
@@ -134,7 +135,17 @@ int VRPipeSystem::addNode(string name, PosePtr pos, string type, map<string, str
     return nID;
 }
 
+void VRPipeSystem::remNode(int nID) {
+    rebuildMesh = true;
+    auto& node = nodes[nID];
+    ontology->remEntity(node->entity);
+    nodesByName.erase(node->name);
+    nodes.erase(nID);
+    graph->remNode(nID);
+}
+
 int VRPipeSystem::getNode(string name) { return nodesByName[name]; }
+string VRPipeSystem::getNodeName(int nID) { return nodes[nID]->name; }
 int VRPipeSystem::getSegment(int n1, int n2) { return graph->getEdgeID(n1, n2); }
 
 int VRPipeSystem::addSegment(double radius, int n1, int n2) {
@@ -146,6 +157,13 @@ int VRPipeSystem::addSegment(double radius, int n1, int n2) {
     auto s = VRPipeSegment::create(sID, radius, length);
     segments[sID] = s;
     return sID;
+}
+
+void VRPipeSystem::remSegment(int eID) {
+    rebuildMesh = true;
+    auto& e = graph->getEdge(eID);
+    graph->disconnect(e.from, e.to);
+    segments.erase(eID);
 }
 
 vector<VRPipeSegmentPtr> VRPipeSystem::getPipes(int nID) {
@@ -399,8 +417,10 @@ void VRPipeSystem::update() {
         //cout << "flows" << endl;
         for (auto s : segments) { // add final flow accellerations
             auto& e = graph->getEdge(s.first);
-            string n1 = nodes[e.from]->entity->getName();
-            string n2 = nodes[e.to]->entity->getName();
+            if (!nodes.count(e.from) || !nodes.count(e.to)) continue;
+
+            string n1 = nodes[e.from]->name;
+            string n2 = nodes[e.to]->name;
 
             if (isNan(s.second->dFl)) {
                 s.second->dFl = 0;
@@ -465,31 +485,39 @@ int VRPipeSystem::disconnect(int nID, int sID) {
     auto e = ontology->addEntity("junction", "Junction");
     auto n = VRPipeNode::create(e);
     nodes[cID] = n;
+    string name = e->getName();
+    n->name = name;
     nodesByName[name] = cID;
     return cID;
 }
 
-void VRPipeSystem::setDoVisual(bool b) { doVisual = b; }
+void VRPipeSystem::setDoVisual(bool b, float s) { doVisual = b; spread = s; rebuildMesh = true; }
+
+VREntityPtr VRPipeSystem::getEntity(string name) {
+    if (!nodesByName.count(name)) return 0;
+    int nID = nodesByName[name];
+    return nodes[nID]->entity;
+}
 
 PosePtr VRPipeSystem::getNodePose(int i) { return graph->getPosition(i); }
 double VRPipeSystem::getSegmentPressure(int i) { return (segments[i]->pressure1+segments[i]->pressure2)*0.5; }
 double VRPipeSystem::getSegmentFlow(int i) { return segments[i]->flow; }
-double VRPipeSystem::getTankPressure(string n) { return nodes[nodesByName[n]]->entity->getValue("pressure", 1.0); }
-double VRPipeSystem::getTankDensity(string n) { return nodes[nodesByName[n]]->entity->getValue("density", 1.0); }
-double VRPipeSystem::getTankVolume(string n) { return nodes[nodesByName[n]]->entity->getValue("volume", 1.0); }
-double VRPipeSystem::getPump(string n) { return nodes[nodesByName[n]]->entity->getValue("performance", 0.0); }
+double VRPipeSystem::getTankPressure(string n) { auto e = getEntity(n); return e ? e->getValue("pressure", 1.0) : 0.0; }
+double VRPipeSystem::getTankDensity(string n) { auto e = getEntity(n); return e ? e->getValue("density", 1.0) : 0.0; }
+double VRPipeSystem::getTankVolume(string n) { auto e = getEntity(n); return e ? e->getValue("volume", 1.0) : 0.0; }
+double VRPipeSystem::getPump(string n) { auto e = getEntity(n); return e ? e->getValue("performance", 0.0) : 0.0; }
 
-void VRPipeSystem::setValve(string n, bool b)  { nodes[nodesByName[n]]->entity->set("state", toString(b)); }
-void VRPipeSystem::setPump(string n, double p) { nodes[nodesByName[n]]->entity->set("performance", toString(p)); }
-void VRPipeSystem::setTankPressure(string n, double p) { nodes[nodesByName[n]]->entity->set("pressure", toString(p)); }
-void VRPipeSystem::setTankDensity(string n, double p) { nodes[nodesByName[n]]->entity->set("density", toString(p)); }
+void VRPipeSystem::setValve(string n, bool b)  { auto e = getEntity(n); if (e) e->set("state", toString(b)); }
+void VRPipeSystem::setPump(string n, double p) { auto e = getEntity(n); if (e) e->set("performance", toString(p)); }
+void VRPipeSystem::setTankPressure(string n, double p) { auto e = getEntity(n); if (e) e->set("pressure", toString(p)); }
+void VRPipeSystem::setTankDensity(string n, double p) { auto e = getEntity(n); if (e) e->set("density", toString(p)); }
 
 void VRPipeSystem::updateVisual() {
     if (!doVisual) return;
 
     VRGeoData data(ptr());
 
-    Vec3d dO = Vec3d(-0.1,-0.1,-0.1);
+    Vec3d dO = Vec3d(-spread,-spread,-spread);
     Vec3d d1 = dO*2;
 
     if (rebuildMesh) {

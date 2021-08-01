@@ -48,6 +48,7 @@ class VRPipeSegment {
 class VRPipeNode {
     public:
         VREntityPtr entity;
+        string name;
         double lastPressureDelta = 0.0;
 
     public:
@@ -66,6 +67,7 @@ class VRPipeSystem : public VRGeometry {
 
         bool doVisual = false;
         bool rebuildMesh = true;
+        float spread = 0.1;
 
         map<int, VRPipeNodePtr> nodes;
         map<string, int> nodesByName;
@@ -77,6 +79,8 @@ class VRPipeSystem : public VRGeometry {
         vector<VRPipeSegmentPtr> getInPipes(int nID);
         vector<VRPipeSegmentPtr> getOutPipes(int nID);
 
+        VREntityPtr getEntity(string name);
+
 	public:
 		VRPipeSystem();
 		~VRPipeSystem();
@@ -86,13 +90,16 @@ class VRPipeSystem : public VRGeometry {
 
 		int addNode(string name, PosePtr pos, string type, map<string, string> params);
 		int addSegment(double radius, int n1, int n2);
+		void remNode(int nID);
+		void remSegment(int eID);
 		int getNode(string name);
+		string getNodeName(int nID);
 		int getSegment(int n1, int n2);
 
 		void setNodePose(int nID, PosePtr p);
         int disconnect(int nID, int sID);
         int insertSegment(int nID, int sID, float radius);
-		void setDoVisual(bool b);
+		void setDoVisual(bool b, float spread = 0.1);
 
 		void update();
 		void updateVisual();

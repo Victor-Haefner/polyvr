@@ -3,7 +3,7 @@
   <Objects>
     <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" visible="4294967295">
       <Object ambient="0.3 0.3 0.3 1" base_name="light" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" shadowVolume="1e+06 1e+06 1e+06 -1e+06 -1e+06 -1e+06 1" specular="0.1 0.1 0.1 1" type="Light" visible="4294967295">
-        <Object accept_root="1" aspect="1" at="0.141232 -1.90735e-06 -0.114469" at_dir="0" base_name="Default" far="512" fov="1.0472" from="-1.82248 4.84014 6.35493" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="4294967295">
+        <Object accept_root="1" aspect="1" at="-0.478595 0.15486 0.358613" at_dir="0" base_name="Default" far="512" fov="1.0472" from="-1.43262 1.0925 0.191051" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="4294967295">
           <attachments>
             <Node base_name="transform" name_space="VRAttachment" name_suffix="0" persistency="666" value=""/>
           </attachments>
@@ -21,25 +21,116 @@
   <Cameras activeCam="Default" persistency="666"/>
   <Rendering deferred_rendering="0" fogColor="0.5 0.5 0.5 1" fogParams="0 0 100 0.1" frustum_culling="1" fxaa="0" hmdd="0" marker="0" occlusion_culling="0" persistency="666" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
   <Scripts persistency="666">
-    <Script base_name="clickTool" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+    <Script base_name="clickTool" group="tools" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	import VR
+	
+	if dev.intersect(VR.hud): return
+
+	if dev.intersect(VR.environment):
+		i = dev.getIntersected()
+		print i, i.hasTag('switch'), i.getName(), i.getTags()
+		if i.hasTag('switch'):
+			i.makeUnique()
+			d = i.getMaterial().getDiffuse()
+			isOn = bool(d[1] &gt; 0.5)
+			
+			m = VR.Material('tmp')
+			i.setMaterial(m)
+			
+			if isOn: m.setDiffuse([1,0,0])
+			else: m.setDiffuse([0,1,0])
+			isOn = not isOn
+		
+			part = i.hasAncestorWithTag('part')
+			nID = int(part.getTagValue('simNode'))
+			n = VR.sim.getNodeName(nID)
+			
+			if 'pump' in n:
+				if isOn: VR.sim.setPump(n, 50.0)
+				else: VR.sim.setPump(n, 0.0)
+				
+			if 'valve' in n:
+				if isOn: VR.sim.setValve(n, 1)
+				else: VR.sim.setValve(n, 0)
 
 	ghost = None
 	if hasattr(VR, 'toolGhost'): ghost = VR.toolGhost
 	
 	if ghost and ghost.isVisible():
+		pose = ghost.getPose()
 		template = ghost.getChild(0).getChild(0)
 		asset = template.duplicate()
-		asset.setPose(ghost.getPose())
+		asset.setPose(pose)
 		asset.addTag('part')
 		VR.environment.addChild(asset)
 		
+		nID = -1
+		n = asset.getName()
+		if 'tank' in n: nID = VR.sim.addNode(n, pose, 'Tank', {'pressure':1.0, 'volume':1.0, 'density':1.0})
+		if 'pump' in n: nID = VR.sim.addNode(n, pose, 'Pump', {'performance':0.0, 'isOpen':0})
+		if 'valve' in n: nID = VR.sim.addNode(n, pose, 'Valve', {'state':0, 'radius':0.01})
+		if nID &gt;= 0: asset.setTagValue('simNode', str(nID))
+		
 	if VR.toDelete:
+		if VR.toDelete.hasTag('simNode'):
+			nID = int(VR.toDelete.getTagValue('simNode'))
+			VR.sim.remNode(nID)
+		if VR.toDelete.hasTag('simPipe'):
+			eID = int(VR.toDelete.getTagValue('simPipe'))
+			VR.sim.remSegment(eID)
 		VR.toDelete.destroy()
 		VR.toDelete = None
+		
+	if not hasattr(VR, 'firstAnchor'): VR.firstAnchor = None
+	if VR.closestAnchor:
+		if not VR.firstAnchor: VR.firstAnchor = VR.closestAnchor
+		else: 
+			VR.createPipe(VR.firstAnchor, VR.closestAnchor)
+			VR.firstAnchor = None
 </core>
       <trig type="on_device" dev="mouse" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="3" persistency="666"/>
+    </Script>
+    <Script base_name="createPipe" group="assets" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR, math
+
+	part1 = anchor1.hasAncestorWithTag('part')
+	part2 = anchor2.hasAncestorWithTag('part')
+	if part1 == part2: return
+	
+	p1 = anchor1.getWorldPose()
+	p2 = anchor2.getWorldPose()
+	
+	p1.setDir(-p1.dir())
+	
+	p = VR.Path()
+	p.addPoint2(p1)
+	p.addPoint2(p2)
+	p.compute(18)
+	
+	R = 0.01
+	N = 16
+	prof = []
+	for i in range(N):
+		a = 2.0*math.pi*float(i)/(N-1)
+		c = math.cos(a)
+		s = math.sin(a)
+		prof.append([c*R,s*R,0])
+	
+	s = VR.Stroke()
+	s.setPath(p)
+	s.strokeProfile(prof, 1, 1, 0)
+	s.addTag('pipe')
+	VR.environment.addChild(s)
+
+	nID1 = int(part1.getTagValue('simNode'))
+	nID2 = int(part2.getTagValue('simNode'))
+	eID = VR.sim.addSegment(R, nID1, nID2)
+	s.setTagValue('simPipe', str(eID))
+</core>
+      <arg type="NoneType" value="None" base_name="anchor1" name_space="createPipe" name_suffix="0" persistency="666"/>
+      <arg type="NoneType" value="None" base_name="anchor2" name_space="createPipe" name_suffix="0" persistency="666"/>
     </Script>
     <Script base_name="hudHandler" group="ui" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
@@ -89,6 +180,11 @@
  		var selected = undefined;
  		function select(button) {
  			if (selected != undefined) selected.className = '';
+ 			if (selected == button) {
+ 				send('tool|None');
+ 				selected = undefined;
+ 				return;
+ 			}
  			selected = button;
  			button.className = 'selected';
  			send('tool|'+button.innerHTML)
@@ -119,10 +215,14 @@
 	VR.setupUI()
 	VR.setupEnvironment()
 	VR.setupAssets()
+	
+	VR.sim = VR.PipeSystem()
+	VR.sim.setDoVisual(True, 0.02)
+	VR.scene.addChild(VR.sim)
 </core>
       <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="0" persistency="666"/>
     </Script>
-    <Script base_name="selectTool" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+    <Script base_name="selectTool" group="tools" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	import VR
 	
@@ -144,6 +244,14 @@
 	if tool == 'Valve': createGhost(VR.valvePrototype)
 	if tool == 'Gauge': createGhost(VR.gaugePrototype)
 	
+	if tool == 'Pipe': VR.materials['anchor'].clearTransparency()
+	else: 
+		VR.materials['anchor'].setTransparency(0)
+		VR.firstAnchor = None
+		if VR.closestAnchor:
+			VR.closestAnchor.switchParent(VR.closestAnchor.getParent().getParent())
+			VR.closestAnchor = None
+	
 </core>
       <arg type="NoneType" value="None" base_name="tool" name_space="selectTool" name_suffix="0" persistency="666"/>
     </Script>
@@ -158,20 +266,53 @@
 	c1.setTransform([0,0.1,0], [0,1,0], [0,0,1])
 	c2.setTransform([0,0.1,0])
 
-
 	VR.tankPrototype = VR.Transform('tank')
 	c = VR.createPrimitive('core', 'Pill 0.22 0.09', VR.tankPrototype, VR.materials['metal'])
 	c.setTransform([0,0.2,0])
-	
 	
 	VR.valvePrototype = VR.Transform('valve')
 	c = VR.createPrimitive('core', 'Cylinder 0.05 0.1 32', VR.valvePrototype, VR.materials['metal'])
 	c.setTransform([0,0.2,0], [0,1,0], [0,0,1])
 	
-	
 	VR.gaugePrototype = VR.Transform('gauge')
 	c = VR.createPrimitive('core', 'Cylinder 0.05 0.1 32', VR.gaugePrototype, VR.materials['gauge'])
 	c.setTransform([0,0.2,0], [0,1,0], [0,0,1])
+	
+	
+	def addSwitch(parent, pose):
+		b = VR.createPrimitive('switch', 'Cylinder 0.02 0.02 32', parent, VR.materials['switch'])
+		b.setPose(pose)
+		b.addTag('switch')
+		
+	addSwitch(VR.pumpPrototype, VR.Pose([0.05, 0.2, 0.05]))
+	addSwitch(VR.valvePrototype, VR.Pose([0, 0.3, 0]))
+	
+
+	if hasattr(VR, 'anchor'): VR.anchor.destroy()
+	VR.anchor = VR.createPrimitive('anchor', 'Gear 0.01 0.04 0.05 11 0.04 0.2', None, VR.materials['anchor'])
+	
+	def addAnchor(parent, pose):
+		a = VR.anchor.duplicate()
+		a.setPose(pose)
+		a.addTag('anchor')
+		s = 0.2
+		a.setScale([s,s,s])
+		parent.addChild(a)
+
+	addAnchor(VR.tankPrototype, VR.Pose([0,0.2,0.09]))
+	addAnchor(VR.tankPrototype, VR.Pose([0,0.2,-0.09], [0,0,1]))
+	addAnchor(VR.tankPrototype, VR.Pose([0.09,0.2,0], [-1,0,0]))
+	addAnchor(VR.tankPrototype, VR.Pose([-0.09,0.2,0], [1,0,0]))
+	addAnchor(VR.tankPrototype, VR.Pose([0,0.0,0], [0,1,0], [0,0,1]))
+	addAnchor(VR.tankPrototype, VR.Pose([0,0.4,0], [0,-1,0], [0,0,1]))
+
+	addAnchor(VR.pumpPrototype, VR.Pose([0.1,0.1,0], [-1,0,0]))
+	addAnchor(VR.pumpPrototype, VR.Pose([-0.1,0.1,0], [1,0,0]))
+	addAnchor(VR.pumpPrototype, VR.Pose([0,0.0,0], [0,1,0], [0,0,1]))
+	addAnchor(VR.pumpPrototype, VR.Pose([0,0.2,0], [0,-1,0], [0,0,1]))
+
+	addAnchor(VR.valvePrototype, VR.Pose([0,0.2, 0.025], [0,0,-1]))
+	addAnchor(VR.valvePrototype, VR.Pose([0,0.2,-0.025], [0,0, 1]))
 </core>
     </Script>
     <Script base_name="setupEnvironment" group="assets" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
@@ -199,6 +340,10 @@
 		
 	floor.setColors(cols)
 	VR.environment.addChild(floor)
+	
+	floor2 = floor.duplicate()
+	floor2.setScale([0.15,0.15,0.15])
+	VR.environment.addChild(floor2)
 </core>
     </Script>
     <Script base_name="setupMaterials" group="assets" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
@@ -221,7 +366,24 @@
 	metalMat.setDiffuse([0.5,0.5,0.5])
 
 	deleteMat = getMat('delete')
+	deleteMat.setActivePass(0)
 	deleteMat.setDiffuse([1.0,0.2,0])
+	deleteMat.setTransparency(0.7)
+	deleteMat.setFrontBackModes('GL_NONE', 'GL_FILL')
+	deleteMat.setActivePass(1)
+	deleteMat.setDiffuse([1.0,0.2,0])
+	deleteMat.setTransparency(0.7)
+	deleteMat.setFrontBackModes('GL_FILL', 'GL_NONE')
+	
+	anchorMat = getMat('anchor')
+	anchorMat.setDiffuse([1,1,1])
+	anchorMat.setTransparency(0)
+	
+	closestAnchorMat = getMat('closestAnchor')
+	closestAnchorMat.setDiffuse([0,1,1])
+	
+	switchMat = getMat('switch')
+	switchMat.setDiffuse([1,0,0])
 	
 	floorMat = getMat('floor')
 	floorMat.setDiffuse([0.2,0.2,0.2])
@@ -259,7 +421,7 @@
  	addHud( 'hudSite', 1.0,0.1, 0,1, VR.hud )
 </core>
     </Script>
-    <Script base_name="updateTool" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+    <Script base_name="updateTool" group="tools" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	import VR
 	
@@ -281,17 +443,48 @@
 		
 	part = None
 	if intersected: part = intersected.hasAncestorWithTag('part')
+	
+	pipe = None
+	if intersected: pipe = intersected.hasAncestorWithTag('pipe')
 		
 	if not hasattr(VR, 'toDelete'): VR.toDelete = None
-	if part and VR.activeTool == 'Delete':
-		if part != VR.toDelete:
+	if (part or pipe) and VR.activeTool == 'Delete':
+		obj = part
+		if pipe: obj = pipe
+		if obj != VR.toDelete:
+			if VR.toDelete: VR.toDelete.switchParent(VR.environment)
 			m = VR.materials['delete']
 			m.switchParent(VR.environment)
-			part.switchParent(m)
-			VR.toDelete = part
+			obj.switchParent(m)
+			VR.toDelete = obj
 	elif VR.toDelete:
 		VR.toDelete.switchParent(VR.environment)
 		VR.toDelete = None
+		
+	def getClosestAnchor(part, pos):
+		dmin = 1e6
+		amin = None
+		anchors = part.findAll('anchor')
+		for a in anchors:
+			ap = a.getWorldFrom()
+			d = ap.distance(pos)
+			if d &lt; dmin:
+				dmin = d
+				amin = a
+		return amin
+		
+	if not hasattr(VR, 'closestAnchor'): VR.closestAnchor = None
+	if part and VR.activeTool == 'Pipe':
+		a = getClosestAnchor(part, intersection)
+		if a != VR.closestAnchor:
+			if VR.closestAnchor: VR.closestAnchor.switchParent(VR.closestAnchor.getParent().getParent())
+			VR.closestAnchor = a
+			m = VR.materials['closestAnchor']
+			m.switchParent(a.getParent())
+			a.switchParent(m)
+	elif VR.closestAnchor:
+		VR.closestAnchor.switchParent(VR.closestAnchor.getParent().getParent())
+		VR.closestAnchor = None
 		
 </core>
       <trig type="on_timeout" dev="" state="Pressed" param="0" key="0" base_name="trigger" name_space="__global__" name_suffix="2" persistency="666"/>

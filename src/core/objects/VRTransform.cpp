@@ -73,10 +73,12 @@ void VRTransform::wrapOSG(OSGObjectPtr node) {
 
 VRObjectPtr VRTransform::copy(vector<VRObjectPtr> children) {
     VRTransformPtr t = VRTransform::create(getBaseName());
+    t->setPersistency(getPersistency());
     t->setVisible(isVisible());
-    t->setEntity(entity);
-    t->setMatrix(getMatrix());
     t->setPickable(isPickable());
+    t->setEntity(entity);
+    for (auto ta : getTags()) t->addTag(ta);
+    t->setMatrix(getMatrix());
     t->old_parent = getParent();
     return t;
 }

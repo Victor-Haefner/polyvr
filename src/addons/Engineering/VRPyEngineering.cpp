@@ -13,12 +13,15 @@ simpleVRPyType(RocketExhaust, New_VRObjects_ptr);
 
 PyMethodDef VRPyPipeSystem::methods[] = {
     {"addNode", PyWrap( PipeSystem, addNode, "Add node, type can be [Tank, Valve, Outlet, Pump]", int, string, PosePtr, string, map<string, string> ) },
+    {"remNode", PyWrap( PipeSystem, remNode, "Remove node", void, int ) },
     {"addSegment", PyWrap( PipeSystem, addSegment, "Add segment between nodes (radius, n1, n2)", int, double, int, int ) },
-    {"setDoVisual", PyWrap( PipeSystem, setDoVisual, "Enable visual", void, bool ) },
+    {"remSegment", PyWrap( PipeSystem, remSegment, "Remove segment", void, int ) },
+    {"setDoVisual", PyWrapOpt( PipeSystem, setDoVisual, "Enable visual", "0.1", void, bool, float ) },
     {"setNodePose", PyWrap( PipeSystem, setNodePose, "Set node pose by ID", void, int, PosePtr ) },
     {"disconnect", PyWrap( PipeSystem, disconnect, "Disconnect a node from a segment, keeps the segment by adding a junction to its end (nId, sID)", int, int, int ) },
     {"insertSegment", PyWrap( PipeSystem, insertSegment, "Insert a segment between a node and segment (nID, sID, radius)", int, int, int, float ) },
     {"getNode", PyWrap( PipeSystem, getNode, "Get node ID by name", int, string ) },
+    {"getNodeName", PyWrap( PipeSystem, getNodeName, "Get node name", string, int ) },
     {"getNodePose", PyWrap( PipeSystem, getNodePose, "Get node pose", PosePtr, int ) },
     {"getSegment", PyWrap( PipeSystem, getSegment, "Get segment ID by its node IDs", int, int, int ) },
     {"getSegmentPressure", PyWrap( PipeSystem, getSegmentPressure, "Get segment pressure", double, int ) },
