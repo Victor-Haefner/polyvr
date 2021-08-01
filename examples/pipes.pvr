@@ -1,0 +1,305 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Scene base_name="pipes" name_space="Scene" name_suffix="0" persistency="666">
+  <Objects>
+    <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" visible="4294967295">
+      <Object ambient="0.3 0.3 0.3 1" base_name="light" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" shadowVolume="1e+06 1e+06 1e+06 -1e+06 -1e+06 -1e+06 1" specular="0.1 0.1 0.1 1" type="Light" visible="4294967295">
+        <Object accept_root="1" aspect="1" at="0.141232 -1.90735e-06 -0.114469" at_dir="0" base_name="Default" far="512" fov="1.0472" from="-1.82248 4.84014 6.35493" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="4294967295">
+          <attachments>
+            <Node base_name="transform" name_space="VRAttachment" name_suffix="0" persistency="666" value=""/>
+          </attachments>
+          <Object at="0 0 -1" at_dir="0" base_name="Headlight_beacon" from="0 0 0" light="light" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" up="0 1 0" visible="4294967295">
+            <attachments>
+              <Node base_name="transform" name_space="VRAttachment" name_suffix="0" persistency="666" value=""/>
+            </attachments>
+            <constraint persistency="666"/>
+          </Object>
+          <constraint persistency="666"/>
+        </Object>
+      </Object>
+    </Object>
+  </Objects>
+  <Cameras activeCam="Default" persistency="666"/>
+  <Rendering deferred_rendering="0" fogColor="0.5 0.5 0.5 1" fogParams="0 0 100 0.1" frustum_culling="1" fxaa="0" hmdd="0" marker="0" occlusion_culling="0" persistency="666" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
+  <Scripts persistency="666">
+    <Script base_name="clickTool" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+
+	ghost = None
+	if hasattr(VR, 'toolGhost'): ghost = VR.toolGhost
+	
+	if ghost and ghost.isVisible():
+		template = ghost.getChild(0).getChild(0)
+		asset = template.duplicate()
+		asset.setPose(ghost.getPose())
+		asset.addTag('part')
+		VR.environment.addChild(asset)
+		
+	if VR.toDelete:
+		VR.toDelete.destroy()
+		VR.toDelete = None
+</core>
+      <trig type="on_device" dev="mouse" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="3" persistency="666"/>
+    </Script>
+    <Script base_name="hudHandler" group="ui" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+
+ 	m = dev.getMessage().split('|')
+ 	
+ 	if m[0] == 'tool': VR.selectTool(m[1])
+ 	
+</core>
+      <trig type="on_device" dev="server1" state="Released" param="0" key="-1" base_name="trigger" name_space="__global__" name_suffix="1" persistency="666"/>
+    </Script>
+    <Script base_name="hudSite" group="ui" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="HTML">
+      <core>
+&lt;!DOCTYPE html&gt;
+ &lt;html&gt;
+
+ &lt;head&gt;
+ 	&lt;style type="text/css"&gt;
+ 		body {
+ 			margin: 0;
+ 			display: flex;
+ 			justify-content: space-evenly;
+ 			overflow: hidden;
+ 		}
+ 		
+ 		button {
+ 			font-size:50vh;
+ 			width: 100%;
+ 			height:100vh;
+ 		}
+ 		
+ 		.selected {
+ 			background: #fff;
+ 		}
+ 	&lt;/style&gt;
+ 	&lt;script&gt;
+ 		var websocket = new WebSocket('ws://localhost:5500');
+ 		websocket.onopen = function() { send('register|hud'); };
+ 		websocket.onerror = function(e) {};
+ 		websocket.onmessage = function(m) { if(m.data) handle(m.data); };
+ 		websocket.onclose = function(e) {};
+
+ 		function send(m) { websocket.send(m); };
+ 		function handle(m) { console.log(m); };
+ 		
+ 		var selected = undefined;
+ 		function select(button) {
+ 			if (selected != undefined) selected.className = '';
+ 			selected = button;
+ 			button.className = 'selected';
+ 			send('tool|'+button.innerHTML)
+ 		};
+ 	&lt;/script&gt;
+ &lt;/head&gt;
+
+ &lt;body&gt;
+ 	&lt;button onclick="select(this)"&gt;Tank&lt;/button&gt;
+ 	&lt;button onclick="select(this)"&gt;Pump&lt;/button&gt;
+ 	&lt;button onclick="select(this)"&gt;Pipe&lt;/button&gt;
+ 	&lt;button onclick="select(this)"&gt;Valve&lt;/button&gt;
+ 	&lt;button onclick="select(this)"&gt;Gauge&lt;/button&gt;
+ 	&lt;button onclick="select(this)"&gt;Delete&lt;/button&gt;
+ &lt;/body&gt;
+ &lt;/html&gt;
+</core>
+    </Script>
+    <Script base_name="init" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+
+	if hasattr(VR, 'scene'): VR.scene.destroy()
+	VR.scene = VR.Object('scene', 'light')
+
+	
+	VR.setupMaterials()
+	VR.setupUI()
+	VR.setupEnvironment()
+	VR.setupAssets()
+</core>
+      <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="0" persistency="666"/>
+    </Script>
+    <Script base_name="selectTool" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+	
+	VR.activeTool = tool
+
+	if hasattr(VR, 'toolGhost'): 
+		if VR.toolGhost: VR.toolGhost.destroy()
+		VR.toolGhost = None
+		
+	def createGhost(template):
+		m = VR.materials['ghost'].duplicate()
+		VR.toolGhost = VR.Transform('toolGhost')
+		VR.toolGhost.addChild(m)
+		m.addChild(template.duplicate())
+		VR.scene.addChild(VR.toolGhost)
+		
+	if tool == 'Tank': createGhost(VR.tankPrototype)
+	if tool == 'Pump': createGhost(VR.pumpPrototype)
+	if tool == 'Valve': createGhost(VR.valvePrototype)
+	if tool == 'Gauge': createGhost(VR.gaugePrototype)
+	
+</core>
+      <arg type="NoneType" value="None" base_name="tool" name_space="selectTool" name_suffix="0" persistency="666"/>
+    </Script>
+    <Script base_name="setupAssets" group="assets" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+
+		
+	VR.pumpPrototype = VR.Transform('pump')
+	c1 = VR.createPrimitive('core1', 'Pill 0.22 0.09', VR.pumpPrototype, VR.materials['metal'])
+	c2 = VR.createPrimitive('core2', 'Box 0.2 0.2 0.2', VR.pumpPrototype, VR.materials['metal'])
+	c1.setTransform([0,0.1,0], [0,1,0], [0,0,1])
+	c2.setTransform([0,0.1,0])
+
+
+	VR.tankPrototype = VR.Transform('tank')
+	c = VR.createPrimitive('core', 'Pill 0.22 0.09', VR.tankPrototype, VR.materials['metal'])
+	c.setTransform([0,0.2,0])
+	
+	
+	VR.valvePrototype = VR.Transform('valve')
+	c = VR.createPrimitive('core', 'Cylinder 0.05 0.1 32', VR.valvePrototype, VR.materials['metal'])
+	c.setTransform([0,0.2,0], [0,1,0], [0,0,1])
+	
+	
+	VR.gaugePrototype = VR.Transform('gauge')
+	c = VR.createPrimitive('core', 'Cylinder 0.05 0.1 32', VR.gaugePrototype, VR.materials['gauge'])
+	c.setTransform([0,0.2,0], [0,1,0], [0,0,1])
+</core>
+    </Script>
+    <Script base_name="setupEnvironment" group="assets" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+
+	if hasattr(VR, 'environment'): VR.environment.destroy()
+	VR.environment = VR.Object('environment')
+	VR.scene.addChild(VR.environment)
+	
+	W = 20
+	Ws = str(W)
+	Ns = str(W/4)
+
+	floor = VR.Geometry('floor')
+	floor.setPrimitive('Plane '+Ws+' '+Ws+' '+Ns+' '+Ns)
+	floor.setOrientation([0,1,0], [0,0,-1])
+	floor.applyTransformation()
+	floor.setMaterial(VR.materials['floor'])
+	cols = [[0,0,0]]*floor.size()
+	for i,p in enumerate(floor.getPositions()):
+		g = abs(p.length()/W*6-1.8)
+		g = min(g*g,1.0)
+		cols[i] = [g,g,g]
+		
+	floor.setColors(cols)
+	VR.environment.addChild(floor)
+</core>
+    </Script>
+    <Script base_name="setupMaterials" group="assets" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+
+	if not hasattr(VR, 'materials'): VR.materials = {}
+	
+	def getMat(name):
+		if not name in VR.materials: VR.materials[name] = VR.Material(name)
+		return VR.materials[name]
+	
+	gaugeMat = getMat('gauge')
+	gaugeMat.setDiffuse([0.8,0.8,0.8])
+	
+	pipeMat = getMat('pipe')
+	pipeMat.setDiffuse([0.4,0.4,0.4])
+	
+	metalMat = getMat('metal')
+	metalMat.setDiffuse([0.5,0.5,0.5])
+
+	deleteMat = getMat('delete')
+	deleteMat.setDiffuse([1.0,0.2,0])
+	
+	floorMat = getMat('floor')
+	floorMat.setDiffuse([0.2,0.2,0.2])
+	floorMat.setWireFrame(1)
+	floorMat.setLineWidth(2)
+	floorMat.setLit(0)
+
+
+	ghostMat = getMat('ghost')
+	ghostMat.setActivePass(0)
+	ghostMat.setDiffuse([0.2,0.8,1.0])
+	ghostMat.setTransparency(0.5)
+	ghostMat.setFrontBackModes('GL_NONE', 'GL_FILL')
+	ghostMat.setActivePass(1)
+	ghostMat.setDiffuse([0.2,0.8,1.0])
+	ghostMat.setTransparency(0.5)
+	ghostMat.setFrontBackModes('GL_FILL', 'GL_NONE')
+</core>
+    </Script>
+    <Script base_name="setupUI" group="ui" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+
+ 	def addHud(site,w,h,x,y,parent):
+ 		s = VR.Sprite('site')
+ 		s.setSize(w,h)
+ 		s.webOpen('http://localhost:5500/'+site, 400, w/h)
+ 		s.setFrom([x,y,-2])
+ 		parent.addChild(s)
+
+ 	if hasattr(VR, 'hud'): VR.hud.destroy()
+ 	VR.hud = VR.Object('hud')
+ 	VR.find('Default').addChild(VR.hud)
+
+ 	addHud( 'hudSite', 1.0,0.1, 0,1, VR.hud )
+</core>
+    </Script>
+    <Script base_name="updateTool" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+	
+	mouse = VR.find('mouse')
+	
+	intersected = None
+	intersection = None
+	if mouse.intersect(VR.environment):
+		intersected = mouse.getIntersected()
+		intersection = mouse.getIntersection()
+
+	ghost = None
+	if hasattr(VR, 'toolGhost'): ghost = VR.toolGhost
+	
+	if ghost: ghost.setVisible(intersected != None)
+	
+	if intersection and ghost:
+		ghost.setFrom(intersection)
+		
+	part = None
+	if intersected: part = intersected.hasAncestorWithTag('part')
+		
+	if not hasattr(VR, 'toDelete'): VR.toDelete = None
+	if part and VR.activeTool == 'Delete':
+		if part != VR.toDelete:
+			m = VR.materials['delete']
+			m.switchParent(VR.environment)
+			part.switchParent(m)
+			VR.toDelete = part
+	elif VR.toDelete:
+		VR.toDelete.switchParent(VR.environment)
+		VR.toDelete = None
+		
+</core>
+      <trig type="on_timeout" dev="" state="Pressed" param="0" key="0" base_name="trigger" name_space="__global__" name_suffix="2" persistency="666"/>
+    </Script>
+  </Scripts>
+  <Sockets persistency="666"/>
+  <Background color="1 1 1" format=".png" path="" persistency="666" type="0"/>
+  <Navigation active="Orbit" persistency="666"/>
+  <Materials persistency="666"/>
+  <Semantics persistency="666"/>
+</Scene>
