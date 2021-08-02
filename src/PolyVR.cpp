@@ -282,7 +282,11 @@ void PolyVR::update() {
 
     VRSceneManager::get()->update();
 
-    if (VRGlobals::CURRENT_FRAME == 300) {
+    int appInitFrame = 10;
+#ifdef _WIN32
+    int appInitFrame = 300;
+#endif
+    if (VRGlobals::CURRENT_FRAME == appInitFrame) {
         string app = options->getOption<string>("application");
         string dcy = options->getOption<string>("decryption");
         string key;
