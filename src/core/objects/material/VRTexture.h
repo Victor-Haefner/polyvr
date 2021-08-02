@@ -28,6 +28,7 @@ class VRTexture : public std::enable_shared_from_this<VRTexture> {
         static VRTexturePtr create();
         static VRTexturePtr create(ImageMTRecPtr img);
         VRTexturePtr ptr();
+        VRTexturePtr copy();
 
         void read(string path);
         void setImage(ImageMTRecPtr img);

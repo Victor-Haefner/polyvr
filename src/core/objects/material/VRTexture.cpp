@@ -16,6 +16,12 @@ VRTexturePtr VRTexture::create() { return shared_ptr<VRTexture>(new VRTexture() 
 VRTexturePtr VRTexture::create(ImageMTRecPtr img) { return shared_ptr<VRTexture>(new VRTexture(img) ); }
 VRTexturePtr VRTexture::ptr() { return shared_from_this(); }
 
+VRTexturePtr VRTexture::copy() {
+    auto t = create();
+    t->img = dynamic_pointer_cast<Image>(img->shallowCopy());
+    t->internal_format = internal_format;
+    return t;
+}
 
 void VRTexture::setImage(ImageMTRecPtr img) { this->img = img; }
 void VRTexture::setInternalFormat(int ipf) { internal_format = ipf; }
