@@ -290,6 +290,9 @@ string VRMaterial::constructShaderVP(VRMatDataPtr data) {
     int texD = data->getTextureDimension();
     //bool hasVertCols = ;
 
+    int pointSize = 1;
+    if (data->pointChunk) pointSize = data->pointChunk->getSize();
+
     string vp;
 #ifdef OSG_OGL_ES2
     vp += "attribute vec4 osg_Vertex;\n";
@@ -315,6 +318,7 @@ string VRMaterial::constructShaderVP(VRMatDataPtr data) {
     if (texD == 2) vp += "  texCoord = osg_MultiTexCoord0;\n";
     vp += "  color = osg_Color;\n";
     vp += "  gl_Position = OSGModelViewProjectionMatrix * osg_Vertex;\n";
+    if (pointSize > 1) vp += "  gl_PointSize = "+toString(pointSize)+".0;\n";
     vp += "}\n";
 #else
     vp += "#version 120\n";
