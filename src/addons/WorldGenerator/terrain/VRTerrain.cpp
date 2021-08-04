@@ -156,7 +156,7 @@ void VRTerrain::setParameters( Vec2d s, double r, double h, float w, float aT, C
     mat->setShaderParameter("atmoColor", aC);
     mat->setShaderParameter("atmoThickness", aT);
     updateTexelSize();
-    setupGeo();
+    //setupGeo();
 }
 
 void VRTerrain::setLocalized(bool in){ localMesh = in; }
@@ -171,22 +171,11 @@ void VRTerrain::setHeightScale(float s) { heightScale = s; mat->setShaderParamet
 void VRTerrain::setMap( VRTexturePtr t, int channel ) {
     VRLock lock(mtx());
     if (!t) return;
-    /*if (t->getChannels() != 4) { // fix mono channels
-        VRTextureGenerator tg;
-        auto dim = t->getSize();
-        tg.setSize(dim, true);
-        heigthsTex = tg.compose(0);
-        for (int i = 0; i < dim[0]; i++) {
-            for (int j = 0; j < dim[1]; j++) {
-                double h = t->getPixelVec(Vec3i(i,j,0))[0];
-                heigthsTex->setPixel(Vec3i(i,j,0), Color4f(1.0,1.0,1.0,h));
-            }
-        }
-    } else*/ heigthsTex = t;
+    heigthsTex = t;
     mat->setTexture(heigthsTex);
     mat->clearTransparency();
-	mat->setShaderParameter("channel", channel);
-	mat->setShaderParameter("heightoffset", heightoffset);
+    mat->setShaderParameter("channel", channel);
+    mat->setShaderParameter("heightoffset", heightoffset);
     mat->setTextureParams(GL_LINEAR, GL_LINEAR, GL_MODULATE, GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
     mat->clearTransparency();
     updateTexelSize();
@@ -376,14 +365,19 @@ bool VRTerrain::createMultiGrid(VRCameraPtr cam, double res) {
 #ifdef __EMSCRIPTEN__
     Vec2d NE;
     PosePtr camPose;
-    if (cam && pla) {
-        camPose = cam->getWorldPose();
-        NE = pla->fromPosLatLong(camPose->pos(), 1, 0);
-        if (NE[0] < N1 || NE[0] > N2 || NE[1] < E1 || NE[1] > E2) { // cam not above terrain
-            res *= 1e6;
-            if (!checkChange(vector<double>())) return false;
-        }
-        if (!checkChange(vector<double>({NE[0], NE[1]}))) return false;
+    if (pla) {
+	    if (cam) {
+		camPose = cam->getWorldPose();
+		NE = pla->fromPosLatLong(camPose->pos(), 1, 0);
+		if (NE[0] < N1 || NE[0] > N2 || NE[1] < E1 || NE[1] > E2) { // cam not above terrain
+		    res *= 1e6;
+		    if (!checkChange(vector<double>())) return false;
+		}
+		if (!checkChange(vector<double>({NE[0], NE[1]}))) return false;
+	    } else {
+		res *= 1e6;
+		if (!checkChange(vector<double>())) return false;
+	    }
     }
 
     if (pla) res *= 32;
@@ -393,6 +387,14 @@ bool VRTerrain::createMultiGrid(VRCameraPtr cam, double res) {
     Vec2d r1 = computeGridSpacing(size, Vec2d(sectorSizeX, sectorSizeY), res);
 #endif
 
+    if (!checkChange(vector<double>({res, r1[0], r1[1], NE[0], NE[1]}))) return false;
+
+    /*if (camPose) cout << " ---- camPose " << camPose->pos() << endl;
+    cout << " ---- NE " << NE << endl;
+    cout << " ---- grid " << grid << endl;
+    cout << " ---- resolution " << resolution << endl;
+    cout << " ---- res " << res << endl;
+    cout << " ---- r1 " << r1 << endl;*/
     VRMultiGrid mg("terrainGrid");
     mg.addGrid(Vec4d(N1,N2,E1,E2), Vec2d(r1[0],r1[1]));
 
@@ -416,7 +418,7 @@ bool VRTerrain::createMultiGrid(VRCameraPtr cam, double res) {
 	    Vec4d rect1 = Vec4d(x-L1[0], x+L1[0], y-L1[1], y+L1[1]);
 	    Vec4d rect2 = Vec4d(x-L2[0], x+L2[0], y-L2[1], y+L2[1]);
 
-	    cout << " - createMultiGrid r1: " << r1 << " r2: " << r2 << " r3: " << r3 << " xy " << Vec2d(x,y) << " L1 " << L1 << " L2 " << L2 << endl;
+	    //cout << " - createMultiGrid r1: " << r1 << " r2: " << r2 << " r3: " << r3 << " xy " << Vec2d(x,y) << " L1 " << L1 << " L2 " << L2 << endl;
 
 	    if (r2[0] < r1[0] && 2*L1[0] < (N2-N1) && x-L1[0] > N1 && x+L1[0] < N2) mg.addGrid(rect1, Vec2d(r2[0],r2[1]));
 	    if (r3[0] < r2[0] && 2*L2[0] < 2*L1[0] && x-L2[0] > N1 && x+L2[0] < N2) mg.addGrid(rect2, Vec2d(r3[0],r3[1]));
@@ -456,12 +458,12 @@ bool VRTerrain::createMultiGrid(VRCameraPtr cam, double res) {
     }
 
     data.apply(ptr());
-    cout << " -- createMultiGrid " << positions->size() << endl;
+    //cout << " -- createMultiGrid " << positions->size() << endl;
     return true;
 }
 
 void VRTerrain::setupGeo(VRCameraPtr cam) {
-    cout << "VRTerrain::setupGeo" << endl;
+    //cout << "VRTerrain::setupGeo" << endl;
     if (!createMultiGrid(cam, grid)) return;
 
 #ifndef __EMSCRIPTEN__
@@ -471,7 +473,7 @@ void VRTerrain::setupGeo(VRCameraPtr cam) {
 
     if (localMesh && planet.lock()) mat->setShaderParameter("local",1);
     setMaterial(mat);
-    cout << "VRTerrain::setupGeo done" << endl;
+    //cout << "VRTerrain::setupGeo done" << endl;
 }
 
 vector<Vec3d> VRTerrain::probeHeight( Vec2d p ) {
@@ -596,10 +598,10 @@ void VRTerrain::setHeightTexture(VRTexturePtr t) {
 }
 
 void VRTerrain::setupMat() {
-	auto defaultMat = VRMaterial::get("defaultTerrain");
-	setHeightTexture(defaultMat->getTexture());
+    /*auto defaultMat = VRMaterial::get("defaultTerrain");
+    setHeightTexture(defaultMat->getTexture());
     Vec2f texel = Vec2f(1,1);
-	if (!heigthsTex) {
+    if (!heigthsTex) {
         Color4f w(0,0,0,0);
         VRTextureGenerator tg;
         tg.setSize(Vec3i(128,128,1),true);
@@ -609,9 +611,9 @@ void VRTerrain::setupMat() {
         defaultMat->clearTransparency();
         auto texSize = heigthsTex->getSize();
         texel = Vec2f( 1.0/texSize[0], 1.0/texSize[1] );
-	}
+    }*/
 
-	mat = VRMaterial::create("terrain");
+    mat = VRMaterial::create("terrain");
 #ifndef OSG_OGL_ES2
 	mat->setVertexShader(vertexShader, "terrainVS");
 	mat->setFragmentShader(fragmentShader, "terrainFS");
@@ -622,13 +624,13 @@ void VRTerrain::setupMat() {
     mat->setVertexShader(vertexShader_es2, "terrainVSes2");
     mat->setFragmentShader(fragmentShader_es2, "terrainFSes2");
 #endif
-	mat->setShaderParameter("resolution", resolution);
-	mat->setShaderParameter("texture", 0);
-	mat->setShaderParameter("channel", 3);
+    mat->setShaderParameter("texture", 0);
+    mat->setShaderParameter("channel", 3);
+    mat->setZOffset(1,1);
+	/*mat->setShaderParameter("resolution", resolution);
 	mat->setShaderParameter("texel", texel);
 	mat->setShaderParameter("texelSize", texelSize);
-    mat->setZOffset(1,1);
-	setMap(heigthsTex);
+	setMap(heigthsTex);*/
 }
 
 bool VRTerrain::applyIntersectionAction(Action* action) {

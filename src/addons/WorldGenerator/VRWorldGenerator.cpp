@@ -16,6 +16,7 @@
 #include "core/objects/material/VRTexture.h"
 #include "core/objects/VRLodTree.h"
 #include "core/scene/VRObjectManager.h"
+#include "core/utils/VRTimer.h"
 #include "core/utils/toString.h"
 #include "core/utils/system/VRSystem.h"
 #include "core/utils/VRFunction.h"
@@ -235,7 +236,7 @@ OSMMapPtr VRWorldGenerator::getOSMMap() { return osmMap; }
 OSMMapPtr VRWorldGenerator::getGMLMap() { return gmlMap; }
 
 void VRWorldGenerator::addTerrainsToLOD() {
-    cout << "VRWorldGenerator::addTerrainsToLOD" << endl;
+    //cout << "VRWorldGenerator::addTerrainsToLOD" << endl;
     //auto nLevel = lodLevels.size();
     auto nTerrains = terrains.size();
     for (unsigned int i = 0; i < nTerrains; i++) {
@@ -248,7 +249,10 @@ void VRWorldGenerator::setTerrainSize( Vec2d in ) { terrainSize = in; }
 
 void VRWorldGenerator::setupLODTerrain(string pathMap, string pathPaint, float detail, bool cache, bool isLit, Color4f mixColor, float mixAmount ) {
 #ifndef WITHOUT_GDAL
-    cout << "VRWorldGenerator::setupLODTerrain" << endl;
+    cout << " !!! VRWorldGenerator::setupLODTerrain" << endl;
+    VRTimer timer;
+    timer.start();
+    //cout << "VRWorldGenerator::setupLODTerrain" << endl;
     auto tex = loadGeoRasterData(pathMap, false);
     Vec3i texSizeN = tex->getSize();
     //cout << " texSizeN: " << texSizeN << endl;
@@ -277,45 +281,42 @@ void VRWorldGenerator::setupLODTerrain(string pathMap, string pathPaint, float d
     string pathPaint1 = genPath(pathPaint, "_1", ".png");
     string pathPaint2 = genPath(pathPaint, "_2", ".png");
 
+#ifndef __EMSCRIPTEN__
     if ( exists(pathMap1) && cache ) {
         tex1 = loadGeoRasterData(pathMap1, false);
     } else {
-        cout << "VRWorldGenerator::setupLODTerrain creating new downsized texture lvl1 at " << pathMap1 << endl;
-        tex1 = loadGeoRasterData(pathMap, false);
-        tex1->downsize();
-#ifndef __EMSCRIPTEN__
+        //cout << "VRWorldGenerator::setupLODTerrain creating new downsized texture lvl1 at " << pathMap1 << endl;
+        tex1 = tex->copy();
+        tex1->downsize(); // TODO: improve performance
         string params[3];
         gTr = getGeoTransform(pathMap);
         for (int i = 0; i < 6; i++) geoTransform[i] = gTr[i];
         geoTransform[1] *= 2;
         writeGeoRasterData(pathMap1, tex1, geoTransform, params);
-#endif
     }
     if ( exists(pathMap2) && cache ) {
         tex2 = loadGeoRasterData(pathMap2, false);
     } else {
-        cout << "VRWorldGenerator::setupLODTerrain creating new downsized texture lvl2 at " << pathMap2 << endl;
-        tex2 = loadGeoRasterData(pathMap, false);
-        tex2->downsize();
-        tex2->downsize();
-#ifndef __EMSCRIPTEN__
+        //cout << "VRWorldGenerator::setupLODTerrain creating new downsized texture lvl2 at " << pathMap2 << endl;
+        tex2 = tex1->copy();
+        tex2->downsize(); // TODO: improve performance
         string params2[3];
         gTr = getGeoTransform(pathMap);
         for (int i = 0; i < 6; i++) geoTransform[i] = gTr[i];
         geoTransform[1] *= 4;
         writeGeoRasterData(pathMap2, tex2, geoTransform, params2);
-#endif
     }
+#endif
 #ifndef __EMSCRIPTEN__
     if ( !exists(pathPaint1) || !cache ) {
-        cout << "VRWorldGenerator::setupLODTerrain creating new downsized sat texture lvl1 at " << pathPaint1 << endl;
+        //cout << "VRWorldGenerator::setupLODTerrain creating new downsized sat texture lvl1 at " << pathPaint1 << endl;
         VRTexturePtr dsSatImg1 = VRTexture::create();
         dsSatImg1->read(pathPaint);
         dsSatImg1->downsize();
         dsSatImg1->write(pathPaint1);
     }
     if ( !exists(pathPaint2) || !cache ) {
-        cout << "VRWorldGenerator::setupLODTerrain creating new downsized sat texture lvl2 at " << pathPaint2 << endl;
+        //cout << "VRWorldGenerator::setupLODTerrain creating new downsized sat texture lvl2 at " << pathPaint2 << endl;
         VRTexturePtr dsSatImg2 = VRTexture::create();
         dsSatImg2->read(pathPaint);
         dsSatImg2->downsize();
@@ -325,6 +326,7 @@ void VRWorldGenerator::setupLODTerrain(string pathMap, string pathPaint, float d
 #endif
 
     auto addTerrain = [&](double fac, int a) {
+        cout << "   !!! VRWorldGenerator::setupLODTerrain::addTerrain" << endl;
         auto terrain = VRTerrain::create("terrain"+toString(fac), bool(planet));
 
         fac *= detail;
@@ -338,7 +340,9 @@ void VRWorldGenerator::setupLODTerrain(string pathMap, string pathPaint, float d
 #endif
 
         //if (mixAmount > 0) texSc->mixColor(mixColor, mixAmount);
+        cout << "   timer addTerrain paintHeights: " << timer.stop() << endl;
         terrain->paintHeights( satImg, mixColor, mixAmount );
+        cout << "   timer addTerrain paintHeights: " << timer.stop() << endl;
         //terrain->paintHeights( satImg, Color4f(1,0,1,1), 0.5 );
         terrain->setMap( texSc, 0 );
         terrain->setWorld( ptr() );
@@ -347,8 +351,10 @@ void VRWorldGenerator::setupLODTerrain(string pathMap, string pathPaint, float d
         terrains.push_back(terrain);
     };
 
-    cout << " VRWorldGenerator::setupLODTerrain add terrains" << endl;
+    //cout << " VRWorldGenerator::setupLODTerrain add terrains" << endl;
+    cout << "  timer addTerrain(1.0, 0): " << timer.stop() << endl;
     addTerrain(1.0, 0);
+    cout << "  timer addTerrain(1.0, 0): " << timer.stop() << endl;
 #ifndef __EMSCRIPTEN__
     addTerrain(0.25, 1);
     addTerrain(0.05, 2);
@@ -356,7 +362,7 @@ void VRWorldGenerator::setupLODTerrain(string pathMap, string pathPaint, float d
 
     addTerrainsToLOD();
     if (planet) planet->localizeSector(ptr());
-    cout << " VRWorldGenerator::setupLODTerrain done!" << endl;
+    cout << " VRWorldGenerator::setupLODTerrain done! it took: " << timer.stop() << endl;
 #endif
 }
 

@@ -41,7 +41,7 @@ void VRPlanet::addMoon(VRTransformPtr t) { moons.push_back(t); }
 vector<VRTransformPtr> VRPlanet::getMoons() { return moons; }
 
 void VRPlanet::localizeSector(VRWorldGeneratorPtr sector) {
-    cout << "VRPlanet::localizeSector" << endl;
+    //cout << "VRPlanet::localizeSector" << endl;
     if (!sectorParent) {
         sectorParent = VRObject::create("sectors");
         addChild(sectorParent);
@@ -58,10 +58,11 @@ void VRPlanet::localizeSector(VRWorldGeneratorPtr sector) {
     pSector->invert();
 
     for (auto terrain : sector->getTerrains()) {
+        cout << " !!! VRPlanet::localizeSector" << endl;
         terrain->curveMesh(ptr(), sector->getPlanetCoords(), pSector);
         terrain->setupGeo();
     }
-    cout << "VRPlanet::localizeSector done" << endl;
+    //cout << "VRPlanet::localizeSector done" << endl;
 }
 
 void VRPlanet::localize(double north, double east) {
@@ -268,7 +269,7 @@ Vec2d VRPlanet::fromPosLatLong(Pnt3d p, bool local, bool doOptimize) { // TODO: 
         cout.precision(pr);
     }
 
-    cout << "VRPlanet::fromPosLatLong p:" << p1 << " n:" << n << " acos:" << acos(n[1]) << " atan2: " << atan2(-n[2], n[0]) << endl;
+    //cout << "VRPlanet::fromPosLatLong p:" << p1 << " n:" << n << " acos:" << acos(n[1]) << " atan2: " << atan2(-n[2], n[0]) << endl;
     return Vec2d(north, east);
 }
 
@@ -331,10 +332,11 @@ VRWorldGeneratorPtr VRPlanet::addSector( double north, double east, bool local )
     generator->setPose( fromLatLongPose(north+0.5*sectorSize, east+0.5*sectorSize) );
 
     Vec2d size = fromLatLongSize(north, east, north+sectorSize, east+sectorSize);
-    for (auto ter:generator->getTerrains()) {
+    /*for (auto ter : generator->getTerrains()) {
         ter->setLocalized(local);
+	cout << " !!! VRPlanet::addSector" << endl;
         ter->setParameters( size, 2, 1);
-    }
+    }*/
     generator->setTerrainSize( size );
     //if (localized) localizeSector(generator);
     return generator;

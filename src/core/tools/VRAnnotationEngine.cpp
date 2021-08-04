@@ -559,6 +559,7 @@ attribute vec4 osg_Normal;
 attribute vec2 osg_MultiTexCoord0;
 
 uniform float doBillboard;
+uniform float screen_size;
 uniform vec2 OSGViewportSize;
 \n
 #ifdef __EMSCRIPTEN__
@@ -571,38 +572,43 @@ uniform mat4 OSGProjectionMatrix;
 \n
 
 void main( void ) {
-    if (doBillboard < 0.5) {
-        vec4 p = osg_Vertex + osg_Normal;
+    vec4 P = osg_Vertex;
+    vec4 N = osg_Normal;
+
+\n
+#ifdef __EMSCRIPTEN__
+\n
+    mat4 M = OSGModelViewProjectionMatrix;
+#else
+\n
+    mat4 M = gl_ModelViewProjectionMatrix;
+\n
+#endif
+\n
+
+    if (doBillboard < 0.5 && screen_size < 0.5) { // normal case
+        vec4 p = P + N;
         p.xyz *= 2.0; // TODO: hack.. I did not find out where this factor ist missing, vertex and normal info is correct..
-\n
-#ifdef __EMSCRIPTEN__
-\n
-        gl_Position = OSGModelViewProjectionMatrix * p;
-\n
-#else
-\n
-        gl_Position = gl_ModelViewProjectionMatrix * p;
-\n
-#endif
-\n
-    } else {
+        P = M * p;
+    } else if (doBillboard > 0.5 && screen_size < 0.5) { // only billboard
         float a = OSGViewportSize.y/OSGViewportSize.x;
-        vec4 norm = osg_Normal;
-        norm.x = norm.x*a;
-        norm.z = 0.0;
-        norm.w = 0.0;
-\n
-#ifdef __EMSCRIPTEN__
-\n
-        gl_Position = OSGModelViewProjectionMatrix * osg_Vertex + norm;
-\n
-#else
-\n
-        gl_Position = gl_ModelViewProjectionMatrix * osg_Vertex + norm;
-\n
-#endif
-\n
+        N.x = N.x*a;
+        N.z = 0.0;
+        N.w = 0.0;
+        P = M * P + N;
+    } else if (screen_size > 0.5) { // screensize
+	vec4 k = M * P;
+        k.xyz = k.xyz/k.w;
+        k.w = 1.0;
+
+        float a = OSGViewportSize.y/OSGViewportSize.x;
+        N.x = N.x*a;
+        N.z = 0.0;
+        N.w = 0.0;
+        P = k + N;
     }
+
+    gl_Position = P;
     texCoord = osg_MultiTexCoord0;
 }
 );
