@@ -31,6 +31,7 @@ void VRCOLLADA_Geometry::handleAccessor(string count, string stride) {
 }
 
 void VRCOLLADA_Geometry::handleInput(string type, string sourceID, string offsetStr, string set) {
+    //cout << "VRCOLLADA_Geometry::handleInput " << type << " " << sourceID << " " << set << endl;
     int offset = toInt(offsetStr);
 
     if (inPrimitive) {
@@ -75,15 +76,17 @@ void VRCOLLADA_Geometry::handleInput(string type, string sourceID, string offset
 }
 
 void VRCOLLADA_Geometry::instantiateGeometry(string geoID, VRObjectPtr parent) {
+    if (!library_geometries.count(geoID)) return;
     lastInstantiatedGeo = dynamic_pointer_cast<VRGeometry>( library_geometries[geoID]->duplicate() );
     parent->addChild( lastInstantiatedGeo );
 }
 
 void VRCOLLADA_Geometry::setMaterial(VRMaterialPtr mat) {
-    lastInstantiatedGeo->setMaterial(mat);
+    if (lastInstantiatedGeo) lastInstantiatedGeo->setMaterial(mat);
 }
 
 void VRCOLLADA_Geometry::newPrimitive(string name, string count, int stride) {
+    //cout << "VRCOLLADA_Geometry::newPrimitive " << name << " " << count << " " << stride << endl;
     inPrimitive = true;
     currentPrimitive = Primitive();
     currentPrimitive.name = name;
@@ -92,13 +95,15 @@ void VRCOLLADA_Geometry::newPrimitive(string name, string count, int stride) {
 }
 
 void VRCOLLADA_Geometry::closeGeometry() {
-    currentGeoData->apply(currentGeometry);
+    //cout << "VRCOLLADA_Geometry::closeGeometry" << endl;
+    currentGeoData->apply(currentGeometry, 1, 1);
     currentGeometry = 0;
     currentGeoData = 0;
     sources.clear();
 }
 
 void VRCOLLADA_Geometry::closePrimitive() {
+    //cout << "VRCOLLADA_Geometry::closePrimitive" << endl;
     inPrimitive = false;
 }
 
@@ -111,21 +116,22 @@ void VRCOLLADA_Geometry::setSourceData(string data) {
 void VRCOLLADA_Geometry::handleIndices(string data) {
     if (currentGeoData && inPrimitive) {
         auto indices = toValue<vector<int>>(data);
+        //cout << "VRCOLLADA_Geometry::handleIndices " << currentPrimitive.name << " " << indices.size() << endl;
 
-        if (currentPrimitive.name == "triangles") {
-            currentGeoData->pushType(GL_TRIANGLES);
-            currentGeoData->pushLength(3*currentPrimitive.count);
-            for (int i=0; i<currentPrimitive.count; i++) { // for each triangle
-                int k = i * currentPrimitive.stride * currentPrimitive.inputs.size();
-                for (int j=0; j<currentPrimitive.stride; j++) { // for each vertex
-                    int l = k + j * currentPrimitive.inputs.size();
-                    for (auto& input : currentPrimitive.inputs) { // for each input
-                        int m = l + input.offset;
-                        if (input.type == "VERTEX") currentGeoData->pushIndex(indices[m]);
-                        if (input.type == "NORMAL") currentGeoData->pushNormalIndex(indices[m]);
-                        if (input.type == "TEXCOORD") currentGeoData->pushTexCoordIndex(indices[m]);
-                    }
-                }
+        if (currentPrimitive.name == "triangles") currentGeoData->pushType(GL_TRIANGLES);
+        if (currentPrimitive.name == "trifans") currentGeoData->pushType(GL_TRIANGLE_FAN);
+        if (currentPrimitive.name == "tristrips") currentGeoData->pushType(GL_TRIANGLE_STRIP);
+
+        int N = indices.size() / currentPrimitive.inputs.size();
+        currentGeoData->pushLength(N);
+
+        for (int i=0; i<N; i++) {
+            for (auto& input : currentPrimitive.inputs) { // for each input
+                int m = i*currentPrimitive.inputs.size() + input.offset;
+                if (m >= indices.size()) continue;
+                if (input.type == "VERTEX") currentGeoData->pushIndex(indices[m]);
+                if (input.type == "NORMAL") currentGeoData->pushNormalIndex(indices[m]);
+                if (input.type == "TEXCOORD") currentGeoData->pushTexCoordIndex(indices[m]);
             }
         }
     }
