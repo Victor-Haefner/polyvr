@@ -77,6 +77,7 @@ PyMethodDef VRPyGeometry::methods[] = {
                         "\n\t\tSphere radius iterations"
                         "\n\t\tCylinder height radius N_sides do_bottom do_top do_sides"
                         "\n\t\tCone height radius N_sides do_bottom do_sides"
+                        "\n\t\tPill height radius Nsides do_bottom do_top do_sides"
                         "\n\t\tTorus inner_radius outer_radius N_segments N_rings"
                         "\n\t\tTeapot iterations scale"
                         "\n\t\tArrow height width trunc hat thickness"

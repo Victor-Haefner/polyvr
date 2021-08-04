@@ -193,6 +193,18 @@ void VRTerrain::setMap( VRTexturePtr t, int channel ) {
     setupGeo();
 }
 
+VRTexturePtr VRTerrain::getTexture() { return satTex; }
+
+void VRTerrain::setTexture(VRTexturePtr t, Color4f mCol, float mAmount) {
+    satTex = t;
+    mat->setTexture(satTex, 0, 3);
+    mat->setShaderParameter("mixColor", mCol);
+    mat->setShaderParameter("mixAmount", mAmount);
+    mat->setShaderParameter("texPic", 3);
+    mat->setShaderParameter("doHeightTextures", 2);
+    mat->clearTransparency();
+}
+
 void VRTerrain::paintHeights(string woods, string gravel) {
     mat->setTexture(woods, 0, 1);
     mat->setTexture(gravel, 0, 2);
@@ -214,14 +226,7 @@ void VRTerrain::paintHeights(string path, Color4f mCol, float mAmount) {
 }
 
 void VRTerrain::paintHeights(VRTexturePtr tex, Color4f mCol, float mAmount) {
-    mat->setTexture(tex, 0, 3);
-    //if (mAmount > 0 )
-    //    if (auto t = mat->getTexture(3)) t->mixColor(mCol, mAmount);
-    mat->setShaderParameter("mixColor", mCol);
-    mat->setShaderParameter("mixAmount", mAmount);
-    mat->setShaderParameter("texPic", 3);
-    mat->setShaderParameter("doHeightTextures", 2);
-    mat->clearTransparency();
+    setTexture(tex, mCol, mAmount);
 }
 
 void VRTerrain::updateTexelSize() {
@@ -332,7 +337,7 @@ void VRTerrain::exportWebMesh(string path) { // this exported mesh is meant to b
     obj->exportToFile(path);
 }
 
-Vec2d computeGridSpacing(Vec2d size, Vec2d gridSize, int res) {
+Vec2d computeGridSpacing(Vec2d size, Vec2d gridSize, double res) {
     Vec2i gridN = Vec2i(round(size[0]*1.0/res-0.5), round(size[1]*1.0/res-0.5));
     if (gridN[0] < 1) gridN[0] = 1;
     if (gridN[1] < 1) gridN[1] = 1;
@@ -342,11 +347,7 @@ Vec2d computeGridSpacing(Vec2d size, Vec2d gridSize, int res) {
     return gridS;
 }
 
-bool VRTerrain::createMultiGrid(VRCameraPtr cam, int res) {
-    //res /= 64; // TODO: remove, just for testing!
-    auto pla = planet.lock();
-    if (!pla) return false;
-
+bool VRTerrain::createMultiGrid(VRCameraPtr cam, double res) {
     auto modulo = [](const double& a, const double& b) { return a-floor(a/b)*b; };
     auto checkChange = [&](const vector<double>& v, double eps = 0) {
         if (v.size() != oldMgParams.size()) { oldMgParams = v; return true; }
@@ -355,59 +356,71 @@ bool VRTerrain::createMultiGrid(VRCameraPtr cam, int res) {
         return false;
     };
 
-    double sectorSize = pla->getSectorSize();
-    double N1 = planetCoords[0];
-    double N2 = planetCoords[0]+sectorSize;
-    double E1 = planetCoords[1];
-    double E2 = planetCoords[1]+sectorSize;
+    double sectorSizeX = size[0];
+    double sectorSizeY = size[1];
+    double N1 = -size[0]*0.5;
+    double N2 =  size[0]*0.5;
+    double E1 = -size[1]*0.5;
+    double E2 =  size[1]*0.5;
+
+    auto pla = planet.lock();
+    if (pla) {
+        sectorSizeX = pla->getSectorSize();
+        sectorSizeY = pla->getSectorSize();
+        N1 = planetCoords[0];
+        N2 = planetCoords[0]+sectorSizeX;
+        E1 = planetCoords[1];
+        E2 = planetCoords[1]+sectorSizeY;
+    }
 
 #ifdef __EMSCRIPTEN__
     Vec2d NE;
     PosePtr camPose;
-    if (cam) {
+    if (cam && pla) {
         camPose = cam->getWorldPose();
-	NE = pla->fromPosLatLong(camPose->pos(), 1, 0);
-	if (NE[0] < N1 || NE[0] > N2 || NE[1] < E1 || NE[1] > E2) { // cam not above terrain
+        NE = pla->fromPosLatLong(camPose->pos(), 1, 0);
+        if (NE[0] < N1 || NE[0] > N2 || NE[1] < E1 || NE[1] > E2) { // cam not above terrain
             res *= 1e6;
             if (!checkChange(vector<double>())) return false;
-	}
+        }
         if (!checkChange(vector<double>({NE[0], NE[1]}))) return false;
     }
 
-    double h = 1.0;
-    //if (cam) h = 1.0 + cam->getWorldPosition()[1]*1e-3;
-    Vec2d r1 = computeGridSpacing(size, Vec2d(sectorSize, sectorSize), res*32*h);
+    if (pla) res *= 32;
+    else res *= 64;
+    Vec2d r1 = computeGridSpacing(size, Vec2d(sectorSizeX, sectorSizeY), res);
 #else
-    Vec2d r1 = computeGridSpacing(size, Vec2d(sectorSize, sectorSize), res);
+    Vec2d r1 = computeGridSpacing(size, Vec2d(sectorSizeX, sectorSizeY), res);
 #endif
-
 
     VRMultiGrid mg("terrainGrid");
     mg.addGrid(Vec4d(N1,N2,E1,E2), Vec2d(r1[0],r1[1]));
 
 #ifdef __EMSCRIPTEN__
-    Vec2d r2 = r1/4.0;//computeGridSpacing(size, Vec2d(sectorSize, sectorSize), res*8);
-    Vec2d r3 = r2/8.0;//computeGridSpacing(size, Vec2d(sectorSize, sectorSize), res);
+    if (pla) {
+	    Vec2d r2 = r1/4.0;
+	    Vec2d r3 = r2/8.0;
 
-    Vec2d L1 = r1*2*0.9;
-    Vec2d L2 = r2*2*0.9;
+	    Vec2d L1 = r1*2*0.9;
+	    Vec2d L2 = r2*2*0.9;
 
-    double x = (N1+N2)*0.5;
-    double y = (E1+E2)*0.5;
-    if (cam) {
-        x = NE[0] - camPose->dir()[2]*L2[0];
-        y = NE[1] + camPose->dir()[0]*L2[1];
+	    double x = (N1+N2)*0.5;
+	    double y = (E1+E2)*0.5;
+	    if (cam) {
+		x = NE[0] - camPose->dir()[2]*L2[0];
+		y = NE[1] + camPose->dir()[0]*L2[1];
+	    }
+
+	    x -= modulo(x,r1[0]); // x%r1
+	    y -= modulo(y,r1[1]); // y%r1
+	    Vec4d rect1 = Vec4d(x-L1[0], x+L1[0], y-L1[1], y+L1[1]);
+	    Vec4d rect2 = Vec4d(x-L2[0], x+L2[0], y-L2[1], y+L2[1]);
+
+	    cout << " - createMultiGrid r1: " << r1 << " r2: " << r2 << " r3: " << r3 << " xy " << Vec2d(x,y) << " L1 " << L1 << " L2 " << L2 << endl;
+
+	    if (r2[0] < r1[0] && 2*L1[0] < (N2-N1) && x-L1[0] > N1 && x+L1[0] < N2) mg.addGrid(rect1, Vec2d(r2[0],r2[1]));
+	    if (r3[0] < r2[0] && 2*L2[0] < 2*L1[0] && x-L2[0] > N1 && x+L2[0] < N2) mg.addGrid(rect2, Vec2d(r3[0],r3[1]));
     }
-
-    x -= modulo(x,r1[0]); // x%r1
-    y -= modulo(y,r1[1]); // y%r1
-    Vec4d rect1 = Vec4d(x-L1[0], x+L1[0], y-L1[1], y+L1[1]);
-    Vec4d rect2 = Vec4d(x-L2[0], x+L2[0], y-L2[1], y+L2[1]);
-
-    cout << " - createMultiGrid r1: " << r1 << " r2: " << r2 << " r3: " << r3 << " xy " << Vec2d(x,y) << " L1 " << L1 << " L2 " << L2 << endl;
-
-    if (r2[0] < r1[0] && 2*L1[0] < (N2-N1) && x-L1[0] > N1 && x+L1[0] < N2) mg.addGrid(rect1, Vec2d(r2[0],r2[1]));
-    if (r3[0] < r2[0] && 2*L2[0] < 2*L1[0] && x-L2[0] > N1 && x+L2[0] < N2) mg.addGrid(rect2, Vec2d(r3[0],r3[1]));
 #endif
     if (!mg.compute(ptr())) {
         cout << " Error in VRTerrain::createMultiGrid, compute failed! ..abort" << endl;
@@ -418,23 +431,30 @@ bool VRTerrain::createMultiGrid(VRCameraPtr cam, int res) {
     Vec2d texel = Vec2d( 1.0/texSize[0], 1.0/texSize[1] );
 
     VRGeoData data(ptr());
+
     auto positions = getMesh()->geo->getPositions();
     for (size_t i=0; i<positions->size(); i++) {
         Pnt3f pos = positions->getValue<Pnt3f>(i);
         double N = pos[0];
         double E = pos[2];
-
         double tn = (N-N1)/(N2-N1);
         double te = (E-E1)/(E2-E1);
-        double tcx = texel[0]*0.5 + te*(1.0-texel[0]);
-        double tcy = texel[1]*0.5 + tn*(1.0-texel[1]);
-        data.pushTexCoord(Vec2d(tcx, 1.0 - tcy));
 
-        auto pose = pla->fromLatLongPose(N, E);
-        pose = pSectorInv->multRight(pose);
-        data.setPos(i, pose->pos());
-        data.setNorm(i, pose->up());
+        if (pla) {
+            double tcx = texel[0]*0.5 + te*(1.0-texel[0]);
+            double tcy = texel[1]*0.5 + tn*(1.0-texel[1]);
+            data.pushTexCoord(Vec2d(tcx, 1.0 - tcy));
+            auto pose = pla->fromLatLongPose(N, E);
+            pose = pSectorInv->multRight(pose);
+            data.setPos(i, pose->pos());
+            data.setNorm(i, pose->up());
+        } else {
+            double tcx = texel[0]*0.5 + tn*(1.0-texel[0]);
+            double tcy = texel[1]*0.5 + te*(1.0-texel[1]);
+            data.pushTexCoord(Vec2d(tcx, 1.0 - tcy));
+        }
     }
+
     data.apply(ptr());
     cout << " -- createMultiGrid " << positions->size() << endl;
     return true;
@@ -442,14 +462,9 @@ bool VRTerrain::createMultiGrid(VRCameraPtr cam, int res) {
 
 void VRTerrain::setupGeo(VRCameraPtr cam) {
     cout << "VRTerrain::setupGeo" << endl;
-    /*VRGeoData geo;
-    createMesh(geo, grid);
-    if (geo.size() > 0) geo.apply(ptr());*/
     if (!createMultiGrid(cam, grid)) return;
 
-#if __EMSCRIPTEN__// TODO: directly create triangles above!
-    convertToTriangles();
-#else
+#ifndef __EMSCRIPTEN__
     setType(GL_PATCHES);
     setPatchVertices(4);
 #endif
@@ -702,6 +717,7 @@ double VRTerrain::getHeight(Vec2d p, bool useEmbankments) {
             }
         }
     }
+
     return h;
 }
 
@@ -1025,6 +1041,7 @@ void main( void ) {
         norm = getNormal();
         applyBlinnPhong();
     } else fragColor = color;
+    //fragColor = vec4(1.0,0.0,0.0,1.0);
 }
 );
 

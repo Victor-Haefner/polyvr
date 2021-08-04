@@ -86,10 +86,10 @@ class OSMSAXHandlerCP : public XMLStreamHandler {
 
     public:
         OSMSAXHandlerCP();
-        void startDocument();
-        void startElement(const string& name, const map<string, string>& attributes);
-        void endElement(const string& name);
-        void endDocument();
+        void startDocument() override;
+        void startElement(const string& uri, const string& name, const string& qname, const map<string, XMLAttribute>& attributes) override;
+        void endElement(const string& uri, const string& name, const string& qname) override;
+        void endDocument() override;
 
         long getNumerator();
         long getNumeratorWritten();
@@ -140,10 +140,10 @@ class OSMSAXHandlerBM : public XMLStreamHandler {
 
     public:
         OSMSAXHandlerBM();
-        void startDocument();
-        void startElement(const string& name, const map<string, string>& attributes);
-        void endElement(const string& name);
-        void endDocument();
+        void startDocument() override;
+        void startElement(const string& uri, const string& name, const string& qname, const map<string, XMLAttribute>& attributes) override;
+        void endElement(const string& uri, const string& name, const string& qname) override;
+        void endDocument() override;
 
         map<string, OSMNodePtr> getNodes();
         map<string, OSMWayPtr> getWays();
@@ -312,18 +312,18 @@ void OSMSAXHandlerCP::setPass(bool in) { sndPass = in; }
 void OSMSAXHandlerCP::setNewPath(string in) { newfilepath = in; }
 
 void OSMSAXHandlerCP::startDocument(){
+    cout << "OSMSAXHandlerCP::startDocument" << endl;
     init();
-    //cout << "OSMSAXHandlerCP::startDocument" << endl;
     if ( writeToFile ) std::ofstream file { newfilepath.c_str() };
     writeLineToFile("<?xml version='1.0' encoding='UTF-8'?>");
 }
 
 void OSMSAXHandlerCP::endDocument(){
     writeLineToFile("</osm>");
-    //cout << "OSMSAXHandlerCP::endDocument with " << numerator << " elements" << endl;
+    cout << "OSMSAXHandlerCP::endDocument with " << numerator << " elements" << endl;
 }
 
-void OSMSAXHandlerCP::startElement(const string& name, const map<string, string>& attributes) {
+void OSMSAXHandlerCP::startElement(const string& uri, const string& name, const string& qname, const map<string, XMLAttribute>& attributes) {
     currentDepth++;
     counter = 0;
 
@@ -349,7 +349,7 @@ void OSMSAXHandlerCP::startElement(const string& name, const map<string, string>
         string tmpRole = ""; //Relation
         for (auto attr : attributes) {
             string key = attr.first;
-            string val = attr.second;
+            string val = attr.second.val;
             string keyXML = convertString(key);
             string valXML = convertString(val);
             res += keyXML+"='"+valXML+"' ";
@@ -433,7 +433,7 @@ void OSMSAXHandlerCP::startElement(const string& name, const map<string, string>
     lastDepth = currentDepth;
 }
 
-void OSMSAXHandlerCP::endElement(const string& name) {
+void OSMSAXHandlerCP::endElement(const string& uri, const string& name, const string& qname) {
     if ( currentDepth == 0 ) {
         //cout << buffer << endl;
     }
@@ -548,14 +548,14 @@ long OSMSAXHandlerBM::getRelationCounter() { return relCounter; }
 
 void OSMSAXHandlerBM::startDocument(){
     init();
-    //cout << "OSMSAXHandlerBM::startDocument" << endl;
+    cout << "OSMSAXHandlerBM::startDocument" << endl;
 }
 
 void OSMSAXHandlerBM::endDocument(){
-    //cout << "OSMSAXHandlerBM::endDocument with " << numerator << " elements" << endl;
+    cout << "OSMSAXHandlerBM::endDocument with " << numerator << " elements" << endl;
 }
 
-void OSMSAXHandlerBM::startElement(const string& name, const map<string, string>& attributes) {
+void OSMSAXHandlerBM::startElement(const string& uri, const string& name, const string& qname, const map<string, XMLAttribute>& attributes) {
     currentDepth++;
     counter = 0;
 
@@ -567,7 +567,7 @@ void OSMSAXHandlerBM::startElement(const string& name, const map<string, string>
         string tmpRole = ""; //Relation
         for (auto attr : attributes) {
             string key = attr.first;
-            string val = attr.second;
+            string val = attr.second.val;
 
             if (key == "id") {
                 currentID = val;
@@ -623,7 +623,7 @@ void OSMSAXHandlerBM::startElement(const string& name, const map<string, string>
     lastDepth = currentDepth;
 }
 
-void OSMSAXHandlerBM::endElement(const string& name) {
+void OSMSAXHandlerBM::endElement(const string& uri, const string& name, const string& qname) {
     if ( currentDepth == 0 ) {
         //cout << buffer << endl;
     }

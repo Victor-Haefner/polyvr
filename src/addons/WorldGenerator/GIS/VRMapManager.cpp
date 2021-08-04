@@ -61,7 +61,7 @@ VRMapDescriptorPtr VRMapManager::getMap(double N, double E, double S, vector<int
 void VRMapManager::handleRequestAnswer(VRRestResponsePtr response, string filename, VRMapCbPtr mcb, double N, double E, double S, vector<int> types) {
     //cout << " response: " << response->getStatus() << endl;
     //cout << " map data response, data size: " << response->getData().size() << endl;
-    //cout << " store map data in: " << filename << endl;
+    cout << " store map data in: " << filename << endl;
 
     // store result in file 'filename'
     storeFile(filename, response->getData());

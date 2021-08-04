@@ -77,7 +77,7 @@ void VRGlutWindow::initGlut() {
     glutInit(&VROptions::get()->argc, VROptions::get()->argv);
 
 #ifdef WASM
-    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH | GLUT_MULTISAMPLE);
+    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH | GLUT_STENCIL | GLUT_MULTISAMPLE);
 #else
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_STENCIL_TEST);

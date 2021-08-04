@@ -65,13 +65,16 @@ VRGeometry::Reference::Reference(int t, string p) {
 
 VRObjectPtr VRGeometry::copy(vector<VRObjectPtr> children) {
     VRGeometryPtr geo = VRGeometry::create(getBaseName());
-    geo->setMesh(mesh);
-    geo->setMaterial(mat);
-    geo->source = source;
+    geo->setPersistency(getPersistency());
     geo->setVisible(isVisible());
     geo->setPickable(isPickable());
     geo->setEntity(entity);
+    for (auto t : getTags()) geo->addTag(t);
     geo->setMatrix(getMatrix());
+    geo->old_parent = getParent();
+    geo->setMesh(mesh);
+    geo->setMaterial(mat);
+    geo->source = source;
     return geo;
 }
 
