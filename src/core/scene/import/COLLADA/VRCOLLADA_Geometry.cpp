@@ -75,7 +75,12 @@ void VRCOLLADA_Geometry::handleInput(string type, string sourceID, string offset
 }
 
 void VRCOLLADA_Geometry::instantiateGeometry(string geoID, VRObjectPtr parent) {
-    parent->addChild( library_geometries[geoID]->duplicate() );
+    lastInstantiatedGeo = dynamic_pointer_cast<VRGeometry>( library_geometries[geoID]->duplicate() );
+    parent->addChild( lastInstantiatedGeo );
+}
+
+void VRCOLLADA_Geometry::setMaterial(VRMaterialPtr mat) {
+    lastInstantiatedGeo->setMaterial(mat);
 }
 
 void VRCOLLADA_Geometry::newPrimitive(string name, string count, int stride) {

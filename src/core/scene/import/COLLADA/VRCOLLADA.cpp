@@ -8,6 +8,7 @@
 #include "core/utils/xml.h"
 
 #include "core/objects/object/VRObject.h"
+#include "core/objects/VRTransform.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/geometry/VRGeoData.h"
@@ -69,12 +70,22 @@ void VRCOLLADA_Stream::startElement(const string& uri, const string& name, const
     nodeStack.push(n);
 
     if (name == "effect") materials.newEffect( n.attributes["id"].val );
+    if (name == "material") materials.newMaterial( n.attributes["id"].val, n.attributes["name"].val );
+    if (name == "instance_effect") materials.setMaterialEffect( skipHash(n.attributes["url"].val) );
+
     if (name == "geometry") geometries.newGeometry(n.attributes["name"].val, n.attributes["id"].val);
     if (name == "source") geometries.newSource(n.attributes["id"].val);
     if (name == "accessor") geometries.handleAccessor(n.attributes["count"].val, n.attributes["stride"].val);
     if (name == "input") geometries.handleInput(n.attributes["semantic"].val, skipHash(n.attributes["source"].val), n.attributes["offset"].val, n.attributes["set"].val);
     if (name == "triangles") geometries.newPrimitive(name, n.attributes["count"].val, 3);
     if (name == "instance_geometry") geometries.instantiateGeometry(skipHash(n.attributes["url"].val), objStack.top());
+
+    if (name == "instance_material") {
+        string mid = skipHash(n.attributes["target"].val);
+        auto mat = materials.getMaterial(mid);
+        if (!mat) cout << "did not found material " << mid << endl;
+        geometries.setMaterial(mat);
+    }
 
     if (name == "node") {
         string Name = n.attributes["name"].val;
@@ -86,7 +97,7 @@ void VRCOLLADA_Stream::startElement(const string& uri, const string& name, const
 }
 
 void VRCOLLADA_Stream::characters(const string& chars) {
-    nodeStack.top().data = chars;
+    nodeStack.top().data += chars;
 }
 
 void VRCOLLADA_Stream::endElement(const string& uri, const string& name, const string& qname) {
@@ -102,9 +113,17 @@ void VRCOLLADA_Stream::endElement(const string& uri, const string& name, const s
     if (node.name == "p") geometries.handleIndices(node.data);
 
     if (node.name == "float") {
-        //float f = toValue<float>(node.data);
-        //string sid = node.attributes["sid"].val;
-        //if (sid == "ior" && currentMaterial) currentMaterial->setRefraction(f);
+        float f = toValue<float>(node.data);
+        string sid = node.attributes["sid"].val;
+        if (sid == "shininess") materials.setShininess(f);
+    }
+
+    if (name == "matrix") {
+        Matrix4d m;
+        toValue(node.data, m);
+        m.transpose();
+        auto t = dynamic_pointer_cast<VRTransform>(objStack.top());
+        if (t) t->setMatrix(m);
     }
 
 
