@@ -1,31 +1,10 @@
-#include "VRCOLLADA.h"
-#include "core/objects/geometry/VRGeometry.h"
-#include "core/objects/VRAnimation.h"
+#include "VRCOLLADA_Kinematics.h"
 
-#include "core/utils/rapidxml/rapidxml.hpp"
-#include "core/utils/rapidxml/rapidxml_print.hpp"
-#include "core/utils/VRFunctionFwd.h"
-#include "core/utils/VRFunction.h"
-#include "core/utils/toString.h"
-#include "core/objects/object/VRObjectT.h"
-#include "core/objects/geometry/VRPhysics.h"
+#include <map>
+#include <string>
+#include <OpenSG/OSGVector.h>
 
-#include "core/math/kinematics/VRConstraint.h"
-#include "core/math/path.h"
-
-#include <fstream>
-#include <math.h>
-
-#include <OpenSG/OSGGeoProperties.h>
-#include <OpenSG/OSGGeometry.h>
-#include <OpenSG/OSGSceneFileHandler.h>
-#include <OpenSG/OSGSimpleMaterial.h>
-
-using namespace rapidxml;
 using namespace OSG;
-
-typedef xml_node<> xNode;
-typedef xml_attribute<> Attrib;
 
 enum AnimType{
     ANIM_TRANSLATE = 0,
@@ -51,7 +30,7 @@ struct Channel {
     string axis;
 };
 
-struct TechniqueCommon{
+struct TechniqueCommon {
     string accessor_source;
     int accessor_stride;
     int accessor_count;
@@ -77,6 +56,84 @@ struct AnimationLibrary {
     map<string, Animation> animations;
 };
 
+struct joint {
+    string id;
+    Vec3d axis;
+    Vec2d bounds;
+};
+
+struct klink;
+struct attachment {
+    string joint;
+    Vec3d translate;
+    map<string, klink> links;
+};
+
+struct klink {
+    string id;
+    string parent;
+    map<string, attachment> attachments;
+};
+
+struct kin_model {
+    string id;
+    map<string, joint> joints;
+    map<string, klink> links;
+};
+
+struct kin_scene {
+    map<string, kin_model> models;
+};
+
+
+VRCOLLADA_Kinematics::VRCOLLADA_Kinematics() {}
+VRCOLLADA_Kinematics::~VRCOLLADA_Kinematics() {}
+
+VRCOLLADA_KinematicsPtr VRCOLLADA_Kinematics::create() { return VRCOLLADA_KinematicsPtr( new VRCOLLADA_Kinematics() ); }
+VRCOLLADA_KinematicsPtr VRCOLLADA_Kinematics::ptr() { return static_pointer_cast<VRCOLLADA_Kinematics>(shared_from_this()); }
+
+void VRCOLLADA_Kinematics::apply() {
+    string data; // TODO: this was the file content..
+    VRObjectPtr objects; // TODO: this was the subtree loaded with OpenSG
+
+    auto library = parseColladaAnimations(data);
+
+    //printAll(library);
+
+    buildAnimations(library, objects);
+
+    auto kscene = parseColladaKinematics(data);
+    printAllKinematics(kscene);
+    buildKinematics(kscene, objects);
+}
+
+#include "core/objects/geometry/VRGeometry.h"
+#include "core/objects/VRAnimation.h"
+
+#include "core/utils/rapidxml/rapidxml.hpp"
+#include "core/utils/rapidxml/rapidxml_print.hpp"
+#include "core/utils/VRFunctionFwd.h"
+#include "core/utils/VRFunction.h"
+#include "core/utils/toString.h"
+#include "core/objects/object/VRObjectT.h"
+#include "core/objects/geometry/VRPhysics.h"
+
+#include "core/math/kinematics/VRConstraint.h"
+#include "core/math/path.h"
+
+#include <fstream>
+#include <math.h>
+
+#include <OpenSG/OSGGeoProperties.h>
+#include <OpenSG/OSGGeometry.h>
+#include <OpenSG/OSGSceneFileHandler.h>
+#include <OpenSG/OSGSimpleMaterial.h>
+
+using namespace rapidxml;
+
+typedef xml_node<> xNode;
+typedef xml_attribute<> Attrib;
+
 vector<xNode*> getxNodes(xNode* node, string name = "") {
     vector<xNode*> res;
     if (name.size() > 0) for (xNode* n = node->first_node(name.c_str()); n; n = n->next_sibling(name.c_str()) ) res.push_back(n);
@@ -84,7 +141,7 @@ vector<xNode*> getxNodes(xNode* node, string name = "") {
     return res;
 }
 
-AnimationLibrary parseColladaAnimations(string data) {
+AnimationLibrary VRCOLLADA_Kinematics::parseColladaAnimations(string data) {
     xml_document<> doc;
     doc.parse<0>(&data[0]);
 
@@ -272,7 +329,7 @@ int getAxis(const Animation& a) {
     return -1;
 }
 
-void buildAnimations(AnimationLibrary& lib, VRObjectPtr objects) {
+void VRCOLLADA_Kinematics::buildAnimations(AnimationLibrary& lib, VRObjectPtr objects) {
     for (auto a : lib.animations) {
         cout << "search object " << a.second.channel.target << endl;
         VRObjectPtr obj = findTarget(objects, a.second.channel.target);
@@ -353,34 +410,6 @@ void buildAnimations(AnimationLibrary& lib, VRObjectPtr objects) {
 // kinematics
 
 
-struct joint {
-    string id;
-    Vec3d axis;
-    Vec2d bounds;
-};
-
-struct klink;
-struct attachment {
-    string joint;
-    Vec3d translate;
-    map<string, klink> links;
-};
-
-struct klink {
-    string id;
-    string parent;
-    map<string, attachment> attachments;
-};
-
-struct kin_model {
-    string id;
-    map<string, joint> joints;
-    map<string, klink> links;
-};
-
-struct kin_scene {
-    map<string, kin_model> models;
-};
 
 vector<klink> parseLink(xNode* data, string model, attachment& parent) {
     vector<klink> res;
@@ -413,7 +442,7 @@ vector<klink> parseLink(xNode* data, string model, attachment& parent) {
     return res;
 }
 
-kin_scene parseColladaKinematics(string data) {
+kin_scene VRCOLLADA_Kinematics::parseColladaKinematics(string data) {
     xml_document<> doc;
     doc.parse<0>(&data[0]);
 
@@ -501,7 +530,7 @@ void printLink(klink l, string indent) {
     }
 }
 
-void printAllKinematics(const kin_scene& scene) {
+void VRCOLLADA_Kinematics::printAllKinematics(const kin_scene& scene) {
     cout << "Imported COLLADA kinematics:\n";
     cout << " Kinematic models:\n";
     for (auto m : scene.models) {
@@ -549,7 +578,7 @@ VRTransformPtr buildLinks(klink l, VRObjectPtr objects, map<string, VRConstraint
     return t1;
 }
 
-void buildKinematics(const kin_scene& scene, VRObjectPtr objects) {
+void VRCOLLADA_Kinematics::buildKinematics(const kin_scene& scene, VRObjectPtr objects) {
     for (auto m : scene.models) {
         map<string, VRConstraintPtr> constraints;
         for (auto j : m.second.joints) {
@@ -565,24 +594,4 @@ void buildKinematics(const kin_scene& scene, VRObjectPtr objects) {
             t1->getPhysics()->setDynamic(false);
         }
     }
-}
-
-VRObjectPtr OSG::loadCollada(string path, VRObjectPtr objects) {
-    ifstream file(path);
-    string data( (std::istreambuf_iterator<char>(file) ), (std::istreambuf_iterator<char>() ) );
-    file.close();
-
-    auto library = parseColladaAnimations(data);
-
-    //printAll(library);
-
-    buildAnimations(library, objects);
-
-    auto kscene = parseColladaKinematics(data);
-    printAllKinematics(kscene);
-    buildKinematics(kscene, objects);
-
-    VRObjectPtr res = VRObject::create("COLLADA");
-    //res->addChild(n);
-    return res;
 }

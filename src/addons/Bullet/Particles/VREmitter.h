@@ -40,7 +40,7 @@ protected:
     VRUpdateCbPtr fkt;
 
     void emitterLoop();
-    boost::recursive_mutex& mtx();
+    VRMutex& mtx();
 };
 OSG_END_NAMESPACE;
 #endif // VREMITTER_H_INCLUDED

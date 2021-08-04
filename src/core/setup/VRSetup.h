@@ -89,6 +89,7 @@ class VRSetup : public VRViewManager, public VRWindowManager, public VRDeviceMan
         void setupLESCCAVELights(VRScenePtr scene); // TODO: temporary until scripts for VRSetup implemented!
 
         void makeTestCube();
+        static void sendToBrowser(const string& msg);
 };
 
 OSG_END_NAMESPACE;

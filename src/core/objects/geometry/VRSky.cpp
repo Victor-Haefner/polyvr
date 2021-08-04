@@ -303,16 +303,34 @@ void VRSky::reloadShader() {
 }
 
 string VRSky::skyVP =
+#ifdef __EMSCRIPTEN__
+"#version 300 es"
+#endif
 GLSL(
+\n
+#ifdef __EMSCRIPTEN__
+\n
+out vec3 norm;
+out vec4 pos;
+out vec2 tcs;
+out mat4 mFragInv;
+in vec4 osg_Vertex;
+in vec3 osg_Normal;
+in vec2 osg_MultiTexCoord0;
+\n
+#else
 \n
 varying vec3 norm;
 varying vec4 pos;
 varying vec2 tcs;
 varying mat4 mFragInv;
-
 attribute vec4 osg_Vertex;
 attribute vec3 osg_Normal;
 attribute vec2 osg_MultiTexCoord0;
+\n
+#endif
+\n
+
 uniform mat4 extInvMat;
 \n
 
@@ -330,21 +348,28 @@ void main() {
 
 string VRSky::skyFP =
 #ifdef __EMSCRIPTEN__
-"#extension GL_EXT_frag_depth : enable\n"
+"#version 300 es"
 #endif
 GLSL(
 \n
 #ifdef __EMSCRIPTEN__
 \n
 precision mediump float;
+in vec3 norm;
+in vec4 pos;
+in vec2 tcs;
+in mat4 mFragInv;
+out vec4 fragColor;
 \n
-#endif
+#else
 \n
-
 varying vec3 norm;
 varying vec4 pos;
 varying vec2 tcs;
 varying mat4 mFragInv;
+\n
+#endif
+\n
 
 vec3 fragDir;
 vec4 color;
@@ -466,11 +491,22 @@ float computeCloudLuminance() {\n
 
 void addCloudLayer(float height, vec2 offset, float density, float luminance) {\n
 	vec2 uv = cloudScale * sphereIntersect(height) + offset;
+\n
+#ifdef __EMSCRIPTEN__
+\n
+	vec4 cloudC = texture(tex, uv);
+	vec4 noiseC = texture(tex, uv * 4.0);
+\n
+#else
+\n
+	vec4 cloudC = texture2D(tex, uv);
+	vec4 noiseC = texture2D(tex, uv * 4.0);
+\n
+#endif
+\n
 
-	float cloud = texture2D(tex, uv).x;
-	float noise = 0.9 + 0.1*texture2D(tex, uv * 4.0).x;
-
-	cloud = smoothstep(0.0, 1.0, (1.0 - density) * cloud);
+	float cloud = smoothstep(0.0, 1.0, (1.0 - density) * cloudC.x);
+	float noise = 0.9 + 0.1*noiseC.x;
 	vec3 c = mix(cloudColor.xyz, color.xyz, 1.0 - luminance);
 	color = mix(vec4(noise*c, 1.0), color, cloud);
 }
@@ -481,7 +517,7 @@ void computeClouds() {\n
 		float scale = cloudScale;
 		float y = computeCloudLuminance(); // compute luminance of clouds based on angle
 
-		addCloudLayer(1.5*cloudHeight, 0.25*cloudOffset, 0.5*cloudDensity, y);
+		//addCloudLayer(1.5*cloudHeight, 0.25*cloudOffset, 0.5*cloudDensity, y);
 		addCloudLayer(    cloudHeight,      cloudOffset,     cloudDensity, 0.8*y);
 	}
 }
@@ -543,19 +579,21 @@ void main() {\n
 	addSun();
 	addGround();
 
-    color[3] = 1.0;
-	gl_FragColor = color;
+        color[3] = 1.0;
+
 \n
 #ifdef __EMSCRIPTEN__
 \n
-	gl_FragDepthEXT = 1.0; // depth is infinite at 1.0
+	fragColor = color;
 \n
 #else
 \n
-	gl_FragDepth = 1.0; // depth is infinite at 1.0
+	gl_FragColor = color;
 \n
 #endif
 \n
+
+	gl_FragDepth = 1.0; // depth is infinite at 1.0
 
 	// vertical line for testing
 	//if (real_fragDir.x < 0.01 && real_fragDir.x > 0) gl_FragColor = vec4(0,0,0,1);

@@ -18,9 +18,9 @@ extern "C" {
 
 #include <string>
 #include <thread>
-#include <boost/thread/recursive_mutex.hpp>
+#include "core/utils/VRMutex.h"
 
-typedef boost::recursive_mutex::scoped_lock PLock;
+
 
 using namespace OSG;
 
@@ -210,7 +210,7 @@ void VRVideo::open(string f) {
 void VRVideo::cacheFrames(VRThreadWeakPtr t) { loadSomeFrames(); }
 
 void VRVideo::loadSomeFrames() {
-    PLock lock(avMutex);
+    VRLock lock(avMutex);
 
     int currentF = currentFrame;
 
@@ -228,7 +228,7 @@ void VRVideo::loadSomeFrames() {
         if (aStreams.count(stream)) {
             auto a = aStreams[stream].audio;
             auto data = a->extractPacket(&packet);
-            PLock lock(osgMutex);
+            VRLock lock(osgMutex);
             aStreams[stream].frames[aStreams[stream].cachedFrameMax] = data;
             aStreams[stream].cachedFrameMax++;
         }
@@ -238,7 +238,7 @@ void VRVideo::loadSomeFrames() {
             auto img = convertFrame(stream, &packet);
             if (!img) continue;
             //cout << "  converted the frame!" << endl;
-            PLock lock(osgMutex);
+            VRLock lock(osgMutex);
             vStreams[stream].frames[vStreams[stream].cachedFrameMax] = img;
             vStreams[stream].cachedFrameMax++;
         }
@@ -276,7 +276,7 @@ size_t VRVideo::getNFrames(int stream) {
 float VRVideo::getDuration() { return duration; }
 
 void VRVideo::goTo(float t) { // TODO
-    PLock lock(avMutex);
+    VRLock lock(avMutex);
 
     t = 0;
 
@@ -315,7 +315,7 @@ bool VRVideo::isPaused() {
 }
 
 void VRVideo::showFrame(int stream, int frame) {
-    PLock lock(osgMutex);
+    VRLock lock(osgMutex);
     currentFrame = frame;
 
     // video, just jump to frame
@@ -343,7 +343,7 @@ void VRVideo::showFrame(int stream, int frame) {
 }
 
 void VRVideo::frameUpdate(float t, int stream) {
-    PLock lock(osgMutex);
+    VRLock lock(osgMutex);
     int i = vStreams[stream].fps * duration * t;
     showFrame(stream, i);
 }

@@ -84,11 +84,13 @@ _xmlNode* getNextNode(_xmlNode* cur) {
 
 vector<XMLElementPtr> XMLElement::getChildren(string name) {
     vector<XMLElementPtr> res;
+    if (!node) return res;
     auto cnode = getNextNode( node->xmlChildrenNode );
-    while (cnode) {
-        if (cnode->type != XML_ELEMENT_NODE) continue;
-        if (name != "" && name != string((const char*)cnode->name)) continue;
-        res.push_back(XMLElement::create(cnode));
+    while ( cnode ) {
+        if (cnode->type == XML_ELEMENT_NODE) {
+            if (name == "" || name == string((const char*)cnode->name))
+                res.push_back(XMLElement::create(cnode));
+        }
         cnode = getNextNode( cnode->next );
     }
     return res;
@@ -97,9 +99,10 @@ vector<XMLElementPtr> XMLElement::getChildren(string name) {
 XMLElementPtr XMLElement::getChild(string name) {
     if (!node) return 0;
     auto cnode = getNextNode( node->xmlChildrenNode );
-    while (cnode) {
-        if (cnode->type != XML_ELEMENT_NODE) continue;
-        if (name == string((const char*)cnode->name)) return XMLElement::create(cnode);
+    while ( cnode ) {
+        if (cnode->type == XML_ELEMENT_NODE) {
+            if (name == string((const char*)cnode->name)) return XMLElement::create(cnode);
+        }
         cnode = getNextNode( cnode->next );
     }
     return 0;
@@ -108,11 +111,12 @@ XMLElementPtr XMLElement::getChild(string name) {
 XMLElementPtr XMLElement::getChild(int i) {
     int k = 0;
     auto cnode = getNextNode( node->xmlChildrenNode );
-    while (cnode) {
-        if (cnode->type != XML_ELEMENT_NODE) continue;
-        if (k == i) return XMLElement::create(cnode);
+    while ( cnode ) {
+        if (cnode->type == XML_ELEMENT_NODE) {
+            if (k == i) return XMLElement::create(cnode);
+            k++;
+        }
         cnode = getNextNode( cnode->next );
-        k++;
     }
     return 0;
 }

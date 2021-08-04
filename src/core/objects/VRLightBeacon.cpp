@@ -2,6 +2,7 @@
 #include "VRLight.h"
 #include "core/objects/OSGObject.h"
 #include "core/objects/material/VRMaterial.h"
+#include "core/objects/material/VRMaterialT.h"
 #include "core/objects/material/OSGMaterial.h"
 #include "core/utils/VRStorage_template.h"
 #include <OpenSG/OSGMultiPassMaterial.h>
@@ -42,6 +43,13 @@ VRLightBeaconPtr VRLightBeacon::create(string name) {
     getAll().push_back( p );
     return p;
 }
+
+#ifdef WASM
+void VRLightBeacon::updateTransformation() {
+    VRTransform::updateTransformation();
+    if (auto l = light.lock()) l->updateUniforms();
+}
+#endif
 
 VRObjectPtr VRLightBeacon::copy(vector<VRObjectPtr> children) {
     VRLightBeaconPtr beacon = VRLightBeacon::create(getBaseName());

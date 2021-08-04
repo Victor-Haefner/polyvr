@@ -1,15 +1,15 @@
 #include "VREmitter.h"
 #include "core/scene/VRScene.h"
-#include <boost/thread/recursive_mutex.hpp>
+#include "core/utils/VRMutex.h"
 
 using namespace std;
 using namespace OSG;
 
 
-typedef boost::recursive_mutex::scoped_lock BLock;
 
-boost::recursive_mutex& Emitter::mtx() {
-    static boost::recursive_mutex m;
+
+VRMutex& Emitter::mtx() {
+    static VRMutex m;
     auto scene = OSG::VRScene::getCurrent();
     if (scene) return scene->physicsMutex();
     else return m;
@@ -58,7 +58,7 @@ void Emitter::emitterLoop() {
     if (timer == 0) {
         Particle* p = particles[p_num];
         {
-            BLock lock(mtx());
+            VRLock lock(mtx());
             p->spawnAt(position, world, collideSelf);
             p->setActive(true);
             p->body->setLinearVelocity(direction);

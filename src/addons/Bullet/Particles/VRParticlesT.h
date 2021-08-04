@@ -6,9 +6,9 @@
 
 #include "core/objects/geometry/OSGGeometry.h"
 #include <OpenSG/OSGGeometry.h>
-#include <boost/thread/recursive_mutex.hpp>
+#include "core/utils/VRMutex.h"
 
-typedef boost::recursive_mutex::scoped_lock BLock;
+
 
 OSG_BEGIN_NAMESPACE;
 
@@ -20,7 +20,7 @@ void VRParticles::resetParticles(int amount) {
     this->disableFunctions();
 
     {
-        BLock lock(mtx());
+        VRLock lock(mtx());
         this->N = amount;
         for (uint i=0; i<particles.size(); i++) delete particles[i];
         particles.resize(N, 0);

@@ -3,18 +3,14 @@
 #include "core/utils/VRGlobals.h"
 
 #include <time.h>
+#include <thread>
 #include <iostream>
 
-#include <boost/lexical_cast.hpp>
-#include <boost/thread.hpp>
-
 using namespace OSG;
+using namespace std;
 
-unsigned long getThreadId(){
-    std::string threadId = boost::lexical_cast<std::string>(boost::this_thread::get_id());
-    unsigned long threadNumber = 0;
-    sscanf(threadId.c_str(), "%lx", &threadNumber);
-    return threadNumber;
+unsigned long getThreadId() {
+    return hash<thread::id>{}( this_thread::get_id() );
 }
 
 VRProfiler* VRProfiler::get() {
@@ -31,7 +27,7 @@ int VRProfiler::regStart(string name) {
     auto tID = getThreadId();
     if (!threadIDs.count(tID)) threadIDs[tID] = threadIDs.size();
 
-    boost::mutex::scoped_lock lock(mutex);
+    VRLock lock(mutex);
     ID++;
     Call c;
     c.name = name;
@@ -44,7 +40,7 @@ int VRProfiler::regStart(string name) {
 void VRProfiler::regStop(int ID) {
     if (ID < 0) return;
     if (!current || !current->calls.count(ID)) return;
-    boost::mutex::scoped_lock lock(mutex);
+    VRLock lock(mutex);
     current->calls[ID].t1 = getTime();
 }
 
@@ -52,12 +48,12 @@ void VRProfiler::setActive(bool b) { active = b; }
 bool VRProfiler::isActive() { return active; }
 
 list<VRProfiler::Frame> VRProfiler::getFrames() {
-    boost::mutex::scoped_lock lock(mutex);
+    VRLock lock(mutex);
     return frames;
 }
 
 VRProfiler::Frame VRProfiler::getFrame(int f) {
-    boost::mutex::scoped_lock lock(mutex);
+    VRLock lock(mutex);
     int i=0;
     for (auto fr : frames) {
         if (i == f) return (Frame)fr;
@@ -69,7 +65,7 @@ VRProfiler::Frame VRProfiler::getFrame(int f) {
 void VRProfiler::swap() {
     if (!isActive()) return;
 
-    boost::mutex::scoped_lock lock(mutex);
+    VRLock lock(mutex);
     if (current) current->t1 = getTime();
     Frame f;
     f.t0 = getTime();

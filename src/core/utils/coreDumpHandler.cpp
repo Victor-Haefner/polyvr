@@ -14,7 +14,7 @@ const char* dumpFile = "/tmp/core";
 
 
 void testSignal(int sig) {
-#ifndef _WIN32
+#if !defined(_WIN32) && !defined(__EMSCRIPTEN__)
     kill(getpid(), sig);
 #endif
 }
@@ -29,7 +29,9 @@ extern "C" void coreDump(int sig) {
         boost::filesystem::current_path(dumpPath);
     }
     once = false;
+#ifndef __EMSCRIPTEN__
     kill(getpid(), sig);
+#endif
 }
 #endif
 

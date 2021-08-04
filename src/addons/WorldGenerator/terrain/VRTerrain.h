@@ -56,6 +56,8 @@ class VRTerrain : public VRGeometry, public VRWorldModule {
         VRMaterialPtr mat;
         shared_ptr<vector<float>> physicsHeightBuffer;
 
+        vector<double> oldMgParams;
+
         VRPlanetWeakPtr planet;
         Vec2d planetCoords;
         PosePtr pSectorInv;
@@ -64,12 +66,14 @@ class VRTerrain : public VRGeometry, public VRWorldModule {
         vector<Vec3d> edgePoints;
         vector<vector<vector<Vec3d>>> meshTer;
 
-        boost::recursive_mutex& mtx(); // physics
+        VRMutex& mtx(); // physics
 
         void setHeightTexture(VRTexturePtr t);
         void updateTexelSize();
         //void setupGeo();
         void setupMat();
+        void createMesh(VRGeoData& geo, int res);
+        bool createMultiGrid(VRCameraPtr cam, int res);
 
         void btPhysicalize();
         void vrPhysicalize();
@@ -97,7 +101,7 @@ class VRTerrain : public VRGeometry, public VRWorldModule {
         Vec2f getTexelSize();
         Vec2d getSize();
         double getGrid();
-        void setupGeo();
+        void setupGeo(VRCameraPtr cam = 0);
         void setLODFactor(double in);
         double getLODFactor();
 
@@ -131,6 +135,8 @@ class VRTerrain : public VRGeometry, public VRWorldModule {
         void addEmbankment(string ID, PathPtr p1, PathPtr p2, PathPtr p3, PathPtr p4);
 
         vector<Vec3d> probeHeight( Vec2d p);
+
+        void exportWebMesh(string path);
 
         void clear();
 };

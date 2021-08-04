@@ -1,6 +1,9 @@
 #include "VRSystem.h"
 #include "../VRTimer.h"
+#include "../toString.h"
 #include <stdlib.h>
+#include <sys/stat.h>
+#include <errno.h>
 #include <iostream>
 #include <boost/filesystem.hpp>
 #ifndef WITHOUT_EXECINFO
@@ -12,6 +15,10 @@
 #endif
 #include <thread>
 #include <chrono>
+
+#ifdef WASM
+#include <sys/stat.h>
+#endif
 
 void printBacktrace() {
 #ifndef WITHOUT_EXECINFO
@@ -29,19 +36,48 @@ void printBacktrace() {
 #endif
 }
 
-bool exists(string path) { return boost::filesystem::exists(path); }
+bool exists(string path) { 
+#ifdef WASM
+	struct stat buffer;   
+	return (stat (path.c_str(), &buffer) == 0); 
+#else
+	return boost::filesystem::exists(path);
+#endif
+}
+
+bool isFile(string path) { return false; boost::filesystem::is_regular_file(path); }
+bool isFolder(string path) { return false; boost::filesystem::is_directory(path); }
 
 bool makedir(string path) {
+    cout << "makedir: " << path << endl;
     bool res = false;
     if (path == "") return true;
-#ifndef WASM
+#ifdef WASM
+    auto folders = splitString(path, '/');
+    string tmp = "";
+    for (auto f : folders) {
+    	//cout << " folder: " << f << ", exists? " << exists(tmp+f) << endl;
+        if (!exists(tmp+f)) {
+	    //cout << "mkdir " << tmp+f << endl;
+	    int result = mkdir((tmp+f).c_str(), 0777);
+            if (result < 0) cout << " -> errno: " << errno << ", result: " << result << ", errno str: " << strerror(errno) << endl;
+	}
+        tmp += f+"/";
+    }
+#else
     try { res = boost::filesystem::create_directory(path); }
     catch(...) { cout << "ERROR: makedir failed when trying to create directory '" + path + "'" << endl; }
 #endif
     return res;
 }
 
-bool removeFile(string path) { return boost::filesystem::remove(path); }
+bool removeFile(string path) { 
+#ifdef WASM
+    return bool(std::remove(path.c_str()) == 0);
+#else
+    return boost::filesystem::remove(path);
+#endif
+}
 
 string canonical(string path) {
 #ifdef WASM
@@ -59,9 +95,13 @@ string absolute(string path) {
 #endif
 }
 
-bool isFile(string path) { return boost::filesystem::is_regular_file(path); }
-bool isFolder(string path) { return boost::filesystem::is_directory(path); }
-bool isSamePath(string path1, string path2) { return boost::filesystem::equivalent(path1, path2); }
+bool isSamePath(string path1, string path2) { 
+#ifdef WASM
+    return false;
+#else
+    return boost::filesystem::equivalent(path1, path2); 
+#endif
+}
 
 string getFileName(string path, bool withExtension) {
     string fname;
@@ -232,7 +272,16 @@ void fileReplaceStrings(string filePath, string oldString, string newString) {
     cout << "fileReplaceStrings " << cmd << endl;
 }
 
-
+#ifdef WASM
+namespace boost {
+	namespace filesystem {
+		BOOST_FILESYSTEM_DECL int path::compare(path const& p) const BOOST_NOEXCEPT
+		{
+		    return bool(string() == p.string());
+		}
+	}
+}
+#endif
 
 
 

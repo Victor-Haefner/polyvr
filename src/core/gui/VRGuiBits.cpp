@@ -77,18 +77,23 @@ void VRGuiBits::on_web_export_clicked() {
     systemCall("cp -f \"" + folder + "/polyvr.wasm\" ./");
     systemCall("cp -f \"" + folder + "/polyvr.js\" ./");
     systemCall("cp -f \"" + folder + "/storage.js\" ./");
+    systemCall("cp -f \"" + folder + "/proxy.php\" ./");
     systemCall("cp -f \"" + folder + "/scanDir.php\" ./");
     systemCall("cp -f \"" + folder + "/Mono.ttf\" ./");
     systemCall("cp -f \"" + folder + "/Browser.xml\" ./");
+    systemCall("cp -f \"" + folder + "/proj.db\" ./");
 
     // generate html file
     systemCall("cp -f \"" + folder + "/polyvr.html\" ./"+projectName+".html");
+    systemCall("cp -f \"" + folder + "/polyvr_editor.html\" ./"+projectName+"_editor.html");
     fileReplaceStrings("./"+projectName+".html", "PROJECT.pvr", project);
+    fileReplaceStrings("./"+projectName+"_editor.html", "PROJECT.pvr", project);
 
     // TODO: table widget to present preloaded files to user
     auto preloadFile = [&](const string& path) {
         string newStr = "preloadFile('" + path + "');\n\t\t\t//INCLUDE_PRELOAD_HOOK";
         fileReplaceStrings("./"+projectName+".html", "//INCLUDE_PRELOAD_HOOK", newStr);
+        fileReplaceStrings("./"+projectName+"_editor.html", "//INCLUDE_PRELOAD_HOOK", newStr);
     };
 
     map<string, bool> preloadedFiles;
@@ -134,6 +139,8 @@ void VRGuiBits::on_web_export_clicked() {
     //systemCall("gedit ./"+projectName+".html");
     if (askUser("Web build files copied to project directory", "Start in browser (google-chrome)?"))
         systemCall("google-chrome --new-window http://localhost:5500/"+projectName+".html");
+    else if (askUser("Web build files copied to project directory", "Start in browser with editor?"))
+        systemCall("google-chrome --new-window http://localhost:5500/"+projectName+"_editor.html");
 }
 
 void VRGuiBits::on_about_clicked() {

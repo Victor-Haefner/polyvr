@@ -18,6 +18,7 @@ class VRSceneGlobals: public VRPyBase {
 		static PyObject* findByID(VRSceneGlobals* self, PyObject *args);
 		static PyObject* loadGeometry(VRSceneGlobals* self, PyObject *args, PyObject *kwargs);
 		static PyObject* getLoadGeometryProgress(VRSceneGlobals* self);
+		static PyObject* createPrimitive(VRSceneGlobals* self, PyObject *args, PyObject *kwargs);
 		static PyObject* exportToFile(VRSceneGlobals* self, PyObject *args);
 		static PyObject* pyTriggerScript(VRSceneGlobals* self, PyObject *args);
 		static PyObject* stackCall(VRSceneGlobals* self, PyObject *args);
@@ -44,6 +45,7 @@ class VRSceneGlobals: public VRPyBase {
 		static PyObject* getActiveCamera(VRSceneGlobals* self);
 		static PyObject* testDWGArcs(VRSceneGlobals* self);
 		static PyObject* setWindowTitle(VRSceneGlobals* self, PyObject* args);
+		static PyObject* sendToBrowser(VRSceneGlobals* self, PyObject* args);
 };
 
 OSG_END_NAMESPACE;

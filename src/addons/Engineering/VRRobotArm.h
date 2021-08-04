@@ -37,7 +37,7 @@ class VRRobotArm {
 
         list<job> job_queue;
 
-        int N = 5;
+        int N = 6;
         float grabDist = 0;
         float pathPos = 0;
         bool showModel = false;
@@ -54,15 +54,17 @@ class VRRobotArm {
         vector<float> lengths;
         vector<int> axis;
 
-        PosePtr getKukaPose();
-        PosePtr getAuboPose();
-        void calcReverseKinematicsKuka(PosePtr p);
-        void calcReverseKinematicsAubo(PosePtr p);
+        vector<float> calcReverseKinematicsKuka(PosePtr p);
+        vector<float> calcReverseKinematicsAubo(PosePtr p);
+        PosePtr calcForwardKinematicsKuka(vector<float> angles);
+        PosePtr calcForwardKinematicsAubo(vector<float> angles);
 
         void update();
+        PosePtr getLastPose();
         double convertAngle(double a, int i);
         void applyAngles();
-        void calcReverseKinematics(PosePtr p);
+        PosePtr calcForwardKinematics(vector<float> angles);
+        vector<float> calcReverseKinematics(PosePtr p);
         void animOnPath(float t);
         void addJob(job j);
 
@@ -82,6 +84,7 @@ class VRRobotArm {
 
         vector<VRTransformPtr> getParts();
         vector<float> getAngles();
+        vector<float> getTargetAngles();
         PosePtr getPose();
 
         void move();
@@ -90,13 +93,14 @@ class VRRobotArm {
         bool isMoving();
         void setEventCallback(VRMessageCbPtr mCb);
 
-        void moveTo(PosePtr p);
+        bool canReach(PosePtr p, bool local = false);
+        void moveTo(PosePtr p, bool local = false);
         void setAngles(vector<float> angles, bool force = false);
         void setGrab(float g);
         void toggleGrab();
 
         void grab(VRTransformPtr obj);
-        void drop();
+        VRTransformPtr drop();
 
         void setPath(PathPtr p, PathPtr po = 0);
         PathPtr getPath();

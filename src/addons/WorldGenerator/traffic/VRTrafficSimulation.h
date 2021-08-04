@@ -185,8 +185,8 @@ class VRTrafficSimulation : public VRObject {
         VRProjectManagerPtr simSettings;
         VRThreadCbPtr worker;
 
-        boost::recursive_mutex* mtx = 0; //locks main thread
-        boost::recursive_mutex* mtx2 = 0; //locks transform updating
+        VRMutex* mtx = 0; //locks main thread
+        VRMutex* mtx2 = 0; //locks transform updating
 
         map<int, laneSegment> roads;
         map<int, Vehicle> vehicles;

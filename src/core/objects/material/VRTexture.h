@@ -29,8 +29,14 @@ class VRTexture : public std::enable_shared_from_this<VRTexture> {
         static VRTexturePtr create(ImageMTRecPtr img);
         VRTexturePtr ptr();
 
+        void read(string path);
         void setImage(ImageMTRecPtr img);
         void setInternalFormat(int ipf);
+        void setPixel(Vec3i p, Color4f c);
+        void setPixel(int i, Color4f c);
+        void setByteData(vector<char> data, Vec3i layout, int chanels, int Nmipmaps, int internalpf);
+        void setFloatData(vector<float> data, Vec3i layout, int chanels, int Nmipmaps, int internalpf);
+
         int getInternalFormat();
         size_t getByteSize();
         int getPixelByteN();
@@ -38,7 +44,7 @@ class VRTexture : public std::enable_shared_from_this<VRTexture> {
         size_t getNPixel();
         ImageMTRecPtr getImage();
 
-        void read(string path);
+        void convertToBytes();
         void writeImage(ImageMTRecPtr img, string path);
         void write(string path, bool doThread = false);
         void writeThreaded(string path, VRTexturePtr self, VRThreadWeakPtr tw);
@@ -48,8 +54,6 @@ class VRTexture : public std::enable_shared_from_this<VRTexture> {
         Color4f getPixelUV(Vec2d uv);
         Color4f getPixelVec(Vec3i p);
         Color4f getPixel(int i);
-        void setPixel(Vec3i p, Color4f c);
-        void setPixel(int i, Color4f c);
 
         void resize(Vec3i size, Vec3i offset);
         void downsize();

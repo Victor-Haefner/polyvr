@@ -87,7 +87,7 @@ int VRAvatar::addBeacon(const Vec3d& castDir) {
 
     beacons[id].beacon = VRTransform::create(this->deviceName + "_" + to_string(id) + "_beacon");
     beacons[id].beacon->setPersistency(0);
-    beacons[id].tmpContainer = VRTransform::create(this->deviceName + "_" + to_string(id) + "_tmp_beacon");
+    beacons[id].tmpContainer = VRTransform::create(this->deviceName + "_" + to_string(id) + "_tmp_beacon"); // TODO: why do we need that?
     beacons[id].tmpContainer->setPersistency(0);
 #ifndef WASM
     beacons[id].avatars["ray"] = initRay(id, castDir);

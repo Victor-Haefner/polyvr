@@ -1,15 +1,15 @@
 #include "VRGuiConsole.h"
 #include "core/utils/VRFunction.h"
+#include "core/utils/VRMutex.h"
 
 #include <gtk/gtk.h>
 #include <pango/pango-font.h>
-#include <boost/thread/recursive_mutex.hpp>
+#include "core/utils/VRMutex.h"
 #include "VRGuiUtils.h"
 
-typedef boost::recursive_mutex::scoped_lock PLock;
-boost::recursive_mutex mtx;
-
 using namespace OSG;
+
+VRMutex mtx;
 
 VRConsoleWidget::message::message(string m, string s, shared_ptr< VRFunction<string> > l) : msg(m), style(s), link(l) {}
 
@@ -43,7 +43,7 @@ VRConsoleWidget::VRConsoleWidget() {
 VRConsoleWidget::~VRConsoleWidget() {}
 
 void VRConsoleWidget::write(string msg, string style, shared_ptr< VRFunction<string> > link) {
-    PLock lock(mtx);
+    VRLock lock(mtx);
 
     if (style == "" && msg.find('\033') != string::npos) { // check for style tags
         string aggregate = "";
@@ -79,7 +79,7 @@ void VRConsoleWidget::write(string msg, string style, shared_ptr< VRFunction<str
 }
 
 void VRConsoleWidget::clear() {
-    PLock lock(mtx);
+    VRLock lock(mtx);
     std::queue<message>().swap(msg_queue);
     gtk_text_buffer_set_text(buffer, "", 0);
     resetColor();
@@ -148,7 +148,7 @@ bool VRConsoleWidget::on_link_activate(GObject* object, GdkEvent* event, GtkText
 }
 
 void VRConsoleWidget::update() {
-    PLock lock(mtx);
+    VRLock lock(mtx);
     while(!msg_queue.empty()) {
         if (!isOpen) setColor(notifyColor);
         auto& msg = msg_queue.front();

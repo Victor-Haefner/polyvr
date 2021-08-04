@@ -32,12 +32,14 @@ VRAnalyticGeometry::VRAnalyticGeometry(string name) : VRTransform(name) {
     pntMat->setSortKey(100);
     if (vectorEndsGeometry) vectorEndsGeometry->setMaterial(pntMat);
 
+#ifndef WASM // TODO
     cirMat = VRMaterial::create("AnalyticGeometry3");
     cirMat->setLit(false);
     cirMat->setVertexShader(circle_vp, "analyticCircleVS");
     cirMat->setFragmentShader(circle_fp, "analyticCircleFS");
     cirMat->setDepthTest(GL_ALWAYS);
     cirMat->setSortKey(100);
+#endif
 }
 
 VRAnalyticGeometry::~VRAnalyticGeometry() {}
@@ -170,6 +172,7 @@ void VRAnalyticGeometry::setAngle(int i, Vec3d p, Vec3d v1, Vec3d v2, Color3f c1
 }
 
 void VRAnalyticGeometry::setCircle(int i, Vec3d p, Vec3d n, float r, Color3f color, string label) {
+#ifndef WASM
     if (!circlesGeometry) {
         circlesGeometry = VRGeometry::create("AGCircles"); // TODO: segfault prone :(
         circlesGeometry->setMaterial(cirMat);
@@ -225,6 +228,7 @@ void VRAnalyticGeometry::setCircle(int i, Vec3d p, Vec3d n, float r, Color3f col
     norms->setValue(norm, 4*i+1);
     norms->setValue(norm, 4*i+2);
     norms->setValue(norm, 4*i+3);
+#endif
 }
 
 void VRAnalyticGeometry::setVector(int i, Vec3d p, Vec3d vec, Color3f color, string label, bool doArrow) {

@@ -4,6 +4,7 @@
 
 #include <OpenSG/OSGImage.h>
 
+
 #ifdef WASM
 PyGILState_STATE PyGILState_Ensure() {
 	return PyGILState_STATE();
@@ -250,6 +251,11 @@ int VRPyBase::toGLConst(PyObject* o) { return toGLConst( PyString_AsString(o) );
 
 int VRPyBase::toOSGConst(string s) {
     // pixel formats
+#ifndef __EMSCRIPTEN__
+    if (s == "R") return GL_RED;
+#else
+    if (s == "R") return OSG::Image::OSG_R_PF;
+#endif
     if (s == "A") return OSG::Image::OSG_A_PF;
     if (s == "I") return OSG::Image::OSG_I_PF;
     if (s == "L") return OSG::Image::OSG_L_PF;
@@ -265,12 +271,23 @@ int VRPyBase::toOSGConst(string s) {
     if (s == "DEPTH") return OSG::Image::OSG_DEPTH_PF;
     if (s == "DEPTH_STENCIL") return OSG::Image::OSG_DEPTH_STENCIL_PF;
 
+    if (s == "R_BYTE") return GL_R8;
+#ifndef __EMSCRIPTEN__
+    if (s == "A_BYTE") return GL_ALPHA8;
+    if (s == "L_BYTE") return GL_LUMINANCE8;
+    //if (s == "LA_BYTE") return GL_LUMINANCE_ALPHA8;
+    if (s == "RGB_BYTE") return GL_RGB8;
+    if (s == "RGBA_BYTE") return GL_RGBA8;
+#endif
+
+    if (s == "R_FLT") return GL_R32F;
     if (s == "A_FLT") return GL_ALPHA32F_ARB;
     if (s == "L_FLT") return GL_LUMINANCE32F_ARB;
     if (s == "LA_FLT") return GL_LUMINANCE_ALPHA32F_ARB;
     if (s == "RGB_FLT") return GL_RGB32F;
     if (s == "RGBA_FLT") return GL_RGBA32F;
 
+    if (s == "R_INT") return GL_RED_INTEGER_EXT;
     if (s == "A_INT") return OSG::Image::OSG_ALPHA_INTEGER_PF;
     if (s == "L_INT") return OSG::Image::OSG_LUMINANCE_INTEGER_PF;
     if (s == "LA_INT") return OSG::Image::OSG_LUMINANCE_ALPHA_INTEGER_PF;

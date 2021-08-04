@@ -1,6 +1,6 @@
 #include "VRImport.h"
 #ifndef WITHOUT_COLLADA
-#include "VRCOLLADA.h"
+#include "COLLADA/VRCOLLADA.h"
 #endif
 #include "VRPLY.h"
 #ifndef WASM
@@ -25,9 +25,6 @@
 #include <OpenSG/OSGNameAttachment.h>
 #include <OpenSG/OSGComponentTransform.h>
 #include <OpenSG/OSGDistanceLOD.h>
-
-#include <boost/filesystem/path.hpp>
-#include <boost/filesystem/operations.hpp>
 
 #include "core/objects/OSGObject.h"
 #include "core/objects/object/OSGCore.h"
@@ -79,8 +76,7 @@ VRTransformPtr VRImport::prependTransform(VRObjectPtr o, string path) {
         if (o->getChild(0)->getType() == "Transform")
             return static_pointer_cast<VRTransform>(o->getChild(0));
 
-    boost::filesystem::path p(path);
-    auto trans = VRTransform::create( p.filename().string() );
+    auto trans = VRTransform::create( getFileName(path,0) );
     trans->addChild(o);
     return trans;
 }
@@ -167,8 +163,7 @@ void VRImport::LoadJob::load(VRThreadWeakPtr tw) {
     if (t) { t->syncFromMain(); thread = true; }
 
     auto loadSwitch = [&]() {
-        auto bpath = boost::filesystem::path(path);
-        string ext = bpath.extension().string();
+        string ext = getFileExtension(path);
 
         auto clist = Thread::getCurrentChangeList();
         int Ncr0 = clist->getNumCreated();
@@ -208,7 +203,7 @@ void VRImport::LoadJob::load(VRThreadWeakPtr tw) {
 #endif
         if (ext == ".gltf" || ext == ".glb") { loadGLTF(path, res, progress, thread); return; }
         if (ext == ".osb" || ext == ".osg") { osgLoad(path, res); return; }
-        if (preset == "OSG" || preset == "COLLADA") osgLoad(path, res); // fallback
+        if (preset == "OSG") osgLoad(path, res); // fallback
 #ifndef WITHOUT_COLLADA
         if (preset == "COLLADA") loadCollada(path, res);
 #endif

@@ -508,6 +508,9 @@ void VRGeometry::updateNormals(bool face) {
     if (!meshSet) return;
     if (face) calcFaceNormals(mesh->geo);
     else calcVertexNormals(mesh->geo);
+#ifdef WASM
+    if (face) makeSingleIndex();
+#endif
 }
 
 void VRGeometry::flipNormals() {

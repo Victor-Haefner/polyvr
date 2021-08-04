@@ -10,14 +10,13 @@
 #include "core/math/path.h"
 #include "core/utils/system/VRSystem.h"
 #include "core/utils/VRStorage_template.h"
+#include "core/utils/VRMutex.h"
 
-#include <boost/thread/recursive_mutex.hpp>
 #include <OpenSG/OSGTextureEnvChunk.h>
 #include <OpenSG/OSGTextureObjChunk.h>
 #include <BulletDynamics/Vehicle/btRaycastVehicle.h>
 #include <math.h>
 
-typedef boost::recursive_mutex::scoped_lock PLock;
 
 using namespace OSG;
 
@@ -99,7 +98,7 @@ VRCarDynamics::VRCarDynamics(string name) : VRObject(name) {
 }
 
 VRCarDynamics::~VRCarDynamics() {
-    PLock lock(mtx());
+    VRLock lock(mtx());
     cout << "\nVRCarDynamics::~VRCarDynamics()\n";
     m_dynamicsWorld->removeVehicle(vehicle);
 	if (vehicle) delete vehicle;
@@ -118,7 +117,7 @@ void VRCarDynamics::initPhysics() {
     scene->addUpdateFkt(updateEPtr);
     scene->addUpdateFkt(updateWPtr);
 
-    PLock lock(mtx());
+    VRLock lock(mtx());
     m_dynamicsWorld = (btDynamicsWorld*) scene->bltWorld();
 	vehicleRayCaster = new btDefaultVehicleRaycaster(m_dynamicsWorld);
 }
@@ -127,7 +126,7 @@ float VRCarDynamics::getSpeed() { return speed; }
 float VRCarDynamics::getAcceleration() { return acceleration; }
 
 void VRCarDynamics::updateChassis() {
-    PLock lock(mtx());
+    VRLock lock(mtx());
     chassis->geo->getPhysics()->setPhysicalized(false);
     chassis->geo->getPhysics()->setMass(chassis->mass);
     chassis->geo->getPhysics()->setCenterOfMass(*chassis->massOffset);
@@ -158,7 +157,7 @@ void VRCarDynamics::addBTWheel(WheelPtr wheel) {
 
 void VRCarDynamics::updateWheelGeos() {
     if (!vehicle) return;
-    PLock lock(mtx());
+    VRLock lock(mtx());
 
     for (uint i=0; i<wheels.size(); i++) {
         vehicle->updateWheelTransform(i,true);
@@ -179,7 +178,7 @@ void VRCarDynamics::setChassisGeo(VRTransformPtr geo, bool doPhys) {
     }
 
     if (doPhys) {
-        PLock lock(mtx());
+        VRLock lock(mtx());
         geo->getPhysics()->setShape("Convex");
         geo->getPhysics()->setMass(chassis->mass);
         geo->getPhysics()->setDynamic(true);
@@ -188,7 +187,7 @@ void VRCarDynamics::setChassisGeo(VRTransformPtr geo, bool doPhys) {
     }
 
     {
-        PLock lock(mtx());
+        VRLock lock(mtx());
         chassis->body = geo->getPhysics()->getRigidBody();
     }
 
@@ -365,7 +364,7 @@ void VRCarDynamics::updateEngine() {
     //VRTimer timer;
     //timer.start("D1");
 
-    PLock lock(mtx());
+    VRLock lock(mtx());
 
     for (uint i=0; i<wheels.size(); i++) {
         auto wheel = wheels[i];
@@ -520,7 +519,7 @@ void VRCarDynamics::setParameter(float mass, float enginePower, float breakPower
 
 	// update physics
 	if (!chassis->geo) return;
-    PLock lock(mtx());
+    VRLock lock(mtx());
     for ( auto geo : chassis->geos ) {
         geo->setMatrix(Matrix4d());
         auto p = chassis->geo->getPoseTo(geo);
@@ -531,17 +530,17 @@ void VRCarDynamics::setParameter(float mass, float enginePower, float breakPower
     updateChassis();
 }
 
-boost::recursive_mutex& VRCarDynamics::mtx() {
+VRMutex& VRCarDynamics::mtx() {
     auto scene = VRScene::getCurrent();
     if (scene) return scene->physicsMutex();
     else {
-        static boost::recursive_mutex m;
+        static VRMutex m;
         return m;
     };
 }
 
 void VRCarDynamics::reset(const Pose& p) {
-    PLock lock(mtx());
+    VRLock lock(mtx());
     setIgnition(false);
 	btTransform t;
 	t.setIdentity();
@@ -564,7 +563,7 @@ void VRCarDynamics::reset(const Pose& p) {
 // deprecated
 btRigidBody* VRCarDynamics::createRigitBody(float mass, const btTransform& startTransform, btCollisionShape* shape) {
 	if (shape == 0) return 0;
-    PLock lock(mtx());
+    VRLock lock(mtx());
 	if (shape->getShapeType() == INVALID_SHAPE_PROXYTYPE) return 0;
 
 	btVector3 localInertia(0, 0, 0);

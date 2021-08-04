@@ -175,7 +175,6 @@ void VRObject::remAttachment(string name) {
 }
 
 string VRObject::getAttachmentAsString(string name) {
-    cout << "VRObject::getAttachmentAsString " << name << " " << getName() << " " << attachments.size() << endl;
     if (attachments.count(name)) {
         return attachments[name]->asString();
     }

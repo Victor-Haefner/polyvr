@@ -2,6 +2,7 @@
 #define VRMATERIALT_H_INCLUDED
 
 #include "VRMaterial.h"
+#include <OpenSG/OSGShaderProgram.h>
 #include <OpenSG/OSGSimpleSHLChunk.h>
 
 template<typename T>

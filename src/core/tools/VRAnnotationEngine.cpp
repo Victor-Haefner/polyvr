@@ -96,6 +96,12 @@ string VRAnnotationEngine::getLabel(int i) {
     return labels[i].str;
 }
 
+map<int, string> VRAnnotationEngine::getLabels() {
+    map<int, string> res;
+    for (int i=0; i<labels.size(); i++) res[i] = labels[i].str;
+    return res;
+}
+
 bool VRAnnotationEngine::applyIntersectionAction(Action* action) {
     if (!mesh || !mesh->geo) return false;
 
@@ -108,6 +114,7 @@ bool VRAnnotationEngine::applyIntersectionAction(Action* action) {
     Pnt3d lh = Pnt3d(ia->getHitPoint());
 
     // TODO: convert ray in engine coord system!
+    //cout << "VRAnnotationEngine::applyIntersectionAction l0: " << l0 << ", ld: " << ld << ", lh: " << lh << endl;
 
     double h = size;
     double w = size;
@@ -122,6 +129,9 @@ bool VRAnnotationEngine::applyIntersectionAction(Action* action) {
 
     for (auto& l : labels) {
         int N = l.entries.size();
+#ifdef OSG_OGL_ES2
+        N = ceil(N/12.0)+4;
+#endif
         if (N == 0) continue;
 
         Pnt3d P0 = data->getPosition(l.entries[0]);
@@ -134,10 +144,10 @@ bool VRAnnotationEngine::applyIntersectionAction(Action* action) {
 
         Vec3d Pp;
         Pnt3d lh;
-        double X, Y;
+        double X, Y, d;
         if (doBillboard) { // labels are facing camera
             Vec3d n = -camPose->dir();
-            double d = Vec3d(P0-l0).dot(n)/ld.dot(n);
+            d = Vec3d(P0-l0).dot(n)/ld.dot(n);
             lh = l0 + ld*d;
             Pp = lh - P0;
             X = Pp.dot(camPose->x());
@@ -145,20 +155,22 @@ bool VRAnnotationEngine::applyIntersectionAction(Action* action) {
             //cout << "applyIntersectionAction n:" << n << "  d:" << d << "  P0:" << P0 << " lh:" << lh << " Pp:" << Pp << "  " << Vec2d(X/(w*((N-4)*3-0.5)),Y/(h*0.5)) << endl;
             //cout << " applyIntersectionAction Nw: " << ((N-4)*3-0.5) << "  W:" << w*((N-4)*3-0.5) << " w:" << w << endl;
         } else {
-            double d = (P0[2]-l0[2])/ld[2]; // all labels are in z+k=0 plane
+            d = (P0[2]-l0[2])/ld[2]; // all labels are in z+k=0 plane
             lh = l0 + ld*d;
             Pp = lh - P0;
             X = Pp[0];
             Y = Pp[1];
         }
 
+        //cout << " VRAnnotationEngine::applyIntersectionAction P0 " << P0 << ", d " << d << ", X " << X << ", lh " << lh << endl;
+        //cout << " VRAnnotationEngine::applyIntersectionAction Y " << Y << ", X " << X << ", w " << w << ", h " << h << ",  " << endl;
         if (Y < -h*0.5) continue;
         if (Y >  h*0.5) continue;
 
         if (X < -w*0.5) continue;
         if (X >  w*(l.Ngraphemes-0.5) ) continue;
         didHit = true;
-        //cout << "VRAnnotationEngine::applyIntersectionAction " << N << " -> " << (N-4)*3 << " -> " << ((N-4)*3-0.5) << " " << Pp[0] << " " << w << " -> " << w*((N-4)*3-0.5) << endl;
+        //cout << " VRAnnotationEngine::applyIntersectionAction " << N << " -> " << (N-4)*3 << " -> " << ((N-4)*3-0.5) << " " << Pp[0] << " " << w << " -> " << w*((N-4)*3-0.5) << endl;
 
         // label hit!
         Real32 t = l0.dist( lh );
@@ -166,10 +178,11 @@ bool VRAnnotationEngine::applyIntersectionAction(Action* action) {
             T = t;
             Vec3f norm(0,1,0);
             ia->setHit(t, ia->getActNode(), 0, norm, l.ID);
-            //cout << "VRAnnotationEngine::applyIntersectionAction ID: " << l.ID << " " << l.str << endl;
+            //cout << " VRAnnotationEngine::applyIntersectionAction ID: " << l.ID << " " << l.str << endl;
         }
     }
 
+    //cout << "  VRAnnotationEngine::applyIntersectionAction T: " << T << ", didHit: " << didHit << endl;
     if (didHit) return true;
 	else return VRGeometry::applyIntersectionAction(action); // fallback
 }
@@ -229,6 +242,7 @@ int VRAnnotationEngine::add(Vec3d p, string s) {
 VRAnnotationEngine::Label::Label(int id) : ID(id) {}
 
 void VRAnnotationEngine::setLine(int i, Vec3d p, string str, bool ascii) {
+    //cout << "VRAnnotationEngine::setLine i: " << i << ", p: " << p << ", str: " << str << ", ascii: " << ascii << endl;
     while (i >= (int)labels.size()) labels.push_back(Label(labels.size()));
 
     auto& l = labels[i];
@@ -277,10 +291,11 @@ void VRAnnotationEngine::setLine(int i, Vec3d p, string str, bool ascii) {
 #endif
         int N = l.Ngraphemes;
 
-        resize(l,p,N*4);
+        resize(l,p,N*4+4); // plus 4 bounding points
         float H = size*0.5;
         float D = charTexSize*0.5;
         float P = texPadding;
+
 
         Vec3d orientationX = -orientationDir.cross(orientationUp);
 
@@ -305,6 +320,12 @@ void VRAnnotationEngine::setLine(int i, Vec3d p, string str, bool ascii) {
             data->setVert(l.entries[j*4+2], p, n3, Vec2d(u2,0));
             data->setVert(l.entries[j*4+3], p, n4, Vec2d(u1,0));
         }
+
+        // bounding points to avoid word clipping
+        data->setVert(l.entries[N*4]  , p+Vec3d(-0.25*size, -0.5*size, 0), Vec3d(0,0,0));
+        data->setVert(l.entries[N*4+1], p+Vec3d(-0.25*size,  0.5*size, 0), Vec3d(0,0,0));
+        data->setVert(l.entries[N*4+2], p+Vec3d((l.Ngraphemes-0.25)*size, -0.5*size, 0), Vec3d(0,0,0));
+        data->setVert(l.entries[N*4+3], p+Vec3d((l.Ngraphemes-0.25)*size,  0.5*size, 0), Vec3d(0,0,0));
 #ifndef OSG_OGL_ES2
     }
 #endif
@@ -551,14 +572,16 @@ uniform mat4 OSGProjectionMatrix;
 
 void main( void ) {
     if (doBillboard < 0.5) {
+        vec4 p = osg_Vertex + osg_Normal;
+        p.xyz *= 2.0; // TODO: hack.. I did not find out where this factor ist missing, vertex and normal info is correct..
 \n
 #ifdef __EMSCRIPTEN__
 \n
-        gl_Position = OSGModelViewProjectionMatrix * (osg_Vertex + osg_Normal);
+        gl_Position = OSGModelViewProjectionMatrix * p;
 \n
 #else
 \n
-        gl_Position = gl_ModelViewProjectionMatrix * (osg_Vertex + osg_Normal);
+        gl_Position = gl_ModelViewProjectionMatrix * p;
 \n
 #endif
 \n

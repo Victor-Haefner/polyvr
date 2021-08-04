@@ -75,6 +75,7 @@ class VRAnnotationEngine : public VRGeometry {
         void setOrientation(Vec3d d, Vec3d u);
 
         string getLabel(int i);
+        map<int, string> getLabels();
 
         virtual bool applyIntersectionAction(Action* ia);
 };

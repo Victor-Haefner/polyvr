@@ -35,7 +35,7 @@ VRHandGeoPtr VRHandGeo::create(string name) {
 }
 
 void VRHandGeo::update(VRLeapFramePtr frame) {
-    boost::mutex::scoped_lock lock(mutex);
+    VRLock lock(mutex);
     if (isLeft) handData = frame->getLeftHand();
     else handData = frame->getRightHand();
     visible = bool(handData);
@@ -53,7 +53,7 @@ void VRHandGeo::connectToLeap(VRLeapPtr leap) {
 }
 
 void VRHandGeo::updateHandGeo() {
-    boost::mutex::scoped_lock lock(mutex);
+    VRLock lock(mutex);
     setVisible(visible);
 
     if (handData && isVisible()) {

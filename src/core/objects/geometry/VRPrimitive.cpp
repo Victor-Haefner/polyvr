@@ -2,6 +2,7 @@
 #include "VRGeometry.h"
 #include "OSGGeometry.h"
 #include "VRGeoData.h"
+#include "core/objects/material/VRMaterial.h"
 #include <math.h>
 #include <OpenSG/OSGSimpleGeometry.h>
 #include <OpenSG/OSGGeoProperties.h>
@@ -302,10 +303,67 @@ GeometryMTRecPtr VRBox::make() {
     return geo->getMesh()->geo;
 }
 
+GeometryMTRecPtr VRCylinder::make() {
+    //return makeCylinderGeo(height, radius, Nsides, doSides, doTop, doBottom);
+
+    if (!doSides && !doTop && !doBottom) return 0;
+
+    VRGeoData data;
+
+    Pnt3d p1 = Pnt3d(0,-height*0.5,0);
+    Pnt3d p2 = Pnt3d(0, height*0.5,0);
+
+    vector<Vec3d> ring;
+    for (int i=0; i<Nsides; i++) {
+        double a = i*2*Pi/Nsides;
+        ring.push_back( Vec3d(cos(a),0,sin(a))*radius );
+    }
+
+    if (doBottom) {
+        int rb0 = -1;
+        for (auto v : ring) {
+            v[1] = -height*0.5;
+            int vID = data.pushVert(Pnt3d(v), Vec3d(0,-1,0), Vec2d(0,0));
+            if (rb0 < 0) rb0 = vID;
+        }
+        int i0 = data.pushVert(p1, Vec3d(0,-1,0), Vec2d(0,0));
+        for (int i=0; i<Nsides; i++) data.pushTri(i0, rb0+i, rb0+(i+1)%Nsides);
+    }
+
+    if (doTop) {
+        int rt0 = -1;
+        for (auto v : ring) {
+            v[1] = height*0.5;
+            int vID = data.pushVert(Pnt3d(v), Vec3d(0,1,0), Vec2d(0,1));
+            if (rt0 < 0) rt0 = vID;
+        }
+        int i0 = data.pushVert(p2, Vec3d(0,1,0), Vec2d(0,1));
+        for (int i=0; i<Nsides; i++) data.pushTri(i0, rt0+(i+1)%Nsides, rt0+i);
+    }
+
+    if (doSides) {
+        int rs0 = -1;
+        for (int i=0; i<ring.size(); i++) {
+            auto v = ring[i];
+            double t = double(i)/(ring.size()-1);
+            Vec3d n = v;
+            n.normalize();
+            v[1] = -height*0.5;
+            int vID = data.pushVert(Pnt3d(v), n, Vec2d(t,0));
+            if (rs0 < 0) rs0 = vID;
+            v[1] =  height*0.5;
+            data.pushVert(Pnt3d(v), n, Vec2d(t,1));
+        }
+        for (int i=0; i<Nsides; i++) data.pushQuad(rs0+2*i, rs0+2*i+1, rs0+2*((i+1)%Nsides)+1, rs0+2*((i+1)%Nsides));
+    }
+
+    auto geo = data.asGeometry("Cylinder");
+    return geo->getMesh()->geo;
+}
+
 GeometryMTRecPtr VRSphere::make() { return makeSphereGeo(iterations, radius); }
 GeometryMTRecPtr VRTorus::make() { return makeTorusGeo(inner_radius, outer_radius, Nsegments, Nrings); }
 GeometryMTRecPtr VRTeapot::make() { return makeTeapotGeo(iterations, scale); }
-GeometryMTRecPtr VRCylinder::make() { return makeCylinderGeo(height, radius, Nsides, doSides, doTop, doBottom); }
 GeometryMTRecPtr VRCone::make() { return makeConeGeo(height, radius, Nsides, doSides, doBottom); }
 
 GeometryMTRecPtr VRArrow::make() {
@@ -485,12 +543,7 @@ GeometryMTRecPtr VRScrewThread::make() {
 }
 
 GeometryMTRecPtr VRGear::make() {
-    GeoUInt8PropertyMTRecPtr      Type = GeoUInt8Property::create();
-    GeoUInt32PropertyMTRecPtr     Length = GeoUInt32Property::create();
-    GeoPnt3fPropertyMTRecPtr      Pos = GeoPnt3fProperty::create();
-    GeoVec3fPropertyMTRecPtr      Norms = GeoVec3fProperty::create();
-    GeoUInt32PropertyMTRecPtr     Indices = GeoUInt32Property::create();
-    SimpleMaterialMTRecPtr        Mat = SimpleMaterial::create();
+    VRGeoData data;
 
     float r0 = hole;
     float r1 = radius();
@@ -510,189 +563,106 @@ GeometryMTRecPtr VRGear::make() {
         for (int j=0; j<6; j++) a[j] = 2*Pi*(i+j/6.)/tN;
         for (int j=0; j<6; j++) { c[j] = cos(a[j]); s[j] = sin(a[j]); }
 
-        iN = Pos->size();
-        Pos->addValue(Vec3d(c[0]*r0, s[0]*r0, -z)); // 0
-        Pos->addValue(Vec3d(c[0]*(r1-b), s[0]*(r1-b), -z)); // 1
-        Pos->addValue(Vec3d(c[1]*(r1-b+bt*0.5), s[1]*(r1-b+bt*0.5), -z+bz*0.5)); // 2
-        Pos->addValue(Vec3d(c[2]*(r1-b+bt), s[2]*(r1-b+bt), -z+bz)); // 3
-        Pos->addValue(Vec3d(c[3]*(r1-b+bt), s[3]*(r1-b+bt), -z+bz)); // 4
-        Pos->addValue(Vec3d(c[4]*(r1-b+bt*0.5), s[4]*(r1-b+bt*0.5), -z+bz*0.5)); // 5
-        Pos->addValue(Vec3d(c[5]*(r1-b), s[5]*(r1-b), -z)); // 6
-        Pos->addValue(Vec3d(c[5]*r0, s[5]*r0, -z)); // 7
+        Vec3d n1 = Vec3d(0,0,-1);
+        Vec3d n2 = Vec3d(0,0, 1);
 
-        Pos->addValue(Vec3d(c[0]*r0, s[0]*r0, z)); // 8
-        Pos->addValue(Vec3d(c[0]*(r1+b), s[0]*(r1+b), z)); // 9
-        Pos->addValue(Vec3d(c[1]*(r1+b+bt*0.5), s[1]*(r1+b+bt*0.5), z+bz*0.5)); // 10
-        Pos->addValue(Vec3d(c[2]*(r1+b+bt), s[2]*(r1+b+bt), z+bz)); // 11
-        Pos->addValue(Vec3d(c[3]*(r1+b+bt), s[3]*(r1+b+bt), z+bz)); // 12
-        Pos->addValue(Vec3d(c[4]*(r1+b+bt*0.5), s[4]*(r1+b+bt*0.5), z+bz*0.5)); // 13
-        Pos->addValue(Vec3d(c[5]*(r1+b), s[5]*(r1+b), z)); // 14
-        Pos->addValue(Vec3d(c[5]*r0, s[5]*r0, z)); // 15
+        iN = data.size();
+        data.pushVert(Vec3d(c[0]*r0, s[0]*r0, -z), n1); // 0
+        data.pushVert(Vec3d(c[0]*(r1-b), s[0]*(r1-b), -z), n1); // 1
+        data.pushVert(Vec3d(c[1]*(r1-b+bt*0.5), s[1]*(r1-b+bt*0.5), -z+bz*0.5), n1); // 2
+        data.pushVert(Vec3d(c[2]*(r1-b+bt), s[2]*(r1-b+bt), -z+bz), n1); // 3
+        data.pushVert(Vec3d(c[3]*(r1-b+bt), s[3]*(r1-b+bt), -z+bz), n1); // 4
+        data.pushVert(Vec3d(c[4]*(r1-b+bt*0.5), s[4]*(r1-b+bt*0.5), -z+bz*0.5), n1); // 5
+        data.pushVert(Vec3d(c[5]*(r1-b), s[5]*(r1-b), -z), n1); // 6
+        data.pushVert(Vec3d(c[5]*r0, s[5]*r0, -z), n1); // 7
 
-        for (int j=0; j<8; j++) { n = Vec3d(0,0,-1); Norms->addValue(n); }
-        for (int j=0; j<8; j++) { n = Vec3d(0,0,1); Norms->addValue(n); }
+        data.pushVert(Vec3d(c[0]*r0, s[0]*r0, z), n2); // 8
+        data.pushVert(Vec3d(c[0]*(r1+b), s[0]*(r1+b), z), n2); // 9
+        data.pushVert(Vec3d(c[1]*(r1+b+bt*0.5), s[1]*(r1+b+bt*0.5), z+bz*0.5), n2); // 10
+        data.pushVert(Vec3d(c[2]*(r1+b+bt), s[2]*(r1+b+bt), z+bz), n2); // 11
+        data.pushVert(Vec3d(c[3]*(r1+b+bt), s[3]*(r1+b+bt), z+bz), n2); // 12
+        data.pushVert(Vec3d(c[4]*(r1+b+bt*0.5), s[4]*(r1+b+bt*0.5), z+bz*0.5), n2); // 13
+        data.pushVert(Vec3d(c[5]*(r1+b), s[5]*(r1+b), z), n2); // 14
+        data.pushVert(Vec3d(c[5]*r0, s[5]*r0, z), n2); // 15
 
-        Indices->addValue(iN+1);
-        Indices->addValue(iN+0); // T1 unten
-        Indices->addValue(iN+7);
-        Indices->addValue(iN+6);
+        data.pushQuad(iN+1, iN+0, iN+7, iN+6); // T1 unten
+        data.pushQuad(iN+2, iN+1, iN+6, iN+5); // T2 unten
+        data.pushQuad(iN+3, iN+2, iN+5, iN+4); // T3 unten
+        data.pushQuad(iN+8, iN+9, iN+14, iN+15); // T1 unten
+        data.pushQuad(iN+9, iN+10, iN+13, iN+14); // T2 unten
+        data.pushQuad(iN+10, iN+11, iN+12, iN+13); // T3 unten
 
-        Indices->addValue(iN+2);
-        Indices->addValue(iN+1); // T2 unten
-        Indices->addValue(iN+6);
-        Indices->addValue(iN+5);
+        if (i<tN-1) data.pushQuad(iN+6, iN+7, iN+16, iN+17); // N unten
+        else data.pushQuad(iN+6, iN+7, 0, 1); // loop closing quad
 
-        Indices->addValue(iN+3);
-        Indices->addValue(iN+2); // T3 unten
-        Indices->addValue(iN+5);
-        Indices->addValue(iN+4);
-
-        Indices->addValue(iN+8); // T1 oben
-        Indices->addValue(iN+9);
-        Indices->addValue(iN+14);
-        Indices->addValue(iN+15);
-
-        Indices->addValue(iN+9); // T2 oben
-        Indices->addValue(iN+10);
-        Indices->addValue(iN+13);
-        Indices->addValue(iN+14);
-
-        Indices->addValue(iN+10); // T3 oben
-        Indices->addValue(iN+11);
-        Indices->addValue(iN+12);
-        Indices->addValue(iN+13);
-
-        Indices->addValue(iN+6);
-        Indices->addValue(iN+7); // N unten
-        if (i<tN-1) {
-            Indices->addValue(iN+16);
-            Indices->addValue(iN+17);
-        } else { // loop closing quad
-            Indices->addValue(0);
-            Indices->addValue(1);
-        }
-
-        Indices->addValue(iN+15); // N oben
-        Indices->addValue(iN+14);
-        if (i<tN-1) {
-            Indices->addValue(iN+25);
-            Indices->addValue(iN+24);
-        } else { // loop closing quad
-            Indices->addValue(9);
-            Indices->addValue(8);
-        }
+        if (i<tN-1) data.pushQuad(iN+15, iN+14, iN+25, iN+24); // N oben
+        else data.pushQuad(iN+15, iN+14, 9, 8); // loop closing quad
     }
 
     // sides
-    int iNs = Pos->size();
+    int iNs = data.size();
     for(int i=0; i<tN; i++) {
         for (int j=0; j<6; j++) a[j] = 2*Pi*(i+j/6.)/tN;
         for (int j=0; j<6; j++) { c[j] = cos(a[j]); s[j] = sin(a[j]); }
 
-        iN = Pos->size();
-        Pos->addValue(Vec3d(c[0]*r0, s[0]*r0, -z)); // 0
-        Pos->addValue(Vec3d(c[0]*(r1-b), s[0]*(r1-b), -z)); // 1
-        Pos->addValue(Vec3d(c[1]*(r1-b+bt*0.5), s[1]*(r1-b+bt*0.5), -z+bz*0.5)); // 2
-        Pos->addValue(Vec3d(c[2]*(r1-b+bt), s[2]*(r1-b+bt), -z+bz)); // 3
-        Pos->addValue(Vec3d(c[3]*(r1-b+bt), s[3]*(r1-b+bt), -z+bz)); // 4
-        Pos->addValue(Vec3d(c[4]*(r1-b+bt*0.5), s[4]*(r1-b+bt*0.5), -z+bz*0.5)); // 5
-        Pos->addValue(Vec3d(c[5]*(r1-b), s[5]*(r1-b), -z)); // 6
-        Pos->addValue(Vec3d(c[5]*r0, s[5]*r0, -z)); // 7
+        iN = data.size();
+        n = Vec3d(-c[0], -s[0], 0); n.normalize();
+        data.pushVert(Vec3d(c[0]*r0, s[0]*r0, -z), n); // 0
+        n = Vec3d(c[0]+s[0], -c[0]+s[0], 0); n.normalize();
+        data.pushVert(Vec3d(c[0]*(r1-b), s[0]*(r1-b), -z), n); // 1
+        n = Vec3d(s[1], -c[1], 0); n.normalize();
+        data.pushVert(Vec3d(c[1]*(r1-b+bt*0.5), s[1]*(r1-b+bt*0.5), -z+bz*0.5), n); // 2
+        n = Vec3d(c[2]+s[2], -c[2]+s[2], 0);
+        data.pushVert(Vec3d(c[2]*(r1-b+bt), s[2]*(r1-b+bt), -z+bz), n); // 3
+        n = Vec3d(c[3]-s[3], c[3]+s[3], 0); n.normalize();
+        data.pushVert(Vec3d(c[3]*(r1-b+bt), s[3]*(r1-b+bt), -z+bz), n); // 4
+        n = Vec3d(-s[4], c[4], 0); n.normalize();
+        data.pushVert(Vec3d(c[4]*(r1-b+bt*0.5), s[4]*(r1-b+bt*0.5), -z+bz*0.5), n); // 5
+        n = Vec3d(c[5]-s[5], c[5]+s[5], 0); n.normalize();
+        data.pushVert(Vec3d(c[5]*(r1-b), s[5]*(r1-b), -z), n); // 6
+        n = Vec3d(-c[5], -s[5], 0); n.normalize();
+        data.pushVert(Vec3d(c[5]*r0, s[5]*r0, -z), n); // 7
 
-        Pos->addValue(Vec3d(c[0]*r0, s[0]*r0, z)); // 8
-        Pos->addValue(Vec3d(c[0]*(r1+b), s[0]*(r1+b), z)); // 9
-        Pos->addValue(Vec3d(c[1]*(r1+b+bt*0.5), s[1]*(r1+b+bt*0.5), z+bz*0.5)); // 10
-        Pos->addValue(Vec3d(c[2]*(r1+b+bt), s[2]*(r1+b+bt), z+bz)); // 11
-        Pos->addValue(Vec3d(c[3]*(r1+b+bt), s[3]*(r1+b+bt), z+bz)); // 12
-        Pos->addValue(Vec3d(c[4]*(r1+b+bt*0.5), s[4]*(r1+b+bt*0.5), z+bz*0.5)); // 13
-        Pos->addValue(Vec3d(c[5]*(r1+b), s[5]*(r1+b), z)); // 14
-        Pos->addValue(Vec3d(c[5]*r0, s[5]*r0, z)); // 15
+        n = Vec3d(-c[0], -s[0], 0); n.normalize();
+        data.pushVert(Vec3d(c[0]*r0, s[0]*r0, z), n); // 8
+        n = Vec3d(c[0]+s[0], -c[0]+s[0], 0); n.normalize();
+        data.pushVert(Vec3d(c[0]*(r1+b), s[0]*(r1+b), z), n); // 9
+        n = Vec3d(s[1], -c[1], 0); n.normalize();
+        data.pushVert(Vec3d(c[1]*(r1+b+bt*0.5), s[1]*(r1+b+bt*0.5), z+bz*0.5), n); // 10
+        n = Vec3d(c[2]+s[2], -c[2]+s[2], 0); n.normalize();
+        data.pushVert(Vec3d(c[2]*(r1+b+bt), s[2]*(r1+b+bt), z+bz), n); // 11
+        n = Vec3d(c[3]-s[3], c[3]+s[3], 0); n.normalize();
+        data.pushVert(Vec3d(c[3]*(r1+b+bt), s[3]*(r1+b+bt), z+bz), n); // 12
+        n = Vec3d(-s[4], c[4], 0); n.normalize();
+        data.pushVert(Vec3d(c[4]*(r1+b+bt*0.5), s[4]*(r1+b+bt*0.5), z+bz*0.5), n); // 13
+        n = Vec3d(c[5]-s[5], c[5]+s[5], 0); n.normalize();
+        data.pushVert(Vec3d(c[5]*(r1+b), s[5]*(r1+b), z), n); // 14
+        n = Vec3d(-c[5], -s[5], 0); n.normalize();
+        data.pushVert(Vec3d(c[5]*r0, s[5]*r0, z), n); // 15
 
-        n = Vec3d(-c[0], -s[0], 0); n.normalize(); Norms->addValue(n);
-        n = Vec3d(c[0]+s[0], -c[0]+s[0], 0); n.normalize(); Norms->addValue(n);
-        n = Vec3d(s[1], -c[1], 0); n.normalize(); Norms->addValue(n);
-        n = Vec3d(c[2]+s[2], -c[2]+s[2], 0); n.normalize(); Norms->addValue(n);
-        n = Vec3d(c[3]-s[3], c[3]+s[3], 0); n.normalize(); Norms->addValue(n);
-        n = Vec3d(-s[4], c[4], 0); n.normalize(); Norms->addValue(n);
-        n = Vec3d(c[5]-s[5], c[5]+s[5], 0); n.normalize(); Norms->addValue(n);
-        n = Vec3d(-c[5], -s[5], 0); n.normalize(); Norms->addValue(n);
+        data.pushQuad(iN+0, iN+8, iN+15, iN+7); // B1
 
-        n = Vec3d(-c[0], -s[0], 0); n.normalize(); Norms->addValue(n);
-        n = Vec3d(c[0]+s[0], -c[0]+s[0], 0); n.normalize(); Norms->addValue(n);
-        n = Vec3d(s[1], -c[1], 0); n.normalize(); Norms->addValue(n);
-        n = Vec3d(c[2]+s[2], -c[2]+s[2], 0); n.normalize(); Norms->addValue(n);
-        n = Vec3d(c[3]-s[3], c[3]+s[3], 0); n.normalize(); Norms->addValue(n);
-        n = Vec3d(-s[4], c[4], 0); n.normalize(); Norms->addValue(n);
-        n = Vec3d(c[5]-s[5], c[5]+s[5], 0); n.normalize(); Norms->addValue(n);
-        n = Vec3d(-c[5], -s[5], 0); n.normalize(); Norms->addValue(n);
+        if (i<tN-1) data.pushQuad(iN+7, iN+15, iN+24, iN+16); // B2
+        else data.pushQuad(iN+7, iN+15, iNs+8, iNs+0); // loop closing quad
 
-        Indices->addValue(iN+0); // B1
-        Indices->addValue(iN+8);
-        Indices->addValue(iN+15);
-        Indices->addValue(iN+7);
+        data.pushQuad(iN+9, iN+1, iN+2, iN+10);  // O1
+        data.pushQuad(iN+10, iN+2, iN+3, iN+11); // O2
+        data.pushQuad(iN+11, iN+3, iN+4, iN+12); // O3
+        data.pushQuad(iN+12, iN+4, iN+5, iN+13); // O4
+        data.pushQuad(iN+13, iN+5, iN+6, iN+14); // O5
 
-        Indices->addValue(iN+7); // B2
-        Indices->addValue(iN+15);
-        if (i<tN-1) {
-            Indices->addValue(iN+24);
-            Indices->addValue(iN+16);
-        } else { // loop closing quad
-            Indices->addValue(iNs+8);
-            Indices->addValue(iNs+0);
-        }
-
-        Indices->addValue(iN+9);
-        Indices->addValue(iN+1); // O1
-        Indices->addValue(iN+2);
-        Indices->addValue(iN+10);
-
-        Indices->addValue(iN+10);
-        Indices->addValue(iN+2); // O2
-        Indices->addValue(iN+3);
-        Indices->addValue(iN+11);
-
-        Indices->addValue(iN+11);
-        Indices->addValue(iN+3); // O3
-        Indices->addValue(iN+4);
-        Indices->addValue(iN+12);
-
-        Indices->addValue(iN+12);
-        Indices->addValue(iN+4); // O4
-        Indices->addValue(iN+5);
-        Indices->addValue(iN+13);
-
-        Indices->addValue(iN+13);
-        Indices->addValue(iN+5); // O5
-        Indices->addValue(iN+6);
-        Indices->addValue(iN+14);
-
-        Indices->addValue(iN+14);
-        Indices->addValue(iN+6); // O6
-        if (i<tN-1) {
-            Indices->addValue(iN+17);
-            Indices->addValue(iN+25);
-        } else { // loop closing quad
-            Indices->addValue(iNs+1);
-            Indices->addValue(iNs+9);
-        }
+        if (i<tN-1) data.pushQuad(iN+14, iN+6, iN+17, iN+25); // O6
+        else data.pushQuad(iN+14, iN+6, iNs+1, iNs+9); // loop closing quad
     }
 
-    Type->addValue(GL_QUADS);
-    Length->addValue(Indices->size()); // for each tooth 4 quads
+    auto mat = VRMaterial::create("gearDefault");
+    mat->setDiffuse(Color3f(0.8,0.8,0.6));
+    mat->setAmbient(Color3f(0.4, 0.4, 0.2));
+    mat->setSpecular(Color3f(0.1, 0.1, 0.1));
 
-    Mat->setDiffuse(Color3f(0.8,0.8,0.6));
-    Mat->setAmbient(Color3f(0.4, 0.4, 0.2));
-    Mat->setSpecular(Color3f(0.1, 0.1, 0.1));
-
-    GeometryMTRecPtr geo = Geometry::create();
-    geo->setTypes(Type);
-    geo->setLengths(Length);
-    geo->setIndices(Indices);
-    geo->setPositions(Pos);
-    geo->setNormals(Norms);
-    geo->setMaterial(Mat);
-
-    return geo;
+    auto geo = data.asGeometry("Gear");
+    geo->setMaterial(mat);
+    return geo->getMesh()->geo;
 }
 
 

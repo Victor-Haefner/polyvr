@@ -2,12 +2,12 @@
 #define VRTEXTURERENDERER_H_INCLUDED
 
 #include <OpenSG/OSGColor.h>
-#include <boost/thread/recursive_mutex.hpp>
 
 #include "core/objects/VRObjectFwd.h"
 #include "core/tools/VRToolsFwd.h"
 #include "core/objects/object/VRObject.h"
 #include "core/networking/VRNetworkingFwd.h"
+#include "core/utils/VRMutex.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -28,7 +28,7 @@ class VRTextureRenderer : public VRObject {
         VRCameraPtr cam = 0;
         VRTCPServerPtr server;
         VRUpdateCbPtr updateCb;
-        boost::recursive_mutex mtx;
+        VRMutex mtx;
 
         void setChannelFP(string fp);
         void resetChannelFP();
