@@ -161,6 +161,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
 #endif
     sm->registerModule<VRPyFABRIK>("FABRIK", pModVR);
     sm->registerModule<VRPyLod>("Lod", pModVR, VRPyObject::typeRef);
+    sm->registerModule<VRPyLodEvent>("LodEvent", pModVR);
     sm->registerModule<VRPyLodLeaf>("LodLeaf", pModVR, VRPyTransform::typeRef);
     sm->registerModule<VRPyLodTree>("LodTree", pModVR, VRPyObject::typeRef);
     sm->registerModule<VRPySprite>("Sprite", pModVR, VRPyGeometry::typeRef);

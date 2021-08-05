@@ -12,6 +12,15 @@
 using namespace OSG;
 
 
+VRLodEvent::VRLodEvent(int c, int l, VRLodPtr lod) : current(c), last(l) { this->lod = lod; }
+
+VRLodEventPtr VRLodEvent::create(int c, int l, VRLodPtr lod) { return VRLodEventPtr( new VRLodEvent(c,l,lod) ); }
+
+int VRLodEvent::getCurrent() { return current; }
+int VRLodEvent::getLast() { return last; }
+VRLodPtr VRLodEvent::getLod() { return lod.lock(); }
+
+
 VRLod::VRLod(string name) : VRObject(name) {
     auto f = new function<void(int,int)>(bind(&VRLod::onLODSwitch, this, placeholders::_1, placeholders::_2));
     onLODSwitchCb = shared_ptr<function<void(int,int)>>( f );
@@ -38,7 +47,8 @@ void VRLod::setCallback(VRLodCbPtr cb) { userCb = cb; }
 void VRLod::onLODSwitch(int current, int last) {
     //cout << "VRLod::onLODSwitch from " << last << " to " << current << " cb: " << userCb << endl;
     if (userCb) {
-	auto f = bind( [](VRLodCbPtr cb, int c, int l){ (*cb)(Vec2i(c, l)); }, userCb, current, last );
+        auto event = VRLodEvent::create(current, last, ptr());
+        auto f = bind( [](VRLodCbPtr cb, VRLodEventPtr e){ (*cb)(e); }, userCb, event );
         VRScene::getCurrent()->queueJob( VRUpdateCb::create("LOD switch", f ) );
     }
 }
