@@ -11,6 +11,8 @@ using namespace std;
 
 class DistanceLOD; OSG_GEN_CONTAINERPTR(DistanceLOD);
 
+ptrFctFwd( VRLod, Vec2i );
+
 class VRLod : public VRObject {
     private:
         DistanceLODRecPtr lod;
@@ -22,10 +24,13 @@ class VRLod : public VRObject {
         map<unsigned int, float> distances;
         map<unsigned int, VRObjectPtr> decimated;
         map<unsigned int, float> decimation;
+	shared_ptr<function<void(int,int)>> onLODSwitchCb;
+	VRLodCbPtr userCb;
 
         void setup();
         void loadSetup(VRStorageContextPtr context);
         void decimateGeometries(VRObjectPtr o, float f);
+        void onLODSwitch(int current, int last);
 
     protected:
         VRObjectPtr copy(vector<VRObjectPtr> childs);
@@ -46,6 +51,8 @@ class VRLod : public VRObject {
         float getDistance(unsigned int i);
         void addDistance(float dist);
         vector<float> getDistances();
+
+	void setCallback(VRLodCbPtr cb);
 
         void addEmpty();
 

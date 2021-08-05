@@ -14,6 +14,7 @@ PyMethodDef VRPyLod::methods[] = {
 	{"getCenter", PyWrap( Lod, getCenter, "Get LOD center", Vec3d) },
 	{"getScale", PyWrap( Lod, getScale, "Get LOD scale", double) },
 	{"getDistance", PyWrap( Lod, getDistance, "Get LOd ith distance", float, unsigned int) },
+	{"setCallback", PyWrap( Lod, setCallback, "Set callback, triggers on LOD level switch", void, VRLodCbPtr) },
     {NULL}  /* Sentinel */
 };
 
