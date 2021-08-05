@@ -383,11 +383,10 @@ bool VRTerrain::createMultiGrid(VRCameraPtr cam, double res) {
     if (pla) res *= 32;
     else res *= 64;
     Vec2d r1 = computeGridSpacing(size, Vec2d(sectorSizeX, sectorSizeY), res);
+    if (!checkChange(vector<double>({res, r1[0], r1[1], NE[0], NE[1]}))) return false;
 #else
     Vec2d r1 = computeGridSpacing(size, Vec2d(sectorSizeX, sectorSizeY), res);
 #endif
-
-    if (!checkChange(vector<double>({res, r1[0], r1[1], NE[0], NE[1]}))) return false;
 
     /*if (camPose) cout << " ---- camPose " << camPose->pos() << endl;
     cout << " ---- NE " << NE << endl;

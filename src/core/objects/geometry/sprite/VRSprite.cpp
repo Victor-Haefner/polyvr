@@ -227,41 +227,36 @@ uniform mat4 OSGProjectionMatrix;
 \n#endif\n
 
 void main( void ) {
+\n
+#ifdef __EMSCRIPTEN__
+\n
+    mat4 M = OSGModelViewProjectionMatrix;
+#else
+\n
+    mat4 M = gl_ModelViewProjectionMatrix;
+\n
+#endif
+\n
+
     if (doBillboard < 0.5) {
 		if (doScreensize < 0.5) {
 			vec4 v = osg_Vertex;
 			v.xy += osg_MultiTexCoord1.xy;
-\n#ifdef __EMSCRIPTEN__\n
-			gl_Position = OSGModelViewProjectionMatrix * v;
-\n#else\n
-			gl_Position = gl_ModelViewProjectionMatrix * v;
-\n#endif\n
+			gl_Position = M * v;
 		} else {
 			vec4 v = osg_Vertex;
-\n#ifdef __EMSCRIPTEN__\n
-			vec4 k = OSGModelViewProjectionMatrix * v;
-\n#else\n
-			vec4 k = gl_ModelViewProjectionMatrix * v;
-\n#endif\n
+			vec4 k = M * v;
 		    k.xyz = k.xyz/k.w;
 		    k.w = 1.0;
     		float a = OSGViewportSize.y/OSGViewportSize.x;
     		vec4 d = vec4(osg_MultiTexCoord1.x*a, osg_MultiTexCoord1.y,0,0);
-\n#ifdef __EMSCRIPTEN__\n
-		    gl_Position = k + OSGModelViewProjectionMatrix * d * 0.1;
-\n#else\n
-		    gl_Position = k + gl_ModelViewProjectionMatrix * d * 0.1;
-\n#endif\n
+		    gl_Position = k + M * d * 0.1;
         }
     } else if (doBillboard < 1.5) {
         float a = OSGViewportSize.y/OSGViewportSize.x;
         vec4 d = vec4(osg_MultiTexCoord1.x*a, osg_MultiTexCoord1.y,0,0);
         vec4 v = osg_Vertex;
-\n#ifdef __EMSCRIPTEN__\n
-		vec4 k = OSGModelViewProjectionMatrix * v;
-\n#else\n
-		vec4 k = gl_ModelViewProjectionMatrix * v;
-\n#endif\n
+		vec4 k = M * v;
 		if (doScreensize > 0.5) {
     		d *= 0.1;
 		    k.xyz = k.xyz/k.w;
@@ -275,25 +270,13 @@ void main( void ) {
         vec4 k;
 		if (doScreensize > 0.5) {
     		d *= 0.1;
-\n#ifdef __EMSCRIPTEN__\n
-			k = OSGModelViewProjectionMatrix * v;
-\n#else\n
-			k = gl_ModelViewProjectionMatrix * v;
-\n#endif\n
+			k = M * v;
 		    k.xyz = k.xyz/k.w;
 		    k.w = 1.0;
-\n#ifdef __EMSCRIPTEN__\n
-		    k += OSGModelViewProjectionMatrix * vec4(0, osg_MultiTexCoord1.y, 0, 0) * 0.1;
-\n#else\n
-		    k += gl_ModelViewProjectionMatrix * vec4(0, osg_MultiTexCoord1.y, 0, 0) * 0.1;
-\n#endif\n
+		    k += M * vec4(0, osg_MultiTexCoord1.y, 0, 0) * 0.1;
 		} else {
 			v.y += osg_MultiTexCoord1.y;
-\n#ifdef __EMSCRIPTEN__\n
-			k = OSGModelViewProjectionMatrix * v;
-\n#else\n
-			k = gl_ModelViewProjectionMatrix * v;
-\n#endif\n
+			k = M * v;
 		}
     	gl_Position = k + d;
     }
