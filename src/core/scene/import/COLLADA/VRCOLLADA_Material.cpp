@@ -12,14 +12,44 @@ VRCOLLADA_MaterialPtr VRCOLLADA_Material::ptr() { return static_pointer_cast<VRC
 void VRCOLLADA_Material::newEffect(string id) {
     auto m = VRMaterial::create();
     library_effects[id] = m;
+    currentEffect = m;
+}
+
+void VRCOLLADA_Material::newMaterial(string id, string name) {
+    auto m = VRMaterial::create(name);
+    library_materials[id] = m;
     currentMaterial = m;
 }
 
 void VRCOLLADA_Material::closeEffect() {
+    currentEffect = 0;
+}
+
+void VRCOLLADA_Material::closeMaterial() {
     currentMaterial = 0;
 }
 
-void VRCOLLADA_Material::setColor(string sid, Color4f col) {
-    if (sid == "diffuse" && currentMaterial) currentMaterial->setDiffuse(Color3f(col[0], col[1], col[2]));
-    //if (sid == "emission" && currentMaterial) currentMaterial->setEmissive(col);
+void VRCOLLADA_Material::setMaterialEffect(string eid) {
+    auto effect = library_effects[eid];
+    currentMaterial->setDiffuse( effect->getDiffuse() );
+    currentMaterial->setSpecular( effect->getSpecular() );
+    currentMaterial->setAmbient( effect->getAmbient() );
+    currentMaterial->setEmission( effect->getEmission() );
+    currentMaterial->setShininess( effect->getShininess() );
 }
+
+void VRCOLLADA_Material::setColor(string sid, Color4f col) {
+    if (!currentEffect) return;
+    Color3f c3 = Color3f(col[0], col[1], col[2]);
+    if (sid == "diffuse") currentEffect->setDiffuse(c3);
+    if (sid == "specular") currentEffect->setSpecular(c3);
+    if (sid == "ambient") currentEffect->setAmbient(c3);
+    if (sid == "emission") currentEffect->setEmission(c3);
+}
+
+void VRCOLLADA_Material::setShininess(float f) {
+    if (!currentEffect) return;
+    currentEffect->setShininess(f*0.01);
+}
+
+VRMaterialPtr VRCOLLADA_Material::getMaterial(string sid) { return library_materials[sid]; }
