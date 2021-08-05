@@ -220,11 +220,15 @@ uniform float doBillboard;
 uniform float doScreensize;
 uniform vec2 OSGViewportSize;
 
-\n#ifdef __EMSCRIPTEN__\n
+\n
+#ifdef __EMSCRIPTEN__
+\n
 uniform mat4 OSGModelViewProjectionMatrix;
 uniform mat4 OSGModelViewMatrix;
 uniform mat4 OSGProjectionMatrix;
-\n#endif\n
+\n
+#endif
+\n
 
 void main( void ) {
 \n
@@ -287,9 +291,13 @@ void main( void ) {
 
 string VRSprite::spriteShaderFP =
 GLSL(
-\n#ifdef __EMSCRIPTEN__\n
+\n
+#ifdef __EMSCRIPTEN__
+\n
 precision mediump float;
-\n#endif\n
+\n
+#endif
+\n
 uniform sampler2D texture;
 
 varying vec2 texCoord;
