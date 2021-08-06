@@ -116,7 +116,7 @@ void VRSprite::webOpen(string path, int res, float ratio) {
 #endif
 
 #ifdef __EMSCRIPTEN__
-    EM_ASM_INT({
+    EM_ASM({
         var uri = Module.UTF8ToString($0);
         var host = window.location.origin;
 	console.log("webOpen "+uri);

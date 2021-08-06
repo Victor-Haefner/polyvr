@@ -12,6 +12,10 @@
 #include "core/scene/VRScene.h"
 #include "core/utils/VRLogger.h"
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#endif
+
 using namespace OSG;
 
 
@@ -74,15 +78,25 @@ void VRServer::handleMessage(const string& m, int button, int state) {
 }
 
 map<string, vector<int>> VRServer::getClients() {
-    return soc->getClients();
+    map<string, vector<int>> res;
+    if (soc) res = soc->getClients();
+    return res;
 }
 
 int VRServer::openWebSocket(string address, string protocols) {
+    if (!soc) return -1;
     return soc->openWebSocket(address, protocols);
 }
 
 void VRServer::answerWebSocket(int id, string msg) {
-    soc->answerWebSocket(id, msg);
+    if (soc) soc->answerWebSocket(id, msg);
+#ifdef __EMSCRIPTEN__
+    EM_ASM({
+        var msg = Module.UTF8ToString($0);
+        var cID = $1;
+	sendToClient(cID, msg);
+    }, msg.c_str(), id);
+#endif
 }
 
 void VRServer::clearSignals() {
@@ -92,17 +106,17 @@ void VRServer::clearSignals() {
     newSignal( 0, 1)->add( addDrag( getBeacon() ) );
 }
 
-void VRServer::setPort(int port) { this->port = port; soc->setPort(port); }
+void VRServer::setPort(int port) { this->port = port; if (soc) soc->setPort(port); }
 int VRServer::getPort() { return port; }
 
 void VRServer::addCallback(string path, VRServerCbPtr cb) {
     callbacks[path] = cb;
-    soc->addHTTPCallback(path, cb);
+    if (soc) soc->addHTTPCallback(path, cb);
 }
 
 void VRServer::remCallback(string path) {
     if (callbacks.count(path)) callbacks.erase(path);
-    soc->remHTTPCallback(path);
+    if (soc) soc->remHTTPCallback(path);
 }
 
 void VRServer::updateMobilePage() {
@@ -110,7 +124,7 @@ void VRServer::updateMobilePage() {
     string page = "<html><body>";
     for (auto w : websites) page += "<a href=\"" + w.first + "\">" + w.first + "</a>";
     page += "</body></html>";
-    soc->addHTTPPage(getName(), page);
+    if (soc) soc->addHTTPPage(getName(), page);
 
     //if (websites.size()) soc->addHTTPPage(getName(), page);
     //else soc->remHTTPPage(getName());
@@ -118,13 +132,13 @@ void VRServer::updateMobilePage() {
 
 void VRServer::addWebSite(string uri, string website) {
     websites[uri] = website;
-    soc->addHTTPPage(uri, website);
+    if (soc) soc->addHTTPPage(uri, website);
     updateMobilePage();
 }
 
 void VRServer::remWebSite(string uri) {
     if (websites.count(uri)) websites.erase(uri);
-    soc->remHTTPPage(uri);
+    if (soc) soc->remHTTPPage(uri);
     updateMobilePage();
 }
 
