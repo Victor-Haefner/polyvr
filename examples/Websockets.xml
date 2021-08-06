@@ -25,6 +25,7 @@
       <core>
 	m = dev.getMessage()
 	dev.answer(dev.getKey(), 'pong')
+	print m
 </core>
       <trig type="on_device" dev="server1" state="Released" param="" key="-1" base_name="trigger" name_space="__global__" name_suffix="1" persistency="666"/>
     </Script>

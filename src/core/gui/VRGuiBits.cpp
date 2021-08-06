@@ -64,6 +64,14 @@ void VRGuiBits::on_quit_clicked() {
     PolyVR::shutdown();
 }
 
+static string wasmServerSend =
+"\nfunction send(m) {\n"
+"    window.parent.postMessage(m, window.origin);"
+"}\n"
+"window.addEventListener('message', (event) => {\n"
+"    msg(event.data);\n"
+"}, false);\n";
+
 void VRGuiBits::on_web_export_clicked() {
     string D = VRSceneManager::get()->getOriginalWorkdir();
     string project = VRScene::getCurrent()->getFile();
@@ -72,6 +80,20 @@ void VRGuiBits::on_web_export_clicked() {
     string folder = D+"/ressources/webBuild";
     if (!exists(folder+"/.git"))
         systemCall("git clone https://github.com/Victor-Haefner/polyvr-webport.git \"" + folder + "\"");
+
+    // copy websites
+    //if (!exists("./websites")) makedir("./websites");
+    for (auto script : VRScene::getCurrent()->getScripts()) {
+        if (script.second->getType() != "HTML") continue;
+        string core = script.second->getCore();
+        auto itr = core.find("function send("); // delete that line, then insert wasmServerSend
+        auto itr2 = core.find("\n", itr);
+        core.erase(itr, itr2-itr);
+        core.insert(itr, wasmServerSend);
+        ofstream out(script.first+".html");
+        out << core;
+        out.close();
+    }
 
     systemCall("git -C \"" + folder + "\" pull");
     systemCall("cp -f \"" + folder + "/polyvr.wasm\" ./");
