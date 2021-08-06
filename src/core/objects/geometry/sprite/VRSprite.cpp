@@ -19,6 +19,10 @@
 #include <OpenSG/OSGGeoProperties.h>
 #include <sstream>
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#endif
+
 #define GLSL(shader) #shader
 
 using namespace OSG;
@@ -109,6 +113,25 @@ void VRSprite::webOpen(string path, int res, float ratio) {
     web->setResolution(res);
     web->setAspectRatio(ratio);
     updateGeo();
+#endif
+
+#ifdef __EMSCRIPTEN__
+    EM_ASM_INT({
+        var uri = Module.UTF8ToString($0);
+        var host = window.location.origin;
+	console.log("webOpen "+uri);
+	console.log(" origin: "+host);
+	
+	var parts = uri.split("/");
+	uri = host + "/" + parts[parts.length - 1];
+	console.log(" addr: "+uri);
+
+	var frame = document.createElement("iframe");
+	document.body.appendChild(frame);
+	frame.src = uri+".html";
+        frame.style = "position:absolute;top:0;left:0;height:300px;width:300px;z-index:2;";
+	frame.title = "PolyVR widget";
+    }, path.c_str());
 #endif
 }
 
