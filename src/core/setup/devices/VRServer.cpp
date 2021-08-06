@@ -17,11 +17,13 @@ using namespace OSG;
 
 VRServer::VRServer(int port) : VRDevice("server") {
     addBeacon();
+#ifndef __EMSCRIPTEN__
     soc = VRSceneManager::get()->getSocket(port);
     this->port = port;
     cb = new VRHTTP_cb( "Mobile_server_callback", bind(&VRServer::callback, this, placeholders::_1) );
     soc->setHTTPCallback(cb);
     soc->setType("http receive");
+#endif
 }
 
 VRServer::~VRServer() {
@@ -39,26 +41,35 @@ VRServerPtr VRServer::ptr() { return static_pointer_cast<VRServer>( shared_from_
 
 void VRServer::callback(void* _args) { // TODO: implement generic button trigger of device etc..
     //args->print();
-	HTTP_args* args = (HTTP_args*)_args;
+    HTTP_args* args = (HTTP_args*)_args;
 
-	int button, state;
-	button = state = 0;
+    int button, state;
+    button = state = 0;
+    string message;
 
     if (args->websocket) {
         button = args->ws_id;
-        state = 0;
-        setMessage(args->ws_data);
+        message = args->ws_data;
+        setMessage(message);
         if (args->ws_data.size() == 0) return;
     } else {
         if (args->params->count("button") == 0) { /*cout << "VRServer::callback warning, no button passed\n";*/ return; }
         if (args->params->count("state") == 0) { /*cout << "VRServer::callback warning, no state passed\n";*/ return; }
-        if (args->params->count("message")) setMessage((*args->params)["message"]);
+        if (args->params->count("message")) {
+            message = (*args->params)["message"];
+	    setMessage(message);
+        }
 
         button = toInt((*args->params)["button"]);
         state = toInt((*args->params)["state"]);
     }
 
     VRLog::log("net", "VRServer::callback button: " + toString(button) + " state: " + toString(state) + "\n");
+    change_button(button, state);
+}
+
+void VRServer::handleMessage(const string& m, int button, int state) { 
+    setMessage(m);
     change_button(button, state);
 }
 

@@ -129,7 +129,7 @@ void VRSprite::webOpen(string path, int res, float ratio) {
 	var frame = document.createElement("iframe");
 	document.body.appendChild(frame);
 	frame.src = uri+".html";
-        frame.style = "position:absolute;top:0;left:0;height:300px;width:300px;z-index:2;";
+        frame.style = "position:absolute;top:0;right:0;height:300px;width:300px;z-index:2;";
 	frame.title = "PolyVR widget";
     }, path.c_str());
 #endif

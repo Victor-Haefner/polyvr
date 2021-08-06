@@ -28,6 +28,8 @@ class VRServer : public VRDevice {
         static VRServerPtr create(int port = 5500);
         VRServerPtr ptr();
 
+	void handleMessage(const string& m, int button, int state);
+
         void clearSignals();
 
         void setPort(int port);
