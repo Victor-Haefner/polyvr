@@ -119,14 +119,23 @@ void VRCOLLADA_Stream::characters(const string& chars) {
 void VRCOLLADA_Stream::endElement(const string& uri, const string& name, const string& qname) {
     auto node = nodeStack.top();
     nodeStack.pop();
+    Node parent;
+    if (nodeStack.size() > 0) parent = nodeStack.top();
 
     if (currentPass == 0) {
         if (node.name == "library_geometries") parsedGeometries = true;
         if (node.name == "library_materials") parsedMaterials = true;
 
+        if (node.name == "surface") materials.addSurface(parent.attributes["sid"].val);
+        if (node.name == "sampler2D") materials.addSampler(parent.attributes["sid"].val);
+        if (node.name == "init_from" && parent.name == "surface") materials.setSurfaceSource(node.data);
+        if (node.name == "source" && parent.name == "sampler2D") materials.setSamplerSource(node.data);
+
         if (node.name == "effect") materials.closeEffect();
         if (node.name == "geometry") geometries.closeGeometry();
+        if (node.name == "init_from" && parent.name == "image") materials.loadImage(parent.attributes["id"].val, node.data);
         if (node.name == "color") materials.setColor(node.attributes["sid"].val, toValue<Color4f>(node.data));
+        if (node.name == "texture") materials.setTexture(node.attributes["texture"].val);
         if (node.name == "float_array") geometries.setSourceData(node.data);
         if (node.name == "p") geometries.handleIndices(node.data);
         if (node.name == "triangles") geometries.closePrimitive();

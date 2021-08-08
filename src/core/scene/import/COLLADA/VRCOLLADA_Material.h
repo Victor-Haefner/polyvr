@@ -12,10 +12,16 @@ OSG_BEGIN_NAMESPACE;
 
 class VRCOLLADA_Material : public std::enable_shared_from_this<VRCOLLADA_Material> {
 	private:
+        map<string, VRTexturePtr> library_images;
+        map<string, string> sampler;
+        map<string, string> surface;
         map<string, VRMaterialPtr> library_effects;
         map<string, VRMaterialPtr> library_materials;
         VRMaterialPtr currentEffect;
         VRMaterialPtr currentMaterial;
+
+        string currentSampler;
+        string currentSurface;
 
 	public:
 		VRCOLLADA_Material();
@@ -24,11 +30,18 @@ class VRCOLLADA_Material : public std::enable_shared_from_this<VRCOLLADA_Materia
 		static VRCOLLADA_MaterialPtr create();
 		VRCOLLADA_MaterialPtr ptr();
 
+        void loadImage(string id, string path);
+        void addSurface(string id);
+        void addSampler(string id);
+        void setSurfaceSource(string source);
+        void setSamplerSource(string source);
+
         void newEffect(string id);
         void newMaterial(string id, string name);
         void closeEffect();
         void closeMaterial();
         void setColor(string sid, Color4f col);
+        void setTexture(string sampler);
         void setShininess(float f);
         VRMaterialPtr getMaterial(string sid);
         void setMaterialEffect(string eid);
