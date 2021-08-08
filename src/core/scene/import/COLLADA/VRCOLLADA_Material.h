@@ -20,6 +20,7 @@ class VRCOLLADA_Material : public std::enable_shared_from_this<VRCOLLADA_Materia
         VRMaterialPtr currentEffect;
         VRMaterialPtr currentMaterial;
 
+        string filePath;
         string currentSampler;
         string currentSurface;
 
@@ -30,6 +31,7 @@ class VRCOLLADA_Material : public std::enable_shared_from_this<VRCOLLADA_Materia
 		static VRCOLLADA_MaterialPtr create();
 		VRCOLLADA_MaterialPtr ptr();
 
+		void setFilePath(string fPath);
         void loadImage(string id, string path);
         void addSurface(string id);
         void addSampler(string id);
@@ -44,7 +46,7 @@ class VRCOLLADA_Material : public std::enable_shared_from_this<VRCOLLADA_Materia
         void setTexture(string sampler);
         void setShininess(float f);
         VRMaterialPtr getMaterial(string sid);
-        void setMaterialEffect(string eid);
+        bool setMaterialEffect(string eid);
 };
 
 OSG_END_NAMESPACE;

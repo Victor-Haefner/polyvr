@@ -29,7 +29,6 @@ class VRCOLLADA_Geometry : public std::enable_shared_from_this<VRCOLLADA_Geometr
         struct Primitive {
             string name;
             int count;
-            int stride = 3;
             vector<Input> inputs;
         };
 
@@ -53,8 +52,9 @@ class VRCOLLADA_Geometry : public std::enable_shared_from_this<VRCOLLADA_Geometr
 		void newSource(string id);
         void handleAccessor(string count, string stride);
         void handleInput(string type, string sourceID, string offsetStr, string set);
+        void handleVCount(string data);
         void instantiateGeometry(string geoID, VRObjectPtr parent);
-        void newPrimitive(string name, string count, int stride);
+        void newPrimitive(string name, string count);
 
         void setSourceData(string data);
         void handleIndices(string data);

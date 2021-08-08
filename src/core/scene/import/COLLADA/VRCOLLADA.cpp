@@ -4,6 +4,7 @@
 #include "VRCOLLADA_Kinematics.h"
 
 #include "core/scene/import/VRImportFwd.h"
+#include "core/utils/system/VRSystem.h"
 #include "core/utils/toString.h"
 #include "core/utils/xml.h"
 
@@ -47,10 +48,13 @@ class VRCOLLADA_Stream : public XMLStreamHandler {
         string skipHash(const string& s) { return subString(s, 1, s.size()-1); }
 
     public:
-        VRCOLLADA_Stream(VRObjectPtr root) : root(root) {}
+        VRCOLLADA_Stream(VRObjectPtr root, string fPath) : root(root) {
+            materials.setFilePath(fPath);
+        }
+
         ~VRCOLLADA_Stream() {}
 
-        static VRCOLLADA_StreamPtr create(VRObjectPtr root) { return VRCOLLADA_StreamPtr( new VRCOLLADA_Stream(root) ); }
+        static VRCOLLADA_StreamPtr create(VRObjectPtr root, string fPath) { return VRCOLLADA_StreamPtr( new VRCOLLADA_Stream(root, fPath) ); }
 
         void startDocument() {}
         void endDocument() { currentPass++; }
@@ -79,17 +83,22 @@ void VRCOLLADA_Stream::startElement(const string& uri, const string& name, const
     if (currentPass == 0) {
         if (name == "effect") materials.newEffect( n.attributes["id"].val );
         if (name == "material") materials.newMaterial( n.attributes["id"].val, n.attributes["name"].val );
-        if (name == "instance_effect") materials.setMaterialEffect( skipHash(n.attributes["url"].val) );
 
         if (name == "geometry") geometries.newGeometry(n.attributes["name"].val, n.attributes["id"].val);
         if (name == "source") geometries.newSource(n.attributes["id"].val);
         if (name == "accessor") geometries.handleAccessor(n.attributes["count"].val, n.attributes["stride"].val);
         if (name == "input") geometries.handleInput(n.attributes["semantic"].val, skipHash(n.attributes["source"].val), n.attributes["offset"].val, n.attributes["set"].val);
-        if (name == "triangles") geometries.newPrimitive(name, n.attributes["count"].val, 3);
-        if (name == "trifans") geometries.newPrimitive(name, n.attributes["count"].val, 3);
-        if (name == "tristrips") geometries.newPrimitive(name, n.attributes["count"].val, 3);
+        if (name == "triangles") geometries.newPrimitive(name, n.attributes["count"].val);
+        if (name == "trifans") geometries.newPrimitive(name, n.attributes["count"].val);
+        if (name == "tristrips") geometries.newPrimitive(name, n.attributes["count"].val);
+        if (name == "polylist") geometries.newPrimitive(name, n.attributes["count"].val);
 
         if (name == "library_visual_scenes" && !parsedGeometries) needSecondPass = true;
+    }
+
+    if (name == "instance_effect") {
+        bool b = materials.setMaterialEffect( skipHash(n.attributes["url"].val) );
+        if (!b) needSecondPass = true;
     }
 
     if (parsedGeometries) {
@@ -134,13 +143,20 @@ void VRCOLLADA_Stream::endElement(const string& uri, const string& name, const s
         if (node.name == "effect") materials.closeEffect();
         if (node.name == "geometry") geometries.closeGeometry();
         if (node.name == "init_from" && parent.name == "image") materials.loadImage(parent.attributes["id"].val, node.data);
-        if (node.name == "color") materials.setColor(node.attributes["sid"].val, toValue<Color4f>(node.data));
+        if (node.name == "color") {
+            string type;
+            if (node.attributes.count("sid")) type = node.attributes["sid"].val;
+            else type = parent.name;
+            materials.setColor(type, toValue<Color4f>(node.data));
+        }
         if (node.name == "texture") materials.setTexture(node.attributes["texture"].val);
         if (node.name == "float_array") geometries.setSourceData(node.data);
         if (node.name == "p") geometries.handleIndices(node.data);
         if (node.name == "triangles") geometries.closePrimitive();
         if (node.name == "trifans") geometries.closePrimitive();
         if (node.name == "tristrips") geometries.closePrimitive();
+        if (node.name == "polylist") geometries.closePrimitive();
+        if (node.name == "vcount") geometries.handleVCount(node.data);
     }
 
     if (parsedGeometries) {
@@ -159,16 +175,28 @@ void VRCOLLADA_Stream::endElement(const string& uri, const string& name, const s
             auto t = dynamic_pointer_cast<VRTransform>(objStack.top());
             if (t) t->setMatrix(m);
         }
+
+        if (node.name == "translate") {
+            Vec3d v;
+            toValue(node.data, v);
+            auto t = dynamic_pointer_cast<VRTransform>(objStack.top());
+            if (t) t->translate(v);
+        }
     }
 
 
     //cout << "endElement " << name << " " << nodeStack.size() << endl;
 }
 
+/**
+TODO:
+    replace multi pass with semantics, use an ontology to store all references, resolve references once all are read
+*/
+
 void OSG::loadCollada(string path, VRObjectPtr root) {
     auto xml = XML::create();
-
-    auto handler = VRCOLLADA_Stream::create(root);
+    string fPath = getFolderName(path);
+    auto handler = VRCOLLADA_Stream::create(root, fPath);
     xml->stream(path, handler.get());
     if (handler->needAnotherPass()) xml->stream(path, handler.get());
 }

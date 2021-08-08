@@ -15,10 +15,11 @@ void VRCOLLADA_Material::addSampler(string id) { currentSampler = id; }
 
 void VRCOLLADA_Material::setSurfaceSource(string source) { surface[currentSurface] = source; }
 void VRCOLLADA_Material::setSamplerSource(string source) { sampler[currentSampler] = source; }
+void VRCOLLADA_Material::setFilePath(string fPath) { filePath = fPath; }
 
 void VRCOLLADA_Material::loadImage(string id, string path) {
     auto img = VRTexture::create();
-    img->read(path);
+    img->read(filePath+"/"+path);
     library_images[id] = img;
 }
 
@@ -49,7 +50,12 @@ void VRCOLLADA_Material::closeMaterial() {
     currentMaterial = 0;
 }
 
-void VRCOLLADA_Material::setMaterialEffect(string eid) {
+bool VRCOLLADA_Material::setMaterialEffect(string eid) {
+    if (!library_effects.count(eid)) {
+        //cout << "VRCOLLADA_Material::setMaterialEffect failed! no effect found with sid " << eid << endl;
+        return false;
+    }
+
     auto effect = library_effects[eid];
     currentMaterial->setDiffuse( effect->getDiffuse() );
     currentMaterial->setSpecular( effect->getSpecular() );
@@ -57,9 +63,11 @@ void VRCOLLADA_Material::setMaterialEffect(string eid) {
     currentMaterial->setEmission( effect->getEmission() );
     currentMaterial->setShininess( effect->getShininess() );
     currentMaterial->setTexture( effect->getTexture() );
+    return true;
 }
 
 void VRCOLLADA_Material::setColor(string sid, Color4f col) {
+    //cout << " -- VRCOLLADA_Material::setColor " << sid << "  " << col << endl;
     if (!currentEffect) return;
     Color3f c3 = Color3f(col[0], col[1], col[2]);
     if (sid == "diffuse") currentEffect->setDiffuse(c3);

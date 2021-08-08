@@ -85,13 +85,12 @@ void VRCOLLADA_Geometry::setMaterial(VRMaterialPtr mat) {
     if (lastInstantiatedGeo) lastInstantiatedGeo->setMaterial(mat);
 }
 
-void VRCOLLADA_Geometry::newPrimitive(string name, string count, int stride) {
+void VRCOLLADA_Geometry::newPrimitive(string name, string count) {
     //cout << "VRCOLLADA_Geometry::newPrimitive " << name << " " << count << " " << stride << endl;
     inPrimitive = true;
     currentPrimitive = Primitive();
     currentPrimitive.name = name;
     currentPrimitive.count = toInt(count);
-    currentPrimitive.stride = stride;
 }
 
 void VRCOLLADA_Geometry::closeGeometry() {
@@ -113,6 +112,19 @@ void VRCOLLADA_Geometry::setSourceData(string data) {
     }
 }
 
+void VRCOLLADA_Geometry::handleVCount(string data) {
+    if (currentGeoData && inPrimitive) {
+        auto lengths = toValue<vector<int>>(data);
+        for (auto l : lengths) {
+            if (l == 1) currentGeoData->updateType(GL_POINTS, 1);
+            if (l == 2) currentGeoData->updateType(GL_LINES, 2);
+            if (l == 3) currentGeoData->updateType(GL_TRIANGLES, 3);
+            if (l == 4) currentGeoData->updateType(GL_QUADS, 4);
+            if (l >= 5) currentGeoData->updateType(GL_POLYGON, l);
+        }
+    }
+}
+
 void VRCOLLADA_Geometry::handleIndices(string data) {
     if (currentGeoData && inPrimitive) {
         auto indices = toValue<vector<int>>(data);
@@ -123,7 +135,7 @@ void VRCOLLADA_Geometry::handleIndices(string data) {
         if (currentPrimitive.name == "tristrips") currentGeoData->pushType(GL_TRIANGLE_STRIP);
 
         int N = indices.size() / currentPrimitive.inputs.size();
-        currentGeoData->pushLength(N);
+        if (currentPrimitive.name != "polylist") currentGeoData->pushLength(N);
 
         for (int i=0; i<N; i++) {
             for (auto& input : currentPrimitive.inputs) { // for each input
