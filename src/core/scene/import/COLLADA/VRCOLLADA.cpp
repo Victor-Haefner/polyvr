@@ -37,12 +37,16 @@ class VRCOLLADA_Scene {
 
         void setRoot(VRObjectPtr r) { root = r; }
         void closeNode() { objStack.pop(); }
-        VRObjectPtr top() { return objStack.top(); }
+        VRObjectPtr top() { return objStack.size() > 0 ? objStack.top() : 0; }
+
+		void finalize() {
+            scheduler->callPostponed(true);
+		}
 
         void newNode(string name) {
             auto parent = objStack.size() > 0 ? objStack.top() : root;
             auto obj = VRTransform::create(name);
-            parent->addChild(obj);
+            if (parent) parent->addChild(obj);
             objStack.push(obj);
         }
 
@@ -61,17 +65,24 @@ class VRCOLLADA_Scene {
             if (t) t->translate(v);
         }
 
-        void setMaterial(string mid, VRCOLLADA_Material& materials) {
-            auto mat = materials.getMaterial(mid);
-            if (!mat) cout << "did not found material " << mid << endl;
-            if (lastInstantiatedGeo) lastInstantiatedGeo->setMaterial(mat);
+        void setMaterial(string mid, VRCOLLADA_Material* materials, VRGeometryPtr geo = 0) {
+            if (!geo) geo = lastInstantiatedGeo;
+            auto mat = materials->getMaterial(mid);
+            if (!mat) {
+                scheduler->postpone( bind(&VRCOLLADA_Scene::setMaterial, this, mid, materials, geo) );
+                return;
+            }
+            if (geo) geo->setMaterial(mat);
         }
 
-        void instantiateGeometry(string gid, VRCOLLADA_Geometry& geometries) {
-            auto geo = geometries.getGeometry(gid);
-            if (!geo) return;
+        void instantiateGeometry(string gid, VRCOLLADA_Geometry* geometries, VRObjectPtr parent = 0) {
+            if (!parent) parent = top();
+            auto geo = geometries->getGeometry(gid);
+            if (!geo) {
+                scheduler->postpone( bind(&VRCOLLADA_Scene::instantiateGeometry, this, gid, geometries, parent) );
+                return;
+            }
             lastInstantiatedGeo = dynamic_pointer_cast<VRGeometry>( geo->duplicate() );
-            auto parent = top();
             if (parent) parent->addChild( lastInstantiatedGeo );
         }
 };
@@ -104,7 +115,13 @@ class VRCOLLADA_Stream : public XMLStreamHandler {
         static VRCOLLADA_StreamPtr create(VRObjectPtr root, string fPath) { return VRCOLLADA_StreamPtr( new VRCOLLADA_Stream(root, fPath) ); }
 
         void startDocument() {}
-        void endDocument() { materials.finalize(); }
+
+        void endDocument() {
+            materials.finalize();
+            geometries.finalize();
+            scene.finalize();
+        }
+
         void startElement(const string& uri, const string& name, const string& qname, const map<string, XMLAttribute>& attributes);
         void endElement(const string& uri, const string& name, const string& qname);
         void characters(const string& chars);
@@ -143,8 +160,8 @@ void VRCOLLADA_Stream::startElement(const string& uri, const string& name, const
     if (name == "tristrips") geometries.newPrimitive(name, n.attributes["count"].val);
     if (name == "polylist") geometries.newPrimitive(name, n.attributes["count"].val);
 
-    if (name == "instance_geometry") scene.instantiateGeometry(skipHash(n.attributes["url"].val), geometries);
-    if (name == "instance_material") scene.setMaterial(skipHash(n.attributes["target"].val), materials);
+    if (name == "instance_geometry") scene.instantiateGeometry(skipHash(n.attributes["url"].val), &geometries);
+    if (name == "instance_material") scene.setMaterial(skipHash(n.attributes["target"].val), &materials);
     if (name == "node") scene.newNode(n.attributes["name"].val);
 }
 

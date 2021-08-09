@@ -47,6 +47,7 @@ class VRCOLLADA_Geometry : public std::enable_shared_from_this<VRCOLLADA_Geometr
 		static VRCOLLADA_GeometryPtr create();
 		VRCOLLADA_GeometryPtr ptr();
 
+		void finalize();
 		VRGeometryPtr getGeometry(string gid);
 
 		void newGeometry(string name, string id);

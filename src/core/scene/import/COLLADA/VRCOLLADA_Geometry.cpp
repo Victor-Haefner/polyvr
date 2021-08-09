@@ -11,6 +11,10 @@ VRCOLLADA_Geometry::~VRCOLLADA_Geometry() {}
 VRCOLLADA_GeometryPtr VRCOLLADA_Geometry::create() { return VRCOLLADA_GeometryPtr( new VRCOLLADA_Geometry() ); }
 VRCOLLADA_GeometryPtr VRCOLLADA_Geometry::ptr() { return static_pointer_cast<VRCOLLADA_Geometry>(shared_from_this()); }
 
+void VRCOLLADA_Geometry::finalize() {
+    //scheduler->callPostponed(true);
+}
+
 VRGeometryPtr VRCOLLADA_Geometry::getGeometry(string gid) {
     if (!library_geometries.count(gid)) return 0;
     return library_geometries[gid];
