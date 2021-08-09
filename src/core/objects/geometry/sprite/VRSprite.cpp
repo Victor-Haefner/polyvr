@@ -179,8 +179,8 @@ void VRSprite::setVisible(bool b, string mode) {
         var b = $1;
         var frame = hudFrames[fID];
 	if (frame != undefined) {
-            if (b) frame.style.display = "none";
-            else frame.style.display = "block";
+            if (b) frame.style.display = "block";
+            else frame.style.display = "none";
 	}
     }, fID, b);
 #endif
