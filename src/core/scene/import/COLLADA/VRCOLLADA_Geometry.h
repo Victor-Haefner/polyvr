@@ -34,7 +34,6 @@ class VRCOLLADA_Geometry : public std::enable_shared_from_this<VRCOLLADA_Geometr
 
         map<string, VRGeometryPtr> library_geometries;
         VRGeometryPtr currentGeometry;
-        VRGeometryPtr lastInstantiatedGeo;
         VRGeoDataPtr currentGeoData;
         Primitive currentPrimitive;
         bool inPrimitive = false;
@@ -48,20 +47,19 @@ class VRCOLLADA_Geometry : public std::enable_shared_from_this<VRCOLLADA_Geometr
 		static VRCOLLADA_GeometryPtr create();
 		VRCOLLADA_GeometryPtr ptr();
 
+		VRGeometryPtr getGeometry(string gid);
+
 		void newGeometry(string name, string id);
 		void newSource(string id);
         void handleAccessor(string count, string stride);
         void handleInput(string type, string sourceID, string offsetStr, string set);
         void handleVCount(string data);
-        void instantiateGeometry(string geoID, VRObjectPtr parent);
         void newPrimitive(string name, string count);
 
         void setSourceData(string data);
         void handleIndices(string data);
         void closeGeometry();
         void closePrimitive();
-
-        void setMaterial(VRMaterialPtr mat);
 };
 
 OSG_END_NAMESPACE;

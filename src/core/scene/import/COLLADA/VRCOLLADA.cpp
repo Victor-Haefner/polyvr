@@ -7,6 +7,7 @@
 #include "core/utils/system/VRSystem.h"
 #include "core/utils/toString.h"
 #include "core/utils/xml.h"
+#include "core/utils/VRScheduler.h"
 
 #include "core/objects/object/VRObject.h"
 #include "core/objects/VRTransform.h"
@@ -23,6 +24,58 @@ using namespace OSG;
 
 namespace OSG {
 
+class VRCOLLADA_Scene {
+    private:
+        VRSchedulerPtr scheduler;
+        VRObjectPtr root;
+        map<string, VRObjectPtr> objects;
+        stack<VRObjectPtr> objStack;
+        VRGeometryPtr lastInstantiatedGeo;
+
+    public:
+        VRCOLLADA_Scene() { scheduler = VRScheduler::create(); }
+
+        void setRoot(VRObjectPtr r) { root = r; }
+        void closeNode() { objStack.pop(); }
+        VRObjectPtr top() { return objStack.top(); }
+
+        void newNode(string name) {
+            auto parent = objStack.size() > 0 ? objStack.top() : root;
+            auto obj = VRTransform::create(name);
+            parent->addChild(obj);
+            objStack.push(obj);
+        }
+
+        void setMatrix(string data) {
+            Matrix4d m;
+            toValue(data, m);
+            m.transpose();
+            auto t = dynamic_pointer_cast<VRTransform>(top());
+            if (t) t->setMatrix(m);
+        }
+
+        void setTranslate(string data) {
+            Vec3d v;
+            toValue(data, v);
+            auto t = dynamic_pointer_cast<VRTransform>(top());
+            if (t) t->translate(v);
+        }
+
+        void setMaterial(string mid, VRCOLLADA_Material& materials) {
+            auto mat = materials.getMaterial(mid);
+            if (!mat) cout << "did not found material " << mid << endl;
+            if (lastInstantiatedGeo) lastInstantiatedGeo->setMaterial(mat);
+        }
+
+        void instantiateGeometry(string gid, VRCOLLADA_Geometry& geometries) {
+            auto geo = geometries.getGeometry(gid);
+            if (!geo) return;
+            lastInstantiatedGeo = dynamic_pointer_cast<VRGeometry>( geo->duplicate() );
+            auto parent = top();
+            if (parent) parent->addChild( lastInstantiatedGeo );
+        }
+};
+
 class VRCOLLADA_Stream : public XMLStreamHandler {
     private:
         struct Node {
@@ -31,24 +84,18 @@ class VRCOLLADA_Stream : public XMLStreamHandler {
             map<string, XMLAttribute> attributes;
         };
 
-        bool parsedGeometries = false;
-        bool parsedMaterials = false;
-        bool needSecondPass = false;
-        int currentPass = 0;
-
         stack<Node> nodeStack;
-
-        VRObjectPtr root;
-        stack<VRObjectPtr> objStack;
 
         VRCOLLADA_Material materials;
         VRCOLLADA_Geometry geometries;
+        VRCOLLADA_Scene scene;
         //VRCOLLADA_Kinematics kinematics;
 
         string skipHash(const string& s) { return subString(s, 1, s.size()-1); }
 
     public:
-        VRCOLLADA_Stream(VRObjectPtr root, string fPath) : root(root) {
+        VRCOLLADA_Stream(VRObjectPtr root, string fPath) {
+            scene.setRoot(root);
             materials.setFilePath(fPath);
         }
 
@@ -57,7 +104,7 @@ class VRCOLLADA_Stream : public XMLStreamHandler {
         static VRCOLLADA_StreamPtr create(VRObjectPtr root, string fPath) { return VRCOLLADA_StreamPtr( new VRCOLLADA_Stream(root, fPath) ); }
 
         void startDocument() {}
-        void endDocument() { currentPass++; materials.finalize(); }
+        void endDocument() { materials.finalize(); }
         void startElement(const string& uri, const string& name, const string& qname, const map<string, XMLAttribute>& attributes);
         void endElement(const string& uri, const string& name, const string& qname);
         void characters(const string& chars);
@@ -67,8 +114,6 @@ class VRCOLLADA_Stream : public XMLStreamHandler {
         void error(const string& chars) { cout << "VRCOLLADA_Stream Error" << endl; }
         void fatalError(const string& chars) { cout << "VRCOLLADA_Stream Fatal Error" << endl; }
         void onException(exception& e) { cout << "VRCOLLADA_Stream Exception" << endl; }
-
-        bool needAnotherPass() { if (needSecondPass) { needSecondPass = false; return true; } else return false; }
 };
 
 }
@@ -83,44 +128,24 @@ void VRCOLLADA_Stream::startElement(const string& uri, const string& name, const
     n.attributes = attributes;
     nodeStack.push(n);
 
-    if (currentPass == 0) {
-        if (name == "surface") materials.addSurface(parent.attributes["sid"].val);
-        if (name == "sampler2D") materials.addSampler(parent.attributes["sid"].val);
-        if (name == "effect") materials.newEffect( n.attributes["id"].val );
-        if (name == "material") materials.newMaterial( n.attributes["id"].val, n.attributes["name"].val );
-        if (name == "instance_effect") materials.setMaterialEffect( skipHash(n.attributes["url"].val) );
+    if (name == "surface") materials.addSurface(parent.attributes["sid"].val);
+    if (name == "sampler2D") materials.addSampler(parent.attributes["sid"].val);
+    if (name == "effect") materials.newEffect( n.attributes["id"].val );
+    if (name == "material") materials.newMaterial( n.attributes["id"].val, n.attributes["name"].val );
+    if (name == "instance_effect") materials.setMaterialEffect( skipHash(n.attributes["url"].val) );
 
-        if (name == "geometry") geometries.newGeometry(n.attributes["name"].val, n.attributes["id"].val);
-        if (name == "source") geometries.newSource(n.attributes["id"].val);
-        if (name == "accessor") geometries.handleAccessor(n.attributes["count"].val, n.attributes["stride"].val);
-        if (name == "input") geometries.handleInput(n.attributes["semantic"].val, skipHash(n.attributes["source"].val), n.attributes["offset"].val, n.attributes["set"].val);
-        if (name == "triangles") geometries.newPrimitive(name, n.attributes["count"].val);
-        if (name == "trifans") geometries.newPrimitive(name, n.attributes["count"].val);
-        if (name == "tristrips") geometries.newPrimitive(name, n.attributes["count"].val);
-        if (name == "polylist") geometries.newPrimitive(name, n.attributes["count"].val);
+    if (name == "geometry") geometries.newGeometry(n.attributes["name"].val, n.attributes["id"].val);
+    if (name == "source") geometries.newSource(n.attributes["id"].val);
+    if (name == "accessor") geometries.handleAccessor(n.attributes["count"].val, n.attributes["stride"].val);
+    if (name == "input") geometries.handleInput(n.attributes["semantic"].val, skipHash(n.attributes["source"].val), n.attributes["offset"].val, n.attributes["set"].val);
+    if (name == "triangles") geometries.newPrimitive(name, n.attributes["count"].val);
+    if (name == "trifans") geometries.newPrimitive(name, n.attributes["count"].val);
+    if (name == "tristrips") geometries.newPrimitive(name, n.attributes["count"].val);
+    if (name == "polylist") geometries.newPrimitive(name, n.attributes["count"].val);
 
-        if (name == "library_visual_scenes" && !parsedGeometries) needSecondPass = true;
-    }
-
-
-    if (parsedGeometries) {
-        if (name == "instance_geometry") geometries.instantiateGeometry(skipHash(n.attributes["url"].val), objStack.top());
-
-        if (name == "instance_material") {
-            string mid = skipHash(n.attributes["target"].val);
-            auto mat = materials.getMaterial(mid);
-            if (!mat) cout << "did not found material " << mid << endl;
-            geometries.setMaterial(mat);
-        }
-
-        if (name == "node") {
-            string Name = n.attributes["name"].val;
-            auto parent = objStack.size() > 0 ? objStack.top() : root;
-            auto obj = VRTransform::create(Name);
-            parent->addChild(obj);
-            objStack.push(obj);
-        }
-    }
+    if (name == "instance_geometry") scene.instantiateGeometry(skipHash(n.attributes["url"].val), geometries);
+    if (name == "instance_material") scene.setMaterial(skipHash(n.attributes["target"].val), materials);
+    if (name == "node") scene.newNode(n.attributes["name"].val);
 }
 
 void VRCOLLADA_Stream::characters(const string& chars) {
@@ -133,70 +158,41 @@ void VRCOLLADA_Stream::endElement(const string& uri, const string& name, const s
     Node parent;
     if (nodeStack.size() > 0) parent = nodeStack.top();
 
-    if (currentPass == 0) {
-        if (node.name == "library_geometries") parsedGeometries = true;
-        if (node.name == "library_materials") parsedMaterials = true;
+    if (node.name == "init_from" && parent.name == "surface") materials.setSurfaceSource(node.data);
+    if (node.name == "source" && parent.name == "sampler2D") materials.setSamplerSource(node.data);
 
-        if (node.name == "init_from" && parent.name == "surface") materials.setSurfaceSource(node.data);
-        if (node.name == "source" && parent.name == "sampler2D") materials.setSamplerSource(node.data);
+    if (node.name == "effect") materials.closeEffect();
+    if (node.name == "geometry") geometries.closeGeometry();
+    if (node.name == "init_from" && parent.name == "image") materials.loadImage(parent.attributes["id"].val, node.data);
+    if (node.name == "color") {
+        string type;
+        if (node.attributes.count("sid")) type = node.attributes["sid"].val;
+        else type = parent.name;
+        materials.setColor(type, toValue<Color4f>(node.data));
+    }
+    if (node.name == "texture") materials.setTexture(node.attributes["texture"].val);
+    if (node.name == "float_array") geometries.setSourceData(node.data);
+    if (node.name == "p") geometries.handleIndices(node.data);
+    if (node.name == "triangles") geometries.closePrimitive();
+    if (node.name == "trifans") geometries.closePrimitive();
+    if (node.name == "tristrips") geometries.closePrimitive();
+    if (node.name == "polylist") geometries.closePrimitive();
+    if (node.name == "vcount") geometries.handleVCount(node.data);
 
-        if (node.name == "effect") materials.closeEffect();
-        if (node.name == "geometry") geometries.closeGeometry();
-        if (node.name == "init_from" && parent.name == "image") materials.loadImage(parent.attributes["id"].val, node.data);
-        if (node.name == "color") {
-            string type;
-            if (node.attributes.count("sid")) type = node.attributes["sid"].val;
-            else type = parent.name;
-            materials.setColor(type, toValue<Color4f>(node.data));
-        }
-        if (node.name == "texture") materials.setTexture(node.attributes["texture"].val);
-        if (node.name == "float_array") geometries.setSourceData(node.data);
-        if (node.name == "p") geometries.handleIndices(node.data);
-        if (node.name == "triangles") geometries.closePrimitive();
-        if (node.name == "trifans") geometries.closePrimitive();
-        if (node.name == "tristrips") geometries.closePrimitive();
-        if (node.name == "polylist") geometries.closePrimitive();
-        if (node.name == "vcount") geometries.handleVCount(node.data);
+    if (node.name == "float") {
+        float f = toValue<float>(node.data);
+        string sid = node.attributes["sid"].val;
+        if (sid == "shininess") materials.setShininess(f);
     }
 
-    if (parsedGeometries) {
-        if (node.name == "node") objStack.pop();
-
-        if (node.name == "float") {
-            float f = toValue<float>(node.data);
-            string sid = node.attributes["sid"].val;
-            if (sid == "shininess") materials.setShininess(f);
-        }
-
-        if (node.name == "matrix") {
-            Matrix4d m;
-            toValue(node.data, m);
-            m.transpose();
-            auto t = dynamic_pointer_cast<VRTransform>(objStack.top());
-            if (t) t->setMatrix(m);
-        }
-
-        if (node.name == "translate") {
-            Vec3d v;
-            toValue(node.data, v);
-            auto t = dynamic_pointer_cast<VRTransform>(objStack.top());
-            if (t) t->translate(v);
-        }
-    }
-
-
-    //cout << "endElement " << name << " " << nodeStack.size() << endl;
+    if (node.name == "node") scene.closeNode();
+    if (node.name == "matrix") scene.setMatrix(node.data);
+    if (node.name == "translate") scene.setTranslate(node.data);
 }
-
-/**
-TODO:
-    replace multi pass with semantics, use an ontology to store all references, resolve references once all are read
-*/
 
 void OSG::loadCollada(string path, VRObjectPtr root) {
     auto xml = XML::create();
     string fPath = getFolderName(path);
     auto handler = VRCOLLADA_Stream::create(root, fPath);
     xml->stream(path, handler.get());
-    if (handler->needAnotherPass()) xml->stream(path, handler.get());
 }

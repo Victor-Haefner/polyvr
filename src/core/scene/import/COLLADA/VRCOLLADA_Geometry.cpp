@@ -11,6 +11,11 @@ VRCOLLADA_Geometry::~VRCOLLADA_Geometry() {}
 VRCOLLADA_GeometryPtr VRCOLLADA_Geometry::create() { return VRCOLLADA_GeometryPtr( new VRCOLLADA_Geometry() ); }
 VRCOLLADA_GeometryPtr VRCOLLADA_Geometry::ptr() { return static_pointer_cast<VRCOLLADA_Geometry>(shared_from_this()); }
 
+VRGeometryPtr VRCOLLADA_Geometry::getGeometry(string gid) {
+    if (!library_geometries.count(gid)) return 0;
+    return library_geometries[gid];
+}
+
 void VRCOLLADA_Geometry::newGeometry(string name, string id) {
     auto m = VRGeometry::create(name);
     library_geometries[id] = m;
@@ -89,16 +94,6 @@ void VRCOLLADA_Geometry::handleInput(string type, string sourceID, string offset
             }
         }
     }
-}
-
-void VRCOLLADA_Geometry::instantiateGeometry(string geoID, VRObjectPtr parent) {
-    if (!library_geometries.count(geoID)) return;
-    lastInstantiatedGeo = dynamic_pointer_cast<VRGeometry>( library_geometries[geoID]->duplicate() );
-    parent->addChild( lastInstantiatedGeo );
-}
-
-void VRCOLLADA_Geometry::setMaterial(VRMaterialPtr mat) {
-    if (lastInstantiatedGeo) lastInstantiatedGeo->setMaterial(mat);
 }
 
 void VRCOLLADA_Geometry::newPrimitive(string name, string count) {
