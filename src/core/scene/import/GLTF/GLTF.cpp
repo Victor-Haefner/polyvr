@@ -306,14 +306,14 @@ struct GLTFNNode : GLTFNode{
     GLTFNNode(string type, string name = "Unnamed") : GLTFNode(type, name) { version = 2; }
     ~GLTFNNode() {}
 
-    void applyTransformations() {
+    void applyTransformations() override {
         VRTransformPtr t = dynamic_pointer_cast<VRTransform>(obj);
         if (t) t->setMatrix(pose);
 
         for (auto c : children) c->applyTransformations();
     }
 
-    void applyMaterials() {
+    void applyMaterials() override {
         if (isGeometryNode(type)) {
             VRGeometryPtr g = dynamic_pointer_cast<VRGeometry>(obj);
             if (g) {
@@ -326,7 +326,7 @@ struct GLTFNNode : GLTFNode{
         for (auto c : children) c->applyMaterials();
     }
 
-    void applyGeometries() {
+    void applyGeometries() override {
         if (type == "Mesh" || type == "Primitive") {
             VRGeometryPtr g = dynamic_pointer_cast<VRGeometry>(obj);
             if (g) {
@@ -338,7 +338,7 @@ struct GLTFNNode : GLTFNode{
         for (auto c : children) c->applyGeometries();
     }
 
-    void applyAnimations() {
+    void applyAnimations() override {
         /*auto slerp3d = [&](Vec3d v0, Vec3d v1, double t) { return v0 + (v1-v0)*t; };
 
         auto animTranslationLinearCB = [&](OSG::VRTransformPtr o, float duration, float t) {
@@ -704,7 +704,7 @@ struct GLTFNNode : GLTFNode{
         //return t;*/
     }
 
-    bool applyAnimationFrame(float maxDuration, float tIn) {
+    bool applyAnimationFrame(float maxDuration, float tIn) override {
         VRTransformPtr t = dynamic_pointer_cast<VRTransform>(obj);
         if (t) {
             auto slerp3d = [&](Vec3d v0, Vec3d v1, double t) { return v0 + (v1-v0)*t; };
@@ -1098,7 +1098,7 @@ struct GLTFNNode : GLTFNode{
         return 0;
     }
 
-    float primeAnimations(float maxDuration = 0.0){
+    float primeAnimations(float maxDuration = 0.0) override {
         VRTransformPtr t = dynamic_pointer_cast<VRTransform>(obj);
         if (t) {
             translationStart = translation;
@@ -1128,7 +1128,7 @@ struct GLTFNNode : GLTFNode{
         return maxDuration;
     }
 
-    void initAnimations() {
+    void initAnimations() override {
         auto animCB = [&](float maxDuration, float t) {
             applyAnimationFrame(maxDuration, t);
             applyTransformations();

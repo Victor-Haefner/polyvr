@@ -46,7 +46,7 @@ class VRGeometry : public VRTransform {
             float length;
         };
 
-        virtual VRObjectPtr copy(vector<VRObjectPtr> children);
+        virtual VRObjectPtr copy(vector<VRObjectPtr> children) override;
 
         void meshChanged();
         void setup(VRStorageContextPtr context);
@@ -76,7 +76,7 @@ class VRGeometry : public VRTransform {
         void makeSingleIndex();
         vector<VRGeometryPtr> splitByVertexColors();
         void setMeshVisibility(bool b);
-        void setVolumeCheck(bool b, bool recursive = false);
+        void setVolumeCheck(bool b, bool recursive = false) override;
 
         virtual bool applyIntersectionAction(Action* ia);
         virtual void setPrimitive(string parameters);

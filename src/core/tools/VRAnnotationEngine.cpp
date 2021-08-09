@@ -98,7 +98,7 @@ string VRAnnotationEngine::getLabel(int i) {
 
 map<int, string> VRAnnotationEngine::getLabels() {
     map<int, string> res;
-    for (int i=0; i<labels.size(); i++) res[i] = labels[i].str;
+    for (size_t i=0; i<labels.size(); i++) res[i] = labels[i].str;
     return res;
 }
 

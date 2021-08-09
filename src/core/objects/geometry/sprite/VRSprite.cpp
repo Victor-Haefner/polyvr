@@ -116,22 +116,38 @@ void VRSprite::webOpen(string path, int res, float ratio) {
 #endif
 
 #ifdef __EMSCRIPTEN__
+    int fID = getID();
     EM_ASM({
-        var uri = Module.UTF8ToString($0);
+        var fID = $0;
+        var uri = Module.UTF8ToString($1);
         var host = window.location.origin;
-	console.log("webOpen "+uri);
-	console.log(" origin: "+host);
-	
-	var parts = uri.split("/");
-	uri = host + "/" + parts[parts.length - 1];
-	console.log(" addr: "+uri);
 
-	var frame = document.createElement("iframe");
-	document.body.appendChild(frame);
-	frame.src = uri+".html";
+        var parts = uri.split("/");
+        uri = host + "/" + parts[parts.length - 1];
+
+        var frame = document.createElement("iframe");
+        document.body.appendChild(frame);
+        frame.src = uri+".html";
         frame.style = "position:absolute;top:0;right:0;height:300px;width:300px;z-index:2;";
-	frame.title = "PolyVR widget";
-    }, path.c_str());
+        frame.title = "PolyVR widget";
+
+        if (typeof hudFrames == 'undefined') var hudFrames = {};
+        hudFrames[fID] = frame;
+    }, fID, path.c_str());
+#endif
+}
+
+void VRSprite::setVisible(bool b, string mode) {
+    cout << "VRSprite::setVisible " << getName() << " " << b << endl;
+#ifdef __EMSCRIPTEN__
+    int fID = getID();
+    EM_ASM({
+        var fID = $0;
+        var b = $1;
+        var frame = hudFrames[fID];
+        if (b) frame.style.display = "none";
+        else frame.style.display = "block";
+    }, fID, b);
 #endif
 }
 

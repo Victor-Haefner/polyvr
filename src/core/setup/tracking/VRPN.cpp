@@ -221,7 +221,7 @@ class myTracker : public vrpn_Tracker {
         myTracker( vrpn_Connection *c = 0 );
         virtual ~myTracker() {};
 
-        virtual void mainloop();
+        virtual void mainloop() override;
 
     protected:
         struct timeval _timestamp;
@@ -273,7 +273,7 @@ class myAnalog : public vrpn_Analog {
         myAnalog( vrpn_Connection *c = 0 );
         virtual ~myAnalog() {};
 
-        virtual void mainloop();
+        virtual void mainloop() override;
 
     protected:
         struct timeval _timestamp;
@@ -315,7 +315,7 @@ class myButton : public vrpn_Button {
         myButton( vrpn_Connection *c = 0 );
         virtual ~myButton() {};
 
-        virtual void mainloop();
+        virtual void mainloop() override;
 
     protected:
         struct timeval _timestamp;

@@ -21,7 +21,7 @@ class VRMetaBalls : public VRObject {
 
         static VRMetaBallsPtr create(string name = "metaballs");
 
-        void addChild(VRObjectPtr child, bool osg = true, int place = -1);
+        void addChild(VRObjectPtr child, bool osg = true, int place = -1) override;
 
         VRMaterialPtr getMaterial();
         VRMaterialPtr getDepthMaterial();

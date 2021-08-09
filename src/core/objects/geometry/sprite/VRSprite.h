@@ -46,6 +46,8 @@ class VRSprite : public VRGeometry {
 
         void showResizeTool(bool b, float size = 0.1, bool doAnnotations = true);
         void convertToCloth();
+
+        void setVisible(bool b, string mode = "") override;
 };
 
 OSG_END_NAMESPACE;

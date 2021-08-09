@@ -19,9 +19,9 @@ class VRPolygonSelection : public VRSelection {
         bool closed = false;
         VRGeometryPtr shape;
 
-        bool vertSelected(Vec3d p);
-        bool objSelected(VRGeometryPtr geo);
-        bool partialSelected(VRGeometryPtr geo);
+        bool vertSelected(Vec3d p) override;
+        bool objSelected(VRGeometryPtr geo) override;
+        bool partialSelected(VRGeometryPtr geo) override;
 
         void updateShape(Frustum f);
 

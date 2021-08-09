@@ -83,7 +83,7 @@ struct VREntity : public VROntoID, public VRName {
 
     bool is_a(string concept);
     string toString();
-    void save(XMLElementPtr e, int p);
+    void save(XMLElementPtr e, int p) override;
     void load(XMLElementPtr e);
 };
 

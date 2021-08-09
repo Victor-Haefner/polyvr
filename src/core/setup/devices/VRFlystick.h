@@ -13,7 +13,7 @@ class VRFlystick : public VRDevice {
         static VRFlystickPtr create();
         VRFlystickPtr ptr();
 
-        void clearSignals();
+        void clearSignals() override;
 
         void update(vector<int> buttons);
         void update(vector<float> sliders);

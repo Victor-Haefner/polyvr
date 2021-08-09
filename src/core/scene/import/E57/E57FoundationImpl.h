@@ -358,25 +358,25 @@ public:
                         StructureNodeImpl(weak_ptr<ImageFileImpl> destImageFile);
     virtual             ~StructureNodeImpl() {};
 
-    virtual NodeType    type();
-    virtual bool        isTypeEquivalent(shared_ptr<NodeImpl> ni);
-    virtual bool        isDefined(const ustring& pathName);
-    virtual void        setAttachedRecursive();
+    virtual NodeType    type() override;
+    virtual bool        isTypeEquivalent(shared_ptr<NodeImpl> ni) override;
+    virtual bool        isDefined(const ustring& pathName) override;
+    virtual void        setAttachedRecursive() override;
 
     virtual int64_t     childCount();
     virtual shared_ptr<NodeImpl> get(int64_t index);
-    virtual shared_ptr<NodeImpl> get(const ustring& pathName);
+    virtual shared_ptr<NodeImpl> get(const ustring& pathName) override;
     virtual void        set(int64_t index, shared_ptr<NodeImpl> ni);
-    virtual void        set(const ustring& pathName, shared_ptr<NodeImpl> ni, bool autoPathCreate = false);
-    virtual void        set(const vector<ustring>& fields, unsigned level, shared_ptr<NodeImpl> ni, bool autoPathCreate = false);
+    virtual void        set(const ustring& pathName, shared_ptr<NodeImpl> ni, bool autoPathCreate = false) override;
+    virtual void        set(const vector<ustring>& fields, unsigned level, shared_ptr<NodeImpl> ni, bool autoPathCreate = false) override;
     virtual void        append(shared_ptr<NodeImpl> ni);
 
-    virtual void        checkLeavesInSet(const std::set<ustring>& pathNames, shared_ptr<NodeImpl> origin);
+    virtual void        checkLeavesInSet(const std::set<ustring>& pathNames, shared_ptr<NodeImpl> origin) override;
 
-    virtual void        writeXml(shared_ptr<ImageFileImpl> imf, CheckedFile& cf, int indent, const char* forcedFieldName=NULL);
+    virtual void        writeXml(shared_ptr<ImageFileImpl> imf, CheckedFile& cf, int indent, const char* forcedFieldName=NULL) override;
 
 #ifdef E57_DEBUG
-    void                dump(int indent = 0, ostream& os = cout);
+    void                dump(int indent = 0, ostream& os = cout) override;
 #endif
 #ifdef E57_DEBUG_INVARIANCE
     virtual void        checkInvariance();
@@ -384,7 +384,7 @@ public:
 
 protected: //=================
     friend class CompressedVectorReaderImpl;
-    virtual shared_ptr<NodeImpl> lookup(const ustring& pathName);
+    virtual shared_ptr<NodeImpl> lookup(const ustring& pathName) override;
 
     vector<shared_ptr<NodeImpl> > children_;
 };
@@ -394,20 +394,20 @@ public:
     explicit            VectorNodeImpl(weak_ptr<ImageFileImpl> destImageFile, bool allowHeteroChildren);
     virtual             ~VectorNodeImpl() {};
 
-    virtual NodeType    type();
-    virtual bool        isTypeEquivalent(shared_ptr<NodeImpl> ni);
+    virtual NodeType    type() override;
+    virtual bool        isTypeEquivalent(shared_ptr<NodeImpl> ni) override;
     bool                allowHeteroChildren();
 
     //???virtual Node   get(int64_t index);
     //???virtual Node   get(const ustring& pathName);
-    virtual void        set(int64_t index, shared_ptr<NodeImpl> ni);
+    virtual void        set(int64_t index, shared_ptr<NodeImpl> ni) override;
     //???virtual void   set(const ustring& pathName, shared_ptr<NodeImpl> ni);
     //???virtual void   append(shared_ptr<NodeImpl> ni);
 
-    virtual void        writeXml(shared_ptr<ImageFileImpl> imf, CheckedFile& cf, int indent, const char* forcedFieldName=NULL);
+    virtual void        writeXml(shared_ptr<ImageFileImpl> imf, CheckedFile& cf, int indent, const char* forcedFieldName=NULL) override;
 
 #ifdef E57_DEBUG
-    void                dump(int indent = 0, ostream& os = cout);
+    void                dump(int indent = 0, ostream& os = cout) override;
 #endif
 #ifdef E57_DEBUG_INVARIANCE
     virtual void        checkInvariance();
@@ -504,10 +504,10 @@ public:
                         CompressedVectorNodeImpl(weak_ptr<ImageFileImpl> destImageFile);
     virtual             ~CompressedVectorNodeImpl() {};
 
-    virtual NodeType    type();
-    virtual bool        isTypeEquivalent(shared_ptr<NodeImpl> ni);
-    virtual bool        isDefined(const ustring& pathName);
-    virtual void        setAttachedRecursive();
+    virtual NodeType    type() override;
+    virtual bool        isTypeEquivalent(shared_ptr<NodeImpl> ni) override;
+    virtual bool        isDefined(const ustring& pathName) override;
+    virtual void        setAttachedRecursive() override;
 
     void                setPrototype(shared_ptr<NodeImpl> prototype);
     shared_ptr<NodeImpl> getPrototype();
@@ -516,9 +516,9 @@ public:
 
     virtual int64_t     childCount();
 
-    virtual void        checkLeavesInSet(const std::set<ustring>& pathNames, shared_ptr<NodeImpl> origin);
+    virtual void        checkLeavesInSet(const std::set<ustring>& pathNames, shared_ptr<NodeImpl> origin) override;
 
-    virtual void        writeXml(shared_ptr<ImageFileImpl> imf, CheckedFile& cf, int indent, const char* forcedFieldName=NULL);
+    virtual void        writeXml(shared_ptr<ImageFileImpl> imf, CheckedFile& cf, int indent, const char* forcedFieldName=NULL) override;
 
     /// Iterator constructors
     shared_ptr<CompressedVectorWriterImpl> writer(vector<SourceDestBuffer> sbufs);
@@ -531,7 +531,7 @@ public:
                                                                 {binarySectionLogicalStart_ = binarySectionLogicalStart;};
 
 #ifdef E57_DEBUG
-    void                dump(int indent = 0, ostream& os = cout);
+    void                dump(int indent = 0, ostream& os = cout) override;
 #endif
 #ifdef E57_DEBUG_INVARIANCE
     virtual void        checkInvariance();
@@ -552,20 +552,20 @@ public:
                         IntegerNodeImpl(weak_ptr<ImageFileImpl> destImageFile, int64_t value = 0, int64_t minimum = 0, int64_t maximum = 0);
     virtual             ~IntegerNodeImpl() {};
 
-    virtual NodeType    type();
-    virtual bool        isTypeEquivalent(shared_ptr<NodeImpl> ni);
-    virtual bool        isDefined(const ustring& pathName);
+    virtual NodeType    type() override;
+    virtual bool        isTypeEquivalent(shared_ptr<NodeImpl> ni) override;
+    virtual bool        isDefined(const ustring& pathName) override;
 
     int64_t             value();
     int64_t             minimum();
     int64_t             maximum();
 
-    virtual void        checkLeavesInSet(const std::set<ustring>& pathNames, shared_ptr<NodeImpl> origin);
+    virtual void        checkLeavesInSet(const std::set<ustring>& pathNames, shared_ptr<NodeImpl> origin) override;
 
-    virtual void        writeXml(shared_ptr<ImageFileImpl> imf, CheckedFile& cf, int indent, const char* forcedFieldName=NULL);
+    virtual void        writeXml(shared_ptr<ImageFileImpl> imf, CheckedFile& cf, int indent, const char* forcedFieldName=NULL) override;
 
 #ifdef E57_DEBUG
-    void                dump(int indent = 0, ostream& os = cout);
+    void                dump(int indent = 0, ostream& os = cout) override;
 #endif
 #ifdef E57_DEBUG_INVARIANCE
     virtual void        checkInvariance();
@@ -589,9 +589,9 @@ public:
 
     virtual             ~ScaledIntegerNodeImpl() {};
 
-    virtual NodeType    type();
-    virtual bool        isTypeEquivalent(shared_ptr<NodeImpl> ni);
-    virtual bool        isDefined(const ustring& pathName);
+    virtual NodeType    type() override;
+    virtual bool        isTypeEquivalent(shared_ptr<NodeImpl> ni) override;
+    virtual bool        isDefined(const ustring& pathName) override;
 
     int64_t             rawValue();
     double              scaledValue();
@@ -602,13 +602,13 @@ public:
     double              scale();
     double              offset();
 
-    virtual void        checkLeavesInSet(const std::set<ustring>& pathNames, shared_ptr<NodeImpl> origin);
+    virtual void        checkLeavesInSet(const std::set<ustring>& pathNames, shared_ptr<NodeImpl> origin) override;
 
-    virtual void        writeXml(shared_ptr<ImageFileImpl> imf, CheckedFile& cf, int indent, const char* forcedFieldName=NULL);
+    virtual void        writeXml(shared_ptr<ImageFileImpl> imf, CheckedFile& cf, int indent, const char* forcedFieldName=NULL) override;
 
 
 #ifdef E57_DEBUG
-    void                dump(int indent = 0, ostream& os = cout);
+    void                dump(int indent = 0, ostream& os = cout) override;
 #endif
 #ifdef E57_DEBUG_INVARIANCE
     virtual void        checkInvariance();
@@ -629,21 +629,21 @@ public:
                                       double minimum = E57_DOUBLE_MIN, double  maximum = E57_DOUBLE_MAX);
     virtual             ~FloatNodeImpl() {};
 
-    virtual NodeType    type();
-    virtual bool        isTypeEquivalent(shared_ptr<NodeImpl> ni);
-    virtual bool        isDefined(const ustring& pathName);
+    virtual NodeType    type() override;
+    virtual bool        isTypeEquivalent(shared_ptr<NodeImpl> ni) override;
+    virtual bool        isDefined(const ustring& pathName) override;
 
     double              value();
     FloatPrecision      precision();
     double              minimum();
     double              maximum();
 
-    virtual void        checkLeavesInSet(const std::set<ustring>& pathNames, shared_ptr<NodeImpl> origin);
+    virtual void        checkLeavesInSet(const std::set<ustring>& pathNames, shared_ptr<NodeImpl> origin) override;
 
-    virtual void        writeXml(shared_ptr<ImageFileImpl> imf, CheckedFile& cf, int indent, const char* forcedFieldName=NULL);
+    virtual void        writeXml(shared_ptr<ImageFileImpl> imf, CheckedFile& cf, int indent, const char* forcedFieldName=NULL) override;
 
 #ifdef E57_DEBUG
-    void                dump(int indent = 0, ostream& os = cout);
+    void                dump(int indent = 0, ostream& os = cout) override;
 #endif
 #ifdef E57_DEBUG_INVARIANCE
     virtual void        checkInvariance();
@@ -661,18 +661,18 @@ public:
     explicit            StringNodeImpl(weak_ptr<ImageFileImpl> destImageFile, const ustring value = "");
     virtual             ~StringNodeImpl() {};
 
-    virtual NodeType    type();
-    virtual bool        isTypeEquivalent(shared_ptr<NodeImpl> ni);
-    virtual bool        isDefined(const ustring& pathName);
+    virtual NodeType    type() override;
+    virtual bool        isTypeEquivalent(shared_ptr<NodeImpl> ni) override;
+    virtual bool        isDefined(const ustring& pathName) override;
 
     ustring             value();
 
-    virtual void        checkLeavesInSet(const std::set<ustring>& pathNames, shared_ptr<NodeImpl> origin);
+    virtual void        checkLeavesInSet(const std::set<ustring>& pathNames, shared_ptr<NodeImpl> origin) override;
 
-    virtual void        writeXml(shared_ptr<ImageFileImpl> imf, CheckedFile& cf, int indent, const char* forcedFieldName=NULL);
+    virtual void        writeXml(shared_ptr<ImageFileImpl> imf, CheckedFile& cf, int indent, const char* forcedFieldName=NULL) override;
 
 #ifdef E57_DEBUG
-    void                dump(int indent = 0, ostream& os = cout);
+    void                dump(int indent = 0, ostream& os = cout) override;
 #endif
 #ifdef E57_DEBUG_INVARIANCE
     virtual void        checkInvariance();
@@ -688,20 +688,20 @@ public:
                         BlobNodeImpl(weak_ptr<ImageFileImpl> destImageFile, int64_t fileOffset, int64_t length);
     virtual             ~BlobNodeImpl();
 
-    virtual NodeType    type();
-    virtual bool        isTypeEquivalent(shared_ptr<NodeImpl> ni);
-    virtual bool        isDefined(const ustring& pathName);
+    virtual NodeType    type() override;
+    virtual bool        isTypeEquivalent(shared_ptr<NodeImpl> ni) override;
+    virtual bool        isDefined(const ustring& pathName) override;
 
     int64_t             byteCount();
     void                read(uint8_t* buf, int64_t start, size_t count);
     void                write(uint8_t* buf, int64_t start, size_t count);
 
-    virtual void        checkLeavesInSet(const std::set<ustring>& pathNames, shared_ptr<NodeImpl> origin);
+    virtual void        checkLeavesInSet(const std::set<ustring>& pathNames, shared_ptr<NodeImpl> origin) override;
 
-    virtual void        writeXml(shared_ptr<ImageFileImpl> imf, CheckedFile& cf, int indent, const char* forcedFieldName=NULL);
+    virtual void        writeXml(shared_ptr<ImageFileImpl> imf, CheckedFile& cf, int indent, const char* forcedFieldName=NULL) override;
 
 #ifdef E57_DEBUG
-    void                dump(int indent = 0, ostream& os = cout);
+    void                dump(int indent = 0, ostream& os = cout) override;
 #endif
 #ifdef E57_DEBUG_INVARIANCE
     virtual void        checkInvariance();
@@ -1073,22 +1073,22 @@ protected: //================
 
 class BitpackEncoder : public Encoder {
 public:
-    virtual uint64_t    processRecords(size_t recordCount) = 0;
-    virtual unsigned    sourceBufferNextIndex();
-    virtual uint64_t    currentRecordIndex();
-    virtual float       bitsPerRecord() = 0;
-    virtual bool        registerFlushToOutput() = 0;
+    virtual uint64_t    processRecords(size_t recordCount) override = 0;
+    virtual unsigned    sourceBufferNextIndex() override;
+    virtual uint64_t    currentRecordIndex() override;
+    virtual float       bitsPerRecord() override = 0;
+    virtual bool        registerFlushToOutput() override = 0;
 
-    virtual size_t      outputAvailable();                                /// number of bytes that can be read
-    virtual void        outputRead(char* dest, const size_t byteCount);       /// get data from encoder
-    virtual void        outputClear();
+    virtual size_t      outputAvailable() override;                                /// number of bytes that can be read
+    virtual void        outputRead(char* dest, const size_t byteCount) override;       /// get data from encoder
+    virtual void        outputClear() override;
 
-    virtual void        sourceBufferSetNew(vector<SourceDestBuffer>& sbufs);
-    virtual size_t      outputGetMaxSize();
-    virtual void        outputSetMaxSize(unsigned byteCount);
+    virtual void        sourceBufferSetNew(vector<SourceDestBuffer>& sbufs) override;
+    virtual size_t      outputGetMaxSize() override;
+    virtual void        outputSetMaxSize(unsigned byteCount) override;
 
 #ifdef E57_DEBUG
-    virtual void        dump(int indent = 0, ostream& os = cout);
+    virtual void        dump(int indent = 0, ostream& os = cout) override;
 #endif
 protected: //================
                         BitpackEncoder(unsigned bytestreamNumber, SourceDestBuffer& sbuf, unsigned outputMaxSize, unsigned alignmentSize);
@@ -1111,12 +1111,12 @@ class BitpackFloatEncoder : public BitpackEncoder {
 public:
                         BitpackFloatEncoder(unsigned bytestreamNumber, SourceDestBuffer& sbuf, unsigned outputMaxSize, FloatPrecision precision);
 
-    virtual uint64_t    processRecords(size_t recordCount);
-    virtual bool        registerFlushToOutput();
-    virtual float       bitsPerRecord();
+    virtual uint64_t    processRecords(size_t recordCount) override;
+    virtual bool        registerFlushToOutput() override;
+    virtual float       bitsPerRecord() override;
 
 #ifdef E57_DEBUG
-    virtual void        dump(int indent = 0, ostream& os = cout);
+    virtual void        dump(int indent = 0, ostream& os = cout) override;
 #endif
 protected: //================
     FloatPrecision      precision_;
@@ -1128,12 +1128,12 @@ class BitpackStringEncoder : public BitpackEncoder {
 public:
                         BitpackStringEncoder(unsigned bytestreamNumber, SourceDestBuffer& sbuf, unsigned outputMaxSize);
 
-    virtual uint64_t    processRecords(size_t recordCount);
-    virtual bool        registerFlushToOutput();
-    virtual float       bitsPerRecord();
+    virtual uint64_t    processRecords(size_t recordCount) override;
+    virtual bool        registerFlushToOutput() override;
+    virtual float       bitsPerRecord() override;
 
 #ifdef E57_DEBUG
-    virtual void        dump(int indent = 0, ostream& os = cout);
+    virtual void        dump(int indent = 0, ostream& os = cout) override;
 #endif
 protected: //================
     uint64_t    totalBytesProcessed_;
@@ -1151,12 +1151,12 @@ public:
                         BitpackIntegerEncoder(bool isScaledInteger, unsigned bytestreamNumber, SourceDestBuffer& sbuf,
                                               unsigned outputMaxSize, int64_t minimum, int64_t maximum, double scale, double offset);
 
-    virtual uint64_t    processRecords(size_t recordCount);
-    virtual bool        registerFlushToOutput();
-    virtual float       bitsPerRecord();
+    virtual uint64_t    processRecords(size_t recordCount) override;
+    virtual bool        registerFlushToOutput() override;
+    virtual float       bitsPerRecord() override;
 
 #ifdef E57_DEBUG
-    virtual void        dump(int indent = 0, ostream& os = cout);
+    virtual void        dump(int indent = 0, ostream& os = cout) override;
 #endif
 protected: //================
     bool            isScaledInteger_;
@@ -1175,22 +1175,22 @@ protected: //================
 class ConstantIntegerEncoder : public Encoder {
 public:
                         ConstantIntegerEncoder(unsigned bytestreamNumber, SourceDestBuffer& sbuf, int64_t minimum);
-    virtual uint64_t    processRecords(size_t recordCount);
-    virtual unsigned    sourceBufferNextIndex();
-    virtual uint64_t    currentRecordIndex();
-    virtual float       bitsPerRecord();
-    virtual bool        registerFlushToOutput();
+    virtual uint64_t    processRecords(size_t recordCount) override;
+    virtual unsigned    sourceBufferNextIndex() override;
+    virtual uint64_t    currentRecordIndex() override;
+    virtual float       bitsPerRecord() override;
+    virtual bool        registerFlushToOutput() override;
 
-    virtual size_t      outputAvailable();                                /// number of bytes that can be read
-    virtual void        outputRead(char* dest, const size_t byteCount);       /// get data from encoder
-    virtual void        outputClear();
+    virtual size_t      outputAvailable() override;                                /// number of bytes that can be read
+    virtual void        outputRead(char* dest, const size_t byteCount) override;       /// get data from encoder
+    virtual void        outputClear() override;
 
-    virtual void        sourceBufferSetNew(vector<SourceDestBuffer>& sbufs);
-    virtual size_t      outputGetMaxSize();
-    virtual void        outputSetMaxSize(unsigned byteCount);
+    virtual void        sourceBufferSetNew(vector<SourceDestBuffer>& sbufs) override;
+    virtual size_t      outputGetMaxSize() override;
+    virtual void        outputSetMaxSize(unsigned byteCount) override;
 
 #ifdef E57_DEBUG
-    virtual void        dump(int indent = 0, ostream& os = cout);
+    virtual void        dump(int indent = 0, ostream& os = cout) override;
 #endif
 protected: //================
     shared_ptr<SourceDestBufferImpl>  sourceBuffer_;
@@ -1230,17 +1230,17 @@ protected: //================
 
 class BitpackDecoder : public Decoder {
 public:
-    virtual void        destBufferSetNew(vector<SourceDestBuffer>& dbufs);
+    virtual void        destBufferSetNew(vector<SourceDestBuffer>& dbufs) override;
 
-    virtual uint64_t    totalRecordsCompleted() {return(currentRecordIndex_);};
+    virtual uint64_t    totalRecordsCompleted() override {return(currentRecordIndex_);};
 
-    virtual size_t      inputProcess(const char* source, const size_t byteCount);
+    virtual size_t      inputProcess(const char* source, const size_t byteCount) override;
     virtual size_t      inputProcessAligned(const char* inbuf, const size_t firstBit, const size_t endBit) = 0;
 
-    virtual void        stateReset();
+    virtual void        stateReset() override;
 
 #ifdef E57_DEBUG
-    virtual void        dump(int indent = 0, ostream& os = cout);
+    virtual void        dump(int indent = 0, ostream& os = cout) override;
 #endif
 protected: //================
                         BitpackDecoder(unsigned bytestreamNumber, SourceDestBuffer& dbuf, unsigned alignmentSize, uint64_t maxRecordCount);
@@ -1266,10 +1266,10 @@ class BitpackFloatDecoder : public BitpackDecoder {
 public:
                         BitpackFloatDecoder(unsigned bytestreamNumber, SourceDestBuffer& dbuf, FloatPrecision precision, uint64_t maxRecordCount);
 
-    virtual size_t      inputProcessAligned(const char* inbuf, const size_t firstBit, const size_t endBit);
+    virtual size_t      inputProcessAligned(const char* inbuf, const size_t firstBit, const size_t endBit) override;
 
 #ifdef E57_DEBUG
-    virtual void        dump(int indent = 0, ostream& os = cout);
+    virtual void        dump(int indent = 0, ostream& os = cout) override;
 #endif
 protected: //================
     FloatPrecision      precision_;
@@ -1281,10 +1281,10 @@ class BitpackStringDecoder : public BitpackDecoder {
 public:
                         BitpackStringDecoder(unsigned bytestreamNumber, SourceDestBuffer& dbuf, uint64_t maxRecordCount);
 
-    virtual size_t      inputProcessAligned(const char* inbuf, const size_t firstBit, const size_t endBit);
+    virtual size_t      inputProcessAligned(const char* inbuf, const size_t firstBit, const size_t endBit) override;
 
 #ifdef E57_DEBUG
-    virtual void        dump(int indent = 0, ostream& os = cout);
+    virtual void        dump(int indent = 0, ostream& os = cout) override;
 #endif
 protected: //================
     bool        readingPrefix_;
@@ -1304,10 +1304,10 @@ public:
                         BitpackIntegerDecoder(bool isScaledInteger, unsigned bytestreamNumber, SourceDestBuffer& dbuf,
                                               int64_t minimum, int64_t maximum, double scale, double offset, uint64_t maxRecordCount);
 
-    virtual size_t      inputProcessAligned(const char* inbuf, const size_t firstBit, const size_t endBit);
+    virtual size_t      inputProcessAligned(const char* inbuf, const size_t firstBit, const size_t endBit) override;
 
 #ifdef E57_DEBUG
-    virtual void        dump(int indent = 0, ostream& os = cout);
+    virtual void        dump(int indent = 0, ostream& os = cout) override;
 #endif
 protected: //================
     bool        isScaledInteger_;
@@ -1325,12 +1325,12 @@ class ConstantIntegerDecoder : public Decoder {
 public:
                         ConstantIntegerDecoder(bool isScaledInteger, unsigned bytestreamNumber, SourceDestBuffer& dbuf,
                                               int64_t minimum, double scale, double offset, uint64_t maxRecordCount);
-    virtual void        destBufferSetNew(vector<SourceDestBuffer>& dbufs);
-    virtual uint64_t    totalRecordsCompleted() {return(currentRecordIndex_);};
-    virtual size_t      inputProcess(const char* source, const size_t byteCount);
-    virtual void        stateReset();
+    virtual void        destBufferSetNew(vector<SourceDestBuffer>& dbufs) override;
+    virtual uint64_t    totalRecordsCompleted() override {return(currentRecordIndex_);};
+    virtual size_t      inputProcess(const char* source, const size_t byteCount) override;
+    virtual void        stateReset() override;
 #ifdef E57_DEBUG
-    virtual void        dump(int indent = 0, ostream& os = cout);
+    virtual void        dump(int indent = 0, ostream& os = cout) override;
 #endif
 protected: //================
     uint64_t            currentRecordIndex_;

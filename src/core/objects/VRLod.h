@@ -51,7 +51,7 @@ class VRLod : public VRObject {
         void onLODSwitch(int current, int last);
 
     protected:
-        VRObjectPtr copy(vector<VRObjectPtr> childs);
+        VRObjectPtr copy(vector<VRObjectPtr> childs) override;
 
     public:
         /** initialise **/

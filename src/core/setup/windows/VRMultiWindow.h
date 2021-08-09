@@ -19,8 +19,8 @@ class VRMultiWindow : public VRWindow {
         int state = INITIALIZING;
         int tries = 0;
 
-        void render(bool fromThread = false);
-        void sync(bool fromThread = false);
+        void render(bool fromThread = false) override;
+        void sync(bool fromThread = false) override;
 
     public:
         VRMultiWindow();
@@ -55,8 +55,8 @@ class VRMultiWindow : public VRWindow {
 
         void reset();
 
-        void save(XMLElementPtr node);
-        void load(XMLElementPtr node);
+        void save(XMLElementPtr node) override;
+        void load(XMLElementPtr node) override;
 };
 
 OSG_END_NAMESPACE;

@@ -49,8 +49,8 @@ class VRGtkWindow : public VRWindow {
         static VRGtkWindowPtr create(_GtkWidget* da, string msaa);
         VRGtkWindowPtr ptr();
 
-        void render(bool fromThread = false);
-        void clear(Color3f c);
+        void render(bool fromThread = false) override;
+        void clear(Color3f c) override;
 
         void forceSize(int W, int H);
         void enableVSync(bool b);
@@ -58,8 +58,8 @@ class VRGtkWindow : public VRWindow {
 
         void setCursor(string c);
 
-        void save(XMLElementPtr node);
-        void load(XMLElementPtr node);
+        void save(XMLElementPtr node) override;
+        void load(XMLElementPtr node) override;
 };
 
 OSG_END_NAMESPACE;

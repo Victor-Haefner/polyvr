@@ -111,7 +111,7 @@ class VRTerrain : public VRGeometry, public VRWorldModule {
         Vec2d toUVSpace(Vec2d uv);
         Vec2d fromUVSpace(Vec2d uv);
 
-        virtual bool applyIntersectionAction(Action* ia);
+        virtual bool applyIntersectionAction(Action* ia) override;
 
         void physicalize(bool b);
 

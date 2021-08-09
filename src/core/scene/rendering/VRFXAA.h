@@ -19,7 +19,7 @@ class VRFXAA : public VRStage {
         void initFXAA(VRMaterialPtr mat);
         void setFXAAparams();
         void reload();
-        void setSize( Vec2i size);
+        void setSize( Vec2i size) override;
 };
 
 OSG_END_NAMESPACE;

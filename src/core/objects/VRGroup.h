@@ -21,7 +21,7 @@ class VRGroup : public VRObject {
         static map<string, vector<VRGroupWeakPtr> > groups;
         static map<string, VRObjectWeakPtr > templates;
 
-        VRObjectPtr copy(vector<VRObjectPtr> children);
+        VRObjectPtr copy(vector<VRObjectPtr> children) override;
         void setup();
 
     public:

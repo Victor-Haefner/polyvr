@@ -30,7 +30,7 @@ class VRServer : public VRDevice {
 
 	void handleMessage(const string& m, int button, int state);
 
-        void clearSignals();
+        void clearSignals() override;
 
         void setPort(int port);
         int getPort();

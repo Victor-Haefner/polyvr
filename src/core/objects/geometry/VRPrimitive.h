@@ -35,9 +35,9 @@ struct VRPlane : public VRPrimitive {
     float Ny = 1;
 
     VRPlane();
-    void fromStream(stringstream& ss);
-    void toStream(stringstream& ss);
-    OSG::GeometryMTRecPtr make();
+    void fromStream(stringstream& ss) override;
+    void toStream(stringstream& ss) override;
+    OSG::GeometryMTRecPtr make() override;
 };
 
 struct VRBox : public VRPrimitive {
@@ -49,9 +49,9 @@ struct VRBox : public VRPrimitive {
     float Nz = 1;
 
     VRBox();
-    void fromStream(stringstream& ss);
-    void toStream(stringstream& ss);
-    OSG::GeometryMTRecPtr make();
+    void fromStream(stringstream& ss) override;
+    void toStream(stringstream& ss) override;
+    OSG::GeometryMTRecPtr make() override;
 };
 
 struct VRSphere : public VRPrimitive {
@@ -59,9 +59,9 @@ struct VRSphere : public VRPrimitive {
     int iterations = 2;
 
     VRSphere();
-    void fromStream(stringstream& ss);
-    void toStream(stringstream& ss);
-    OSG::GeometryMTRecPtr make();
+    void fromStream(stringstream& ss) override;
+    void toStream(stringstream& ss) override;
+    OSG::GeometryMTRecPtr make() override;
 };
 
 struct VRTorus : public VRPrimitive {
@@ -71,9 +71,9 @@ struct VRTorus : public VRPrimitive {
     int Nrings = 16;
 
     VRTorus();
-    void fromStream(stringstream& ss);
-    void toStream(stringstream& ss);
-    OSG::GeometryMTRecPtr make();
+    void fromStream(stringstream& ss) override;
+    void toStream(stringstream& ss) override;
+    OSG::GeometryMTRecPtr make() override;
 };
 
 struct VRTeapot : public VRPrimitive {
@@ -81,9 +81,9 @@ struct VRTeapot : public VRPrimitive {
     int iterations = 2;
 
     VRTeapot();
-    void fromStream(stringstream& ss);
-    void toStream(stringstream& ss);
-    OSG::GeometryMTRecPtr make();
+    void fromStream(stringstream& ss) override;
+    void toStream(stringstream& ss) override;
+    OSG::GeometryMTRecPtr make() override;
 };
 
 struct VRCone : public VRPrimitive {
@@ -94,9 +94,9 @@ struct VRCone : public VRPrimitive {
     bool doBottom = true;
 
     VRCone();
-    void fromStream(stringstream& ss);
-    void toStream(stringstream& ss);
-    OSG::GeometryMTRecPtr make();
+    void fromStream(stringstream& ss) override;
+    void toStream(stringstream& ss) override;
+    OSG::GeometryMTRecPtr make() override;
 };
 
 struct VRCylinder : public VRPrimitive {
@@ -108,9 +108,9 @@ struct VRCylinder : public VRPrimitive {
     bool doBottom = true;
 
     VRCylinder();
-    void fromStream(stringstream& ss);
-    void toStream(stringstream& ss);
-    OSG::GeometryMTRecPtr make();
+    void fromStream(stringstream& ss) override;
+    void toStream(stringstream& ss) override;
+    OSG::GeometryMTRecPtr make() override;
 };
 
 struct VRPill : public VRPrimitive {
@@ -122,9 +122,9 @@ struct VRPill : public VRPrimitive {
     bool doBottom = true;
 
     VRPill();
-    void fromStream(stringstream& ss);
-    void toStream(stringstream& ss);
-    OSG::GeometryMTRecPtr make();
+    void fromStream(stringstream& ss) override;
+    void toStream(stringstream& ss) override;
+    OSG::GeometryMTRecPtr make() override;
 };
 
 struct VRArrow : public VRPrimitive {
@@ -135,9 +135,9 @@ struct VRArrow : public VRPrimitive {
     float thickness = 0.2;
 
     VRArrow();
-    void fromStream(stringstream& ss);
-    void toStream(stringstream& ss);
-    OSG::GeometryMTRecPtr make();
+    void fromStream(stringstream& ss) override;
+    void toStream(stringstream& ss) override;
+    OSG::GeometryMTRecPtr make() override;
 };
 
 struct VRScrewThread : public VRPrimitive {
@@ -147,9 +147,9 @@ struct VRScrewThread : public VRPrimitive {
     float Nsegments = 16;
 
     VRScrewThread();
-    void fromStream(stringstream& ss);
-    void toStream(stringstream& ss);
-    OSG::GeometryMTRecPtr make();
+    void fromStream(stringstream& ss) override;
+    void toStream(stringstream& ss) override;
+    OSG::GeometryMTRecPtr make() override;
 };
 
 struct VRGear : public VRPrimitive {
@@ -163,9 +163,9 @@ struct VRGear : public VRPrimitive {
 
     VRGear();
     VRGear(float width, float hole, float pitch, int N_teeth, float teeth_size, float bevel);
-    void fromStream(stringstream& ss);
-    void toStream(stringstream& ss);
-    OSG::GeometryMTRecPtr make();
+    void fromStream(stringstream& ss) override;
+    void toStream(stringstream& ss) override;
+    OSG::GeometryMTRecPtr make() override;
     float radius();
 };
 

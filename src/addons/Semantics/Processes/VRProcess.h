@@ -66,10 +66,10 @@ struct VRProcessDiagram : public Graph {
     ~VRProcessDiagram();
     static VRProcessDiagramPtr create();
 
-    void update(int i, bool changed);
-    void remNode(int i);
+    void update(int i, bool changed) override;
+    void remNode(int i) override;
     vector<VRProcessNodePtr> getNodes();
-    void clear();
+    void clear() override;
 };
 
 class VRProcess : public std::enable_shared_from_this<VRProcess>, public VRName {

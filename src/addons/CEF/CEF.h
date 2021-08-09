@@ -31,7 +31,7 @@ class CEF_handler : public CefRenderHandler, public CefLoadHandler, public CefCo
         void OnBeforeContextMenu(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefContextMenuParams> params, CefRefPtr<CefMenuModel> model);
         bool OnContextMenuCommand(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefContextMenuParams> params, int command_id, EventFlags event_flags);
 #else
-        bool GetViewRect(CefRefPtr<CefBrowser> browser, CefRect& rect);
+        bool GetViewRect(CefRefPtr<CefBrowser> browser, CefRect& rect) override;
 #endif
         void OnPaint(CefRefPtr<CefBrowser> browser, PaintElementType type, const RectList& dirtyRects, const void* buffer, int width, int height) override;
         VRTexturePtr getImage();
@@ -53,9 +53,9 @@ class CEF_client : public CefClient {
         ~CEF_client();
 
         CefRefPtr<CEF_handler> getHandler();
-        CefRefPtr<CefRenderHandler> GetRenderHandler();
-        CefRefPtr<CefLoadHandler> GetLoadHandler();
-        CefRefPtr<CefContextMenuHandler> GetContextMenuHandler();
+        CefRefPtr<CefRenderHandler> GetRenderHandler() override;
+        CefRefPtr<CefLoadHandler> GetLoadHandler() override;
+        CefRefPtr<CefContextMenuHandler> GetContextMenuHandler() override;
 
         IMPLEMENT_REFCOUNTING(CEF_client);
 };

@@ -42,6 +42,7 @@
 			<Add option="-frounding-math" />
 			<Add option="-ftime-report" />
 			<Add option="-fno-strict-aliasing" />
+			<Add option="-Wsuggest-override" />
 			<Add option="-DLC_ALL=C" />
 			<Add option="-DLINUX" />
 			<Add option="-DOSG2" />

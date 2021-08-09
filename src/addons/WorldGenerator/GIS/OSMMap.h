@@ -43,7 +43,7 @@ struct OSMNode : OSMBase {
 
     OSMNode(string id, double lat, double lon);
     OSMNode(XMLElementPtr e);
-    string toString();
+    string toString() override;
     Vec2d getPosition();
     Vec3d getPosition3();
     void writeTo(XMLElementPtr e);
@@ -55,7 +55,7 @@ struct OSMWay : OSMBase {
 
     OSMWay(string id);
     OSMWay(XMLElementPtr e, map<string, bool>& invalidIDs);
-    string toString();
+    string toString() override;
     VRPolygon getPolygon();
     vector<string> getNodes(float downSampleRate = 1.0);
     void writeTo(XMLElementPtr e);
@@ -68,7 +68,7 @@ struct OSMRelation : OSMBase {
 
     OSMRelation(string id);
     OSMRelation(XMLElementPtr e, map<string, bool>& invalidIDs);
-    string toString();
+    string toString() override;
     vector<string> getWays();
     vector<string> getNodes();
     vector<string> getRelations(); //not OSM, but for GML

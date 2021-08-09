@@ -56,20 +56,20 @@ struct MChainGearRelation : public MRelation {
     int segID = 0;
 
     MChainGearRelation();
-    void translateChange(MChange& change);
+    void translateChange(MChange& change) override;
 };
 
 struct MGearGearRelation : public MRelation {
     bool doFlip = true;
 
     MGearGearRelation();
-    void translateChange(MChange& change);
+    void translateChange(MChange& change) override;
 };
 
 struct MObjRelation : public MRelation {
 
     MObjRelation();
-    void translateChange(MChange& change);
+    void translateChange(MChange& change) override;
 };
 
 struct pointPolySegment {
@@ -137,11 +137,11 @@ class MGear : public MPart {
 
         VRGear* gear();
 
-        void setup();
+        void setup() override;
 
-        void computeChange();
-        void move();
-        void updateNeighbors(vector<MPart*> parts);
+        void computeChange() override;
+        void move() override;
+        void updateNeighbors(vector<MPart*> parts) override;
 };
 
 class MThread : public MPart {
@@ -151,8 +151,8 @@ class MThread : public MPart {
 
         VRScrewthread* thread();
 
-        void move();
-        void updateNeighbors(vector<MPart*> parts);
+        void move() override;
+        void updateNeighbors(vector<MPart*> parts) override;
 };
 
 class MChain : public MPart {
@@ -175,8 +175,8 @@ class MChain : public MPart {
         void updateGeo();
         vector<pointPolySegment> toPolygon(Vec3d p);
 
-        void move();
-        void updateNeighbors(vector<MPart*> parts);
+        void move() override;
+        void updateNeighbors(vector<MPart*> parts) override;
 };
 
 class VRMechanism : public VRObject {

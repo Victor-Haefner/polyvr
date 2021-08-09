@@ -46,7 +46,7 @@ class VRTree : public VRTransform {
         void testSetup();
 
     protected:
-        VRObjectPtr copy(vector<VRObjectPtr> children);
+        VRObjectPtr copy(vector<VRObjectPtr> children) override;
 
     public:
         VRTree(string name = "tree");

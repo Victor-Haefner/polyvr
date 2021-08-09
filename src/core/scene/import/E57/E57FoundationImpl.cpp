@@ -2960,7 +2960,7 @@ class E57FileInputStream : public XMLInputStream {
 
         XMLFilePos curPos() const { return(logicalPosition_); };
         //const XMLCh* getContentType() const { return(0); };
-        size_t readBytes(char* const toFill, const size_t maxToRead);
+        size_t readBytes(char* const toFill, const size_t maxToRead) override;
 };
 
 E57FileInputStream::E57FileInputStream(CheckedFile* cf, uint64_t logicalStart, uint64_t logicalLength)
@@ -3043,18 +3043,18 @@ public:
     ~E57XmlParser();
 
     /// SAX interface
-    void startDocument();
-    void endDocument();
-    void startElement(const string& uri, const string& localname, const string& qname, const map<string, XMLAttribute>& attributes);
-    void endElement( const string& uri, const string& localname, const string& qname);
-    void characters(const string& chars);
-    void processingInstruction(const string& target, const string& data);
+    void startDocument() override;
+    void endDocument() override;
+    void startElement(const string& uri, const string& localname, const string& qname, const map<string, XMLAttribute>& attributes) override;
+    void endElement( const string& uri, const string& localname, const string& qname) override;
+    void characters(const string& chars) override;
+    void processingInstruction(const string& target, const string& data) override;
 
     /// SAX error interface
-    void warning(const string& chars);
-    void error(const string& chars);
-    void fatalError(const string& chars);
-    void onException(exception& e);
+    void warning(const string& chars) override;
+    void error(const string& chars) override;
+    void fatalError(const string& chars) override;
+    void onException(exception& e) override;
 
 private:
     ustring lookupAttribute(const map<string, XMLAttribute>& attributes, const XMLCh* attribute_name);
