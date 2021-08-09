@@ -61,10 +61,19 @@ VRSky::VRSky() : VRGeometry("Sky") {
 	setLuminance(1.75);
     setVolumeCheck(false, true);
 
-    //textureSize = 2048;
     textureSize = 512;
+#ifdef __EMSCRIPTEN__
+    textureSize = 256;
+#endif
 	VRTextureGenerator tg;
 	tg.setSize(textureSize, textureSize);
+#ifdef __EMSCRIPTEN__
+    tg.add(PERLIN, 1, Color4f(0.9), Color4f(1.0));
+	tg.add(PERLIN, 1.0/2, Color4f(0.8), Color4f(1.0));
+	tg.add(PERLIN, 1.0/4, Color4f(0.7), Color4f(1.0));
+	tg.add(PERLIN, 1.0/16, Color4f(0.4), Color4f(1.0));
+	tg.add(PERLIN, 1.0/64, Color4f(0.1), Color4f(1.0));
+#else
     tg.add(PERLIN, 1, Color4f(0.9), Color4f(1.0));
 	tg.add(PERLIN, 1.0/2, Color4f(0.8), Color4f(1.0));
 	tg.add(PERLIN, 1.0/4, Color4f(0.7), Color4f(1.0));
@@ -73,17 +82,7 @@ VRSky::VRSky() : VRGeometry("Sky") {
 	tg.add(PERLIN, 1.0/32, Color4f(0.2), Color4f(1.0));
 	tg.add(PERLIN, 1.0/64, Color4f(0.1), Color4f(1.0));
 	tg.add(PERLIN, 1.0/128, Color4f(0.1), Color4f(1.0));
-	/*
-	tg.add(PERLIN, 1, Color3f(0.95), Color3f(1.0));
-	tg.add(PERLIN, 1.0/2, Color3f(0.9), Color3f(1.0));
-	tg.add(PERLIN, 1.0/4, Color3f(0.7), Color3f(1.0));
-	tg.add(PERLIN, 1.0/8, Color3f(0.6), Color3f(1.0));
-	tg.add(PERLIN, 1.0/16, Color3f(0.5), Color3f(1.0));
-	tg.add(PERLIN, 1.0/32, Color3f(0.4), Color3f(1.0));
-	tg.add(PERLIN, 1.0/64, Color3f(0.4), Color3f(1.0));
-	tg.add(PERLIN, 1.0/128, Color3f(0.3), Color3f(1.0));
-	tg.add(PERLIN, 1.0/256, Color3f(0.2), Color3f(1.0));
-	*/
+#endif
 	mat->setTexture(tg.compose(0));
     update();
 
@@ -296,7 +295,9 @@ void VRSky::reloadShader() {
     string resDir = VRSceneManager::get()->getOriginalWorkdir() + "/shader/Sky/";
     mat->setVertexShader(skyVP, "skyVP");
     mat->setFragmentShader(skyFP, "skyFP");
+#ifndef __EMSCRIPTEN__
     mat->readFragmentShader(resDir + "Sky.dfp", true); // TODO
+#endif
     Matrix m;
     mat->setShaderParameter("extInvMat", m);
     mat->updateDeferredShader();
