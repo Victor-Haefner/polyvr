@@ -23,6 +23,7 @@ class VRSprite : public VRGeometry {
         static string spriteShaderFP;
 
         void updateGeo();
+	void updateTransformation() override;
 
     public:
         VRSprite (string name, bool alpha = true, float w = 0.5, float h = 0.5);

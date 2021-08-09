@@ -116,11 +116,20 @@ void VRSprite::webOpen(string path, int res, float ratio) {
 #endif
 
 #ifdef __EMSCRIPTEN__
+    setMeshVisibility(0);
     int fID = getID();
+    float z = abs(getFrom()[2]);
+    if (z < 1e-3) z = 1e-3; 
+    cout << " --- --- z,w,h: " << z << " " << width << " " << height << endl;
+
     EM_ASM({
         var fID = $0;
-        var uri = Module.UTF8ToString($1);
+	var isVis = $1;
+	var width = $2 * 80.0;
+	var height = $3 * 80.0;
+        var uri = Module.UTF8ToString($4);
         var host = window.location.origin;
+    	console.log(" -------> w: "+width.toString()+" h: "+height.toString());
 
         var parts = uri.split("/");
         uri = host + "/" + parts[parts.length - 1];
@@ -128,25 +137,51 @@ void VRSprite::webOpen(string path, int res, float ratio) {
         var frame = document.createElement("iframe");
         document.body.appendChild(frame);
         frame.src = uri+".html";
-        frame.style = "position:absolute;top:0;right:0;height:300px;width:300px;z-index:2;";
+        frame.style = "position:absolute;top:0;left:0;height:300px;width:300px;z-index:2;";
+	frame.style.width = width+"vh";
+	frame.style.height = height+"vh";
         frame.title = "PolyVR widget";
+	if (!isVis) frame.style.display = "none";
+	
 
-        if (typeof hudFrames == 'undefined') var hudFrames = {};
         hudFrames[fID] = frame;
-    }, fID, path.c_str());
+    }, fID, isVisible(), width/z, height/z, path.c_str());
+#endif
+}
+
+void VRSprite::updateTransformation() {
+    VRTransform::updateTransformation();
+#ifdef __EMSCRIPTEN__
+    int fID = getID();
+    float z = abs(getFrom()[2]);
+    if (z < 1e-3) z = 1e-3;
+    EM_ASM({
+        var fID = $0;
+	var width = $1 * 80.0;
+	var height = $2 * 80.0;
+    	console.log(" ---------------> w: "+width.toString()+" h: "+height.toString());
+        var frame = hudFrames[fID];
+	if (frame != undefined) {
+	    frame.style.width = width+"vh";
+	    frame.style.height = height+"vh";
+	}
+    }, fID, width/z, height/z);
 #endif
 }
 
 void VRSprite::setVisible(bool b, string mode) {
     cout << "VRSprite::setVisible " << getName() << " " << b << endl;
+    VRObject::setVisible(b,mode);
 #ifdef __EMSCRIPTEN__
     int fID = getID();
     EM_ASM({
         var fID = $0;
         var b = $1;
         var frame = hudFrames[fID];
-        if (b) frame.style.display = "none";
-        else frame.style.display = "block";
+	if (frame != undefined) {
+            if (b) frame.style.display = "none";
+            else frame.style.display = "block";
+	}
     }, fID, b);
 #endif
 }
