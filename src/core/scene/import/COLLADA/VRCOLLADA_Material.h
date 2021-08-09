@@ -4,7 +4,6 @@
 #include <OpenSG/OSGConfig.h>
 #include "core/scene/import/VRImportFwd.h"
 #include "core/objects/material/VRMaterial.h"
-#include "addons/Semantics/VRSemanticsFwd.h"
 
 #include <map>
 
@@ -13,7 +12,7 @@ OSG_BEGIN_NAMESPACE;
 
 class VRCOLLADA_Material : public std::enable_shared_from_this<VRCOLLADA_Material> {
 	private:
-        VROntologyPtr ontology;
+        VRSchedulerPtr scheduler;
 
         map<string, VRTexturePtr> library_images;
         map<string, string> sampler;
@@ -21,12 +20,12 @@ class VRCOLLADA_Material : public std::enable_shared_from_this<VRCOLLADA_Materia
         map<string, string> mappings;
         map<string, VRMaterialPtr> library_effects;
         map<string, VRMaterialPtr> library_materials;
-        VRMaterialPtr currentEffect;
 
         string filePath;
         string currentSampler;
         string currentSurface;
         string currentMaterial;
+        string currentEffect;
 
 	public:
 		VRCOLLADA_Material();
@@ -35,7 +34,6 @@ class VRCOLLADA_Material : public std::enable_shared_from_this<VRCOLLADA_Materia
 		static VRCOLLADA_MaterialPtr create();
 		VRCOLLADA_MaterialPtr ptr();
 
-		void setupOntology(VROntologyPtr ontology);
 		void finalize();
 
 		void setFilePath(string fPath);
@@ -49,11 +47,11 @@ class VRCOLLADA_Material : public std::enable_shared_from_this<VRCOLLADA_Materia
         void newMaterial(string id, string name);
         void closeEffect();
         void closeMaterial();
-        void setColor(string sid, Color4f col);
-        void setTexture(string sampler);
-        void setShininess(float f);
+        void setColor(string sid, Color4f col, string eid = "");
+        void setTexture(string sampler, string eid = "");
+        void setShininess(float f, string eid = "");
         VRMaterialPtr getMaterial(string sid);
-        void setMaterialEffect(string eid);
+        void setMaterialEffect(string eid, string mid = "");
 };
 
 OSG_END_NAMESPACE;

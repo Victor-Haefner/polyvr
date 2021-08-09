@@ -14,11 +14,6 @@
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/geometry/VRGeoData.h"
 
-#include "addons/Semantics/Reasoning/VROntology.h"
-#include "addons/Semantics/Reasoning/VRConcept.h"
-#include "addons/Semantics/Reasoning/VREntity.h"
-#include "addons/Semantics/Reasoning/VRProperty.h"
-
 #include <OpenSG/OSGColor.h>
 
 #include <iostream>
@@ -40,7 +35,6 @@ class VRCOLLADA_Stream : public XMLStreamHandler {
         bool parsedMaterials = false;
         bool needSecondPass = false;
         int currentPass = 0;
-        VROntologyPtr ontology;
 
         stack<Node> nodeStack;
 
@@ -56,10 +50,6 @@ class VRCOLLADA_Stream : public XMLStreamHandler {
     public:
         VRCOLLADA_Stream(VRObjectPtr root, string fPath) : root(root) {
             materials.setFilePath(fPath);
-            ontology = VROntology::create("COLLADA");
-
-            materials.setupOntology(ontology);
-            geometries.setupOntology(ontology);
         }
 
         ~VRCOLLADA_Stream() {}

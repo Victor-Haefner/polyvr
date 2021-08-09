@@ -11,11 +11,6 @@ VRCOLLADA_Geometry::~VRCOLLADA_Geometry() {}
 VRCOLLADA_GeometryPtr VRCOLLADA_Geometry::create() { return VRCOLLADA_GeometryPtr( new VRCOLLADA_Geometry() ); }
 VRCOLLADA_GeometryPtr VRCOLLADA_Geometry::ptr() { return static_pointer_cast<VRCOLLADA_Geometry>(shared_from_this()); }
 
-void VRCOLLADA_Geometry::setupOntology(VROntologyPtr o) {
-    ontology = o;
-    ;
-}
-
 void VRCOLLADA_Geometry::newGeometry(string name, string id) {
     auto m = VRGeometry::create(name);
     library_geometries[id] = m;
