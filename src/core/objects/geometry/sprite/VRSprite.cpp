@@ -118,18 +118,12 @@ void VRSprite::webOpen(string path, int res, float ratio) {
 #ifdef __EMSCRIPTEN__
     setMeshVisibility(0);
     int fID = getID();
-    float z = abs(getFrom()[2]);
-    if (z < 1e-3) z = 1e-3; 
-    cout << " --- --- z,w,h: " << z << " " << width << " " << height << endl;
 
     EM_ASM({
         var fID = $0;
 	var isVis = $1;
-	var width = $2 * 80.0;
-	var height = $3 * 80.0;
-        var uri = Module.UTF8ToString($4);
+        var uri = Module.UTF8ToString($2);
         var host = window.location.origin;
-    	console.log(" -------> w: "+width.toString()+" h: "+height.toString());
 
         var parts = uri.split("/");
         uri = host + "/" + parts[parts.length - 1];
@@ -138,14 +132,12 @@ void VRSprite::webOpen(string path, int res, float ratio) {
         document.body.appendChild(frame);
         frame.src = uri+".html";
         frame.style = "position:absolute;top:0;left:0;height:300px;width:300px;z-index:2;";
-	frame.style.width = width+"vh";
-	frame.style.height = height+"vh";
+	frame.frameBorder = 0;
         frame.title = "PolyVR widget";
 	if (!isVis) frame.style.display = "none";
-	
 
         hudFrames[fID] = frame;
-    }, fID, isVisible(), width/z, height/z, path.c_str());
+    }, fID, isVisible(), path.c_str());
 #endif
 }
 
@@ -153,24 +145,32 @@ void VRSprite::updateTransformation() {
     VRTransform::updateTransformation();
 #ifdef __EMSCRIPTEN__
     int fID = getID();
-    float z = abs(getFrom()[2]);
+    float x = getFrom()[0];
+    float y = getFrom()[1];
+    float z = abs(getFrom()[2])*1.3;
+    float w = width/z;
+    float h = height/z;
+    float l = 0.5+x/z;
+    float b = 0.5+y/z;
     if (z < 1e-3) z = 1e-3;
     EM_ASM({
         var fID = $0;
-	var width = $1 * 80.0;
-	var height = $2 * 80.0;
-    	console.log(" ---------------> w: "+width.toString()+" h: "+height.toString());
+	var width = $1 * 100.0;
+	var height = $2 * 100.0;
+	var left = $3 * 100.0;
+	var bottom = $4 * 100.0;
         var frame = hudFrames[fID];
 	if (frame != undefined) {
 	    frame.style.width = width+"vh";
 	    frame.style.height = height+"vh";
+	    frame.style.left = "calc("+left+"vw - "+(width*0.5)+"vh)";
+	    frame.style.top = ((100-bottom)-height*0.5)+"vh";
 	}
-    }, fID, width/z, height/z);
+    }, fID, w, h, l, b);
 #endif
 }
 
 void VRSprite::setVisible(bool b, string mode) {
-    cout << "VRSprite::setVisible " << getName() << " " << b << endl;
     VRObject::setVisible(b,mode);
 #ifdef __EMSCRIPTEN__
     int fID = getID();
