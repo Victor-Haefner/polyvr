@@ -4,6 +4,7 @@
 #include <OpenSG/OSGConfig.h>
 #include "core/scene/import/VRImportFwd.h"
 #include "core/objects/material/VRMaterial.h"
+#include "addons/Semantics/VRSemanticsFwd.h"
 
 #include <map>
 
@@ -12,17 +13,20 @@ OSG_BEGIN_NAMESPACE;
 
 class VRCOLLADA_Material : public std::enable_shared_from_this<VRCOLLADA_Material> {
 	private:
+        VROntologyPtr ontology;
+
         map<string, VRTexturePtr> library_images;
         map<string, string> sampler;
         map<string, string> surface;
+        map<string, string> mappings;
         map<string, VRMaterialPtr> library_effects;
         map<string, VRMaterialPtr> library_materials;
         VRMaterialPtr currentEffect;
-        VRMaterialPtr currentMaterial;
 
         string filePath;
         string currentSampler;
         string currentSurface;
+        string currentMaterial;
 
 	public:
 		VRCOLLADA_Material();
@@ -30,6 +34,9 @@ class VRCOLLADA_Material : public std::enable_shared_from_this<VRCOLLADA_Materia
 
 		static VRCOLLADA_MaterialPtr create();
 		VRCOLLADA_MaterialPtr ptr();
+
+		void setupOntology(VROntologyPtr ontology);
+		void finalize();
 
 		void setFilePath(string fPath);
         void loadImage(string id, string path);
@@ -46,7 +53,7 @@ class VRCOLLADA_Material : public std::enable_shared_from_this<VRCOLLADA_Materia
         void setTexture(string sampler);
         void setShininess(float f);
         VRMaterialPtr getMaterial(string sid);
-        bool setMaterialEffect(string eid);
+        void setMaterialEffect(string eid);
 };
 
 OSG_END_NAMESPACE;

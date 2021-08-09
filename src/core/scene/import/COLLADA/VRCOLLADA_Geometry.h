@@ -4,6 +4,7 @@
 #include <OpenSG/OSGConfig.h>
 #include "core/scene/import/VRImportFwd.h"
 #include "core/objects/VRObjectFwd.h"
+#include "addons/Semantics/VRSemanticsFwd.h"
 
 #include <vector>
 #include <map>
@@ -32,6 +33,8 @@ class VRCOLLADA_Geometry : public std::enable_shared_from_this<VRCOLLADA_Geometr
             vector<Input> inputs;
         };
 
+        VROntologyPtr ontology;
+
         map<string, VRGeometryPtr> library_geometries;
         VRGeometryPtr currentGeometry;
         VRGeometryPtr lastInstantiatedGeo;
@@ -47,6 +50,8 @@ class VRCOLLADA_Geometry : public std::enable_shared_from_this<VRCOLLADA_Geometr
 
 		static VRCOLLADA_GeometryPtr create();
 		VRCOLLADA_GeometryPtr ptr();
+
+		void setupOntology(VROntologyPtr ontology);
 
 		void newGeometry(string name, string id);
 		void newSource(string id);

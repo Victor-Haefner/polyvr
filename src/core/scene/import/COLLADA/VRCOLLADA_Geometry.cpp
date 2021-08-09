@@ -11,6 +11,11 @@ VRCOLLADA_Geometry::~VRCOLLADA_Geometry() {}
 VRCOLLADA_GeometryPtr VRCOLLADA_Geometry::create() { return VRCOLLADA_GeometryPtr( new VRCOLLADA_Geometry() ); }
 VRCOLLADA_GeometryPtr VRCOLLADA_Geometry::ptr() { return static_pointer_cast<VRCOLLADA_Geometry>(shared_from_this()); }
 
+void VRCOLLADA_Geometry::setupOntology(VROntologyPtr o) {
+    ontology = o;
+    ;
+}
+
 void VRCOLLADA_Geometry::newGeometry(string name, string id) {
     auto m = VRGeometry::create(name);
     library_geometries[id] = m;
@@ -59,6 +64,22 @@ void VRCOLLADA_Geometry::handleInput(string type, string sourceID, string offset
                     int k = i*source.stride;
                     Vec3d norm(source.data[k], source.data[k+1], source.data[k+2]);
                     currentGeoData->pushNorm(norm);
+                }
+            }
+
+            if (type == "COLOR" && source.stride == 3) {
+                for (int i=0; i<source.count; i++) {
+                    int k = i*source.stride;
+                    Color3f col(source.data[k], source.data[k+1], source.data[k+2]);
+                    currentGeoData->pushColor(col);
+                }
+            }
+
+            if (type == "COLOR" && source.stride == 4) {
+                for (int i=0; i<source.count; i++) {
+                    int k = i*source.stride;
+                    Color4f col(source.data[k], source.data[k+1], source.data[k+2], source.data[k+3]);
+                    currentGeoData->pushColor(col);
                 }
             }
 
@@ -143,6 +164,7 @@ void VRCOLLADA_Geometry::handleIndices(string data) {
                 if (m >= indices.size()) continue;
                 if (input.type == "VERTEX") currentGeoData->pushIndex(indices[m]);
                 if (input.type == "NORMAL") currentGeoData->pushNormalIndex(indices[m]);
+                if (input.type == "COLOR") currentGeoData->pushColorIndex(indices[m]);
                 if (input.type == "TEXCOORD") currentGeoData->pushTexCoordIndex(indices[m]);
             }
         }

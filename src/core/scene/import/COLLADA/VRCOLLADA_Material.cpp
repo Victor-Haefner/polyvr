@@ -10,17 +10,36 @@ VRCOLLADA_Material::~VRCOLLADA_Material() {}
 VRCOLLADA_MaterialPtr VRCOLLADA_Material::create() { return VRCOLLADA_MaterialPtr( new VRCOLLADA_Material() ); }
 VRCOLLADA_MaterialPtr VRCOLLADA_Material::ptr() { return static_pointer_cast<VRCOLLADA_Material>(shared_from_this()); }
 
-void VRCOLLADA_Material::addSurface(string id) { currentSurface = id; }
-void VRCOLLADA_Material::addSampler(string id) { currentSampler = id; }
+void VRCOLLADA_Material::setupOntology(VROntologyPtr o) {
+    ontology = o;
+}
 
-void VRCOLLADA_Material::setSurfaceSource(string source) { surface[currentSurface] = source; }
-void VRCOLLADA_Material::setSamplerSource(string source) { sampler[currentSampler] = source; }
+void VRCOLLADA_Material::finalize() {
+    for (auto m : mappings) {
+        //cout << "VRCOLLADA_Material::finalize " << m.first << " <- " << m.second << endl;
+        auto effect = library_effects[m.second];
+        auto material = library_materials[m.first];
+        material->setDiffuse( effect->getDiffuse() );
+        material->setSpecular( effect->getSpecular() );
+        material->setAmbient( effect->getAmbient() );
+        material->setEmission( effect->getEmission() );
+        material->setShininess( effect->getShininess() );
+        material->setTexture( effect->getTexture() );
+    }
+}
+
+void VRCOLLADA_Material::addSurface(string id) { currentSurface = id; /*cout << "VRCOLLADA_Material::addSurface " << id << endl;*/ }
+void VRCOLLADA_Material::addSampler(string id) { currentSampler = id; /*cout << "VRCOLLADA_Material::addSampler " << id << endl;*/ }
+
+void VRCOLLADA_Material::setSurfaceSource(string source) { surface[currentSurface] = source; /*cout << "VRCOLLADA_Material::setSurfaceSource " << currentSurface << " " << source << endl;*/ }
+void VRCOLLADA_Material::setSamplerSource(string source) { sampler[currentSampler] = source; /*cout << "VRCOLLADA_Material::setSamplerSource " << currentSampler << " " << source << endl;*/ }
 void VRCOLLADA_Material::setFilePath(string fPath) { filePath = fPath; }
 
 void VRCOLLADA_Material::loadImage(string id, string path) {
     auto img = VRTexture::create();
     img->read(filePath+"/"+path);
     library_images[id] = img;
+    //cout << "VRCOLLADA_Material::loadImage " << id << ", " << filePath+"/"+path << endl;
 }
 
 void VRCOLLADA_Material::setTexture(string source) {
@@ -28,6 +47,7 @@ void VRCOLLADA_Material::setTexture(string source) {
     auto surfaceSrc = surface[samplerSrc];
     auto img = library_images[surfaceSrc];
     currentEffect->setTexture(img);
+    //cout << "VRCOLLADA_Material::setTexture " << source << ", " << samplerSrc << ", " << surfaceSrc << endl;
 }
 
 void VRCOLLADA_Material::newEffect(string id) {
@@ -39,7 +59,7 @@ void VRCOLLADA_Material::newEffect(string id) {
 void VRCOLLADA_Material::newMaterial(string id, string name) {
     auto m = VRMaterial::create(name);
     library_materials[id] = m;
-    currentMaterial = m;
+    currentMaterial = id;
 }
 
 void VRCOLLADA_Material::closeEffect() {
@@ -47,23 +67,11 @@ void VRCOLLADA_Material::closeEffect() {
 }
 
 void VRCOLLADA_Material::closeMaterial() {
-    currentMaterial = 0;
+    currentMaterial = "";
 }
 
-bool VRCOLLADA_Material::setMaterialEffect(string eid) {
-    if (!library_effects.count(eid)) {
-        //cout << "VRCOLLADA_Material::setMaterialEffect failed! no effect found with sid " << eid << endl;
-        return false;
-    }
-
-    auto effect = library_effects[eid];
-    currentMaterial->setDiffuse( effect->getDiffuse() );
-    currentMaterial->setSpecular( effect->getSpecular() );
-    currentMaterial->setAmbient( effect->getAmbient() );
-    currentMaterial->setEmission( effect->getEmission() );
-    currentMaterial->setShininess( effect->getShininess() );
-    currentMaterial->setTexture( effect->getTexture() );
-    return true;
+void VRCOLLADA_Material::setMaterialEffect(string eid) {
+    mappings[currentMaterial] = eid;
 }
 
 void VRCOLLADA_Material::setColor(string sid, Color4f col) {

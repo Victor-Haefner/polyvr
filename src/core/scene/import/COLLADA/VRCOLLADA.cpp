@@ -14,6 +14,11 @@
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/geometry/VRGeoData.h"
 
+#include "addons/Semantics/Reasoning/VROntology.h"
+#include "addons/Semantics/Reasoning/VRConcept.h"
+#include "addons/Semantics/Reasoning/VREntity.h"
+#include "addons/Semantics/Reasoning/VRProperty.h"
+
 #include <OpenSG/OSGColor.h>
 
 #include <iostream>
@@ -35,6 +40,7 @@ class VRCOLLADA_Stream : public XMLStreamHandler {
         bool parsedMaterials = false;
         bool needSecondPass = false;
         int currentPass = 0;
+        VROntologyPtr ontology;
 
         stack<Node> nodeStack;
 
@@ -50,6 +56,10 @@ class VRCOLLADA_Stream : public XMLStreamHandler {
     public:
         VRCOLLADA_Stream(VRObjectPtr root, string fPath) : root(root) {
             materials.setFilePath(fPath);
+            ontology = VROntology::create("COLLADA");
+
+            materials.setupOntology(ontology);
+            geometries.setupOntology(ontology);
         }
 
         ~VRCOLLADA_Stream() {}
@@ -57,7 +67,7 @@ class VRCOLLADA_Stream : public XMLStreamHandler {
         static VRCOLLADA_StreamPtr create(VRObjectPtr root, string fPath) { return VRCOLLADA_StreamPtr( new VRCOLLADA_Stream(root, fPath) ); }
 
         void startDocument() {}
-        void endDocument() { currentPass++; }
+        void endDocument() { currentPass++; materials.finalize(); }
         void startElement(const string& uri, const string& name, const string& qname, const map<string, XMLAttribute>& attributes);
         void endElement(const string& uri, const string& name, const string& qname);
         void characters(const string& chars);
@@ -75,14 +85,20 @@ class VRCOLLADA_Stream : public XMLStreamHandler {
 
 void VRCOLLADA_Stream::startElement(const string& uri, const string& name, const string& qname, const map<string, XMLAttribute>& attributes) {
     //cout << "startElement " << name << " " << nodeStack.size() << endl;
+    Node parent;
+    if (nodeStack.size() > 0) parent = nodeStack.top();
+
     Node n;
     n.name = name;
     n.attributes = attributes;
     nodeStack.push(n);
 
     if (currentPass == 0) {
+        if (name == "surface") materials.addSurface(parent.attributes["sid"].val);
+        if (name == "sampler2D") materials.addSampler(parent.attributes["sid"].val);
         if (name == "effect") materials.newEffect( n.attributes["id"].val );
         if (name == "material") materials.newMaterial( n.attributes["id"].val, n.attributes["name"].val );
+        if (name == "instance_effect") materials.setMaterialEffect( skipHash(n.attributes["url"].val) );
 
         if (name == "geometry") geometries.newGeometry(n.attributes["name"].val, n.attributes["id"].val);
         if (name == "source") geometries.newSource(n.attributes["id"].val);
@@ -96,10 +112,6 @@ void VRCOLLADA_Stream::startElement(const string& uri, const string& name, const
         if (name == "library_visual_scenes" && !parsedGeometries) needSecondPass = true;
     }
 
-    if (name == "instance_effect") {
-        bool b = materials.setMaterialEffect( skipHash(n.attributes["url"].val) );
-        if (!b) needSecondPass = true;
-    }
 
     if (parsedGeometries) {
         if (name == "instance_geometry") geometries.instantiateGeometry(skipHash(n.attributes["url"].val), objStack.top());
@@ -135,8 +147,6 @@ void VRCOLLADA_Stream::endElement(const string& uri, const string& name, const s
         if (node.name == "library_geometries") parsedGeometries = true;
         if (node.name == "library_materials") parsedMaterials = true;
 
-        if (node.name == "surface") materials.addSurface(parent.attributes["sid"].val);
-        if (node.name == "sampler2D") materials.addSampler(parent.attributes["sid"].val);
         if (node.name == "init_from" && parent.name == "surface") materials.setSurfaceSource(node.data);
         if (node.name == "source" && parent.name == "sampler2D") materials.setSamplerSource(node.data);
 
