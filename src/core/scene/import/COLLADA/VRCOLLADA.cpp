@@ -29,6 +29,7 @@ class VRCOLLADA_Scene {
         VRSchedulerPtr scheduler;
         VRObjectPtr root;
         map<string, VRObjectPtr> objects;
+        map<string, VRObjectPtr> subscenes;
         stack<VRObjectPtr> objStack;
         VRGeometryPtr lastInstantiatedGeo;
 
@@ -43,13 +44,6 @@ class VRCOLLADA_Scene {
             scheduler->callPostponed(true);
 		}
 
-        void newNode(string name) {
-            auto parent = objStack.size() > 0 ? objStack.top() : root;
-            auto obj = VRTransform::create(name);
-            if (parent) parent->addChild(obj);
-            objStack.push(obj);
-        }
-
         void setMatrix(string data) {
             Matrix4d m;
             toValue(data, m);
@@ -58,11 +52,18 @@ class VRCOLLADA_Scene {
             if (t) t->setMatrix(m);
         }
 
-        void setTranslate(string data) {
+        void translate(string data) {
             Vec3d v;
             toValue(data, v);
             auto t = dynamic_pointer_cast<VRTransform>(top());
             if (t) t->translate(v);
+        }
+
+        void rotate(string data) {
+            Vec4d v;
+            toValue(data, v);
+            auto t = dynamic_pointer_cast<VRTransform>(top());
+            if (t) t->rotate(v[3]/180.0*Pi, Vec3d(v[0], v[1], v[2]));
         }
 
         void setMaterial(string mid, VRCOLLADA_Material* materials, VRGeometryPtr geo = 0) {
@@ -75,6 +76,13 @@ class VRCOLLADA_Scene {
             if (geo) geo->setMaterial(mat);
         }
 
+        void newNode(string name) {
+            auto parent = objStack.size() > 0 ? objStack.top() : root;
+            auto obj = VRTransform::create(name);
+            if (parent) parent->addChild(obj);
+            objStack.push(obj);
+        }
+
         void instantiateGeometry(string gid, VRCOLLADA_Geometry* geometries, VRObjectPtr parent = 0) {
             if (!parent) parent = top();
             auto geo = geometries->getGeometry(gid);
@@ -84,6 +92,21 @@ class VRCOLLADA_Scene {
             }
             lastInstantiatedGeo = dynamic_pointer_cast<VRGeometry>( geo->duplicate() );
             if (parent) parent->addChild( lastInstantiatedGeo );
+        }
+
+        void loadSubscene(string url, string fPath, VRObjectPtr parent = 0) {
+            if (!parent) parent = top();
+
+            if (!subscenes.count(url)) {
+                string file = splitString(url, '#')[0];
+                if (file == "") return; // TODO: implement nodes library!
+                //string scene = splitString(url, '#')[1]; // TODO
+                VRTransformPtr obj = VRTransform::create(file);
+                loadCollada( fPath + "/" + file, obj );
+                subscenes[url] = obj;
+            }
+
+            if (parent) parent->addChild( subscenes[url]->duplicate() );
         }
 };
 
@@ -95,6 +118,7 @@ class VRCOLLADA_Stream : public XMLStreamHandler {
             map<string, XMLAttribute> attributes;
         };
 
+        string fPath;
         stack<Node> nodeStack;
 
         VRCOLLADA_Material materials;
@@ -105,7 +129,7 @@ class VRCOLLADA_Stream : public XMLStreamHandler {
         string skipHash(const string& s) { return subString(s, 1, s.size()-1); }
 
     public:
-        VRCOLLADA_Stream(VRObjectPtr root, string fPath) {
+        VRCOLLADA_Stream(VRObjectPtr root, string fPath) : fPath(fPath) {
             scene.setRoot(root);
             materials.setFilePath(fPath);
         }
@@ -162,6 +186,7 @@ void VRCOLLADA_Stream::startElement(const string& uri, const string& name, const
 
     if (name == "instance_geometry") scene.instantiateGeometry(skipHash(n.attributes["url"].val), &geometries);
     if (name == "instance_material") scene.setMaterial(skipHash(n.attributes["target"].val), &materials);
+    if (name == "instance_node") scene.loadSubscene(n.attributes["url"].val, fPath);
     if (name == "node") scene.newNode(n.attributes["name"].val);
 }
 
@@ -204,7 +229,8 @@ void VRCOLLADA_Stream::endElement(const string& uri, const string& name, const s
 
     if (node.name == "node") scene.closeNode();
     if (node.name == "matrix") scene.setMatrix(node.data);
-    if (node.name == "translate") scene.setTranslate(node.data);
+    if (node.name == "translate") scene.translate(node.data);
+    if (node.name == "rotate") scene.rotate(node.data);
 }
 
 void OSG::loadCollada(string path, VRObjectPtr root) {
