@@ -26,12 +26,17 @@ namespace OSG {
 
 class VRCOLLADA_Scene {
     private:
-        VRSchedulerPtr scheduler;
         VRObjectPtr root;
         map<string, VRObjectPtr> objects;
-        map<string, VRObjectPtr> subscenes;
+        map<string, VRObjectPtr> library_nodes;
+        map<string, VRObjectPtr> library_scenes;
+        string currentSection;
+
+        VRSchedulerPtr scheduler;
         stack<VRObjectPtr> objStack;
         VRGeometryPtr lastInstantiatedGeo;
+
+        string skipHash(const string& s) { return (s[0] == '#') ? subString(s, 1, s.size()-1) : s; }
 
     public:
         VRCOLLADA_Scene() { scheduler = VRScheduler::create(); }
@@ -40,9 +45,13 @@ class VRCOLLADA_Scene {
         void closeNode() { objStack.pop(); }
         VRObjectPtr top() { return objStack.size() > 0 ? objStack.top() : 0; }
 
-		void finalize() {
-            scheduler->callPostponed(true);
-		}
+        void setCurrentSection(string s) {
+            currentSection = s;
+            objStack = stack<VRObjectPtr>();
+            lastInstantiatedGeo = 0;
+        }
+
+		void finalize() { scheduler->callPostponed(true); }
 
         void setMatrix(string data) {
             Matrix4d m;
@@ -76,10 +85,18 @@ class VRCOLLADA_Scene {
             if (geo) geo->setMaterial(mat);
         }
 
-        void newNode(string name) {
-            auto parent = objStack.size() > 0 ? objStack.top() : root;
+        void newNode(string id, string name) {
+            cout << "newNode " << id << " " << currentSection << " " << name << endl;
             auto obj = VRTransform::create(name);
+
+            auto parent = top();
+            //if (!parent && currentSection == "") parent = root;
             if (parent) parent->addChild(obj);
+            else {
+                if (currentSection == "library_nodes") library_nodes[id] = obj;
+                if (currentSection == "library_visual_scenes") library_scenes[id] = obj;
+            }
+
             objStack.push(obj);
         }
 
@@ -94,19 +111,30 @@ class VRCOLLADA_Scene {
             if (parent) parent->addChild( lastInstantiatedGeo );
         }
 
-        void loadSubscene(string url, string fPath, VRObjectPtr parent = 0) {
+        void instantiateNode(string url, string fPath, VRObjectPtr parent = 0) {
+            url = skipHash(url);
+            cout << "instantiateNode " << url << " " << currentSection << " " << library_nodes.count(url) << endl;
             if (!parent) parent = top();
 
-            if (!subscenes.count(url)) {
+            if (!library_nodes.count(url)) {
                 string file = splitString(url, '#')[0];
-                if (file == "") return; // TODO: implement nodes library!
-                //string scene = splitString(url, '#')[1]; // TODO
-                VRTransformPtr obj = VRTransform::create(file);
-                loadCollada( fPath + "/" + file, obj );
-                subscenes[url] = obj;
+                string node = splitString(url, '#')[1];
+
+                if (file != "") { // reference another file
+                    // TODO, use node to get correct object
+                    VRTransformPtr obj = VRTransform::create(file);
+                    loadCollada( fPath + "/" + file, obj );
+                    library_nodes[url] = obj;
+                } else {} // should already be in library_nodes
             }
 
-            if (parent) parent->addChild( subscenes[url]->duplicate() );
+            if (parent && library_nodes.count(url))
+                parent->addChild( library_nodes[url] );
+        }
+
+        void instantiateScene(string url) {
+            if (library_scenes.count(url)) root->addChild(library_scenes[url]);
+            else cout << "instantiateScene " << url << " failed!" << endl;
         }
 };
 
@@ -121,12 +149,13 @@ class VRCOLLADA_Stream : public XMLStreamHandler {
         string fPath;
         stack<Node> nodeStack;
 
+        string currentSection;
         VRCOLLADA_Material materials;
         VRCOLLADA_Geometry geometries;
         VRCOLLADA_Scene scene;
         //VRCOLLADA_Kinematics kinematics;
 
-        string skipHash(const string& s) { return subString(s, 1, s.size()-1); }
+        string skipHash(const string& s) { return (s[0] == '#') ? subString(s, 1, s.size()-1) : s; }
 
     public:
         VRCOLLADA_Stream(VRObjectPtr root, string fPath) : fPath(fPath) {
@@ -169,12 +198,24 @@ void VRCOLLADA_Stream::startElement(const string& uri, const string& name, const
     n.attributes = attributes;
     nodeStack.push(n);
 
+    // enter section
+    if (name == "asset") currentSection = name;
+    if (name == "library_geometries") currentSection = name;
+    if (name == "library_materials" || name == "library_effects" || name == "library_images") currentSection = name;
+    if (name == "library_joints" || name == "library_kinematics_models" || name == "library_articulated_systems" || name == "library_kinematics_scenes") currentSection = name;
+    if (name == "scene" || name == "library_visual_scenes" || name == "library_nodes") {
+        currentSection = name;
+        scene.setCurrentSection(name);
+    }
+
+    // materials and textures
     if (name == "surface") materials.addSurface(parent.attributes["sid"].val);
     if (name == "sampler2D") materials.addSampler(parent.attributes["sid"].val);
     if (name == "effect") materials.newEffect( n.attributes["id"].val );
     if (name == "material") materials.newMaterial( n.attributes["id"].val, n.attributes["name"].val );
     if (name == "instance_effect") materials.setMaterialEffect( skipHash(n.attributes["url"].val) );
 
+    // geometric data
     if (name == "geometry") geometries.newGeometry(n.attributes["name"].val, n.attributes["id"].val);
     if (name == "source") geometries.newSource(n.attributes["id"].val);
     if (name == "accessor") geometries.handleAccessor(n.attributes["count"].val, n.attributes["stride"].val);
@@ -184,10 +225,14 @@ void VRCOLLADA_Stream::startElement(const string& uri, const string& name, const
     if (name == "tristrips") geometries.newPrimitive(name, n.attributes["count"].val);
     if (name == "polylist") geometries.newPrimitive(name, n.attributes["count"].val);
 
+    // scene graphs
     if (name == "instance_geometry") scene.instantiateGeometry(skipHash(n.attributes["url"].val), &geometries);
     if (name == "instance_material") scene.setMaterial(skipHash(n.attributes["target"].val), &materials);
-    if (name == "instance_node") scene.loadSubscene(n.attributes["url"].val, fPath);
-    if (name == "node") scene.newNode(n.attributes["name"].val);
+    if (name == "instance_node") scene.instantiateNode(n.attributes["url"].val, fPath);
+    if (name == "node" || name == "visual_scene") scene.newNode(n.attributes["id"].val, n.attributes["name"].val);
+
+    // actual scene
+    if (name == "instance_visual_scene") scene.instantiateScene(skipHash(n.attributes["url"].val));
 }
 
 void VRCOLLADA_Stream::characters(const string& chars) {
