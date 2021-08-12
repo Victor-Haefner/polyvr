@@ -36,8 +36,6 @@ class VRCOLLADA_Scene {
         stack<VRObjectPtr> objStack;
         VRGeometryPtr lastInstantiatedGeo;
 
-        string skipHash(const string& s) { return (s[0] == '#') ? subString(s, 1, s.size()-1) : s; }
-
     public:
         VRCOLLADA_Scene() { scheduler = VRScheduler::create(); }
 
@@ -79,18 +77,18 @@ class VRCOLLADA_Scene {
             if (!geo) geo = lastInstantiatedGeo;
             auto mat = materials->getMaterial(mid);
             if (!mat) {
+                if (geo) geo->addTag("COLLADA-postponed");
                 scheduler->postpone( bind(&VRCOLLADA_Scene::setMaterial, this, mid, materials, geo) );
                 return;
             }
+            if (geo) geo->remTag("COLLADA-postponed");
             if (geo) geo->setMaterial(mat);
         }
 
         void newNode(string id, string name) {
-            cout << "newNode " << id << " " << currentSection << " " << name << endl;
             auto obj = VRTransform::create(name);
 
             auto parent = top();
-            //if (!parent && currentSection == "") parent = root;
             if (parent) parent->addChild(obj);
             else {
                 if (currentSection == "library_nodes") library_nodes[id] = obj;
@@ -104,16 +102,16 @@ class VRCOLLADA_Scene {
             if (!parent) parent = top();
             auto geo = geometries->getGeometry(gid);
             if (!geo) {
+                if (parent) parent->addTag("COLLADA-postponed");
                 scheduler->postpone( bind(&VRCOLLADA_Scene::instantiateGeometry, this, gid, geometries, parent) );
                 return;
             }
             lastInstantiatedGeo = dynamic_pointer_cast<VRGeometry>( geo->duplicate() );
+            if (parent) parent->remTag("COLLADA-postponed");
             if (parent) parent->addChild( lastInstantiatedGeo );
         }
 
         void instantiateNode(string url, string fPath, VRObjectPtr parent = 0) {
-            url = skipHash(url);
-            cout << "instantiateNode " << url << " " << currentSection << " " << library_nodes.count(url) << endl;
             if (!parent) parent = top();
 
             if (!library_nodes.count(url)) {
@@ -128,13 +126,16 @@ class VRCOLLADA_Scene {
                 } else {} // should already be in library_nodes
             }
 
-            if (parent && library_nodes.count(url))
-                parent->addChild( library_nodes[url] );
+            if (parent && library_nodes.count(url)) {
+                auto prototype = library_nodes[url];
+                if (prototype->hasTag("COLLADA-postponed")) {
+                    scheduler->postpone( bind(&VRCOLLADA_Scene::instantiateNode, this, url, fPath, parent) );
+                } else parent->addChild( prototype->duplicate() );
+            }
         }
 
         void instantiateScene(string url) {
             if (library_scenes.count(url)) root->addChild(library_scenes[url]);
-            else cout << "instantiateScene " << url << " failed!" << endl;
         }
 };
 
@@ -228,7 +229,7 @@ void VRCOLLADA_Stream::startElement(const string& uri, const string& name, const
     // scene graphs
     if (name == "instance_geometry") scene.instantiateGeometry(skipHash(n.attributes["url"].val), &geometries);
     if (name == "instance_material") scene.setMaterial(skipHash(n.attributes["target"].val), &materials);
-    if (name == "instance_node") scene.instantiateNode(n.attributes["url"].val, fPath);
+    if (name == "instance_node") scene.instantiateNode(skipHash(n.attributes["url"].val), fPath);
     if (name == "node" || name == "visual_scene") scene.newNode(n.attributes["id"].val, n.attributes["name"].val);
 
     // actual scene
