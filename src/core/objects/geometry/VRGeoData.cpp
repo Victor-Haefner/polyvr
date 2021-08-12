@@ -795,6 +795,41 @@ void VRGeoData::makeSingleIndex() {
     if (!geo->getMesh()->geo->isSingleIndex()) cout << "VRGeoData::makeSingleIndex FAILED!! probably needs to set more indices!" << endl;
 }
 
+vector<VRGeometryPtr> VRGeoData::split(int N) {
+    vector<VRGeometryPtr> res;
+    map<size_t, VRGeoData> geos;
+    map<size_t, Color3f> colors;
+    map<size_t, map<size_t, size_t>> indexMaps;
+
+    int h = 0;
+    int c = 0;
+    int n = size() / N;
+    if (n == 0) return res;
+
+    for (auto& prim : *this) {
+        if (c >= n) { h++; c = 0; }
+        auto& geo = geos[h];
+        auto& indexMap = indexMaps[h];
+
+        vector<int> ninds;
+        for (auto i : prim.indices) {
+            if (!indexMap.count(i)) {
+                c++;
+                indexMap[i] = geo.pushVert(*this, i);
+            }
+            ninds.push_back(indexMap[i]);
+        }
+        prim.indices = ninds;
+        geo.pushPrim(prim);
+    }
+
+    for (auto g : geos) {
+        auto gg = g.second.asGeometry(geo?geo->getBaseName():"part");
+        res.push_back(gg);
+    }
+    return res;
+}
+
 vector<VRGeometryPtr> VRGeoData::splitByVertexColors(const Matrix4d& m) {
     map<size_t, VRGeoData> geos;
     map<size_t, Color3f> colors;
