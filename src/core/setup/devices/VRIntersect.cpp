@@ -67,6 +67,7 @@ Vec3i VRIntersect_computeVertices(VRIntersection& ins, NodeMTRecPtr node) {
 }
 
 VRIntersection VRIntersect::intersectRay(VRObjectWeakPtr wtree, Line ray, bool skipVols) {
+    //VRTimer t; t.start();
     VRIntersection ins;
     auto tree = wtree.lock();
     if (!tree) return ins;
@@ -108,6 +109,7 @@ VRIntersection VRIntersect::intersectRay(VRObjectWeakPtr wtree, Line ray, bool s
     intersections[tree.get()] = ins;
 
     if (showHit) cross->setWorldPosition(Vec3d(ins.point));
+    //cout << " intersectRay took: " << t.stop() << " " << skipVols << endl;
     return ins;
 }
 
@@ -167,6 +169,7 @@ void VRIntersect::initIntersect(VRDevicePtr dev) {
 }
 
 void VRIntersect::dragCB(VRTransformWeakPtr caster, VRObjectWeakPtr tree, VRDeviceWeakPtr dev) {
+    if (!dnd) return;
     VRIntersection ins = intersect(tree);
     drag(ins, caster);
 }

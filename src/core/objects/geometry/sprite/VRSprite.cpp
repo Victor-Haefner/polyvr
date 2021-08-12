@@ -123,14 +123,12 @@ void VRSprite::webOpen(string path, int res, float ratio) {
         var fID = $0;
 	var isVis = $1;
         var uri = Module.UTF8ToString($2);
-        var host = window.location.origin;
-
         var parts = uri.split("/");
-        uri = host + "/" + parts[parts.length - 1];
+        uri = parts[parts.length - 1]+".html";
 
         var frame = document.createElement("iframe");
         document.body.appendChild(frame);
-        frame.src = uri+".html";
+        frame.src = uri;
         frame.style = "position:absolute;top:0;left:0;height:300px;width:300px;z-index:2;";
 	frame.frameBorder = 0;
         frame.title = "PolyVR widget";
