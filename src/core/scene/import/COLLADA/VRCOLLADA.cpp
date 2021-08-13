@@ -8,6 +8,7 @@
 #include "core/utils/toString.h"
 #include "core/utils/xml.h"
 #include "core/utils/VRScheduler.h"
+#include "core/math/pose.h"
 
 #include "core/objects/object/VRObject.h"
 #include "core/objects/VRTransform.h"
@@ -52,25 +53,38 @@ class VRCOLLADA_Scene {
 		void finalize() { scheduler->callPostponed(true); }
 
         void setMatrix(string data) {
-            Matrix4d m;
-            toValue(data, m);
+            Matrix4d m = toValue<Matrix4d>(data);
             m.transpose();
             auto t = dynamic_pointer_cast<VRTransform>(top());
-            if (t) t->setMatrix(m);
+            if (t) {
+                auto M = t->getMatrix();
+                M.mult(m);
+                t->setMatrix(M);
+            }
         }
 
-        void translate(string data) {
-            Vec3d v;
-            toValue(data, v);
+        void translate(string data) { // TODO: read in specs what these are all about, like this it messes up the AML test scene
+            /*Vec3d v = toValue<Vec3d>(data);
+            Matrix4d m;
+            m.setTranslate(v);
             auto t = dynamic_pointer_cast<VRTransform>(top());
-            if (t) t->translate(v);
+            if (t) {
+                auto M = t->getMatrix();
+                M.mult(m);
+                t->setMatrix(M);
+            }*/
         }
 
-        void rotate(string data) {
-            Vec4d v;
-            toValue(data, v);
+        void rotate(string data) { // TODO: read in specs what these are all about, like this it messes up the AML test scene
+            /*Vec4d v = toValue<Vec4d>(data);
+            Matrix4d m;
+            m.setRotate(Quaterniond(Vec3d(v[0], v[1], v[2]), v[3]/180.0*Pi));
             auto t = dynamic_pointer_cast<VRTransform>(top());
-            if (t) t->rotate(v[3]/180.0*Pi, Vec3d(v[0], v[1], v[2]));
+            if (t) {
+                auto M = t->getMatrix();
+                M.mult(m);
+                t->setMatrix(M);
+            }*/
         }
 
         void setMaterial(string mid, VRCOLLADA_Material* materials, VRGeometryPtr geo = 0) {
@@ -168,23 +182,23 @@ class VRCOLLADA_Stream : public XMLStreamHandler {
 
         static VRCOLLADA_StreamPtr create(VRObjectPtr root, string fPath) { return VRCOLLADA_StreamPtr( new VRCOLLADA_Stream(root, fPath) ); }
 
-        void startDocument() {}
+        void startDocument() override {}
 
-        void endDocument() {
+        void endDocument() override {
             materials.finalize();
             geometries.finalize();
             scene.finalize();
         }
 
-        void startElement(const string& uri, const string& name, const string& qname, const map<string, XMLAttribute>& attributes);
-        void endElement(const string& uri, const string& name, const string& qname);
-        void characters(const string& chars);
-        void processingInstruction(const string& target, const string& data) {}
+        void startElement(const string& uri, const string& name, const string& qname, const map<string, XMLAttribute>& attributes) override;
+        void endElement(const string& uri, const string& name, const string& qname) override;
+        void characters(const string& chars) override;
+        void processingInstruction(const string& target, const string& data) override {}
 
-        void warning(const string& chars) { cout << "VRCOLLADA_Stream Warning" << endl; }
-        void error(const string& chars) { cout << "VRCOLLADA_Stream Error" << endl; }
-        void fatalError(const string& chars) { cout << "VRCOLLADA_Stream Fatal Error" << endl; }
-        void onException(exception& e) { cout << "VRCOLLADA_Stream Exception" << endl; }
+        void warning(const string& chars) override { cout << "VRCOLLADA_Stream Warning" << endl; }
+        void error(const string& chars) override { cout << "VRCOLLADA_Stream Error" << endl; }
+        void fatalError(const string& chars) override { cout << "VRCOLLADA_Stream Fatal Error" << endl; }
+        void onException(exception& e) override { cout << "VRCOLLADA_Stream Exception" << endl; }
 };
 
 }
