@@ -52,39 +52,36 @@ class VRCOLLADA_Scene {
 
 		void finalize() { scheduler->callPostponed(true); }
 
-        void setMatrix(string data) {
-            Matrix4d m = toValue<Matrix4d>(data);
-            m.transpose();
+		void applyMatrix(Matrix4d m) {
             auto t = dynamic_pointer_cast<VRTransform>(top());
             if (t) {
                 auto M = t->getMatrix();
                 M.mult(m);
                 t->setMatrix(M);
             }
+		}
+
+        void setMatrix(string data) {
+            Matrix4d m = toValue<Matrix4d>(data);
+            m.transpose();
+            applyMatrix(m);
         }
 
         void translate(string data) { // TODO: read in specs what these are all about, like this it messes up the AML test scene
-            /*Vec3d v = toValue<Vec3d>(data);
+            Vec3d v = toValue<Vec3d>(data);
             Matrix4d m;
             m.setTranslate(v);
-            auto t = dynamic_pointer_cast<VRTransform>(top());
-            if (t) {
-                auto M = t->getMatrix();
-                M.mult(m);
-                t->setMatrix(M);
-            }*/
+            applyMatrix(m);
         }
 
         void rotate(string data) { // TODO: read in specs what these are all about, like this it messes up the AML test scene
-            /*Vec4d v = toValue<Vec4d>(data);
+            Vec4d v = toValue<Vec4d>(data);
+            double a = v[3]/180.0*Pi;
+            Quaterniond q(Vec3d(v[0], v[1], v[2]), a);
+
             Matrix4d m;
-            m.setRotate(Quaterniond(Vec3d(v[0], v[1], v[2]), v[3]/180.0*Pi));
-            auto t = dynamic_pointer_cast<VRTransform>(top());
-            if (t) {
-                auto M = t->getMatrix();
-                M.mult(m);
-                t->setMatrix(M);
-            }*/
+            m.setRotate(q);
+            applyMatrix(m);
         }
 
         void setMaterial(string mid, VRCOLLADA_Material* materials, VRGeometryPtr geo = 0) {
@@ -100,6 +97,7 @@ class VRCOLLADA_Scene {
         }
 
         void newNode(string id, string name) {
+            if (name == "") name = id;
             auto obj = VRTransform::create(name);
 
             auto parent = top();
@@ -287,7 +285,7 @@ void VRCOLLADA_Stream::endElement(const string& uri, const string& name, const s
         if (sid == "shininess") materials.setShininess(f);
     }
 
-    if (node.name == "node") scene.closeNode();
+    if (node.name == "node" || node.name == "visual_scene") scene.closeNode();
     if (node.name == "matrix") scene.setMatrix(node.data);
     if (node.name == "translate") scene.translate(node.data);
     if (node.name == "rotate") scene.rotate(node.data);
