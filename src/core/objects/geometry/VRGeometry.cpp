@@ -137,20 +137,26 @@ class geoIntersectionProxy : public Geometry {
 
         Action::ResultE intersectDefaultGeometry(Action* action) {
             if (!getTypes()) return Action::Skip;
-            auto type = getTypes()->getValue(0);
-            if ( type != GL_PATCHES ) return Geometry::intersectEnter(action);
+            auto type0 = getTypes()->getValue(0);
 
-            if ( getPatchVertices() != 4 ) {
-                cout << "Warning: patch vertices is " + toString(getPatchVertices()) + ", not 4, skipping intersect action!\n";
-                return Action::Skip;
+            if ( type0 == GL_PATCHES ) {
+                if ( getPatchVertices() != 4 ) {
+                    cout << "Warning: patch vertices is " + toString(getPatchVertices()) + ", not 4, skipping intersect action!\n";
+                    return Action::Skip;
+                }
+
+                IntersectAction* ia = dynamic_cast<IntersectAction*>(action);
+                if (!intersectVolume(ia)) return Action::Skip; //bv missed -> can not hit children
+                intersectQuadPatch(ia);
+                //return Action::Skip;
+                return Action::Continue;
             }
 
-            IntersectAction* ia = dynamic_cast<IntersectAction*>(action);
-            if (!intersectVolume(ia)) return Action::Skip; //bv missed -> can not hit children
+            /*if ( type0 == GL_TRIANGLES && getTypes()->size() == 1 ) { // only triangles, TODO: maybe find a better algorithm to intersect only triangle mesh
+                ;
+            }*/
 
-            intersectQuadPatch(ia);
-            //return Action::Skip;
-            return Action::Continue;
+            return Geometry::intersectEnter(action);
         }
 
         Action::ResultE intersectEnter(Action* action) {
@@ -685,6 +691,16 @@ Vec3d morphColor3(const Vec3d& c) { return c; }
 Vec3d morphColor3(const Vec4d& c) { return Vec3d(c[0], c[1], c[2]); }
 Vec4d morphColor4(const Vec3d& c) { return Vec4d(c[0], c[1], c[2], 1); }
 Vec4d morphColor4(const Vec4d& c) { return c; }
+
+vector<VRGeometryPtr> VRGeometry::split(int N) {
+    VRGeoData self(ptr());
+    auto geos = self.split(N);
+    for (auto g : geos) {
+        g->setMatrix(getMatrix());
+        g->setMaterial(getMaterial());
+    }
+    return geos;
+}
 
 vector<VRGeometryPtr> VRGeometry::splitByVertexColors() {
     VRGeoData self(ptr());

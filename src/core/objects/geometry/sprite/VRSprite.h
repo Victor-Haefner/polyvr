@@ -23,6 +23,7 @@ class VRSprite : public VRGeometry {
         static string spriteShaderFP;
 
         void updateGeo();
+	void updateTransformation() override;
 
     public:
         VRSprite (string name, bool alpha = true, float w = 0.5, float h = 0.5);
@@ -46,6 +47,8 @@ class VRSprite : public VRGeometry {
 
         void showResizeTool(bool b, float size = 0.1, bool doAnnotations = true);
         void convertToCloth();
+
+        void setVisible(bool b, string mode = "") override;
 };
 
 OSG_END_NAMESPACE;

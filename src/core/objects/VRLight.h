@@ -50,7 +50,7 @@ class VRLight : public VRObject {
 
         VRUpdateCbPtr setupAfterCb;
 
-        VRObjectPtr copy(vector<VRObjectPtr> children);
+        VRObjectPtr copy(vector<VRObjectPtr> children) override;
 
         void setup(VRStorageContextPtr context);
         void setup_after();

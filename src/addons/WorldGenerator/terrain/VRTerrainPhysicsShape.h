@@ -29,12 +29,12 @@ ATTRIBUTE_ALIGNED16(class) VRTerrainPhysicsShape : public btConcaveShape {
         VRTerrainPhysicsShape(VRTerrainPtr terrain, float resolution = 0);
         ~VRTerrainPhysicsShape();
 
-        virtual void getAabb(const btTransform& t,btVector3& aabbMin,btVector3& aabbMax) const;
-        virtual void processAllTriangles(btTriangleCallback* callback,const btVector3& aabbMin,const btVector3& aabbMax) const;
-        virtual void calculateLocalInertia(btScalar mass,btVector3& inertia) const;
-        virtual void setLocalScaling(const btVector3& scaling);
-        virtual const btVector3& getLocalScaling() const;
-        virtual const char*	getName()const {return "HEIGHTFIELD";}
+        virtual void getAabb(const btTransform& t,btVector3& aabbMin,btVector3& aabbMax) const override;
+        virtual void processAllTriangles(btTriangleCallback* callback,const btVector3& aabbMin,const btVector3& aabbMax) const override;
+        virtual void calculateLocalInertia(btScalar mass,btVector3& inertia) const override;
+        virtual void setLocalScaling(const btVector3& scaling) override;
+        virtual const btVector3& getLocalScaling() const override;
+        virtual const char*	getName() const override { return "HEIGHTFIELD"; }
 };
 
 OSG_END_NAMESPACE;

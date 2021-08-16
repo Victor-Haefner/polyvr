@@ -815,14 +815,14 @@ struct VRML1Node : VRMLNode {
     VRML1Node(string type, string name = "Unnamed") : VRMLNode(type, name) { version = 1; }
     ~VRML1Node() {}
 
-    VRML1Node* newChild(string t, string n) {
+    VRML1Node* newChild(string t, string n) override {
         //cout << "VRML1Node::newChild '" << n << "' of type " << t << endl;
         auto c = new VRML1Node(t,n);
         addChild(c);
         return c;
     }
 
-    Matrix4d applyTransformations(Matrix4d m = Matrix4d()) {
+    Matrix4d applyTransformations(Matrix4d m = Matrix4d()) override {
         if (isGeometryNode(type)) {
             VRTransformPtr t = dynamic_pointer_cast<VRTransform>(obj);
             if (t) t->setMatrix(m);
@@ -836,7 +836,7 @@ struct VRML1Node : VRMLNode {
         return m;
     }
 
-    VRMaterialPtr applyMaterials(VRMaterialPtr m = 0) {
+    VRMaterialPtr applyMaterials(VRMaterialPtr m = 0) override {
         if (isGeometryNode(type)) {
             VRGeometryPtr g = dynamic_pointer_cast<VRGeometry>(obj);
             if (g) g->setMaterial(m);
@@ -850,7 +850,7 @@ struct VRML1Node : VRMLNode {
         return m;
     }
 
-    VRGeoData applyGeometries(VRGeoData data, map<string, VRMLNode*>& references) {
+    VRGeoData applyGeometries(VRGeoData data, map<string, VRMLNode*>& references) override {
         if (type == "IndexedFaceSet") {
             VRGeometryPtr g = dynamic_pointer_cast<VRGeometry>(obj);
             if (g) {
@@ -885,14 +885,14 @@ struct VRML2Node : VRMLNode {
     VRML2Node(string type, string name = "Unnamed") : VRMLNode(type, name) { version = 2; }
     ~VRML2Node() {}
 
-    VRML2Node* newChild(string t, string n) {
+    VRML2Node* newChild(string t, string n) override {
         //cout << "VRML2Node::newChild '" << n << "' of type " << t << endl;
         auto c = new VRML2Node(t,n);
         addChild(c);
         return c;
     }
 
-    Matrix4d applyTransformations(Matrix4d m = Matrix4d()) {
+    Matrix4d applyTransformations(Matrix4d m = Matrix4d()) override {
         if (type == "Transform") {
             VRTransformPtr t = dynamic_pointer_cast<VRTransform>(obj);
             if (t) t->setMatrix(pose);
@@ -902,7 +902,7 @@ struct VRML2Node : VRMLNode {
         return m;
     }
 
-    VRMaterialPtr applyMaterials(VRMaterialPtr m = 0) {
+    VRMaterialPtr applyMaterials(VRMaterialPtr m = 0) override {
         if (isGeometryNode(type)) {
             VRGeometryPtr g = dynamic_pointer_cast<VRGeometry>(obj);
             if (g) {
@@ -922,7 +922,7 @@ struct VRML2Node : VRMLNode {
         return m;
     }
 
-    VRGeoData applyGeometries(VRGeoData data, map<string, VRMLNode*>& references) {
+    VRGeoData applyGeometries(VRGeoData data, map<string, VRMLNode*>& references) override {
         if (type == "IndexedFaceSet") {
             VRGeometryPtr g = dynamic_pointer_cast<VRGeometry>(obj);
             if (g) {

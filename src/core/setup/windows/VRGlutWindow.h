@@ -22,10 +22,10 @@ class VRGlutWindow : public VRWindow {
 
         static void initGlut();
 
-        void render(bool fromThread = false);
+        void render(bool fromThread = false) override;
 
-        void save(XMLElementPtr node);
-        void load(XMLElementPtr node);
+        void save(XMLElementPtr node) override;
+        void load(XMLElementPtr node) override;
 
         void onMouse(int b, int s, int x, int y);
         void onMotion(int x, int y);

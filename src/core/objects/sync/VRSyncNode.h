@@ -50,7 +50,7 @@ class VRSyncNode : public VRTransform {
         void getAllSubContainersRec(FieldContainer* node, FieldContainer* parent, map<FieldContainer*, vector<FieldContainer*>>& res);
         UInt32 findParent(map<UInt32,vector<UInt32>>& parentToChildren, UInt32 remoteNodeID);
 
-        VRObjectPtr copy(vector<VRObjectPtr> children);
+        VRObjectPtr copy(vector<VRObjectPtr> children) override;
 
         void sendTypes();
 

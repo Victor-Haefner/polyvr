@@ -44,10 +44,10 @@ class VRHandle : public VRGeometry {
         Vec3d getAxis();
         PosePtr getOrigin();
 
-        void drag(VRTransformPtr new_parent, VRIntersection i = VRIntersection());
-        void drop();
+        void drag(VRTransformPtr new_parent, VRIntersection i = VRIntersection()) override;
+        void drop() override;
 
-        void setMatrix(Matrix4d m);
+        void setMatrix(Matrix4d m) override;
 };
 
 OSG_END_NAMESPACE;

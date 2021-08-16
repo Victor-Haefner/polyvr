@@ -645,6 +645,9 @@ void VRMaterial::setPointSize(int s, bool smooth) {
     }
     md->pointChunk->setSize(s);
     md->pointChunk->setSmooth(smooth);
+#ifdef __EMSCRIPTEN__
+    updateOGL2Shader();
+#endif
 }
 
 void VRMaterial::setMaterial(MaterialMTRecPtr m) {

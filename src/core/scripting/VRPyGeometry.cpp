@@ -86,6 +86,7 @@ PyMethodDef VRPyGeometry::methods[] = {
     {"decimate", PyWrap( Geometry, decimate, "Decimate geometry by collapsing a fraction of edges - decimate(f)", void, float ) },
     {"setRandomColors", PyWrap( Geometry, setRandomColors, "Set a random color for each vertex", void ) },
     {"removeDoubles", PyWrap( Geometry, removeDoubles, "Remove double vertices", void, float ) },
+    {"split", PyWrap( Geometry, split, "Split geometry in N parts", vector<VRGeometryPtr>, int ) },
     {"splitByVertexColors", PyWrap( Geometry, splitByVertexColors, "Split geometry ba vertex colors", vector<VRGeometryPtr> ) },
     {"updateNormals", PyWrapOpt( Geometry, updateNormals, "Recalculate the normals of the geometry - updateNormals(| bool face)\n\tset face to true to compute face normals, the default are vertex normals", "0", void, bool ) },
     {"makeUnique", PyWrap( Geometry, makeUnique, "Make the geometry data unique", void ) },

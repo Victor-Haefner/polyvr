@@ -162,10 +162,10 @@ bool VRGeoData::valid() const {
 }
 
 bool VRGeoData::validIndices() const {
-    auto checkMaxIndex = [](GeoUInt32PropertyMTRecPtr indices, unsigned int VecN) {
+    auto checkMaxIndex = [](GeoUInt32PropertyMTRecPtr indices, unsigned int VecN, unsigned int& Imax) {
         if (VecN == 0) return true;
-        unsigned int Imax = 0;
-        for (unsigned int i = 0; i < indices->size(); i++) {
+        Imax = 0;
+        for (size_t i = 0; i < indices->size(); i++) {
             unsigned int idx = indices->getValue(i);
             if (idx > Imax) Imax = idx;
         }
@@ -173,13 +173,14 @@ bool VRGeoData::validIndices() const {
         return true;
     };
 
-    if (!checkMaxIndex(data->indices, data->pos->size())) { cout << "VRGeoData invalid: coord indices have too big values!\n"; return false; }
-    if (!checkMaxIndex(data->indicesNormals, data->norms->size())) { cout << "VRGeoData invalid: normal indices have too big values!\n"; return false; }
-    if (!checkMaxIndex(data->indicesTexCoords, data->texs->size())) { cout << "VRGeoData invalid: tex coords indices have too big values!\n"; return false; }
+    unsigned int Imax = 0;
+    if (!checkMaxIndex(data->indices, data->pos->size(), Imax)) { cout << "VRGeoData invalid: coord indices have too big values! max index is " << data->pos->size() << "/" << Imax << endl; return false; }
+    if (!checkMaxIndex(data->indicesNormals, data->norms->size(), Imax)) { cout << "VRGeoData invalid: normal indices have too big values!\n"; return false; }
+    if (!checkMaxIndex(data->indicesTexCoords, data->texs->size(), Imax)) { cout << "VRGeoData invalid: tex coords indices have too big values!\n"; return false; }
     if (data->cols3->size())
-        if (!checkMaxIndex(data->indicesColors, data->cols3->size())) { cout << "VRGeoData invalid: color3 indices have too big values!\n"; return false; }
+        if (!checkMaxIndex(data->indicesColors, data->cols3->size(), Imax)) { cout << "VRGeoData invalid: color3 indices have too big values!\n"; return false; }
     if (data->cols4->size())
-        if (!checkMaxIndex(data->indicesColors, data->cols4->size())) { cout << "VRGeoData invalid: color4 indices have too big values!\n"; return false; }
+        if (!checkMaxIndex(data->indicesColors, data->cols4->size(), Imax)) { cout << "VRGeoData invalid: color4 indices have too big values!\n"; return false; }
     return true;
 }
 
@@ -792,6 +793,41 @@ void VRGeoData::makeSingleIndex() {
     geo->getMesh()->geo->setIndex(geo->getMesh()->geo->getIndex(Geometry::PositionsIndex), Geometry::ColorsIndex);
 
     if (!geo->getMesh()->geo->isSingleIndex()) cout << "VRGeoData::makeSingleIndex FAILED!! probably needs to set more indices!" << endl;
+}
+
+vector<VRGeometryPtr> VRGeoData::split(int N) {
+    vector<VRGeometryPtr> res;
+    map<size_t, VRGeoData> geos;
+    map<size_t, Color3f> colors;
+    map<size_t, map<size_t, size_t>> indexMaps;
+
+    int h = 0;
+    int c = 0;
+    int n = size() / N;
+    if (n == 0) return res;
+
+    for (auto& prim : *this) {
+        if (c >= n) { h++; c = 0; }
+        auto& geo = geos[h];
+        auto& indexMap = indexMaps[h];
+
+        vector<int> ninds;
+        for (auto i : prim.indices) {
+            if (!indexMap.count(i)) {
+                c++;
+                indexMap[i] = geo.pushVert(*this, i);
+            }
+            ninds.push_back(indexMap[i]);
+        }
+        prim.indices = ninds;
+        geo.pushPrim(prim);
+    }
+
+    for (auto g : geos) {
+        auto gg = g.second.asGeometry(geo?geo->getBaseName():"part");
+        res.push_back(gg);
+    }
+    return res;
 }
 
 vector<VRGeometryPtr> VRGeoData::splitByVertexColors(const Matrix4d& m) {

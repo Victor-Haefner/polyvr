@@ -42,6 +42,7 @@
 			<Add option="-frounding-math" />
 			<Add option="-ftime-report" />
 			<Add option="-fno-strict-aliasing" />
+			<Add option="-Wsuggest-override" />
 			<Add option="-DLC_ALL=C" />
 			<Add option="-DLINUX" />
 			<Add option="-DOSG2" />
@@ -1567,6 +1568,8 @@
 		<Unit filename="src/core/utils/VRProgress.h" />
 		<Unit filename="src/core/utils/VRRate.cpp" />
 		<Unit filename="src/core/utils/VRRate.h" />
+		<Unit filename="src/core/utils/VRScheduler.cpp" />
+		<Unit filename="src/core/utils/VRScheduler.h" />
 		<Unit filename="src/core/utils/VRSpreadsheet.cpp" />
 		<Unit filename="src/core/utils/VRSpreadsheet.h" />
 		<Unit filename="src/core/utils/VRStorage.cpp" />

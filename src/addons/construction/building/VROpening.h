@@ -38,7 +38,7 @@ class VROpening: public VRTransform, public VROCtoggle {
         void initAnimations(VRObjectPtr _d1, VRObjectPtr _d2);
 
     protected:
-        VRObjectPtr copy(vector<VRObjectPtr> children);
+        VRObjectPtr copy(vector<VRObjectPtr> children) override;
 
     public:
         //VROpening(string name); // TODO -> deprecated??

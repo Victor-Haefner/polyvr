@@ -134,14 +134,14 @@ class ourBinaryDataHandler : public BinaryDataHandler {
             forceDirectIO();
         }
 
-        void read(MemoryHandle src, UInt32 size) {
+        void read(MemoryHandle src, UInt32 size) override {
 //            cout << "ourBinaryDataHandler -> read() data.size" << data.size() << " size " << size << endl;
             size_t readSize = min((size_t)size, data.size()-progress);
             memcpy(src, &data[progress], readSize); //read data from handler into src (sentry.fieldMask)
             progress += readSize;
         }
 
-        void write(MemoryHandle src, UInt32 size) {
+        void write(MemoryHandle src, UInt32 size) override {
             data.insert(data.end(), src, src + size);
         }
 
@@ -171,7 +171,7 @@ void debugBinary(FieldContainer* fcPtr, ourBinaryDataHandler& handler2, SerialEn
 struct VRSyncNodeFieldContainerMapper : public ContainerIdMapper {
     VRSyncNode* syncNode = 0;
 
-    UInt32 map(UInt32 uiId) const;
+    UInt32 map(UInt32 uiId) const override;
     VRSyncNodeFieldContainerMapper(VRSyncNode* node) : syncNode(node) {};
 
  //   private:

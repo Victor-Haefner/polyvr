@@ -38,7 +38,7 @@ class VRCamera : public VRTransform {
         static VRCameraPtr create(string name = "None", bool reg = false);
         VRCameraPtr ptr();
 
-        VRObjectPtr copy(vector<VRObjectPtr> children);
+        VRObjectPtr copy(vector<VRObjectPtr> children) override;
 
         void setType(int type);
         int getType();
@@ -77,9 +77,9 @@ class VRCamera : public VRTransform {
         void focusPoint(Vec3d p);
         void focusObject(VRObjectPtr t);
 
-        void setAt(Vec3d at);
-        void setFrom(Vec3d pos);
-        void setMatrix(Matrix4d m);
+        void setAt(Vec3d at) override;
+        void setFrom(Vec3d pos) override;
+        void setMatrix(Matrix4d m) override;
 };
 
 OSG_END_NAMESPACE;

@@ -21,6 +21,7 @@ namespace OSG {
     ptrFwd(VRSpreadsheet);
     ptrFwd(VRMutex);
     ptrFwd(VRLock);
+    ptrFwd(VRScheduler);
 }
 
 #endif // VRUTILSFWD_H_INCLUDED

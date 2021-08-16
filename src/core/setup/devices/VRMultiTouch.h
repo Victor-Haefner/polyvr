@@ -77,14 +77,14 @@ class VRMultiTouch : public VRDevice {
         void updateDevice();
         void connectDevice();
         void disconnectDevice();
-        void clearSignals();
+        void clearSignals() override;
 
         //3d object to emulate a hand in VRSpace
         void updatePosition(int x, int y);
         void mouse(int button, int state, int x, int y);
 
         Line getRay();
-        void setCamera(VRCameraPtr cam);
+        void setCamera(VRCameraPtr cam) override;
         void setWindow(VRWindowPtr win);
 
         void showVisual(bool b);

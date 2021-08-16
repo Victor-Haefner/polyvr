@@ -183,7 +183,7 @@ struct VRCallbackWrapperT<P, U, R (T::*)(Args...)> : public VRCallbackWrapper<P>
         r = (obj->*callback)( a, b, c, d, e, f, g, h, i ); return true;
     }
 
-    bool execute(void* o, const vector<P>& params, P& result) {
+    bool execute(void* o, const vector<P>& params, P& result) override {
         if (!callback) return false;
         R res;
         vector<string> defaultParams = splitString(U::str(),'|');
@@ -310,7 +310,7 @@ struct VRCallbackWrapperT<P, U, void (T::*)(Args...)> : public VRCallbackWrapper
         (obj->*callback)( a, b, c, d, e, f, g, h, i ); return true;
     }
 
-    bool execute(void* o, const vector<P>& params, P& result) {
+    bool execute(void* o, const vector<P>& params, P& result) override {
         if (!callback) return false;
         vector<string> defaultParams = splitString(U::str(),'|');
         if (!call<void, Args...>((T*)o, params, defaultParams)) return false;

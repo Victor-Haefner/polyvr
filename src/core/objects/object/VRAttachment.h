@@ -20,9 +20,9 @@ class VRAttachment : public OSG::VRName {
             T data;
             attachment(T& t);
             ~attachment();
-            string asString();
-            void fromString(string s);
-            string typeName();
+            string asString() override;
+            void fromString(string s) override;
+            string typeName() override;
         };
 
     private:

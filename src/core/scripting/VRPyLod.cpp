@@ -4,6 +4,7 @@
 using namespace OSG;
 
 simpleVRPyType(Lod, New_VRObjects_ptr);
+simpleVRPyType(LodEvent, 0);
 simpleVRPyType(LodTree, New_VRObjects_ptr);
 simpleVRPyType(LodLeaf, 0);
 
@@ -14,6 +15,14 @@ PyMethodDef VRPyLod::methods[] = {
 	{"getCenter", PyWrap( Lod, getCenter, "Get LOD center", Vec3d) },
 	{"getScale", PyWrap( Lod, getScale, "Get LOD scale", double) },
 	{"getDistance", PyWrap( Lod, getDistance, "Get LOd ith distance", float, unsigned int) },
+	{"setCallback", PyWrap( Lod, setCallback, "Set callback, triggers on LOD level switch", void, VRLodCbPtr) },
+    {NULL}  /* Sentinel */
+};
+
+PyMethodDef VRPyLodEvent::methods[] = {
+	{"getCurrent", PyWrap( LodEvent, getCurrent, "Get event lod level", int) },
+	{"getLast", PyWrap( LodEvent, getLast, "Get event last lod level", int) },
+	{"getLod", PyWrap( LodEvent, getLod, "Get event lod", VRLodPtr) },
     {NULL}  /* Sentinel */
 };
 

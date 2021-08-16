@@ -59,7 +59,7 @@ class VRTransform : public VRObject {
 
         Matrix4d old_transformation; //drag n drop
 
-        virtual VRObjectPtr copy(vector<VRObjectPtr> children);
+        virtual VRObjectPtr copy(vector<VRObjectPtr> children) override;
 
         void computeMatrix4d();
 
@@ -69,7 +69,7 @@ class VRTransform : public VRObject {
         void reg_change();
         bool checkWorldChange();
 
-        void printInformation();
+        void printInformation() override;
         void initCoords();
         void initTranslator();
 
@@ -81,7 +81,7 @@ class VRTransform : public VRObject {
         VRTransformPtr ptr();
         OSGTransformPtr getOSGTransformPtr();
 
-        virtual void wrapOSG(OSGObjectPtr node);
+        virtual void wrapOSG(OSGObjectPtr node) override;
 
         static VRTransformPtr getParentTransform(VRObjectPtr o);
         static Vec3d computeEulerAngles(const Matrix4d& t);

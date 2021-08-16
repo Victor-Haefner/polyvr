@@ -31,7 +31,7 @@ class VRMouse : public VRDevice {
         static VRMousePtr create();
         VRMousePtr ptr();
 
-        void clearSignals();
+        void clearSignals() override;
 
         //3d object to emulate a hand in VRSpace
         void updatePosition(int x, int y);
@@ -39,12 +39,12 @@ class VRMouse : public VRDevice {
         void mouse(int button, int state, int x, int y);
         void motion(int x, int y);
 
-        void setCamera(VRCameraPtr cam);
+        void setCamera(VRCameraPtr cam) override;
         void setViewport(VRViewPtr view);
 
         Line getRay();
-        VRSignalPtr getToEdgeSignal();
-        VRSignalPtr getFromEdgeSignal();
+        VRSignalPtr getToEdgeSignal() override;
+        VRSignalPtr getFromEdgeSignal() override;
 
         void setCursor(string c);
 

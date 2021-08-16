@@ -42,6 +42,8 @@
 #include <OpenSG/OSGOSBTypedGeoIntegralPropertyElement.h>
 #include <OpenSG/OSGOSBTypedGeoVectorPropertyElement.h>
 
+#include "core/setup/devices/VRServer.h"
+
 OSG_BEGIN_NAMESPACE;
 
 typedef const char* CSTR;
@@ -226,6 +228,13 @@ EMSCRIPTEN_KEEPALIVE void PolyVR_setScriptIthArgumentVal(CSTR name, int i, CSTR 
     if (!script) return;
     auto a = getIthArg(script, i);
     script->changeArgValue(a->getName(), string(val));
+}
+
+EMSCRIPTEN_KEEPALIVE void PolyVR_triggerServerMessage(CSTR msg, int clientID) {
+    auto dev = VRSetup::getCurrent()->getDevice("server1");
+    auto server = dynamic_pointer_cast<VRServer>(dev);
+    server->handleMessage("", clientID, 1);
+    server->handleMessage(msg, clientID, 0);
 }
 
 OSG_END_NAMESPACE;

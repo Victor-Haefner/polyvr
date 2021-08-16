@@ -9,6 +9,10 @@ struct VRPyLod : VRPyBaseT<OSG::VRLod> {
     static PyMethodDef methods[];
 };
 
+struct VRPyLodEvent : VRPyBaseT<OSG::VRLodEvent> {
+    static PyMethodDef methods[];
+};
+
 struct VRPyLodTree : VRPyBaseT<OSG::VRLodTree> {
     static PyMethodDef methods[];
 };

@@ -3,6 +3,7 @@
 #include "core/utils/toString.h"
 #include "core/utils/VRFunction.h"
 #include "core/utils/VRStorage_template.h"
+#include "core/scene/VRScene.h"
 #include "core/objects/object/OSGCore.h"
 
 #include <OpenSG/OSGDistanceLOD.h>
@@ -11,8 +12,23 @@
 using namespace OSG;
 
 
+VRLodEvent::VRLodEvent(int c, int l, VRLodPtr lod) : current(c), last(l) { this->lod = lod; }
+
+VRLodEventPtr VRLodEvent::create(int c, int l, VRLodPtr lod) { return VRLodEventPtr( new VRLodEvent(c,l,lod) ); }
+
+int VRLodEvent::getCurrent() { return current; }
+int VRLodEvent::getLast() { return last; }
+VRLodPtr VRLodEvent::getLod() { return lod.lock(); }
+
+
 VRLod::VRLod(string name) : VRObject(name) {
+    auto f = new function<void(int,int)>(bind(&VRLod::onLODSwitch, this, placeholders::_1, placeholders::_2));
+    onLODSwitchCb = shared_ptr<function<void(int,int)>>( f );
+
     lod = DistanceLOD::create();
+#ifdef OSGDistanceLODHasUserCb
+    lod->setUserCallback(onLODSwitchCb);
+#endif
     setCore(OSGCore::create(lod), "Lod");
 
     store("center", &center);
@@ -25,6 +41,17 @@ VRLod::~VRLod() {}
 
 VRLodPtr VRLod::create(string name) { return shared_ptr<VRLod>(new VRLod(name) ); }
 VRLodPtr VRLod::ptr() { return static_pointer_cast<VRLod>( shared_from_this() ); }
+
+void VRLod::setCallback(VRLodCbPtr cb) { userCb = cb; }
+
+void VRLod::onLODSwitch(int current, int last) {
+    //cout << "VRLod::onLODSwitch from " << last << " to " << current << " cb: " << userCb << endl;
+    if (userCb) {
+        auto event = VRLodEvent::create(current, last, ptr());
+        auto f = bind( [](VRLodCbPtr cb, VRLodEventPtr e){ (*cb)(e); }, userCb, event );
+        VRScene::getCurrent()->queueJob( VRUpdateCb::create("LOD switch", f ) );
+    }
+}
 
 void VRLod::setCenter(Vec3d c) { center = c; setup(); }
 void VRLod::setScale(double s) { scale = s; setup(); }

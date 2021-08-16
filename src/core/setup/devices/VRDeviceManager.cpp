@@ -143,9 +143,6 @@ void VRDeviceManager::load(XMLElementPtr node) {
 #endif
 
         if (type == "server") {
-#ifdef WASM  // TODO: hack, hangs here somewhere..
-            continue;
-#endif
             VRServerPtr m = VRServer::create(5500);
             m->load(el);
             dev = m;

@@ -93,7 +93,7 @@ class VRNetworkNode : public VRManager<VRNetworkSlave>, public std::enable_share
 
         void setup(VRStorageContextPtr context);
 
-        virtual VRNetworkSlavePtr add(string name = "");
+        virtual VRNetworkSlavePtr add(string name = "") override;
 
         string getAddress();
         string getUser();

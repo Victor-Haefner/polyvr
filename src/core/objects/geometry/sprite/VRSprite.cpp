@@ -19,6 +19,10 @@
 #include <OpenSG/OSGGeoProperties.h>
 #include <sstream>
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#endif
+
 #define GLSL(shader) #shader
 
 using namespace OSG;
@@ -109,6 +113,74 @@ void VRSprite::webOpen(string path, int res, float ratio) {
     web->setResolution(res);
     web->setAspectRatio(ratio);
     updateGeo();
+#endif
+
+#ifdef __EMSCRIPTEN__
+    setMeshVisibility(0);
+    int fID = getID();
+
+    EM_ASM({
+        var fID = $0;
+	var isVis = $1;
+        var uri = Module.UTF8ToString($2);
+        var parts = uri.split("/");
+        uri = parts[parts.length - 1]+".html";
+
+        var frame = document.createElement("iframe");
+        document.body.appendChild(frame);
+        frame.src = uri;
+        frame.style = "position:absolute;top:0;left:0;height:300px;width:300px;z-index:2;";
+	frame.frameBorder = 0;
+        frame.title = "PolyVR widget";
+	if (!isVis) frame.style.display = "none";
+
+        hudFrames[fID] = frame;
+    }, fID, isVisible(), path.c_str());
+#endif
+}
+
+void VRSprite::updateTransformation() {
+    VRTransform::updateTransformation();
+#ifdef __EMSCRIPTEN__
+    int fID = getID();
+    float x = getFrom()[0];
+    float y = getFrom()[1];
+    float z = abs(getFrom()[2])*1.3;
+    float w = width/z;
+    float h = height/z;
+    float l = 0.5+x/z;
+    float b = 0.5+y/z;
+    if (z < 1e-3) z = 1e-3;
+    EM_ASM({
+        var fID = $0;
+	var width = $1 * 100.0;
+	var height = $2 * 100.0;
+	var left = $3 * 100.0;
+	var bottom = $4 * 100.0;
+        var frame = hudFrames[fID];
+	if (frame != undefined) {
+	    frame.style.width = width+"vh";
+	    frame.style.height = height+"vh";
+	    frame.style.left = "calc("+left+"vw - "+(width*0.5)+"vh)";
+	    frame.style.top = ((100-bottom)-height*0.5)+"vh";
+	}
+    }, fID, w, h, l, b);
+#endif
+}
+
+void VRSprite::setVisible(bool b, string mode) {
+    VRObject::setVisible(b,mode);
+#ifdef __EMSCRIPTEN__
+    int fID = getID();
+    EM_ASM({
+        var fID = $0;
+        var b = $1;
+        var frame = hudFrames[fID];
+	if (frame != undefined) {
+            if (b) frame.style.display = "block";
+            else frame.style.display = "none";
+	}
+    }, fID, b);
 #endif
 }
 
@@ -220,48 +292,47 @@ uniform float doBillboard;
 uniform float doScreensize;
 uniform vec2 OSGViewportSize;
 
-\n#ifdef __EMSCRIPTEN__\n
+\n
+#ifdef __EMSCRIPTEN__
+\n
 uniform mat4 OSGModelViewProjectionMatrix;
 uniform mat4 OSGModelViewMatrix;
 uniform mat4 OSGProjectionMatrix;
-\n#endif\n
+\n
+#endif
+\n
 
 void main( void ) {
+\n
+#ifdef __EMSCRIPTEN__
+\n
+    mat4 M = OSGModelViewProjectionMatrix;
+#else
+\n
+    mat4 M = gl_ModelViewProjectionMatrix;
+\n
+#endif
+\n
+
     if (doBillboard < 0.5) {
 		if (doScreensize < 0.5) {
 			vec4 v = osg_Vertex;
 			v.xy += osg_MultiTexCoord1.xy;
-\n#ifdef __EMSCRIPTEN__\n
-			gl_Position = OSGModelViewProjectionMatrix * v;
-\n#else\n
-			gl_Position = gl_ModelViewProjectionMatrix * v;
-\n#endif\n
+			gl_Position = M * v;
 		} else {
 			vec4 v = osg_Vertex;
-\n#ifdef __EMSCRIPTEN__\n
-			vec4 k = OSGModelViewProjectionMatrix * v;
-\n#else\n
-			vec4 k = gl_ModelViewProjectionMatrix * v;
-\n#endif\n
+			vec4 k = M * v;
 		    k.xyz = k.xyz/k.w;
 		    k.w = 1.0;
     		float a = OSGViewportSize.y/OSGViewportSize.x;
     		vec4 d = vec4(osg_MultiTexCoord1.x*a, osg_MultiTexCoord1.y,0,0);
-\n#ifdef __EMSCRIPTEN__\n
-		    gl_Position = k + OSGModelViewProjectionMatrix * d * 0.1;
-\n#else\n
-		    gl_Position = k + gl_ModelViewProjectionMatrix * d * 0.1;
-\n#endif\n
+		    gl_Position = k + M * d * 0.1;
         }
     } else if (doBillboard < 1.5) {
         float a = OSGViewportSize.y/OSGViewportSize.x;
         vec4 d = vec4(osg_MultiTexCoord1.x*a, osg_MultiTexCoord1.y,0,0);
         vec4 v = osg_Vertex;
-\n#ifdef __EMSCRIPTEN__\n
-		vec4 k = OSGModelViewProjectionMatrix * v;
-\n#else\n
-		vec4 k = gl_ModelViewProjectionMatrix * v;
-\n#endif\n
+		vec4 k = M * v;
 		if (doScreensize > 0.5) {
     		d *= 0.1;
 		    k.xyz = k.xyz/k.w;
@@ -275,25 +346,13 @@ void main( void ) {
         vec4 k;
 		if (doScreensize > 0.5) {
     		d *= 0.1;
-\n#ifdef __EMSCRIPTEN__\n
-			k = OSGModelViewProjectionMatrix * v;
-\n#else\n
-			k = gl_ModelViewProjectionMatrix * v;
-\n#endif\n
+			k = M * v;
 		    k.xyz = k.xyz/k.w;
 		    k.w = 1.0;
-\n#ifdef __EMSCRIPTEN__\n
-		    k += OSGModelViewProjectionMatrix * vec4(0, osg_MultiTexCoord1.y, 0, 0) * 0.1;
-\n#else\n
-		    k += gl_ModelViewProjectionMatrix * vec4(0, osg_MultiTexCoord1.y, 0, 0) * 0.1;
-\n#endif\n
+		    k += M * vec4(0, osg_MultiTexCoord1.y, 0, 0) * 0.1;
 		} else {
 			v.y += osg_MultiTexCoord1.y;
-\n#ifdef __EMSCRIPTEN__\n
-			k = OSGModelViewProjectionMatrix * v;
-\n#else\n
-			k = gl_ModelViewProjectionMatrix * v;
-\n#endif\n
+			k = M * v;
 		}
     	gl_Position = k + d;
     }
@@ -304,9 +363,13 @@ void main( void ) {
 
 string VRSprite::spriteShaderFP =
 GLSL(
-\n#ifdef __EMSCRIPTEN__\n
+\n
+#ifdef __EMSCRIPTEN__
+\n
 precision mediump float;
-\n#endif\n
+\n
+#endif
+\n
 uniform sampler2D texture;
 
 varying vec2 texCoord;

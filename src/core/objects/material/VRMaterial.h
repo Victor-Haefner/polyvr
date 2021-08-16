@@ -44,7 +44,7 @@ class VRMaterial : public VRObject {
         bool force_transparency = false;
         bool deferred = false;
 
-        VRObjectPtr copy(vector<VRObjectPtr> children);
+        VRObjectPtr copy(vector<VRObjectPtr> children) override;
 
         bool isCMat(MaterialMTUncountedPtr matPtr);
         bool isSMat(MaterialMTUncountedPtr matPtr);

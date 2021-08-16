@@ -14,7 +14,7 @@ class VRLightBeacon : public VRTransform {
         string light_name;
         OSGObjectPtr lightGeo;
 
-        VRObjectPtr copy(vector<VRObjectPtr> children);
+        VRObjectPtr copy(vector<VRObjectPtr> children) override;
 
 #ifdef WASM
         void updateTransformation();

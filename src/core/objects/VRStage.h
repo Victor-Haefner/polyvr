@@ -28,7 +28,7 @@ class VRStage : public VRObject {
         void setup();
 
     protected:
-        VRObjectPtr copy(vector<VRObjectPtr> children);
+        VRObjectPtr copy(vector<VRObjectPtr> children) override;
 
     public:
         VRStage(string name);

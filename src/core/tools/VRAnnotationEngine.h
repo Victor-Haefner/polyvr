@@ -53,7 +53,7 @@ class VRAnnotationEngine : public VRGeometry {
         void initialize();
 
     protected:
-        VRObjectPtr copy(vector<VRObjectPtr> children);
+        VRObjectPtr copy(vector<VRObjectPtr> children) override;
 
     public:
         VRAnnotationEngine(string name, bool init = true);
@@ -77,7 +77,7 @@ class VRAnnotationEngine : public VRGeometry {
         string getLabel(int i);
         map<int, string> getLabels();
 
-        virtual bool applyIntersectionAction(Action* ia);
+        virtual bool applyIntersectionAction(Action* ia) override;
 };
 
 OSG_END_NAMESPACE;
