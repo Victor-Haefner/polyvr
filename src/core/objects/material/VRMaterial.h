@@ -163,6 +163,10 @@ class VRMaterial : public VRObject {
         void setGeometryScript(string script);
         void setTessControlScript(string script);
         void setTessEvaluationScript(string script);
+
+        void applyPBR();
+        void setPBRcolor(Color3f c);
+        //void applyPBR(string s, string name);
         string getVertexShader();
         string getFragmentShader(bool deferred = false);
         string getGeometryShader();
