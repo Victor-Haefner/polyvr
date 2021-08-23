@@ -441,18 +441,24 @@ bool VRTerrain::createMultiGrid(VRCameraPtr cam, double res) {
         double tn = (N-N1)/(N2-N1);
         double te = (E-E1)/(E2-E1);
 
-        if (pla) {
-            double tcx = texel[0]*0.5 + te*(1.0-texel[0]);
-            double tcy = texel[1]*0.5 + tn*(1.0-texel[1]);
-            data.pushTexCoord(Vec2d(tcx, 1.0 - tcy));
-            auto pose = pla->fromLatLongPose(N, E);
-            pose = pSectorInv->multRight(pose);
-            data.setPos(i, pose->pos());
-            data.setNorm(i, pose->up());
-        } else {
+        if (!vertextFlip) {
             double tcx = texel[0]*0.5 + tn*(1.0-texel[0]);
             double tcy = texel[1]*0.5 + te*(1.0-texel[1]);
-            data.pushTexCoord(Vec2d(tcx, 1.0 - tcy));
+            data.pushTexCoord(Vec2d(tcx, tcy));
+        } else {
+            if (pla) {
+                double tcx = texel[0]*0.5 + te*(1.0-texel[0]);
+                double tcy = texel[1]*0.5 + tn*(1.0-texel[1]);
+                data.pushTexCoord(Vec2d(tcx, 1.0 - tcy));
+                auto pose = pla->fromLatLongPose(N, E);
+                pose = pSectorInv->multRight(pose);
+                data.setPos(i, pose->pos());
+                data.setNorm(i, pose->up());
+            } else {
+                double tcx = texel[0]*0.5 + tn*(1.0-texel[0]);
+                double tcy = texel[1]*0.5 + te*(1.0-texel[1]);
+                data.pushTexCoord(Vec2d(tcx, 1.0 - tcy));
+            }
         }
     }
 
@@ -473,6 +479,10 @@ void VRTerrain::setupGeo(VRCameraPtr cam) {
     if (localMesh && planet.lock()) mat->setShaderParameter("local",1);
     setMaterial(mat);
     //cout << "VRTerrain::setupGeo done" << endl;
+}
+
+void VRTerrain::deactivateVertexFlip() {
+    vertextFlip = false;
 }
 
 vector<Vec3d> VRTerrain::probeHeight( Vec2d p ) {

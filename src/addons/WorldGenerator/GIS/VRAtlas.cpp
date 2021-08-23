@@ -89,8 +89,8 @@ void VRAtlas::Patch::paint() {
             mt->setSortKey(2);
             mt->setStencilBuffer(false, 1, -1, GL_ALWAYS, GL_KEEP, GL_KEEP, GL_KEEP);
 
-            removeFile(orthoPic);
-            removeFile(heightPic);
+            //removeFile(orthoPic);
+            //removeFile(heightPic);
         }
         loaded = true;
     };
@@ -230,6 +230,7 @@ void VRAtlas::handleJobQueue() {
                 Vec2d terrainSize = Vec2d(edgeLength,edgeLength);
                 float scale = float(pow(2,allPatchesByID[sID].LODlvl));
                 auto terrain = VRTerrain::create(name);
+                terrain->deactivateVertexFlip();
                 terrain->setParameters (terrainSize, scale, 1);
                 allPatchesByID[sID].terrain = terrain;
                 atlas->addChild(terrain);
@@ -390,7 +391,8 @@ void VRAtlas::update() {
                 float coordE = (vecat[0]-4+j)*edgeLength+atlasOrigin[0];
                 float coordN = (vecat[1]+4-i)*edgeLength+atlasOrigin[1];
                 float coordx =   (vecat[0]-4+j)*edgeLength;
-                float coordz = - (vecat[1]+4-i)*edgeLength;
+                //float coordz = - (vecat[1]+4-i)*edgeLength;
+                float coordz =   (vecat[1]-4+i)*edgeLength;
 
                 Vec2d coords = Vec2d(coordE, coordN);
 

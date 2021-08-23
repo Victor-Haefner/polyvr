@@ -51,6 +51,7 @@ class VRTerrain : public VRGeometry, public VRWorldModule {
         double LODfac = 1.0;
         bool localMesh = false;
         bool useHeightoffset = false;
+        bool vertextFlip = true;
         float heightoffset = 0.0;
         VRTexturePtr heigthsTex;
         VRTexturePtr satTex;
@@ -83,6 +84,7 @@ class VRTerrain : public VRGeometry, public VRWorldModule {
         VRTerrain(string name, bool localized = false);
         ~VRTerrain();
         static VRTerrainPtr create(string name = "terrain", bool localized = false);
+        void deactivateVertexFlip();
         VRTerrainPtr ptr();
 
         void setSimpleNoise();
