@@ -57,7 +57,7 @@ class VRTexture : public std::enable_shared_from_this<VRTexture> {
         Color4f getPixelVec(Vec3i p);
         Color4f getPixel(int i);
 
-        void resize(Vec3i size, Vec3i offset);
+        void resize(Vec3i size, bool scale, Vec3i offset);
         void downsize();
         void paste(VRTexturePtr other, Vec3i offset);
         void merge(VRTexturePtr other, Vec3d pos);

@@ -20,7 +20,7 @@ void VRTextureMosaic::add(VRTexturePtr tex, Vec2i pos, Vec2i ID) {
         return;
     }
 
-    resize( Vec3i(max(pos[0]+tex->getSize()[0], s[0]), max(pos[1]+tex->getSize()[1], s[1]), 1), Vec3i() );
+    resize( Vec3i(max(pos[0]+tex->getSize()[0], s[0]), max(pos[1]+tex->getSize()[1], s[1]), 1), false, Vec3i() );
     paste(tex, Vec3i(pos[0], pos[1], 0) );
 }
 

@@ -62,6 +62,7 @@ PyMethodDef VRPyTexture::methods[] = {
     {"setByteData", PyWrapOpt(Texture, setByteData, "Set byte texture data", "1|0", void, vector<char>, Vec3i, int, int, int ) },
     {"setFloatData", PyWrapOpt(Texture, setFloatData, "Set float texture data", "1|0", void, vector<float>, Vec3i, int, int, int ) },
     {"setInternalFormat", PyWrap(Texture, setInternalFormat, "Set internal format", void, int ) },
+    {"resize", PyWrapOpt(Texture, resize, "Resize image, optional scaling and offset", "1|0 0 0", void, Vec3i, bool, Vec3i ) },
     {NULL}  /* Sentinel */
 };
 
