@@ -16,9 +16,9 @@ PyMethodDef VRPyTerrain::methods[] = {
     {"setLit", PyWrap(Terrain, setLit, "Set lit or not", void, bool ) },
     {"setAtmosphericEffect", PyWrap(Terrain, setAtmosphericEffect, "Set the atmospheric density and color", void, float, Color3f ) },
     {"loadMap", PyWrapOpt(Terrain, loadMap, "Load height map opt parameters ( path, channel = 3, consoleOutputEnabled = 1 )", "3|1", void, string, int, bool ) },
-    {"setMap", PyWrapOpt(Terrain, setMap, "Set height map", "0", void, VRTexturePtr, int ) },
+    {"setMap", PyWrapOpt(Terrain, setMap, "Set height map, optional channel and rectangle", "0|0 0 1 1", void, VRTexturePtr, int, Vec4d ) },
     {"getMap", PyWrap(Terrain, getMap, "Get height map", VRTexturePtr ) },
-    {"setTexture", PyWrapOpt(Terrain, setTexture, "Set color texture", "1 1 1 1|0", void, VRTexturePtr, Color4f, float ) },
+    {"setTexture", PyWrapOpt(Terrain, setTexture, "Set color texture", "1 1 1 1|0|0 0 1 1", void, VRTexturePtr, Color4f, float, Vec4d ) },
     {"getTexture", PyWrap(Terrain, getTexture, "Get color texture", VRTexturePtr ) },
     {"physicalize", PyWrap(Terrain, physicalize, "Physicalize terrain", void, bool ) },
     {"projectOSM", PyWrap(Terrain, projectOSM, "Load an OSM file and project surface types onto terrain, OSM path, N, E", void ) },
@@ -33,7 +33,6 @@ PyMethodDef VRPyTerrain::methods[] = {
     {"elevateObject", PyWrapOpt(Terrain, elevateObject, "Elevate an Object onto the terrain", "0", void, VRTransformPtr, float ) },
     {"flatten", PyWrap(Terrain, flatten, "Flatten the area inside a perimeter", void, vector<Vec2d>, float ) },
     {"setHeightScale", PyWrap(Terrain, setHeightScale, "Set height scale", void, float ) },
-    {"exportWebMesh", PyWrap(Terrain, exportWebMesh, "Export mesh for webassembly pojects", void, string ) },
     {"setupGeo", PyWrapOpt(Terrain, setupGeo, "Computes terrain mesh, pass camera to optimize mesh", "0", void, VRCameraPtr ) },
     {NULL}  /* Sentinel */
 };
