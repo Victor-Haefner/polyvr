@@ -324,7 +324,9 @@ void VRPlanet::setLayermode( string mode ) {
 }
 
 VRWorldGeneratorPtr VRPlanet::addSector( double north, double east, bool local ) {
-    auto generator = VRWorldGenerator::create(layermode);
+    auto generator = VRWorldGenerator::create();
+    if (layermode == 0) generator->init();
+    if (layermode == 1) generator->initMinimum();
     auto sid = toSID(north, east);
     sectors[sid] = generator;
     anchor->addChild(generator);

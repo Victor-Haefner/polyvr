@@ -335,6 +335,7 @@ bool VRTerrain::createMultiGrid(VRCameraPtr cam, double res) {
         return false;
     }
 
+    if (!heigthsTex) return false;
     auto texSize = heigthsTex->getSize();
     Vec2d texel = Vec2d( 1.0/texSize[0], 1.0/texSize[1] );
 

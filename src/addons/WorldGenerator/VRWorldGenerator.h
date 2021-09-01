@@ -55,16 +55,16 @@ class VRWorldGenerator : public VRTransform {
 
         void processOSMMap(double subN = -1, double subE = -1, double subSize = -1);
         void processGMLfromOSM();
-        void init();
-        void initMinimum();
 
     public:
         VRWorldGenerator();
         ~VRWorldGenerator();
 
         static VRWorldGeneratorPtr create();
-        static VRWorldGeneratorPtr create(int meta);
         VRWorldGeneratorPtr ptr();
+
+        void init();
+        void initMinimum();
 
         void setOntology(VROntologyPtr ontology);
         void setPlanet(VRPlanetPtr planet, Vec2d coords);
@@ -80,8 +80,8 @@ class VRWorldGenerator : public VRTransform {
 
         //getLODTerrain();
         void setupLOD(int layers);
+        void addTerrain(VRTexturePtr sat, VRTexturePtr heights, double lodf, int lod, bool isLit, Color4f mixColor, float mixAmount);
         void setupLODTerrain(string pathMap, string pathPaint = "", float scale = 1.0, bool cache = true, bool isLit = true, Color4f mixColor = Color4f(1,1,1,1), float mixAmount = 0);
-        void addTerrainsToLOD();
         void setLODTerrainParameters(float heightScale);
         void setTerrainSize( Vec2d in );
         VRLodTreePtr getLodTree();

@@ -3,6 +3,7 @@
 #include "core/utils/toString.h"
 #include "core/utils/system/VRSystem.h"
 #include "core/scene/VRScene.h"
+#include "core/scene/import/GIS/VRGDAL.h"
 
 #include <OpenSG/OSGImage.h>
 
@@ -40,6 +41,12 @@ void VRTexture::setFloatData(vector<float> data, Vec3i layout, int chanels, int 
 
 void VRTexture::read(string path) {
     if (!img->read(path.c_str())) cout << " VRTexture::read from file '" << path << "' failed!" << endl;
+}
+
+void VRTexture::readGIS(string path) {
+    auto tex = loadGeoRasterData(path, false);
+    img = tex->img;
+    internal_format = tex->internal_format;
 }
 
 void VRTexture::writeThreaded(string path, VRTexturePtr self, VRThreadWeakPtr tw) { // TODO: add mutex!
