@@ -76,16 +76,16 @@ void VRWorldGenerator::setPlanet(VRPlanetPtr p, Vec2d c) {
     coords = c;
     planet = p;
     for (auto terrain:terrains) terrain->setWorld( ptr() );
-    if (metaLVL == 0) roads->setWorld( ptr() );
-    if (metaLVL == 0) nature->setWorld( ptr() );
-    if (metaLVL == 0) district->setWorld( ptr() );
+    if (roads) roads->setWorld( ptr() );
+    if (nature) nature->setWorld( ptr() );
+    if (district) district->setWorld( ptr() );
 }
 
 VROntologyPtr VRWorldGenerator::getOntology() { return ontology; }
 VRRoadNetworkPtr VRWorldGenerator::getRoadNetwork() { return roads; }
 VRTrafficSignsPtr VRWorldGenerator::getTrafficSigns() { return trafficSigns; }
 VRObjectManagerPtr VRWorldGenerator::getAssetManager() { return assets; }
-VRTerrainPtr VRWorldGenerator::getTerrain() { return terrains[0]; }
+VRTerrainPtr VRWorldGenerator::getTerrain() { return terrains.size() > 0 ? terrains[0] : 0; }
 VRNaturePtr VRWorldGenerator::getNature() { return nature; }
 VRPlanetPtr VRWorldGenerator::getPlanet() { return planet; }
 VRDistrictPtr VRWorldGenerator::getDistrict() { return district; }
@@ -117,7 +117,6 @@ VRGeometryPtr VRWorldGenerator::getMiscArea(VREntityPtr mEnt){
 }
 
 void VRWorldGenerator::init() {
-    metaLVL = 0;
     auto addMat = [&](string name, int texDim) {
         auto mat = VRMaterial::create(name);
         mat->setDefaultVertexShader();
@@ -168,7 +167,6 @@ void VRWorldGenerator::init() {
 }
 
 void VRWorldGenerator::initMinimum() {
-    metaLVL = 1;
     auto addMat = [&](string name, int texDim) {
         auto mat = VRMaterial::create(name);
         mat->setDefaultVertexShader();
