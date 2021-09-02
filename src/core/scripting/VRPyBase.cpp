@@ -1,6 +1,7 @@
 #include "VRPyBase.h"
 #include "VRPyBaseT.h"
 #include "VRPyMath.h"
+#include "core/utils/toString.h"
 
 #include <OpenSG/OSGImage.h>
 
