@@ -43,7 +43,7 @@
 using namespace OSG;
 
 
-VRWorldGenerator::VRWorldGenerator() : VRTransform("WorldGenerator") {}
+VRWorldGenerator::VRWorldGenerator() : VRTransform("WorldGenerator") { type = "WorldGenerator"; }
 VRWorldGenerator::~VRWorldGenerator() {}
 
 VRWorldGeneratorPtr VRWorldGenerator::create() {
