@@ -46,7 +46,13 @@ using namespace OSG;
 VRWorldGenerator::VRWorldGenerator() : VRTransform("WorldGenerator") {}
 VRWorldGenerator::~VRWorldGenerator() {}
 
-VRWorldGeneratorPtr VRWorldGenerator::create() { return VRWorldGeneratorPtr( new VRWorldGenerator() ); }
+VRWorldGeneratorPtr VRWorldGenerator::create() {
+    auto wg = VRWorldGeneratorPtr( new VRWorldGenerator() );
+    wg->lod = VRLod::create("wgenLod");
+    wg->addChild(wg->lod);
+    return wg;
+}
+
 VRWorldGeneratorPtr VRWorldGenerator::ptr() { return dynamic_pointer_cast<VRWorldGenerator>( shared_from_this() ); }
 
 VRSpatialCollisionManagerPtr VRWorldGenerator::getPhysicsSystem() { return collisionShape; }
@@ -116,7 +122,7 @@ VRGeometryPtr VRWorldGenerator::getMiscArea(VREntityPtr mEnt){
     return 0;
 }
 
-void VRWorldGenerator::init() {
+void VRWorldGenerator::init() { // deprecated
     auto addMat = [&](string name, int texDim) {
         auto mat = VRMaterial::create(name);
         mat->setDefaultVertexShader();
@@ -143,15 +149,15 @@ void VRWorldGenerator::init() {
     auto terrain = VRTerrain::create();
     terrains.push_back(terrain);
     terrain->setWorld( ptr() );
-    lodLevels[0]->addChild(terrain);
+    lod->getChild(0)->addChild(terrain);
 
     roads = VRRoadNetwork::create();
     roads->setWorld( ptr() );
-    lodLevels[0]->addChild(roads);
+    lod->getChild(0)->addChild(roads);
 
     trafficSigns = VRTrafficSigns::create();
     trafficSigns->setWorld( ptr() );
-    lodLevels[0]->addChild(trafficSigns);
+    lod->getChild(0)->addChild(trafficSigns);
 
     assets = VRObjectManager::create();
     addChild(assets);
@@ -166,7 +172,7 @@ void VRWorldGenerator::init() {
     addChild(district);
 }
 
-void VRWorldGenerator::initMinimum() {
+void VRWorldGenerator::initMinimum() { // deprecated
     auto addMat = [&](string name, int texDim) {
         auto mat = VRMaterial::create(name);
         mat->setDefaultVertexShader();
@@ -186,7 +192,7 @@ void VRWorldGenerator::initMinimum() {
     auto terrain = VRTerrain::create();
     terrains.push_back(terrain);
     terrain->setWorld( ptr() );
-    lodLevels[1]->addChild(terrain);
+    lod->getChild(1)->addChild(terrain);
 
     assets = VRObjectManager::create();
     addChild(assets);
@@ -216,8 +222,8 @@ OSMMapPtr VRWorldGenerator::getGMLMap() { return gmlMap; }
 
 void VRWorldGenerator::setTerrainSize( Vec2d in ) { terrainSize = in; }
 
-void VRWorldGenerator::addTerrain(VRTexturePtr sat, VRTexturePtr heights, double lodf, int lod, bool isLit, Color4f mixColor, float mixAmount) {
-    auto terrain = VRTerrain::create("terrain"+toString(lod), bool(planet));
+VRTerrainPtr VRWorldGenerator::addTerrain(VRTexturePtr sat, VRTexturePtr heights, double lodf, double loddist, int lodlvl, bool isLit, Color4f mixColor, float mixAmount) {
+    auto terrain = VRTerrain::create("terrain"+toString(lodlvl), bool(planet));
 
     terrain->setParameters(terrainSize, 2/lodf, 1);
     if (!heights) {
@@ -234,8 +240,17 @@ void VRWorldGenerator::addTerrain(VRTexturePtr sat, VRTexturePtr heights, double
     terrain->setLODFactor(lodf);
     terrain->setLit(isLit);
     terrains.push_back(terrain);
-    lodLevels[lod]->addChild(terrain);
+
+    for (int i=lod->getChildrenCount(); i<=lodlvl; i++) {
+        lod->addChild(VRObject::create("wgenlvl"+toString(i)));
+        if (i > 0) lod->addDistance(1e6);
+    }
+
+    auto lodc = lod->getChild(lodlvl);
+    if (lodlvl > 0) lod->setDistance(lodlvl-1, loddist);
+    if (lodc) lodc->addChild(terrain);
     if (planet) planet->localizeSector(ptr());
+    return terrain;
 }
 
 void VRWorldGenerator::setupLODTerrain(string pathMap, string pathPaint, float detail, bool cache, bool isLit, Color4f mixColor, float mixAmount ) {
@@ -313,7 +328,7 @@ void VRWorldGenerator::setupLODTerrain(string pathMap, string pathPaint, float d
     }
 #endif
 
-    auto addLOD = [&](double fac, int a) {
+    auto addLOD = [&](double fac, int a, int dist) {
         cout << "   !!! VRWorldGenerator::setupLODTerrain::addLOD" << endl;
         VRTexturePtr texH = tex;
         string satImg = pathPaint;
@@ -324,14 +339,14 @@ void VRWorldGenerator::setupLODTerrain(string pathMap, string pathPaint, float d
 #endif
         auto texS = VRTexture::create();
         texS->read(satImg);
-        addTerrain(texS, texH, fac*detail, a, isLit, mixColor, mixAmount);
+        addTerrain(texS, texH, fac*detail, dist, a, isLit, mixColor, mixAmount);
     };
 
     //cout << " VRWorldGenerator::setupLODTerrain add terrains" << endl;
-    addLOD(1.0, 0);
+    addLOD(1.0, 0, 0);
 #ifndef __EMSCRIPTEN__
-    addLOD(0.25, 1);
-    addLOD(0.05, 2);
+    addLOD(0.25, 1, 5000.0);
+    addLOD(0.05, 2, 15000.0);
 #endif
 
     //if (planet) planet->localizeSector(ptr());
@@ -343,34 +358,31 @@ vector<VRTerrainPtr> VRWorldGenerator::getTerrains(){
     return terrains;
 }
 
-void VRWorldGenerator::setupLOD(int layers){
-    lodLevels.clear();
-    lodFactors.clear();
-    for (auto tt:terrains) tt->destroy();
+void VRWorldGenerator::setupLOD(int layers) { // deprecated
+    for (auto t : terrains) t->destroy();
     terrains.clear();
+
     if (lod) lod->destroy();
     lod = VRLod::create("wgenLod");
-    auto addLod = [&](string name, double d, double fac) {
+
+    auto addLod = [&](string name, double d) {
         auto obj = VRObject::create(name);
-        lodLevels.push_back(obj);
-        lodFactors.push_back(fac);
         lod->addChild(obj);
         lod->addDistance(d);
     };
+
     ///TODO: make layer distance dependent of planet scale and radius
 #ifndef __EMSCRIPTEN__
-    if ( layers == 1 ) { addLod( "wgenlvl0", 10000000.0, 1.0 ); }
+    if ( layers == 1 ) { addLod( "wgenlvl0", 10000000.0 ); }
     if ( layers > 1 ) {
-        addLod( "wgenlvl0", 5000.0, 1.0 );
-        addLod( "wgenlvl1", 15000.0, 0.5 );
-        addLod( "wgenlvl2", 300000.0, 0.05);
+        addLod( "wgenlvl0", 5000.0 );
+        addLod( "wgenlvl1", 15000.0 );
+        addLod( "wgenlvl2", 300000.0);
     }
 #else
-    addLod( "wgenlvl0", 10000000.0, 0.05 );
+    addLod( "wgenlvl0", 10000000.0 );
 #endif
     auto anchor = VRObject::create("wgenAnchor");
-    lodLevels.push_back(anchor);
-    lodFactors.push_back(-1);
     lod->addChild(anchor);
     addChild(lod);
 }

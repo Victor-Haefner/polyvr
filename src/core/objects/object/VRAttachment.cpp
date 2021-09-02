@@ -6,7 +6,7 @@ using namespace std;
 
 typedef VRAttachment::base* VRAttachmentBasePtr;
 
-template<> string typeName(const VRAttachmentBasePtr& data) { return data->typeName(); }
+template<> string typeName(const VRAttachment::base* data) { return data ? data->typeName() : "VRAttachment"; }
 
 template<> string toString(const VRAttachmentBasePtr& data) {
     if (!data) return "";

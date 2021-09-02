@@ -21,9 +21,9 @@
 
 using namespace OSG;
 
-template<> string typeName(const VRObject& o) {
-    VRObject* O = (VRObject*)&o;
-    return O->getType();
+template<> string typeName(const VRObject* o) {
+    VRObject* O = (VRObject*)o;
+    return O ? O->getType() : "VRObject";
 }
 
 VRObject::VRObject(string _name) {

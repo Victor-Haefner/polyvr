@@ -38,8 +38,6 @@ class VRWorldGenerator : public VRTransform {
         VRObjectManagerPtr assets;
         VRNaturePtr nature;
         VRLodPtr lod;
-        vector<VRObjectPtr> lodLevels;
-        vector<double> lodFactors;
         vector<VRTerrainPtr> terrains;
         Vec2d terrainSize = Vec2d(100,100);
         map<string, VRMaterialPtr> materials;
@@ -79,7 +77,7 @@ class VRWorldGenerator : public VRTransform {
 
         //getLODTerrain();
         void setupLOD(int layers);
-        void addTerrain(VRTexturePtr sat, VRTexturePtr heights, double lodf, int lod, bool isLit, Color4f mixColor, float mixAmount);
+        VRTerrainPtr addTerrain(VRTexturePtr sat, VRTexturePtr heights, double lodf, double loddist, int lod, bool isLit, Color4f mixColor, float mixAmount);
         void setupLODTerrain(string pathMap, string pathPaint = "", float scale = 1.0, bool cache = true, bool isLit = true, Color4f mixColor = Color4f(1,1,1,1), float mixAmount = 0);
         void setLODTerrainParameters(float heightScale);
         void setTerrainSize( Vec2d in );

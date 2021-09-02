@@ -172,32 +172,32 @@ template<> string toString(const Matrix4d& m) {
 
 typedef void* voidPtr;
 
-template<> string typeName(const voidPtr& t) { return "pointer"; }
-template<> string typeName(const string& t) { return "string"; }
-template<> string typeName(const int& t) { return "int"; }
-template<> string typeName(const unsigned int& t) { return "int"; }
+template<> string typeName(const voidPtr* t) { return "pointer"; }
+template<> string typeName(const string* t) { return "string"; }
+template<> string typeName(const int* t) { return "int"; }
+template<> string typeName(const unsigned int* t) { return "int"; }
 //#ifdef _WIN32
-template<> string typeName(const size_t& t) { return "int"; }
+template<> string typeName(const size_t* t) { return "int"; }
 //#endif
-template<> string typeName(const float& t) { return "float"; }
-template<> string typeName(const double& t) { return "double"; }
-template<> string typeName(const bool& t) { return "bool"; }
-template<> string typeName(const char& t) { return "char"; }
-template<> string typeName(const unsigned char& t) { return "unsigned char"; }
-template<> string typeName(const Pnt2d& t) { return "Pnt2d"; }
-template<> string typeName(const Pnt3d& t) { return "Pnt3d"; }
-template<> string typeName(const Pnt4d& t) { return "Pnt4d"; }
-template<> string typeName(const Vec2d& t) { return "Vec2d"; }
-template<> string typeName(const Vec3d& t) { return "Vec3d"; }
-template<> string typeName(const Vec4d& t) { return "Vec4d"; }
-template<> string typeName(const Vec2i& t) { return "Vec2i"; }
-template<> string typeName(const Vec3i& t) { return "Vec3i"; }
-template<> string typeName(const Vec4i& t) { return "Vec4i"; }
-template<> string typeName(const Matrix4d& t) { return "Matrix"; }
-template<> string typeName(const Color3f& t) { return "Vec3d"; }
-template<> string typeName(const Color4f& t) { return "Vec4d"; }
-template<> string typeName(const Line& t) { return "Line"; }
-string typeName(const std::shared_ptr<VRFunction<void>> t) { return "callback()"; }
+template<> string typeName(const float* t) { return "float"; }
+template<> string typeName(const double* t) { return "double"; }
+template<> string typeName(const bool* t) { return "bool"; }
+template<> string typeName(const char* t) { return "char"; }
+template<> string typeName(const unsigned char* t) { return "unsigned char"; }
+template<> string typeName(const Pnt2d* t) { return "Pnt2d"; }
+template<> string typeName(const Pnt3d* t) { return "Pnt3d"; }
+template<> string typeName(const Pnt4d* t) { return "Pnt4d"; }
+template<> string typeName(const Vec2d* t) { return "Vec2d"; }
+template<> string typeName(const Vec3d* t) { return "Vec3d"; }
+template<> string typeName(const Vec4d* t) { return "Vec4d"; }
+template<> string typeName(const Vec2i* t) { return "Vec2i"; }
+template<> string typeName(const Vec3i* t) { return "Vec3i"; }
+template<> string typeName(const Vec4i* t) { return "Vec4i"; }
+template<> string typeName(const Matrix4d* t) { return "Matrix"; }
+template<> string typeName(const Color3f* t) { return "Vec3d"; }
+template<> string typeName(const Color4f* t) { return "Vec4d"; }
+template<> string typeName(const Line* t) { return "Line"; }
+string typeName(const std::shared_ptr<VRFunction<void>>* t) { return "callback()"; }
 
 template <typename T> int ssToVal(stringstream& ss, T& t) {
     int N = ss.tellg();

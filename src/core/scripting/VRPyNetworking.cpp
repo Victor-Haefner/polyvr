@@ -100,9 +100,9 @@ template<> int toValue(stringstream& ss, function<string(string)>& e) { return 0
 template<> int toValue(stringstream& ss, function<void(string)>& e) { return 0; }
 template<> int toValue(stringstream& ss, function<void(void)>& e) { return 0; }
 
-template<> string typeName(const function<string(string)>& t) { return "string function(string)"; }
-template<> string typeName(const function<void(string)>& t) { return "void function(string)"; }
-template<> string typeName(const function<void(void)>& t) { return "void function()"; }
+template<> string typeName(const function<string(string)>* t) { return "string function(string)"; }
+template<> string typeName(const function<void(string)>* t) { return "void function(string)"; }
+template<> string typeName(const function<void(void)>* t) { return "void function()"; }
 #endif
 
 
