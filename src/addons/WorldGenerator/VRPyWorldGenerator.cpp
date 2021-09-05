@@ -53,7 +53,7 @@ PyMethodDef VRPyWorldGenerator::methods[] = {
     {"getRoadNetwork", PyWrap( WorldGenerator, getRoadNetwork, "Access road network", VRRoadNetworkPtr ) },
     {"getTrafficSigns", PyWrap( WorldGenerator, getTrafficSigns, "Access traffic signs", VRTrafficSignsPtr ) },
     {"getNature", PyWrap( WorldGenerator, getNature, "Access nature module", VRNaturePtr ) },
-    {"getTerrain", PyWrap( WorldGenerator, getTerrain, "Access the terrain", VRTerrainPtr ) },
+    {"getTerrain", PyWrap( WorldGenerator, getTerrain, "Access the ith LOD terrain", VRTerrainPtr, int ) },
     {"getDistrict", PyWrap( WorldGenerator, getDistrict, "Access the district module", VRDistrictPtr ) },
     {"getLodTree", PyWrap( WorldGenerator, getLodTree, "Access the lod tree", VRLodTreePtr ) },
     {"setOntology", PyWrap( WorldGenerator, setOntology, "Set ontology", void, VROntologyPtr ) },

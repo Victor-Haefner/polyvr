@@ -91,11 +91,16 @@ VROntologyPtr VRWorldGenerator::getOntology() { return ontology; }
 VRRoadNetworkPtr VRWorldGenerator::getRoadNetwork() { return roads; }
 VRTrafficSignsPtr VRWorldGenerator::getTrafficSigns() { return trafficSigns; }
 VRObjectManagerPtr VRWorldGenerator::getAssetManager() { return assets; }
-VRTerrainPtr VRWorldGenerator::getTerrain() { return terrains.size() > 0 ? terrains[0] : 0; }
 VRNaturePtr VRWorldGenerator::getNature() { return nature; }
 VRPlanetPtr VRWorldGenerator::getPlanet() { return planet; }
 VRDistrictPtr VRWorldGenerator::getDistrict() { return district; }
 VRLodTreePtr VRWorldGenerator::getLodTree() { return lodTree; }
+
+VRTerrainPtr VRWorldGenerator::getTerrain(int i) {
+    auto lc = lod->getChild(i);
+    if (!lc) return 0;
+    return dynamic_pointer_cast<VRTerrain>( lc->getChild(0) );
+}
 
 void VRWorldGenerator::addMaterial( string name, VRMaterialPtr mat ) { materials[name] = mat; }
 void VRWorldGenerator::addAsset( string name, VRTransformPtr geo ) {

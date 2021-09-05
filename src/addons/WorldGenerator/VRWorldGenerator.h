@@ -89,7 +89,7 @@ class VRWorldGenerator : public VRTransform {
         VRTrafficSignsPtr getTrafficSigns();
         VRObjectManagerPtr getAssetManager();
         VRNaturePtr getNature();
-        VRTerrainPtr getTerrain();
+        VRTerrainPtr getTerrain(int i);
         vector<VRTerrainPtr> getTerrains();
         VRDistrictPtr getDistrict();
         VRMaterialPtr getMaterial(string name);
