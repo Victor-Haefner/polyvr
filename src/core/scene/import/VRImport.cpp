@@ -205,7 +205,7 @@ void VRImport::LoadJob::load(VRThreadWeakPtr tw) {
         if (ext == ".osb" || ext == ".osg") { osgLoad(path, res); return; }
         if (preset == "OSG") osgLoad(path, res); // fallback
 #ifndef WITHOUT_COLLADA
-        if (preset == "COLLADA") loadCollada(path, res);
+        if (preset == "COLLADA") loadCollada(path, res, options);
 #endif
         cout << " additional created: " << clist->getNumCreated()-Ncr0 << ", changed: " << clist->getNumChanged()-Nch0 << endl;
     };
