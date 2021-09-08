@@ -14,6 +14,7 @@ simpleVRPyType(RestServer, New_ptr);
 #ifndef WITHOUT_TCP
 simpleVRPyType(TCPClient, New_ptr);
 simpleVRPyType(TCPServer, New_ptr);
+simpleVRPyType(ICEClient, New_ptr);
 #endif
 
 #ifndef WITHOUT_HDLC
@@ -69,6 +70,21 @@ PyMethodDef VRPyTCPServer::methods[] = {
     {"listen", PyWrapOpt(TCPServer, listen, "Listen on port", "", void, int, string) },
     {"close", PyWrap(TCPServer, close, "Close server", void) },
     {"onMessage", PyWrap(TCPServer, onMessage, "Set onMessage callback", void, function<string(string)>) },
+    {NULL}  /* Sentinel */
+};
+
+typedef map<string, string> mapSS;
+
+PyMethodDef VRPyICEClient::methods[] = {
+    {"setTurnServer", PyWrap(ICEClient, setTurnServer, "Setup turn server address and ip", void, string, string) },
+    {"onEvent", PyWrap(ICEClient, onEvent, "Set onEvent callback", void, function<void(string)>) },
+    {"onMessage", PyWrap(ICEClient, onMessage, "Set onMessage callback", void, function<void(string)>) },
+    {"setName", PyWrap(ICEClient, setName, "Set your name used to register on broker", void, string) },
+    {"send", PyWrap(ICEClient, send, "Send message", void, string) },
+    {"connectTo", PyWrap(ICEClient, connectTo, "Connect to another user", void, string) },
+    {"getUserID", PyWrap(ICEClient, getUserID, "Get UID of specific user by name", string, string) },
+    {"getUsers", PyWrap(ICEClient, getUsers, "Get all users registered at turn server", mapSS) },
+    {"getClient", PyWrap(ICEClient, getClient, "Get internal TCP client", VRTCPClientPtr) },
     {NULL}  /* Sentinel */
 };
 

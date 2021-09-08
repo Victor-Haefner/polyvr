@@ -1048,6 +1048,8 @@
 		<Unit filename="src/core/networking/rest/VRRestResponse.h" />
 		<Unit filename="src/core/networking/rest/VRRestServer.cpp" />
 		<Unit filename="src/core/networking/rest/VRRestServer.h" />
+		<Unit filename="src/core/networking/tcp/VRICEclient.cpp" />
+		<Unit filename="src/core/networking/tcp/VRICEclient.h" />
 		<Unit filename="src/core/networking/tcp/VRTCPClient.cpp" />
 		<Unit filename="src/core/networking/tcp/VRTCPClient.h" />
 		<Unit filename="src/core/networking/tcp/VRTCPServer.cpp" />

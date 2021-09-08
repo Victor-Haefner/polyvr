@@ -7,6 +7,7 @@
 #include "core/networking/rest/VRRestServer.h"
 #include "core/networking/tcp/VRTCPClient.h"
 #include "core/networking/tcp/VRTCPServer.h"
+#include "core/networking/tcp/VRICEclient.h"
 #include "VRPyBase.h"
 
 struct VRPyHDLC : public VRPyBaseT<OSG::VRHDLC> {
@@ -31,6 +32,10 @@ struct VRPyTCPClient : public VRPyBaseT<OSG::VRTCPClient> {
 };
 
 struct VRPyTCPServer : public VRPyBaseT<OSG::VRTCPServer> {
+    static PyMethodDef methods[];
+};
+
+struct VRPyICEClient : public VRPyBaseT<OSG::VRICEClient> {
     static PyMethodDef methods[];
 };
 #endif

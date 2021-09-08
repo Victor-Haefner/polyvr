@@ -85,9 +85,42 @@
 
 
 	print 'send messages'
-	VR.cli.send('ok')
+	#VR.cli.send('ok')
 	#VR.cli1.send('message from client1')
 	#VR.cli2.send('message from client2')
+
+	VR.ice1.send('hi from alice')
+	VR.ice2.send('hi from bob')
+</core>
+    </Script>
+    <Script base_name="iceTest" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+	
+	server = 'localhost'
+	tcpServ = '127.0.0.1' # has to be an IPv4
+			
+	def setupICE(name, other):
+		def onMsg(m):
+			print name, 'received message:', m
+			
+		def onEvt(m):
+			print name, 'received event:', m
+	
+		ice = VR.ICEClient()
+		ice.setTurnServer(server, tcpServ)
+		ice.onMessage(onMsg)
+		ice.onEvent(onEvt)
+		ice.setName(name)
+		ice.connectTo(other)
+		return ice
+		
+	VR.ice1 = setupICE('alice', 'bob')
+	VR.ice2 = setupICE('bob', 'alice')
+	
+	VR.ice1.send('hi from alice')
+	VR.ice2.send('hi from bob')
+	
 </core>
     </Script>
     <Script base_name="init" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
@@ -97,7 +130,8 @@
 	
 	# try the different tests 
 	#VR.startP2Pclients()
-	VR.startP2PwTurnclients()
+	VR.iceTest()
+	#VR.startP2PwTurnclients()
 	#VR.startServer(5678)
 	#VR.startClients('127.0.0.1', 5678)
 
