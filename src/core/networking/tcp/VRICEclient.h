@@ -5,6 +5,7 @@
 #include "../VRNetworkingFwd.h"
 
 #include <map>
+#include <vector>
 #include <string>
 #include <functional>
 
@@ -18,6 +19,7 @@ class VRICEClient : public std::enable_shared_from_this<VRICEClient> {
         map<string, string> users;
 
         string name;
+        string uID;
         string turnURL;
         string turnIP;
 
@@ -35,11 +37,12 @@ class VRICEClient : public std::enable_shared_from_this<VRICEClient> {
         void onEvent( function<void(string)> f );
         void onMessage( function<void(string)> f );
 
-        void setName(string name);
+        void setName(string name, string uID);
         void connectTo(string other);
         void send(string msg);
 
-		string getUserID(string name);
+		string getUserName(string ID);
+		vector<string> getUserID(string name);
 		map<string, string> getUsers();
 		VRTCPClientPtr getClient();
 };

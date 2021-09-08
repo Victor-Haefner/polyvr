@@ -111,8 +111,13 @@
 		ice.setTurnServer(server, tcpServ)
 		ice.onMessage(onMsg)
 		ice.onEvent(onEvt)
-		ice.setName(name)
-		ice.connectTo(other)
+		
+		nID = ice.getUserID(name)[0]
+		ice.setName(name, nID)
+		
+		oID = ice.getUserID(other)[0]
+		print name, 'connect to', other, '('+oID+')'
+		ice.connectTo(oID)
 		return ice
 		
 	VR.ice1 = setupICE('alice', 'bob')

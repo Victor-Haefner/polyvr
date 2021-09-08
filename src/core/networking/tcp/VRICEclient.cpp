@@ -22,10 +22,11 @@ void VRICEClient::setTurnServer(string url, string ip) {
     getUsers();
 }
 
-void VRICEClient::setName(string n) {
+void VRICEClient::setName(string n, string ID) {
     getUsers();
     name = n;
-    if (!users.count(n)) broker->get(turnURL+"/regUser.php?NAME="+n);
+    if (!users.count(ID)) uID = broker->get(turnURL+"/regUser.php?NAME="+n)->getData();
+    else uID = ID;
     getUsers();
 }
 
@@ -54,22 +55,40 @@ map<string, string> VRICEClient::getUsers() {
         if (data.size() != 2) continue;
         string name = data[0];
         string uid = data[1];
-        users[name] = uid;
+        users[uid] = name;
     }
     return users;
 }
 
-string VRICEClient::getUserID(string n) {
-    if (users.count(n)) return users[n];
+string VRICEClient::getUserName(string ID) {
+    if (users.count(ID)) return users[ID];
     return "";
 }
 
-void VRICEClient::connectTo(string other) {
-    string uid1 = getUserID(name);
-    string uid2 = getUserID(other);
+vector<string> VRICEClient::getUserID(string n) {
+    vector<string> res;
+    for (auto u : users) if (u.second == n) res.push_back(u.first);
+    return res;
+}
+
+void VRICEClient::connectTo(string otherID) {
+    if (uID == "" || otherID == "") {
+        cout << "VRICEClient::connectTo failed, empty ID" << endl;
+        return;
+    }
+
+    string uid1 = uID;
+    string uid2 = otherID;
+    //cout << "VRICEClient::connectTo, name/uid: " << name << "/" << uid1 << " other/uid " << users[uid2] << "/" << uid2 << endl;
+
+    if (!users.count(uid1) || !users.count(uid2)) {
+        cout << "VRICEClient::connectTo failed, unknown ID" << endl;
+        return;
+    }
+
     string data = broker->get(turnURL+"/getConnection.php?UID="+uid1+"&UID2="+uid2)->getData();
     int port = toInt( splitString(data, ':')[0] );
-    cout << "VRICEClient::connectTo, name/uid: " << name << "/" << uid1 << " other/uid " << other << "/" << uid2 << " -> port " << port << endl;
+    //cout << " -> port " << port << endl;
     client->connect(turnIP, port);
 }
 
