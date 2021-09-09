@@ -3,6 +3,7 @@
 
 #include <OpenSG/OSGConfig.h>
 #include "../VRNetworkingFwd.h"
+#include "core/utils/VRFunctionFwd.h"
 
 #include <map>
 #include <vector>
@@ -26,6 +27,13 @@ class VRICEClient : public std::enable_shared_from_this<VRICEClient> {
         function<void(string)> onEventCb;
         function<void(string)> onMessageCb;
 
+        VRUpdateCbPtr updateCb;
+        string usersList;
+        void update();
+        void pollUsers();
+        void pollMessages();
+        void updateUsers();
+
 	public:
 		VRICEClient();
 		~VRICEClient();
@@ -39,7 +47,8 @@ class VRICEClient : public std::enable_shared_from_this<VRICEClient> {
 
         void setName(string name);
         void connectTo(string other);
-        void send(string msg);
+        void sendTCP(string msg);
+        void send(string otherID, string msg);
         void removeUser(string uid);
 
         string getID();

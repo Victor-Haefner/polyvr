@@ -3,12 +3,15 @@
 #include "../rest/VRRestClient.h"
 #include "../rest/VRRestResponse.h"
 #include "core/utils/toString.h"
+#include "core/scene/VRScene.h"
 
 using namespace OSG;
 
 VRICEClient::VRICEClient() {
     broker = VRRestClient::create();
     client = VRTCPClient::create();
+    updateCb = VRUpdateCb::create("ice update", bind(&VRICEClient::update, this));
+    VRScene::getCurrent()->addTimeoutFkt(updateCb, 0, 1000);
 }
 
 VRICEClient::~VRICEClient() {
@@ -21,19 +24,19 @@ VRICEClientPtr VRICEClient::ptr() { return static_pointer_cast<VRICEClient>(shar
 void VRICEClient::setTurnServer(string url, string ip) {
     turnURL = url;
     turnIP = ip;
-    getUsers();
+    pollUsers();
 }
 
 void VRICEClient::setName(string n) {
     name = n;
     uID = broker->get(turnURL+"/regUser.php?NAME="+n)->getData();
     //cout << "register name " << n << " -> " << uID << endl;
-    getUsers();
+    pollUsers();
 }
 
 void VRICEClient::removeUser(string uid) {
     broker->get(turnURL+"/remUser.php?UID="+uid);
-    getUsers();
+    pollUsers();
 }
 
 string VRICEClient::getID() { return uID; }
@@ -46,26 +49,47 @@ void VRICEClient::onEvent( function<void(string)> f ) {
 void VRICEClient::onMessage( function<void(string)> f ) {
     onMessageCb = f;
     client->onMessage(f);
-    /*auto onTCPMessage = [this](string msg) {
-        cout << "VRICEClient::onMessage " << msg << endl;
-        if (startsWith(msg, "TURN:")) {
-            if (onEventCb) onEventCb(msg);
-        } else if (onMessageCb) onMessageCb(msg);
-    };
-    client->onMessage(onTCPMessage);*/
 }
 
-map<string, string> VRICEClient::getUsers() {
+void VRICEClient::update() {
+    pollUsers();
+    pollMessages();
+}
+
+void VRICEClient::updateUsers() {
     users.clear();
-    string userDataList = broker->get(turnURL+"/listUsers.php")->getData();
-    for (auto usrData : splitString(userDataList, '\n')) {
+    for (auto usrData : splitString(usersList, '\n')) {
         auto data = splitString(usrData, '|');
         if (data.size() != 2) continue;
         string name = data[0];
         string uid = data[1];
         users[uid] = name;
     }
+}
+
+map<string, string> VRICEClient::getUsers() {
+    pollUsers();
     return users;
+}
+
+void VRICEClient::send(string otherID, string msg) { // TODO: check if msg needs to be processed to confom URL syntax
+    broker->get(turnURL+"/addMessage.php?UID="+otherID+"&MSG="+msg)->getData();
+}
+
+void VRICEClient::pollMessages() {
+    string data = broker->get(turnURL+"/getMessages.php?UID="+uID)->getData();
+    if (data != "") {
+        if (onEventCb) onEventCb("message|"+data);
+    }
+}
+
+void VRICEClient::pollUsers() {
+    string data = broker->get(turnURL+"/listUsers.php")->getData();
+    if (data == usersList) return;
+
+    usersList = data;
+    updateUsers();
+    if (onEventCb) onEventCb("users changed");
 }
 
 string VRICEClient::getUserName(string ID) {
@@ -100,7 +124,7 @@ void VRICEClient::connectTo(string otherID) {
     client->connect(turnIP, port);
 }
 
-void VRICEClient::send(string msg) {
+void VRICEClient::sendTCP(string msg) {
     if (!client->connected()) return;
     client->send(msg);
 }
