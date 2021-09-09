@@ -79,13 +79,15 @@ PyMethodDef VRPyICEClient::methods[] = {
     {"setTurnServer", PyWrap(ICEClient, setTurnServer, "Setup turn server address and ip", void, string, string) },
     {"onEvent", PyWrap(ICEClient, onEvent, "Set onEvent callback", void, function<void(string)>) },
     {"onMessage", PyWrap(ICEClient, onMessage, "Set onMessage callback", void, function<void(string)>) },
-    {"setName", PyWrap(ICEClient, setName, "Set your name and uID to register on broker", void, string, string) },
+    {"setName", PyWrap(ICEClient, setName, "Set your name and uID to register on broker", void, string) },
     {"send", PyWrap(ICEClient, send, "Send message", void, string) },
     {"connectTo", PyWrap(ICEClient, connectTo, "Connect to another user", void, string) },
+    {"getID", PyWrap(ICEClient, getID, "Get UID", string) },
     {"getUserName", PyWrap(ICEClient, getUserName, "Get user name by UID", string, string) },
     {"getUserID", PyWrap(ICEClient, getUserID, "Get UIDs of all users with certain name", vector<string>, string) },
     {"getUsers", PyWrap(ICEClient, getUsers, "Get all users registered at turn server", mapSS) },
     {"getClient", PyWrap(ICEClient, getClient, "Get internal TCP client", VRTCPClientPtr) },
+    {"removeUser", PyWrap(ICEClient, removeUser, "Remove user by UID", void, string) },
     {NULL}  /* Sentinel */
 };
 

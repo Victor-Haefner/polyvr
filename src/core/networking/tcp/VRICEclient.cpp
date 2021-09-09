@@ -11,7 +11,9 @@ VRICEClient::VRICEClient() {
     client = VRTCPClient::create();
 }
 
-VRICEClient::~VRICEClient() {}
+VRICEClient::~VRICEClient() {
+    removeUser(uID);
+}
 
 VRICEClientPtr VRICEClient::create() { return VRICEClientPtr( new VRICEClient() ); }
 VRICEClientPtr VRICEClient::ptr() { return static_pointer_cast<VRICEClient>(shared_from_this()); }
@@ -22,13 +24,19 @@ void VRICEClient::setTurnServer(string url, string ip) {
     getUsers();
 }
 
-void VRICEClient::setName(string n, string ID) {
-    getUsers();
+void VRICEClient::setName(string n) {
     name = n;
-    if (!users.count(ID)) uID = broker->get(turnURL+"/regUser.php?NAME="+n)->getData();
-    else uID = ID;
+    uID = broker->get(turnURL+"/regUser.php?NAME="+n)->getData();
+    //cout << "register name " << n << " -> " << uID << endl;
     getUsers();
 }
+
+void VRICEClient::removeUser(string uid) {
+    broker->get(turnURL+"/remUser.php?UID="+uid);
+    getUsers();
+}
+
+string VRICEClient::getID() { return uID; }
 
 void VRICEClient::onEvent( function<void(string)> f ) {
     onEventCb = f;

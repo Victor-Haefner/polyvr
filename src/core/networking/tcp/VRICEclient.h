@@ -37,10 +37,12 @@ class VRICEClient : public std::enable_shared_from_this<VRICEClient> {
         void onEvent( function<void(string)> f );
         void onMessage( function<void(string)> f );
 
-        void setName(string name, string uID);
+        void setName(string name);
         void connectTo(string other);
         void send(string msg);
+        void removeUser(string uid);
 
+        string getID();
 		string getUserName(string ID);
 		vector<string> getUserID(string name);
 		map<string, string> getUsers();
