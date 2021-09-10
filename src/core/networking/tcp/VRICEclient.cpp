@@ -77,6 +77,7 @@ void VRICEClient::send(string otherID, string msg) { // TODO: check if msg needs
 }
 
 void VRICEClient::pollMessages() {
+    if (uID == "") return;
     string data = broker->get(turnURL+"/getMessages.php?UID="+uID)->getData();
     if (data != "") {
         if (onEventCb) onEventCb("message|"+data);
