@@ -85,11 +85,14 @@ void VRPipeSegment::handleValve(double area, VRPipeSegmentPtr other, double dt, 
     other->addEnergy(m, density, !p1);
 }
 
-void VRPipeSegment::handlePump(double performance, bool isOpen, VRPipeSegmentPtr other, double dt, bool p1) {
+void VRPipeSegment::handlePump(double performance, double maxPressure, bool isOpen, VRPipeSegmentPtr other, double dt, bool p1) {
     double pressure = p1 ? pressure1 : pressure2;
     double otherPressure = p1 ? other->pressure2 : other->pressure1;
-    double v = pressure/(otherPressure + pressure);
-    double m = performance*dt/exp(1/v);
+    if (pressure < 1e-6) return; // min pressure
+    if (otherPressure > maxPressure) return;
+
+    double v = 1.0 + otherPressure/pressure;
+    double m = performance*dt/exp(v);
     //if (isOpen) m = max(m, computeExchange(area*0.1, other, dt, p1)); // minimal exchange if pump is open
     m = min(m, pressure*volume); // pump out not more than available!
     addEnergy(-m, other->density, p1);
@@ -275,8 +278,9 @@ void VRPipeSystem::update() {
                 auto pipe2 = pipes[1];
 
                 double pumpPerformance = entity->getValue("performance", 0.0);
+                double pumpMaxPressure = entity->getValue("maxPressure", 0.0);
                 bool pumpIsOpen= entity->getValue("isOpen", false);
-                pipe1->handlePump(pumpPerformance, pumpIsOpen, pipe2, dt, false);
+                pipe1->handlePump(pumpPerformance, pumpMaxPressure, pumpIsOpen, pipe2, dt, false);
                 continue;
             }
 
@@ -449,6 +453,7 @@ void VRPipeSystem::initOntology() {
     Tank->addProperty("volume", "double");
     Tank->addProperty("density", "double");
     Pump->addProperty("performance", "double");
+    Pump->addProperty("maxPressure", "double");
     Pump->addProperty("isOpen", "bool");
     Outlet->addProperty("radius", "double");
     Valve->addProperty("state", "bool");
@@ -508,9 +513,16 @@ double VRPipeSystem::getTankVolume(string n) { auto e = getEntity(n); return e ?
 double VRPipeSystem::getPump(string n) { auto e = getEntity(n); return e ? e->getValue("performance", 0.0) : 0.0; }
 
 void VRPipeSystem::setValve(string n, bool b)  { auto e = getEntity(n); if (e) e->set("state", toString(b)); }
-void VRPipeSystem::setPump(string n, double p) { auto e = getEntity(n); if (e) e->set("performance", toString(p)); }
 void VRPipeSystem::setTankPressure(string n, double p) { auto e = getEntity(n); if (e) e->set("pressure", toString(p)); }
 void VRPipeSystem::setTankDensity(string n, double p) { auto e = getEntity(n); if (e) e->set("density", toString(p)); }
+
+void VRPipeSystem::setPump(string n, double p, double pmax) {
+    auto e = getEntity(n);
+    if (e) {
+        e->set("performance", toString(p));
+        e->set("maxPressure", toString(pmax));
+    }
+}
 
 void VRPipeSystem::updateVisual() {
     if (!doVisual) return;

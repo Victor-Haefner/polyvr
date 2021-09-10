@@ -30,7 +30,7 @@ PyMethodDef VRPyPipeSystem::methods[] = {
     {"getTankDensity", PyWrap( PipeSystem, getTankDensity, "Get tank density", double, string ) },
     {"getTankVolume", PyWrap( PipeSystem, getTankVolume, "Get tank volume", double, string ) },
     {"getPump", PyWrap( PipeSystem, getPump, "Get pump performance", double, string ) },
-    {"setPump", PyWrap( PipeSystem, setPump, "Set pump performance", void, string, double ) },
+    {"setPump", PyWrap( PipeSystem, setPump, "Set pump performance and max pressure", void, string, double, double ) },
     {"setValve", PyWrap( PipeSystem, setValve, "Set valve state", void, string, bool ) },
     {"setTankPressure", PyWrap( PipeSystem, setTankPressure, "Set tank pressure", void, string, double ) },
     {"setTankDensity", PyWrap( PipeSystem, setTankDensity, "Set tank density", void, string, double ) },

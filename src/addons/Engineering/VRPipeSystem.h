@@ -38,7 +38,7 @@ class VRPipeSegment {
 
         void handleTank(double& pressure, double otherVolume, double& otherDensity, double dt, bool p1);
         void handleValve(double area, VRPipeSegmentPtr other, double dt, bool p1);
-        void handlePump(double performance, bool isOpen, VRPipeSegmentPtr other, double dt, bool p1);
+        void handlePump(double performance, double maxPressure, bool isOpen, VRPipeSegmentPtr other, double dt, bool p1);
 
         void addEnergy(double m, double d, bool p1);
         void setLength(double l);
@@ -114,7 +114,7 @@ class VRPipeSystem : public VRGeometry {
 		double getPump(string n);
 
 		void setValve(string n, bool b);
-		void setPump(string n, double p);
+		void setPump(string n, double p, double pmax);
 		void setTankPressure(string n, double p);
 		void setTankDensity(string n, double p);
 
