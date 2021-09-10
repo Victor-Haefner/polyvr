@@ -199,7 +199,8 @@ template<> string typeName(const Color4f* t) { return "Vec4d"; }
 template<> string typeName(const Line* t) { return "Line"; }
 string typeName(const std::shared_ptr<VRFunction<void>>* t) { return "callback()"; }
 
-template <typename T> int ssToVal(stringstream& ss, T& t) {
+template <typename T, typename O> int ssToVal(stringstream& ss, T& t, const O& o) {
+    t = o; // initialize to avoid undefined values
     int N = ss.tellg();
     bool b = false;
     do {
@@ -215,90 +216,90 @@ template <typename T> int ssToVal(stringstream& ss, T& t) {
 
 template<> int toValue(stringstream& ss, void*& s) { return true; }
 template<> int toValue(stringstream& ss, string& s) { s = ss.str(); return true; }
-template<> int toValue(stringstream& ss, bool& v) { return ssToVal(ss, v); }
-template<> int toValue(stringstream& ss, char& v) { return ssToVal(ss, v); }
-template<> int toValue(stringstream& ss, signed char& v) { return ssToVal(ss, v); }
-template<> int toValue(stringstream& ss, unsigned char& v) { return ssToVal(ss, v); }
+template<> int toValue(stringstream& ss, bool& v) { return ssToVal(ss, v, false); }
+template<> int toValue(stringstream& ss, char& v) { return ssToVal(ss, v, 0); }
+template<> int toValue(stringstream& ss, signed char& v) { return ssToVal(ss, v, 0); }
+template<> int toValue(stringstream& ss, unsigned char& v) { return ssToVal(ss, v, 0); }
 #ifdef _WIN32
 template<> int toValue(stringstream& ss, size_t& v) { return ssToVal(ss, v); }
 #endif
-template<> int toValue(stringstream& ss, short& v) { return ssToVal(ss, v); }
-template<> int toValue(stringstream& ss, unsigned short& v) { return ssToVal(ss, v); }
-template<> int toValue(stringstream& ss, int& v) { return ssToVal(ss, v); }
-template<> int toValue(stringstream& ss, unsigned int& v) { return ssToVal(ss, v); }
-template<> int toValue(stringstream& ss, long& v) { return ssToVal(ss, v); }
-template<> int toValue(stringstream& ss, unsigned long& v) { return ssToVal(ss, v); }
-template<> int toValue(stringstream& ss, float& v) { double d; auto r = ssToVal(ss, d); v = d; return r; } // use double because stringstreams may fail to convert scientific notations to float
-template<> int toValue(stringstream& ss, double& v) { return ssToVal(ss, v); }
+template<> int toValue(stringstream& ss, short& v) { return ssToVal(ss, v, 0); }
+template<> int toValue(stringstream& ss, unsigned short& v) { return ssToVal(ss, v, 0); }
+template<> int toValue(stringstream& ss, int& v) { return ssToVal(ss, v, 0); }
+template<> int toValue(stringstream& ss, unsigned int& v) { return ssToVal(ss, v, 0); }
+template<> int toValue(stringstream& ss, long& v) { return ssToVal(ss, v, 0); }
+template<> int toValue(stringstream& ss, unsigned long& v) { return ssToVal(ss, v, 0); }
+template<> int toValue(stringstream& ss, float& v) { double d; auto r = ssToVal(ss, d, 0); v = d; return r; } // use double because stringstreams may fail to convert scientific notations to float
+template<> int toValue(stringstream& ss, double& v) { return ssToVal(ss, v, 0); }
 
 int   toInt  (string s) { return toValue<int  >(s); }
 float toFloat(string s) { return toValue<float>(s); }
 
 template<> int toValue(stringstream& ss, Vec2d& v) {
-    ssToVal(ss, v[0]);
-    return ssToVal(ss, v[1]);
+    ssToVal(ss, v[0], 0);
+    return ssToVal(ss, v[1], 0);
 }
 
 template<> int toValue(stringstream& ss, Vec3d& v) {
-    ssToVal(ss, v[0]);
-    ssToVal(ss, v[1]);
-    return ssToVal(ss, v[2]);
+    ssToVal(ss, v[0], 0);
+    ssToVal(ss, v[1], 0);
+    return ssToVal(ss, v[2], 0);
 }
 
 template<> int toValue(stringstream& ss, Vec4d& v) {
-    ssToVal(ss, v[0]);
-    ssToVal(ss, v[1]);
-    ssToVal(ss, v[2]);
-    return ssToVal(ss, v[3]);
+    ssToVal(ss, v[0], 0);
+    ssToVal(ss, v[1], 0);
+    ssToVal(ss, v[2], 0);
+    return ssToVal(ss, v[3], 0);
 }
 
 template<> int toValue(stringstream& ss, Pnt2d& v) {
-    ssToVal(ss, v[0]);
-    return ssToVal(ss, v[1]);
+    ssToVal(ss, v[0], 0);
+    return ssToVal(ss, v[1], 0);
 }
 
 template<> int toValue(stringstream& ss, Pnt3d& v) {
-    ssToVal(ss, v[0]);
-    ssToVal(ss, v[1]);
-    return ssToVal(ss, v[2]);
+    ssToVal(ss, v[0], 0);
+    ssToVal(ss, v[1], 0);
+    return ssToVal(ss, v[2], 0);
 }
 
 template<> int toValue(stringstream& ss, Pnt4d& v) {
-    ssToVal(ss, v[0]);
-    ssToVal(ss, v[1]);
-    ssToVal(ss, v[2]);
-    return ssToVal(ss, v[3]);
+    ssToVal(ss, v[0], 0);
+    ssToVal(ss, v[1], 0);
+    ssToVal(ss, v[2], 0);
+    return ssToVal(ss, v[3], 0);
 }
 
 template<> int toValue(stringstream& ss, Vec2i& v) {
-    ssToVal(ss, v[0]);
-    return ssToVal(ss, v[1]);
+    ssToVal(ss, v[0], 0);
+    return ssToVal(ss, v[1], 0);
 }
 
 template<> int toValue(stringstream& ss, Vec3i& v) {
-    ssToVal(ss, v[0]);
-    ssToVal(ss, v[1]);
-    return ssToVal(ss, v[2]);
+    ssToVal(ss, v[0], 0);
+    ssToVal(ss, v[1], 0);
+    return ssToVal(ss, v[2], 0);
 }
 
 template<> int toValue(stringstream& ss, Vec4i& v) {
-    ssToVal(ss, v[0]);
-    ssToVal(ss, v[1]);
-    ssToVal(ss, v[2]);
-    return ssToVal(ss, v[3]);
+    ssToVal(ss, v[0], 0);
+    ssToVal(ss, v[1], 0);
+    ssToVal(ss, v[2], 0);
+    return ssToVal(ss, v[3], 0);
 }
 
 template<> int toValue(stringstream& ss, Color3f& v) {
-    ssToVal(ss, v[0]);
-    ssToVal(ss, v[1]);
-    return ssToVal(ss, v[2]);
+    ssToVal(ss, v[0], 0);
+    ssToVal(ss, v[1], 0);
+    return ssToVal(ss, v[2], 0);
 }
 
 template<> int toValue(stringstream& ss, Color4f& v) {
-    ssToVal(ss, v[0]);
-    ssToVal(ss, v[1]);
-    ssToVal(ss, v[2]);
-    return ssToVal(ss, v[3]);
+    ssToVal(ss, v[0], 0);
+    ssToVal(ss, v[1], 0);
+    ssToVal(ss, v[2], 0);
+    return ssToVal(ss, v[3], 0);
 }
 
 template<> int toValue(stringstream& ss, Line& l) {
