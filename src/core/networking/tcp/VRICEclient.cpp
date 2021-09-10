@@ -73,7 +73,7 @@ map<string, string> VRICEClient::getUsers() {
 }
 
 void VRICEClient::send(string otherID, string msg) { // TODO: check if msg needs to be processed to confom URL syntax
-    broker->get(turnURL+"/addMessage.php?UID="+otherID+"&MSG="+msg)->getData();
+    broker->get(turnURL+"/addMessage.php?ORG="+uID+"&UID="+otherID+"&MSG="+msg)->getData();
 }
 
 void VRICEClient::pollMessages() {
