@@ -1587,8 +1587,8 @@ class GLTFLoader : public GLTFUtils {
                     const tinygltf::Accessor& accessorP = model.accessors[primitive.attributes["POSITION"]];
                     const tinygltf::BufferView& bufferViewP = model.bufferViews[accessorP.bufferView];
                     const tinygltf::Buffer& bufferP = model.buffers[bufferViewP.buffer];
-                    const float* positions = reinterpret_cast<const float*>(&bufferP.data[bufferViewP.byteOffset + accessorP.byteOffset]);
-                    if (accessorP.componentType == 5126) {
+                    if (accessorP.componentType == GL_FLOAT) {
+                        const float* positions = reinterpret_cast<const float*>(&bufferP.data[bufferViewP.byteOffset + accessorP.byteOffset]);
                         for (size_t i = 0; i < accessorP.count; ++i) {
                             // Positions are Vec3 components, so for each vec3 stride, offset for x, y, and z.
                             Vec3d pos;
@@ -1604,8 +1604,8 @@ class GLTFLoader : public GLTFUtils {
                     const tinygltf::Accessor& accessorN = model.accessors[primitive.attributes["NORMAL"]];
                     const tinygltf::BufferView& bufferViewN = model.bufferViews[accessorN.bufferView];
                     const tinygltf::Buffer& bufferN = model.buffers[bufferViewN.buffer];
-                    const float* normals   = reinterpret_cast<const float*>(&bufferN.data[bufferViewN.byteOffset + accessorN.byteOffset]);
-                    if (accessorN.componentType == 5126) {
+                    if (accessorN.componentType == GL_FLOAT) {
+                        const float* normals   = reinterpret_cast<const float*>(&bufferN.data[bufferViewN.byteOffset + accessorN.byteOffset]);
                         for (size_t i = 0; i < accessorN.count; ++i) {
                             Vec3d nor;
                             if (bufferViewN.byteStride > 12) { nor = Vec3d( normals[i * (bufferViewN.byteStride/4) + 0], normals[i * (bufferViewN.byteStride/4) + 1], normals[i * (bufferViewN.byteStride/4) + 2] ); }
@@ -1621,7 +1621,7 @@ class GLTFLoader : public GLTFUtils {
                     const tinygltf::BufferView& bufferViewT = model.bufferViews[accessorT.bufferView];
                     const tinygltf::Buffer& bufferT = model.buffers[bufferViewT.buffer];
                     const float* tangents   = reinterpret_cast<const float*>(&bufferT.data[bufferViewT.byteOffset + accessorT.byteOffset]);
-                    if (accessorT.componentType == 5126) {
+                    if (accessorT.componentType == GL_FLOAT) {
                         for (size_t i = 0; i < accessorT.count; ++i) {
                             Vec3d tan;
                             if (bufferViewT.byteStride > 12) { tan = Vec3d( tangents[i * (bufferViewT.byteStride/4) + 0], tangents[i * (bufferViewT.byteStride/4) + 1], tangents[i * (bufferViewT.byteStride/4) + 2] ); }
@@ -1637,12 +1637,26 @@ class GLTFLoader : public GLTFUtils {
                     const tinygltf::Accessor& accessorColor = model.accessors[primitive.attributes["COLOR_0"]];
                     const tinygltf::BufferView& bufferViewCO = model.bufferViews[accessorColor.bufferView];
                     const tinygltf::Buffer& bufferCO = model.buffers[bufferViewCO.buffer];
-                    if (accessorColor.componentType == 5126) {
-                        const float* colors   = reinterpret_cast<const float*>(&bufferCO.data[bufferViewCO.byteOffset + accessorColor.byteOffset]);
+
+                    if (accessorColor.componentType == GL_FLOAT) {
+                        const float* colors = reinterpret_cast<const float*>(&bufferCO.data[bufferViewCO.byteOffset + accessorColor.byteOffset]);
                         for (size_t i = 0; i < accessorColor.count; ++i) {
                             if (accessorColor.type == 3){ auto cl = Color3f( colors[i * 3 + 0], colors[i * 3 + 1], colors[i * 3 + 2] ); gdata.pushColor(cl); }
                             if (accessorColor.type == 4){ auto cl = Color4f( colors[i * 4 + 0], colors[i * 4 + 1], colors[i * 4 + 2], colors[i * 4 + 3] ); gdata.pushColor(cl);  }
                         }
+                    }
+
+                    else if (accessorColor.componentType == GL_UNSIGNED_SHORT) {
+                        const unsigned short* colors = reinterpret_cast<const unsigned short*>(&bufferCO.data[bufferViewCO.byteOffset + accessorColor.byteOffset]);
+                        double s = 1.0/(256*256 - 1);
+                        for (size_t i = 0; i < accessorColor.count; ++i) {
+                            if (accessorColor.type == 3){ auto cl = Color3f( colors[i * 3 + 0]*s, colors[i * 3 + 1]*s, colors[i * 3 + 2]*s ); gdata.pushColor(cl); }
+                            if (accessorColor.type == 4){ auto cl = Color4f( colors[i * 4 + 0]*s, colors[i * 4 + 1]*s, colors[i * 4 + 2]*s, colors[i * 4 + 3]*s ); gdata.pushColor(cl);  }
+                        }
+                    }
+
+                    else {
+                        cout << " got unknown colors comp: " << int(accessorColor.componentType) << ", acc: " << int(accessorColor.type) << ", count: " << int(accessorColor.count) << endl;
                     }
                 }
 
@@ -1650,7 +1664,7 @@ class GLTFLoader : public GLTFUtils {
                     const tinygltf::Accessor& accessorTexUV = model.accessors[primitive.attributes["TEXCOORD_0"]];
                     const tinygltf::BufferView& bufferViewUV = model.bufferViews[accessorTexUV.bufferView];
                     const tinygltf::Buffer& bufferUV = model.buffers[bufferViewUV.buffer];
-                    if (accessorTexUV.componentType == 5126) {
+                    if (accessorTexUV.componentType == GL_FLOAT) {
                         const float* UVs   = reinterpret_cast<const float*>(&bufferUV.data[bufferViewUV.byteOffset + accessorTexUV.byteOffset]);
                         for (size_t i = 0; i < accessorTexUV.count; ++i) {
                             Vec2d UV = Vec2d( UVs[i*2 + 0], UVs[i*2 + 1] );
@@ -1670,8 +1684,8 @@ class GLTFLoader : public GLTFUtils {
                     const tinygltf::Buffer& buffer = model.buffers[bufferView.buffer];
                     vector<Vec4i> joints;
                     if (accessor.type == 4) {
-                        if (accessor.componentType == 5123) {
-                            const short* jointsData   = reinterpret_cast<const short*>(&buffer.data[bufferView.byteOffset + accessor.byteOffset]);
+                        if (accessor.componentType == GL_UNSIGNED_SHORT) {
+                            const unsigned short* jointsData   = reinterpret_cast<const unsigned short*>(&buffer.data[bufferView.byteOffset + accessor.byteOffset]);
                             for (size_t i = 0; i < accessor.count; i++) joints.push_back( Vec4i( jointsData[i*4 + 0], jointsData[i*4 + 1], jointsData[i*4 + 2], jointsData[i*4 + 3] ) );
                         }
                     }
@@ -1684,7 +1698,7 @@ class GLTFLoader : public GLTFUtils {
                     const tinygltf::Buffer& buffer = model.buffers[bufferView.buffer];
                     vector<Vec4d> weights;
                     if (accessor.type == 4) {
-                        if (accessor.componentType == 5126) {
+                        if (accessor.componentType == GL_FLOAT) {
                             const float* weightsData   = reinterpret_cast<const float*>(&buffer.data[bufferView.byteOffset + accessor.byteOffset]);
                             for (size_t i = 0; i < accessor.count; i++) weights.push_back( Vec4d( weightsData[i*4 + 0],  weightsData[i*4 + 1],  weightsData[i*4 + 2],  weightsData[i*4 + 3] ) );
                         }
@@ -1698,48 +1712,48 @@ class GLTFLoader : public GLTFUtils {
                     const tinygltf::Buffer& bufferInd = model.buffers[bufferViewIndices.buffer];
                     if (primitive.mode == 0) { /*POINTS*/
                         pointsOnly = true;
-                        if (accessorIndices.componentType == 5121) {
+                        if (accessorIndices.componentType == GL_UNSIGNED_BYTE) {
                             const unsigned char* indices   = reinterpret_cast<const unsigned char*>(&bufferInd.data[bufferViewIndices.byteOffset + accessorIndices.byteOffset]);
                             for (size_t i = 0; i < accessorIndices.count; ++i) gdata.pushPoint(nUpTo+indices[i]);
                         }
-                        if (accessorIndices.componentType == 5122) {
-                            const unsigned short* indices   = reinterpret_cast<const unsigned short*>(&bufferInd.data[bufferViewIndices.byteOffset + accessorIndices.byteOffset]);
-                            for (size_t i = 0; i < accessorIndices.count; ++i) gdata.pushPoint(nUpTo+indices[i]);
-                        }
-                        if (accessorIndices.componentType == 5123) {
+                        else if (accessorIndices.componentType == GL_SHORT) {
                             const short* indices   = reinterpret_cast<const short*>(&bufferInd.data[bufferViewIndices.byteOffset + accessorIndices.byteOffset]);
                             for (size_t i = 0; i < accessorIndices.count; ++i) gdata.pushPoint(nUpTo+indices[i]);
                         }
-                        if (accessorIndices.componentType == 5125) {
+                        else if (accessorIndices.componentType == GL_UNSIGNED_SHORT) {
+                            const unsigned short* indices   = reinterpret_cast<const unsigned short*>(&bufferInd.data[bufferViewIndices.byteOffset + accessorIndices.byteOffset]);
+                            for (size_t i = 0; i < accessorIndices.count; ++i) gdata.pushPoint(nUpTo+indices[i]);
+                        }
+                        else if (accessorIndices.componentType == GL_UNSIGNED_INT) {
                             const unsigned int* indices   = reinterpret_cast<const unsigned int*>(&bufferInd.data[bufferViewIndices.byteOffset + accessorIndices.byteOffset]);
                             for (size_t i = 0; i < accessorIndices.count; ++i) gdata.pushPoint(nUpTo+indices[i]);
                         }
-                        if (accessorIndices.componentType != 5121 && accessorIndices.componentType != 5122 && accessorIndices.componentType != 5125 && accessorIndices.componentType != 5123) { cout << "GLTF-LOADER: data type of POINT INDICES unknwon: " << accessorIndices.componentType << endl; }
+                        else { cout << "GLTF-LOADER: data type of POINT INDICES unknwon: " << accessorIndices.componentType << endl; }
                     }
                     if (primitive.mode == 1) { /*LINE*/ cout << "GLTF-LOADER: not implemented LINE" << endl; }
                     if (primitive.mode == 2) { /*LINE LOOP*/ cout << "GLTF-LOADER: not implemented LINE LOOP" << endl; }
                     if (primitive.mode == 3) { /*LINE STRIP*/ cout << "GLTF-LOADER: not implemented LINE STRIP" << endl; }
                     if (primitive.mode == 4) { /*TRIANGLES*/
-                        if (accessorIndices.componentType == 5121) {
+                        if (accessorIndices.componentType == GL_UNSIGNED_BYTE) {
                             const unsigned char* indices   = reinterpret_cast<const unsigned char*>(&bufferInd.data[bufferViewIndices.byteOffset + accessorIndices.byteOffset]);
                             for (size_t i = 0; i < accessorIndices.count/3; ++i) gdata.pushTri(nUpTo+indices[i*3+0],nUpTo+indices[i*3+1],nUpTo+indices[i*3+2]);
                         }
-                        if (accessorIndices.componentType == 5122) {
-                            const unsigned short* indices   = reinterpret_cast<const unsigned short*>(&bufferInd.data[bufferViewIndices.byteOffset + accessorIndices.byteOffset]);
-                            for (size_t i = 0; i < accessorIndices.count/3; ++i) gdata.pushTri(nUpTo+indices[i*3+0],nUpTo+indices[i*3+1],nUpTo+indices[i*3+2]);
-                        }
-                        if (accessorIndices.componentType == 5123) {
+                        else if (accessorIndices.componentType == GL_SHORT) {
                             const short* indices   = reinterpret_cast<const short*>(&bufferInd.data[bufferViewIndices.byteOffset + accessorIndices.byteOffset]);
                             for (size_t i = 0; i < accessorIndices.count/3; ++i) gdata.pushTri(nUpTo+indices[i*3+0],nUpTo+indices[i*3+1],nUpTo+indices[i*3+2]);
                         }
-                        if (accessorIndices.componentType == 5125) {
+                        else if (accessorIndices.componentType == GL_UNSIGNED_SHORT) {
+                            const unsigned short* indices   = reinterpret_cast<const unsigned short*>(&bufferInd.data[bufferViewIndices.byteOffset + accessorIndices.byteOffset]);
+                            for (size_t i = 0; i < accessorIndices.count/3; ++i) gdata.pushTri(nUpTo+indices[i*3+0],nUpTo+indices[i*3+1],nUpTo+indices[i*3+2]);
+                        }
+                        else if (accessorIndices.componentType == GL_UNSIGNED_INT) {
                             const unsigned int* indices   = reinterpret_cast<const unsigned int*>(&bufferInd.data[bufferViewIndices.byteOffset + accessorIndices.byteOffset]);
                             for (size_t i = 0; i < accessorIndices.count/3; ++i) gdata.pushTri(nUpTo+indices[i*3+0],nUpTo+indices[i*3+1],nUpTo+indices[i*3+2]);
                         }
-                        if (accessorIndices.componentType != 5121 && accessorIndices.componentType != 5122 && accessorIndices.componentType != 5125 && accessorIndices.componentType != 5123) { cout << "GLTF-LOADER: data type of TRIANGLE INDICES unknwon: " << accessorIndices.componentType << endl; }
+                        else { cout << "GLTF-LOADER: data type of TRIANGLE INDICES unknwon: " << accessorIndices.componentType << endl; }
                     }
                     if (primitive.mode == 5) { /*TRIANGLE STRIP*/
-                        if (accessorIndices.componentType == 5121) {
+                        if (accessorIndices.componentType == GL_UNSIGNED_BYTE) {
                             const unsigned char* indices   = reinterpret_cast<const unsigned char*>(&bufferInd.data[bufferViewIndices.byteOffset + accessorIndices.byteOffset]);
                             for (size_t i = 0; i < accessorIndices.count-2; ++i) {
                                 if (i%2) {
@@ -1749,17 +1763,7 @@ class GLTFLoader : public GLTFUtils {
                                 }
                             }
                         }
-                        if (accessorIndices.componentType == 5122) {
-                            const unsigned short* indices   = reinterpret_cast<const unsigned short*>(&bufferInd.data[bufferViewIndices.byteOffset + accessorIndices.byteOffset]);
-                            for (size_t i = 0; i < accessorIndices.count-2; ++i)  {
-                                if (i%2) {
-                                    gdata.pushTri(nUpTo+indices[i+1],nUpTo+indices[i+0],nUpTo+indices[i+2]);
-                                } else {
-                                    gdata.pushTri(nUpTo+indices[i+0],nUpTo+indices[i+1],nUpTo+indices[i+2]);
-                                }
-                            }
-                        }
-                        if (accessorIndices.componentType == 5123) {
+                        else if (accessorIndices.componentType == GL_SHORT) {
                             const short* indices   = reinterpret_cast<const short*>(&bufferInd.data[bufferViewIndices.byteOffset + accessorIndices.byteOffset]);
                             for (size_t i = 0; i < accessorIndices.count-2; ++i)  {
                                 if (i%2) {
@@ -1769,7 +1773,17 @@ class GLTFLoader : public GLTFUtils {
                                 }
                             }
                         }
-                        if (accessorIndices.componentType == 5125) {
+                        else if (accessorIndices.componentType == GL_UNSIGNED_SHORT) {
+                            const unsigned short* indices   = reinterpret_cast<const unsigned short*>(&bufferInd.data[bufferViewIndices.byteOffset + accessorIndices.byteOffset]);
+                            for (size_t i = 0; i < accessorIndices.count-2; ++i)  {
+                                if (i%2) {
+                                    gdata.pushTri(nUpTo+indices[i+1],nUpTo+indices[i+0],nUpTo+indices[i+2]);
+                                } else {
+                                    gdata.pushTri(nUpTo+indices[i+0],nUpTo+indices[i+1],nUpTo+indices[i+2]);
+                                }
+                            }
+                        }
+                        else if (accessorIndices.componentType == GL_UNSIGNED_INT) {
                             const unsigned int* indices   = reinterpret_cast<const unsigned int*>(&bufferInd.data[bufferViewIndices.byteOffset + accessorIndices.byteOffset]);
                             for (size_t i = 0; i < accessorIndices.count-2; ++i)  {
                                 if (i%2) {
@@ -1779,7 +1793,7 @@ class GLTFLoader : public GLTFUtils {
                                 }
                             }
                         }
-                        if (accessorIndices.componentType != 5121 && accessorIndices.componentType != 5122 && accessorIndices.componentType != 5125 && accessorIndices.componentType != 5123) { cout << "GLTF-LOADER: data type of TRIANGLE SRIP INDICES unknwon: " << accessorIndices.componentType << endl; }
+                        else { cout << "GLTF-LOADER: data type of TRIANGLE SRIP INDICES unknwon: " << accessorIndices.componentType << endl; }
                     }
                     if (primitive.mode == 6) { /*TRAINGLE FAN*/ cout << "GLTF-LOADER: not implemented fTRAINGLE FAN" << endl;}
                 }   else {
@@ -1857,7 +1871,7 @@ class GLTFLoader : public GLTFUtils {
                 const tinygltf::BufferView& bufferView = model.bufferViews[accessor.bufferView];
                 const tinygltf::Buffer& buffer = model.buffers[bufferView.buffer];
                 if (accessor.type == 36) {
-                    if (accessor.componentType == 5126) {
+                    if (accessor.componentType == GL_FLOAT) {
                         const float* invBindData   = reinterpret_cast<const float*>(&buffer.data[bufferView.byteOffset + accessor.byteOffset]);
                         for (size_t i = 0; i < accessor.count; i++) { invBMs.push_back( Matrix4d(
                             invBindData[i*16 +  0], invBindData[i*16 +  1], invBindData[i*16 +  2], invBindData[i*16 +  3],
@@ -1897,7 +1911,7 @@ class GLTFLoader : public GLTFUtils {
                 const tinygltf::BufferView& bufferViewIn = model.bufferViews[accessorIn.bufferView];
                 const tinygltf::Buffer& bufferIn = model.buffers[bufferViewIn.buffer];
                 const float* dataIn = reinterpret_cast<const float*>(&bufferIn.data[bufferViewIn.byteOffset + accessorIn.byteOffset]);
-                if (accessorIn.componentType == 5126) {
+                if (accessorIn.componentType == GL_FLOAT) {
                     for (size_t i = 0; i < accessorIn.count; ++i) {
                         keyFrameTs.push_back(dataIn[i]);
                         //cout << dataIn[i] << endl;
@@ -1909,7 +1923,7 @@ class GLTFLoader : public GLTFUtils {
                 const tinygltf::Buffer& bufferOut = model.buffers[bufferViewOut.buffer];
                 const float* dataOut = reinterpret_cast<const float*>(&bufferOut.data[bufferViewOut.byteOffset + accessorOut.byteOffset]);
                 cout << " accOut-type: " << accessorOut.type << " accOut-component-type: " << accessorOut.componentType << endl;
-                if (accessorOut.componentType == 5126) {
+                if (accessorOut.componentType == GL_FLOAT) {
                     for (size_t i = 0; i < accessorOut.count; ++i) {
                         if (accessorOut.type == 3){
                             Vec3d vec = Vec3d( dataOut[i * 3 + 0], dataOut[i * 3 + 1], dataOut[i * 3 + 2] );
