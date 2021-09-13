@@ -72,7 +72,7 @@ void VRServer::callback(void* _args) { // TODO: implement generic button trigger
     change_button(button, state);
 }
 
-void VRServer::handleMessage(const string& m, int button, int state) { 
+void VRServer::handleMessage(const string& m, int button, int state) {
     setMessage(m);
     change_button(button, state);
 }
@@ -94,7 +94,7 @@ void VRServer::answerWebSocket(int id, string msg) {
     EM_ASM({
         var msg = Module.UTF8ToString($0);
         var cID = $1;
-	sendToClient(cID, msg);
+        sendToClient(cID, msg);
     }, msg.c_str(), id);
 #endif
 }

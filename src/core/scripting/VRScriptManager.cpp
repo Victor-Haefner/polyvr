@@ -485,6 +485,20 @@ string restClient = TEMPLATE(
 \tprint 'sync: ' + res.getData()\n
 );
 
+string OrderedDict = TEMPLATE(
+\tclass OrderedDict:\n
+\t\tdef __init__(self):\n
+\t\t\tself.dict = {}\n
+\t\t\tself.keys = []\n\n
+\t\tdef __setitem__(self, k, v):\n
+\t\t\tself.dict[k] = v\n
+\t\t\tself.keys.append(k)\n\n
+\t\tdef __getitem__(self, k):\n
+\t\t\treturn self.dict[k]\n\n
+\t\tdef items(self):\n
+\t\t\treturn [ (k,self.dict[k]) for k in self.keys ]\n
+);
+
 struct VRScriptTemplate {
     string name;
     string type;
@@ -542,6 +556,7 @@ void VRScriptManager::initTemplates() {
         addTemplate("websites", "hudSite", hudSite);
         addTemplate("shaders", "test", "TODO");
         addTemplate("scripts", "restClient", restClient);
+        addTemplate("scripts", "OrderedDict", OrderedDict);
     }
 }
 

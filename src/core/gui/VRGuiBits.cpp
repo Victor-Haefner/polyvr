@@ -66,10 +66,12 @@ void VRGuiBits::on_quit_clicked() {
 
 static string wasmServerSend =
 "\nfunction send(m) {\n"
-"    window.parent.postMessage(m, window.origin);"
-"}\n"
+"    window.parent.postMessage(m, window.origin);\n"
+"}\n";
+
+static string wasmServerReceive =
 "window.addEventListener('message', (event) => {\n"
-"    msg(event.data);\n"
+"    handle(event.data);\n"
 "}, false);\n";
 
 void VRGuiBits::on_web_export_clicked() {
@@ -86,10 +88,19 @@ void VRGuiBits::on_web_export_clicked() {
     for (auto script : VRScene::getCurrent()->getScripts()) {
         if (script.second->getType() != "HTML") continue;
         string core = script.second->getCore();
+
         auto itr = core.find("function send("); // delete that line, then insert wasmServerSend
-        auto itr2 = core.find("\n", itr);
-        core.erase(itr, itr2-itr);
-        core.insert(itr, wasmServerSend);
+        if (itr != string::npos) {
+            auto itr2 = core.find("\n", itr);
+            if (itr2 != string::npos) {
+                core.erase(itr, itr2-itr);
+                core.insert(itr, wasmServerSend);
+            }
+        }
+
+        itr = core.find("var websocket"); // prepend wasmServerReceive
+        if (itr != string::npos) core.insert(itr, wasmServerReceive);
+
         ofstream out(script.first+".html");
         out << core;
         out.close();
@@ -145,7 +156,7 @@ void VRGuiBits::on_web_export_clicked() {
             size_t i1 = positions[i]+1;
             size_t i2 = positions[i+1];
             string str = core.substr(i1,i2-i1);
-            if (str.size() > 50) continue;
+            if (str.size() > 250) continue;
             if (exists(str) && isFile(str)) {
                 if (preloadedFiles.count(str)) continue;
                 preloadedFiles[str] = true;

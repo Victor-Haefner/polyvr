@@ -45,23 +45,31 @@
 &lt;html&gt;
 
 &lt;head&gt;
- &lt;style type="text/css"&gt;
-  body {font-size:200%;
-		text-align:center;
-		background:#fff0e0;
-		color:#ff6622}
-  button {font-size:100%;color:#ff6622;}
- &lt;/style&gt;
-  &lt;script&gt;
-	var websocket = new WebSocket('ws://localhost:5500');
-	websocket.onopen = function() { msg('open'); };
-	websocket.onerror = function(e) { msg('error'); };
-	websocket.onmessage = function(m) { if(m.data) msg('msg: '+m.data); };
-	websocket.onclose = function(e) { msg('closed with code '+e.code); };
+	&lt;style type="text/css"&gt;
+		body {
+			font-size:200%;
+			text-align:center;
+			background:#fff0e0;
+			color:#ff6622;
+			margin: 0;
+		}
+		
+  		button {
+  			font-size:100%;
+  			color:#ff6622;
+  		}
+	&lt;/style&gt;
 	
-	function send(m){ websocket.send(m); };
-	function msg(m){ document.getElementById("msg").innerHTML += '&lt;br&gt;' + m; };
- &lt;/script&gt;
+	&lt;script&gt;
+		var websocket = new WebSocket('ws://localhost:5500');
+		websocket.onopen = function() { ; };
+		websocket.onerror = function(e) { ; };
+		websocket.onmessage = function(m) { if(m.data) handle(m.data); };
+		websocket.onclose = function(e) { ; };
+		
+		function send(m) { websocket.send(m); };
+		function handle(m) { document.getElementById("msg").innerHTML += '&lt;br&gt;' + m; };
+	&lt;/script&gt;
 &lt;/head&gt;
 
 &lt;body&gt;
