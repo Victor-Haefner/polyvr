@@ -71,6 +71,7 @@ static string wasmServerSend =
 
 static string wasmServerReceive =
 "window.addEventListener('message', (event) => {\n"
+"    console.log('message listener: '+event.data);\n"
 "    handle(event.data);\n"
 "}, false);\n";
 
