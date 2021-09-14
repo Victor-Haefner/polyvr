@@ -5,7 +5,9 @@
 #include <OpenSG/OSGImage.h>
 
 #ifndef WITHOUT_NUMPY
+#define NO_IMPORT_ARRAY
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
+#include <numpy/ndarraytypes.h>
 #include <numpy/ndarrayobject.h>
 #endif
 
@@ -84,7 +86,7 @@ bool CheckExtension(string extN) {
 
 PyObject* VRPyTexture::New(PyTypeObject *type, PyObject *args, PyObject *kwds) {
 #ifndef WITHOUT_NUMPY
-    import_array1(NULL);
+    //import_array1(NULL);
     VRTexturePtr img = VRTexture::create();
     if (pySize(args) == 0) return allocPtr( type, img );
 

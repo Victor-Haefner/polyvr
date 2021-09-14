@@ -99,7 +99,13 @@ void VRGuiBits::on_web_export_clicked() {
         }
 
         itr = core.find("var websocket"); // prepend wasmServerReceive
-        if (itr != string::npos) core.insert(itr, wasmServerReceive);
+        if (itr != string::npos) core.insert(itr, wasmServerReceive + "/*");
+
+        itr = core.find("websocket.onclose"); // prepend wasmServerReceive
+        if (itr != string::npos) {
+            auto itr2 = core.find("\n", itr);
+            if (itr2 != string::npos) core.insert(itr2, "*/");
+        }
 
         ofstream out(script.first+".html");
         out << core;
