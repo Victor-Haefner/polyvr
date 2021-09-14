@@ -94,7 +94,6 @@ void VRServer::answerWebSocket(int id, string msg) {
     EM_ASM({
         var msg = Module.UTF8ToString($0);
         var cID = $1;
-        console.log('VRServer::answerWebSocket to '+cID+': '+msg);
         sendToClient(cID, msg);
     }, msg.c_str(), id);
 #endif

@@ -71,7 +71,6 @@ static string wasmServerSend =
 
 static string wasmServerReceive =
 "window.addEventListener('message', (event) => {\n"
-"    console.log('message listener: '+event.data);\n"
 "    handle(event.data);\n"
 "}, false);\n";
 
@@ -90,7 +89,20 @@ void VRGuiBits::on_web_export_clicked() {
         if (script.second->getType() != "HTML") continue;
         string core = script.second->getCore();
 
-        auto itr = core.find("function send("); // delete that line, then insert wasmServerSend
+        string onOpen = "";
+        auto itr = core.find("websocket.onopen"); // get the code executed on ws open
+        if (itr != string::npos) {
+            auto itr2 = core.find("{", itr);
+            if (itr2 != string::npos) {
+                auto itr3 = core.find("}", itr2);
+                if (itr3 != string::npos) {
+                    onOpen = core.substr(itr2+1, itr3-itr2-1);
+                    cout << " on open action: " << onOpen << endl;
+                }
+            }
+        }
+
+        itr = core.find("function send("); // delete that line, then insert wasmServerSend
         if (itr != string::npos) {
             auto itr2 = core.find("\n", itr);
             if (itr2 != string::npos) {
@@ -100,9 +112,9 @@ void VRGuiBits::on_web_export_clicked() {
         }
 
         itr = core.find("var websocket"); // prepend wasmServerReceive
-        if (itr != string::npos) core.insert(itr, wasmServerReceive + "/*");
+        if (itr != string::npos) core.insert(itr, wasmServerReceive + onOpen + "\n\t/*");
 
-        itr = core.find("websocket.onclose"); // prepend wasmServerReceive
+        itr = core.find("websocket.onclose"); // close the comment to disable the websocket
         if (itr != string::npos) {
             auto itr2 = core.find("\n", itr);
             if (itr2 != string::npos) core.insert(itr2, "*/");
