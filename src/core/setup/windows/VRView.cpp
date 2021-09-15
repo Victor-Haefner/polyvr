@@ -159,7 +159,9 @@ void VRView::setViewports() {//create && set size of viewports
         }
     }
 
+#ifndef WASM
     if (doStats && stats) lView->addForeground(stats);
+#endif
 }
 
 void VRView::setBG() {
