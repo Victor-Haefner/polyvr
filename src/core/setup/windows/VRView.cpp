@@ -158,6 +158,8 @@ void VRView::setViewports() {//create && set size of viewports
             if (renderingR) renderingR->resize(s);
         }
     }
+
+    if (doStats && stats) lView->addForeground(stats);
 }
 
 void VRView::setBG() {
