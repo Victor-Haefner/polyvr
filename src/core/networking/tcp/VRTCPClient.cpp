@@ -311,8 +311,8 @@ VRTCPClient::~VRTCPClient() { delete client; }
 
 VRTCPClientPtr VRTCPClient::create() { return VRTCPClientPtr(new VRTCPClient()); }
 
-void VRTCPClient::connect(string host, int port) { client->connect(host, port); }
-void VRTCPClient::connect(string host) { client->connect(host); }
+void VRTCPClient::connect(string host, int port) { client->connect(host, port); uri = host+":"+toString(port); }
+void VRTCPClient::connect(string host) { client->connect(host); uri = host; }
 void VRTCPClient::send(const string& message, string guard) { client->send(message, guard); }
 bool VRTCPClient::connected() { return client->connected(); }
 
@@ -323,6 +323,7 @@ void VRTCPClient::connectToPeer(int localPort, string remoteIP, int remotePort) 
     client->connectToPeer(localPort, remoteIP, remotePort);
 }
 
+string VRTCPClient::getConnectedUri() { return uri; }
 string VRTCPClient::getPublicIP(bool cached) { return VRTCPUtils::getPublicIP(cached); }
 
 

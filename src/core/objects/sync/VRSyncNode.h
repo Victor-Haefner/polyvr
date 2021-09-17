@@ -105,6 +105,8 @@ class VRSyncNode : public VRTransform {
         static VRSyncNodePtr create(string name = "None");
         VRSyncNodePtr ptr();
 
+        void setTCPClient(VRTCPClientPtr);
+
         void setDoWrapping(bool b);
         void setDoAvatars(bool b);
 

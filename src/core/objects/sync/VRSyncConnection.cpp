@@ -100,16 +100,22 @@ vector<BYTE> VRSyncConnection::base64_decode(string const& encoded_string) {
 }
 
 
-VRSyncConnection::VRSyncConnection(string host, int port) : host(host), port(port) {
+VRSyncConnection::VRSyncConnection(string host, int port) {
     client = VRTCPClient::create();
+    uri = host+":"+toString(port);
     if (host != "") connect();
+}
+
+VRSyncConnection::VRSyncConnection(VRTCPClientPtr client) : client(client) {
+    uri = client->getConnectedUri();
 }
 
 VRSyncConnection::~VRSyncConnection() { cout << "~VRSyncConnection::VRSyncConnection" << endl; }
 VRSyncConnectionPtr VRSyncConnection::create(string host, int port) { return VRSyncConnectionPtr( new VRSyncConnection(host, port) ); }
+VRSyncConnectionPtr VRSyncConnection::create(VRTCPClientPtr client) { return VRSyncConnectionPtr( new VRSyncConnection(client) ); }
 
 void VRSyncConnection::connect() {
-    client->connect(host, port);
+    client->connect(uri);
     //if (!result) cout << "VRSyncConnection, Failed to open websocket to " << uri << endl;
 }
 
@@ -120,7 +126,7 @@ bool VRSyncConnection::send(string message) {
 
 string VRSyncConnection::getStatus() {
     string s;
-    s = " connection with "+host+":"+toString(port)+", "+toString(client->connected());
+    s = " connection with "+uri+", "+toString(client->connected());
     return s;
 }
 

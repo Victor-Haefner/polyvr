@@ -1,5 +1,6 @@
 #include "VRSyncNode.h"
 #include "core/networking/tcp/VRTCPServer.h"
+#include "core/networking/tcp/VRTCPClient.h"
 
 #include "core/objects/VRLight.h"
 #include "core/objects/OSGObject.h"
@@ -97,6 +98,35 @@ VRSyncNode::~VRSyncNode() {
 
 VRSyncNodePtr VRSyncNode::ptr() { return static_pointer_cast<VRSyncNode>( shared_from_this() ); }
 VRSyncNodePtr VRSyncNode::create(string name) { return VRSyncNodePtr(new VRSyncNode(name) ); }
+
+void VRSyncNode::setTCPClient(VRTCPClientPtr client) { // TODO
+    string uri = client->getConnectedUri();
+    remotes[uri] = VRSyncConnection::create(client);
+
+    // sync node ID
+    auto nID = getNode()->node->getId();
+    remotes[uri]->send("selfmap|"+toString(nID));
+    remotes[uri]->send("newConnect|"+getConnectionLink());
+    cout << "   send newConnect from " << uri << endl;
+
+    sendTypes();
+}
+
+//Add remote Nodes to sync with
+void VRSyncNode::addRemote(string host, int port) {
+    cout << " >>> > > VRSyncNode::addRemote to " << getName() << ": " << name << " at " << host << " on " << port << endl;
+    string uri = host + ":" + toString(port);
+    if (remotes.count(uri)) return;
+    remotes[uri] = VRSyncConnection::create(host, port);
+
+    // sync node ID
+    auto nID = getNode()->node->getId();
+    remotes[uri]->send("selfmap|"+toString(nID));
+    remotes[uri]->send("newConnect|"+getConnectionLink());
+    cout << "   send newConnect from " << uri << endl;
+
+    sendTypes();
+}
 
 void VRSyncNode::setDoWrapping(bool b) { doWrapping = b; }
 void VRSyncNode::setDoAvatars(bool b) { doAvatars = b; }
@@ -798,22 +828,6 @@ vector<string> VRSyncNode::getRemotes() {
     return res;
 }
 
-//Add remote Nodes to sync with
-void VRSyncNode::addRemote(string host, int port) {
-    cout << " >>> > > VRSyncNode::addRemote to " << getName() << ": " << name << " at " << host << " on " << port << endl;
-    string uri = host + ":" + toString(port);
-    if (remotes.count(uri)) return;
-    remotes[uri] = VRSyncConnection::create(host, port);
-
-    // sync node ID
-    auto nID = getNode()->node->getId();
-    remotes[uri]->send("selfmap|"+toString(nID));
-    remotes[uri]->send("newConnect|"+getConnectionLink());
-    cout << "   send newConnect from " << uri << endl;
-
-    sendTypes();
-}
-
 void VRSyncNode::handleNewConnect(string data){
     cout << "VRSyncNode::handleNewConnect" << endl;
     auto remoteData = splitString(data, '|');
@@ -934,9 +948,7 @@ void VRSyncNode::analyseSubGraph() {
 }
 
 string VRSyncNode::getConnectionLink() {
-    /*ifconf ic;
-    ioctl(s, SIOCGIFCONF, ic);
-    IP = string(ic.ifc_buf);*/
+    if (!server) return "";
     string IP = server->getPublicIP();
     int port = server->getPort();
     return IP+":"+toString(port);

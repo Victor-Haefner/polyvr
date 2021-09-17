@@ -72,7 +72,8 @@ map<string, string> VRICEClient::getUsers() {
     return users;
 }
 
-void VRICEClient::send(string otherID, string msg) { // TODO: check if msg needs to be processed to confom URL syntax
+void VRICEClient::send(string otherID, string msg) {
+    msg = VRRestResponse::uriEncode(msg);
     broker->get(turnURL+"/addMessage.php?ORG="+uID+"&UID="+otherID+"&MSG="+msg)->getData();
 }
 
@@ -80,6 +81,7 @@ void VRICEClient::pollMessages() {
     if (uID == "") return;
     string data = broker->get(turnURL+"/getMessages.php?UID="+uID)->getData();
     if (data != "") {
+        cout << "VRICEClient::pollMessages " << data << endl;
         if (onEventCb) onEventCb("message|"+data);
     }
 }
@@ -114,8 +116,13 @@ void VRICEClient::connectTo(string otherID) {
     string uid2 = otherID;
     //cout << "VRICEClient::connectTo, name/uid: " << name << "/" << uid1 << " other/uid " << users[uid2] << "/" << uid2 << endl;
 
-    if (!users.count(uid1) || !users.count(uid2)) {
-        cout << "VRICEClient::connectTo failed, unknown ID" << endl;
+    if (!users.count(uid1)) {
+        cout << "VRICEClient::connectTo failed, own ID " << uid1 << " not in users!" << endl;
+        return;
+    }
+
+    if (!users.count(uid2)) {
+        cout << "VRICEClient::connectTo failed, others ID " << uid2 << " not in users!" << endl;
         return;
     }
 

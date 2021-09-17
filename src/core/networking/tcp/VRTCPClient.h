@@ -13,6 +13,7 @@ namespace OSG {
 
 class VRTCPClient {
     private:
+        string uri;
         TCPClient* client = 0;
 
     public:
@@ -31,6 +32,7 @@ class VRTCPClient {
         bool connected();
 
         string getPublicIP(bool cached = false);
+        string getConnectedUri();
 };
 
 }
