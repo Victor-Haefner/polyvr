@@ -406,6 +406,10 @@ VRGuiBits::VRGuiBits() {
     addTermTab("Search results");
     addTermTab("Reasoning");
     addTermTab("Tracking");
+    auto colTab = addTermTab("Collaboration");
+
+    colTab->addStyle( "red", "#ff3311", "#ffffff", false, false, false );
+
     openConsole = consoles["Console"];
     openConsole->setOpen(true);
 

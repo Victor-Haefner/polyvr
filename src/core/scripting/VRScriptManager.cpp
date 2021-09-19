@@ -190,7 +190,7 @@ static PyObject* writeOut(PyObject *self, PyObject *args) {
     const char *what;
     if (!PyArg_ParseTuple(args, "s", &what)) return NULL;
 #ifndef WITHOUT_GTK
-    VRGuiManager::get()->getConsole(pyOutConsole)->write(what);
+    VRConsoleWidget::get(pyOutConsole)->write(what);
 #else
     cout << what;
 #endif
@@ -201,7 +201,7 @@ static PyObject* writeErr(PyObject *self, PyObject *args) {
     const char *what;
     if (!PyArg_ParseTuple(args, "s", &what)) return NULL;
 #ifndef WITHOUT_GTK
-    VRGuiManager::get()->getConsole(pyErrConsole)->write(what);
+    VRConsoleWidget::get(pyErrConsole)->write(what);
 #else
     cout << what;
 #endif

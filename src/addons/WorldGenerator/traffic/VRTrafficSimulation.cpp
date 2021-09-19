@@ -32,7 +32,7 @@
 
 #ifndef WITHOUT_GTK
 #define CPRINT(x) \
-VRGuiManager::get()->getConsole( "Console" )->write( string(x)+"\n" );
+VRConsoleWidget::get( "Console" )->write( string(x)+"\n" );
 #else
 #define CPRINT(x) \
 cout << string(x) << endl;

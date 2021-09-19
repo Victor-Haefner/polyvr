@@ -21,7 +21,7 @@
 #include "core/gui/VRGuiConsole.h"
 
 #define WARN(x) \
-VRGuiManager::get()->getConsole( "Errors" )->write( x+"\n" );
+VRConsoleWidget::get( "Errors" )->write( x+"\n" );
 
 using namespace OSG;
 

@@ -51,6 +51,7 @@ class VRConsoleWidget {
         VRConsoleWidget();
         ~VRConsoleWidget();
 
+        static VRConsoleWidgetPtr get(string name);
         _GtkScrolledWindow* getWindow();
 
         void clear();

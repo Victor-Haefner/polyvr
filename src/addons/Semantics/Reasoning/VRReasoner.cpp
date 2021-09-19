@@ -59,7 +59,7 @@ bool VRReasoner::startswith(string s, string subs) {
 void VRReasoner::print(const string& s) {
     if (verbConsole) cout << pre << s << endl;
 #ifndef WITHOUT_GTK
-    if (verbGui) VRGuiManager::get()->getConsole( "Reasoning" )->write( s+"\n" );
+    if (verbGui) VRConsoleWidget::get( "Reasoning" )->write( s+"\n" );
 #endif
 }
 
@@ -77,10 +77,10 @@ void VRReasoner::print(const string& s, COLOR c) {
 #ifndef WITHOUT_GTK
     if (verbGui) {
         switch(c) {
-            case BLUE: VRGuiManager::get()->getConsole( "Reasoning" )->write( s+"\n", "blue" ); break;
-            case RED: VRGuiManager::get()->getConsole( "Reasoning" )->write( s+"\n", "red" ); break;
-            case GREEN: VRGuiManager::get()->getConsole( "Reasoning" )->write( s+"\n", "green" ); break;
-            case YELLOW: VRGuiManager::get()->getConsole( "Reasoning" )->write( s+"\n", "yellow" ); break;
+            case BLUE: VRConsoleWidget::get( "Reasoning" )->write( s+"\n", "blue" ); break;
+            case RED: VRConsoleWidget::get( "Reasoning" )->write( s+"\n", "red" ); break;
+            case GREEN: VRConsoleWidget::get( "Reasoning" )->write( s+"\n", "green" ); break;
+            case YELLOW: VRConsoleWidget::get( "Reasoning" )->write( s+"\n", "yellow" ); break;
         }
     }
 #endif

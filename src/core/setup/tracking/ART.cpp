@@ -15,6 +15,7 @@
 #include "core/utils/VRStorage_template.h"
 #include "core/setup/devices/VRSignal.h"
 #include "core/utils/VRMutex.h"
+#include "core/gui/VRGuiConsole.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -201,6 +202,7 @@ void ART::checkNewDevices(int type, int N) {
     for (int i=0; i<N; i++) {
         int k = ART_device::key(i,type);
         if (devices.count(k) == 0) {
+            VRConsoleWidget::get("Tracking")->write( "New ART device "+toString(type)+" with ID "+toString(k)+"\n");
             cout << "ART - New device " << type << " " << k << endl;
             devices[k] = ART_device::create(i,type);
             on_new_device->triggerPtr<VRDevice>();
@@ -239,6 +241,7 @@ void ART::setARTPort(int port) {
     if (dtrack != 0) delete dtrack;
     dtrack = new DTrack(port);
     if (!dtrack->valid()) {
+        VRConsoleWidget::get("Tracking")->write( "Failed to start DTrack on "+toString(port)+"\n");
         cout << "DTrack init error" << endl;
         delete dtrack;
         port = -1;
@@ -246,6 +249,7 @@ void ART::setARTPort(int port) {
         return;
     }
     dtrack->receive();
+    VRConsoleWidget::get("Tracking")->write( "Start DTrack on "+toString(port)+"\n");
 }
 
 void ART::setARTOffset(Vec3d o) { offset = o; }

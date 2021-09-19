@@ -1,6 +1,7 @@
 #include "VRTCPClient.h"
 #include "VRTCPUtils.h"
 #include "core/utils/toString.h"
+#include "core/utils/VRMutex.h"
 
 #include <boost/asio.hpp>
 
@@ -32,6 +33,7 @@ class TCPClient {
         asio::streambuf buffer;
         thread service;
         string guard;
+        VRMutex mtx;
 
         // hole punching
         thread tunnelAccept;
@@ -98,6 +100,7 @@ class TCPClient {
         void processQueue() {
             auto onWritten = [this](system::error_code ec, size_t N) { // write queued messages until done, then go read
                 if (!ec) {
+                    VRLock lock(mtx);
                     messages.pop_front();
                     if (!messages.empty()) processQueue();
                 } else {
@@ -106,6 +109,7 @@ class TCPClient {
                 }
             };
 
+            VRLock lock(mtx);
             asio::async_write(*socket, asio::buffer(messages.front().data(), messages.front().length()), onWritten );
         }
 
@@ -169,7 +173,10 @@ class TCPClient {
             }
         }
 
+        void setGuard(string g) { guard = g; }
+
         void send(string msg, string guard) {
+            VRLock lock(mtx);
             cout << "TCPClient::send " << this << " msg: " << msg << endl;
             this->guard = guard;
             msg += guard;
@@ -313,6 +320,7 @@ VRTCPClientPtr VRTCPClient::create() { return VRTCPClientPtr(new VRTCPClient());
 
 void VRTCPClient::connect(string host, int port) { client->connect(host, port); uri = host+":"+toString(port); }
 void VRTCPClient::connect(string host) { client->connect(host); uri = host; }
+void VRTCPClient::setGuard(string guard) { client->setGuard(guard); }
 void VRTCPClient::send(const string& message, string guard) { client->send(message, guard); }
 bool VRTCPClient::connected() { return client->connected(); }
 

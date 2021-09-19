@@ -4,12 +4,14 @@
 #include "../rest/VRRestResponse.h"
 #include "core/utils/toString.h"
 #include "core/scene/VRScene.h"
+#include "core/gui/VRGuiConsole.h"
 
 using namespace OSG;
 
 VRICEClient::VRICEClient() {
     broker = VRRestClient::create();
     client = VRTCPClient::create();
+    client->setGuard("TCPPVR\n");
     updateCb = VRUpdateCb::create("ice update", bind(&VRICEClient::update, this));
     VRScene::getCurrent()->addTimeoutFkt(updateCb, 0, 1000);
 }
@@ -111,7 +113,6 @@ void VRICEClient::connectTo(string otherID) {
         cout << "VRICEClient::connectTo failed, empty ID" << endl;
         return;
     }
-
     string uid1 = uID;
     string uid2 = otherID;
     //cout << "VRICEClient::connectTo, name/uid: " << name << "/" << uid1 << " other/uid " << users[uid2] << "/" << uid2 << endl;
@@ -125,6 +126,8 @@ void VRICEClient::connectTo(string otherID) {
         cout << "VRICEClient::connectTo failed, others ID " << uid2 << " not in users!" << endl;
         return;
     }
+
+    VRConsoleWidget::get("Collaboration")->write( " ICE "+name+"("+uid1+"): connect to "+users[uid2]+"("+uid2+")\n");
 
     string data = broker->get(turnURL+"/getConnection.php?UID="+uid1+"&UID2="+uid2)->getData();
     int port = toInt( splitString(data, ':')[0] );

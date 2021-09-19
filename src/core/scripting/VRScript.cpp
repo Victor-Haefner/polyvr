@@ -401,7 +401,7 @@ finally:
 void print_error_text(int offset, char *text) {
     auto print = [&]( string m, string style = "", shared_ptr< VRFunction<string> > link = 0 ) {
 #ifndef WITHOUT_GTK
-        VRGuiManager::get()->getConsole( "Syntax" )->write( m, style, link );
+        VRConsoleWidget::get( "Syntax" )->write( m, style, link );
 #endif
     };
 
@@ -435,7 +435,7 @@ void print_error_text(int offset, char *text) {
 void VRScript::printSyntaxError(PyObject *exception, PyObject *value, PyObject *tb) {
     auto print = [&]( string m, string style = "", shared_ptr< VRFunction<string> > link = 0 ) {
 #ifndef WITHOUT_GTK
-        VRGuiManager::get()->getConsole( "Syntax" )->write( m, style, link );
+        VRConsoleWidget::get( "Syntax" )->write( m, style, link );
 #endif
     };
 
@@ -471,7 +471,7 @@ void VRScript::pyErrPrint(string channel) {
 
     auto print = [&]( string m, string style = "", shared_ptr< VRFunction<string> > link = 0 ) {
 #ifndef WITHOUT_GTK
-        VRGuiManager::get()->getConsole( channel )->write( m, style, link );
+        VRConsoleWidget::get( channel )->write( m, style, link );
 #else
         cout << m << endl;
 #endif
@@ -491,7 +491,7 @@ void VRScript::pyErrPrint(string channel) {
     };
 
 #ifndef WITHOUT_GTK
-    VRGuiManager::get()->getConsole( channel )->addStyle( "redLink", "#ff3311", "#ffffff", false, false, true );
+    VRConsoleWidget::get( channel )->addStyle( "redLink", "#ff3311", "#ffffff", false, false, true );
 #endif
 
     struct Line {
