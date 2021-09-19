@@ -74,23 +74,14 @@ class OSGChangeList : public ChangeList {
         }
 
         void addChange(ContainerChangeEntry* entry, map<UInt32, ContainerChangeEntry*>& changedFCs, UInt32 mask = -1) {
-            /*if (entry->uiEntryDesc == ContainerChangeEntry::AddReference   ||
+            if (entry->uiEntryDesc == ContainerChangeEntry::AddReference   ||
                 entry->uiEntryDesc == ContainerChangeEntry::SubReference   ||
                 entry->uiEntryDesc == ContainerChangeEntry::DepSubReference) {
                 ContainerChangeEntry* pEntry = getNewEntry();
                 pEntry->uiEntryDesc   = entry->uiEntryDesc;
                 pEntry->uiContainerId = entry->uiContainerId;
                 pEntry->pList         = this;
-            } else if(entry->uiEntryDesc == ContainerChangeEntry::Create) {
-                ContainerChangeEntry* pEntry = getNewEntry();
-                pEntry->uiEntryDesc   = entry->uiEntryDesc; //ContainerChangeEntry::Change; //TODO: check what I did here (workaround to get created entries into the changelist aswell)
-                pEntry->pFieldFlags   = entry->pFieldFlags;
-                pEntry->uiContainerId = entry->uiContainerId;
-                pEntry->whichField    = entry->whichField;
-                if (pEntry->whichField == 0 && entry->bvUncommittedChanges != 0)
-                    pEntry->whichField |= *entry->bvUncommittedChanges;
-                pEntry->pList         = this;
-            } else*/
+            }
 
             if (entry->uiEntryDesc == ContainerChangeEntry::Change) {
                 ContainerChangeEntry* pEntry = 0;
@@ -100,11 +91,10 @@ class OSGChangeList : public ChangeList {
                     pEntry->uiContainerId = entry->uiContainerId;
                     changedFCs[pEntry->uiContainerId] = pEntry;
                 }
-                pEntry->uiEntryDesc   = entry->uiEntryDesc; //ContainerChangeEntry::Change; //TODO: check what I did here (workaround to get created entries into the changelist aswell)
+                pEntry->uiEntryDesc = entry->uiEntryDesc; //ContainerChangeEntry::Change; //TODO: check what I did here (workaround to get created entries into the changelist aswell)
                 //pEntry->pFieldFlags   = entry->pFieldFlags; // what are they used for?
                 pEntry->whichField |= entry->whichField;
-                if (pEntry->whichField == 0 && entry->bvUncommittedChanges != 0)
-                    pEntry->whichField |= *entry->bvUncommittedChanges;
+                if (pEntry->whichField == 0 && entry->bvUncommittedChanges != 0) pEntry->whichField |= *entry->bvUncommittedChanges;
                 pEntry->whichField &= mask;
                 pEntry->pList         = this;
             }
@@ -264,6 +254,7 @@ OSGChangeList* VRSyncChangelist::filterChanges(VRSyncNodePtr syncNode) {
         }
 
         if (syncNode->isRegistered(id)) localChanges->addChange(entry, changedFCs);
+
         UInt32 cMask;
         if (syncNode->isExternalContainer(id, cMask)) localChanges->addChange(entry, changedFCs, cMask);
         if (!syncNode->isSubContainer(id)) continue;
@@ -767,6 +758,7 @@ void VRSyncChangelist::broadcastChangeList(VRSyncNodePtr syncNode, OSGChangeList
 
 //copies state into a CL and serializes it as string
 void VRSyncChangelist::broadcastSceneState(VRSyncNodePtr syncNode) {
+    VRConsoleWidget::get("Collaboration")->write( " Broadcast inital state\n");
     OSGChangeList* localChanges = (OSGChangeList*)ChangeList::create();
     localChanges->fillFromCurrentState();
     broadcastChangeList(syncNode, localChanges, true);

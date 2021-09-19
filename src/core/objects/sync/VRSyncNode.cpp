@@ -615,7 +615,7 @@ void VRSyncNode::update() {
     getAndBroadcastPoses();
     auto localChanges = changelist->filterChanges(ptr());
     if (!localChanges) return;
-    if (getChildrenCount() == 0) return; // TODO: this may happen if the only child is dragged..
+    //if (getChildrenCount() == 0) return; // TODO: this may happen if the only child is dragged, or the only child was just deleted..
     cout << endl << " > > >  " << name << " VRSyncNode::update()" << endl;
 
 
