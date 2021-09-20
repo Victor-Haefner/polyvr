@@ -30,9 +30,15 @@ class VRICEClient : public std::enable_shared_from_this<VRICEClient> {
         VRUpdateCbPtr updateCb;
         string usersList;
         void update();
-        void pollUsers();
-        void pollMessages();
         void updateUsers();
+
+        void processUsers(string data);
+        void processMessages(string data);
+        void processRespUsers(VRRestResponsePtr r);
+        void processRespMessages(VRRestResponsePtr r);
+
+        void pollUsers(bool async);
+        void pollMessages(bool async);
 
 	public:
 		VRICEClient();

@@ -26,19 +26,19 @@ VRICEClientPtr VRICEClient::ptr() { return static_pointer_cast<VRICEClient>(shar
 void VRICEClient::setTurnServer(string url, string ip) {
     turnURL = url;
     turnIP = ip;
-    pollUsers();
+    pollUsers(false);
 }
 
 void VRICEClient::setName(string n) {
     name = n;
     uID = broker->get(turnURL+"/regUser.php?NAME="+n)->getData();
     //cout << "register name " << n << " -> " << uID << endl;
-    pollUsers();
+    pollUsers(false);
 }
 
 void VRICEClient::removeUser(string uid) {
     broker->get(turnURL+"/remUser.php?UID="+uid);
-    pollUsers();
+    pollUsers(false);
 }
 
 string VRICEClient::getID() { return uID; }
@@ -53,9 +53,9 @@ void VRICEClient::onMessage( function<void(string)> f ) {
     client->onMessage(f);
 }
 
-void VRICEClient::update() {
-    pollUsers();
-    pollMessages();
+void VRICEClient::update() { // TODO: test and debug async
+    pollUsers(false);
+    pollMessages(false);
 }
 
 void VRICEClient::updateUsers() {
@@ -70,7 +70,7 @@ void VRICEClient::updateUsers() {
 }
 
 map<string, string> VRICEClient::getUsers() {
-    pollUsers();
+    pollUsers(false);
     return users;
 }
 
@@ -79,22 +79,49 @@ void VRICEClient::send(string otherID, string msg) {
     broker->get(turnURL+"/addMessage.php?ORG="+uID+"&UID="+otherID+"&MSG="+msg)->getData();
 }
 
-void VRICEClient::pollMessages() {
-    if (uID == "") return;
-    string data = broker->get(turnURL+"/getMessages.php?UID="+uID)->getData();
+void VRICEClient::processUsers(string data) {
+    if (data == usersList) return;
+    usersList = data;
+    updateUsers();
+    if (onEventCb) onEventCb("users changed");
+}
+
+void VRICEClient::processMessages(string data) {
     if (data != "") {
         cout << "VRICEClient::pollMessages " << data << endl;
         if (onEventCb) onEventCb("message|"+data);
     }
 }
 
-void VRICEClient::pollUsers() {
-    string data = broker->get(turnURL+"/listUsers.php")->getData();
-    if (data == usersList) return;
+void VRICEClient::processRespUsers(VRRestResponsePtr r) {
+    auto job = VRUpdateCb::create( "icePollUsrJob", bind(&VRICEClient::processUsers, this, r->getData()) );
+    VRScene::getCurrent()->queueJob( job );
+}
 
-    usersList = data;
-    updateUsers();
-    if (onEventCb) onEventCb("users changed");
+void VRICEClient::processRespMessages(VRRestResponsePtr r) {
+    auto job = VRUpdateCb::create( "icePollMsgJob", bind(&VRICEClient::processMessages, this, r->getData()) );
+    VRScene::getCurrent()->queueJob( job );
+}
+
+void VRICEClient::pollMessages(bool async) {
+    if (uID == "") return;
+    if (!async) {
+        string data = broker->get(turnURL+"/getMessages.php?UID="+uID)->getData();
+        processMessages(data);
+    } else {
+        auto cb = VRRestCb::create("icePollMsgs", bind(&VRICEClient::processRespMessages, this, placeholders::_1) );
+        broker->getAsync(turnURL+"/getMessages.php?UID="+uID, cb);
+    }
+}
+
+void VRICEClient::pollUsers(bool async) {
+    if (!async) {
+        string data = broker->get(turnURL+"/listUsers.php")->getData();
+        processUsers(data);
+    } else {
+        auto cb = VRRestCb::create("icePollUsers", bind(&VRICEClient::processRespUsers, this, placeholders::_1) );
+        broker->getAsync(turnURL+"/listUsers.php", cb);
+    }
 }
 
 string VRICEClient::getUserName(string ID) {

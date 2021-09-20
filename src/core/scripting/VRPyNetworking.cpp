@@ -62,6 +62,7 @@ PyMethodDef VRPyTCPClient::methods[] = {
     {"send", PyWrapOpt(TCPClient, send, "Send message to server", "", void, const string&, string) },
     {"onMessage", PyWrap(TCPClient, onMessage, "Set onMessage callback", void, function<void(string)>) },
     {"onConnect", PyWrap(TCPClient, onConnect, "Set onConnect callback", void, function<void(void)>) },
+    {"connected", PyWrap(TCPClient, connected, "Returns True is connected", bool) },
     {"getPublicIP", PyWrapOpt(TCPClient, getPublicIP, "Get public IP", "0", string, bool) },
     {NULL}  /* Sentinel */
 };
