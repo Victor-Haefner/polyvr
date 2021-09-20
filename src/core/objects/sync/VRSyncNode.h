@@ -99,6 +99,7 @@ class VRSyncNode : public VRTransform {
 
         void handleNewConnect(string data);
         void accTCPConnection(string msg);
+        void reqInitState();
 
     public:
         VRSyncNode(string name = "syncNode");

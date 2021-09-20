@@ -114,9 +114,16 @@ void VRSyncNode::setTCPClient(VRTCPClientPtr client) {
 void VRSyncNode::accTCPConnection(string msg) {
     auto nID = getNode()->node->getId();
     VRConsoleWidget::get("Collaboration")->write( name+": got tcp client acc, "+msg+"\n");
-    if (msg == "accConnect|1") remotes[connectionUri]->send("accConnect|");
+    if (msg == "accConnect|1") remotes[connectionUri]->send("accConnect|2");
     remotes[connectionUri]->send("selfmap|"+toString(nID));
     sendTypes();
+    remotes[connectionUri]->send("reqInitState|");
+}
+
+void VRSyncNode::reqInitState() {
+    VRConsoleWidget::get("Collaboration")->write( name+": got request to send initial state\n");
+    if (getChildrenCount() == 0) return;
+    changelist->broadcastSceneState(ptr());
 }
 
 //Add remote Nodes to sync with
@@ -196,14 +203,17 @@ bool VRSyncNode::isSubContainer(const UInt32& id) {
             return isSubContainer(scID);
         }
         cout << "  -- WARNING -- untracked ShaderProgram " << id << endl;
+        return false;
     }
 
-    if (typeName == "ShaderVariableOSG" || typeName == "ShaderVariableInt" || typeName == "ShaderVariableReal") {
+    if (typeName == "ShaderVariableOSG" || typeName == "ShaderVariableInt" || typeName == "ShaderVariableReal"
+        || typeName == "ShaderVariableVec4f" || typeName == "ShaderVariableVec3f" || typeName == "ShaderVariableVec2f") {
         if (VRMaterial::fieldContainerMap.count(id)) {
             auto scID = VRMaterial::fieldContainerMap[id];
             return isSubContainer(scID);
         }
         cout << "  -- WARNING -- untracked ShaderVariable " << id << endl;
+        return false;
     }
 
     if (typeName == "Image") { // TODO, implement propper check
@@ -212,9 +222,20 @@ bool VRSyncNode::isSubContainer(const UInt32& id) {
             return isSubContainer(toID);
         }
         cout << "  -- WARNING -- untracked image " << id << endl;
+        return false;
     }
 
-    if (typeName == "SolidBackground" || typeName == "FrameBufferObject") { // TODO, implement propper check
+    if (typeName == "SolidBackground"
+        || typeName == "State" // TODO: what is a State?? there are many of those!
+        || typeName == "ShaderShadowMapEngine"
+        || typeName == "TrapezoidalShadowMapEngine"
+        || typeName == "SimpleShadowMapEngine"
+        || typeName == "TextureBackground"
+        || typeName == "SkyBackground"
+        || typeName == "PerspectiveCamera"
+        || typeName == "TextureBuffer"
+        || typeName == "RenderBuffer"
+        || typeName == "FrameBufferObject") { // TODO, implement propper check
         //cout << " -- WARNING -- unhandled FC type in isSubContainer: " << id << " " << typeName << endl;
         return false;
     }
@@ -602,20 +623,6 @@ void VRSyncNode::getAndBroadcastPoses() {
     //cout << "broadcast poses " << poses << endl;
 }
 
-/*void VRSyncNode::sync(string uri) {
-    if (!container.size()) return;
-    vector<BYTE> data;
-    vector<UInt32> containerData;
-    for (auto c : container) {
-        containerData.push_back(c.first);
-        containerData.push_back(c.second);
-    }
-    data.insert(data.end(), (BYTE*)&containerData[0], (BYTE*)&containerData[0] + sizeof(UInt32)*containerData.size());
-    string msg = VRSyncConnection::base64_encode(&data[0], data.size());
-    remotes[uri]->send("sync");
-    remotes[uri]->send(msg);
-}*/
-
 //update this SyncNode
 void VRSyncNode::update() {
     handledPoses = false;
@@ -631,9 +638,10 @@ void VRSyncNode::update() {
 
 
     //printRegistredContainers(); // DEBUG: print registered container
-    printSyncedContainers();
+    //printSyncedContainers();
     //changelist->printChangeList(ptr(), localChanges);
 
+    VRConsoleWidget::get("Collaboration")->write( " Broadcast scene updates\n");
     changelist->broadcastChangeList(ptr(), localChanges, true);
     syncedContainer.clear();
     cout << "            / " << name << " VRSyncNode::update()" << "  < < < " << endl;
@@ -939,6 +947,7 @@ string VRSyncNode::handleMessage(string msg) {
     else if (startsWith(msg, "ownership|")) job = VRUpdateCb::create( "sync-ownership", bind(&VRSyncNode::handleOwnershipMessage, this, msg) );
     else if (startsWith(msg, "newConnect|")) job = VRUpdateCb::create( "sync-newConnect", bind(&VRSyncNode::handleNewConnect, this, msg) );
     else if (startsWith(msg, "accConnect|")) job = VRUpdateCb::create( "sync-accConnect", bind(&VRSyncNode::accTCPConnection, this, msg) );
+    else if (startsWith(msg, "reqInitState|")) job = VRUpdateCb::create( "sync-reqInitState", bind(&VRSyncNode::reqInitState, this) );
     else if (startsWith(msg, "changelistEnd|")) job = VRUpdateCb::create( "sync-finalizeCL", bind(&VRSyncChangelist::deserializeAndApply, changelist.get(), ptr()) );
     else if (startsWith(msg, "warn|")) job = VRUpdateCb::create( "sync-handleWarning", bind(&VRSyncNode::handleWarning, this, msg) );
     //else if (startsWith(msg, "warn|")) handleWarning(msg);

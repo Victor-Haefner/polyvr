@@ -160,7 +160,7 @@ void VRICEClient::connectTo(string otherID) {
 
 void VRICEClient::sendTCP(string msg) {
     if (!client->connected()) return;
-    client->send(msg);
+    client->send(msg, "TCPPVR\n");
 }
 
 VRTCPClientPtr VRICEClient::getClient() { return client; }

@@ -177,9 +177,11 @@ class TCPClient {
 
         void send(string msg, string guard) {
             VRLock lock(mtx);
-            cout << "TCPClient::send " << this << " msg: " << msg << endl;
             this->guard = guard;
             msg += guard;
+            size_t S = msg.size();
+            double s = S/1000.0;
+            cout << "TCPClient::send " << this << " msg: " << msg << ", " << s << " kb" << endl;
             bool write_in_progress = !messages.empty();
             messages.push_back(msg);
             if (!write_in_progress) processQueue();
