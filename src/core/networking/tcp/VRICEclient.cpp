@@ -26,19 +26,16 @@ VRICEClientPtr VRICEClient::ptr() { return static_pointer_cast<VRICEClient>(shar
 void VRICEClient::setTurnServer(string url, string ip) {
     turnURL = url;
     turnIP = ip;
-    pollUsers(false);
 }
 
 void VRICEClient::setName(string n) {
     name = n;
     uID = broker->get(turnURL+"/regUser.php?NAME="+n)->getData();
     //cout << "register name " << n << " -> " << uID << endl;
-    pollUsers(false);
 }
 
 void VRICEClient::removeUser(string uid) {
     broker->get(turnURL+"/remUser.php?UID="+uid);
-    pollUsers(false);
 }
 
 string VRICEClient::getID() { return uID; }
@@ -54,8 +51,15 @@ void VRICEClient::onMessage( function<void(string)> f ) {
 }
 
 void VRICEClient::update() { // TODO: test and debug async
-    pollUsers(false);
-    pollMessages(false);
+    if (!usrGuard) {
+        usrGuard = true;
+        pollUsers(true);
+    }
+
+    if (!msgGuard) {
+        msgGuard = true;
+        pollMessages(true);
+    }
 }
 
 void VRICEClient::updateUsers() {
@@ -69,10 +73,7 @@ void VRICEClient::updateUsers() {
     }
 }
 
-map<string, string> VRICEClient::getUsers() {
-    pollUsers(false);
-    return users;
-}
+map<string, string> VRICEClient::getUsers() { return users; }
 
 void VRICEClient::send(string otherID, string msg) {
     msg = VRRestResponse::uriEncode(msg);
@@ -80,17 +81,19 @@ void VRICEClient::send(string otherID, string msg) {
 }
 
 void VRICEClient::processUsers(string data) {
-    if (data == usersList) return;
-    usersList = data;
-    updateUsers();
-    if (onEventCb) onEventCb("users changed");
+    if (data != usersList) {
+        usersList = data;
+        updateUsers();
+        if (onEventCb) {
+            onEventCb("users changed");
+        }
+    }
+    usrGuard = false;
 }
 
 void VRICEClient::processMessages(string data) {
-    if (data != "") {
-        cout << "VRICEClient::pollMessages " << data << endl;
-        if (onEventCb) onEventCb("message|"+data);
-    }
+    if (data != "") if (onEventCb) onEventCb("message|"+data);
+    msgGuard = false;
 }
 
 void VRICEClient::processRespUsers(VRRestResponsePtr r) {

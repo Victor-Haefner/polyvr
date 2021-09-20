@@ -23,6 +23,8 @@ class VRICEClient : public std::enable_shared_from_this<VRICEClient> {
         string uID;
         string turnURL;
         string turnIP;
+        bool usrGuard = false;
+        bool msgGuard = false;
 
         function<void(string)> onEventCb;
         function<void(string)> onMessageCb;
