@@ -81,7 +81,7 @@ void VRICEClient::send(string otherID, string msg) {
 }
 
 void VRICEClient::processUsers(string data) {
-    if (data != usersList) {
+    if (data != usersList && data != "") {
         usersList = data;
         updateUsers();
         if (onEventCb) {
@@ -96,15 +96,8 @@ void VRICEClient::processMessages(string data) {
     msgGuard = false;
 }
 
-void VRICEClient::processRespUsers(VRRestResponsePtr r) {
-    auto job = VRUpdateCb::create( "icePollUsrJob", bind(&VRICEClient::processUsers, this, r->getData()) );
-    VRScene::getCurrent()->queueJob( job );
-}
-
-void VRICEClient::processRespMessages(VRRestResponsePtr r) {
-    auto job = VRUpdateCb::create( "icePollMsgJob", bind(&VRICEClient::processMessages, this, r->getData()) );
-    VRScene::getCurrent()->queueJob( job );
-}
+void VRICEClient::processRespUsers(VRRestResponsePtr r) { processUsers(r->getData()); }
+void VRICEClient::processRespMessages(VRRestResponsePtr r) { processMessages(r->getData()); }
 
 void VRICEClient::pollMessages(bool async) {
     if (uID == "") return;

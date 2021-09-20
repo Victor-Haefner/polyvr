@@ -766,6 +766,7 @@ void VRMaterial::setTexture(VRTexturePtr img, bool alpha, int unit) {
 
     //md->texture = img;
     md->texChunks[unit]->setImage(img->getImage());
+    fieldContainerMap[img->getImage()->getId()] = md->texChunks[unit]->getId();
     if (alpha && img->getImage()->hasAlphaChannel()) enableTransparency(false);
 
     md->texChunks[unit]->setInternalFormat(img->getInternalFormat());
@@ -804,7 +805,10 @@ void VRMaterial::setTexture(TextureObjChunkMTRefPtr texChunk, int unit) {
 void VRMaterial::setTextureAndUnit(VRTexturePtr img, int unit) {
     if (img == 0) return;
     auto texChunk = getTexChunk(unit);
-    texChunk->setImage(img->getImage());
+    if (texChunk) {
+        texChunk->setImage(img->getImage());
+        fieldContainerMap[img->getImage()->getId()] = texChunk->getId();
+    }
 }
 
 void VRMaterial::setMappingBeacon(VRObjectPtr obj, int unit) {

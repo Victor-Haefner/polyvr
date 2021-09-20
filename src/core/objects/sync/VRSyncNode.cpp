@@ -142,7 +142,6 @@ bool VRSyncNode::isSubContainer(const UInt32& id) {
     auto fct = factory->getContainer(id);
     if (!fct) return false;
 
-
     UInt32 syncNodeID = getNode()->node->getId();
     auto type = factory->findType(fct->getTypeId());
 
@@ -207,7 +206,15 @@ bool VRSyncNode::isSubContainer(const UInt32& id) {
         cout << "  -- WARNING -- untracked ShaderVariable " << id << endl;
     }
 
-    if (typeName == "Image" || typeName == "SolidBackground" || typeName == "FrameBufferObject") { // TODO, implement propper check
+    if (typeName == "Image") { // TODO, implement propper check
+        if (VRMaterial::fieldContainerMap.count(id)) {
+            auto toID = VRMaterial::fieldContainerMap[id];
+            return isSubContainer(toID);
+        }
+        cout << "  -- WARNING -- untracked image " << id << endl;
+    }
+
+    if (typeName == "SolidBackground" || typeName == "FrameBufferObject") { // TODO, implement propper check
         //cout << " -- WARNING -- unhandled FC type in isSubContainer: " << id << " " << typeName << endl;
         return false;
     }
@@ -887,21 +894,19 @@ void VRSyncNode::startInterface(int port) {
 }
 
 void VRSyncNode::handleWarning(string msg) {
-    //cout << "Incomming Warning! " << msg << endl;
     auto data = splitString(msg, '|');
     if (data.size() != 3) { cout << "AAargh" << endl; return; }
-    int ID = toInt(data[2]);
-    cout << " --> Warning from other SyncNode: " << data[1] << " with fc ID: " << ID;
+    VRConsoleWidget::get("Collaboration")->write( name+": Warning received '"+data[1]+"' about FC "+data[2], "red");
     if (factory) {
+        int ID = toInt(data[2]);
         if (auto fct = factory->getContainer(ID)) {
-            cout << " fc type: " << fct->getTypeName() << " (" << fct->getTypeId() << ")";
+            string name = "";
             if (AttachmentContainer* attc = dynamic_cast<AttachmentContainer*>(fct)) {
-                if (auto n = ::getName(attc)) cout << " named: " << n;
-                else cout << " unnamed";
+                if (auto n = ::getName(attc)) name = n;
             }
+            VRConsoleWidget::get("Collaboration")->write( " "+name+" of type: "+fct->getTypeName()+" ("+toString(fct->getTypeId())+")\n", "red");
         }
     }
-    cout << " owned by " << getName() << endl;
 }
 
 void VRSyncNode::handleSelfmapRequest(string msg) {
