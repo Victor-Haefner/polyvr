@@ -579,6 +579,7 @@ bool poseChanged(Pose oldPose, PosePtr newPose, int thresholdPos, int thresholdA
 }
 
 void VRSyncNode::getAndBroadcastPoses() {
+    return;
     if (!doAvatars) return;
     string poses = "poses|name$" + connectionUri;
     bool changed = false;
@@ -658,28 +659,47 @@ void VRSyncNode::registerContainer(FieldContainer* c, UInt32 syncNodeID) {
     container[ID] = syncNodeID;
 }
 
+UInt32 getTransformID(VRTransformPtr t) {
+    //return t->getNode()->node->getId();
+    return t->getNode()->node->getCore()->getId();
+}
+
 void VRSyncNode::setAvatarBeacons(VRTransformPtr head, VRTransformPtr device) {
     avatarHeadBeacon = head;
     avatarDeviceBeacon = device;
+    UInt32 headID = getTransformID(head);
+    UInt32 deviceID = getTransformID(device);
+    VRConsoleWidget::get("Collaboration")->write( name+": Add avatar input, head "+head->getName()+" ("+toString(headID)+"), hand "+device->getName()+" ("+toString(deviceID)+")\n", "green");
 }
 
 void VRSyncNode::addRemoteAvatar(VRTransformPtr head, VRTransformPtr device) {
-    UInt32 headID = head->getNode()->node->getId();
-    UInt32 deviceID = device->getNode()->node->getId();
+    UInt32 headID = getTransformID(head);
+    UInt32 deviceID = getTransformID(device);
     broadcast("addAvatar|"+toString(headID)+":"+toString(deviceID));
+    VRConsoleWidget::get("Collaboration")->write( name+": Add avatar representation, head "+head->getName()+" ("+toString(headID)+"), hand "+device->getName()+" ("+toString(deviceID)+")\n", "green");
 }
 
 void VRSyncNode::handleAvatar(string data) {
-    auto IDs = splitString( splitString(data, '|')[1], ':');
-    UInt32 avatarBeaconID = toInt(IDs[1]);
-    UInt32 mouseBeaconID = avatarDeviceBeacon->getNode()->node->getId();
+    if (avatarDeviceBeacon) {
+        auto IDs = splitString( splitString(data, '|')[1], ':');
+        UInt32 avatarHeadID = toInt(IDs[0]);
+        UInt32 avatarBeaconID = toInt(IDs[1]);
+        UInt32 cameraBeaconID = getTransformID( avatarHeadBeacon );
+        UInt32 mouseBeaconID = getTransformID( avatarDeviceBeacon );
 
-    addRemoteMapping(mouseBeaconID, avatarBeaconID); // local, remote
-    broadcast("mapping|"+toString(avatarBeaconID)+":"+toString(mouseBeaconID));
+        addRemoteMapping(cameraBeaconID, avatarHeadID); // local, remote
+        broadcast("mapping|"+toString(avatarHeadID)+":"+toString(cameraBeaconID));
+        VRConsoleWidget::get("Collaboration")->write( name+": Map remote avatar head ID "+toString(avatarHeadID)+" to local camera ID "+toString(cameraBeaconID)+"\n", "green");
 
-    UInt32 mask = 0;
-    mask |= Node::ChildrenFieldMask;
-    externalContainer[mouseBeaconID] = mask;
+        addRemoteMapping(mouseBeaconID, avatarBeaconID); // local, remote
+        broadcast("mapping|"+toString(avatarBeaconID)+":"+toString(mouseBeaconID));
+        VRConsoleWidget::get("Collaboration")->write( name+": Map remote avatar hand ID "+toString(avatarBeaconID)+" to local device ID "+toString(mouseBeaconID)+"\n", "green");
+
+
+        UInt32 mask = 0;
+        mask |= Node::ChildrenFieldMask;
+        externalContainer[mouseBeaconID] = mask;
+    }
 
     //cout << " ---> mapAvatar, " << mouseBeaconID << ": " << mouseBeacon->getName() << ", " << avatarBeaconID << ": " << avatarBeacon->getName() << endl;
 }
@@ -763,6 +783,7 @@ void VRSyncNode::handleTypeMapping(string mappingData) {
 }
 
 void VRSyncNode::handlePoses(string poses)  {
+    return;
     //cout << "VRSyncNode::handlePoses: " << poses << endl;
     if (handledPoses) return;
     handledPoses = true;

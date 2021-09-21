@@ -491,7 +491,7 @@ void VRScript::pyErrPrint(string channel) {
     };
 
 #ifndef WITHOUT_GTK
-    VRConsoleWidget::get( channel )->addStyle( "redLink", "#ff3311", "#ffffff", false, false, true );
+    VRConsoleWidget::get( channel )->addStyle( "redLink", "#ff3311", "#ffffff", false, false, true, false );
 #endif
 
     struct Line {

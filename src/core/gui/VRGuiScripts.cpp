@@ -940,7 +940,7 @@ void VRGuiScripts::on_find_diag_find_clicked() {
         VRConsoleWidget::get( "Search results" )->write( m, style, link );
     };
 
-    VRConsoleWidget::get( "Search results" )->addStyle( "blueLink", "#3355ff", "#ffffff", false, true, true );
+    VRConsoleWidget::get( "Search results" )->addStyle( "blueLink", "#3355ff", "#ffffff", false, true, true, false );
 
     // result output
     print( "Results, line-position, for search of '" + search + "':\n");
