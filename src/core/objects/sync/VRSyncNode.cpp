@@ -642,7 +642,7 @@ void VRSyncNode::update() {
     //printSyncedContainers();
     //changelist->printChangeList(ptr(), localChanges);
 
-    VRConsoleWidget::get("Collaboration")->write( " Broadcast scene updates\n");
+    //VRConsoleWidget::get("Collaboration")->write( " Broadcast scene updates\n");
     changelist->broadcastChangeList(ptr(), localChanges, true);
     syncedContainer.clear();
     cout << "            / " << name << " VRSyncNode::update()" << "  < < < " << endl;
@@ -659,9 +659,9 @@ void VRSyncNode::registerContainer(FieldContainer* c, UInt32 syncNodeID) {
     container[ID] = syncNodeID;
 }
 
-UInt32 getTransformID(VRTransformPtr t) {
+UInt32 VRSyncNode::getTransformID(VRTransformPtr t) {
     //return t->getNode()->node->getId();
-    return t->getNode()->node->getCore()->getId();
+    return t->getOSGTransformPtr()->trans->getId();
 }
 
 void VRSyncNode::setAvatarBeacons(VRTransformPtr head, VRTransformPtr device) {
@@ -679,26 +679,30 @@ void VRSyncNode::addRemoteAvatar(VRTransformPtr head, VRTransformPtr device) {
     VRConsoleWidget::get("Collaboration")->write( name+": Add avatar representation, head "+head->getName()+" ("+toString(headID)+"), hand "+device->getName()+" ("+toString(deviceID)+")\n", "green");
 }
 
+void VRSyncNode::addExternalContainer(UInt32 id, UInt32 mask) {
+    externalContainer[id] = mask;
+    VRConsoleWidget::get("Collaboration")->write( name+": Add external container "+toString(id)+" with mask "+toString(mask)+"\n", "green");
+}
+
 void VRSyncNode::handleAvatar(string data) {
     if (avatarDeviceBeacon) {
         auto IDs = splitString( splitString(data, '|')[1], ':');
-        UInt32 avatarHeadID = toInt(IDs[0]);
-        UInt32 avatarBeaconID = toInt(IDs[1]);
-        UInt32 cameraBeaconID = getTransformID( avatarHeadBeacon );
-        UInt32 mouseBeaconID = getTransformID( avatarDeviceBeacon );
+        UInt32 avatarHeadID = toInt(IDs[0]); // remote
+        UInt32 avatarBeaconID = toInt(IDs[1]); // remote
+        UInt32 cameraBeaconID = getTransformID( avatarHeadBeacon ); // local
+        UInt32 mouseBeaconID = getTransformID( avatarDeviceBeacon ); // local
 
-        addRemoteMapping(cameraBeaconID, avatarHeadID); // local, remote
         broadcast("mapping|"+toString(avatarHeadID)+":"+toString(cameraBeaconID));
         VRConsoleWidget::get("Collaboration")->write( name+": Map remote avatar head ID "+toString(avatarHeadID)+" to local camera ID "+toString(cameraBeaconID)+"\n", "green");
 
-        addRemoteMapping(mouseBeaconID, avatarBeaconID); // local, remote
         broadcast("mapping|"+toString(avatarBeaconID)+":"+toString(mouseBeaconID));
         VRConsoleWidget::get("Collaboration")->write( name+": Map remote avatar hand ID "+toString(avatarBeaconID)+" to local device ID "+toString(mouseBeaconID)+"\n", "green");
 
 
-        UInt32 mask = 0;
-        mask |= Node::ChildrenFieldMask;
-        externalContainer[mouseBeaconID] = mask;
+        /*UInt32 mask = 0; // -1 ?
+        mask |= Node::ChildrenFieldMask;*/
+        addExternalContainer(cameraBeaconID, -1);
+        addExternalContainer(mouseBeaconID, -1);
     }
 
     //cout << " ---> mapAvatar, " << mouseBeaconID << ": " << mouseBeacon->getName() << ", " << avatarBeaconID << ": " << avatarBeacon->getName() << endl;
@@ -979,6 +983,7 @@ string VRSyncNode::handleMessage(string msg) {
 
 //broadcast message to all remote nodes
 void VRSyncNode::broadcast(string message) {
+    //VRConsoleWidget::get("Collaboration")->write( " Broadcast: "+message+"\n");
     for (auto& remote : remotes) {
         if (!remote.second->send(message)) {
             cout << "Failed to send message to remote." << endl;

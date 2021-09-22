@@ -95,6 +95,8 @@ class VRSyncNode : public VRTransform {
         // avatar
         VRTransformPtr avatarHeadBeacon;
         VRTransformPtr avatarDeviceBeacon;
+        UInt32 getTransformID(VRTransformPtr t);
+        void addExternalContainer(UInt32 id, UInt32 mask);
         void handleAvatar(string data);
 
         void handleNewConnect(string data);
