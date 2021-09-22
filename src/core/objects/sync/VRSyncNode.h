@@ -28,8 +28,6 @@ class VRSyncNode : public VRTransform {
         size_t selfID = 0;
         string connectionUri;
         bool doWrapping = true;
-        bool doAvatars = true;
-        bool handledPoses = false; // optimization
 
         VRMessageCbPtr onEvent;
 
@@ -72,21 +70,6 @@ class VRSyncNode : public VRTransform {
 
         void printRegistredContainers();
         void printSyncedContainers();
-        void getAndBroadcastPoses();
-
-        bool syncronizing = false;
-        //void sync(string remoteUri);
-
-        //Avatars
-        void handlePoses(string poses);
-        //void updateRemoteAvatarPose(string nodeName, PosePtr camPose);
-        //void updateRemoteMousePose(string nodeName, PosePtr mousePose);
-        map<string, PosePtr> remotesCameraPose;
-        map<string, PosePtr> remotesMousePose;
-        map<string, PosePtr> remotesFlystickPose;
-        Pose oldCamPose;
-        Pose oldMousePose;
-        Pose oldFlystickPose;
 
         //Ownership
         vector<string> owned; //names of owned objects by this node
