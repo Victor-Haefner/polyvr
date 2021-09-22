@@ -93,8 +93,9 @@ class VRSyncNode : public VRTransform {
         void handleOwnershipMessage(string ownership);
 
         // avatar
-        VRTransformPtr avatarHeadBeacon;
-        VRTransformPtr avatarDeviceBeacon;
+        VRTransformPtr avatarHeadTransform;
+        VRTransformPtr avatarDeviceTransform;
+        VRTransformPtr avatarDeviceAnchor;
         UInt32 getNodeID(VRObjectPtr t);
         UInt32 getTransformID(VRTransformPtr t);
         void addExternalContainer(UInt32 id, UInt32 mask);
@@ -153,8 +154,8 @@ class VRSyncNode : public VRTransform {
 
         void registerContainer(FieldContainer* c, UInt32 syncNodeID = -1);
         vector<UInt32> registerNode(Node* c); //returns all registered IDs
-        void setAvatarBeacons(VRTransformPtr head, VRTransformPtr device);
-        void addRemoteAvatar(VRTransformPtr head, VRTransformPtr device);
+        void setAvatarBeacons(VRTransformPtr headTransform, VRTransformPtr devTransform, VRTransformPtr devAnchor);
+        void addRemoteAvatar(VRTransformPtr headTransform, VRTransformPtr devTransform, VRTransformPtr devAnchor);
 
         map<FieldContainer*, vector<FieldContainer*>> getAllSubContainers(FieldContainer* node);
 

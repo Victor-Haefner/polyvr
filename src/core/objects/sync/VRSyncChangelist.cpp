@@ -95,6 +95,8 @@ class OSGChangeList : public ChangeList {
                 //pEntry->pFieldFlags   = entry->pFieldFlags; // what are they used for?
                 pEntry->whichField |= entry->whichField;
                 if (entry->bvUncommittedChanges != 0) pEntry->whichField |= *entry->bvUncommittedChanges;
+                if (mask != -1 && pEntry->whichField != Node::VolumeFieldMask)
+                    VRConsoleWidget::get("Collaboration")->write( " Add change to CL: "+toString(entry->uiContainerId)+", "+toString(pEntry->whichField)+", "+toString(BitVector(mask))+", "+toString(pEntry->whichField&mask)+"\n");
                 pEntry->whichField &= mask;
                 pEntry->pList = this;
             }

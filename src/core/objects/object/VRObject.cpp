@@ -661,7 +661,7 @@ void VRObject::printOSGTree(OSGObjectPtr o, string indent) {
     // get attachments
     // print them
 
-    cout << "\n" << indent << name << " " << type << "  ";
+    cout << "\n" << indent << name << " (" << o->node->getId() << ") " << type << "  ";
     if (type == "Transform") {
         Transform* t = dynamic_cast<Transform*>(o->node->getCore());
         cout << t->getMatrix()[0] << "  " << t->getMatrix()[1] << "  " << t->getMatrix()[2];
