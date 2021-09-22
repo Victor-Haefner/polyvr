@@ -141,6 +141,7 @@ class VRSyncNode : public VRTransform {
         void addRemoteAvatar(VRTransformPtr headTransform, VRTransformPtr devTransform, VRTransformPtr devAnchor);
 
         map<FieldContainer*, vector<FieldContainer*>> getAllSubContainers(FieldContainer* node);
+        map<UInt32, VRObjectWeakPtr> getMappedFCs();
 
         void wrapOSG();
 

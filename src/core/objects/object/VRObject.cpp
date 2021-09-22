@@ -12,10 +12,12 @@
 #include "core/utils/VRUndoInterfaceT.h"
 #include "core/utils/VRStorage_template.h"
 #include "core/scene/import/VRExport.h"
+#include "core/gui/VRGuiConsole.h"
 
 #include <OpenSG/OSGGroup.h>
 #include <OpenSG/OSGTransform.h>
 #include <OpenSG/OSGNameAttachment.h>
+#include <OpenSG/OSGStringAttributeMap.h>
 #include <OpenSG/OSGVisitSubTree.h>
 #include <OpenSG/OSGSceneFileHandler.h>
 
@@ -762,7 +764,26 @@ void VRObject::toggleVisible(string mode) { setVisible(!isVisible(mode), mode); 
 
 bool VRObject::isPickable() { return pickable == 1; }
 
-void VRObject::setPickable(int b) { if (hasTag("transform")) pickable = b; } //TODO: check if the if is necessary!
+void VRObject::setPickable(int b, bool setAttachment) {
+    if (!hasTag("transform")) return;  //TODO: check if the if is necessary!
+    if (pickable == b) return;
+
+    pickable = b;
+    if (!setAttachment) return;
+
+    StringAttributeMapUnrecPtr aMap = 0;
+    Attachment* att = getNode()->node->findAttachment( StringAttributeMap::getClassType().getGroupId());
+
+    if (!att) {
+        aMap = StringAttributeMap::create();
+        getNode()->node->addAttachment(aMap);
+    } else aMap = dynamic_cast<StringAttributeMap*>(att);
+
+    if (aMap) {
+        if (b) aMap->setAttribute("pickable", "yes");
+        else   aMap->setAttribute("pickable", "no");
+    }
+}
 
 string VRObject::getPath() {
     VRObjectPtr o = ptr();

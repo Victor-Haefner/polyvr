@@ -160,7 +160,7 @@ class VRObject : public std::enable_shared_from_this<VRObject>, public VRName, p
         void toggleVisible(string mode = "");
 
         bool isPickable();
-        void setPickable(int b);
+        void setPickable(int b, bool setAttachment = true);
 
         void setupBefore(VRStorageContextPtr context);
         void setupAfter(VRStorageContextPtr context);

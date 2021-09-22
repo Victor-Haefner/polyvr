@@ -9,6 +9,8 @@
 #include <OpenSG/OSGFieldContainer.h>
 #include <OpenSG/OSGFieldContainerFactory.h>
 #include <OpenSG/OSGAttachment.h>
+#include <OpenSG/OSGStringAttributeMap.h>
+#include <OpenSG/OSGNameAttachment.h>
 #include <OpenSG/OSGNode.h>
 #include <OpenSG/OSGGroup.h>
 
@@ -95,8 +97,6 @@ class OSGChangeList : public ChangeList {
                 //pEntry->pFieldFlags   = entry->pFieldFlags; // what are they used for?
                 pEntry->whichField |= entry->whichField;
                 if (entry->bvUncommittedChanges != 0) pEntry->whichField |= *entry->bvUncommittedChanges;
-                if (mask != -1 && pEntry->whichField != Node::VolumeFieldMask)
-                    VRConsoleWidget::get("Collaboration")->write( " Add change to CL: "+toString(entry->uiContainerId)+", "+toString(pEntry->whichField)+", "+toString(BitVector(mask))+", "+toString(pEntry->whichField&mask)+"\n");
                 pEntry->whichField &= mask;
                 pEntry->pList = this;
             }
@@ -387,6 +387,21 @@ void VRSyncChangelist::handleGenericChange(VRSyncNodePtr syncNode, FieldContaine
     fixNullCore(fcPtr, sentry.fieldMask);
     auto obj = syncNode->getVRObject(fcPtr->getId());
     if (obj) obj->wrapOSG(obj->getNode()); // update VR Objects, for example the VRTransform after its Matrix changed!
+
+    string type = fcPtr->getTypeName();
+    StringAttributeMap* attachment = dynamic_cast<StringAttributeMap*>(fcPtr.get());
+    if (attachment) {
+        auto pickable = attachment->getAttribute("pickable");
+        Node* attachmentNode = dynamic_cast<Node*>(attachment->getParents(0));
+        if (attachmentNode) {
+            auto obj = syncNode->getVRObject(attachmentNode->getCore()->getId());
+            if (obj) {
+                bool b = (pickable == "yes");
+                VRConsoleWidget::get("Collaboration")->write( " handleGenericChange: "+obj->getName()+" is pickable? "+pickable+"\n");
+                obj->setPickable(b, false);
+            }
+        }
+    }
 }
 
 void VRSyncChangelist::handleRemoteEntries(VRSyncNodePtr syncNode, vector<SerialEntry>& entries, map<UInt32, vector<UInt32>>& parentToChildren, map<UInt32, vector<unsigned char>>& fcData) {

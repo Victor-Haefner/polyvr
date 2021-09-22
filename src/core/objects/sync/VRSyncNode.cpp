@@ -360,6 +360,8 @@ void VRSyncNode::gatherLeafs(VRObjectPtr parent, vector<pair<Node*, VRObjectPtr>
     for (auto child : parent->getChildren()) gatherLeafs(child, leafs, inconsistentCores);
 }
 
+map<UInt32, VRObjectWeakPtr> VRSyncNode::getMappedFCs() { return nodeToVRObject; }
+
 VRObjectPtr VRSyncNode::OSGConstruct(NodeMTRecPtr n, VRObjectPtr parent, Node* geoParent) {
     if (!doWrapping) return 0;
     if (n == 0) return 0; // TODO add an osg wrap method for each object?
