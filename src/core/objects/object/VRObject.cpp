@@ -284,6 +284,10 @@ void VRObject::wrapOSG(OSGObjectPtr node) {
     getNode()->node = node->node;
     if (!core || !node->node->getCore()) return;
     core->core = node->node->getCore();
+
+    Attachment* att = node->node->findAttachment( StringAttributeMap::getClassType().getGroupId());
+    StringAttributeMapUnrecPtr aMap = dynamic_cast<StringAttributeMap*>(att);
+    if (aMap && aMap->hasAttribute("pickable")) pickable = (aMap->getAttribute("pickable") == "yes");
 }
 
 OSGObjectPtr VRObject::getNode() { return osg; }
