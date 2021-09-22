@@ -675,10 +675,13 @@ void VRSyncNode::setAvatarBeacons(VRTransformPtr headTransform, VRTransformPtr d
 }
 
 void VRSyncNode::addRemoteAvatar(VRTransformPtr headTransform, VRTransformPtr devTransform, VRTransformPtr devAnchor) { // some geometries
+    headTransform->enableOptimization(false);
+    devTransform->enableOptimization(false);
+    devAnchor->enableOptimization(false);
+
     UInt32 headTransID = getTransformID(headTransform);
     UInt32 deviceTransID = getTransformID(devTransform);
-    UInt32 deviceAnchorID = getNodeID(devTransform);
-    //UInt32 deviceAnchorID = getNodeID(devAnchor);
+    UInt32 deviceAnchorID = getNodeID(devAnchor);
     UInt32 deviceAnchorTransID = getTransformID(devAnchor);
     broadcast("addAvatar|"+toString(headTransID)+":"+toString(deviceTransID)+":"+toString(deviceAnchorID)+":"+toString(deviceAnchorTransID));
     VRConsoleWidget::get("Collaboration")->write( name+": Add avatar representation, head "+headTransform->getName()+" ("+toString(headTransID)+"), hand "+devTransform->getName()+" ("+toString(deviceTransID)+")\n", "green");
@@ -699,14 +702,13 @@ void VRSyncNode::handleAvatar(string data) {
 
         UInt32 camTrans = getTransformID( avatarHeadTransform ); // local
         UInt32 devTrans = getTransformID( avatarDeviceTransform ); // local
-        UInt32 devAnchor = getNodeID( avatarDeviceTransform ); // local
-        //UInt32 devAnchor = getNodeID( avatarDeviceAnchor ); // local
+        UInt32 devAnchor = getNodeID( avatarDeviceAnchor ); // local
 
         string mapping = "mapping";
         mapping += "|"+toString(headTransID)+":"+toString(camTrans);
+        mapping += "|"+toString(deviceAnchorTransID)+":"+toString(devTrans);
         mapping += "|"+toString(deviceTransID)+":"+toString(devTrans);
         mapping += "|"+toString(deviceAnchorID)+":"+toString(devAnchor);
-        //mapping += "|"+toString(deviceAnchorTransID)+":"+toString(devTrans);
         broadcast(mapping);
         VRConsoleWidget::get("Collaboration")->write( name+": Map remote avatar head ID "+toString(headTransID)+" to local camera ID "+toString(camTrans)+"\n", "green");
         VRConsoleWidget::get("Collaboration")->write( name+": Map remote avatar hand ID "+toString(deviceTransID)+" to local device ID "+toString(devTrans)+"\n", "green");
