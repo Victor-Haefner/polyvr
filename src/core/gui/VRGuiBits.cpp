@@ -74,6 +74,10 @@ static string wasmServerReceive =
 "    handle(event.data);\n"
 "}, false);\n";
 
+string wrapTimeout(string code, string delay) {
+    return "setTimeout(function(){ "+code+" }, "+delay+");";
+}
+
 void VRGuiBits::on_web_export_clicked() {
     string D = VRSceneManager::get()->getOriginalWorkdir();
     string project = VRScene::getCurrent()->getFile();
@@ -112,7 +116,7 @@ void VRGuiBits::on_web_export_clicked() {
         }
 
         itr = core.find("var websocket"); // prepend wasmServerReceive
-        if (itr != string::npos) core.insert(itr, wasmServerReceive + onOpen + "\n\t/*");
+        if (itr != string::npos) core.insert(itr, wasmServerReceive + wrapTimeout(onOpen, "1000") + "\n\t/*");
 
         itr = core.find("websocket.onclose"); // close the comment to disable the websocket
         if (itr != string::npos) {
