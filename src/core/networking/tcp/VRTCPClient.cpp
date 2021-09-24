@@ -2,6 +2,7 @@
 #include "VRTCPUtils.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRMutex.h"
+#include "core/gui/VRGuiConsole.h"
 
 #include <boost/asio.hpp>
 
@@ -160,6 +161,7 @@ class TCPClient {
                 read();
             } catch(std::exception& e) {
                 cout << "TCPClient::connect failed with: " << e.what() << endl;
+                VRConsoleWidget::get("Collaboration")->write( " TCP connect to "+host+":"+toString(port)+" failed with "+e.what()+"\n", "red");
             }
         }
 
@@ -170,6 +172,7 @@ class TCPClient {
                 read();
             } catch(std::exception& e) {
                 cout << "TCPClient::connect failed with: " << e.what() << endl;
+                VRConsoleWidget::get("Collaboration")->write( " TCP connect to "+uri+" failed with "+e.what()+"\n", "red");
             }
         }
 

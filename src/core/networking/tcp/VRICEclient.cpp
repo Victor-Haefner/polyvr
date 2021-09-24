@@ -106,7 +106,11 @@ void VRICEClient::processRespUsers(VRRestResponsePtr r) { processUsers(r->getDat
 void VRICEClient::processRespMessages(VRRestResponsePtr r) { processMessages(r->getData()); }
 
 void VRICEClient::pollMessages(bool async) {
-    if (uID == "") return;
+    if (uID == "") {
+        msgGuard = false;
+        return;
+    }
+
     if (!async) {
         string data = broker->get(turnURL+"/getMessages.php?UID="+uID)->getData();
         processMessages(data);
@@ -160,9 +164,15 @@ void VRICEClient::connectTo(string otherID) {
     }
 
     string data = broker->get(turnURL+"/getConnection.php?UID="+uid1+"&UID2="+uid2)->getData();
-    int port = toInt( splitString(data, ':')[0] );
+    auto params = splitString(data, ':');
+    if (params.size() == 0) {
+        VRConsoleWidget::get("Collaboration")->write( " ICE "+name+"("+uid1+"): connect to "+turnIP+" faild! no port received from turn server "+turnURL+", received '"+data+"'\n", "red");
+        return;
+    }
+
+    int port = toInt( params[0] );
     if (port == 0) {
-        VRConsoleWidget::get("Collaboration")->write( " ICE "+name+"("+uid1+"): connect to "+turnIP+" faild! no port received from turn server "+turnURL+"\n", "red");
+        VRConsoleWidget::get("Collaboration")->write( " ICE "+name+"("+uid1+"): connect to "+turnIP+" faild! no port received from turn server "+turnURL+", received '"+data+"'\n", "red");
         return;
     }
 
