@@ -34,6 +34,7 @@ PyMethodDef VRPyPipeSystem::methods[] = {
     {"setValve", PyWrap( PipeSystem, setValve, "Set valve state", void, string, bool ) },
     {"setTankPressure", PyWrap( PipeSystem, setTankPressure, "Set tank pressure", void, string, double ) },
     {"setTankDensity", PyWrap( PipeSystem, setTankDensity, "Set tank density", void, string, double ) },
+    {"setPipeRadius", PyWrap( PipeSystem, setPipeRadius, "Set pipe radius, set to 0 to simulate blocked pipe", void, int, double ) },
     {"printSystem", PyWrap( PipeSystem, printSystem, "Print system state to console", void ) },
     {NULL}
 };
