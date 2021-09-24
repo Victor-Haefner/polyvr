@@ -22,7 +22,8 @@ class VRPipeSegment {
         double volume = 0;
         double density = 1.0;
         double flow = 0.0;
-        double dFl = 0.0;
+        double dFl1 = 0.0;
+        double dFl2 = 0.0;
         bool flowBlocked = false;
 
         double pressure1 = 1.0;
@@ -107,7 +108,10 @@ class VRPipeSystem : public VRGeometry {
 
 		PosePtr getNodePose(int i);
 		double getSegmentPressure(int i);
+		Vec2d getSegmentGradient(int i);
+		double getSegmentDensity(int i);
 		double getSegmentFlow(int i);
+		Vec2d getSegmentFlowAccelleration(int i);
 		double getTankPressure(string n);
 		double getTankDensity(string n);
 		double getTankVolume(string n);

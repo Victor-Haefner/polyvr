@@ -327,7 +327,7 @@ void VRPipeSystem::update() {
             double F = dP*s.second->area;
             double R = s.second->density * s.second->flow ; // friction
             double a = (F-R)/m; // accelleration
-            s.second->dFl = a*dt*s.second->area;  // pipe flow change in m³ / s
+            s.second->dFl1 = a*dt*s.second->area;  // pipe flow change in m³ / s
             s.second->flowBlocked = false;
         }
 
@@ -353,14 +353,15 @@ void VRPipeSystem::update() {
                 }
 
                 if (closed) {
-                    pipe1->dFl = -pipe1->flow*latency;
-                    pipe2->dFl = -pipe2->flow*latency;
+                    pipe1->dFl1 = -pipe1->flow*latency;
+                    pipe2->dFl1 = -pipe2->flow*latency;
                     pipe1->flowBlocked = true;
                     pipe2->flowBlocked = true;
                 }
             }
         }
 
+        for (auto s : segments) s.second->dFl2 = s.second->dFl1;
 
         //cout << "nodes" << endl;
         int itr = 0;
@@ -379,36 +380,36 @@ void VRPipeSystem::update() {
                 vector<int> outFlowPipeIDs;
                 for (auto e : graph->getInEdges(nID) ) {
                     auto pipe = segments[e.ID];
-                    if (pipe->flow + pipe->dFl > 0) inFlowPipeIDs.push_back(e.ID);
-                    if (pipe->flow + pipe->dFl < 0) outFlowPipeIDs.push_back(e.ID);
+                    if (pipe->flow + pipe->dFl2 > 0) inFlowPipeIDs.push_back(e.ID);
+                    if (pipe->flow + pipe->dFl2 < 0) outFlowPipeIDs.push_back(e.ID);
                 }
                 for (auto e : graph->getOutEdges(nID) ) {
                     auto pipe = segments[e.ID];
-                    if (pipe->flow + pipe->dFl > 0) outFlowPipeIDs.push_back(e.ID);
-                    if (pipe->flow + pipe->dFl < 0) inFlowPipeIDs.push_back(e.ID);
+                    if (pipe->flow + pipe->dFl2 > 0) outFlowPipeIDs.push_back(e.ID);
+                    if (pipe->flow + pipe->dFl2 < 0) inFlowPipeIDs.push_back(e.ID);
                 }
 
                 double maxInFlow = 0;
                 double maxOutFlow = 0;
-                for (auto eID : inFlowPipeIDs  ) maxInFlow  += abs(segments[eID]->flow + segments[eID]->dFl);
-                for (auto eID : outFlowPipeIDs ) maxOutFlow += abs(segments[eID]->flow + segments[eID]->dFl);
+                for (auto eID : inFlowPipeIDs  ) maxInFlow  += abs(segments[eID]->flow + segments[eID]->dFl2);
+                for (auto eID : outFlowPipeIDs ) maxOutFlow += abs(segments[eID]->flow + segments[eID]->dFl2);
                 double maxFlow = min(maxInFlow, maxOutFlow);
                 if (maxFlow > 1e-6 && maxInFlow > 1e-6 && maxOutFlow > 1e-6) {
                     double inPart  = maxFlow/maxInFlow;
                     double outPart = maxFlow/maxOutFlow;
-                    //for (auto eID :  inFlowPipeIDs ) segments[eID]->dFl *= inPart;
-                    //for (auto eID : outFlowPipeIDs ) segments[eID]->dFl *= outPart;
-                    for (auto eID :  inFlowPipeIDs ) segments[eID]->dFl = (segments[eID]->flow*latency + segments[eID]->dFl)*inPart  - segments[eID]->flow*latency;
-                    for (auto eID : outFlowPipeIDs ) segments[eID]->dFl = (segments[eID]->flow*latency + segments[eID]->dFl)*outPart - segments[eID]->flow*latency;
+                    //for (auto eID :  inFlowPipeIDs ) segments[eID]->dFl2 *= inPart;
+                    //for (auto eID : outFlowPipeIDs ) segments[eID]->dFl2 *= outPart;
+                    for (auto eID :  inFlowPipeIDs ) segments[eID]->dFl2 = (segments[eID]->flow*latency + segments[eID]->dFl2)*inPart  - segments[eID]->flow*latency;
+                    for (auto eID : outFlowPipeIDs ) segments[eID]->dFl2 = (segments[eID]->flow*latency + segments[eID]->dFl2)*outPart - segments[eID]->flow*latency;
                     if (abs(inPart-1.0) > 1e-3 || abs(outPart-1.0) > 1e-3) flowCheck = true;
                 } else { // no flow
-                    for (auto eID :  inFlowPipeIDs ) segments[eID]->dFl = -segments[eID]->flow*latency;
-                    for (auto eID : outFlowPipeIDs ) segments[eID]->dFl = -segments[eID]->flow*latency;
+                    for (auto eID :  inFlowPipeIDs ) segments[eID]->dFl2 = -segments[eID]->flow*latency;
+                    for (auto eID : outFlowPipeIDs ) segments[eID]->dFl2 = -segments[eID]->flow*latency;
                     flowCheck = true;
                 }
 
                 /*cout << " node " << entity->getName() << " Npipes: " << getPipes(nID).size();
-                for (auto p : getPipes(nID)) cout << ", " << p->eID << " flow: " << p->flow << "+" << p->dFl;
+                for (auto p : getPipes(nID)) cout << ", " << p->eID << " flow: " << p->flow << "+" << p->dFl2;
                 for (auto eID : inFlowPipeIDs) cout << ", in " << eID ;
                 for (auto eID : outFlowPipeIDs) cout << ", out " << eID ;
                 cout << endl;
@@ -426,14 +427,14 @@ void VRPipeSystem::update() {
             string n1 = nodes[e.from]->name;
             string n2 = nodes[e.to]->name;
 
-            if (isNan(s.second->dFl)) {
-                s.second->dFl = 0;
+            if (isNan(s.second->dFl2)) {
+                s.second->dFl2 = 0;
                 cout << "Warning in Pipe simulation! dFL is NaN!" << endl;
             }
 
-            s.second->flow += s.second->dFl;  // pipe flow change in m³ / s
-            //if (abs(s.second->dFl) > 1e-9 || 1)
-            //    cout << " flow +" << s.second->dFl << " -> " << s.second->flow << " (" << n1 << "->" << n2 << ") blocked? " << s.second->flowBlocked << endl;
+            s.second->flow += s.second->dFl2;  // pipe flow change in m³ / s
+            //if (abs(s.second->dFl2) > 1e-9 || 1)
+            //    cout << " flow +" << s.second->dFl2 << " -> " << s.second->flow << " (" << n1 << "->" << n2 << ") blocked? " << s.second->flowBlocked << endl;
         }
     }
 
@@ -506,7 +507,10 @@ VREntityPtr VRPipeSystem::getEntity(string name) {
 
 PosePtr VRPipeSystem::getNodePose(int i) { return graph->getPosition(i); }
 double VRPipeSystem::getSegmentPressure(int i) { return (segments[i]->pressure1+segments[i]->pressure2)*0.5; }
+Vec2d VRPipeSystem::getSegmentGradient(int i) { return Vec2d(segments[i]->pressure1,segments[i]->pressure2); }
+double VRPipeSystem::getSegmentDensity(int i) { return segments[i]->density; }
 double VRPipeSystem::getSegmentFlow(int i) { return segments[i]->flow; }
+Vec2d VRPipeSystem::getSegmentFlowAccelleration(int i) { return Vec2d(segments[i]->dFl1, segments[i]->dFl2); }
 double VRPipeSystem::getTankPressure(string n) { auto e = getEntity(n); return e ? e->getValue("pressure", 1.0) : 0.0; }
 double VRPipeSystem::getTankDensity(string n) { auto e = getEntity(n); return e ? e->getValue("density", 1.0) : 0.0; }
 double VRPipeSystem::getTankVolume(string n) { auto e = getEntity(n); return e ? e->getValue("volume", 1.0) : 0.0; }
