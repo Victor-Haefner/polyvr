@@ -55,6 +55,8 @@ void VRCharacter::simpleSetup() {
 
         bool isFoot  = bool(bID == 0 || bID == 3);
         bool isAnkle = bool(bID == 2 || bID == 5);
+        bool isHand  = bool(bID == 6 || bID == 9);
+        bool isWrist = bool(bID == 8 || bID == 11);
 
         if (isFoot) { // feet
             Vec3d x = n.cross(u) * s[0]*0.5;
@@ -91,14 +93,16 @@ void VRCharacter::simpleSetup() {
 
         float t1 = 1.0;
         float t2 = 1.0;
-        if (!bone.isStart || isFoot ) t1 = 0.5;
-        if (!bone.isEnd   || isAnkle) t2 = 0.5;
+        if (!bone.isStart || isFoot  || isHand)  t1 = 0.5;
+        if (!bone.isEnd   || isAnkle || isWrist) t2 = 0.5;
 
         for (int i=0; i<4; i++) skin->addMap(bone.ID, t1);
         for (int i=0; i<4; i++) skin->addMap(bone.ID, t2);
 
         if (isFoot)  for (int i : {0,1,2,3}) skin->addMap(bones[bID+2].ID, 0.5, mI+i);
+        if (isHand)  for (int i : {0,1,2,3}) skin->addMap(bones[bID+2].ID, 0.5, mI+i);
         if (isAnkle) for (int i : {4,5,6,7}) skin->addMap(bones[bID-2].ID, 0.5, mI+i);
+        if (isWrist) for (int i : {4,5,6,7}) skin->addMap(bones[bID-2].ID, 0.5, mI+i);
 
         if (!bone.isStart) for (int i : {0,1,2,3}) skin->addMap(bones[bID-1].ID, 0.5, mI+i);
         if (!bone.isEnd)   for (int i : {4,5,6,7}) skin->addMap(bones[bID+1].ID, 0.5, mI+i);
@@ -184,6 +188,7 @@ struct WalkMotion {
 struct MoveTarget {
     PosePtr target;
     PathPtr path;
+    VRAnimationPtr moveAnim;
 
     MoveTarget(PosePtr p1, PosePtr p2) : target(p1) {
         path = Path::create();
@@ -193,12 +198,25 @@ struct MoveTarget {
             path->compute(16);
         }
     }
+
+    ~MoveTarget() {
+        if (moveAnim) moveAnim->stop();
+    }
+
+    void start(VRAnimCbPtr animCb) {
+        moveAnim = VRAnimation::create("moveAnim");
+        moveAnim->setCallback(animCb);
+        moveAnim->setDuration(1);
+        moveAnim->start();
+    }
 };
 
-void VRCharacter::moveEE(float t) {
-    if (!target) return;
-    auto pos = target->path->getPose(t)->pos();
-    target->target->setPos(pos);
+void VRCharacter::moveEE(float t, string endEffector) {
+    if (!target.count(endEffector)) return;
+    MoveTarget* tgt = target[endEffector];
+    if (!tgt->target) return;
+    auto pos = tgt->path->getPose(t)->pos();
+    tgt->target->setPos(pos);
 }
 
 void VRCharacter::pathWalk(float t) {
@@ -244,22 +262,21 @@ PathPtr VRCharacter::moveTo(Vec3d p1, float speed) {
     return path;
 }
 
+PathPtr VRCharacter::grab(Vec3d p1, float speed) {
+    return 0;
+}
+
 void VRCharacter::move(string endEffector, PosePtr pose) {
     if (!skeleton) return;
     auto p0 = skeleton->getTarget(endEffector);
 
-    if (moveAnim) moveAnim->stop();
-    if (target) delete target;
+    if (target.count(endEffector)) delete target[endEffector];
 
     auto self = getPose();
     self->invert();
     pose = self->multRight(pose);
-    target = new MoveTarget(p0, pose); // TODO
-
-    moveAnim = VRAnimation::create("moveAnim");
-    moveAnim->setCallback(VRAnimCb::create("moveAnim", bind(&VRCharacter::moveEE, this, placeholders::_1) ));
-    moveAnim->setDuration(1);
-    moveAnim->start();
+    target[endEffector] = new MoveTarget(p0, pose); // TODO
+    target[endEffector]->start( VRAnimCb::create("moveAnim", bind(&VRCharacter::moveEE, this, placeholders::_1, endEffector) ) );
 }
 
 

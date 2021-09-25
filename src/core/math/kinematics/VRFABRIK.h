@@ -53,7 +53,7 @@ class FABRIK {
         vector<int> getChainJoints(string name);
 
         void addConstraint(int j, Vec4d angles);
-        void addSpring(int j, Vec3d anchor);
+        void addSpring(int j, Vec3d anchor, double force);
 
         void forward(Chain& chain);
         void backward(Chain& chain);

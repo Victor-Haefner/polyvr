@@ -31,7 +31,7 @@ PyMethodDef VRPyFABRIK::methods[] = {
     {"addJoint", PyWrap2( FABRIK, addJoint, "Add joint, ID, pose, in, out", void, int, PosePtr ) },
     {"addChain", PyWrap2( FABRIK, addChain, "Add chain, name, joints", void, string, vector<int> ) },
     {"addConstraint", PyWrap2( FABRIK, addConstraint, "Add constraint, joint, angles", void, int, Vec4d ) },
-    {"addSpring", PyWrap2( FABRIK, addSpring, "Add spring, joint, local anchor", void, int, Vec3d ) },
+    {"addSpring", PyWrap2( FABRIK, addSpring, "Add spring, joint, local anchor vector, spring force", void, int, Vec3d, double ) },
     {"iterate", PyWrap2( FABRIK, iterate, "Execute FABRIK iteration", void ) },
     {"iterateChain", PyWrap2( FABRIK, iterateChain, "Execute single chain FABRIK iteration, pass chain name", void, string ) },
     {"setJoint", PyWrap2( FABRIK, setJoint, "Set joint", void, int, PosePtr ) },

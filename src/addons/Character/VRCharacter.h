@@ -17,13 +17,12 @@ class VRCharacter : public VRGeometry {
         map<string, VRBehaviorPtr> behaviors;
         VRUpdateCbPtr updateCb;
         VRAnimationPtr walkAnim;
-        VRAnimationPtr moveAnim;
         WalkMotion* motion = 0;
-        MoveTarget* target = 0;
+        map<string, MoveTarget*> target;
         //map<string, VRBehavior::ActionPtr> actions;
         void update();
         void pathWalk(float t);
-        void moveEE(float t);
+        void moveEE(float t, string endEffector);
 
     public:
         VRCharacter(string name );
@@ -37,6 +36,7 @@ class VRCharacter : public VRGeometry {
 
         void move(string endEffector, PosePtr pose);
         PathPtr moveTo(Vec3d p, float s);
+        PathPtr grab(Vec3d p, float s);
 
         void addBehavior(VRBehaviorPtr b);
         //void addAction(VRBehavior::ActionPtr a);

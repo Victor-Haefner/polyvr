@@ -95,6 +95,11 @@ vector<VRSkeleton::Bone> VRSkeleton::getBones() {
     return res;
 }
 
+int VRSkeleton::getJointID(string name) {
+    if (!joints.count(name)) return -1;
+    return joints[name];
+}
+
 void VRSkeleton::setupSimpleHumanoid() {
     clear();
 
@@ -120,12 +125,24 @@ void VRSkeleton::setupSimpleHumanoid() {
     };
 
 	auto addArm = [&](string side, float w, int i) {
-		int shoulderID = addJoint("shoulder"+side, Pose::create(Vec3d(w,1.5,0)));
-		int elbowID = addJoint("elbow"+side, Pose::create(Vec3d(w,1.2,0)));
-		int wristID = addJoint("wrist"+side, Pose::create(Vec3d(w,0.9,0)));
-		int handID = addJoint("hand"+side, Pose::create(Vec3d(w,0.8,0)));
-		addChain("arm"+side, {0,shoulderID,elbowID,wristID,handID});
-		addTarget("hand"+side, Pose::create(Vec3d(w,0.8,0)));
+		int shoulderID = addJoint("shoulder"+side, Pose::create(Vec3d(w,1.5,0), Vec3d(0,1,0), Vec3d(0,0,1)));
+		int elbowID = addJoint("elbow"+side, Pose::create(Vec3d(w,1.2,0), Vec3d(0,1,0), Vec3d(0,0,1)));
+		int wristID = addJoint("wrist"+side, Pose::create(Vec3d(w,0.9,0), Vec3d(0,1,0), Vec3d(0,0,1)));
+		int handID = addJoint("palm"+side, Pose::create(Vec3d(w,0.8,0), Vec3d(0,1,0), Vec3d(0,0,1)));
+
+		addChain("hand"+side, {wristID,handID});
+		addChain("arm"+side, {shoulderID,elbowID,wristID});
+
+		float a1 = 0.1;
+		float a2 = 2.0;
+		addConstraint("elbow"+side, Vec4d(a1,a2,a1,0)); // elbow
+
+		float a3 = 0.4;
+		float a4 = 1.4;
+		addConstraint("wrist"+side, Vec4d(a3,a4,a3,a4)); // wrist
+
+		addTarget("wrist"+side, Pose::create(Vec3d(w,0.9,0)));
+		addTarget("palm"+side, Pose::create(Vec3d(w,0.8,0)));
     };
 
 	addLeg("L", 0.2, 0);
