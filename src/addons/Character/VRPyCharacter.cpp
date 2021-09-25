@@ -28,7 +28,7 @@ PyMethodDef VRPyCharacter::methods[] = {
     {"addBehavior", PyWrap( Character, addBehavior, "Add a behavior pattern", void, VRBehaviorPtr ) },
     //{"triggerBehavior", PyWrap( Character, triggerBehavior, "Trigger a certain behavior", void, string ) },
     {"simpleSetup", PyWrap( Character, simpleSetup, "Simple character setup", void ) },
-    {"move", PyWrap( Character, move, "Move end effector, 'handLeft', 'handRight', footLeft', 'footRight'", void, string, PosePtr ) },
+    {"move", PyWrap( Character, move, "Move end effector, 'handL', 'handR', footL', 'footR'", void, string, PosePtr ) },
     {"moveTo", PyWrapOpt( Character, moveTo, "Move to position", "4", PathPtr, Vec3d, float ) },
     {NULL}  /* Sentinel */
 };

@@ -9,7 +9,7 @@
           </attachments>
           <constraint persistency="666"/>
         </Object>
-        <Object accept_root="1" aspect="1" at="0.25 0.110732 0.034004" at_dir="0" base_name="Default" far="512" fov="1.0472" from="2.35272 1.9491 3.27266" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
+        <Object accept_root="1" aspect="1" at="0.163215 0.895892 2.5" at_dir="0" base_name="Default" far="512" fov="1.0472" from="-2.56459 3.11921 2.82178" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
           <attachments>
             <Node base_name="transform" name_space="VRAttachment" name_suffix="0" persistency="666" value=""/>
           </attachments>
@@ -42,7 +42,7 @@
       <core>
 	import VR
 
-	VR.makeFloor()
+	VR.makeScene()
 	
 	if hasattr(VR, 'character'): VR.character.destroy()
 	VR.character = VR.Character('character', 'light')
@@ -78,17 +78,25 @@
 </core>
       <trig type="none" dev="" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="6" persistency="666"/>
     </Script>
-    <Script base_name="makeFloor" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+    <Script base_name="makeScene" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	import VR
-
-
 
 	if hasattr(VR, 'floor'): VR.floor.destroy()
 	VR.floor = VR.Geometry('floor', 'light')
 	VR.floor.setPrimitive('Box 10 2 10')
 	VR.floor.setFrom([0,-1,0])
 	VR.floor.setColor('blue')
+	
+	
+	def addTable(p, d):
+		t = VR.Geometry('table')
+		t.setPrimitive('Box 2 1.0 1')
+		t.setTransform(p, d)
+		t.setColor('green')
+		VR.floor.addChild(t)
+	
+	addTable([0,1.5,3], [0,0,-1])
 </core>
     </Script>
     <Script base_name="moveTo" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
@@ -96,16 +104,23 @@
 	import VR
 
 	if dev.intersect(VR.floor):
-		p = dev.getIntersection()
-		path = VR.character.moveTo(p, 1)
+		obj = dev.getIntersected()
+		pos = dev.getIntersection()
 		
-		if hasattr(VR, 'walkPath'): VR.walkPath.destroy()
-		VR.walkPath = VR.Stroke('path', 'light')
-		VR.walkPath.setPath(path)
-		VR.walkPath.strokeProfile([[0,0.1,0]], 0,0,0)
-		m = VR.Material('mat')
-		m.setLineWidth(3)
-		VR.walkPath.setMaterial(m)
+		if obj == VR.floor:
+			path = VR.character.moveTo(pos, 1)
+			
+			if hasattr(VR, 'walkPath'): VR.walkPath.destroy()
+			VR.walkPath = VR.Stroke('path', 'light')
+			VR.walkPath.setPath(path)
+			VR.walkPath.strokeProfile([[0,0.1,0]], 0,0,0)
+			m = VR.Material('mat')
+			m.setLineWidth(3)
+			VR.walkPath.setMaterial(m)
+			
+		else:
+			p = VR.Pose(pos)
+			path = VR.character.move('handR', p)
 		
 	
 </core>

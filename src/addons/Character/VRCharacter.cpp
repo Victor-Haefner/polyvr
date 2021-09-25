@@ -29,11 +29,6 @@ VRSkeletonPtr VRCharacter::getSkeleton() { return skeleton; }
 void VRCharacter::addBehavior(VRBehaviorPtr b) { behaviors[b->getName()] = b; }
 //void VRCharacter::addAction(VRBehavior::ActionPtr a) { actions[a->getName()] = a; }
 
-void VRCharacter::move(string endEffector, PosePtr pose) {
-    if (!skeleton) return;
-    //skeleton->move(endEffector, pose);
-}
-
 void VRCharacter::update() {
     if (skeleton) skeleton->resolveKinematics();
     if (skin) skin->updateBoneTexture();
@@ -186,7 +181,28 @@ struct WalkMotion {
     }
 };
 
+struct MoveTarget {
+    PosePtr target;
+    PathPtr path;
+
+    MoveTarget(PosePtr p1, PosePtr p2) : target(p1) {
+        path = Path::create();
+        if (p1 && p2) {
+            path->addPoint(*p1.get());
+            path->addPoint(*p2.get());
+            path->compute(16);
+        }
+    }
+};
+
+void VRCharacter::moveEE(float t) {
+    if (!target) return;
+    auto pos = target->path->getPose(t)->pos();
+    target->target->setPos(pos);
+}
+
 void VRCharacter::pathWalk(float t) {
+    if (!motion) return;
     PosePtr p = motion->path->getPose(t);
     p->setDir(-p->dir());
     PosePtr p0 = getPose();
@@ -228,6 +244,23 @@ PathPtr VRCharacter::moveTo(Vec3d p1, float speed) {
     return path;
 }
 
+void VRCharacter::move(string endEffector, PosePtr pose) {
+    if (!skeleton) return;
+    auto p0 = skeleton->getTarget(endEffector);
+
+    if (moveAnim) moveAnim->stop();
+    if (target) delete target;
+
+    auto self = getPose();
+    self->invert();
+    pose = self->multRight(pose);
+    target = new MoveTarget(p0, pose); // TODO
+
+    moveAnim = VRAnimation::create("moveAnim");
+    moveAnim->setCallback(VRAnimCb::create("moveAnim", bind(&VRCharacter::moveEE, this, placeholders::_1) ));
+    moveAnim->setDuration(1);
+    moveAnim->start();
+}
 
 
 
