@@ -41,7 +41,7 @@ void VRCharacter::simpleSetup() {
 }
 
 void VRCharacter::setSkin(VRGeometryPtr geo) {
-
+    addChild(geo);
 }
 
 void VRCharacter::addDebugSkin() {
