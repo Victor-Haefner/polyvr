@@ -9,6 +9,9 @@ OSG_BEGIN_NAMESPACE;
 
 class VRHumanoid : public VRGeometry {
 	private:
+        VRSkeletonPtr skeleton;
+        VRSkinPtr skin;
+
         void generateTorso(VRGeoData& data);
         void generateLegs(VRGeoData& data);
         void generateArms(VRGeoData& data);
@@ -22,6 +25,9 @@ class VRHumanoid : public VRGeometry {
 
 		static VRHumanoidPtr create(string name = "Jane");
 		VRHumanoidPtr ptr();
+
+        VRSkinPtr getSkin();
+        VRSkeletonPtr getSkeleton();
 };
 
 OSG_END_NAMESPACE;

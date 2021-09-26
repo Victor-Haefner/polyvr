@@ -1,4 +1,5 @@
 #include "VRCharacter.h"
+#include "VRHumanoid.h"
 #include "VRSkeleton.h"
 #include "VRSkin.h"
 #include "VRBehavior.h"
@@ -23,7 +24,6 @@ VRCharacter::~VRCharacter() {}
 VRCharacterPtr VRCharacter::create(string name) { return VRCharacterPtr(new VRCharacter(name) ); }
 VRCharacterPtr VRCharacter::ptr() { return dynamic_pointer_cast<VRCharacter>( shared_from_this() ); }
 
-void VRCharacter::setSkeleton(VRSkeletonPtr s) { skeleton = s; }
 VRSkeletonPtr VRCharacter::getSkeleton() { return skeleton; }
 
 void VRCharacter::addBehavior(VRBehaviorPtr b) { behaviors[b->getName()] = b; }
@@ -35,16 +35,28 @@ void VRCharacter::update() {
 }
 
 void VRCharacter::simpleSetup() {
-    auto s = VRSkeleton::create();
-    s->setupSimpleHumanoid();
-    setSkeleton(s);
+    auto model = VRHumanoid::create("Jane");
+    setSkin(model, model->getSkin(), model->getSkeleton());
 }
 
-void VRCharacter::setSkin(VRGeometryPtr geo) {
+void VRCharacter::setSkin(VRGeometryPtr geo, VRSkinPtr skin, VRSkeletonPtr skeleton) {
+    if (!geo || !skin || !skeleton) return;
+
+    this->skeleton = skeleton;
+    this->skin = skin;
+
     addChild(geo);
+    if (skin) {
+        skin->updateBoneTexture();
+        skin->updateMappingTexture();
+        skin->applyMapping(geo);
+        geo->setMaterial( skin->getMaterial() );
+    }
 }
 
 void VRCharacter::addDebugSkin() {
+    skeleton = VRSkeleton::create();
+    skeleton->setupSimpleHumanoid();
     skeleton->setupGeometry(); // visualize skeleton
     addChild(skeleton);
 
@@ -92,7 +104,7 @@ void VRCharacter::addDebugSkin() {
             hullData.pushQuad(v13, v14, v24, v23);
             hullData.pushQuad(v14, v11, v21, v24);
         } else hullData.pushBox(p,n,u,s,true);
-        cout << "   test hull quad: " << p << " / "  << n << " / " << u << " / " << s << "    " << u.dot(n) << endl;
+        //cout << "   test hull quad: " << p << " / "  << n << " / " << u << " / " << s << "    " << u.dot(n) << endl;
 
         // create skin mapping
         size_t mI = skin->mapSize();
@@ -114,11 +126,12 @@ void VRCharacter::addDebugSkin() {
         if (!bone.isEnd)   for (int i : {4,5,6,7}) skin->addMap(bones[bID+1].ID, 0.5, mI+i);
     }
 
-    skin->updateBoneTexture();
-    skin->updateMappingTexture();
     auto hull = hullData.asGeometry("hull");
     hull->updateNormals(true);
     addChild(hull);
+
+    skin->updateBoneTexture();
+    skin->updateMappingTexture();
     skin->applyMapping(hull);
     hull->setMaterial( skin->getMaterial() );
 }

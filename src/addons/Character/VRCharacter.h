@@ -31,8 +31,7 @@ class VRCharacter : public VRTransform {
         static VRCharacterPtr create(string name = "JohnDoe");
         VRCharacterPtr ptr();
 
-        void setSkeleton(VRSkeletonPtr s);
-        void setSkin(VRGeometryPtr geo);
+        void setSkin(VRGeometryPtr geo, VRSkinPtr skin, VRSkeletonPtr skeleton);
         VRSkeletonPtr getSkeleton();
         VRGeometryPtr getSkin();
 

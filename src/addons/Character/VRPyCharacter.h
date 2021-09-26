@@ -4,6 +4,7 @@
 #include "core/scripting/VRPyBase.h"
 #include "VRCharacter.h"
 #include "VRSkeleton.h"
+#include "VRSkin.h"
 #include "VRBehavior.h"
 #include "VRHumanoid.h"
 
@@ -12,6 +13,10 @@ struct VRPyBehavior : VRPyBaseT<OSG::VRBehavior> {
 };
 
 struct VRPySkeleton : VRPyBaseT<OSG::VRSkeleton> {
+    static PyMethodDef methods[];
+};
+
+struct VRPySkin : VRPyBaseT<OSG::VRSkin> {
     static PyMethodDef methods[];
 };
 

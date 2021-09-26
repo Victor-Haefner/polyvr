@@ -1,9 +1,16 @@
 #include "VRHumanoid.h"
+#include "VRSkeleton.h"
+#include "VRSkin.h"
 #include "core/objects/geometry/VRGeoData.h"
 
 using namespace OSG;
 
-VRHumanoid::VRHumanoid(string name) : VRGeometry(name) {}
+VRHumanoid::VRHumanoid(string name) : VRGeometry(name) {
+    skeleton = VRSkeleton::create();
+    skeleton->setupSimpleHumanoid();
+    skin = VRSkin::create(skeleton);
+}
+
 VRHumanoid::~VRHumanoid() {}
 
 VRHumanoidPtr VRHumanoid::create(string name) {
@@ -13,6 +20,8 @@ VRHumanoidPtr VRHumanoid::create(string name) {
 }
 
 VRHumanoidPtr VRHumanoid::ptr() { return static_pointer_cast<VRHumanoid>(shared_from_this()); }
+VRSkinPtr VRHumanoid::getSkin() { return skin; }
+VRSkeletonPtr VRHumanoid::getSkeleton() { return skeleton; }
 
 void VRHumanoid::generate() {
     VRGeoData data;
@@ -39,11 +48,15 @@ void VRHumanoid::generateTorso(VRGeoData& data) {
     double D3 = 0.24; // ribs
     double D4 = 0.2; // shoulders
 
-    auto addRect = [&](float h, float b, float d) {
+    auto bones = skeleton->getBones();
+
+    auto addRect = [&](float h, float b, float d, int bID, float t) {
         int i1 = data.pushVert(Vec3d(-b*0.5,h,-d*0.5));
         int i2 = data.pushVert(Vec3d( b*0.5,h,-d*0.5));
         int i3 = data.pushVert(Vec3d( b*0.5,h, d*0.5));
         int i4 = data.pushVert(Vec3d(-b*0.5,h, d*0.5));
+        auto& bone = bones[bID];
+        for (int i=0; i<4; i++) skin->addMap(bone.ID, t);
         return Vec4i(i1,i2,i3,i4);
     };
 
@@ -54,13 +67,13 @@ void VRHumanoid::generateTorso(VRGeoData& data) {
         if (!sidesOpen) data.pushQuad(r1[3], r1[0], r2[0], r2[3]);
     };
 
-    Vec4i i0 = addRect(O, 0.1, 0.22);
-    Vec4i i1 = addRect(O+0.14, B1, D1);
-    Vec4i i2 = addRect(O+H*0.34, B2, D2);
-    Vec4i i3 = addRect(O+H*0.57, B3, D3);
-    Vec4i i4 = addRect(O+H*0.75, B4*0.9, D4);
-    Vec4i i5 = addRect(O+H*0.94, B4, D4);
-    Vec4i i6 = addRect(O+H, 0.15, D4*0.8);
+    Vec4i i0 = addRect(O, 0.1, 0.22, 0, 1);
+    Vec4i i1 = addRect(O+0.14, B1, D1, 0, 1);
+    Vec4i i2 = addRect(O+H*0.34, B2, D2, 0, 1);
+    Vec4i i3 = addRect(O+H*0.57, B3, D3, 0, 1);
+    Vec4i i4 = addRect(O+H*0.75, B4*0.9, D4, 0, 1);
+    Vec4i i5 = addRect(O+H*0.94, B4, D4, 0, 1);
+    Vec4i i6 = addRect(O+H, 0.15, D4*0.8, 0, 1);
 
     joinRects(i0, i1, true);
     joinRects(i1, i2);
@@ -77,6 +90,9 @@ void VRHumanoid::generateHead(VRGeoData& data) {
     double H1 = 0.05; // height neck
     double H2 = 0.25; // height head
 
+    auto bones = skeleton->getBones();
+    auto& bone = bones[13];
+
     auto addRing = [&](float h, vector<float> rads) {
         vector<int> ids;
         int N = (rads.size()-1)*2;
@@ -86,6 +102,7 @@ void VRHumanoid::generateHead(VRGeoData& data) {
             int ri = i < rads.size() ? i : -i+2*(rads.size()-1);
             double r = rads[ri];
             int id = data.pushVert(Vec3d(sin(a)*r,h,cos(a)*r));
+            skin->addMap(bone.ID, 1);
             ids.push_back(id);
         }
         return ids;
@@ -105,6 +122,7 @@ void VRHumanoid::generateHead(VRGeoData& data) {
         for (auto i : r) pm += Vec3d( data.getPosition(i) );
         pm *= (1.0/N);
         int c = data.pushVert(pm);
+        skin->addMap(bone.ID, 1);
         for (int i=0; i<N; i++) {
             int j = (i+1)%N;
             data.pushTri(c, r[i], r[j]);
@@ -139,11 +157,15 @@ void VRHumanoid::generateLegs(VRGeoData& data) {
     Vec4i hipLIDs(4, 0, 3, 7);
     Vec4i hipRIDs(1, 5, 6, 2);
 
-    auto addRect = [&](float h, float b, float d, float x) {
+    auto bones = skeleton->getBones();
+
+    auto addRect = [&](float h, float b, float d, float x, int bID, float t) {
         int i1 = data.pushVert(Vec3d(-b*0.5+x,h,-d*0.5));
         int i2 = data.pushVert(Vec3d( b*0.5+x,h,-d*0.5));
         int i3 = data.pushVert(Vec3d( b*0.5+x,h, d*0.5));
         int i4 = data.pushVert(Vec3d(-b*0.5+x,h, d*0.5));
+        auto& bone = bones[bID];
+        for (int i=0; i<4; i++) skin->addMap(bone.ID, t);
         return Vec4i(i1,i2,i3,i4);
     };
 
@@ -154,17 +176,17 @@ void VRHumanoid::generateLegs(VRGeoData& data) {
         data.pushQuad(r1[3], r1[0], r2[0], r2[3]);
     };
 
-    auto addLeg = [&](float x) {
-        auto i1 = addRect(0, 0.1, 0.2, x*1.7);
-        auto i2 = addRect(L1, 0.1, 0.15, x*1.5);
-        auto i3 = addRect(L1+L2, 0.2, 0.22, x);
+    auto addLeg = [&](float x, int b0) {
+        auto i1 = addRect(0, 0.1, 0.2, x*1.7, b0, 1);
+        auto i2 = addRect(L1, 0.1, 0.15, x*1.5, b0+2, 1);
+        auto i3 = addRect(L1+L2, 0.2, 0.22, x, b0+1, 1);
         joinRects(i1, i2);
         joinRects(i2, i3);
         joinRects(i3, x<0? hipLIDs : hipRIDs);
     };
 
-    addLeg(-W);
-    addLeg( W);
+    addLeg(-W, 3);
+    addLeg( W, 0);
 }
 
 void VRHumanoid::generateArms(VRGeoData& data) {
@@ -177,11 +199,15 @@ void VRHumanoid::generateArms(VRGeoData& data) {
     Vec4i shoulderLIDs(k+4, k+0, k+3, k+7);
     Vec4i shoulderRIDs(k+1, k+5, k+6, k+2);
 
-    auto addRect = [&](float h, float b, float d, float x) {
+    auto bones = skeleton->getBones();
+
+    auto addRect = [&](float h, float b, float d, float x, int bID, float t) {
         int i1 = data.pushVert(Vec3d(-b*0.5+x,h,-d*0.5));
         int i2 = data.pushVert(Vec3d( b*0.5+x,h,-d*0.5));
         int i3 = data.pushVert(Vec3d( b*0.5+x,h, d*0.5));
         int i4 = data.pushVert(Vec3d(-b*0.5+x,h, d*0.5));
+        auto& bone = bones[bID];
+        for (int i=0; i<4; i++) skin->addMap(bone.ID, t);
         return Vec4i(i1,i2,i3,i4);
     };
 
@@ -192,17 +218,17 @@ void VRHumanoid::generateArms(VRGeoData& data) {
         data.pushQuad(r1[3], r1[0], r2[0], r2[3]);
     };
 
-    auto addArm = [&](float x) {
-        auto i1 = addRect(L0, 0.1, 0.2, x*1.7);
-        auto i2 = addRect(L1, 0.1, 0.15, x*1.5);
-        auto i3 = addRect(L2, 0.1, 0.22, x*1.3);
+    auto addArm = [&](float x, int b0) {
+        auto i1 = addRect(L0, 0.1, 0.2, x*1.7, b0, 1);
+        auto i2 = addRect(L1, 0.1, 0.15, x*1.5, b0+2, 1);
+        auto i3 = addRect(L2, 0.1, 0.22, x*1.3, b0+1, 1);
         joinRects(i1, i2);
         joinRects(i2, i3);
         joinRects(i3, x<0? shoulderLIDs : shoulderRIDs);
     };
 
-    addArm(-W);
-    addArm( W);
+    addArm(-W, 9);
+    addArm( W, 6);
 }
 
 

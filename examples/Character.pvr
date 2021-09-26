@@ -47,12 +47,12 @@
 	if hasattr(VR, 'character'): VR.character.destroy()
 	
 	VR.character = VR.Character('character', 'light')
-	VR.character.simpleSetup()
+	#VR.character.simpleSetup()
 	
-	#VR.character.addDebugSkin()
+	VR.character.addDebugSkin()
 
-	VR.alice = VR.Humanoid('Alice')
-	VR.character.setSkin(VR.alice)
+	#VR.alice = VR.Humanoid('Alice')
+	#VR.character.setSkin(VR.alice)
 </core>
       <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="4" persistency="666"/>
     </Script>

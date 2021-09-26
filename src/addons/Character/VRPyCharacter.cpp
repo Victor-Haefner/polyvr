@@ -7,12 +7,17 @@
 using namespace OSG;
 
 simpleVRPyType(Behavior, New_ptr);
+simpleVRPyType(Skin, 0);
 simpleVRPyType(Skeleton, New_ptr);
 simpleVRPyType(Character, New_VRObjects_ptr);
 simpleVRPyType(Humanoid, New_VRObjects_ptr);
 
 
 PyMethodDef VRPyBehavior::methods[] = {
+    {NULL}  /* Sentinel */
+};
+
+PyMethodDef VRPySkin::methods[] = {
     {NULL}  /* Sentinel */
 };
 
@@ -24,14 +29,13 @@ PyMethodDef VRPySkeleton::methods[] = {
 };
 
 PyMethodDef VRPyCharacter::methods[] = {
-    {"setSkeleton", PyWrap( Character, setSkeleton, "Set the skeleton", void, VRSkeletonPtr ) },
     {"getSkeleton", PyWrap( Character, getSkeleton, "Get the skeleton", VRSkeletonPtr ) },
     //{"setSkin", PyWrap( Character, setSkin, "Set the skin geometry", void, string, bool ) },
     {"addBehavior", PyWrap( Character, addBehavior, "Add a behavior pattern", void, VRBehaviorPtr ) },
     //{"triggerBehavior", PyWrap( Character, triggerBehavior, "Trigger a certain behavior", void, string ) },
     {"simpleSetup", PyWrap( Character, simpleSetup, "Simple character setup", void ) },
     {"addDebugSkin", PyWrap( Character, addDebugSkin, "Add a simple debug skin", void ) },
-    {"setSkin", PyWrap( Character, setSkin, "Set geometry with skin", void, VRGeometryPtr ) },
+    {"setSkin", PyWrap( Character, setSkin, "Set geometry with skin", void, VRGeometryPtr, VRSkinPtr, VRSkeletonPtr ) },
     {"move", PyWrap( Character, move, "Move end effector, 'wristL/R', 'palmL/R', 'ankleL/R', 'toesL/R'", PathPtr, string, PosePtr, float ) },
     {"moveTo", PyWrapOpt( Character, moveTo, "Move to position", "4", PathPtr, Vec3d, float ) },
     {"grab", PyWrapOpt( Character, grab, "Grab an object with right hand", "2", PathPtr, Vec3d, float ) },

@@ -145,14 +145,14 @@ void VRSkeleton::setupSimpleHumanoid() {
 		addTarget("palm"+side, Pose::create(Vec3d(w,0.8,0)));
     };
 
-	addLeg("L", 0.2, 0);
-	addLeg("R",-0.2, 4);
-	addArm("L", 0.3, 8);
-	addArm("R",-0.3,12);
+	addLeg("L", 0.2, 0); // 3 bones
+	addLeg("R",-0.2, 4); // 3 bones
+	addArm("L", 0.3, 8); // 3 bones
+	addArm("R",-0.3,12); // 3 bones
 
 	int headID = addJoint("head", Pose::create(Vec3d(0,1.6,0)));
 	int neckID = addJoint("neck", Pose::create(Vec3d(0,1.8,0)));
-	addChain("head", {0,headID,neckID});
+	addChain("head", {0,headID,neckID}); // 2 bones
 	addTarget("neck", Pose::create(Vec3d(0,1.8,0)));
 
     fabrik->iterate();
