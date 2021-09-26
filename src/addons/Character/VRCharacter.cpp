@@ -203,10 +203,10 @@ struct MoveTarget {
         if (moveAnim) moveAnim->stop();
     }
 
-    void start(VRAnimCbPtr animCb) {
+    void start(VRAnimCbPtr animCb, float speed) {
         moveAnim = VRAnimation::create("moveAnim");
         moveAnim->setCallback(animCb);
-        moveAnim->setDuration(1);
+        moveAnim->setDuration(path->getLength()/abs(speed));
         moveAnim->start();
     }
 };
@@ -263,11 +263,19 @@ PathPtr VRCharacter::moveTo(Vec3d p1, float speed) {
 }
 
 PathPtr VRCharacter::grab(Vec3d p1, float speed) {
-    return 0;
+    auto ph = getPose();
+    ph->setPos(p1);
+    auto pw = getPose();
+    Vec3d d = ph->dir();
+    d.normalize();
+    pw->setPos(p1+d*0.1);
+    move("wristR", pw, speed);
+    auto path = move("palmR", ph, speed);
+    return path;
 }
 
-void VRCharacter::move(string endEffector, PosePtr pose) {
-    if (!skeleton) return;
+PathPtr VRCharacter::move(string endEffector, PosePtr pose, float s) {
+    if (!skeleton) return 0;
     auto p0 = skeleton->getTarget(endEffector);
 
     if (target.count(endEffector)) delete target[endEffector];
@@ -276,7 +284,8 @@ void VRCharacter::move(string endEffector, PosePtr pose) {
     self->invert();
     pose = self->multRight(pose);
     target[endEffector] = new MoveTarget(p0, pose); // TODO
-    target[endEffector]->start( VRAnimCb::create("moveAnim", bind(&VRCharacter::moveEE, this, placeholders::_1, endEffector) ) );
+    target[endEffector]->start( VRAnimCb::create("moveAnim", bind(&VRCharacter::moveEE, this, placeholders::_1, endEffector) ), s);
+    return target[endEffector]->path;
 }
 
 

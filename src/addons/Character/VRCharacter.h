@@ -34,7 +34,7 @@ class VRCharacter : public VRGeometry {
         void setSkeleton(VRSkeletonPtr s);
         VRSkeletonPtr getSkeleton();
 
-        void move(string endEffector, PosePtr pose);
+        PathPtr move(string endEffector, PosePtr pose, float s);
         PathPtr moveTo(Vec3d p, float s);
         PathPtr grab(Vec3d p, float s);
 
