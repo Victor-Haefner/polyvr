@@ -1,7 +1,7 @@
 #ifndef VRCHARACTER_H_INCLUDED
 #define VRCHARACTER_H_INCLUDED
 
-#include "core/objects/geometry/VRGeometry.h"
+#include "core/objects/VRTransform.h"
 #include "VRCharacterFwd.h"
 
 struct WalkMotion;
@@ -10,7 +10,7 @@ struct MoveTarget;
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-class VRCharacter : public VRGeometry {
+class VRCharacter : public VRTransform {
     private:
         VRSkeletonPtr skeleton;
         VRSkinPtr skin;
@@ -32,7 +32,9 @@ class VRCharacter : public VRGeometry {
         VRCharacterPtr ptr();
 
         void setSkeleton(VRSkeletonPtr s);
+        void setSkin(VRGeometryPtr geo);
         VRSkeletonPtr getSkeleton();
+        VRGeometryPtr getSkin();
 
         PathPtr move(string endEffector, PosePtr pose, float s);
         PathPtr moveTo(Vec3d p, float s);
@@ -42,6 +44,7 @@ class VRCharacter : public VRGeometry {
         //void addAction(VRBehavior::ActionPtr a);
 
         void simpleSetup();
+        void addDebugSkin();
 };
 
 OSG_END_NAMESPACE;

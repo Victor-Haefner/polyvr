@@ -254,7 +254,8 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyCartesianKinematics>("CartesianKinematics", pModVR, VRPyMachiningKinematics::typeRef);
     sm->registerModule<VRPyNumberingEngine>("NumberingEngine", pModVR, VRPyGeometry::typeRef);
     sm->registerModule<VRPySkeleton>("Skeleton", pModVR, VRPyObject::typeRef);
-    sm->registerModule<VRPyCharacter>("Character", pModVR, VRPyGeometry::typeRef);
+    sm->registerModule<VRPyCharacter>("Character", pModVR, VRPyTransform::typeRef);
+    sm->registerModule<VRPyHumanoid>("Humanoid", pModVR, VRPyGeometry::typeRef);
     sm->registerModule<VRPyTree>("Tree", pModVR, VRPyGeometry::typeRef);
     sm->registerModule<VRPyNature>("Nature", pModVR, VRPyObject::typeRef);
     sm->registerModule<VRPyTerrain>("Terrain", pModVR, VRPyGeometry::typeRef);

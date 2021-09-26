@@ -13,7 +13,7 @@
 
 using namespace OSG;
 
-VRCharacter::VRCharacter (string name) : VRGeometry(name) {
+VRCharacter::VRCharacter (string name) : VRTransform(name) {
     updateCb = VRUpdateCb::create("character-update", bind(&VRCharacter::update, this));
     VRScene::getCurrent()->addUpdateFkt(updateCb);
 }
@@ -38,14 +38,20 @@ void VRCharacter::simpleSetup() {
     auto s = VRSkeleton::create();
     s->setupSimpleHumanoid();
     setSkeleton(s);
+}
 
-    s->setupGeometry(); // visualize skeleton
-    addChild(s);
+void VRCharacter::setSkin(VRGeometryPtr geo) {
 
-    skin = VRSkin::create(s);
+}
+
+void VRCharacter::addDebugSkin() {
+    skeleton->setupGeometry(); // visualize skeleton
+    addChild(skeleton);
+
+    skin = VRSkin::create(skeleton);
 
     VRGeoData hullData; // TODO: create test hull
-    auto bones = s->getBones();
+    auto bones = skeleton->getBones();
     for (size_t bID = 0; bID < bones.size(); bID++) {
         auto& bone = bones[bID];
         Vec3d p = (bone.p1+bone.p2)*0.5;

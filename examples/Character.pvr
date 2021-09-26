@@ -9,7 +9,7 @@
           </attachments>
           <constraint persistency="666"/>
         </Object>
-        <Object accept_root="1" aspect="1" at="0.17672 1 0.709132" at_dir="0" base_name="Default" far="512" fov="1.0472" from="2.18712 3.09356 2.09234" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
+        <Object accept_root="1" aspect="1" at="0.17672 1 0.709132" at_dir="0" base_name="Default" far="512" fov="1.0472" from="2.71396 2.96855 0.55045" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
           <attachments>
             <Node base_name="transform" name_space="VRAttachment" name_suffix="0" persistency="666" value=""/>
           </attachments>
@@ -38,17 +38,21 @@
 	VR.floor.setOrientation([0,1,0], [0,0,1])
 </core>
     </Script>
-    <Script base_name="init3" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+    <Script base_name="init" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	import VR
 
 	VR.makeScene()
 	
 	if hasattr(VR, 'character'): VR.character.destroy()
+	
 	VR.character = VR.Character('character', 'light')
 	VR.character.simpleSetup()
 	
-	VR.testSprings()
+	VR.character.addDebugSkin()
+
+	#VR.alice = VR.Humanoid('Alice')
+	#VR.character.setSkin(VR.alice)
 </core>
       <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="4" persistency="666"/>
     </Script>
@@ -132,7 +136,7 @@
 </core>
       <trig type="on_device" dev="mouse" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="11" persistency="666"/>
     </Script>
-    <Script base_name="testSprings" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+    <Script base_name="testSprings" group="test" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	import VR
 
