@@ -9,7 +9,7 @@
           </attachments>
           <constraint persistency="666"/>
         </Object>
-        <Object accept_root="1" aspect="1" at="-0.208783 0.904817 0.119521" at_dir="0" base_name="Default" far="512" fov="1.0472" from="-2.00442 1.80197 0.781316" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
+        <Object accept_root="1" aspect="1" at="-0.313629 0.997303 0.0814183" at_dir="0" base_name="Default" far="512" fov="1.0472" from="-2.29034 2.48925 1.62101" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
           <attachments>
             <Node base_name="transform" name_space="VRAttachment" name_suffix="0" persistency="666" value=""/>
           </attachments>
@@ -47,9 +47,9 @@
 	if hasattr(VR, 'character'): VR.character.destroy()
 	
 	VR.character = VR.Character('character', 'light')
-	#VR.character.simpleSetup()
+	VR.character.simpleSetup()
 	
-	VR.character.addDebugSkin()
+	#VR.character.addDebugSkin()
 
 	#VR.alice = VR.Humanoid('Alice')
 	#VR.character.setSkin(VR.alice)

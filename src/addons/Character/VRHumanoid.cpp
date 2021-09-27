@@ -49,12 +49,13 @@ void VRHumanoid::generateTorso(VRGeoData& data) {
     double D4 = 0.2; // shoulders
 
     auto bones = skeleton->getBones();
+    Vec3d n(0,1,0);
 
     auto addRect = [&](float h, float b, float d, int bID, float t) {
-        int i1 = data.pushVert(Vec3d(-b*0.5,h,-d*0.5));
-        int i2 = data.pushVert(Vec3d( b*0.5,h,-d*0.5));
-        int i3 = data.pushVert(Vec3d( b*0.5,h, d*0.5));
-        int i4 = data.pushVert(Vec3d(-b*0.5,h, d*0.5));
+        int i1 = data.pushVert(Vec3d(-b*0.5,h,-d*0.5), n, Vec2d(0,0));
+        int i2 = data.pushVert(Vec3d( b*0.5,h,-d*0.5), n, Vec2d(0,0));
+        int i3 = data.pushVert(Vec3d( b*0.5,h, d*0.5), n, Vec2d(0,0));
+        int i4 = data.pushVert(Vec3d(-b*0.5,h, d*0.5), n, Vec2d(0,0));
         auto& bone = bones[bID];
         for (int i=0; i<4; i++) skin->addMap(bone.ID, t);
         return Vec4i(i1,i2,i3,i4);
@@ -67,13 +68,14 @@ void VRHumanoid::generateTorso(VRGeoData& data) {
         if (!sidesOpen) data.pushQuad(r1[3], r1[0], r2[0], r2[3]);
     };
 
-    Vec4i i0 = addRect(O, 0.1, 0.22, 0, 1);
-    Vec4i i1 = addRect(O+0.14, B1, D1, 0, 1);
-    Vec4i i2 = addRect(O+H*0.34, B2, D2, 0, 1);
-    Vec4i i3 = addRect(O+H*0.57, B3, D3, 0, 1);
-    Vec4i i4 = addRect(O+H*0.75, B4*0.9, D4, 0, 1);
-    Vec4i i5 = addRect(O+H*0.94, B4, D4, 0, 1);
-    Vec4i i6 = addRect(O+H, 0.15, D4*0.8, 0, 1);
+    int bID = 12;
+    Vec4i i0 = addRect(O, 0.1, 0.22, bID, 1);
+    Vec4i i1 = addRect(O+0.14, B1, D1, bID, 1);
+    Vec4i i2 = addRect(O+H*0.34, B2, D2, bID, 1);
+    Vec4i i3 = addRect(O+H*0.57, B3, D3, bID, 1);
+    Vec4i i4 = addRect(O+H*0.75, B4*0.9, D4, bID, 1);
+    Vec4i i5 = addRect(O+H*0.94, B4, D4, bID, 1);
+    Vec4i i6 = addRect(O+H, 0.15, D4*0.8, bID, 1);
 
     joinRects(i0, i1, true);
     joinRects(i1, i2);
@@ -92,6 +94,7 @@ void VRHumanoid::generateHead(VRGeoData& data) {
 
     auto bones = skeleton->getBones();
     auto& bone = bones[13];
+    Vec3d n(0,1,0);
 
     auto addRing = [&](float h, vector<float> rads) {
         vector<int> ids;
@@ -101,7 +104,7 @@ void VRHumanoid::generateHead(VRGeoData& data) {
             double a = da*i;
             int ri = i < rads.size() ? i : -i+2*(rads.size()-1);
             double r = rads[ri];
-            int id = data.pushVert(Vec3d(sin(a)*r,h,cos(a)*r));
+            int id = data.pushVert(Vec3d(sin(a)*r,h,cos(a)*r), n, Vec2d(0,0));
             skin->addMap(bone.ID, 1);
             ids.push_back(id);
         }
@@ -121,7 +124,7 @@ void VRHumanoid::generateHead(VRGeoData& data) {
         Vec3d pm;
         for (auto i : r) pm += Vec3d( data.getPosition(i) );
         pm *= (1.0/N);
-        int c = data.pushVert(pm);
+        int c = data.pushVert(pm, n, Vec2d(0,0));
         skin->addMap(bone.ID, 1);
         for (int i=0; i<N; i++) {
             int j = (i+1)%N;
@@ -158,12 +161,13 @@ void VRHumanoid::generateLegs(VRGeoData& data) {
     Vec4i hipRIDs(1, 5, 6, 2);
 
     auto bones = skeleton->getBones();
+    Vec3d n(0,1,0);
 
     auto addRect = [&](float h, float b, float d, float x, int bID, float t) {
-        int i1 = data.pushVert(Vec3d(-b*0.5+x,h,-d*0.5));
-        int i2 = data.pushVert(Vec3d( b*0.5+x,h,-d*0.5));
-        int i3 = data.pushVert(Vec3d( b*0.5+x,h, d*0.5));
-        int i4 = data.pushVert(Vec3d(-b*0.5+x,h, d*0.5));
+        int i1 = data.pushVert(Vec3d(-b*0.5+x,h,-d*0.5), n, Vec2d(0,0));
+        int i2 = data.pushVert(Vec3d( b*0.5+x,h,-d*0.5), n, Vec2d(0,0));
+        int i3 = data.pushVert(Vec3d( b*0.5+x,h, d*0.5), n, Vec2d(0,0));
+        int i4 = data.pushVert(Vec3d(-b*0.5+x,h, d*0.5), n, Vec2d(0,0));
         auto& bone = bones[bID];
         for (int i=0; i<4; i++) skin->addMap(bone.ID, t);
         return Vec4i(i1,i2,i3,i4);
@@ -200,12 +204,13 @@ void VRHumanoid::generateArms(VRGeoData& data) {
     Vec4i shoulderRIDs(k+1, k+5, k+6, k+2);
 
     auto bones = skeleton->getBones();
+    Vec3d n(0,1,0);
 
     auto addRect = [&](float h, float b, float d, float x, int bID, float t) {
-        int i1 = data.pushVert(Vec3d(-b*0.5+x,h,-d*0.5));
-        int i2 = data.pushVert(Vec3d( b*0.5+x,h,-d*0.5));
-        int i3 = data.pushVert(Vec3d( b*0.5+x,h, d*0.5));
-        int i4 = data.pushVert(Vec3d(-b*0.5+x,h, d*0.5));
+        int i1 = data.pushVert(Vec3d(-b*0.5+x,h,-d*0.5), n, Vec2d(0,0));
+        int i2 = data.pushVert(Vec3d( b*0.5+x,h,-d*0.5), n, Vec2d(0,0));
+        int i3 = data.pushVert(Vec3d( b*0.5+x,h, d*0.5), n, Vec2d(0,0));
+        int i4 = data.pushVert(Vec3d(-b*0.5+x,h, d*0.5), n, Vec2d(0,0));
         auto& bone = bones[bID];
         for (int i=0; i<4; i++) skin->addMap(bone.ID, t);
         return Vec4i(i1,i2,i3,i4);

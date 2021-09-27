@@ -38,9 +38,11 @@ void VRSkin::addMap(int bID, float t, int vID) {
 
 void VRSkin::applyMapping(VRGeometryPtr hull) {
     VRGeoData data(hull);
+    cout << "applyMapping " << hull->getName() << " " << data.size() << endl;
 
     for (int i=0; i<data.size(); i++) {
         data.setTexCoord(i, Vec2d(i+0.1,0));
+        cout << " applyMapping " << i << endl;
     }
 }
 
@@ -65,7 +67,7 @@ void VRSkin::updateMappingTexture() {
             float t = vMapping[mID].second;
             tg->drawPixel( Vec3i(vID, 1+mID, 0), Color4f(bID, t, 0, 1) ); // per bone, [bID, t, 0, 1]
 
-            //cout << "  bID: " << bID << ", t: " << t << endl;
+            cout << " vID: " << vID << "  bID: " << bID << ", t: " << t << endl;
 
         }
     }
@@ -139,9 +141,10 @@ void main(void) {
 	vec3 pv = osg_Vertex.xyz;
 
 	vec3 d = vec3(0.0);
+	int bID = -1;
 	for (int i=0; i<Nb; i++) {
         vec4 b1 = texelFetch(texMapping, ivec2(vID,i+1), 0);
-        int bID = int(b1.x);
+        bID = int(b1.x);
         float t = b1.y;
 
         vec3 p0 = texelFetch(texBones, ivec2(bID,0), 0).rgb;
@@ -162,9 +165,14 @@ void main(void) {
 	color = osg_Color;
 	norm = osg_Normal;
 
+	/*
 	if (Nb == 1) color = vec4(1,0,0,1);
 	if (Nb == 2) color = vec4(0,1,0,1);
 	if (Nb >  2) color = vec4(1,1,0,1);
+	*/
+
+	color = vec4(1.0-bID*0.07, bID*0.07, 0, 1);
+	if (bID == -1) color = vec4(0, 0, 1, 1);
 }
 );
 
