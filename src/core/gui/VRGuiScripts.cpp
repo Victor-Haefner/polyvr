@@ -973,6 +973,7 @@ void VRGuiScripts::on_toggle_find_replace() {
 void VRGuiScripts::on_change_script_type() {
     if(!trigger_cbs) return;
     VRScriptPtr script = getSelectedScript();
+    if (!script) return;
     string t = getComboboxText("combobox1");
     script->setType(t);
     on_select_script();
@@ -982,6 +983,7 @@ void VRGuiScripts::on_change_script_type() {
 void VRGuiScripts::on_change_group() {
     if(!trigger_cbs) return;
     VRScriptPtr script = getSelectedScript();
+    if (!script) return;
     script->setGroup( getComboboxText("combobox10") );
     on_select_script();
     on_save_clicked();
@@ -991,6 +993,7 @@ void VRGuiScripts::on_change_group() {
 void VRGuiScripts::on_change_server() {
     if(!trigger_cbs) return;
     VRScriptPtr script = getSelectedScript();
+    if (!script) return;
     script->setHTMLHost( getComboboxText("combobox24") );
     on_select_script();
     on_save_clicked();

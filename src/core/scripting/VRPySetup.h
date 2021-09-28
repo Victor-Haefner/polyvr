@@ -17,8 +17,6 @@ struct VRPyView : VRPyBaseT<OSG::VRView> {
     static PyObject* toggleStereo(VRPyView* self);
     static PyObject* setPose(VRPyView* self, PyObject* args);
     static PyObject* getPose(VRPyView* self);
-    static PyObject* setSize(VRPyView* self, PyObject* args);
-    static PyObject* getSize(VRPyView* self);
     static PyObject* grab(VRPyView* self);
     static PyObject* setCamera(VRPyView* self, PyObject* args);
     static PyObject* getName(VRPyView* self);

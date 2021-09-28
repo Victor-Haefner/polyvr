@@ -37,8 +37,10 @@ PyMethodDef VRPyView::methods[] = {
     {"toggleStats", PyWrap(View, toggleStats, "Toggle displayed stats", void) },
     {"setPose", (PyCFunction)VRPyView::setPose, METH_VARARGS, "Set the pose - setPose( pose p )" },
     {"getPose", (PyCFunction)VRPyView::getPose, METH_NOARGS, "Get the pose - pose getPose()" },
-    {"setSize", (PyCFunction)VRPyView::setSize, METH_VARARGS, "Set the size in meter - setSize( [W,H] )" },
-    {"getSize", (PyCFunction)VRPyView::getSize, METH_NOARGS, "Get the size in meter - [W,H] getSize()" },
+    {"setProjectionSize", PyWrap(View, setProjectionSize, "Set the size in meter", void, Vec2d) },
+    {"getProjectionSize", PyWrap(View, getProjectionSize, "Get the size in meter", Vec2d) },
+    {"setSize", PyWrap(View, setSize, "Set the size in pixel", void, Vec2i) },
+    {"getSize", PyWrap(View, getSize, "Get the size in pixel", Vec2i) },
     {"grab", (PyCFunction)VRPyView::grab, METH_NOARGS, "Get the current visual as texture - tex grab()" },
     {"setCamera", (PyCFunction)VRPyView::setCamera, METH_VARARGS, "Set the camera of the view - setCamera( cam )" },
     {"getName", (PyCFunction)VRPyView::getName, METH_NOARGS, "Get the name of the view - getName()" },
@@ -58,17 +60,6 @@ PyObject* VRPyView::getName(VRPyView* self) {
 PyObject* VRPyView::grab(VRPyView* self) {
     if (!self->valid()) return NULL;
     return VRPyTexture::fromSharedPtr( self->objPtr->grab() );
-}
-
-PyObject* VRPyView::setSize(VRPyView* self, PyObject* args) {
-    if (!self->valid()) return NULL;
-    self->objPtr->setProjectionSize( parseVec2f(args) );
-    Py_RETURN_TRUE;
-}
-
-PyObject* VRPyView::getSize(VRPyView* self) {
-    if (!self->valid()) return NULL;
-    return toPyObject( self->objPtr->getProjectionSize() );
 }
 
 PyObject* VRPyView::getPose(VRPyView* self) {

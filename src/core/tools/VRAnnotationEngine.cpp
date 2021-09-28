@@ -499,14 +499,20 @@ void emitQuad(in float offset, in vec4 tc) {
         p3 = p+MVP[0]*transform( sx+ox, sy);
         p4 = p+MVP[0]*transform( sx+ox,-sy);
     } else {
-        p1 = p+P[0]*transform(-sx+ox,-sy);
-        p2 = p+P[0]*transform(-sx+ox, sy);
-        p3 = p+P[0]*transform( sx+ox, sy);
-        p4 = p+P[0]*transform( sx+ox,-sy);
-        v1 = vertex[0]+P[0]*transform(-sx+ox,-sy);
-        v2 = vertex[0]+P[0]*transform(-sx+ox, sy);
-        v3 = vertex[0]+P[0]*transform( sx+ox, sy);
-        v4 = vertex[0]+P[0]*transform( sx+ox,-sy);
+		mat4 M = P[0]; // this is enough for desktop, but not for cave
+		// TODO: pass k as uniform parameter and use the camera fov instead of 1.05!
+		float a = OSGViewportSize.y / OSGViewportSize.x;
+		float k = 1.0/tan(1.05*0.5); // M[1][1]; // 1.0/tan(cam.fov*0.5);
+		M = mat4(mat2( k*a, 0.0, 0.0, k ));
+
+		p1 = p+M*transform(-sx+ox,-sy);
+		p2 = p+M*transform(-sx+ox, sy);
+		p3 = p+M*transform( sx+ox, sy);
+		p4 = p+M*transform( sx+ox,-sy);
+		v1 = vertex[0]+M*transform(-sx+ox,-sy);
+		v2 = vertex[0]+M*transform(-sx+ox, sy);
+		v3 = vertex[0]+M*transform( sx+ox, sy);
+		v4 = vertex[0]+M*transform( sx+ox,-sy);
     }
 
     emitVertex(p1, vec2(tc[0], tc[2]), v1);

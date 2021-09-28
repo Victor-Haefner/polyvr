@@ -241,7 +241,7 @@ void ART::setARTPort(int port) {
     if (dtrack != 0) delete dtrack;
     dtrack = new DTrack(port);
     if (!dtrack->valid()) {
-        VRConsoleWidget::get("Tracking")->write( "Failed to start DTrack on "+toString(port)+"\n");
+        //VRConsoleWidget::get("Tracking")->write( "Failed to start DTrack on "+toString(port)+"\n");
         cout << "DTrack init error" << endl;
         delete dtrack;
         port = -1;
@@ -249,7 +249,7 @@ void ART::setARTPort(int port) {
         return;
     }
     dtrack->receive();
-    VRConsoleWidget::get("Tracking")->write( "Start DTrack on "+toString(port)+"\n");
+    //VRConsoleWidget::get("Tracking")->write( "Start DTrack on "+toString(port)+"\n");
 }
 
 void ART::setARTOffset(Vec3d o) { offset = o; }
