@@ -112,7 +112,7 @@ void VRSky::update() {
     Matrix mProj = cam->getProjectionMatrix(viewSize[0], viewSize[1]);
     mModelView.multLeft(mProj);
     mModelView.invert();
-    mat->setShaderParameter("extInvMat", mModelView);
+    mat->setShaderParameter("extInvMat", mModelView); // doesnt work in cave!
 
     double current = getTime()*1e-6;
     float dt = (current - lastTime)*speed;
@@ -338,7 +338,15 @@ uniform mat4 extInvMat;
 uniform int c1; // test input
 
 void main() {
+#ifdef __EMSCRIPTEN__
 	mFragInv = extInvMat;
+#else
+    mFragInv = gl_ModelViewProjectionMatrix; // this is the only working solution for cave
+    mFragInv[3] = vec4(0,0,0,mFragInv[3][3]);
+    mFragInv = inverse(mFragInv);
+#endif
+
+
 	pos = osg_Vertex * 0.5;
 	pos.z = 0.5; // try to fix stereo
 	gl_Position = osg_Vertex;
