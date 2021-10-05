@@ -28,6 +28,7 @@ class VRSkin : public std::enable_shared_from_this<VRSkin> {
 		VRSkinPtr ptr();
 
 		void addMap(int bID, float t, int vID = -1);
+		void setMap(int bID, vector<float> t);
         void setMapping(vector<vector<pair<int, float>>> mapping);
         void applyMapping(VRGeometryPtr hull);
         size_t mapSize();

@@ -36,6 +36,12 @@ void VRSkin::addMap(int bID, float t, int vID) {
     else if (vID < mapping.size()) mapping[vID].push_back( make_pair(bID, t) );
 }
 
+void VRSkin::setMap(int bID, vector<float> t) {
+    int vID = mapping.size();
+    if (t.size() > 0) addMap(bID, t[0]);
+    for (int i=1; i<t.size(); i++) addMap(bID, t[0], vID);
+}
+
 void VRSkin::applyMapping(VRGeometryPtr hull) {
     VRGeoData data(hull);
     cout << "applyMapping " << hull->getName() << " " << data.size() << endl;
