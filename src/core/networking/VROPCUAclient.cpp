@@ -336,6 +336,7 @@ void UaClient::Connect(const EndpointDescription & endpoint)
       DefaultTimeout = createSessionResponse.Parameters.RevisedSessionTimeout;
     }
 
+  cout << " start OPC UA keep alive thread with timeout: " << DefaultTimeout << endl;
   KeepAlive.Start(Server, Node(Server, ObjectId::Server_ServerStatus_State), DefaultTimeout);
 }
 

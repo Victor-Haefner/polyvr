@@ -19,12 +19,11 @@ PyMethodDef VRPyOPCUANode::methods[] = {
     {"getChildAtPath", PyWrap( OPCUANode, getChildAtPath, "Get child at path, the path are the names connected with '.'", VROPCUANodePtr, string ) },
     {"subscribe", PyWrap( OPCUANode, subscribe, "Subscribe to OPCUA server", void, VROPCUANodeCbPtr ) },
     {"isSubscribed", PyWrap( OPCUANode, isSubscribed, "Returns if subscribed to server", bool ) },
-    {"test", PyWrap( OPCUANode, test, "A test ..duh", string ) },
     {NULL}  /* Sentinel */
 };
 
 PyMethodDef VRPyOPCUA::methods[] = {
-    {"connect", PyWrap( OPCUA, connect, "Connect to server", VROPCUANodePtr, string ) },
+    {"connect", PyWrapOpt( OPCUA, connect, "Connect to server, optional subscription period, default is 100 (ms)", "100", VROPCUANodePtr, string, int ) },
     {"setupTestServer", PyWrap( OPCUA, setupTestServer, "Start test server", void ) },
     {NULL}  /* Sentinel */
 };

@@ -221,10 +221,6 @@ string VROPCUANode::name() {
 
 bool VROPCUANode::valid() { return isValid; }
 
-string VROPCUANode::test() {
-    return "duh";
-}
-
 string VROPCUANode::type() {
     VariantType type = node->GetValue().Type();
     return typeToString(uint8_t(type));
@@ -425,7 +421,7 @@ void VROPCUA::watchdog() {
 shared_ptr<SubClient> VROPCUA::getSubscriptionClient() { return subscriptionClient; }
 shared_ptr<OpcUa::Subscription> VROPCUA::getSubscription() { return subscription; }
 
-VROPCUANodePtr VROPCUA::connect(string address) {
+VROPCUANodePtr VROPCUA::connect(string address, int subPeriod) {
     bool doDebug = false;
     endpoint = address;
     cout << "OPCUA: connect to " << endpoint << endl;
@@ -434,11 +430,12 @@ VROPCUANodePtr VROPCUA::connect(string address) {
     //client = shared_ptr<VRUaClient>( new VRUaClient() );
 
     try { cout << " try connection" << endl; client->Connect(endpoint); }
+    catch(exception& e) { cout << " connection failed with: " << e.what() << endl; return 0; }
     catch(...) { cout << " connection failed!" << endl; return 0; }
 
     cout << " connected sucessfully!" << endl;
     subscriptionClient = SubClient::create();
-    subscription = client->CreateSubscription(100, *subscriptionClient);
+    subscription = client->CreateSubscription(subPeriod, *subscriptionClient);
 
     OpcUa::Node objects = client->GetObjectsNode();
     return VROPCUANode::create( objects, ptr() );
