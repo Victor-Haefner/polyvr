@@ -234,23 +234,26 @@ EndpointDescription UaClient::SelectEndpoint(const std::string & endpoint)
   return EndpointDescription();
 }
 
-void UaClient::Connect(const std::string & endpoint)
-{
-  EndpointDescription endpointdesc = SelectEndpoint(endpoint);
-  endpointdesc.EndpointUrl = endpoint; //force the use of the enpoint the user wants, seems like servers often send wrong hostname
-  Connect(endpointdesc);
+void UaClient::Connect(const std::string & endpoint) {
+    cout << "UaClient::Connect to " << endpoint << endl;
+    EndpointDescription endpointdesc = SelectEndpoint(endpoint);
+    endpointdesc.EndpointUrl = endpoint; //force the use of the enpoint the user wants, seems like servers often send wrong hostname
+    Connect(endpointdesc);
 }
 
-void UaClient::Connect(const EndpointDescription & endpoint)
-{
+void UaClient::Connect(const EndpointDescription & endpoint) {
+    cout << "UaClient::Connect endpoint" << endl;
   Endpoint = endpoint;
   const Common::Uri serverUri(Endpoint.EndpointUrl);
+    cout << " .. connect open channel " << serverUri.Host() << " on " << serverUri.Port() << endl;
   OpcUa::IOChannel::SharedPtr channel = OpcUa::Connect(serverUri.Host(), serverUri.Port(), Logger);
+    cout << " .. done" << endl;
 
   OpcUa::SecureConnectionParams params;
   params.EndpointUrl = Endpoint.EndpointUrl;
   params.SecurePolicy = "http://opcfoundation.org/UA/SecurityPolicy#None";
 
+    cout << " .. create binary client " << endl;
   Server = OpcUa::CreateBinaryClient(channel, params, Logger);
 
   OpenSecureChannel();
@@ -258,6 +261,7 @@ void UaClient::Connect(const EndpointDescription & endpoint)
 
   LOG_INFO(Logger, "ua_client             | creating session ...");
 
+    cout << " .. create session " << endl;
   OpcUa::RemoteSessionParameters session;
   session.ClientDescription.ApplicationUri = ApplicationUri;
   session.ClientDescription.ProductUri = ProductUri;
@@ -326,6 +330,7 @@ void UaClient::Connect(const EndpointDescription & endpoint)
         cout << "Cannot find suitable user identify token for session" << endl;
       }
   }
+    cout << " .. activate session " << endl;
   ActivateSessionResponse aresponse = Server->ActivateSession(sessionParameters);
   CheckStatusCode(aresponse.Header.ServiceResult);
 
@@ -336,7 +341,7 @@ void UaClient::Connect(const EndpointDescription & endpoint)
       DefaultTimeout = createSessionResponse.Parameters.RevisedSessionTimeout;
     }
 
-  cout << " start OPC UA keep alive thread with timeout: " << DefaultTimeout << endl;
+  cout << " .. start OPC UA keep alive thread with timeout: " << DefaultTimeout << endl;
   KeepAlive.Start(Server, Node(Server, ObjectId::Server_ServerStatus_State), DefaultTimeout);
 }
 
