@@ -88,8 +88,10 @@ class STEPLoader {
             //cout << "step convert shape dim max: " << Dmax << ", ld: " << linear_deflection << endl;
 
             //BRepMesh_IncrementalMesh mesher(shape, linear_deflection, false, angular_deflection, true); // shape, linear deflection, relative to edge length, angular deflection, paralellize
-            BRepMesh_IncrementalMesh mesher(shape, linear_deflection, true, angular_deflection, true, on_update); // shape, linear deflection, relative to edge length, angular deflection, paralellize
-            VRGeoData data;
+            try {
+                BRepMesh_IncrementalMesh mesher(shape, linear_deflection, true, angular_deflection, true, on_update); // shape, linear deflection, relative to edge length, angular deflection, paralellize
+            } catch(exception& e) { cout << " Warning in STEP convertGeo: " << e.what() << endl;  return 0; }
+            catch(...) { cout << " Warning in STEP convertGeo: unknown exception" << endl; return 0; }
 
             auto shapeColor = getColor(shape);
             if (!shapeColor.first) shapeColor.second = Color3f(0.5,0.9,0.4);
@@ -100,6 +102,7 @@ class STEPLoader {
                 if (color.first) { useVertexColors = true; break; }
             }
 
+            VRGeoData data;
             for (TopExp_Explorer exp(shape, TopAbs_FACE); exp.More(); exp.Next()) {
                 const TopoDS_Face& face = TopoDS::Face(exp.Current());
                 TopLoc_Location loc;
@@ -249,10 +252,12 @@ class STEPLoader {
                         if (Assembly->IsSimpleShape(label)) {
                             cout << " create shape " << name << endl;
                             VRGeometryPtr obj = convertGeo(shape);
-                            obj->setName( name );
-                            applyMaterial(obj, shape);
-                            if (parts.count(label.Tag())) cout << "Warning in STEP import, the label tag " << label.Tag() << " is allready used!" << endl;
-                            parts[label.Tag()] = obj;
+                            if (obj) {
+                                obj->setName( name );
+                                applyMaterial(obj, shape);
+                                if (parts.count(label.Tag())) cout << "Warning in STEP import, the label tag " << label.Tag() << " is allready used!" << endl;
+                                parts[label.Tag()] = obj;
+                            }
                         }
                     }
                 }
@@ -280,9 +285,16 @@ class STEPLoader {
                     cout << " add node: " << name << " ID: " << label.Tag() << endl;
 
                     if (Assembly->IsSimpleShape(label)) {
-                        VRGeometryPtr part = dynamic_pointer_cast<VRGeometry>( parts[label.Tag()]->duplicate() );
-                        applyTransform(part, shape);
-                        parent->addChild( part );
+                        if (parts.count( label.Tag() )) {
+                            auto partTemplate = parts[label.Tag()];
+                            if (partTemplate) {
+                                VRGeometryPtr part = dynamic_pointer_cast<VRGeometry>( partTemplate->duplicate() );
+                                if (part) {
+                                    applyTransform(part, shape);
+                                    parent->addChild( part );
+                                }
+                            }
+                        }
                     }
 
                     if (Assembly->IsAssembly(label)) {
