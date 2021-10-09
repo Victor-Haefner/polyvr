@@ -284,7 +284,7 @@ void VRTextureRenderer::setMaterialSubstitutes(map<VRMaterial*, VRMaterialPtr> s
     substitutes[c] = s;
 }
 
-VRTexturePtr VRTextureRenderer::renderOnce(CHANNEL c) {
+VRTexturePtr VRTextureRenderer::renderOnce(CHANNEL c) { // TODO: not working!
     if (!cam) return 0;
 
     bool deferred = VRScene::getCurrent()->getDefferedShading();

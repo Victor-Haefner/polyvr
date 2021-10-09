@@ -830,6 +830,7 @@ void VRMaterial::setMappingPlanes(Vec4d p1, Vec4d p2, Vec4d p3, Vec4d p4, int un
 }
 
 void VRMaterial::setCubeTexture(VRTexturePtr img, string side, int unit) {
+    if (!img) return;
     auto md = mats[activePass];
     // TODO: check for textureobj chunk and remove it
 
