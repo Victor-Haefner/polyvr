@@ -129,6 +129,32 @@ bool VRGtkWindow::on_render(GdkGLContext* glcontext) {
     return true;
 }
 
+string typeToString(GLenum type) {
+    if (type == GL_DEBUG_TYPE_ERROR) return "GL_DEBUG_TYPE_ERROR";
+    if (type == GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR) return "GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR";
+    if (type == GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR) return "GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR";
+    if (type == GL_DEBUG_TYPE_PORTABILITY) return "GL_DEBUG_TYPE_PORTABILITY";
+    if (type == GL_DEBUG_TYPE_PERFORMANCE) return "GL_DEBUG_TYPE_PERFORMANCE";
+    if (type == GL_DEBUG_TYPE_MARKER) return "GL_DEBUG_TYPE_MARKER";
+    if (type == GL_DEBUG_TYPE_PUSH_GROUP) return "GL_DEBUG_TYPE_PUSH_GROUP";
+    if (type == GL_DEBUG_TYPE_POP_GROUP) return "GL_DEBUG_TYPE_POP_GROUP";
+    if (type == GL_DEBUG_TYPE_OTHER) return "GL_DEBUG_TYPE_OTHER";
+    return "";
+}
+
+void GLAPIENTRY
+MessageCallback( GLenum source,
+                 GLenum type,
+                 GLuint id,
+                 GLenum severity,
+                 GLsizei length,
+                 const GLchar* message,
+                 const void* userParam )
+{
+        fprintf( stderr, "GL CALLBACK: type = %s, severity = 0x%x, message = %s\n",
+                typeToString(type).c_str(), severity, message );
+}
+
 void VRGtkWindow::on_realize() {
     cout << " --------------------- VRGtkWindow::on_realize -------------- " << endl;
     initialExpose = true;
@@ -137,6 +163,10 @@ void VRGtkWindow::on_realize() {
         printf("VRGtkWindow::on_realize - failed to initialize buffers\n");
         return;
     }
+
+    //glEnable              ( GL_DEBUG_OUTPUT );
+    //glDebugMessageCallback( MessageCallback, 0 );
+
     win->init();
 #ifndef WITHOUT_OPENVR
     if (hmd) hmd->initHMD();

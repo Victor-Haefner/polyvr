@@ -44,6 +44,16 @@
 
 #define GLSL(shader) #shader
 
+#define CHECK_GL_ERROR(msg) \
+{ \
+    GLenum err = glGetError(); \
+    if (err != GL_NO_ERROR) { \
+        static int i=0; i++; \
+        if (i <= 4) printf(" gl error on %s: %s\n", msg, gluErrorString(err)); \
+        if (i == 4) printf("  ..ignoring further errors\n"); \
+    } \
+}
+
 using namespace OSG;
 
 
@@ -286,7 +296,6 @@ void VRTextureRenderer::setMaterialSubstitutes(map<VRMaterial*, VRMaterialPtr> s
 
 VRTexturePtr VRTextureRenderer::renderOnce(CHANNEL c) { // TODO: not working!
     if (!cam) return 0;
-
     bool deferred = VRScene::getCurrent()->getDefferedShading();
 
     if (!data->ract) {
@@ -328,10 +337,14 @@ VRTexturePtr VRTextureRenderer::renderOnce(CHANNEL c) { // TODO: not working!
     }
 
     if (c != RENDER) setChannelSubstitutes(c);
+
+    setActive(true);
+    setReadback(true);
     data->win->render(data->ract);
-    if (deferred) { // hack, TODO: for some reason the fbo gets not updated the first render call..
-        data->win->render(data->ract);
-    }
+    if (deferred) data->win->render(data->ract); // hack, TODO: for some reason the fbo gets not updated the first render call..
+    setReadback(false);
+    setActive(false);
+
     ImageMTRecPtr img = Image::create();
     img->set( data->fboTexImg );
     if (c != RENDER) resetChannelSubstitutes();
