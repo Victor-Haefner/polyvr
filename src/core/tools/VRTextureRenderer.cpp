@@ -41,6 +41,7 @@
 #include <OpenSG/OSGFBOViewport.h>
 #include <OpenSG/OSGRenderAction.h>
 #include <OpenSG/OSGSolidBackground.h>
+#include <OpenSG/OSGTreeBuilderBase.h>
 
 #include "core/utils/VRMutex.h"
 
@@ -314,85 +315,58 @@ class MyFrameBufferObject : public FrameBufferObject {
         OSGGETGLFUNCBYID_GL3_ES( glBindFramebuffer, osgGlBindFramebuffer, _uiFuncBindFramebuffer, win);
         osgGlBindFramebuffer(GL_FRAMEBUFFER, win->getGLObjectId(glId));
         pEnv->setActiveFBO(glId);
-
-        /*if(eDrawBuffer == GL_NONE) {
-            if(_mfDrawBuffers.size() != 0) {
-                OSGGETGLFUNCBYID_GL3( glDrawBuffers, osgGlDrawBuffers, _uiFuncDrawBuffers, win);
-                cout << " --- myactivate --- " << _mfDrawBuffers.size() << endl;
-                //osgGlDrawBuffers(GLsizei(_mfDrawBuffers.size()), &(_mfDrawBuffers[0]) );
-                //osgGlDrawBuffers(1, &(_mfDrawBuffers[1]) );
-                CHECK_GL_ERROR("myactivate A1");
-            } else {
-                glDrawBuffer(GL_NONE);
-                glReadBuffer(GL_NONE);
-            }
-        } else {
-            OSGGETGLFUNCBYID_GL3( glDrawBuffers, osgGlDrawBuffers, _uiFuncDrawBuffers, win);
-            osgGlDrawBuffers(1, &eDrawBuffer );
-        }*/
     }
 };
 
 class OpenRenderPartition : public RenderPartition {
     public:
-        void setupMyExecution(bool bUpdateGlobalViewport) { setupExecution(bUpdateGlobalViewport); }
-        void doMyExecution(bool bRestoreViewport) { doExecution(bRestoreViewport); }
+        void setupMyExecution() {
+            auto target = (MyFrameBufferObject*)_pRenderTarget;
+            target->myactivate(&_oDrawEnv, _eDrawBuffer);
 
-        void setupMyExecution2(bool bUpdateGlobalViewport = false) {
-            if (_bDone == true) return;
-            if (_pRenderTarget != NULL) {
-                auto target = (MyFrameBufferObject*)_pRenderTarget;
-                target->myactivate(&_oDrawEnv, _eDrawBuffer);
+            glPushAttrib(GL_VIEWPORT_BIT | GL_SCISSOR_BIT);
+            glViewport(_oDrawEnv.getPixelLeft  (), _oDrawEnv.getPixelBottom(), _oDrawEnv.getPixelWidth (), _oDrawEnv.getPixelHeight());
+
+            glMatrixMode (GL_PROJECTION);
+            glPushMatrix();
+            glLoadMatrixf(_oDrawEnv._openGLState.getProjection().getValues());
+            glMatrixMode(GL_MODELVIEW);
+
+            _pBackground->clear(&_oDrawEnv);
+        }
+
+        void doMyExecution(bool bRestoreViewport = false) {
+            BuildKeyMapIt      mapIt  = _mMatTrees.begin();
+            BuildKeyMapConstIt mapEnd = _mMatTrees.end  ();
+            while (mapIt != mapEnd) {
+                if (mapIt->second != NULL) mapIt->second->draw(_oDrawEnv, this);
+                ++mapIt;
             }
 
-            if (bUpdateGlobalViewport == false) glPushAttrib(GL_VIEWPORT_BIT | GL_SCISSOR_BIT);
+            _oDrawEnv.deactivateState();
+            if (!_bZWriteTrans) glDepthMask(false);
 
-            if (0x0000 != (_uiSetupMode & ViewportSetup)) {
-                if (0x0000 == (_uiSetupMode & PassiveBit)) {
-                    glViewport(_oDrawEnv.getPixelLeft  (), _oDrawEnv.getPixelBottom(), _oDrawEnv.getPixelWidth (), _oDrawEnv.getPixelHeight());
-
-                    if(_oDrawEnv.getFull() == false) {
-                        glScissor (_oDrawEnv.getPixelLeft  (), _oDrawEnv.getPixelBottom(), _oDrawEnv.getPixelWidth (), _oDrawEnv.getPixelHeight());
-                        glEnable(GL_SCISSOR_TEST);
-                    } else glDisable(GL_SCISSOR_TEST);
-                }
-            } else glDisable(GL_SCISSOR_TEST);
-
-            if(bUpdateGlobalViewport == true) glPushAttrib(GL_VIEWPORT_BIT | GL_SCISSOR_BIT);
-
-            if(0x0000 != (_uiSetupMode & ProjectionSetup)) {
-                glMatrixMode (GL_PROJECTION);
-                glPushMatrix();
-                glLoadMatrixf(_oDrawEnv._openGLState.getProjection().getValues());
-                glMatrixMode(GL_MODELVIEW);
+            mapIt  = _mTransMatTrees.begin();
+            mapEnd = _mTransMatTrees.end  ();
+            while (mapIt != mapEnd) {
+                if (mapIt->second != NULL) mapIt->second->draw(_oDrawEnv, this);
+                ++mapIt;
             }
 
-            RenderCallbackStore::const_iterator cbIt  = _vPreRenderCallbacks.begin();
-            RenderCallbackStore::const_iterator cbEnd = _vPreRenderCallbacks.end  ();
+            if (!_bZWriteTrans) glDepthMask(true);
 
-            while(cbIt != cbEnd) {
-                (*cbIt)(&_oDrawEnv);
-                ++cbIt;
-            }
+            glMatrixMode (GL_PROJECTION);
+            glPopMatrix();
+            glMatrixMode(GL_MODELVIEW);
 
-            if(0x0000 != (_uiSetupMode & BackgroundSetup)) {
-                if(_pBackground != NULL) _pBackground->clear(&_oDrawEnv); //, _oDrawEnv.getViewport());
-            }
+            glPopAttrib();
+            _pRenderTarget->deactivate(&_oDrawEnv);
+            this->exit();
         }
 
         void myexecute(void) {
-            if(_bDone == false) {
-                setupMyExecution2();
-                doExecution   ();
-            }
-
-            GroupStore::iterator gIt  = _vGroupStore.begin();
-            GroupStore::iterator gEnd = _vGroupStore.end  ();
-
-            while(gIt != gEnd) {
-                (*gIt)->execute();
-                ++gIt;
-            }
+            setupMyExecution();
+            doMyExecution();
         }
 };
 
@@ -409,7 +383,7 @@ class OpenRenderAction : public RenderAction {
         }
 
         Action::ResultE traverse(Node* const node) {
-            NodeCore *core = node->getCore();
+            NodeCore* core = node->getCore();
 
             Action::ResultE result = Continue;
 
@@ -442,30 +416,13 @@ class OpenRenderAction : public RenderAction {
             return Skip;
         }
 
-        void drawMyBuffer(UInt32 buf) {
-            auto part = (OpenRenderPartition*)_vRenderPartitions[buf][0];
-            part->setupMyExecution(true);
-
+        Action::ResultE mystop(ResultE res) {
+            Inherited::stop(res);
+            auto buf = _currentBuffer;
             for (PtrDiffT i = _vRenderPartitions[buf].size() - 1; i > 0; --i) {
                 auto partI = (OpenRenderPartition*)_vRenderPartitions[buf][i];
                 partI->myexecute();
             }
-
-            part->doMyExecution(true);
-            //if(_bUseGLFinish == true) glFinish();
-        }
-
-        Action::ResultE mystop(ResultE res) {
-            Inherited::stop(res);
-
-            if (!_doCullOnly) {
-                drawMyBuffer(_currentBuffer);
-                //if (getVolumeDrawing()) drawVolume(_oFrustum);
-            }
-
-            //if (_pViewarea != NULL && _pViewarea->getRenderOptions() != NULL) _pViewarea->getRenderOptions()->deactivate(this);
-            //else if (_pWindow != NULL && _pWindow->getRenderOptions() != NULL) _pWindow->getRenderOptions()->deactivate(this);
-
             return Action::Continue;
         }
 };
@@ -536,6 +493,7 @@ VRTexturePtr VRTextureRenderer::renderOnce(CHANNEL c) { // TODO: not working!
     ract->start();
     auto res = ract->traverse(getNode()->node);
     ract->mystop(res);
+    CHECK_GL_ERROR("renderOnce");
 
     //data->win->render(data->ract);
     //data->win->renderNoFinish(data->ract);
