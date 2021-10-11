@@ -15,6 +15,7 @@
 #include "core/objects/geometry/VRSky.h"
 #include "core/setup/VRSetup.h"
 #include "core/setup/windows/VRGtkWindow.h"
+#include "core/setup/windows/VRView.h"
 #include "core/scene/VRScene.h"
 #include "core/scene/rendering/VRDefShading.h"
 #include "core/math/partitioning/boundingbox.h"
@@ -36,6 +37,7 @@
 
 #include <OpenSG/OSGPassiveWindow.h>
 #include <OpenSG/OSGViewport.h>
+#include <OpenSG/OSGPassiveViewport.h>
 #include <OpenSG/OSGFBOViewport.h>
 #include <OpenSG/OSGRenderAction.h>
 #include <OpenSG/OSGSolidBackground.h>
@@ -49,8 +51,8 @@
     GLenum err = glGetError(); \
     if (err != GL_NO_ERROR) { \
         static int i=0; i++; \
-        if (i <= 4) printf(" gl error on %s: %s\n", msg, gluErrorString(err)); \
-        if (i == 4) printf("  ..ignoring further errors\n"); \
+        if (i <= 9) printf(" gl error on %s: %s\n", msg, gluErrorString(err)); \
+        if (i == 9) printf("  ..ignoring further errors\n"); \
     } \
 }
 
@@ -294,6 +296,180 @@ void VRTextureRenderer::setMaterialSubstitutes(map<VRMaterial*, VRMaterialPtr> s
     substitutes[c] = s;
 }
 
+class MyFrameBufferObject : public FrameBufferObject {
+    public:
+
+    void myactivate(DrawEnv *pEnv, GLenum   eDrawBuffer) {
+        Window *win = pEnv->getWindow();
+        UInt32 glId = getGLId();
+        win->validateGLObject(getGLId(), pEnv);
+
+        if(_sfEnableMultiSample.getValue()                      == true &&
+            win->hasExtOrVersion(_uiFramebufferBlitExt, 0x0300) == true   ) {
+                win->validateGLObject(getMultiSampleGLId(), pEnv);
+                glId = getMultiSampleGLId();
+                glEnable(GL_MULTISAMPLE);
+        }
+
+        OSGGETGLFUNCBYID_GL3_ES( glBindFramebuffer, osgGlBindFramebuffer, _uiFuncBindFramebuffer, win);
+        osgGlBindFramebuffer(GL_FRAMEBUFFER, win->getGLObjectId(glId));
+        pEnv->setActiveFBO(glId);
+
+        /*if(eDrawBuffer == GL_NONE) {
+            if(_mfDrawBuffers.size() != 0) {
+                OSGGETGLFUNCBYID_GL3( glDrawBuffers, osgGlDrawBuffers, _uiFuncDrawBuffers, win);
+                cout << " --- myactivate --- " << _mfDrawBuffers.size() << endl;
+                //osgGlDrawBuffers(GLsizei(_mfDrawBuffers.size()), &(_mfDrawBuffers[0]) );
+                //osgGlDrawBuffers(1, &(_mfDrawBuffers[1]) );
+                CHECK_GL_ERROR("myactivate A1");
+            } else {
+                glDrawBuffer(GL_NONE);
+                glReadBuffer(GL_NONE);
+            }
+        } else {
+            OSGGETGLFUNCBYID_GL3( glDrawBuffers, osgGlDrawBuffers, _uiFuncDrawBuffers, win);
+            osgGlDrawBuffers(1, &eDrawBuffer );
+        }*/
+    }
+};
+
+class OpenRenderPartition : public RenderPartition {
+    public:
+        void setupMyExecution(bool bUpdateGlobalViewport) { setupExecution(bUpdateGlobalViewport); }
+        void doMyExecution(bool bRestoreViewport) { doExecution(bRestoreViewport); }
+
+        void setupMyExecution2(bool bUpdateGlobalViewport = false) {
+            if (_bDone == true) return;
+            if (_pRenderTarget != NULL) {
+                auto target = (MyFrameBufferObject*)_pRenderTarget;
+                target->myactivate(&_oDrawEnv, _eDrawBuffer);
+            }
+
+            if (bUpdateGlobalViewport == false) glPushAttrib(GL_VIEWPORT_BIT | GL_SCISSOR_BIT);
+
+            if (0x0000 != (_uiSetupMode & ViewportSetup)) {
+                if (0x0000 == (_uiSetupMode & PassiveBit)) {
+                    glViewport(_oDrawEnv.getPixelLeft  (), _oDrawEnv.getPixelBottom(), _oDrawEnv.getPixelWidth (), _oDrawEnv.getPixelHeight());
+
+                    if(_oDrawEnv.getFull() == false) {
+                        glScissor (_oDrawEnv.getPixelLeft  (), _oDrawEnv.getPixelBottom(), _oDrawEnv.getPixelWidth (), _oDrawEnv.getPixelHeight());
+                        glEnable(GL_SCISSOR_TEST);
+                    } else glDisable(GL_SCISSOR_TEST);
+                }
+            } else glDisable(GL_SCISSOR_TEST);
+
+            if(bUpdateGlobalViewport == true) glPushAttrib(GL_VIEWPORT_BIT | GL_SCISSOR_BIT);
+
+            if(0x0000 != (_uiSetupMode & ProjectionSetup)) {
+                glMatrixMode (GL_PROJECTION);
+                glPushMatrix();
+                glLoadMatrixf(_oDrawEnv._openGLState.getProjection().getValues());
+                glMatrixMode(GL_MODELVIEW);
+            }
+
+            RenderCallbackStore::const_iterator cbIt  = _vPreRenderCallbacks.begin();
+            RenderCallbackStore::const_iterator cbEnd = _vPreRenderCallbacks.end  ();
+
+            while(cbIt != cbEnd) {
+                (*cbIt)(&_oDrawEnv);
+                ++cbIt;
+            }
+
+            if(0x0000 != (_uiSetupMode & BackgroundSetup)) {
+                if(_pBackground != NULL) _pBackground->clear(&_oDrawEnv); //, _oDrawEnv.getViewport());
+            }
+        }
+
+        void myexecute(void) {
+            if(_bDone == false) {
+                setupMyExecution2();
+                doExecution();
+            }
+
+            GroupStore::iterator gIt  = _vGroupStore.begin();
+            GroupStore::iterator gEnd = _vGroupStore.end  ();
+
+            while(gIt != gEnd) {
+                (*gIt)->execute();
+                ++gIt;
+            }
+        }
+};
+
+class OpenRenderAction : public RenderAction {
+    public:
+        Action::FunctorStore* getEnterFunctors() { return getDefaultEnterFunctors(); }
+        Action::FunctorStore* getLeaveFunctors() { return getDefaultEnterFunctors(); }
+
+        //Action::ResultE traverse(Node* const node) { return recurse(node); }
+
+        Action::ResultE callenter(NodeCore* const core) {
+            UInt32 uiFunctorIndex = core->getType().getId();
+            return _enterFunctors[uiFunctorIndex](core, this);
+        }
+
+        Action::ResultE traverse(Node* const node) {
+            NodeCore *core = node->getCore();
+
+            Action::ResultE result = Continue;
+
+            _actList   = NULL;
+            _actNode   = node;
+            _actParent = node;
+
+            _newList.clear();
+            _useNewList = false;
+
+            result = callenter(node->getCore());
+
+            _actNode   = node;
+            _actParent = node;
+
+            Node::MFChildrenType::const_iterator cIt = node->getMFChildren()->begin();
+            Node::MFChildrenType::const_iterator cEnd = node->getMFChildren()->end  ();
+
+            for(; cIt != cEnd; ++cIt) {
+                result = recurse(*cIt);
+                if (result != Continue) break;
+            }
+
+            _actNode   = node;
+            _actParent = node;
+            result = callLeave(node->getCore());
+
+            _actNode   = node;
+            _actParent = node;
+            return Skip;
+        }
+
+        void drawMyBuffer(UInt32 buf) {
+            auto part = (OpenRenderPartition*)_vRenderPartitions[buf][0];
+            part->setupMyExecution(true);
+
+            for (PtrDiffT i = _vRenderPartitions[buf].size() - 1; i > 0; --i) {
+                auto partI = (OpenRenderPartition*)_vRenderPartitions[buf][i];
+                partI->myexecute();
+            }
+
+            //part->doMyExecution(true);
+            //if(_bUseGLFinish == true) glFinish();
+        }
+
+        Action::ResultE mystop(ResultE res) {
+            Inherited::stop(res);
+
+            if (!_doCullOnly) {
+                drawMyBuffer(_currentBuffer);
+                //if (getVolumeDrawing()) drawVolume(_oFrustum);
+            }
+
+            //if (_pViewarea != NULL && _pViewarea->getRenderOptions() != NULL) _pViewarea->getRenderOptions()->deactivate(this);
+            //else if (_pWindow != NULL && _pWindow->getRenderOptions() != NULL) _pWindow->getRenderOptions()->deactivate(this);
+
+            return Action::Continue;
+        }
+};
+
 VRTexturePtr VRTextureRenderer::renderOnce(CHANNEL c) { // TODO: not working!
     if (!cam) return 0;
     bool deferred = VRScene::getCurrent()->getDefferedShading();
@@ -325,14 +501,16 @@ VRTexturePtr VRTextureRenderer::renderOnce(CHANNEL c) { // TODO: not working!
         } else
 #endif
         {
+
             data->win = PassiveWindow::create();
-            data->view = Viewport::create();
+            data->view = Viewport::create(); // PassiveViewport or FBOViewport ?
+
             data->view->setRoot(getNode()->node);
             data->view->setBackground(data->stage->getBackground());
         }
 
         data->win->addPort(data->view);
-        data->view->setSize(0, 0, 1, 1);
+        data->view->setSize(0.5, 0.5, 0.5, 0.5);
         data->view->setCamera(cam->getCam()->cam);
     }
 
@@ -340,7 +518,24 @@ VRTexturePtr VRTextureRenderer::renderOnce(CHANNEL c) { // TODO: not working!
 
     setActive(true);
     setReadback(true);
-    data->win->render(data->ract);
+
+    data->win->frameInit();
+    data->ract->setWindow(data->win);
+    data->ract->setTraversalRoot(getNode()->node);
+    data->ract->setTravMask     (data->view->getTravMask()  );
+    data->ract->setRenderProperties(0);
+
+    auto ract = (OpenRenderAction*)data->ract.get();
+    auto core = getNode()->node->getCore();
+    UInt32 uiFunctorIndex = core->getType().getId();
+
+    //data->ract->apply( getNode()->node );
+    ract->start();
+    auto res = ract->traverse(getNode()->node);
+    ract->mystop(res);
+
+    //data->win->render(data->ract);
+    //data->win->renderNoFinish(data->ract);
     if (deferred) data->win->render(data->ract); // hack, TODO: for some reason the fbo gets not updated the first render call..
     setReadback(false);
     setActive(false);

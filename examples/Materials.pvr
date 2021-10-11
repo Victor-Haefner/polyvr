@@ -4,9 +4,15 @@
     <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" visible="4294967295">
       <Object ambient="1 1 1 1" base_name="light" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="directional" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" shadowVolume="1e+06 1e+06 1e+06 -1e+06 -1e+06 -1e+06 1" specular="1 1 1 1" type="Light" visible="4294967295">
         <Object at="-1 -1 -1" at_dir="0" base_name="Headlight_beacon" from="0 0 0" light="light" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" up="0 1 0" visible="4294967295">
+          <attachments>
+            <Node base_name="transform" name_space="VRAttachment" name_suffix="0" persistency="666" value=""/>
+          </attachments>
           <constraint persistency="666"/>
         </Object>
-        <Object accept_root="1" aspect="1" at="0 0 0" at_dir="1" base_name="Default" far="512" fov="1.0472" from="-2 0 4" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="4294967295">
+        <Object accept_root="1" aspect="1" at="0 0 0" at_dir="0" base_name="Default" far="512" fov="1.0472" from="-0.107008 0.246665 4.46405" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="4294967295">
+          <attachments>
+            <Node base_name="transform" name_space="VRAttachment" name_suffix="0" persistency="666" value=""/>
+          </attachments>
           <constraint persistency="666"/>
         </Object>
       </Object>
@@ -276,7 +282,7 @@ void main(void) {
 	VR.find('Default').setFrom([-2.0,0,4])
 	VR.find('Default').setAt([0,0,0])
 
-	def addObject(pos, mat):
+	def addObject(pos, mat, doIt):
 		sphere = VR.Geometry('sphere')
 		#sphere.setPrimitive('Sphere 0.4 3')
 		#sphere.setPrimitive('Teapot 6 0.2')
@@ -284,7 +290,7 @@ void main(void) {
 		sphere.setFrom(pos)
 		sphere.rotate(-1.2, [1,1,1])
 		sphere.setMaterial(mat)
-		VR.scene.addChild(sphere)
+		if doIt: VR.scene.addChild(sphere)
 		return sphere
 		
 	# simple materials
@@ -298,9 +304,9 @@ void main(void) {
 	mat1 = simpleMaterial([0,0.4,0.7], [0,0,0], [0,0,0])
 	mat2 = simpleMaterial([0,0.4,0.7], [1,1,1], [0,0,0])
 	mat3 = simpleMaterial([0,0.4,0.7], [1,1,1], [0,0.2,0.4])
-	addObject([-1, 1, 0], mat1)
-	addObject([ 0, 1, 0], mat2)
-	addObject([ 1, 1, 0], mat3)
+	addObject([-1, 1, 0], mat1, True)
+	addObject([ 0, 1, 0], mat2, True)
+	addObject([ 1, 1, 0], mat3, True)
 	
 	# textured materials
 	def simpleNoise(color1, color2, size):
@@ -309,23 +315,43 @@ void main(void) {
 		return tg.compose(0)
 		
 	def makeCubeMap(sphere):
+		cam = VR.find('Default')
 		tr = VR.TextureRenderer()
-		tr.setup(VR.find('Default'), 400, 400)
+		tr.setup(cam, 400, 400)
+		tr.setActive(False)
+		
 		tr.addLink(VR.find('light'))
-		VR.find('Root').addChild(tr)
-		return tr.createCubeMaps(sphere)
+		
+		"""
+		l = VR.Light('tmpL')
+		b = l.addBeacon()
+		#b.setFrom([5,0,0])
+		#cam.addChild(b)
+		#l.addLink(sphere)
+		tr.addChild(l)
+		"""
+		
+		#VR.find('Root').addChild(tr)
+		maps = tr.createCubeMaps(sphere)
+		for i,t in enumerate(maps):
+			s = VR.Sprite('map', 'light')
+			s.setFrom([i,2,0])
+			m = VR.Material('bla')
+			m.setTexture(t)
+			s.setMaterial(m)
+		return maps
 		
 	mat4 = simpleMaterial([0.6,0.6,0.6], [1,1,1], [0.2,0.2,0.2])
 	mat5 = simpleMaterial([0.6,0.6,0.6], [1,1,1], [0.2,0.2,0.2])
 	mat6 = simpleMaterial([0.6,0.6,0.6], [1,1,1], [0.2,0.2,0.2])
-	addObject([-1, 0, 0], mat4)
-	addObject([ 1, 0, 0], mat5)
-	S6 = addObject([ 0, 0, 0], mat6)
+	addObject([-1, 0, 0], mat4, True)
+	addObject([ 1, 0, 0], mat5, True)
+	S6 = addObject([ 0, 0, 0], mat6, True)
 	
 	mat7 = simpleMaterial([0.6,0.6,0.6], [1,1,1], [0.2,0.2,0.2])
 	mat8 = simpleMaterial([0.6,0.6,0.6], [1,1,1], [0.4,0.4,0.4])
-	S7 = addObject([-0.5,-1, 0], mat7)
-	S8 = addObject([ 0.5,-1, 0], mat8)
+	S7 = addObject([-0.5,-1, 0], mat7, True)
+	S8 = addObject([ 0.5,-1, 0], mat8, True)
 	
 	# simple texture
 	noise1 = simpleNoise([0,0.9,1], [0,0.7,0.8], 512)
@@ -344,10 +370,10 @@ void main(void) {
 	bmt.read('bumpmap.jpg')
 	mat7.setTexture(noise2)
 	mat7.setTexture(bmt,1)
-	mat7.setVertexProgram('bumpmapVP')
-	mat7.setFragmentProgram('bumpmapFP')
-	mat7.setShaderParameter('diffuseTexture', 0)
-	mat7.setShaderParameter('normalTexture', 1)
+	#mat7.setVertexProgram('bumpmapVP')
+	#mat7.setFragmentProgram('bumpmapFP')
+	#mat7.setShaderParameter('diffuseTexture', 0)
+	#mat7.setShaderParameter('normalTexture', 1)
 	
 	# displacement map
 	noise3 = simpleNoise([1,1,1], [0.5,0.5,0.5], 128)
@@ -363,11 +389,12 @@ void main(void) {
 	
 	
 	# reflection (last to get environment with other spheres on it)
+	#return
 	maps = makeCubeMap(S6)
-	mat6.setTexture(noise2)
-	mat6.addPass()
+	#mat6.setTexture(noise2)
+	#mat6.addPass()
 	mat6.setTextureType('CubeEnv')
-	mat6.setTransparency(0.5)
+	#mat6.setTransparency(0.5)
 	for tex,side in zip(maps, ['front', 'back', 'left', 'right', 'top', 'bottom']):
 		mat6.setCubeTexture(tex, side)
 		
