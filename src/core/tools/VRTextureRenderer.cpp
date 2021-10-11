@@ -383,7 +383,7 @@ class OpenRenderPartition : public RenderPartition {
         void myexecute(void) {
             if(_bDone == false) {
                 setupMyExecution2();
-                doExecution();
+                doExecution   ();
             }
 
             GroupStore::iterator gIt  = _vGroupStore.begin();
@@ -451,7 +451,7 @@ class OpenRenderAction : public RenderAction {
                 partI->myexecute();
             }
 
-            //part->doMyExecution(true);
+            part->doMyExecution(true);
             //if(_bUseGLFinish == true) glFinish();
         }
 
