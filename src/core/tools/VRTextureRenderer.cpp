@@ -476,6 +476,9 @@ VRTexturePtr VRTextureRenderer::renderOnce(CHANNEL c) { // TODO: not working!
 
     if (!data->ract) {
         data->ract = RenderAction::create();
+        data->ract->setFrustumCulling(false);
+        data->ract->setOcclusionCulling(false);
+
 #ifndef WITHOUT_DEFERRED_RENDERING
         if (deferred) {
             GLUTWindowRecPtr gwin = GLUTWindow::create();

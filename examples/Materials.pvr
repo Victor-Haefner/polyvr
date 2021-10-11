@@ -370,10 +370,10 @@ void main(void) {
 	bmt.read('bumpmap.jpg')
 	mat7.setTexture(noise2)
 	mat7.setTexture(bmt,1)
-	#mat7.setVertexProgram('bumpmapVP')
-	#mat7.setFragmentProgram('bumpmapFP')
-	#mat7.setShaderParameter('diffuseTexture', 0)
-	#mat7.setShaderParameter('normalTexture', 1)
+	mat7.setVertexProgram('bumpmapVP')
+	mat7.setFragmentProgram('bumpmapFP')
+	mat7.setShaderParameter('diffuseTexture', 0)
+	mat7.setShaderParameter('normalTexture', 1)
 	
 	# displacement map
 	noise3 = simpleNoise([1,1,1], [0.5,0.5,0.5], 128)
