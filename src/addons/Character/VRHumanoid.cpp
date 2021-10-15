@@ -6,6 +6,10 @@
 using namespace OSG;
 
 VRHumanoid::VRHumanoid(string name) : VRGeometry(name) {
+    colors["skin"] = Color3f(1,0.7,0.4);
+    colors["shirt"] = Color3f(1,1,0);
+    colors["pants"] = Color3f(0,0,1);
+
     skeleton = VRSkeleton::create();
     skeleton->setupSimpleHumanoid();
     skin = VRSkin::create(skeleton);
@@ -51,11 +55,13 @@ void VRHumanoid::generateTorso(VRGeoData& data) {
     auto bones = skeleton->getBones();
     Vec3d n(0,1,0);
 
+    Color3f col = colors["shirt"];
+
     auto addRect = [&](float h, float b, float d, int bID, vector<float> t) {
-        int i1 = data.pushVert(Vec3d(-b*0.5,h,-d*0.5), n, Vec2d(0,0));
-        int i2 = data.pushVert(Vec3d( b*0.5,h,-d*0.5), n, Vec2d(0,0));
-        int i3 = data.pushVert(Vec3d( b*0.5,h, d*0.5), n, Vec2d(0,0));
-        int i4 = data.pushVert(Vec3d(-b*0.5,h, d*0.5), n, Vec2d(0,0));
+        int i1 = data.pushVert(Vec3d(-b*0.5,h,-d*0.5), n, col, Vec2d(0,0));
+        int i2 = data.pushVert(Vec3d( b*0.5,h,-d*0.5), n, col, Vec2d(0,0));
+        int i3 = data.pushVert(Vec3d( b*0.5,h, d*0.5), n, col, Vec2d(0,0));
+        int i4 = data.pushVert(Vec3d(-b*0.5,h, d*0.5), n, col, Vec2d(0,0));
         auto& bone = bones[bID];
         for (int i=0; i<4; i++) skin->setMap(bone.ID, t);
         return Vec4i(i1,i2,i3,i4);
@@ -96,6 +102,8 @@ void VRHumanoid::generateHead(VRGeoData& data) {
     auto& bone = bones[13];
     Vec3d n(0,1,0);
 
+    Color3f col = colors["skin"];
+
     auto addRing = [&](float h, vector<float> rads) {
         vector<int> ids;
         int N = (rads.size()-1)*2;
@@ -104,7 +112,7 @@ void VRHumanoid::generateHead(VRGeoData& data) {
             double a = da*i;
             int ri = i < rads.size() ? i : -i+2*(rads.size()-1);
             double r = rads[ri];
-            int id = data.pushVert(Vec3d(sin(a)*r,h,cos(a)*r), n, Vec2d(0,0));
+            int id = data.pushVert(Vec3d(sin(a)*r,h,cos(a)*r), n, col, Vec2d(0,0));
             skin->addMap(bone.ID, 1);
             ids.push_back(id);
         }
@@ -124,7 +132,7 @@ void VRHumanoid::generateHead(VRGeoData& data) {
         Vec3d pm;
         for (auto i : r) pm += Vec3d( data.getPosition(i) );
         pm *= (1.0/N);
-        int c = data.pushVert(pm, n, Vec2d(0,0));
+        int c = data.pushVert(pm, n, col, Vec2d(0,0));
         skin->addMap(bone.ID, 1);
         for (int i=0; i<N; i++) {
             int j = (i+1)%N;
@@ -163,11 +171,13 @@ void VRHumanoid::generateLegs(VRGeoData& data) {
     auto bones = skeleton->getBones();
     Vec3d n(0,1,0);
 
+    Color3f col = colors["pants"];
+
     auto addRect = [&](float h, float b, float d, float x, int bID, vector<float> t) {
-        int i1 = data.pushVert(Vec3d(-b*0.5+x,h,-d*0.5), n, Vec2d(0,0));
-        int i2 = data.pushVert(Vec3d( b*0.5+x,h,-d*0.5), n, Vec2d(0,0));
-        int i3 = data.pushVert(Vec3d( b*0.5+x,h, d*0.5), n, Vec2d(0,0));
-        int i4 = data.pushVert(Vec3d(-b*0.5+x,h, d*0.5), n, Vec2d(0,0));
+        int i1 = data.pushVert(Vec3d(-b*0.5+x,h,-d*0.5), n, col, Vec2d(0,0));
+        int i2 = data.pushVert(Vec3d( b*0.5+x,h,-d*0.5), n, col, Vec2d(0,0));
+        int i3 = data.pushVert(Vec3d( b*0.5+x,h, d*0.5), n, col, Vec2d(0,0));
+        int i4 = data.pushVert(Vec3d(-b*0.5+x,h, d*0.5), n, col, Vec2d(0,0));
         auto& bone = bones[bID];
         for (int i=0; i<4; i++) skin->setMap(bone.ID, t);
         return Vec4i(i1,i2,i3,i4);
@@ -206,11 +216,13 @@ void VRHumanoid::generateArms(VRGeoData& data) {
     auto bones = skeleton->getBones();
     Vec3d n(0,1,0);
 
+    Color3f col = colors["skin"];
+
     auto addRect = [&](float h, float b, float d, float x, int bID, vector<float> t) {
-        int i1 = data.pushVert(Vec3d(-b*0.5+x,h,-d*0.5), n, Vec2d(0,0));
-        int i2 = data.pushVert(Vec3d( b*0.5+x,h,-d*0.5), n, Vec2d(0,0));
-        int i3 = data.pushVert(Vec3d( b*0.5+x,h, d*0.5), n, Vec2d(0,0));
-        int i4 = data.pushVert(Vec3d(-b*0.5+x,h, d*0.5), n, Vec2d(0,0));
+        int i1 = data.pushVert(Vec3d(-b*0.5+x,h,-d*0.5), n, col, Vec2d(0,0));
+        int i2 = data.pushVert(Vec3d( b*0.5+x,h,-d*0.5), n, col, Vec2d(0,0));
+        int i3 = data.pushVert(Vec3d( b*0.5+x,h, d*0.5), n, col, Vec2d(0,0));
+        int i4 = data.pushVert(Vec3d(-b*0.5+x,h, d*0.5), n, col, Vec2d(0,0));
         auto& bone = bones[bID];
         for (int i=0; i<4; i++) skin->setMap(bone.ID, t);
         return Vec4i(i1,i2,i3,i4);
@@ -234,6 +246,11 @@ void VRHumanoid::generateArms(VRGeoData& data) {
 
     addArm(-W, 9);
     addArm( W, 6);
+}
+
+void VRHumanoid::setColor(string pID, Color3f c) {
+    colors[pID] = c;
+    generate();
 }
 
 

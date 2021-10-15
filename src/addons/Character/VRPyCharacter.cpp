@@ -43,6 +43,9 @@ PyMethodDef VRPyCharacter::methods[] = {
 };
 
 PyMethodDef VRPyHumanoid::methods[] = {
+    {"getSkin", PyWrap( Humanoid, getSkin, "Get skin object", VRSkinPtr ) },
+    {"getSkeleton", PyWrap( Humanoid, getSkeleton, "Get skeleton object", VRSkeletonPtr ) },
+    {"setColor", PyWrap( Humanoid, setColor, "Set part color, (partID, color)", void, string, Color3f ) },
     {NULL}  /* Sentinel */
 };
 

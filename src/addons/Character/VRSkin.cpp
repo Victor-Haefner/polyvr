@@ -18,6 +18,7 @@ VRSkin::VRSkin(VRSkeletonPtr s) : skeleton(s) {
 
     material->setVertexShader(skinning_vp, "skinningVP");
     material->setFragmentShader(skinning_fp, "skinningFP");
+    material->setShaderParameter<int>("debugMode", 0);
 
     bone0s = skeleton->getBones();
 }
@@ -28,6 +29,10 @@ VRSkinPtr VRSkin::create(VRSkeletonPtr s) { return VRSkinPtr( new VRSkin(s) ); }
 VRSkinPtr VRSkin::ptr() { return static_pointer_cast<VRSkin>(shared_from_this()); }
 
 VRMaterialPtr VRSkin::getMaterial() { return material; }
+
+void VRSkin::setDebugShader(bool b) {
+    material->setShaderParameter<int>("debugMode", (int)b);
+}
 
 void VRSkin::setMapping(vector<vector<pair<int, float>>> m) { mapping = m; updateMappingTexture(); }
 
@@ -135,6 +140,7 @@ in vec2 osg_MultiTexCoord0;
 
 uniform sampler2D texMapping;
 uniform sampler2D texBones;
+uniform int debugMode;
 
 out vec4 color;
 out vec3 norm;
@@ -171,16 +177,13 @@ void main(void) {
 	color = osg_Color;
 	norm = osg_Normal;
 
-	/*
-	if (Nb == 1) color = vec4(1,0,0,1);
-	if (Nb == 2) color = vec4(0,1,0,1);
-	if (Nb >  2) color = vec4(1,1,0,1);
-	*/
-
-	color = vec4(1.0-bID*0.07, bID*0.07, 0, 1);
-	if (bID == -1) color = vec4(0, 0, 1, 1);
+    if (debugMode == 1) {
+        color = vec4(1.0-bID*0.07, bID*0.07, 0, 1);
+        if (bID == -1) color = vec4(0, 0, 1, 1);
+    }
 }
 );
+
 
 string VRSkin::skinning_fp =
 "#version 400 compatibility\n"
@@ -203,4 +206,3 @@ void main(void) {
     applyBlinnPhong();
 }
 );
-

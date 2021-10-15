@@ -33,6 +33,8 @@ class VRSkin : public std::enable_shared_from_this<VRSkin> {
         void applyMapping(VRGeometryPtr hull);
         size_t mapSize();
 
+        void setDebugShader(bool b = true);
+
         void updateMappingTexture();
         void updateBoneTexture();
 

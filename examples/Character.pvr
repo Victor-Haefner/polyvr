@@ -9,7 +9,7 @@
           </attachments>
           <constraint persistency="666"/>
         </Object>
-        <Object accept_root="1" aspect="1" at="-0.313629 0.997303 0.0814183" at_dir="0" base_name="Default" far="512" fov="1.0472" from="-2.29034 2.48925 1.62101" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
+        <Object accept_root="1" aspect="1" at="0.0757408 1.2174 1.7248" at_dir="0" base_name="Default" far="512" fov="1.0472" from="-6.08114 3.6732 -0.965518" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
           <attachments>
             <Node base_name="transform" name_space="VRAttachment" name_suffix="0" persistency="666" value=""/>
           </attachments>
@@ -21,6 +21,94 @@
   <Cameras activeCam="Default" persistency="666"/>
   <Rendering deferred_rendering="0" fogColor="0.5 0.5 0.5 1" fogParams="0 0 100 0.1" frustum_culling="1" fxaa="0" hmdd="0" marker="0" occlusion_culling="0" persistency="666" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
   <Scripts persistency="666">
+    <Script base_name="editorSite" group="editor" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="HTML">
+      <core>
+&lt;!DOCTYPE html&gt;
+ &lt;html&gt;
+
+ &lt;head&gt;
+ 	&lt;style type="text/css"&gt;
+ 		body {
+ 			font-size:4vh;
+ 			background-color: rgba(1,1,1,0);
+ 		}
+ 		
+ 		.colorChooser {
+ 			position: fixed;
+ 			display: flex;
+ 			justify-content: space-around;
+ 			width: 80vw;
+ 			background-color: rgba(200,200,200,255);
+ 		}
+ 		
+ 		.colorField {
+ 			font-size:4vh;
+ 			width: 15vw;
+ 			height: 100%;
+ 			background-color: rgba(255,255,255,255);
+ 		}
+ 	&lt;/style&gt;
+ 	&lt;script&gt;
+ 		var websocket = new WebSocket('ws://localhost:5500');
+ 		websocket.onopen = function() { send('register|hud'); };
+ 		websocket.onerror = function(e) {};
+ 		websocket.onmessage = function(m) { if(m.data) handle(m.data); };
+ 		websocket.onclose = function(e) {};
+
+ 		function send(m) { websocket.send(m); };
+ 		function handle(m) { console.log(m); };
+ 		
+ 		function addLabel(t, p) {
+ 			var lbl = document.createElement('div');
+ 			lbl.innerHTML = t;
+ 			p.appendChild(lbl);
+ 			return lbl;
+ 		}
+ 		
+ 		function onFieldChange(c,v) {
+ 			var r = c.children[1].value;
+ 			var g = c.children[2].value;
+ 			var b = c.children[3].value;
+ 			send('changeColor|'+v+'|'+r+':'+g+':'+b);
+ 		}
+ 		
+ 		function addColorField(id, p) {
+ 			var e = document.createElement('input');
+ 			e.value = 0;
+ 			e.className = 'colorField';
+ 			e.onchange = function(c,v){ return function(){ onFieldChange(c,v); }; }(p, id);
+ 			p.appendChild(e);
+ 			return e;
+ 		}
+ 		
+ 		function addColorChooser(id, x, y) {
+ 			var cc = document.createElement('div');
+ 			cc.className = 'colorChooser';
+ 			cc.style.left=x+'vw';
+ 			cc.style.top=y+'vh';
+ 			document.body.appendChild(cc)
+ 			var lbl = addLabel(id, cc);
+ 			var eR = addColorField(id, cc);
+ 			var eG = addColorField(id, cc);
+ 			var eB = addColorField(id, cc);
+ 		}
+ 		
+ 		function setup() {
+ 			addColorChooser('skin', 5, 20);
+ 			addColorChooser('shirt', 5, 50);
+ 			addColorChooser('pants', 5, 80);
+ 		}
+ 	&lt;/script&gt;
+ &lt;/head&gt;
+
+ &lt;body&gt;
+ &lt;/body&gt;
+ 
+ &lt;script&gt;setup();&lt;/script&gt;
+ 
+ &lt;/html&gt;
+</core>
+    </Script>
     <Script base_name="gridFloor" group="test" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	import VR
@@ -38,6 +126,25 @@
 	VR.floor.setOrientation([0,1,0], [0,0,1])
 </core>
     </Script>
+    <Script base_name="hudHandler" group="editor" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+
+ 	m = dev.getMessage()
+ 	print m
+
+	
+	m = m.split('|')
+	if m[0] == 'changeColor':
+		part = m[1]
+		col = [ float(c) for c in m[2].split(':') ]
+		
+		VR.humanoid.setColor(part, col)
+		VR.character.setSkin(VR.humanoid, VR.humanoid.getSkin(), VR.humanoid.getSkeleton())
+	
+</core>
+      <trig type="on_device" dev="server1" state="Released" param="0" key="-1" base_name="trigger" name_space="__global__" name_suffix="3" persistency="666"/>
+    </Script>
     <Script base_name="init" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	import VR
@@ -46,13 +153,14 @@
 	
 	if hasattr(VR, 'character'): VR.character.destroy()
 	
+	VR.humanoid = VR.Humanoid('Alice')
+	
 	VR.character = VR.Character('character', 'light')
-	VR.character.simpleSetup()
+	VR.character.setSkin(VR.humanoid, VR.humanoid.getSkin(), VR.humanoid.getSkeleton())
 	
 	#VR.character.addDebugSkin()
-
-	#VR.alice = VR.Humanoid('Alice')
-	#VR.character.setSkin(VR.alice)
+	
+	VR.setupEditor()
 </core>
       <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="4" persistency="666"/>
     </Script>
@@ -135,6 +243,56 @@
 	
 </core>
       <trig type="on_device" dev="mouse" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="11" persistency="666"/>
+    </Script>
+    <Script base_name="setupEditor" group="editor" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+
+	
+
+	if hasattr(VR, 'editor'): VR.editor.destroy()
+	VR.editor = VR.Transform('editor')
+	cam = VR.getActiveCamera()
+	cam.addChild(VR.editor)
+	
+	VR.editor.setFrom([-2, -1, -3])
+	light = VR.Light('fLight')
+	VR.editor.addChild(light)
+	lb = light.addBeacon()
+	lb.setFrom([0,2,1])
+	
+	m = VR.Material('efMat')
+	m.setDiffuse([1,1,1])
+	m.setLit(0)
+	m.addPass()
+	m.setWireFrame(1)
+	m.setDiffuse([0,0,0])
+	m.setLit(0)
+	floor = VR.Geometry('eFloor')
+	floor.setPrimitive('Plane 1.5 1.5 3 3')
+	floor.setMaterial(m)
+	floor.setOrientation([0,1,0], [0,0,-1])
+	
+	stage = VR.Transform('stage')
+	light.addChild(stage)
+	stage.addChild(floor)
+	stage.addLink(VR.character.getChild(0))
+	
+	stage.setPickable(True)
+	ec = stage.getConstraint()
+	ec.setReference(stage.getPose())
+	ec.setReferential(VR.editor)
+	ec.lock([0,1,2,3,5])
+	ec.free([4])
+	
+	w,h = 1.0, 2.0
+	s = VR.Sprite('site')
+	s.setSize(w,h)
+	s.webOpen('http://localhost:5500/editorSite', 400, w/h)
+	s.setFrom([-0.25,1,0.75])
+	s.getMaterial().enableTransparency()
+	VR.editor.addChild(s)
+</core>
     </Script>
     <Script base_name="testSprings" group="test" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
