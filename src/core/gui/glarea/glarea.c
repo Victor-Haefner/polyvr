@@ -910,13 +910,13 @@ void glarea_render(GLArea* area) {
 }
 
 void cairo_draw(cairo_t* cr, GLArea* area, _GdkWindow* window, int scale, int x, int y, int width, int height) {
-    CHECK_GL_ERROR("cairo_draw_begin beg");
+    CHECK_GL_ERROR("cairo_draw A1");
   GLAreaPrivate* priv = gl_area_get_instance_private (area);
   impl_window = window->impl_window;
   window_scale = gdk_window_get_scale_factor ((GdkWindow*)impl_window);
   clip_region = gdk_cairo_region_from_clip (cr);
   gdk_gl_context_make_current(priv->context);
-    CHECK_GL_ERROR("gdk_gl_context_make_current");
+    CHECK_GL_ERROR("cairo_draw A2");
   cairo_matrix_t matrix;
   cairo_get_matrix (cr, &matrix);
   dx = matrix.x0;
@@ -940,7 +940,9 @@ void cairo_draw(cairo_t* cr, GLArea* area, _GdkWindow* window, int scale, int x,
           dest.height = height * window_scale / scale;
 
           if (gdk_rectangle_intersect (&clip_rect, &dest, &fdest)) {
+    CHECK_GL_ERROR("cairo_draw A3");
               glarea_render(area);
+    CHECK_GL_ERROR("cairo_draw A4");
               if (impl_window->current_paint.flushed_region) {
                   cairo_rectangle_int_t flushed_rect;
 
@@ -961,7 +963,7 @@ void cairo_draw(cairo_t* cr, GLArea* area, _GdkWindow* window, int scale, int x,
 
 static gboolean gl_area_draw(GtkWidget* widget, cairo_t* cr) {
     //SET_DEBUG_BREAK_POINT(B,1)
-    CHECK_GL_ERROR("gl_area_draw beg");
+    CHECK_GL_ERROR("gl_area_draw A1");
 
     GLArea *area = GL_AREA(widget);
     //gtk_widget_set_double_buffered(widget, FALSE);
@@ -974,7 +976,7 @@ static gboolean gl_area_draw(GtkWidget* widget, cairo_t* cr) {
     if (priv->context == NULL) return FALSE;
 
     gl_area_make_current (area);
-    CHECK_GL_ERROR("gl_area_make_current");
+    CHECK_GL_ERROR("gl_area_draw A2");
 
     //glEnable (GL_DEPTH_TEST);
 
@@ -982,6 +984,7 @@ static gboolean gl_area_draw(GtkWidget* widget, cairo_t* cr) {
     w = gtk_widget_get_allocated_width (widget) * scale;
     h = gtk_widget_get_allocated_height (widget) * scale;
     cairo_draw(cr, area, (_GdkWindow*)gtk_widget_get_window(widget), scale, 0, 0, w, h);
+    CHECK_GL_ERROR("gl_area_draw A3");
 
     return TRUE;
 }
@@ -1125,7 +1128,9 @@ void gl_area_queue_render (GLArea *area) {
     GLAreaPrivate *priv = gl_area_get_instance_private (area);
     g_return_if_fail (IS_GL_AREA (area));
     priv->needs_render = TRUE;
+    CHECK_GL_ERROR("gl_area_queue_render A1");
     gtk_widget_queue_draw (GTK_WIDGET (area));
+    CHECK_GL_ERROR("gl_area_queue_render A2");
 }
 
 GdkGLContext* gl_area_get_context (GLArea *area) {
