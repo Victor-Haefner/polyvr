@@ -4,12 +4,24 @@
 #include "core/utils/toString.h"
 #include "core/objects/geometry/VRGeoData.h"
 
+#include <jsoncpp/json/json.h>
+
+#define JSONSTR(txt) #txt
+
 using namespace OSG;
 
 VRHumanoid::VRHumanoid(string name) : VRGeometry(name) {
     colors["skin"] = Color3f(1,0.7,0.4);
     colors["shirt"] = Color3f(1,1,0);
     colors["pants"] = Color3f(0,0,1);
+
+    ringParams[10] = { Vec3d(0.10, 0.05, 0.3), Vec3d(0.22, 0.1, 0.4) };
+    ringParams[11] = { Vec3d(0.42, 0.20, 0.6), Vec3d(0.26, 0.1, 0.4) }; // hips
+    ringParams[12] = { Vec3d(0.40, 0.20, 0.6), Vec3d(0.27, 0.1, 0.4) }; // belly
+    ringParams[13] = { Vec3d(0.40, 0.20, 0.6), Vec3d(0.24, 0.1, 0.4) }; // ribs
+    ringParams[14] = { Vec3d(0.41, 0.20, 0.6), Vec3d(0.20, 0.1, 0.4) }; // chest
+    ringParams[15] = { Vec3d(0.45, 0.20, 0.6), Vec3d(0.20, 0.1, 0.4) }; // shoulders
+    ringParams[16] = { Vec3d(0.15, 0.05, 0.3), Vec3d(0.16, 0.1, 0.4) }; // neck
 
     ringParams[30] = { Vec3d(0.1, 0.05, 0.3), Vec3d(0.20, 0.05, 0.3), Vec3d(0.255, 0.1, 0.5) };
     ringParams[31] = { Vec3d(0.1, 0.05, 0.3), Vec3d(0.15, 0.05, 0.3), Vec3d(0.225, 0.1, 0.5) };
@@ -22,6 +34,8 @@ VRHumanoid::VRHumanoid(string name) : VRGeometry(name) {
     skeleton = VRSkeleton::create();
     skeleton->setupSimpleHumanoid();
     skin = VRSkin::create(skeleton);
+
+    loadParameters(params1, false);
 }
 
 VRHumanoid::~VRHumanoid() {}
@@ -51,22 +65,15 @@ void VRHumanoid::generateTorso(VRGeoData& data) {
     double O = 0.75; // distance to ground
     double H = 0.77; // torso height
 
-    double B1 = 0.42; // hips
-    double B2 = 0.4; // belly
-    double B3 = 0.4; // ribs
-    double B4 = 0.45; // shoulders
-
-    double D1 = 0.26; // hips
-    double D2 = 0.27; // belly
-    double D3 = 0.24; // ribs
-    double D4 = 0.2; // shoulders
-
     auto bones = skeleton->getBones();
     Vec3d n(0,-1,0);
 
     Color3f col = colors["shirt"];
 
-    auto addRect = [&](float h, float b, float d, int bID, int rID, vector<float> t) {
+    auto addRect = [&](float h, int bID, int rID, vector<float> t) {
+        auto params = ringParams[rID];
+        float b = params[0][0];
+        float d = params[1][0];
         int i1 = data.pushVert(Vec3d(-b*0.5,h,-d*0.5), n, col, Vec2d(0,rID));
         int i2 = data.pushVert(Vec3d( b*0.5,h,-d*0.5), n, col, Vec2d(0,rID));
         int i3 = data.pushVert(Vec3d( b*0.5,h, d*0.5), n, col, Vec2d(0,rID));
@@ -84,13 +91,13 @@ void VRHumanoid::generateTorso(VRGeoData& data) {
     };
 
     int bID = 12;
-    Vec4i i0 = addRect(O, 0.1, 0.22, bID, 10, {1});
-    Vec4i i1 = addRect(O+0.14, B1, D1, bID, 11, {1});
-    Vec4i i2 = addRect(O+H*0.34, B2, D2, bID, 12, {1});
-    Vec4i i3 = addRect(O+H*0.57, B3, D3, bID, 13, {1});
-    Vec4i i4 = addRect(O+H*0.75, B4*0.9, D4, bID, 14, {1});
-    Vec4i i5 = addRect(O+H*0.94, B4, D4, bID, 15, {1});
-    Vec4i i6 = addRect(O+H, 0.15, D4*0.8, bID, 16, {1});
+    Vec4i i0 = addRect(O, bID, 10, {1});
+    Vec4i i1 = addRect(O+0.14, bID, 11, {1});
+    Vec4i i2 = addRect(O+H*0.34, bID, 12, {1});
+    Vec4i i3 = addRect(O+H*0.57, bID, 13, {1});
+    Vec4i i4 = addRect(O+H*0.75, bID, 14, {1});
+    Vec4i i5 = addRect(O+H*0.94, bID, 15, {1});
+    Vec4i i6 = addRect(O+H, bID, 16, {1});
 
     joinRects(i0, i1, true);
     joinRects(i1, i2);
@@ -270,31 +277,98 @@ string VRHumanoid::getParameterString() {
 
     data += "\t\"colors\": {\n";
     for (auto col : colors) {
-        data += "\t\t\""+col.first+"\": \""+toString(col.second)+"\",\n";
+        data += "\t\t\""+col.first+"\": \""+toString(col.second);
+        if (col.first != (--colors.end())->first) data += "\",\n";
+        else data += "\"\n";
     }
-    data += "\t}\n";
+    data += "\t},\n";
+
+    auto onlyParams = [&](vector<Vec3d>& data) {
+        vector<double> res;
+        for (auto v : data) res.push_back(v[0]);
+        return res;
+    };
 
     data += "\t\"rings\": {\n";
-    for (auto ring : ringParams) {
-        data += "\t\t\""+toString(ring.first)+"\": \""+toString(ring.second)+"\",\n";
+    for (auto& ring : ringParams) {
+        data += "\t\t\""+toString(ring.first)+"\": \""+toString(onlyParams(ring.second));
+        if (ring.first != (--ringParams.end())->first) data += "\",\n";
+        else data += "\"\n";
     }
     data += "\t}\n";
 
     return data+"}";
 }
 
+void VRHumanoid::loadParameters(string params, bool gen) {
+    Json::Value root;
+    Json::Reader reader;
+
+    if (params[0] == '(') { // strip brackets
+        params = params.substr(1, params.size() - 2);;
+    }
+
+    cout << "loadParameters:\n" << params << endl;
+
+    if ( !reader.parse( params, root ) ) {
+        cout << "Error in VRHumanoid::loadParameters, json parsing failed with: " << reader.getFormattedErrorMessages() << endl;
+        return;
+    }
+
+    auto colors = root["colors"];
+    auto rings = root["rings"];
+
+    for ( auto cID : colors.getMemberNames() ) {
+        string color = colors[cID].asString();
+        setColor(cID, toValue<Color3f>(color), false);
+    }
+
+    for ( auto rID : rings.getMemberNames() ) {
+        string params = rings[rID].asString();
+        setRingParams(toInt(rID), toValue<vector<double>>(params), false);
+    }
+
+    if (gen) generate();
+}
+
 Color3f VRHumanoid::getColor(string pID) { return colors[pID]; }
 vector<Vec3d> VRHumanoid::getRingParams(int rID) { return ringParams[rID]; }
 
-void VRHumanoid::setColor(string pID, Color3f c) {
+void VRHumanoid::setColor(string pID, Color3f c, bool gen) {
     colors[pID] = c;
-    generate();
+    if (gen) generate();
 }
 
-void VRHumanoid::setRingParams(int rID, vector<double> params) {
+void VRHumanoid::setRingParams(int rID, vector<double> params, bool gen) {
     for (int i=0; i<params.size() && i<ringParams[rID].size(); i++) {
         ringParams[rID][i][0] = params[i];
     }
-    generate();
+    if (gen) generate();
 }
 
+
+string VRHumanoid::params1 =
+JSONSTR((
+{
+	"colors": {
+		"pants": "0 0 1",
+		"shirt": "1 1 0",
+		"skin": "1 0.7 0.4"
+	},
+	"rings": {
+		"10": "[0.05, 0.19]",
+		"11": "[0.3, 0.22]",
+		"12": "[0.3, 0.205]",
+		"13": "[0.3, 0.22]",
+		"14": "[0.34, 0.235]",
+		"15": "[0.42, 0.175]",
+		"16": "[0.15, 0.16]",
+		"30": "[0.1, 0.125, 0.12]",
+		"31": "[0.1, 0.125, 0.12]",
+		"32": "[0.12, 0.1625, 0.1]",
+		"40": "[0.0625, 0.075, 0.24]",
+		"41": "[0.0875, 0.0875, 0.24]",
+		"42": "[0.0875, 0.1375, 0.22]"
+	}
+}
+));

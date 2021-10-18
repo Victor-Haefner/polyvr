@@ -22,6 +22,8 @@ class VRHumanoid : public VRGeometry {
 
         void generate();
 
+        static string params1;
+
 	public:
 		VRHumanoid(string name);
 		~VRHumanoid();
@@ -35,9 +37,10 @@ class VRHumanoid : public VRGeometry {
         Color3f getColor(string pID);
         vector<Vec3d> getRingParams(int rID);
         string getParameterString();
+        void loadParameters(string params, bool gen = true);
 
-        void setColor(string pID, Color3f c);
-        void setRingParams(int rID, vector<double> params);
+        void setColor(string pID, Color3f c, bool gen = true);
+        void setRingParams(int rID, vector<double> params, bool gen = true);
 };
 
 OSG_END_NAMESPACE;

@@ -45,11 +45,12 @@ PyMethodDef VRPyCharacter::methods[] = {
 PyMethodDef VRPyHumanoid::methods[] = {
     {"getSkin", PyWrap( Humanoid, getSkin, "Get skin object", VRSkinPtr ) },
     {"getSkeleton", PyWrap( Humanoid, getSkeleton, "Get skeleton object", VRSkeletonPtr ) },
-    {"setColor", PyWrap( Humanoid, setColor, "Set part color, (partID, color)", void, string, Color3f ) },
-    {"setRingParams", PyWrap( Humanoid, setRingParams, "Set ring parameters", void, int, vector<double> ) },
+    {"setColor", PyWrapOpt( Humanoid, setColor, "Set part color, (partID, color)", "1", void, string, Color3f, bool ) },
+    {"setRingParams", PyWrapOpt( Humanoid, setRingParams, "Set ring parameters", "1", void, int, vector<double>, bool ) },
     {"getColor", PyWrap( Humanoid, getColor, "Get color", Color3f, string ) },
     {"getRingParams", PyWrap( Humanoid, getRingParams, "Get ring params", vector<Vec3d>, int ) },
     {"getParameterString", PyWrap( Humanoid, getParameterString, "Return all parameters as json string", string ) },
+    {"loadParameters", PyWrapOpt( Humanoid, loadParameters, "Load parameters from string", "1", void, string, bool ) },
     {NULL}  /* Sentinel */
 };
 
