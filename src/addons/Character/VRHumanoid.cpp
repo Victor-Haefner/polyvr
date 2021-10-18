@@ -58,6 +58,7 @@ void VRHumanoid::generate() {
     generateHead(data);
     data.apply(ptr());
     updateNormals(true);
+    flipNormals();
     cout << "VRHumanoid::generate " << getName() << " " << data.size() << endl;
 }
 
