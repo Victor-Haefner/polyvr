@@ -9,7 +9,7 @@
           </attachments>
           <constraint persistency="666"/>
         </Object>
-        <Object accept_root="1" aspect="1" at="0.0757408 1.2174 1.7248" at_dir="0" base_name="Default" far="512" fov="1.0472" from="-6.08114 3.6732 -0.965518" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
+        <Object accept_root="1" aspect="1" at="0.0757408 1.2174 1.7248" at_dir="0" base_name="Default" far="512" fov="1.0472" from="1.36916 3.30888 -4.8694" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
           <attachments>
             <Node base_name="transform" name_space="VRAttachment" name_suffix="0" persistency="666" value=""/>
           </attachments>
@@ -21,6 +21,26 @@
   <Cameras activeCam="Default" persistency="666"/>
   <Rendering deferred_rendering="0" fogColor="0.5 0.5 0.5 1" fogParams="0 0 100 0.1" frustum_culling="1" fxaa="0" hmdd="0" marker="0" occlusion_culling="0" persistency="666" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
   <Scripts persistency="666">
+    <Script base_name="clickCharacter" group="editor" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+	
+	#print VR.humanoid.getParameterString()
+
+	if dev.intersect():
+		i = dev.getIntersected()
+		if i.getName() == VR.humanoid.getName():
+			tcs = i.getTexCoords()
+			t = dev.getIntersectionTriangle()
+			rIDs = [ tcs[k][1] for k in t ]
+			rID = int(round((rIDs[0]+rIDs[1]+rIDs[2])/3.0))
+			
+			params = VR.humanoid.getRingParams(rID)
+			VR.sendEditor('setRing|'+str(rID)+'|'+str(params))
+			print i.getName(), rID, params
+</core>
+      <trig type="on_device" dev="mouse" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="4" persistency="666"/>
+    </Script>
     <Script base_name="editorSite" group="editor" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="HTML">
       <core>
 &lt;!DOCTYPE html&gt;
@@ -41,28 +61,79 @@
  			background-color: rgba(200,200,200,255);
  		}
  		
+ 		.ringEditor {
+ 			position: fixed;
+ 			display: flex;
+ 			flex-direction: column;
+ 			align-items: center;
+ 			justify-content: space-around;
+ 			width: 80vw;
+ 			background-color: rgba(200,200,200,255);
+ 		}
+ 		
  		.colorField {
  			font-size:4vh;
  			width: 15vw;
  			height: 100%;
  			background-color: rgba(255,255,255,255);
  		}
+ 		
+ 		.paramSlider {
+ 			width: 70vw;
+ 			height: 6vh;
+ 		}
  	&lt;/style&gt;
  	&lt;script&gt;
  		var websocket = new WebSocket('ws://localhost:5500');
- 		websocket.onopen = function() { send('register|hud'); };
+ 		websocket.onopen = function() { send('register|editor'); };
  		websocket.onerror = function(e) {};
  		websocket.onmessage = function(m) { if(m.data) handle(m.data); };
  		websocket.onclose = function(e) {};
 
  		function send(m) { websocket.send(m); };
- 		function handle(m) { console.log(m); };
+ 		
+ 		function handle(m) { 
+ 			m = m.split('|');
+ 			if (m[0] == 'setColor') setColor(m[1], m[2]);
+ 			if (m[0] == 'setRing') setRing(m[1], m[2]);
+ 		}
+ 		
+ 		function setColor(cID, color) {
+ 			var cc = document.getElementById(cID);
+ 			color = color.split(' ');
+ 			cc.children[1].value = color[0];
+ 			cc.children[2].value = color[1];
+ 			cc.children[3].value = color[2];
+ 		}
+ 		
+ 		var ringID = 0;
+ 		function setRing(rID, params) {
+ 			ringID = rID;
+ 			
+ 			var re = document.getElementById('paramsEditor');
+ 			re.innerHTML = '';
+ 			addLabel('ring params:', re);
+ 			data = JSON.parse(params);
+ 			console.log(data);
+ 			for (var param of data) {
+ 				console.log(param);
+ 				addParam(param[0], param[1], param[2], re);
+ 			}
+ 		}
  		
  		function addLabel(t, p) {
  			var lbl = document.createElement('div');
  			lbl.innerHTML = t;
  			p.appendChild(lbl);
  			return lbl;
+ 		}
+ 		
+ 		function onParamChange(c) {
+ 			params = [];
+ 			for (var i=1; i&lt;c.children.length; i++) {
+ 				params.push(c.children[i].value);
+ 			}
+ 			send('changeParams|'+ringID+'|'+params);
  		}
  		
  		function onFieldChange(c,v) {
@@ -84,19 +155,45 @@
  		function addColorChooser(id, x, y) {
  			var cc = document.createElement('div');
  			cc.className = 'colorChooser';
+ 			cc.id = id;
  			cc.style.left=x+'vw';
  			cc.style.top=y+'vh';
- 			document.body.appendChild(cc)
+ 			document.body.appendChild(cc);
  			var lbl = addLabel(id, cc);
  			var eR = addColorField(id, cc);
  			var eG = addColorField(id, cc);
  			var eB = addColorField(id, cc);
  		}
  		
+ 		function addParam(v, mi, ma, p) {
+ 			var i = document.createElement('input');
+ 			i.className = 'paramSlider';
+ 			i.type = 'range';
+ 			i.min = mi;
+ 			i.max = ma;
+ 			i.step = (ma-mi)/20;
+ 			i.value = v;
+ 			p.appendChild(i);
+ 			i.onchange = function(c){ return function(){ onParamChange(c); }; }(p);
+ 			return i;
+ 		}
+ 		
+ 		function addRingEditor(x, y) {
+ 			var re = document.createElement('div');
+ 			re.className = 'ringEditor';
+ 			re.id = 'paramsEditor';
+ 			re.style.left=x+'vw';
+ 			re.style.top=y+'vh';
+ 			document.body.appendChild(re);
+ 			var lbl = addLabel('ring params:', re);
+ 			addParam(0.5, 0.0, 1.0, re);
+ 		}
+ 		
  		function setup() {
  			addColorChooser('skin', 5, 20);
- 			addColorChooser('shirt', 5, 50);
- 			addColorChooser('pants', 5, 80);
+ 			addColorChooser('shirt', 5, 30);
+ 			addColorChooser('pants', 5, 40);
+ 			addRingEditor(5, 50);
  		}
  	&lt;/script&gt;
  &lt;/head&gt;
@@ -135,11 +232,23 @@
 
 	
 	m = m.split('|')
+	
+	if m[0] == 'register': 
+		VR.clients[m[1]] = dev.getKey()
+		VR.updateEditor()
+	
 	if m[0] == 'changeColor':
 		part = m[1]
 		col = [ float(c) for c in m[2].split(':') ]
 		
 		VR.humanoid.setColor(part, col)
+		VR.character.setSkin(VR.humanoid, VR.humanoid.getSkin(), VR.humanoid.getSkeleton())
+	
+	if m[0] == 'changeParams':
+		rID = int(m[1])
+		params = [ float(v) for v in m[2].split(',') ]
+		print rID, params
+		VR.humanoid.setRingParams(rID, params)
 		VR.character.setSkin(VR.humanoid, VR.humanoid.getSkin(), VR.humanoid.getSkeleton())
 	
 </core>
@@ -244,10 +353,21 @@
 </core>
       <trig type="on_device" dev="mouse" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="11" persistency="666"/>
     </Script>
+    <Script base_name="sendEditor" group="editor" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+
+	k = VR.clients['editor']
+	s = VR.find('server1')
+	s.answer(k, msg)
+</core>
+      <arg type="NoneType" value="None" base_name="msg" name_space="sendEditor" name_suffix="0" persistency="666"/>
+    </Script>
     <Script base_name="setupEditor" group="editor" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	import VR
 
+	VR.clients = {}
 	
 
 	if hasattr(VR, 'editor'): VR.editor.destroy()
@@ -316,6 +436,16 @@
 	# - add shoulder constraint
 	# - add elbow constraint
 	# - probably needs torsion constraints/springs etc..
+</core>
+    </Script>
+    <Script base_name="updateEditor" group="editor" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+
+	for cID in ['skin', 'shirt', 'pants']:
+		c = VR.humanoid.getColor(cID)
+		r,g,b = str(c[0]), str(c[1]), str(c[2])
+		VR.sendEditor('setColor|'+cID+'|'+r+' '+g+' '+b)
 </core>
     </Script>
   </Scripts>

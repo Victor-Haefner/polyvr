@@ -57,6 +57,8 @@ class VRGeoData {
         int getIndex(int i, int a = PositionsIndex);
         Pnt3d getPosition(int i);
         Vec3d getNormal(int i);
+        Vec2d getTexCoord(int i);
+        Vec2d getTexCoord2(int i);
         Color4f getColor(int i);
         Color3f getColor3(int i);
         int getNIndices();

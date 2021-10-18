@@ -46,6 +46,10 @@ PyMethodDef VRPyHumanoid::methods[] = {
     {"getSkin", PyWrap( Humanoid, getSkin, "Get skin object", VRSkinPtr ) },
     {"getSkeleton", PyWrap( Humanoid, getSkeleton, "Get skeleton object", VRSkeletonPtr ) },
     {"setColor", PyWrap( Humanoid, setColor, "Set part color, (partID, color)", void, string, Color3f ) },
+    {"setRingParams", PyWrap( Humanoid, setRingParams, "Set ring parameters", void, int, vector<double> ) },
+    {"getColor", PyWrap( Humanoid, getColor, "Get color", Color3f, string ) },
+    {"getRingParams", PyWrap( Humanoid, getRingParams, "Get ring params", vector<Vec3d>, int ) },
+    {"getParameterString", PyWrap( Humanoid, getParameterString, "Return all parameters as json string", string ) },
     {NULL}  /* Sentinel */
 };
 

@@ -1,6 +1,7 @@
 #include "VRHumanoid.h"
 #include "VRSkeleton.h"
 #include "VRSkin.h"
+#include "core/utils/toString.h"
 #include "core/objects/geometry/VRGeoData.h"
 
 using namespace OSG;
@@ -9,6 +10,14 @@ VRHumanoid::VRHumanoid(string name) : VRGeometry(name) {
     colors["skin"] = Color3f(1,0.7,0.4);
     colors["shirt"] = Color3f(1,1,0);
     colors["pants"] = Color3f(0,0,1);
+
+    ringParams[30] = { Vec3d(0.1, 0.05, 0.3), Vec3d(0.20, 0.05, 0.3), Vec3d(0.255, 0.1, 0.5) };
+    ringParams[31] = { Vec3d(0.1, 0.05, 0.3), Vec3d(0.15, 0.05, 0.3), Vec3d(0.225, 0.1, 0.5) };
+    ringParams[32] = { Vec3d(0.2, 0.05, 0.4), Vec3d(0.22, 0.05, 0.3), Vec3d(0.150, 0.1, 0.5) };
+
+    ringParams[40] = { Vec3d(0.1, 0.05, 0.3), Vec3d(0.20, 0.05, 0.3), Vec3d(0.34, 0.1, 0.5) };
+    ringParams[41] = { Vec3d(0.1, 0.05, 0.3), Vec3d(0.15, 0.05, 0.3), Vec3d(0.30, 0.1, 0.5) };
+    ringParams[42] = { Vec3d(0.1, 0.05, 0.3), Vec3d(0.22, 0.05, 0.3), Vec3d(0.26, 0.1, 0.5) };
 
     skeleton = VRSkeleton::create();
     skeleton->setupSimpleHumanoid();
@@ -53,15 +62,15 @@ void VRHumanoid::generateTorso(VRGeoData& data) {
     double D4 = 0.2; // shoulders
 
     auto bones = skeleton->getBones();
-    Vec3d n(0,1,0);
+    Vec3d n(0,-1,0);
 
     Color3f col = colors["shirt"];
 
-    auto addRect = [&](float h, float b, float d, int bID, vector<float> t) {
-        int i1 = data.pushVert(Vec3d(-b*0.5,h,-d*0.5), n, col, Vec2d(0,0));
-        int i2 = data.pushVert(Vec3d( b*0.5,h,-d*0.5), n, col, Vec2d(0,0));
-        int i3 = data.pushVert(Vec3d( b*0.5,h, d*0.5), n, col, Vec2d(0,0));
-        int i4 = data.pushVert(Vec3d(-b*0.5,h, d*0.5), n, col, Vec2d(0,0));
+    auto addRect = [&](float h, float b, float d, int bID, int rID, vector<float> t) {
+        int i1 = data.pushVert(Vec3d(-b*0.5,h,-d*0.5), n, col, Vec2d(0,rID));
+        int i2 = data.pushVert(Vec3d( b*0.5,h,-d*0.5), n, col, Vec2d(0,rID));
+        int i3 = data.pushVert(Vec3d( b*0.5,h, d*0.5), n, col, Vec2d(0,rID));
+        int i4 = data.pushVert(Vec3d(-b*0.5,h, d*0.5), n, col, Vec2d(0,rID));
         auto& bone = bones[bID];
         for (int i=0; i<4; i++) skin->setMap(bone.ID, t);
         return Vec4i(i1,i2,i3,i4);
@@ -75,13 +84,13 @@ void VRHumanoid::generateTorso(VRGeoData& data) {
     };
 
     int bID = 12;
-    Vec4i i0 = addRect(O, 0.1, 0.22, bID, {1});
-    Vec4i i1 = addRect(O+0.14, B1, D1, bID, {1});
-    Vec4i i2 = addRect(O+H*0.34, B2, D2, bID, {1});
-    Vec4i i3 = addRect(O+H*0.57, B3, D3, bID, {1});
-    Vec4i i4 = addRect(O+H*0.75, B4*0.9, D4, bID, {1});
-    Vec4i i5 = addRect(O+H*0.94, B4, D4, bID, {1});
-    Vec4i i6 = addRect(O+H, 0.15, D4*0.8, bID, {1});
+    Vec4i i0 = addRect(O, 0.1, 0.22, bID, 10, {1});
+    Vec4i i1 = addRect(O+0.14, B1, D1, bID, 11, {1});
+    Vec4i i2 = addRect(O+H*0.34, B2, D2, bID, 12, {1});
+    Vec4i i3 = addRect(O+H*0.57, B3, D3, bID, 13, {1});
+    Vec4i i4 = addRect(O+H*0.75, B4*0.9, D4, bID, 14, {1});
+    Vec4i i5 = addRect(O+H*0.94, B4, D4, bID, 15, {1});
+    Vec4i i6 = addRect(O+H, 0.15, D4*0.8, bID, 16, {1});
 
     joinRects(i0, i1, true);
     joinRects(i1, i2);
@@ -104,7 +113,7 @@ void VRHumanoid::generateHead(VRGeoData& data) {
 
     Color3f col = colors["skin"];
 
-    auto addRing = [&](float h, vector<float> rads) {
+    auto addRing = [&](float h, int rID, vector<float> rads) {
         vector<int> ids;
         int N = (rads.size()-1)*2;
         float da = 2*Pi/N;
@@ -112,7 +121,7 @@ void VRHumanoid::generateHead(VRGeoData& data) {
             double a = da*i;
             int ri = i < rads.size() ? i : -i+2*(rads.size()-1);
             double r = rads[ri];
-            int id = data.pushVert(Vec3d(sin(a)*r,h,cos(a)*r), n, col, Vec2d(0,0));
+            int id = data.pushVert(Vec3d(sin(a)*r,h,cos(a)*r), n, col, Vec2d(0,rID));
             skin->addMap(bone.ID, 1);
             ids.push_back(id);
         }
@@ -140,14 +149,14 @@ void VRHumanoid::generateHead(VRGeoData& data) {
         }
     };
 
-    auto ids1 = addRing(O, {0.04, 0.06, 0.06, 0.07});
-    auto ids2 = addRing(O+H1, {0.04, 0.06, 0.06, 0.07});
-    auto ids3 = addRing(O+H1, {0.08, 0.08, 0.08, 0.08});
-    auto ids4 = addRing(O+H1+H2*0.3, {0.1, 0.09, 0.09, 0.1});
-    auto ids5 = addRing(O+H1+H2*0.5, {0.08, 0.09, 0.09, 0.1});
-    auto ids6 = addRing(O+H1+H2*0.75, {0.09, 0.09, 0.09, 0.095});
-    auto ids7 = addRing(O+H1+H2*0.9, {0.085, 0.07, 0.07, 0.085});
-    auto ids8 = addRing(O+H1+H2, {0.05, 0.04, 0.04, 0.05});
+    auto ids1 = addRing(O, 20, {0.04, 0.06, 0.06, 0.07});
+    auto ids2 = addRing(O+H1, 21, {0.04, 0.06, 0.06, 0.07});
+    auto ids3 = addRing(O+H1, 22, {0.08, 0.08, 0.08, 0.08});
+    auto ids4 = addRing(O+H1+H2*0.3, 23, {0.1, 0.09, 0.09, 0.1});
+    auto ids5 = addRing(O+H1+H2*0.5, 24, {0.08, 0.09, 0.09, 0.1});
+    auto ids6 = addRing(O+H1+H2*0.75, 25, {0.09, 0.09, 0.09, 0.095});
+    auto ids7 = addRing(O+H1+H2*0.9, 26, {0.085, 0.07, 0.07, 0.085});
+    auto ids8 = addRing(O+H1+H2, 27, {0.05, 0.04, 0.04, 0.05});
 
     joinRings(ids1, ids2);
     joinRings(ids2, ids3);
@@ -163,21 +172,24 @@ void VRHumanoid::generateHead(VRGeoData& data) {
 void VRHumanoid::generateLegs(VRGeoData& data) {
     float L1 = 0.38;
     float L2 = 0.35;
-    float W = 0.15; // x displaycement of legs
 
     Vec4i hipLIDs(4, 0, 3, 7);
     Vec4i hipRIDs(1, 5, 6, 2);
 
     auto bones = skeleton->getBones();
-    Vec3d n(0,1,0);
+    Vec3d n(0,-1,0);
 
     Color3f col = colors["pants"];
 
-    auto addRect = [&](float h, float b, float d, float x, int bID, vector<float> t) {
-        int i1 = data.pushVert(Vec3d(-b*0.5+x,h,-d*0.5), n, col, Vec2d(0,0));
-        int i2 = data.pushVert(Vec3d( b*0.5+x,h,-d*0.5), n, col, Vec2d(0,0));
-        int i3 = data.pushVert(Vec3d( b*0.5+x,h, d*0.5), n, col, Vec2d(0,0));
-        int i4 = data.pushVert(Vec3d(-b*0.5+x,h, d*0.5), n, col, Vec2d(0,0));
+    auto addRect = [&](float h, float D, int bID, int rID, vector<float> t) {
+        auto params = ringParams[rID];
+        float b = params[0][0];
+        float d = params[1][0];
+        float x = params[2][0]*D;
+        int i1 = data.pushVert(Vec3d(-b*0.5+x,h,-d*0.5), n, col, Vec2d(0,rID));
+        int i2 = data.pushVert(Vec3d( b*0.5+x,h,-d*0.5), n, col, Vec2d(0,rID));
+        int i3 = data.pushVert(Vec3d( b*0.5+x,h, d*0.5), n, col, Vec2d(0,rID));
+        int i4 = data.pushVert(Vec3d(-b*0.5+x,h, d*0.5), n, col, Vec2d(0,rID));
         auto& bone = bones[bID];
         for (int i=0; i<4; i++) skin->setMap(bone.ID, t);
         return Vec4i(i1,i2,i3,i4);
@@ -191,38 +203,42 @@ void VRHumanoid::generateLegs(VRGeoData& data) {
     };
 
     auto addLeg = [&](float x, int b0) {
-        auto i1 = addRect(0, 0.1, 0.2, x*1.7, b0, {1});
-        auto i2 = addRect(L1, 0.1, 0.15, x*1.5, b0+2, {1});
-        auto i3 = addRect(L1+L2, 0.2, 0.22, x, b0+1, {1});
+        auto i1 = addRect(0, x, b0, 30, {1});
+        auto i2 = addRect(L1, x, b0+2, 31, {1});
+        auto i3 = addRect(L1+L2, x, b0+1, 32, {1});
         joinRects(i1, i2);
         joinRects(i2, i3);
         joinRects(i3, x<0? hipLIDs : hipRIDs);
+        data.pushQuad(i1[0], i1[1], i1[2], i1[3]);
     };
 
-    addLeg(-W, 3);
-    addLeg( W, 0);
+    addLeg(-1, 3);
+    addLeg( 1, 0);
 }
 
 void VRHumanoid::generateArms(VRGeoData& data) {
     float L0 = 0.7;
     float L1 = 1.1;
     float L2 = 1.3;
-    float W = 0.2; // x displaycement of arms
     int k = 4*4;
 
     Vec4i shoulderLIDs(k+4, k+0, k+3, k+7);
     Vec4i shoulderRIDs(k+1, k+5, k+6, k+2);
 
     auto bones = skeleton->getBones();
-    Vec3d n(0,1,0);
+    Vec3d n(0,-1,0);
 
     Color3f col = colors["skin"];
 
-    auto addRect = [&](float h, float b, float d, float x, int bID, vector<float> t) {
-        int i1 = data.pushVert(Vec3d(-b*0.5+x,h,-d*0.5), n, col, Vec2d(0,0));
-        int i2 = data.pushVert(Vec3d( b*0.5+x,h,-d*0.5), n, col, Vec2d(0,0));
-        int i3 = data.pushVert(Vec3d( b*0.5+x,h, d*0.5), n, col, Vec2d(0,0));
-        int i4 = data.pushVert(Vec3d(-b*0.5+x,h, d*0.5), n, col, Vec2d(0,0));
+    auto addRect = [&](float h, float D, int bID, int rID, vector<float> t) {
+        auto params = ringParams[rID];
+        float b = params[0][0];
+        float d = params[1][0];
+        float x = params[2][0]*D;
+        int i1 = data.pushVert(Vec3d(-b*0.5+x,h,-d*0.5), n, col, Vec2d(0,rID));
+        int i2 = data.pushVert(Vec3d( b*0.5+x,h,-d*0.5), n, col, Vec2d(0,rID));
+        int i3 = data.pushVert(Vec3d( b*0.5+x,h, d*0.5), n, col, Vec2d(0,rID));
+        int i4 = data.pushVert(Vec3d(-b*0.5+x,h, d*0.5), n, col, Vec2d(0,rID));
         auto& bone = bones[bID];
         for (int i=0; i<4; i++) skin->setMap(bone.ID, t);
         return Vec4i(i1,i2,i3,i4);
@@ -236,21 +252,49 @@ void VRHumanoid::generateArms(VRGeoData& data) {
     };
 
     auto addArm = [&](float x, int b0) {
-        auto i1 = addRect(L0, 0.1, 0.2, x*1.7, b0, {1});
-        auto i2 = addRect(L1, 0.1, 0.15, x*1.5, b0+2, {1});
-        auto i3 = addRect(L2, 0.1, 0.22, x*1.3, b0+1, {1});
+        auto i1 = addRect(L0, x, b0  , 40, {1});
+        auto i2 = addRect(L1, x, b0+2, 41, {1});
+        auto i3 = addRect(L2, x, b0+1, 42, {1});
         joinRects(i1, i2);
         joinRects(i2, i3);
         joinRects(i3, x<0? shoulderLIDs : shoulderRIDs);
+        data.pushQuad(i1[0], i1[1], i1[2], i1[3]);
     };
 
-    addArm(-W, 9);
-    addArm( W, 6);
+    addArm(-1, 9);
+    addArm( 1, 6);
 }
+
+string VRHumanoid::getParameterString() {
+    string data = "{\n";
+
+    data += "\t\"colors\": {\n";
+    for (auto col : colors) {
+        data += "\t\t\""+col.first+"\": \""+toString(col.second)+"\",\n";
+    }
+    data += "\t}\n";
+
+    data += "\t\"rings\": {\n";
+    for (auto ring : ringParams) {
+        data += "\t\t\""+toString(ring.first)+"\": \""+toString(ring.second)+"\",\n";
+    }
+    data += "\t}\n";
+
+    return data+"}";
+}
+
+Color3f VRHumanoid::getColor(string pID) { return colors[pID]; }
+vector<Vec3d> VRHumanoid::getRingParams(int rID) { return ringParams[rID]; }
 
 void VRHumanoid::setColor(string pID, Color3f c) {
     colors[pID] = c;
     generate();
 }
 
+void VRHumanoid::setRingParams(int rID, vector<double> params) {
+    for (int i=0; i<params.size() && i<ringParams[rID].size(); i++) {
+        ringParams[rID][i][0] = params[i];
+    }
+    generate();
+}
 

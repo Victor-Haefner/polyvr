@@ -52,7 +52,8 @@ void VRSkin::applyMapping(VRGeometryPtr hull) {
     cout << "applyMapping " << hull->getName() << " " << data.size() << endl;
 
     for (int i=0; i<data.size(); i++) {
-        data.setTexCoord(i, Vec2d(i+0.1,0));
+        auto tc = data.getTexCoord(i);
+        data.setTexCoord(i, Vec2d(i+0.1,tc[1]));
         cout << " applyMapping " << i << endl;
     }
 }

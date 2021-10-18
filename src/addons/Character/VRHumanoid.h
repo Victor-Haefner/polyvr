@@ -13,6 +13,7 @@ class VRHumanoid : public VRGeometry {
         VRSkinPtr skin;
 
         map<string, Color3f> colors;
+        map<int, vector<Vec3d>> ringParams;
 
         void generateTorso(VRGeoData& data);
         void generateLegs(VRGeoData& data);
@@ -31,7 +32,12 @@ class VRHumanoid : public VRGeometry {
         VRSkinPtr getSkin();
         VRSkeletonPtr getSkeleton();
 
+        Color3f getColor(string pID);
+        vector<Vec3d> getRingParams(int rID);
+        string getParameterString();
+
         void setColor(string pID, Color3f c);
+        void setRingParams(int rID, vector<double> params);
 };
 
 OSG_END_NAMESPACE;
