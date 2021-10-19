@@ -3,7 +3,7 @@
   <Objects>
     <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" visible="4294967295">
       <Object ambient="0.3 0.3 0.3 1" base_name="light" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" shadowVolume="1e+06 1e+06 1e+06 -1e+06 -1e+06 -1e+06 1" specular="0.1 0.1 0.1 1" type="Light" visible="4294967295">
-        <Object accept_root="1" aspect="1" at="-0.121089 -0.219678 0.613726" at_dir="0" base_name="Default" far="512" fov="1.0472" from="-1.49739 0.636377 0.436649" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="4294967295">
+        <Object accept_root="1" aspect="1" at="0.0226822 0.224088 0.339247" at_dir="0" base_name="Default" far="512" fov="1.0472" from="0.673979 0.301385 0.552933" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="4294967295">
           <attachments>
             <Node base_name="transform" name_space="VRAttachment" name_suffix="0" persistency="666" value=""/>
           </attachments>
@@ -21,6 +21,13 @@
   <Cameras activeCam="Default" persistency="666"/>
   <Rendering deferred_rendering="0" fogColor="0.5 0.5 0.5 1" fogParams="0 0 100 0.1" frustum_culling="1" fxaa="0" hmdd="0" marker="0" occlusion_culling="0" persistency="666" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
   <Scripts persistency="666">
+    <Script base_name="Script" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+
+	VR.sim.printSystem()
+</core>
+    </Script>
     <Script base_name="clickTool" group="tools" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	import VR
@@ -264,8 +271,8 @@
 	VR.pumpPrototype = VR.Transform('pump')
 	c1 = VR.createPrimitive('core1', 'Pill 0.22 0.09', VR.pumpPrototype, VR.materials['metal'])
 	c2 = VR.createPrimitive('core2', 'Box 0.2 0.2 0.2', VR.pumpPrototype, VR.materials['metal'])
-	c1.setTransform([0,0.1,0], [0,1,0], [0,0,1])
-	c2.setTransform([0,0.1,0])
+	c1.setTransform([0,0.2,0], [0,1,0], [0,0,1])
+	c2.setTransform([0,0.2,0])
 
 	VR.tankPrototype = VR.Transform('tank')
 	c = VR.createPrimitive('core', 'Pill 0.22 0.09', VR.tankPrototype, VR.materials['metal'])
@@ -285,7 +292,7 @@
 		b.setPose(pose)
 		b.addTag('switch')
 		
-	addSwitch(VR.pumpPrototype, VR.Pose([0.05, 0.2, 0.05]))
+	addSwitch(VR.pumpPrototype, VR.Pose([0.05, 0.3, 0.05]))
 	addSwitch(VR.valvePrototype, VR.Pose([0, 0.3, 0]))
 	
 
@@ -307,10 +314,10 @@
 	addAnchor(VR.tankPrototype, VR.Pose([0,0.0,0], [0,1,0], [0,0,1]))
 	addAnchor(VR.tankPrototype, VR.Pose([0,0.4,0], [0,-1,0], [0,0,1]))
 
-	addAnchor(VR.pumpPrototype, VR.Pose([0.1,0.1,0], [-1,0,0]))
-	addAnchor(VR.pumpPrototype, VR.Pose([-0.1,0.1,0], [1,0,0]))
-	addAnchor(VR.pumpPrototype, VR.Pose([0,0.0,0], [0,1,0], [0,0,1]))
-	addAnchor(VR.pumpPrototype, VR.Pose([0,0.2,0], [0,-1,0], [0,0,1]))
+	addAnchor(VR.pumpPrototype, VR.Pose([0.1,0.2,0], [-1,0,0]))
+	addAnchor(VR.pumpPrototype, VR.Pose([-0.1,0.2,0], [1,0,0]))
+	addAnchor(VR.pumpPrototype, VR.Pose([0,0.1,0], [0,1,0], [0,0,1]))
+	addAnchor(VR.pumpPrototype, VR.Pose([0,0.3,0], [0,-1,0], [0,0,1]))
 
 	addAnchor(VR.valvePrototype, VR.Pose([0,0.2, 0.025], [0,0,-1]))
 	addAnchor(VR.valvePrototype, VR.Pose([0,0.2,-0.025], [0,0, 1]))
@@ -422,6 +429,42 @@
  	addHud( 'hudSite', 1.0,0.1, 0,1, VR.hud )
 </core>
     </Script>
+    <Script base_name="test" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+	
+	VR.init()
+
+	def add(template, pose):
+		asset = template.duplicate()
+		asset.setPose(pose)
+		asset.addTag('part')
+		VR.environment.addChild(asset)
+		
+		nID = -1
+		n = asset.getName()
+		if 'tank' in n: nID = VR.sim.addNode(n, pose, 'Tank', {'pressure':1.0, 'volume':1.0, 'density':1.0})
+		if 'pump' in n: nID = VR.sim.addNode(n, pose, 'Pump', {'performance':0.0, 'isOpen':0})
+		if 'valve' in n: nID = VR.sim.addNode(n, pose, 'Valve', {'state':0, 'radius':0.01})
+		if nID &gt;= 0: asset.setTagValue('simNode', str(nID))
+		return asset
+
+	def getAnchor(obj, i):
+		anchors = obj.getChildrenWithTag('anchor', 1, 1)
+		return anchors[i]
+
+	t1 = add(VR.tankPrototype,  VR.Pose([-1.0,0.5,0]))
+	t2 = add(VR.tankPrototype,  VR.Pose([ 1.0,0.5,0]))
+	pp = add(VR.pumpPrototype,  VR.Pose([ 0.0,0.5,0]))
+	v1 = add(VR.valvePrototype, VR.Pose([-0.5,0.5,0], [-1,0,0]))
+	v2 = add(VR.valvePrototype, VR.Pose([ 0.5,0.5,0], [-1,0,0]))
+	
+	VR.createPipe(getAnchor(t1,0), getAnchor(v1,1))
+	VR.createPipe(getAnchor(v1,0), getAnchor(pp,1))
+	VR.createPipe(getAnchor(pp,0), getAnchor(v2,1))
+	VR.createPipe(getAnchor(v2,0), getAnchor(t2,0))
+</core>
+    </Script>
     <Script base_name="updateTool" group="tools" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	import VR
@@ -455,6 +498,7 @@
 	if intersected: pipe = intersected.hasAncestorWithTag('pipe')
 		
 	if not hasattr(VR, 'toDelete'): VR.toDelete = None
+	if not hasattr(VR, 'activeTool'): VR.activeTool = None
 	if (part or pipe) and VR.activeTool == 'Delete':
 		obj = part
 		if pipe: obj = pipe

@@ -63,9 +63,9 @@ void VRPipeSegment::handleTank(double& otherPressure, double otherVolume, double
     //cout << " ... " <<  " P: " << pressure << "->" << pressure1 << "->" << pressure2 << " pipe: " << this << endl;
 }
 
-double VRPipeSegment::computeExchange(double hole, VRPipeSegmentPtr other, double dt, bool p1) {
+double VRPipeSegment::computeExchange(double hole, VRPipeSegmentPtr other, double dt, bool p1, bool op1) {
     double pressure = p1 ? pressure1 : pressure2;
-    double otherPressure = p1 ? other->pressure2 : other->pressure1;
+    double otherPressure = op1 ? other->pressure1 : other->pressure2;
     double dP = pressure - otherPressure;
     hole = min(hole, min(this->area, other->area));
     double m = dP*hole*dt*gasSpeed; // energy through the opening
@@ -79,15 +79,15 @@ double VRPipeSegment::computeExchange(double hole, VRPipeSegmentPtr other, doubl
     return m;
 }
 
-void VRPipeSegment::handleValve(double area, VRPipeSegmentPtr other, double dt, bool p1) {
-    double m = computeExchange(area, other, dt, p1);
+void VRPipeSegment::handleValve(double area, VRPipeSegmentPtr other, double dt, bool p1, bool op1) {
+    double m = computeExchange(area, other, dt, p1, op1);
     addEnergy(-m, other->density, p1);
-    other->addEnergy(m, density, !p1);
+    other->addEnergy(m, density, op1);
 }
 
-void VRPipeSegment::handlePump(double performance, double maxPressure, bool isOpen, VRPipeSegmentPtr other, double dt, bool p1) {
+void VRPipeSegment::handlePump(double performance, double maxPressure, bool isOpen, VRPipeSegmentPtr other, double dt, bool p1, bool op1) {
     double pressure = p1 ? pressure1 : pressure2;
-    double otherPressure = p1 ? other->pressure2 : other->pressure1;
+    double otherPressure = op1 ? other->pressure1 : other->pressure2;
     if (pressure < 1e-6) return; // min pressure
     if (otherPressure > maxPressure) return;
 
@@ -96,7 +96,7 @@ void VRPipeSegment::handlePump(double performance, double maxPressure, bool isOp
     //if (isOpen) m = max(m, computeExchange(area*0.1, other, dt, p1)); // minimal exchange if pump is open
     m = min(m, pressure*volume); // pump out not more than available!
     addEnergy(-m, other->density, p1);
-    other->addEnergy(m, density, !p1);
+    other->addEnergy(m, density, op1);
     //cout << " pump " << dP << " m " << m << " v " << v << endl;
 }
 
@@ -169,6 +169,16 @@ void VRPipeSystem::remSegment(int eID) {
     segments.erase(eID);
 }
 
+bool VRPipeSystem::goesIn(VRPipeSegmentPtr s, int nID) {
+    auto edge = graph->getEdge(s->eID);
+    return bool(edge.to == nID);
+}
+
+bool VRPipeSystem::goesOut(VRPipeSegmentPtr s, int nID) {
+    auto edge = graph->getEdge(s->eID);
+    return bool(edge.from == nID);
+}
+
 vector<VRPipeSegmentPtr> VRPipeSystem::getPipes(int nID) {
     vector<VRPipeSegmentPtr> res;
     for (auto e : graph->getInEdges (nID) ) res.push_back(segments[e.ID]);
@@ -194,7 +204,10 @@ void VRPipeSystem::printSystem() {
         auto entity = n.second->entity;
         double P = entity->getValue("pressure", 1.0);
         double V = entity->getValue("volume", 1.0);
-        if (entity->is_a("Tank")) cout << " tank: P " << P << " V " << V << endl;
+        if (entity->is_a("Tank")) cout << " tank (n" << n.first << "): P " << P << " V " << V << endl;
+        else cout << " " << entity->getName() << " (n" << n.first << ")" << endl;
+        for (auto nIn : getInPipes (n.first)) cout << "  in  e" << nIn->eID << endl;
+        for (auto nOt : getOutPipes(n.first)) cout << "  out e" << nOt->eID << endl;
         totalEnergy += P*V;
     }
 
@@ -202,7 +215,7 @@ void VRPipeSystem::printSystem() {
         double P1 = s.second->pressure1;
         double P2 = s.second->pressure2;
         double V = s.second->volume;
-        cout << " pipe: P " << P1 << "->" << P2 << " \tFl: " << s.second->flow << endl;
+        cout << " pipe (e" << s.second->eID << "): P " << P1 << "->" << P2 << " \tFl: " << s.second->flow << endl;
         totalEnergy += (P1+P2)*0.5*V;
     }
     cout << " total energy: " << totalEnergy << endl;
@@ -272,15 +285,15 @@ void VRPipeSystem::update() {
             }
 
             if (entity->is_a("Pump")) {
+                double pumpPerformance = entity->getValue("performance", 0.0);
+                double pumpMaxPressure = entity->getValue("maxPressure", 0.0);
+                bool pumpIsOpen = entity->getValue("isOpen", false);
+
                 auto pipes = getPipes(nID);
                 if (pipes.size() != 2) continue;
                 auto pipe1 = pipes[0];
                 auto pipe2 = pipes[1];
-
-                double pumpPerformance = entity->getValue("performance", 0.0);
-                double pumpMaxPressure = entity->getValue("maxPressure", 0.0);
-                bool pumpIsOpen= entity->getValue("isOpen", false);
-                pipe1->handlePump(pumpPerformance, pumpMaxPressure, pumpIsOpen, pipe2, dt, false);
+                pipe1->handlePump(pumpPerformance, pumpMaxPressure, pumpIsOpen, pipe2, dt, !goesIn(pipe1, nID), goesOut(pipe2, nID));
                 continue;
             }
 
@@ -288,13 +301,13 @@ void VRPipeSystem::update() {
                 bool valveState = entity->getValue("state", false);
                 double valveRadius = entity->getValue("radius", 0.0);
                 if (valveState == 0) continue; // valve closed
+
                 auto pipes = getPipes(nID);
                 if (pipes.size() != 2) continue;
-
                 auto pipe1 = pipes[0];
                 auto pipe2 = pipes[1];
                 double area = valveRadius*valveRadius*Pi;
-                pipe1->handleValve(area, pipe2, dt, false);
+                pipe1->handleValve(area, pipe2, dt, !goesIn(pipe1, nID), goesOut(pipe2, nID));
                 continue;
             }
 
@@ -304,7 +317,7 @@ void VRPipeSystem::update() {
                 if (pipes.size() != 1) continue;
                 auto pipe = pipes[0];
 
-                bool p1 = getOutPipes(nID).size() == 1;
+                bool p1 = goesOut(pipe, nID);
 
                 double area = outletRadius*outletRadius*Pi;
                 if (p1) pipe->pressure1 -= (pipe->pressure1-1.0)*area*dt;

@@ -29,7 +29,7 @@ class VRPipeSegment {
         double pressure1 = 1.0;
         double pressure2 = 1.0;
 
-        double computeExchange(double hole, VRPipeSegmentPtr other, double dt, bool p1);
+        double computeExchange(double hole, VRPipeSegmentPtr other, double dt, bool p1, bool op1);
 
     public:
         VRPipeSegment(int eID, double radius, double length);
@@ -38,8 +38,8 @@ class VRPipeSegment {
         static VRPipeSegmentPtr create(int eID, double radius, double length);
 
         void handleTank(double& pressure, double otherVolume, double& otherDensity, double dt, bool p1);
-        void handleValve(double area, VRPipeSegmentPtr other, double dt, bool p1);
-        void handlePump(double performance, double maxPressure, bool isOpen, VRPipeSegmentPtr other, double dt, bool p1);
+        void handleValve(double area, VRPipeSegmentPtr other, double dt, bool p1, bool op1);
+        void handlePump(double performance, double maxPressure, bool isOpen, VRPipeSegmentPtr other, double dt, bool p1, bool op1);
 
         void addEnergy(double m, double d, bool p1);
         void setLength(double l);
@@ -80,6 +80,8 @@ class VRPipeSystem : public VRGeometry {
         vector<VRPipeSegmentPtr> getInPipes(int nID);
         vector<VRPipeSegmentPtr> getOutPipes(int nID);
 
+        bool goesIn(VRPipeSegmentPtr s, int nID);
+        bool goesOut(VRPipeSegmentPtr s, int nID);
         VREntityPtr getEntity(string name);
 
 	public:
