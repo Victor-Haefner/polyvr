@@ -1011,19 +1011,30 @@ void VRGuiScripts::on_convert_cpp_clicked() {
         return i;
     };
 
-    auto countTrailingEmptyChars = [](const string& txt) {
+    auto countTrailingEmptyChars = [](const string& txt, int i0) {
         int i=0;
-        int N = txt.size()-1;
-        while (txt[N-i] == '\n' || txt[N-i] == '\t') i++;
+        while (txt[i0-i] == '\n' || txt[i0-i] == '\t') i++;
         return i;
+    };
+
+    auto findAndReplace = [](string& line, string s1, string s2) {
+        int p = line.find(s1);
+        if (p != string::npos) line.replace(p, s1.size(), s2);
     };
 
     const string core = script->getHead() + script->getCore();
     string newCore = "";
 
     int lastTabCount = 0;
+    bool lastLineEmpty = 0;
     size_t k1 = 0;
     size_t k2 = 0;
+
+    map<string, string> lineStarts;
+    lineStarts["def "] = "void ";
+    lineStarts["if "] = "if (";
+    lineStarts["for "] = "for (";
+    lineStarts["while "] = "while (";
 
     auto lines = splitString(core, '\n');
     for (int i=0; i<lines.size(); i++) {
@@ -1041,34 +1052,55 @@ void VRGuiScripts::on_convert_cpp_clicked() {
 
         if (line[N2-1] == ':') {
             line[N2-1] = ' ';
-            line += "{";
+            if (line[N2-1] == ')') line += "{";
+            else line += ") {";
+
             N2 = line.size();
             addSemicolon = false;
         }
 
-        if ( subString(line, tabCount, 4) == "def " ) {
-            line = line.replace(tabCount, 4, "void ");
-            N2 = line.size();
+        for (auto ls : lineStarts) {
+            int k = ls.first.size();
+            if ( subString(line, tabCount, k) == ls.first ) {
+                line = line.replace(tabCount, k, ls.second);
+                N2 = line.size();
+
+                if (ls.first != "def ") {
+                    int p = line.find(':');
+                    if (p != string::npos) line[p] = ')';
+                }
+
+                if (ls.first == "for ") findAndReplace(line, " in ", " : ");
+            }
         }
 
-        // find and replace "VR." with "VR"
-
-        if (tabCount < lastTabCount && !emptyLine) {
-            line = "}\n"+line;
-        }
-
+        findAndReplace(line, "#", "//");
         if (contains(line, "hasattr")) line = "//"+line;
 
         if (addSemicolon) line += ";";
 
-        lastTabCount = tabCount;
+        // find and replace "VR." with "VR"
+
+        if (!emptyLine && tabCount<lastTabCount) { // closing brackets
+            int N = newCore.size()-1;
+            int nec = countTrailingEmptyChars(newCore, N);
+            string whitespace = subString(newCore, N-nec, nec);
+            newCore = subString(newCore, 0, N+1-nec);
+            for (int t=lastTabCount; t>tabCount; t--) {
+                newCore += "\n"+string(t-1, '\t') + "}";
+            }
+            newCore += whitespace + "\n";
+        }
+
+        if (!emptyLine) lastTabCount = tabCount;
+        lastLineEmpty = emptyLine;
         k1 += N1;
         k2 += N2;
 
         if (!skipLine) newCore += line+"\n";
     }
 
-    int nec = countTrailingEmptyChars(newCore);
+    int nec = countTrailingEmptyChars(newCore, newCore.size()-1);
     newCore = subString(newCore, 0, newCore.size()-nec);
     if (newCore[newCore.size()-1] != '}') newCore += "\n}";
     VRConsoleWidget::get( "Console" )->write( newCore );
