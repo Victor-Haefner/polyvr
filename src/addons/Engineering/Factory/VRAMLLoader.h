@@ -3,6 +3,7 @@
 
 #include <OpenSG/OSGConfig.h>
 #include <string>
+#include <map>
 
 #include "core/objects/VRObjectFwd.h"
 #include "core/utils/VRUtilsFwd.h"
@@ -16,9 +17,11 @@ class VRAMLLoader {
     private:
         VROntologyPtr ontology;
         VRTransformPtr scene;
+        string AMLDir;
+        map<string, VRObjectPtr> assets;
 
-        void processElement(XMLElementPtr node, VRObjectPtr obj);
-        void readNode(XMLElementPtr node, VRObjectPtr obj);
+        void processElement(XMLElementPtr node, VRTransformPtr obj);
+        void readNode(XMLElementPtr node, VRTransformPtr obj);
 
     public:
         VRAMLLoader();

@@ -1019,7 +1019,10 @@ void VRGuiScripts::on_convert_cpp_clicked() {
 
     auto findAndReplace = [](string& line, string s1, string s2) {
         int p = line.find(s1);
-        if (p != string::npos) line.replace(p, s1.size(), s2);
+        while(p != string::npos) {
+            line.replace(p, s1.size(), s2);
+            p = line.find(s1);
+        }
     };
 
     const string core = script->getHead() + script->getCore();
@@ -1074,7 +1077,11 @@ void VRGuiScripts::on_convert_cpp_clicked() {
             }
         }
 
-        findAndReplace(line, "#", "//");
+        findAndReplace(line, "#", "; //");
+        findAndReplace(line, ".", "->");
+        findAndReplace(line, "'", "\"");
+        findAndReplace(line, " and ", " && ");
+        findAndReplace(line, " or ", " || ");
         if (contains(line, "hasattr")) line = "//"+line;
 
         if (addSemicolon) line += ";";
