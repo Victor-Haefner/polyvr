@@ -999,6 +999,80 @@ void VRGuiScripts::on_change_server() {
     on_save_clicked();
 }
 
+// others
+
+void VRGuiScripts::on_convert_cpp_clicked() {
+    VRScriptPtr script = getSelectedScript();
+    if (!script) return;
+
+    auto countTabs = [](const string& line) {
+        int i=0;
+        while (line[i] == '\t') i++;
+        return i;
+    };
+
+    auto countTrailingEmptyChars = [](const string& txt) {
+        int i=0;
+        int N = txt.size()-1;
+        while (txt[N-i] == '\n' || txt[N-i] == '\t') i++;
+        return i;
+    };
+
+    const string core = script->getHead() + script->getCore();
+    string newCore = "";
+
+    int lastTabCount = 0;
+    size_t k1 = 0;
+    size_t k2 = 0;
+
+    auto lines = splitString(core, '\n');
+    for (int i=0; i<lines.size(); i++) {
+        string& line = lines[i];
+        int N1 = line.size();
+        int N2 = line.size();
+
+        bool skipLine = false;
+        bool addSemicolon = true;
+        bool emptyLine = false;
+        int tabCount = countTabs(line);
+
+        if ( N2-tabCount == 0 ) emptyLine = true;
+        if ( emptyLine ) addSemicolon = false;
+
+        if (line[N2-1] == ':') {
+            line[N2-1] = ' ';
+            line += "{";
+            N2 = line.size();
+            addSemicolon = false;
+        }
+
+        if ( subString(line, tabCount, 4) == "def " ) {
+            line = line.replace(tabCount, 4, "void ");
+            N2 = line.size();
+        }
+
+        // find and replace "VR." with "VR"
+
+        if (tabCount < lastTabCount && !emptyLine) {
+            line = "}\n"+line;
+        }
+
+        if (contains(line, "hasattr")) line = "//"+line;
+
+        if (addSemicolon) line += ";";
+
+        lastTabCount = tabCount;
+        k1 += N1;
+        k2 += N2;
+
+        if (!skipLine) newCore += line+"\n";
+    }
+
+    int nec = countTrailingEmptyChars(newCore);
+    newCore = subString(newCore, 0, newCore.size()-nec);
+    if (newCore[newCore.size()-1] != '}') newCore += "\n}";
+    VRConsoleWidget::get( "Console" )->write( newCore );
+}
 
 // --------------------------
 // ---------Main-------------
@@ -1117,6 +1191,7 @@ VRGuiScripts::VRGuiScripts() {
     setToolButtonCallback("toolbutton23", bind(&VRGuiScripts::on_find_clicked, this) );
     setToolButtonCallback("toggletoolbutton1", bind(&VRGuiScripts::on_perf_toggled, this) );
     setToolButtonCallback("toggletoolbutton2", bind(&VRGuiScripts::on_pause_toggled, this) );
+    setToolButtonCallback("toolbutton30", bind(&VRGuiScripts::on_convert_cpp_clicked, this) );
 
     setButtonCallback("button12", bind(&VRGuiScripts::on_argadd_clicked, this) );
     setButtonCallback("button13", bind(&VRGuiScripts::on_argrem_clicked, this) );

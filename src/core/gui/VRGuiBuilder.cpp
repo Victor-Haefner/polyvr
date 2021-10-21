@@ -167,7 +167,9 @@ GtkWidget* addToolbar(string ID, GtkIconSize iSize, GtkOrientation o) {
 }
 
 GtkToolItem* addToolButton(string ID, string stock, GtkWidget* bar, string tooltip) {
-    auto item = gtk_tool_button_new_from_stock(stock.c_str());
+    GtkToolItem* item = 0;
+    if (stock != "") item = gtk_tool_button_new_from_stock(stock.c_str());
+    else item = gtk_tool_button_new(0, "");
     VRGuiBuilder::get()->reg_widget(GTK_WIDGET(item), ID);
     gtk_toolbar_insert(GTK_TOOLBAR(bar), item, -1);
     gtk_widget_set_tooltip_text(GTK_WIDGET(item), tooltip.c_str());
@@ -1186,12 +1188,16 @@ void VRGuiBuilder::buildBaseUI() {
     addNotebookPage(notebook3, table21, "Semantics");
 
     /* ---------- VR Scene -scripting ---------------------- */
+    auto toolbar_wrap = addGrid("toolbar_wrap");
     auto toolbar3 = addToolbar("toolbar3", GTK_ICON_SIZE_LARGE_TOOLBAR, GTK_ORIENTATION_HORIZONTAL);
+    auto toolbar3_2 = addToolbar("toolbar3_2", GTK_ICON_SIZE_LARGE_TOOLBAR, GTK_ORIENTATION_HORIZONTAL);
     auto script_tree = gtk_tree_store_new(9, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_INT);
     auto treeview5_and_frame = addTreeview("treeview5", "script_tree", GTK_TREE_MODEL(script_tree));
     auto treeview5 = treeview5_and_frame.first;
     auto table15 = addGrid("table15");
-    gtk_grid_attach(GTK_GRID(table14), toolbar3, 0,0,2,1);
+    gtk_grid_attach(GTK_GRID(toolbar_wrap), toolbar3, 0,0,1,1);
+    gtk_grid_attach(GTK_GRID(toolbar_wrap), toolbar3_2, 1,0,1,1);
+    gtk_grid_attach(GTK_GRID(table14), toolbar_wrap, 0,0,2,1);
     gtk_grid_attach(GTK_GRID(table14), treeview5_and_frame.second, 0,1,1,1);
     gtk_grid_attach(GTK_GRID(table14), table15, 1,1,1,1);
 
@@ -1204,6 +1210,8 @@ void VRGuiBuilder::buildBaseUI() {
     auto toolbutton8 = addToolButton("toolbutton8", "gtk-execute", toolbar3, "Execute Script");
     auto toolbutton23 = addToolButton("toolbutton23", "gtk-find", toolbar3, "Search");
     auto toolbutton16 = addToolButton("toolbutton16", "gtk-help", toolbar3, "Documentation");
+    auto toolbutton30 = addToolButton("toolbutton30", "", toolbar3_2, "Convert to C++");
+    gtk_tool_button_set_label(GTK_TOOL_BUTTON(toolbutton30), "CPP");
     auto toggletoolbutton1 = addToggleToolButton("toggletoolbutton1", "gtk-sort-ascending", toolbar3, "Show Performance");
     auto toggletoolbutton2 = addToggleToolButton("toggletoolbutton2", "gtk-media-pause", toolbar3, "Pause Script Execution");
 
