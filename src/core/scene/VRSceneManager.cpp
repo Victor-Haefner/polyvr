@@ -307,7 +307,7 @@ void VRSceneManager::update() {
 #endif
         VRTimer t1; t1.start();
 #ifndef WITHOUT_GTK
-        VRGuiManager::get()->updateGtk(); // update GUI
+        VRSetup::getCurrent()->updateGtkDevices();
 #endif
         VRGlobals::GTK1_FRAME_RATE.update(t1);
         VRGlobals::UPDATE_LOOP1.update(timer);

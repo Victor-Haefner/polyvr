@@ -7,6 +7,7 @@
 #include "core/scene/VRScene.h"
 #ifndef WITHOUT_GTK
 #include "core/setup/windows/VRGtkWindow.h"
+#include "core/setup/devices/VRMouse.h"
 #endif
 #include "core/utils/toString.h"
 #include "core/utils/VROptions.h"
@@ -136,6 +137,13 @@ void VRSetup::setupLESCCAVELights(VRScenePtr scene) {
         setLoadingLights(4,-1,0,0,0);
     }// else p->setup("scene loading progress", 100, VRProgress::CONSOLE_M);
 #endif
+}
+
+void VRSetup::updateGtkDevices() {
+    for (auto dev : getDevices()) {
+        auto m = dynamic_pointer_cast<VRMouse>(dev.second);
+        if (m) m->applyEvents();
+    }
 }
 
 void VRSetup::updateTracking() {

@@ -150,6 +150,15 @@ bool VRMouse::calcViewRay(VRCameraPtr cam, Line &line, float x, float y, int W, 
 VRSignalPtr VRMouse::getToEdgeSignal() { return on_to_edge; }
 VRSignalPtr VRMouse::getFromEdgeSignal() { return on_from_edge; }
 
+void VRMouse::applyEvents() {
+    for (auto e : delayedEvents) {
+        int N = e.size();
+        if (N == 2) motion(e[0], e[1], false);
+        else if (N == 4) mouse(e[0], e[1], e[2], e[3], false);
+    }
+    delayedEvents.clear();
+}
+
 //3d object to emulate a hand in VRSpace
 void VRMouse::updatePosition(int x, int y) {
     auto cam = this->cam.lock();
@@ -220,14 +229,24 @@ void VRMouse::updatePosition(int x, int y) {
 * @param x: x coordinate of mouse pointer on screen
 * @param y: y coordinate of mouse pointer on screen
 */
-void VRMouse::mouse(int button, int state, int x, int y) {
-    motion(x,y);
+void VRMouse::mouse(int button, int state, int x, int y, bool delayed) {
+    if (delayed) {
+        delayedEvents.push_back( {button,state,x,y} );
+        return;
+    }
+
+    motion(x,y,false);
     //cout << "VRMouse::mouse " << Vec4i(button, state, x, y) << endl;
     bool pressed = bool(state == 0);
     change_button(button, pressed);
 }
 
-void VRMouse::motion(int x, int y) {
+void VRMouse::motion(int x, int y, bool delayed) {
+    if (delayed) {
+        delayedEvents.push_back( {x,y} );
+        return;
+    }
+
     auto sv = view.lock();
     if (!sv) return;
     ViewportMTRecPtr v = sv->getViewportL();

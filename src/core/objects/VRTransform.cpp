@@ -856,12 +856,18 @@ void VRTransform::setConstraint(VRConstraintPtr c) {
 
 VRConstraintPtr VRTransform::getConstraint() { setConstraint(constraint); return constraint; }
 
-void VRTransform::apply_constraints(bool force) { // TODO: check efficiency
-    if (!constraint && aJoints.size() == 0) return;
-    if (!checkWorldChange() && !force) return;
-    computeMatrix4d(); // update matrix!
+void VRTransform::apply_constraints(bool force) {
+    if (constraint && constraint->isActive()) {
+        if (force || checkWorldChange()) {
+            computeMatrix4d(); // update matrix!
+            constraint->apply(ptr(), 0, force);
+        }
+    }
 
-    if (constraint) constraint->apply(ptr(), 0, force);
+    if (aJoints.size() > 0) {
+        if (force || checkWorldChange()) computeMatrix4d(); // update matrix!
+    }
+
     for (auto joint : aJoints) {
         VRTransformPtr parent = joint.second.second.lock();
         if (parent) joint.second.first->apply(ptr(), parent, force);
