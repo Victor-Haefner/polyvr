@@ -8,6 +8,7 @@
 #ifndef WITHOUT_GTK
 #include "core/setup/windows/VRGtkWindow.h"
 #include "core/setup/devices/VRMouse.h"
+#include "core/setup/devices/VRKeyboard.h"
 #endif
 #include "core/utils/toString.h"
 #include "core/utils/VROptions.h"
@@ -142,7 +143,9 @@ void VRSetup::setupLESCCAVELights(VRScenePtr scene) {
 void VRSetup::updateGtkDevices() {
     for (auto dev : getDevices()) {
         auto m = dynamic_pointer_cast<VRMouse>(dev.second);
+        auto k = dynamic_pointer_cast<VRKeyboard>(dev.second);
         if (m) m->applyEvents();
+        if (k) k->applyEvents();
     }
 }
 
