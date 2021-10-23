@@ -843,6 +843,7 @@ void VRTransform::printTransformationTree(int indent) {
 map<VRTransform*, VRTransformWeakPtr> constrainedObjects;
 
 void VRTransform::updateConstraints() { // global updater
+    //cout << VRGlobals::CURRENT_FRAME << " VRTransform::updateConstraints " << constrainedObjects.size() << endl;
     for (auto wc : constrainedObjects) {
         if (VRTransformPtr obj = wc.second.lock()) obj->updateChange();
     }

@@ -284,6 +284,7 @@ void VRSceneManager::updateScene() {
 void VRSceneManager::setTargetFPS(double fps) { targetFPS = fps;  }
 
 void VRSceneManager::update() {
+    //cout << endl;
 #ifndef WASM
     VRProfiler* profiler = 0;
 #endif
@@ -409,7 +410,7 @@ void VRSceneManager::update() {
 
     setupProfiling();
     doGTKUpdate();
-    doCallbacks();
+    doCallbacks(); // Warning, CEF may call g_main_context_iteration
     doSetupUpdate();
     doSceneUpdate();
     doRender();

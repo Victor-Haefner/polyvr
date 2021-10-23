@@ -225,9 +225,10 @@ void VRScene::update() {
     //Vec3d min,max;
     //root->getNode()->updateVolume();
     //root->getNode()->getVolume().getBounds( min, max );
+    VRTransform::updateConstraints(); // because of changes in devices/tracking
     ThreadManagerUpdate();
     updateCallbacks();
-    VRTransform::updateConstraints();
+    VRTransform::updateConstraints(); // because of changes in scripts
     //cout << "  VRScene::update done" << endl;
 }
 

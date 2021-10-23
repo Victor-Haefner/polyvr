@@ -161,6 +161,8 @@ void VRMouse::applyEvents() {
 
 //3d object to emulate a hand in VRSpace
 void VRMouse::updatePosition(int x, int y) {
+    //cout << VRGlobals::CURRENT_FRAME << " VRMouse::updatePosition " << Vec2i(x,y) << endl;
+
     auto cam = this->cam.lock();
     if (!cam) return;
 

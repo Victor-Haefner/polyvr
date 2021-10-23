@@ -3,6 +3,9 @@
 #include "core/setup/windows/VRHeadMountedDisplay.h"
 #include "core/gui/glarea/glarea.h"
 #include "core/gui/VRGuiBuilder.h"
+#include "core/objects/object/VRObject.h"
+#include "core/objects/OSGObject.h"
+#include "core/utils/system/VRSystem.h"
 
 #include <OpenSG/OSGFrameBufferObject.h>
 #include <OpenSG/OSGRenderBuffer.h>
@@ -106,6 +109,20 @@ bool VRGtkWindow::on_render(GdkGLContext* glcontext) {
         if (hmd) hmd->render();
 #endif
         //cout << "   VRGtkWindow::on_render win" << endl;
+
+
+        /*if (VRScene::getCurrent()) {
+            auto box = VRScene::getCurrent()->get("Rollen");
+            if (box) {
+                Matrix p = box->getNode()->node->getToWorld();
+                //Vec3d p = dynamic_pointer_cast<VRTransform>(box)->getWorldPosition();
+                //if (abs(p[3][1]-1.0) > 1e-6)
+                    cout << VRGlobals::CURRENT_FRAME << " doRender " << p[3][1] << endl;
+            }
+        }
+        printBacktrace();*/
+
+        VRGlobals::GTK_LAST_RENDER = VRGlobals::CURRENT_FRAME;
         win->render(ract);
         //cout << "   VRGtkWindow::on_render win done" << endl;
     } else {

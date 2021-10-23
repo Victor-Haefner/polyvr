@@ -53,6 +53,7 @@ class VRGlobals {
 
         static Int NCHANGED;
         static Int NCREATED;
+        static Int GTK_LAST_RENDER;
 };
 
 OSG_END_NAMESPACE;
