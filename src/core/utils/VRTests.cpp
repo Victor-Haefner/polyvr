@@ -8,6 +8,7 @@
 #ifndef WITHOUT_VIRTUOSE
 #include "core/setup/devices/VRHaptic.h"
 #endif
+#include "core/setup/tracking/VRPN.h"
 #include "core/utils/toString.h"
 
 #include <map>
@@ -65,7 +66,7 @@ void vrpn_client() {
 #include "core/setup/VRSetup.h"
 void vrpn_server() {
     auto setup = VRSetup::getCurrent();
-    if (setup) setup->startVRPNTestServer();
+    if (setup) setup->getVRPN()->startVRPNTestServer();
 }
 #endif
 

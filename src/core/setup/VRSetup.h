@@ -4,8 +4,6 @@
 #include "windows/VRViewManager.h"
 #include "windows/VRWindowManager.h"
 #include "devices/VRDeviceManager.h"
-#include "tracking/VRPN.h"
-#include "tracking/ART.h"
 #include "core/scripting/VRScriptManager.h"
 #include "core/scene/VRCallbackManager.h"
 #include "core/utils/VRName.h"
@@ -22,14 +20,7 @@ using namespace std;
 class VRScene;
 class VRVisualLayer;
 
-class VRSetup : public VRViewManager, public VRWindowManager, public VRDeviceManager/*, public VRScriptManager, public VRCallbackManager*/,
-#ifndef WITHOUT_ART
-                public ART,
-#endif
-#ifndef WITHOUT_VRPN
-                public VRPN,
-#endif
-                public VRName {
+class VRSetup : public VRViewManager, public VRWindowManager, public VRDeviceManager, public VRName {
     private:
         string cfgfile;
         string tracking;
@@ -39,6 +30,13 @@ class VRSetup : public VRViewManager, public VRWindowManager, public VRDeviceMan
         VRTransformPtr real_root = 0;
         VRTransformPtr user = 0;
         VRCameraPtr setup_cam = 0;
+
+#ifndef WITHOUT_ART
+        ARTPtr art;
+#endif
+#ifndef WITHOUT_VRPN
+        VRPNPtr vrpn;
+#endif
 
         VivePtr vive = 0;
 
@@ -66,6 +64,9 @@ class VRSetup : public VRViewManager, public VRWindowManager, public VRDeviceMan
 
         VRNetworkPtr getNetwork();
         VRTransformPtr getUser();
+
+        ARTPtr getART();
+        VRPNPtr getVRPN();
 
         void addObject(VRObjectPtr o);
         VRTransformPtr getRoot();

@@ -2,9 +2,11 @@
 #define VRMECHANISM_H_INCLUDED
 
 #include <vector>
+#include <OpenSG/OSGVector.h>
+#include <OpenSG/OSGMatrix.h>
 #include "VRMechanismFwd.h"
 #include "core/math/OSGMathFwd.h"
-#include "core/objects/geometry/VRGeometry.h"
+#include "core/objects/object/VRObject.h"
 
 class VRGear;
 class VRScrewthread;

@@ -5,7 +5,6 @@
 #include <deque>
 #include <OpenSG/OSGConfig.h>
 #include "core/objects/VRObjectFwd.h"
-#include "core/objects/geometry/VRGeometry.h"
 #include "core/scene/VRSceneManager.h"
 #include "core/objects/VRTransform.h"
 #include "../terrain/VRTerrain.h"

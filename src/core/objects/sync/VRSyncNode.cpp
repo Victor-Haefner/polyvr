@@ -10,6 +10,7 @@
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/VRCamera.h"
 #include "core/setup/VRSetup.h"
+#include "core/setup/devices/VRDevice.h"
 //#include "core/math/pose.h"
 #include "core/utils/VRStorage_template.h"
 #include "core/gui/VRGuiConsole.h"

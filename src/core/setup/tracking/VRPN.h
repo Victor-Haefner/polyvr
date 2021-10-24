@@ -67,6 +67,8 @@ class VRPN : public VRStorage {
         VRPN();
         ~VRPN();
 
+        static VRPNPtr create();
+
         void update();
         void addVRPNTracker(int ID, string addr, Vec3d offset, float scale);
         void delVRPNTracker(VRPN_devicePtr t);

@@ -3,7 +3,7 @@
 
 #include "core/math/OSGMathFwd.h"
 #include <OpenSG/OSGColor.h>
-#include "core/objects/geometry/VRGeometry.h"
+#include "core/objects/VRTransform.h"
 #include "addons/WorldGenerator/VRWorldGeneratorFwd.h"
 
 using namespace std;

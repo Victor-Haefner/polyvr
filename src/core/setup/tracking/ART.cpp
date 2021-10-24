@@ -92,6 +92,8 @@ ART::~ART() {
     delete mutex;
 }
 
+ARTPtr ART::create() { return ARTPtr(new ART()); }
+
 template<typename dev>
 void ART::getMatrix(dev t, Matrix4d& m, bool doOffset) {
     int X = abs(axis[0]);

@@ -15,7 +15,7 @@ OSG_BEGIN_NAMESPACE;
 
 class Action;
 
-class VREmbankment : public VRGeometry{
+class VREmbankment : public VRGeometry {
     private:
         PathPtr p1, p2, p3, p4;
         VRPolygon area;

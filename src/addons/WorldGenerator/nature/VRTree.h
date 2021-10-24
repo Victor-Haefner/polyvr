@@ -1,7 +1,7 @@
 #ifndef VRTREE_H_INCLUDED
 #define VRTREE_H_INCLUDED
 
-#include "core/objects/geometry/VRGeometry.h"
+#include "core/objects/VRTransform.h"
 #include <OpenSG/OSGColor.h>
 
 OSG_BEGIN_NAMESPACE;

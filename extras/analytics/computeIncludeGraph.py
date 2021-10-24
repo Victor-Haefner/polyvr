@@ -6,7 +6,8 @@ import datetime, sys
 from PIL import Image
 from time import sleep
 
-onlyHeader = sys.argv[1]
+onlyHeader = ""
+if len(sys.argv) > 1: onlyHeader = sys.argv[1]
 
 sourceDir = '../../src'
 #sourceDir = 'testData'
@@ -216,6 +217,9 @@ def countImpact(): # compute how many source files the header impacts
 		print h[0], ' '*(40-len(h[0])), 'direct includes', len(A.includeGraph[h[0]]), '\t,', 'dependend headers', h[1][2], '\t/', len(A.sources), '\t,', 'dependend sources', h[1][0], '\t/', len(A.headers), '\t- ', 
 		if h[0] in compilationTimes: print compilationTimes[h[0]], ' s'
 		else: print ' '
+
+		for i in A.includeGraph[h[0]]:
+			print i
 	
 	print 'total compilation time:', totalTime
 
