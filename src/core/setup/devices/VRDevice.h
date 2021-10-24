@@ -6,7 +6,6 @@
 #include "VRIntersect.h"
 #include "VRAvatar.h"
 #include "core/utils/VRName.h"
-#include "core/utils/VRStorage.h"
 OSG_BEGIN_NAMESPACE;
 
 class VRDevice : public std::enable_shared_from_this<VRDevice>, public VRName, public VRIntersect, public VRAvatar {

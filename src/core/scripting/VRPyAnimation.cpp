@@ -1,8 +1,5 @@
 #include "VRPyAnimation.h"
-#include "VRPyGeometry.h"
-#include "VRPyDevice.h"
 #include "VRPyBaseT.h"
-#include "VRPyBaseFactory.h"
 
 #include "core/scene/VRAnimationManagerT.h"
 

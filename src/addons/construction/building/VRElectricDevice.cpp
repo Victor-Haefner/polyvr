@@ -1,5 +1,6 @@
 #include "VRElectricDevice.h"
 #include "core/utils/VRFunction.h"
+#include "core/setup/devices/VRDevice.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;

@@ -1,6 +1,4 @@
 #include "VRPyMenu.h"
-#include "VRPyGeometry.h"
-#include "VRPyDevice.h"
 #include "VRPyBaseT.h"
 
 using namespace OSG;

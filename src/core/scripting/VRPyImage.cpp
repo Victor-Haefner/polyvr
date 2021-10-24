@@ -1,6 +1,4 @@
 #include "VRPyImage.h"
-#include "VRPyGeometry.h"
-#include "VRPyDevice.h"
 #include "VRPyBaseT.h"
 #include <OpenSG/OSGImage.h>
 

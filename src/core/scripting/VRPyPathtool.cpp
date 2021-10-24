@@ -1,14 +1,5 @@
 #include "VRPyPathtool.h"
-#include "VRPyMaterial.h"
-#include "VRPyObject.h"
-#include "VRPyGeometry.h"
-#include "VRPyDevice.h"
-#include "VRPyPath.h"
-#include "VRPyGraph.h"
 #include "VRPyBaseT.h"
-#include "VRPyStroke.h"
-#include "VRPyPose.h"
-#include "VRPyTypeCaster.h"
 
 using namespace OSG;
 

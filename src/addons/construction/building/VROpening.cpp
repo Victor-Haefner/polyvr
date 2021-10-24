@@ -3,6 +3,7 @@
 #include "core/scene/sound/VRSoundManager.h"
 #endif
 #include "core/scene/VRAnimationManagerT.h"
+#include "core/setup/devices/VRDevice.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;

@@ -3,7 +3,6 @@
 
 #include "core/objects/VRObjectFwd.h"
 #include "core/objects/VRTransform.h"
-#include "core/setup/devices/VRDevice.h"
 #include "core/scene/VRScene.h"
 #include <memory>
 
