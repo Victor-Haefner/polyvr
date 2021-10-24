@@ -20,6 +20,7 @@
 #endif
 #include "core/scene/VRScene.h"
 #include "core/scene/VRSpaceWarper.h"
+#include "core/setup/devices/VRIntersect.h"
 
 #include <OpenSG/OSGSimpleGeometry.h>
 #include <OpenSG/OSGChunkMaterial.h>
@@ -703,7 +704,7 @@ void VRTransform::move(float d) {
     translate(Vec3d(dv*d));
 }
 
-void VRTransform::drag(VRTransformPtr new_parent, VRIntersection i) {
+void VRTransform::drag(VRTransformPtr new_parent, VRIntersectionPtr ins) {
     if (held) return;
     held = true;
     if (auto p = getParent()) old_parent = p;
@@ -732,7 +733,8 @@ void VRTransform::drag(VRTransformPtr new_parent, VRIntersection i) {
             cs->setMinMax(i+3,-1,0);
         }
 
-        Pnt3d P = i.point; // intersection point in world coords
+        Pnt3d P;
+        if (ins) P = ins->point; // intersection point in world coords
         m.invert();
         m.mult(P, P);
 
@@ -808,7 +810,7 @@ Line VRTransform::castRay(VRObjectPtr obj, Vec3d dir) { // TODO: check what this
     return ray;
 }
 
-VRIntersection VRTransform::intersect(VRObjectPtr obj, Vec3d dir) {
+VRIntersectionPtr VRTransform::intersect(VRObjectPtr obj, Vec3d dir) {
     VRIntersect in;
     return in.intersect(obj, false, ptr(), dir);
 }

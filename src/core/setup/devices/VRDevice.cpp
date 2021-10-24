@@ -167,25 +167,25 @@ void VRDevice::setSpeed(Vec2d s) { speed = s; }
 Vec2d VRDevice::getSpeed() { return speed; }
 
 void VRDevice::drag(VRObjectPtr obj, int bID) {
-    VRIntersection i;
-    i.object = obj;
+    auto i = VRIntersection::create();
+    i->object = obj;
     VRIntersect::drag(i, getBeacon(bID));
 }
 
 void VRDevice::drop(int bID) { VRIntersect::drop( VRDevicePtr(0), getBeacon(bID) ); }
 
 bool VRDevice::intersect2(VRObjectPtr subtreeRoot, bool force, VRTransformPtr caster, Vec3d dir, bool skipVols) {
-    OSG::VRIntersection ins = VRIntersect::intersect(subtreeRoot, force, caster, dir, skipVols);
-    return ins.hit;
+    auto ins = VRIntersect::intersect(subtreeRoot, force, caster, dir, skipVols);
+    return ins->hit;
 }
 
-Pnt3d VRDevice::getIntersectionPoint() { return getLastIntersection().point; }
-Vec3i VRDevice::getIntersectionTriangle() { return getLastIntersection().triangleVertices; }
-Vec3d VRDevice::getIntersectionNormal() { return getLastIntersection().normal; }
-Vec2d VRDevice::getIntersectionUV() { return getLastIntersection().texel; }
-Line  VRDevice::getIntersectionRay() { return getLastIntersection().ray; }
-VRObjectPtr VRDevice::getIntersected() { return getLastIntersection().object.lock(); }
-int VRDevice::getIntersectionID() { return getLastIntersection().customID; }
+Pnt3d VRDevice::getIntersectionPoint() { return getLastIntersection()->point; }
+Vec3i VRDevice::getIntersectionTriangle() { return getLastIntersection()->triangleVertices; }
+Vec3d VRDevice::getIntersectionNormal() { return getLastIntersection()->normal; }
+Vec2d VRDevice::getIntersectionUV() { return getLastIntersection()->texel; }
+Line  VRDevice::getIntersectionRay() { return getLastIntersection()->ray; }
+VRObjectPtr VRDevice::getIntersected() { return getLastIntersection()->object.lock(); }
+int VRDevice::getIntersectionID() { return getLastIntersection()->customID; }
 
 void VRDevice::addIntersection(VRObjectPtr obj, int priority) { addDynTree(obj, priority); }
 void VRDevice::remIntersection(VRObjectPtr obj) { remDynTree(obj); }

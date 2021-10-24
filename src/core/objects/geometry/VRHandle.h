@@ -44,7 +44,7 @@ class VRHandle : public VRGeometry {
         Vec3d getAxis();
         PosePtr getOrigin();
 
-        void drag(VRTransformPtr new_parent, VRIntersection i = VRIntersection()) override;
+        void drag(VRTransformPtr new_parent, VRIntersectionPtr i = 0) override;
         void drop() override;
 
         void setMatrix(Matrix4d m) override;

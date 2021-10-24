@@ -62,12 +62,12 @@ void VRColorChooser::resolve(VRDevicePtr dev) {
     if (dev == 0) return;
 
     //VRIntersection ins = dev->getLastIntersection();
-    VRIntersection ins = dev->intersect(geo);
-    if (!ins.hit) return;
-    auto obj = ins.object.lock();
+    auto ins = dev->intersect(geo);
+    if (!ins->hit) return;
+    auto obj = ins->object.lock();
     auto g = geo.lock();
     if (obj != g || !g || !obj) return;
 
-    setColor(colFromUV(ins.texel));
+    setColor(colFromUV(ins->texel));
 }
 

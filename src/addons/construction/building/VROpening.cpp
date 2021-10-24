@@ -96,9 +96,9 @@ void VROpening::toggle(VRDeviceWeakPtr d) {
     if (d1 == 0 && d2 == 0) return;
 
     if (auto dev = d.lock()) { //if triggered by a device, check if this is hit
-        VRIntersection ins = dev->intersect( VRObject::ptr() );
-        if (!ins.hit) return;
-        auto obj = ins.object.lock();
+        auto ins = dev->intersect( VRObject::ptr() );
+        if (!ins->hit) return;
+        auto obj = ins->object.lock();
         if ( obj == 0 ) return;
 
         bool b = true;

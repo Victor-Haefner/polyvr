@@ -1,6 +1,8 @@
 #ifndef VRHUMANOID_H_INCLUDED
 #define VRHUMANOID_H_INCLUDED
 
+#include <OpenSG/OSGColor.h>
+
 #include "core/objects/geometry/VRGeometry.h"
 #include "VRCharacterFwd.h"
 

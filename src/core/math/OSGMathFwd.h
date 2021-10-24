@@ -9,6 +9,7 @@
 namespace OSG {
 
 template<class ValueTypeT, unsigned int SizeI> class Vector;
+template<class ValueTypeT, unsigned int SizeI> class Point;
 
 typedef Vector< float, 2 > Vec2f;
 typedef Vector< float, 3 > Vec3f;
@@ -23,6 +24,10 @@ typedef Vector< int, 3 > Vec3i;
 typedef Vector< int, 4 > Vec4i;
 
 template<class ValueTypeT> class TransformationMatrix;
+
+typedef Point< double, 2 > Pnt2d;
+typedef Point< double, 3 > Pnt3d;
+typedef Point< double, 4 > Pnt4d;
 
 typedef TransformationMatrix<float> Matrix;
 typedef TransformationMatrix<double> Matrix4d;

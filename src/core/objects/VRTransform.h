@@ -10,7 +10,7 @@
 #include "core/objects/VRObjectFwd.h"
 #include "core/utils/VRFunctionFwd.h"
 #include "core/math/VRMathFwd.h"
-#include "core/setup/devices/VRIntersect.h"
+#include "core/utils/VRDeviceFwd.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -175,7 +175,7 @@ class VRTransform : public VRObject {
         void move(float d);
         void rotateYonZ();
 
-        virtual void drag(VRTransformPtr new_parent, VRIntersection i = VRIntersection());
+        virtual void drag(VRTransformPtr new_parent, VRIntersectionPtr i = 0);
         virtual void drop();
         void rebaseDrag(VRObjectPtr new_parent);
         VRObjectPtr getDragParent();
@@ -183,7 +183,7 @@ class VRTransform : public VRObject {
 
         // Cast a ray in world coordinates from the object in its local coordinates, -z axis defaults
         Line castRay(VRObjectPtr obj = 0, Vec3d dir = Vec3d(0,0,-1));
-        VRIntersection intersect(VRObjectPtr obj, Vec3d dir = Vec3d(0,0,-1));
+        VRIntersectionPtr intersect(VRObjectPtr obj, Vec3d dir = Vec3d(0,0,-1));
 
         map<string, VRAnimationPtr> animations;
         void addAnimation(VRAnimationPtr animation);

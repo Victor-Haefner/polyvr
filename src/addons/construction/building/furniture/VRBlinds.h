@@ -1,11 +1,9 @@
 #ifndef VRBLINDS_H_INCLUDED
 #define VRBLINDS_H_INCLUDED
 
-#include "core/objects/VRObjectFwd.h"
 #include "core/objects/VRTransform.h"
 #include "core/utils/VRFunctionFwd.h"
-#include "core/scene/VRScene.h"
-#include "core/setup/devices/VRDevice.h"
+#include "core/scene/VRSceneFwd.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -21,7 +19,6 @@ class VRBlinds: public VRTransform {
         State state;
         string sound;
         string param;
-
 
         VRGeometryPtr window;
         VRAnimCbPtr fkt;
@@ -44,13 +41,10 @@ class VRBlinds: public VRTransform {
         bool isOpen();
 
         void open();
-
         void close();
-
         void toggle(VRDeviceWeakPtr dev);
 
         void create();
-
         void interpolate(float t);
 
         VRDeviceCbPtr getCallback();

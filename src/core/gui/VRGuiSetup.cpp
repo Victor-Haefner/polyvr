@@ -262,16 +262,16 @@ void VRGuiSetup::updateObjectData() {
 
     if (device) {
         VRDevice* dev = (VRDevice*)selected_object;
-        VRIntersection ins = dev->getLastIntersection();
+        auto ins = dev->getLastIntersection();
 
         setWidgetVisibility("expander21", true, true);
         setLabel("label93", dev->getName());
         if (setup) fillStringListstore("dev_types_list", setup->getDeviceTypes());
         setCombobox("combobox26", getListStorePos("dev_types_list", dev->getType()) );
-        string hobj = ins.hit ? ins.name : "NONE";
+        string hobj = ins->hit ? ins->name : "NONE";
         setLabel("label110", hobj);
-        setLabel("label111", toString(ins.point));
-        setLabel("label112", toString(ins.texel));
+        setLabel("label111", toString(ins->point));
+        setLabel("label112", toString(ins->texel));
         setToggleButton("checkbutton37", dev->getCross()->isVisible());
     }
 

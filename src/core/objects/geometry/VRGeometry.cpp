@@ -17,6 +17,7 @@
 
 #include <OpenSG/OSGTriangleIterator.h>
 #include "core/scene/import/VRImport.h"
+#include "core/setup/devices/VRIntersectAction.h"
 #include "core/math/interpolator.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRFunction.h"

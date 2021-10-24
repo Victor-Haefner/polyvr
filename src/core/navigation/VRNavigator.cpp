@@ -383,13 +383,13 @@ void VRNavigator::focus(VRDeviceWeakPtr _dev) {
     if (target == 0) return;
     if (devBeacon == 0) return;
 
-    VRIntersection ins = dev->intersect(target->getRoot());
-    if (!ins.hit) return;
+    VRIntersectionPtr ins = dev->intersect(target->getRoot());
+    if (!ins->hit) return;
 
     Vec3d z;
     auto p = Path::create();
     p->addPoint( Pose(target->getWorldAt(), z));
-    p->addPoint( Pose(ins.point.subZero(), z));
+    p->addPoint( Pose(ins->point.subZero(), z));
     p->compute(20);
 
     focus_fkt = VRFunction<float>::create("TransAnim", bind(animPathAt, VRTransformWeakPtr(target), p, _1));

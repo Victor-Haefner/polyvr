@@ -2,6 +2,7 @@
 #define VRATLAS_H
 
 #include <string>
+#include <deque>
 #include <OpenSG/OSGConfig.h>
 #include "core/objects/VRObjectFwd.h"
 #include "core/objects/geometry/VRGeometry.h"

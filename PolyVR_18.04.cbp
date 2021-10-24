@@ -1403,6 +1403,7 @@
 		<Unit filename="src/core/setup/devices/VRHaptic.h" />
 		<Unit filename="src/core/setup/devices/VRIntersect.cpp" />
 		<Unit filename="src/core/setup/devices/VRIntersect.h" />
+		<Unit filename="src/core/setup/devices/VRIntersectAction.h" />
 		<Unit filename="src/core/setup/devices/VRKeyboard.cpp" />
 		<Unit filename="src/core/setup/devices/VRKeyboard.h" />
 		<Unit filename="src/core/setup/devices/VRMouse.cpp" />
