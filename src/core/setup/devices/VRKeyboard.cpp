@@ -17,20 +17,22 @@ void VRKeyboard::applyEvents() {
 }
 
 void VRKeyboard::keyboard(unsigned int k, bool pressed, int x, int y, bool delayed) {
-    if (delayed) {
+    if (delayed && 0) { // TODO: delay deaktivated because CEF doenst like it at all!
         delayedEvents.push_back( {0,k,pressed,x,y} );
         return;
     }
 
+    cout << "VRKeyboard::keyboard " << k << " " << pressed << " " << Vec2i(x,y) << endl;
     change_button(k,pressed);
 }
 
 void VRKeyboard::keyboard_special(int k, bool pressed, int x, int y, bool delayed) {
-    if (delayed) {
+    if (delayed && 0) { // TODO: delay deaktivated because CEF doenst like it at all!
         delayedEvents.push_back( {1,k,pressed,x,y} );
         return;
     }
 
+    cout << "VRKeyboard::keyboard_special " << k << " " << pressed << " " << Vec2i(x,y) << endl;
     change_button(k+100,pressed);
 }
 
