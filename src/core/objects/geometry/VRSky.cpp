@@ -59,6 +59,7 @@ VRSky::VRSky() : VRGeometry("Sky") {
     sunFromTime();
     setClouds(0.1, 1e-5, 3000, Vec2d(.002, .001), Color4f(1,1,1, 1.0));
 	setLuminance(1.75);
+	setGround(Color4f(0.95,0.95,0.93, 1.0)); // 0.3, 0.3, 0.35
     setVolumeCheck(false, true);
 
     textureSize = 512;
@@ -258,6 +259,11 @@ void VRSky::setClouds(float density, float scale, float height, Vec2d vel, Color
     mat->setShaderParameter<Color4f>("cloudColor", cloudColor);
 }
 
+void VRSky::setGround(Color4f c) {
+    colGround = c;
+    mat->setShaderParameter<Color4f>("colGround", colGround);
+}
+
 void VRSky::setLuminance(float t) {
     turbidity = t;
     mat->setShaderParameter<float>("turbidity", turbidity);
@@ -389,6 +395,7 @@ uniform vec2 OSGViewportSize;
 // sun
 uniform vec3 sunPos; //define sun direction
 uniform float theta_s;
+uniform vec4 colGround;
 
 // clouds
 uniform sampler2D tex;
@@ -410,7 +417,6 @@ float gamma;
 float theta;
 
 vec3 real_fragDir;
-vec4 colGround = vec4(0.6, 0.6, 0.7, 1.0);
 float rad_earth = 6.371e6;
 
 
@@ -541,8 +547,8 @@ void addSun() {\n
 
 void addGround() {\n
 	float offset = 0.75;
-	float factor = 0.3 * (offset + (1.0 - offset)*xyY_z.z);
-	color = mix(factor * colGround, color, smoothstep( -0.05, 0.0, real_fragDir.y) );
+	float factor = min(1.0 * (offset + (1.0 - offset)*xyY_z.z), 1.0);
+	color = mix(factor*colGround, color, smoothstep( -0.05, 0.0, real_fragDir.y) );
 }
 
 vec3 f_f0() {\n

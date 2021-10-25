@@ -108,7 +108,7 @@ VRIntersectionPtr VRIntersect::intersectRay(VRObjectWeakPtr wtree, Line ray, boo
         ins->time = now;
     } else {
         ins->object.reset();
-        if (lastIntersection->time < ins->time) lastIntersection = ins;
+        if (!lastIntersection || lastIntersection->time < ins->time) lastIntersection = ins;
     }
 
     intersections[tree.get()] = ins;
