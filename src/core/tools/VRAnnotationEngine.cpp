@@ -242,7 +242,7 @@ int VRAnnotationEngine::add(Vec3d p, string s) {
 VRAnnotationEngine::Label::Label(int id) : ID(id) {}
 
 void VRAnnotationEngine::setLine(int i, Vec3d p, string str, bool ascii) {
-    //cout << "VRAnnotationEngine::setLine i: " << i << ", p: " << p << ", str: " << str << ", ascii: " << ascii << endl;
+    //cout << "VRAnnotationEngine::setLine i: " << i << ", p: " << p << ", str: '" << str << "', ascii: " << ascii << endl;
     while (i >= (int)labels.size()) labels.push_back(Label(labels.size()));
 
     auto& l = labels[i];
@@ -335,6 +335,7 @@ void VRAnnotationEngine::setLine(int i, Vec3d p, string str, bool ascii) {
 
 void VRAnnotationEngine::set(int i0, Vec3d p0, string txt) {
     auto strings = splitString(txt, '\n');
+    if (txt == "") strings = { "" };
     int Nlines = strings.size();
     for (int y = 0; y<Nlines; y++) {
         string str = strings[y];
