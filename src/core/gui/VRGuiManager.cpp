@@ -261,9 +261,9 @@ void VRGuiManager::updateGtk() {
 
     VRLock lock( guiMutex() );
     CHECK_GL_ERROR("VRGuiManager::updateGtk A1");
-    //while( gtk_events_pending() ) gtk_main_iteration_do(false); // non blocking, may fail to catch the rendering event!
-    while( gtk_events_pending() || VRGlobals::GTK_LAST_RENDER < VRGlobals::CURRENT_FRAME)
-        gtk_main_iteration_do(true); // blocking, this should wait for the rendering event
+    while( gtk_events_pending() ) gtk_main_iteration_do(false); // non blocking, may fail to catch the rendering event!
+    //while( gtk_events_pending() || VRGlobals::GTK_LAST_RENDER < VRGlobals::CURRENT_FRAME)
+    //    gtk_main_iteration_do(true); // blocking, this should wait for the rendering event
     //gtk_main_iteration(); // blocking, this should wait for the rendering event
     CHECK_GL_ERROR("VRGuiManager::updateGtk A2");
 }

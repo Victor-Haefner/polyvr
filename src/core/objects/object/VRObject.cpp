@@ -550,7 +550,7 @@ bool VRObject::hasGraphChanged() {
 
 BoundingboxPtr VRObject::getBoundingbox() {
     Pnt3f p1, p2;
-    commitChanges();
+    //commitChanges(); // crashes in cave, but why??
     osg->node->updateVolume();
     osg->node->getVolume().getBounds(p1, p2);
     auto b = Boundingbox::create();
