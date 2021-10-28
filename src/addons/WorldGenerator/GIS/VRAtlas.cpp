@@ -133,7 +133,7 @@ void VRAtlas::Layout::setCoords(Patch& pat, Vec3d co3, int p_type) {
     } else {
         VRTexturePtr heightIMG = VRTexture::create();
         heightIMG->read(pathHeight);
-        pat.terrain->setMap( heightIMG, 3 );
+        pat.terrain->setMap( heightIMG, 0 );
     }*/
     /*if (!checkHeight && !checkOrthop) pat.terrain->setVisible(false);
     else pat.terrain->setVisible(true);
@@ -710,8 +710,9 @@ VRTerrainPtr VRAtlas::generateTerrain(string id, int lvl){
 
     auto terrain = VRTerrain::create(name);
     terrain->setParameters (terrainSize, scale, 1);
+    terrain->setInvertY(0,1);
     terrain->paintHeights( pathOrtho, mixColor, mixAmount );
-    terrain->setMap( heightIMG, 3 );
+    terrain->setMap( heightIMG, 0 );
     //terrain->setWorld( ptr() );
     //terrain->setLODFactor(fac);
     //terrain->setLit(isLit);

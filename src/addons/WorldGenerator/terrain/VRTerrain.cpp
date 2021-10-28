@@ -153,6 +153,8 @@ void VRTerrain::setParameters( Vec2d s, double r, double h, float w, float aT, C
     mat->setShaderParameter("doHeightTextures", 0);
     mat->setShaderParameter("waterLevel", w);
     mat->setShaderParameter("isLit", int(isLit));
+    mat->setShaderParameter("invertSatY", int(doInvertSatY));
+    mat->setShaderParameter("invertTopoY", int(doInvertTopoY));
     mat->setShaderParameter("atmoColor", aC);
     mat->setShaderParameter("atmoThickness", aT);
     updateTexelSize();
@@ -167,6 +169,13 @@ void VRTerrain::setWaterLevel(float w) { mat->setShaderParameter("waterLevel", w
 void VRTerrain::setLit(bool isLit) { mat->setShaderParameter("isLit", int(isLit)); }
 void VRTerrain::setAtmosphericEffect(float thickness, Color3f color) { mat->setShaderParameter("atmoColor", color); mat->setShaderParameter("atmoThickness", thickness); }
 void VRTerrain::setHeightScale(float s) { heightScale = s; mat->setShaderParameter("heightScale", s); }
+
+void VRTerrain::setInvertY(bool invertSatY, bool invertTopoY) {
+    doInvertSatY = invertSatY;
+    doInvertTopoY = invertTopoY;
+    mat->setShaderParameter("invertSatY", int(doInvertSatY));
+    mat->setShaderParameter("invertTopoY", int(doInvertTopoY));
+}
 
 void VRTerrain::setMap( VRTexturePtr t, int channel, Vec4d rect ) {
     VRLock lock(mtx());
@@ -866,6 +875,7 @@ uniform sampler2D tex;
 uniform float heightScale;
 uniform int local;
 uniform int channel;
+uniform int invertTopoY;
 uniform float heightoffset;
 uniform mat4 OSGModelViewProjectionMatrix;
 
@@ -875,7 +885,9 @@ void main(void) {
     vTexCoord = osg_MultiTexCoord0;
     vTexCoord2 = osg_MultiTexCoord1;
 
-    vec4 texData = texture(tex, osg_MultiTexCoord0);
+    vec2 tc = osg_MultiTexCoord0
+    if (invertTopoY == 1) tc.y = 1-tc.y;
+    vec4 texData = texture(tex, tc);
     vColor = texData;
     float height = texData.r;
     vec4 tePosition = osg_Vertex;
@@ -906,6 +918,8 @@ uniform sampler2D texPic;
 uniform mat4 OSGNormalMatrix;
 uniform vec2 texelSize;
 uniform int isLit;
+uniform int invertSatY;
+uniform int invertTopoY;
 
 #ifdef __EMSCRIPTEN__
 in vec2 vTexCoord;
@@ -939,6 +953,7 @@ void applyBlinnPhong() {
 
 vec3 getNormal() {
     vec2 tc = vTexCoord;
+    if (invertTopoY == 1) tc.y = 1-tc.y;
     float s11 = texture(tex, tc).r;
     float s01 = textureOffset(tex, tc, off.xy).r;
     float s21 = textureOffset(tex, tc, off.zy).r;
@@ -954,7 +969,7 @@ vec3 getNormal() {
 
 void main( void ) {
     vec2 tc = vTexCoord2;
-    tc.y = 1.0 - tc.y;
+    if (invertSatY == 1) tc.y = 1.0 - tc.y;
     color = texture(texPic, tc);
 
     if (isLit == 1) {
@@ -980,6 +995,8 @@ uniform vec4 mixColor;
 uniform float mixAmount;
 uniform float waterLevel;
 uniform int isLit;
+uniform int invertSatY;
+uniform int invertTopoY;
 
 in vec4 pos;
 in vec4 vertex;
@@ -1001,6 +1018,7 @@ void applyBlinnPhong() {
 
 vec3 getNormal() {
     vec2 tc = gl_TexCoord[0].xy;
+    if (invertTopoY == 1) tc.y = 1-tc.y;
     float s11 = texture(tex, tc).r;
     float s01 = textureOffset(tex, tc, off.xy).r;
     float s21 = textureOffset(tex, tc, off.zy).r;
@@ -1021,6 +1039,7 @@ void main( void ) {
 	if (doHeightTextures == 0) color = vec4(texture2D(tex, tc).rgb, 1.0);
 	else {
         if (doHeightTextures == 1) {
+            if (invertSatY == 1) tc.y = 1-tc.y;
             vec4 cW1 = texture(texWoods, tc*1077);
             vec4 cW2 = texture(texWoods, tc*107);
             vec4 cW3 = texture(texWoods, tc*17);
@@ -1036,7 +1055,7 @@ void main( void ) {
             if (height < waterLevel) color = vec4(0.2,0.4,1,1);
             else color = mix(cG, cW, min(cW3.r*0.1*max(height,0),1));
         } else {
-            tc.y = 1-tc.y;
+            if (invertSatY == 1) tc.y = 1-tc.y;
             color = texture(texPic, tc);
             color = mix(color, mixColor, mixAmount);
         }
@@ -1064,6 +1083,8 @@ uniform float mixAmount;
 uniform float heightoffset = 0.0;
 uniform float waterLevel;
 uniform int isLit;
+uniform int invertSatY;
+uniform int invertTopoY;
 uniform vec3 atmoColor;
 uniform float atmoThickness;
 
@@ -1075,6 +1096,7 @@ vec4 color;
 
 vec3 getNormal() {
 	vec2 tc = gl_TexCoord[0].xy;
+    if (invertTopoY == 1) tc.y = 1-tc.y;
     float s11 = texture(tex, tc).a;
     float s01 = textureOffset(tex, tc, off.xy).a;
     float s21 = textureOffset(tex, tc, off.zy).a;
@@ -1111,6 +1133,7 @@ void main( void ) {
 	if (doHeightTextures == 0) color = vec4( texture2D(tex, tc).rgb ,1.0);
 	else {
         if ( doHeightTextures == 1 ) {
+            if (invertSatY == 1) tc.y = 1-tc.y;
             vec4 cW1 = texture(texWoods, tc*1077);
             vec4 cW2 = texture(texWoods, tc*107);
             vec4 cW3 = texture(texWoods, tc*17);
@@ -1129,7 +1152,7 @@ void main( void ) {
             else color = mix(cG, cW, min(cW3.r*0.1*max(nheight,0),1));
             color = mix(color, vec4(atmoColor,1), clamp(atmoThickness*length(pos.xyz), 0.0, 0.9)); // atmospheric effects
         } else {
-            tc.y = 1-tc.y;
+            if (invertSatY == 1) tc.y = 1-tc.y;
             color = texture(texPic, tc);
             color = mix(color, mixColor, mixAmount);
         }
@@ -1205,6 +1228,7 @@ out vec4 vertex;
 uniform float heightScale;
 uniform int local = 0;
 uniform int channel;
+uniform int invertTopoY;
 uniform float heightoffset = 0.0;
 uniform sampler2D texture;
 
@@ -1228,7 +1252,9 @@ void main() {
     vec3 c = mix(tcNormal[0], tcNormal[1], u);
     vec3 d = mix(tcNormal[3], tcNormal[2], u);
     vec3 teNormal = mix(c, d, v);
-    vec4 texData = texture2D(texture, gl_TexCoord[0].xy);
+    vec2 ttc = gl_TexCoord[0].xy;
+    if (invertTopoY == 1) ttc.y = 1-ttc.y;
+    vec4 texData = texture2D(texture, ttc);
     height = heightScale * texData[channel];
     float nheight = (height - heightoffset);
     if (local > 0) tePosition += teNormal*nheight;
