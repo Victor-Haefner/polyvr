@@ -733,13 +733,19 @@ void VRTransform::drag(VRTransformPtr new_parent, VRIntersectionPtr ins) {
             cs->setMinMax(i+3,-1,0);
         }
 
-        Pnt3d P;
-        if (ins) P = ins->point; // intersection point in world coords
-        m.invert();
-        m.mult(P, P);
+        Pnt3d P1;
+        if (ins) P1 = ins->point; // intersection point in world coords
+        Pnt3d P2 = P1;
 
-        c->setReferenceA(Pose::create(Vec3d(P)));
-        c->setReferenceB(Pose::create(getFrom()));
+        m.invert();
+        m.mult(P1, P1);
+
+        auto m2 = new_parent->getWorldMatrix();
+        m2.invert();
+        m2.mult(P2, P2);
+
+        c->setReferenceA(Pose::create(Vec3d(P1)));
+        c->setReferenceB(Pose::create(Vec3d(P2)));
         physics->setConstraint(new_parent->physics, c, cs);
     }
 #endif
