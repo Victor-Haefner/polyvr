@@ -449,6 +449,7 @@ void VRPhysics::update() {
 
     if (!visShape) {
         visShape = OSG::VRGeometry::create("phys_shape");
+        visShape->addTag("SYSTEM:COLLISIONSHAPE");
         auto scene = OSG::VRScene::getCurrent();
         scene->getVisualLayer()->addObject(visShape);
     }
