@@ -13,6 +13,7 @@
 #include <OpenSG/OSGNode.h>
 #include <OpenSG/OSGGeometry.h>
 #include "core/objects/geometry/VRGeometry.h"
+#include "core/objects/geometry/VRGeoData.h"
 #include "core/objects/geometry/VRPhysics.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/utils/VRGlobals.h"
@@ -156,6 +157,52 @@ void VRPhysicsManager::dropPhysicsUpdateFunction(VRUpdateCbPtr fkt, bool after) 
     }
  }
 
+void VRPhysicsManager::updateSpringsVisual() {
+    if (!physics_visual_layer->getVisibility()) return;
+
+    if (!springsVisual) {
+        springsVisual = OSG::VRGeometry::create("phys_shape");
+        springsVisual->addTag("SYSTEM:COLLISIONSHAPE");
+        physics_visual_layer->addObject(springsVisual);
+
+        auto m = VRMaterial::create("springsVisualMat");
+        m->setLit(0);
+        m->setLineWidth(2);
+        m->setDiffuse(Color3f(0.3,0,0.6));
+        m->setDepthTest(GL_ALWAYS);
+        springsVisual->setMaterial(m);
+    }
+
+    VRGeoData data;
+    //for (auto o : OSGobjs) if (auto so = o.second.lock())
+    for (int i=0; i<dynamicsWorld->getNumConstraints(); i++) {
+        btTypedConstraint* c = dynamicsWorld->getConstraint(i);
+        btRigidBody& bA = c->getRigidBodyA();
+        btRigidBody& bB = c->getRigidBodyB();
+
+        Vec3d pA = VRPhysics::toVec3d( bA.getCenterOfMassPosition() );
+        Vec3d pB = VRPhysics::toVec3d( bB.getCenterOfMassPosition() );
+
+        btGeneric6DofSpringConstraint* s = dynamic_cast<btGeneric6DofSpringConstraint*>(c);
+        if (s) {
+            btTransform& fA = s->getFrameOffsetA();
+            btTransform& fB = s->getFrameOffsetB();
+            btTransform mA = bA.getCenterOfMassTransform();
+            btTransform mB = bB.getCenterOfMassTransform();
+            btTransform sA, sB;
+            sA.mult(mA,fA);
+            sB.mult(mB,fB);
+            pA = VRPhysics::toVec3d( sA.getOrigin() );
+            pB = VRPhysics::toVec3d( sB.getOrigin() );
+        }
+
+        data.pushVert(pA);
+        data.pushVert(pB);
+        data.pushLine();
+    }
+    data.apply(springsVisual);
+}
+
 void VRPhysicsManager::updatePhysObjects() {
     //VRTimer timer;
     //timer.start("D1");
@@ -164,6 +211,8 @@ void VRPhysicsManager::updatePhysObjects() {
     //timer.start("D2");
     VRGlobals::PHYSICS_FRAME_RATE.fps = fps;
     for (auto o : OSGobjs) if (auto so = o.second.lock()) so->resolvePhysics();
+
+    updateSpringsVisual();
 
     //auto D = timer.stop("D1");
     //if (D > 3) cout << "      tt " << D << " " << timer.stop("D2") << endl;
