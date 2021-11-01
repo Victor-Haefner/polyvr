@@ -126,6 +126,10 @@ bool VRRenderManager::getStencil() { return do_stencil; }
 bool VRRenderManager::getCalib() { return calib; }
 bool VRRenderManager::getFXAA() { return do_fxaa; }
 
+float VRRenderManager::getSSAOradius() { return ssao_radius; }
+int VRRenderManager::getSSAOkernel() { return ssao_kernel; }
+int VRRenderManager::getSSAOnoise() { return ssao_noise; }
+
 vector<VRRenderStudioPtr> VRRenderManager::getRenderings() {
     vector<VRRenderStudioPtr> res;
     auto setup = VRSetup::getCurrent();

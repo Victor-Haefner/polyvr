@@ -24,7 +24,6 @@ VRGuiGeneral::VRGuiGeneral() {
     setCheckButtonCallback("radiobutton4", bind(&VRGuiGeneral::setMode, this) );
     setCheckButtonCallback("checkbutton_01", bind(&VRGuiGeneral::toggleFrustumCulling, this) );
     setCheckButtonCallback("checkbutton_02", bind(&VRGuiGeneral::toggleOcclusionCulling, this) );
-    setCheckButtonCallback("checkbutton_2", bind(&VRGuiGeneral::toggleTwoSided, this) );
     setCheckButtonCallback("checkbutton_3", bind(&VRGuiGeneral::toggleDeferredShader, this) );
     setCheckButtonCallback("checkbutton_4", bind(&VRGuiGeneral::toggleSSAO, this) );
     setCheckButtonCallback("checkbutton_5", bind(&VRGuiGeneral::toggleCalib, this) );
@@ -69,22 +68,22 @@ void VRGuiGeneral::on_tfps_changed() {
 bool VRGuiGeneral::setSSAOradius( int st, double d ) {
     if (updating) return false;
     auto scene = VRScene::getCurrent();
-    if (scene) scene->setSSAOradius( getSliderState("hscale1") );
-    return true;
+    if (scene) scene->setSSAOradius( getSliderValue("hscale1") );
+    return false;
 }
 
 bool VRGuiGeneral::setSSAOkernel( int st, double d ) {
     if (updating) return false;
     auto scene = VRScene::getCurrent();
-    if (scene) scene->setSSAOkernel( getSliderState("hscale2") );
-    return true;
+    if (scene) scene->setSSAOkernel( getSliderValue("hscale2") );
+    return false;
 }
 
 bool VRGuiGeneral::setSSAOnoise( int st, double d ) {
     if (updating) return false;
     auto scene = VRScene::getCurrent();
-    if (scene) scene->setSSAOnoise( getSliderState("hscale3") );
-    return true;
+    if (scene) scene->setSSAOnoise( getSliderValue("hscale3") );
+    return false;
 }
 
 void VRGuiGeneral::dumpOSG() {
@@ -206,12 +205,6 @@ void VRGuiGeneral::toggleOcclusionCulling() {
     if (scene) scene->setOcclusionCulling( getCheckButtonState("checkbutton_02") );
 }
 
-void VRGuiGeneral::toggleTwoSided() {
-    if (updating) return;
-    auto scene = VRScene::getCurrent();
-    if (scene) scene->setTwoSided( getCheckButtonState("checkbutton_2") );
-}
-
 void VRGuiGeneral::updateScene() {
 	cout << "VRGuiGeneral::updateScene" << endl;
     auto scene = VRScene::getCurrent();
@@ -235,11 +228,14 @@ void VRGuiGeneral::updateScene() {
     // rendering
     setToggleButton("checkbutton_01", scene->getFrustumCulling() );
     setToggleButton("checkbutton_02", scene->getOcclusionCulling() );
-    setToggleButton("checkbutton_2", scene->getTwoSided() );
     setToggleButton("checkbutton_3", scene->getDefferedShading() );
     setToggleButton("checkbutton_4", scene->getSSAO() );
     setToggleButton("checkbutton_6", scene->getHMDD() );
     setToggleButton("checkbutton_8", scene->getFXAA() );
+
+    setSliderValue("hscale1", scene->getSSAOradius());
+    setSliderValue("hscale2", scene->getSSAOkernel());
+    setSliderValue("hscale3", scene->getSSAOnoise());
 
     updating = false;
 }

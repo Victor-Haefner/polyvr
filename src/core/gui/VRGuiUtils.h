@@ -122,7 +122,8 @@ _GtkTreeIter getComboboxIter(string cbn);
 void eraseComboboxActive(string cb);
 
 // SLIDER
-float getSliderState(string s);
+void setSliderValue(string s, float v);
+float getSliderValue(string s);
 
 // LISTVIEWS
 void fillStringListstore(string ls, vector<string> list);
