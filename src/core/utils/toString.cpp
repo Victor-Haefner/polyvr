@@ -221,7 +221,7 @@ template<> int toValue(stringstream& ss, char& v) { return ssToVal(ss, v, 0); }
 template<> int toValue(stringstream& ss, signed char& v) { return ssToVal(ss, v, 0); }
 template<> int toValue(stringstream& ss, unsigned char& v) { return ssToVal(ss, v, 0); }
 #ifdef _WIN32
-template<> int toValue(stringstream& ss, size_t& v) { return ssToVal(ss, v); }
+template<> int toValue(stringstream& ss, size_t& v) { return ssToVal(ss, v, 0); }
 #endif
 template<> int toValue(stringstream& ss, short& v) { return ssToVal(ss, v, 0); }
 template<> int toValue(stringstream& ss, unsigned short& v) { return ssToVal(ss, v, 0); }

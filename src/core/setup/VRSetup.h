@@ -31,12 +31,8 @@ class VRSetup : public VRViewManager, public VRWindowManager, public VRDeviceMan
         VRTransformPtr user = 0;
         VRCameraPtr setup_cam = 0;
 
-#ifndef WITHOUT_ART
         ARTPtr art;
-#endif
-#ifndef WITHOUT_VRPN
         VRPNPtr vrpn;
-#endif
 
         VivePtr vive = 0;
 

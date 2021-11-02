@@ -55,8 +55,12 @@ VRSetup::VRSetup(string name) {
     user = 0;
     tracking = "None";
 
+#ifndef WITHOUT_ART
     art = ART::create();
+#endif
+#ifndef WITHOUT_VRPN
     vrpn = VRPN::create();
+#endif
 
     setup_layer = VRVisualLayer::getLayer("Setup", "setup.png",1);
     stats_layer = VRVisualLayer::getLayer("Statistics", "stats.png",1);
