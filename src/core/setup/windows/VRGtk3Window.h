@@ -159,7 +159,7 @@ string typeToString(GLenum type) {
     return "";
 }
 
-void GLAPIENTRY
+void
 MessageCallback( GLenum source,
                  GLenum type,
                  GLuint id,

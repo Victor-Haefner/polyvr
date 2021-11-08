@@ -64,6 +64,9 @@ class VRRenderManager : public VRStorage {
 
         bool getDefferedShading();
         bool getSSAO();
+        float getSSAOradius();
+        int getSSAOkernel();
+        int getSSAOnoise();
         bool getHMDD();
         bool getMarker();
         bool getStencil();

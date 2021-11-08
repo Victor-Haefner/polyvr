@@ -51,6 +51,8 @@ class VRTerrain : public VRGeometry, public VRWorldModule {
         double LODfac = 1.0;
         bool localMesh = false;
         bool useHeightoffset = false;
+        bool doInvertSatY = false;
+        bool doInvertTopoY = false;
         float heightoffset = 0.0;
         VRTexturePtr heigthsTex;
         VRTexturePtr satTex;
@@ -95,6 +97,7 @@ class VRTerrain : public VRGeometry, public VRWorldModule {
         void setMeshTer(vector<vector<vector<Vec3d>>> in);
         void setWaterLevel(float w);
         void setLit(bool isLit);
+        void setInvertY(bool invertSatY, bool invertTopoY);
         void setAtmosphericEffect(float thickness, Color3f color);
         void setHeightScale(float s);
         void setMap( VRTexturePtr tex, int channel = 0, Vec4d rect = Vec4d(0,0,1,1) );

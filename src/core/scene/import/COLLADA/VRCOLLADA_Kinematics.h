@@ -5,6 +5,8 @@
 #include "core/objects/VRObjectFwd.h"
 #include "core/scene/import/VRImportFwd.h"
 
+#include <string>
+
 struct AnimationLibrary;
 struct kin_scene;
 

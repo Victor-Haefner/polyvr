@@ -185,9 +185,15 @@ void setButtonText(string b, string txt ) {
     gtk_button_set_label(bu, txt.c_str());
 }
 
-float getSliderState(string s) {
-    GtkHScale* hs = (GtkHScale*)VRGuiBuilder::get()->get_widget(s);
-    return gtk_adjustment_get_value((GtkAdjustment*)hs);
+void setSliderValue(string s, float v) {
+    auto hs = GTK_RANGE(VRGuiBuilder::get()->get_widget(s));
+    if (hs) gtk_range_set_value(hs, v);
+}
+
+float getSliderValue(string s) {
+    auto hs = GTK_RANGE(VRGuiBuilder::get()->get_widget(s));
+    if (hs) return gtk_range_get_value(hs);
+    else return 0;
 }
 
 bool keySignalProxy(GdkEventKey* e, string k, function<void(void)> sig ) {

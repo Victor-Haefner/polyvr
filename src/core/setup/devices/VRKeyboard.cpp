@@ -18,7 +18,7 @@ void VRKeyboard::applyEvents() {
 
 void VRKeyboard::keyboard(unsigned int k, bool pressed, int x, int y, bool delayed) {
     if (delayed && 0) { // TODO: delay deaktivated because CEF doenst like it at all!
-        delayedEvents.push_back( {0,k,pressed,x,y} );
+        delayedEvents.push_back( {0,int(k),int(pressed),x,y} );
         return;
     }
 

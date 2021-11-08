@@ -132,6 +132,7 @@ class VRPhysics : public VRStorage {
         void update();
         void clear();
 
+        void createVisualGeo();
         void updateVisualGeo();
 
     public:

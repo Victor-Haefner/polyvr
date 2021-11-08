@@ -704,6 +704,15 @@ void VRTransform::move(float d) {
     translate(Vec3d(dv*d));
 }
 
+/**
+
+Warning!
+
+I tried a fixed constraint instead of a spring,
+but this does not work with other constrained objects!
+
+*/
+
 void VRTransform::drag(VRTransformPtr new_parent, VRIntersectionPtr ins) {
     if (held) return;
     held = true;
@@ -729,17 +738,23 @@ void VRTransform::drag(VRTransformPtr new_parent, VRIntersectionPtr ins) {
         c->free({0,1,2,3,4,5});
         auto cs = VRConstraint::create();
         for (int i=0; i<3; i++) {
-            cs->setMinMax(i,1000,0.01); // stiffness, dampness
+            cs->setMinMax(i,10000,0.01); // stiffness, dampness // 10k seams ok, 1k seams too low
             cs->setMinMax(i+3,-1,0);
         }
 
-        Pnt3d P;
-        if (ins) P = ins->point; // intersection point in world coords
-        m.invert();
-        m.mult(P, P);
+        Pnt3d P1;
+        if (ins) P1 = ins->point; // intersection point in world coords
+        Pnt3d P2 = P1;
 
-        c->setReferenceA(Pose::create(Vec3d(P)));
-        c->setReferenceB(Pose::create(getFrom()));
+        m.invert();
+        m.mult(P1, P1);
+
+        auto m2 = new_parent->getWorldMatrix();
+        m2.invert();
+        m2.mult(P2, P2);
+
+        c->setReferenceA(Pose::create(Vec3d(P1)));
+        c->setReferenceB(Pose::create(Vec3d(P2)));
         physics->setConstraint(new_parent->physics, c, cs);
     }
 #endif
