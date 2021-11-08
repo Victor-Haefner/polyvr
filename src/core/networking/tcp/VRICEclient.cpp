@@ -10,8 +10,6 @@ using namespace OSG;
 
 VRICEClient::VRICEClient() {
     broker = VRRestClient::create();
-    client = VRTCPClient::create();
-    client->setGuard("TCPPVR\n");
     updateCb = VRUpdateCb::create("ice update", bind(&VRICEClient::update, this));
     VRScene::getCurrent()->addTimeoutFkt(updateCb, 0, 1000);
 }
@@ -44,12 +42,12 @@ string VRICEClient::getID() { return uID; }
 
 void VRICEClient::onEvent( function<void(string)> f ) {
     onEventCb = f;
-    client->onConnect([this](){;});
+    //getClient(otherID)->onConnect([this](){;});
 }
 
 void VRICEClient::onMessage( function<void(string)> f ) {
     onMessageCb = f;
-    client->onMessage(f);
+    //getClient(otherID)->onMessage(f);
 }
 
 void VRICEClient::update() { // TODO: test and debug async
@@ -141,6 +139,16 @@ vector<string> VRICEClient::getUserID(string n) {
     return res;
 }
 
+VRTCPClientPtr VRICEClient::getClient(string otherID) {
+    if (!clients.count(otherID)) {
+        clients[otherID] = VRTCPClient::create();
+        clients[otherID]->setGuard("TCPPVR\n");
+    }
+    return clients[otherID];
+}
+
+map<string, VRTCPClientPtr> VRICEClient::getClients() { return clients; }
+
 void VRICEClient::connectTo(string otherID) {
     if (uID == "" || otherID == "") {
         cout << "VRICEClient::connectTo failed, empty ID" << endl;
@@ -178,13 +186,12 @@ void VRICEClient::connectTo(string otherID) {
 
     //cout << " -> port " << port << endl;
     VRConsoleWidget::get("Collaboration")->write( " ICE "+name+"("+uid1+"): connect to "+users[uid2]+"("+uid2+") over "+turnIP+":"+toString(port)+"\n");
-    client->connect(turnIP, port);
+    getClient(otherID)->connect(turnIP, port);
 }
 
-void VRICEClient::sendTCP(string msg) {
-    if (!client->connected()) return;
-    client->send(msg, "TCPPVR\n");
+void VRICEClient::sendTCP(string otherID, string msg) {
+    auto cli = getClient(otherID);
+    if (!cli->connected()) return;
+    cli->send(msg, "TCPPVR\n");
 }
-
-VRTCPClientPtr VRICEClient::getClient() { return client; }
 

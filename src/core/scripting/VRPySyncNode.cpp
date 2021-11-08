@@ -26,6 +26,7 @@ PyMethodDef VRPySyncNode::methods[] = {
     {"getConnectionStatus", PyWrap(SyncNode, getConnectionStatus, "Set syncNode callback", string) },
     {"getRemotes", PyWrap(SyncNode, getRemotes, "Get list with uris of remotes", vector<string>) },
     {"setTCPClient", PyWrap(SyncNode, setTCPClient, "Set TCP client, usually from an ICE session", void, VRTCPClientPtr) },
+    {"addTCPClient", PyWrap(SyncNode, addTCPClient, "Add TCP client, usually from an ICE session", void, VRTCPClientPtr) },
     {NULL}  /* Sentinel */
 };
 

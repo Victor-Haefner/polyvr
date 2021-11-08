@@ -108,7 +108,16 @@ void VRSyncNode::setTCPClient(VRTCPClientPtr client) {
     connectionUri = uri;
     remotes[uri] = VRSyncConnection::create(client);
     client->onMessage( [&](string m) { handleMessage(m); } ); // bind(&VRSyncNode::handleMessage, this, std::placeholders::_1)
-    VRConsoleWidget::get("Collaboration")->write( name+": got tcp client connected to "+uri+", state is "+toString(client->connected())+"\n");
+    VRConsoleWidget::get("Collaboration")->write( name+": set tcp client connected to "+uri+", state is "+toString(client->connected())+"\n");
+    remotes[uri]->send("accConnect|1");
+}
+
+void VRSyncNode::addTCPClient(VRTCPClientPtr client) { // TODO: solve the problem with the single connectionUri !!
+    string uri = client->getConnectedUri();
+    connectionUri = uri;
+    remotes[uri] = VRSyncConnection::create(client);
+    client->onMessage( [&](string m) { handleMessage(m); } ); // bind(&VRSyncNode::handleMessage, this, std::placeholders::_1)
+    VRConsoleWidget::get("Collaboration")->write( name+": add tcp client connected to "+uri+", state is "+toString(client->connected())+"\n");
     remotes[uri]->send("accConnect|1");
 }
 
