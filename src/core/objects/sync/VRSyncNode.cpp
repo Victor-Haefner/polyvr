@@ -110,6 +110,7 @@ string VRSyncNode::setTCPClient(VRTCPClientPtr client) {
 
 string VRSyncNode::addTCPClient(VRTCPClientPtr client) { // TODO: solve the problem with the single connectionUri !!
     string uri = client->getConnectedUri();
+    cout << " -------- addTCPClient to " << uri << endl;
     remotes[uri] = VRSyncConnection::create(client, uri);
     client->onMessage( bind(&VRSyncNode::handleMessage, this, std::placeholders::_1, uri) );
     VRConsoleWidget::get("Collaboration")->write( name+": add tcp client connected to "+uri+", state is "+toString(client->connected())+"\n");
@@ -118,6 +119,7 @@ string VRSyncNode::addTCPClient(VRTCPClientPtr client) { // TODO: solve the prob
 }
 
 void VRSyncNode::accTCPConnection(string msg, string rID) {
+    if (!remotes.count(rID)) return;
     auto nID = getNode()->node->getId();
     VRConsoleWidget::get("Collaboration")->write( name+": got tcp client acc, "+msg+"\n");
     if (msg == "accConnect|1") remotes[rID]->send("accConnect|2");
@@ -185,7 +187,7 @@ bool VRSyncNode::isSubContainer(const UInt32& id) {
         auto parents = att->getMFParents();
         for (UInt32 i = 0; i<parents->size(); i++) {
             FieldContainer* parent = parents->at(i);
-            if (isSubContainer(parent->getId())) return true;
+            if (parent && isSubContainer(parent->getId())) return true;
         }
         if (parents->size() == 0) {
             if (typeName == "MultiPassMaterial") return false; // Materials may not be attached to a geometry, thats fine!
@@ -610,6 +612,8 @@ void VRSyncNode::setAvatarBeacons(VRTransformPtr headTransform, VRTransformPtr d
 }
 
 void VRSyncNode::addRemoteAvatar(string remoteID, VRTransformPtr headTransform, VRTransformPtr devTransform, VRTransformPtr devAnchor) { // some geometries
+    if (!remotes.count(remoteID)) return;
+
     headTransform->enableOptimization(false);
     devTransform->enableOptimization(false);
     devAnchor->enableOptimization(false);
@@ -628,6 +632,7 @@ void VRSyncNode::addExternalContainer(UInt32 id, UInt32 mask) {
 }
 
 void VRSyncNode::handleAvatar(string data, string remoteID) {
+    if (!remotes.count(remoteID)) return;
     if (avatarHeadTransform && avatarDeviceTransform && avatarDeviceAnchor) {
         auto IDs = splitString( splitString(data, '|')[1], ':');
         UInt32 headTransID = toInt(IDs[0]); // remote
@@ -705,6 +710,7 @@ void VRSyncNode::handleMapping(string mappingData) {
 }
 
 void VRSyncNode::sendTypes(string remoteID) {
+    if (!remotes.count(remoteID)) return;
     auto dtIt = factory->begin(FieldContainer::getClassType());
     auto dtEnd = factory->end();
 
