@@ -590,6 +590,8 @@ void VRSyncNode::update() {
     //VRConsoleWidget::get("Collaboration")->write( " Broadcast scene updates\n");
     changelist->broadcastChangeList(ptr(), localChanges, true);
     syncedContainer.clear();
+
+    for (auto& remote : remotes) remote.second->keepAlive();
     cout << "            / " << name << " VRSyncNode::update()" << "  < < < " << endl;
 }
 
@@ -887,6 +889,7 @@ void VRSyncNode::handleSelfmapRequest(string msg) {
 string VRSyncNode::handleMessage(string msg, string rID) {
     VRUpdateCbPtr job = 0;
     if (startsWith(msg, "message|"));
+    else if (startsWith(msg, "keepAlive"));
     else if (startsWith(msg, "addAvatar|")) job = VRUpdateCb::create( "sync-handleAvatar", bind(&VRSyncNode::handleAvatar, this, msg, rID) );
     else if (startsWith(msg, "selfmap|")) handleSelfmapRequest(msg);
     else if (startsWith(msg, "mapping|")) job = VRUpdateCb::create( "sync-handleMap", bind(&VRSyncNode::handleMapping, this, msg) );

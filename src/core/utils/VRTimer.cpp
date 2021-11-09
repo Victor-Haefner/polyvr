@@ -5,6 +5,7 @@
 using namespace std;
 
 VRTimer::VRTimer() { start(); }
+VRTimerPtr VRTimer::create() { return VRTimerPtr(new VRTimer()); }
 
 void VRTimer::start() { single.start = getTime()*1e-3; }
 double VRTimer::stop() { double t = getTime()*1e-3; return max(0.0, t - single.start); }

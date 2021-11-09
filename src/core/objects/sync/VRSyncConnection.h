@@ -3,6 +3,7 @@
 
 #include "core/networking/VRNetworkingFwd.h"
 #include "core/objects/VRObjectFwd.h"
+#include "core/utils/VRUtilsFwd.h"
 #include <OpenSG/OSGBaseTypes.h>
 
 #include <map>
@@ -20,6 +21,7 @@ class VRSyncConnection {
         string uri;
         string localUri;
         VRTCPClientPtr client;
+        VRTimerPtr timer;
 
     public:
         VRSyncConnection(string host, int port, string localUri);
@@ -32,6 +34,7 @@ class VRSyncConnection {
         void connect();
         bool send(string message);
         void startInterface(int port, VRSyncNodePtr snode);
+        void keepAlive();
 
         string getStatus();
         string getUri();
