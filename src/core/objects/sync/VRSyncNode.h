@@ -26,7 +26,7 @@ class VRSyncNode : public VRTransform {
         vector<UInt32> createdNodes; //IDs of the currently created nodes/children
 
         size_t selfID = 0;
-        string connectionUri;
+        string serverUri;
         bool doWrapping = true;
 
         VRMessageCbPtr onEvent;
@@ -51,7 +51,7 @@ class VRSyncNode : public VRTransform {
 
         VRObjectPtr copy(vector<VRObjectPtr> children) override;
 
-        void sendTypes();
+        void sendTypes(string remoteID);
 
         void handleWarning(string msg);
         void handleSelfmapRequest(string msg);
@@ -95,8 +95,8 @@ class VRSyncNode : public VRTransform {
         static VRSyncNodePtr create(string name = "None");
         VRSyncNodePtr ptr();
 
-        void setTCPClient(VRTCPClientPtr cli);
-        void addTCPClient(VRTCPClientPtr cli);
+        string setTCPClient(VRTCPClientPtr cli);
+        string addTCPClient(VRTCPClientPtr cli);
 
         void setDoWrapping(bool b);
         void setDoAvatars(bool b);
@@ -139,7 +139,7 @@ class VRSyncNode : public VRTransform {
         void registerContainer(FieldContainer* c, UInt32 syncNodeID = -1);
         vector<UInt32> registerNode(Node* c); //returns all registered IDs
         void setAvatarBeacons(VRTransformPtr headTransform, VRTransformPtr devTransform, VRTransformPtr devAnchor);
-        void addRemoteAvatar(VRTransformPtr headTransform, VRTransformPtr devTransform, VRTransformPtr devAnchor);
+        void addRemoteAvatar(string remoteID, VRTransformPtr headTransform, VRTransformPtr devTransform, VRTransformPtr devAnchor);
 
         map<FieldContainer*, vector<FieldContainer*>> getAllSubContainers(FieldContainer* node);
         map<UInt32, VRObjectWeakPtr> getMappedFCs();

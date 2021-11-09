@@ -20,13 +20,13 @@ PyMethodDef VRPySyncNode::methods[] = {
     {"addOwnedObject", PyWrap(SyncNode, addOwnedObject, "addOwnedObject ( objectName )", void, string) },
     {"setDoWrapping", PyWrap(SyncNode, setDoWrapping, "Set if doing OSG wrapping", void, bool) },
     {"setAvatarBeacons", PyWrap(SyncNode, setAvatarBeacons, "Set own avatar beacons, usually camera, mouse beacon, mouse beacon", void, VRTransformPtr, VRTransformPtr, VRTransformPtr) },
-    {"addRemoteAvatar", PyWrap(SyncNode, addRemoteAvatar, "Add avatar components, a geometry for the head, another for the hand, and a transform attached to the hand for DnD", void, VRTransformPtr, VRTransformPtr, VRTransformPtr) },
+    {"addRemoteAvatar", PyWrap(SyncNode, addRemoteAvatar, "Add avatar components, a geometry for the head, another for the hand, and a transform attached to the hand for DnD", void, string, VRTransformPtr, VRTransformPtr, VRTransformPtr) },
     {"getConnectionLink", PyWrap(SyncNode, getConnectionLink, "Get Connection Link", string) },
     {"setCallback", PyWrap(SyncNode, setCallback, "Set syncNode callback", void, VRMessageCbPtr) },
     {"getConnectionStatus", PyWrap(SyncNode, getConnectionStatus, "Set syncNode callback", string) },
     {"getRemotes", PyWrap(SyncNode, getRemotes, "Get list with uris of remotes", vector<string>) },
-    {"setTCPClient", PyWrap(SyncNode, setTCPClient, "Set TCP client, usually from an ICE session", void, VRTCPClientPtr) },
-    {"addTCPClient", PyWrap(SyncNode, addTCPClient, "Add TCP client, usually from an ICE session", void, VRTCPClientPtr) },
+    {"setTCPClient", PyWrap(SyncNode, setTCPClient, "Set TCP client, usually from an ICE session", string, VRTCPClientPtr) },
+    {"addTCPClient", PyWrap(SyncNode, addTCPClient, "Add TCP client, usually from an ICE session", string, VRTCPClientPtr) },
     {NULL}  /* Sentinel */
 };
 
