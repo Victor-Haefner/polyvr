@@ -573,6 +573,7 @@ map<FieldContainer*, vector<FieldContainer*>> VRSyncNode::getAllSubContainers(Fi
 
 //update this SyncNode
 void VRSyncNode::update() {
+    for (auto& remote : remotes) remote.second->keepAlive();
     auto localChanges = changelist->filterChanges(ptr());
     if (!localChanges) return;
     //if (getChildrenCount() == 0) return; // TODO: this may happen if the only child is dragged, or the only child was just deleted..
@@ -590,8 +591,6 @@ void VRSyncNode::update() {
     //VRConsoleWidget::get("Collaboration")->write( " Broadcast scene updates\n");
     changelist->broadcastChangeList(ptr(), localChanges, true);
     syncedContainer.clear();
-
-    for (auto& remote : remotes) remote.second->keepAlive();
     cout << "            / " << name << " VRSyncNode::update()" << "  < < < " << endl;
 }
 

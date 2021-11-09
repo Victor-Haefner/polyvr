@@ -136,7 +136,10 @@ bool VRSyncConnection::send(string message) {
 }
 
 void VRSyncConnection::keepAlive() {
-    if (timer->stop() < 3) send("keepAlive");
+    //cout << "keepAlive? " << timer->stop() << endl;
+    if (timer->stop() > 3*60*1000) { // 3 min
+        send("keepAlive");
+    }
 }
 
 string VRSyncConnection::getStatus() {
