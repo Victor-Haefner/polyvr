@@ -73,7 +73,7 @@ class VRSyncNode : public VRTransform {
 
         //Ownership
         vector<string> owned; //names of owned objects by this node
-        void handleOwnershipMessage(string ownership);
+        void handleOwnershipMessage(string ownership, string rID);
 
         // avatar
         VRTransformPtr avatarHeadTransform;
@@ -82,7 +82,7 @@ class VRSyncNode : public VRTransform {
         UInt32 getNodeID(VRObjectPtr t);
         UInt32 getTransformID(VRTransformPtr t);
         void addExternalContainer(UInt32 id, UInt32 mask);
-        void handleAvatar(string data);
+        void handleAvatar(string data, string remoteID);
 
         void handleNewConnect(string data);
         void accTCPConnection(string msg);
@@ -107,7 +107,7 @@ class VRSyncNode : public VRTransform {
         void replaceContainerMapping(UInt32 ID1, UInt32 ID2);
 
         void startInterface(int port);
-        string handleMessage(string msg);
+        string handleMessage(string msg, string rID);
         void update();
         void broadcast(string message);
         size_t getContainerCount();
