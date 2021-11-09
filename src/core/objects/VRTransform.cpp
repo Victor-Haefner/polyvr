@@ -859,10 +859,20 @@ void VRTransform::printTransformationTree(int indent) {
 
 map<VRTransform*, VRTransformWeakPtr> constrainedObjects;
 
+// TODO: revisit all that update constraints/transform/physics crap!
 void VRTransform::updateConstraints() { // global updater
     //cout << VRGlobals::CURRENT_FRAME << " VRTransform::updateConstraints " << constrainedObjects.size() << endl;
     for (auto wc : constrainedObjects) {
-        if (VRTransformPtr obj = wc.second.lock()) obj->updateChange();
+        if (VRTransformPtr obj = wc.second.lock()) {
+            obj->apply_constraints();
+            if (obj->held) obj->updatePhysics();
+            obj->computeMatrix4d();
+            obj->updateTransformation();
+            obj->noBlt = obj->getPhysicsDynamic();
+            obj->updatePhysics();
+        }
+
+        //if (VRTransformPtr obj = wc.second.lock()) obj->updateChange();
     }
 }
 

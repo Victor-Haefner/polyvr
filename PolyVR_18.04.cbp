@@ -415,8 +415,6 @@
 		<Unit filename="src/addons/Engineering/VRProfile.h" />
 		<Unit filename="src/addons/Engineering/VRPyEngineering.cpp" />
 		<Unit filename="src/addons/Engineering/VRPyEngineering.h" />
-		<Unit filename="src/addons/Engineering/VRPyNumberingEngine.h" />
-		<Unit filename="src/addons/Engineering/VRPyRobotArm.h" />
 		<Unit filename="src/addons/Engineering/VRRobotArm.cpp" />
 		<Unit filename="src/addons/Engineering/VRRobotArm.h" />
 		<Unit filename="src/addons/LeapMotion/VRHandGeo.cpp" />
@@ -635,10 +633,7 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/core/gui/gtksourceview/completion-providers/words/gtksourcecompletionwordsutils.h" />
-		<Unit filename="src/core/gui/gtksourceview/config.h" />
 		<Unit filename="src/core/gui/gtksourceview/gconstructor.h" />
-		<Unit filename="src/core/gui/gtksourceview/gtksource-enumtypes.h" />
-		<Unit filename="src/core/gui/gtksourceview/gtksource-marshal.h" />
 		<Unit filename="src/core/gui/gtksourceview/gtksource.h" />
 		<Unit filename="src/core/gui/gtksourceview/gtksourceautocleanups.h" />
 		<Unit filename="src/core/gui/gtksourceview/gtksourcebuffer-private.h" />
@@ -663,7 +658,6 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/core/gui/gtksourceview/gtksourcecompletion.h" />
-		<Unit filename="src/core/gui/gtksourceview/gtksourcecompletion.ui" />
 		<Unit filename="src/core/gui/gtksourceview/gtksourcecompletioncontainer.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -692,7 +686,6 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/core/gui/gtksourceview/gtksourcecompletionprovider.h" />
-		<Unit filename="src/core/gui/gtksourceview/gtksourcecompletionutils.h" />
 		<Unit filename="src/core/gui/gtksourceview/gtksourcecontextengine.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -744,7 +737,6 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/core/gui/gtksourceview/gtksourcegutterrenderertext.h" />
-		<Unit filename="src/core/gui/gtksourceview/gtksourceinit.h" />
 		<Unit filename="src/core/gui/gtksourceview/gtksourceiter.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -780,7 +772,6 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/core/gui/gtksourceview/gtksourcemarkssequence.h" />
-		<Unit filename="src/core/gui/gtksourceview/gtksourcemarshalers.list" />
 		<Unit filename="src/core/gui/gtksourceview/gtksourcepixbufhelper.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -849,7 +840,6 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/core/gui/gtksourceview/gtksourceundomanagerdefault.h" />
-		<Unit filename="src/core/gui/gtksourceview/gtksourceutils-private.h" />
 		<Unit filename="src/core/gui/gtksourceview/gtksourceutils.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -863,7 +853,6 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/core/gui/gtksourceview/gtksourceview-enumtypes.h" />
-		<Unit filename="src/core/gui/gtksourceview/gtksourceview-gresources.h" />
 		<Unit filename="src/core/gui/gtksourceview/gtksourceview-i18n.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -871,7 +860,6 @@
 		<Unit filename="src/core/gui/gtksourceview/gtksourceview-init.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/core/gui/gtksourceview/gtksourceview-marshal.h" />
 		<Unit filename="src/core/gui/gtksourceview/gtksourceview-typebuiltins.h" />
 		<Unit filename="src/core/gui/gtksourceview/gtksourceview-utils.c">
 			<Option compilerVar="CC" />
@@ -882,7 +870,6 @@
 		</Unit>
 		<Unit filename="src/core/gui/gtksourceview/gtksourceview.gresource.xml" />
 		<Unit filename="src/core/gui/gtksourceview/gtksourceview.h" />
-		<Unit filename="src/core/gui/gtksourceview/gtktextregion.h" />
 		<Unit filename="src/core/gui/widgets/VRAppLauncher.cpp" />
 		<Unit filename="src/core/gui/widgets/VRAppLauncher.h" />
 		<Unit filename="src/core/gui/widgets/VRAppPanel.cpp" />
@@ -978,7 +965,6 @@
 		<Unit filename="src/core/networking/VROPCUAclient.cpp" />
 		<Unit filename="src/core/networking/VROPCUAclient.h" />
 		<Unit filename="src/core/networking/VROPCUAvariant.cpp" />
-		<Unit filename="src/core/networking/VROPCUAvariant.h" />
 		<Unit filename="src/core/networking/VRPing.cpp" />
 		<Unit filename="src/core/networking/VRPing.h" />
 		<Unit filename="src/core/networking/VRProtocol.cpp" />
