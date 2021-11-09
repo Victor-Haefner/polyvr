@@ -104,32 +104,26 @@ VRSyncNodePtr VRSyncNode::ptr() { return static_pointer_cast<VRSyncNode>( shared
 VRSyncNodePtr VRSyncNode::create(string name) { return VRSyncNodePtr(new VRSyncNode(name) ); }
 
 string VRSyncNode::setTCPClient(VRTCPClientPtr client) {
-    string uri = client->getConnectedUri();
-    serverUri = uri;
-    remotes[uri] = VRSyncConnection::create(client, serverUri);
-    client->onMessage( bind(&VRSyncNode::handleMessage, this, std::placeholders::_1, uri) );
-    VRConsoleWidget::get("Collaboration")->write( name+": set tcp client connected to "+uri+", state is "+toString(client->connected())+"\n");
-    remotes[uri]->send("accConnect|1");
-    return uri;
+    remotes.clear();
+    return addTCPClient(client);
 }
 
 string VRSyncNode::addTCPClient(VRTCPClientPtr client) { // TODO: solve the problem with the single connectionUri !!
     string uri = client->getConnectedUri();
-    serverUri = uri;
-    remotes[uri] = VRSyncConnection::create(client, serverUri);
+    remotes[uri] = VRSyncConnection::create(client, uri);
     client->onMessage( bind(&VRSyncNode::handleMessage, this, std::placeholders::_1, uri) );
     VRConsoleWidget::get("Collaboration")->write( name+": add tcp client connected to "+uri+", state is "+toString(client->connected())+"\n");
     remotes[uri]->send("accConnect|1");
     return uri;
 }
 
-void VRSyncNode::accTCPConnection(string msg) {
+void VRSyncNode::accTCPConnection(string msg, string rID) {
     auto nID = getNode()->node->getId();
     VRConsoleWidget::get("Collaboration")->write( name+": got tcp client acc, "+msg+"\n");
-    if (msg == "accConnect|1") remotes[serverUri]->send("accConnect|2");
-    remotes[serverUri]->send("selfmap|"+toString(nID));
-    sendTypes(serverUri);
-    remotes[serverUri]->send("reqInitState|");
+    if (msg == "accConnect|1") remotes[rID]->send("accConnect|2");
+    remotes[rID]->send("selfmap|"+toString(nID));
+    sendTypes(rID);
+    remotes[rID]->send("reqInitState|");
 }
 
 void VRSyncNode::reqInitState() {
@@ -881,7 +875,7 @@ string VRSyncNode::handleMessage(string msg, string rID) {
     else if (startsWith(msg, "typeMapping|")) job = VRUpdateCb::create("sync-handleTMap", bind(&VRSyncNode::handleTypeMapping, this, msg));
     else if (startsWith(msg, "ownership|")) job = VRUpdateCb::create( "sync-ownership", bind(&VRSyncNode::handleOwnershipMessage, this, msg, rID) );
     else if (startsWith(msg, "newConnect|")) job = VRUpdateCb::create( "sync-newConnect", bind(&VRSyncNode::handleNewConnect, this, msg) );
-    else if (startsWith(msg, "accConnect|")) job = VRUpdateCb::create( "sync-accConnect", bind(&VRSyncNode::accTCPConnection, this, msg) );
+    else if (startsWith(msg, "accConnect|")) job = VRUpdateCb::create( "sync-accConnect", bind(&VRSyncNode::accTCPConnection, this, msg, rID) );
     else if (startsWith(msg, "reqInitState|")) job = VRUpdateCb::create( "sync-reqInitState", bind(&VRSyncNode::reqInitState, this) );
     else if (startsWith(msg, "changelistEnd|")) job = VRUpdateCb::create( "sync-finalizeCL", bind(&VRSyncChangelist::deserializeAndApply, changelist.get(), ptr()) );
     else if (startsWith(msg, "warn|")) job = VRUpdateCb::create( "sync-handleWarning", bind(&VRSyncNode::handleWarning, this, msg) );
@@ -891,8 +885,7 @@ string VRSyncNode::handleMessage(string msg, string rID) {
     return "";
 }
 
-//broadcast message to all remote nodes
-void VRSyncNode::broadcast(string message) {
+void VRSyncNode::broadcast(string message) { // broadcast message to all remote nodes
     //VRConsoleWidget::get("Collaboration")->write( " Broadcast: "+message+"\n");
     for (auto& remote : remotes) {
         if (!remote.second->send(message)) {

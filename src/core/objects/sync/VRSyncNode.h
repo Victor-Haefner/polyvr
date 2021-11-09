@@ -85,7 +85,7 @@ class VRSyncNode : public VRTransform {
         void handleAvatar(string data, string remoteID);
 
         void handleNewConnect(string data);
-        void accTCPConnection(string msg);
+        void accTCPConnection(string msg, string rID);
         void reqInitState();
 
     public:
