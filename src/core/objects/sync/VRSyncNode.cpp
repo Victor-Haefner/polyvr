@@ -103,29 +103,36 @@ VRSyncNode::~VRSyncNode() {
 VRSyncNodePtr VRSyncNode::ptr() { return static_pointer_cast<VRSyncNode>( shared_from_this() ); }
 VRSyncNodePtr VRSyncNode::create(string name) { return VRSyncNodePtr(new VRSyncNode(name) ); }
 
+VRSyncConnectionPtr VRSyncNode::getRemote(string rID) {
+    if (!remotes.count(rID)) return 0;
+    return remotes[rID];
+}
+
 string VRSyncNode::setTCPClient(VRTCPClientPtr client) {
     remotes.clear();
     return addTCPClient(client);
 }
 
-string VRSyncNode::addTCPClient(VRTCPClientPtr client) { // TODO: solve the problem with the single connectionUri !!
+string VRSyncNode::addTCPClient(VRTCPClientPtr client) {
     string uri = client->getConnectedUri();
     cout << " -------- addTCPClient to " << uri << endl;
-    remotes[uri] = VRSyncConnection::create(client, uri);
+    auto remote = VRSyncConnection::create(client, uri);
+    remotes[uri] = remote;
     client->onMessage( bind(&VRSyncNode::handleMessage, this, std::placeholders::_1, uri) );
     VRConsoleWidget::get("Collaboration")->write( name+": add tcp client connected to "+uri+", state is "+toString(client->connected())+"\n");
-    remotes[uri]->send("accConnect|1");
+    remote->send("accConnect|1");
     return uri;
 }
 
 void VRSyncNode::accTCPConnection(string msg, string rID) {
-    if (!remotes.count(rID)) return;
+    auto remote = getRemote(rID);
+    if (!remote) return;
     auto nID = getNode()->node->getId();
     VRConsoleWidget::get("Collaboration")->write( name+": got tcp client acc, "+msg+"\n");
-    if (msg == "accConnect|1") remotes[rID]->send("accConnect|2");
-    remotes[rID]->send("selfmap|"+toString(nID));
+    if (msg == "accConnect|1") remote->send("accConnect|2");
+    remote->send("selfmap|"+toString(nID));
     sendTypes(rID);
-    remotes[rID]->send("reqInitState|");
+    remote->send("reqInitState|");
 }
 
 void VRSyncNode::reqInitState() {
@@ -139,12 +146,13 @@ void VRSyncNode::addRemote(string host, int port) {
     cout << " >>> > > VRSyncNode::addRemote to " << getName() << ": " << name << " at " << host << " on " << port << endl;
     string uri = host + ":" + toString(port);
     if (remotes.count(uri)) return;
-    remotes[uri] = VRSyncConnection::create(host, port, serverUri);
+    auto remote = VRSyncConnection::create(host, port, serverUri);
+    remotes[uri] = remote;
 
     // sync node ID
     auto nID = getNode()->node->getId();
-    remotes[uri]->send("selfmap|"+toString(nID));
-    remotes[uri]->send("newConnect|"+serverUri);
+    remote->send("selfmap|"+toString(nID));
+    remote->send("newConnect|"+serverUri);
     cout << "   send newConnect from " << uri << endl;
 
     sendTypes(uri);
@@ -612,7 +620,8 @@ void VRSyncNode::setAvatarBeacons(VRTransformPtr headTransform, VRTransformPtr d
 }
 
 void VRSyncNode::addRemoteAvatar(string remoteID, VRTransformPtr headTransform, VRTransformPtr devTransform, VRTransformPtr devAnchor) { // some geometries
-    if (!remotes.count(remoteID)) return;
+    auto remote = getRemote(remoteID);
+    if (!remote) return;
 
     headTransform->enableOptimization(false);
     devTransform->enableOptimization(false);
@@ -622,7 +631,7 @@ void VRSyncNode::addRemoteAvatar(string remoteID, VRTransformPtr headTransform, 
     UInt32 deviceTransID = getTransformID(devTransform);
     UInt32 deviceAnchorID = getNodeID(devAnchor);
     string msg = "addAvatar|"+toString(headTransID)+":"+toString(deviceTransID)+":"+toString(deviceAnchorID);
-    remotes[remoteID]->send(msg);
+    remote->send(msg);
     VRConsoleWidget::get("Collaboration")->write( name+": Add avatar representation, head "+headTransform->getName()+" ("+toString(headTransID)+"), hand "+devTransform->getName()+" ("+toString(deviceTransID)+")\n", "green");
 }
 
@@ -632,7 +641,9 @@ void VRSyncNode::addExternalContainer(UInt32 id, UInt32 mask) {
 }
 
 void VRSyncNode::handleAvatar(string data, string remoteID) {
-    if (!remotes.count(remoteID)) return;
+    auto remote = getRemote(remoteID);
+    if (!remote) return;
+
     if (avatarHeadTransform && avatarDeviceTransform && avatarDeviceAnchor) {
         auto IDs = splitString( splitString(data, '|')[1], ':');
         UInt32 headTransID = toInt(IDs[0]); // remote
@@ -647,7 +658,7 @@ void VRSyncNode::handleAvatar(string data, string remoteID) {
         mapping += "|"+toString(headTransID)+":"+toString(camTrans);
         mapping += "|"+toString(deviceTransID)+":"+toString(devTrans);
         mapping += "|"+toString(deviceAnchorID)+":"+toString(devAnchor);
-        remotes[remoteID]->send(mapping);
+        remote->send(mapping);
         VRConsoleWidget::get("Collaboration")->write( name+": Map remote avatar head ID "+toString(headTransID)+" to local camera ID "+toString(camTrans)+"\n", "green");
         VRConsoleWidget::get("Collaboration")->write( name+": Map remote avatar hand ID "+toString(deviceTransID)+" to local device ID "+toString(devTrans)+"\n", "green");
         VRConsoleWidget::get("Collaboration")->write( name+": Map remote avatar anchor ID "+toString(deviceAnchorID)+" to local anchor ID "+toString(devAnchor)+"\n", "green");
@@ -710,7 +721,8 @@ void VRSyncNode::handleMapping(string mappingData) {
 }
 
 void VRSyncNode::sendTypes(string remoteID) {
-    if (!remotes.count(remoteID)) return;
+    auto remote = getRemote(remoteID);
+    if (!remote) return;
     auto dtIt = factory->begin(FieldContainer::getClassType());
     auto dtEnd = factory->end();
 
@@ -720,7 +732,7 @@ void VRSyncNode::sendTypes(string remoteID) {
         msg += "|" + toString(fcT->getId()) + ":" + fcT->getName();
         ++dtIt;
     }
-    remotes[remoteID]->send(msg);
+    remote->send(msg);
 }
 
 void VRSyncNode::handleTypeMapping(string mappingData) {
@@ -946,7 +958,7 @@ void VRSyncNode::setCallback(VRMessageCbPtr fkt) {
 
 string VRSyncNode::getConnectionStatus() {
     string status = "SyncNode: " + serverUri + "\n";
-    for (auto remote : remotes) {
+    for (auto& remote : remotes) {
         status += " (" + remote.first + ") " + remote.second->getStatus();
         status += "\n";
     }

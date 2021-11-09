@@ -102,6 +102,7 @@ class VRSyncNode : public VRTransform {
         void setDoAvatars(bool b);
 
         void addRemote(string host, int port);
+        VRSyncConnectionPtr getRemote(string rID);
 
         void addRemoteMapping(UInt32 lID, UInt32 rID);
         void replaceContainerMapping(UInt32 ID1, UInt32 ID2);
