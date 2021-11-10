@@ -14,6 +14,7 @@
 //#include "core/math/pose.h"
 #include "core/utils/VRStorage_template.h"
 #include "core/gui/VRGuiConsole.h"
+#include "core/utils/system/VRSystem.h"
 #include "core/scene/VRScene.h"
 #include "core/scene/VRSceneManager.h"
 #include "core/scene/import/VRImport.h"
@@ -98,6 +99,8 @@ VRSyncNode::VRSyncNode(string name) : VRTransform(name) {
 
 VRSyncNode::~VRSyncNode() {
     cout << " VRSyncNode::~VRSyncNode " << name << endl;
+	cout << " -------------- ~VRSyncNode ----------------" << endl;
+	printBacktrace();
 }
 
 VRSyncNodePtr VRSyncNode::ptr() { return static_pointer_cast<VRSyncNode>( shared_from_this() ); }
@@ -135,10 +138,10 @@ void VRSyncNode::accTCPConnection(string msg, string rID) {
     remote->send("reqInitState|");
 }
 
-void VRSyncNode::reqInitState() {
+void VRSyncNode::reqInitState(string rID) {
     VRConsoleWidget::get("Collaboration")->write( name+": got request to send initial state\n");
     if (getChildrenCount() == 0) return;
-    changelist->broadcastSceneState(ptr());
+    changelist->sendSceneState(ptr(), rID);
 }
 
 //Add remote Nodes to sync with
@@ -896,7 +899,7 @@ string VRSyncNode::handleMessage(string msg, string rID) {
     else if (startsWith(msg, "ownership|")) job = VRUpdateCb::create( "sync-ownership", bind(&VRSyncNode::handleOwnershipMessage, this, msg, rID) );
     else if (startsWith(msg, "newConnect|")) job = VRUpdateCb::create( "sync-newConnect", bind(&VRSyncNode::handleNewConnect, this, msg) );
     else if (startsWith(msg, "accConnect|")) job = VRUpdateCb::create( "sync-accConnect", bind(&VRSyncNode::accTCPConnection, this, msg, rID) );
-    else if (startsWith(msg, "reqInitState|")) job = VRUpdateCb::create( "sync-reqInitState", bind(&VRSyncNode::reqInitState, this) );
+    else if (startsWith(msg, "reqInitState|")) job = VRUpdateCb::create( "sync-reqInitState", bind(&VRSyncNode::reqInitState, this, rID) );
     else if (startsWith(msg, "changelistEnd|")) job = VRUpdateCb::create( "sync-finalizeCL", bind(&VRSyncChangelist::deserializeAndApply, changelist.get(), ptr()) );
     else if (startsWith(msg, "warn|")) job = VRUpdateCb::create( "sync-handleWarning", bind(&VRSyncNode::handleWarning, this, msg) );
     //else if (startsWith(msg, "warn|")) handleWarning(msg);

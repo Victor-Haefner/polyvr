@@ -783,13 +783,25 @@ void VRSyncChangelist::broadcastSceneState(VRSyncNodePtr syncNode) {
     auto fullState = ChangeList::create();
     fullState->fillFromCurrentState();
     auto localChanges = filterChangeList(syncNode, fullState);
-    //broadcastChangeList(syncNode, localChanges, true);
 
     string data = serialize(syncNode, localChanges);
     syncNode->broadcast(data); // send over websocket to remote
     syncNode->broadcast("changelistEnd|");
 }
 
+void VRSyncChangelist::sendSceneState(VRSyncNodePtr syncNode, string rID) {
+    auto remote = syncNode->getRemote(rID);
+    if (!remote) return;
+
+    VRConsoleWidget::get("Collaboration")->write( " Send scene state to"+rID+"\n");
+    auto fullState = ChangeList::create();
+    fullState->fillFromCurrentState();
+    auto localChanges = filterChangeList(syncNode, fullState);
+
+    string data = serialize(syncNode, localChanges);
+    remote->send(data);
+    remote->send("changelistEnd|");
+}
 
 
 
