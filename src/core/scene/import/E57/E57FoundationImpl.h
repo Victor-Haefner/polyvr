@@ -951,7 +951,7 @@ public:
                 ~CompressedVectorReaderImpl();
     unsigned    read();
     unsigned    read(vector<SourceDestBuffer>& dbufs);
-    void        seek(uint64_t recordNumber);
+    uint64_t    seek(uint64_t recordNumber);
     bool        isOpen();
     shared_ptr<CompressedVectorNodeImpl> compressedVectorNode();
     void        close();

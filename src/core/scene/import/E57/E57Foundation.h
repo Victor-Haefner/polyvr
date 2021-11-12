@@ -326,7 +326,7 @@ class CompressedVectorReader {
 public:
     unsigned    read();
     unsigned    read(vector<SourceDestBuffer>& dbufs);
-    void        seek(int64_t recordNumber); // !!! not implemented yet
+    uint64_t    seek(int64_t recordNumber); // !!! not implemented yet
     void        close();
     bool        isOpen();
     CompressedVectorNode compressedVectorNode() const;
