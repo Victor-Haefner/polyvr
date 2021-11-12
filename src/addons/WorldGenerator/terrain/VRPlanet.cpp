@@ -92,12 +92,14 @@ Vec2d VRPlanet::getSurfaceUV(double north, double east) {
     Vec2d res;
     auto sector = getSector(north, east);
     if (!sector) return res;
+    auto terrain = sector->getTerrain(0);
+    if (!terrain) return res;
 
     auto sectorCoords = sector->getPlanetCoords();
     auto s = fromLatLongSize(sectorCoords[0], sectorCoords[1], sectorCoords[0]+sectorSize, sectorCoords[1]+sectorSize); //u = east, v = north
     auto u = (east-sectorCoords[1]-sectorSize/2)/sectorSize*s[0];
     auto v = -(north-sectorCoords[0]-sectorSize/2)/sectorSize*s[1];
-    return sector->getTerrain()->getTexCoord( Vec2d(u,v) );
+    return terrain->getTexCoord( Vec2d(u,v) );
 }
 
 double VRPlanet::getRadius() { return radius; }
@@ -107,18 +109,21 @@ PosePtr VRPlanet::getSurfacePose( double north, double east, bool local, bool se
 
     auto sector = getSector(north, east);
     if (sector) {
-        auto sectorCoords = sector->getPlanetCoords();
-        auto s = fromLatLongSize(sectorCoords[0], sectorCoords[1], sectorCoords[0]+sectorSize, sectorCoords[1]+sectorSize); //u = east, v = north
-        auto u = (east-sectorCoords[1]-sectorSize/2)/sectorSize*s[0];
-        auto v = -(north-sectorCoords[0]-sectorSize/2)/sectorSize*s[1];
+        auto terrain = sector->getTerrain(0);
+        if (terrain) {
+            auto sectorCoords = sector->getPlanetCoords();
+            auto s = fromLatLongSize(sectorCoords[0], sectorCoords[1], sectorCoords[0]+sectorSize, sectorCoords[1]+sectorSize); //u = east, v = north
+            auto u = (east-sectorCoords[1]-sectorSize/2)/sectorSize*s[0];
+            auto v = -(north-sectorCoords[0]-sectorSize/2)/sectorSize*s[1];
 
-        Vec2d uv = Vec2d(u,v);
-        auto height = sector->getTerrain()->getHeight(uv);
-        auto newPos = poseG->pos() + poseG->up()*height;
-        Vec3d f = newPos;
-        Vec3d d = poseG->dir();
-        Vec3d up = poseG->up();
-        poseG = Pose::create(f,d,up); //global pose
+            Vec2d uv = Vec2d(u,v);
+            auto height = terrain->getHeight(uv);
+            auto newPos = poseG->pos() + poseG->up()*height;
+            Vec3d f = newPos;
+            Vec3d d = poseG->dir();
+            Vec3d up = poseG->up();
+            poseG = Pose::create(f,d,up); //global pose
+        }
     }
 
     if (local) {
@@ -324,7 +329,9 @@ void VRPlanet::setLayermode( string mode ) {
 }
 
 VRWorldGeneratorPtr VRPlanet::addSector( double north, double east, bool local ) {
-    auto generator = VRWorldGenerator::create(layermode);
+    auto generator = VRWorldGenerator::create();
+    //if (layermode == 0) generator->init();
+    //if (layermode == 1) generator->initMinimum();
     auto sid = toSID(north, east);
     sectors[sid] = generator;
     anchor->addChild(generator);

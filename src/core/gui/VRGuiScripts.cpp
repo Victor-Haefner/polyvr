@@ -937,10 +937,10 @@ void VRGuiScripts::on_find_diag_find_clicked() {
     else results = scene->searchScript(search);
 
     auto print = [&]( string m, string style = "", shared_ptr< VRFunction<string> > link = 0 ) {
-        VRGuiManager::get()->getConsole( "Search results" )->write( m, style, link );
+        VRConsoleWidget::get( "Search results" )->write( m, style, link );
     };
 
-    VRGuiManager::get()->getConsole( "Search results" )->addStyle( "blueLink", "#3355ff", "#ffffff", false, true, true );
+    VRConsoleWidget::get( "Search results" )->addStyle( "blueLink", "#3355ff", "#ffffff", false, true, true );
 
     // result output
     print( "Results, line-position, for search of '" + search + "':\n");

@@ -61,12 +61,12 @@ void VRProjectManager::save(string path) {
     xml.write(path);
 }
 
-void VRProjectManager::load(string path) {
+bool VRProjectManager::load(string path) {
     if (path == "") path = getName();
     if (exists(path)) {
         setName(path);
         path = canonical(path);
-    } else return;
+    } else return false;
     cout << "VRProjectManager::load " << path << endl;
 
     XML xml;
@@ -89,6 +89,8 @@ void VRProjectManager::load(string path) {
         auto ctx = VRStorageContext::create(mode == "RELOAD");
         s->load(e, ctx);
     }
+
+    return true;
 }
 
 void VRProjectManager::setPersistencyLevel(int p) { persistencyLvl = p; }

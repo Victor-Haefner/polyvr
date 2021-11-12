@@ -26,6 +26,7 @@ class VRSyncChangelist {
         ~VRSyncChangelist();
         static VRSyncChangelistPtr create();
 
+        OSGChangeList* filterChangeList(VRSyncNodePtr node, ChangeList* cl);
         OSGChangeList* filterChanges(VRSyncNodePtr node);
 
         void printChangeList(VRSyncNodePtr syncNode, OSGChangeList* cl);

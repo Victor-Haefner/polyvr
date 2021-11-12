@@ -5,15 +5,23 @@
 #include <OpenSG/OSGImage.h>
 
 #ifndef WITHOUT_NUMPY
+#define NO_IMPORT_ARRAY
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
+#include <numpy/ndarraytypes.h>
 #include <numpy/ndarrayobject.h>
 #endif
 
 using namespace OSG;
 
-template<> string typeName(const VRTexture& t) { return "Texture"; }
+template<> string typeName(const VRTexture* t) { return "Texture"; }
 template<> PyObject* VRPyTypeCaster::cast(const VRTexturePtr& e) { return VRPyTexture::fromSharedPtr(e); }
-template<> bool toValue(PyObject* o, VRTexturePtr& v) { if (!VRPyTexture::check(o)) return 0; v = ((VRPyTexture*)o)->objPtr; return 1; }
+
+template<> bool toValue(PyObject* o, VRTexturePtr& v) {
+    if (VRPyBase::isNone(o)) { v = 0; return 1; }
+    if (!VRPyTexture::check(o)) return 0;
+    v = ((VRPyTexture*)o)->objPtr;
+    return 1;
+}
 
 template<> PyTypeObject VRPyBaseT<VRTexture>::type = {
     PyObject_HEAD_INIT(NULL)
@@ -51,7 +59,8 @@ template<> PyTypeObject VRPyBaseT<VRTexture>::type = {
 };
 
 PyMethodDef VRPyTexture::methods[] = {
-    {"read", PyWrap(Texture, read, "Read an image from disk - read( str path )", void, string ) },
+    {"read", PyWrap(Texture, read, "Read an image from disk", void, string ) },
+    {"readGIS", PyWrap(Texture, readGIS, "Read GIS raster data from disk", void, string ) },
     {"write", PyWrapOpt(Texture, write, "Write an image to disk - write( str path )", "0", void, string, bool ) },
     {"getPixel", PyWrap(Texture, getPixelUV, "Return pixel at coordinates u,v - getPixel( [u,v] )", Color4f, Vec2d ) },
     {"getPixels", PyWrap(Texture, getPixels, "Return pixels", vector<Color4f> ) },
@@ -62,6 +71,7 @@ PyMethodDef VRPyTexture::methods[] = {
     {"setByteData", PyWrapOpt(Texture, setByteData, "Set byte texture data", "1|0", void, vector<char>, Vec3i, int, int, int ) },
     {"setFloatData", PyWrapOpt(Texture, setFloatData, "Set float texture data", "1|0", void, vector<float>, Vec3i, int, int, int ) },
     {"setInternalFormat", PyWrap(Texture, setInternalFormat, "Set internal format", void, int ) },
+    {"resize", PyWrapOpt(Texture, resize, "Resize image, optional scaling and offset", "1|0 0 0", void, Vec3i, bool, Vec3i ) },
     {NULL}  /* Sentinel */
 };
 
@@ -76,7 +86,7 @@ bool CheckExtension(string extN) {
 
 PyObject* VRPyTexture::New(PyTypeObject *type, PyObject *args, PyObject *kwds) {
 #ifndef WITHOUT_NUMPY
-    import_array1(NULL);
+    //import_array1(NULL);
     VRTexturePtr img = VRTexture::create();
     if (pySize(args) == 0) return allocPtr( type, img );
 

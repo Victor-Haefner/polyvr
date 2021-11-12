@@ -1,4 +1,5 @@
 #include "VRGuiConsole.h"
+#include "VRGuiManager.h"
 #include "core/utils/VRFunction.h"
 #include "core/utils/VRMutex.h"
 
@@ -41,6 +42,10 @@ VRConsoleWidget::VRConsoleWidget() {
 }
 
 VRConsoleWidget::~VRConsoleWidget() {}
+
+VRConsoleWidgetPtr VRConsoleWidget::get(string name) {
+    return VRGuiManager::get()->getConsole(name);
+}
 
 void VRConsoleWidget::write(string msg, string style, shared_ptr< VRFunction<string> > link) {
     VRLock lock(mtx);

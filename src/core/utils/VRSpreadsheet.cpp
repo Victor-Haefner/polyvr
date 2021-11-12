@@ -155,16 +155,23 @@ vector<string> VRSpreadsheet::getSheets() {
 }
 
 size_t VRSpreadsheet::getNColumns(string sheet) {
+    if (!sheets.count(sheet)) return 0;
     //cout << "VRSpreadsheet::getNColumns of " << sheet << endl;
     //cout << sheets[sheet].xml->getRoot()->getChild("sheetData")->toString() << endl;
     return sheets[sheet].NCols;
 }
 
 size_t VRSpreadsheet::getNRows(string sheet) {
+    if (!sheets.count(sheet)) return 0;
     return sheets[sheet].NRows;
 }
 
 string VRSpreadsheet::getCell(string sheet, size_t i, size_t j) {
+    if (!sheets.count(sheet)) return "";
+    if (j >= sheets[sheet].NRows) return "";
+    if (i >= sheets[sheet].NCols) return "";
+    if (j >= sheets[sheet].rows.size()) return "";
+    if (i >= sheets[sheet].rows[j].cells.size()) return "";
     return sheets[sheet].rows[j].cells[i].data;
 }
 

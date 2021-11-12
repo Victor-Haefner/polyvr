@@ -17,16 +17,18 @@ if (Np < N-Ndp ) { \
 }
 
 #define CW_GET_VALUE(i,T,t,N) \
-typename std::remove_const< typename std::remove_reference<T>::type >::type t; \
+typedef typename std::remove_const< typename std::remove_reference<T>::type >::type K ## i; \
+K ## i t; \
 if (i < params.size()) { \
     if (! toValue(params[i], t)) { \
-        VRCallbackWrapperBase::err = "Function argument "+toString(i)+" expects a "+typeName(t)+" ("+typeName( params[i] )+" given)"; \
+        VRCallbackWrapperBase::err = "Function argument "+toString(i)+" expects a "+typeName(&t); \
+        VRCallbackWrapperBase::err += " ("+typeName( &params[i] )+" given)"; \
         return false; \
     } \
 } else { \
     int j = i - (N-defaultParams.size()); \
     if (! toValue( string(&defaultParams[j][0]), t)) { \
-        VRCallbackWrapperBase::err = "Internal error, function argument "+toString(i)+" expects a "+typeName(t)+", but got default argument "+defaultParams[j]; \
+        VRCallbackWrapperBase::err = "Internal error, function argument "+toString(i)+" expects a "+typeName(&t)+", but got default argument "+defaultParams[j]; \
         return false; \
     } \
 }

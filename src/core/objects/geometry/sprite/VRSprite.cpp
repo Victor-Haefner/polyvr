@@ -121,7 +121,7 @@ void VRSprite::webOpen(string path, int res, float ratio) {
 
     EM_ASM({
         var fID = $0;
-	var isVis = $1;
+        var isVis = $1;
         var uri = Module.UTF8ToString($2);
         var parts = uri.split("/");
         uri = parts[parts.length - 1]+".html";
@@ -129,10 +129,10 @@ void VRSprite::webOpen(string path, int res, float ratio) {
         var frame = document.createElement("iframe");
         document.body.appendChild(frame);
         frame.src = uri;
-        frame.style = "position:absolute;top:0;left:0;height:300px;width:300px;z-index:2;";
-	frame.frameBorder = 0;
+        frame.style = "position:absolute;top:0;right:0;height:300px;width:300px;z-index:2;";
+        frame.frameBorder = 0;
         frame.title = "PolyVR widget";
-	if (!isVis) frame.style.display = "none";
+        if (!isVis) frame.style.display = "none";
 
         hudFrames[fID] = frame;
     }, fID, isVisible(), path.c_str());
@@ -148,22 +148,22 @@ void VRSprite::updateTransformation() {
     float z = abs(getFrom()[2])*1.3;
     float w = width/z;
     float h = height/z;
-    float l = 0.5+x/z;
+    float l = 0.5+0.8*x/z;
     float b = 0.5+y/z;
     if (z < 1e-3) z = 1e-3;
     EM_ASM({
         var fID = $0;
-	var width = $1 * 100.0;
-	var height = $2 * 100.0;
-	var left = $3 * 100.0;
-	var bottom = $4 * 100.0;
+        var width = $1 * 100.0;
+        var height = $2 * 100.0;
+        var left = $3 * 100.0;
+        var bottom = $4 * 100.0;
         var frame = hudFrames[fID];
-	if (frame != undefined) {
-	    frame.style.width = width+"vh";
-	    frame.style.height = height+"vh";
-	    frame.style.left = "calc("+left+"vw - "+(width*0.5)+"vh)";
-	    frame.style.top = ((100-bottom)-height*0.5)+"vh";
-	}
+        if (frame != undefined) {
+            frame.style.width = width+"vh";
+            frame.style.height = height+"vh";
+            frame.style.left = "calc("+left+"vw - "+(width*0.5)+"vh)";
+            frame.style.top = ((100-bottom)-height*0.5)+"vh";
+        }
     }, fID, w, h, l, b);
 #endif
 }

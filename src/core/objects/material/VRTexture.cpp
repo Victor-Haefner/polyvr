@@ -3,6 +3,7 @@
 #include "core/utils/toString.h"
 #include "core/utils/system/VRSystem.h"
 #include "core/scene/VRScene.h"
+#include "core/scene/import/GIS/VRGDAL.h"
 
 #include <OpenSG/OSGImage.h>
 
@@ -40,6 +41,12 @@ void VRTexture::setFloatData(vector<float> data, Vec3i layout, int chanels, int 
 
 void VRTexture::read(string path) {
     if (!img->read(path.c_str())) cout << " VRTexture::read from file '" << path << "' failed!" << endl;
+}
+
+void VRTexture::readGIS(string path) {
+    auto tex = loadGeoRasterData(path, false);
+    img = tex->img;
+    internal_format = tex->internal_format;
 }
 
 void VRTexture::writeThreaded(string path, VRTexturePtr self, VRThreadWeakPtr tw) { // TODO: add mutex!
@@ -171,12 +178,20 @@ void VRTexture::paste(VRTexturePtr other, Vec3i offset) {
     // TODO: evaluate the speed against the setSubData function!
 }
 
-void VRTexture::resize(Vec3i size, Vec3i offset) {
-    auto tmp = VRTexture::create(img);
+void VRTexture::resize(Vec3i size, bool scale, Vec3i offset) {
     ImageMTRecPtr nimg = Image::create();
-    nimg->set(img->getPixelFormat(), size[0], size[1], size[2],
-              img->getMipMapCount(), img->getFrameCount(), img->getFrameDelay(),
-              0, img->getDataType(), true, img->getSideCount());
+    nimg->set(img->getPixelFormat(), size[0], size[1], size[2], img->getMipMapCount(), img->getFrameCount(), img->getFrameDelay(), 0, img->getDataType(), true, img->getSideCount());
+    VRTexturePtr tmp;
+
+    if (scale) {
+        ImageMTRecPtr simg = Image::create();
+        simg->set(img->getPixelFormat(), size[0], size[1], size[2], img->getMipMapCount(), img->getFrameCount(), img->getFrameDelay(), 0, img->getDataType(), true, img->getSideCount());
+        img->scale(size[0], size[1], size[2], simg);
+        tmp = VRTexture::create(simg);
+    } else {
+        tmp = VRTexture::create(img);
+    }
+
     img = nimg;
     paste(tmp, offset);
 }
@@ -194,7 +209,7 @@ void VRTexture::merge(VRTexturePtr other, Vec3d pos) {
     Boundingbox bb; // compute total new size
     bb.updateFromPoints( { Vec3d(offset), Vec3d(offset2), Vec3d(offset+dim2), Vec3d(offset2+dim1) } );
     Vec3i dim3 = Vec3i(bb.size());
-    resize(dim3, offset2);
+    resize(dim3, false, offset2);
     paste(other, offset);
 }
 

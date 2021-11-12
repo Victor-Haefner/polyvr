@@ -14,6 +14,7 @@
 #include "core/objects/geometry/VRStroke.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/material/VRTexture.h"
+#include "core/objects/material/VRTextureGenerator.h"
 #include "core/objects/VRLodTree.h"
 #include "core/scene/VRObjectManager.h"
 #include "core/utils/VRTimer.h"
@@ -42,28 +43,14 @@
 using namespace OSG;
 
 
-VRWorldGenerator::VRWorldGenerator() : VRTransform("WorldGenerator") {}
-
+VRWorldGenerator::VRWorldGenerator() : VRTransform("WorldGenerator") { type = "WorldGenerator"; }
 VRWorldGenerator::~VRWorldGenerator() {}
 
 VRWorldGeneratorPtr VRWorldGenerator::create() {
     auto wg = VRWorldGeneratorPtr( new VRWorldGenerator() );
-    wg->init();
+    wg->lod = VRLod::create("wgenLod");
+    wg->addChild(wg->lod);
     return wg;
-}
-
-VRWorldGeneratorPtr VRWorldGenerator::create(int meta) {
-    if (meta == 0) {
-        auto wg = VRWorldGeneratorPtr( new VRWorldGenerator() );
-        wg->init();
-        return wg;
-    }
-    if ( meta == 1 ) {
-        auto wg = VRWorldGeneratorPtr( new VRWorldGenerator() );
-        wg->initMinimum();
-        return wg;
-    }
-    return 0;
 }
 
 VRWorldGeneratorPtr VRWorldGenerator::ptr() { return dynamic_pointer_cast<VRWorldGenerator>( shared_from_this() ); }
@@ -95,20 +82,25 @@ void VRWorldGenerator::setPlanet(VRPlanetPtr p, Vec2d c) {
     coords = c;
     planet = p;
     for (auto terrain:terrains) terrain->setWorld( ptr() );
-    if (metaLVL == 0) roads->setWorld( ptr() );
-    if (metaLVL == 0) nature->setWorld( ptr() );
-    if (metaLVL == 0) district->setWorld( ptr() );
+    if (roads) roads->setWorld( ptr() );
+    if (nature) nature->setWorld( ptr() );
+    if (district) district->setWorld( ptr() );
 }
 
 VROntologyPtr VRWorldGenerator::getOntology() { return ontology; }
 VRRoadNetworkPtr VRWorldGenerator::getRoadNetwork() { return roads; }
 VRTrafficSignsPtr VRWorldGenerator::getTrafficSigns() { return trafficSigns; }
 VRObjectManagerPtr VRWorldGenerator::getAssetManager() { return assets; }
-VRTerrainPtr VRWorldGenerator::getTerrain() { return terrains[0]; }
 VRNaturePtr VRWorldGenerator::getNature() { return nature; }
 VRPlanetPtr VRWorldGenerator::getPlanet() { return planet; }
 VRDistrictPtr VRWorldGenerator::getDistrict() { return district; }
 VRLodTreePtr VRWorldGenerator::getLodTree() { return lodTree; }
+
+VRTerrainPtr VRWorldGenerator::getTerrain(int i) {
+    auto lc = lod->getChild(i);
+    if (!lc) return 0;
+    return dynamic_pointer_cast<VRTerrain>( lc->getChild(0) );
+}
 
 void VRWorldGenerator::addMaterial( string name, VRMaterialPtr mat ) { materials[name] = mat; }
 void VRWorldGenerator::addAsset( string name, VRTransformPtr geo ) {
@@ -135,8 +127,7 @@ VRGeometryPtr VRWorldGenerator::getMiscArea(VREntityPtr mEnt){
     return 0;
 }
 
-void VRWorldGenerator::init() {
-    metaLVL = 0;
+void VRWorldGenerator::init() { // deprecated
     auto addMat = [&](string name, int texDim) {
         auto mat = VRMaterial::create(name);
         mat->setDefaultVertexShader();
@@ -163,15 +154,15 @@ void VRWorldGenerator::init() {
     auto terrain = VRTerrain::create();
     terrains.push_back(terrain);
     terrain->setWorld( ptr() );
-    lodLevels[0]->addChild(terrain);
+    lod->getChild(0)->addChild(terrain);
 
     roads = VRRoadNetwork::create();
     roads->setWorld( ptr() );
-    lodLevels[0]->addChild(roads);
+    lod->getChild(0)->addChild(roads);
 
     trafficSigns = VRTrafficSigns::create();
     trafficSigns->setWorld( ptr() );
-    lodLevels[0]->addChild(trafficSigns);
+    lod->getChild(0)->addChild(trafficSigns);
 
     assets = VRObjectManager::create();
     addChild(assets);
@@ -186,8 +177,7 @@ void VRWorldGenerator::init() {
     addChild(district);
 }
 
-void VRWorldGenerator::initMinimum() {
-    metaLVL = 1;
+void VRWorldGenerator::initMinimum() { // deprecated
     auto addMat = [&](string name, int texDim) {
         auto mat = VRMaterial::create(name);
         mat->setDefaultVertexShader();
@@ -207,7 +197,7 @@ void VRWorldGenerator::initMinimum() {
     auto terrain = VRTerrain::create();
     terrains.push_back(terrain);
     terrain->setWorld( ptr() );
-    lodLevels[1]->addChild(terrain);
+    lod->getChild(1)->addChild(terrain);
 
     assets = VRObjectManager::create();
     addChild(assets);
@@ -235,33 +225,51 @@ OSMMapPtr VRWorldGenerator::getOSMMap() { return osmMap; }
 
 OSMMapPtr VRWorldGenerator::getGMLMap() { return gmlMap; }
 
-void VRWorldGenerator::addTerrainsToLOD() {
-    //cout << "VRWorldGenerator::addTerrainsToLOD" << endl;
-    //auto nLevel = lodLevels.size();
-    auto nTerrains = terrains.size();
-    for (unsigned int i = 0; i < nTerrains; i++) {
-        lodLevels[i]->addChild(terrains[i]);
-        //cout << "  added Child to lodLevel " << lodLevels[i]->getName() << " " << i << endl;
-    }
-}
-
 void VRWorldGenerator::setTerrainSize( Vec2d in ) { terrainSize = in; }
+
+VRTerrainPtr VRWorldGenerator::addTerrain(VRTexturePtr sat, VRTexturePtr heights, double lodf, double loddist, int lodlvl, bool isLit, Color4f mixColor, float mixAmount) {
+    auto terrain = VRTerrain::create("terrain"+toString(lodlvl), bool(planet));
+
+    terrain->setParameters(terrainSize, 2/lodf, 1);
+    if (!heights) {
+        auto tg = VRTextureGenerator::create();
+        tg->setSize(Vec3i(2,2,1));
+        heights = tg->compose(0);
+    }
+
+    cout << " -------------------------- VRWorldGenerator::addTerrain " << heights << endl;
+
+    terrain->paintHeights( sat, mixColor, mixAmount );
+    terrain->setMap( heights, 0 );
+    terrain->setWorld( ptr() );
+    terrain->setLODFactor(lodf);
+    terrain->setLit(isLit);
+    terrains.push_back(terrain);
+
+    for (int i=lod->getChildrenCount(); i<=lodlvl; i++) {
+        lod->addChild(VRObject::create("wgenlvl"+toString(i)));
+        if (i > 0) lod->addDistance(1e6);
+    }
+
+    auto lodc = lod->getChild(lodlvl);
+    if (lodlvl > 0) lod->setDistance(lodlvl-1, loddist);
+    if (lodc) lodc->addChild(terrain);
+    if (planet) planet->localizeSector(ptr());
+    return terrain;
+}
 
 void VRWorldGenerator::setupLODTerrain(string pathMap, string pathPaint, float detail, bool cache, bool isLit, Color4f mixColor, float mixAmount ) {
 #ifndef WITHOUT_GDAL
     cout << " !!! VRWorldGenerator::setupLODTerrain" << endl;
-    VRTimer timer;
-    timer.start();
     //cout << "VRWorldGenerator::setupLODTerrain" << endl;
     auto tex = loadGeoRasterData(pathMap, false);
-    Vec3i texSizeN = tex->getSize();
-    //cout << " texSizeN: " << texSizeN << endl;
 
     for (auto tt : terrains) tt->destroy();
     terrains.clear();
     ///TODO: angular resolution human eye: 1 arcminute, approximately 0.02° or 0.0003 radians,[1] which corresponds to 0.3 m at a 1 km distance., https://en.wikipedia.org/wiki/Naked_eye
 
-    auto genPath = [&](string filepath, string in, string type){
+    auto genPath = [&](string filepath, string in, string type) -> string {
+        if (filepath == "") return "";
         string typ = "";
         string res = "";
         for (int i = 0; i < 4; i++) typ = filepath.at(filepath.length()-1-i) + typ;
@@ -284,7 +292,7 @@ void VRWorldGenerator::setupLODTerrain(string pathMap, string pathPaint, float d
 #ifndef __EMSCRIPTEN__
     if ( exists(pathMap1) && cache ) {
         tex1 = loadGeoRasterData(pathMap1, false);
-    } else {
+    } else if (tex) {
         //cout << "VRWorldGenerator::setupLODTerrain creating new downsized texture lvl1 at " << pathMap1 << endl;
         tex1 = tex->copy();
         tex1->downsize(); // TODO: improve performance
@@ -296,7 +304,7 @@ void VRWorldGenerator::setupLODTerrain(string pathMap, string pathPaint, float d
     }
     if ( exists(pathMap2) && cache ) {
         tex2 = loadGeoRasterData(pathMap2, false);
-    } else {
+    } else if (tex1) {
         //cout << "VRWorldGenerator::setupLODTerrain creating new downsized texture lvl2 at " << pathMap2 << endl;
         tex2 = tex1->copy();
         tex2->downsize(); // TODO: improve performance
@@ -325,44 +333,29 @@ void VRWorldGenerator::setupLODTerrain(string pathMap, string pathPaint, float d
     }
 #endif
 
-    auto addTerrain = [&](double fac, int a) {
-        cout << "   !!! VRWorldGenerator::setupLODTerrain::addTerrain" << endl;
-        auto terrain = VRTerrain::create("terrain"+toString(fac), bool(planet));
-
-        fac *= detail;
-        terrain->setParameters (terrainSize, 2/fac, 1);
-        VRTexturePtr texSc = tex;
+    auto addLOD = [&](double fac, int a, int dist) {
+        cout << "   !!! VRWorldGenerator::setupLODTerrain::addLOD" << endl;
+        VRTexturePtr texH = tex;
         string satImg = pathPaint;
 #ifndef __EMSCRIPTEN__
-        if (a == 1) { texSc = tex1; satImg = pathPaint1; }
-        if (a == 2) { texSc = tex2; satImg = pathPaint2; }
+        if (a == 1 && tex1) { texH = tex1; satImg = pathPaint1; }
+        if (a == 2 && tex2) { texH = tex2; satImg = pathPaint2; }
         if ( !exists(pathPaint2) ) satImg = pathPaint;
 #endif
-
-        //if (mixAmount > 0) texSc->mixColor(mixColor, mixAmount);
-        cout << "   timer addTerrain paintHeights: " << timer.stop() << endl;
-        terrain->paintHeights( satImg, mixColor, mixAmount );
-        cout << "   timer addTerrain paintHeights: " << timer.stop() << endl;
-        //terrain->paintHeights( satImg, Color4f(1,0,1,1), 0.5 );
-        terrain->setMap( texSc, 0 );
-        terrain->setWorld( ptr() );
-        terrain->setLODFactor(fac);
-        terrain->setLit(isLit);
-        terrains.push_back(terrain);
+        auto texS = VRTexture::create();
+        texS->read(satImg);
+        addTerrain(texS, texH, fac*detail, dist, a, isLit, mixColor, mixAmount);
     };
 
     //cout << " VRWorldGenerator::setupLODTerrain add terrains" << endl;
-    cout << "  timer addTerrain(1.0, 0): " << timer.stop() << endl;
-    addTerrain(1.0, 0);
-    cout << "  timer addTerrain(1.0, 0): " << timer.stop() << endl;
+    addLOD(1.0, 0, 0);
 #ifndef __EMSCRIPTEN__
-    addTerrain(0.25, 1);
-    addTerrain(0.05, 2);
+    addLOD(0.25, 1, 5000.0);
+    addLOD(0.05, 2, 15000.0);
 #endif
 
-    addTerrainsToLOD();
-    if (planet) planet->localizeSector(ptr());
-    cout << " VRWorldGenerator::setupLODTerrain done! it took: " << timer.stop() << endl;
+    //if (planet) planet->localizeSector(ptr());
+    cout << " VRWorldGenerator::setupLODTerrain done! " << endl;
 #endif
 }
 
@@ -370,34 +363,31 @@ vector<VRTerrainPtr> VRWorldGenerator::getTerrains(){
     return terrains;
 }
 
-void VRWorldGenerator::setupLOD(int layers){
-    lodLevels.clear();
-    lodFactors.clear();
-    for (auto tt:terrains) tt->destroy();
+void VRWorldGenerator::setupLOD(int layers) { // deprecated
+    for (auto t : terrains) t->destroy();
     terrains.clear();
+
     if (lod) lod->destroy();
     lod = VRLod::create("wgenLod");
-    auto addLod = [&](string name, double d, double fac) {
+
+    auto addLod = [&](string name, double d) {
         auto obj = VRObject::create(name);
-        lodLevels.push_back(obj);
-        lodFactors.push_back(fac);
         lod->addChild(obj);
         lod->addDistance(d);
     };
+
     ///TODO: make layer distance dependent of planet scale and radius
 #ifndef __EMSCRIPTEN__
-    if ( layers == 1 ) { addLod( "wgenlvl0", 10000000.0, 1.0 ); }
+    if ( layers == 1 ) { addLod( "wgenlvl0", 10000000.0 ); }
     if ( layers > 1 ) {
-        addLod( "wgenlvl0", 5000.0, 1.0 );
-        addLod( "wgenlvl1", 15000.0, 0.5 );
-        addLod( "wgenlvl2", 300000.0, 0.05);
+        addLod( "wgenlvl0", 5000.0 );
+        addLod( "wgenlvl1", 15000.0 );
+        addLod( "wgenlvl2", 300000.0);
     }
 #else
-    addLod( "wgenlvl0", 10000000.0, 0.05 );
+    addLod( "wgenlvl0", 10000000.0 );
 #endif
     auto anchor = VRObject::create("wgenAnchor");
-    lodLevels.push_back(anchor);
-    lodFactors.push_back(-1);
     lod->addChild(anchor);
     addChild(lod);
 }

@@ -84,7 +84,7 @@ VRRestResponsePtr VRRestClient::get(string uri, int timeoutSecs) {
     curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, timeoutSecs);
     curl_easy_setopt(curl, CURLOPT_URL, uri.c_str());
     CURLcode c = curl_easy_perform(curl);
-    if (c != CURLE_OK) fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(c));
+    if (c != CURLE_OK) fprintf(stderr, "curl_easy_perform() failed: %s, request was: %s\n", curl_easy_strerror(c), uri.c_str());
     curl_easy_cleanup(curl);
 #endif
 

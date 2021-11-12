@@ -12,8 +12,10 @@ using namespace OSG;
 
 typedef PyObject* PyObjectPtr;
 
-template<> string typeName(const PyObjectPtr& o) {
-    PyTypeObject* type = o->ob_type;
+template<> string typeName(const PyObjectPtr* o) {
+    if (!o) return "PyObject";
+    if (!*o) return "PyObject";
+    PyTypeObject* type = (*o)->ob_type;
     if (!type) return "undefined";
     return type->tp_name;
 }

@@ -30,7 +30,7 @@ class VRProjectManager : public VRObject {
 
         void newProject(string path);
         void save(string path = "");
-        void load(string path = "");
+        bool load(string path = "");
 
         void setPersistencyLevel(int p);
 };

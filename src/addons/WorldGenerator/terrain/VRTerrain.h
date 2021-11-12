@@ -55,6 +55,8 @@ class VRTerrain : public VRGeometry, public VRWorldModule {
         float heightoffset = 0.0;
         VRTexturePtr heigthsTex;
         VRTexturePtr satTex;
+        Vec4d heightsRect = Vec4d(0,0,1,1);
+        Vec4d satRect = Vec4d(0,0,1,1);
         VRMaterialPtr mat;
         shared_ptr<vector<float>> physicsHeightBuffer;
 
@@ -74,7 +76,6 @@ class VRTerrain : public VRGeometry, public VRWorldModule {
         void updateTexelSize();
         //void setupGeo();
         void setupMat();
-        void createMesh(VRGeoData& geo, int res);
         bool createMultiGrid(VRCameraPtr cam, double res);
 
         void btPhysicalize();
@@ -98,8 +99,8 @@ class VRTerrain : public VRGeometry, public VRWorldModule {
         void setLit(bool isLit);
         void setAtmosphericEffect(float thickness, Color3f color);
         void setHeightScale(float s);
-        void setMap( VRTexturePtr tex, int channel = 0 );
-        void setTexture( VRTexturePtr tex, Color4f mCol, float mAmount );
+        void setMap( VRTexturePtr tex, int channel = 0, Vec4d rect = Vec4d(0,0,1,1) );
+        void setTexture( VRTexturePtr tex, Color4f mCol, float mAmount, Vec4d rect = Vec4d(0,0,1,1) );
         void loadMap( string path, int channel = 0, bool shout = true );
         VRTexturePtr getMap();
         VRTexturePtr getTexture();
@@ -135,13 +136,12 @@ class VRTerrain : public VRGeometry, public VRWorldModule {
 
         void flatten(vector<Vec2d> perimeter, float h);
         void paintHeights( string woods, string gravel );
-        void paintHeights( string path, Color4f mCol = Color4f(1,1,1,1), float mAmount = 0 );
-        void paintHeights( VRTexturePtr tex, Color4f mCol = Color4f(1,1,1,1), float mAmount = 0 );
+        void paintHeights( string path, Color4f mCol = Color4f(1,1,1,1), float mAmount = 0, Vec4d rect = Vec4d(0,0,1,1) );
+        void paintHeights( VRTexturePtr tex, Color4f mCol = Color4f(1,1,1,1), float mAmount = 0, Vec4d rect = Vec4d(0,0,1,1) );
         void addEmbankment(string ID, PathPtr p1, PathPtr p2, PathPtr p3, PathPtr p4);
 
         vector<Vec3d> probeHeight( Vec2d p);
 
-        void exportWebMesh(string path);
 
         void clear();
 };

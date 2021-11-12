@@ -44,6 +44,8 @@ class VRCOLLADA_Scene {
         void closeNode() { objStack.pop(); }
         VRObjectPtr top() { return objStack.size() > 0 ? objStack.top() : 0; }
 
+        bool hasScene(string name) { return library_scenes.count(name); }
+
         void setCurrentSection(string s) {
             currentSection = s;
             objStack = stack<VRObjectPtr>();
@@ -133,7 +135,8 @@ class VRCOLLADA_Scene {
                 if (file != "") { // reference another file
                     // TODO, use node to get correct object
                     VRTransformPtr obj = VRTransform::create(file);
-                    loadCollada( fPath + "/" + file, obj );
+                    map<string, string> options;
+                    loadCollada( fPath + "/" + file, obj, options );
                     library_nodes[url] = obj;
                 } else {} // should already be in library_nodes
             }
@@ -160,6 +163,7 @@ class VRCOLLADA_Stream : public XMLStreamHandler {
         };
 
         string fPath;
+        map<string, string> options;
         stack<Node> nodeStack;
 
         string currentSection;
@@ -171,14 +175,14 @@ class VRCOLLADA_Stream : public XMLStreamHandler {
         string skipHash(const string& s) { return (s[0] == '#') ? subString(s, 1, s.size()-1) : s; }
 
     public:
-        VRCOLLADA_Stream(VRObjectPtr root, string fPath) : fPath(fPath) {
+        VRCOLLADA_Stream(VRObjectPtr root, string fPath, map<string, string> opts) : fPath(fPath), options(opts) {
             scene.setRoot(root);
             materials.setFilePath(fPath);
         }
 
         ~VRCOLLADA_Stream() {}
 
-        static VRCOLLADA_StreamPtr create(VRObjectPtr root, string fPath) { return VRCOLLADA_StreamPtr( new VRCOLLADA_Stream(root, fPath) ); }
+        static VRCOLLADA_StreamPtr create(VRObjectPtr root, string fPath, map<string, string> opts) { return VRCOLLADA_StreamPtr( new VRCOLLADA_Stream(root, fPath, opts) ); }
 
         void startDocument() override {}
 
@@ -245,7 +249,13 @@ void VRCOLLADA_Stream::startElement(const string& uri, const string& name, const
     if (name == "node" || name == "visual_scene") scene.newNode(n.attributes["id"].val, n.attributes["name"].val);
 
     // actual scene
-    if (name == "instance_visual_scene") scene.instantiateScene(skipHash(n.attributes["url"].val));
+    if (name == "instance_visual_scene") {
+        string sceneName = skipHash(n.attributes["url"].val);
+        if (options.count("scene"))
+            if (scene.hasScene(options["scene"]))
+                sceneName = options["scene"];
+        scene.instantiateScene(sceneName);
+    }
 }
 
 void VRCOLLADA_Stream::characters(const string& chars) {
@@ -291,9 +301,9 @@ void VRCOLLADA_Stream::endElement(const string& uri, const string& name, const s
     if (node.name == "rotate") scene.rotate(node.data);
 }
 
-void OSG::loadCollada(string path, VRObjectPtr root) {
+void OSG::loadCollada(string path, VRObjectPtr root, map<string, string> options) {
     auto xml = XML::create();
     string fPath = getFolderName(path);
-    auto handler = VRCOLLADA_Stream::create(root, fPath);
+    auto handler = VRCOLLADA_Stream::create(root, fPath, options);
     xml->stream(path, handler.get());
 }

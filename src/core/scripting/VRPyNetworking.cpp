@@ -14,6 +14,7 @@ simpleVRPyType(RestServer, New_ptr);
 #ifndef WITHOUT_TCP
 simpleVRPyType(TCPClient, New_ptr);
 simpleVRPyType(TCPServer, New_ptr);
+simpleVRPyType(ICEClient, New_ptr);
 #endif
 
 #ifndef WITHOUT_HDLC
@@ -61,6 +62,7 @@ PyMethodDef VRPyTCPClient::methods[] = {
     {"send", PyWrapOpt(TCPClient, send, "Send message to server", "", void, const string&, string) },
     {"onMessage", PyWrap(TCPClient, onMessage, "Set onMessage callback", void, function<void(string)>) },
     {"onConnect", PyWrap(TCPClient, onConnect, "Set onConnect callback", void, function<void(void)>) },
+    {"connected", PyWrap(TCPClient, connected, "Returns True is connected", bool) },
     {"getPublicIP", PyWrapOpt(TCPClient, getPublicIP, "Get public IP", "0", string, bool) },
     {NULL}  /* Sentinel */
 };
@@ -69,6 +71,25 @@ PyMethodDef VRPyTCPServer::methods[] = {
     {"listen", PyWrapOpt(TCPServer, listen, "Listen on port", "", void, int, string) },
     {"close", PyWrap(TCPServer, close, "Close server", void) },
     {"onMessage", PyWrap(TCPServer, onMessage, "Set onMessage callback", void, function<string(string)>) },
+    {NULL}  /* Sentinel */
+};
+
+typedef map<string, string> mapSS;
+
+PyMethodDef VRPyICEClient::methods[] = {
+    {"setTurnServer", PyWrap(ICEClient, setTurnServer, "Setup turn server address and ip", void, string, string) },
+    {"onEvent", PyWrap(ICEClient, onEvent, "Set onEvent callback", void, function<void(string)>) },
+    {"onMessage", PyWrap(ICEClient, onMessage, "Set onMessage callback", void, function<void(string)>) },
+    {"setName", PyWrap(ICEClient, setName, "Set your name and uID to register on broker", void, string) },
+    {"sendTCP", PyWrap(ICEClient, sendTCP, "Send data over the TCP connection", void, string) },
+    {"send", PyWrap(ICEClient, send, "Send message to other: (uID, msg)", void, string, string) },
+    {"connectTo", PyWrap(ICEClient, connectTo, "Connect to another user", void, string) },
+    {"getID", PyWrap(ICEClient, getID, "Get UID", string) },
+    {"getUserName", PyWrap(ICEClient, getUserName, "Get user name by UID", string, string) },
+    {"getUserID", PyWrap(ICEClient, getUserID, "Get UIDs of all users with certain name", vector<string>, string) },
+    {"getUsers", PyWrap(ICEClient, getUsers, "Get all users registered at turn server", mapSS) },
+    {"getClient", PyWrap(ICEClient, getClient, "Get internal TCP client", VRTCPClientPtr) },
+    {"removeUser", PyWrap(ICEClient, removeUser, "Remove user by UID", void, string) },
     {NULL}  /* Sentinel */
 };
 
@@ -100,9 +121,9 @@ template<> int toValue(stringstream& ss, function<string(string)>& e) { return 0
 template<> int toValue(stringstream& ss, function<void(string)>& e) { return 0; }
 template<> int toValue(stringstream& ss, function<void(void)>& e) { return 0; }
 
-template<> string typeName(const function<string(string)>& t) { return "string function(string)"; }
-template<> string typeName(const function<void(string)>& t) { return "void function(string)"; }
-template<> string typeName(const function<void(void)>& t) { return "void function()"; }
+template<> string typeName(const function<string(string)>* t) { return "string function(string)"; }
+template<> string typeName(const function<void(string)>* t) { return "void function(string)"; }
+template<> string typeName(const function<void(void)>* t) { return "void function()"; }
 #endif
 
 

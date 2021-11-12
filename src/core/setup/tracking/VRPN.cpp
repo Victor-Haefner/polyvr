@@ -46,20 +46,20 @@ void VRPN_CALLBACK handle_tracker(void* data, const vrpn_TRACKERCB tracker ) {
     Vec3d pos = dev->offset + Vec3d(sta[0]*tracker.pos[(int)ta[0]]*s, sta[1]*tracker.pos[(int)ta[1]]*s, sta[2]*tracker.pos[(int)ta[2]]*s);
     for (int i=0; i<3; i++) m[3][i] = pos[i];
 
-    if (dev->verbose) VRGuiManager::get()->getConsole("Tracking")->write( "vrpn tracker pos "+toString(pos)+" dir "+toString(-Vec3d(m[2]))+"\n");
+    if (dev->verbose) VRConsoleWidget::get("Tracking")->write( "vrpn tracker pos "+toString(pos)+" dir "+toString(-Vec3d(m[2]))+"\n");
     obj->setMatrix(m);
 }
 
 void VRPN_CALLBACK handle_button(void* data, const vrpn_BUTTONCB button ) {
     VRPN_device* dev = (VRPN_device*)data;
-    if (dev->verbose) VRGuiManager::get()->getConsole("Tracking")->write( "vrpn button "+toString(button.button)+" state "+toString(button.state)+"\n");
+    if (dev->verbose) VRConsoleWidget::get("Tracking")->write( "vrpn button "+toString(button.button)+" state "+toString(button.state)+"\n");
     dev->change_button(button.button, button.state);
 }
 
 void VRPN_CALLBACK handle_analog(void* data, const vrpn_ANALOGCB analog ) {
     VRPN_device* dev = (VRPN_device*)data;
     for (int i=0; i<analog.num_channel; i++) {
-        if (dev->verbose) VRGuiManager::get()->getConsole("Tracking")->write("vrpn handle_analog channel "+toString(i)+" state "+toString(analog.channel[i])+"\n");
+        if (dev->verbose) VRConsoleWidget::get("Tracking")->write("vrpn handle_analog channel "+toString(i)+" state "+toString(analog.channel[i])+"\n");
         dev->change_slider(i+100, analog.channel[i]);
     }
 }
@@ -150,7 +150,7 @@ VRPN::~VRPN() {
 void VRPN::update_t(VRThread* thread) {}
 void VRPN::update() {
     if (!active) return;
-    if (verbose) VRGuiManager::get()->getConsole("Tracking")->write("vrpn devices: "+toString(devices.size())+"\n");
+    if (verbose) VRConsoleWidget::get("Tracking")->write("vrpn devices: "+toString(devices.size())+"\n");
     for (auto tr : devices) tr.second->loop(verbose);
 }
 

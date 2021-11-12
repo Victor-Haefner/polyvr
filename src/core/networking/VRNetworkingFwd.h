@@ -13,6 +13,7 @@ namespace OSG {
     ptrFwd(VRTCPServer);
     ptrFwd(VRTCPClient);
     ptrFwd(VRTCPUtils);
+    ptrFwd(VRICEClient);
     ptrFwd(VRRestServer);
     ptrFwd(VRRestClient);
     ptrFwd(VRRestResponse);

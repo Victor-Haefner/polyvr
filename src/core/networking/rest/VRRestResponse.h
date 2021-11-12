@@ -26,6 +26,8 @@ class VRRestResponse : public std::enable_shared_from_this<VRRestResponse> {
 
 		string getStatus();
 		string getData();
+
+		static string uriEncode(const string& s);
 };
 
 OSG_END_NAMESPACE;

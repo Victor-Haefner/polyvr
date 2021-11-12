@@ -26,6 +26,7 @@ class VRSyncNode : public VRTransform {
         vector<UInt32> createdNodes; //IDs of the currently created nodes/children
 
         size_t selfID = 0;
+        string connectionUri;
         bool doWrapping = true;
         bool doAvatars = true;
         bool handledPoses = false; // optimization
@@ -97,6 +98,8 @@ class VRSyncNode : public VRTransform {
         void handleAvatar(string data);
 
         void handleNewConnect(string data);
+        void accTCPConnection(string msg);
+        void reqInitState();
 
     public:
         VRSyncNode(string name = "syncNode");
@@ -104,6 +107,8 @@ class VRSyncNode : public VRTransform {
 
         static VRSyncNodePtr create(string name = "None");
         VRSyncNodePtr ptr();
+
+        void setTCPClient(VRTCPClientPtr);
 
         void setDoWrapping(bool b);
         void setDoAvatars(bool b);

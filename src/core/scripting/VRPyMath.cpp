@@ -608,7 +608,7 @@ simplePyType(XML, New_ptr);
 simplePyType(XMLElement, 0);
 simpleVRPyType(Spreadsheet, New_ptr);
 
-template<> string typeName(const Datarow& p) { return "Datarow"; }
+template<> string typeName(const Datarow* p) { return "Datarow"; }
 
 template<> PyTypeObject VRPyBaseT<Datarow>::type = {
     PyObject_HEAD_INIT(NULL)
@@ -742,12 +742,12 @@ PyMethodDef VRPyDatarow::methods[] = {
     {"set", PyWrap2( Datarow, set, "Set ith value", void, double, int ) },
     {"get", PyWrap2( Datarow, get, "Get ith value", double, int ) },
     {"asList", PyWrap2( Datarow, getDataCpy, "Get as list", vector<double> ) },
+    {"getMinMax", PyWrap2( Datarow, getMinMax, "Return min and max value", vector<double> ) },
     {"fromList", PyWrap2( Datarow, setData, "Set from list", void, vector<double>& ) },
     {"length", PyWrap2( Datarow, length, "Get data size", size_t ) },
     {"resize", PyWrap2( Datarow, resize, "Resize data with value", void, int, double ) },
     {"add", PyWrap2( Datarow, add, "Add all elements of other datarow", void, DatarowPtr ) },
     {"insert", PyWrap2( Datarow, insert, "Add an element at ith place, element will be ith element, old ith element will shift to the right", void, int, double ) },
-    {"getMinMax", PyWrap2( Datarow, getMinMax, "Return min and max value", vector<double> ) },
     {"getPCT", PyWrap2( Datarow, getPCT, "Get ith PCT", double, int ) },
     {"getLogRet", PyWrap2( Datarow, getLogRet, "Get ith log return", double, int ) },
     {"getPCTs", PyWrap2( Datarow, getPCTs, "Get PCTs", DatarowPtr ) },

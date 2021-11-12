@@ -20,7 +20,7 @@ template<typename T>
 void VRAttachment::attachment<T>::fromString(string s) { toValue<T>(s, data); }
 
 template<typename T>
-string VRAttachment::attachment<T>::typeName() { return ::typeName<T>(data); }
+string VRAttachment::attachment<T>::typeName() const { return ::typeName<T>((T*)0); }
 
 template<typename T>
 void VRAttachment::set(T& t) {

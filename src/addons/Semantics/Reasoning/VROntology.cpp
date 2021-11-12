@@ -18,7 +18,7 @@
 
 #ifndef WITHOUT_GTK
 #define WARN(x) \
-VRGuiManager::get()->getConsole( "Errors" )->write( x+"\n" );
+VRConsoleWidget::get( "Errors" )->write( x+"\n" );
 #else
 #define WARN(x) \
 std::cout << x << std::endl;

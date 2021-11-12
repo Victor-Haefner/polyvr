@@ -168,10 +168,11 @@ void VRTerrain::setLit(bool isLit) { mat->setShaderParameter("isLit", int(isLit)
 void VRTerrain::setAtmosphericEffect(float thickness, Color3f color) { mat->setShaderParameter("atmoColor", color); mat->setShaderParameter("atmoThickness", thickness); }
 void VRTerrain::setHeightScale(float s) { heightScale = s; mat->setShaderParameter("heightScale", s); }
 
-void VRTerrain::setMap( VRTexturePtr t, int channel ) {
+void VRTerrain::setMap( VRTexturePtr t, int channel, Vec4d rect ) {
     VRLock lock(mtx());
     if (!t) return;
     heigthsTex = t;
+    heightsRect = rect;
     mat->setTexture(heigthsTex);
     mat->clearTransparency();
     mat->setShaderParameter("channel", channel);
@@ -184,9 +185,11 @@ void VRTerrain::setMap( VRTexturePtr t, int channel ) {
 
 VRTexturePtr VRTerrain::getTexture() { return satTex; }
 
-void VRTerrain::setTexture(VRTexturePtr t, Color4f mCol, float mAmount) {
+void VRTerrain::setTexture(VRTexturePtr t, Color4f mCol, float mAmount, Vec4d rect) {
     satTex = t;
+    satRect = rect;
     mat->setTexture(satTex, 0, 3);
+    mat->setTextureWrapping(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE, 3);
     mat->setShaderParameter("mixColor", mCol);
     mat->setShaderParameter("mixAmount", mAmount);
     mat->setShaderParameter("texPic", 3);
@@ -203,19 +206,14 @@ void VRTerrain::paintHeights(string woods, string gravel) {
     mat->clearTransparency();
 }
 
-void VRTerrain::paintHeights(string path, Color4f mCol, float mAmount) {
-    mat->setTexture(path, 0, 3);
-    //if (mAmount > 0 )
-    //    if (auto t = mat->getTexture(3)) t->mixColor(mCol, mAmount);
-    mat->setShaderParameter("mixColor", mCol);
-    mat->setShaderParameter("mixAmount", mAmount);
-    mat->setShaderParameter("texPic", 3);
-    mat->setShaderParameter("doHeightTextures", 2);
-    mat->clearTransparency();
+void VRTerrain::paintHeights(string path, Color4f mCol, float mAmount, Vec4d rect) {
+    auto t = VRTexture::create();
+    t->read(path);
+    setTexture(t, mCol, mAmount, rect);
 }
 
-void VRTerrain::paintHeights(VRTexturePtr tex, Color4f mCol, float mAmount) {
-    setTexture(tex, mCol, mAmount);
+void VRTerrain::paintHeights(VRTexturePtr tex, Color4f mCol, float mAmount, Vec4d rect) {
+    setTexture(tex, mCol, mAmount, rect);
 }
 
 void VRTerrain::updateTexelSize() {
@@ -233,97 +231,6 @@ void VRTerrain::curveMesh(VRPlanetPtr p, Vec2d c, PosePtr s) {
     planet = p;
     planetCoords = c;
     pSectorInv = s;
-}
-
-void VRTerrain::createMesh(VRGeoData& geo, int res) { // TODO: use multigrid
-    Vec2i gridN = Vec2i(round(size[0]*1.0/res-0.5), round(size[1]*1.0/res-0.5));
-    if (gridN[0] < 1) gridN[0] = 1;
-    if (gridN[1] < 1) gridN[1] = 1;
-    Vec2d gridS = size;
-    gridS[0] /= gridN[0];
-    gridS[1] /= gridN[1];
-
-    if (!heigthsTex) { cout << "VRTerrain::exportWebMesh -- no heigthsTex loaded" << endl; return; }
-    auto texSize = heigthsTex->getSize();
-    Vec2d texel = Vec2d( 1.0/texSize[0], 1.0/texSize[1] );
-	Vec2d tcChunk = Vec2d((1.0-texel[0])/gridN[0], (1.0-texel[1])/gridN[1]);
-
-    auto pla = planet.lock();
-    if (localMesh && pla) {
-        double sectorSize = pla->getSectorSize();
-
-        int t1 = 0;
-        int t2 = 0;
-
-        map<Vec2i, PosePtr> cache;
-
-        auto getPose = [&](int i, int j) {
-            if (cache.count(Vec2i(i,j))) return cache[Vec2i(i,j)];
-            double N = planetCoords[0]+sectorSize*(1.0-double(j)/double(gridN[1]));
-            double E = planetCoords[1]+i*sectorSize/gridN[0];
-            auto p = pla->fromLatLongPose(N, E);
-            p = pSectorInv->multRight(p);
-            cache[Vec2i(i,j)] = p;
-            return p;
-        };
-
-        for (int i =0; i < gridN[0]; i++) {
-            t1++;
-            t2 = 0;
-            double tcx1 = texel[0]*0.5 + i*tcChunk[0];
-            double tcx2 = tcx1 + tcChunk[0];
-            for (int j =0; j < gridN[1]; j++) {
-                t2++;
-                double tcy1 = texel[1]*0.5 + j*tcChunk[1];
-                double tcy2 = tcy1 + tcChunk[1];
-
-                auto pI0J0 = getPose(i,j);
-                auto pI0J1 = getPose(i,j+1);
-                auto pI1J1 = getPose(i+1,j+1);
-                auto pI1J0 = getPose(i+1,j);
-
-                geo.pushVert(pI0J0->pos(), pI0J0->up(), Vec2d(tcx1,tcy1));
-                geo.pushVert(pI0J1->pos(), pI0J1->up(), Vec2d(tcx1,tcy2));
-                geo.pushVert(pI1J1->pos(), pI1J1->up(), Vec2d(tcx2,tcy2));
-                geo.pushVert(pI1J0->pos(), pI1J0->up(), Vec2d(tcx2,tcy1));
-                geo.pushQuad();
-            }
-        }
-    } else if (!localMesh) {
-        int old1 = 0;
-        int old2 = 0;
-        for (int i =0; i < gridN[0]; i++) {
-            old1++;
-            old2 = 0;
-            double px1 = -size[0]*0.5 + i*gridS[0];
-            double px2 = px1 + gridS[0];
-            double tcx1 = texel[0]*0.5 + i*tcChunk[0];
-            double tcx2 = tcx1 + tcChunk[0];
-
-            for (int j =0; j < gridN[1]; j++) {
-                old2++;
-                double py1 = -size[1]*0.5 + j*gridS[1];
-                double py2 = py1 + gridS[1];
-                double tcy1 = texel[1]*0.5 + j*tcChunk[1];
-                double tcy2 = tcy1 + tcChunk[1];
-                geo.pushVert(Vec3d(px1,0,py1), Vec3d(0,1,0), Vec2d(tcx1,tcy1));
-                geo.pushVert(Vec3d(px1,0,py2), Vec3d(0,1,0), Vec2d(tcx1,tcy2));
-                geo.pushVert(Vec3d(px2,0,py2), Vec3d(0,1,0), Vec2d(tcx2,tcy2));
-                geo.pushVert(Vec3d(px2,0,py1), Vec3d(0,1,0), Vec2d(tcx2,tcy1));
-                geo.pushQuad();
-            }
-        }
-    }
-}
-
-void VRTerrain::exportWebMesh(string path) { // this exported mesh is meant to be used in webassembly projects
-    cout << "VRTerrain::exportWebMesh" << endl;
-    VRGeoData geo;
-    createMesh(geo, resolution);
-    if (geo.size() == 0) return;
-    auto obj = geo.asGeometry( getBaseName() );
-    //obj->convertToTriangles();
-    obj->exportToFile(path);
 }
 
 Vec2d computeGridSpacing(Vec2d size, Vec2d gridSize, double res) {
@@ -428,6 +335,7 @@ bool VRTerrain::createMultiGrid(VRCameraPtr cam, double res) {
         return false;
     }
 
+    if (!heigthsTex) return false;
     auto texSize = heigthsTex->getSize();
     Vec2d texel = Vec2d( 1.0/texSize[0], 1.0/texSize[1] );
 
@@ -441,6 +349,7 @@ bool VRTerrain::createMultiGrid(VRCameraPtr cam, double res) {
         double tn = (N-N1)/(N2-N1);
         double te = (E-E1)/(E2-E1);
 
+        /*
         if (!vertextFlip) {
             double tcx = texel[0]*0.5 + tn*(1.0-texel[0]);
             double tcy = texel[1]*0.5 + te*(1.0-texel[1]);
@@ -459,6 +368,21 @@ bool VRTerrain::createMultiGrid(VRCameraPtr cam, double res) {
                 double tcy = texel[1]*0.5 + te*(1.0-texel[1]);
                 data.pushTexCoord(Vec2d(tcx, 1.0 - tcy));
             }
+            */
+        if (pla) {
+            double tcx = texel[0]*0.5 + te*((heightsRect[2]-heightsRect[0])-texel[0]);
+            double tcy = texel[1]*0.5 + tn*((heightsRect[3]-heightsRect[1])-texel[1]);
+            data.pushTexCoord (Vec2d(heightsRect[0]+tcx, 1.0 - (heightsRect[1]+tcy))); // depth
+            data.pushTexCoord2(Vec2d(satRect[0]+te*(satRect[2]-satRect[0]), 1.0 - (satRect[1]+tn*(satRect[3]-satRect[1]))));   // sat
+            auto pose = pla->fromLatLongPose(N, E);
+            pose = pSectorInv->multRight(pose);
+            data.setPos(i, pose->pos());
+            data.setNorm(i, pose->up());
+        } else {
+            double tcx = texel[0]*0.5 + tn*((heightsRect[2]-heightsRect[0])-texel[0]);
+            double tcy = texel[1]*0.5 + te*((heightsRect[3]-heightsRect[1])-texel[1]);
+            data.pushTexCoord (Vec2d(heightsRect[0]+tcx, 1.0 - (heightsRect[1]+tcy))); // depth
+            data.pushTexCoord2(Vec2d(satRect[0]+tn*(satRect[2]-satRect[0]), 1.0 - (satRect[1]+te*(satRect[3]-satRect[1]))));   // sat
         }
     }
 
@@ -923,10 +847,12 @@ GLSL(
 attribute vec4 osg_Vertex;
 attribute vec3 osg_Normal;
 attribute vec2 osg_MultiTexCoord0;
+attribute vec2 osg_MultiTexCoord1;
 varying vec3 vNormal;
 
 void main(void) {
     gl_TexCoord[0] = vec4(osg_MultiTexCoord0,0.0,0.0);
+    gl_TexCoord[1] = vec4(osg_MultiTexCoord1,0.0,0.0);
 	gl_Position = osg_Vertex;
 	vNormal = osg_Normal;
 }
@@ -942,18 +868,22 @@ GLSL(
 in vec4 osg_Vertex;
 in vec3 osg_Normal;
 in vec2 osg_MultiTexCoord0;
+in vec2 osg_MultiTexCoord1;
 out vec3 vNormal;
 out vec4 vColor;
 out vec4 vVertex;
 out vec2 vTexCoord;
+out vec2 vTexCoord2;
 #else
 attribute vec4 osg_Vertex;
 attribute vec3 osg_Normal;
 attribute vec2 osg_MultiTexCoord0;
+attribute vec2 osg_MultiTexCoord1;
 varying vec3 vNormal;
 varying vec4 vColor;
 varying vec4 vVertex;
 varying vec2 vTexCoord;
+varying vec2 vTexCoord2;
 #endif
 
 uniform sampler2D tex;
@@ -967,6 +897,7 @@ void main(void) {
     vVertex = osg_Vertex;
     vNormal = osg_Normal;
     vTexCoord = osg_MultiTexCoord0;
+    vTexCoord2 = osg_MultiTexCoord1;
 
     vec4 texData = texture(tex, osg_MultiTexCoord0);
     vColor = texData;
@@ -1002,10 +933,12 @@ uniform int isLit;
 
 #ifdef __EMSCRIPTEN__
 in vec2 vTexCoord;
+in vec2 vTexCoord2;
 in vec4 vColor;
 out vec4 fragColor;
 #else
 varying vec2 vTexCoord;
+varying vec2 vTexCoord2;
 varying vec4 vColor;
 #endif
 
@@ -1044,7 +977,7 @@ vec3 getNormal() {
 }
 
 void main( void ) {
-    vec2 tc = vTexCoord;
+    vec2 tc = vTexCoord2;
     tc.y = 1.0 - tc.y;
     color = texture(texPic, tc);
 
@@ -1106,7 +1039,7 @@ vec3 getNormal() {
 }
 
 void main( void ) {
-	vec2 tc = gl_TexCoord[0].xy;
+	vec2 tc = gl_TexCoord[1].xy;
 	norm = getNormal();
 
 	if (doHeightTextures == 0) color = vec4(texture2D(tex, tc).rgb, 1.0);
@@ -1196,7 +1129,7 @@ void applyBumpMap(vec4 b) {
 }
 
 void main( void ) {
-	vec2 tc = gl_TexCoord[0].xy;
+	vec2 tc = gl_TexCoord[1].xy;
 	norm = getNormal();
 
 	if (doHeightTextures == 0) color = vec4( texture2D(tex, tc).rgb ,1.0);
@@ -1243,6 +1176,7 @@ in vec3 vNormal[];
 out vec3 tcPosition[];
 out vec3 tcNormal[];
 out vec2 tcTexCoords[];
+out vec2 tcTexCoords2[];
 uniform float resolution;
 )
 "\n#define ID gl_InvocationID\n"
@@ -1251,6 +1185,7 @@ void main() {
     tcPosition[ID] = gl_in[ID].gl_Position.xyz;
     tcNormal[ID] = vNormal[ID];
     tcTexCoords[ID] = gl_in[ID].gl_TexCoord[0].xy;
+    tcTexCoords2[ID] = gl_in[ID].gl_TexCoord[1].xy;
 
     if (ID == 0) {
 		vec4 mid = (gl_in[0].gl_Position + gl_in[1].gl_Position + gl_in[2].gl_Position + gl_in[3].gl_Position) * 0.25;
@@ -1286,6 +1221,7 @@ layout( quads ) in;
 in vec3 tcPosition[];
 in vec3 tcNormal[];
 in vec2 tcTexCoords[];
+in vec2 tcTexCoords2[];
 out float height;
 out vec4 pos;
 out vec4 vertex;
@@ -1304,6 +1240,11 @@ void main() {
     vec2 tb = mix(tcTexCoords[3], tcTexCoords[2], u);
     vec2 tc = mix(ta, tb, v);
     gl_TexCoord[0] = vec4(tc.x, tc.y, 1.0, 1.0);
+
+    vec2 ta2 = mix(tcTexCoords2[0], tcTexCoords2[1], u);
+    vec2 tb2 = mix(tcTexCoords2[3], tcTexCoords2[2], u);
+    vec2 tc2 = mix(ta2, tb2, v);
+    gl_TexCoord[1] = vec4(tc2.x, tc2.y, 1.0, 1.0);
 
     vec3 a = mix(tcPosition[0], tcPosition[1], u);
     vec3 b = mix(tcPosition[3], tcPosition[2], u);

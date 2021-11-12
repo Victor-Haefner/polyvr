@@ -38,8 +38,6 @@ class VRWorldGenerator : public VRTransform {
         VRObjectManagerPtr assets;
         VRNaturePtr nature;
         VRLodPtr lod;
-        vector<VRObjectPtr> lodLevels;
-        vector<double> lodFactors;
         vector<VRTerrainPtr> terrains;
         Vec2d terrainSize = Vec2d(100,100);
         map<string, VRMaterialPtr> materials;
@@ -51,20 +49,19 @@ class VRWorldGenerator : public VRTransform {
         OSMMapPtr gmlMap;
         Vec2d coords;
         VRUserGenCbPtr userCbPtr;
-        int metaLVL = 0;
 
         void processOSMMap(double subN = -1, double subE = -1, double subSize = -1);
         void processGMLfromOSM();
-        void init();
-        void initMinimum();
 
     public:
         VRWorldGenerator();
         ~VRWorldGenerator();
 
         static VRWorldGeneratorPtr create();
-        static VRWorldGeneratorPtr create(int meta);
         VRWorldGeneratorPtr ptr();
+
+        void init();
+        void initMinimum();
 
         void setOntology(VROntologyPtr ontology);
         void setPlanet(VRPlanetPtr planet, Vec2d coords);
@@ -80,8 +77,8 @@ class VRWorldGenerator : public VRTransform {
 
         //getLODTerrain();
         void setupLOD(int layers);
+        VRTerrainPtr addTerrain(VRTexturePtr sat, VRTexturePtr heights, double lodf, double loddist, int lod, bool isLit, Color4f mixColor, float mixAmount);
         void setupLODTerrain(string pathMap, string pathPaint = "", float scale = 1.0, bool cache = true, bool isLit = true, Color4f mixColor = Color4f(1,1,1,1), float mixAmount = 0);
-        void addTerrainsToLOD();
         void setLODTerrainParameters(float heightScale);
         void setTerrainSize( Vec2d in );
         VRLodTreePtr getLodTree();
@@ -92,7 +89,7 @@ class VRWorldGenerator : public VRTransform {
         VRTrafficSignsPtr getTrafficSigns();
         VRObjectManagerPtr getAssetManager();
         VRNaturePtr getNature();
-        VRTerrainPtr getTerrain();
+        VRTerrainPtr getTerrain(int i);
         vector<VRTerrainPtr> getTerrains();
         VRDistrictPtr getDistrict();
         VRMaterialPtr getMaterial(string name);

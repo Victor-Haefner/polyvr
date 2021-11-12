@@ -66,10 +66,12 @@ void VRGuiBits::on_quit_clicked() {
 
 static string wasmServerSend =
 "\nfunction send(m) {\n"
-"    window.parent.postMessage(m, window.origin);"
-"}\n"
+"    window.parent.postMessage(m, window.origin);\n"
+"}\n";
+
+static string wasmServerReceive =
 "window.addEventListener('message', (event) => {\n"
-"    msg(event.data);\n"
+"    handle(event.data);\n"
 "}, false);\n";
 
 void VRGuiBits::on_web_export_clicked() {
@@ -86,10 +88,38 @@ void VRGuiBits::on_web_export_clicked() {
     for (auto script : VRScene::getCurrent()->getScripts()) {
         if (script.second->getType() != "HTML") continue;
         string core = script.second->getCore();
-        auto itr = core.find("function send("); // delete that line, then insert wasmServerSend
-        auto itr2 = core.find("\n", itr);
-        core.erase(itr, itr2-itr);
-        core.insert(itr, wasmServerSend);
+
+        string onOpen = "";
+        auto itr = core.find("websocket.onopen"); // get the code executed on ws open
+        if (itr != string::npos) {
+            auto itr2 = core.find("{", itr);
+            if (itr2 != string::npos) {
+                auto itr3 = core.find("}", itr2);
+                if (itr3 != string::npos) {
+                    onOpen = core.substr(itr2+1, itr3-itr2-1);
+                    cout << " on open action: " << onOpen << endl;
+                }
+            }
+        }
+
+        itr = core.find("function send("); // delete that line, then insert wasmServerSend
+        if (itr != string::npos) {
+            auto itr2 = core.find("\n", itr);
+            if (itr2 != string::npos) {
+                core.erase(itr, itr2-itr);
+                core.insert(itr, wasmServerSend);
+            }
+        }
+
+        itr = core.find("var websocket"); // prepend wasmServerReceive
+        if (itr != string::npos) core.insert(itr, wasmServerReceive + onOpen + "\n\t/*");
+
+        itr = core.find("websocket.onclose"); // close the comment to disable the websocket
+        if (itr != string::npos) {
+            auto itr2 = core.find("\n", itr);
+            if (itr2 != string::npos) core.insert(itr2, "*/");
+        }
+
         ofstream out(script.first+".html");
         out << core;
         out.close();
@@ -145,7 +175,7 @@ void VRGuiBits::on_web_export_clicked() {
             size_t i1 = positions[i]+1;
             size_t i2 = positions[i+1];
             string str = core.substr(i1,i2-i1);
-            if (str.size() > 50) continue;
+            if (str.size() > 250) continue;
             if (exists(str) && isFile(str)) {
                 if (preloadedFiles.count(str)) continue;
                 preloadedFiles[str] = true;
@@ -376,6 +406,10 @@ VRGuiBits::VRGuiBits() {
     addTermTab("Search results");
     addTermTab("Reasoning");
     addTermTab("Tracking");
+    auto colTab = addTermTab("Collaboration");
+
+    colTab->addStyle( "red", "#ff3311", "#ffffff", false, false, false );
+
     openConsole = consoles["Console"];
     openConsole->setOpen(true);
 
