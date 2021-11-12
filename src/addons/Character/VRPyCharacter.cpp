@@ -7,32 +7,52 @@
 using namespace OSG;
 
 simpleVRPyType(Behavior, New_ptr);
+simpleVRPyType(Skin, 0);
 simpleVRPyType(Skeleton, New_ptr);
 simpleVRPyType(Character, New_VRObjects_ptr);
+simpleVRPyType(Humanoid, New_VRObjects_ptr);
 
 
 PyMethodDef VRPyBehavior::methods[] = {
     {NULL}  /* Sentinel */
 };
 
+PyMethodDef VRPySkin::methods[] = {
+    {NULL}  /* Sentinel */
+};
+
 PyMethodDef VRPySkeleton::methods[] = {
     {"getKinematics", PyWrap( Skeleton, getKinematics, "Get internal FABRIK solver", FABRIKPtr ) },
     {"getTarget", PyWrap( Skeleton, getTarget, "Get joint target by name", PosePtr, string ) },
+    {"getJointID", PyWrap( Skeleton, getJointID, "Get joint ID by name", int, string ) },
     {NULL}  /* Sentinel */
 };
 
 PyMethodDef VRPyCharacter::methods[] = {
-    {"setSkeleton", PyWrap( Character, setSkeleton, "Set the skeleton", void, VRSkeletonPtr ) },
     {"getSkeleton", PyWrap( Character, getSkeleton, "Get the skeleton", VRSkeletonPtr ) },
     //{"setSkin", PyWrap( Character, setSkin, "Set the skin geometry", void, string, bool ) },
     {"addBehavior", PyWrap( Character, addBehavior, "Add a behavior pattern", void, VRBehaviorPtr ) },
     //{"triggerBehavior", PyWrap( Character, triggerBehavior, "Trigger a certain behavior", void, string ) },
     {"simpleSetup", PyWrap( Character, simpleSetup, "Simple character setup", void ) },
-    {"move", PyWrap( Character, move, "Move end effector, 'handLeft', 'handRight', footLeft', 'footRight'", void, string, PosePtr ) },
+    {"addDebugSkin", PyWrap( Character, addDebugSkin, "Add a simple debug skin", void ) },
+    {"setSkin", PyWrap( Character, setSkin, "Set geometry with skin", void, VRGeometryPtr, VRSkinPtr, VRSkeletonPtr ) },
+    {"move", PyWrap( Character, move, "Move end effector, 'wristL/R', 'palmL/R', 'ankleL/R', 'toesL/R'", PathPtr, string, PosePtr, float ) },
     {"moveTo", PyWrapOpt( Character, moveTo, "Move to position", "4", PathPtr, Vec3d, float ) },
+    {"grab", PyWrapOpt( Character, grab, "Grab an object with right hand", "2", PathPtr, Vec3d, float ) },
     {NULL}  /* Sentinel */
 };
 
+PyMethodDef VRPyHumanoid::methods[] = {
+    {"getSkin", PyWrap( Humanoid, getSkin, "Get skin object", VRSkinPtr ) },
+    {"getSkeleton", PyWrap( Humanoid, getSkeleton, "Get skeleton object", VRSkeletonPtr ) },
+    {"setColor", PyWrapOpt( Humanoid, setColor, "Set part color, (partID, color)", "1", void, string, Color3f, bool ) },
+    {"setRingParams", PyWrapOpt( Humanoid, setRingParams, "Set ring parameters", "1", void, int, vector<double>, bool ) },
+    {"getColor", PyWrap( Humanoid, getColor, "Get color", Color3f, string ) },
+    {"getRingParams", PyWrap( Humanoid, getRingParams, "Get ring params", vector<Vec3d>, int ) },
+    {"getParameterString", PyWrap( Humanoid, getParameterString, "Return all parameters as json string", string ) },
+    {"loadParameters", PyWrapOpt( Humanoid, loadParameters, "Load parameters from string", "1", void, string, bool ) },
+    {NULL}  /* Sentinel */
+};
 
 
 

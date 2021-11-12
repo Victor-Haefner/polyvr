@@ -830,6 +830,7 @@ void VRMaterial::setMappingPlanes(Vec4d p1, Vec4d p2, Vec4d p3, Vec4d p4, int un
 }
 
 void VRMaterial::setCubeTexture(VRTexturePtr img, string side, int unit) {
+    if (!img) return;
     auto md = mats[activePass];
     // TODO: check for textureobj chunk and remove it
 
@@ -941,6 +942,11 @@ bool VRMaterial::isWireFrame() {
 }
 
 VRVideoPtr VRMaterial::setVideo(string vid_path) {
+    if (!exists(vid_path)) {
+        VRConsoleWidget::get("Errors")->write("Material setVideo "+vid_path+" of material "+getName()+" failed, path not found!\n");
+        return 0;
+    }
+
     auto md = mats[activePass];
 #ifndef WITHOUT_AV
     if (md->video == 0) md->video = VRVideo::create( ptr() );

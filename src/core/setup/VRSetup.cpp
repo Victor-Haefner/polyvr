@@ -7,6 +7,8 @@
 #include "core/scene/VRScene.h"
 #ifndef WITHOUT_GTK
 #include "core/setup/windows/VRGtkWindow.h"
+#include "core/setup/devices/VRMouse.h"
+#include "core/setup/devices/VRKeyboard.h"
 #endif
 #include "core/utils/toString.h"
 #include "core/utils/VROptions.h"
@@ -17,6 +19,9 @@
 #ifndef __EMSCRIPTEN__
 #include "core/networking/VRPing.h"
 #endif
+
+#include "tracking/VRPN.h"
+#include "tracking/ART.h"
 
 #include "core/objects/VRTransform.h"
 #include "core/objects/VRCamera.h"
@@ -50,6 +55,13 @@ VRSetup::VRSetup(string name) {
     user = 0;
     tracking = "None";
 
+#ifndef WITHOUT_ART
+    art = ART::create();
+#endif
+#ifndef WITHOUT_VRPN
+    vrpn = VRPN::create();
+#endif
+
     setup_layer = VRVisualLayer::getLayer("Setup", "setup.png",1);
     stats_layer = VRVisualLayer::getLayer("Statistics", "stats.png",1);
     stencil_layer = VRVisualLayer::getLayer("Stencil", "stencil.png",1);
@@ -81,6 +93,9 @@ void VRSetup::showStencil(bool b) {
     auto s = VRScene::getCurrent();
     if (s) s->setStencil(b);
 }
+
+ARTPtr VRSetup::getART() { return art; }
+VRPNPtr VRSetup::getVRPN() { return vrpn; }
 
 VRScriptPtr VRSetup::addScript(string name) { auto s = VRScript::create(name); scripts[s->getName()] = s; return s; }
 VRScriptPtr VRSetup::getScript(string name) { return scripts[name]; }
@@ -138,12 +153,21 @@ void VRSetup::setupLESCCAVELights(VRScenePtr scene) {
 #endif
 }
 
+void VRSetup::updateGtkDevices() {
+    for (auto dev : getDevices()) {
+        auto m = dynamic_pointer_cast<VRMouse>(dev.second);
+        auto k = dynamic_pointer_cast<VRKeyboard>(dev.second);
+        if (m) m->applyEvents();
+        if (k) k->applyEvents();
+    }
+}
+
 void VRSetup::updateTracking() {
 #ifndef WITHOUT_ART
-    ART::applyEvents();
+    if (art) art->applyEvents();
 #endif
 #ifndef WITHOUT_VRPN
-    VRPN::update();
+    if (vrpn) vrpn->update();
 #endif
     for (auto view : getViews()) view->updateMirror();
 }
@@ -190,15 +214,15 @@ VRTransformPtr VRSetup::getRoot() { return real_root; }
 
 VRTransformPtr VRSetup::getTracker(string t) {
 #ifndef WITHOUT_ART
-    for (int ID : getARTDevices()) {
-        ART_devicePtr dev = getARTDevice(ID);
+    for (int ID : art->getARTDevices()) {
+        ART_devicePtr dev = art->getARTDevice(ID);
         if (dev->ent && dev->ent->getName() == t) return dev->ent;
     }
 #endif
 
 #ifndef WITHOUT_VRPN
-    for (int ID : getVRPNTrackerIDs()) {
-        VRPN_devicePtr dev = getVRPNTracker(ID);
+    for (int ID : vrpn->getVRPNTrackerIDs()) {
+        VRPN_devicePtr dev = vrpn->getVRPNTracker(ID);
         if (dev->getName() == t) return dev->getBeacon();
     }
 #endif
@@ -254,10 +278,10 @@ void VRSetup::save(string file) {
     VRWindowManager::save(displayN);
     VRDeviceManager::save(deviceN);
 #ifndef WITHOUT_ART
-    ART::save(trackingARTN);
+    art->save(trackingARTN);
 #endif
 #ifndef WITHOUT_VRPN
-    VRPN::save(trackingVRPNN);
+    vrpn->save(trackingVRPNN);
 #endif
     network->save(networkN);
     displayN->setAttribute("globalOffset", toString(globalOffset).c_str());
@@ -288,10 +312,10 @@ void VRSetup::load(string file) {
     XMLElementPtr scriptN = setupN->getChild("Scripts");
 
 #ifndef WITHOUT_ART
-    if (trackingARTN) ART::load(trackingARTN);
+    if (trackingARTN && art) art->load(trackingARTN);
 #endif
 #ifndef WITHOUT_VRPN
-    if (trackingVRPNN) VRPN::load(trackingVRPNN);
+    if (trackingVRPNN && vrpn) vrpn->load(trackingVRPNN);
 #endif
     if (deviceN) VRDeviceManager::load(deviceN);
     if (displayN) VRWindowManager::load(displayN);

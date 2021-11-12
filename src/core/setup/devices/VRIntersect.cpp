@@ -1,4 +1,5 @@
 #include "VRIntersect.h"
+
 #include <OpenSG/OSGLineChunk.h>
 #include <OpenSG/OSGIntersectAction.h>
 #include <OpenSG/OSGSimpleMaterial.h>
@@ -12,15 +13,19 @@
 #include "core/utils/toString.h"
 #include "VRSignal.h"
 #include "VRDevice.h"
+#include "VRIntersectAction.h"
 
 using namespace OSG;
+
+
+VRIntersectionPtr VRIntersection::create() { return VRIntersectionPtr(new VRIntersection()); }
 
 VRObjectPtr VRIntersection::getIntersected() { return object.lock(); }
 Pnt3d VRIntersection::getIntersection() { return point; }
 Line VRIntersection::getRay() { return ray; }
 
-Vec2d VRIntersect_computeTexel(VRIntersection& ins, NodeMTRecPtr node) {
-    if (!ins.hit) return Vec2d(0,0);
+Vec2d VRIntersect_computeTexel(VRIntersectionPtr ins, NodeMTRecPtr node) {
+    if (!ins->hit) return Vec2d(0,0);
     if (node == 0) return Vec2d(0,0);
 
     GeometryRefPtr geo = dynamic_cast<Geometry*>( node->getCore() );
@@ -30,12 +35,12 @@ Vec2d VRIntersect_computeTexel(VRIntersection& ins, NodeMTRecPtr node) {
 
     auto texcoords = geo->getTexCoords();
     if (texcoords == 0) return Vec2d(0,0);
-    TriangleIterator iter = geo->beginTriangles(); iter.seek( ins.triangle );
+    TriangleIterator iter = geo->beginTriangles(); iter.seek( ins->triangle );
 
 
     Matrix4f m = node->getToWorld();
     m.invert();
-    Pnt3f local_pnt; m.mult(Pnt3f(ins.point), local_pnt);
+    Pnt3f local_pnt; m.mult(Pnt3f(ins->point), local_pnt);
 
     Pnt3f p0 = iter.getPosition(0);
     Pnt3f p1 = iter.getPosition(1);
@@ -53,8 +58,8 @@ Vec2d VRIntersect_computeTexel(VRIntersection& ins, NodeMTRecPtr node) {
     return Vec2d( iter.getTexCoords(0) * a + iter.getTexCoords(1) * b + iter.getTexCoords(2) * c );
 }
 
-Vec3i VRIntersect_computeVertices(VRIntersection& ins, NodeMTRecPtr node) {
-    if (!ins.hit) return Vec3i(0,0,0);
+Vec3i VRIntersect_computeVertices(VRIntersectionPtr ins, NodeMTRecPtr node) {
+    if (!ins->hit) return Vec3i(0,0,0);
     if (node == 0) return Vec3i(0,0,0);
 
     GeometryRefPtr geo = dynamic_cast<Geometry*>( node->getCore() );
@@ -62,13 +67,13 @@ Vec3i VRIntersect_computeVertices(VRIntersection& ins, NodeMTRecPtr node) {
     auto type = geo->getTypes()->getValue(0);
     if ( type == GL_PATCHES ) return Vec3i(0,0,0);
 
-    TriangleIterator iter = geo->beginTriangles(); iter.seek( ins.triangle );
+    TriangleIterator iter = geo->beginTriangles(); iter.seek( ins->triangle );
     return Vec3i(iter.getPositionIndex(0), iter.getPositionIndex(1), iter.getPositionIndex(2));
 }
 
-VRIntersection VRIntersect::intersectRay(VRObjectWeakPtr wtree, Line ray, bool skipVols) {
+VRIntersectionPtr VRIntersect::intersectRay(VRObjectWeakPtr wtree, Line ray, bool skipVols) {
     //VRTimer t; t.start();
-    VRIntersection ins;
+    auto ins = VRIntersection::create();
     auto tree = wtree.lock();
     if (!tree) return ins;
     if (!tree->getNode()) return ins;
@@ -82,33 +87,33 @@ VRIntersection VRIntersect::intersectRay(VRObjectWeakPtr wtree, Line ray, bool s
     iAct.setLine(ray);
     iAct.apply(tree->getNode()->node);
 
-    ins.ray = ray;
-    ins.hit = iAct.didHit();
+    ins->ray = ray;
+    ins->hit = iAct.didHit();
     //cout << "VRIntersect::intersectRay " << ray << " with " << tree->getName() << " hit? " << ins.hit << endl;
-    if (ins.hit) {
-        ins.object = tree->find(OSGObject::create(iAct.getHitObject()->getParent()));
-        if (auto sp = ins.object.lock()) ins.name = sp->getName();
-        ins.point = Pnt3d(iAct.getHitPoint());
-        ins.normal = Vec3d(iAct.getHitNormal());
+    if (ins->hit) {
+        ins->object = tree->find(OSGObject::create(iAct.getHitObject()->getParent()));
+        if (auto sp = ins->object.lock()) ins->name = sp->getName();
+        ins->point = Pnt3d(iAct.getHitPoint());
+        ins->normal = Vec3d(iAct.getHitNormal());
         if (tree->getParent()) {
             auto m = toMatrix4d( tree->getParent()->getNode()->node->getToWorld() );
-            m.mult( ins.point, ins.point );
-            m.mult( ins.normal, ins.normal );
+            m.mult( ins->point, ins->point );
+            m.mult( ins->normal, ins->normal );
         }
-        ins.triangle = iAct.getHitTriangle();
-        ins.triangleVertices = VRIntersect_computeVertices(ins, iAct.getHitObject());
-        ins.texel = VRIntersect_computeTexel(ins, iAct.getHitObject());
-        ins.customID = iAct.getHitLine();
+        ins->triangle = iAct.getHitTriangle();
+        ins->triangleVertices = VRIntersect_computeVertices(ins, iAct.getHitObject());
+        ins->texel = VRIntersect_computeTexel(ins, iAct.getHitObject());
+        ins->customID = iAct.getHitLine();
         lastIntersection = ins;
-        ins.time = now;
+        ins->time = now;
     } else {
-        ins.object.reset();
-        if (lastIntersection.time < ins.time) lastIntersection = ins;
+        ins->object.reset();
+        if (!lastIntersection || lastIntersection->time < ins->time) lastIntersection = ins;
     }
 
     intersections[tree.get()] = ins;
 
-    if (showHit) cross->setWorldPosition(Vec3d(ins.point));
+    if (showHit) cross->setWorldPosition(Vec3d(ins->point));
     //cout << " intersectRay took: " << t.stop() << " " << skipVols << endl;
     return ins;
 }
@@ -119,14 +124,14 @@ VRIntersection VRIntersect::intersectRay(VRObjectWeakPtr wtree, Line ray, bool s
 * @param caster: beacon which should be used for intersection (for use of multiple beacons with multitouch)
 * @param dir: local ray casting vector
 */
-VRIntersection VRIntersect::intersect(VRObjectWeakPtr wtree, bool force, VRTransformPtr caster, Vec3d dir, bool skipVols) {
+VRIntersectionPtr VRIntersect::intersect(VRObjectWeakPtr wtree, bool force, VRTransformPtr caster, Vec3d dir, bool skipVols) {
     vector<VRObjectPtr> trees;
     if (auto sp = wtree.lock()) trees.push_back(sp);
     else for (auto grp : dynTrees) {
         for (auto swp : grp.second) if (auto sp = swp.second.lock()) trees.push_back(sp);
     }
 
-    VRIntersection ins;
+    auto ins = VRIntersection::create();
     VRDevice* dev = (VRDevice*)this;
 
     if (caster == 0) caster = dev->getBeacon();
@@ -135,7 +140,7 @@ VRIntersection VRIntersect::intersect(VRObjectWeakPtr wtree, bool force, VRTrans
     for (auto t : trees) {
         if (intersections.count(t.get())) {
             auto& ins_tmp = intersections[t.get()];
-            if (ins_tmp.hit && ins_tmp.time == now && !force) {
+            if (ins_tmp->hit && ins_tmp->time == now && !force) {
                 ins = ins_tmp;
                 //cout << " use old intersection from " << now << endl;
                 break;
@@ -146,7 +151,7 @@ VRIntersection VRIntersect::intersect(VRObjectWeakPtr wtree, bool force, VRTrans
         //cout << "VRIntersect::intersect " << caster->getName() << " rDir: " << ray.getDirection() << " cDir: " << caster->getDir() << endl;
         ins = intersectRay(t, ray, skipVols);
         //if (force) cout << ray.getPosition()[1] << " " << caster->getWorldPosition()[1] << endl;
-        if (ins.hit) break;
+        if (ins->hit) break;
     }
 
     //cout << " hit? " << ins.hit << ", " << ins.name << ", " << ins.point << endl;
@@ -170,14 +175,14 @@ void VRIntersect::initIntersect(VRDevicePtr dev) {
 
 void VRIntersect::dragCB(VRTransformWeakPtr caster, VRObjectWeakPtr tree, VRDeviceWeakPtr dev) {
     if (!dnd) return;
-    VRIntersection ins = intersect(tree);
+    auto ins = intersect(tree);
     drag(ins, caster);
 }
 
 void VRIntersect::clearDynTrees() { dynTrees.clear(); }
 
-void VRIntersect::drag(VRIntersection i, VRTransformWeakPtr wcaster) {
-    VRObjectWeakPtr wobj = i.object;
+void VRIntersect::drag(VRIntersectionPtr i, VRTransformWeakPtr wcaster) {
+    VRObjectWeakPtr wobj = i->object;
     auto obj = wobj.lock();
     auto caster = wcaster.lock();
     if (!obj || !caster) return;
@@ -295,5 +300,5 @@ void VRIntersect::remDynTree(VRObjectPtr o) {
 VRObjectPtr VRIntersect::getCross() { return cross; }//needs to be optimized for multiple scenes
 VRDeviceCbPtr VRIntersect::getDrop() { return drop_fkt; }
 
-VRIntersection VRIntersect::getLastIntersection() { return lastIntersection; }
+VRIntersectionPtr VRIntersect::getLastIntersection() { return lastIntersection; }
 

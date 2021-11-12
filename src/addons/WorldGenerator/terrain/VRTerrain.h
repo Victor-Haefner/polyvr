@@ -15,7 +15,7 @@ OSG_BEGIN_NAMESPACE;
 
 class Action;
 
-class VREmbankment : public VRGeometry{
+class VREmbankment : public VRGeometry {
     private:
         PathPtr p1, p2, p3, p4;
         VRPolygon area;
@@ -51,7 +51,8 @@ class VRTerrain : public VRGeometry, public VRWorldModule {
         double LODfac = 1.0;
         bool localMesh = false;
         bool useHeightoffset = false;
-        bool vertextFlip = true;
+        bool doInvertSatY = false;
+        bool doInvertTopoY = false;
         float heightoffset = 0.0;
         VRTexturePtr heigthsTex;
         VRTexturePtr satTex;
@@ -85,7 +86,6 @@ class VRTerrain : public VRGeometry, public VRWorldModule {
         VRTerrain(string name, bool localized = false);
         ~VRTerrain();
         static VRTerrainPtr create(string name = "terrain", bool localized = false);
-        void deactivateVertexFlip();
         VRTerrainPtr ptr();
 
         void setSimpleNoise();
@@ -97,6 +97,7 @@ class VRTerrain : public VRGeometry, public VRWorldModule {
         void setMeshTer(vector<vector<vector<Vec3d>>> in);
         void setWaterLevel(float w);
         void setLit(bool isLit);
+        void setInvertY(bool invertSatY, bool invertTopoY);
         void setAtmosphericEffect(float thickness, Color3f color);
         void setHeightScale(float s);
         void setMap( VRTexturePtr tex, int channel = 0, Vec4d rect = Vec4d(0,0,1,1) );

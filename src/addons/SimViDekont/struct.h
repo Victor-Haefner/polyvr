@@ -1,4 +1,3 @@
-#include "core/objects/geometry/VRGeometry.h"
 
 using namespace std;
 OSG_BEGIN_NAMESPACE;

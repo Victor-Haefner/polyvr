@@ -28,6 +28,17 @@ gboolean global_invalidate = TRUE;
 #include "glareaWin.h"
 #endif
 
+#include <GL/glu.h>
+
+#define CHECK_GL_ERROR(msg) \
+{ \
+    GLenum err = glGetError(); \
+    if (err != GL_NO_ERROR) { \
+        static int i=0; i++; \
+        if (i <= 4) printf(" gl error on %s: %s\n", msg, gluErrorString(err)); \
+        if (i == 4) printf("  ..ignoring further errors\n"); \
+    } \
+}
 
 void override_window_invalidate_for_new_frame(_GdkWindow* window) {
     _GdkWindowImplClass* impl_class = getGdkWindowImplClass();
@@ -899,13 +910,13 @@ void glarea_render(GLArea* area) {
 }
 
 void cairo_draw(cairo_t* cr, GLArea* area, _GdkWindow* window, int scale, int x, int y, int width, int height) {
-  if (glGetError() != GL_NO_ERROR) printf(" gl error on cairo_draw_begin beg\n");
+    CHECK_GL_ERROR("cairo_draw A1");
   GLAreaPrivate* priv = gl_area_get_instance_private (area);
   impl_window = window->impl_window;
   window_scale = gdk_window_get_scale_factor ((GdkWindow*)impl_window);
   clip_region = gdk_cairo_region_from_clip (cr);
   gdk_gl_context_make_current(priv->context);
-  if (glGetError() != GL_NO_ERROR) printf(" gl error on gdk_gl_context_make_current\n");
+    CHECK_GL_ERROR("cairo_draw A2");
   cairo_matrix_t matrix;
   cairo_get_matrix (cr, &matrix);
   dx = matrix.x0;
@@ -929,7 +940,9 @@ void cairo_draw(cairo_t* cr, GLArea* area, _GdkWindow* window, int scale, int x,
           dest.height = height * window_scale / scale;
 
           if (gdk_rectangle_intersect (&clip_rect, &dest, &fdest)) {
+    CHECK_GL_ERROR("cairo_draw A3");
               glarea_render(area);
+    CHECK_GL_ERROR("cairo_draw A4");
               if (impl_window->current_paint.flushed_region) {
                   cairo_rectangle_int_t flushed_rect;
 
@@ -950,7 +963,7 @@ void cairo_draw(cairo_t* cr, GLArea* area, _GdkWindow* window, int scale, int x,
 
 static gboolean gl_area_draw(GtkWidget* widget, cairo_t* cr) {
     //SET_DEBUG_BREAK_POINT(B,1)
-    if (glGetError() != GL_NO_ERROR) printf(" gl error on gl_area_draw beg\n");
+    CHECK_GL_ERROR("gl_area_draw A1");
 
     GLArea *area = GL_AREA(widget);
     //gtk_widget_set_double_buffered(widget, FALSE);
@@ -963,7 +976,7 @@ static gboolean gl_area_draw(GtkWidget* widget, cairo_t* cr) {
     if (priv->context == NULL) return FALSE;
 
     gl_area_make_current (area);
-    if (glGetError() != GL_NO_ERROR) printf(" gl error on gl_area_make_current\n");
+    CHECK_GL_ERROR("gl_area_draw A2");
 
     //glEnable (GL_DEPTH_TEST);
 
@@ -971,6 +984,7 @@ static gboolean gl_area_draw(GtkWidget* widget, cairo_t* cr) {
     w = gtk_widget_get_allocated_width (widget) * scale;
     h = gtk_widget_get_allocated_height (widget) * scale;
     cairo_draw(cr, area, (_GdkWindow*)gtk_widget_get_window(widget), scale, 0, 0, w, h);
+    CHECK_GL_ERROR("gl_area_draw A3");
 
     return TRUE;
 }
@@ -1114,7 +1128,9 @@ void gl_area_queue_render (GLArea *area) {
     GLAreaPrivate *priv = gl_area_get_instance_private (area);
     g_return_if_fail (IS_GL_AREA (area));
     priv->needs_render = TRUE;
+    CHECK_GL_ERROR("gl_area_queue_render A1");
     gtk_widget_queue_draw (GTK_WIDGET (area));
+    CHECK_GL_ERROR("gl_area_queue_render A2");
 }
 
 GdkGLContext* gl_area_get_context (GLArea *area) {
@@ -1128,7 +1144,7 @@ void gl_area_make_current (GLArea *area) {
     g_return_if_fail (IS_GL_AREA (area));
     GtkWidget* widget = GTK_WIDGET (area);
     g_return_if_fail (gtk_widget_get_realized (widget));
-    if (glGetError() != GL_NO_ERROR) printf(" gl error on gdk_gl_context_make_current bevore\n");
+    CHECK_GL_ERROR("gdk_gl_context_make_current bevore");
     if (priv->context != NULL) gdk_gl_context_make_current (priv->context);
-    if (glGetError() != GL_NO_ERROR) printf(" gl error on gdk_gl_context_make_current after\n");
+    CHECK_GL_ERROR("gdk_gl_context_make_current after");
 }

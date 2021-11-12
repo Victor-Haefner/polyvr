@@ -333,6 +333,8 @@
 		<Unit filename="src/addons/Character/VRCharacter.cpp" />
 		<Unit filename="src/addons/Character/VRCharacter.h" />
 		<Unit filename="src/addons/Character/VRCharacterFwd.h" />
+		<Unit filename="src/addons/Character/VRHumanoid.cpp" />
+		<Unit filename="src/addons/Character/VRHumanoid.h" />
 		<Unit filename="src/addons/Character/VRPyCharacter.cpp" />
 		<Unit filename="src/addons/Character/VRPyCharacter.h" />
 		<Unit filename="src/addons/Character/VRSkeleton.cpp" />

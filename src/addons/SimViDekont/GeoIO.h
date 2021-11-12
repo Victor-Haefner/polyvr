@@ -3,6 +3,7 @@
 
 #include <OpenSG/OSGSceneFileHandler.h>
 #include <OpenSG/OSGGeometry.h>
+#include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/geometry/OSGGeometry.h"
 
 using namespace std;

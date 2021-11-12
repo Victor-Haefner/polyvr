@@ -10,8 +10,6 @@ using namespace OSG;
 
 VRICEClient::VRICEClient() {
     broker = VRRestClient::create();
-    client = VRTCPClient::create();
-    client->setGuard("TCPPVR\n");
     updateCb = VRUpdateCb::create("ice update", bind(&VRICEClient::update, this));
     VRScene::getCurrent()->addTimeoutFkt(updateCb, 0, 1000);
 }
@@ -26,12 +24,14 @@ VRICEClientPtr VRICEClient::ptr() { return static_pointer_cast<VRICEClient>(shar
 void VRICEClient::setTurnServer(string url, string ip) {
     turnURL = url;
     turnIP = ip;
+    VRConsoleWidget::get("Collaboration")->write( " ICE "+toString((void*)this)+" set turn server "+url+" ("+ip+")\n");
 }
 
 void VRICEClient::setName(string n) {
     name = n;
     uID = broker->get(turnURL+"/regUser.php?NAME="+n)->getData();
     //cout << "register name " << n << " -> " << uID << endl;
+    VRConsoleWidget::get("Collaboration")->write( " ICE "+toString((void*)this)+", set named "+name+" ("+uID+")\n");
 }
 
 void VRICEClient::removeUser(string uid) {
@@ -42,12 +42,12 @@ string VRICEClient::getID() { return uID; }
 
 void VRICEClient::onEvent( function<void(string)> f ) {
     onEventCb = f;
-    client->onConnect([this](){;});
+    //getClient(otherID)->onConnect([this](){;});
 }
 
 void VRICEClient::onMessage( function<void(string)> f ) {
     onMessageCb = f;
-    client->onMessage(f);
+    //getClient(otherID)->onMessage(f);
 }
 
 void VRICEClient::update() { // TODO: test and debug async
@@ -63,6 +63,7 @@ void VRICEClient::update() { // TODO: test and debug async
 }
 
 void VRICEClient::updateUsers() {
+    string status = " ICE "+name+" updateUsers:";
     users.clear();
     for (auto usrData : splitString(usersList, '\n')) {
         auto data = splitString(usrData, '|');
@@ -70,7 +71,9 @@ void VRICEClient::updateUsers() {
         string name = data[0];
         string uid = data[1];
         users[uid] = name;
+        status += " "+name+"("+uid+")";
     }
+    VRConsoleWidget::get("Collaboration")->write( status+"\n");
 }
 
 map<string, string> VRICEClient::getUsers() { return users; }
@@ -78,6 +81,7 @@ map<string, string> VRICEClient::getUsers() { return users; }
 void VRICEClient::send(string otherID, string msg) {
     msg = VRRestResponse::uriEncode(msg);
     broker->get(turnURL+"/addMessage.php?ORG="+uID+"&UID="+otherID+"&MSG="+msg)->getData();
+    VRConsoleWidget::get("Collaboration")->write( " ICE "+name+" send to "+otherID+": '"+msg+"'\n");
 }
 
 void VRICEClient::processUsers(string data) {
@@ -100,7 +104,11 @@ void VRICEClient::processRespUsers(VRRestResponsePtr r) { processUsers(r->getDat
 void VRICEClient::processRespMessages(VRRestResponsePtr r) { processMessages(r->getData()); }
 
 void VRICEClient::pollMessages(bool async) {
-    if (uID == "") return;
+    if (uID == "") {
+        msgGuard = false;
+        return;
+    }
+
     if (!async) {
         string data = broker->get(turnURL+"/getMessages.php?UID="+uID)->getData();
         processMessages(data);
@@ -131,9 +139,20 @@ vector<string> VRICEClient::getUserID(string n) {
     return res;
 }
 
+VRTCPClientPtr VRICEClient::getClient(string otherID) {
+    if (!clients.count(otherID)) {
+        clients[otherID] = VRTCPClient::create();
+        clients[otherID]->setGuard("TCPPVR\n");
+    }
+    return clients[otherID];
+}
+
+map<string, VRTCPClientPtr> VRICEClient::getClients() { return clients; }
+
 void VRICEClient::connectTo(string otherID) {
     if (uID == "" || otherID == "") {
         cout << "VRICEClient::connectTo failed, empty ID" << endl;
+        VRConsoleWidget::get("Collaboration")->write( " ICE "+name+" connectTo failed, empty ID "+uID+", "+otherID+"\n", "red");
         return;
     }
     string uid1 = uID;
@@ -142,26 +161,37 @@ void VRICEClient::connectTo(string otherID) {
 
     if (!users.count(uid1)) {
         cout << "VRICEClient::connectTo failed, own ID " << uid1 << " not in users!" << endl;
+        VRConsoleWidget::get("Collaboration")->write( " ICE "+name+" connectTo failed, own ID "+uid1+" not in users\n", "red");
         return;
     }
 
     if (!users.count(uid2)) {
         cout << "VRICEClient::connectTo failed, others ID " << uid2 << " not in users!" << endl;
+        VRConsoleWidget::get("Collaboration")->write( " ICE "+name+" connectTo failed, other ID "+uid2+" not in users\n", "red");
         return;
     }
 
-    VRConsoleWidget::get("Collaboration")->write( " ICE "+name+"("+uid1+"): connect to "+users[uid2]+"("+uid2+")\n");
-
     string data = broker->get(turnURL+"/getConnection.php?UID="+uid1+"&UID2="+uid2)->getData();
-    int port = toInt( splitString(data, ':')[0] );
+    auto params = splitString(data, ':');
+    if (params.size() == 0) {
+        VRConsoleWidget::get("Collaboration")->write( " ICE "+name+"("+uid1+"): connect to "+turnIP+" faild! no port received from turn server "+turnURL+", received '"+data+"'\n", "red");
+        return;
+    }
+
+    int port = toInt( params[0] );
+    if (port == 0) {
+        VRConsoleWidget::get("Collaboration")->write( " ICE "+name+"("+uid1+"): connect to "+turnIP+" faild! no port received from turn server "+turnURL+", received '"+data+"'\n", "red");
+        return;
+    }
+
     //cout << " -> port " << port << endl;
-    client->connect(turnIP, port);
+    VRConsoleWidget::get("Collaboration")->write( " ICE "+name+"("+uid1+"): connect to "+users[uid2]+"("+uid2+") over "+turnIP+":"+toString(port)+"\n");
+    getClient(otherID)->connect(turnIP, port);
 }
 
-void VRICEClient::sendTCP(string msg) {
-    if (!client->connected()) return;
-    client->send(msg, "TCPPVR\n");
+void VRICEClient::sendTCP(string otherID, string msg) {
+    auto cli = getClient(otherID);
+    if (!cli->connected()) return;
+    cli->send(msg, "TCPPVR\n");
 }
-
-VRTCPClientPtr VRICEClient::getClient() { return client; }
 

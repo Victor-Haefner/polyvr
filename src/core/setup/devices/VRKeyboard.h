@@ -11,6 +11,8 @@ class VRKeyboard : public VRDevice {
     private:
         _GdkEventKey* gdk_event = 0;
 
+        vector< vector<int> > delayedEvents;
+
     public:
         VRKeyboard();
         ~VRKeyboard();
@@ -18,8 +20,10 @@ class VRKeyboard : public VRDevice {
         static VRKeyboardPtr create();
         VRKeyboardPtr ptr();
 
-        void keyboard(unsigned int k, bool pressed, int x, int y);
-        void keyboard_special(int k, bool pressed, int x, int y);
+        void applyEvents();
+
+        void keyboard(unsigned int k, bool pressed, int x, int y, bool delayed = true);
+        void keyboard_special(int k, bool pressed, int x, int y, bool delayed = true);
 
         bool shiftDown();
         bool ctrlDown();

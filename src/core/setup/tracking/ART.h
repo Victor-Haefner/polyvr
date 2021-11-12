@@ -79,6 +79,8 @@ class ART : public VRStorage {
         ART();
         ~ART();
 
+        static ARTPtr create();
+
         void applyEvents(); //main loop update
 
         vector<int> getARTDevices();

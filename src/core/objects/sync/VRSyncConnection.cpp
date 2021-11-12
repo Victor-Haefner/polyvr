@@ -2,6 +2,7 @@
 #include "VRSyncNode.h"
 #include "core/networking/tcp/VRTCPClient.h"
 #include "core/utils/toString.h"
+#include "core/utils/VRTimer.h"
 
 using namespace OSG;
 
@@ -99,20 +100,25 @@ vector<BYTE> VRSyncConnection::base64_decode(string const& encoded_string) {
   return ret;
 }
 
-VRSyncConnection::VRSyncConnection(string host, int port) {
+VRSyncConnection::VRSyncConnection(string host, int port, string localUri) : localUri(localUri) {
+    timer = VRTimer::create();
     client = VRTCPClient::create();
     client->setGuard("TCPPVR\n");
     uri = host+":"+toString(port);
     if (host != "") connect();
 }
 
-VRSyncConnection::VRSyncConnection(VRTCPClientPtr client) : client(client) {
+VRSyncConnection::VRSyncConnection(VRTCPClientPtr client, string localUri) : localUri(localUri), client(client) {
+    timer = VRTimer::create();
     uri = client->getConnectedUri();
 }
 
 VRSyncConnection::~VRSyncConnection() { cout << "~VRSyncConnection::VRSyncConnection" << endl; }
-VRSyncConnectionPtr VRSyncConnection::create(string host, int port) { return VRSyncConnectionPtr( new VRSyncConnection(host, port) ); }
-VRSyncConnectionPtr VRSyncConnection::create(VRTCPClientPtr client) { return VRSyncConnectionPtr( new VRSyncConnection(client) ); }
+VRSyncConnectionPtr VRSyncConnection::create(string host, int port, string localUri) { return VRSyncConnectionPtr( new VRSyncConnection(host, port, localUri) ); }
+VRSyncConnectionPtr VRSyncConnection::create(VRTCPClientPtr client, string localUri) { return VRSyncConnectionPtr( new VRSyncConnection(client, localUri) ); }
+
+string VRSyncConnection::getUri() { return uri; }
+string VRSyncConnection::getLocalUri() { return localUri; }
 
 void VRSyncConnection::connect() {
     client->connect(uri);
@@ -120,8 +126,20 @@ void VRSyncConnection::connect() {
 }
 
 bool VRSyncConnection::send(string message) {
+    timer->reset();
+    if (!client) {
+        cout << "Error in VRSyncConnection::send, failed! no client.. tried to send " << message << endl;
+        return 0;
+    }
     client->send(message, "TCPPVR\n");
     return 1;
+}
+
+void VRSyncConnection::keepAlive() {
+    //cout << "keepAlive? " << timer->stop() << endl;
+    if (timer->stop() > 3*60*1000) { // 3 min
+        send("keepAlive");
+    }
 }
 
 string VRSyncConnection::getStatus() {

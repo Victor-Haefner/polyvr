@@ -96,7 +96,7 @@ PyMethodDef VRPyObject::methods[] = {
     {"findFirst", PyWrap(Object, findFirst, "Find first node with given base name in scene graph below this node", VRObjectPtr, string) },
     {"findAll", PyWrapOpt(Object, findAll, "Find nodes with given base name (str) in scene graph below this node", "", vector<VRObjectPtr>, string, vector<VRObjectPtr>) },
     {"isPickable", PyWrap(Object, isPickable, "Return if the object is pickable", bool) },
-    {"setPickable", PyWrap(Object, setPickable, "Set if the object is pickable - setPickable(int pickable)\n   pickable can be 0 or 1 to disable or enable picking, as well as -1 to block picking even if an ancestor is pickable", void, int) },
+    {"setPickable", PyWrapOpt(Object, setPickable, "Set if the object is pickable - setPickable(int pickable)\n   pickable can be 0 or 1 to disable or enable picking, as well as -1 to block picking even if an ancestor is pickable", "1", void, int, bool) },
     //{"printOSG", PyWrap(Object, printOSGTree, "Print the OSG structure to console", void) },
     {"flattenHiarchy", PyWrap(Object, flattenHiarchy, "Flatten the scene graph hiarchy", void) },
     {"addTag", PyWrap(Object, addTag, "Add a tag to the object - addTag( str tag )", void, string) },

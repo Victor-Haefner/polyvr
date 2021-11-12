@@ -491,13 +491,13 @@ void VRPathtool::updateHandle(VRGeometryPtr handle) { // update paths the handle
 
 void VRPathtool::projectHandle(VRGeometryPtr handle, VRDevicePtr dev) { // project handle on projObj if set
     if (!projObj) return;
-    OSG::VRIntersection ins = dev->intersect(projObj);
-    if (ins.hit) {
+    auto ins = dev->intersect(projObj);
+    if (ins->hit) {
         Vec3d d = handle->getWorldDirection();
         //Vec3d d = handle->getRelativeDirection(ptr());
-        d -= d.dot(ins.normal)*ins.normal;
+        d -= d.dot(ins->normal)*ins->normal;
         //handle->setRelativePose( pose::create(Vec3d(ins.point), d, ins.normal), ptr() );
-        handle->setWorldPose( Pose::create(Vec3d(ins.point), d, ins.normal) );
+        handle->setWorldPose( Pose::create(Vec3d(ins->point), d, ins->normal) );
     }
 }
 

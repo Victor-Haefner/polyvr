@@ -3,6 +3,7 @@
 #include "core/objects/material/VRMaterialT.h"
 #include "core/scene/VRScene.h"
 #include "core/setup/VRSetup.h"
+#include "core/setup/devices/VRDevice.h"
 
 #include <OpenSG/OSGMatrix.h>
 

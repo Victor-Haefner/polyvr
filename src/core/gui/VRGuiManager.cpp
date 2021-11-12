@@ -26,6 +26,29 @@
 #include "core/utils/VRMutex.h"
 
 
+#include <GL/glu.h>
+
+#define CHECK_GL_ERROR(msg) \
+{ \
+    GLenum err = glGetError(); \
+    if (err != GL_NO_ERROR) { \
+        static int i=0; i++; \
+        if (i <= 4) printf(" gl error on %s: %s\n", msg, gluErrorString(err)); \
+        if (i == 4) printf("  ..ignoring further errors\n"); \
+    } \
+}
+
+#define CHECK_GL_ERROR2(msg) \
+{ \
+    GLenum err = glGetError(); \
+    if (err != GL_NO_ERROR) { \
+        printf(" gl error on %s: %s\n", msg, gluErrorString(err)); \
+        GtkWidget* w = gtk_get_event_widget(e); \
+        cout << "  got gdk event: " << e->type << " " << w << endl; \
+        if (w) cout << "  " << gtk_widget_get_name(w) << endl; \
+    } \
+}
+
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -220,9 +243,29 @@ VRConsoleWidgetPtr VRGuiManager::getConsole(string t) {
     return g_bits->getConsole(t);
 }
 
+void vr_gtk_main_do_event(GdkEvent* e) {
+
+    /*if (e->type == GDK_EXPOSE) {
+        auto ew = gtk_get_event_widget(e);
+        if (e->any.window) gtk_widget_render(ew, e->any.window, e->expose.region);
+    } else */
+
+    CHECK_GL_ERROR2("vr_gtk_main_do_event A1");
+    gtk_main_do_event(e);
+    CHECK_GL_ERROR2("vr_gtk_main_do_event A2");
+}
+
 void VRGuiManager::updateGtk() {
+    //cout << VRGlobals::CURRENT_FRAME << "VRGuiManager::updateGtk" << endl;
+    gdk_event_handler_set((GdkEventFunc)vr_gtk_main_do_event, NULL, NULL);
+
     VRLock lock( guiMutex() );
-    while( gtk_events_pending() ) gtk_main_iteration_do(false);
+    CHECK_GL_ERROR("VRGuiManager::updateGtk A1");
+    while( gtk_events_pending() ) gtk_main_iteration_do(false); // non blocking, may fail to catch the rendering event!
+    //while( gtk_events_pending() || VRGlobals::GTK_LAST_RENDER < VRGlobals::CURRENT_FRAME)
+    //    gtk_main_iteration_do(true); // blocking, this should wait for the rendering event
+    //gtk_main_iteration(); // blocking, this should wait for the rendering event
+    CHECK_GL_ERROR("VRGuiManager::updateGtk A2");
 }
 
 void VRGuiManager::updateGtkThreaded(VRThreadWeakPtr t) {

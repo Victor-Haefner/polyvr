@@ -11,6 +11,7 @@ PyMethodDef VRPyLight::methods[] = {
     {"setOn", PyWrap(Light, setOn, "Set light state", void, bool) },
     {"setBeacon", PyWrap(Light, setBeacon, "Set the light beacon", void, VRLightBeaconPtr) },
     {"getBeacon", PyWrap(Light, getBeacon, "Get the light beacon", VRLightBeaconPtr ) },
+    {"addBeacon", PyWrap(Light, addBeacon, "Create and return a light beacon", VRLightBeaconPtr ) },
     {"setDiffuse", PyWrap(Light, setDiffuse, "Set diffuse light color", void, Color4f) },
     {"setAmbient", PyWrap(Light, setAmbient, "Set ambient light color", void, Color4f) },
     {"setSpecular", PyWrap(Light, setSpecular, "Set specular light color", void, Color4f) },

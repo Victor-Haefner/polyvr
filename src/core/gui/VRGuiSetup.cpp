@@ -17,6 +17,8 @@
 #include "core/objects/geometry/VRPrimitive.h"
 #include "core/setup/devices/VRKeyboard.h"
 #include "core/setup/devices/VRFlystick.h"
+#include "core/setup/tracking/VRPN.h"
+#include "core/setup/tracking/ART.h"
 #ifndef WITHOUT_VIRTUOSE
 #include "core/setup/devices/VRHaptic.h"
 #endif
@@ -225,8 +227,8 @@ void VRGuiSetup::updateObjectData() {
 #ifndef WITHOUT_VRPN
     if (selected_type == "vrpn_device" || selected_type == "vrpn_tracker") {
         if (setup) {
-            setTextEntry("entry13", toString(setup->getVRPNPort()));
-            setToggleButton("checkbutton25", setup->getVRPNActive());
+            setTextEntry("entry13", toString(setup->getVRPN()->getVRPNPort()));
+            setToggleButton("checkbutton25", setup->getVRPN()->getVRPNActive());
         }
     }
 #endif
@@ -235,19 +237,19 @@ void VRGuiSetup::updateObjectData() {
 #ifndef WITHOUT_ART
         if (selected_name == "ART") {
             setWidgetVisibility("expander6", true, true);
-            setTextEntry("entry39", toString(setup->getARTPort()));
-            setToggleButton("checkbutton24", setup->getARTActive());
+            setTextEntry("entry39", toString(setup->getART()->getARTPort()));
+            setToggleButton("checkbutton24", setup->getART()->getARTActive());
 
-            artOffset.set(setup->getARTOffset());
-            artAxis.set(Vec3d(setup->getARTAxis()));
+            artOffset.set(setup->getART()->getARTOffset());
+            artAxis.set(Vec3d(setup->getART()->getARTAxis()));
         }
 #endif
 
 #ifndef WITHOUT_VRPN
         if (selected_name == "VRPN") {
             setWidgetVisibility("expander7", true, true);
-            setTextEntry("entry13", toString(setup->getVRPNPort()));
-            setToggleButton("checkbutton25", setup->getVRPNActive());
+            setTextEntry("entry13", toString(setup->getVRPN()->getVRPNPort()));
+            setToggleButton("checkbutton25", setup->getVRPN()->getVRPNActive());
         }
 #endif
 
@@ -262,16 +264,16 @@ void VRGuiSetup::updateObjectData() {
 
     if (device) {
         VRDevice* dev = (VRDevice*)selected_object;
-        VRIntersection ins = dev->getLastIntersection();
+        auto ins = dev->getLastIntersection();
 
         setWidgetVisibility("expander21", true, true);
         setLabel("label93", dev->getName());
         if (setup) fillStringListstore("dev_types_list", setup->getDeviceTypes());
         setCombobox("combobox26", getListStorePos("dev_types_list", dev->getType()) );
-        string hobj = ins.hit ? ins.name : "NONE";
+        string hobj = ins->hit ? ins->name : "NONE";
         setLabel("label110", hobj);
-        setLabel("label111", toString(ins.point));
-        setLabel("label112", toString(ins.texel));
+        setLabel("label111", toString(ins->point));
+        setLabel("label112", toString(ins->texel));
         setToggleButton("checkbutton37", dev->getCross()->isVisible());
     }
 
@@ -449,7 +451,7 @@ void VRGuiSetup::on_name_edited(const char* path, const char* new_name) {
     if (auto s = current_setup.lock()) {
         if (type == "window") s->changeWindowName(name, new_name);
 #ifndef WITHOUT_VRPN
-        if (type == "vrpn_tracker") s->changeVRPNDeviceName(((VRPN_device*)obj)->ptr(), new_name);
+        if (type == "vrpn_tracker") s->getVRPN()->changeVRPNDeviceName(((VRPN_device*)obj)->ptr(), new_name);
 #endif
         if (type == "node") ((VRNetworkNode*)obj)->setName(new_name);
         if (type == "slave") ((VRNetworkSlave*)obj)->setName(new_name);
@@ -488,7 +490,7 @@ void VRGuiSetup::on_menu_delete() {
 #ifndef WITHOUT_VRPN
     if (selected_type == "vrpn_tracker") {
         VRPN_device* t = (VRPN_device*)selected_object;
-        setup->delVRPNTracker(t->ptr());
+        setup->getVRPN()->delVRPNTracker(t->ptr());
     }
 #endif
 
@@ -542,7 +544,7 @@ void VRGuiSetup::on_menu_add_viewport() {
 void VRGuiSetup::on_menu_add_vrpn_tracker() {
     auto setup = current_setup.lock();
     if (!setup) return;
-    setup->addVRPNTracker(0, "Tracker0@localhost", Vec3d(0,0,0), 1);
+    setup->getVRPN()->addVRPNTracker(0, "Tracker0@localhost", Vec3d(0,0,0), 1);
     //setup->addVRPNTracker(0, "LeapTracker@tcp://141.3.151.136", Vec3d(0,0,0), 1);
 
     updateSetup();
@@ -908,7 +910,7 @@ void VRGuiSetup::on_toggle_art() {
     auto setup = current_setup.lock();
     if (!setup) return;
     bool b = getCheckButtonState("checkbutton24");
-    setup->setARTActive(b);
+    setup->getART()->setARTActive(b);
     VRGuiWidget("toolbutton12").setSensitivity(true);
 }
 #endif
@@ -919,7 +921,7 @@ void VRGuiSetup::on_toggle_vrpn() {
     auto setup = current_setup.lock();
     if (!setup) return;
     bool b = getCheckButtonState("checkbutton25");
-    setup->setVRPNActive(b);
+    setup->getVRPN()->setVRPNActive(b);
     VRGuiWidget("toolbutton12").setSensitivity(true);
 }
 #endif
@@ -930,7 +932,7 @@ void VRGuiSetup::on_art_edit_port() {
     auto setup = current_setup.lock();
     if (!setup) return;
     int p = toInt(getTextEntry("entry39"));
-    setup->setARTPort(p);
+    setup->getART()->setARTPort(p);
     VRGuiWidget("toolbutton12").setSensitivity(true);
 }
 #endif
@@ -951,7 +953,7 @@ void VRGuiSetup::on_art_edit_offset(Vec3d v) {
     if (guard) return;
     auto setup = current_setup.lock();
     if (!setup) return;
-    setup->setARTOffset(v);
+    setup->getART()->setARTOffset(v);
     VRGuiWidget("toolbutton12").setSensitivity(true);
 }
 
@@ -959,7 +961,7 @@ void VRGuiSetup::on_art_edit_axis(Vec3d v) {
     if (guard) return;
     auto setup = current_setup.lock();
     if (!setup) return;
-    setup->setARTAxis(Vec3i(round(v[0]), round(v[1]), round(v[2])));
+    setup->getART()->setARTAxis(Vec3i(round(v[0]), round(v[1]), round(v[2])));
     VRGuiWidget("toolbutton12").setSensitivity(true);
 }
 
@@ -978,7 +980,7 @@ void VRGuiSetup::on_vrpn_edit_port() {
     auto setup = current_setup.lock();
     if (!setup) return;
     int p = toInt(getTextEntry("entry13"));
-    setup->setVRPNPort(p);
+    setup->getVRPN()->setVRPNPort(p);
     VRGuiWidget("toolbutton12").setSensitivity(true);
 }
 
@@ -1140,8 +1142,8 @@ void VRGuiSetup::on_toggle_vrpn_test_server() {
     auto setup = current_setup.lock();
     if (!setup) return;
     bool b = getCheckButtonState("checkbutton39");
-    if (b) setup->startVRPNTestServer();
-    else setup->stopVRPNTestServer();
+    if (b) setup->getVRPN()->startVRPNTestServer();
+    else setup->getVRPN()->stopVRPNTestServer();
 }
 
 void VRGuiSetup::on_toggle_vrpn_verbose() {
@@ -1149,7 +1151,7 @@ void VRGuiSetup::on_toggle_vrpn_verbose() {
     auto setup = current_setup.lock();
     if (!setup) return;
     bool b = getCheckButtonState("checkbutton40");
-    setup->setVRPNVerbose(b);
+    setup->getVRPN()->setVRPNVerbose(b);
 }
 #endif
 
@@ -1420,7 +1422,7 @@ void VRGuiSetup::on_setup_changed() {
     updateSetup();
 
 #ifndef WITHOUT_ART
-    current_setup.lock()->getSignal_on_new_art_device()->add(updateSetupCb); // TODO: where to put this? NOT in updateSetup() !!!
+    current_setup.lock()->getART()->getSignal_on_new_art_device()->add(updateSetupCb); // TODO: where to put this? NOT in updateSetup() !!!
 #endif
 
     if (!init) {
@@ -1545,9 +1547,9 @@ void VRGuiSetup::updateSetup() {
 
 #ifndef WITHOUT_VRPN
     // VRPN
-    vector<int> vrpnIDs = setup->getVRPNTrackerIDs();
+    vector<int> vrpnIDs = setup->getVRPN()->getVRPNTrackerIDs();
     for (uint i=0; i<vrpnIDs.size(); i++) {
-        VRPN_device* t = setup->getVRPNTracker(vrpnIDs[i]).get();
+        VRPN_device* t = setup->getVRPN()->getVRPNTracker(vrpnIDs[i]).get();
         GtkTreeIter itr;
         gtk_tree_store_append(tree_store, &itr, &vrpn_itr);
         cout << "vrpn liststore: " << t->getName() << endl;
@@ -1557,8 +1559,8 @@ void VRGuiSetup::updateSetup() {
 
 #ifndef WITHOUT_ART
     // ART
-    for (int ID : setup->getARTDevices() ) {
-        ART_devicePtr dev = setup->getARTDevice(ID);
+    for (int ID : setup->getART()->getARTDevices() ) {
+        ART_devicePtr dev = setup->getART()->getARTDevice(ID);
 
         GtkTreeIter itr, row;
         gtk_tree_store_append(tree_store, &itr, &art_itr);

@@ -127,6 +127,8 @@ class VRGuiScripts {
         void on_toggle_find_replace();
         void on_search_link_clicked(searchResult res, string s);
 
+        void on_convert_cpp_clicked();
+
         void on_scene_changed();
 
     public:

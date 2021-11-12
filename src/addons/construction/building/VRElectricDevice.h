@@ -1,7 +1,6 @@
 #ifndef VRELECTRICDEVICE_H_INCLUDED
 #define VRELECTRICDEVICE_H_INCLUDED
 
-#include "core/setup/devices/VRDevice.h"
 #include "core/objects/object/VRObject.h"
 
 OSG_BEGIN_NAMESPACE;
@@ -17,11 +16,8 @@ class VRElectricDevice {
         VRElectricDevice(VRObjectPtr obj, VRFunction<bool>* cb);
 
         bool isActive();
-
         void turnOn();
-
         void turnOff();
-
         void toggle(VRDevicePtr dev);
 };
 

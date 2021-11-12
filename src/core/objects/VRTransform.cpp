@@ -20,6 +20,7 @@
 #endif
 #include "core/scene/VRScene.h"
 #include "core/scene/VRSpaceWarper.h"
+#include "core/setup/devices/VRIntersect.h"
 
 #include <OpenSG/OSGSimpleGeometry.h>
 #include <OpenSG/OSGChunkMaterial.h>
@@ -703,7 +704,16 @@ void VRTransform::move(float d) {
     translate(Vec3d(dv*d));
 }
 
-void VRTransform::drag(VRTransformPtr new_parent, VRIntersection i) {
+/**
+
+Warning!
+
+I tried a fixed constraint instead of a spring,
+but this does not work with other constrained objects!
+
+*/
+
+void VRTransform::drag(VRTransformPtr new_parent, VRIntersectionPtr ins) {
     if (held) return;
     held = true;
     if (auto p = getParent()) old_parent = p;
@@ -728,16 +738,23 @@ void VRTransform::drag(VRTransformPtr new_parent, VRIntersection i) {
         c->free({0,1,2,3,4,5});
         auto cs = VRConstraint::create();
         for (int i=0; i<3; i++) {
-            cs->setMinMax(i,1000,0.01); // stiffness, dampness
+            cs->setMinMax(i,10000,0.01); // stiffness, dampness // 10k seams ok, 1k seams too low
             cs->setMinMax(i+3,-1,0);
         }
 
-        Pnt3d P = i.point; // intersection point in world coords
-        m.invert();
-        m.mult(P, P);
+        Pnt3d P1;
+        if (ins) P1 = ins->point; // intersection point in world coords
+        Pnt3d P2 = P1;
 
-        c->setReferenceA(Pose::create(Vec3d(P)));
-        c->setReferenceB(Pose::create(getFrom()));
+        m.invert();
+        m.mult(P1, P1);
+
+        auto m2 = new_parent->getWorldMatrix();
+        m2.invert();
+        m2.mult(P2, P2);
+
+        c->setReferenceA(Pose::create(Vec3d(P1)));
+        c->setReferenceB(Pose::create(Vec3d(P2)));
         physics->setConstraint(new_parent->physics, c, cs);
     }
 #endif
@@ -808,7 +825,7 @@ Line VRTransform::castRay(VRObjectPtr obj, Vec3d dir) { // TODO: check what this
     return ray;
 }
 
-VRIntersection VRTransform::intersect(VRObjectPtr obj, Vec3d dir) {
+VRIntersectionPtr VRTransform::intersect(VRObjectPtr obj, Vec3d dir) {
     VRIntersect in;
     return in.intersect(obj, false, ptr(), dir);
 }
@@ -842,9 +859,20 @@ void VRTransform::printTransformationTree(int indent) {
 
 map<VRTransform*, VRTransformWeakPtr> constrainedObjects;
 
+// TODO: revisit all that update constraints/transform/physics crap!
 void VRTransform::updateConstraints() { // global updater
+    //cout << VRGlobals::CURRENT_FRAME << " VRTransform::updateConstraints " << constrainedObjects.size() << endl;
     for (auto wc : constrainedObjects) {
-        if (VRTransformPtr obj = wc.second.lock()) obj->updateChange();
+        if (VRTransformPtr obj = wc.second.lock()) {
+            obj->apply_constraints();
+            if (obj->held) obj->updatePhysics();
+            obj->computeMatrix4d();
+            obj->updateTransformation();
+            obj->noBlt = obj->getPhysicsDynamic();
+            obj->updatePhysics();
+        }
+
+        //if (VRTransformPtr obj = wc.second.lock()) obj->updateChange();
     }
 }
 
@@ -856,12 +884,18 @@ void VRTransform::setConstraint(VRConstraintPtr c) {
 
 VRConstraintPtr VRTransform::getConstraint() { setConstraint(constraint); return constraint; }
 
-void VRTransform::apply_constraints(bool force) { // TODO: check efficiency
-    if (!constraint && aJoints.size() == 0) return;
-    if (!checkWorldChange() && !force) return;
-    computeMatrix4d(); // update matrix!
+void VRTransform::apply_constraints(bool force) {
+    if (constraint && constraint->isActive()) {
+        if (force || checkWorldChange()) {
+            computeMatrix4d(); // update matrix!
+            constraint->apply(ptr(), 0, force);
+        }
+    }
 
-    if (constraint) constraint->apply(ptr(), 0, force);
+    if (aJoints.size() > 0) {
+        if (force || checkWorldChange()) computeMatrix4d(); // update matrix!
+    }
+
     for (auto joint : aJoints) {
         VRTransformPtr parent = joint.second.second.lock();
         if (parent) joint.second.first->apply(ptr(), parent, force);

@@ -8,8 +8,33 @@
 
 using namespace OSG;
 
-void VRKeyboard::keyboard(unsigned int k, bool pressed, int x, int y) { change_button(k,pressed); }
-void VRKeyboard::keyboard_special(int k, bool pressed, int x, int y) { change_button(k+100,pressed); }
+void VRKeyboard::applyEvents() {
+    for (auto e : delayedEvents) {
+        if (e[0] == 0) keyboard(e[1], e[2], e[3], e[4], false);
+        if (e[0] == 1) keyboard_special(e[1], e[2], e[3], e[4], false);
+    }
+    delayedEvents.clear();
+}
+
+void VRKeyboard::keyboard(unsigned int k, bool pressed, int x, int y, bool delayed) {
+    if (delayed && 0) { // TODO: delay deaktivated because CEF doenst like it at all!
+        delayedEvents.push_back( {0,int(k),int(pressed),x,y} );
+        return;
+    }
+
+    cout << "VRKeyboard::keyboard " << k << " " << pressed << " " << Vec2i(x,y) << endl;
+    change_button(k,pressed);
+}
+
+void VRKeyboard::keyboard_special(int k, bool pressed, int x, int y, bool delayed) {
+    if (delayed && 0) { // TODO: delay deaktivated because CEF doenst like it at all!
+        delayedEvents.push_back( {1,k,pressed,x,y} );
+        return;
+    }
+
+    cout << "VRKeyboard::keyboard_special " << k << " " << pressed << " " << Vec2i(x,y) << endl;
+    change_button(k+100,pressed);
+}
 
 VRKeyboard::VRKeyboard() : VRDevice("keyboard") {
     addBeacon();

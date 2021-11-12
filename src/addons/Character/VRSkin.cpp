@@ -18,6 +18,7 @@ VRSkin::VRSkin(VRSkeletonPtr s) : skeleton(s) {
 
     material->setVertexShader(skinning_vp, "skinningVP");
     material->setFragmentShader(skinning_fp, "skinningFP");
+    material->setShaderParameter<int>("debugMode", 0);
 
     bone0s = skeleton->getBones();
 }
@@ -29,6 +30,10 @@ VRSkinPtr VRSkin::ptr() { return static_pointer_cast<VRSkin>(shared_from_this())
 
 VRMaterialPtr VRSkin::getMaterial() { return material; }
 
+void VRSkin::setDebugShader(bool b) {
+    material->setShaderParameter<int>("debugMode", (int)b);
+}
+
 void VRSkin::setMapping(vector<vector<pair<int, float>>> m) { mapping = m; updateMappingTexture(); }
 
 void VRSkin::addMap(int bID, float t, int vID) {
@@ -36,11 +41,20 @@ void VRSkin::addMap(int bID, float t, int vID) {
     else if (vID < mapping.size()) mapping[vID].push_back( make_pair(bID, t) );
 }
 
+void VRSkin::setMap(int bID, vector<float> t) {
+    int vID = mapping.size();
+    if (t.size() > 0) addMap(bID, t[0]);
+    for (int i=1; i<t.size(); i++) addMap(bID, t[0], vID);
+}
+
 void VRSkin::applyMapping(VRGeometryPtr hull) {
     VRGeoData data(hull);
+    cout << "applyMapping " << hull->getName() << " " << data.size() << endl;
 
     for (int i=0; i<data.size(); i++) {
-        data.setTexCoord(i, Vec2d(i+0.1,0));
+        auto tc = data.getTexCoord(i);
+        data.setTexCoord(i, Vec2d(i+0.1,tc[1]));
+        cout << " applyMapping " << i << endl;
     }
 }
 
@@ -65,7 +79,7 @@ void VRSkin::updateMappingTexture() {
             float t = vMapping[mID].second;
             tg->drawPixel( Vec3i(vID, 1+mID, 0), Color4f(bID, t, 0, 1) ); // per bone, [bID, t, 0, 1]
 
-            //cout << "  bID: " << bID << ", t: " << t << endl;
+            cout << " vID: " << vID << "  bID: " << bID << ", t: " << t << endl;
 
         }
     }
@@ -127,6 +141,7 @@ in vec2 osg_MultiTexCoord0;
 
 uniform sampler2D texMapping;
 uniform sampler2D texBones;
+uniform int debugMode;
 
 out vec4 color;
 out vec3 norm;
@@ -139,9 +154,10 @@ void main(void) {
 	vec3 pv = osg_Vertex.xyz;
 
 	vec3 d = vec3(0.0);
+	int bID = -1;
 	for (int i=0; i<Nb; i++) {
         vec4 b1 = texelFetch(texMapping, ivec2(vID,i+1), 0);
-        int bID = int(b1.x);
+        bID = int(b1.x);
         float t = b1.y;
 
         vec3 p0 = texelFetch(texBones, ivec2(bID,0), 0).rgb;
@@ -162,11 +178,13 @@ void main(void) {
 	color = osg_Color;
 	norm = osg_Normal;
 
-	if (Nb == 1) color = vec4(1,0,0,1);
-	if (Nb == 2) color = vec4(0,1,0,1);
-	if (Nb >  2) color = vec4(1,1,0,1);
+    if (debugMode == 1) {
+        color = vec4(1.0-bID*0.07, bID*0.07, 0, 1);
+        if (bID == -1) color = vec4(0, 0, 1, 1);
+    }
 }
 );
+
 
 string VRSkin::skinning_fp =
 "#version 400 compatibility\n"
@@ -189,4 +207,3 @@ void main(void) {
     applyBlinnPhong();
 }
 );
-

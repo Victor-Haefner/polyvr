@@ -9,6 +9,9 @@
 #include "core/objects/material/VRMaterial.h"
 #include <OpenSG/OSGGeoProperties.h>
 
+#include "core/setup/devices/VRDevice.h"
+#include "core/scene/VRScene.h"
+
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
@@ -72,10 +75,10 @@ void VRBlinds::close() {
 
 void VRBlinds::toggle(VRDeviceWeakPtr d) {
     if (auto dev = d.lock()) { //if triggered by a device, check if this is hit
-        VRIntersection ins = dev->intersect(ptr());
-        if (!ins.hit) return;
-        if ( ins.object.lock() == 0 ) return;
-        if ( !ins.object.lock()->hasAncestorWithTag("blind")) return;
+        auto ins = dev->intersect(ptr());
+        if (!ins->hit) return;
+        if ( ins->object.lock() == 0 ) return;
+        if ( !ins->object.lock()->hasAncestorWithTag("blind")) return;
     }
 
     if (state == CLOSE) open();

@@ -1,4 +1,5 @@
 #include "VRCharacter.h"
+#include "VRHumanoid.h"
 #include "VRSkeleton.h"
 #include "VRSkin.h"
 #include "VRBehavior.h"
@@ -13,7 +14,7 @@
 
 using namespace OSG;
 
-VRCharacter::VRCharacter (string name) : VRGeometry(name) {
+VRCharacter::VRCharacter (string name) : VRTransform(name) {
     updateCb = VRUpdateCb::create("character-update", bind(&VRCharacter::update, this));
     VRScene::getCurrent()->addUpdateFkt(updateCb);
 }
@@ -23,16 +24,10 @@ VRCharacter::~VRCharacter() {}
 VRCharacterPtr VRCharacter::create(string name) { return VRCharacterPtr(new VRCharacter(name) ); }
 VRCharacterPtr VRCharacter::ptr() { return dynamic_pointer_cast<VRCharacter>( shared_from_this() ); }
 
-void VRCharacter::setSkeleton(VRSkeletonPtr s) { skeleton = s; }
 VRSkeletonPtr VRCharacter::getSkeleton() { return skeleton; }
 
 void VRCharacter::addBehavior(VRBehaviorPtr b) { behaviors[b->getName()] = b; }
 //void VRCharacter::addAction(VRBehavior::ActionPtr a) { actions[a->getName()] = a; }
-
-void VRCharacter::move(string endEffector, PosePtr pose) {
-    if (!skeleton) return;
-    //skeleton->move(endEffector, pose);
-}
 
 void VRCharacter::update() {
     if (skeleton) skeleton->resolveKinematics();
@@ -40,17 +35,35 @@ void VRCharacter::update() {
 }
 
 void VRCharacter::simpleSetup() {
-    auto s = VRSkeleton::create();
-    s->setupSimpleHumanoid();
-    setSkeleton(s);
+    auto model = VRHumanoid::create("Jane");
+    setSkin(model, model->getSkin(), model->getSkeleton());
+}
 
-    s->setupGeometry(); // visualize skeleton
-    addChild(s);
+void VRCharacter::setSkin(VRGeometryPtr geo, VRSkinPtr skin, VRSkeletonPtr skeleton) {
+    if (!geo || !skin || !skeleton) return;
 
-    skin = VRSkin::create(s);
+    this->skeleton = skeleton;
+    this->skin = skin;
+
+    addChild(geo);
+    if (skin) {
+        skin->updateBoneTexture();
+        skin->updateMappingTexture();
+        skin->applyMapping(geo);
+        geo->setMaterial( skin->getMaterial() );
+    }
+}
+
+void VRCharacter::addDebugSkin() {
+    skeleton = VRSkeleton::create();
+    skeleton->setupSimpleHumanoid();
+    skeleton->setupGeometry(); // visualize skeleton
+    addChild(skeleton);
+
+    skin = VRSkin::create(skeleton);
 
     VRGeoData hullData; // TODO: create test hull
-    auto bones = s->getBones();
+    auto bones = skeleton->getBones();
     for (size_t bID = 0; bID < bones.size(); bID++) {
         auto& bone = bones[bID];
         Vec3d p = (bone.p1+bone.p2)*0.5;
@@ -60,6 +73,8 @@ void VRCharacter::simpleSetup() {
 
         bool isFoot  = bool(bID == 0 || bID == 3);
         bool isAnkle = bool(bID == 2 || bID == 5);
+        bool isHand  = bool(bID == 6 || bID == 9);
+        bool isWrist = bool(bID == 8 || bID == 11);
 
         if (isFoot) { // feet
             Vec3d x = n.cross(u) * s[0]*0.5;
@@ -89,31 +104,34 @@ void VRCharacter::simpleSetup() {
             hullData.pushQuad(v13, v14, v24, v23);
             hullData.pushQuad(v14, v11, v21, v24);
         } else hullData.pushBox(p,n,u,s,true);
-        cout << "   test hull quad: " << p << " / "  << n << " / " << u << " / " << s << "    " << u.dot(n) << endl;
+        //cout << "   test hull quad: " << p << " / "  << n << " / " << u << " / " << s << "    " << u.dot(n) << endl;
 
         // create skin mapping
         size_t mI = skin->mapSize();
 
         float t1 = 1.0;
         float t2 = 1.0;
-        if (!bone.isStart || isFoot ) t1 = 0.5;
-        if (!bone.isEnd   || isAnkle) t2 = 0.5;
+        if (!bone.isStart || isFoot  || isHand)  t1 = 0.5;
+        if (!bone.isEnd   || isAnkle || isWrist) t2 = 0.5;
 
         for (int i=0; i<4; i++) skin->addMap(bone.ID, t1);
         for (int i=0; i<4; i++) skin->addMap(bone.ID, t2);
 
         if (isFoot)  for (int i : {0,1,2,3}) skin->addMap(bones[bID+2].ID, 0.5, mI+i);
+        if (isHand)  for (int i : {0,1,2,3}) skin->addMap(bones[bID+2].ID, 0.5, mI+i);
         if (isAnkle) for (int i : {4,5,6,7}) skin->addMap(bones[bID-2].ID, 0.5, mI+i);
+        if (isWrist) for (int i : {4,5,6,7}) skin->addMap(bones[bID-2].ID, 0.5, mI+i);
 
         if (!bone.isStart) for (int i : {0,1,2,3}) skin->addMap(bones[bID-1].ID, 0.5, mI+i);
         if (!bone.isEnd)   for (int i : {4,5,6,7}) skin->addMap(bones[bID+1].ID, 0.5, mI+i);
     }
 
-    skin->updateBoneTexture();
-    skin->updateMappingTexture();
     auto hull = hullData.asGeometry("hull");
     hull->updateNormals(true);
     addChild(hull);
+
+    skin->updateBoneTexture();
+    skin->updateMappingTexture();
     skin->applyMapping(hull);
     hull->setMaterial( skin->getMaterial() );
 }
@@ -186,7 +204,42 @@ struct WalkMotion {
     }
 };
 
+struct MoveTarget {
+    PosePtr target;
+    PathPtr path;
+    VRAnimationPtr moveAnim;
+
+    MoveTarget(PosePtr p1, PosePtr p2) : target(p1) {
+        path = Path::create();
+        if (p1 && p2) {
+            path->addPoint(*p1.get());
+            path->addPoint(*p2.get());
+            path->compute(16);
+        }
+    }
+
+    ~MoveTarget() {
+        if (moveAnim) moveAnim->stop();
+    }
+
+    void start(VRAnimCbPtr animCb, float speed) {
+        moveAnim = VRAnimation::create("moveAnim");
+        moveAnim->setCallback(animCb);
+        moveAnim->setDuration(path->getLength()/abs(speed));
+        moveAnim->start();
+    }
+};
+
+void VRCharacter::moveEE(float t, string endEffector) {
+    if (!target.count(endEffector)) return;
+    MoveTarget* tgt = target[endEffector];
+    if (!tgt->target) return;
+    auto pos = tgt->path->getPose(t)->pos();
+    tgt->target->setPos(pos);
+}
+
 void VRCharacter::pathWalk(float t) {
+    if (!motion) return;
     PosePtr p = motion->path->getPose(t);
     p->setDir(-p->dir());
     PosePtr p0 = getPose();
@@ -228,6 +281,31 @@ PathPtr VRCharacter::moveTo(Vec3d p1, float speed) {
     return path;
 }
 
+PathPtr VRCharacter::grab(Vec3d p1, float speed) {
+    auto ph = getPose();
+    ph->setPos(p1);
+    auto pw = getPose();
+    Vec3d d = ph->dir();
+    d.normalize();
+    pw->setPos(p1+d*0.1);
+    move("wristR", pw, speed);
+    auto path = move("palmR", ph, speed);
+    return path;
+}
+
+PathPtr VRCharacter::move(string endEffector, PosePtr pose, float s) {
+    if (!skeleton) return 0;
+    auto p0 = skeleton->getTarget(endEffector);
+
+    if (target.count(endEffector)) delete target[endEffector];
+
+    auto self = getPose();
+    self->invert();
+    pose = self->multRight(pose);
+    target[endEffector] = new MoveTarget(p0, pose); // TODO
+    target[endEffector]->start( VRAnimCb::create("moveAnim", bind(&VRCharacter::moveEE, this, placeholders::_1, endEffector) ), s);
+    return target[endEffector]->path;
+}
 
 
 

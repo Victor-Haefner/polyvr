@@ -10,9 +10,11 @@
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/VRCamera.h"
 #include "core/setup/VRSetup.h"
+#include "core/setup/devices/VRDevice.h"
 //#include "core/math/pose.h"
 #include "core/utils/VRStorage_template.h"
 #include "core/gui/VRGuiConsole.h"
+#include "core/utils/system/VRSystem.h"
 #include "core/scene/VRScene.h"
 #include "core/scene/VRSceneManager.h"
 #include "core/scene/import/VRImport.h"
@@ -97,33 +99,49 @@ VRSyncNode::VRSyncNode(string name) : VRTransform(name) {
 
 VRSyncNode::~VRSyncNode() {
     cout << " VRSyncNode::~VRSyncNode " << name << endl;
+	cout << " -------------- ~VRSyncNode ----------------" << endl;
+	printBacktrace();
 }
 
 VRSyncNodePtr VRSyncNode::ptr() { return static_pointer_cast<VRSyncNode>( shared_from_this() ); }
 VRSyncNodePtr VRSyncNode::create(string name) { return VRSyncNodePtr(new VRSyncNode(name) ); }
 
-void VRSyncNode::setTCPClient(VRTCPClientPtr client) {
-    string uri = client->getConnectedUri();
-    connectionUri = uri;
-    remotes[uri] = VRSyncConnection::create(client);
-    client->onMessage( [&](string m) { handleMessage(m); } ); // bind(&VRSyncNode::handleMessage, this, std::placeholders::_1)
-    VRConsoleWidget::get("Collaboration")->write( name+": got tcp client connected to "+uri+", state is "+toString(client->connected())+"\n");
-    remotes[uri]->send("accConnect|1");
+VRSyncConnectionPtr VRSyncNode::getRemote(string rID) {
+    if (!remotes.count(rID)) return 0;
+    return remotes[rID];
 }
 
-void VRSyncNode::accTCPConnection(string msg) {
+string VRSyncNode::setTCPClient(VRTCPClientPtr client) {
+    remotes.clear();
+    return addTCPClient(client);
+}
+
+string VRSyncNode::addTCPClient(VRTCPClientPtr client) {
+    string uri = client->getConnectedUri();
+    cout << " -------- addTCPClient to " << uri << endl;
+    auto remote = VRSyncConnection::create(client, uri);
+    remotes[uri] = remote;
+    client->onMessage( bind(&VRSyncNode::handleMessage, this, std::placeholders::_1, uri) );
+    VRConsoleWidget::get("Collaboration")->write( name+": add tcp client connected to "+uri+", state is "+toString(client->connected())+"\n");
+    remote->send("accConnect|1");
+    return uri;
+}
+
+void VRSyncNode::accTCPConnection(string msg, string rID) {
+    auto remote = getRemote(rID);
+    if (!remote) return;
     auto nID = getNode()->node->getId();
     VRConsoleWidget::get("Collaboration")->write( name+": got tcp client acc, "+msg+"\n");
-    if (msg == "accConnect|1") remotes[connectionUri]->send("accConnect|2");
-    remotes[connectionUri]->send("selfmap|"+toString(nID));
-    sendTypes();
-    remotes[connectionUri]->send("reqInitState|");
+    if (msg == "accConnect|1") remote->send("accConnect|2");
+    remote->send("selfmap|"+toString(nID));
+    sendTypes(rID);
+    remote->send("reqInitState|");
 }
 
-void VRSyncNode::reqInitState() {
+void VRSyncNode::reqInitState(string rID) {
     VRConsoleWidget::get("Collaboration")->write( name+": got request to send initial state\n");
     if (getChildrenCount() == 0) return;
-    changelist->broadcastSceneState(ptr());
+    changelist->sendSceneState(ptr(), rID);
 }
 
 //Add remote Nodes to sync with
@@ -131,19 +149,19 @@ void VRSyncNode::addRemote(string host, int port) {
     cout << " >>> > > VRSyncNode::addRemote to " << getName() << ": " << name << " at " << host << " on " << port << endl;
     string uri = host + ":" + toString(port);
     if (remotes.count(uri)) return;
-    remotes[uri] = VRSyncConnection::create(host, port);
+    auto remote = VRSyncConnection::create(host, port, serverUri);
+    remotes[uri] = remote;
 
     // sync node ID
     auto nID = getNode()->node->getId();
-    remotes[uri]->send("selfmap|"+toString(nID));
-    remotes[uri]->send("newConnect|"+connectionUri);
+    remote->send("selfmap|"+toString(nID));
+    remote->send("newConnect|"+serverUri);
     cout << "   send newConnect from " << uri << endl;
 
-    sendTypes();
+    sendTypes(uri);
 }
 
 void VRSyncNode::setDoWrapping(bool b) { doWrapping = b; }
-void VRSyncNode::setDoAvatars(bool b) { doAvatars = b; }
 
 bool VRSyncNode::isSubContainer(const UInt32& id) {
     auto fct = factory->getContainer(id);
@@ -180,7 +198,7 @@ bool VRSyncNode::isSubContainer(const UInt32& id) {
         auto parents = att->getMFParents();
         for (UInt32 i = 0; i<parents->size(); i++) {
             FieldContainer* parent = parents->at(i);
-            if (isSubContainer(parent->getId())) return true;
+            if (parent && isSubContainer(parent->getId())) return true;
         }
         if (parents->size() == 0) {
             if (typeName == "MultiPassMaterial") return false; // Materials may not be attached to a geometry, thats fine!
@@ -360,6 +378,8 @@ void VRSyncNode::gatherLeafs(VRObjectPtr parent, vector<pair<Node*, VRObjectPtr>
 
     for (auto child : parent->getChildren()) gatherLeafs(child, leafs, inconsistentCores);
 }
+
+map<UInt32, VRObjectWeakPtr> VRSyncNode::getMappedFCs() { return nodeToVRObject; }
 
 VRObjectPtr VRSyncNode::OSGConstruct(NodeMTRecPtr n, VRObjectPtr parent, Node* geoParent) {
     if (!doWrapping) return 0;
@@ -554,79 +574,9 @@ map<FieldContainer*, vector<FieldContainer*>> VRSyncNode::getAllSubContainers(Fi
     return res;
 }
 
-bool poseChanged(Pose oldPose, PosePtr newPose, int thresholdPos, int thresholdAngle){
-    Vec3d oldPos = oldPose.pos();
-    Vec3d oldDir = oldPose.dir();
-    Vec3d newPos = newPose->pos();
-    Vec3d newDir = newPose->dir();
-    //cout << "oldPos, oldDir " << oldPos << ", " << oldDir << " newPos,newDir" << newPos << ", " << newDir << endl;
-
-    Vec3d distancePos = oldPos - newPos; //calculate distances
-
-    float magOldDir = std::sqrt(oldDir.x()*oldDir.x() + oldDir.y()*oldDir.y() + oldDir.z()*oldDir.z()); //calculate dir angle
-    float magNewDir = std::sqrt(newDir.x()*newDir.x() + newDir.y()*newDir.y() + newDir.z()*newDir.z());
-
-    oldDir.normalize();
-    newDir.normalize();
-    float dotProduct = oldPos.x()*newPos.x() + oldPos.y()*newPos.y() + oldPos.z()*newPos.z();
-    float cosAngle = dotProduct / (magOldDir*magNewDir);
-    auto angle = std::acos(cosAngle);
-    //cout << "poseChanged      Angle: " << angle << " cosAngle " << cosAngle << " dotProduct " << dotProduct << " magNewDir " << magNewDir << " magOldDir " << magOldDir << endl;
-
-    if (abs(distancePos.x()) > thresholdPos || abs(distancePos.y()) > thresholdPos || abs(distancePos.z()) > thresholdPos) return true; // check if differences exceed thresholds
-    else if (abs(angle) > thresholdAngle) return true;
-    else return false;
-}
-
-void VRSyncNode::getAndBroadcastPoses() {
-    if (!doAvatars) return;
-    string poses = "poses|name$" + connectionUri;
-    bool changed = false;
-
-    VRScenePtr scene = VRScene::getCurrent(); //get scene
-    VRCameraPtr cam = scene->getActiveCamera(); //get camera pose
-    PosePtr camPose = cam->getWorldPose();
-    VRDevicePtr mouse = VRSetup::getCurrent()->getDevice("mouse"); //check devices and eventually get poses
-    PosePtr mousePose = mouse->getBeacon()->getPose();
-    VRDevicePtr flyStick = VRSetup::getCurrent()->getDevice("flystick"); //check devices and eventually get poses
-
-
-    bool camChanged = poseChanged(oldCamPose, camPose, 0.1, 10);
-    bool mouseChanged = poseChanged(oldMousePose, mousePose, 0.1, 10);
-
-    //if (!camChanged && !mouseChanged) return;
-
-    if (camChanged) {
-        string pose_str = toString(camPose); //append poses to string
-        poses += "|cam$" + pose_str;
-        oldCamPose = *camPose; //update oldPoses
-        changed = true;
-    }
-
-    if (mousePose && mouseChanged) {
-        poses += "|mouse$" + toString(mousePose);
-        oldMousePose = *mousePose;
-        changed = true;
-    }
-
-    if (flyStick) {
-        PosePtr flyStickPose = flyStick->getBeacon()->getPose();
-        bool flyStickChanged = poseChanged(oldFlystickPose, flyStickPose, 0.1, 10);
-        if (flyStickChanged) {
-            poses += "|flystick$" + toString(flyStickPose);
-            oldFlystickPose = *flyStickPose;
-            changed = true;
-        }
-    }
-
-    if (changed) broadcast(poses); //broadcast
-    //cout << "broadcast poses " << poses << endl;
-}
-
 //update this SyncNode
 void VRSyncNode::update() {
-    handledPoses = false;
-    getAndBroadcastPoses();
+    for (auto& remote : remotes) remote.second->keepAlive();
     auto localChanges = changelist->filterChanges(ptr());
     if (!localChanges) return;
     //if (getChildrenCount() == 0) return; // TODO: this may happen if the only child is dragged, or the only child was just deleted..
@@ -641,7 +591,7 @@ void VRSyncNode::update() {
     //printSyncedContainers();
     //changelist->printChangeList(ptr(), localChanges);
 
-    VRConsoleWidget::get("Collaboration")->write( " Broadcast scene updates\n");
+    //VRConsoleWidget::get("Collaboration")->write( " Broadcast scene updates\n");
     changelist->broadcastChangeList(ptr(), localChanges, true);
     syncedContainer.clear();
     cout << "            / " << name << " VRSyncNode::update()" << "  < < < " << endl;
@@ -658,30 +608,73 @@ void VRSyncNode::registerContainer(FieldContainer* c, UInt32 syncNodeID) {
     container[ID] = syncNodeID;
 }
 
-void VRSyncNode::setAvatarBeacons(VRTransformPtr head, VRTransformPtr device) {
-    avatarHeadBeacon = head;
-    avatarDeviceBeacon = device;
+UInt32 VRSyncNode::getNodeID(VRObjectPtr t) {
+    return t->getNode()->node->getId();
 }
 
-void VRSyncNode::addRemoteAvatar(VRTransformPtr head, VRTransformPtr device) {
-    UInt32 headID = head->getNode()->node->getId();
-    UInt32 deviceID = device->getNode()->node->getId();
-    broadcast("addAvatar|"+toString(headID)+":"+toString(deviceID));
+UInt32 VRSyncNode::getTransformID(VRTransformPtr t) {
+    return t->getOSGTransformPtr()->trans->getId();
 }
 
-void VRSyncNode::handleAvatar(string data) {
-    auto IDs = splitString( splitString(data, '|')[1], ':');
-    UInt32 avatarBeaconID = toInt(IDs[1]);
-    UInt32 mouseBeaconID = avatarDeviceBeacon->getNode()->node->getId();
+void VRSyncNode::setAvatarBeacons(VRTransformPtr headTransform, VRTransformPtr devTransform, VRTransformPtr devAnchor) { // camera and mouse or flystick
+    avatarHeadTransform = headTransform;
+    avatarDeviceTransform = devTransform;
+    avatarDeviceAnchor = devAnchor;
+    //VRConsoleWidget::get("Collaboration")->write( name+": Add avatar input, head "+head->getName()+" ("+toString(getTransformID(head))+"), hand "+device->getName()+" ("+toString(getTransformID(device))+")\n", "green");
+}
 
-    addRemoteMapping(mouseBeaconID, avatarBeaconID); // local, remote
-    broadcast("mapping|"+toString(avatarBeaconID)+":"+toString(mouseBeaconID));
+void VRSyncNode::addRemoteAvatar(string remoteID, VRTransformPtr headTransform, VRTransformPtr devTransform, VRTransformPtr devAnchor) { // some geometries
+    auto remote = getRemote(remoteID);
+    if (!remote) return;
 
-    UInt32 mask = 0;
-    mask |= Node::ChildrenFieldMask;
-    externalContainer[mouseBeaconID] = mask;
+    headTransform->enableOptimization(false);
+    devTransform->enableOptimization(false);
+    devAnchor->enableOptimization(false);
 
-    //cout << " ---> mapAvatar, " << mouseBeaconID << ": " << mouseBeacon->getName() << ", " << avatarBeaconID << ": " << avatarBeacon->getName() << endl;
+    UInt32 headTransID = getTransformID(headTransform);
+    UInt32 deviceTransID = getTransformID(devTransform);
+    UInt32 deviceAnchorID = getNodeID(devAnchor);
+    string msg = "addAvatar|"+toString(headTransID)+":"+toString(deviceTransID)+":"+toString(deviceAnchorID);
+    remote->send(msg);
+    VRConsoleWidget::get("Collaboration")->write( name+": Add avatar representation, head "+headTransform->getName()+" ("+toString(headTransID)+"), hand "+devTransform->getName()+" ("+toString(deviceTransID)+")\n", "green");
+}
+
+void VRSyncNode::addExternalContainer(UInt32 id, UInt32 mask) {
+    externalContainer[id] = mask;
+    VRConsoleWidget::get("Collaboration")->write( name+": Add external container "+toString(id)+" with mask "+toString(mask)+"\n", "green");
+}
+
+void VRSyncNode::handleAvatar(string data, string remoteID) {
+    auto remote = getRemote(remoteID);
+    if (!remote) return;
+
+    if (avatarHeadTransform && avatarDeviceTransform && avatarDeviceAnchor) {
+        auto IDs = splitString( splitString(data, '|')[1], ':');
+        UInt32 headTransID = toInt(IDs[0]); // remote
+        UInt32 deviceTransID = toInt(IDs[1]); // remote
+        UInt32 deviceAnchorID = toInt(IDs[2]); // remote
+
+        UInt32 camTrans = getTransformID( avatarHeadTransform ); // local
+        UInt32 devTrans = getTransformID( avatarDeviceTransform ); // local
+        UInt32 devAnchor = getNodeID( avatarDeviceAnchor ); // local
+
+        string mapping = "mapping";
+        mapping += "|"+toString(headTransID)+":"+toString(camTrans);
+        mapping += "|"+toString(deviceTransID)+":"+toString(devTrans);
+        mapping += "|"+toString(deviceAnchorID)+":"+toString(devAnchor);
+        remote->send(mapping);
+        VRConsoleWidget::get("Collaboration")->write( name+": Map remote avatar head ID "+toString(headTransID)+" to local camera ID "+toString(camTrans)+"\n", "green");
+        VRConsoleWidget::get("Collaboration")->write( name+": Map remote avatar hand ID "+toString(deviceTransID)+" to local device ID "+toString(devTrans)+"\n", "green");
+        VRConsoleWidget::get("Collaboration")->write( name+": Map remote avatar anchor ID "+toString(deviceAnchorID)+" to local anchor ID "+toString(devAnchor)+"\n", "green");
+
+        UInt32 childMask = 0;
+        childMask |= Node::ChildrenFieldMask;
+        childMask |= Node::VolumeFieldMask;
+
+        addExternalContainer(camTrans, -1);
+        addExternalContainer(devTrans, -1);
+        addExternalContainer(devAnchor, childMask);
+    }
 }
 
 size_t VRSyncNode::getContainerCount() { return container.size(); }
@@ -731,7 +724,9 @@ void VRSyncNode::handleMapping(string mappingData) {
     //printRegistredContainers();
 }
 
-void VRSyncNode::sendTypes() {
+void VRSyncNode::sendTypes(string remoteID) {
+    auto remote = getRemote(remoteID);
+    if (!remote) return;
     auto dtIt = factory->begin(FieldContainer::getClassType());
     auto dtEnd = factory->end();
 
@@ -741,7 +736,7 @@ void VRSyncNode::sendTypes() {
         msg += "|" + toString(fcT->getId()) + ":" + fcT->getName();
         ++dtIt;
     }
-    broadcast(msg);
+    remote->send(msg);
 }
 
 void VRSyncNode::handleTypeMapping(string mappingData) {
@@ -762,37 +757,13 @@ void VRSyncNode::handleTypeMapping(string mappingData) {
     //printRegistredContainers();
 }
 
-void VRSyncNode::handlePoses(string poses)  {
-    //cout << "VRSyncNode::handlePoses: " << poses << endl;
-    if (handledPoses) return;
-    handledPoses = true;
-    string nodeName;
-    vector<string> pairs = splitString(poses, '|');
-    if (pairs.size() < 2) { cout << "Warning in VRSyncNode::handlePoses!, poses malformed" << endl; return; }
-    vector<string> namePair = splitString(pairs[1], '$');
-    if (namePair.size() < 2) return;
-    if (namePair[0] == "name") nodeName = namePair[1];
-    if (nodeName == "") return;
-    for (unsigned int i = 2; i < pairs.size(); i++) {
-        auto data = splitString(pairs[i], '$');
-        if (data.size() != 2) continue;
-        string deviceName = data[0];
-        PosePtr pose = toValue<PosePtr>(data[1]);
-        if (deviceName == "cam") remotesCameraPose[nodeName] = pose;
-        else if (deviceName == "mouse") remotesMousePose[nodeName] = pose;
-        else if (deviceName == "flystick") remotesFlystickPose[nodeName] = pose;
-        //cout <<  "VRSyncNode::handlePoses      deviceName " << deviceName << " pose " << pose << " remotesCameraPose[nodeName] " << remotesCameraPose[nodeName] << " nodeName " << nodeName << endl;
-    }
-    //TODO: do something with poses
-
-}
-
-void VRSyncNode::handleOwnershipMessage(string ownership)  {
+void VRSyncNode::handleOwnershipMessage(string ownership, string rID)  { // TODO: properly test and use rID
     cout << "VRSyncNode::handleOwnership" << endl;
     vector<string> str_vec = splitString(ownership, '|');
-    string nodeName = str_vec[2];
+    string remoteID = str_vec[1];
+    string command = str_vec[2];
     string objectName = str_vec[3];
-    if (str_vec[1] == "request") {
+    if (command == "request") {
         cout << "handle request" << endl;
         for (string s : owned) {
 
@@ -812,8 +783,8 @@ void VRSyncNode::handleOwnershipMessage(string ownership)  {
                 }
                 for (auto remote : remotes) { //grant ownership
                     cout << "remote.first " << remote.first << endl;
-                    if (remote.first.find(nodeName) != string::npos) {
-                        string message = "ownership|grant|" + nodeName + "|" + objectName;
+                    if (remote.first.find(remoteID) != string::npos) {
+                        string message = "ownership|"+remote.second->getLocalUri()+"|grant|" + objectName + "|" + remoteID;
                         remote.second->send(message);
                         auto it = std::find(owned.begin(), owned.end(), objectName);
                         if (it != owned.end()) owned.erase(it);
@@ -823,8 +794,9 @@ void VRSyncNode::handleOwnershipMessage(string ownership)  {
             }
         }
     }
-    else if (str_vec[1] == "grant") {
-        if (nodeName == connectionUri) owned.push_back(objectName);
+    else if (command == "grant") {
+        string grantedTo = str_vec[4];
+        if (grantedTo == serverUri) owned.push_back(objectName);
         cout << "got ownership of object " << objectName << endl;
     }
 }
@@ -833,27 +805,15 @@ vector<string> VRSyncNode::getOwnedObjects(string nodeName) {
     return owned;
 }
 
-void VRSyncNode::requestOwnership(string objectName){
-    string message = "ownership|request|" + connectionUri + "|" + objectName;
-    broadcast(message);
+void VRSyncNode::requestOwnership(string objectName) {
+    for (auto remote : remotes) {
+        string message = "ownership|"+remote.second->getLocalUri()+"|request|" + objectName;
+        remote.second->send(message);
+    }
 }
 
 void VRSyncNode::addOwnedObject(string objectName){
     owned.push_back(objectName);
-}
-
-PosePtr VRSyncNode::getRemoteCamPose(string remoteName) {
-    if (!remotesCameraPose.count(remoteName)) { /*cout << "Error in VRSyncNode::getRemoteCamPose: " << remoteName << " not in camera poses!" << endl;*/ return 0; }
-    return remotesCameraPose[remoteName];
-}
-
-PosePtr VRSyncNode::getRemoteMousePose(string remoteName) {
-    if (!remotesMousePose.count(remoteName)) { /*cout << "Error in VRSyncNode::getRemoteMousePose: " << remoteName << " not in mouse poses!" << endl;*/ return 0; }
-    return remotesMousePose[remoteName];
-}
-PosePtr VRSyncNode::getRemoteFlystickPose(string remoteName) {
-    if (!remotesFlystickPose.count(remoteName)) { /*cout << "Error in VRSyncNode::getRemoteFlystickPose: " << remoteName << " not in flystick poses!" << endl;*/ return 0; }
-    return remotesFlystickPose[remoteName];
 }
 
 vector<string> VRSyncNode::getRemotes() {
@@ -896,9 +856,9 @@ void VRSyncNode::handleNewConnect(string data){
 
 void VRSyncNode::startInterface(int port) {
     server = VRTCPServer::create();
-    connectionUri = VRTCPUtils::getPublicIP() + ":" + toString(port);
+    serverUri = VRTCPUtils::getPublicIP() + ":" + toString(port);
     server->listen(port, "TCPPVR\n");
-    server->onMessage( bind(&VRSyncNode::handleMessage, this, std::placeholders::_1) );
+    server->onMessage( bind(&VRSyncNode::handleMessage, this, std::placeholders::_1, serverUri) );
 }
 
 void VRSyncNode::handleWarning(string msg) {
@@ -928,26 +888,18 @@ void VRSyncNode::handleSelfmapRequest(string msg) {
     addRemoteMapping(selfID, rID);
 }
 
-/*void VRSyncNode::handleMessage(void* _args) {
-    HTTP_args* args = (HTTP_args*)_args;
-    if (!args->websocket) cout << "AAAARGH" << endl;
-
-    //UInt32 client = args->ws_id;
-    string msg = args->ws_data;*/
-string VRSyncNode::handleMessage(string msg) {
-    //cout << "VRSyncNode::handleMessage " << msg.size() << endl;
-    //cout << msg << endl;
+string VRSyncNode::handleMessage(string msg, string rID) {
     VRUpdateCbPtr job = 0;
     if (startsWith(msg, "message|"));
-    else if (startsWith(msg, "addAvatar|")) job = VRUpdateCb::create( "sync-handleAvatar", bind(&VRSyncNode::handleAvatar, this, msg) );
+    else if (startsWith(msg, "keepAlive"));
+    else if (startsWith(msg, "addAvatar|")) job = VRUpdateCb::create( "sync-handleAvatar", bind(&VRSyncNode::handleAvatar, this, msg, rID) );
     else if (startsWith(msg, "selfmap|")) handleSelfmapRequest(msg);
     else if (startsWith(msg, "mapping|")) job = VRUpdateCb::create( "sync-handleMap", bind(&VRSyncNode::handleMapping, this, msg) );
     else if (startsWith(msg, "typeMapping|")) job = VRUpdateCb::create("sync-handleTMap", bind(&VRSyncNode::handleTypeMapping, this, msg));
-    else if (startsWith(msg, "poses|"))   job = VRUpdateCb::create( "sync-handlePoses", bind(&VRSyncNode::handlePoses, this, msg) );
-    else if (startsWith(msg, "ownership|")) job = VRUpdateCb::create( "sync-ownership", bind(&VRSyncNode::handleOwnershipMessage, this, msg) );
+    else if (startsWith(msg, "ownership|")) job = VRUpdateCb::create( "sync-ownership", bind(&VRSyncNode::handleOwnershipMessage, this, msg, rID) );
     else if (startsWith(msg, "newConnect|")) job = VRUpdateCb::create( "sync-newConnect", bind(&VRSyncNode::handleNewConnect, this, msg) );
-    else if (startsWith(msg, "accConnect|")) job = VRUpdateCb::create( "sync-accConnect", bind(&VRSyncNode::accTCPConnection, this, msg) );
-    else if (startsWith(msg, "reqInitState|")) job = VRUpdateCb::create( "sync-reqInitState", bind(&VRSyncNode::reqInitState, this) );
+    else if (startsWith(msg, "accConnect|")) job = VRUpdateCb::create( "sync-accConnect", bind(&VRSyncNode::accTCPConnection, this, msg, rID) );
+    else if (startsWith(msg, "reqInitState|")) job = VRUpdateCb::create( "sync-reqInitState", bind(&VRSyncNode::reqInitState, this, rID) );
     else if (startsWith(msg, "changelistEnd|")) job = VRUpdateCb::create( "sync-finalizeCL", bind(&VRSyncChangelist::deserializeAndApply, changelist.get(), ptr()) );
     else if (startsWith(msg, "warn|")) job = VRUpdateCb::create( "sync-handleWarning", bind(&VRSyncNode::handleWarning, this, msg) );
     //else if (startsWith(msg, "warn|")) handleWarning(msg);
@@ -956,8 +908,8 @@ string VRSyncNode::handleMessage(string msg) {
     return "";
 }
 
-//broadcast message to all remote nodes
-void VRSyncNode::broadcast(string message) {
+void VRSyncNode::broadcast(string message) { // broadcast message to all remote nodes
+    //VRConsoleWidget::get("Collaboration")->write( " Broadcast: "+message+"\n");
     for (auto& remote : remotes) {
         if (!remote.second->send(message)) {
             cout << "Failed to send message to remote." << endl;
@@ -1002,7 +954,7 @@ void VRSyncNode::analyseSubGraph() {
     printRegistredContainers();
 }
 
-string VRSyncNode::getConnectionLink() { return connectionUri; }
+string VRSyncNode::getConnectionLink() { return serverUri; }
 
 void VRSyncNode::setCallback(VRMessageCbPtr fkt) {
     onEvent = fkt;
@@ -1010,8 +962,8 @@ void VRSyncNode::setCallback(VRMessageCbPtr fkt) {
 }
 
 string VRSyncNode::getConnectionStatus() {
-    string status = "SyncNode: " + connectionUri + "\n";
-    for (auto remote : remotes) {
+    string status = "SyncNode: " + serverUri + "\n";
+    for (auto& remote : remotes) {
         status += " (" + remote.first + ") " + remote.second->getStatus();
         status += "\n";
     }

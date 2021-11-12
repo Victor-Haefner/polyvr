@@ -63,7 +63,7 @@ class VRConsoleWidget {
         void resetColor();
         void forward();
         void write(string s, string style = "", shared_ptr< VRFunction<string> > link = 0);
-        void addStyle( string style, string fg, string bg, bool italiq, bool bold, bool underlined );
+        void addStyle( string style, string fg, string bg, bool italiq, bool bold, bool underlined, bool editable );
         void update();
 };
 

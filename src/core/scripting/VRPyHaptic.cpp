@@ -1,5 +1,4 @@
 #include "VRPyHaptic.h"
-#include "VRPyDevice.h"
 #include "VRPyBaseT.h"
 #include "VRPyMath.h"
 

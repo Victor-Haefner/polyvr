@@ -147,6 +147,8 @@ VRPN::~VRPN() {
     //VRSceneManager::get()->stopThread(threadID);
 }
 
+VRPNPtr VRPN::create() { return VRPNPtr(new VRPN()); }
+
 void VRPN::update_t(VRThread* thread) {}
 void VRPN::update() {
     if (!active) return;

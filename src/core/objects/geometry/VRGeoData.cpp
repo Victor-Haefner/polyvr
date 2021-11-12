@@ -263,6 +263,9 @@ int VRGeoData::getIndex(int i, int v) {
 
 Pnt3d VRGeoData::getPosition(int i) { return int(data->pos->size()) > i ? Pnt3d(data->pos->getValue(i)) : Pnt3d(); }
 Vec3d VRGeoData::getNormal(int i) { return int(data->norms->size()) > i ? Vec3d(data->norms->getValue(i)) : Vec3d(); }
+Vec2d VRGeoData::getTexCoord(int i) { return int(data->texs->size()) > i ? Vec2d(data->texs->getValue(i)) : Vec2d(); }
+Vec2d VRGeoData::getTexCoord2(int i) { return int(data->texs2->size()) > i ? Vec2d(data->texs2->getValue(i)) : Vec2d(); }
+
 Color4f VRGeoData::getColor(int i) {
     if (int(data->cols4->size()) > i) return data->cols4->getValue(i);
     if (int(data->cols3->size()) > i) {

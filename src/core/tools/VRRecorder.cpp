@@ -254,15 +254,43 @@ void VRRecorder::closeFrame() {
     frame = 0;
 }
 
+void VRRecorder::writeHeader(string path) {
+    AVFormatContext* ofmt_ctx;
+    AVOutputFormat* ofmt = av_guess_format("avi", path.c_str(), NULL);
+    auto status = avformat_alloc_output_context2(&ofmt_ctx, ofmt, "avi", path.c_str());
+    if (status < 0) std::cerr << "could not allocate output format" << std::endl;
+    AVStream* stream = avformat_new_stream(ofmt_ctx, codec);
+    ofmt_ctx->duration = 60*1000000; // 60 sec
+    stream->codec = codec_context;
+    stream->time_base = stream->codec->time_base;
+    stream->duration = ofmt_ctx->duration;
+    stream->avg_frame_rate = av_make_q(60,1);
+    avcodec_parameters_from_context(stream->codecpar, stream->codec);
+    stream->display_aspect_ratio = av_make_q(stream->codec->width, stream->codec->height);
+    ofmt_ctx->video_codec = codec;
+
+    av_dict_set(&ofmt_ctx->metadata, "TPFL", "testtest", 0);
+    av_dump_format(ofmt_ctx, 0, path.c_str(), 1);
+    avio_open(&ofmt_ctx->pb, path.c_str(), AVIO_FLAG_WRITE);
+
+    avformat_init_output(ofmt_ctx, NULL);
+    avformat_write_header(ofmt_ctx, &ofmt_ctx->metadata);
+    //av_write_trailer(ofmt_ctx);
+    avio_close(ofmt_ctx->pb);
+}
+
 void VRRecorder::compile(string path) {
     if (captures.size() == 0) return;
 
-    /*for (int i=0; i<1; i++) { // test export the first N images
-        string pimg = path+"."+toString(i)+".png";
-        captures[i]->capture->write(pimg.c_str());
-    }*/
+    bool doWriteHeader = false; // TODO: doesnt work yet!
 
-    FILE* f = fopen(path.c_str(), "wb");
+    if (doWriteHeader) writeHeader(path);
+
+
+    // write frames
+    FILE* f = 0;
+    if (doWriteHeader) f = fopen(path.c_str(), "ab");
+    else f =  fopen(path.c_str(), "wb");
     if (!f) { fprintf(stderr, "Could not open %s\n", path.c_str()); return; }
 
     for (int i=0; i<(int)captures.size(); i++) captures[i]->write(f);

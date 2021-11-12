@@ -16,7 +16,7 @@ OSG_BEGIN_NAMESPACE;
 class VRICEClient : public std::enable_shared_from_this<VRICEClient> {
 	private:
         VRRestClientPtr broker;
-        VRTCPClientPtr client;
+        map<string, VRTCPClientPtr> clients;
         map<string, string> users;
 
         string name;
@@ -55,7 +55,7 @@ class VRICEClient : public std::enable_shared_from_this<VRICEClient> {
 
         void setName(string name);
         void connectTo(string other);
-        void sendTCP(string msg);
+        void sendTCP(string otherID, string msg);
         void send(string otherID, string msg);
         void removeUser(string uid);
 
@@ -63,7 +63,8 @@ class VRICEClient : public std::enable_shared_from_this<VRICEClient> {
 		string getUserName(string ID);
 		vector<string> getUserID(string name);
 		map<string, string> getUsers();
-		VRTCPClientPtr getClient();
+		VRTCPClientPtr getClient(string otherID);
+		map<string, VRTCPClientPtr> getClients();
 };
 
 OSG_END_NAMESPACE;

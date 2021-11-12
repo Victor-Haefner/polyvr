@@ -12,10 +12,12 @@
 #include "core/utils/VRUndoInterfaceT.h"
 #include "core/utils/VRStorage_template.h"
 #include "core/scene/import/VRExport.h"
+#include "core/gui/VRGuiConsole.h"
 
 #include <OpenSG/OSGGroup.h>
 #include <OpenSG/OSGTransform.h>
 #include <OpenSG/OSGNameAttachment.h>
+#include <OpenSG/OSGStringAttributeMap.h>
 #include <OpenSG/OSGVisitSubTree.h>
 #include <OpenSG/OSGSceneFileHandler.h>
 
@@ -282,6 +284,10 @@ void VRObject::wrapOSG(OSGObjectPtr node) {
     getNode()->node = node->node;
     if (!core || !node->node->getCore()) return;
     core->core = node->node->getCore();
+
+    Attachment* att = node->node->findAttachment( StringAttributeMap::getClassType().getGroupId());
+    StringAttributeMapUnrecPtr aMap = dynamic_cast<StringAttributeMap*>(att);
+    if (aMap && aMap->hasAttribute("pickable")) pickable = (aMap->getAttribute("pickable") == "yes");
 }
 
 OSGObjectPtr VRObject::getNode() { return osg; }
@@ -544,7 +550,7 @@ bool VRObject::hasGraphChanged() {
 
 BoundingboxPtr VRObject::getBoundingbox() {
     Pnt3f p1, p2;
-    commitChanges();
+    //commitChanges(); // crashes in cave, but why??
     osg->node->updateVolume();
     osg->node->getVolume().getBounds(p1, p2);
     auto b = Boundingbox::create();
@@ -661,7 +667,7 @@ void VRObject::printOSGTree(OSGObjectPtr o, string indent) {
     // get attachments
     // print them
 
-    cout << "\n" << indent << name << " " << type << "  ";
+    cout << "\n" << indent << name << " (" << o->node->getId() << ") " << type << "  ";
     if (type == "Transform") {
         Transform* t = dynamic_cast<Transform*>(o->node->getCore());
         cout << t->getMatrix()[0] << "  " << t->getMatrix()[1] << "  " << t->getMatrix()[2];
@@ -762,7 +768,26 @@ void VRObject::toggleVisible(string mode) { setVisible(!isVisible(mode), mode); 
 
 bool VRObject::isPickable() { return pickable == 1; }
 
-void VRObject::setPickable(int b) { if (hasTag("transform")) pickable = b; } //TODO: check if the if is necessary!
+void VRObject::setPickable(int b, bool setAttachment) {
+    if (!hasTag("transform")) return;  //TODO: check if the if is necessary!
+    if (pickable == b) return;
+
+    pickable = b;
+    if (!setAttachment) return;
+
+    StringAttributeMapUnrecPtr aMap = 0;
+    Attachment* att = getNode()->node->findAttachment( StringAttributeMap::getClassType().getGroupId());
+
+    if (!att) {
+        aMap = StringAttributeMap::create();
+        getNode()->node->addAttachment(aMap);
+    } else aMap = dynamic_cast<StringAttributeMap*>(att);
+
+    if (aMap) {
+        if (b) aMap->setAttribute("pickable", "yes");
+        else   aMap->setAttribute("pickable", "no");
+    }
+}
 
 string VRObject::getPath() {
     VRObjectPtr o = ptr();

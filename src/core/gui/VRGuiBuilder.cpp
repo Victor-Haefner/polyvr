@@ -167,7 +167,9 @@ GtkWidget* addToolbar(string ID, GtkIconSize iSize, GtkOrientation o) {
 }
 
 GtkToolItem* addToolButton(string ID, string stock, GtkWidget* bar, string tooltip) {
-    auto item = gtk_tool_button_new_from_stock(stock.c_str());
+    GtkToolItem* item = 0;
+    if (stock != "") item = gtk_tool_button_new_from_stock(stock.c_str());
+    else item = gtk_tool_button_new(0, "");
     VRGuiBuilder::get()->reg_widget(GTK_WIDGET(item), ID);
     gtk_toolbar_insert(GTK_TOOLBAR(bar), item, -1);
     gtk_widget_set_tooltip_text(GTK_WIDGET(item), tooltip.c_str());
@@ -1186,12 +1188,16 @@ void VRGuiBuilder::buildBaseUI() {
     addNotebookPage(notebook3, table21, "Semantics");
 
     /* ---------- VR Scene -scripting ---------------------- */
+    auto toolbar_wrap = addGrid("toolbar_wrap");
     auto toolbar3 = addToolbar("toolbar3", GTK_ICON_SIZE_LARGE_TOOLBAR, GTK_ORIENTATION_HORIZONTAL);
+    auto toolbar3_2 = addToolbar("toolbar3_2", GTK_ICON_SIZE_LARGE_TOOLBAR, GTK_ORIENTATION_HORIZONTAL);
     auto script_tree = gtk_tree_store_new(9, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_INT);
     auto treeview5_and_frame = addTreeview("treeview5", "script_tree", GTK_TREE_MODEL(script_tree));
     auto treeview5 = treeview5_and_frame.first;
     auto table15 = addGrid("table15");
-    gtk_grid_attach(GTK_GRID(table14), toolbar3, 0,0,2,1);
+    gtk_grid_attach(GTK_GRID(toolbar_wrap), toolbar3, 0,0,1,1);
+    gtk_grid_attach(GTK_GRID(toolbar_wrap), toolbar3_2, 1,0,1,1);
+    gtk_grid_attach(GTK_GRID(table14), toolbar_wrap, 0,0,2,1);
     gtk_grid_attach(GTK_GRID(table14), treeview5_and_frame.second, 0,1,1,1);
     gtk_grid_attach(GTK_GRID(table14), table15, 1,1,1,1);
 
@@ -1204,6 +1210,8 @@ void VRGuiBuilder::buildBaseUI() {
     auto toolbutton8 = addToolButton("toolbutton8", "gtk-execute", toolbar3, "Execute Script");
     auto toolbutton23 = addToolButton("toolbutton23", "gtk-find", toolbar3, "Search");
     auto toolbutton16 = addToolButton("toolbutton16", "gtk-help", toolbar3, "Documentation");
+    auto toolbutton30 = addToolButton("toolbutton30", "", toolbar3_2, "Convert to C++");
+    gtk_tool_button_set_label(GTK_TOOL_BUTTON(toolbutton30), "CPP");
     auto toggletoolbutton1 = addToggleToolButton("toggletoolbutton1", "gtk-sort-ascending", toolbar3, "Show Performance");
     auto toggletoolbutton2 = addToggleToolButton("toggletoolbutton2", "gtk-media-pause", toolbar3, "Pause Script Execution");
 
@@ -1428,10 +1436,12 @@ void VRGuiBuilder::buildBaseUI() {
     /* ---------- VR Scene - general ---------------------- */
     auto label87 = addLabel("label87", "Background:");
     auto bg_solid = addColorChooser("bg_solid");
+    auto bgbox = addGrid("bgbox");
     auto radiobutton3 = addRadiobutton("radiobutton3", "Solid", 0);
     auto radiobutton4 = addRadiobutton("radiobutton4", "Image", radiobutton3);
     auto radiobutton5 = addRadiobutton("radiobutton5", "Skybox", radiobutton3);
     auto radiobutton18 = addRadiobutton("radiobutton18", "Sky", radiobutton3);
+    auto bgbox2 = addGrid("bgbox2");
     auto label88 = addLabel("label88", "Path:");
     auto entry42 = addEntry("entry42");
     auto entry14 = addEntry("entry14", 4);
@@ -1440,28 +1450,25 @@ void VRGuiBuilder::buildBaseUI() {
 
     gtk_grid_attach(GTK_GRID(table30), label87, 0,0,1,1);
     gtk_grid_attach(GTK_GRID(table30), bg_solid, 1,0,1,1);
-    gtk_grid_attach(GTK_GRID(table30), radiobutton3, 0,1,1,1);
-    gtk_grid_attach(GTK_GRID(table30), radiobutton4, 1,1,1,1);
-    gtk_grid_attach(GTK_GRID(table30), radiobutton5, 2,1,1,1);
-    gtk_grid_attach(GTK_GRID(table30), radiobutton18, 3,1,1,1);
-    gtk_grid_attach(GTK_GRID(table30), label88, 0,2,1,1);
-    gtk_grid_attach(GTK_GRID(table30), entry42, 1,2,1,1);
-    gtk_grid_attach(GTK_GRID(table30), entry14, 2,2,1,1);
-    gtk_grid_attach(GTK_GRID(table30), button18, 3,2,1,1);
-    gtk_grid_attach(GTK_GRID(table30), spacer, 0,3,4,1);
+    gtk_grid_attach(GTK_GRID(table30), bgbox, 0,1,4,1);
+    gtk_grid_attach(GTK_GRID(bgbox), radiobutton3, 0,0,1,1);
+    gtk_grid_attach(GTK_GRID(bgbox), radiobutton4, 1,0,1,1);
+    gtk_grid_attach(GTK_GRID(bgbox), radiobutton5, 2,0,1,1);
+    gtk_grid_attach(GTK_GRID(bgbox), radiobutton18, 3,0,1,1);
+    gtk_grid_attach(GTK_GRID(table30), bgbox2, 0,2,4,1);
+    gtk_grid_attach(GTK_GRID(bgbox2), label88, 0,0,1,1);
+    gtk_grid_attach(GTK_GRID(bgbox2), entry42, 1,0,1,1);
+    gtk_grid_attach(GTK_GRID(bgbox2), entry14, 2,0,1,1);
+    gtk_grid_attach(GTK_GRID(bgbox2), button18, 3,0,1,1);
+    gtk_grid_attach(GTK_GRID(table30), spacer, 0,3,4,3);
 
-    auto label_2 = addLabel("label_2", "Physics:");
-    auto checkbutton_1 = addCheckbutton("checkbutton_1", "Gravity:");
-    auto entry43 = addEntry("entry43", 4);
-    auto entry47 = addEntry("entry47", 4);
-    auto entry58 = addEntry("entry58", 4);
-    auto spacer2 = addSpacer(20);
     auto label_01 = addLabel("label_01", "Rendering:");
     auto tfpsLabel = addLabel("tfpsLabel", "Target FPS:");
     auto tfpsCombobox = addCombobox("tfpsCombobox", "tfps");
-    auto checkbutton_01 = addCheckbutton("checkbutton_01", "Frustum culling");
-    auto checkbutton_02 = addCheckbutton("checkbutton_02", "Occlusion culling");
-    auto checkbutton_2 = addCheckbutton("checkbutton_2", "Two sided");
+    auto cullingbox = addGrid("cullingbox");
+    auto cullingLabel = addLabel("cullingLabel", "Culling:");
+    auto checkbutton_01 = addCheckbutton("checkbutton_01", "Frustum");
+    auto checkbutton_02 = addCheckbutton("checkbutton_02", "Occlusion");
     auto checkbutton_3 = addCheckbutton("checkbutton_3", "Deferred rendering");
     auto hbuttonbox7 = addGrid("hbuttonbox7");
     auto radiobutton13 = addRadiobutton("radiobutton13", "rendered", 0);
@@ -1474,25 +1481,20 @@ void VRGuiBuilder::buildBaseUI() {
     gtk_widget_set_sensitive(entry14, false);
     gtk_widget_set_sensitive(button18, false);
 
-    gtk_grid_attach(GTK_GRID(table30), label_2, 0,4,1,1);
-    gtk_grid_attach(GTK_GRID(table30), checkbutton_1, 0,5,1,1);
-    gtk_grid_attach(GTK_GRID(table30), entry43, 1,5,1,1);
-    gtk_grid_attach(GTK_GRID(table30), entry47, 2,5,1,1);
-    gtk_grid_attach(GTK_GRID(table30), entry58, 3,5,1,1);
-    gtk_grid_attach(GTK_GRID(table30), spacer2, 0,6,4,1);
-    gtk_grid_attach(GTK_GRID(table30), label_01, 0,7,1,1);
-    gtk_grid_attach(GTK_GRID(table30), tfpsLabel, 0,8,2,1);
-    gtk_grid_attach(GTK_GRID(table30), tfpsCombobox, 2,8,2,1);
-    gtk_grid_attach(GTK_GRID(table30), checkbutton_01, 0,9,2,1);
-    gtk_grid_attach(GTK_GRID(table30), checkbutton_02, 2,9,2,1);
-    gtk_grid_attach(GTK_GRID(table30), checkbutton_2, 0,10,2,1);
-    gtk_grid_attach(GTK_GRID(table30), checkbutton_3, 2,10,2,1);
-    gtk_grid_attach(GTK_GRID(table30), hbuttonbox7, 0,11,4,1);
+    gtk_grid_attach(GTK_GRID(table30), label_01, 0,6,1,1);
+    gtk_grid_attach(GTK_GRID(table30), tfpsLabel, 0,7,1,1);
+    gtk_grid_attach(GTK_GRID(table30), tfpsCombobox, 1,7,1,1);
+    gtk_grid_attach(GTK_GRID(table30), cullingbox, 0,8,4,1);
+    gtk_grid_attach(GTK_GRID(cullingbox), cullingLabel, 0,0,1,1);
+    gtk_grid_attach(GTK_GRID(cullingbox), checkbutton_01, 1,0,1,1);
+    gtk_grid_attach(GTK_GRID(cullingbox), checkbutton_02, 2,0,1,1);
+    gtk_grid_attach(GTK_GRID(table30), checkbutton_3, 0,9,2,1);
+    gtk_grid_attach(GTK_GRID(table30), hbuttonbox7, 1,10,3,1);
     gtk_grid_attach(GTK_GRID(hbuttonbox7), radiobutton13, 0,0,1,1);
-    gtk_grid_attach(GTK_GRID(hbuttonbox7), radiobutton14, 1,0,1,1);
-    gtk_grid_attach(GTK_GRID(hbuttonbox7), radiobutton15, 2,0,1,1);
-    gtk_grid_attach(GTK_GRID(hbuttonbox7), radiobutton16, 3,0,1,1);
-    gtk_grid_attach(GTK_GRID(hbuttonbox7), radiobutton17, 4,0,1,1);
+    gtk_grid_attach(GTK_GRID(hbuttonbox7), radiobutton14, 0,1,1,1);
+    gtk_grid_attach(GTK_GRID(hbuttonbox7), radiobutton15, 0,2,1,1);
+    gtk_grid_attach(GTK_GRID(hbuttonbox7), radiobutton16, 0,3,1,1);
+    gtk_grid_attach(GTK_GRID(hbuttonbox7), radiobutton17, 0,4,1,1);
 
     auto checkbutton_4 = addCheckbutton("checkbutton_4", "SSAO:");
     auto label121 = addLabel("label121", "radius:");
@@ -1509,20 +1511,20 @@ void VRGuiBuilder::buildBaseUI() {
     auto label_1 = addLabel("label_1", "Export OSG:");
     auto button22 = addButton("button22", "dump");
 
-    gtk_grid_attach(GTK_GRID(table30), checkbutton_4, 0,12,4,1);
-    gtk_grid_attach(GTK_GRID(table30), label121, 0,13,2,1);
-    gtk_grid_attach(GTK_GRID(table30), hscale1, 2,13,2,1);
-    gtk_grid_attach(GTK_GRID(table30), label122, 0,14,2,1);
-    gtk_grid_attach(GTK_GRID(table30), hscale2, 2,14,2,1);
-    gtk_grid_attach(GTK_GRID(table30), label123, 0,15,2,1);
-    gtk_grid_attach(GTK_GRID(table30), hscale3, 2,15,2,1);
-    gtk_grid_attach(GTK_GRID(table30), checkbutton_5, 0,16,2,1);
-    gtk_grid_attach(GTK_GRID(table30), checkbutton_7, 2,16,2,1);
-    gtk_grid_attach(GTK_GRID(table30), checkbutton_6, 0,17,2,1);
-    gtk_grid_attach(GTK_GRID(table30), checkbutton_8, 2,17,2,1);
-    gtk_grid_attach(GTK_GRID(table30), spacer3, 0,18,4,1);
-    gtk_grid_attach(GTK_GRID(table30), label_1, 0,19,2,1);
-    gtk_grid_attach(GTK_GRID(table30), button22, 2,19,2,1);
+    gtk_grid_attach(GTK_GRID(table30), checkbutton_4, 0,11,4,1);
+    gtk_grid_attach(GTK_GRID(table30), label121, 0,12,1,1);
+    gtk_grid_attach(GTK_GRID(table30), hscale1, 1,12,3,1);
+    gtk_grid_attach(GTK_GRID(table30), label122, 0,13,1,1);
+    gtk_grid_attach(GTK_GRID(table30), hscale2, 1,13,3,1);
+    gtk_grid_attach(GTK_GRID(table30), label123, 0,14,1,1);
+    gtk_grid_attach(GTK_GRID(table30), hscale3, 1,14,3,1);
+    gtk_grid_attach(GTK_GRID(table30), checkbutton_5, 0,15,2,1);
+    gtk_grid_attach(GTK_GRID(table30), checkbutton_7, 2,15,2,1);
+    gtk_grid_attach(GTK_GRID(table30), checkbutton_6, 0,16,2,1);
+    gtk_grid_attach(GTK_GRID(table30), checkbutton_8, 2,16,2,1);
+    gtk_grid_attach(GTK_GRID(table30), spacer3, 0,17,4,1);
+    gtk_grid_attach(GTK_GRID(table30), label_1, 0,18,2,1);
+    gtk_grid_attach(GTK_GRID(table30), button22, 2,18,2,1);
 
     /* ---------- VR Scene - scenegraph ---------------------- */
     auto hpaned3 = addPaned("hpaned3", GTK_ORIENTATION_HORIZONTAL);

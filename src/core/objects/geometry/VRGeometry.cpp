@@ -17,6 +17,7 @@
 
 #include <OpenSG/OSGTriangleIterator.h>
 #include "core/scene/import/VRImport.h"
+#include "core/setup/devices/VRIntersectAction.h"
 #include "core/math/interpolator.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRFunction.h"
@@ -198,6 +199,7 @@ class transIntersectionProxy : public Transform {
 
 bool VRGeometry::applyIntersectionAction(Action* action) {
     if (!mesh || !mesh->geo) return false;
+    if (hasTag("SYSTEM:COLLISIONSHAPE")) return false;
     auto proxy = (geoIntersectionProxy*)mesh->geo.get();
     if (!proxy) return false;
     return proxy->intersectDefaultGeometry(action) == Action::Continue;

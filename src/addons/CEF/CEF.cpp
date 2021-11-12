@@ -280,14 +280,14 @@ void CEF::mouse_move(VRDeviceWeakPtr d) {
     if (!dev) return;
     auto geo = obj.lock();
     if (!geo) return;
-    VRIntersection ins = dev->intersect(geo);
+    VRIntersectionPtr ins = dev->intersect(geo);
 
-    if (!ins.hit) return;
-    if (ins.object.lock() != geo) return;
+    if (!ins->hit) return;
+    if (ins->object.lock() != geo) return;
 
     CefMouseEvent me;
-    me.x = ins.texel[0]*resolution;
-    me.y = ins.texel[1]*(resolution/aspect);
+    me.x = ins->texel[0]*resolution;
+    me.y = ins->texel[1]*(resolution/aspect);
     if (!browser) return;
     auto host = browser->GetHost();
     if (!host) return;
@@ -313,17 +313,17 @@ void CEF::mouse(int lb, int rb, int wu, int wd, VRDeviceWeakPtr d) {
     auto geo = obj.lock();
     if (!geo) return;
 
-    VRIntersection ins = dev->intersect(geo);
-    auto iobj = ins.object.lock();
+    auto ins = dev->intersect(geo);
+    auto iobj = ins->object.lock();
 
     if (VRLog::tag("net")) {
         string o = "NONE";
         if (iobj) o = iobj->getName();
         stringstream ss;
         ss << "CEF::mouse " << this << " dev " << dev->getName();
-        ss << " hit " << ins.hit << " " << o << ", trg " << geo->getName();
+        ss << " hit " << ins->hit << " " << o << ", trg " << geo->getName();
         ss << " b: " << b << " s: " << down;
-        ss << " texel: " << ins.texel;
+        ss << " texel: " << ins->texel;
         ss << endl;
         VRLog::log("net", ss.str());
     }
@@ -331,7 +331,7 @@ void CEF::mouse(int lb, int rb, int wu, int wd, VRDeviceWeakPtr d) {
     if (!browser) return;
     auto host = browser->GetHost();
     if (!host) return;
-    if (!ins.hit) { host->SendFocusEvent(false); focus = false; return; }
+    if (!ins->hit) { host->SendFocusEvent(false); focus = false; return; }
     if (iobj != geo) { host->SendFocusEvent(false); focus = false; return; }
     host->SendFocusEvent(true); focus = true;
 
@@ -339,8 +339,8 @@ void CEF::mouse(int lb, int rb, int wu, int wd, VRDeviceWeakPtr d) {
     int height = resolution/aspect;
 
     CefMouseEvent me;
-    me.x = ins.texel[0]*width;
-    me.y = ins.texel[1]*height;
+    me.x = ins->texel[0]*width;
+    me.y = ins->texel[1]*height;
 
     if (b < 3) {
         cef_mouse_button_type_t mbt;

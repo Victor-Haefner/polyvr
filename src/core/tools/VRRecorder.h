@@ -39,6 +39,8 @@ class VRRecorder {
         VRToggleCbPtr toggleCallback;
         VRUpdateCbPtr updateCallback;
 
+        void writeHeader(string path);
+
         void initCodec();
         void closeCodec();
         void initFrame();

@@ -48,6 +48,7 @@ class VRSky : public VRGeometry {
         float cloudScale;
         float cloudHeight;
         Color4f cloudColor;
+        Color4f colGround;
 
         // luminance
         float turbidity;
@@ -78,6 +79,7 @@ class VRSky : public VRGeometry {
         void setSpeed(float speed = 1);
         void setClouds(float density, float scale, float height, Vec2d speed, Color4f color);
         void setLuminance(float turbidity);
+        void setGround(Color4f c);
         void setPosition(float latitude, float longitude);
         void reloadShader();
 

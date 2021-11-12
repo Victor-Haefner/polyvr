@@ -3,6 +3,8 @@
 
 #include "core/utils/VRFwdDeclTemplate.h"
 
+ptrFwd(VRPrimitive);
+
 namespace OSG {
 
 // objects

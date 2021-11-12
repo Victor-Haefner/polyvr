@@ -33,6 +33,7 @@ class VRSyncChangelist {
         void broadcastChangeList(VRSyncNodePtr syncNode, OSGChangeList* cl, bool doDelete = false);
 
         string getChangeType(UInt32 uiEntryDesc);
+        void sendSceneState(VRSyncNodePtr syncNode, string rID);
         void broadcastSceneState(VRSyncNodePtr syncNode);
 
         vector<UInt32> getFCChildren(FieldContainer* fcPtr, BitVector fieldMask);

@@ -940,7 +940,7 @@ void VRGuiScripts::on_find_diag_find_clicked() {
         VRConsoleWidget::get( "Search results" )->write( m, style, link );
     };
 
-    VRConsoleWidget::get( "Search results" )->addStyle( "blueLink", "#3355ff", "#ffffff", false, true, true );
+    VRConsoleWidget::get( "Search results" )->addStyle( "blueLink", "#3355ff", "#ffffff", false, true, true, false );
 
     // result output
     print( "Results, line-position, for search of '" + search + "':\n");
@@ -973,6 +973,7 @@ void VRGuiScripts::on_toggle_find_replace() {
 void VRGuiScripts::on_change_script_type() {
     if(!trigger_cbs) return;
     VRScriptPtr script = getSelectedScript();
+    if (!script) return;
     string t = getComboboxText("combobox1");
     script->setType(t);
     on_select_script();
@@ -982,6 +983,7 @@ void VRGuiScripts::on_change_script_type() {
 void VRGuiScripts::on_change_group() {
     if(!trigger_cbs) return;
     VRScriptPtr script = getSelectedScript();
+    if (!script) return;
     script->setGroup( getComboboxText("combobox10") );
     on_select_script();
     on_save_clicked();
@@ -991,11 +993,125 @@ void VRGuiScripts::on_change_group() {
 void VRGuiScripts::on_change_server() {
     if(!trigger_cbs) return;
     VRScriptPtr script = getSelectedScript();
+    if (!script) return;
     script->setHTMLHost( getComboboxText("combobox24") );
     on_select_script();
     on_save_clicked();
 }
 
+// others
+
+void VRGuiScripts::on_convert_cpp_clicked() {
+    VRScriptPtr script = getSelectedScript();
+    if (!script) return;
+
+    auto countTabs = [](const string& line) {
+        int i=0;
+        while (line[i] == '\t') i++;
+        return i;
+    };
+
+    auto countTrailingEmptyChars = [](const string& txt, int i0) {
+        int i=0;
+        while (txt[i0-i] == '\n' || txt[i0-i] == '\t') i++;
+        return i;
+    };
+
+    auto findAndReplace = [](string& line, string s1, string s2) {
+        int p = line.find(s1);
+        while(p != string::npos) {
+            line.replace(p, s1.size(), s2);
+            p = line.find(s1);
+        }
+    };
+
+    const string core = script->getHead() + script->getCore();
+    string newCore = "";
+
+    int lastTabCount = 0;
+    bool lastLineEmpty = 0;
+    size_t k1 = 0;
+    size_t k2 = 0;
+
+    map<string, string> lineStarts;
+    lineStarts["def "] = "void ";
+    lineStarts["if "] = "if (";
+    lineStarts["for "] = "for (";
+    lineStarts["while "] = "while (";
+
+    auto lines = splitString(core, '\n');
+    for (int i=0; i<lines.size(); i++) {
+        string& line = lines[i];
+        int N1 = line.size();
+        int N2 = line.size();
+
+        bool skipLine = false;
+        bool addSemicolon = true;
+        bool emptyLine = false;
+        int tabCount = countTabs(line);
+
+        if ( N2-tabCount == 0 ) emptyLine = true;
+        if ( emptyLine ) addSemicolon = false;
+
+        if (line[N2-1] == ':') {
+            line[N2-1] = ' ';
+            if (line[N2-1] == ')') line += "{";
+            else line += ") {";
+
+            N2 = line.size();
+            addSemicolon = false;
+        }
+
+        for (auto ls : lineStarts) {
+            int k = ls.first.size();
+            if ( subString(line, tabCount, k) == ls.first ) {
+                line = line.replace(tabCount, k, ls.second);
+                N2 = line.size();
+
+                if (ls.first != "def ") {
+                    int p = line.find(':');
+                    if (p != string::npos) line[p] = ')';
+                }
+
+                if (ls.first == "for ") findAndReplace(line, " in ", " : ");
+            }
+        }
+
+        findAndReplace(line, "#", "; //");
+        findAndReplace(line, ".", "->");
+        findAndReplace(line, "'", "\"");
+        findAndReplace(line, " and ", " && ");
+        findAndReplace(line, " or ", " || ");
+        if (contains(line, "hasattr")) line = "//"+line;
+
+        if (addSemicolon) line += ";";
+
+        // find and replace "VR." with "VR"
+
+        if (!emptyLine && tabCount<lastTabCount) { // closing brackets
+            int N = newCore.size()-1;
+            int nec = countTrailingEmptyChars(newCore, N);
+            string whitespace = subString(newCore, N-nec, nec);
+            newCore = subString(newCore, 0, N+1-nec);
+            for (int t=lastTabCount; t>tabCount; t--) {
+                newCore += "\n"+string(t-1, '\t') + "}";
+            }
+            newCore += whitespace + "\n";
+        }
+
+        if (!emptyLine) lastTabCount = tabCount;
+        lastLineEmpty = emptyLine;
+        k1 += N1;
+        k2 += N2;
+
+        if (!skipLine) newCore += line+"\n";
+    }
+
+    int nec = countTrailingEmptyChars(newCore, newCore.size()-1);
+    newCore = subString(newCore, 0, newCore.size()-nec);
+    if (newCore[newCore.size()-1] != '}') newCore += "\n}";
+    VRConsoleWidget::get( "Console" )->write( newCore );
+}
 
 // --------------------------
 // ---------Main-------------
@@ -1114,6 +1230,7 @@ VRGuiScripts::VRGuiScripts() {
     setToolButtonCallback("toolbutton23", bind(&VRGuiScripts::on_find_clicked, this) );
     setToolButtonCallback("toggletoolbutton1", bind(&VRGuiScripts::on_perf_toggled, this) );
     setToolButtonCallback("toggletoolbutton2", bind(&VRGuiScripts::on_pause_toggled, this) );
+    setToolButtonCallback("toolbutton30", bind(&VRGuiScripts::on_convert_cpp_clicked, this) );
 
     setButtonCallback("button12", bind(&VRGuiScripts::on_argadd_clicked, this) );
     setButtonCallback("button13", bind(&VRGuiScripts::on_argrem_clicked, this) );

@@ -26,10 +26,8 @@ class VRSyncNode : public VRTransform {
         vector<UInt32> createdNodes; //IDs of the currently created nodes/children
 
         size_t selfID = 0;
-        string connectionUri;
+        string serverUri;
         bool doWrapping = true;
-        bool doAvatars = true;
-        bool handledPoses = false; // optimization
 
         VRMessageCbPtr onEvent;
 
@@ -53,7 +51,7 @@ class VRSyncNode : public VRTransform {
 
         VRObjectPtr copy(vector<VRObjectPtr> children) override;
 
-        void sendTypes();
+        void sendTypes(string remoteID);
 
         void handleWarning(string msg);
         void handleSelfmapRequest(string msg);
@@ -72,34 +70,23 @@ class VRSyncNode : public VRTransform {
 
         void printRegistredContainers();
         void printSyncedContainers();
-        void getAndBroadcastPoses();
-
-        bool syncronizing = false;
-        //void sync(string remoteUri);
-
-        //Avatars
-        void handlePoses(string poses);
-        //void updateRemoteAvatarPose(string nodeName, PosePtr camPose);
-        //void updateRemoteMousePose(string nodeName, PosePtr mousePose);
-        map<string, PosePtr> remotesCameraPose;
-        map<string, PosePtr> remotesMousePose;
-        map<string, PosePtr> remotesFlystickPose;
-        Pose oldCamPose;
-        Pose oldMousePose;
-        Pose oldFlystickPose;
 
         //Ownership
         vector<string> owned; //names of owned objects by this node
-        void handleOwnershipMessage(string ownership);
+        void handleOwnershipMessage(string ownership, string rID);
 
         // avatar
-        VRTransformPtr avatarHeadBeacon;
-        VRTransformPtr avatarDeviceBeacon;
-        void handleAvatar(string data);
+        VRTransformPtr avatarHeadTransform;
+        VRTransformPtr avatarDeviceTransform;
+        VRTransformPtr avatarDeviceAnchor;
+        UInt32 getNodeID(VRObjectPtr t);
+        UInt32 getTransformID(VRTransformPtr t);
+        void addExternalContainer(UInt32 id, UInt32 mask);
+        void handleAvatar(string data, string remoteID);
 
         void handleNewConnect(string data);
-        void accTCPConnection(string msg);
-        void reqInitState();
+        void accTCPConnection(string msg, string rID);
+        void reqInitState(string rID);
 
     public:
         VRSyncNode(string name = "syncNode");
@@ -108,18 +95,20 @@ class VRSyncNode : public VRTransform {
         static VRSyncNodePtr create(string name = "None");
         VRSyncNodePtr ptr();
 
-        void setTCPClient(VRTCPClientPtr);
+        string setTCPClient(VRTCPClientPtr cli);
+        string addTCPClient(VRTCPClientPtr cli);
 
         void setDoWrapping(bool b);
         void setDoAvatars(bool b);
 
         void addRemote(string host, int port);
+        VRSyncConnectionPtr getRemote(string rID);
 
         void addRemoteMapping(UInt32 lID, UInt32 rID);
         void replaceContainerMapping(UInt32 ID1, UInt32 ID2);
 
         void startInterface(int port);
-        string handleMessage(string msg);
+        string handleMessage(string msg, string rID);
         void update();
         void broadcast(string message);
         size_t getContainerCount();
@@ -150,10 +139,11 @@ class VRSyncNode : public VRTransform {
 
         void registerContainer(FieldContainer* c, UInt32 syncNodeID = -1);
         vector<UInt32> registerNode(Node* c); //returns all registered IDs
-        void setAvatarBeacons(VRTransformPtr head, VRTransformPtr device);
-        void addRemoteAvatar(VRTransformPtr head, VRTransformPtr device);
+        void setAvatarBeacons(VRTransformPtr headTransform, VRTransformPtr devTransform, VRTransformPtr devAnchor);
+        void addRemoteAvatar(string remoteID, VRTransformPtr headTransform, VRTransformPtr devTransform, VRTransformPtr devAnchor);
 
         map<FieldContainer*, vector<FieldContainer*>> getAllSubContainers(FieldContainer* node);
+        map<UInt32, VRObjectWeakPtr> getMappedFCs();
 
         void wrapOSG();
 

@@ -2,9 +2,12 @@
 
 import os, fnmatch, subprocess
 import numpy, Gnuplot # sudo apt install python-gnuplot
-import datetime
+import datetime, sys
 from PIL import Image
 from time import sleep
+
+onlyHeader = ""
+if len(sys.argv) > 1: onlyHeader = sys.argv[1]
 
 sourceDir = '../../src'
 #sourceDir = 'testData'
@@ -179,6 +182,7 @@ def getCompilationTimes():
 	i = 0
 	tA = datetime.datetime.now()
 	for header in A.headers:
+		if onlyHeader != "" and onlyHeader != header: continue
 		print 'compile header:', header,
 		compilationTimes[header] = runCompilation(header)
 		print compilationTimes[header]
@@ -198,6 +202,7 @@ def countImpact(): # compute how many source files the header impacts
 	import random, operator
 	Ndepends = {}
 	for header in A.headers: 
+		if onlyHeader != "" and onlyHeader != header: continue
 		processed = []
 		countIncludes(header, processed)
 		Nc = 0
@@ -209,9 +214,12 @@ def countImpact(): # compute how many source files the header impacts
 	Ndepends = sorted(Ndepends.items(), key=operator.itemgetter(1,0))
 	for h in Ndepends:
 		#print len(h[1][1]), h
-		print h[0], ' '*(40-len(h[0])), len(A.includeGraph[h[0]]), '\t,', h[1][2], '\t/', len(A.sources), '\t,', h[1][0], '\t/', len(A.headers), '\t- ', 
+		print h[0], ' '*(40-len(h[0])), 'direct includes', len(A.includeGraph[h[0]]), '\t,', 'dependend headers', h[1][2], '\t/', len(A.sources), '\t,', 'dependend sources', h[1][0], '\t/', len(A.headers), '\t- ', 
 		if h[0] in compilationTimes: print compilationTimes[h[0]], ' s'
 		else: print ' '
+
+		for i in A.includeGraph[h[0]]:
+			print i
 	
 	print 'total compilation time:', totalTime
 

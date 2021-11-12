@@ -383,7 +383,7 @@ void VRPhysics::setDynamic(bool b, bool fast) {
     } else { update(); }
 }
 
-void VRPhysics::update() {
+void VRPhysics::update() { // only called when object is physicalized
     auto scene = OSG::VRScene::getCurrent();
     if (scene == 0) return;
 
@@ -447,11 +447,7 @@ void VRPhysics::update() {
     scene->physicalize(vr_obj.lock());
     updateConstraints();
 
-    if (!visShape) {
-        visShape = OSG::VRGeometry::create("phys_shape");
-        auto scene = OSG::VRScene::getCurrent();
-        scene->getVisualLayer()->addObject(visShape);
-    }
+    if (!visShape) createVisualGeo();
 
     //if (visShape->isVisible())
     updateVisualGeo(); // TODO: only when the visuallayer toggles, maybe a callback somewhere??
@@ -909,13 +905,17 @@ btCollisionShape* VRPhysics::getHACDShape() {
 
 void VRPhysics::setCustomShape(btCollisionShape* shape) { customShape = shape; physicsShape = "Custom"; }
 
+void VRPhysics::createVisualGeo() {
+    if (visShape) return;
+    visShape = OSG::VRGeometry::create("phys_shape");
+    visShape->addTag("SYSTEM:COLLISIONSHAPE");
+    auto scene = OSG::VRScene::getCurrent();
+    scene->getVisualLayer()->addObject(visShape);
+}
+
 OSG::VRTransformPtr VRPhysics::getVisualShape() {
-    if (!visShape) {
-        visShape = OSG::VRGeometry::create("phys_shape");
-        auto scene = OSG::VRScene::getCurrent();
-        scene->getVisualLayer()->addObject(visShape);
-        updateVisualGeo();
-    }
+    if (!visShape) createVisualGeo();
+    updateVisualGeo();
     return visShape;
 }
 

@@ -9,6 +9,8 @@
 #include <OpenSG/OSGFieldContainer.h>
 #include <OpenSG/OSGFieldContainerFactory.h>
 #include <OpenSG/OSGAttachment.h>
+#include <OpenSG/OSGStringAttributeMap.h>
+#include <OpenSG/OSGNameAttachment.h>
 #include <OpenSG/OSGNode.h>
 #include <OpenSG/OSGGroup.h>
 
@@ -94,9 +96,9 @@ class OSGChangeList : public ChangeList {
                 pEntry->uiEntryDesc = entry->uiEntryDesc; //ContainerChangeEntry::Change; //TODO: check what I did here (workaround to get created entries into the changelist aswell)
                 //pEntry->pFieldFlags   = entry->pFieldFlags; // what are they used for?
                 pEntry->whichField |= entry->whichField;
-                if (pEntry->whichField == 0 && entry->bvUncommittedChanges != 0) pEntry->whichField |= *entry->bvUncommittedChanges;
+                if (entry->bvUncommittedChanges != 0) pEntry->whichField |= *entry->bvUncommittedChanges;
                 pEntry->whichField &= mask;
-                pEntry->pList         = this;
+                pEntry->pList = this;
             }
         }
 
@@ -113,8 +115,7 @@ class OSGChangeList : public ChangeList {
             pEntry->uiEntryDesc   = entry->uiEntryDesc;
             pEntry->uiContainerId = entry->uiContainerId;
             pEntry->whichField    = entry->whichField;
-            if (pEntry->whichField == 0 && entry->bvUncommittedChanges != 0)
-                pEntry->whichField |= *entry->bvUncommittedChanges;
+            if (entry->bvUncommittedChanges != 0) pEntry->whichField |= *entry->bvUncommittedChanges;
             pEntry->pList         = this;
         }
 };
@@ -203,24 +204,6 @@ OSGChangeList* VRSyncChangelist::filterChangeList(VRSyncNodePtr syncNode, Change
         UInt32 id = entry->uiContainerId;
 
         FieldContainer* fct = factory->getContainer(id);
-        /*if (fct) {
-            auto type = factory->findType(fct->getTypeId());
-            Attachment* att = dynamic_cast<Attachment*>(fct);
-            if (id > 3014 && !syncNode->isSubContainer(id)) {
-                if (att) {
-                    //auto parents = att->getMFParents();
-                    //cout << " ----- getFilteredChangeList entry: " << id << " " << fct->getTypeName() << " isNode? " << type->isNode() << " isCore? " << type->isNodeCore() << " isAttachment? " << type->isAttachment() << " Nparents: " << parents->size() << endl;
-
-                }
-                //cout << " ----- getFilteredChangeList entry: " << id << " " << fct->getTypeName() << " isNode? " << type->isNode() << " isCore? " << type->isNodeCore() << " isAttachment? " << type->isAttachment() << endl;
-                if (type->isNode()) {
-                    //cout << "    node name: " << ::getName((Node*)fct) << endl;
-                }
-            }
-            //if (!att && !type->isNode() && !type->isNodeCore()) cout << " ----- getFilteredChangeList entry: " << fct->getTypeName() << "  " << fct->getId() << endl;
-            //if (fct) cout << " getFilteredChangeList entry: " << fct->getTypeName() << " attachment? " << att << endl;
-            //if (att) cout << "    attachement N parents: " << att->getMFParents()->size() << endl;
-        }*/
 
         if (syncNode->isRemoteChange(id)) continue;
 
@@ -256,7 +239,7 @@ OSGChangeList* VRSyncChangelist::filterChangeList(VRSyncNodePtr syncNode, Change
 
         // get changes fieldmask
         BitVector whichField = entry->whichField;
-        if (whichField == 0 && entry->bvUncommittedChanges != 0) whichField |= *entry->bvUncommittedChanges;
+        if (entry->bvUncommittedChanges != 0) whichField |= *entry->bvUncommittedChanges;
 //        cout << "entry->whichField " << entry->whichField << endl;
 
         // get container
@@ -404,6 +387,21 @@ void VRSyncChangelist::handleGenericChange(VRSyncNodePtr syncNode, FieldContaine
     fixNullCore(fcPtr, sentry.fieldMask);
     auto obj = syncNode->getVRObject(fcPtr->getId());
     if (obj) obj->wrapOSG(obj->getNode()); // update VR Objects, for example the VRTransform after its Matrix changed!
+
+    string type = fcPtr->getTypeName();
+    StringAttributeMap* attachment = dynamic_cast<StringAttributeMap*>(fcPtr.get());
+    if (attachment) {
+        auto pickable = attachment->getAttribute("pickable");
+        Node* attachmentNode = dynamic_cast<Node*>(attachment->getParents(0));
+        if (attachmentNode) {
+            auto obj = syncNode->getVRObject(attachmentNode->getCore()->getId());
+            if (obj) {
+                bool b = (pickable == "yes");
+                VRConsoleWidget::get("Collaboration")->write( " handleGenericChange: "+obj->getName()+" is pickable? "+pickable+"\n");
+                obj->setPickable(b, false);
+            }
+        }
+    }
 }
 
 void VRSyncChangelist::handleRemoteEntries(VRSyncNodePtr syncNode, vector<SerialEntry>& entries, map<UInt32, vector<UInt32>>& parentToChildren, map<UInt32, vector<unsigned char>>& fcData) {
@@ -558,7 +556,7 @@ void VRSyncChangelist::printChangeList(VRSyncNodePtr syncNode, OSGChangeList* cl
     auto printEntry = [&](ContainerChangeEntry* entry) {
         //const FieldFlags* fieldFlags = entry->pFieldFlags;
         BitVector whichField = entry->whichField;
-        if (whichField == 0 && entry->bvUncommittedChanges != 0) whichField |= *entry->bvUncommittedChanges;
+        if (entry->bvUncommittedChanges != 0) whichField |= *entry->bvUncommittedChanges;
         UInt32 id = entry->uiContainerId;
 
         // ----- print info ---- //
@@ -711,6 +709,9 @@ void VRSyncChangelist::serialize_entry(VRSyncNodePtr syncNode, ContainerChangeEn
         sentry.uiEntryDesc = entry->uiEntryDesc;
         sentry.fcTypeID = fcPtr->getTypeId();
 
+
+        //VRConsoleWidget::get("Collaboration")->write( " Serialize entry: "+toString(entry->uiContainerId)+"/"+toString(syncNodeID)+" "+toString(entry->whichField)+"\n");
+
         filterFieldMask(syncNode, fcPtr, sentry);
 
         ourBinaryDataHandler handler;
@@ -756,7 +757,8 @@ string VRSyncChangelist::serialize(VRSyncNodePtr syncNode, ChangeList* clist) {
 
     for (auto it = clist->begin(); it != clist->end(); it++, i++) {
         ContainerChangeEntry* entry = *it;
-        serialize_entry(syncNode, entry, data, syncNode->getContainerMappedID(entry->uiContainerId));
+        auto id = syncNode->getContainerMappedID(entry->uiContainerId);
+        serialize_entry(syncNode, entry, data, id);
     }
 
     cout << "serialized entries: " << i << endl; //Debugging
@@ -781,13 +783,25 @@ void VRSyncChangelist::broadcastSceneState(VRSyncNodePtr syncNode) {
     auto fullState = ChangeList::create();
     fullState->fillFromCurrentState();
     auto localChanges = filterChangeList(syncNode, fullState);
-    //broadcastChangeList(syncNode, localChanges, true);
 
     string data = serialize(syncNode, localChanges);
     syncNode->broadcast(data); // send over websocket to remote
     syncNode->broadcast("changelistEnd|");
 }
 
+void VRSyncChangelist::sendSceneState(VRSyncNodePtr syncNode, string rID) {
+    auto remote = syncNode->getRemote(rID);
+    if (!remote) return;
+
+    VRConsoleWidget::get("Collaboration")->write( " Send scene state to"+rID+"\n");
+    auto fullState = ChangeList::create();
+    fullState->fillFromCurrentState();
+    auto localChanges = filterChangeList(syncNode, fullState);
+
+    string data = serialize(syncNode, localChanges);
+    remote->send(data);
+    remote->send("changelistEnd|");
+}
 
 
 

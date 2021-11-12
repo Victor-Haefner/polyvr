@@ -3,8 +3,14 @@
   <Objects>
     <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" visible="1">
       <Object ambient="0.3 0.3 0.3 1" base_name="Headlight" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" shadowVolume="1e+06 1e+06 1e+06 -1e+06 -1e+06 -1e+06 1" specular="0.1 0.1 0.1 1" type="Light" visible="1">
-        <Object accept_root="1" aspect="1" at="0 0 2" at_dir="0" base_name="Default" far="250" fov="1.0472" from="1.9847 0.491631 10.8731" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
+        <Object accept_root="1" aspect="1" at="0 0 2" at_dir="0" base_name="Default" far="100" fov="1.0472" from="0.459751 1.34175 7.71053" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
+          <attachments>
+            <Node base_name="transform" name_space="VRAttachment" name_suffix="0" persistency="666" value=""/>
+          </attachments>
           <Object at="0 0 -1" at_dir="0" base_name="Headlight_beacon" from="0 0 0" light="Headlight" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" up="0 1 0" visible="1">
+            <attachments>
+              <Node base_name="transform" name_space="VRAttachment" name_suffix="0" persistency="666" value=""/>
+            </attachments>
             <constraint persistency="666"/>
           </Object>
           <constraint persistency="666"/>
@@ -15,6 +21,196 @@
   <Cameras activeCam="Default" persistency="666"/>
   <Rendering deferred_rendering="0" fogColor="0.5 0.5 0.5 1" fogParams="0 0 100 0.1" frustum_culling="1" fxaa="0" hmdd="0" marker="0" occlusion_culling="0" persistency="666" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
   <Scripts persistency="666">
+    <Script base_name="Script" group="debug" name_space="__script__" name_suffix="1" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+
+	VR.ae.setBillboard(1)
+	return
+	
+	m = VR.ae.getMaterial()
+	
+	m.setVertexProgram('vs')	
+	m.setGeometryProgram('gs')	
+	
+	#fs = m.getGeometryShader()
+	#print fs
+</core>
+    </Script>
+    <Script base_name="comPM" group="debug" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR, math
+
+	cam = VR.getActiveCamera()
+	view = VR.getSetup().getView(4)
+	
+	n = cam.getNear()*2
+	f = cam.getFar()
+	a = cam.getFov()
+	vx = view.getSize()[0]
+	vy = view.getSize()[1]
+	va = float(vx)/vy
+	ct = math.tan(a*0.5)
+	
+	x = ct*n * va
+	y = ct*n
+
+	#print n,f,a
+	#print vx, vy, va
+	print n,f,x,y
+	
+	
+	dx = x + x
+	dy = y + y
+	dz = f - n
+
+	m = [
+         n / x, 0, 0, 0,
+         0, n / y, 0, 0,
+         0, 0, -(f + n) / dz, -1,
+         0, 0, -(f * n*2) / dz, 0
+	]
+	
+	print m
+	
+	# ---
+	"""
+	n/x = n/(ct*n*va) = 1/ct/va
+	n/y = n/(ct*n) = 1/ct
+			
+		
+	"""
+	
+	
+	# -----
+	
+	m = [
+         2*n / w, 0, 0, 0,
+         0, 2*n / h, 0, 0,
+         0, 0, -(f + n) / dz, -1,
+         0, 0, -(f * n*2) / dz, 0
+	]
+</core>
+    </Script>
+    <Script base_name="gs" group="debug" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="GLSL">
+      <core>
+#version 150
+#extension GL_EXT_geometry_shader4 : enable
+layout (points) in;
+layout (triangle_strip, max_vertices=60) out;
+
+uniform float doBillboard;
+uniform float screen_size;
+uniform vec3 orientationDir;
+uniform vec3 orientationUp;
+uniform float size;
+uniform float texPadding;
+uniform float charTexSize;
+uniform vec2 OSGViewportSize;
+
+in vec4 vertex[];
+in vec3 normal[];
+in mat4 MVP[];
+in mat4 P[];
+out vec2 texCoord;
+out vec4 geomPos;
+out vec3 geomNorm;
+
+vec3 orientationX;
+
+vec4 transform(in float x, in float y) { 
+	vec3 p = -orientationX*x + orientationUp*y;
+	return vec4(p, 0);
+} 
+
+void emitVertex(in vec4 p, in vec2 tc, in vec4 v) { 
+	gl_Position = p;
+	texCoord = tc;
+	geomPos = v;
+	geomNorm = vec3(0,0,1);
+	EmitVertex();
+} 
+
+void emitQuad(in float offset, in vec4 tc) { 
+	float sx = 0.5*size;
+	float sy = size;
+	float ox = 2*sx*offset;
+	vec4 p1;
+	vec4 p2;
+	vec4 p3;
+	vec4 p4;
+	vec4 v1;
+	vec4 v2;
+	vec4 v3;
+	vec4 v4;
+	
+ 	vec4 p = gl_PositionIn[0];
+	if (screen_size &gt; 0.5) { p.xyz = p.xyz/p.w; p.w = 1; } 
+	if (doBillboard &lt; 0.5) { 
+		p1 = p+MVP[0]*transform(-sx+ox,-sy);
+		p2 = p+MVP[0]*transform(-sx+ox, sy);
+		p3 = p+MVP[0]*transform( sx+ox, sy);
+		p4 = p+MVP[0]*transform( sx+ox,-sy);
+	} else { 
+		mat4 M = P[0]; // this is enough for desktop, but not for cave
+		vec2 vs = OSGViewportSize;
+		float a = vs.y/vs.x;
+		// TODO: pass k as uniform parameter and use the camera fov instead of 1.05!
+		float k = 1.0/tan(1.05*0.5); // M[1][1]; // 1.0/tan(cam.fov*0.5);
+		mat2 m = mat2(
+			k*a, 0.0,
+			0.0, k
+		);
+		M = mat4(m);
+		
+		p1 = p+M*transform(-sx+ox,-sy);
+		p2 = p+M*transform(-sx+ox, sy);
+		p3 = p+M*transform( sx+ox, sy);
+		p4 = p+M*transform( sx+ox,-sy);
+		v1 = vertex[0]+M*transform(-sx+ox,-sy);
+		v2 = vertex[0]+M*transform(-sx+ox, sy);
+		v3 = vertex[0]+M*transform( sx+ox, sy);
+		v4 = vertex[0]+M*transform( sx+ox,-sy);
+	} 
+	
+	emitVertex(p1, vec2(tc[0], tc[2]), v1);
+	emitVertex(p2, vec2(tc[0], tc[3]), v2);
+	emitVertex(p3, vec2(tc[1], tc[3]), v3);
+	EndPrimitive();
+	emitVertex(p1, vec2(tc[0], tc[2]), v1);
+	emitVertex(p3, vec2(tc[1], tc[3]), v3);
+	emitVertex(p4, vec2(tc[1], tc[2]), v4);
+	EndPrimitive();
+} 
+ 
+void emitChar(in int d, in float p) { 
+	float padding = texPadding;
+	float f = charTexSize;
+	d -= 1;
+	if (d &gt;= 0) emitQuad(p, vec4(padding+d*f, padding+(d+1)*f, 0, 1));
+} 
+
+void emitString(in float str, in float offset) { 
+	int stri = int(str);
+	int c0 = stri;
+	int c1 = c0/256;
+	int c2 = c1/256;
+	c0 = c0%256;
+	c1 = c1%256;
+	c2 = c2%256;
+	if (c0 &gt; 0) emitChar(c0, 3*offset);
+	if (c1 &gt; 0) emitChar(c1, 3*offset + 1);
+	if (c2 &gt; 0) emitChar(c2, 3*offset + 2);
+} 
+
+void main() { 
+	orientationX = cross(orientationDir, orientationUp);
+	float str = normal[0][0];
+	float offset = normal[0][2];
+	if (offset &gt;= 0) emitString(str, offset);
+}
+</core>
+    </Script>
     <Script base_name="init" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	import VR
@@ -37,10 +233,12 @@
 	from math import pi, cos, sin
 	from random import shuffle
 	
+	
 	# offset
 	if not hasattr(VR, 'offset'): VR.offset = 0
 	VR.offset += 0.01
 	if VR.offset &gt; 2*pi: VR.offset = 0
+	#VR.offset = 0
 	
 	# numbers
 	N = 120
@@ -55,11 +253,37 @@
 	#text	 
 	e = VR.ae
 	txt = 'This is a strange example'.split(' ')
-	shuffle(txt)
+	#shuffle(txt)
 	for i,t in enumerate(txt):
 		e.set(i, [-1,1-i*0.5,i*0.3*cos(VR.offset*10)], t)
 </core>
       <trig type="on_timeout" dev="" state="Pressed" param="17" key="0" base_name="trigger" name_space="__global__" name_suffix="1" persistency="666"/>
+    </Script>
+    <Script base_name="vs" group="debug" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="GLSL">
+      <core>
+#version 120
+varying vec4 vertex; 
+varying vec3 normal; 
+varying mat4 MVP; 
+varying mat4 P; 
+varying vec2 texCoord; 
+attribute vec4 osg_Vertex; 
+attribute vec4 osg_Normal; 
+void main( void ) { 
+	vertex = osg_Vertex; 
+	gl_Position = gl_ModelViewProjectionMatrix*osg_Vertex; 
+	normal = osg_Normal.xyz; 
+	MVP = gl_ModelViewProjectionMatrix; 
+	P = gl_ProjectionMatrix;
+	/*float xL = P[0].xyz.length();
+	float yL = P[0].xyz.length();
+	float zL = P[0].xyz.length();
+	P[0].xyz = vec3(xL,0,0);
+	P[1].xyz = vec3(0,yL,0);
+	P[2].xyz = vec3(0,0,zL);*/
+	texCoord = vec2(0,0); 
+}
+</core>
     </Script>
   </Scripts>
   <Sockets persistency="666"/>

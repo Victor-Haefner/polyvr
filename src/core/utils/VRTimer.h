@@ -3,6 +3,7 @@
 
 #include <map>
 #include <string>
+#include "core/utils/VRUtilsFwd.h"
 
 class VRTimer {
     private:
@@ -17,6 +18,8 @@ class VRTimer {
 
     public:
         VRTimer();
+        static VRTimerPtr create();
+
         void start();
         double stop();
         void reset();

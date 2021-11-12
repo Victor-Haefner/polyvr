@@ -1,5 +1,6 @@
 #include "VRElectricDevice.h"
 #include "core/utils/VRFunction.h"
+#include "core/setup/devices/VRDevice.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -21,9 +22,9 @@ void VRElectricDevice::turnOff() {
 
 void VRElectricDevice::toggle(VRDevicePtr dev) {
     if (dev != 0 && EDev != 0) {
-        VRIntersection ins = dev->intersect(EDev);
-        if (!ins.hit) return;
-        auto obj = ins.object.lock();
+        auto ins = dev->intersect(EDev);
+        if (!ins->hit) return;
+        auto obj = ins->object.lock();
         if ( obj == 0 ) return;
         if ( EDev->find(obj) == 0 ) return;
     }

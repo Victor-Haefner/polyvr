@@ -2,29 +2,17 @@
 #define VRINTERSECT_H_INCLUDED
 
 #include <OpenSG/OSGConfig.h>
-#include "core/math/OSGMathFwd.h"
 #include <OpenSG/OSGLine.h>
-#include <OpenSG/OSGIntersectAction.h>
 #include <vector>
 #include <map>
 
+#include "core/math/OSGMathFwd.h"
 #include "core/objects/VRObjectFwd.h"
 #include "core/utils/VRDeviceFwd.h"
 #include "core/utils/VRFunctionFwd.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
-
-class VRIntersectAction : public IntersectAction {
-    private:
-        bool doSkipVolumes = false;
-
-    public:
-        VRIntersectAction() {}
-
-        void setSkipVolumes(bool b) { doSkipVolumes = b; }
-        bool skipVolume() { return doSkipVolumes; }
-};
 
 struct VRIntersection {
     Line ray;
@@ -43,12 +31,14 @@ struct VRIntersection {
     VRObjectPtr getIntersected();
     Pnt3d getIntersection();
     Line getRay();
+
+    static VRIntersectionPtr create();
 };
 
 class VRIntersect {
     private:
-        map<VRObject*, VRIntersection> intersections;
-        VRIntersection lastIntersection;
+        map<VRObject*, VRIntersectionPtr> intersections;
+        VRIntersectionPtr lastIntersection;
 
         bool dnd = true;//drag n drop
         bool showHit = false;//show where the hitpoint lies
@@ -69,7 +59,7 @@ class VRIntersect {
         map< int, map<VRObject*, VRObjectWeakPtr> > dynTrees;
 
         void initIntersect(VRDevicePtr dev);
-        VRIntersection intersectRay(VRObjectWeakPtr tree, Line ray, bool skipVols = false);
+        VRIntersectionPtr intersectRay(VRObjectWeakPtr tree, Line ray, bool skipVols = false);
 
         virtual void dragCB(VRTransformWeakPtr caster, VRObjectWeakPtr tree, VRDeviceWeakPtr dev = VRDevicePtr(0));
 
@@ -77,8 +67,8 @@ class VRIntersect {
         VRIntersect();
         ~VRIntersect();
 
-        VRIntersection intersect(VRObjectWeakPtr wtree, bool force = false, VRTransformPtr caster = 0, Vec3d dir = Vec3d(0,0,-1), bool skipVols = false);
-        void drag(VRIntersection i, VRTransformWeakPtr caster);
+        VRIntersectionPtr intersect(VRObjectWeakPtr wtree, bool force = false, VRTransformPtr caster = 0, Vec3d dir = Vec3d(0,0,-1), bool skipVols = false);
+        void drag(VRIntersectionPtr i, VRTransformWeakPtr caster);
         void drop(VRDeviceWeakPtr dev = VRDevicePtr(0), VRTransformWeakPtr beacon = VRTransformPtr(0));
         VRDeviceCbPtr addDrag(VRTransformWeakPtr caster, VRObjectWeakPtr tree);
         VRDeviceCbPtr addDrag(VRTransformWeakPtr caster);
@@ -97,7 +87,7 @@ class VRIntersect {
         VRSignalPtr getDropSignal();
         VRTransformPtr getDraggedObject(VRTransformPtr beacon = 0);
         VRTransformPtr getDraggedGhost();
-        VRIntersection getLastIntersection();
+        VRIntersectionPtr getLastIntersection();
 };
 
 OSG_END_NAMESPACE;

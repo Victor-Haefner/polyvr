@@ -331,6 +331,8 @@
 		<Unit filename="src/addons/Character/VRCharacter.cpp" />
 		<Unit filename="src/addons/Character/VRCharacter.h" />
 		<Unit filename="src/addons/Character/VRCharacterFwd.h" />
+		<Unit filename="src/addons/Character/VRHumanoid.cpp" />
+		<Unit filename="src/addons/Character/VRHumanoid.h" />
 		<Unit filename="src/addons/Character/VRPyCharacter.cpp" />
 		<Unit filename="src/addons/Character/VRPyCharacter.h" />
 		<Unit filename="src/addons/Character/VRSkeleton.cpp" />
@@ -413,8 +415,6 @@
 		<Unit filename="src/addons/Engineering/VRProfile.h" />
 		<Unit filename="src/addons/Engineering/VRPyEngineering.cpp" />
 		<Unit filename="src/addons/Engineering/VRPyEngineering.h" />
-		<Unit filename="src/addons/Engineering/VRPyNumberingEngine.h" />
-		<Unit filename="src/addons/Engineering/VRPyRobotArm.h" />
 		<Unit filename="src/addons/Engineering/VRRobotArm.cpp" />
 		<Unit filename="src/addons/Engineering/VRRobotArm.h" />
 		<Unit filename="src/addons/LeapMotion/VRHandGeo.cpp" />
@@ -606,55 +606,12 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/core/gui/glarea/glarea.h" />
+		<Unit filename="src/core/gui/glarea/glareaCommon.h" />
+		<Unit filename="src/core/gui/glarea/glareaLinux.h" />
 		<Unit filename="src/core/gui/glarea/glgdk.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/core/gui/glarea/glgdk.h" />
-		<Unit filename="src/core/gui/gtkglext/gdk/gdkgl.h" />
-		<Unit filename="src/core/gui/gtkglext/gdk/gdkglconfig.h" />
-		<Unit filename="src/core/gui/gtkglext/gdk/gdkglconfigimpl.h" />
-		<Unit filename="src/core/gui/gtkglext/gdk/gdkglcontext.h" />
-		<Unit filename="src/core/gui/gtkglext/gdk/gdkglcontextimpl.h" />
-		<Unit filename="src/core/gui/gtkglext/gdk/gdkgldebug.h" />
-		<Unit filename="src/core/gui/gtkglext/gdk/gdkgldefs.h" />
-		<Unit filename="src/core/gui/gtkglext/gdk/gdkgldrawable.h" />
-		<Unit filename="src/core/gui/gtkglext/gdk/gdkglextcontext.h" />
-		<Unit filename="src/core/gui/gtkglext/gdk/gdkglextcontextimpl.h" />
-		<Unit filename="src/core/gui/gtkglext/gdk/gdkglinit.h" />
-		<Unit filename="src/core/gui/gtkglext/gdk/gdkglprivate.h" />
-		<Unit filename="src/core/gui/gtkglext/gdk/gdkglquery.h" />
-		<Unit filename="src/core/gui/gtkglext/gdk/gdkgltokens.h" />
-		<Unit filename="src/core/gui/gtkglext/gdk/gdkgltypes.h" />
-		<Unit filename="src/core/gui/gtkglext/gdk/gdkglwindow.h" />
-		<Unit filename="src/core/gui/gtkglext/gdk/gdkglwindowimpl.h" />
-		<Unit filename="src/core/gui/gtkglext/gdk/win32/gdkglconfig-win32.h" />
-		<Unit filename="src/core/gui/gtkglext/gdk/win32/gdkglcontext-win32.h" />
-		<Unit filename="src/core/gui/gtkglext/gdk/win32/gdkglprivate-win32.h" />
-		<Unit filename="src/core/gui/gtkglext/gdk/win32/gdkglquery-win32.h" />
-		<Unit filename="src/core/gui/gtkglext/gdk/win32/gdkglwin32.h" />
-		<Unit filename="src/core/gui/gtkglext/gdk/win32/gdkglwindow-win32.h" />
-		<Unit filename="src/core/gui/gtkglext/gdk/win32/gdkwin32glconfig.h" />
-		<Unit filename="src/core/gui/gtkglext/gdk/win32/gdkwin32glcontext.h" />
-		<Unit filename="src/core/gui/gtkglext/gdk/win32/gdkwin32glquery.h" />
-		<Unit filename="src/core/gui/gtkglext/gdk/win32/gdkwin32glwindow.h" />
-		<Unit filename="src/core/gui/gtkglext/gdk/x11/gdkglconfig-x11.h" />
-		<Unit filename="src/core/gui/gtkglext/gdk/x11/gdkglcontext-x11.h" />
-		<Unit filename="src/core/gui/gtkglext/gdk/x11/gdkglextcontext-x11.h" />
-		<Unit filename="src/core/gui/gtkglext/gdk/x11/gdkglprivate-x11.h" />
-		<Unit filename="src/core/gui/gtkglext/gdk/x11/gdkglquery-x11.h" />
-		<Unit filename="src/core/gui/gtkglext/gdk/x11/gdkglwindow-x11.h" />
-		<Unit filename="src/core/gui/gtkglext/gdk/x11/gdkglx.h" />
-		<Unit filename="src/core/gui/gtkglext/gdk/x11/gdkx11glconfig.h" />
-		<Unit filename="src/core/gui/gtkglext/gdk/x11/gdkx11glcontext.h" />
-		<Unit filename="src/core/gui/gtkglext/gdk/x11/gdkx11glextcontext.h" />
-		<Unit filename="src/core/gui/gtkglext/gdk/x11/gdkx11glquery.h" />
-		<Unit filename="src/core/gui/gtkglext/gdk/x11/gdkx11glwindow.h" />
-		<Unit filename="src/core/gui/gtkglext/gtk/gtkgl.h" />
-		<Unit filename="src/core/gui/gtkglext/gtk/gtkgldebug.h" />
-		<Unit filename="src/core/gui/gtkglext/gtk/gtkgldefs.h" />
-		<Unit filename="src/core/gui/gtkglext/gtk/gtkglinit.h" />
-		<Unit filename="src/core/gui/gtkglext/gtk/gtkglprivate.h" />
-		<Unit filename="src/core/gui/gtkglext/gtk/gtkglwidget.h" />
 		<Unit filename="src/core/gui/gtksourceview/GtkSource.metadata.in" />
 		<Unit filename="src/core/gui/gtksourceview/completion-providers/words/gtksourcecompletionwords.c">
 			<Option compilerVar="CC" />
@@ -676,10 +633,7 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/core/gui/gtksourceview/completion-providers/words/gtksourcecompletionwordsutils.h" />
-		<Unit filename="src/core/gui/gtksourceview/config.h" />
 		<Unit filename="src/core/gui/gtksourceview/gconstructor.h" />
-		<Unit filename="src/core/gui/gtksourceview/gtksource-enumtypes.h" />
-		<Unit filename="src/core/gui/gtksourceview/gtksource-marshal.h" />
 		<Unit filename="src/core/gui/gtksourceview/gtksource.h" />
 		<Unit filename="src/core/gui/gtksourceview/gtksourceautocleanups.h" />
 		<Unit filename="src/core/gui/gtksourceview/gtksourcebuffer-private.h" />
@@ -704,7 +658,6 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/core/gui/gtksourceview/gtksourcecompletion.h" />
-		<Unit filename="src/core/gui/gtksourceview/gtksourcecompletion.ui" />
 		<Unit filename="src/core/gui/gtksourceview/gtksourcecompletioncontainer.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -733,7 +686,6 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/core/gui/gtksourceview/gtksourcecompletionprovider.h" />
-		<Unit filename="src/core/gui/gtksourceview/gtksourcecompletionutils.h" />
 		<Unit filename="src/core/gui/gtksourceview/gtksourcecontextengine.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -785,7 +737,6 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/core/gui/gtksourceview/gtksourcegutterrenderertext.h" />
-		<Unit filename="src/core/gui/gtksourceview/gtksourceinit.h" />
 		<Unit filename="src/core/gui/gtksourceview/gtksourceiter.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -821,7 +772,6 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/core/gui/gtksourceview/gtksourcemarkssequence.h" />
-		<Unit filename="src/core/gui/gtksourceview/gtksourcemarshalers.list" />
 		<Unit filename="src/core/gui/gtksourceview/gtksourcepixbufhelper.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -890,7 +840,6 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/core/gui/gtksourceview/gtksourceundomanagerdefault.h" />
-		<Unit filename="src/core/gui/gtksourceview/gtksourceutils-private.h" />
 		<Unit filename="src/core/gui/gtksourceview/gtksourceutils.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -904,7 +853,6 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/core/gui/gtksourceview/gtksourceview-enumtypes.h" />
-		<Unit filename="src/core/gui/gtksourceview/gtksourceview-gresources.h" />
 		<Unit filename="src/core/gui/gtksourceview/gtksourceview-i18n.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -912,7 +860,6 @@
 		<Unit filename="src/core/gui/gtksourceview/gtksourceview-init.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/core/gui/gtksourceview/gtksourceview-marshal.h" />
 		<Unit filename="src/core/gui/gtksourceview/gtksourceview-typebuiltins.h" />
 		<Unit filename="src/core/gui/gtksourceview/gtksourceview-utils.c">
 			<Option compilerVar="CC" />
@@ -923,7 +870,6 @@
 		</Unit>
 		<Unit filename="src/core/gui/gtksourceview/gtksourceview.gresource.xml" />
 		<Unit filename="src/core/gui/gtksourceview/gtksourceview.h" />
-		<Unit filename="src/core/gui/gtksourceview/gtktextregion.h" />
 		<Unit filename="src/core/gui/widgets/VRAppLauncher.cpp" />
 		<Unit filename="src/core/gui/widgets/VRAppLauncher.h" />
 		<Unit filename="src/core/gui/widgets/VRAppPanel.cpp" />
@@ -1019,7 +965,6 @@
 		<Unit filename="src/core/networking/VROPCUAclient.cpp" />
 		<Unit filename="src/core/networking/VROPCUAclient.h" />
 		<Unit filename="src/core/networking/VROPCUAvariant.cpp" />
-		<Unit filename="src/core/networking/VROPCUAvariant.h" />
 		<Unit filename="src/core/networking/VRPing.cpp" />
 		<Unit filename="src/core/networking/VRPing.h" />
 		<Unit filename="src/core/networking/VRProtocol.cpp" />
@@ -1444,6 +1389,7 @@
 		<Unit filename="src/core/setup/devices/VRHaptic.h" />
 		<Unit filename="src/core/setup/devices/VRIntersect.cpp" />
 		<Unit filename="src/core/setup/devices/VRIntersect.h" />
+		<Unit filename="src/core/setup/devices/VRIntersectAction.h" />
 		<Unit filename="src/core/setup/devices/VRKeyboard.cpp" />
 		<Unit filename="src/core/setup/devices/VRKeyboard.h" />
 		<Unit filename="src/core/setup/devices/VRMouse.cpp" />
@@ -1594,7 +1540,6 @@
 		<Unit filename="src/core/utils/system/VRSystem.h" />
 		<Unit filename="src/core/utils/toString.cpp" />
 		<Unit filename="src/core/utils/toString.h" />
-		<Unit filename="src/core/utils/toStringBis.h" />
 		<Unit filename="src/core/utils/xml.cpp" />
 		<Unit filename="src/core/utils/xml.h" />
 		<Unit filename="src/core/utils/zipper/defs.h" />

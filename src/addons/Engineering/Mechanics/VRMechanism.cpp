@@ -2,6 +2,7 @@
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/geometry/VRPrimitive.h"
 #include "core/objects/geometry/VRGeoData.h"
+#include "core/objects/geometry/VRGeometry.h"
 #include "core/math/partitioning/boundingbox.h"
 #include "core/utils/VRGlobals.h"
 #include "core/utils/toString.h"

@@ -35,10 +35,10 @@ VRConsoleWidget::VRConsoleWidget() {
     setToolButtonCallback("toolbutton25", bind(&VRConsoleWidget::forward, this));
     setToolButtonCallback("pause_terminal", bind(&VRConsoleWidget::pause, this));
 
-    addStyle( "console91", "#ff3311", "#ffffff", false, false, false );
-    addStyle( "console92", "#11ff33", "#ffffff", false, false, false );
-    addStyle( "console93", "#aa8811", "#ffffff", false, false, false );
-    addStyle( "console94", "#1133ff", "#ffffff", false, false, false );
+    addStyle( "console91", "#ff3311", "#ffffff", false, false, false, true );
+    addStyle( "console92", "#11ff33", "#ffffff", false, false, false, true );
+    addStyle( "console93", "#aa8811", "#ffffff", false, false, false, true );
+    addStyle( "console94", "#1133ff", "#ffffff", false, false, false, true );
 }
 
 VRConsoleWidget::~VRConsoleWidget() {}
@@ -112,11 +112,11 @@ void VRConsoleWidget::resetColor() {
     gtk_widget_modify_fg((GtkWidget*)label, GTK_STATE_NORMAL , 0 );
 }
 
-void VRConsoleWidget::addStyle( string style, string fg, string bg, bool italic, bool bold, bool underlined ) {
+void VRConsoleWidget::addStyle( string style, string fg, string bg, bool italic, bool bold, bool underlined, bool editable ) {
     GtkTextTag* tag = gtk_text_buffer_create_tag(buffer, NULL, NULL);
     function<bool(GObject*, GdkEvent*, GtkTextIter*)> sig = bind(&VRConsoleWidget::on_link_activate, this, placeholders::_1, placeholders::_2, placeholders::_3);
     connect_signal((GtkWidget*)tag, sig, "event");
-    g_object_set(tag, "editable", false, NULL);
+    g_object_set(tag, "editable", editable, NULL);
     g_object_set(tag, "foreground", fg.c_str(), NULL);
     g_object_set(tag, "background", bg.c_str(), NULL);
     if (underlined) g_object_set(tag, "underline", PANGO_UNDERLINE_SINGLE, NULL);

@@ -59,6 +59,7 @@ class VRSkeleton : public VRGeometry {
         void addTarget(string name, PosePtr p);
 
         PosePtr getTarget(string name);
+        int getJointID(string name);
         vector<Bone> getBones();
 
         void clear();

@@ -1,11 +1,5 @@
 #include "VRPyTextureGenerator.h"
-#include "VRPyGeometry.h"
-#include "VRPyDevice.h"
 #include "VRPyBaseT.h"
-#include "VRPyImage.h"
-#include "VRPyPath.h"
-
-#include "core/math/path.h"
 
 using namespace OSG;
 

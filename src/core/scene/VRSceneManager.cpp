@@ -284,6 +284,7 @@ void VRSceneManager::updateScene() {
 void VRSceneManager::setTargetFPS(double fps) { targetFPS = fps;  }
 
 void VRSceneManager::update() {
+    //cout << endl;
 #ifndef WASM
     VRProfiler* profiler = 0;
 #endif
@@ -307,7 +308,8 @@ void VRSceneManager::update() {
 #endif
         VRTimer t1; t1.start();
 #ifndef WITHOUT_GTK
-        VRGuiManager::get()->updateGtk(); // update GUI
+        VRSetup::getCurrent()->updateGtkDevices();
+        //VRGuiManager::get()->updateGtk();
 #endif
         VRGlobals::GTK1_FRAME_RATE.update(t1);
         VRGlobals::UPDATE_LOOP1.update(timer);
@@ -409,7 +411,7 @@ void VRSceneManager::update() {
 
     setupProfiling();
     doGTKUpdate();
-    doCallbacks();
+    doCallbacks(); // Warning, CEF may call g_main_context_iteration
     doSetupUpdate();
     doSceneUpdate();
     doRender();

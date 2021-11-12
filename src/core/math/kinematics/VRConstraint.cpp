@@ -123,6 +123,7 @@ void VRConstraint::apply(VRTransformPtr obj, VRObjectPtr parent, bool force) {
     if (obj->getPhysics()->isPhysicalized()) return;
 #endif
 
+    // TODO: this may be wrong! it could happen that the constraint needs to be reapplied in the same frame!
     auto now = VRGlobals::CURRENT_FRAME;
     if (apply_time_stamp == now && !force) return;
     apply_time_stamp = now;
@@ -170,6 +171,8 @@ void VRConstraint::apply(VRTransformPtr obj, VRObjectPtr parent, bool force) {
     J.multLeft(refMatrixA);
     J.mult(refMatrixBI);
     obj->setMatrixTo(J, parent);
+
+    cout << VRGlobals::CURRENT_FRAME << "  VRConstraint::apply " << obj->getName() << " " << obj->getWorldPosition()[1] << endl;
 }
 
 

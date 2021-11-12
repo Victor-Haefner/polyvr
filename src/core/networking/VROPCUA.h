@@ -69,8 +69,6 @@ class VROPCUANode : public std::enable_shared_from_this<VROPCUANode> {
         bool isSubscribed();
         void updateValue(string val);
 
-        string test();
-
         static string typeToString(uint8_t v);
 };
 
@@ -99,7 +97,7 @@ class VROPCUA : public std::enable_shared_from_this<VROPCUA> {
         static VROPCUAPtr create();
         VROPCUAPtr ptr();
 
-        VROPCUANodePtr connect(string address);
+        VROPCUANodePtr connect(string address, int subPeriod = 100);
 
         shared_ptr<SubClient> getSubscriptionClient();
         shared_ptr<OpcUa::Subscription> getSubscription();

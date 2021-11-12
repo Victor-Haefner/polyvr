@@ -43,6 +43,8 @@ class VRHeadMountedDisplay : public std::enable_shared_from_this<VRHeadMountedDi
 
 		vector<vr::TrackedDevicePose_t> m_rTrackedDevicePose;
 		vector<Matrix4d> m_rmat4DevicePose;
+		VRDevicePtr hmd;
+		map<int, VRTransformPtr> tracker;
 		map<int, VRDevicePtr> devices;
 
 		int m_iValidPoseCount = 0;
@@ -81,10 +83,13 @@ class VRHeadMountedDisplay : public std::enable_shared_from_this<VRHeadMountedDi
 		VRHeadMountedDisplayPtr ptr();
 
 		static bool checkDeviceAttached();
-
 		void initHMD();
-
 		void render(bool fromThread = false);
+
+		VRTransformPtr getTracker(int tID);
+		VRDevicePtr getDevice(int dID);
+		map<int, VRTransformPtr> getTrackers();
+		map<int, VRDevicePtr> getDevices();
 };
 
 OSG_END_NAMESPACE;

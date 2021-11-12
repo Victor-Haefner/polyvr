@@ -15,6 +15,7 @@
 #include "core/objects/geometry/VRSky.h"
 #include "core/setup/VRSetup.h"
 #include "core/setup/windows/VRGtkWindow.h"
+#include "core/setup/windows/VRView.h"
 #include "core/scene/VRScene.h"
 #include "core/scene/rendering/VRDefShading.h"
 #include "core/math/partitioning/boundingbox.h"
@@ -36,13 +37,25 @@
 
 #include <OpenSG/OSGPassiveWindow.h>
 #include <OpenSG/OSGViewport.h>
+#include <OpenSG/OSGPassiveViewport.h>
 #include <OpenSG/OSGFBOViewport.h>
 #include <OpenSG/OSGRenderAction.h>
 #include <OpenSG/OSGSolidBackground.h>
+#include <OpenSG/OSGTreeBuilderBase.h>
 
 #include "core/utils/VRMutex.h"
 
 #define GLSL(shader) #shader
+
+#define CHECK_GL_ERROR(msg) \
+{ \
+    GLenum err = glGetError(); \
+    if (err != GL_NO_ERROR) { \
+        static int i=0; i++; \
+        if (i <= 9) printf(" gl error on %s: %s\n", msg, gluErrorString(err)); \
+        if (i == 9) printf("  ..ignoring further errors\n"); \
+    } \
+}
 
 using namespace OSG;
 
@@ -284,13 +297,145 @@ void VRTextureRenderer::setMaterialSubstitutes(map<VRMaterial*, VRMaterialPtr> s
     substitutes[c] = s;
 }
 
-VRTexturePtr VRTextureRenderer::renderOnce(CHANNEL c) {
-    if (!cam) return 0;
+class MyFrameBufferObject : public FrameBufferObject {
+    public:
 
+    void myactivate(DrawEnv *pEnv, GLenum   eDrawBuffer) {
+        Window *win = pEnv->getWindow();
+        UInt32 glId = getGLId();
+        win->validateGLObject(getGLId(), pEnv);
+
+        if(_sfEnableMultiSample.getValue()                      == true &&
+            win->hasExtOrVersion(_uiFramebufferBlitExt, 0x0300) == true   ) {
+                win->validateGLObject(getMultiSampleGLId(), pEnv);
+                glId = getMultiSampleGLId();
+                glEnable(GL_MULTISAMPLE);
+        }
+
+        OSGGETGLFUNCBYID_GL3_ES( glBindFramebuffer, osgGlBindFramebuffer, _uiFuncBindFramebuffer, win);
+        osgGlBindFramebuffer(GL_FRAMEBUFFER, win->getGLObjectId(glId));
+        pEnv->setActiveFBO(glId);
+    }
+};
+
+class OpenRenderPartition : public RenderPartition {
+    public:
+        void setupMyExecution() {
+            auto target = (MyFrameBufferObject*)_pRenderTarget;
+            target->myactivate(&_oDrawEnv, _eDrawBuffer);
+
+            glPushAttrib(GL_VIEWPORT_BIT | GL_SCISSOR_BIT);
+            glViewport(_oDrawEnv.getPixelLeft  (), _oDrawEnv.getPixelBottom(), _oDrawEnv.getPixelWidth (), _oDrawEnv.getPixelHeight());
+
+            glMatrixMode (GL_PROJECTION);
+            glPushMatrix();
+            glLoadMatrixf(_oDrawEnv._openGLState.getProjection().getValues());
+            glMatrixMode(GL_MODELVIEW);
+
+            _pBackground->clear(&_oDrawEnv);
+        }
+
+        void doMyExecution(bool bRestoreViewport = false) {
+            BuildKeyMapIt      mapIt  = _mMatTrees.begin();
+            BuildKeyMapConstIt mapEnd = _mMatTrees.end  ();
+            while (mapIt != mapEnd) {
+                if (mapIt->second != NULL) mapIt->second->draw(_oDrawEnv, this);
+                ++mapIt;
+            }
+
+            _oDrawEnv.deactivateState();
+            if (!_bZWriteTrans) glDepthMask(false);
+
+            mapIt  = _mTransMatTrees.begin();
+            mapEnd = _mTransMatTrees.end  ();
+            while (mapIt != mapEnd) {
+                if (mapIt->second != NULL) mapIt->second->draw(_oDrawEnv, this);
+                ++mapIt;
+            }
+
+            if (!_bZWriteTrans) glDepthMask(true);
+
+            glMatrixMode (GL_PROJECTION);
+            glPopMatrix();
+            glMatrixMode(GL_MODELVIEW);
+
+            glPopAttrib();
+            _pRenderTarget->deactivate(&_oDrawEnv);
+            this->exit();
+        }
+
+        void myexecute(void) {
+            setupMyExecution();
+            doMyExecution();
+        }
+};
+
+class OpenRenderAction : public RenderAction {
+    public:
+        Action::FunctorStore* getEnterFunctors() { return getDefaultEnterFunctors(); }
+        Action::FunctorStore* getLeaveFunctors() { return getDefaultEnterFunctors(); }
+
+        //Action::ResultE traverse(Node* const node) { return recurse(node); }
+
+        Action::ResultE callenter(NodeCore* const core) {
+            UInt32 uiFunctorIndex = core->getType().getId();
+            return _enterFunctors[uiFunctorIndex](core, this);
+        }
+
+        Action::ResultE traverse(Node* const node) {
+            NodeCore* core = node->getCore();
+
+            Action::ResultE result = Continue;
+
+            _actList   = NULL;
+            _actNode   = node;
+            _actParent = node;
+
+            _newList.clear();
+            _useNewList = false;
+
+            result = callenter(node->getCore());
+
+            _actNode   = node;
+            _actParent = node;
+
+            Node::MFChildrenType::const_iterator cIt = node->getMFChildren()->begin();
+            Node::MFChildrenType::const_iterator cEnd = node->getMFChildren()->end  ();
+
+            for(; cIt != cEnd; ++cIt) {
+                result = recurse(*cIt);
+                if (result != Continue) break;
+            }
+
+            _actNode   = node;
+            _actParent = node;
+            result = callLeave(node->getCore());
+
+            _actNode   = node;
+            _actParent = node;
+            return Skip;
+        }
+
+        Action::ResultE mystop(ResultE res) {
+            Inherited::stop(res);
+            auto buf = _currentBuffer;
+            for (PtrDiffT i = _vRenderPartitions[buf].size() - 1; i > 0; --i) {
+                auto partI = (OpenRenderPartition*)_vRenderPartitions[buf][i];
+                partI->myexecute();
+            }
+            return Action::Continue;
+        }
+};
+
+VRTexturePtr VRTextureRenderer::renderOnce(CHANNEL c) { // TODO: not working!
+    if (!cam) return 0;
     bool deferred = VRScene::getCurrent()->getDefferedShading();
 
     if (!data->ract) {
         data->ract = RenderAction::create();
+        data->ract->setFrustumCulling(false);
+        data->ract->setOcclusionCulling(false);
+
 #ifndef WITHOUT_DEFERRED_RENDERING
         if (deferred) {
             GLUTWindowRecPtr gwin = GLUTWindow::create();
@@ -316,22 +461,46 @@ VRTexturePtr VRTextureRenderer::renderOnce(CHANNEL c) {
         } else
 #endif
         {
+
             data->win = PassiveWindow::create();
-            data->view = Viewport::create();
+            data->view = Viewport::create(); // PassiveViewport or FBOViewport ?
+
             data->view->setRoot(getNode()->node);
             data->view->setBackground(data->stage->getBackground());
         }
 
         data->win->addPort(data->view);
-        data->view->setSize(0, 0, 1, 1);
+        data->view->setSize(0.5, 0.5, 0.5, 0.5);
         data->view->setCamera(cam->getCam()->cam);
     }
 
     if (c != RENDER) setChannelSubstitutes(c);
-    data->win->render(data->ract);
-    if (deferred) { // hack, TODO: for some reason the fbo gets not updated the first render call..
-        data->win->render(data->ract);
-    }
+
+    setActive(true);
+    setReadback(true);
+
+    data->win->frameInit();
+    data->ract->setWindow(data->win);
+    data->ract->setTraversalRoot(getNode()->node);
+    data->ract->setTravMask     (data->view->getTravMask()  );
+    data->ract->setRenderProperties(0);
+
+    auto ract = (OpenRenderAction*)data->ract.get();
+    auto core = getNode()->node->getCore();
+    UInt32 uiFunctorIndex = core->getType().getId();
+
+    //data->ract->apply( getNode()->node );
+    ract->start();
+    auto res = ract->traverse(getNode()->node);
+    ract->mystop(res);
+    CHECK_GL_ERROR("renderOnce");
+
+    //data->win->render(data->ract);
+    //data->win->renderNoFinish(data->ract);
+    if (deferred) data->win->render(data->ract); // hack, TODO: for some reason the fbo gets not updated the first render call..
+    setReadback(false);
+    setActive(false);
+
     ImageMTRecPtr img = Image::create();
     img->set( data->fboTexImg );
     if (c != RENDER) resetChannelSubstitutes();

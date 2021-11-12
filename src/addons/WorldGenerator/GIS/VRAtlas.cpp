@@ -154,7 +154,7 @@ void VRAtlas::setCoords(Patch& pat) {
     } else {
         VRTexturePtr heightIMG = VRTexture::create();
         heightIMG->read(pathHeight);
-        pat.terrain->setMap( heightIMG, 3 );
+        pat.terrain->setMap( heightIMG, 0 );
     }*/
     /*if (!checkHeight && !checkOrthop) pat.terrain->setVisible(false);
     else pat.terrain->setVisible(true);
@@ -230,7 +230,6 @@ void VRAtlas::handleJobQueue() {
                 Vec2d terrainSize = Vec2d(edgeLength,edgeLength);
                 float scale = float(pow(2,allPatchesByID[sID].LODlvl));
                 auto terrain = VRTerrain::create(name);
-                terrain->deactivateVertexFlip();
                 terrain->setParameters (terrainSize, scale, 1);
                 allPatchesByID[sID].terrain = terrain;
                 atlas->addChild(terrain);
@@ -275,8 +274,12 @@ VRTerrainPtr VRAtlas::generateTerrain(string id, int lvl){
     float scale = float(pow(2,lvl));
     auto terrain = VRTerrain::create(name);
     terrain->setParameters (terrainSize, scale, 1);
+    terrain->setInvertY(0,1);
     terrain->paintHeights( pathOrtho, mixColor, mixAmount );
-    terrain->setMap( heightIMG, 3 );
+    terrain->setMap( heightIMG, 0 );
+    //terrain->setWorld( ptr() );
+    //terrain->setLODFactor(fac);
+    //terrain->setLit(isLit);
 
     return terrain;
 }

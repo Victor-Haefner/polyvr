@@ -32,6 +32,7 @@ namespace OSG {
 
         bool springed = false;
         Vec3d springAnchor;
+        double springForce = 0.5;
     };
 
     struct FABRIK::Chain {
@@ -104,9 +105,10 @@ void FABRIK::addChain(string name, vector<int> joints) {
 vector<string> FABRIK::getChains() { return chainOrder; }
 vector<int> FABRIK::getChainJoints(string name) { return chains[name].joints; }
 
-void FABRIK::addSpring(int j, Vec3d anchor) {
+void FABRIK::addSpring(int j, Vec3d anchor, double force) {
     joints[j].springed = true;
     joints[j].springAnchor = anchor;
+    joints[j].springForce = force;
 }
 
 
@@ -225,13 +227,13 @@ void FABRIK::applySpring(int j, float d) {
 
     // test spring force
     //if (j == 2) cout << " applySpring " << j << " -> " << J1.in[0] << ", " << J2.springed << " " << doSprings << endl;
-    if (J2.springed && doSprings) {
+    if (J2.springed) {
         auto pS = Pose::create(J2.springAnchor);
         pS = J2.p->multRight(pS);
 
         //Vec3d D = J1.p->pos() - J2.p->pos();
         //float ts = abs(D.length()/d - 1.0)*0.5;
-        float ts = 0.5;
+        float ts = J2.springForce;
 
         Vec3d p1 = J1.p->pos();
         Vec3d ps = pS->pos();
@@ -242,8 +244,8 @@ void FABRIK::applySpring(int j, float d) {
 
 void FABRIK::updateJointOrientation(int j) {
     Joint& J1 = joints[j];
-    if (J1.in.size() == 0) return;
-    Joint& J2 = joints[J1.in[0]]; // TODO: handle multiple in!
+    if (J1.in.size() < 1) return; // TODO: handle multiple in!
+    Joint& J2 = joints[J1.in[0]];
 
     // update joint direction
     Vec3d D = J1.p->pos() - J2.p->pos();
@@ -464,11 +466,12 @@ void FABRIK::visualize(VRGeometryPtr geo) {
 
     // joint orientation
     for (auto j : joints) {
+        double l = 0.1;
         data.pushVert(j.second.p->pos(), Vec3d(0,0,0), Color3f(1,1,0));
-        data.pushVert(j.second.p->pos()+j.second.p->up()*0.05, Vec3d(0,0,0), Color3f(1,1,0));
+        data.pushVert(j.second.p->pos()+j.second.p->up()*l, Vec3d(0,0,0), Color3f(1,1,0));
         data.pushLine();
         data.pushVert(j.second.p->pos(), Vec3d(0,0,0), Color3f(0,1,0));
-        data.pushVert(j.second.p->pos()+j.second.p->dir()*0.05, Vec3d(0,0,0), Color3f(0,1,0));
+        data.pushVert(j.second.p->pos()+j.second.p->dir()*l, Vec3d(0,0,0), Color3f(0,1,0));
         data.pushLine();
         //if (j.second.ID == 2) cout << "vis: " << j.second.p->dir() << ",   " << j.second.p->up() << endl;
     }

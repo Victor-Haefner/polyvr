@@ -9,7 +9,7 @@
           </attachments>
           <constraint persistency="666"/>
         </Object>
-        <Object accept_root="1" aspect="1" at="0.25 0.110732 0.034004" at_dir="0" base_name="Default" far="512" fov="1.0472" from="2.35272 1.9491 3.27266" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
+        <Object accept_root="1" aspect="1" at="0.0757408 1.2174 1.7248" at_dir="0" base_name="Default" far="512" fov="1.0472" from="4.36632 6.57028 4.78165" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
           <attachments>
             <Node base_name="transform" name_space="VRAttachment" name_suffix="0" persistency="666" value=""/>
           </attachments>
@@ -21,6 +21,191 @@
   <Cameras activeCam="Default" persistency="666"/>
   <Rendering deferred_rendering="0" fogColor="0.5 0.5 0.5 1" fogParams="0 0 100 0.1" frustum_culling="1" fxaa="0" hmdd="0" marker="0" occlusion_culling="0" persistency="666" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
   <Scripts persistency="666">
+    <Script base_name="clickCharacter" group="editor" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+	
+	#print VR.humanoid.getParameterString()
+
+	if dev.intersect():
+		i = dev.getIntersected()
+		if i.getName() == VR.humanoid.getName():
+			tcs = i.getTexCoords()
+			t = dev.getIntersectionTriangle()
+			rIDs = [ tcs[k][1] for k in t ]
+			rID = int(round((rIDs[0]+rIDs[1]+rIDs[2])/3.0))
+			
+			params = VR.humanoid.getRingParams(rID)
+			VR.sendEditor('setRing|'+str(rID)+'|'+str(params))
+			print i.getName(), rID, params
+</core>
+      <trig type="on_device" dev="mouse" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="4" persistency="666"/>
+    </Script>
+    <Script base_name="editorSite" group="editor" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="HTML">
+      <core>
+&lt;!DOCTYPE html&gt;
+ &lt;html&gt;
+
+ &lt;head&gt;
+ 	&lt;style type="text/css"&gt;
+ 		body {
+ 			font-size:4vh;
+ 			background-color: rgba(1,1,1,0);
+ 		}
+ 		
+ 		.colorChooser {
+ 			position: fixed;
+ 			display: flex;
+ 			justify-content: space-around;
+ 			width: 80vw;
+ 			background-color: rgba(200,200,200,255);
+ 		}
+ 		
+ 		.ringEditor {
+ 			position: fixed;
+ 			display: flex;
+ 			flex-direction: column;
+ 			align-items: center;
+ 			justify-content: space-around;
+ 			width: 80vw;
+ 			background-color: rgba(200,200,200,255);
+ 		}
+ 		
+ 		.colorField {
+ 			font-size:4vh;
+ 			width: 15vw;
+ 			height: 100%;
+ 			background-color: rgba(255,255,255,255);
+ 		}
+ 		
+ 		.paramSlider {
+ 			width: 70vw;
+ 			height: 6vh;
+ 		}
+ 	&lt;/style&gt;
+ 	&lt;script&gt;
+ 		var websocket = new WebSocket('ws://localhost:5500');
+ 		websocket.onopen = function() { send('register|editor'); };
+ 		websocket.onerror = function(e) {};
+ 		websocket.onmessage = function(m) { if(m.data) handle(m.data); };
+ 		websocket.onclose = function(e) {};
+
+ 		function send(m) { websocket.send(m); };
+ 		
+ 		function handle(m) { 
+ 			m = m.split('|');
+ 			if (m[0] == 'setColor') setColor(m[1], m[2]);
+ 			if (m[0] == 'setRing') setRing(m[1], m[2]);
+ 		}
+ 		
+ 		function setColor(cID, color) {
+ 			var cc = document.getElementById(cID);
+ 			color = color.split(' ');
+ 			cc.children[1].value = color[0];
+ 			cc.children[2].value = color[1];
+ 			cc.children[3].value = color[2];
+ 		}
+ 		
+ 		var ringID = 0;
+ 		function setRing(rID, params) {
+ 			ringID = rID;
+ 			
+ 			var re = document.getElementById('paramsEditor');
+ 			re.innerHTML = '';
+ 			addLabel('ring params:', re);
+ 			data = JSON.parse(params);
+ 			console.log(data);
+ 			for (var param of data) {
+ 				console.log(param);
+ 				addParam(param[0], param[1], param[2], re);
+ 			}
+ 		}
+ 		
+ 		function addLabel(t, p) {
+ 			var lbl = document.createElement('div');
+ 			lbl.innerHTML = t;
+ 			p.appendChild(lbl);
+ 			return lbl;
+ 		}
+ 		
+ 		function onParamChange(c) {
+ 			params = [];
+ 			for (var i=1; i&lt;c.children.length; i++) {
+ 				params.push(c.children[i].value);
+ 			}
+ 			send('changeParams|'+ringID+'|'+params);
+ 		}
+ 		
+ 		function onFieldChange(c,v) {
+ 			var r = c.children[1].value;
+ 			var g = c.children[2].value;
+ 			var b = c.children[3].value;
+ 			send('changeColor|'+v+'|'+r+':'+g+':'+b);
+ 		}
+ 		
+ 		function addColorField(id, p) {
+ 			var e = document.createElement('input');
+ 			e.value = 0;
+ 			e.className = 'colorField';
+ 			e.onchange = function(c,v){ return function(){ onFieldChange(c,v); }; }(p, id);
+ 			p.appendChild(e);
+ 			return e;
+ 		}
+ 		
+ 		function addColorChooser(id, x, y) {
+ 			var cc = document.createElement('div');
+ 			cc.className = 'colorChooser';
+ 			cc.id = id;
+ 			cc.style.left=x+'vw';
+ 			cc.style.top=y+'vh';
+ 			document.body.appendChild(cc);
+ 			var lbl = addLabel(id, cc);
+ 			var eR = addColorField(id, cc);
+ 			var eG = addColorField(id, cc);
+ 			var eB = addColorField(id, cc);
+ 		}
+ 		
+ 		function addParam(v, mi, ma, p) {
+ 			var i = document.createElement('input');
+ 			i.className = 'paramSlider';
+ 			i.type = 'range';
+ 			i.min = mi;
+ 			i.max = ma;
+ 			i.step = (ma-mi)/20;
+ 			i.value = v;
+ 			p.appendChild(i);
+ 			i.onchange = function(c){ return function(){ onParamChange(c); }; }(p);
+ 			return i;
+ 		}
+ 		
+ 		function addRingEditor(x, y) {
+ 			var re = document.createElement('div');
+ 			re.className = 'ringEditor';
+ 			re.id = 'paramsEditor';
+ 			re.style.left=x+'vw';
+ 			re.style.top=y+'vh';
+ 			document.body.appendChild(re);
+ 			var lbl = addLabel('ring params:', re);
+ 			addParam(0.5, 0.0, 1.0, re);
+ 		}
+ 		
+ 		function setup() {
+ 			addColorChooser('skin', 5, 20);
+ 			addColorChooser('shirt', 5, 30);
+ 			addColorChooser('pants', 5, 40);
+ 			addRingEditor(5, 50);
+ 		}
+ 	&lt;/script&gt;
+ &lt;/head&gt;
+
+ &lt;body&gt;
+ &lt;/body&gt;
+ 
+ &lt;script&gt;setup();&lt;/script&gt;
+ 
+ &lt;/html&gt;
+</core>
+    </Script>
     <Script base_name="gridFloor" group="test" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	import VR
@@ -38,15 +223,53 @@
 	VR.floor.setOrientation([0,1,0], [0,0,1])
 </core>
     </Script>
-    <Script base_name="init3" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+    <Script base_name="hudHandler" group="editor" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	import VR
 
-	VR.makeFloor()
+ 	m = dev.getMessage()
+ 	print m
+
+	
+	m = m.split('|')
+	
+	if m[0] == 'register': 
+		VR.clients[m[1]] = dev.getKey()
+		VR.updateEditor()
+	
+	if m[0] == 'changeColor':
+		part = m[1]
+		col = [ float(c) for c in m[2].split(':') ]
+		
+		VR.humanoid.setColor(part, col)
+		VR.character.setSkin(VR.humanoid, VR.humanoid.getSkin(), VR.humanoid.getSkeleton())
+	
+	if m[0] == 'changeParams':
+		rID = int(m[1])
+		params = [ float(v) for v in m[2].split(',') ]
+		print rID, params
+		VR.humanoid.setRingParams(rID, params)
+		VR.character.setSkin(VR.humanoid, VR.humanoid.getSkin(), VR.humanoid.getSkeleton())
+	
+</core>
+      <trig type="on_device" dev="server1" state="Released" param="0" key="-1" base_name="trigger" name_space="__global__" name_suffix="3" persistency="666"/>
+    </Script>
+    <Script base_name="init" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+
+	VR.makeScene()
 	
 	if hasattr(VR, 'character'): VR.character.destroy()
+	
+	VR.humanoid = VR.Humanoid('Alice')
+	
 	VR.character = VR.Character('character', 'light')
-	VR.character.simpleSetup()
+	VR.character.setSkin(VR.humanoid, VR.humanoid.getSkin(), VR.humanoid.getSkeleton())
+	
+	#VR.character.addDebugSkin()
+	
+	VR.setupEditor()
 </core>
       <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="4" persistency="666"/>
     </Script>
@@ -78,38 +301,190 @@
 </core>
       <trig type="none" dev="" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="6" persistency="666"/>
     </Script>
-    <Script base_name="makeFloor" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+    <Script base_name="makeScene" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	import VR
-
-
 
 	if hasattr(VR, 'floor'): VR.floor.destroy()
 	VR.floor = VR.Geometry('floor', 'light')
 	VR.floor.setPrimitive('Box 10 2 10')
 	VR.floor.setFrom([0,-1,0])
 	VR.floor.setColor('blue')
+	
+	
+	def addTable(p, d):
+		t = VR.Geometry('table')
+		t.setPrimitive('Box 2 1.0 1')
+		t.setTransform(p, d)
+		t.setColor('green')
+		VR.floor.addChild(t)
+	
+	addTable([0,1.5,1], [0,0,-1])
 </core>
     </Script>
     <Script base_name="moveTo" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
 	import VR
-
-	if dev.intersect(VR.floor):
-		p = dev.getIntersection()
-		path = VR.character.moveTo(p, 1)
-		
+	
+	def showPath(path, color, local, height):
 		if hasattr(VR, 'walkPath'): VR.walkPath.destroy()
 		VR.walkPath = VR.Stroke('path', 'light')
+		if local: VR.character.addChild(VR.walkPath)
 		VR.walkPath.setPath(path)
-		VR.walkPath.strokeProfile([[0,0.1,0]], 0,0,0)
+		VR.walkPath.strokeProfile([[0,height,0]], 0,0,0)
 		m = VR.Material('mat')
 		m.setLineWidth(3)
+		m.setDiffuse(color)
 		VR.walkPath.setMaterial(m)
+
+	if dev.intersect(VR.floor):
+		obj = dev.getIntersected()
+		pos = dev.getIntersection()
+		
+		if obj == VR.floor:
+			path = VR.character.moveTo(pos, 1)
+			showPath(path, [1,1,1], False, 0.1)
+			
+		else:
+			path = VR.character.grab(pos, 1)
+			showPath(path, [1,0.4,0], True, 0.01)
 		
 	
 </core>
       <trig type="on_device" dev="mouse" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="11" persistency="666"/>
+    </Script>
+    <Script base_name="printParameters" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+
+	print VR.humanoid.getParameterString()
+
+
+	if 0:
+		params = """
+		{
+			"colors": {
+				"pants": "1 0 1",
+				"shirt": "1 1 0",
+				"skin": "1 0.7 0.4"
+			},
+			"rings": {
+				"10": "[0.05, 0.19]",
+				"11": "[0.3, 0.22]",
+				"12": "[0.3, 0.205]",
+				"13": "[0.3, 0.22]",
+				"14": "[0.34, 0.235]",
+				"15": "[0.42, 0.175]",
+				"16": "[0.15, 0.16]",
+				"30": "[0.1, 0.125, 0.12]",
+				"31": "[0.1, 0.125, 0.12]",
+				"32": "[0.12, 0.1625, 0.1]",
+				"40": "[0.0625, 0.075, 0.24]",
+				"41": "[0.0875, 0.0875, 0.24]",
+				"42": "[0.0875, 0.1375, 0.22]"
+			}
+		}
+		"""
+		
+		VR.humanoid.loadParameters(params)
+		VR.character.setSkin(VR.humanoid, VR.humanoid.getSkin(), VR.humanoid.getSkeleton())
+		
+</core>
+    </Script>
+    <Script base_name="sendEditor" group="editor" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+
+	k = VR.clients['editor']
+	s = VR.find('server1')
+	s.answer(k, msg)
+</core>
+      <arg type="NoneType" value="None" base_name="msg" name_space="sendEditor" name_suffix="0" persistency="666"/>
+    </Script>
+    <Script base_name="setupEditor" group="editor" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+
+	VR.clients = {}
+	
+
+	if hasattr(VR, 'editor'): VR.editor.destroy()
+	VR.editor = VR.Transform('editor')
+	cam = VR.getActiveCamera()
+	cam.addChild(VR.editor)
+	
+	VR.editor.setFrom([-2, -1, -3])
+	light = VR.Light('fLight')
+	VR.editor.addChild(light)
+	lb = light.addBeacon()
+	lb.setFrom([0,2,1])
+	
+	m = VR.Material('efMat')
+	m.setDiffuse([1,1,1])
+	m.setLit(0)
+	m.addPass()
+	m.setWireFrame(1)
+	m.setDiffuse([0,0,0])
+	m.setLit(0)
+	floor = VR.Geometry('eFloor')
+	floor.setPrimitive('Plane 1.5 1.5 3 3')
+	floor.setMaterial(m)
+	floor.setOrientation([0,1,0], [0,0,-1])
+	
+	stage = VR.Transform('stage')
+	light.addChild(stage)
+	stage.addChild(floor)
+	stage.addLink(VR.character.getChild(0))
+	
+	stage.setPickable(True)
+	ec = stage.getConstraint()
+	ec.setReference(stage.getPose())
+	ec.setReferential(VR.editor)
+	ec.lock([0,1,2,3,5])
+	ec.free([4])
+	
+	w,h = 1.0, 2.0
+	s = VR.Sprite('site')
+	s.setSize(w,h)
+	s.webOpen('http://localhost:5500/editorSite', 400, w/h)
+	s.setFrom([-0.25,1,0.75])
+	s.getMaterial().enableTransparency()
+	VR.editor.addChild(s)
+</core>
+    </Script>
+    <Script base_name="testSprings" group="test" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+
+	s = VR.character.getSkeleton()
+	k = s.getKinematics()
+	
+	core = s.getJointID('core')
+	shoulderR = s.getJointID('shoulderR')
+	elbowR = s.getJointID('elbowR')
+	wristR = s.getJointID('wristR')
+	handR = s.getJointID('handR')
+	
+	#k.addSpring(core, [0,-0.1,-1], 0.7)
+	#k.addSpring(shoulderR, [0,0,1], 0.5)
+	#k.addSpring(elbowR, [0,1,0], 0.01)
+	
+	
+	# todo:
+	# - add shoulder constraint
+	# - add elbow constraint
+	# - probably needs torsion constraints/springs etc..
+</core>
+    </Script>
+    <Script base_name="updateEditor" group="editor" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
+      <core>
+	import VR
+
+	for cID in ['skin', 'shirt', 'pants']:
+		c = VR.humanoid.getColor(cID)
+		r,g,b = str(c[0]), str(c[1]), str(c[2])
+		VR.sendEditor('setColor|'+cID+'|'+r+' '+g+' '+b)
+</core>
     </Script>
   </Scripts>
   <Sockets persistency="666"/>

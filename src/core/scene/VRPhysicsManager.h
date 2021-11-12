@@ -60,7 +60,8 @@ class VRPhysicsManager {
         map<btCollisionObject*, VRGeometryPtr> physics_visuals;
         vector<btCollisionObject*> physics_visuals_to_update;
         VRVisualLayerPtr physics_visual_layer;
-        VRMaterialPtr phys_mat = 0;
+        VRGeometryPtr springsVisual;
+        VRMaterialPtr phys_mat ;
 
         VRMutex* mtx = 0;
         int fps = 500;
@@ -73,6 +74,7 @@ class VRPhysicsManager {
 
         void prepareObjects();
         void updatePhysics( VRThreadWeakPtr  t);
+        void updateSpringsVisual();
         void updatePhysObjects();
 
     public:

@@ -231,6 +231,7 @@ VRTerrainPtr VRWorldGenerator::addTerrain(VRTexturePtr sat, VRTexturePtr heights
     auto terrain = VRTerrain::create("terrain"+toString(lodlvl), bool(planet));
 
     terrain->setParameters(terrainSize, 2/lodf, 1);
+    terrain->setInvertY(1,0);
     if (!heights) {
         auto tg = VRTextureGenerator::create();
         tg->setSize(Vec3i(2,2,1));

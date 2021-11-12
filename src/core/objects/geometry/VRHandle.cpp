@@ -88,7 +88,7 @@ void VRHandle::updateHandle(bool sceneUpdate) {
     lockHandle = false;
 }
 
-void VRHandle::drag(VRTransformPtr new_parent, VRIntersection i) {
+void VRHandle::drag(VRTransformPtr new_parent, VRIntersectionPtr i) {
     lockHandle = true;
     VRTransform::drag(new_parent, i);
     auto scene = VRScene::getCurrent();

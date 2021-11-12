@@ -394,9 +394,9 @@ void VRLeap::clearSignals() {
     newSignal(1, 0)->add(dndCb);
 }
 
-VRIntersection findInside(VRObjectWeakPtr wtree, Vec3d point) {
+VRIntersectionPtr findInside(VRObjectWeakPtr wtree, Vec3d point) {
 
-    VRIntersection ins;
+    auto ins = VRIntersection::create();
     auto tree = wtree.lock();
     if (!tree) return ins;
     if (!tree->getNode()) return ins;
@@ -416,10 +416,10 @@ VRIntersection findInside(VRObjectWeakPtr wtree, Vec3d point) {
     }
 
     if (insideObject) {
-        ins.hit = true;
-        ins.time = now;
-        ins.object = insideObject;
-        ins.name = insideObject->getName();
+        ins->hit = true;
+        ins->time = now;
+        ins->object = insideObject;
+        ins->name = insideObject->getName();
     }
 
     return ins;
@@ -433,12 +433,12 @@ void VRLeap::dragCB(VRTransformWeakPtr wcaster, VRObjectWeakPtr wtree, VRDeviceW
         for (auto swp : grp.second) if (auto sp = swp.second.lock()) trees.push_back(sp);
     }
 
-    VRIntersection ins;
+    auto ins = VRIntersection::create();
     auto caster = wcaster.lock();
 
     for (auto t : trees) {
         ins = findInside(t, caster->getWorldPosition());
-        if (ins.hit) break;
+        if (ins->hit) break;
     }
 
     VRIntersect::drag(ins, caster);
@@ -536,8 +536,8 @@ void VRLeap::leapDnD(VRDeviceWeakPtr dev) {
 
             Line ray(p0, d);
             auto intersection = intersectRay(dndRoot, ray);
-            if ( intersection.hit ) {
-                auto i = intersection.object.lock();
+            if ( intersection->hit ) {
+                auto i = intersection->object.lock();
                 if (i) drag(i, bID);
             }
         } else drop(bID);

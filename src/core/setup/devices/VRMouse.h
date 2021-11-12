@@ -10,7 +10,6 @@ using namespace std;
 
 class VRMouse : public VRDevice {
     private:
-
         // TODO: Camera Pointer is not updated if the camera of the view
         VRCameraWeakPtr cam;
         VRViewWeakPtr view;
@@ -19,6 +18,8 @@ class VRMouse : public VRDevice {
         VRSignalPtr on_to_edge = 0;
         VRSignalPtr on_from_edge = 0;
         int onEdge = -1;
+
+        vector< vector<int> > delayedEvents;
 
         void multFull(Matrix _matrix, const Pnt3f &pntIn, Pnt3f  &pntOut);
 
@@ -33,11 +34,13 @@ class VRMouse : public VRDevice {
 
         void clearSignals() override;
 
+        void applyEvents();
+
         //3d object to emulate a hand in VRSpace
         void updatePosition(int x, int y);
 
-        void mouse(int button, int state, int x, int y);
-        void motion(int x, int y);
+        void mouse(int button, int state, int x, int y, bool delayed = true);
+        void motion(int x, int y, bool delayed = true);
 
         void setCamera(VRCameraPtr cam) override;
         void setViewport(VRViewPtr view);

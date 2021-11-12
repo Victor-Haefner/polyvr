@@ -197,7 +197,9 @@ PyObject* VRSceneGlobals::getRendering(VRSceneGlobals* self) {
 }
 
 PyObject* VRSceneGlobals::printOSG(VRSceneGlobals* self) {
+    cout << " --- Print Scene ---" << endl;
     VRObject::printOSGTree( VRScene::getCurrent()->getRoot()->getNode() );
+    cout << " --- Print Setup ---" << endl;
     VRSetup::getCurrent()->printOSG();
     Py_RETURN_TRUE;
 }
