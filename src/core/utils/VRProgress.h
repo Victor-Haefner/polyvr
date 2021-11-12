@@ -21,24 +21,25 @@ class VRProgress {
 
     private:
         string title;
-        int max = 0;
+        size_t max = 0;
 		Mode mode = CONSOLE_M;
-        int count = 0;
+        size_t count = 0;
         double part = 0;
         VRAnimCbWeakPtr callback;
+        VRTimerPtr timer;
 
     public:
-		VRProgress(string title = "Progress", int max = 100, Mode m = CONSOLE_M);
+		VRProgress(string title = "Progress", size_t max = 100, Mode m = CONSOLE_M);
         ~VRProgress();
 
-        static VRProgressPtr create(string title = "Progress", int max = 100, Mode m = CONSOLE_M);
+        static VRProgressPtr create(string title = "Progress", size_t max = 100, Mode m = CONSOLE_M);
 
         void setCallback(VRAnimCbPtr cb);
         float get();
         void set(float t);
 
-        void setup(string title, int max, Mode m = CONSOLE_M);
-        void update(int i = 1);
+        void setup(string title, size_t max, Mode m = CONSOLE_M);
+        void update(size_t i = 1);
         void finish();
         void reset();
 };

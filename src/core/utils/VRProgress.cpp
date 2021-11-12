@@ -1,11 +1,15 @@
 #include "VRProgress.h"
 #include "VRFunction.h"
 #include "toString.h"
+#include "VRTimer.h"
 
 using namespace OSG;
 
 
-VRProgress::VRProgress(string title, int max, Mode m) { setup(title, max, m); }
+VRProgress::VRProgress(string title, size_t max, Mode m) {
+    timer = VRTimer::create();
+    setup(title, max, m);
+}
 
 VRProgress::~VRProgress() {
 	if (mode == CONSOLE_M) cout << endl;
@@ -13,9 +17,9 @@ VRProgress::~VRProgress() {
 
 void VRProgress::setCallback(VRAnimCbPtr cb) { callback = cb; }
 
-VRProgressPtr VRProgress::create(string title, int max, Mode m) { return VRProgressPtr( new VRProgress(title, max, m) ); }
+VRProgressPtr VRProgress::create(string title, size_t max, Mode m) { return VRProgressPtr( new VRProgress(title, max, m) ); }
 
-void VRProgress::update(int i) {
+void VRProgress::update(size_t i) {
     if (count < max) {
         count += i;
         double k = double(count)/max;
@@ -23,9 +27,13 @@ void VRProgress::update(int i) {
         part = k;
     }
 
+    double dt = timer->stop()*0.001;
+    if (count == 0) return;
+    double pending = dt*(max/double(count)-1);
+
     switch(mode) {
         case CONSOLE_M:
-            cout << "\r" << title << " " << this << " " << long(part*100) << "%" << flush;
+            cout << "\r" << title << " " << this << " " << long(part*100) << "% - pending " << pending << " s, " << pending/60.0 << " min" << flush;
             break;
 		case CALLBACK_M:
             if (auto cl = callback.lock()) (*cl)(part*100);
@@ -40,9 +48,9 @@ void VRProgress::update(int i) {
 void VRProgress::finish() { count = max; part = 1.0; update(0); }
 float VRProgress::get() { return part; }
 void VRProgress::set(float t) { part = t; }
-void VRProgress::reset() { part = count = 0; }
+void VRProgress::reset() { part = count = 0; timer->reset(); }
 
-void VRProgress::setup(string title, int max, Mode m) {
+void VRProgress::setup(string title, size_t max, Mode m) {
     this->title = title;
     this->max = max;
     mode = m;
