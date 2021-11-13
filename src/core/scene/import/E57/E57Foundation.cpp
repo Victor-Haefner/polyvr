@@ -2787,9 +2787,14 @@ It is not an error to seek to recordNumber = childCount() (i.e. to one record pa
 @throw   ::E57_ERROR_INTERNAL           All objects in undocumented state
 @see     SourceDestBufferNumericCreate.cpp example, CompressedVectorNode::reader
 */ /*================*/
-uint64_t CompressedVectorReader::seek(int64_t recordNumber)
+void CompressedVectorReader::seek(int64_t recordNumber)
 {
-    return impl_->seek(recordNumber);
+    impl_->seek(recordNumber);
+}
+
+void CompressedVectorReader::skip(int64_t recordNumber, int64_t offset)
+{
+    impl_->skip(recordNumber, offset);
 }
 
 /*================*/ /*!

@@ -64,7 +64,7 @@ void OSG::loadE57(string path, VRTransformPtr res, map<string, string> importOpt
             }
 
             vector<SourceDestBuffer> destBuffers;
-            const int N = 4;
+            const int N = 1;
             double x[N]; destBuffers.push_back(SourceDestBuffer(imf, "cartesianX", x, N, true));
             double y[N]; destBuffers.push_back(SourceDestBuffer(imf, "cartesianY", y, N, true));
             double z[N]; destBuffers.push_back(SourceDestBuffer(imf, "cartesianZ", z, N, true));
@@ -77,11 +77,16 @@ void OSG::loadE57(string path, VRTransformPtr res, map<string, string> importOpt
                 destBuffers.push_back(SourceDestBuffer(imf, "colorBlue", b, N, true));
             }
 
-            int gotCount = 0;
-            CompressedVectorReader reader = points.reader(destBuffers);
-
             auto pointcloud = VRPointCloud::create("pointcloud");
             pointcloud->applySettings(importOptions);
+
+            auto pushPoint = [&](int j) {
+                Vec3d pos = Vec3d(x[j], y[j], z[j]);
+                Color3f col(r[j]/255.0, g[j]/255.0, b[j]/255.0);
+                pointcloud->getOctree()->add(pos, new Color3f(col), -1, true, 1e5);
+            };
+
+            CompressedVectorReader reader = points.reader(destBuffers);
 
             //reader.seek(5500); // test
 
@@ -89,40 +94,35 @@ void OSG::loadE57(string path, VRTransformPtr res, map<string, string> importOpt
             size_t Nskip = round(1.0/downsampling) - 1;
             size_t count = 0;
             int Nskipped = 0;
+            int gotCount = 0;
             do {
                 gotCount = (int)reader.read();
 
-                /*if (gotCount > 0) {
+                if (gotCount > 0) {
                     int j = 0;
-
-                    Vec3d pos = Vec3d(x[j], y[j], z[j]);
-                    Color3f col(r[j]/255.0, g[j]/255.0, b[j]/255.0);
-                    pointcloud->getOctree()->add(pos, new Color3f(col), -1, true, 1e5);
+                    pushPoint(j);
 
                     Nskip = min(Nskip, cN-count);
-                    if (Nskip > 0) reader.seek(Nskip);
+                    if (Nskip > 0) reader.skip(Nskip, count);
                     progress->update( gotCount+Nskip );
                     count += gotCount+Nskip;
 
-                    if (count >= cN) break;
-                }*/
+                    //if (count >= cN) break;
+                }
 
-                if (gotCount > 0) {
+                /*if (gotCount > 0) {
 
                     if (Nskipped+gotCount < Nskip) Nskipped += gotCount;
                     else for (int j=0; j < gotCount; j++) {
                         Nskipped++;
                         if (Nskipped >= Nskip) {
-                            Vec3d pos = Vec3d(x[j], y[j], z[j]);
-                            Color3f col(r[j]/255.0, g[j]/255.0, b[j]/255.0);
-
-                            pointcloud->addPoint(pos, col);
+                            pushPoint(j);
                             Nskipped = 0;
                         }
                     }
 
                     progress->update( gotCount );
-                }
+                }*/
 
             } while(gotCount);
 
