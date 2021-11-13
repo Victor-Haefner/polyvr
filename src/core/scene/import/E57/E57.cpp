@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include "E57Foundation.h"
+#include "E57Simple.h"
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/geometry/VRGeoData.h"
 #include "core/objects/material/VRMaterial.h"
@@ -115,7 +116,7 @@ void OSG::loadE57(string path, VRTransformPtr res, map<string, string> importOpt
                             Vec3d pos = Vec3d(x[j], y[j], z[j]);
                             Color3f col(r[j]/255.0, g[j]/255.0, b[j]/255.0);
 
-                            pointcloud->getOctree()->add(pos, new Color3f(col), -1, true, 1e5);
+                            pointcloud->addPoint(pos, col);
                             Nskipped = 0;
                         }
                     }
@@ -228,7 +229,92 @@ void OSG::loadXYZ(string path, VRTransformPtr res, map<string, string> importOpt
     catch (...) { cerr << "Got an unknown exception" << endl; return; }
 }
 
-//void writeE57(VRGeometryPtr geo, string path);
+void OSG::writeE57(VRPointCloudPtr pcloud, string path) {
+    if (!pcloud) return;
+
+    vector<double>  cartesianX;
+    vector<double>  cartesianY;
+    vector<double>  cartesianZ;
+    vector<int>  colorRed;
+    vector<int>  colorGreen;
+    vector<int>  colorBlue;
+
+    for (auto g : pcloud->getChildren(true, "Geometry")) {
+        VRGeometryPtr geo = dynamic_pointer_cast<VRGeometry>(g);
+        if (!geo) continue;
+        cout << "OSG::writeE57 " << geo->getName() << endl;
+        VRGeoData data(geo);
+        for (int i=0; i<data.size(); i++) {
+            Pnt3d P = data.getPosition(i);
+            Color3f C = data.getColor3(i);
+            cartesianX.push_back(P[0]);
+            cartesianY.push_back(P[1]);
+            cartesianZ.push_back(P[2]);
+            colorRed.push_back(round(C[0]*255));
+            colorGreen.push_back(round(C[1]*255));
+            colorBlue.push_back(round(C[2]*255));
+        }
+    }
+
+    try {
+        ImageFile imf(path, "w");
+        StructureNode root = imf.root();
+
+        root.set("formatName", StringNode(imf, "ASTM E57 3D Imaging Data File"));
+        root.set("guid", StringNode(imf, "3F2504E0-4F89-11D3-9A0C-0305E82C3300"));
+
+        int astmMajor;
+        int astmMinor;
+        ustring libraryId;
+        E57Utilities().getVersions(astmMajor, astmMinor, libraryId);
+        root.set("versionMajor", IntegerNode(imf, astmMajor));
+        root.set("versionMinor", IntegerNode(imf, astmMinor));
+        root.set("coordinateMetadata", StringNode(imf, "Not used."));
+
+        StructureNode creationDateTime = StructureNode(imf);
+        root.set("creationDateTime", creationDateTime);
+        creationDateTime.set("dateTimeValue", FloatNode(imf));
+        creationDateTime.set("isAtomicClockReferenced", IntegerNode(imf));
+
+        VectorNode data3D = VectorNode(imf, true);
+        root.set("data3D", data3D);
+
+        StructureNode scan0 = StructureNode(imf);
+        data3D.append(scan0);
+        scan0.set("guid", StringNode(imf, "3F2504E0-4F89-11D3-9A0C-0305E82C3301"));
+
+        StructureNode proto = StructureNode(imf);
+        proto.set("cartesianX",  FloatNode(imf));
+        proto.set("cartesianY",  FloatNode(imf));
+        proto.set("cartesianZ",  FloatNode(imf));
+        proto.set("colorRed",    IntegerNode(imf, 0, 0, 255));
+        proto.set("colorGreen",  IntegerNode(imf, 0, 0, 255));
+        proto.set("colorBlue",   IntegerNode(imf, 0, 0, 255));
+
+        VectorNode codecs = VectorNode(imf, true);
+        CompressedVectorNode points = CompressedVectorNode(imf, proto, codecs);
+        scan0.set("points", points);
+        scan0.set("name", StringNode(imf, pcloud->getName()));
+        scan0.set("description", StringNode(imf, "PolyVR pointcloud export"));
+
+        const int N = cartesianX.size();
+        vector<SourceDestBuffer> sourceBuffers;
+        sourceBuffers.push_back(SourceDestBuffer(imf, "cartesianX",  &cartesianX[0],  N, true, true));
+        sourceBuffers.push_back(SourceDestBuffer(imf, "cartesianY",  &cartesianY[0],  N, true, true));
+        sourceBuffers.push_back(SourceDestBuffer(imf, "cartesianZ",  &cartesianZ[0],  N, true, true));
+        sourceBuffers.push_back(SourceDestBuffer(imf, "colorRed",    &colorRed[0],    N, true));
+        sourceBuffers.push_back(SourceDestBuffer(imf, "colorGreen",  &colorGreen[0],  N, true));
+        sourceBuffers.push_back(SourceDestBuffer(imf, "colorBlue",   &colorBlue[0],   N, true));
+
+        CompressedVectorWriter writer = points.writer(sourceBuffers);
+        writer.write(N);
+        writer.close();
+        imf.close();
+    }
+    catch(E57Exception& ex)     { ex.report(__FILE__, __LINE__, __FUNCTION__); }
+    catch(std::exception& ex)   { cerr << "Got an std::exception, what=" << ex.what() << endl; }
+    catch(...)                  { cerr << "Got an unknown exception" << endl; }
+}
 
 
 

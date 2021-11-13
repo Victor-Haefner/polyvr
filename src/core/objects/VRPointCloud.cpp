@@ -54,6 +54,10 @@ void VRPointCloud::addLevel(float distance, int downsampling) {
     lodDistances.push_back(distance);
 }
 
+void VRPointCloud::addPoint(Vec3d p, Color3f c) {
+    octree->add(p, new Color3f(c), -1, true, 1e5);
+}
+
 void VRPointCloud::setupLODs() {
     for (auto leaf : octree->getAllLeafs()) {
         Vec3d center = leaf->getCenter();

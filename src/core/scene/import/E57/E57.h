@@ -11,7 +11,8 @@ using namespace std;
 
 void loadE57(string path, VRTransformPtr res, map<string, string> importOptions);
 void loadXYZ(string path, VRTransformPtr res, map<string, string> importOptions);
-//void writeE57(VRGeometryPtr geo, string path);
+
+void writeE57(VRPointCloudPtr pcloud, string path);
 
 OSG_END_NAMESPACE;
 
