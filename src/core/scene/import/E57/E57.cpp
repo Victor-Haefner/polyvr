@@ -98,7 +98,7 @@ void OSG::loadE57(string path, VRTransformPtr res, map<string, string> importOpt
             do {
                 gotCount = (int)reader.read();
 
-                if (gotCount > 0) {
+                /*if (gotCount > 0) {
                     int j = 0;
                     pushPoint(j);
 
@@ -108,11 +108,11 @@ void OSG::loadE57(string path, VRTransformPtr res, map<string, string> importOpt
                     count += gotCount+Nskip;
 
                     //if (count >= cN) break;
-                }
+                }*/
 
-                /*if (gotCount > 0) {
+                if (gotCount > 0) {
 
-                    if (Nskipped+gotCount < Nskip) Nskipped += gotCount;
+                    if (Nskipped+gotCount <= Nskip) Nskipped += gotCount;
                     else for (int j=0; j < gotCount; j++) {
                         Nskipped++;
                         if (Nskipped >= Nskip) {
@@ -122,7 +122,7 @@ void OSG::loadE57(string path, VRTransformPtr res, map<string, string> importOpt
                     }
 
                     progress->update( gotCount );
-                }*/
+                }
 
             } while(gotCount);
 
