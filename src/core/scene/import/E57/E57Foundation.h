@@ -615,6 +615,9 @@ public:
     ustring         fileName() const;
     int             writerCount() const;
     int             readerCount() const;
+    size_t          xmlByteOffset();
+    size_t          xmlByteLength();
+    string          getXmlData();
 
     // Manipulate registered extensions in the file
     void            extensionsAdd(const ustring& prefix, const ustring& uri);

@@ -3765,6 +3765,10 @@ ImageFileImpl::ImageFileImpl()
     /// See ImageFileImpl::construct2() for second phase.
 }
 
+size_t ImageFileImpl::xmlByteOffset() { return xmlLogicalOffset2_; }
+size_t ImageFileImpl::xmlByteLength() { return xmlLogicalLength_; }
+string ImageFileImpl::getXmlData() { return xmlData_; }
+
 void ImageFileImpl::construct2(const ustring& fileName, const ustring& mode, const ustring& /*configuration*/)
 {
     /// Second phase of construction, now we have a well-formed ImageFile object.
@@ -3813,6 +3817,12 @@ void ImageFileImpl::construct2(const ustring& fileName, const ustring& mode, con
             ///!!! stash major,minor numbers for API?
             xmlLogicalOffset_ = file_->physicalToLogical(header.xmlPhysicalOffset);
             xmlLogicalLength_ = header.xmlLogicalLength;
+
+            E57FileInputStream iStream(file_, xmlLogicalOffset_, xmlLogicalLength_);
+            xmlData_.resize(xmlLogicalLength_);
+            iStream.readBytes(&xmlData_[0], xmlLogicalLength_);
+            //cout << "   --- loadE57 intern: " << header.xmlPhysicalOffset << "  " << xmlLogicalLength_ << endl;
+            //cout << xmlData_ << endl;
         } catch (...) {
             /// Remember to close file if got any exception
             if (file_ != NULL) {

@@ -4607,6 +4607,10 @@ ImageFile::ImageFile(const ustring& fname, const ustring& mode, const ustring& c
     CHECK_THIS_INVARIANCE()
 }
 
+size_t ImageFile::xmlByteOffset() { return impl_->xmlByteOffset(); }
+size_t ImageFile::xmlByteLength() { return impl_->xmlByteLength(); }
+string ImageFile::getXmlData() { return impl_->getXmlData(); }
+
 /*================*/ /*!
 @brief   Get the pre-established root StructureNode of the E57 ImageFile.
 @details The root node of an ImageFile always exists and is always type StructureNode.

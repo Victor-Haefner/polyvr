@@ -751,6 +751,11 @@ public:
     CheckedFile*    file();
     ustring         fileName();
 
+    size_t          xmlByteOffset();
+    size_t          xmlByteLength();
+    string          xmlData_;
+    string          getXmlData();
+
     /// Manipulate registered extensions in the file
     void            extensionsAdd(const ustring& prefix, const ustring& uri);
     bool            extensionsLookupPrefix(const ustring& prefix, ustring& uri);
@@ -810,6 +815,7 @@ protected: //=================
 
     /// Read file attributes
     uint64_t        xmlLogicalOffset_;
+    uint64_t        xmlLogicalOffset2_;
     uint64_t        xmlLogicalLength_;
 
     /// Write file attributes
