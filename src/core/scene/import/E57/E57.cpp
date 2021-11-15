@@ -19,31 +19,36 @@ using namespace e57;
 using namespace std;
 using namespace OSG;
 
-void testOwnImport(string path, VRTransformPtr res, map<string, string> importOptions) {
-    try {
-        ImageFile imf(path, "r"); // Read file from disk
-        size_t xmlOffset = imf.xmlByteOffset();
-        size_t xmlLength = imf.xmlByteLength();
-        cout << " --- loadE57 " << xmlOffset << "  " << xmlLength << endl;
-        string xmlData = imf.getXmlData();
-        imf.close();
+void OSG::genTestPC(string path, size_t N, bool doColor) {
+    size_t n = cbrt(N);
+    double f = 255.0/n;
+    double s = 0.01;
+    N = n*n*n;
 
-        ifstream stream(path);
+    ofstream stream(path);
+    stream << "x8y8z8";
+    if (doColor) stream << "r1g1b1";
+    stream << "\n";
+    stream << toString(N);
+    stream << "\n";
 
-        // total file length
-        stream.seekg (0, stream.end);
-        size_t length = stream.tellg();
-        stream.seekg (0, stream.beg);
+    auto progress = VRProgress::create();
+    progress->setup("generate points ", N);
+    progress->reset();
 
-        // get xml header
-        /*xmlData.resize(xmlLength);
-        stream.seekg(xmlOffset);
-        stream.read(&xmlData[0], xmlLength);*/
-        cout << " E57 xml data: " << endl << xmlData << endl;
+    for (size_t i=0; i<n; i++) {
+        for (size_t j=0; j<n; j++) {
+            for (size_t k=0; k<n; k++) {
+                Vec3d P(i*s, j*s, k*s);
+                Vec3ub C(i*f, j*f, k*f);
+                stream.write((const char*)&P[0], sizeof(Vec3d));
+                if (doColor) stream.write((const char*)&C[0], sizeof(Vec3ub));
+            }
+            progress->update( n );
+        }
     }
-    catch (E57Exception& ex) { ex.report(__FILE__, __LINE__, __FUNCTION__); return; }
-    catch (std::exception& ex) { cerr << "Got an std::exception, what=" << ex.what() << endl; return; }
-    catch (...) { cerr << "Got an unknown exception" << endl; return; }
+
+    stream.close();
 }
 
 void OSG::convertE57(string pathIn, string pathOut) {
@@ -115,9 +120,9 @@ void OSG::convertE57(string pathIn, string pathOut) {
 
                 for (int j=0; j < gotCount; j++) {
                     Vec3d P(x[j], y[j], z[j]);
-                    Vec3b C(r[j], g[j], b[j]);
+                    Vec3ub C(r[j], g[j], b[j]);
                     stream.write((const char*)&P[0], sizeof(Vec3d));
-                    stream.write((const char*)&C[0], sizeof(Vec3b));
+                    stream.write((const char*)&C[0], sizeof(Vec3ub));
                 }
                 progress->update( gotCount );
 
@@ -139,12 +144,6 @@ void OSG::loadE57(string path, VRTransformPtr res, map<string, string> importOpt
 
     float downsampling = 1;
     if (importOptions.count("downsampling")) downsampling = toFloat(importOptions["downsampling"]);
-
-    //convertE57(path, path+".cvrt");
-    //return;
-
-    //testOwnImport(path, res, importOptions);
-    //return;
 
     try {
         ImageFile imf(path, "r"); // Read file from disk
@@ -294,29 +293,26 @@ void OSG::loadPCB(string path, VRTransformPtr res, map<string, string> importOpt
     int Nskipped = 0;
 
     int N = sizeof(Vec3d);
-    if (hasCol) N += sizeof(Vec3b);
+    if (hasCol) N += sizeof(Vec3ub);
     char data[256];
 
-    for (size_t i = 0; i<cN; i++) {
+    while (!stream.eof()) {
         stream.read(&data[0], N);
-        //stream.ignore(N*Nskip);
-        stream.seekg(stream.tellg()+N*Nskip);
 
         Vec3d pos = *(Vec3d*)&data[0];
-        Vec3b rgb = *(Vec3b*)&data[sizeof(Vec3d)];
+        Vec3ub rgb = *(Vec3ub*)&data[sizeof(Vec3d)];
         Color3f col(rgb[0]/255.0, rgb[1]/255.0, rgb[2]/255.0);
         pointcloud->addPoint(pos, col);
-        progress->update( Nskip+1 );
 
-        /*if (Nskipped <= Nskip) Nskipped++;
-        else {
-            Vec3d pos = *(Vec3d*)&data[0];
-            Vec3b rgb = *(Vec3b*)&data[sizeof(Vec3d)];
-            Color3f col(rgb[0]/255.0, rgb[1]/255.0, rgb[2]/255.0);
-            pointcloud->addPoint(pos, col);
-            progress->update( Nskipped+1 );
-            Nskipped = 0;
-        }*/
+        int Nprocessed = 0;
+        if (Nskip>0) {
+            Nprocessed = min(Nskip, progress->left());
+            if (Nprocessed == 0) break;
+            if (Nprocessed < 10) stream.ignore(N*Nprocessed, EOF); // ignore processes all chars
+            else stream.seekg(stream.tellg()+N*Nprocessed); // seek jumps directly, better with jump length
+        }
+
+        progress->update( Nprocessed+1 );
     }
 
     pointcloud->setupLODs();
@@ -426,11 +422,13 @@ void OSG::writeE57(VRPointCloudPtr pcloud, string path) {
 
     for (auto g : pcloud->getChildren(true, "Geometry")) {
         VRGeometryPtr geo = dynamic_pointer_cast<VRGeometry>(g);
+        Matrix4d M = pcloud->getMatrixTo(geo);
         if (!geo) continue;
         cout << "OSG::writeE57 " << geo->getName() << endl;
         VRGeoData data(geo);
         for (int i=0; i<data.size(); i++) {
             Pnt3d P = data.getPosition(i);
+            M.mult(P, P);
             Color3f C = data.getColor3(i);
             cartesianX.push_back(P[0]);
             cartesianY.push_back(P[1]);

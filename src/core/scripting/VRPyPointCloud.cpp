@@ -14,5 +14,7 @@ PyMethodDef VRPyPointCloud::methods[] = {
     {"setupLODs", PyWrap( PointCloud, setupLODs, "Setup LODs, this will delete the octree content if not disabled using the settings", void ) },
     {"setupMaterial", PyWrap( PointCloud, setupMaterial, "Setup material, (lit, pointsize)", void, bool, int ) },
     {"applySettings", PyWrap( PointCloud, applySettings, "Setup parameters", void, map<string, string> ) },
+    {"convert", PyWrap( PointCloud, convert, "Convert a E57 pointcloud to PCB, it will export to the same path but with '.pcb' at the end", void, string ) },
+    {"genTestFile", PyWrap( PointCloud, genTestFile, "Generate a pointcloud (.pcb) file (path, Npoints, doColors)", void, string, size_t, bool ) },
     {NULL}  /* Sentinel */
 };

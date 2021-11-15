@@ -36,6 +36,7 @@ class VRProgress {
 
         void setCallback(VRAnimCbPtr cb);
         float get();
+        size_t left();
         void set(float t);
 
         void setup(string title, size_t max, Mode m = CONSOLE_M);

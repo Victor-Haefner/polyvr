@@ -5,6 +5,7 @@
 #include "core/objects/VRLod.h"
 #include "core/math/partitioning/Octree.h"
 #include "core/utils/toString.h"
+#include "core/scene/import/E57/E57.h"
 
 using namespace OSG;
 using namespace std;
@@ -90,3 +91,15 @@ void VRPointCloud::setupLODs() {
 
     //addChild(octree->getVisualization());
 }
+
+void VRPointCloud::convert(string pathIn) {
+    string pathOut = pathIn+".pcb";
+    convertE57(pathIn, pathOut);
+}
+
+void VRPointCloud::genTestFile(string path, size_t N, bool doColor) {
+    genTestPC(path, N, doColor);
+}
+
+
+

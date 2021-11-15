@@ -15,6 +15,7 @@ void loadXYZ(string path, VRTransformPtr res, map<string, string> importOptions)
 
 void writeE57(VRPointCloudPtr pcloud, string path);
 void convertE57(string pathIn, string pathOut);
+void genTestPC(string path, size_t N, bool doColor);
 
 OSG_END_NAMESPACE;
 

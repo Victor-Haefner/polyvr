@@ -19,6 +19,12 @@ void VRProgress::setCallback(VRAnimCbPtr cb) { callback = cb; }
 
 VRProgressPtr VRProgress::create(string title, size_t max, Mode m) { return VRProgressPtr( new VRProgress(title, max, m) ); }
 
+size_t VRProgress::left() {
+    if (count < max) return max-count;
+    //if (count > max) cout << " -------------- ARGH " << -1*int(count-max) << endl;
+    return 0;
+}
+
 void VRProgress::update(size_t i) {
     if (count < max) {
         count += i;

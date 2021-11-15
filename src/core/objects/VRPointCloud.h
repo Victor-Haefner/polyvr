@@ -30,6 +30,9 @@ class VRPointCloud : public VRTransform {
 
         void addPoint(Vec3d p, Color3f c);
 
+        void convert(string pathIn);
+        void genTestFile(string path, size_t N, bool doColor);
+
         OctreePtr getOctree();
 };
 
