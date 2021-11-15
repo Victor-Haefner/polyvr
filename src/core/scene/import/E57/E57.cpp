@@ -13,9 +13,125 @@
 #include "core/utils/VRProgress.h"
 #include "core/utils/toString.h"
 
+#include <iostream>
+
 using namespace e57;
 using namespace std;
 using namespace OSG;
+
+void testOwnImport(string path, VRTransformPtr res, map<string, string> importOptions) {
+    try {
+        ImageFile imf(path, "r"); // Read file from disk
+        size_t xmlOffset = imf.xmlByteOffset();
+        size_t xmlLength = imf.xmlByteLength();
+        cout << " --- loadE57 " << xmlOffset << "  " << xmlLength << endl;
+        string xmlData = imf.getXmlData();
+        imf.close();
+
+        ifstream stream(path);
+
+        // total file length
+        stream.seekg (0, stream.end);
+        size_t length = stream.tellg();
+        stream.seekg (0, stream.beg);
+
+        // get xml header
+        /*xmlData.resize(xmlLength);
+        stream.seekg(xmlOffset);
+        stream.read(&xmlData[0], xmlLength);*/
+        cout << " E57 xml data: " << endl << xmlData << endl;
+    }
+    catch (E57Exception& ex) { ex.report(__FILE__, __LINE__, __FUNCTION__); return; }
+    catch (std::exception& ex) { cerr << "Got an std::exception, what=" << ex.what() << endl; return; }
+    catch (...) { cerr << "Got an unknown exception" << endl; return; }
+}
+
+void OSG::convertE57(string pathIn, string pathOut) {
+    try {
+        ImageFile imf(pathIn, "r"); // Read file from disk
+
+        StructureNode root = imf.root();
+        if (!root.isDefined("/data3D")) { cout << "File doesn't contain 3D images" << endl; return; }
+
+        e57::Node n = root.get("/data3D");
+        if (n.type() != E57_VECTOR) { cout << "bad file" << endl; return; }
+
+        VectorNode data3D(n);
+        int64_t scanCount = data3D.childCount(); // number of scans in file
+        cout << " file read succefully, it contains " << scanCount << " scans" << endl;
+
+        for (int i = 0; i < scanCount; i++) {
+            StructureNode scan(data3D.get(i));
+            string sname = scan.pathName();
+
+            CompressedVectorNode points( scan.get("points") );
+            string pname = points.pathName();
+            auto cN = points.childCount();
+            cout << "  scan " << i << " contains " << cN << " points\n";
+
+            auto progress = VRProgress::create();
+            progress->setup("process points ", cN);
+            progress->reset();
+
+            StructureNode proto(points.prototype());
+            bool hasPos = (proto.isDefined("cartesianX") && proto.isDefined("cartesianY") && proto.isDefined("cartesianZ"));
+            bool hasCol = (proto.isDefined("colorRed") && proto.isDefined("colorGreen") && proto.isDefined("colorBlue"));
+            if (!hasPos) continue;
+
+            if (hasCol) cout << "   scan has colors\n";
+            else cout << "   scan has no colors\n";
+
+            for (int i=0; i<proto.childCount(); i++) {
+                auto child = proto.get(i);
+                cout << "    scan data: " << child.pathName() << endl;
+            }
+
+            vector<SourceDestBuffer> destBuffers;
+            const int N = 4;
+            double x[N]; destBuffers.push_back(SourceDestBuffer(imf, "cartesianX", x, N, true));
+            double y[N]; destBuffers.push_back(SourceDestBuffer(imf, "cartesianY", y, N, true));
+            double z[N]; destBuffers.push_back(SourceDestBuffer(imf, "cartesianZ", z, N, true));
+            double r[N];
+            double g[N];
+            double b[N];
+            if (hasCol) {
+                destBuffers.push_back(SourceDestBuffer(imf, "colorRed", r, N, true));
+                destBuffers.push_back(SourceDestBuffer(imf, "colorGreen", g, N, true));
+                destBuffers.push_back(SourceDestBuffer(imf, "colorBlue", b, N, true));
+            }
+
+            int gotCount = 0;
+            CompressedVectorReader reader = points.reader(destBuffers);
+
+            ofstream stream(pathOut);
+            stream << "x8y8z8";
+            if (hasCol) stream << "r1g1b1";
+            stream << "\n";
+            stream << toString(cN);
+            stream << "\n";
+
+            do {
+                gotCount = (int)reader.read();
+
+                for (int j=0; j < gotCount; j++) {
+                    Vec3d P(x[j], y[j], z[j]);
+                    Vec3b C(r[j], g[j], b[j]);
+                    stream.write((const char*)&P[0], sizeof(Vec3d));
+                    stream.write((const char*)&C[0], sizeof(Vec3b));
+                }
+                progress->update( gotCount );
+
+            } while(gotCount);
+            stream.close();
+            reader.close();
+        }
+
+        imf.close();
+    }
+    catch (E57Exception& ex) { ex.report(__FILE__, __LINE__, __FUNCTION__); return; }
+    catch (std::exception& ex) { cerr << "Got an std::exception, what=" << ex.what() << endl; return; }
+    catch (...) { cerr << "Got an unknown exception" << endl; return; }
+}
 
 void OSG::loadE57(string path, VRTransformPtr res, map<string, string> importOptions) {
     cout << "load e57 pointcloud " << path << endl;
@@ -23,6 +139,12 @@ void OSG::loadE57(string path, VRTransformPtr res, map<string, string> importOpt
 
     float downsampling = 1;
     if (importOptions.count("downsampling")) downsampling = toFloat(importOptions["downsampling"]);
+
+    //convertE57(path, path+".cvrt");
+    //return;
+
+    //testOwnImport(path, res, importOptions);
+    //return;
 
     try {
         ImageFile imf(path, "r"); // Read file from disk
@@ -109,7 +231,7 @@ void OSG::loadE57(string path, VRTransformPtr res, map<string, string> importOpt
 
                 if (gotCount > 0) {
 
-                    if (Nskipped+gotCount < Nskip) Nskipped += gotCount;
+                    if (Nskipped+gotCount <= Nskip) Nskipped += gotCount;
                     else for (int j=0; j < gotCount; j++) {
                         Nskipped++;
                         if (Nskipped >= Nskip) {
@@ -137,6 +259,69 @@ void OSG::loadE57(string path, VRTransformPtr res, map<string, string> importOpt
     catch (E57Exception& ex) { ex.report(__FILE__, __LINE__, __FUNCTION__); return; }
     catch (std::exception& ex) { cerr << "Got an std::exception, what=" << ex.what() << endl; return; }
     catch (...) { cerr << "Got an unknown exception" << endl; return; }
+}
+
+void OSG::loadPCB(string path, VRTransformPtr res, map<string, string> importOptions) {
+    cout << "load PCB pointcloud " << path << endl;
+    res->setName(path);
+
+    float downsampling = 1;
+    if (importOptions.count("downsampling")) downsampling = toFloat(importOptions["downsampling"]);
+
+    ifstream stream(path);
+    string h1, h2;
+    getline(stream, h1);
+    getline(stream, h2);
+    cout << "  headers " << h1 << " " << h2 << endl;
+
+    auto cN = toValue<size_t>(h2);
+    cout << "  scan contains " << cN << " points" << endl;
+
+    auto progress = VRProgress::create();
+    progress->setup("process points ", cN);
+    progress->reset();
+
+    bool hasCol = contains(h1, "r");
+    if (hasCol) cout << "   scan has colors\n";
+    else cout << "   scan has no colors\n";
+
+    auto pointcloud = VRPointCloud::create("pointcloud");
+    pointcloud->applySettings(importOptions);
+
+    cout << "fill octree" << endl;
+    size_t Nskip = round(1.0/downsampling) - 1;
+    size_t count = 0;
+    int Nskipped = 0;
+
+    int N = sizeof(Vec3d);
+    if (hasCol) N += sizeof(Vec3b);
+    char data[256];
+
+    for (size_t i = 0; i<cN; i++) {
+        stream.read(&data[0], N);
+        //stream.ignore(N*Nskip);
+        stream.seekg(stream.tellg()+N*Nskip);
+
+        Vec3d pos = *(Vec3d*)&data[0];
+        Vec3b rgb = *(Vec3b*)&data[sizeof(Vec3d)];
+        Color3f col(rgb[0]/255.0, rgb[1]/255.0, rgb[2]/255.0);
+        pointcloud->addPoint(pos, col);
+        progress->update( Nskip+1 );
+
+        /*if (Nskipped <= Nskip) Nskipped++;
+        else {
+            Vec3d pos = *(Vec3d*)&data[0];
+            Vec3b rgb = *(Vec3b*)&data[sizeof(Vec3d)];
+            Color3f col(rgb[0]/255.0, rgb[1]/255.0, rgb[2]/255.0);
+            pointcloud->addPoint(pos, col);
+            progress->update( Nskipped+1 );
+            Nskipped = 0;
+        }*/
+    }
+
+    pointcloud->setupLODs();
+    res->addChild(pointcloud);
+    stream.close();
 }
 
 void OSG::loadXYZ(string path, VRTransformPtr res, map<string, string> importOptions) {

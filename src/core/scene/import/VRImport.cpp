@@ -170,6 +170,7 @@ void VRImport::LoadJob::load(VRThreadWeakPtr tw) {
         int Nch0 = clist->getNumChanged();
         cout << "load " << path << " ext: " << ext << " preset: " << preset << ", until now created: " << Ncr0 << ", changed: " << Nch0 << endl;
         if (ext == ".e57") { loadE57(path, res, options); return; }
+        if (ext == ".pcb") { loadPCB(path, res, options); return; }
         if (ext == ".xyz") { loadXYZ(path, res, options); return; }
         if (ext == ".ply") { loadPly(path, res); return; }
         //if (ext == ".step" || ext == ".stp" || ext == ".STEP" || ext == ".STP") { VRSTEP step; step.load(path, res, options); }
