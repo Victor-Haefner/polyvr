@@ -309,7 +309,7 @@ void OSG::loadPCB(string path, VRTransformPtr res, map<string, string> importOpt
             Nprocessed = min(Nskip, progress->left());
             if (Nprocessed == 0) break;
             if (Nprocessed < 10) stream.ignore(N*Nprocessed, EOF); // ignore processes all chars
-            else stream.seekg(stream.tellg()+N*Nprocessed); // seek jumps directly, better with jump length
+            else stream.seekg(N*Nprocessed, ios_base::cur); // seek jumps directly, better with increasing jump length
         }
 
         progress->update( Nprocessed+1 );

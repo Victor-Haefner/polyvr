@@ -32,6 +32,7 @@ class VRPointCloud : public VRTransform {
 
         void convert(string pathIn);
         void genTestFile(string path, size_t N, bool doColor);
+        void externalSort(string path, size_t Nchunks, double binSize);
 
         OctreePtr getOctree();
 };
