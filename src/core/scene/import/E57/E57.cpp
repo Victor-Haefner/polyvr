@@ -295,14 +295,18 @@ void OSG::loadPCB(string path, VRTransformPtr res, map<string, string> importOpt
     int N = sizeof(Vec3d);
     if (hasCol) N += sizeof(Vec3ub);
     char data[256];
+    size_t pcN = 0;
 
     while (!stream.eof()) {
+        if (pcN == cN) break;
+
         stream.read(&data[0], N);
 
-        Vec3d pos = *(Vec3d*)&data[0];
+        Vec3d  pos = *(Vec3d*)&data[0];
         Vec3ub rgb = *(Vec3ub*)&data[sizeof(Vec3d)];
         Color3f col(rgb[0]/255.0, rgb[1]/255.0, rgb[2]/255.0);
         pointcloud->addPoint(pos, col);
+        pcN++;
 
         int Nprocessed = 0;
         if (Nskip>0) {

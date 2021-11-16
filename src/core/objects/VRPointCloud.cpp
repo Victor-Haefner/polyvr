@@ -102,10 +102,6 @@ void VRPointCloud::genTestFile(string path, size_t N, bool doColor) {
     genTestPC(path, N, doColor);
 }
 
-void sortChunk(string& buffer) {
-    ;
-}
-
 struct PntCol {
     Vec3d p;
     Vec3ub c;
@@ -150,8 +146,7 @@ void VRPointCloud::externalSort(string path, size_t NchunkMax, double binSize) {
     };
 
     auto compPoints = [&](PntCol& p1, PntCol& p2) -> bool {
-        return bool(p1.p[2] > p2.p[2]); // test
-
+        //return bool(p1.p[2] > p2.p[2]); // test
         if (!sameBin(p1.p[1],p2.p[1])) return bool(p1.p[1] < p2.p[1]);
         if (!sameBin(p1.p[0],p2.p[0])) return bool(p1.p[0] < p2.p[0]);
         return bool(p1.p[2] < p2.p[2]);
@@ -162,7 +157,9 @@ void VRPointCloud::externalSort(string path, size_t NchunkMax, double binSize) {
 
     for (size_t i = 0; i<Nchunks; i++) { // write sorted chunks to disk
         for (size_t j = 0; j<chunkSize; j++) stream.read((char*)&buffer[j], N);
+        //for (size_t j = 0; j<chunkSize; j++) cout << "  read chunk pnt " << j << ") " << buffer[j].p << endl;
         sort(buffer.begin(), buffer.end(), compPoints);
+        //for (size_t j = 0; j<chunkSize; j++) cout << "  sort chunk pnt " << j << ") " << buffer[j].p << endl;
         string cPath = path+".chunk."+toString(i);
         ofstream cStream(cPath);
         for (size_t j = 0; j<chunkSize; j++) cStream.write((char*)&buffer[j], N);
@@ -171,46 +168,68 @@ void VRPointCloud::externalSort(string path, size_t NchunkMax, double binSize) {
 
     stream.close();
 
-    auto mergeChunks = [&](int lvl, int ID, vector<string>& currentChunks, const vector<string>& lastChunks) {
-        cout << " lvl " << lvl << " ID " << ID << endl;
-        string wPath = path+".lvl"+toString(lvl)+"."+toString(ID);
-        currentChunks.push_back(wPath);
-        /*ofstream wStream(wPath);
-        for (size_t i = 0; i<Nchunks; i++) {
-            string cPath = path+".chunk."+toString(i);
-            ifstream cStream(cPath);
-            for (size_t j = 0; j<chunkSize; j++) cStream.read((char*)&buffer[j], N);
-            if (i == 0) for (auto b : buffer) cout << i << ") " << b.p << endl;
-            cStream.close();
-            for (size_t j = 0; j<chunkSize; j++) wStream.write((char*)&buffer[j], N);
+    auto mergeChunks = [&](size_t L, vector<ifstream>& inStreams, ofstream& wStream) {
+        vector<size_t> mergeHeads;
+        vector<PntCol> mergeHeadData;
+        mergeHeads.resize(inStreams.size(), 0);
+        mergeHeadData.resize(inStreams.size(), PntCol());
+
+        for (size_t i = 0; i<inStreams.size(); i++) {
+            inStreams[i].read((char*)&mergeHeadData[i], N);
+            //cout << "   start point " << i << ": " << mergeHeadData[i].p << endl;
         }
-        wStream.close();*/
+
+        for (size_t i = 0; i<L*3; i++) {
+            int kNext = 0;
+            while(mergeHeads[kNext] == L) kNext++;
+            for (size_t j=kNext+1; j<inStreams.size(); j++) {
+                if (mergeHeads[j] == L) continue;
+                bool b = compPoints(mergeHeadData[j], mergeHeadData[kNext]);
+                //cout << "    compare [" << mergeHeadData[j].p << "] (" << j << ") with [" << mergeHeadData[kNext].p << "] (" << kNext << ") -> " << b << endl;
+                if (b) kNext = j;
+            }
+
+            //cout << "     write point " << kNext << ") " << mergeHeadData[kNext].p << endl;
+            wStream.write((char*)&mergeHeadData[kNext], N);
+            mergeHeads[kNext]++;
+            inStreams[kNext].read((char*)&mergeHeadData[kNext], N);
+        }
     };
 
     size_t NlvlChunks = Nchunks;
+    size_t Lchunks = chunkSize;
     vector<string> currentChunks;
     vector<string> lastChunks;
+    for (int i=0; i<Nchunks; i++) lastChunks.push_back( path+".chunk."+toString(i) );
+
+    //cout << "start merge" << endl;
     for (int i=0; NlvlChunks>1; i++) {
         NlvlChunks /= Mchunks;
+        //cout << " pass " << i << endl;
         for (int j=0; j<NlvlChunks; j++) {
-            if (NlvlChunks > 1) mergeChunks(i, j, currentChunks, lastChunks);
-            else { // final file
-                ofstream wStream(path);
-                wStream << h1 << "\n" << h2 << "\n";
-                for (size_t i = 0; i<Nchunks; i++) {
-                    string cPath = path+".chunk."+toString(i);
-                    ifstream cStream(cPath);
-                    for (size_t j = 0; j<chunkSize; j++) cStream.read((char*)&buffer[j], N);
-                    if (i == 0) for (auto b : buffer) cout << i << ") " << b.p << endl;
-                    cStream.close();
-                    for (size_t j = 0; j<chunkSize; j++) wStream.write((char*)&buffer[j], N);
-                }
-                wStream.close();
+            bool finalPass = (NlvlChunks == 1);
+
+            vector<ifstream> inStreams;
+            for (int k=0; k<Mchunks; k++) {
+                string cPath = lastChunks[j*Mchunks+k];
+                inStreams.push_back(ifstream(cPath));
             }
+
+            string wPath = path;
+            if (!finalPass) wPath = path+".lvl"+toString(i)+"."+toString(j);
+            currentChunks.push_back(wPath);
+
+            ofstream wStream(wPath);
+            if (finalPass) wStream << h1 << "\n" << h2 << "\n";
+
+            //cout << "  merge to " << j << endl;
+            mergeChunks(Lchunks, inStreams, wStream);
+            for (auto& s : inStreams) s.close();
+            wStream.close();
         }
         lastChunks = currentChunks;
+        Lchunks *= Mchunks;
     }
-
 }
 
 
