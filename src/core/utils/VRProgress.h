@@ -36,6 +36,7 @@ class VRProgress {
 
         void setCallback(VRAnimCbPtr cb);
         float get();
+        size_t current();
         size_t left();
         void set(float t);
 

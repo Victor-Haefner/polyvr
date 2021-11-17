@@ -260,12 +260,60 @@ void OSG::loadE57(string path, VRTransformPtr res, map<string, string> importOpt
     catch (...) { cerr << "Got an unknown exception" << endl; return; }
 }
 
+struct PntCol { Vec3d p; Vec3ub c; };
+
+vector<size_t> extractRegionBounds(string path, vector<double> region) {
+    if (region.size() != 6) return {0,0};
+
+    ifstream stream(path);
+    string h1, h2;
+    getline(stream, h1);
+    getline(stream, h2);
+    auto cN = toValue<size_t>(h2);
+    bool hasCol = contains(h1, "r");
+
+    size_t s0 = stream.tellg();
+    int N = sizeof(Vec3d);
+    if (hasCol) N += sizeof(Vec3ub);
+
+    vector<size_t> C = { 0, cN, 0, cN };
+    vector<size_t> B = { 0, cN };
+
+    auto getPoint = [&](size_t pID) -> Vec3d {
+        PntCol pnt;
+        stream.seekg(s0+N*pID, ios::beg);
+        stream.read((char*)&pnt, N);
+        return pnt.p;
+    };
+
+    while(C[1]-C[0] > 1) {
+        size_t M = C[0]*0.5 + C[1]*0.5;
+        Vec3d PM = getPoint(M);
+        if (PM[1] < region[2]) C[0] = M;
+        if (PM[1] > region[2]) C[1] = M;
+    }
+
+    while(C[2]-C[3] > 1) {
+        size_t M = C[2]*0.5 + C[3]*0.5;
+        Vec3d PM = getPoint(M);
+        if (PM[1] < region[3]) C[2] = M;
+        if (PM[1] > region[3]) C[3] = M;
+    }
+
+    B[0] = C[0]*0.5 + C[1]*0.5;
+    B[1] = C[2]*0.5 + C[3]*0.5;
+    return B;
+}
+
 void OSG::loadPCB(string path, VRTransformPtr res, map<string, string> importOptions) {
     cout << "load PCB pointcloud " << path << endl;
     res->setName(path);
 
     float downsampling = 1;
     if (importOptions.count("downsampling")) downsampling = toFloat(importOptions["downsampling"]);
+
+    auto region = toValue<vector<double>>(importOptions["region"]);
+    auto bounds = extractRegionBounds(path, region);
 
     ifstream stream(path);
     string h1, h2;
@@ -287,36 +335,33 @@ void OSG::loadPCB(string path, VRTransformPtr res, map<string, string> importOpt
     auto pointcloud = VRPointCloud::create("pointcloud");
     pointcloud->applySettings(importOptions);
 
-    cout << "fill octree" << endl;
     size_t Nskip = round(1.0/downsampling) - 1;
     size_t count = 0;
     int Nskipped = 0;
 
     int N = sizeof(Vec3d);
     if (hasCol) N += sizeof(Vec3ub);
-    char data[256];
-    size_t pcN = 0;
+    PntCol pnt;
 
-    while (!stream.eof()) {
-        if (pcN == cN) break;
+    auto skip = [&](size_t Nskip) {
+        size_t Nprocessed = min(Nskip, progress->left());
+        if (Nprocessed == 0) return;
+        if (Nprocessed < 10) stream.ignore(N*Nprocessed, EOF); // ignore processes all chars
+        else stream.seekg(N*Nprocessed, ios::cur); // seek jumps directly, better with increasing jump length
+        progress->update( Nprocessed );
+    };
 
-        stream.read(&data[0], N);
+    if (bounds[0]>0) skip(bounds[0]);
 
-        Vec3d  pos = *(Vec3d*)&data[0];
-        Vec3ub rgb = *(Vec3ub*)&data[sizeof(Vec3d)];
+    while (stream.read((char*)&pnt, N)) {
+        Vec3d  pos = pnt.p;
+        Vec3ub rgb = pnt.c;
         Color3f col(rgb[0]/255.0, rgb[1]/255.0, rgb[2]/255.0);
         pointcloud->addPoint(pos, col);
-        pcN++;
-
-        int Nprocessed = 0;
-        if (Nskip>0) {
-            Nprocessed = min(Nskip, progress->left());
-            if (Nprocessed == 0) break;
-            if (Nprocessed < 10) stream.ignore(N*Nprocessed, EOF); // ignore processes all chars
-            else stream.seekg(N*Nprocessed, ios_base::cur); // seek jumps directly, better with increasing jump length
-        }
-
-        progress->update( Nprocessed+1 );
+        progress->update( 1 );
+        if (Nskip>0) skip(Nskip);
+        if (bounds[1]>0)
+            if (progress->current() >= bounds[1]) break;
     }
 
     pointcloud->setupLODs();
