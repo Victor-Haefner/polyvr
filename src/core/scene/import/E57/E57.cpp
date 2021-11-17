@@ -286,22 +286,22 @@ vector<size_t> extractRegionBounds(string path, vector<double> region) {
         return pnt.p;
     };
 
-    while(C[1]-C[0] > 1) {
-        size_t M = C[0]*0.5 + C[1]*0.5;
-        Vec3d PM = getPoint(M);
-        if (PM[1] < region[2]) C[0] = M;
-        if (PM[1] > region[2]) C[1] = M;
-    }
+    auto homeIn = [&](size_t& A, size_t& B, int rComp) {
+        while(B-A > 1) {
+            size_t M = (A + B)*0.5;
+            Vec3d PM = getPoint(M);
+            //cout << "1) " << PM << "  " << PM[1] << " <> " << region[2] << "? -> " << C[0] << "/" << C[1] << endl;
+            if (PM[1] < region[rComp]) A = M;
+            if (PM[1] > region[rComp]) B = M;
+        }
+    };
 
-    while(C[3]-C[2] > 1) {
-        size_t M = C[2]*0.5 + C[3]*0.5;
-        Vec3d PM = getPoint(M);
-        if (PM[1] < region[3]) C[2] = M;
-        if (PM[1] > region[3]) C[3] = M;
-    }
+    homeIn(C[0],C[1],2); // Y lower bound
+    homeIn(C[2],C[3],3); // Y upper bound
 
-    B[0] = C[0]*0.5 + C[1]*0.5;
-    B[1] = C[2]*0.5 + C[3]*0.5;
+    B[0] = max(C[0], C[1]);
+    B[1] = max(C[2], C[3]);
+    cout << "extractRegionBounds " << toString(C) << " -> " << toString(B) << endl;
     return B;
 }
 

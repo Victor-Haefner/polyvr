@@ -6,6 +6,7 @@
 #include "core/math/partitioning/Octree.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRProgress.h"
+#include "core/utils/system/VRSystem.h"
 #include "core/scene/import/E57/E57.h"
 
 using namespace OSG;
@@ -224,9 +225,12 @@ void VRPointCloud::externalSort(string path, size_t NchunkMax, double binSize) {
 
             //cout << "  merge to " << j << endl;
             mergeChunks(Lchunks, inStreams, wStream);
-            for (auto& s : inStreams) s.close();
             wStream.close();
+
+            for (auto& s : inStreams) s.close();
         }
+
+        for (auto& p : lastChunks) removeFile(p);
         lastChunks = currentChunks;
         Lchunks *= Mchunks;
     }
