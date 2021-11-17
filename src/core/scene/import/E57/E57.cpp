@@ -293,7 +293,7 @@ vector<size_t> extractRegionBounds(string path, vector<double> region) {
         if (PM[1] > region[2]) C[1] = M;
     }
 
-    while(C[2]-C[3] > 1) {
+    while(C[3]-C[2] > 1) {
         size_t M = C[2]*0.5 + C[3]*0.5;
         Vec3d PM = getPoint(M);
         if (PM[1] < region[3]) C[2] = M;
