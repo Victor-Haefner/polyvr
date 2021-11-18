@@ -28,9 +28,7 @@ void OSG::genTestPC(string path, size_t N, bool doColor) {
     ofstream stream(path);
     stream << "x8y8z8";
     if (doColor) stream << "r1g1b1";
-    stream << "\n";
-    stream << toString(N);
-    stream << "\n";
+    stream << "\n" << toString(N) << "\n0\n";
 
     auto progress = VRProgress::create();
     progress->setup("generate points ", N);
@@ -111,9 +109,7 @@ void OSG::convertE57(string pathIn, string pathOut) {
             ofstream stream(pathOut);
             stream << "x8y8z8";
             if (hasCol) stream << "r1g1b1";
-            stream << "\n";
-            stream << toString(cN);
-            stream << "\n";
+            stream << "\n" << toString(cN) << "\n0\n";
 
             do {
                 gotCount = (int)reader.read();
@@ -266,11 +262,14 @@ vector<size_t> extractRegionBounds(string path, vector<double> region) {
     if (region.size() != 6) return {0,0};
 
     ifstream stream(path);
-    string h1, h2;
+    string h1, h2, h3;
     getline(stream, h1);
     getline(stream, h2);
+    getline(stream, h3);
+    cout << "  extractRegionBounds > headers " << h1 << " " << h2 << " " << h3 << endl;
     auto cN = toValue<size_t>(h2);
     bool hasCol = contains(h1, "r");
+    double binSize = toValue<double>(h3);
 
     size_t s0 = stream.tellg();
     int N = sizeof(Vec3d);
@@ -286,22 +285,44 @@ vector<size_t> extractRegionBounds(string path, vector<double> region) {
         return pnt.p;
     };
 
-    auto homeIn = [&](size_t& A, size_t& B, int rComp) {
+    static const double eps = 1e-6;
+
+    auto calcBin = [&](double& a) {
+        return round(0.5 + eps + a/binSize);
+    };
+
+    auto calcBinMin = [&](size_t& b) {
+        return b*binSize - binSize + eps;
+    };
+
+    auto calcBinMax = [&](size_t& b) {
+        return b*binSize - eps;
+    };
+
+    auto homeIn = [&](size_t& A, size_t& B, int rComp, bool isMin) {
+        double v = region[rComp];
+        size_t bin = calcBin(v);
+        cout << "homeIn " << v << " (" << bin << ") -> " << calcBinMin(bin) << " / " << calcBinMax(bin) << endl;
+        if (isMin)  v = calcBinMin(bin);
+        else        v = calcBinMax(bin);
+        cout << " --> " << v << "   binSize: " << binSize << endl;
+
+
         while(B-A > 1) {
             size_t M = (A + B)*0.5;
             Vec3d PM = getPoint(M);
             //cout << "1) " << PM << "  " << PM[1] << " <> " << region[2] << "? -> " << C[0] << "/" << C[1] << endl;
-            if (PM[1] < region[rComp]) A = M;
-            if (PM[1] > region[rComp]) B = M;
+            if (PM[1] < v) A = M;
+            if (PM[1] > v) B = M;
         }
     };
 
-    homeIn(C[0],C[1],2); // Y lower bound
-    homeIn(C[2],C[3],3); // Y upper bound
+    homeIn(C[0],C[1],2, true); // Y lower bound
+    homeIn(C[2],C[3],3, false); // Y upper bound
 
     B[0] = max(C[0], C[1]);
     B[1] = max(C[2], C[3]);
-    cout << "extractRegionBounds " << toString(C) << " -> " << toString(B) << endl;
+    //cout << "extractRegionBounds " << toString(C) << " -> " << toString(B) << endl;
     return B;
 }
 
@@ -316,10 +337,11 @@ void OSG::loadPCB(string path, VRTransformPtr res, map<string, string> importOpt
     auto bounds = extractRegionBounds(path, region);
 
     ifstream stream(path);
-    string h1, h2;
+    string h1, h2, h3;
     getline(stream, h1);
     getline(stream, h2);
-    cout << "  headers " << h1 << " " << h2 << endl;
+    getline(stream, h3);
+    cout << "  headers " << h1 << " " << h2 << " " << h3 << endl;
 
     auto cN = toValue<size_t>(h2);
     cout << "  scan contains " << cN << " points" << endl;

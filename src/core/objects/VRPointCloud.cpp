@@ -110,9 +110,10 @@ struct PntCol {
 
 void VRPointCloud::externalSort(string path, size_t NchunkMax, double binSize) {
     ifstream stream(path);
-    string h1, h2;
+    string h1, h2, h3;
     getline(stream, h1);
     getline(stream, h2);
+    getline(stream, h3);
     cout << "  externalSort headers " << h1 << " " << h2 << endl;
 
     auto cN = toValue<size_t>(h2);
@@ -142,8 +143,14 @@ void VRPointCloud::externalSort(string path, size_t NchunkMax, double binSize) {
     cout << "  externalSort Nchunks: " << Nchunks << ", with Mchunks: " << Mchunks << endl;
     cout << "  externalSort chunkSize: " << chunkSize << ", lastChunkSize: " << lastChunkSize << endl;
 
-    auto sameBin = [&](double& a, double& b){
-        return bool( abs(b-a)<binSize );
+    auto calcBin = [&](double& a) {
+        static const double eps = 1e-6;
+        return round(0.5 + eps + a/binSize);
+    };
+
+    auto sameBin = [&](double& a, double& b) {
+        return bool( calcBin(a) == calcBin(b) );
+        //return bool( abs(b-a)<binSize );
     };
 
     auto compPoints = [&](PntCol& p1, PntCol& p2) -> bool {
@@ -169,7 +176,7 @@ void VRPointCloud::externalSort(string path, size_t NchunkMax, double binSize) {
 
     stream.close();
 
-    auto mergeChunks = [&](size_t L, vector<ifstream>& inStreams, ofstream& wStream) {
+    auto mergeChunks = [&](size_t L, vector<ifstream>& inStreams, ofstream& wStream, bool verbose = false) {
         vector<size_t> mergeHeads;
         vector<PntCol> mergeHeadData;
         mergeHeads.resize(inStreams.size(), 0);
@@ -177,7 +184,7 @@ void VRPointCloud::externalSort(string path, size_t NchunkMax, double binSize) {
 
         for (size_t i = 0; i<inStreams.size(); i++) {
             inStreams[i].read((char*)&mergeHeadData[i], N);
-            //cout << "   start point " << i << ": " << mergeHeadData[i].p << endl;
+            //if (verbose) cout << "   start point " << i << ": " << mergeHeadData[i].p << endl;
         }
 
         for (size_t i = 0; i<L*3; i++) {
@@ -186,11 +193,11 @@ void VRPointCloud::externalSort(string path, size_t NchunkMax, double binSize) {
             for (size_t j=kNext+1; j<inStreams.size(); j++) {
                 if (mergeHeads[j] == L) continue;
                 bool b = compPoints(mergeHeadData[j], mergeHeadData[kNext]);
-                //cout << "    compare [" << mergeHeadData[j].p << "] (" << j << ") with [" << mergeHeadData[kNext].p << "] (" << kNext << ") -> " << b << endl;
+                //if (verbose) cout << "    compare [" << mergeHeadData[j].p << "] (" << j << ") with [" << mergeHeadData[kNext].p << "] (" << kNext << ") -> " << b << endl;
                 if (b) kNext = j;
             }
 
-            //cout << "     write point " << kNext << ") " << mergeHeadData[kNext].p << endl;
+            //if (verbose) cout << "     write point " << kNext << ") " << mergeHeadData[kNext].p << endl;
             wStream.write((char*)&mergeHeadData[kNext], N);
             mergeHeads[kNext]++;
             inStreams[kNext].read((char*)&mergeHeadData[kNext], N);
@@ -206,13 +213,14 @@ void VRPointCloud::externalSort(string path, size_t NchunkMax, double binSize) {
     //cout << "start merge" << endl;
     for (int i=0; NlvlChunks>1; i++) {
         NlvlChunks /= Mchunks;
-        //cout << " pass " << i << endl;
+        //cout << " pass " << i << ", NlvlChunks: " << NlvlChunks << endl;
         for (int j=0; j<NlvlChunks; j++) {
             bool finalPass = (NlvlChunks == 1);
 
             vector<ifstream> inStreams;
             for (int k=0; k<Mchunks; k++) {
                 string cPath = lastChunks[j*Mchunks+k];
+                //cout << " > open input stream " << cPath << endl;
                 inStreams.push_back(ifstream(cPath));
             }
 
@@ -220,18 +228,28 @@ void VRPointCloud::externalSort(string path, size_t NchunkMax, double binSize) {
             if (!finalPass) wPath = path+".lvl"+toString(i)+"."+toString(j);
             currentChunks.push_back(wPath);
 
+            //cout << "  > open output stream " << wPath << endl;
             ofstream wStream(wPath);
-            if (finalPass) wStream << h1 << "\n" << h2 << "\n";
+            if (finalPass) {
+                cout << "  sort, write final pass!! binSize: " << binSize << endl;
+                wStream << h1 << "\n" << h2 << "\n" << toString(binSize) << "\n";
+            }
 
-            //cout << "  merge to " << j << endl;
-            mergeChunks(Lchunks, inStreams, wStream);
+            //cout << "    merge to " << j << endl;
+            mergeChunks(Lchunks, inStreams, wStream, i == 2);
+            //cout << "  < close output stream " << wPath << endl;
             wStream.close();
 
-            for (auto& s : inStreams) s.close();
+            for (int k=0; k<Mchunks; k++) {
+                string cPath = lastChunks[j*Mchunks+k];
+                //cout << " < close input stream " << cPath << endl;
+                inStreams[k].close();
+            }
         }
 
         for (auto& p : lastChunks) removeFile(p);
         lastChunks = currentChunks;
+        currentChunks.clear();
         Lchunks *= Mchunks;
     }
 }
