@@ -96,7 +96,13 @@ void VRICEClient::processUsers(string data) {
 }
 
 void VRICEClient::processMessages(string data) {
-    if (data != "") if (onEventCb) onEventCb("message|"+data);
+    if (data != "") {
+        auto messages = splitString(data, ">>>---");
+        for (int i=0; i<messages.size(); i++)  {
+            string msg = messages[i];
+            if (onEventCb) onEventCb("message|"+msg);
+        }
+    }
     msgGuard = false;
 }
 
