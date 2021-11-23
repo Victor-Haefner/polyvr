@@ -292,7 +292,7 @@ vector<size_t> extractRegionBounds(string path, vector<double> region) {
     };
 
     auto calcBinMin = [&](size_t& b) {
-        return b*binSize - binSize + eps;
+        return b*binSize - binSize - eps;
     };
 
     auto calcBinMax = [&](size_t& b) {
@@ -302,10 +302,10 @@ vector<size_t> extractRegionBounds(string path, vector<double> region) {
     auto homeIn = [&](size_t& A, size_t& B, int rComp, bool isMin) {
         double v = region[rComp];
         size_t bin = calcBin(v);
-        cout << "homeIn " << v << " (" << bin << ") -> " << calcBinMin(bin) << " / " << calcBinMax(bin) << endl;
+        //cout << "homeIn " << v << " (" << bin << ") -> " << calcBinMin(bin) << " / " << calcBinMax(bin) << endl;
         if (isMin)  v = calcBinMin(bin);
         else        v = calcBinMax(bin);
-        cout << " --> " << v << "   binSize: " << binSize << endl;
+        //cout << " --> " << v << "   binSize: " << binSize << endl;
 
 
         while(B-A > 1) {
