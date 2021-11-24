@@ -13,7 +13,9 @@
 #include "core/setup/devices/VRDevice.h"
 //#include "core/math/pose.h"
 #include "core/utils/VRStorage_template.h"
+#ifndef WITHOUT_GTK
 #include "core/gui/VRGuiConsole.h"
+#endif
 #include "core/utils/system/VRSystem.h"
 #include "core/scene/VRScene.h"
 #include "core/scene/VRSceneManager.h"
@@ -122,7 +124,9 @@ string VRSyncNode::addTCPClient(VRTCPClientPtr client) {
     auto remote = VRSyncConnection::create(client, uri);
     remotes[uri] = remote;
     client->onMessage( bind(&VRSyncNode::handleMessage, this, std::placeholders::_1, uri) );
+#ifndef WITHOUT_GTK
     VRConsoleWidget::get("Collaboration")->write( name+": add tcp client connected to "+uri+", state is "+toString(client->connected())+"\n");
+#endif
     remote->send("accConnect|1");
     return uri;
 }
@@ -131,7 +135,9 @@ void VRSyncNode::accTCPConnection(string msg, string rID) {
     auto remote = getRemote(rID);
     if (!remote) return;
     auto nID = getNode()->node->getId();
+#ifndef WITHOUT_GTK
     VRConsoleWidget::get("Collaboration")->write( name+": got tcp client acc, "+msg+"\n");
+#endif
     if (msg == "accConnect|1") remote->send("accConnect|2");
     remote->send("selfmap|"+toString(nID));
     sendTypes(rID);
@@ -139,7 +145,9 @@ void VRSyncNode::accTCPConnection(string msg, string rID) {
 }
 
 void VRSyncNode::reqInitState(string rID) {
+#ifndef WITHOUT_GTK
     VRConsoleWidget::get("Collaboration")->write( name+": got request to send initial state\n");
+#endif
     if (getChildrenCount() == 0) return;
     changelist->sendSceneState(ptr(), rID);
 }
@@ -438,7 +446,9 @@ VRObjectPtr VRSyncNode::OSGConstruct(NodeMTRecPtr n, VRObjectPtr parent, Node* g
         if (tmp) {
             auto child = n->getChild(i);
             if (child == n) {
+#ifndef WITHOUT_GTK
                 VRConsoleWidget::get("Collaboration")->write( name+": Error in OSGConstruct, found invalid child equaling its parent!\n", "red");
+#endif
                 continue;
             }
             obj = OSGConstruct(child, tmp, geoParent);
@@ -636,12 +646,16 @@ void VRSyncNode::addRemoteAvatar(string remoteID, VRTransformPtr headTransform, 
     UInt32 deviceAnchorID = getNodeID(devAnchor);
     string msg = "addAvatar|"+toString(headTransID)+":"+toString(deviceTransID)+":"+toString(deviceAnchorID);
     remote->send(msg);
+#ifndef WITHOUT_GTK
     VRConsoleWidget::get("Collaboration")->write( name+": Add avatar representation, head "+headTransform->getName()+" ("+toString(headTransID)+"), hand "+devTransform->getName()+" ("+toString(deviceTransID)+")\n", "green");
+#endif
 }
 
 void VRSyncNode::addExternalContainer(UInt32 id, UInt32 mask) {
     externalContainer[id] = mask;
+#ifndef WITHOUT_GTK
     VRConsoleWidget::get("Collaboration")->write( name+": Add external container "+toString(id)+" with mask "+toString(mask)+"\n", "green");
+#endif
 }
 
 void VRSyncNode::handleAvatar(string data, string remoteID) {
@@ -663,9 +677,11 @@ void VRSyncNode::handleAvatar(string data, string remoteID) {
         mapping += "|"+toString(deviceTransID)+":"+toString(devTrans);
         mapping += "|"+toString(deviceAnchorID)+":"+toString(devAnchor);
         remote->send(mapping);
+#ifndef WITHOUT_GTK
         VRConsoleWidget::get("Collaboration")->write( name+": Map remote avatar head ID "+toString(headTransID)+" to local camera ID "+toString(camTrans)+"\n", "green");
         VRConsoleWidget::get("Collaboration")->write( name+": Map remote avatar hand ID "+toString(deviceTransID)+" to local device ID "+toString(devTrans)+"\n", "green");
         VRConsoleWidget::get("Collaboration")->write( name+": Map remote avatar anchor ID "+toString(deviceAnchorID)+" to local anchor ID "+toString(devAnchor)+"\n", "green");
+#endif
 
         UInt32 childMask = 0;
         childMask |= Node::ChildrenFieldMask;
@@ -823,11 +839,15 @@ vector<string> VRSyncNode::getRemotes() {
 }
 
 void VRSyncNode::handleNewConnect(string data){
+#ifndef WITHOUT_GTK
     VRConsoleWidget::get("Collaboration")->write( name+": got new connection: "+data+"\n");
+#endif
     cout << "VRSyncNode::handleNewConnect '" << data << "'" << endl;
     auto remoteData = splitString(data, '|');
     if (remoteData.size() < 2) {
+#ifndef WITHOUT_GTK
         VRConsoleWidget::get("Collaboration")->write( name+":  Error, new connection, data malformed!\n", "red");
+#endif
         cout << "Warning in VRSyncNode::handleNewConnect!, data malformed" << endl;
         return;
     }
@@ -835,7 +855,9 @@ void VRSyncNode::handleNewConnect(string data){
     string remoteName = remoteData[1];
     auto uri = splitString(remoteName, ':');
     if (uri.size() < 2) {
+#ifndef WITHOUT_GTK
         VRConsoleWidget::get("Collaboration")->write( name+":  Error, new connection, remote name malformed!\n", "red");
+#endif
         cout << "Warning in VRSyncNode::handleNewConnect!, remote name malformed" << endl;
         return;
     }
@@ -849,7 +871,9 @@ void VRSyncNode::handleNewConnect(string data){
 
     if (!remotes.count(remoteName)) {
         cout << "  new connection -> add remote" << remoteName << endl;
+#ifndef WITHOUT_GTK
         VRConsoleWidget::get("Collaboration")->write( name+":  new connection, add remote "+remoteName+"\n");
+#endif
         VRSyncNode::addRemote(ip, toInt(port));
     }
 }
@@ -864,7 +888,9 @@ void VRSyncNode::startInterface(int port) {
 void VRSyncNode::handleWarning(string msg) {
     auto data = splitString(msg, '|');
     if (data.size() != 3) { cout << "AAargh" << endl; return; }
+#ifndef WITHOUT_GTK
     VRConsoleWidget::get("Collaboration")->write( name+": Warning received '"+data[1]+"' about FC "+data[2], "red");
+#endif
     if (factory) {
         int ID = toInt(data[2]);
         if (auto fct = factory->getContainer(ID)) {
@@ -872,7 +898,9 @@ void VRSyncNode::handleWarning(string msg) {
             if (AttachmentContainer* attc = dynamic_cast<AttachmentContainer*>(fct)) {
                 if (auto n = ::getName(attc)) name = n;
             }
+#ifndef WITHOUT_GTK
             VRConsoleWidget::get("Collaboration")->write( " "+name+" of type: "+fct->getTypeName()+" ("+toString(fct->getTypeId())+")\n", "red");
+#endif
         }
     }
 }
@@ -880,11 +908,15 @@ void VRSyncNode::handleWarning(string msg) {
 void VRSyncNode::handleSelfmapRequest(string msg) {
     auto data = splitString(msg, '|');
     if (data.size() < 2) {
+#ifndef WITHOUT_GTK
         VRConsoleWidget::get("Collaboration")->write( name+":  Error, received remote sync node ID, data malformed!\n", "red");
+#endif
         return;
     }
     int rID = toInt(data[1]);
+#ifndef WITHOUT_GTK
     VRConsoleWidget::get("Collaboration")->write( name+": map own ID "+toString(selfID)+", to remote ID "+toString(rID)+"\n");
+#endif
     addRemoteMapping(selfID, rID);
 }
 

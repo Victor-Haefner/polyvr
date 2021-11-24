@@ -4,7 +4,9 @@
 #include "../rest/VRRestResponse.h"
 #include "core/utils/toString.h"
 #include "core/scene/VRScene.h"
+#ifndef WITHOUT_GTK
 #include "core/gui/VRGuiConsole.h"
+#endif
 
 using namespace OSG;
 
@@ -24,14 +26,18 @@ VRICEClientPtr VRICEClient::ptr() { return static_pointer_cast<VRICEClient>(shar
 void VRICEClient::setTurnServer(string url, string ip) {
     turnURL = url;
     turnIP = ip;
+#ifndef WITHOUT_GTK
     VRConsoleWidget::get("Collaboration")->write( " ICE "+toString((void*)this)+" set turn server "+url+" ("+ip+")\n");
+#endif
 }
 
 void VRICEClient::setName(string n) {
     name = n;
     uID = broker->get(turnURL+"/regUser.php?NAME="+n)->getData();
     //cout << "register name " << n << " -> " << uID << endl;
+#ifndef WITHOUT_GTK
     VRConsoleWidget::get("Collaboration")->write( " ICE "+toString((void*)this)+", set named "+name+" ("+uID+")\n");
+#endif
 }
 
 void VRICEClient::removeUser(string uid) {
@@ -73,7 +79,9 @@ void VRICEClient::updateUsers() {
         users[uid] = name;
         status += " "+name+"("+uid+")";
     }
+#ifndef WITHOUT_GTK
     VRConsoleWidget::get("Collaboration")->write( status+"\n");
+#endif
 }
 
 map<string, string> VRICEClient::getUsers() { return users; }
@@ -81,7 +89,9 @@ map<string, string> VRICEClient::getUsers() { return users; }
 void VRICEClient::send(string otherID, string msg) {
     msg = VRRestResponse::uriEncode(msg);
     broker->get(turnURL+"/addMessage.php?ORG="+uID+"&UID="+otherID+"&MSG="+msg)->getData();
+#ifndef WITHOUT_GTK
     VRConsoleWidget::get("Collaboration")->write( " ICE "+name+" send to "+otherID+": '"+msg+"'\n");
+#endif
 }
 
 void VRICEClient::processUsers(string data) {
@@ -152,7 +162,9 @@ map<string, VRTCPClientPtr> VRICEClient::getClients() { return clients; }
 void VRICEClient::connectTo(string otherID) {
     if (uID == "" || otherID == "") {
         cout << "VRICEClient::connectTo failed, empty ID" << endl;
+#ifndef WITHOUT_GTK
         VRConsoleWidget::get("Collaboration")->write( " ICE "+name+" connectTo failed, empty ID "+uID+", "+otherID+"\n", "red");
+#endif
         return;
     }
     string uid1 = uID;
@@ -161,31 +173,41 @@ void VRICEClient::connectTo(string otherID) {
 
     if (!users.count(uid1)) {
         cout << "VRICEClient::connectTo failed, own ID " << uid1 << " not in users!" << endl;
+#ifndef WITHOUT_GTK
         VRConsoleWidget::get("Collaboration")->write( " ICE "+name+" connectTo failed, own ID "+uid1+" not in users\n", "red");
+#endif
         return;
     }
 
     if (!users.count(uid2)) {
         cout << "VRICEClient::connectTo failed, others ID " << uid2 << " not in users!" << endl;
+#ifndef WITHOUT_GTK
         VRConsoleWidget::get("Collaboration")->write( " ICE "+name+" connectTo failed, other ID "+uid2+" not in users\n", "red");
+#endif
         return;
     }
 
     string data = broker->get(turnURL+"/getConnection.php?UID="+uid1+"&UID2="+uid2)->getData();
     auto params = splitString(data, ':');
     if (params.size() == 0) {
+#ifndef WITHOUT_GTK
         VRConsoleWidget::get("Collaboration")->write( " ICE "+name+"("+uid1+"): connect to "+turnIP+" faild! no port received from turn server "+turnURL+", received '"+data+"'\n", "red");
+#endif
         return;
     }
 
     int port = toInt( params[0] );
     if (port == 0) {
+#ifndef WITHOUT_GTK
         VRConsoleWidget::get("Collaboration")->write( " ICE "+name+"("+uid1+"): connect to "+turnIP+" faild! no port received from turn server "+turnURL+", received '"+data+"'\n", "red");
+#endif
         return;
     }
 
     //cout << " -> port " << port << endl;
+#ifndef WITHOUT_GTK
     VRConsoleWidget::get("Collaboration")->write( " ICE "+name+"("+uid1+"): connect to "+users[uid2]+"("+uid2+") over "+turnIP+":"+toString(port)+"\n");
+#endif
     getClient(otherID)->connect(turnIP, port);
 }
 

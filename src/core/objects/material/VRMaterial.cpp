@@ -943,7 +943,9 @@ bool VRMaterial::isWireFrame() {
 
 VRVideoPtr VRMaterial::setVideo(string vid_path) {
     if (!exists(vid_path)) {
+#ifndef WITHOUT_GTK
         VRConsoleWidget::get("Errors")->write("Material setVideo "+vid_path+" of material "+getName()+" failed, path not found!\n");
+#endif
         return 0;
     }
 

@@ -865,11 +865,15 @@ void VRTransform::updateConstraints() { // global updater
     for (auto wc : constrainedObjects) {
         if (VRTransformPtr obj = wc.second.lock()) {
             obj->apply_constraints();
+#ifndef WITHOUT_BULLET
             if (obj->held) obj->updatePhysics();
+#endif
             obj->computeMatrix4d();
             obj->updateTransformation();
+#ifndef WITHOUT_BULLET
             obj->noBlt = obj->getPhysicsDynamic();
             obj->updatePhysics();
+#endif
         }
 
         //if (VRTransformPtr obj = wc.second.lock()) obj->updateChange();

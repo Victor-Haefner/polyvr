@@ -154,12 +154,14 @@ void VRSetup::setupLESCCAVELights(VRScenePtr scene) {
 }
 
 void VRSetup::updateGtkDevices() {
+#ifndef WITHOUT_GTK
     for (auto dev : getDevices()) {
         auto m = dynamic_pointer_cast<VRMouse>(dev.second);
         auto k = dynamic_pointer_cast<VRKeyboard>(dev.second);
         if (m) m->applyEvents();
         if (k) k->applyEvents();
     }
+#endif
 }
 
 void VRSetup::updateTracking() {

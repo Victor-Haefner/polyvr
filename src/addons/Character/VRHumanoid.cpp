@@ -308,6 +308,7 @@ string VRHumanoid::getParameterString() {
 }
 
 void VRHumanoid::loadParameters(string params, bool gen) {
+#ifndef WITHOUT_JSONCPP
     Json::Value root;
     Json::Reader reader;
 
@@ -336,6 +337,7 @@ void VRHumanoid::loadParameters(string params, bool gen) {
     }
 
     if (gen) generate();
+#endif
 }
 
 Color3f VRHumanoid::getColor(string pID) { return colors[pID]; }
