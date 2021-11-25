@@ -118,6 +118,7 @@
 			<Add directory="/usr/include/DWG" />
 			<Add directory="/usr/include/libxml2" />
 			<Add directory="/usr/include/eigen3" />
+			<Add directory="/usr/include/jsoncpp" />
 		</Compiler>
 		<Linker>
 			<Add option="-lTKV3d" />
@@ -1574,9 +1575,6 @@
 		<Unit filename="src/core/utils/zipper/zipper.h" />
 		<Unit filename="src/main.cpp" />
 		<Unit filename="src/version/version.cpp" />
-		<Extensions>
-			<code_completion />
-			<debugger />
-		</Extensions>
+		<Extensions />
 	</Project>
 </CodeBlocks_project_file>
