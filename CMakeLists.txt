@@ -34,6 +34,12 @@ add_custom_target(
     COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/src/version/${versionScript}
 )
 
+if(UNIX)
+add_custom_target(cefResourceCopy)
+add_custom_command(TARGET cefResourceCopy PRE_BUILD COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/ressources/cef18/icudtl.dat ${CMAKE_BINARY_DIR})
+add_custom_command(TARGET cefResourceCopy PRE_BUILD COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/ressources/cef18/*.bin ${CMAKE_BINARY_DIR})
+endif()
+
 add_definitions( -D__USE_MISC=1 )
 
 set(INCLUDE_DIRS "")
@@ -1300,11 +1306,13 @@ target_sources(polyvr PRIVATE src/addons/Algorithms/VRPathFinding.cpp)
 target_sources(polyvr PRIVATE src/addons/Algorithms/VRGraphLayout.cpp)
 endif()
 
+if(UNIX)
+add_dependencies(polyvr cefResourceCopy)
+endif()
 add_dependencies(polyvr versionTarget)
 target_compile_options(polyvr PRIVATE ${COMPILER_FLAGS})
 message(${LINKER_FLAGS})
 target_link_libraries(polyvr PRIVATE ${LINKER_FLAGS})
-
 
 
 
