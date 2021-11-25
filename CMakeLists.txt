@@ -1,6 +1,7 @@
 cmake_minimum_required (VERSION 3.0)
 
 #set( CMAKE_VERBOSE_MAKEFILE on )
+#set(CMAKE_BUILD_TYPE Debug) # Warning! this will recompile everything!
 
 project(PolyVR)
 

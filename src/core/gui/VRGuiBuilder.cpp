@@ -81,7 +81,7 @@ _GtkObject* VRGuiBuilder::get_object(string name) {
 
 GtkWidget* addWindow(string ID, string name) {
     GtkWidget* w = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-    cout << "addWindow " << ID << " " << name << endl;
+    cout << "addWindow " << ID << " " << name << ", widget: " << w << endl;
 
     VRGuiBuilder::get()->reg_widget(w, ID);
     gtk_window_set_title(GTK_WINDOW(w), name.c_str());
