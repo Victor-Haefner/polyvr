@@ -11,7 +11,9 @@
 #include "core/scene/VRSceneManager.h"
 #include "core/math/partitioning/boundingbox.h"
 #ifndef WITHOUT_LAPACKE_BLAS
+#ifndef WITHOUT_CGAL
 #include "core/math/VRConvexHull.h"
+#endif
 #endif
 #include "core/utils/VRStorage_template.h"
 #include "core/utils/system/VRSystem.h"
@@ -679,12 +681,16 @@ void VRTree::createHullLeafLod(VRGeoData& geo, int lvl, Vec3d offset, int ID) {
         float ch = color[2]; // chlorophyll
         Color3f leafColor(0.4*ca,0.8*ch,0.2*ch);
 #ifndef WITHOUT_LAPACKE_BLAS
+#ifndef WITHOUT_CGAL
         VRConvexHull hull;
         auto hgeo = hull.compute( tmpData.asGeometry("tmpdata") );
         if (!hgeo) return 0;
         auto res = VRGeoData( hgeo );
         for (int i=0; i<res.size(); i++) res.pushColor( leafColor );
         return res.size() > 0 ? res.asGeometry("tmp") : 0;
+#else
+        return 0;
+#endif
 #else
         return 0;
 #endif

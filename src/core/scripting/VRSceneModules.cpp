@@ -127,7 +127,7 @@
 
 #ifndef WITHOUT_CEF
 #include "addons/CEF/VRPyCEF.h"
-#ifndef _WIN32
+#ifndef WITHOUT_AV
 #include "addons/CEF/VRPyWebCam.h"
 #endif
 #endif
@@ -383,7 +383,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
 
 #ifndef WITHOUT_CEF
     sm->registerModule<VRPyCEF>("CEF", pModVR);
-#ifndef _WIN32
+#ifndef WITHOUT_AV
     sm->registerModule<VRPyWebCam>("Webcam", pModVR, VRPySprite::typeRef);
 #endif
 #endif

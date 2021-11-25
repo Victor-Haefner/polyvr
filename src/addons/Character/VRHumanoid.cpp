@@ -5,11 +5,7 @@
 #include "core/objects/geometry/VRGeoData.h"
 
 #ifndef WITHOUT_JSONCPP
-#ifdef _WIN32
 #include <json/json.h>
-#else
-#include <jsoncpp/json/json.h>
-#endif
 #endif
 
 #define JSONSTR(txt) #txt

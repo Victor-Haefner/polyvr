@@ -1,6 +1,7 @@
 
-
+#ifndef WITHOUT_OPENVR
 #include "core/setup/windows/VRHeadMountedDisplay.h"
+#endif
 #include "core/gui/glarea/glarea.h"
 #include "core/gui/VRGuiBuilder.h"
 #include "core/objects/object/VRObject.h"
