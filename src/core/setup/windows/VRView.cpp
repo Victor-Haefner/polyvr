@@ -122,8 +122,13 @@ void VRView::setViewports() {//create && set size of viewports
         lView = Viewport::create();
         rView = Viewport::create();
         // left bottom right top
-        lView->setSize(p[0], p[1], (p[0]+p[2])*0.5, p[3]);
-        rView->setSize((p[0]+p[2])*0.5, p[1], p[2], p[3]);
+        //lView->setSize(p[0], p[1], (p[0]+p[2])*0.5, p[3]);
+        //rView->setSize((p[0]+p[2])*0.5, p[1], p[2], p[3]);
+
+	double a = p[0]*0.5;
+	double b = (1.0-p[2])*0.5;
+        lView->setSize(a,     p[1], 0.5-b, p[3]);
+        rView->setSize(0.5+a, p[1], 1.0-b, p[3]);
 
         // special test config that induces strange artifacts for ssao
         //lView->setSize(0, 0, 0.5, 1.0);

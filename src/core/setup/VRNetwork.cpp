@@ -24,6 +24,11 @@ VRNetwork::~VRNetwork() {
     stopSlaves();
 }
 
+void VRNetwork::joinInitThreads() {
+    cout << "----------------------- VRNetwork::joinInitThreads ------------------------" << endl;
+    for (auto n : getData()) n->joinInitThread();
+}
+
 
 VRNetworkNode::VRNetworkNode(string name) : VRManager("NetworkNode") {
     setNameSpace("NetworkNode");
@@ -43,8 +48,12 @@ VRNetworkNodePtr VRNetworkNode::create(string name) { return VRNetworkNodePtr( n
 VRNetworkNodePtr VRNetworkNode::ptr() { return static_pointer_cast<VRNetworkNode>( shared_from_this() ); }
 
 void VRNetworkNode::setup(VRStorageContextPtr context) {
-    update();
-    initSlaves();
+    cout << "       ----------------------- VRNetworkNode::setup ------------------------" << endl;
+    initThread = thread( [&](){ update(); initSlaves();} );
+}
+
+void VRNetworkNode::joinInitThread() {
+    initThread.join();
 }
 
 string VRNetworkNode::getAddress() { return address; }
@@ -105,7 +114,15 @@ void VRNetworkNode::initSlaves() {
 }
 
 void VRNetwork::stopSlaves() {
-    for (auto n : getData()) n->stopSlaves();
+    cout << "VRNetwork::stopSlaves" << endl;
+    vector<thread*> threads;
+    for (auto n : getData()) {
+	auto t = new thread( [&](){n->stopSlaves();} );
+        threads.push_back(t);
+    }
+    cout << " wait for all threads to finish.. (" << threads.size() << ")" << endl;
+    for (auto t : threads) { t->join(); delete t; }
+    cout << "  done!" << endl;
 }
 
 void VRNetworkNode::stopSlaves() {
@@ -158,12 +175,15 @@ void VRNetworkNode::update() {
 #endif
 }
 
+map<string, shared_ptr<VRSSHSession> > sessions;
+
 string VRNetworkNode::getRemoteOS() {
     if (isLocal()) return os;
     if (stat_ssh != "ok") return "";
 #ifndef WITHOUT_SSH
-    auto ssh = VRSSHSession::open(address, user);
-    os = ssh->getRemoteOS();
+    string n = getName();
+    if (!sessions.count(n)) sessions[n] = VRSSHSession::open(address, user);
+    os = sessions[n]->getRemoteOS();
 #endif
     return os;
 }
@@ -176,8 +196,9 @@ string VRNetworkNode::execCmd(string cmd, bool read) {
     }
 #ifndef WITHOUT_SSH
     if (stat_ssh != "ok") return "";
-    auto ssh = VRSSHSession::open(address, user);
-    return ssh->exec_cmd(cmd, read);
+    string n = getName();
+    if (!sessions.count(n)) sessions[n] = VRSSHSession::open(address, user);
+    return sessions[n]->exec_cmd(cmd, read);
 #else
     return "";
 #endif

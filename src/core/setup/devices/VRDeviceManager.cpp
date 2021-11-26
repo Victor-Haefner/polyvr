@@ -9,6 +9,7 @@
 #include "VRMouse.h"
 #include "VRKeyboard.h"
 #include "VRServer.h"
+#include "VRPresenter.h"
 #include "addons/LeapMotion/VRLeap.h"
 
 #ifndef WITHOUT_ART
@@ -148,6 +149,21 @@ void VRDeviceManager::load(XMLElementPtr node) {
             dev = m;
         }
 
+        if (type == "presenter") {
+            VRPresenterPtr m = VRPresenter::create();
+            m->load(el);
+            dev = m;
+
+            /*auto scene = VRScene::getCurrent();
+            if (scene) {
+                scene->initFlyWalk(scene->getActiveCamera(), dev);
+                scene->setActiveNavigation("FlyWalk");
+                dev->clearDynTrees();
+                dev->addDynTree(scene->getRoot());
+            }*/
+
+            
+        }
 
         if (dev == 0) continue;
         addDevice(dev);

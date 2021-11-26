@@ -321,7 +321,10 @@ void VRSetup::load(string file) {
 #endif
     if (deviceN) VRDeviceManager::load(deviceN);
     if (displayN) VRWindowManager::load(displayN);
-    if (networkN) network->load(networkN);
+    if (networkN) {
+        network->load(networkN);
+        network->joinInitThreads();
+    }
     for (auto el : scriptN->getChildren()) {
         auto s = VRScript::create("tmp");
         s->load(el);
