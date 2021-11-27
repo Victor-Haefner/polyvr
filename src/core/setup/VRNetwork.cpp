@@ -175,15 +175,17 @@ void VRNetworkNode::update() {
 #endif
 }
 
-map<string, shared_ptr<VRSSHSession> > sessions;
+//map<string, shared_ptr<VRSSHSession> > sessions;
 
 string VRNetworkNode::getRemoteOS() {
     if (isLocal()) return os;
     if (stat_ssh != "ok") return "";
 #ifndef WITHOUT_SSH
     string n = getName();
-    if (!sessions.count(n)) sessions[n] = VRSSHSession::open(address, user);
-    os = sessions[n]->getRemoteOS();
+    //if (!sessions.count(n)) sessions[n] = VRSSHSession::open(address, user);
+    //os = sessions[n]->getRemoteOS();
+    auto ssh = VRSSHSession::open(address, user);
+    os = ssh->getRemoteOS();
 #endif
     return os;
 }
@@ -197,8 +199,10 @@ string VRNetworkNode::execCmd(string cmd, bool read) {
 #ifndef WITHOUT_SSH
     if (stat_ssh != "ok") return "";
     string n = getName();
-    if (!sessions.count(n)) sessions[n] = VRSSHSession::open(address, user);
-    return sessions[n]->exec_cmd(cmd, read);
+    //if (!sessions.count(n)) sessions[n] = VRSSHSession::open(address, user);
+    //return sessions[n]->exec_cmd(cmd, read);
+    auto ssh = VRSSHSession::open(address, user);
+    return ssh->exec_cmd(cmd, read);
 #else
     return "";
 #endif

@@ -182,7 +182,6 @@ void VRIntersect::dragCB(VRTransformWeakPtr caster, VRObjectWeakPtr tree, VRDevi
 void VRIntersect::clearDynTrees() { dynTrees.clear(); }
 
 void VRIntersect::drag(VRIntersectionPtr i, VRTransformWeakPtr wcaster) {
-    cout << "VRIntersect::drag " << endl;
     VRObjectWeakPtr wobj = i->object;
     auto obj = wobj.lock();
     auto caster = wcaster.lock();
@@ -206,7 +205,6 @@ void VRIntersect::drag(VRIntersectionPtr i, VRTransformWeakPtr wcaster) {
 }
 
 void VRIntersect::drop(VRDeviceWeakPtr dev, VRTransformWeakPtr beacon) {
-    cout << "VRIntersect::drop " << endl;
     auto d = getDraggedObject(beacon.lock());
     if (d) {
         d->drop();

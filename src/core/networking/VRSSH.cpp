@@ -115,38 +115,38 @@ string VRSSHSession::auth_user() {
     cout << " key folder: " << kf << endl;
     cout << " pub key:  " << pk1 << endl;
     cout << " priv key: " << pk2 << endl;
-    //int rc = libssh2_userauth_publickey_fromfile(session, user.c_str(), pk1.c_str(), pk2.c_str(), NULL);
-    //if (rc < 0) {
+    int rc = libssh2_userauth_publickey_fromfile(session, user.c_str(), pk1.c_str(), pk2.c_str(), NULL);
+    if (rc < 0) {
         cout << "  pubkey auth failed, try ssh agent" << endl;
         LIBSSH2_AGENT* agent = libssh2_agent_init(session);
-	if (agent == NULL) return lastError(41);
+        if (agent == NULL) return lastError(41);
 
         int rc = libssh2_agent_connect(agent);
-	if (rc != LIBSSH2_ERROR_NONE) return lastError(42);
+        if (rc != LIBSSH2_ERROR_NONE) return lastError(42);
 
-	rc = libssh2_agent_list_identities(agent); 
-	if (rc != LIBSSH2_ERROR_NONE) return lastError(43);
+        rc = libssh2_agent_list_identities(agent);
+        if (rc != LIBSSH2_ERROR_NONE) return lastError(43);
 
-	struct libssh2_agent_publickey *curr, *prev = NULL;
+        struct libssh2_agent_publickey *curr, *prev = NULL;
 
         cout << "  connected to agent, search for identities" << endl;
         while (1) {
-		rc = libssh2_agent_get_identity(agent, &curr, prev);
+            rc = libssh2_agent_get_identity(agent, &curr, prev);
         	cout << "   " << rc << endl;
 
-		if (rc < 0) return lastError(44);
-		if (rc == 1) {
-			rc = LIBSSH2_ERROR_AUTHENTICATION_FAILED;
-			return lastError(45);
-		}
+            if (rc < 0) return lastError(44);
+            if (rc == 1) {
+                rc = LIBSSH2_ERROR_AUTHENTICATION_FAILED;
+                return lastError(45);
+            }
 
-		rc = libssh2_agent_userauth(agent, user.c_str(), curr);
-		if (rc == 0) return "ok";
-		prev = curr;
-	}
+            rc = libssh2_agent_userauth(agent, user.c_str(), curr);
+            if (rc == 0) return "ok";
+            prev = curr;
+        }
 
         return lastError(4);
-    //}
+    }
     return "ok";
 }
 

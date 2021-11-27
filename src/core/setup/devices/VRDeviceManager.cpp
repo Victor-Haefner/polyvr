@@ -153,16 +153,12 @@ void VRDeviceManager::load(XMLElementPtr node) {
             VRPresenterPtr m = VRPresenter::create();
             m->load(el);
             dev = m;
+        }
 
-            /*auto scene = VRScene::getCurrent();
-            if (scene) {
-                scene->initFlyWalk(scene->getActiveCamera(), dev);
-                scene->setActiveNavigation("FlyWalk");
-                dev->clearDynTrees();
-                dev->addDynTree(scene->getRoot());
-            }*/
-
-            
+        if (type == "flystick") {
+            VRFlystickPtr m = VRFlystick::create();
+            m->load(el);
+            dev = m;
         }
 
         if (dev == 0) continue;
