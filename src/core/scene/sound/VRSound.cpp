@@ -249,6 +249,30 @@ bool VRSound::initiate() {
     return true;
 }
 
+bool VRSound::initiateEmpty() {
+    cout << "init empty sound " << endl;
+    al->state = AL_STOPPED;
+    al->resampler = 0;
+    //al->codec = codec;
+
+    updateSampleAndFormat();
+
+#ifdef OLD_LIBAV
+        al->frame = avcodec_alloc_frame(); // Allocate frame
+#else
+        al->frame = av_frame_alloc(); // Allocate frame
+#endif
+
+    ALCHECK( alGenBuffers(Nbuffers, buffers) );
+    for (uint i=0; i<Nbuffers; i++) free_buffers.push_back(buffers[i]);
+
+    ALCHECK( alGenSources(1u, &source) );
+    updateSource();
+
+    initiated = true;
+    return true;
+}
+
 void VRSound::initWithCodec(AVCodecContext* codec) {
     al->state = AL_STOPPED;
     al->resampler = 0;
@@ -365,6 +389,10 @@ void VRSound::playFrame() {
 
         queuePacket(&al->packet);
     } // while more packets exist inside container.
+}
+
+void VRSound::addBuffer(vector<short>& buffer, int sample_rate) {
+    ;
 }
 
 void VRSound::playLocally() {

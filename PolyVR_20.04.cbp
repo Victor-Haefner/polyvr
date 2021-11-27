@@ -1265,6 +1265,8 @@
 		<Unit filename="src/core/scene/rendering/VRRenderStudio.h" />
 		<Unit filename="src/core/scene/rendering/VRSSAO.cpp" />
 		<Unit filename="src/core/scene/rendering/VRSSAO.h" />
+		<Unit filename="src/core/scene/sound/VRMicrophone.cpp" />
+		<Unit filename="src/core/scene/sound/VRMicrophone.h" />
 		<Unit filename="src/core/scene/sound/VRSound.cpp" />
 		<Unit filename="src/core/scene/sound/VRSound.h" />
 		<Unit filename="src/core/scene/sound/VRSoundFwd.h" />

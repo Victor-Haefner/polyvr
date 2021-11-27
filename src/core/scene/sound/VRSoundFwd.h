@@ -8,6 +8,7 @@ namespace OSG {
 ptrFwd(VRSoundContext);
 ptrFwd(VRSoundManager);
 ptrFwd(VRSound);
+ptrFwd(VRMicrophone);
 
 }
 
