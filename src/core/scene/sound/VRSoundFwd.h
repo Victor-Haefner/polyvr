@@ -3,13 +3,14 @@
 
 #include "core/utils/VRFwdDeclTemplate.h"
 
-namespace OSG {
+ptrFwd(VRSoundInterface);
+ptrFwd(VRSoundBuffer);
 
+namespace OSG {
 ptrFwd(VRSoundContext);
 ptrFwd(VRSoundManager);
 ptrFwd(VRSound);
 ptrFwd(VRMicrophone);
-
 }
 
 #endif // VRSOUNDFWD_H_INCLUDED

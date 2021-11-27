@@ -330,15 +330,16 @@ void VRVideo::showFrame(int stream, int frame) {
 
     // audio, queue until current frame
     for (auto& s : aStreams) { // just pick first audio stream if any..
-        int I0 = s.second.lastFrameQueued;
-        int I1 = s.second.cachedFrameMax; //min(frame+audioQueue, s.second.cachedFrameMax);
-        //cout << ", queue audio: " << I0 << " -> " << I1 << ", queued buffers: " << s.second.audio->getQueuedBuffer() << endl;
+        AStream& aStream = s.second;
+        int I0 = aStream.lastFrameQueued;
+        int I1 = aStream.cachedFrameMax; //min(frame+audioQueue, aStream.cachedFrameMax);
+        //cout << ", queue audio: " << I0 << " -> " << I1 << ", queued buffers: " << aStream.audio->getQueuedBuffer() << endl;
         for (int i=I0; i<I1; i++) {
-            for (auto& d : s.second.frames[i]) {
-                s.second.audio->queueFrameData(d.first, d.second);
+            for (auto frame : aStream.frames[i]) {
+                aStream.audio->playBuffer(frame);
             }
         }
-        s.second.lastFrameQueued = I1;
+        aStream.lastFrameQueued = I1;
     }
 }
 

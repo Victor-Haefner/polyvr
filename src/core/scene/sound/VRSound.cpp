@@ -56,14 +56,12 @@ VRSound::VRSound() {
     vel = new Vec3d();
 
     VRSoundManager::get(); // this may init channel
-    buffers = new uint[Nbuffers];
     al = shared_ptr<ALData>( new ALData() );
     reset();
 }
 
 VRSound::~VRSound() {
     close();
-    delete[] buffers;
     delete pos;
     delete vel;
 }
@@ -79,30 +77,26 @@ void VRSound::setPitch(float pitch) { this->pitch = pitch; doUpdate = true; }
 void VRSound::setVolume(float gain) { this->gain = gain; doUpdate = true; }
 void VRSound::setUser(Vec3d p, Vec3d v) { *pos = p; *vel = v; doUpdate = true; }
 void VRSound::setCallback(VRUpdateCbPtr cb) { callback = cb; }
+
 bool VRSound::isRunning() {
-    recycleBuffer();
+    interface->recycleBuffer();
     //cout << "isRunning " << bool(al->state == AL_PLAYING) << " " << bool(al->state == AL_INITIAL) << " " << getQueuedBuffer()<< endl;
-    return al->state == AL_PLAYING || al->state == AL_INITIAL || getQueuedBuffer() != 0;
+    return al->state == AL_PLAYING || al->state == AL_INITIAL || interface->getQueuedBuffer() != 0;
 }
 void VRSound::stop() { interrupt = true; loop = false; }
 
 void VRSound::pause() {
-    ALint val = -1;
-    ALCHECK( alGetSourcei(source, AL_SOURCE_STATE, &val));
-    if (val == AL_PLAYING) ALCHECK( alSourcePause(source));
+    if (interface) interface->pause();
 }
 
 void VRSound::resume() {
-    ALint val = -1;
-    ALCHECK( alGetSourcei(source, AL_SOURCE_STATE, &val));
-    if (val != AL_PLAYING) ALCHECK( alSourcePlay(source));
+    if (interface) interface->play();
 }
 
 void VRSound::close() {
     cout << " !!! VRSound::close !!!" << endl;
     stop();
-    if (source) ALCHECK( alDeleteSources(1u, &source));
-    if (buffers && Nbuffers) ALCHECK( alDeleteBuffers(Nbuffers, buffers));
+    interface = 0;
     if (al->context) avformat_close_input(&al->context);
     if (al->resampler) avresample_free(&al->resampler);
     al->context = 0;
@@ -113,16 +107,6 @@ void VRSound::close() {
 
 void VRSound::reset() { al->state = AL_STOPPED; }
 void VRSound::play() { al->state = AL_INITIAL; }
-
-void VRSound::updateSource() {
-    cout << "update source, pitch: " << pitch << " gain: " << gain << endl;
-    ALCHECK( alSourcef(source, AL_PITCH, pitch));
-    ALCHECK( alSourcef(source, AL_MAX_GAIN, gain));
-    ALCHECK( alSourcef(source, AL_GAIN, gain));
-    //ALCHECK( alSource3f(source, AL_POSITION, (*pos)[0], (*pos)[1], (*pos)[2]));
-    //ALCHECK( alSource3f(source, AL_VELOCITY, (*vel)[0], (*vel)[1], (*vel)[2]));
-    doUpdate = false;
-}
 
 void VRSound::updateSampleAndFormat() {
     if (al->codec->channel_layout == 0) {
@@ -216,13 +200,8 @@ void VRSound::updateSampleAndFormat() {
 
 bool VRSound::initiate() {
     cout << "init sound " << path << endl;
+    interface = VRSoundInterface::create();
     initiated = true;
-
-    ALCHECK( alGenBuffers(Nbuffers, buffers) );
-    for (uint i=0; i<Nbuffers; i++) free_buffers.push_back(buffers[i]);
-
-    ALCHECK( alGenSources(1u, &source) );
-    updateSource();
 
     if (path == "") return 1;
 
@@ -249,30 +228,6 @@ bool VRSound::initiate() {
     return true;
 }
 
-bool VRSound::initiateEmpty() {
-    cout << "init empty sound " << endl;
-    al->state = AL_STOPPED;
-    al->resampler = 0;
-    //al->codec = codec;
-
-    updateSampleAndFormat();
-
-#ifdef OLD_LIBAV
-        al->frame = avcodec_alloc_frame(); // Allocate frame
-#else
-        al->frame = av_frame_alloc(); // Allocate frame
-#endif
-
-    ALCHECK( alGenBuffers(Nbuffers, buffers) );
-    for (uint i=0; i<Nbuffers; i++) free_buffers.push_back(buffers[i]);
-
-    ALCHECK( alGenSources(1u, &source) );
-    updateSource();
-
-    initiated = true;
-    return true;
-}
-
 void VRSound::initWithCodec(AVCodecContext* codec) {
     al->state = AL_STOPPED;
     al->resampler = 0;
@@ -286,17 +241,12 @@ void VRSound::initWithCodec(AVCodecContext* codec) {
         al->frame = av_frame_alloc(); // Allocate frame
 #endif
 
-    ALCHECK( alGenBuffers(Nbuffers, buffers) );
-    for (uint i=0; i<Nbuffers; i++) free_buffers.push_back(buffers[i]);
-
-    ALCHECK( alGenSources(1u, &source) );
-    updateSource();
-
+    interface = VRSoundInterface::create();
     initiated = true;
 }
 
-vector<pair<ALbyte*, int>> VRSound::extractPacket(AVPacket* packet) {
-    vector<pair<ALbyte*, int>> res;
+vector<VRSoundBufferPtr> VRSound::extractPacket(AVPacket* packet) {
+    vector<VRSoundBufferPtr> res;
     //cout << "VRSound::queuePacket, alIsSource1: " << bool(alIsSource(source) == AL_TRUE) << endl;
     while (packet->size > 0) { // Decodes audio data from `packet` into the frame
         if (interrupt) { cout << "interrupt sound\n"; break; }
@@ -317,7 +267,9 @@ vector<pair<ALbyte*, int>> VRSound::extractPacket(AVPacket* packet) {
                 frameData = (ALbyte *)av_malloc(data_size*sizeof(uint8_t));
                 avresample_convert( al->resampler, (uint8_t **)&frameData, linesize, al->frame->nb_samples, (uint8_t **)al->frame->data, al->frame->linesize[0], al->frame->nb_samples);
             } else frameData = (ALbyte*)al->frame->data[0];
-            res.push_back(make_pair(frameData, data_size));
+
+            auto frame = VRSoundBuffer::wrap(frameData, data_size, frequency, al->format);
+            res.push_back(frame);
         }
 
         //There may be more than one frame of audio data inside the packet.
@@ -327,23 +279,10 @@ vector<pair<ALbyte*, int>> VRSound::extractPacket(AVPacket* packet) {
     return res;
 }
 
-void VRSound::queueFrameData(ALbyte* frameData, int data_size) {
-    ALint val = -1;
-    ALuint bufid = getFreeBufferID();
-
-    //cout << " alBufferData source: " << source << " bufid: " << bufid << " format: " << al->format << " data_size: " << data_size << " frequency: " << frequency << endl;
-
-    ALCHECK( alBufferData(bufid, al->format, frameData, data_size, frequency));
-    ALCHECK( alSourceQueueBuffers(source, 1, &bufid));
-    ALCHECK( alGetSourcei(source, AL_SOURCE_STATE, &val));
-    //cout << "  source playing? " << bool(val == AL_PLAYING) << endl;
-    if (val != AL_PLAYING) ALCHECK( alSourcePlay(source));
-}
-
 void VRSound::queuePacket(AVPacket* packet) {
-    for (auto data : extractPacket(packet)) {
+    for (auto frame : extractPacket(packet)) {
         if (interrupt) { cout << "interrupt sound\n"; break; }
-        queueFrameData(data.first, data.second);
+        interface->queueFrame(frame);
     }
 }
 
@@ -364,12 +303,12 @@ void VRSound::playFrame() {
     }
 
     if (al->state == AL_PLAYING) {
-        if (getQueuedBuffer() > 5) {
-            recycleBuffer();
+        if (interface->getQueuedBuffer() > 5) {
+            interface->recycleBuffer();
             return;
         }
 
-        if (doUpdate) updateSource();
+        if (doUpdate) interface->updateSource(pitch, gain);
         auto avrf = av_read_frame(al->context, &al->packet);
         if (interrupt || avrf < 0) {
             if (al->packet.data) {
@@ -391,14 +330,16 @@ void VRSound::playFrame() {
     } // while more packets exist inside container.
 }
 
-void VRSound::addBuffer(vector<short>& buffer, int sample_rate) {
+void VRSound::playBuffer(VRSoundBufferPtr frame) { interface->queueFrame(frame); }
+
+void VRSound::addBuffer(VRSoundBufferPtr frame) {
     ;
 }
 
 void VRSound::playLocally() {
     if (!initiated) initiate();
     if (!al->context) return;
-    if (doUpdate) updateSource();
+    if (doUpdate) interface->updateSource(pitch, gain);
 #ifdef OLD_LIBAV
     al->frame = avcodec_alloc_frame(); // Allocate frame
 #else
@@ -429,26 +370,10 @@ void VRSound::playLocally() {
                     avresample_convert( al->resampler, (uint8_t **)&frameData, linesize, al->frame->nb_samples, (uint8_t **)al->frame->data, al->frame->linesize[0], al->frame->nb_samples);
                 } else frameData = (ALbyte*)al->frame->data[0];
 
-                ALint val = -1;
-                ALuint bufid = 0;
 
-                do { ALCHECK_BREAK( alGetSourcei(source, AL_BUFFERS_PROCESSED, &val) ); } // recycle buffers
-                while (val <= 0 && free_buffers.size() == 0);
-                if (val <= 0 && free_buffers.size() == 0) { al->state = AL_STOPPED; return; } // no available buffer, stop!
-                for(; val > 0; --val) {
-                    ALCHECK( alSourceUnqueueBuffers(source, 1, &bufid));
-                    free_buffers.push_back(bufid);
-                    queuedBuffers = max(0,queuedBuffers-1);
-                }
-
-                bufid = free_buffers.front();
-                free_buffers.pop_front();
-
-                queuedBuffers += 1;
-                ALCHECK( alBufferData(bufid, al->format, frameData, data_size, frequency));
-                ALCHECK( alSourceQueueBuffers(source, 1, &bufid));
-                ALCHECK( alGetSourcei(source, AL_SOURCE_STATE, &val));
-                if (val != AL_PLAYING) ALCHECK( alSourcePlay(source));
+                interface->recycleBuffer();
+                auto frame = VRSoundBuffer::wrap(frameData, data_size, frequency, al->format);
+                interface->queueFrame(frame);
             }
 
             //There may be more than one frame of audio data inside the packet.
@@ -459,37 +384,6 @@ void VRSound::playLocally() {
 
     if (al->packet.data) av_packet_unref(&al->packet);
     av_free(al->frame);
-}
-
-void VRSound::playBuffer(vector<short>& buffer, int sample_rate) {
-    //cout << "playBuffer " << source << endl;
-    ALint val = -1;
-    ALuint buf = getFreeBufferID();
-    alBufferData(buf, AL_FORMAT_MONO16, &buffer[0], buffer.size()*sizeof(short), sample_rate);
-    ALCHECK( alSourceQueueBuffers(source, 1, &buf));
-    ALCHECK( alGetSourcei(source, AL_SOURCE_STATE, &val));
-    if (val != AL_PLAYING) ALCHECK( alSourcePlay(source));
-}
-
-uint VRSound::getFreeBufferID() {
-    recycleBuffer();
-
-    if (free_buffers.size()) {
-        queuedBuffers += 1;
-        auto bufid = free_buffers.front();
-        free_buffers.pop_front();
-        return bufid;
-    }
-
-    ALuint bufid;
-    alGenBuffers(1, &bufid);
-    queuedBuffers += 1;
-    return bufid;
-
-    // no available buffer, stop!
-    cout << "VRSound::playFrame Warning: no available buffers!" << endl;
-    al->state = AL_STOPPED;
-    return 0;
 }
 
 // carrier amplitude, carrier frequency, carrier phase, modulation amplitude, modulation frequency, modulation phase, packet duration
@@ -509,11 +403,17 @@ void VRSound::synthesize(float Ac, float wc, float pc, float Am, float wm, float
     }
     synth_t0 = tmp;
 
-    playBuffer(samples, sample_rate);
+    auto frame = VRSoundBuffer::wrap((ALbyte*)&samples[0], samples.size()*sizeof(short), sample_rate, AL_FORMAT_MONO16);
+    playBuffer(frame);
 }
 
-vector<short> VRSound::synthSpectrum(vector<double> spectrum, uint sample_rate, float duration, float fade_factor, bool returnBuffer) {
+vector<short> VRSound::synthSpectrum(vector<double> spectrum, uint sample_rate, float duration, float fade_factor, bool returnBuffer, int maxQueued) {
     if (!initiated) initiate();
+
+    if (maxQueued >= 0) {
+        interface->recycleBuffer();
+        if ( interface->getQueuedBuffer() >= maxQueued ) return vector<short>();
+    }
 
     /* --- fade in/out curve ---
     ::path c;
@@ -522,8 +422,6 @@ vector<short> VRSound::synthSpectrum(vector<double> spectrum, uint sample_rate, 
     c.compute(sample_rate);
     */
 
-    //ALuint buf;
-    //alGenBuffers(1, &buf);
     size_t buf_size = duration * sample_rate;
     uint fade = min(fade_factor * sample_rate, duration * sample_rate); // number of samples to fade at beginning and end
 
@@ -531,31 +429,10 @@ vector<short> VRSound::synthSpectrum(vector<double> spectrum, uint sample_rate, 
     FFT fft;
     vector<double> out = fft.transform(spectrum, sample_rate);
 
-    /*
-    vector<double> out(sample_rate);
-    fftw_plan ifft;
-    ifft = fftw_plan_r2r_1d(sample_rate, &spectrum[0], &out[0], FFTW_DHT, FFTW_ESTIMATE);   //Setup fftw plan for ifft
-    fftw_execute(ifft); // is output normalized?
-    fftw_destroy_plan(ifft);*/
-
     vector<short> samples(buf_size);
     for(uint i=0; i<buf_size; ++i) {
-        //samples[i] = (double)(SHRT_MAX - 1) * out[i] / (sample_rate * maxVal); // for fftw normalization
         samples[i] = 0.5 * SHRT_MAX * out[i]; // for fftw normalization
     }
-
-    //uint flat = fade / 10;
-    /*uint flat = fade / 2;
-
-    for (uint i=0; i < fade; ++i) {
-        if (i < flat) {
-            samples[i] = 0;
-            samples[buf_size-i-1] = 0;
-        } else {
-            samples[i] *= (float)(i - flat)/(fade - 1 - flat);
-            samples[buf_size-i-1] *= (float)(i - flat)/(fade - 1 - flat);
-        }
-    }*/
 
     auto calcFade = [](double& t) {
         if (t < 0) t = 0;
@@ -569,42 +446,13 @@ vector<short> VRSound::synthSpectrum(vector<double> spectrum, uint sample_rate, 
 
     for (uint i=0; i < fade; ++i) {
         double t = double(i)/(fade-1);
-        //double y = c.getPosition(t)[1];
         double y = calcFade(t);
         samples[i] *= y;
         samples[buf_size-i-1] *= y;
     }
 
-    //float flat_samples = 100;
-    //uint flat = min((float)fade / 2, flat_samples);
-    /*uint flat_samples = 1000;
-    uint flat = min(flat_samples, fade);
-
-    for (uint i=0; i < fade; ++i) {
-        if (i < flat) {
-            if (i > 100 && i < 200){
-                //samples[i] = 0.5 * SHRT_MAX;
-                samples[buf_size-i-1] = 0.5 * SHRT_MAX;
-            } else {
-                //samples[i] = 0;
-                samples[buf_size-i-1] = 0;
-            }
-        } else {
-            double t = double(i - flat)/(fade - 1 - flat);
-            //samples[i] *= calcFade(t);
-            samples[buf_size-i-1] *= calcFade(t);
-        }
-    }*/
-
-    /*for (uint i=0; i < fade*2; ++i) {
-        double t = (double(i)-double(fade))/(fade-1);
-        //double y = c.getPosition(t)[1];
-        double y = calcFade(t);
-        //samples[i] *= y;
-        samples[buf_size-i-1] *= y;
-    }*/
-
-    playBuffer(samples, sample_rate);
+    auto frame = VRSoundBuffer::wrap((ALbyte*)&samples[0], samples.size()*sizeof(short), sample_rate, AL_FORMAT_MONO16);
+    playBuffer(frame);
     return returnBuffer ? samples : vector<short>();
 }
 
@@ -629,7 +477,8 @@ vector<short> VRSound::synthBuffer(vector<Vec2d> freqs1, vector<Vec2d> freqs2, f
             samples[i] += A*Ni*phasors[j].imag();
         }
     }
-    playBuffer(samples, sample_rate);
+    auto frame = VRSoundBuffer::wrap((ALbyte*)&samples[0], samples.size()*sizeof(short), sample_rate, AL_FORMAT_MONO16);
+    playBuffer(frame);
     if (true) return samples;
     return vector<short>();
 }
@@ -731,35 +580,8 @@ void VRSound::synthBufferOnChannels(vector<vector<Vec2d>> freqs1, vector<vector<
             format = AL_FORMAT_MONO16;
     }
 
-    // actually put the samples on the audio buffer and play it
-    ALint val = -1;
-    ALuint buf = getFreeBufferID();
-    alBufferData(buf, format, &buffer[0], buffer.size()*sizeof(short), sample_rate);
-    ALCHECK( alSourceQueueBuffers(source, 1, &buf));
-    ALCHECK( alGetSourcei(source, AL_SOURCE_STATE, &val));
-    if (val != AL_PLAYING) ALCHECK( alSourcePlay(source));
-}
-
-int VRSound::getQueuedBuffer() { return queuedBuffers; }
-
-void VRSound::checkSource() {
-    cout << " checkSource: " << source << endl;
-    ALint val = -1;
-    ALCHECK( alGetSourcei(source, AL_SOURCE_STATE, &val));
-    if (val == -1) cout << endl << " checkSource FAILED!" << endl;
-}
-
-void VRSound::recycleBuffer() {
-    if (!initiated) return;
-    ALint val = -1;
-    ALuint bufid = 0; // TODO: not working properly!!
-    do { ALCHECK_BREAK( alGetSourcei(source, AL_BUFFERS_PROCESSED, &val) ); // recycle buffers
-        for(; val > 0; --val) {
-            ALCHECK( alSourceUnqueueBuffers(source, 1, &bufid));
-            free_buffers.push_back(bufid);
-            if ( queuedBuffers > 0 ) queuedBuffers -= 1;
-        }
-    } while (val > 0);
+    auto frame = VRSoundBuffer::wrap((ALbyte*)&buffer[0], buffer.size()*sizeof(short), sample_rate, format);
+    playBuffer(frame);
 }
 
 

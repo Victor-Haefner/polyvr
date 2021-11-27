@@ -1,5 +1,6 @@
 #include "VRMicrophone.h"
 #include "VRSound.h"
+#include "VRSoundUtils.h"
 
 #include <AL/al.h>
 #include <AL/alc.h>
@@ -22,10 +23,6 @@ void VRMicrophone::setup() {
 
 void VRMicrophone::startRecording() {
     recording = VRSound::create();
-    recording->initiateEmpty();
-
-    vector<short> samples;
-    samples.resize(sample_rate);
 
     doRecord = true;
     ALint count;
@@ -33,9 +30,10 @@ void VRMicrophone::startRecording() {
 
     auto recordCb = [&]() {
         while (doRecord) {
+            auto frame = VRSoundBuffer::allocate(sample_rate*2, sample_rate, AL_FORMAT_STEREO16);
             alcGetIntegerv(device, ALC_CAPTURE_SAMPLES, (ALCsizei)sizeof(ALint), &count);
-            alcCaptureSamples(device, &samples[0], count);
-            recording->addBuffer(samples, sample_rate);
+            alcCaptureSamples(device, frame->data, count);
+            recording->addBuffer(frame);
         }
     };
 
