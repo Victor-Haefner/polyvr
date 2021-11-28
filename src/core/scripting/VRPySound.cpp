@@ -14,6 +14,7 @@ PyMethodDef VRPySound::methods[] = {
     {"stop", PyWrap(Sound, stop, "Stop sound", void) },
     {"pause", PyWrap(Sound, pause, "Pause sound", void) },
     {"resume", PyWrap(Sound, resume, "Resume paused sound", void) },
+    {"setCallback", PyWrap(Sound, setCallback, "Set event callback", void, VRUpdateCbPtr ) },
     {"setPath", PyWrap(Sound, setPath, "Stop sound", void, string ) },
     {"setLoop", PyWrap(Sound, setLoop, "Stop sound", void, bool ) },
     {"setPitch", PyWrap(Sound, setPitch, "Stop sound", void, float ) },

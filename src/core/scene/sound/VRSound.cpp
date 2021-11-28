@@ -1,5 +1,6 @@
 #include "VRSound.h"
 #include "VRSoundUtils.h"
+#include "core/scene/VRScene.h"
 #include "core/math/path.h"
 #include "core/math/fft.h"
 #include "core/utils/toString.h"
@@ -343,7 +344,11 @@ void VRSound::playFrame() {
 
         if (endReached) {
             al->state = loop ? AL_INITIAL : AL_STOPPED;
-            if (al->state == AL_STOPPED) if (auto cb = callback.lock()) (*cb)();
+            cout << "endReached, stop? " << (al->state == AL_STOPPED) << endl;
+            if (al->state == AL_STOPPED && callback) {
+                auto scene = VRScene::getCurrent();
+                if (scene) scene->queueJob(callback);
+            }
             return;
         }
     } // while more packets exist inside container.

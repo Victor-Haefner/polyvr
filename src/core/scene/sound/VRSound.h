@@ -26,7 +26,7 @@ class VRSound {
         shared_ptr<ALData> al;
         vector<VRSoundBufferPtr> ownedBuffer;
         int nextBuffer = 0;
-        VRUpdateCbWeakPtr callback;
+        VRUpdateCbPtr callback;
 
         unsigned int frequency = 0;
         int stream_id = 0;
