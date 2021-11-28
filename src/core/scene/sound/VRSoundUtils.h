@@ -48,7 +48,6 @@ class VRSoundBuffer {
 
 class VRSoundInterface {
     private:
-        bool initiated = false;
         unsigned int Nbuffers = 50;
         unsigned int source = 0;
         int queuedBuffers = 0;

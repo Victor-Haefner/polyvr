@@ -110,12 +110,12 @@ uint VRSoundInterface::getFreeBufferID() {
 int VRSoundInterface::getQueuedBuffer() { return queuedBuffers; }
 
 void VRSoundInterface::recycleBuffer() {
-    if (!initiated) return;
     ALint val = -1;
     ALuint bufid = 0;
 
-    /* // TODO: not working properly!!
-    do { ALCHECK_BREAK( alGetSourcei(source, AL_BUFFERS_PROCESSED, &val) ); // recycle buffers
+     // TODO: not working properly!!
+    /*do { ALCHECK_BREAK( alGetSourcei(source, AL_BUFFERS_PROCESSED, &val) ); // recycle buffers
+        cout << " recycleBuffer val " << val << endl;
         for(; val > 0; --val) {
             ALCHECK( alSourceUnqueueBuffers(source, 1, &bufid));
             free_buffers.push_back(bufid);

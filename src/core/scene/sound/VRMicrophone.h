@@ -20,6 +20,8 @@ class VRMicrophone : public std::enable_shared_from_this<VRMicrophone> {
 	    ALCdevice_struct* device = 0;
 	    VRSoundPtr recording;
 
+	    VRSoundBufferPtr frame;
+
 	    void setup();
 
 	public:

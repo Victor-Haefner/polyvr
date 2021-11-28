@@ -79,9 +79,9 @@ void VRSound::setUser(Vec3d p, Vec3d v) { *pos = p; *vel = v; doUpdate = true; }
 void VRSound::setCallback(VRUpdateCbPtr cb) { callback = cb; }
 
 bool VRSound::isRunning() {
-    interface->recycleBuffer();
+    if (interface) interface->recycleBuffer();
     //cout << "isRunning " << bool(al->state == AL_PLAYING) << " " << bool(al->state == AL_INITIAL) << " " << getQueuedBuffer()<< endl;
-    return al->state == AL_PLAYING || al->state == AL_INITIAL || interface->getQueuedBuffer() != 0;
+    return al->state == AL_PLAYING || al->state == AL_INITIAL || interface && interface->getQueuedBuffer() != 0;
 }
 void VRSound::stop() { interrupt = true; loop = false; }
 
@@ -224,6 +224,8 @@ bool VRSound::initiate() {
     if (avcodec == 0) return 0;
     if (avcodec_open2(al->codec, avcodec, NULL) < 0) return 0;
 
+    nextBuffer = 0;
+
     updateSampleAndFormat();
     return true;
 }
@@ -243,6 +245,19 @@ void VRSound::initWithCodec(AVCodecContext* codec) {
 
     interface = VRSoundInterface::create();
     initiated = true;
+}
+
+void VRSound::playBuffer(VRSoundBufferPtr frame) { interface->queueFrame(frame); }
+
+void VRSound::addBuffer(VRSoundBufferPtr frame) {
+    ownedBuffer.push_back(frame);
+} // TODO
+
+void VRSound::queuePacket(AVPacket* packet) {
+    for (auto frame : extractPacket(packet)) {
+        if (interrupt) { cout << "interrupt sound\n"; break; }
+        interface->queueFrame(frame);
+    }
 }
 
 vector<VRSoundBufferPtr> VRSound::extractPacket(AVPacket* packet) {
@@ -279,18 +294,15 @@ vector<VRSoundBufferPtr> VRSound::extractPacket(AVPacket* packet) {
     return res;
 }
 
-void VRSound::queuePacket(AVPacket* packet) {
-    for (auto frame : extractPacket(packet)) {
-        if (interrupt) { cout << "interrupt sound\n"; break; }
-        interface->queueFrame(frame);
-    }
-}
-
 void VRSound::playFrame() {
     //cout << "VRSound::playFrame " << interrupt << " " << this << " playing: " << (al->state == AL_PLAYING) << " N buffer: " << getQueuedBuffer() << endl;
 
+    bool internal = (ownedBuffer.size() > 0);
+
     if (al->state == AL_INITIAL) {
+        cout << "playFrame AL_INITIAL" << endl;
         if (!initiated) initiate();
+        if (internal) { al->state = AL_PLAYING; interrupt = false; return; }
         if (!al->context) { /*cout << "VRSound::playFrame Warning: no context" << endl;*/ return; }
 #ifdef OLD_LIBAV
         al->frame = avcodec_alloc_frame(); // Allocate frame
@@ -309,81 +321,32 @@ void VRSound::playFrame() {
         }
 
         if (doUpdate) interface->updateSource(pitch, gain);
-        auto avrf = av_read_frame(al->context, &al->packet);
-        if (interrupt || avrf < 0) {
-            if (al->packet.data) {
-                //cout << "  free packet" << endl;
-                av_packet_unref(&al->packet);
+
+        bool endReached = false;
+
+        if (!internal) {
+            auto avrf = av_read_frame(al->context, &al->packet);
+            if (interrupt || avrf < 0) { // End of stream, done decoding
+                if (al->packet.data) av_packet_unref(&al->packet);
+                av_free(al->frame);
+                endReached = true;
+            } else {
+                if (al->packet.stream_index != stream_id) { cout << "skip non audio\n"; return; } // Skip non audio packets
+                queuePacket(&al->packet);
             }
-            //cout << "  free frame" << endl;
-            av_free(al->frame);
+        } else {
+            if (nextBuffer < ownedBuffer.size()) {
+                interface->queueFrame(ownedBuffer[nextBuffer]);
+                nextBuffer++;
+            } else endReached = true;
+        }
+
+        if (endReached) {
             al->state = loop ? AL_INITIAL : AL_STOPPED;
-
-            if (al->state == AL_STOPPED)
-                if (auto cb = callback.lock()) (*cb)();
+            if (al->state == AL_STOPPED) if (auto cb = callback.lock()) (*cb)();
             return;
-        } // End of stream. Done decoding.
-
-        if (al->packet.stream_index != stream_id) { cout << "skip non audio\n"; return; } // Skip non audio packets
-
-        queuePacket(&al->packet);
+        }
     } // while more packets exist inside container.
-}
-
-void VRSound::playBuffer(VRSoundBufferPtr frame) { interface->queueFrame(frame); }
-
-void VRSound::addBuffer(VRSoundBufferPtr frame) {
-    ;
-}
-
-void VRSound::playLocally() {
-    if (!initiated) initiate();
-    if (!al->context) return;
-    if (doUpdate) interface->updateSource(pitch, gain);
-#ifdef OLD_LIBAV
-    al->frame = avcodec_alloc_frame(); // Allocate frame
-#else
-    al->frame = av_frame_alloc(); // Allocate frame
-#endif
-    av_seek_frame(al->context, stream_id, 0,  AVSEEK_FLAG_FRAME);
-
-    while (av_read_frame(al->context, &al->packet) >= 0) {
-        if (al->packet.stream_index != stream_id) { cout << "skip non audio\n"; return; } // Skip non audio packets
-
-        while (al->packet.size > 0) { // Decodes audio data from `packet` into the frame
-            if (interrupt) { cout << "interrupt sound\n"; break; }
-
-            int finishedFrame = 0;
-            int len = avcodec_decode_audio4(al->codec, al->frame, &finishedFrame, &al->packet);
-            if (len < 0) { cout << "decoding error\n"; break; }
-
-            if (finishedFrame) {
-                if (interrupt) { cout << "interrupt sound\n"; break; }
-
-                // Decoded data is now available in frame->data[0]
-                int linesize;
-                int data_size = av_samples_get_buffer_size(&linesize, al->codec->channels, al->frame->nb_samples, al->codec->sample_fmt, 0);
-
-                ALbyte* frameData;
-                if (al->resampler != 0) {
-                    frameData = (ALbyte *)av_malloc(data_size*sizeof(uint8_t));
-                    avresample_convert( al->resampler, (uint8_t **)&frameData, linesize, al->frame->nb_samples, (uint8_t **)al->frame->data, al->frame->linesize[0], al->frame->nb_samples);
-                } else frameData = (ALbyte*)al->frame->data[0];
-
-
-                interface->recycleBuffer();
-                auto frame = VRSoundBuffer::wrap(frameData, data_size, frequency, al->format);
-                interface->queueFrame(frame);
-            }
-
-            //There may be more than one frame of audio data inside the packet.
-            al->packet.size -= len;
-            al->packet.data += len;
-        } // while packet.size > 0
-    }
-
-    if (al->packet.data) av_packet_unref(&al->packet);
-    av_free(al->frame);
 }
 
 // carrier amplitude, carrier frequency, carrier phase, modulation amplitude, modulation frequency, modulation phase, packet duration

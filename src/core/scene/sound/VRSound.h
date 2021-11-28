@@ -24,6 +24,8 @@ class VRSound {
 
         struct ALData;
         shared_ptr<ALData> al;
+        vector<VRSoundBufferPtr> ownedBuffer;
+        int nextBuffer = 0;
         VRUpdateCbWeakPtr callback;
 
         unsigned int frequency = 0;
@@ -67,7 +69,6 @@ class VRSound {
         void close();
         void reset();
         bool initiate();
-        void playLocally();
         void playFrame();
 
         void initWithCodec(AVCodecContext* codec);

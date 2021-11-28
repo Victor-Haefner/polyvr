@@ -1,5 +1,6 @@
 #include "VRMicrophone.h"
 #include "VRSound.h"
+#include "VRSoundManager.h"
 #include "VRSoundUtils.h"
 
 #include <AL/al.h>
@@ -17,27 +18,37 @@ VRMicrophonePtr VRMicrophone::ptr() { return static_pointer_cast<VRMicrophone>(s
 
 void VRMicrophone::setup() {
     alGetError();
-    device = alcCaptureOpenDevice(NULL, sample_rate, AL_FORMAT_STEREO16, sample_size);
+    device = alcCaptureOpenDevice(NULL, sample_rate, AL_FORMAT_MONO16, sample_size);
     if (alGetError() != AL_NO_ERROR) cout << "No microphone device found!" << endl;
 }
 
 void VRMicrophone::startRecording() {
     recording = VRSound::create();
+    recording->initiate();
+    //recording = VRSoundManager::get()->setupSound("");
 
     doRecord = true;
-    ALint count;
     alcCaptureStart(device);
 
     auto recordCb = [&]() {
         while (doRecord) {
-            auto frame = VRSoundBuffer::allocate(sample_rate*2, sample_rate, AL_FORMAT_STEREO16);
-            alcGetIntegerv(device, ALC_CAPTURE_SAMPLES, (ALCsizei)sizeof(ALint), &count);
-            alcCaptureSamples(device, frame->data, count);
-            recording->addBuffer(frame);
+            ALint Count = 0;
+            alGetError();
+            alcGetIntegerv(device, ALC_CAPTURE_SAMPLES, (ALCsizei)sizeof(ALint), &Count);
+
+            if (Count > 0) {
+                frame = VRSoundBuffer::allocate(sample_rate*2*Count, sample_rate, AL_FORMAT_MONO16);
+                alGetError();
+                alcCaptureSamples(device, frame->data, Count);
+                //recording->addBuffer(frame);
+                recording->playBuffer(frame);
+            }
         }
     };
 
     recordingThread = new thread(recordCb);
+
+    //recordCb();
 }
 
 VRSoundPtr VRMicrophone::stopRecording() {
