@@ -249,10 +249,7 @@ void VRSound::initWithCodec(AVCodecContext* codec) {
 }
 
 void VRSound::playBuffer(VRSoundBufferPtr frame) { interface->queueFrame(frame); }
-
-void VRSound::addBuffer(VRSoundBufferPtr frame) {
-    ownedBuffer.push_back(frame);
-} // TODO
+void VRSound::addBuffer(VRSoundBufferPtr frame) { ownedBuffer.push_back(frame); }
 
 void VRSound::queuePacket(AVPacket* packet) {
     for (auto frame : extractPacket(packet)) {
