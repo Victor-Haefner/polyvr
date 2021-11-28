@@ -11,7 +11,7 @@
 using namespace OSG;
 
 VRMicrophone::VRMicrophone() { setup(); }
-VRMicrophone::~VRMicrophone() {}
+VRMicrophone::~VRMicrophone() { alcCaptureCloseDevice(device); }
 
 VRMicrophonePtr VRMicrophone::create() { return VRMicrophonePtr( new VRMicrophone() ); }
 VRMicrophonePtr VRMicrophone::ptr() { return static_pointer_cast<VRMicrophone>(shared_from_this()); }
@@ -23,9 +23,9 @@ void VRMicrophone::setup() {
 }
 
 void VRMicrophone::startRecording() {
-    recording = VRSound::create();
-    recording->initiate();
-    //recording = VRSoundManager::get()->setupSound("");
+    //recording = VRSound::create();
+    //recording->initiate();
+    recording = VRSoundManager::get()->setupSound("");
 
     doRecord = true;
     alcCaptureStart(device);
@@ -37,11 +37,12 @@ void VRMicrophone::startRecording() {
             alcGetIntegerv(device, ALC_CAPTURE_SAMPLES, (ALCsizei)sizeof(ALint), &Count);
 
             if (Count > 0) {
-                frame = VRSoundBuffer::allocate(sample_rate*2*Count, sample_rate, AL_FORMAT_MONO16);
+                //frame = VRSoundBuffer::allocate(sample_rate*2*Count, sample_rate, AL_FORMAT_MONO16);
+                frame = VRSoundBuffer::allocate(2*Count, sample_rate, AL_FORMAT_MONO16);
                 alGetError();
                 alcCaptureSamples(device, frame->data, Count);
-                //recording->addBuffer(frame);
-                recording->playBuffer(frame);
+                recording->addBuffer(frame);
+                //recording->playBuffer(frame);
             }
         }
     };
@@ -56,7 +57,6 @@ VRSoundPtr VRMicrophone::stopRecording() {
     recordingThread->join();
     recordingThread = 0;
     alcCaptureStop(device);
-    alcCaptureCloseDevice(device);
     auto r = recording;
     recording = 0;
     return r;
