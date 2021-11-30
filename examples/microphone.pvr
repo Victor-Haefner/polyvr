@@ -71,6 +71,7 @@
 	else:
 		print 'play'
 		VR.recording = VR.mike.stopRecording()
+		VR.recording.exportToFile('test.mp3')
 		VR.recording.setCallback(onStopped)
 		VR.recording.play()
 		setIndicator('#0af')
