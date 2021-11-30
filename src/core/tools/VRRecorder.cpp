@@ -275,7 +275,6 @@ void VRRecorder::writeHeader(string path) {
 
     avformat_init_output(ofmt_ctx, NULL);
     avformat_write_header(ofmt_ctx, &ofmt_ctx->metadata);
-    //av_write_trailer(ofmt_ctx);
     avio_close(ofmt_ctx->pb);
 }
 
@@ -316,6 +315,8 @@ void VRRecorder::compile(string path) {
     uint8_t endcode[] = { 0, 0, 1, 0xb7 };
     fwrite(endcode, 1, sizeof(endcode), f);
     fclose(f);
+
+    //av_write_trailer(ofmt_ctx);
 
     closeCodec();
     closeFrame();
