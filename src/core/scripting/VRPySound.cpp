@@ -21,6 +21,7 @@ PyMethodDef VRPySound::methods[] = {
     {"setVolume", PyWrap(Sound, setVolume, "Set sound volume, try setting master volume on soundmanager", void, float ) },
     {"setUser", PyWrap(Sound, setUser, "Stop sound", void, Vec3d, Vec3d ) },
     {"isRunning", PyWrap(Sound, isRunning, "Check if sound is running", bool) },
+    {"exportToFile", PyWrap(Sound, exportToFile, "Export to file, (.mp3)", void, string) },
     {"synthesize", PyWrap(Sound, synthesize, "synthesize( Ac, wc, pc, Am, wm, pm, T)\t\n A,w,p are the amplitude, frequency and phase, c and m are the carrier sinusoid and modulator sinusoid, T is the packet duration in seconds", void, float, float, float, float, float, float, float) },
     {"synthBuffer", PyWrap(Sound, synthBuffer, "synthBuffer( [[f,A]], [[f,A]], T )\t\n [f,A] frequency/amplitude pairs, interpolate the two spectra, T is the packet duration in seconds", vector<short>, vector<Vec2d>, vector<Vec2d>, float) },
     {"synthBufferOnChannels", PyWrap(Sound, synthBufferOnChannels, "synthBufferOnChannels( [[[f,A]]], [[[f,A]]], T)\n\t [[f,A]] list of channels with each containing a list of frequency/amplitude pairs in channel order, interpolate the two spectra\n\tT is the packet duration in seconds\n\t", void, vector<vector<Vec2d>>, vector<vector<Vec2d>>, float) },

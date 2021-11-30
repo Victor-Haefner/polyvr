@@ -78,6 +78,8 @@ class VRSound {
         void playBuffer(VRSoundBufferPtr frame);
         void addBuffer(VRSoundBufferPtr frame);
 
+        void exportToFile(string path);
+
         // carrier amplitude, carrier frequency, carrier phase, modulation amplitude, modulation frequency, modulation phase, packet duration
         void synthesize(float Ac = 32760, float wc = 440, float pc = 0, float Am = 0, float wm = 0, float pm = 0, float T = 1);
         vector<short> synthSpectrum(vector<double> spectrum, unsigned int samples, float duration, float fade_factor, bool returnBuffer = false, int maxQueued = -1);
