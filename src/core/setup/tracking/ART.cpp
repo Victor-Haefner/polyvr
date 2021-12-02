@@ -31,15 +31,17 @@ int ART_device::key(int ID, int type) { return ID*1000 + type; }
 void ART_device::init() {
     if (type != 1) {
         ent = VRTransform::create("ART_tracker", false);
+        ent->setPersistency(0);
+
         auto setup = VRSetup::getCurrent();
         if (setup) {
             for (auto dev : setup->getDevices()) {
                 auto fly = dynamic_pointer_cast<VRFlystick>(dev.second);
                 if (!fly) continue;
                 if (fly->getTrackerName() == ent->getName()) {
-			fly->setBeacon(ent);
-			fly->clearSignals();
-		}
+                    fly->setBeacon(ent);
+                    fly->clearSignals();
+                }
             }
         }
     }
@@ -47,6 +49,7 @@ void ART_device::init() {
     if (type == 2) { // finger tracking
         for (int i=0;i<5;i++) {
             auto f = VRTransform::create("finger"+toString(i), false);
+            f->setPersistency(0);
             ent->addChild(f);
             fingerEnts.push_back(f);
         }
@@ -54,6 +57,7 @@ void ART_device::init() {
 
     if (type == 1) { // flystick
         dev = VRFlystick::create();
+        dev->setPersistency(0);
         ent = dev->editBeacon();
 
         auto setup = VRSetup::getCurrent();
