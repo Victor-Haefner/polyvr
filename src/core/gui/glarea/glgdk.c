@@ -342,6 +342,11 @@ void glgdk_x11_screen_update_visuals_for_gl (_GdkScreen *screen) {
   printf("glgdk_x11_screen_update_visuals_for_gl\n");
   struct glvisualinfo* gl_info;
 
+  if (!GDK_IS_X11_SCREEN(screen)) {
+  	printf(" ..not a X11 screen, ignore..\n");
+	return;
+  }
+
   _GdkX11Screen* x11_screen = (_GdkX11Screen*)GDK_X11_SCREEN (screen);
   GdkDisplay* display = x11_screen->display;
   _GdkX11Display* display_x11 = (_GdkX11Display*)GDK_X11_DISPLAY(display);

@@ -3,7 +3,9 @@
 #include "core/utils/toString.h"
 #include "core/utils/system/VRSystem.h"
 #include "core/scene/VRScene.h"
+#ifndef WITHOUT_GDAL
 #include "core/scene/import/GIS/VRGDAL.h"
+#endif
 
 #include <OpenSG/OSGImage.h>
 
@@ -44,9 +46,11 @@ void VRTexture::read(string path) {
 }
 
 void VRTexture::readGIS(string path) {
+#ifndef WITHOUT_GDAL
     auto tex = loadGeoRasterData(path, false);
     img = tex->img;
     internal_format = tex->internal_format;
+#endif
 }
 
 void VRTexture::writeThreaded(string path, VRTexturePtr self, VRThreadWeakPtr tw) { // TODO: add mutex!

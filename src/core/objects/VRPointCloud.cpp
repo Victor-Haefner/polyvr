@@ -5,6 +5,9 @@
 #include "core/objects/VRLod.h"
 #include "core/math/partitioning/Octree.h"
 #include "core/utils/toString.h"
+#include "core/utils/VRProgress.h"
+#include "core/utils/system/VRSystem.h"
+#include "core/scene/import/E57/E57.h"
 
 using namespace OSG;
 using namespace std;
@@ -54,6 +57,10 @@ void VRPointCloud::addLevel(float distance, int downsampling) {
     lodDistances.push_back(distance);
 }
 
+void VRPointCloud::addPoint(Vec3d p, Color3f c) {
+    octree->add(p, new Color3f(c), -1, true, 1e5);
+}
+
 void VRPointCloud::setupLODs() {
     for (auto leaf : octree->getAllLeafs()) {
         Vec3d center = leaf->getCenter();
@@ -86,3 +93,168 @@ void VRPointCloud::setupLODs() {
 
     //addChild(octree->getVisualization());
 }
+
+void VRPointCloud::convert(string pathIn) {
+    string pathOut = pathIn+".pcb";
+    convertE57(pathIn, pathOut);
+}
+
+void VRPointCloud::genTestFile(string path, size_t N, bool doColor) {
+    genTestPC(path, N, doColor);
+}
+
+struct PntCol {
+    Vec3d p;
+    Vec3ub c;
+};
+
+void VRPointCloud::externalSort(string path, size_t NchunkMax, double binSize) {
+    ifstream stream(path);
+    string h1, h2, h3;
+    getline(stream, h1);
+    getline(stream, h2);
+    getline(stream, h3);
+    cout << "  externalSort headers " << h1 << " " << h2 << endl;
+
+    auto cN = toValue<size_t>(h2);
+    cout << "  externalSort scan '" << path << "' contains " << cN << " points" << endl;
+
+    auto progress = VRProgress::create();
+    progress->setup("process points ", cN);
+    progress->reset();
+
+    bool hasCol = contains(h1, "r");
+    if (hasCol) cout << "   scan has colors\n";
+    else cout << "   scan has no colors\n";
+
+    int N = sizeof(Vec3d);
+    if (hasCol) N += sizeof(Vec3ub);
+
+    int Mchunks = 3; // chunks to merge at once!
+
+    size_t Nchunks = 1;
+    while(cN / Nchunks > NchunkMax) Nchunks *= Mchunks;
+
+    size_t chunkSize = cN / Nchunks;
+    size_t lastChunkSize = cN - Nchunks*chunkSize;
+    cN -= lastChunkSize; // TODO: for now we crop the PC
+    h2 = toString(cN);
+
+    cout << "  externalSort Nchunks: " << Nchunks << ", with Mchunks: " << Mchunks << endl;
+    cout << "  externalSort chunkSize: " << chunkSize << ", lastChunkSize: " << lastChunkSize << endl;
+
+    auto calcBin = [&](double& a) {
+        static const double eps = 1e-6;
+        return round(0.5 + eps + a/binSize);
+    };
+
+    auto sameBin = [&](double& a, double& b) {
+        return bool( calcBin(a) == calcBin(b) );
+        //return bool( abs(b-a)<binSize );
+    };
+
+    auto compPoints = [&](PntCol& p1, PntCol& p2) -> bool {
+        //return bool(p1.p[2] > p2.p[2]); // test
+        if (!sameBin(p1.p[1],p2.p[1])) return bool(p1.p[1] < p2.p[1]);
+        if (!sameBin(p1.p[0],p2.p[0])) return bool(p1.p[0] < p2.p[0]);
+        return bool(p1.p[2] < p2.p[2]);
+    };
+
+    vector<PntCol> buffer;
+    buffer.resize(chunkSize);
+
+    for (size_t i = 0; i<Nchunks; i++) { // write sorted chunks to disk
+        for (size_t j = 0; j<chunkSize; j++) stream.read((char*)&buffer[j], N);
+        //for (size_t j = 0; j<chunkSize; j++) cout << "  read chunk pnt " << j << ") " << buffer[j].p << endl;
+        sort(buffer.begin(), buffer.end(), compPoints);
+        //for (size_t j = 0; j<chunkSize; j++) cout << "  sort chunk pnt " << j << ") " << buffer[j].p << endl;
+        string cPath = path+".chunk."+toString(i);
+        ofstream cStream(cPath);
+        for (size_t j = 0; j<chunkSize; j++) cStream.write((char*)&buffer[j], N);
+        cStream.close();
+    }
+
+    stream.close();
+
+    auto mergeChunks = [&](size_t L, vector<ifstream>& inStreams, ofstream& wStream, bool verbose = false) {
+        vector<size_t> mergeHeads;
+        vector<PntCol> mergeHeadData;
+        mergeHeads.resize(inStreams.size(), 0);
+        mergeHeadData.resize(inStreams.size(), PntCol());
+
+        for (size_t i = 0; i<inStreams.size(); i++) {
+            inStreams[i].read((char*)&mergeHeadData[i], N);
+            //if (verbose) cout << "   start point " << i << ": " << mergeHeadData[i].p << endl;
+        }
+
+        for (size_t i = 0; i<L*3; i++) {
+            int kNext = 0;
+            while(mergeHeads[kNext] == L) kNext++;
+            for (size_t j=kNext+1; j<inStreams.size(); j++) {
+                if (mergeHeads[j] == L) continue;
+                bool b = compPoints(mergeHeadData[j], mergeHeadData[kNext]);
+                //if (verbose) cout << "    compare [" << mergeHeadData[j].p << "] (" << j << ") with [" << mergeHeadData[kNext].p << "] (" << kNext << ") -> " << b << endl;
+                if (b) kNext = j;
+            }
+
+            //if (verbose) cout << "     write point " << kNext << ") " << mergeHeadData[kNext].p << endl;
+            wStream.write((char*)&mergeHeadData[kNext], N);
+            mergeHeads[kNext]++;
+            inStreams[kNext].read((char*)&mergeHeadData[kNext], N);
+        }
+    };
+
+    size_t NlvlChunks = Nchunks;
+    size_t Lchunks = chunkSize;
+    vector<string> currentChunks;
+    vector<string> lastChunks;
+    for (int i=0; i<Nchunks; i++) lastChunks.push_back( path+".chunk."+toString(i) );
+
+    //cout << "start merge" << endl;
+    for (int i=0; NlvlChunks>1; i++) {
+        NlvlChunks /= Mchunks;
+        //cout << " pass " << i << ", NlvlChunks: " << NlvlChunks << endl;
+        for (int j=0; j<NlvlChunks; j++) {
+            bool finalPass = (NlvlChunks == 1);
+
+            vector<ifstream> inStreams;
+            for (int k=0; k<Mchunks; k++) {
+                string cPath = lastChunks[j*Mchunks+k];
+                //cout << " > open input stream " << cPath << endl;
+                inStreams.push_back(ifstream(cPath));
+            }
+
+            string wPath = path;
+            if (!finalPass) wPath = path+".lvl"+toString(i)+"."+toString(j);
+            currentChunks.push_back(wPath);
+
+            //cout << "  > open output stream " << wPath << endl;
+            ofstream wStream(wPath);
+            if (finalPass) {
+                cout << "  sort, write final pass!! binSize: " << binSize << endl;
+                wStream << h1 << "\n" << h2 << "\n" << toString(binSize) << "\n";
+            }
+
+            //cout << "    merge to " << j << endl;
+            mergeChunks(Lchunks, inStreams, wStream, i == 2);
+            //cout << "  < close output stream " << wPath << endl;
+            wStream.close();
+
+            for (int k=0; k<Mchunks; k++) {
+                string cPath = lastChunks[j*Mchunks+k];
+                //cout << " < close input stream " << cPath << endl;
+                inStreams[k].close();
+            }
+        }
+
+        for (auto& p : lastChunks) removeFile(p);
+        lastChunks = currentChunks;
+        currentChunks.clear();
+        Lchunks *= Mchunks;
+    }
+}
+
+
+
+
+

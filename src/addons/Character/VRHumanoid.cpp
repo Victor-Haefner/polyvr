@@ -5,11 +5,7 @@
 #include "core/objects/geometry/VRGeoData.h"
 
 #ifndef WITHOUT_JSONCPP
-#ifdef _WIN32
 #include <json/json.h>
-#else
-#include <jsoncpp/json/json.h>
-#endif
 #endif
 
 #define JSONSTR(txt) #txt
@@ -308,6 +304,7 @@ string VRHumanoid::getParameterString() {
 }
 
 void VRHumanoid::loadParameters(string params, bool gen) {
+#ifndef WITHOUT_JSONCPP
     Json::Value root;
     Json::Reader reader;
 
@@ -336,6 +333,7 @@ void VRHumanoid::loadParameters(string params, bool gen) {
     }
 
     if (gen) generate();
+#endif
 }
 
 Color3f VRHumanoid::getColor(string pID) { return colors[pID]; }

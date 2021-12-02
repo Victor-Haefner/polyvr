@@ -18,7 +18,8 @@
 #include <algorithm>
 #include <memory>
 
-#define TEMPLATE(core) #core
+#define TEMPLATEV(...) #__VA_ARGS__
+#define TEMPLATE(...) TEMPLATEV(__VA_ARGS__)
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -499,6 +500,24 @@ string OrderedDict = TEMPLATE(
 \t\t\treturn [ (k,self.dict[k]) for k in self.keys ]\n
 );
 
+string pointCloudImport = TEMPLATE(
+\timport VR\n\n
+\tif hasattr(VR, 'scene'): VR.scene.destroy()\n
+\tVR.scene = VR.Object('scene', 'light')\n\n
+\topts = {}\n
+\topts['downsampling'] = 1\n
+\topts['lit'] = 0\n
+\topts['resolution'] = 2\n
+\topts['pointSize'] = 5\n
+\topts['lod1'] = [5, 20]\n
+\topts['lod2'] = [10, 200]\n
+\topts['swapYZ'] = 1\n
+\topts['keepOctree'] = 0\n\n
+\tpath = 'data/myPC.e57'\n
+\tpc = VR.loadGeometry(path, options = opts)\n
+\tVR.scene.addChild(pc)\n
+);
+
 struct VRScriptTemplate {
     string name;
     string type;
@@ -557,6 +576,7 @@ void VRScriptManager::initTemplates() {
         addTemplate("shaders", "test", "TODO");
         addTemplate("scripts", "restClient", restClient);
         addTemplate("scripts", "OrderedDict", OrderedDict);
+        addTemplate("scripts", "pointCloudImport", pointCloudImport);
     }
 }
 

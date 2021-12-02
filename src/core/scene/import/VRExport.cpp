@@ -1,6 +1,7 @@
 #include "VRExport.h"
 #include "VRPLY.h"
 #include "GLTF/GLTF.h"
+#include "E57/E57.h"
 #ifndef WITHOUT_DWG
 #include "VRDWG.h"
 #endif
@@ -11,6 +12,7 @@
 #include "core/objects/object/VRObject.h"
 #include "core/objects/OSGObject.h"
 #include "core/objects/geometry/VRGeometry.h"
+#include "core/objects/VRPointCloud.h"
 #include "core/utils/system/VRSystem.h"
 
 using namespace OSG;
@@ -30,6 +32,7 @@ void VRExport::write(VRObjectPtr obj, string path) {
 #ifndef WITHOUT_DWG
     if (ext == ".dwg") { writeDWG(obj, path); }
 #endif
+    if (ext == ".e57") { writeE57(dynamic_pointer_cast<VRPointCloud>(obj), path); }
 
     if (ext == ".wrl" || ext == ".wrz" || ext == ".obj" || ext == ".osb" || ext == ".osg")
         SceneFileHandler::the()->write(obj->getNode()->node, path.c_str());

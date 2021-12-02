@@ -41,7 +41,14 @@ gboolean global_invalidate = TRUE;
 }
 
 void override_window_invalidate_for_new_frame(_GdkWindow* window) {
+    printf("override_window_invalidate_for_new_frame, window: %p\n", window);
     _GdkWindowImplClass* impl_class = getGdkWindowImplClass();
+    printf(" impl_class: %p\n", impl_class);
+    if (!impl_class) {
+        printf(" getGdkWindowImplClass failed! ignore override\n");
+        return;
+    }
+
 #ifdef _WIN32
     impl_class->invalidate_for_new_frame = _gdk_win32_window_invalidate_for_new_frame;
     //impl_class->set_opacity = _gdk_win32_window_set_opacity;

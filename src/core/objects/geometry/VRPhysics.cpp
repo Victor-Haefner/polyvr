@@ -22,7 +22,7 @@
 #include <BulletSoftBody/btSoftBodyHelpers.h>
 #include <BulletSoftBody/btSoftRigidDynamicsWorld.h>
 
-#ifndef _WIN32
+#ifndef WITHOUT_HACD
 #include <HACD/hacdCircularList.h>
 #include <HACD/hacdVector.h>
 #include <HACD/hacdICHull.h>
@@ -775,7 +775,7 @@ btCollisionShape* VRPhysics::getCompoundShape() {
     return shape;
 }
 
-#ifndef _WIN32
+#ifndef WITHOUT_HACD
 class MyConvexDecomposition : public ConvexDecomposition::ConvexDecompInterface {
     public:
         btAlignedObjectArray<btConvexHullShape*> m_convexShapes;
@@ -812,7 +812,7 @@ void VRPhysics::setConvexDecompositionParameters(float cw, float vw, float nc, f
 }
 
 btCollisionShape* VRPhysics::getHACDShape() {
-#ifndef _WIN32
+#ifndef WITHOUT_HACD
     OSG::VRGeometryPtr obj = dynamic_pointer_cast<OSG::VRGeometry>( vr_obj.lock() );
     if (!obj) { cout << "Warning in getHACDShape: not a geometry!"; return 0; }
 

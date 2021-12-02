@@ -7,6 +7,7 @@
 
 #include <map>
 #include <vector>
+#include <thread>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -81,6 +82,8 @@ class VRNetworkNode : public VRManager<VRNetworkSlave>, public std::enable_share
         string stat_ssh_key = "none";
         string stat_path = "none";
 
+        thread initThread;
+
         void initSlaves();
         void update();
 
@@ -92,6 +95,7 @@ class VRNetworkNode : public VRManager<VRNetworkSlave>, public std::enable_share
         VRNetworkNodePtr ptr();
 
         void setup(VRStorageContextPtr context);
+        void joinInitThread();
 
         virtual VRNetworkSlavePtr add(string name = "") override;
 
@@ -123,6 +127,7 @@ class VRNetwork : public VRManager<VRNetworkNode> {
         VRNetwork();
         ~VRNetwork();
 
+        void joinInitThreads();
         void stopSlaves();
 };
 

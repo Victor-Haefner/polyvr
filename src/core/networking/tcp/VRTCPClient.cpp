@@ -161,7 +161,9 @@ class TCPClient {
                 read();
             } catch(std::exception& e) {
                 cout << "TCPClient::connect failed with: " << e.what() << endl;
+#ifndef WITHOUT_GTK
                 VRConsoleWidget::get("Collaboration")->write( " TCP connect to "+host+":"+toString(port)+" failed with "+e.what()+"\n", "red");
+#endif
             }
         }
 
@@ -172,7 +174,9 @@ class TCPClient {
                 read();
             } catch(std::exception& e) {
                 cout << "TCPClient::connect failed with: " << e.what() << endl;
+#ifndef WITHOUT_GTK
                 VRConsoleWidget::get("Collaboration")->write( " TCP connect to "+uri+" failed with "+e.what()+"\n", "red");
+#endif
             }
         }
 

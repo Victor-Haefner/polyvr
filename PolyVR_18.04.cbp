@@ -118,6 +118,7 @@
 			<Add directory="/usr/include/DWG" />
 			<Add directory="/usr/include/libxml2" />
 			<Add directory="/usr/include/eigen3" />
+			<Add directory="/usr/include/jsoncpp" />
 		</Compiler>
 		<Linker>
 			<Add option="-lTKV3d" />
@@ -1204,6 +1205,8 @@
 		<Unit filename="src/core/scene/rendering/VRRenderStudio.h" />
 		<Unit filename="src/core/scene/rendering/VRSSAO.cpp" />
 		<Unit filename="src/core/scene/rendering/VRSSAO.h" />
+		<Unit filename="src/core/scene/sound/VRMicrophone.cpp" />
+		<Unit filename="src/core/scene/sound/VRMicrophone.h" />
 		<Unit filename="src/core/scene/sound/VRSound.cpp" />
 		<Unit filename="src/core/scene/sound/VRSound.h" />
 		<Unit filename="src/core/scene/sound/VRSoundFwd.h" />
@@ -1396,6 +1399,8 @@
 		<Unit filename="src/core/setup/devices/VRMouse.h" />
 		<Unit filename="src/core/setup/devices/VRMultiTouch.cpp" />
 		<Unit filename="src/core/setup/devices/VRMultiTouch.h" />
+		<Unit filename="src/core/setup/devices/VRPresenter.cpp" />
+		<Unit filename="src/core/setup/devices/VRPresenter.h" />
 		<Unit filename="src/core/setup/devices/VRServer.cpp" />
 		<Unit filename="src/core/setup/devices/VRServer.h" />
 		<Unit filename="src/core/setup/devices/VRSignal.cpp" />
@@ -1574,9 +1579,6 @@
 		<Unit filename="src/core/utils/zipper/zipper.h" />
 		<Unit filename="src/main.cpp" />
 		<Unit filename="src/version/version.cpp" />
-		<Extensions>
-			<code_completion />
-			<debugger />
-		</Extensions>
+		<Extensions />
 	</Project>
 </CodeBlocks_project_file>

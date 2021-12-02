@@ -9,6 +9,7 @@ VRFlystick::VRFlystick() : VRDevice("flystick") {
     addBeacon();
     enableAvatar("cone");
     enableAvatar("ray");
+    store("tracker", &trackerName);
 }
 
 VRFlystickPtr VRFlystick::create() {
@@ -36,5 +37,7 @@ void VRFlystick::update(vector<int> buttons) {
 void VRFlystick::update(vector<float> sliders) {
     for(unsigned int i=0; i<sliders.size(); i++) change_slider(i+10, sliders[i]); // art slider key has an offset of 10
 }
+
+string VRFlystick::getTrackerName() { return trackerName; }
 
 OSG_END_NAMESPACE;

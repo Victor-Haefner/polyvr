@@ -22,6 +22,21 @@ vector<string> splitString(const string& s, char c) {
     return res;
 }
 
+vector<string> splitString(const string& s, const string& d) {
+    vector<string> res;
+    size_t lpos = 0;
+    size_t pos = 0;
+    string token;
+    do {
+        pos = s.find(d, lpos+1);
+        token = s.substr(lpos, pos);
+        res.push_back(token);
+        lpos = pos;
+        //s.erase(0, pos + d.length());
+    } while (pos != string::npos);
+    return res;
+}
+
 string subString(const string& s, int beg, int len) { return s.substr(beg, len); }
 
 bool startsWith(const string& s, const string& s2, bool caseSensitive) {

@@ -2789,9 +2789,12 @@ It is not an error to seek to recordNumber = childCount() (i.e. to one record pa
 */ /*================*/
 void CompressedVectorReader::seek(int64_t recordNumber)
 {
-    CHECK_THIS_INVARIANCE()
     impl_->seek(recordNumber);
-    CHECK_THIS_INVARIANCE()
+}
+
+void CompressedVectorReader::skip(int64_t recordNumber, int64_t offset)
+{
+    impl_->skip(recordNumber, offset);
 }
 
 /*================*/ /*!
@@ -4603,6 +4606,10 @@ ImageFile::ImageFile(const ustring& fname, const ustring& mode, const ustring& c
 
     CHECK_THIS_INVARIANCE()
 }
+
+size_t ImageFile::xmlByteOffset() { return impl_->xmlByteOffset(); }
+size_t ImageFile::xmlByteLength() { return impl_->xmlByteLength(); }
+string ImageFile::getXmlData() { return impl_->getXmlData(); }
 
 /*================*/ /*!
 @brief   Get the pre-established root StructureNode of the E57 ImageFile.

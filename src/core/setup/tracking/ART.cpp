@@ -29,7 +29,20 @@ int ART_device::key() { return key(ID, type); }
 int ART_device::key(int ID, int type) { return ID*1000 + type; }
 
 void ART_device::init() {
-    if (type != 1) ent = VRTransform::create("ART_tracker", false);
+    if (type != 1) {
+        ent = VRTransform::create("ART_tracker", false);
+        auto setup = VRSetup::getCurrent();
+        if (setup) {
+            for (auto dev : setup->getDevices()) {
+                auto fly = dynamic_pointer_cast<VRFlystick>(dev.second);
+                if (!fly) continue;
+                if (fly->getTrackerName() == ent->getName()) {
+			fly->setBeacon(ent);
+			fly->clearSignals();
+		}
+            }
+        }
+    }
 
     if (type == 2) { // finger tracking
         for (int i=0;i<5;i++) {

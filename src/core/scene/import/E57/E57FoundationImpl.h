@@ -751,6 +751,11 @@ public:
     CheckedFile*    file();
     ustring         fileName();
 
+    size_t          xmlByteOffset();
+    size_t          xmlByteLength();
+    string          xmlData_;
+    string          getXmlData();
+
     /// Manipulate registered extensions in the file
     void            extensionsAdd(const ustring& prefix, const ustring& uri);
     bool            extensionsLookupPrefix(const ustring& prefix, ustring& uri);
@@ -810,6 +815,7 @@ protected: //=================
 
     /// Read file attributes
     uint64_t        xmlLogicalOffset_;
+    uint64_t        xmlLogicalOffset2_;
     uint64_t        xmlLogicalLength_;
 
     /// Write file attributes
@@ -951,6 +957,7 @@ public:
                 ~CompressedVectorReaderImpl();
     unsigned    read();
     unsigned    read(vector<SourceDestBuffer>& dbufs);
+    void        skip(uint64_t recordNumber, uint64_t offset);
     void        seek(uint64_t recordNumber);
     bool        isOpen();
     shared_ptr<CompressedVectorNodeImpl> compressedVectorNode();
@@ -1210,6 +1217,7 @@ public:
 
     virtual void        destBufferSetNew(vector<SourceDestBuffer>& dbufs) = 0;
     virtual uint64_t    totalRecordsCompleted() = 0;
+    virtual size_t      skip(size_t byteCount) { return 0; };
     virtual size_t      inputProcess(const char* source, const size_t count) = 0;
     virtual void        stateReset() = 0;
     unsigned            bytestreamNumber() {return(bytestreamNumber_);};
@@ -1234,6 +1242,7 @@ public:
 
     virtual uint64_t    totalRecordsCompleted() override {return(currentRecordIndex_);};
 
+    virtual size_t      skip(size_t byteCount) override;
     virtual size_t      inputProcess(const char* source, const size_t byteCount) override;
     virtual size_t      inputProcessAligned(const char* inbuf, const size_t firstBit, const size_t endBit) = 0;
 

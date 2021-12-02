@@ -2,6 +2,7 @@
 #define VRPOINTCLOUD_H_INCLUDED
 
 #include "core/objects/VRTransform.h"
+#include <OpenSG/OSGColor.h>
 
 OSG_BEGIN_NAMESPACE;
 
@@ -26,6 +27,12 @@ class VRPointCloud : public VRTransform {
 
         void setupMaterial(bool lit, int pointsize);
         VRMaterialPtr getMaterial();
+
+        void addPoint(Vec3d p, Color3f c);
+
+        void convert(string pathIn);
+        void genTestFile(string path, size_t N, bool doColor);
+        void externalSort(string path, size_t Nchunks, double binSize);
 
         OctreePtr getOctree();
 };

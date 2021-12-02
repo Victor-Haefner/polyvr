@@ -7,6 +7,9 @@ OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 class VRFlystick : public VRDevice {
+    private:
+        string trackerName;
+
     public:
         VRFlystick();
 
@@ -17,6 +20,8 @@ class VRFlystick : public VRDevice {
 
         void update(vector<int> buttons);
         void update(vector<float> sliders);
+
+        string getTrackerName();
 };
 
 

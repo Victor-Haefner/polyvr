@@ -32,7 +32,7 @@ class VRVideo : public VRStorage {
 
         struct AStream {
             VRSoundPtr audio;
-            map< int, vector<pair<ALbyte*, int>> > frames;
+            map< int, vector<VRSoundBufferPtr> > frames;
             int lastFrameQueued = 0;
             int cachedFrameMax = 0;
             ~AStream();

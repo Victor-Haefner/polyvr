@@ -20,16 +20,15 @@ OSG_BEGIN_NAMESPACE;
 
 class VRSound {
     private:
+        VRSoundInterfacePtr interface;
+
         struct ALData;
         shared_ptr<ALData> al;
-        VRUpdateCbWeakPtr callback;
+        vector<VRSoundBufferPtr> ownedBuffer;
+        int nextBuffer = 0;
+        VRUpdateCbPtr callback;
 
-        int queuedBuffers = 0;
-        unsigned int source = 0;
-        unsigned int* buffers = 0;
-        list<unsigned int> free_buffers;
         unsigned int frequency = 0;
-        unsigned int Nbuffers = 50;
         int stream_id = 0;
         int init = 0;
         string path;
@@ -45,7 +44,6 @@ class VRSound {
         Vec3d* pos;
         Vec3d* vel;
 
-        void playBuffer(vector<short>& buffer, int sample_rate);
         void updateSampleAndFormat();
 
     public:
@@ -63,7 +61,6 @@ class VRSound {
         bool isRunning();
         int getState();
         string getPath();
-        void checkSource();
 
         void play();
         void stop();
@@ -71,22 +68,21 @@ class VRSound {
         void resume();
         void close();
         void reset();
-        void updateSource();
         bool initiate();
-        void playLocally();
         void playFrame();
 
-        int getQueuedBuffer();
-        void recycleBuffer();
-        unsigned int getFreeBufferID();
         void initWithCodec(AVCodecContext* codec);
-        vector<pair<ALbyte*, int>> extractPacket(AVPacket* packet);
-        void queueFrameData(ALbyte* frameData, int data_size);
+        vector<VRSoundBufferPtr> extractPacket(AVPacket* packet);
         void queuePacket(AVPacket* packet);
+
+        void playBuffer(VRSoundBufferPtr frame);
+        void addBuffer(VRSoundBufferPtr frame);
+
+        void exportToFile(string path);
 
         // carrier amplitude, carrier frequency, carrier phase, modulation amplitude, modulation frequency, modulation phase, packet duration
         void synthesize(float Ac = 32760, float wc = 440, float pc = 0, float Am = 0, float wm = 0, float pm = 0, float T = 1);
-        vector<short> synthSpectrum(vector<double> spectrum, unsigned int samples, float duration, float fade_factor, bool returnBuffer = false);
+        vector<short> synthSpectrum(vector<double> spectrum, unsigned int samples, float duration, float fade_factor, bool returnBuffer = false, int maxQueued = -1);
         vector<short> synthBuffer(vector<Vec2d> freqs1, vector<Vec2d> freqs2, float T = 1);
         vector<short> synthBufferForChannel(vector<Vec2d> freqs1, vector<Vec2d> freqs2, int channel, float T = 1);
         void synthBufferOnChannels(vector<vector<Vec2d>> freqs1, vector<vector<Vec2d>> freqs2, float T = 1);

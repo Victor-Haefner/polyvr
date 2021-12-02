@@ -15,6 +15,7 @@
 #include "core/objects/material/VRTexture.h"
 #include "core/objects/material/VRTextureGenerator.h"
 #include "core/utils/VRLogger.h"
+#include "core/utils/system/VRSystem.h"
 
 using namespace OSG;
 
@@ -139,15 +140,28 @@ void CEF::global_initiate() {
     string path = "/ressources/cef";
 #endif
 
+    auto checkPath = [](string name, string path) {
+        cout << "CEF::global_initiate, " << name << " path: " << path << endl;
+        if (exists(path)) cout << " found " << name << " path" << endl;
+        else cout << " Warning! did not find " << name << " path!" << endl;
+    };
+
 #ifdef _WIN32
     string bsp = VRSceneManager::get()->getOriginalWorkdir() + path + "/CefSubProcessWin.exe";
 #else
     string bsp = VRSceneManager::get()->getOriginalWorkdir() + path + "/CefSubProcess";
 #endif
 
+    checkPath("subprocess", bsp);
+
     string ldp = VRSceneManager::get()->getOriginalWorkdir() + path + "/locales";
     string rdp = VRSceneManager::get()->getOriginalWorkdir() + path;
     string lfp = VRSceneManager::get()->getOriginalWorkdir() + path + "/wblog.log";
+
+    checkPath("locales", ldp);
+    checkPath("ressources", rdp);
+    checkPath("log", lfp);
+
     CefString(&settings.browser_subprocess_path).FromASCII(bsp.c_str());
     CefString(&settings.locales_dir_path).FromASCII(ldp.c_str());
     CefString(&settings.resources_dir_path).FromASCII(rdp.c_str());

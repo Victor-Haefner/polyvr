@@ -10,6 +10,7 @@ ptrFwd(VRDevice);
 ptrFwd(VRIntersection);
 ptrFwd(VRFlystick);
 ptrFwd(VRMouse);
+ptrFwd(VRPresenter);
 ptrFwd(VRMultiTouch);
 ptrFwd(VRKeyboard);
 ptrFwd(VRServer);

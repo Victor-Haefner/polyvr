@@ -326,7 +326,8 @@ class CompressedVectorReader {
 public:
     unsigned    read();
     unsigned    read(vector<SourceDestBuffer>& dbufs);
-    void        seek(int64_t recordNumber); // !!! not implemented yet
+    void        skip(int64_t recordNumber, int64_t offset);
+    void        seek(int64_t recordNumber);
     void        close();
     bool        isOpen();
     CompressedVectorNode compressedVectorNode() const;
@@ -614,6 +615,9 @@ public:
     ustring         fileName() const;
     int             writerCount() const;
     int             readerCount() const;
+    size_t          xmlByteOffset();
+    size_t          xmlByteLength();
+    string          getXmlData();
 
     // Manipulate registered extensions in the file
     void            extensionsAdd(const ustring& prefix, const ustring& uri);

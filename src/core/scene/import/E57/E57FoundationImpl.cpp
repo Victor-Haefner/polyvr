@@ -3765,6 +3765,10 @@ ImageFileImpl::ImageFileImpl()
     /// See ImageFileImpl::construct2() for second phase.
 }
 
+size_t ImageFileImpl::xmlByteOffset() { return xmlLogicalOffset2_; }
+size_t ImageFileImpl::xmlByteLength() { return xmlLogicalLength_; }
+string ImageFileImpl::getXmlData() { return xmlData_; }
+
 void ImageFileImpl::construct2(const ustring& fileName, const ustring& mode, const ustring& /*configuration*/)
 {
     /// Second phase of construction, now we have a well-formed ImageFile object.
@@ -3813,6 +3817,12 @@ void ImageFileImpl::construct2(const ustring& fileName, const ustring& mode, con
             ///!!! stash major,minor numbers for API?
             xmlLogicalOffset_ = file_->physicalToLogical(header.xmlPhysicalOffset);
             xmlLogicalLength_ = header.xmlLogicalLength;
+
+            E57FileInputStream iStream(file_, xmlLogicalOffset_, xmlLogicalLength_);
+            xmlData_.resize(xmlLogicalLength_);
+            iStream.readBytes(&xmlData_[0], xmlLogicalLength_);
+            //cout << "   --- loadE57 intern: " << header.xmlPhysicalOffset << "  " << xmlLogicalLength_ << endl;
+            //cout << xmlData_ << endl;
         } catch (...) {
             /// Remember to close file if got any exception
             if (file_ != NULL) {
@@ -6301,6 +6311,8 @@ unsigned CompressedVectorReaderImpl::read(vector<SourceDestBuffer>& dbufs)
     return(read());
 }
 
+static size_t nRead = 0;
+
 unsigned CompressedVectorReaderImpl::read()
 {
 #ifdef E57_MAX_VERBOSE
@@ -6347,6 +6359,9 @@ unsigned CompressedVectorReaderImpl::read()
         }
     }
 
+    nRead += outputCount;
+    //cout << "  read " << outputCount << " " << nRead << endl;
+
     /// Return number of records transferred to each dbuf.
     return(outputCount);
 }
@@ -6383,6 +6398,7 @@ uint64_t CompressedVectorReaderImpl::earliestPacketNeededForInput()
 
 void CompressedVectorReaderImpl::feedPacketToDecoders(uint64_t currentPacketLogicalOffset)
 {
+    //cout << "feedPacketToDecoders " << currentPacketLogicalOffset << endl;
     /// Read earliest packet into cache and send data to decoders with unblocked output
     bool channelHasExhaustedPacket = false;
     uint64_t nextPacketLogicalOffset = E57_UINT64_MAX;
@@ -6412,6 +6428,8 @@ void CompressedVectorReaderImpl::feedPacketToDecoders(uint64_t currentPacketLogi
             char* uneatenStart = &bsbStart[chan->currentBytestreamBufferIndex];
             size_t uneatenLength = bsbLength - chan->currentBytestreamBufferIndex;
 
+            //cout << "  i) " << i << " " << bsbLength << " " << uneatenLength << endl;
+
             /// Double check we are not off end of buffer
             if (chan->currentBytestreamBufferIndex > bsbLength) {
                 throw E57_EXCEPTION2(E57_ERROR_INTERNAL,
@@ -6435,6 +6453,8 @@ void CompressedVectorReaderImpl::feedPacketToDecoders(uint64_t currentPacketLogi
 #endif
             /// Adjust counts of bytestream location
             chan->currentBytestreamBufferIndex += bytesProcessed;
+            //cout << " -- " << i << ") " << chan->currentPacketLogicalOffset << " " << chan->currentBytestreamBufferIndex << " " << bytesProcessed << endl;
+            //cout << "     read " << nRead << endl;
 
             /// Check if this channel has exhausted its bytestream buffer in this packet
             if (chan->isInputBlocked()) {
@@ -6524,12 +6544,125 @@ uint64_t CompressedVectorReaderImpl::findNextDataPacket(uint64_t nextPacketLogic
     return(E57_UINT64_MAX);
 }
 
-void CompressedVectorReaderImpl::seek(uint64_t /*recordNumber*/)
-{
-    checkImageFileOpen(__FILE__, __LINE__, __FUNCTION__);
+int byteSize(MemoryRepresentation m) {
+    if (m == E57_INT8) return 1;
+    if (m == E57_UINT8) return 1;
+    if (m == E57_INT16) return 2;
+    if (m == E57_UINT16) return 2;
+    if (m == E57_INT32) return 4;
+    if (m == E57_UINT32) return 4;
+    if (m == E57_INT64) return 8;
+    if (m == E57_BOOL) return 1;
+    if (m == E57_REAL32) return 4;
+    if (m == E57_REAL64) return 8;
+    if (m == E57_USTRING) return 0;
+    return 0;
+}
 
-    ///!!! implement
-    throw E57_EXCEPTION1(E57_ERROR_NOT_IMPLEMENTED);
+void CompressedVectorReaderImpl::skip(uint64_t Nskip, uint64_t offset) {
+    checkImageFileOpen(__FILE__, __LINE__, __FUNCTION__);
+    checkReaderOpen(__FILE__, __LINE__, __FUNCTION__);
+
+    char* anyPacket = NULL;
+
+    //if (offset > 125) cout << " --- skip --- " << Nskip << " from " << offset << endl;
+    for (unsigned i = 0; i < channels_.size(); i++) {
+        DecodeChannel& chan = channels_[i];
+
+        auto_ptr<PacketLock> packetLock = cache_->lock(chan.currentPacketLogicalOffset, anyPacket);
+        DataPacket* dpkt = reinterpret_cast<DataPacket*>(anyPacket);
+        size_t Nb = dpkt->getBytestreamBufferLength(chan.bytestreamNumber);
+
+        int S = i<3 ? 8 : 1;
+
+        uint64_t iNskip = Nskip*S;
+
+        //if (i == 0 && offset > 125) cout << " decoder skip: " << iNskip;
+        size_t deltaN = chan.decoder->skip(iNskip);
+        iNskip -= deltaN;
+        //if (i == 0 && offset > 125) cout << " -> " << iNskip << endl;
+        //if (deltaN == 0) chan.decoder->
+        //if (iNskip <= 0) continue;
+
+        size_t currentIdx = chan.currentBytestreamBufferIndex/S;
+
+        //int S = byteSize(chan.dbuf.memoryRepresentation());
+        size_t N = 0;
+        if (currentIdx < Nskip+offset) N = (Nskip+offset-currentIdx)*S;
+        //if (i == 0 && offset > 125) cout << " " << i << ") skip bytes: " << N << ", packet size: " << Nb << endl;
+
+        /*while (chan.currentBytestreamBufferIndex+N > Nb) {
+            chan.currentPacketLogicalOffset += dpkt->packetLogicalLengthMinus1+1;
+            chan.currentBytestreamBufferLength = Nb;
+            chan.currentBytestreamBufferIndex = 0;
+            N -= Nb;
+
+            cout << "    channel buffer offset: " << chan.currentPacketLogicalOffset << endl;
+
+            /*auto_ptr<PacketLock> packetLock = cache_->lock(chan.currentPacketLogicalOffset, anyPacket);
+            DataPacket* dpkt = reinterpret_cast<DataPacket*>(anyPacket);
+            Nb = dpkt->getBytestreamBufferLength(chan.bytestreamNumber);*/
+        //}
+
+        chan.currentBytestreamBufferIndex += N;
+
+        //if (i == 0 && offset > 125) cout << "  i: " << chan.currentBytestreamBufferIndex << " offset: " << chan.currentPacketLogicalOffset << endl;
+    }
+}
+
+// TODO:
+//  1) make more generic
+//  2) increase chan->currentPacketLogicalOffset accordingly!
+void CompressedVectorReaderImpl::seek(uint64_t Nskip) {
+    checkImageFileOpen(__FILE__, __LINE__, __FUNCTION__);
+    checkReaderOpen(__FILE__, __LINE__, __FUNCTION__);
+
+    /*for (unsigned i = 0; i < channels_.size(); i++) {
+        DecodeChannel& chan = channels_[i];
+        chan.decoder->inputProcess(NULL, 0);
+    }*/
+
+    char* anyPacket = NULL;
+
+    // 1056 bytes per data packet
+    //  132 points
+    //    8 bytes per coordinate (x,y,z)
+    //    1 byte per color channel (r,g,b)
+
+
+    //size_t NPskip = Nskip*8; // x,y,z
+    //size_t NCskip = Nskip*1; // r,g,b
+
+    cout << " --- seek --- " << Nskip << endl;
+    for (unsigned i = 0; i < channels_.size(); i++) {
+        DecodeChannel& chan = channels_[i];
+
+        auto_ptr<PacketLock> packetLock = cache_->lock(chan.currentPacketLogicalOffset, anyPacket);
+        DataPacket* dpkt = reinterpret_cast<DataPacket*>(anyPacket);
+        size_t Nb = dpkt->getBytestreamBufferLength(chan.bytestreamNumber);
+
+        //int S = byteSize(chan.dbuf.memoryRepresentation());
+        int S = i<3 ? 8 : 1;
+        size_t N = Nskip*S;
+        cout << " " << i << ") skip bytes: " << N << ", packet size: " << Nb << endl;
+
+        /*while (chan.currentBytestreamBufferIndex+N > Nb) {
+            chan.currentPacketLogicalOffset += dpkt->packetLogicalLengthMinus1+1;
+            chan.currentBytestreamBufferLength = Nb;
+            chan.currentBytestreamBufferIndex = 0;
+            N -= Nb;
+
+            cout << "    channel buffer offset: " << chan.currentPacketLogicalOffset << endl;
+
+            /*auto_ptr<PacketLock> packetLock = cache_->lock(chan.currentPacketLogicalOffset, anyPacket);
+            DataPacket* dpkt = reinterpret_cast<DataPacket*>(anyPacket);
+            Nb = dpkt->getBytestreamBufferLength(chan.bytestreamNumber);*/
+        //}
+
+        chan.currentBytestreamBufferIndex += N;
+
+        cout << "  i: " << chan.currentBytestreamBufferIndex << " offset: " << chan.currentPacketLogicalOffset << endl;
+    }
 }
 
 bool CompressedVectorReaderImpl::isOpen()
@@ -7272,6 +7405,17 @@ void BitpackDecoder::destBufferSetNew(vector<SourceDestBuffer>& dbufs)
     destBuffer_ = dbufs.at(0).impl();
 }
 
+size_t BitpackDecoder::skip(size_t Nskip) {
+    if (Nskip*8 == inBufferEndByte_*8-inBufferFirstBit_) {
+        return 0;
+    }
+
+    size_t NBskip = min(Nskip*8, inBufferEndByte_*8-inBufferFirstBit_);
+    inBufferFirstBit_ += NBskip;
+    //cout << " decoder skip " << Nskip << " -> " << NBskip/8 << endl;
+    return NBskip/8;
+}
+
 size_t BitpackDecoder::inputProcess(const char* source, const size_t availableByteCount)
 {
 #ifdef E57_MAX_VERBOSE
@@ -7335,7 +7479,7 @@ size_t BitpackDecoder::inputProcess(const char* source, const size_t availableBy
 
         /// If the lower level processing didn't eat anything on this iteration, stop looping and tell caller how much we ate or stored.
     } while (bytesUnsaved > 0 && bitsEaten > 0);
-
+    //cout << "BitpackDecoder::inputProcess n: " << availableByteCount - bytesUnsaved << endl;
     /// Return the number of bytes we ate/saved.
     return(availableByteCount - bytesUnsaved);
 }

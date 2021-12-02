@@ -5,7 +5,7 @@
 #include "core/utils/VRTimer.h"
 #include "core/objects/material/VRTexture.h"
 
-#include <bullet/LinearMath/btTransformUtil.h>
+#include <LinearMath/btTransformUtil.h>
 
 using namespace OSG;
 

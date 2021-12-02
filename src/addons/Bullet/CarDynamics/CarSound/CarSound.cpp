@@ -179,11 +179,7 @@ void VRCarSound::play(float rpm) {
         if (!isLoaded()) { cout << "No spectrum data loaded" << endl; return; }
         auto clamp = [](float& v, float a, float b) { return min(b,max(a,v)); };
         clamp(rpm, minRPM, maxRPM);
-
-        sound->recycleBuffer();
-        if ( sound->getQueuedBuffer() < 2 ) {
-            sound->synthSpectrum(getSpectrum(rpm), getRes(), duration, fade);
-        }
+        sound->synthSpectrum(getSpectrum(rpm), getRes(), duration, fade, 2);
     }
 }
 
