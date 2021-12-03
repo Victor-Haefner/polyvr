@@ -25,6 +25,12 @@ VRPointCloudPtr VRPointCloud::create(string name) { return VRPointCloudPtr( new 
 void VRPointCloud::setupMaterial(bool lit, int pointsize) {
     mat->setLit(lit);
     mat->setPointSize(pointsize);
+
+    // TODO: add splatting option
+    //  - compute tangent space at each point
+    //  - compute density at each point
+    //  - render patches for each point, needs tangents and size
+    //  - render disks on the quads?
 }
 
 VRMaterialPtr VRPointCloud::getMaterial() { return mat; }
