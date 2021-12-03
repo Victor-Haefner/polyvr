@@ -71,6 +71,7 @@ VRGuiRecWidget::VRGuiRecWidget() {
 }
 
 void VRGuiRecWidget::onSCPathChanged() {
+    screenshots_path = getTextEntry("sc_entry");
 }
 
 void VRGuiRecWidget::onSCTrigger() {
@@ -79,7 +80,7 @@ void VRGuiRecWidget::onSCTrigger() {
     tex->write(screenshots_path+"/pvr_"+toString(time(0))+".png");
 }
 
-void VRGuiRecWidget::onSCChangeDir() {
+void VRGuiRecWidget::onSCChangeDir() { // TODO
     ;
 }
 
