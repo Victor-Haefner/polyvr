@@ -202,6 +202,10 @@ VRGuiManager::~VRGuiManager() {
     if (mtx) delete mtx;
 }
 
+void VRGuiManager::openHelp(string search) {
+    g_sc->openHelp(search);
+}
+
 void VRGuiManager::updateSystemInfo() {
     g_mon->updateSystemInfo();
 }

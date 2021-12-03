@@ -737,11 +737,13 @@ void VRGuiScripts::on_help_close_clicked() {
 }
 
 void VRGuiScripts::on_help_clicked() {
+    string txt = editor->getSelection();
+    openHelp(txt);
+}
+
+void VRGuiScripts::openHelp(string search) {
     VRGuiScripts::updateDocumentation();
-
-    auto tb  = VRGuiBuilder::get()->get_object("pydoc");
-    gtk_text_buffer_set_text((GtkTextBuffer*)tb, "", 0);
-
+    setTextEntry("entry25", search);
     showDialog("pybindings-docs");
     VRGuiWidget("entry25").grabFocus();
 }
@@ -1261,6 +1263,7 @@ VRGuiScripts::VRGuiScripts() {
 
     editor = shared_ptr<VRGuiEditor>( new VRGuiEditor("scrolledwindow4") );
     editor->addKeyBinding("find", VRUpdateCb::create("findCb", bind(&VRGuiScripts::on_find_clicked, this)));
+    editor->addKeyBinding("help", VRUpdateCb::create("helpCb", bind(&VRGuiScripts::on_help_clicked, this)));
     editor->addKeyBinding("save", VRUpdateCb::create("saveCb", bind(&VRGuiScripts::on_save_clicked, this)));
     editor->addKeyBinding("exec", VRUpdateCb::create("execCb", bind(&VRGuiScripts::on_exec_clicked, this)));
     connect_signal<void>(editor->getSourceBuffer(), bind(&VRGuiScripts::on_buffer_changed, this), "changed");

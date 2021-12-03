@@ -1226,10 +1226,10 @@ void VRGuiBuilder::buildBaseUI() {
     auto toolbutton20 = addToolButton("toolbutton20", "gtk-indent", toolbar3, "New Group");
     auto toolbutton22 = addToolButton("toolbutton22", "gtk-open", toolbar3, "Import Script From Scene");
     auto toolbutton9 = addToolButton("toolbutton9", "gtk-delete", toolbar3, "Delete Script");
-    auto toolbutton7 = addToolButton("toolbutton7", "gtk-save", toolbar3, "Save Script");
-    auto toolbutton8 = addToolButton("toolbutton8", "gtk-execute", toolbar3, "Execute Script");
-    auto toolbutton23 = addToolButton("toolbutton23", "gtk-find", toolbar3, "Search");
-    auto toolbutton16 = addToolButton("toolbutton16", "gtk-help", toolbar3, "Documentation");
+    auto toolbutton7 = addToolButton("toolbutton7", "gtk-save", toolbar3, "Save Script (Ctrl+S)");
+    auto toolbutton8 = addToolButton("toolbutton8", "gtk-execute", toolbar3, "Execute Script (Ctrl+E)");
+    auto toolbutton23 = addToolButton("toolbutton23", "gtk-find", toolbar3, "Search (Ctrl+F)");
+    auto toolbutton16 = addToolButton("toolbutton16", "gtk-help", toolbar3, "Documentation (Ctrl+H)");
     auto toolbutton30 = addToolButton("toolbutton30", "", toolbar3_2, "Convert to C++");
     gtk_tool_button_set_label(GTK_TOOL_BUTTON(toolbutton30), "CPP");
     auto toggletoolbutton1 = addToggleToolButton("toggletoolbutton1", "gtk-sort-ascending", toolbar3, "Show Performance");
