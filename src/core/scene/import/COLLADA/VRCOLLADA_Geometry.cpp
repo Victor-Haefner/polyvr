@@ -92,8 +92,7 @@ void VRCOLLADA_Geometry::handleInput(string type, string sourceID, string offset
                 for (int i=0; i<source.count; i++) {
                     int k = i*source.stride;
                     Vec2d tc(source.data[k], source.data[k+1]);
-                    if (tcSlot == 0) currentGeoData->pushTexCoord(tc);
-                    if (tcSlot == 1) currentGeoData->pushTexCoord2(tc);
+                    currentGeoData->pushTexCoord(tc, tcSlot);
                 }
             }
         }

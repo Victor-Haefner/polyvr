@@ -383,7 +383,8 @@ void OSG::loadPCB(string path, VRTransformPtr res, map<string, string> importOpt
         Vec3d  pos = pnt.p;
         Vec3ub rgb = pnt.c;
         //Color3f col(rgb[0]/255.0, rgb[1]/255.0, rgb[2]/255.0);
-        pointcloud->addPoint(pos, rgb);
+        if (hasSpl) pointcloud->addPoint(pos, pnt);
+        else pointcloud->addPoint(pos, rgb);
         progress->update( 1 );
         if (Nskip>0) skip(Nskip);
         if (bounds[1]>0)

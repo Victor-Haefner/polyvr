@@ -96,9 +96,17 @@ void VRPointCloud::setupLODs() {
             for (int i = 0; i < leaf->dataSize(); i+=downsamplingRate[lvl]) {
                 void* data = leaf->getData(i);
                 Vec3d pos = leaf->getPoint(i);
-                Color3ub col = *((Color3ub*)data);
                 chunk.pushVert(pos - center, Vec3d(0,1,0));
-                chunk.pushColor(col);
+                if (pointType == COLOR) {
+                    Color3ub col = *((Color3ub*)data);
+                    chunk.pushColor(col);
+                } else if (pointType == SPLAT) {
+                    Splat splat = *((Splat*)data);
+                    chunk.pushColor(splat.c);
+                    chunk.pushTexCoord(Vec2d(splat.v1), 0);
+                    chunk.pushTexCoord(Vec2d(splat.v2), 1);
+                    chunk.pushTexCoord(Vec2d(splat.w,0), 2);
+                }
                 chunk.pushPoint();
 
             }
@@ -121,15 +129,15 @@ void VRPointCloud::genTestFile(string path, size_t N, bool doColor) {
 }
 
 void VRPointCloud::genTestFile2(string path, size_t N, bool doColor) {
+    auto sphere = VRGeometry::create("spherePC");
+    sphere->setPrimitive("Sphere 1 "+toString(N));
+    VRGeoData data(sphere);
+
     ofstream stream(path);
     stream << "x8y8z8";
     if (doColor) stream << "r1g1b1";
     stream << "u2v2s1"; // splatting data
-    stream << "\n" << toString(N) << "\n0\n";
-
-    auto sphere = VRGeometry::create("spherePC");
-    sphere->setPrimitive("Sphere 1 "+toString(N));
-    VRGeoData data(sphere);
+    stream << "\n" << toString(data.size()) << "\n0\n";
 
     auto progress = VRProgress::create();
     progress->setup("generate points ", data.size());
@@ -140,6 +148,12 @@ void VRPointCloud::genTestFile2(string path, size_t N, bool doColor) {
 
     cout << "gen PC sphere " << data.size() << endl;
 
+    auto toSpherical = [](Vec3d v) {
+        double a = acos(v[1]);
+        double b = atan2(v[2],v[0]) + Pi;
+        return Vec2ub(255.0*a/Pi, 255.0*b/(2*Pi));
+    };
+
     for (int i=0; i<data.size(); i++) {
         Vec3d P = Vec3d( data.getPosition(i) );
         Vec3ub C = Vec3ub(255*abs(P[0]), 255*abs(P[1]), 255*abs(P[2]));
@@ -149,9 +163,9 @@ void VRPointCloud::genTestFile2(string path, size_t N, bool doColor) {
         O.makeUpOrthogonal();
         Vec3d u = O.x();
         Vec3d v = O.up();
-        Vec2ub U(255*u.dot(up), 255*u.dot(x));
-        Vec2ub V(255*u.dot(up), 255*u.dot(x));
-        char W = 10; // mm
+        Vec2ub U = toSpherical(u);
+        Vec2ub V = toSpherical(v);
+        char W = 46; // mm
 
         stream.write((const char*)&P[0], sizeof(Vec3d));
         if (doColor) stream.write((const char*)&C[0], sizeof(Vec3ub));
