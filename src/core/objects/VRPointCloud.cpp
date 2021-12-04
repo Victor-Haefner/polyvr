@@ -63,8 +63,16 @@ void VRPointCloud::addLevel(float distance, int downsampling) {
     lodDistances.push_back(distance);
 }
 
-void VRPointCloud::addPoint(Vec3d p, Color3f c) {
-    octree->add(p, new Color3f(c), -1, true, 1e5);
+void VRPointCloud::addPoint(Vec3d p, Splat c) {
+    if (pointType == NONE) pointType = SPLAT;
+    if (pointType != SPLAT) return;
+    octree->add(p, new Splat(c), -1, true, 1e5);
+}
+
+void VRPointCloud::addPoint(Vec3d p, Color3ub c) {
+    if (pointType == NONE) pointType = COLOR;
+    if (pointType != COLOR) return;
+    octree->add(p, new Color3ub(c), -1, true, 1e5);
 }
 
 void VRPointCloud::setupLODs() {
@@ -86,15 +94,16 @@ void VRPointCloud::setupLODs() {
             for (int i = 0; i < leaf->dataSize(); i+=downsamplingRate[lvl]) {
                 void* data = leaf->getData(i);
                 Vec3d pos = leaf->getPoint(i);
-                Color3f col = *((Color3f*)data);
-                chunk.pushVert(pos - center, Vec3d(0,1,0), col);
+                Color3ub col = *((Color3ub*)data);
+                chunk.pushVert(pos - center, Vec3d(0,1,0));
+                chunk.pushColor(col);
                 chunk.pushPoint();
 
             }
             if (chunk.size() > 0) chunk.apply( geo );
         }
 
-        if (!keepOctree) leaf->delContent<Color3f>();
+        if (!keepOctree) leaf->delContent<Color3ub>();
     }
 
     //addChild(octree->getVisualization());

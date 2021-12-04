@@ -3,10 +3,27 @@
 
 #include "core/objects/VRTransform.h"
 #include <OpenSG/OSGColor.h>
+#include <OpenSG/OSGVector.h>
 
 OSG_BEGIN_NAMESPACE;
 
 class VRPointCloud : public VRTransform {
+    public:
+        enum POINTTYPE {
+            NONE,
+            COLOR,
+            SPLAT
+        };
+
+        struct Splat {
+            Color3ub c;
+            Vec2ub v1;
+            Vec2ub v2;
+            char w;
+        };
+
+        POINTTYPE pointType = NONE;
+
     private:
         VRMaterialPtr mat;
         OctreePtr octree;
@@ -28,7 +45,8 @@ class VRPointCloud : public VRTransform {
         void setupMaterial(bool lit, int pointsize);
         VRMaterialPtr getMaterial();
 
-        void addPoint(Vec3d p, Color3f c);
+        void addPoint(Vec3d p, Color3ub c);
+        void addPoint(Vec3d p, Splat c);
 
         void convert(string pathIn);
         void genTestFile(string path, size_t N, bool doColor);

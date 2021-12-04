@@ -19,6 +19,8 @@ struct VRGeoData::Data {
     GeoVec3fPropertyMTRecPtr norms;
     GeoVec3fPropertyMTRecPtr cols3;
     GeoVec4fPropertyMTRecPtr cols4;
+    GeoVec3ubPropertyMTRecPtr cols3ub;
+    GeoVec4ubPropertyMTRecPtr cols4ub;
     GeoVec2fPropertyMTRecPtr texs;
     GeoVec2fPropertyMTRecPtr texs2;
     GeoUInt32PropertyMTRecPtr indicesNormals;
@@ -37,6 +39,11 @@ struct VRGeoData::Data {
             channels[ GeoVec4fProperty::create()->getType().getId() ] = 4;
             channels[ GeoColor3fProperty::create()->getType().getId() ] = 3;
             channels[ GeoColor4fProperty::create()->getType().getId() ] = 4;
+            channels[ GeoVec2ubProperty::create()->getType().getId() ] = 2;
+            channels[ GeoVec3ubProperty::create()->getType().getId() ] = 3;
+            channels[ GeoVec4ubProperty::create()->getType().getId() ] = 4;
+            channels[ GeoColor3ubProperty::create()->getType().getId() ] = 3;
+            channels[ GeoColor4ubProperty::create()->getType().getId() ] = 4;
 #ifndef WASM
             channels[ GeoVec2dProperty::create()->getType().getId() ] = 2;
             channels[ GeoVec3dProperty::create()->getType().getId() ] = 3;
@@ -67,10 +74,12 @@ VRGeoData::VRGeoData(VRGeometryPtr geo) : pend(this, 0) {
         data->norms = (GeoVec3fProperty*)geo->getMesh()->geo->getNormals();
         data->texs = (GeoVec2fProperty*)geo->getMesh()->geo->getTexCoords();
         data->texs2 = (GeoVec2fProperty*)geo->getMesh()->geo->getTexCoords1();
-        auto cols = geo->getMesh()->geo->getColors();
+        GeoVectorPropertyMTRecPtr cols = geo->getMesh()->geo->getColors();
         int Nc = data->getColorChannels(cols);
-        if (Nc == 3) data->cols3 = (GeoVec3fProperty*)cols;
-        if (Nc == 4) data->cols4 = (GeoVec4fProperty*)cols;
+        if (Nc == 3) data->cols3 = dynamic_pointer_cast<GeoVec3fProperty>(cols);
+        if (Nc == 4) data->cols4 = dynamic_pointer_cast<GeoVec4fProperty>(cols);
+        if (Nc == 3) data->cols3ub = dynamic_pointer_cast<GeoVec3ubProperty>(cols);
+        if (Nc == 4) data->cols4ub = dynamic_pointer_cast<GeoVec4ubProperty>(cols);
 
         data->indicesNormals = (GeoUInt32Property*)geo->getMesh()->geo->getIndex(Geometry::NormalsIndex);
         data->indicesColors = (GeoUInt32Property*)geo->getMesh()->geo->getIndex(Geometry::ColorsIndex);
@@ -85,6 +94,8 @@ VRGeoData::VRGeoData(VRGeometryPtr geo) : pend(this, 0) {
     if (!data->norms) data->norms = GeoVec3fProperty::create();
     if (!data->cols3) data->cols3 = GeoVec3fProperty::create();
     if (!data->cols4) data->cols4 = GeoVec4fProperty::create();
+    if (!data->cols3ub) data->cols3ub = GeoVec3ubProperty::create();
+    if (!data->cols4ub) data->cols4ub = GeoVec4ubProperty::create();
     if (!data->texs) data->texs = GeoVec2fProperty::create();
     if (!data->texs2) data->texs2 = GeoVec2fProperty::create();
     if (!data->indicesNormals) data->indicesNormals = GeoUInt32Property::create();
@@ -127,6 +138,10 @@ void VRGeoData::reset() {
     else data->cols3 = GeoVec3fProperty::create();
     if (data->cols4) data->cols4->clear();
     else data->cols4 = GeoVec4fProperty::create();
+    if (data->cols3ub) data->cols3ub->clear();
+    else data->cols3ub = GeoVec3ubProperty::create();
+    if (data->cols4ub) data->cols4ub->clear();
+    else data->cols4ub = GeoVec4ubProperty::create();
     if (data->texs) data->texs->clear();
     else data->texs = GeoVec2fProperty::create();
     if (data->texs2) data->texs2->clear();
@@ -181,6 +196,10 @@ bool VRGeoData::validIndices() const {
         if (!checkMaxIndex(data->indicesColors, data->cols3->size(), Imax)) { cout << "VRGeoData invalid: color3 indices have too big values!\n"; return false; }
     if (data->cols4->size())
         if (!checkMaxIndex(data->indicesColors, data->cols4->size(), Imax)) { cout << "VRGeoData invalid: color4 indices have too big values!\n"; return false; }
+    if (data->cols3ub->size())
+        if (!checkMaxIndex(data->indicesColors, data->cols3ub->size(), Imax)) { cout << "VRGeoData invalid: color3ub indices have too big values!\n"; return false; }
+    if (data->cols4ub->size())
+        if (!checkMaxIndex(data->indicesColors, data->cols4ub->size(), Imax)) { cout << "VRGeoData invalid: color4ub indices have too big values!\n"; return false; }
     return true;
 }
 
@@ -220,7 +239,9 @@ void VRGeoData::apply(VRGeometryPtr geo, bool check, bool checkIndices) const {
 
     GeoVectorProperty* c3 = data->cols3->size() > 0 ? data->cols3 : 0;
     GeoVectorProperty* c4 = data->cols4->size() > 0 ? data->cols4 : 0;
-    geo->setColors( c3 ? c3 : c4 );
+    GeoVectorProperty* c3ub = data->cols3ub->size() > 0 ? data->cols3ub : 0;
+    GeoVectorProperty* c4ub = data->cols4ub->size() > 0 ? data->cols4ub : 0;
+    geo->setColors( c3ub ? c3ub : c4ub ? c4ub : c3 ? c3 : c4);
 }
 
 int VRGeoData::size() const { return data->pos->size(); }
@@ -284,6 +305,24 @@ Color3f VRGeoData::getColor3(int i) {
     return Color3f();
 }
 
+Color4ub VRGeoData::getColor4ub(int i) {
+    if (int(data->cols4ub->size()) > i) return data->cols4ub->getValue(i);
+    if (int(data->cols3ub->size()) > i) {
+        auto c = data->cols3ub->getValue(i);
+        return Color4ub( c[0], c[1], c[2], 1.0 );
+    }
+    return Color4ub();
+}
+
+Color3ub VRGeoData::getColor3ub(int i) {
+    if (int(data->cols3ub->size()) > i) return data->cols3ub->getValue(i);
+    if (int(data->cols4ub->size()) > i) {
+        auto c = data->cols4ub->getValue(i);
+        return Color3ub( c[0], c[1], c[2]);
+    }
+    return Color3ub();
+}
+
 string VRGeoData::getDataName(int type) {
     if (type == 0) return "types";
     if (type == 1) return "lengths";
@@ -307,6 +346,8 @@ int VRGeoData::getDataSize(int type) {
     if (type == 4) return data->norms->size();
     if (type == 5) return data->cols3->size();
     if (type == 6) return data->cols4->size();
+    if (type == 51) return data->cols3ub->size();
+    if (type == 61) return data->cols4ub->size();
     if (type == 7) return data->texs->size();
     if (type == 8) return data->texs2->size();
     if (type == 9) return data->indicesNormals->size();
@@ -334,6 +375,8 @@ template<> string toString(const GeoPnt3fPropertyMTRecPtr& p) { return propToStr
 template<> string toString(const GeoVec2fPropertyMTRecPtr& p) { return propToString<Vec2d>(p); }
 template<> string toString(const GeoVec3fPropertyMTRecPtr& p) { return propToString<Vec3d>(p); }
 template<> string toString(const GeoVec4fPropertyMTRecPtr& p) { return propToString<Vec4d>(p); }
+template<> string toString(const GeoVec3ubPropertyMTRecPtr& p) { return propToString<Vec3ub>(p); }
+template<> string toString(const GeoVec4ubPropertyMTRecPtr& p) { return propToString<Vec4ub>(p); }
 
 string VRGeoData::getDataAsString(int type) {
     if (type == 0) return toString(data->types);
@@ -343,6 +386,8 @@ string VRGeoData::getDataAsString(int type) {
     if (type == 4) return toString(data->norms);
     if (type == 5) return toString(data->cols3);
     if (type == 6) return toString(data->cols4);
+    if (type == 51) return toString(data->cols3ub);
+    if (type == 61) return toString(data->cols4ub);
     if (type == 7) return toString(data->texs);
     if (type == 8) return toString(data->texs2);
     if (type == 9) return toString(data->indicesNormals);
@@ -371,6 +416,8 @@ int VRGeoData::pushTexCoord(Vec2d t) { data->texs->addValue(t); return data->tex
 int VRGeoData::pushTexCoord2(Vec2d t) { data->texs2->addValue(t); return data->texs2->size()-1; }
 int VRGeoData::pushColor(Color3f c) { data->cols3->addValue(c); return data->cols3->size()-1; }
 int VRGeoData::pushColor(Color4f c) { data->cols4->addValue(c); return data->cols4->size()-1; }
+int VRGeoData::pushColor(Color3ub c) { data->cols3ub->addValue(c); return data->cols3ub->size()-1; }
+int VRGeoData::pushColor(Color4ub c) { data->cols4ub->addValue(c); return data->cols4ub->size()-1; }
 
 int VRGeoData::pushNormalIndex(int i) { data->indicesNormals->addValue(i); return data->indicesNormals->size()-1; }
 int VRGeoData::pushColorIndex(int i) { data->indicesColors->addValue(i); return data->indicesColors->size()-1; }
@@ -396,6 +443,8 @@ bool VRGeoData::setTexCoord(int i, Vec2d t) { if (i < (int)data->texs->size()) d
 bool VRGeoData::setTexCoord2(int i, Vec2d t) { if (i < (int)data->texs2->size()) data->texs2->setValue(t,i); else return 0; return 1; }
 bool VRGeoData::setColor(int i, Color3f c) { if (i < (int)data->cols3->size()) data->cols3->setValue(c,i); else return 0; return 1; }
 bool VRGeoData::setColor(int i, Color4f c) { if (i < (int)data->cols4->size()) data->cols4->setValue(c,i); else return 0; return 1; }
+bool VRGeoData::setColor(int i, Color3ub c) { if (i < (int)data->cols3ub->size()) data->cols3ub->setValue(c,i); else return 0; return 1; }
+bool VRGeoData::setColor(int i, Color4ub c) { if (i < (int)data->cols4ub->size()) data->cols4ub->setValue(c,i); else return 0; return 1; }
 
 void VRGeoData::pushQuad(Vec3d p, Vec3d n, Vec3d u, Vec2d s, bool addInds) {
     Vec3d x = -n.cross(u); x.normalize();
@@ -441,6 +490,8 @@ int VRGeoData::pushVert(const VRGeoData& other, int i) {
     bool doNorms = (od->norms && int(od->norms->size()) > i);
     bool doCol3 = (od->cols3 && int(od->cols3->size()) > i);
     bool doCol4 = (od->cols4 && int(od->cols4->size()) > i);
+    bool doCol3ub = (od->cols3ub && int(od->cols3ub->size()) > i);
+    bool doCol4ub = (od->cols4ub && int(od->cols4ub->size()) > i);
     bool doTex = (od->texs && int(od->texs->size()) > i);
     bool doTex2 = (od->texs2 && int(od->texs2->size()) > i);
     if (doNorms) {
@@ -606,6 +657,8 @@ string VRGeoData::status() {
     res += " " + toString(data->norms->size()) + " normals\n";
     res += " " + toString(data->cols3->size()) + " colors 3\n";
     res += " " + toString(data->cols4->size()) + " colors 4\n";
+    res += " " + toString(data->cols3ub->size()) + " colors 3 ub\n";
+    res += " " + toString(data->cols4ub->size()) + " colors 4 ub\n";
     res += " " + toString(data->texs->size()) + " texture coordinates\n";
     res += " " + toString(data->texs2->size()) + " texture coordinates 2\n";
     res += " " + toString(data->indices->size()) + " indices: ";

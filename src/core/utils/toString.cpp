@@ -127,6 +127,18 @@ template<> string toString(const Vec4d& v) {
     return ss.str();
 }
 
+template<> string toString(const Vec3ub& v) {
+    stringstream ss;
+    ss << v[0] << " " << v[1] << " " << v[2];
+    return ss.str();
+}
+
+template<> string toString(const Vec4ub& v) {
+    stringstream ss;
+    ss << v[0] << " " << v[1] << " " << v[2] << " " << v[3];
+    return ss.str();
+}
+
 template<> string toString(const Pnt2d& v) { return toString(Vec2d(v)); }
 template<> string toString(const Pnt3d& v) { return toString(Vec3d(v)); }
 template<> string toString(const Pnt4d& v) { return toString(Vec4d(v)); }
@@ -138,6 +150,18 @@ template<> string toString(const Color3f& v) {
 }
 
 template<> string toString(const Color4f& v) {
+    stringstream ss;
+    ss << v[0] << " " << v[1] << " " << v[2] << " " << v[3];
+    return ss.str();
+}
+
+template<> string toString(const Color3ub& v) {
+    stringstream ss;
+    ss << v[0] << " " << v[1] << " " << v[2];
+    return ss.str();
+}
+
+template<> string toString(const Color4ub& v) {
     stringstream ss;
     ss << v[0] << " " << v[1] << " " << v[2] << " " << v[3];
     return ss.str();
@@ -208,9 +232,13 @@ template<> string typeName(const Vec4d* t) { return "Vec4d"; }
 template<> string typeName(const Vec2i* t) { return "Vec2i"; }
 template<> string typeName(const Vec3i* t) { return "Vec3i"; }
 template<> string typeName(const Vec4i* t) { return "Vec4i"; }
+template<> string typeName(const Vec3ub* t) { return "Vec3ub"; }
+template<> string typeName(const Vec4ub* t) { return "Vec4ub"; }
 template<> string typeName(const Matrix4d* t) { return "Matrix"; }
 template<> string typeName(const Color3f* t) { return "Vec3d"; }
 template<> string typeName(const Color4f* t) { return "Vec4d"; }
+template<> string typeName(const Color3ub* t) { return "Vec3ub"; }
+template<> string typeName(const Color4ub* t) { return "Vec4ub"; }
 template<> string typeName(const Line* t) { return "Line"; }
 string typeName(const std::shared_ptr<VRFunction<void>>* t) { return "callback()"; }
 
@@ -268,6 +296,19 @@ template<> int toValue(stringstream& ss, Vec4d& v) {
     return ssToVal(ss, v[3], 0);
 }
 
+template<> int toValue(stringstream& ss, Vec3ub& v) {
+    ssToVal(ss, v[0], 0);
+    ssToVal(ss, v[1], 0);
+    return ssToVal(ss, v[2], 0);
+}
+
+template<> int toValue(stringstream& ss, Vec4ub& v) {
+    ssToVal(ss, v[0], 0);
+    ssToVal(ss, v[1], 0);
+    ssToVal(ss, v[2], 0);
+    return ssToVal(ss, v[3], 0);
+}
+
 template<> int toValue(stringstream& ss, Pnt2d& v) {
     ssToVal(ss, v[0], 0);
     return ssToVal(ss, v[1], 0);
@@ -311,6 +352,19 @@ template<> int toValue(stringstream& ss, Color3f& v) {
 }
 
 template<> int toValue(stringstream& ss, Color4f& v) {
+    ssToVal(ss, v[0], 0);
+    ssToVal(ss, v[1], 0);
+    ssToVal(ss, v[2], 0);
+    return ssToVal(ss, v[3], 0);
+}
+
+template<> int toValue(stringstream& ss, Color3ub& v) {
+    ssToVal(ss, v[0], 0);
+    ssToVal(ss, v[1], 0);
+    return ssToVal(ss, v[2], 0);
+}
+
+template<> int toValue(stringstream& ss, Color4ub& v) {
     ssToVal(ss, v[0], 0);
     ssToVal(ss, v[1], 0);
     ssToVal(ss, v[2], 0);
