@@ -351,8 +351,11 @@ void OSG::loadPCB(string path, VRTransformPtr res, map<string, string> importOpt
     progress->reset();
 
     bool hasCol = contains(h1, "r");
+    bool hasSpl = contains(h1, "u");
     if (hasCol) cout << "   scan has colors\n";
     else cout << "   scan has no colors\n";
+    if (hasSpl) cout << "   scan has splats\n";
+    else cout << "   scan has no splats\n";
 
     auto pointcloud = VRPointCloud::create("pointcloud");
     pointcloud->applySettings(importOptions);
@@ -362,8 +365,9 @@ void OSG::loadPCB(string path, VRTransformPtr res, map<string, string> importOpt
     int Nskipped = 0;
 
     int N = sizeof(Vec3d);
-    if (hasCol) N += sizeof(Vec3ub);
-    PntCol pnt;
+    if (hasCol) N = sizeof(VRPointCloud::PntCol);
+    if (hasSpl) N = sizeof(VRPointCloud::Splat);
+    VRPointCloud::Splat pnt;
 
     auto skip = [&](size_t Nskip) {
         size_t Nprocessed = min(Nskip, progress->left());

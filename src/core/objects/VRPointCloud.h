@@ -16,10 +16,16 @@ class VRPointCloud : public VRTransform {
         };
 
         struct Splat {
+            Vec3d p;
             Color3ub c;
             Vec2ub v1;
             Vec2ub v2;
             char w;
+        };
+
+        struct PntCol {
+            Vec3d p;
+            Color3ub c;
         };
 
         POINTTYPE pointType = NONE;
@@ -50,6 +56,7 @@ class VRPointCloud : public VRTransform {
 
         void convert(string pathIn);
         void genTestFile(string path, size_t N, bool doColor);
+        void genTestFile2(string path, size_t N, bool doColor);
         void externalSort(string path, size_t Nchunks, double binSize);
 
         OctreePtr getOctree();

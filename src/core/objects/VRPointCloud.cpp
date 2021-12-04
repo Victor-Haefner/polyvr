@@ -2,8 +2,10 @@
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/geometry/VRGeoData.h"
+#include "core/objects/geometry/VRPrimitive.h"
 #include "core/objects/VRLod.h"
 #include "core/math/partitioning/Octree.h"
+#include "core/math/pose.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRProgress.h"
 #include "core/utils/system/VRSystem.h"
@@ -118,10 +120,50 @@ void VRPointCloud::genTestFile(string path, size_t N, bool doColor) {
     genTestPC(path, N, doColor);
 }
 
-struct PntCol {
-    Vec3d p;
-    Vec3ub c;
-};
+void VRPointCloud::genTestFile2(string path, size_t N, bool doColor) {
+    ofstream stream(path);
+    stream << "x8y8z8";
+    if (doColor) stream << "r1g1b1";
+    stream << "u2v2s1"; // splatting data
+    stream << "\n" << toString(N) << "\n0\n";
+
+    auto sphere = VRGeometry::create("spherePC");
+    sphere->setPrimitive("Sphere 1 "+toString(N));
+    VRGeoData data(sphere);
+
+    auto progress = VRProgress::create();
+    progress->setup("generate points ", data.size());
+    progress->reset();
+
+    Vec3d up(0,1,0);
+    Vec3d x(1,0,0);
+
+    cout << "gen PC sphere " << data.size() << endl;
+
+    for (int i=0; i<data.size(); i++) {
+        Vec3d P = Vec3d( data.getPosition(i) );
+        Vec3ub C = Vec3ub(255*abs(P[0]), 255*abs(P[1]), 255*abs(P[2]));
+
+        Vec3d n = data.getNormal(i);
+        Pose O(P, n);
+        O.makeUpOrthogonal();
+        Vec3d u = O.x();
+        Vec3d v = O.up();
+        Vec2ub U(255*u.dot(up), 255*u.dot(x));
+        Vec2ub V(255*u.dot(up), 255*u.dot(x));
+        char W = 10; // mm
+
+        stream.write((const char*)&P[0], sizeof(Vec3d));
+        if (doColor) stream.write((const char*)&C[0], sizeof(Vec3ub));
+        stream.write((const char*)&U[0], sizeof(Vec2ub));
+        stream.write((const char*)&V[0], sizeof(Vec2ub));
+        stream.write((const char*)&W, sizeof(char));
+
+        progress->update( 1 );
+    }
+
+    stream.close();
+}
 
 void VRPointCloud::externalSort(string path, size_t NchunkMax, double binSize) {
     ifstream stream(path);
