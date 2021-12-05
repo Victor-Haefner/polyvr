@@ -18,6 +18,13 @@ OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 class VRSyncNode : public VRTransform {
+    public:
+        struct Avatar {
+            VRTransformPtr head;
+            VRTransformPtr dev;
+            VRTransformPtr anchor;
+        };
+
     private:
         typedef unsigned char BYTE;
         VRTCPServerPtr server;
@@ -38,6 +45,7 @@ class VRSyncNode : public VRTransform {
         //vector<UInt32> cores; //lists IDs of nodecores
         vector<UInt32> syncedContainer; //Id's of container that got changes over sync (changed by remote). Needed to filter out sync changes from local Changelist to prevent cycles.
         map<string, VRSyncConnectionPtr> remotes;
+        map<string, Avatar> avatars;
         map<UInt32, UInt32> remoteToLocalID;
         map<UInt32, UInt32> localToRemoteID;
         map<UInt32, UInt32> typeMapping;
@@ -83,6 +91,7 @@ class VRSyncNode : public VRTransform {
         UInt32 getTransformID(VRTransformPtr t);
         void addExternalContainer(UInt32 id, UInt32 mask);
         void handleAvatar(string data, string remoteID);
+        void updateAvatar(string data, string remoteID);
 
         void handleNewConnect(string data);
         void accTCPConnection(string msg, string rID);

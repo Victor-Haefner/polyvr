@@ -626,6 +626,13 @@ UInt32 VRSyncNode::getTransformID(VRTransformPtr t) {
     return t->getOSGTransformPtr()->trans->getId();
 }
 
+void VRSyncNode::addExternalContainer(UInt32 id, UInt32 mask) {
+    externalContainer[id] = mask;
+#ifndef WITHOUT_GTK
+    VRConsoleWidget::get("Collaboration")->write( name+": Add external container "+toString(id)+" with mask "+toString(mask)+"\n", "green");
+#endif
+}
+
 void VRSyncNode::setAvatarBeacons(VRTransformPtr headTransform, VRTransformPtr devTransform, VRTransformPtr devAnchor) { // camera and mouse or flystick
     avatarHeadTransform = headTransform;
     avatarDeviceTransform = devTransform;
@@ -637,6 +644,12 @@ void VRSyncNode::addRemoteAvatar(string remoteID, VRTransformPtr headTransform, 
     auto remote = getRemote(remoteID);
     if (!remote) return;
 
+    Avatar avatar;
+    avatar.head = headTransform;
+    avatar.dev = devTransform;
+    avatar.anchor = devAnchor;
+    avatars[remoteID] = avatar;
+
     headTransform->enableOptimization(false);
     devTransform->enableOptimization(false);
     devAnchor->enableOptimization(false);
@@ -646,16 +659,18 @@ void VRSyncNode::addRemoteAvatar(string remoteID, VRTransformPtr headTransform, 
     UInt32 deviceAnchorID = getNodeID(devAnchor);
     string msg = "addAvatar|"+toString(headTransID)+":"+toString(deviceTransID)+":"+toString(deviceAnchorID);
     remote->send(msg);
+
 #ifndef WITHOUT_GTK
     VRConsoleWidget::get("Collaboration")->write( name+": Add avatar representation, head "+headTransform->getName()+" ("+toString(headTransID)+"), hand "+devTransform->getName()+" ("+toString(deviceTransID)+")\n", "green");
 #endif
 }
 
-void VRSyncNode::addExternalContainer(UInt32 id, UInt32 mask) {
-    externalContainer[id] = mask;
-#ifndef WITHOUT_GTK
-    VRConsoleWidget::get("Collaboration")->write( name+": Add external container "+toString(id)+" with mask "+toString(mask)+"\n", "green");
-#endif
+void VRSyncNode::updateAvatar(string data, string remoteID) { // TODO: use pose in data to set the avatar pose
+    auto remote = getRemote(remoteID);
+    if (!remote) return;
+
+    PosePtr p = toValue<PosePtr>(splitString(data, '|')[1]);
+    avatars[remoteID].head->setPose(p);
 }
 
 void VRSyncNode::handleAvatar(string data, string remoteID) {
@@ -664,19 +679,21 @@ void VRSyncNode::handleAvatar(string data, string remoteID) {
 
     if (avatarHeadTransform && avatarDeviceTransform && avatarDeviceAnchor) {
         auto IDs = splitString( splitString(data, '|')[1], ':');
-        UInt32 headTransID = toInt(IDs[0]); // remote
-        UInt32 deviceTransID = toInt(IDs[1]); // remote
-        UInt32 deviceAnchorID = toInt(IDs[2]); // remote
+        UInt32 headTransID = toInt(IDs[0]); // remote geometry
+        UInt32 deviceTransID = toInt(IDs[1]); // remote geometry
+        UInt32 deviceAnchorID = toInt(IDs[2]); // remote geometry
 
-        UInt32 camTrans = getTransformID( avatarHeadTransform ); // local
-        UInt32 devTrans = getTransformID( avatarDeviceTransform ); // local
-        UInt32 devAnchor = getNodeID( avatarDeviceAnchor ); // local
+        UInt32 camTrans = getTransformID( avatarHeadTransform ); // local camera
+        UInt32 devTrans = getTransformID( avatarDeviceTransform ); // local device beacon
+        UInt32 devAnchor = getNodeID( avatarDeviceAnchor ); // local device beacon
 
         string mapping = "mapping";
         mapping += "|"+toString(headTransID)+":"+toString(camTrans);
         mapping += "|"+toString(deviceTransID)+":"+toString(devTrans);
         mapping += "|"+toString(deviceAnchorID)+":"+toString(devAnchor);
         remote->send(mapping);
+        remote->send("updateAvatar|"+toString(avatarHeadTransform->getPose()));
+
 #ifndef WITHOUT_GTK
         VRConsoleWidget::get("Collaboration")->write( name+": Map remote avatar head ID "+toString(headTransID)+" to local camera ID "+toString(camTrans)+"\n", "green");
         VRConsoleWidget::get("Collaboration")->write( name+": Map remote avatar hand ID "+toString(deviceTransID)+" to local device ID "+toString(devTrans)+"\n", "green");
@@ -925,6 +942,7 @@ string VRSyncNode::handleMessage(string msg, string rID) {
     if (startsWith(msg, "message|"));
     else if (startsWith(msg, "keepAlive"));
     else if (startsWith(msg, "addAvatar|")) job = VRUpdateCb::create( "sync-handleAvatar", bind(&VRSyncNode::handleAvatar, this, msg, rID) );
+    else if (startsWith(msg, "updateAvatar|")) job = VRUpdateCb::create( "sync-updateAvatar", bind(&VRSyncNode::updateAvatar, this, msg, rID) );
     else if (startsWith(msg, "selfmap|")) handleSelfmapRequest(msg);
     else if (startsWith(msg, "mapping|")) job = VRUpdateCb::create( "sync-handleMap", bind(&VRSyncNode::handleMapping, this, msg) );
     else if (startsWith(msg, "typeMapping|")) job = VRUpdateCb::create("sync-handleTMap", bind(&VRSyncNode::handleTypeMapping, this, msg));
