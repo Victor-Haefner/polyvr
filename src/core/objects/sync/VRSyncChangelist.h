@@ -44,15 +44,15 @@ class VRSyncChangelist {
         void fixNullChildren(FieldContainerRecPtr fcPtr, UInt32 fieldMask);
         void fixNullCore(FieldContainerRecPtr fcPtr, UInt32 fieldMask);
 
-        void handleChildrenChange(VRSyncNodePtr syncNode, FieldContainerRecPtr fcPtr, SerialEntry& sentry, map<UInt32, vector<UInt32>>& parentToChildren);
-        void handleCoreChange(VRSyncNodePtr syncNode, FieldContainerRecPtr fcPtr, SerialEntry& sentry);
+        void handleChildrenChange(VRSyncNodePtr syncNode, FieldContainerRecPtr fcPtr, SerialEntry& sentry, map<UInt32, vector<UInt32>>& parentToChildren, string rID);
+        void handleCoreChange(VRSyncNodePtr syncNode, FieldContainerRecPtr fcPtr, SerialEntry& sentry, string rID);
         void handleGenericChange(VRSyncNodePtr syncNode, FieldContainerRecPtr fcPtr, SerialEntry& sentry, map<UInt32, vector<unsigned char>>& fcData);
-        FieldContainerRecPtr getOrCreate(VRSyncNodePtr syncNode, UInt32& id, SerialEntry& sentry, map<UInt32, vector<UInt32>>& parentToChildren);
+        FieldContainerRecPtr getOrCreate(VRSyncNodePtr syncNode, UInt32& id, SerialEntry& sentry, map<UInt32, vector<UInt32>>& parentToChildren, string rID);
         void printDeserializedData(vector<SerialEntry>& entries, map<UInt32, vector<UInt32>>& parentToChildren, map<UInt32, vector<unsigned char>>& fcData);
-        void handleRemoteEntries(VRSyncNodePtr syncNode, vector<SerialEntry>& entries, map<UInt32, vector<UInt32>>& parentToChildren, map<UInt32, vector<unsigned char>>& fcData);
+        void handleRemoteEntries(VRSyncNodePtr syncNode, vector<SerialEntry>& entries, map<UInt32, vector<UInt32>>& parentToChildren, map<UInt32, vector<unsigned char>>& fcData, string rID);
         void deserializeEntries(vector<unsigned char>& data, vector<SerialEntry>& entries, map<UInt32, vector<UInt32>>& parentToChildren, map<UInt32, vector<unsigned char>>& fcData);
         void deserializeChildrenData(vector<unsigned char>& childrenData, map<UInt32,vector<UInt32>>& parentToChildren);
-        void deserializeAndApply(VRSyncNodePtr syncNode);
+        void deserializeAndApply(VRSyncNodePtr syncNode, string rID);
         void gatherChangelistData(VRSyncNodePtr syncNode, string& data);
 };
 

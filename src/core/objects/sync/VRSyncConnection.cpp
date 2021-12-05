@@ -1,6 +1,8 @@
 #include "VRSyncConnection.h"
 #include "VRSyncNode.h"
 #include "core/networking/tcp/VRTCPClient.h"
+#include "core/objects/OSGTransform.h"
+#include "core/objects/OSGObject.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRTimer.h"
 
@@ -148,4 +150,104 @@ string VRSyncConnection::getStatus() {
     return s;
 }
 
+VRSyncConnection::Avatar& VRSyncConnection::getAvatar() { return avatar; }
 
+void VRSyncConnection::setupDevices(UInt32 headTransform, UInt32 devTransform, UInt32 devAnchor) {
+    avatar.localHeadID = headTransform;
+    avatar.localDevID = devTransform;
+    avatar.localAnchorID = devAnchor;
+}
+
+UInt32 VRSyncConnection::getNodeID(VRObjectPtr t) {
+    return t->getNode()->node->getId();
+}
+
+UInt32 VRSyncConnection::getTransformID(VRTransformPtr t) {
+    return t->getOSGTransformPtr()->trans->getId();
+}
+
+void VRSyncConnection::setupAvatar(VRTransformPtr headTransform, VRTransformPtr devTransform, VRTransformPtr devAnchor) { // some geometries
+    avatar.head = headTransform;
+    avatar.dev = devTransform;
+    avatar.anchor = devAnchor;
+
+    headTransform->enableOptimization(false);
+    devTransform->enableOptimization(false);
+    devAnchor->enableOptimization(false);
+
+    UInt32 headTransID = getTransformID(headTransform);
+    UInt32 deviceTransID = getTransformID(devTransform);
+    UInt32 deviceAnchorID = getNodeID(devAnchor);
+    string msg = "addAvatar|"+toString(headTransID)+":"+toString(deviceTransID)+":"+toString(deviceAnchorID);
+    send(msg);
+}
+
+void VRSyncConnection::updateAvatar(string data) {
+    PosePtr p = toValue<PosePtr>(splitString(data, '|')[1]);
+    if (avatar.head) avatar.head->setPose(p);
+}
+
+void VRSyncConnection::handleAvatar(string data) {
+    if (!avatar.localHeadID) return;
+    if (!avatar.localDevID) return;
+    if (!avatar.localAnchorID) return;
+
+    auto IDs = splitString( splitString(data, '|')[1], ':');
+    UInt32 headTransID = toInt(IDs[0]); // remote geometry
+    UInt32 deviceTransID = toInt(IDs[1]); // remote geometry
+    UInt32 deviceAnchorID = toInt(IDs[2]); // remote geometry
+
+    string mapping = "mapping";
+    mapping += "|"+toString(headTransID)+":"+toString(avatar.localHeadID);
+    mapping += "|"+toString(deviceTransID)+":"+toString(avatar.localDevID);
+    mapping += "|"+toString(deviceAnchorID)+":"+toString(avatar.localAnchorID);
+    send(mapping);
+}
+
+void VRSyncConnection::addRemoteMapping(UInt32 lID, UInt32 rID) {
+    remoteToLocalID[rID] = lID;
+    localToRemoteID[lID] = rID;
+}
+
+void VRSyncConnection::handleMapping(string mappingData) {
+    auto pairs = splitString(mappingData, '|');
+    for (auto p : pairs) {
+        auto IDs = splitString(p, ':');
+        if (IDs.size() != 2) continue;
+        UInt32 lID = toInt(IDs[0]);
+        UInt32 rID = toInt(IDs[1]);
+        addRemoteMapping(lID, rID);
+    }
+}
+
+UInt32 VRSyncConnection::getLocalID(UInt32 id) {
+    if (!remoteToLocalID.count(id)) return 0;
+    return remoteToLocalID[id];
+}
+
+UInt32 VRSyncConnection::getRemoteID(UInt32 id) {
+    if (!localToRemoteID.count(id)) return 0;
+    return localToRemoteID[id];
+}
+
+void VRSyncConnection::handleTypeMapping(string mappingData) {
+    auto pairs = splitString(mappingData, '|');
+    for (auto p : pairs) {
+        auto IDs = splitString(p, ':');
+        if (IDs.size() != 2) continue;
+        UInt32 rID = toInt(IDs[0]);
+        string name = IDs[1];
+        FieldContainerType* fcT = factory->findType(name.c_str());
+        if (!fcT) {
+            cout << "Warning in VRSyncNode::handleTypeMapping, unknown remote type " << name.c_str() << endl;
+            continue;
+        }
+        typeMapping[rID] = fcT->getId();
+        //cout << " typeMapping: " << rID << " " << name << " " << fcT->getId() << endl;
+    }
+    //printRegistredContainers();
+}
+
+UInt32 VRSyncConnection::getLocalType(UInt32 id) {
+    return typeMapping[id];
+}

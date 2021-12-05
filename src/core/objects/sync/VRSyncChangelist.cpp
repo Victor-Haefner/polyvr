@@ -162,9 +162,10 @@ void debugBinary(FieldContainer* fcPtr, ourBinaryDataHandler& handler2, SerialEn
 
 struct VRSyncNodeFieldContainerMapper : public ContainerIdMapper {
     VRSyncNode* syncNode = 0;
+    string remoteID;
 
     UInt32 map(UInt32 uiId) const override;
-    VRSyncNodeFieldContainerMapper(VRSyncNode* node) : syncNode(node) {};
+    VRSyncNodeFieldContainerMapper(VRSyncNode* node, string rID) : syncNode(node), remoteID(rID) {};
 
  //   private:
  //   VRSyncNodeFieldContainerMapper( const VRSyncNodeFieldContainerMapper &other);
@@ -172,7 +173,13 @@ struct VRSyncNodeFieldContainerMapper : public ContainerIdMapper {
 };
 
 UInt32 VRSyncNodeFieldContainerMapper::map(UInt32 uiId) const {
-    UInt32 id = syncNode ? syncNode->getRemoteToLocalID(uiId) : 0;
+    UInt32 id = 0;
+
+    if (syncNode) {
+        auto remote = syncNode->getRemote(remoteID);
+        if (remote) id = remote->getLocalID(uiId);
+    }
+
     if (id == 0) {
         //if (syncNode) cout << " --- WARNING in VRSyncNodeFieldContainerMapper::map remote id " << uiId << " to " << id << ", syncNode: " << syncNode->getName() << endl;
         if (syncNode) syncNode->broadcast("warn|mappingFailed|"+toString(uiId));
@@ -293,14 +300,17 @@ OSGChangeList* VRSyncChangelist::filterChanges(VRSyncNodePtr syncNode) {
 
 static vector<FieldContainerRecPtr> debugStorage;
 
-FieldContainerRecPtr VRSyncChangelist::getOrCreate(VRSyncNodePtr syncNode, UInt32& id, SerialEntry& sentry, map<UInt32, vector<UInt32>>& parentToChildren) {
+FieldContainerRecPtr VRSyncChangelist::getOrCreate(VRSyncNodePtr syncNode, UInt32& id, SerialEntry& sentry, map<UInt32, vector<UInt32>>& parentToChildren, string rID) {
+    auto remote = syncNode->getRemote(rID);
+    if (!remote) return 0;
+
     //cout << "VRSyncNode::getOrCreate remote: " << sentry.localId << ", local: " << id << endl;
     FieldContainerRecPtr fcPtr = 0; // Field Container to apply changes to
     FieldContainerFactoryBase* factory = FieldContainerFactory::the();
     if (id != 0) {
         fcPtr = factory->getContainer(id);
     } else if (sentry.uiEntryDesc == ContainerChangeEntry::Create) {
-        auto tID = syncNode->getLocalType(sentry.fcTypeID);
+        auto tID = remote->getLocalType(sentry.fcTypeID);
         FieldContainerType* fcType = factory->findType(tID);
         if (fcType == 0) {
             cout << "Error in VRSyncChangelist::getOrCreate, unknown FC type!";
@@ -316,7 +326,7 @@ FieldContainerRecPtr VRSyncChangelist::getOrCreate(VRSyncNodePtr syncNode, UInt3
         //debugStorage.push_back(fcPtr); // increase ref count permanently to avoid destruction! only for testing!
         syncNode->registerContainer(fcPtr.get(), sentry.syncNodeID);
         id = fcPtr.get()->getId();
-        syncNode->addRemoteMapping(id, sentry.localId);
+        remote->addRemoteMapping(id, sentry.localId);
         //cout << " ---- create, new ID, remote: " << sentry.localId << ", local: " << id << endl;
 #ifndef WITHOUT_GTK
         VRConsoleWidget::get("Collaboration")->write( "  created new FC, remote ID "+toString(sentry.localId)+", local ID "+toString(id)+", type: "+fcPtr.get()->getTypeName()+"\n");
@@ -326,7 +336,10 @@ FieldContainerRecPtr VRSyncChangelist::getOrCreate(VRSyncNodePtr syncNode, UInt3
     return fcPtr;
 }
 
-void VRSyncChangelist::handleChildrenChange(VRSyncNodePtr syncNode, FieldContainerRecPtr fcPtr, SerialEntry& sentry, map<UInt32, vector<UInt32>>& parentToChildren) {
+void VRSyncChangelist::handleChildrenChange(VRSyncNodePtr syncNode, FieldContainerRecPtr fcPtr, SerialEntry& sentry, map<UInt32, vector<UInt32>>& parentToChildren, string rID) {
+    auto remote = syncNode->getRemote(rID);
+    if (!remote) return;
+
     //cout << "VRSyncNode::handleChildrenChange +++++++++++++++++++++++++++++++++++++++++++++++ " << fcPtr->getId() << endl;
     FieldContainerFactoryBase* factory = FieldContainerFactory::the();
     FieldContainerType* fcType = factory->findType(sentry.fcTypeID);
@@ -337,7 +350,7 @@ void VRSyncChangelist::handleChildrenChange(VRSyncNodePtr syncNode, FieldContain
     vector<UInt32> childrenIDs = parentToChildren[sentry.localId];
     //cout << " N children: " << childrenIDs.size() << endl;
     for (auto cID : childrenIDs) {
-        UInt32 childID = syncNode->getRemoteToLocalID(cID);
+        UInt32 childID = remote->getLocalID(cID);
         FieldContainer* childPtr = factory->getContainer(childID);
         Node* child = dynamic_cast<Node*>(childPtr);
         //cout << "  child: " << childID << " " << child << endl;
@@ -356,7 +369,10 @@ void VRSyncChangelist::handleChildrenChange(VRSyncNodePtr syncNode, FieldContain
     //cout << "  VRSyncNode::handleChildrenChange done" << endl;
 }
 
-void VRSyncChangelist::handleCoreChange(VRSyncNodePtr syncNode, FieldContainerRecPtr fcPtr, SerialEntry& sentry) {
+void VRSyncChangelist::handleCoreChange(VRSyncNodePtr syncNode, FieldContainerRecPtr fcPtr, SerialEntry& sentry, string rID) {
+    auto remote = syncNode->getRemote(rID);
+    if (!remote) return;
+
     //cout << "VRSyncNode::handleCoreChange" << endl;
     FieldContainerFactoryBase* factory = FieldContainerFactory::the();
     FieldContainerType* fcType = factory->findType(sentry.fcTypeID);
@@ -364,7 +380,7 @@ void VRSyncChangelist::handleCoreChange(VRSyncNodePtr syncNode, FieldContainerRe
     Node* node = dynamic_cast<Node*>(fcPtr.get());
     if (!node) return;
 
-    UInt32 coreID = syncNode->getRemoteToLocalID(sentry.coreID);
+    UInt32 coreID = remote->getLocalID(sentry.coreID);
     FieldContainer* corePtr = factory->getContainer(coreID);
     NodeCore* core = dynamic_cast<NodeCore*>(corePtr);
     if (!core) return;
@@ -420,22 +436,25 @@ void VRSyncChangelist::handleGenericChange(VRSyncNodePtr syncNode, FieldContaine
     }
 }
 
-void VRSyncChangelist::handleRemoteEntries(VRSyncNodePtr syncNode, vector<SerialEntry>& entries, map<UInt32, vector<UInt32>>& parentToChildren, map<UInt32, vector<unsigned char>>& fcData) {
+void VRSyncChangelist::handleRemoteEntries(VRSyncNodePtr syncNode, vector<SerialEntry>& entries, map<UInt32, vector<UInt32>>& parentToChildren, map<UInt32, vector<unsigned char>>& fcData, string rID) {
+    auto remote = syncNode->getRemote(rID);
+    if (!remote) return;
+
     for (auto sentry : entries) {
         //cout << "deserialize > > > sentry: " << sentry.localId << " " << sentry.fieldMask << " " << sentry.len << " desc " << sentry.uiEntryDesc << " syncID " << sentry.syncNodeID << " at pos " << pos << endl;
 
         //sync of initial syncNode container
         if (sentry.syncNodeID >= 0 && sentry.syncNodeID <= 2) {
-            syncNode->replaceContainerMapping(sentry.syncNodeID, sentry.localId);
+            syncNode->replaceContainerMapping(sentry.syncNodeID, sentry.localId, rID);
         }
 
         /*if (sentry.uiEntryDesc == ContainerChangeEntry::Create) {
             VRConsoleWidget::get("Collaboration")->write( "Create FC, remote ID: "+toString(sentry.localId)+"\n");
         }*/
 
-        UInt32 id = syncNode->getRemoteToLocalID(sentry.localId);// map remote id to local id if exist (otherwise id = -1)
+        UInt32 id = remote->getLocalID(sentry.localId);// map remote id to local id if exist (otherwise id = -1)
         //cout << " --- getRemoteToLocalID: " << sentry.localId << " to " << id << " syncNode: " << syncNode->getName() << ", syncNodeID: " << sentry.syncNodeID << endl;
-        FieldContainerRecPtr fcPtr = getOrCreate(syncNode, id, sentry, parentToChildren); // Field Container to apply changes to
+        FieldContainerRecPtr fcPtr = getOrCreate(syncNode, id, sentry, parentToChildren, rID); // Field Container to apply changes to
 
         if (fcPtr == nullptr) {
             cout << " -- WARNING in handleRemoteEntries, no container found with id " << id << ", entry local ID " << sentry.localId << endl;
@@ -456,11 +475,11 @@ void VRSyncChangelist::handleRemoteEntries(VRSyncNodePtr syncNode, vector<Serial
             string mappingData = "mapping";
             for (int i=0; i<1000 && counter < justCreated.size(); i++) {
                 auto fc = justCreated[counter];
-                UInt32 lID = syncNode->getLocalToRemoteID(fc->getId());
+                UInt32 lID = remote->getRemoteID(fc->getId());
                 mappingData += "|" + toString(lID) + ":" + toString(fc->getId());
                 counter++;
             }
-            syncNode->broadcast(mappingData);
+            remote->send(mappingData);
         }
         justCreated.clear();
     }
@@ -508,7 +527,7 @@ void VRSyncChangelist::deserializeEntries(vector<unsigned char>& data, vector<Se
         vector<unsigned char>& FCdata = fcData[sentry.localId];
         if (sentry.len != UInt32(-1)) { // this checks if len > -1 (uint32)
             FCdata.insert(FCdata.end(), CLdata.begin()+pos, CLdata.begin()+pos+sentry.len);
-        } 
+        }
 #ifndef WITHOUT_GTK
 	else { VRConsoleWidget::get("Collaboration")->write( " Error in deserializing change entries, data length is -1\n", "red" ); }
 #endif
@@ -534,10 +553,10 @@ void VRSyncChangelist::deserializeEntries(vector<unsigned char>& data, vector<Se
     }
 }
 
-void VRSyncChangelist::deserializeAndApply(VRSyncNodePtr syncNode) {
+void VRSyncChangelist::deserializeAndApply(VRSyncNodePtr syncNode, string rID) {
     if (CLdata.size() == 0) return;
     cout << endl << "> > >  " << syncNode->getName() << " VRSyncNode::deserializeAndApply(), received data size: " << CLdata.size() << endl;
-    VRSyncNodeFieldContainerMapper mapper(syncNode.get());
+    VRSyncNodeFieldContainerMapper mapper(syncNode.get(), rID);
     FieldContainerFactoryBase* factory = FieldContainerFactory::the();
     factory->setMapper(&mapper);
 
@@ -548,7 +567,7 @@ void VRSyncChangelist::deserializeAndApply(VRSyncNodePtr syncNode) {
     deserializeEntries(CLdata, entries, parentToChildren, fcData);
     cout << " deserialized " << entries.size() << " entries" << endl;
     //printDeserializedData(entries, parentToChildren, fcData);
-    handleRemoteEntries(syncNode, entries, parentToChildren, fcData);
+    handleRemoteEntries(syncNode, entries, parentToChildren, fcData, rID);
     //printRegistredContainers();
     syncNode->wrapOSG();
 
