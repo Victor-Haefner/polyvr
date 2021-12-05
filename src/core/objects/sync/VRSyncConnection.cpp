@@ -251,3 +251,4 @@ void VRSyncConnection::handleTypeMapping(string mappingData) {
 UInt32 VRSyncConnection::getLocalType(UInt32 id) {
     return typeMapping[id];
 }
+

@@ -28,7 +28,6 @@ class VRSyncConnection {
 
     private:
         // TODO: unused, currently handled in syncnode, needs to move here
-        map<UInt32, UInt32> fcMapping; // <remote container ID, local container ID>
         map<UInt32, UInt32> typeMapping;
         map<UInt32, UInt32> remoteToLocalID;
         map<UInt32, UInt32> localToRemoteID;

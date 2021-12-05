@@ -182,7 +182,11 @@ UInt32 VRSyncNodeFieldContainerMapper::map(UInt32 uiId) const {
 
     if (id == 0) {
         //if (syncNode) cout << " --- WARNING in VRSyncNodeFieldContainerMapper::map remote id " << uiId << " to " << id << ", syncNode: " << syncNode->getName() << endl;
-        if (syncNode) syncNode->broadcast("warn|mappingFailed|"+toString(uiId));
+        if (syncNode) {
+            auto remote = syncNode->getRemote(remoteID);
+            if (remote) remote->send("warn|failed fc pointer mapping|"+toString(uiId));
+        }
+
 #ifndef WITHOUT_GTK
         VRConsoleWidget::get("Collaboration")->write( " Warning in sync FC mapper, could not map "+toString(uiId)+"\n", "red");
 #endif
@@ -246,6 +250,7 @@ OSGChangeList* VRSyncChangelist::filterChangeList(VRSyncNodePtr syncNode, Change
 
         UInt32 cMask;
         if (syncNode->isExternalContainer(id, cMask)) localChanges->addChange(entry, changedFCs, cMask);
+
         if (!syncNode->isSubContainer(id)) continue;
 
         // now check if the container is a node and if his core or children contain unregistered nodes
