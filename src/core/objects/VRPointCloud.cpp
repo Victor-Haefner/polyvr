@@ -11,6 +11,8 @@
 #include "core/utils/system/VRSystem.h"
 #include "core/scene/import/E57/E57.h"
 
+#define GLSL(shader) #shader
+
 using namespace OSG;
 using namespace std;
 
@@ -24,15 +26,20 @@ VRPointCloud::~VRPointCloud() {}
 
 VRPointCloudPtr VRPointCloud::create(string name) { return VRPointCloudPtr( new VRPointCloud(name) ); }
 
-void VRPointCloud::setupMaterial(bool lit, int pointsize) {
+void VRPointCloud::setupMaterial(bool lit, int pointsize, bool doSplat, float splatModifier) {
     mat->setLit(lit);
     mat->setPointSize(pointsize);
+
+    if (doSplat) {
+        mat->setVertexShader(splatVP, "splatVP");
+        mat->setGeometryShader(splatGP, "splatGP");
+        mat->setFragmentShader(splatFP, "splatFP");
+        mat->setShaderParameter("splatModifier", splatModifier);
+    }
 
     // TODO: add splatting option
     //  - compute tangent space at each point
     //  - compute density at each point
-    //  - render patches for each point, needs tangents and size
-    //  - render disks on the quads?
 }
 
 VRMaterialPtr VRPointCloud::getMaterial() { return mat; }
@@ -325,7 +332,108 @@ void VRPointCloud::externalSort(string path, size_t NchunkMax, double binSize) {
     }
 }
 
+string VRPointCloud::splatFP =
+"#version 120\n"
+GLSL(
+varying vec4 Color;
+varying vec2 tcoords;
 
+void main( void ) {
+	float r = tcoords.x*tcoords.x+tcoords.y*tcoords.y;
+	if (r > 1.0) discard;
+	gl_FragColor = Color;
+}
+);
 
+string VRPointCloud::splatVP =
+"#version 120\n"
+GLSL(
+varying vec4 color;
+varying vec4 vertex;
+varying vec3 normal;
+varying vec4 tangentU;
+varying vec4 tangentV;
+varying mat4 mwp;
 
+attribute vec4 osg_Vertex;
+attribute vec4 osg_Normal;
+attribute vec4 osg_Color;
+attribute vec2 osg_MultiTexCoord0;
+attribute vec2 osg_MultiTexCoord1;
+attribute vec2 osg_MultiTexCoord2;
 
+uniform float splatModifier;
+
+vec4 vecFromAngles(vec2 ab) {
+	ab.x = ab.x/255.0*3.1416;
+	ab.y = ab.y/255.0*3.1416*2 + 3.1416;
+	return vec4(cos(ab.y)*sin(ab.x), cos(ab.x), sin(ab.y)*sin(ab.x), 0);
+}
+
+void main( void ) {
+    color = vec4(osg_Color.x/255.0, osg_Color.y/255.0, osg_Color.z/255.0, 1.0);
+    normal = osg_Normal.xyz;
+    vertex = osg_Vertex;
+
+    vec2 u = osg_MultiTexCoord0;
+    vec2 v = osg_MultiTexCoord1;
+    float size = osg_MultiTexCoord2.x*splatModifier; // mm
+	tangentU = vecFromAngles(u)*size;
+	tangentV = vecFromAngles(v)*size;
+    mwp = gl_ModelViewProjectionMatrix;
+    gl_Position = osg_Vertex;
+}
+);
+
+string VRPointCloud::splatGP =
+"#version 150\n"
+"#extension GL_EXT_geometry_shader4 : enable\n"
+GLSL(
+layout (points) in;
+layout (triangle_strip, max_vertices=6) out;
+
+uniform vec2 OSGViewportSize;
+
+in vec4 color[];
+in vec4 vertex[];
+in vec3 normal[];
+in vec4 tangentU[];
+in vec4 tangentV[];
+in mat4 mwp[];
+out vec4 Color;
+out vec2 tcoords;
+
+void emitVertex(in vec4 p, in vec2 tc) {
+	gl_Position = p;
+	tcoords = tc;
+	EmitVertex();
+}
+
+void emitQuad(in float s, in vec4 tc) {
+	vec4 p = vertex[0];
+
+	float a = OSGViewportSize.y/OSGViewportSize.x;
+
+	vec4 u = tangentU[0];
+	vec4 v = tangentV[0];
+
+	vec4 p1 = mwp[0]*(p -u -v);
+	vec4 p2 = mwp[0]*(p -u +v);
+	vec4 p3 = mwp[0]*(p +u +v);
+	vec4 p4 = mwp[0]*(p +u -v);
+
+	emitVertex(p1, vec2(-1,-1));
+	emitVertex(p2, vec2( 1,-1));
+	emitVertex(p3, vec2( 1, 1));
+	EndPrimitive();
+	emitVertex(p1, vec2(-1,-1));
+	emitVertex(p3, vec2( 1, 1));
+	emitVertex(p4, vec2(-1, 1));
+	EndPrimitive();
+}
+
+void main() {
+	Color = color[0];
+	emitQuad(0.13, vec4(0,1,0,1));
+}
+);

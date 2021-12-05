@@ -38,6 +38,10 @@ class VRPointCloud : public VRTransform {
         vector<int> downsamplingRate = {1};
         vector<float> lodDistances;
 
+        static string splatVP;
+        static string splatFP;
+        static string splatGP;
+
     public:
         VRPointCloud(string name = "pointcloud");
         ~VRPointCloud();
@@ -48,7 +52,7 @@ class VRPointCloud : public VRTransform {
         void addLevel(float distance, int downsampling);
         void setupLODs();
 
-        void setupMaterial(bool lit, int pointsize);
+        void setupMaterial(bool lit, int pointsize, bool doSplat = false, float splatModifier = 0.001);
         VRMaterialPtr getMaterial();
 
         void addPoint(Vec3d p, Color3ub c);
