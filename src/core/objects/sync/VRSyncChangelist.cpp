@@ -840,7 +840,10 @@ void VRSyncChangelist::broadcastSceneState(VRSyncNodePtr syncNode) {
 
 void VRSyncChangelist::sendSceneState(VRSyncNodePtr syncNode, string rID) {
     auto remote = syncNode->getRemote(rID);
-    if (!remote) return;
+    if (!remote) {
+        VRConsoleWidget::get("Collaboration")->write( " Send scene state to"+rID+" failed! remote unknown!\n", "red");
+        return;
+    }
 
 #ifndef WITHOUT_GTK
     VRConsoleWidget::get("Collaboration")->write( " Send scene state to"+rID+"\n");

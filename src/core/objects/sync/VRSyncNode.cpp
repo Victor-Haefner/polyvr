@@ -144,11 +144,14 @@ void VRSyncNode::accTCPConnection(string msg, string rID) {
     remote->send("reqInitState|");
 }
 
-void VRSyncNode::reqInitState(string rID) {
+void VRSyncNode::reqInitState(string rID) { // TODO: solve the problem of initial state collision on syncnodes!
 #ifndef WITHOUT_GTK
     VRConsoleWidget::get("Collaboration")->write( name+": got request to send initial state\n");
 #endif
-    if (getChildrenCount() == 0) return;
+    if (getChildrenCount() == 0) {
+        VRConsoleWidget::get("Collaboration")->write( name+": no children, ignore send initial state!\n");
+        return;
+    }
     changelist->sendSceneState(ptr(), rID);
 }
 
