@@ -283,9 +283,9 @@ int VRGeoData::getType(int i) { return int(data->types->size()) > i ? data->type
 int VRGeoData::getLength(int i) { return int(data->lengths->size()) > i ? data->lengths->getValue(i) : 0; }
 
 int VRGeoData::getIndex(int i, int v) {
-    if (v == NormalsIndex && data->indicesNormals) return int(data->indicesNormals->size()) > i ? data->indices->getValue(i) : 0;
-    if (v == ColorsIndex && data->indicesColors) return int(data->indicesColors->size()) > i ? data->indices->getValue(i) : 0;
-    if (v == TexCoordsIndex && data->indicesTexCoords) return int(data->indicesTexCoords->size()) > i ? data->indices->getValue(i) : 0;
+    if (v == NormalsIndex && data->indicesNormals) return int(data->indicesNormals->size()) > i ? data->indicesNormals->getValue(i) : 0;
+    if (v == ColorsIndex && data->indicesColors) return int(data->indicesColors->size()) > i ? data->indicesColors->getValue(i) : 0;
+    if (v == TexCoordsIndex && data->indicesTexCoords) return int(data->indicesTexCoords->size()) > i ? data->indicesTexCoords->getValue(i) : 0;
     return int(data->indices->size()) > i ? data->indices->getValue(i) : 0;
 }
 

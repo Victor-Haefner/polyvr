@@ -307,3 +307,221 @@ void OSG::loadCollada(string path, VRObjectPtr root, map<string, string> options
     auto handler = VRCOLLADA_Stream::create(root, fPath, options);
     xml->stream(path, handler.get());
 }
+
+string create_timestamp() {
+    time_t _tm = time(0);
+    struct tm * curtime = localtime ( &_tm );
+    ostringstream ss;
+    ss << put_time(curtime, "%Y-%m-%dT%H:%M:%S"); // 2021-12-06T13:51:03
+    return string(ss.str());
+}
+
+void OSG::writeCollada(VRObjectPtr root, string path, map<string, string> options) {
+    string version = "1.5.0"; // "1.4.1"
+    if (options.count("version")) version = options["version"];
+    ofstream stream(path);
+
+    function<void(VRObjectPtr, int)> writeSceneGraph = [&](VRObjectPtr node, int indent) -> void {
+        string identStr = "";
+        for (int i=0; i< indent; i++) identStr += "\t";
+        string name = node->getName();
+        VRTransformPtr trans = dynamic_pointer_cast<VRTransform>(node);
+        VRGeometryPtr geo = dynamic_pointer_cast<VRGeometry>(node);
+        VRMaterialPtr mat = geo->getMaterial();
+        string matName = mat->getName();
+
+        stream << identStr << "<node id=\"" << name << "_visual_scene_node\" name=\"" << name << "\">" << endl;
+
+        if (trans) {
+            Matrix4d m = trans->getMatrix();
+            stream << identStr << "\t<matrix>";
+            stream << m[0][0] << " " << m[0][1] << " " << m[0][2] << " " << m[0][3] << " ";
+            stream << m[1][0] << " " << m[1][1] << " " << m[1][2] << " " << m[1][3] << " ";
+            stream << m[2][0] << " " << m[2][1] << " " << m[2][2] << " " << m[2][3] << " ";
+            stream << m[3][0] << " " << m[3][1] << " " << m[3][2] << " " << m[3][3];
+            stream << "</matrix>" << endl;
+        }
+
+        if (geo) {
+            stream << identStr << "\t<instance_geometry url=\"#" << name << "\">" << endl;
+            stream << identStr << "\t\t<bind_material>" << endl;
+            stream << identStr << "\t\t\t<technique_common>" << endl;
+            stream << identStr << "\t\t\t\t<instance_material symbol=\"" << matName << "\" target=\"#" << matName << "\"/>" << endl;
+            stream << identStr << "\t\t\t</technique_common>" << endl;
+            stream << identStr << "\t\t</bind_material>" << endl;
+            stream << identStr << "\t</instance_geometry>" << endl;
+        }
+
+		if (node->getChildrenCount() > 0) {
+            for (auto child : node->getChildren()) {
+                writeSceneGraph(child, indent+1);
+            }
+		}
+		stream << identStr << "</node>" << endl;
+    };
+
+    stream << "﻿<?xml version=\"1.0\" encoding=\"utf-8\"?>" << endl;
+    if (version == "1.4.1") stream << "<COLLADA xmlns=\"http://www.collada.org/2005/11/COLLADASchema\" version=\"" << version << "\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">" << endl;
+    else                    stream << "﻿<COLLADA xmlns=\"http://www.collada.org/2008/03/COLLADASchema\" version=\"" << version << "\">" << endl;
+
+    string timestamp = create_timestamp();
+    stream << "﻿\t<asset>" << endl;
+    stream << "﻿\t\t<contributor>" << endl;
+    stream << "﻿\t\t\t<author>PolyVR User</author>" << endl;
+	stream << "﻿\t\t\t<author_website>https://github.com/Victor-Haefner/polyvr</author_website>" << endl;
+    stream << "﻿\t\t\t<authoring_tool>PolyVR</authoring_tool>" << endl;
+    stream << "﻿\t\t</contributor>" << endl;
+    stream << "﻿\t\t<created>" << timestamp << "</created>" << endl;
+    stream << "﻿\t\t<modified>" << timestamp << "</modified>" << endl;
+    stream << "﻿\t\t<unit name=\"meter\" meter=\"1\"/>" << endl;
+    stream << "﻿\t\t<up_axis>Y_UP</up_axis>" << endl;
+    stream << "﻿\t</asset>" << endl;
+
+    auto geos = root->getChildren(true, "Geometry", true);
+    map<string, VRMaterialPtr> materials;
+    for (auto obj : geos) {
+        VRGeometryPtr geo = dynamic_pointer_cast<VRGeometry>(obj);
+        auto mat = geo->getMaterial();
+        materials[mat->getName()] = mat;
+    }
+
+    stream << "﻿\t<library_effects>" << endl;
+    for (auto mat : materials) {
+        string name = mat.second->getName();
+        Color3f d = mat.second->getDiffuse();
+        float t = mat.second->getTransparency();
+
+        stream << "﻿\t\t<effect id=\"" << name << "_effect\">" << endl;
+        stream << "﻿\t\t\t<profile_COMMON>" << endl;
+        stream << "﻿\t\t\t\t<technique sid=\"common\">" << endl;
+        stream << "﻿\t\t\t\t\t<lambert>" << endl;
+        stream << "﻿\t\t\t\t\t\t<emission>" << endl;
+        stream << "﻿\t\t\t\t\t\t\t<color sid=\"emission\">0 0 0 1</color>" << endl;
+        stream << "﻿\t\t\t\t\t\t</emission>" << endl;
+        stream << "﻿\t\t\t\t\t\t<diffuse>" << endl;
+        stream << "﻿\t\t\t\t\t\t\t<color sid=\"diffuse\">" << d[0] << " " << d[1] << " " << d[2] << " " << t << "</color>" << endl;
+        stream << "﻿\t\t\t\t\t\t</diffuse>" << endl;
+        stream << "﻿\t\t\t\t\t\t<index_of_refraction>" << endl;
+        stream << "﻿\t\t\t\t\t\t\t<float sid=\"ior\">1.45</float>" << endl;
+        stream << "﻿\t\t\t\t\t\t</index_of_refraction>" << endl;
+        stream << "﻿\t\t\t\t\t</lambert>" << endl;
+        stream << "﻿\t\t\t\t</technique>" << endl;
+        stream << "﻿\t\t\t</profile_COMMON>" << endl;
+        stream << "﻿\t\t</effect>" << endl;
+    }
+    stream << "﻿\t</library_effects>" << endl;
+
+    stream << "﻿\t<library_materials>" << endl;
+    for (auto mat : materials) {
+        string name = mat.second->getName();
+        stream << "﻿\t\t<material id=\"" << name << "\" name=\"" << name << "\">" << endl;
+        stream << "﻿\t\t\t<instance_effect url=\"#" << name << "_effect\"/>" << endl;
+        stream << "﻿\t\t</material>" << endl;
+    }
+    stream << "﻿\t</library_materials>" << endl;
+
+
+    stream << "\t<library_geometries>" << endl;
+    for (auto obj : geos) {
+        VRGeometryPtr geo = dynamic_pointer_cast<VRGeometry>(obj);
+        string name = geo->getName();
+        VRGeoData data(geo);
+        auto mat = geo->getMaterial();
+
+        stream << "\t\t<geometry id=\"" << name << "\" name=\"" << name << "\">" << endl;
+        stream << "\t\t\t<mesh>" << endl;
+
+        stream << "\t\t\t\t<source id=\"" << name << "_positions\">" << endl;
+        stream << "\t\t\t\t\t<float_array count=\"" << data.size()*3 << "\" id=\"" << name << "_positions_array\">";
+        for (int i=0; i<data.size(); i++) {
+            if (i > 0) stream << " ";
+            Pnt3d p = data.getPosition(i);
+            stream << p[0] << " " << p[1] << " " << p[2];
+        }
+        stream << "</float_array>" << endl;
+		stream << "\t\t\t\t\t<technique_common>" << endl;
+		stream << "\t\t\t\t\t\t<accessor source=\"#box_normals_array\" count=\"" << data.size() << "\" stride=\"3\">" << endl;
+		stream << "\t\t\t\t\t\t\t<param name=\"X\" type=\"float\"/>" << endl;
+		stream << "\t\t\t\t\t\t\t<param name=\"Y\" type=\"float\"/>" << endl;
+		stream << "\t\t\t\t\t\t\t<param name=\"Z\" type=\"float\"/>" << endl;
+		stream << "\t\t\t\t\t\t</accessor>" << endl;
+		stream << "\t\t\t\t\t</technique_common>" << endl;
+        stream << "\t\t\t\t</source>" << endl;
+
+        stream << "\t\t\t\t<source id=\"" << name << "_normals\">" << endl;
+        stream << "\t\t\t\t\t<float_array count=\"" << data.sizeNormals()*3 << "\" id=\"" << name << "_normals_array\">";
+        for (int i=0; i<data.sizeNormals(); i++) {
+            if (i > 0) stream << " ";
+            Vec3d n = data.getNormal(i);
+            stream << n[0] << " " << n[1] << " " << n[2];
+        }
+        stream << "</float_array>" << endl;
+		stream << "\t\t\t\t\t<technique_common>" << endl;
+		stream << "\t\t\t\t\t\t<accessor source=\"#box_normals_array\" count=\"" << data.sizeNormals() << "\" stride=\"3\">" << endl;
+		stream << "\t\t\t\t\t\t\t<param name=\"X\" type=\"float\"/>" << endl;
+		stream << "\t\t\t\t\t\t\t<param name=\"Y\" type=\"float\"/>" << endl;
+		stream << "\t\t\t\t\t\t\t<param name=\"Z\" type=\"float\"/>" << endl;
+		stream << "\t\t\t\t\t\t</accessor>" << endl;
+		stream << "\t\t\t\t\t</technique_common>" << endl;
+        stream << "\t\t\t\t</source>" << endl;
+
+        stream << "\t\t\t\t<vertices id=\"" << name << "_vertices\">" << endl;
+		stream << "\t\t\t\t\t<input semantic=\"POSITION\" source=\"#" << name << "_positions\" />" << endl;
+		stream << "\t\t\t\t</vertices>" << endl;
+
+        for (int i=0; i<data.getNTypes(); i++) {
+            int type = data.getType(i);
+            int length = data.getLength(i);
+
+            int faceCount = length/3;
+            string typeName = "triangles";
+            if (type == GL_TRIANGLE_FAN) { typeName = "trifans"; faceCount = 1; }
+            if (type == GL_TRIANGLE_STRIP) { typeName = "tristrips"; faceCount = 1; }
+            if (type == GL_QUADS) { typeName = "triangles"; faceCount = length/4 * 2; } // times two because we convert to triangles
+            if (type == GL_QUAD_STRIP) { typeName = "quadstrips"; faceCount = 1; } // probably not supported..
+
+            stream << "\t\t\t\t<" << typeName << " count=\"" << faceCount << "\" material=\"" << mat->getName() << "\">" << endl;
+            stream << "\t\t\t\t\t<input offset=\"0\" semantic=\"VERTEX\" source=\"#" << name << "_vertices\" />" << endl;
+            stream << "\t\t\t\t\t<input offset=\"1\" semantic=\"NORMAL\" source=\"#" << name << "_normals\" />" << endl;
+            stream << "\t\t\t\t\t<p>";
+            if (type == GL_QUADS) { // convert to triangles on the fly
+                for (int i=0; i<length/4; i++) {
+                    if (i > 0) stream << " ";
+                    stream << data.getIndex(i*4+0) << " " << data.getIndex(i*4+0, NormalsIndex) << " ";
+                    stream << data.getIndex(i*4+1) << " " << data.getIndex(i*4+1, NormalsIndex) << " ";
+                    stream << data.getIndex(i*4+2) << " " << data.getIndex(i*4+2, NormalsIndex) << " ";
+                    stream << data.getIndex(i*4+0) << " " << data.getIndex(i*4+0, NormalsIndex) << " ";
+                    stream << data.getIndex(i*4+2) << " " << data.getIndex(i*4+2, NormalsIndex) << " ";
+                    stream << data.getIndex(i*4+3) << " " << data.getIndex(i*4+3, NormalsIndex);
+                }
+            } else {
+                for (int i=0; i<length; i++) {
+                    if (i > 0) stream << " ";
+                    stream << data.getIndex(i) << " " << data.getIndex(i, NormalsIndex);
+                }
+            }
+            stream << "</p>" << endl;
+            stream << "\t\t\t\t</" << typeName << ">" << endl;
+        }
+
+        stream << "\t\t\t</mesh>" << endl;
+        stream << "\t\t</geometry>" << endl;
+    }
+    stream << "\t</library_geometries>" << endl;
+
+    // the scenes, actually only a single one..
+	stream << "\t<library_visual_scenes>" << endl;
+	stream << "\t\t<visual_scene id=\"the_visual_scene\">" << endl;
+	writeSceneGraph(root, 3);
+	stream << "\t\t</visual_scene>" << endl;
+	stream << "\t</library_visual_scenes>" << endl;
+
+    // the scene
+    stream << "\t<scene>" << endl;
+    stream << "\t\t<instance_visual_scene url=\"#the_visual_scene\" />" << endl;
+    stream << "\t</scene>" << endl;
+
+    stream << "﻿</COLLADA>" << endl;
+}
+
+

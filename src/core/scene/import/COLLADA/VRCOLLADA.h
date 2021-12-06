@@ -10,6 +10,7 @@ OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 void loadCollada(string path, VRObjectPtr root, map<string, string> options);
+void writeCollada(VRObjectPtr root, string path, map<string, string> options);
 
 OSG_END_NAMESPACE;
 
