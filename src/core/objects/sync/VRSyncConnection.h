@@ -32,6 +32,7 @@ class VRSyncConnection {
         map<UInt32, UInt32> remoteToLocalID;
         map<UInt32, UInt32> localToRemoteID;
         map<UInt32, UInt32> remoteCoreToLocalNode;
+        vector<UInt32> syncedContainer; //Id's of container that got changes over sync (changed by remote). Needed to filter out sync changes from local Changelist to prevent cycles.
         Avatar avatar;
 
         string uri;
@@ -75,6 +76,10 @@ class VRSyncConnection {
         UInt32 getRemoteID(UInt32 id);
         UInt32 getLocalID(UInt32 id);
         UInt32 getLocalType(UInt32 id);
+
+        bool isRemoteChange(const UInt32& id);
+        void logSyncedContainer(UInt32 id);
+        void clearSyncedContainer();
 };
 
 OSG_END_NAMESPACE;

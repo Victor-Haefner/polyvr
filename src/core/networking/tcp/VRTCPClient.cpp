@@ -197,7 +197,7 @@ class TCPClient {
             msg += guard;
             size_t S = msg.size();
             double s = S/1000.0;
-            cout << "TCPClient::send " << this << " msg: " << msg << ", " << s << " kb" << endl;
+            //cout << "TCPClient::send " << this << " msg: " << msg << ", " << s << " kb" << endl;
             bool write_in_progress = !messages.empty();
             messages.push_back(msg);
             if (!write_in_progress) processQueue();

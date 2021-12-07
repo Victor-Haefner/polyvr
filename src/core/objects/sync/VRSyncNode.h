@@ -38,8 +38,6 @@ class VRSyncNode : public VRTransform {
 
         map<UInt32, UInt32> container; // local containers, sub-set of containers which need to be synced for collaboration
         map<UInt32, UInt32> externalContainer; // local external containers, key is container ID, value is change mask to use
-        //vector<UInt32> cores; //lists IDs of nodecores
-        vector<UInt32> syncedContainer; //Id's of container that got changes over sync (changed by remote). Needed to filter out sync changes from local Changelist to prevent cycles.
         map<string, VRSyncConnectionPtr> remotes;
         map<UInt32, VRObjectWeakPtr> nodeToVRObject;
         UInt32 getRegisteredContainerID(UInt32 syncID);
@@ -67,7 +65,6 @@ class VRSyncNode : public VRTransform {
         void handleNodeCore(FieldContainerRecPtr& fcPtr, UInt32 remoteNodeID);
 
         void printRegistredContainers();
-        void printSyncedContainers();
 
         //Ownership
         vector<string> owned; //names of owned objects by this node
@@ -108,10 +105,7 @@ class VRSyncNode : public VRTransform {
 
         bool isRegistered(const UInt32& id);
         bool isSubContainer(const UInt32& id);
-        bool isRemoteChange(const UInt32& id);
         bool isExternalContainer(const UInt32& id, UInt32& mask);
-
-        void logSyncedContainer(UInt32 id);
 
         UInt32 getContainerMappedID(UInt32 id);
         VRObjectPtr getVRObject(UInt32 id);

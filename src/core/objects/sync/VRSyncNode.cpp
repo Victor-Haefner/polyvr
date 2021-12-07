@@ -56,22 +56,6 @@
 
 #include <bitset>
 
-//BUGS:
-/*
-Known bugs:
-    - syncedContainer seem not get get empty (keeps filling with same id)
-    - in PolyVR: when syncNodes are not initialized on_scene_load but by manually triggering the script - the program will crash
-    - syncNodes need to be translated on initialization else no Transform Node will be created to track (PolyVR optimisation initialises with Group Node type; Transform Node only creates after a Transformation)
-
-*/
-
-//TODO:
-/*
-    - create (Node/Child) change handling and applying on remote SyncNode
-    - copy Changes from state for initialization of new remote SyncNode from master's State
-    - remove Changes (derefferencing?)
-*/
-
 using namespace OSG;
 
 void printGeoGLIDs(Geometry* geo) {
@@ -213,7 +197,8 @@ bool VRSyncNode::isSubContainer(const UInt32& id) {
         }
         if (parents->size() == 0) {
             if (typeName == "MultiPassMaterial") return false; // Materials may not be attached to a geometry, thats fine!
-            cout << " -- WARNING -- attachment FC has no parents: " << id << " type: " << fct->getTypeName();
+            if (typeName == "ShaderExecutableChunk") return false; // ? -> TODO
+            cout << " -- WARNING -- attachment FC has no parents: " << id << " type: " << typeName;
             if (AttachmentContainer* attc = dynamic_cast<AttachmentContainer*>(fct)) {
                 if (auto n = ::getName(attc)) cout << " named: " << n;
                 else cout << " unnamed";
@@ -273,11 +258,6 @@ bool VRSyncNode::isSubContainer(const UInt32& id) {
     cout << " -- WARNING -- unhandled FC type in isSubContainer: " << id << " " << typeName << endl;
 
     return false;
-}
-
-// checks if a container was changed by remote
-bool VRSyncNode::isRemoteChange(const UInt32& id) {
-    return bool(::find(syncedContainer.begin(), syncedContainer.end(), id) != syncedContainer.end());
 }
 
 void VRSyncNode::replaceContainerMapping(UInt32 ID1, UInt32 ID2, string rID) {
@@ -486,11 +466,6 @@ void VRSyncNode::printRegistredContainers() {
     }
 }
 
-void VRSyncNode::printSyncedContainers() {
-    cout << endl << "synced container:" << endl;
-    for (UInt32 id : syncedContainer) cout << id << endl;
-}
-
 bool VRSyncNode::isRegistered(const UInt32& id) {
     return bool(container.count(id));
 }
@@ -568,7 +543,7 @@ void VRSyncNode::update() {
     auto localChanges = changelist->filterChanges(ptr());
     if (!localChanges) return;
     //if (getChildrenCount() == 0) return; // TODO: this may happen if the only child is dragged, or the only child was just deleted..
-    cout << endl << " > > >  " << name << " VRSyncNode::update()" << endl;
+    //cout << endl << " > > >  " << name << " VRSyncNode::update()" << endl;
 
 
     //OSGChangeList* cl = (OSGChangeList*)applicationThread->getChangeList();
@@ -581,12 +556,8 @@ void VRSyncNode::update() {
 
     //VRConsoleWidget::get("Collaboration")->write( " Broadcast scene updates\n");
     changelist->broadcastChangeList(ptr(), localChanges, true);
-    syncedContainer.clear();
-    cout << "            / " << name << " VRSyncNode::update()" << "  < < < " << endl;
-}
-
-void VRSyncNode::logSyncedContainer(UInt32 id) {
-    if (isRemoteChange(id)) syncedContainer.push_back(id); // TODO: irgendwie komisch.. wird syncedContainer ueberhaupt verwendet?
+    for (auto remote : remotes) remote.second->clearSyncedContainer();
+    //cout << "            / " << name << " VRSyncNode::update()" << "  < < < " << endl;
 }
 
 void VRSyncNode::registerContainer(FieldContainer* c, UInt32 syncNodeID) {

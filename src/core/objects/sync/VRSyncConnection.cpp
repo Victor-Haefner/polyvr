@@ -230,6 +230,19 @@ UInt32 VRSyncConnection::getRemoteID(UInt32 id) {
     return localToRemoteID[id];
 }
 
+// checks if a container was changed by remote
+bool VRSyncConnection::isRemoteChange(const UInt32& id) {
+    return bool(::find(syncedContainer.begin(), syncedContainer.end(), id) != syncedContainer.end());
+}
+
+void VRSyncConnection::logSyncedContainer(UInt32 id) {
+    if (isRemoteChange(id)) syncedContainer.push_back(id);
+}
+
+void VRSyncConnection::clearSyncedContainer() {
+    syncedContainer.clear();
+}
+
 void VRSyncConnection::handleTypeMapping(string mappingData) {
     auto pairs = splitString(mappingData, '|');
     for (auto p : pairs) {
