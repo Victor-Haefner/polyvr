@@ -397,9 +397,11 @@ void VRSyncChangelist::fixNullChildren(FieldContainerRecPtr fcPtr, UInt32 fieldM
     if (!(fieldMask & Node::ChildrenFieldMask)) return;
     if (!fcPtr->getType().isNode()) return;
     NodeRecPtr node = dynamic_pointer_cast<Node>(fcPtr);
+    if (node->getNChildren() == 0) return;
     vector<size_t> toRemove;
-    for (size_t i=0; i<node->getNChildren(); i++) {
-        if (node->getChild(i) == 0) toRemove.push_back(i);
+    for (size_t i=node->getNChildren()-1; i>0; i--) {
+        Node* child = node->getChild(i);
+        if (!child) toRemove.push_back(i);
     }
     for (auto i : toRemove) node->subChild(i);
 }
@@ -411,15 +413,106 @@ void VRSyncChangelist::fixNullCore(FieldContainerRecPtr fcPtr, UInt32 fieldMask)
     if (!node->getCore()) node->setCore(Group::create());
 }
 
+vector<Node*> oldChildren;
+vector<Node*> newChildren;
+
+bool isInside(Node* n, vector<Node*>& v) {
+    for (int i=0; i<v.size(); i++) if (v[i] == n) return true;
+    return false;
+}
+
+void VRSyncChangelist::checkChildrenChange(FieldContainerRecPtr fcPtr, UInt32 fieldMask) {
+    if (!fcPtr->getType().isNode()) return;
+    NodeRecPtr node = dynamic_pointer_cast<Node>(fcPtr);
+    string nName = getName(node) ? getName(node) : "unnamed";
+
+    if ((fieldMask & Node::ParentFieldMask)) {
+        Node* parent = node->getParent();
+        int parentID = parent ? parent->getId() : 0;
+        cout << " node: " << nName << " (" << node->getId() << "), parent bevor change: " << parentID << endl;
+        if (parent) {
+            cout << "  parent (" << parentID << ") current children count: " << parent->getNChildren() << endl;
+            for (size_t i=0; i<parent->getNChildren(); i++) {
+                Node* child = parent->getChild(i);
+                if (child) cout << "    child: " << getName(child) << ", " << child->getId() << endl;
+                else cout << "    child: " << child << endl;
+
+                if (child == node) {
+                    parent->subChild(i);
+                    break;
+                }
+            }
+            cout << "  parent (" << parentID << ") new children count: " << parent->getNChildren() << endl;
+            Node* parent = node->getParent();
+            int parentID = parent ? parent->getId() : 0;
+            cout << "   node " << nName << " (" << node->getId() << ") current parent: " << parentID << endl;
+        }
+    }
+
+    if ((fieldMask & Node::ChildrenFieldMask)) {
+        oldChildren.clear();
+
+        cout << " node: " << nName << " (" << node->getId() << "), N children bevor changes: " << node->getNChildren() << endl;
+
+        for (size_t i=0; i<node->getNChildren(); i++) {
+            Node* child = node->getChild(i);
+            if (child/* && child->getRefCount() > 0*/) {
+                Node* parent = child->getParent();
+                int parentID = parent ? parent->getId() : 0;
+                string cName = getName(child) ? getName(child) : "unnamed";
+                cout << "  child: " << cName << ", " << child->getId() << ", refcount: " << child->getRefCount() << ", parentID: " << parentID << endl;
+                oldChildren.push_back( child );
+            } else cout << "  child: " << child << endl;
+        }
+    }
+}
+
+void VRSyncChangelist::mergeChildrenChange(FieldContainerRecPtr fcPtr, UInt32 fieldMask) {
+    if (!fcPtr->getType().isNode()) return;
+    NodeRecPtr node = dynamic_pointer_cast<Node>(fcPtr);
+    string nName = getName(node) ? getName(node) : "unnamed";
+
+    if ((fieldMask & Node::ChildrenFieldMask)) {
+        newChildren.clear();
+
+        cout << " node: " << nName << " (" << node->getId() << "), N children after changes: " << node->getNChildren() << endl;
+
+        for (size_t i=0; i<node->getNChildren(); i++) {
+            Node* child = node->getChild(i);
+            if (child/* && child->getRefCount() > 0*/) {
+                Node* parent = child->getParent();
+                int parentID = parent ? parent->getId() : 0;
+                string cName = getName(child) ? getName(child) : "unnamed";
+                cout << "  child: " << cName << ", " << child->getId() << ", refcount: " << child->getRefCount() << ", parentID: " << parentID << endl;
+                newChildren.push_back( child );
+            } else cout << "  child: " << child << endl;
+        }
+
+        for (int i=0; i<oldChildren.size(); i++) {
+            Node* child = oldChildren[i];
+            Node* parent = child->getParent();
+            int parentID = parent ? parent->getId() : 0;
+            string cName = getName(child) ? getName(child) : "unnamed";
+            cout << "  old child: " << cName << ", " << child->getId() << ", refcount: " << child->getRefCount() << ", parentID: " << parentID << endl;
+            if (isInside(child, newChildren)) continue;
+            cout << "   missing it! keepin it! " << cName << endl;
+            node->addChild(child);
+        }
+        cout << "  final child count of " << nName << " is: " << node->getNChildren() << endl;
+    }
+}
+
 void VRSyncChangelist::handleGenericChange(VRSyncNodePtr syncNode, FieldContainerRecPtr fcPtr, SerialEntry& sentry, map<UInt32, vector<unsigned char>>& fcData) {
     //cout << " VRSyncChangelist::handleGenericChange " << sentry.localId << " -> " << fcPtr->getId() << endl;}
     vector<unsigned char>& FCdata = fcData[sentry.localId];
     ourBinaryDataHandler handler; //use ourBinaryDataHandler to somehow apply binary change to fieldcontainer
     handler.data.insert(handler.data.end(), FCdata.begin(), FCdata.end()); //feed handler with FCdata
 
+    checkChildrenChange(fcPtr, sentry.fieldMask);
     fcPtr->copyFromBin(handler, sentry.fieldMask); //calls handler->read
     fixNullChildren(fcPtr, sentry.fieldMask);
     fixNullCore(fcPtr, sentry.fieldMask);
+    mergeChildrenChange(fcPtr, sentry.fieldMask);
     auto obj = syncNode->getVRObject(fcPtr->getId());
     if (obj) obj->wrapOSG(obj->getNode()); // update VR Objects, for example the VRTransform after its Matrix changed!
 

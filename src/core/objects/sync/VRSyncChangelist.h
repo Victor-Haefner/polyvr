@@ -41,6 +41,8 @@ class VRSyncChangelist {
         void serialize_entry(VRSyncNodePtr syncNode, ContainerChangeEntry* entry, vector<unsigned char>& data, UInt32 syncNodeID);
         string serialize(VRSyncNodePtr syncNode, ChangeList* clist);
 
+        void checkChildrenChange(FieldContainerRecPtr fcPtr, UInt32 fieldMask);
+        void mergeChildrenChange(FieldContainerRecPtr fcPtr, UInt32 fieldMask);
         void fixNullChildren(FieldContainerRecPtr fcPtr, UInt32 fieldMask);
         void fixNullCore(FieldContainerRecPtr fcPtr, UInt32 fieldMask);
 
