@@ -508,11 +508,11 @@ void VRSyncChangelist::handleGenericChange(VRSyncNodePtr syncNode, FieldContaine
     ourBinaryDataHandler handler; //use ourBinaryDataHandler to somehow apply binary change to fieldcontainer
     handler.data.insert(handler.data.end(), FCdata.begin(), FCdata.end()); //feed handler with FCdata
 
-    checkChildrenChange(fcPtr, sentry.fieldMask);
+    //checkChildrenChange(fcPtr, sentry.fieldMask); // TODO: this does sub and add children -> new changes -> bad!
     fcPtr->copyFromBin(handler, sentry.fieldMask); //calls handler->read
     fixNullChildren(fcPtr, sentry.fieldMask);
     fixNullCore(fcPtr, sentry.fieldMask);
-    mergeChildrenChange(fcPtr, sentry.fieldMask);
+    //mergeChildrenChange(fcPtr, sentry.fieldMask); // TODO: this does sub and add children -> new changes -> bad!
     auto obj = syncNode->getVRObject(fcPtr->getId());
     if (obj) obj->wrapOSG(obj->getNode()); // update VR Objects, for example the VRTransform after its Matrix changed!
 
