@@ -52,6 +52,7 @@ class VRSyncNode : public VRTransform {
         void handleWarning(string msg, string rID);
         void handleSelfmapRequest(string msg, string rID);
         void handleMapping(string mappingData, string rID);
+        void handleRemoteMapping(string mappingData, string rID);
         void handleTypeMapping(string mappingData, string rID);
         vector<FieldContainer*> findContainer(string typeName); //deprecated
         vector<FieldContainer*> getTransformationContainer(ChangeList* cl); //deprecated

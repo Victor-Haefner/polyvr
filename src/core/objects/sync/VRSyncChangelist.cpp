@@ -604,14 +604,21 @@ void VRSyncChangelist::handleRemoteEntries(VRSyncNodePtr syncNode, vector<Serial
     if (justCreated.size() > 0) {
         size_t counter = 0;
         while (counter < justCreated.size()) {
-            string mappingData = "mapping";
+            string mappingData = "";
             for (int i=0; i<1000 && counter < justCreated.size(); i++) {
                 auto fc = justCreated[counter];
-                UInt32 lID = remote->getRemoteID(fc->getId());
-                mappingData += "|" + toString(lID) + ":" + toString(fc->getId());
+                UInt32 rID = remote->getRemoteID(fc->getId());
+                mappingData += "|" + toString(rID) + ":" + toString(fc->getId());
                 counter++;
             }
-            remote->send(mappingData);
+            remote->send("mapping"+mappingData);
+
+
+            for (auto reID : syncNode->getRemotes()) {
+                if (rID == reID) continue; // dont send to origin, only to others
+                auto otherRemote = syncNode->getRemote(reID);
+                //if (otherRemote) otherRemote->send("remoteMapping|"+rUserID+mappingData); // TODO: get a rUserID to pass to other users! the rID is only locally valid!
+            }
         }
         justCreated.clear();
     }

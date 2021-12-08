@@ -663,6 +663,13 @@ void VRSyncNode::handleMapping(string mappingData, string rID) {
     remote->handleMapping(mappingData);
 }
 
+void VRSyncNode::handleRemoteMapping(string mappingData, string rID) {
+    cout << "VRSyncNode::handleRemoteMapping " << rID << " -> " << mappingData << endl;
+    auto remote = getRemote(rID);
+    if (!remote) return;
+    remote->handleRemoteMapping(mappingData, ptr());
+}
+
 void VRSyncNode::sendTypes(string remoteID) {
     auto remote = getRemote(remoteID);
     if (!remote) return;
@@ -842,6 +849,7 @@ string VRSyncNode::handleMessage(string msg, string rID) {
     else if (startsWith(msg, "updateAvatar|")) job = VRUpdateCb::create( "sync-updateAvatar", bind(&VRSyncNode::updateAvatar, this, msg, rID) );
     else if (startsWith(msg, "selfmap|")) handleSelfmapRequest(msg, rID);
     else if (startsWith(msg, "mapping|")) job = VRUpdateCb::create( "sync-handleMap", bind(&VRSyncNode::handleMapping, this, msg, rID) );
+    else if (startsWith(msg, "remoteMapping|")) job = VRUpdateCb::create( "sync-handleRemMap", bind(&VRSyncNode::handleRemoteMapping, this, msg, rID) );
     else if (startsWith(msg, "typeMapping|")) job = VRUpdateCb::create("sync-handleTMap", bind(&VRSyncNode::handleTypeMapping, this, msg, rID));
     else if (startsWith(msg, "ownership|")) job = VRUpdateCb::create( "sync-ownership", bind(&VRSyncNode::handleOwnershipMessage, this, msg, rID) );
     else if (startsWith(msg, "newConnect|")) job = VRUpdateCb::create( "sync-newConnect", bind(&VRSyncNode::handleNewConnect, this, msg) );

@@ -220,6 +220,31 @@ void VRSyncConnection::handleMapping(string mappingData) {
     }
 }
 
+void VRSyncConnection::handleRemoteMapping(string mappingData, VRSyncNodePtr syncNode) {
+    if (!syncNode) return;
+    auto pairs = splitString(mappingData, '|');
+    string originRemoteID = pairs[1];
+    auto origin = syncNode->getRemote(originRemoteID);
+    cout << " VRSyncConnection::handleRemoteMapping origin " << originRemoteID << " -> " << origin << endl;
+    if (!origin) return;
+
+    mappingData = "";
+    for (auto p : pairs) {
+        auto IDs = splitString(p, ':');
+        if (IDs.size() != 2) continue;
+        UInt32 oID = toInt(IDs[0]);
+        UInt32 rID = toInt(IDs[1]);
+        UInt32 lID = origin->getLocalID(oID);
+        cout << "  oID, rID, lID " << Vec3i(oID, rID, lID) << endl;
+        if (lID != 0) {
+            addRemoteMapping(lID, rID);
+            mappingData += "|" + toString(rID) + ":" + toString(lID);
+        }
+    }
+
+    if (mappingData != "") send("mapping"+mappingData);
+}
+
 UInt32 VRSyncConnection::getLocalID(UInt32 id) {
     if (!remoteToLocalID.count(id)) return 0;
     return remoteToLocalID[id];

@@ -73,6 +73,7 @@ class VRSyncConnection {
         void addRemoteMapping(UInt32 lID, UInt32 rID);
         void handleTypeMapping(string mappingData);
         void handleMapping(string mappingData);
+        void handleRemoteMapping(string mappingData, VRSyncNodePtr syncNode);
         UInt32 getRemoteID(UInt32 id);
         UInt32 getLocalID(UInt32 id);
         UInt32 getLocalType(UInt32 id);
