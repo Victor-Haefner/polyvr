@@ -172,6 +172,8 @@ struct VRSyncNodeFieldContainerMapper : public ContainerIdMapper {
  //   void operator =(const VRSyncNodeFieldContainerMapper &other);
 };
 
+static map<UInt32, int> blacklist;
+
 UInt32 VRSyncNodeFieldContainerMapper::map(UInt32 uiId) const {
     UInt32 id = 0;
 
@@ -181,15 +183,19 @@ UInt32 VRSyncNodeFieldContainerMapper::map(UInt32 uiId) const {
     }
 
     if (id == 0) {
-        //if (syncNode) cout << " --- WARNING in VRSyncNodeFieldContainerMapper::map remote id " << uiId << " to " << id << ", syncNode: " << syncNode->getName() << endl;
-        if (syncNode) {
-            auto remote = weakRemote.lock();
-            if (remote) remote->send("warn|failed fc pointer mapping|"+toString(uiId));
-        }
+        if (blacklist[id] < 10) {
+            blacklist[id]++;
+
+            if (syncNode) {
+                if (syncNode) cout << " --- WARNING in VRSyncNodeFieldContainerMapper::map remote id " << uiId << " to " << id << ", syncNode: " << syncNode->getName() << endl;
+                auto remote = weakRemote.lock();
+                if (remote) remote->send("warn|failed fc pointer mapping|"+toString(uiId));
+            }
 
 #ifndef WITHOUT_GTK
-        VRConsoleWidget::get("Collaboration")->write( " Warning in sync FC mapper, could not map "+toString(uiId)+"\n", "red");
+            VRConsoleWidget::get("Collaboration")->write( " Warning in sync FC mapper, could not map "+toString(uiId)+"\n", "red");
 #endif
+        }
     }
     return id;
 }
@@ -930,7 +936,7 @@ string VRSyncChangelist::serialize(VRSyncNodePtr syncNode, ChangeList* clist) {
 #endif
     }
 
-    bool verbose = false;
+    bool verbose = true;
     if (verbose) cout << "> > >  " << syncNode->getName() << " VRSyncNode::serialize()" << endl; //Debugging
 
     vector<unsigned char> data;

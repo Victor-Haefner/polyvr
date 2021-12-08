@@ -57,6 +57,7 @@
 #include <bitset>
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_io.hpp>
+#include <boost/uuid/uuid_generators.hpp>
 
 using namespace OSG;
 
@@ -78,7 +79,7 @@ ThreadRefPtr applicationThread;
 
 VRSyncNode::VRSyncNode(string name) : VRTransform(name) {
     type = "SyncNode";
-    boost::uuids::uuid u;
+    boost::uuids::uuid u = boost::uuids::random_generator()();
     UUID = boost::uuids::to_string(u);
     cout << " VRSyncNode::VRSyncNode " << name << " " << UUID << endl;
     selfID = getNode()->node->getId();
@@ -200,12 +201,12 @@ bool VRSyncNode::isSubContainer(const UInt32& id) {
         if (parents->size() == 0) {
             if (typeName == "MultiPassMaterial") return false; // Materials may not be attached to a geometry, thats fine!
             if (typeName == "ShaderExecutableChunk") return false; // ? -> TODO
-            cout << " -- WARNING -- attachment FC has no parents: " << id << " type: " << typeName;
+            /*cout << " -- WARNING -- attachment FC has no parents: " << id << " type: " << typeName;
             if (AttachmentContainer* attc = dynamic_cast<AttachmentContainer*>(fct)) {
                 if (auto n = ::getName(attc)) cout << " named: " << n;
                 else cout << " unnamed";
             }
-            cout << endl;
+            cout << endl;*/
         }
         return false;
     }
@@ -218,7 +219,7 @@ bool VRSyncNode::isSubContainer(const UInt32& id) {
             auto scID = VRMaterial::fieldContainerMap[id];
             return isSubContainer(scID);
         }
-        cout << "  -- WARNING -- untracked ShaderProgram " << id << endl;
+        //cout << "  -- WARNING -- untracked ShaderProgram " << id << endl;
         return false;
     }
 
@@ -228,7 +229,7 @@ bool VRSyncNode::isSubContainer(const UInt32& id) {
             auto scID = VRMaterial::fieldContainerMap[id];
             return isSubContainer(scID);
         }
-        cout << "  -- WARNING -- untracked ShaderVariable " << id << endl;
+        //cout << "  -- WARNING -- untracked ShaderVariable " << id << endl;
         return false;
     }
 
@@ -237,7 +238,7 @@ bool VRSyncNode::isSubContainer(const UInt32& id) {
             auto toID = VRMaterial::fieldContainerMap[id];
             return isSubContainer(toID);
         }
-        cout << "  -- WARNING -- untracked image " << id << endl;
+        //cout << "  -- WARNING -- untracked image " << id << endl;
         return false;
     }
 
@@ -592,8 +593,13 @@ void VRSyncNode::setAvatarBeacons(VRTransformPtr headTransform, VRTransformPtr d
 }
 
 void VRSyncNode::addRemoteAvatar(string remoteID, VRTransformPtr headTransform, VRTransformPtr devTransform, VRTransformPtr devAnchor) { // some geometries
+    if (remoteUUIDs.count(remoteID)) remoteID = remoteUUIDs[remoteID];
     auto remote = getRemote(remoteID);
-    if (!remote) return;
+    if (!remote) {
+        VRConsoleWidget::get("Collaboration")->write( name+": Add avatar representation failed, invalid remote "+remoteID+"\n", "red");
+        return;
+    }
+
     remote->setupAvatar(headTransform, devTransform, devAnchor);
 
 #ifndef WITHOUT_GTK
@@ -809,7 +815,7 @@ void VRSyncNode::handleWarning(string msg, VRSyncConnectionWeakPtr weakRemote) {
     auto data = splitString(msg, '|');
     if (data.size() != 3) { cout << "AAargh" << endl; return; }
 #ifndef WITHOUT_GTK
-    VRConsoleWidget::get("Collaboration")->write( name+": Warning received '"+data[1]+"' about FC "+data[2], "red");
+    VRConsoleWidget::get("Collaboration")->write( name+": Warning received '"+data[1]+"' about FC "+data[2]+"\n", "red");
 #endif
     if (factory) {
         int ID = toInt(data[2]);
@@ -838,9 +844,9 @@ void VRSyncNode::handleSelfmapRequest(string msg, VRSyncConnectionWeakPtr weakRe
     }
     int remoteID = toInt(data[1]);
     string remoteUUID = data[2];
-    /*for (auto r : remotes) if (r.second == remote) { remotes.erase(r.first); break; }
+    for (auto r : remotes) if (r.second == remote) { remoteUUIDs[r.first] = remoteUUID; remotes.erase(r.first); break; }
     remotes[remoteUUID] = remote;
-    remote->setID(remoteUUID);*/
+    remote->setID(remoteUUID);
 #ifndef WITHOUT_GTK
     VRConsoleWidget::get("Collaboration")->write( name+": map own ID "+toString(selfID)+", to remote ID "+toString(remoteID)+", remote UUID: "+remoteUUID+"\n");
 #endif
