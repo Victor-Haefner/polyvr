@@ -308,6 +308,7 @@ OSGChangeList* VRSyncChangelist::filterChanges(VRSyncNodePtr syncNode) {
 
 static vector<FieldContainerRecPtr> debugStorage;
 
+// TODO: when creating -> send mapping IDs to this object with all other users if they have created the same object!
 FieldContainerRecPtr VRSyncChangelist::getOrCreate(VRSyncNodePtr syncNode, UInt32& id, SerialEntry& sentry, map<UInt32, vector<UInt32>>& parentToChildren, string rID) {
     auto remote = syncNode->getRemote(rID);
     if (!remote) return 0;
