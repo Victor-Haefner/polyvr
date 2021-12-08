@@ -119,8 +119,11 @@ VRSyncConnection::~VRSyncConnection() { cout << "~VRSyncConnection::VRSyncConnec
 VRSyncConnectionPtr VRSyncConnection::create(string host, int port, string localUri) { return VRSyncConnectionPtr( new VRSyncConnection(host, port, localUri) ); }
 VRSyncConnectionPtr VRSyncConnection::create(VRTCPClientPtr client, string localUri) { return VRSyncConnectionPtr( new VRSyncConnection(client, localUri) ); }
 
+string VRSyncConnection::getID() { return uuid; }
 string VRSyncConnection::getUri() { return uri; }
 string VRSyncConnection::getLocalUri() { return localUri; }
+
+void VRSyncConnection::setID(string u) { uuid = u; }
 
 void VRSyncConnection::connect() {
     client->connect(uri);

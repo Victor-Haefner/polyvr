@@ -35,6 +35,7 @@ class VRSyncConnection {
         vector<UInt32> syncedContainer; //Id's of container that got changes over sync (changed by remote). Needed to filter out sync changes from local Changelist to prevent cycles.
         Avatar avatar;
 
+        string uuid;
         string uri;
         string localUri;
         VRTCPClientPtr client;
@@ -55,6 +56,9 @@ class VRSyncConnection {
         void startInterface(int port, VRSyncNodePtr snode);
         void keepAlive();
 
+        void setID(string uuid);
+
+        string getID();
         string getStatus();
         string getUri();
         string getLocalUri();

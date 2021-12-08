@@ -36,6 +36,7 @@ class VRSyncNode : public VRTransform {
         VRMessageCbPtr onEvent;
         VRSyncChangelistPtr changelist;
 
+        string UUID;
         map<UInt32, UInt32> container; // local containers, sub-set of containers which need to be synced for collaboration
         map<UInt32, UInt32> externalContainer; // local external containers, key is container ID, value is change mask to use
         map<string, VRSyncConnectionPtr> remotes;
@@ -47,13 +48,13 @@ class VRSyncNode : public VRTransform {
 
         VRObjectPtr copy(vector<VRObjectPtr> children) override;
 
-        void sendTypes(string remoteID);
+        void sendTypes(VRSyncConnectionWeakPtr weakRemote);
 
-        void handleWarning(string msg, string rID);
-        void handleSelfmapRequest(string msg, string rID);
-        void handleMapping(string mappingData, string rID);
-        void handleRemoteMapping(string mappingData, string rID);
-        void handleTypeMapping(string mappingData, string rID);
+        void handleWarning(string msg, VRSyncConnectionWeakPtr weakRemote);
+        void handleSelfmapRequest(string msg, VRSyncConnectionWeakPtr weakRemote);
+        void handleMapping(string mappingData, VRSyncConnectionWeakPtr weakRemote);
+        void handleRemoteMapping(string mappingData, VRSyncConnectionWeakPtr weakRemote);
+        void handleTypeMapping(string mappingData, VRSyncConnectionWeakPtr weakRemote);
         vector<FieldContainer*> findContainer(string typeName); //deprecated
         vector<FieldContainer*> getTransformationContainer(ChangeList* cl); //deprecated
         //vector<OSG::Field
@@ -69,16 +70,16 @@ class VRSyncNode : public VRTransform {
 
         //Ownership
         vector<string> owned; //names of owned objects by this node
-        void handleOwnershipMessage(string ownership, string rID);
+        void handleOwnershipMessage(string ownership, VRSyncConnectionWeakPtr weakRemote);
 
         void handleNewConnect(string data);
-        void accTCPConnection(string msg, string rID);
-        void reqInitState(string rID);
+        void accTCPConnection(string msg, VRSyncConnectionWeakPtr weakRemote);
+        void reqInitState(VRSyncConnectionWeakPtr weakRemote);
 
         UInt32 getNodeID(VRObjectPtr t);
         UInt32 getTransformID(VRTransformPtr t);
-        void handleAvatar(string data, string rID);
-        void updateAvatar(string data, string rID);
+        void handleAvatar(string data, VRSyncConnectionWeakPtr weakRemote);
+        void updateAvatar(string data, VRSyncConnectionWeakPtr weakRemote);
 
     public:
         VRSyncNode(string name = "syncNode");
@@ -96,10 +97,10 @@ class VRSyncNode : public VRTransform {
         void addRemote(string host, int port);
         VRSyncConnectionPtr getRemote(string rID);
 
-        void replaceContainerMapping(UInt32 ID1, UInt32 ID2, string rID);
+        void replaceContainerMapping(UInt32 ID1, UInt32 ID2, VRSyncConnectionWeakPtr weakRemote);
 
         void startInterface(int port);
-        string handleMessage(string msg, string rID);
+        string handleMessage(string msg, VRSyncConnectionWeakPtr weakRemote);
         void update();
         void broadcast(string message);
         size_t getContainerCount();
