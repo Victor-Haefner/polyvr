@@ -35,7 +35,9 @@ VRObject::VRObject(string _name) {
 
     setName(_name);
 
-    osg = OSGObject::create( makeNodeFor( Group::create() ) );
+    auto group = Group::create();
+    osg = OSGObject::create( makeNodeFor( group ) );
+    core = OSGCore::create( group );
     OSG::setName(osg->node, name);
     type = "Object";
 

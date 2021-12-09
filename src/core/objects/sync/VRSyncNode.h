@@ -91,6 +91,10 @@ class VRSyncNode : public VRTransform {
         static VRSyncNodePtr create(string name = "None");
         VRSyncNodePtr ptr();
 
+        UInt32 getSyncNodeID();
+        UInt32 getSyncNameID();
+        UInt32 getSyncCoreID();
+
         string setTCPClient(VRTCPClientPtr cli);
         string addTCPClient(VRTCPClientPtr cli);
 

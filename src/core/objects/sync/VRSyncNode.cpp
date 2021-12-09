@@ -392,12 +392,15 @@ VRObjectPtr VRSyncNode::OSGConstruct(NodeMTRecPtr n, VRObjectPtr parent, Node* g
     string name = ::getName(n);
 
     if (t_name == "Group" || t_name == "Transform") {
-        if (n->getChild(0)) {
-            if (n->getChild(0)->getCore()) {
-                string tp = n->getChild(0)->getCore()->getTypeName();
+        Node* child0 = 0;
+        if (n->getNChildren() > 0) child0 = n->getChild(0);
+
+        if (child0) {
+            if (child0->getCore()) {
+                string tp = child0->getCore()->getTypeName();
                 if (tp == "Geometry") {
                     tmp_g = VRGeometry::create(name);
-                    tmp_g->wrapOSG(OSGObject::create(n), OSGObject::create(n->getChild(0)));
+                    tmp_g->wrapOSG(OSGObject::create(n), OSGObject::create(child0));
                     tmp = tmp_g;
                     nodeToVRObject[n->getCore()->getId()] = tmp;
                 }
@@ -589,6 +592,10 @@ void VRSyncNode::addExternalContainer(UInt32 id, UInt32 mask) {
     VRConsoleWidget::get("Collaboration")->write( name+": Add external container "+toString(id)+" with mask "+toString(mask)+"\n", "green");
 #endif
 }
+
+UInt32 VRSyncNode::getSyncNodeID() { return selfNodeID; }
+UInt32 VRSyncNode::getSyncNameID() { return selfNameID; }
+UInt32 VRSyncNode::getSyncCoreID() { return selfCoreID; }
 
 UInt32 VRSyncNode::getNodeID(VRObjectPtr t) {
     return t->getNode()->node->getId();
@@ -914,8 +921,9 @@ void printNode(VRObjectPtr obj, string indent = "") {
     Node* node = obj->getNode()->node;
     if (!node) { cout << "no object node for " << obj->getName() << endl; return; }
     NodeCore* core1 = node->getCore();
-    if (!obj->getCore()->core) { cout << "no valid object core for " << obj->getName() << endl; return; }
-    NodeCore* core2 = obj->getCore()->core;
+    OSGCorePtr osgCore = obj->getCore();
+    if (!osgCore) { cout << "no valid object osg core for " << obj->getName() << endl; return; }
+    NodeCore* core2 = osgCore->core;
     cout << indent << "obj " << obj->getName() << " (" << obj->getType() << ")";
     cout << ", nodeID: " << node->getId();
     if (core1) cout << ", nde coreID: " << core1->getId() << ", nde coreType: " << core1->getTypeName();

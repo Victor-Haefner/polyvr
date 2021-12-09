@@ -808,13 +808,12 @@ vector<UInt32> VRSyncChangelist::getFCChildren(FieldContainer* fcPtr, BitVector 
     return res;
 }
 
-void VRSyncChangelist::filterFieldMask(VRSyncNodePtr syncNode, FieldContainer* fc, SerialEntry& sentry) {
-    if (sentry.localId == syncNode->getNode()->node->getId()) { // check for sync node ID
-        sentry.fieldMask &= ~Node::ParentFieldMask; // remove parent field change!
-        sentry.fieldMask &= ~Node::CoreFieldMask; // remove core field change!
-    }
+bool VRSyncChangelist::filterFieldMask(VRSyncNodePtr syncNode, FieldContainer* fc, SerialEntry& sentry) {
+    if (sentry.localId == syncNode->getSyncNodeID()) return false; // dismiss entry
+    if (sentry.localId == syncNode->getSyncNameID()) return false; // dismiss entry
+    if (sentry.localId == syncNode->getSyncCoreID()) return false; // dismiss entry
 
-    if (dynamic_cast<Node*>(fc)) {
+    if (dynamic_cast<Node*>(fc)) { // ignore all changes to children array
         sentry.fieldMask &= ~Node::ChildrenFieldMask;
     }
 
@@ -887,6 +886,8 @@ void VRSyncChangelist::filterFieldMask(VRSyncNodePtr syncNode, FieldContainer* f
     if (dynamic_cast<ProgramChunk*>(fc)) {
         sentry.fieldMask &= ~ProgramChunk::GLIdFieldMask;
     }
+
+    return true;
 }
 
 void VRSyncChangelist::serialize_entry(VRSyncNodePtr syncNode, ContainerChangeEntry* entry, vector<unsigned char>& data) {
@@ -902,7 +903,7 @@ void VRSyncChangelist::serialize_entry(VRSyncNodePtr syncNode, ContainerChangeEn
 
         //VRConsoleWidget::get("Collaboration")->write( " Serialize entry: "+toString(entry->uiContainerId)+"/"+toString(syncNodeID)+" "+toString(entry->whichField)+"\n");
 
-        filterFieldMask(syncNode, fcPtr, sentry);
+        if (!filterFieldMask(syncNode, fcPtr, sentry)) return;
 
         ourBinaryDataHandler handler;
         fcPtr->copyToBin(handler, sentry.fieldMask); //calls handler->write
