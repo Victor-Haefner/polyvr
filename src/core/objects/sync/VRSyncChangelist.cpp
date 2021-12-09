@@ -52,7 +52,6 @@ struct SerialEntry {
     BitVector fieldMask;
     UInt32 len = 0; //number of data BYTEs in the SerialEntry
     UInt32 cplen = 0; //number of Children BYTEs in the SerialEntry
-    UInt32 syncNodeID = 0; //sync Id of the Node
     UInt32 uiEntryDesc = -1; //ChangeEntry Type
     UInt32 fcTypeID = -1; //FieldContainer Type Id
     UInt32 coreID = -1; //Core Id is this is an entry for node with a core
@@ -239,7 +238,7 @@ OSGChangeList* VRSyncChangelist::filterChangeList(VRSyncNodePtr syncNode, Change
 
             localChanges->addCreate(entry);
             //cout << "    isSubContainer: " << id << " " << container.size() << endl;
-            syncNode->registerContainer(factory->getContainer(id), syncNode->getContainerCount()+1);
+            syncNode->registerContainer(factory->getContainer(id));
         }
     }
 
@@ -281,7 +280,7 @@ OSGChangeList* VRSyncChangelist::filterChangeList(VRSyncNodePtr syncNode, Change
             for (auto subc : subcontainers) {
                 localChanges->newCreate(subc.first->getId(), 0);
                 localChanges->newChange(subc.first->getId(), -1, changedFCs);
-                syncNode->registerContainer(subc.first, syncNode->getContainerCount()+1);
+                syncNode->registerContainer(subc.first);
                 for (auto subcParent : subc.second) {
                     if (subcParent) {
                         localChanges->newChange(subcParent->getId(), -1, changedFCs);
@@ -338,7 +337,7 @@ FieldContainerRecPtr VRSyncChangelist::getOrCreate(VRSyncNodePtr syncNode, UInt3
         fcPtr = fcType->createContainer();
         justCreated.push_back(fcPtr); // increase ref count temporarily to avoid destruction!
         //debugStorage.push_back(fcPtr); // increase ref count permanently to avoid destruction! only for testing!
-        syncNode->registerContainer(fcPtr.get(), sentry.syncNodeID);
+        syncNode->registerContainer(fcPtr.get());
         id = fcPtr.get()->getId();
         remote->addRemoteMapping(id, sentry.localId);
         //cout << " ---- create, new ID, remote: " << sentry.localId << ", local: " << id << endl;
@@ -571,9 +570,9 @@ void VRSyncChangelist::handleRemoteEntries(VRSyncNodePtr syncNode, vector<Serial
         //cout << "deserialize > > > sentry: " << sentry.localId << " " << sentry.fieldMask << " " << sentry.len << " desc " << sentry.uiEntryDesc << " syncID " << sentry.syncNodeID << " at pos " << pos << endl;
 
         //sync of initial syncNode container
-        if (sentry.syncNodeID > 0 && sentry.syncNodeID <= 3) {
+        /*if (sentry.syncNodeID > 0 && sentry.syncNodeID <= 3) {
             syncNode->replaceContainerMapping(sentry.syncNodeID, sentry.localId, weakRemote);
-        }
+        }*/
 
         /*if (sentry.uiEntryDesc == ContainerChangeEntry::Create) {
             VRConsoleWidget::get("Collaboration")->write( "Create FC, remote ID: "+toString(sentry.localId)+"\n");
@@ -646,7 +645,6 @@ void VRSyncChangelist::printDeserializedData(vector<SerialEntry>& entries, map<U
             cout << ", fcType: " << fcType->getName();
         }
 
-        if (entry.syncNodeID != noID) cout << ", syncNodeID: " << entry.syncNodeID;
         if (entry.uiEntryDesc != noID) cout << ", change type: " << getChangeType(entry.uiEntryDesc);
         if (entry.coreID != noID) cout << ", coreID: " << entry.coreID;
 
@@ -891,14 +889,13 @@ void VRSyncChangelist::filterFieldMask(VRSyncNodePtr syncNode, FieldContainer* f
     }
 }
 
-void VRSyncChangelist::serialize_entry(VRSyncNodePtr syncNode, ContainerChangeEntry* entry, vector<unsigned char>& data, UInt32 syncNodeID) {
+void VRSyncChangelist::serialize_entry(VRSyncNodePtr syncNode, ContainerChangeEntry* entry, vector<unsigned char>& data) {
     FieldContainerFactoryBase* factory = FieldContainerFactory::the();
     FieldContainer* fcPtr = factory->getContainer(entry->uiContainerId);
     if (fcPtr) {
         SerialEntry sentry;
         sentry.localId = entry->uiContainerId;
         sentry.fieldMask = entry->whichField;
-        sentry.syncNodeID = syncNodeID;
         sentry.uiEntryDesc = entry->uiEntryDesc;
         sentry.fcTypeID = fcPtr->getTypeId();
 
@@ -948,13 +945,12 @@ string VRSyncChangelist::serialize(VRSyncNodePtr syncNode, ChangeList* clist) {
 
     for (auto it = clist->beginCreated(); it != clist->endCreated(); it++, i++) {
         ContainerChangeEntry* entry = *it;
-        serialize_entry(syncNode, entry, data, syncNode->getContainerMappedID(entry->uiContainerId));
+        serialize_entry(syncNode, entry, data);
     }
 
     for (auto it = clist->begin(); it != clist->end(); it++, i++) {
         ContainerChangeEntry* entry = *it;
-        auto id = syncNode->getContainerMappedID(entry->uiContainerId);
-        serialize_entry(syncNode, entry, data, id);
+        serialize_entry(syncNode, entry, data);
     }
 
     if (verbose) cout << "serialized entries: " << i << endl; //Debugging

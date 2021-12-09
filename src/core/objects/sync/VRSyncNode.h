@@ -25,7 +25,9 @@ class VRSyncNode : public VRTransform {
         FieldContainerFactoryBase* factory = FieldContainerFactory::the();
         vector<UInt32> createdNodes; //IDs of the currently created nodes/children
 
-        size_t selfID = 0;
+        size_t selfNodeID = 0;
+        size_t selfNameID = 0;
+        size_t selfCoreID = 0;
         string serverUri;
         bool doWrapping = true;
 
@@ -37,7 +39,7 @@ class VRSyncNode : public VRTransform {
         VRSyncChangelistPtr changelist;
 
         string UUID;
-        map<UInt32, UInt32> container; // local containers, sub-set of containers which need to be synced for collaboration
+        map<UInt32, bool> container; // local containers, sub-set of containers which need to be synced for collaboration
         map<UInt32, UInt32> externalContainer; // local external containers, key is container ID, value is change mask to use
         map<string, VRSyncConnectionPtr> remotes;
         map<string, string> remoteUUIDs;
@@ -110,7 +112,6 @@ class VRSyncNode : public VRTransform {
         bool isSubContainer(const UInt32& id);
         bool isExternalContainer(const UInt32& id, UInt32& mask);
 
-        UInt32 getContainerMappedID(UInt32 id);
         VRObjectPtr getVRObject(UInt32 id);
 
         void analyseSubGraph();
@@ -124,7 +125,7 @@ class VRSyncNode : public VRTransform {
         void requestOwnership(string objectName);
         void addOwnedObject(string objectName);
 
-        void registerContainer(FieldContainer* c, UInt32 syncNodeID = 0);
+        void registerContainer(FieldContainer* c);
         void addExternalContainer(UInt32 id, UInt32 mask);
         vector<UInt32> registerNode(Node* c); //returns all registered IDs
         void setAvatarBeacons(VRTransformPtr headTransform, VRTransformPtr devTransform, VRTransformPtr devAnchor);

@@ -78,11 +78,17 @@ void printGeoGLIDs(Geometry* geo) {
 ThreadRefPtr applicationThread;
 
 VRSyncNode::VRSyncNode(string name) : VRTransform(name) {
+    enableOptimization(false);
     type = "SyncNode";
     boost::uuids::uuid u = boost::uuids::random_generator()();
     UUID = boost::uuids::to_string(u);
     cout << " VRSyncNode::VRSyncNode " << name << " " << UUID << endl;
-    selfID = getNode()->node->getId();
+
+    selfNodeID = getNode()->node->getId();
+    Attachment* att = getNode()->node->findAttachment(Name::getClassType().getGroupId());
+    selfNameID = att->getId();
+    selfCoreID = getNode()->node->getCore()->getId();
+
     changelist = VRSyncChangelist::create();
     applicationThread = dynamic_cast<Thread *>(ThreadManager::getAppThread());
 	updateFkt = VRUpdateCb::create("SyncNode update", bind(&VRSyncNode::update, this));
@@ -125,12 +131,11 @@ string VRSyncNode::addTCPClient(VRTCPClientPtr client) {
 void VRSyncNode::accTCPConnection(string msg, VRSyncConnectionWeakPtr weakRemote) {
     auto remote = weakRemote.lock();
     if (!remote) return;
-    auto nID = getNode()->node->getId();
 #ifndef WITHOUT_GTK
     VRConsoleWidget::get("Collaboration")->write( name+": got tcp client acc, "+msg+"\n");
 #endif
     if (msg == "accConnect|1") remote->send("accConnect|2");
-    remote->send("selfmap|"+toString(nID)+"|"+UUID);
+    remote->send("selfmap|"+UUID+"|"+toString(selfNodeID)+"|"+toString(selfNameID)+"|"+toString(selfCoreID));
     sendTypes(weakRemote);
     remote->send("reqInitState|");
 }
@@ -460,7 +465,7 @@ void VRSyncNode::printRegistredContainers() {
     for (auto c : container) {
         UInt32 id = c.first;
         FieldContainer* fc = factory->getContainer(id);
-        cout << " " << id << ", syncNodeID " << c.second;
+        cout << " " << id;
 
         for (auto remote : remotes) {
             auto remoteID = remote.second->getRemoteID(id);
@@ -471,7 +476,7 @@ void VRSyncNode::printRegistredContainers() {
         if (fc) {
             cout << ", type: " << fc->getTypeName() << ", Refs: " << fc->getRefCount();
             if (Node* node = dynamic_cast<Node*>(fc)) cout << ", N children: " << node->getNChildren() << ", name: '" << ::getName(node) << "'";
-        }
+        } else cout << " no fc!";
         cout << endl;
     }
 }
@@ -571,11 +576,11 @@ void VRSyncNode::update() {
     //cout << "            / " << name << " VRSyncNode::update()" << "  < < < " << endl;
 }
 
-void VRSyncNode::registerContainer(FieldContainer* c, UInt32 syncNodeID) {
+void VRSyncNode::registerContainer(FieldContainer* c) {
     UInt32 ID = c->getId();
     if (container.count(ID)) return;
     //cout << " VRSyncNode::registerContainer " << getName() << " container: " << c->getTypeName() << " at fieldContainerId: " << ID << endl;
-    container[ID] = syncNodeID;
+    container[ID] = true;
 }
 
 void VRSyncNode::addExternalContainer(UInt32 id, UInt32 mask) {
@@ -652,11 +657,11 @@ vector<UInt32> VRSyncNode::registerNode(Node* node) { // deprecated?
     NodeCoreMTRefPtr core = node->getCore();
     cout << "register node " << node->getId() << endl;
 
-    registerContainer(node, container.size()+1);
+    registerContainer(node);
     if (!core) cout << "no core" << core << endl;
     cout << "register core " << core->getId() << endl;
 
-    registerContainer(core, container.size()+1);
+    registerContainer(core);
     localRes.push_back(node->getId());
     localRes.push_back(core->getId());
     for (UInt32 i=0; i<node->getNChildren(); i++) {
@@ -844,21 +849,28 @@ void VRSyncNode::handleSelfmapRequest(string msg, VRSyncConnectionWeakPtr weakRe
     if (!remote) return;
 
     auto data = splitString(msg, '|');
-    if (data.size() < 3) {
+    if (data.size() < 5) {
 #ifndef WITHOUT_GTK
         VRConsoleWidget::get("Collaboration")->write( name+":  Error, received remote sync node ID, data malformed!\n", "red");
 #endif
         return;
     }
-    int remoteID = toInt(data[1]);
-    string remoteUUID = data[2];
+    string remoteUUID = data[1];
+    int remoteNodeID = toInt(data[2]);
+    int remoteNameID = toInt(data[3]);
+    int remoteCoreID = toInt(data[4]);
+
     for (auto r : remotes) if (r.second == remote) { remoteUUIDs[r.first] = remoteUUID; remotes.erase(r.first); break; }
     remotes[remoteUUID] = remote;
     remote->setID(remoteUUID);
+
+    remote->addRemoteMapping(selfNodeID, remoteNodeID);
+    remote->addRemoteMapping(selfNameID, remoteNameID);
+    remote->addRemoteMapping(selfCoreID, remoteCoreID);
+
 #ifndef WITHOUT_GTK
-    VRConsoleWidget::get("Collaboration")->write( name+": map own ID "+toString(selfID)+", to remote ID "+toString(remoteID)+", remote UUID: "+remoteUUID+"\n");
+    VRConsoleWidget::get("Collaboration")->write( name+": map own ID "+toString(selfNodeID)+", to remote ID "+toString(remoteNodeID)+", remote UUID: "+remoteUUID+"\n");
 #endif
-    remote->addRemoteMapping(selfID, remoteID);
 }
 
 string VRSyncNode::handleMessage(string msg, VRSyncConnectionWeakPtr weakRemote) {
@@ -890,11 +902,6 @@ void VRSyncNode::broadcast(string message) { // broadcast message to all remote 
             cout << "Failed to send message to remote." << endl;
         }
     }
-}
-
-UInt32 VRSyncNode::getContainerMappedID(UInt32 id) {
-    if (!container.count(id)) return 0;
-    return container[id];
 }
 
 VRObjectPtr VRSyncNode::getVRObject(UInt32 id) {
