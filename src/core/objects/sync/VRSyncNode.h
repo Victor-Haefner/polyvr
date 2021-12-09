@@ -124,7 +124,7 @@ class VRSyncNode : public VRTransform {
         void requestOwnership(string objectName);
         void addOwnedObject(string objectName);
 
-        void registerContainer(FieldContainer* c, UInt32 syncNodeID = -1);
+        void registerContainer(FieldContainer* c, UInt32 syncNodeID = 0);
         void addExternalContainer(UInt32 id, UInt32 mask);
         vector<UInt32> registerNode(Node* c); //returns all registered IDs
         void setAvatarBeacons(VRTransformPtr headTransform, VRTransformPtr devTransform, VRTransformPtr devAnchor);

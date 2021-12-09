@@ -52,7 +52,7 @@ struct SerialEntry {
     BitVector fieldMask;
     UInt32 len = 0; //number of data BYTEs in the SerialEntry
     UInt32 cplen = 0; //number of Children BYTEs in the SerialEntry
-    UInt32 syncNodeID = -1; //sync Id of the Node
+    UInt32 syncNodeID = 0; //sync Id of the Node
     UInt32 uiEntryDesc = -1; //ChangeEntry Type
     UInt32 fcTypeID = -1; //FieldContainer Type Id
     UInt32 coreID = -1; //Core Id is this is an entry for node with a core
@@ -239,7 +239,7 @@ OSGChangeList* VRSyncChangelist::filterChangeList(VRSyncNodePtr syncNode, Change
 
             localChanges->addCreate(entry);
             //cout << "    isSubContainer: " << id << " " << container.size() << endl;
-            syncNode->registerContainer(factory->getContainer(id), syncNode->getContainerCount());
+            syncNode->registerContainer(factory->getContainer(id), syncNode->getContainerCount()+1);
         }
     }
 
@@ -281,7 +281,7 @@ OSGChangeList* VRSyncChangelist::filterChangeList(VRSyncNodePtr syncNode, Change
             for (auto subc : subcontainers) {
                 localChanges->newCreate(subc.first->getId(), 0);
                 localChanges->newChange(subc.first->getId(), -1, changedFCs);
-                syncNode->registerContainer(subc.first, syncNode->getContainerCount());
+                syncNode->registerContainer(subc.first, syncNode->getContainerCount()+1);
                 for (auto subcParent : subc.second) {
                     if (subcParent) {
                         localChanges->newChange(subcParent->getId(), -1, changedFCs);
@@ -487,6 +487,10 @@ void VRSyncChangelist::mergeChildrenChange(FieldContainerRecPtr fcPtr, UInt32 fi
         Node* parent = node->getParent();
         int parentID = parent ? parent->getId() : 0;
         cout << " node: " << nName << " (" << node->getId() << "), parent after change: " << parentID << endl;
+        if (parent == node) {
+            cout << " ERROR in VRSyncChangelist::mergeChildrenChange parent == node!" << endl;
+            return;
+        }
         if (parent) {
             cout << "  parent (" << parentID << ") current children count: " << parent->getNChildren() << endl;
             parent->addChild(node);
@@ -567,7 +571,7 @@ void VRSyncChangelist::handleRemoteEntries(VRSyncNodePtr syncNode, vector<Serial
         //cout << "deserialize > > > sentry: " << sentry.localId << " " << sentry.fieldMask << " " << sentry.len << " desc " << sentry.uiEntryDesc << " syncID " << sentry.syncNodeID << " at pos " << pos << endl;
 
         //sync of initial syncNode container
-        if (sentry.syncNodeID >= 0 && sentry.syncNodeID <= 2) {
+        if (sentry.syncNodeID > 0 && sentry.syncNodeID <= 3) {
             syncNode->replaceContainerMapping(sentry.syncNodeID, sentry.localId, weakRemote);
         }
 
@@ -936,7 +940,7 @@ string VRSyncChangelist::serialize(VRSyncNodePtr syncNode, ChangeList* clist) {
 #endif
     }
 
-    bool verbose = true;
+    bool verbose = false;
     if (verbose) cout << "> > >  " << syncNode->getName() << " VRSyncNode::serialize()" << endl; //Debugging
 
     vector<unsigned char> data;

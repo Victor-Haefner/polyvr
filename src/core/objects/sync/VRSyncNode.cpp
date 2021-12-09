@@ -168,24 +168,31 @@ bool VRSyncNode::isSubContainer(const UInt32& id) {
     UInt32 syncNodeID = getNode()->node->getId();
     auto type = factory->findType(fct->getTypeId());
 
-    function<bool(Node*)> checkAncestor = [&](Node* node) {
+    auto detectCycle = [&](Node* node, Node* parent, int depth) { // TODO
+        if (parent == node) return true;
+        if (depth > 30) return true;
+        return false;
+    };
+
+    function<bool(Node*, int)> checkAncestor = [&](Node* node, int depth) {
         if (!node) return false;
         if (node->getId() == syncNodeID) return true;
         Node* parent = node->getParent();
-        return checkAncestor(parent);
+        if (detectCycle(node, parent, depth)) return false;
+        return checkAncestor(parent,depth+1);
     };
 
     if (type->isNode()) {
         Node* node = dynamic_cast<Node*>(fct);
         if (!node) return false;
-        return checkAncestor(node);
+        return checkAncestor(node, 0);
     }
 
     if (type->isNodeCore()) {
         NodeCore* core = dynamic_cast<NodeCore*>(fct);
         if (!core) return false;
         for (auto node : core->getParents())
-            if (checkAncestor(dynamic_cast<Node*>(node))) return true;
+            if (checkAncestor(dynamic_cast<Node*>(node), 0)) return true;
         return false;
     }
 
@@ -463,7 +470,7 @@ void VRSyncNode::printRegistredContainers() {
 
         if (fc) {
             cout << ", type: " << fc->getTypeName() << ", Refs: " << fc->getRefCount();
-            if (Node* node = dynamic_cast<Node*>(fc)) cout << ", N children: " << node->getNChildren();
+            if (Node* node = dynamic_cast<Node*>(fc)) cout << ", N children: " << node->getNChildren() << ", name: '" << ::getName(node) << "'";
         }
         cout << endl;
     }
@@ -511,6 +518,7 @@ void VRSyncNode::getAllSubContainersRec(FieldContainer* node, FieldContainer* pa
 
         for (UInt32 i=0; i<pnode->getNChildren(); i++) {
             Node* child = pnode->getChild(i);
+            if (child == pnode) continue;
             getAllSubContainersRec(child, node, res);
         }
     }
@@ -644,11 +652,11 @@ vector<UInt32> VRSyncNode::registerNode(Node* node) { // deprecated?
     NodeCoreMTRefPtr core = node->getCore();
     cout << "register node " << node->getId() << endl;
 
-    registerContainer(node, container.size());
+    registerContainer(node, container.size()+1);
     if (!core) cout << "no core" << core << endl;
     cout << "register core " << core->getId() << endl;
 
-    registerContainer(core, container.size());
+    registerContainer(core, container.size()+1);
     localRes.push_back(node->getId());
     localRes.push_back(core->getId());
     for (UInt32 i=0; i<node->getNChildren(); i++) {
@@ -885,7 +893,7 @@ void VRSyncNode::broadcast(string message) { // broadcast message to all remote 
 }
 
 UInt32 VRSyncNode::getContainerMappedID(UInt32 id) {
-    if (!container.count(id)) return -1;
+    if (!container.count(id)) return 0;
     return container[id];
 }
 
@@ -895,10 +903,18 @@ VRObjectPtr VRSyncNode::getVRObject(UInt32 id) {
 }
 
 void printNode(VRObjectPtr obj, string indent = "") {
+    if (!obj) { cout << "no object" << endl; return; }
+    Node* node = obj->getNode()->node;
+    if (!node) { cout << "no object node for " << obj->getName() << endl; return; }
+    NodeCore* core1 = node->getCore();
+    if (!obj->getCore()->core) { cout << "no valid object core for " << obj->getName() << endl; return; }
+    NodeCore* core2 = obj->getCore()->core;
     cout << indent << "obj " << obj->getName() << " (" << obj->getType() << ")";
-    cout << ", nodeID: " << obj->getNode()->node->getId();
-    cout << ", nde coreID: " << obj->getNode()->node->getCore()->getId() << ", nde coreType: " << obj->getNode()->node->getCore()->getTypeName();
-    cout << ", obj coreID: " << obj->getCore()->core->getId() << ", obj coreType: " << obj->getCore()->core->getTypeName();
+    cout << ", nodeID: " << node->getId();
+    if (core1) cout << ", nde coreID: " << core1->getId() << ", nde coreType: " << core1->getTypeName();
+    else       cout << ", no node core!" << endl;
+    if (core2) cout << ", obj coreID: " << core2->getId() << ", obj coreType: " << core2->getTypeName();
+    else       cout << ", no object core!" << endl;
     if (auto geo = dynamic_pointer_cast<VRGeometry>(obj)) cout << ", geoNodeID: " << geo->getNode()->node->getChild(0);
     cout << endl;
 
