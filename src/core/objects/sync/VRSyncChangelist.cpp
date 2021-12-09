@@ -340,7 +340,7 @@ FieldContainerRecPtr VRSyncChangelist::getOrCreate(VRSyncNodePtr syncNode, UInt3
         syncNode->registerContainer(fcPtr.get());
         id = fcPtr.get()->getId();
         remote->addRemoteMapping(id, sentry.localId);
-        //cout << " ---- create, new ID, remote: " << sentry.localId << ", local: " << id << endl;
+        cout << " ---- syncNode " << syncNode->getName() << ", remote: " << remote->getID() << ", create, new ID, remote: " << sentry.localId << ", local: " << id << endl;
 #ifndef WITHOUT_GTK
         VRConsoleWidget::get("Collaboration")->write( "  created new FC, remote ID "+toString(sentry.localId)+", local ID "+toString(id)+", type: "+fcPtr.get()->getTypeName()+"\n");
 #endif
@@ -909,8 +909,9 @@ void VRSyncChangelist::serialize_entry(VRSyncNodePtr syncNode, ContainerChangeEn
         fcPtr->copyToBin(handler, sentry.fieldMask); //calls handler->write
         sentry.len = handler.data.size();//UInt32(fcPtr->getBinSize(sentry.fieldMask));
 
-        //if (fcPtr->getId() == 3024 && sentry.uiEntryDesc == ContainerChangeEntry::Change)
-        //    debugBinary(fcPtr, handler);
+        /*if (sentry.uiEntryDesc == ContainerChangeEntry::Create) {
+            cout << " serialize create entry for fc: " << fcPtr->getId() << endl;
+        }*/
 
         vector<UInt32> children;
         if (factory->findType(sentry.fcTypeID)->isNode()) children = getFCChildren(fcPtr, sentry.fieldMask);
