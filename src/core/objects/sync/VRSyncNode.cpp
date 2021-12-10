@@ -135,14 +135,15 @@ void VRSyncNode::accTCPConnection(string msg, VRSyncConnectionWeakPtr weakRemote
     VRConsoleWidget::get("Collaboration")->write( name+": got tcp client acc, "+msg+"\n");
 #endif
 
-    if (msg == "accConnect|1") {
-        remote->send("selfmap|"+UUID+"|"+toString(selfNodeID)+"|"+toString(selfNameID)+"|"+toString(selfCoreID));
-        remote->send("accConnect|2");
-    }
+    cout << " syncNode " << getName() << " accTCPConnection (" << msg << ") from " << remote->getID() << endl;
+
+    if (msg == "accConnect|1") remote->send("accConnect|2");
+    remote->send("selfmap|"+UUID+"|"+toString(selfNodeID)+"|"+toString(selfNameID)+"|"+toString(selfCoreID));
+
+    sendTypes(weakRemote);
 
     if (msg == "accConnect|2") {
-        sendTypes(weakRemote);
-        cout << " syncNode " << getName() << " accTCPConnection (" << msg << ") from " << remote->getID() << ", reqInitState!" << endl;
+        cout << " --> reqInitState!" << endl;
         remote->send("reqInitState|");
     }
 }

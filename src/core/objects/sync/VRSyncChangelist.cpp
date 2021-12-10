@@ -809,9 +809,14 @@ vector<UInt32> VRSyncChangelist::getFCChildren(FieldContainer* fcPtr, BitVector 
 }
 
 bool VRSyncChangelist::filterFieldMask(VRSyncNodePtr syncNode, FieldContainer* fc, SerialEntry& sentry) {
-    if (sentry.localId == syncNode->getSyncNodeID()) return false; // dismiss entry
+    //if (sentry.localId == syncNode->getSyncNodeID()) return false; // dismiss entry
     if (sentry.localId == syncNode->getSyncNameID()) return false; // dismiss entry
     if (sentry.localId == syncNode->getSyncCoreID()) return false; // dismiss entry
+
+    if (sentry.localId == syncNode->getSyncNodeID()) { // check for sync node ID
+        sentry.fieldMask &= ~Node::ParentFieldMask; // remove parent field change!
+        sentry.fieldMask &= ~Node::CoreFieldMask; // remove core field change!
+    }
 
     if (dynamic_cast<Node*>(fc)) { // ignore all changes to children array
         sentry.fieldMask &= ~Node::ChildrenFieldMask;
