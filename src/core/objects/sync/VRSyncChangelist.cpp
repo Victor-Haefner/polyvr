@@ -548,18 +548,33 @@ void VRSyncChangelist::handleGenericChange(VRSyncNodePtr syncNode, FieldContaine
     StringAttributeMap* attachment = dynamic_cast<StringAttributeMap*>(fcPtr.get());
     if (attachment) {
         auto pickable = attachment->getAttribute("pickable");
-        Node* attachmentNode = dynamic_cast<Node*>(attachment->getParents(0));
-        if (attachmentNode) {
-            auto obj = syncNode->getVRObject(attachmentNode->getCore()->getId());
-            if (obj) {
-                bool b = (pickable == "yes");
+        if (attachment->getMFParents()->size() > 0) {
+            Node* attachmentNode = dynamic_cast<Node*>(attachment->getParents(0));
+            if (attachmentNode) {
+                auto obj = syncNode->getVRObject(attachmentNode->getCore()->getId());
+                if (obj) {
+                    bool b = (pickable == "yes");
 #ifndef WITHOUT_GTK
-                VRConsoleWidget::get("Collaboration")->write( " handleGenericChange: "+obj->getName()+" is pickable? "+pickable+"\n");
+                    VRConsoleWidget::get("Collaboration")->write( " handleGenericChange: "+obj->getName()+" is pickable? "+pickable+"\n");
 #endif
-                obj->setPickable(b, false);
+                    obj->setPickable(b, false);
+                }
             }
         }
     }
+}
+
+void VRSyncChangelist::handleDestructed(VRSyncNodePtr syncNode, FieldContainerRecPtr fcPtr, SerialEntry& sentry) {
+    cout << " VRSyncChangelist::handleDestructed " << fcPtr->getId() << " refCount: " << fcPtr->getRefCount() << endl;
+
+    if (!fcPtr->getType().isNode()) return;
+    NodeRecPtr node = dynamic_pointer_cast<Node>(fcPtr);
+    string nName = getName(node) ? getName(node) : "unnamed";
+
+    Node* parent = node->getParent();
+    cout << " -----------x-x-x-- destructed node '" << nName << "', parent: " << getName(parent) << endl;
+    if (parent) parent->subChild(node);
+    // TODO: remove all traces of node, especially the ID mappings in remotes
 }
 
 void VRSyncChangelist::handleRemoteEntries(VRSyncNodePtr syncNode, vector<SerialEntry>& entries, map<UInt32, vector<UInt32>>& parentToChildren, map<UInt32, vector<unsigned char>>& fcData, VRSyncConnectionWeakPtr weakRemote) {
@@ -567,6 +582,7 @@ void VRSyncChangelist::handleRemoteEntries(VRSyncNodePtr syncNode, vector<Serial
     if (!remote) return;
 
     for (auto sentry : entries) {
+
         //cout << "deserialize > > > sentry: " << sentry.localId << " " << sentry.fieldMask << " " << sentry.len << " desc " << sentry.uiEntryDesc << " syncID " << sentry.syncNodeID << " at pos " << pos << endl;
 
         //sync of initial syncNode container
@@ -599,6 +615,10 @@ void VRSyncChangelist::handleRemoteEntries(VRSyncNodePtr syncNode, vector<Serial
         if (fcPtr == nullptr) {
             cout << " -- WARNING in handleRemoteEntries, no container found with local id " << id << ", remote ID " << sentry.localId << endl;
             continue;
+        }
+
+        if (sentry.uiEntryDesc == ContainerChangeEntry::SubReference && sentry.fcTypeID == 666) {
+            handleDestructed(syncNode, fcPtr, sentry);
         }
 
         if (sentry.uiEntryDesc == ContainerChangeEntry::Change) { //if its a node change, update child info has changed. TODO: check only if children info has changed
@@ -675,7 +695,7 @@ void VRSyncChangelist::deserializeEntries(vector<unsigned char>& data, vector<Se
             FCdata.insert(FCdata.end(), CLdata.begin()+pos, CLdata.begin()+pos+sentry.len);
         }
 #ifndef WITHOUT_GTK
-	else { VRConsoleWidget::get("Collaboration")->write( " Error in deserializing change entries, data length is -1\n", "red" ); }
+        else { VRConsoleWidget::get("Collaboration")->write( " Error in deserializing change entries, data length is -1\n", "red" ); }
 #endif
         pos += sentry.len;
 
@@ -898,36 +918,42 @@ bool VRSyncChangelist::filterFieldMask(VRSyncNodePtr syncNode, FieldContainer* f
 void VRSyncChangelist::serialize_entry(VRSyncNodePtr syncNode, ContainerChangeEntry* entry, vector<unsigned char>& data) {
     FieldContainerFactoryBase* factory = FieldContainerFactory::the();
     FieldContainer* fcPtr = factory->getContainer(entry->uiContainerId);
+
+    if (!fcPtr && entry->uiEntryDesc == ContainerChangeEntry::SubReference) { // delete field container event
+        SerialEntry sentry;
+        sentry.localId = entry->uiContainerId;
+        sentry.fieldMask = entry->whichField;
+        sentry.uiEntryDesc = entry->uiEntryDesc;
+        sentry.fcTypeID = 666;
+        data.insert(data.end(), (unsigned char*)&sentry, (unsigned char*)&sentry + sizeof(SerialEntry));
+        cout << " VRSyncChangelist::serialize_entry send destroy " << sentry.localId << endl;
+        // TODO: delete ID from remotes mappings and syncnode container
+    }
+
     if (fcPtr) {
         SerialEntry sentry;
         sentry.localId = entry->uiContainerId;
         sentry.fieldMask = entry->whichField;
         sentry.uiEntryDesc = entry->uiEntryDesc;
-        sentry.fcTypeID = fcPtr->getTypeId();
-
-
-        //VRConsoleWidget::get("Collaboration")->write( " Serialize entry: "+toString(entry->uiContainerId)+"/"+toString(syncNodeID)+" "+toString(entry->whichField)+"\n");
-
-        if (!filterFieldMask(syncNode, fcPtr, sentry)) return;
 
         ourBinaryDataHandler handler;
-        fcPtr->copyToBin(handler, sentry.fieldMask); //calls handler->write
-        sentry.len = handler.data.size();//UInt32(fcPtr->getBinSize(sentry.fieldMask));
-
-        /*if (sentry.uiEntryDesc == ContainerChangeEntry::Create) {
-            cout << " serialize create entry for fc: " << fcPtr->getId() << endl;
-        }*/
-
         vector<UInt32> children;
-        if (factory->findType(sentry.fcTypeID)->isNode()) children = getFCChildren(fcPtr, sentry.fieldMask);
-        sentry.cplen = children.size();
 
-        if (factory->findType(sentry.fcTypeID)->isNode()) {
-            Node* node = dynamic_cast<Node*>(fcPtr);
-            sentry.coreID = node->getCore()->getId();
-//            if (sentry.fieldMask & Node::CoreFieldMask) { // node core changed
-//                sentry.coreID = node->getCore()->getId();
-//            }
+        if (fcPtr) {
+            sentry.fcTypeID = fcPtr->getTypeId();
+
+            if (!filterFieldMask(syncNode, fcPtr, sentry)) return;
+
+            fcPtr->copyToBin(handler, sentry.fieldMask); //calls handler->write
+            sentry.len = handler.data.size();
+
+            if (factory->findType(sentry.fcTypeID)->isNode()) {
+                children = getFCChildren(fcPtr, sentry.fieldMask);
+                sentry.cplen = children.size();
+
+                Node* node = dynamic_cast<Node*>(fcPtr);
+                sentry.coreID = node->getCore()->getId();
+            }
         }
 
         data.insert(data.end(), (unsigned char*)&sentry, (unsigned char*)&sentry + sizeof(SerialEntry));
