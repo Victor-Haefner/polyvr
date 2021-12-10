@@ -3,6 +3,7 @@
 #include "core/networking/tcp/VRTCPClient.h"
 #include "core/objects/OSGTransform.h"
 #include "core/objects/OSGObject.h"
+#include "core/scene/VRScene.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRTimer.h"
 
@@ -130,7 +131,12 @@ void VRSyncConnection::connect() {
     //if (!result) cout << "VRSyncConnection, Failed to open websocket to " << uri << endl;
 }
 
-bool VRSyncConnection::send(string message) {
+bool VRSyncConnection::send(string message, int frameDelay) {
+    if (frameDelay > 0) {
+        VRScene::getCurrent()->queueJob( VRUpdateCb::create("sync send", bind(&VRSyncConnection::send, this, message, frameDelay-1) ) );
+        return 1;
+    }
+
     timer->reset();
     if (!client) {
         cout << "Error in VRSyncConnection::send, failed! no client.. tried to send " << message << endl;

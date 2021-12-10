@@ -52,7 +52,7 @@ class VRSyncConnection {
         static VRSyncConnectionPtr create(VRTCPClientPtr client, string localUri);
 
         void connect();
-        bool send(string message);
+        bool send(string message, int frameDelay = 0);
         void startInterface(int port, VRSyncNodePtr snode);
         void keepAlive();
 

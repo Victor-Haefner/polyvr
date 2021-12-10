@@ -124,7 +124,7 @@ string VRSyncNode::addTCPClient(VRTCPClientPtr client) {
 #ifndef WITHOUT_GTK
     VRConsoleWidget::get("Collaboration")->write( name+": add tcp client connected to "+uri+", state is "+toString(client->connected())+"\n");
 #endif
-    remote->send("accConnect|1");
+    remote->send("accConnect|1", 1); // delay one frame, when started locally, syncnodes may not be setup before receiving accConnect1
     return uri;
 }
 
