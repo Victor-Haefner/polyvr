@@ -340,7 +340,7 @@ FieldContainerRecPtr VRSyncChangelist::getOrCreate(VRSyncNodePtr syncNode, UInt3
         syncNode->registerContainer(fcPtr.get());
         id = fcPtr.get()->getId();
         remote->addRemoteMapping(id, sentry.localId);
-        cout << " ---- syncNode " << syncNode->getName() << ", remote: " << remote->getID() << ", create, new ID, remote: " << sentry.localId << ", local: " << id << endl;
+        cout << " ---- syncNode " << syncNode->getName() << ", create, new ID, remote: " << sentry.localId << ", local: " << id << ", remoteNode: " << remote->getID() << endl;
 #ifndef WITHOUT_GTK
         VRConsoleWidget::get("Collaboration")->write( "  created new FC, remote ID "+toString(sentry.localId)+", local ID "+toString(id)+", type: "+fcPtr.get()->getTypeName()+"\n");
 #endif
@@ -993,12 +993,14 @@ void VRSyncChangelist::sendSceneState(VRSyncNodePtr syncNode, VRSyncConnectionWe
     }
 
 #ifndef WITHOUT_GTK
-    VRConsoleWidget::get("Collaboration")->write( " Send scene state to"+remote->getID()+"\n");
+    VRConsoleWidget::get("Collaboration")->write( " Send scene state to "+remote->getID()+"\n");
 #endif
+
     auto fullState = ChangeList::create();
     fullState->fillFromCurrentState();
     auto localChanges = filterChangeList(syncNode, fullState);
 
+    cout << " syncNode: " << syncNode->getName() << ", Send scene state to "+remote->getID() << ", created: " << localChanges->getNumCreated() << endl;
     string data = serialize(syncNode, localChanges);
     remote->send(data);
     remote->send("changelistEnd|");
