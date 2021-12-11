@@ -367,6 +367,7 @@ void VRSyncNode::gatherLeafs(VRObjectPtr parent, vector<pair<Node*, VRObjectPtr>
     }
 
     // check if transform core and obj are mapped
+    //if (!nodeToVRObject.count(pNode->getId())) nodeToVRObject[pNode->getId()] = parent; // Warning! this induces constant changes, but why?
     if (c2 && !nodeToVRObject.count(c2->getId())) nodeToVRObject[c2->getId()] = parent;
 
     for (UInt32 i=0; i<pNode->getNChildren(); i++) {

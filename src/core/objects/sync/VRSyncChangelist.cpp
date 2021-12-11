@@ -249,6 +249,14 @@ OSGChangeList* VRSyncChangelist::filterChangeList(VRSyncNodePtr syncNode, Change
         ContainerChangeEntry* entry = *it;
         UInt32 id = entry->uiContainerId;
 
+        if (entry->uiEntryDesc == ContainerChangeEntry::SubReference) {
+            auto obj = syncNode->getVRObject(entry->uiContainerId);
+            cout << " filterChangeList subRef " << entry->uiContainerId;
+            if (obj) cout << ", obj " << obj->getName();
+            else cout << " no obj";
+            cout << endl;
+        }
+
         for (auto rID : syncNode->getRemotes())
             if (auto remote = syncNode->getRemote(rID))
                 if (remote->isRemoteChange(id)) continue;
@@ -567,13 +575,34 @@ void VRSyncChangelist::handleGenericChange(VRSyncNodePtr syncNode, FieldContaine
 void VRSyncChangelist::handleDestructed(VRSyncNodePtr syncNode, FieldContainerRecPtr fcPtr, SerialEntry& sentry) {
     cout << " VRSyncChangelist::handleDestructed " << fcPtr->getId() << " refCount: " << fcPtr->getRefCount() << endl;
 
-    if (!fcPtr->getType().isNode()) return;
+    if (!fcPtr->getType().isNode()) {
+        cout << "  fc not a node! ignore destruction" << endl;
+        return;
+    }
+
     NodeRecPtr node = dynamic_pointer_cast<Node>(fcPtr);
     string nName = getName(node) ? getName(node) : "unnamed";
 
-    Node* parent = node->getParent();
-    cout << " -----------x-x-x-- destructed node '" << nName << "', parent: " << getName(parent) << endl;
-    if (parent) parent->subChild(node);
+    //Node* parent = node->getParent();
+    //if (parent) parent->subChild(node);
+    //cout << " -----------x-x-x-- destructed node '" << nName << "', parent: " << getName(parent) << endl;
+
+    auto core = node->getCore();
+    if (core) {
+        VRObjectPtr obj = syncNode->getVRObject(core->getId());
+        if (obj) {
+            cout << " -----------x-x-x-- destructed node '" << nName << "', vr object: " << obj->getName() << endl;
+            obj->destroy();
+        } else {
+            cout << " node " << nName << " has no vr object, ignore destruction" << endl;
+            cout << "  VR Objects:" << endl;
+            for (auto fc : syncNode->getMappedFCs()) {
+                auto o = fc.second.lock();
+                cout << "    " << fc.first << " " << string(o ? o->getName() : "0") << endl;
+            }
+        }
+    }
+
     // TODO: remove all traces of node, especially the ID mappings in remotes
 }
 
@@ -583,7 +612,7 @@ void VRSyncChangelist::handleRemoteEntries(VRSyncNodePtr syncNode, vector<Serial
 
     for (auto sentry : entries) {
 
-        //cout << "deserialize > > > sentry: " << sentry.localId << " " << sentry.fieldMask << " " << sentry.len << " desc " << sentry.uiEntryDesc << " syncID " << sentry.syncNodeID << " at pos " << pos << endl;
+        cout << "deserialize > > > sentry: " << sentry.localId << " " << sentry.fieldMask << " " << sentry.len << " desc " << sentry.uiEntryDesc << " typeID " << sentry.fcTypeID << endl;
 
         //sync of initial syncNode container
         /*if (sentry.syncNodeID > 0 && sentry.syncNodeID <= 3) {
@@ -684,7 +713,7 @@ void VRSyncChangelist::deserializeEntries(vector<unsigned char>& data, vector<Se
     int Ncreated = 0;
 
     //deserialize and collect change and create entries
-    while (pos + sizeof(SerialEntry) < CLdata.size()) {
+    while (pos + sizeof(SerialEntry) <= CLdata.size()) {
         SerialEntry sentry = *((SerialEntry*)&CLdata[pos]);
         entries.push_back(sentry);
         if (sentry.uiEntryDesc == ContainerChangeEntry::Create) Ncreated++;
@@ -721,7 +750,7 @@ void VRSyncChangelist::deserializeEntries(vector<unsigned char>& data, vector<Se
 
 void VRSyncChangelist::deserializeAndApply(VRSyncNodePtr syncNode, VRSyncConnectionWeakPtr weakRemote) {
     if (CLdata.size() == 0) return;
-    bool verbose = false; //(CLdata.size() > 2);
+    bool verbose = true; //(CLdata.size() > 2);
     if (verbose) cout << endl << "> > >  " << syncNode->getName() << " VRSyncNode::deserializeAndApply(), received data size: " << CLdata.size() << endl;
     VRSyncNodeFieldContainerMapper mapper(syncNode.get(), weakRemote);
     FieldContainerFactoryBase* factory = FieldContainerFactory::the();
@@ -915,7 +944,7 @@ bool VRSyncChangelist::filterFieldMask(VRSyncNodePtr syncNode, FieldContainer* f
     return true;
 }
 
-void VRSyncChangelist::serialize_entry(VRSyncNodePtr syncNode, ContainerChangeEntry* entry, vector<unsigned char>& data) {
+void VRSyncChangelist::serialize_entry(VRSyncNodePtr syncNode, ContainerChangeEntry* entry, vector<unsigned char>& data, size_t& count) {
     FieldContainerFactoryBase* factory = FieldContainerFactory::the();
     FieldContainer* fcPtr = factory->getContainer(entry->uiContainerId);
 
@@ -927,6 +956,7 @@ void VRSyncChangelist::serialize_entry(VRSyncNodePtr syncNode, ContainerChangeEn
         sentry.fcTypeID = 666;
         data.insert(data.end(), (unsigned char*)&sentry, (unsigned char*)&sentry + sizeof(SerialEntry));
         cout << " VRSyncChangelist::serialize_entry send destroy " << sentry.localId << endl;
+        count++;
         // TODO: delete ID from remotes mappings and syncnode container
     }
 
@@ -956,8 +986,10 @@ void VRSyncChangelist::serialize_entry(VRSyncNodePtr syncNode, ContainerChangeEn
             }
         }
 
+        cout << " VRSyncChangelist::serialize_entry " << sentry.localId << endl;
         data.insert(data.end(), (unsigned char*)&sentry, (unsigned char*)&sentry + sizeof(SerialEntry));
         data.insert(data.end(), handler.data.begin(), handler.data.end());
+        count++;
 
         if (sentry.cplen > 0) data.insert(data.end(), (unsigned char*)&children[0], (unsigned char*)&children[0] + sizeof(UInt32)*sentry.cplen);
     }
@@ -970,20 +1002,20 @@ string VRSyncChangelist::serialize(VRSyncNodePtr syncNode, ChangeList* clist) {
 #endif
     }
 
-    bool verbose = false;
+    bool verbose = true;
     if (verbose) cout << "> > >  " << syncNode->getName() << " VRSyncNode::serialize()" << endl; //Debugging
 
     vector<unsigned char> data;
     size_t i = 0;
 
-    for (auto it = clist->beginCreated(); it != clist->endCreated(); it++, i++) {
+    for (auto it = clist->beginCreated(); it != clist->endCreated(); it++) {
         ContainerChangeEntry* entry = *it;
-        serialize_entry(syncNode, entry, data);
+        serialize_entry(syncNode, entry, data, i);
     }
 
-    for (auto it = clist->begin(); it != clist->end(); it++, i++) {
+    for (auto it = clist->begin(); it != clist->end(); it++) {
         ContainerChangeEntry* entry = *it;
-        serialize_entry(syncNode, entry, data);
+        serialize_entry(syncNode, entry, data, i);
     }
 
     if (verbose) cout << "serialized entries: " << i << endl; //Debugging

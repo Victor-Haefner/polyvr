@@ -39,7 +39,7 @@ class VRSyncChangelist {
 
         vector<UInt32> getFCChildren(FieldContainer* fcPtr, BitVector fieldMask);
         bool filterFieldMask(VRSyncNodePtr syncNode, FieldContainer* fc, SerialEntry& sentry);
-        void serialize_entry(VRSyncNodePtr syncNode, ContainerChangeEntry* entry, vector<unsigned char>& data);
+        void serialize_entry(VRSyncNodePtr syncNode, ContainerChangeEntry* entry, vector<unsigned char>& data, size_t& count);
         string serialize(VRSyncNodePtr syncNode, ChangeList* clist);
 
         void checkChildrenChange(FieldContainerRecPtr fcPtr, UInt32 fieldMask);
