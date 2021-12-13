@@ -199,8 +199,8 @@ void OSG::loadE57(string path, VRTransformPtr res, map<string, string> importOpt
 
             auto pushPoint = [&](int j) {
                 Vec3d pos = Vec3d(x[j], y[j], z[j]);
-                Color3f col(r[j]/255.0, g[j]/255.0, b[j]/255.0);
-                pointcloud->getOctree()->add(pos, new Color3f(col), -1, true, 1e5);
+                Color3ub col(r[j], g[j], b[j]);
+                pointcloud->addPoint(pos, col);
             };
 
             CompressedVectorReader reader = points.reader(destBuffers);
@@ -351,8 +351,11 @@ void OSG::loadPCB(string path, VRTransformPtr res, map<string, string> importOpt
     progress->reset();
 
     bool hasCol = contains(h1, "r");
+    bool hasSpl = contains(h1, "u");
     if (hasCol) cout << "   scan has colors\n";
     else cout << "   scan has no colors\n";
+    if (hasSpl) cout << "   scan has splats\n";
+    else cout << "   scan has no splats\n";
 
     auto pointcloud = VRPointCloud::create("pointcloud");
     pointcloud->applySettings(importOptions);
@@ -362,8 +365,9 @@ void OSG::loadPCB(string path, VRTransformPtr res, map<string, string> importOpt
     int Nskipped = 0;
 
     int N = sizeof(Vec3d);
-    if (hasCol) N += sizeof(Vec3ub);
-    PntCol pnt;
+    if (hasCol) N = sizeof(VRPointCloud::PntCol);
+    if (hasSpl) N = sizeof(VRPointCloud::Splat);
+    VRPointCloud::Splat pnt;
 
     auto skip = [&](size_t Nskip) {
         size_t Nprocessed = min(Nskip, progress->left());
@@ -378,8 +382,9 @@ void OSG::loadPCB(string path, VRTransformPtr res, map<string, string> importOpt
     while (stream.read((char*)&pnt, N)) {
         Vec3d  pos = pnt.p;
         Vec3ub rgb = pnt.c;
-        Color3f col(rgb[0]/255.0, rgb[1]/255.0, rgb[2]/255.0);
-        pointcloud->addPoint(pos, col);
+        //Color3f col(rgb[0]/255.0, rgb[1]/255.0, rgb[2]/255.0);
+        if (hasSpl) pointcloud->addPoint(pos, pnt);
+        else pointcloud->addPoint(pos, rgb);
         progress->update( 1 );
         if (Nskip>0) skip(Nskip);
         if (bounds[1]>0)
@@ -429,8 +434,8 @@ void OSG::loadXYZ(string path, VRTransformPtr res, map<string, string> importOpt
                         Vec3d pos;
                         if (swapYZ) pos = Vec3d(vertex[0], vertex[2], -vertex[1]);
                         else pos = Vec3d(vertex[0], vertex[1], vertex[2]);
-                        Color3f col(vertex[3]/255.0, vertex[4]/255.0, vertex[5]/255.0);
-                        pointcloud->getOctree()->add(pos, new Color3f(col), -1, true, 1e5);
+                        Color3ub col(vertex[3], vertex[4], vertex[5]);
+                        pointcloud->addPoint(pos, col);
                         Nskipped = 0;
                     }
                 }
@@ -460,8 +465,8 @@ void OSG::loadXYZ(string path, VRTransformPtr res, map<string, string> importOpt
                         Vec3d pos;
                         if (swapYZ) pos = Vec3d(vertex[0], vertex[2], -vertex[1]);
                         else pos = Vec3d(vertex[0], vertex[1], vertex[2]);
-                        Color3f col(0.0, 0.0, 0.0);
-                        pointcloud->getOctree()->add(pos, new Color3f(col), -1, true, 1e5);
+                        Color3ub col(0, 0, 0);
+                        pointcloud->addPoint(pos, col);
                         Nskipped = 0;
                     }
                 }
@@ -500,7 +505,7 @@ void OSG::writeE57(VRPointCloudPtr pcloud, string path) {
         for (int i=0; i<data.size(); i++) {
             Pnt3d P = data.getPosition(i);
             M.mult(P, P);
-            Color3f C = data.getColor3(i);
+            Color3ub C = data.getColor3ub(i);
             cartesianX.push_back(P[0]);
             cartesianY.push_back(P[1]);
             cartesianZ.push_back(P[2]);

@@ -2,6 +2,7 @@
 #include "VRPLY.h"
 #include "GLTF/GLTF.h"
 #include "E57/E57.h"
+#include "COLLADA/VRCOLLADA.h"
 #ifndef WITHOUT_DWG
 #include "VRDWG.h"
 #endif
@@ -22,7 +23,7 @@ VRExport::VRExport() {}
 
 VRExport* VRExport::get() { static VRExport* s = new VRExport(); return s; }
 
-void VRExport::write(VRObjectPtr obj, string path) {
+void VRExport::write(VRObjectPtr obj, string path, map<string, string> options) {
     if (!obj) return;
 
     string ext = getFileExtension(path);
@@ -37,5 +38,9 @@ void VRExport::write(VRObjectPtr obj, string path) {
     if (ext == ".wrl" || ext == ".wrz" || ext == ".obj" || ext == ".osb" || ext == ".osg")
         SceneFileHandler::the()->write(obj->getNode()->node, path.c_str());
 
-    //SceneFileHandler::the()->print();
+    if (ext == ".dae") { writeCollada(obj, path, options); }
 }
+
+
+
+

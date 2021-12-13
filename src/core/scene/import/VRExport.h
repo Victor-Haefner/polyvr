@@ -3,6 +3,8 @@
 
 #include <OpenSG/OSGConfig.h>
 #include <string>
+#include <map>
+
 #include "core/objects/VRObjectFwd.h"
 
 using namespace std;
@@ -15,7 +17,7 @@ class VRExport {
     public:
         static VRExport* get();
 
-        void write(VRObjectPtr obj, string path);
+        void write(VRObjectPtr obj, string path, map<string, string> options);
 };
 
 OSG_END_NAMESPACE;

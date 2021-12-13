@@ -35,7 +35,9 @@ VRObject::VRObject(string _name) {
 
     setName(_name);
 
-    osg = OSGObject::create( makeNodeFor( Group::create() ) );
+    auto group = Group::create();
+    osg = OSGObject::create( makeNodeFor( group ) );
+    core = OSGCore::create( group );
     OSG::setName(osg->node, name);
     type = "Object";
 
@@ -738,9 +740,9 @@ bool VRObject::isVisible(string mode, bool recursive) {
     return getBit(visibleMask, b);
 }
 
-void VRObject::exportToFile(string path) { // may crash due to strange charachters in object names
+void VRObject::exportToFile(string path, map<string, string> options) { // may crash due to strange charachters in object names
     if (!getNode()) return;
-    VRExport::get()->write( ptr(), path );
+    VRExport::get()->write( ptr(), path, options );
 }
 
 void VRObject::setVisible(bool b, string mode) {

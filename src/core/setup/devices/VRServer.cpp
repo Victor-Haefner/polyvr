@@ -23,7 +23,7 @@ VRServer::VRServer(int port) : VRDevice("server") {
     addBeacon();
 #ifndef __EMSCRIPTEN__
     soc = VRSceneManager::get()->getSocket(port);
-    this->port = port;
+    this->port = soc->getPort();
     cb = new VRHTTP_cb( "Mobile_server_callback", bind(&VRServer::callback, this, placeholders::_1) );
     soc->setHTTPCallback(cb);
     soc->setType("http receive");
@@ -107,7 +107,7 @@ void VRServer::clearSignals() {
 }
 
 void VRServer::setPort(int port) { this->port = port; if (soc) soc->setPort(port); }
-int VRServer::getPort() { return port; }
+int VRServer::getPort() { return soc ? soc->getPort() : port; }
 
 void VRServer::addCallback(string path, VRServerCbPtr cb) {
     callbacks[path] = cb;

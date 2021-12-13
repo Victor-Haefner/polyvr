@@ -6,7 +6,9 @@
 #include "core/objects/object/VRObject.h"
 #include "core/scene/VRScene.h"
 #include "core/scene/VRSceneManager.h"
+#include "core/setup/VRSetup.h"
 #include "core/setup/devices/VRDevice.h"
+#include "core/setup/devices/VRServer.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRLogger.h"
 #include "core/utils/system/VRSystem.h"
@@ -16,6 +18,8 @@
 #include <curl/curl.h> // TODO: windows port
 #endif
 #include <stdint.h>
+
+#include <regex>
 
 using namespace OSG;
 
@@ -76,8 +80,9 @@ class HTTPServer {
         //struct MHD_Daemon* server = 0;
         struct mg_mgr* server = 0;
         struct mg_bind_opts bind_opts;
-        struct mg_connection *nc;
-        const char *err_str;
+        struct mg_connection* nc = 0;
+        const char* err_str = 0;
+        int port = 0;
         int threadID = 0;
         HTTP_args* data = 0;
 
@@ -94,14 +99,22 @@ class HTTPServer {
             delete data;
         }
 
-        bool initServer(VRHTTP_cb* fkt, int port) {
+        bool initServer(VRHTTP_cb* fkt, int p) {
+            port = p;
             data->cb = fkt;
             server = new mg_mgr();
             mg_mgr_init(server, data);
             //server = mg_create_server(data, server_answer_to_connection_m);
             memset(&bind_opts, 0, sizeof(bind_opts));
             bind_opts.error_string = &err_str;
-            nc = mg_bind_opt(server, toString(port).c_str(), server_answer_to_connection_m, bind_opts);
+            for (int i=0; i<10; i++) {
+                nc = mg_bind_opt(server, toString(port+i).c_str(), server_answer_to_connection_m, bind_opts);
+                if (!nc) cout << "Warning in initServer: could not bind to " << server << ":" << port+i << ", increment port to " << port+i << endl;
+                else {
+                    port = port+i;
+                    break;
+                }
+            }
             if (!nc) { cout << "Warning in initServer: could not bind to " << server << ":" << port << endl; return false; }
             mg_set_protocol_http_websocket(nc);
             //s_http_server_opts.document_root = ".";
@@ -287,6 +300,11 @@ static void server_answer_to_connection_m(struct mg_connection *conn, int ev, vo
         if (sad->path != "") {
             if (sad->pages->count(sad->path)) { // return local site
                 string spage = (*sad->pages)[sad->path];
+                int port_server1 = 5500;
+                if (auto setup = VRSetup::getCurrent())
+                    if (auto server = dynamic_pointer_cast<VRServer>(setup->getDevice("server1")))
+                        port_server1 = server->getPort();
+                spage = std::regex_replace(spage, std::regex("\\$PORT_server1\\$"), toString(port_server1));
                 sendString(spage);
                 if (v) VRLog::log("net", "Send local site\n");
             } else if(sad->callbacks->count(sad->path)) { // return callback
@@ -591,7 +609,10 @@ void VRSocket::update() {
     sig->setName("on_" + name + "_" + type);
 
     if (type == "tcpip receive") if (tcp_fkt.lock()) initServer(TCP, port);
-    if (type == "http receive" && http_serv && http_fkt) http_serv->initServer(http_fkt, port);
+    if (type == "http receive" && http_serv && http_fkt) {
+        http_serv->initServer(http_fkt, port);
+        port = http_serv->port;
+    }
 }
 
 bool VRSocket::isClient() {

@@ -393,7 +393,7 @@ void setNotebookPage(string nb, int p) {
     gtk_notebook_set_current_page(nbk, p);
 }
 
-OSG::VRTexturePtr takeSnapshot() {
+OSG::VRTexturePtr takeSnapshot(bool swapY) {
     GtkWidget* drawArea = VRGuiBuilder::get()->get_widget("glarea");
     GdkWindow* src = gtk_widget_get_window(drawArea); // 24 bits per pixel ( src->get_depth() )
 
@@ -405,6 +405,7 @@ OSG::VRTexturePtr takeSnapshot() {
     w -= w%4; h -= h%4;
 
     GdkPixbuf* pxb = gdk_pixbuf_get_from_window(src, a.x,a.y,w,h);
+    if (swapY) pxb = gdk_pixbuf_flip(pxb, false);
 
     OSG::ImageMTRecPtr res = OSG::Image::create();
     //Image::set(pixFormat, width, height, depth, mipmapcount, framecount, framedelay, data, type, aloc, sidecount);

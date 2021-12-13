@@ -361,8 +361,10 @@ bool VRTerrain::createMultiGrid(VRCameraPtr cam, double res) {
         if (pla) {
             double tcx = texel[0]*0.5 + te*((heightsRect[2]-heightsRect[0])-texel[0]);
             double tcy = texel[1]*0.5 + tn*((heightsRect[3]-heightsRect[1])-texel[1]);
-            data.pushTexCoord (Vec2d(heightsRect[0]+tcx, 1.0 - (heightsRect[1]+tcy))); // depth
-            data.pushTexCoord2(Vec2d(satRect[0]+te*(satRect[2]-satRect[0]), 1.0 - (satRect[1]+tn*(satRect[3]-satRect[1]))));   // sat
+            Vec2d tc0 = Vec2d(heightsRect[0]+tcx, 1.0 - (heightsRect[1]+tcy)); // depth
+            Vec2d tc1 = Vec2d(satRect[0]+te*(satRect[2]-satRect[0]), 1.0 - (satRect[1]+tn*(satRect[3]-satRect[1]))); // sat
+            data.pushTexCoord(tc0, 0);
+            data.pushTexCoord(tc1, 1);
             auto pose = pla->fromLatLongPose(N, E);
             pose = pSectorInv->multRight(pose);
             data.setPos(i, pose->pos());
@@ -370,8 +372,8 @@ bool VRTerrain::createMultiGrid(VRCameraPtr cam, double res) {
         } else {
             double tcx = texel[0]*0.5 + tn*((heightsRect[2]-heightsRect[0])-texel[0]);
             double tcy = texel[1]*0.5 + te*((heightsRect[3]-heightsRect[1])-texel[1]);
-            data.pushTexCoord (Vec2d(heightsRect[0]+tcx, 1.0 - (heightsRect[1]+tcy))); // depth
-            data.pushTexCoord2(Vec2d(satRect[0]+tn*(satRect[2]-satRect[0]), 1.0 - (satRect[1]+te*(satRect[3]-satRect[1]))));   // sat
+            data.pushTexCoord(Vec2d(heightsRect[0]+tcx, 1.0 - (heightsRect[1]+tcy)), 0); // depth
+            data.pushTexCoord(Vec2d(satRect[0]+tn*(satRect[2]-satRect[0]), 1.0 - (satRect[1]+te*(satRect[3]-satRect[1]))), 1);   // sat
         }
     }
 

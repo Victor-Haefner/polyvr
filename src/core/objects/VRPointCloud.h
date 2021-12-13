@@ -3,10 +3,33 @@
 
 #include "core/objects/VRTransform.h"
 #include <OpenSG/OSGColor.h>
+#include <OpenSG/OSGVector.h>
 
 OSG_BEGIN_NAMESPACE;
 
 class VRPointCloud : public VRTransform {
+    public:
+        enum POINTTYPE {
+            NONE,
+            COLOR,
+            SPLAT
+        };
+
+        struct Splat {
+            Vec3d p;
+            Color3ub c;
+            Vec2ub v1;
+            Vec2ub v2;
+            char w;
+        };
+
+        struct PntCol {
+            Vec3d p;
+            Color3ub c;
+        };
+
+        POINTTYPE pointType = NONE;
+
     private:
         VRMaterialPtr mat;
         OctreePtr octree;
@@ -14,6 +37,10 @@ class VRPointCloud : public VRTransform {
         bool keepOctree = 0;
         vector<int> downsamplingRate = {1};
         vector<float> lodDistances;
+
+        static string splatVP;
+        static string splatFP;
+        static string splatGP;
 
     public:
         VRPointCloud(string name = "pointcloud");
@@ -25,13 +52,15 @@ class VRPointCloud : public VRTransform {
         void addLevel(float distance, int downsampling);
         void setupLODs();
 
-        void setupMaterial(bool lit, int pointsize);
+        void setupMaterial(bool lit, int pointsize, bool doSplat = false, float splatModifier = 0.001);
         VRMaterialPtr getMaterial();
 
-        void addPoint(Vec3d p, Color3f c);
+        void addPoint(Vec3d p, Color3ub c);
+        void addPoint(Vec3d p, Splat c);
 
         void convert(string pathIn);
         void genTestFile(string path, size_t N, bool doColor);
+        void genTestFile2(string path, size_t N, bool doColor);
         void externalSort(string path, size_t Nchunks, double binSize);
 
         OctreePtr getOctree();

@@ -439,7 +439,7 @@ string hudSite = TEMPLATE(
 \t\t}\n
 \t</style>\n
 \t<script>\n
-\t\tvar websocket = new WebSocket('ws://localhost:5500');\n
+\t\tvar websocket = new WebSocket('ws://localhost:$PORT_server1$');\n
 \t\twebsocket.onopen = function() { send('register|hud'); };\n
 \t\twebsocket.onerror = function(e) {};\n
 \t\twebsocket.onmessage = function(m) { if(m.data) handle(m.data); };\n
@@ -461,7 +461,8 @@ string hudInit = TEMPLATE(
 \tdef addHud(site,w,h,x,y,parent):\n
 \t\ts = VR.Sprite('site')\n
 \t\ts.setSize(w,h)\n
-\t\ts.webOpen('http://localhost:5500/'+site, 400, w/h)\n
+\t\tport = VR.find('server1').getPort()
+\t\ts.webOpen('http://localhost:'+str(port)+'/'+site, 400, w/h)\n
 \t\ts.setFrom([x,y,-2])\n
 \t\tparent.addChild(s)\n\n
 \tif hasattr(VR, 'hud'): VR.hud.destroy()\n

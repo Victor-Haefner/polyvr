@@ -5,6 +5,7 @@
 #include "core/utils/VRFunctionFwd.h"
 #include <OpenSG/OSGConfig.h>
 #include <gdk/gdk.h>
+#include <string>
 
 struct _GtkDialog;
 struct _GtkLabel;
@@ -25,6 +26,11 @@ class VRGuiRecWidget {
         void on_codec_changed();
         void on_bitrate_changed();
         void on_toggle_vsync();
+
+        std::string screenshots_path;
+        void onSCPathChanged();
+        void onSCTrigger();
+        void onSCChangeDir();
 
         void update();
         void buttonHandler(int i);

@@ -139,6 +139,7 @@ class VRGuiScripts {
         void focusScript(string name, int line, int column);
         void getLineFocus(int& line, int& column);
         void update();
+        void openHelp(string search = "");
         shared_ptr<VRGuiEditor> getEditor();
 };
 

@@ -607,11 +607,29 @@ void VRGuiBuilder::buildBaseUI() {
     gtk_window_set_transient_for(GTK_WINDOW(advanced_start), GTK_WINDOW(window1));
 
     cout << " build recorder dialog" << endl;
-    /* ---------- recorder ---------------------- */  // TODO: to test!
+    /* ---------- recorder ---------------------- */
+    // dialog
     auto recorder = addDialog("recorder");
     auto dialog_vbox15 = gtk_dialog_get_content_area(GTK_DIALOG(recorder));
     auto dialog_action_area15 = gtk_dialog_get_action_area(GTK_DIALOG(recorder));
+
+    // add screenshot ui
+    auto sc_Grid = addGrid("sc_Grid");
+    auto sc_spacer = addSpacer(20);
+    auto sc_label1 = addLabel("sc_label1", "Take Screenshot");
+    auto sc_path = addImgButton("sc_path", "gtk-directory");
+    auto sc_entry = addEntry("sc_entry");
+    auto sc_trigger = addButton("sc_trigger", "Take");
+    gtk_box_pack_start(GTK_BOX(dialog_vbox15), sc_label1, true, true, 5);
+    gtk_box_pack_start(GTK_BOX(dialog_vbox15), sc_Grid, true, true, 0);
+    gtk_box_pack_start(GTK_BOX(dialog_vbox15), sc_spacer, true, true, 5);
+    gtk_grid_attach(GTK_GRID(sc_Grid), sc_path, 0,0,1,1);
+    gtk_grid_attach(GTK_GRID(sc_Grid), sc_entry, 1,0,1,1);
+    gtk_grid_attach(GTK_GRID(sc_Grid), sc_trigger, 0,1,2,1);
+
+    // add recorder ui
     auto recGrid = addGrid("recGrid");
+    auto recLbl = addLabel("recLbl", "Record Video");
     auto label149 = addLabel("label149", "Idle");
     auto labelRes = addLabel("labelRes", "resolution:");
     auto label151 = addLabel("label151", "codec:");
@@ -620,20 +638,22 @@ void VRGuiBuilder::buildBaseUI() {
     auto resolutions = addCombobox("resolutions", "resList");
     auto doVSync = addCheckbutton("doVSyncCB", "VSync");
     auto entry27 = addEntry("entry27");
+    gtk_box_pack_start(GTK_BOX(dialog_vbox15), recLbl, true, true, 5);
     gtk_box_pack_start(GTK_BOX(dialog_vbox15), label149, true, true, 5);
     gtk_box_pack_start(GTK_BOX(dialog_vbox15), recGrid, true, true, 0);
     gtk_grid_attach(GTK_GRID(recGrid), labelRes, 0,0,1,1);
+    gtk_grid_attach(GTK_GRID(recGrid), doVSync, 2,0,1,1);
     gtk_grid_attach(GTK_GRID(recGrid), label151, 0,1,1,1);
     gtk_grid_attach(GTK_GRID(recGrid), label150, 0,2,1,1);
     gtk_grid_attach(GTK_GRID(recGrid), resolutions, 1,0,1,1);
     gtk_grid_attach(GTK_GRID(recGrid), codecs, 1,1,2,1);
     gtk_grid_attach(GTK_GRID(recGrid), entry27, 1,2,2,1);
-    gtk_grid_attach(GTK_GRID(recGrid), doVSync, 2,0,1,1);
     gtk_window_set_transient_for(GTK_WINDOW(recorder), GTK_WINDOW(window1));
-    gtk_widget_show_all(dialog_vbox15);
     gtk_label_set_xalign(GTK_LABEL(labelRes), 0);
     gtk_label_set_xalign(GTK_LABEL(label151), 0);
     gtk_label_set_xalign(GTK_LABEL(label150), 0);
+
+    gtk_widget_show_all(dialog_vbox15);
 
     cout << " build about dialog" << endl;
     /* ---------- about dialog ---------------------- */
@@ -1206,10 +1226,10 @@ void VRGuiBuilder::buildBaseUI() {
     auto toolbutton20 = addToolButton("toolbutton20", "gtk-indent", toolbar3, "New Group");
     auto toolbutton22 = addToolButton("toolbutton22", "gtk-open", toolbar3, "Import Script From Scene");
     auto toolbutton9 = addToolButton("toolbutton9", "gtk-delete", toolbar3, "Delete Script");
-    auto toolbutton7 = addToolButton("toolbutton7", "gtk-save", toolbar3, "Save Script");
-    auto toolbutton8 = addToolButton("toolbutton8", "gtk-execute", toolbar3, "Execute Script");
-    auto toolbutton23 = addToolButton("toolbutton23", "gtk-find", toolbar3, "Search");
-    auto toolbutton16 = addToolButton("toolbutton16", "gtk-help", toolbar3, "Documentation");
+    auto toolbutton7 = addToolButton("toolbutton7", "gtk-save", toolbar3, "Save Script (Ctrl+S)");
+    auto toolbutton8 = addToolButton("toolbutton8", "gtk-execute", toolbar3, "Execute Script (Ctrl+E)");
+    auto toolbutton23 = addToolButton("toolbutton23", "gtk-find", toolbar3, "Search (Ctrl+F)");
+    auto toolbutton16 = addToolButton("toolbutton16", "gtk-help", toolbar3, "Documentation (Ctrl+H)");
     auto toolbutton30 = addToolButton("toolbutton30", "", toolbar3_2, "Convert to C++");
     gtk_tool_button_set_label(GTK_TOOL_BUTTON(toolbutton30), "CPP");
     auto toggletoolbutton1 = addToggleToolButton("toggletoolbutton1", "gtk-sort-ascending", toolbar3, "Show Performance");

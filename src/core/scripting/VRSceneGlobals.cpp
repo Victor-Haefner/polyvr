@@ -304,8 +304,11 @@ PyObject* VRSceneGlobals::createPrimitive(VRSceneGlobals* self, PyObject *args, 
 PyObject* VRSceneGlobals::exportToFile(VRSceneGlobals* self, PyObject *args) {
     const char* path = "";
     VRPyObject* o;
-    if (! PyArg_ParseTuple(args, "Os", &o, &path)) return NULL;
-    VRExport::get()->write( o->objPtr, path );
+    PyObject* opts;
+    map<string, string> options;
+    if (! PyArg_ParseTuple(args, "Os|O", &o, &path, &opts)) return NULL;
+    toValue(opts, options);
+    VRExport::get()->write( o->objPtr, path, options );
     Py_RETURN_TRUE;
 }
 

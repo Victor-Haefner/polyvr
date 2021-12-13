@@ -2,12 +2,16 @@
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/geometry/VRGeoData.h"
+#include "core/objects/geometry/VRPrimitive.h"
 #include "core/objects/VRLod.h"
 #include "core/math/partitioning/Octree.h"
+#include "core/math/pose.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRProgress.h"
 #include "core/utils/system/VRSystem.h"
 #include "core/scene/import/E57/E57.h"
+
+#define GLSL(shader) #shader
 
 using namespace OSG;
 using namespace std;
@@ -22,9 +26,20 @@ VRPointCloud::~VRPointCloud() {}
 
 VRPointCloudPtr VRPointCloud::create(string name) { return VRPointCloudPtr( new VRPointCloud(name) ); }
 
-void VRPointCloud::setupMaterial(bool lit, int pointsize) {
+void VRPointCloud::setupMaterial(bool lit, int pointsize, bool doSplat, float splatModifier) {
     mat->setLit(lit);
     mat->setPointSize(pointsize);
+
+    if (doSplat) {
+        mat->setVertexShader(splatVP, "splatVP");
+        mat->setGeometryShader(splatGP, "splatGP");
+        mat->setFragmentShader(splatFP, "splatFP");
+        mat->setShaderParameter("splatModifier", splatModifier);
+    }
+
+    // TODO: add splatting option
+    //  - compute tangent space at each point
+    //  - compute density at each point
 }
 
 VRMaterialPtr VRPointCloud::getMaterial() { return mat; }
@@ -57,8 +72,16 @@ void VRPointCloud::addLevel(float distance, int downsampling) {
     lodDistances.push_back(distance);
 }
 
-void VRPointCloud::addPoint(Vec3d p, Color3f c) {
-    octree->add(p, new Color3f(c), -1, true, 1e5);
+void VRPointCloud::addPoint(Vec3d p, Splat c) {
+    if (pointType == NONE) pointType = SPLAT;
+    if (pointType != SPLAT) return;
+    octree->add(p, new Splat(c), -1, true, 1e5);
+}
+
+void VRPointCloud::addPoint(Vec3d p, Color3ub c) {
+    if (pointType == NONE) pointType = COLOR;
+    if (pointType != COLOR) return;
+    octree->add(p, new Color3ub(c), -1, true, 1e5);
 }
 
 void VRPointCloud::setupLODs() {
@@ -80,15 +103,24 @@ void VRPointCloud::setupLODs() {
             for (int i = 0; i < leaf->dataSize(); i+=downsamplingRate[lvl]) {
                 void* data = leaf->getData(i);
                 Vec3d pos = leaf->getPoint(i);
-                Color3f col = *((Color3f*)data);
-                chunk.pushVert(pos - center, Vec3d(0,1,0), col);
+                chunk.pushVert(pos - center, Vec3d(0,1,0));
+                if (pointType == COLOR) {
+                    Color3ub col = *((Color3ub*)data);
+                    chunk.pushColor(col);
+                } else if (pointType == SPLAT) {
+                    Splat splat = *((Splat*)data);
+                    chunk.pushColor(splat.c);
+                    chunk.pushTexCoord(Vec2d(splat.v1), 0);
+                    chunk.pushTexCoord(Vec2d(splat.v2), 1);
+                    chunk.pushTexCoord(Vec2d(splat.w,0), 2);
+                }
                 chunk.pushPoint();
 
             }
             if (chunk.size() > 0) chunk.apply( geo );
         }
 
-        if (!keepOctree) leaf->delContent<Color3f>();
+        if (!keepOctree) leaf->delContent<Color3ub>();
     }
 
     //addChild(octree->getVisualization());
@@ -103,10 +135,56 @@ void VRPointCloud::genTestFile(string path, size_t N, bool doColor) {
     genTestPC(path, N, doColor);
 }
 
-struct PntCol {
-    Vec3d p;
-    Vec3ub c;
-};
+void VRPointCloud::genTestFile2(string path, size_t N, bool doColor) {
+    auto sphere = VRGeometry::create("spherePC");
+    sphere->setPrimitive("Sphere 1 "+toString(N));
+    VRGeoData data(sphere);
+
+    ofstream stream(path);
+    stream << "x8y8z8";
+    if (doColor) stream << "r1g1b1";
+    stream << "u2v2s1"; // splatting data
+    stream << "\n" << toString(data.size()) << "\n0\n";
+
+    auto progress = VRProgress::create();
+    progress->setup("generate points ", data.size());
+    progress->reset();
+
+    Vec3d up(0,1,0);
+    Vec3d x(1,0,0);
+
+    cout << "gen PC sphere " << data.size() << endl;
+
+    auto toSpherical = [](Vec3d v) {
+        double a = acos(v[1]);
+        double b = atan2(v[2],v[0]) + Pi;
+        return Vec2ub(255.0*a/Pi, 255.0*b/(2*Pi));
+    };
+
+    for (int i=0; i<data.size(); i++) {
+        Vec3d P = Vec3d( data.getPosition(i) );
+        Vec3ub C = Vec3ub(255*abs(P[0]), 255*abs(P[1]), 255*abs(P[2]));
+
+        Vec3d n = data.getNormal(i);
+        Pose O(P, n);
+        O.makeUpOrthogonal();
+        Vec3d u = O.x();
+        Vec3d v = O.up();
+        Vec2ub U = toSpherical(u);
+        Vec2ub V = toSpherical(v);
+        char W = 46; // mm
+
+        stream.write((const char*)&P[0], sizeof(Vec3d));
+        if (doColor) stream.write((const char*)&C[0], sizeof(Vec3ub));
+        stream.write((const char*)&U[0], sizeof(Vec2ub));
+        stream.write((const char*)&V[0], sizeof(Vec2ub));
+        stream.write((const char*)&W, sizeof(char));
+
+        progress->update( 1 );
+    }
+
+    stream.close();
+}
 
 void VRPointCloud::externalSort(string path, size_t NchunkMax, double binSize) {
     ifstream stream(path);
@@ -254,7 +332,108 @@ void VRPointCloud::externalSort(string path, size_t NchunkMax, double binSize) {
     }
 }
 
+string VRPointCloud::splatFP =
+"#version 120\n"
+GLSL(
+varying vec4 Color;
+varying vec2 tcoords;
 
+void main( void ) {
+	float r = tcoords.x*tcoords.x+tcoords.y*tcoords.y;
+	if (r > 1.0) discard;
+	gl_FragColor = Color;
+}
+);
 
+string VRPointCloud::splatVP =
+"#version 120\n"
+GLSL(
+varying vec4 color;
+varying vec4 vertex;
+varying vec3 normal;
+varying vec4 tangentU;
+varying vec4 tangentV;
+varying mat4 mwp;
 
+attribute vec4 osg_Vertex;
+attribute vec4 osg_Normal;
+attribute vec4 osg_Color;
+attribute vec2 osg_MultiTexCoord0;
+attribute vec2 osg_MultiTexCoord1;
+attribute vec2 osg_MultiTexCoord2;
 
+uniform float splatModifier;
+
+vec4 vecFromAngles(vec2 ab) {
+	ab.x = ab.x/255.0*3.1416;
+	ab.y = ab.y/255.0*3.1416*2 + 3.1416;
+	return vec4(cos(ab.y)*sin(ab.x), cos(ab.x), sin(ab.y)*sin(ab.x), 0);
+}
+
+void main( void ) {
+    color = vec4(osg_Color.x/255.0, osg_Color.y/255.0, osg_Color.z/255.0, 1.0);
+    normal = osg_Normal.xyz;
+    vertex = osg_Vertex;
+
+    vec2 u = osg_MultiTexCoord0;
+    vec2 v = osg_MultiTexCoord1;
+    float size = osg_MultiTexCoord2.x*splatModifier; // mm
+	tangentU = vecFromAngles(u)*size;
+	tangentV = vecFromAngles(v)*size;
+    mwp = gl_ModelViewProjectionMatrix;
+    gl_Position = osg_Vertex;
+}
+);
+
+string VRPointCloud::splatGP =
+"#version 150\n"
+"#extension GL_EXT_geometry_shader4 : enable\n"
+GLSL(
+layout (points) in;
+layout (triangle_strip, max_vertices=6) out;
+
+uniform vec2 OSGViewportSize;
+
+in vec4 color[];
+in vec4 vertex[];
+in vec3 normal[];
+in vec4 tangentU[];
+in vec4 tangentV[];
+in mat4 mwp[];
+out vec4 Color;
+out vec2 tcoords;
+
+void emitVertex(in vec4 p, in vec2 tc) {
+	gl_Position = p;
+	tcoords = tc;
+	EmitVertex();
+}
+
+void emitQuad(in float s, in vec4 tc) {
+	vec4 p = vertex[0];
+
+	float a = OSGViewportSize.y/OSGViewportSize.x;
+
+	vec4 u = tangentU[0];
+	vec4 v = tangentV[0];
+
+	vec4 p1 = mwp[0]*(p -u -v);
+	vec4 p2 = mwp[0]*(p -u +v);
+	vec4 p3 = mwp[0]*(p +u +v);
+	vec4 p4 = mwp[0]*(p +u -v);
+
+	emitVertex(p1, vec2(-1,-1));
+	emitVertex(p2, vec2( 1,-1));
+	emitVertex(p3, vec2( 1, 1));
+	EndPrimitive();
+	emitVertex(p1, vec2(-1,-1));
+	emitVertex(p3, vec2( 1, 1));
+	emitVertex(p4, vec2(-1, 1));
+	EndPrimitive();
+}
+
+void main() {
+	Color = color[0];
+	emitQuad(0.13, vec4(0,1,0,1));
+}
+);

@@ -118,7 +118,7 @@ VRSnappingEngine::VRSnappingEngine() {
     snapSignal = VRSignal::create();
 
     updatePtr = VRUpdateCb::create("snapping engine update", bind(&VRSnappingEngine::update, this) );
-    VRScene::getCurrent()->addUpdateFkt(updatePtr, 999);
+    VRScene::getCurrent()->addUpdateFkt(updatePtr, 0);
 }
 
 VRSnappingEngine::~VRSnappingEngine() {
@@ -345,7 +345,7 @@ void VRSnappingEngine::postProcessEvent(VRDevicePtr dev, VRTransformPtr obj, VRT
         }
     } else {
         if (doGhosts) updateGhost(0, 0);
-        obj->setMatrix( gobj->getMatrix() );
+        else obj->setMatrix( gobj->getMatrix() );
     }
 
     if (lastEvent != event->snap || lastEventID != event->snapID) {
