@@ -5,6 +5,8 @@
 #include "core/math/fft.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRFunction.h"
+#include "core/networking/tcp/VRTCPClient.h"
+#include "core/networking/rest/VRRestClient.h"
 #include "VRSoundManager.h"
 
 #ifndef WITHOUT_GTK
@@ -458,37 +460,37 @@ int encode_audio_frame(AVFormatContext *oc, OutputStream *ost, AVFrame *frame) {
     AVPacket pkt = { 0 }; // data and size must be 0;
     int got_packet;
 
-    cout << "   init packet" << endl;
+    //cout << "   init packet" << endl;
     av_init_packet(&pkt);
-    cout << "   encode audio frame" << endl;
+    //cout << "   encode audio frame" << endl;
     avcodec_encode_audio2(ost->enc, &pkt, frame, &got_packet);
 
     if (got_packet) {
         pkt.stream_index = ost->st->index;
 
-        cout << "   rescale packet" << endl;
+        //cout << "   rescale packet" << endl;
         av_packet_rescale_ts(&pkt, ost->enc->time_base, ost->st->time_base);
 
         /* Write the compressed frame to the media file. */
-        cout << "   write frame" << endl;
+        //cout << "   write frame" << endl;
         if (av_interleaved_write_frame(oc, &pkt) != 0) {
             fprintf(stderr, "Error while writing audio frame\n");
             return 0;
         }
-        cout << "   write frame done" << endl;
+        //cout << "   write frame done" << endl;
     }
 
     return (frame || got_packet) ? 0 : 1;
 }
 
 void write_buffer(AVFormatContext *oc, OutputStream *ost, VRSoundBufferPtr buffer) {
-    cout << "  get audio frame" << endl;
+    //cout << "  get audio frame" << endl;
     AVFrame* frame = get_audio_frame(ost, buffer);
-    cout << "  resample convert" << endl;
+    //cout << "  resample convert" << endl;
     int ret = avresample_convert(ost->avr, NULL, 0, 0, frame->extended_data, frame->linesize[0], frame->nb_samples);
     if (ret < 0) { fprintf(stderr, "Error feeding audio data to the resampler\n"); return; }
 
-    cout << "  write buffer" << endl;
+    //cout << "  write buffer" << endl;
     while ((frame && avresample_available(ost->avr) >= ost->frame->nb_samples) ||
            (!frame && avresample_get_out_samples(ost->avr, 0))) {
         // when we pass a frame to the encoder, it may keep a reference to it internally; make sure we do not overwrite it here
@@ -512,13 +514,13 @@ void write_buffer(AVFormatContext *oc, OutputStream *ost, VRSoundBufferPtr buffe
             return;
         }
 
-        cout << "  encode frame" << endl;
+        //cout << "  encode frame" << endl;
 
         ost->frame->nb_samples = ret;
         ost->frame->pts        = ost->next_pts;
         ost->next_pts         += ost->frame->nb_samples;
         encode_audio_frame(oc, ost, ret ? ost->frame : NULL);
-        cout << "  encode frame done" << endl;
+        //cout << "  encode frame done" << endl;
     }
 }
 
@@ -578,17 +580,40 @@ void VRSound::exportToFile(string path) {
     return;
 }
 
-int custom_io_write(void* opaque, uint8_t *buffer, int32_t buffer_size) {
-    cout << " custom_io_write " << buffer_size << endl;
-    return buffer_size;
+void VRSound::writeStreamData(const string& data) {
+    cout << " custom_io_write " << data.size() << endl;
+    if (data.size() < 200) cout << endl << data << endl;
+    if (tcpClient) tcpClient->send(data, "", true);
+    if (restClient) restClient->post("http://localhost:1234", data);
 }
 
-void VRSound::streamTo(string url, int port) {
+int custom_io_write(void* opaque, uint8_t* buffer, int32_t N) {
+    VRSound* sound = (VRSound*)opaque;
+    string data((char*)buffer, N);
+    if (sound && N > 0) sound->writeStreamData(data);
+    return N;
+}
+
+void VRSound::streamTo(string url, int port, bool keepOpen) {
     cout << "streamTo " << url << ":" << port << endl;
+
+    //restClient = VRRestClient::create();
+    if (!tcpClient) {
+        tcpClient = VRTCPClient::create();
+        tcpClient->connect(url, port);
+    }
+
+    if (!tcpClient->connected()) {
+        cout << " connect to " << url << ":" << port << " failed!" << endl;
+        return;
+    }
+
+
     OutputStream audio_st = { 0 };
     av_register_all();
 
-    AVOutputFormat* fmt = av_guess_format(NULL, "test.mp3", NULL);
+    //AVOutputFormat* fmt = av_guess_format("opus", NULL, NULL);
+    AVOutputFormat* fmt = av_guess_format("mp3", NULL, NULL);
     //AVOutputFormat* fmt = av_guess_format("matroska", "test.mkv", NULL);
     if (!fmt) { fprintf(stderr, "Could not find suitable output format\n"); return; }
 
@@ -599,15 +624,15 @@ void VRSound::streamTo(string url, int port) {
     //muxer->oformat->audio_codec = AV_CODEC_ID_OPUS;
     //snprintf(muxer->filename, sizeof(muxer->filename), "%s", filename);
 
-    int avio_buffer_size = 4*32768;
+    int avio_buffer_size = 4096;
     unsigned char* avio_buffer = (unsigned char*)av_malloc(avio_buffer_size);
-    AVIOContext* custom_io = avio_alloc_context ( avio_buffer, avio_buffer_size, 1, (void*)42, NULL, &custom_io_write, NULL);
+    AVIOContext* custom_io = avio_alloc_context ( avio_buffer, avio_buffer_size, 1, (void*)this, NULL, &custom_io_write, NULL);
     muxer->pb = custom_io;
 
     cout << " add audio stream" << endl;
     add_audio_stream(&audio_st, muxer, fmt->audio_codec);
     open_audio(muxer, &audio_st);
-    //av_dump_format(muxer, 0, NULL, 1);
+    av_dump_format(muxer, 0, NULL, 1);
 
     // header
     cout << " write header" << endl;
@@ -631,9 +656,11 @@ void VRSound::streamTo(string url, int port) {
     cout << " close stream, cleanup" << endl;
     close_stream(muxer, &audio_st);
     avformat_free_context(muxer);
+    if (!keepOpen) tcpClient.reset();
 
     // test with
-    //   ffplay -f matroska -listen 1 -i http://localhost:1234
+    //   ffplay -f mp3 -vn -listen 1 -i http://localhost:1234
+    //   ffplay -f mp3 -vn -listen 1 -i tcp://127.0.0.1:1234
 }
 
 

@@ -27,6 +27,8 @@ class VRRestClient : public std::enable_shared_from_this<VRRestClient> {
 		VRRestResponsePtr get(string uri, int timeoutSecs = 2);
 		void getAsync(string uri, VRRestCbPtr cb, int timeoutSecs = 2);
 
+		void post(string uri, const string& data, int timeoutSecs = 2);
+
 		void test();
 };
 

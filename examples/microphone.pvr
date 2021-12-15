@@ -62,7 +62,8 @@
 	else:
 		print 'play'
 		VR.recording = VR.mike.stopRecording()
-		VR.recording.exportToFile('test.mp3')
+		#VR.recording.exportToFile('test.mp3')
+		#VR.recording.streamTo('127.0.0.1', 1234, True)
 		VR.recording.setCallback(onStopped)
 		VR.recording.play()
 		setIndicator('#0af')
@@ -74,7 +75,7 @@
       <core>
 	import VR
 
-	VR.recording.streamTo('localhost', 1234)
+	VR.recording.streamTo('127.0.0.1', 1234, False)
 </core>
     </Script>
   </Scripts>
