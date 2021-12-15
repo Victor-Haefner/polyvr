@@ -41,5 +41,8 @@ PyMethodDef VRPySoundManager::methods[] = {
 PyMethodDef VRPyMicrophone::methods[] = {
     {"startRecording", PyWrap(Microphone, startRecording, "Starts to record from microphone", void) },
     {"stopRecording", PyWrap(Microphone, stopRecording, "Stops the recording, returns sound", VRSoundPtr) },
+    {"startStreaming", PyWrap(Microphone, startStreaming, "Start streaming to (addr, port)", void, string, int) },
+    {"pauseStreaming", PyWrap(Microphone, pauseStreaming, "Pause streaming", void, bool) },
+    {"stopStreaming", PyWrap(Microphone, stopStreaming, "Stop streaming", void) },
     {NULL}  /* Sentinel */
 };

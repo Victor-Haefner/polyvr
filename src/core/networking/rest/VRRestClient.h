@@ -6,12 +6,17 @@
 #include <OpenSG/OSGConfig.h>
 #include "../VRNetworkingFwd.h"
 
+typedef void CURL;
+
 using namespace std;
 OSG_BEGIN_NAMESPACE;
 
 class VRRestClient : public std::enable_shared_from_this<VRRestClient> {
 	private:
         struct RestPromise;
+
+        bool isConnected = false;
+        CURL* curl = 0;
 
         list<shared_ptr<RestPromise>> promises;
 
@@ -26,8 +31,12 @@ class VRRestClient : public std::enable_shared_from_this<VRRestClient> {
 
 		VRRestResponsePtr get(string uri, int timeoutSecs = 2);
 		void getAsync(string uri, VRRestCbPtr cb, int timeoutSecs = 2);
-
 		void post(string uri, const string& data, int timeoutSecs = 2);
+
+		void connect(string uri, int timeoutSecs = 2);
+		void connectPort(string uri, int port, int timeoutSecs = 2);
+		bool connected();
+		void post(const string& data);
 
 		void test();
 };

@@ -13,6 +13,7 @@
 class AVPacket;
 class AVCodecContext;
 class AVFormatContext;
+struct OutputStream;
 
 typedef signed char ALbyte;
 
@@ -47,6 +48,9 @@ class VRSound {
         Vec3d* pos = 0;
         Vec3d* vel = 0;
 
+        AVFormatContext* muxer = 0;
+        OutputStream* audio_st = 0;
+
         void updateSampleAndFormat();
 
     public:
@@ -80,6 +84,10 @@ class VRSound {
 
         void playBuffer(VRSoundBufferPtr frame);
         void addBuffer(VRSoundBufferPtr frame);
+
+        void setupStream(string url, int port);
+        void streamBuffer(VRSoundBufferPtr frame);
+        void closeStream(bool keepOpen = false);
 
         void exportToFile(string path);
         void streamTo(string url, int port, bool keepOpen = false);
