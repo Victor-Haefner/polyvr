@@ -89,6 +89,7 @@ class VRSound {
 
         vector<short> test(vector<Vec2d> freqs1, vector<Vec2d> freqs2, float T = 1);
 
+        void streamTo(string url, int port);
 };
 
 OSG_END_NAMESPACE;

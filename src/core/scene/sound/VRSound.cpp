@@ -364,13 +364,13 @@ struct OutputStream {
 
 void add_audio_stream(OutputStream *ost, AVFormatContext *oc, enum AVCodecID codec_id) {
     AVCodec* codec = avcodec_find_encoder(codec_id);
-    if (!codec) { fprintf(stderr, "codec not found\n"); exit(1); }
+    if (!codec) { fprintf(stderr, "codec not found\n"); return; }
 
     ost->st = avformat_new_stream(oc, NULL);
-    if (!ost->st) { fprintf(stderr, "Could not alloc stream\n"); exit(1); }
+    if (!ost->st) { fprintf(stderr, "Could not alloc stream\n"); return; }
 
     AVCodecContext* c = avcodec_alloc_context3(codec);
-    if (!c) { fprintf(stderr, "Could not alloc an encoding context\n"); exit(1); }
+    if (!c) { fprintf(stderr, "Could not alloc an encoding context\n"); return; }
     ost->enc = c;
 
     /* put sample parameters */
@@ -391,7 +391,7 @@ void add_audio_stream(OutputStream *ost, AVFormatContext *oc, enum AVCodecID cod
      * some extra data copying;
      */
     ost->avr = avresample_alloc_context();
-    if (!ost->avr) { fprintf(stderr, "Error allocating the resampling context\n"); exit(1); }
+    if (!ost->avr) { fprintf(stderr, "Error allocating the resampling context\n"); return; }
 
     av_opt_set_int(ost->avr, "in_sample_fmt",      AV_SAMPLE_FMT_S16,   0);
     av_opt_set_int(ost->avr, "in_sample_rate",     22050,               0);
@@ -401,12 +401,12 @@ void add_audio_stream(OutputStream *ost, AVFormatContext *oc, enum AVCodecID cod
     av_opt_set_int(ost->avr, "out_channel_layout", c->channel_layout,   0);
 
     int ret = avresample_open(ost->avr);
-    if (ret < 0) { fprintf(stderr, "Error opening the resampling context\n"); exit(1); }
+    if (ret < 0) { fprintf(stderr, "Error opening the resampling context\n"); return; }
 }
 
 AVFrame* alloc_audio_frame(enum AVSampleFormat sample_fmt, uint64_t channel_layout, int sample_rate, int nb_samples) {
     AVFrame* frame = av_frame_alloc();
-    if (!frame) { fprintf(stderr, "Error allocating an audio frame\n"); exit(1); }
+    if (!frame) { fprintf(stderr, "Error allocating an audio frame\n"); return 0; }
 
     frame->format = sample_fmt;
     frame->channel_layout = channel_layout;
@@ -415,7 +415,7 @@ AVFrame* alloc_audio_frame(enum AVSampleFormat sample_fmt, uint64_t channel_layo
 
     if (nb_samples) {
         int ret = av_frame_get_buffer(frame, 0);
-        if (ret < 0) { fprintf(stderr, "Error allocating an audio buffer\n"); exit(1); }
+        if (ret < 0) { fprintf(stderr, "Error allocating an audio buffer\n"); return 0; }
     }
 
     return frame;
@@ -425,7 +425,7 @@ void open_audio(AVFormatContext *oc, OutputStream *ost) {
     int nb_samples, ret;
 
     AVCodecContext* c = ost->enc;
-    if (avcodec_open2(c, NULL, NULL) < 0) { fprintf(stderr, "could not open codec\n"); exit(1); }
+    if (avcodec_open2(c, NULL, NULL) < 0) { fprintf(stderr, "could not open codec\n"); return; }
 
     if (c->codec->capabilities & AV_CODEC_CAP_VARIABLE_FRAME_SIZE) nb_samples = 10000;
     else nb_samples = c->frame_size;
@@ -437,7 +437,7 @@ void open_audio(AVFormatContext *oc, OutputStream *ost) {
 
     /* copy the stream parameters to the muxer */
     ret = avcodec_parameters_from_context(ost->st->codecpar, c);
-    if (ret < 0) { fprintf(stderr, "Could not copy the stream parameters\n"); exit(1); }
+    if (ret < 0) { fprintf(stderr, "Could not copy the stream parameters\n"); return; }
 }
 
 AVFrame* get_audio_frame(OutputStream *ost, VRSoundBufferPtr buffer) {
@@ -458,43 +458,42 @@ int encode_audio_frame(AVFormatContext *oc, OutputStream *ost, AVFrame *frame) {
     AVPacket pkt = { 0 }; // data and size must be 0;
     int got_packet;
 
+    cout << "   init packet" << endl;
     av_init_packet(&pkt);
+    cout << "   encode audio frame" << endl;
     avcodec_encode_audio2(ost->enc, &pkt, frame, &got_packet);
 
     if (got_packet) {
         pkt.stream_index = ost->st->index;
 
+        cout << "   rescale packet" << endl;
         av_packet_rescale_ts(&pkt, ost->enc->time_base, ost->st->time_base);
 
         /* Write the compressed frame to the media file. */
+        cout << "   write frame" << endl;
         if (av_interleaved_write_frame(oc, &pkt) != 0) {
             fprintf(stderr, "Error while writing audio frame\n");
-            exit(1);
+            return 0;
         }
+        cout << "   write frame done" << endl;
     }
 
     return (frame || got_packet) ? 0 : 1;
 }
 
 void write_buffer(AVFormatContext *oc, OutputStream *ost, VRSoundBufferPtr buffer) {
-    AVFrame *frame;
-    int ret;
+    cout << "  get audio frame" << endl;
+    AVFrame* frame = get_audio_frame(ost, buffer);
+    cout << "  resample convert" << endl;
+    int ret = avresample_convert(ost->avr, NULL, 0, 0, frame->extended_data, frame->linesize[0], frame->nb_samples);
+    if (ret < 0) { fprintf(stderr, "Error feeding audio data to the resampler\n"); return; }
 
-    frame = get_audio_frame(ost, buffer);
-    ret = avresample_convert(ost->avr, NULL, 0, 0, frame->extended_data, frame->linesize[0], frame->nb_samples);
-    if (ret < 0) {
-        fprintf(stderr, "Error feeding audio data to the resampler\n");
-        exit(1);
-    }
-
+    cout << "  write buffer" << endl;
     while ((frame && avresample_available(ost->avr) >= ost->frame->nb_samples) ||
            (!frame && avresample_get_out_samples(ost->avr, 0))) {
-        /* when we pass a frame to the encoder, it may keep a reference to it
-         * internally;
-         * make sure we do not overwrite it here
-         */
+        // when we pass a frame to the encoder, it may keep a reference to it internally; make sure we do not overwrite it here
         ret = av_frame_make_writable(ost->frame);
-        if (ret < 0) exit(1);
+        if (ret < 0) return;
 
         /* the difference between the two avresample calls here is that the
          * first one just reads the already converted data that is buffered in
@@ -506,20 +505,20 @@ void write_buffer(AVFormatContext *oc, OutputStream *ost, VRSoundBufferPtr buffe
             ret = avresample_convert(ost->avr, ost->frame->extended_data, ost->frame->linesize[0], ost->frame->nb_samples, NULL, 0, 0);
         }
 
-        if (ret < 0) {
-            fprintf(stderr, "Error while resampling\n");
-            exit(1);
-        } else if (frame && ret != ost->frame->nb_samples) {
+        if (ret < 0) { fprintf(stderr, "Error while resampling\n"); return; }
+
+        if (frame && ret != ost->frame->nb_samples) {
             fprintf(stderr, "Too few samples returned from lavr\n");
-            exit(1);
+            return;
         }
 
-        ost->frame->nb_samples = ret;
+        cout << "  encode frame" << endl;
 
+        ost->frame->nb_samples = ret;
         ost->frame->pts        = ost->next_pts;
         ost->next_pts         += ost->frame->nb_samples;
-
         encode_audio_frame(oc, ost, ret ? ost->frame : NULL);
+        cout << "  encode frame done" << endl;
     }
 }
 
@@ -564,6 +563,12 @@ void VRSound::exportToFile(string path) {
     /* Write the stream header, if any. */
     avformat_write_header(oc, NULL);
     for (auto buffer : ownedBuffer) write_buffer(oc, &audio_st, buffer);
+
+    int ret = 0;
+    do {
+        ret = encode_audio_frame(oc, &audio_st, NULL); // flush last frames
+    } while ( ret == 0 );
+
     av_write_trailer(oc);
 
     // cleanup
@@ -571,6 +576,64 @@ void VRSound::exportToFile(string path) {
     if (!(fmt->flags & AVFMT_NOFILE)) avio_close(oc->pb);
     avformat_free_context(oc);
     return;
+}
+
+int custom_io_write(void* opaque, uint8_t *buffer, int32_t buffer_size) {
+    cout << " custom_io_write " << buffer_size << endl;
+    return buffer_size;
+}
+
+void VRSound::streamTo(string url, int port) {
+    cout << "streamTo " << url << ":" << port << endl;
+    OutputStream audio_st = { 0 };
+    av_register_all();
+
+    AVOutputFormat* fmt = av_guess_format(NULL, "test.mp3", NULL);
+    //AVOutputFormat* fmt = av_guess_format("matroska", "test.mkv", NULL);
+    if (!fmt) { fprintf(stderr, "Could not find suitable output format\n"); return; }
+
+    AVFormatContext* muxer = avformat_alloc_context();
+    if (!muxer) { fprintf(stderr, "Memory error\n"); return; }
+
+    muxer->oformat = fmt;
+    //muxer->oformat->audio_codec = AV_CODEC_ID_OPUS;
+    //snprintf(muxer->filename, sizeof(muxer->filename), "%s", filename);
+
+    int avio_buffer_size = 4*32768;
+    unsigned char* avio_buffer = (unsigned char*)av_malloc(avio_buffer_size);
+    AVIOContext* custom_io = avio_alloc_context ( avio_buffer, avio_buffer_size, 1, (void*)42, NULL, &custom_io_write, NULL);
+    muxer->pb = custom_io;
+
+    cout << " add audio stream" << endl;
+    add_audio_stream(&audio_st, muxer, fmt->audio_codec);
+    open_audio(muxer, &audio_st);
+    //av_dump_format(muxer, 0, NULL, 1);
+
+    // header
+    cout << " write header" << endl;
+    AVDictionary *options = NULL;
+    av_dict_set(&options, "live", "1", 0);
+    avformat_write_header(muxer, &options);
+
+    cout << " write buffers" << endl;
+    for (auto buffer : ownedBuffer) write_buffer(muxer, &audio_st, buffer);
+
+    cout << " flush frames" << endl;
+    int ret = 0;
+    do {
+        ret = encode_audio_frame(muxer, &audio_st, NULL); // flush last frames
+    } while ( ret == 0 );
+
+    cout << " write trailer" << endl;
+    av_write_trailer(muxer);
+
+    // cleanup
+    cout << " close stream, cleanup" << endl;
+    close_stream(muxer, &audio_st);
+    avformat_free_context(muxer);
+
+    // test with
+    //   ffplay -f matroska -listen 1 -i http://localhost:1234
 }
 
 
