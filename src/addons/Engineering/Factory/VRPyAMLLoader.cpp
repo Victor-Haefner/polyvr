@@ -11,5 +11,6 @@ PyMethodDef VRPyAMLLoader::methods[] = {
     {"write", PyWrap( AMLLoader, write, "Write AML to file" , void, string ) },
     {"getScene", PyWrap( AMLLoader, getScene, "Get aml scene root" , VRTransformPtr ) },
     {"getOntology", PyWrap( AMLLoader, getOntology, "Get ontology" , VROntologyPtr ) },
+    {"addAsset", PyWrap( AMLLoader, addAsset, "Add asset, returns uuid" , string, VRObjectPtr ) },
     {NULL}  /* Sentinel */
 };

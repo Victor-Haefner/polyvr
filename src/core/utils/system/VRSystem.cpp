@@ -70,7 +70,8 @@ bool makedir(string path) {
         tmp += f+"/";
     }
 #else
-    try { res = boost::filesystem::create_directory(path); }
+    try { res = boost::filesystem::create_directories(path); }
+    catch(const boost::filesystem::filesystem_error& e) { cout << "ERROR: makedir failed when trying to create directory '" + path + "', " << e.code().message() << endl; }
     catch(...) { cout << "ERROR: makedir failed when trying to create directory '" + path + "'" << endl; }
 #endif
     return res;

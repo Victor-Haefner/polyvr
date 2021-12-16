@@ -42,6 +42,8 @@ template<typename T> string toString(const vector<T>& v) {
 string toString(const vector<float>& v, int d=-1);
 string toString(const vector<double>& v, int d=-1);
 
+string genUUID();
+
 template<typename T> string typeName(const T* t);
 template<typename T> string typeName(const std::shared_ptr<T>* t) { return typeName<T>((T*)0); }
 template<typename T> string typeName(const std::weak_ptr<T>* t) { return typeName<T>((T*)0); }

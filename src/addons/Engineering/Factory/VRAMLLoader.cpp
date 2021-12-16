@@ -114,8 +114,81 @@ void VRAMLLoader::processElement(XMLElementPtr node, VRTransformPtr parent) {
     }
 }
 
+
+string VRAMLLoader::addAsset(VRObjectPtr obj) {
+    string uuid = genUUID();
+    assets[uuid] = obj;
+    return uuid;
+}
+
+void VRAMLLoader::writeHeader(ofstream& stream, string fileName) {
+    string head =
+    "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+    "<CAEXFile FileName=\""+fileName+"\" SchemaVersion=\"2.15\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"CAEX_ClassModel_V2.15.xsd\">\n"
+    "\t<Version>2.0</Version>\n"
+    "\t<AdditionalInformation AutomationMLVersion=\"2.0\" />\n"
+    "\t<AdditionalInformation>\n"
+    "\t\t<WriterHeader>\n"
+    "\t\t\t<WriterName>PolyVR</WriterName>\n"
+    "\t\t\t<WriterID>PolyVR</WriterID>\n"
+    "\t\t\t<WriterVendor>PolyVR</WriterVendor>\n"
+    "\t\t\t<WriterVendorURL>https://github.com/Victor-Haefner/polyvr</WriterVendorURL>\n"
+    "\t\t\t<WriterVersion>1.0</WriterVersion>\n"
+    "\t\t\t<WriterRelease>1.0</WriterRelease>\n"
+    "\t\t\t<LastWritingDateTime>2021-12-16T12:00:00.0000000+01:00</LastWritingDateTime>\n"
+    "\t\t\t<WriterProjectTitle>PolyVR Data Export</WriterProjectTitle>\n"
+    "\t\t\t<WriterProjectID>PolyVR Data Export</WriterProjectID>\n"
+    "\t\t</WriterHeader>\n"
+    "\t</AdditionalInformation>\n";
+
+    stream << head;
+}
+
+void VRAMLLoader::writeFooter(ofstream& stream) {
+    stream << "</CAEXFile>\n";
+}
+
+void VRAMLLoader::writeScene(ofstream& stream, string daeFolder) {
+    makedir( daeFolder );
+	stream << "\t<InstanceHierarchy ID=\"" << genUUID() << "\" Name=\"InstanceHierarchy\">\n";
+
+	for (auto obj : assets) {
+        string oName = obj.second->getName();
+        string fPath = daeFolder+"/"+oName+".dae";
+        string uuidEl = genUUID();
+        string uuidIn = genUUID();
+        obj.second->exportToFile(fPath, {});
+        stream << "\t\t<InternalElement ID=\"" << uuidEl << "\" Name=\"" << oName << "\">\n";
+        stream << "\t\t\t<ExternalInterface Name=\"Representation\" RefBaseClassPath=\"AutomationMLInterfaceClassLib/AutomationMLBaseInterface/ExternalDataConnector/COLLADAInterface\" ID=\"" << uuidIn << "\">\n";
+        stream << "\t\t\t\t<Attribute Name=\"refURI\" AttributeDataType=\"xs:anyURI\">\n";
+        stream << "\t\t\t\t\t<Value>./dae/" << oName << ".dae</Value>\n";
+        stream << "\t\t\t\t</Attribute>\n";
+        stream << "\t\t\t\t<Attribute Name=\"refType\">\n";
+        stream << "\t\t\t\t\t<Value>explicit</Value>\n";
+        stream << "\t\t\t\t</Attribute>\n";
+        stream << "\t\t\t</ExternalInterface>\n";
+        stream << "\t\t\t<RoleRequirements RefBaseRoleClassPath=\"AutomationMLBaseRoleClassLib/AutomationMLBaseRole/Resource\" />\n";
+        stream << "\t\t</InternalElement>\n";
+	}
+
+	stream << "\t</InstanceHierarchy>\n";
+}
+
+void VRAMLLoader::writeOntology(ofstream& stream) {
+    stream << "\t<InterfaceClassLib Name=\"AutomationMLInterfaceClassLib\">\n";
+    stream << "\t\t<Description>Standard Automation Markup Language Interface Class Library</Description>\n";
+    stream << "\t\t<Version>2.2.2</Version>\n";
+	stream << "\t</InterfaceClassLib>\n";
+}
+
 void VRAMLLoader::write(string path) {
-    ;
+    string amlFolder = getFolderName(path);
+    makedir( amlFolder );
+    ofstream stream(path);
+    writeHeader(stream, getFileName(path) );
+    writeScene(stream, amlFolder+"/dae");
+    writeOntology(stream);
+    writeFooter(stream);
 }
 
 

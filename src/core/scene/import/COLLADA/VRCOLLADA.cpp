@@ -198,7 +198,7 @@ class VRCOLLADA_Stream : public XMLStreamHandler {
         void processingInstruction(const string& target, const string& data) override {}
 
         void warning(const string& chars) override { cout << "VRCOLLADA_Stream Warning" << endl; }
-        void error(const string& chars) override { cout << "VRCOLLADA_Stream Error" << endl; }
+        void error(const string& chars) override { cout << "VRCOLLADA_Stream Error " << getLine() << "," << getColumn() << ": " << chars << endl; }
         void fatalError(const string& chars) override { cout << "VRCOLLADA_Stream Fatal Error" << endl; }
         void onException(exception& e) override { cout << "VRCOLLADA_Stream Exception" << endl; }
 };
@@ -327,8 +327,10 @@ void OSG::writeCollada(VRObjectPtr root, string path, map<string, string> option
         string name = node->getName();
         VRTransformPtr trans = dynamic_pointer_cast<VRTransform>(node);
         VRGeometryPtr geo = dynamic_pointer_cast<VRGeometry>(node);
-        VRMaterialPtr mat = geo->getMaterial();
-        string matName = mat->getName();
+        VRMaterialPtr mat;
+        if (geo) mat = geo->getMaterial();
+        string matName;
+        if (mat) matName = mat->getName();
 
         stream << identStr << "<node id=\"" << name << "_visual_scene_node\" name=\"" << name << "\">" << endl;
 
@@ -362,7 +364,7 @@ void OSG::writeCollada(VRObjectPtr root, string path, map<string, string> option
 
     stream << "﻿<?xml version=\"1.0\" encoding=\"utf-8\"?>" << endl;
     if (version == "1.4.1") stream << "<COLLADA xmlns=\"http://www.collada.org/2005/11/COLLADASchema\" version=\"" << version << "\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">" << endl;
-    else                    stream << "﻿<COLLADA xmlns=\"http://www.collada.org/2008/03/COLLADASchema\" version=\"" << version << "\">" << endl;
+    else                    stream << "<COLLADA xmlns=\"http://www.collada.org/2008/03/COLLADASchema\" version=\"" << version << "\">" << endl;
 
     string timestamp = create_timestamp();
     stream << "﻿\t<asset>" << endl;

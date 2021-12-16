@@ -55,9 +55,6 @@
 #include <OpenSG/OSGProgramChunk.h>
 
 #include <bitset>
-#include <boost/uuid/uuid.hpp>
-#include <boost/uuid/uuid_io.hpp>
-#include <boost/uuid/uuid_generators.hpp>
 
 using namespace OSG;
 
@@ -80,8 +77,7 @@ ThreadRefPtr applicationThread;
 VRSyncNode::VRSyncNode(string name) : VRTransform(name) {
     enableOptimization(false);
     type = "SyncNode";
-    boost::uuids::uuid u = boost::uuids::random_generator()();
-    UUID = boost::uuids::to_string(u);
+    UUID = genUUID();
     cout << " VRSyncNode::VRSyncNode " << name << " " << UUID << endl;
 
     selfNodeID = getNode()->node->getId();
