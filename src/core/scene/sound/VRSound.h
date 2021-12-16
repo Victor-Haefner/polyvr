@@ -50,8 +50,10 @@ class VRSound {
 
         AVFormatContext* muxer = 0;
         OutputStream* audio_st = 0;
+        int lastEncodingFlag = 1;
 
         void updateSampleAndFormat();
+        void write_buffer(AVFormatContext *oc, OutputStream *ost, VRSoundBufferPtr buffer);
 
     public:
         VRSound();
@@ -85,9 +87,10 @@ class VRSound {
         void playBuffer(VRSoundBufferPtr frame);
         void addBuffer(VRSoundBufferPtr frame);
 
-        void setupStream(string url, int port);
+        bool setupStream(string url, int port);
         void streamBuffer(VRSoundBufferPtr frame);
         void closeStream(bool keepOpen = false);
+        void flushPackets();
 
         void exportToFile(string path);
         void streamTo(string url, int port, bool keepOpen = false);

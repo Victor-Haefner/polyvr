@@ -26,12 +26,12 @@ void VRMicrophone::setup() {
 
 void VRMicrophone::start() {
     recording = VRSoundManager::get()->setupSound("");
-    doRecord = true;
     alcCaptureStart(device);
 }
 
 void VRMicrophone::startRecording() {
     start();
+    doRecord = true;
 
     auto recordCb = [&]() {
         while (doRecord) {
@@ -56,12 +56,11 @@ using duration = std::chrono::duration<T, std::milli>;
 
 void VRMicrophone::startStreaming(string address, int port) {
     start();
+    doStream = true;
     streamMutex = new VRMutex();
 
     auto recordCb = [&]() {
-        streamBuffer.resize(4, 0);
-
-        while (doRecord) {
+        while (doStream) {
             ALint Count = 0;
             alGetError();
             alcGetIntegerv(device, ALC_CAPTURE_SAMPLES, (ALCsizei)sizeof(ALint), &Count);
@@ -73,29 +72,38 @@ void VRMicrophone::startStreaming(string address, int port) {
 
                 if (!streamPaused) {
                     VRLock(*streamMutex);
-                    streamBuffer[nextPointer] = frame;
-                    lastPointer = nextPointer;
-                    nextPointer = (nextPointer+1)%streamBuffer.size();
-                    cout << "rec frame at " << lastPointer << endl;
+                    frameBuffer.push_back(frame);
+                    queuedFrames++;
+                    queuedStream = max(queuedStream-1, 0);
                 }
             }
         }
     };
 
     auto streamCb = [&](string address, int port) {
-        cout << " --- streamCb A1" << endl;
-        recording->setupStream(address, port);
-        cout << " --- streamCb A2" << endl;
+        doStream = recording->setupStream(address, port);
 
-        while (doRecord) {
-            if (lastPointer != streamedPointer) {
+        while (doStream) {
+            bool enoughInitialQueuedFrames = bool(queuedFrames >= queueSize);
+            bool enoughQueuedFramesInStream = bool(queuedStream >= queueSize - streamBuffer);
+
+            if (enoughInitialQueuedFrames || enoughQueuedFramesInStream || needsFlushing ) {
                 VRLock(*streamMutex);
-                streamedPointer = lastPointer;
-                auto frame = streamBuffer[lastPointer];
-                if (frame) {
-                    cout << "stream frame at " << lastPointer << endl;
-                    recording->streamBuffer(frame);
+                while (queuedFrames) {
+                    auto frame = frameBuffer.front();
+                    frameBuffer.pop_front();
+
+                    if (frame) {
+                        recording->streamBuffer(frame);
+                        queuedFrames = max(queuedFrames-1, 0);
+                        if (!needsFlushing) queuedStream++;
+                    }
                 }
+            }
+
+            if (needsFlushing) {
+                recording->flushPackets();
+                needsFlushing = false;
             }
 
             duration<double> T(1);
@@ -109,10 +117,13 @@ void VRMicrophone::startStreaming(string address, int port) {
     streamingThread = new thread(streamCb, address, port);
 }
 
-void VRMicrophone::pauseStreaming(bool p) { streamPaused = p; }
+void VRMicrophone::pauseStreaming(bool p) {
+    streamPaused = p;
+    queuedStream = 0;
+    needsFlushing = true;
+}
 
 void VRMicrophone::stop() {
-    doRecord = false;
     if (recordingThread) recordingThread->join();
     if (streamingThread) streamingThread->join();
     recordingThread = 0;
@@ -122,6 +133,7 @@ void VRMicrophone::stop() {
 }
 
 VRSoundPtr VRMicrophone::stopRecording() {
+    doRecord = false;
     stop();
     auto r = recording;
     recording = 0;
@@ -129,6 +141,7 @@ VRSoundPtr VRMicrophone::stopRecording() {
 }
 
 void VRMicrophone::stopStreaming() {
+    doStream = false;
     stop();
     recording = 0;
 }

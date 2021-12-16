@@ -2,7 +2,7 @@
 #define VRMICROPHONE_H_INCLUDED
 
 #include <OpenSG/OSGConfig.h>
-#include <vector>
+#include <list>
 #include "VRSoundFwd.h"
 
 struct ALCdevice_struct;
@@ -18,6 +18,8 @@ class VRMicrophone : public std::enable_shared_from_this<VRMicrophone> {
         int sample_size = 1024;
         int sample_rate = 22050;
         bool doRecord = false;
+        bool doStream = false;
+        bool needsFlushing = false;
         bool streamPaused = false;
 
         thread* recordingThread = 0;
@@ -26,11 +28,12 @@ class VRMicrophone : public std::enable_shared_from_this<VRMicrophone> {
 	    VRSoundPtr recording;
 
 	    VRSoundBufferPtr frame;
-	    vector<VRSoundBufferPtr> streamBuffer;
+	    list<VRSoundBufferPtr> frameBuffer;
 	    VRMutex* streamMutex = 0;
-	    int nextPointer = 0;
-	    int lastPointer = 0;
-	    int streamedPointer = -1;
+	    int queueSize = 10;
+	    int streamBuffer = 5;
+	    int queuedFrames = 0; // frames recorded but not streamed yet
+	    int queuedStream = 0; // frames streamed at the beginning
 
 	    void setup();
 	    void start();
