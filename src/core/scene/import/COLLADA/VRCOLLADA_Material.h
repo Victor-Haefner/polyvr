@@ -47,6 +47,7 @@ class VRCOLLADA_Material : public std::enable_shared_from_this<VRCOLLADA_Materia
         void newMaterial(string id, string name);
         void closeEffect();
         void closeMaterial();
+        void setRendering(string method, string eid = "");
         void setColor(string sid, Color4f col, string eid = "");
         void setTexture(string sampler, string eid = "");
         void setShininess(float f, string eid = "");

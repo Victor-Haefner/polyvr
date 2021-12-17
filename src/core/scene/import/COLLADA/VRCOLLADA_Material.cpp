@@ -90,6 +90,20 @@ void VRCOLLADA_Material::setMaterialEffect(string eid, string mid) {
     material->setEmission( effect->getEmission() );
     material->setShininess( effect->getShininess() );
     material->setTexture( effect->getTexture() );
+    material->setLit( effect->isLit() );
+}
+
+void VRCOLLADA_Material::setRendering(string method, string eid) {
+    if (eid == "") eid = currentEffect;
+    if (!library_effects.count(eid)) {
+        scheduler->postpone( bind(&VRCOLLADA_Material::setRendering, this, method, eid) );
+        return;
+    }
+
+    auto effect = library_effects[eid];
+    if (method == "constant") effect->setLit(0);
+    if (method == "lambert") effect->setLit(1);
+    if (method == "phong") effect->setLit(1);
 }
 
 void VRCOLLADA_Material::setColor(string sid, Color4f col, string eid) {

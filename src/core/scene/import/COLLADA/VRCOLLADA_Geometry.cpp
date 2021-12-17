@@ -144,6 +144,8 @@ void VRCOLLADA_Geometry::handleIndices(string data) {
         auto indices = toValue<vector<int>>(data);
         //cout << "VRCOLLADA_Geometry::handleIndices " << currentPrimitive.name << " " << indices.size() << endl;
 
+        if (currentPrimitive.name == "points") currentGeoData->pushType(GL_POINTS);
+        if (currentPrimitive.name == "lines") currentGeoData->pushType(GL_LINES);
         if (currentPrimitive.name == "triangles") currentGeoData->pushType(GL_TRIANGLES);
         if (currentPrimitive.name == "trifans") currentGeoData->pushType(GL_TRIANGLE_FAN);
         if (currentPrimitive.name == "tristrips") currentGeoData->pushType(GL_TRIANGLE_STRIP);

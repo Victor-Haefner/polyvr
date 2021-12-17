@@ -28,7 +28,7 @@ void VRAMLLoader::read(string path) {
     xml.read(path);
 
     scene = VRTransform::create("scene");
-    scene->setOrientation(Vec3d(0,-1,0), Vec3d(0,0,1));
+    //scene->setOrientation(Vec3d(0,-1,0), Vec3d(0,0,1)); // TODO
     auto hierarchy = xml.getRoot()->getChild("InstanceHierarchy"); // scene graph
 	readNode(hierarchy, scene);
 }

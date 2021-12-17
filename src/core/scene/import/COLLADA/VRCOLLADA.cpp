@@ -27,7 +27,8 @@ namespace OSG {
 
 class VRCOLLADA_Scene {
     private:
-        VRObjectPtr root;
+        VRTransformPtr root;
+        PosePtr rootPose;
         map<string, VRObjectPtr> objects;
         map<string, VRObjectPtr> library_nodes;
         map<string, VRObjectPtr> library_scenes;
@@ -40,7 +41,14 @@ class VRCOLLADA_Scene {
     public:
         VRCOLLADA_Scene() { scheduler = VRScheduler::create(); }
 
-        void setRoot(VRObjectPtr r) { root = r; }
+        void setRootOrientation(string upAxis) {
+            if (upAxis == "X_UP") rootPose = Pose::create(Vec3d(), Vec3d(0,0, 1), Vec3d(1,0,0));
+            if (upAxis == "Y_UP") rootPose = Pose::create(Vec3d(), Vec3d(0,0,-1), Vec3d(0,1,0));
+            if (upAxis == "Z_UP") rootPose = Pose::create(Vec3d(), Vec3d(0,-1,0), Vec3d(0,0,1));
+            if (root) root->setPose(rootPose);
+        }
+
+        void setRoot(VRTransformPtr r) { root = r; if (root) root->setPose(rootPose); }
         void closeNode() { objStack.pop(); }
         VRObjectPtr top() { return objStack.size() > 0 ? objStack.top() : 0; }
 
@@ -175,14 +183,14 @@ class VRCOLLADA_Stream : public XMLStreamHandler {
         string skipHash(const string& s) { return (s[0] == '#') ? subString(s, 1, s.size()-1) : s; }
 
     public:
-        VRCOLLADA_Stream(VRObjectPtr root, string fPath, map<string, string> opts) : fPath(fPath), options(opts) {
+        VRCOLLADA_Stream(VRTransformPtr root, string fPath, map<string, string> opts) : fPath(fPath), options(opts) {
             scene.setRoot(root);
             materials.setFilePath(fPath);
         }
 
         ~VRCOLLADA_Stream() {}
 
-        static VRCOLLADA_StreamPtr create(VRObjectPtr root, string fPath, map<string, string> opts) { return VRCOLLADA_StreamPtr( new VRCOLLADA_Stream(root, fPath, opts) ); }
+        static VRCOLLADA_StreamPtr create(VRTransformPtr root, string fPath, map<string, string> opts) { return VRCOLLADA_StreamPtr( new VRCOLLADA_Stream(root, fPath, opts) ); }
 
         void startDocument() override {}
 
@@ -237,6 +245,8 @@ void VRCOLLADA_Stream::startElement(const string& uri, const string& name, const
     if (name == "source") geometries.newSource(n.attributes["id"].val);
     if (name == "accessor") geometries.handleAccessor(n.attributes["count"].val, n.attributes["stride"].val);
     if (name == "input") geometries.handleInput(n.attributes["semantic"].val, skipHash(n.attributes["source"].val), n.attributes["offset"].val, n.attributes["set"].val);
+    if (name == "points") geometries.newPrimitive(name, n.attributes["count"].val);
+    if (name == "lines") geometries.newPrimitive(name, n.attributes["count"].val);
     if (name == "triangles") geometries.newPrimitive(name, n.attributes["count"].val);
     if (name == "trifans") geometries.newPrimitive(name, n.attributes["count"].val);
     if (name == "tristrips") geometries.newPrimitive(name, n.attributes["count"].val);
@@ -280,9 +290,14 @@ void VRCOLLADA_Stream::endElement(const string& uri, const string& name, const s
         else type = parent.name;
         materials.setColor(type, toValue<Color4f>(node.data));
     }
+    if (node.name == "lambert") materials.setRendering(node.name);
+    if (node.name == "phong") materials.setRendering(node.name);
+    if (node.name == "constant") materials.setRendering(node.name);
     if (node.name == "texture") materials.setTexture(node.attributes["texture"].val);
     if (node.name == "float_array") geometries.setSourceData(node.data);
     if (node.name == "p") geometries.handleIndices(node.data);
+    if (node.name == "points") geometries.closePrimitive();
+    if (node.name == "lines") geometries.closePrimitive();
     if (node.name == "triangles") geometries.closePrimitive();
     if (node.name == "trifans") geometries.closePrimitive();
     if (node.name == "tristrips") geometries.closePrimitive();
@@ -295,13 +310,14 @@ void VRCOLLADA_Stream::endElement(const string& uri, const string& name, const s
         if (sid == "shininess") materials.setShininess(f);
     }
 
+    if (node.name == "up_axis") scene.setRootOrientation(node.data);
     if (node.name == "node" || node.name == "visual_scene") scene.closeNode();
     if (node.name == "matrix") scene.setMatrix(node.data);
     if (node.name == "translate") scene.translate(node.data);
     if (node.name == "rotate") scene.rotate(node.data);
 }
 
-void OSG::loadCollada(string path, VRObjectPtr root, map<string, string> options) {
+void OSG::loadCollada(string path, VRTransformPtr root, map<string, string> options) {
     auto xml = XML::create();
     string fPath = getFolderName(path);
     auto handler = VRCOLLADA_Stream::create(root, fPath, options);
@@ -321,7 +337,15 @@ void OSG::writeCollada(VRObjectPtr root, string path, map<string, string> option
     if (options.count("version")) version = options["version"];
     ofstream stream(path);
 
+    function<bool(VRObjectPtr)> isVisible = [&](VRObjectPtr o) -> bool {
+        if (!o->isVisible()) return false;
+        if (o == root) return true;
+        if (!isVisible(o->getParent())) return false;
+        return true;
+    };
+
     function<void(VRObjectPtr, int)> writeSceneGraph = [&](VRObjectPtr node, int indent) -> void {
+        if (!node->isVisible()) return;
         string identStr = "";
         for (int i=0; i< indent; i++) identStr += "\t";
         string name = node->getName();
@@ -336,12 +360,8 @@ void OSG::writeCollada(VRObjectPtr root, string path, map<string, string> option
 
         if (trans) {
             Matrix4d m = trans->getMatrix();
-            stream << identStr << "\t<matrix>";
-            stream << m[0][0] << " " << m[0][1] << " " << m[0][2] << " " << m[0][3] << " ";
-            stream << m[1][0] << " " << m[1][1] << " " << m[1][2] << " " << m[1][3] << " ";
-            stream << m[2][0] << " " << m[2][1] << " " << m[2][2] << " " << m[2][3] << " ";
-            stream << m[3][0] << " " << m[3][1] << " " << m[3][2] << " " << m[3][3];
-            stream << "</matrix>" << endl;
+            m.transpose();
+            stream << identStr << "\t<matrix sid=\"transform\">" << toString(m) << "</matrix>" << endl;
         }
 
         if (geo) {
@@ -392,11 +412,12 @@ void OSG::writeCollada(VRObjectPtr root, string path, map<string, string> option
         string name = mat.second->getName();
         Color3f d = mat.second->getDiffuse();
         float t = mat.second->getTransparency();
+        string rendering = mat.second->isLit() ? "lambert" : "constant"; // there is also phong
 
         stream << "﻿\t\t<effect id=\"" << name << "_effect\">" << endl;
         stream << "﻿\t\t\t<profile_COMMON>" << endl;
         stream << "﻿\t\t\t\t<technique sid=\"common\">" << endl;
-        stream << "﻿\t\t\t\t\t<lambert>" << endl;
+        stream << "﻿\t\t\t\t\t<" << rendering << ">" << endl;
         stream << "﻿\t\t\t\t\t\t<emission>" << endl;
         stream << "﻿\t\t\t\t\t\t\t<color sid=\"emission\">0 0 0 1</color>" << endl;
         stream << "﻿\t\t\t\t\t\t</emission>" << endl;
@@ -406,7 +427,7 @@ void OSG::writeCollada(VRObjectPtr root, string path, map<string, string> option
         stream << "﻿\t\t\t\t\t\t<index_of_refraction>" << endl;
         stream << "﻿\t\t\t\t\t\t\t<float sid=\"ior\">1.45</float>" << endl;
         stream << "﻿\t\t\t\t\t\t</index_of_refraction>" << endl;
-        stream << "﻿\t\t\t\t\t</lambert>" << endl;
+        stream << "﻿\t\t\t\t\t</" << rendering << ">" << endl;
         stream << "﻿\t\t\t\t</technique>" << endl;
         stream << "﻿\t\t\t</profile_COMMON>" << endl;
         stream << "﻿\t\t</effect>" << endl;
@@ -425,6 +446,7 @@ void OSG::writeCollada(VRObjectPtr root, string path, map<string, string> option
 
     stream << "\t<library_geometries>" << endl;
     for (auto obj : geos) {
+        if (!isVisible(obj)) continue;
         VRGeometryPtr geo = dynamic_pointer_cast<VRGeometry>(obj);
         string name = geo->getName();
         VRGeoData data(geo);
@@ -442,7 +464,7 @@ void OSG::writeCollada(VRObjectPtr root, string path, map<string, string> option
         }
         stream << "</float_array>" << endl;
 		stream << "\t\t\t\t\t<technique_common>" << endl;
-		stream << "\t\t\t\t\t\t<accessor source=\"#box_normals_array\" count=\"" << data.size() << "\" stride=\"3\">" << endl;
+		stream << "\t\t\t\t\t\t<accessor source=\"#" << name << "_positions_array\" count=\"" << data.size() << "\" stride=\"3\">" << endl;
 		stream << "\t\t\t\t\t\t\t<param name=\"X\" type=\"float\"/>" << endl;
 		stream << "\t\t\t\t\t\t\t<param name=\"Y\" type=\"float\"/>" << endl;
 		stream << "\t\t\t\t\t\t\t<param name=\"Z\" type=\"float\"/>" << endl;
@@ -450,22 +472,26 @@ void OSG::writeCollada(VRObjectPtr root, string path, map<string, string> option
 		stream << "\t\t\t\t\t</technique_common>" << endl;
         stream << "\t\t\t\t</source>" << endl;
 
-        stream << "\t\t\t\t<source id=\"" << name << "_normals\">" << endl;
-        stream << "\t\t\t\t\t<float_array count=\"" << data.sizeNormals()*3 << "\" id=\"" << name << "_normals_array\">";
-        for (int i=0; i<data.sizeNormals(); i++) {
-            if (i > 0) stream << " ";
-            Vec3d n = data.getNormal(i);
-            stream << n[0] << " " << n[1] << " " << n[2];
+        bool doNormals = bool(data.sizeNormals() > 0);
+
+        if (doNormals) {
+            stream << "\t\t\t\t<source id=\"" << name << "_normals\">" << endl;
+            stream << "\t\t\t\t\t<float_array count=\"" << data.sizeNormals()*3 << "\" id=\"" << name << "_normals_array\">";
+            for (int i=0; i<data.sizeNormals(); i++) {
+                if (i > 0) stream << " ";
+                Vec3d n = data.getNormal(i);
+                stream << n[0] << " " << n[1] << " " << n[2];
+            }
+            stream << "</float_array>" << endl;
+            stream << "\t\t\t\t\t<technique_common>" << endl;
+            stream << "\t\t\t\t\t\t<accessor source=\"#" << name << "_normals_array\" count=\"" << data.sizeNormals() << "\" stride=\"3\">" << endl;
+            stream << "\t\t\t\t\t\t\t<param name=\"X\" type=\"float\"/>" << endl;
+            stream << "\t\t\t\t\t\t\t<param name=\"Y\" type=\"float\"/>" << endl;
+            stream << "\t\t\t\t\t\t\t<param name=\"Z\" type=\"float\"/>" << endl;
+            stream << "\t\t\t\t\t\t</accessor>" << endl;
+            stream << "\t\t\t\t\t</technique_common>" << endl;
+            stream << "\t\t\t\t</source>" << endl;
         }
-        stream << "</float_array>" << endl;
-		stream << "\t\t\t\t\t<technique_common>" << endl;
-		stream << "\t\t\t\t\t\t<accessor source=\"#box_normals_array\" count=\"" << data.sizeNormals() << "\" stride=\"3\">" << endl;
-		stream << "\t\t\t\t\t\t\t<param name=\"X\" type=\"float\"/>" << endl;
-		stream << "\t\t\t\t\t\t\t<param name=\"Y\" type=\"float\"/>" << endl;
-		stream << "\t\t\t\t\t\t\t<param name=\"Z\" type=\"float\"/>" << endl;
-		stream << "\t\t\t\t\t\t</accessor>" << endl;
-		stream << "\t\t\t\t\t</technique_common>" << endl;
-        stream << "\t\t\t\t</source>" << endl;
 
         stream << "\t\t\t\t<vertices id=\"" << name << "_vertices\">" << endl;
 		stream << "\t\t\t\t\t<input semantic=\"POSITION\" source=\"#" << name << "_positions\" />" << endl;
@@ -477,6 +503,8 @@ void OSG::writeCollada(VRObjectPtr root, string path, map<string, string> option
 
             int faceCount = length/3;
             string typeName = "triangles";
+            if (type == GL_POINTS) { typeName = "points"; faceCount = length; }
+            if (type == GL_LINES) { typeName = "lines"; faceCount = length/2; }
             if (type == GL_TRIANGLE_FAN) { typeName = "trifans"; faceCount = 1; }
             if (type == GL_TRIANGLE_STRIP) { typeName = "tristrips"; faceCount = 1; }
             if (type == GL_QUADS) { typeName = "triangles"; faceCount = length/4 * 2; } // times two because we convert to triangles
@@ -484,22 +512,29 @@ void OSG::writeCollada(VRObjectPtr root, string path, map<string, string> option
 
             stream << "\t\t\t\t<" << typeName << " count=\"" << faceCount << "\" material=\"" << mat->getName() << "\">" << endl;
             stream << "\t\t\t\t\t<input offset=\"0\" semantic=\"VERTEX\" source=\"#" << name << "_vertices\" />" << endl;
-            stream << "\t\t\t\t\t<input offset=\"1\" semantic=\"NORMAL\" source=\"#" << name << "_normals\" />" << endl;
+            if (doNormals) stream << "\t\t\t\t\t<input offset=\"1\" semantic=\"NORMAL\" source=\"#" << name << "_normals\" />" << endl;
             stream << "\t\t\t\t\t<p>";
             if (type == GL_QUADS) { // convert to triangles on the fly
                 for (int i=0; i<length/4; i++) {
                     if (i > 0) stream << " ";
-                    stream << data.getIndex(i*4+0) << " " << data.getIndex(i*4+0, NormalsIndex) << " ";
-                    stream << data.getIndex(i*4+1) << " " << data.getIndex(i*4+1, NormalsIndex) << " ";
-                    stream << data.getIndex(i*4+2) << " " << data.getIndex(i*4+2, NormalsIndex) << " ";
-                    stream << data.getIndex(i*4+0) << " " << data.getIndex(i*4+0, NormalsIndex) << " ";
-                    stream << data.getIndex(i*4+2) << " " << data.getIndex(i*4+2, NormalsIndex) << " ";
-                    stream << data.getIndex(i*4+3) << " " << data.getIndex(i*4+3, NormalsIndex);
+                    stream << data.getIndex(i*4+0) << " ";
+                    if (doNormals) stream << data.getIndex(i*4+0, NormalsIndex) << " ";
+                    stream << data.getIndex(i*4+1) << " ";
+                    if (doNormals) stream << data.getIndex(i*4+1, NormalsIndex) << " ";
+                    stream << data.getIndex(i*4+2) << " ";
+                    if (doNormals) stream << data.getIndex(i*4+2, NormalsIndex) << " ";
+                    stream << data.getIndex(i*4+0) << " ";
+                    if (doNormals) stream << data.getIndex(i*4+0, NormalsIndex) << " ";
+                    stream << data.getIndex(i*4+2) << " ";
+                    if (doNormals) stream << data.getIndex(i*4+2, NormalsIndex) << " ";
+                    stream << data.getIndex(i*4+3);
+                    if (doNormals) stream << " " << data.getIndex(i*4+3, NormalsIndex);
                 }
             } else {
                 for (int i=0; i<length; i++) {
                     if (i > 0) stream << " ";
-                    stream << data.getIndex(i) << " " << data.getIndex(i, NormalsIndex);
+                    stream << data.getIndex(i);
+                    if (doNormals) stream << " " << data.getIndex(i, NormalsIndex);
                 }
             }
             stream << "</p>" << endl;
