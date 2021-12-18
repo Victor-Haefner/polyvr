@@ -473,7 +473,6 @@ void OSG::writeCollada(VRObjectPtr root, string path, map<string, string> option
         stream << "\t\t\t\t</source>" << endl;
 
         bool doNormals = bool(data.sizeNormals() > 0);
-
         if (doNormals) {
             stream << "\t\t\t\t<source id=\"" << name << "_normals\">" << endl;
             stream << "\t\t\t\t\t<float_array count=\"" << data.sizeNormals()*3 << "\" id=\"" << name << "_normals_array\">";
@@ -493,10 +492,61 @@ void OSG::writeCollada(VRObjectPtr root, string path, map<string, string> option
             stream << "\t\t\t\t</source>" << endl;
         }
 
+        bool doColor3s = bool(data.sizeColor3s() > 0);
+        bool doColor4s = bool(data.sizeColor4s() > 0);
+        bool doColors = bool(doColor3s || doColor4s);
+        if (doColors) {
+            int Ncols = max(data.sizeColor3s(), data.sizeColor4s());
+            int Nchannels = doColor3s ? 3 : 4;
+            stream << "\t\t\t\t<source id=\"" << name << "_colors\">" << endl;
+            stream << "\t\t\t\t\t<float_array count=\"" << Ncols*Nchannels << "\" id=\"" << name << "_colors_array\">";
+            for (int i=0; i<Ncols; i++) {
+                if (i > 0) stream << " ";
+                if (doColor3s) {
+                    Color3f n = data.getColor3(i);
+                    stream << n[0] << " " << n[1] << " " << n[2];
+                }
+                if (doColor4s) {
+                    Color4f n = data.getColor(i);
+                    stream << n[0] << " " << n[1] << " " << n[2] << " " << n[3];
+                }
+            }
+            stream << "</float_array>" << endl;
+            stream << "\t\t\t\t\t<technique_common>" << endl;
+            stream << "\t\t\t\t\t\t<accessor source=\"#" << name << "_normals_array\" count=\"" << Ncols << "\" stride=\"" << Nchannels << "\">" << endl;
+            stream << "\t\t\t\t\t\t\t<param name=\"R\" type=\"float\"/>" << endl;
+            stream << "\t\t\t\t\t\t\t<param name=\"G\" type=\"float\"/>" << endl;
+            stream << "\t\t\t\t\t\t\t<param name=\"B\" type=\"float\"/>" << endl;
+            if (doColor4s) stream << "\t\t\t\t\t\t\t<param name=\"A\" type=\"float\"/>" << endl;
+            stream << "\t\t\t\t\t\t</accessor>" << endl;
+            stream << "\t\t\t\t\t</technique_common>" << endl;
+            stream << "\t\t\t\t</source>" << endl;
+        }
+
+        bool doTexCoords = bool(data.sizeTexCoords() > 0);
+        if (doTexCoords) {
+            stream << "\t\t\t\t<source id=\"" << name << "_texcoords\">" << endl;
+            stream << "\t\t\t\t\t<float_array count=\"" << data.sizeTexCoords()*2 << "\" id=\"" << name << "_texcoords_array\">";
+            for (int i=0; i<data.sizeTexCoords(); i++) {
+                if (i > 0) stream << " ";
+                Vec2d n = data.getTexCoord(i);
+                stream << n[0] << " " << n[1];
+            }
+            stream << "</float_array>" << endl;
+            stream << "\t\t\t\t\t<technique_common>" << endl;
+            stream << "\t\t\t\t\t\t<accessor source=\"#" << name << "_normals_array\" count=\"" << data.sizeTexCoords() << "\" stride=\"2\">" << endl;
+            stream << "\t\t\t\t\t\t\t<param name=\"U\" type=\"float\"/>" << endl;
+            stream << "\t\t\t\t\t\t\t<param name=\"V\" type=\"float\"/>" << endl;
+            stream << "\t\t\t\t\t\t</accessor>" << endl;
+            stream << "\t\t\t\t\t</technique_common>" << endl;
+            stream << "\t\t\t\t</source>" << endl;
+        }
+
         stream << "\t\t\t\t<vertices id=\"" << name << "_vertices\">" << endl;
 		stream << "\t\t\t\t\t<input semantic=\"POSITION\" source=\"#" << name << "_positions\" />" << endl;
 		stream << "\t\t\t\t</vertices>" << endl;
 
+		size_t N0 = 0;
         for (int i=0; i<data.getNTypes(); i++) {
             int type = data.getType(i);
             int length = data.getLength(i);
@@ -513,32 +563,49 @@ void OSG::writeCollada(VRObjectPtr root, string path, map<string, string> option
             stream << "\t\t\t\t<" << typeName << " count=\"" << faceCount << "\" material=\"" << mat->getName() << "\">" << endl;
             stream << "\t\t\t\t\t<input offset=\"0\" semantic=\"VERTEX\" source=\"#" << name << "_vertices\" />" << endl;
             if (doNormals) stream << "\t\t\t\t\t<input offset=\"1\" semantic=\"NORMAL\" source=\"#" << name << "_normals\" />" << endl;
+            if (doColors)  stream << "\t\t\t\t\t<input offset=\"1\" semantic=\"COLOR\" source=\"#" << name << "_colors\" />" << endl;
+            if (doTexCoords)  stream << "\t\t\t\t\t<input offset=\"1\" semantic=\"TEXCOORD\" source=\"#" << name << "_texcoords\" />" << endl;
             stream << "\t\t\t\t\t<p>";
             if (type == GL_QUADS) { // convert to triangles on the fly
                 for (int i=0; i<length/4; i++) {
                     if (i > 0) stream << " ";
-                    stream << data.getIndex(i*4+0) << " ";
-                    if (doNormals) stream << data.getIndex(i*4+0, NormalsIndex) << " ";
-                    stream << data.getIndex(i*4+1) << " ";
-                    if (doNormals) stream << data.getIndex(i*4+1, NormalsIndex) << " ";
-                    stream << data.getIndex(i*4+2) << " ";
-                    if (doNormals) stream << data.getIndex(i*4+2, NormalsIndex) << " ";
-                    stream << data.getIndex(i*4+0) << " ";
-                    if (doNormals) stream << data.getIndex(i*4+0, NormalsIndex) << " ";
-                    stream << data.getIndex(i*4+2) << " ";
-                    if (doNormals) stream << data.getIndex(i*4+2, NormalsIndex) << " ";
-                    stream << data.getIndex(i*4+3);
-                    if (doNormals) stream << " " << data.getIndex(i*4+3, NormalsIndex);
+                    stream << data.getIndex(N0+i*4+0) << " ";
+                    if (doNormals) stream << data.getIndex(N0+i*4+0, NormalsIndex) << " ";
+                    if (doColors)  stream << data.getIndex(N0+i*4+0, ColorsIndex) << " ";
+                    if (doTexCoords)  stream << data.getIndex(N0+i*4+0, TexCoordsIndex) << " ";
+                    stream << data.getIndex(N0+i*4+1) << " ";
+                    if (doNormals) stream << data.getIndex(N0+i*4+1, NormalsIndex) << " ";
+                    if (doColors)  stream << data.getIndex(N0+i*4+1, ColorsIndex) << " ";
+                    if (doTexCoords)  stream << data.getIndex(N0+i*4+1, TexCoordsIndex) << " ";
+                    stream << data.getIndex(N0+i*4+2) << " ";
+                    if (doNormals) stream << data.getIndex(N0+i*4+2, NormalsIndex) << " ";
+                    if (doColors)  stream << data.getIndex(N0+i*4+2, ColorsIndex) << " ";
+                    if (doTexCoords)  stream << data.getIndex(N0+i*4+2, TexCoordsIndex) << " ";
+                    stream << data.getIndex(N0+i*4+0) << " ";
+                    if (doNormals) stream << data.getIndex(N0+i*4+0, NormalsIndex) << " ";
+                    if (doColors)  stream << data.getIndex(N0+i*4+0, ColorsIndex) << " ";
+                    if (doTexCoords)  stream << data.getIndex(N0+i*4+0, TexCoordsIndex) << " ";
+                    stream << data.getIndex(N0+i*4+2) << " ";
+                    if (doNormals) stream << data.getIndex(N0+i*4+2, NormalsIndex) << " ";
+                    if (doColors)  stream << data.getIndex(N0+i*4+2, ColorsIndex) << " ";
+                    if (doTexCoords)  stream << data.getIndex(N0+i*4+2, TexCoordsIndex) << " ";
+                    stream << data.getIndex(N0+i*4+3);
+                    if (doNormals) stream << " " << data.getIndex(N0+i*4+3, NormalsIndex);
+                    if (doColors)  stream << " " << data.getIndex(N0+i*4+3, ColorsIndex);
+                    if (doTexCoords)  stream << " " << data.getIndex(N0+i*4+3, TexCoordsIndex);
                 }
             } else {
                 for (int i=0; i<length; i++) {
                     if (i > 0) stream << " ";
-                    stream << data.getIndex(i);
-                    if (doNormals) stream << " " << data.getIndex(i, NormalsIndex);
+                    stream << data.getIndex(N0+i);
+                    if (doNormals) stream << " " << data.getIndex(N0+i, NormalsIndex);
+                    if (doColors) stream << " " << data.getIndex(N0+i, ColorsIndex);
+                    if (doTexCoords) stream << " " << data.getIndex(N0+i, TexCoordsIndex);
                 }
             }
             stream << "</p>" << endl;
             stream << "\t\t\t\t</" << typeName << ">" << endl;
+            N0 += length;
         }
 
         stream << "\t\t\t</mesh>" << endl;

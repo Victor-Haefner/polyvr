@@ -253,6 +253,9 @@ void VRGeoData::apply(VRGeometryPtr geo, bool check, bool checkIndices) const {
 
 int VRGeoData::size() const { return data->pos->size(); }
 int VRGeoData::sizeNormals() const { return data->norms->size(); }
+int VRGeoData::sizeColor3s() const { return data->cols3->size(); }
+int VRGeoData::sizeColor4s() const { return data->cols4->size(); }
+int VRGeoData::sizeTexCoords(int i) const { return data->texs[i]->size(); }
 int VRGeoData::getNTypes() const { return data->types->size(); }
 
 int VRGeoData::getNFaces() const {

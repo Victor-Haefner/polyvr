@@ -154,6 +154,7 @@ void VRAMLLoader::writeScene(ofstream& stream, string daeFolder) {
 
 	for (auto obj : assets) {
         string oName = obj.second->getName();
+        std::replace( oName.begin(), oName.end(), '/', '_');
         string fPath = daeFolder+"/"+oName+".dae";
         string uuidEl = genUUID();
         string uuidIn = genUUID();

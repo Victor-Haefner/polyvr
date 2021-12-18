@@ -142,7 +142,7 @@ void VRCOLLADA_Geometry::handleVCount(string data) {
 void VRCOLLADA_Geometry::handleIndices(string data) {
     if (currentGeoData && inPrimitive) {
         auto indices = toValue<vector<int>>(data);
-        //cout << "VRCOLLADA_Geometry::handleIndices " << currentPrimitive.name << " " << indices.size() << endl;
+        cout << "VRCOLLADA_Geometry::handleIndices " << currentPrimitive.name << " " << indices.size() << endl;
 
         if (currentPrimitive.name == "points") currentGeoData->pushType(GL_POINTS);
         if (currentPrimitive.name == "lines") currentGeoData->pushType(GL_LINES);
