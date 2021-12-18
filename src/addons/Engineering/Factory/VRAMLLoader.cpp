@@ -56,7 +56,7 @@ void VRAMLLoader::processElement(XMLElementPtr node, VRTransformPtr parent) {
                 if (ref == "implicit") parent->hide();
             }
 
-            if (a->getAttribute("Name") == "refURI" ) {
+            if (a->getAttribute("Name") == "refURI") {
                 string uri = a->getChild("Value")->getText();
                 if ( contains(uri, ".dae") ) {
                     string scene = "";
@@ -68,11 +68,13 @@ void VRAMLLoader::processElement(XMLElementPtr node, VRTransformPtr parent) {
                         map<string, string> options;
                         options["scene"] = scene;
                         cout << "AMLDir \"" << AMLDir << "\", uri \"" << uri << "\"" << endl;
-                        assets[uri] = VRImport::get()->load( AMLDir+uri, 0, 0, "COLLADA", 0, options, 0);
-                        if (assets[uri]) assets[uri]->setPersistency(0);
+                        auto obj = VRImport::get()->load( AMLDir+uri, 0, 0, "COLLADA", 0, options, 0);
+                        if (obj) {
+                            obj->setPersistency(0);
+                            assets[uri] = obj;
+                        }
                     }
-                    //if len(assets) == 56 ) {
-                    if (assets[uri]) parent->addChild(assets[uri]->duplicate());
+                    if (assets.count(uri) && assets[uri]) parent->addChild(assets[uri]->duplicate());
                 }
             }
         }
