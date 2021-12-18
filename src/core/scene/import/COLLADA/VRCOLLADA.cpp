@@ -45,10 +45,13 @@ class VRCOLLADA_Scene {
             if (upAxis == "X_UP") rootPose = Pose::create(Vec3d(), Vec3d(0,0, 1), Vec3d(1,0,0));
             if (upAxis == "Y_UP") rootPose = Pose::create(Vec3d(), Vec3d(0,0,-1), Vec3d(0,1,0));
             if (upAxis == "Z_UP") rootPose = Pose::create(Vec3d(), Vec3d(0,-1,0), Vec3d(0,0,1));
-            if (root) root->setPose(rootPose);
+            if (root && rootPose) {
+                root->setPose(rootPose);
+                //root->setIdentity();
+            }
         }
 
-        void setRoot(VRTransformPtr r) { root = r; if (root) root->setPose(rootPose); }
+        void setRoot(VRTransformPtr r) { root = r; if (root && rootPose) root->setPose(rootPose); }
         void closeNode() { objStack.pop(); }
         VRObjectPtr top() { return objStack.size() > 0 ? objStack.top() : 0; }
 
@@ -145,6 +148,7 @@ class VRCOLLADA_Scene {
                     VRTransformPtr obj = VRTransform::create(file);
                     map<string, string> options;
                     loadCollada( fPath + "/" + file, obj, options );
+                    obj->setIdentity(); // dont turn coord system multiple times!
                     library_nodes[url] = obj;
                 } else {} // should already be in library_nodes
             }

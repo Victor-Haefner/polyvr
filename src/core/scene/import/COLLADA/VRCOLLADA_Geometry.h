@@ -17,7 +17,7 @@ class VRCOLLADA_Geometry : public std::enable_shared_from_this<VRCOLLADA_Geometr
         struct Source {
             int count = 0;
             int stride = 0;
-            bool pushed = false;
+            map<VRGeoDataPtr, size_t> users;
             vector<float> data;
         };
 

@@ -28,7 +28,7 @@ void VRAMLLoader::read(string path) {
     xml.read(path);
 
     scene = VRTransform::create("scene");
-    //scene->setOrientation(Vec3d(0,-1,0), Vec3d(0,0,1)); // TODO
+    scene->setOrientation(Vec3d(0,-1,0), Vec3d(0,0,1)); // AML has z up
     auto hierarchy = xml.getRoot()->getChild("InstanceHierarchy"); // scene graph
 	readNode(hierarchy, scene);
 }
@@ -64,6 +64,7 @@ void VRAMLLoader::processElement(XMLElementPtr node, VRTransformPtr parent) {
                         scene = splitString(uri, '#')[1];
                         uri = splitString(uri, '#')[0];
                     }
+
                     if (!assets.count(uri)) {
                         map<string, string> options;
                         options["scene"] = scene;
@@ -71,10 +72,17 @@ void VRAMLLoader::processElement(XMLElementPtr node, VRTransformPtr parent) {
                         auto obj = VRImport::get()->load( AMLDir+uri, 0, 0, "COLLADA", 0, options, 0);
                         if (obj) {
                             obj->setPersistency(0);
+                            obj->setIdentity(); // rotation is in aml node!
                             assets[uri] = obj;
                         }
                     }
-                    if (assets.count(uri) && assets[uri]) parent->addChild(assets[uri]->duplicate());
+
+                    if (assets.count(uri) && assets[uri]) {
+                        auto obj = dynamic_pointer_cast<VRTransform>(assets[uri]->duplicate());
+                        //parent->setPose( obj->getPose() );
+                        //obj->setIdentity();
+                        parent->addChild(obj);
+                    }
                 }
             }
         }
@@ -162,6 +170,26 @@ void VRAMLLoader::writeScene(ofstream& stream, string daeFolder) {
         string uuidIn = genUUID();
         obj.second->exportToFile(fPath, {});
         stream << "\t\t<InternalElement ID=\"" << uuidEl << "\" Name=\"" << oName << "\">\n";
+		stream << "\t\t\t<Attribute Name=\"Frame\">\n";
+		stream << "\t\t\t\t<Attribute Name=\"x\">\n";
+		stream << "\t\t\t\t\t<Value>0</Value>\n";
+		stream << "\t\t\t\t</Attribute>\n";
+		stream << "\t\t\t\t<Attribute Name=\"y\">\n";
+		stream << "\t\t\t\t\t<Value>0</Value>\n";
+		stream << "\t\t\t\t</Attribute>\n";
+		stream << "\t\t\t\t<Attribute Name=\"z\">\n";
+		stream << "\t\t\t\t\t<Value>0</Value>\n";
+		stream << "\t\t\t\t</Attribute>\n";
+		stream << "\t\t\t\t<Attribute Name=\"rx\">\n";
+		stream << "\t\t\t\t\t<Value>90</Value>\n"; // rotate to get Z up
+		stream << "\t\t\t\t</Attribute>\n";
+		stream << "\t\t\t\t<Attribute Name=\"ry\">\n";
+		stream << "\t\t\t\t\t<Value>0</Value>\n";
+		stream << "\t\t\t\t</Attribute>\n";
+		stream << "\t\t\t\t<Attribute Name=\"rz\">\n";
+		stream << "\t\t\t\t\t<Value>0</Value>\n";
+		stream << "\t\t\t\t</Attribute>\n";
+		stream << "\t\t\t</Attribute>\n";
         stream << "\t\t\t<ExternalInterface Name=\"Representation\" RefBaseClassPath=\"AutomationMLInterfaceClassLib/AutomationMLBaseInterface/ExternalDataConnector/COLLADAInterface\" ID=\"" << uuidIn << "\">\n";
         stream << "\t\t\t\t<Attribute Name=\"refURI\" AttributeDataType=\"xs:anyURI\">\n";
         stream << "\t\t\t\t\t<Value>./dae/" << oName << ".dae</Value>\n";

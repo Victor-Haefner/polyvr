@@ -54,8 +54,8 @@ void VRCOLLADA_Geometry::handleInput(string type, string sourceID, string offset
     if (sources.count(sourceID)) {
         auto& source = sources[sourceID];
 
-        if (currentGeoData && !source.pushed) {
-            source.pushed = true;
+        if (currentGeoData && !source.users.count(currentGeoData)) {
+            source.users[currentGeoData] = 0;
 
             if (type == "POSITION" && source.stride == 3) {
                 for (int i=0; i<source.count; i++) {
