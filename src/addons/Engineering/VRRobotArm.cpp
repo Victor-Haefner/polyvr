@@ -25,7 +25,7 @@ VRRobotArm::VRRobotArm(string type) : type(type) {
 #endif
 
     animPtr = VRFunction<float>::create("animOnPath", bind(&VRRobotArm::animOnPath, this, placeholders::_1 ) );
-    anim->setUnownedCallback(animPtr);
+    anim->addUnownedCallback(animPtr);
 
     updatePtr = VRUpdateCb::create("run engines", bind(&VRRobotArm::update, this) );
     VRScene::getCurrent()->addUpdateFkt(updatePtr, 999);
@@ -164,7 +164,7 @@ vector<float> VRRobotArm::calcReverseKinematics(PosePtr p) {
 PosePtr VRRobotArm::calcForwardKinematicsKuka(vector<float> angles) {
     float r1 = lengths[1];
     float r2 = lengths[2];
-    float b = Pi-angles[2];
+    //float b = Pi-angles[2];
     float a = angles[1] + Pi*0.5;
     float f = angles[0];
 

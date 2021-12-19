@@ -181,8 +181,8 @@ class VRCOLLADA_Stream : public XMLStreamHandler {
         string currentSection;
         VRCOLLADA_Material materials;
         VRCOLLADA_Geometry geometries;
+        VRCOLLADA_Kinematics kinematics;
         VRCOLLADA_Scene scene;
-        //VRCOLLADA_Kinematics kinematics;
 
         string skipHash(const string& s) { return (s[0] == '#') ? subString(s, 1, s.size()-1) : s; }
 
@@ -229,6 +229,7 @@ void VRCOLLADA_Stream::startElement(const string& uri, const string& name, const
 
     // enter section
     if (name == "asset") currentSection = name;
+    if (name == "library_animations") currentSection = name;
     if (name == "library_geometries") currentSection = name;
     if (name == "library_materials" || name == "library_effects" || name == "library_images") currentSection = name;
     if (name == "library_joints" || name == "library_kinematics_models" || name == "library_articulated_systems" || name == "library_kinematics_scenes") currentSection = name;
@@ -255,6 +256,9 @@ void VRCOLLADA_Stream::startElement(const string& uri, const string& name, const
     if (name == "trifans") geometries.newPrimitive(name, n.attributes["count"].val);
     if (name == "tristrips") geometries.newPrimitive(name, n.attributes["count"].val);
     if (name == "polylist") geometries.newPrimitive(name, n.attributes["count"].val);
+
+    // animations
+    if (name == "animation") kinematics.newAnimation( n.attributes["id"].val, n.attributes["name"].val );
 
     // scene graphs
     if (name == "instance_geometry") scene.instantiateGeometry(skipHash(n.attributes["url"].val), &geometries);
@@ -319,6 +323,9 @@ void VRCOLLADA_Stream::endElement(const string& uri, const string& name, const s
     if (node.name == "matrix") scene.setMatrix(node.data);
     if (node.name == "translate") scene.translate(node.data);
     if (node.name == "rotate") scene.rotate(node.data);
+
+    // animations
+    if (node.name == "animation") kinematics.endAnimation();
 }
 
 void OSG::loadCollada(string path, VRTransformPtr root, map<string, string> options) {

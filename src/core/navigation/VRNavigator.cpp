@@ -392,8 +392,8 @@ void VRNavigator::focus(VRDeviceWeakPtr _dev) {
     p->addPoint( Pose(ins->point.subZero(), z));
     p->compute(20);
 
-    focus_fkt = VRFunction<float>::create("TransAnim", bind(animPathAt, VRTransformWeakPtr(target), p, _1));
-    scene->addAnimation<float>(0.3,0,focus_fkt,0,1);
+    focus_fkt = VRAnimCb::create("TransAnim", bind(animPathAt, VRTransformWeakPtr(target), p, _1));
+    scene->addAnimation(0.3,0,focus_fkt,0,1);
 }
 
 // presets

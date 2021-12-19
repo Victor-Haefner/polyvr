@@ -1139,7 +1139,7 @@ struct GLTFNNode : GLTFNode{
         if (t) {
             float maxDuration = primeAnimations();
             VRAnimCbPtr fkt = VRAnimCb::create("anim", bind(animCB, maxDuration, placeholders::_1) );
-            VRAnimationPtr animptr = VRScene::getCurrent()->addAnimation<float>(maxDuration, 0.f, fkt, 0.f, 1.f, true, true);
+            VRAnimationPtr animptr = VRScene::getCurrent()->addAnimation(maxDuration, 0.f, fkt, 0.f, 1.f, true, true);
             t->addAnimation(animptr);
         }
     }
@@ -2020,7 +2020,7 @@ class GLTFLoader : public GLTFUtils {
             if (t) {
                 float duration = 5.0;
                 VRAnimCbPtr fkt = VRAnimCb::create("anim", bind(animCB,duration, placeholders::_1) );
-                VRAnimationPtr animptr = VRScene::getCurrent()->addAnimation<float>(duration, 0.f, fkt, 0.f, 1.f, true, true);
+                VRAnimationPtr animptr = VRScene::getCurrent()->addAnimation(duration, 0.f, fkt, 0.f, 1.f, true, true);
                 t->addAnimation(animptr);
             } else cout << "no Tree found" << endl;
         }

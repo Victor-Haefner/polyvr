@@ -30,8 +30,6 @@
 #include "VRGuiBuilder.h"
 #include "VRGuiSignals.h"
 #include "VRGuiFile.h"
-#include "addons/construction/building/VRElectricDevice.h"
-//#include "addons/Engineering/CSG/CSGGeometry.h"
 
 #include "wrapper/VRGuiTreeView.h"
 

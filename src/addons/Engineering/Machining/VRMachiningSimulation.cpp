@@ -50,7 +50,7 @@ void VRMachiningSimulation::runInstruction(float delay) {
 	eeP0 = c.p0;
 
 	anim = VRAnimation::create("MachiningAnim");
-	anim->setCallback( VRAnimCb::create( "MachiningAnim", bind(&VRMachiningSimulation::run, this, std::placeholders::_1) ) );
+	anim->addCallback( VRAnimCb::create( "MachiningAnim", bind(&VRMachiningSimulation::run, this, std::placeholders::_1) ) );
 	anim->setDuration(c.T);
 	anim->start(delay);
 }

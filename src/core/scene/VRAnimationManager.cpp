@@ -30,4 +30,11 @@ void VRAnimationManager::remAnimation(VRAnimationPtr anim) {
     if (anim_map.count(n)) anim_map.erase(n);
 }
 
+VRAnimationPtr VRAnimationManager::addAnimation(float duration, float offset, VRAnimCbPtr fkt, float start, float end, bool loop, bool owned) {//Todo: replace VRFunction, template?
+    auto anim = VRAnimation::create(duration, offset, fkt, start, end, loop, owned);
+    addAnimation(anim);
+    anim->start(offset);
+    return anim;
+}
+
 OSG_END_NAMESPACE;

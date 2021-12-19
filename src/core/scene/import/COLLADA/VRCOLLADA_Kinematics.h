@@ -6,6 +6,7 @@
 #include "core/scene/import/VRImportFwd.h"
 
 #include <string>
+#include <map>
 
 struct AnimationLibrary;
 struct kin_scene;
@@ -15,7 +16,11 @@ OSG_BEGIN_NAMESPACE;
 
 class VRCOLLADA_Kinematics : public std::enable_shared_from_this<VRCOLLADA_Kinematics> {
 	private:
+        map<string, VRAnimationPtr> library_animations;
+        string currentAnimation;
+        string currentSubAnimation;
 
+        // deprecated
         AnimationLibrary parseColladaAnimations(string data);
         void buildAnimations(AnimationLibrary& lib, VRObjectPtr objects);
         kin_scene parseColladaKinematics(string data);
@@ -29,7 +34,10 @@ class VRCOLLADA_Kinematics : public std::enable_shared_from_this<VRCOLLADA_Kinem
 		static VRCOLLADA_KinematicsPtr create();
 		VRCOLLADA_KinematicsPtr ptr();
 
-		void apply();
+		void apply(); // deprecated
+
+		void newAnimation(string id, string name);
+		void endAnimation();
 };
 
 OSG_END_NAMESPACE;

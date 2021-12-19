@@ -1,5 +1,7 @@
 #include "VRCOLLADA_Kinematics.h"
 
+#include "core/objects/VRAnimation.h"
+
 #include <map>
 #include <string>
 #include <OpenSG/OSGVector.h>
@@ -91,6 +93,22 @@ VRCOLLADA_Kinematics::~VRCOLLADA_Kinematics() {}
 
 VRCOLLADA_KinematicsPtr VRCOLLADA_Kinematics::create() { return VRCOLLADA_KinematicsPtr( new VRCOLLADA_Kinematics() ); }
 VRCOLLADA_KinematicsPtr VRCOLLADA_Kinematics::ptr() { return static_pointer_cast<VRCOLLADA_Kinematics>(shared_from_this()); }
+
+void VRCOLLADA_Kinematics::newAnimation(string id, string name) {
+    if (currentAnimation == "") { // outer animation
+        auto a = VRAnimation::create(name);
+        library_animations[id] = a;
+        currentAnimation = id;
+    } else {
+        currentSubAnimation = id;
+    }
+}
+
+void VRCOLLADA_Kinematics::endAnimation() {
+    if (currentSubAnimation != "") currentSubAnimation = "";
+    else currentAnimation == "";
+}
+
 
 void VRCOLLADA_Kinematics::apply() {
     string data; // TODO: this was the file content..
