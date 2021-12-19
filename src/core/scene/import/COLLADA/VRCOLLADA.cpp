@@ -403,10 +403,24 @@ void OSG::writeCollada(VRObjectPtr root, string path, map<string, string> option
     stream << "﻿\t\t<up_axis>Y_UP</up_axis>" << endl;
     stream << "﻿\t</asset>" << endl;
 
-    auto geos = root->getChildren(true, "Geometry", true);
+    auto getGeometries = [](VRObjectPtr root) {
+        auto objs = root->getChildren(true, "", true);
+
+        vector<VRGeometryPtr> geos;
+        for (auto obj : objs) {
+            VRGeometryPtr geo = dynamic_pointer_cast<VRGeometry>(obj);
+            if (!geo) continue;
+            if (geo->getType() == "AnnotationEngine") continue;
+            geos.push_back(geo);
+        }
+        return geos;
+    };
+
+    auto geos = getGeometries(root);
+
     map<string, VRMaterialPtr> materials;
-    for (auto obj : geos) {
-        VRGeometryPtr geo = dynamic_pointer_cast<VRGeometry>(obj);
+    for (auto geo : geos) {
+        if (!geo) continue;
         auto mat = geo->getMaterial();
         materials[mat->getName()] = mat;
     }
@@ -449,9 +463,8 @@ void OSG::writeCollada(VRObjectPtr root, string path, map<string, string> option
 
 
     stream << "\t<library_geometries>" << endl;
-    for (auto obj : geos) {
-        if (!isVisible(obj)) continue;
-        VRGeometryPtr geo = dynamic_pointer_cast<VRGeometry>(obj);
+    for (auto geo : geos) {
+        if (!isVisible(geo)) continue;
         string name = geo->getName();
         VRGeoData data(geo);
         auto mat = geo->getMaterial();
