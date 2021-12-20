@@ -25,10 +25,9 @@ class VRCOLLADA_Kinematics : public std::enable_shared_from_this<VRCOLLADA_Kinem
 
         struct Sampler {
             string target;
+            string animation;
             map<string, string> sources;
         };
-
-        VRObjectPtr root;
 
         map<string, VRAnimationPtr> library_animations;
         string currentAnimation;
@@ -49,13 +48,14 @@ class VRCOLLADA_Kinematics : public std::enable_shared_from_this<VRCOLLADA_Kinem
         void buildKinematics(const kin_scene& scene, VRObjectPtr objects);
 
 	public:
-		VRCOLLADA_Kinematics(VRObjectPtr r);
+		VRCOLLADA_Kinematics();
 		~VRCOLLADA_Kinematics();
 
-		static VRCOLLADA_KinematicsPtr create(VRObjectPtr r);
+		static VRCOLLADA_KinematicsPtr create();
 		VRCOLLADA_KinematicsPtr ptr();
 
 		void apply(); // deprecated
+		void finalize(map<string, VRObjectWeakPtr>& objects);
 
 		void newAnimation(string id, string name);
 		void endAnimation();

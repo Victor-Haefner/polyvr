@@ -29,7 +29,7 @@ class VRCOLLADA_Scene {
     private:
         VRTransformPtr root;
         PosePtr rootPose;
-        map<string, VRObjectPtr> objects;
+        map<string, VRObjectWeakPtr> objects;
         map<string, VRObjectPtr> library_nodes;
         map<string, VRObjectPtr> library_scenes;
         string currentSection;
@@ -55,6 +55,7 @@ class VRCOLLADA_Scene {
         void closeNode() { objStack.pop(); }
         VRObjectPtr top() { return objStack.size() > 0 ? objStack.top() : 0; }
 
+        map<string, VRObjectWeakPtr>& getObjects() { return objects; }
         bool hasScene(string name) { return library_scenes.count(name); }
 
         void setCurrentSection(string s) {
@@ -112,6 +113,7 @@ class VRCOLLADA_Scene {
         void newNode(string id, string name) {
             if (name == "") name = id;
             auto obj = VRTransform::create(name);
+            objects[id] = obj;
 
             auto parent = top();
             if (parent) parent->addChild(obj);
@@ -187,7 +189,7 @@ class VRCOLLADA_Stream : public XMLStreamHandler {
         string skipHash(const string& s) { return (s[0] == '#') ? subString(s, 1, s.size()-1) : s; }
 
     public:
-        VRCOLLADA_Stream(VRTransformPtr root, string fPath, map<string, string> opts) : fPath(fPath), options(opts), kinematics(root) {
+        VRCOLLADA_Stream(VRTransformPtr root, string fPath, map<string, string> opts) : fPath(fPath), options(opts) {
             scene.setRoot(root);
             materials.setFilePath(fPath);
         }
@@ -202,6 +204,7 @@ class VRCOLLADA_Stream : public XMLStreamHandler {
             materials.finalize();
             geometries.finalize();
             scene.finalize();
+            kinematics.finalize(scene.getObjects());
         }
 
         void startElement(const string& uri, const string& name, const string& qname, const map<string, XMLAttribute>& attributes) override;
@@ -266,7 +269,7 @@ void VRCOLLADA_Stream::startElement(const string& uri, const string& name, const
         if (name == "accessor") kinematics.handleAccessor(n.attributes["count"].val, n.attributes["stride"].val);
         if (name == "sampler") kinematics.newSampler(n.attributes["id"].val);
         if (name == "input") kinematics.handleInput(n.attributes["semantic"].val, skipHash(n.attributes["source"].val));
-        if (name == "channel") kinematics.handleChannel(n.attributes["source"].val, n.attributes["target"].val);
+        if (name == "channel") kinematics.handleChannel(skipHash(n.attributes["source"].val), n.attributes["target"].val);
     }
 
     // scene graphs
