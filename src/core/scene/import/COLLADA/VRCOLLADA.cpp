@@ -187,7 +187,7 @@ class VRCOLLADA_Stream : public XMLStreamHandler {
         string skipHash(const string& s) { return (s[0] == '#') ? subString(s, 1, s.size()-1) : s; }
 
     public:
-        VRCOLLADA_Stream(VRTransformPtr root, string fPath, map<string, string> opts) : fPath(fPath), options(opts) {
+        VRCOLLADA_Stream(VRTransformPtr root, string fPath, map<string, string> opts) : fPath(fPath), options(opts), kinematics(root) {
             scene.setRoot(root);
             materials.setFilePath(fPath);
         }
@@ -246,19 +246,28 @@ void VRCOLLADA_Stream::startElement(const string& uri, const string& name, const
     if (name == "instance_effect") materials.setMaterialEffect( skipHash(n.attributes["url"].val) );
 
     // geometric data
-    if (name == "geometry") geometries.newGeometry(n.attributes["name"].val, n.attributes["id"].val);
-    if (name == "source") geometries.newSource(n.attributes["id"].val);
-    if (name == "accessor") geometries.handleAccessor(n.attributes["count"].val, n.attributes["stride"].val);
-    if (name == "input") geometries.handleInput(n.attributes["semantic"].val, skipHash(n.attributes["source"].val), n.attributes["offset"].val, n.attributes["set"].val);
-    if (name == "points") geometries.newPrimitive(name, n.attributes["count"].val);
-    if (name == "lines") geometries.newPrimitive(name, n.attributes["count"].val);
-    if (name == "triangles") geometries.newPrimitive(name, n.attributes["count"].val);
-    if (name == "trifans") geometries.newPrimitive(name, n.attributes["count"].val);
-    if (name == "tristrips") geometries.newPrimitive(name, n.attributes["count"].val);
-    if (name == "polylist") geometries.newPrimitive(name, n.attributes["count"].val);
+    if (currentSection == "library_geometries") {
+        if (name == "geometry") geometries.newGeometry(n.attributes["name"].val, n.attributes["id"].val);
+        if (name == "source") geometries.newSource(n.attributes["id"].val);
+        if (name == "accessor") geometries.handleAccessor(n.attributes["count"].val, n.attributes["stride"].val);
+        if (name == "input") geometries.handleInput(n.attributes["semantic"].val, skipHash(n.attributes["source"].val), n.attributes["offset"].val, n.attributes["set"].val);
+        if (name == "points") geometries.newPrimitive(name, n.attributes["count"].val);
+        if (name == "lines") geometries.newPrimitive(name, n.attributes["count"].val);
+        if (name == "triangles") geometries.newPrimitive(name, n.attributes["count"].val);
+        if (name == "trifans") geometries.newPrimitive(name, n.attributes["count"].val);
+        if (name == "tristrips") geometries.newPrimitive(name, n.attributes["count"].val);
+        if (name == "polylist") geometries.newPrimitive(name, n.attributes["count"].val);
+    }
 
     // animations
-    if (name == "animation") kinematics.newAnimation( n.attributes["id"].val, n.attributes["name"].val );
+    if (currentSection == "library_animations") {
+        if (name == "animation") kinematics.newAnimation( n.attributes["id"].val, n.attributes["name"].val);
+        if (name == "source") kinematics.newSource(n.attributes["id"].val);
+        if (name == "accessor") kinematics.handleAccessor(n.attributes["count"].val, n.attributes["stride"].val);
+        if (name == "sampler") kinematics.newSampler(n.attributes["id"].val);
+        if (name == "input") kinematics.handleInput(n.attributes["semantic"].val, skipHash(n.attributes["source"].val));
+        if (name == "channel") kinematics.handleChannel(n.attributes["source"].val, n.attributes["target"].val);
+    }
 
     // scene graphs
     if (name == "instance_geometry") scene.instantiateGeometry(skipHash(n.attributes["url"].val), &geometries);
@@ -302,7 +311,6 @@ void VRCOLLADA_Stream::endElement(const string& uri, const string& name, const s
     if (node.name == "phong") materials.setRendering(node.name);
     if (node.name == "constant") materials.setRendering(node.name);
     if (node.name == "texture") materials.setTexture(node.attributes["texture"].val);
-    if (node.name == "float_array") geometries.setSourceData(node.data);
     if (node.name == "p") geometries.handleIndices(node.data);
     if (node.name == "points") geometries.closePrimitive();
     if (node.name == "lines") geometries.closePrimitive();
@@ -311,6 +319,14 @@ void VRCOLLADA_Stream::endElement(const string& uri, const string& name, const s
     if (node.name == "tristrips") geometries.closePrimitive();
     if (node.name == "polylist") geometries.closePrimitive();
     if (node.name == "vcount") geometries.handleVCount(node.data);
+
+    if (currentSection == "library_geometries") {
+        if (node.name == "float_array") geometries.setSourceData(node.data);
+    }
+
+    if (currentSection == "library_animations") {
+        if (node.name == "float_array") kinematics.setSourceData(node.data);
+    }
 
     if (node.name == "float") {
         float f = toValue<float>(node.data);

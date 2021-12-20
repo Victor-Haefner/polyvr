@@ -1,10 +1,16 @@
 #include "VRCOLLADA_Kinematics.h"
 
 #include "core/objects/VRAnimation.h"
+#include "core/objects/object/VRObject.h"
+#include "core/objects/VRTransform.h"
+#include "core/utils/system/VRSystem.h"
+#include "core/utils/toString.h"
+#include "core/utils/VRFunction.h"
 
 #include <map>
 #include <string>
 #include <OpenSG/OSGVector.h>
+#include <OpenSG/OSGMatrix.h>
 
 using namespace OSG;
 
@@ -88,10 +94,10 @@ struct kin_scene {
 };
 
 
-VRCOLLADA_Kinematics::VRCOLLADA_Kinematics() {}
+VRCOLLADA_Kinematics::VRCOLLADA_Kinematics(VRObjectPtr r) : root(r) {}
 VRCOLLADA_Kinematics::~VRCOLLADA_Kinematics() {}
 
-VRCOLLADA_KinematicsPtr VRCOLLADA_Kinematics::create() { return VRCOLLADA_KinematicsPtr( new VRCOLLADA_Kinematics() ); }
+VRCOLLADA_KinematicsPtr VRCOLLADA_Kinematics::create(VRObjectPtr r) { return VRCOLLADA_KinematicsPtr( new VRCOLLADA_Kinematics(r) ); }
 VRCOLLADA_KinematicsPtr VRCOLLADA_Kinematics::ptr() { return static_pointer_cast<VRCOLLADA_Kinematics>(shared_from_this()); }
 
 void VRCOLLADA_Kinematics::newAnimation(string id, string name) {
@@ -106,8 +112,98 @@ void VRCOLLADA_Kinematics::newAnimation(string id, string name) {
 
 void VRCOLLADA_Kinematics::endAnimation() {
     if (currentSubAnimation != "") currentSubAnimation = "";
-    else currentAnimation == "";
+    else {
+        auto anim = library_animations[currentAnimation];
+        currentAnimation == "";
+
+        for (auto& sampl : sampler) {
+            VRObjectPtr obj = root->findFirst( getFolderName(sampl.second.target) );
+            VRTransformPtr target = dynamic_pointer_cast<VRTransform>(obj);
+            cout << "VRCOLLADA_Kinematics::endAnimation " << sampl.second.target << ", " << getFolderName(sampl.second.target) << endl;
+            if (!target) continue;
+            string sInID  = sampl.second.sources["INPUT"];
+            string sOutID = sampl.second.sources["OUTPUT"];
+            cout << "VRCOLLADA_Kinematics::endAnimation " << obj << ", " << sInID << ", " << sOutID << endl;
+            if (!sources.count(sInID)) continue;
+            if (!sources.count(sOutID)) continue;
+            Source& sourceIn  = sources[sInID];
+            Source& sourceOut = sources[sOutID];
+            if (sourceIn.data.size() == 0) continue;
+
+            float T = sourceIn.data[ sourceIn.data.size()-1 ] - sourceIn.data[ 0 ];
+
+            anim->addCallback( VRAnimCb::create("COLLADA_anim", bind(&VRCOLLADA_Kinematics::animTransform, this, placeholders::_1, target, sourceIn, sourceOut)) );
+            anim->setDuration(T);
+            anim->start(); // to test
+        }
+    }
 }
+
+void VRCOLLADA_Kinematics::animTransform(float t, VRTransformWeakPtr target, Source sourceIn, Source sourceOut) {
+    if (sourceOut.stride != 16) return; // stride has to be 16!
+    auto obj = target.lock();
+    if (!obj) return;
+
+    //float t0 = sourceIn.data[ 0 ];
+    //float te = sourceIn.data[ sourceIn.data.size()-1 ];
+
+    float d = sourceOut.count*t;
+    int n1 = floor(d);
+    int n2 = ceil (d);
+    float k = d-n1;
+
+    auto getMatrix = [&](int n1, int n2, float k) {
+        int h = n1*16;
+        int j = n2*16;
+        float u = (1.0-k);
+        auto& d = sourceOut.data;
+        return Matrix4d( d[h+0] *u + d[j+0] *k, d[h+1] *u + d[j+1] *k, d[h+2] *u + d[j+2] *k, d[h+3] *u + d[j+3] *k,
+                         d[h+4] *u + d[j+4] *k, d[h+5] *u + d[j+5] *k, d[h+6] *u + d[j+6] *k, d[h+7] *u + d[j+7] *k,
+                         d[h+8] *u + d[j+8] *k, d[h+9] *u + d[j+8] *k, d[h+10]*u + d[j+10]*k, d[h+11]*u + d[j+11]*k,
+                         d[h+12]*u + d[j+12]*k, d[h+13]*u + d[j+13]*k, d[h+14]*u + d[j+14]*k, d[h+15]*u + d[j+15]*k );
+    };
+
+    Matrix4d m = getMatrix(n1, n2, k);
+    obj->setMatrix(m);
+}
+
+void VRCOLLADA_Kinematics::newSampler(string id) {
+    currentSampler = id;
+    sampler[id] = Sampler();
+}
+
+void VRCOLLADA_Kinematics::newSource(string id) {
+    currentSource = id;
+    sources[id] = Source();
+}
+
+void VRCOLLADA_Kinematics::setSourceData(string data) {
+    if (currentSource != "") {
+        sources[currentSource].data = toValue<vector<float>>(data);
+    }
+}
+
+void VRCOLLADA_Kinematics::handleAccessor(string count, string stride) {
+    if (currentSource != "") {
+        sources[currentSource].count  = toInt(count);
+        sources[currentSource].stride = toInt(stride);
+    }
+}
+
+void VRCOLLADA_Kinematics::handleChannel(string source, string target) {
+    if (currentSource != "") {
+        sampler[source].target = target;
+    }
+}
+
+void VRCOLLADA_Kinematics::handleInput(string type, string sourceID) {
+    if (sampler.count(currentSampler)) {
+        sampler[currentSampler].sources[type] = sourceID;
+    }
+}
+
+
+
 
 
 void VRCOLLADA_Kinematics::apply() {
@@ -160,7 +256,7 @@ vector<xNode*> getxNodes(xNode* node, string name = "") {
 }
 
 AnimationLibrary VRCOLLADA_Kinematics::parseColladaAnimations(string data) {
-    xml_document<> doc;
+    /*xml_document<> doc;
     doc.parse<0>(&data[0]);
 
     AnimationLibrary library;
@@ -252,7 +348,8 @@ AnimationLibrary VRCOLLADA_Kinematics::parseColladaAnimations(string data) {
             }
         } else cout << "<library_animations> tag not found" << endl;
     } else cout << "<COLLADA> tag not found" << endl;
-    return library;
+    return library;*/
+    return AnimationLibrary();
 }
 
 void printAll(const AnimationLibrary& library) {
@@ -348,7 +445,7 @@ int getAxis(const Animation& a) {
 }
 
 void VRCOLLADA_Kinematics::buildAnimations(AnimationLibrary& lib, VRObjectPtr objects) {
-    for (auto a : lib.animations) {
+    /*for (auto a : lib.animations) {
         cout << "search object " << a.second.channel.target << endl;
         VRObjectPtr obj = findTarget(objects, a.second.channel.target);
         if(obj==0) cout << "object is 0 "<< endl;
@@ -422,7 +519,7 @@ void VRCOLLADA_Kinematics::buildAnimations(AnimationLibrary& lib, VRObjectPtr ob
             else anim = VRAnimation::create(duration, start[0], fkt, start[1], end[1], loop, true);
             t->addAnimation(anim);
         }
-    }
+    }*/
 }
 
 // kinematics
