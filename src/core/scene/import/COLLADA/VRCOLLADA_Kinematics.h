@@ -31,7 +31,7 @@ class VRCOLLADA_Kinematics : public std::enable_shared_from_this<VRCOLLADA_Kinem
             map<string, string> sources;
         };
 
-        map<string, VRAnimationPtr> library_animations;
+        map<string, VRKeyFrameAnimationPtr> library_animations;
         string currentAnimation;
         string currentSubAnimation;
 
@@ -41,7 +41,7 @@ class VRCOLLADA_Kinematics : public std::enable_shared_from_this<VRCOLLADA_Kinem
         string currentSource;
 
         Matrix4d extractMatrix(int n1, int n2, float k, Source& sourceOut);
-        void animTransform(float t, VRTransformWeakPtr target, string property, float T, Source sourceIn, Source sourceOut, Source sourceInterp);
+        void animTransform(float t, VRTransformWeakPtr target, string property, Source sourceIn, Source sourceOut, Source sourceInterp);
 
         // deprecated
         AnimationLibrary parseColladaAnimations(string data);

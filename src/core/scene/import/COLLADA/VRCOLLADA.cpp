@@ -12,6 +12,7 @@
 
 #include "core/objects/object/VRObject.h"
 #include "core/objects/VRTransform.h"
+#include "core/objects/VRKeyFrameAnimation.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/geometry/VRGeoData.h"
@@ -443,7 +444,20 @@ void OSG::writeCollada(VRObjectPtr root, string path, map<string, string> option
         return geos;
     };
 
+    auto getTransforms = [](VRObjectPtr root) {
+        auto objs = root->getChildren(true, "", true);
+
+        vector<VRTransformPtr> trans;
+        for (auto obj : objs) {
+            VRTransformPtr tr = dynamic_pointer_cast<VRTransform>(obj);
+            if (!tr) continue;
+            trans.push_back(tr);
+        }
+        return trans;
+    };
+
     auto geos = getGeometries(root);
+    auto trans = getTransforms(root);
 
     map<string, VRMaterialPtr> materials;
     for (auto geo : geos) {
@@ -656,6 +670,16 @@ void OSG::writeCollada(VRObjectPtr root, string path, map<string, string> option
         stream << "\t\t</geometry>" << endl;
     }
     stream << "\t</library_geometries>" << endl;
+
+    stream << "\t<library_animations>" << endl;
+    for (auto t : trans) {
+        for (auto a : t->getAnimations()) {
+            auto kfAnim = dynamic_pointer_cast<VRKeyFrameAnimation>(a);
+            if (!kfAnim) continue;
+            // TODO
+        }
+    }
+    stream << "\t</library_animations>" << endl;
 
     // the scenes, actually only a single one..
 	stream << "\t<library_visual_scenes>" << endl;

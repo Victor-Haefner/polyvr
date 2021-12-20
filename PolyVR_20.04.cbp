@@ -1065,6 +1065,8 @@
 		<Unit filename="src/core/objects/VRCamera.h" />
 		<Unit filename="src/core/objects/VRGroup.cpp" />
 		<Unit filename="src/core/objects/VRGroup.h" />
+		<Unit filename="src/core/objects/VRKeyFrameAnimation.cpp" />
+		<Unit filename="src/core/objects/VRKeyFrameAnimation.h" />
 		<Unit filename="src/core/objects/VRLight.cpp" />
 		<Unit filename="src/core/objects/VRLight.h" />
 		<Unit filename="src/core/objects/VRLightBeacon.cpp" />

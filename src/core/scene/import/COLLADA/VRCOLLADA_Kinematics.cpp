@@ -1,6 +1,7 @@
 #include "VRCOLLADA_Kinematics.h"
 
 #include "core/objects/VRAnimation.h"
+#include "core/objects/VRKeyFrameAnimation.h"
 #include "core/objects/object/VRObject.h"
 #include "core/objects/VRTransform.h"
 #include "core/utils/system/VRSystem.h"
@@ -103,7 +104,7 @@ VRCOLLADA_KinematicsPtr VRCOLLADA_Kinematics::ptr() { return static_pointer_cast
 
 void VRCOLLADA_Kinematics::newAnimation(string id, string name) {
     if (currentAnimation == "") { // outer animation
-        auto a = VRAnimation::create(name);
+        auto a = VRKeyFrameAnimation::create(name);
         library_animations[id] = a;
         currentAnimation = id;
     } else {
@@ -136,7 +137,7 @@ void VRCOLLADA_Kinematics::finalize(map<string, VRObjectWeakPtr>& objects) {
 
         float T = sourceIn.data[ sourceIn.data.size()-1 ] - sourceIn.data[ 0 ];
         auto anim = library_animations[sampl.second.animation];
-        anim->addCallback( VRAnimCb::create("COLLADA_anim", bind(&VRCOLLADA_Kinematics::animTransform, this, placeholders::_1, target, property, T, sourceIn, sourceOut, sourceInterp)) );
+        anim->addCallback( VRAnimCb::create("COLLADA_anim", bind(&VRCOLLADA_Kinematics::animTransform, this, placeholders::_1, target, property, sourceIn, sourceOut, sourceInterp)) );
         anim->setDuration(T);
         target->addAnimation(anim);
         cout << " add callback to " << anim->getName() << ", duration: " << T << endl;
@@ -153,10 +154,11 @@ void VRCOLLADA_Kinematics::endAnimation() {
     }
 }
 
-void VRCOLLADA_Kinematics::animTransform(float t, VRTransformWeakPtr target, string property, float T, Source sourceIn, Source sourceOut, Source sourceInterp) {
+void VRCOLLADA_Kinematics::animTransform(float t, VRTransformWeakPtr target, string property, Source sourceIn, Source sourceOut, Source sourceInterp) {
     auto obj = target.lock();
     if (!obj) return;
 
+    float T = sourceIn.data[ sourceIn.data.size()-1 ] - sourceIn.data[0];
     float time = T*t + sourceIn.data[0];
 
     auto tItr = upper_bound(sourceIn.data.begin(), sourceIn.data.end(), time); // TODO: optimize by keeping track of n1/n2 ?
