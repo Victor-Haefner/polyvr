@@ -65,7 +65,33 @@ class VRCOLLADA_Scene {
             lastInstantiatedGeo = 0;
         }
 
-		void finalize() { scheduler->callPostponed(true); }
+		void finalize() {
+		    scheduler->callPostponed(true);
+
+		    auto geos = root->getChildren(true, "Geometry");
+		    for (auto g : geos) {
+                auto geo = dynamic_pointer_cast<VRTransform>(g);
+                auto trans = dynamic_pointer_cast<VRTransform>(g->getParent());
+                if (!geo || !trans) continue;
+                auto parent = trans->getParent();
+                if (!parent) continue;
+
+                geo->setPose(trans->getPose());
+                parent->addChild(geo);
+                for (auto child : trans->getChildren()) geo->addChild(child);
+
+                for (auto o : objects) {
+                    if (auto O = o.second.lock()) {
+                        if (O == trans) {
+                            objects[o.first] = geo;
+                            break;
+                        }
+                    }
+                }
+
+                trans->destroy();
+		    }
+        }
 
 		void applyMatrix(Matrix4d m) {
             auto t = dynamic_pointer_cast<VRTransform>(top());
@@ -134,9 +160,12 @@ class VRCOLLADA_Scene {
                 scheduler->postpone( bind(&VRCOLLADA_Scene::instantiateGeometry, this, gid, geometries, parent) );
                 return;
             }
+
             lastInstantiatedGeo = dynamic_pointer_cast<VRGeometry>( geo->duplicate() );
-            if (parent) parent->remTag("COLLADA-postponed");
-            if (parent) parent->addChild( lastInstantiatedGeo );
+            if (parent) {
+                parent->remTag("COLLADA-postponed");
+                parent->addChild( lastInstantiatedGeo );
+            }
         }
 
         void instantiateNode(string url, string fPath, VRObjectPtr parent = 0) {
@@ -164,8 +193,15 @@ class VRCOLLADA_Scene {
             }
         }
 
+        void mergeGeometryNodes() { // merge geometry with parent transform nodes
+
+        }
+
         void instantiateScene(string url) {
-            if (library_scenes.count(url)) root->addChild(library_scenes[url]);
+            if (library_scenes.count(url)) {
+                for (auto child : library_scenes[url]->getChildren())
+                    root->addChild(child);
+            }
         }
 };
 
@@ -365,6 +401,8 @@ string create_timestamp() {
 }
 
 void OSG::writeCollada(VRObjectPtr root, string path, map<string, string> options) {
+    bool exportChildren = bool(root->getBaseName() == "proxy");
+
     string version = "1.5.0"; // "1.4.1"
     if (options.count("version")) version = options["version"];
     ofstream stream(path);
@@ -376,7 +414,7 @@ void OSG::writeCollada(VRObjectPtr root, string path, map<string, string> option
         return true;
     };
 
-    function<void(VRObjectPtr, int)> writeSceneGraph = [&](VRObjectPtr node, int indent) -> void {
+    function<void(VRObjectPtr, int, bool)> writeSceneGraph = [&](VRObjectPtr node, int indent, bool onlyChildren) -> void {
         if (!node->isVisible()) return;
         string identStr = "";
         for (int i=0; i< indent; i++) identStr += "\t";
@@ -388,30 +426,32 @@ void OSG::writeCollada(VRObjectPtr root, string path, map<string, string> option
         string matName;
         if (mat) matName = mat->getName();
 
-        stream << identStr << "<node id=\"" << name << "_visual_scene_node\" name=\"" << name << "\">" << endl;
+        if (!onlyChildren) {
+            stream << identStr << "<node id=\"" << name << "_visual_scene_node\" name=\"" << name << "\" type=\"NODE\">" << endl;
 
-        if (trans) {
-            Matrix4d m = trans->getMatrix();
-            m.transpose();
-            stream << identStr << "\t<matrix sid=\"transform\">" << toString(m) << "</matrix>" << endl;
-        }
+            if (trans) {
+                Matrix4d m = trans->getMatrix();
+                m.transpose();
+                stream << identStr << "\t<matrix sid=\"transform\">" << toString(m) << "</matrix>" << endl;
+            }
 
-        if (geo) {
-            stream << identStr << "\t<instance_geometry url=\"#" << name << "\">" << endl;
-            stream << identStr << "\t\t<bind_material>" << endl;
-            stream << identStr << "\t\t\t<technique_common>" << endl;
-            stream << identStr << "\t\t\t\t<instance_material symbol=\"" << matName << "\" target=\"#" << matName << "\"/>" << endl;
-            stream << identStr << "\t\t\t</technique_common>" << endl;
-            stream << identStr << "\t\t</bind_material>" << endl;
-            stream << identStr << "\t</instance_geometry>" << endl;
-        }
+            if (geo) {
+                stream << identStr << "\t<instance_geometry url=\"#" << name << "\">" << endl;
+                stream << identStr << "\t\t<bind_material>" << endl;
+                stream << identStr << "\t\t\t<technique_common>" << endl;
+                stream << identStr << "\t\t\t\t<instance_material symbol=\"" << matName << "\" target=\"#" << matName << "\"/>" << endl;
+                stream << identStr << "\t\t\t</technique_common>" << endl;
+                stream << identStr << "\t\t</bind_material>" << endl;
+                stream << identStr << "\t</instance_geometry>" << endl;
+            }
+        } else indent--;
 
 		if (node->getChildrenCount() > 0) {
             for (auto child : node->getChildren()) {
-                writeSceneGraph(child, indent+1);
+                writeSceneGraph(child, indent+1, false);
             }
 		}
-		stream << identStr << "</node>" << endl;
+		if (!onlyChildren) stream << identStr << "</node>" << endl;
     };
 
     stream << "﻿<?xml version=\"1.0\" encoding=\"utf-8\"?>" << endl;
@@ -492,6 +532,8 @@ void OSG::writeCollada(VRObjectPtr root, string path, map<string, string> option
         stream << "﻿\t\t</effect>" << endl;
     }
     stream << "﻿\t</library_effects>" << endl;
+
+    stream << "\t<library_images/>" << endl;
 
     stream << "﻿\t<library_materials>" << endl;
     for (auto mat : materials) {
@@ -618,11 +660,12 @@ void OSG::writeCollada(VRObjectPtr root, string path, map<string, string> option
             if (type == GL_QUADS) { typeName = "triangles"; faceCount = length/4 * 2; } // times two because we convert to triangles
             if (type == GL_QUAD_STRIP) { typeName = "quadstrips"; faceCount = 1; } // probably not supported..
 
+            int offset = 0;
             stream << "\t\t\t\t<" << typeName << " count=\"" << faceCount << "\" material=\"" << mat->getName() << "\">" << endl;
-            stream << "\t\t\t\t\t<input offset=\"0\" semantic=\"VERTEX\" source=\"#" << name << "_vertices\" />" << endl;
-            if (doNormals) stream << "\t\t\t\t\t<input offset=\"1\" semantic=\"NORMAL\" source=\"#" << name << "_normals\" />" << endl;
-            if (doColors)  stream << "\t\t\t\t\t<input offset=\"1\" semantic=\"COLOR\" source=\"#" << name << "_colors\" />" << endl;
-            if (doTexCoords)  stream << "\t\t\t\t\t<input offset=\"1\" semantic=\"TEXCOORD\" source=\"#" << name << "_texcoords\" />" << endl;
+            stream << "\t\t\t\t\t<input offset=\"" << offset++ << "\" semantic=\"VERTEX\" source=\"#" << name << "_vertices\" />" << endl;
+            if (doNormals) stream << "\t\t\t\t\t<input offset=\"" << offset++ << "\" semantic=\"NORMAL\" source=\"#" << name << "_normals\" />" << endl;
+            if (doColors)  stream << "\t\t\t\t\t<input offset=\"" << offset++ << "\" semantic=\"COLOR\" source=\"#" << name << "_colors\" />" << endl;
+            if (doTexCoords)  stream << "\t\t\t\t\t<input offset=\"" << offset++ << "\" semantic=\"TEXCOORD\" source=\"#" << name << "_texcoords\" set=\"0\"/>" << endl;
             stream << "\t\t\t\t\t<p>";
             if (type == GL_QUADS) { // convert to triangles on the fly
                 for (int i=0; i<length/4; i++) {
@@ -684,7 +727,7 @@ void OSG::writeCollada(VRObjectPtr root, string path, map<string, string> option
     // the scenes, actually only a single one..
 	stream << "\t<library_visual_scenes>" << endl;
 	stream << "\t\t<visual_scene id=\"the_visual_scene\">" << endl;
-	writeSceneGraph(root, 3);
+	writeSceneGraph(root, 3, exportChildren);
 	stream << "\t\t</visual_scene>" << endl;
 	stream << "\t</library_visual_scenes>" << endl;
 
