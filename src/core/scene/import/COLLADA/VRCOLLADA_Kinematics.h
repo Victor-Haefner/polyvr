@@ -22,6 +22,7 @@ class VRCOLLADA_Kinematics : public std::enable_shared_from_this<VRCOLLADA_Kinem
             int count = 0;
             int stride = 0;
             vector<float> data;
+            vector<string> strData;
         };
 
         struct Sampler {
@@ -40,7 +41,7 @@ class VRCOLLADA_Kinematics : public std::enable_shared_from_this<VRCOLLADA_Kinem
         string currentSource;
 
         Matrix4d extractMatrix(int n1, int n2, float k, Source& sourceOut);
-        void animTransform(float t, VRTransformWeakPtr target, string property, Source sourceIn, Source sourceOut);
+        void animTransform(float t, VRTransformWeakPtr target, string property, float T, Source sourceIn, Source sourceOut, Source sourceInterp);
 
         // deprecated
         AnimationLibrary parseColladaAnimations(string data);
@@ -65,6 +66,7 @@ class VRCOLLADA_Kinematics : public std::enable_shared_from_this<VRCOLLADA_Kinem
 		void newSampler(string id);
 		void newSource(string id);
         void setSourceData(string data);
+        void setSourceStrData(string data);
         void handleAccessor(string count, string stride);
         void handleChannel(string source, string target);
         void handleInput(string type, string sourceID);

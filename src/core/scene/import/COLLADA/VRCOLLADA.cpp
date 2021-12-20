@@ -329,6 +329,7 @@ void VRCOLLADA_Stream::endElement(const string& uri, const string& name, const s
 
     if (currentSection == "library_animations") {
         if (node.name == "float_array") kinematics.setSourceData(node.data);
+        if (node.name == "Name_array") kinematics.setSourceStrData(node.data);
     }
 
     if (node.name == "float") {

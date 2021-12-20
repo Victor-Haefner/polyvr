@@ -9,6 +9,7 @@
 
 #include <map>
 #include <string>
+#include <algorithm>
 #include <OpenSG/OSGVector.h>
 #include <OpenSG/OSGMatrix.h>
 
@@ -122,17 +123,20 @@ void VRCOLLADA_Kinematics::finalize(map<string, VRObjectWeakPtr>& objects) {
 
         string sInID  = sampl.second.sources["INPUT"];
         string sOutID = sampl.second.sources["OUTPUT"];
+        string sInterpID = sampl.second.sources["INTERPOLATION"];
         for (auto s : sampl.second.sources)
             cout << "  sources: " << s.first << "," << s.second << endl;
         if (!sources.count(sInID)) continue;
         if (!sources.count(sOutID)) continue;
+        if (!sources.count(sInterpID)) continue;
         Source& sourceIn  = sources[sInID];
         Source& sourceOut = sources[sOutID];
+        Source& sourceInterp = sources[sInterpID];
         if (sourceIn.data.size() == 0) continue;
 
         float T = sourceIn.data[ sourceIn.data.size()-1 ] - sourceIn.data[ 0 ];
         auto anim = library_animations[sampl.second.animation];
-        anim->addCallback( VRAnimCb::create("COLLADA_anim", bind(&VRCOLLADA_Kinematics::animTransform, this, placeholders::_1, target, property, sourceIn, sourceOut)) );
+        anim->addCallback( VRAnimCb::create("COLLADA_anim", bind(&VRCOLLADA_Kinematics::animTransform, this, placeholders::_1, target, property, T, sourceIn, sourceOut, sourceInterp)) );
         anim->setDuration(T);
         target->addAnimation(anim);
         cout << " add callback to " << anim->getName() << ", duration: " << T << endl;
@@ -149,60 +153,45 @@ void VRCOLLADA_Kinematics::endAnimation() {
     }
 }
 
-void VRCOLLADA_Kinematics::animTransform(float t, VRTransformWeakPtr target, string property, Source sourceIn, Source sourceOut) {
+void VRCOLLADA_Kinematics::animTransform(float t, VRTransformWeakPtr target, string property, float T, Source sourceIn, Source sourceOut, Source sourceInterp) {
     auto obj = target.lock();
     if (!obj) return;
 
-    float d = (sourceOut.count-1)*t;
-    int n1 = floor(d);
-    int n2 = ceil (d);
-    float k = d-n1;
+    float time = T*t + sourceIn.data[0];
+
+    auto tItr = upper_bound(sourceIn.data.begin(), sourceIn.data.end(), time); // TODO: optimize by keeping track of n1/n2 ?
+    int n2 = tItr - sourceIn.data.begin();
+    int n1 = n2-1;
+
+    float t1 = sourceIn.data[n1];
+    float t2 = sourceIn.data[n2];
+    float dt = t2-t1;
+    float k = (time-t1)/dt; // key frame interpolation
+
+    string interp = sourceInterp.strData[n1]; // TODO
+
+    //cout << " animTransform " << t << " -> " << time << ", " << t1 << " / " << t2 << ", " << n1 << ", " << n2 << ", k: " << k << ", interp: " << interp << endl;
 
     if (property == "transform") {
-        //cout << " animTransform " << t << ", " << n1 << ", " << n2 << ", k: " << k << endl;
         Matrix4d m = extractMatrix(n1, n2, k, sourceOut);
         obj->setMatrix(m);
     }
 
-    if (property == "location.X") {
+    if (property == "location.X" || property == "location.Y" || property == "location.Z") {
         float x = sourceOut.data[n1]*(1.0-k) + sourceOut.data[n2]*k; // linear
         Vec3d p = obj->getFrom();
-        p[0] = x;
+        if (property == "location.X") p[0] = x;
+        if (property == "location.Y") p[1] = x;
+        if (property == "location.Z") p[2] = x;
         obj->setFrom(p);
     }
 
-    if (property == "location.Y") {
-        float x = sourceOut.data[n1]*(1.0-k) + sourceOut.data[n2]*k; // linear
-        Vec3d p = obj->getFrom();
-        p[1] = x;
-        obj->setFrom(p);
-    }
-
-    if (property == "location.Z") {
-        float x = sourceOut.data[n1]*(1.0-k) + sourceOut.data[n2]*k; // linear
-        Vec3d p = obj->getFrom();
-        p[2] = x;
-        obj->setFrom(p);
-    }
-
-    if (property == "rotationX.ANGLE") {
+    if (property == "rotationX.ANGLE" || property == "rotationY.ANGLE" || property == "rotationZ.ANGLE") {
         float x = sourceOut.data[n1]*(1.0-k) + sourceOut.data[n2]*k; // linear
         Vec3d p = obj->getEuler();
-        p[0] = x/180*Pi;
-        obj->setEuler(p);
-    }
-
-    if (property == "rotationY.ANGLE") {
-        float x = sourceOut.data[n1]*(1.0-k) + sourceOut.data[n2]*k; // linear
-        Vec3d p = obj->getEuler();
-        p[1] = x/180*Pi;
-        obj->setEuler(p);
-    }
-
-    if (property == "rotationZ.ANGLE") {
-        float x = sourceOut.data[n1]*(1.0-k) + sourceOut.data[n2]*k; // linear
-        Vec3d p = obj->getEuler();
-        p[2] = x/180*Pi;
+        if (property == "rotationX.ANGLE") p[0] = x/180.0*Pi;
+        if (property == "rotationY.ANGLE") p[1] = x/180.0*Pi;
+        if (property == "rotationZ.ANGLE") p[2] = x/180.0*Pi;
         obj->setEuler(p);
     }
 }
@@ -232,6 +221,12 @@ void VRCOLLADA_Kinematics::newSource(string id) {
 void VRCOLLADA_Kinematics::setSourceData(string data) {
     if (currentSource != "") {
         sources[currentSource].data = toValue<vector<float>>(data);
+    }
+}
+
+void VRCOLLADA_Kinematics::setSourceStrData(string data) {
+    if (currentSource != "") {
+        sources[currentSource].strData = splitString(data, ' ');
     }
 }
 
