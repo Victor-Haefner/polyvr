@@ -111,14 +111,19 @@ void VRCOLLADA_Kinematics::newAnimation(string id, string name) {
 }
 
 void VRCOLLADA_Kinematics::finalize(map<string, VRObjectWeakPtr>& objects) {
+    cout << "VRCOLLADA_Kinematics::finalize, N objects: " << objects.size() << endl;
     for (auto& sampl : sampler) {
         string objID = getFolderName(sampl.second.target);
+        string property = getFileName(sampl.second.target);
         VRObjectPtr obj = objects[objID].lock();
         VRTransformPtr target = dynamic_pointer_cast<VRTransform>(obj);
+        cout << " sampler: " << sampl.first << ", target: " << objID << ", transform: " << target << ", property: " << property << endl;
         if (!target) continue;
 
         string sInID  = sampl.second.sources["INPUT"];
         string sOutID = sampl.second.sources["OUTPUT"];
+        for (auto s : sampl.second.sources)
+            cout << "  sources: " << s.first << "," << s.second << endl;
         if (!sources.count(sInID)) continue;
         if (!sources.count(sOutID)) continue;
         Source& sourceIn  = sources[sInID];
@@ -127,9 +132,10 @@ void VRCOLLADA_Kinematics::finalize(map<string, VRObjectWeakPtr>& objects) {
 
         float T = sourceIn.data[ sourceIn.data.size()-1 ] - sourceIn.data[ 0 ];
         auto anim = library_animations[sampl.second.animation];
-        anim->addCallback( VRAnimCb::create("COLLADA_anim", bind(&VRCOLLADA_Kinematics::animTransform, this, placeholders::_1, target, sourceIn, sourceOut)) );
+        anim->addCallback( VRAnimCb::create("COLLADA_anim", bind(&VRCOLLADA_Kinematics::animTransform, this, placeholders::_1, target, property, sourceIn, sourceOut)) );
         anim->setDuration(T);
         target->addAnimation(anim);
+        cout << " add callback to " << anim->getName() << ", duration: " << T << endl;
     }
 }
 
@@ -143,8 +149,7 @@ void VRCOLLADA_Kinematics::endAnimation() {
     }
 }
 
-void VRCOLLADA_Kinematics::animTransform(float t, VRTransformWeakPtr target, Source sourceIn, Source sourceOut) {
-    if (sourceOut.stride != 16) return; // stride has to be 16!
+void VRCOLLADA_Kinematics::animTransform(float t, VRTransformWeakPtr target, string property, Source sourceIn, Source sourceOut) {
     auto obj = target.lock();
     if (!obj) return;
 
@@ -153,20 +158,65 @@ void VRCOLLADA_Kinematics::animTransform(float t, VRTransformWeakPtr target, Sou
     int n2 = ceil (d);
     float k = d-n1;
 
-    auto getMatrix = [&](int n1, int n2, float k) {
-        cout << " animTransform " << t << ", " << n1 << ", " << n2 << ", k: " << k << endl;
-        int h = n1*16;
-        int j = n2*16;
-        float u = (1.0-k);
-        auto& d = sourceOut.data;
-        return Matrix4d( d[h+0] *u + d[j+0] *k, d[h+1] *u + d[j+1] *k, d[h+2] *u + d[j+2] *k, d[h+3] *u + d[j+3] *k,
-                         d[h+4] *u + d[j+4] *k, d[h+5] *u + d[j+5] *k, d[h+6] *u + d[j+6] *k, d[h+7] *u + d[j+7] *k,
-                         d[h+8] *u + d[j+8] *k, d[h+9] *u + d[j+9] *k, d[h+10]*u + d[j+10]*k, d[h+11]*u + d[j+11]*k,
-                         d[h+12]*u + d[j+12]*k, d[h+13]*u + d[j+13]*k, d[h+14]*u + d[j+14]*k, d[h+15]*u + d[j+15]*k );
-    };
+    if (property == "transform") {
+        //cout << " animTransform " << t << ", " << n1 << ", " << n2 << ", k: " << k << endl;
+        Matrix4d m = extractMatrix(n1, n2, k, sourceOut);
+        obj->setMatrix(m);
+    }
 
-    Matrix4d m = getMatrix(n1, n2, k);
-    obj->setMatrix(m);
+    if (property == "location.X") {
+        float x = sourceOut.data[n1]*(1.0-k) + sourceOut.data[n2]*k; // linear
+        Vec3d p = obj->getFrom();
+        p[0] = x;
+        obj->setFrom(p);
+    }
+
+    if (property == "location.Y") {
+        float x = sourceOut.data[n1]*(1.0-k) + sourceOut.data[n2]*k; // linear
+        Vec3d p = obj->getFrom();
+        p[1] = x;
+        obj->setFrom(p);
+    }
+
+    if (property == "location.Z") {
+        float x = sourceOut.data[n1]*(1.0-k) + sourceOut.data[n2]*k; // linear
+        Vec3d p = obj->getFrom();
+        p[2] = x;
+        obj->setFrom(p);
+    }
+
+    if (property == "rotationX.ANGLE") {
+        float x = sourceOut.data[n1]*(1.0-k) + sourceOut.data[n2]*k; // linear
+        Vec3d p = obj->getEuler();
+        p[0] = x/180*Pi;
+        obj->setEuler(p);
+    }
+
+    if (property == "rotationY.ANGLE") {
+        float x = sourceOut.data[n1]*(1.0-k) + sourceOut.data[n2]*k; // linear
+        Vec3d p = obj->getEuler();
+        p[1] = x/180*Pi;
+        obj->setEuler(p);
+    }
+
+    if (property == "rotationZ.ANGLE") {
+        float x = sourceOut.data[n1]*(1.0-k) + sourceOut.data[n2]*k; // linear
+        Vec3d p = obj->getEuler();
+        p[2] = x/180*Pi;
+        obj->setEuler(p);
+    }
+}
+
+Matrix4d VRCOLLADA_Kinematics::extractMatrix(int n1, int n2, float k, Source& sourceOut) {
+    if (sourceOut.stride != 16) return Matrix4d();
+    int h = n1*16;
+    int j = n2*16;
+    float u = (1.0-k);
+    auto& d = sourceOut.data;
+    return Matrix4d( d[h+0] *u + d[j+0] *k, d[h+1] *u + d[j+1] *k, d[h+2] *u + d[j+2] *k, d[h+3] *u + d[j+3] *k,
+                     d[h+4] *u + d[j+4] *k, d[h+5] *u + d[j+5] *k, d[h+6] *u + d[j+6] *k, d[h+7] *u + d[j+7] *k,
+                     d[h+8] *u + d[j+8] *k, d[h+9] *u + d[j+9] *k, d[h+10]*u + d[j+10]*k, d[h+11]*u + d[j+11]*k,
+                     d[h+12]*u + d[j+12]*k, d[h+13]*u + d[j+13]*k, d[h+14]*u + d[j+14]*k, d[h+15]*u + d[j+15]*k );
 }
 
 void VRCOLLADA_Kinematics::newSampler(string id) {

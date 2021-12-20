@@ -2,6 +2,7 @@
 #define VRCOLLADA_KINEMATICS_H_INCLUDED
 
 #include <OpenSG/OSGConfig.h>
+#include <OpenSG/OSGMatrix.h>
 #include "core/objects/VRObjectFwd.h"
 #include "core/scene/import/VRImportFwd.h"
 
@@ -38,7 +39,8 @@ class VRCOLLADA_Kinematics : public std::enable_shared_from_this<VRCOLLADA_Kinem
         string currentSampler;
         string currentSource;
 
-        void animTransform(float t, VRTransformWeakPtr target, Source sourceIn, Source sourceOut);
+        Matrix4d extractMatrix(int n1, int n2, float k, Source& sourceOut);
+        void animTransform(float t, VRTransformWeakPtr target, string property, Source sourceIn, Source sourceOut);
 
         // deprecated
         AnimationLibrary parseColladaAnimations(string data);
