@@ -40,9 +40,6 @@ class VRCOLLADA_Kinematics : public std::enable_shared_from_this<VRCOLLADA_Kinem
         string currentSampler;
         string currentSource;
 
-        Matrix4d extractMatrix(int n1, int n2, float k, Source& sourceOut);
-        void animTransform(float t, VRTransformWeakPtr target, string property, Source sourceIn, Source sourceOut, Source sourceInterp);
-
         // deprecated
         AnimationLibrary parseColladaAnimations(string data);
         void buildAnimations(AnimationLibrary& lib, VRObjectPtr objects);

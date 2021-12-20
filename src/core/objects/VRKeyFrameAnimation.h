@@ -2,6 +2,7 @@
 #define VRKEYFRAMEANIMATION_H_INCLUDED
 
 #include <OpenSG/OSGConfig.h>
+#include <OpenSG/OSGMatrix.h>
 #include "VRObjectFwd.h"
 #include "VRAnimation.h"
 
@@ -20,11 +21,13 @@ class VRKeyFrameAnimation : public VRAnimation {
         struct Sampler {
             string property;
             VRTransformWeakPtr target;
-            vector<string> sources;
+            map<string, string> sources;
         };
 
         map<string, Source> sources;
         map<string, Sampler> samplers;
+
+        Matrix4d extractMatrix(int n1, int n2, float k, Source& sourceOut);
 
 	public:
 		VRKeyFrameAnimation(string name = "");
@@ -35,8 +38,9 @@ class VRKeyFrameAnimation : public VRAnimation {
 
 		void addSource(string ID, int count, int stride, vector<float>& data);
 		void addSource(string ID, int count, int stride, vector<string>& data);
+		void addSampler(string ID, string property, VRTransformPtr target, map<string, string>& sources);
 
-		void addSampler(string ID, string property, VRTransformPtr target, vector<string>& sources);
+        void animTransform(float t, string samplerID);
 };
 
 OSG_END_NAMESPACE;

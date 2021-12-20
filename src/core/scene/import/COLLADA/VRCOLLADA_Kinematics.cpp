@@ -1,12 +1,10 @@
 #include "VRCOLLADA_Kinematics.h"
 
-#include "core/objects/VRAnimation.h"
 #include "core/objects/VRKeyFrameAnimation.h"
 #include "core/objects/object/VRObject.h"
 #include "core/objects/VRTransform.h"
 #include "core/utils/system/VRSystem.h"
 #include "core/utils/toString.h"
-#include "core/utils/VRFunction.h"
 
 #include <map>
 #include <string>
@@ -113,34 +111,26 @@ void VRCOLLADA_Kinematics::newAnimation(string id, string name) {
 }
 
 void VRCOLLADA_Kinematics::finalize(map<string, VRObjectWeakPtr>& objects) {
-    cout << "VRCOLLADA_Kinematics::finalize, N objects: " << objects.size() << endl;
-    for (auto& sampl : sampler) {
-        string objID = getFolderName(sampl.second.target);
-        string property = getFileName(sampl.second.target);
+    for (auto& s : sampler) {
+        auto& sampl = s.second;
+        string objID = getFolderName(sampl.target);
+        string property = getFileName(sampl.target);
         VRObjectPtr obj = objects[objID].lock();
         VRTransformPtr target = dynamic_pointer_cast<VRTransform>(obj);
-        cout << " sampler: " << sampl.first << ", target: " << objID << ", transform: " << target << ", property: " << property << endl;
         if (!target) continue;
 
-        string sInID  = sampl.second.sources["INPUT"];
-        string sOutID = sampl.second.sources["OUTPUT"];
-        string sInterpID = sampl.second.sources["INTERPOLATION"];
-        for (auto s : sampl.second.sources)
-            cout << "  sources: " << s.first << "," << s.second << endl;
-        if (!sources.count(sInID)) continue;
-        if (!sources.count(sOutID)) continue;
-        if (!sources.count(sInterpID)) continue;
-        Source& sourceIn  = sources[sInID];
-        Source& sourceOut = sources[sOutID];
-        Source& sourceInterp = sources[sInterpID];
-        if (sourceIn.data.size() == 0) continue;
 
-        float T = sourceIn.data[ sourceIn.data.size()-1 ] - sourceIn.data[ 0 ];
-        auto anim = library_animations[sampl.second.animation];
-        anim->addCallback( VRAnimCb::create("COLLADA_anim", bind(&VRCOLLADA_Kinematics::animTransform, this, placeholders::_1, target, property, sourceIn, sourceOut, sourceInterp)) );
-        anim->setDuration(T);
+        auto anim = library_animations[sampl.animation];
+
+        for (auto s : sampl.sources) {
+            if (!sources.count(s.second)) continue;
+            auto& source = sources[s.second];
+            if (source.data.size() > 0)    anim->addSource(s.second, source.count, source.stride, source.data);
+            if (source.strData.size() > 0) anim->addSource(s.second, source.count, source.stride, source.strData);
+        }
+
+        anim->addSampler(s.first, property, target, sampl.sources);
         target->addAnimation(anim);
-        cout << " add callback to " << anim->getName() << ", duration: " << T << endl;
     }
 }
 
@@ -152,62 +142,6 @@ void VRCOLLADA_Kinematics::endAnimation() {
         }
         currentAnimation == "";
     }
-}
-
-void VRCOLLADA_Kinematics::animTransform(float t, VRTransformWeakPtr target, string property, Source sourceIn, Source sourceOut, Source sourceInterp) {
-    auto obj = target.lock();
-    if (!obj) return;
-
-    float T = sourceIn.data[ sourceIn.data.size()-1 ] - sourceIn.data[0];
-    float time = T*t + sourceIn.data[0];
-
-    auto tItr = upper_bound(sourceIn.data.begin(), sourceIn.data.end(), time); // TODO: optimize by keeping track of n1/n2 ?
-    int n2 = tItr - sourceIn.data.begin();
-    int n1 = n2-1;
-
-    float t1 = sourceIn.data[n1];
-    float t2 = sourceIn.data[n2];
-    float dt = t2-t1;
-    float k = (time-t1)/dt; // key frame interpolation
-
-    string interp = sourceInterp.strData[n1]; // TODO
-
-    //cout << " animTransform " << t << " -> " << time << ", " << t1 << " / " << t2 << ", " << n1 << ", " << n2 << ", k: " << k << ", interp: " << interp << endl;
-
-    if (property == "transform") {
-        Matrix4d m = extractMatrix(n1, n2, k, sourceOut);
-        obj->setMatrix(m);
-    }
-
-    if (property == "location.X" || property == "location.Y" || property == "location.Z") {
-        float x = sourceOut.data[n1]*(1.0-k) + sourceOut.data[n2]*k; // linear
-        Vec3d p = obj->getFrom();
-        if (property == "location.X") p[0] = x;
-        if (property == "location.Y") p[1] = x;
-        if (property == "location.Z") p[2] = x;
-        obj->setFrom(p);
-    }
-
-    if (property == "rotationX.ANGLE" || property == "rotationY.ANGLE" || property == "rotationZ.ANGLE") {
-        float x = sourceOut.data[n1]*(1.0-k) + sourceOut.data[n2]*k; // linear
-        Vec3d p = obj->getEuler();
-        if (property == "rotationX.ANGLE") p[0] = x/180.0*Pi;
-        if (property == "rotationY.ANGLE") p[1] = x/180.0*Pi;
-        if (property == "rotationZ.ANGLE") p[2] = x/180.0*Pi;
-        obj->setEuler(p);
-    }
-}
-
-Matrix4d VRCOLLADA_Kinematics::extractMatrix(int n1, int n2, float k, Source& sourceOut) {
-    if (sourceOut.stride != 16) return Matrix4d();
-    int h = n1*16;
-    int j = n2*16;
-    float u = (1.0-k);
-    auto& d = sourceOut.data;
-    return Matrix4d( d[h+0] *u + d[j+0] *k, d[h+1] *u + d[j+1] *k, d[h+2] *u + d[j+2] *k, d[h+3] *u + d[j+3] *k,
-                     d[h+4] *u + d[j+4] *k, d[h+5] *u + d[j+5] *k, d[h+6] *u + d[j+6] *k, d[h+7] *u + d[j+7] *k,
-                     d[h+8] *u + d[j+8] *k, d[h+9] *u + d[j+9] *k, d[h+10]*u + d[j+10]*k, d[h+11]*u + d[j+11]*k,
-                     d[h+12]*u + d[j+12]*k, d[h+13]*u + d[j+13]*k, d[h+14]*u + d[j+14]*k, d[h+15]*u + d[j+15]*k );
 }
 
 void VRCOLLADA_Kinematics::newSampler(string id) {
@@ -246,9 +180,7 @@ void VRCOLLADA_Kinematics::handleChannel(string source, string target) {
 }
 
 void VRCOLLADA_Kinematics::handleInput(string type, string sourceID) {
-    cout << " --- handleInput "  << type << "  " << sourceID << "  " << currentSampler << endl;
     if (sampler.count(currentSampler)) {
-        cout << " -   -- handleInput set "  << type << "  " << sourceID << "  " << currentSampler << endl;
         sampler[currentSampler].sources[type] = sourceID;
     }
 }
