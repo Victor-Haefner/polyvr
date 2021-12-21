@@ -431,6 +431,13 @@ void OSG::writeCollada(VRObjectPtr root, string path, map<string, string> option
 
             if (trans) {
                 bool hasAnim = false;
+
+                if (!hasAnim) {
+                    Matrix4d m = trans->getMatrix();
+                    m.transpose();
+                    stream << identStr << "\t<matrix sid=\"transform\">" << toString(m) << "</matrix>" << endl;
+                }
+
                 for (auto a : trans->getAnimations()) {
                     auto kfAnim = dynamic_pointer_cast<VRKeyFrameAnimation>(a);
                     if (!kfAnim) continue;
@@ -441,13 +448,6 @@ void OSG::writeCollada(VRObjectPtr root, string path, map<string, string> option
                     for (auto& s : kfAnim->getSamplers()) {
                         auto& sampler = s.second;
                         string property = sampler.property;
-
-                        if (contains(property,"transform") && !properties.count("transform")) {
-                            Matrix4d m = trans->getMatrix();
-                            m.transpose();
-                            stream << identStr << "\t<matrix sid=\"transform\">" << toString(m) << "</matrix>" << endl;
-                            properties["transform"] = true;
-                        }
 
                         if (contains(property,"rotationX") && !properties.count("rotationX")) {
                             Vec3d e = trans->getEuler();
@@ -473,12 +473,6 @@ void OSG::writeCollada(VRObjectPtr root, string path, map<string, string> option
                             properties["location"] = true;
                         }
                     }
-                }
-
-                if (!hasAnim) {
-                    Matrix4d m = trans->getMatrix();
-                    m.transpose();
-                    stream << identStr << "\t<matrix sid=\"transform\">" << toString(m) << "</matrix>" << endl;
                 }
             }
 
