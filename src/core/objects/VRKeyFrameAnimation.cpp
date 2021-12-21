@@ -10,6 +10,9 @@ VRKeyFrameAnimation::~VRKeyFrameAnimation() {}
 VRKeyFrameAnimationPtr VRKeyFrameAnimation::create(string name) { return VRKeyFrameAnimationPtr( new VRKeyFrameAnimation(name) ); }
 VRKeyFrameAnimationPtr VRKeyFrameAnimation::ptr() { return static_pointer_cast<VRKeyFrameAnimation>(shared_from_this()); }
 
+map<string, VRKeyFrameAnimation::Sampler> VRKeyFrameAnimation::getSamplers() { return samplers; }
+map<string, VRKeyFrameAnimation::Source>  VRKeyFrameAnimation::getSources()  { return sources;  }
+
 void VRKeyFrameAnimation::addSource(string ID, int count, int stride, vector<float>& data) {
     sources[ID] = Source();
     sources[ID].count = count;

@@ -10,7 +10,7 @@ using namespace std;
 OSG_BEGIN_NAMESPACE;
 
 class VRKeyFrameAnimation : public VRAnimation {
-	private:
+	public:
         struct Source {
             int count = 0;
             int stride = 0;
@@ -24,6 +24,7 @@ class VRKeyFrameAnimation : public VRAnimation {
             map<string, string> sources;
         };
 
+	private:
         map<string, Source> sources;
         map<string, Sampler> samplers;
 
@@ -35,6 +36,9 @@ class VRKeyFrameAnimation : public VRAnimation {
 
 		static VRKeyFrameAnimationPtr create(string name);
 		VRKeyFrameAnimationPtr ptr();
+
+		map<string, Sampler> getSamplers();
+		map<string, Source> getSources();
 
 		void addSource(string ID, int count, int stride, vector<float>& data);
 		void addSource(string ID, int count, int stride, vector<string>& data);

@@ -427,16 +427,63 @@ void OSG::writeCollada(VRObjectPtr root, string path, map<string, string> option
         if (mat) matName = mat->getName();
 
         if (!onlyChildren) {
-            stream << identStr << "<node id=\"" << name << "_visual_scene_node\" name=\"" << name << "\" type=\"NODE\">" << endl;
+            stream << identStr << "<node id=\"" << name << "\" name=\"" << name << "\" type=\"NODE\">" << endl;
 
             if (trans) {
-                Matrix4d m = trans->getMatrix();
-                m.transpose();
-                stream << identStr << "\t<matrix sid=\"transform\">" << toString(m) << "</matrix>" << endl;
+                bool hasAnim = false;
+                for (auto a : trans->getAnimations()) {
+                    auto kfAnim = dynamic_pointer_cast<VRKeyFrameAnimation>(a);
+                    if (!kfAnim) continue;
+                    hasAnim = true;
+
+                    map<string, bool> properties;
+
+                    for (auto& s : kfAnim->getSamplers()) {
+                        auto& sampler = s.second;
+                        string property = sampler.property;
+
+                        if (contains(property,"transform") && !properties.count("transform")) {
+                            Matrix4d m = trans->getMatrix();
+                            m.transpose();
+                            stream << identStr << "\t<matrix sid=\"transform\">" << toString(m) << "</matrix>" << endl;
+                            properties["transform"] = true;
+                        }
+
+                        if (contains(property,"rotationX") && !properties.count("rotationX")) {
+                            Vec3d e = trans->getEuler();
+                            stream << identStr << "\t<rotate sid=\"rotationX\">1 0 0 " << e[0] << "</rotate>" << endl;
+                            properties["rotationX"] = true;
+                        }
+
+                        if (contains(property,"rotationY") && !properties.count("rotationY")) {
+                            Vec3d e = trans->getEuler();
+                            stream << identStr << "\t<rotate sid=\"rotationY\">0 1 0 " << e[1] << "</rotate>" << endl;
+                            properties["rotationY"] = true;
+                        }
+
+                        if (contains(property,"rotationZ") && !properties.count("rotationZ")) {
+                            Vec3d e = trans->getEuler();
+                            stream << identStr << "\t<rotate sid=\"rotationZ\">0 0 1 " << e[2] << "</rotate>" << endl;
+                            properties["rotationZ"] = true;
+                        }
+
+                        if (contains(property,"location") && !properties.count("location")) {
+                            Vec3d p = trans->getFrom();
+                            stream << identStr << "\t<translate sid=\"location\">" << toString(p) << "</translate>" << endl;
+                            properties["location"] = true;
+                        }
+                    }
+                }
+
+                if (!hasAnim) {
+                    Matrix4d m = trans->getMatrix();
+                    m.transpose();
+                    stream << identStr << "\t<matrix sid=\"transform\">" << toString(m) << "</matrix>" << endl;
+                }
             }
 
             if (geo) {
-                stream << identStr << "\t<instance_geometry url=\"#" << name << "\">" << endl;
+                stream << identStr << "\t<instance_geometry url=\"#" << name << "_mesh\" name=\"" << name << "\">" << endl;
                 stream << identStr << "\t\t<bind_material>" << endl;
                 stream << identStr << "\t\t\t<technique_common>" << endl;
                 stream << identStr << "\t\t\t\t<instance_material symbol=\"" << matName << "\" target=\"#" << matName << "\"/>" << endl;
@@ -552,7 +599,7 @@ void OSG::writeCollada(VRObjectPtr root, string path, map<string, string> option
         VRGeoData data(geo);
         auto mat = geo->getMaterial();
 
-        stream << "\t\t<geometry id=\"" << name << "\" name=\"" << name << "\">" << endl;
+        stream << "\t\t<geometry id=\"" << name << "_mesh\" name=\"" << name << "\">" << endl;
         stream << "\t\t\t<mesh>" << endl;
 
         stream << "\t\t\t\t<source id=\"" << name << "_positions\">" << endl;
@@ -719,7 +766,74 @@ void OSG::writeCollada(VRObjectPtr root, string path, map<string, string> option
         for (auto a : t->getAnimations()) {
             auto kfAnim = dynamic_pointer_cast<VRKeyFrameAnimation>(a);
             if (!kfAnim) continue;
-            // TODO
+
+            auto sources = kfAnim->getSources();
+            auto samplers = kfAnim->getSamplers();
+
+            string name = kfAnim->getName();
+            stream << "\t\t<animation id=\"action_container_" << name << "\" name=\"" << name << "\">" << endl;
+            for (auto& s : samplers) {
+                auto& sampler = s.second;
+                auto tObj = sampler.target.lock();
+                if (!tObj) continue;
+                string tName = tObj->getName();
+                stream << "\t\t\t<animation id=\"anim_" << s.first << "\" name=\"" << name << "\">" << endl;
+
+                string paramIn = "TIME";
+                string paramOut = "TRANSFORM"; // for property transform
+                if (sampler.property == "location.X") paramOut = "X";
+                if (sampler.property == "location.Y") paramOut = "Y";
+                if (sampler.property == "location.Z") paramOut = "Z";
+                if (contains(sampler.property, "ANGLE")) paramOut = "ANGLE";
+
+                for (auto& so : sampler.sources) {
+                    string sourceID = so.second;
+                    auto& source = sources[sourceID];
+                    stream << "\t\t\t\t<source id=\"" << sourceID << "\">" << endl;
+                    string type = "float";
+
+                    string param = "INTERPOLATION";
+                    if (so.first == "INPUT") param = paramIn;
+                    if (so.first == "OUTPUT") param = paramOut;
+
+                    if (source.data.size() > 0) {
+                        stream << "\t\t\t\t\t<float_array id=\"" << sourceID << "_array\" count=\"" << source.data.size() << "\">";
+                        for (int i=0; i<source.data.size(); i++) {
+                            if (i > 0) stream << " ";
+                            stream << source.data[i];
+                        }
+                        stream << "</float_array>" << endl;
+                    }
+
+                    if (source.strData.size() > 0) {
+                        type = "name";
+                        stream << "\t\t\t\t\t<Name_array id=\"" << sourceID << "_array\" count=\"" << source.strData.size() << "\">";
+                        for (int i=0; i<source.strData.size(); i++) {
+                            if (i > 0) stream << " ";
+                            stream << source.strData[i];
+                        }
+                        stream << "</Name_array>" << endl;
+                    }
+
+                    stream << "\t\t\t\t\t<technique_common>" << endl;
+                    stream << "\t\t\t\t\t\t<accessor source=\"#" << sourceID << "_array\" count=\"" << source.count << "\" stride=\"" << source.stride << "\">" << endl;
+                    stream << "\t\t\t\t\t\t\t<param name=\"" << param << "\" type=\"" << type << "\"/>" << endl;
+                    stream << "\t\t\t\t\t\t</accessor>" << endl;
+                    stream << "\t\t\t\t\t</technique_common>" << endl;
+                    stream << "\t\t\t\t</source>" << endl;
+                }
+
+                stream << "\t\t\t\t<sampler id=\"" << s.first << "\">" << endl;
+                for (auto& so : sampler.sources) {
+                    string sourceID = so.second;
+                    auto& source = sources[sourceID];
+                    stream << "\t\t\t\t\t<input semantic=\"" << so.first << "\" source=\"#" << sourceID << "\"/>" << endl;
+                }
+                stream << "\t\t\t\t</sampler>" << endl;
+                stream << "\t\t\t\t<channel source=\"#" << s.first << "\" target=\"" << tName << "/" << sampler.property << "\"/>" << endl;
+                stream << "\t\t\t</animation>" << endl;
+            }
+            stream << "\t\t</animation>" << endl;
         }
     }
     stream << "\t</library_animations>" << endl;
