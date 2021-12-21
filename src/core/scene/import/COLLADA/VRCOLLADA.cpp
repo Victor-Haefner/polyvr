@@ -450,26 +450,22 @@ void OSG::writeCollada(VRObjectPtr root, string path, map<string, string> option
                         string property = sampler.property;
 
                         if (contains(property,"rotationX") && !properties.count("rotationX")) {
-                            Vec3d e = trans->getEuler();
-                            stream << identStr << "\t<rotate sid=\"rotationX\">1 0 0 " << e[0] << "</rotate>" << endl;
+                            stream << identStr << "\t<rotate sid=\"rotationX\">1 0 0 0</rotate>" << endl;
                             properties["rotationX"] = true;
                         }
 
                         if (contains(property,"rotationY") && !properties.count("rotationY")) {
-                            Vec3d e = trans->getEuler();
-                            stream << identStr << "\t<rotate sid=\"rotationY\">0 1 0 " << e[1] << "</rotate>" << endl;
+                            stream << identStr << "\t<rotate sid=\"rotationY\">0 1 0 0</rotate>" << endl;
                             properties["rotationY"] = true;
                         }
 
                         if (contains(property,"rotationZ") && !properties.count("rotationZ")) {
-                            Vec3d e = trans->getEuler();
-                            stream << identStr << "\t<rotate sid=\"rotationZ\">0 0 1 " << e[2] << "</rotate>" << endl;
+                            stream << identStr << "\t<rotate sid=\"rotationZ\">0 0 1 0</rotate>" << endl;
                             properties["rotationZ"] = true;
                         }
 
                         if (contains(property,"location") && !properties.count("location")) {
-                            Vec3d p = trans->getFrom();
-                            stream << identStr << "\t<translate sid=\"location\">" << toString(p) << "</translate>" << endl;
+                            stream << identStr << "\t<translate sid=\"location\">0 0 0</translate>" << endl;
                             properties["location"] = true;
                         }
                     }
