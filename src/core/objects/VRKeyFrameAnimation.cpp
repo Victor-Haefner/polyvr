@@ -13,21 +13,21 @@ VRKeyFrameAnimationPtr VRKeyFrameAnimation::ptr() { return static_pointer_cast<V
 map<string, VRKeyFrameAnimation::Sampler> VRKeyFrameAnimation::getSamplers() { return samplers; }
 map<string, VRKeyFrameAnimation::Source>  VRKeyFrameAnimation::getSources()  { return sources;  }
 
-void VRKeyFrameAnimation::addSource(string ID, int count, int stride, vector<float>& data) {
+void VRKeyFrameAnimation::addSource(string ID, int stride, vector<float>& data) {
     sources[ID] = Source();
-    sources[ID].count = count;
+    sources[ID].count = data.size()/stride;
     sources[ID].stride = stride;
     sources[ID].data = data;
 }
 
-void VRKeyFrameAnimation::addSource(string ID, int count, int stride, vector<string>& data) {
+void VRKeyFrameAnimation::addInterpolation(string ID, vector<string>& data) {
     sources[ID] = Source();
-    sources[ID].count = count;
-    sources[ID].stride = stride;
+    sources[ID].count = data.size();
+    sources[ID].stride = 1;
     sources[ID].strData = data;
 }
 
-void VRKeyFrameAnimation::addSampler(string ID, string property, VRTransformPtr target, map<string, string>& srces) {
+void VRKeyFrameAnimation::addChannel(string ID, string property, VRTransformPtr target, map<string, string>& srces) {
     samplers[ID] = Sampler();
     samplers[ID].property = property;
     samplers[ID].target = target;

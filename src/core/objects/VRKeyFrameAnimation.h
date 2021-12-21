@@ -28,6 +28,7 @@ class VRKeyFrameAnimation : public VRAnimation {
         map<string, Source> sources;
         map<string, Sampler> samplers;
 
+        void animTransform(float t, string samplerID);
         Matrix4d extractMatrix(int n1, int n2, float k, Source& sourceOut);
 
 	public:
@@ -40,11 +41,9 @@ class VRKeyFrameAnimation : public VRAnimation {
 		map<string, Sampler> getSamplers();
 		map<string, Source> getSources();
 
-		void addSource(string ID, int count, int stride, vector<float>& data);
-		void addSource(string ID, int count, int stride, vector<string>& data);
-		void addSampler(string ID, string property, VRTransformPtr target, map<string, string>& sources);
-
-        void animTransform(float t, string samplerID);
+		void addSource(string ID, int stride, vector<float>& data);
+		void addInterpolation(string ID, vector<string>& data);
+		void addChannel(string ID, string property, VRTransformPtr target, map<string, string>& sources);
 };
 
 OSG_END_NAMESPACE;

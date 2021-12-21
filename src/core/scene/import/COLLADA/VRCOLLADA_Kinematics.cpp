@@ -125,11 +125,11 @@ void VRCOLLADA_Kinematics::finalize(map<string, VRObjectWeakPtr>& objects) {
         for (auto s : sampl.sources) {
             if (!sources.count(s.second)) continue;
             auto& source = sources[s.second];
-            if (source.data.size() > 0)    anim->addSource(s.second, source.count, source.stride, source.data);
-            if (source.strData.size() > 0) anim->addSource(s.second, source.count, source.stride, source.strData);
+            if (source.data.size() > 0)    anim->addSource(s.second, source.stride, source.data);
+            if (source.strData.size() > 0) anim->addInterpolation(s.second, source.strData);
         }
 
-        anim->addSampler(s.first, property, target, sampl.sources);
+        anim->addChannel(s.first, property, target, sampl.sources);
         target->addAnimation(anim);
     }
 }
