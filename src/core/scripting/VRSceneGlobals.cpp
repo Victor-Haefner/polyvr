@@ -23,7 +23,7 @@
 #include "VRPyMaterial.h"
 #include "VRPyCodeCompletion.h"
 
-#include "core/scene/VRAnimationManagerT.h"
+#include "core/objects/VRAnimation.h"
 #include "core/scene/import/VRImport.h"
 #include "core/scene/import/VRExport.h"
 #include "core/scene/import/E57/E57.h"

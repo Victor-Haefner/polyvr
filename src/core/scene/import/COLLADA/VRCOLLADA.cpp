@@ -547,15 +547,21 @@ void OSG::writeCollada(VRObjectPtr root, string path, map<string, string> option
     for (auto mat : materials) {
         string name = mat.second->getName();
         Color3f d = mat.second->getDiffuse();
+        Color3f e = mat.second->getEmission();
         float t = mat.second->getTransparency();
-        string rendering = mat.second->isLit() ? "lambert" : "constant"; // there is also phong
+
+        string rendering = "lambert";
+        if (!mat.second->isLit()) {
+            rendering = "constant";
+            e = d; // constant color is pushed in emissive
+        }
 
         stream << "﻿\t\t<effect id=\"" << name << "_effect\">" << endl;
         stream << "﻿\t\t\t<profile_COMMON>" << endl;
         stream << "﻿\t\t\t\t<technique sid=\"common\">" << endl;
         stream << "﻿\t\t\t\t\t<" << rendering << ">" << endl;
         stream << "﻿\t\t\t\t\t\t<emission>" << endl;
-        stream << "﻿\t\t\t\t\t\t\t<color sid=\"emission\">0 0 0 1</color>" << endl;
+        stream << "﻿\t\t\t\t\t\t\t<color sid=\"emission\">" << e[0] << " " << e[1] << " " << e[2] << " 1</color>" << endl;
         stream << "﻿\t\t\t\t\t\t</emission>" << endl;
         stream << "﻿\t\t\t\t\t\t<diffuse>" << endl;
         stream << "﻿\t\t\t\t\t\t\t<color sid=\"diffuse\">" << d[0] << " " << d[1] << " " << d[2] << " " << t << "</color>" << endl;
@@ -692,10 +698,10 @@ void OSG::writeCollada(VRObjectPtr root, string path, map<string, string> option
             string typeName = "triangles";
             if (type == GL_POINTS) { typeName = "points"; faceCount = length; }
             if (type == GL_LINES) { typeName = "lines"; faceCount = length/2; }
-            if (type == GL_TRIANGLE_FAN) { typeName = "trifans"; faceCount = 1; }
-            if (type == GL_TRIANGLE_STRIP) { typeName = "tristrips"; faceCount = 1; }
+            if (type == GL_TRIANGLE_FAN) { typeName = "triangles"; faceCount = length-2; }
+            if (type == GL_TRIANGLE_STRIP) { typeName = "triangles"; faceCount = length-2; }
             if (type == GL_QUADS) { typeName = "triangles"; faceCount = length/4 * 2; } // times two because we convert to triangles
-            if (type == GL_QUAD_STRIP) { typeName = "quadstrips"; faceCount = 1; } // probably not supported..
+            if (type == GL_QUAD_STRIP) { typeName = "quadstrips"; faceCount = 1; } // TODO: probably not supported..
 
             int offset = 0;
             stream << "\t\t\t\t<" << typeName << " count=\"" << faceCount << "\" material=\"" << mat->getName() << "\">" << endl;
@@ -704,43 +710,51 @@ void OSG::writeCollada(VRObjectPtr root, string path, map<string, string> option
             if (doColors)  stream << "\t\t\t\t\t<input offset=\"" << offset++ << "\" semantic=\"COLOR\" source=\"#" << name << "_colors\" />" << endl;
             if (doTexCoords)  stream << "\t\t\t\t\t<input offset=\"" << offset++ << "\" semantic=\"TEXCOORD\" source=\"#" << name << "_texcoords\" set=\"0\"/>" << endl;
             stream << "\t\t\t\t\t<p>";
+
+            auto pushInds = [&](int i, bool first = false) {
+                if (!first) stream << " ";
+                stream << data.getIndex(N0+i);
+                if (doNormals) stream << " " << data.getIndex(N0+i, NormalsIndex);
+                if (doColors) stream << " " << data.getIndex(N0+i, ColorsIndex);
+                if (doTexCoords) stream << " " << data.getIndex(N0+i, TexCoordsIndex);
+            };
+
+            if (type == GL_TRIANGLES) {
+                for (int i=0; i<length; i++)  pushInds(i, i == 0);
+            }
+
             if (type == GL_QUADS) { // convert to triangles on the fly
                 for (int i=0; i<length/4; i++) {
-                    if (i > 0) stream << " ";
-                    stream << data.getIndex(N0+i*4+0) << " ";
-                    if (doNormals) stream << data.getIndex(N0+i*4+0, NormalsIndex) << " ";
-                    if (doColors)  stream << data.getIndex(N0+i*4+0, ColorsIndex) << " ";
-                    if (doTexCoords)  stream << data.getIndex(N0+i*4+0, TexCoordsIndex) << " ";
-                    stream << data.getIndex(N0+i*4+1) << " ";
-                    if (doNormals) stream << data.getIndex(N0+i*4+1, NormalsIndex) << " ";
-                    if (doColors)  stream << data.getIndex(N0+i*4+1, ColorsIndex) << " ";
-                    if (doTexCoords)  stream << data.getIndex(N0+i*4+1, TexCoordsIndex) << " ";
-                    stream << data.getIndex(N0+i*4+2) << " ";
-                    if (doNormals) stream << data.getIndex(N0+i*4+2, NormalsIndex) << " ";
-                    if (doColors)  stream << data.getIndex(N0+i*4+2, ColorsIndex) << " ";
-                    if (doTexCoords)  stream << data.getIndex(N0+i*4+2, TexCoordsIndex) << " ";
-                    stream << data.getIndex(N0+i*4+0) << " ";
-                    if (doNormals) stream << data.getIndex(N0+i*4+0, NormalsIndex) << " ";
-                    if (doColors)  stream << data.getIndex(N0+i*4+0, ColorsIndex) << " ";
-                    if (doTexCoords)  stream << data.getIndex(N0+i*4+0, TexCoordsIndex) << " ";
-                    stream << data.getIndex(N0+i*4+2) << " ";
-                    if (doNormals) stream << data.getIndex(N0+i*4+2, NormalsIndex) << " ";
-                    if (doColors)  stream << data.getIndex(N0+i*4+2, ColorsIndex) << " ";
-                    if (doTexCoords)  stream << data.getIndex(N0+i*4+2, TexCoordsIndex) << " ";
-                    stream << data.getIndex(N0+i*4+3);
-                    if (doNormals) stream << " " << data.getIndex(N0+i*4+3, NormalsIndex);
-                    if (doColors)  stream << " " << data.getIndex(N0+i*4+3, ColorsIndex);
-                    if (doTexCoords)  stream << " " << data.getIndex(N0+i*4+3, TexCoordsIndex);
-                }
-            } else {
-                for (int i=0; i<length; i++) {
-                    if (i > 0) stream << " ";
-                    stream << data.getIndex(N0+i);
-                    if (doNormals) stream << " " << data.getIndex(N0+i, NormalsIndex);
-                    if (doColors) stream << " " << data.getIndex(N0+i, ColorsIndex);
-                    if (doTexCoords) stream << " " << data.getIndex(N0+i, TexCoordsIndex);
+                    pushInds(i*4, i == 0);
+                    pushInds(i*4+1);
+                    pushInds(i*4+2);
+                    pushInds(i*4);
+                    pushInds(i*4+2);
+                    pushInds(i*4+3);
                 }
             }
+
+            if (type == GL_TRIANGLE_STRIP) { // convert to triangles on the fly
+                for (int i=2; i<length; i++) {
+                    pushInds(i-2, i == 2);
+                    if (i%2 == 0) {
+                        pushInds(i-1);
+                        pushInds(i);
+                    } else {
+                        pushInds(i);
+                        pushInds(i-1);
+                    }
+                }
+            }
+
+            if (type == GL_TRIANGLE_FAN) { // convert to triangles on the fly
+                for (int i=2; i<length; i++) {
+                    pushInds(0, i == 2);
+                    pushInds(i-1);
+                    pushInds(i);
+                }
+            }
+
             stream << "</p>" << endl;
             stream << "\t\t\t\t</" << typeName << ">" << endl;
             N0 += length;
