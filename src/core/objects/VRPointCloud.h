@@ -21,11 +21,13 @@ class VRPointCloud : public VRTransform {
             Vec2ub v1;
             Vec2ub v2;
             char w;
+            static const int size = 32; // 24 + 3 + 2 + 2 + 1  // for IO, because sizeof contains padding
         };
 
         struct PntCol {
             Vec3d p;
             Color3ub c;
+            static const int size = 27; // 24 + 3  // for IO, because sizeof contains padding
         };
 
         POINTTYPE pointType = NONE;
@@ -61,9 +63,12 @@ class VRPointCloud : public VRTransform {
         void convert(string pathIn);
         void genTestFile(string path, size_t N, bool doColor);
         void genTestFile2(string path, size_t N, bool doColor);
-        void externalSort(string path, size_t Nchunks, double binSize);
+        void externalSort(string path, size_t chunkSize, double binSize);
 
         OctreePtr getOctree();
+
+        static map<string, string> readPCBHeader(string path);
+        static void writePCBHeader(string path, map<string, string> params);
 };
 
 OSG_END_NAMESPACE;

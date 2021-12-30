@@ -19,36 +19,6 @@ using namespace e57;
 using namespace std;
 using namespace OSG;
 
-void OSG::genTestPC(string path, size_t N, bool doColor) {
-    size_t n = cbrt(N);
-    double f = 255.0/n;
-    double s = 0.01;
-    N = n*n*n;
-
-    ofstream stream(path);
-    stream << "x8y8z8";
-    if (doColor) stream << "r1g1b1";
-    stream << "\n" << toString(N) << "\n0\n";
-
-    auto progress = VRProgress::create();
-    progress->setup("generate points ", N);
-    progress->reset();
-
-    for (size_t i=0; i<n; i++) {
-        for (size_t j=0; j<n; j++) {
-            for (size_t k=0; k<n; k++) {
-                Vec3d P(i*s, j*s, k*s);
-                Vec3ub C(i*f, j*f, k*f);
-                stream.write((const char*)&P[0], sizeof(Vec3d));
-                if (doColor) stream.write((const char*)&C[0], sizeof(Vec3ub));
-            }
-            progress->update( n );
-        }
-    }
-
-    stream.close();
-}
-
 void OSG::convertE57(string pathIn, string pathOut) {
     try {
         ImageFile imf(pathIn, "r"); // Read file from disk
@@ -106,11 +76,13 @@ void OSG::convertE57(string pathIn, string pathOut) {
             int gotCount = 0;
             CompressedVectorReader reader = points.reader(destBuffers);
 
-            ofstream stream(pathOut);
-            stream << "x8y8z8";
-            if (hasCol) stream << "r1g1b1";
-            stream << "\n" << toString(cN) << "\n0\n";
+            map<string, string> params;
+            params["N_points"] = toString(cN);
+            params["format"] = "x8y8z8";
+            if (hasCol) params["format"] += "r1g1b1";
+            VRPointCloud::writePCBHeader(pathOut, params);
 
+            ofstream stream(pathOut, ios::app);
             do {
                 gotCount = (int)reader.read();
 
@@ -256,30 +228,30 @@ void OSG::loadE57(string path, VRTransformPtr res, map<string, string> importOpt
     catch (...) { cerr << "Got an unknown exception" << endl; return; }
 }
 
-struct PntCol { Vec3d p; Vec3ub c; };
-
 vector<size_t> extractRegionBounds(string path, vector<double> region) {
-    if (region.size() != 6) return {0,0};
+    if (region.size() != 6) return {};
 
+    auto params = VRPointCloud::readPCBHeader(path);
     ifstream stream(path);
-    string h1, h2, h3;
-    getline(stream, h1);
-    getline(stream, h2);
-    getline(stream, h3);
-    cout << "  extractRegionBounds > headers " << h1 << " " << h2 << " " << h3 << endl;
-    auto cN = toValue<size_t>(h2);
-    bool hasCol = contains(h1, "r");
-    double binSize = toValue<double>(h3);
+    int hL = toInt(params["headerLength"]);
+    stream.seekg(hL);
+
+    auto cN = toValue<size_t>(params["N_points"]);
+    bool hasCol = contains( params["format"], "r");
+    double binSize = toValue<double>(params["binSize"]);
+    if (binSize == 0) {
+        cout << " extractRegionBounds failed, binSize is 0!" << endl;
+        return {};
+    }
 
     size_t s0 = stream.tellg();
     int N = sizeof(Vec3d);
     if (hasCol) N += sizeof(Vec3ub);
 
-    vector<size_t> C = { 0, cN, 0, cN };
-    vector<size_t> B = { 0, cN };
+    cout << " extractRegionBounds - headers: " << toString(params) << ", cN: " << cN << endl;
 
     auto getPoint = [&](size_t pID) -> Vec3d {
-        PntCol pnt;
+        VRPointCloud::PntCol pnt;
         stream.seekg(s0+N*pID, ios::beg);
         stream.read((char*)&pnt, N);
         return pnt.p;
@@ -299,10 +271,9 @@ vector<size_t> extractRegionBounds(string path, vector<double> region) {
         return b*binSize - eps;
     };
 
-    auto homeIn = [&](size_t& A, size_t& B, int rComp, bool isMin) {
-        double v = region[rComp];
+    auto homeIn = [&](size_t& A, size_t& B, double v, bool isMin) {
         size_t bin = calcBin(v);
-        //cout << "homeIn " << v << " (" << bin << ") -> " << calcBinMin(bin) << " / " << calcBinMax(bin) << endl;
+        //cout << "homeIn " << v << " (" << bin << ", " << calcBin(v) << ") -> " << calcBinMin(bin) << " / " << calcBinMax(bin) << endl;
         if (isMin)  v = calcBinMin(bin);
         else        v = calcBinMax(bin);
         //cout << " --> " << v << "   binSize: " << binSize << endl;
@@ -317,13 +288,24 @@ vector<size_t> extractRegionBounds(string path, vector<double> region) {
         }
     };
 
-    homeIn(C[0],C[1],2, true); // Y lower bound
-    homeIn(C[2],C[3],3, false); // Y upper bound
+    vector<size_t> C = { 0, cN, cN };
+    vector<size_t> bounds;
 
-    B[0] = max(C[0], C[1]);
-    B[1] = max(C[2], C[3]);
-    //cout << "extractRegionBounds " << toString(C) << " -> " << toString(B) << endl;
-    return B;
+    // first find bounds in Y
+    homeIn(C[0], C[1], region[2], true); // Y lower bound
+    homeIn(C[0], C[2], region[3], false); // Y upper bound
+    bounds.push_back(C[1]);
+    bounds.push_back(C[2]);
+
+
+
+    // then find all row bounds in X
+
+
+    // finally find for each row the bounds in Z
+
+    cout << "extractRegionBounds " << toString(bounds) << endl;
+    return bounds;
 }
 
 void OSG::loadPCB(string path, VRTransformPtr res, map<string, string> importOptions) {
@@ -336,22 +318,22 @@ void OSG::loadPCB(string path, VRTransformPtr res, map<string, string> importOpt
     auto region = toValue<vector<double>>(importOptions["region"]);
     auto bounds = extractRegionBounds(path, region);
 
+    auto params = VRPointCloud::readPCBHeader(path);
     ifstream stream(path);
-    string h1, h2, h3;
-    getline(stream, h1);
-    getline(stream, h2);
-    getline(stream, h3);
-    cout << "  headers " << h1 << " " << h2 << " " << h3 << endl;
+    int hL = toInt(params["headerLength"]);
+    stream.seekg(hL);
+    cout << "  headers: " << toString(params) << endl;
 
-    auto cN = toValue<size_t>(h2);
+    auto cN = toValue<size_t>(params["N_points"]);
+    bool hasCol = contains( params["format"], "r");
+    bool hasSpl = contains( params["format"], "u");
+    //double binSize = toValue<double>(params["binarySize"]);
     cout << "  scan contains " << cN << " points" << endl;
 
     auto progress = VRProgress::create();
     progress->setup("process points ", cN);
     progress->reset();
 
-    bool hasCol = contains(h1, "r");
-    bool hasSpl = contains(h1, "u");
     if (hasCol) cout << "   scan has colors\n";
     else cout << "   scan has no colors\n";
     if (hasSpl) cout << "   scan has splats\n";
@@ -365,8 +347,8 @@ void OSG::loadPCB(string path, VRTransformPtr res, map<string, string> importOpt
     int Nskipped = 0;
 
     int N = sizeof(Vec3d);
-    if (hasCol) N = sizeof(VRPointCloud::PntCol);
-    if (hasSpl) N = sizeof(VRPointCloud::Splat);
+    if (hasCol) N = VRPointCloud::PntCol::size;
+    if (hasSpl) N = VRPointCloud::Splat::size;
     VRPointCloud::Splat pnt;
 
     auto skip = [&](size_t Nskip) {
@@ -377,18 +359,30 @@ void OSG::loadPCB(string path, VRTransformPtr res, map<string, string> importOpt
         progress->update( Nprocessed );
     };
 
-    if (bounds[0]>0) skip(bounds[0]);
+    int boundsID = 0;
+    int Nbounds = bounds.size()*0.5;
+    if (Nbounds > 0 && bounds[0] > 0) skip(bounds[0]);
 
     while (stream.read((char*)&pnt, N)) {
         Vec3d  pos = pnt.p;
         Vec3ub rgb = pnt.c;
+        //cout << "  read pnt: " << pos << " " << rgb << " " << endl;
         //Color3f col(rgb[0]/255.0, rgb[1]/255.0, rgb[2]/255.0);
         if (hasSpl) pointcloud->addPoint(pos, pnt);
         else pointcloud->addPoint(pos, rgb);
         progress->update( 1 );
         if (Nskip>0) skip(Nskip);
-        if (bounds[1]>0)
-            if (progress->current() >= bounds[1]) break;
+
+        if (boundsID < Nbounds) {
+            size_t upperBound = bounds[boundsID*2+1];
+            if ( upperBound > 0 && progress->current() >= upperBound) {
+                boundsID++;
+                if (boundsID < Nbounds) {
+                    size_t nextLowerBound = bounds[boundsID*2];
+                    skip(nextLowerBound-upperBound);
+                } else break;
+            }
+        }
     }
 
     pointcloud->setupLODs();

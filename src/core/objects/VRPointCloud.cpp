@@ -132,28 +132,61 @@ void VRPointCloud::convert(string pathIn) {
 }
 
 void VRPointCloud::genTestFile(string path, size_t N, bool doColor) {
-    genTestPC(path, N, doColor);
-}
+    size_t n = cbrt(N);
+    double f = 255.0/n;
+    double s = 0.01;
+    N = n*n*n;
 
-void VRPointCloud::genTestFile2(string path, size_t N, bool doColor) {
-    auto sphere = VRGeometry::create("spherePC");
-    sphere->setPrimitive("Sphere 1 "+toString(N));
-    VRGeoData data(sphere);
-
-    ofstream stream(path);
-    stream << "x8y8z8";
-    if (doColor) stream << "r1g1b1";
-    stream << "u2v2s1"; // splatting data
-    stream << "\n" << toString(data.size()) << "\n0\n";
+    map<string, string> params;
+    params["N_points"] = toString(N);
+    params["format"] = "x8y8z8";
+    if (doColor) params["format"] += "r1g1b1";
+    writePCBHeader(path, params);
 
     auto progress = VRProgress::create();
-    progress->setup("generate points ", data.size());
+    progress->setup("generate points ", N);
     progress->reset();
+
+    ofstream stream(path, ios::app);
+
+    for (size_t i=0; i<n; i++) {
+        for (size_t j=0; j<n; j++) {
+            for (size_t k=0; k<n; k++) {
+                Vec3d P(i*s, j*s, k*s);
+                Vec3ub C(i*f, j*f, k*f);
+                stream.write((const char*)&P[0], sizeof(Vec3d));
+                if (doColor) stream.write((const char*)&C[0], sizeof(Vec3ub));
+            }
+            progress->update( n );
+        }
+    }
+
+    stream.close();
+}
+
+void VRPointCloud::genTestFile2(string path, size_t N_itr, bool doColor) {
+    auto sphere = VRGeometry::create("spherePC");
+    sphere->setPrimitive("Sphere 1 "+toString(N_itr));
+    VRGeoData data(sphere);
+    size_t N = data.size();
+
+    map<string, string> params;
+    params["N_points"] = toString(N);
+    params["format"] = "x8y8z8";
+    if (doColor) params["format"] += "r1g1b1";
+    params["format"] += "u2v2s1"; // splatting data
+    writePCBHeader(path, params);
+
+    auto progress = VRProgress::create();
+    progress->setup("generate points ", N);
+    progress->reset();
+
+    ofstream stream(path, ios::app);
 
     Vec3d up(0,1,0);
     Vec3d x(1,0,0);
 
-    cout << "gen PC sphere " << data.size() << endl;
+    cout << "gen PC sphere " << N << endl;
 
     auto toSpherical = [](Vec3d v) {
         double a = acos(v[1]);
@@ -186,150 +219,214 @@ void VRPointCloud::genTestFile2(string path, size_t N, bool doColor) {
     stream.close();
 }
 
-void VRPointCloud::externalSort(string path, size_t NchunkMax, double binSize) {
+map<string, string> VRPointCloud::readPCBHeader(string path) {
+    cout << "readPCBHeader " << path << endl;
     ifstream stream(path);
-    string h1, h2, h3;
-    getline(stream, h1);
-    getline(stream, h2);
-    getline(stream, h3);
-    cout << "  externalSort headers " << h1 << " " << h2 << endl;
+    string header;
+    getline(stream, header);
+    auto pairs = splitString(header, '|');
 
-    auto cN = toValue<size_t>(h2);
+    map<string, string> params;
+    for (auto p : pairs) {
+        auto param = splitString(p, '$');
+        params[param[0]] = param[1];
+    }
+    size_t pos = stream.tellg();
+    params["headerLength"] = toString(pos);
+
+    stream.close();
+    return params;
+}
+
+void VRPointCloud::writePCBHeader(string path, map<string, string> params) {
+    ofstream stream(path);
+    int i=0;
+    for (auto p : params) {
+        if (i > 0) stream << "|";
+        stream << p.first << "$" << p.second;
+        i++;
+    }
+    stream << endl;
+    stream.close();
+}
+
+struct MergeHead {
+    size_t pointer = 0;
+    bool done = false;
+    VRPointCloud::PntCol point;
+};
+
+void VRPointCloud::externalSort(string path, size_t chunkSize, double binSize) {
+    auto addProgress = [](string head, size_t N) {
+        auto progress = VRProgress::create();
+        progress->setup(head, N);
+        progress->reset();
+        return progress;
+    };
+
+    auto params = readPCBHeader(path);
+    params["binSize"] = toString(binSize);
+    cout << "  externalSort headers " << toString(params) << endl;
+
+    auto cN = toValue<size_t>( params["N_points"] );
     cout << "  externalSort scan '" << path << "' contains " << cN << " points" << endl;
 
-    auto progress = VRProgress::create();
-    progress->setup("process points ", cN);
-    progress->reset();
-
-    bool hasCol = contains(h1, "r");
+    bool hasCol = contains( params["format"], "r");
     if (hasCol) cout << "   scan has colors\n";
     else cout << "   scan has no colors\n";
 
     int N = sizeof(Vec3d);
     if (hasCol) N += sizeof(Vec3ub);
 
-    int Mchunks = 3; // chunks to merge at once!
-
-    size_t Nchunks = 1;
-    while(cN / Nchunks > NchunkMax) Nchunks *= Mchunks;
-
-    size_t chunkSize = cN / Nchunks;
+    size_t Nchunks = cN/chunkSize;
     size_t lastChunkSize = cN - Nchunks*chunkSize;
-    cN -= lastChunkSize; // TODO: for now we crop the PC
-    h2 = toString(cN);
-
-    cout << "  externalSort Nchunks: " << Nchunks << ", with Mchunks: " << Mchunks << endl;
-    cout << "  externalSort chunkSize: " << chunkSize << ", lastChunkSize: " << lastChunkSize << endl;
+    cout << "  externalSort Nchunks: " << Nchunks << ", chunkSize: " << chunkSize << ", lastChunkSize: " << lastChunkSize << endl;
 
     auto calcBin = [&](double& a) {
         static const double eps = 1e-6;
         return round(0.5 + eps + a/binSize);
     };
 
-    auto sameBin = [&](double& a, double& b) {
+    auto sameBin = [calcBin](double& a, double& b) {
         return bool( calcBin(a) == calcBin(b) );
         //return bool( abs(b-a)<binSize );
     };
 
-    auto compPoints = [&](PntCol& p1, PntCol& p2) -> bool {
+    auto compPoints = [sameBin](PntCol& p1, PntCol& p2) -> bool {
         //return bool(p1.p[2] > p2.p[2]); // test
         if (!sameBin(p1.p[1],p2.p[1])) return bool(p1.p[1] < p2.p[1]);
         if (!sameBin(p1.p[0],p2.p[0])) return bool(p1.p[0] < p2.p[0]);
         return bool(p1.p[2] < p2.p[2]);
     };
 
-    vector<PntCol> buffer;
-    buffer.resize(chunkSize);
+    auto createChunks = [&]() {
+        ifstream stream(path);
+        int hL = toInt(params["headerLength"]);
+        stream.seekg(hL);
 
-    for (size_t i = 0; i<Nchunks; i++) { // write sorted chunks to disk
-        for (size_t j = 0; j<chunkSize; j++) stream.read((char*)&buffer[j], N);
-        //for (size_t j = 0; j<chunkSize; j++) cout << "  read chunk pnt " << j << ") " << buffer[j].p << endl;
-        sort(buffer.begin(), buffer.end(), compPoints);
-        //for (size_t j = 0; j<chunkSize; j++) cout << "  sort chunk pnt " << j << ") " << buffer[j].p << endl;
-        string cPath = path+".chunk."+toString(i);
-        ofstream cStream(cPath);
-        for (size_t j = 0; j<chunkSize; j++) cStream.write((char*)&buffer[j], N);
-        cStream.close();
-    }
+        vector<PntCol> buffer;
+        buffer.resize(chunkSize);
+        auto progressChunks = addProgress("process chunk ", Nchunks+1);
 
-    stream.close();
-
-    auto mergeChunks = [&](size_t L, vector<ifstream>& inStreams, ofstream& wStream, bool verbose = false) {
-        vector<size_t> mergeHeads;
-        vector<PntCol> mergeHeadData;
-        mergeHeads.resize(inStreams.size(), 0);
-        mergeHeadData.resize(inStreams.size(), PntCol());
-
-        for (size_t i = 0; i<inStreams.size(); i++) {
-            inStreams[i].read((char*)&mergeHeadData[i], N);
-            //if (verbose) cout << "   start point " << i << ": " << mergeHeadData[i].p << endl;
+        for (size_t i = 0; i<=Nchunks; i++) { // write sorted chunks to disk, +1 for last partial chunk
+            if (i == Nchunks) buffer.resize(lastChunkSize);
+            if (buffer.size() > 0) {
+                for (size_t j = 0; j<buffer.size(); j++) stream.read((char*)&buffer[j], N);
+                sort(buffer.begin(), buffer.end(), compPoints);
+                string cPath = path+".chunk."+toString(i);
+                ofstream cStream(cPath);
+                for (size_t j = 0; j<buffer.size(); j++) cStream.write((char*)&buffer[j], N);
+                cStream.close();
+            }
+            progressChunks->update(1);
         }
 
-        for (size_t i = 0; i<L*3; i++) {
+        stream.close();
+    };
+
+    auto mergeChunks = [compPoints, N](size_t levelSize, vector<ifstream>& inStreams, ofstream& wStream, bool verbose = false) {
+        size_t Nstreams = inStreams.size();
+        vector<MergeHead> mergeHeads;
+        mergeHeads.resize(Nstreams, MergeHead());
+
+        for (size_t i = 0; i<Nstreams; i++) {
+            inStreams[i].read((char*)&mergeHeads[i].point, N); // read first point
+            if (!inStreams[i]) mergeHeads[i].done = true; // end of stream reached
+            if (verbose) cout << "   start point " << i << ": " << mergeHeads[i].point.p << endl;
+        }
+
+        while (true) {
             int kNext = 0;
-            while(mergeHeads[kNext] == L) kNext++;
-            for (size_t j=kNext+1; j<inStreams.size(); j++) {
-                if (mergeHeads[j] == L) continue;
-                bool b = compPoints(mergeHeadData[j], mergeHeadData[kNext]);
-                //if (verbose) cout << "    compare [" << mergeHeadData[j].p << "] (" << j << ") with [" << mergeHeadData[kNext].p << "] (" << kNext << ") -> " << b << endl;
+            while (mergeHeads[kNext].done) kNext++;
+            if (kNext >= Nstreams) break; // all done!
+
+            for (size_t j=kNext+1; j<Nstreams; j++) {
+                if (mergeHeads[j].done) continue;
+                bool b = compPoints(mergeHeads[j].point, mergeHeads[kNext].point);
                 if (b) kNext = j;
             }
+            if (kNext >= Nstreams) break; // all done!
 
-            //if (verbose) cout << "     write point " << kNext << ") " << mergeHeadData[kNext].p << endl;
-            wStream.write((char*)&mergeHeadData[kNext], N);
-            mergeHeads[kNext]++;
-            inStreams[kNext].read((char*)&mergeHeadData[kNext], N);
+            wStream.write((char*)&mergeHeads[kNext].point, N);
+            mergeHeads[kNext].pointer++;
+            if (inStreams[kNext]) inStreams[kNext].read((char*)&mergeHeads[kNext].point, N); // read next point
+            if (!inStreams[kNext]) mergeHeads[kNext].done = true; // end of stream reached
+
+            if (verbose) {
+                cout << "     write point " << mergeHeads[kNext].pointer << " (stream " << kNext << "/" << Nstreams << ") " << mergeHeads[kNext].point.p;
+                cout << " sstate: " << bool(inStreams[kNext]) << " " << int(inStreams[kNext].gcount()) << endl;
+            }
+
+            //if (!inStreams[kNext] && inStreams[kNext].gcount() == 0) mergeHeads[kNext].done = true; // end of stream reached
         }
     };
 
-    size_t NlvlChunks = Nchunks;
-    size_t Lchunks = chunkSize;
-    vector<string> currentChunks;
-    vector<string> lastChunks;
-    for (int i=0; i<Nchunks; i++) lastChunks.push_back( path+".chunk."+toString(i) );
+    auto mergeChunksLevel = [&](int lvl, size_t& NlvlChunks, size_t& levelSize, vector<string>& lastChunks) -> bool {
+        vector<string> newChunks;
+        int Mchunks = min(3,int(lastChunks.size())); // N chunks to merge at once!
+        NlvlChunks = lastChunks.size()/Mchunks;
+        if (lastChunks.size()%Mchunks > 0) NlvlChunks++;
+        bool finalPass = (NlvlChunks == 1);
+        cout << " pass " << lvl << ", NlvlChunks: " << NlvlChunks << endl;
 
-    //cout << "start merge" << endl;
-    for (int i=0; NlvlChunks>1; i++) {
-        NlvlChunks /= Mchunks;
-        //cout << " pass " << i << ", NlvlChunks: " << NlvlChunks << endl;
-        for (int j=0; j<NlvlChunks; j++) {
-            bool finalPass = (NlvlChunks == 1);
-
+        for (size_t j=0; j<NlvlChunks; j++) {
+            // prepare in streams
             vector<ifstream> inStreams;
             for (int k=0; k<Mchunks; k++) {
-                string cPath = lastChunks[j*Mchunks+k];
-                //cout << " > open input stream " << cPath << endl;
-                inStreams.push_back(ifstream(cPath));
+                size_t cI = j*Mchunks+k;
+                if (cI < lastChunks.size()) {
+                    string cPath = lastChunks[j*Mchunks+k];
+                    inStreams.push_back(ifstream(cPath));
+                }
             }
 
-            string wPath = path;
-            if (!finalPass) wPath = path+".lvl"+toString(i)+"."+toString(j);
-            currentChunks.push_back(wPath);
-
-            //cout << "  > open output stream " << wPath << endl;
-            ofstream wStream(wPath);
+            // prepare out stream
+            string wPath = path+".lvl"+toString(lvl)+"."+toString(j);
+            if (finalPass) wPath = path;//+".sorted.pcb";
+            newChunks.push_back(wPath);
+            ofstream wStream;
             if (finalPass) {
-                cout << "  sort, write final pass!! binSize: " << binSize << endl;
-                wStream << h1 << "\n" << h2 << "\n" << toString(binSize) << "\n";
+                cout << "  sort, write final pass to: " << wPath << endl;
+                writePCBHeader(wPath, params);
+                wStream.open(wPath, std::ios_base::app);
+            } else {
+                wStream.open(wPath);
             }
 
-            //cout << "    merge to " << j << endl;
-            mergeChunks(Lchunks, inStreams, wStream, i == 2);
-            //cout << "  < close output stream " << wPath << endl;
+            mergeChunks(levelSize, inStreams, wStream, false);
             wStream.close();
 
-            for (int k=0; k<Mchunks; k++) {
+            for (int k=0; k<inStreams.size(); k++) {
                 string cPath = lastChunks[j*Mchunks+k];
-                //cout << " < close input stream " << cPath << endl;
                 inStreams[k].close();
+                removeFile(cPath);
             }
         }
 
-        for (auto& p : lastChunks) removeFile(p);
-        lastChunks = currentChunks;
-        currentChunks.clear();
-        Lchunks *= Mchunks;
-    }
+        levelSize *= Mchunks;
+        lastChunks = newChunks;
+        return finalPass;
+    };
+
+    auto mergeAllChunks = [&]() {
+        size_t levelSize = chunkSize;
+
+        size_t NlvlChunks = Nchunks;
+        if (lastChunkSize > 0) NlvlChunks++;
+
+        vector<string> lastChunks;
+        for (size_t i=0; i<NlvlChunks; i++) lastChunks.push_back( path+".chunk."+toString(i) );
+
+        cout << "mergeAllChunks N chunks: " << lastChunks.size() << ", NlvlChunks: " << NlvlChunks << endl;
+        int lvl = 0;
+        while (true) {
+            if (mergeChunksLevel(lvl, NlvlChunks, levelSize, lastChunks)) break;
+            lvl++;
+        }
+    };
+
+    createChunks();
+    mergeAllChunks();
 }
 
 string VRPointCloud::splatFP =

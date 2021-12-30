@@ -39,6 +39,19 @@ template<typename T> string toString(const vector<T>& v) {
     return res+"]";
 }
 
+template<typename K, typename T> string toString(const map<K,T>& m) {
+    string res = "{";
+    int i = 0;
+    for (auto p : m) {
+        if (i > 0) res += ", ";
+        res += toString<K>(p.first);
+        res += " : ";
+        res += toString<T>(p.second);
+        i++;
+    }
+    return res+"}";
+}
+
 string toString(const vector<float>& v, int d=-1);
 string toString(const vector<double>& v, int d=-1);
 
