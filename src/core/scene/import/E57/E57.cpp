@@ -306,32 +306,16 @@ vector<size_t> extractRegionBounds(string path, vector<double> region) {
     homeIn(Ybounds[0], Ybounds[1], 1, segY1.min); // Y lower bound
     homeIn(Ybounds[0], Ybounds[2], 1, segY2.max); // Y upper bound
 
-    struct Layer {
+    struct Range {
         Segment segment;
         size_t b0 = 0;
         size_t b1 = 0;
 
-        Layer(int i, double binSize) : segment(i, binSize) {}
-    };
-
-    struct Row {
-        Segment segment;
-        size_t b0 = 0;
-        size_t b1 = 0;
-
-        Row(int i, double binSize) : segment(i, binSize) {}
-    };
-
-    struct Cell {
-        Segment segment;
-        size_t b0 = 0;
-        size_t b1 = 0;
-
-        Cell(int i, double binSize) : segment(i, binSize) {}
+        Range(int i, double binSize) : segment(i, binSize) {}
     };
 
     for (int i = segY1.coord; i <= segY2.coord; i++) {
-        Layer layer(i, binSize);
+        Range layer(i, binSize);
 
         size_t lb = Ybounds[1];
         layer.b0 = Ybounds[2];
@@ -339,30 +323,26 @@ vector<size_t> extractRegionBounds(string path, vector<double> region) {
         homeIn(lb, layer.b0, 1, layer.segment.min); // layer Y lower bound
         homeIn(lb, layer.b1, 1, layer.segment.max); // layer Y upper bound
 
-        cout << "  found layer " << i << ", " << Vec2d(layer.b0, layer.b1) << endl;
+        //cout << "  found layer " << i << ", " << Vec2d(layer.b0, layer.b1) << endl;
 
         for (int j = segX1.coord; j <= segX2.coord; j++) { // then find all row bounds in X
-            Row row(j, binSize);
+            Range row(j, binSize);
             size_t lb = layer.b0;
             row.b0 = layer.b1;
             row.b1 = layer.b1;
             homeIn(lb, row.b0, 0, row.segment.min); // row X lower bound
             homeIn(lb, row.b1, 0, row.segment.max); // row X upper bound
 
-            cout << "   found row " << j << ", " << Vec2d(row.b0, row.b1) << endl;
+            //cout << "   found row " << j << ", " << Vec2d(row.b0, row.b1) << endl;
 
-            for (int k = segZ1.coord; k <= segZ2.coord; k++) { // finally find for each row the bounds in Z
-                Cell cell(k, binSize);
-                size_t lb = row.b0;
-                cell.b0 = row.b1;
-                cell.b1 = row.b1;
-                homeIn(lb, cell.b0, 2, cell.segment.min); // cell Z lower bound
-                homeIn(lb, cell.b1, 2, cell.segment.max); // cell Z upper bound
+            lb = row.b0;
+            size_t cb0 = row.b1;
+            size_t cb1 = row.b1;
+            homeIn(lb, cb0, 2, segZ1.min); // cell Z lower bound
+            homeIn(lb, cb1, 2, segZ2.max); // cell Z upper bound
 
-                bounds.push_back(cell.b0);
-                bounds.push_back(cell.b1);
-                cout << "    found cell " << k << ", " << Vec2d(cell.b0, cell.b1) << endl;
-            }
+            bounds.push_back(cb0);
+            bounds.push_back(cb1);
         }
     }
 

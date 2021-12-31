@@ -40,7 +40,10 @@ void VRProgress::update(size_t i) {
 
     switch(mode) {
         case CONSOLE_M:
-            cout << "\r" << title << " " << this << " " << long(part*100) << "% - pending " << pending << " s, " << pending/60.0 << " min" << flush;
+            cout << "\r" << title << " " << this << " " << long(part*100) << "% - ";
+            cout << "pending " << pending << " s, " << pending/60.0 << " min - ";
+            cout << "duration " << dt << " s, " << dt/60.0 << " min";
+            cout << flush;
             break;
 		case CALLBACK_M:
             if (auto cl = callback.lock()) (*cl)(part*100);

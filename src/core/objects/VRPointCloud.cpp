@@ -324,7 +324,7 @@ void VRPointCloud::externalSort(string path, size_t chunkSize, double binSize) {
         stream.close();
     };
 
-    auto mergeChunks = [compPoints, N](size_t levelSize, vector<ifstream>& inStreams, ofstream& wStream, bool verbose = false) {
+    auto mergeChunks = [compPoints, N](size_t levelSize, vector<ifstream>& inStreams, ofstream& wStream, VRProgressPtr progress, bool verbose = false) {
         size_t Nstreams = inStreams.size();
         vector<MergeHead> mergeHeads;
         mergeHeads.resize(Nstreams, MergeHead());
@@ -348,6 +348,7 @@ void VRPointCloud::externalSort(string path, size_t chunkSize, double binSize) {
             if (kNext >= Nstreams) break; // all done!
 
             wStream.write((char*)&mergeHeads[kNext].point, N);
+            progress->update(1);
             mergeHeads[kNext].pointer++;
             if (inStreams[kNext]) inStreams[kNext].read((char*)&mergeHeads[kNext].point, N); // read next point
             if (!inStreams[kNext]) mergeHeads[kNext].done = true; // end of stream reached
@@ -368,6 +369,8 @@ void VRPointCloud::externalSort(string path, size_t chunkSize, double binSize) {
         if (lastChunks.size()%Mchunks > 0) NlvlChunks++;
         bool finalPass = (NlvlChunks == 1);
         cout << " pass " << lvl << ", NlvlChunks: " << NlvlChunks << endl;
+
+        auto progress = addProgress("process level "+toString(lvl)+" ", cN);
 
         for (size_t j=0; j<NlvlChunks; j++) {
             // prepare in streams
@@ -393,7 +396,7 @@ void VRPointCloud::externalSort(string path, size_t chunkSize, double binSize) {
                 wStream.open(wPath);
             }
 
-            mergeChunks(levelSize, inStreams, wStream, false);
+            mergeChunks(levelSize, inStreams, wStream, progress, false);
             wStream.close();
 
             for (int k=0; k<inStreams.size(); k++) {
