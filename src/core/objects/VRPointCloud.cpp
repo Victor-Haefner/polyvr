@@ -126,8 +126,8 @@ void VRPointCloud::setupLODs() {
     //addChild(octree->getVisualization());
 }
 
-void VRPointCloud::convert(string pathIn) {
-    string pathOut = pathIn+".pcb";
+void VRPointCloud::convert(string pathIn, string pathOut) {
+    if (pathOut == "") pathOut = pathIn+".pcb";
     convertE57(pathIn, pathOut);
 }
 

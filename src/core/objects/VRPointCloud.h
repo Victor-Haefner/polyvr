@@ -60,7 +60,7 @@ class VRPointCloud : public VRTransform {
         void addPoint(Vec3d p, Color3ub c);
         void addPoint(Vec3d p, Splat c);
 
-        void convert(string pathIn);
+        void convert(string pathIn, string pathOut);
         void genTestFile(string path, size_t N, bool doColor);
         void genTestFile2(string path, size_t N, bool doColor);
         void externalSort(string path, size_t chunkSize, double binSize);

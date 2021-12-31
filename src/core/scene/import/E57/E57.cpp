@@ -314,6 +314,9 @@ vector<size_t> extractRegionBounds(string path, vector<double> region) {
         Range(int i, double binSize) : segment(i, binSize) {}
     };
 
+    //bounds.push_back(Ybounds[1]);
+    //bounds.push_back(Ybounds[2]);
+
     for (int i = segY1.coord; i <= segY2.coord; i++) {
         Range layer(i, binSize);
 
@@ -333,7 +336,9 @@ vector<size_t> extractRegionBounds(string path, vector<double> region) {
             homeIn(lb, row.b0, 0, row.segment.min); // row X lower bound
             homeIn(lb, row.b1, 0, row.segment.max); // row X upper bound
 
-            //cout << "   found row " << j << ", " << Vec2d(row.b0, row.b1) << endl;
+            //bounds.push_back(row.b0);
+            //bounds.push_back(row.b1);
+
 
             lb = row.b0;
             size_t cb0 = row.b1;
@@ -341,15 +346,14 @@ vector<size_t> extractRegionBounds(string path, vector<double> region) {
             homeIn(lb, cb0, 2, segZ1.min); // cell Z lower bound
             homeIn(lb, cb1, 2, segZ2.max); // cell Z upper bound
 
-            bounds.push_back(cb0);
-            bounds.push_back(cb1);
+            if (cb1 > cb0) {
+                bounds.push_back(cb0);
+                bounds.push_back(cb1);
+            }
+
+            //cout << "   found row " << j << ", " << Vec2d(row.b0, row.b1) << ", Z " << Vec2d(cb0, cb1) << endl;
         }
     }
-
-
-
-
-
 
     cout << "extractRegionBounds " << toString(bounds) << endl;
     return bounds;
