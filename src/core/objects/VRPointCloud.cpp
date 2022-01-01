@@ -8,7 +8,9 @@
 #include "core/math/pose.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRProgress.h"
+#include "core/utils/VRFunction.h"
 #include "core/utils/system/VRSystem.h"
+#include "core/scene/import/VRImport.h"
 #include "core/scene/import/E57/E57.h"
 
 #define GLSL(shader) #shader
@@ -46,9 +48,7 @@ VRMaterialPtr VRPointCloud::getMaterial() { return mat; }
 OctreePtr VRPointCloud::getOctree() { return octree; }
 
 void VRPointCloud::applySettings(map<string, string> options) {
-    bool lit = 0;
-    int pointSize = 1;
-    int leafSize = 10;
+    if (options.count("filePath")) filePath = options["filePath"];
     if (options.count("lit")) lit = toInt(options["lit"]);
     if (options.count("leafSize")) leafSize = toInt(options["leafSize"]);
     if (options.count("pointSize")) pointSize = toInt(options["pointSize"]);
@@ -66,10 +66,64 @@ void VRPointCloud::applySettings(map<string, string> options) {
     }
 }
 
-void VRPointCloud::addLevel(float distance, int downsampling) {
+void VRPointCloud::onLodSwitch(VRLodEventPtr e) {
+    int i0 = e->getLast();
+    int i1 = e->getCurrent();
+    VRLodPtr lod = e->getLod();
+
+    if (i1 == 0) {
+        cout << "VRPointCloud::onLodSwitch " << lod->getName() << ", load region " << Vec2i(i0, i1) << endl;
+        auto prxy = lod->getChild(0);
+        if (prxy->getChildrenCount() == 0) { // load chunk
+            Vec3d c = lod->getCenter();
+
+            double L = leafSize*0.5*1.01;
+
+            vector<double> region = {c[0]-L,c[0]+L, c[1]-L,c[1]+L, c[2]-L,c[2]+L}; // TODO, try out BB from child0?
+            string path = filePath;
+
+            map<string, string> options;
+            options["lit"] = toString(mat->isLit());
+            options["pointSize"] = toString(pointSize);
+            options["leafSize"] = toString(50.0);
+            options["keepOctree"] = toString(0);
+            options["region"] = toString( region );
+
+            auto chunk = VRImport::get()->load(path, prxy, false, "OSG", false, options);
+            prxy->addChild(chunk);
+            cout << " VRPointCloud::onLodSwitch loaded " << chunk->getName() << ", parent: " << chunk->getParent() << ", region: " << toString(region) << endl;
+        }
+    }
+
+    if (i1 == 1) {
+        cout << "VRPointCloud::onLodSwitch " << lod->getName() << ", unload region " << Vec2i(i0, i1) << endl;
+    }
+}
+
+void VRPointCloud::addLevel(float distance, int downsampling, bool stream) {
     levels++;
     downsamplingRate.push_back(downsampling);
     lodDistances.push_back(distance);
+
+    if (lodsSetUp && stream) {
+        VRLodCbPtr streamCB = VRLodCb::create( "pointcloudStreamCB", bind(&VRPointCloud::onLodSwitch, this, placeholders::_1 ) );
+
+        for (auto c : getChildren()) {
+            auto lod = dynamic_pointer_cast<VRLod>(c);
+            if (!lod) continue;
+
+            lod->setCallback(streamCB);
+            lod->addDistance(distance);
+
+            auto obj = VRObject::create("pcStreamPrxy");
+            auto geo = lod->getChild(0);
+            lod->subChild( geo );
+
+            lod->addChild( obj );
+            lod->addChild( geo );
+            obj->addLink( geo );
+        }
+    }
 }
 
 void VRPointCloud::addPoint(Vec3d p, Splat c) {
@@ -85,6 +139,8 @@ void VRPointCloud::addPoint(Vec3d p, Color3ub c) {
 }
 
 void VRPointCloud::setupLODs() {
+    lodsSetUp = true;
+
     for (auto leaf : octree->getAllLeafs()) {
         Vec3d center = leaf->getCenter();
 

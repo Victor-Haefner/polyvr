@@ -108,6 +108,7 @@ void OSG::convertE57(string pathIn, string pathOut) {
 
 void OSG::loadE57(string path, VRTransformPtr res, map<string, string> importOptions) {
     cout << "load e57 pointcloud " << path << endl;
+    importOptions["filePath"] = path;
     res->setName(path);
 
     float downsampling = 1;
@@ -361,6 +362,7 @@ vector<size_t> extractRegionBounds(string path, vector<double> region) {
 
 void OSG::loadPCB(string path, VRTransformPtr res, map<string, string> importOptions) {
     cout << "load PCB pointcloud " << path << endl;
+    importOptions["filePath"] = path;
     res->setName(path);
 
     float downsampling = 1;
@@ -443,6 +445,7 @@ void OSG::loadPCB(string path, VRTransformPtr res, map<string, string> importOpt
 
 void OSG::loadXYZ(string path, VRTransformPtr res, map<string, string> importOptions) {
     cout << "load xyz pointcloud " << path << endl;
+    importOptions["filePath"] = path;
     res->setName(path);
 
     float downsampling = 1;

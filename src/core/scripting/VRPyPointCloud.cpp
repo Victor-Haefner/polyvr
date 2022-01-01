@@ -10,7 +10,7 @@ simpleVRPyType(PointCloud, New_VRObjects_ptr);
 PyMethodDef VRPyPointCloud::methods[] = {
     {"getOctree", PyWrap( PointCloud, getOctree, "Access internal octree", OctreePtr ) },
     {"addPoint", PyWrap( PointCloud, addPoint, "Add a point, position and color", void, Vec3d, Color3ub ) },
-    {"addLevel", PyWrap( PointCloud, addLevel, "Add LOD level, (distance, downsampling)", void, float, int ) },
+    {"addLevel", PyWrapOpt( PointCloud, addLevel, "Add LOD level, (distance, downsampling, stream = false)", "0", void, float, int, bool ) },
     {"setupLODs", PyWrap( PointCloud, setupLODs, "Setup LODs, this will delete the octree content if not disabled using the settings", void ) },
     {"setupMaterial", PyWrapOpt( PointCloud, setupMaterial, "Setup material, (lit, pointsize, doSplats = false, splatSizeModifier = 0.001)", "0|0.001", void, bool, int, bool, float ) },
     {"getMaterial", PyWrap( PointCloud, getMaterial, "Get material", VRMaterialPtr ) },

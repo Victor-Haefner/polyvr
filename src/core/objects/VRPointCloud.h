@@ -37,12 +37,21 @@ class VRPointCloud : public VRTransform {
         OctreePtr octree;
         int levels = 1;
         bool keepOctree = 0;
+        bool lodsSetUp = 0;
         vector<int> downsamplingRate = {1};
         vector<float> lodDistances;
+
+        // import options
+        string filePath;
+        bool lit = 0;
+        int pointSize = 1;
+        int leafSize = 10;
 
         static string splatVP;
         static string splatFP;
         static string splatGP;
+
+        void onLodSwitch(VRLodEventPtr e);
 
     public:
         VRPointCloud(string name = "pointcloud");
@@ -51,7 +60,7 @@ class VRPointCloud : public VRTransform {
         static VRPointCloudPtr create(string name = "pointcloud");
         void applySettings(map<string, string> options);
 
-        void addLevel(float distance, int downsampling);
+        void addLevel(float distance, int downsampling, bool stream = false);
         void setupLODs();
 
         void setupMaterial(bool lit, int pointsize, bool doSplat = false, float splatModifier = 0.001);
