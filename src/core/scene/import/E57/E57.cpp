@@ -241,6 +241,7 @@ vector<size_t> extractRegionBounds(string path, vector<double> region) {
     if (cN == 0) return {};
 
     bool hasCol = contains( params["format"], "r");
+    bool hasSpl = contains( params["format"], "u");
     double binSize = toValue<double>(params["binSize"]);
     if (binSize == 0) {
         cout << " extractRegionBounds failed, binSize is 0!" << endl;
@@ -249,12 +250,13 @@ vector<size_t> extractRegionBounds(string path, vector<double> region) {
 
     size_t s0 = stream.tellg();
     int N = sizeof(Vec3d);
-    if (hasCol) N += sizeof(Vec3ub);
+    if (hasCol) N = VRPointCloud::PntCol::size;
+    if (hasSpl) N = VRPointCloud::Splat::size;
+    VRPointCloud::Splat pnt;
 
     cout << " extractRegionBounds - headers: " << toString(params) << ", cN: " << cN << endl;
 
     auto getPoint = [&](size_t pID) -> Vec3d {
-        VRPointCloud::PntCol pnt;
         stream.seekg(s0+N*pID, ios::beg);
         stream.read((char*)&pnt, N);
         return pnt.p;
@@ -390,6 +392,9 @@ void OSG::loadPCB(string path, VRTransformPtr res, map<string, string> importOpt
     bool hasSpl = contains( params["format"], "u");
     //double binSize = toValue<double>(params["binarySize"]);
     cout << "  scan contains " << cN << " points" << endl;
+
+    if (hasSpl) importOptions["doSplats"] = "1";
+    if (params.count("splatMod")) importOptions["splatMod"] = params["splatMod"];
 
     auto progress = VRProgress::create();
     progress->setup("process points ", cN);

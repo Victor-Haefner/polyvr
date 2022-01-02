@@ -54,7 +54,12 @@ void VRPointCloud::applySettings(map<string, string> options) {
     if (options.count("pointSize")) pointSize = toInt(options["pointSize"]);
     if (options.count("keepOctree")) keepOctree = toInt(options["keepOctree"]);
 
-    setupMaterial(lit, pointSize);
+    bool doSplats = false;
+    double splatMod = 1.0;
+    if (options.count("doSplats")) doSplats = true;
+    if (options.count("splatMod")) splatMod = toFloat(options["splatMod"]);
+
+    setupMaterial(lit, pointSize, doSplats, splatMod);
     octree->setResolution(leafSize);
     actualLeafSize = octree->getLeafSize();
 
@@ -227,6 +232,12 @@ void VRPointCloud::genTestFile(string path, size_t N, bool doColor) {
     stream.close();
 }
 
+Vec2ub VRPointCloud::toSpherical(const Vec3d& v) {
+    double a = acos(v[1]);
+    double b = atan2(v[2],v[0]) + Pi;
+    return Vec2ub(255.0*a/Pi, 255.0*b/(2*Pi));
+}
+
 void VRPointCloud::genTestFile2(string path, size_t N_itr, bool doColor) {
     auto sphere = VRGeometry::create("spherePC");
     sphere->setPrimitive("Sphere 1 "+toString(N_itr));
@@ -250,13 +261,6 @@ void VRPointCloud::genTestFile2(string path, size_t N_itr, bool doColor) {
     Vec3d x(1,0,0);
 
     cout << "gen PC sphere " << N << endl;
-
-    auto toSpherical = [](Vec3d v) {
-        double a = acos(v[1]);
-        double b = atan2(v[2],v[0]) + Pi;
-        return Vec2ub(255.0*a/Pi, 255.0*b/(2*Pi));
-    };
-
     for (int i=0; i<data.size(); i++) {
         Vec3d P = Vec3d( data.getPosition(i) );
         Vec3ub C = Vec3ub(255*abs(P[0]), 255*abs(P[1]), 255*abs(P[2]));
@@ -454,7 +458,7 @@ void VRPointCloud::externalSort(string path, size_t chunkSize, double binSize) {
             if (finalPass) {
                 cout << "  sort, write final pass to: " << wPath << endl;
                 writePCBHeader(wPath, params);
-                wStream.open(wPath, std::ios_base::app);
+                wStream.open(wPath, ios::app);
             } else {
                 wStream.open(wPath);
             }
@@ -493,6 +497,52 @@ void VRPointCloud::externalSort(string path, size_t chunkSize, double binSize) {
 
     createChunks();
     mergeAllChunks();
+}
+
+void VRPointCloud::externalComputeSplats(string path) {
+    auto params = readPCBHeader(path);
+    cout << "  externalComputeSplats headers " << toString(params) << endl;
+
+    bool hasCol = contains( params["format"], "r");
+    auto cN = toValue<size_t>( params["N_points"] );
+
+    int N1 = sizeof(Vec3d);
+    if (hasCol) N1 += sizeof(Vec3ub);
+
+    string wpath = path+".tmp.pcb";
+    params["format"] = "x8y8z8r1g1b1u2v2s1";
+    params["splatMod"] = "0.001";
+    writePCBHeader(wpath, params);
+    ofstream wstream(wpath, ios::app);
+
+    ifstream stream(path);
+    int hL = toInt(params["headerLength"]);
+    stream.seekg(hL);
+
+    VRPointCloud::Splat splat;
+
+    for (size_t i = 0; i<cN; i++) {
+        stream.read((char*)&splat, N1);
+
+        Vec3d n = Vec3d(1,0,0); // TODO: compute from pc
+        Pose O(splat.p, n);
+        O.makeUpOrthogonal();
+        Vec3d u = O.x();
+        Vec3d v = O.up();
+        Vec2ub U = toSpherical(u);
+        Vec2ub V = toSpherical(v);
+        char W = 46; // mm, TODO: compute from pc
+
+        wstream.write((const char*)&splat.p[0], sizeof(Vec3d));
+        wstream.write((const char*)&splat.c[0], sizeof(Vec3ub));
+        wstream.write((const char*)&U[0], sizeof(Vec2ub));
+        wstream.write((const char*)&V[0], sizeof(Vec2ub));
+        wstream.write((const char*)&W, sizeof(char));
+    }
+
+    stream.close();
+    wstream.close();
+    rename(wpath.c_str(), path.c_str());
 }
 
 string VRPointCloud::splatFP =

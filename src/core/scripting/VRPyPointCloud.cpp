@@ -17,6 +17,7 @@ PyMethodDef VRPyPointCloud::methods[] = {
     {"applySettings", PyWrap( PointCloud, applySettings, "Setup parameters", void, map<string, string> ) },
     {"convert", PyWrapOpt( PointCloud, convert, "Convert a E57 pointcloud to PCB, if out path provided it will export to the same path but with '.pcb' at the end", "", void, string, string ) },
     {"externalSort", PyWrap( PointCloud, externalSort, "External sort, merge sort, only for PCB files, chunkSize in bytes to sort internal, bin size in m (path, chunkSize, binSize)", void, string, size_t, double ) },
+    {"externalComputeSplats", PyWrap( PointCloud, externalComputeSplats, "External algorithm to compute surface tangents and splat sizes", void, string) },
     {"genTestFile", PyWrap( PointCloud, genTestFile, "Generate a pointcloud, regular cube grid, (.pcb) file (path, Npoints, doColors)", void, string, size_t, bool ) },
     {"genTestFile2", PyWrap( PointCloud, genTestFile2, "Generate a pointcloud, ico sphere surface, (.pcb) file (path, Niterations, doColors)", void, string, size_t, bool ) },
     {NULL}  /* Sentinel */

@@ -52,6 +52,7 @@ class VRPointCloud : public VRTransform {
         static string splatFP;
         static string splatGP;
 
+        Vec2ub toSpherical(const Vec3d& v);
         void loadChunk(VRLodPtr lod);
         void onLodSwitch(VRLodEventPtr e);
 
@@ -74,7 +75,9 @@ class VRPointCloud : public VRTransform {
         void convert(string pathIn, string pathOut);
         void genTestFile(string path, size_t N, bool doColor);
         void genTestFile2(string path, size_t N, bool doColor);
+
         void externalSort(string path, size_t chunkSize, double binSize);
+        void externalComputeSplats(string path);
 
         OctreePtr getOctree();
 
