@@ -45,12 +45,14 @@ class VRPointCloud : public VRTransform {
         string filePath;
         bool lit = 0;
         int pointSize = 1;
-        int leafSize = 10;
+        double leafSize = 10;
+        double actualLeafSize = 0;
 
         static string splatVP;
         static string splatFP;
         static string splatGP;
 
+        void loadChunk(VRLodPtr lod);
         void onLodSwitch(VRLodEventPtr e);
 
     public:

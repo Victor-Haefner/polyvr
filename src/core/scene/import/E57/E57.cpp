@@ -238,6 +238,8 @@ vector<size_t> extractRegionBounds(string path, vector<double> region) {
     stream.seekg(hL);
 
     auto cN = toValue<size_t>(params["N_points"]);
+    if (cN == 0) return {};
+
     bool hasCol = contains( params["format"], "r");
     double binSize = toValue<double>(params["binSize"]);
     if (binSize == 0) {
@@ -324,7 +326,9 @@ vector<size_t> extractRegionBounds(string path, vector<double> region) {
         size_t lb = Ybounds[1];
         layer.b0 = Ybounds[2];
         layer.b1 = Ybounds[2];
+        if (lb == layer.b0) continue;
         homeIn(lb, layer.b0, 1, layer.segment.min); // layer Y lower bound
+        if (lb == layer.b1) continue;
         homeIn(lb, layer.b1, 1, layer.segment.max); // layer Y upper bound
 
         //cout << "  found layer " << i << ", " << Vec2d(layer.b0, layer.b1) << endl;
@@ -334,7 +338,9 @@ vector<size_t> extractRegionBounds(string path, vector<double> region) {
             size_t lb = layer.b0;
             row.b0 = layer.b1;
             row.b1 = layer.b1;
+            if (lb == row.b0) continue;
             homeIn(lb, row.b0, 0, row.segment.min); // row X lower bound
+            if (lb == row.b1) continue;
             homeIn(lb, row.b1, 0, row.segment.max); // row X upper bound
 
             //bounds.push_back(row.b0);
@@ -344,7 +350,9 @@ vector<size_t> extractRegionBounds(string path, vector<double> region) {
             lb = row.b0;
             size_t cb0 = row.b1;
             size_t cb1 = row.b1;
+            if (lb == cb0) continue;
             homeIn(lb, cb0, 2, segZ1.min); // cell Z lower bound
+            if (lb == cb1) continue;
             homeIn(lb, cb1, 2, segZ2.max); // cell Z upper bound
 
             if (cb1 > cb0) {

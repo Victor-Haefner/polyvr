@@ -56,6 +56,7 @@ void VRPointCloud::applySettings(map<string, string> options) {
 
     setupMaterial(lit, pointSize);
     octree->setResolution(leafSize);
+    actualLeafSize = octree->getLeafSize();
 
     for (auto l : {"lod1", "lod2", "lod3", "lod4", "lod5"}) {
         if (options.count(l)) {
@@ -66,33 +67,38 @@ void VRPointCloud::applySettings(map<string, string> options) {
     }
 }
 
-void VRPointCloud::onLodSwitch(VRLodEventPtr e) {
+void VRPointCloud::loadChunk(VRLodPtr lod) {
+    auto prxy = lod->getChild(0);
+    if (prxy->getChildrenCount() > 0) return;
+
+    Vec3d c = lod->getCenter();
+    double L = actualLeafSize*0.5;
+
+    vector<double> region = {c[0]-L,c[0]+L, c[1]-L,c[1]+L, c[2]-L,c[2]+L};
+    string path = filePath;
+
+    map<string, string> options;
+    options["lit"] = toString(mat->isLit());
+    options["pointSize"] = toString(pointSize);
+    options["leafSize"] = toString(leafSize);
+    options["keepOctree"] = toString(0);
+    options["region"] = toString( region );
+
+    auto chunk = VRImport::get()->load(path, prxy, false, "OSG", false, options);
+    prxy->addChild(chunk);
+    //prxy->addChild(VRObject::create("bla"));
+    //lod->getParent()->addChild(chunk);
+    cout << " VRPointCloud::onLodSwitch loaded " << chunk->getName() << ", parent: " << chunk->getParent() << ", region: " << toString(region) << endl;
+}
+
+void VRPointCloud::onLodSwitch(VRLodEventPtr e) { // for streaming
     int i0 = e->getLast();
     int i1 = e->getCurrent();
     VRLodPtr lod = e->getLod();
 
     if (i1 == 0) {
         cout << "VRPointCloud::onLodSwitch " << lod->getName() << ", load region " << Vec2i(i0, i1) << endl;
-        auto prxy = lod->getChild(0);
-        if (prxy->getChildrenCount() == 0) { // load chunk
-            Vec3d c = lod->getCenter();
-
-            double L = leafSize*0.5*1.01;
-
-            vector<double> region = {c[0]-L,c[0]+L, c[1]-L,c[1]+L, c[2]-L,c[2]+L}; // TODO, try out BB from child0?
-            string path = filePath;
-
-            map<string, string> options;
-            options["lit"] = toString(mat->isLit());
-            options["pointSize"] = toString(pointSize);
-            options["leafSize"] = toString(50.0);
-            options["keepOctree"] = toString(0);
-            options["region"] = toString( region );
-
-            auto chunk = VRImport::get()->load(path, prxy, false, "OSG", false, options);
-            prxy->addChild(chunk);
-            cout << " VRPointCloud::onLodSwitch loaded " << chunk->getName() << ", parent: " << chunk->getParent() << ", region: " << toString(region) << endl;
-        }
+        loadChunk(lod);
     }
 
     if (i1 == 1) {
@@ -112,6 +118,7 @@ void VRPointCloud::addLevel(float distance, int downsampling, bool stream) {
             auto lod = dynamic_pointer_cast<VRLod>(c);
             if (!lod) continue;
 
+            //loadChunk(lod);
             lod->setCallback(streamCB);
             lod->addDistance(distance);
 

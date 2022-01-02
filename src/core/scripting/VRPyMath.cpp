@@ -813,6 +813,7 @@ PyMethodDef VRPyQuadtree::methods[] = {
 PyMethodDef VRPyOctree::methods[] = {
     {"add", PyWrapOpt2( Octree, add, "Add to tree - will leak memory!", "0|-1|1|-1", OctreeNode*, Vec3d, void*, int, bool, int ) },
     {"get", PyWrapOpt2( Octree, get, "Get leaf node at position", "1", OctreeNode*, Vec3d, bool ) },
+    {"getLeafSize", PyWrap2( Octree, getLeafSize, "Get leaf node size", double ) },
     {"getVisualization", PyWrapOpt2( Octree, getVisualization, "Get tree visual", "0", VRGeometryPtr, bool ) },
     {"getAllLeafs", PyWrap2( Octree, getAllLeafs, "Get all leafs", vector<OctreeNode*> ) },
     {"radiusSearch", PyWrapOpt2( Octree, radiusSearch, "Search for data within radius", "-1", vector<void*>, Vec3d, float, int) },
