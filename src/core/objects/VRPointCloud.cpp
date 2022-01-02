@@ -519,25 +519,98 @@ void VRPointCloud::externalComputeSplats(string path) {
     int hL = toInt(params["headerLength"]);
     stream.seekg(hL);
 
-    VRPointCloud::Splat splat;
+    int Nn = 10; // number of neighbors to get
+    int Nb = 50; // half of buffer size
+    vector<VRPointCloud::Splat> buffer;
+    buffer.resize(Nb*2+1);
 
-    for (size_t i = 0; i<cN; i++) {
-        stream.read((char*)&splat, N1);
-
-        Vec3d n = Vec3d(1,0,0); // TODO: compute from pc
+    auto writeSplat = [&](VRPointCloud::Splat& splat, Vec3d n, char W) {
         Pose O(splat.p, n);
         O.makeUpOrthogonal();
         Vec3d u = O.x();
         Vec3d v = O.up();
         Vec2ub U = toSpherical(u);
         Vec2ub V = toSpherical(v);
-        char W = 46; // mm, TODO: compute from pc
 
         wstream.write((const char*)&splat.p[0], sizeof(Vec3d));
         wstream.write((const char*)&splat.c[0], sizeof(Vec3ub));
         wstream.write((const char*)&U[0], sizeof(Vec2ub));
         wstream.write((const char*)&V[0], sizeof(Vec2ub));
         wstream.write((const char*)&W, sizeof(char));
+    };
+
+    auto getNeighbors = [&](int i, int n) {
+        Vec3d p0 = buffer[i].p;
+
+        map<int, double> pnts;
+        for (int j=0; j<buffer.size(); j++) {
+            if (i == j) continue;
+
+            double d = p0.dist(buffer[j].p);
+
+            if (pnts.size() < n) {
+                pnts[j] = d;
+                continue;
+            }
+
+            int kmax = -1;
+            for (auto p : pnts) if (kmax == -1 || p.second > pnts[kmax]) kmax = p.first;
+
+            if (d < pnts[kmax]) {
+                pnts.erase(kmax);
+                pnts[j] = d;
+            }
+        }
+
+        vector<int> res;
+        for (auto p : pnts) res.push_back(p.first);
+        return res;
+    };
+
+    auto computeNormal = [&](int i, vector<int>& neighbors) {
+        Vec3d p0 = buffer[i].p;
+        Vec3d dl;
+        vector<Vec3d> normals;
+        for (int j=0; j<neighbors.size(); j++) {
+            int ni = neighbors[j];
+            Vec3d dj = buffer[ni].p - p0;
+            if (j > 0) {
+                Vec3d n = dl.cross(dj);
+                n.normalize();
+                normals.push_back(n);
+            }
+            dl = dj;
+        }
+
+        for (int j=1; j<normals.size(); j++) {
+            if (normals[j-1].dot(normals[j]) < 0) normals[j] *= -1;
+        }
+
+        Vec3d res;
+        for (auto& n : normals) res += n;
+        res.normalize();
+        return res;
+    };
+
+    auto computeSize = [&](int i, vector<int>& neighbors) { // TODO
+        return 50;
+    };
+
+    size_t wi = 0;
+    for (size_t i = 0; i<cN; i++) {
+        stream.read((char*)&buffer[i%buffer.size()], N1);
+
+        if (i >= buffer.size()-1) { // first fill the whole buffer
+            while (wi <= i) {
+                int Wi = wi%buffer.size();
+                VRPointCloud::Splat& splat = buffer[Wi];
+                vector<int> neighbors = getNeighbors(Wi, Nn);
+                Vec3d n = computeNormal(Wi, neighbors);
+                char W = computeSize(Wi, neighbors);
+                writeSplat(splat, n, W);
+                wi++;
+            }
+        }
     }
 
     stream.close();
