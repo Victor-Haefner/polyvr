@@ -38,7 +38,9 @@ void VRExport::write(VRObjectPtr obj, string path, map<string, string> options) 
     if (ext == ".wrl" || ext == ".wrz" || ext == ".obj" || ext == ".osb" || ext == ".osg")
         SceneFileHandler::the()->write(obj->getNode()->node, path.c_str());
 
+#ifndef WITHOUT_COLLADA
     if (ext == ".dae") { writeCollada(obj, path, options); }
+#endif
 }
 
 

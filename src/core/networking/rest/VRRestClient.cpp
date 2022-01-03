@@ -31,7 +31,9 @@ struct VRRestClient::RestPromise {
 
 VRRestClient::VRRestClient() {}
 VRRestClient::~VRRestClient() {
+#ifndef __EMSCRIPTEN__
     if (curl) curl_easy_cleanup(curl);
+#endif
 }
 
 VRRestClientPtr VRRestClient::create() { return VRRestClientPtr( new VRRestClient() ); }
@@ -97,6 +99,7 @@ VRRestResponsePtr VRRestClient::get(string uri, int timeoutSecs) {
 }
 
 void VRRestClient::post(string uri, const string& data, int timeoutSecs) {
+#ifndef __EMSCRIPTEN__
     cout << " post to " << uri << ", data: " << data.size() << endl;
     auto curl = curl_easy_init();
     curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data.c_str());
@@ -107,6 +110,7 @@ void VRRestClient::post(string uri, const string& data, int timeoutSecs) {
     CURLcode c = curl_easy_perform(curl);
     if (c != CURLE_OK) fprintf(stderr, "curl_easy_perform() failed: %s, request was: %s\n", curl_easy_strerror(c), uri.c_str());
     curl_easy_cleanup(curl);
+#endif
 }
 
 void VRRestClient::connectPort(string uri, int port, int timeoutSecs) {
@@ -114,6 +118,7 @@ void VRRestClient::connectPort(string uri, int port, int timeoutSecs) {
 }
 
 void VRRestClient::connect(string uri, int timeoutSecs) {
+#ifndef __EMSCRIPTEN__
     cout << "VRRestClient::connect " << uri << endl;
     curl = curl_easy_init();
     curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1);
@@ -125,11 +130,13 @@ void VRRestClient::connect(string uri, int timeoutSecs) {
     //CURLcode c = curl_easy_perform(curl);
     //if (c != CURLE_OK) fprintf(stderr, "curl_easy_perform() failed: %s, request was: %s\n", curl_easy_strerror(c), uri.c_str());
     isConnected = true;
+#endif
 }
 
 bool VRRestClient::connected() { return isConnected; }
 
 void VRRestClient::post(const string& data) {
+#ifndef __EMSCRIPTEN__
     cout << "VRRestClient::post " << data.size() << endl;
     curl_easy_setopt(curl, CURLOPT_NOBODY, 0);
     curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data.c_str());
@@ -137,6 +144,7 @@ void VRRestClient::post(const string& data) {
     CURLcode c = curl_easy_perform(curl);
     if (c != CURLE_OK) fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(c));
     else fprintf(stderr, "curl_easy_perform() success\n");
+#endif
 }
 
 void VRRestClient::getAsync(string uri, VRRestCbPtr cb, int timeoutSecs) { // TODO: implement correctly for wasm

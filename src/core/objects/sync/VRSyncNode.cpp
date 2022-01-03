@@ -621,7 +621,9 @@ void VRSyncNode::addRemoteAvatar(string remoteID, VRTransformPtr headTransform, 
     if (remoteUUIDs.count(remoteID)) remoteID = remoteUUIDs[remoteID];
     auto remote = getRemote(remoteID);
     if (!remote) {
+#ifndef WITHOUT_GTK
         VRConsoleWidget::get("Collaboration")->write( name+": Add avatar representation failed, invalid remote "+remoteID+"\n", "red");
+#endif
         return;
     }
 

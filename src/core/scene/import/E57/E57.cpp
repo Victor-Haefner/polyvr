@@ -39,7 +39,7 @@ void OSG::convertE57(string pathIn, string pathOut) {
 
             CompressedVectorNode points( scan.get("points") );
             string pname = points.pathName();
-            auto cN = points.childCount();
+            size_t cN = points.childCount();
             cout << "  scan " << i << " contains " << cN << " points\n";
 
             auto progress = VRProgress::create();
