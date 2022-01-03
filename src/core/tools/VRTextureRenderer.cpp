@@ -318,6 +318,7 @@ class MyFrameBufferObject : public FrameBufferObject {
     }
 };
 
+#ifndef __EMSCRIPTEN__
 class OpenRenderPartition : public RenderPartition {
     public:
         void setupMyExecution() {
@@ -426,6 +427,7 @@ class OpenRenderAction : public RenderAction {
             return Action::Continue;
         }
 };
+#endif
 
 VRTexturePtr VRTextureRenderer::renderOnce(CHANNEL c) { // TODO: not working!
     if (!cam) return 0;
@@ -479,6 +481,9 @@ VRTexturePtr VRTextureRenderer::renderOnce(CHANNEL c) { // TODO: not working!
     setActive(true);
     setReadback(true);
 
+#ifdef __EMSCRIPTEN__
+    data->win->render(data->ract);
+#else
     data->win->frameInit();
     data->ract->setWindow(data->win);
     data->ract->setTraversalRoot(getNode()->node);
@@ -494,6 +499,7 @@ VRTexturePtr VRTextureRenderer::renderOnce(CHANNEL c) { // TODO: not working!
     auto res = ract->traverse(getNode()->node);
     ract->mystop(res);
     CHECK_GL_ERROR("renderOnce");
+#endif
 
     //data->win->render(data->ract);
     //data->win->renderNoFinish(data->ract);
