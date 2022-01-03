@@ -323,14 +323,14 @@ struct MergeHead {
     VRPointCloud::PntCol point;
 };
 
-void VRPointCloud::externalSort(string path, size_t chunkSize, double binSize) {
-    auto addProgress = [](string head, size_t N) {
-        auto progress = VRProgress::create();
-        progress->setup(head, N);
-        progress->reset();
-        return progress;
-    };
+VRProgressPtr VRPointCloud::addProgress(string head, size_t N) {
+    auto progress = VRProgress::create();
+    progress->setup(head, N);
+    progress->reset();
+    return progress;
+}
 
+void VRPointCloud::externalSort(string path, size_t chunkSize, double binSize) {
     auto params = readPCBHeader(path);
     params["binSize"] = toString(binSize);
     cout << "  externalSort headers " << toString(params) << endl;
@@ -506,6 +506,8 @@ void VRPointCloud::externalComputeSplats(string path) {
     bool hasCol = contains( params["format"], "r");
     auto cN = toValue<size_t>( params["N_points"] );
 
+    auto progress = addProgress("process splats ", cN);
+
     int N1 = sizeof(Vec3d);
     if (hasCol) N1 += sizeof(Vec3ub);
 
@@ -519,10 +521,13 @@ void VRPointCloud::externalComputeSplats(string path) {
     int hL = toInt(params["headerLength"]);
     stream.seekg(hL);
 
-    int Nn = 10; // number of neighbors to get
-    int Nb = 50; // half of buffer size
+    double threshhold = 0.1;
+    int Nn = 6; // number of neighbors to get
+    int Nb = 100; // half of buffer size
     vector<VRPointCloud::Splat> buffer;
     buffer.resize(Nb*2+1);
+    double meanSplatSize = threshhold;
+    size_t meanCount = 0;
 
     auto writeSplat = [&](VRPointCloud::Splat& splat, Vec3d n, char W) {
         Pose O(splat.p, n);
@@ -547,6 +552,8 @@ void VRPointCloud::externalComputeSplats(string path) {
             if (i == j) continue;
 
             double d = p0.dist(buffer[j].p);
+
+            if (d > threshhold) continue;
 
             if (pnts.size() < n) {
                 pnts[j] = d;
@@ -592,8 +599,37 @@ void VRPointCloud::externalComputeSplats(string path) {
         return res;
     };
 
-    auto computeSize = [&](int i, vector<int>& neighbors) { // TODO
-        return 50;
+    auto computeSize = [&](int i, vector<int>& neighbors) -> char {
+        if (neighbors.size() < Nn) return 1; // 1 mm
+
+        Vec3d p0 = buffer[i].p;
+
+        double d = threshhold;
+        for (int j=0; j<neighbors.size(); j++) {
+            int ni = neighbors[j];
+            Vec3d dj = buffer[ni].p - p0;
+            if (dj.length() < d) d = dj.length();
+        }
+        d *= 1.2;
+
+        /*double d = 0;
+        for (int j=0; j<neighbors.size(); j++) {
+            int ni = neighbors[j];
+            Vec3d dj = buffer[ni].p - p0;
+            d += dj.length();
+        }
+        d /= neighbors.size();*/
+
+        if (meanCount == 0) meanSplatSize = d;
+        else meanSplatSize = (meanSplatSize*meanCount+d)/(meanCount+1);
+        meanCount++;
+
+        if (d > meanSplatSize*2) return 1; // 1 mm
+
+        d *= 1000.0; // in mm
+        //d *= 0.5;
+        char c = min(int(d), 255);
+        return c;
     };
 
     size_t wi = 0;
@@ -609,6 +645,7 @@ void VRPointCloud::externalComputeSplats(string path) {
                 char W = computeSize(Wi, neighbors);
                 writeSplat(splat, n, W);
                 wi++;
+                progress->update(1);
             }
         }
     }

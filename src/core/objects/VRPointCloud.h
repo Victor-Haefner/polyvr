@@ -55,6 +55,7 @@ class VRPointCloud : public VRTransform {
         Vec2ub toSpherical(const Vec3d& v);
         void loadChunk(VRLodPtr lod);
         void onLodSwitch(VRLodEventPtr e);
+        VRProgressPtr addProgress(string head, size_t N);
 
     public:
         VRPointCloud(string name = "pointcloud");
