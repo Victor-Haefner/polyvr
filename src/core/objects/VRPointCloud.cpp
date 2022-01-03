@@ -58,6 +58,8 @@ void VRPointCloud::applySettings(map<string, string> options) {
     double splatMod = 1.0;
     if (options.count("doSplats")) doSplats = true;
     if (options.count("splatMod")) splatMod = toFloat(options["splatMod"]);
+    if (options.count("downsampling")) splatMod /= sqrt(toFloat(options["downsampling"]));
+    //splatMod = 0.02;
 
     setupMaterial(lit, pointSize, doSplats, splatMod);
     octree->setResolution(leafSize);
@@ -90,6 +92,7 @@ void VRPointCloud::loadChunk(VRLodPtr lod) {
     options["region"] = toString( region );
 
     auto chunk = VRImport::get()->load(path, prxy, false, "OSG", false, options);
+    prxy->clearLinks();
     prxy->addChild(chunk);
     //prxy->addChild(VRObject::create("bla"));
     //lod->getParent()->addChild(chunk);
@@ -612,22 +615,13 @@ void VRPointCloud::externalComputeSplats(string path) {
         }
         d *= 1.2;
 
-        /*double d = 0;
-        for (int j=0; j<neighbors.size(); j++) {
-            int ni = neighbors[j];
-            Vec3d dj = buffer[ni].p - p0;
-            d += dj.length();
-        }
-        d /= neighbors.size();*/
-
+        // catch outliers
         if (meanCount == 0) meanSplatSize = d;
         else meanSplatSize = (meanSplatSize*meanCount+d)/(meanCount+1);
         meanCount++;
-
-        if (d > meanSplatSize*2) return 1; // 1 mm
+        if (d > meanSplatSize*2) d = meanSplatSize;
 
         d *= 1000.0; // in mm
-        //d *= 0.5;
         char c = min(int(d), 255);
         return c;
     };
