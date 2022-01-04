@@ -1,6 +1,7 @@
 #include "E57.h"
 
 #include <iostream>
+
 #include "E57Foundation.h"
 #include "E57Simple.h"
 #include "core/objects/geometry/VRGeometry.h"
@@ -12,8 +13,6 @@
 #include "core/math/partitioning/Octree.h"
 #include "core/utils/VRProgress.h"
 #include "core/utils/toString.h"
-
-#include <iostream>
 
 using namespace e57;
 using namespace std;
