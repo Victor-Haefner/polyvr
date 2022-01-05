@@ -373,7 +373,8 @@ void VRRoadNetwork::addFence( PathPtr path, float height ) {
 	auto shape = VRStroke::create("shape");
 	shape->setPaths({path});
 	shape->strokeProfile({Vec3d(0,0,0), Vec3d(0,height,0)}, false, true, false);
-	if (auto w = world.lock()) w->getPhysicsSystem()->add(shape, fences->getID());
+	if (auto w = world.lock())
+        if (auto s = w->getPhysicsSystem()) s->add(shape, fences->getID());
 #endif
 }
 
@@ -435,7 +436,8 @@ void VRRoadNetwork::addGuardRail( PathPtr path, float height ) {
 	auto shape = VRStroke::create("shape");
 	shape->setPaths({path});
 	shape->strokeProfile({Vec3d(0,0,0), Vec3d(0,height,0)}, false, true, false);
-	if (auto w = world.lock()) w->getPhysicsSystem()->add(shape, guardRails->getID());
+	if (auto w = world.lock())
+        if (auto s = w->getPhysicsSystem()) s->add(shape, guardRails->getID());
 #endif
 }
 
@@ -480,7 +482,8 @@ void VRRoadNetwork::addKirb( VRPolygonPtr perimeter, float h ) {
 	auto shape = VRStroke::create("shape");
 	shape->addPath(path);
 	shape->strokeProfile({Vec3d(-0.1, h, 0), Vec3d(-0.1, 0, 0)}, false, true, false);
-	if (auto w = world.lock()) w->getPhysicsSystem()->add(shape, kirbs->getID());
+	if (auto w = world.lock())
+        if (auto s = w->getPhysicsSystem()) s->add(shape, kirbs->getID());
 #endif
 }
 
@@ -515,6 +518,8 @@ void replaceChar(string& txt, char c1, char c2) {
 void VRRoadNetwork::computeSigns() {
     auto w = world.lock();
     auto assets = w->getAssetManager();
+    if (!assets) return;
+
     for (auto signEnt : w->getOntology()->getEntities("Sign")) {
         Vec3d pos = signEnt->getVec3("position");
         Vec3d dir = signEnt->getVec3("direction");
@@ -594,7 +599,8 @@ void VRRoadNetwork::computeSigns() {
             }
         }
 #ifndef WITHOUT_BULLET
-        if (auto w = world.lock()) w->getPhysicsSystem()->addQuad(0.15, 2, *sign->getPose(), sign->getID());
+        if (auto w = world.lock())
+            if (auto s = w->getPhysicsSystem()) s->addQuad(0.15, 2, *sign->getPose(), sign->getID());
 #endif
     }
 }
@@ -836,7 +842,8 @@ void VRRoadNetwork::computeSurfaces() {
         if (!roadGeo) return;
         roadsGeo->merge(roadGeo);
 #ifndef WITHOUT_BULLET
-        if (auto w = world.lock()) w->getPhysicsSystem()->add(roadGeo, roadGeo->getID());
+        if (auto w = world.lock())
+            if (auto s = w->getPhysicsSystem()) s->add(roadGeo, roadGeo->getID());
 #endif
     };
 
@@ -848,7 +855,8 @@ void VRRoadNetwork::computeSurfaces() {
         //iGeo->setMaterial( asphalt );
         roadsGeo->merge(iGeo);
 #ifndef WITHOUT_BULLET
-        if (auto w = world.lock()) w->getPhysicsSystem()->add(iGeo, iGeo->getID());
+        if (auto w = world.lock())
+            if (auto s = w->getPhysicsSystem()) s->add(iGeo, iGeo->getID());
 #endif
     }
 

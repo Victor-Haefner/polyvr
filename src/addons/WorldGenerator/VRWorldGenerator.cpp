@@ -72,10 +72,10 @@ void VRWorldGenerator::updatePhysics(Boundingbox box) {
 
 void VRWorldGenerator::setOntology(VROntologyPtr o) {
     ontology = o;
-    for (auto terrain:terrains) terrain->setWorld( ptr() );
-    roads->setWorld( ptr() );
-    nature->setWorld( ptr() );
-    district->setWorld( ptr() );
+    for (auto terrain : terrains) if (terrain) terrain->setWorld( ptr() );
+    if (roads) roads->setWorld( ptr() );
+    if (nature) nature->setWorld( ptr() );
+    if (district) district->setWorld( ptr() );
 }
 
 void VRWorldGenerator::setPlanet(VRPlanetPtr p, Vec2d c) {
@@ -125,6 +125,14 @@ VRMaterialPtr VRWorldGenerator::getMaterial(string name) {
 VRGeometryPtr VRWorldGenerator::getMiscArea(VREntityPtr mEnt){
     if (miscAreaByEnt.count(mEnt)) return miscAreaByEnt[mEnt];
     return 0;
+}
+
+VRRoadNetworkPtr VRWorldGenerator::addRoadNetwork() {
+    roads = VRRoadNetwork::create();
+    roads->setWorld( ptr() );
+    //lod->getChild(0)->addChild(roads); // TODO
+    addChild(roads); // TODO
+    return roads;
 }
 
 void VRWorldGenerator::init() { // deprecated

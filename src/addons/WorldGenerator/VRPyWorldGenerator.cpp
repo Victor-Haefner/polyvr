@@ -49,6 +49,7 @@ simplePyType(OSMBase, 0);
 
 PyMethodDef VRPyWorldGenerator::methods[] = {
     {"addAsset", PyWrap( WorldGenerator, addAsset, "Add an asset template", void, string, VRTransformPtr ) },
+    {"addRoadNetwork", PyWrap( WorldGenerator, addRoadNetwork, "Add a road network", VRRoadNetworkPtr ) },
     {"getAssetManager", PyWrap( WorldGenerator, getAssetManager, "Get the asset manager", VRObjectManagerPtr ) },
     {"getRoadNetwork", PyWrap( WorldGenerator, getRoadNetwork, "Access road network", VRRoadNetworkPtr ) },
     {"getTrafficSigns", PyWrap( WorldGenerator, getTrafficSigns, "Access traffic signs", VRTrafficSignsPtr ) },

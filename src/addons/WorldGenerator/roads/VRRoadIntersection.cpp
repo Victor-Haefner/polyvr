@@ -1085,7 +1085,9 @@ VREntityPtr VRRoadIntersection::addTrafficLight( PosePtr p, string asset, Vec3d 
     if (!system) system = VRTrafficLights::create();
     //cout << "  VRRoadIntersection::addTrafficLight" << endl;
     float R = 0.05;
-    VRTransformPtr geo = world.lock()->getAssetManager()->copy(asset, Pose::create());
+    auto assetMgr = world.lock()->getAssetManager();
+    VRTransformPtr geo;
+    if (assetMgr) geo = assetMgr->copy(asset, Pose::create());
     VRGeometryPtr red, orange, green, box, caps;
     bool checked = false;
     if (geo) {
@@ -1141,13 +1143,15 @@ VREntityPtr VRRoadIntersection::addTrafficLight( PosePtr p, string asset, Vec3d 
     light->setUsingAsset(checked);
     matchedLights[lane] = light;
 
-    auto pose = light->getPose();
-    lodTree->addObject(light, light->getWorldPosition(), 3, false);
-    light->setOrientation(pose->dir(), pose->up());
-
     auto roads = world.lock()->getRoadNetwork();
     auto mergeGeoPoles = roads->getTrafficSignalsPolesGeo();
     mergeGeoPoles->merge(pole, pole->getWorldPose());
+
+    auto pose = light->getPose();
+    if (lodTree) lodTree->addObject(light, light->getWorldPosition(), 3, false);
+    else addChild(light);
+    light->setOrientation(pose->dir(), pose->up());
+
     return 0;
 }
 
