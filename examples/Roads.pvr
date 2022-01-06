@@ -1,41 +1,135 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Scene base_name="Roads" name_space="Scene" name_suffix="0" persistency="666">
+<Scene base_name="lightpark" name_space="Scene" name_suffix="0" persistency="666">
   <Objects>
-    <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" visible="4294967295">
-      <Object ambient="0.3 0.3 0.3 1" base_name="light" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" shadowVolume="1e+06 1e+06 1e+06 -1e+06 -1e+06 -1e+06 1" specular="0.1 0.1 0.1 1" type="Light" visible="4294967295">
-        <Object accept_root="1" aspect="1" at="0 0 0" at_dir="0" base_name="Default" far="512" fov="1.0472" from="3 2 3" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="4294967295">
+    <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" visible="3">
+      <Object ambient="0.3 0.3 0.3 1" base_name="light" beacon="light_beacon" diffuse="1 1 1 1" lightType="directional" name_space="__global__" name_suffix="0" on="0" persistency="666" photometricMap="" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" shadowVolume="1e+06 1e+06 1e+06 -1e+06 -1e+06 -1e+06 1" specular="0.1 0.1 0.1 1" type="Light" visible="3">
+        <Object accept_root="1" aspect="1" at="-6.20387 9.50001 -5.0579" at_dir="0" base_name="camera" far="5120" fov="1.0472" from="-35.4122 35.1821 -46.2902" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
           <attachments>
             <Node base_name="transform" name_space="VRAttachment" name_suffix="0" persistency="666" value=""/>
           </attachments>
-          <Object at="0 0 -1" at_dir="1" base_name="Headlight_beacon" from="0 0 0" light="light" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" up="0 1 0" visible="4294967295">
-            <attachments>
-              <Node base_name="transform" name_space="VRAttachment" name_suffix="0" persistency="666" value=""/>
-            </attachments>
-            <constraint persistency="666"/>
-          </Object>
+          <constraint persistency="666"/>
+        </Object>
+        <Object at="1 0 -1" at_dir="0" base_name="light_beacon" from="0 10 0" light="light" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" up="0 1 0" visible="1">
+          <attachments>
+            <Node base_name="transform" name_space="VRAttachment" name_suffix="0" persistency="666" value=""/>
+          </attachments>
           <constraint persistency="666"/>
         </Object>
       </Object>
     </Object>
   </Objects>
-  <Cameras activeCam="Default" persistency="666"/>
-  <Rendering deferred_rendering="0" fogColor="0.5 0.5 0.5 1" fogParams="0 0 100 0.1" frustum_culling="1" fxaa="0" hmdd="0" marker="0" occlusion_culling="0" persistency="666" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
+  <Cameras activeCam="camera" persistency="666"/>
+  <Rendering deferred_rendering="0" fogColor="0.5 0.5 0.5 1" fogParams="0 0 100 0.1" frustum_culling="0" fxaa="0" hmdd="0" marker="0" occlusion_culling="0" persistency="666" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
   <Scripts persistency="666">
     <Script base_name="init" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
       <core>
-	import VR
-
+	import VR, math
+	from VR.Math import Vec3
+	
 	if hasattr(VR, 'scene'): VR.scene.destroy()
 	VR.scene = VR.Object('scene', 'light')
+	
+	
+	o = VR.Ontology('Driving')
+	o.addModule('Object')
+	o.addModule('World')
+	VR.ontology = o
+	
+	world = VR.WorldGenerator.WorldGenerator()
+	world.setOntology(o)
+	world.addSpatialCollisions()
+	world.addLodTree()
+	world.addLodTree()
+	roads = world.addRoadNetwork()
+	world.addAssetManager()
+	world.addDistrict()
+	VR.roads = roads
+	VR.scene.addChild(world)
+	
+	def doGrid(N, L, D):
+		nodes = [[0]*N for x in range(N)]
+		for i in range(N):
+			for j in range(N):
+				x = i*D-(N-1)*0.5*D
+				y = j*D-(N-1)*0.5*D
+				nodes[i][j] = roads.addNode( i*N+j, [x,0,y], 1 )
+				print i, j, x, y
+				
+		def connect(i1,i2,j1,j2,d1,d2):
+			n1 = nodes[i1][j1]
+			n2 = nodes[i2][j2]
+			road = roads.addRoad('myRoad', 'tertiary', n1, n2, d1, d2, L)
+			
+			p1 = Vec3(n1.getVector("position"))
+			p2 = Vec3(n2.getVector("position"))
+			road.addTrafficLight(p1+(p2-p1)*0.9)
+			road.addTrafficLight(p2+(p1-p2)*0.9)
+		
+		for i in range(1,N-1):
+			for j in range(N-1): 
+				connect(i,i,j,j+1,[0,0,1],[0,0,1])
+				connect(j,j+1,i,i,[1,0,0],[1,0,0])
+		
+	# roads
+	doGrid(4, 4, 60)
+	
+	roads.setTerrainOffset(0.05) # 0.35
+	roads.compute()
+	roads.updateAsphaltTexture()	
+	#VR.testTraffic()
+	
+	# buildings
+	def addSquareBuilding(district, x0, y0, s, H):
+		w2 = s*0.5
+		b = VR.Polygon()
+		b.addPoint([x0-w2,y0-w2])
+		b.addPoint([x0-w2,y0+w2])
+		b.addPoint([x0+w2,y0+w2])
+		b.addPoint([x0+w2,y0-w2])
+		district.addBuilding(b, H)
+		
+	def addTriangleBuilding(district, x0, y0, s, d, H):
+		b = VR.Polygon()
+		x0 -= s*0.5*d[0]
+		y0 -= s*0.5*d[1]
+		b.addPoint([x0,y0])
+		b.addPoint([x0+d[0]*s,y0])
+		b.addPoint([x0,y0+d[1]*s])
+		district.addBuilding(b, H)
+	
+	district = world.getDistrict()
+	#district.addTexture('models/textures/Buildings.png', 'building')
+	
+	addSquareBuilding(district,  0,  0, 35, 3)
+	addSquareBuilding(district, 60,  0, 35, 4)
+	addSquareBuilding(district,  0, 60, 35, 2)
+	addSquareBuilding(district,-60,  0, 35, 4)
+	addSquareBuilding(district,  0,-60, 35, 5)
+	
+	addTriangleBuilding(district, 60, 60, 35, [ 1, 1], 2)
+	addTriangleBuilding(district,-60, 60, 35, [-1, 1], 4)
+	addTriangleBuilding(district,-60,-60, 35, [-1,-1], 3)
+	addTriangleBuilding(district, 60,-60, 35, [ 1,-1], 3)
+	
+
+
+
+
+
+
+
+
 
 	
-	VR.network = VR.RoadNetwork()
-	VR.network.a
+	
+	
+	
 </core>
+      <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" base_name="trigger" name_space="__global__" name_suffix="0" persistency="666"/>
     </Script>
   </Scripts>
   <Sockets persistency="666"/>
-  <Background color="0.6 0.6 0.6" format=".png" path="" persistency="666" type="0"/>
+  <Background color="0 0 0" format=".png" path="" persistency="666" type="3"/>
   <Navigation active="Orbit" persistency="666"/>
   <Materials persistency="666"/>
   <Semantics persistency="666"/>

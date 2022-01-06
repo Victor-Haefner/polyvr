@@ -64,6 +64,11 @@ class VRWorldGenerator : public VRTransform {
         void initMinimum();
 
         VRRoadNetworkPtr addRoadNetwork();
+        VRDistrictPtr addDistrict();
+        VRObjectManagerPtr addAssetManager();
+        VRNaturePtr addNatureManager();
+        void addSpatialCollisions();
+        void addLodTree();
 
         void setOntology(VROntologyPtr ontology);
         void setPlanet(VRPlanetPtr planet, Vec2d coords);
