@@ -68,6 +68,9 @@ class VRLight : public VRObject {
         bool isOn();
         void toggleShadows(bool b);
 
+        void setAutomaticShadowUpdates(bool b); // untested!
+        void requestShadowPass();         // untested!
+
         void setType(string type);
         void setDeferred(bool b);
         void reloadDeferredSystem();
