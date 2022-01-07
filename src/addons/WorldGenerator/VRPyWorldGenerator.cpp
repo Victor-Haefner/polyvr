@@ -55,6 +55,7 @@ PyMethodDef VRPyWorldGenerator::methods[] = {
     {"addNatureManager", PyWrap( WorldGenerator, addNatureManager, "Add nature manager", VRNaturePtr ) },
     {"addSpatialCollisions", PyWrap( WorldGenerator, addSpatialCollisions, "Add localized collision system", void ) },
     {"addLodTree", PyWrap( WorldGenerator, addLodTree, "Add LoD tree module", void ) },
+    {"addOntology", PyWrap( WorldGenerator, addOntology, "Add ontology, uses 'Object' and 'World' modules", void ) },
     {"getAssetManager", PyWrap( WorldGenerator, getAssetManager, "Get the asset manager", VRObjectManagerPtr ) },
     {"getRoadNetwork", PyWrap( WorldGenerator, getRoadNetwork, "Access road network", VRRoadNetworkPtr ) },
     {"getTrafficSigns", PyWrap( WorldGenerator, getTrafficSigns, "Access traffic signs", VRTrafficSignsPtr ) },

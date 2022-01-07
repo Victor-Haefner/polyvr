@@ -172,7 +172,14 @@ void VRWorldGenerator::addLodTree() {
     addChild(lodTree);
 }
 
-void VRWorldGenerator::init() { // deprecated
+void VRWorldGenerator::addOntology() {
+	auto o = VROntology::create("Driving");
+	o->addModule("Object");
+	o->addModule("World");
+	setOntology(o);
+}
+
+void VRWorldGenerator::initFull() {
     auto addMat = [&](string name, int texDim) {
         auto mat = VRMaterial::create(name);
         mat->setDefaultVertexShader();
@@ -188,8 +195,8 @@ void VRWorldGenerator::init() { // deprecated
     addSpatialCollisions();
     addLodTree();
 
-    addMat("phong", 0);
-    addMat("phongTex", 2);
+    addMat("phong", 0); // needed??
+    addMat("phongTex", 2); // needed??
 
     setupLOD(4);
     auto terrain = VRTerrain::create();
