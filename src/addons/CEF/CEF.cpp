@@ -313,6 +313,7 @@ void CEF::mouse_move(VRDeviceWeakPtr d) {
 }
 
 void CEF::mouse(int lb, int rb, int wu, int wd, VRDeviceWeakPtr d) {
+    //cout << "CEF::mouse " << lb << " " << rb << " " << wu << " " << wd << endl;
     auto dev = d.lock();
     if (!dev) return;
     int b = dev->key();

@@ -10,6 +10,7 @@
 #include "core/objects/OSGObject.h"
 #include "core/objects/object/OSGCore.h"
 #include "VRLightBeacon.h"
+#include "VRShadowEngine.h"
 
 #include <OpenSG/OSGNode.h>
 #include <OpenSG/OSGShadowStage.h>
@@ -250,6 +251,7 @@ void VRLight::setDeferred(bool b) {
 void VRLight::setupShadowEngines() {
 #ifndef OSG_OGL_ES2
     ssme = SimpleShadowMapEngine::create();
+    //ssme = VRShadowEngine::create(); // only for local test, add improvements to OpenSG!
     gsme = ShaderShadowMapEngine::create();
     ptsme = TrapezoidalShadowMapEngine::create();
     stsme = TrapezoidalShadowMapEngine::create();
@@ -313,6 +315,13 @@ void VRLight::toggleShadows(bool b) { // TODO: optimize this
     if (shadows == b) return;
     setShadows(b);
 }
+
+/*void VRLight::setShadowBlendFactors(int src, int dst, int aFunc, float aVal) {
+    ssme->blendSrcFactor = src;
+    ssme->blendDstFactor = dst;
+    ssme->blendAlphaFunc = aFunc;
+    ssme->blendAlphaValue = aVal;
+}*/
 
 void VRLight::setShadows(bool b) {
 #ifndef OSG_OGL_ES2
