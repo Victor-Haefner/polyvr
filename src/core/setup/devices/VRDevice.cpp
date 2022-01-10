@@ -49,25 +49,34 @@ void VRDevice::triggerSignal(int key, int state, bool doGeneric) {
     VRSignalPtr sig = signalExist(key, state);
     if (!doGeneric) {
         if (sig) {
-            sig->triggerPtr<VRDevice>();
+            sig->triggerAll<VRDevice>();
             if (sig->doUpdate()) addUpdateSignal(sig, key);
         }
     } else {
         VRSignalPtr sig1 = signalExist( -1, state);
 
         if (sig && !sig1) {
-            sig->triggerPtr<VRDevice>();
+            sig->triggerAll<VRDevice>();
             if (sig->doUpdate()) addUpdateSignal(sig, key);
         }
 
         if (!sig && sig1) {
-            sig1->triggerPtr<VRDevice>();
+            sig1->triggerAll<VRDevice>();
             if (sig1->doUpdate()) addUpdateSignal(sig1, key);
         }
 
-        if (sig && sig1) { // TODO: trigger by priorities..
-            sig->triggerPtr<VRDevice>();
-            sig1->triggerPtr<VRDevice>();
+        if (sig && sig1) {
+            auto map0 = sig->getCallbacks();
+            auto map1 = sig1->getCallbacks();
+            int k0 = min(map0.begin()->first , map1.begin()->first );
+            int k1 = max(map0.rbegin()->first, map1.rbegin()->first);
+            for (int i=k0; i<=k1; i++) {
+                if (map0.count(i)) if (!sig ->trigger<VRDevice>(map0[i])) break;
+                if (map1.count(i)) if (!sig1->trigger<VRDevice>(map1[i])) break;
+            }
+
+            //sig->triggerAll<VRDevice>();
+            //sig1->triggerAll<VRDevice>();
             if (sig->doUpdate()) addUpdateSignal(sig, key);
             if (sig1->doUpdate()) addUpdateSignal(sig1, key);
         }
@@ -84,7 +93,7 @@ void VRDevice::addUpdateSignal(VRSignalPtr sig, int key) {
 bool VRDevice::remUpdateSignal(VRSignalPtr sig, VRDeviceWeakPtr dev) {
     auto k = sig.get();
     if (activatedSignals.count(k) == 0) return true;
-    activatedSignals[k].first->triggerPtr<VRDevice>();
+    activatedSignals[k].first->triggerAll<VRDevice>();
     activatedSignals.erase(k);
     return true;
 }
@@ -93,7 +102,7 @@ void VRDevice::updateSignals() {
     auto k = sig_key;
     for (auto a : activatedSignals) {
         sig_key = a.second.second;
-        a.second.first->triggerPtr<VRDevice>();
+        a.second.first->triggerAll<VRDevice>();
     }
     sig_key = k;
 }

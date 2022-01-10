@@ -185,7 +185,7 @@ VRNavigator::~VRNavigator() {}
 float VRNavigator::clip_dist_down = 1.5;
 
 bool VRNavigator::zoom(VRDeviceWeakPtr _dev, int dir) {
-    cout << "VRNavigator::zoom " << dir << endl;
+    //cout << "VRNavigator::zoom " << dir << endl;
     auto dev = _dev.lock();
     if (!dev) return true;
     VRTransformPtr target = dev->getTarget();

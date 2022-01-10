@@ -202,14 +202,14 @@ void VRIntersect::drag(VRIntersectionPtr i, VRTransformWeakPtr wcaster) {
     dragged_ghost->setMatrix(dobj->getMatrix());
     dragged_ghost->switchParent(caster);
 
-    dragSignal->triggerPtr<VRDevice>();
+    dragSignal->triggerAll<VRDevice>();
 }
 
 bool VRIntersect::drop(VRDeviceWeakPtr dev, VRTransformWeakPtr beacon) {
     auto d = getDraggedObject(beacon.lock());
     if (d) {
         d->drop();
-        if (d != dragged_ghost) dropSignal->triggerPtr<VRDevice>();
+        if (d != dragged_ghost) dropSignal->triggerAll<VRDevice>();
         drop_time = VRGlobals::CURRENT_FRAME;
         dragged.erase(beacon.lock().get());
         if (beacon.lock() == 0) dragged.clear();

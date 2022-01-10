@@ -468,7 +468,7 @@ void VRGuiScene::on_edit_object_name(const char* path_string, const char* new_te
     VRGuiTreeView tree_view("treeview6");
     tree_view.setSelectedStringValue(0, getSelected()->getName());
     updateObjectForms();
-    if (getSelected()->getType() == "Camera") VRGuiSignals::get()->getSignal("camera_added")->triggerPtr<VRDevice>();
+    if (getSelected()->getType() == "Camera") VRGuiSignals::get()->getSignal("camera_added")->triggerAll<VRDevice>();
 }
 
 // --------------------------
@@ -798,7 +798,7 @@ void VRGuiScene::on_menu_add_camera() {
     VRTransformPtr cam = VRCamera::create("camera");
     getSelected()->addChild(cam);
     parseSGTree(cam, selected_itr);
-    VRGuiSignals::get()->getSignal("camera_added")->triggerPtr<VRDevice>();
+    VRGuiSignals::get()->getSignal("camera_added")->triggerAll<VRDevice>();
 }
 
 void VRGuiScene::on_menu_add_primitive(string s) {

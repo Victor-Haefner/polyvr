@@ -234,7 +234,7 @@ void VRGuiManager::getScriptFocus(VRScriptPtr& script, int& line, int& column) {
 }
 
 void VRGuiManager::broadcast(string sig) {
-    VRGuiSignals::get()->getSignal(sig)->triggerPtr<VRDevice>();
+    VRGuiSignals::get()->getSignal(sig)->triggerAll<VRDevice>();
 }
 
 void VRGuiManager::wakeWindow() {

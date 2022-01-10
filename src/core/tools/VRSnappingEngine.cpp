@@ -350,7 +350,7 @@ void VRSnappingEngine::postProcessEvent(VRDevicePtr dev, VRTransformPtr obj, VRT
 
     if (lastEvent != event->snap || lastEventID != event->snapID) {
         if (event->o1 == obj) {
-            snapSignal->triggerPtr<EventSnap>(event);
+            snapSignal->triggerAll<EventSnap>(event);
             for (auto cb : callbacks) (*cb)(event);
         }
     }

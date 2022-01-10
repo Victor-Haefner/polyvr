@@ -218,8 +218,8 @@ void VRMouse::updatePosition(int x, int y) {
     if (side != onEdge) {
         sig_state = (side == -1) ? 5 : 4;
         sig_key = (side == -1) ? (1+v->getID())*10+onEdge : (1+v->getID())*10+side;
-        if (side == -1) on_from_edge->triggerPtr<VRDevice>();
-        else on_to_edge->triggerPtr<VRDevice>();
+        if (side == -1) on_from_edge->triggerAll<VRDevice>();
+        else on_to_edge->triggerAll<VRDevice>();
     }
     onEdge = side;
 }

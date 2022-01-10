@@ -224,7 +224,7 @@ void ART::checkNewDevices(int type, int N) {
             VRConsoleWidget::get("Tracking")->write( "New ART device "+toString(type)+" with ID "+toString(k)+"\n");
             cout << "ART - New device " << type << " " << k << endl;
             devices[k] = ART_device::create(i,type);
-            on_new_device->triggerPtr<VRDevice>();
+            on_new_device->triggerAll<VRDevice>();
             update_setup();
         }
     }
