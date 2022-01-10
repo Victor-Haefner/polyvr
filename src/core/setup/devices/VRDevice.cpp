@@ -45,11 +45,32 @@ VRSignalPtr VRDevice::createSignal(int key, int state) {
     return sig;
 }
 
-void VRDevice::triggerSignal(int key, int state) {
+void VRDevice::triggerSignal(int key, int state, bool doGeneric) {
     VRSignalPtr sig = signalExist(key, state);
-    if (sig) {
-        sig->triggerPtr<VRDevice>();
-        if (sig->doUpdate()) addUpdateSignal(sig, key);
+    if (!doGeneric) {
+        if (sig) {
+            sig->triggerPtr<VRDevice>();
+            if (sig->doUpdate()) addUpdateSignal(sig, key);
+        }
+    } else {
+        VRSignalPtr sig1 = signalExist( -1, state);
+
+        if (sig && !sig1) {
+            sig->triggerPtr<VRDevice>();
+            if (sig->doUpdate()) addUpdateSignal(sig, key);
+        }
+
+        if (!sig && sig1) {
+            sig1->triggerPtr<VRDevice>();
+            if (sig1->doUpdate()) addUpdateSignal(sig1, key);
+        }
+
+        if (sig && sig1) { // TODO: trigger by priorities..
+            sig->triggerPtr<VRDevice>();
+            sig1->triggerPtr<VRDevice>();
+            if (sig->doUpdate()) addUpdateSignal(sig, key);
+            if (sig1->doUpdate()) addUpdateSignal(sig1, key);
+        }
     }
 }
 
@@ -128,12 +149,7 @@ void VRDevice::change_button(int key, int state) {
     sig_key = key;
     sig_state = state;
     BStates[key] = state;
-
-    //VRSignalPtr sig_1 = signalExist( -1, state);
-    //VRSignalPtr sig   = signalExist(key, state);
-
-    triggerSignal(key, state);
-    triggerSignal(-1, state);
+    triggerSignal(key, state, true);
 }
 
 void VRDevice::change_slider(int key, float state) {

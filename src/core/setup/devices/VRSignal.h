@@ -42,7 +42,6 @@ class VRSignal : public VRSignal_base {
 
         void add(VRBaseCbWeakPtr fkt, int priority = 0); // lower priority comes first
         void sub(VRBaseCbWeakPtr fkt);
-        template<typename Event> bool trigger(Event* event = 0);
         template<typename Event> bool triggerPtr(std::shared_ptr<Event> event = 0);
 };
 

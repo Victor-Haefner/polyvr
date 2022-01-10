@@ -25,7 +25,7 @@ class VRDevice : public std::enable_shared_from_this<VRDevice>, public VRName, p
 
         VRSignalPtr signalExist(int key, int state);
         VRSignalPtr createSignal(int key, int state);
-        void triggerSignal(int key, int state);
+        void triggerSignal(int key, int state, bool doGeneric = false);
 
     public:
         VRDevice(string type);
