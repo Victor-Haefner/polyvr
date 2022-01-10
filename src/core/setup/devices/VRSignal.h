@@ -13,7 +13,7 @@ using namespace std;
 
 class VRSignal_base : public VRName {
     protected:
-        vector<VRBaseCbWeakPtr> callbacksPtr;
+        map<int, vector<VRBaseCbWeakPtr>> callbacksPtr;
         VRUpdateCbPtr trig_fkt = 0;
         bool _doUpdate = false;
 
@@ -25,7 +25,7 @@ class VRSignal_base : public VRName {
         bool doUpdate();
 
         VRUpdateCbPtr getTriggerFkt();
-        vector<VRBaseCbWeakPtr> getCallbacks();
+        map<int, vector<VRBaseCbWeakPtr>> getCallbacks();
 
         void clear();
 };
@@ -40,10 +40,10 @@ class VRSignal : public VRSignal_base {
 
         static VRSignalPtr create(VRDevicePtr dev = 0);
 
-        void add(VRBaseCbWeakPtr fkt);
+        void add(VRBaseCbWeakPtr fkt, int priority = 0); // lower priority comes first
         void sub(VRBaseCbWeakPtr fkt);
-        template<typename Event> void trigger(Event* event = 0);
-        template<typename Event> void triggerPtr(std::shared_ptr<Event> event = 0);
+        template<typename Event> bool trigger(Event* event = 0);
+        template<typename Event> bool triggerPtr(std::shared_ptr<Event> event = 0);
 };
 
 OSG_END_NAMESPACE

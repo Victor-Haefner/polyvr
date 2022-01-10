@@ -6,29 +6,43 @@
 OSG_BEGIN_NAMESPACE;
 
 template<typename Event>
-void VRSignal::trigger(Event* event) {
+bool VRSignal::trigger(Event* event) {
     if (!event) event = (Event*)this->event;
     auto callbacks = callbacksPtr; // make copy to avoid corruption while iterating!
-    for (auto c : callbacks) {
-        if (auto spc = c.lock()) {
-            //( (VRFunction<Event*>*)spc.get() )(event);
-            auto cb = (VRFunction<Event*>*)spc.get();
-            (*cb)(event);
+    bool abort = false;
+
+    for (auto& prio : callbacks) {
+        for (auto& c : prio.second) {
+            if (auto spc = c.lock()) {
+                //( (VRFunction<Event*>*)spc.get() )(event);
+                auto cb = (VRFunction<Event*, bool>*)spc.get();
+                abort = !(*cb)(event);
+                if (abort) break;
+            }
         }
+        if (abort) break;
     }
+    return !abort;
 }
 
 template<typename Event>
-void VRSignal::triggerPtr(shared_ptr<Event> event) {
+bool VRSignal::triggerPtr(shared_ptr<Event> event) {
     if (!event && this->event) event = ((Event*)this->event)->ptr();
     auto callbacks = callbacksPtr; // make copy to avoid corruption while iterating!
-    for (auto c : callbacks) {
-        if (auto spc = c.lock()) {
-            //( (VRFunction<Event*>*)spc.get() )(event);
-            auto cb = (VRFunction< weak_ptr<Event> >*)spc.get();
-            (*cb)(event);
+    bool abort = false;
+
+    for (auto& prio : callbacks) {
+        for (auto& c : prio.second) {
+            if (auto spc = c.lock()) {
+                //( (VRFunction<Event*>*)spc.get() )(event);
+                auto cb = (VRFunction< weak_ptr<Event>, bool >*)spc.get();
+                abort = !(*cb)(event);
+                if (abort) break;
+            }
         }
+        if (abort) break;
     }
+    return !abort;
 }
 
 OSG_END_NAMESPACE

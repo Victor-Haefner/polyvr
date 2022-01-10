@@ -51,7 +51,7 @@ class VRAppLauncher : public std::enable_shared_from_this<VRAppLauncher> {
         static VRAppLauncherPtr create(VRAppPanelPtr s);
 
         void setup(VRGuiContextMenu* menu, VRAppManager* mgr);
-        void updatePixmap();
+        bool updatePixmap();
 
         void setState(int state);
         void toggle_lock();

@@ -272,9 +272,9 @@ void CEF::addMouse(VRDevicePtr dev, VRObjectPtr obj, int lb, int rb, int wu, int
     this->obj = obj;
 
     auto k = dev.get();
-    if (!mouse_dev_callback.count(k)) mouse_dev_callback[k] = VRFunction<VRDeviceWeakPtr>::create( "CEF::MOUSE", bind(&CEF::mouse, this, lb,rb,wu,wd,_1 ) );
-    dev->newSignal(-1,0)->add(mouse_dev_callback[k]);
-    dev->newSignal(-1,1)->add(mouse_dev_callback[k]);
+    if (!mouse_dev_callback.count(k)) mouse_dev_callback[k] = VRFunction<VRDeviceWeakPtr, bool>::create( "CEF::MOUSE", bind(&CEF::mouse, this, lb,rb,wu,wd,_1 ) );
+    dev->newSignal(-1,0)->add(mouse_dev_callback[k], -1);
+    dev->newSignal(-1,1)->add(mouse_dev_callback[k], -1);
 
     if (!mouse_move_callback.count(k)) mouse_move_callback[k] = VRUpdateCb::create( "CEF::MM", bind(&CEF::mouse_move, this, dev) );
     auto scene = VRScene::getCurrent();
@@ -283,7 +283,7 @@ void CEF::addMouse(VRDevicePtr dev, VRObjectPtr obj, int lb, int rb, int wu, int
 
 void CEF::addKeyboard(VRDevicePtr dev) {
     if (dev == 0) return;
-    if (!keyboard_dev_callback) keyboard_dev_callback = VRFunction<VRDeviceWeakPtr>::create( "CEF::KR", bind(&CEF::keyboard, this, _1 ) );
+    if (!keyboard_dev_callback) keyboard_dev_callback = VRFunction<VRDeviceWeakPtr, bool>::create( "CEF::KR", bind(&CEF::keyboard, this, _1 ) );
     dev->newSignal(-1, 0)->add( keyboard_dev_callback );
     dev->newSignal(-1, 1)->add( keyboard_dev_callback );
 }
@@ -312,10 +312,10 @@ void CEF::mouse_move(VRDeviceWeakPtr d) {
     }
 }
 
-void CEF::mouse(int lb, int rb, int wu, int wd, VRDeviceWeakPtr d) {
-    //cout << "CEF::mouse " << lb << " " << rb << " " << wu << " " << wd << endl;
+bool CEF::mouse(int lb, int rb, int wu, int wd, VRDeviceWeakPtr d) {
+    cout << "CEF::mouse " << lb << " " << rb << " " << wu << " " << wd << endl;
     auto dev = d.lock();
-    if (!dev) return;
+    if (!dev) return true;
     int b = dev->key();
     bool down = dev->getState();
 
@@ -323,10 +323,10 @@ void CEF::mouse(int lb, int rb, int wu, int wd, VRDeviceWeakPtr d) {
     else if (b == rb) b = 2;
     else if (b == wu) b = 3;
     else if (b == wd) b = 4;
-    else return;
+    else return true;
 
     auto geo = obj.lock();
-    if (!geo) return;
+    if (!geo) return true;
 
     auto ins = dev->intersect(geo);
     auto iobj = ins->object.lock();
@@ -343,11 +343,11 @@ void CEF::mouse(int lb, int rb, int wu, int wd, VRDeviceWeakPtr d) {
         VRLog::log("net", ss.str());
     }
 
-    if (!browser) return;
+    if (!browser) return true;
     auto host = browser->GetHost();
-    if (!host) return;
-    if (!ins->hit) { host->SendFocusEvent(false); focus = false; return; }
-    if (iobj != geo) { host->SendFocusEvent(false); focus = false; return; }
+    if (!host) return true;
+    if (!ins->hit) { host->SendFocusEvent(false); focus = false; return true; }
+    if (iobj != geo) { host->SendFocusEvent(false); focus = false; return true; }
     host->SendFocusEvent(true); focus = true;
 
     int width = resolution;
@@ -370,20 +370,21 @@ void CEF::mouse(int lb, int rb, int wu, int wd, VRDeviceWeakPtr d) {
         int d = b==3 ? -1 : 1;
         host->SendMouseWheelEvent(me, d*width*0.05, d*height*0.05);
     }
+    return false;
 }
 
-void CEF::keyboard(VRDeviceWeakPtr d) {
+bool CEF::keyboard(VRDeviceWeakPtr d) {
     auto dev = d.lock();
-    if (!dev) return;
-    if (!focus) return;
-    if (dev->getType() != "keyboard") return;
+    if (!dev) return true;
+    if (!focus) return true;
+    if (dev->getType() != "keyboard") return true;
     //bool down = dev->getState();
     VRKeyboardPtr keyboard = dynamic_pointer_cast<VRKeyboard>(dev);
-    if (!keyboard) return;
+    if (!keyboard) return true;
     auto event = keyboard->getGtkEvent();
-    if (!browser) return;
+    if (!browser) return true;
     auto host = browser->GetHost();
-    if (!host) return;
+    if (!host) return true;
 
     //cout << "CEF::keyboard " << event->keyval << " " << ctrlUsed << " " << keyboard->ctrlDown() << endl;
 
@@ -391,14 +392,14 @@ void CEF::keyboard(VRDeviceWeakPtr d) {
         if (event->keyval == 'a') { browser->GetFocusedFrame()->SelectAll(); ctrlUsed = true; }
         if (event->keyval == 'c') { browser->GetFocusedFrame()->Copy(); ctrlUsed = true; }
         if (event->keyval == 'v') { browser->GetFocusedFrame()->Paste(); ctrlUsed = true; }
-        return;
+        return false;
     }
 
     if (!keyboard->ctrlDown() && event->type == GDK_KEY_PRESS) ctrlUsed = false;
 
     if (ctrlUsed && !keyboard->ctrlDown() && event->type == GDK_KEY_RELEASE && event->keyval != GDK_KEY_Control_L && event->keyval != GDK_KEY_Control_R ) {
         ctrlUsed = false;
-        return; // ignore next key up event when ctrl was used for a shortcut above!
+        return false; // ignore next key up event when ctrl was used for a shortcut above!
     }
 
     CefKeyEvent kev;
@@ -411,8 +412,8 @@ void CEF::keyboard(VRDeviceWeakPtr d) {
 
     kev.native_key_code = event->keyval;
 
-    if (windows_key_code == VKEY_RETURN) kev.unmodified_character = '\r'; else
-    kev.unmodified_character = static_cast<int>(gdk_keyval_to_unicode(event->keyval));
+    if (windows_key_code == VKEY_RETURN) kev.unmodified_character = '\r';
+    else kev.unmodified_character = static_cast<int>(gdk_keyval_to_unicode(event->keyval));
 
     if (kev.modifiers & EVENTFLAG_CONTROL_DOWN) kev.character = GetControlCharacter(windows_key_code, kev.modifiers & EVENTFLAG_SHIFT_DOWN);
     else kev.character = kev.unmodified_character;
@@ -425,4 +426,5 @@ void CEF::keyboard(VRDeviceWeakPtr d) {
         kev.type = KEYEVENT_KEYUP; host->SendKeyEvent(kev);
         kev.type = KEYEVENT_CHAR; host->SendKeyEvent(kev);
     }
+    return false;
 }

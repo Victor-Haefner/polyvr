@@ -1397,7 +1397,7 @@ VRGuiSetup::VRGuiSetup() {
     setWidgetSensitivity("table7", false);
     setWidgetSensitivity("table8", false);
 
-    updateSetupCb = VRFunction<VRDeviceWeakPtr>::create("update gui setup", bind(&VRGuiSetup::updateSetup, this) );
+    updateSetupCb = VRDeviceCb::create("update gui setup", bind(&VRGuiSetup::updateSetup, this) );
 
     guard = false;
 
@@ -1461,7 +1461,7 @@ void VRGuiSetup::updateStatus() {
     if (mwindow) setLabel("win_state", mwindow->getStateString());
 }
 
-void VRGuiSetup::updateSetup() {
+bool VRGuiSetup::updateSetup() {
     auto tree_store = (GtkTreeStore*)VRGuiBuilder::get()->get_object("setupTree");
     gtk_tree_store_clear(tree_store);
 
@@ -1495,7 +1495,7 @@ void VRGuiSetup::updateSetup() {
 
     auto setup = current_setup.lock();
     setLabel("label13", "VR Setup: NONE");
-    if (!setup) return;
+    if (!setup) return true;
     setLabel("label13", "VR Setup: " + setup->getName());
 
     for (auto ditr : setup->getDevices()) {
@@ -1587,6 +1587,7 @@ void VRGuiSetup::updateSetup() {
     on_treeview_select();
     auto tree_view = VRGuiBuilder::get()->get_widget("treeview2");
     gtk_tree_view_expand_all((GtkTreeView*)tree_view);
+    return true;
 }
 
 bool getSetupEntries(string dir, string& local, string& def) {

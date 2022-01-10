@@ -45,7 +45,7 @@ class VRGuiGeneral {
         VRGuiGeneral();
 
 
-        void updateScene();
+        bool updateScene();
 };
 
 OSG_END_NAMESPACE

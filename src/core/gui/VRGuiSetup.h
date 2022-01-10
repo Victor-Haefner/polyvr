@@ -174,7 +174,7 @@ class VRGuiSetup {
         shared_ptr<VRGuiEditor> getEditor();
 
         void updateSetupList();
-        void updateSetup();
+        bool updateSetup();
         void updateStatus();
 };
 

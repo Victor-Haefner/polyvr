@@ -53,7 +53,7 @@ class VRDevice : public std::enable_shared_from_this<VRDevice>, public VRName, p
         void change_slider(int key, float state);
 
         void addUpdateSignal(VRSignalPtr sig, int key);
-        void remUpdateSignal(VRSignalPtr sig, VRDeviceWeakPtr dev);
+        bool remUpdateSignal(VRSignalPtr sig, VRDeviceWeakPtr dev);
         void updateSignals();
 
         int key();

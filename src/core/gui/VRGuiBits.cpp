@@ -464,12 +464,12 @@ void VRGuiBits::updateVisualLayer() {
     gtk_widget_show_all(bar);
 }
 
-void VRGuiBits::update() { // scene changed
+bool VRGuiBits::update() { // scene changed
 	cout << "VRGuiBits::update" << endl;
     update_ward = true;
     auto scene = VRScene::getCurrent();
     setLabel("label24", "Project: None");
-    if (scene == 0) return;
+    if (scene == 0) return true;
 
     fillStringListstore("cameras", scene->getCameraNames());
     fillStringListstore("nav_presets", scene->getNavigationNames());
@@ -483,6 +483,7 @@ void VRGuiBits::update() { // scene changed
     updateVisualLayer();
     update_ward = false;
     cout << " VRGuiBits::update done" << endl;
+    return true;
 }
 
 void VRGuiBits::wipeConsoles() {

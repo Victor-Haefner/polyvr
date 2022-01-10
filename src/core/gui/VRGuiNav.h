@@ -20,7 +20,7 @@ class VRGuiNav {
     public:
         VRGuiNav();
 
-        void update();
+        bool update();
 };
 
 OSG_END_NAMESPACE;

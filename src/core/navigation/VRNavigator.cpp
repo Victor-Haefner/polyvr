@@ -164,8 +164,8 @@ map<string, VRDeviceCbPtr>& VRNavigator_base::getNavigationCallbacks() { return 
 
 VRNavigator::VRNavigator() {
     setStorageType("Navigation");
-    auto addNavCb = [&](string name, boost::function<void(VRDeviceWeakPtr)> fkt) {
-        storeNavigationCallback( VRFunction<VRDeviceWeakPtr>::create(name, fkt) );
+    auto addNavCb = [&](string name, boost::function<bool(VRDeviceWeakPtr)> fkt) {
+        storeNavigationCallback( VRDeviceCb::create(name, fkt) );
     };
 
     addNavCb("mouse_orbit2d", bind(&VRNavigator::orbit2D, this, _1) );
@@ -184,16 +184,17 @@ VRNavigator::~VRNavigator() {}
 
 float VRNavigator::clip_dist_down = 1.5;
 
-void VRNavigator::zoom(VRDeviceWeakPtr _dev, int dir) {
-    //cout << "VRNavigator::zoom " << dir << endl;
+bool VRNavigator::zoom(VRDeviceWeakPtr _dev, int dir) {
+    cout << "VRNavigator::zoom " << dir << endl;
     auto dev = _dev.lock();
-    if (!dev) return;
+    if (!dev) return true;
     VRTransformPtr target = dev->getTarget();
-    if (target == 0) return;
+    if (target == 0) return true;
 
     //Vec2d speed = dev->getSpeed(); // 0.05
     float speed = 0.05;
     target->zoom(speed*dir);
+    return true;
 }
 
 bool VRNavigator::isCtrlDown() { return isKeyDown(65507); }
@@ -205,14 +206,14 @@ bool VRNavigator::isKeyDown(int k) {
     else return false;
 }
 
-void VRNavigator::orbit(VRDeviceWeakPtr _dev) {
+bool VRNavigator::orbit(VRDeviceWeakPtr _dev) {
     auto dev = _dev.lock();
-    if (!dev) return;
+    if (!dev) return true;
     VRTransformPtr target = dev->getTarget();
     VRTransformPtr devBeacon = dev->getBeacon();
 
-    if (target == 0) return;
-    if (devBeacon == 0) return;
+    if (target == 0) return true;
+    if (devBeacon == 0) return true;
 
     static int state = 0;
     static Vec3d camPos;
@@ -287,16 +288,17 @@ void VRNavigator::orbit(VRDeviceWeakPtr _dev) {
         target->setAt(camAtRef + delta);
         target->setFrom(camPos);
 	}
+	return true;
 }
 
-void VRNavigator::walk(VRDeviceWeakPtr _dev) {
+bool VRNavigator::walk(VRDeviceWeakPtr _dev) {
     auto dev = _dev.lock();
-    if (!dev) return;
+    if (!dev) return true;
     VRTransformPtr target = dev->getTarget();
     VRTransformPtr devBeacon = dev->getBeacon();
 
-    if (target == 0) return;
-    if (devBeacon == 0) return;
+    if (target == 0) return true;
+    if (devBeacon == 0) return true;
 
     Vec3d dir_c = target->getWorldDirection();
     Vec3d dir_m = devBeacon->getAt() - devBeacon->getFrom();
@@ -312,11 +314,12 @@ void VRNavigator::walk(VRDeviceWeakPtr _dev) {
 
     target->rotate(y);
     target->translate(x);
+    return true;
 }
 
-void VRNavigator::fly_walk(VRDeviceWeakPtr _dev) {
+bool VRNavigator::fly_walk(VRDeviceWeakPtr _dev) {
     auto dev = _dev.lock();
-    if (!dev) return;
+    if (!dev) return true;
     int key = dev->key();
     float d = 0;
     dev->s_state(key, &d);
@@ -324,8 +327,8 @@ void VRNavigator::fly_walk(VRDeviceWeakPtr _dev) {
 
     VRTransformPtr target = dev->getTarget();
     VRTransformPtr flystick = dev->getBeacon();
-    if (target == 0 || flystick == 0) return;
-    if (target->getParent() == 0 ) return;
+    if (target == 0 || flystick == 0) return true;
+    if (target->getParent() == 0 ) return true;
 
     Vec3d dir = target->getParent()->getPoseTo(flystick)->dir();
     //Vec3d dir = flystick->getDir();
@@ -344,16 +347,17 @@ void VRNavigator::fly_walk(VRDeviceWeakPtr _dev) {
             target->translate(dir*dt*d*d_abs*0.2*tspeed);
             break;
     }
+    return true;
 }
 
-void VRNavigator::orbit2D(VRDeviceWeakPtr _dev) {
+bool VRNavigator::orbit2D(VRDeviceWeakPtr _dev) {
     auto dev = _dev.lock();
-    if (!dev) return;
+    if (!dev) return true;
     VRTransformPtr target = dev->getTarget();
     VRTransformPtr devBeacon = dev->getBeacon();
 
-    if (target == 0) return;
-    if (devBeacon == 0) return;
+    if (target == 0) return true;
+    if (devBeacon == 0) return true;
 
     Vec3d dir_m = devBeacon->getAt() - devBeacon->getFrom();
     dir_m.normalize();
@@ -366,6 +370,7 @@ void VRNavigator::orbit2D(VRDeviceWeakPtr _dev) {
 
     target->rotateAround(y);
     target->zoom(x);
+    return true;
 }
 
 void animPathAt(VRTransformWeakPtr trp, PathPtr p, float t) {
@@ -374,18 +379,18 @@ void animPathAt(VRTransformWeakPtr trp, PathPtr p, float t) {
     tr->setWorldAt( p->getPosition(t) );
 }
 
-void VRNavigator::focus(VRDeviceWeakPtr _dev) {
+bool VRNavigator::focus(VRDeviceWeakPtr _dev) {
     auto dev = _dev.lock();
-    if (!dev) return;
+    if (!dev) return true;
     VRTransformPtr target = dev->getTarget();
     VRTransformPtr devBeacon = dev->getBeacon();
     auto scene = VRScene::getCurrent();
 
-    if (target == 0) return;
-    if (devBeacon == 0) return;
+    if (target == 0) return true;
+    if (devBeacon == 0) return true;
 
     VRIntersectionPtr ins = dev->intersect(target->getRoot());
-    if (!ins->hit) return;
+    if (!ins->hit) return true;
 
     Vec3d z;
     auto p = Path::create();
@@ -395,6 +400,7 @@ void VRNavigator::focus(VRDeviceWeakPtr _dev) {
 
     focus_fkt = VRAnimCb::create("TransAnim", bind(animPathAt, VRTransformWeakPtr(target), p, _1));
     scene->addAnimation(0.3,0,focus_fkt,0,1);
+    return true;
 }
 
 // presets
@@ -487,9 +493,9 @@ void VRNavigator::initFlyWalk(VRTransformPtr target, VRDevicePtr dev) {
     addNavigation(preset);
 }
 
-void VRNavigator::hyd_walk(VRDeviceWeakPtr _dev) {
+bool VRNavigator::hyd_walk(VRDeviceWeakPtr _dev) {
     auto dev = _dev.lock();
-    if (!dev) return;
+    if (!dev) return true;
     int key = dev->key();
     float d = 0;
     dev->s_state(key, &d);
@@ -497,7 +503,7 @@ void VRNavigator::hyd_walk(VRDeviceWeakPtr _dev) {
 
     VRTransformPtr target = dev->getTarget();
     VRTransformPtr flystick = dev->getBeacon();
-    if (target == 0 || flystick == 0) return;
+    if (target == 0 || flystick == 0) return true;
 
     Vec3d dir = flystick->getWorldDirection();
     dir.normalize();
@@ -516,6 +522,7 @@ void VRNavigator::hyd_walk(VRDeviceWeakPtr _dev) {
             target->translate(dir*dt*d*d_abs*0.2*tspeed);
             break;
     }
+    return true;
 }
 
 void VRNavigator::initHydraFly(VRTransformPtr target, VRDevicePtr dev) {

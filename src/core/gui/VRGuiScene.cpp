@@ -1351,10 +1351,10 @@ VRGuiScene::VRGuiScene() { // TODO: reduce callbacks with templated functions
 }
 
 // new scene, update stuff here
-void VRGuiScene::updateTreeView() {
+bool VRGuiScene::updateTreeView() {
 	cout << "VRGuiScene::updateTreeView" << endl;
     auto scene = VRScene::getCurrent();
-    if (scene == 0) return;
+    if (scene == 0) return true;
 
     gtk_tree_store_clear(tree_store);
     VRObjectPtr root = scene->getRoot();
@@ -1362,6 +1362,7 @@ void VRGuiScene::updateTreeView() {
     gtk_tree_view_expand_all(tree_view);
 
     setWidgetSensitivity("table11", false);
+    return true;
 }
 
 // check if currently getSelected() object has been modified

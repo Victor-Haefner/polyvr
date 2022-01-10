@@ -20,7 +20,7 @@ class VRMainInterface {
         VRServerCbPtr reqCb;
 
         VRMainInterface();
-        void on_scene_clicked(VRDeviceWeakPtr dev);
+        bool on_scene_clicked(VRDeviceWeakPtr dev);
         void update();
 
         string handleRequest(map<string, string> params);
