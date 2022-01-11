@@ -303,12 +303,16 @@ bool VRLight::getShadows() { return shadows; }
 Color4f VRLight::getShadowColor() { return shadowColor; }
 
 void VRLight::setAutomaticShadowUpdates(bool b) {
+#ifndef OSG_OGL_ES2
     if (b) ssme->setUpdateMode(ShadowMapEngine::OnRequest);
     else   ssme->setUpdateMode(ShadowMapEngine::PerTraversal);
+#endif
 }
 
 void VRLight::requestShadowPass() {
+#ifndef OSG_OGL_ES2
     ssme->requestRun();
+#endif
 }
 
 void VRLight::toggleShadows(bool b) { // TODO: optimize this
