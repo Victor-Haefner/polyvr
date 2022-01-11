@@ -461,6 +461,29 @@ gboolean on_window_expose(GtkWidget* widget, GdkEventExpose* event) {
     return FALSE;
 }
 
+void set3DViewBarHeight(GtkWidget* widget, GtkAllocation* allocation, void* hbox1_layout) {
+    int h = allocation->height;
+    gtk_widget_set_size_request(GTK_WIDGET(hbox1_layout), -1, h);
+}
+
+void set3DViewBarWidth(GtkWidget* widget, GtkAllocation* allocation, void* hbox1_viewport) {
+    int w = allocation->width;
+    gtk_widget_set_size_request(GTK_WIDGET(hbox1_viewport), w, -1);
+}
+
+void setConsolesBoxSize(GtkWidget* widget, GtkAllocation* allocation, void* hbox15_viewport) {
+    int w = allocation->width;
+    int h = allocation->height;
+    gtk_widget_set_size_request(GTK_WIDGET(hbox15_viewport), w, h);
+}
+
+bool setInitalPannedPos(GtkWidget* widget, cairo_t* ctx, gpointer data) {
+    static bool once = true;
+    if (once) gtk_paned_set_position(GTK_PANED(widget), 700);
+    once = false;
+    return false;
+}
+
 void VRGuiBuilder::buildBaseUI() {
     auto window1 = addWindow("window1", "PolyVR");
     auto main_frame = addGrid("main_frame");
@@ -476,7 +499,7 @@ void VRGuiBuilder::buildBaseUI() {
     gtk_grid_attach(GTK_GRID(main_frame), hseparator1, 0,1,2,1);
     gtk_grid_attach(GTK_GRID(main_frame), hpaned1, 0,2,2,1);
     gtk_widget_set_vexpand(hpaned1, true);
-    gtk_paned_set_position(GTK_PANED(hpaned1), 210);
+    gtk_paned_set_position(GTK_PANED(hpaned1), 230);
     gtk_paned_set_wide_handle(GTK_PANED(hpaned1), true);
 
     auto banner = addImage("banner", "ressources/gui/logo4.png");
@@ -511,15 +534,23 @@ void VRGuiBuilder::buildBaseUI() {
     /* ---------- core section ---------------------- */
     auto notebook1 = addNotebook("notebook1");
     auto vpaned1 = addPaned("vpaned1", GTK_ORIENTATION_VERTICAL);
-    auto vbox5 = addBox("vbox5", GTK_ORIENTATION_VERTICAL);
-    auto hbox15 = addBox("hbox15", GTK_ORIENTATION_HORIZONTAL);
+    auto vbox5 = addBox("vbox5", GTK_ORIENTATION_VERTICAL); // 3d view
+    auto hbox15 = addBox("hbox15", GTK_ORIENTATION_HORIZONTAL); // consoles
+
+    GtkWidget* hbox15_layout = gtk_layout_new(0,0);
+    GtkWidget* hbox15_viewport = gtk_viewport_new(0,0);
+    gtk_container_add(GTK_CONTAINER(hbox15_viewport), hbox15);
+    gtk_container_add(GTK_CONTAINER(hbox15_layout), hbox15_viewport);
+    g_signal_connect(hbox15_layout, "size-allocate", G_CALLBACK(setConsolesBoxSize), hbox15_viewport);
+
     add2ToPaned(hpaned1, vpaned1);
     add1ToPaned(vpaned1, vbox5);
-    add2ToPaned(vpaned1, hbox15);
+    add2ToPaned(vpaned1, hbox15_layout);
     gtk_widget_set_hexpand(notebook1, true);
     gtk_widget_set_vexpand(vbox5, true);
-    gtk_paned_set_position(GTK_PANED(vpaned1), 120);
+    gtk_paned_set_position(GTK_PANED(vpaned1), 700);
     gtk_paned_set_wide_handle(GTK_PANED(vpaned1), true);
+    g_signal_connect(vpaned1, "draw", (GCallback)setInitalPannedPos, NULL);
 
     GtkWidget* layout = gtk_layout_new(0,0);
     GtkWidget* viewport = gtk_viewport_new(0,0);
@@ -529,7 +560,7 @@ void VRGuiBuilder::buildBaseUI() {
     g_signal_connect(hpaned1, "notify::position", (GCallback)onPanedMove, notebook1);
 
     /* ---------- right core section ---------------------- */
-    auto hbox1 = addBox("hbox1", GTK_ORIENTATION_HORIZONTAL);
+    auto hbox1 = addBox("hbox1", GTK_ORIENTATION_HORIZONTAL); // bar above 3d view
     auto glarea = addGLWidget();
     auto label5 = addLabel("label5", "Camera:");
     auto label45 = addLabel("label45", "Navigation:");
@@ -538,7 +569,17 @@ void VRGuiBuilder::buildBaseUI() {
     auto hseparator5 = addSeparator("hseparator5", GTK_ORIENTATION_HORIZONTAL);
     auto hseparator6 = addSeparator("hseparator6", GTK_ORIENTATION_HORIZONTAL);
     auto toolbar6 = addToolbar("toolbar6", GTK_ICON_SIZE_LARGE_TOOLBAR, GTK_ORIENTATION_HORIZONTAL);
-    gtk_box_pack_start(GTK_BOX(vbox5), hbox1, false, true, 0);
+
+    GtkWidget* hbox1_layout = gtk_layout_new(0,0);
+    GtkWidget* hbox1_viewport = gtk_viewport_new(0,0);
+    gtk_container_add(GTK_CONTAINER(hbox1_viewport), hbox1);
+    gtk_container_add(GTK_CONTAINER(hbox1_layout), hbox1_viewport);
+    gtk_widget_set_hexpand(hbox1_viewport, true);
+    gtk_widget_set_hexpand(hbox1_layout, true);
+    g_signal_connect(hbox1, "size-allocate", G_CALLBACK(set3DViewBarHeight), hbox1_layout);
+    g_signal_connect(hbox1_layout, "size-allocate", G_CALLBACK(set3DViewBarWidth), hbox1_viewport);
+
+    gtk_box_pack_start(GTK_BOX(vbox5), hbox1_layout, false, true, 0);
     gtk_box_pack_start(GTK_BOX(vbox5), glarea, false, true, 0);
     gtk_box_pack_start(GTK_BOX(hbox1), label5, false, true, 0);
     gtk_box_pack_start(GTK_BOX(hbox1), combobox4, false, true, 0);
@@ -607,11 +648,29 @@ void VRGuiBuilder::buildBaseUI() {
     gtk_window_set_transient_for(GTK_WINDOW(advanced_start), GTK_WINDOW(window1));
 
     cout << " build recorder dialog" << endl;
-    /* ---------- recorder ---------------------- */  // TODO: to test!
+    /* ---------- recorder ---------------------- */
+    // dialog
     auto recorder = addDialog("recorder");
     auto dialog_vbox15 = gtk_dialog_get_content_area(GTK_DIALOG(recorder));
     auto dialog_action_area15 = gtk_dialog_get_action_area(GTK_DIALOG(recorder));
+
+    // add screenshot ui
+    auto sc_Grid = addGrid("sc_Grid");
+    auto sc_spacer = addSpacer(20);
+    auto sc_label1 = addLabel("sc_label1", "Take Screenshot");
+    auto sc_path = addImgButton("sc_path", "gtk-directory");
+    auto sc_entry = addEntry("sc_entry");
+    auto sc_trigger = addButton("sc_trigger", "Take");
+    gtk_box_pack_start(GTK_BOX(dialog_vbox15), sc_label1, true, true, 5);
+    gtk_box_pack_start(GTK_BOX(dialog_vbox15), sc_Grid, true, true, 0);
+    gtk_box_pack_start(GTK_BOX(dialog_vbox15), sc_spacer, true, true, 5);
+    gtk_grid_attach(GTK_GRID(sc_Grid), sc_path, 0,0,1,1);
+    gtk_grid_attach(GTK_GRID(sc_Grid), sc_entry, 1,0,1,1);
+    gtk_grid_attach(GTK_GRID(sc_Grid), sc_trigger, 0,1,2,1);
+
+    // add recorder ui
     auto recGrid = addGrid("recGrid");
+    auto recLbl = addLabel("recLbl", "Record Video");
     auto label149 = addLabel("label149", "Idle");
     auto labelRes = addLabel("labelRes", "resolution:");
     auto label151 = addLabel("label151", "codec:");
@@ -620,20 +679,22 @@ void VRGuiBuilder::buildBaseUI() {
     auto resolutions = addCombobox("resolutions", "resList");
     auto doVSync = addCheckbutton("doVSyncCB", "VSync");
     auto entry27 = addEntry("entry27");
+    gtk_box_pack_start(GTK_BOX(dialog_vbox15), recLbl, true, true, 5);
     gtk_box_pack_start(GTK_BOX(dialog_vbox15), label149, true, true, 5);
     gtk_box_pack_start(GTK_BOX(dialog_vbox15), recGrid, true, true, 0);
     gtk_grid_attach(GTK_GRID(recGrid), labelRes, 0,0,1,1);
+    gtk_grid_attach(GTK_GRID(recGrid), doVSync, 2,0,1,1);
     gtk_grid_attach(GTK_GRID(recGrid), label151, 0,1,1,1);
     gtk_grid_attach(GTK_GRID(recGrid), label150, 0,2,1,1);
     gtk_grid_attach(GTK_GRID(recGrid), resolutions, 1,0,1,1);
     gtk_grid_attach(GTK_GRID(recGrid), codecs, 1,1,2,1);
     gtk_grid_attach(GTK_GRID(recGrid), entry27, 1,2,2,1);
-    gtk_grid_attach(GTK_GRID(recGrid), doVSync, 2,0,1,1);
     gtk_window_set_transient_for(GTK_WINDOW(recorder), GTK_WINDOW(window1));
-    gtk_widget_show_all(dialog_vbox15);
     gtk_label_set_xalign(GTK_LABEL(labelRes), 0);
     gtk_label_set_xalign(GTK_LABEL(label151), 0);
     gtk_label_set_xalign(GTK_LABEL(label150), 0);
+
+    gtk_widget_show_all(dialog_vbox15);
 
     cout << " build about dialog" << endl;
     /* ---------- about dialog ---------------------- */
@@ -1206,10 +1267,10 @@ void VRGuiBuilder::buildBaseUI() {
     auto toolbutton20 = addToolButton("toolbutton20", "gtk-indent", toolbar3, "New Group");
     auto toolbutton22 = addToolButton("toolbutton22", "gtk-open", toolbar3, "Import Script From Scene");
     auto toolbutton9 = addToolButton("toolbutton9", "gtk-delete", toolbar3, "Delete Script");
-    auto toolbutton7 = addToolButton("toolbutton7", "gtk-save", toolbar3, "Save Script");
-    auto toolbutton8 = addToolButton("toolbutton8", "gtk-execute", toolbar3, "Execute Script");
-    auto toolbutton23 = addToolButton("toolbutton23", "gtk-find", toolbar3, "Search");
-    auto toolbutton16 = addToolButton("toolbutton16", "gtk-help", toolbar3, "Documentation");
+    auto toolbutton7 = addToolButton("toolbutton7", "gtk-save", toolbar3, "Save Script (Ctrl+S)");
+    auto toolbutton8 = addToolButton("toolbutton8", "gtk-execute", toolbar3, "Execute Script (Ctrl+E)");
+    auto toolbutton23 = addToolButton("toolbutton23", "gtk-find", toolbar3, "Search (Ctrl+F)");
+    auto toolbutton16 = addToolButton("toolbutton16", "gtk-help", toolbar3, "Documentation (Ctrl+H)");
     auto toolbutton30 = addToolButton("toolbutton30", "", toolbar3_2, "Convert to C++");
     gtk_tool_button_set_label(GTK_TOOL_BUTTON(toolbutton30), "CPP");
     auto toggletoolbutton1 = addToggleToolButton("toggletoolbutton1", "gtk-sort-ascending", toolbar3, "Show Performance");

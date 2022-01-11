@@ -23,6 +23,11 @@ class VRAMLLoader {
         void processElement(XMLElementPtr node, VRTransformPtr obj);
         void readNode(XMLElementPtr node, VRTransformPtr obj);
 
+        void writeHeader(ofstream& stream, string fileName);
+        void writeFooter(ofstream& stream);
+        void writeScene(ofstream& stream, string daeFolder);
+        void writeOntology(ofstream& stream);
+
     public:
         VRAMLLoader();
         ~VRAMLLoader();
@@ -34,6 +39,8 @@ class VRAMLLoader {
 
         VROntologyPtr getOntology();
         VRTransformPtr getScene();
+
+        string addAsset(VRObjectPtr obj);
 };
 
 OSG_END_NAMESPACE;

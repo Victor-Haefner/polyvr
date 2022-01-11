@@ -10,6 +10,7 @@ using namespace std;
 
 struct _xmlDoc;
 struct _xmlNode;
+struct _xmlSAXLocator;
 
 OSG_BEGIN_NAMESPACE;
 
@@ -70,6 +71,9 @@ class XMLStreamHandler {
     public:
         XMLStreamHandler();
         virtual ~XMLStreamHandler();
+
+        int getLine();
+        int getColumn();
 
         virtual void startDocument();
         virtual void endDocument();

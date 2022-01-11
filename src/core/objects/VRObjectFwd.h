@@ -49,6 +49,7 @@ ptrFwd(VRTextureMosaic);
 ptrFwd(VRVideo);
 ptrFwd(VRConstraint);
 ptrFwd(VRAnimation);
+ptrFwd(VRKeyFrameAnimation);
 
 // addons
 ptrFwd(VRLodTree);

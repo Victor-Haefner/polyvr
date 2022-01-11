@@ -2,6 +2,7 @@
 #include "VRGuiEditor.h"
 #include "VRGuiUtils.h"
 #include "VRGuiBuilder.h"
+#include "VRGuiManager.h"
 #include "VRGuiCodeCompletion.h"
 #include "core/scene/VRSceneManager.h"
 #include "core/scripting/VRScript.h"
@@ -158,6 +159,11 @@ bool VRGuiEditor::on_editor_shortkey( GdkEventKey* e ) {
 
     if (e->keyval == 101) {// e
         triggerCB("exec");
+        return true;
+    }
+
+    if (e->keyval == 104) {// h
+        triggerCB("help");
         return true;
     }
 

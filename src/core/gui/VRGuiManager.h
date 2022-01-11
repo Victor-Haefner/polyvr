@@ -46,6 +46,7 @@ class VRGuiManager {
         void startThreadedUpdate();
         void wakeWindow();
 
+        void openHelp(string search = "");
         void updateSystemInfo();
 
         _GtkWindow* newWindow();

@@ -4,8 +4,10 @@
 
 #include "core/tools/VRRecorder.h"
 #include "core/scene/VRSceneManager.h"
+#include "core/objects/material/VRTexture.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRFunction.h"
+#include "core/utils/system/VRSystem.h"
 #include "VRGuiUtils.h"
 
 #include <gtk/gtk.h>
@@ -57,8 +59,29 @@ VRGuiRecWidget::VRGuiRecWidget() {
     updateCb = VRUpdateCb::create("recorder widget", bind(&VRGuiRecWidget::update, this) );
     VRSceneManager::get()->addUpdateFkt( updateCb );
 
+    // screenshot ui
+    screenshots_path = "./screenshots";
+    setTextEntry("sc_entry", screenshots_path);
+    setEntryCallback("sc_entry", bind(&VRGuiRecWidget::onSCPathChanged, this));
+    setButtonCallback("sc_trigger", bind(&VRGuiRecWidget::onSCTrigger, this));
+    setButtonCallback("sc_path", bind(&VRGuiRecWidget::onSCChangeDir, this));
+
     setVisible(false);
 #endif
+}
+
+void VRGuiRecWidget::onSCPathChanged() {
+    screenshots_path = getTextEntry("sc_entry");
+}
+
+void VRGuiRecWidget::onSCTrigger() {
+    if (!exists(screenshots_path)) makedir(screenshots_path);
+    auto tex = takeSnapshot(true);
+    tex->write(screenshots_path+"/pvr_"+toString(time(0))+".png");
+}
+
+void VRGuiRecWidget::onSCChangeDir() { // TODO
+    ;
 }
 
 VRGuiRecWidget::~VRGuiRecWidget() {}

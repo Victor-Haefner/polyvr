@@ -92,7 +92,7 @@ void VRSceneManager::loadScene(string path, bool write_protected, string encrypt
     current->setFlag("write_protected", write_protected);
 
 #ifndef WITHOUT_GTK
-    VRGuiSignals::get()->getSignal("scene_changed")->triggerPtr<VRDevice>(); // update gui
+    VRGuiSignals::get()->getSignal("scene_changed")->triggerAll<VRDevice>(); // update gui
 #endif
 
     cout << " VRSceneManager, storeFavorites" << endl;
@@ -110,7 +110,7 @@ void VRSceneManager::closeScene() {
 #ifndef WASM
     VRProfiler::get()->setActive(false);
 #endif
-    on_scene_close->triggerPtr<VRDevice>();
+    on_scene_close->triggerAll<VRDevice>();
     current = 0;
 
     auto setup = VRSetup::getCurrent();
@@ -126,7 +126,7 @@ void VRSceneManager::closeScene() {
     setWorkdir(original_workdir);
 
 #ifndef WITHOUT_GTK
-    VRGuiSignals::get()->getSignal("scene_changed")->triggerPtr<VRDevice>(); // update gui
+    VRGuiSignals::get()->getSignal("scene_changed")->triggerAll<VRDevice>(); // update gui
 #endif
 }
 
@@ -203,10 +203,10 @@ void VRSceneManager::setScene(VRScenePtr scene) {
     VRProfiler::get()->setActive(true);
 #endif
 
-    on_scene_load->triggerPtr<VRDevice>();
+    on_scene_load->triggerAll<VRDevice>();
 
 #ifndef WITHOUT_GTK
-    VRGuiSignals::get()->getSignal("scene_changed")->triggerPtr<VRDevice>(); // update gui
+    VRGuiSignals::get()->getSignal("scene_changed")->triggerAll<VRDevice>(); // update gui
 #endif
 	cout << " VRSceneManager::setScene done" << endl;
 }

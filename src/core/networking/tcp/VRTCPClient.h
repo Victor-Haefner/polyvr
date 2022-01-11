@@ -29,8 +29,9 @@ class VRTCPClient {
         void connect(string host, int port);
         void connect(string uri);
         void connectToPeer(int localPort, string remoteIP, int remotePort);
-        void send(const string& message, string guard = "");
+        void send(const string& message, string guard = "", bool verbose = false);
         bool connected();
+        void close();
 
         string getPublicIP(bool cached = false);
         string getConnectedUri();

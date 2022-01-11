@@ -51,7 +51,7 @@ VRAppManager::VRAppManager() {
 
     if (favorites->size() == 0) setNotebookPage("notebook2", 1);
 
-    updateCb = VRFunction<VRDeviceWeakPtr>::create("GUI_updateDemos", bind(&VRAppManager::update, this) );
+    updateCb = VRFunction<VRDeviceWeakPtr, bool>::create("GUI_updateDemos", bind(&VRAppManager::update, this) );
     VRGuiSignals::get()->getSignal("scene_changed")->add( updateCb );
 
     setToolButtonCallback("toolbutton1", bind(&VRAppManager::on_new_clicked, this));
@@ -370,7 +370,7 @@ void VRAppManager::on_search() {
     }
 }
 
-void VRAppManager::update() {
+bool VRAppManager::update() {
 	cout << "VRAppManager::update " << endl;
     auto scene = VRScene::getCurrent();
     if (scene == 0) {
@@ -378,7 +378,7 @@ void VRAppManager::update() {
         if (current_demo) current_demo->running = false;
         setGuiState(current_demo);
         current_demo = 0;
-        return;
+        return true;
     }
 
     string sPath = scene->getPath();
@@ -389,13 +389,13 @@ void VRAppManager::update() {
             current_demo->running = true;
             cout << "  .. to running, set ui state accordingly" << endl;
             setGuiState(current_demo);
-            return;
+            return true;
         }
         cout << "  .. to not running, set ui state accordingly" << endl;
         current_demo->running = false;
         setGuiState(current_demo);
         current_demo = 0;
-        return;
+        return true;
     }
 
     auto e = sections["recents"]->getLauncher(sPath);
@@ -407,7 +407,7 @@ void VRAppManager::update() {
         current_demo->running = true;
         cout << " .. found launcher, set to current and to running, set ui state accordingly" << endl;
         setGuiState(current_demo);
-        return;
+        return true;
     }
 
     //noLauncherScene = true;
@@ -415,10 +415,11 @@ void VRAppManager::update() {
     if (noLauncherScene) {
         cout << " .. noLauncherScene set, set ui state accordingly" << endl;
         setGuiState(0);
-        return;
+        return true;
     }
 
     cout << " .. ui state not changed" << endl;
+    return true;
 }
 
 OSG_END_NAMESPACE;

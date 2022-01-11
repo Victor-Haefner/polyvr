@@ -11,33 +11,17 @@ using namespace std;
 
 class VRAnimation : public VRName, public std::enable_shared_from_this<VRAnimation> {
     protected:
-        struct interpolator {
-            virtual ~interpolator();
-            virtual void update(float t) = 0;
-            virtual void own(bool b) = 0;
-        };
+        vector<VRAnimCbWeakPtr> weakCallbacks;
+        vector<VRAnimCbPtr> ownedCallbacks;
+        float start_value = 0;
+        float end_value = 1;
 
-        template<typename T>
-        struct interpolatorT : interpolator {
-            std::shared_ptr< VRFunction<T> > sp;
-            std::weak_ptr< VRFunction<T> > fkt;
-            T start_value, end_value;
-            void update(float t) {
-                T val = start_value + (end_value - start_value)*t;
-                if ( auto sp = fkt.lock() ) (*sp)(val);
-            }
+        void execCallbacks(float t);
 
-            void own(bool b) {
-                if (b) sp = fkt.lock();
-                else sp = 0;
-            }
-        };
-
-        interpolator* interp = 0 ;
         float start_time = 0;
         float update_time = 0;
         float pause_time = 0;
-        float duration = 0;
+        float duration = 1;
         float offset = 0;
         float t = 0;
         bool run = false;
@@ -49,14 +33,11 @@ class VRAnimation : public VRName, public std::enable_shared_from_this<VRAnimati
         ~VRAnimation();
         static VRAnimationPtr create(string name = "animation");
 
-        template<typename T>
-        VRAnimation(float _duration, float _offset, std::shared_ptr< VRFunction<T> > _fkt, T _start, T _end, bool _loop, bool owned);
+        VRAnimation(float _duration, float _offset, VRAnimCbPtr _fkt, float _start, float _end, bool _loop, bool owned);
+        static VRAnimationPtr create(float _duration, float _offset, VRAnimCbPtr _fkt, float _start, float _end, bool _loop, bool owned);
 
-        template<typename T>
-        static VRAnimationPtr create(float _duration, float _offset, std::shared_ptr< VRFunction<T> > _fkt, T _start, T _end, bool _loop, bool owned);
-
-        void setUnownedCallback(VRAnimCbPtr fkt);
-        void setCallback(VRAnimCbPtr fkt);
+        void addCallback(VRAnimCbPtr fkt);
+        void addUnownedCallback(VRAnimCbPtr fkt);
 
         void setLoop(bool b);
         bool getLoop();

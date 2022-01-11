@@ -48,7 +48,7 @@ VRHapticPtr VRHaptic::create() {
 
 VRHapticPtr VRHaptic::ptr() { return static_pointer_cast<VRHaptic>( shared_from_this() ); }
 
-void VRHaptic::on_scene_changed(VRDeviceWeakPtr dev) {
+bool VRHaptic::on_scene_changed(VRDeviceWeakPtr dev) {
     VRScene::getCurrent()->dropPhysicsUpdateFunction(updateFktPre,false);
     VRScene::getCurrent()->dropPhysicsUpdateFunction(updateFktPost,true);
     //disconnect
@@ -62,6 +62,7 @@ void VRHaptic::on_scene_changed(VRDeviceWeakPtr dev) {
     VRScene::getCurrent()->addPhysicsUpdateFunction(updateFktPost,true);
 
     setIP(IP); //reconnect
+    return true;
 }
 
 void VRHaptic::applyTransformation(VRTransformPtr t) {

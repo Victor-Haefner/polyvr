@@ -737,11 +737,13 @@ void VRGuiScripts::on_help_close_clicked() {
 }
 
 void VRGuiScripts::on_help_clicked() {
+    string txt = editor->getSelection();
+    openHelp(txt);
+}
+
+void VRGuiScripts::openHelp(string search) {
     VRGuiScripts::updateDocumentation();
-
-    auto tb  = VRGuiBuilder::get()->get_object("pydoc");
-    gtk_text_buffer_set_text((GtkTextBuffer*)tb, "", 0);
-
+    setTextEntry("entry25", search);
     showDialog("pybindings-docs");
     VRGuiWidget("entry25").grabFocus();
 }
@@ -1117,9 +1119,10 @@ void VRGuiScripts::on_convert_cpp_clicked() {
 // ---------Main-------------
 // --------------------------
 
-void VRGuiScripts::on_scene_changed() {
+bool VRGuiScripts::on_scene_changed() {
 	cout << "VRGuiScripts::on_scene_changed" << endl;
     groups.clear();
+    return true;
 }
 
 void VRGuiScripts::update() {
@@ -1128,10 +1131,10 @@ void VRGuiScripts::update() {
     for (auto& r : scriptRows) setScriptListRow(&r.second, r.first.lock(), true);
 }
 
-void VRGuiScripts::updateList() {
+bool VRGuiScripts::updateList() {
 	cout << "VRGuiScripts::updateList" << endl;
     auto scene = VRScene::getCurrent();
-    if (scene == 0) return;
+    if (scene == 0) return true;
 
     // update script list
     auto store = (GtkTreeStore*)VRGuiBuilder::get()->get_object("script_tree");
@@ -1181,6 +1184,7 @@ void VRGuiScripts::updateList() {
         else pages[name] = pagePos();
     }
     on_select_script();
+    return true;
 }
 
 bool VRGuiScripts_on_editor_select(GtkWidget* widget, GdkEvent* event, VRGuiScripts* self) {
@@ -1261,6 +1265,7 @@ VRGuiScripts::VRGuiScripts() {
 
     editor = shared_ptr<VRGuiEditor>( new VRGuiEditor("scrolledwindow4") );
     editor->addKeyBinding("find", VRUpdateCb::create("findCb", bind(&VRGuiScripts::on_find_clicked, this)));
+    editor->addKeyBinding("help", VRUpdateCb::create("helpCb", bind(&VRGuiScripts::on_help_clicked, this)));
     editor->addKeyBinding("save", VRUpdateCb::create("saveCb", bind(&VRGuiScripts::on_save_clicked, this)));
     editor->addKeyBinding("exec", VRUpdateCb::create("execCb", bind(&VRGuiScripts::on_exec_clicked, this)));
     connect_signal<void>(editor->getSourceBuffer(), bind(&VRGuiScripts::on_buffer_changed, this), "changed");
@@ -1299,7 +1304,7 @@ VRGuiScripts::VRGuiScripts() {
     updatePtr = VRUpdateCb::create("scripts_gui_update",  bind(&VRGuiScripts::update, this) );
     VRSceneManager::get()->addUpdateFkt(updatePtr, 100);
 
-    sceneChangedCb = VRFunction<VRDeviceWeakPtr>::create("GUI_sceneChanged", bind(&VRGuiScripts::on_scene_changed, this) );
+    sceneChangedCb = VRDeviceCb::create("GUI_sceneChanged", bind(&VRGuiScripts::on_scene_changed, this) );
     VRGuiSignals::get()->getSignal("scene_changed")->add( sceneChangedCb );
 
     // init scriptImportWidget

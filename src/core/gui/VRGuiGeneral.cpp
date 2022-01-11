@@ -205,10 +205,10 @@ void VRGuiGeneral::toggleOcclusionCulling() {
     if (scene) scene->setOcclusionCulling( getCheckButtonState("checkbutton_02") );
 }
 
-void VRGuiGeneral::updateScene() {
+bool VRGuiGeneral::updateScene() {
 	cout << "VRGuiGeneral::updateScene" << endl;
     auto scene = VRScene::getCurrent();
-    if (scene == 0) return;
+    if (scene == 0) return true;
 
     updating = true;
 
@@ -238,6 +238,7 @@ void VRGuiGeneral::updateScene() {
     setSliderValue("hscale3", scene->getSSAOnoise());
 
     updating = false;
+    return true;
 }
 
 

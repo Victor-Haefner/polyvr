@@ -27,6 +27,7 @@ class VRLight : public VRObject {
         VRLightBeaconWeakPtr beacon;
 #ifndef OSG_OGL_ES2
         SimpleShadowMapEngineRefPtr ssme;
+        //VRShadowEngineRefPtr ssme;
         ShaderShadowMapEngineRefPtr gsme;
         TrapezoidalShadowMapEngineRefPtr ptsme;
         TrapezoidalShadowMapEngineRefPtr stsme;
@@ -67,6 +68,10 @@ class VRLight : public VRObject {
         void setOn(bool b);
         bool isOn();
         void toggleShadows(bool b);
+
+        //void setShadowBlendFactors(int src, int dst, int aFunc, float aVal);
+        void setAutomaticShadowUpdates(bool b); // untested!
+        void requestShadowPass();         // untested!
 
         void setType(string type);
         void setDeferred(bool b);

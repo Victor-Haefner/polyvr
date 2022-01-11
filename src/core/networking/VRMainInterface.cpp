@@ -30,13 +30,14 @@ VRMainInterface* VRMainInterface::get() {
     return instance;
 }
 
-void VRMainInterface::on_scene_clicked(VRDeviceWeakPtr d) {
+bool VRMainInterface::on_scene_clicked(VRDeviceWeakPtr d) {
     auto dev = d.lock();
-    if (!dev) return;
+    if (!dev) return true;
     string path = dev->getMessage();
     cout << "switch to scene " << path << endl;
     VRSceneManager::get()->loadScene(path);
     update();
+    return true;
 }
 
 void start_demo_proxy(string path) {

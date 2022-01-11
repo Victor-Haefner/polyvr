@@ -43,7 +43,7 @@ class VRAppManager {
         VRAppLauncherPtr addEntry(string path, string table, bool running, string timestamp = "", bool recent = false);
 
         void updatePixmap(VRAppLauncherPtr e, _GtkImage* img_pxb, int w, int h);
-        void update();
+        bool update();
 
         void writeGitignore(string path);
         void normFileName(string& f);

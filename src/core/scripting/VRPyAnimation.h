@@ -9,4 +9,8 @@ struct VRPyAnimation : public VRPyBaseT<OSG::VRAnimation> {
     static PyMethodDef methods[];
 };
 
+struct VRPyKeyFrameAnimation : public VRPyBaseT<OSG::VRKeyFrameAnimation> {
+    static PyMethodDef methods[];
+};
+
 #endif // VRPYANIMATION_H_INCLUDED

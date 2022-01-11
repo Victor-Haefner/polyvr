@@ -612,10 +612,10 @@ void VRScript::execute() {
     }
 }
 
-void VRScript::execute_dev(VRDeviceWeakPtr _dev) {
+bool VRScript::execute_dev(VRDeviceWeakPtr _dev) {
     auto dev = _dev.lock();
-    if (!dev || !devArg) return;
-    if (type != "Python") return;
+    if (!dev || !devArg) return true;
+    if (type != "Python") return true;
 
     devArg->type = "VRPyDeviceType";
     if (dev->getType() == "haptic") devArg->type = "VRPyHapticType";
@@ -624,6 +624,7 @@ void VRScript::execute_dev(VRDeviceWeakPtr _dev) {
     devArg->ptr = dev.get();
     execute();
     devArg->val = "";
+    return true;
 }
 
 void VRScript::execute_soc(string s) {

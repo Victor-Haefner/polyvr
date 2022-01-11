@@ -553,12 +553,6 @@
 		<Unit filename="src/addons/WorldGenerator/weather/VRRain.h" />
 		<Unit filename="src/addons/WorldGenerator/weather/VRRainCarWindshield.cpp" />
 		<Unit filename="src/addons/WorldGenerator/weather/VRRainCarWindshield.h" />
-		<Unit filename="src/addons/construction/building/VRElectricDevice.cpp" />
-		<Unit filename="src/addons/construction/building/VRElectricDevice.h" />
-		<Unit filename="src/addons/construction/building/VROpening.cpp" />
-		<Unit filename="src/addons/construction/building/VROpening.h" />
-		<Unit filename="src/addons/construction/building/furniture/VRBlinds.cpp" />
-		<Unit filename="src/addons/construction/building/furniture/VRBlinds.h" />
 		<Unit filename="src/core/gui/VRDemos.cpp" />
 		<Unit filename="src/core/gui/VRDemos.h" />
 		<Unit filename="src/core/gui/VRGuiBits.cpp" />
@@ -1010,6 +1004,8 @@
 		<Unit filename="src/core/objects/VRCamera.h" />
 		<Unit filename="src/core/objects/VRGroup.cpp" />
 		<Unit filename="src/core/objects/VRGroup.h" />
+		<Unit filename="src/core/objects/VRKeyFrameAnimation.cpp" />
+		<Unit filename="src/core/objects/VRKeyFrameAnimation.h" />
 		<Unit filename="src/core/objects/VRLight.cpp" />
 		<Unit filename="src/core/objects/VRLight.h" />
 		<Unit filename="src/core/objects/VRLightBeacon.cpp" />
@@ -1021,7 +1017,9 @@
 		<Unit filename="src/core/objects/VRObjectFwd.h" />
 		<Unit filename="src/core/objects/VRPointCloud.cpp" />
 		<Unit filename="src/core/objects/VRPointCloud.h" />
+		<Unit filename="src/core/objects/VRShadowEngine.cpp" />
 		<Unit filename="src/core/objects/VRShadowEngine.h" />
+		<Unit filename="src/core/objects/VRShadowEngineBase.cpp" />
 		<Unit filename="src/core/objects/VRShadowEngineBase.h" />
 		<Unit filename="src/core/objects/VRShadowEngineFields.h" />
 		<Unit filename="src/core/objects/VRStage.cpp" />
@@ -1422,7 +1420,6 @@
 		<Unit filename="src/core/setup/windows/VRGlutWindow.cpp" />
 		<Unit filename="src/core/setup/windows/VRGlutWindow.h" />
 		<Unit filename="src/core/setup/windows/VRGtk2Window.h" />
-		<Unit filename="src/core/setup/windows/VRGtk32Window.h" />
 		<Unit filename="src/core/setup/windows/VRGtk3Window.h" />
 		<Unit filename="src/core/setup/windows/VRGtkWindow.cpp" />
 		<Unit filename="src/core/setup/windows/VRGtkWindow.h" />

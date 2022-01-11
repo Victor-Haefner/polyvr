@@ -61,7 +61,7 @@ class VRIntersect {
         void initIntersect(VRDevicePtr dev);
         VRIntersectionPtr intersectRay(VRObjectWeakPtr tree, Line ray, bool skipVols = false);
 
-        virtual void dragCB(VRTransformWeakPtr caster, VRObjectWeakPtr tree, VRDeviceWeakPtr dev = VRDevicePtr(0));
+        virtual bool dragCB(VRTransformWeakPtr caster, VRObjectWeakPtr tree, VRDeviceWeakPtr dev = VRDevicePtr(0));
 
     public:
         VRIntersect();
@@ -69,7 +69,7 @@ class VRIntersect {
 
         VRIntersectionPtr intersect(VRObjectWeakPtr wtree, bool force = false, VRTransformPtr caster = 0, Vec3d dir = Vec3d(0,0,-1), bool skipVols = false);
         void drag(VRIntersectionPtr i, VRTransformWeakPtr caster);
-        void drop(VRDeviceWeakPtr dev = VRDevicePtr(0), VRTransformWeakPtr beacon = VRTransformPtr(0));
+        bool drop(VRDeviceWeakPtr dev = VRDevicePtr(0), VRTransformWeakPtr beacon = VRTransformPtr(0));
         VRDeviceCbPtr addDrag(VRTransformWeakPtr caster, VRObjectWeakPtr tree);
         VRDeviceCbPtr addDrag(VRTransformWeakPtr caster);
         VRDeviceCbPtr getDrop();

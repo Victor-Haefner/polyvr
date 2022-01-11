@@ -295,6 +295,12 @@ void Octree::addBox(const Boundingbox& b, void* d, int targetLevel, bool checkPo
 OctreeNode* Octree::getRoot() { return root; }
 void Octree::updateRoot() { while (auto p = root->getParent()) root = p; }
 
+double Octree::getLeafSize() {
+    double s = root->getSize();
+    while ( resolution < s ) s *= 0.5;
+    return s;
+}
+
 vector<void*> Octree::getAllData() { return getRoot()->getAllData(); }
 
 vector<void*> Octree::radiusSearch(Vec3d p, float r, int d) {

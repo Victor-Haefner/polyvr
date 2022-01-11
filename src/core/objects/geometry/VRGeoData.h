@@ -44,6 +44,9 @@ class VRGeoData {
 
         int size() const;
         int sizeNormals() const;
+        int sizeColor3s() const;
+        int sizeColor4s() const;
+        int sizeTexCoords(int i=0) const;
         int getNFaces() const;
         int getFaceSize(int fID) const;
         int getNTypes() const;
@@ -61,6 +64,8 @@ class VRGeoData {
         Vec2d getTexCoord2(int i);
         Color4f getColor(int i);
         Color3f getColor3(int i);
+        Color4ub getColor4ub(int i);
+        Color3ub getColor3ub(int i);
         int getNIndices();
         string getDataName(int type);
         int getDataSize(int type);
@@ -83,10 +88,11 @@ class VRGeoData {
         int pushLength(int l);
         int pushPos(Pnt3d p);
         int pushNorm(Vec3d n);
-        int pushTexCoord(Vec2d t);
-        int pushTexCoord2(Vec2d t);
+        int pushTexCoord(Vec2d t, int idx = 0);
         int pushColor(Color3f c);
         int pushColor(Color4f c);
+        int pushColor(Color3ub c);
+        int pushColor(Color4ub c);
 
         int pushIndex(int i);
         int pushNormalIndex(int i);
@@ -109,10 +115,11 @@ class VRGeoData {
         bool setIndex(int i, int I);
         bool setPos(int i, Pnt3d p);
         bool setNorm(int i, Vec3d n);
-        bool setTexCoord(int i, Vec2d t);
-        bool setTexCoord2(int i, Vec2d t);
+        bool setTexCoord(int i, Vec2d t, int idx = 0);
         bool setColor(int i, Color3f c);
         bool setColor(int i, Color4f c);
+        bool setColor(int i, Color3ub c);
+        bool setColor(int i, Color4ub c);
 
         int pushVert(const VRGeoData& other, int i);
         int pushVert(const VRGeoData& other, int i, Matrix4d m);

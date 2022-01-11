@@ -44,19 +44,23 @@ class VRSnappingEngine {
             int snpgrp = 0;
         };
 
-        struct EventSnap {
+        struct EventSnap : public std::enable_shared_from_this<EventSnap> {
             int snap = 0;
             int snapID = 0;
             VRTransformPtr o1 = 0;
             VRTransformPtr o2 = 0;
             Matrix4d m;
             VRDevicePtr dev = 0;
+
             void set(VRTransformPtr O1, VRTransformPtr O2, Matrix4d M, VRDevicePtr DEV, int Snap, int SnapID) {
                 o1 = O1; o2 = O2; m = M; dev = DEV; snap = Snap; snapID = SnapID;
             }
+
+            shared_ptr<EventSnap> ptr() { return shared_from_this(); }
         };
 
-        typedef VRFunction<EventSnap> VRSnapCb;
+        typedef shared_ptr<EventSnap> EventSnapPtr;
+        typedef VRFunction<EventSnapPtr> VRSnapCb;
         typedef shared_ptr<VRSnapCb> VRSnapCbPtr;
 
     private:
@@ -78,8 +82,8 @@ class VRSnappingEngine {
         bool lastEvent = 0;
         int lastEventID = 0;
 
-        EventSnap* event = 0;
-        VRSignalPtr snapSignal = 0;
+        EventSnapPtr event;
+        VRSignalPtr snapSignal;
 
         bool doGhosts = false;
         bool active = true;

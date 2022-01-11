@@ -71,6 +71,7 @@ class Octree : public Partitiontree {
         OctreeNode* add(Vec3d p, void* data, int targetLevel = -1, bool checkPosition = true, int partitionLimit = -1);
         OctreeNode* get(Vec3d p, bool checkPosition = true);
         vector<OctreeNode*> getAllLeafs();
+        double getLeafSize();
 
         void setResolution(float res);
         float getSize();

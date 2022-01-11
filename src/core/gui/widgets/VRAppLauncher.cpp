@@ -22,12 +22,13 @@ VRAppLauncherPtr VRAppLauncher::create(VRAppPanelPtr s) { return VRAppLauncherPt
 void VRAppLauncher::show() { gtk_widget_show((GtkWidget*)widget); }
 void VRAppLauncher::hide() { gtk_widget_hide((GtkWidget*)widget); }
 
-void VRAppLauncher::updatePixmap() {
-    if (imgScene == 0) return;
-    if ( !exists( pxm_path ) ) return;
+bool VRAppLauncher::updatePixmap() {
+    if (imgScene == 0) return true;
+    if ( !exists( pxm_path ) ) return true;
     try {
         loadGTKIcon(imgScene, pxm_path, 100, 60);
     } catch (...) { cout << "Warning: Caught exception in VRAppManager::updatePixmap, ignoring.."; }
+    return true;
 }
 
 void VRAppLauncher::setState(int state) {

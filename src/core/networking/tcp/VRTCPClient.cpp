@@ -44,6 +44,7 @@ class TCPClient {
         SocketPtr cSocket;
         AcceptorPtr acceptor;
         bool stop = false;
+        bool broken = false;
 
         function<void (string)> onMessageCb;
         function<void (void)> onConnectCb;
@@ -60,7 +61,11 @@ class TCPClient {
 
         bool read_handler(const system::error_code& ec, size_t N) {
             //cout << "TCPClient, " << this << " read_handler, got: " << N << endl;
-            if (ec) { cout << "TCPClient, read_handler failed with: " << ec.message() << endl; return false; }
+            if (ec) {
+                cout << "TCPClient, read_handler failed with: " << ec.message() << endl;
+                broken = true;
+                return false;
+            }
 
             size_t gN = guard.size();
             //cout << " TCPClient, guard: " << gN << " " << guard << endl;
@@ -79,6 +84,8 @@ class TCPClient {
         }
 
         bool read(bool block = false) {
+            if (broken) return false;
+
             //cout << "TCPClient, " << this << " read " << (block?"blocking":"non blocking") << endl;
             if (!block) {
                 auto onRead = [this](system::error_code ec, size_t N) {
@@ -100,6 +107,7 @@ class TCPClient {
 
         void processQueue() {
             auto onWritten = [this](system::error_code ec, size_t N) { // write queued messages until done, then go read
+                //cout << " async write finished " << N << endl;
                 if (!ec) {
                     VRLock lock(mtx);
                     messages.pop_front();
@@ -110,6 +118,7 @@ class TCPClient {
                 }
             };
 
+            if (broken) return;
             VRLock lock(mtx);
             asio::async_write(*socket, asio::buffer(messages.front().data(), messages.front().length()), onWritten );
         }
@@ -182,19 +191,22 @@ class TCPClient {
 
         void setGuard(string g) { guard = g; }
 
-        void send(string msg, string guard) {
+        void send(string msg, string guard, bool verbose) {
+            if (broken) return;
             VRLock lock(mtx);
             this->guard = guard;
             msg += guard;
             size_t S = msg.size();
             double s = S/1000.0;
-            cout << "TCPClient::send " << this << " msg: " << msg << ", " << s << " kb" << endl;
+            //if (verbose) cout << "TCPClient::send " << this << " msg: " << msg << ", " << s << " kb" << endl;
+            if (verbose) cout << "TCPClient::send " << this << ", " << s << " kb" << endl;
             bool write_in_progress = !messages.empty();
             messages.push_back(msg);
             if (!write_in_progress) processQueue();
         }
 
         bool connected() {
+            if (broken) return false;
             return socket->is_open();
         }
 
@@ -330,7 +342,7 @@ VRTCPClientPtr VRTCPClient::create() { return VRTCPClientPtr(new VRTCPClient());
 void VRTCPClient::connect(string host, int port) { client->connect(host, port); uri = host+":"+toString(port); }
 void VRTCPClient::connect(string host) { client->connect(host); uri = host; }
 void VRTCPClient::setGuard(string guard) { client->setGuard(guard); }
-void VRTCPClient::send(const string& message, string guard) { client->send(message, guard); }
+void VRTCPClient::send(const string& message, string guard, bool verbose) { client->send(message, guard, verbose); }
 bool VRTCPClient::connected() { return client->connected(); }
 
 void VRTCPClient::onConnect( function<void(void)>   f ) { client->onConnect(f); }
@@ -338,6 +350,11 @@ void VRTCPClient::onMessage( function<void(string)> f ) { client->onMessage(f); 
 
 void VRTCPClient::connectToPeer(int localPort, string remoteIP, int remotePort) {
     client->connectToPeer(localPort, remoteIP, remotePort);
+}
+
+void VRTCPClient::close() {
+    delete client;
+    client = new TCPClient();
 }
 
 string VRTCPClient::getConnectedUri() { return uri; }

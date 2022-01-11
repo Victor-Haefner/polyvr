@@ -180,7 +180,6 @@ void VRGtkWindow::on_resize(int w, int h) {
 
     auto clipping = gl_area_get_clipping(GL_AREA(widget));
 
-    //cout << " on_resize " << Vec2i(allocation->x, allocation->y) << " " << Vec2i(allocation->width, allocation->height) << endl;
     //cout << " on_resize " << Vec4i(clipping.x, clipping.y, clipping.w, clipping.h) << " " << Vec2i(clipping.W, clipping.H) << endl;
 
     double x1 = double(clipping.x           )/clipping.W;

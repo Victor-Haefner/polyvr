@@ -326,6 +326,7 @@ int VRPyBase::toGLConst(string s) {
     if (s == "GL_GEQUAL") return GL_GEQUAL;
     if (s == "GL_GREATER") return GL_GREATER;
     if (s == "GL_KEEP") return GL_KEEP;
+    if (s == "GL_ONE") return GL_ONE;
     if (s == "GL_ZERO") return GL_ZERO;
     if (s == "GL_REPLACE") return GL_REPLACE;
 	if (s == "GL_INCR") return GL_INCR;
@@ -367,6 +368,16 @@ int VRPyBase::toGLConst(string s) {
     if (s == "GL_LINEAR_MIPMAP_NEAREST") return GL_LINEAR_MIPMAP_NEAREST;
     if (s == "GL_NEAREST_MIPMAP_LINEAR") return GL_NEAREST_MIPMAP_LINEAR;
     if (s == "GL_LINEAR_MIPMAP_LINEAR") return GL_LINEAR_MIPMAP_LINEAR;
+
+    if (s == "GL_SRC_ALPHA") return GL_SRC_ALPHA;
+    if (s == "GL_DST_ALPHA") return GL_DST_ALPHA;
+    if (s == "GL_ONE_MINUS_SRC_ALPHA") return GL_ONE_MINUS_SRC_ALPHA;
+    if (s == "GL_ONE_MINUS_DST_ALPHA") return GL_ONE_MINUS_DST_ALPHA;
+    if (s == "GL_SRC_COLOR") return GL_SRC_COLOR;
+    if (s == "GL_DST_COLOR") return GL_DST_COLOR;
+    if (s == "GL_ONE_MINUS_SRC_COLOR") return GL_ONE_MINUS_SRC_COLOR;
+    if (s == "GL_ONE_MINUS_DST_COLOR") return GL_ONE_MINUS_DST_COLOR;
+
 
     return -1;
 }

@@ -72,10 +72,10 @@ void VRWorldGenerator::updatePhysics(Boundingbox box) {
 
 void VRWorldGenerator::setOntology(VROntologyPtr o) {
     ontology = o;
-    for (auto terrain:terrains) terrain->setWorld( ptr() );
-    roads->setWorld( ptr() );
-    nature->setWorld( ptr() );
-    district->setWorld( ptr() );
+    for (auto terrain : terrains) if (terrain) terrain->setWorld( ptr() );
+    if (roads) roads->setWorld( ptr() );
+    if (nature) nature->setWorld( ptr() );
+    if (district) district->setWorld( ptr() );
 }
 
 void VRWorldGenerator::setPlanet(VRPlanetPtr p, Vec2d c) {
@@ -127,7 +127,59 @@ VRGeometryPtr VRWorldGenerator::getMiscArea(VREntityPtr mEnt){
     return 0;
 }
 
-void VRWorldGenerator::init() { // deprecated
+VRRoadNetworkPtr VRWorldGenerator::addRoadNetwork() {
+    roads = VRRoadNetwork::create();
+    roads->setWorld( ptr() );
+    addChild(roads);
+    trafficSigns = VRTrafficSigns::create();
+    trafficSigns->setWorld( ptr() );
+    addChild(trafficSigns);
+    return roads;
+}
+
+VRObjectManagerPtr VRWorldGenerator::addAssetManager() {
+    assets = VRObjectManager::create();
+    addChild(assets);
+    return assets;
+}
+
+VRNaturePtr VRWorldGenerator::addNatureManager() {
+    if (!assets) addAssetManager();
+    nature = VRNature::create();
+    nature->setWorld( ptr() );
+    addChild(nature);
+    //nature->simpleInit(10, 5);
+    return nature;
+}
+
+VRDistrictPtr VRWorldGenerator::addDistrict() {
+    if (!assets) addAssetManager();
+    district = VRDistrict::create();
+    district->setWorld( ptr() );
+    addChild(district);
+    return district;
+}
+
+void VRWorldGenerator::addSpatialCollisions() {
+#ifndef WITHOUT_BULLET
+    collisionShape = VRSpatialCollisionManager::create(12);
+    addChild(collisionShape);
+#endif
+}
+
+void VRWorldGenerator::addLodTree() {
+    lodTree = VRLodTree::create(name, 5);
+    addChild(lodTree);
+}
+
+void VRWorldGenerator::addOntology() {
+	auto o = VROntology::create("Driving");
+	o->addModule("Object");
+	o->addModule("World");
+	setOntology(o);
+}
+
+void VRWorldGenerator::initFull() {
     auto addMat = [&](string name, int texDim) {
         auto mat = VRMaterial::create(name);
         mat->setDefaultVertexShader();
@@ -139,16 +191,12 @@ void VRWorldGenerator::init() { // deprecated
         mat->setFragmentShader(dfp, name+"DFS", true);
         addMaterial(name, mat);
     };
-    lodTree = VRLodTree::create(name, 5);
-    addChild(lodTree);
 
-#ifndef WITHOUT_BULLET
-    collisionShape = VRSpatialCollisionManager::create(12);
-    addChild(collisionShape);
-#endif
+    addSpatialCollisions();
+    addLodTree();
 
-    addMat("phong", 0);
-    addMat("phongTex", 2);
+    addMat("phong", 0); // needed??
+    addMat("phongTex", 2); // needed??
 
     setupLOD(4);
     auto terrain = VRTerrain::create();
@@ -156,25 +204,13 @@ void VRWorldGenerator::init() { // deprecated
     terrain->setWorld( ptr() );
     lod->getChild(0)->addChild(terrain);
 
-    roads = VRRoadNetwork::create();
-    roads->setWorld( ptr() );
+    addRoadNetwork();
     lod->getChild(0)->addChild(roads);
-
-    trafficSigns = VRTrafficSigns::create();
-    trafficSigns->setWorld( ptr() );
     lod->getChild(0)->addChild(trafficSigns);
 
-    assets = VRObjectManager::create();
-    addChild(assets);
-
-    nature = VRNature::create();
-    nature->setWorld( ptr() );
-    addChild(nature);
-    //nature->simpleInit(10, 5);
-
-    district = VRDistrict::create();
-    district->setWorld( ptr() );
-    addChild(district);
+    addAssetManager();
+    addNatureManager();
+    addDistrict();
 }
 
 void VRWorldGenerator::initMinimum() { // deprecated

@@ -157,6 +157,7 @@ void VRConsoleWidget::update() {
     while(!msg_queue.empty()) {
         if (!isOpen) setColor(notifyColor);
         auto& msg = msg_queue.front();
+        //cout << "VRConsoleWidget::update message: '" << msg.msg << "'" << endl;
         GtkTextIter itr;
         if (styles.count( msg.style )) {
             auto tag = styles[msg.style];

@@ -274,7 +274,7 @@ void VRGeometry::setMesh(OSGGeometryPtr geo, Reference ref, bool keep_material) 
     setGeometryAttachment(geo->geo, this);
     mesh = geo;
     mesh_node = OSGObject::create( makeNodeFor(geo->geo) );
-    OSG::setName(mesh_node->node, getName());
+    OSG::setName(mesh_node->node, getName()+"_geoNode");
     getNode()->node->addChild(mesh_node->node);
     meshSet = true;
     source = ref;

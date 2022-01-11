@@ -224,7 +224,7 @@ struct MoveTarget {
 
     void start(VRAnimCbPtr animCb, float speed) {
         moveAnim = VRAnimation::create("moveAnim");
-        moveAnim->setCallback(animCb);
+        moveAnim->addCallback(animCb);
         moveAnim->setDuration(path->getLength()/abs(speed));
         moveAnim->start();
     }
@@ -274,7 +274,7 @@ PathPtr VRCharacter::moveTo(Vec3d p1, float speed) {
     motion = new WalkMotion(getSkeleton(), path); // TODO
 
     walkAnim = VRAnimation::create("walkAnim");
-    walkAnim->setCallback(VRAnimCb::create("walkAnim", bind(&VRCharacter::pathWalk, this, placeholders::_1) ));
+    walkAnim->addCallback(VRAnimCb::create("walkAnim", bind(&VRCharacter::pathWalk, this, placeholders::_1) ));
     walkAnim->setDuration(path->getLength()/abs(speed));
     walkAnim->start();
 

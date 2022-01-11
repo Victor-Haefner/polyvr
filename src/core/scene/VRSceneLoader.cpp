@@ -19,7 +19,6 @@
 #include "core/utils/VREncryption.h"
 #include "core/navigation/VRNavigator.h"
 #include "core/objects/VRLod.h"
-#include "addons/construction/building/VROpening.h"
 
 #include <OpenSG/OSGGeometry.h>
 #include <OpenSG/OSGSimpleMaterial.h>

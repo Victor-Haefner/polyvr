@@ -138,7 +138,7 @@ void VRRain::start() {
 
         auto rainAnimation = VRAnimation::create("startRain");
         rainAnimationCb = VRAnimCb::create("rain update", bind(&VRRain::startRainCallback, this, _1));
-        rainAnimation->setCallback(rainAnimationCb);
+        rainAnimation->addCallback(rainAnimationCb);
         rainAnimation->setDuration(durationTransition);
         rainAnimation->start();
         isRaining = true;
@@ -164,7 +164,7 @@ void VRRain::stop() {
     if (isRaining) {
         auto rainAnimation = VRAnimation::create("stopRain");
         rainAnimationCb = VRAnimCb::create("rain update", bind(&VRRain::stopRainCallback, this, _1));
-        rainAnimation->setCallback(rainAnimationCb);
+        rainAnimation->addCallback(rainAnimationCb);
         rainAnimation->setDuration(durationTransition);
         rainAnimation->start();
         isRaining = false;

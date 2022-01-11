@@ -10,6 +10,7 @@
 #include "core/objects/OSGObject.h"
 #include "core/objects/object/OSGCore.h"
 #include "VRLightBeacon.h"
+#include "VRShadowEngine.h"
 
 #include <OpenSG/OSGNode.h>
 #include <OpenSG/OSGShadowStage.h>
@@ -28,6 +29,18 @@
 #include <OpenSG/OSGBoxVolume.h>
 
 using namespace OSG;
+
+/** shadow engine structure:
+
+SimpleShadowMapEngine
+-> SimpleShadowMapEngineBase                _sfShadowColor and _sfForceTextureUnit
+-> ShadowMapEngine                          static _pLightPassMat
+-> ShadowMapEngineBase                      _sfShadowTexChunk, _sfWidth, _sfHeight, _sfOffsetBias, _sfOffsetFactor and _sfShadowTravMask
+-> ShadowMapEngineParent
+---> TraversalValidationHandlerMixin        _sfUpdateMode
+---> ShadowMapEngineDesc
+
+*/
 
 
 VRLight::VRLight(string name) : VRObject(name) {
@@ -82,13 +95,13 @@ VRLight::~VRLight() {
 VRLightPtr VRLight::ptr() { return static_pointer_cast<VRLight>( shared_from_this() ); }
 VRLightPtr VRLight::create(string name) {
     auto l = VRLightPtr(new VRLight(name) );
-    VRScene::getCurrent()->addLight(l);
-    //cout << "VRLight::create " << l << " " << l->getName() << " deferred " << l->deferred << endl;
+    VRScene::getCurrent()->addLight(l); // TODO: this will result in call to setup before params are loaded!
     return l;
 }
 
 void VRLight::setup(VRStorageContextPtr context) {
     setType(lightType);
+    if (shadows) setupShadowEngines();
     setShadows(shadows);
     setShadowColor(shadowColor);
     setShadowVolume(shadowVolume);
@@ -238,6 +251,7 @@ void VRLight::setDeferred(bool b) {
 void VRLight::setupShadowEngines() {
 #ifndef OSG_OGL_ES2
     ssme = SimpleShadowMapEngine::create();
+    //ssme = VRShadowEngine::create(); // only for local test, add improvements to OpenSG!
     gsme = ShaderShadowMapEngine::create();
     ptsme = TrapezoidalShadowMapEngine::create();
     stsme = TrapezoidalShadowMapEngine::create();
@@ -270,6 +284,17 @@ void VRLight::setupShadowEngines() {
     stsme->setOffsetBias  (16.f );
     stsme->setForceTextureUnit(3);
 
+    /*TextureObjChunkMTRefPtr texc = TextureObjChunk::create();
+    ImageMTRefPtr img = Image::create();
+    const uint8_t* data = 0;
+    img->set( Image::OSG_RGBA_PF, 64, 64, 1, 0, 0, 0, data, Image::OSG_UINT8_IMAGEDATA, true, 1);
+    texc->setImage(img);
+    texc->setMinFilter(GL_NEAREST);
+    texc->setMagFilter(GL_NEAREST);
+    ssme->setShadowTexChunk(texc);*/
+
+    //TODO: setWrapS and setWrapT to get rid of border artifact!
+
     //OSG::SimpleShadowMapEngine::getShadowTexChunk()
 #endif
 }
@@ -277,10 +302,30 @@ void VRLight::setupShadowEngines() {
 bool VRLight::getShadows() { return shadows; }
 Color4f VRLight::getShadowColor() { return shadowColor; }
 
+void VRLight::setAutomaticShadowUpdates(bool b) {
+#ifndef OSG_OGL_ES2
+    if (b) ssme->setUpdateMode(ShadowMapEngine::OnRequest);
+    else   ssme->setUpdateMode(ShadowMapEngine::PerTraversal);
+#endif
+}
+
+void VRLight::requestShadowPass() {
+#ifndef OSG_OGL_ES2
+    ssme->requestRun();
+#endif
+}
+
 void VRLight::toggleShadows(bool b) { // TODO: optimize this
     if (shadows == b) return;
     setShadows(b);
 }
+
+/*void VRLight::setShadowBlendFactors(int src, int dst, int aFunc, float aVal) {
+    ssme->blendSrcFactor = src;
+    ssme->blendDstFactor = dst;
+    ssme->blendAlphaFunc = aFunc;
+    ssme->blendAlphaValue = aVal;
+}*/
 
 void VRLight::setShadows(bool b) {
 #ifndef OSG_OGL_ES2
@@ -296,6 +341,7 @@ void VRLight::setShadows(bool b) {
         if (!deferred) setShadowEngine(p_light, ssme);
         if (!deferred) setShadowEngine(s_light, ssme);
         if (!deferred) setShadowEngine(ph_light, ssme);
+
         if (deferred) setShadowEngine(d_light, gsme);
         if (deferred) setShadowEngine(p_light, ptsme);
         if (deferred) setShadowEngine(s_light, stsme);
@@ -378,8 +424,11 @@ Vec3d VRLight::getAttenuation() { return attenuation; }
 void VRLight::setShadowMapRes(int t) {
 #ifndef OSG_OGL_ES2
     shadowMapRes = t;
-    if (ssme) ssme->setWidth (t);
-    if (ssme) ssme->setHeight(t);
+    if (!deferred && ssme) {
+        setupShadowEngines(); // rebuild ssme!
+        setShadows(shadows);
+    }
+
     if (gsme) gsme->setWidth (t);
     if (gsme) gsme->setHeight(t);
     if (ptsme) ptsme->setWidth (t);

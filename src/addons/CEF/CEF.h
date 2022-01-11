@@ -86,9 +86,9 @@ class CEF {
         void initiate();
         void update();
 
-        void mouse(int lb, int rb, int wu, int wd, VRDeviceWeakPtr dev);
+        bool mouse(int lb, int rb, int wu, int wd, VRDeviceWeakPtr dev);
         void mouse_move(VRDeviceWeakPtr dev);
-        void keyboard(VRDeviceWeakPtr dev);
+        bool keyboard(VRDeviceWeakPtr dev);
 
         CEF();
     public:
