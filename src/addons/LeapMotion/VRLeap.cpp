@@ -387,7 +387,7 @@ void VRLeap::clearSignals() {
     newSignal( 1, 1)->add( addDrag( getBeacon(6) ) ); // 7
 
     // TODO: maybe use the drag and drop signals?
-    dndCb = VRFunction<VRDeviceWeakPtr>::create("leapDnD", bind(&VRLeap::leapDnD, this, placeholders::_1));
+    dndCb = VRFunction<VRDeviceWeakPtr, bool>::create("leapDnD", bind(&VRLeap::leapDnD, this, placeholders::_1));
     newSignal(0, 1)->add(dndCb);
     newSignal(1, 1)->add(dndCb);
     newSignal(0, 0)->add(dndCb);
@@ -425,8 +425,7 @@ VRIntersectionPtr findInside(VRObjectWeakPtr wtree, Vec3d point) {
     return ins;
 }
 
-void VRLeap::dragCB(VRTransformWeakPtr wcaster, VRObjectWeakPtr wtree, VRDeviceWeakPtr dev) {
-
+bool VRLeap::dragCB(VRTransformWeakPtr wcaster, VRObjectWeakPtr wtree, VRDeviceWeakPtr dev) {
     vector<VRObjectPtr> trees;
     if (auto sp = wtree.lock()) trees.push_back(sp);
     else for (auto grp : dynTrees) {
@@ -442,6 +441,7 @@ void VRLeap::dragCB(VRTransformWeakPtr wcaster, VRObjectWeakPtr wtree, VRDeviceW
     }
 
     VRIntersect::drag(ins, caster);
+    return true;
 }
 
 void VRLeap::setPose(PosePtr pose) {
@@ -516,8 +516,8 @@ void VRLeap::enableDnD(VRObjectPtr root) {
 
 }
 
-void VRLeap::leapDnD(VRDeviceWeakPtr dev) {
-    if (!doDnD) return;
+bool VRLeap::leapDnD(VRDeviceWeakPtr dev) {
+    if (!doDnD) return true;
 
     /*if (!ageo) {
         ageo = VRAnalyticGeometry::create();
@@ -542,6 +542,8 @@ void VRLeap::leapDnD(VRDeviceWeakPtr dev) {
             }
         } else drop(bID);
     }
+
+    return true;
 }
 
 VRLeapPtr VRLeap::ptr() { return static_pointer_cast<VRLeap>( shared_from_this() ); }

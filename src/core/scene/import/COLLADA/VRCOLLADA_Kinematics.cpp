@@ -1,8 +1,16 @@
 #include "VRCOLLADA_Kinematics.h"
 
+#include "core/objects/VRKeyFrameAnimation.h"
+#include "core/objects/object/VRObject.h"
+#include "core/objects/VRTransform.h"
+#include "core/utils/system/VRSystem.h"
+#include "core/utils/toString.h"
+
 #include <map>
 #include <string>
+#include <algorithm>
 #include <OpenSG/OSGVector.h>
+#include <OpenSG/OSGMatrix.h>
 
 using namespace OSG;
 
@@ -92,6 +100,95 @@ VRCOLLADA_Kinematics::~VRCOLLADA_Kinematics() {}
 VRCOLLADA_KinematicsPtr VRCOLLADA_Kinematics::create() { return VRCOLLADA_KinematicsPtr( new VRCOLLADA_Kinematics() ); }
 VRCOLLADA_KinematicsPtr VRCOLLADA_Kinematics::ptr() { return static_pointer_cast<VRCOLLADA_Kinematics>(shared_from_this()); }
 
+void VRCOLLADA_Kinematics::newAnimation(string id, string name) {
+    if (currentAnimation == "") { // outer animation
+        auto a = VRKeyFrameAnimation::create(name);
+        library_animations[id] = a;
+        currentAnimation = id;
+    } else {
+        currentSubAnimation = id;
+    }
+}
+
+void VRCOLLADA_Kinematics::finalize(map<string, VRObjectWeakPtr>& objects) {
+    for (auto& s : sampler) {
+        auto& sampl = s.second;
+        string objID = getFolderName(sampl.target);
+        string property = getFileName(sampl.target);
+        VRObjectPtr obj = objects[objID].lock();
+        VRTransformPtr target = dynamic_pointer_cast<VRTransform>(obj);
+        if (!target) continue;
+
+
+        auto anim = library_animations[sampl.animation];
+
+        for (auto s : sampl.sources) {
+            if (!sources.count(s.second)) continue;
+            auto& source = sources[s.second];
+            if (source.data.size() > 0)    anim->addSource(s.second, source.stride, source.data);
+            if (source.strData.size() > 0) anim->addInterpolation(s.second, source.strData);
+        }
+
+        anim->addChannel(s.first, property, target, sampl.sources);
+        target->addAnimation(anim);
+    }
+}
+
+void VRCOLLADA_Kinematics::endAnimation() {
+    if (currentSubAnimation != "") currentSubAnimation = "";
+    else {
+        for (auto& sampl : sampler) {
+            if (sampl.second.animation == "") sampl.second.animation = currentAnimation;
+        }
+        currentAnimation == "";
+    }
+}
+
+void VRCOLLADA_Kinematics::newSampler(string id) {
+    currentSampler = id;
+    sampler[id] = Sampler();
+}
+
+void VRCOLLADA_Kinematics::newSource(string id) {
+    currentSource = id;
+    sources[id] = Source();
+}
+
+void VRCOLLADA_Kinematics::setSourceData(string data) {
+    if (currentSource != "") {
+        sources[currentSource].data = toValue<vector<float>>(data);
+    }
+}
+
+void VRCOLLADA_Kinematics::setSourceStrData(string data) {
+    if (currentSource != "") {
+        sources[currentSource].strData = splitString(data, ' ');
+    }
+}
+
+void VRCOLLADA_Kinematics::handleAccessor(string count, string stride) {
+    if (currentSource != "") {
+        sources[currentSource].count  = toInt(count);
+        sources[currentSource].stride = toInt(stride);
+    }
+}
+
+void VRCOLLADA_Kinematics::handleChannel(string source, string target) {
+    if (currentSource != "") {
+        sampler[source].target = target;
+    }
+}
+
+void VRCOLLADA_Kinematics::handleInput(string type, string sourceID) {
+    if (sampler.count(currentSampler)) {
+        sampler[currentSampler].sources[type] = sourceID;
+    }
+}
+
+
+
+
+
 void VRCOLLADA_Kinematics::apply() {
     string data; // TODO: this was the file content..
     VRObjectPtr objects; // TODO: this was the subtree loaded with OpenSG
@@ -142,7 +239,7 @@ vector<xNode*> getxNodes(xNode* node, string name = "") {
 }
 
 AnimationLibrary VRCOLLADA_Kinematics::parseColladaAnimations(string data) {
-    xml_document<> doc;
+    /*xml_document<> doc;
     doc.parse<0>(&data[0]);
 
     AnimationLibrary library;
@@ -234,7 +331,8 @@ AnimationLibrary VRCOLLADA_Kinematics::parseColladaAnimations(string data) {
             }
         } else cout << "<library_animations> tag not found" << endl;
     } else cout << "<COLLADA> tag not found" << endl;
-    return library;
+    return library;*/
+    return AnimationLibrary();
 }
 
 void printAll(const AnimationLibrary& library) {
@@ -330,7 +428,7 @@ int getAxis(const Animation& a) {
 }
 
 void VRCOLLADA_Kinematics::buildAnimations(AnimationLibrary& lib, VRObjectPtr objects) {
-    for (auto a : lib.animations) {
+    /*for (auto a : lib.animations) {
         cout << "search object " << a.second.channel.target << endl;
         VRObjectPtr obj = findTarget(objects, a.second.channel.target);
         if(obj==0) cout << "object is 0 "<< endl;
@@ -404,7 +502,7 @@ void VRCOLLADA_Kinematics::buildAnimations(AnimationLibrary& lib, VRObjectPtr ob
             else anim = VRAnimation::create(duration, start[0], fkt, start[1], end[1], loop, true);
             t->addAnimation(anim);
         }
-    }
+    }*/
 }
 
 // kinematics

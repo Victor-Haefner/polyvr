@@ -106,6 +106,7 @@ void VRDistrict::addBuilding( VRPolygonPtr p, int stories, string housenumber, s
     for (auto i=0; i<stories; i++) b->addFloor(*p, 2.5);
     b->addRoof(*p);
     b->computeGeometry(facades, roofs, ptr());
+    roofs->updateNormals(true);
 
     auto toStringVector = [](const Vec3d& v) {
         vector<string> res;
@@ -146,6 +147,7 @@ void VRDistrict::addBuilding( VRPolygonPtr p, int stories, string housenumber, s
 void VRDistrict::computeGeometry() {
     init();
     for (auto b : buildings) b.second->computeGeometry(facades, roofs, ptr());
+    roofs->updateNormals(true);
 }
 
 void VRDistrict::remBuilding( string street, string housenumber ) {

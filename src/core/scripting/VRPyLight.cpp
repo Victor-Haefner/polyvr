@@ -27,6 +27,7 @@ PyMethodDef VRPyLight::methods[] = {
     {"toggleShadows", PyWrap(Light, toggleShadows, "Toggle shadows efficiently", void, bool) },
     {"setShadowNearFar", PyWrap(Light, setShadowNearFar, "Set near and far of the light pass", void, Vec2d) },
     {"setShadowVolume", PyWrap(Light, setShadowVolume, "Set shadowed scene volume", void, Boundingbox) },
+    //{"setShadowBlendFactors", PyWrap(Light, setShadowBlendFactors, "Test function to tune shadow blending", void, int, int, int, float) },
     {NULL}
 };
 

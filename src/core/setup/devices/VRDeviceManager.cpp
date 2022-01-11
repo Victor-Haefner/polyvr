@@ -9,7 +9,9 @@
 #include "VRMouse.h"
 #include "VRKeyboard.h"
 #include "VRServer.h"
+#ifndef WITHOUT_PRESENTER
 #include "VRPresenter.h"
+#endif
 #include "addons/LeapMotion/VRLeap.h"
 
 #ifndef WITHOUT_ART
@@ -149,17 +151,21 @@ void VRDeviceManager::load(XMLElementPtr node) {
             dev = m;
         }
 
+#ifndef WITHOUT_PRESENTER
         if (type == "presenter") {
             VRPresenterPtr m = VRPresenter::create();
             m->load(el);
             dev = m;
         }
+#endif
 
+#ifndef WITHOUT_ART
         if (type == "flystick") {
             VRFlystickPtr m = VRFlystick::create();
             m->load(el);
             dev = m;
         }
+#endif
 
         if (dev == 0) continue;
         addDevice(dev);

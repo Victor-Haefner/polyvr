@@ -178,10 +178,10 @@ VRGuiNav::VRGuiNav() {
 }
 
 // scene updated, get cameras && nav presets
-void VRGuiNav::update() {
+bool VRGuiNav::update() {
 	cout << "VRGuiNav::update" << endl;
     auto scene = VRScene::getCurrent();
-    if (scene == 0) return;
+    if (scene == 0) return true;
 
     vector<string> callbacks; // get navigator callback library!
     for (auto cb : scene->getNavigationCallbacks()) callbacks.push_back(cb.first);
@@ -189,6 +189,7 @@ void VRGuiNav::update() {
 
     setComboboxLastActive("combobox5");
     setCombobox("combobox5", getListStorePos( "nav_presets", scene->getActiveNavigation() ) );
+    return true;
 }
 
 OSG_END_NAMESPACE;

@@ -358,6 +358,11 @@ void fatalError(void* ctx, const char* msg, ...) {
     va_end(args);
 }
 
+int XMLStreamHandler::getLine() { return 0; /*xmlSAX2GetLineNumber(this);*/ } // TODO
+int XMLStreamHandler::getColumn() { return 0; /*xmlSAX2GetColumnNumber(this);*/ } // TODO
+
+void setDocumentLocator(void * ctx, xmlSAXLocatorPtr loc) {}
+
 void internalSubset(void * ctx, const xmlChar * name, const xmlChar * ExternalID, const xmlChar * SystemID) {}
 int isStandalone(void * ctx) { return 1; }
 int hasInternalSubset(void * ctx) { return 0; }
@@ -369,7 +374,6 @@ void notationDecl(void * ctx, const xmlChar * name, const xmlChar * publicId, co
 void attributeDecl(void * ctx, const xmlChar * elem, const xmlChar * fullname, int type, int def, const xmlChar * defaultValue, xmlEnumerationPtr tree) {}
 void elementDecl(void * ctx, const xmlChar * name, int type, xmlElementContentPtr content) {}
 void unparsedEntityDecl(void * ctx, const xmlChar * name, const xmlChar * publicId, const xmlChar * systemId, const xmlChar * notationName) {}
-void setDocumentLocator(void * ctx, xmlSAXLocatorPtr loc) {}
 void reference(void * ctx, const xmlChar * name) {}
 void ignorableWhitespace(void * ctx, const xmlChar * ch, int len) {}
 void comment(void * ctx, const xmlChar * value) {}

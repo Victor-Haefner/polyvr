@@ -128,6 +128,8 @@ void VRThreadManager::stopThread(int id, int tries) {
 
 void VRThreadManager::runLoop(VRThreadWeakPtr wt) {
     auto t = wt.lock();
+    if (!t) return;
+
     ExternalThreadRefPtr tr = OSGThread::create(t->name.c_str(), 0);
     tr->initialize(t->aspect);//der hauptthread nutzt Aspect 0
 

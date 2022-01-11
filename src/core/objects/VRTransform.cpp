@@ -941,7 +941,7 @@ vector<VRAnimationPtr> VRTransform::getAnimations() {
 VRAnimationPtr VRTransform::animate(PathPtr p, float time, float offset, bool redirect, bool loop, PathPtr po) {
     pathAnimPtr = VRAnimCb::create("TransAnim", bind(setFromPath, VRTransformWeakPtr(ptr()), p, po, redirect, _1));
     animCBs.push_back(pathAnimPtr);
-    auto a = VRScene::getCurrent()->addAnimation<float>(time, offset, pathAnimPtr, 0.f, 1.f, loop);addAnimation(a);
+    auto a = VRScene::getCurrent()->addAnimation(time, offset, pathAnimPtr, 0.f, 1.f, loop);addAnimation(a);
     return a;
 }
 

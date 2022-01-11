@@ -461,7 +461,7 @@ string hudInit = TEMPLATE(
 \tdef addHud(site,w,h,x,y,parent):\n
 \t\ts = VR.Sprite('site')\n
 \t\ts.setSize(w,h)\n
-\t\tport = VR.find('server1').getPort()
+\t\tport = VR.find('server1').getPort()\n
 \t\ts.webOpen('http://localhost:'+str(port)+'/'+site, 400, w/h)\n
 \t\ts.setFrom([x,y,-2])\n
 \t\tparent.addChild(s)\n\n

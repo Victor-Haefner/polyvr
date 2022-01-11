@@ -30,7 +30,11 @@ struct VRRestClient::RestPromise {
 };
 
 VRRestClient::VRRestClient() {}
-VRRestClient::~VRRestClient() {}
+VRRestClient::~VRRestClient() {
+#ifndef __EMSCRIPTEN__
+    if (curl) curl_easy_cleanup(curl);
+#endif
+}
 
 VRRestClientPtr VRRestClient::create() { return VRRestClientPtr( new VRRestClient() ); }
 VRRestClientPtr VRRestClient::ptr() { return static_pointer_cast<VRRestClient>(shared_from_this()); }
@@ -92,6 +96,55 @@ VRRestResponsePtr VRRestClient::get(string uri, int timeoutSecs) {
     return res;
     //cout << " response: " << response->getStatus() << endl;
     //cout << " response: " << response->getData() << endl;
+}
+
+void VRRestClient::post(string uri, const string& data, int timeoutSecs) {
+#ifndef __EMSCRIPTEN__
+    cout << " post to " << uri << ", data: " << data.size() << endl;
+    auto curl = curl_easy_init();
+    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data.c_str());
+    curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, data.size());
+    curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, timeoutSecs);
+    curl_easy_setopt(curl, CURLOPT_URL, uri.c_str());
+
+    CURLcode c = curl_easy_perform(curl);
+    if (c != CURLE_OK) fprintf(stderr, "curl_easy_perform() failed: %s, request was: %s\n", curl_easy_strerror(c), uri.c_str());
+    curl_easy_cleanup(curl);
+#endif
+}
+
+void VRRestClient::connectPort(string uri, int port, int timeoutSecs) {
+    connect(uri+":"+toString(port), timeoutSecs);
+}
+
+void VRRestClient::connect(string uri, int timeoutSecs) {
+#ifndef __EMSCRIPTEN__
+    cout << "VRRestClient::connect " << uri << endl;
+    curl = curl_easy_init();
+    curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1);
+    curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, timeoutSecs);
+    curl_easy_setopt(curl, CURLOPT_URL, uri.c_str());
+    //curl_easy_setopt(curl, CURLOPT_TCP_KEEPALIVE, 1L);
+    //curl_easy_setopt(curl, CURLOPT_TCP_KEEPIDLE, 120L); // set keep-alive idle time to 120 seconds
+    //curl_easy_setopt(curl, CURLOPT_TCP_KEEPINTVL, 60L); // interval time between keep-alive probes: 60 seconds
+    //CURLcode c = curl_easy_perform(curl);
+    //if (c != CURLE_OK) fprintf(stderr, "curl_easy_perform() failed: %s, request was: %s\n", curl_easy_strerror(c), uri.c_str());
+    isConnected = true;
+#endif
+}
+
+bool VRRestClient::connected() { return isConnected; }
+
+void VRRestClient::post(const string& data) {
+#ifndef __EMSCRIPTEN__
+    cout << "VRRestClient::post " << data.size() << endl;
+    curl_easy_setopt(curl, CURLOPT_NOBODY, 0);
+    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data.c_str());
+    curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, data.size());
+    CURLcode c = curl_easy_perform(curl);
+    if (c != CURLE_OK) fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(c));
+    else fprintf(stderr, "curl_easy_perform() success\n");
+#endif
 }
 
 void VRRestClient::getAsync(string uri, VRRestCbPtr cb, int timeoutSecs) { // TODO: implement correctly for wasm

@@ -114,7 +114,7 @@ struct VRSnappingEngine::Rule {
 
 VRSnappingEngine::VRSnappingEngine() {
     positions = Octree::create(0.1);
-    event = new EventSnap();
+    event = EventSnapPtr(new EventSnap());
     snapSignal = VRSignal::create();
 
     updatePtr = VRUpdateCb::create("snapping engine update", bind(&VRSnappingEngine::update, this) );
@@ -123,7 +123,7 @@ VRSnappingEngine::VRSnappingEngine() {
 
 VRSnappingEngine::~VRSnappingEngine() {
     clear();
-    if (event) delete event;
+    if (event) event = 0;
 }
 
 shared_ptr<VRSnappingEngine> VRSnappingEngine::create() { return shared_ptr<VRSnappingEngine>(new VRSnappingEngine()); }
@@ -136,8 +136,8 @@ void VRSnappingEngine::clear() {
     objects.clear();
     for (auto r : rules) delete r.second;
     rules.clear();
-    if (event) delete event;
-    event = new EventSnap();
+    if (event) event = 0;
+    event = EventSnapPtr(new EventSnap());
 }
 
 
@@ -350,8 +350,8 @@ void VRSnappingEngine::postProcessEvent(VRDevicePtr dev, VRTransformPtr obj, VRT
 
     if (lastEvent != event->snap || lastEventID != event->snapID) {
         if (event->o1 == obj) {
-            snapSignal->trigger<EventSnap>(event);
-            for (auto cb : callbacks) (*cb)(*event);
+            snapSignal->triggerAll<EventSnap>(event);
+            for (auto cb : callbacks) (*cb)(event);
         }
     }
 }

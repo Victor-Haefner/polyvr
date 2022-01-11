@@ -371,6 +371,7 @@ string VRMaterial::constructShaderFP(VRMatDataPtr data, bool deferred, int force
     if (texD == 2) fp += "  vec4 diffCol = texture2D(tex0, texCoord);\n";
 //    if (texD == 2) fp += "  vec4 diffCol = vec4(texCoord.x, texCoord.y, 0.0, 1.0);\n";
     else fp += "  vec4 diffCol = color;\n";
+    fp += "  diffCol.a *= color.a;\n"; // transparency
     fp += "  vec4  ambient = mat_ambient * diffCol;\n";
     fp += "  vec4  diffuse = NdotL * diffCol;\n";
     fp += "  vec4  specular = mat_specular * 0.0;\n";

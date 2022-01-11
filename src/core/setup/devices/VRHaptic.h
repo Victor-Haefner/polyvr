@@ -28,7 +28,7 @@ class VRHaptic : public VRDevice {
         /** fps stable flag. 1=stable, 0=not stable**/
         int fps_stable = 1;
 
-        void on_scene_changed(VRDeviceWeakPtr dev);
+        bool on_scene_changed(VRDeviceWeakPtr dev);
 
         void applyTransformation(VRTransformPtr t);
         void updateHapticPre(VRTransformPtr t);

@@ -353,7 +353,7 @@ void VRVideo::play(int stream, float t0, float t1, float v) {
     if (!anim) anim = VRAnimation::create();
 
     animCb = VRAnimCb::create("videoCB", bind(&VRVideo::frameUpdate, this, placeholders::_1, stream));
-    anim->setCallback(animCb);
+    anim->addCallback(animCb);
     anim->setDuration(duration);
     anim->start(start_time);
     cout << "video, play stream" << stream << ", start offset: " << start_time << ", duration: " << duration << endl;

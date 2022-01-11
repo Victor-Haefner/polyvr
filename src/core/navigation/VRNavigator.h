@@ -103,13 +103,13 @@ class VRNavigator : public VRNavigator_base {
         bool isKeyDown(int k);
 
         // callbacks
-        void zoom(VRDeviceWeakPtr dev, int dir);
-        void walk(VRDeviceWeakPtr dev);
-        void fly_walk(VRDeviceWeakPtr dev);
-        void hyd_walk(VRDeviceWeakPtr dev);
-        void orbit(VRDeviceWeakPtr dev);
-        void orbit2D(VRDeviceWeakPtr dev);
-        void focus(VRDeviceWeakPtr dev);
+        bool zoom(VRDeviceWeakPtr dev, int dir);
+        bool walk(VRDeviceWeakPtr dev);
+        bool fly_walk(VRDeviceWeakPtr dev);
+        bool hyd_walk(VRDeviceWeakPtr dev);
+        bool orbit(VRDeviceWeakPtr dev);
+        bool orbit2D(VRDeviceWeakPtr dev);
+        bool focus(VRDeviceWeakPtr dev);
 
     protected:
         VRNavigator();

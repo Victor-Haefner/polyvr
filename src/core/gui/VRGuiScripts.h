@@ -129,12 +129,12 @@ class VRGuiScripts {
 
         void on_convert_cpp_clicked();
 
-        void on_scene_changed();
+        bool on_scene_changed();
 
     public:
         VRGuiScripts();
 
-        void updateList();
+        bool updateList();
         VRScriptPtr getSelectedScript();
         void focusScript(string name, int line, int column);
         void getLineFocus(int& line, int& column);

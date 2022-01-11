@@ -44,6 +44,9 @@ class VRGeoData {
 
         int size() const;
         int sizeNormals() const;
+        int sizeColor3s() const;
+        int sizeColor4s() const;
+        int sizeTexCoords(int i=0) const;
         int getNFaces() const;
         int getFaceSize(int fID) const;
         int getNTypes() const;

@@ -62,6 +62,11 @@ class OSG_GROUP_DLLMAPPING VRShadowEngine :
 
   public:
 
+    GLenum blendSrcFactor = GL_ONE;
+    GLenum blendDstFactor = GL_ONE;
+    GLenum blendAlphaFunc = GL_GEQUAL;
+    float  blendAlphaValue = 0.99;
+
     typedef SimpleShadowMapEngineData          EngineData;
     typedef SimpleShadowMapEngineData         *EngineDataPtr;
     typedef SimpleShadowMapEngineDataUnrecPtr  EngineDataUnrecPtr;

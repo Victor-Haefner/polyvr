@@ -894,6 +894,7 @@ void gl_area_trigger_resize(GLArea* area) {
 
 void glarea_render(GLArea* area) {
     GLAreaPrivate* priv = gl_area_get_instance_private (area);
+    //printf("glarea_render %i, %i %i, %i %i\n", priv->needs_resize, priv->clipping.w, dest.width, priv->clipping.h, dest.height);
 
     //if (priv->needs_resize) { // insufficient, when reducing the width, when getting small its not called anymore??
     if (priv->needs_resize || priv->clipping.w != dest.width || priv->clipping.h != dest.height) {
@@ -903,6 +904,7 @@ void glarea_render(GLArea* area) {
         priv->clipping.h = dest.height;
         priv->clipping.W = unscaled_window_width;
         priv->clipping.H = unscaled_window_height;
+        //printf("glarea_render, emit resize %i, %i %i, %i %i\n", priv->needs_resize, priv->clipping.w, dest.width, priv->clipping.h, dest.height);
         g_signal_emit (area, area_signals[RESIZE], 0, 0, 0, NULL);
         global_invalidate = TRUE;
         priv->needs_resize = FALSE;
@@ -918,16 +920,16 @@ void glarea_render(GLArea* area) {
 
 void cairo_draw(cairo_t* cr, GLArea* area, _GdkWindow* window, int scale, int x, int y, int width, int height) {
     CHECK_GL_ERROR("cairo_draw A1");
-  GLAreaPrivate* priv = gl_area_get_instance_private (area);
-  impl_window = window->impl_window;
-  window_scale = gdk_window_get_scale_factor ((GdkWindow*)impl_window);
-  clip_region = gdk_cairo_region_from_clip (cr);
-  gdk_gl_context_make_current(priv->context);
+    GLAreaPrivate* priv = gl_area_get_instance_private (area);
+    impl_window = window->impl_window;
+    window_scale = gdk_window_get_scale_factor ((GdkWindow*)impl_window);
+    clip_region = gdk_cairo_region_from_clip (cr);
+    gdk_gl_context_make_current(priv->context);
     CHECK_GL_ERROR("cairo_draw A2");
-  cairo_matrix_t matrix;
-  cairo_get_matrix (cr, &matrix);
-  dx = matrix.x0;
-  dy = matrix.y0;
+    cairo_matrix_t matrix;
+    cairo_get_matrix (cr, &matrix);
+    dx = matrix.x0;
+    dy = matrix.y0;
 
   if (clip_region != NULL) {
       /* Translate to impl coords */

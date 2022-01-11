@@ -152,7 +152,7 @@ class VRScript : public std::enable_shared_from_this<VRScript>, public VRName {
 
         void compile( PyObject* pGlobal, PyObject* pModVR );
         void execute();
-        void execute_dev(VRDeviceWeakPtr dev);
+        bool execute_dev(VRDeviceWeakPtr dev);
         void execute_soc(string);
         void queueExecution();
 

@@ -22,7 +22,7 @@ void VRKeyboard::keyboard(unsigned int k, bool pressed, int x, int y, bool delay
         return;
     }
 
-    cout << "VRKeyboard::keyboard " << k << " " << pressed << " " << Vec2i(x,y) << endl;
+    //cout << "VRKeyboard::keyboard " << k << " " << pressed << " " << Vec2i(x,y) << endl;
     change_button(k,pressed);
 }
 
@@ -32,7 +32,7 @@ void VRKeyboard::keyboard_special(int k, bool pressed, int x, int y, bool delaye
         return;
     }
 
-    cout << "VRKeyboard::keyboard_special " << k << " " << pressed << " " << Vec2i(x,y) << endl;
+    //cout << "VRKeyboard::keyboard_special " << k << " " << pressed << " " << Vec2i(x,y) << endl;
     change_button(k+100,pressed);
 }
 

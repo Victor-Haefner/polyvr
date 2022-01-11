@@ -64,7 +64,7 @@ class VRGuiBits {
         void toggleStereo();
         bool pressFKey(_GdkEventKey* k);
 
-        void update();
+        bool update();
         void wipeConsoles();
 };
 

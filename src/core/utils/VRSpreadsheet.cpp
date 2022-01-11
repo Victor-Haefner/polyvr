@@ -17,6 +17,11 @@ VRSpreadsheetPtr VRSpreadsheet::create() { return VRSpreadsheetPtr( new VRSpread
 VRSpreadsheetPtr VRSpreadsheet::ptr() { return static_pointer_cast<VRSpreadsheet>(shared_from_this()); }
 
 void VRSpreadsheet::read(string path) {
+    if (!exists(path)) {
+        cout << "VRSpreadsheet::read failed, path not found: '" << path << "'" << endl;
+        return;
+    }
+
     cout << "VRSpreadsheet::read: " << path << endl;
     string ext = getFileExtension(path);
 
@@ -112,6 +117,8 @@ void VRSpreadsheet::addSheet(string& name, string& data, vector<string>& strings
     auto root = sheet.xml->getRoot();
 
     auto dims = root->getChild("dimension");
+    if (!dims) return;
+
     auto dv = dims->getAttribute("ref");
     Vec2i C0 = convCoords( splitString(dv,':')[0] );
     Vec2i C1 = convCoords(splitString(dv,':')[1] );

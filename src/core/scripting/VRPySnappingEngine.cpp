@@ -18,18 +18,18 @@ template<> bool toValue(PyObject* o, VRSnappingEngine::VRSnapCbPtr& e) {
     //if (!VRPyEntity::check(o)) return 0; // TODO: add checks!
     Py_IncRef(o);
 	PyObject* args = PyTuple_New(1);
-    e = VRSnappingEngine::VRSnapCb::create( "pyExecCall", bind(VRPyBase::execPyCallVoid<VRSnappingEngine::EventSnap>, o, args, placeholders::_1));
+    e = VRSnappingEngine::VRSnapCb::create( "pyExecCall", bind(VRPyBase::execPyCallVoid<VRSnappingEngine::EventSnapPtr>, o, args, placeholders::_1));
     return 1;
 }
 
-template<> PyObject* VRPyTypeCaster::cast(const VRSnappingEngine::EventSnap& e) {
+template<> PyObject* VRPyTypeCaster::cast(const VRSnappingEngine::EventSnapPtr& e) {
     auto res = PyTuple_New(6);
-    PyTuple_SetItem(res, 0, PyInt_FromLong(e.snap));
-    PyTuple_SetItem(res, 1, PyInt_FromLong(e.snapID));
-    PyTuple_SetItem(res, 2, VRPyTransform::fromSharedPtr(e.o1));
-    PyTuple_SetItem(res, 3, VRPyTransform::fromSharedPtr(e.o2));
-    PyTuple_SetItem(res, 4, VRPyPose::fromMatrix(e.m));
-    PyTuple_SetItem(res, 5, VRPyDevice::fromSharedPtr(e.dev));
+    PyTuple_SetItem(res, 0, PyInt_FromLong(e->snap));
+    PyTuple_SetItem(res, 1, PyInt_FromLong(e->snapID));
+    PyTuple_SetItem(res, 2, VRPyTransform::fromSharedPtr(e->o1));
+    PyTuple_SetItem(res, 3, VRPyTransform::fromSharedPtr(e->o2));
+    PyTuple_SetItem(res, 4, VRPyPose::fromMatrix(e->m));
+    PyTuple_SetItem(res, 5, VRPyDevice::fromSharedPtr(e->dev));
     return res;
 }
 

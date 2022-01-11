@@ -440,7 +440,7 @@ void saveScene(string path, bool saveas, string encryptionKey) {
     if (path == "") path = scene->getPath();
     OSG::VRSceneLoader::get()->saveScene(path, 0, encryptionKey);
     saveSnapshot( scene->getIcon() );
-    OSG::VRGuiSignals::get()->getSignal("onSaveScene")->triggerPtr<OSG::VRDevice>();
+    OSG::VRGuiSignals::get()->getSignal("onSaveScene")->triggerAll<OSG::VRDevice>();
 }
 
 int getListStorePos(string ls, string s) {

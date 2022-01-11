@@ -6,17 +6,37 @@
 
 using namespace OSG;
 
-
-VRAnimation::interpolator::~interpolator() {;}
-
 VRAnimation::VRAnimation(string name) {
     setNameSpace("animation");
     setName(name);
 }
 
+VRAnimation::VRAnimation(float _duration, float _offset, VRAnimCbPtr _fkt, float _start, float _end, bool _loop, bool owned) : VRAnimation(_fkt->name) {
+    run = false;
+
+    duration = _duration;
+    offset = _offset;
+    loop = _loop;
+
+    if (owned) addCallback(_fkt);
+    else addUnownedCallback(_fkt);
+    start_value = _start;
+    end_value = _end;
+
+    setNameSpace("animation");
+    setName("anim"); // TODO: _fkt->getBaseName() is an empty string??
+}
+
 VRAnimation::~VRAnimation() {}
 
 shared_ptr<VRAnimation> VRAnimation::create(string name) { return shared_ptr<VRAnimation>(new VRAnimation(name)); }
+shared_ptr<VRAnimation> VRAnimation::create(float duration, float offset, VRAnimCbPtr fkt, float start, float end, bool loop, bool owned) { return shared_ptr<VRAnimation>(new VRAnimation(duration, offset, fkt, start, end, loop, owned)); }
+
+void VRAnimation::execCallbacks(float t) {
+    float val = start_value + (end_value - start_value)*t;
+    for (auto cb : weakCallbacks) if ( auto CB = cb.lock() ) (*CB)(val);
+    for (auto CB : ownedCallbacks) if ( CB ) (*CB)(val);
+}
 
 void VRAnimation::start(float offset) {
     this->offset = offset;
@@ -29,22 +49,12 @@ void VRAnimation::stop() { run = false; }
 bool VRAnimation::isActive() { return run; }
 bool VRAnimation::isPaused() { return paused; }
 
-void VRAnimation::setUnownedCallback(VRAnimCbPtr fkt) {
-    setCallback(fkt);
-    interp->own(false);
+void VRAnimation::addUnownedCallback(VRAnimCbPtr fkt) {
+    weakCallbacks.push_back(fkt);
 }
 
-void VRAnimation::setCallback(VRAnimCbPtr fkt) {
-    run = false;
-    duration = 1;
-
-    if (interp) delete interp;
-    auto i = new interpolatorT<float>();
-    i->sp = fkt;
-    i->fkt = fkt;
-    i->start_value = 0;
-    i->end_value = 1;
-    interp = i;
+void VRAnimation::addCallback(VRAnimCbPtr fkt) {
+    ownedCallbacks.push_back(fkt);
 }
 
 bool VRAnimation::getLoop() { return loop; }
@@ -72,14 +82,14 @@ bool VRAnimation::update(float current_time) {
         if (loop) start(offset);
         else {
             stop();
-            if (interp) interp->update(1);
+            execCallbacks(1);
         }
         return true;
     }
 
     //cout << " t: " << t << endl;
 
-    if (interp) interp->update(t);
+    execCallbacks(t);
     return true;
 }
 

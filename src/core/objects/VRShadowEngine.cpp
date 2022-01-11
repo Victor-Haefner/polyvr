@@ -56,10 +56,13 @@
 
 #include <OpenSG/OSGTextureBuffer.h>
 #include <OpenSG/OSGTextureObjChunk.h>
+#include <OpenSG/OSGTextureEnvChunk.h>
 #include <OpenSG/OSGPolygonChunk.h>
 #include <OpenSG/OSGTexGenChunk.h>
 #include <OpenSG/OSGBlendChunk.h>
 #include <OpenSG/OSGImage.h>
+
+#include <OpenSG/OSGMaterialChunk.h>
 
 OSG_USING_NAMESPACE
 
@@ -344,27 +347,18 @@ void VRShadowEngine::setupLightChunk(Light         *pLight,
             pEngineData->setLightChunk(pChunk);
         }
 
-        Color4f tmpVal(0.0, 0.0, 0.0, 1.0);
+        Color4f black(0.0, 0.0, 0.0, 1.0);
+        Color4f tmpVal = getShadowColor();
 
-        pChunk->setSpecular(tmpVal);
-
-        tmpVal.setValuesRGBA(this->getShadowColor()[0],
-                             this->getShadowColor()[1],
-                             this->getShadowColor()[2],
-                             this->getShadowColor()[3]);
-
-        pChunk->setDiffuse (tmpVal);
-
-        tmpVal.setValuesRGBA(0.0, 0.0, 0.0, 1.0);
-
-        pChunk->setAmbient (tmpVal);
+        pChunk->setSpecular(black);  // black
+        pChunk->setDiffuse (tmpVal); // tmpVal
+        pChunk->setAmbient (black);  // black
 
         Vec4f pos(pPLight->getPosition());
 
         pos[3] = 1;
 
         pChunk->setPosition(pos);
-
         pChunk->setBeacon(pLight->getBeacon());
     }
 }
@@ -465,6 +459,13 @@ void VRShadowEngine::doLightPass(Light         *pLight,
 
     Node *pActNode = pAction->getActNode();
 
+    /*MaterialChunkUnrecPtr pMatChunk = MaterialChunk::createLocal();
+    pMatChunk->setLit          (false  );
+    pMatChunk->setColorMaterial(GL_NONE);
+    pMatChunk->setDiffuse( Color4f(1,0,0, 0.5) );
+    _pLightPassMat->addChunk(pMatChunk);
+    _pLightPassMat->clearChunks();*/
+
     pAction->overrideMaterial(_pLightPassMat, pActNode);
 
     pAction->pushState();
@@ -560,13 +561,27 @@ void VRShadowEngine::doFinalPass(Light         *pLight,
     {
         pBlender = BlendChunk::createLocal();
 
-        pBlender->setSrcFactor(GL_ONE);
-        pBlender->setDestFactor(GL_ONE);
-        pBlender->setAlphaFunc(GL_GEQUAL);
-        pBlender->setAlphaValue(0.99f);
+        // this fixes the coloring bugs of shadows! (no idea why!)
+        pBlender->setSrcFactor(blendSrcFactor); // GL_ONE, GL_SRC_ALPHA, GL_SRC_COLOR
+        pBlender->setDestFactor(blendDstFactor); // GL_ONE, GL_ONE_MINUS_SRC_ALPHA, GL_ONE_MINUS_SRC_COLOR
+
+        //pBlender->setAlphaSrcFactor(GL_ZERO); // GL_ONE, GL_ONE_MINUS_SRC_ALPHA
+        //pBlender->setAlphaDestFactor(GL_ONE); // GL_ONE, GL_ONE_MINUS_SRC_ALPHA
+
+        //pBlender->setSrcFactor(GL_ZERO); // GL_ZERO, GL_DST_COLOR
+        //pBlender->setSrcFactor(GL_SRC_COLOR); // GL_ZERO, GL_SRC_COLOR
+
+        //pBlender->setEquation(GL_MIN);
+        pBlender->setAlphaFunc(blendAlphaFunc);
+        pBlender->setAlphaValue(blendAlphaValue);
 
         pEngineData->setBlendChunk(pBlender);
     }
+
+    pBlender->setSrcFactor(blendSrcFactor); // GL_ONE, GL_SRC_ALPHA, GL_SRC_COLOR
+    pBlender->setDestFactor(blendDstFactor); // GL_ONE, GL_ONE_MINUS_SRC_ALPHA, GL_ONE_MINUS_SRC_COLOR
+    pBlender->setAlphaFunc(blendAlphaFunc);
+    pBlender->setAlphaValue(blendAlphaValue);
 
 
     Matrix4f projectionMatrix, viewMatrix, biasMatrix;
@@ -633,35 +648,43 @@ void VRShadowEngine::doFinalPass(Light         *pLight,
         pTexChunk->setExternalFormat(GL_DEPTH_COMPONENT);
         pTexChunk->setMinFilter     (GL_LINEAR); // tried GL_LINEAR_MIPMAP_LINEAR
         pTexChunk->setMagFilter     (GL_LINEAR);
-        pTexChunk->setWrapS         (GL_CLAMP_TO_EDGE); // was GL_CLAMP_TO_BORDER
-        pTexChunk->setWrapT         (GL_CLAMP_TO_EDGE); // was GL_CLAMP_TO_BORDER
-//        pTexChunk->setEnvMode       (GL_MODULATE);
+        pTexChunk->setWrapS         (GL_CLAMP_TO_BORDER);
+        pTexChunk->setWrapT         (GL_CLAMP_TO_BORDER);
+        pTexChunk->setBorderColor   (Color4f(1,0,0,0)); // set r border to 1, removes artifacts
         pTexChunk->setTarget        (GL_TEXTURE_2D);
 
         pTexChunk->setCompareMode(GL_COMPARE_R_TO_TEXTURE);
         pTexChunk->setCompareFunc(GL_LEQUAL);
-        pTexChunk->setDepthMode  (GL_INTENSITY);
+        pTexChunk->setDepthMode  (GL_INTENSITY); // GL_INTENSITY, GL_ALPHA
     }
+
+    /*static TextureEnvChunkUnrecPtr pEnvChunk = NULL;
+    if (pEnvChunk == NULL) pEnvChunk = TextureEnvChunk::createLocal();
+    pEnvChunk->setEnvMode(GL_MODULATE); // GL_MODULATE, GL_REPLACE*/
 
     pAction->pushState();
 
     UInt32 uiBlendSlot  = pBlender ->getClassId();
     UInt32 uiTexSlot    = pTexChunk->getClassId();
+    //UInt32 uiEnvSlot    = pEnvChunk->getClassId();
     UInt32 uiTexGenSlot = pTexGen  ->getClassId();
 
     if(this->getForceTextureUnit() != -1)
     {
         uiTexSlot    += this->getForceTextureUnit();
         uiTexGenSlot += this->getForceTextureUnit();
+        //uiEnvSlot    += this->getForceTextureUnit();
     }
     else
     {
         uiTexSlot    += 3;
         uiTexGenSlot += 3;
+        //uiEnvSlot    += 3;
     }
 
     pAction->addOverride(uiBlendSlot,  pBlender );
     pAction->addOverride(uiTexSlot,    pTexChunk);
+    //pAction->addOverride(uiEnvSlot,    pEnvChunk);
     pAction->addOverride(uiTexGenSlot, pTexGen  );
 
     lightRenderEnter(pLight, pAction);

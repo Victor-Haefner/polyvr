@@ -185,7 +185,7 @@ class VRGuiScene {
     public:
         VRGuiScene();
 
-        void updateTreeView();
+        bool updateTreeView();
         void update();
 };
 

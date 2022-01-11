@@ -66,10 +66,10 @@ class VRLeap : public VRDevice {
         VRTransformPtr getBeaconChild(int i);
         PosePtr computeCalibPose(vector<PenPtr>& pens);
 
-        void leapDnD(VRDeviceWeakPtr dev);
+        bool leapDnD(VRDeviceWeakPtr dev);
 
     protected:
-        void dragCB(VRTransformWeakPtr wcaster, VRObjectWeakPtr wtree, VRDeviceWeakPtr dev = VRDevicePtr(0)) override;
+        bool dragCB(VRTransformWeakPtr wcaster, VRObjectWeakPtr wtree, VRDeviceWeakPtr dev = VRDevicePtr(0)) override;
 
     public:
         VRLeap();

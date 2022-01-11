@@ -10,9 +10,18 @@
 #include <OpenSG/OSGLine.h>
 
 #include <boost/algorithm/string.hpp>
+#include <boost/uuid/uuid.hpp>
+#include <boost/uuid/uuid_io.hpp>
+#include <boost/uuid/uuid_generators.hpp>
 
 using namespace OSG;
 using namespace boost::algorithm;
+
+
+string genUUID() {
+    boost::uuids::uuid u = boost::uuids::random_generator()();
+    return boost::uuids::to_string(u);
+}
 
 vector<string> splitString(const string& s, char c) {
     stringstream ss(s);

@@ -20,7 +20,7 @@ ptrFctFwd( VRToggle, bool );
 ptrFctFwd( VREval, bool& );
 ptrFctFwd( VRAnim, float );
 ptrFctFwd( VRMessage, std::string );
-ptrFctFwd( VRDevice, OSG::VRDeviceWeakPtr );
+ptrRFctFwd( VRDevice, OSG::VRDeviceWeakPtr, bool );
 ptrFctFwd( VRThread, OSG::VRThreadWeakPtr );
 
 typedef std::map<std::string, std::string> strMap;

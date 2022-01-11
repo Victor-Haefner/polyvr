@@ -54,7 +54,9 @@ void VRCOLLADA_Geometry::handleInput(string type, string sourceID, string offset
     if (sources.count(sourceID)) {
         auto& source = sources[sourceID];
 
-        if (currentGeoData) {
+        if (currentGeoData && !source.users.count(currentGeoData)) {
+            source.users[currentGeoData] = 0;
+
             if (type == "POSITION" && source.stride == 3) {
                 for (int i=0; i<source.count; i++) {
                     int k = i*source.stride;
@@ -142,8 +144,9 @@ void VRCOLLADA_Geometry::handleVCount(string data) {
 void VRCOLLADA_Geometry::handleIndices(string data) {
     if (currentGeoData && inPrimitive) {
         auto indices = toValue<vector<int>>(data);
-        //cout << "VRCOLLADA_Geometry::handleIndices " << currentPrimitive.name << " " << indices.size() << endl;
 
+        if (currentPrimitive.name == "points") currentGeoData->pushType(GL_POINTS);
+        if (currentPrimitive.name == "lines") currentGeoData->pushType(GL_LINES);
         if (currentPrimitive.name == "triangles") currentGeoData->pushType(GL_TRIANGLES);
         if (currentPrimitive.name == "trifans") currentGeoData->pushType(GL_TRIANGLE_FAN);
         if (currentPrimitive.name == "tristrips") currentGeoData->pushType(GL_TRIANGLE_STRIP);

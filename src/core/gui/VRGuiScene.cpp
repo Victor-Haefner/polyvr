@@ -30,8 +30,6 @@
 #include "VRGuiBuilder.h"
 #include "VRGuiSignals.h"
 #include "VRGuiFile.h"
-#include "addons/construction/building/VRElectricDevice.h"
-//#include "addons/Engineering/CSG/CSGGeometry.h"
 
 #include "wrapper/VRGuiTreeView.h"
 
@@ -470,7 +468,7 @@ void VRGuiScene::on_edit_object_name(const char* path_string, const char* new_te
     VRGuiTreeView tree_view("treeview6");
     tree_view.setSelectedStringValue(0, getSelected()->getName());
     updateObjectForms();
-    if (getSelected()->getType() == "Camera") VRGuiSignals::get()->getSignal("camera_added")->triggerPtr<VRDevice>();
+    if (getSelected()->getType() == "Camera") VRGuiSignals::get()->getSignal("camera_added")->triggerAll<VRDevice>();
 }
 
 // --------------------------
@@ -800,7 +798,7 @@ void VRGuiScene::on_menu_add_camera() {
     VRTransformPtr cam = VRCamera::create("camera");
     getSelected()->addChild(cam);
     parseSGTree(cam, selected_itr);
-    VRGuiSignals::get()->getSignal("camera_added")->triggerPtr<VRDevice>();
+    VRGuiSignals::get()->getSignal("camera_added")->triggerAll<VRDevice>();
 }
 
 void VRGuiScene::on_menu_add_primitive(string s) {
@@ -1353,10 +1351,10 @@ VRGuiScene::VRGuiScene() { // TODO: reduce callbacks with templated functions
 }
 
 // new scene, update stuff here
-void VRGuiScene::updateTreeView() {
+bool VRGuiScene::updateTreeView() {
 	cout << "VRGuiScene::updateTreeView" << endl;
     auto scene = VRScene::getCurrent();
-    if (scene == 0) return;
+    if (scene == 0) return true;
 
     gtk_tree_store_clear(tree_store);
     VRObjectPtr root = scene->getRoot();
@@ -1364,6 +1362,7 @@ void VRGuiScene::updateTreeView() {
     gtk_tree_view_expand_all(tree_view);
 
     setWidgetSensitivity("table11", false);
+    return true;
 }
 
 // check if currently getSelected() object has been modified

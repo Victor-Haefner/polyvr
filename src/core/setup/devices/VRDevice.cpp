@@ -45,11 +45,41 @@ VRSignalPtr VRDevice::createSignal(int key, int state) {
     return sig;
 }
 
-void VRDevice::triggerSignal(int key, int state) {
+void VRDevice::triggerSignal(int key, int state, bool doGeneric) {
     VRSignalPtr sig = signalExist(key, state);
-    if (sig) {
-        sig->triggerPtr<VRDevice>();
-        if (sig->doUpdate()) addUpdateSignal(sig, key);
+    if (!doGeneric) {
+        if (sig) {
+            sig->triggerAll<VRDevice>();
+            if (sig->doUpdate()) addUpdateSignal(sig, key);
+        }
+    } else {
+        VRSignalPtr sig1 = signalExist( -1, state);
+
+        if (sig && !sig1) {
+            sig->triggerAll<VRDevice>();
+            if (sig->doUpdate()) addUpdateSignal(sig, key);
+        }
+
+        if (!sig && sig1) {
+            sig1->triggerAll<VRDevice>();
+            if (sig1->doUpdate()) addUpdateSignal(sig1, key);
+        }
+
+        if (sig && sig1) {
+            auto map0 = sig->getCallbacks();
+            auto map1 = sig1->getCallbacks();
+            int k0 = min(map0.begin()->first , map1.begin()->first );
+            int k1 = max(map0.rbegin()->first, map1.rbegin()->first);
+            for (int i=k0; i<=k1; i++) {
+                if (map0.count(i)) if (!sig ->trigger<VRDevice>(map0[i])) break;
+                if (map1.count(i)) if (!sig1->trigger<VRDevice>(map1[i])) break;
+            }
+
+            //sig->triggerAll<VRDevice>();
+            //sig1->triggerAll<VRDevice>();
+            if (sig->doUpdate()) addUpdateSignal(sig, key);
+            if (sig1->doUpdate()) addUpdateSignal(sig1, key);
+        }
     }
 }
 
@@ -60,18 +90,19 @@ void VRDevice::addUpdateSignal(VRSignalPtr sig, int key) {
     activatedSignals[sig.get()] = make_pair(sig, key);
 }
 
-void VRDevice::remUpdateSignal(VRSignalPtr sig, VRDeviceWeakPtr dev) {
+bool VRDevice::remUpdateSignal(VRSignalPtr sig, VRDeviceWeakPtr dev) {
     auto k = sig.get();
-    if (activatedSignals.count(k) == 0) return;
-    activatedSignals[k].first->triggerPtr<VRDevice>();
+    if (activatedSignals.count(k) == 0) return true;
+    activatedSignals[k].first->triggerAll<VRDevice>();
     activatedSignals.erase(k);
+    return true;
 }
 
 void VRDevice::updateSignals() {
     auto k = sig_key;
     for (auto a : activatedSignals) {
         sig_key = a.second.second;
-        a.second.first->triggerPtr<VRDevice>();
+        a.second.first->triggerAll<VRDevice>();
     }
     sig_key = k;
 }
@@ -101,7 +132,7 @@ VRSignalPtr VRDevice::addToggleSignal(int key) { // TODO: this is not ok, an act
 
     // deactivation signal
     VRSignalPtr sigB = createSignal(key, 0);
-    auto fkt = VRFunction<VRDeviceWeakPtr>::create("Device_remUpdate", bind(&VRDevice::remUpdateSignal, ptr(), sigA, placeholders::_1)); // TODO: check if passing ptr() induces a ptr cycle!!
+    auto fkt = VRFunction<VRDeviceWeakPtr, bool>::create("Device_remUpdate", bind(&VRDevice::remUpdateSignal, ptr(), sigA, placeholders::_1)); // TODO: check if passing ptr() induces a ptr cycle!!
     sigB->add( fkt );
     deactivationCallbacks[sigA.get()] = fkt;
 
@@ -127,8 +158,7 @@ void VRDevice::change_button(int key, int state) {
     sig_key = key;
     sig_state = state;
     BStates[key] = state;
-    triggerSignal(key, state);
-    triggerSignal(-1, state);
+    triggerSignal(key, state, true);
 }
 
 void VRDevice::change_slider(int key, float state) {

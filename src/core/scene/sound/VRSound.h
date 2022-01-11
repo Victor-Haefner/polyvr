@@ -8,10 +8,12 @@
 
 #include "VRSoundFwd.h"
 #include "core/utils/VRFunctionFwd.h"
+#include "core/networking/VRNetworkingFwd.h"
 
 class AVPacket;
 class AVCodecContext;
 class AVFormatContext;
+struct OutputStream;
 
 typedef signed char ALbyte;
 
@@ -27,6 +29,8 @@ class VRSound {
         vector<VRSoundBufferPtr> ownedBuffer;
         int nextBuffer = 0;
         VRUpdateCbPtr callback;
+        VRTCPClientPtr tcpClient;
+        VRRestClientPtr restClient;
 
         unsigned int frequency = 0;
         int stream_id = 0;
@@ -41,10 +45,15 @@ class VRSound {
         bool loop = false;
         float pitch = 1;
         float gain = 1;
-        Vec3d* pos;
-        Vec3d* vel;
+        Vec3d* pos = 0;
+        Vec3d* vel = 0;
+
+        AVFormatContext* muxer = 0;
+        OutputStream* audio_st = 0;
+        int lastEncodingFlag = 1;
 
         void updateSampleAndFormat();
+        void write_buffer(AVFormatContext *oc, OutputStream *ost, VRSoundBufferPtr buffer);
 
     public:
         VRSound();
@@ -78,7 +87,14 @@ class VRSound {
         void playBuffer(VRSoundBufferPtr frame);
         void addBuffer(VRSoundBufferPtr frame);
 
+        bool setupStream(string url, int port);
+        void streamBuffer(VRSoundBufferPtr frame);
+        void closeStream(bool keepOpen = false);
+        void flushPackets();
+
         void exportToFile(string path);
+        void streamTo(string url, int port, bool keepOpen = false);
+        void writeStreamData(const string& data);
 
         // carrier amplitude, carrier frequency, carrier phase, modulation amplitude, modulation frequency, modulation phase, packet duration
         void synthesize(float Ac = 32760, float wc = 440, float pc = 0, float Am = 0, float wm = 0, float pm = 0, float T = 1);
@@ -88,7 +104,6 @@ class VRSound {
         void synthBufferOnChannels(vector<vector<Vec2d>> freqs1, vector<vector<Vec2d>> freqs2, float T = 1);
 
         vector<short> test(vector<Vec2d> freqs1, vector<Vec2d> freqs2, float T = 1);
-
 };
 
 OSG_END_NAMESPACE;

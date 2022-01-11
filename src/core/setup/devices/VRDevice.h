@@ -25,7 +25,7 @@ class VRDevice : public std::enable_shared_from_this<VRDevice>, public VRName, p
 
         VRSignalPtr signalExist(int key, int state);
         VRSignalPtr createSignal(int key, int state);
-        void triggerSignal(int key, int state);
+        void triggerSignal(int key, int state, bool doGeneric = false);
 
     public:
         VRDevice(string type);
@@ -53,7 +53,7 @@ class VRDevice : public std::enable_shared_from_this<VRDevice>, public VRName, p
         void change_slider(int key, float state);
 
         void addUpdateSignal(VRSignalPtr sig, int key);
-        void remUpdateSignal(VRSignalPtr sig, VRDeviceWeakPtr dev);
+        bool remUpdateSignal(VRSignalPtr sig, VRDeviceWeakPtr dev);
         void updateSignals();
 
         int key();
