@@ -203,6 +203,7 @@ void CEF::setMaterial(VRMaterialPtr mat) {
     if (!client->getHandler()) return;
     this->mat = mat;
     mat->setTexture(client->getHandler()->getImage());
+    mat->setTextureWrapping(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
 }
 
 string CEF::getSite() { return site; }

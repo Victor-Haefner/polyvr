@@ -571,6 +571,7 @@ void VRGuiBuilder::buildBaseUI() {
     auto toolbar6 = addToolbar("toolbar6", GTK_ICON_SIZE_LARGE_TOOLBAR, GTK_ORIENTATION_HORIZONTAL);
 
     GtkWidget* hbox1_layout = gtk_layout_new(0,0);
+    VRGuiBuilder::get()->reg_widget(hbox1_layout, "hbox1_layout");
     GtkWidget* hbox1_viewport = gtk_viewport_new(0,0);
     gtk_container_add(GTK_CONTAINER(hbox1_viewport), hbox1);
     gtk_container_add(GTK_CONTAINER(hbox1_layout), hbox1_viewport);
