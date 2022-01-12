@@ -87,7 +87,8 @@ Vec2i VRGtkWindow::rebaseMousePosition(int x, int y) {
 void VRGtkWindow::render(bool fromThread) {
     if (fromThread) return;
     VRLock lock( VRGuiManager::get()->guiMutex() );
-    if (!active || !content || !isRealized) return;
+    if (!isRealized) return;
+    //if (!active || !content || !isRealized) return;
     gl_area_queue_render((GLArea*)widget);
 }
 
