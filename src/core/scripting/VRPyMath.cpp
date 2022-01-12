@@ -920,6 +920,8 @@ PyMethodDef VRPyXMLElement::methods[] = {
 PyMethodDef VRPySpreadsheet::methods[] = {
     {"read", PyWrap(Spreadsheet, read, "Read file", void, string) },
     {"getSheets", PyWrap(Spreadsheet, getSheets, "Get list of sheet names", vector<string>) },
+    {"getRow", PyWrap(Spreadsheet, getRow, "Get ith row (sheet, row)", vector<string>, string, size_t) },
+    {"getRows", PyWrap(Spreadsheet, getRows, "Get list of rows by sheet name", vector<vector<string>>, string) },
     {"getNColumns", PyWrap(Spreadsheet, getNColumns, "Get N columns of sheet", size_t, string) },
     {"getNRows", PyWrap(Spreadsheet, getNRows, "Get N rows of sheet", size_t, string) },
     {"getCell", PyWrap(Spreadsheet, getCell, "Get cell content (sheet, column, row)", string, string, size_t, size_t) },

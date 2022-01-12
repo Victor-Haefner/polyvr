@@ -37,14 +37,15 @@ void VRSpreadsheet::read(string path) {
 
         sheets.clear();
 
-        string workbookData = extractZipEntry(z, "xl/workbook.xml");
-        auto sheets = parseWorkbook(workbookData);
+        string workbookData1 = extractZipEntry(z, "xl/workbook.xml");
+        string workbookData2 = extractZipEntry(z, "xl/_rels/workbook.xml.rels");
+        auto sheets = parseWorkbook(workbookData1, workbookData2);
 
         string stringsData = extractZipEntry(z, "xl/sharedStrings.xml");
         auto strings = parseStrings(stringsData);
 
         for (auto s : sheets) {
-            string path = "xl/worksheets/sheet" + toString(s.first) + ".xml";
+            string path = "xl/" + s.first;
             string data = extractZipEntry(z, path);
             addSheet(s.second, data, strings);
         }
@@ -52,7 +53,7 @@ void VRSpreadsheet::read(string path) {
         return;
     }
 
-    cout << "VRSpreadsheet::read error: unknown extention " << ext << endl;
+    cout << "VRSpreadsheet::read Error: unknown extention " << ext << endl;
 }
 
 Vec2i VRSpreadsheet::convCoords(string d) {
@@ -90,20 +91,29 @@ vector<string> VRSpreadsheet::parseStrings(string& data) {
     return res;
 }
 
-map<string, string> VRSpreadsheet::parseWorkbook(string& data) {
+map<string, string> VRSpreadsheet::parseWorkbook(string& data, string& relsData) {
     XML xml;
     xml.parse(data);
+    XML rels;
+    rels.parse(relsData);
+
+    map<string, string> paths;
+    auto relations = rels.getRoot();
+    for (auto rel : relations->getChildren()) {
+        string rID = rel->getAttribute("Id");
+        paths[rID] = rel->getAttribute("Target");
+    }
 
     map<string, string> res;
-
     auto sheets = xml.getRoot()->getChild("sheets");
     for (auto sheet : sheets->getChildren()) {
         string state = sheet->getAttribute("state");
         if (state == "hidden") continue;
 
         string name = sheet->getAttribute("name");
-        string sheetId = sheet->getAttribute("sheetId");
-        res[sheetId] = name;
+        string sheetId = sheet->getAttribute("id");
+        string sheetPath = paths[sheetId];
+        res[sheetPath] = name;
     }
 
     return res;
@@ -116,16 +126,15 @@ void VRSpreadsheet::addSheet(string& name, string& data, vector<string>& strings
     sheet.xml->parse(data);
     auto root = sheet.xml->getRoot();
 
-    auto dims = root->getChild("dimension");
-    if (!dims) return;
-
-    auto dv = dims->getAttribute("ref");
-    Vec2i C0 = convCoords( splitString(dv,':')[0] );
-    Vec2i C1 = convCoords(splitString(dv,':')[1] );
-    sheet.NCols = C1[0] - C0[0] + 1;
-    sheet.NRows = C1[1] - C0[1] + 1;
+    sheet.NCols = 0;
+    sheet.NRows = 0;
 
     auto sdata = root->getChild("sheetData");
+    if (!sdata) {
+        cout << "Warning, sheet " << name << " has no root, skip!" << endl;
+        return;
+    }
+
     for (auto row : sdata->getChildren()) {
         Row R;
         for (auto col : row->getChildren()) {
@@ -138,21 +147,11 @@ void VRSpreadsheet::addSheet(string& name, string& data, vector<string>& strings
             R.cells.push_back(C);
         }
         sheet.rows.push_back(R);
+        sheet.NRows++;
+        sheet.NCols = max(sheet.NCols, R.cells.size());
     }
 
-    cout << " VRSpreadsheet::addSheet " << name << " " << Vec2i(sheet.rows[0].cells.size(), sheet.rows.size()) << " " << Vec2i(sheet.NCols, sheet.NRows) << endl;
-
-    // TODO: use dimensions and cell access properly (maps instead of vectors)
-    sheet.NCols = sheet.rows[0].cells.size();
-    sheet.NRows = sheet.rows.size();
-
-
-    /*for (auto r : sheet.rows) {
-        for (auto c : r.cells) {
-            cout << "\t " << c.data;
-        }
-        cout << endl;
-    }*/
+    cout << " VRSpreadsheet::addSheet " << name << " " << Vec2i(sheet.NRows, sheet.NCols) << endl;
 }
 
 vector<string> VRSpreadsheet::getSheets() {
@@ -171,6 +170,32 @@ size_t VRSpreadsheet::getNColumns(string sheet) {
 size_t VRSpreadsheet::getNRows(string sheet) {
     if (!sheets.count(sheet)) return 0;
     return sheets[sheet].NRows;
+}
+
+vector<string> VRSpreadsheet::getRow(string sheet, size_t i) {
+    vector<string> res;
+    if (!sheets.count(sheet)) return res;
+    if (i >= sheets[sheet].rows.size()) return res;
+
+    auto& row = sheets[sheet].rows[i];
+    for (auto& cell : row.cells) {
+        res.push_back(cell.data);
+    }
+    return res;
+}
+
+vector< vector<string> > VRSpreadsheet::getRows(string sheet) {
+    vector< vector<string> > res;
+    if (!sheets.count(sheet)) return res;
+
+    for (auto& row : sheets[sheet].rows) {
+        vector<string> data;
+        for (auto& cell : row.cells) {
+            data.push_back(cell.data);
+        }
+        res.push_back(data);
+    }
+    return res;
 }
 
 string VRSpreadsheet::getCell(string sheet, size_t i, size_t j) {

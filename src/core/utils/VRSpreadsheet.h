@@ -26,8 +26,8 @@ class VRSpreadsheet : public std::enable_shared_from_this<VRSpreadsheet> {
 			string name;
 			XMLPtr xml;
 
-			int NCols = 0;
-			int NRows = 0;
+			size_t NCols = 0;
+			size_t NRows = 0;
 
 			vector<Row> rows;
 
@@ -39,7 +39,7 @@ class VRSpreadsheet : public std::enable_shared_from_this<VRSpreadsheet> {
 		map<string, Sheet> sheets;
 
 		void addSheet(string& name, string& data, vector<string>& strings);
-		map<string, string> parseWorkbook(string& data);
+		map<string, string> parseWorkbook(string& data, string& rels);
 		vector<string> parseStrings(string& data);
 
 		Vec2i convCoords(string c);
@@ -56,6 +56,8 @@ class VRSpreadsheet : public std::enable_shared_from_this<VRSpreadsheet> {
 		vector<string> getSheets();
 		size_t getNColumns(string sheet);
 		size_t getNRows(string sheet);
+		vector<string> getRow(string sheet, size_t i);
+		vector< vector<string> > getRows(string sheet);
 		string getCell(string sheet, size_t i, size_t j);
 };
 
