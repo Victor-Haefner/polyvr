@@ -94,10 +94,7 @@ void VRPointCloud::loadChunk(VRLodPtr lod) {
     options["region"] = toString( region );
 
     auto chunk = VRImport::get()->load(path, prxy, false, "OSG", false, options);
-    //prxy->clearLinks();
     prxy->addChild(chunk);
-    //prxy->addChild(VRObject::create("bla"));
-    //lod->getParent()->addChild(chunk);
     //cout << " VRPointCloud::onLodSwitch loaded " << chunk->getName() << ", parent: " << chunk->getParent() << ", region: " << toString(region) << endl;
 }
 
