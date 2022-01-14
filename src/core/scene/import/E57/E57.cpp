@@ -365,7 +365,7 @@ vector<size_t> extractRegionBounds(string path, vector<double> region) {
         }
     }
 
-    cout << "extractRegionBounds " << toString(bounds) << endl;
+    //cout << "extractRegionBounds " << toString(bounds) << endl;
     return bounds;
 }
 

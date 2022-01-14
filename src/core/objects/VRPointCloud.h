@@ -3,6 +3,8 @@
 
 #include "core/objects/VRTransform.h"
 #include "core/scene/import/VRImport.h"
+#include "core/utils/VRMutex.h"
+
 #include <OpenSG/OSGColor.h>
 #include <OpenSG/OSGVector.h>
 
@@ -42,6 +44,7 @@ class VRPointCloud : public VRTransform {
         vector<int> downsamplingRate = {1};
         vector<float> lodDistances;
         VRImportCbPtr onImport;
+        VRMutex mtx;
 
         // import options
         string filePath;

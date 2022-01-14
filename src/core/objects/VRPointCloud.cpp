@@ -75,6 +75,7 @@ void VRPointCloud::applySettings(map<string, string> options) {
 }
 
 void VRPointCloud::loadChunk(VRLodPtr lod) {
+    VRLock lock(mtx);
     auto prxy = lod->getChild(0);
     if (prxy->getChildrenCount() > 0) return;
 
@@ -87,11 +88,12 @@ void VRPointCloud::loadChunk(VRLodPtr lod) {
     map<string, string> options;
     options["lit"] = toString(mat->isLit());
     options["pointSize"] = toString(pointSize);
+    options["downsampling"] = toString(1.0/downsamplingRate[0]);
     options["leafSize"] = toString(leafSize);
     options["keepOctree"] = toString(0);
     options["region"] = toString( region );
 
-    auto chunk = VRImport::get()->load(path, prxy, false, "OSG", true, options);
+    auto chunk = VRImport::get()->load(path, prxy, false, "OSG", false, options);
     //prxy->clearLinks();
     prxy->addChild(chunk);
     //prxy->addChild(VRObject::create("bla"));
@@ -100,6 +102,7 @@ void VRPointCloud::loadChunk(VRLodPtr lod) {
 }
 
 void VRPointCloud::onImportEvent(VRImportJob params) {
+    VRLock lock(mtx);
     //cout << " ---------------------- VRPointCloud::onImportEvent " << params.path << endl;
     params.res->getParent()->clearLinks();
 }
@@ -115,7 +118,8 @@ void VRPointCloud::onLodSwitch(VRLodEventPtr e) { // for streaming
     }
 
     if (i1 == 1) {
-        //cout << "VRPointCloud::onLodSwitch " << lod->getName() << ", unload region " << Vec2i(i0, i1) << endl;
+        cout << "VRPointCloud::onLodSwitch " << lod->getName() << ", unload region " << Vec2i(i0, i1) << endl;
+        VRLock lock(mtx);
         auto prxy = lod->getChild(0);
         prxy->clearChildren();
         prxy->addLink( lod->getChild(1) );
