@@ -91,12 +91,17 @@ void VRPointCloud::loadChunk(VRLodPtr lod) {
     options["keepOctree"] = toString(0);
     options["region"] = toString( region );
 
-    auto chunk = VRImport::get()->load(path, prxy, false, "OSG", false, options);
-    prxy->clearLinks();
+    auto chunk = VRImport::get()->load(path, prxy, false, "OSG", true, options);
+    //prxy->clearLinks();
     prxy->addChild(chunk);
     //prxy->addChild(VRObject::create("bla"));
     //lod->getParent()->addChild(chunk);
-    cout << " VRPointCloud::onLodSwitch loaded " << chunk->getName() << ", parent: " << chunk->getParent() << ", region: " << toString(region) << endl;
+    //cout << " VRPointCloud::onLodSwitch loaded " << chunk->getName() << ", parent: " << chunk->getParent() << ", region: " << toString(region) << endl;
+}
+
+void VRPointCloud::onImportEvent(VRImportJob params) {
+    //cout << " ---------------------- VRPointCloud::onImportEvent " << params.path << endl;
+    params.res->getParent()->clearLinks();
 }
 
 void VRPointCloud::onLodSwitch(VRLodEventPtr e) { // for streaming
@@ -105,12 +110,15 @@ void VRPointCloud::onLodSwitch(VRLodEventPtr e) { // for streaming
     VRLodPtr lod = e->getLod();
 
     if (i1 == 0) {
-        cout << "VRPointCloud::onLodSwitch " << lod->getName() << ", load region " << Vec2i(i0, i1) << endl;
+        //cout << "VRPointCloud::onLodSwitch " << lod->getName() << ", load region " << Vec2i(i0, i1) << endl;
         loadChunk(lod);
     }
 
     if (i1 == 1) {
-        cout << "VRPointCloud::onLodSwitch " << lod->getName() << ", unload region " << Vec2i(i0, i1) << endl;
+        //cout << "VRPointCloud::onLodSwitch " << lod->getName() << ", unload region " << Vec2i(i0, i1) << endl;
+        auto prxy = lod->getChild(0);
+        prxy->clearChildren();
+        prxy->addLink( lod->getChild(1) );
     }
 }
 
@@ -118,6 +126,11 @@ void VRPointCloud::addLevel(float distance, int downsampling, bool stream) {
     levels++;
     downsamplingRate.push_back(downsampling);
     lodDistances.push_back(distance);
+
+    if (!onImport) {
+        onImport = VRImportCb::create("pc chunk import", bind(&VRPointCloud::onImportEvent, this, placeholders::_1));
+        VRImport::get()->addEventCallback(onImport);
+    }
 
     if (lodsSetUp && stream) {
         VRLodCbPtr streamCB = VRLodCb::create( "pointcloudStreamCB", bind(&VRPointCloud::onLodSwitch, this, placeholders::_1 ) );

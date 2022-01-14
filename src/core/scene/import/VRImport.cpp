@@ -146,14 +146,31 @@ VRTransformPtr VRImport::load(string path, VRObjectPtr parent, bool useCache, st
     }
 }
 
+void VRImport::addEventCallback(VRImportCbPtr cb) {
+    callbacks.push_back(cb);
+}
+
+void VRImport::remEventCallback(VRImportCbPtr cb) {
+    callbacks.erase(std::remove(callbacks.begin(), callbacks.end(), cb), callbacks.end());
+}
+
+void VRImport::triggerCallbacks(const VRImportJob& params) {
+    auto doTrigger = [&](VRImportJob params) {
+        for (auto cb : callbacks) (*cb)(params);
+    };
+
+    auto cb = VRUpdateCb::create("trigger import events", bind(doTrigger, params));
+    VRScene::getCurrent()->queueJob(cb);
+}
+
 VRImport::LoadJob::LoadJob(string p, string pr, VRTransformPtr r, VRProgressPtr pg, map<string, string> opt, bool uc, bool ubc) {
-    path = p;
-    res = r;
-    progress = pg;
-    preset = pr;
-    options = opt;
-    useCache = uc;
-    useBinaryCache = ubc;
+    params.path = p;
+    params.res = r;
+    params.progress = pg;
+    params.preset = pr;
+    params.options = opt;
+    params.useCache = uc;
+    params.useBinaryCache = ubc;
 }
 
 void VRImport::LoadJob::load(VRThreadWeakPtr tw) {
@@ -161,6 +178,14 @@ void VRImport::LoadJob::load(VRThreadWeakPtr tw) {
 
     bool thread = false;
     if (t) { t->syncFromMain(); thread = true; }
+
+    string& path = params.path;
+    auto& res = params.res;
+    auto& progress = params.progress;
+    auto& preset = params.preset;
+    auto& options = params.options;
+    auto& useCache = params.useCache;
+    auto& useBinaryCache = params.useBinaryCache;
 
     auto loadSwitch = [&]() {
         string ext = getFileExtension(path);
@@ -231,6 +256,8 @@ void VRImport::LoadJob::load(VRThreadWeakPtr tw) {
         // TODO: create descriptive hash of file, store hash
         cout << "store in binary cache: " << path << " " << osbPath << endl;
     }
+
+    VRImport::get()->triggerCallbacks(params);
 }
 
 string repSpaces(string s) {

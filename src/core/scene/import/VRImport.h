@@ -13,20 +13,26 @@ OSG_BEGIN_NAMESPACE;
 
 class NodeCore;
 
+
+struct VRImportJob {
+    string path;
+    string preset;
+    map<string, string> options;
+    bool useCache = false;
+    bool useBinaryCache = false;
+    VRProgressPtr progress;
+    VRTransformPtr res;
+};
+
+ptrFctFwd( VRImport, VRImportJob );
+
 class VRImport {
     public:
         struct LoadJob {
-            string path;
-            string preset;
-            map<string, string> options;
-            bool useCache = false;
-            bool useBinaryCache = false;
-            VRProgressPtr progress;
-            VRTransformPtr res;
+            VRImportJob params;
             VRThreadCbPtr loadCb;
 
             LoadJob(string p, string preset, VRTransformPtr r, VRProgressPtr pg, map<string, string> opt, bool useCache, bool useBinaryCache);
-
             void load(VRThreadWeakPtr t);
         };
 
@@ -42,6 +48,7 @@ class VRImport {
 
     private:
         map<string, Cache> cache;
+        vector<VRImportCbPtr> callbacks;
 
         VRProgressPtr progress;
         bool ihr_flag = false; // ignore heavy ressources
@@ -64,6 +71,10 @@ class VRImport {
 
         VRProgressPtr getProgressObject();
         void ingoreHeavyRessources();
+
+        void addEventCallback(VRImportCbPtr cb);
+        void remEventCallback(VRImportCbPtr cb);
+        void triggerCallbacks(const VRImportJob& params);
 };
 
 OSG_END_NAMESPACE;

@@ -2,6 +2,7 @@
 #define VRPOINTCLOUD_H_INCLUDED
 
 #include "core/objects/VRTransform.h"
+#include "core/scene/import/VRImport.h"
 #include <OpenSG/OSGColor.h>
 #include <OpenSG/OSGVector.h>
 
@@ -40,6 +41,7 @@ class VRPointCloud : public VRTransform {
         bool lodsSetUp = 0;
         vector<int> downsamplingRate = {1};
         vector<float> lodDistances;
+        VRImportCbPtr onImport;
 
         // import options
         string filePath;
@@ -55,6 +57,7 @@ class VRPointCloud : public VRTransform {
         Vec2ub toSpherical(const Vec3d& v);
         void loadChunk(VRLodPtr lod);
         void onLodSwitch(VRLodEventPtr e);
+        void onImportEvent(VRImportJob params);
         VRProgressPtr addProgress(string head, size_t N);
 
     public:
