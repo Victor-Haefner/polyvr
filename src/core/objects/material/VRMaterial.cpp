@@ -237,12 +237,12 @@ VRMaterial::~VRMaterial() {}
 
 VRMaterialPtr VRMaterial::ptr() { return static_pointer_cast<VRMaterial>( shared_from_this() ); }
 
-VRMaterialPtr VRMaterial::create(string name) {
+VRMaterialPtr VRMaterial::create(string name, bool reg) {
     auto p = VRMaterialPtr(new VRMaterial(name) );
     p->init();
-    materials[p->getName()] = p;
     MaterialMTRecPtr mat = p->getMaterial()->mat;
-    materialsByPtr[mat] = p;
+    if (reg) materials[p->getName()] = p;
+    if (reg) materialsByPtr[mat] = p;
 #ifdef OSG_OGL_ES2
     p->updateOGL2Shader(); // TODO: find a better place!
 #endif

@@ -57,7 +57,7 @@ class VRMaterial : public VRObject {
         VRMaterial(string name);
         virtual ~VRMaterial();
 
-        static VRMaterialPtr create(string name = "None");
+        static VRMaterialPtr create(string name = "None", bool reg = true);
         VRMaterialPtr ptr();
 
         void init();
