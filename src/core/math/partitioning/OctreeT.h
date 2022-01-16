@@ -1,4 +1,7 @@
-#include "Quadtree.h"
+#ifndef OCTREET_H_INCLUDED
+#define OCTREET_H_INCLUDED
+
+#include "Octree.h"
 #include <cmath>
 #include <algorithm>
 #include <iostream>
@@ -10,23 +13,20 @@
 #include "core/objects/geometry/VRGeoData.h"
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/material/VRMaterial.h"
-#include "core/math/partitioning/PartitiontreeT.h"
 
 using namespace OSG;
 
-QuadtreeNode::QuadtreeNode(QuadtreePtr tree, float res, float s, int lvl) : PartitiontreeNode(res, s, lvl) { this->tree = tree; }
-QuadtreeNode::~QuadtreeNode() {
-    for (auto c : children) if (c) delete c;
-}
+#include "PartitiontreeT.h"
 
-QuadtreeNode* QuadtreeNode::get(Vec3d p, bool checkPosition) {
+template<class T>
+OctreeNode<T>* OSG::OctreeNode<T>::get(Vec3d p, bool checkPosition) {
     if ( !inBox(p, center, size) && checkPosition ) {
         if (parent) return parent->get(p, true);
         else return 0;
     }
 
     if (size > resolution) {
-        int o = getQuadrant(p);
+        int o = getOctant(p);
         if (!children[o]) return this;
         return children[o]->get(p, false);
     }
@@ -37,19 +37,20 @@ QuadtreeNode* QuadtreeNode::get(Vec3d p, bool checkPosition) {
 // checkPosition avoids parent/child cycles due to float error
 // partitionLimit sets a max amount of data points, tree is subdivided if necessary!
 
-QuadtreeNode* QuadtreeNode::add(Vec3d pos, void* dat, int targetLevel, bool checkPosition, int partitionLimit) {
+template<class T>
+OctreeNode<T>* OctreeNode<T>::add(Vec3d pos, T dat, int targetLevel, bool checkPosition, int partitionLimit) {
     Vec3d rpos = pos - center;
 
     auto createParent = [&]() {
-        parent = new QuadtreeNode(tree.lock(), resolution, 2*size, level+1);
+        parent = new OctreeNode(tree.lock(), resolution, 2*size, level+1);
         parent->center = center + lvljumpCenter(size*0.5, rpos);
-        int o = parent->getQuadrant(center);
+        int o = parent->getOctant(center);
         parent->children[o] = this;
         tree.lock()->updateRoot();
     };
 
     auto createChild = [&](int octant) {
-        children[octant] = new QuadtreeNode(tree.lock(), resolution, size*0.5, level-1);
+        children[octant] = new OctreeNode(tree.lock(), resolution, size*0.5, level-1);
         Vec3d c = center + lvljumpCenter(size*0.25, rpos);
         children[octant]->center = c;
         children[octant]->parent = this;
@@ -78,12 +79,13 @@ QuadtreeNode* QuadtreeNode::add(Vec3d pos, void* dat, int targetLevel, bool chec
     }
 
     if (!reachedTargetLevel()) {
-        int o = getQuadrant(pos);
+        int o = getOctant(pos);
         if (!children[o]) createChild(o);
         return children[o]->add(pos, dat, targetLevel, false, partitionLimit);
     }
 
     if (reachedPartitionLimit()) {
+        //cout << "OctreeNode<T>::add, reachedPartitionLimit (" << partitionLimit << ") -> split node!" << endl;
         while (size <= resolution) resolution *= 0.5;
         for (unsigned int i=0; i<points.size(); i++) {
             add(points[i], data[i], targetLevel, false, partitionLimit);
@@ -98,50 +100,61 @@ QuadtreeNode* QuadtreeNode::add(Vec3d pos, void* dat, int targetLevel, bool chec
     return this;
 }
 
-int QuadtreeNode::getQuadrant(Vec3d p) {
+template<class T>
+int OctreeNode<T>::getOctant(Vec3d p) {
     Vec3d rp = p - center;
 
-    int q = 0;
-    if (rp[0] < 0) q+=1;
-    if (rp[2] < 0) q+=2;
-    return q;
+    int o = 0;
+    if (rp[0] < 0) o+=1;
+    if (rp[1] < 0) o+=2;
+    if (rp[2] < 0) o+=4;
+    return o;
 }
 
-Vec3d QuadtreeNode::lvljumpCenter(float s2, Vec3d rp) {
-    Vec3d c(s2,0,s2);
+template<class T>
+Vec3d OctreeNode<T>::lvljumpCenter(float s2, Vec3d rp) {
+    Vec3d c(s2,s2,s2);
     if (rp[0] < 0) c[0]-=s2*2;
+    if (rp[1] < 0) c[1]-=s2*2;
     if (rp[2] < 0) c[2]-=s2*2;
     return c;
 }
 
-bool QuadtreeNode::inBox(Vec3d p, Vec3d c, float size) {
+template<class T>
+bool OctreeNode<T>::inBox(Vec3d p, Vec3d c, float size) {
     if (abs(2*p[0] - 2*c[0]) > size) return false;
+    if (abs(2*p[1] - 2*c[1]) > size) return false;
     if (abs(2*p[2] - 2*c[2]) > size) return false;
     return true;
 }
 
-void QuadtreeNode::set(QuadtreeNode* node, Vec3d p, void* d) { node->data.clear(); node->points.clear(); node->data.push_back(d); node->points.push_back(p); }
+template<class T>
+void OctreeNode<T>::set(OctreeNode* node, Vec3d p, T d) { node->data.clear(); node->points.clear(); node->data.push_back(d); node->points.push_back(p); }
 
-vector<QuadtreeNode*> QuadtreeNode::getAncestry() {
-    vector<QuadtreeNode*> res;
+template<class T>
+vector<OctreeNode<T>*> OctreeNode<T>::getAncestry() {
+    vector<OctreeNode<T>*> res;
     auto p = parent;
     while (p) { res.push_back(p); p = p->parent; }
     return res;
 }
 
-vector<QuadtreeNode*> QuadtreeNode::getChildren() {
-    return vector<QuadtreeNode*>(children, children+4);
+template<class T>
+vector<OctreeNode<T>*> OctreeNode<T>::getChildren() {
+    return vector<OctreeNode<T>*>(children, children+8);
 }
 
-bool QuadtreeNode::isLeaf() {
+template<class T>
+bool OctreeNode<T>::isLeaf() {
     //return points.size() > 0;
     if ( resolution < size ) return false;
-    for (int i=0; i<4; i++) if (children[i]) return false;
+    for (int i=0; i<8; i++) if (children[i]) return false;
     return true;
 }
 
-vector<QuadtreeNode*> QuadtreeNode::getPathTo(Vec3d p) {
-    vector<QuadtreeNode*> res;
+template<class T>
+vector<OctreeNode<T>*> OctreeNode<T>::getPathTo(Vec3d p) {
+    vector<OctreeNode<T>*> res;
     auto o = get(p);
     if (!o) return res;
 
@@ -154,7 +167,8 @@ vector<QuadtreeNode*> QuadtreeNode::getPathTo(Vec3d p) {
     return res;
 }
 
-void gatherSubtree(QuadtreeNode* o, vector<QuadtreeNode*>& res, bool leafs) {
+template<class T>
+void gatherSubtree(OctreeNode<T>* o, vector<OctreeNode<T>*>& res, bool leafs) {
     for (auto c : o->getChildren()) {
         if (c) {
             if (leafs) {
@@ -165,64 +179,66 @@ void gatherSubtree(QuadtreeNode* o, vector<QuadtreeNode*>& res, bool leafs) {
     }
 }
 
-vector<QuadtreeNode*> QuadtreeNode::getSubtree() {
-    vector<QuadtreeNode*> res;
+template<class T>
+vector<OctreeNode<T>*> OctreeNode<T>::getSubtree() {
+    vector<OctreeNode<T>*> res;
     res.push_back(this);
     gatherSubtree(this, res, false);
     return res;
 }
 
-vector<QuadtreeNode*> QuadtreeNode::getLeafs() {
-    vector<QuadtreeNode*> res;
+template<class T>
+vector<OctreeNode<T>*> OctreeNode<T>::getLeafs() {
+    vector<OctreeNode<T>*> res;
     if (isLeaf()) res.push_back(this);
     gatherSubtree(this, res, true);
     return res;
 }
 
-Vec3d QuadtreeNode::getLocalCenter() {
+template<class T>
+Vec3d OctreeNode<T>::getLocalCenter() {
     if (parent) return center - parent->center;
     else return center;
 }
 
-int QuadtreeNode::dataSize() { return data.size(); }
+template<class T>
+int OctreeNode<T>::dataSize() { return data.size(); }
 
-QuadtreeNode* QuadtreeNode::getParent() { return parent; }
-QuadtreeNode* QuadtreeNode::getRoot() { auto o = this; while(o->parent) o = o->parent; return o; }
+template<class T>
+OctreeNode<T>* OctreeNode<T>::getParent() { return parent; }
+template<class T>
+OctreeNode<T>* OctreeNode<T>::getRoot() { auto o = this; while(o->parent) o = o->parent; return o; }
 
-void QuadtreeNode::findInSphere(Vec3d p, float r, int d, vector<void*>& res) { // TODO: optimize!!
-    p[1] = 0;
-    if (!sphere_box_intersect(p, center, r, size)) return;
+template<class T>
+void OctreeNode<T>::findInSphere(Vec3d p, float r, int d, vector<T>& res) { // TODO: optimize!!
+    if (!this->sphere_box_intersect(p, center, r, size)) return;
 
     float r2 = r*r;
     for (unsigned int i=0; i<data.size(); i++) {
-        auto p2 = points[i];
-        p2[1] = 0;
-        if ((p2-p).squareLength() <= r2)
+        if ((points[i]-p).squareLength() <= r2)
             res.push_back(data[i]);
     }
 
     if (level == d && d != -1) return;
-    for (int i=0; i<4; i++) {
+    for (int i=0; i<8; i++) {
         if (children[i]) children[i]->findInSphere(p, r, d, res);
     }
 }
 
-void QuadtreeNode::findPointsInSphere(Vec3d p, float r, int d, vector<Vec3d>& res, bool getAll) { // TODO: optimize!!
-    p[1] = 0;
-    if (!sphere_box_intersect(p, center, r, size)) return;
+template<class T>
+void OctreeNode<T>::findPointsInSphere(Vec3d p, float r, int d, vector<Vec3d>& res, bool getAll) { // TODO: optimize!!
+    if (!this->sphere_box_intersect(p, center, r, size)) return;
 
     float r2 = r*r;
     for (unsigned int i=0; i<data.size(); i++) {
-        auto p2 = points[i];
-        p2[1] = 0;
-        if ((p2-p).squareLength() <= r2) {
+        if ((points[i]-p).squareLength() <= r2) {
             res.push_back(points[i]);
             if (!getAll) return;
         }
     }
 
     if (level == d && d != -1) return;
-    for (int i=0; i<4; i++) {
+    for (int i=0; i<8; i++) {
         if (children[i]) {
             children[i]->findPointsInSphere(p, r, d, res, getAll);
             if (!getAll && res.size() > 0) return;
@@ -230,28 +246,31 @@ void QuadtreeNode::findPointsInSphere(Vec3d p, float r, int d, vector<Vec3d>& re
     }
 }
 
-void QuadtreeNode::findInBox(const Boundingbox& b, int d, vector<void*>& res) { // TODO: optimize!!
-    if (!box_box_intersect(b.min(), b.max(), center, size)) return;
+template<class T>
+void OctreeNode<T>::findInBox(const Boundingbox& b, int d, vector<T>& res) { // TODO: optimize!!
+    if (!this->box_box_intersect(b.min(), b.max(), center, size)) return;
 
     for (unsigned int i=0; i<data.size(); i++) {
         if (b.isInside( points[i] )) res.push_back(data[i]);
     }
 
     if (level == d && d != -1) return;
-    for (int i=0; i<4; i++) {
+    for (int i=0; i<8; i++) {
         if (children[i]) children[i]->findInBox(b, d, res);
     }
 }
 
-void QuadtreeNode::print(int indent) {
+template<class T>
+void OctreeNode<T>::print(int indent) {
     cout << toString(indent) << flush;
-    for (int i=0; i<4; i++) {
+    for (int i=0; i<8; i++) {
         if (children[i] != 0) children[i]->print(indent+1);
     }
 }
 
-vector<void*> QuadtreeNode::getAllData() {
-    vector<void*> res;
+template<class T>
+vector<T> OctreeNode<T>::getAllData() {
+    vector<T> res;
     for (auto c : getSubtree()) {
         auto d = c->getData();
         res.insert(res.end(), d.begin(), d.end());
@@ -260,61 +279,89 @@ vector<void*> QuadtreeNode::getAllData() {
 }
 
 
-Quadtree::Quadtree(float res, float s, string n) : Partitiontree(res, s, n) {}
-Quadtree::~Quadtree() { if (root) delete root; }
-
-QuadtreePtr Quadtree::create(float resolution, float size, string n) {
-    auto o = QuadtreePtr( new Quadtree(resolution, size, n) );
+template<class T>
+shared_ptr<Octree<T>> Octree<T>::create(float resolution, float size, string n) {
+    auto o = shared_ptr<Octree<T>>( new Octree<T>(resolution, size, n) );
     o->clear();
     return o;
 }
 
-QuadtreePtr Quadtree::ptr() { return static_pointer_cast<Quadtree>(shared_from_this()); }
+template<class T>
+shared_ptr<Octree<T>> Octree<T>::ptr() { return static_pointer_cast<Octree<T>>(shared_from_this()); }
 
-float Quadtree::getSize() { return root->getSize(); }
-void Quadtree::setResolution(float res) { resolution = res; root->setResolution(res); }
-void Quadtree::clear() { if (root) delete root; root = new QuadtreeNode(ptr(), resolution, firstSize, 0); }
+template<class T>
+float Octree<T>::getSize() { return root->getSize(); }
 
-QuadtreeNode* Quadtree::get(Vec3d p, bool checkPosition) { return root->get(p, checkPosition); }
+template<class T>
+void Octree<T>::setResolution(float res) { resolution = res; root->setResolution(res); }
 
-vector<QuadtreeNode*> Quadtree::getAllLeafs() { return root->getRoot()->getLeafs(); }
+template<class T>
+void Octree<T>::clear() { if (root) delete root; root = new Octree::Node(ptr(), resolution, firstSize, 0); }
 
-QuadtreeNode* Quadtree::add(Vec3d p, void* data, int targetLevel, bool checkPosition, int partitionLimit) {
+template<class T>
+OctreeNode<T>* Octree<T>::get(Vec3d p, bool checkPosition) { return root->get(p, checkPosition); }
+
+template<class T>
+vector<OctreeNode<T>*> Octree<T>::getAllLeafs() { return root->getRoot()->getLeafs(); }
+
+template<class T>
+OctreeNode<T>* Octree<T>::add(Vec3d p, T data, int targetLevel, bool checkPosition, int partitionLimit) {
     return getRoot()->add(p, data, targetLevel, checkPosition, partitionLimit);
 }
 
-void Quadtree::addBox(const Boundingbox& b, void* d, int targetLevel, bool checkPosition) {
+template<class T>
+void Octree<T>::addBox(const Boundingbox& b, T d, int targetLevel, bool checkPosition) {
     const Vec3d min = b.min();
     const Vec3d max = b.max();
     add(min, d, targetLevel, checkPosition);
-    add(Vec3d(max[0],0,min[2]), d, targetLevel, checkPosition);
-    add(Vec3d(min[0],0,max[2]), d, targetLevel, checkPosition);
+    add(Vec3d(max[0],min[1],min[2]), d, targetLevel, checkPosition);
+    add(Vec3d(max[0],min[1],max[2]), d, targetLevel, checkPosition);
+    add(Vec3d(min[0],min[1],max[2]), d, targetLevel, checkPosition);
     add(max, d, targetLevel, checkPosition);
+    add(Vec3d(max[0],max[1],min[2]), d, targetLevel, checkPosition);
+    add(Vec3d(min[0],max[1],min[2]), d, targetLevel, checkPosition);
+    add(Vec3d(min[0],max[1],max[2]), d, targetLevel, checkPosition);
 }
 
-QuadtreeNode* Quadtree::getRoot() { return root; }
-void Quadtree::updateRoot() { while (auto p = root->getParent()) root = p; }
+template<class T>
+OctreeNode<T>* Octree<T>::getRoot() { return root; }
 
-vector<void*> Quadtree::getAllData() { return getRoot()->getAllData(); }
+template<class T>
+void Octree<T>::updateRoot() { while (auto p = root->getParent()) root = p; }
 
-vector<void*> Quadtree::radiusSearch(Vec3d p, float r, int d) {
-    vector<void*> res;
+template<class T>
+double Octree<T>::getLeafSize() {
+    double s = root->getSize();
+    while ( resolution < s ) s *= 0.5;
+    return s;
+}
+
+template<class T>
+vector<T> Octree<T>::getAllData() { return getRoot()->getAllData(); }
+
+template<class T>
+vector<T> Octree<T>::radiusSearch(Vec3d p, float r, int d) {
+    vector<T> res;
     getRoot()->findInSphere(p, r, d, res);
     return res;
 }
-vector<Vec3d> Quadtree::radiusPointSearch(Vec3d p, float r, int d, bool getAll) {
+
+template<class T>
+vector<Vec3d> Octree<T>::radiusPointSearch(Vec3d p, float r, int d, bool getAll) {
     vector<Vec3d> res;
     getRoot()->findPointsInSphere(p, r, d, res, getAll);
     return res;
 }
 
-vector<void*> Quadtree::boxSearch(const Boundingbox& b, int d) {
-    vector<void*> res;
+template<class T>
+vector<T> Octree<T>::boxSearch(const Boundingbox& b, int d) {
+    vector<T> res;
     getRoot()->findInBox(b, d, res);
     return res;
 }
 
-void Quadtree::test() {
+template<class T>
+void Octree<T>::test() {
     int Nv = 100000;
     float sMax = 4;
     Vec3d p(1,2,3);
@@ -356,7 +403,7 @@ void Quadtree::test() {
     // validate results
 
     if (radSearchRes_brute.size() != radSearchRes_tree.size()) {
-        cout << "\nQuadtreeNode test failed: result vector has wrong length " << radSearchRes_brute.size() << " " << radSearchRes_tree.size() << " !";
+        cout << "\nOctreeNode test failed: result vector has wrong length " << radSearchRes_brute.size() << " " << radSearchRes_tree.size() << " !";
         return;
     }
 
@@ -365,17 +412,18 @@ void Quadtree::test() {
 
     for (unsigned int i=0; i<radSearchRes_brute.size(); i++) {
         if (radSearchRes_tree[i] != radSearchRes_brute[i]) {
-            cout << "\nQuadtreeNode test failed: mismatching test data!" << radSearchRes_tree[i] << "  " << radSearchRes_brute[i];
+            cout << "\nOctreeNode test failed: mismatching test data!" << radSearchRes_tree[i] << "  " << radSearchRes_brute[i];
             return;
         }
     }
 
-    cout << "\nQuadtreeNode test passed with " << radSearchRes_tree.size() << " found Vec3fs!\n";
+    cout << "\nOctreeNode test passed with " << radSearchRes_tree.size() << " found Vec3fs!\n";
 }
 
-VRGeometryPtr Quadtree::getVisualization(bool onlyLeafes) {
+template<class T>
+VRGeometryPtr Octree<T>::getVisualization(bool onlyLeafes) {
     VRGeoData data;
-    vector<QuadtreeNode*> nodes;
+    vector<Octree::Node*> nodes;
     if (!onlyLeafes) {
         nodes = root->getRoot()->getSubtree();
         nodes.push_back(root);
@@ -384,11 +432,20 @@ VRGeometryPtr Quadtree::getVisualization(bool onlyLeafes) {
     for (auto c : nodes) {
         Pnt3d p = c->getCenter();
         float s = c->getSize()*0.499;
-        int ruf = data.pushVert(p + Vec3d( 1, 0, 1)*s);
-        int luf = data.pushVert(p + Vec3d(-1, 0, 1)*s);
-        int rub = data.pushVert(p + Vec3d( 1, 0,-1)*s);
-        int lub = data.pushVert(p + Vec3d(-1, 0,-1)*s);
+        int ruf = data.pushVert(p + Vec3d( 1, 1, 1)*s);
+        int luf = data.pushVert(p + Vec3d(-1, 1, 1)*s);
+        int rub = data.pushVert(p + Vec3d( 1, 1,-1)*s);
+        int lub = data.pushVert(p + Vec3d(-1, 1,-1)*s);
+        int rdf = data.pushVert(p + Vec3d( 1,-1, 1)*s);
+        int ldf = data.pushVert(p + Vec3d(-1,-1, 1)*s);
+        int rdb = data.pushVert(p + Vec3d( 1,-1,-1)*s);
+        int ldb = data.pushVert(p + Vec3d(-1,-1,-1)*s);
         data.pushQuad(ruf, luf, lub, rub); // side up
+        data.pushQuad(rdf, ldf, ldb, rdb); // side down
+        data.pushQuad(luf, lub, ldb, ldf); // side left
+        data.pushQuad(ruf, rub, rdb, rdf); // side right
+        data.pushQuad(rub, lub, ldb, rdb); // side behind
+        data.pushQuad(ruf, luf, ldf, rdf); // side front
     }
 
     auto g = data.asGeometry("octree");
@@ -400,3 +457,4 @@ VRGeometryPtr Quadtree::getVisualization(bool onlyLeafes) {
 }
 
 
+#endif // OCTREET_H_INCLUDED

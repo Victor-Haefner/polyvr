@@ -19,7 +19,7 @@ class CSGGeometry : public VRGeometry {
         PosePtr oldWorldTrans;
         float thresholdL = 1e-4;
         float thresholdA = 1e-8;
-        OctreePtr oct;
+        shared_ptr<Octree<size_t>> oct;
 
     protected:
         void applyTransform(CGALPolyhedron* p, PosePtr m);

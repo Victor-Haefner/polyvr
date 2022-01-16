@@ -20,6 +20,7 @@
 #include "core/objects/VRLod.h"
 #include "core/objects/VRLodTree.h"
 #include "core/math/partitioning/Octree.h"
+#include "core/math/partitioning/OctreeT.h"
 #include "core/math/pose.h"
 #include "core/math/polygon.h"
 #include "core/math/partitioning/boundingbox.h"
@@ -154,7 +155,7 @@ void VRNature::removeTree(int id) {
     t->destroy();
 
     auto oLeafs = leaf->getOLeaf()->getAncestry();
-    map<OctreeNode*, VRLodLeafPtr> aLeafs;
+    map<OctreeNode<VRTransform*>*, VRLodLeafPtr> aLeafs;
     for (auto o : oLeafs) {
         auto l = lodTree->getLeaf(o);
         if (l) aLeafs[o] = l;
@@ -324,14 +325,14 @@ void VRNature::computeAllLODs(bool threaded) {
 
 void VRNature::computeLODs(VRLodLeafPtr leaf) {
     auto oLeafs = leaf->getOLeaf()->getAncestry();
-    map<OctreeNode*, VRLodLeafPtr> aLeafs;
+    map<OctreeNode<VRTransform*>*, VRLodLeafPtr> aLeafs;
     for (auto o : oLeafs) {
         if (auto l = lodTree->getLeaf(o)) aLeafs[o] = l;
     }
     computeLODs(aLeafs);
 }
 
-void VRNature::computeLODs2(map<OctreeNode*, VRLodLeafPtr>& leafs) {
+void VRNature::computeLODs2(map<OctreeNode<VRTransform*>*, VRLodLeafPtr>& leafs) {
 
     // get all trees and grass patches for each leaf layer
     map<VRLodLeaf*, vector<VRTree*> > trees;
@@ -341,7 +342,7 @@ void VRNature::computeLODs2(map<OctreeNode*, VRLodLeafPtr>& leafs) {
         int lvl = leaf->getLevel();
         if (lvl == 0) continue;
 
-        vector<void*> data = leaf->getOLeaf()->getAllData();
+        vector<VRTransform*> data = leaf->getOLeaf()->getAllData();
         for (auto v : data) {
             if (((VRObject*)v)->hasTag("tree")) trees[leaf.get()].push_back((VRTree*)v);
             if (((VRObject*)v)->hasTag("grass")) grass[leaf.get()].push_back((VRGrassPatch*)v);
@@ -400,7 +401,7 @@ void VRNature::computeLODs2(map<OctreeNode*, VRLodLeafPtr>& leafs) {
     }
 }
 
-void VRNature::computeLODs3(map<OctreeNode*, VRLodLeafPtr>& leafs) {
+void VRNature::computeLODs3(map<OctreeNode<VRTransform*>*, VRLodLeafPtr>& leafs) {
     // construct master material
     auto mosaic1 = VRTextureMosaic::create();
     auto mosaic2 = VRTextureMosaic::create();
@@ -480,7 +481,7 @@ void VRNature::computeLODs3(map<OctreeNode*, VRLodLeafPtr>& leafs) {
     treesData.apply(trees);
 }
 
-void VRNature::computeLODs(map<OctreeNode*, VRLodLeafPtr>& leafs) {
+void VRNature::computeLODs(map<OctreeNode<VRTransform*>*, VRLodLeafPtr>& leafs) {
     auto simpleLeafMat = [](bool doAlpha) {
         auto m = VRMaterial::create("simpleLeafMat");
         m->setPointSize(3);
@@ -526,7 +527,7 @@ void VRNature::computeLODs(map<OctreeNode*, VRLodLeafPtr>& leafs) {
         int lvl = leaf->getLevel();
         if (lvl == 0) continue;
 
-        vector<void*> data = leaf->getOLeaf()->getAllData();
+        vector<VRTransform*> data = leaf->getOLeaf()->getAllData();
         for (auto v : data) {
             if (((VRObject*)v)->hasTag("tree")) trees[leaf.get()].push_back((VRTree*)v);
             if (((VRObject*)v)->hasTag("grass")) grass[leaf.get()].push_back((VRGrassPatch*)v);

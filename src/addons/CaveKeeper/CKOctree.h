@@ -54,12 +54,12 @@ class CKOctree {
 
             void print(string indent = "");
 
-            void updateLightning(light* l);
-            void updateLightning(vector<void*> lights);
+            void updateLightning(const light& l);
+            void updateLightning(vector<light> lights);
         };
 
     private:
-		OctreePtr lightTree;
+		shared_ptr<Octree<light>> lightTree;
         map<int,element*> elements;
         element* root = 0;
         int N = 0;
@@ -79,7 +79,7 @@ class CKOctree {
         element* add(Vec3i _p);
         void rem(element* e);
         void addAround(element* e);
-        light* addLight(Vec3d p);
+        light addLight(Vec3d p);
 
         //check if there is a cube at pos
         bool isLeaf(Vec3d p);

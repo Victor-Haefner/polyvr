@@ -1,5 +1,6 @@
 #include "VRGraphLayout.h"
 #include "core/math/partitioning/Octree.h"
+#include "core/math/partitioning/OctreeT.h"
 #include "core/utils/toString.h"
 
 using namespace OSG;
@@ -77,12 +78,12 @@ void VRGraphLayout::applySprings(float eps, float v) {
 void VRGraphLayout::applyOccupancy(float eps, float v) {
     if (!graph) return;
     auto& nodes = graph->getNodes();
-    auto o = Octree::create(10*eps);
+    auto o = Octree<size_t>::create(10*eps);
 
-    for (unsigned long i=0; i<nodes.size(); i++) {
+    for (size_t i=0; i<nodes.size(); i++) {
         if ( isFlag(i, INACTIVE) ) continue;
         auto& n = nodes[i];
-        o->addBox( n.box, (void*)i );
+        o->addBox( n.box, i );
     }
 
     for (unsigned int i=0; i<nodes.size(); i++) {

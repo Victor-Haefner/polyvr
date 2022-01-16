@@ -308,11 +308,11 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyMathExpression>("MathExpression", pModMath, VRPyExpression::typeRef, "Math");
     sm->registerModule<VRPyTSDF>("TSDF", pModVR, 0, "Math");
     sm->registerModule<VRPyPartitiontree>("Partitiontree", pModVR, 0, "Math");
-    sm->registerModule<VRPyPartitiontreeNode>("PartitiontreeNode", pModVR, 0, "Math");
+    sm->registerModule<VRPyPartitiontreePyNode>("PartitiontreeNode", pModVR, 0, "Math");
     sm->registerModule<VRPyQuadtree>("Quadtree", pModVR, VRPyPartitiontree::typeRef, "Math");
-    sm->registerModule<VRPyQuadtreeNode>("QuadtreeNode", pModVR, VRPyPartitiontreeNode::typeRef, "Math");
-    sm->registerModule<VRPyOctree>("Octree", pModVR, VRPyPartitiontree::typeRef, "Math");
-    sm->registerModule<VRPyOctreeNode>("OctreeNode", pModVR, VRPyPartitiontreeNode::typeRef, "Math");
+    sm->registerModule<VRPyQuadtreeNode>("QuadtreeNode", pModVR, VRPyPartitiontreePyNode::typeRef, "Math");
+    sm->registerModule<VRPyOcPytree>("Octree", pModVR, VRPyPartitiontree::typeRef, "Math");
+    sm->registerModule<VRPyOctreePyNode>("OctreeNode", pModVR, VRPyPartitiontreePyNode::typeRef, "Math");
 #ifndef WITHOUT_LAPACKE_BLAS
     sm->registerModule<VRPyPCA>("PCA", pModVR, 0, "Math");
 #endif

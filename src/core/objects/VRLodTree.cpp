@@ -1,15 +1,16 @@
 #include "VRLodTree.h"
 #include "core/math/partitioning/Octree.h"
+#include "core/math/partitioning/OctreeT.h"
 #include "core/utils/toString.h"
 #include "core/objects/geometry/VRGeometry.h"
 
 using namespace OSG;
 
-VRLodLeaf::VRLodLeaf(string name, OctreeNode* o, int l) : VRObject(name), oLeaf(o), lvl(l) {}
+VRLodLeaf::VRLodLeaf(string name, OctreeNode<VRTransform*>* o, int l) : VRObject(name), oLeaf(o), lvl(l) {}
 VRLodLeaf::~VRLodLeaf() {}
 VRLodLeafPtr VRLodLeaf::ptr() { return static_pointer_cast<VRLodLeaf>( shared_from_this() ); }
 
-VRLodLeafPtr VRLodLeaf::create(string name, OctreeNode* o, int lvl) {
+VRLodLeafPtr VRLodLeaf::create(string name, OctreeNode<VRTransform*>* o, int lvl) {
     auto l = VRLodLeafPtr(new VRLodLeaf(name, o, lvl));
     l->lod = VRLod::create("natureLod");
     l->lod->setPersistency(0);
@@ -49,12 +50,12 @@ void VRLodLeaf::set(VRObjectPtr obj, int lvl) {
 
 void VRLodLeaf::reset() { set(0,1); }
 
-OctreeNode* VRLodLeaf::getOLeaf() { return oLeaf; }
+OctreeNode<VRTransform*>* VRLodLeaf::getOLeaf() { return oLeaf; }
 int VRLodLeaf::getLevel() { return lvl; }
 
 // --------------------------------------------------------------------------------------------------
 
-VRLodTree::VRLodTree(string name, float size) : VRObject(name) { octree = Octree::create(size,size,name); }
+VRLodTree::VRLodTree(string name, float size) : VRObject(name) { octree = Octree<VRTransform*>::create(size,size,name); }
 VRLodTree::~VRLodTree() {}
 VRLodTreePtr VRLodTree::ptr() { return static_pointer_cast<VRLodTree>( shared_from_this() ); }
 VRLodTreePtr VRLodTree::create(string name, float size) { return VRLodTreePtr(new VRLodTree(name, size)); }
@@ -63,19 +64,19 @@ void VRLodTree::reset(float size) {
     leafs.clear();
     objects.clear();
     rootLeaf = 0;
-    if (size > 0) octree = Octree::create(size,size,name);
+    if (size > 0) octree = Octree<VRTransform*>::create(size,size,name);
     else {
         auto s = octree->getSize();
-        octree = Octree::create(s,s,name);
+        octree = Octree<VRTransform*>::create(s,s,name);
     }
     clearChildren();
 }
 
-VRLodLeafPtr VRLodTree::getLeaf(OctreeNode* o) {
+VRLodLeafPtr VRLodTree::getLeaf(OctreeNode<VRTransform*>* o) {
     return leafs.count(o) ? leafs[o] : 0;
 }
 
-map<OctreeNode*, VRLodLeafPtr>& VRLodTree::getLeafs() { return leafs; }
+map<OctreeNode<VRTransform*>*, VRLodLeafPtr>& VRLodTree::getLeafs() { return leafs; }
 
 vector<VRLodLeafPtr> VRLodTree::getSubTree(VRLodLeafPtr l) {
     vector<VRLodLeafPtr> res;
@@ -101,7 +102,7 @@ void VRLodTree::showOctree() {
     addChild(o);
 }
 
-VRLodLeafPtr VRLodTree::addLeaf(OctreeNode* o, int lvl) {
+VRLodLeafPtr VRLodTree::addLeaf(OctreeNode<VRTransform*>* o, int lvl) {
     if (leafs.count(o)) return leafs[o];
     auto l = VRLodLeaf::create("lodLeaf", o, lvl);
     l->setPersistency(0);
@@ -153,7 +154,7 @@ VRLodLeafPtr VRLodTree::addObject(VRTransformPtr obj, Vec3d p, int lvl, bool und
     //cout << "VRLodTree::addObject " << obj->getName() << " p " << p << " lvl: " << lvl << endl;
     if (leafs.size() == 0) addLeaf(octree->getRoot(), 0);
     objects[lvl].push_back(obj);
-    OctreeNode* oLeaf = octree->add(p, obj.get(), lvl, true);
+    OctreeNode<VRTransform*>* oLeaf = octree->add(p, obj.get(), lvl, true);
     //cout << " VRLodTree::addObject octree leaf: " << oLeaf->getSize() << endl;
     auto leaf = addLeaf(oLeaf, lvl);
     if (lvl == 0 || !underLod) leaf->add(obj, 0);
@@ -166,7 +167,7 @@ VRLodLeafPtr VRLodTree::addObject(VRTransformPtr obj, Vec3d p, int lvl, bool und
 
 VRLodLeafPtr VRLodTree::remObject(VRTransformPtr obj) { // TODO, finish it!
     if (!octree) return 0;
-    OctreeNode* o = octree->get( obj->getWorldPosition() );
+    OctreeNode<VRTransform*>* o = octree->get( obj->getWorldPosition() );
     o->remData(obj.get());
     return leafs[o];
 }

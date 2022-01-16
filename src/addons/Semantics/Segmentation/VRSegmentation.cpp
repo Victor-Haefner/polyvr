@@ -4,6 +4,7 @@
 #include "core/objects/geometry/OSGGeometry.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/math/partitioning/Octree.h"
+#include "core/math/partitioning/OctreeT.h"
 #include <OpenSG/OSGGeometry.h>
 #include <OpenSG/OSGGeoProperties.h>
 #include <OpenSG/OSGGeoFunctions.h>
@@ -73,15 +74,15 @@ void VRSegmentation::removeDuplicates(VRGeometryPtr geo) {
 	size_t curIndex = 0;
 	float threshold = 1e-4;
 	size_t NLM = numeric_limits<size_t>::max();
-	auto oct = Octree::create(threshold);
+	auto oct = Octree<size_t>::create(threshold);
 
 	TriangleIterator it(geo->getMesh()->geo);
 	for (; !it.isAtEnd() ;++it) {
         vector<size_t> IDs(3);
         for (int i=0; i<3; i++) {
             auto p = it.getPosition(i);
-            vector<void*> resultData = oct->radiusSearch(Vec3d(p), threshold);
-            if (resultData.size() > 0) IDs[i] = *(size_t*)resultData.at(0);
+            vector<size_t> resultData = oct->radiusSearch(Vec3d(p), threshold);
+            if (resultData.size() > 0) IDs[i] = resultData[0];
             else IDs[i] = NLM;
         }
 
@@ -92,9 +93,7 @@ void VRSegmentation::removeDuplicates(VRGeometryPtr geo) {
 				pos->addValue(p);
 				norms->addValue(n);
 				IDs[i] = curIndex;
-				size_t *curIndexPtr = new size_t;
-				*curIndexPtr = curIndex;
-				oct->add(Vec3d(p), curIndexPtr);
+				oct->add(Vec3d(p), curIndex);
 				curIndex++;
 			}
 		}
@@ -112,7 +111,6 @@ void VRSegmentation::removeDuplicates(VRGeometryPtr geo) {
 	geo->setLengths(lengths);
 
 	calcVertexNormals(geo->getMesh()->geo);
-	oct->delContent<size_t>();
 }
 
 
@@ -289,7 +287,7 @@ struct Accumulator_grid : public Accumulator {
 };
 
 struct Accumulator_octree : public Accumulator {
-    OctreePtr octree;
+    shared_ptr<Octree<Bin>> octree;
     int Da, Dr;
     float Ra, Rr, Dp;
 
@@ -299,30 +297,28 @@ struct Accumulator_octree : public Accumulator {
         Ra = Pi/Da;
         Rr = 5.0/Dr;
         Dp = 0.05*Rr;
-        octree = Octree::create(Rr);
+        octree = Octree<Bin>::create(Rr);
     }
 
     ~Accumulator_octree() {}
 
     float getWeight(Vec3d p) {
         auto t = octree->get(p);
-        vector<void*> data = t->getData();
+        vector<Bin> data = t->getData();
         if (data.size() == 0) return 0;
-        Bin* bin = (Bin*)data[0];
-        return bin->weight;
+        return data[0].weight;
     }
 
     void pushPoint(Pnt3d p, Vec3d n) {
         float w = 0;
         auto t = octree->get(p.subZero());
-        vector<void*> data = t->getData();
+        auto& data = t->getData();
         if (data.size() > 0) {
-            Bin* bin = (Bin*)data[0];
-            w = bin->weight;
-            bin->weight += 0.1;
+            w = data[0].weight;
+            data[0].weight += 0.1;
         }
 
-        t->add(p.subZero(), new Bin(), w);
+        t->add(p.subZero(), Bin(), w);
     }
 
     vector<VRPlane> eval() {

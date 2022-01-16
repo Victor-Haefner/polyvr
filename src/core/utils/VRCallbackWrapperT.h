@@ -187,7 +187,7 @@ struct VRCallbackWrapperT<P, U, R (T::*)(Args...)> : public VRCallbackWrapper<P>
 
     bool execute(void* o, const vector<P>& params, P& result) override {
         if (!callback) return false;
-        R res;
+        typename std::remove_reference<R>::type res;
         vector<string> defaultParams = splitString(U::str(),'|');
         if (!call<R, Args...>((T*)o, params, res, defaultParams)) return false;
         result = this->convert( res );

@@ -127,7 +127,13 @@ struct VRPyTSDF : VRPyBaseT<OSG::TSDF> {
     static PyObject* New(PyTypeObject *type, PyObject *args, PyObject *kwds);
 };
 
-struct VRPyPartitiontreeNode : VRPyBaseT<OSG::PartitiontreeNode> {
+namespace OSG {
+    typedef PartitiontreeNode<PyObject*> PartitiontreePyNode;
+    typedef OctreeNode<PyObject*> OctreePyNode;
+    typedef Octree<PyObject*> OcPytree;
+}
+
+struct VRPyPartitiontreePyNode : VRPyBaseT<OSG::PartitiontreePyNode> {
     static PyMethodDef methods[];
 };
 
@@ -135,7 +141,7 @@ struct VRPyQuadtreeNode : VRPyBaseT<OSG::QuadtreeNode> {
     static PyMethodDef methods[];
 };
 
-struct VRPyOctreeNode : VRPyBaseT<OSG::OctreeNode> {
+struct VRPyOctreePyNode : VRPyBaseT<OSG::OctreePyNode> {
     static PyMethodDef methods[];
 };
 
@@ -149,7 +155,7 @@ struct VRPyQuadtree : VRPyBaseT<OSG::Quadtree> {
     static PyObject* New(PyTypeObject *type, PyObject *args, PyObject *kwds);
 };
 
-struct VRPyOctree : VRPyBaseT<OSG::Octree> {
+struct VRPyOcPytree : VRPyBaseT<OSG::OcPytree> {
     static PyMethodDef methods[];
 
     static PyObject* New(PyTypeObject *type, PyObject *args, PyObject *kwds);

@@ -4,6 +4,7 @@
 #include "VREmitter.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/scene/VRScene.h"
+#include "core/math/partitioning/OctreeT.h"
 
 #include <cmath> /* cbrtf() */
 #include <btBulletDynamicsCommon.h>
@@ -24,7 +25,7 @@ VRMutex& VRParticles::mtx() {
 }
 
 VRParticles::VRParticles(string name, bool spawnParticles) : VRGeometry(name) {
-    ocparticles = Octree::create(0.1,10,name);
+    ocparticles = Octree<Particle*>::create(0.1,10,name);
     if (spawnParticles) resetParticles<Particle>();
     setVolumeCheck(false);
 }

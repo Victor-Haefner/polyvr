@@ -1,6 +1,7 @@
 #include "CSGGeometry.h"
 #include "CGALTypedefs.h"
 #include "core/math/partitioning/Octree.h"
+#include "core/math/partitioning/OctreeT.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/geometry/OSGGeometry.h"
 
@@ -92,9 +93,7 @@ CGALPolyhedron* CSGGeometry::toPolyhedron(VRGeometryPtr geo, PosePtr worldTransf
 				positions.push_back( CGAL::Point(p[0], p[1], p[2]) );
 				IDs[i] = curIndex;
                 //cout << "add point " << curIndex << "   " << osgPos << endl;
-				size_t *curIndexPtr = new size_t;
-				*curIndexPtr = curIndex;
-				oct->add(p, curIndexPtr);
+				oct->add(p, curIndex);
 				curIndex++;
 			}
 		}
@@ -121,8 +120,8 @@ CGALPolyhedron* CSGGeometry::toPolyhedron(VRGeometryPtr geo, PosePtr worldTransf
 	}
 
 	// Cleanup
-	oct->delContent<size_t>();
-	oct = Octree::create(thresholdL);
+	oct.reset();
+	oct = Octree<size_t>::create(thresholdL);
 
 	// Construct the polyhedron from raw data
     success = true;

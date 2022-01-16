@@ -64,9 +64,9 @@ class VRNature : public VRObject, public VRWorldModule {
         void removeTree(int id);
         void computeAllLODs(bool threaded = false);
         void computeLODs(VRLodLeafPtr leaf);
-        void computeLODs(map<OctreeNode*, VRLodLeafPtr>& leafs);
-        void computeLODs2(map<OctreeNode*, VRLodLeafPtr>& leafs);
-        void computeLODs3(map<OctreeNode*, VRLodLeafPtr>& leafs);
+        void computeLODs(map<OctreeNode<VRTransform*>*, VRLodLeafPtr>& leafs);
+        void computeLODs2(map<OctreeNode<VRTransform*>*, VRLodLeafPtr>& leafs);
+        void computeLODs3(map<OctreeNode<VRTransform*>*, VRLodLeafPtr>& leafs);
 
         VRLodTreePtr getLodTree();
 

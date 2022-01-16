@@ -13,6 +13,7 @@
 #include "core/math/partitioning/Octree.h"
 #include "core/utils/VRProgress.h"
 #include "core/utils/toString.h"
+#include "core/utils/MemMonitor.h"
 
 using namespace e57;
 using namespace std;
@@ -181,7 +182,7 @@ void OSG::loadE57(string path, VRTransformPtr res, map<string, string> importOpt
 
             cout << "fill octree" << endl;
             size_t Nskip = round(1.0/downsampling) - 1;
-            size_t count = 0;
+            //size_t count = 0;
             int Nskipped = 0;
             int gotCount = 0;
             do {
@@ -404,12 +405,30 @@ void OSG::loadPCB(string path, VRTransformPtr res, map<string, string> importOpt
     if (hasSpl) cout << "   scan has splats\n";
     else cout << "   scan has no splats\n";
 
+    //VRTransform("tmp"); // to add tmp to the name pool!
+    //VRPointCloud::create("tmp");
+
+    //MemMonitor::enable();
+
+    if (0) { // no memleaks here :D
+        auto i = shared_ptr<int>(new int(5));
+        auto o = VRObject::create("tmp");
+        auto t = VRTransform::create("tmp");
+        auto m = VRMaterial::create("tmp", false);
+        auto p = VRPointCloud::create("tmp");
+        p->applySettings(importOptions);
+        for (int i=0; i<500; i++) p->addPoint( Vec3d(i*0.17347,0.5001,0.5001), Vec3ub(100,101,102) );
+    }
+
+    //MemMonitor::disable();
+    //MemMonitor::enable();
+
     auto pointcloud = VRPointCloud::create("pointcloud");
     pointcloud->applySettings(importOptions);
 
     size_t Nskip = round(1.0/downsampling) - 1;
-    size_t count = 0;
-    int Nskipped = 0;
+    //size_t count = 0;
+    //int Nskipped = 0;
 
     int N = sizeof(Vec3d);
     if (hasCol) N = VRPointCloud::PntCol::size;
@@ -431,8 +450,6 @@ void OSG::loadPCB(string path, VRTransformPtr res, map<string, string> importOpt
     while (stream.read((char*)&pnt, N)) {
         Vec3d  pos = pnt.p;
         Vec3ub rgb = pnt.c;
-        //cout << "  read pnt: " << pos << " " << rgb << " " << endl;
-        //Color3f col(rgb[0]/255.0, rgb[1]/255.0, rgb[2]/255.0);
         if (hasSpl) pointcloud->addPoint(pos, pnt);
         else pointcloud->addPoint(pos, rgb);
         progress->update( 1 );
@@ -453,6 +470,9 @@ void OSG::loadPCB(string path, VRTransformPtr res, map<string, string> importOpt
     pointcloud->setupLODs();
     res->addChild(pointcloud);
     stream.close();
+
+    //pointcloud.reset();
+    //MemMonitor::disable();
 }
 
 void OSG::loadXYZ(string path, VRTransformPtr res, map<string, string> importOptions) {
