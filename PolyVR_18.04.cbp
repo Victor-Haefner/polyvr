@@ -1479,6 +1479,8 @@
 		<Unit filename="src/core/tools/selection/VRSelectionFwd.h" />
 		<Unit filename="src/core/tools/selection/VRSelector.cpp" />
 		<Unit filename="src/core/tools/selection/VRSelector.h" />
+		<Unit filename="src/core/utils/MemMonitor.cpp" />
+		<Unit filename="src/core/utils/MemMonitor.h" />
 		<Unit filename="src/core/utils/VRCallbackWrapper.cpp" />
 		<Unit filename="src/core/utils/VRCallbackWrapper.h" />
 		<Unit filename="src/core/utils/VRCallbackWrapperT.h" />
