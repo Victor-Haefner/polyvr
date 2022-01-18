@@ -383,7 +383,8 @@ void add_audio_stream(OutputStream *ost, AVFormatContext *oc, enum AVCodecID cod
     c->channels       = av_get_channel_layout_nb_channels(c->channel_layout);
     c->bit_rate       = 64000;
 
-    ost->st->time_base = (AVRational){ 1, c->sample_rate };
+	ost->st->time_base.num = 1;
+	ost->st->time_base.den = c->sample_rate;
 
     // some formats want stream headers to be separate
     if (oc->oformat->flags & AVFMT_GLOBALHEADER) c->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;

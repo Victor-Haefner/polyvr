@@ -5,7 +5,12 @@
 #include <list>
 #include "VRSoundFwd.h"
 
+#ifdef _WIN32
+struct ALCdevice;
+#else
 struct ALCdevice_struct;
+#endif
+
 namespace std { struct thread; }
 
 using namespace std;
@@ -24,7 +29,11 @@ class VRMicrophone : public std::enable_shared_from_this<VRMicrophone> {
 
         thread* recordingThread = 0;
         thread* streamingThread = 0;
+#ifdef _WIN32
+	    ALCdevice* device = 0;
+#else
 	    ALCdevice_struct* device = 0;
+#endif
 	    VRSoundPtr recording;
 
 	    VRSoundBufferPtr frame;

@@ -2,6 +2,10 @@
 #include "core/utils/toString.h"
 #include <AL/al.h>
 
+#ifdef _WIN32
+#include <minmax.h>
+#endif
+
 using namespace OSG;
 
 string toString(ALenum a) {

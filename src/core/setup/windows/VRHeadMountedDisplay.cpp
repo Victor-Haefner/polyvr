@@ -13,6 +13,7 @@
 #include "core/setup/VRSetup.h"
 #include "core/setup/windows/VRWindow.h"
 #include "core/setup/windows/VRGtkWindow.h"
+#include "core/setup/devices/VRDevice.h"
 #include "core/setup/devices/VRFlystick.h"
 #include "core/scripting/VRScript.h"
 #include "core/gui/VRGuiManager.h"
@@ -103,8 +104,8 @@ void VRHeadMountedDisplay::initTexRenderer() {
 	
 }
 
-void VRHeadMountedDisplay::updateCamera() {
-	if (!fboData) return;
+bool VRHeadMountedDisplay::updateCamera() {
+	if (!fboData) return true;
 	cout << "VRHeadMountedDisplay::updateCamera" << endl;
 	VRCameraPtr cam = VRScene::getCurrent()->getActiveCamera();
 	float f = cam->getFar();
@@ -123,6 +124,7 @@ void VRHeadMountedDisplay::updateCamera() {
 	mR.mult(m_mat4eyePosRight);
 	fboData->mcamL->setProjectionMatrix(toMatrix4f(mL));
 	fboData->mcamR->setProjectionMatrix(toMatrix4f(mR));
+	return true;
 }
 
 void VRHeadMountedDisplay::setScene() {
@@ -402,7 +404,7 @@ void VRHeadMountedDisplay::UpdateHMDMatrixPose() {
 	}
 }
 
-VRTransformPtr getTracker(int tID) { 
+VRTransformPtr VRHeadMountedDisplay::getTracker(int tID) { 
 	if (!tracker.count(tID)) {
 		tracker[tID] = VRTransform::create("hmdTracker");
 		hmd->setBeacon( tracker[tID], tID );
@@ -410,13 +412,13 @@ VRTransformPtr getTracker(int tID) {
 	return tracker[tID];
 }
 
-VRTransformPtr getDevice(int dID) { 
-	if (!devices.count(devID)) addController(devID); 
+VRDevicePtr VRHeadMountedDisplay::getDevice(int dID) { 
+	if (!devices.count(dID)) addController(dID); 
 	return devices[dID];
 }
 
 map<int, VRTransformPtr> VRHeadMountedDisplay::getTrackers() { return tracker; }
-map<int, VRDevicePtr> VRHeadMountedDisplay::getDevices() { return tracker; }
+map<int, VRDevicePtr> VRHeadMountedDisplay::getDevices() { return devices; }
 
 Matrix4d VRHeadMountedDisplay::convertMatrix(const vr::HmdMatrix34_t& mat) {
 	return Matrix4d(

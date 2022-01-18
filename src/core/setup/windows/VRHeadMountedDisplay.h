@@ -8,6 +8,7 @@
 #include <map>
 
 #include "../VRSetupFwd.h"
+#include "core/objects/VRObjectFwd.h"
 #include "core/utils/VRFunctionFwd.h"
 #include "core/utils/VRDeviceFwd.h"
 #include "core/tools/VRToolsFwd.h"
@@ -73,7 +74,7 @@ class VRHeadMountedDisplay : public std::enable_shared_from_this<VRHeadMountedDi
 		void setScene();
 		void SetupTexturemaps();
 
-		void updateCamera();
+		bool updateCamera();
 
 	public:
 		VRHeadMountedDisplay();
