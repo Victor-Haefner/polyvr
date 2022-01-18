@@ -3,6 +3,8 @@
 
 #include <OpenSG/OSGConfig.h>
 #include <list>
+#include <string>
+
 #include "VRSoundFwd.h"
 
 #ifdef _WIN32

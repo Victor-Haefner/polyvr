@@ -665,6 +665,10 @@ target_sources(polyvr PRIVATE src/core/scene/sound/VRMicrophone.cpp) # needs lib
 target_sources(polyvr PRIVATE src/core/scripting/VRPyRecorder.cpp) # needs AV
 target_sources(polyvr PRIVATE src/core/scripting/VRPySound.cpp) # needs libav
 target_sources(polyvr PRIVATE src/core/tools/VRRecorder.cpp) # needs av
+if(NOT WITHOUT_CEF)
+target_sources(polyvr PRIVATE src/addons/CEF/VRPyWebCam.cpp)
+target_sources(polyvr PRIVATE src/addons/CEF/VRWebCam.cpp)
+endif()
 endif()
 
 if(NOT WITHOUT_QRENCODE)
@@ -1178,8 +1182,6 @@ target_sources(polyvr PRIVATE src/core/utils/xml.cpp)
 endif()
 
 if(TRUE) # ok
-#target_sources(polyvr PRIVATE src/addons/CEF/VRPyWebCam.cpp)
-#target_sources(polyvr PRIVATE src/addons/CEF/VRWebCam.cpp)
 #target_sources(polyvr PRIVATE src/addons/RealWorld/MapGrid.cpp)
 #target_sources(polyvr PRIVATE src/addons/RealWorld/StreetAlgos.cpp)
 #target_sources(polyvr PRIVATE src/addons/RealWorld/World.cpp)
