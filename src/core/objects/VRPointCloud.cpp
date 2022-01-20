@@ -86,7 +86,7 @@ void VRPointCloud::loadChunk(VRLodPtr lod) {
     map<string, string> options;
     options["lit"] = toString(mat->isLit());
     options["pointSize"] = toString(pointSize);
-    options["downsampling"] = toString(1.0/downsamplingRate[0]);
+    options["downsampling"] = toString(1.0/downsamplingRate[1]);
     options["leafSize"] = toString(leafSize);
     options["keepOctree"] = toString(0);
     options["region"] = toString( region );
