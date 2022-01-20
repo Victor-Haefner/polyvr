@@ -61,6 +61,17 @@ class VRPyTypeCaster {
             return pack(l);
         }
 
+        template<typename T, typename G, typename H>
+        static PyObject* cast(const map<T,map<G,H>>& vt) {
+            vector< pair<PyObject*,PyObject*> > l;
+            for (auto t : vt) {
+                PyObject* o1 = cast<T>(t.first);
+                PyObject* o2 = cast<G,H>(t.second);
+                if (o1 && o2) l.push_back(make_pair(o1, o2));
+            }
+            return pack(l);
+        }
+
         template<typename T, typename G>
         static PyObject* cast(const map<T,vector<G>>& vt) {
             vector< pair<PyObject*,PyObject*> > l;
