@@ -30,6 +30,7 @@ VRPointCloud::~VRPointCloud() {}
 VRPointCloudPtr VRPointCloud::create(string name) { return VRPointCloudPtr( new VRPointCloud(name) ); }
 
 void VRPointCloud::setupMaterial(bool lit, int pointsize, bool doSplat, float splatModifier) {
+    mat->setUseGlobalFCMap(false); // the global material FC map is not threadsafe and its a memory leak!
     mat->setLit(lit);
     mat->setPointSize(pointsize);
 
@@ -55,9 +56,9 @@ void VRPointCloud::applySettings(map<string, string> options) {
     bool doSplats = false;
     double splatMod = 1.0;
     if (options.count("doSplats")) doSplats = true;
-    if (options.count("splatMod")) splatMod = toFloat(options["splatMod"]);
+    if (options.count("splatScale")) { splatScale = toFloat(options["splatScale"]); splatMod *= splatScale; }
+    if (options.count("splatMod")) splatMod *= toFloat(options["splatMod"]);
     if (options.count("downsampling")) splatMod /= sqrt(toFloat(options["downsampling"]));
-    //splatMod = 0.02;
 
     setupMaterial(lit, pointSize, doSplats, splatMod);
     octree->setResolution(leafSize);
@@ -90,8 +91,11 @@ void VRPointCloud::loadChunk(VRLodPtr lod) {
     options["leafSize"] = toString(leafSize);
     options["keepOctree"] = toString(0);
     options["region"] = toString( region );
+    options["splatScale"] = toString( splatScale );
+    cout << " ---------------- " << splatScale << endl;
 
-    auto chunk = VRImport::get()->load(path, prxy, false, "OSG", false, options);
+    bool threaded = true;
+    auto chunk = VRImport::get()->load(path, prxy, false, "OSG", threaded, options);
     prxy->addChild(chunk);
     //cout << " VRPointCloud::onLodSwitch loaded " << chunk->getName() << ", parent: " << chunk->getParent() << ", region: " << toString(region) << endl;
 }
@@ -99,7 +103,14 @@ void VRPointCloud::loadChunk(VRLodPtr lod) {
 void VRPointCloud::onImportEvent(VRImportJob params) {
     VRLock lock(mtx);
     //cout << " ---------------------- VRPointCloud::onImportEvent " << params.path << endl;
-    params.res->getParent()->clearLinks();
+    if (!params.res) return;
+    auto p = params.res->getParent();
+    if (!p) return;
+    auto pc = params.res->getChild(0);
+    if (!pc) return;
+    p->clearLinks();
+    params.res->subChild(pc); // workaround for thread issues
+    params.res->addChild(pc);
 }
 
 void VRPointCloud::onLodSwitch(VRLodEventPtr e) { // for streaming
@@ -113,7 +124,7 @@ void VRPointCloud::onLodSwitch(VRLodEventPtr e) { // for streaming
     }
 
     if (i1 == 1) {
-        cout << "VRPointCloud::onLodSwitch " << lod->getName() << ", unload region " << Vec2i(i0, i1) << endl;
+        //cout << "VRPointCloud::onLodSwitch " << lod->getName() << ", unload region " << Vec2i(i0, i1) << endl;
         VRLock lock(mtx);
         auto prxy = lod->getChild(0);
         prxy->clearChildren();

@@ -60,6 +60,7 @@ class VRPointCloud : public VRTransform {
         double leafSize = 10;
         double actualLeafSize = 0;
         size_t partitionLimit = 1e5;
+        double splatScale = 1.0;
 
         static string splatVP;
         static string splatFP;

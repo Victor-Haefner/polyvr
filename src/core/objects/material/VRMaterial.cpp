@@ -767,7 +767,7 @@ void VRMaterial::setTexture(VRTexturePtr img, bool alpha, int unit) {
 
     //md->texture = img;
     md->texChunks[unit]->setImage(img->getImage());
-    fieldContainerMap[img->getImage()->getId()] = md->texChunks[unit]->getId();
+    if (useGlobalFCMap) fieldContainerMap[img->getImage()->getId()] = md->texChunks[unit]->getId();
     if (alpha && img->getImage()->hasAlphaChannel()) enableTransparency(false);
 
     md->texChunks[unit]->setInternalFormat(img->getInternalFormat());
@@ -808,7 +808,7 @@ void VRMaterial::setTextureAndUnit(VRTexturePtr img, int unit) {
     auto texChunk = getTexChunk(unit);
     if (texChunk) {
         texChunk->setImage(img->getImage());
-        fieldContainerMap[img->getImage()->getId()] = texChunk->getId();
+        if (useGlobalFCMap) fieldContainerMap[img->getImage()->getId()] = texChunk->getId();
     }
 }
 
@@ -1127,6 +1127,10 @@ void regVProgramVars(ShaderProgram* vp) {
     for (size_t i=0; i < mfpvars->size(); i++) VRMaterial::fieldContainerMap[(*mfpvars)[i]->getId()] = vp->getId();
 }
 
+void VRMaterial::setUseGlobalFCMap(bool b) {
+    useGlobalFCMap = b;
+}
+
 void VRMaterial::initShaderChunk() {
     auto md = mats[activePass];
     if (md->shaderChunk != 0) return;
@@ -1158,12 +1162,12 @@ void VRMaterial::initShaderChunk() {
     md->teProgram->setShaderType(GL_TESS_EVALUATION_SHADER);
 
     // link shaderprogramchunk to is programs
-    fieldContainerMap[md->vProgram->getId()] = scID;
-    fieldContainerMap[md->fProgram->getId()] = scID;
-    fieldContainerMap[md->fdProgram->getId()] = scID;
-    fieldContainerMap[md->gProgram->getId()] = scID;
-    fieldContainerMap[md->tcProgram->getId()] = scID;
-    fieldContainerMap[md->teProgram->getId()] = scID;
+    if (useGlobalFCMap) fieldContainerMap[md->vProgram->getId()] = scID;
+    if (useGlobalFCMap) fieldContainerMap[md->fProgram->getId()] = scID;
+    if (useGlobalFCMap) fieldContainerMap[md->fdProgram->getId()] = scID;
+    if (useGlobalFCMap) fieldContainerMap[md->gProgram->getId()] = scID;
+    if (useGlobalFCMap) fieldContainerMap[md->tcProgram->getId()] = scID;
+    if (useGlobalFCMap) fieldContainerMap[md->teProgram->getId()] = scID;
 
     md->shaderChunk->addShader(md->vProgram);
 
@@ -1182,14 +1186,14 @@ void VRMaterial::initShaderChunk() {
 	md->vProgram->addOSGVariable("OSGModelViewMatrix");
 	md->vProgram->addOSGVariable("OSGViewMatrix");
 #endif
-	regVProgramVars(md->vProgram);
+	if (useGlobalFCMap) regVProgramVars(md->vProgram);
 }
 
 void VRMaterial::enableShaderParameter(string name) {
     auto md = mats[activePass];
     if (!md->vProgram) return;
     md->vProgram->addOSGVariable(name.c_str());
-	regVProgramVars(md->vProgram);
+	if (useGlobalFCMap) regVProgramVars(md->vProgram);
 }
 
 void VRMaterial::remShaderChunk() {

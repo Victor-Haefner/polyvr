@@ -15,6 +15,9 @@
 #include "core/utils/toString.h"
 #include "core/utils/MemMonitor.h"
 
+#include <fcntl.h> // to tell the system how we will read data
+#include <ext/stdio_filebuf.h>
+
 using namespace e57;
 using namespace std;
 using namespace OSG;
@@ -382,7 +385,12 @@ void OSG::loadPCB(string path, VRTransformPtr res, map<string, string> importOpt
     auto bounds = extractRegionBounds(path, region);
 
     auto params = VRPointCloud::readPCBHeader(path);
-    ifstream stream(path);
+
+    int fileDescr = fileno(::fopen(path.c_str(), "rb"));
+    __gnu_cxx::stdio_filebuf<char> filebuf(fileDescr, std::ios::in);
+    istream stream(&filebuf);
+    //ifstream stream(path); // I guess this will be needed on windows..
+
     int hL = toInt(params["headerLength"]);
     stream.seekg(hL);
     cout << "  headers: " << toString(params) << endl;
@@ -395,6 +403,7 @@ void OSG::loadPCB(string path, VRTransformPtr res, map<string, string> importOpt
 
     if (hasSpl) importOptions["doSplats"] = "1";
     if (params.count("splatMod")) importOptions["splatMod"] = params["splatMod"];
+    else importOptions["splatMod"] = "1.0";
 
     auto progress = VRProgress::create();
     progress->setup("process points ", cN);
@@ -447,6 +456,18 @@ void OSG::loadPCB(string path, VRTransformPtr res, map<string, string> importOpt
     int Nbounds = bounds.size()*0.5;
     if (Nbounds > 0 && bounds[0] > 0) skip(bounds[0]);
 
+    // try to optimize file access
+    /**
+    POSIX_FADV_NORMAL Indicates that the application has no advice to give about its access pattern for the specified data. If no advice is given for an open file, this is the default assumption.
+    POSIX_FADV_SEQUENTIAL The application expects to access the specified data sequentially (with lower offsets read before higher ones).
+    POSIX_FADV_RANDOM The specified data will be accessed in random order.
+    POSIX_FADV_NOREUSE The specified data will be accessed only once.
+    POSIX_FADV_WILLNEED The specified data will be accessed in the near future.
+    POSIX_FADV_DONTNEED The specified data will not be accessed in the near future.
+    */
+    //posix_fadvise(fileDescr, 0, 0, POSIX_FADV_RANDOM); // meh, doesn't really improve anything!
+
+
     while (stream.read((char*)&pnt, N)) {
         Vec3d  pos = pnt.p;
         Vec3ub rgb = pnt.c;
@@ -468,8 +489,9 @@ void OSG::loadPCB(string path, VRTransformPtr res, map<string, string> importOpt
     }
 
     pointcloud->setupLODs();
-    res->addChild(pointcloud);
-    stream.close();
+    res->addChild(pointcloud); // TODO: threading -> problems with states, re-adding it as child in main thread fixes issue!
+    //stream.close(); // for windows?
+    close(fileDescr);
 
     //pointcloud.reset();
     //MemMonitor::disable();
