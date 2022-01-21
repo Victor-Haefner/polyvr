@@ -155,15 +155,15 @@ vector<string> VRICEClient::getUserID(string n) {
     return res;
 }
 
-VRTCPClientPtr VRICEClient::getClient(string otherID) {
-    if (!clients.count(otherID)) {
-        clients[otherID] = VRTCPClient::create();
-        clients[otherID]->setGuard("TCPPVR\n");
+VRTCPClientPtr VRICEClient::getClient(string otherID, CHANNEL channel) {
+    if (!clients.count(otherID) || !clients[otherID].count(channel)) {
+        clients[otherID][channel] = VRTCPClient::create();
+        clients[otherID][channel]->setGuard("TCPPVR\n");
     }
-    return clients[otherID];
+    return clients[otherID][channel];
 }
 
-map<string, VRTCPClientPtr> VRICEClient::getClients() { return clients; }
+map<string, map<VRICEClient::CHANNEL, VRTCPClientPtr> > VRICEClient::getClients() { return clients; }
 
 void VRICEClient::connectTo(string otherID) {
     if (uID == "" || otherID == "") {
@@ -202,23 +202,28 @@ void VRICEClient::connectTo(string otherID) {
         return;
     }
 
-    int port = toInt( params[0] );
-    if (port == 0) {
+    int port1 = toInt( params[0] );
+    if (port1 == 0) {
 #ifndef WITHOUT_GTK
         VRConsoleWidget::get("Collaboration")->write( " ICE "+name+"("+uid1+"): connect to "+turnIP+" faild! no port received from turn server "+turnURL+", received '"+data+"'\n", "red");
 #endif
         return;
     }
 
-    //cout << " -> port " << port << endl;
+    //cout << " -> port " << port1 << endl;
 #ifndef WITHOUT_GTK
-    VRConsoleWidget::get("Collaboration")->write( " ICE "+name+"("+uid1+"): connect to "+users[uid2]+"("+uid2+") over "+turnIP+":"+toString(port)+"\n");
+    VRConsoleWidget::get("Collaboration")->write( " ICE "+name+"("+uid1+"): connect to "+users[uid2]+"("+uid2+") over "+turnIP+":"+toString(port1)+"\n");
 #endif
-    getClient(otherID)->connect(turnIP, port);
+    getClient(otherID, SCENEGRAPH)->connect(turnIP, port1);
+
+    if (params.size() > 1) {
+        int port2 = toInt( params[0] );
+        if (port2 != 0) getClient(otherID, AUDIO)->connect(turnIP, port2);
+    }
 }
 
-void VRICEClient::sendTCP(string otherID, string msg) {
-    auto cli = getClient(otherID);
+void VRICEClient::sendTCP(string otherID, string msg, CHANNEL channel) {
+    auto cli = getClient(otherID, channel);
     if (!cli->connected()) return;
     cli->send(msg, "TCPPVR\n");
 }
