@@ -358,6 +358,8 @@ bool CEF::mouse(int lb, int rb, int wu, int wd, VRDeviceWeakPtr d) {
     me.x = ins->texel[0]*width;
     me.y = ins->texel[1]*height;
 
+    bool blockSignals = false;
+
     if (b < 3) {
         cef_mouse_button_type_t mbt;
         if (b == 0) mbt = MBT_LEFT;
@@ -370,8 +372,10 @@ bool CEF::mouse(int lb, int rb, int wu, int wd, VRDeviceWeakPtr d) {
     if (b == 3 || b == 4) {
         int d = b==3 ? -1 : 1;
         host->SendMouseWheelEvent(me, d*width*0.05, d*height*0.05);
+        blockSignals = true; // only for scrolling
     }
-    return false;
+
+    return !blockSignals;
 }
 
 bool CEF::keyboard(VRDeviceWeakPtr d) {

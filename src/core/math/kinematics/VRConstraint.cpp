@@ -172,7 +172,7 @@ void VRConstraint::apply(VRTransformPtr obj, VRObjectPtr parent, bool force) {
     J.mult(refMatrixBI);
     obj->setMatrixTo(J, parent);
 
-    cout << VRGlobals::CURRENT_FRAME << "  VRConstraint::apply " << obj->getName() << " " << obj->getWorldPosition()[1] << endl;
+    //cout << VRGlobals::CURRENT_FRAME << "  VRConstraint::apply " << obj->getName() << " " << obj->getWorldPosition()[1] << endl;
 }
 
 
