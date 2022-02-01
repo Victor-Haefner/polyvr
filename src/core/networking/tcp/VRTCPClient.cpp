@@ -113,7 +113,7 @@ class TCPClient {
                     messages.pop_front();
                     if (!messages.empty()) processQueue();
                 } else {
-                    cout << " tcp client write ERROR: " << ec << "  N: " << N << ", close socket!" << endl;
+                    cout << " tcp client write ERROR: " << ec.message() << "  N: " << N << ", close socket!" << endl;
                     socket->close();
                 }
             };
@@ -178,13 +178,21 @@ class TCPClient {
 
         void connect(string uri) {
             //cout << "TCPClient::connect to: " << uri << endl;
+            auto endpoints = uriToEndpoints(uri);
+            if (endpoints.size() == 0) {
+                cout << "TCPClient::connect failed, no endpoints found for uri " << uri << endl;
+#ifndef WITHOUT_GTK
+                VRConsoleWidget::get("Collaboration")->write( " TCP connect to "+uri+" failed, no endpoints found\n", "red");
+#endif
+            }
+
             try {
-                socket->connect( uriToEndpoints(uri)[0] );
+                socket->connect( endpoints[0] );
                 read();
             } catch(std::exception& e) {
                 cout << "TCPClient::connect failed with: " << e.what() << endl;
 #ifndef WITHOUT_GTK
-                VRConsoleWidget::get("Collaboration")->write( " TCP connect to "+uri+" failed with "+e.what()+"\n", "red");
+                VRConsoleWidget::get("Collaboration")->write( " TCP connect to "+uri+" ("+toString(endpoints.size())+" endpoints) failed with "+e.what()+"\n", "red");
 #endif
             }
         }
