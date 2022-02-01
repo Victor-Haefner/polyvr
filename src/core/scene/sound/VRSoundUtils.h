@@ -50,6 +50,7 @@ class VRSoundInterface {
     private:
         unsigned int Nbuffers = 50;
         unsigned int source = 0;
+        unsigned int filter = 0;
         int queuedBuffers = 0;
         unsigned int* buffers = 0;
         list<unsigned int> free_buffers;
@@ -63,7 +64,7 @@ class VRSoundInterface {
         void play();
         void pause();
 
-        void updateSource(float pitch, float gain);
+        void updateSource(float pitch, float gain, float lowpass = 1.0, float highpass = 1.0);
         void checkSource();
 
         int getQueuedBuffer();

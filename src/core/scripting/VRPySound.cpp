@@ -19,6 +19,7 @@ PyMethodDef VRPySound::methods[] = {
     {"setLoop", PyWrap(Sound, setLoop, "Stop sound", void, bool ) },
     {"setPitch", PyWrap(Sound, setPitch, "Stop sound", void, float ) },
     {"setVolume", PyWrap(Sound, setVolume, "Set sound volume, try setting master volume on soundmanager", void, float ) },
+    {"setBandpass", PyWrap(Sound, setBandpass, "Set band pass", void, float, float ) },
     {"setUser", PyWrap(Sound, setUser, "Stop sound", void, Vec3d, Vec3d ) },
     {"isRunning", PyWrap(Sound, isRunning, "Check if sound is running", bool) },
     {"exportToFile", PyWrap(Sound, exportToFile, "Export to file, (.mp3)", void, string) },

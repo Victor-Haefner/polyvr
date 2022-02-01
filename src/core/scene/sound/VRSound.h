@@ -47,6 +47,8 @@ class VRSound {
         bool loop = false;
         float pitch = 1;
         float gain = 1;
+        float lpass = 1;
+        float hpass = 1;
         Vec3d* pos = 0;
         Vec3d* vel = 0;
 
@@ -68,6 +70,7 @@ class VRSound {
         void setLoop(bool loop);
         void setPitch(float pitch);
         void setVolume(float gain);
+        void setBandpass(float lpass, float hpass);
         void setUser(Vec3d p, Vec3d v);
         void setCallback(VRUpdateCbPtr callback);
 

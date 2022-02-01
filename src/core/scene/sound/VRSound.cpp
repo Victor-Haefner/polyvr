@@ -104,6 +104,12 @@ void VRSound::setVolume(float gain) { this->gain = gain; doUpdate = true; }
 void VRSound::setUser(Vec3d p, Vec3d v) { *pos = p; *vel = v; doUpdate = true; }
 void VRSound::setCallback(VRUpdateCbPtr cb) { callback = cb; }
 
+void VRSound::setBandpass(float lpass, float hpass) {
+    this->lpass = lpass;
+    this->hpass = hpass;
+    doUpdate = true;
+}
+
 bool VRSound::isRunning() {
     if (interface) interface->recycleBuffer();
     //cout << "isRunning " << bool(al->state == AL_PLAYING) << " " << bool(al->state == AL_INITIAL) << " " << getQueuedBuffer()<< endl;
@@ -277,6 +283,11 @@ void VRSound::playBuffer(VRSoundBufferPtr frame) { interface->queueFrame(frame);
 void VRSound::addBuffer(VRSoundBufferPtr frame) { ownedBuffer.push_back(frame); }
 
 void VRSound::queuePacket(AVPacket* packet) {
+    if (doUpdate) {
+        interface->updateSource(pitch, gain, hpass, lpass);
+        doUpdate = false;
+    }
+
     for (auto frame : extractPacket(packet)) {
         if (interrupt) { cout << "interrupt sound\n"; break; }
         interface->queueFrame(frame);
@@ -342,8 +353,6 @@ void VRSound::playFrame() {
             interface->recycleBuffer();
             return;
         }
-
-        if (doUpdate) interface->updateSource(pitch, gain);
 
         bool endReached = false;
 

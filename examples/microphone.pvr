@@ -43,6 +43,7 @@
 	import VR
 
 	VR.inStream = VR.Sound()
+	VR.inStream.setBandpass(0.25, 0.25) # basic noise reduction
 	VR.inStream.listenStream(1234)
 </core>
     </Script>
