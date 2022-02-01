@@ -14,6 +14,7 @@ class AVPacket;
 class AVCodecContext;
 class AVFormatContext;
 struct OutputStream;
+struct InputStream;
 
 typedef signed char ALbyte;
 
@@ -30,6 +31,7 @@ class VRSound {
         int nextBuffer = 0;
         VRUpdateCbPtr callback;
         VRTCPClientPtr tcpClient;
+        VRTCPServerPtr tcpServer;
         VRRestClientPtr restClient;
 
         unsigned int frequency = 0;
@@ -49,7 +51,8 @@ class VRSound {
         Vec3d* vel = 0;
 
         AVFormatContext* muxer = 0;
-        OutputStream* audio_st = 0;
+        OutputStream* audio_ost = 0;
+        InputStream*  audio_ist = 0;
         int lastEncodingFlag = 1;
 
         void updateSampleAndFormat();
@@ -87,10 +90,13 @@ class VRSound {
         void playBuffer(VRSoundBufferPtr frame);
         void addBuffer(VRSoundBufferPtr frame);
 
-        bool setupStream(string url, int port);
+        bool setupOutStream(string url, int port);
         void streamBuffer(VRSoundBufferPtr frame);
         void closeStream(bool keepOpen = false);
         void flushPackets();
+
+        bool setupInStream(int port);
+        bool listenStream(int port);
 
         void exportToFile(string path);
         void streamTo(string url, int port, bool keepOpen = false);

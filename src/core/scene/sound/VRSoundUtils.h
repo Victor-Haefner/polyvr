@@ -70,6 +70,8 @@ class VRSoundInterface {
         void recycleBuffer();
         unsigned int getFreeBufferID();
         void queueFrame(VRSoundBufferPtr frame);
+
+        static void printBuffer(VRSoundBufferPtr frame, string tag);
 };
 
 #endif // VRSOUNDUTILS_H_INCLUDED

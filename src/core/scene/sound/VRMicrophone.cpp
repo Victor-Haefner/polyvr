@@ -81,7 +81,7 @@ void VRMicrophone::startStreaming(string address, int port) {
     };
 
     auto streamCb = [&](string address, int port) {
-        doStream = recording->setupStream(address, port);
+        doStream = recording->setupOutStream(address, port);
 
         while (doStream) {
             bool enoughInitialQueuedFrames = bool(queuedFrames >= queueSize);

@@ -89,6 +89,7 @@ void VRSoundInterface::updateSource(float pitch, float gain) {
 void VRSoundInterface::queueFrame(VRSoundBufferPtr frame) {
     ALint val = -1;
     ALuint bufid = getFreeBufferID();
+    printBuffer(frame, "queueFrame");
     ALCHECK( alBufferData(bufid, frame->format, frame->data, frame->size, frame->sample_rate));
     ALCHECK( alSourceQueueBuffers(source, 1, &bufid));
     ALCHECK( alGetSourcei(source, AL_SOURCE_STATE, &val));
@@ -137,3 +138,17 @@ void VRSoundInterface::recycleBuffer() {
         queuedBuffers = max(0,queuedBuffers-1);
     }
 }
+
+
+void VRSoundInterface::printBuffer(VRSoundBufferPtr frame, string tag) {
+    cout << " -- print buffer info " << tag << endl;
+    cout << "  data: " << (void*)frame->data << endl;
+    cout << "  size: " << frame->size << endl;
+    cout << "  sample_rate: " << frame->sample_rate << endl;
+    cout << "  format: " << frame->format << endl;
+    cout << "  owned: " << frame->owned << endl;
+    cout << " -- done -- " << endl;
+}
+
+
+

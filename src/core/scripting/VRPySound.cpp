@@ -27,6 +27,7 @@ PyMethodDef VRPySound::methods[] = {
     {"synthBufferOnChannels", PyWrap(Sound, synthBufferOnChannels, "synthBufferOnChannels( [[[f,A]]], [[[f,A]]], T)\n\t [[f,A]] list of channels with each containing a list of frequency/amplitude pairs in channel order, interpolate the two spectra\n\tT is the packet duration in seconds\n\t", void, vector<vector<Vec2d>>, vector<vector<Vec2d>>, float) },
     {"synthSpectrum", PyWrap(Sound, synthSpectrum, "synthSpectrum( [A], int S, float T, float F, bool retBuffer )\t\n A amplitude, S sample rate, T packet duration in seconds, F fade in/out duration in s , specify if you want to return the generated buffer, maxQueued", vector<short>, vector<double>, uint, float, float, bool, int) },
     {"streamTo", PyWrap(Sound, streamTo, "Stream sound to a target URL and port", void, string, int, bool) },
+    {"listenStream", PyWrap(Sound, listenStream, "Listen on port for incoming stream packets", bool, int) },
     {NULL}  /* Sentinel */
 };
 
