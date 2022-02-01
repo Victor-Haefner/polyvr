@@ -756,65 +756,67 @@ struct InputStream {
     }
 };
 
+string VRSound::onStreamData(string data) {
+    if (!audio_ist) {
+        if (!initiated) initiate();
+        audio_ist = new InputStream(data);
 
-bool VRSound::setupInStream(int port) {
-    function<string(string)> onStreamData = [&](string data) -> string {
-        if (!audio_ist) {
-            if (!initiated) initiate();
-            audio_ist = new InputStream(data);
+        AVInputFormat* fmt = av_find_input_format("mp3");
+        auto codec = avcodec_find_decoder(AV_CODEC_ID_MP3);
+        al->codec = avcodec_alloc_context3(codec);
 
-            AVInputFormat* fmt = av_find_input_format("mp3");
-            auto codec = avcodec_find_decoder(AV_CODEC_ID_MP3);
-            al->codec = avcodec_alloc_context3(codec);
+        al->codec->sample_fmt     = AV_SAMPLE_FMT_S32P;
+        al->codec->sample_rate    = 44100;
+        al->codec->channel_layout = AV_CH_LAYOUT_MONO;
+        al->codec->channels       = 1;
+        al->codec->bit_rate       = 64000;
+        if (fmt->flags & AVFMT_GLOBALHEADER) al->codec->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
+        int ret = avcodec_open2(al->codec, NULL, NULL);
 
-            al->codec->sample_fmt     = AV_SAMPLE_FMT_S32P;
-            al->codec->sample_rate    = 44100;
-            al->codec->channel_layout = AV_CH_LAYOUT_MONO;
-            al->codec->channels       = 1;
-            al->codec->bit_rate       = 64000;
-            if (fmt->flags & AVFMT_GLOBALHEADER) al->codec->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
-            int ret = avcodec_open2(al->codec, NULL, NULL);
+        al->context = avformat_alloc_context();
+        al->context->iformat = fmt;
 
-            al->context = avformat_alloc_context();
-            al->context->iformat = fmt;
+        AVStream* stream = avformat_new_stream(al->context, NULL);
+        stream->codec = al->codec;
+        stream->time_base.num = 1;
+        stream->time_base.den = al->codec->sample_rate;
+        ret = avcodec_parameters_from_context(stream->codecpar, al->codec);
+        stream->codecpar->format = AV_SAMPLE_FMT_S32P;
+        if (ret < 0) { fprintf(stderr, "Could not copy the stream parameters\n"); return ""; }
 
-            AVStream* stream = avformat_new_stream(al->context, NULL);
-            stream->codec = al->codec;
-            stream->time_base.num = 1;
-            stream->time_base.den = al->codec->sample_rate;
-            ret = avcodec_parameters_from_context(stream->codecpar, al->codec);
-            stream->codecpar->format = AV_SAMPLE_FMT_S32P;
-            if (ret < 0) { fprintf(stderr, "Could not copy the stream parameters\n"); return ""; }
+        av_dump_format(al->context, 0, NULL, 0);
 
-            av_dump_format(al->context, 0, NULL, 0);
+        al->frame = av_frame_alloc(); // Allocate frame
+        al->packet = { 0 };
+        av_init_packet(&al->packet);
 
-            al->frame = av_frame_alloc(); // Allocate frame
-            al->packet = { 0 };
-            av_init_packet(&al->packet);
+        updateSampleAndFormat();
+    } else {
+        int r = av_packet_from_data(&al->packet, (uint8_t*)&data[0], data.size());
+        if (r < 0 ) cout << "  av_packet_from_data failed with " << r << endl;
+        queuePacket(&al->packet);
+    }
 
-            updateSampleAndFormat();
-        } else {
-            int r = av_packet_from_data(&al->packet, (uint8_t*)&data[0], data.size());
-            if (r < 0 ) cout << "  av_packet_from_data failed with " << r << endl;
-            queuePacket(&al->packet);
-        }
+    return "";
+}
 
-        return "";
-    };
+bool VRSound::listenStream(int port) {
+    auto streamCb = bind(&VRSound::onStreamData, this, placeholders::_1);
 
     if (!tcpServer) {
         tcpServer = VRTCPServer::create();
-        tcpServer->onMessage(onStreamData);
+        tcpServer->onMessage(streamCb);
         tcpServer->listen(port, "");
     }
 
     av_register_all();
-
     return true;
 }
 
-bool VRSound::listenStream(int port) {
-    setupInStream(port);
+bool VRSound::playPeerStream(VRTCPClientPtr client) {
+    auto streamCb = bind(&VRSound::onStreamData, this, placeholders::_1);
+    client->onMessage(streamCb);
+    av_register_all();
     return true;
 }
 

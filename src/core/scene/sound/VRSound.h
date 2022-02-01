@@ -57,6 +57,7 @@ class VRSound {
 
         void updateSampleAndFormat();
         void write_buffer(AVFormatContext *oc, OutputStream *ost, VRSoundBufferPtr buffer);
+        string onStreamData(string s);
 
     public:
         VRSound();
@@ -95,8 +96,8 @@ class VRSound {
         void closeStream(bool keepOpen = false);
         void flushPackets();
 
-        bool setupInStream(int port);
         bool listenStream(int port);
+        bool playPeerStream(VRTCPClientPtr client);
 
         void exportToFile(string path);
         void streamTo(string url, int port, bool keepOpen = false);
