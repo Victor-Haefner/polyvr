@@ -54,11 +54,7 @@ void VRMicrophone::startRecording() {
 template <typename T>
 using duration = std::chrono::duration<T, std::milli>;
 
-void VRMicrophone::startStreaming(string address, int port) {
-    start();
-    doStream = true;
-    streamMutex = new VRMutex();
-
+void VRMicrophone::startRecordingThread() {
     auto recordCb = [&]() {
         while (doStream) {
             ALint Count = 0;
@@ -80,9 +76,11 @@ void VRMicrophone::startStreaming(string address, int port) {
         }
     };
 
-    auto streamCb = [&](string address, int port) {
-        doStream = recording->setupOutStream(address, port);
+    recordingThread = new thread(recordCb);
+}
 
+void VRMicrophone::startStreamingThread() {
+    auto streamCb = [&]() {
         while (doStream) {
             bool enoughInitialQueuedFrames = bool(queuedFrames >= queueSize);
             bool enoughQueuedFramesInStream = bool(queuedStream >= queueSize - streamBuffer);
@@ -94,6 +92,7 @@ void VRMicrophone::startStreaming(string address, int port) {
                     frameBuffer.pop_front();
 
                     if (frame) {
+                        cout << "VRMicrophone stream " << frame->size << endl;
                         recording->streamBuffer(frame);
                         queuedFrames = max(queuedFrames-1, 0);
                         if (!needsFlushing) queuedStream++;
@@ -113,8 +112,25 @@ void VRMicrophone::startStreaming(string address, int port) {
         recording->closeStream();
     };
 
-    recordingThread = new thread(recordCb);
-    streamingThread = new thread(streamCb, address, port);
+    streamingThread = new thread(streamCb);
+}
+
+void VRMicrophone::startStreamingOver(VRTCPClientPtr client) {
+    start();
+    streamMutex = new VRMutex();
+    doStream = recording->addOutStreamClient(client);
+
+    startRecordingThread();
+    startStreamingThread();
+}
+
+void VRMicrophone::startStreaming(string address, int port) {
+    start();
+    streamMutex = new VRMutex();
+    doStream = recording->setupOutStream(address, port);
+
+    startRecordingThread();
+    startStreamingThread();
 }
 
 void VRMicrophone::pauseStreaming(bool p) {

@@ -6,6 +6,7 @@
 #include <string>
 
 #include "VRSoundFwd.h"
+#include "core/networking/VRNetworkingFwd.h"
 
 #ifdef _WIN32
 struct ALCdevice;
@@ -50,6 +51,9 @@ class VRMicrophone : public std::enable_shared_from_this<VRMicrophone> {
 	    void start();
 	    void stop();
 
+	    void startRecordingThread();
+	    void startStreamingThread();
+
 	public:
 		VRMicrophone();
 		~VRMicrophone();
@@ -61,6 +65,7 @@ class VRMicrophone : public std::enable_shared_from_this<VRMicrophone> {
 		VRSoundPtr stopRecording();
 
 		void startStreaming(string address, int port);
+		void startStreamingOver(VRTCPClientPtr client);
 		void pauseStreaming(bool p);
 		void stopStreaming();
 };

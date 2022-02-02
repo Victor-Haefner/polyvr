@@ -95,6 +95,7 @@ class VRSound {
         void addBuffer(VRSoundBufferPtr frame);
 
         bool setupOutStream(string url, int port);
+        bool addOutStreamClient(VRTCPClientPtr client);
         void streamBuffer(VRSoundBufferPtr frame);
         void closeStream(bool keepOpen = false);
         void flushPackets();

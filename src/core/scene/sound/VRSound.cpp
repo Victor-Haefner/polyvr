@@ -680,11 +680,8 @@ void VRSound::flushPackets() {
     }
 }
 
-bool VRSound::setupOutStream(string url, int port) {
-    if (!tcpClient) {
-        tcpClient = VRTCPClient::create();
-        tcpClient->connect(url, port);
-    }
+bool VRSound::addOutStreamClient(VRTCPClientPtr client) {
+    tcpClient = client;
 
     if (!tcpClient->connected()) {
         tcpClient.reset();
@@ -722,6 +719,15 @@ bool VRSound::setupOutStream(string url, int port) {
     av_dict_set(&options, "live", "1", 0);
     avformat_write_header(muxer, &options);
     return true;
+}
+
+bool VRSound::setupOutStream(string url, int port) {
+    if (!tcpClient) {
+        tcpClient = VRTCPClient::create();
+        tcpClient->connect(url, port);
+    }
+
+    return addOutStreamClient(tcpClient);
 }
 
 void VRSound::streamBuffer(VRSoundBufferPtr frame) { write_buffer(muxer, audio_ost, frame); }

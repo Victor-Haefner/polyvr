@@ -216,10 +216,10 @@ void VRICEClient::connectTo(string otherID) {
 #endif
     getClient(otherID, SCENEGRAPH)->connect(turnIP, port1);
 
-    /*if (params.size() >= 3) {
+    if (params.size() >= 3) {
         int port2 = toInt( params[3] );
         if (port2 != 0) getClient(otherID, AUDIO)->connect(turnIP, port2);
-    }*/
+    }
 }
 
 void VRICEClient::sendTCP(string otherID, string msg, CHANNEL channel) {
