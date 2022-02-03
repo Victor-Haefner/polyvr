@@ -829,7 +829,7 @@ bool VRSound::listenStream(int port) {
 
 bool VRSound::playPeerStream(VRUDPClientPtr client) {
     auto streamCb = bind(&VRSound::onStreamData, this, placeholders::_1);
-    //client->onMessage(streamCb); // TODO
+    client->onMessage(streamCb);
     av_register_all();
     return true;
 }

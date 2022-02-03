@@ -55,6 +55,7 @@ template<> bool toValue(PyObject* o, string& v) {
         return 1;
     }
 
+    if (VRPyBase::isNone(o)) return 1;
     if (!PyString_Check(o) && !PyUnicode_Check(o)) o = PyObject_Repr(o); // may segfault with tuple!
     auto vc = PyString_AsString(o);
     v = vc?vc:"";

@@ -30,7 +30,7 @@ class UDPServer {
         boost::array<char, 1024> buffer;
         udp::endpoint remote_endpoint;
 
-        function<void (string)> onMessageCb;
+        function<string (string)> onMessageCb;
 
         void wait() {
             auto cb = boost::bind(&UDPServer::read_handler, this, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred);
@@ -45,7 +45,10 @@ class UDPServer {
             if (ec) { cout << "Receive failed: " << ec.message() << "\n"; return; }
             string msg(buffer.begin(), buffer.begin()+N);
             //cout << "Received: '" << msg << "' (" << ec.message() << ")\n";
-            if (onMessageCb) onMessageCb(msg);
+            if (onMessageCb) {
+                string res = onMessageCb(msg);
+                // TODO: respond to client
+            }
             wait();
         }
 
@@ -56,7 +59,7 @@ class UDPServer {
 
         ~UDPServer() { close(); }
 
-        void onMessage( function<void (string)> f ) { onMessageCb = f; }
+        void onMessage( function<string (string)> f ) { onMessageCb = f; }
 
         void listen(int port) {
             cout << "UDPServer listen on port " << port << endl;
@@ -81,7 +84,7 @@ VRUDPServer::~VRUDPServer() { delete server; }
 
 VRUDPServerPtr VRUDPServer::create() { return VRUDPServerPtr(new VRUDPServer()); }
 
-void VRUDPServer::onMessage( function<void(string)> f ) { server->onMessage(f); }
+void VRUDPServer::onMessage( function<string(string)> f ) { server->onMessage(f); }
 void VRUDPServer::listen(int port) { this->port = port; server->listen(port); }
 void VRUDPServer::close() { server->close(); }
 int VRUDPServer::getPort() { return port; }

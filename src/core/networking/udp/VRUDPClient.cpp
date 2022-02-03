@@ -24,6 +24,7 @@ class UDPClient {
         VRMutex mtx;
         bool stop = false;
         bool broken = false;
+        function<string (string)> onMessageCb;
 
         vector<asio::ip::udp::endpoint> uriToEndpoints(const string& uri) {
             asio::ip::udp::resolver resolver(io_service);
@@ -62,6 +63,8 @@ class UDPClient {
         }
 
         ~UDPClient() { close(); }
+
+        void onMessage( function<string (string)> f ) { onMessageCb = f; }
 
         void close() {
             cout << "close UDP client" << endl;
@@ -119,6 +122,7 @@ VRUDPClient::~VRUDPClient() { delete client; }
 
 VRUDPClientPtr VRUDPClient::create() { return VRUDPClientPtr( new VRUDPClient() ); }
 
+void VRUDPClient::onMessage( function<string(string)> f ) { client->onMessage(f); }
 void VRUDPClient::connect(string host, int port) { client->connect(host, port); uri = host+":"+toString(port); }
 void VRUDPClient::send(const string& message, bool verbose) { client->send(message, verbose); }
 

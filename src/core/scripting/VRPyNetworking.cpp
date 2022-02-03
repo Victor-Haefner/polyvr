@@ -84,13 +84,14 @@ PyMethodDef VRPyRestServer::methods[] = {
 PyMethodDef VRPyUDPClient::methods[] = {
     {"connect", PyWrap(UDPClient, connect, "Connect to server", void, string, int) },
     {"send", PyWrapOpt(UDPClient, send, "Send message to server", "|0", void, const string&, bool) },
+    {"onMessage", PyWrap(UDPClient, onMessage, "Set onMessage callback", void, function<string(string)>) },
     {NULL}  /* Sentinel */
 };
 
 PyMethodDef VRPyUDPServer::methods[] = {
     {"listen", PyWrapOpt(UDPServer, listen, "Listen on port", "", void, int) },
     {"close", PyWrap(UDPServer, close, "Close server", void) },
-    {"onMessage", PyWrap(UDPServer, onMessage, "Set onMessage callback", void, function<void(string)>) },
+    {"onMessage", PyWrap(UDPServer, onMessage, "Set onMessage callback", void, function<string(string)>) },
     {NULL}  /* Sentinel */
 };
 

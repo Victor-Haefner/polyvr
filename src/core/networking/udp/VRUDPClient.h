@@ -4,6 +4,8 @@
 #include <OpenSG/OSGConfig.h>
 #include "../VRNetworkingFwd.h"
 
+#include <functional>
+
 class UDPClient;
 
 using namespace std;
@@ -20,6 +22,8 @@ class VRUDPClient {
 
 		static VRUDPClientPtr create();
 		VRUDPClientPtr ptr();
+
+        void onMessage( function<string(string)> f );
 
         void connect(string host, int port);
         void send(const string& message, bool verbose = false);
