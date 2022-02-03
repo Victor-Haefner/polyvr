@@ -12,6 +12,8 @@ simpleVRPyType(RestClient, New_ptr);
 simpleVRPyType(RestServer, New_ptr);
 
 #ifndef WITHOUT_TCP
+simpleVRPyType(UDPClient, New_ptr);
+simpleVRPyType(UDPServer, New_ptr);
 simpleVRPyType(TCPClient, New_ptr);
 simpleVRPyType(TCPServer, New_ptr);
 simpleVRPyType(ICEClient, New_ptr);
@@ -79,6 +81,19 @@ PyMethodDef VRPyRestServer::methods[] = {
 };
 
 #ifndef WITHOUT_TCP
+PyMethodDef VRPyUDPClient::methods[] = {
+    {"connect", PyWrap(UDPClient, connect, "Connect to server", void, string, int) },
+    {"send", PyWrapOpt(UDPClient, send, "Send message to server", "|0", void, const string&, bool) },
+    {NULL}  /* Sentinel */
+};
+
+PyMethodDef VRPyUDPServer::methods[] = {
+    {"listen", PyWrapOpt(UDPServer, listen, "Listen on port", "", void, int) },
+    {"close", PyWrap(UDPServer, close, "Close server", void) },
+    {"onMessage", PyWrap(UDPServer, onMessage, "Set onMessage callback", void, function<void(string)>) },
+    {NULL}  /* Sentinel */
+};
+
 PyMethodDef VRPyTCPClient::methods[] = {
     {"connect", PyWrap(TCPClient, connect, "Connect to server", void, string, int) },
     {"connectToPeer", PyWrap(TCPClient, connectToPeer, "Connect to another client P2P using TCP tunneling (local port, remote IP, remote port)", void, int, string, int) },

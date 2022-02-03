@@ -196,6 +196,8 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyHDLC>("HDLC", pModVR);
 #endif
 #ifndef WITHOUT_TCP
+    sm->registerModule<VRPyUDPClient>("UDPClient", pModVR);
+    sm->registerModule<VRPyUDPServer>("UDPServer", pModVR);
     sm->registerModule<VRPyTCPClient>("TCPClient", pModVR);
     sm->registerModule<VRPyTCPServer>("TCPServer", pModVR);
     sm->registerModule<VRPyICEClient>("ICEClient", pModVR);

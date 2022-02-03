@@ -10,6 +10,8 @@ namespace OSG {
     ptrFwd(VRWebSocket);
     ptrFwd(VRSerial);
     ptrFwd(VRHDLC);
+    ptrFwd(VRUDPServer);
+    ptrFwd(VRUDPClient);
     ptrFwd(VRTCPServer);
     ptrFwd(VRTCPClient);
     ptrFwd(VRTCPUtils);

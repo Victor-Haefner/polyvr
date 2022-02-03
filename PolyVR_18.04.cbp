@@ -994,6 +994,10 @@
 		<Unit filename="src/core/networking/tcp/VRTCPServer.h" />
 		<Unit filename="src/core/networking/tcp/VRTCPUtils.cpp" />
 		<Unit filename="src/core/networking/tcp/VRTCPUtils.h" />
+		<Unit filename="src/core/networking/udp/VRUDPClient.cpp" />
+		<Unit filename="src/core/networking/udp/VRUDPClient.h" />
+		<Unit filename="src/core/networking/udp/VRUDPServer.cpp" />
+		<Unit filename="src/core/networking/udp/VRUDPServer.h" />
 		<Unit filename="src/core/objects/OSGCamera.cpp" />
 		<Unit filename="src/core/objects/OSGCamera.h" />
 		<Unit filename="src/core/objects/OSGObject.cpp" />
