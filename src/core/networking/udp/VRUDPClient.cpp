@@ -4,6 +4,7 @@
 #include "core/gui/VRGuiConsole.h"
 
 #include <boost/asio.hpp>
+#include <boost/array.hpp>
 #include <iostream>
 #include <list>
 #include <thread>
@@ -25,6 +26,7 @@ class UDPClient {
         bool stop = false;
         bool broken = false;
         function<string (string)> onMessageCb;
+        boost::array<char, 1024> buffer;
 
         vector<asio::ip::udp::endpoint> uriToEndpoints(const string& uri) {
             asio::ip::udp::resolver resolver(io_service);
@@ -34,6 +36,35 @@ class UDPClient {
                 res.push_back(*i);
             }
             return res;
+        }
+
+        bool read_handler(const system::error_code& ec, size_t N) {
+            if (ec) { cout << "UDPClient receive failed: " << ec.message() << "\n"; broken = true; return false; }
+            string msg(buffer.begin(), buffer.begin()+N);
+            //cout << "Received: '" << msg << "' (" << ec.message() << ")\n";
+            if (onMessageCb) {
+                string res = onMessageCb(msg);
+                if (res != "") {
+                    boost::system::error_code ec;
+                    auto N = socket.send_to(boost::asio::buffer(res), remote_endpoint, 0, ec);
+                    // TODO: respond to client
+                }
+            }
+
+            return true;
+        }
+
+        bool read() {
+            if (broken) return false;
+
+            auto onRead = [this](system::error_code ec, size_t N) {
+                read_handler(ec, N);
+                read();
+            };
+
+            //auto cb = boost::bind(&UDPClient::read_handler, this, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred);
+            socket.async_receive_from(boost::asio::buffer(buffer), remote_endpoint, onRead);
+            return true;
         }
 
         void processQueue() {
@@ -88,6 +119,7 @@ class UDPClient {
             try {
                 remote_endpoint = udp::endpoint( asio::ip::address::from_string(host), port);
                 //socket.connect( udp::endpoint( asio::ip::address::from_string(host), port ));
+                read();
             } catch(std::exception& e) {
                 cout << "UDPClient::connect failed with: " << e.what() << endl;
 #ifndef WITHOUT_GTK

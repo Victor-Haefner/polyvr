@@ -47,7 +47,11 @@ class UDPServer {
             //cout << "Received: '" << msg << "' (" << ec.message() << ")\n";
             if (onMessageCb) {
                 string res = onMessageCb(msg);
-                // TODO: respond to client
+                if (res != "") {
+                    boost::system::error_code ec;
+                    auto N = socket.send_to(boost::asio::buffer(res), remote_endpoint, 0, ec);
+                    // TODO: respond to client
+                }
             }
             wait();
         }
