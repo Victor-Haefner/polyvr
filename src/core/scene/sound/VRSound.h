@@ -30,9 +30,8 @@ class VRSound {
         vector<VRSoundBufferPtr> ownedBuffer;
         int nextBuffer = 0;
         VRUpdateCbPtr callback;
-        VRTCPClientPtr tcpClient;
-        VRTCPServerPtr tcpServer;
-        VRRestClientPtr restClient;
+        VRUDPClientPtr udpClient;
+        VRUDPServerPtr udpServer;
 
         unsigned int frequency = 0;
         int stream_id = 0;
@@ -95,13 +94,13 @@ class VRSound {
         void addBuffer(VRSoundBufferPtr frame);
 
         bool setupOutStream(string url, int port);
-        bool addOutStreamClient(VRTCPClientPtr client);
+        bool addOutStreamClient(VRUDPClientPtr client);
         void streamBuffer(VRSoundBufferPtr frame);
         void closeStream(bool keepOpen = false);
         void flushPackets();
 
         bool listenStream(int port);
-        bool playPeerStream(VRTCPClientPtr client);
+        bool playPeerStream(VRUDPClientPtr client);
 
         void exportToFile(string path);
         void streamTo(string url, int port, bool keepOpen = false);

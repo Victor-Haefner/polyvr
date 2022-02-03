@@ -115,7 +115,7 @@ void VRMicrophone::startStreamingThread() {
     streamingThread = new thread(streamCb);
 }
 
-void VRMicrophone::startStreamingOver(VRTCPClientPtr client) {
+void VRMicrophone::startStreamingOver(VRUDPClientPtr client) {
     start();
     streamMutex = new VRMutex();
     doStream = recording->addOutStreamClient(client);

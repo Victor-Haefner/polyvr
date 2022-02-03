@@ -65,7 +65,7 @@ class VRMicrophone : public std::enable_shared_from_this<VRMicrophone> {
 		VRSoundPtr stopRecording();
 
 		void startStreaming(string address, int port);
-		void startStreamingOver(VRTCPClientPtr client);
+		void startStreamingOver(VRUDPClientPtr client);
 		void pauseStreaming(bool p);
 		void stopStreaming();
 };

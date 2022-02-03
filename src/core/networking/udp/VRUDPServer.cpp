@@ -44,7 +44,7 @@ class UDPServer {
         void read_handler(const boost::system::error_code& ec, size_t N) {
             if (ec) { cout << "Receive failed: " << ec.message() << "\n"; return; }
             string msg(buffer.begin(), buffer.begin()+N);
-            cout << "Received: '" << msg << "' (" << ec.message() << ")\n";
+            //cout << "Received: '" << msg << "' (" << ec.message() << ")\n";
             if (onMessageCb) onMessageCb(msg);
             wait();
         }

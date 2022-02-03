@@ -6,8 +6,8 @@
 #include "core/utils/toString.h"
 #include "core/utils/VRFunction.h"
 #include "core/utils/system/VRSystem.h"
-#include "core/networking/tcp/VRTCPClient.h"
-#include "core/networking/tcp/VRTCPServer.h"
+#include "core/networking/udp/VRUDPClient.h"
+#include "core/networking/udp/VRUDPServer.h"
 #include "core/networking/rest/VRRestClient.h"
 #include "VRSoundManager.h"
 
@@ -661,8 +661,7 @@ void VRSound::exportToFile(string path) {
 void VRSound::writeStreamData(const string& data) {
     //cout << " custom_io_write " << data.size() << endl;
     //if (data.size() < 200) cout << endl << data << endl;
-    if (tcpClient) tcpClient->send(data, "", false);
-    if (restClient) restClient->post(data);
+    if (udpClient) udpClient->send(data, false);
     //doFrameSleep(0, 60);
 }
 
@@ -680,13 +679,13 @@ void VRSound::flushPackets() {
     }
 }
 
-bool VRSound::addOutStreamClient(VRTCPClientPtr client) {
-    tcpClient = client;
+bool VRSound::addOutStreamClient(VRUDPClientPtr client) {
+    udpClient = client;
 
-    if (!tcpClient->connected()) {
-        tcpClient.reset();
+    /*if (!udpClient->connected()) {
+        udpClient.reset();
         return false;
-    }
+    }*/
 
     audio_ost = new OutputStream();
     av_register_all();
@@ -722,12 +721,12 @@ bool VRSound::addOutStreamClient(VRTCPClientPtr client) {
 }
 
 bool VRSound::setupOutStream(string url, int port) {
-    if (!tcpClient) {
-        tcpClient = VRTCPClient::create();
-        tcpClient->connect(url, port);
+    if (!udpClient) {
+        udpClient = VRUDPClient::create();
+        udpClient->connect(url, port);
     }
 
-    return addOutStreamClient(tcpClient);
+    return addOutStreamClient(udpClient);
 }
 
 void VRSound::streamBuffer(VRSoundBufferPtr frame) { write_buffer(muxer, audio_ost, frame); }
@@ -742,7 +741,7 @@ void VRSound::closeStream(bool keepOpen) {
     audio_ost = 0;
     avformat_free_context(muxer);
     muxer = 0;
-    if (!keepOpen) tcpClient.reset();
+    if (!keepOpen) udpClient.reset();
 }
 
 void VRSound::streamTo(string url, int port, bool keepOpen) {
@@ -818,19 +817,19 @@ string VRSound::onStreamData(string data) {
 bool VRSound::listenStream(int port) {
     auto streamCb = bind(&VRSound::onStreamData, this, placeholders::_1);
 
-    if (!tcpServer) {
-        tcpServer = VRTCPServer::create();
-        tcpServer->onMessage(streamCb);
-        tcpServer->listen(port, "");
+    if (!udpServer) {
+        udpServer = VRUDPServer::create();
+        udpServer->onMessage(streamCb);
+        udpServer->listen(port);
     }
 
     av_register_all();
     return true;
 }
 
-bool VRSound::playPeerStream(VRTCPClientPtr client) {
+bool VRSound::playPeerStream(VRUDPClientPtr client) {
     auto streamCb = bind(&VRSound::onStreamData, this, placeholders::_1);
-    client->onMessage(streamCb);
+    //client->onMessage(streamCb); // TODO
     av_register_all();
     return true;
 }

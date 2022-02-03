@@ -45,11 +45,11 @@
 	VR.inStream = VR.Sound()
 	VR.inStream.setBandpass(0.25, 0.25) # basic noise reduction
 	
-	VR.clientIn = VR.TCPClient()
-	VR.clientIn.connect('0.0.0.0', 4044)
-	VR.inStream.playPeerStream(VR.clientIn)
-	#VR.inStream.listenStream(1234)
-	print 'listenStream', VR.clientIn.connected()
+	#VR.clientIn = VR.UDPClient()
+	#VR.clientIn.connect('0.0.0.0', 4044)
+	#VR.inStream.playPeerStream(VR.clientIn)
+	VR.inStream.listenStream(1234)
+	#print 'listenStream', VR.clientIn.connected()
 </core>
     </Script>
     <Script base_name="record" group="no group" name_space="__script__" name_suffix="0" persistency="666" server="server1" type="Python">
@@ -58,12 +58,12 @@
 
 	if not hasattr(VR, 'toggle'): 
 		VR.toggle = False
-		VR.clientOut = VR.TCPClient()
-		VR.clientOut.connect('0.0.0.0', 4045)
-		VR.mike.startStreamingOver(VR.clientOut)
-		#VR.mike.startStreaming('127.0.0.1', 1234)
+		#VR.clientOut = VR.UDPClient()
+		#VR.clientOut.connect('0.0.0.0', 4045)
+		#VR.mike.startStreamingOver(VR.clientOut)
+		VR.mike.startStreaming('0.0.0.0', 1234)
 		VR.mike.pauseStreaming(True)
-		print 'setupMikeStream', VR.clientOut.connected()
+		#print 'setupMikeStream', VR.clientOut.connected()
 		
 	pressed = dev.getState()
 	if VR.toggle == pressed: return
