@@ -50,7 +50,6 @@ class UDPServer {
                 if (res != "") {
                     boost::system::error_code ec;
                     auto N = socket.send_to(boost::asio::buffer(res), remote_endpoint, 0, ec);
-                    // TODO: respond to client
                 }
             }
             wait();
