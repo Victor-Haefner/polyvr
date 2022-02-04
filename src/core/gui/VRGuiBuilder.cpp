@@ -466,14 +466,25 @@ void set3DViewBarHeight(GtkWidget* widget, GtkAllocation* allocation, void* hbox
     gtk_widget_set_size_request(GTK_WIDGET(hbox1_layout), -1, h);
 }
 
-void set3DViewBarWidth(GtkWidget* widget, GtkAllocation* allocation, void* hbox1_viewport) {
-    int w = allocation->width;
+void set3DViewBarWidth(GtkPaned* widget, GdkEvent* event, void* hbox1_viewport) {
+    int p = gtk_paned_get_position(widget);
+    int w = gtk_widget_get_allocated_width(GTK_WIDGET(widget)) - p;
     gtk_widget_set_size_request(GTK_WIDGET(hbox1_viewport), w, -1);
 }
 
-void setConsolesBoxSize(GtkWidget* widget, GtkAllocation* allocation, void* hbox15_viewport) {
-    int w = allocation->width;
-    int h = allocation->height;
+void setConsolesBoxHeight(GtkPaned* widget, GdkEvent* event, void* hbox15_viewport) {
+    int p = gtk_paned_get_position(widget);
+    int w, h;
+    gtk_widget_get_size_request(GTK_WIDGET(hbox15_viewport),&w,&h);
+    h = gtk_widget_get_allocated_height(GTK_WIDGET(widget)) - p;
+    gtk_widget_set_size_request(GTK_WIDGET(hbox15_viewport), w, h);
+}
+
+void setConsolesBoxWidth(GtkPaned* widget, GdkEvent* event, void* hbox15_viewport) {
+    int p = gtk_paned_get_position(widget);
+    int w, h;
+    gtk_widget_get_size_request(GTK_WIDGET(hbox15_viewport),&w,&h);
+    w = gtk_widget_get_allocated_width(GTK_WIDGET(widget)) - p;
     gtk_widget_set_size_request(GTK_WIDGET(hbox15_viewport), w, h);
 }
 
@@ -541,7 +552,7 @@ void VRGuiBuilder::buildBaseUI() {
     GtkWidget* hbox15_viewport = gtk_viewport_new(0,0);
     gtk_container_add(GTK_CONTAINER(hbox15_viewport), hbox15);
     gtk_container_add(GTK_CONTAINER(hbox15_layout), hbox15_viewport);
-    g_signal_connect(hbox15_layout, "size-allocate", G_CALLBACK(setConsolesBoxSize), hbox15_viewport);
+    g_signal_connect(vpaned1, "notify::position", (GCallback)setConsolesBoxHeight, hbox15_viewport);
 
     add2ToPaned(hpaned1, vpaned1);
     add1ToPaned(vpaned1, vbox5);
@@ -558,6 +569,7 @@ void VRGuiBuilder::buildBaseUI() {
     gtk_container_add(GTK_CONTAINER(layout), viewport);
     gtk_paned_pack1(GTK_PANED(hpaned1), layout, true, true);
     g_signal_connect(hpaned1, "notify::position", (GCallback)onPanedMove, notebook1);
+    g_signal_connect(hpaned1, "notify::position", (GCallback)setConsolesBoxWidth, hbox15_viewport);
 
     /* ---------- right core section ---------------------- */
     auto hbox1 = addBox("hbox1", GTK_ORIENTATION_HORIZONTAL); // bar above 3d view
@@ -578,7 +590,7 @@ void VRGuiBuilder::buildBaseUI() {
     gtk_widget_set_hexpand(hbox1_viewport, true);
     gtk_widget_set_hexpand(hbox1_layout, true);
     g_signal_connect(hbox1, "size-allocate", G_CALLBACK(set3DViewBarHeight), hbox1_layout);
-    g_signal_connect(hbox1_layout, "size-allocate", G_CALLBACK(set3DViewBarWidth), hbox1_viewport);
+    g_signal_connect(hpaned1, "notify::position", (GCallback)set3DViewBarWidth, hbox1_viewport);
 
     gtk_box_pack_start(GTK_BOX(vbox5), hbox1_layout, false, true, 0);
     gtk_box_pack_start(GTK_BOX(vbox5), glarea, false, true, 0);
