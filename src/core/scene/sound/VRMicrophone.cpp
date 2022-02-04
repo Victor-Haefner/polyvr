@@ -72,7 +72,7 @@ void VRMicrophone::startRecordingThread() {
                 alcCaptureSamples(device, frame->data, Count);
 
                 if (!streamPaused) {
-                    VRLock(*streamMutex);
+                    VRLock lock(*streamMutex);
                     if (frameBuffer.size() < maxBufferSize) {
                         frameBuffer.push_back(frame);
                         queuedFrames++;
@@ -97,7 +97,7 @@ void VRMicrophone::startStreamingThread() {
             bool enoughQueuedFramesInStream = bool(queuedStream >= queueSize - streamBuffer);
 
             if (enoughInitialQueuedFrames || enoughQueuedFramesInStream || needsFlushing ) {
-                VRLock(*streamMutex);
+                VRLock lock(*streamMutex);
                 while (queuedFrames && frameBuffer.size() > 0) {
                     auto frame = frameBuffer.front();
                     frameBuffer.pop_front();
