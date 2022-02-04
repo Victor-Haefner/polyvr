@@ -105,12 +105,14 @@ VRSyncConnectionPtr VRSyncNode::getRemote(string rID) {
     return remotes[rID];
 }
 
-string VRSyncNode::setTCPClient(VRTCPClientPtr client) {
+string VRSyncNode::setTCPClient(VRNetworkClientPtr client) {
     remotes.clear();
     return addTCPClient(client);
 }
 
-string VRSyncNode::addTCPClient(VRTCPClientPtr client) {
+string VRSyncNode::addTCPClient(VRNetworkClientPtr nclient) {
+    auto client = dynamic_pointer_cast<VRTCPClient>(nclient);
+    if (!client) return "";
     string uri = client->getConnectedUri();
     cout << " VRSyncNode::addTCPClient, connected uri: '" << uri << "', tcp client connected: " << client->connected() << endl;
     auto remote = VRSyncConnection::create(client, uri);

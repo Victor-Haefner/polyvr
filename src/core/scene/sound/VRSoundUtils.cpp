@@ -27,7 +27,7 @@ string toString(ALenum a) {
 VRSoundBuffer::VRSoundBuffer() {}
 
 VRSoundBuffer::~VRSoundBuffer() {
-    if (data && owned) delete data;
+    if (data && owned) delete[] data;
 }
 
 VRSoundBufferPtr VRSoundBuffer::wrap(ALbyte* d, int s, int r, ALenum f) {

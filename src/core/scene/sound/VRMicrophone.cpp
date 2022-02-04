@@ -21,15 +21,20 @@ VRMicrophonePtr VRMicrophone::ptr() { return static_pointer_cast<VRMicrophone>(s
 void VRMicrophone::setup() {
     alGetError();
     device = alcCaptureOpenDevice(NULL, sample_rate, AL_FORMAT_MONO16, sample_size);
-    if (alGetError() != AL_NO_ERROR) cout << "No microphone device found!" << endl;
+    if (alGetError() != AL_NO_ERROR) {
+        cout << "No microphone device found!" << endl;
+
+    } else deviceOk = true;
 }
 
 void VRMicrophone::start() {
+    if (!deviceOk) return;
     recording = VRSoundManager::get()->setupSound("");
     alcCaptureStart(device);
 }
 
 void VRMicrophone::startRecording() {
+    if (!deviceOk) return;
     start();
     doRecord = true;
 
@@ -40,7 +45,7 @@ void VRMicrophone::startRecording() {
             alcGetIntegerv(device, ALC_CAPTURE_SAMPLES, (ALCsizei)sizeof(ALint), &Count);
 
             if (Count > 0) {
-                frame = VRSoundBuffer::allocate(2*Count, sample_rate, AL_FORMAT_MONO16);
+                auto frame = VRSoundBuffer::allocate(2*Count, sample_rate, AL_FORMAT_MONO16);
                 alGetError();
                 alcCaptureSamples(device, frame->data, Count);
                 recording->addBuffer(frame);
@@ -62,15 +67,21 @@ void VRMicrophone::startRecordingThread() {
             alcGetIntegerv(device, ALC_CAPTURE_SAMPLES, (ALCsizei)sizeof(ALint), &Count);
 
             if (Count > 0) {
-                frame = VRSoundBuffer::allocate(2*Count, sample_rate, AL_FORMAT_MONO16);
+                auto frame = VRSoundBuffer::allocate(Count*2, sample_rate, AL_FORMAT_MONO16);
                 alGetError();
                 alcCaptureSamples(device, frame->data, Count);
 
                 if (!streamPaused) {
                     VRLock(*streamMutex);
-                    frameBuffer.push_back(frame);
-                    queuedFrames++;
-                    queuedStream = max(queuedStream-1, 0);
+                    if (frameBuffer.size() < maxBufferSize) {
+                        frameBuffer.push_back(frame);
+                        queuedFrames++;
+                        queuedFrames = min(int(frameBuffer.size()), queuedFrames);
+                        queuedStream = max(queuedStream-1, 0);
+                    } else {
+                        frameBuffer.pop_front();
+                        frameBuffer.push_back(frame);
+                    }
                 }
             }
         }
@@ -87,12 +98,11 @@ void VRMicrophone::startStreamingThread() {
 
             if (enoughInitialQueuedFrames || enoughQueuedFramesInStream || needsFlushing ) {
                 VRLock(*streamMutex);
-                while (queuedFrames) {
+                while (queuedFrames && frameBuffer.size() > 0) {
                     auto frame = frameBuffer.front();
                     frameBuffer.pop_front();
 
                     if (frame) {
-                        cout << "VRMicrophone stream " << frame->size << endl;
                         recording->streamBuffer(frame);
                         queuedFrames = max(queuedFrames-1, 0);
                         if (!needsFlushing) queuedStream++;
@@ -115,7 +125,8 @@ void VRMicrophone::startStreamingThread() {
     streamingThread = new thread(streamCb);
 }
 
-void VRMicrophone::startStreamingOver(VRUDPClientPtr client) {
+void VRMicrophone::startStreamingOver(VRNetworkClientPtr client) {
+    if (!deviceOk) return;
     start();
     streamMutex = new VRMutex();
     doStream = recording->addOutStreamClient(client);
@@ -125,6 +136,7 @@ void VRMicrophone::startStreamingOver(VRUDPClientPtr client) {
 }
 
 void VRMicrophone::startStreaming(string address, int port) {
+    if (!deviceOk) return;
     start();
     streamMutex = new VRMutex();
     doStream = recording->setupOutStream(address, port);
@@ -144,7 +156,7 @@ void VRMicrophone::stop() {
     if (streamingThread) streamingThread->join();
     recordingThread = 0;
     streamingThread = 0;
-    alcCaptureStop(device);
+    if (deviceOk) alcCaptureStop(device);
     delete streamMutex;
 }
 

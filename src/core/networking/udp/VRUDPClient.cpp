@@ -149,13 +149,13 @@ class UDPClient {
 };
 
 
-VRUDPClient::VRUDPClient() { client = new UDPClient(); }
+VRUDPClient::VRUDPClient() { protocol = "udp"; client = new UDPClient(); }
 VRUDPClient::~VRUDPClient() { delete client; }
 
 VRUDPClientPtr VRUDPClient::create() { return VRUDPClientPtr( new VRUDPClient() ); }
 
 void VRUDPClient::onMessage( function<string(string)> f ) { client->onMessage(f); }
 void VRUDPClient::connect(string host, int port) { client->connect(host, port); uri = host+":"+toString(port); }
-void VRUDPClient::send(const string& message, bool verbose) { client->send(message, verbose); }
+void VRUDPClient::send(const string& message, string guard, bool verbose) { client->send(message+guard, verbose); }
 
 

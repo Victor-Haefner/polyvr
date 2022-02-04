@@ -1,5 +1,6 @@
 #include "VRICEclient.h"
 #include "VRTCPClient.h"
+#include "../udp/VRUDPClient.h"
 #include "../rest/VRRestClient.h"
 #include "../rest/VRRestResponse.h"
 #include "core/utils/toString.h"
@@ -155,15 +156,25 @@ vector<string> VRICEClient::getUserID(string n) {
     return res;
 }
 
-VRTCPClientPtr VRICEClient::getClient(string otherID, CHANNEL channel) {
+VRNetworkClientPtr VRICEClient::getClient(string otherID, CHANNEL channel) {
+    if (channel == NONE) return 0;
+
     if (!clients.count(otherID) || !clients[otherID].count(channel)) {
-        clients[otherID][channel] = VRTCPClient::create();
-        clients[otherID][channel]->setGuard("TCPPVR\n");
+        if (channel == SCENEGRAPH) {
+            auto client = VRTCPClient::create();
+            client->setGuard("TCPPVR\n");
+            clients[otherID][channel] = client;
+        }
+
+        if (channel == AUDIO) {
+            clients[otherID][channel] = VRUDPClient::create();
+        }
     }
+
     return clients[otherID][channel];
 }
 
-map<string, map<VRICEClient::CHANNEL, VRTCPClientPtr> > VRICEClient::getClients() { return clients; }
+map<string, map<VRICEClient::CHANNEL, VRNetworkClientPtr> > VRICEClient::getClients() { return clients; }
 
 void VRICEClient::connectTo(string otherID) {
     if (uID == "" || otherID == "") {
@@ -223,7 +234,8 @@ void VRICEClient::connectTo(string otherID) {
 }
 
 void VRICEClient::sendTCP(string otherID, string msg, CHANNEL channel) {
-    auto cli = getClient(otherID, channel);
+    auto cli = dynamic_pointer_cast<VRTCPClient>( getClient(otherID, channel) );
+    if (!cli) return;
     if (!cli->connected()) return;
     cli->send(msg, "TCPPVR\n");
 }

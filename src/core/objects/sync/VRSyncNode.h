@@ -95,8 +95,8 @@ class VRSyncNode : public VRTransform {
         UInt32 getSyncNameID();
         UInt32 getSyncCoreID();
 
-        string setTCPClient(VRTCPClientPtr cli);
-        string addTCPClient(VRTCPClientPtr cli);
+        string setTCPClient(VRNetworkClientPtr cli);
+        string addTCPClient(VRNetworkClientPtr cli);
 
         void setDoWrapping(bool b);
         void setDoAvatars(bool b);

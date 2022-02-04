@@ -29,7 +29,7 @@ PyMethodDef VRPySound::methods[] = {
     {"synthSpectrum", PyWrap(Sound, synthSpectrum, "synthSpectrum( [A], int S, float T, float F, bool retBuffer )\t\n A amplitude, S sample rate, T packet duration in seconds, F fade in/out duration in s , specify if you want to return the generated buffer, maxQueued", vector<short>, vector<double>, uint, float, float, bool, int) },
     {"streamTo", PyWrap(Sound, streamTo, "Stream sound to a target URL and port", void, string, int, bool) },
     {"listenStream", PyWrap(Sound, listenStream, "Listen on port for incoming stream packets", bool, int) },
-    {"playPeerStream", PyWrap(Sound, playPeerStream, "Play incoming stream packets", bool, VRUDPClientPtr) },
+    {"playPeerStream", PyWrap(Sound, playPeerStream, "Play incoming stream packets", bool, VRNetworkClientPtr) },
     {NULL}  /* Sentinel */
 };
 
@@ -45,7 +45,7 @@ PyMethodDef VRPyMicrophone::methods[] = {
     {"startRecording", PyWrap(Microphone, startRecording, "Starts to record from microphone", void) },
     {"stopRecording", PyWrap(Microphone, stopRecording, "Stops the recording, returns sound", VRSoundPtr) },
     {"startStreaming", PyWrap(Microphone, startStreaming, "Start streaming to (addr, port)", void, string, int) },
-    {"startStreamingOver", PyWrap(Microphone, startStreamingOver, "Start streaming over tcp client", void, VRUDPClientPtr) },
+    {"startStreamingOver", PyWrap(Microphone, startStreamingOver, "Start streaming over tcp client", void, VRNetworkClientPtr) },
     {"pauseStreaming", PyWrap(Microphone, pauseStreaming, "Pause streaming", void, bool) },
     {"stopStreaming", PyWrap(Microphone, stopStreaming, "Stop streaming", void) },
     {NULL}  /* Sentinel */

@@ -29,6 +29,10 @@ struct VRPyRestServer : public VRPyBaseT<OSG::VRRestServer> {
 };
 
 #ifndef WITHOUT_TCP
+struct VRPyNetworkClient : public VRPyBaseT<OSG::VRNetworkClient> {
+    static PyMethodDef methods[];
+};
+
 struct VRPyTCPClient : public VRPyBaseT<OSG::VRTCPClient> {
     static PyMethodDef methods[];
 };

@@ -39,10 +39,11 @@ class VRMicrophone : public std::enable_shared_from_this<VRMicrophone> {
 #endif
 	    VRSoundPtr recording;
 
-	    VRSoundBufferPtr frame;
 	    list<VRSoundBufferPtr> frameBuffer;
+	    bool deviceOk = false;
 	    VRMutex* streamMutex = 0;
 	    int queueSize = 10;
+	    int maxBufferSize = 20;
 	    int streamBuffer = 5;
 	    int queuedFrames = 0; // frames recorded but not streamed yet
 	    int queuedStream = 0; // frames streamed at the beginning
@@ -65,7 +66,7 @@ class VRMicrophone : public std::enable_shared_from_this<VRMicrophone> {
 		VRSoundPtr stopRecording();
 
 		void startStreaming(string address, int port);
-		void startStreamingOver(VRUDPClientPtr client);
+		void startStreamingOver(VRNetworkClientPtr client);
 		void pauseStreaming(bool p);
 		void stopStreaming();
 };

@@ -12,6 +12,7 @@ simpleVRPyType(RestClient, New_ptr);
 simpleVRPyType(RestServer, New_ptr);
 
 #ifndef WITHOUT_TCP
+simpleVRPyType(NetworkClient, 0);
 simpleVRPyType(UDPClient, New_ptr);
 simpleVRPyType(UDPServer, New_ptr);
 simpleVRPyType(TCPClient, New_ptr);
@@ -81,10 +82,15 @@ PyMethodDef VRPyRestServer::methods[] = {
 };
 
 #ifndef WITHOUT_TCP
+PyMethodDef VRPyNetworkClient::methods[] = {
+    {"getProtocol", PyWrap(NetworkClient, getProtocol, "Return protocol, either UDP or TCP", string) },
+    {"connect", PyWrap(NetworkClient, connect, "Connect to server", void, string, int) },
+    {"send", PyWrapOpt(NetworkClient, send, "Send message to server", "|0", void, const string&, string, bool) },
+    {"onMessage", PyWrap(NetworkClient, onMessage, "Set onMessage callback", void, function<string(string)>) },
+    {NULL}  /* Sentinel */
+};
+
 PyMethodDef VRPyUDPClient::methods[] = {
-    {"connect", PyWrap(UDPClient, connect, "Connect to server", void, string, int) },
-    {"send", PyWrapOpt(UDPClient, send, "Send message to server", "|0", void, const string&, bool) },
-    {"onMessage", PyWrap(UDPClient, onMessage, "Set onMessage callback", void, function<string(string)>) },
     {NULL}  /* Sentinel */
 };
 
@@ -96,10 +102,7 @@ PyMethodDef VRPyUDPServer::methods[] = {
 };
 
 PyMethodDef VRPyTCPClient::methods[] = {
-    {"connect", PyWrap(TCPClient, connect, "Connect to server", void, string, int) },
     {"connectToPeer", PyWrap(TCPClient, connectToPeer, "Connect to another client P2P using TCP tunneling (local port, remote IP, remote port)", void, int, string, int) },
-    {"send", PyWrapOpt(TCPClient, send, "Send message to server", "|0", void, const string&, string, bool) },
-    {"onMessage", PyWrap(TCPClient, onMessage, "Set onMessage callback", void, function<void(string)>) },
     {"onConnect", PyWrap(TCPClient, onConnect, "Set onConnect callback", void, function<void(void)>) },
     {"connected", PyWrap(TCPClient, connected, "Returns True is connected", bool) },
     {"getPublicIP", PyWrapOpt(TCPClient, getPublicIP, "Get public IP", "0", string, bool) },
@@ -114,7 +117,7 @@ PyMethodDef VRPyTCPServer::methods[] = {
 };
 
 typedef map<string, string> mapSS;
-typedef map<string, map<VRICEClient::CHANNEL, VRTCPClientPtr> > mapScli;
+typedef map<string, map<VRICEClient::CHANNEL, VRNetworkClientPtr> > mapScli;
 
 PyMethodDef VRPyICEClient::methods[] = {
     {"setTurnServer", PyWrap(ICEClient, setTurnServer, "Setup turn server address and ip", void, string, string) },
@@ -128,7 +131,7 @@ PyMethodDef VRPyICEClient::methods[] = {
     {"getUserName", PyWrap(ICEClient, getUserName, "Get user name by UID", string, string) },
     {"getUserID", PyWrap(ICEClient, getUserID, "Get UIDs of all users with certain name", vector<string>, string) },
     {"getUsers", PyWrap(ICEClient, getUsers, "Get all users registered at turn server", mapSS) },
-    {"getClient", PyWrap(ICEClient, getClient, "Get TCP client by ID", VRTCPClientPtr, string, VRICEClient::CHANNEL) },
+    {"getClient", PyWrap(ICEClient, getClient, "Get TCP client by ID", VRNetworkClientPtr, string, VRICEClient::CHANNEL) },
     {"getClients", PyWrap(ICEClient, getClients, "Get all TCP clients", mapScli) },
     {"removeUser", PyWrap(ICEClient, removeUser, "Remove user by UID", void, string) },
     {NULL}  /* Sentinel */

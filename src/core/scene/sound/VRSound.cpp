@@ -477,6 +477,7 @@ void open_audio(AVFormatContext *oc, OutputStream *ost) {
 
 AVFrame* get_audio_frame(OutputStream *ost, VRSoundBufferPtr buffer) {
     AVFrame* frame = ost->tmp_frame;
+    if (!frame || !buffer) return 0;
     int16_t* src = (int16_t*)buffer->data;
     int16_t* dst = (int16_t*)frame->data[0];
 
@@ -564,6 +565,7 @@ int encode_audio_frame(AVFormatContext *oc, OutputStream *ost, AVFrame *frame) {
 void VRSound::write_buffer(AVFormatContext *oc, OutputStream *ost, VRSoundBufferPtr buffer) {
     //cout << "  get audio frame" << endl;
     AVFrame* frame = get_audio_frame(ost, buffer);
+    if (!frame) return;
     //cout << "  resample convert " << frame->linesize[0] << " " << frame->nb_samples << endl;
     int ret = avresample_convert(ost->avr, NULL, 0, 0, frame->extended_data, frame->linesize[0], frame->nb_samples);
     if (ret < 0) { fprintf(stderr, "Error feeding audio data to the resampler\n"); return; }
@@ -661,7 +663,7 @@ void VRSound::exportToFile(string path) {
 void VRSound::writeStreamData(const string& data) {
     //cout << " custom_io_write " << data.size() << endl;
     //if (data.size() < 200) cout << endl << data << endl;
-    if (udpClient) udpClient->send(data, false);
+    if (udpClient) udpClient->send(data, "", false);
     //doFrameSleep(0, 60);
 }
 
@@ -679,7 +681,7 @@ void VRSound::flushPackets() {
     }
 }
 
-bool VRSound::addOutStreamClient(VRUDPClientPtr client) {
+bool VRSound::addOutStreamClient(VRNetworkClientPtr client) {
     udpClient = client;
 
     /*if (!udpClient->connected()) {
@@ -827,7 +829,7 @@ bool VRSound::listenStream(int port) {
     return true;
 }
 
-bool VRSound::playPeerStream(VRUDPClientPtr client) {
+bool VRSound::playPeerStream(VRNetworkClientPtr client) {
     auto streamCb = bind(&VRSound::onStreamData, this, placeholders::_1);
     client->onMessage(streamCb);
     av_register_all();

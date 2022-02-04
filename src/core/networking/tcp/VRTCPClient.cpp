@@ -46,7 +46,7 @@ class TCPClient {
         bool stop = false;
         bool broken = false;
 
-        function<void (string)> onMessageCb;
+        function<string(string)> onMessageCb;
         function<void (void)> onConnectCb;
 
         vector<asio::ip::tcp::endpoint> uriToEndpoints(const string& uri) {
@@ -135,7 +135,7 @@ class TCPClient {
 
         ~TCPClient() { close(); }
 
-        void onMessage( function<void (string)> f ) { onMessageCb = f; }
+        void onMessage( function<string(string)> f ) { onMessageCb = f; }
         void onConnect( function<void (void)> f ) { onConnectCb = f; }
 
         void close() {
@@ -342,7 +342,7 @@ class TCPClient {
 };
 
 
-VRTCPClient::VRTCPClient() { client = new TCPClient(); }
+VRTCPClient::VRTCPClient() { protocol = "tcp"; client = new TCPClient(); }
 VRTCPClient::~VRTCPClient() { delete client; }
 
 VRTCPClientPtr VRTCPClient::create() { return VRTCPClientPtr(new VRTCPClient()); }
@@ -354,7 +354,7 @@ void VRTCPClient::send(const string& message, string guard, bool verbose) { clie
 bool VRTCPClient::connected() { return client->connected(); }
 
 void VRTCPClient::onConnect( function<void(void)>   f ) { client->onConnect(f); }
-void VRTCPClient::onMessage( function<void(string)> f ) { client->onMessage(f); }
+void VRTCPClient::onMessage( function<string(string)> f ) { client->onMessage(f); }
 
 void VRTCPClient::connectToPeer(int localPort, string remoteIP, int remotePort) {
     client->connectToPeer(localPort, remoteIP, remotePort);
