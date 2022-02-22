@@ -148,31 +148,33 @@ vector<string> openFolder(string folder) {
     return res;
 }
 
-/*string exec(const char* cmd) {
-    array<char, 128> buffer;
-    string result;
-    unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd, "r"), pclose);
-    if (!pipe) return "";
-    while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
-        result += buffer.data();
-    }
-    return result;
-}*/
+string createTempFile() {
+    /*char tmpname[L_tmpnam];
+    char* r = std::tmpnam(tmpname);
+    if (r == 0) cout << "create temp file failed" << endl;
+    return string() + tmpname;*/
 
-std::string ssystem(const char* command) {
-    char tmpname[L_tmpnam];
-    std::tmpnam(tmpname);
-    std::string scommand = command;
-    std::string cmd = scommand + " >> " + tmpname;
-    std::system(cmd.c_str());
-    std::ifstream file(tmpname, std::ios::in | std::ios::binary);
-    std::string result;
+    return string() + P_tmpdir + "/exec_out_file" + toString(time(0)) + "_" + toString(rand());
+}
+
+string readFileContent(string fileName) {
+    ifstream file(fileName, ios::in | ios::binary);
+    string result;
     if (file) {
-        while (!file.eof()) result.push_back(file.get())
-            ;
+        while (!file.eof()) result.push_back(file.get());
         file.close();
     }
-    remove(tmpname);
+    return result;
+}
+
+string ssystem(const char* command) {
+    string tmpFile = createTempFile();
+    string scommand = command;
+    string cmd = scommand + " >> " + tmpFile;
+    int r = std::system(cmd.c_str());
+    if (r != 0) cout << "system call did not return 0 (" << r << ")" << endl;
+    string result = readFileContent(tmpFile);
+    remove(tmpFile.c_str());
     return result;
 }
 
