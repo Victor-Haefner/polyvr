@@ -82,8 +82,6 @@ enum {
     LAST_PROP
 };
 
-static GParamSpec *obj_props[LAST_PROP] = { NULL, };
-
 enum {
   RENDER,
   RESIZE,
@@ -186,7 +184,7 @@ static gboolean find_fbconfig_for_visual (GdkDisplay* display, _GdkVisual* visua
       goto out;
     }
 
-    printf("Error, find_fbconfig_for_visual failed? tried to find %i\n", xvisual_id);
+    printf("Error, find_fbconfig_for_visual failed? tried to find %lu\n", xvisual_id);
     //g_set_error (error, GDK_GL_ERROR, GDK_GL_ERROR_UNSUPPORTED_FORMAT, "No available configurations for the given RGBA pixel format");
 
 out:
@@ -1063,8 +1061,6 @@ static void gl_area_class_init (GLAreaClass *klass) {
     gobject_class->get_property = gl_area_get_property;
     gobject_class->dispose = gl_area_dispose;
     gobject_class->notify = gl_area_notify;
-
-    g_object_class_install_properties (gobject_class, LAST_PROP, obj_props);
 
     area_signals[RENDER] = g_signal_new (I_("render"),
                   G_TYPE_FROM_CLASS (gobject_class),
