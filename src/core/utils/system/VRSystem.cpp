@@ -10,9 +10,16 @@
 #include <execinfo.h>
 #endif
 #include <stdio.h>
+
 #ifndef _WIN32
 #include <unistd.h>
 #endif
+
+#ifdef _WIN32
+#define _AMD64_
+#include <fileapi.h>
+#endif
+
 #include <thread>
 #include <chrono>
 
@@ -153,7 +160,10 @@ string createTempFile() {
     char* r = std::tmpnam(tmpname);
     if (r == 0) cout << "create temp file failed" << endl;
     return string() + tmpname;*/
-
+#ifdef _WIN32
+    static char P_tmpdir[MAX_PATH + 1] = { 0 };
+    if (!P_tmpdir[0]) GetTempPath(sizeof(P_tmpdir), P_tmpdir);
+#endif
     return string() + P_tmpdir + "/exec_out_file" + toString(time(0)) + "_" + toString(rand());
 }
 

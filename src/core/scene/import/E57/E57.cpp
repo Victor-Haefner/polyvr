@@ -15,8 +15,10 @@
 #include "core/utils/toString.h"
 #include "core/utils/MemMonitor.h"
 
+#ifndef _WIN32
 #include <fcntl.h> // to tell the system how we will read data
 #include <ext/stdio_filebuf.h>
+#endif
 
 using namespace e57;
 using namespace std;
@@ -386,10 +388,13 @@ void OSG::loadPCB(string path, VRTransformPtr res, map<string, string> importOpt
 
     auto params = VRPointCloud::readPCBHeader(path);
 
+#ifndef _WIN32
     int fileDescr = fileno(::fopen(path.c_str(), "rb"));
     __gnu_cxx::stdio_filebuf<char> filebuf(fileDescr, std::ios::in);
     istream stream(&filebuf);
-    //ifstream stream(path); // I guess this will be needed on windows..
+#else
+    ifstream stream(path);
+#endif
 
     int hL = toInt(params["headerLength"]);
     stream.seekg(hL);
@@ -490,8 +495,11 @@ void OSG::loadPCB(string path, VRTransformPtr res, map<string, string> importOpt
 
     pointcloud->setupLODs();
     res->addChild(pointcloud); // TODO: threading -> problems with states, re-adding it as child in main thread fixes issue!
-    //stream.close(); // for windows?
+#ifndef _WIN32
     close(fileDescr);
+#else
+    stream.close();
+#endif
 
     //pointcloud.reset();
     //MemMonitor::disable();

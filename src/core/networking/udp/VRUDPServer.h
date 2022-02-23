@@ -4,6 +4,7 @@
 #include <OpenSG/OSGConfig.h>
 #include "../VRNetworkingFwd.h"
 
+#include <string>
 #include <functional>
 
 class UDPServer;
