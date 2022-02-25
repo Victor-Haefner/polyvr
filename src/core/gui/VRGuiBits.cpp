@@ -151,7 +151,8 @@ void VRGuiBits::updateWebPortRessources() {
     fileReplaceStrings("./"+projectName+".html", "PROJECT.pvr", project);
 
     if (withXR) {
-        // TODO: copy webXR assets
+        systemCall("cp -f \"" + folder + "/webxr.js\" ./");
+        systemCall("cp -f \"" + folder + "/webxr.css\" ./");
     }
 
     // TODO: table widget to present preloaded files to user
