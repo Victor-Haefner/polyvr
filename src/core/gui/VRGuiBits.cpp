@@ -79,6 +79,8 @@ string wrapTimeout(string code, string delay) {
 }
 
 void VRGuiBits::updateWebPortRessources() {
+    bool withXR = getCheckButtonState("wed_opt_xr");
+
     int startOpt = getRadioButtonState("wed_opt_start1");
     startOpt += 2*getRadioButtonState("wed_opt_start2");
     startOpt += 3*getRadioButtonState("wed_opt_start3");
@@ -148,6 +150,10 @@ void VRGuiBits::updateWebPortRessources() {
     systemCall("cp -f \"" + folder + "/polyvr.html\" ./"+projectName+".html");
     fileReplaceStrings("./"+projectName+".html", "PROJECT.pvr", project);
 
+    if (withXR) {
+        // TODO: copy webXR assets
+    }
+
     // TODO: table widget to present preloaded files to user
     auto preloadFile = [&](const string& path) {
         string newStr = "preloadFile('" + path + "');\n\t\t\t//INCLUDE_PRELOAD_HOOK";
@@ -195,8 +201,20 @@ void VRGuiBits::updateWebPortRessources() {
         }
     }
 
-    if (startOpt == 2) systemCall("google-chrome --new-window http://localhost:5500/"+projectName+".html");
-    if (startOpt == 3) systemCall("google-chrome --new-window http://localhost:5500/"+projectName+".html?editor");
+    vector<string> options;
+
+    if (withXR) options.push_back("webXR");
+    if (startOpt == 3) options.push_back("editor");
+
+    string optionstr = "";
+    for (int i=0; i<options.size(); i++) {
+        if (i > 0) optionstr += "&";
+        else optionstr = "?";
+        optionstr += options[i];
+    }
+
+    if (startOpt > 1)
+        systemCall("google-chrome --new-window \"http://localhost:5500/"+projectName+".html"+optionstr+"\"");
 }
 
 void VRGuiBits::on_web_export_clicked() {
