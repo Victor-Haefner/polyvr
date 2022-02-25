@@ -82,8 +82,8 @@ void VRGuiBits::updateWebPortRessources() {
     bool withXR = getCheckButtonState("wed_opt_xr");
 
     int startOpt = getRadioButtonState("wed_opt_start1");
-    startOpt += 2*getRadioButtonState("wed_opt_start2");
-    startOpt += 3*getRadioButtonState("wed_opt_start3");
+    startOpt +=  2*getRadioButtonState("wed_opt_start2");
+    startOpt +=  3*getRadioButtonState("wed_opt_start3");
 
     string D = VRSceneManager::get()->getOriginalWorkdir();
     string project = VRScene::getCurrent()->getFile();
@@ -141,6 +141,8 @@ void VRGuiBits::updateWebPortRessources() {
     systemCall("cp -f \"" + folder + "/editor.js\" ./");
     systemCall("cp -f \"" + folder + "/editor.css\" ./");
     systemCall("cp -f \"" + folder + "/editor._html\" ./");
+    systemCall("cp -f \"" + folder + "/webxr.js\" ./");
+    systemCall("cp -f \"" + folder + "/webxr.css\" ./");
     systemCall("cp -f \"" + folder + "/storage.js\" ./");
     systemCall("cp -f \"" + folder + "/proxy.php\" ./");
     systemCall("cp -f \"" + folder + "/scanDir.php\" ./");
@@ -149,11 +151,6 @@ void VRGuiBits::updateWebPortRessources() {
     systemCall("cp -f \"" + folder + "/proj.db\" ./");
     systemCall("cp -f \"" + folder + "/polyvr.html\" ./"+projectName+".html");
     fileReplaceStrings("./"+projectName+".html", "PROJECT.pvr", project);
-
-    if (withXR) {
-        systemCall("cp -f \"" + folder + "/webxr.js\" ./");
-        systemCall("cp -f \"" + folder + "/webxr.css\" ./");
-    }
 
     // TODO: table widget to present preloaded files to user
     auto preloadFile = [&](const string& path) {
