@@ -50,6 +50,10 @@ class VRGuiBits {
         void on_internal_close_clicked();
         void on_console_switch(_GtkWidget* page, unsigned int page_num);
 
+        void updateWebPortRessources();
+        void on_wed_cancel();
+        void on_wed_start();
+
     public:
         VRGuiBits();
 
