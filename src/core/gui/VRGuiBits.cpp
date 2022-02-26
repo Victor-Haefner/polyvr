@@ -78,7 +78,13 @@ string wrapTimeout(string code, string delay) {
     return "setTimeout(function(){ "+code+" }, "+delay+");";
 }
 
-void VRGuiBits::on_web_export_clicked() {
+void VRGuiBits::updateWebPortRessources() {
+    bool withXR = getCheckButtonState("wed_opt_xr");
+
+    int startOpt = getRadioButtonState("wed_opt_start1");
+    startOpt +=  2*getRadioButtonState("wed_opt_start2");
+    startOpt +=  3*getRadioButtonState("wed_opt_start3");
+
     string D = VRSceneManager::get()->getOriginalWorkdir();
     string project = VRScene::getCurrent()->getFile();
     string projectName = VRScene::getCurrent()->getFileName();
@@ -132,18 +138,19 @@ void VRGuiBits::on_web_export_clicked() {
     systemCall("git -C \"" + folder + "\" pull");
     systemCall("cp -f \"" + folder + "/polyvr.wasm\" ./");
     systemCall("cp -f \"" + folder + "/polyvr.js\" ./");
+    systemCall("cp -f \"" + folder + "/editor.js\" ./");
+    systemCall("cp -f \"" + folder + "/editor.css\" ./");
+    systemCall("cp -f \"" + folder + "/editor._html\" ./");
+    systemCall("cp -f \"" + folder + "/webxr.js\" ./");
+    systemCall("cp -f \"" + folder + "/webxr.css\" ./");
     systemCall("cp -f \"" + folder + "/storage.js\" ./");
     systemCall("cp -f \"" + folder + "/proxy.php\" ./");
     systemCall("cp -f \"" + folder + "/scanDir.php\" ./");
     systemCall("cp -f \"" + folder + "/Mono.ttf\" ./");
     systemCall("cp -f \"" + folder + "/Browser.xml\" ./");
     systemCall("cp -f \"" + folder + "/proj.db\" ./");
-
-    // generate html file
     systemCall("cp -f \"" + folder + "/polyvr.html\" ./"+projectName+".html");
-    systemCall("cp -f \"" + folder + "/polyvr_editor.html\" ./"+projectName+"_editor.html");
     fileReplaceStrings("./"+projectName+".html", "PROJECT.pvr", project);
-    fileReplaceStrings("./"+projectName+"_editor.html", "PROJECT.pvr", project);
 
     // TODO: table widget to present preloaded files to user
     auto preloadFile = [&](const string& path) {
@@ -192,11 +199,36 @@ void VRGuiBits::on_web_export_clicked() {
         }
     }
 
-    //systemCall("gedit ./"+projectName+".html");
-    if (askUser("Web build files copied to project directory", "Start in browser (google-chrome)?"))
-        systemCall("google-chrome --new-window http://localhost:5500/"+projectName+".html");
-    else if (askUser("Web build files copied to project directory", "Start in browser with editor?"))
-        systemCall("google-chrome --new-window http://localhost:5500/"+projectName+"_editor.html");
+    vector<string> options;
+
+    if (withXR) options.push_back("webXR");
+    if (startOpt == 3) options.push_back("editor");
+
+    string optionstr = "";
+    for (int i=0; i<options.size(); i++) {
+        if (i > 0) optionstr += "&";
+        else optionstr = "?";
+        optionstr += options[i];
+    }
+
+    if (startOpt > 1)
+        systemCall("google-chrome --new-window \"http://localhost:5500/"+projectName+".html"+optionstr+"\"");
+}
+
+void VRGuiBits::on_web_export_clicked() {
+    auto diag = VRGuiBuilder::get()->get_widget("webExportDialog");
+    gtk_widget_show_all(diag);
+}
+
+void VRGuiBits::on_wed_cancel() {
+    GtkWidget* diag = VRGuiBuilder::get()->get_widget("webExportDialog");
+    gtk_widget_hide(diag);
+}
+
+void VRGuiBits::on_wed_start() {
+    GtkWidget* diag = VRGuiBuilder::get()->get_widget("webExportDialog");
+    gtk_widget_hide(diag);
+    updateWebPortRessources();
 }
 
 void VRGuiBits::on_about_clicked() {
@@ -358,6 +390,9 @@ VRGuiBits::VRGuiBits() {
     setToolButtonCallback("toolbutton26", bind(&VRGuiBits::on_fullscreen_clicked, this));
 
     setButtonCallback("button21", bind(&VRGuiBits::on_internal_close_clicked, this));
+
+    setButtonCallback("wed_cancel", bind(&VRGuiBits::on_wed_cancel, this));
+    setButtonCallback("wed_start", bind(&VRGuiBits::on_wed_start, this));
 
     setToolButtonCallback("togglebutton1", bind(&VRGuiBits::toggleDock, this) );
     setToolButtonCallback("network_verbose", bind(&VRGuiBits::toggleVerbose, this, "network" ) );

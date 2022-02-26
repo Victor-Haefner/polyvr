@@ -546,6 +546,28 @@ void VRGuiBuilder::buildBaseUI() {
     auto toolbutton18 = addToolButton("toolbutton18", "gtk-paste", toolbar1, "Profiler");
     auto toolbutton26 = addToolButton("toolbutton26", "gtk-fullscreen", toolbar1, "Fullscreen");
 
+    /* ---------- web export dialog ---------------------- */
+    auto webExportDialog = addDialog("webExportDialog");
+    auto wed_vbox = gtk_dialog_get_content_area(GTK_DIALOG(webExportDialog));
+    auto wed_actions = gtk_dialog_get_action_area(GTK_DIALOG(webExportDialog));
+    auto wed_cancel = addButton("wed_cancel", "Cancel");
+    auto wed_start = addButton("wed_start", "Start");
+    auto wed_opt_box = addBox("wed_opt_box", GTK_ORIENTATION_VERTICAL);
+    auto wed_lbl1 = addLabel("wed_lbl1", "Options");
+    auto wed_opt_xr = addCheckbutton("wed_opt_xr", "Add WebXR capabilities");
+    auto wed_opt_start1 = addRadiobutton("wed_opt_start1", "Only update web assets", 0);
+    auto wed_opt_start2 = addRadiobutton("wed_opt_start2", "Start in browser (google-chrome)", wed_opt_start1);
+    auto wed_opt_start3 = addRadiobutton("wed_opt_start3", "Start in browser with editor", wed_opt_start1);
+    gtk_box_pack_start(GTK_BOX(wed_actions), wed_cancel, false, true, 0);
+    gtk_box_pack_start(GTK_BOX(wed_actions), wed_start, false, true, 0);
+    gtk_box_pack_start(GTK_BOX(wed_vbox), wed_opt_box, false, true, 0);
+    gtk_box_pack_start(GTK_BOX(wed_opt_box), wed_lbl1, false, true, 0);
+    gtk_box_pack_start(GTK_BOX(wed_opt_box), wed_opt_xr, false, true, 0);
+    gtk_box_pack_start(GTK_BOX(wed_opt_box), wed_opt_start1, false, true, 0);
+    gtk_box_pack_start(GTK_BOX(wed_opt_box), wed_opt_start2, false, true, 0);
+    gtk_box_pack_start(GTK_BOX(wed_opt_box), wed_opt_start3, false, true, 0);
+    gtk_window_set_transient_for(GTK_WINDOW(webExportDialog), GTK_WINDOW(window1));
+
     cout << " build core section" << endl;
     /* ---------- core section ---------------------- */
     auto notebook1 = addNotebook("notebook1");

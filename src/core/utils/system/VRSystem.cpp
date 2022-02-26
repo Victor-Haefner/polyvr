@@ -177,10 +177,10 @@ string readFileContent(string fileName) {
     return result;
 }
 
-string ssystem(const char* command) {
+string ssystem(string command) {
     string tmpFile = createTempFile();
-    string scommand = command;
-    string cmd = scommand + " >> " + tmpFile;
+    string cmd = command + " >> " + tmpFile;
+    //cout << "systemCall: '" << cmd << "'" << endl;
     int r = std::system(cmd.c_str());
     if (r != 0) cout << "system call did not return 0 (" << r << ")" << endl;
     string result = readFileContent(tmpFile);
@@ -189,9 +189,7 @@ string ssystem(const char* command) {
 }
 
 string systemCall(string cmd) {
-    //cmd += " > callO"
-    return ssystem(cmd.c_str());
-    //return system(cmd.c_str());
+    return ssystem(cmd);
 }
 
 bool compileCodeblocksProject(string path) {
