@@ -69,7 +69,7 @@ VRHeadMountedDisplay::VRHeadMountedDisplay() {
 	onCameraChanged = VRDeviceCb::create("GUI_updateSceneViewer", bind(&VRHeadMountedDisplay::updateCamera, this));
 	VRGuiSignals::get()->getSignal("camera_changed")->add(onCameraChanged);
 	VRGuiSignals::get()->getSignal("camera_near_far_changed")->add(onCameraChanged);
-
+	
 	hmd = VRDevice::create("hmd");
 	auto setup = VRSetup::getCurrent();
 	if (setup) setup->addDevice(hmd);
@@ -81,7 +81,6 @@ VRHeadMountedDisplay::~VRHeadMountedDisplay() {
 }
 
 VRHeadMountedDisplayPtr VRHeadMountedDisplay::ptr() { return static_pointer_cast<VRHeadMountedDisplay>(shared_from_this()); }
-
 VRHeadMountedDisplayPtr VRHeadMountedDisplay::create() { return VRHeadMountedDisplayPtr(new VRHeadMountedDisplay()); }
 
 bool VRHeadMountedDisplay::checkDeviceAttached() {
@@ -381,14 +380,14 @@ void VRHeadMountedDisplay::UpdateHMDMatrixPose() {
 
 			if (devType == vr::TrackedDeviceClass_Controller) {
 				auto d = getDevice(devID);
-				d->getBeacon()->setMatrix(m);
+				if (d) d->getBeacon()->setMatrix(m);
 			} else {
 				auto t = getTracker(devID);
-				t->setMatrix(m);
-			}
+				if (t) t->setMatrix(m);
+ 			}
 		}
 	}
-
+	
 	int hmdID = vr::k_unTrackedDeviceIndex_Hmd;
 	if (m_rTrackedDevicePose[hmdID].bPoseIsValid) {
 		Matrix4d mvm = m_rmat4DevicePose[hmdID];
@@ -406,8 +405,8 @@ void VRHeadMountedDisplay::UpdateHMDMatrixPose() {
 
 VRTransformPtr VRHeadMountedDisplay::getTracker(int tID) { 
 	if (!tracker.count(tID)) {
-		tracker[tID] = VRTransform::create("hmdTracker");
-		hmd->setBeacon( tracker[tID], tID );
+		int bID = hmd->addBeacon();
+		tracker[tID] = hmd->getBeacon(bID);
 	}
 	return tracker[tID];
 }

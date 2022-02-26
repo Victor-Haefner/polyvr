@@ -84,9 +84,11 @@ class VRHeadMountedDisplay : public std::enable_shared_from_this<VRHeadMountedDi
 		VRHeadMountedDisplayPtr ptr();
 
 		static bool checkDeviceAttached();
-		void initHMD();
-		void render(bool fromThread = false);
 
+		void initHMD();
+
+		void render(bool fromThread = false);
+		
 		VRTransformPtr getTracker(int tID);
 		VRDevicePtr getDevice(int dID);
 		map<int, VRTransformPtr> getTrackers();
