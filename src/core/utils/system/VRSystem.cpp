@@ -10,9 +10,16 @@
 #include <execinfo.h>
 #endif
 #include <stdio.h>
+
 #ifndef _WIN32
 #include <unistd.h>
 #endif
+
+#ifdef _WIN32
+#define _AMD64_
+#include <fileapi.h>
+#endif
+
 #include <thread>
 #include <chrono>
 
@@ -153,7 +160,10 @@ string createTempFile() {
     char* r = std::tmpnam(tmpname);
     if (r == 0) cout << "create temp file failed" << endl;
     return string() + tmpname;*/
-
+#ifdef _WIN32
+    static char P_tmpdir[MAX_PATH + 1] = { 0 };
+    if (!P_tmpdir[0]) GetTempPath(sizeof(P_tmpdir), P_tmpdir);
+#endif
     return string() + P_tmpdir + "/exec_out_file" + toString(time(0)) + "_" + toString(rand());
 }
 
@@ -167,10 +177,10 @@ string readFileContent(string fileName) {
     return result;
 }
 
-string ssystem(const char* command) {
+string ssystem(string command) {
     string tmpFile = createTempFile();
-    string scommand = command;
-    string cmd = scommand + " >> " + tmpFile;
+    string cmd = command + " >> " + tmpFile;
+    //cout << "systemCall: '" << cmd << "'" << endl;
     int r = std::system(cmd.c_str());
     if (r != 0) cout << "system call did not return 0 (" << r << ")" << endl;
     string result = readFileContent(tmpFile);
@@ -179,9 +189,7 @@ string ssystem(const char* command) {
 }
 
 string systemCall(string cmd) {
-    //cmd += " > callO"
-    return ssystem(cmd.c_str());
-    //return system(cmd.c_str());
+    return ssystem(cmd);
 }
 
 bool compileCodeblocksProject(string path) {

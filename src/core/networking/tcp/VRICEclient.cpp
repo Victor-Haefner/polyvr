@@ -223,13 +223,16 @@ void VRICEClient::connectTo(string otherID) {
 
     //cout << " -> port " << port1 << endl;
 #ifndef WITHOUT_GTK
-    VRConsoleWidget::get("Collaboration")->write( " ICE "+name+"("+uid1+"): connect to "+users[uid2]+"("+uid2+") over "+turnIP+":"+toString(port1)+"\n");
+    VRConsoleWidget::get("Collaboration")->write( " ICE "+name+"("+uid1+"): connect to "+users[uid2]+"("+uid2+") over "+turnIP+":"+toString(port1)+", received '"+data+"'\n");
 #endif
     getClient(otherID, SCENEGRAPH)->connect(turnIP, port1);
 
-    if (params.size() >= 3) {
-        int port2 = toInt( params[3] );
+    if (params.size() >= 4) {
+        int port2 = toInt( params[4] );
         if (port2 != 0) getClient(otherID, AUDIO)->connect(turnIP, port2);
+#ifndef WITHOUT_GTK
+            VRConsoleWidget::get("Collaboration")->write( " ICE "+name+"("+uid1+"): connect AUDIO to "+users[uid2]+"("+uid2+") over "+turnIP+":"+toString(port2)+", received '"+data+"'\n");
+#endif
     }
 }
 
