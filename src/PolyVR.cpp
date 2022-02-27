@@ -285,7 +285,7 @@ void PolyVR::update() {
 #ifdef _WIN32
     int appInitFrame = 300;
 #else
-    int appInitFrame = 10;
+    int appInitFrame = 2;
 #endif
     if (VRGlobals::CURRENT_FRAME == appInitFrame) {
         string app = options->getOption<string>("application");

@@ -37,6 +37,12 @@ CEF_handler::~CEF_handler() {
 void CEF_handler::GetViewRect(CefRefPtr<CefBrowser> browser, CefRect& rect) {
     rect = CefRect(0, 0, max(8,width), max(8,height)); // never give an empty rectangle!!
 }
+#else
+bool CEF_handler::GetViewRect(CefRefPtr<CefBrowser> browser, CefRect& rect) {
+    rect = CefRect(0, 0, max(8, width), max(8, height)); // never give an empty rectangle!!
+    return true;
+}
+#endif
 
 //Disable context menu
 //Define below two functions to essentially do nothing, overwriting defaults
@@ -50,12 +56,7 @@ bool CEF_handler::OnContextMenuCommand( CefRefPtr<CefBrowser> browser, CefRefPtr
     //MessageBox(browser->GetHost()->GetWindowHandle(), L"The requested action is not supported", L"Unsupported Action", MB_OK | MB_ICONINFORMATION);
     return false;
 }
-#else
-bool CEF_handler::GetViewRect(CefRefPtr<CefBrowser> browser, CefRect& rect) {
-    rect = CefRect(0, 0, max(8, width), max(8, height)); // never give an empty rectangle!!
-    return true;
-}
-#endif
+
 
 void CEF_handler::OnPaint(CefRefPtr<CefBrowser> browser, PaintElementType type, const RectList& dirtyRects, const void* buffer, int width, int height) {
     if (!image) return;
