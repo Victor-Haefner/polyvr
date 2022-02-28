@@ -28,7 +28,7 @@ class VRConstructionKit {
         map<VRTransform*, VRTransformPtr> objects;
 
         int ID();
-        void on_snap(VRSnappingEngine::EventSnapPtr e);
+        bool on_snap(VRSnappingEngine::EventSnapWeakPtr e);
 
     public:
         VRConstructionKit();

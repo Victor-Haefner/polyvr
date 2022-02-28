@@ -60,7 +60,8 @@ class VRSnappingEngine {
         };
 
         typedef shared_ptr<EventSnap> EventSnapPtr;
-        typedef VRFunction<EventSnapPtr> VRSnapCb;
+        typedef weak_ptr<EventSnap> EventSnapWeakPtr;
+        typedef VRFunction<EventSnapWeakPtr, bool> VRSnapCb;
         typedef shared_ptr<VRSnapCb> VRSnapCbPtr;
 
     private:

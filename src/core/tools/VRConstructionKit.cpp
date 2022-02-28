@@ -38,26 +38,24 @@ vector<VRObjectPtr> VRConstructionKit::getObjects() {
     return res;
 }
 
-void VRConstructionKit::on_snap(VRSnappingEngine::EventSnapPtr e) {
-    return;
-    if (!doConstruction || !e) return;
-    if (!e->snap) { breakup(e->o1); return; }
-
-    if (!e->o1 || !e->o2) return;
-
-    cout << "VRConstructionKit::on_snap0 " << e << " " << e->o1 << " " << e->o2 << endl;
+bool VRConstructionKit::on_snap(VRSnappingEngine::EventSnapWeakPtr we) {
+    if (!doConstruction) return true;
+    auto e = we.lock();
+    if (!e) return true;
+    if (!e->snap) { breakup(e->o1); return true; }
+    if (!e->o1 || !e->o2) return true;
 
     VRObjectPtr p1 = e->o1->getDragParent();
     VRObjectPtr p2 = e->o2->getParent();
-    if (p1 == 0 || p2 == 0) return;
-    if (p1 == p2) if (p1->hasTag("kit_group")) return;
+    if (p1 == 0 || p2 == 0) return true;
+    if (p1 == p2) if (p1->hasTag("kit_group")) return true;
 
     if (p2->hasTag("kit_group")) {
         e->o1->rebaseDrag(p2);
         e->o1->setPickable(false);
         e->o2->setPickable(false);
         e->o1->setWorldMatrix(e->m);
-        return;
+        return true;
     }
 
     VRTransformPtr group = VRTransform::create("kit_group");
@@ -72,6 +70,7 @@ void VRConstructionKit::on_snap(VRSnappingEngine::EventSnapPtr e) {
     e->o2->setPickable(false);
     e->o1->setWorldMatrix(e->m);
     e->o2->setWorldMatrix(m);
+    return true;
 }
 
 int VRConstructionKit::ID() {
