@@ -229,9 +229,13 @@ void VRICEClient::connectTo(string otherID) {
 
     if (params.size() >= 4) {
         int port2 = toInt( params[4] );
-        if (port2 != 0) getClient(otherID, AUDIO)->connect(turnIP, port2);
+        if (port2 != 0) {
+            auto cli = getClient(otherID, AUDIO);
+            cli->connect(turnIP, port2);
+            cli->send("hi"); // to register the client port on turn server
+        }
 #ifndef WITHOUT_GTK
-            VRConsoleWidget::get("Collaboration")->write( " ICE "+name+"("+uid1+"): connect AUDIO to "+users[uid2]+"("+uid2+") over "+turnIP+":"+toString(port2)+", received '"+data+"'\n");
+        VRConsoleWidget::get("Collaboration")->write( " ICE "+name+"("+uid1+"): connect AUDIO to "+users[uid2]+"("+uid2+") over "+turnIP+":"+toString(port2)+", received '"+data+"'\n");
 #endif
     }
 }
