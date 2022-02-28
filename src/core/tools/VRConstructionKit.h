@@ -21,14 +21,14 @@ class VRConstructionKit {
         VRSnappingEnginePtr snapping;
         VRSelectorPtr selector;
         VRObjectPtr root;
-        shared_ptr< VRFunction<VRSnappingEngine::EventSnap*> > onSnap;
+        VRSnappingEngine::VRSnapCbPtr onSnap;
         bool doConstruction = true;
 
         map<int, VRGeometryPtr> anchors;
         map<VRTransform*, VRTransformPtr> objects;
 
         int ID();
-        void on_snap(VRSnappingEngine::EventSnap* e);
+        void on_snap(VRSnappingEngine::EventSnapPtr e);
 
     public:
         VRConstructionKit();

@@ -62,6 +62,7 @@
 	idev = VR.find('mouse')
 	if VR.find('flystick'): idev = VR.find('flystick')
 	idev.drag(g)
+	g.setFrom([0,0,-0.5])
 	idev.getDragGhost().setFrom([0,0,-0.5])
 </core>
       <arg type="float" value="1" base_name="X" name_space="addBrick" name_suffix="0" persistency="666"/>

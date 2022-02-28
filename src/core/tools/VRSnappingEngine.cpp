@@ -351,6 +351,10 @@ void VRSnappingEngine::postProcessEvent(VRDevicePtr dev, VRTransformPtr obj, VRT
 
     if (lastEvent != event->snap || lastEventID != event->snapID) {
         if (event->o1 == obj) {
+    cout << "VRSnappingEngine::on_snap0 " << event << " " << event->o1 << " " << event->o2 << endl;
+            for (auto s : snapSignal->getCallbacks())
+                for (auto i : s.second)
+                    cout << " cb " << i.lock()->name << endl;
             snapSignal->triggerAll<EventSnap>(event);
             for (auto cb : callbacks) (*cb)(event);
         }

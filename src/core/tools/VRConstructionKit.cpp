@@ -15,7 +15,7 @@ VRConstructionKit::VRConstructionKit() {
     snapping = VRSnappingEngine::create();
     selector = VRSelector::create();
 
-    onSnap = VRFunction<VRSnappingEngine::EventSnap*>::create("on_snap_callback", bind(&VRConstructionKit::on_snap, this, placeholders::_1));
+    onSnap = VRSnappingEngine::VRSnapCb::create("on_snap_callback", bind(&VRConstructionKit::on_snap, this, placeholders::_1));
     snapping->getSignalSnap()->add(onSnap);
 }
 
@@ -38,11 +38,15 @@ vector<VRObjectPtr> VRConstructionKit::getObjects() {
     return res;
 }
 
-void VRConstructionKit::on_snap(VRSnappingEngine::EventSnap* e) {
-    if (!doConstruction) return;
-    if (e->snap == 0) { breakup(e->o1); return; }
+void VRConstructionKit::on_snap(VRSnappingEngine::EventSnapPtr e) {
+    return;
+    if (!doConstruction || !e) return;
+    if (!e->snap) { breakup(e->o1); return; }
 
-    if (e->o1 == 0 || e->o2 == 0) return;
+    if (!e->o1 || !e->o2) return;
+
+    cout << "VRConstructionKit::on_snap0 " << e << " " << e->o1 << " " << e->o2 << endl;
+
     VRObjectPtr p1 = e->o1->getDragParent();
     VRObjectPtr p2 = e->o2->getParent();
     if (p1 == 0 || p2 == 0) return;
