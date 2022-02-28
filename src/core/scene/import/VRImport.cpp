@@ -130,9 +130,11 @@ VRTransformPtr VRImport::load(string path, VRObjectPtr parent, bool useCache, st
     if (!thread) {
         LoadJob job(path, preset, res, progress, options, useCache, useBinaryCache);
         job.load(VRThreadWeakPtr());
+        if (!useCache && parent) parent->addChild(res);
         if (useCache) return cache[path].retrieve(parent);
         else return res;
     } else {
+        if (!useCache && parent) parent->addChild(res);
         if (useCache) {
             fillCache(path, res);
             res = cache[path].retrieve(parent);
