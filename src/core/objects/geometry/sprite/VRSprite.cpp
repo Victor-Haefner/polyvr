@@ -127,8 +127,8 @@ void VRSprite::webOpen(string path, int res, float ratio) {
         uri = parts[parts.length - 1]+".html";
 
         var frame = document.createElement("iframe");
-        if (document.getElemntById("hudDiv")) {
-            document.getElemntById("hudDiv").appendChild(frame);
+        if (document.getElementById("hudDiv")) {
+            document.getElementById("hudDiv").appendChild(frame);
         } else {
             var div = document.createElement("div");
             div.id = "hudDiv";
