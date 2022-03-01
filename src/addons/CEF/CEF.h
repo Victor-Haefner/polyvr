@@ -28,11 +28,13 @@ class CEF_handler : public CefRenderHandler, public CefLoadHandler, public CefCo
 
 #ifdef _WIN32
         void GetViewRect(CefRefPtr<CefBrowser> browser, CefRect& rect);
-        void OnBeforeContextMenu(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefContextMenuParams> params, CefRefPtr<CefMenuModel> model);
-        bool OnContextMenuCommand(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefContextMenuParams> params, int command_id, EventFlags event_flags);
 #else
         bool GetViewRect(CefRefPtr<CefBrowser> browser, CefRect& rect) override;
 #endif
+
+        void OnBeforeContextMenu(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefContextMenuParams> params, CefRefPtr<CefMenuModel> model);
+        bool OnContextMenuCommand(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefContextMenuParams> params, int command_id, EventFlags event_flags);
+
         void OnPaint(CefRefPtr<CefBrowser> browser, PaintElementType type, const RectList& dirtyRects, const void* buffer, int width, int height) override;
         VRTexturePtr getImage();
         void resize(int resolution, float aspect);

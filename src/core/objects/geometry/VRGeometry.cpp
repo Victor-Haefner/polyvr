@@ -1353,9 +1353,7 @@ vector< tuple<Pnt3d, Pnt3d>> VRGeometry::mapPoints(vector<Pnt3d>& e1, vector<Pnt
 VRPointCloudPtr VRGeometry::convertToPointCloud(map<string, string> options) {
     VRGeoData data;
     int resolution = 1;
-    int partitionSize = -1;
     if (options.count("resolution")) resolution = toInt(options["resolution"]);
-    if (options.count("partitionSize")) partitionSize = toInt(options["partitionSize"]);
     auto pointcloud = VRPointCloud::create("pointcloud");
     pointcloud->applySettings(options);
 
@@ -1363,8 +1361,6 @@ VRPointCloudPtr VRGeometry::convertToPointCloud(map<string, string> options) {
     convertToTriangles();
 
     TriangleIterator it(mesh->geo);
-
-    Color3f color;
 
 	for (int i=0; !it.isAtEnd(); ++it, i++) {
         vector<Edge> edges = {};
@@ -1382,10 +1378,9 @@ VRPointCloudPtr VRGeometry::convertToPointCloud(map<string, string> options) {
     }
     cout << "added " << data.size() << " new points!" << endl;
 
-    Color3f col(1,0.5,0.5);
+    Color3ub col(255,123,123);
     for (int i = 0; i < data.size(); i++) {
-        //pointcloud->getOctree()->add(Vec3d(data.getPosition(i)), new Color3f(0,0,0) );
-        pointcloud->getOctree()->add(Vec3d(data.getPosition(i)), &color, -1, true, partitionSize );
+        pointcloud->addPoint( Vec3d(data.getPosition(i)), col );
     }
     pointcloud->setupLODs();
 

@@ -43,6 +43,7 @@ class VRMaterial : public VRObject {
         int activePass = 0;
         bool force_transparency = false;
         bool deferred = false;
+        bool useGlobalFCMap = true;
 
         VRObjectPtr copy(vector<VRObjectPtr> children) override;
 
@@ -57,11 +58,12 @@ class VRMaterial : public VRObject {
         VRMaterial(string name);
         virtual ~VRMaterial();
 
-        static VRMaterialPtr create(string name = "None");
+        static VRMaterialPtr create(string name = "None", bool reg = true);
         VRMaterialPtr ptr();
 
         void init();
 
+        void setUseGlobalFCMap(bool b);
         void setDeferred(bool b);
         void updateDeferredShader();
         void updateOGL2Shader();

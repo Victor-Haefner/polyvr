@@ -201,11 +201,15 @@ void add1ToPaned(GtkWidget* p, GtkWidget* w) {
     gtk_paned_pack1(GTK_PANED(p), w, true, true);
 }
 
-// TODO: wrong signature
+void setWidgetSize(GtkWidget* w, int W, int H) {
+    if (W < -1 || H < -1) cout << "Warning in setWidgetSize, invalid size request! " << W << " " << H << endl;
+    gtk_widget_set_size_request(w, W, H);
+}
+
 void onPanedMove(GtkPaned* widget, GdkEvent* event, GtkWidget* content) {
     int p = gtk_paned_get_position(widget);
     int h = gtk_widget_get_allocated_height(GTK_WIDGET(widget));
-    gtk_widget_set_size_request(content, p, h);
+    setWidgetSize(content, p, h);
 }
 
 void add2ToPaned(GtkWidget* p, GtkWidget* w) {
@@ -268,7 +272,7 @@ GtkWidget* addColorChooser(string ID) {
     auto n = gtk_drawing_area_new();
     VRGuiBuilder::get()->reg_widget(n, ID);
     gtk_container_add(GTK_CONTAINER(f), n);
-    gtk_widget_set_size_request(n, 50, 30);
+    setWidgetSize(n, 50, 30);
     gtk_widget_set_halign(f, GTK_ALIGN_CENTER);
     gtk_widget_set_valign(f, GTK_ALIGN_CENTER);
     return f;
@@ -362,7 +366,7 @@ GtkWidget* appendExpander(string ID, string label, string gID, GtkWidget* box) {
 
 void addNotebookPage(GtkWidget* notebook, GtkWidget* content, string label) {
     auto lbl = gtk_label_new(label.c_str());
-    gtk_widget_set_size_request(lbl, 1, -1);
+    setWidgetSize(lbl, 1, -1);
     gtk_notebook_append_page(GTK_NOTEBOOK(notebook), content, lbl);
     gtk_notebook_set_show_border(GTK_NOTEBOOK(notebook), true);
 
@@ -463,18 +467,30 @@ gboolean on_window_expose(GtkWidget* widget, GdkEventExpose* event) {
 
 void set3DViewBarHeight(GtkWidget* widget, GtkAllocation* allocation, void* hbox1_layout) {
     int h = allocation->height;
-    gtk_widget_set_size_request(GTK_WIDGET(hbox1_layout), -1, h);
+    setWidgetSize(GTK_WIDGET(hbox1_layout), -1, h);
 }
 
-void set3DViewBarWidth(GtkWidget* widget, GtkAllocation* allocation, void* hbox1_viewport) {
-    int w = allocation->width;
-    gtk_widget_set_size_request(GTK_WIDGET(hbox1_viewport), w, -1);
+void set3DViewBarWidth(GtkPaned* widget, GdkEvent* event, void* hbox1_viewport) {
+    int p = gtk_paned_get_position(widget);
+    int w = gtk_widget_get_allocated_width(GTK_WIDGET(widget)) - p;
+    setWidgetSize(GTK_WIDGET(hbox1_viewport), w, -1);
 }
 
-void setConsolesBoxSize(GtkWidget* widget, GtkAllocation* allocation, void* hbox15_viewport) {
-    int w = allocation->width;
-    int h = allocation->height;
-    gtk_widget_set_size_request(GTK_WIDGET(hbox15_viewport), w, h);
+void setConsolesBoxHeight(GtkPaned* widget, GdkEvent* event, void* hbox15_viewport) {
+    int p = gtk_paned_get_position(widget);
+    int w, h;
+    gtk_widget_get_size_request(GTK_WIDGET(hbox15_viewport),&w,&h);
+    h = gtk_widget_get_allocated_height(GTK_WIDGET(widget)) - p;
+    h = max(h, 0);
+    setWidgetSize(GTK_WIDGET(hbox15_viewport), w, h);
+}
+
+void setConsolesBoxWidth(GtkPaned* widget, GdkEvent* event, void* hbox15_viewport) {
+    int p = gtk_paned_get_position(widget);
+    int w, h;
+    gtk_widget_get_size_request(GTK_WIDGET(hbox15_viewport),&w,&h);
+    w = gtk_widget_get_allocated_width(GTK_WIDGET(widget)) - p;
+    setWidgetSize(GTK_WIDGET(hbox15_viewport), w, h);
 }
 
 bool setInitalPannedPos(GtkWidget* widget, cairo_t* ctx, gpointer data) {
@@ -530,6 +546,28 @@ void VRGuiBuilder::buildBaseUI() {
     auto toolbutton18 = addToolButton("toolbutton18", "gtk-paste", toolbar1, "Profiler");
     auto toolbutton26 = addToolButton("toolbutton26", "gtk-fullscreen", toolbar1, "Fullscreen");
 
+    /* ---------- web export dialog ---------------------- */
+    auto webExportDialog = addDialog("webExportDialog");
+    auto wed_vbox = gtk_dialog_get_content_area(GTK_DIALOG(webExportDialog));
+    auto wed_actions = gtk_dialog_get_action_area(GTK_DIALOG(webExportDialog));
+    auto wed_cancel = addButton("wed_cancel", "Cancel");
+    auto wed_start = addButton("wed_start", "Start");
+    auto wed_opt_box = addBox("wed_opt_box", GTK_ORIENTATION_VERTICAL);
+    auto wed_lbl1 = addLabel("wed_lbl1", "Options");
+    auto wed_opt_xr = addCheckbutton("wed_opt_xr", "Add WebXR capabilities");
+    auto wed_opt_start1 = addRadiobutton("wed_opt_start1", "Only update web assets", 0);
+    auto wed_opt_start2 = addRadiobutton("wed_opt_start2", "Start in browser (google-chrome)", wed_opt_start1);
+    auto wed_opt_start3 = addRadiobutton("wed_opt_start3", "Start in browser with editor", wed_opt_start1);
+    gtk_box_pack_start(GTK_BOX(wed_actions), wed_cancel, false, true, 0);
+    gtk_box_pack_start(GTK_BOX(wed_actions), wed_start, false, true, 0);
+    gtk_box_pack_start(GTK_BOX(wed_vbox), wed_opt_box, false, true, 0);
+    gtk_box_pack_start(GTK_BOX(wed_opt_box), wed_lbl1, false, true, 0);
+    gtk_box_pack_start(GTK_BOX(wed_opt_box), wed_opt_xr, false, true, 0);
+    gtk_box_pack_start(GTK_BOX(wed_opt_box), wed_opt_start1, false, true, 0);
+    gtk_box_pack_start(GTK_BOX(wed_opt_box), wed_opt_start2, false, true, 0);
+    gtk_box_pack_start(GTK_BOX(wed_opt_box), wed_opt_start3, false, true, 0);
+    gtk_window_set_transient_for(GTK_WINDOW(webExportDialog), GTK_WINDOW(window1));
+
     cout << " build core section" << endl;
     /* ---------- core section ---------------------- */
     auto notebook1 = addNotebook("notebook1");
@@ -541,7 +579,7 @@ void VRGuiBuilder::buildBaseUI() {
     GtkWidget* hbox15_viewport = gtk_viewport_new(0,0);
     gtk_container_add(GTK_CONTAINER(hbox15_viewport), hbox15);
     gtk_container_add(GTK_CONTAINER(hbox15_layout), hbox15_viewport);
-    g_signal_connect(hbox15_layout, "size-allocate", G_CALLBACK(setConsolesBoxSize), hbox15_viewport);
+    g_signal_connect(vpaned1, "notify::position", (GCallback)setConsolesBoxHeight, hbox15_viewport);
 
     add2ToPaned(hpaned1, vpaned1);
     add1ToPaned(vpaned1, vbox5);
@@ -558,6 +596,7 @@ void VRGuiBuilder::buildBaseUI() {
     gtk_container_add(GTK_CONTAINER(layout), viewport);
     gtk_paned_pack1(GTK_PANED(hpaned1), layout, true, true);
     g_signal_connect(hpaned1, "notify::position", (GCallback)onPanedMove, notebook1);
+    g_signal_connect(hpaned1, "notify::position", (GCallback)setConsolesBoxWidth, hbox15_viewport);
 
     /* ---------- right core section ---------------------- */
     auto hbox1 = addBox("hbox1", GTK_ORIENTATION_HORIZONTAL); // bar above 3d view
@@ -569,15 +608,15 @@ void VRGuiBuilder::buildBaseUI() {
     auto hseparator5 = addSeparator("hseparator5", GTK_ORIENTATION_HORIZONTAL);
     auto hseparator6 = addSeparator("hseparator6", GTK_ORIENTATION_HORIZONTAL);
     auto toolbar6 = addToolbar("toolbar6", GTK_ICON_SIZE_LARGE_TOOLBAR, GTK_ORIENTATION_HORIZONTAL);
-
     GtkWidget* hbox1_layout = gtk_layout_new(0,0);
+    VRGuiBuilder::get()->reg_widget(hbox1_layout, "hbox1_layout");
     GtkWidget* hbox1_viewport = gtk_viewport_new(0,0);
     gtk_container_add(GTK_CONTAINER(hbox1_viewport), hbox1);
     gtk_container_add(GTK_CONTAINER(hbox1_layout), hbox1_viewport);
     gtk_widget_set_hexpand(hbox1_viewport, true);
     gtk_widget_set_hexpand(hbox1_layout, true);
     g_signal_connect(hbox1, "size-allocate", G_CALLBACK(set3DViewBarHeight), hbox1_layout);
-    g_signal_connect(hbox1_layout, "size-allocate", G_CALLBACK(set3DViewBarWidth), hbox1_viewport);
+    g_signal_connect(hpaned1, "notify::position", (GCallback)set3DViewBarWidth, hbox1_viewport);
 
     gtk_box_pack_start(GTK_BOX(vbox5), hbox1_layout, false, true, 0);
     gtk_box_pack_start(GTK_BOX(vbox5), glarea, false, true, 0);
@@ -732,7 +771,7 @@ void VRGuiBuilder::buildBaseUI() {
     auto notebook4 = addNotebook("notebook4");
     auto systemGrid = addGrid("systemGrid");
     auto table31 = addGrid("table31");
-    gtk_widget_set_size_request(dialog2, 1024, 600);
+    setWidgetSize(dialog2, 1024, 600);
     gtk_box_pack_start(GTK_BOX(dialog_action_area10), button21, false, true, 0);
     gtk_box_pack_start(GTK_BOX(dialog_vbox10), label92, false, true, 0);
     gtk_box_pack_start(GTK_BOX(dialog_vbox10), notebook4, true, true, 0);
@@ -1379,7 +1418,7 @@ void VRGuiBuilder::buildBaseUI() {
     gtk_box_pack_start(GTK_BOX(tdialog_vbox), tlabel1, false, true, 0);
     gtk_box_pack_start(GTK_BOX(tdialog_vbox), thpaned1, false, true, 0);
     gtk_window_set_transient_for(GTK_WINDOW(templates_docs), GTK_WINDOW(window1));
-    gtk_widget_set_size_request(templates_docs, 800, 600);
+    setWidgetSize(templates_docs, 800, 600);
     gtk_paned_set_position(GTK_PANED(thpaned1), 200);
 
     auto ttable1 = addGrid("ttable1");
@@ -1411,7 +1450,7 @@ void VRGuiBuilder::buildBaseUI() {
     gtk_box_pack_start(GTK_BOX(dialog_vbox6), label69, false, true, 0);
     gtk_box_pack_start(GTK_BOX(dialog_vbox6), table40, false, true, 0);
     gtk_window_set_transient_for(GTK_WINDOW(pybindings_docs), GTK_WINDOW(window1));
-    gtk_widget_set_size_request(pybindings_docs, 800, 600);
+    setWidgetSize(pybindings_docs, 800, 600);
 
     auto image49 = addStockImage("image49", "gtk-find", GTK_ICON_SIZE_SMALL_TOOLBAR);
     auto entry25 = addEntry("entry25");
@@ -1604,7 +1643,7 @@ void VRGuiBuilder::buildBaseUI() {
     add2ToPaned(hpaned3, table11);
     gtk_widget_set_hexpand(treeview6, true);
     gtk_widget_set_vexpand(treeview6, true);
-    gtk_widget_set_size_request(treeview6, 300, -1);
+    setWidgetSize(treeview6, 300, -1);
     gtk_tree_view_set_reorderable(GTK_TREE_VIEW(treeview6), true);
     gtk_widget_set_hexpand(current_object_lab, true);
     gtk_paned_set_position(GTK_PANED(hpaned3), 300);

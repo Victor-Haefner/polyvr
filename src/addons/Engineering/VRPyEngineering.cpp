@@ -28,6 +28,7 @@ PyMethodDef VRPyPipeSystem::methods[] = {
     {"getSegmentGradient", PyWrap( PipeSystem, getSegmentGradient, "Get segment pressure gradient", Vec2d, int ) },
     {"getSegmentDensity", PyWrap( PipeSystem, getSegmentDensity, "Get segment density", double, int ) },
     {"getSegmentFlow", PyWrap( PipeSystem, getSegmentFlow, "Get segment flow", double, int ) },
+    {"getValveState", PyWrap( PipeSystem, getValveState, "Get valve state", bool, string ) },
     {"getSegmentFlowAccelleration", PyWrap( PipeSystem, getSegmentFlowAccelleration, "Get segment flow acceleration due to pressure gradient", Vec2d, int ) },
     {"getTankPressure", PyWrap( PipeSystem, getTankPressure, "Get tank pressure", double, string ) },
     {"getTankDensity", PyWrap( PipeSystem, getTankDensity, "Get tank density", double, string ) },

@@ -18,6 +18,7 @@
 #include "core/math/partitioning/graph.h"
 #include "core/math/triangulator.h"
 #include "core/math/partitioning/Octree.h"
+#include "core/math/partitioning/OctreeT.h"
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/geometry/VRGeoData.h"
@@ -338,7 +339,7 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
 
     if (!roadNetwork) return;
     auto g = roadNetwork->getGraph();
-    auto space = Octree::create(2,10,"trafficSimThread");
+    auto space = Octree<Vehicle*>::create(2,10,"trafficSimThread");
     map<int, vector<pair<int, int>>> toChangeRoad;
     map<int, int> toChangeLane;
     map<int, map<int, int>> visionVec;
@@ -844,9 +845,7 @@ void VRTrafficSimulation::trafficSimThread(VRThreadWeakPtr tw) {
         auto pose = vehicle.simPose;
         auto resFar = space->radiusSearch(pose->pos(), sightRadius);
 
-        for (auto vv : resFar) {
-        //check vehicles in radiusSearch
-            auto v = (Vehicle*)vv;
+        for (auto v : resFar) { //check vehicles in radiusSearch
             if (!v) continue;
             if (!v->simPose) continue;
             if (v->vID == vehicle.vID) continue;

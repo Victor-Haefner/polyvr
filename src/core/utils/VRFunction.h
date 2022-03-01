@@ -12,6 +12,7 @@ using namespace std;
 
 class VRFunction_base {
     public:
+        virtual ~VRFunction_base() {}
         string name = "Function";
 
     private:

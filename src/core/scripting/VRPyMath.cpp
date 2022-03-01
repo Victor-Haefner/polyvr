@@ -1,6 +1,7 @@
 #include "VRPyMath.h"
 #include "VRPyBaseT.h"
 #include "core/utils/toString.h"
+#include "core/math/partitioning/OctreeT.h"
 
 using namespace OSG;
 
@@ -594,12 +595,12 @@ PyObject* VRPyLine::intersect(VRPyLine* self, PyObject *args) {
 simplePyType(Expression, New_named_ptr);
 simplePyType(MathExpression, New_named_ptr);
 simplePyType(TSDF, VRPyTSDF::New );
-simplePyType(PartitiontreeNode, 0 );
+simplePyType(PartitiontreePyNode, 0 );
 simplePyType(QuadtreeNode, 0 );
-simplePyType(OctreeNode, 0 );
+simplePyType(OctreePyNode, 0 );
 simplePyType(Partitiontree, 0);
 simplePyType(Quadtree, VRPyQuadtree::New );
-simplePyType(Octree, VRPyOctree::New );
+simplePyType(OcPytree, VRPyOcPytree::New );
 #ifndef WITHOUT_LAPACKE_BLAS
 simplePyType(PCA, New_ptr);
 #endif
@@ -788,12 +789,12 @@ PyObject* VRPyTSDF::New(PyTypeObject *type, PyObject *args, PyObject *kwds) {
 }
 
 
-typedef PartitiontreeNode* pnPtr;
+typedef PartitiontreePyNode* pnPtr;
 typedef QuadtreeNode* qnPtr;
-typedef OctreeNode* onPtr;
-template<> PyObject* VRPyTypeCaster::cast(const pnPtr& n) { if (n) return VRPyPartitiontreeNode::fromPtr(n); Py_RETURN_NONE; }
+typedef OctreePyNode* onPtr;
+template<> PyObject* VRPyTypeCaster::cast(const pnPtr& n) { if (n) return VRPyPartitiontreePyNode::fromPtr(n); Py_RETURN_NONE; }
 template<> PyObject* VRPyTypeCaster::cast(const qnPtr& n) { if (n) return VRPyQuadtreeNode::fromPtr(n); Py_RETURN_NONE; }
-template<> PyObject* VRPyTypeCaster::cast(const onPtr& n) { if (n) return VRPyOctreeNode::fromPtr(n); Py_RETURN_NONE; }
+template<> PyObject* VRPyTypeCaster::cast(const onPtr& n) { if (n) return VRPyOctreePyNode::fromPtr(n); Py_RETURN_NONE; }
 
 PyMethodDef VRPyPartitiontree::methods[] = {
     {NULL}  /* Sentinel */
@@ -810,15 +811,15 @@ PyMethodDef VRPyQuadtree::methods[] = {
     {NULL}  /* Sentinel */
 };
 
-PyMethodDef VRPyOctree::methods[] = {
-    {"add", PyWrapOpt2( Octree, add, "Add to tree - will leak memory!", "0|-1|1|-1", OctreeNode*, Vec3d, void*, int, bool, int ) },
-    {"get", PyWrapOpt2( Octree, get, "Get leaf node at position", "1", OctreeNode*, Vec3d, bool ) },
-    {"getLeafSize", PyWrap2( Octree, getLeafSize, "Get leaf node size", double ) },
-    {"getVisualization", PyWrapOpt2( Octree, getVisualization, "Get tree visual", "0", VRGeometryPtr, bool ) },
-    {"getAllLeafs", PyWrap2( Octree, getAllLeafs, "Get all leafs", vector<OctreeNode*> ) },
-    {"radiusSearch", PyWrapOpt2( Octree, radiusSearch, "Search for data within radius", "-1", vector<void*>, Vec3d, float, int) },
-    {"radiusPointSearch", PyWrapOpt2( Octree, radiusPointSearch, "Search for points within radius", "-1|1", vector<Vec3d>, Vec3d, float, int, bool) },
-    //{"boxSearch", PyWrapOpt2( Octree, boxSearch, "Search for points within bounding box", "-1", vector<void*>, const Boundingbox&, int) },
+PyMethodDef VRPyOcPytree::methods[] = {
+    {"add", PyWrapOpt2( OcPytree, add, "Add to tree - will leak memory!", "0|-1|1|-1", OctreePyNode*, Vec3d, PyObject*, int, bool, int ) },
+    {"get", PyWrapOpt2( OcPytree, get, "Get leaf node at position", "1", OctreePyNode*, Vec3d, bool ) },
+    {"getLeafSize", PyWrap2( OcPytree, getLeafSize, "Get leaf node size", double ) },
+    {"getVisualization", PyWrapOpt2( OcPytree, getVisualization, "Get tree visual", "0", VRGeometryPtr, bool ) },
+    {"getAllLeafs", PyWrap2( OcPytree, getAllLeafs, "Get all leafs", vector<OctreePyNode*> ) },
+    {"radiusSearch", PyWrapOpt2( OcPytree, radiusSearch, "Search for data within radius", "-1", vector<PyObject*>, Vec3d, float, int) },
+    {"radiusPointSearch", PyWrapOpt2( OcPytree, radiusPointSearch, "Search for points within radius", "-1|1", vector<Vec3d>, Vec3d, float, int, bool) },
+    //{"boxSearch", PyWrapOpt2( OcPytree, boxSearch, "Search for points within bounding box", "-1", vector<void*>, const Boundingbox&, int) },
     {NULL}  /* Sentinel */
 };
 
@@ -831,21 +832,21 @@ PyObject* VRPyQuadtree::New(PyTypeObject *type, PyObject *args, PyObject *kwds) 
     return allocPtr( type, Quadtree::create(res, size, Name) );
 }
 
-PyObject* VRPyOctree::New(PyTypeObject *type, PyObject *args, PyObject *kwds) {
+PyObject* VRPyOcPytree::New(PyTypeObject *type, PyObject *args, PyObject *kwds) {
     float res = 0.1;
     float size = 10;
     char* name = 0;
     if (!PyArg_ParseTuple(args, "f|fs", &res, &size, &name)) return NULL;
     string Name = name?name:"";
-    return allocPtr( type, Octree::create(res, size, Name) );
+    return allocPtr( type, OcPytree::create(res, size, Name) );
 }
 
-PyMethodDef VRPyPartitiontreeNode::methods[] = {
-    {"getData", PyWrap2( PartitiontreeNode, getData, "Get node data", vector<void*> ) },
-    {"getPoints", PyWrap2( PartitiontreeNode, getPoints, "Get node points", vector<Vec3d> ) },
-    {"getCenter", PyWrap2( PartitiontreeNode, getCenter, "Get node center", Vec3d ) },
-    {"getSize", PyWrap2( PartitiontreeNode, getSize, "Get node size", float ) },
-    {"getResolution", PyWrap2( PartitiontreeNode, getResolution, "Get node resolution", float ) },
+PyMethodDef VRPyPartitiontreePyNode::methods[] = {
+    {"getData", PyWrap2( PartitiontreePyNode, getData, "Get node data", vector<PyObject*>& ) },
+    {"getPoints", PyWrap2( PartitiontreePyNode, getPoints, "Get node points", vector<Vec3d>& ) },
+    {"getCenter", PyWrap2( PartitiontreePyNode, getCenter, "Get node center", Vec3d ) },
+    {"getSize", PyWrap2( PartitiontreePyNode, getSize, "Get node size", float ) },
+    {"getResolution", PyWrap2( PartitiontreePyNode, getResolution, "Get node resolution", float ) },
     {NULL}  /* Sentinel */
 };
 
@@ -857,11 +858,11 @@ PyMethodDef VRPyQuadtreeNode::methods[] = {
     {NULL}  /* Sentinel */
 };
 
-PyMethodDef VRPyOctreeNode::methods[] = {
-    {"getChildren", PyWrap2( OctreeNode, getChildren, "Get node children", vector<OctreeNode*> ) },
-    {"getLocalCenter", PyWrap2( OctreeNode, getLocalCenter, "Get node local center", Vec3d ) },
-    {"getParent", PyWrap2( OctreeNode, getParent, "Get node parent", OctreeNode* ) },
-    {"getRoot", PyWrap2( OctreeNode, getRoot, "Get node root", OctreeNode* ) },
+PyMethodDef VRPyOctreePyNode::methods[] = {
+    {"getChildren", PyWrap2( OctreePyNode, getChildren, "Get node children", vector<OctreePyNode*> ) },
+    {"getLocalCenter", PyWrap2( OctreePyNode, getLocalCenter, "Get node local center", Vec3d ) },
+    {"getParent", PyWrap2( OctreePyNode, getParent, "Get node parent", OctreePyNode* ) },
+    {"getRoot", PyWrap2( OctreePyNode, getRoot, "Get node root", OctreePyNode* ) },
     {NULL}  /* Sentinel */
 };
 
@@ -920,6 +921,8 @@ PyMethodDef VRPyXMLElement::methods[] = {
 PyMethodDef VRPySpreadsheet::methods[] = {
     {"read", PyWrap(Spreadsheet, read, "Read file", void, string) },
     {"getSheets", PyWrap(Spreadsheet, getSheets, "Get list of sheet names", vector<string>) },
+    {"getRow", PyWrap(Spreadsheet, getRow, "Get ith row (sheet, row)", vector<string>, string, size_t) },
+    {"getRows", PyWrap(Spreadsheet, getRows, "Get list of rows by sheet name", vector<vector<string>>, string) },
     {"getNColumns", PyWrap(Spreadsheet, getNColumns, "Get N columns of sheet", size_t, string) },
     {"getNRows", PyWrap(Spreadsheet, getNRows, "Get N rows of sheet", size_t, string) },
     {"getCell", PyWrap(Spreadsheet, getCell, "Get cell content (sheet, column, row)", string, string, size_t, size_t) },

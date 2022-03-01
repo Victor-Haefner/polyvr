@@ -10,6 +10,7 @@
 #include "core/objects/geometry/VRGeoData.h"
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/material/VRMaterial.h"
+#include "core/math/partitioning/PartitiontreeT.h"
 
 using namespace OSG;
 

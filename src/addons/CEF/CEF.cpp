@@ -37,6 +37,12 @@ CEF_handler::~CEF_handler() {
 void CEF_handler::GetViewRect(CefRefPtr<CefBrowser> browser, CefRect& rect) {
     rect = CefRect(0, 0, max(8,width), max(8,height)); // never give an empty rectangle!!
 }
+#else
+bool CEF_handler::GetViewRect(CefRefPtr<CefBrowser> browser, CefRect& rect) {
+    rect = CefRect(0, 0, max(8, width), max(8, height)); // never give an empty rectangle!!
+    return true;
+}
+#endif
 
 //Disable context menu
 //Define below two functions to essentially do nothing, overwriting defaults
@@ -50,12 +56,7 @@ bool CEF_handler::OnContextMenuCommand( CefRefPtr<CefBrowser> browser, CefRefPtr
     //MessageBox(browser->GetHost()->GetWindowHandle(), L"The requested action is not supported", L"Unsupported Action", MB_OK | MB_ICONINFORMATION);
     return false;
 }
-#else
-bool CEF_handler::GetViewRect(CefRefPtr<CefBrowser> browser, CefRect& rect) {
-    rect = CefRect(0, 0, max(8, width), max(8, height)); // never give an empty rectangle!!
-    return true;
-}
-#endif
+
 
 void CEF_handler::OnPaint(CefRefPtr<CefBrowser> browser, PaintElementType type, const RectList& dirtyRects, const void* buffer, int width, int height) {
     if (!image) return;
@@ -203,6 +204,7 @@ void CEF::setMaterial(VRMaterialPtr mat) {
     if (!client->getHandler()) return;
     this->mat = mat;
     mat->setTexture(client->getHandler()->getImage());
+    mat->setTextureWrapping(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
 }
 
 string CEF::getSite() { return site; }
@@ -357,6 +359,8 @@ bool CEF::mouse(int lb, int rb, int wu, int wd, VRDeviceWeakPtr d) {
     me.x = ins->texel[0]*width;
     me.y = ins->texel[1]*height;
 
+    bool blockSignals = false;
+
     if (b < 3) {
         cef_mouse_button_type_t mbt;
         if (b == 0) mbt = MBT_LEFT;
@@ -369,8 +373,10 @@ bool CEF::mouse(int lb, int rb, int wu, int wd, VRDeviceWeakPtr d) {
     if (b == 3 || b == 4) {
         int d = b==3 ? -1 : 1;
         host->SendMouseWheelEvent(me, d*width*0.05, d*height*0.05);
+        blockSignals = true; // only for scrolling
     }
-    return false;
+
+    return !blockSignals;
 }
 
 bool CEF::keyboard(VRDeviceWeakPtr d) {

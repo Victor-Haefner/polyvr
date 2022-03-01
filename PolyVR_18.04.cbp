@@ -923,8 +923,10 @@
 		<Unit filename="src/core/math/kinematics/VRKinematics.h" />
 		<Unit filename="src/core/math/partitioning/Octree.cpp" />
 		<Unit filename="src/core/math/partitioning/Octree.h" />
+		<Unit filename="src/core/math/partitioning/OctreeT.h" />
 		<Unit filename="src/core/math/partitioning/Partitiontree.cpp" />
 		<Unit filename="src/core/math/partitioning/Partitiontree.h" />
+		<Unit filename="src/core/math/partitioning/PartitiontreeT.h" />
 		<Unit filename="src/core/math/partitioning/Quadtree.cpp" />
 		<Unit filename="src/core/math/partitioning/Quadtree.h" />
 		<Unit filename="src/core/math/partitioning/Tsdf.cpp" />
@@ -952,6 +954,8 @@
 		<Unit filename="src/core/networking/VRHDLC.h" />
 		<Unit filename="src/core/networking/VRMainInterface.cpp" />
 		<Unit filename="src/core/networking/VRMainInterface.h" />
+		<Unit filename="src/core/networking/VRNetworkClient.cpp" />
+		<Unit filename="src/core/networking/VRNetworkClient.h" />
 		<Unit filename="src/core/networking/VRNetworkManager.cpp" />
 		<Unit filename="src/core/networking/VRNetworkManager.h" />
 		<Unit filename="src/core/networking/VRNetworkingFwd.h" />
@@ -992,6 +996,10 @@
 		<Unit filename="src/core/networking/tcp/VRTCPServer.h" />
 		<Unit filename="src/core/networking/tcp/VRTCPUtils.cpp" />
 		<Unit filename="src/core/networking/tcp/VRTCPUtils.h" />
+		<Unit filename="src/core/networking/udp/VRUDPClient.cpp" />
+		<Unit filename="src/core/networking/udp/VRUDPClient.h" />
+		<Unit filename="src/core/networking/udp/VRUDPServer.cpp" />
+		<Unit filename="src/core/networking/udp/VRUDPServer.h" />
 		<Unit filename="src/core/objects/OSGCamera.cpp" />
 		<Unit filename="src/core/objects/OSGCamera.h" />
 		<Unit filename="src/core/objects/OSGObject.cpp" />
@@ -1479,6 +1487,8 @@
 		<Unit filename="src/core/tools/selection/VRSelectionFwd.h" />
 		<Unit filename="src/core/tools/selection/VRSelector.cpp" />
 		<Unit filename="src/core/tools/selection/VRSelector.h" />
+		<Unit filename="src/core/utils/MemMonitor.cpp" />
+		<Unit filename="src/core/utils/MemMonitor.h" />
 		<Unit filename="src/core/utils/VRCallbackWrapper.cpp" />
 		<Unit filename="src/core/utils/VRCallbackWrapper.h" />
 		<Unit filename="src/core/utils/VRCallbackWrapperT.h" />

@@ -35,12 +35,13 @@ vector<string> splitString(const string& s, const string& d) {
     vector<string> res;
     size_t lpos = 0;
     size_t pos = 0;
+    size_t Nd = d.size();
     string token;
     do {
-        pos = s.find(d, lpos+1);
+        pos = s.find(d, lpos);
         token = s.substr(lpos, pos);
         res.push_back(token);
-        lpos = pos;
+        lpos = pos+Nd;
         //s.erase(0, pos + d.length());
     } while (pos != string::npos);
     return res;
@@ -267,6 +268,7 @@ template <typename T, typename O> int ssToVal(stringstream& ss, T& t, const O& o
 }
 
 template<> int toValue(stringstream& ss, void*& s) { return true; }
+template<> int toValue(stringstream& ss, PyObject*& s) { return true; }
 template<> int toValue(stringstream& ss, string& s) { s = ss.str(); return true; }
 template<> int toValue(stringstream& ss, bool& v) { return ssToVal(ss, v, false); }
 template<> int toValue(stringstream& ss, char& v) { return ssToVal(ss, v, 0); }

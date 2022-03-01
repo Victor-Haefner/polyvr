@@ -1,0 +1,28 @@
+#!/bin/sh
+
+root=$1
+
+/bin/cat <<EOM >$root/PolyVR.desktop
+[Desktop Entry]
+Type=Application
+Name=PolyVR
+Terminal=true
+MimeType=application/x-polyvr
+Path=$root
+Exec=$root/PolyVR.sh
+Icon=$root/ressources/gui/logo_icon.png
+EOM
+
+chmod +x $root/PolyVR.desktop
+gio set $root/PolyVR.desktop "metadata::trusted" yes
+
+# for pvr mime type
+/bin/cat <<EOM >$root/application-x-polyvr.xml
+<?xml version="1.0" encoding="UTF-8"?>
+<mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info">
+  <mime-type type="application/x-polyvr">
+    <comment>polyvr project file</comment>
+    <glob pattern="*.pvr"/>
+  </mime-type>
+</mime-info>
+EOM

@@ -7,6 +7,7 @@
 #include "core/setup/VRSetup.h"
 #include "core/scene/VRScene.h"
 #include "core/math/partitioning/Octree.h"
+#include "core/math/partitioning/OctreeT.h"
 #include "core/math/pose.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRDoublebuffer.h"
@@ -113,7 +114,7 @@ struct VRSnappingEngine::Rule {
 };
 
 VRSnappingEngine::VRSnappingEngine() {
-    positions = Octree::create(0.1);
+    positions = Octree<VRTransform*>::create(0.1);
     event = EventSnapPtr(new EventSnap());
     snapSignal = VRSignal::create();
 

@@ -318,7 +318,7 @@ static void server_answer_to_connection_m(struct mg_connection *conn, int ev, vo
                 if (!exists( sad->path )) {
                     if (v) VRLog::wrn("net", "Did not find ressource: " + sad->path + "\n");
                     if (v) VRLog::log("net", "Send empty string\n");
-                    sendString("<head><style>body{background:#f0f;color:white;font-size:50vh;font-weight:bold;display:flex;justify-content:center;align-items:center;width:100vw;height:100vh;margin:0;}</style></head><body>Not Found!</body>", 404);
+                    sendString("<head><style>body{background:#f0f;color:white;font-size:20vh;font-weight:bold;display:flex;justify-content:center;align-items:center;width:100vw;height:100vh;margin:0;}</style></head><body>Not Found!</body>", 404);
                 }
                 else {
                     if (endsWith(sad->path, ".php", false)) {

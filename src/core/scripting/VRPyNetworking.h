@@ -5,6 +5,8 @@
 #include "core/networking/rest/VRRestResponse.h"
 #include "core/networking/rest/VRRestClient.h"
 #include "core/networking/rest/VRRestServer.h"
+#include "core/networking/udp/VRUDPClient.h"
+#include "core/networking/udp/VRUDPServer.h"
 #include "core/networking/tcp/VRTCPClient.h"
 #include "core/networking/tcp/VRTCPServer.h"
 #include "core/networking/tcp/VRICEclient.h"
@@ -27,6 +29,10 @@ struct VRPyRestServer : public VRPyBaseT<OSG::VRRestServer> {
 };
 
 #ifndef WITHOUT_TCP
+struct VRPyNetworkClient : public VRPyBaseT<OSG::VRNetworkClient> {
+    static PyMethodDef methods[];
+};
+
 struct VRPyTCPClient : public VRPyBaseT<OSG::VRTCPClient> {
     static PyMethodDef methods[];
 };
@@ -36,6 +42,14 @@ struct VRPyTCPServer : public VRPyBaseT<OSG::VRTCPServer> {
 };
 
 struct VRPyICEClient : public VRPyBaseT<OSG::VRICEClient> {
+    static PyMethodDef methods[];
+};
+
+struct VRPyUDPClient : public VRPyBaseT<OSG::VRUDPClient> {
+    static PyMethodDef methods[];
+};
+
+struct VRPyUDPServer : public VRPyBaseT<OSG::VRUDPServer> {
     static PyMethodDef methods[];
 };
 #endif

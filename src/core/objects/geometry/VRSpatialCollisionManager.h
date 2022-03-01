@@ -13,7 +13,7 @@ ptrFctFwd( VRCollision, vector<VRCollision> );
 
 class VRSpatialCollisionManager : public VRGeometry {
     private:
-        OctreePtr space;
+        shared_ptr<Octree<btTriangleMesh*>> space;
         VRCollisionCbPtr collisionCb;
         VRUpdateCbPtr updateCollisionCb;
 

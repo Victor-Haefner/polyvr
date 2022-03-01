@@ -1,5 +1,6 @@
 #include "CKOctree.h"
 #include "core/math/partitioning/Octree.h"
+#include "core/math/partitioning/OctreeT.h"
 
 OSG_BEGIN_NAMESPACE
 using namespace std;
@@ -147,7 +148,7 @@ int CKOctree::signof(float f) {
 }
 
 CKOctree::CKOctree() {
-	lightTree = Octree::create(1);
+	lightTree = Octree<light>::create(1);
 }
 
 CKOctree::element* CKOctree::add(Vec3i _p) {
@@ -176,13 +177,13 @@ CKOctree::element* CKOctree::add(Vec3i _p) {
     return cube;
 }
 
-CKOctree::light* CKOctree::addLight(Vec3d p) {
-    auto l = new light(p);
+CKOctree::light CKOctree::addLight(Vec3d p) {
+    auto l = light(p);
     lightTree->add(p, l);
     return l;
 }
 
-void CKOctree::element::updateLightning(CKOctree::light* l) {
+void CKOctree::element::updateLightning(const CKOctree::light& l) {
     Vec3d normals[6];
     normals[0]= Vec3d(1,0,0);
     normals[1]= Vec3d(0,1,0);
@@ -205,7 +206,7 @@ void CKOctree::element::updateLightning(CKOctree::light* l) {
     ric[2] = Vec2d(1,-1);
     ric[3] = Vec2d(-1,-1);
 
-    Vec3d lp = l->pos;
+    Vec3d lp = l.pos;
     Vec3d dp = lp - pos;
     Vec3d n, p, t, x;
     for (int j=0;j<6;j++) {
@@ -227,8 +228,8 @@ void CKOctree::element::updateLightning(CKOctree::light* l) {
     }
 }
 
-void CKOctree::element::updateLightning(vector<void*> lights) {
-    for (auto vl : lights) updateLightning((light*)vl);
+void CKOctree::element::updateLightning(vector<CKOctree::light> lights) {
+    for (auto vl : lights) updateLightning(vl);
 }
 
 void CKOctree::rem(element* e) {

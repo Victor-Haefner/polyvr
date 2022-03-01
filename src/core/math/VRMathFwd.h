@@ -18,11 +18,11 @@ ptrFwd(Frustum);
 ptrFwd(Patch);
 ptrFwd(Graph);
 ptrFwd(Partitiontree);
-ptrFwd(PartitiontreeNode);
+//ptrFwd(PartitiontreeNode);
 ptrFwd(Quadtree);
 ptrFwd(QuadtreeNode);
-ptrFwd(Octree);
-ptrFwd(OctreeNode);
+//ptrFwd(Octree);
+//ptrFwd(OctreeNode);
 ptrFwd(Triangulator);
 ptrFwd(VRKinematics);
 ptrFwd(VRKabschAlgorithm);
@@ -31,6 +31,12 @@ ptrFwd(Expression);
 ptrFwd(MathExpression);
 ptrFwd(TSDF);
 ptrFwd(PCA);
+
+template<class T>
+class OctreeNode;
+
+template<class T>
+class Octree;
 
 ptrTemplateFwd( VRStateMachine, VRStateMachinePy, PyObject* );
 typedef std::map<std::string, std::string> strMap;

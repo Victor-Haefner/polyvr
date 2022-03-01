@@ -2,6 +2,7 @@
 #define VRSIGNALT_H_INCLUDED
 
 #include "VRSignal.h"
+#include "core/utils/VRFunction.h"
 
 OSG_BEGIN_NAMESPACE;
 
@@ -9,10 +10,14 @@ template<typename Event>
 bool VRSignal::trigger(vector<VRBaseCbWeakPtr>& callbacks, shared_ptr<Event> event) {
     if (!event && this->event) event = ((Event*)this->event)->ptr();
 
+    using cbType = VRFunction< weak_ptr<Event>, bool >;
+
     for (auto& c : callbacks) {
-        if (auto spc = c.lock()) {
-            //( (VRFunction<Event*>*)spc.get() )(event);
-            auto cb = (VRFunction< weak_ptr<Event>, bool >*)spc.get();
+        if (VRBaseCbPtr spc = c.lock()) {
+            if (!spc) continue;
+            auto cb = dynamic_pointer_cast<cbType>(spc);
+            if (!cb) continue;
+
             bool abort = !(*cb)(event);
             if (abort) return false;
         }

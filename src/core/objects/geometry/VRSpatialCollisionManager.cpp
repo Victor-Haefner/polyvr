@@ -1,6 +1,7 @@
 #include "VRSpatialCollisionManager.h"
 #include "core/math/partitioning/boundingbox.h"
 #include "core/math/partitioning/Octree.h"
+#include "core/math/partitioning/OctreeT.h"
 #include "core/math/pose.h"
 #include "core/objects/geometry/OSGGeometry.h"
 #include "core/objects/geometry/VRPhysics.h"
@@ -14,7 +15,7 @@ using namespace OSG;
 
 
 VRSpatialCollisionManager::VRSpatialCollisionManager(float resolution) : VRGeometry("spatialCollisionShape") {
-    space = Octree::create(resolution,10,"spatialCollisionShape");
+    space = Octree<btTriangleMesh*>::create(resolution,10,"spatialCollisionShape");
     hide("SHADOW");
     updateCollisionCb = VRUpdateCb::create( "collision check", bind( &VRSpatialCollisionManager::checkCollisions, this ) );
     VRScene::getCurrent()->addUpdateFkt(updateCollisionCb);
@@ -68,7 +69,7 @@ btTriangleMesh* VRSpatialCollisionManager::getCollisionShape(Vec3d p, bool creat
     auto node = space->get(p);
     if (node) {
         auto data = node->getData();
-        if (data.size() > 0) return (btTriangleMesh*)data[0];
+        if (data.size() > 0) return data[0];
     }
     if (!create) return 0;
     btTriangleMesh* tri_mesh = new btTriangleMesh();

@@ -7,19 +7,20 @@
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
+template<class T>
 class OctreeNode;
 
 class VRLodLeaf : public VRObject {
     private:
-        OctreeNode* oLeaf = 0;
+        OctreeNode<VRTransform*>* oLeaf = 0;
         int lvl = 0;
         VRLodPtr lod;
         vector<VRObjectPtr> levels;
 
     public:
-        VRLodLeaf(string name, OctreeNode* o, int lvl);
+        VRLodLeaf(string name, OctreeNode<VRTransform*>* o, int lvl);
         ~VRLodLeaf();
-        static VRLodLeafPtr create(string name, OctreeNode* o, int lvl);
+        static VRLodLeafPtr create(string name, OctreeNode<VRTransform*>* o, int lvl);
         VRLodLeafPtr ptr();
 
         void addLevel(float dist);
@@ -27,19 +28,19 @@ class VRLodLeaf : public VRObject {
         void set(VRObjectPtr obj, int lvl);
         void reset();
 
-        OctreeNode* getOLeaf();
+        OctreeNode<VRTransform*>* getOLeaf();
         VRLodPtr getLod();
         int getLevel();
 };
 
 class VRLodTree : public VRObject {
     protected:
-        OctreePtr octree;
+        shared_ptr<Octree<VRTransform*>> octree;
         VRLodLeafPtr rootLeaf;
-        map<OctreeNode*, VRLodLeafPtr> leafs;
+        map<OctreeNode<VRTransform*>*, VRLodLeafPtr> leafs;
         map<int, vector<VRTransformPtr> > objects;
 
-        VRLodLeafPtr addLeaf(OctreeNode* o, int lvl);
+        VRLodLeafPtr addLeaf(OctreeNode<VRTransform*>* o, int lvl);
 
     public:
         VRLodTree(string name, float size = 10);
@@ -53,8 +54,8 @@ class VRLodTree : public VRObject {
         int size();
 
         vector<VRLodLeafPtr> getSubTree(VRLodLeafPtr l);
-        VRLodLeafPtr getLeaf(OctreeNode* o);
-        map<OctreeNode*, VRLodLeafPtr>& getLeafs();
+        VRLodLeafPtr getLeaf(OctreeNode<VRTransform*>* o);
+        map<OctreeNode<VRTransform*>*, VRLodLeafPtr>& getLeafs();
         vector<VRObjectPtr> rangeSearch(Vec3d p, float r, int depth = -1);
 
         void showOctree();
