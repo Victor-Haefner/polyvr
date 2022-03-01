@@ -127,7 +127,14 @@ void VRSprite::webOpen(string path, int res, float ratio) {
         uri = parts[parts.length - 1]+".html";
 
         var frame = document.createElement("iframe");
-        document.body.appendChild(frame);
+        if (document.getElemntById("hudDiv")) {
+            document.getElemntById("hudDiv").appendChild(frame);
+        } else {
+            var div = document.createElement("div");
+            div.id = "hudDiv";
+            document.body.appendChild(div);
+            div.appendChild(frame);
+        }
         frame.src = uri;
         frame.style = "position:absolute;top:0;right:0;height:300px;width:300px;z-index:2;";
         frame.frameBorder = 0;
@@ -137,6 +144,7 @@ void VRSprite::webOpen(string path, int res, float ratio) {
         hudFrames[fID] = frame;
     }, fID, isVisible(), path.c_str());
 #endif
+
 }
 
 void VRSprite::updateTransformation() {
