@@ -20,6 +20,7 @@ namespace OSG {
     ptrFwd(VRRestServer);
     ptrFwd(VRRestClient);
     ptrFwd(VRRestResponse);
+    ptrFwd(VRCollaboration);
 
     ptrFctFwd( VRRest, VRRestResponsePtr );
 }

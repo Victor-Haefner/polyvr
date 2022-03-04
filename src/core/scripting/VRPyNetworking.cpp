@@ -18,6 +18,7 @@ simpleVRPyType(UDPServer, New_ptr);
 simpleVRPyType(TCPClient, New_ptr);
 simpleVRPyType(TCPServer, New_ptr);
 simpleVRPyType(ICEClient, New_ptr);
+simpleVRPyType(Collaboration, New_ptr);
 
 template<> int toValue(string s, VRICEClient::CHANNEL& t) {
     t = VRICEClient::NONE;
@@ -134,6 +135,10 @@ PyMethodDef VRPyICEClient::methods[] = {
     {"getClient", PyWrap(ICEClient, getClient, "Get TCP client by ID", VRNetworkClientPtr, string, VRICEClient::CHANNEL) },
     {"getClients", PyWrap(ICEClient, getClients, "Get all TCP clients", mapScli) },
     {"removeUser", PyWrap(ICEClient, removeUser, "Remove user by UID", void, string) },
+    {NULL}  /* Sentinel */
+};
+
+PyMethodDef VRPyCollaboration::methods[] = {
     {NULL}  /* Sentinel */
 };
 

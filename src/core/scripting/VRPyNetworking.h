@@ -10,6 +10,7 @@
 #include "core/networking/tcp/VRTCPClient.h"
 #include "core/networking/tcp/VRTCPServer.h"
 #include "core/networking/tcp/VRICEclient.h"
+#include "core/networking/VRCollaboration.h"
 #include "VRPyBase.h"
 
 struct VRPyHDLC : public VRPyBaseT<OSG::VRHDLC> {
@@ -50,6 +51,10 @@ struct VRPyUDPClient : public VRPyBaseT<OSG::VRUDPClient> {
 };
 
 struct VRPyUDPServer : public VRPyBaseT<OSG::VRUDPServer> {
+    static PyMethodDef methods[];
+};
+
+struct VRPyCollaboration : public VRPyBaseT<OSG::VRCollaboration> {
     static PyMethodDef methods[];
 };
 #endif
