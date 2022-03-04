@@ -1,6 +1,7 @@
 #include "VRICEclient.h"
 #include "VRTCPClient.h"
 #include "../udp/VRUDPClient.h"
+#include "../tcp/VRTCPUtils.h"
 #include "../rest/VRRestClient.h"
 #include "../rest/VRRestResponse.h"
 #include "core/utils/toString.h"
@@ -24,11 +25,11 @@ VRICEClient::~VRICEClient() {
 VRICEClientPtr VRICEClient::create() { return VRICEClientPtr( new VRICEClient() ); }
 VRICEClientPtr VRICEClient::ptr() { return static_pointer_cast<VRICEClient>(shared_from_this()); }
 
-void VRICEClient::setTurnServer(string url, string ip) {
+void VRICEClient::setTurnServer(string url) {
     turnURL = url;
-    turnIP = ip;
+    turnIP = VRTCPUtils::getHostIP(url);
 #ifndef WITHOUT_GTK
-    VRConsoleWidget::get("Collaboration")->write( " ICE "+toString((void*)this)+" set turn server "+url+" ("+ip+")\n");
+    VRConsoleWidget::get("Collaboration")->write( " ICE "+toString((void*)this)+" set turn server "+url+" ("+turnIP+")\n");
 #endif
 }
 

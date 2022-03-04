@@ -13,6 +13,8 @@ class VRTCPUtils {
     public:
         static string getLocalIP();
         static string getPublicIP(bool cached = false);
+        static string getHostName(string uri);
+        static string getHostIP(string host);
 };
 
 }

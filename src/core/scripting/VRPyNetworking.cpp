@@ -120,7 +120,7 @@ typedef map<string, string> mapSS;
 typedef map<string, map<VRICEClient::CHANNEL, VRNetworkClientPtr> > mapScli;
 
 PyMethodDef VRPyICEClient::methods[] = {
-    {"setTurnServer", PyWrap(ICEClient, setTurnServer, "Setup turn server address and ip", void, string, string) },
+    {"setTurnServer", PyWrap(ICEClient, setTurnServer, "Setup turn server address, something like http://my.server/PolyServ/", void, string) },
     {"onEvent", PyWrap(ICEClient, onEvent, "Set onEvent callback", void, function<void(string)>) },
     {"onMessage", PyWrap(ICEClient, onMessage, "Set onMessage callback", void, function<void(string)>) },
     {"setName", PyWrap(ICEClient, setName, "Set your name and uID to register on broker", void, string) },

@@ -56,7 +56,7 @@ class VRICEClient : public std::enable_shared_from_this<VRICEClient> {
 		static VRICEClientPtr create();
 		VRICEClientPtr ptr();
 
-		void setTurnServer(string url, string ip);
+		void setTurnServer(string url);
         void onEvent( function<void(string)> f );
         void onMessage( function<void(string)> f );
 
