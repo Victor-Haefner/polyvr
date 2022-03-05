@@ -3,13 +3,18 @@
 
 #include <OpenSG/OSGConfig.h>
 
+#include "core/utils/VRFunctionFwd.h"
+#include "core/objects/VRObjectFwd.h"
+
+#ifdef PLOG
+#undef PLOG
+#endif
+
 #include "include/cef_app.h"
 #include "include/cef_client.h"
 #include "include/cef_render_handler.h"
 #include "include/cef_load_handler.h"
 
-#include "core/utils/VRFunctionFwd.h"
-#include "core/objects/VRObjectFwd.h"
 
 using namespace std;
 OSG_BEGIN_NAMESPACE;

@@ -202,6 +202,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyTCPClient>("TCPClient", pModVR, VRPyNetworkClient::typeRef);
     sm->registerModule<VRPyTCPServer>("TCPServer", pModVR);
     sm->registerModule<VRPyICEClient>("ICEClient", pModVR);
+    sm->registerModule<VRPyCollaboration>("Collaboration", pModVR, VRPyObject::typeRef);
 #endif
     sm->registerModule<VRPyRestResponse>("RestResponse", pModVR);
     sm->registerModule<VRPyRestClient>("RestClient", pModVR);
