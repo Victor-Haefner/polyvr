@@ -15,9 +15,6 @@
 #define WEBSITEV(...) #__VA_ARGS__
 #define WEBSITE(...) WEBSITEV(__VA_ARGS__)
 
-#define HASH(a) hstr(a)
-#define hstr(a) #a
-
 using namespace OSG;
 
 VRCollaboration::VRCollaboration(string name) : VRObject(name) {}
@@ -252,7 +249,7 @@ body {
 	font-size: 4vh;
 	color: white;
 	margin: 0;
-	background-color: HASH(23272a);
+	background-color: #23272a;
 }
 
 .emptyBG {
@@ -275,22 +272,20 @@ input {
 }
 
 .selfUsername {
-	color: HASH(ffffff);
+	color: #ffffff;
 	font-weight: bold;
-}
-
-HASH(userlistContainer) {
+} #userlistContainer {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
 	width: 100vw;
 	height: 100vh;
- 	background-color:  HASH(2c2f33);
+ 	background-color: #2c2f33;
 }
 
 .button {
 	font-size: 4vh;
-	background-color: HASH(888);
+	background-color: #888;
 	color: white;
 	border: none;
 	width: 80%;
@@ -348,10 +343,8 @@ string VRCollaboration::connectionInSite = WEBSITE(
 			font-size: 20vh;
 			color: black;
 			margin: 0;
-			background-color: HASH(23272A00);
-		}
-
-		HASH(buttons) {
+			background-color: #23272A00;
+		} #buttons {
 			display: flex;
 			flex-direction: row;
 			height: 50vh;
@@ -359,10 +352,8 @@ string VRCollaboration::connectionInSite = WEBSITE(
 			font-size: 4vh;
 			color: white;
 			margin: 0;
-			background-color: HASH(23272a);
-		}
-
-		HASH(label) {
+			background-color: #23272a;
+		} #label {
 			height: 50vh;
 		}
 
@@ -389,184 +380,166 @@ string VRCollaboration::connectionInSite = WEBSITE(
 );
 
 string VRCollaboration::userlistSite = WEBSITE(
-<html>
-	<head>
-		<link rel="stylesheet" href="gui/font-awesome-4.5.0/css/font-awesome.min.css">
-		<link rel="stylesheet" href="uiCSS">
-	</head>
-	<body>
-		<!--div id="profile" >Name:
-			<span id="usernamePreview">Anonymous</span>
-			<i id ="usernameEditIcon" onclick="toggleUsernameChangeForm(false)" class="fa far fa-solid fa-pencil"></i>
-			<i id="cancelEditIcon" onclick="toggleUsernameChangeForm(true)" class =" fa far fa-solid fa-x">X</i>
-		</div-->
+<html>\n
+	<head>\n
+		<link rel="stylesheet" href="gui/font-awesome-4.5.0/css/font-awesome.min.css">\n
+		<link rel="stylesheet" href="uiCSS">\n
+	</head>\n
+	<body>\n
+		<div id="userlistContainer"></div>\n\n
 
-		<div id="userlistContainer"></div>
+		<script>\n
+		var websocket = new WebSocket('ws://localhost:$PORT_server1$');\n
+		websocket.onopen = function() { send('register usersList'); };\n
+ 		websocket.onerror = function(e) {};\n
+ 		websocket.onmessage = function(m) { if(m.data) handle(m.data); };\n
+ 		websocket.onclose = function(e) {};\n\n
 
-		<script>
-		var websocket = new WebSocket('ws://localhost:$PORT_server1$');
-		websocket.onopen = function() { send('register usersList'); };
- 		websocket.onerror = function(e) {};
- 		websocket.onmessage = function(m) { if(m.data) handle(m.data); };
- 		websocket.onclose = function(e) {};
+ 		function send(m) { websocket.send(m); };\n\n
 
- 		function send(m) { websocket.send(m); };
+ 		function handle(m) {\n
+ 			if (m == 'clearUsers') document.getElementById('userlistContainer').innerHTML = "";\n\n
 
- 		function handle(m) {
- 			if (m == 'clearUsers') document.getElementById('userlistContainer').innerHTML = "";
+ 			if (m.startsWith('addUser|')) addUser(m.split('|')[1], m.split('|')[2]);\n\n
 
- 			if (m.startsWith('addUser|')) addUser(m.split('|')[1], m.split('|')[2]);
+ 			if (m.startsWith('setUserStats|')) {\n
+ 				var data = m.split('|');\n
+ 				setUserStats(data[1], data[2]);\n
+ 			}\n
+ 		};\n\n
 
- 			if (m.startsWith('setUserStats|')) {
- 				var data = m.split('|');
- 				setUserStats(data[1], data[2]);
- 			}
- 		};
+ 		function setUserStats(name, params) {\n
+ 			btn = document.getElementById(name);\n
+ 			params = params.split(' ');\n
+ 			var color = params[0];\n
+ 			console.log('setUserStats '+name+" "+color);\n
+ 			btn.style.background = color;\n
+ 		}\n\n
 
- 		function setUserStats(name, params) {
- 			btn = document.getElementById(name);
- 			params = params.split(' ');
- 			var color = params[0];
- 			console.log('setUserStats '+name+" "+color);
- 			btn.style.background = color;
- 		}
+ 		function addUser(name, uid) {\n
+			let btn = document.createElement("button");\n
+			btn.setAttribute("id", uid);\n
+			btn.className = "button";\n
+			btn.innerHTML = name;\n
+			document.getElementById("userlistContainer").appendChild(btn);\n
+			btn.onclick = function () {\n
+				console.log("Button " + btn.id + " is clicked");\n
+				send('onUserClick|'+btn.id);\n
+			};\n
+ 		}\n\n
 
- 		function addUser(name, uid) {
-			let btn = document.createElement("button");
-			btn.setAttribute("id", uid);
-			btn.className = "button";
-			btn.innerHTML = name;
-			document.getElementById("userlistContainer").appendChild(btn);
-			btn.onclick = function () {
-				console.log("Button " + btn.id + " is clicked");
-				//document.getElementById("txt").innerHTML = "Connecting User " + btn.id;
-				send('onUserClick|'+btn.id);
-			};
- 		}
+		var username = "Anonymous";\n
+		var seperator = "<chatModule_seperator>";\n
+		var messageIndex = 0;\n\n
 
-		var username = "Anonymous";
-		var seperator = "<chatModule_seperator>";
-		var messageIndex = 0;
+		function sendMessage(message) {\n
+			send('chatModule_sendMessage'+ seperator + username + seperator + message);\n
+		}\n\n
 
-		function sendMessage(message)
-		{
-			send('chatModule_sendMessage'+ seperator + username + seperator + message);
-		}
-		function changeUsername(newUsername)
-		{
-			username = newUsername;
-			send("chatModule_changeUsername" + seperator + username)
-		}
-	 	function displayMessage(messageOwner, messageText, origin)
-	 	{
-	 		var messageContainer = document.getElementById('messageContainer');
+		function changeUsername(newUsername) {\n
+			username = newUsername;\n
+			send("chatModule_changeUsername" + seperator + username);\n
+		}\n\n
 
-			// Setup of the container which holds all elements of this message
-			var completeMessage = document.createElement("div");
-			completeMessage.className = origin + "CompleteMessage";
+	 	function displayMessage(messageOwner, messageText, origin) {\n
+	 		var messageContainer = document.getElementById('messageContainer');\n\n
 
-			// Create Username Container and fill with information
-			var message_User = document.createElement("div");
-			message_User.className = origin + "Username";
-			message_User.innerHTML = messageOwner;
-			var id = "message_" + messageIndex;
+			// Setup of the container which holds all elements of this message\n
+			var completeMessage = document.createElement("div");\n
+			completeMessage.className = origin + "CompleteMessage";\n\n
 
-			// Create Content Container and fill with information
-			var message_Content = "<div id ='"+ id + "' onclick='copyMessage(" + id + ");' class='" + origin + "Message " + origin + "Triangle'>" + messageText + "</div>";
-			// Add the containers to complete the message and add to messageContainer
-			completeMessage.appendChild(message_User);
-			completeMessage.innerHTML += message_Content;
-			messageContainer.appendChild(completeMessage);
-			messageContainer.innerHTML += "<br>";
+			// Create Username Container and fill with information\n
+			var message_User = document.createElement("div");\n
+			message_User.className = origin + "Username";\n
+			message_User.innerHTML = messageOwner;\n
+			var id = "message_" + messageIndex;\n\n
 
-			// Scrolls the view down to the newest message
-			messageContainer.scrollTop = messageContainer.scrollHeight;
+			// Create Content Container and fill with information\n
+			var message_Content = "<div id ='"+ id + "' onclick='copyMessage(" + id + ");' class='" + origin + "Message " + origin + "Triangle'>" + messageText + "</div>";\n
+			// Add the containers to complete the message and add to messageContainer\n
+			completeMessage.appendChild(message_User);\n
+			completeMessage.innerHTML += message_Content;\n
+			messageContainer.appendChild(completeMessage);\n
+			messageContainer.innerHTML += "<br>";\n\n
 
-			messageIndex ++;
-	 	}
-		function handleMessage()
-		{
-			var inputField = document.getElementById("messageContent");
-			if(!isEmptyOrSpaces(inputField.value))
-			{
-				var messageContent = inputField.value;
-				displayMessage(username, messageContent, "self");
-				sendMessage(messageContent);
-			}
-			inputField.value = "";
-		}
+			// Scrolls the view down to the newest message\n
+			messageContainer.scrollTop = messageContainer.scrollHeight;\n\n
 
-		function isEmptyOrSpaces(str)
-		{
-    		return str === null || str.match(/^ *$/) !== null;
-		}
-		function receiveMessage(message)
-		{
-			var messageFragments = message.data.split(seperator);
-			if(messageFragments[0] == "chatModule_chatMessage")
-			{
-				var user = messageFragments[1];
-				var msg = messageFragments[2];
-				displayMessage(user, msg, "remote");
-			}
-			if(messageFragments[0] == "chatModule_changeUsername")
-			{
-				var newUsername = messageFragments[1];
-				changeUsername(newUsername);
-			}
-			//if(messageFragments[0] == "chatModule_changeUsername")
-		}
-		function copyMessage(message)
-		{
-		   var copyContainer = document.getElementById("messageContent")
-		   var tempsave = copyContainer.value;
-		   copyContainer.value = message.innerHTML;
-		   copyContainer.select();
-		   document.execCommand('copy');
-		   copyContainer.value = tempsave;
-		}
-		var changeFormActive = false;
-		function toggleUsernameChangeForm(isCancel)
-		{
-			var usernameEditIcon = document.getElementById("usernameEditIcon");
-			var cancelEditIcon = document.getElementById("cancelEditIcon");
-			var profile = document.getElementById("profile");
-			var usernamePreview = document.getElementById("usernamePreview");
+			messageIndex ++;\n
+	 	}\n\n
 
-			if(changeFormActive)
-			{
-				if(isCancel)
-				{
-					usernamePreview.innerHTML = username;
-				}
-				else
-				{
-					var newUsername = usernamePreview.innerHTML;
-					changeUsername(newUsername);
-				}
-				usernamePreview.contentEditable = "false";
-				cancelEditIcon.style.display = "none";
-				changeFormActive = false;
-				usernameEditIcon.className = "fa far fa-solid fa-pencil";
-			}
-			else
-			{
-				usernameEditIcon.className = "fa far fa-solid fa-download";
-				usernamePreview.contentEditable = "true";
-				usernamePreview.focus();
-				cancelEditIcon.style.display = "inline-block";
-				changeFormActive = true;
-			}
-		}
-		function sendDummy()
-		{
-			send("chatModule_chatMessage" + seperator + "Dummy" + seperator + "This is a test !");
-		}
-		function sendDebug(debugMessage)
-		{
-			send("chatModule_debugMessage" + seperator + debugMessage);
-		}
-		</script>
-	</body>
+		function handleMessage() {\n
+			var inputField = document.getElementById("messageContent");\n
+			if(!isEmptyOrSpaces(inputField.value)) {\n
+				var messageContent = inputField.value;\n
+				displayMessage(username, messageContent, "self");\n
+				sendMessage(messageContent);\n
+			}\n
+			inputField.value = "";\n
+		}\n\n
+
+		function isEmptyOrSpaces(str) {\n
+    		return str === null || str.match(/^ *$/) !== null;\n
+		}\n\n
+
+		function receiveMessage(message) {\n
+			var messageFragments = message.data.split(seperator);\n
+			if(messageFragments[0] == "chatModule_chatMessage") {\n
+				var user = messageFragments[1];\n
+				var msg = messageFragments[2];\n
+				displayMessage(user, msg, "remote");\n
+			}\n
+			if(messageFragments[0] == "chatModule_changeUsername") {\n
+				var newUsername = messageFragments[1];\n
+				changeUsername(newUsername);\n
+			}\n
+		}\n
+
+		function copyMessage(message) {\n
+		   var copyContainer = document.getElementById("messageContent");\n
+		   var tempsave = copyContainer.value;\n
+		   copyContainer.value = message.innerHTML;\n
+		   copyContainer.select();\n
+		   document.execCommand('copy');\n
+		   copyContainer.value = tempsave;\n
+		}\n\n
+
+		var changeFormActive = false;\n\n
+
+		function toggleUsernameChangeForm(isCancel) {\n
+			var usernameEditIcon = document.getElementById("usernameEditIcon");\n
+			var cancelEditIcon = document.getElementById("cancelEditIcon");\n
+			var profile = document.getElementById("profile");\n
+			var usernamePreview = document.getElementById("usernamePreview");\n\n
+
+			if (changeFormActive) {\n
+				if (isCancel) {\n
+					usernamePreview.innerHTML = username;\n
+				} else {\n
+					var newUsername = usernamePreview.innerHTML;\n
+					changeUsername(newUsername);\n
+				}\n
+				usernamePreview.contentEditable = "false";\n
+				cancelEditIcon.style.display = "none";\n
+				changeFormActive = false;\n
+				usernameEditIcon.className = "fa far fa-solid fa-pencil";\n
+			} else {\n
+				usernameEditIcon.className = "fa far fa-solid fa-download";\n
+				usernamePreview.contentEditable = "true";\n
+				usernamePreview.focus();\n
+				cancelEditIcon.style.display = "inline-block";\n
+				changeFormActive = true;\n
+			}\n
+		}\n\n
+
+		function sendDummy() {\n
+			send("chatModule_chatMessage" + seperator + "Dummy" + seperator + "This is a test !");\n
+		}\n
+
+		function sendDebug(debugMessage) {\n
+			send("chatModule_debugMessage" + seperator + debugMessage);\n
+		}\n
+		</script>\n
+	</body>\n
 </html>
 );
