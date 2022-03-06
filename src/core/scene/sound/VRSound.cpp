@@ -1,6 +1,8 @@
 #include "VRSound.h"
 #include "VRSoundUtils.h"
 #include "core/scene/VRScene.h"
+#include "core/objects/VRTransform.h"
+#include "core/objects/VRCamera.h"
 #include "core/math/path.h"
 #include "core/math/fft.h"
 #include "core/utils/toString.h"
@@ -78,18 +80,14 @@ struct VRSound::ALData {
 };
 
 VRSound::VRSound() {
-    pos = new Vec3d();
-    vel = new Vec3d();
-
     VRSoundManager::get(); // this may init channel
     al = shared_ptr<ALData>( new ALData() );
     reset();
+    poseUpdateCb = VRUpdateCb::create( "poseUpdateCb", bind(&VRSound::update3DSound, this) );
 }
 
 VRSound::~VRSound() {
     close();
-    delete pos;
-    delete vel;
 }
 
 VRSoundPtr VRSound::create() { return VRSoundPtr( new VRSound() ); }
@@ -101,8 +99,13 @@ void VRSound::setPath( string p ) { path = p; }
 void VRSound::setLoop(bool loop) { this->loop = loop; doUpdate = true; }
 void VRSound::setPitch(float pitch) { this->pitch = pitch; doUpdate = true; }
 void VRSound::setVolume(float gain) { this->gain = gain; doUpdate = true; }
-void VRSound::setUser(Vec3d p, Vec3d v) { *pos = p; *vel = v; doUpdate = true; }
 void VRSound::setCallback(VRUpdateCbPtr cb) { callback = cb; }
+
+void VRSound::setBeacon(VRTransformPtr t) {
+    poseBeacon = t;
+    if (t) VRScene::getCurrent()->addUpdateFkt(poseUpdateCb);
+    else   VRScene::getCurrent()->dropUpdateFkt(poseUpdateCb);
+}
 
 void VRSound::setBandpass(float lpass, float hpass) {
     this->lpass = lpass;
@@ -385,6 +388,16 @@ void VRSound::playFrame() {
     } // while more packets exist inside container.
 }
 
+void VRSound::update3DSound() {
+    if (!poseBeacon) return;
+    auto cam = VRScene::getCurrent()->getActiveCamera();
+    auto pose = cam->getPoseTo(poseBeacon);
+
+    if (!lastPose) lastPose = Pose::create(*pose);
+    velocity = pose->pos().dist(lastPose->pos());
+    lastPose->setPos(pose->pos());
+    interface->updatePose(pose, velocity);
+}
 
 
 struct OutputStream {

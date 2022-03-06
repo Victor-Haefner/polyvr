@@ -2,6 +2,7 @@
 #define VRSOUNDUTILS_H_INCLUDED
 
 #include "VRSoundFwd.h"
+#include "core/math/VRMathFwd.h"
 #include <string>
 #include <list>
 #include <vector>
@@ -65,6 +66,7 @@ class VRSoundInterface {
         void pause();
 
         void updateSource(float pitch, float gain, float lowpass = 1.0, float highpass = 1.0);
+        void updatePose(OSG::PosePtr pose = 0, float velocity = 0);
         void checkSource();
 
         int getQueuedBuffer();

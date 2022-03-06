@@ -1,5 +1,7 @@
 #include "VRSoundUtils.h"
 #include "core/utils/toString.h"
+#include "core/math/pose.h"
+#include <OpenSG/OSGVector.h>
 
 #define AL_ALEXT_PROTOTYPES
 #include <AL/al.h>
@@ -79,13 +81,21 @@ void VRSoundInterface::play() {
     if (val != AL_PLAYING) ALCHECK( alSourcePlay(source));
 }
 
+void VRSoundInterface::updatePose(PosePtr pose, float velocity) {
+    if (pose) {
+        Vec3d pos = pose->pos();
+        Vec3d vel = pose->dir()*velocity;
+        ALCHECK( alSource3f(source, AL_POSITION, pos[0], pos[1], pos[2]));
+        ALCHECK( alSource3f(source, AL_VELOCITY, vel[0], vel[1], vel[2]));
+        //cout << "VRSoundInterface::updateSource " << pos << ", " << vel << endl;
+    }
+}
+
 void VRSoundInterface::updateSource(float pitch, float gain, float lowpass, float highpass) {
     cout << "update source, pitch: " << pitch << " gain: " << gain << endl;
     ALCHECK( alSourcef(source, AL_PITCH, pitch));
     ALCHECK( alSourcef(source, AL_MAX_GAIN, gain));
     ALCHECK( alSourcef(source, AL_GAIN, gain));
-    //ALCHECK( alSource3f(source, AL_POSITION, (*pos)[0], (*pos)[1], (*pos)[2]));
-    //ALCHECK( alSource3f(source, AL_VELOCITY, (*vel)[0], (*vel)[1], (*vel)[2]));
 
     if ((lowpass < 1.0-1e-3 || highpass < 1.0-1e-3) && filter == 0) {
         ALCHECK( alGenFilters(1u, &filter) );

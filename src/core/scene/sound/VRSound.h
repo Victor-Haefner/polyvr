@@ -5,6 +5,8 @@
 #include <list>
 #include <vector>
 #include "core/math/OSGMathFwd.h"
+#include "core/math/VRMathFwd.h"
+#include "core/objects/VRObjectFwd.h"
 
 #include "VRSoundFwd.h"
 #include "core/utils/VRFunctionFwd.h"
@@ -48,8 +50,11 @@ class VRSound {
         float gain = 1;
         float lpass = 1;
         float hpass = 1;
-        Vec3d* pos = 0;
-        Vec3d* vel = 0;
+
+        PosePtr lastPose;
+        VRTransformPtr poseBeacon;
+        float velocity = 0;
+        VRUpdateCbPtr poseUpdateCb;
 
         AVFormatContext* muxer = 0;
         OutputStream* audio_ost = 0;
@@ -57,6 +62,7 @@ class VRSound {
         int lastEncodingFlag = 1;
 
         void updateSampleAndFormat();
+        void update3DSound();
         void write_buffer(AVFormatContext *oc, OutputStream *ost, VRSoundBufferPtr buffer);
         string onStreamData(string s);
 
@@ -70,7 +76,7 @@ class VRSound {
         void setPitch(float pitch);
         void setVolume(float gain);
         void setBandpass(float lpass, float hpass);
-        void setUser(Vec3d p, Vec3d v);
+        void setBeacon(VRTransformPtr t);
         void setCallback(VRUpdateCbPtr callback);
 
         bool isRunning();

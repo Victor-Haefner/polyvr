@@ -20,7 +20,7 @@ PyMethodDef VRPySound::methods[] = {
     {"setPitch", PyWrap(Sound, setPitch, "Stop sound", void, float ) },
     {"setVolume", PyWrap(Sound, setVolume, "Set sound volume, try setting master volume on soundmanager", void, float ) },
     {"setBandpass", PyWrap(Sound, setBandpass, "Set band pass", void, float, float ) },
-    {"setUser", PyWrap(Sound, setUser, "Stop sound", void, Vec3d, Vec3d ) },
+    {"setBeacon", PyWrap(Sound, setBeacon, "Set beacon for 3D sound", void, VRTransformPtr ) },
     {"isRunning", PyWrap(Sound, isRunning, "Check if sound is running", bool) },
     {"exportToFile", PyWrap(Sound, exportToFile, "Export to file, (.mp3)", void, string) },
     {"synthesize", PyWrap(Sound, synthesize, "synthesize( Ac, wc, pc, Am, wm, pm, T)\t\n A,w,p are the amplitude, frequency and phase, c and m are the carrier sinusoid and modulator sinusoid, T is the packet duration in seconds", void, float, float, float, float, float, float, float) },
