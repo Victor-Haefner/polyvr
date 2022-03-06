@@ -88,7 +88,7 @@ int VRServer::openWebSocket(string address, string protocols) {
     return soc->openWebSocket(address, protocols);
 }
 
-void VRServer::answerWebSocket(int id, string msg) {
+void VRServer::answer(int id, string msg) {
     if (soc) soc->answerWebSocket(id, msg);
 #ifdef __EMSCRIPTEN__
     EM_ASM({

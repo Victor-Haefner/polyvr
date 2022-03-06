@@ -21,8 +21,17 @@ class VRCollaboration : public VRObject {
         VRTransformPtr avatarHandLeft;
         VRTransformPtr avatarHandRight;
 
+	    VRSpritePtr userNameWidget;
+	    VRSpritePtr userlist;
 	    VRSpritePtr connectionInWidget;
+	    static string uiCSS;
+	    static string userNameSite;
+	    static string userlistSite;
+	    static string connectionInSite;
+	    VRDeviceCbPtr ui_dev_cb;
+	    map<string, int> gui_sites;
 
+	    string userName;
 	    string connReqOrigin;
 
 	    void init();
@@ -32,14 +41,18 @@ class VRCollaboration : public VRObject {
 
 	    void initUI();
 	    void sendUI(string widget, string data);
+	    bool handleUI(VRDeviceWeakPtr dev);
 	    void updateUsersWidget();
 
 	public:
-		VRCollaboration();
+		VRCollaboration(string name = "Collab");
 		~VRCollaboration();
 
-		static VRCollaborationPtr create();
+		static VRCollaborationPtr create(string name = "Collab");
 		VRCollaborationPtr ptr();
+
+        void addChild(VRObjectPtr child, bool osg = true, int place = -1) override;
+        void subChild(VRObjectPtr child, bool osg = true) override;
 
 		void setServer(string uri);
 		void setAvatarDevices(VRTransformPtr head, VRTransformPtr hand, VRTransformPtr handGrab = 0);

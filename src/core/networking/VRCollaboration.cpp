@@ -4,18 +4,27 @@
 #include "tcp/VRICEclient.h"
 #include "core/objects/sync/VRSyncNode.h"
 #include "core/objects/geometry/sprite/VRSprite.h"
+#include "core/objects/material/VRMaterial.h"
+#include "core/objects/VRCamera.h"
 #include "core/scene/sound/VRMicrophone.h"
 #include "core/scene/sound/VRSound.h"
 #include "core/scene/VRScene.h"
+#include "core/setup/VRSetup.h"
+#include "core/setup/devices/VRServer.h"
 
+#define WEBSITEV(...) #__VA_ARGS__
+#define WEBSITE(...) WEBSITEV(__VA_ARGS__)
+
+#define HASH(a) hstr(a)
+#define hstr(a) #a
 
 using namespace OSG;
 
-VRCollaboration::VRCollaboration() {}
+VRCollaboration::VRCollaboration(string name) : VRObject(name) {}
 VRCollaboration::~VRCollaboration() {}
 
-VRCollaborationPtr VRCollaboration::create() {
-    auto c = VRCollaborationPtr( new VRCollaboration() );
+VRCollaborationPtr VRCollaboration::create(string name) {
+    auto c = VRCollaborationPtr( new VRCollaboration(name) );
     c->init();
     return c;
 }
@@ -27,7 +36,7 @@ void VRCollaboration::init() {
 	ice->onEvent(bind(&VRCollaboration::onIceEvent, this, placeholders::_1));
 
     syncNode = VRSyncNode::create("syncNode");
-	addChild(syncNode);
+	VRObject::addChild(syncNode);
 
     mike = VRMicrophone::create();
 	mike->pauseStreaming(true);
@@ -35,6 +44,14 @@ void VRCollaboration::init() {
     sound = VRSound::create();
 
     initUI();
+}
+
+void VRCollaboration::addChild(VRObjectPtr child, bool osg, int place) {
+    syncNode->addChild(child, osg, place);
+}
+
+void VRCollaboration::subChild(VRObjectPtr child, bool osg) {
+    syncNode->subChild(child, osg);
 }
 
 void VRCollaboration::setServer(string uri) {
@@ -54,7 +71,7 @@ void VRCollaboration::setAvatarGeometry(VRTransformPtr torso, VRTransformPtr lef
 
 void VRCollaboration::setupAvatar(string rID, string name) {
 	auto avatar = VRTransform::create("avatar");
-	addChild(avatar);
+	VRObject::addChild(avatar);
 
 	auto rightHandContainer = VRTransform::create("rightHandContainer");
 	auto anchor = VRTransform::create("anchor");
@@ -135,14 +152,421 @@ void VRCollaboration::onIceEvent(string m) {
     }
 }
 
-void VRCollaboration::sendUI(string widget, string data) { // TODO
-    ;
+void VRCollaboration::sendUI(string widget, string data) {
+	if (!gui_sites.count(widget)) return;
+	auto dev = VRSetup::getCurrent()->getDevice("server1");
+	auto server = dynamic_pointer_cast<VRServer>(dev);
+	if (server) server->answer(gui_sites[widget], data);
 }
 
-void VRCollaboration::updateUsersWidget() { // TODO
-    ;
+void VRCollaboration::updateUsersWidget() {
+	sendUI("usersList", "clearUsers");
+	for (auto& usr : ice->getUsers()) {
+        string uid = usr.first;
+        string name = usr.second;
+		sendUI("usersList", "addUser|"+name+"|"+uid);
+	};
+
+	auto uid = ice->getID();
+	if (uid != "" ) sendUI("usersList", "setUserStats|"+uid+"|#23c");
 }
 
-void VRCollaboration::initUI() { // TODO
-    connectionInWidget = VRSprite::create("connectionInWidget");
+void VRCollaboration::initUI() { // TODO: add websites, css, js, html
+	gui_sites.clear();
+
+	auto dev = VRSetup::getCurrent()->getDevice("server1");
+	auto server = dynamic_pointer_cast<VRServer>(dev);
+    auto port = server->getPort();
+    auto cam = VRScene::getCurrent()->getActiveCamera();
+
+    ui_dev_cb = VRDeviceCb::create( "CollabUI", bind(&VRCollaboration::handleUI, this, _1 ) );
+    server->newSignal(-1, 0)->add( ui_dev_cb );
+
+    auto serveSite = [&](string name, string content) {
+        server->addWebSite(name, content);
+    };
+
+	auto addWidget = [&](string name, string site, int res, float W, float H, Vec3d pos) {
+		auto w = VRSprite::create(name);
+		cam->addChild(w);
+		w->setFrom(pos);
+		w->setSize(W,H);
+		w->webOpen("localhost:"+toString(port)+"/"+site, res, float(W)/H);
+		w->getMaterial()->enableTransparency();
+		return w;
+	};
+
+	serveSite("uiCSS", uiCSS);
+	serveSite("userlistSite", userlistSite);
+	serveSite("userNameSite", userNameSite);
+	serveSite("connectionInSite", connectionInSite);
+
+	userlist = addWidget("userlist", "userlistSite", 200, 3, 6, Vec3d(-8,0,-10));
+	userNameWidget = addWidget("userNameWidget", "userNameSite", 200, 3, 1.5, Vec3d(0,0,-10));
+	connectionInWidget = addWidget("connectionInWidget", "connectionInSite", 200, 3, 1.5, Vec3d(0,1.5,-10));
+	userNameWidget->hide();
+	userlist->hide();
+	connectionInWidget->hide();
 }
+
+bool VRCollaboration::handleUI(VRDeviceWeakPtr wdev) {
+    auto dev = wdev.lock();
+	auto m = dev->getMessage();
+	auto n = splitString(m, ';');
+
+	if (startsWith(m, "register")) {
+		string widget = splitString(m, ' ')[1];
+		gui_sites[widget] = dev->key();
+		if (widget == "usersList") updateUsersWidget();
+		if (widget == "namebox") userNameWidget->show();
+	}
+
+	if (startsWith(m, "setName") ) {
+		userName = splitString(m, '|')[1];
+		userNameWidget->hide();
+		userlist->show();
+		ice->setName(userName);
+		updateUsersWidget();
+	}
+
+	if (startsWith(m, "onUserClick") ) {
+		auto data = splitString(m, '|');
+		sendUI("usersList", "setUserStats|"+data[1]+"|#fa0");
+		ice->send(data[1], "CONREQ");
+	}
+
+	if (m == "connectionAccept" ) {
+		ice->connectTo(connReqOrigin);
+		ice->send(connReqOrigin, "CONACC");
+		connectTCP(connReqOrigin);
+		connectionInWidget->hide();
+	}
+
+	if (m == "connectionRefuse" ) connectionInWidget->hide();
+
+	return true;
+}
+
+string VRCollaboration::uiCSS = WEBSITE(
+body {
+	font-size: 4vh;
+	color: white;
+	margin: 0;
+	background-color: HASH(23272a);
+}
+
+.emptyBG {
+	margin:5px;
+	color:rgba(0,255,0,0.5);
+	background:rgba(255,255,255,0.0);
+	overflow: hidden;
+}
+
+input {
+	border-radius:5vw;
+	border: 1vw solid rgba(0,150,0,1);
+	margin-bottom: 5vw;
+	padding: 3vw;
+}
+
+.remoteUsername {
+	color: yellow;
+	font-weight: bold;
+}
+
+.selfUsername {
+	color: HASH(ffffff);
+	font-weight: bold;
+}
+
+HASH(userlistContainer) {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	width: 100vw;
+	height: 100vh;
+ 	background-color:  HASH(2c2f33);
+}
+
+.button {
+	font-size: 4vh;
+	background-color: HASH(888);
+	color: white;
+	border: none;
+	width: 80%;
+	text-align: center;
+	height: 8vh;
+	margin-top: 2vh;
+}
+
+.button:hover, .open-button:hover {
+	opacity: 1;
+}
+);
+
+string VRCollaboration::userNameSite = WEBSITE(
+<!DOCTYPE html>
+<html>
+
+<head>
+	<link rel="stylesheet" href="uiCSS">
+</head>
+
+<body class='emptyBG'>
+	<script>
+		var ws = new WebSocket('ws://localhost:$PORT_server1$');
+		ws.onopen = function() { send('register namebox'); };
+		function send(m) { ws.send(m); };
+	</script>
+
+	<input id='field' class='background' value='Enter Name'></input>
+
+	<script>
+		input = document.getElementById("field");
+		input.addEventListener("keyup", function(event) {
+			if (event.keyCode === 13) send('setName|'+input.value);
+		});
+		input.addEventListener("click", function(event) {
+			input.value = "";
+		});
+	</script>
+</body>
+</html>
+);
+
+string VRCollaboration::connectionInSite = WEBSITE(
+<!DOCTYPE html>
+<html>
+
+<head>
+	<style>
+		body {
+			display: flex;
+			flex-direction: column;
+			height: 100vh;
+			width: 100vw;
+			font-size: 20vh;
+			color: black;
+			margin: 0;
+			background-color: HASH(23272A00);
+		}
+
+		HASH(buttons) {
+			display: flex;
+			flex-direction: row;
+			height: 50vh;
+			width: 100vw;
+			font-size: 4vh;
+			color: white;
+			margin: 0;
+			background-color: HASH(23272a);
+		}
+
+		HASH(label) {
+			height: 50vh;
+		}
+
+		button {
+			width: 100%;
+		}
+	</style>
+</head>
+
+<body>
+	<script>
+		var ws = new WebSocket('ws://localhost:$PORT_server1$');
+		ws.onopen = function() { send('register conReq'); };
+		function send(m) { ws.send(m); };
+	</script>
+
+	<div id='label'>Accept incomming connection?</div>
+	<div id='buttons'>
+		<button onclick='send("connectionAccept")'>Yes</button>
+		<button onclick='send("connectionRefuse")'>No</button>
+	</div>
+</body>
+</html>
+);
+
+string VRCollaboration::userlistSite = WEBSITE(
+<html>
+	<head>
+		<link rel="stylesheet" href="gui/font-awesome-4.5.0/css/font-awesome.min.css">
+		<link rel="stylesheet" href="uiCSS">
+	</head>
+	<body>
+		<!--div id="profile" >Name:
+			<span id="usernamePreview">Anonymous</span>
+			<i id ="usernameEditIcon" onclick="toggleUsernameChangeForm(false)" class="fa far fa-solid fa-pencil"></i>
+			<i id="cancelEditIcon" onclick="toggleUsernameChangeForm(true)" class =" fa far fa-solid fa-x">X</i>
+		</div-->
+
+		<div id="userlistContainer"></div>
+
+		<script>
+		var websocket = new WebSocket('ws://localhost:$PORT_server1$');
+		websocket.onopen = function() { send('register usersList'); };
+ 		websocket.onerror = function(e) {};
+ 		websocket.onmessage = function(m) { if(m.data) handle(m.data); };
+ 		websocket.onclose = function(e) {};
+
+ 		function send(m) { websocket.send(m); };
+
+ 		function handle(m) {
+ 			if (m == 'clearUsers') document.getElementById('userlistContainer').innerHTML = "";
+
+ 			if (m.startsWith('addUser|')) addUser(m.split('|')[1], m.split('|')[2]);
+
+ 			if (m.startsWith('setUserStats|')) {
+ 				var data = m.split('|');
+ 				setUserStats(data[1], data[2]);
+ 			}
+ 		};
+
+ 		function setUserStats(name, params) {
+ 			btn = document.getElementById(name);
+ 			params = params.split(' ');
+ 			var color = params[0];
+ 			console.log('setUserStats '+name+" "+color);
+ 			btn.style.background = color;
+ 		}
+
+ 		function addUser(name, uid) {
+			let btn = document.createElement("button");
+			btn.setAttribute("id", uid);
+			btn.className = "button";
+			btn.innerHTML = name;
+			document.getElementById("userlistContainer").appendChild(btn);
+			btn.onclick = function () {
+				console.log("Button " + btn.id + " is clicked");
+				//document.getElementById("txt").innerHTML = "Connecting User " + btn.id;
+				send('onUserClick|'+btn.id);
+			};
+ 		}
+
+		var username = "Anonymous";
+		var seperator = "<chatModule_seperator>";
+		var messageIndex = 0;
+
+		function sendMessage(message)
+		{
+			send('chatModule_sendMessage'+ seperator + username + seperator + message);
+		}
+		function changeUsername(newUsername)
+		{
+			username = newUsername;
+			send("chatModule_changeUsername" + seperator + username)
+		}
+	 	function displayMessage(messageOwner, messageText, origin)
+	 	{
+	 		var messageContainer = document.getElementById('messageContainer');
+
+			// Setup of the container which holds all elements of this message
+			var completeMessage = document.createElement("div");
+			completeMessage.className = origin + "CompleteMessage";
+
+			// Create Username Container and fill with information
+			var message_User = document.createElement("div");
+			message_User.className = origin + "Username";
+			message_User.innerHTML = messageOwner;
+			var id = "message_" + messageIndex;
+
+			// Create Content Container and fill with information
+			var message_Content = "<div id ='"+ id + "' onclick='copyMessage(" + id + ");' class='" + origin + "Message " + origin + "Triangle'>" + messageText + "</div>";
+			// Add the containers to complete the message and add to messageContainer
+			completeMessage.appendChild(message_User);
+			completeMessage.innerHTML += message_Content;
+			messageContainer.appendChild(completeMessage);
+			messageContainer.innerHTML += "<br>";
+
+			// Scrolls the view down to the newest message
+			messageContainer.scrollTop = messageContainer.scrollHeight;
+
+			messageIndex ++;
+	 	}
+		function handleMessage()
+		{
+			var inputField = document.getElementById("messageContent");
+			if(!isEmptyOrSpaces(inputField.value))
+			{
+				var messageContent = inputField.value;
+				displayMessage(username, messageContent, "self");
+				sendMessage(messageContent);
+			}
+			inputField.value = "";
+		}
+
+		function isEmptyOrSpaces(str)
+		{
+    		return str === null || str.match(/^ *$/) !== null;
+		}
+		function receiveMessage(message)
+		{
+			var messageFragments = message.data.split(seperator);
+			if(messageFragments[0] == "chatModule_chatMessage")
+			{
+				var user = messageFragments[1];
+				var msg = messageFragments[2];
+				displayMessage(user, msg, "remote");
+			}
+			if(messageFragments[0] == "chatModule_changeUsername")
+			{
+				var newUsername = messageFragments[1];
+				changeUsername(newUsername);
+			}
+			//if(messageFragments[0] == "chatModule_changeUsername")
+		}
+		function copyMessage(message)
+		{
+		   var copyContainer = document.getElementById("messageContent")
+		   var tempsave = copyContainer.value;
+		   copyContainer.value = message.innerHTML;
+		   copyContainer.select();
+		   document.execCommand('copy');
+		   copyContainer.value = tempsave;
+		}
+		var changeFormActive = false;
+		function toggleUsernameChangeForm(isCancel)
+		{
+			var usernameEditIcon = document.getElementById("usernameEditIcon");
+			var cancelEditIcon = document.getElementById("cancelEditIcon");
+			var profile = document.getElementById("profile");
+			var usernamePreview = document.getElementById("usernamePreview");
+
+			if(changeFormActive)
+			{
+				if(isCancel)
+				{
+					usernamePreview.innerHTML = username;
+				}
+				else
+				{
+					var newUsername = usernamePreview.innerHTML;
+					changeUsername(newUsername);
+				}
+				usernamePreview.contentEditable = "false";
+				cancelEditIcon.style.display = "none";
+				changeFormActive = false;
+				usernameEditIcon.className = "fa far fa-solid fa-pencil";
+			}
+			else
+			{
+				usernameEditIcon.className = "fa far fa-solid fa-download";
+				usernamePreview.contentEditable = "true";
+				usernamePreview.focus();
+				cancelEditIcon.style.display = "inline-block";
+				changeFormActive = true;
+			}
+		}
+		function sendDummy()
+		{
+			send("chatModule_chatMessage" + seperator + "Dummy" + seperator + "This is a test !");
+		}
+		function sendDebug(debugMessage)
+		{
+			send("chatModule_debugMessage" + seperator + debugMessage);
+		}
+		</script>
+	</body>
+</html>
+);

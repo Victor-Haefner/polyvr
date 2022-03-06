@@ -18,7 +18,7 @@ simpleVRPyType(UDPServer, New_ptr);
 simpleVRPyType(TCPClient, New_ptr);
 simpleVRPyType(TCPServer, New_ptr);
 simpleVRPyType(ICEClient, New_ptr);
-simpleVRPyType(Collaboration, New_ptr);
+simpleVRPyType(Collaboration, New_VRObjects_ptr);
 
 template<> int toValue(string s, VRICEClient::CHANNEL& t) {
     t = VRICEClient::NONE;
@@ -139,6 +139,9 @@ PyMethodDef VRPyICEClient::methods[] = {
 };
 
 PyMethodDef VRPyCollaboration::methods[] = {
+    {"setServer", PyWrap(Collaboration, setServer, "Set server, something like http://my.server/PolyServ/", void, string) },
+    {"setAvatarDevices", PyWrap(Collaboration, setAvatarDevices, "Set device beacons used for remote avatar representation", void, VRTransformPtr, VRTransformPtr, VRTransformPtr) },
+    {"setAvatarGeometry", PyWrap(Collaboration, setAvatarGeometry, "Set avatar template geometries used to represent remote users", void, VRTransformPtr, VRTransformPtr, VRTransformPtr) },
     {NULL}  /* Sentinel */
 };
 
