@@ -101,8 +101,9 @@ void VRSound::setPitch(float pitch) { this->pitch = pitch; doUpdate = true; }
 void VRSound::setVolume(float gain) { this->gain = gain; doUpdate = true; }
 void VRSound::setCallback(VRUpdateCbPtr cb) { callback = cb; }
 
-void VRSound::setBeacon(VRTransformPtr t) {
+void VRSound::setBeacon(VRTransformPtr t, VRTransformPtr head) {
     poseBeacon = t;
+    headBeacon = head;
     if (t) VRScene::getCurrent()->addUpdateFkt(poseUpdateCb);
     else   VRScene::getCurrent()->dropUpdateFkt(poseUpdateCb);
 }
@@ -390,8 +391,9 @@ void VRSound::playFrame() {
 
 void VRSound::update3DSound() {
     if (!poseBeacon) return;
-    auto cam = VRScene::getCurrent()->getActiveCamera();
-    auto pose = cam->getPoseTo(poseBeacon);
+    VRTransformPtr head = headBeacon;
+    if (!head) head = VRScene::getCurrent()->getActiveCamera();
+    auto pose = head->getPoseTo(poseBeacon);
 
     if (!lastPose) lastPose = Pose::create(*pose);
     velocity = pose->pos().dist(lastPose->pos());

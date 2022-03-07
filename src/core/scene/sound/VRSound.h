@@ -52,6 +52,7 @@ class VRSound {
         float hpass = 1;
 
         PosePtr lastPose;
+        VRTransformPtr headBeacon;
         VRTransformPtr poseBeacon;
         float velocity = 0;
         VRUpdateCbPtr poseUpdateCb;
@@ -76,7 +77,7 @@ class VRSound {
         void setPitch(float pitch);
         void setVolume(float gain);
         void setBandpass(float lpass, float hpass);
-        void setBeacon(VRTransformPtr t);
+        void setBeacon(VRTransformPtr t, VRTransformPtr head = 0);
         void setCallback(VRUpdateCbPtr callback);
 
         bool isRunning();
