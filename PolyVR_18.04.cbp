@@ -1388,6 +1388,8 @@
 		<Unit filename="src/core/setup/VRSetupFwd.h" />
 		<Unit filename="src/core/setup/VRSetupManager.cpp" />
 		<Unit filename="src/core/setup/VRSetupManager.h" />
+		<Unit filename="src/core/setup/VRWebXR.cpp" />
+		<Unit filename="src/core/setup/VRWebXR.h" />
 		<Unit filename="src/core/setup/devices/VRAvatar.cpp" />
 		<Unit filename="src/core/setup/devices/VRAvatar.h" />
 		<Unit filename="src/core/setup/devices/VRDevice.cpp" />
