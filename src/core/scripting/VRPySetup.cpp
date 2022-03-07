@@ -12,6 +12,7 @@ using namespace OSG;
 simpleVRPyType(Setup, 0);
 simpleVRPyType(View, 0);
 simpleVRPyType(Window, 0);
+simpleVRPyType(WebXR, 0);
 
 PyMethodDef VRPySetup::methods[] = {
     {"getView", (PyCFunction)VRPySetup::getView, METH_VARARGS, "Get view i/name - getView(int i / str name)" },
@@ -101,5 +102,9 @@ PyObject* VRPyWindow::getSize(VRPyWindow* self) {
     if (!self->valid()) return NULL;
     return toPyTuple( self->objPtr->getSize() );
 }
+
+PyMethodDef VRPyWebXR::methods[] = {
+    {NULL}  /* Sentinel */
+};
 
 

@@ -3,6 +3,7 @@
 
 #include "VRPyBase.h"
 #include "core/setup/VRSetup.h"
+#include "core/setup/VRWebXR.h"
 #include "core/setup/windows/VRView.h"
 #include "core/setup/windows/VRWindow.h"
 
@@ -24,6 +25,10 @@ struct VRPyView : VRPyBaseT<OSG::VRView> {
 
 struct VRPyWindow : VRPyBaseT<OSG::VRWindow> {
     static PyObject* getSize(VRPyWindow* self);
+    static PyMethodDef methods[];
+};
+
+struct VRPyWebXR : VRPyBaseT<OSG::VRWebXR> {
     static PyMethodDef methods[];
 };
 

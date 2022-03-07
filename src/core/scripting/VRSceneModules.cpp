@@ -326,6 +326,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPySetup>("Setup", pModSetup, 0, "Setup");
     sm->registerModule<VRPyView>("View", pModSetup, 0, "Setup");
     sm->registerModule<VRPyWindow>("Window", pModSetup, 0, "Setup");
+    sm->registerModule<VRPyWebXR>("WebXR", pModSetup, 0, "Setup");
 
     PyObject* pModWorldGenerator = sm->newModule("WorldGenerator", VRSceneGlobals::methods, "VR world generator module");
     sm->registerModule<VRPyWorldGenerator>("WorldGenerator", pModWorldGenerator, VRPyTransform::typeRef, "WorldGenerator");
