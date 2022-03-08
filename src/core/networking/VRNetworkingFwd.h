@@ -3,6 +3,8 @@
 
 #include "core/utils/VRFwdDeclTemplate.h"
 
+ptrFwd(VRSSHSession);
+
 namespace OSG {
     ptrFwd(VROPCUA);
     ptrFwd(VROPCUANode);

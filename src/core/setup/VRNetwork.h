@@ -4,6 +4,7 @@
 #include <OpenSG/OSGConfig.h>
 #include "core/setup/VRSetupFwd.h"
 #include "core/utils/VRManager.h"
+#include "core/networking/VRNetworkingFwd.h"
 
 #include <map>
 #include <vector>
@@ -66,6 +67,8 @@ class VRNetworkSlave : public VRName {
 
 class VRNetworkNode : public VRManager<VRNetworkSlave>, public std::enable_shared_from_this<VRNetworkNode> {
     private:
+        VRSSHSessionPtr ssh;
+
         string address = "localhost";
         string user = "user";
         string slavePath = "";
@@ -84,6 +87,7 @@ class VRNetworkNode : public VRManager<VRNetworkSlave>, public std::enable_share
 
         thread initThread;
 
+        void openSSHSession();
         void initSlaves();
         void update();
 
