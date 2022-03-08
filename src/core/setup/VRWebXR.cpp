@@ -8,6 +8,10 @@
 #include <OpenSG/OSGMatrix.h>
 #include <OpenSG/OSGQuaternion.h>
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+typedef const char* CSTR;
+#endif
 
 
 /**
