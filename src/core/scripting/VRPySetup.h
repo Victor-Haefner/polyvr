@@ -7,24 +7,23 @@
 #include "core/setup/windows/VRView.h"
 #include "core/setup/windows/VRWindow.h"
 
+struct VRPyViewManager : VRPyBaseT<OSG::VRViewManager> {
+    static PyMethodDef methods[];
+};
+
+struct VRPyWindowManager : VRPyBaseT<OSG::VRWindowManager> {
+    static PyMethodDef methods[];
+};
+
 struct VRPySetup : VRPyBaseT<OSG::VRSetup> {
     static PyMethodDef methods[];
-    static PyObject* getView(VRPySetup* self, PyObject* args);
-    static PyObject* getWindow(VRPySetup* self, PyObject* args);
 };
 
 struct VRPyView : VRPyBaseT<OSG::VRView> {
     static PyMethodDef methods[];
-    static PyObject* toggleStereo(VRPyView* self);
-    static PyObject* setPose(VRPyView* self, PyObject* args);
-    static PyObject* getPose(VRPyView* self);
-    static PyObject* grab(VRPyView* self);
-    static PyObject* setCamera(VRPyView* self, PyObject* args);
-    static PyObject* getName(VRPyView* self);
 };
 
 struct VRPyWindow : VRPyBaseT<OSG::VRWindow> {
-    static PyObject* getSize(VRPyWindow* self);
     static PyMethodDef methods[];
 };
 

@@ -133,6 +133,7 @@ class VRView : public std::enable_shared_from_this<VRView> {
         void setStereoEyeSeparation(float v);
         void setProjection(bool b);
         void setOffset(Vec3d);
+        void toggleStereo();
 
         VRTransformPtr getUser();
         VRObjectPtr getRoot();
@@ -143,6 +144,7 @@ class VRView : public std::enable_shared_from_this<VRView> {
         float getEyeSeparation();
         bool isProjection();
 
+        void setPose(PosePtr p);
         void setProjectionUp(Vec3d v);
         Vec3d getProjectionUp();
         void setProjectionNormal(Vec3d v);

@@ -94,6 +94,14 @@ void VRView::setMaterial() {
     viewGeoMat->setLit(false);
 }
 
+void VRView::toggleStereo() { setStereo(!stereo); }
+
+void VRView::setPose(PosePtr p) {
+    setProjectionCenter(p->pos());
+    setProjectionNormal(p->dir());
+    setProjectionUp(p->up());
+}
+
 void VRView::setViewports() {//create && set size of viewports
     if (window && lView) window->subPortByObj(lView);
     if (window && rView) window->subPortByObj(rView);

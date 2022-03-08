@@ -29,6 +29,9 @@ struct VRPyBase {
         if ((PyObject*)t == Py_None) t = 0;
     }
 
+    static void registerModule(PyTypeObject* typeRef, string name, PyObject* mod, vector<PyTypeObject*> tp_bases);
+    static PyObject* allocatePyObject(PyTypeObject* typeRef, vector<PyTypeObject*>& tp_bases);
+
     template <typename T, typename R>
     static R execPyCall(PyObject* pyFkt, PyObject* pArgs, T t);
     template <typename T>
@@ -86,9 +89,10 @@ struct VRPyBaseT : public VRPyBase {
     bool owner = true;
     static PyTypeObject type;
     static PyTypeObject* typeRef;
+    static vector<PyTypeObject*> typeBases;
+    static map<PyTypeObject*, int> typeOffsets;
 
     VRPyBaseT();
-    //virtual ~VRPyBaseT();
 
     bool valid();
 
@@ -107,7 +111,7 @@ struct VRPyBaseT : public VRPyBase {
     static PyObject* allocPtr(PyTypeObject* type, std::shared_ptr<T> t);
     static void dealloc(VRPyBaseT<T>* self);
     static int init(VRPyBaseT<T> *self, PyObject *args, PyObject *kwds);
-    static void registerModule(string name, PyObject* mod, PyTypeObject* tp_base = 0);
+    static void registerModule(string name, PyObject* mod, vector<PyTypeObject*> tp_base = 0);
 };
 
 #endif // VRPYBASE_H_INCLUDED
