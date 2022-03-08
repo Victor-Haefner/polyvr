@@ -2,6 +2,7 @@
 #include "core/scene/VRSceneManager.h"
 #include "core/setup/VRSetupManager.h"
 #include "core/setup/VRSetup.h"
+#include "core/setup/VRWebXR.h"
 #include "core/utils/xml.h"
 #include "core/objects/VRTransform.h"
 
@@ -166,6 +167,12 @@ void VRDeviceManager::load(XMLElementPtr node) {
             dev = m;
         }
 #endif
+
+        if (type == "webxr") {
+            VRWebXRPtr w = VRWebXR::create();
+            w->load(el);
+            dev = w;
+        }
 
         if (dev == 0) continue;
         addDevice(dev);
