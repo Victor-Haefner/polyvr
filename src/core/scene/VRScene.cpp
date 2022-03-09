@@ -27,6 +27,7 @@
 #include "core/utils/toString.h"
 #include "core/utils/VRProgress.h"
 #include "core/utils/system/VRSystem.h"
+#include "core/scene/import/VRImport.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -337,6 +338,8 @@ void VRScene::importScene(XMLElementPtr e, string path) {
     if (e == 0) return;
     auto oldScripts = getScripts();
     VRScriptManager::loadChildFrom(e);
+
+    VRImport::get()->addPath( getFolderName(path) );
 
     vector<string> newScripts;
     for (auto s : getScripts()) if (!oldScripts.count(s.first)) newScripts.push_back(s.first);

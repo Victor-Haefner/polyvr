@@ -110,8 +110,25 @@ void testSync(int t) {
 }
 
 /// --------------------------------------------------
+void VRImport::addPath(string folder) {
+    importPaths.push_back(folder);
+}
+
+bool VRImport::checkPath(string& path) {
+    if (exists(path)) return true;
+    for (auto& folder : importPaths) {
+        if (exists(folder+"/"+path)) {
+            path = folder+"/"+path;
+            return true;
+        }
+    }
+    return false;
+}
 
 VRTransformPtr VRImport::load(string path, VRObjectPtr parent, bool useCache, string preset, bool thread, map<string, string> options, bool useBinaryCache) {
+    // check file path
+    if (!checkPath(path)) { cout << "VRImport::load " << path << " not found!" << endl; return 0; }
+
     cout << "VRImport::load " << path << ", with preset: " << preset << ", useCache: " << useCache << endl;
     if (ihr_flag) if (fileSize(path) > 3e7) return 0;
     setlocale(LC_ALL, "C");
@@ -122,9 +139,6 @@ VRTransformPtr VRImport::load(string path, VRObjectPtr parent, bool useCache, st
         cout << "load " << path << " : " << res << " from cache\n";
         return res;
     }
-
-    // check file path
-    if (!exists(path)) { cout << "VRImport::load " << path << " not found!" << endl; return 0; }
 
     VRTransformPtr res = VRTransform::create("proxy");
     if (!thread) {
