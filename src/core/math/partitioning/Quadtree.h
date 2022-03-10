@@ -13,7 +13,7 @@ using namespace std;
 
 OSG_BEGIN_NAMESPACE
 
-class QuadtreeNode : public PartitiontreeNode {
+class QuadtreeNode : public PartitiontreeNode<void*> {
     private:
         QuadtreeWeakPtr tree;
         QuadtreeNode* parent = 0;

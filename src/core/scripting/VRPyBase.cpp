@@ -17,6 +17,53 @@ void PyGILState_Release(PyGILState_STATE state) {}
 
 PyObject* VRPyBase::err = NULL;
 
+void VRPyBase::registerModule(PyTypeObject* typeRef, string name, PyObject* mod, vector<PyTypeObject*> tp_bases) {
+    if (tp_bases.size() == 1) typeRef->tp_base = tp_bases[0];
+    if ( PyType_Ready(typeRef) < 0 ) { cout << "\nERROR! could not register " << name << endl; return; }
+    Py_INCREF(typeRef);
+    PyModule_AddObject(mod, name.c_str(), (PyObject*)typeRef);
+}
+
+PyObject* VRPyBase::allocatePyObject(PyTypeObject* typeRef, vector<PyTypeObject*>& tp_bases) {
+    PyObject* obj = typeRef->tp_alloc(typeRef, 0);
+
+    size_t Nb = tp_bases.size();
+    if (Nb > 1) {
+        PyObject* types = PyTuple_New(Nb);
+        for (size_t i=0; i<Nb; i++) PyTuple_SetItem(types, i, (PyObject*)tp_bases[i]);
+        obj->ob_type->tp_bases = types;
+
+        Py_INCREF(tp_bases[0]);
+        obj->ob_type->tp_base = tp_bases[0];
+
+        size_t Nmro0 = PyTuple_GET_SIZE(obj->ob_type->tp_mro);
+        size_t Nmro = Nmro0;
+        for (size_t i=0; i<Nb; i++) Nmro += PyTuple_GET_SIZE(tp_bases[i]->tp_mro);
+        PyObject* mro = PyTuple_New(Nmro);
+
+        size_t mi=0;
+        for (size_t i = 0; i<Nmro0; i++, mi++) {
+            PyObject* m = PyTuple_GetItem(obj->ob_type->tp_mro, i);
+            Py_INCREF(m);
+            PyTuple_SetItem(mro, mi, m);
+        }
+
+        for (size_t j=0; j<Nb; j++) {
+            size_t Nmroi = PyTuple_GET_SIZE(tp_bases[j]->tp_mro);
+            for (size_t i = 0; i<Nmroi; i++, mi++) {
+                PyObject* m = PyTuple_GetItem(tp_bases[j]->tp_mro, i);
+                Py_INCREF(m);
+                PyTuple_SetItem(mro, mi, m);
+            }
+        }
+
+        obj->ob_type->tp_mro = mro;
+        //cout << " VRPyBase::allocatePyObject, mro tuple? " << PyTuple_Check(obj->ob_type->tp_mro) << endl;
+    }
+
+    return obj;
+}
+
 PyObject* VRPyBase::parseObject(PyObject *args) {
     PyObject* o = NULL;
     if (! PyArg_ParseTuple(args, "O", &o)) return NULL;

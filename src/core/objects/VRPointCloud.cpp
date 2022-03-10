@@ -5,6 +5,7 @@
 #include "core/objects/geometry/VRPrimitive.h"
 #include "core/objects/VRLod.h"
 #include "core/math/partitioning/Octree.h"
+#include "core/math/partitioning/OctreeT.h"
 #include "core/math/pose.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRProgress.h"
@@ -19,8 +20,8 @@ using namespace OSG;
 using namespace std;
 
 VRPointCloud::VRPointCloud(string name) : VRTransform(name) {
-    octree = Octree::create(10);
-    mat = VRMaterial::create("pcmat");
+    octree = Octree<PntData>::create(10);
+    mat = VRMaterial::create("pcmat", false);
     type = "PointCloud";
 }
 
@@ -29,6 +30,7 @@ VRPointCloud::~VRPointCloud() {}
 VRPointCloudPtr VRPointCloud::create(string name) { return VRPointCloudPtr( new VRPointCloud(name) ); }
 
 void VRPointCloud::setupMaterial(bool lit, int pointsize, bool doSplat, float splatModifier) {
+    mat->setUseGlobalFCMap(false); // the global material FC map is not threadsafe and its a memory leak!
     mat->setLit(lit);
     mat->setPointSize(pointsize);
 
@@ -38,14 +40,10 @@ void VRPointCloud::setupMaterial(bool lit, int pointsize, bool doSplat, float sp
         mat->setFragmentShader(splatFP, "splatFP");
         mat->setShaderParameter("splatModifier", splatModifier);
     }
-
-    // TODO: add splatting option
-    //  - compute tangent space at each point
-    //  - compute density at each point
 }
 
 VRMaterialPtr VRPointCloud::getMaterial() { return mat; }
-OctreePtr VRPointCloud::getOctree() { return octree; }
+shared_ptr<Octree<VRPointCloud::PntData>>& VRPointCloud::getOctree() { return octree; }
 
 void VRPointCloud::applySettings(map<string, string> options) {
     if (options.count("filePath")) filePath = options["filePath"];
@@ -53,13 +51,14 @@ void VRPointCloud::applySettings(map<string, string> options) {
     if (options.count("leafSize")) leafSize = toInt(options["leafSize"]);
     if (options.count("pointSize")) pointSize = toInt(options["pointSize"]);
     if (options.count("keepOctree")) keepOctree = toInt(options["keepOctree"]);
+    if (options.count("partitionLimit")) partitionLimit = toInt(options["partitionLimit"]);
 
     bool doSplats = false;
     double splatMod = 1.0;
     if (options.count("doSplats")) doSplats = true;
-    if (options.count("splatMod")) splatMod = toFloat(options["splatMod"]);
+    if (options.count("splatScale")) { splatScale = toFloat(options["splatScale"]); splatMod *= splatScale; }
+    if (options.count("splatMod")) splatMod *= toFloat(options["splatMod"]);
     if (options.count("downsampling")) splatMod /= sqrt(toFloat(options["downsampling"]));
-    //splatMod = 0.02;
 
     setupMaterial(lit, pointSize, doSplats, splatMod);
     octree->setResolution(leafSize);
@@ -75,6 +74,7 @@ void VRPointCloud::applySettings(map<string, string> options) {
 }
 
 void VRPointCloud::loadChunk(VRLodPtr lod) {
+    VRLock lock(mtx);
     auto prxy = lod->getChild(0);
     if (prxy->getChildrenCount() > 0) return;
 
@@ -87,16 +87,30 @@ void VRPointCloud::loadChunk(VRLodPtr lod) {
     map<string, string> options;
     options["lit"] = toString(mat->isLit());
     options["pointSize"] = toString(pointSize);
+    options["downsampling"] = toString(1.0/downsamplingRate[1]);
     options["leafSize"] = toString(leafSize);
     options["keepOctree"] = toString(0);
     options["region"] = toString( region );
+    options["splatScale"] = toString( splatScale );
+    cout << " ---------------- " << splatScale << endl;
 
-    auto chunk = VRImport::get()->load(path, prxy, false, "OSG", false, options);
-    prxy->clearLinks();
+    bool threaded = true;
+    auto chunk = VRImport::get()->load(path, prxy, false, "OSG", threaded, options);
     prxy->addChild(chunk);
-    //prxy->addChild(VRObject::create("bla"));
-    //lod->getParent()->addChild(chunk);
-    cout << " VRPointCloud::onLodSwitch loaded " << chunk->getName() << ", parent: " << chunk->getParent() << ", region: " << toString(region) << endl;
+    //cout << " VRPointCloud::onLodSwitch loaded " << chunk->getName() << ", parent: " << chunk->getParent() << ", region: " << toString(region) << endl;
+}
+
+void VRPointCloud::onImportEvent(VRImportJob params) {
+    VRLock lock(mtx);
+    //cout << " ---------------------- VRPointCloud::onImportEvent " << params.path << endl;
+    if (!params.res) return;
+    auto p = params.res->getParent();
+    if (!p) return;
+    auto pc = params.res->getChild(0);
+    if (!pc) return;
+    p->clearLinks();
+    params.res->subChild(pc); // workaround for thread issues
+    params.res->addChild(pc);
 }
 
 void VRPointCloud::onLodSwitch(VRLodEventPtr e) { // for streaming
@@ -105,12 +119,16 @@ void VRPointCloud::onLodSwitch(VRLodEventPtr e) { // for streaming
     VRLodPtr lod = e->getLod();
 
     if (i1 == 0) {
-        cout << "VRPointCloud::onLodSwitch " << lod->getName() << ", load region " << Vec2i(i0, i1) << endl;
+        //cout << "VRPointCloud::onLodSwitch " << lod->getName() << ", load region " << Vec2i(i0, i1) << endl;
         loadChunk(lod);
     }
 
     if (i1 == 1) {
-        cout << "VRPointCloud::onLodSwitch " << lod->getName() << ", unload region " << Vec2i(i0, i1) << endl;
+        //cout << "VRPointCloud::onLodSwitch " << lod->getName() << ", unload region " << Vec2i(i0, i1) << endl;
+        VRLock lock(mtx);
+        auto prxy = lod->getChild(0);
+        prxy->clearChildren();
+        prxy->addLink( lod->getChild(1) );
     }
 }
 
@@ -118,6 +136,11 @@ void VRPointCloud::addLevel(float distance, int downsampling, bool stream) {
     levels++;
     downsamplingRate.push_back(downsampling);
     lodDistances.push_back(distance);
+
+    if (!onImport) {
+        onImport = VRImportCb::create("pc chunk import", bind(&VRPointCloud::onImportEvent, this, placeholders::_1));
+        VRImport::get()->addEventCallback(onImport);
+    }
 
     if (lodsSetUp && stream) {
         VRLodCbPtr streamCB = VRLodCb::create( "pointcloudStreamCB", bind(&VRPointCloud::onLodSwitch, this, placeholders::_1 ) );
@@ -141,16 +164,23 @@ void VRPointCloud::addLevel(float distance, int downsampling, bool stream) {
     }
 }
 
-void VRPointCloud::addPoint(Vec3d p, Splat c) {
+void VRPointCloud::addPoint(Vec3d p, Splat s) {
     if (pointType == NONE) pointType = SPLAT;
     if (pointType != SPLAT) return;
-    octree->add(p, new Splat(c), -1, true, 1e5);
+    PntData d;
+    d.c = s.c;
+    d.v1 = s.v1;
+    d.v2 = s.v2;
+    d.w = s.w;
+    octree->add(p, d, -1, true, partitionLimit);
 }
 
 void VRPointCloud::addPoint(Vec3d p, Color3ub c) {
     if (pointType == NONE) pointType = COLOR;
     if (pointType != COLOR) return;
-    octree->add(p, new Color3ub(c), -1, true, 1e5);
+    PntData d;
+    d.c = c;
+    octree->add(p, d, -1, true, partitionLimit);
 }
 
 void VRPointCloud::setupLODs() {
@@ -172,18 +202,14 @@ void VRPointCloud::setupLODs() {
 
             VRGeoData chunk;
             for (int i = 0; i < leaf->dataSize(); i+=downsamplingRate[lvl]) {
-                void* data = leaf->getData(i);
+                PntData& data = leaf->getData(i);
                 Vec3d pos = leaf->getPoint(i);
                 chunk.pushVert(pos - center, Vec3d(0,1,0));
-                if (pointType == COLOR) {
-                    Color3ub col = *((Color3ub*)data);
-                    chunk.pushColor(col);
-                } else if (pointType == SPLAT) {
-                    Splat splat = *((Splat*)data);
-                    chunk.pushColor(splat.c);
-                    chunk.pushTexCoord(Vec2d(splat.v1), 0);
-                    chunk.pushTexCoord(Vec2d(splat.v2), 1);
-                    chunk.pushTexCoord(Vec2d(splat.w,0), 2);
+                chunk.pushColor(data.c);
+                if (pointType == SPLAT) {
+                    chunk.pushTexCoord(Vec2d(data.v1), 0);
+                    chunk.pushTexCoord(Vec2d(data.v2), 1);
+                    chunk.pushTexCoord(Vec2d(data.w,0), 2);
                 }
                 chunk.pushPoint();
 
@@ -191,7 +217,7 @@ void VRPointCloud::setupLODs() {
             if (chunk.size() > 0) chunk.apply( geo );
         }
 
-        if (!keepOctree) leaf->delContent<Color3ub>();
+        if (!keepOctree) leaf->clearContent();
     }
 
     //addChild(octree->getVisualization());
@@ -406,7 +432,7 @@ void VRPointCloud::externalSort(string path, size_t chunkSize, double binSize) {
         }
 
         while (true) {
-            int kNext = 0;
+            size_t kNext = 0;
             while (mergeHeads[kNext].done) kNext++;
             if (kNext >= Nstreams) break; // all done!
 
@@ -469,7 +495,7 @@ void VRPointCloud::externalSort(string path, size_t chunkSize, double binSize) {
             mergeChunks(levelSize, inStreams, wStream, progress, false);
             wStream.close();
 
-            for (int k=0; k<inStreams.size(); k++) {
+            for (size_t k=0; k<inStreams.size(); k++) {
                 string cPath = lastChunks[j*Mchunks+k];
                 inStreams[k].close();
                 removeFile(cPath);
@@ -525,7 +551,7 @@ void VRPointCloud::externalComputeSplats(string path) {
     stream.seekg(hL);
 
     double threshhold = 0.1;
-    int Nn = 6; // number of neighbors to get
+    size_t Nn = 6; // number of neighbors to get
     int Nb = 100; // half of buffer size
     vector<VRPointCloud::Splat> buffer;
     buffer.resize(Nb*2+1);
@@ -547,11 +573,11 @@ void VRPointCloud::externalComputeSplats(string path) {
         wstream.write((const char*)&W, sizeof(char));
     };
 
-    auto getNeighbors = [&](int i, int n) {
+    auto getNeighbors = [&](size_t i, size_t n) {
         Vec3d p0 = buffer[i].p;
 
         map<int, double> pnts;
-        for (int j=0; j<buffer.size(); j++) {
+        for (size_t j=0; j<buffer.size(); j++) {
             if (i == j) continue;
 
             double d = p0.dist(buffer[j].p);
@@ -581,7 +607,7 @@ void VRPointCloud::externalComputeSplats(string path) {
         Vec3d p0 = buffer[i].p;
         Vec3d dl;
         vector<Vec3d> normals;
-        for (int j=0; j<neighbors.size(); j++) {
+        for (size_t j=0; j<neighbors.size(); j++) {
             int ni = neighbors[j];
             Vec3d dj = buffer[ni].p - p0;
             if (j > 0) {
@@ -592,7 +618,7 @@ void VRPointCloud::externalComputeSplats(string path) {
             dl = dj;
         }
 
-        for (int j=1; j<normals.size(); j++) {
+        for (size_t j=1; j<normals.size(); j++) {
             if (normals[j-1].dot(normals[j]) < 0) normals[j] *= -1;
         }
 
@@ -608,7 +634,7 @@ void VRPointCloud::externalComputeSplats(string path) {
         Vec3d p0 = buffer[i].p;
 
         double d = threshhold;
-        for (int j=0; j<neighbors.size(); j++) {
+        for (size_t j=0; j<neighbors.size(); j++) {
             int ni = neighbors[j];
             Vec3d dj = buffer[ni].p - p0;
             if (dj.length() < d) d = dj.length();

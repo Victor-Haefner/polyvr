@@ -96,9 +96,18 @@ PyObject* proxyWrap<allowPacking, sT, R (T::*)(Args...), mf, O>::exec(sT* self, 
         params = { res };
     }
 
+    int offset = 0;
+    bool inherited = (self->ob_type != sT::typeRef);
+    if (inherited) {
+        if (sT::typeOffsets.count(self->ob_type)) {
+            offset = sT::typeOffsets[self->ob_type];
+        }
+    }
+
     wrap->callback = mf;
     PyObject* res = 0;
     T* tPtr = self->objPtr ? self->objPtr.get() : self->obj;
+    if (offset != 0) tPtr = (T*)(((char*)tPtr)+offset);
     bool success = wrap->execute(tPtr, params, res);
     if (!success) { self->setErr(wrap->err); return NULL; }
     if (!res) Py_RETURN_TRUE;

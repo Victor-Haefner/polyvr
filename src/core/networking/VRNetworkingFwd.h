@@ -3,6 +3,8 @@
 
 #include "core/utils/VRFwdDeclTemplate.h"
 
+ptrFwd(VRSSHSession);
+
 namespace OSG {
     ptrFwd(VROPCUA);
     ptrFwd(VROPCUANode);
@@ -10,6 +12,9 @@ namespace OSG {
     ptrFwd(VRWebSocket);
     ptrFwd(VRSerial);
     ptrFwd(VRHDLC);
+    ptrFwd(VRNetworkClient);
+    ptrFwd(VRUDPServer);
+    ptrFwd(VRUDPClient);
     ptrFwd(VRTCPServer);
     ptrFwd(VRTCPClient);
     ptrFwd(VRTCPUtils);
@@ -17,6 +22,7 @@ namespace OSG {
     ptrFwd(VRRestServer);
     ptrFwd(VRRestClient);
     ptrFwd(VRRestResponse);
+    ptrFwd(VRCollaboration);
 
     ptrFctFwd( VRRest, VRRestResponsePtr );
 }

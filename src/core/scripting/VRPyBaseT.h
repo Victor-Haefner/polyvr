@@ -56,6 +56,8 @@ string typeName(const X* e) { \
 #define simplePyType( X, NEWfkt ) newPyType( X , X , NEWfkt )
 
 template<class T> PyTypeObject* VRPyBaseT<T>::typeRef = &VRPyBaseT<T>::type;
+template<class T> vector<PyTypeObject*> VRPyBaseT<T>::typeBases = vector<PyTypeObject*>();
+template<class T> map<PyTypeObject*, int> VRPyBaseT<T>::typeOffsets = map<PyTypeObject*, int>();
 template<class T> VRPyBaseT<T>::VRPyBaseT() {;}
 /*template<class T> VRPyBaseT<T>::~VRPyBaseT() {
     cout << "VRPyBaseT<T>::destruct " << this << " " << this->obj << " " << this->objPtr << " " << typeRef->tp_name << endl;
@@ -142,7 +144,7 @@ bool VRPyBase::pyListToVector(PyObject* o, T& vec) {
 
 template<class T>
 PyObject* VRPyBaseT<T>::fromObject(T obj) {
-    VRPyBaseT<T> *self = (VRPyBaseT<T> *)typeRef->tp_alloc(typeRef, 0);
+    VRPyBaseT<T> *self = (VRPyBaseT<T> *)allocatePyObject(typeRef, VRPyBaseT<T>::typeBases);
     if (self == NULL) Py_RETURN_NONE;
     T* optr = new T(obj);
     self->objPtr = std::shared_ptr<T>( optr );
@@ -152,7 +154,7 @@ PyObject* VRPyBaseT<T>::fromObject(T obj) {
 
 template<class T>
 PyObject* VRPyBaseT<T>::fromPtr(T* obj) {
-    VRPyBaseT<T> *self = (VRPyBaseT<T> *)typeRef->tp_alloc(typeRef, 0);
+    VRPyBaseT<T> *self = (VRPyBaseT<T> *)allocatePyObject(typeRef, VRPyBaseT<T>::typeBases);
     if (self == NULL) Py_RETURN_NONE;
     self->obj = obj;
     self->owner = false;
@@ -166,7 +168,7 @@ PyObject* VRPyBaseT<T>::fromSharedPtr(std::shared_ptr<T> obj) {
         cout << "VRPyBase::fromSharedPtr for type " << typeName<T>(&obj) << " failed because of missing type alloc" << endl;
         Py_RETURN_NONE;
     }
-    VRPyBaseT<T> *self = (VRPyBaseT<T> *)typeRef->tp_alloc(typeRef, 0);
+    VRPyBaseT<T> *self = (VRPyBaseT<T> *)allocatePyObject(typeRef, VRPyBaseT<T>::typeBases);
     if (self == NULL) {
         cout << "VRPyBase::fromSharedPtr for type " << typeName<T>(&obj) << " failed because of failed type alloc" << endl;
         Py_RETURN_NONE;
@@ -199,7 +201,7 @@ bool VRPyBaseT<T>::parse(PyObject *args, std::shared_ptr<T>* obj) {
 
 template<class T>
 PyObject* VRPyBaseT<T>::allocPtr(PyTypeObject* type, std::shared_ptr<T> t) {
-    VRPyBaseT<T>* self = (VRPyBaseT<T> *)type->tp_alloc(type, 0);
+    VRPyBaseT<T>* self = (VRPyBaseT<T> *)allocatePyObject(type, VRPyBaseT<T>::typeBases);
     if (self != NULL) {
         self->owner = true;
         self->objPtr = t;
@@ -246,12 +248,14 @@ int VRPyBaseT<T>::init(VRPyBaseT<T> *self, PyObject *args, PyObject *kwds) {
 }
 
 template<class T>
-void VRPyBaseT<T>::registerModule(string name, PyObject* mod, PyTypeObject* tp_base) {
-    if (tp_base) typeRef->tp_base = tp_base;
-
-    if ( PyType_Ready(typeRef) < 0 ) { cout << "\nERROR! could not register " << name << endl; return; }
-    Py_INCREF(typeRef);
-    PyModule_AddObject(mod, name.c_str(), (PyObject*)typeRef);
+void VRPyBaseT<T>::registerModule(string name, PyObject* mod, vector<PyTypeObject*> tp_bases) {
+    VRPyBase::registerModule(typeRef, name, mod, tp_bases);
+    if (tp_bases.size() > 1) typeBases = tp_bases;
+    if (tp_bases.size() > 0) { // multiple inheritance needs to be handles dynamically!
+        for (auto tObj : tp_bases) { // here only default value, dont forget to compute values with computeTypeOffset
+            typeOffsets[tObj] = 0;
+        }
+    }
 }
 
 #endif //VRPYBASET_H_INCLUDED

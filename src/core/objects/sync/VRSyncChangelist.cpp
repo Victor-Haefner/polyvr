@@ -251,10 +251,10 @@ OSGChangeList* VRSyncChangelist::filterChangeList(VRSyncNodePtr syncNode, Change
 
         if (entry->uiEntryDesc == ContainerChangeEntry::SubReference) {
             auto obj = syncNode->getVRObject(entry->uiContainerId);
-            cout << " filterChangeList subRef " << entry->uiContainerId;
+            /*cout << " filterChangeList subRef " << entry->uiContainerId;
             if (obj) cout << ", obj " << obj->getName();
             else cout << " no obj";
-            cout << endl;
+            cout << endl;*/
         }
 
         for (auto rID : syncNode->getRemotes())

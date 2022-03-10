@@ -7,6 +7,7 @@
 #include <exception>
 #include <fstream>
 #include <stdexcept>
+#include <iostream>
 
 struct Unzipper::Impl {
     Unzipper& m_outer;
@@ -356,6 +357,7 @@ struct Unzipper::Impl {
       }
       else
       {
+        std::cout << "Warning in Unzipper::extractEntryToMemory, could not locate " << name << std::endl;
         return false;
       }
     }

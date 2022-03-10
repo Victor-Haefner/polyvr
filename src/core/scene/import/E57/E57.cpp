@@ -13,6 +13,14 @@
 #include "core/math/partitioning/Octree.h"
 #include "core/utils/VRProgress.h"
 #include "core/utils/toString.h"
+#include "core/utils/MemMonitor.h"
+
+#ifndef __EMSCRIPTEN__
+#ifndef _WIN32
+#include <fcntl.h> // to tell the system how we will read data
+#include <ext/stdio_filebuf.h>
+#endif
+#endif // __EMSCRIPTEN__
 
 using namespace e57;
 using namespace std;
@@ -181,7 +189,7 @@ void OSG::loadE57(string path, VRTransformPtr res, map<string, string> importOpt
 
             cout << "fill octree" << endl;
             size_t Nskip = round(1.0/downsampling) - 1;
-            size_t count = 0;
+            //size_t count = 0;
             int Nskipped = 0;
             int gotCount = 0;
             do {
@@ -365,7 +373,7 @@ vector<size_t> extractRegionBounds(string path, vector<double> region) {
         }
     }
 
-    cout << "extractRegionBounds " << toString(bounds) << endl;
+    //cout << "extractRegionBounds " << toString(bounds) << endl;
     return bounds;
 }
 
@@ -381,7 +389,15 @@ void OSG::loadPCB(string path, VRTransformPtr res, map<string, string> importOpt
     auto bounds = extractRegionBounds(path, region);
 
     auto params = VRPointCloud::readPCBHeader(path);
+
+#if !defined _WIN32 && !defined __EMSCRIPTEN__
+    int fileDescr = fileno(::fopen(path.c_str(), "rb"));
+    __gnu_cxx::stdio_filebuf<char> filebuf(fileDescr, std::ios::in);
+    istream stream(&filebuf);
+#else
     ifstream stream(path);
+#endif
+
     int hL = toInt(params["headerLength"]);
     stream.seekg(hL);
     cout << "  headers: " << toString(params) << endl;
@@ -394,6 +410,7 @@ void OSG::loadPCB(string path, VRTransformPtr res, map<string, string> importOpt
 
     if (hasSpl) importOptions["doSplats"] = "1";
     if (params.count("splatMod")) importOptions["splatMod"] = params["splatMod"];
+    else importOptions["splatMod"] = "1.0";
 
     auto progress = VRProgress::create();
     progress->setup("process points ", cN);
@@ -404,12 +421,30 @@ void OSG::loadPCB(string path, VRTransformPtr res, map<string, string> importOpt
     if (hasSpl) cout << "   scan has splats\n";
     else cout << "   scan has no splats\n";
 
+    //VRTransform("tmp"); // to add tmp to the name pool!
+    //VRPointCloud::create("tmp");
+
+    //MemMonitor::enable();
+
+    if (0) { // no memleaks here :D
+        auto i = shared_ptr<int>(new int(5));
+        auto o = VRObject::create("tmp");
+        auto t = VRTransform::create("tmp");
+        auto m = VRMaterial::create("tmp", false);
+        auto p = VRPointCloud::create("tmp");
+        p->applySettings(importOptions);
+        for (int i=0; i<500; i++) p->addPoint( Vec3d(i*0.17347,0.5001,0.5001), Vec3ub(100,101,102) );
+    }
+
+    //MemMonitor::disable();
+    //MemMonitor::enable();
+
     auto pointcloud = VRPointCloud::create("pointcloud");
     pointcloud->applySettings(importOptions);
 
     size_t Nskip = round(1.0/downsampling) - 1;
-    size_t count = 0;
-    int Nskipped = 0;
+    //size_t count = 0;
+    //int Nskipped = 0;
 
     int N = sizeof(Vec3d);
     if (hasCol) N = VRPointCloud::PntCol::size;
@@ -428,11 +463,21 @@ void OSG::loadPCB(string path, VRTransformPtr res, map<string, string> importOpt
     int Nbounds = bounds.size()*0.5;
     if (Nbounds > 0 && bounds[0] > 0) skip(bounds[0]);
 
+    // try to optimize file access
+    /**
+    POSIX_FADV_NORMAL Indicates that the application has no advice to give about its access pattern for the specified data. If no advice is given for an open file, this is the default assumption.
+    POSIX_FADV_SEQUENTIAL The application expects to access the specified data sequentially (with lower offsets read before higher ones).
+    POSIX_FADV_RANDOM The specified data will be accessed in random order.
+    POSIX_FADV_NOREUSE The specified data will be accessed only once.
+    POSIX_FADV_WILLNEED The specified data will be accessed in the near future.
+    POSIX_FADV_DONTNEED The specified data will not be accessed in the near future.
+    */
+    //posix_fadvise(fileDescr, 0, 0, POSIX_FADV_RANDOM); // meh, doesn't really improve anything!
+
+
     while (stream.read((char*)&pnt, N)) {
         Vec3d  pos = pnt.p;
         Vec3ub rgb = pnt.c;
-        //cout << "  read pnt: " << pos << " " << rgb << " " << endl;
-        //Color3f col(rgb[0]/255.0, rgb[1]/255.0, rgb[2]/255.0);
         if (hasSpl) pointcloud->addPoint(pos, pnt);
         else pointcloud->addPoint(pos, rgb);
         progress->update( 1 );
@@ -451,8 +496,15 @@ void OSG::loadPCB(string path, VRTransformPtr res, map<string, string> importOpt
     }
 
     pointcloud->setupLODs();
-    res->addChild(pointcloud);
+    res->addChild(pointcloud); // TODO: threading -> problems with states, re-adding it as child in main thread fixes issue!
+#if !defined _WIN32 && !defined __EMSCRIPTEN__
+    close(fileDescr);
+#else
     stream.close();
+#endif
+
+    //pointcloud.reset();
+    //MemMonitor::disable();
 }
 
 void OSG::loadXYZ(string path, VRTransformPtr res, map<string, string> importOptions) {

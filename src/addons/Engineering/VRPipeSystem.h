@@ -118,6 +118,7 @@ class VRPipeSystem : public VRGeometry {
 		double getTankDensity(string n);
 		double getTankVolume(string n);
 		double getPump(string n);
+		bool getValveState(string n);
 
 		void setValve(string n, bool b);
 		void setPump(string n, double p, double pmax);

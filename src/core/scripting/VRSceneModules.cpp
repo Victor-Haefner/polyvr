@@ -138,6 +138,12 @@
 
 using namespace OSG;
 
+template<class D, class T> // D is parent class, T is derived class
+static int computeTypeOffset() {
+    int offset = (reinterpret_cast<char*>(static_cast<D*>(reinterpret_cast<T*>(0x10000000))) - reinterpret_cast<char*>(0x10000000));
+    return offset;
+}
+
 void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyName>("Named", pModVR, VRPyStorage::typeRef);
     sm->registerModule<VRPyObject>("Object", pModVR, VRPyName::typeRef);
@@ -196,9 +202,13 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyHDLC>("HDLC", pModVR);
 #endif
 #ifndef WITHOUT_TCP
-    sm->registerModule<VRPyTCPClient>("TCPClient", pModVR);
+    sm->registerModule<VRPyNetworkClient>("UDPClient", pModVR);
+    sm->registerModule<VRPyUDPClient>("UDPClient", pModVR, VRPyNetworkClient::typeRef);
+    sm->registerModule<VRPyUDPServer>("UDPServer", pModVR);
+    sm->registerModule<VRPyTCPClient>("TCPClient", pModVR, VRPyNetworkClient::typeRef);
     sm->registerModule<VRPyTCPServer>("TCPServer", pModVR);
     sm->registerModule<VRPyICEClient>("ICEClient", pModVR);
+    sm->registerModule<VRPyCollaboration>("Collaboration", pModVR, VRPyObject::typeRef);
 #endif
     sm->registerModule<VRPyRestResponse>("RestResponse", pModVR);
     sm->registerModule<VRPyRestClient>("RestClient", pModVR);
@@ -308,20 +318,26 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyMathExpression>("MathExpression", pModMath, VRPyExpression::typeRef, "Math");
     sm->registerModule<VRPyTSDF>("TSDF", pModVR, 0, "Math");
     sm->registerModule<VRPyPartitiontree>("Partitiontree", pModVR, 0, "Math");
-    sm->registerModule<VRPyPartitiontreeNode>("PartitiontreeNode", pModVR, 0, "Math");
+    sm->registerModule<VRPyPartitiontreePyNode>("PartitiontreeNode", pModVR, 0, "Math");
     sm->registerModule<VRPyQuadtree>("Quadtree", pModVR, VRPyPartitiontree::typeRef, "Math");
-    sm->registerModule<VRPyQuadtreeNode>("QuadtreeNode", pModVR, VRPyPartitiontreeNode::typeRef, "Math");
-    sm->registerModule<VRPyOctree>("Octree", pModVR, VRPyPartitiontree::typeRef, "Math");
-    sm->registerModule<VRPyOctreeNode>("OctreeNode", pModVR, VRPyPartitiontreeNode::typeRef, "Math");
+    sm->registerModule<VRPyQuadtreeNode>("QuadtreeNode", pModVR, VRPyPartitiontreePyNode::typeRef, "Math");
+    sm->registerModule<VRPyOcPytree>("Octree", pModVR, VRPyPartitiontree::typeRef, "Math");
+    sm->registerModule<VRPyOctreePyNode>("OctreeNode", pModVR, VRPyPartitiontreePyNode::typeRef, "Math");
 #ifndef WITHOUT_LAPACKE_BLAS
     sm->registerModule<VRPyPCA>("PCA", pModVR, 0, "Math");
 #endif
     sm->registerModule<VRPyPatch>("Patch", pModVR, 0, "Math");
 
     PyObject* pModSetup = sm->newModule("Setup", VRSceneGlobals::methods, "VR setup module");
-    sm->registerModule<VRPySetup>("Setup", pModSetup, 0, "Setup");
+    sm->registerModule<VRPyWindowManager>("WindowManager", pModSetup, 0, "Setup");
+    sm->registerModule<VRPyViewManager>("ViewManager", pModSetup, 0, "Setup");
+    sm->registerModule<VRPySetup>("Setup", pModSetup, { VRPyViewManager::typeRef, VRPyWindowManager::typeRef }, "Setup");
     sm->registerModule<VRPyView>("View", pModSetup, 0, "Setup");
     sm->registerModule<VRPyWindow>("Window", pModSetup, 0, "Setup");
+    sm->registerModule<VRPyWebXR>("WebXR", pModSetup, 0, "Setup");
+
+    VRPyViewManager::typeOffsets[VRPySetup::typeRef]   = computeTypeOffset<VRViewManager, VRSetup>();
+    VRPyWindowManager::typeOffsets[VRPySetup::typeRef] = computeTypeOffset<VRWindowManager, VRSetup>();
 
     PyObject* pModWorldGenerator = sm->newModule("WorldGenerator", VRSceneGlobals::methods, "VR world generator module");
     sm->registerModule<VRPyWorldGenerator>("WorldGenerator", pModWorldGenerator, VRPyTransform::typeRef, "WorldGenerator");

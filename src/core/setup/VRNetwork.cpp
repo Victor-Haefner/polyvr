@@ -78,8 +78,8 @@ void VRNetworkNode::set(string a, string u, string p) {
 
 void VRNetworkNode::distributeKey() {
 #ifndef WITHOUT_SSH
-    if (stat_node != "ok") return;
-    auto ssh = VRSSHSession::open(address, user);
+    if (!ssh) openSSHSession();
+    if (!ssh) return;
     if (!ssh->hasLocalKey()) ssh->createLocalKey();
     ssh->distrib_key();
     stat_ssh = ssh->getStat();
@@ -159,10 +159,9 @@ void VRNetworkNode::update() {
 
     if (!isLocal()) {
         if (!p.start(address, "22", 1)) { stat_node = "no ssh, install with sudo apt install ssh"; return; }
-        auto ssh = VRSSHSession::open(address, user);
-        stat_ssh = ssh->getStat();
-        stat_ssh_key = ssh->getKeyStat();
-        if (stat_ssh != "ok") { stat_path = "no ssh access"; return; }
+        if (!ssh) openSSHSession();
+        if (ssh) stat_ssh_key = ssh->getKeyStat();
+        else { stat_path = "no ssh access"; return; }
         getRemoteOS();
     }
 
@@ -175,33 +174,32 @@ void VRNetworkNode::update() {
 #endif
 }
 
-//map<string, shared_ptr<VRSSHSession> > sessions;
-
 string VRNetworkNode::getRemoteOS() {
     if (isLocal()) return os;
-    if (stat_ssh != "ok") return "";
-#ifndef WITHOUT_SSH
+    if (!ssh) openSSHSession();
+    if (!ssh) return "";
     string n = getName();
-    //if (!sessions.count(n)) sessions[n] = VRSSHSession::open(address, user);
-    //os = sessions[n]->getRemoteOS();
-    auto ssh = VRSSHSession::open(address, user);
+#ifndef WITHOUT_SSH
     os = ssh->getRemoteOS();
 #endif
     return os;
 }
 
+void VRNetworkNode::openSSHSession() {
+    if (ssh) return;
+#ifndef WITHOUT_SSH
+    ssh = VRSSHSession::open(address, user);
+    stat_ssh = ssh->getStat();
+    if (stat_ssh != "ok") ssh = 0;
+#endif
+}
+
 string VRNetworkNode::execCmd(string cmd, bool read) {
     if (stat_node != "ok" ) return "";
-    if (isLocal()) {
-        cout << "exec local: " << cmd << endl;
-        return systemCall(cmd);
-    }
+    if (isLocal()) return systemCall(cmd);
+    if (!ssh) openSSHSession();
+    if (!ssh) return "";
 #ifndef WITHOUT_SSH
-    if (stat_ssh != "ok") return "";
-    string n = getName();
-    //if (!sessions.count(n)) sessions[n] = VRSSHSession::open(address, user);
-    //return sessions[n]->exec_cmd(cmd, read);
-    auto ssh = VRSSHSession::open(address, user);
     return ssh->exec_cmd(cmd, read);
 #else
     return "";

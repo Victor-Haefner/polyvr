@@ -528,6 +528,7 @@ double VRPipeSystem::getTankPressure(string n) { auto e = getEntity(n); return e
 double VRPipeSystem::getTankDensity(string n) { auto e = getEntity(n); return e ? e->getValue("density", 1.0) : 0.0; }
 double VRPipeSystem::getTankVolume(string n) { auto e = getEntity(n); return e ? e->getValue("volume", 1.0) : 0.0; }
 double VRPipeSystem::getPump(string n) { auto e = getEntity(n); return e ? e->getValue("performance", 0.0) : 0.0; }
+bool VRPipeSystem::getValveState(string n) { auto e = getEntity(n); return e ? e->getValue("state", false) : false; }
 
 void VRPipeSystem::setValve(string n, bool b)  { auto e = getEntity(n); if (e) e->set("state", toString(b)); }
 void VRPipeSystem::setTankPressure(string n, double p) { auto e = getEntity(n); if (e) e->set("pressure", toString(p)); }

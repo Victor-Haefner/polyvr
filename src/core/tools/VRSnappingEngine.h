@@ -60,7 +60,8 @@ class VRSnappingEngine {
         };
 
         typedef shared_ptr<EventSnap> EventSnapPtr;
-        typedef VRFunction<EventSnapPtr> VRSnapCb;
+        typedef weak_ptr<EventSnap> EventSnapWeakPtr;
+        typedef VRFunction<EventSnapWeakPtr, bool> VRSnapCb;
         typedef shared_ptr<VRSnapCb> VRSnapCbPtr;
 
     private:
@@ -68,7 +69,7 @@ class VRSnappingEngine {
         map<VRTransformPtr, Matrix4d> objects; // map objects to reference matrix
         map<VRTransformPtr, vector<Anchor> > anchors; // object anchors
         vector<VRSnapCbPtr> callbacks; // object anchors
-        OctreePtr positions = 0; // objects by positions
+        shared_ptr<Octree<VRTransform*>> positions = 0; // objects by positions
         VRUpdateCbPtr updatePtr;
 
         VRTransformPtr ghostHost;

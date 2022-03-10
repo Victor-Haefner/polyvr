@@ -3,6 +3,8 @@
 #include "core/utils/toString.h"
 #include "core/utils/system/VRSystem.h"
 
+#include <libssh2.h>
+
 #ifndef _WIN32
 #include <sys/socket.h>
 #include <netdb.h>

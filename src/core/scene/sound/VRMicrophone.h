@@ -3,9 +3,17 @@
 
 #include <OpenSG/OSGConfig.h>
 #include <list>
-#include "VRSoundFwd.h"
+#include <string>
 
+#include "VRSoundFwd.h"
+#include "core/networking/VRNetworkingFwd.h"
+
+#ifdef _WIN32
+struct ALCdevice;
+#else
 struct ALCdevice_struct;
+#endif
+
 namespace std { struct thread; }
 
 using namespace std;
@@ -24,13 +32,18 @@ class VRMicrophone : public std::enable_shared_from_this<VRMicrophone> {
 
         thread* recordingThread = 0;
         thread* streamingThread = 0;
+#ifdef _WIN32
+	    ALCdevice* device = 0;
+#else
 	    ALCdevice_struct* device = 0;
+#endif
 	    VRSoundPtr recording;
 
-	    VRSoundBufferPtr frame;
 	    list<VRSoundBufferPtr> frameBuffer;
+	    bool deviceOk = false;
 	    VRMutex* streamMutex = 0;
 	    int queueSize = 10;
+	    int maxBufferSize = 20;
 	    int streamBuffer = 5;
 	    int queuedFrames = 0; // frames recorded but not streamed yet
 	    int queuedStream = 0; // frames streamed at the beginning
@@ -38,6 +51,9 @@ class VRMicrophone : public std::enable_shared_from_this<VRMicrophone> {
 	    void setup();
 	    void start();
 	    void stop();
+
+	    void startRecordingThread();
+	    void startStreamingThread();
 
 	public:
 		VRMicrophone();
@@ -50,6 +66,7 @@ class VRMicrophone : public std::enable_shared_from_this<VRMicrophone> {
 		VRSoundPtr stopRecording();
 
 		void startStreaming(string address, int port);
+		void startStreamingOver(VRNetworkClientPtr client);
 		void pauseStreaming(bool p);
 		void stopStreaming();
 };

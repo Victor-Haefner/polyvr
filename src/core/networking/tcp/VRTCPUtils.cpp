@@ -1,12 +1,14 @@
 #include "VRTCPUtils.h"
 #include "core/networking/rest/VRRestClient.h"
 #include "core/networking/rest/VRRestResponse.h"
+#include "core/utils/toString.h"
 
 #include <boost/asio.hpp>
 #include <iostream>
 
 using namespace OSG;
 using boost::asio::ip::udp;
+using boost::asio::ip::tcp;
 
 string VRTCPUtils::getLocalIP() {
     string lIP;
@@ -24,6 +26,33 @@ string VRTCPUtils::getLocalIP() {
         std::cout << "VRTCPUtils::getLocalIP exception: " << e.what() << std::endl;
     }
     return lIP;
+}
+
+string VRTCPUtils::getHostName(string uri) {
+    if (contains(uri, "//")) {
+        uri = splitString(uri, "//")[1];
+    }
+    if (contains(uri, "/")) {
+        uri = splitString(uri, "/")[0];
+    }
+    return uri;
+}
+
+string VRTCPUtils::getHostIP(string host) {
+    host = getHostName(host);
+
+    string IP;
+    try {
+        boost::asio::io_service netService;
+        tcp::resolver resolver(netService);
+        tcp::resolver::query query(host, "80");
+        tcp::resolver::iterator endpoints = resolver.resolve(query);
+        tcp::endpoint ep = *endpoints;
+        IP = ep.address().to_string();
+    } catch (std::exception& e){
+        std::cout << "VRTCPUtils::getHostIP from " << host << ", exception: " << e.what() << std::endl;
+    }
+    return IP;
 }
 
 string VRTCPUtils::getPublicIP(bool cached) {

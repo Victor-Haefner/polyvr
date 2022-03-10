@@ -5,6 +5,8 @@
 #include <list>
 #include <vector>
 #include "core/math/OSGMathFwd.h"
+#include "core/math/VRMathFwd.h"
+#include "core/objects/VRObjectFwd.h"
 
 #include "VRSoundFwd.h"
 #include "core/utils/VRFunctionFwd.h"
@@ -14,6 +16,7 @@ class AVPacket;
 class AVCodecContext;
 class AVFormatContext;
 struct OutputStream;
+struct InputStream;
 
 typedef signed char ALbyte;
 
@@ -29,8 +32,8 @@ class VRSound {
         vector<VRSoundBufferPtr> ownedBuffer;
         int nextBuffer = 0;
         VRUpdateCbPtr callback;
-        VRTCPClientPtr tcpClient;
-        VRRestClientPtr restClient;
+        VRNetworkClientPtr udpClient;
+        VRUDPServerPtr udpServer;
 
         unsigned int frequency = 0;
         int stream_id = 0;
@@ -45,15 +48,24 @@ class VRSound {
         bool loop = false;
         float pitch = 1;
         float gain = 1;
-        Vec3d* pos = 0;
-        Vec3d* vel = 0;
+        float lpass = 1;
+        float hpass = 1;
+
+        PosePtr lastPose;
+        VRTransformPtr headBeacon;
+        VRTransformPtr poseBeacon;
+        float velocity = 0;
+        VRUpdateCbPtr poseUpdateCb;
 
         AVFormatContext* muxer = 0;
-        OutputStream* audio_st = 0;
+        OutputStream* audio_ost = 0;
+        InputStream*  audio_ist = 0;
         int lastEncodingFlag = 1;
 
         void updateSampleAndFormat();
+        void update3DSound();
         void write_buffer(AVFormatContext *oc, OutputStream *ost, VRSoundBufferPtr buffer);
+        string onStreamData(string s);
 
     public:
         VRSound();
@@ -64,7 +76,8 @@ class VRSound {
         void setLoop(bool loop);
         void setPitch(float pitch);
         void setVolume(float gain);
-        void setUser(Vec3d p, Vec3d v);
+        void setBandpass(float lpass, float hpass);
+        void setBeacon(VRTransformPtr t, VRTransformPtr head = 0);
         void setCallback(VRUpdateCbPtr callback);
 
         bool isRunning();
@@ -87,10 +100,14 @@ class VRSound {
         void playBuffer(VRSoundBufferPtr frame);
         void addBuffer(VRSoundBufferPtr frame);
 
-        bool setupStream(string url, int port);
+        bool setupOutStream(string url, int port);
+        bool addOutStreamClient(VRNetworkClientPtr client);
         void streamBuffer(VRSoundBufferPtr frame);
         void closeStream(bool keepOpen = false);
         void flushPackets();
+
+        bool listenStream(int port);
+        bool playPeerStream(VRNetworkClientPtr client);
 
         void exportToFile(string path);
         void streamTo(string url, int port, bool keepOpen = false);

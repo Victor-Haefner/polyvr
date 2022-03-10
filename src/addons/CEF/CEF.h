@@ -3,13 +3,18 @@
 
 #include <OpenSG/OSGConfig.h>
 
+#include "core/utils/VRFunctionFwd.h"
+#include "core/objects/VRObjectFwd.h"
+
+#ifdef PLOG
+#undef PLOG
+#endif
+
 #include "include/cef_app.h"
 #include "include/cef_client.h"
 #include "include/cef_render_handler.h"
 #include "include/cef_load_handler.h"
 
-#include "core/utils/VRFunctionFwd.h"
-#include "core/objects/VRObjectFwd.h"
 
 using namespace std;
 OSG_BEGIN_NAMESPACE;
@@ -28,11 +33,13 @@ class CEF_handler : public CefRenderHandler, public CefLoadHandler, public CefCo
 
 #ifdef _WIN32
         void GetViewRect(CefRefPtr<CefBrowser> browser, CefRect& rect);
-        void OnBeforeContextMenu(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefContextMenuParams> params, CefRefPtr<CefMenuModel> model);
-        bool OnContextMenuCommand(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefContextMenuParams> params, int command_id, EventFlags event_flags);
 #else
         bool GetViewRect(CefRefPtr<CefBrowser> browser, CefRect& rect) override;
 #endif
+
+        void OnBeforeContextMenu(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefContextMenuParams> params, CefRefPtr<CefMenuModel> model);
+        bool OnContextMenuCommand(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefContextMenuParams> params, int command_id, EventFlags event_flags);
+
         void OnPaint(CefRefPtr<CefBrowser> browser, PaintElementType type, const RectList& dirtyRects, const void* buffer, int width, int height) override;
         VRTexturePtr getImage();
         void resize(int resolution, float aspect);

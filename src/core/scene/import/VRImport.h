@@ -13,20 +13,26 @@ OSG_BEGIN_NAMESPACE;
 
 class NodeCore;
 
+
+struct VRImportJob {
+    string path;
+    string preset;
+    map<string, string> options;
+    bool useCache = false;
+    bool useBinaryCache = false;
+    VRProgressPtr progress;
+    VRTransformPtr res;
+};
+
+ptrFctFwd( VRImport, VRImportJob );
+
 class VRImport {
     public:
         struct LoadJob {
-            string path;
-            string preset;
-            map<string, string> options;
-            bool useCache = false;
-            bool useBinaryCache = false;
-            VRProgressPtr progress;
-            VRTransformPtr res;
+            VRImportJob params;
             VRThreadCbPtr loadCb;
 
             LoadJob(string p, string preset, VRTransformPtr r, VRProgressPtr pg, map<string, string> opt, bool useCache, bool useBinaryCache);
-
             void load(VRThreadWeakPtr t);
         };
 
@@ -42,6 +48,8 @@ class VRImport {
 
     private:
         map<string, Cache> cache;
+        vector<VRImportCbPtr> callbacks;
+        vector<string> importPaths;
 
         VRProgressPtr progress;
         bool ihr_flag = false; // ignore heavy ressources
@@ -59,11 +67,18 @@ class VRImport {
     public:
         static VRImport* get();
 
+        void addPath(string folder);
+        bool checkPath(string& path);
+
         VRTransformPtr load(string path, VRObjectPtr parent = 0, bool useCache = true, string preset = "OSG", bool thread = false, map<string, string> options = map<string, string>(), bool useBinaryCache = false);
         VRGeometryPtr loadGeometry(string path, string name, string preset = "OSG", bool thread = false);
 
         VRProgressPtr getProgressObject();
         void ingoreHeavyRessources();
+
+        void addEventCallback(VRImportCbPtr cb);
+        void remEventCallback(VRImportCbPtr cb);
+        void triggerCallbacks(const VRImportJob& params);
 };
 
 OSG_END_NAMESPACE;

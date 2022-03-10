@@ -12,6 +12,7 @@ ptrFwd(VRGtkWindow);
 ptrFwd(VRGlutWindow);
 ptrFwd(VRMultiWindow);
 ptrFwd(VRHeadMountedDisplay);
+ptrFwd(VRWebXR);
 ptrFwd(VRNetwork);
 ptrFwd(VRNetworkNode);
 ptrFwd(VRNetworkSlave);

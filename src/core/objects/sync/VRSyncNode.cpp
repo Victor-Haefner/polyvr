@@ -105,20 +105,22 @@ VRSyncConnectionPtr VRSyncNode::getRemote(string rID) {
     return remotes[rID];
 }
 
-string VRSyncNode::setTCPClient(VRTCPClientPtr client) {
+string VRSyncNode::setTCPClient(VRNetworkClientPtr client) {
     remotes.clear();
     return addTCPClient(client);
 }
 
-string VRSyncNode::addTCPClient(VRTCPClientPtr client) {
+string VRSyncNode::addTCPClient(VRNetworkClientPtr nclient) {
+    auto client = dynamic_pointer_cast<VRTCPClient>(nclient);
+    if (!client) return "";
     string uri = client->getConnectedUri();
-    cout << " -------- addTCPClient to " << uri << endl;
+    cout << " VRSyncNode::addTCPClient, connected uri: '" << uri << "', tcp client connected: " << client->connected() << endl;
     auto remote = VRSyncConnection::create(client, uri);
     remotes[uri] = remote;
     VRSyncConnectionWeakPtr weakRemote = remote;
     client->onMessage( bind(&VRSyncNode::handleMessage, this, std::placeholders::_1, weakRemote) );
 #ifndef WITHOUT_GTK
-    VRConsoleWidget::get("Collaboration")->write( name+": add tcp client connected to "+uri+", state is "+toString(client->connected())+"\n");
+    VRConsoleWidget::get("Collaboration")->write( name+": add tcp client connected to "+uri+", connected "+toString(client->connected())+"\n");
 #endif
     remote->send("accConnect|1", 1); // delay one frame, when started locally, syncnodes may not be setup before receiving accConnect1
     return uri;

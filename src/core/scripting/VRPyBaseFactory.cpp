@@ -32,6 +32,7 @@ template<> bool toValue(PyObject* o, int& v) {
 }
 
 template<> bool toValue(PyObject* o, void*& v) { v = o; Py_INCREF(o); return 1; }
+template<> bool toValue(PyObject* o, PyObject*& v) { v = o; Py_INCREF(o); return 1; }
 template<> bool toValue(PyObject* o, bool& v) { if (!PyNumber_Check(o)) return 0; v = PyInt_AsLong(o); return 1; }
 template<> bool toValue(PyObject* o, char& v) { if (!PyNumber_Check(o)) return 0; v = PyInt_AsLong(o); return 1; }
 template<> bool toValue(PyObject* o, unsigned char& v) { if (!PyNumber_Check(o)) return 0; v = PyInt_AsLong(o); return 1; }
@@ -54,6 +55,7 @@ template<> bool toValue(PyObject* o, string& v) {
         return 1;
     }
 
+    if (VRPyBase::isNone(o)) return 1;
     if (!PyString_Check(o) && !PyUnicode_Check(o)) o = PyObject_Repr(o); // may segfault with tuple!
     auto vc = PyString_AsString(o);
     v = vc?vc:"";

@@ -1,5 +1,7 @@
 #include "VRICEclient.h"
 #include "VRTCPClient.h"
+#include "../udp/VRUDPClient.h"
+#include "../tcp/VRTCPUtils.h"
 #include "../rest/VRRestClient.h"
 #include "../rest/VRRestResponse.h"
 #include "core/utils/toString.h"
@@ -23,11 +25,11 @@ VRICEClient::~VRICEClient() {
 VRICEClientPtr VRICEClient::create() { return VRICEClientPtr( new VRICEClient() ); }
 VRICEClientPtr VRICEClient::ptr() { return static_pointer_cast<VRICEClient>(shared_from_this()); }
 
-void VRICEClient::setTurnServer(string url, string ip) {
+void VRICEClient::setTurnServer(string url) {
     turnURL = url;
-    turnIP = ip;
+    turnIP = VRTCPUtils::getHostIP(url);
 #ifndef WITHOUT_GTK
-    VRConsoleWidget::get("Collaboration")->write( " ICE "+toString((void*)this)+" set turn server "+url+" ("+ip+")\n");
+    VRConsoleWidget::get("Collaboration")->write( " ICE "+toString((void*)this)+" set turn server "+url+" ("+turnIP+")\n");
 #endif
 }
 
@@ -155,15 +157,25 @@ vector<string> VRICEClient::getUserID(string n) {
     return res;
 }
 
-VRTCPClientPtr VRICEClient::getClient(string otherID) {
-    if (!clients.count(otherID)) {
-        clients[otherID] = VRTCPClient::create();
-        clients[otherID]->setGuard("TCPPVR\n");
+VRNetworkClientPtr VRICEClient::getClient(string otherID, CHANNEL channel) {
+    if (channel == NONE) return 0;
+
+    if (!clients.count(otherID) || !clients[otherID].count(channel)) {
+        if (channel == SCENEGRAPH) {
+            auto client = VRTCPClient::create();
+            client->setGuard("TCPPVR\n");
+            clients[otherID][channel] = client;
+        }
+
+        if (channel == AUDIO) {
+            clients[otherID][channel] = VRUDPClient::create();
+        }
     }
-    return clients[otherID];
+
+    return clients[otherID][channel];
 }
 
-map<string, VRTCPClientPtr> VRICEClient::getClients() { return clients; }
+map<string, map<VRICEClient::CHANNEL, VRNetworkClientPtr> > VRICEClient::getClients() { return clients; }
 
 void VRICEClient::connectTo(string otherID) {
     if (uID == "" || otherID == "") {
@@ -202,23 +214,36 @@ void VRICEClient::connectTo(string otherID) {
         return;
     }
 
-    int port = toInt( params[0] );
-    if (port == 0) {
+    int port1 = toInt( params[0] );
+    if (port1 == 0) {
 #ifndef WITHOUT_GTK
         VRConsoleWidget::get("Collaboration")->write( " ICE "+name+"("+uid1+"): connect to "+turnIP+" faild! no port received from turn server "+turnURL+", received '"+data+"'\n", "red");
 #endif
         return;
     }
 
-    //cout << " -> port " << port << endl;
+    //cout << " -> port " << port1 << endl;
 #ifndef WITHOUT_GTK
-    VRConsoleWidget::get("Collaboration")->write( " ICE "+name+"("+uid1+"): connect to "+users[uid2]+"("+uid2+") over "+turnIP+":"+toString(port)+"\n");
+    VRConsoleWidget::get("Collaboration")->write( " ICE "+name+"("+uid1+"): connect to "+users[uid2]+"("+uid2+") over "+turnIP+":"+toString(port1)+", received '"+data+"'\n");
 #endif
-    getClient(otherID)->connect(turnIP, port);
+    getClient(otherID, SCENEGRAPH)->connect(turnIP, port1);
+
+    if (params.size() >= 3) {
+        int port2 = toInt( params[3] );
+        if (port2 != 0) {
+            auto cli = getClient(otherID, AUDIO);
+            cli->connect(turnIP, port2);
+            cli->send("hi"); // to register the client port on turn server
+        }
+#ifndef WITHOUT_GTK
+        VRConsoleWidget::get("Collaboration")->write( " ICE "+name+"("+uid1+"): connect AUDIO to "+users[uid2]+"("+uid2+") over "+turnIP+":"+toString(port2)+", received '"+data+"'\n");
+#endif
+    }
 }
 
-void VRICEClient::sendTCP(string otherID, string msg) {
-    auto cli = getClient(otherID);
+void VRICEClient::sendTCP(string otherID, string msg, CHANNEL channel) {
+    auto cli = dynamic_pointer_cast<VRTCPClient>( getClient(otherID, channel) );
+    if (!cli) return;
     if (!cli->connected()) return;
     cli->send(msg, "TCPPVR\n");
 }

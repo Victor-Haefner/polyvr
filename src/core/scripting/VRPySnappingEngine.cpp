@@ -18,12 +18,14 @@ template<> bool toValue(PyObject* o, VRSnappingEngine::VRSnapCbPtr& e) {
     //if (!VRPyEntity::check(o)) return 0; // TODO: add checks!
     Py_IncRef(o);
 	PyObject* args = PyTuple_New(1);
-    e = VRSnappingEngine::VRSnapCb::create( "pyExecCall", bind(VRPyBase::execPyCallVoid<VRSnappingEngine::EventSnapPtr>, o, args, placeholders::_1));
+    e = VRSnappingEngine::VRSnapCb::create( "pyExecCall", bind(VRPyBase::execPyCall<VRSnappingEngine::EventSnapWeakPtr, bool>, o, args, placeholders::_1));
     return 1;
 }
 
-template<> PyObject* VRPyTypeCaster::cast(const VRSnappingEngine::EventSnapPtr& e) {
+template<> PyObject* VRPyTypeCaster::cast(const VRSnappingEngine::EventSnapWeakPtr& we) {
+    auto e = we.lock();
     auto res = PyTuple_New(6);
+    if (!e) return res;
     PyTuple_SetItem(res, 0, PyInt_FromLong(e->snap));
     PyTuple_SetItem(res, 1, PyInt_FromLong(e->snapID));
     PyTuple_SetItem(res, 2, VRPyTransform::fromSharedPtr(e->o1));

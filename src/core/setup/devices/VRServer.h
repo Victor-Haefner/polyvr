@@ -28,7 +28,7 @@ class VRServer : public VRDevice {
         static VRServerPtr create(int port = 5500);
         VRServerPtr ptr();
 
-	void handleMessage(const string& m, int button, int state);
+        void handleMessage(const string& m, int button, int state);
 
         void clearSignals() override;
 
@@ -43,7 +43,7 @@ class VRServer : public VRDevice {
         void updateClients(string uri);
 
         int openWebSocket(string address, string protocols);
-        void answerWebSocket(int id, string msg);
+        void answer(int id, string msg);
 
         map<string, vector<int>> getClients();
 };

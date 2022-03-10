@@ -123,7 +123,7 @@ void VRHumanoid::generateHead(VRGeoData& data) {
 
     Color3f col = colors["skin"];
 
-    auto addRing = [&](float h, int rID, vector<float> rads) {
+    auto addRing = [&](float h, int rID, vector<double> rads) {
         vector<int> ids;
         int N = (rads.size()-1)*2;
         float da = 2*Pi/N;

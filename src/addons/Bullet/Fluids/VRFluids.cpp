@@ -1,6 +1,7 @@
 #include "VRFluids.h"
 #include "../Particles/VRParticle.h"
 #include "../Particles/VRParticlesT.h"
+#include "core/math/partitioning/OctreeT.h"
 
 #include <cmath> // pow(), etc. needed for kernels
 #include <omp.h> // openMP for parallelization

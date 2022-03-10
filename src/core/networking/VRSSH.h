@@ -3,9 +3,12 @@
 
 #include <memory>
 #include <string>
-#include <libssh2.h>
+
+#include "core/networking/VRNetworkingFwd.h"
 
 using namespace std;
+
+struct _LIBSSH2_SESSION;
 
 /*
 
@@ -17,7 +20,7 @@ sudo apt-get install libssh2-1-dev
 
 class VRSSHSession {
     private:
-        LIBSSH2_SESSION* session;
+        _LIBSSH2_SESSION* session;
         string stat;
         string stat_key;
         string address;
@@ -35,10 +38,8 @@ class VRSSHSession {
 
     public:
         VRSSHSession(string a, string u);
-
         ~VRSSHSession();
-
-        static shared_ptr<VRSSHSession> open(string a, string u);
+        static VRSSHSessionPtr open(string a, string u);
 
         string getRemoteOS();
         string verify_knownhost();

@@ -13,6 +13,7 @@
 #include "core/setup/VRSetup.h"
 #include "core/setup/windows/VRWindow.h"
 #include "core/setup/windows/VRGtkWindow.h"
+#include "core/setup/devices/VRDevice.h"
 #include "core/setup/devices/VRFlystick.h"
 #include "core/scripting/VRScript.h"
 #include "core/gui/VRGuiManager.h"
@@ -68,7 +69,7 @@ VRHeadMountedDisplay::VRHeadMountedDisplay() {
 	onCameraChanged = VRDeviceCb::create("GUI_updateSceneViewer", bind(&VRHeadMountedDisplay::updateCamera, this));
 	VRGuiSignals::get()->getSignal("camera_changed")->add(onCameraChanged);
 	VRGuiSignals::get()->getSignal("camera_near_far_changed")->add(onCameraChanged);
-
+	
 	hmd = VRDevice::create("hmd");
 	auto setup = VRSetup::getCurrent();
 	if (setup) setup->addDevice(hmd);
@@ -80,7 +81,6 @@ VRHeadMountedDisplay::~VRHeadMountedDisplay() {
 }
 
 VRHeadMountedDisplayPtr VRHeadMountedDisplay::ptr() { return static_pointer_cast<VRHeadMountedDisplay>(shared_from_this()); }
-
 VRHeadMountedDisplayPtr VRHeadMountedDisplay::create() { return VRHeadMountedDisplayPtr(new VRHeadMountedDisplay()); }
 
 bool VRHeadMountedDisplay::checkDeviceAttached() {
@@ -103,8 +103,8 @@ void VRHeadMountedDisplay::initTexRenderer() {
 	
 }
 
-void VRHeadMountedDisplay::updateCamera() {
-	if (!fboData) return;
+bool VRHeadMountedDisplay::updateCamera() {
+	if (!fboData) return true;
 	cout << "VRHeadMountedDisplay::updateCamera" << endl;
 	VRCameraPtr cam = VRScene::getCurrent()->getActiveCamera();
 	float f = cam->getFar();
@@ -123,6 +123,7 @@ void VRHeadMountedDisplay::updateCamera() {
 	mR.mult(m_mat4eyePosRight);
 	fboData->mcamL->setProjectionMatrix(toMatrix4f(mL));
 	fboData->mcamR->setProjectionMatrix(toMatrix4f(mR));
+	return true;
 }
 
 void VRHeadMountedDisplay::setScene() {
@@ -379,14 +380,14 @@ void VRHeadMountedDisplay::UpdateHMDMatrixPose() {
 
 			if (devType == vr::TrackedDeviceClass_Controller) {
 				auto d = getDevice(devID);
-				d->getBeacon()->setMatrix(m);
+				if (d) d->getBeacon()->setMatrix(m);
 			} else {
 				auto t = getTracker(devID);
-				t->setMatrix(m);
-			}
+				if (t) t->setMatrix(m);
+ 			}
 		}
 	}
-
+	
 	int hmdID = vr::k_unTrackedDeviceIndex_Hmd;
 	if (m_rTrackedDevicePose[hmdID].bPoseIsValid) {
 		Matrix4d mvm = m_rmat4DevicePose[hmdID];
@@ -402,21 +403,21 @@ void VRHeadMountedDisplay::UpdateHMDMatrixPose() {
 	}
 }
 
-VRTransformPtr getTracker(int tID) { 
+VRTransformPtr VRHeadMountedDisplay::getTracker(int tID) { 
 	if (!tracker.count(tID)) {
-		tracker[tID] = VRTransform::create("hmdTracker");
-		hmd->setBeacon( tracker[tID], tID );
+		int bID = hmd->addBeacon();
+		tracker[tID] = hmd->getBeacon(bID);
 	}
 	return tracker[tID];
 }
 
-VRTransformPtr getDevice(int dID) { 
-	if (!devices.count(devID)) addController(devID); 
+VRDevicePtr VRHeadMountedDisplay::getDevice(int dID) { 
+	if (!devices.count(dID)) addController(dID); 
 	return devices[dID];
 }
 
 map<int, VRTransformPtr> VRHeadMountedDisplay::getTrackers() { return tracker; }
-map<int, VRDevicePtr> VRHeadMountedDisplay::getDevices() { return tracker; }
+map<int, VRDevicePtr> VRHeadMountedDisplay::getDevices() { return devices; }
 
 Matrix4d VRHeadMountedDisplay::convertMatrix(const vr::HmdMatrix34_t& mat) {
 	return Matrix4d(

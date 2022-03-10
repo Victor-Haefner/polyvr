@@ -6,6 +6,7 @@
 #include "core/objects/geometry/VRGeoData.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/math/partitioning/Octree.h"
+#include "core/math/partitioning/OctreeT.h"
 #include "core/math/pose.h"
 #include "core/utils/toString.h"
 
@@ -36,7 +37,7 @@ CSGGeometryPtr CSGGeometry::create(string name) {
 }
 
 void CSGGeometry::init() {
-	oct = Octree::create(thresholdL);
+	oct = Octree<size_t>::create(thresholdL);
 	type = "CSGGeometry";
 	setPose(oldWorldTrans);
 	polyhedron = new CGALPolyhedron();
@@ -102,8 +103,8 @@ void CSGGeometry::toOsgGeometry(CGALPolyhedron *P) {
 }
 
 size_t CSGGeometry::isKnownPoint(Pnt3f newPoint) {
-	vector<void*> resultData = oct->radiusSearch(Vec3d(newPoint), thresholdL);
-	if (resultData.size() > 0) return *(size_t*)resultData.at(0);
+	vector<size_t> resultData = oct->radiusSearch(Vec3d(newPoint), thresholdL);
+	if (resultData.size() > 0) return resultData[0];
 	return numeric_limits<size_t>::max();
 }
 

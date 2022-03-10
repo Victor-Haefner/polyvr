@@ -2,6 +2,10 @@
 #include "core/utils/system/VRSystem.h"
 #include <iostream>
 
+#ifdef _WIN32
+#include <minmax.h>
+#endif
+
 using namespace std;
 
 VRTimer::VRTimer() { start(); }

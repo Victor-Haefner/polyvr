@@ -46,7 +46,7 @@ class TCPClient {
         bool stop = false;
         bool broken = false;
 
-        function<void (string)> onMessageCb;
+        function<string(string)> onMessageCb;
         function<void (void)> onConnectCb;
 
         vector<asio::ip::tcp::endpoint> uriToEndpoints(const string& uri) {
@@ -113,7 +113,7 @@ class TCPClient {
                     messages.pop_front();
                     if (!messages.empty()) processQueue();
                 } else {
-                    cout << " tcp client write ERROR: " << ec << "  N: " << N << ", close socket!" << endl;
+                    cout << " tcp client write ERROR: " << ec.message() << "  N: " << N << ", close socket!" << endl;
                     socket->close();
                 }
             };
@@ -135,7 +135,7 @@ class TCPClient {
 
         ~TCPClient() { close(); }
 
-        void onMessage( function<void (string)> f ) { onMessageCb = f; }
+        void onMessage( function<string(string)> f ) { onMessageCb = f; }
         void onConnect( function<void (void)> f ) { onConnectCb = f; }
 
         void close() {
@@ -178,13 +178,21 @@ class TCPClient {
 
         void connect(string uri) {
             //cout << "TCPClient::connect to: " << uri << endl;
+            auto endpoints = uriToEndpoints(uri);
+            if (endpoints.size() == 0) {
+                cout << "TCPClient::connect failed, no endpoints found for uri " << uri << endl;
+#ifndef WITHOUT_GTK
+                VRConsoleWidget::get("Collaboration")->write( " TCP connect to "+uri+" failed, no endpoints found\n", "red");
+#endif
+            }
+
             try {
-                socket->connect( uriToEndpoints(uri)[0] );
+                socket->connect( endpoints[0] );
                 read();
             } catch(std::exception& e) {
                 cout << "TCPClient::connect failed with: " << e.what() << endl;
 #ifndef WITHOUT_GTK
-                VRConsoleWidget::get("Collaboration")->write( " TCP connect to "+uri+" failed with "+e.what()+"\n", "red");
+                VRConsoleWidget::get("Collaboration")->write( " TCP connect to "+uri+" ("+toString(endpoints.size())+" endpoints) failed with "+e.what()+"\n", "red");
 #endif
             }
         }
@@ -334,7 +342,7 @@ class TCPClient {
 };
 
 
-VRTCPClient::VRTCPClient() { client = new TCPClient(); }
+VRTCPClient::VRTCPClient() { protocol = "tcp"; client = new TCPClient(); }
 VRTCPClient::~VRTCPClient() { delete client; }
 
 VRTCPClientPtr VRTCPClient::create() { return VRTCPClientPtr(new VRTCPClient()); }
@@ -346,7 +354,7 @@ void VRTCPClient::send(const string& message, string guard, bool verbose) { clie
 bool VRTCPClient::connected() { return client->connected(); }
 
 void VRTCPClient::onConnect( function<void(void)>   f ) { client->onConnect(f); }
-void VRTCPClient::onMessage( function<void(string)> f ) { client->onMessage(f); }
+void VRTCPClient::onMessage( function<string(string)> f ) { client->onMessage(f); }
 
 void VRTCPClient::connectToPeer(int localPort, string remoteIP, int remotePort) {
     client->connectToPeer(localPort, remoteIP, remotePort);

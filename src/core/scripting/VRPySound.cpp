@@ -19,7 +19,8 @@ PyMethodDef VRPySound::methods[] = {
     {"setLoop", PyWrap(Sound, setLoop, "Stop sound", void, bool ) },
     {"setPitch", PyWrap(Sound, setPitch, "Stop sound", void, float ) },
     {"setVolume", PyWrap(Sound, setVolume, "Set sound volume, try setting master volume on soundmanager", void, float ) },
-    {"setUser", PyWrap(Sound, setUser, "Stop sound", void, Vec3d, Vec3d ) },
+    {"setBandpass", PyWrap(Sound, setBandpass, "Set band pass", void, float, float ) },
+    {"setBeacon", PyWrapOpt(Sound, setBeacon, "Set beacons for 3D sound, (source, head) - head is optional, default is active camera", "0", void, VRTransformPtr, VRTransformPtr ) },
     {"isRunning", PyWrap(Sound, isRunning, "Check if sound is running", bool) },
     {"exportToFile", PyWrap(Sound, exportToFile, "Export to file, (.mp3)", void, string) },
     {"synthesize", PyWrap(Sound, synthesize, "synthesize( Ac, wc, pc, Am, wm, pm, T)\t\n A,w,p are the amplitude, frequency and phase, c and m are the carrier sinusoid and modulator sinusoid, T is the packet duration in seconds", void, float, float, float, float, float, float, float) },
@@ -27,6 +28,8 @@ PyMethodDef VRPySound::methods[] = {
     {"synthBufferOnChannels", PyWrap(Sound, synthBufferOnChannels, "synthBufferOnChannels( [[[f,A]]], [[[f,A]]], T)\n\t [[f,A]] list of channels with each containing a list of frequency/amplitude pairs in channel order, interpolate the two spectra\n\tT is the packet duration in seconds\n\t", void, vector<vector<Vec2d>>, vector<vector<Vec2d>>, float) },
     {"synthSpectrum", PyWrap(Sound, synthSpectrum, "synthSpectrum( [A], int S, float T, float F, bool retBuffer )\t\n A amplitude, S sample rate, T packet duration in seconds, F fade in/out duration in s , specify if you want to return the generated buffer, maxQueued", vector<short>, vector<double>, uint, float, float, bool, int) },
     {"streamTo", PyWrap(Sound, streamTo, "Stream sound to a target URL and port", void, string, int, bool) },
+    {"listenStream", PyWrap(Sound, listenStream, "Listen on port for incoming stream packets", bool, int) },
+    {"playPeerStream", PyWrap(Sound, playPeerStream, "Play incoming stream packets", bool, VRNetworkClientPtr) },
     {NULL}  /* Sentinel */
 };
 
@@ -42,6 +45,7 @@ PyMethodDef VRPyMicrophone::methods[] = {
     {"startRecording", PyWrap(Microphone, startRecording, "Starts to record from microphone", void) },
     {"stopRecording", PyWrap(Microphone, stopRecording, "Stops the recording, returns sound", VRSoundPtr) },
     {"startStreaming", PyWrap(Microphone, startStreaming, "Start streaming to (addr, port)", void, string, int) },
+    {"startStreamingOver", PyWrap(Microphone, startStreamingOver, "Start streaming over tcp client", void, VRNetworkClientPtr) },
     {"pauseStreaming", PyWrap(Microphone, pauseStreaming, "Pause streaming", void, bool) },
     {"stopStreaming", PyWrap(Microphone, stopStreaming, "Stop streaming", void) },
     {NULL}  /* Sentinel */

@@ -41,7 +41,11 @@ void VROptions::parse(int _argc, char** _argv) {
     for (int i=0; i<argc; i++) cout << "  " << i+1 << ") '" << _argv[i] << "'" << endl;
 
     try {
-        bpo::store(bpo::parse_command_line(argc, argv, desc), vm);
+        bpo::positional_options_description p;
+        p.add("application", -1);
+
+        //bpo::store(bpo::parse_command_line(argc, argv, desc), vm);
+        bpo::store(bpo::command_line_parser(argc, argv).options(desc).positional(p).run(), vm);
         bpo::notify(vm);
         if (vm.count("help")) { cout << desc << endl; exit(1); }
     } catch(exception& e) {

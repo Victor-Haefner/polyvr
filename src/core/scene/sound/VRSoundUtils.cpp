@@ -1,6 +1,15 @@
 #include "VRSoundUtils.h"
 #include "core/utils/toString.h"
+#include "core/math/pose.h"
+#include <OpenSG/OSGVector.h>
+
+#define AL_ALEXT_PROTOTYPES
 #include <AL/al.h>
+#include <AL/efx.h>
+
+#ifdef _WIN32
+#include <minmax.h>
+#endif
 
 using namespace OSG;
 
@@ -20,7 +29,7 @@ string toString(ALenum a) {
 VRSoundBuffer::VRSoundBuffer() {}
 
 VRSoundBuffer::~VRSoundBuffer() {
-    if (data && owned) delete data;
+    if (data && owned) delete[] data;
 }
 
 VRSoundBufferPtr VRSoundBuffer::wrap(ALbyte* d, int s, int r, ALenum f) {
@@ -72,22 +81,43 @@ void VRSoundInterface::play() {
     if (val != AL_PLAYING) ALCHECK( alSourcePlay(source));
 }
 
-void VRSoundInterface::updateSource(float pitch, float gain) {
+void VRSoundInterface::updatePose(PosePtr pose, float velocity) {
+    if (pose) {
+        Vec3d pos = pose->pos();
+        Vec3d vel = pose->dir()*velocity;
+        ALCHECK( alSource3f(source, AL_POSITION, pos[0], pos[1], pos[2]));
+        ALCHECK( alSource3f(source, AL_VELOCITY, vel[0], vel[1], vel[2]));
+        //cout << "VRSoundInterface::updateSource " << pos << ", " << vel << endl;
+    }
+}
+
+void VRSoundInterface::updateSource(float pitch, float gain, float lowpass, float highpass) {
     cout << "update source, pitch: " << pitch << " gain: " << gain << endl;
     ALCHECK( alSourcef(source, AL_PITCH, pitch));
     ALCHECK( alSourcef(source, AL_MAX_GAIN, gain));
     ALCHECK( alSourcef(source, AL_GAIN, gain));
-    //ALCHECK( alSource3f(source, AL_POSITION, (*pos)[0], (*pos)[1], (*pos)[2]));
-    //ALCHECK( alSource3f(source, AL_VELOCITY, (*vel)[0], (*vel)[1], (*vel)[2]));
-    //doUpdate = false;
+
+    if ((lowpass < 1.0-1e-3 || highpass < 1.0-1e-3) && filter == 0) {
+        ALCHECK( alGenFilters(1u, &filter) );
+    }
+
+    if (filter > 0) {
+        ALCHECK( alFilteri(filter, AL_FILTER_TYPE, AL_FILTER_BANDPASS) );
+        //ALCHECK( alFilterf(filter, AL_BANDPASS_GAIN, 0.25f) );
+        ALCHECK( alFilterf(filter, AL_BANDPASS_GAIN, (lowpass+highpass)*0.5) );
+        ALCHECK( alFilterf(filter, AL_BANDPASS_GAINLF, lowpass) );
+        ALCHECK( alFilterf(filter, AL_BANDPASS_GAINHF, highpass) );
+        ALCHECK( alSourcei(source, AL_DIRECT_FILTER, filter) );
+    }
 }
 
 void VRSoundInterface::queueFrame(VRSoundBufferPtr frame) {
     ALint val = -1;
     ALuint bufid = getFreeBufferID();
-    ALCHECK( alBufferData(bufid, frame->format, frame->data, frame->size, frame->sample_rate));
-    ALCHECK( alSourceQueueBuffers(source, 1, &bufid));
-    ALCHECK( alGetSourcei(source, AL_SOURCE_STATE, &val));
+    //printBuffer(frame, "queueFrame");
+    ALCHECK( alBufferData(bufid, frame->format, frame->data, frame->size, frame->sample_rate) );
+    ALCHECK( alSourceQueueBuffers(source, 1, &bufid) );
+    ALCHECK( alGetSourcei(source, AL_SOURCE_STATE, &val) );
     if (val != AL_PLAYING) ALCHECK( alSourcePlay(source));
 }
 
@@ -133,3 +163,17 @@ void VRSoundInterface::recycleBuffer() {
         queuedBuffers = max(0,queuedBuffers-1);
     }
 }
+
+
+void VRSoundInterface::printBuffer(VRSoundBufferPtr frame, string tag) {
+    cout << " -- print buffer info " << tag << endl;
+    cout << "  data: " << (void*)frame->data << endl;
+    cout << "  size: " << frame->size << endl;
+    cout << "  sample_rate: " << frame->sample_rate << endl;
+    cout << "  format: " << frame->format << endl;
+    cout << "  owned: " << frame->owned << endl;
+    cout << " -- done -- " << endl;
+}
+
+
+
