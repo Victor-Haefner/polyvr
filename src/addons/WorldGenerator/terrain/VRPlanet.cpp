@@ -1,4 +1,5 @@
 #include "VRPlanet.h"
+#include "VROrbit.h"
 #include "../VRWorldGenerator.h"
 #include "VRTerrain.h"
 #include "core/objects/geometry/VRGeometry.h"
@@ -39,6 +40,21 @@ double VRPlanet::getSectorSize() { return sectorSize; }
 
 void VRPlanet::addMoon(VRTransformPtr t) { moons.push_back(t); }
 vector<VRTransformPtr> VRPlanet::getMoons() { return moons; }
+
+void VRPlanet::addSatellite(VRTransformPtr t) { satellites.push_back(t); }
+vector<VRTransformPtr> VRPlanet::getSatellites() { return satellites; }
+
+map<string, VROrbitPtr> VRPlanet::getOrbits() { return orbits; }
+
+VROrbitPtr VRPlanet::putInOrbit(VRTransformPtr child, vector<double> params) {
+    auto orbit = VROrbit::create();
+    orbit->fromKepler(params);
+    orbits[child->getBaseName()] = orbit;
+    orbit->setTarget(child);
+    //orbit->setReferential(ptr());
+    orbit->setReferential(getParent()); // getHook(this)
+    return orbit;
+}
 
 void VRPlanet::localizeSector(VRWorldGeneratorPtr sector) {
     //cout << "VRPlanet::localizeSector" << endl;
