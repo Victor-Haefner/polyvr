@@ -21,7 +21,7 @@ using namespace std;
 
 vector<string> splitString(const string& s, char c = ' ');
 vector<string> splitString(const string& s, const string& d);
-string subString(const string& s, int beg, int len);
+string subString(const string& s, int beg, int len = -1);
 bool startsWith(const string& s, const string& s2, bool caseSensitive = true);
 bool endsWith(const string& s, const string& s2, bool caseSensitive = true);
 bool contains(const string& s, const string& s2, bool caseSensitive = true);

@@ -1081,6 +1081,11 @@ void VRGuiScripts::on_convert_cpp_clicked() {
         }
 
         findAndReplace(line, "#", "; //");
+        findAndReplace(line, "(self, ", "(");
+        findAndReplace(line, "self.", "");
+        findAndReplace(line, "VR.", "");
+        findAndReplace(line, ".values()", "");
+        findAndReplace(line, ".items()", "");
         findAndReplace(line, ".", "->");
         findAndReplace(line, "'", "\"");
         findAndReplace(line, " and ", " && ");

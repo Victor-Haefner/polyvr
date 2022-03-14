@@ -9,6 +9,8 @@ using namespace OSG;
 simpleVRPyType(NumberingEngine, New_VRObjects_ptr);
 simpleVRPyType(RobotArm, New_named_ptr);
 simpleVRPyType(PipeSystem, New_ptr);
+simpleVRPyType(ElectricSystem, New_ptr);
+simpleVRPyType(WiringSimulation, 0);
 simpleVRPyType(RocketExhaust, New_VRObjects_ptr);
 
 PyMethodDef VRPyPipeSystem::methods[] = {
@@ -40,6 +42,14 @@ PyMethodDef VRPyPipeSystem::methods[] = {
     {"setTankDensity", PyWrap( PipeSystem, setTankDensity, "Set tank density", void, string, double ) },
     {"setPipeRadius", PyWrap( PipeSystem, setPipeRadius, "Set pipe radius, set to 0 to simulate blocked pipe", void, int, double ) },
     {"printSystem", PyWrap( PipeSystem, printSystem, "Print system state to console", void ) },
+    {NULL}
+};
+
+PyMethodDef VRPyElectricSystem::methods[] = {
+    {NULL}
+};
+
+PyMethodDef VRPyWiringSimulation::methods[] = {
     {NULL}
 };
 

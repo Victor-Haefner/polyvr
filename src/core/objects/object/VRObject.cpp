@@ -355,6 +355,11 @@ void VRObject::switchParent(VRObjectPtr new_p, int place) {
     new_p->addChild(ptr(), true, place);
 }
 
+void VRObject::replaceChild(int i, VRObjectPtr new_c) {
+    subChild(getChild(i));
+    addChild(new_c, true, i);
+}
+
 size_t VRObject::getChildrenCount() { return children.size(); }
 
 void VRObject::clearChildren(bool destroy) {
