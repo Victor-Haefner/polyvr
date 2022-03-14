@@ -36,13 +36,14 @@ class VRElectricSystem : public std::enable_shared_from_this<VRElectricSystem> {
 		VRElectricSystemPtr ptr();
 
 		VRElectricComponentPtr newComponent(string name, string eID, string mID);
-		void setLADVariables(map<string, VRLADVariablePtr> vars);
+		void addVariable(string v, VRLADVariablePtr var);
 
 		VRElectricComponentPtr getComponent(size_t ID);
 		map<size_t, VRElectricComponentPtr> getComponents();
 		map<string, vector<VRElectricComponentPtr>> getComponentIDs();
 		vector<VRElectricComponentPtr> getRegistred(string ID);
 		VRLADVariablePtr getVariable(string ID);
+		map<string, VRLADVariablePtr> getLADVariables();
 		map<string, VRObjectPtr> getObjectsByName();
 
 		void setVariable(string HWaddr, string c);

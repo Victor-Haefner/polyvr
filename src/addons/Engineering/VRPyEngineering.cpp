@@ -66,9 +66,10 @@ typedef map<string, vector<VRElectricComponentPtr>> strVecECompMap;
 
 PyMethodDef VRPyElectricSystem::methods[] = {
     {"newComponent", PyWrap( ElectricSystem, newComponent, "Add new component", VRElectricComponentPtr, string, string, string ) },
+    {"addVariable", PyWrap( ElectricSystem, addVariable, "Add new variable", void, string, VRLADVariablePtr ) },
     {"importECAD", PyWrap( ElectricSystem, importECAD, "Import ECAD data", void ) },
     {"buildECADgraph", PyWrap( ElectricSystem, buildECADgraph, "Build graphs", void ) },
-    {"setLADVariables", PyWrap( ElectricSystem, setLADVariables, "Set LAD variables", void, strLadMap ) },
+    {"getLADVariables", PyWrap( ElectricSystem, getLADVariables, "Get LAD variables", strLadMap ) },
     {"getObjectsByName", PyWrap( ElectricSystem, getObjectsByName, "Get objects map", strObjMap ) },
     {"simECAD", PyWrap( ElectricSystem, simECAD, "Do simulation step", void ) },
     {"getRegistred", PyWrap( ElectricSystem, getRegistred, "Get components", vector<VRElectricComponentPtr>, string ) },

@@ -28,6 +28,11 @@ map<string, vector<VRElectricComponentPtr>> VRElectricSystem::getComponentIDs() 
 vector<VRElectricComponentPtr> VRElectricSystem::getRegistred(string ID) { return componentIDs[ID]; }
 VRLADVariablePtr VRElectricSystem::getVariable(string ID) { return profinetVariables[ID]; }
 map<string, VRObjectPtr> VRElectricSystem::getObjectsByName() { return objectsByName; }
+map<string, VRLADVariablePtr> VRElectricSystem::getLADVariables() { return profinetVariables; }
+
+void VRElectricSystem::addVariable(string v, VRLADVariablePtr var) {
+    profinetVariables[v] = var;
+}
 
 void VRElectricSystem::simECAD() {
     simulation->iterate();
@@ -45,10 +50,6 @@ void VRElectricSystem::setVariable(string HWaddr, string ci) {
         if (v->name == "SFT_Estop_Button" || v->name == "OS_ExtMot_Overload_Switch") continue;
         if (v->logicalAddress == HWaddr && v->value != ci ) v->value = ci;
     }
-}
-
-void VRElectricSystem::setLADVariables(map<string, VRLADVariablePtr> vars) {
-    profinetVariables = vars;
 }
 
 void VRElectricSystem::registerID(string ID, VRElectricComponentPtr c) {
