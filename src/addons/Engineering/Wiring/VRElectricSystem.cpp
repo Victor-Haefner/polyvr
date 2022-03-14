@@ -1,6 +1,7 @@
 #include "VRElectricSystem.h"
 #include "VRElectricComponent.h"
 #include "VRWire.h"
+#include "VRWiringSimulation.h"
 #include "core/math/partitioning/graph.h"
 #include "core/utils/toString.h"
 #include "core/utils/xml.h"
@@ -13,27 +14,41 @@ using namespace OSG;
 VRElectricSystem::VRElectricSystem() {}
 VRElectricSystem::~VRElectricSystem() {}
 
-VRElectricSystemPtr VRElectricSystem::create() { return VRElectricSystemPtr( new VRElectricSystem() ); }
+VRElectricSystemPtr VRElectricSystem::create() {
+    auto s = VRElectricSystemPtr( new VRElectricSystem() );
+    s->simulation = VRWiringSimulation::create(s);
+    return s;
+}
+
 VRElectricSystemPtr VRElectricSystem::ptr() { return static_pointer_cast<VRElectricSystem>(shared_from_this()); }
 
 VRElectricComponentPtr VRElectricSystem::getComponent(size_t ID) { return components[ID]; }
 map<size_t, VRElectricComponentPtr> VRElectricSystem::getComponents() { return components; }
+map<string, vector<VRElectricComponentPtr>> VRElectricSystem::getComponentIDs() { return componentIDs; }
 vector<VRElectricComponentPtr> VRElectricSystem::getRegistred(string ID) { return componentIDs[ID]; }
 VRLADVariablePtr VRElectricSystem::getVariable(string ID) { return profinetVariables[ID]; }
+map<string, VRObjectPtr> VRElectricSystem::getObjectsByName() { return objectsByName; }
+
+void VRElectricSystem::simECAD() {
+    simulation->iterate();
+}
 
 VRElectricComponentPtr VRElectricSystem::newComponent(string name, string eID, string mID) {
-    auto c = VRElectricComponent::create(name, eID, mID);
-    c->system = ptr();
+    auto c = VRElectricComponent::create(ptr(), name, eID, mID);
     components[c->vrID] = c;
     return c;
 }
 
-void VRElectricSystem::setVariable(string HWaddr, int ci) {
+void VRElectricSystem::setVariable(string HWaddr, string ci) {
     for (auto& var : profinetVariables) {
         auto& v = var.second;
         if (v->name == "SFT_Estop_Button" || v->name == "OS_ExtMot_Overload_Switch") continue;
         if (v->logicalAddress == HWaddr && v->value != ci ) v->value = ci;
     }
+}
+
+void VRElectricSystem::setLADVariables(map<string, VRLADVariablePtr> vars) {
+    profinetVariables = vars;
 }
 
 void VRElectricSystem::registerID(string ID, VRElectricComponentPtr c) {
@@ -96,7 +111,7 @@ void VRElectricSystem::importECAD() {
 		return "=" + seq1 + c + seq2;
 	};
 
-	auto split = [&](string s, string c) -> vector<string> {
+	/*auto split = [&](string s, string c) -> vector<string> {
 		if (s == "") return {"", ""};
 		auto data = splitString(s,c);
 		int N = data.size();
@@ -104,7 +119,7 @@ void VRElectricSystem::importECAD() {
 		if (N >= 2) return { data[0], data[1] };
 		if (N == 1) return { data[0], "" };
 		return {"", ""};
-	};
+	};*/
 
 	auto parseAddress = [&](string address) {
 		VRElectricComponent::Address a(address);
@@ -151,8 +166,8 @@ void VRElectricSystem::importECAD() {
 
 	// get ecad components;
 	auto bmk = XML::create();
-	bmk->read("data/ECAD/EDC/bmk->edc");
-	for (auto node : bmk->getRoot()->getChildren("O17") ) {
+	bmk->read("data/ECAD/EDC/bmk.edc");
+	for (auto node : bmk->getRoot()->getChildren("O17", true) ) {
 		string ecadID = node->getAttribute("P20006");
 		string name = node->getAttribute("P20100_1");
 		if (name == "") continue;
@@ -163,8 +178,8 @@ void VRElectricSystem::importECAD() {
 
 	// get ecad wires;
 	auto edges = XML::create();
-	edges->read("data/ECAD/EDC/Verbindungen->edc");
-	for (auto edge : edges->getRoot()->getChildren("O18") ) {
+	edges->read("data/ECAD/EDC/Verbindungen.edc");
+	for (auto edge : edges->getRoot()->getChildren("O18", true) ) {
 		string targetData = edge->getAttribute("P31020");
 		string sourceData = edge->getAttribute("P31019");
 		string label  = edge->getAttribute("P31011");
@@ -202,10 +217,10 @@ void VRElectricSystem::importECAD() {
 	}
 
 	auto ecadProject = XML::create();
-	ecadProject->read("data/ECAD/EPJ/217155 SOBCO Algerien Ball Forming Line->epj");
+	ecadProject->read("data/ECAD/EPJ/217155 SOBCO Algerien Ball Forming Line.epj");
 	//ecadProject = VR->importXML("data/ECAD/EPJ/Extruder->epj");
-	for (auto i : ecadProject->getRoot()->getChildren("O117") ) {
-		for (auto j : i->getChildren("P11")) { // get ecad -> mcad mapping data;
+	for (auto i : ecadProject->getRoot()->getChildren("O117", true) ) {
+		for (auto j : i->getChildren("P11", true)) { // get ecad -> mcad mapping data;
 			if (!j->hasAttribute("P22003") || !j->hasAttribute("P22001")) continue;
 			auto mcadID = j->getAttribute("P22003");
 			auto name = j->getAttribute("P22001");
@@ -225,18 +240,22 @@ void VRElectricSystem::importECAD() {
 	traverseScene(VRScene::getCurrent()->getRoot());
 
 	//make 100% sure each component has correct ecadID and mcadID based on traverse scene
-	for (auto i : ecadProject->getRoot()->getChildren("O117") ) {
-		for (auto j : i->getChildren("P11") ) {
+	for (auto i : ecadProject->getRoot()->getChildren("O117", true) ) {
+		for (auto j : i->getChildren("P11", true) ) {
 			if (!j->hasAttribute("P22001") || !j->hasAttribute("P22003")) continue;
 			auto mcadID = j->getAttribute("P22003");
 			auto name = j->getAttribute("P22001");
+            //if (mcadID == "0656 012 03") cout << " -- O117 > P11 " << name << "  ,  " << mcadID << endl;
 			for (auto obj : objectsByName) {
+                //if (mcadID == "0656 012 03") cout << "    " << contains(obj.first, mcadID) << "   " << obj.first << endl;
 				if (contains(obj.first, mcadID)) { //if mcadID is not in traversed scene;
-					for (auto s : ecadProject->getRoot()->getChildren("O17")) { //get correct mcadID;
-						for (auto t : s->getChildren("P11") ) {
+                    //cout << " -- " << obj.first << endl;
+					for (auto s : ecadProject->getRoot()->getChildren("O17", true)) { //get correct mcadID;
+						for (auto t : s->getChildren("P11", true) ) {
 							for (auto attrib : t->getAttributes() ) {
 								if (name == attrib.second) {
-									for (auto l : s->getChildren("P150") ) {
+                                    //cout << " --B" << endl;
+									for (auto l : s->getChildren("P150", true) ) {
 										auto plant1 = l->getAttribute("P1100");
 										auto plant2 = l->getAttribute("P1200");
 										auto id1 = l->getAttribute("P20012");
@@ -259,19 +278,20 @@ void VRElectricSystem::importECAD() {
 				}
 			}
 		}
-	};
+	}
 
 	// get ecad -> LAD mapping data;
 	map<string, map<string, string>> O117_data;
-	for (auto i : ecadProject->getRoot()->getChildren("O117") ) {
+	for (auto i : ecadProject->getRoot()->getChildren("O117", true) ) {
 		string name;
 		vector<pair<string, string>> IN_O117;
 
-		for (auto j : i->getChildren("P11") ) {
+		for (auto j : i->getChildren("P11", true) ) {
 			if (j->hasAttribute("P21002_1") && j->hasAttribute("P21000_1")) {
 				auto IN = j->getAttribute("P21002_1");
 				auto PO = j->getAttribute("P21000_1");
 				IN_O117.push_back( make_pair(IN,PO) );
+				cout << "IN_O117 " << IN << ", " << PO << endl;
 			}
 			if (j->hasAttribute("P22001")) name = j->getAttribute("P22001");
 		}
@@ -283,20 +303,20 @@ void VRElectricSystem::importECAD() {
 	}
 
 	map<string, map<string, string>> O17_data;
-	for (auto s : ecadProject->getRoot()->getChildren("O17") ) {
+	for (auto s : ecadProject->getRoot()->getChildren("O17", true) ) {
 		string ecadID;
 		vector<pair<string, string>> IN_O17;
 
-		for (auto l : s->getChildren("P150")) { // get ecad ID;
+		for (auto l : s->getChildren("P150", true)) { // get ecad ID;
 			string plant1 = l->getAttribute("P1100"); //;
 			string plant2 = l->getAttribute("P1200"); //;
 			string id1 = l->getAttribute("P20012"); //;
 			string kind = l->getAttribute("P20013"); //;
 			string id2 = l->getAttribute("P20014"); //;
-			string ecadID = join(plant1,plant2,id1,kind,id2);
+			ecadID = join(plant1,plant2,id1,kind,id2);
 		}
 
-		for (auto t : s->getChildren("P11") ) {
+		for (auto t : s->getChildren("P11", true) ) {
 			if (t->hasAttribute("P20407") && t->hasAttribute("P20400") ) {
 				string IN = t->getAttribute("P20407");
 				string AD = t->getAttribute("P20400");

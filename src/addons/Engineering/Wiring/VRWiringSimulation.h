@@ -14,14 +14,14 @@ class VRWiringSimulation : public std::enable_shared_from_this<VRWiringSimulatio
 	private:
 	    VRElectricSystemPtr system;
 
-	    void iterate();
-
 	public:
 		VRWiringSimulation(VRElectricSystemPtr s);
 		~VRWiringSimulation();
 
 		static VRWiringSimulationPtr create(VRElectricSystemPtr s);
 		VRWiringSimulationPtr ptr();
+
+	    void iterate();
 };
 
 OSG_END_NAMESPACE;

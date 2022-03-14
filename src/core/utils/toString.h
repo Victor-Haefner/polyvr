@@ -65,6 +65,7 @@ template<typename T> string typeName(const vector<std::shared_ptr<T>>* t) { retu
 template<typename T> string typeName(const vector<vector<T>>* t) { return "list of lists of "+typeName<T>((T*)0); }
 template<typename T> string typeName(const vector<vector<std::shared_ptr<T>>>* t) { return "list of lists of "+typeName<T>((T*)0); }
 template<typename T, typename U> string typeName(const map<T,U>* t) { return "dictionary of "+typeName<T>((T*)0) + " to " + typeName<U>((U*)0); }
+template<typename T, typename U> string typeName(const map<T,std::shared_ptr<U>>* t) { return "dictionary of "+typeName<T>((T*)0) + " to " + typeName<U>((U*)0); }
 
 string typeName(const std::shared_ptr<VRFunction<void>>* t);
 template<typename T> string typeName(const std::shared_ptr<VRFunction<T>>* t) { return "callback("+typeName<T>((T*)0)+")"; }

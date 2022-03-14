@@ -14,8 +14,8 @@ class VRLADVariable : public std::enable_shared_from_this<VRLADVariable> {
         string dataType;
         string source;
         string remanence;
-        int value = 0;
-        int startValue = 0;
+        string value = "0";
+        string startValue = "0";
 
 	public:
 		VRLADVariable();
@@ -23,6 +23,22 @@ class VRLADVariable : public std::enable_shared_from_this<VRLADVariable> {
 
 		static VRLADVariablePtr create();
 		VRLADVariablePtr ptr();
+
+		void setName(string name);
+		void setLogicalAddress(string logicalAddress);
+		void setDataType(string dataType);
+		void setSource(string source);
+		void setRemanence(string remanence);
+		void setValue(string value);
+		void setStartValue(string startValue);
+
+		string getName();
+		string getLogicalAddress();
+		string getDataType();
+		string getSource();
+		string getRemanence();
+		string getValue();
+		string getStartValue();
 };
 
 OSG_END_NAMESPACE;

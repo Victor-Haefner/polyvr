@@ -18,3 +18,11 @@ VRElectricComponent::Address VRWire::getOther(VRElectricComponentPtr first) {
     if (target.ecadID == first->ecadID) return source;
     return target;
 }
+
+VRElectricComponent::Address VRWire::getSource() { return source; }
+VRElectricComponent::Address VRWire::getTarget() { return target; }
+
+void VRWire::setEntity(VREntityPtr e) { entity = e; }
+VREntityPtr VRWire::getEntity() { return entity; }
+string VRWire::getLabel() { return label; }
+string VRWire::getType() { return cType; }

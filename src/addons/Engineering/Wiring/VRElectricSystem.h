@@ -26,6 +26,8 @@ class VRElectricSystem : public std::enable_shared_from_this<VRElectricSystem> {
 
         map<string, VRObjectPtr> objectsByName;
 
+        VRWiringSimulationPtr simulation;
+
 	public:
 		VRElectricSystem();
 		~VRElectricSystem();
@@ -34,17 +36,22 @@ class VRElectricSystem : public std::enable_shared_from_this<VRElectricSystem> {
 		VRElectricSystemPtr ptr();
 
 		VRElectricComponentPtr newComponent(string name, string eID, string mID);
+		void setLADVariables(map<string, VRLADVariablePtr> vars);
 
 		VRElectricComponentPtr getComponent(size_t ID);
 		map<size_t, VRElectricComponentPtr> getComponents();
+		map<string, vector<VRElectricComponentPtr>> getComponentIDs();
 		vector<VRElectricComponentPtr> getRegistred(string ID);
 		VRLADVariablePtr getVariable(string ID);
+		map<string, VRObjectPtr> getObjectsByName();
 
-		void setVariable(string HWaddr, int c);
+		void setVariable(string HWaddr, string c);
 		void registerID(string ID, VRElectricComponentPtr c);
 
 		void importECAD();
 		void buildECADgraph();
+
+		void simECAD();
 };
 
 OSG_END_NAMESPACE;

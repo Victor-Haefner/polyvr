@@ -53,15 +53,15 @@ class VRElectricComponent : public std::enable_shared_from_this<VRElectricCompon
         Address address;
 
         Vec3d position;
-        VRTransformPtr geometry;
+        VRObjectPtr geometry;
         VREntityPtr entity;
         int flag = 0;
 
 	public:
-		VRElectricComponent(string name, string eID, string mID);
+		VRElectricComponent(VRElectricSystemPtr sys, string name, string eID, string mID);
 		~VRElectricComponent();
 
-		static VRElectricComponentPtr create(string name, string eID, string mID);
+		static VRElectricComponentPtr create(VRElectricSystemPtr sys, string name, string eID, string mID);
 		VRElectricComponentPtr ptr();
 
 		void setCurrent(string current, string port);
@@ -71,6 +71,32 @@ class VRElectricComponent : public std::enable_shared_from_this<VRElectricCompon
         void setName(string n);
         void setEcadID(string eID);
         void setMcadID(string mID);
+        void setGeometry(VRObjectPtr obj);
+        void setEntity(VREntityPtr obj);
+        void setPosition(Vec3d p);
+
+        int getEGraphID();
+        int getPGraphID();
+        void setEGraphID(int ID);
+        void setPGraphID(int ID);
+
+        void addPort(string port, string ladHWaddr, string ecadHWaddr, string socket);
+        void setPortEntity(string port, VREntityPtr e);
+
+        string getName();
+        string getEcadID();
+        string getMcadID();
+        VRObjectPtr getGeometry();
+        VREntityPtr getEntity();
+        vector<VRWirePtr> getConnections();
+        vector<string> getPorts();
+        VRWirePtr getPortWire(string port);
+        VREntityPtr getPortEntity(string port);
+        Vec3d getPosition();
+
+        Address getAddress();
+        bool hasAddress();
+        string getAddressMachine();
 };
 
 OSG_END_NAMESPACE;

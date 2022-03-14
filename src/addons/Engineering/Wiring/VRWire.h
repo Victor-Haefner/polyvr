@@ -24,6 +24,14 @@ class VRWire : public std::enable_shared_from_this<VRWire> {
 		static VRWirePtr create();
 		VRWirePtr ptr();
 
+        void setEntity(VREntityPtr e);
+        VREntityPtr getEntity();
+        string getLabel();
+        string getType();
+
+        VRElectricComponent::Address getSource();
+        VRElectricComponent::Address getTarget();
+
 		VRElectricComponent::Address getThis(VRElectricComponentPtr first);
         VRElectricComponent::Address getOther(VRElectricComponentPtr first);
 };
