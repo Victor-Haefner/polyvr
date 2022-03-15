@@ -57,6 +57,9 @@ class VRElectricSystem : public std::enable_shared_from_this<VRElectricSystem> {
 		void importECAD();
 		void buildECADgraph();
 
+		vector<VRElectricComponentPtr> getBusRoute(string ecadID1, string ecadID2);
+        vector<VRElectricComponentPtr> getElectricRoute(string ecadID1, string ecadID2);
+
 		void simECAD();
 };
 

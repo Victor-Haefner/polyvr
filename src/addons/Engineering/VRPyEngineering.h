@@ -9,6 +9,7 @@
 #include "Wiring/VRWire.h"
 #include "Wiring/VRWiringSimulation.h"
 #include "Wiring/VRElectricSystem.h"
+#include "Wiring/VRElectricVisualization.h"
 #include "Wiring/VRElectricComponent.h"
 #include "Programming/VRLADVariable.h"
 
@@ -33,6 +34,10 @@ struct VRPyWiringSimulation : VRPyBaseT<OSG::VRWiringSimulation> {
 };
 
 struct VRPyElectricSystem : VRPyBaseT<OSG::VRElectricSystem> {
+    static PyMethodDef methods[];
+};
+
+struct VRPyElectricVisualization : VRPyBaseT<OSG::VRElectricVisualization> {
     static PyMethodDef methods[];
 };
 

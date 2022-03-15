@@ -424,6 +424,8 @@
 		<Unit filename="src/addons/Engineering/Wiring/VRElectricComponent.h" />
 		<Unit filename="src/addons/Engineering/Wiring/VRElectricSystem.cpp" />
 		<Unit filename="src/addons/Engineering/Wiring/VRElectricSystem.h" />
+		<Unit filename="src/addons/Engineering/Wiring/VRElectricVisualization.cpp" />
+		<Unit filename="src/addons/Engineering/Wiring/VRElectricVisualization.h" />
 		<Unit filename="src/addons/Engineering/Wiring/VRWire.cpp" />
 		<Unit filename="src/addons/Engineering/Wiring/VRWire.h" />
 		<Unit filename="src/addons/Engineering/Wiring/VRWiringSimulation.cpp" />

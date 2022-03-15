@@ -8,6 +8,7 @@
 #include "core/objects/object/VRObject.h"
 #include "core/scene/VRScene.h"
 #include "addons/Engineering/Programming/VRLADVariable.h"
+#include "addons/Algorithms/VRPathFinding.h"
 
 using namespace OSG;
 
@@ -60,6 +61,28 @@ map<size_t, VRElectricComponentPtr> VRElectricSystem::getComponentsByPGraphID() 
 void VRElectricSystem::registerID(string ID, VRElectricComponentPtr c) {
     if (!componentIDs.count(ID)) componentIDs[ID] = vector<VRElectricComponentPtr>();
     componentIDs[ID].push_back(c);
+}
+
+vector<VRElectricComponentPtr> VRElectricSystem::getBusRoute(string ecadID1, string ecadID2) {
+	auto pathing = VRPathFinding::create();
+	pathing->setGraph(profinetGraph);
+	auto start = getRegistred(ecadID1)[0]->getPGraphID();
+	auto end   = getRegistred(ecadID2)[0]->getPGraphID();
+	auto nIDs  = pathing->computePath(start, end);
+	vector<VRElectricComponentPtr> route;
+	for (auto p : nIDs) route.push_back( componentsByPGraphID[p.nID] );
+	return route;
+}
+
+vector<VRElectricComponentPtr> VRElectricSystem::getElectricRoute(string ecadID1, string ecadID2) {
+	auto pathing = VRPathFinding::create();
+	pathing->setGraph(electricGraph);
+	auto start = getRegistred(ecadID1)[0]->getEGraphID();
+	auto end   = getRegistred(ecadID2)[0]->getEGraphID();
+	auto nIDs  = pathing->computePath(start, end);
+	vector<VRElectricComponentPtr> route;
+	for (auto p : nIDs) route.push_back( componentsByEGraphID[p.nID] );
+	return route;
 }
 
 void VRElectricSystem::buildECADgraph() {

@@ -10,6 +10,7 @@ simpleVRPyType(NumberingEngine, New_VRObjects_ptr);
 simpleVRPyType(RobotArm, New_named_ptr);
 simpleVRPyType(PipeSystem, New_ptr);
 simpleVRPyType(ElectricSystem, New_ptr);
+simpleVRPyType(ElectricVisualization, New_ptr);
 simpleVRPyType(Wire, 0);
 simpleVRPyType(WiringSimulation, 0);
 simpleVRPyType(ElectricComponent, 0);
@@ -79,6 +80,13 @@ PyMethodDef VRPyElectricSystem::methods[] = {
     {"getComponentIDs", PyWrap( ElectricSystem, getComponentIDs, "Get components", strVecECompMap ) },
     {"getElectricGraph", PyWrap( ElectricSystem, getElectricGraph, "Get electric graph", GraphPtr ) },
     {"getProfinetGraph", PyWrap( ElectricSystem, getProfinetGraph, "Get profinet graph", GraphPtr ) },
+    {NULL}
+};
+
+PyMethodDef VRPyElectricVisualization::methods[] = {
+    {"setSystem", PyWrap( ElectricVisualization, setSystem, "Set electric system", void, VRElectricSystemPtr ) },
+    {"update", PyWrap( ElectricVisualization, update, "Update visualization", void ) },
+    {"updateWires", PyWrap( ElectricVisualization, updateWires, "Update visualization, only wires", void ) },
     {NULL}
 };
 
