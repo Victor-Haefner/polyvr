@@ -52,6 +52,11 @@ void VRElectricSystem::setVariable(string HWaddr, string ci) {
     }
 }
 
+GraphPtr VRElectricSystem::getElectricGraph() { return electricGraph; }
+GraphPtr VRElectricSystem::getProfinetGraph() { return profinetGraph; }
+map<size_t, VRElectricComponentPtr> VRElectricSystem::getComponentsByEGraphID() { return componentsByEGraphID; }
+map<size_t, VRElectricComponentPtr> VRElectricSystem::getComponentsByPGraphID() { return componentsByPGraphID; }
+
 void VRElectricSystem::registerID(string ID, VRElectricComponentPtr c) {
     if (!componentIDs.count(ID)) componentIDs[ID] = vector<VRElectricComponentPtr>();
     componentIDs[ID].push_back(c);

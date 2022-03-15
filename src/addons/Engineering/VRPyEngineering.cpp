@@ -74,7 +74,11 @@ PyMethodDef VRPyElectricSystem::methods[] = {
     {"simECAD", PyWrap( ElectricSystem, simECAD, "Do simulation step", void ) },
     {"getRegistred", PyWrap( ElectricSystem, getRegistred, "Get components", vector<VRElectricComponentPtr>, string ) },
     {"getComponents", PyWrap( ElectricSystem, getComponents, "Get components", intECompMap ) },
+    {"getComponentsByEGraphID", PyWrap( ElectricSystem, getComponentsByEGraphID, "Get components", intECompMap ) },
+    {"getComponentsByPGraphID", PyWrap( ElectricSystem, getComponentsByPGraphID, "Get components", intECompMap ) },
     {"getComponentIDs", PyWrap( ElectricSystem, getComponentIDs, "Get components", strVecECompMap ) },
+    {"getElectricGraph", PyWrap( ElectricSystem, getElectricGraph, "Get electric graph", GraphPtr ) },
+    {"getProfinetGraph", PyWrap( ElectricSystem, getProfinetGraph, "Get profinet graph", GraphPtr ) },
     {NULL}
 };
 
