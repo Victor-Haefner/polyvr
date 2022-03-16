@@ -140,7 +140,7 @@ VRTransformPtr VRImport::load(string path, VRObjectPtr parent, bool useCache, st
         return res;
     }
 
-    VRTransformPtr res = VRTransform::create("proxy");
+    VRTransformPtr res = VRTransform::create( getFileName(path, false) );
     if (!thread) {
         LoadJob job(path, preset, res, progress, options, useCache, useBinaryCache);
         job.load(VRThreadWeakPtr());
