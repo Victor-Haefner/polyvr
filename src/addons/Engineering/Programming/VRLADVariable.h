@@ -4,6 +4,8 @@
 #include <OpenSG/OSGConfig.h>
 #include "addons/Engineering/VREngineeringFwd.h"
 
+#include <string>
+
 using namespace std;
 OSG_BEGIN_NAMESPACE;
 
