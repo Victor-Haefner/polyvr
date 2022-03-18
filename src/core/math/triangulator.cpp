@@ -2,6 +2,7 @@
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/geometry/VRGeoData.h"
 #include "core/utils/toString.h"
+#include "core/utils/isNan.h"
 #include <GL/glut.h>
 #include <iostream>
 #include <sstream>
@@ -145,6 +146,12 @@ void Triangulator::tessellate() {
     gluTessCallback(tess, GLU_TESS_COMBINE, (void (*)()) tessCombineCB);
 
     auto toSpace = [&](const vector<Vec2d>& poly) {
+        for (auto& v : poly) {
+            if (isNan(v)) {
+                cout << "Warning in Triangulator::tessellate, Vec2d contains NaN: " << v << endl;
+                return vector<Vec3d>();
+            }
+        }
         vector<Vec3d> res;
         for (auto& v : poly) res.push_back(Vec3d(v[0], 0, v[1]));
         return res;
@@ -157,8 +164,13 @@ void Triangulator::tessellate() {
     for (auto b : inner_bounds) if (b.size3() > 2) bounds.push_back( b.get3() );
 
     if (bounds.size() > 0) {
+        cout << "tessellate " << toString(bounds) << endl;
         gluTessBeginPolygon(tess, 0);
         for (auto& b : bounds) {
+            if (b.size() <= 2) {
+                cout << "Warning in Triangulator::tessellate, bound size below 3: " << b.size() << endl;
+                continue;
+            }
             gluTessBeginContour(tess);
             for (auto& v : b) gluTessVertex(tess, &v[0], &v[0]);
             gluTessEndContour(tess);

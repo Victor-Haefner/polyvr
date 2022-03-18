@@ -39,6 +39,15 @@ template<typename T> string toString(const vector<T>& v) {
     return res+"]";
 }
 
+template<typename T> string toString(const vector<vector<T>>& v) {
+    string res = "[";
+    for (unsigned int i=0; i<v.size(); i++) {
+        if (i > 0) res += ", ";
+        res += toString<T>(v[i]);
+    }
+    return res+"]";
+}
+
 template<typename K, typename T> string toString(const map<K,T>& m) {
     string res = "{";
     int i = 0;
