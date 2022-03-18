@@ -164,7 +164,7 @@ void Triangulator::tessellate() {
     for (auto b : inner_bounds) if (b.size3() > 2) bounds.push_back( b.get3() );
 
     if (bounds.size() > 0) {
-        cout << "tessellate " << toString(bounds) << endl;
+        //cout << "tessellate " << toString(bounds) << endl;
         gluTessBeginPolygon(tess, 0);
         for (auto& b : bounds) {
             if (b.size() <= 2) {
