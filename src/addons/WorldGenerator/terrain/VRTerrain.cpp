@@ -599,7 +599,7 @@ Vec2d VRTerrain::getTexCoord( Vec2d p ) {
 
     double u = (1.0-texel[0])*p[0]/size[0] + 0.5;
     double v = (1.0-texel[1])*p[1]/size[1] + 0.5;
-    return Vec2d(u,v);
+    return Vec2d(u,1.0-v);
 }
 
 Vec2d VRTerrain::toUVSpace(Vec2d p) {

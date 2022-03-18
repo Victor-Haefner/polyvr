@@ -1131,9 +1131,6 @@ void VRGeometry::showGeometricData(string type, bool b) {
 }
 
 void VRGeometry::setup(VRStorageContextPtr context) {
-    string p1, p2, p3, p4;
-    stringstream ss;
-    VRGeometryPtr g;
     // get source info
     // construct data from that
 
@@ -1146,14 +1143,20 @@ void VRGeometry::setup(VRStorageContextPtr context) {
         case SCRIPT:
             break;
         case FILE:
-            ss << source.parameter;
-            ss >> p1; ss >> p2;
-            if (!(ss >> p3)) p3 = "OSG";
-            if (!(ss >> p4)) p4 = "0";
-            //g = VRImport::get()->loadGeometry(p1, p2, p3, toBool(p4)); // TODO: set callback for thread load
-            g = VRImport::get()->loadGeometry(p1, p2, p3, false); // TODO: set callback for thread load
-            if (g) setMesh( g->getMesh(), source, true );
-            else cout << "failed to load " << p2 << " from file " << p1 << endl;
+            {
+                auto params = splitString(source.parameter, '|');
+                string p1, p2, p3, p4;
+                p3 = "OSG";
+                p4 = "0";
+                if (params.size() > 0) p1 = params[0];
+                if (params.size() > 1) p2 = params[1];
+                if (params.size() > 2) p3 = params[2];
+                if (params.size() > 3) p4 = params[3];
+                //g = VRImport::get()->loadGeometry(p1, p2, p3, toBool(p4)); // TODO: set callback for thread load
+                VRGeometryPtr g = VRImport::get()->loadGeometry(p1, p2, p3, false); // TODO: set callback for thread load
+                if (g) setMesh( g->getMesh(), source, true );
+                else cout << "failed to load " << p2 << " from file " << p1 << endl;
+            }
             break;
         case PRIMITIVE:
             setPrimitive(source.parameter);

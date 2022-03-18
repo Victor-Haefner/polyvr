@@ -82,17 +82,25 @@ _xmlNode* getNextNode(_xmlNode* cur) {
     return cur;
 }
 
-vector<XMLElementPtr> XMLElement::getChildren(string name) {
+void aggregateNodes(_xmlNode* cnode, vector<XMLElementPtr>& res, const string& name, bool recursive) {
+    while ( cnode ) {
+        if (cnode->type == XML_ELEMENT_NODE) {
+            if (name == "" || name == string((const char*)cnode->name)) {
+                auto elem = XMLElement::create(cnode);
+                res.push_back(elem);
+            }
+        }
+        auto ccnode = getNextNode( cnode->xmlChildrenNode );
+        if (recursive) aggregateNodes(ccnode, res, name, recursive);
+        cnode = getNextNode( cnode->next );
+    }
+}
+
+vector<XMLElementPtr> XMLElement::getChildren(string name, bool recursive) {
     vector<XMLElementPtr> res;
     if (!node) return res;
     auto cnode = getNextNode( node->xmlChildrenNode );
-    while ( cnode ) {
-        if (cnode->type == XML_ELEMENT_NODE) {
-            if (name == "" || name == string((const char*)cnode->name))
-                res.push_back(XMLElement::create(cnode));
-        }
-        cnode = getNextNode( cnode->next );
-    }
+    aggregateNodes(cnode, res, name, recursive);
     return res;
 }
 

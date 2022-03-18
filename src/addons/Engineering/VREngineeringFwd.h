@@ -16,6 +16,12 @@ ptrFwd(VRMillingCuttingToolProfile);
 ptrFwd(VRPipeSystem);
 ptrFwd(VRPipeSegment);
 ptrFwd(VRPipeNode);
+ptrFwd(VRElectricSystem);
+ptrFwd(VRElectricVisualization);
+ptrFwd(VRWire);
+ptrFwd(VRWiringSimulation);
+ptrFwd(VRElectricComponent);
+ptrFwd(VRLADVariable);
 
 ptrFwd(VRAtom);
 ptrFwd(VRBond);

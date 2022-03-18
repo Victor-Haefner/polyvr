@@ -5,6 +5,7 @@
 #include "core/utils/toString.h"
 #include "core/utils/VRProgress.h"
 
+#include <StepBasic_SiUnitAndLengthUnit.hxx>
 #include <XCAFDoc_ShapeTool.hxx>
 #include <XCAFDoc_DocumentTool.hxx>
 #include <XCAFDoc_ColorTool.hxx>
@@ -164,6 +165,30 @@ class STEPLoader {
             else mat->setDiffuse(Color3f(0.5,0.7,0.9));
         }
 
+        float getScale(STEPCAFControl_Reader& reader) {
+            const STEPControl_Reader& stpreader = reader.Reader();
+            const Handle(Interface_InterfaceModel) Model = stpreader.Model();
+            Handle(StepData_StepModel) aSM = Handle(StepData_StepModel)::DownCast(Model);
+
+            for (int i=1; i<=Model->NbEntities(); i++) {
+                Handle(Standard_Transient) enti = aSM->Entity(i);
+
+                if (enti->IsKind(STANDARD_TYPE(StepBasic_SiUnitAndLengthUnit))) {
+                    Handle(StepBasic_SiUnitAndLengthUnit) unit = Handle(StepBasic_SiUnitAndLengthUnit)::DownCast(enti);
+
+                    if (unit->HasPrefix() && (StepBasic_SiUnitName::StepBasic_sunMetre == unit->Name()) && (StepBasic_SiPrefix::StepBasic_spMilli == unit->Prefix())) {
+                        return 0.001; // millimeter
+                    } else if (!unit->HasPrefix() && (StepBasic_SiUnitName::StepBasic_sunMetre == unit->Name())) {
+                        return 1.0; // meter
+                    } else {
+                        return 1.0; // unknown
+                    }
+                }
+            }
+
+            return 1.0;
+        }
+
     public:
         STEPLoader() {}
 
@@ -207,6 +232,9 @@ class STEPLoader {
                 reader.SetColorMode(true);
                 reader.SetLayerMode(true);
 
+                float scale = getScale(reader);
+                cout << "Model length unit scale: " << scale << endl;
+
                 int countTransfers = 0;
                 for (int i=1; i<=Nroots; i++) {
                     cout << " transfer " << i << "/" << Nroots << endl;
@@ -216,9 +244,10 @@ class STEPLoader {
                     else countTransfers++;
                 }
 
-                if (countTransfers < Nroots) cout << "Warning! failed to transfer come roots, model might be incomplete!" << endl;
+                if (countTransfers < Nroots) cout << "Warning! failed to transfer some roots, model might be incomplete!" << endl;
                 if (countTransfers == 0) { cout << "Error! failed to transfer any root" << endl; return; }
                 cout << "XCAF transfers done " << endl;
+
 
                 Handle(XCAFDoc_ShapeTool) Assembly = XCAFDoc_DocumentTool::ShapeTool(aDoc->Main());
                 TDF_LabelSequence shapes;
@@ -257,6 +286,7 @@ class STEPLoader {
                                 applyMaterial(obj, shape);
                                 if (parts.count(label.Tag())) cout << "Warning in STEP import, the label tag " << label.Tag() << " is allready used!" << endl;
                                 parts[label.Tag()] = obj;
+                                obj->setReference(VRGeometry::Reference(VRGeometry::FILE, path+"|"+obj->getName()));
                             }
                         }
                     }
@@ -309,6 +339,11 @@ class STEPLoader {
 
                 // explore root shape
                 for (int i=1; i<=rootShapes.Length(); i++) explore(rootShapes.Value(i), res);
+
+                for (auto c : res->getChildren()) {
+                    auto t = dynamic_pointer_cast<VRTransform>(c);
+                    if (t) t->setScale(Vec3d(scale, scale, scale));
+                }
             } catch(exception e) {
                 cout << " STEP import failed in load: " << e.what() << endl;
             }

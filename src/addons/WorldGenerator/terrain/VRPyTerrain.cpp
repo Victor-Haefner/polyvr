@@ -38,6 +38,8 @@ PyMethodDef VRPyTerrain::methods[] = {
     {NULL}  /* Sentinel */
 };
 
+typedef map<string, VROrbitPtr> mapStrOrbit;
+
 PyMethodDef VRPyPlanet::methods[] = {
     {"addSector", PyWrap(Planet, addSector, "Add sector to planet", VRWorldGeneratorPtr, double, double, bool ) },
     {"addOSMMap", PyWrap(Planet, addOSMMap, "Add OSMMap to planet", OSMMapPtr, string ) },
@@ -63,6 +65,10 @@ PyMethodDef VRPyPlanet::methods[] = {
     {"getInclination", PyWrap(Planet, getInclination, "Get inclination in rad", double ) },
     {"addMoon", PyWrap(Planet, addMoon, "Add moon", void, VRTransformPtr ) },
     {"getMoons", PyWrap(Planet, getMoons, "Get all moons", vector<VRTransformPtr> ) },
+    {"addSatellite", PyWrap(Planet, addSatellite, "Add satellite", void, VRTransformPtr ) },
+    {"getSatellites", PyWrap(Planet, getSatellites, "Get all satellites", vector<VRTransformPtr> ) },
+    {"putInOrbit", PyWrap(Planet, putInOrbit, "See Orbit.fromKepler", VROrbitPtr, VRTransformPtr, vector<double> ) },
+    {"getOrbits", PyWrap(Planet, getOrbits, "Get orbits", mapStrOrbit  ) },
     {NULL}  /* Sentinel */
 };
 

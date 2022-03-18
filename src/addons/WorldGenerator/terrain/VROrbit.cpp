@@ -21,10 +21,13 @@ VRObjectPtr VROrbit::getTarget() { return target; }
 VRObjectPtr VROrbit::getTrail() { return trail; }
 
 void VROrbit::fromKepler(vector<double> p) {
+    if (p.size() == 0) return;
+
     if (p.size() != 12) {
         cout << "Warning in VROrbit::fromKepler, wrong number of argument, got " << p.size() << " parameters, need 12!" << endl;
         return;
     }
+
     params.a0 = p[0];
     params.e0 = p[1];
     params.I0 = p[2];

@@ -9,7 +9,7 @@
 #include "core/scripting/VRScriptFwd.h"
 
 struct _GtkSourceLanguage;
-struct _GtkTable;
+struct _GtkGrid;
 struct _GtkTreeView;
 struct _GtkListStore;
 struct _GdkEventKey;
@@ -50,7 +50,7 @@ class VRGuiScripts {
 	    VRDeviceCbPtr sceneChangedCb;
 	    string selected;
 
-        _GtkTable* scriptImportWidget = 0;
+        _GtkGrid* scriptImportWidget = 0;
         _GtkTreeView* import_treeview1 = 0;
         _GtkTreeView* import_treeview2 = 0;
         _GtkListStore* import_liststore1;

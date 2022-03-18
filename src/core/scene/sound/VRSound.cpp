@@ -283,7 +283,7 @@ void VRSound::initWithCodec(AVCodecContext* codec) {
     initiated = true;
 }
 
-void VRSound::playBuffer(VRSoundBufferPtr frame) { interface->queueFrame(frame); }
+void VRSound::playBuffer(VRSoundBufferPtr frame) { if (interface) interface->queueFrame(frame); }
 void VRSound::addBuffer(VRSoundBufferPtr frame) { ownedBuffer.push_back(frame); }
 
 void VRSound::queuePacket(AVPacket* packet) {
@@ -853,8 +853,13 @@ bool VRSound::playPeerStream(VRNetworkClientPtr client) {
 
 
 // carrier amplitude, carrier frequency, carrier phase, modulation amplitude, modulation frequency, modulation phase, packet duration
-void VRSound::synthesize(float Ac, float wc, float pc, float Am, float wm, float pm, float duration) {
+void VRSound::synthesize(float Ac, float wc, float pc, float Am, float wm, float pm, float duration, int maxQueued) {
     if (!initiated) initiate();
+
+    if (maxQueued >= 0) {
+        interface->recycleBuffer();
+        if ( interface->getQueuedBuffer() >= maxQueued ) return;
+    }
 
     int sample_rate = 22050;
     size_t buf_size = duration * sample_rate;
@@ -922,8 +927,14 @@ vector<short> VRSound::synthSpectrum(vector<double> spectrum, uint sample_rate, 
     return returnBuffer ? samples : vector<short>();
 }
 
-vector<short> VRSound::synthBuffer(vector<Vec2d> freqs1, vector<Vec2d> freqs2, float duration) {
+vector<short> VRSound::synthBuffer(vector<Vec2d> freqs1, vector<Vec2d> freqs2, float duration, int maxQueued) {
     if (!initiated) initiate();
+
+    if (maxQueued >= 0) {
+        interface->recycleBuffer();
+        if ( interface->getQueuedBuffer() >= maxQueued ) return vector<short>();
+    }
+
     // play sound
     int sample_rate = 22050;
     size_t buf_size = duration * sample_rate;
@@ -949,7 +960,7 @@ vector<short> VRSound::synthBuffer(vector<Vec2d> freqs1, vector<Vec2d> freqs2, f
     return vector<short>();
 }
 
-vector<short> VRSound::synthBufferForChannel(vector<Vec2d> freqs1, vector<Vec2d> freqs2, int channel, float duration) {
+vector<short> VRSound::synthBufferForChannel(vector<Vec2d> freqs1, vector<Vec2d> freqs2, int channel, float duration, int maxQueued) {
     /*
         this creates synthetic sound samples based on two vectors of frequencies
         the channel is required for separation of the different static phasors
@@ -957,8 +968,13 @@ vector<short> VRSound::synthBufferForChannel(vector<Vec2d> freqs1, vector<Vec2d>
 
         this is based on the work done in synthBuffer
     */
-
     if (!initiated) initiate();
+
+    if (maxQueued >= 0) {
+        interface->recycleBuffer();
+        if ( interface->getQueuedBuffer() >= maxQueued ) return vector<short>();
+    }
+
     // play sound
     int sample_rate = 22050;
     size_t buf_size = duration * sample_rate;
@@ -988,12 +1004,19 @@ vector<short> VRSound::synthBufferForChannel(vector<Vec2d> freqs1, vector<Vec2d>
     return samples;
 }
 
-void VRSound::synthBufferOnChannels(vector<vector<Vec2d>> freqs1, vector<vector<Vec2d>> freqs2, float duration) {
+void VRSound::synthBufferOnChannels(vector<vector<Vec2d>> freqs1, vector<vector<Vec2d>> freqs2, float duration, int maxQueued) {
     /*
         this expects two vectors of input vectors consisting of <frequency, amplitude> tuples
         the vectors should contain a vector with input data for every channel
         the duration determines how long the generated sound samples will be played on the audio buffer
     */
+    if (!initiated) initiate();
+
+    if (maxQueued >= 0) {
+        interface->recycleBuffer();
+        if ( interface->getQueuedBuffer() >= maxQueued ) return;
+    }
+
     auto num_channels = freqs1.size();
     if (num_channels != freqs2.size()) {
         cout << "synthBufferOnChannels - sizes don't match - freqs1 = " << num_channels << " freqs2 = " << freqs2.size() << endl;

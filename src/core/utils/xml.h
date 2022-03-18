@@ -36,7 +36,7 @@ class XMLElement {
         bool hasAttribute(string name);
         void setAttribute(string name, string value);
 
-        vector<XMLElementPtr> getChildren(string name = "");
+        vector<XMLElementPtr> getChildren(string name = "", bool recursive = false);
         XMLElementPtr getChild(string name);
         XMLElementPtr getChild(int i);
         XMLElementPtr addChild(string name);

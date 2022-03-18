@@ -30,6 +30,8 @@ class VRPlanet : public VRTransform {
         VRMaterialPtr sphereMat;
 
         vector<VRTransformPtr> moons;
+        vector<VRTransformPtr> satellites;
+        map<string, VROrbitPtr> orbits;
 
         VRAnalyticGeometryPtr metaGeo;
         void rebuild();
@@ -88,6 +90,11 @@ class VRPlanet : public VRTransform {
 
         void addMoon(VRTransformPtr t);
         vector<VRTransformPtr> getMoons();
+        void addSatellite(VRTransformPtr t);
+        vector<VRTransformPtr> getSatellites();
+
+        VROrbitPtr putInOrbit(VRTransformPtr child, vector<double> params);
+        map<string, VROrbitPtr> getOrbits();
 };
 
 OSG_END_NAMESPACE;

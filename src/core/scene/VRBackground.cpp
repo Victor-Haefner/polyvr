@@ -9,6 +9,7 @@
 
 #include "core/setup/VRSetup.h"
 #include "core/scene/VRScene.h"
+#include "core/scene/import/VRImport.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRStorage_template.h"
 #include "core/utils/system/VRSystem.h"
@@ -37,6 +38,7 @@ class VRBackgroundBase {
         void updateSkyTextures();
         void initSky();
 
+        void readImage(int ID, string path);
         void updateImgTexture();
         void initImg();
 };
@@ -61,27 +63,24 @@ string normPath(string p) {
     return p;
 }
 
-void VRBackgroundBase::updateSkyTextures() {
-    if (path == "") return;
-    if (!exists(path + "_back" + format)) {
-        cout << " Error in updateSkyTextures: '" << path + "_back" + format << "' not found" << endl;
+void VRBackgroundBase::readImage(int ID, string path) {
+    if ( !VRImport::get()->checkPath( path ) ) {
+        cout << " Error in VRBackground read texture: '" << path << "' not found" << endl;
         return;
     }
 
-    string tmp;
+    skyImgs[ID]->read(normPath(path).c_str());
+}
 
-    tmp = path + "_back" + format;
-    skyImgs[0]->read(normPath(tmp).c_str());
-    tmp = path + "_front" + format;
-    skyImgs[1]->read(normPath(tmp).c_str());
-    tmp = path + "_left" + format;
-    skyImgs[2]->read(normPath(tmp).c_str());
-    tmp = path + "_right" + format;
-    skyImgs[3]->read(normPath(tmp).c_str());
-    tmp = path + "_down" + format;
-    skyImgs[4]->read(normPath(tmp).c_str());
-    tmp = path + "_up" + format;
-    skyImgs[5]->read(normPath(tmp).c_str());
+void VRBackgroundBase::updateSkyTextures() {
+    if (path == "") return;
+
+    readImage(0, path + "_back" + format);
+    readImage(1, path + "_front" + format);
+    readImage(2, path + "_left" + format);
+    readImage(3, path + "_right" + format);
+    readImage(4, path + "_down" + format);
+    readImage(5, path + "_up" + format);
 }
 
 void VRBackgroundBase::initSky() {
@@ -96,12 +95,7 @@ void VRBackgroundBase::initSky() {
 
 void VRBackgroundBase::updateImgTexture() {
     if (path == "") return;
-    if (!exists(path)) {
-        cout << " Error in updateImgTexture: '" << path << "' not found" << endl;
-        return;
-    }
-
-    skyImgs[6]->read(normPath(path).c_str());
+    readImage(6, path);
 }
 
 void VRBackgroundBase::initImg() {

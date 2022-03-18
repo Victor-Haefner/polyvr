@@ -21,7 +21,7 @@ using namespace std;
 
 vector<string> splitString(const string& s, char c = ' ');
 vector<string> splitString(const string& s, const string& d);
-string subString(const string& s, int beg, int len);
+string subString(const string& s, int beg, int len = -1);
 bool startsWith(const string& s, const string& s2, bool caseSensitive = true);
 bool endsWith(const string& s, const string& s2, bool caseSensitive = true);
 bool contains(const string& s, const string& s2, bool caseSensitive = true);
@@ -31,6 +31,15 @@ string toString(const double& f, int d = -1);
 string toString(const float& f, int d = -1);
 
 template<typename T> string toString(const vector<T>& v) {
+    string res = "[";
+    for (unsigned int i=0; i<v.size(); i++) {
+        if (i > 0) res += ", ";
+        res += toString<T>(v[i]);
+    }
+    return res+"]";
+}
+
+template<typename T> string toString(const vector<vector<T>>& v) {
     string res = "[";
     for (unsigned int i=0; i<v.size(); i++) {
         if (i > 0) res += ", ";
@@ -65,6 +74,7 @@ template<typename T> string typeName(const vector<std::shared_ptr<T>>* t) { retu
 template<typename T> string typeName(const vector<vector<T>>* t) { return "list of lists of "+typeName<T>((T*)0); }
 template<typename T> string typeName(const vector<vector<std::shared_ptr<T>>>* t) { return "list of lists of "+typeName<T>((T*)0); }
 template<typename T, typename U> string typeName(const map<T,U>* t) { return "dictionary of "+typeName<T>((T*)0) + " to " + typeName<U>((U*)0); }
+template<typename T, typename U> string typeName(const map<T,std::shared_ptr<U>>* t) { return "dictionary of "+typeName<T>((T*)0) + " to " + typeName<U>((U*)0); }
 
 string typeName(const std::shared_ptr<VRFunction<void>>* t);
 template<typename T> string typeName(const std::shared_ptr<VRFunction<T>>* t) { return "callback("+typeName<T>((T*)0)+")"; }

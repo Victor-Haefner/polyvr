@@ -49,6 +49,7 @@ class VRImport {
     private:
         map<string, Cache> cache;
         vector<VRImportCbPtr> callbacks;
+        vector<string> importPaths;
 
         VRProgressPtr progress;
         bool ihr_flag = false; // ignore heavy ressources
@@ -65,6 +66,9 @@ class VRImport {
 
     public:
         static VRImport* get();
+
+        void addPath(string folder);
+        bool checkPath(string& path);
 
         VRTransformPtr load(string path, VRObjectPtr parent = 0, bool useCache = true, string preset = "OSG", bool thread = false, map<string, string> options = map<string, string>(), bool useBinaryCache = false);
         VRGeometryPtr loadGeometry(string path, string name, string preset = "OSG", bool thread = false);

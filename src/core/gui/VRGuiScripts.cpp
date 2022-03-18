@@ -171,6 +171,7 @@ void VRGuiScripts::on_import_clicked() {
         gtk_list_store_set (import_liststore2, &row, 0, script.first.c_str(), -1);
     }
 
+    cout << "VRGuiScripts::on_import_clicked " << scriptImportWidget << endl;
     VRGuiFile::clearFilter();
     VRGuiFile::addFilter("Project", 2, "*.xml", "*.pvr");
     VRGuiFile::addFilter("All", 1, "*");
@@ -1080,6 +1081,11 @@ void VRGuiScripts::on_convert_cpp_clicked() {
         }
 
         findAndReplace(line, "#", "; //");
+        findAndReplace(line, "(self, ", "(");
+        findAndReplace(line, "self.", "");
+        findAndReplace(line, "VR.", "");
+        findAndReplace(line, ".values()", "");
+        findAndReplace(line, ".items()", "");
         findAndReplace(line, ".", "->");
         findAndReplace(line, "'", "\"");
         findAndReplace(line, " and ", " && ");
@@ -1308,7 +1314,7 @@ VRGuiScripts::VRGuiScripts() {
     VRGuiSignals::get()->getSignal("scene_changed")->add( sceneChangedCb );
 
     // init scriptImportWidget
-    scriptImportWidget = (GtkTable*)gtk_table_new(0,0,true);
+    scriptImportWidget = (GtkGrid*)gtk_grid_new();
     GtkScrolledWindow* sw1 = (GtkScrolledWindow*)gtk_scrolled_window_new(0,0);
     GtkScrolledWindow* sw2 = (GtkScrolledWindow*)gtk_scrolled_window_new(0,0);
     import_treeview1 = (GtkTreeView*)gtk_tree_view_new();
@@ -1331,9 +1337,16 @@ VRGuiScripts::VRGuiScripts() {
     import_liststore1 = gtk_list_store_new(9, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_INT);
     import_liststore2 = gtk_list_store_new(9, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_INT);
 
-    GtkAttachOptions Opt = GtkAttachOptions(GTK_EXPAND|GTK_FILL);
-    gtk_table_attach(scriptImportWidget, (GtkWidget*)sw1, 0,1,0,1,  Opt, Opt, 0, 0);
-    gtk_table_attach(scriptImportWidget, (GtkWidget*)sw2, 0,1,1,2,  Opt, Opt, 0, 0);
+    auto line = gtk_separator_new(GTK_ORIENTATION_VERTICAL);
+
+    gtk_grid_attach(scriptImportWidget, (GtkWidget*)sw2, 0,0,1,1);
+    gtk_grid_attach(scriptImportWidget, (GtkWidget*)line, 1,0,1,1);
+    gtk_grid_attach(scriptImportWidget, (GtkWidget*)sw1, 2,0,1,1);
+    gtk_widget_set_vexpand((GtkWidget*)sw1, true);
+    gtk_widget_set_hexpand((GtkWidget*)sw1, true);
+    gtk_widget_set_vexpand((GtkWidget*)line, true);
+    gtk_widget_set_vexpand((GtkWidget*)sw2, true);
+    gtk_widget_set_hexpand((GtkWidget*)sw2, true);
     gtk_container_add((GtkContainer*)sw1, (GtkWidget*)import_treeview1);
     gtk_container_add((GtkContainer*)sw2, (GtkWidget*)import_treeview2);
 

@@ -13,6 +13,7 @@
 #include "core/utils/toString.h"
 #include "core/utils/VRUndoInterfaceT.h"
 #include "core/scene/VRScene.h"
+#include "core/scene/import/VRImport.h"
 #include "core/setup/VRSetup.h"
 #include "core/setup/windows/VRWindow.h"
 #include "core/scripting/VRScript.h"
@@ -751,8 +752,9 @@ void VRMaterial::setTextureWrapping(int wrapS, int wrapT, int unit) {
 }
 
 void VRMaterial::setTexture(string img_path, bool alpha, int unit) { // TODO: improve with texture map
-    if (exists(img_path)) img_path = canonical(img_path);
-    else { VRLog::wrn("PyAPI", "Material '" + getName() + "' setTexture failed, path invalid: '" + img_path + "'"); return; }
+    if ( !VRImport::get()->checkPath( img_path ) )
+        { VRLog::wrn("PyAPI", "Material '" + getName() + "' setTexture failed, path invalid: '" + img_path + "'"); return; }
+    else img_path = canonical(img_path);
     auto tex = VRTexture::create();
     tex->read(img_path);
     setTexture(tex, alpha, unit);
