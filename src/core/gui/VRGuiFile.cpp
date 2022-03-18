@@ -19,9 +19,9 @@ GtkWidget* VRGuiFile::treeview = 0;
 GtkListStore* VRGuiFile::filesStore;
 GtkWidget* VRGuiFile::pathEntry = 0;
 GtkWidget* VRGuiFile::fileEntry = 0;
-GtkTable* VRGuiFile::addon = 0;
-GtkTable* VRGuiFile::geoImportWidget = 0;
-GtkTable* VRGuiFile::saveasWidget = 0;
+GtkGrid* VRGuiFile::addon = 0;
+GtkGrid* VRGuiFile::geoImportWidget = 0;
+GtkGrid* VRGuiFile::saveasWidget = 0;
 function<void()> VRGuiFile::sigApply = function<void()>();
 function<void()> VRGuiFile::sigClose = function<void()>();
 function<void()> VRGuiFile::sigSelect = function<void()>();
@@ -133,8 +133,9 @@ void VRGuiFile::close() {
     clearFilter();
 }
 
-void VRGuiFile::setWidget(GtkTable* table, bool expand, bool fill) {
-    if (addon == table) return;
+void VRGuiFile::setWidget(GtkGrid* grid, bool expand, bool fill) {
+    cout << "VRGuiFile::setWidget " << grid << " " << expand << " " << fill << endl;
+    if (addon == grid) return;
     auto vbox = gtk_dialog_get_content_area(GTK_DIALOG(dialog));
     if (!vbox) cout << "Error in VRGuiFile::setWidget: no file dialog vbox!" << endl;
 
@@ -143,11 +144,11 @@ void VRGuiFile::setWidget(GtkTable* table, bool expand, bool fill) {
         g_object_ref(addon); // increase ref count
         gtk_container_remove((GtkContainer*)vbox, (GtkWidget*)addon);
     }
-    addon = table;
-    if (table == 0) return;
+    addon = grid;
+    if (grid == 0) return;
 
     // add
-    gtk_box_pack_start(GTK_BOX(vbox), GTK_WIDGET(table), expand, fill, 0);
+    gtk_box_pack_start(GTK_BOX(vbox), GTK_WIDGET(grid), expand, fill, 0);
     gtk_widget_show_all(GTK_WIDGET(vbox));
 }
 
@@ -177,7 +178,7 @@ void VRGuiFile::on_change_preset(GtkComboBox* b) {
 
 void VRGuiFile::setGeoLoadWidget() {
     if (geoImportWidget == 0) {
-        geoImportWidget = (GtkTable*)gtk_table_new(0,0,false);
+        geoImportWidget = (GtkGrid*)gtk_grid_new();
         auto fixed = gtk_fixed_new();
         auto cache_override = gtk_check_button_new_with_label("ignore cache");
         auto label163 = gtk_label_new("Loader:");
@@ -196,12 +197,13 @@ void VRGuiFile::setGeoLoadWidget() {
         GtkAttachOptions opts3 = GTK_FILL;
         GtkAttachOptions opts2 = GtkAttachOptions(0);
 
-        gtk_table_attach(geoImportWidget, (GtkWidget*)fixed, 0,3,0,1, opts, opts2, 0, 0);
-        gtk_table_attach(geoImportWidget, (GtkWidget*)cache_override, 3,4,0,1, opts3, opts2, 0, 0);
-        gtk_table_attach(geoImportWidget, (GtkWidget*)label163, 0,1,1,2, opts, opts2, 0, 0);
-        gtk_table_attach(geoImportWidget, (GtkWidget*)combobox15, 1,2,1,2, opts, opts2, 0, 0);
-        gtk_table_attach(geoImportWidget, (GtkWidget*)openFileWarning1, 2,3,1,2, opts, opts2, 10, 0);
-        gtk_table_attach(geoImportWidget, (GtkWidget*)entry21, 3,4,1,2, opts3, opts2, 0, 0);
+        gtk_grid_attach(geoImportWidget, (GtkWidget*)fixed, 0,0,3,1);
+        gtk_grid_attach(geoImportWidget, (GtkWidget*)cache_override, 3,0,1,1);
+        gtk_grid_attach(geoImportWidget, (GtkWidget*)label163, 0,1,1,1);
+        gtk_grid_attach(geoImportWidget, (GtkWidget*)combobox15, 1,1,1,1);
+        gtk_grid_attach(geoImportWidget, (GtkWidget*)openFileWarning1, 2,1,1,1);
+        gtk_grid_attach(geoImportWidget, (GtkWidget*)entry21, 3,1,1,1);
+        gtk_widget_set_hexpand((GtkWidget*)fixed, true);
 
         connect_signal<void>(entry21, bind(VRGuiFile::on_edit_import_scale, (_GtkEntry*)entry21), "activate");
         connect_signal<void>(cache_override, bind(VRGuiFile::on_toggle_cache_override, (_GtkCheckButton*)cache_override), "toggled");
@@ -218,7 +220,7 @@ void VRGuiFile::setGeoLoadWidget() {
 
 void VRGuiFile::setSaveasWidget( function<void(GtkCheckButton*)> sig ) {
     if (saveasWidget == 0) {
-        saveasWidget = (GtkTable*)gtk_table_new(0,0,false);
+        saveasWidget = (GtkGrid*)gtk_grid_new();
         auto fixed = gtk_fixed_new();
         auto encrypt = gtk_check_button_new_with_label("encrypt");
 
@@ -226,8 +228,9 @@ void VRGuiFile::setSaveasWidget( function<void(GtkCheckButton*)> sig ) {
         GtkAttachOptions opts3 = GTK_FILL;
         GtkAttachOptions opts2 = GtkAttachOptions(0);
 
-        gtk_table_attach(saveasWidget, (GtkWidget*)fixed, 0,3,0,1, opts, opts2, 0, 0);
-        gtk_table_attach(saveasWidget, (GtkWidget*)encrypt, 3,4,0,1, opts3, opts2, 0, 0);
+        gtk_grid_attach(saveasWidget, (GtkWidget*)fixed, 0,0,3,1);
+        gtk_grid_attach(saveasWidget, (GtkWidget*)encrypt, 3,0,1,1);
+        gtk_widget_set_hexpand((GtkWidget*)fixed, true);
 
         connect_signal((GtkWidget*)encrypt, sig, "toggled");
     }

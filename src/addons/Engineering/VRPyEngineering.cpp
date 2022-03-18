@@ -9,7 +9,24 @@ using namespace OSG;
 simpleVRPyType(NumberingEngine, New_VRObjects_ptr);
 simpleVRPyType(RobotArm, New_named_ptr);
 simpleVRPyType(PipeSystem, New_ptr);
+simpleVRPyType(ElectricSystem, New_ptr);
+simpleVRPyType(ElectricVisualization, New_ptr);
+simpleVRPyType(Wire, 0);
+simpleVRPyType(WiringSimulation, 0);
+simpleVRPyType(ElectricComponent, 0);
+simpleVRPyType(LADVariable, New_ptr);
 simpleVRPyType(RocketExhaust, New_VRObjects_ptr);
+
+template<> PyObject* VRPyTypeCaster::cast(const VRElectricComponent::Address& a) {
+    map<string, string> v;
+    v["address"] = a.address;
+    v["ecadID"] = a.ecadID;
+    v["port"] = a.port;
+    v["component"] = a.component;
+    v["socket"] = a.socket;
+    v["machine"] = a.machine;
+    return VRPyTypeCaster::cast(v);
+}
 
 PyMethodDef VRPyPipeSystem::methods[] = {
     {"addNode", PyWrap( PipeSystem, addNode, "Add node, type can be [Tank, Valve, Outlet, Pump]", int, string, PosePtr, string, map<string, string> ) },
@@ -40,6 +57,101 @@ PyMethodDef VRPyPipeSystem::methods[] = {
     {"setTankDensity", PyWrap( PipeSystem, setTankDensity, "Set tank density", void, string, double ) },
     {"setPipeRadius", PyWrap( PipeSystem, setPipeRadius, "Set pipe radius, set to 0 to simulate blocked pipe", void, int, double ) },
     {"printSystem", PyWrap( PipeSystem, printSystem, "Print system state to console", void ) },
+    {NULL}
+};
+
+typedef map<string, VRLADVariablePtr> strLadMap;
+typedef map<string, VRObjectPtr> strObjMap;
+typedef map<size_t, VRElectricComponentPtr> intECompMap;
+typedef map<string, vector<VRElectricComponentPtr>> strVecECompMap;
+
+PyMethodDef VRPyElectricSystem::methods[] = {
+    {"newComponent", PyWrap( ElectricSystem, newComponent, "Add new component", VRElectricComponentPtr, string, string, string ) },
+    {"addVariable", PyWrap( ElectricSystem, addVariable, "Add new variable", void, string, VRLADVariablePtr ) },
+    {"importECAD", PyWrap( ElectricSystem, importECAD, "Import ECAD data", void ) },
+    {"buildECADgraph", PyWrap( ElectricSystem, buildECADgraph, "Build graphs", void ) },
+    {"getLADVariables", PyWrap( ElectricSystem, getLADVariables, "Get LAD variables", strLadMap ) },
+    {"getObjectsByName", PyWrap( ElectricSystem, getObjectsByName, "Get objects map", strObjMap ) },
+    {"simECAD", PyWrap( ElectricSystem, simECAD, "Do simulation step", void ) },
+    {"getRegistred", PyWrap( ElectricSystem, getRegistred, "Get components", vector<VRElectricComponentPtr>, string ) },
+    {"getComponents", PyWrap( ElectricSystem, getComponents, "Get components", intECompMap ) },
+    {"getComponentsByEGraphID", PyWrap( ElectricSystem, getComponentsByEGraphID, "Get components", intECompMap ) },
+    {"getComponentsByPGraphID", PyWrap( ElectricSystem, getComponentsByPGraphID, "Get components", intECompMap ) },
+    {"getComponentIDs", PyWrap( ElectricSystem, getComponentIDs, "Get components", strVecECompMap ) },
+    {"getElectricGraph", PyWrap( ElectricSystem, getElectricGraph, "Get electric graph", GraphPtr ) },
+    {"getProfinetGraph", PyWrap( ElectricSystem, getProfinetGraph, "Get profinet graph", GraphPtr ) },
+    {NULL}
+};
+
+PyMethodDef VRPyElectricVisualization::methods[] = {
+    {"setSystem", PyWrap( ElectricVisualization, setSystem, "Set electric system", void, VRElectricSystemPtr ) },
+    {"update", PyWrap( ElectricVisualization, update, "Update visualization", void ) },
+    {"updateWires", PyWrap( ElectricVisualization, updateWires, "Update visualization, only wires", void ) },
+    {NULL}
+};
+
+PyMethodDef VRPyWire::methods[] = {
+    {"setEntity", PyWrap( Wire, setEntity, "Set entity", void, VREntityPtr ) },
+    {"getEntity", PyWrap( Wire, getEntity, "Get entity", VREntityPtr ) },
+    {"getLabel", PyWrap( Wire, getLabel, "Get label", string ) },
+    {"getType", PyWrap( Wire, getType, "Get type", string ) },
+    {"getSource", PyWrap( Wire, getSource, "Get source address", VRElectricComponent::Address ) },
+    {"getTarget", PyWrap( Wire, getTarget, "Get target address", VRElectricComponent::Address ) },
+    {"getOther", PyWrap( Wire, getOther, "Get address of other component", VRElectricComponent::Address, VRElectricComponentPtr ) },
+    {NULL}
+};
+
+PyMethodDef VRPyWiringSimulation::methods[] = {
+    {NULL}
+};
+
+PyMethodDef VRPyElectricComponent::methods[] = {
+    {"setCurrent", PyWrap( ElectricComponent, setCurrent, "Set current on port (current, port), current is '0' or '1'", void, string, string ) },
+    {"setName", PyWrap( ElectricComponent, setName, "Set name", void, string ) },
+    {"setMcadID", PyWrap( ElectricComponent, setMcadID, "Set mcad ID", void, string ) },
+    {"setGeometry", PyWrap( ElectricComponent, setGeometry, "Set geometry", void, VRObjectPtr ) },
+    {"setEntity", PyWrap( ElectricComponent, setEntity, "Set entity", void, VREntityPtr ) },
+    {"setEGraphID", PyWrap( ElectricComponent, setEGraphID, "Set E graph ID", void, int ) },
+    {"setPGraphID", PyWrap( ElectricComponent, setPGraphID, "Set P graph ID", void, int ) },
+    {"setPGraphID", PyWrap( ElectricComponent, setPGraphID, "Set P graph ID", void, int ) },
+    {"setPortEntity", PyWrap( ElectricComponent, setPortEntity, "Set port entity", void, string, VREntityPtr ) },
+    {"setPosition", PyWrap( ElectricComponent, setPosition, "Set position", void, Vec3d ) },
+    {"getName", PyWrap( ElectricComponent, getName, "Get name", string ) },
+    {"getWire", PyWrap( ElectricComponent, getWire, "Get wire", VRWirePtr, VRElectricComponentPtr ) },
+    {"getEcadID", PyWrap( ElectricComponent, getEcadID, "Get ecad ID", string ) },
+    {"getMcadID", PyWrap( ElectricComponent, getMcadID, "Get mcad ID", string ) },
+    {"getGeometry", PyWrap( ElectricComponent, getGeometry, "Get geometry", VRObjectPtr ) },
+    {"getEntity", PyWrap( ElectricComponent, getEntity, "Get entity", VREntityPtr ) },
+    {"getConnections", PyWrap( ElectricComponent, getConnections, "Get wires", vector<VRWirePtr> ) },
+    {"getPorts", PyWrap( ElectricComponent, getPorts, "Get ports names", vector<string> ) },
+    {"hasAddress", PyWrap( ElectricComponent, hasAddress, "Check address", bool ) },
+    {"getAddress", PyWrap( ElectricComponent, getAddress, "Get address", VRElectricComponent::Address ) },
+    {"getAddressMachine", PyWrap( ElectricComponent, getAddressMachine, "Get address machine", string ) },
+    {"getPortWire", PyWrap( ElectricComponent, getPortWire, "Get port wire", VRWirePtr, string ) },
+    {"getPortEntity", PyWrap( ElectricComponent, getPortEntity, "Get port entity", VREntityPtr, string ) },
+    {"getEGraphID", PyWrap( ElectricComponent, getEGraphID, "Get port entity", int ) },
+    {"getPGraphID", PyWrap( ElectricComponent, getPGraphID, "Get port entity", int ) },
+    {"getPosition", PyWrap( ElectricComponent, getPosition, "Get position", Vec3d ) },
+    {"getConnection", PyWrap( ElectricComponent, getConnection, "Get connection", VRWirePtr, string ) },
+    {"addPort", PyWrap( ElectricComponent, addPort, "Add port", void, string, string, string, string ) },
+    {NULL}
+};
+
+PyMethodDef VRPyLADVariable::methods[] = {
+    {"setName", PyWrap( LADVariable, setName, "Set name", void, string ) },
+    {"setLogicalAddress", PyWrap( LADVariable, setLogicalAddress, "Set logical address", void, string ) },
+    {"setDataType", PyWrap( LADVariable, setDataType, "Set data type", void, string ) },
+    {"setSource", PyWrap( LADVariable, setSource, "Set source", void, string ) },
+    {"setRemanence", PyWrap( LADVariable, setRemanence, "Set remanence", void, string ) },
+    {"setValue", PyWrap( LADVariable, setValue, "Set value", void, string ) },
+    {"setStartValue", PyWrap( LADVariable, setStartValue, "Set start value", void, string ) },
+    {"getName", PyWrap( LADVariable, getName, "Get name", string ) },
+    {"getLogicalAddress", PyWrap( LADVariable, getLogicalAddress, "Get logical address", string ) },
+    {"getDataType", PyWrap( LADVariable, getDataType, "Get data type", string ) },
+    {"getSource", PyWrap( LADVariable, getSource, "Get source", string ) },
+    {"getRemanence", PyWrap( LADVariable, getRemanence, "Get remanence", string ) },
+    {"getValue", PyWrap( LADVariable, getValue, "Get value", string ) },
+    {"getStartValue", PyWrap( LADVariable, getStartValue, "Get start value", string ) },
     {NULL}
 };
 

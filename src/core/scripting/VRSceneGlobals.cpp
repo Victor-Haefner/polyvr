@@ -61,7 +61,7 @@ PyMethodDef VRSceneGlobals::methods[] = {
 	{"getLoadGeometryProgress", (PyCFunction)VRSceneGlobals::getLoadGeometryProgress, METH_VARARGS, "Return the progress object for geometry loading - getLoadGeometryProgress()" },
 	{"createPrimitive", (PyCFunction)VRSceneGlobals::createPrimitive, METH_VARARGS|METH_KEYWORDS, "Helper to create a geometric primitive (see setPrimitive for the params) with optional material or color - createPrimitive(name, params, [ parent, material, color] )" },
 	{"stackCall", (PyCFunction)VRSceneGlobals::stackCall, METH_VARARGS, "Schedules a call to a python function - stackCall( function, delay, [args] )" },
-	{"openFileDialog", (PyCFunction)VRSceneGlobals::openFileDialog, METH_VARARGS, "Open a file dialog - openFileDialog( onLoad, mode, title, default_path, filter )\n mode : {Save, Load, New, Create}" },
+	{"openFileDialog", (PyCFunction)VRSceneGlobals::openFileDialog, METH_VARARGS, "Open a file dialog - openFileDialog( onLoad, mode, title, default_path, filter )\n mode : {Save, Load, New, Create}\n callback signature: onLoad(path, scale, preset)" },
 	{"updateGui", (PyCFunction)VRSceneGlobals::updateGui, METH_NOARGS, "Update the gui" },
 	{"render", (PyCFunction)VRSceneGlobals::render, METH_NOARGS, "Renders the viewports" },
 	{"triggerScript", (PyCFunction)VRSceneGlobals::pyTriggerScript, METH_VARARGS, "Trigger a script - triggerScript( str script )" },

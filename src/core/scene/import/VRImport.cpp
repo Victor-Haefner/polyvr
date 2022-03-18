@@ -140,7 +140,7 @@ VRTransformPtr VRImport::load(string path, VRObjectPtr parent, bool useCache, st
         return res;
     }
 
-    VRTransformPtr res = VRTransform::create("proxy");
+    VRTransformPtr res = VRTransform::create( getFileName(path, false) );
     if (!thread) {
         LoadJob job(path, preset, res, progress, options, useCache, useBinaryCache);
         job.load(VRThreadWeakPtr());
@@ -276,20 +276,6 @@ void VRImport::LoadJob::load(VRThreadWeakPtr tw) {
     VRImport::get()->triggerCallbacks(params);
 }
 
-string repSpaces(string s) {
-    for(auto it = s.begin(); it != s.end(); ++it) {
-        if(*it == ' ') *it = '|';
-    }
-    return s;
-}
-
-string unrepSpaces(string s) {
-    for(auto it = s.begin(); it != s.end(); ++it) {
-        if(*it == '|') *it = ' ';
-    }
-    return s;
-}
-
 VRObjectPtr VRImport::OSGConstruct(NodeMTRecPtr n, VRObjectPtr parent, string name, string currentFile, NodeCore* geoTrans, string geoTransName) {
     if (n == 0) return 0; // TODO add an osg wrap method for each object?
 
@@ -379,7 +365,7 @@ VRObjectPtr VRImport::OSGConstruct(NodeMTRecPtr n, VRObjectPtr parent, string na
 
         VRGeometry::Reference ref;
         ref.type = VRGeometry::FILE;
-        ref.parameter = repSpaces(currentFile) + " " + repSpaces( tmp_g->getBaseName() );
+        ref.parameter = currentFile + "|" + tmp_g->getName();
         tmp_g->setMesh( OSGGeometry::create( osgGeo ), ref, true);
         tmp = tmp_g;
     }
@@ -398,9 +384,6 @@ VRObjectPtr VRImport::OSGConstruct(NodeMTRecPtr n, VRObjectPtr parent, string na
 }
 
 VRGeometryPtr VRImport::loadGeometry(string file, string object, string preset, bool thread) {
-    file = unrepSpaces(file);
-    object = unrepSpaces(object);
-
     if (cache.count(file) == 0) load(file, 0, true, preset, thread); // set useCache to true, else this wont work obviously..
 
     if (cache.count(file) == 0) {
@@ -435,12 +418,13 @@ VRImport::Cache::Cache(VRTransformPtr root) { setup(root); }
 void VRImport::Cache::setup(VRTransformPtr root) {
     objects.clear();
     this->root = root;
-    //for (auto c : root->getChildren(true)) objects[getName(c->getNode()->node)] = c;
-    for (auto c : root->getChildren(true)) objects[c->getName()] = c;
-    //for (auto c : root->getChildren(true)) objects[c->getBaseName()] = c; // not a valid option as basename is not unique! SW VRML import does not provide unique names
 
     root->setNameSpace("VRImportCache"); // maybe try a unique namespace (use the path)?
     for (auto o : root->getChildren(true) ) o->setNameSpace("VRImportCache");
+
+    //for (auto c : root->getChildren(true)) objects[getName(c->getNode()->node)] = c;
+    for (auto c : root->getChildren(true)) objects[c->getName()] = c;
+    //for (auto c : root->getChildren(true)) objects[c->getBaseName()] = c; // not a valid option as basename is not unique! SW VRML import does not provide unique names
 }
 
 VRTransformPtr VRImport::Cache::retrieve(VRObjectPtr parent) {

@@ -47,7 +47,10 @@ vector<string> splitString(const string& s, const string& d) {
     return res;
 }
 
-string subString(const string& s, int beg, int len) { return s.substr(beg, len); }
+string subString(const string& s, int beg, int len) {
+    if (len < 0) len = s.size()-beg;
+    return s.substr(beg, len);
+}
 
 bool startsWith(const string& s, const string& s2, bool caseSensitive) {
     string s1 = subString(s, 0, s2.size());

@@ -8,7 +8,7 @@
 struct _GtkWidget;
 struct _GtkListStore;
 struct _GtkButton;
-struct _GtkTable;
+struct _GtkGrid;
 struct _GtkCheckButton;
 struct _GtkEntry;
 struct _GtkComboBox;
@@ -28,9 +28,9 @@ class VRGuiFile {
         static _GtkWidget* pathEntry;
         static _GtkWidget* treeview;
         static _GtkListStore* filesStore;
-        static _GtkTable* addon;
-        static _GtkTable* geoImportWidget;
-        static _GtkTable* saveasWidget;
+        static _GtkGrid* addon;
+        static _GtkGrid* geoImportWidget;
+        static _GtkGrid* saveasWidget;
         static function<void()> sigApply;
         static function<void()> sigClose;
         static function<void()> sigSelect;
@@ -64,7 +64,7 @@ class VRGuiFile {
         static void clearFilter();
 
         static void setCallbacks(function<void()> sa = function<void()>(), function<void()> sc = function<void()>(), function<void()> ss = function<void()>());
-        static void setWidget(_GtkTable* table, bool expand = false, bool fill = false);
+        static void setWidget(_GtkGrid* grid, bool expand = false, bool fill = false);
         static void setGeoLoadWidget();
         static void setSaveasWidget(function<void(_GtkCheckButton*)> sig);
 

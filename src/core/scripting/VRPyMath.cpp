@@ -911,7 +911,7 @@ PyMethodDef VRPyXMLElement::methods[] = {
     {"getAttributes", PyWrap2(XMLElement, getAttributes, "Get attributes as dictionary", ssDict) },
     {"hasAttribute", PyWrap2(XMLElement, hasAttribute, "Return if element has an attribute", bool, string) },
     {"setAttribute", PyWrap2(XMLElement, setAttribute, "Set an attribute (name, value)", void, string, string) },
-    {"getChildren", PyWrapOpt2(XMLElement, getChildren, "Get children, optional element name", "", vector<XMLElementPtr>, string) },
+    {"getChildren", PyWrapOpt2(XMLElement, getChildren, "Get children, optional element name and recursive", "|0", vector<XMLElementPtr>, string, bool) },
     {"getChild", PyWrap2(XMLElement, getChild, "Get child by name", XMLElementPtr, string) },
     {"addChild", PyWrap2(XMLElement, addChild, "Add child element", XMLElementPtr, string) },
     {"print", PyWrap2(XMLElement, print, "Print to console", void) },

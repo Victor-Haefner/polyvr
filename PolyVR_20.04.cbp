@@ -407,6 +407,8 @@
 		<Unit filename="src/addons/Engineering/Milling/VRPyMillingMachine.h" />
 		<Unit filename="src/addons/Engineering/Milling/VRPyMillingWorkPiece.cpp" />
 		<Unit filename="src/addons/Engineering/Milling/VRPyMillingWorkPiece.h" />
+		<Unit filename="src/addons/Engineering/Programming/VRLADVariable.cpp" />
+		<Unit filename="src/addons/Engineering/Programming/VRLADVariable.h" />
 		<Unit filename="src/addons/Engineering/Space/VRRocketExhaust.cpp" />
 		<Unit filename="src/addons/Engineering/Space/VRRocketExhaust.h" />
 		<Unit filename="src/addons/Engineering/VREngineeringFwd.h" />
@@ -422,6 +424,16 @@
 		<Unit filename="src/addons/Engineering/VRPyRobotArm.h" />
 		<Unit filename="src/addons/Engineering/VRRobotArm.cpp" />
 		<Unit filename="src/addons/Engineering/VRRobotArm.h" />
+		<Unit filename="src/addons/Engineering/Wiring/VRElectricComponent.cpp" />
+		<Unit filename="src/addons/Engineering/Wiring/VRElectricComponent.h" />
+		<Unit filename="src/addons/Engineering/Wiring/VRElectricSystem.cpp" />
+		<Unit filename="src/addons/Engineering/Wiring/VRElectricSystem.h" />
+		<Unit filename="src/addons/Engineering/Wiring/VRElectricVisualization.cpp" />
+		<Unit filename="src/addons/Engineering/Wiring/VRElectricVisualization.h" />
+		<Unit filename="src/addons/Engineering/Wiring/VRWire.cpp" />
+		<Unit filename="src/addons/Engineering/Wiring/VRWire.h" />
+		<Unit filename="src/addons/Engineering/Wiring/VRWiringSimulation.cpp" />
+		<Unit filename="src/addons/Engineering/Wiring/VRWiringSimulation.h" />
 		<Unit filename="src/addons/LeapMotion/VRHandGeo.cpp" />
 		<Unit filename="src/addons/LeapMotion/VRHandGeo.h" />
 		<Unit filename="src/addons/LeapMotion/VRLeap.cpp" />
@@ -1444,6 +1456,8 @@
 		<Unit filename="src/core/setup/VRSetupFwd.h" />
 		<Unit filename="src/core/setup/VRSetupManager.cpp" />
 		<Unit filename="src/core/setup/VRSetupManager.h" />
+		<Unit filename="src/core/setup/VRWebXR.cpp" />
+		<Unit filename="src/core/setup/VRWebXR.h" />
 		<Unit filename="src/core/setup/devices/VRAvatar.cpp" />
 		<Unit filename="src/core/setup/devices/VRAvatar.h" />
 		<Unit filename="src/core/setup/devices/VRDevice.cpp" />

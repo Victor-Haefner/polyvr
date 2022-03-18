@@ -111,7 +111,7 @@ struct VRPyBaseT : public VRPyBase {
     static PyObject* allocPtr(PyTypeObject* type, std::shared_ptr<T> t);
     static void dealloc(VRPyBaseT<T>* self);
     static int init(VRPyBaseT<T> *self, PyObject *args, PyObject *kwds);
-    static void registerModule(string name, PyObject* mod, vector<PyTypeObject*> tp_base = 0);
+    static void registerModule(string name, PyObject* mod, vector<PyTypeObject*> tp_base);
 };
 
 #endif // VRPYBASE_H_INCLUDED

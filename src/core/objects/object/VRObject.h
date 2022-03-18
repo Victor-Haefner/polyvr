@@ -114,6 +114,7 @@ class VRObject : public std::enable_shared_from_this<VRObject>, public VRName, p
         void clearLinks();
 
         void switchParent(VRObjectPtr new_p, int place = -1);
+        void replaceChild(int i, VRObjectPtr new_c);
         void detach();
 
         int getChildIndex();

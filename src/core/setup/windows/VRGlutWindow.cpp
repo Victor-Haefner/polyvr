@@ -5,6 +5,8 @@
 
 #include "../devices/VRMouse.h"
 #include "../devices/VRKeyboard.h"
+#include "core/setup/VRSetup.h"
+#include "core/setup/VRWebXR.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -112,7 +114,10 @@ void VRGlutWindow::onKeyboard_special(int c, int s, int x, int y) {
 
 void VRGlutWindow::render(bool fromThread) {
     if (fromThread) return;
+    auto webxr = dynamic_pointer_cast<VRWebXR>( VRSetup::getCurrent()->getDevice("webxr") );
+    if (webxr) webxr->preRender();
     VRWindow::render();
+    if (webxr) webxr->postRender();
 }
 
 OSG_END_NAMESPACE;
