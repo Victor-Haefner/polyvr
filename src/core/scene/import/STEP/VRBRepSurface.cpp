@@ -5,6 +5,7 @@
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/geometry/OSGGeometry.h"
 #include "core/objects/geometry/VRGeoData.h"
+#include "core/utils/isNan.h"
 #include <OpenSG/OSGTriangleIterator.h>
 
 using namespace OSG;
@@ -53,23 +54,32 @@ VRGeometryPtr VRBRepSurface::build(string type) {
         }
     };
 
+    auto containsNan = [&](VRBRepBound& b) {
+        for (auto p : b.points) if (isNan(p)) return true;
+        return false;
+    };
+
     if (type == "Plane") {
         //return 0;
+        //cout << "make Plane, N bounds: " << bounds.size() << endl;
         Triangulator t;
         if (bounds.size() == 0) cout << "Warning: No bounds!\n";
-        for (auto b : bounds) {
+        for (auto& b : bounds) {
             //if (b.points.size() == 0) cout << "Warning: No bound points for bound " << b.BRepType << endl;
+            bool doPrint = containsNan(b);
             VRPolygon poly;
-            for(auto p : b.points) {
+            for (auto p : b.points) {
+                if (doPrint) cout << " pIn: " << p << endl;
                 mI.mult(Pnt3d(p),p);
+                if (doPrint) cout << " pOut: " << p << " " << mI[0] << ", " << mI[1] << ", " << mI[2] << ", " << mI[3] << endl;
                 poly.addPoint(Vec2d(p[0], p[1]));
-                //cout << Vec2d(p[0], p[1]) << endl;
             }
             if (!poly.isCCW()) poly.reverseOrder();
             t.add(poly);
         }
 
         auto g = t.compute(); // TODO: check about g??
+        if (!g) return 0;
         if (!g->getMesh()->geo->getPositions()) cout << "NO MESH!\n";
         g->setMatrix(m);
         return g;
@@ -99,7 +109,7 @@ VRGeometryPtr VRBRepSurface::build(string type) {
             cout << " poly\n";
             for (auto& e : b.edges) {
                 if (e.etype == "Circle") {
-                    float h = cylindricUnproject(*e.EBeg)[1];
+                    float h = cylindricUnproject(e.EBeg)[1];
                     double a1, a2;
                     a1 = e.a1; a2 = e.a2;
                     Vec3d cd = e.center->dir();
@@ -125,8 +135,8 @@ VRGeometryPtr VRBRepSurface::build(string type) {
                 }
 
                 if (e.etype == "Line") {
-                    Vec2d p1 = cylindricUnproject(*e.EBeg);
-                    Vec2d p2 = cylindricUnproject(*e.EEnd);
+                    Vec2d p1 = cylindricUnproject(e.EBeg);
+                    Vec2d p2 = cylindricUnproject(e.EEnd);
 
                     cout << " line " << Vec3d(p1[0],p2[0],la) << endl;
                     rebaseAngle(p1[0], la);
@@ -171,6 +181,7 @@ VRGeometryPtr VRBRepSurface::build(string type) {
         }
 
         auto g = t.compute();
+        if (!g) return 0;
         if (auto gg = g->getMesh()->geo) { if (!gg->getPositions()) cout << "VRBRepSurface::build: Triangulation failed, no mesh positions!\n";
         } else cout << "VRBRepSurface::build: Triangulation failed, no mesh generated!\n";
 
@@ -706,6 +717,13 @@ VRGeometryPtr VRBRepSurface::build(string type) {
         return 0;
     }
 
+    if (type == "Conical_Surface") {
+        return 0;
+    }
+
+    if (type == "Toroidal_Surface") {
+        return 0;
+    }
     cout << "VRBRepSurface::build Error: unhandled surface type " << type << endl;
 
     // wireframe

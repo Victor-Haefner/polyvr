@@ -1186,6 +1186,8 @@
 		<Unit filename="src/core/scene/import/STEP/VRBRepUtils.h" />
 		<Unit filename="src/core/scene/import/STEP/VRSTEP.cpp" />
 		<Unit filename="src/core/scene/import/STEP/VRSTEP.h" />
+		<Unit filename="src/core/scene/import/STEP/VRSTEPExplorer.cpp" />
+		<Unit filename="src/core/scene/import/STEP/VRSTEPExplorer.h" />
 		<Unit filename="src/core/scene/import/VRDWG.cpp" />
 		<Unit filename="src/core/scene/import/VRDWG.h" />
 		<Unit filename="src/core/scene/import/VRDXF.cpp" />

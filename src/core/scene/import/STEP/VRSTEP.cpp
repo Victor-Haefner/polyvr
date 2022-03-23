@@ -1,4 +1,5 @@
 #include "VRSTEP.h"
+#include "VRSTEPExplorer.h"
 
 #include <STEPfile.h>
 #include <STEPcomplex.h>
@@ -9,6 +10,7 @@
 #include <unistd.h>
 #include <memory>
 #include <algorithm>
+#include "core/utils/isNan.h"
 #include "core/utils/system/VRSystem.h"
 
 #include "core/objects/geometry/VRGeometry.h"
@@ -17,7 +19,6 @@
 #include "core/utils/VRFunction.h"
 #include "core/math/polygon.h"
 #include "core/math/pose.h"
-//#include "core/gui/VRGuiTreeExplorer.h"
 
 #include "VRBRepEdge.h"
 #include "VRBRepBound.h"
@@ -36,8 +37,6 @@ sudo gdebi -n libstepcode-dev.deb
 
 using namespace std;
 using namespace OSG;
-
-//VRGuiTreeExplorerPtr explorer;
 
 void VRSTEP::loadT(string file, STEPfilePtr sfile, bool* done) {
     if (exists(file)) file = canonical(file);
@@ -82,7 +81,7 @@ VRSTEP::VRSTEP() {
     addType< tuple<int, int, field<STEPentity*>, bool, bool, bool > >( "B_Spline_Surface", "a0i|a1i|a2Fe|a4b|a5b|a6b", "a0i|a1i|a2Fe|a4b|a5b|a6b", false);
 
     addType< tuple<int, int, field<STEPentity*>, bool, bool, bool, vector<int>, vector<int>, vector<double>, vector<double> > >( "B_Spline_Surface_With_Knots",
-        "a0i|a1i|a2Fe|a4b|a5b|a6b|a7Vi|a8Vi|a9Vf|a10Vf",
+        "a1i|a2i|a3Fe|a5b|a6b|a7b|a8Vi|a9Vi|a10Vf|a11Vf",
         "c0a0i|c0a1i|c0a2Fe|c0a4b|c0a5b|c0a6b|c1a0Vi|c1a1Vi|c1a2Vf|c1a3Vf", false);
     //addType< tuple<int, int, field<STEPentity*>, bool, bool, bool, vector<int>, vector<int>, vector<double>, vector<double> > >( "B_Spline_Surface_With_Knots", "a0i|a1i|a2Fe|a4b|a5b|a6b|a7Vi|a8Vi|a9Vf|a10Vf", "c1a0i|c1a1i|c1a2Fe|c1a4b|c1a5b|c1a6b|c2a0Vi|c2a1Vi|c2a2Vf|c2a3Vf", false);
 
@@ -125,7 +124,7 @@ VRSTEP::VRSTEP() {
     addType< tuple<STEPentity*, STEPentity*> >( "Shape_Representation_Relationship", "a2e|a3e", "c0a2e|c0a3e", false);
     //addType< tuple<STEPentity*, STEPentity*> >( "Geometric_Representation_Context", "a2e|a3e" );
 
-    addType< tuple<string, string> >( "Product", "a0S|a1S", "", false);
+    addType< tuple<string, string> >( "Product", "a0S|a2S", "", false);
     addType< tuple<STEPentity*> >( "Property_Definition", "a2se", "", false);
     addType< tuple<STEPentity*> >( "Shape_Aspect", "a2e", "", false);
     addType< tuple<STEPentity*> >( "Product_Definition", "a2e", "", false);
@@ -189,21 +188,17 @@ VRSTEP::VRSTEP() {
     }
 }
 
-void VRSTEP::on_explorer_select(VRGuiTreeExplorer* e) {
-    /*auto row = e->getSelected();
-    auto id = e->get<int>(row, 0);
-    auto type = e->get<string>(row, 1);
-    auto val = e->get<string>(row, 2);
-    string info = toString(id) + "\n" + type + "\n" + val;
-    e->setInfo(info);*/
-}
+VRSTEP::~VRSTEP() {}
+
+VRSTEPPtr VRSTEP::create() { return VRSTEPPtr(new VRSTEP()); }
+VRSTEPPtr VRSTEP::ptr() { return static_pointer_cast<VRSTEP>(shared_from_this()); }
 
 template<class T> void VRSTEP::addType(string typeName, string path, string cpath, bool print) {
     Type type;
     type.print = print;
     type.path = path;
     type.cpath = cpath;
-    type.cb = VRFunction<STEPentity*>::create("STEPtypeCb", bind( &VRSTEP::parse<T>, this, placeholders::_1, path, cpath, typeName ));
+    type.cb  = VRFunction<STEPentity*>::create("STEPtypeCb" , bind( &VRSTEP::parse<T>, this, placeholders::_1, path, cpath, typeName ));
     types[typeName] = type;
 }
 
@@ -443,10 +438,16 @@ template<typename T> bool VRSTEP::query(STEPentity* e, string path, T& t, string
     auto toInt = [](char c) { return int(c-'0'); };
 
     auto warn = [&](int i, string w) {
-        cout << "VRSTEP::query " << path << ":" << i << " of type " << type << " entity " << e->EntityName() << " " << e->StepFileId() << " warning: " << w << endl;
+        cout << "VRSTEP::query " << path << ":" << i << " of type " << type;
+        cout << " entity " << e->EntityName() << " " << e->StepFileId() << ", N attribs: " << e->AttributeCount();
+        cout << " warning: " << w << " attribs:\n";
+        /*for (int k=0; k<e->AttributeCount(); k++) {
+            cout << " " << k << ")" << e->attributes[k].asStr() << ",";
+        }*/
+        cout << endl;
     };
 
-    bool verbose = 0;//(e->StepFileId() == 248);
+    bool verbose = 0; //(e->StepFileId() == 268114);
 
     int j = 1;
     STEPattribute* curAttr = 0;
@@ -464,6 +465,12 @@ template<typename T> bool VRSTEP::query(STEPentity* e, string path, T& t, string
         if (c == 'a') { // attribute
             j = 2;
             int ai = toInt(path[i+1]);
+            int ai2 = toInt(path[i+2]);
+            if (ai2 < 10) {
+                ai = ai*10+ai2;
+                j = 3;
+            }
+
             if (e->AttributeCount() <= ai) { warn(i, string("attrib ") + path[i+1] + " is out of range!"); return false; }
             curAttr = &e->attributes[ai];
             attrStr = curAttr->asStr();
@@ -503,7 +510,7 @@ template<typename T> bool VRSTEP::query(STEPentity* e, string path, T& t, string
         if (c == 'V') { // vector
             if (!curAttr) continue;
             curAggr = curAttr->Aggregate();
-            if (!curAggr) { warn(i, " is not an Aggregate Vector!"); return false; } // TODO
+            if (!curAggr) { warn(i, " is not an Aggregate Vector! attribute: " + attrStr ); return false; } // TODO
             char tc = path[i+1];
             //if (tc == 's') tc = path[i+2];
             bool b = getValue(e, curAttr, curAggr->GetHead(), t, tc, type);
@@ -514,7 +521,7 @@ template<typename T> bool VRSTEP::query(STEPentity* e, string path, T& t, string
         if (c == 'F') { // field
             if (!curAttr) continue;
             curAggr = curAttr->Aggregate();
-            if (!curAggr) { warn(i, " is not an Aggregate Field!"); return false; } // TODO
+            if (!curAggr) { warn(i, " is not an Aggregate Field! attribute: " + attrStr ); return false; } // TODO
             bool b = getValue(e, curAttr, curAggr->GetHead(), t, path[i+1], type);
             if (verbose) cout << "VAL field " << e->EntityName() << " v " << toString(t) << " t " << path[i+1] << endl;
             return b;
@@ -590,40 +597,6 @@ void VRSTEP::open(string file) {
     t.join();
 }
 
-void VRSTEP::explore(VRSTEP::Node* node, int parent) {
-    //int ID = -1;
-    string name, type;
-
-    if (node->entity) {
-        name = string(node->entity->EntityName()) + (node->entity->IsComplex() ? " (C)" : "");
-        //ID = node->entity->STEPfile_id;
-        type = node->type;
-    }
-
-    else if (node->aggregate) {
-        name = node->a_name;
-        //ID = 0;//node->select->STEPfile_id;
-        type = node->type;
-    }
-
-    else if (node->select) {
-        name = node->a_name;
-        //ID = 0;//node->select->STEPfile_id;
-        type = node->type;
-    }
-
-    else if(parent) {
-        name = node->a_name;
-        type = node->a_val;
-        //ID = 0;
-    }
-
-    // huh?
-    //if (ID >= 0) parent = explorer->add( parent, 3, ID, name.c_str(), type.c_str() );
-
-    for (auto n : node->childrenV) explore(n, parent);
-}
-
 vector<STEPentity*> VRSTEP::unfoldComplex(STEPentity* e) {
     vector<STEPentity*> res;
     if (e->IsComplex()) {
@@ -680,6 +653,25 @@ STEPentity* VRSTEP::Node::key() {
 }
 
 void VRSTEP::traverseEntity(STEPentity* se, int lvl, VRSTEP::Node* parent, bool complexPass) {
+    if (!scaleDefined) {
+        string ename = se->EntityName() ? se->EntityName() : "";
+        if (ename == "Global_Unit_Assigned_Context") {
+            scaleDefined = true;
+            STEPaggregate* a = se->attributes[0].Aggregate();
+            if (a) {
+                SelectNode* s = (SelectNode*)a->GetHead();
+                auto e = getSelectEntity(s->node);
+
+                STEPattribute* attr = 0;
+                e->ResetAttributes();
+                while ( (attr = e->NextAttribute()) != NULL ) {
+                    string val = attr->asStr();
+                    if (val == "MILLI") scale = 0.001;
+                }
+            }
+        }
+    }
+
     if (se->IsComplex() && !complexPass) {
         for (auto e : unfoldComplex(se)) traverseEntity(e, lvl, parent, 1);
         return;
@@ -732,20 +724,29 @@ void VRSTEP::traverseEntity(STEPentity* se, int lvl, VRSTEP::Node* parent, bool 
 }
 
 void VRSTEP::traverseSelect(SDAI_Select* s, int lvl, VRSTEP::Node* parent) {
-    auto e = getSelectEntity(s);
-    if (e) {
-        Node* n = 0;
-        if (!nodes.count((STEPentity*)s)) {
-            n = new Node();
-            n->select = s;
-            n->type = "SELECT";
-            //n->a_name = ID;
-            nodes[(STEPentity*)s] = n;
-        } else n = nodes[(STEPentity*)s];
+    Node* n = 0;
+    if (!nodes.count((STEPentity*)s)) {
+        n = new Node();
+        n->select = s;
+        n->type = "SELECT";
+        //n->a_name = ID;
+        nodes[(STEPentity*)s] = n;
+    } else n = nodes[(STEPentity*)s];
+    parent->addChild(n);
 
-        parent->addChild(n);
-        traverseEntity(e, lvl, n);
+    if (s->ValueType() == ENTITY_TYPE) {
+        auto e = getSelectEntity(s);
+        if (e) traverseEntity(e, lvl, n);
+        return;
     }
+
+    if (s->ValueType() == REAL_TYPE) {
+        SDAI_Real* r = (SDAI_Real*)s;
+        n->a_val = toString(*r);
+        return;
+    }
+
+    cout << "VRSTEP::traverseSelect Warning! type " << s->ValueType() << " not handled!" << endl;
 }
 
 string primTypeAsString(int t) {
@@ -852,9 +853,14 @@ void VRSTEP::traverseAggregate(STEPaggregate *sa, int atype, STEPattribute* attr
                             ID = toInt(splitString(v, '#')[1]);
                             traverseEntity(instancesById[ID].entity, lvl, n);
                             break;
-                        case REAL_TYPE: // TODO
+                        case REAL_TYPE: {
+                                Node* n = new Node();
+                                n->type = "REAL";
+                                n->a_val = v;
+                                parent->addChild(n);
+                            } break;
                         default:
-                            cout << "Warning: unhandled LIST_TYPE base type " << btype << endl;
+                            cout << "Warning: unhandled LIST_TYPE base type " << btype << ", " << v << endl;
                     }
                 }
                 break;
@@ -971,8 +977,8 @@ struct VRSTEP::Edge : public VRSTEP::Instance, public VRBRepEdge {
             auto& EdgeElement = instances[ i.get<0, STEPentity*, bool>() ];
             //bool edir = i.get<1, STEPentity*, bool>();
             if (EdgeElement.type == "Edge_Curve") {
-                *EBeg = toVec3d( EdgeElement.get<0, STEPentity*, STEPentity*, STEPentity*>(), instances );
-                *EEnd = toVec3d( EdgeElement.get<1, STEPentity*, STEPentity*, STEPentity*>(), instances );
+                EBeg = toVec3d( EdgeElement.get<0, STEPentity*, STEPentity*, STEPentity*>(), instances );
+                EEnd = toVec3d( EdgeElement.get<1, STEPentity*, STEPentity*, STEPentity*>(), instances );
                 auto EdgeGeoI = EdgeElement.get<2, STEPentity*, STEPentity*, STEPentity*>();
 
                 if (instances[EdgeGeoI].type == "Surface_Curve") {
@@ -1031,6 +1037,10 @@ struct VRSTEP::Bound : public VRSTEP::Instance, public VRBRepBound {
 
         for (auto& e : edges) {
             for (auto& p : e.points) {
+                if (isNan(p)) {
+                    cout << "Error in VRSTEP::Bound, point contains NaN" << endl;
+                    continue;
+                }
                 /*cout << " " << p;
                 if (points.size() > 0) cout << " " << sameVec(p, points[points.size()-1]) << " " << sameVec(p, points[0]);
                 cout << endl;*/
@@ -1220,6 +1230,7 @@ class VRSTEPProductStructure {
         }
 
         VRTransformPtr construct() { return construct(getRoot()); }
+
         VRTransformPtr construct( shared_ptr<node> n ) {
             if (!n) return 0;
             vector<VRTransformPtr> childrenT;
@@ -1236,43 +1247,41 @@ class VRSTEPProductStructure {
 };
 
 void VRSTEP::buildScenegraph() {
-    cout << blueBeg << "VRSTEP::buildScenegraph start\n" << colEnd;
+    cout << blueBeg << "VRSTEP::buildScenegraph start" << colEnd << endl;
 
     // get geometries -------------------------------------
     map<STEPentity*, STEPentity*> SRepToGEO;
-    for (auto ShapeRepRel : instancesByType["Shape_Representation_Relationship"]) {
+    for (auto ShapeRepRel : instancesByType["Shape_Representation_Relationship"]) { // Part
         if (ShapeRepRel.entity->IsComplex()) continue;
-        auto ABrep = ShapeRepRel.get<0, STEPentity*, STEPentity*>();
-        auto SRep = ShapeRepRel.get<1, STEPentity*, STEPentity*>();
-        if (!ABrep || !SRep) { cout << "VRSTEP::buildScenegraph Warning 1\n" ; continue; } // empty one
-        SRepToGEO[SRep] = ABrep;
-        cout << "Shape_Representation_Relationship: " << ShapeRepRel.ID << " " << ShapeRepRel.entity->IsComplex() << " srep " << SRep->EntityName() << " " << SRep->StepFileId() << " " << ABrep->EntityName() << " " << ABrep->StepFileId() << endl;
+        auto& SRep  = getChild<0, STEPentity*, STEPentity*>(ShapeRepRel, "Shape_Representation");
+        auto& ABrep = getChild<1, STEPentity*, STEPentity*>(ShapeRepRel, "Advanced_Brep_Shape_Representation");
+        if (!ABrep.entity || !SRep.entity) { cout << "VRSTEP::buildScenegraph Warning 1" << endl ; continue; } // empty one
+        SRepToGEO[SRep.entity] = ABrep.entity;
+        //cout << "Shape_Representation_Relationship: " << ShapeRepRel.ID << " " << ShapeRepRel.entity->IsComplex() << " srep " << SRep.type << " " << SRep.ID << " " << ABrep.type << " " << ABrep.ID << endl;
     }
 
     cout << "VRSTEP::buildScenegraph SRepToGEO " << SRepToGEO.size() << endl;
-    for (auto o : SRepToGEO) cout << " SRep: " << o.first->StepFileId() << " ABrep: " << o.second->StepFileId() << endl;
+    //for (auto o : SRepToGEO) cout << " SRep: " << o.first->StepFileId() << " ABrep: " << o.second->StepFileId() << endl;
 
     map<STEPentity*, STEPentity*> ProductToSRep;
-    for (auto ShapeRepRel : instancesByType["Shape_Definition_Representation"]) {
-        if (!ShapeRepRel) { cout << "VRSTEP::buildScenegraph Error 2 " << ShapeRepRel.ID << endl; continue; }
-        auto& PDS = getInstance( ShapeRepRel.get<0, STEPentity*, STEPentity*>() );
-        if (!PDS) { cout << "VRSTEP::buildScenegraph Error 3.1 " << ShapeRepRel.ID << endl; continue; }
-        if (PDS.type == "Property_Definition") PDS = getInstance( PDS.get<0, STEPentity*>() );
-        if (!PDS) { cout << "VRSTEP::buildScenegraph Error 3.2 " << ShapeRepRel.ID << endl; continue; }
-        if (PDS.type == "Shape_Aspect") PDS = getInstance( PDS.get<0, STEPentity*>() );
-        if (!PDS) { cout << "VRSTEP::buildScenegraph Error 3.3 " << ShapeRepRel.ID << endl; continue; }
+    auto shape_definitions = instancesByType["Shape_Definition_Representation"]; // Component
+    if (shape_definitions.size() == 0) cout << "VRSTEP::buildScenegraph Warning! no 'Shape_Definition_Representation' entities!" << endl;
+    for (auto ShapeDefRep : shape_definitions) {
+        if (!ShapeDefRep) { cout << "VRSTEP::buildScenegraph Error 2 " << ShapeDefRep.ID << endl; continue; }
 
-        auto& PDef = getInstance( PDS.get<0, STEPentity*>() );
-        if (!PDef) { cout << "VRSTEP::buildScenegraph Error 4 " << ShapeRepRel.ID << endl; continue; }
-        auto& PDF = getInstance( PDef.get<0, STEPentity*>() );
-        if (!PDF) { cout << "VRSTEP::buildScenegraph Error 5 " << ShapeRepRel.ID << endl; continue; }
-        auto& Product = getInstance( PDF.get<0, STEPentity*>() );
-        if (!Product) { cout << "VRSTEP::buildScenegraph Error 6 " << ShapeRepRel.ID << endl; continue; }
-        auto SRep = ShapeRepRel.get<1, STEPentity*, STEPentity*>();
-        ProductToSRep[Product.entity] = SRep;
+        auto& PDS = getChild<0, STEPentity*, STEPentity*>(ShapeDefRep, "Product_Definition_Shape");
+        if (PDS.type == "Property_Definition") PDS = getChild<0, STEPentity*>(PDS, "Product_Definition_Shape");
+        if (PDS.type == "Shape_Aspect")        PDS = getChild<0, STEPentity*>(PDS, "Product_Definition_Shape");
+
+        auto& PDef = getChild<0, STEPentity*>(PDS, "Product_Definition");
+        auto& PDF  = getChild<0, STEPentity*>(PDef, "Product_Definition_Formation_With_Specified_Source");
+        auto& prod = getChild<0, STEPentity*>(PDF, "Product");
+        auto& SRep = getChild<1, STEPentity*, STEPentity*>(ShapeDefRep, "Shape_Representation");
+        ProductToSRep[prod.entity] = SRep.entity;
     }
 
     cout << "VRSTEP::buildScenegraph ProductToSRep " << ProductToSRep.size() << endl;
+    if (ProductToSRep.size() == 0) return;
 
     // get product definitions -------------------------------------
     resRoot->setName("STEPRoot");
@@ -1284,70 +1293,67 @@ void VRSTEP::buildScenegraph() {
         if (!Def) { cout << "VRSTEP::buildScenegraph Error 8\n" ; continue; }
 
         if (Def.type == "Product_Definition") {
-            auto& PDF = getInstance( Def.get<0, STEPentity*>() );
-            if (!PDF) { cout << "VRSTEP::buildScenegraph Error 9\n" ; continue; }
-            auto& Product = getInstance( PDF.get<0, STEPentity*>() );
-            if (!Product) { cout << "VRSTEP::buildScenegraph Error 10\n" ; continue; }
+            auto& PDF = getChild<0, STEPentity*>(Def, "Product_Definition_Formation_With_Specified_Source");
+            auto& Product = getChild<0, STEPentity*>(PDF, "Product");
             string name = Product.get<0, string, string>();
 
             STEPentity* brep = 0;
             if (ProductToSRep.count(Product.entity)) brep = ProductToSRep[Product.entity];
-            else { cout << "VRSTEP::buildScenegraph Error: Product not found!"; continue; }
+            else { cout << "VRSTEP::buildScenegraph Error: Product not found!\n"; continue; }
 
             string type = brep->EntityName();
             if (type == "Shape_Representation") {
                 if (SRepToGEO.count(brep)) brep = SRepToGEO[brep];
+                //else cout << "VRSTEP::buildScenegraph Error: Geometry not found!" << endl;
             }
 
-            cout << "VRSTEP::buildScenegraph geo " << name << " " << Product.ID << " " << PDF.ID << " brep " << brep->StepFileId() << " " << brep->EntityName() << " " << SRepToGEO.count(brep) << endl;
+            //cout << "VRSTEP::buildScenegraph geo " << name << " " << Product.ID << " " << PDF.ID << " brep " << brep->StepFileId() << " " << brep->EntityName() << " " << SRepToGEO.count(brep) << endl;
 
             VRTransformPtr o;
-            if (resGeos.count(brep)/* && !SRepToGEO.count(brep)*/) o = resGeos[brep];
+            if (resGeos.count(brep)) o = resGeos[brep];
             else o = VRTransform::create(name);
             objs[name] = o;
         }
     }
 
     cout << "VRSTEP::buildScenegraph objs " << objs.size() << endl;
+    //for (auto o : objs) cout << "  prod ID: " << o.first << ", " << o.second->getType() << endl;
+    //for (auto o : resGeos) cout << "  brep ID: " << o.first << ", " << o.first->EntityName() << ", " << o.first->StepFileId() << ", " << o.second->getType() << endl;
 
     // build scene graph and set transforms ----------------------------------------
     VRSTEPProductStructure product_structure;
-    for (auto ShapeRep : instancesByType["Context_Dependent_Shape_Representation"]) {
-        if (!ShapeRep) { cout << "VRSTEP::buildScenegraph Error 11\n" ; continue; }
-        auto& Rep = getInstance( ShapeRep.get<0, STEPentity*, STEPentity*, STEPentity*>() );
-        if (!Rep) { cout << "VRSTEP::buildScenegraph Error 12\n" ; continue; }
+    for (auto ShapeRep : instancesByType["Context_Dependent_Shape_Representation"]) { // Assembly
+        if (!ShapeRep) { cout << "VRSTEP::buildScenegraph Error 11" << endl ; continue; }
+        auto& Rep = getInstance( ShapeRep.get<0, STEPentity*, STEPentity*, STEPentity*>() ); // Representation_Relationship
+        if (!Rep) { cout << "VRSTEP::buildScenegraph Error 12" << endl ; continue; }
         auto& Shape1 = getInstance( Rep.get<0, STEPentity*, STEPentity*>() );
         auto& Shape2 = getInstance( Rep.get<1, STEPentity*, STEPentity*>() );
-        if (!Shape1 || !Shape2) { cout << "VRSTEP::buildScenegraph Error 13\n" ; continue; }
+        if (!Shape1 || !Shape2) { cout << "VRSTEP::buildScenegraph Error 13" << endl ; continue; }
 
-        auto& RepTrans = getInstance( ShapeRep.get<1, STEPentity*, STEPentity*, STEPentity*>() );
-        if (!RepTrans) { cout << "VRSTEP::buildScenegraph Error 14\n" ; continue; }
-        auto& ItemTrans = getInstance( RepTrans.get<0, STEPentity*>() );
-        if (!ItemTrans) { cout << "VRSTEP::buildScenegraph Error 15\n" ; continue; }
+        auto& RepTrans = getChild<1, STEPentity*, STEPentity*, STEPentity*>(ShapeRep, "Representation_Relationship_With_Transformation");
+        auto& ItemTrans = getChild<0, STEPentity*>(RepTrans, "Item_Defined_Transformation");
+
         auto pose1 = toPose( ItemTrans.get<0, STEPentity*, STEPentity*>(), instances );
         auto pose2 = toPose( ItemTrans.get<1, STEPentity*, STEPentity*>(), instances );
 
-        auto& PDef = getInstance( ShapeRep.get<2, STEPentity*, STEPentity*, STEPentity*>() );
-        if (!PDef) { cout << "VRSTEP::buildScenegraph Error 16\n" ; continue; }
-        auto& Assembly = getInstance( PDef.get<0, STEPentity*>() );
-        if (!Assembly) { cout << "VRSTEP::buildScenegraph Error 17\n" ; continue; }
-        string name  = Assembly.get<0, string, STEPentity*, STEPentity*>();
+        // TODO: the third entity may not be a Product_Definition_Shape!!
+        auto& PDef = getChild<2, STEPentity*, STEPentity*, STEPentity*>(ShapeRep, "Product_Definition_Shape"); // Shape_Representation_Relationship,  Product_Definition_Shape ?
+        auto& Assembly = getChild<0, STEPentity*>(PDef, "Next_Assembly_Usage_Occurrence");
+        string name = Assembly.get<0, string, STEPentity*, STEPentity*>();
 
-        auto& Relating = getInstance( Assembly.get<1, string, STEPentity*, STEPentity*>() );
-        auto& Related  = getInstance( Assembly.get<2, string, STEPentity*, STEPentity*>() );
-        if (!Relating || !Related) { cout << "VRSTEP::buildScenegraph Error 18\n" ; continue; }
-        //cout << Relating.type << " " << Related.type << endl;
-        auto& PDF1 = getInstance( Relating.get<0, STEPentity*>() );
-        auto& PDF2 = getInstance( Related.get<0, STEPentity*>() );
-        if (!PDF1 || !PDF2) { cout << "VRSTEP::buildScenegraph Error 19\n" ; continue; }
-        auto& Product1 = getInstance( PDF1.get<0, STEPentity*>() );
-        auto& Product2 = getInstance( PDF2.get<0, STEPentity*>() );
-        if (!Product1 || !Product2) { cout << "VRSTEP::buildScenegraph Error 20\n" ; continue; }
+        auto& Relating = getChild<1, string, STEPentity*, STEPentity*>(Assembly, "Product_Definition");
+        auto& Related  = getChild<2, string, STEPentity*, STEPentity*>(Assembly, "Product_Definition");
+        auto& PDF1 = getChild<0, STEPentity*>(Relating, "Product_Definition_Formation_With_Specified_Source");
+        auto& PDF2 = getChild<0, STEPentity*>(Related, "Product_Definition_Formation_With_Specified_Source");
+        auto& Product1 = getChild<0, STEPentity*>(PDF1, "Product");
+        auto& Product2 = getChild<0, STEPentity*>(PDF2, "Product");
 
         string parent = Product1.get<0, string, string>();
         string obj = Product2.get<0, string, string>();
         if (!objs.count(parent)) { cout << "VRSTEP::buildScenegraph Error 21 parent not found " << parent << endl ; continue; }
         if (!objs.count(obj)) { cout << "VRSTEP::buildScenegraph Error 22 object not found " << obj << endl ; continue; }
+
+        //cout << " add '" << obj << "' to '" << parent << "'" << endl;
 
         if (!product_structure.nodes.count(parent)) {
             auto n = product_structure.addNode(parent);
@@ -1360,11 +1366,14 @@ void VRSTEP::buildScenegraph() {
         }
 
         auto l = product_structure.addLink(obj, parent);
-        l->name = name;
+        l->name = obj;
         l->p = pose2;
     }
 
     resRoot->addChild( product_structure.construct() );
+    auto pRoot = product_structure.getRoot();
+    if (pRoot) cout << " product structure: " << endl << pRoot->toString() << endl;
+    else cout << "VRSTEP::buildScenegraph Error! no product structure root!" << endl;
 
     //cout << "VRSTEP::buildScenegraph objs " << objs.size() << endl;
     cout << blueBeg << "VRSTEP::buildScenegraph finished\n" << colEnd;
@@ -1436,31 +1445,34 @@ void VRSTEP::build() {
     auto root = new VRSTEP::Node();
     for( int i=0; i<N; i++ ) {
         STEPentity* se = instMgr->GetApplication_instance(i);
-        string name = se->EntityName();
         traverseEntity(se,0,root);
     }
 
-    if (options == "explorer") {
-        //explorer->setSelectCallback( VRFunction<VRGuiTreeExplorer*>::create( "step_explorer", bind(&VRSTEP::on_explorer_select, this, _1) ) );
-        //explore(root);
-    }
+#ifndef WITHOUT_GTK
+    if (options.count("explorer")) explorer->traverse(ptr(), root);
+#endif
 
     buildMaterials();
     buildGeometries();
     buildScenegraph();
 
-    cout << "build results:\n";
-    cout << instances.size() << " STEP entities parsed\n";
-    cout << blacklisted << " STEP blacklisted entities ignored\n";
-    cout << resGeos.size() << " VR objects created\n";
+    cout << "scale: " << scale << endl;
+    cout << "build results:" << endl;
+    cout << instances.size() << " STEP entities parsed" << endl;
+    cout << blacklisted << " STEP blacklisted entities ignored" << endl;
+    cout << resGeos.size() << " VR objects created" << endl;
 }
 
-void VRSTEP::load(string file, VRTransformPtr t, string opt) {
+void VRSTEP::load(string file, VRTransformPtr t,  map<string,string> opt) {
     options = opt;
-    //if (options == "explorer") explorer = VRGuiTreeExplorer::create("iss", "STEP file explorer (" + file + ")");
+#ifndef WITHOUT_GTK
+    //options["explorer"] = "";
+    if (options.count("explorer")) explorer = VRSTEPExplorer::create(file);
+#endif
     resRoot = t;
     open(file);
     build();
+    resRoot->setScale(Vec3d(scale, scale, scale));
 }
 
 /* ------------------------------ DOC -----------------------------------

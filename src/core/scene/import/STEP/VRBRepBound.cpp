@@ -16,7 +16,7 @@ bool VRBRepBound::isClosed() {
 string VRBRepBound::edgeEndsToString() {
     string r;
     for (auto& e : edges) {
-        r += " [" + toString(*e.EBeg) + " - " + toString(*e.EEnd) + "] ";
+        r += " [" + toString(e.EBeg) + " - " + toString(e.EEnd) + "] ";
     }
     return r;
 }
