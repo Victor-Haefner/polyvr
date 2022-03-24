@@ -71,7 +71,7 @@ void VRSTEPExplorer::on_explorer_select(VRGuiTreeExplorer* e) {
 
     if (node->aggregate) {
         info += "\n aggregate: " + toString((void*)node->aggregate);
-        info += "\n    size: " + node->aggregate->EntryCount();
+        info += "\n    size: ";// + node->aggregate->EntryCount();
     }
 
     if (node->select) {
@@ -84,9 +84,9 @@ void VRSTEPExplorer::on_explorer_select(VRGuiTreeExplorer* e) {
 #endif
 }
 
-void VRSTEPExplorer::traverse(VRSTEPPtr sPtr, VRSTEP::Node* node, int parent) {
+void VRSTEPExplorer::traverse(VRSTEPPtr sPtr, VRSTEP::Node* node, bool doFilter) {
     stepPtr = sPtr;
-    explore(node, parent);
+    explore(node, 0, doFilter);
 }
 
 void VRSTEPExplorer::translate(string& name) {
@@ -101,9 +101,10 @@ void VRSTEPExplorer::translate(string& name) {
     if (name == "Application_Protocol_Definition") name = "PartInfo2";
 }
 
-void VRSTEPExplorer::explore(VRSTEP::Node* node, int parent) {
+void VRSTEPExplorer::explore(VRSTEP::Node* node, int parent, bool doFilter) {
     if (!node) return;
-    if (doIgnore(node)) return;
+    if (doFilter)
+        if (doIgnore(node)) return;
 
 
     int ID = -1;
@@ -124,7 +125,7 @@ void VRSTEPExplorer::explore(VRSTEP::Node* node, int parent) {
     else if (node->select) { ID = 0; /*node->select->STEPfile_id;*/ }
     else if (parent) { ID = 0; }
 
-    translate(name);
+    if (doFilter) translate(name);
 
 #ifndef WITHOUT_GTK
     static size_t c = 0; c++;
@@ -132,5 +133,5 @@ void VRSTEPExplorer::explore(VRSTEP::Node* node, int parent) {
     if (ID >= 0 /*&& c < 30000*/) parent = treeview->add( parent, 5, type.c_str(), sID.c_str(), name.c_str(), data.c_str(), node);
 #endif
 
-    for (auto n : node->childrenV) explore(n, parent);
+    for (auto n : node->childrenV) explore(n, parent, doFilter);
 }

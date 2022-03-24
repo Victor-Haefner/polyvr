@@ -68,11 +68,14 @@ VRGeometryPtr VRBRepSurface::build(string type) {
             //if (b.points.size() == 0) cout << "Warning: No bound points for bound " << b.BRepType << endl;
             bool doPrint = containsNan(b);
             VRPolygon poly;
-            for (auto p : b.points) {
-                if (doPrint) cout << " pIn: " << p << endl;
-                mI.mult(Pnt3d(p),p);
-                if (doPrint) cout << " pOut: " << p << " " << mI[0] << ", " << mI[1] << ", " << mI[2] << ", " << mI[3] << endl;
-                poly.addPoint(Vec2d(p[0], p[1]));
+
+            for (auto pIn : b.points) {
+                Pnt3d pOut;
+                if (doPrint) cout << " pIn: " << pIn << endl;
+                mI.multFull(Pnt3d(pIn), pOut);
+                if (doPrint) cout << " pOut: " << pOut << " " << mI[0] << ", " << mI[1] << ", " << mI[2] << ", " << mI[3] << endl;
+                if (abs(pOut[2]) > 0.001) cout << " Error in VRBRepSurface::build Plane, p[2] not 0 (" << pOut[2] << ")! -> data loss" << endl;
+                poly.addPoint(Vec2d(pOut[0], pOut[1]));
             }
             if (!poly.isCCW()) poly.reverseOrder();
             t.add(poly);
@@ -82,11 +85,21 @@ VRGeometryPtr VRBRepSurface::build(string type) {
         if (!g) return 0;
         if (!g->getMesh()->geo->getPositions()) cout << "NO MESH!\n";
         g->setMatrix(m);
+
+
+        GeoVectorPropertyMTRecPtr norms = g->getMesh()->geo->getNormals();
+        for (uint i=0; i<norms->size(); i++) {
+            Vec3d n = Vec3d(norms->getValue<Vec3f>(i));
+            //cout << " plane normal " << n << endl;
+            n = Vec3d(0, 0, -1);
+            norms->setValue(n, i);
+        }
+
         return g;
     }
 
     if (type == "Cylindrical_Surface") {
-
+        return 0;
         static int i=0; i++;
         if (i != 22 && i != 23) return 0; // 22,23
 
@@ -225,7 +238,7 @@ VRGeometryPtr VRBRepSurface::build(string type) {
         };
 
         // tesselate the result while projecting it back on the surface
-        if (g and 1) if (auto gg = g->getMesh()) {
+        if (g) if (auto gg = g->getMesh()) {
             TriangleIterator it;
             VRGeoData nMesh;
             Vec3d n(0,0,1);
@@ -517,6 +530,7 @@ VRGeometryPtr VRBRepSurface::build(string type) {
     }
 
     if (type == "B_Spline_Surface") {
+        return 0;
         cout << " BUILD B_Spline_Surface" << endl;
 
         // ROADMAP
@@ -659,6 +673,7 @@ VRGeometryPtr VRBRepSurface::build(string type) {
     }
 
     if (type == "B_Spline_Surface_With_Knots") {
+        return 0;
         // ROADMAP
         //  first idea:
         //   - tesselate whole BSpline surface (lots of quads)
@@ -717,6 +732,10 @@ VRGeometryPtr VRBRepSurface::build(string type) {
         return 0;
     }
 
+    if (type == "Spherical_Surface") {
+        return 0;
+    }
+
     if (type == "Conical_Surface") {
         return 0;
     }
@@ -724,6 +743,7 @@ VRGeometryPtr VRBRepSurface::build(string type) {
     if (type == "Toroidal_Surface") {
         return 0;
     }
+
     cout << "VRBRepSurface::build Error: unhandled surface type " << type << endl;
 
     // wireframe

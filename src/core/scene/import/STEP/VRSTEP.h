@@ -92,6 +92,7 @@ class VRSTEP : public std::enable_shared_from_this<VRSTEP> {
         map<string,string> options;
         bool scaleDefined = false;
         float scale = 1.0;
+        string filePath;
 
         string redBeg  = "\033[0;38;2;255;150;150m";
         string greenBeg  = "\033[0;38;2;150;255;150m";
@@ -146,6 +147,8 @@ class VRSTEP : public std::enable_shared_from_this<VRSTEP> {
         void buildScenegraph();
         void buildMaterials();
         void build();
+
+        void exploreEntity(VRSTEP::Node* n, bool doFilter = true);
 
     public:
         VRSTEP();

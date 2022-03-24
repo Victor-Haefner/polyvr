@@ -82,7 +82,7 @@ void VRBRepEdge::build(string type) {
         int res = (Ncurv - 1)*0.5;
         float T = knots[knots.size()-1] - knots[0];
         for (int i=0; i<=res; i++) {
-            float t = i*T/res;
+            float t = knots[0]+i*T/res;
             Vec3d p = doWeights ? BSplineW(t, deg, cpoints, knots, weights) : BSpline(t, deg, cpoints, knots);
             if (isNan(p)) cout << "Error in VRBRepEdge::build, B spline curve point contains NaN! doWeights: " << doWeights << endl;
             else points.push_back(p);

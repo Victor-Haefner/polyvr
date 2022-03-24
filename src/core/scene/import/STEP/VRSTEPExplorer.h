@@ -25,8 +25,8 @@ class VRSTEPExplorer : public std::enable_shared_from_this<VRSTEPExplorer> {
 		static VRSTEPExplorerPtr create(string file);
 		VRSTEPExplorerPtr ptr();
 
-        void explore(VRSTEP::Node* node, int parent = 0);
-        void traverse(VRSTEPPtr stepPtr, VRSTEP::Node* node, int parent = 0);
+        void explore(VRSTEP::Node* node, int parent = 0, bool doFilter = true);
+        void traverse(VRSTEPPtr stepPtr, VRSTEP::Node* node, bool doFilter = true);
 };
 
 OSG_END_NAMESPACE;

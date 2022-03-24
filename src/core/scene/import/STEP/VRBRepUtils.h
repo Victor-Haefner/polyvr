@@ -4,6 +4,8 @@
 #include "core/math/OSGMathFwd.h"
 #include "core/math/field.h"
 
+#include <string>
+
 using namespace std;
 OSG_BEGIN_NAMESPACE;
 
@@ -23,9 +25,9 @@ class VRBRepUtils {
         Vec2d getSide(int i);
 
         // B Splines
-        float Bik(float t, int i, int k, const vector<double>& knots, bool verbose = 0);
-        Vec3d BSpline(float t, int deg, const vector<Vec3d>& cpoints, const vector<double>& knots);
-        Vec3d BSplineW(float t, int deg, const vector<Vec3d>& cpoints, const vector<double>& knots, const vector<double>& weights);
+        float Bik(float t, int i, int k, const vector<double>& knots, string indent = "", bool verbose = 0);
+        Vec3d BSpline(float t, int deg, const vector<Vec3d>& cpoints, const vector<double>& knots, bool verbose = 0);
+        Vec3d BSplineW(float t, int deg, const vector<Vec3d>& cpoints, const vector<double>& knots, const vector<double>& weights, bool verbose = 0);
         Vec3d BSpline(float u, float v, int degu, int degv, const field<Vec3d>& cpoints, const vector<double>& knotsu, const vector<double>& knotsv);
         Vec3d BSplineNorm(float u, float v, int degu, int degv, const field<Vec3d>& cpoints, const vector<double>& knotsu, const vector<double>& knotsv);
         Vec3d BSpline(float u, float v, int degu, int degv, const field<Vec3d>& cpoints, const vector<double>& knotsu, const vector<double>& knotsv, const field<double>& weights);

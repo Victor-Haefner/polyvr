@@ -585,6 +585,7 @@ template<class T> void VRSTEP::parse(STEPentity* e, string path, string cpath, s
 }
 
 void VRSTEP::open(string file) {
+    filePath = file;
     bool done = false;
     thread t(&VRSTEP::loadT, this, file, sfile, &done);
 
@@ -900,7 +901,8 @@ Vec3d toVec3d(STEPentity* i, map<STEPentity*, VRSTEP::Instance>& instances) {
         auto x = I.get<0, double, double, double>(); if (abs(x) < 1e-14) x = 0;
         auto y = I.get<1, double, double, double>(); if (abs(y) < 1e-14) y = 0;
         auto z = I.get<2, double, double, double>(); if (abs(z) < 1e-14) z = 0;
-        return Vec3d(y,x,-z)*L;
+        //return Vec3d(y,x,-z)*L;
+        return Vec3d(x,y,z)*L;
     }
     cout << "toVec3d FAILED with instance type " << I.type << endl;
     return Vec3d();
@@ -909,12 +911,11 @@ Vec3d toVec3d(STEPentity* i, map<STEPentity*, VRSTEP::Instance>& instances) {
 PosePtr toPose(STEPentity* i, map<STEPentity*, VRSTEP::Instance>& instances) {
     auto I = instances[i];
     if (I.type == "Axis2_Placement_3d") {
-        Vec3d p = toVec3d( I.get<0, STEPentity*, STEPentity*, STEPentity*>(), instances);
-        Vec3d d = toVec3d( I.get<1, STEPentity*, STEPentity*, STEPentity*>(), instances);
-        Vec3d u = toVec3d( I.get<2, STEPentity*, STEPentity*, STEPentity*>(), instances);
-        //d[2] *= -1;
+        Vec3d p =  toVec3d( I.get<0, STEPentity*, STEPentity*, STEPentity*>(), instances);
+        Vec3d d = -toVec3d( I.get<1, STEPentity*, STEPentity*, STEPentity*>(), instances);
+        Vec3d x =  toVec3d( I.get<2, STEPentity*, STEPentity*, STEPentity*>(), instances);
+        Vec3d u = x.cross(d);
         return Pose::create(p,d,u);
-        //return Pose(p,d,u);
     }
     cout << "toPose FAILED with instance type " << I.type << endl;
     return Pose::create();
@@ -1061,7 +1062,10 @@ struct VRSTEP::Surface : public VRSTEP::Instance, public VRBRepSurface {
         string etype = e->EntityName();
         auto& inst = instances[e];
 
-        if (etype == "Plane") trans = toPose( inst.get<0, STEPentity*>(), instances);
+        if (etype == "Plane") {
+            trans = toPose( inst.get<0, STEPentity*>(), instances);
+        }
+
         if (etype == "Cylindrical_Surface") {
             trans = toPose( inst.get<0, STEPentity*, double>(), instances );
             R = inst.get<1, STEPentity*, double>();
@@ -1184,7 +1188,7 @@ class VRSTEPProductStructure {
             string name;
             string parent;
             string child;
-            PosePtr p;
+            PosePtr pose;
 
             string toString() {
                 string s = "link n: " + name + " p: " + parent + " c: " + child;
@@ -1234,9 +1238,9 @@ class VRSTEPProductStructure {
         VRTransformPtr construct( shared_ptr<node> n ) {
             if (!n) return 0;
             vector<VRTransformPtr> childrenT;
-            for (auto l : n->children) {
+            for (auto& l : n->children) {
                 auto c = construct( nodes[l->child] );
-                c->setPose(l->p);
+                c->setPose(l->pose);
                 c->setName(l->name);
                 childrenT.push_back( c );
             }
@@ -1324,17 +1328,21 @@ void VRSTEP::buildScenegraph() {
     VRSTEPProductStructure product_structure;
     for (auto ShapeRep : instancesByType["Context_Dependent_Shape_Representation"]) { // Assembly
         if (!ShapeRep) { cout << "VRSTEP::buildScenegraph Error 11" << endl ; continue; }
-        auto& Rep = getInstance( ShapeRep.get<0, STEPentity*, STEPentity*, STEPentity*>() ); // Representation_Relationship
-        if (!Rep) { cout << "VRSTEP::buildScenegraph Error 12" << endl ; continue; }
-        auto& Shape1 = getInstance( Rep.get<0, STEPentity*, STEPentity*>() );
-        auto& Shape2 = getInstance( Rep.get<1, STEPentity*, STEPentity*>() );
-        if (!Shape1 || !Shape2) { cout << "VRSTEP::buildScenegraph Error 13" << endl ; continue; }
+        auto& Rep = getChild<0, STEPentity*, STEPentity*, STEPentity*>(ShapeRep, "Representation_Relationship");
+        auto& Shape1 = getChild<0, STEPentity*, STEPentity*>(Rep, "Shape_Representation");
+        auto& Shape2 = getChild<1, STEPentity*, STEPentity*>(Rep, "Shape_Representation");
+
+        auto poses = Shape1.get<0, vector<STEPentity*>, STEPentity*>();
 
         auto& RepTrans = getChild<1, STEPentity*, STEPentity*, STEPentity*>(ShapeRep, "Representation_Relationship_With_Transformation");
         auto& ItemTrans = getChild<0, STEPentity*>(RepTrans, "Item_Defined_Transformation");
+        auto& Trans1 = getChild<0, STEPentity*, STEPentity*>(ItemTrans, "Axis2_Placement_3d");
+        auto& Trans2 = getChild<1, STEPentity*, STEPentity*>(ItemTrans, "Axis2_Placement_3d");
 
-        auto pose1 = toPose( ItemTrans.get<0, STEPentity*, STEPentity*>(), instances );
-        auto pose2 = toPose( ItemTrans.get<1, STEPentity*, STEPentity*>(), instances );
+        // transformations of object one and two
+        auto pose1 = toPose( Trans1.entity, instances );
+        auto pose2 = toPose( Trans2.entity, instances );
+        //cout << " assembly " << ShapeRep.ID << "    " << pose1->toString() << "    " << pose2->toString() << endl;
 
         // TODO: the third entity may not be a Product_Definition_Shape!!
         auto& PDef = getChild<2, STEPentity*, STEPentity*, STEPentity*>(ShapeRep, "Product_Definition_Shape"); // Shape_Representation_Relationship,  Product_Definition_Shape ?
@@ -1367,7 +1375,7 @@ void VRSTEP::buildScenegraph() {
 
         auto l = product_structure.addLink(obj, parent);
         l->name = obj;
-        l->p = pose2;
+        l->pose = pose1;
     }
 
     resRoot->addChild( product_structure.construct() );
@@ -1448,9 +1456,7 @@ void VRSTEP::build() {
         traverseEntity(se,0,root);
     }
 
-#ifndef WITHOUT_GTK
-    if (options.count("explorer")) explorer->traverse(ptr(), root);
-#endif
+    if (options.count("explorer")) exploreEntity(root);
 
     buildMaterials();
     buildGeometries();
@@ -1463,12 +1469,16 @@ void VRSTEP::build() {
     cout << resGeos.size() << " VR objects created" << endl;
 }
 
+void VRSTEP::exploreEntity(VRSTEP::Node* n, bool doFilter) {
+#ifndef WITHOUT_GTK
+    explorer = VRSTEPExplorer::create(filePath);
+    explorer->traverse(ptr(), n, doFilter);
+#endif
+}
+
 void VRSTEP::load(string file, VRTransformPtr t,  map<string,string> opt) {
     options = opt;
-#ifndef WITHOUT_GTK
     //options["explorer"] = "";
-    if (options.count("explorer")) explorer = VRSTEPExplorer::create(file);
-#endif
     resRoot = t;
     open(file);
     build();

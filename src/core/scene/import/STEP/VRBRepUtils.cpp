@@ -57,48 +57,47 @@ vector<float> VRBRepUtils::angleFrame(float a1, float a2) {
     return angles;
 }
 
-float VRBRepUtils::Bik(float t, int i, int k, const vector<double>& knots, bool verbose) {
-    if (verbose) cout << "Bik t: " << t << " i: " << i << " k: " << k << endl;
+float VRBRepUtils::Bik(float t, int i, int k, const vector<double>& knots, string indent, bool verbose) {
+    if (verbose) indent += "  ";
     float ti = knots[i];
     float ti1 = knots[i+1];
     float tik = knots[i+k];
     float tik1 = knots[i+k+1];
     float t0 = knots[0];
     float tL = knots[knots.size()-1];
-    if (verbose) cout << " Bik ti: " << ti << " ti1: " << ti1 << " tik: " << tik << " tik1: " << tik1 << endl;
+    if (verbose) cout << indent << "Bik t: " << t << " i: " << i << " k: " << k << "  -->  ti: " << ti << " ti1: " << ti1 << " tik: " << tik << " tik1: " << tik1 << endl;
     if (k == 0) {
-        if (t >= ti && t <= ti1) { if (verbose) cout << " Bik goes first 1" << endl; return 1; }
-        if (t == ti1 && t == tL) { if (verbose) cout << " Bik goes second 1" << endl; return 1; } // ?
-        if (t <= t0 && i == 0) { if (verbose) cout << " Bik goes third 1" << endl; return 1; }
-        if (t >= tL && i+k+2 == knots.size()) { if (verbose) cout << " Bik goes forth 1" << endl; return 1; }
-        if (verbose) cout << " Bik goes 0" << endl;
+        if (t >= ti && t < ti1) { if (verbose) cout << indent << " Bik goes first 1" << endl; return 1; }
+        if (t <= t0 && ti <= t0) { if (verbose) cout << indent << " Bik goes second 1" << endl; return 1; }
+        if (t >= tL && ti1 >= tL) { if (verbose) cout << indent << " Bik goes third 1" << endl; return 1; }
+        if (verbose) cout << indent << " Bik goes 0, i: " << i << ", t: " << t << ", t0: " << t0 << ", tL: " << tL << endl;
         return 0;
     }
-    float A = tik == ti ? 0 : Bik(t, i, k-1, knots, verbose)*(t-ti)/(tik-ti);
-    float B = tik1 == ti1 ? 0 : Bik(t, i+1, k-1, knots, verbose)*(tik1 - t)/(tik1 - ti1);
-    if (verbose) cout << " Bik return A " << A << "(" << (tik == ti) << ")" << " B " << B << "(" << (tik1 == ti1) << ")" << endl;
+    float A = tik == ti ? 0 : Bik(t, i, k-1, knots, indent, verbose)*(t-ti)/(tik-ti);
+    float B = tik1 == ti1 ? 0 : Bik(t, i+1, k-1, knots, indent, verbose)*(tik1 - t)/(tik1 - ti1);
+    if (verbose) cout << indent << " Bik return A " << A << "(" << (tik == ti) << ")" << " B " << B << "(" << (tik1 == ti1) << ")" << endl;
     return A + B;
 }
 
-Vec3d VRBRepUtils::BSpline(float t, int deg, const vector<Vec3d>& cpoints, const vector<double>& knots) {
+Vec3d VRBRepUtils::BSpline(float t, int deg, const vector<Vec3d>& cpoints, const vector<double>& knots, bool verbose) {
     Vec3d p;
-    for (uint i=0; i<cpoints.size(); i++) p += cpoints[i]*Bik(t, i, deg, knots);
+    for (uint i=0; i<cpoints.size(); i++) p += cpoints[i]*Bik(t, i, deg, knots, "", verbose);
     return p;
 }
 
-Vec3d VRBRepUtils::BSplineW(float t, int deg, const vector<Vec3d>& cpoints, const vector<double>& knots, const vector<double>& weights) {
+Vec3d VRBRepUtils::BSplineW(float t, int deg, const vector<Vec3d>& cpoints, const vector<double>& knots, const vector<double>& weights, bool verbose) {
     Vec3d p;
     float W = 0;
-    for (uint i=0; i<cpoints.size(); i++) W += Bik(t, i, deg, knots)*weights[i];
+    for (uint i=0; i<cpoints.size(); i++) W += Bik(t, i, deg, knots, "", verbose)*weights[i];
     if (abs(W) > 1e-4) {
-        for (uint i=0; i<cpoints.size(); i++) p += cpoints[i]*Bik(t, i, deg, knots)*weights[i]/W;
+        for (uint i=0; i<cpoints.size(); i++) p += cpoints[i]*Bik(t, i, deg, knots, "", verbose)*weights[i]/W;
     } else {
         for (uint i=0; i<cpoints.size(); i++) {
-            cout << " i: " << i << ", Bik: " << Bik(t, i, deg, knots) << ", t: " << t << ", i: " << i << ", deg: " << toString(deg) << ", knots: " << toString(knots) << endl;
-            Bik(t, i, deg, knots, true); // verbose
+            cout << " i: " << i << ", Bik: " << Bik(t, i, deg, knots, "", verbose) << ", t: " << t << ", i: " << i << ", deg: " << toString(deg) << ", knots: " << toString(knots) << endl;
+            Bik(t, i, deg, knots, "", true); // verbose
         }
 
-        for (uint i=0; i<cpoints.size(); i++) p += cpoints[i]*Bik(t, i, deg, knots);
+        for (uint i=0; i<cpoints.size(); i++) p += cpoints[i]*Bik(t, i, deg, knots, "", verbose);
     }
     return p;
 }
