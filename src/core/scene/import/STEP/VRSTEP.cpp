@@ -1147,7 +1147,7 @@ void VRSTEP::buildGeometries() {
         for (auto i : BrepShape.get<1, string, vector<STEPentity*> >() ) {
             auto& Item = instances[i];
             //cout << " Item: " << Item.type << " " << Item.ID << endl;
-            if (Item.ID == 57189) exploreEntity(nodes[Item.entity], true);
+            //if (Item.ID == 57189) exploreEntity(nodes[Item.entity], true);
             if (Item.type == "Manifold_Solid_Brep") {
                 auto& Outer = instances[ Item.get<0, STEPentity*>() ];
                 for (auto j : Outer.get<0, vector<STEPentity*> >() ) {
