@@ -41,6 +41,8 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
 
     auto cylindricUnproject = [&](Vec3d& p) {
         mI.mult(Pnt3d(p),p);
+        //cout << " cylindricUnproject: " << p << " -> ";
+        //cout << " -> R: " << R << ", r: " << p[0]*p[0]+p[1]*p[1] << endl;
         float h = p[2];
         p[0] /= R; p[1] /= R;
         float a = atan2(p[1], p[0]);
@@ -60,7 +62,7 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
     };
 
     if (type == "Plane") {
-        //return 0;
+        return 0;
         //cout << "make Plane, N bounds: " << bounds.size() << endl;
         Triangulator t;
         if (bounds.size() == 0) cout << "Warning: No bounds!\n";
@@ -94,13 +96,18 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
     }
 
     if (type == "Cylindrical_Surface") {
+        cout << "Cylindrical_Surface" << endl;
         // feed the triangulator with unprojected points
-        Triangulator t;
+        Triangulator triangulator;
 
         for (auto b : bounds) {
             VRPolygon poly;
             double la = -1001;
             //cout << "Bound" << endl << b.edgeEndsToString() << endl;
+
+
+
+            for (auto p : b.points) cout << "bound point: " << p << " -> " << cylindricUnproject(p) << endl;
 
             // TODO: this fails for any closed bounds around the cylinder!
             // idea:
@@ -114,24 +121,26 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
                     float h = cylindricUnproject(e.EBeg)[1];
                     double a1, a2;
                     a1 = e.a1; a2 = e.a2;
+                    cout << " circle " << Vec2d(a1,a2) << " -> ";
                     Vec3d cd = e.center->dir();
                     Vec3d cu = e.center->up();
-                    if (a2 < a1 && cd.dot(d) < 0) a2 += 2*Pi;
+                    //if (a2 < a1 && cd.dot(d) < 0) a2 += 2*Pi;
 
 
                     //a1 = cylindricUnproject(e.EBeg)[0];
                     //a2 = cylindricUnproject(e.EEnd)[0];
                     //if (a2 < a1) a2 += 2*Pi;
 
-                    //cout << " circle " << Vec3d(a1,a2,la) << endl;
+                    cout << " circle " << Vec3d(a1,a2,la);
                     rebaseAngle(a1, la);
                     rebaseAngle(a2, la);
-                    //cout << " circle " << cd.dot(d) << " " << cu.dot(u) << endl;
+                    cout << " -> " << cd.dot(d) << " " << cu.dot(u) << endl;
 
                     if (poly.size() == 0) poly.addPoint(Vec2d(a1,h));
                     poly.addPoint(Vec2d(a2,h));
-                    //cout << "cp1 " << Vec2d(a1,h) << endl;
-                    //cout << "cp2 " << Vec2d(a2,h) << endl;
+                    cout << "  cp1 " << Vec2d(a1,h);
+                    cout << " -> cp2 " << Vec2d(a2,h);
+                    cout << ", EBeg: " << e.EBeg << " -> " << e.EEnd << endl;
                     la = a2;
                     continue;
                 }
@@ -140,15 +149,16 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
                     Vec2d p1 = cylindricUnproject(e.EBeg);
                     Vec2d p2 = cylindricUnproject(e.EEnd);
 
-                    //cout << " line " << Vec3d(p1[0],p2[0],la) << endl;
+                    cout << " line " << Vec3d(p1[0],p2[0],la);
                     rebaseAngle(p1[0], la);
                     rebaseAngle(p2[0], la);
-                    //cout << " line " << Vec3d(p1[0],p2[0],la) << endl;
+                    cout << " -> " << Vec3d(p1[0],p2[0],la) << endl;
 
                     if (poly.size() == 0) poly.addPoint(p1);
                     poly.addPoint(p2);
-                    //cout << "lp1 " << p1 << endl;
-                    //cout << "lp2 " << p2 << endl;
+                    cout << "  lp1 " << p1;
+                    cout << " -> lp2 " << p2;
+                    cout << ", EBeg: " << e.EBeg << " -> " << e.EEnd << endl;
                     la = p2[0];
                     continue;
                 }
@@ -159,7 +169,7 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
                         rebaseAngle(pc[0], la);
 
                         poly.addPoint(pc);
-                        //cout << "bsp " << pc << endl;
+                        cout << "  bsp " << pc << endl;
                         la = pc[0];
                     }
                     continue;
@@ -167,7 +177,7 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
 
                 cout << "Unhandled edge of type " << e.etype << endl;
             }
-            //cout << endl << poly.toString() << endl;
+            cout << endl << poly.toString() << endl;
 
             /*for(auto p : b.points) {
                 Vec2d pc = cylindricUnproject(p);
@@ -178,10 +188,10 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
             }*/
 
             if (!poly.isCCW()) poly.reverseOrder();
-            t.add(poly);
+            triangulator.add(poly);
         }
 
-        auto g = t.compute();
+        auto g = triangulator.compute();
         if (!g) return 0;
         if (auto gg = g->getMesh()->geo) { if (!gg->getPositions()) cout << "VRBRepSurface::build: Triangulation failed, no mesh positions!\n";
         } else cout << "VRBRepSurface::build: Triangulation failed, no mesh generated!\n";
@@ -226,7 +236,7 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
         };
 
         // tesselate the result while projecting it back on the surface
-        if (g) if (auto gg = g->getMesh()) {
+        if (g && 0) if (auto gg = g->getMesh()) {
             TriangleIterator it;
             VRGeoData nMesh;
             Vec3d n(0,0,1);
@@ -489,7 +499,9 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
                 for (uint i=0; i<pos->size(); i++) {
                     Pnt3d p = Pnt3d(pos->getValue<Pnt3f>(i));
                     Vec3d n = Vec3d(norms->getValue<Vec3f>(i));
-                    n = Vec3d(cos(p[0]), sin(p[0]), 0);
+                    double a = p[0];
+                    double h = p[2];
+                    n = Vec3d(cos(a), sin(a), 0);
 
                     Vec2d side = getSide(p[0]);
                     Vec3d A = Vec3d(R*cos(side[0]), R*sin(side[0]), 0);
@@ -499,10 +511,10 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
 
                     float t = (A[0]*D[1] - A[1]*D[0]) / (n[0]*D[1] - n[1]*D[0]);
 
-                    //cout << "p: " << p[0]/Pi*180 << " AB: " << side*(180/Pi) << " s: " << getSideN(p[0]) << endl;
-                    //if (p[0] < side[0] || p[0] > side[1]) cout << "   AAAH\n"; // TODO: check this out!
+                    //cout << "p: " << a/Pi*180 << " AB: " << side*(180/Pi) << " s: " << getSideN(a) << endl;
+                    //if (a < side[0] || a > side[1]) cout << "   AAAH\n"; // TODO: check this out!
 
-                    p[2] = p[1];
+                    p[2] = h;
                     p[1] = n[1]*t;
                     p[0] = n[0]*t;
 
@@ -518,6 +530,7 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
     }
 
     if (type == "B_Spline_Surface") {
+        return 0;
         cout << " BUILD B_Spline_Surface" << endl;
 
         // ROADMAP
@@ -660,6 +673,7 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
     }
 
     if (type == "B_Spline_Surface_With_Knots") {
+        return 0;
         // ROADMAP
         //  first idea:
         //   - tesselate whole BSpline surface (lots of quads)

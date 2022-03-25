@@ -1002,7 +1002,9 @@ struct VRSTEP::Edge : public VRSTEP::Instance, public VRBRepEdge {
 struct VRSTEP::Bound : public VRSTEP::Instance, public VRBRepBound {
     Bound(Instance& i, map<STEPentity*, Instance>& instances) : Instance(i) {
         BRepType = type;
+
         if (type != "Face_Outer_Bound") outer = false;
+
         if (type == "Face_Bound" || type == "Face_Outer_Bound") {
             auto& Loop = instances[ get<0, STEPentity*, bool>() ];
             //bool dir = get<1, STEPentity*, bool>();
@@ -1017,7 +1019,13 @@ struct VRSTEP::Bound : public VRSTEP::Instance, public VRBRepBound {
         }
 
         if (edges.size() > 1) {
-            if ( sameVec(edges[0].beg(), edges[1].beg()) || sameVec(edges[0].beg(), edges[1].end()) ) edges[0].swap(); // swap first edge
+            if ( sameVec(edges[0].beg(), edges[1].beg()) || sameVec(edges[0].beg(), edges[1].end()) ) {
+                cout << "swap edge 0!" << endl;
+                cout << " e0p0: " << edges[0].beg() << ", e1p0: " << edges[1].beg() << ", -> " << sameVec(edges[0].beg(), edges[1].beg()) << endl;
+                cout << " e0p0: " << edges[0].beg() << ", e1p1: " << edges[1].end() << ", -> " << sameVec(edges[0].beg(), edges[1].end()) << endl;
+                cout << " e0p1: " << edges[0].end() << endl;
+                edges[0].swap(); // swap first edge
+            }
 
             for (unsigned int i=1; i<edges.size(); i++) {
                 auto& e1 = edges[i-1];
@@ -1037,6 +1045,7 @@ struct VRSTEP::Bound : public VRSTEP::Instance, public VRBRepBound {
         }*/
 
         for (auto& e : edges) {
+            cout << "edge: " << e.beg() << " " << e.end() << endl;
             for (auto& p : e.points) {
                 if (isNan(p)) {
                     cout << "Error in VRSTEP::Bound, point contains NaN" << endl;
@@ -1052,6 +1061,11 @@ struct VRSTEP::Bound : public VRSTEP::Instance, public VRBRepBound {
                 points.push_back(p);
             }
         }
+
+        /*for (auto p : points) {
+            cout << "bound point: " << p << endl;
+        }*/
+
         if (points.size() == 0) cout << "Warning1: No bound points" << endl;
     }
 };
@@ -1137,7 +1151,9 @@ void VRSTEP::buildGeometries() {
     cout << blueBeg << "VRSTEP::buildGeometries start\n" << colEnd;
     for (auto BrepShape : instancesByType["Advanced_Brep_Shape_Representation"]) {
         static int i=0; i++;
-        //if (i != 5) continue;
+        if (i != 12) continue; // test for cylinder surfaces
+        //cout << BrepShape.ID << endl;
+        //if (BrepShape.ID == 57189) exploreEntity(nodes[BrepShape.entity], true);
 
         string name = BrepShape.get<0, string, vector<STEPentity*> >();
         auto geo = VRGeometry::create(name);
@@ -1147,7 +1163,6 @@ void VRSTEP::buildGeometries() {
         for (auto i : BrepShape.get<1, string, vector<STEPentity*> >() ) {
             auto& Item = instances[i];
             //cout << " Item: " << Item.type << " " << Item.ID << endl;
-            //if (Item.ID == 57189) exploreEntity(nodes[Item.entity], true);
             if (Item.type == "Manifold_Solid_Brep") {
                 auto& Outer = instances[ Item.get<0, STEPentity*>() ];
                 for (auto j : Outer.get<0, vector<STEPentity*> >() ) {
@@ -1165,6 +1180,7 @@ void VRSTEP::buildGeometries() {
                         geo->merge( surface.build(surface.type, same_sense) );
                         //geo->addChild( surface.build(surface.type) );
                     } else cout << "VRSTEP::buildGeometries Error 2 " << Face.type << " " << Face.ID << endl;
+                    break;
                 }
                 if (materials.count(Item.entity)) geo->setMaterial(materials[Item.entity]);
             } else if (Item.type == "Axis2_Placement_3d") { // ignore?
