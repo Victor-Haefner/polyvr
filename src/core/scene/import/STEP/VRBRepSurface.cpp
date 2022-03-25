@@ -26,7 +26,7 @@ struct triangle {
     }
 };
 
-VRGeometryPtr VRBRepSurface::build(string type) {
+VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
     //cout << "VRSTEP::Surface build " << type << endl;
 
     Matrix4d m;
@@ -70,12 +70,12 @@ VRGeometryPtr VRBRepSurface::build(string type) {
             VRPolygon poly;
 
             for (auto pIn : b.points) {
-                Pnt3d pOut;
+                Vec3d pOut;
                 if (doPrint) cout << " pIn: " << pIn << endl;
                 mI.multFull(Pnt3d(pIn), pOut);
                 if (doPrint) cout << " pOut: " << pOut << " " << mI[0] << ", " << mI[1] << ", " << mI[2] << ", " << mI[3] << endl;
                 if (abs(pOut[2]) > 0.001) cout << " Error in VRBRepSurface::build Plane, p[2] not 0 (" << pOut[2] << ")! -> data loss" << endl;
-                poly.addPoint(Vec2d(pOut[0], pOut[1]));
+                poly.addPoint(pOut);
             }
             if (!poly.isCCW()) poly.reverseOrder();
             t.add(poly);
@@ -86,20 +86,14 @@ VRGeometryPtr VRBRepSurface::build(string type) {
         if (!g->getMesh()->geo->getPositions()) cout << "NO MESH!\n";
         g->setMatrix(m);
 
-
+        Vec3d nP = Vec3d(0, 0, -1+2*int(same_sense));
         GeoVectorPropertyMTRecPtr norms = g->getMesh()->geo->getNormals();
-        for (uint i=0; i<norms->size(); i++) {
-            Vec3d n = Vec3d(norms->getValue<Vec3f>(i));
-            //cout << " plane normal " << n << endl;
-            n = Vec3d(0, 0, -1);
-            norms->setValue(n, i);
-        }
+        for (uint i=0; i<norms->size(); i++) norms->setValue(nP, i);
 
         return g;
     }
 
     if (type == "Cylindrical_Surface") {
-        return 0;
         static int i=0; i++;
         if (i != 22 && i != 23) return 0; // 22,23
 
@@ -116,7 +110,7 @@ VRGeometryPtr VRBRepSurface::build(string type) {
             // TODO: this fails for any closed bounds around the cylinder!
             // idea:
             //  dont use the bound points but go through the edges
-            //  use edge angle values insteas of cartesian points
+            //  use edge angle values instead of cartesian points
             //  if closed bound around cylinder detected, clip bound with lines at +/- PI, generating new bound on cylinder!
 
             cout << " poly\n";
@@ -530,7 +524,6 @@ VRGeometryPtr VRBRepSurface::build(string type) {
     }
 
     if (type == "B_Spline_Surface") {
-        return 0;
         cout << " BUILD B_Spline_Surface" << endl;
 
         // ROADMAP

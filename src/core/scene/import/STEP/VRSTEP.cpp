@@ -1146,25 +1146,29 @@ void VRSTEP::buildGeometries() {
 
         for (auto i : BrepShape.get<1, string, vector<STEPentity*> >() ) {
             auto& Item = instances[i];
+            //cout << " Item: " << Item.type << " " << Item.ID << endl;
+            if (Item.ID == 57189) exploreEntity(nodes[Item.entity], true);
             if (Item.type == "Manifold_Solid_Brep") {
                 auto& Outer = instances[ Item.get<0, STEPentity*>() ];
                 for (auto j : Outer.get<0, vector<STEPentity*> >() ) {
                     auto& Face = instances[j];
+                    //cout << "  Outer Face: " << Face.type << " " << Face.ID << endl;
                     if (Face.type == "Advanced_Face") {
                         auto& s = instances[ Face.get<1, vector<STEPentity*>, STEPentity*, bool>() ];
                         Surface surface(s, instances);
-                        //bool same_sense = Face.get<2, vector<STEPentity*>, STEPentity*, bool>();
+                        bool same_sense = Face.get<2, vector<STEPentity*>, STEPentity*, bool>();
                         for (auto k : Face.get<0, vector<STEPentity*>, STEPentity*, bool>() ) {
                             auto& b = instances[k];
                             Bound bound(b, instances);
                             surface.bounds.push_back(bound);
                         }
-                        geo->merge( surface.build(surface.type) );
+                        geo->merge( surface.build(surface.type, same_sense) );
                         //geo->addChild( surface.build(surface.type) );
                     } else cout << "VRSTEP::buildGeometries Error 2 " << Face.type << " " << Face.ID << endl;
                 }
                 if (materials.count(Item.entity)) geo->setMaterial(materials[Item.entity]);
             } else if (Item.type == "Axis2_Placement_3d") { // ignore?
+
             } else cout << "VRSTEP::buildGeometries Error 1 " << Item.type << " " << Item.ID << endl;
         }
 

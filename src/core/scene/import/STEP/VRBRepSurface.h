@@ -27,7 +27,7 @@ class VRBRepSurface : public VRBRepUtils {
     public:
         VRBRepSurface();
 
-        VRGeometryPtr build(string type);
+        VRGeometryPtr build(string type, bool same_sense);
 };
 
 OSG_END_NAMESPACE;
