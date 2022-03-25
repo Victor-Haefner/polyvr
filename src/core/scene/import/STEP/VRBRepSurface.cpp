@@ -120,15 +120,15 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
                 if (e.etype == "Circle") {
                     float h = cylindricUnproject(e.EBeg)[1];
                     double a1, a2;
-                    //a1 = e.a1; a2 = e.a2;
+                    a1 = e.a1; a2 = e.a2;
                     //cout << " circle " << Vec2d(a1,a2) << " -> ";
                     Vec3d cd = e.center->dir();
                     Vec3d cu = e.center->up();
-                    //if (a2 < a1 && cd.dot(d) < 0) a2 += 2*Pi;
+                    if (a2 < a1 && cd.dot(d) < 0) a2 += 2*Pi;
 
 
-                    a1 = cylindricUnproject(e.EBeg)[0];
-                    a2 = cylindricUnproject(e.EEnd)[0];
+                    //a1 = cylindricUnproject(e.EBeg)[0];
+                    //a2 = cylindricUnproject(e.EEnd)[0];
                     //if (a2 < a1) a2 += 2*Pi;
 
                     //cout << " circle " << Vec3d(a1,a2,la);
@@ -235,11 +235,15 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
             return res;
         };
 
+
+        //GeoVectorPropertyMTRecPtr pos = g->getMesh()->geo->getPositions();
+        //for (size_t i=0; i<pos->size(); i++) cout << " tesselated position: " << pos->getValue<Pnt3f>(i) << endl;
+
         // tesselate the result while projecting it back on the surface
         if (g) if (auto gg = g->getMesh()) { // TODO
             TriangleIterator it;
             VRGeoData nMesh;
-            Vec3d n(0,0,1);
+            Vec3d n(0,-1,0);
 
             auto checkOrder = [&](Pnt3d p0, Pnt3d p1, Pnt3d p2) {
                 float cp = (p1-p0).cross(p2-p0).dot(n);
@@ -247,6 +251,7 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
             };
 
             auto pushTri = [&](Pnt3d p1, Pnt3d p2, Pnt3d p3) {
+                //cout << " pushTri " << p1 << "   " << p2 << "   " << p3 << endl;
                 int a = nMesh.pushVert(p1,n);
                 int b = nMesh.pushVert(p2,n);
                 int c = nMesh.pushVert(p3,n);
@@ -255,6 +260,7 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
             };
 
             auto pushQuad = [&](Pnt3d p1, Pnt3d p2, Pnt3d p3, Pnt3d p4) {
+                //cout << " pushQuad " << p1 << "   " << p2 << "   " << p3 << "   " << p4 << endl;
                 int a = nMesh.pushVert(p1,n);
                 int b = nMesh.pushVert(p2,n);
                 int c = nMesh.pushVert(p3,n);
@@ -266,6 +272,7 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
             };
 
             auto pushPen = [&](Pnt3d p1, Pnt3d p2, Pnt3d p3, Pnt3d p4, Pnt3d p5) {
+                //cout << " pushPen " << p1 << "   " << p2 << "   " << p3 << "   " << p4 << "   " << p5 << endl;
                 int a = nMesh.pushVert(p1,n);
                 int b = nMesh.pushVert(p2,n);
                 int c = nMesh.pushVert(p3,n);
@@ -280,22 +287,22 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
             };
 
             for (it = TriangleIterator(gg->geo); !it.isAtEnd() ;++it) {
-                triangle t(it);
-                if (t.A < 1e-6) continue; // ignore flat triangles
+                triangle tri(it);
+                if (tri.A < 1e-6) continue; // ignore flat triangles
 
-                Vec2d xs = getXsize(t.p); // triangle width
+                Vec2d xs = getXsize(tri.p); // triangle width
                 vector<float> rays = angleFrame(xs[0], xs[1]);
 
                 vector<Vec2d> sides;
                 Vec3i pSides;
                 //cout << " triangle size in x " << xs*180/Pi << " " << rays.size() << endl;
-                //cout << " triangle: " << p[0] << "   " << p[1] << "   " << p[2] << endl;
+                //cout << " triangle: " << tri.p[0] << "   " << tri.p[1] << "   " << tri.p[2] << endl;
                 for (uint i=1; i<rays.size(); i++) {
                     auto s = Vec2d(rays[i-1], rays[i]);
                     //cout << "  side " << s*180/Pi << endl;
                     sides.push_back( s ); // get all cylinder faces
                     for (int j=0; j<3; j++) { // find out on what cylinder face each vertex lies
-                        if (t.p[j][0] >= rays[i-1] && t.p[j][0] <= rays[i]) {
+                        if (tri.p[j][0] >= rays[i-1] && tri.p[j][0] <= rays[i]) {
                             pSides[j] = i-1;
                         }
                     }
@@ -312,7 +319,7 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
                 // test first case: all vertices on the same cylinder face
                 if (pSides[0] == pSides[1] && pSides[0] == pSides[2]) { // DEBUGGING
                     //cout << "  case 1" << endl;
-                    pushTri(Pnt3d(t.p[0]),Pnt3d(t.p[1]),Pnt3d(t.p[2]));
+                    pushTri(Pnt3d(tri.p[0]), Pnt3d(tri.p[1]), Pnt3d(tri.p[2]));
                     continue;
                 }
 
@@ -324,45 +331,45 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
                         Vec2d s = sides[i];
                         if (i == 0) { // first triangle
                             int pi = pOrder[0]; // vertex index on that face
-                            Pnt3d pv = Pnt3d(t.p[pi]);
+                            Pnt3d pv = Pnt3d(tri.p[pi]);
                             Vec3d pr1(s[1],0,0); // point on cylinder edge
                             Vec3d pr2(s[1],0,0); // point on cylinder edge
-                            Vec3d vp1 = Vec3d(t.v[pOrder[1]]); // vector to middle point
-                            Vec3d vp2 = Vec3d(t.v[pOrder[2]]); // vector to last point
-                            pr1[1] = pv[1] + vp1[1]/vp1[0]*(s[1]-pv[0]);
-                            pr2[1] = pv[1] + vp2[1]/vp2[0]*(s[1]-pv[0]);
+                            Vec3d vp1 = Vec3d(tri.v[pOrder[1]]); // vector to middle point
+                            Vec3d vp2 = Vec3d(tri.v[pOrder[2]]); // vector to last point
+                            pr1[2] = pv[2] + vp1[2]/vp1[0]*(s[1]-pv[0]);
+                            pr2[2] = pv[2] + vp2[2]/vp2[0]*(s[1]-pv[0]);
                             pushTri(pv,pr1,pr2);
                             continue;
                         }
 
                         if (i == sides.size()-1) { // last triangle
                             int pi = pOrder[2]; // vertex index on that face
-                            Pnt3d pv = Pnt3d(t.p[pi]);
+                            Pnt3d pv = Pnt3d(tri.p[pi]);
                             Vec3d pr1(s[0],0,0); // point on cylinder edge
                             Vec3d pr2(s[0],0,0); // point on cylinder edge
-                            Vec3d vp1 = Vec3d(t.v[pOrder[1]]); // vector to middle point
-                            Vec3d vp2 = Vec3d(t.v[pOrder[0]]); // vector to last point
-                            pr1[1] = pv[1] + vp1[1]/vp1[0]*(s[0]-pv[0]);
-                            pr2[1] = pv[1] + vp2[1]/vp2[0]*(s[0]-pv[0]);
+                            Vec3d vp1 = Vec3d(tri.v[pOrder[1]]); // vector to middle point
+                            Vec3d vp2 = Vec3d(tri.v[pOrder[0]]); // vector to last point
+                            pr1[2] = pv[2] + vp1[2]/vp1[0]*(s[0]-pv[0]);
+                            pr2[2] = pv[2] + vp2[2]/vp2[0]*(s[0]-pv[0]);
                             pushTri(pv,pr1,pr2);
                             continue;
                         }
 
                         if (int(i) == pSides[pOrder[1]]) { // pentagon in the middle
-                            Pnt3d pv = Pnt3d(t.p[pOrder[1]]); // point in the middle
+                            Pnt3d pv = Pnt3d(tri.p[pOrder[1]]); // point in the middle
                             Vec3d pr11(s[0],0,0); // point on cylinder edge
                             Vec3d pr12(s[0],0,0); // point on cylinder edge
                             Vec3d pr21(s[1],0,0); // point on cylinder edge
                             Vec3d pr22(s[1],0,0); // point on cylinder edge
-                            Vec3d vp1 = Vec3d(t.v[pOrder[0]]); // vector from middle to last
-                            Vec3d vp2 = Vec3d(t.v[pOrder[1]]); // vector from first to last
-                            Vec3d vp3 = Vec3d(t.v[pOrder[2]]); // vector from first to middle
-                            Pnt3d pv1 = Vec3d(t.p[pOrder[0]]); // first vertex
-                            Pnt3d pv2 = Vec3d(t.p[pOrder[2]]); // last vertex
-                            pr11[1] = pv1[1] + vp2[1]/vp2[0]*(s[0]-pv1[0]);
-                            pr12[1] = pv1[1] + vp3[1]/vp3[0]*(s[0]-pv1[0]);
-                            pr21[1] = pv1[1] + vp2[1]/vp2[0]*(s[1]-pv1[0]);
-                            pr22[1] = pv[1] + vp1[1]/vp1[0]*(s[1]-pv[0]);
+                            Vec3d vp1 = Vec3d(tri.v[pOrder[0]]); // vector from middle to last
+                            Vec3d vp2 = Vec3d(tri.v[pOrder[1]]); // vector from first to last
+                            Vec3d vp3 = Vec3d(tri.v[pOrder[2]]); // vector from first to middle
+                            Pnt3d pv1 = Vec3d(tri.p[pOrder[0]]); // first vertex
+                            Pnt3d pv2 = Vec3d(tri.p[pOrder[2]]); // last vertex
+                            pr11[2] = pv1[2] + vp2[2]/vp2[0]*(s[0]-pv1[0]);
+                            pr12[2] = pv1[2] + vp3[2]/vp3[0]*(s[0]-pv1[0]);
+                            pr21[2] = pv1[2] + vp2[2]/vp2[0]*(s[1]-pv1[0]);
+                            pr22[2] = pv[2] + vp1[2]/vp1[0]*(s[1]-pv[0]);
                             pushPen(pr11, pr12, pr21, pr22, pv);
                             passed_middle = true;
                             continue;
@@ -376,20 +383,20 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
                         Vec3d vp1, vp2;
                         Pnt3d pv1, pv2;
                         if (!passed_middle) {
-                            vp1 = Vec3d(t.v[pOrder[1]]); // vector to middle point
-                            vp2 = Vec3d(t.v[pOrder[2]]); // vector to last point
-                            pv1 = Pnt3d(t.p[pOrder[2]]); // vertex on that face
-                            pv2 = Pnt3d(t.p[pOrder[1]]); // vertex on that face
+                            vp1 = Vec3d(tri.v[pOrder[1]]); // vector to middle point
+                            vp2 = Vec3d(tri.v[pOrder[2]]); // vector to last point
+                            pv1 = Pnt3d(tri.p[pOrder[2]]); // vertex on that face
+                            pv2 = Pnt3d(tri.p[pOrder[1]]); // vertex on that face
                         } else {
-                            vp1 = Vec3d(t.v[pOrder[1]]); // vector from first point
-                            vp2 = Vec3d(t.v[pOrder[0]]); // vector from middle point
-                            pv1 = Pnt3d(t.p[pOrder[0]]); // vertex on that face
-                            pv2 = Pnt3d(t.p[pOrder[1]]); // vertex on that face
+                            vp1 = Vec3d(tri.v[pOrder[1]]); // vector from first point
+                            vp2 = Vec3d(tri.v[pOrder[0]]); // vector from middle point
+                            pv1 = Pnt3d(tri.p[pOrder[0]]); // vertex on that face
+                            pv2 = Pnt3d(tri.p[pOrder[1]]); // vertex on that face
                         }
-                        pr11[1] = pv1[1] + vp1[1]/vp1[0]*(s[0]-pv1[0]);
-                        pr12[1] = pv2[1] + vp2[1]/vp2[0]*(s[0]-pv2[0]);
-                        pr21[1] = pv1[1] + vp1[1]/vp1[0]*(s[1]-pv1[0]);
-                        pr22[1] = pv2[1] + vp2[1]/vp2[0]*(s[1]-pv2[0]);
+                        pr11[2] = pv1[2] + vp1[2]/vp1[0]*(s[0]-pv1[0]);
+                        pr12[2] = pv2[2] + vp2[2]/vp2[0]*(s[0]-pv2[0]);
+                        pr21[2] = pv1[2] + vp1[2]/vp1[0]*(s[1]-pv1[0]);
+                        pr22[2] = pv2[2] + vp2[2]/vp2[0]*(s[1]-pv2[0]);
                         pushQuad(pr11, pr12, pr21, pr22);
                     }
                     continue;
@@ -401,41 +408,41 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
                     for (uint i=0; i<sides.size(); i++) {
                         Vec2d s = sides[i];
                         if (i == 0) { // first quad
-                            Pnt3d pv1 = Pnt3d(t.p[pOrder[0]]); // vertex on that face
-                            Pnt3d pv2 = Pnt3d(t.p[pOrder[1]]); // vertex on that face
+                            Pnt3d pv1 = Pnt3d(tri.p[pOrder[0]]); // vertex on that face
+                            Pnt3d pv2 = Pnt3d(tri.p[pOrder[1]]); // vertex on that face
                             Vec3d pr1(s[1],0,0); // point on cylinder edge
                             Vec3d pr2(s[1],0,0); // point on cylinder edge
-                            Vec3d vp1 = Vec3d(t.v[pOrder[1]]); // vector to last point
-                            Vec3d vp2 = Vec3d(t.v[pOrder[0]]); // vector to last point
-                            pr1[1] = pv1[1] + vp1[1]/vp1[0]*(s[1]-pv1[0]);
-                            pr2[1] = pv2[1] + vp2[1]/vp2[0]*(s[1]-pv2[0]);
+                            Vec3d vp1 = Vec3d(tri.v[pOrder[1]]); // vector to last point
+                            Vec3d vp2 = Vec3d(tri.v[pOrder[0]]); // vector to last point
+                            pr1[2] = pv1[2] + vp1[2]/vp1[0]*(s[1]-pv1[0]);
+                            pr2[2] = pv2[2] + vp2[2]/vp2[0]*(s[1]-pv2[0]);
                             pushQuad(pv1, pv2, pr1, pr2);
                             continue;
                         }
                         if (i == sides.size()-1) { // last triangle
-                            Pnt3d pv = Pnt3d(t.p[pOrder[2]]); // vertex on that face
+                            Pnt3d pv = Pnt3d(tri.p[pOrder[2]]); // vertex on that face
                             Vec3d pr1(s[0],0,0); // point on cylinder edge
                             Vec3d pr2(s[0],0,0); // point on cylinder edge
-                            Vec3d vp1 = Vec3d(t.v[pOrder[1]]); // vector to middle point
-                            Vec3d vp2 = Vec3d(t.v[pOrder[0]]); // vector to last point
-                            pr1[1] = pv[1] + vp1[1]/vp1[0]*(s[0]-pv[0]);
-                            pr2[1] = pv[1] + vp2[1]/vp2[0]*(s[0]-pv[0]);
+                            Vec3d vp1 = Vec3d(tri.v[pOrder[1]]); // vector to middle point
+                            Vec3d vp2 = Vec3d(tri.v[pOrder[0]]); // vector to last point
+                            pr1[2] = pv[2] + vp1[2]/vp1[0]*(s[0]-pv[0]);
+                            pr2[2] = pv[2] + vp2[2]/vp2[0]*(s[0]-pv[0]);
                             pushTri(pv,pr1,pr2);
                             continue;
                         }
 
-                        Pnt3d pv1 = Pnt3d(t.p[pOrder[0]]); // vertex on that face
-                        Pnt3d pv2 = Pnt3d(t.p[pOrder[1]]); // vertex on that face
+                        Pnt3d pv1 = Pnt3d(tri.p[pOrder[0]]); // vertex on that face
+                        Pnt3d pv2 = Pnt3d(tri.p[pOrder[1]]); // vertex on that face
                         Vec3d pr11(s[0],0,0); // point on cylinder edge
                         Vec3d pr12(s[0],0,0); // point on cylinder edge
                         Vec3d pr21(s[1],0,0); // point on cylinder edge
                         Vec3d pr22(s[1],0,0); // point on cylinder edge
-                        Vec3d vp1 = Vec3d(t.v[pOrder[1]]); // vector to last point
-                        Vec3d vp2 = Vec3d(t.v[pOrder[0]]); // vector to last point
-                        pr11[1] = pv1[1] + vp1[1]/vp1[0]*(s[0]-pv1[0]);
-                        pr12[1] = pv2[1] + vp2[1]/vp2[0]*(s[0]-pv2[0]);
-                        pr21[1] = pv1[1] + vp1[1]/vp1[0]*(s[1]-pv1[0]);
-                        pr22[1] = pv2[1] + vp2[1]/vp2[0]*(s[1]-pv2[0]);
+                        Vec3d vp1 = Vec3d(tri.v[pOrder[1]]); // vector to last point
+                        Vec3d vp2 = Vec3d(tri.v[pOrder[0]]); // vector to last point
+                        pr11[2] = pv1[2] + vp1[2]/vp1[0]*(s[0]-pv1[0]);
+                        pr12[2] = pv2[2] + vp2[2]/vp2[0]*(s[0]-pv2[0]);
+                        pr21[2] = pv1[2] + vp1[2]/vp1[0]*(s[1]-pv1[0]);
+                        pr22[2] = pv2[2] + vp2[2]/vp2[0]*(s[1]-pv2[0]);
                         pushQuad(pr11, pr12, pr21, pr22);
                     }
                     continue;
@@ -447,27 +454,27 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
                     for (uint i=0; i<sides.size(); i++) {
                         Vec2d s = sides[i];
 
-                        Pnt3d pv = Pnt3d(t.p[pOrder[0]]); // vertex on that face
-                        Pnt3d pv1 = Pnt3d(t.p[pOrder[1]]); // vertex on that face
-                        Pnt3d pv2 = Pnt3d(t.p[pOrder[2]]); // vertex on that face
+                        Pnt3d pv = Pnt3d(tri.p[pOrder[0]]); // vertex on that face
+                        Pnt3d pv1 = Pnt3d(tri.p[pOrder[1]]); // vertex on that face
+                        Pnt3d pv2 = Pnt3d(tri.p[pOrder[2]]); // vertex on that face
 
                         if (i == 0) { // first triangle
                             Vec3d pr1(s[1],0,0); // point on cylinder edge
                             Vec3d pr2(s[1],0,0); // point on cylinder edge
-                            Vec3d vp1 = Vec3d(t.v[pOrder[1]]); // vector to middle point
-                            Vec3d vp2 = Vec3d(t.v[pOrder[2]]); // vector to last point
-                            pr1[1] = pv[1] + vp1[1]/vp1[0]*(s[1]-pv[0]);
-                            pr2[1] = pv[1] + vp2[1]/vp2[0]*(s[1]-pv[0]);
+                            Vec3d vp1 = Vec3d(tri.v[pOrder[1]]); // vector to middle point
+                            Vec3d vp2 = Vec3d(tri.v[pOrder[2]]); // vector to last point
+                            pr1[2] = pv[2] + vp1[2]/vp1[0]*(s[1]-pv[0]);
+                            pr2[2] = pv[2] + vp2[2]/vp2[0]*(s[1]-pv[0]);
                             pushTri(pv,pr1,pr2);
                             continue;
                         }
                         if (i == sides.size()-1) { // last quad
                             Vec3d pr1(s[0],0,0); // point on cylinder edge
                             Vec3d pr2(s[0],0,0); // point on cylinder edge
-                            Vec3d vp1 = Vec3d(t.v[pOrder[2]]); // vector to last point
-                            Vec3d vp2 = Vec3d(t.v[pOrder[1]]); // vector to last point
-                            pr1[1] = pv1[1] + vp1[1]/vp1[0]*(s[0]-pv1[0]);
-                            pr2[1] = pv2[1] + vp2[1]/vp2[0]*(s[0]-pv2[0]);
+                            Vec3d vp1 = Vec3d(tri.v[pOrder[2]]); // vector to last point
+                            Vec3d vp2 = Vec3d(tri.v[pOrder[1]]); // vector to last point
+                            pr1[2] = pv1[2] + vp1[2]/vp1[0]*(s[0]-pv1[0]);
+                            pr2[2] = pv2[2] + vp2[2]/vp2[0]*(s[0]-pv2[0]);
                             pushQuad(pv1, pv2, pr1, pr2);
                             continue;
                         }
@@ -476,12 +483,12 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
                         Vec3d pr12(s[0],0,0); // point on cylinder edge
                         Vec3d pr21(s[1],0,0); // point on cylinder edge
                         Vec3d pr22(s[1],0,0); // point on cylinder edge
-                        Vec3d vp1 = Vec3d(t.v[pOrder[2]]); // vector to last point
-                        Vec3d vp2 = Vec3d(t.v[pOrder[1]]); // vector to last point
-                        pr11[1] = pv1[1] + vp1[1]/vp1[0]*(s[0]-pv1[0]);
-                        pr12[1] = pv2[1] + vp2[1]/vp2[0]*(s[0]-pv2[0]);
-                        pr21[1] = pv1[1] + vp1[1]/vp1[0]*(s[1]-pv1[0]);
-                        pr22[1] = pv2[1] + vp2[1]/vp2[0]*(s[1]-pv2[0]);
+                        Vec3d vp1 = Vec3d(tri.v[pOrder[2]]); // vector to last point
+                        Vec3d vp2 = Vec3d(tri.v[pOrder[1]]); // vector to last point
+                        pr11[2] = pv1[2] + vp1[2]/vp1[0]*(s[0]-pv1[0]);
+                        pr12[2] = pv2[2] + vp2[2]/vp2[0]*(s[0]-pv2[0]);
+                        pr21[2] = pv1[2] + vp1[2]/vp1[0]*(s[1]-pv1[0]);
+                        pr22[2] = pv2[2] + vp2[2]/vp2[0]*(s[1]-pv2[0]);
                         pushQuad(pr11, pr12, pr21, pr22);
                     }
                     continue;

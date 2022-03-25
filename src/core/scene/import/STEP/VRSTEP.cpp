@@ -1151,7 +1151,7 @@ void VRSTEP::buildGeometries() {
     cout << blueBeg << "VRSTEP::buildGeometries start\n" << colEnd;
     for (auto BrepShape : instancesByType["Advanced_Brep_Shape_Representation"]) {
         static int i=0; i++;
-        //if (i != 12) continue; // test for cylinder surfaces
+        if (i != 12) continue; // test for cylinder surfaces
         //cout << BrepShape.ID << endl;
         //if (BrepShape.ID == 57189) exploreEntity(nodes[BrepShape.entity], true);
 
@@ -1180,7 +1180,7 @@ void VRSTEP::buildGeometries() {
                         geo->merge( surface.build(surface.type, same_sense) );
                         //geo->addChild( surface.build(surface.type) );
                     } else cout << "VRSTEP::buildGeometries Error 2 " << Face.type << " " << Face.ID << endl;
-                    //break;
+                    break;
                 }
                 if (materials.count(Item.entity)) geo->setMaterial(materials[Item.entity]);
             } else if (Item.type == "Axis2_Placement_3d") { // ignore?

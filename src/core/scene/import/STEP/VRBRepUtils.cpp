@@ -52,7 +52,7 @@ vector<float> VRBRepUtils::angleFrame(float a1, float a2) {
     int s1 = getSideN(a1);
     float a = s1*Dangle;
     while (a <= a1) a += Dangle;
-    for(; a < a2; a += Dangle) angles.push_back(a);
+    for(; a < a2-1e-6; a += Dangle) angles.push_back(a);
     angles.push_back(a2);
     return angles;
 }
