@@ -6,6 +6,7 @@
 #include "core/objects/geometry/OSGGeometry.h"
 #include "core/objects/geometry/VRGeoData.h"
 #include "core/utils/isNan.h"
+#include "core/utils/toString.h"
 #include <OpenSG/OSGTriangleIterator.h>
 
 using namespace OSG;
@@ -26,6 +27,8 @@ struct triangle {
     }
 };
 
+static const double pi = 3.1415926535;
+
 VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
     //cout << "VRSTEP::Surface build " << type << endl;
 
@@ -39,21 +42,35 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
     Matrix4d mI = m;
     mI.invert();
 
-    auto cylindricUnproject = [&](Vec3d& p) {
-        mI.mult(Pnt3d(p),p);
-        //cout << " cylindricUnproject: " << p << " -> ";
-        //cout << " -> R: " << R << ", r: " << p[0]*p[0]+p[1]*p[1] << endl;
-        float h = p[2];
-        p[0] /= R; p[1] /= R;
-        float a = atan2(p[1], p[0]);
-        return Vec2d(a,h);
-    };
-
     auto rebaseAngle = [&](double& a, double& la) {
         if (la > -1000 && abs(a - la) > Pi) {
             if (a - la > Pi) a -= 2*Pi;
             else a += 2*Pi;
         }
+    };
+
+    auto cylindricUnproject = [&](Vec3d& p, double& lastAngle, int type, double cDir = 0) {
+        mI.mult(Pnt3d(p),p);
+        cout << " cylindricUnproject, p: " << p << ", lastAngle: " << lastAngle << ", type: " << type << ", cDir: " << cDir << endl;
+        //cout << " -> R: " << R << ", r: " << p[0]*p[0]+p[1]*p[1] << endl;
+        double h = p[2];
+        double a = atan2(p[1]/R, p[0]/R);
+        // rebaseAngle(a, lastAngle)
+
+        if (a > lastAngle) cDir *= -1;
+
+        if (abs(a) > pi-1e-3) { // ambigous point on +- pi
+            if (type == 0 && lastAngle != 1000) a = lastAngle; // next point on line
+            if (type == 1) { // circle
+                if (cDir > 0) {
+                    a *= -1;
+                    cout << "  swap a: " << a << endl;
+                }
+            }
+        }
+
+        lastAngle = a;
+        return Vec2d(a,h);
     };
 
     auto containsNan = [&](VRBRepBound& b) {
@@ -96,16 +113,20 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
     }
 
     if (type == "Cylindrical_Surface") {
+        // still old problem!
+        //  IDEA: solve it in cylindricUnproject! the problem is for points on +/- pi, maybe solve it there!
+        //          maybe move the point a bit left or right depending on the circle direction?
+        //          but what with the lines?
+
+
         //cout << "Cylindrical_Surface" << endl;
         // feed the triangulator with unprojected points
         Triangulator triangulator;
 
         for (auto b : bounds) {
             VRPolygon poly;
-            double la = -1001;
-            //cout << "Bound" << endl << b.edgeEndsToString() << endl;
-
-
+            double lastAngle = 1000;
+            //cout << " Bound" << endl << b.edgeEndsToString() << endl;
 
             //for (auto p : b.points) cout << "bound point: " << p << " -> " << cylindricUnproject(p) << endl;
 
@@ -115,43 +136,64 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
             //  use edge angle values instead of cartesian points
             //  if closed bound around cylinder detected, clip bound with lines at +/- PI, generating new bound on cylinder!
 
+            // edge points rules:
+            //  - first edge, push two points: push the point not found in next edge
+            //  - push the point not found in previous edge
+
+            // shift edges to have as first edge not a line
+            if (b.edges[0].etype == "Line")  {
+                int i0 = -1;
+                for (int i=1; i<b.edges.size(); i++) {
+                    if (b.edges[i].etype != "Line") {
+                        i0 = i;
+                        break;
+                    }
+                }
+
+                vector<VRBRepEdge> edges;
+                for (int i=i0; i<b.edges.size(); i++) edges.push_back(b.edges[i]);
+                for (int i=0; i<i0; i++) edges.push_back(b.edges[i]);
+                b.edges = edges;
+            }
+
             //cout << " poly\n";
             for (auto& e : b.edges) {
                 if (e.etype == "Circle") {
-                    float h = cylindricUnproject(e.EBeg)[1];
-                    double a1, a2;
-                    a1 = e.a1; a2 = e.a2;
-                    //cout << " circle " << Vec2d(a1,a2) << " -> ";
                     Vec3d cd = e.center->dir();
                     Vec3d cu = e.center->up();
-                    if (a2 < a1 && cd.dot(d) < 0) a2 += 2*Pi;
+                    double cDir = cu.dot(u);
+                    /*a1 = e.a1; a2 = e.a2;
+                    //cout << " circle " << Vec2d(a1,a2) << " -> ";
+                    if (a2 < a1 && cd.dot(d) < 0) a2 += 2*Pi;*/
 
-
-                    //a1 = cylindricUnproject(e.EBeg)[0];
-                    //a2 = cylindricUnproject(e.EEnd)[0];
                     //if (a2 < a1) a2 += 2*Pi;
 
-                    //cout << " circle " << Vec3d(a1,a2,la);
-                    rebaseAngle(a1, la);
-                    rebaseAngle(a2, la);
+                    //cout << " circle " << p1 << " -> " << p2 << ",  " << cd << " " << cu << endl;
+                    //rebaseAngle(a1, la);
+                    //rebaseAngle(a2, la);
                     //cout << " -> " << cd.dot(d) << " " << cu.dot(u) << endl;
 
-                    if (poly.size() == 0) poly.addPoint(Vec2d(a1,h));
-                    poly.addPoint(Vec2d(a2,h));
+                    if (poly.size() == 0) {
+                        Vec2d p1 = cylindricUnproject(e.EBeg, lastAngle, 1, cDir);
+                        poly.addPoint(p1);
+                    }
+
+                    Vec2d p2 = cylindricUnproject(e.EEnd, lastAngle, 1, cDir);
+                    poly.addPoint(p2);
                     /*cout << "  cp1 " << Vec2d(a1,h);
                     cout << " -> cp2 " << Vec2d(a2,h);
                     cout << ", EBeg: " << e.EBeg << " -> " << e.EEnd << endl;*/
-                    la = a2;
+                    //la = a2;
                     continue;
                 }
 
                 if (e.etype == "Line") {
-                    Vec2d p1 = cylindricUnproject(e.EBeg);
-                    Vec2d p2 = cylindricUnproject(e.EEnd);
+                    Vec2d p1 = cylindricUnproject(e.EBeg, lastAngle, 0);
+                    Vec2d p2 = cylindricUnproject(e.EEnd, lastAngle, 0);
 
-                    //cout << " line " << Vec3d(p1[0],p2[0],la);
-                    rebaseAngle(p1[0], la);
-                    rebaseAngle(p2[0], la);
+                    //cout << " line " << Vec3d(p1[0],p2[0],la) << endl;
+                    //rebaseAngle(p1[0], la);
+                    //rebaseAngle(p2[0], la);
                     //cout << " -> " << Vec3d(p1[0],p2[0],la) << endl;
 
                     if (poly.size() == 0) poly.addPoint(p1);
@@ -159,18 +201,18 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
                     /*cout << "  lp1 " << p1;
                     cout << " -> lp2 " << p2;
                     cout << ", EBeg: " << e.EBeg << " -> " << e.EEnd << endl;*/
-                    la = p2[0];
+                    //la = p2[0];
                     continue;
                 }
 
                 if (e.etype == "B_Spline_Curve_With_Knots") {
                     for (auto& p : e.points) {
-                        Vec2d pc = cylindricUnproject(p);
-                        rebaseAngle(pc[0], la);
+                        Vec2d pc = cylindricUnproject(p, lastAngle, 2);
+                        rebaseAngle(pc[0], lastAngle);
 
                         poly.addPoint(pc);
                         //cout << "  bsp " << pc << endl;
-                        la = pc[0];
+                        //la = pc[0];
                     }
                     continue;
                 }
@@ -186,6 +228,31 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
                 la = pc[0];
                 poly.addPoint(pc);
             }*/
+
+            /*VRPolygon poly2;
+            for (int i=3; i<poly.size(); i+=2) { // start at second edge, increment every two points
+                Vec2d e1p1 = poly.getPoint(i-3);
+                Vec2d e1p2 = poly.getPoint(i-2);
+                Vec2d e2p1 = poly.getPoint(i-1);
+                Vec2d e2p2 = poly.getPoint(i);
+
+                bool same11 = (sameVec(e1p1, e2p1) || sameVec(e1p1, e2p2));
+                bool same12 = (sameVec(e1p2, e2p1) || sameVec(e1p2, e2p2));
+                bool same21 = (sameVec(e2p1, e1p1) || sameVec(e2p1, e1p2));
+                bool same22 = (sameVec(e2p2, e1p1) || sameVec(e2p2, e1p2));
+
+                if (i == 3) {
+                    if (same11) { poly2.addPoint(e1p2); poly2.addPoint(e1p1); }
+                    else if (same12) { poly2.addPoint(e1p1); poly2.addPoint(e1p2); }
+                    else cout << " Warning in Poly filter, same points: " << sameVec(e1p1, e2p1) << " " << sameVec(e1p1, e2p2) << " " << sameVec(e1p2, e2p1) << " " << sameVec(e1p2, e2p2) << endl;
+                }
+
+                if (same21) poly2.addPoint(e2p2);
+                else if (same22) poly2.addPoint(e2p1);
+                else cout << " Warning in Poly filter, same points: " << sameVec(e1p1, e2p1) << " " << sameVec(e1p1, e2p2) << " " << sameVec(e1p2, e2p1) << " " << sameVec(e1p2, e2p2) << endl;
+            }*/
+
+            //cout << " polygon: " << toString(poly2.get()) << endl;
 
             if (!poly.isCCW()) poly.reverseOrder();
             triangulator.add(poly);

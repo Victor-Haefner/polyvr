@@ -49,6 +49,7 @@ void VRBRepEdge::build(string type) {
         c1 *= _r; c2*= _r;
         a1 = atan2(c1[1],c1[0]);
         a2 = atan2(c2[1],c2[0]);
+        cout << " circle edge: " << Vec2d(a1, a2) << endl;
         if (a1 == a2) fullCircle = true;
         //if (a1 > a2) a2 += 2*Pi;
 

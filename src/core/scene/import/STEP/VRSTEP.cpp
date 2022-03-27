@@ -1151,7 +1151,7 @@ void VRSTEP::buildGeometries() {
     cout << blueBeg << "VRSTEP::buildGeometries start\n" << colEnd;
     for (auto BrepShape : instancesByType["Advanced_Brep_Shape_Representation"]) {
         static int i=0; i++;
-        if (i != 12) continue; // test for cylinder surfaces
+        //if (i != 12) continue; // test for cylinder surfaces
         //cout << BrepShape.ID << endl;
         //if (BrepShape.ID == 57189) exploreEntity(nodes[BrepShape.entity], true);
 
@@ -1166,8 +1166,11 @@ void VRSTEP::buildGeometries() {
             if (Item.type == "Manifold_Solid_Brep") {
                 auto& Outer = instances[ Item.get<0, STEPentity*>() ];
                 for (auto j : Outer.get<0, vector<STEPentity*> >() ) {
+                    static int k = 0; k++;
+                    //if (k != 1 && k != 48) continue; // k=1 and k=48 is the two part cylinder
+
                     auto& Face = instances[j];
-                    //cout << "  Outer Face: " << Face.type << " " << Face.ID << endl;
+                    cout << "  Outer Face: " << Face.type << " " << Face.ID << " " << k << endl;
                     if (Face.type == "Advanced_Face") {
                         auto& s = instances[ Face.get<1, vector<STEPentity*>, STEPentity*, bool>() ];
                         Surface surface(s, instances);
@@ -1180,7 +1183,6 @@ void VRSTEP::buildGeometries() {
                         geo->merge( surface.build(surface.type, same_sense) );
                         //geo->addChild( surface.build(surface.type) );
                     } else cout << "VRSTEP::buildGeometries Error 2 " << Face.type << " " << Face.ID << endl;
-                    break;
                 }
                 if (materials.count(Item.entity)) geo->setMaterial(materials[Item.entity]);
             } else if (Item.type == "Axis2_Placement_3d") { // ignore?

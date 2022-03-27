@@ -11,6 +11,11 @@ VRBRepUtils::VRBRepUtils() {
     for (int i=0; i<Ncurv; i++) Adict.push_back(Dangle*i);
 }
 
+bool VRBRepUtils::sameVec(const Vec2d& v1, const Vec2d& v2, float d) {
+    Vec2d dv = v2-v1;
+    return ( abs(dv[0]) < d && abs(dv[1]) < d);
+}
+
 bool VRBRepUtils::sameVec(const Vec3d& v1, const Vec3d& v2, float d) {
     Vec3d dv = v2-v1;
     return ( abs(dv[0]) < d && abs(dv[1]) < d && abs(dv[2]) < d );
