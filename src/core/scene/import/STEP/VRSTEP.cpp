@@ -1158,7 +1158,7 @@ void VRSTEP::buildGeometries() {
         string name = BrepShape.get<0, string, vector<STEPentity*> >();
         auto geo = VRGeometry::create(name);
 
-        cout << "VRSTEP::buildGeometries " << name << " ID: " << BrepShape.ID << endl;
+        cout << "VRSTEP::buildGeometries " << name << " ID: " << BrepShape.ID << " i " << i << endl;
 
         for (auto i : BrepShape.get<1, string, vector<STEPentity*> >() ) {
             auto& Item = instances[i];
@@ -1167,7 +1167,8 @@ void VRSTEP::buildGeometries() {
                 auto& Outer = instances[ Item.get<0, STEPentity*>() ];
                 for (auto j : Outer.get<0, vector<STEPentity*> >() ) {
                     static int k = 0; k++;
-                    //if (k != 1 && k != 48) continue; // k=1 and k=48 is the two part cylinder
+                    //if (k != 1 && k != 2 && k != 17 && k != 48) continue; // k=1 and k=48 is the two part cylinder
+                    //if (k != 2 && k != 17) continue; // k=1 and k=48 is the two part cylinder
 
                     auto& Face = instances[j];
                     cout << "  Outer Face: " << Face.type << " " << Face.ID << " " << k << endl;

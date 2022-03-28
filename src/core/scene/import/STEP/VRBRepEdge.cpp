@@ -19,6 +19,7 @@ void VRBRepEdge::swap() {
     std::swap(EBeg, EEnd);
     std::swap(a1, a2);
     reverse(points.begin(), points.end());
+    swapped = !swapped;
 }
 
 bool VRBRepEdge::connectsTo(VRBRepEdge& e) { return ( sameVec(end(), e.beg()) ); }

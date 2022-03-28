@@ -26,6 +26,7 @@ class VRBRepEdge : public VRBRepUtils {
         float a1,a2;
         int deg;
         bool fullCircle = false;
+        bool swapped = false;
         string etype;
 
         VRBRepEdge();
