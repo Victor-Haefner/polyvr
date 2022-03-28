@@ -42,30 +42,23 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
     Matrix4d mI = m;
     mI.invert();
 
-    auto rebaseAngle = [&](double& a, double& la) {
-        if (la > -1000 && abs(a - la) > Pi) {
-            if (a - la > Pi) a -= 2*Pi;
-            else a += 2*Pi;
-        }
-    };
-
     auto cylindricUnproject = [&](Vec3d& p, double& lastAngle, int type, double cDir = 0, bool circleEnd = false) {
         mI.mult(Pnt3d(p),p);
-        cout << " cylindricUnproject, p: " << p << ", lastAngle: " << lastAngle << ", type: " << type << ", cDir: " << cDir << ", circleEnd: " << circleEnd << endl;
+        //cout << " cylindricUnproject, p: " << p << ", lastAngle: " << lastAngle << ", type: " << type << ", cDir: " << cDir << ", circleEnd: " << circleEnd << endl;
         //cout << " -> R: " << R << ", r: " << p[0]*p[0]+p[1]*p[1] << endl;
         double h = p[2];
         double a = atan2(p[1]/R, p[0]/R);
         // rebaseAngle(a, lastAngle)
 
         if (abs(a) > pi-1e-3) { // ambigous point on +- pi
-            cout << "  amb point?: " << a << ", cDir: " << cDir << endl;
+            //cout << "  amb point?: " << a << ", cDir: " << cDir << endl;
             if (type == 0 && lastAngle != 1000) a = lastAngle; // next point on line
             if (type == 1) { // circle
                 if (cDir > 0 && !circleEnd) a = -pi;
                 if (cDir < 0 && !circleEnd) a =  pi;
                 if (cDir > 0 &&  circleEnd) a =  pi;
                 if (cDir < 0 &&  circleEnd) a = -pi;
-                cout << "   set a: " << a << endl;
+                //cout << "   set a: " << a << endl;
             }
         }
 
@@ -87,7 +80,7 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
 
         if (abs(w) > 1e-4) {
             if (w > 0) cDir = -1;
-            cout << "   --- small angle, W: " << W << ", w: " << w << ", p1: " << p1 << ", p2: " << p2 << ", d: " << d << endl;
+            //cout << "   --- small angle, W: " << W << ", w: " << w << ", p1: " << p1 << ", p2: " << p2 << ", d: " << d << endl;
         } else { // special case! flat angle pi
             double c = d.dot(e.center->dir());
             if (c < 0) cDir = -1;
@@ -96,7 +89,7 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
             //cout << "   --- flat angle, W: " << W << ", w: " << w << ", p1: " << p1 << ", p2: " << p2 << ", cd: " << e.center->dir() << endl;
         }
 
-        cout << " compCircleDirection, circle: " << Vec2d(e.a1, e.a2) << ", cDir: " << cDir << ", W: " << W << ", cd: " << e.center->dir() << ", eSwapped: " << e.swapped << endl;
+        //cout << " compCircleDirection, circle: " << Vec2d(e.a1, e.a2) << ", cDir: " << cDir << ", W: " << W << ", cd: " << e.center->dir() << ", eSwapped: " << e.swapped << endl;
         return cDir;
     };
 
@@ -123,18 +116,23 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
                 if (abs(pOut[2]) > 0.001) cout << " Error in VRBRepSurface::build Plane, p[2] not 0 (" << pOut[2] << ")! -> data loss" << endl;
                 poly.addPoint(pOut);
             }
+            //cout << " poly: " << toString(poly.get3()) << ", CCW: " << poly.isCCW() << endl;
             if (!poly.isCCW()) poly.reverseOrder();
             t.add(poly);
         }
 
-        auto g = t.compute(); // TODO: check about g??
+        auto g = t.compute();
         if (!g) return 0;
         if (!g->getMesh()->geo->getPositions()) cout << "NO MESH!\n";
         g->setMatrix(m);
 
-        Vec3d nP = Vec3d(0, 0, -1+2*int(same_sense));
+        Vec3d nP = Vec3d(0, 0, 1);
         GeoVectorPropertyMTRecPtr norms = g->getMesh()->geo->getNormals();
         for (uint i=0; i<norms->size(); i++) norms->setValue(nP, i);
+
+        /*GeoVec3fPropertyMTRecPtr cols = GeoVec3fProperty::create();
+        for (uint i=0; i<norms->size(); i++) cols->addValue(Color3f(1,0,0));
+        g->getMesh()->geo->setColors(cols);*/
 
         return g;
     }
@@ -255,7 +253,7 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
                 else cout << " Warning in Poly filter, same points: " << sameVec(e1p1, e2p1) << " " << sameVec(e1p1, e2p2) << " " << sameVec(e1p2, e2p1) << " " << sameVec(e1p2, e2p2) << endl;
             }*/
 
-            cout << " polygon: " << toString(poly.get()) << endl;
+            //cout << " polygon: " << toString(poly.get()) << endl;
 
             if (!poly.isCCW()) poly.reverseOrder();
             triangulator.add(poly);

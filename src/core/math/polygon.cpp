@@ -42,7 +42,7 @@ VRPolygon fromCGALPolygon(CGALPolygon cp) {
 
 VRPolygon::VRPolygon() {}
 
-bool VRPolygon::isCCW() {
+bool VRPolygon::isCCW2() {
     double s = 0;
     auto tmp = points;
     if (!closed && tmp.size() > 0) tmp.push_back(tmp[0]);
@@ -52,6 +52,23 @@ bool VRPolygon::isCCW() {
         s += (v2[0]-v1[0])*(v2[1]+v1[1]);
     }
     return (s <= 0);
+}
+
+bool VRPolygon::isCCW3() {
+    double s = 0;
+    auto tmp = points3;
+    if (!closed && tmp.size() > 0) tmp.push_back(tmp[0]);
+    for (unsigned int i=1; i<tmp.size(); i++) {
+        auto v1 = tmp[i-1];
+        auto v2 = tmp[i];
+        s += (v2[0]-v1[0])*(v2[1]+v1[1]);
+    }
+    return (s <= 0);
+}
+
+bool VRPolygon::isCCW() {
+    if (points.size() > 0) return isCCW2();
+    if (points3.size() > 0) return isCCW3();
 }
 
 void VRPolygon::runTest() {

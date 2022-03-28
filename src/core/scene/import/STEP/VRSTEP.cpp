@@ -1073,7 +1073,7 @@ struct VRSTEP::Bound : public VRSTEP::Instance, public VRBRepBound {
 struct VRSTEP::Surface : public VRSTEP::Instance, public VRBRepSurface {
     void handleSurface(STEPentity* e, map<STEPentity*, Instance>& instances) {
         bool cplx = e->IsComplex();
-        string etype = e->EntityName();
+        etype = e->EntityName();
         auto& inst = instances[e];
 
         if (etype == "Plane") {
@@ -1172,9 +1172,10 @@ void VRSTEP::buildGeometries() {
                     //if (k != 255) continue;
                     //if (k != 251) continue;
                     //if (k != 261) continue;
+                    //if (k < 188 || k > 190) continue;
+                    //if (k != 189) continue; // cylinder cap, normal issue
 
                     auto& Face = instances[j];
-                    cout << "  Outer Face: " << Face.type << " " << Face.ID << " " << k << endl;
                     if (Face.type == "Advanced_Face") {
                         auto& s = instances[ Face.get<1, vector<STEPentity*>, STEPentity*, bool>() ];
                         Surface surface(s, instances);
@@ -1185,7 +1186,8 @@ void VRSTEP::buildGeometries() {
                             surface.bounds.push_back(bound);
                         }
                         geo->merge( surface.build(surface.type, same_sense) );
-                        //geo->addChild( surface.build(surface.type) );
+                        //geo->addChild( surface.build(surface.type, same_sense) );
+                        cout << "  Outer Face: " << Face.type << " " << surface.etype << " " << Face.ID << " " << k << endl;
                     } else cout << "VRSTEP::buildGeometries Error 2 " << Face.type << " " << Face.ID << endl;
                 }
                 if (materials.count(Item.entity)) geo->setMaterial(materials[Item.entity]);
