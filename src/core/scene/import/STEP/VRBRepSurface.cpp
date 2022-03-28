@@ -130,10 +130,6 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
         GeoVectorPropertyMTRecPtr norms = g->getMesh()->geo->getNormals();
         for (uint i=0; i<norms->size(); i++) norms->setValue(nP, i);
 
-        /*GeoVec3fPropertyMTRecPtr cols = GeoVec3fProperty::create();
-        for (uint i=0; i<norms->size(); i++) cols->addValue(Color3f(1,0,0));
-        g->getMesh()->geo->setColors(cols);*/
-
         return g;
     }
 
