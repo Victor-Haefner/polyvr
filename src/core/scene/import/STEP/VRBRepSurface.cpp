@@ -49,9 +49,9 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
         }
     };
 
-    auto cylindricUnproject = [&](Vec3d& p, double& lastAngle, int type, double cDir = 0) {
+    auto cylindricUnproject = [&](Vec3d& p, double& lastAngle, int type, double cDir = 0, bool circleEnd = false) {
         mI.mult(Pnt3d(p),p);
-        cout << " cylindricUnproject, p: " << p << ", lastAngle: " << lastAngle << ", type: " << type << ", cDir: " << cDir << endl;
+        cout << " cylindricUnproject, p: " << p << ", lastAngle: " << lastAngle << ", type: " << type << ", cDir: " << cDir << ", circleEnd: " << circleEnd << endl;
         //cout << " -> R: " << R << ", r: " << p[0]*p[0]+p[1]*p[1] << endl;
         double h = p[2];
         double a = atan2(p[1]/R, p[0]/R);
@@ -61,10 +61,11 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
             cout << "  amb point?: " << a << ", cDir: " << cDir << endl;
             if (type == 0 && lastAngle != 1000) a = lastAngle; // next point on line
             if (type == 1) { // circle
-                if (cDir > 0) {
-                    a *= -1;
-                    cout << "   swap a: " << a << endl;
-                }
+                if (cDir > 0 && !circleEnd) a = -pi;
+                if (cDir < 0 && !circleEnd) a =  pi;
+                if (cDir > 0 &&  circleEnd) a =  pi;
+                if (cDir < 0 &&  circleEnd) a = -pi;
+                cout << "   set a: " << a << endl;
             }
         }
 
@@ -75,17 +76,27 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
     auto compCircleDirection = [&](VRBRepEdge& e) {
         double cDir = 1;
 
-        Vec3d W = e.EBeg.cross(e.EEnd);
-        double w = W.dot(e.center->up());
-        if (w < 0) cDir = -1;
+        Vec3d p1 = e.EBeg - e.center->pos();
+        Vec3d p2 = e.EEnd - e.center->pos();
 
-        //Vec3d cd = e.center->dir();
-        //Vec3d cu = e.center->up();
-        //double cDir = cu.dot(u);
-        //if (e.a1 > e.a2) cDir *= -1;
-        if (e.swapped) cDir *= -1;
+        //mI.mult(Pnt3d(p1),p1);
+        //mI.mult(Pnt3d(p2),p2);
 
-        cout << " compCircleDirection, circle: " << Vec2d(e.a1, e.a2) << ", cDir: " << cDir << ", W: " << W << ", cu: " << e.center->up() << ", eSwapped: " << e.swapped << endl;
+        Vec3d W = p1.cross(p2);
+        double w = W.dot(d);
+
+        if (abs(w) > 1e-4) {
+            if (w > 0) cDir = -1;
+            cout << "   --- small angle, W: " << W << ", w: " << w << ", p1: " << p1 << ", p2: " << p2 << ", d: " << d << endl;
+        } else { // special case! flat angle pi
+            double c = d.dot(e.center->dir());
+            if (c < 0) cDir = -1;
+            if (e.swapped) cDir *= -1;
+            //cDir *= -1;
+            //cout << "   --- flat angle, W: " << W << ", w: " << w << ", p1: " << p1 << ", p2: " << p2 << ", cd: " << e.center->dir() << endl;
+        }
+
+        cout << " compCircleDirection, circle: " << Vec2d(e.a1, e.a2) << ", cDir: " << cDir << ", W: " << W << ", cd: " << e.center->dir() << ", eSwapped: " << e.swapped << endl;
         return cDir;
     };
 
@@ -181,11 +192,11 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
                     double cDir = compCircleDirection(e);
 
                     if (poly.size() == 0) {
-                        Vec2d p1 = cylindricUnproject(e.EBeg, lastAngle, 1, cDir);
+                        Vec2d p1 = cylindricUnproject(e.EBeg, lastAngle, 1, cDir, false);
                         poly.addPoint(p1);
                     }
 
-                    Vec2d p2 = cylindricUnproject(e.EEnd, lastAngle, 1, cDir);
+                    Vec2d p2 = cylindricUnproject(e.EEnd, lastAngle, 1, cDir, true);
                     poly.addPoint(p2);
                     continue;
                 }
