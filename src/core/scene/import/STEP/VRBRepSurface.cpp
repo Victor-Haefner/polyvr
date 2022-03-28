@@ -73,13 +73,19 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
     };
 
     auto compCircleDirection = [&](VRBRepEdge& e) {
-        Vec3d cd = e.center->dir();
-        Vec3d cu = e.center->up();
-        double cDir = cu.dot(u);
-        if (e.a1 > e.a2) cDir *= -1;
+        double cDir = 1;
+
+        Vec3d W = e.EBeg.cross(e.EEnd);
+        double w = W.dot(e.center->up());
+        if (w < 0) cDir = -1;
+
+        //Vec3d cd = e.center->dir();
+        //Vec3d cu = e.center->up();
+        //double cDir = cu.dot(u);
+        //if (e.a1 > e.a2) cDir *= -1;
         if (e.swapped) cDir *= -1;
 
-        cout << " compCircleDirection, circle: " << Vec2d(e.a1, e.a2) << ", cDir: " << cDir << ", cd: " << cd << ", cu: " << cu << ", eSwapped: " << e.swapped << endl;
+        cout << " compCircleDirection, circle: " << Vec2d(e.a1, e.a2) << ", cDir: " << cDir << ", W: " << W << ", cu: " << e.center->up() << ", eSwapped: " << e.swapped << endl;
         return cDir;
     };
 
