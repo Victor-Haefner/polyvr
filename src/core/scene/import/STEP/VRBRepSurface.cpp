@@ -85,10 +85,11 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
 
     auto sphericalUnproject = [&](Vec3d& p, double& lastTheta, double& lastPhi, int type, double cDir = 0, bool circleEnd = false) {
         mI.mult(Pnt3d(p),p);
-        //cout << " sphericalUnproject, p: " << p << ", lastAngle: " << lastAngle << ", type: " << type << ", cDir: " << cDir << ", circleEnd: " << circleEnd << endl;
-        //cout << " -> R: " << R << ", r: " << p[0]*p[0]+p[1]*p[1] << endl;
-        double theta = atan(p[2]/R); // theta, angle to up axis z, -pi/2 -> pi/2
-        double phi   = atan2(p[1]/R, p[0]/R); // phi, angle in horizontal plane, -pi -> pi
+        Vec3d n = p*1.0/R;
+        cout << " sphericalUnproject, p: " << p << ", lastTheta: " << lastTheta << ", lastPhi: " << lastPhi << ", type: " << type << ", cDir: " << cDir << ", circleEnd: " << circleEnd << endl;
+        cout << " -> R: " << R << ", n: " << n << " nL: " << n.length() << endl;
+        double theta = asin(n[2]); // theta, angle to up axis z, -pi/2 -> pi/2
+        double phi   = atan2(n[1], n[0]); // phi, angle in horizontal plane, -pi -> pi
 
         /*if (abs(a) > pi-1e-3) { // ambigous point on +- pi
             //cout << "  amb point?: " << a << ", cDir: " << cDir << endl;
@@ -100,6 +101,8 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
                 //cout << "   set a: " << a << endl;
             }
         }*/
+
+        cout << "   -> theta,phi: " << theta << ", " << phi << endl;
 
         lastTheta = theta;
         lastPhi = phi;
@@ -158,7 +161,7 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
     };
 
     if (type == "Plane") {
-        return 0;
+        //return 0;
         //cout << "make Plane, N bounds: " << bounds.size() << endl;
         Triangulator t;
         if (bounds.size() == 0) cout << "Warning: No bounds!\n";
@@ -193,7 +196,7 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
     }
 
     if (type == "Cylindrical_Surface") {
-        return 0;
+        //return 0;
         Triangulator triangulator; // feed the triangulator with unprojected points
 
         for (auto b : bounds) {
@@ -818,7 +821,7 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
 
             for (it = TriangleIterator(gg->geo); !it.isAtEnd() ;++it) {
                 triangle tri(it);
-                if (tri.A < 1e-6) continue; // ignore flat triangles
+                //if (tri.A < 1e-6) continue; // ignore flat triangles
 
                 // TODO: subdivide the triangle and add sub triangles to nMesh
                 /*int Nt =
@@ -831,7 +834,7 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
                 pushTri(nMesh, Pnt3d(tri.p[0]), Pnt3d(tri.p[1]), Pnt3d(tri.p[2]), n);
             }
 
-            nMesh.apply(g);
+            //nMesh.apply(g);
 
             // project the points back into 3D space
             GeoVectorPropertyMTRecPtr pos = gg->geo->getPositions();
@@ -842,7 +845,7 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
                     Vec3d n = Vec3d(norms->getValue<Vec3f>(i));
                     double theta = p[0];
                     double phi   = p[2];
-                    n = Vec3d(cos(phi)*sin(theta), cos(phi)*cos(theta), cos(theta)) * R;
+                    n = Vec3d(cos(phi)*cos(theta), sin(phi)*cos(theta), sin(theta));
 
                     /*Vec2d side = getSide(p[0]);
                     Vec3d A = Vec3d(R*cos(side[0]), R*sin(side[0]), 0);
@@ -856,6 +859,8 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
                     //if (a < side[0] || a > side[1]) cout << "   AAAH\n"; // TODO: check this out!
 
                     p = Pnt3d(n*R);
+
+                    cout << "    sphere theta: " << theta << ", phi: " << phi << ", pos: " << p << ", R: " << R << endl;
 
                     pos->setValue(p, i);
                     norms->setValue(n, i);
