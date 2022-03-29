@@ -61,6 +61,7 @@ VRSTEP::VRSTEP() {
     addType< tuple<STEPentity*> >( "Manifold_Solid_Brep", "a1e", "", false);
     addType< tuple<STEPentity*> >( "Plane", "a1e", "", false);
     addType< tuple<STEPentity*, double> >( "Cylindrical_Surface", "a1e|a2f", "", false);
+    addType< tuple<STEPentity*, double> >( "Spherical_Surface", "a1e|a2f", "", false);
     addType< tuple<STEPentity*, STEPentity*> >( "Line", "a1e|a2e", "", false);
     addType< tuple<STEPentity*, double> >( "Vector", "a1e|a2f", "", false);
     addType< tuple<STEPentity*> >( "Vertex_Point", "a1e", "", false);
@@ -1086,6 +1087,11 @@ struct VRSTEP::Surface : public VRSTEP::Instance, public VRBRepSurface {
             R = inst.get<1, STEPentity*, double>();
         }
 
+        if (etype == "Spherical_Surface") {
+            trans = toPose( inst.get<0, STEPentity*, double>(), instances );
+            R = inst.get<1, STEPentity*, double>();
+        }
+
         // int, int, field<STEPentity*>, bool, bool, bool, vector<int>, vector<int>, vector<double>, vector<double>
         // degree_u, degree_v, control_points, u_closed, v_closed, self_intersect, u multiplicities, v multiplicities, u knots, v knots
         if (etype == "B_Spline_Surface_With_Knots") {
@@ -1205,10 +1211,7 @@ void VRSTEP::buildGeometries() {
 
                         geo->merge( faceGeo );
                         //geo->addChild( surface.build(surface.type, same_sense) );
-
-
-
-                        cout << "  Outer Face: " << Face.type << " " << surface.etype << " " << Face.ID << " " << k << endl;
+                        //cout << "  Outer Face: " << Face.type << " " << surface.etype << " " << Face.ID << " " << k << endl;
                     } else cout << "VRSTEP::buildGeometries Error 2 " << Face.type << " " << Face.ID << endl;
                 }
             } else if (Item.type == "Axis2_Placement_3d") { // ignore?

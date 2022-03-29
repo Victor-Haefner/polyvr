@@ -42,13 +42,76 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
     Matrix4d mI = m;
     mI.invert();
 
+    auto checkOrder = [&](Pnt3d p0, Pnt3d p1, Pnt3d p2, Vec3d n) {
+        float cp = (p1-p0).cross(p2-p0).dot(n);
+        return (cp >= 0);
+    };
+
+    auto pushTri = [&](VRGeoData& g, Pnt3d p1, Pnt3d p2, Pnt3d p3, Vec3d n) {
+        //cout << " pushTri " << p1 << "   " << p2 << "   " << p3 << endl;
+        int a = g.pushVert(p1,n);
+        int b = g.pushVert(p2,n);
+        int c = g.pushVert(p3,n);
+        if (checkOrder(p1,p2,p3,n)) g.pushTri(a,b,c);
+        else g.pushTri(a,c,b);
+    };
+
+    auto pushQuad = [&](VRGeoData& g, Pnt3d p1, Pnt3d p2, Pnt3d p3, Pnt3d p4, Vec3d n) {
+        //cout << " pushQuad " << p1 << "   " << p2 << "   " << p3 << "   " << p4 << endl;
+        int a = g.pushVert(p1,n);
+        int b = g.pushVert(p2,n);
+        int c = g.pushVert(p3,n);
+        int d = g.pushVert(p4,n);
+        if (checkOrder(p1,p2,p3,n)) g.pushTri(a,b,c);
+        else g.pushTri(a,c,b);
+        if (checkOrder(p2,p3,p4,n)) g.pushTri(b,c,d);
+        else g.pushTri(b,d,c);
+    };
+
+    auto pushPen = [&](VRGeoData& g, Pnt3d p1, Pnt3d p2, Pnt3d p3, Pnt3d p4, Pnt3d p5, Vec3d n) {
+        //cout << " pushPen " << p1 << "   " << p2 << "   " << p3 << "   " << p4 << "   " << p5 << endl;
+        int a = g.pushVert(p1,n);
+        int b = g.pushVert(p2,n);
+        int c = g.pushVert(p3,n);
+        int d = g.pushVert(p4,n);
+        int e = g.pushVert(p5,n);
+        if (checkOrder(p1,p2,p3,n)) g.pushTri(a,b,c);
+        else g.pushTri(a,c,b);
+        if (checkOrder(p2,p3,p4,n)) g.pushTri(b,c,d);
+        else g.pushTri(b,d,c);
+        if (checkOrder(p2,p4,p5,n)) g.pushTri(b,d,e);
+        else g.pushTri(b,e,d);
+    };
+
+    auto sphericalUnproject = [&](Vec3d& p, double& lastTheta, double& lastPhi, int type, double cDir = 0, bool circleEnd = false) {
+        mI.mult(Pnt3d(p),p);
+        //cout << " sphericalUnproject, p: " << p << ", lastAngle: " << lastAngle << ", type: " << type << ", cDir: " << cDir << ", circleEnd: " << circleEnd << endl;
+        //cout << " -> R: " << R << ", r: " << p[0]*p[0]+p[1]*p[1] << endl;
+        double theta = atan(p[2]/R); // theta, angle to up axis z, -pi/2 -> pi/2
+        double phi   = atan2(p[1]/R, p[0]/R); // phi, angle in horizontal plane, -pi -> pi
+
+        /*if (abs(a) > pi-1e-3) { // ambigous point on +- pi
+            //cout << "  amb point?: " << a << ", cDir: " << cDir << endl;
+            if (type == 1) { // circle
+                if (cDir > 0 && !circleEnd) a = -pi;
+                if (cDir < 0 && !circleEnd) a =  pi;
+                if (cDir > 0 &&  circleEnd) a =  pi;
+                if (cDir < 0 &&  circleEnd) a = -pi;
+                //cout << "   set a: " << a << endl;
+            }
+        }*/
+
+        lastTheta = theta;
+        lastPhi = phi;
+        return Vec2d(theta, phi);
+    };
+
     auto cylindricUnproject = [&](Vec3d& p, double& lastAngle, int type, double cDir = 0, bool circleEnd = false) {
         mI.mult(Pnt3d(p),p);
         //cout << " cylindricUnproject, p: " << p << ", lastAngle: " << lastAngle << ", type: " << type << ", cDir: " << cDir << ", circleEnd: " << circleEnd << endl;
         //cout << " -> R: " << R << ", r: " << p[0]*p[0]+p[1]*p[1] << endl;
         double h = p[2];
         double a = atan2(p[1]/R, p[0]/R);
-        // rebaseAngle(a, lastAngle)
 
         if (abs(a) > pi-1e-3) { // ambigous point on +- pi
             //cout << "  amb point?: " << a << ", cDir: " << cDir << endl;
@@ -72,9 +135,6 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
         Vec3d p1 = e.EBeg - e.center->pos();
         Vec3d p2 = e.EEnd - e.center->pos();
 
-        //mI.mult(Pnt3d(p1),p1);
-        //mI.mult(Pnt3d(p2),p2);
-
         Vec3d W = p1.cross(p2);
         double w = W.dot(d);
 
@@ -85,7 +145,6 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
             double c = d.dot(e.center->dir());
             if (c < 0) cDir = -1;
             if (e.swapped) cDir *= -1;
-            //cDir *= -1;
             //cout << "   --- flat angle, W: " << W << ", w: " << w << ", p1: " << p1 << ", p2: " << p2 << ", cd: " << e.center->dir() << endl;
         }
 
@@ -99,7 +158,7 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
     };
 
     if (type == "Plane") {
-        //return 0;
+        return 0;
         //cout << "make Plane, N bounds: " << bounds.size() << endl;
         Triangulator t;
         if (bounds.size() == 0) cout << "Warning: No bounds!\n";
@@ -134,35 +193,12 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
     }
 
     if (type == "Cylindrical_Surface") {
-        // still old problem!
-        //  IDEA: solve it in cylindricUnproject! the problem is for points on +/- pi, maybe solve it there!
-        //          maybe move the point a bit left or right depending on the circle direction?
-        //          but what with the lines?
-
-
-        //cout << "Cylindrical_Surface" << endl;
-        // feed the triangulator with unprojected points
-        Triangulator triangulator;
-
-
+        return 0;
+        Triangulator triangulator; // feed the triangulator with unprojected points
 
         for (auto b : bounds) {
             VRPolygon poly;
             double lastAngle = 1000;
-            //cout << " Bound" << toString(b.points) << endl;
-            //cout << " Bound" << endl << b.edgeEndsToString() << endl;
-
-            //for (auto p : b.points) cout << "bound point: " << p << " -> " << cylindricUnproject(p) << endl;
-
-            // TODO: this fails for any closed bounds around the cylinder!
-            // idea:
-            //  dont use the bound points but go through the edges
-            //  use edge angle values instead of cartesian points
-            //  if closed bound around cylinder detected, clip bound with lines at +/- PI, generating new bound on cylinder!
-
-            // edge points rules:
-            //  - first edge, push two points: push the point not found in next edge
-            //  - push the point not found in previous edge
 
             // shift edges to have as first edge not a line
             if (b.edges[0].etype == "Line")  {
@@ -180,7 +216,6 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
                 b.edges = edges;
             }
 
-            //cout << " poly\n";
             for (auto& e : b.edges) {
                 if (e.etype == "Circle") {
                     double cDir = compCircleDirection(e);
@@ -196,7 +231,7 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
                 }
 
                 if (e.etype == "Line") {
-                    if (poly.size() == 0) { // should not happn anymore
+                    if (poly.size() == 0) { // should not happen anymore
                         Vec2d p1 = cylindricUnproject(e.EBeg, lastAngle, 0);
                         poly.addPoint(p1);
                     }
@@ -214,42 +249,8 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
                     continue;
                 }
 
-                cout << "Unhandled edge of type " << e.etype << endl;
+                cout << "Unhandled edge on cylinder of type " << e.etype << endl;
             }
-            //cout << endl << poly.toString() << endl;
-
-            /*for(auto p : b.points) {
-                Vec2d pc = cylindricUnproject(p);
-                rebaseAngle(pc[0], la);
-                //cout << " h " << h << " a " << a << " p " << p << " +2pi " << (la > -1000 && abs(a - la)>Pi) << endl;
-                la = pc[0];
-                poly.addPoint(pc);
-            }*/
-
-            /*VRPolygon poly2;
-            for (int i=3; i<poly.size(); i+=2) { // start at second edge, increment every two points
-                Vec2d e1p1 = poly.getPoint(i-3);
-                Vec2d e1p2 = poly.getPoint(i-2);
-                Vec2d e2p1 = poly.getPoint(i-1);
-                Vec2d e2p2 = poly.getPoint(i);
-
-                bool same11 = (sameVec(e1p1, e2p1) || sameVec(e1p1, e2p2));
-                bool same12 = (sameVec(e1p2, e2p1) || sameVec(e1p2, e2p2));
-                bool same21 = (sameVec(e2p1, e1p1) || sameVec(e2p1, e1p2));
-                bool same22 = (sameVec(e2p2, e1p1) || sameVec(e2p2, e1p2));
-
-                if (i == 3) {
-                    if (same11) { poly2.addPoint(e1p2); poly2.addPoint(e1p1); }
-                    else if (same12) { poly2.addPoint(e1p1); poly2.addPoint(e1p2); }
-                    else cout << " Warning in Poly filter, same points: " << sameVec(e1p1, e2p1) << " " << sameVec(e1p1, e2p2) << " " << sameVec(e1p2, e2p1) << " " << sameVec(e1p2, e2p2) << endl;
-                }
-
-                if (same21) poly2.addPoint(e2p2);
-                else if (same22) poly2.addPoint(e2p1);
-                else cout << " Warning in Poly filter, same points: " << sameVec(e1p1, e2p1) << " " << sameVec(e1p1, e2p2) << " " << sameVec(e1p2, e2p1) << " " << sameVec(e1p2, e2p2) << endl;
-            }*/
-
-            //cout << " polygon: " << toString(poly.get()) << endl;
 
             if (!poly.isCCW()) poly.reverseOrder();
             triangulator.add(poly);
@@ -299,56 +300,11 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
             return res;
         };
 
-
-        //GeoVectorPropertyMTRecPtr pos = g->getMesh()->geo->getPositions();
-        //for (size_t i=0; i<pos->size(); i++) cout << " tesselated position: " << pos->getValue<Pnt3f>(i) << endl;
-
         // tesselate the result while projecting it back on the surface
-        if (g) if (auto gg = g->getMesh()) { // TODO
+        if (g) if (auto gg = g->getMesh()) {
             TriangleIterator it;
             VRGeoData nMesh;
             Vec3d n(0,-1,0);
-
-            auto checkOrder = [&](Pnt3d p0, Pnt3d p1, Pnt3d p2) {
-                float cp = (p1-p0).cross(p2-p0).dot(n);
-                return (cp >= 0);
-            };
-
-            auto pushTri = [&](Pnt3d p1, Pnt3d p2, Pnt3d p3) {
-                //cout << " pushTri " << p1 << "   " << p2 << "   " << p3 << endl;
-                int a = nMesh.pushVert(p1,n);
-                int b = nMesh.pushVert(p2,n);
-                int c = nMesh.pushVert(p3,n);
-                if (checkOrder(p1,p2,p3)) nMesh.pushTri(a,b,c);
-                else nMesh.pushTri(a,c,b);
-            };
-
-            auto pushQuad = [&](Pnt3d p1, Pnt3d p2, Pnt3d p3, Pnt3d p4) {
-                //cout << " pushQuad " << p1 << "   " << p2 << "   " << p3 << "   " << p4 << endl;
-                int a = nMesh.pushVert(p1,n);
-                int b = nMesh.pushVert(p2,n);
-                int c = nMesh.pushVert(p3,n);
-                int d = nMesh.pushVert(p4,n);
-                if (checkOrder(p1,p2,p3)) nMesh.pushTri(a,b,c);
-                else nMesh.pushTri(a,c,b);
-                if (checkOrder(p2,p3,p4)) nMesh.pushTri(b,c,d);
-                else nMesh.pushTri(b,d,c);
-            };
-
-            auto pushPen = [&](Pnt3d p1, Pnt3d p2, Pnt3d p3, Pnt3d p4, Pnt3d p5) {
-                //cout << " pushPen " << p1 << "   " << p2 << "   " << p3 << "   " << p4 << "   " << p5 << endl;
-                int a = nMesh.pushVert(p1,n);
-                int b = nMesh.pushVert(p2,n);
-                int c = nMesh.pushVert(p3,n);
-                int d = nMesh.pushVert(p4,n);
-                int e = nMesh.pushVert(p5,n);
-                if (checkOrder(p1,p2,p3)) nMesh.pushTri(a,b,c);
-                else nMesh.pushTri(a,c,b);
-                if (checkOrder(p2,p3,p4)) nMesh.pushTri(b,c,d);
-                else nMesh.pushTri(b,d,c);
-                if (checkOrder(p2,p4,p5)) nMesh.pushTri(b,d,e);
-                else nMesh.pushTri(b,e,d);
-            };
 
             for (it = TriangleIterator(gg->geo); !it.isAtEnd() ;++it) {
                 triangle tri(it);
@@ -383,7 +339,7 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
                 // test first case: all vertices on the same cylinder face
                 if (pSides[0] == pSides[1] && pSides[0] == pSides[2]) { // DEBUGGING
                     //cout << "  case 1" << endl;
-                    pushTri(Pnt3d(tri.p[0]), Pnt3d(tri.p[1]), Pnt3d(tri.p[2]));
+                    pushTri(nMesh, Pnt3d(tri.p[0]), Pnt3d(tri.p[1]), Pnt3d(tri.p[2]), n);
                     continue;
                 }
 
@@ -402,7 +358,7 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
                             Vec3d vp2 = Vec3d(tri.v[pOrder[2]]); // vector to last point
                             pr1[2] = pv[2] + vp1[2]/vp1[0]*(s[1]-pv[0]);
                             pr2[2] = pv[2] + vp2[2]/vp2[0]*(s[1]-pv[0]);
-                            pushTri(pv,pr1,pr2);
+                            pushTri(nMesh, pv,pr1,pr2, n);
                             continue;
                         }
 
@@ -415,7 +371,7 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
                             Vec3d vp2 = Vec3d(tri.v[pOrder[0]]); // vector to last point
                             pr1[2] = pv[2] + vp1[2]/vp1[0]*(s[0]-pv[0]);
                             pr2[2] = pv[2] + vp2[2]/vp2[0]*(s[0]-pv[0]);
-                            pushTri(pv,pr1,pr2);
+                            pushTri(nMesh, pv,pr1,pr2, n);
                             continue;
                         }
 
@@ -434,7 +390,7 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
                             pr12[2] = pv1[2] + vp3[2]/vp3[0]*(s[0]-pv1[0]);
                             pr21[2] = pv1[2] + vp2[2]/vp2[0]*(s[1]-pv1[0]);
                             pr22[2] = pv[2] + vp1[2]/vp1[0]*(s[1]-pv[0]);
-                            pushPen(pr11, pr12, pr21, pr22, pv);
+                            pushPen(nMesh, pr11, pr12, pr21, pr22, pv, n);
                             passed_middle = true;
                             continue;
                         }
@@ -461,7 +417,7 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
                         pr12[2] = pv2[2] + vp2[2]/vp2[0]*(s[0]-pv2[0]);
                         pr21[2] = pv1[2] + vp1[2]/vp1[0]*(s[1]-pv1[0]);
                         pr22[2] = pv2[2] + vp2[2]/vp2[0]*(s[1]-pv2[0]);
-                        pushQuad(pr11, pr12, pr21, pr22);
+                        pushQuad(nMesh, pr11, pr12, pr21, pr22, n);
                     }
                     continue;
                 }
@@ -480,7 +436,7 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
                             Vec3d vp2 = Vec3d(tri.v[pOrder[0]]); // vector to last point
                             pr1[2] = pv1[2] + vp1[2]/vp1[0]*(s[1]-pv1[0]);
                             pr2[2] = pv2[2] + vp2[2]/vp2[0]*(s[1]-pv2[0]);
-                            pushQuad(pv1, pv2, pr1, pr2);
+                            pushQuad(nMesh, pv1, pv2, pr1, pr2, n);
                             continue;
                         }
                         if (i == sides.size()-1) { // last triangle
@@ -491,7 +447,7 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
                             Vec3d vp2 = Vec3d(tri.v[pOrder[0]]); // vector to last point
                             pr1[2] = pv[2] + vp1[2]/vp1[0]*(s[0]-pv[0]);
                             pr2[2] = pv[2] + vp2[2]/vp2[0]*(s[0]-pv[0]);
-                            pushTri(pv,pr1,pr2);
+                            pushTri(nMesh, pv,pr1,pr2, n);
                             continue;
                         }
 
@@ -507,7 +463,7 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
                         pr12[2] = pv2[2] + vp2[2]/vp2[0]*(s[0]-pv2[0]);
                         pr21[2] = pv1[2] + vp1[2]/vp1[0]*(s[1]-pv1[0]);
                         pr22[2] = pv2[2] + vp2[2]/vp2[0]*(s[1]-pv2[0]);
-                        pushQuad(pr11, pr12, pr21, pr22);
+                        pushQuad(nMesh, pr11, pr12, pr21, pr22, n);
                     }
                     continue;
                 }
@@ -529,7 +485,7 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
                             Vec3d vp2 = Vec3d(tri.v[pOrder[2]]); // vector to last point
                             pr1[2] = pv[2] + vp1[2]/vp1[0]*(s[1]-pv[0]);
                             pr2[2] = pv[2] + vp2[2]/vp2[0]*(s[1]-pv[0]);
-                            pushTri(pv,pr1,pr2);
+                            pushTri(nMesh, pv,pr1,pr2, n);
                             continue;
                         }
                         if (i == sides.size()-1) { // last quad
@@ -539,7 +495,7 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
                             Vec3d vp2 = Vec3d(tri.v[pOrder[1]]); // vector to last point
                             pr1[2] = pv1[2] + vp1[2]/vp1[0]*(s[0]-pv1[0]);
                             pr2[2] = pv2[2] + vp2[2]/vp2[0]*(s[0]-pv2[0]);
-                            pushQuad(pv1, pv2, pr1, pr2);
+                            pushQuad(nMesh, pv1, pv2, pr1, pr2, n);
                             continue;
                         }
 
@@ -553,7 +509,7 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
                         pr12[2] = pv2[2] + vp2[2]/vp2[0]*(s[0]-pv2[0]);
                         pr21[2] = pv1[2] + vp1[2]/vp1[0]*(s[1]-pv1[0]);
                         pr22[2] = pv2[2] + vp2[2]/vp2[0]*(s[1]-pv2[0]);
-                        pushQuad(pr11, pr12, pr21, pr22);
+                        pushQuad(nMesh, pr11, pr12, pr21, pr22, n);
                     }
                     continue;
                 }
@@ -810,7 +766,105 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
     }
 
     if (type == "Spherical_Surface") {
-        //cout << "Spherical_Surface" << endl;
+        cout << "Spherical_Surface" << endl;
+        Triangulator triangulator; // feed the triangulator with unprojected points
+
+        for (auto b : bounds) {
+            VRPolygon poly;
+            double lastTheta = 1000;
+            double lastPhi   = 1000;
+
+            for (auto& e : b.edges) {
+                cout << " edge on sphere " << e.etype << endl;
+                if (e.etype == "Circle") {
+                    double cDir = compCircleDirection(e);
+
+                    if (poly.size() == 0) {
+                        Vec2d p1 = sphericalUnproject(e.EBeg, lastTheta, lastPhi, 1, cDir, false);
+                        poly.addPoint(p1);
+                    }
+
+                    Vec2d p2 = sphericalUnproject(e.EEnd, lastTheta, lastPhi, 1, cDir, true);
+                    poly.addPoint(p2);
+                    continue;
+                }
+
+                if (e.etype == "B_Spline_Curve_With_Knots") {
+                    for (auto& p : e.points) {
+                        Vec2d pc = sphericalUnproject(p, lastTheta, lastPhi, 2);
+                        poly.addPoint(pc);
+                    }
+                    continue;
+                }
+
+                cout << "Unhandled edge on sphere of type " << e.etype << endl;
+            }
+
+            if (!poly.isCCW()) poly.reverseOrder();
+            triangulator.add(poly);
+            cout << "  poly: " << toString(poly.get()) << endl;
+        }
+
+        auto g = triangulator.compute();
+        if (!g) return 0;
+        if (auto gg = g->getMesh()->geo) { if (!gg->getPositions()) cout << "VRBRepSurface::build: Triangulation failed, no mesh positions!\n";
+        } else cout << "VRBRepSurface::build: Triangulation failed, no mesh generated!\n";
+
+        // tesselate the result while projecting it back on the surface
+        if (g) if (auto gg = g->getMesh()) {
+            TriangleIterator it;
+            VRGeoData nMesh;
+            Vec3d n(0,-1,0);
+
+            for (it = TriangleIterator(gg->geo); !it.isAtEnd() ;++it) {
+                triangle tri(it);
+                if (tri.A < 1e-6) continue; // ignore flat triangles
+
+                // TODO: subdivide the triangle and add sub triangles to nMesh
+                /*int Nt =
+                int Np =
+                for (int j=0; j<3; j++) {
+                    tri.p[j];
+                }*/
+
+                // test
+                pushTri(nMesh, Pnt3d(tri.p[0]), Pnt3d(tri.p[1]), Pnt3d(tri.p[2]), n);
+            }
+
+            nMesh.apply(g);
+
+            // project the points back into 3D space
+            GeoVectorPropertyMTRecPtr pos = gg->geo->getPositions();
+            GeoVectorPropertyMTRecPtr norms = gg->geo->getNormals();
+            if (pos) {
+                for (uint i=0; i<pos->size(); i++) {
+                    Pnt3d p = Pnt3d(pos->getValue<Pnt3f>(i));
+                    Vec3d n = Vec3d(norms->getValue<Vec3f>(i));
+                    double theta = p[0];
+                    double phi   = p[2];
+                    n = Vec3d(cos(phi)*sin(theta), cos(phi)*cos(theta), cos(theta)) * R;
+
+                    /*Vec2d side = getSide(p[0]);
+                    Vec3d A = Vec3d(R*cos(side[0]), R*sin(side[0]), 0);
+                    Vec3d B = Vec3d(R*cos(side[1]), R*sin(side[1]), 0);
+                    Vec3d D = B-A;
+                    D.normalize();
+
+                    float t = (A[0]*D[1] - A[1]*D[0]) / (n[0]*D[1] - n[1]*D[0]);*/
+
+                    //cout << "p: " << a/Pi*180 << " AB: " << side*(180/Pi) << " s: " << getSideN(a) << endl;
+                    //if (a < side[0] || a > side[1]) cout << "   AAAH\n"; // TODO: check this out!
+
+                    p = Pnt3d(n*R);
+
+                    pos->setValue(p, i);
+                    norms->setValue(n, i);
+                }
+            }
+        }
+
+        if (g) g->setMatrix(m);
+        if (g && g->getMesh() && g->getMesh()->geo->getPositions() && g->getMesh()->geo->getPositions()->size() > 0) return g;
         return 0;
     }
 
