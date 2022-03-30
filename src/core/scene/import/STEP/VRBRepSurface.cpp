@@ -88,6 +88,8 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
         Vec3d n = p*1.0/R;
         cout << " sphericalUnproject, p: " << p << ", lastTheta: " << lastTheta << ", lastPhi: " << lastPhi << ", type: " << type << ", cDir: " << cDir << ", circleEnd: " << circleEnd << endl;
         cout << " -> R: " << R << ", n: " << n << " nL: " << n.length() << endl;
+        if (n[2] <= -1.0) n[2] = -1.0;
+        if (n[2] >=  1.0) n[2] =  1.0;
         double theta = asin(n[2]); // theta, angle to up axis z, -pi/2 -> pi/2
         double phi   = atan2(n[1], n[0]); // phi, angle in horizontal plane, -pi -> pi
 
@@ -137,6 +139,8 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
         if (!isCCW && bound.outer && same_sense) poly.reverseOrder();
         if (isCCW && !bound.outer && same_sense) poly.reverseOrder();
     };
+
+    //if (type != "Spherical_Surface") return 0;
 
     if (type == "Plane") {
         //return 0;
@@ -286,6 +290,7 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
             TriangleIterator it;
             VRGeoData nMesh;
             Vec3d n(0,-1,0);
+            //if (!same_sense) n *= -1;
 
             for (it = TriangleIterator(gg->geo); !it.isAtEnd() ;++it) {
                 triangle tri(it);
@@ -510,6 +515,7 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
                     double a = p[0];
                     double h = p[2];
                     n = Vec3d(cos(a), sin(a), 0);
+                    //if (!same_sense) n *= -1;
 
                     /*Vec2d side = getSide(p[0]);
                     Vec3d A = Vec3d(R*cos(side[0]), R*sin(side[0]), 0);
@@ -758,7 +764,7 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
             for (auto& e : b.edges) {
                 cout << " edge on sphere " << e.etype << endl;
                 if (e.etype == "Circle") {
-                    double cDir = e.compCircleDirection(d);
+                    /*double cDir = e.compCircleDirection(d);
 
                     if (poly.size() == 0) {
                         Vec2d p1 = sphericalUnproject(e.EBeg, lastTheta, lastPhi, 1, cDir, false);
@@ -769,7 +775,13 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
                     Vec2d p2 = sphericalUnproject(e.EEnd, lastTheta, lastPhi, 1, cDir, true);
 
                     vector<Vec2d> pnts = angleFrame(p1, p2);
-                    for (int i=1; i<pnts.size(); i++) poly.addPoint(pnts[i]);
+                    for (int i=1; i<pnts.size(); i++) poly.addPoint(pnts[i]);*/
+
+                    for (auto& p : e.points) {
+                        Vec2d pc = sphericalUnproject(p, lastTheta, lastPhi, 2);
+                        cout << " ---- " << p << " -> " << pc << endl;
+                        poly.addPoint(pc);
+                    }
                     continue;
                 }
 
