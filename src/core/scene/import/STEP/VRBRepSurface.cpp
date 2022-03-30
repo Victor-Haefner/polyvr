@@ -173,16 +173,7 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
                 poly.addPoint(pOut);
             }
 
-            /*bool isCCW = poly.isCCW();
-            cout << "plane poly, same_sense? " << same_sense << ", outer bound? " << b.outer << ", isCCW? " << isCCW << endl;
-            cout << " " << toString(poly.get3()) << endl;*/
-
             checkPolyOrientation(poly, b);
-
-            /*isCCW = poly.isCCW();
-            cout << " -> isCCW? " << isCCW << endl;
-            cout << " " << toString(poly.get3()) << endl;*/
-
             t.add(poly);
         }
 
@@ -312,7 +303,7 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
             TriangleIterator it;
             VRGeoData nMesh;
             Vec3d n(0,-1,0);
-            //if (!same_sense) n *= -1;
+            if (!same_sense) n *= -1;
 
             for (it = TriangleIterator(gg->geo); !it.isAtEnd() ;++it) {
                 triangle tri(it);
@@ -537,7 +528,6 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
                     double a = p[0];
                     double h = p[2];
                     n = Vec3d(cos(a), sin(a), 0);
-                    //if (!same_sense) n *= -1;
 
                     /*Vec2d side = getSide(p[0]);
                     Vec3d A = Vec3d(R*cos(side[0]), R*sin(side[0]), 0);
@@ -555,6 +545,8 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
                     p[0] = n[0]*t;
 
                     pos->setValue(p, i);
+
+                    if (!same_sense) n *= -1;
                     norms->setValue(n, i);
                 }
             }
