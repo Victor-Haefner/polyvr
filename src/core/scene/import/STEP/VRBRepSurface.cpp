@@ -737,7 +737,11 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
                 if (same_sense) n *= -1;
                 ids[i][j] = nMesh.pushVert(p,n);
 
-                if (i > 0 && j > 0) nMesh.pushQuad(ids[i][j], ids[i][j-1], ids[i-1][j-1], ids[i-1][j]);
+                if (same_sense) {
+                    if (i > 0 && j > 0) nMesh.pushQuad(ids[i][j], ids[i-1][j], ids[i-1][j-1], ids[i][j-1]);
+                } else {
+                    if (i > 0 && j > 0) nMesh.pushQuad(ids[i][j], ids[i][j-1], ids[i-1][j-1], ids[i-1][j]);
+                }
             }
         }
 
