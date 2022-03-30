@@ -1158,6 +1158,7 @@ void VRSTEP::buildGeometries() {
     cout << blueBeg << "VRSTEP::buildGeometries start\n" << colEnd;
     for (auto BrepShape : instancesByType["Advanced_Brep_Shape_Representation"]) {
         static int i=0; i++;
+        //if (i != 35) continue; // test for cylinder surfaces
         //if (i != 24) continue; // test for cylinder surfaces
         //if (i != 12) continue; // test for cylinder surfaces
         //cout << BrepShape.ID << endl;
@@ -1170,8 +1171,8 @@ void VRSTEP::buildGeometries() {
 
         cout << "VRSTEP::buildGeometries " << name << " ID: " << BrepShape.ID << " i " << i << endl;
 
-        for (auto i : BrepShape.get<1, string, vector<STEPentity*> >() ) {
-            auto& Item = instances[i];
+        for (auto instance : BrepShape.get<1, string, vector<STEPentity*> >() ) {
+            auto& Item = instances[instance];
             //cout << " Item: " << Item.type << " " << Item.ID << endl;
 
             VRMaterialPtr material;
@@ -1182,6 +1183,7 @@ void VRSTEP::buildGeometries() {
                 for (auto j : Outer.get<0, vector<STEPentity*> >() ) {
                     static int k = 0; k++;
                     //if (k != 1 && k != 2 && k != 17 && k != 48) continue; // k=1 and k=48 is the two part cylinder
+                    //if (k != 188) continue;
                     //if (k != 255) continue;
                     //if (k != 251) continue;
                     //if (k != 261) continue;
@@ -1211,6 +1213,7 @@ void VRSTEP::buildGeometries() {
 
                         VRGeoData data(faceGeo);
                         data.addVertexColors(color);
+                        data.addVertexTexCoords(Vec2d(i, k)); // for debugging faces
 
                         geo->merge( faceGeo );
                         //geo->addChild( surface.build(surface.type, same_sense) );

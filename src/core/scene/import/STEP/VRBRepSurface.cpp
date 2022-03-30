@@ -136,8 +136,13 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
 
     auto checkPolyOrientation = [&](VRPolygon& poly, VRBRepBound& bound) {
         bool isCCW = poly.isCCW();
-        if (!isCCW && bound.outer && same_sense) poly.reverseOrder();
-        if (isCCW && !bound.outer && same_sense) poly.reverseOrder();
+        if (same_sense) {
+            if (!isCCW && bound.outer) poly.reverseOrder();
+            if (isCCW && !bound.outer) poly.reverseOrder();
+        } else {
+            if (isCCW && bound.outer) poly.reverseOrder();
+            if (!isCCW && !bound.outer) poly.reverseOrder();
+        }
     };
 
     //if (type != "Spherical_Surface") return 0;
@@ -147,7 +152,14 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
         //cout << "make Plane, N bounds: " << bounds.size() << endl;
         Triangulator t;
         if (bounds.size() == 0) cout << "Warning: No bounds!\n";
-        for (auto& b : bounds) {
+
+        vector<int> sortedBounds;
+        for (int i=0; i<bounds.size(); i++) if ( bounds[i].outer) sortedBounds.push_back(i);
+        for (int i=0; i<bounds.size(); i++) if (!bounds[i].outer) sortedBounds.push_back(i);
+
+        //for (auto& b : bounds) {
+        for (auto& bi : sortedBounds) {
+            auto& b = bounds[bi];
             //if (b.points.size() == 0) cout << "Warning: No bound points for bound " << b.BRepType << endl;
             bool doPrint = b.containsNan();
             VRPolygon poly;
@@ -160,7 +172,17 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
                 if (abs(pOut[2]) > 0.001) cout << " Error in VRBRepSurface::build Plane, p[2] not 0 (" << pOut[2] << ")! -> data loss" << endl;
                 poly.addPoint(pOut);
             }
+
+            /*bool isCCW = poly.isCCW();
+            cout << "plane poly, same_sense? " << same_sense << ", outer bound? " << b.outer << ", isCCW? " << isCCW << endl;
+            cout << " " << toString(poly.get3()) << endl;*/
+
             checkPolyOrientation(poly, b);
+
+            /*isCCW = poly.isCCW();
+            cout << " -> isCCW? " << isCCW << endl;
+            cout << " " << toString(poly.get3()) << endl;*/
+
             t.add(poly);
         }
 

@@ -199,6 +199,7 @@ class VRGeoData {
 
         void addVertexColors(Color3f c);
         void addVertexColors(Color4f c);
+        void addVertexTexCoords(Vec2d tc);
 
         string status();
         void test_copy(VRGeoData& g);
