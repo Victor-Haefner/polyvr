@@ -24,6 +24,31 @@ void VRBRepEdge::swap() {
 
 bool VRBRepEdge::connectsTo(VRBRepEdge& e) { return ( sameVec(end(), e.beg()) ); }
 
+double VRBRepEdge::compCircleDirection(Vec3d d) {
+    if (d.length() < 1e-6) d = center->dir(); // d is for example cylinder axis, default is to use circle axis
+
+    double cDir = 1;
+
+    Vec3d p1 = EBeg - center->pos();
+    Vec3d p2 = EEnd - center->pos();
+
+    Vec3d W = p1.cross(p2);
+    double w = W.dot(d);
+
+    if (abs(w) > 1e-4) {
+        if (w > 0) cDir = -1;
+        //cout << "   --- small angle, W: " << W << ", w: " << w << ", p1: " << p1 << ", p2: " << p2 << ", d: " << d << endl;
+    } else { // special case! flat angle pi
+        double c = d.dot(center->dir());
+        if (c < 0) cDir = -1;
+        if (swapped) cDir *= -1;
+        //cout << "   --- flat angle, W: " << W << ", w: " << w << ", p1: " << p1 << ", p2: " << p2 << ", cd: " << e.center->dir() << endl;
+    }
+
+    //cout << " compCircleDirection, circle: " << Vec2d(e.a1, e.a2) << ", cDir: " << cDir << ", W: " << W << ", cd: " << e.center->dir() << ", eSwapped: " << e.swapped << endl;
+    return cDir;
+}
+
 void VRBRepEdge::build(string type) {
     etype = type;
 

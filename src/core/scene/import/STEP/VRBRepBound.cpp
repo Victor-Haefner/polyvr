@@ -1,5 +1,6 @@
 #include "VRBRepBound.h"
 #include "core/utils/toString.h"
+#include "core/utils/isNan.h"
 #include <OpenSG/OSGVector.h>
 
 using namespace OSG;
@@ -20,3 +21,8 @@ string VRBRepBound::edgeEndsToString() {
     }
     return r;
 }
+
+bool VRBRepBound::containsNan() {
+    for (auto p : points) if (isNan(p)) return true;
+    return false;
+};

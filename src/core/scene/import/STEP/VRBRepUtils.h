@@ -19,6 +19,7 @@ class VRBRepUtils {
         bool sameVec(const Vec2d& v1, const Vec2d& v2, float d = 1e-5);
         bool sameVec(const Vec3d& v1, const Vec3d& v2, float d = 1e-5);
         vector<float> angleFrame(float a1, float a2);
+        vector<Vec2d> angleFrame(Vec2d a1, Vec2d a2);
         int getSideN(double a);
         int getSideN(float a);
         Vec2d getSide(double a);

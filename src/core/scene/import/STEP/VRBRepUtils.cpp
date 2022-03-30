@@ -43,6 +43,16 @@ Vec2d VRBRepUtils::getSide(int i) {
     return Vec2d(i*Dangle, (i+1)*Dangle);
 }
 
+vector<Vec2d> VRBRepUtils::angleFrame(Vec2d p1, Vec2d p2) {
+    float A = (p2-p1).length();
+
+    vector<Vec2d> angles;
+    angles.push_back(p1);
+    for(float a = 0; a < A-1e-6; a += Dangle) angles.push_back(p1 + (p2-p1)*a/A);
+    angles.push_back(p2);
+    return angles;
+}
+
 vector<float> VRBRepUtils::angleFrame(float a1, float a2) {
     if (a1 == a2) { // full circle
         cout << "Full circle detected! " << a1;

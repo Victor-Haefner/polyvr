@@ -132,34 +132,6 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
         return Vec2d(a,h);
     };
 
-    auto compCircleDirection = [&](VRBRepEdge& e) {
-        double cDir = 1;
-
-        Vec3d p1 = e.EBeg - e.center->pos();
-        Vec3d p2 = e.EEnd - e.center->pos();
-
-        Vec3d W = p1.cross(p2);
-        double w = W.dot(d);
-
-        if (abs(w) > 1e-4) {
-            if (w > 0) cDir = -1;
-            //cout << "   --- small angle, W: " << W << ", w: " << w << ", p1: " << p1 << ", p2: " << p2 << ", d: " << d << endl;
-        } else { // special case! flat angle pi
-            double c = d.dot(e.center->dir());
-            if (c < 0) cDir = -1;
-            if (e.swapped) cDir *= -1;
-            //cout << "   --- flat angle, W: " << W << ", w: " << w << ", p1: " << p1 << ", p2: " << p2 << ", cd: " << e.center->dir() << endl;
-        }
-
-        //cout << " compCircleDirection, circle: " << Vec2d(e.a1, e.a2) << ", cDir: " << cDir << ", W: " << W << ", cd: " << e.center->dir() << ", eSwapped: " << e.swapped << endl;
-        return cDir;
-    };
-
-    auto containsNan = [&](VRBRepBound& b) {
-        for (auto p : b.points) if (isNan(p)) return true;
-        return false;
-    };
-
     if (type == "Plane") {
         //return 0;
         //cout << "make Plane, N bounds: " << bounds.size() << endl;
@@ -167,7 +139,7 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
         if (bounds.size() == 0) cout << "Warning: No bounds!\n";
         for (auto& b : bounds) {
             //if (b.points.size() == 0) cout << "Warning: No bound points for bound " << b.BRepType << endl;
-            bool doPrint = containsNan(b);
+            bool doPrint = b.containsNan();
             VRPolygon poly;
 
             for (auto pIn : b.points) {
@@ -221,7 +193,7 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
 
             for (auto& e : b.edges) {
                 if (e.etype == "Circle") {
-                    double cDir = compCircleDirection(e);
+                    double cDir = e.compCircleDirection(d);
 
                     if (poly.size() == 0) {
                         Vec2d p1 = cylindricUnproject(e.EBeg, lastAngle, 1, cDir, false);
@@ -533,13 +505,13 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
                     double h = p[2];
                     n = Vec3d(cos(a), sin(a), 0);
 
-                    Vec2d side = getSide(p[0]);
+                    /*Vec2d side = getSide(p[0]);
                     Vec3d A = Vec3d(R*cos(side[0]), R*sin(side[0]), 0);
                     Vec3d B = Vec3d(R*cos(side[1]), R*sin(side[1]), 0);
                     Vec3d D = B-A;
-                    D.normalize();
+                    D.normalize();*/
 
-                    float t = (A[0]*D[1] - A[1]*D[0]) / (n[0]*D[1] - n[1]*D[0]);
+                    float t = R;//(A[0]*D[1] - A[1]*D[0]) / (n[0]*D[1] - n[1]*D[0]);
 
                     //cout << "p: " << a/Pi*180 << " AB: " << side*(180/Pi) << " s: " << getSideN(a) << endl;
                     //if (a < side[0] || a > side[1]) cout << "   AAAH\n"; // TODO: check this out!
@@ -780,15 +752,18 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
             for (auto& e : b.edges) {
                 cout << " edge on sphere " << e.etype << endl;
                 if (e.etype == "Circle") {
-                    double cDir = compCircleDirection(e);
+                    double cDir = e.compCircleDirection(d);
 
                     if (poly.size() == 0) {
                         Vec2d p1 = sphericalUnproject(e.EBeg, lastTheta, lastPhi, 1, cDir, false);
                         poly.addPoint(p1);
                     }
 
+                    Vec2d p1 = poly.get().back();
                     Vec2d p2 = sphericalUnproject(e.EEnd, lastTheta, lastPhi, 1, cDir, true);
-                    poly.addPoint(p2);
+
+                    vector<Vec2d> pnts = angleFrame(p1, p2);
+                    for (int i=1; i<pnts.size(); i++) poly.addPoint(pnts[i]);
                     continue;
                 }
 
