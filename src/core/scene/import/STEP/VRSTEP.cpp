@@ -1166,6 +1166,8 @@ void VRSTEP::buildGeometries() {
         string name = BrepShape.get<0, string, vector<STEPentity*> >();
         auto geo = VRGeometry::create(name);
 
+        //geo->getMaterial()->setFrontBackModes(GL_FILL, GL_LINE); // to test face orientations
+
         cout << "VRSTEP::buildGeometries " << name << " ID: " << BrepShape.ID << " i " << i << endl;
 
         for (auto i : BrepShape.get<1, string, vector<STEPentity*> >() ) {
@@ -1183,7 +1185,8 @@ void VRSTEP::buildGeometries() {
                     //if (k != 255) continue;
                     //if (k != 251) continue;
                     //if (k != 261) continue;
-                    //if (k < 188 || k > 190) continue;
+                    //if (k < 150 || k > 160) continue;
+                    //if (k != 155) continue; // other test plane face
                     //if (k != 189) continue; // cylinder cap, normal issue
 
                     auto& Face = instances[j];

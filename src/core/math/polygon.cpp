@@ -51,6 +51,7 @@ bool VRPolygon::isCCW2() {
         auto v2 = tmp[i];
         s += (v2[0]-v1[0])*(v2[1]+v1[1]);
     }
+    if (abs(s) < 1e-4) cout << "Warning in VRPolygon::isCCW2! s is very small: " << s << endl;
     return (s <= 0);
 }
 
@@ -63,12 +64,15 @@ bool VRPolygon::isCCW3() {
         auto v2 = tmp[i];
         s += (v2[0]-v1[0])*(v2[1]+v1[1]);
     }
+    if (abs(s) < 1e-4) cout << "Warning in VRPolygon::isCCW3! s is very small: " << s << endl;
     return (s <= 0);
 }
 
 bool VRPolygon::isCCW() {
     if (points.size() > 0) return isCCW2();
     if (points3.size() > 0) return isCCW3();
+    cout << "Warning in VRPolygon::isCCW! polygon is emtpy!" << endl;
+    return true;
 }
 
 void VRPolygon::runTest() {

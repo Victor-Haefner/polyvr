@@ -132,6 +132,12 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
         return Vec2d(a,h);
     };
 
+    auto checkPolyOrientation = [&](VRPolygon& poly, VRBRepBound& bound) {
+        bool isCCW = poly.isCCW();
+        if (!isCCW && bound.outer && same_sense) poly.reverseOrder();
+        if (isCCW && !bound.outer && same_sense) poly.reverseOrder();
+    };
+
     if (type == "Plane") {
         //return 0;
         //cout << "make Plane, N bounds: " << bounds.size() << endl;
@@ -150,8 +156,7 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
                 if (abs(pOut[2]) > 0.001) cout << " Error in VRBRepSurface::build Plane, p[2] not 0 (" << pOut[2] << ")! -> data loss" << endl;
                 poly.addPoint(pOut);
             }
-            //cout << " poly: " << toString(poly.get3()) << ", CCW: " << poly.isCCW() << endl;
-            if (!poly.isCCW()) poly.reverseOrder();
+            checkPolyOrientation(poly, b);
             t.add(poly);
         }
 
@@ -161,6 +166,7 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
         g->setMatrix(m);
 
         Vec3d nP = Vec3d(0, 0, 1);
+        if (!same_sense) nP *= -1;
         GeoVectorPropertyMTRecPtr norms = g->getMesh()->geo->getNormals();
         for (uint i=0; i<norms->size(); i++) norms->setValue(nP, i);
 
@@ -227,7 +233,7 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
                 cout << "Unhandled edge on cylinder of type " << e.etype << endl;
             }
 
-            if (!poly.isCCW()) poly.reverseOrder();
+            checkPolyOrientation(poly, b);
             triangulator.add(poly);
         }
 
@@ -778,7 +784,7 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
                 cout << "Unhandled edge on sphere of type " << e.etype << endl;
             }
 
-            if (!poly.isCCW()) poly.reverseOrder();
+            checkPolyOrientation(poly, b);
             triangulator.add(poly);
             cout << "  poly: " << toString(poly.get()) << endl;
         }
@@ -792,7 +798,7 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
         if (g) if (auto gg = g->getMesh()) {
             TriangleIterator it;
             VRGeoData nMesh;
-            Vec3d n(0,-1,0);
+            Vec3d n(0,1,0);
 
             for (it = TriangleIterator(gg->geo); !it.isAtEnd() ;++it) {
                 triangle tri(it);
@@ -809,7 +815,7 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
                 pushTri(nMesh, Pnt3d(tri.p[0]), Pnt3d(tri.p[1]), Pnt3d(tri.p[2]), n);
             }
 
-            //nMesh.apply(g);
+            nMesh.apply(g);
 
             // project the points back into 3D space
             GeoVectorPropertyMTRecPtr pos = gg->geo->getPositions();

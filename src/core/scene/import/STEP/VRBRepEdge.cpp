@@ -25,7 +25,8 @@ void VRBRepEdge::swap() {
 bool VRBRepEdge::connectsTo(VRBRepEdge& e) { return ( sameVec(end(), e.beg()) ); }
 
 double VRBRepEdge::compCircleDirection(Vec3d d) {
-    if (d.length() < 1e-6) d = center->dir(); // d is for example cylinder axis, default is to use circle axis
+    if (d.length() < 1e-6)
+        d = center->dir(); // d is for example cylinder axis, default is to use circle axis
 
     double cDir = 1;
 
@@ -34,6 +35,7 @@ double VRBRepEdge::compCircleDirection(Vec3d d) {
 
     Vec3d W = p1.cross(p2);
     double w = W.dot(d);
+    //if (swapped) w *= -1;
 
     if (abs(w) > 1e-4) {
         if (w > 0) cDir = -1;
