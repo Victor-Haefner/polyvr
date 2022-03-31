@@ -216,7 +216,6 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
             VRPolygon poly;
             double lastAngle = 1000;
             Vec3d cN(0,0,1);
-            if (!same_sense) cN *= -1;
 
             // shift edges so first edge not start on +-pi line
             auto eOnPiLine = [&](VRBRepEdge& e) {
