@@ -1158,9 +1158,9 @@ void VRSTEP::buildGeometries() {
     cout << blueBeg << "VRSTEP::buildGeometries start\n" << colEnd;
     for (auto BrepShape : instancesByType["Advanced_Brep_Shape_Representation"]) {
         static int i=0; i++;
-        //if (i != 47) continue; // test for cylinder surfaces
+        //if (i != 49) continue; // test for cylinder surfaces
         //if (i != 24) continue; // test for cylinder surfaces
-        //if (i != 12) continue; // test for cylinder surfaces
+        if (i != 5) continue; // test for cylinder surfaces
         //cout << BrepShape.ID << endl;
         //if (BrepShape.ID == 57189) exploreEntity(nodes[BrepShape.entity], true);
 
@@ -1182,14 +1182,7 @@ void VRSTEP::buildGeometries() {
                 auto& Outer = instances[ Item.get<0, STEPentity*>() ];
                 for (auto j : Outer.get<0, vector<STEPentity*> >() ) {
                     static int k = 0; k++;
-                    //if (k != 1 && k != 2 && k != 17 && k != 48) continue; // k=1 and k=48 is the two part cylinder
-                    //if (k != 44) continue;
-                    //if (k != 255) continue;
-                    //if (k != 251) continue;
-                    //if (k != 261) continue;
-                    //if (k < 150 || k > 160) continue;
-                    //if (k != 155) continue; // other test plane face
-                    //if (k != 189) continue; // cylinder cap, normal issue
+                    if (k != 18) continue;
 
                     auto& Face = instances[j];
 

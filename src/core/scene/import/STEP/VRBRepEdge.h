@@ -36,7 +36,7 @@ class VRBRepEdge : public VRBRepUtils {
         Vec3d& end();
         void swap();
         bool connectsTo(VRBRepEdge& e);
-        double compCircleDirection(Vec3d d);
+        double compCircleDirection(Matrix4d mI, Vec3d d);
 
         void build(string type);
 };

@@ -25,4 +25,15 @@ string VRBRepBound::edgeEndsToString() {
 bool VRBRepBound::containsNan() {
     for (auto p : points) if (isNan(p)) return true;
     return false;
-};
+}
+
+void VRBRepBound::shiftEdges(int i0) {
+    vector<VRBRepEdge> shifted;
+    for (int i=i0; i<edges.size(); i++) shifted.push_back(edges[i]);
+    for (int i=0; i<i0; i++) shifted.push_back(edges[i]);
+    edges = shifted;
+}
+
+
+
+

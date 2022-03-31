@@ -24,30 +24,33 @@ void VRBRepEdge::swap() {
 
 bool VRBRepEdge::connectsTo(VRBRepEdge& e) { return ( sameVec(end(), e.beg()) ); }
 
-double VRBRepEdge::compCircleDirection(Vec3d d) {
-    if (d.length() < 1e-6)
-        d = center->dir(); // d is for example cylinder axis, default is to use circle axis
-
+double VRBRepEdge::compCircleDirection(Matrix4d mI, Vec3d d) {
     double cDir = 1;
 
-    Vec3d p1 = EBeg - center->pos();
-    Vec3d p2 = EEnd - center->pos();
+    Vec3d p1, p2, c;
+    //mI.mult(d, d);
+    mI.multFull(Pnt3d(EBeg), p1);
+    mI.multFull(Pnt3d(EEnd), p2);
+    mI.multFull(Pnt3d(center->pos()), c);
+
+    p1 -= c;
+    p2 -= c;
 
     Vec3d W = p1.cross(p2);
     double w = W.dot(d);
     //if (swapped) w *= -1;
 
     if (abs(w) > 1e-4) {
-        if (w > 0) cDir = -1;
-        //cout << "   --- small angle, W: " << W << ", w: " << w << ", p1: " << p1 << ", p2: " << p2 << ", d: " << d << endl;
+        if (w < 0) cDir = -1;
+        cout << "   --- small angle, W: " << W << ", w: " << w << ", p1: " << p1 << ", p2: " << p2 << ", d: " << d << " -> cDir: " << cDir << endl;
     } else { // special case! flat angle pi
         double c = d.dot(center->dir());
         if (c < 0) cDir = -1;
         if (swapped) cDir *= -1;
-        //cout << "   --- flat angle, W: " << W << ", w: " << w << ", p1: " << p1 << ", p2: " << p2 << ", cd: " << e.center->dir() << endl;
+        cout << "   --- flat angle, W: " << W << ", w: " << w << ", p1: " << p1 << ", p2: " << p2 << ", cd: " << center->dir() << endl;
     }
 
-    //cout << " compCircleDirection, circle: " << Vec2d(e.a1, e.a2) << ", cDir: " << cDir << ", W: " << W << ", cd: " << e.center->dir() << ", eSwapped: " << e.swapped << endl;
+    cout << " compCircleDirection, circle: " << Vec2d(a1, a2) << ", cDir: " << cDir << ", W: " << W << ", cd: " << center->dir() << ", eSwapped: " << swapped << endl;
     return cDir;
 }
 

@@ -22,6 +22,7 @@ class VRBRepBound : public VRBRepUtils {
         string edgeEndsToString();
 
         bool containsNan();
+        void shiftEdges(int i0);
 };
 
 OSG_END_NAMESPACE;
