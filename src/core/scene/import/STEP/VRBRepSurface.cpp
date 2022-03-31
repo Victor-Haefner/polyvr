@@ -150,6 +150,33 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
         return Vec2d(a,h);
     };
 
+    // TODO: this may fail if inner polygons are not moved accrodingly
+    //  maybe it would be better to make a border instead of moving points
+    auto fixPolyJump = [&](VRPolygon& poly) {
+        auto& points = poly.get();
+        for (int i=1; i<points.size(); i++) {
+            Vec2d& p1 = points[i-1];
+            Vec2d& p2 = points[i];
+            if (abs(p2[0] - p1[0]) > 1.5*pi) {
+                if (p2[0] < 0) p2[0] += 2*pi;
+                else p2[0] -= 2*pi;
+            }
+        }
+    };
+
+    auto checkPolyIntegrety = [&](VRPolygon& poly) { // for cylinder
+        auto& points = poly.get();
+        for (int i=1; i<points.size(); i++) {
+            Vec2d p1 = points[i-1];
+            Vec2d p2 = points[i];
+            if (abs(p2[0] - p1[0]) > 1.5*pi) {
+                //cout << "Warning! cylinder polygon jump detected: " << p1 << " -> " << p2 << endl;
+                fixPolyJump(poly); // try to fix it
+                return;
+            }
+        }
+    };
+
     auto checkPolyOrientation = [&](VRPolygon& poly, VRBRepBound& bound) {
         bool isCCW = poly.isCCW();
         if (same_sense) {
@@ -283,6 +310,8 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
 
                 cout << "Unhandled edge on cylinder of type " << e.etype << endl;
             }
+
+            checkPolyIntegrety(poly);
 
             cout << "  poly: " << toString(poly.get()) << endl;
             checkPolyOrientation(poly, b);

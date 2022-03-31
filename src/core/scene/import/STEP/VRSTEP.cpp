@@ -1188,7 +1188,7 @@ void VRSTEP::buildGeometries() {
                 for (auto j : Outer.get<0, vector<STEPentity*> >() ) {
                     static int k = 0; k++;
                     //if (k != 15 && k != 22) continue;
-                    //if (k != 12) continue;
+                    //if (k != 48) continue;
 
                     auto& Face = instances[j];
 
