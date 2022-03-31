@@ -1033,6 +1033,11 @@ struct VRSTEP::Bound : public VRSTEP::Instance, public VRBRepBound {
                 auto& e1 = edges[i-1];
                 auto& e2 = edges[i];
                 if ( sameVec(e2.end(), e1.end()) ) e2.swap();
+                if (!sameVec(e1.end(), e2.beg()) ) {
+                    cout << "Warning in VRSTEP::Bound constructor, edges do not connect! " << e1.end() << " != " << e2.beg() << endl;
+                    cout << " edge1: " << e1.beg() << " -> " << e1.end() << endl;
+                    cout << " edge2: " << e2.beg() << " -> " << e2.end() << endl;
+                }
             }
         } else {
             if (edges.size() == 0) { cout << "Warning: No bound edges" << endl; return; }
@@ -1158,7 +1163,7 @@ void VRSTEP::buildGeometries() {
     cout << blueBeg << "VRSTEP::buildGeometries start\n" << colEnd;
     for (auto BrepShape : instancesByType["Advanced_Brep_Shape_Representation"]) {
         static int i=0; i++;
-        //if (i != 49) continue; // test for cylinder surfaces
+        if (i != 31) continue; // test for cylinder surfaces
         //if (i != 24) continue; // test for cylinder surfaces
         //if (i != 5) continue; // test for cylinder surfaces
         //cout << BrepShape.ID << endl;
@@ -1182,7 +1187,8 @@ void VRSTEP::buildGeometries() {
                 auto& Outer = instances[ Item.get<0, STEPentity*>() ];
                 for (auto j : Outer.get<0, vector<STEPentity*> >() ) {
                     static int k = 0; k++;
-                    //if (k != 18) continue;
+                    //if (k != 15 && k != 22) continue;
+                    if (k != 12) continue;
 
                     auto& Face = instances[j];
 
