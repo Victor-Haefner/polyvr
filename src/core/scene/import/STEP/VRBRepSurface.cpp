@@ -194,6 +194,7 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
 
     if (type == "Cylindrical_Surface") {
         //return 0;
+        //cout << "Surface: " << type << endl;
         Triangulator triangulator; // feed the triangulator with unprojected points
 
         for (auto b : bounds) {
@@ -222,6 +223,8 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
             }
 
             for (auto& e : b.edges) {
+                //cout << " edge " << e.etype << endl;
+
                 if (e.etype == "Circle") {
                     double cDir = e.compCircleDirection(mI, Vec3d(0,0,1));
 
@@ -236,7 +239,7 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
                 }
 
                 if (e.etype == "Line") {
-                    if (poly.size() == 0) { // should not happen anymore
+                    if (poly.size() == 0) {
                         Vec2d p1 = cylindricUnproject(e.EBeg, lastAngle, 0);
                         poly.addPoint(p1);
                     }
@@ -247,7 +250,10 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
                 }
 
                 if (e.etype == "B_Spline_Curve_With_Knots") {
-                    for (auto& p : e.points) {
+                    int i0 = 1;
+                    if (poly.size() == 0) i0 = 0;
+                    for (int i=i0; i<e.points.size(); i++) {
+                        auto& p = e.points[i];
                         Vec2d pc = cylindricUnproject(p, lastAngle, 2);
                         poly.addPoint(pc);
                     }
@@ -257,6 +263,7 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
                 cout << "Unhandled edge on cylinder of type " << e.etype << endl;
             }
 
+            //cout << " poly: " << toString(poly.get()) << endl;
             checkPolyOrientation(poly, b);
             triangulator.add(poly);
         }

@@ -1160,7 +1160,7 @@ void VRSTEP::buildGeometries() {
         static int i=0; i++;
         //if (i != 49) continue; // test for cylinder surfaces
         //if (i != 24) continue; // test for cylinder surfaces
-        if (i != 5) continue; // test for cylinder surfaces
+        //if (i != 5) continue; // test for cylinder surfaces
         //cout << BrepShape.ID << endl;
         //if (BrepShape.ID == 57189) exploreEntity(nodes[BrepShape.entity], true);
 
@@ -1182,7 +1182,7 @@ void VRSTEP::buildGeometries() {
                 auto& Outer = instances[ Item.get<0, STEPentity*>() ];
                 for (auto j : Outer.get<0, vector<STEPentity*> >() ) {
                     static int k = 0; k++;
-                    if (k != 18) continue;
+                    //if (k != 18) continue;
 
                     auto& Face = instances[j];
 

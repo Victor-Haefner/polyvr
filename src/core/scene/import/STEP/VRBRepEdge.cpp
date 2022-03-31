@@ -27,8 +27,8 @@ bool VRBRepEdge::connectsTo(VRBRepEdge& e) { return ( sameVec(end(), e.beg()) );
 double VRBRepEdge::compCircleDirection(Matrix4d mI, Vec3d d) {
     double cDir = 1;
 
-    Vec3d p1, p2, c;
-    //mI.mult(d, d);
+    Vec3d p1, p2, c, cd;
+    mI.mult(cd, cd);
     mI.multFull(Pnt3d(EBeg), p1);
     mI.multFull(Pnt3d(EEnd), p2);
     mI.multFull(Pnt3d(center->pos()), c);
@@ -44,10 +44,10 @@ double VRBRepEdge::compCircleDirection(Matrix4d mI, Vec3d d) {
         if (w < 0) cDir = -1;
         cout << "   --- small angle, W: " << W << ", w: " << w << ", p1: " << p1 << ", p2: " << p2 << ", d: " << d << " -> cDir: " << cDir << endl;
     } else { // special case! flat angle pi
-        double c = d.dot(center->dir());
+        double c = d.dot(cd);
         if (c < 0) cDir = -1;
         if (swapped) cDir *= -1;
-        cout << "   --- flat angle, W: " << W << ", w: " << w << ", p1: " << p1 << ", p2: " << p2 << ", cd: " << center->dir() << endl;
+        cout << "   --- flat angle, W: " << W << ", w: " << w << ", p1: " << p1 << ", p2: " << p2 << ", cd: " << center->dir() << " -> cDir: " << cDir << endl;
     }
 
     cout << " compCircleDirection, circle: " << Vec2d(a1, a2) << ", cDir: " << cDir << ", W: " << W << ", cd: " << center->dir() << ", eSwapped: " << swapped << endl;
