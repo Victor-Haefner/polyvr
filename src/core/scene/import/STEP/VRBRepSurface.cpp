@@ -188,6 +188,27 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
         }
     };
 
+    auto computeSplineRes = [&](field<Vec3d>& cpoints) {
+        double LcurvU = 0;
+        double LcurvV = 0;
+        for (int i=1; i<cpoints.width; i++) {
+            Vec3d p1 = cpoints.get(i-1,0);
+            Vec3d p2 = cpoints.get(i,0);
+            LcurvV += (p2-p1).length();
+        }
+        for (int j=1; j<cpoints.height; j++) {
+            Vec3d p1 = cpoints.get(0,j-1);
+            Vec3d p2 = cpoints.get(0,j);
+            LcurvU += (p2-p1).length();
+        }
+
+        double K = 2*pi*50;
+        int resI = Ncurv*ceil(LcurvU/K);
+        int resJ = Ncurv*ceil(LcurvV/K);
+        //cout << "res: " << Vec2i(resI, resJ) << ", L: " << Vec2i(LcurvU, LcurvV) << endl;
+        return Vec2i(resI, resJ);
+    };
+
     //if (type != "Spherical_Surface") return 0;
 
     if (type == "Plane") {
@@ -623,7 +644,7 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
 
     if (type == "B_Spline_Surface") {
         //return 0;
-        cout << " BUILD B_Spline_Surface" << endl;
+        cout << "B_Spline_Surface" << endl;
 
         // ROADMAP
         //  first idea:
@@ -646,12 +667,12 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
 
         cout << "B_Spline_Surface du " << degu << " dv " << degv << "  pw " << cpoints.width << " ph " << cpoints.height << endl;
 
-        int res = (Ncurv - 1)*0.5;
+        Vec2i res = computeSplineRes(cpoints);
         float T = 1; //knots[knots.size()-1] - knots[0];
-        for (int i=0; i<=res; i++) {
-            float u = i*T/res;
-            for (int j=0; j<=res; j++) {
-                float v = j*T/res;
+        for (int i=0; i<=res[0]; i++) {
+            float u = i*T/res[0];
+            for (int j=0; j<=res[1]; j++) {
+                float v = j*T/res[1];
                 Vec3d p = BSpline(u,v, degu, degv, cpoints, knotsu, knotsv);
                 ids[i][j] = nMesh.pushVert(p,n);
 
@@ -766,6 +787,7 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
 
     if (type == "B_Spline_Surface_With_Knots") {
         //return 0;
+        cout << "B_Spline_Surface_With_Knots" << endl;
         // ROADMAP
         //  first idea:
         //   - tesselate whole BSpline surface (lots of quads)
@@ -803,13 +825,14 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
 
         // BSpline mesh
         map<int, map<int, int> > ids;
-        int res = (Ncurv - 1)*0.5;
+        Vec2i res = computeSplineRes(cpoints);
+
         float Tu = knotsu[knotsu.size()-1] - knotsu[0];
         float Tv = knotsv[knotsv.size()-1] - knotsv[0];
-        for (int i=0; i<=res; i++) {
-            float u = knotsu[0]+i*Tu/res;
-            for (int j=0; j<=res; j++) {
-                float v = knotsv[0]+j*Tv/res;
+        for (int i=0; i<=res[0]; i++) {
+            float u = knotsu[0]+i*Tu/res[0];
+            for (int j=0; j<=res[1]; j++) {
+                float v = knotsv[0]+j*Tv/res[1];
                 Vec3d p = isWeighted ? BSpline(u,v, degu, degv, cpoints, knotsu, knotsv, weights) : BSpline(u,v, degu, degv, cpoints, knotsu, knotsv);
                 Vec3d n = isWeighted ? BSplineNorm(u,v, degu, degv, cpoints, knotsu, knotsv, weights) : BSplineNorm(u,v, degu, degv, cpoints, knotsu, knotsv);
                 if (same_sense) n *= -1;
