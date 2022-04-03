@@ -1261,7 +1261,7 @@ class VRSTEPProductStructure {
 
             string toString() {
                 string s = "o: " + obj;
-                for (auto p : parents) s += "\n pi: " + p->toString();
+                for (auto p : parents)  s += "\n pi: " + p->toString();
                 for (auto c : children) s += "\n ci: " + c->toString();
                 return s;
             }

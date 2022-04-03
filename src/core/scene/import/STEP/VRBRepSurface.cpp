@@ -11,45 +11,66 @@
 
 using namespace OSG;
 
+static const double pi = 3.1415926535;
+
 VRBRepSurface::VRBRepSurface() {}
 
 struct triangle {
     vector<Pnt3f> p; // vertex positions
     vector<Vec3f> v; // edge vectors
+    vector<Vec2f> tcs; // uvs
     Vec3i i; // vertex indices
     double A = 0; // area
-    Vec3d C;   // circumcenter
+    Vec3f C;   // circumcenter
     double R;  // circumradius
     double R2; // circumradius square
 
-    triangle(TriangleIterator it, bool computeCircumsphere = false) : p(3), v(3) {
+    triangle(TriangleIterator it, bool computeCircumsphere = false, bool getTCs = false) : p(3), v(3) {
         i = Vec3i(it.getPositionIndex(0), it.getPositionIndex(1), it.getPositionIndex(2));
         for (int i=0; i<3; i++) p[i] = it.getPosition(i);
         v[0] = p[2]-p[1]; v[1] = p[2]-p[0]; v[2] = p[1]-p[0];
         A = v[0].cross(v[1]).squareLength();
 
         if (computeCircumsphere) {
-            C = (Vec3d(p[0])+Vec3d(p[1])+Vec3d(p[2]))*1.0/3.0;
-            R = C.dist(Vec3d(p[0]));
+            C = (Vec3f(p[0])+Vec3f(p[1])+Vec3f(p[2]))*1.0/3.0;
+            R = C.dist(p[0]);
             R2 = R*R;
+        }
+
+        if (getTCs) {
+            tcs.resize(3);
+            for (int i=0; i<3; i++) tcs[i] = it.getTexCoords(i);
         }
     }
 
-    bool isInside(Vec3d P, Vec2d& uv) {
+    bool isInside(Vec3d Pd, Vec2d& uv) {
+        Vec3f P(Pd);
         if (P.dist2(C) > R2) return false;
-        Vec3f n = v[0].cross(v[1]);
-        double L = n.length();
-        double d12 = L;
-        n *= 1.0/L;
-        P -= Vec3d(n) * P.dot(Vec3d(n));
-        //dp1
-        // TODO: compute isinside and then uv
-        //  https://mathworld.wolfram.com/TriangleInterior.html#:~:text=The%20simplest%20way%20to%20determine,it%20lies%20outside%20the%20triangle.
+
+        Vec3f n = v[0].cross(v[1]); n.normalize();
+        P -= n * P.dot(n); // project on triangle plane
+
+        auto det = [&](Vec3f& A, Vec3f& B) {
+            return A.cross(B).dot(n);
+        };
+
+        double d01 = det(v[0], v[1]);
+        if (abs(d01) < 1e-4) { return false; }
+
+        Vec3f p0(p[0]);
+        double a =  (det(P, v[1]) - det(p0, v[1])) / d01;
+        double b = -(det(P, v[0]) - det(p0, v[0])) / d01;
+
+        if (a >= 0 && b >= 0 && a + b <= 1) {
+            cout << "tri inside, P: " << Pd << ", P0: " << p[0] << ", P1: " << p[1] << ", P2: " << p[2] << ", ab: " << Vec2d(a,b) << endl;
+            if (tcs.size() == 3)
+                uv = Vec2d( tcs[0] * (1.0-a-b) + tcs[1] * a + tcs[2] * b );
+            return true;
+        }
+
         return false;
     }
 };
-
-static const double pi = 3.1415926535;
 
 VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
     //cout << "VRSTEP::Surface build " << type << endl;
@@ -853,11 +874,11 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
             }
         }
 
+        // compute bounds on surface
         auto g = nMesh.asGeometry("BSpline");
         if (g) if (auto gg = g->getMesh()) {
             Triangulator triangulator;
 
-            // bounds
             for (auto b : bounds) {
                 cout << " BSpline Bound, outer: " << b.outer << endl;
                 VRPolygon poly;
@@ -865,22 +886,51 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
                 vector<triangle> triangles;
                 TriangleIterator it;
                 for (it = TriangleIterator(gg->geo); !it.isAtEnd() ;++it) {
-                    triangles.push_back( triangle(it, true ));
+                    triangles.push_back( triangle(it, true, true ));
                 }
 
-                for (auto& p : b.points) {
+                for (auto p : b.points) {
+                    mI.multFull(p, p);
+                    cout << "bound point: " << p << endl;
                     for (auto& tri : triangles) {
                         Vec2d uv;
-                        if (tri.isInside(p, uv)) poly.addPoint(uv);
+                        if (tri.isInside(p, uv)) {
+                            poly.addPoint(uv);
+                            break;
+                        }
                     }
                 }
 
-                checkPolyOrientation(poly, b);
+                //checkPolyOrientation(poly, b);
                 triangulator.add(poly);
+                cout << "  BSpline bounds poly: " << toString(poly.get()) << endl;
             }
 
             g = triangulator.compute();
+
+            if (g) if (auto gg = g->getMesh()) {
+                VRGeoData nMesh;
+
+                for (auto it = TriangleIterator(gg->geo); !it.isAtEnd() ;++it) {
+                    triangle tri(it);
+                    if (tri.A < 1e-6) continue; // ignore flat triangles
+
+                    for (int i=0; i<3; i++) {
+                        double u = tri.p[i][0];
+                        double v = tri.p[i][2];
+                        Vec3d p = isWeighted ? BSpline(u,v, degu, degv, cpoints, knotsu, knotsv, weights) : BSpline(u,v, degu, degv, cpoints, knotsu, knotsv);
+                        Vec3d n = isWeighted ? BSplineNorm(u,v, degu, degv, cpoints, knotsu, knotsv, weights) : BSplineNorm(u,v, degu, degv, cpoints, knotsu, knotsv);
+                        if (same_sense) n *= -1;
+                        nMesh.pushVert(p,n);
+                        cout << "bound point unprojected, uv: " << Vec2d(u,v) << " -> " << p << endl;
+                    }
+
+                    nMesh.pushTri();
+                }
+                nMesh.apply(g);
+            }
         }
+
 
         if (g) g->setMatrix(m);
         if (g && g->getMesh() && g->getMesh()->geo->getPositions() && g->getMesh()->geo->getPositions()->size() > 0) return g;
