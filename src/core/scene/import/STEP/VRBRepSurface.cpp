@@ -67,7 +67,19 @@ struct triangle {
         Vec2d uv;
         Vec3d abc = computeBaryCoords(P, n);
         if (tcs.size() == 3) uv = Vec2d( tcs[0]*abc[2] + tcs[1]*abc[0] + tcs[2]*abc[1] );
+
+        cout << "  computeBaryUV, P: " << Pd << ", P0: " << p[0] << ", P1: " << p[1] << ", P2: " << p[2] << ", abc: " << abc << endl;
+
         return uv;
+    }
+
+    double distToLine(Vec3f P, Vec3f A, Vec3f B) {
+        Vec3f D = B-A;
+        D.normalize();
+        Vec3f V = P-A;
+        float t = V.dot(D);
+        Vec3f Pl = A+t*D;
+        return Pl.dist(P);
     }
 
     double isInside(Vec3d Pd, Vec2d& uv) {
@@ -82,15 +94,17 @@ struct triangle {
         if (tcs.size() == 3) uv = Vec2d( tcs[0]*abc[2] + tcs[1]*abc[0] + tcs[2]*abc[1] );
 
         if (abc[0] >= 0 && abc[1] >= 0 && abc[2] >= 0) {
-            //cout << "tri inside, P: " << Pd << ", P0: " << p[0] << ", P1: " << p[1] << ", P2: " << p[2] << ", ab: " << Vec2d(a,b) << endl;
+            cout << "  tri inside, P: " << Pd << ", P0: " << p[0] << ", P1: " << p[1] << ", P2: " << p[2] << ", abc: " << abc << endl;
             return 0;
         } else {
+            //return 1e6;
             if (abc[0] < 0 && abc[1] < 0) return P.length(); // distance to p0
             if (abc[0] < 0 && abc[2] < 0) return v[2].dist(P); // distance to p2
             if (abc[1] < 0 && abc[2] < 0) return v[1].dist(P); // distance to p1
-            if (abc[0] < 0) return min(P.length(), v[2].dist(P)); // approx
-            if (abc[1] < 0) return min(P.length(), v[1].dist(P)); // approx
-            if (abc[2] < 0) return min(v[1].dist(P), v[2].dist(P)); // approx
+            //return 1e6;
+            if (abc[0] < 0) return distToLine(P, Vec3f(), v[2]);
+            if (abc[1] < 0) return distToLine(P, Vec3f(), v[1]);
+            if (abc[2] < 0) return distToLine(P, v[1]   , v[2]);
             return 0;
         }
 
@@ -906,11 +920,11 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
             Triangulator triangulator;
 
             for (auto b : bounds) {
-                cout << " BSpline Bound, outer: " << b.outer << endl;
+                cout << " BSpline Bound, outer: " << b.outer << " " << b.points.size() << endl;
 
-                for (auto& e : b.edges) {
+                /*for (auto& e : b.edges) {
                     cout << "  edge " << e.etype << ", Np: " << e.points.size() << ", BE: " << e.EBeg << " -> " << e.EEnd << endl;
-                }
+                }*/
 
 
                 VRPolygon poly;
@@ -922,34 +936,40 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
                 }
 
                 for (auto p : b.points) {
+                    if (p[0] > 75) continue; // for testing
+
                     mI.multFull(p, p);
-                    cout << "bound point: " << p << endl;
-                    double dmin = 1e6;
+                    //cout << "bound point: " << p << endl;
+                    double dmin = 1e5;
                     int imin = -1;
                     for (int i=0; i<triangles.size(); i++) {
                         auto& tri = triangles[i];
                         Vec2d uv;
                         double d = tri.isInside(p, uv);
-                        if (d < 1e-3) { // is inside
-                            poly.addPoint(uv);
-                            imin = -1;
-                            break;
-                        } else if (d < dmin) {
+
+                        if (d < dmin) {
                             dmin = d;
                             imin = i;
                         }
+
+                        if (d < 1e-3) break; // is inside
                     }
 
-                    if (imin >= 0) { // no triangle found previously -> use closest triangle!
+                    if (imin >= 0) {
                         auto& tri = triangles[imin];
                         Vec2d uv = tri.computeBaryUV(p);
                         poly.addPoint(uv);
+                        Vec3d p2 = isWeighted ? BSpline(uv[0],uv[1], degu, degv, cpoints, knotsu, knotsv, weights) : BSpline(uv[0],uv[1], degu, degv, cpoints, knotsu, knotsv);
+                        //if (p2.dist(p) > 10)
+                        //if (p2.length() < 10)
+                        cout << "imin: " << imin<< ", dmin: " << dmin << endl;
+                            cout << " bound point unprojected, p -> uv -> p: " << p << " -> " << uv << " -> " << p2 << ", D: " << p2.dist(p) << endl;
                     }
                 }
 
                 //checkPolyOrientation(poly, b);
                 triangulator.add(poly);
-                cout << "  BSpline bounds poly: " << toString(poly.get()) << endl;
+                //cout << "  BSpline bounds poly: " << toString(poly.get()) << endl;
             }
 
             g = triangulator.compute();
@@ -959,7 +979,7 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
 
                 for (auto it = TriangleIterator(gg->geo); !it.isAtEnd() ;++it) {
                     triangle tri(it);
-                    if (tri.A < 1e-6) continue; // ignore flat triangles
+                    //if (tri.A < 1e-6) continue; // ignore flat triangles
 
                     for (int i=0; i<3; i++) {
                         double u = tri.p[i][0];
