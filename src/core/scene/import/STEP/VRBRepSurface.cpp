@@ -48,11 +48,11 @@ struct triangle {
             return A.cross(B).dot(n);
         };
 
-        double d01 = det(v[0], v[1]);
+        double d01 = det(v[2], v[1]);
 
         Vec3f p0(p[0]);
         double a =  (det(P, v[1]) - det(p0, v[1])) / d01;
-        double b = -(det(P, v[0]) - det(p0, v[0])) / d01;
+        double b = -(det(P, v[2]) - det(p0, v[2])) / d01;
         double c = 1.0 - a - b;
 
         return Vec3d(a,b,c);
@@ -61,7 +61,7 @@ struct triangle {
     Vec2d computeBaryUV(Vec3d Pd) {
         Vec3f P(Pd);
 
-        Vec3f n = v[0].cross(v[1]); n.normalize();
+        Vec3f n = v[2].cross(v[1]); n.normalize();
         P -= n * P.dot(n); // project on triangle plane
 
         Vec2d uv;
@@ -86,7 +86,7 @@ struct triangle {
         Vec3f P(Pd);
         if (P.dist2(C) > R2) return 1e6; // big distance
 
-        Vec3f n = v[0].cross(v[1]); n.normalize();
+        Vec3f n = v[2].cross(v[1]); n.normalize();
         P -= n * P.dot(n); // project on triangle plane
 
         Vec3d abc = computeBaryCoords(P, n);
@@ -99,11 +99,11 @@ struct triangle {
         } else {
             //return 1e6;
             if (abc[0] < 0 && abc[1] < 0) return P.length(); // distance to p0
-            if (abc[0] < 0 && abc[2] < 0) return v[2].dist(P); // distance to p2
-            if (abc[1] < 0 && abc[2] < 0) return v[1].dist(P); // distance to p1
+            if (abc[0] < 0 && abc[2] < 0) return v[1].dist(P); // distance to p2
+            if (abc[1] < 0 && abc[2] < 0) return v[2].dist(P); // distance to p1
             //return 1e6;
-            if (abc[0] < 0) return distToLine(P, Vec3f(), v[2]);
-            if (abc[1] < 0) return distToLine(P, Vec3f(), v[1]);
+            if (abc[0] < 0) return distToLine(P, Vec3f(), v[1]);
+            if (abc[1] < 0) return distToLine(P, Vec3f(), v[2]);
             if (abc[2] < 0) return distToLine(P, v[1]   , v[2]);
             return 0;
         }
@@ -936,7 +936,7 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
                 }
 
                 for (auto p : b.points) {
-                    if (p[0] > 75) continue; // for testing
+                    //if (p[0] > 75) continue; // for testing
 
                     mI.multFull(p, p);
                     //cout << "bound point: " << p << endl;
