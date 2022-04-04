@@ -43,32 +43,58 @@ struct triangle {
         }
     }
 
-    bool isInside(Vec3d Pd, Vec2d& uv) {
-        Vec3f P(Pd);
-        if (P.dist2(C) > R2) return false;
-
-        Vec3f n = v[0].cross(v[1]); n.normalize();
-        P -= n * P.dot(n); // project on triangle plane
-
+    Vec3d computeBaryCoords(Vec3f P, Vec3f n) {
         auto det = [&](Vec3f& A, Vec3f& B) {
             return A.cross(B).dot(n);
         };
 
         double d01 = det(v[0], v[1]);
-        if (abs(d01) < 1e-4) { return false; }
 
         Vec3f p0(p[0]);
         double a =  (det(P, v[1]) - det(p0, v[1])) / d01;
         double b = -(det(P, v[0]) - det(p0, v[0])) / d01;
+        double c = 1.0 - a - b;
 
-        if (a >= 0 && b >= 0 && a + b <= 1) {
-            cout << "tri inside, P: " << Pd << ", P0: " << p[0] << ", P1: " << p[1] << ", P2: " << p[2] << ", ab: " << Vec2d(a,b) << endl;
-            if (tcs.size() == 3)
-                uv = Vec2d( tcs[0] * (1.0-a-b) + tcs[1] * a + tcs[2] * b );
-            return true;
+        return Vec3d(a,b,c);
+    }
+
+    Vec2d computeBaryUV(Vec3d Pd) {
+        Vec3f P(Pd);
+
+        Vec3f n = v[0].cross(v[1]); n.normalize();
+        P -= n * P.dot(n); // project on triangle plane
+
+        Vec2d uv;
+        Vec3d abc = computeBaryCoords(P, n);
+        if (tcs.size() == 3) uv = Vec2d( tcs[0]*abc[2] + tcs[1]*abc[0] + tcs[2]*abc[1] );
+        return uv;
+    }
+
+    double isInside(Vec3d Pd, Vec2d& uv) {
+        Vec3f P(Pd);
+        if (P.dist2(C) > R2) return 1e6; // big distance
+
+        Vec3f n = v[0].cross(v[1]); n.normalize();
+        P -= n * P.dot(n); // project on triangle plane
+
+        Vec3d abc = computeBaryCoords(P, n);
+
+        if (tcs.size() == 3) uv = Vec2d( tcs[0]*abc[2] + tcs[1]*abc[0] + tcs[2]*abc[1] );
+
+        if (abc[0] >= 0 && abc[1] >= 0 && abc[2] >= 0) {
+            //cout << "tri inside, P: " << Pd << ", P0: " << p[0] << ", P1: " << p[1] << ", P2: " << p[2] << ", ab: " << Vec2d(a,b) << endl;
+            return 0;
+        } else {
+            if (abc[0] < 0 && abc[1] < 0) return P.length(); // distance to p0
+            if (abc[0] < 0 && abc[2] < 0) return v[2].dist(P); // distance to p2
+            if (abc[1] < 0 && abc[2] < 0) return v[1].dist(P); // distance to p1
+            if (abc[0] < 0) return min(P.length(), v[2].dist(P)); // approx
+            if (abc[1] < 0) return min(P.length(), v[1].dist(P)); // approx
+            if (abc[2] < 0) return min(v[1].dist(P), v[2].dist(P)); // approx
+            return 0;
         }
 
-        return false;
+        return 1e6; // big distance
     }
 };
 
@@ -881,6 +907,12 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
 
             for (auto b : bounds) {
                 cout << " BSpline Bound, outer: " << b.outer << endl;
+
+                for (auto& e : b.edges) {
+                    cout << "  edge " << e.etype << ", Np: " << e.points.size() << ", BE: " << e.EBeg << " -> " << e.EEnd << endl;
+                }
+
+
                 VRPolygon poly;
 
                 vector<triangle> triangles;
@@ -892,12 +924,26 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
                 for (auto p : b.points) {
                     mI.multFull(p, p);
                     cout << "bound point: " << p << endl;
-                    for (auto& tri : triangles) {
+                    double dmin = 1e6;
+                    int imin = -1;
+                    for (int i=0; i<triangles.size(); i++) {
+                        auto& tri = triangles[i];
                         Vec2d uv;
-                        if (tri.isInside(p, uv)) {
+                        double d = tri.isInside(p, uv);
+                        if (d < 1e-3) { // is inside
                             poly.addPoint(uv);
+                            imin = -1;
                             break;
+                        } else if (d < dmin) {
+                            dmin = d;
+                            imin = i;
                         }
+                    }
+
+                    if (imin >= 0) { // no triangle found previously -> use closest triangle!
+                        auto& tri = triangles[imin];
+                        Vec2d uv = tri.computeBaryUV(p);
+                        poly.addPoint(uv);
                     }
                 }
 

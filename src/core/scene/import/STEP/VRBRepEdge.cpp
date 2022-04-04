@@ -54,11 +54,27 @@ double VRBRepEdge::compCircleDirection(Matrix4d mI, Vec3d d) {
     return cDir;
 }
 
+static const double pi = 3.1415926535;
+
 void VRBRepEdge::build(string type) {
     etype = type;
 
     if (isNan(EBeg)) cout << "Error in VRBRepEdge::build, EBeg contains NaN!" << endl;
     if (isNan(EEnd)) cout << "Error in VRBRepEdge::build, EBeg contains NaN!" << endl;
+
+    auto computeSplineRes = [&](vector<Vec3d>& cpoints) {
+        double Lcurv = 0;
+        for (int i=1; i<cpoints.size(); i++) {
+            Vec3d p1 = cpoints[i-1];
+            Vec3d p2 = cpoints[i];
+            Lcurv += (p2-p1).length();
+        }
+
+        double K = 2*pi*50;
+        int res = Ncurv*ceil(Lcurv/K);
+        //cout << "res: " << Vec2i(resI, resJ) << ", L: " << Vec2i(LcurvU, LcurvV) << endl;
+        return res;
+    };
 
     if (type == "Line") {
         points.push_back(EBeg);
@@ -111,7 +127,7 @@ void VRBRepEdge::build(string type) {
 
         bool doWeights = (weights.size() == cpoints.size());
 
-        int res = (Ncurv - 1)*0.5;
+        int res = computeSplineRes(cpoints);
         float T = knots[knots.size()-1] - knots[0];
         for (int i=0; i<=res; i++) {
             float t = knots[0]+i*T/res;
