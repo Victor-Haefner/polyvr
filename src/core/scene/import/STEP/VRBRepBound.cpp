@@ -1,6 +1,9 @@
 #include "VRBRepBound.h"
 #include "core/utils/toString.h"
 #include "core/utils/isNan.h"
+#include "core/objects/geometry/VRGeoData.h"
+#include "core/objects/geometry/VRGeometry.h"
+#include "core/objects/material/VRMaterial.h"
 #include <OpenSG/OSGVector.h>
 
 using namespace OSG;
@@ -34,6 +37,27 @@ void VRBRepBound::shiftEdges(int i0) {
     edges = shifted;
 }
 
+VRGeometryPtr VRBRepBound::asGeometry() {
+    VRGeoData boundPoints;
+
+    for (auto p : points) {
+        boundPoints.pushVert(p,Vec3d(),Color3f(1,0,0));
+        boundPoints.pushPoint();
+    }
+
+    for (int i=1; i<points.size(); i++) {
+        boundPoints.pushLine(i-1, i);
+    }
+
+    auto tmp = boundPoints.asGeometry("bounds");
+    auto mb = VRMaterial::create("bounds");
+    mb->setDiffuse(Color3f(1,0,0));
+    mb->setLit(0);
+    mb->setPointSize(5);
+    tmp->setMaterial(mb);
+
+    return tmp;
+}
 
 
 

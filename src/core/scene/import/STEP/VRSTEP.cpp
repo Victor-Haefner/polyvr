@@ -1188,7 +1188,8 @@ void VRSTEP::buildGeometries() {
                 for (auto j : Outer.get<0, vector<STEPentity*> >() ) {
                     static int k = 0; k++;
                     //if (k != 15 && k != 22) continue;
-                    if (k != 67 && k != 9) continue;
+                    //if (k != 67 && k != 9) continue;
+                    if (k != 95) continue;
 
                     auto& Face = instances[j];
                     //if (k == 67) exploreEntity(nodes[Face.entity], true);
@@ -1215,8 +1216,8 @@ void VRSTEP::buildGeometries() {
                         data.addVertexColors(color);
                         data.addVertexTexCoords(Vec2d(i, k)); // for debugging faces
 
-                        geo->merge( faceGeo );
-                        //geo->addChild( surface.build(surface.type, same_sense) );
+                        //geo->merge( faceGeo );
+                        geo->addChild( faceGeo );
                         //cout << "  Outer Face: " << Face.type << " " << surface.etype << " " << Face.ID << " " << k << endl;
                     } else cout << "VRSTEP::buildGeometries Error 2 " << Face.type << " " << Face.ID << endl;
                 }

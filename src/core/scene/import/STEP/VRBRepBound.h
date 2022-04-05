@@ -3,6 +3,7 @@
 
 #include "VRBRepUtils.h"
 #include "VRBRepEdge.h"
+#include "core/objects/VRObjectFwd.h"
 
 using namespace std;
 OSG_BEGIN_NAMESPACE;
@@ -23,6 +24,8 @@ class VRBRepBound : public VRBRepUtils {
 
         bool containsNan();
         void shiftEdges(int i0);
+
+        VRGeometryPtr asGeometry();
 };
 
 OSG_END_NAMESPACE;

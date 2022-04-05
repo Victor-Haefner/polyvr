@@ -59,16 +59,16 @@ struct triangle {
     }
 
     Vec2d computeBaryUV(Vec3d Pd) {
-        Vec3f P(Pd);
-
+        Vec3f P = Vec3f(Pd)-Vec3f(p[0]);
         Vec3f n = v[2].cross(v[1]); n.normalize();
         P -= n * P.dot(n); // project on triangle plane
+        P += Vec3f(p[0]);
 
         Vec2d uv;
         Vec3d abc = computeBaryCoords(P, n);
         if (tcs.size() == 3) uv = Vec2d( tcs[0]*abc[2] + tcs[1]*abc[0] + tcs[2]*abc[1] );
 
-        cout << "  computeBaryUV, P: " << Pd << ", P0: " << p[0] << ", P1: " << p[1] << ", P2: " << p[2] << ", abc: " << abc << endl;
+        //cout << "  computeBaryUV, P: " << Pd << ", P0: " << p[0] << ", P1: " << p[1] << ", P2: " << p[2] << ", abc: " << abc << endl;
 
         return uv;
     }
@@ -82,14 +82,22 @@ struct triangle {
         return Pl.dist(P);
     }
 
+    Vec3f projected(Vec3d Pd) {
+        Vec3f P = Vec3f(Pd)-Vec3f(p[0]);
+        Vec3f n = v[2].cross(v[1]); n.normalize();
+        P -= n * P.dot(n); // project on triangle plane
+        return Vec3f(p[0])+P;
+    }
+
     double isInside(Vec3d Pd, Vec2d& uv) {
-        Vec3f P(Pd);
+        Vec3f P = Vec3f(Pd);
         if (P.dist2(C) > R2) return 1e6; // big distance
 
+        P -= Vec3f(p[0]);
         Vec3f n = v[2].cross(v[1]); n.normalize();
         P -= n * P.dot(n); // project on triangle plane
 
-        Vec3d abc = computeBaryCoords(P, n);
+        Vec3d abc = computeBaryCoords(Vec3f(p[0])+P, n);
 
         if (tcs.size() == 3) uv = Vec2d( tcs[0]*abc[2] + tcs[1]*abc[0] + tcs[2]*abc[1] );
 
@@ -98,7 +106,7 @@ struct triangle {
             return 0;
         } else {
             //return 1e6;
-            if (abc[0] < 0 && abc[1] < 0) return P.length(); // distance to p0
+            if (abc[0] < 0 && abc[1] < 0) return P.length();   // distance to p0
             if (abc[0] < 0 && abc[2] < 0) return v[1].dist(P); // distance to p2
             if (abc[1] < 0 && abc[2] < 0) return v[2].dist(P); // distance to p1
             //return 1e6;
@@ -124,6 +132,124 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
     }
     Matrix4d mI = m;
     mI.invert();
+
+    auto subdivide = [&](VRGeometryPtr geo, Vec3d res) {
+        VRGeoData data(geo);
+
+        // to subdivide a triangle in a mesh:
+        //  create new points on edge to subdivide, linear interpolate
+        //  append new vertices to geometry
+        //  add new triangles indices in a new index vector
+        //  add all triangle indices if no subdivision required
+
+        GeoUInt32PropertyMTRefPtr newIndex = GeoUInt32Property::create();
+
+        auto gg = geo->getMesh();
+        for (auto it = TriangleIterator(gg->geo); !it.isAtEnd() ;++it) {
+            vector<Vec3f> p(3); // vertex positions
+            for (int i=0; i<3; i++) p[i] = Vec3f(it.getPosition(i));
+
+            vector< vector<int> > eIDs = { {it.getPositionIndex(0)}, {it.getPositionIndex(1)}, {it.getPositionIndex(2)} };
+
+            auto pushTri = [&](int a, int b, int c) {
+                newIndex->addValue(a);
+                newIndex->addValue(b);
+                newIndex->addValue(c);
+            };
+
+            auto inverted = [](vector<int>& v) {
+                vector<int> i(v.size());
+                for (int k=0; k<v.size(); k++) i[k] = v[v.size()-k-1];
+                return i;
+            };
+
+            auto getNSubs = [&](Vec3f& A, Vec3f& B) {
+                Vec3f edge = B-A;
+
+                int eN = 1; // get subdivisions
+                for (int j=0; j<3; j++) {
+                    if (res[j] <= 0) continue;
+                    int N = ceil(edge[j]/res[j]);
+                    eN = max(N, eN);
+                }
+
+                return eN;
+            };
+
+            for (int i=0; i<3; i++) {
+                Vec3f& A = p[i];
+                Vec3f& B = p[(i+1)%3];
+                int eN = getNSubs(A, B);
+
+                for (int k=1; k<eN; k++) {
+                    double x = double(k)/eN;
+                    int vID = data.pushVert(Vec3d(A*(1.0-x)+B*x));
+                    eIDs[i].push_back(vID);
+                }
+            }
+
+            if (eIDs[0].size() == 1 && eIDs[1].size() == 1 && eIDs[2].size() == 1) { // no subdivisions
+                pushTri(it.getPositionIndex(0), it.getPositionIndex(1), it.getPositionIndex(2));
+                continue;
+            }
+
+            eIDs[0].push_back(it.getPositionIndex(1));
+            eIDs[1].push_back(it.getPositionIndex(2));
+            eIDs[2].push_back(it.getPositionIndex(0));
+
+            Vec3i edgesByDivisions(0,1,2);
+            if (eIDs[0].size() < eIDs[2].size() && eIDs[2].size() < eIDs[1].size()) edgesByDivisions = Vec3i(0,2,1);
+            if (eIDs[1].size() < eIDs[0].size() && eIDs[0].size() < eIDs[2].size()) edgesByDivisions = Vec3i(1,0,2);
+            if (eIDs[1].size() < eIDs[2].size() && eIDs[2].size() < eIDs[0].size()) edgesByDivisions = Vec3i(1,2,0);
+            if (eIDs[2].size() < eIDs[0].size() && eIDs[0].size() < eIDs[1].size()) edgesByDivisions = Vec3i(2,0,1);
+            if (eIDs[2].size() < eIDs[1].size() && eIDs[1].size() < eIDs[0].size()) edgesByDivisions = Vec3i(2,1,0);
+
+            int I1 = edgesByDivisions[0]; // start with edge with least divisions
+            vector<vector<int>> fan(eIDs[I1].size());
+            fan[0] = inverted(eIDs[(I1-1)%3]);
+            for (int i=1; i<eIDs[I1].size()-1; i++) { // create mid edges
+                int i0 = eIDs[I1][i]; // start ID of fan edge
+                int iPo = eIDs[(I1-1)%3][0]; // ID of opposing point to edge
+                fan[i].push_back(eIDs[I1][i]); // start of fan edge
+                Vec3f A = Vec3f(data.getPosition(i0));
+                Vec3f B = Vec3f(data.getPosition(iPo));
+                int eN = getNSubs(A, B);
+                for (int k=1; k<eN; k++) {
+                    double x = double(k)/eN;
+                    int vID = data.pushVert(Vec3d(A*(1.0-x)+B*x));
+                    fan[i].push_back(vID);
+                }
+                fan[i].push_back(iPo); // end of fan edge, opposing point to edge
+            }
+            fan[fan.size()-1] = eIDs[(I1+1)%3];
+
+            auto meshSlice = [&](vector<int>& e1, vector<int>& e2) { // e1 has more points
+                int ei1 = 0;
+                int ei2 = 0;
+                double et1 = 0;
+                double et2 = 0;
+                double dt1 = 1.0/(e1.size()-1);
+                double dt2 = 1.0/(e2.size()-1);
+                for (;ei1<e1.size()-1 && ei2<e2.size()-1;) {
+                    if (et1 <= et2) pushTri(e1[ei1], e2[ei2], e1[ei1+1]);
+                    else            pushTri(e2[ei2], e1[ei1], e2[ei2+1]);
+
+                    // advance
+                    if (et1 <= et2) { ei1++; et1 += dt1; }
+                    else            { ei2++; et2 += dt2; }
+                }
+            };
+
+            for (int i=1; i<fan.size(); i++) {
+                auto& e1 = fan[i-1];
+                auto& e2 = fan[i];
+                if (e1.size() >= e2.size()) meshSlice(e1, e2);
+                else                       meshSlice(e2, e1);
+            }
+        }
+
+        gg->geo->setIndices(newIndex);
+    };
 
     auto checkOrder = [&](Pnt3d p0, Pnt3d p1, Pnt3d p2, Vec3d n) {
         float cp = (p1-p0).cross(p2-p0).dot(n);
@@ -920,6 +1046,7 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
             Triangulator triangulator;
 
             for (auto b : bounds) {
+
                 cout << " BSpline Bound, outer: " << b.outer << " " << b.points.size() << endl;
 
                 /*for (auto& e : b.edges) {
@@ -936,7 +1063,7 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
                 }
 
                 for (auto p : b.points) {
-                    //if (p[0] > 75) continue; // for testing
+                    if (p[0] > 75) continue; // for testing
 
                     mI.multFull(p, p);
                     //cout << "bound point: " << p << endl;
@@ -962,24 +1089,32 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
                         Vec3d p2 = isWeighted ? BSpline(uv[0],uv[1], degu, degv, cpoints, knotsu, knotsv, weights) : BSpline(uv[0],uv[1], degu, degv, cpoints, knotsu, knotsv);
                         //if (p2.dist(p) > 10)
                         //if (p2.length() < 10)
-                        cout << "imin: " << imin<< ", dmin: " << dmin << endl;
-                            cout << " bound point unprojected, p -> uv -> p: " << p << " -> " << uv << " -> " << p2 << ", D: " << p2.dist(p) << endl;
+                        //cout << "imin: " << imin<< ", dmin: " << dmin << endl;
+                        //    cout << " bound point unprojected, p -> uv -> p: " << p << " -> " << uv << " -> " << p2 << ", D: " << p2.dist(p) << endl;
+
+                        /*auto pj = tri.projected(p);
+                        boundPoints.pushVert(p,Vec3d(),Color3f(1,0,0));
+                        boundPoints.pushVert(Vec3d(pj),Vec3d(),Color3f(0,1,0));
+                        boundPoints.pushLine();
+                        boundPoints.pushVert(p,Vec3d(),Color3f(1,0,0));
+                        boundPoints.pushVert(p2,Vec3d(),Color3f(0,0,1));
+                        boundPoints.pushLine();*/
                     }
                 }
 
                 //checkPolyOrientation(poly, b);
                 triangulator.add(poly);
-                //cout << "  BSpline bounds poly: " << toString(poly.get()) << endl;
+                cout << "  BSpline bounds poly: " << toString(poly.get()) << endl;
             }
 
             g = triangulator.compute();
+            subdivide( g, Vec3d(Tu/res[0], -1, Tv/res[1]) );
 
             if (g) if (auto gg = g->getMesh()) {
                 VRGeoData nMesh;
 
                 for (auto it = TriangleIterator(gg->geo); !it.isAtEnd() ;++it) {
                     triangle tri(it);
-                    //if (tri.A < 1e-6) continue; // ignore flat triangles
 
                     for (int i=0; i<3; i++) {
                         double u = tri.p[i][0];
@@ -995,6 +1130,8 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
                 }
                 nMesh.apply(g);
             }
+
+            for (auto& b : bounds) g->addChild(b.asGeometry());
         }
 
 
