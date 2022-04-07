@@ -283,6 +283,8 @@
 		<Unit filename="src/addons/Algorithms/VRAlgorithmsFwd.h" />
 		<Unit filename="src/addons/Algorithms/VRGraphLayout.cpp" />
 		<Unit filename="src/addons/Algorithms/VRGraphLayout.h" />
+		<Unit filename="src/addons/Algorithms/VRMeshSubdivision.cpp" />
+		<Unit filename="src/addons/Algorithms/VRMeshSubdivision.h" />
 		<Unit filename="src/addons/Algorithms/VRPathFinding.cpp" />
 		<Unit filename="src/addons/Algorithms/VRPathFinding.h" />
 		<Unit filename="src/addons/Algorithms/VRPyGraphLayout.cpp" />
