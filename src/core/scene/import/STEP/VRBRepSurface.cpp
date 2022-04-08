@@ -809,17 +809,18 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
 
             VRMeshSubdivision subdiv;
             //subdiv.subdivideTriangles( g, Vec3d(Tu/res[0], -1, Tv/res[1]) );
-            subdiv.subdivideGrid( g, Vec3d(Tu/res[0], -1, Tv/res[1]) );
+            //subdiv.subdivideGrid( g, Vec3d(Tu/res[0], -1, Tv/res[1]) );
 
-            if (0) {
+            if (1) {
                 VRPolygon ply;
                 ply.addPoint(Vec2d(0,0));
                 ply.addPoint(Vec2d(5,0));
+                ply.addPoint(Vec2d(5,5));
                 ply.addPoint(Vec2d(0,5));
                 Triangulator tt;
                 tt.add(ply);
                 auto G = tt.compute();
-                subdiv.subdivideGrid( G, Vec3d(0.4, -1, 0.5) );
+                subdiv.subdivideGrid( G, Vec3d(1.0, -1, 5) );
                 G->getMaterial()->setLit(0);
                 G->getMaterial()->setWireFrame(true);
                 return G;
