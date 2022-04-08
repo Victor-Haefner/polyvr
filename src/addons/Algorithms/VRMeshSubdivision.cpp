@@ -81,6 +81,8 @@ void VRMeshSubdivision::segmentTriangle(VRGeoData& geo, Vec3i pSegments, vector<
         return;
     }
 
+
+    // TODO: push all vertices first, then make primitives! see case 3 and 4!
     // test second case: all vertices on different cylinder faces
     if (pSegments[0] != pSegments[1] && pSegments[0] != pSegments[2] && pSegments[1] != pSegments[2]) {
         //cout << "  case 2" << endl;
@@ -166,91 +168,87 @@ void VRMeshSubdivision::segmentTriangle(VRGeoData& geo, Vec3i pSegments, vector<
 
     // case 3
     if (pSegments[pOrder[0]] == pSegments[pOrder[1]]) {
+        //cout << "  case 3" << endl;
         Pnt3d pv1 = Pnt3d(points[pOrder[0]]); // vertex on that face
         Pnt3d pv2 = Pnt3d(points[pOrder[1]]); // vertex on that face
         Pnt3d pv3 = Pnt3d(points[pOrder[2]]); // vertex on that face
+
         Vec3d vp1 = Vec3d(edges[pOrder[1]]); // vector to last point
         Vec3d vp2 = Vec3d(edges[pOrder[0]]); // vector to last point
 
-        Pnt3d pr11, pr12, pr21, pr22;
+        int i1 = geo.pushVert(pv1, n);
+        int i2 = geo.pushVert(pv2, n);
+        int i3 = geo.pushVert(pv3, n);
 
-        //cout << "  case 3" << endl;
-        for (uint i=0; i<segments.size(); i++) {
+        vector<int> ep1 = { i1 };
+        vector<int> ep2 = { i2 };
+
+        Pnt3d pr1, pr2;
+        for (uint i=0; i<segments.size()-1; i++) {
             Vec2d s = segments[i];
 
-            pr11[dim] = s[0]; // point on cylinder edge
-            pr12[dim] = s[0]; // point on cylinder edge
-            pr21[dim] = s[1]; // point on cylinder edge
-            pr22[dim] = s[1]; // point on cylinder edge
+            pr1[dim] = s[1]; // point on cylinder edge
+            pr2[dim] = s[1]; // point on cylinder edge
 
-            pr11[dim2] = pv1[dim2] + vp1[dim2]/vp1[dim]*(s[0]-pv1[dim]);
-            pr12[dim2] = pv2[dim2] + vp2[dim2]/vp2[dim]*(s[0]-pv2[dim]);
-            pr21[dim2] = pv1[dim2] + vp1[dim2]/vp1[dim]*(s[1]-pv1[dim]);
-            pr22[dim2] = pv2[dim2] + vp2[dim2]/vp2[dim]*(s[1]-pv2[dim]);
+            pr1[dim2] = pv1[dim2] + vp1[dim2]/vp1[dim]*(s[1]-pv1[dim]);
+            pr2[dim2] = pv2[dim2] + vp2[dim2]/vp2[dim]*(s[1]-pv2[dim]);
 
-            if (i == 0) { // first quad
-                pushQuad(geo, pv1, pv2, pr21, pr22, n);
-                continue;
-            }
-
-            if (i == segments.size()-1) { // last triangle
-                pr11[dim2] = pv3[dim2] + vp1[dim2]/vp1[dim]*(s[0]-pv3[dim]);
-                pr12[dim2] = pv3[dim2] + vp2[dim2]/vp2[dim]*(s[0]-pv3[dim]);
-                pushTri(geo, pv3, pr11, pr12, n);
-                continue;
-            }
-
-            pushQuad(geo, pr11, pr12, pr21, pr22, n);
+            int e1 = geo.pushVert(pr1, n);
+            int e2 = geo.pushVert(pr2, n);
+            ep1.push_back(e1);
+            ep2.push_back(e2);
         }
+
+        for (uint i=0; i<segments.size()-1; i++) {
+            geo.pushQuad(ep1[i], ep2[i], ep2[i+1], ep1[i+1]);
+        }
+
+        geo.pushTri(ep1.back(), ep2.back(), i3);
         return;
     }
 
     // case 4
     if (pSegments[pOrder[1]] == pSegments[pOrder[2]]) {
-        //cout << "  case 4" << endl;
-        for (uint i=0; i<segments.size(); i++) {
+        //cout << "  case 3" << endl;
+        Pnt3d pv1 = Pnt3d(points[pOrder[0]]); // vertex on that face
+        Pnt3d pv2 = Pnt3d(points[pOrder[1]]); // vertex on that face
+        Pnt3d pv3 = Pnt3d(points[pOrder[2]]); // vertex on that face
+
+        Vec3d vp1 = Vec3d(edges[pOrder[2]]); // vector to last point
+        Vec3d vp2 = Vec3d(edges[pOrder[1]]); // vector to last point
+
+        int i1 = geo.pushVert(pv1, n);
+        int i2 = geo.pushVert(pv2, n);
+        int i3 = geo.pushVert(pv3, n);
+
+        vector<int> ep1;
+        vector<int> ep2;
+
+        Pnt3d pr1, pr2;
+        for (uint i=0; i<segments.size()-1; i++) {
             Vec2d s = segments[i];
 
-            Pnt3d pv  = Pnt3d(points[pOrder[0]]); // vertex on that face
-            Pnt3d pv1 = Pnt3d(points[pOrder[1]]); // vertex on that face
-            Pnt3d pv2 = Pnt3d(points[pOrder[2]]); // vertex on that face
+            pr1[dim] = s[1]; // point on cylinder edge
+            pr2[dim] = s[1]; // point on cylinder edge
 
-            if (i == 0) { // first triangle
-                Pnt3d pr1, pr2;
-                pr1[dim] = s[1]; // point on cylinder edge
-                pr2[dim] = s[1]; // point on cylinder edge
-                Vec3d vp1 = Vec3d(edges[pOrder[1]]); // vector to middle point
-                Vec3d vp2 = Vec3d(edges[pOrder[2]]); // vector to last point
-                pr1[dim2] = pv[dim2] + vp1[dim2]/vp1[dim]*(s[1]-pv[dim]);
-                pr2[dim2] = pv[dim2] + vp2[dim2]/vp2[dim]*(s[1]-pv[dim]);
-                pushTri(geo, pv,pr1,pr2, n);
-                continue;
-            }
-            if (i == segments.size()-1) { // last quad
-                Pnt3d pr1, pr2;
-                pr1[dim] = s[0]; // point on cylinder edge
-                pr2[dim] = s[0]; // point on cylinder edge
-                Vec3d vp1 = Vec3d(edges[pOrder[2]]); // vector to last point
-                Vec3d vp2 = Vec3d(edges[pOrder[1]]); // vector to last point
-                pr1[dim2] = pv1[dim2] + vp1[dim2]/vp1[dim]*(s[0]-pv1[dim]);
-                pr2[dim2] = pv2[dim2] + vp2[dim2]/vp2[dim]*(s[0]-pv2[dim]);
-                pushQuad(geo, pv1, pv2, pr1, pr2, n);
-                continue;
-            }
+            pr1[dim2] = pv1[dim2] + vp1[dim2]/vp1[dim]*(s[1]-pv1[dim]);
+            pr2[dim2] = pv1[dim2] + vp2[dim2]/vp2[dim]*(s[1]-pv1[dim]);
 
-            Pnt3d pr11, pr12, pr21, pr22;
-            pr11[dim] = s[0]; // point on cylinder edge
-            pr12[dim] = s[0]; // point on cylinder edge
-            pr21[dim] = s[1]; // point on cylinder edge
-            pr22[dim] = s[1]; // point on cylinder edge
-            Vec3d vp1 = Vec3d(edges[pOrder[2]]); // vector to last point
-            Vec3d vp2 = Vec3d(edges[pOrder[1]]); // vector to last point
-            pr11[dim2] = pv1[dim2] + vp1[dim2]/vp1[dim]*(s[0]-pv1[dim]);
-            pr12[dim2] = pv2[dim2] + vp2[dim2]/vp2[dim]*(s[0]-pv2[dim]);
-            pr21[dim2] = pv1[dim2] + vp1[dim2]/vp1[dim]*(s[1]-pv1[dim]);
-            pr22[dim2] = pv2[dim2] + vp2[dim2]/vp2[dim]*(s[1]-pv2[dim]);
-            pushQuad(geo, pr11, pr12, pr21, pr22, n);
+            int e1 = geo.pushVert(pr1, n);
+            int e2 = geo.pushVert(pr2, n);
+            ep1.push_back(e1);
+            ep2.push_back(e2);
         }
+
+        ep1.push_back(i2);
+        ep2.push_back(i3);
+
+        geo.pushTri(i1, ep1[0], ep2[0]);
+
+        for (uint i=0; i<segments.size()-1; i++) {
+            geo.pushQuad(ep1[i], ep2[i], ep2[i+1], ep1[i+1]);
+        }
+
         return;
     }
 
