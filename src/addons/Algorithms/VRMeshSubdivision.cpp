@@ -354,13 +354,17 @@ void VRMeshSubdivision::subdivideGrid(VRGeometryPtr geo, Vec3d res) {
 
             segmentTriangle(newData, pSegments, points, Vec3d(n), segments, dim, dim2);
         }
+
+        // apply and reset for next pass
+        newData.apply(geo);
+        gg = geo->getMesh();
+        newData = VRGeoData();
     };
 
     subdivideAxis(0, 2);
     //subdivideAxis(1, 2);
     subdivideAxis(2, 0);
 
-    newData.apply(geo);
 }
 
 void VRMeshSubdivision::subdivideTriangles(VRGeometryPtr geo, Vec3d res) {
