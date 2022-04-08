@@ -1,10 +1,13 @@
 #include "VRMeshSubdivision.h"
 
+#include "core/math/partitioning/boundingbox.h"
+
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/geometry/OSGGeometry.h"
 #include "core/objects/geometry/VRGeoData.h"
 
 #include <OpenSG/OSGTriangleIterator.h>
+#include <OpenSG/OSGGeoPnt3fProperty.h>
 
 using namespace OSG;
 
@@ -13,6 +16,82 @@ VRMeshSubdivision::~VRMeshSubdivision() {}
 
 VRMeshSubdivisionPtr VRMeshSubdivision::create() { return VRMeshSubdivisionPtr( new VRMeshSubdivision() ); }
 VRMeshSubdivisionPtr VRMeshSubdivision::ptr() { return static_pointer_cast<VRMeshSubdivision>(shared_from_this()); }
+
+void VRMeshSubdivision::subdivideGrid(VRGeometryPtr geo, Vec3d res) {
+    VRGeoData data(geo);
+    VRGeoData newData;
+
+    for (size_t i=0; i<data.size(); i++) newData.pushVert( data.getPosition(i) );
+
+    auto gg = geo->getMesh();
+
+    // first iteration, get bounding box
+    Boundingbox box;
+    GeoVectorPropertyMTRecPtr positions = gg->geo->getPositions();
+    for (size_t i=0; i<positions->size(); i++) {
+        Vec3d p(positions->getValue<Pnt3f>(i));
+        box.update(p);
+    }
+
+    // compute grid params
+    Vec3i gridN(1,1,1);
+    Vec3d boxSize = box.size();
+    for (int i=0; i<3; i++) {
+        if (res[i] <= 0) continue;
+        gridN[i] = max(1.0, floor(boxSize[i]/res[i]));
+        res[i] = boxSize[i]/gridN[i];
+    }
+
+    // second iteration, split all triangles along one dimension according to grid
+    // TODO: repeat for second and third dimension
+
+    int dim = 0;
+    if (gridN[dim] == 1) return;
+
+    for (auto it = TriangleIterator(gg->geo); !it.isAtEnd() ;++it) {
+        vector<Vec3f> p(3); // vertex positions
+        for (int i=0; i<3; i++) p[i] = Vec3f(it.getPosition(i));
+
+        // analyse triangle
+        float aMin = p[0][dim];
+        float aMax = p[0][dim];
+        float aMid = p[0][dim];
+        int vMin = 0;
+        int vMax = 0;
+        int vMid = 0;
+
+        for (int i=0; i<3; i++) {
+            float x = p[i][dim];
+
+            if (x < aMin) {
+                aMin = x;
+                vMin = i;
+            }
+
+            if (x > aMax) {
+                aMax = x;
+                vMax = i;
+            }
+        }
+
+        vMid = 3-(vMin+vMax);
+        aMid = p[vMid][dim];
+
+        // grid intersect triangle -> SEE CYLINDER SURFACE ALGO, pushTri, pushQuad, pushPen..
+        float gMin = box.min()[dim];
+        for (int i=0; i<gridN[dim]; i++) {
+            float g = gMin + i*res[dim];
+            if (g <= aMin) continue;
+            if (g >= aMax) break;
+
+            Vec3f e1 = p[vMax] - p[vMin];
+            Vec3f e2 = p[vMid] - p[vMin];
+            if (g > aMid) e2 = p[vMax] - p[vMid];
+
+            ;
+        }
+    }
+}
 
 void VRMeshSubdivision::subdivideTriangles(VRGeometryPtr geo, Vec3d res) {
     VRGeoData data(geo);

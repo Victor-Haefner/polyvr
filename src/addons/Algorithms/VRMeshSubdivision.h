@@ -20,6 +20,7 @@ class VRMeshSubdivision : public std::enable_shared_from_this<VRMeshSubdivision>
 		VRMeshSubdivisionPtr ptr();
 
         void subdivideTriangles(VRGeometryPtr geo, Vec3d res);
+        void subdivideGrid(VRGeometryPtr geo, Vec3d res);
 };
 
 OSG_END_NAMESPACE;

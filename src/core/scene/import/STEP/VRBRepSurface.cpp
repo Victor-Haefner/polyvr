@@ -993,7 +993,8 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
             g = triangulator.compute();
 
             VRMeshSubdivision subdiv;
-            subdiv.subdivideTriangles( g, Vec3d(Tu/res[0], -1, Tv/res[1]) );
+            //subdiv.subdivideTriangles( g, Vec3d(Tu/res[0], -1, Tv/res[1]) );
+            subdiv.subdivideGrid( g, Vec3d(Tu/res[0], -1, Tv/res[1]) );
 
             if (0) {
                 VRPolygon ply;
