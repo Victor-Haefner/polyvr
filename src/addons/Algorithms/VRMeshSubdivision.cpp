@@ -60,7 +60,7 @@ void VRMeshSubdivision::pushPen(VRGeoData& g, Pnt3d p1, Pnt3d p2, Pnt3d p3, Pnt3
     else g.pushTri(b,e,d);
 }
 
-void VRMeshSubdivision::segmentTriangle(VRGeoData& geo, Vec3i pSegments, vector<Pnt3f> points, Vec3d n, vector<Vec2d> segments) {
+void VRMeshSubdivision::segmentTriangle(VRGeoData& geo, Vec3i pSegments, vector<Pnt3f> points, Vec3d n, vector<Vec2d> segments, int dim) {
     Vec3i pOrder(0,1,2); // get the order of the vertices
     for (int i=0; i<3; i++) { // max 3 sort steps
         if (pSegments[pOrder[0]] > pSegments[pOrder[1]]) swap(pOrder[0], pOrder[1]);
@@ -90,11 +90,12 @@ void VRMeshSubdivision::segmentTriangle(VRGeoData& geo, Vec3i pSegments, vector<
             if (i == 0) { // first triangle
                 int pi = pOrder[0]; // vertex index on that face
                 Pnt3d pv = Pnt3d(points[pi]);
-                Vec3d pr1(s[1],0,0); // point on cylinder edge
-                Vec3d pr2(s[1],0,0); // point on cylinder edge
+                Pnt3d pr1, pr2;
+                pr1[dim] = s[1]; // point on cylinder edge
+                pr2[dim] = s[1]; // point on cylinder edge
                 Vec3d vp1 = Vec3d(edges[pOrder[1]]); // vector to middle point
                 Vec3d vp2 = Vec3d(edges[pOrder[2]]); // vector to last point
-                pr1[2] = pv[2] + vp1[2]/vp1[0]*(s[1]-pv[0]);
+                pr1[2] = pv[2] + vp1[2]/vp1[0]*(s[1]-pv[0]); // TODO: use dim!
                 pr2[2] = pv[2] + vp2[2]/vp2[0]*(s[1]-pv[0]);
                 pushTri(geo, pv,pr1,pr2, n);
                 continue;
@@ -103,8 +104,9 @@ void VRMeshSubdivision::segmentTriangle(VRGeoData& geo, Vec3i pSegments, vector<
             if (i == segments.size()-1) { // last triangle
                 int pi = pOrder[2]; // vertex index on that face
                 Pnt3d pv = Pnt3d(points[pi]);
-                Vec3d pr1(s[0],0,0); // point on cylinder edge
-                Vec3d pr2(s[0],0,0); // point on cylinder edge
+                Pnt3d pr1, pr2;
+                pr1[dim] = s[0]; // point on cylinder edge
+                pr2[dim] = s[0]; // point on cylinder edge
                 Vec3d vp1 = Vec3d(edges[pOrder[1]]); // vector to middle point
                 Vec3d vp2 = Vec3d(edges[pOrder[0]]); // vector to last point
                 pr1[2] = pv[2] + vp1[2]/vp1[0]*(s[0]-pv[0]);
@@ -115,10 +117,11 @@ void VRMeshSubdivision::segmentTriangle(VRGeoData& geo, Vec3i pSegments, vector<
 
             if (int(i) == pSegments[pOrder[1]]) { // pentagon in the middle
                 Pnt3d pv = Pnt3d(points[pOrder[1]]); // point in the middle
-                Vec3d pr11(s[0],0,0); // point on cylinder edge
-                Vec3d pr12(s[0],0,0); // point on cylinder edge
-                Vec3d pr21(s[1],0,0); // point on cylinder edge
-                Vec3d pr22(s[1],0,0); // point on cylinder edge
+                Pnt3d pr11, pr12, pr21, pr22;
+                pr11[dim] = s[0]; // point on cylinder edge
+                pr12[dim] = s[0]; // point on cylinder edge
+                pr21[dim] = s[1]; // point on cylinder edge
+                pr22[dim] = s[1]; // point on cylinder edge
                 Vec3d vp1 = Vec3d(edges[pOrder[0]]); // vector from middle to last
                 Vec3d vp2 = Vec3d(edges[pOrder[1]]); // vector from first to last
                 Vec3d vp3 = Vec3d(edges[pOrder[2]]); // vector from first to middle
@@ -134,10 +137,11 @@ void VRMeshSubdivision::segmentTriangle(VRGeoData& geo, Vec3i pSegments, vector<
             }
 
             // middle quad
-            Vec3d pr11(s[0],0,0); // point on cylinder edge
-            Vec3d pr12(s[0],0,0); // point on cylinder edge
-            Vec3d pr21(s[1],0,0); // point on cylinder edge
-            Vec3d pr22(s[1],0,0); // point on cylinder edge
+            Pnt3d pr11, pr12, pr21, pr22;
+            pr11[dim] = s[0]; // point on cylinder edge
+            pr12[dim] = s[0]; // point on cylinder edge
+            pr21[dim] = s[1]; // point on cylinder edge
+            pr22[dim] = s[1]; // point on cylinder edge
             Vec3d vp1, vp2;
             Pnt3d pv1, pv2;
             if (!passed_middle) {
@@ -168,8 +172,9 @@ void VRMeshSubdivision::segmentTriangle(VRGeoData& geo, Vec3i pSegments, vector<
             if (i == 0) { // first quad
                 Pnt3d pv1 = Pnt3d(points[pOrder[0]]); // vertex on that face
                 Pnt3d pv2 = Pnt3d(points[pOrder[1]]); // vertex on that face
-                Vec3d pr1(s[1],0,0); // point on cylinder edge
-                Vec3d pr2(s[1],0,0); // point on cylinder edge
+                Pnt3d pr1, pr2;
+                pr1[dim] = s[1]; // point on cylinder edge
+                pr2[dim] = s[1]; // point on cylinder edge
                 Vec3d vp1 = Vec3d(edges[pOrder[1]]); // vector to last point
                 Vec3d vp2 = Vec3d(edges[pOrder[0]]); // vector to last point
                 pr1[2] = pv1[2] + vp1[2]/vp1[0]*(s[1]-pv1[0]);
@@ -179,8 +184,9 @@ void VRMeshSubdivision::segmentTriangle(VRGeoData& geo, Vec3i pSegments, vector<
             }
             if (i == segments.size()-1) { // last triangle
                 Pnt3d pv = Pnt3d(points[pOrder[2]]); // vertex on that face
-                Vec3d pr1(s[0],0,0); // point on cylinder edge
-                Vec3d pr2(s[0],0,0); // point on cylinder edge
+                Pnt3d pr1, pr2;
+                pr1[dim] = s[0]; // point on cylinder edge
+                pr2[dim] = s[0]; // point on cylinder edge
                 Vec3d vp1 = Vec3d(edges[pOrder[1]]); // vector to middle point
                 Vec3d vp2 = Vec3d(edges[pOrder[0]]); // vector to last point
                 pr1[2] = pv[2] + vp1[2]/vp1[0]*(s[0]-pv[0]);
@@ -191,10 +197,11 @@ void VRMeshSubdivision::segmentTriangle(VRGeoData& geo, Vec3i pSegments, vector<
 
             Pnt3d pv1 = Pnt3d(points[pOrder[0]]); // vertex on that face
             Pnt3d pv2 = Pnt3d(points[pOrder[1]]); // vertex on that face
-            Vec3d pr11(s[0],0,0); // point on cylinder edge
-            Vec3d pr12(s[0],0,0); // point on cylinder edge
-            Vec3d pr21(s[1],0,0); // point on cylinder edge
-            Vec3d pr22(s[1],0,0); // point on cylinder edge
+            Pnt3d pr11, pr12, pr21, pr22;
+            pr11[dim] = s[0]; // point on cylinder edge
+            pr12[dim] = s[0]; // point on cylinder edge
+            pr21[dim] = s[1]; // point on cylinder edge
+            pr22[dim] = s[1]; // point on cylinder edge
             Vec3d vp1 = Vec3d(edges[pOrder[1]]); // vector to last point
             Vec3d vp2 = Vec3d(edges[pOrder[0]]); // vector to last point
             pr11[2] = pv1[2] + vp1[2]/vp1[0]*(s[0]-pv1[0]);
@@ -217,8 +224,9 @@ void VRMeshSubdivision::segmentTriangle(VRGeoData& geo, Vec3i pSegments, vector<
             Pnt3d pv2 = Pnt3d(points[pOrder[2]]); // vertex on that face
 
             if (i == 0) { // first triangle
-                Vec3d pr1(s[1],0,0); // point on cylinder edge
-                Vec3d pr2(s[1],0,0); // point on cylinder edge
+                Pnt3d pr1, pr2;
+                pr1[dim] = s[1]; // point on cylinder edge
+                pr2[dim] = s[1]; // point on cylinder edge
                 Vec3d vp1 = Vec3d(edges[pOrder[1]]); // vector to middle point
                 Vec3d vp2 = Vec3d(edges[pOrder[2]]); // vector to last point
                 pr1[2] = pv[2] + vp1[2]/vp1[0]*(s[1]-pv[0]);
@@ -227,8 +235,9 @@ void VRMeshSubdivision::segmentTriangle(VRGeoData& geo, Vec3i pSegments, vector<
                 continue;
             }
             if (i == segments.size()-1) { // last quad
-                Vec3d pr1(s[0],0,0); // point on cylinder edge
-                Vec3d pr2(s[0],0,0); // point on cylinder edge
+                Pnt3d pr1, pr2;
+                pr1[dim] = s[0]; // point on cylinder edge
+                pr2[dim] = s[0]; // point on cylinder edge
                 Vec3d vp1 = Vec3d(edges[pOrder[2]]); // vector to last point
                 Vec3d vp2 = Vec3d(edges[pOrder[1]]); // vector to last point
                 pr1[2] = pv1[2] + vp1[2]/vp1[0]*(s[0]-pv1[0]);
@@ -237,10 +246,11 @@ void VRMeshSubdivision::segmentTriangle(VRGeoData& geo, Vec3i pSegments, vector<
                 continue;
             }
 
-            Vec3d pr11(s[0],0,0); // point on cylinder edge
-            Vec3d pr12(s[0],0,0); // point on cylinder edge
-            Vec3d pr21(s[1],0,0); // point on cylinder edge
-            Vec3d pr22(s[1],0,0); // point on cylinder edge
+            Pnt3d pr11, pr12, pr21, pr22;
+            pr11[dim] = s[0]; // point on cylinder edge
+            pr12[dim] = s[0]; // point on cylinder edge
+            pr21[dim] = s[1]; // point on cylinder edge
+            pr22[dim] = s[1]; // point on cylinder edge
             Vec3d vp1 = Vec3d(edges[pOrder[2]]); // vector to last point
             Vec3d vp2 = Vec3d(edges[pOrder[1]]); // vector to last point
             pr11[2] = pv1[2] + vp1[2]/vp1[0]*(s[0]-pv1[0]);
@@ -258,8 +268,6 @@ void VRMeshSubdivision::segmentTriangle(VRGeoData& geo, Vec3i pSegments, vector<
 void VRMeshSubdivision::subdivideGrid(VRGeometryPtr geo, Vec3d res) {
     VRGeoData data(geo);
     VRGeoData newData;
-
-    for (size_t i=0; i<data.size(); i++) newData.pushVert( data.getPosition(i) );
 
     auto gg = geo->getMesh();
 
@@ -283,60 +291,75 @@ void VRMeshSubdivision::subdivideGrid(VRGeometryPtr geo, Vec3d res) {
     // second iteration, split all triangles along one dimension according to grid
     // TODO: repeat for second and third dimension
 
-    Vec3d n(0,1,0);
-
     cout << " subdivide " << gridN << ", " << boxSize << ", " << res << endl;
 
-    int dim = 0;
-    if (gridN[dim] == 1) return;
-    float gMin = box.min()[dim];
+    auto subdivideAxis = [&](int dim) {
+        if (gridN[dim] == 1) return;
+        float gMin = box.min()[dim];
 
-    for (auto it = TriangleIterator(gg->geo); !it.isAtEnd() ;++it) {
-        vector<Pnt3f> points(3); // vertex positions
-        for (int i=0; i<3; i++) points[i] = it.getPosition(i);
+        for (auto it = TriangleIterator(gg->geo); !it.isAtEnd() ;++it) {
+            vector<Pnt3f> points(3); // vertex positions
+            for (int i=0; i<3; i++) points[i] = it.getPosition(i);
 
-        // analyse triangle
-        float aMin = points[0][dim];
-        float aMax = points[0][dim];
-        float aMid = points[0][dim];
-        int vMin = 0;
-        int vMax = 0;
-        int vMid = 0;
+            Vec3f n(0,1,0);
+            Vec3f e1 = points[1]-points[0];
+            Vec3f e2 = points[2]-points[0];
+            Vec3f e3 = points[2]-points[1];
+            double e1L2 = e1.squareLength();
+            double e2L2 = e2.squareLength();
+            double e3L2 = e3.squareLength();
+            if (e1L2 > e3L2 && e2L2 > e3L2) n = e1.cross(e2);
+            if (e1L2 > e2L2 && e3L2 > e2L2) n = e1.cross(e3);
+            if (e2L2 > e1L2 && e3L2 > e1L2) n = e2.cross(e3);
+            n.normalize();
 
-        for (int i=0; i<3; i++) {
-            float x = points[i][dim];
+            // analyse triangle
+            float aMin = points[0][dim];
+            float aMax = points[0][dim];
+            float aMid = points[0][dim];
+            int vMin = 0;
+            int vMax = 0;
+            int vMid = 0;
 
-            if (x < aMin) {
-                aMin = x;
-                vMin = i;
+            for (int i=0; i<3; i++) {
+                float x = points[i][dim];
+
+                if (x < aMin) {
+                    aMin = x;
+                    vMin = i;
+                }
+
+                if (x > aMax) {
+                    aMax = x;
+                    vMax = i;
+                }
             }
 
-            if (x > aMax) {
-                aMax = x;
-                vMax = i;
+            vMid = 3-(vMin+vMax);
+            aMid = points[vMid][dim];
+
+            // grid intersect triangle
+            Vec3i pSegments;
+            vector<Vec2d> segments;
+            for (int i=0; i<gridN[dim]; i++) {
+                float g1 = gMin + i*res[dim];
+                float g2 = g1 + res[dim];
+                segments.push_back(Vec2d(g1, g2));
+                if (g1 <= aMin && g2 >  aMin) pSegments[vMin] = i;
+                if (g1 <= aMid && g2 >  aMid) pSegments[vMid] = i;
+                if (g1 <  aMax && g2 >= aMax) pSegments[vMax] = i;
+                //cout << "  i: " << i << ", span: " << Vec2f(g1, g2) << " -> " << endl;
             }
+
+            cout << " subdivide triangle " << pSegments << ", points: " << toString(points) << ", n: " << n << ", segments: " << toString(segments) << endl;
+
+            segmentTriangle(newData, pSegments, points, Vec3d(n), segments, dim);
         }
+    };
 
-        vMid = 3-(vMin+vMax);
-        aMid = points[vMid][dim];
-
-        // grid intersect triangle -> SEE CYLINDER SURFACE ALGO, pushTri, pushQuad, pushPen..
-        Vec3i pSegments;
-        vector<Vec2d> segments;
-        for (int i=0; i<gridN[dim]; i++) {
-            float g1 = gMin + i*res[dim];
-            float g2 = g1 + res[dim];
-            segments.push_back(Vec2d(g1, g2));
-            if (g1 <= aMin && g2 >  aMin) pSegments[vMin] = i;
-            if (g1 <= aMid && g2 >  aMid) pSegments[vMid] = i;
-            if (g1 <  aMax && g2 >= aMax) pSegments[vMax] = i;
-            cout << "  i: " << i << ", span: " << Vec2f(g1, g2) << " -> " << endl;
-        }
-
-        cout << " subdivide triangle " << pSegments << ", points: " << toString(points) << ", n: " << n << ", segments: " << toString(segments) << endl;
-
-        segmentTriangle(newData, pSegments, points, n, segments);
-    }
+    //subdivideAxis(0);
+    //subdivideAxis(1);
+    subdivideAxis(2);
 
     newData.apply(geo);
 }
