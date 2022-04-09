@@ -89,44 +89,36 @@ void VRMeshSubdivision::segmentTriangle(VRGeoData& geo, Vec3i pSegments, vector<
         bool passed_middle = false;
         for (uint i=0; i<segments.size(); i++) {
             Vec2d s = segments[i];
+
+            Pnt3d pr11, pr12, pr21, pr22;
+            pr11[dim] = s[0]; // point on cylinder edge
+            pr12[dim] = s[0]; // point on cylinder edge
+            pr21[dim] = s[1]; // point on cylinder edge
+            pr22[dim] = s[1]; // point on cylinder edge
+            Vec3d vp1 = Vec3d(edges[pOrder[0]]); // vector from middle to last
+            Vec3d vp2 = Vec3d(edges[pOrder[1]]); // vector from first to last
+            Vec3d vp3 = Vec3d(edges[pOrder[2]]); // vector from first to middle
+
             if (i == 0) { // first triangle
                 int pi = pOrder[0]; // vertex index on that face
                 Pnt3d pv = Pnt3d(points[pi]);
-                Pnt3d pr1, pr2;
-                pr1[dim] = s[1]; // point on cylinder edge
-                pr2[dim] = s[1]; // point on cylinder edge
-                Vec3d vp1 = Vec3d(edges[pOrder[1]]); // vector to middle point
-                Vec3d vp2 = Vec3d(edges[pOrder[2]]); // vector to last point
-                pr1[dim2] = pv[dim2] + vp1[dim2]/vp1[dim]*(s[1]-pv[dim]); // TODO: use dim!
-                pr2[dim2] = pv[dim2] + vp2[dim2]/vp2[dim]*(s[1]-pv[dim]);
-                pushTri(geo, pv,pr1,pr2, n);
+                pr21[dim2] = pv[dim2] + vp2[dim2]/vp2[dim]*(s[1]-pv[dim]); // TODO: use dim!
+                pr22[dim2] = pv[dim2] + vp3[dim2]/vp3[dim]*(s[1]-pv[dim]);
+                pushTri(geo, pv,pr21,pr22, n);
                 continue;
             }
 
             if (i == segments.size()-1) { // last triangle
                 int pi = pOrder[2]; // vertex index on that face
                 Pnt3d pv = Pnt3d(points[pi]);
-                Pnt3d pr1, pr2;
-                pr1[dim] = s[0]; // point on cylinder edge
-                pr2[dim] = s[0]; // point on cylinder edge
-                Vec3d vp1 = Vec3d(edges[pOrder[1]]); // vector to middle point
-                Vec3d vp2 = Vec3d(edges[pOrder[0]]); // vector to last point
-                pr1[dim2] = pv[dim2] + vp1[dim2]/vp1[dim]*(s[0]-pv[dim]);
-                pr2[dim2] = pv[dim2] + vp2[dim2]/vp2[dim]*(s[0]-pv[dim]);
-                pushTri(geo, pv,pr1,pr2, n);
+                pr11[dim2] = pv[dim2] + vp2[dim2]/vp2[dim]*(s[0]-pv[dim]);
+                pr12[dim2] = pv[dim2] + vp1[dim2]/vp1[dim]*(s[0]-pv[dim]);
+                pushTri(geo, pv,pr11,pr12, n);
                 continue;
             }
 
             if (int(i) == pSegments[pOrder[1]]) { // pentagon in the middle
                 Pnt3d pv = Pnt3d(points[pOrder[1]]); // point in the middle
-                Pnt3d pr11, pr12, pr21, pr22;
-                pr11[dim] = s[0]; // point on cylinder edge
-                pr12[dim] = s[0]; // point on cylinder edge
-                pr21[dim] = s[1]; // point on cylinder edge
-                pr22[dim] = s[1]; // point on cylinder edge
-                Vec3d vp1 = Vec3d(edges[pOrder[0]]); // vector from middle to last
-                Vec3d vp2 = Vec3d(edges[pOrder[1]]); // vector from first to last
-                Vec3d vp3 = Vec3d(edges[pOrder[2]]); // vector from first to middle
                 Pnt3d pv1 = Vec3d(points[pOrder[0]]); // first vertex
                 Pnt3d pv2 = Vec3d(points[pOrder[2]]); // last vertex
                 pr11[dim2] = pv1[dim2] + vp2[dim2]/vp2[dim]*(s[0]-pv1[dim]);
@@ -139,12 +131,6 @@ void VRMeshSubdivision::segmentTriangle(VRGeoData& geo, Vec3i pSegments, vector<
             }
 
             // middle quad
-            Pnt3d pr11, pr12, pr21, pr22;
-            pr11[dim] = s[0]; // point on cylinder edge
-            pr12[dim] = s[0]; // point on cylinder edge
-            pr21[dim] = s[1]; // point on cylinder edge
-            pr22[dim] = s[1]; // point on cylinder edge
-            Vec3d vp1, vp2;
             Pnt3d pv1, pv2;
             if (!passed_middle) {
                 vp1 = Vec3d(edges[pOrder[1]]); // vector to middle point

@@ -814,7 +814,7 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
             if (1) {
                 VRPolygon ply;
                 ply.addPoint(Vec2d(0,0));
-                ply.addPoint(Vec2d(5,0));
+                ply.addPoint(Vec2d(3,0));
                 ply.addPoint(Vec2d(5,5));
                 ply.addPoint(Vec2d(0,5));
                 Triangulator tt;
