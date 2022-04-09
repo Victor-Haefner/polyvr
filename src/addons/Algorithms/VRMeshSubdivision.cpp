@@ -98,56 +98,48 @@ void VRMeshSubdivision::segmentTriangle(VRGeoData& geo, Vec3i pSegments, vector<
             Vec3d vp1 = Vec3d(edges[pOrder[0]]); // vector from middle to last
             Vec3d vp2 = Vec3d(edges[pOrder[1]]); // vector from first to last
             Vec3d vp3 = Vec3d(edges[pOrder[2]]); // vector from first to middle
+            Pnt3d pv1 = Pnt3d(points[pOrder[0]]);
+            Pnt3d pv2 = Pnt3d(points[pOrder[1]]);
+            Pnt3d pv3 = Pnt3d(points[pOrder[2]]);
 
             if (i == 0) { // first triangle
-                int pi = pOrder[0]; // vertex index on that face
-                Pnt3d pv = Pnt3d(points[pi]);
-                pr21[dim2] = pv[dim2] + vp2[dim2]/vp2[dim]*(s[1]-pv[dim]); // TODO: use dim!
-                pr22[dim2] = pv[dim2] + vp3[dim2]/vp3[dim]*(s[1]-pv[dim]);
-                pushTri(geo, pv,pr21,pr22, n);
+                pr21[dim2] = pv1[dim2] + vp2[dim2]/vp2[dim]*(s[1]-pv1[dim]);
+                pr22[dim2] = pv1[dim2] + vp3[dim2]/vp3[dim]*(s[1]-pv1[dim]);
+                pushTri(geo, pv1,pr21,pr22, n);
                 continue;
             }
 
             if (i == segments.size()-1) { // last triangle
-                int pi = pOrder[2]; // vertex index on that face
-                Pnt3d pv = Pnt3d(points[pi]);
-                pr11[dim2] = pv[dim2] + vp2[dim2]/vp2[dim]*(s[0]-pv[dim]);
-                pr12[dim2] = pv[dim2] + vp1[dim2]/vp1[dim]*(s[0]-pv[dim]);
-                pushTri(geo, pv,pr11,pr12, n);
+                pr11[dim2] = pv3[dim2] + vp2[dim2]/vp2[dim]*(s[0]-pv3[dim]);
+                pr12[dim2] = pv3[dim2] + vp1[dim2]/vp1[dim]*(s[0]-pv3[dim]);
+                pushTri(geo, pv3,pr11,pr12, n);
                 continue;
             }
 
             if (int(i) == pSegments[pOrder[1]]) { // pentagon in the middle
-                Pnt3d pv = Pnt3d(points[pOrder[1]]); // point in the middle
-                Pnt3d pv1 = Vec3d(points[pOrder[0]]); // first vertex
-                Pnt3d pv2 = Vec3d(points[pOrder[2]]); // last vertex
                 pr11[dim2] = pv1[dim2] + vp2[dim2]/vp2[dim]*(s[0]-pv1[dim]);
                 pr12[dim2] = pv1[dim2] + vp3[dim2]/vp3[dim]*(s[0]-pv1[dim]);
                 pr21[dim2] = pv1[dim2] + vp2[dim2]/vp2[dim]*(s[1]-pv1[dim]);
-                pr22[dim2] = pv[dim2]  + vp1[dim2]/vp1[dim]*(s[1]-pv[dim]);
-                pushPen(geo, pr11, pr12, pr21, pr22, pv, n);
+                pr22[dim2] = pv2[dim2] + vp1[dim2]/vp1[dim]*(s[1]-pv2[dim]);
+                pushPen(geo, pr11, pr12, pr21, pr22, pv2, n);
                 passed_middle = true;
                 continue;
             }
 
             // middle quad
-            Pnt3d pv1, pv2;
             if (!passed_middle) {
-                vp1 = Vec3d(edges[pOrder[1]]); // vector to middle point
-                vp2 = Vec3d(edges[pOrder[2]]); // vector to last point
-                pv1 = Pnt3d(points[pOrder[2]]); // vertex on that face
-                pv2 = Pnt3d(points[pOrder[1]]); // vertex on that face
+                pr11[dim2] = pv3[dim2] + vp2[dim2]/vp2[dim]*(s[0]-pv3[dim]);
+                pr12[dim2] = pv2[dim2] + vp3[dim2]/vp3[dim]*(s[0]-pv2[dim]);
+                pr21[dim2] = pv3[dim2] + vp2[dim2]/vp2[dim]*(s[1]-pv3[dim]);
+                pr22[dim2] = pv2[dim2] + vp3[dim2]/vp3[dim]*(s[1]-pv2[dim]);
+                pushQuad(geo, pr11, pr12, pr21, pr22, n);
             } else {
-                vp1 = Vec3d(edges[pOrder[1]]); // vector from first point
-                vp2 = Vec3d(edges[pOrder[0]]); // vector from middle point
-                pv1 = Pnt3d(points[pOrder[0]]); // vertex on that face
-                pv2 = Pnt3d(points[pOrder[1]]); // vertex on that face
+                pr11[dim2] = pv1[dim2] + vp2[dim2]/vp2[dim]*(s[0]-pv1[dim]);
+                pr12[dim2] = pv2[dim2] + vp1[dim2]/vp1[dim]*(s[0]-pv2[dim]);
+                pr21[dim2] = pv1[dim2] + vp2[dim2]/vp2[dim]*(s[1]-pv1[dim]);
+                pr22[dim2] = pv2[dim2] + vp1[dim2]/vp1[dim]*(s[1]-pv2[dim]);
+                pushQuad(geo, pr11, pr12, pr21, pr22, n);
             }
-            pr11[dim2] = pv1[dim2] + vp1[dim2]/vp1[dim]*(s[0]-pv1[dim]);
-            pr12[dim2] = pv2[dim2] + vp2[dim2]/vp2[dim]*(s[0]-pv2[dim]);
-            pr21[dim2] = pv1[dim2] + vp1[dim2]/vp1[dim]*(s[1]-pv1[dim]);
-            pr22[dim2] = pv2[dim2] + vp2[dim2]/vp2[dim]*(s[1]-pv2[dim]);
-            pushQuad(geo, pr11, pr12, pr21, pr22, n);
         }
         return;
     }
