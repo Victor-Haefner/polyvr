@@ -13,10 +13,9 @@ OSG_BEGIN_NAMESPACE;
 class VRMeshSubdivision : public std::enable_shared_from_this<VRMeshSubdivision> {
 	private:
 
-        bool checkOrder(Pnt3d p0, Pnt3d p1, Pnt3d p2, Vec3d n);
-        void pushTri(VRGeoData& g, Pnt3d p1, Pnt3d p2, Pnt3d p3, Vec3d n);
-        void pushQuad(VRGeoData& g, Pnt3d p1, Pnt3d p2, Pnt3d p3, Pnt3d p4, Vec3d n);
-        void pushPen(VRGeoData& g, Pnt3d p1, Pnt3d p2, Pnt3d p3, Pnt3d p4, Pnt3d p5, Vec3d n);
+        bool checkOrder(VRGeoData& g, size_t p0, size_t p1, size_t p2, Vec3d n);
+        void pushTri(VRGeoData& g, size_t p1, size_t p2, size_t p3, Vec3d n);
+        void pushQuad(VRGeoData& g, size_t p1, size_t p2, size_t p3, size_t p4, Vec3d n);
 
 	public:
 		VRMeshSubdivision();

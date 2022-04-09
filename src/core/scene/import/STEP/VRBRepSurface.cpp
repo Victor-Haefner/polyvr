@@ -809,9 +809,9 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
 
             VRMeshSubdivision subdiv;
             //subdiv.subdivideTriangles( g, Vec3d(Tu/res[0], -1, Tv/res[1]) );
-            //subdiv.subdivideGrid( g, Vec3d(Tu/res[0], -1, Tv/res[1]) );
+            subdiv.subdivideGrid( g, Vec3d(Tu/res[0], -1, Tv/res[1]) );
 
-            if (1) {
+            if (0) {
                 VRPolygon ply;
                 ply.addPoint(Vec2d(0,0));
                 ply.addPoint(Vec2d(3,0));
