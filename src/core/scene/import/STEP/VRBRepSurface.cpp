@@ -294,9 +294,9 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
             LcurvU += (p2-p1).length();
         }
 
-        double K = 2*pi*50;
-        int resI = Ncurv*ceil(LcurvU/K);
-        int resJ = Ncurv*ceil(LcurvV/K);
+        double K = 2*pi*20;
+        int resI = ceil(Ncurv*LcurvU/K);
+        int resJ = ceil(Ncurv*LcurvV/K);
         //cout << "res: " << Vec2i(resI, resJ) << ", L: " << Vec2i(LcurvU, LcurvV) << endl;
         return Vec2i(resI, resJ);
     };
@@ -761,7 +761,7 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
                 }
 
                 for (auto p : b.points) {
-                    if (p[0] > 75) continue; // for testing
+                    if (p[0] > 85) continue; // for testing
 
                     mI.multFull(p, p);
                     //cout << "bound point: " << p << endl;
