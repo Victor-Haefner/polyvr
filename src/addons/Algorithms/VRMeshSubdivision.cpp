@@ -114,7 +114,7 @@ void VRMeshSubdivision::segmentTriangle(VRGeoData& geo, Vec3i pSegments, vector<
     }
 
     if (pSegments[pOrder[0]] == pSegments[pOrder[1]]) { // case 3
-        cout << "  case 3" << endl;
+        //cout << "  case 3" << endl;
         Pnt3d pv1 = Pnt3d(points[pOrder[0]]); // vertex on that face
         Pnt3d pv2 = Pnt3d(points[pOrder[1]]); // vertex on that face
         Pnt3d pv3 = Pnt3d(points[pOrder[2]]); // vertex on that face
@@ -154,7 +154,7 @@ void VRMeshSubdivision::segmentTriangle(VRGeoData& geo, Vec3i pSegments, vector<
     }
 
     if (pSegments[pOrder[1]] == pSegments[pOrder[2]]) { // case 4
-        cout << "  case 4" << endl;
+        //cout << "  case 4" << endl;
         Pnt3d pv1 = Pnt3d(points[pOrder[0]]); // vertex on that face
         Pnt3d pv2 = Pnt3d(points[pOrder[1]]); // vertex on that face
         Pnt3d pv3 = Pnt3d(points[pOrder[2]]); // vertex on that face
