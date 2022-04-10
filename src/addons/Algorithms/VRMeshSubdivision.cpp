@@ -29,14 +29,12 @@ bool VRMeshSubdivision::checkOrder(VRGeoData& g, size_t a, size_t b, size_t c, V
 
 void VRMeshSubdivision::pushTri(VRGeoData& g, size_t p1, size_t p2, size_t p3, Vec3d n) {
     if (checkOrder(g,p1,p2,p3,n)) g.pushTri(p1,p2,p3);
-    else g.pushTri(p1,p2,p3);
+    else g.pushTri(p1,p3,p2);
 }
 
 void VRMeshSubdivision::pushQuad(VRGeoData& g, size_t p1, size_t p2, size_t p3, size_t p4, Vec3d n) {
-    if (checkOrder(g,p1,p2,p3,n)) g.pushTri(p1,p2,p3);
-    else g.pushTri(p1,p3,p2);
-    if (checkOrder(g,p1,p3,p4,n)) g.pushTri(p1,p3,p4);
-    else g.pushTri(p1,p4,p3);
+    pushTri(g, p1,p2,p3, n);
+    pushTri(g, p1,p3,p4, n);
 }
 
 void VRMeshSubdivision::segmentTriangle(VRGeoData& geo, Vec3i pSegments, vector<Pnt3f> points, Vec3d n, vector<Vec2d> segments, int dim, int dim2) {
@@ -248,10 +246,16 @@ void VRMeshSubdivision::subdivideGrid(VRGeometryPtr geo, Vec3d res) {
             double e1L2 = e1.squareLength();
             double e2L2 = e2.squareLength();
             double e3L2 = e3.squareLength();
-            if (e1L2 > e3L2 && e2L2 > e3L2) n = e1.cross(e2);
-            if (e1L2 > e2L2 && e3L2 > e2L2) n = e1.cross(e3);
-            if (e2L2 > e1L2 && e3L2 > e1L2) n = e2.cross(e3);
+            //n = e1.cross(e2);
+            //if (e1L2 > e3L2 && e2L2 > e3L2) n = e1.cross(e2);
+            //if (e1L2 > e2L2 && e3L2 > e2L2) n = e1.cross(e3);
+            //if (e2L2 > e1L2 && e3L2 > e1L2) n = e3.cross(e2);
+            if (n.length() < 1e-8) {
+                cout << "Warning! skip small triangle, n: " << n << " dot: " << n.dot(Vec3f(0,1,0)) << ", e1: " << e1 << ", e2: " << e2 << ", e3: " << e3 << endl;
+                continue;
+            }
             n.normalize();
+            if (n.dot(Vec3f(0,1,0)) > 0) cout << " n: " << n << " dot: " << n.dot(Vec3f(0,1,0)) << ", e1: " << e1 << ", e2: " << e2 << ", e3: " << e3 << endl;
 
             // analyse triangle
             float aMin = points[0][dim];
