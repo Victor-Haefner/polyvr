@@ -427,49 +427,6 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
         VRMeshSubdivision subdiv;
         subdiv.subdivideGrid(g, Vec3d(Dangle, -1, -1));
 
-        /*auto getXsize = [](vector<Pnt3f>& pnts) {
-            Vec2d res(pnts[0][0], pnts[0][0]);
-            for (auto& p : pnts) {
-                if (p[0] < res[0]) res[0] = p[0];
-                if (p[0] > res[1]) res[1] = p[0];
-            }
-            return res;
-        };
-
-
-
-        // tesselate the result while projecting it back on the surface
-        if (g) if (auto gg = g->getMesh()) {
-            TriangleIterator it;
-            VRGeoData nMesh;
-            Vec3d n(0,-1,0);
-            if (!same_sense) n *= -1;
-
-            for (it = TriangleIterator(gg->geo); !it.isAtEnd() ;++it) {
-                triangle tri(it);
-                if (tri.A < 1e-6) continue; // ignore flat triangles
-
-                Vec2d xs = getXsize(tri.p); // triangle width
-                vector<float> rays = angleFrame(xs[0], xs[1]);
-
-                vector<Vec2d> sides;
-                Vec3i pSides;
-                for (uint i=1; i<rays.size(); i++) {
-                    auto s = Vec2d(rays[i-1], rays[i]);
-                    sides.push_back( s ); // get all cylinder faces
-                    for (int j=0; j<3; j++) { // find out on what cylinder face each vertex lies
-                        if (tri.p[j][0] >= rays[i-1] && tri.p[j][0] <= rays[i]) {
-                            pSides[j] = i-1;
-                        }
-                    }
-                }
-
-                VRMeshSubdivision subdiv;
-                subdiv.segmentTriangle(nMesh, pSides, tri.p, n, sides);
-            }
-
-            nMesh.apply(g);*/
-
         if (g) if (auto gg = g->getMesh()) {
             // project the points back into 3D space
             GeoVectorPropertyMTRecPtr pos = gg->geo->getPositions();
@@ -869,27 +826,17 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
         if (auto gg = g->getMesh()->geo) { if (!gg->getPositions()) cout << "VRBRepSurface::build: Triangulation failed, no mesh positions!\n";
         } else cout << "VRBRepSurface::build: Triangulation failed, no mesh generated!\n";
 
+        VRMeshSubdivision subdiv;
+        subdiv.subdivideGrid(g, Vec3d(Dangle, -1, Dangle));
+
         // tesselate the result while projecting it back on the surface
         if (g) if (auto gg = g->getMesh()) {
-            TriangleIterator it;
-            VRGeoData nMesh;
+            VRGeoData nMesh; // TODO: remove this, this only swaps the normal!
             Vec3d n(0,1,0);
-
-            for (it = TriangleIterator(gg->geo); !it.isAtEnd() ;++it) {
+            for (auto it = TriangleIterator(gg->geo); !it.isAtEnd() ;++it) {
                 triangle tri(it);
-                //if (tri.A < 1e-6) continue; // ignore flat triangles
-
-                // TODO: subdivide the triangle and add sub triangles to nMesh
-                /*int Nt =
-                int Np =
-                for (int j=0; j<3; j++) {
-                    tri.p[j];
-                }*/
-
-                // test
                 pushTri(nMesh, Pnt3d(tri.p[0]), Pnt3d(tri.p[1]), Pnt3d(tri.p[2]), n);
             }
-
             nMesh.apply(g);
 
             // project the points back into 3D space

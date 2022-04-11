@@ -415,12 +415,12 @@ void VRMeshSubdivision::subdivideGrid(VRGeometryPtr geo, Vec3d res) {
     }
 
     subdivideAxis(geo, gridN, gMin, res, 0, 2);
-    subdivideAxis(geo, gridN, gMin, res, 1, 2);
     subdivideAxis(geo, gridN, gMin, res, 2, 0);
-
     gridMergeTriangles(geo, gMin, res, 0, 2);
-    gridMergeTriangles(geo, gMin, res, 1, 2);
-    gridMergeTriangles(geo, gMin, res, 2, 0);
+
+    //subdivideAxis(geo, gridN, gMin, res, 1, 2);
+    //gridMergeTriangles(geo, gMin, res, 1, 2);
+    //gridMergeTriangles(geo, gMin, res, 0, 1);
 
     removeDoubles(geo);
 }
