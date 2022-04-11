@@ -70,7 +70,7 @@ void VRBRepEdge::build(string type) {
             Lcurv += (p2-p1).length();
         }
 
-        double K = 2*pi*20;
+        double K = 2*pi*10;
         int res = ceil(Ncurv*Lcurv/K);
         cout << "computeSplineRes, res: " << res << ", L: " << Lcurv << endl;
         return res;

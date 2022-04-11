@@ -12,10 +12,12 @@ OSG_BEGIN_NAMESPACE;
 
 class VRMeshSubdivision : public std::enable_shared_from_this<VRMeshSubdivision> {
 	private:
-
         bool checkOrder(VRGeoData& g, size_t p0, size_t p1, size_t p2, Vec3d n);
         void pushTri(VRGeoData& g, size_t p1, size_t p2, size_t p3, Vec3d n);
         void pushQuad(VRGeoData& g, size_t p1, size_t p2, size_t p3, size_t p4, Vec3d n);
+
+        void removeDoubles(VRGeometryPtr g);
+        void gridMergeTriangles(VRGeometryPtr g, Vec3d g0, Vec3d res, int dim, int dim2);
 
 	public:
 		VRMeshSubdivision();

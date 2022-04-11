@@ -37,6 +37,103 @@ void VRMeshSubdivision::pushQuad(VRGeoData& g, size_t p1, size_t p2, size_t p3, 
     pushTri(g, p1,p3,p4, n);
 }
 
+
+void VRMeshSubdivision::removeDoubles(VRGeometryPtr geo) { // TODO
+    ;
+}
+
+void VRMeshSubdivision::gridMergeTriangles(VRGeometryPtr geo, Vec3d g0, Vec3d res, int dim, int dim2) {
+    VRGeoData newData;
+    auto gg = geo->getMesh();
+
+    double cellA = res[dim] * res[dim2];
+
+    auto getGridPos = [&](Vec3f p) {
+        Vec3i g;
+        for(int i=0; i<3; i++) g[i] = floor((p[i]-g0[i])/res[i]);
+        return g;
+    };
+
+    auto gridPos = [&](Vec3i gridID) {
+        Pnt3d p = g0;
+        for(int i=0; i<3; i++)
+            if (res[i] > 0) p[i] += res[i]*gridID[i];
+        return p;
+    };
+
+    auto pushCell = [&](Vec3i gridID, Vec3d n) {
+        Vec3i g1,g2;
+        g1[dim] = 1;
+        g2[dim2] = 1;
+
+        Pnt3d p1 = gridPos(gridID);
+        Pnt3d p2 = gridPos(gridID + g1);
+        Pnt3d p3 = gridPos(gridID + g1 + g2);
+        Pnt3d p4 = gridPos(gridID + g2);
+
+        size_t a = newData.pushVert(p1, n);
+        size_t b = newData.pushVert(p2, n);
+        size_t c = newData.pushVert(p3, n);
+        size_t d = newData.pushVert(p4, n);
+        pushQuad(newData, a,b,c,d, n);
+    };
+
+    auto comArea = [](vector<Vec3f> p) {
+        Vec3f a = p[2]-p[0];
+        Vec3f b = p[2]-p[1];
+        return a.cross(b).length()*0.5;
+    };
+
+    map<size_t, size_t> vIDmap;
+    auto pushTriangles = [&](vector<TriangleIterator> triangles) {
+        for (auto& it : triangles) {
+            for (int i=0; i<3; i++) {
+                size_t idx = it.getIndex(i);
+                if (!vIDmap.count(idx)) {
+                    Pnt3d p = Pnt3d(it.getPosition(i));
+                    Vec3d n = Vec3d(it.getNormal(i));
+                    vIDmap[idx] = newData.pushVert(p, n);
+                }
+            }
+
+            size_t a = vIDmap[it.getIndex(0)];
+            size_t b = vIDmap[it.getIndex(1)];
+            size_t c = vIDmap[it.getIndex(2)];
+            newData.pushTri(a,b,c);
+        }
+    };
+
+    map<Vec3i, vector<TriangleIterator>> gridTriangles;
+    for (auto it = TriangleIterator(gg->geo); !it.isAtEnd() ;++it) {
+        vector<Vec3f> p(3); // vertex positions
+        for (int i=0; i<3; i++) p[i] = Vec3f(it.getPosition(i));
+
+        Vec3f mid = (p[0]+p[1]+p[2])*1.0/3;
+        Vec3i midID = getGridPos(mid);
+
+        if (!gridTriangles.count(midID)) gridTriangles[midID] = vector<TriangleIterator>();
+        gridTriangles[midID].push_back(it);
+    }
+
+    for (auto& gtri : gridTriangles) {
+        Vec3i gridID = gtri.first;
+        double A = 0;
+        for (auto& it : gtri.second) {
+            vector<Vec3f> p(3); // vertex positions
+            for (int i=0; i<3; i++) p[i] = Vec3f(it.getPosition(i));
+            A += comArea(p);
+        }
+
+        double q = A/cellA;
+
+
+        if (q > 0.995) pushCell(gridID, Vec3d(gtri.second[0].getNormal(0)));
+        else           pushTriangles(gtri.second);
+    }
+
+    newData.apply(geo);
+}
+
 void VRMeshSubdivision::segmentTriangle(VRGeoData& geo, Vec3i pSegments, vector<Pnt3f> points, Vec3d n, vector<Vec2d> segments, int dim, int dim2) {
     Vec3i pOrder(0,1,2); // get the order of the vertices
     for (int i=0; i<3; i++) { // max 3 sort steps
@@ -298,6 +395,9 @@ void VRMeshSubdivision::subdivideGrid(VRGeometryPtr geo, Vec3d res) {
     subdivideAxis(0, 2);
     //subdivideAxis(1, 2);
     subdivideAxis(2, 0);
+
+    gridMergeTriangles(geo, box.min(), res, 0, 2);
+    removeDoubles(geo);
 }
 
 void VRMeshSubdivision::subdivideTriangles(VRGeometryPtr geo, Vec3d res) {
