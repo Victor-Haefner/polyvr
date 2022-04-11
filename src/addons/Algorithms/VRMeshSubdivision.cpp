@@ -38,8 +38,34 @@ void VRMeshSubdivision::pushQuad(VRGeoData& g, size_t p1, size_t p2, size_t p3, 
 }
 
 
-void VRMeshSubdivision::removeDoubles(VRGeometryPtr geo) { // TODO
-    ;
+void VRMeshSubdivision::removeDoubles(VRGeometryPtr geo) {
+    VRGeoData newData;
+    auto gg = geo->getMesh();
+
+    auto toBin = [](Pnt3f p) {
+        double eps = 1.0/1e-3;
+        return Vec3i(p[0]*eps, p[1]*eps, p[2]*eps);
+    };
+
+    map<Vec3i, size_t> vIDmap;
+
+    for (auto it = TriangleIterator(gg->geo); !it.isAtEnd() ;++it) {
+        vector<Vec3f> p(3); // vertex positions
+        for (int i=0; i<3; i++) {
+            Pnt3f p = it.getPosition(i);
+            Vec3i pi = toBin(p);
+            if (!vIDmap.count(pi)) {
+                vIDmap[pi] = newData.pushVert(Pnt3d(p), Vec3d(it.getNormal(i)));
+            }
+        }
+
+        size_t a = vIDmap[toBin(it.getPosition(0))];
+        size_t b = vIDmap[toBin(it.getPosition(1))];
+        size_t c = vIDmap[toBin(it.getPosition(2))];
+        newData.pushTri(a,b,c);
+    }
+
+    newData.apply(geo);
 }
 
 void VRMeshSubdivision::gridMergeTriangles(VRGeometryPtr geo, Vec3d g0, Vec3d res, int dim, int dim2) {
@@ -88,7 +114,7 @@ void VRMeshSubdivision::gridMergeTriangles(VRGeometryPtr geo, Vec3d g0, Vec3d re
     auto pushTriangles = [&](vector<TriangleIterator> triangles) {
         for (auto& it : triangles) {
             for (int i=0; i<3; i++) {
-                size_t idx = it.getIndex(i);
+                size_t idx = it.getPositionIndex(i);
                 if (!vIDmap.count(idx)) {
                     Pnt3d p = Pnt3d(it.getPosition(i));
                     Vec3d n = Vec3d(it.getNormal(i));
@@ -96,9 +122,9 @@ void VRMeshSubdivision::gridMergeTriangles(VRGeometryPtr geo, Vec3d g0, Vec3d re
                 }
             }
 
-            size_t a = vIDmap[it.getIndex(0)];
-            size_t b = vIDmap[it.getIndex(1)];
-            size_t c = vIDmap[it.getIndex(2)];
+            size_t a = vIDmap[it.getPositionIndex(0)];
+            size_t b = vIDmap[it.getPositionIndex(1)];
+            size_t c = vIDmap[it.getPositionIndex(2)];
             newData.pushTri(a,b,c);
         }
     };
@@ -127,7 +153,7 @@ void VRMeshSubdivision::gridMergeTriangles(VRGeometryPtr geo, Vec3d g0, Vec3d re
         double q = A/cellA;
 
 
-        if (q > 0.995) pushCell(gridID, Vec3d(gtri.second[0].getNormal(0)));
+        if (q > 0.99) pushCell(gridID, Vec3d(gtri.second[0].getNormal(0)));
         else           pushTriangles(gtri.second);
     }
 

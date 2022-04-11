@@ -294,7 +294,7 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
             LcurvU += (p2-p1).length();
         }
 
-        double K = 2*pi*10;
+        double K = 2*pi*15;
         int resI = ceil(Ncurv*LcurvU/K);
         int resJ = ceil(Ncurv*LcurvV/K);
         //cout << "res: " << Vec2i(resI, resJ) << ", L: " << Vec2i(LcurvU, LcurvV) << endl;
@@ -761,7 +761,7 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
                 }
 
                 for (auto p : b.points) {
-                    if (p[0] > 100) continue; // for testing
+                    //if (p[0] > 85) continue; // for testing
 
                     mI.multFull(p, p);
                     //cout << "bound point: " << p << endl;
@@ -810,31 +810,30 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
             VRMeshSubdivision subdiv;
             subdiv.subdivideGrid( g, Vec3d(Tu/res[0], -1, Tv/res[1]) );
 
-            if (g && 0) if (auto gg = g->getMesh()) {
+            if (g) if (auto gg = g->getMesh()) {
                 VRGeoData nMesh;
 
-                VRGeoData tmp(g);
-                cout << "unproject: " << tmp.size() << endl;
+                auto pos = gg->geo->getPositions();
+                cout << "unproject: " << pos->size() << endl;
+
+                for (size_t i=0; i<pos->size(); i++) {
+                    Pnt3f uv = pos->getValue<Pnt3f>(i);
+                    double u = uv[0];
+                    double v = uv[2];
+                    Vec3d p = isWeighted ? BSpline(u,v, degu, degv, cpoints, knotsu, knotsv, weights) : BSpline(u,v, degu, degv, cpoints, knotsu, knotsv);
+                    Vec3d n = isWeighted ? BSplineNorm(u,v, degu, degv, cpoints, knotsu, knotsv, weights) : BSplineNorm(u,v, degu, degv, cpoints, knotsu, knotsv);
+                    if (same_sense) n *= -1;
+                    nMesh.pushVert(p,n);
+                }
 
                 for (auto it = TriangleIterator(gg->geo); !it.isAtEnd() ;++it) {
-                    triangle tri(it);
-
-                    for (int i=0; i<3; i++) {
-                        double u = tri.p[i][0];
-                        double v = tri.p[i][2];
-                        Vec3d p = isWeighted ? BSpline(u,v, degu, degv, cpoints, knotsu, knotsv, weights) : BSpline(u,v, degu, degv, cpoints, knotsu, knotsv);
-                        Vec3d n = isWeighted ? BSplineNorm(u,v, degu, degv, cpoints, knotsu, knotsv, weights) : BSplineNorm(u,v, degu, degv, cpoints, knotsu, knotsv);
-                        if (same_sense) n *= -1;
-                        nMesh.pushVert(p,n);
-                        //cout << "bound point unprojected, uv: " << Vec2d(u,v) << " -> " << p << endl;
-                    }
-
-                    nMesh.pushTri();
+                    nMesh.pushTri(it.getPositionIndex(0), it.getPositionIndex(1), it.getPositionIndex(2));
                 }
+
                 nMesh.apply(g);
             }
 
-            for (auto& b : bounds) g->addChild(b.asGeometry());
+            //for (auto& b : bounds) g->addChild(b.asGeometry());
         }
 
 
