@@ -103,7 +103,7 @@ struct triangle {
         if (tcs.size() == 3) uv = Vec2d( tcs[0]*abc[2] + tcs[1]*abc[0] + tcs[2]*abc[1] );
 
         if (abc[0] >= 0 && abc[1] >= 0 && abc[2] >= 0) {
-            cout << "  tri inside, P: " << Pd << ", P0: " << p[0] << ", P1: " << p[1] << ", P2: " << p[2] << ", abc: " << abc << endl;
+            //cout << "  tri inside, P: " << Pd << ", P0: " << p[0] << ", P1: " << p[1] << ", P2: " << p[2] << ", abc: " << abc << endl;
             return 0;
         } else {
             //return 1e6;
@@ -844,7 +844,7 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
 
     if (type == "Conical_Surface") {
         //cout << "Conical_Surface" << endl;
-        return 0;
+        //return 0;
     }
 
     if (type == "Spherical_Surface") {
@@ -981,35 +981,25 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
 
     if (type == "Toroidal_Surface") {
         //cout << "Toroidal_Surface" << endl;
-        return 0;
+        //return 0;
     }
 
     cout << "VRBRepSurface::build Error: unhandled surface type " << type << endl;
 
     // wireframe
-    auto geo = VRGeometry::create("face");
-    GeoPnt3fPropertyMTRecPtr pos = GeoPnt3fProperty::create();
-    GeoVec3fPropertyMTRecPtr norms = GeoVec3fProperty::create();
-    GeoUInt32PropertyMTRecPtr inds = GeoUInt32Property::create();
+    VRGeoData data;
 
     for (auto b : bounds) {
         for (uint i=0; i<b.points.size(); i+=2) {
             Pnt3d p1 = b.points[i];
             Pnt3d p2 = b.points[i+1];
-            pos->addValue(p1);
-            pos->addValue(p2);
-            norms->addValue(Vec3d(0,1,0));
-            norms->addValue(Vec3d(0,1,0));
-            inds->addValue(pos->size()-2);
-            inds->addValue(pos->size()-1);
+            data.pushVert(p1, Vec3d(0,1,0));
+            data.pushVert(p2, Vec3d(0,1,0));
+            data.pushLine();
         }
     }
 
-    geo->setType(GL_LINES);
-    geo->setPositions(pos);
-    geo->setNormals(norms);
-    geo->setIndices(inds);
-
+    auto geo = data.asGeometry("facePlaceHolder");
     VRMaterialPtr mat = VRMaterial::create("face");
     mat->setLit(0);
     mat->setLineWidth(3);
