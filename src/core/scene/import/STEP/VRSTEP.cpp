@@ -1164,8 +1164,8 @@ void VRSTEP::buildGeometries() {
     for (auto BrepShape : instancesByType["Advanced_Brep_Shape_Representation"]) {
         static int i=0; i++;
         //if (i != 31) continue; // test for cylinder surfaces
-        //if (i != 24) continue; // test for cylinder surfaces
-        if (i != 26) continue; // test for cylinder surfaces
+        if (i != 24) continue; // test for cylinder surfaces
+        //if (i != 26) continue; // test for cylinder surfaces
         //cout << BrepShape.ID << endl;
         //if (BrepShape.ID == 134852) exploreEntity(nodes[BrepShape.entity], true);
 
@@ -1189,7 +1189,7 @@ void VRSTEP::buildGeometries() {
                     static int k = 0; k++;
                     //if (k != 15 && k != 22) continue;
                     //if (k != 67 && k != 9) continue;
-                    //if (k != 95) continue;
+                    //if (k != 247) continue;
 
                     auto& Face = instances[j];
                     //if (k == 67) exploreEntity(nodes[Face.entity], true);

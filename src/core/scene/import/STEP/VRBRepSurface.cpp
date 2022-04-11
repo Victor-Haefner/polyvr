@@ -347,12 +347,9 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
     }
 
     if (type == "Cylindrical_Surface") {
-        //return 0;
-        //cout << "Surface: " << type << endl;
         Triangulator triangulator; // feed the triangulator with unprojected points
 
         for (auto b : bounds) {
-            //cout << " Bound, outer: " << b.outer << endl;
             VRPolygon poly;
             double lastAngle = 1000;
             Vec3d cN(0,0,1);
@@ -379,20 +376,16 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
             }
 
             for (auto& e : b.edges) {
-                //cout << "  edge " << e.etype << endl;
-
                 if (e.etype == "Circle") {
                     double cDir = e.compCircleDirection(mI, cN);
 
                     if (poly.size() == 0) {
                         Vec2d p1 = cylindricUnproject(e.EBeg, lastAngle, 1, cDir, false);
                         poly.addPoint(p1);
-                        //cout << "   p0: " << p1 << endl;
                     }
 
                     Vec2d p2 = cylindricUnproject(e.EEnd, lastAngle, 1, cDir, true);
                     poly.addPoint(p2);
-                    //cout << "   p: " << p2 << endl;
                     continue;
                 }
 
@@ -400,12 +393,10 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
                     if (poly.size() == 0) {
                         Vec2d p1 = cylindricUnproject(e.EBeg, lastAngle, 0);
                         poly.addPoint(p1);
-                        //cout << "   p0: " << p1 << endl;
                     }
 
                     Vec2d p2 = cylindricUnproject(e.EEnd, lastAngle, 0);
                     poly.addPoint(p2);
-                    //cout << "   p: " << p2 << endl;
                     continue;
                 }
 
@@ -416,7 +407,6 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
                         auto& p = e.points[i];
                         Vec2d pc = cylindricUnproject(p, lastAngle, 2, 0, i>0);
                         poly.addPoint(pc);
-                        //cout << "   p: " << pc << endl;
                     }
                     continue;
                 }
@@ -425,8 +415,6 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
             }
 
             checkPolyIntegrety(poly);
-
-            //cout << "  poly: " << toString(poly.get()) << endl;
             checkPolyOrientation(poly, b);
             triangulator.add(poly);
         }
@@ -436,37 +424,10 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
         if (auto gg = g->getMesh()->geo) { if (!gg->getPositions()) cout << "VRBRepSurface::build: Triangulation failed, no mesh positions!\n";
         } else cout << "VRBRepSurface::build: Triangulation failed, no mesh generated!\n";
 
-        /* intersecting the cylinder rays with a triangle (2D)
+        VRMeshSubdivision subdiv;
+        subdiv.subdivideGrid(g, Vec3d(Dangle, -1, -1));
 
-        - get triangle min/max in x
-        - get the cylinder rays that will intersect the triangle
-        - get for each segment the intersection points and map them to a ray ID
-        - create list of sides
-        - check if all vertices on the same side
-
-        - 3 possible cases for a cylinder side:
-            + triangle
-            + quad -> 2 triangles
-            + pentagon -> 3 triangles
-        - possible cases:
-            + only one cylinder side (no ray intersections)
-                -> create only one triangle
-            + one ray intersection
-                -> one triangle and one quad = 3 triangles (strip)
-            + multiple ray intersections
-                - two triangle vertices on the same side
-                    -> one triangle and then only quads
-                - all three vertices on different sides
-                    -> two triangles and the side of the middle vertex has a pentagon!!!
-
-        - special cases:
-            + the triangle segment is parallel and on top of a ray
-            + a triangle vertex is on a ray
-            -> test triangle vertex on ray
-
-        */
-
-        auto getXsize = [](vector<Pnt3f>& pnts) {
+        /*auto getXsize = [](vector<Pnt3f>& pnts) {
             Vec2d res(pnts[0][0], pnts[0][0]);
             for (auto& p : pnts) {
                 if (p[0] < res[0]) res[0] = p[0];
@@ -474,6 +435,8 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
             }
             return res;
         };
+
+
 
         // tesselate the result while projecting it back on the surface
         if (g) if (auto gg = g->getMesh()) {
@@ -491,11 +454,8 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
 
                 vector<Vec2d> sides;
                 Vec3i pSides;
-                //cout << " triangle size in x " << xs*180/Pi << " " << rays.size() << endl;
-                //cout << " triangle: " << tri.p[0] << "   " << tri.p[1] << "   " << tri.p[2] << endl;
                 for (uint i=1; i<rays.size(); i++) {
                     auto s = Vec2d(rays[i-1], rays[i]);
-                    //cout << "  side " << s*180/Pi << endl;
                     sides.push_back( s ); // get all cylinder faces
                     for (int j=0; j<3; j++) { // find out on what cylinder face each vertex lies
                         if (tri.p[j][0] >= rays[i-1] && tri.p[j][0] <= rays[i]) {
@@ -508,8 +468,9 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
                 subdiv.segmentTriangle(nMesh, pSides, tri.p, n, sides);
             }
 
-            nMesh.apply(g);
+            nMesh.apply(g);*/
 
+        if (g) if (auto gg = g->getMesh()) {
             // project the points back into 3D space
             GeoVectorPropertyMTRecPtr pos = gg->geo->getPositions();
             GeoVectorPropertyMTRecPtr norms = gg->geo->getNormals();
@@ -521,20 +482,9 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
                     double h = p[2];
                     n = Vec3d(cos(a), sin(a), 0);
 
-                    /*Vec2d side = getSide(p[0]);
-                    Vec3d A = Vec3d(R*cos(side[0]), R*sin(side[0]), 0);
-                    Vec3d B = Vec3d(R*cos(side[1]), R*sin(side[1]), 0);
-                    Vec3d D = B-A;
-                    D.normalize();*/
-
-                    float t = R;//(A[0]*D[1] - A[1]*D[0]) / (n[0]*D[1] - n[1]*D[0]);
-
-                    //cout << "p: " << a/Pi*180 << " AB: " << side*(180/Pi) << " s: " << getSideN(a) << endl;
-                    //if (a < side[0] || a > side[1]) cout << "   AAAH\n"; // TODO: check this out!
-
                     p[2] = h;
-                    p[1] = n[1]*t;
-                    p[0] = n[0]*t;
+                    p[1] = n[1]*R;
+                    p[0] = n[0]*R;
 
                     pos->setValue(p, i);
 
@@ -844,7 +794,7 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
 
     if (type == "Conical_Surface") {
         //cout << "Conical_Surface" << endl;
-        //return 0;
+        return 0;
     }
 
     if (type == "Spherical_Surface") {

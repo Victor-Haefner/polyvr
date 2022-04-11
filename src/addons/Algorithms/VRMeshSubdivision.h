@@ -18,6 +18,7 @@ class VRMeshSubdivision : public std::enable_shared_from_this<VRMeshSubdivision>
 
         void removeDoubles(VRGeometryPtr g);
         void gridMergeTriangles(VRGeometryPtr g, Vec3d g0, Vec3d res, int dim, int dim2);
+        void subdivideAxis(VRGeometryPtr geo, Vec3i gridN, Vec3d gMin, Vec3d res, int dim, int dim2);
 
 	public:
 		VRMeshSubdivision();

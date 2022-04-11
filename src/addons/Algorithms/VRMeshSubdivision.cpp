@@ -69,10 +69,11 @@ void VRMeshSubdivision::removeDoubles(VRGeometryPtr geo) {
 }
 
 void VRMeshSubdivision::gridMergeTriangles(VRGeometryPtr geo, Vec3d g0, Vec3d res, int dim, int dim2) {
+    double cellA = res[dim] * res[dim2];
+    if (res[dim] < 0 || res[dim2] < 0) return;
+
     VRGeoData newData;
     auto gg = geo->getMesh();
-
-    double cellA = res[dim] * res[dim2];
 
     auto getGridPos = [&](Vec3f p) {
         Vec3i g;
@@ -151,10 +152,8 @@ void VRMeshSubdivision::gridMergeTriangles(VRGeometryPtr geo, Vec3d g0, Vec3d re
         }
 
         double q = A/cellA;
-
-
         if (q > 0.99) pushCell(gridID, Vec3d(gtri.second[0].getNormal(0)));
-        else           pushTriangles(gtri.second);
+        else          pushTriangles(gtri.second);
     }
 
     newData.apply(geo);
@@ -323,18 +322,88 @@ void VRMeshSubdivision::segmentTriangle(VRGeoData& geo, Vec3i pSegments, vector<
     cout << " unhandled triangle " << endl;
 }
 
-void VRMeshSubdivision::subdivideGrid(VRGeometryPtr geo, Vec3d res) {
-    VRGeoData newData;
+void VRMeshSubdivision::subdivideAxis(VRGeometryPtr geo, Vec3i gridN, Vec3d gMin, Vec3d res, int dim, int dim2) {
+    if (gridN[dim] == 1) return;
+    //cout << " ...... subdivideAxis gridN: " << gridN << ", gMin: " << gMin << ", res: " << res << ", dim: " << dim << ", dim2: " << dim2 << endl;
 
+    VRGeoData newData;
     auto gg = geo->getMesh();
 
-    // first iteration, get bounding box
+    for (auto it = TriangleIterator(gg->geo); !it.isAtEnd() ;++it) {
+        vector<Pnt3f> points(3); // vertex positions
+        for (int i=0; i<3; i++) points[i] = it.getPosition(i);
+
+        Vec3f n(0,1,0);
+        Vec3f e1 = points[1]-points[0];
+        Vec3f e2 = points[2]-points[0];
+        Vec3f e3 = points[2]-points[1];
+        double e1L2 = e1.squareLength();
+        double e2L2 = e2.squareLength();
+        double e3L2 = e3.squareLength();
+        n = e1.cross(e2);
+        if (n.length() < 1e-8) {
+            cout << "Warning! skip small triangle, n: " << n << " dot: " << n.dot(Vec3f(0,1,0)) << ", e1: " << e1 << ", e2: " << e2 << ", e3: " << e3 << endl;
+            continue;
+        }
+        n.normalize();
+
+        // analyse triangle
+        float aMin = points[0][dim];
+        float aMax = points[0][dim];
+        float aMid = points[0][dim];
+        int vMin = 0;
+        int vMax = 0;
+        int vMid = 0;
+
+        for (int i=0; i<3; i++) {
+            float x = points[i][dim];
+
+            if (x < aMin) {
+                aMin = x;
+                vMin = i;
+            }
+
+            if (x > aMax) {
+                aMax = x;
+                vMax = i;
+            }
+        }
+
+        vMid = 3-(vMin+vMax);
+        aMid = points[vMid][dim];
+
+        // grid intersect triangle
+        Vec3i pSegments;
+        vector<Vec2d> segments;
+        for (int i=0; i<gridN[dim]; i++) {
+            float eps = 1e-6;
+            float g1 = gMin[dim] + i*res[dim];
+            float g2 = g1 + res[dim];
+            if (g2 >  aMin     && g1 <  aMax) segments.push_back(Vec2d(g1, g2));
+            if (g1 <= aMin+eps && g2 >  aMin) pSegments[vMin] = i;
+            if (g1 <= aMid+eps && g2 >= aMid-eps) pSegments[vMid] = i;
+            if (g1 <  aMax     && g2 >= aMax-eps) pSegments[vMax] = i;
+            //cout << "     g12: " << Vec2d(g1, g2) << ", aMinMidMax: " << Vec3d(aMin, aMid, aMax) << ", vMinMidMax: " << Vec3d(vMin, vMid, vMax) << endl;
+        }
+
+        //cout << "   subdivide triangle " << pSegments << ", points: " << toString(points) << ", n: " << n << ", segments: " << toString(segments) << endl;
+        segmentTriangle(newData, pSegments, points, Vec3d(n), segments, dim, dim2);
+    }
+
+    // apply and reset for next pass
+    newData.apply(geo);
+    gg = geo->getMesh();
+}
+
+void VRMeshSubdivision::subdivideGrid(VRGeometryPtr geo, Vec3d res) {
+    auto gg = geo->getMesh();
     Boundingbox box;
     GeoVectorPropertyMTRecPtr positions = gg->geo->getPositions();
     for (size_t i=0; i<positions->size(); i++) {
         Vec3d p(positions->getValue<Pnt3f>(i));
         box.update(p);
     }
+    Vec3d gMin = box.min();
 
     // compute grid params
     Vec3i gridN(1,1,1);
@@ -345,84 +414,14 @@ void VRMeshSubdivision::subdivideGrid(VRGeometryPtr geo, Vec3d res) {
         res[i] = boxSize[i]/gridN[i];
     }
 
-    // second iteration, split all triangles along one dimension according to grid
+    subdivideAxis(geo, gridN, gMin, res, 0, 2);
+    subdivideAxis(geo, gridN, gMin, res, 1, 2);
+    subdivideAxis(geo, gridN, gMin, res, 2, 0);
 
-    cout << " subdivide grid: " << gridN << ", box: " << boxSize << ", res: " << res << endl;
+    gridMergeTriangles(geo, gMin, res, 0, 2);
+    gridMergeTriangles(geo, gMin, res, 1, 2);
+    gridMergeTriangles(geo, gMin, res, 2, 0);
 
-    auto subdivideAxis = [&](int dim, int dim2) {
-        if (gridN[dim] == 1) return;
-        float gMin = box.min()[dim];
-
-        for (auto it = TriangleIterator(gg->geo); !it.isAtEnd() ;++it) {
-            vector<Pnt3f> points(3); // vertex positions
-            for (int i=0; i<3; i++) points[i] = it.getPosition(i);
-
-            Vec3f n(0,1,0);
-            Vec3f e1 = points[1]-points[0];
-            Vec3f e2 = points[2]-points[0];
-            Vec3f e3 = points[2]-points[1];
-            double e1L2 = e1.squareLength();
-            double e2L2 = e2.squareLength();
-            double e3L2 = e3.squareLength();
-            n = e1.cross(e2);
-            if (n.length() < 1e-8) {
-                cout << "Warning! skip small triangle, n: " << n << " dot: " << n.dot(Vec3f(0,1,0)) << ", e1: " << e1 << ", e2: " << e2 << ", e3: " << e3 << endl;
-                continue;
-            }
-            n.normalize();
-
-            // analyse triangle
-            float aMin = points[0][dim];
-            float aMax = points[0][dim];
-            float aMid = points[0][dim];
-            int vMin = 0;
-            int vMax = 0;
-            int vMid = 0;
-
-            for (int i=0; i<3; i++) {
-                float x = points[i][dim];
-
-                if (x < aMin) {
-                    aMin = x;
-                    vMin = i;
-                }
-
-                if (x > aMax) {
-                    aMax = x;
-                    vMax = i;
-                }
-            }
-
-            vMid = 3-(vMin+vMax);
-            aMid = points[vMid][dim];
-
-            // grid intersect triangle
-            Vec3i pSegments;
-            vector<Vec2d> segments;
-            for (int i=0; i<gridN[dim]; i++) {
-                float g1 = gMin + i*res[dim];
-                float g2 = g1 + res[dim];
-                if (g2 >  aMin && g1 <  aMax) segments.push_back(Vec2d(g1, g2));
-                if (g1 <= aMin && g2 >  aMin) pSegments[vMin] = i;
-                if (g1 <= aMid && g2 >= aMid) pSegments[vMid] = i;
-                if (g1 <  aMax && g2 >= aMax) pSegments[vMax] = i;
-            }
-
-            //cout << "   subdivide triangle " << pSegments << ", points: " << toString(points) << ", n: " << n << ", segments: " << toString(segments) << endl;
-            segmentTriangle(newData, pSegments, points, Vec3d(n), segments, dim, dim2);
-        }
-
-        // apply and reset for next pass
-        newData.apply(geo);
-        gg = geo->getMesh();
-        newData = VRGeoData();
-    };
-
-    subdivideAxis(0, 2);
-    //subdivideAxis(1, 2);
-    subdivideAxis(2, 0);
-
-    gridMergeTriangles(geo, box.min(), res, 0, 2);
     removeDoubles(geo);
 }
 
