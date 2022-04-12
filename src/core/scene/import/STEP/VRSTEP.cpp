@@ -1207,7 +1207,7 @@ void VRSTEP::buildGeometries() {
                     static int k = 0; k++;
                     //if (k != 15 && k != 22) continue;
                     //if (k != 67 && k != 9) continue;
-                    if (k != 82) continue;
+                    //if (k != 82) continue;
 
                     auto& Face = instances[j];
                     //if (k == 67) exploreEntity(nodes[Face.entity], true);

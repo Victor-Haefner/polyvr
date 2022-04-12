@@ -900,7 +900,7 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
                     p = Pnt3d(n*R);
 
                     //cout << "    sphere theta: " << theta << ", phi: " << phi << ", pos: " << p << ", R: " << R << endl;
-
+                    if (!same_sense) n *= -1;
                     pos->setValue(p, i);
                     norms->setValue(n, i);
                 }
@@ -912,7 +912,7 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
         return 0;
     }
 
-    if (type == "Toroidal_Surface") { // TODO
+    if (type == "Toroidal_Surface") {
         cout << "Toroidal_Surface R: " << R << ", r: " << R2 << endl;
         Triangulator triangulator; // feed the triangulator with unprojected points
 
@@ -988,8 +988,8 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
         if (auto gg = g->getMesh()->geo) { if (!gg->getPositions()) cout << "VRBRepSurface::build: Triangulation failed, no mesh positions!\n";
         } else cout << "VRBRepSurface::build: Triangulation failed, no mesh generated!\n";
 
-        //VRMeshSubdivision subdiv;
-        //subdiv.subdivideGrid(g, Vec3d(Dangle, -1, Dangle));
+        VRMeshSubdivision subdiv;
+        subdiv.subdivideGrid(g, Vec3d(Dangle, -1, Dangle));
 
         // tesselate the result while projecting it back on the surface
         if (g) if (auto gg = g->getMesh()) {
@@ -1008,7 +1008,7 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
                 for (uint i=0; i<pos->size(); i++) {
                     Pnt3d p = Pnt3d(pos->getValue<Pnt3f>(i));
                     Vec3d n = Vec3d(norms->getValue<Vec3f>(i));
-                    double theta = p[0];
+                    double theta = pi-p[0];
                     double phi   = p[2];
 
                     Vec3d pRing = Vec3d(cos(phi), sin(phi), 0) * R; // middle of ring
@@ -1016,7 +1016,7 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
                     p = Pnt3d(pRing + n * R2);
 
                     cout << "    torus theta: " << theta << ", phi: " << phi << ", pos: " << p << ", R: " << R << ", R2: " << R2 << endl;
-
+                    if (!same_sense) n *= -1;
                     pos->setValue(p, i);
                     norms->setValue(n, i);
                 }
