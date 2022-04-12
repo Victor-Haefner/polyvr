@@ -6,6 +6,7 @@
 #include "core/objects/geometry/sprite/VRSprite.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/VRCamera.h"
+#include "core/tools/VRAnnotationEngine.h"
 #include "core/scene/sound/VRMicrophone.h"
 #include "core/scene/sound/VRSound.h"
 #include "core/scene/VRScene.h"
@@ -100,14 +101,20 @@ void VRCollaboration::setupAvatar(string rID, string name) {
         rightHandContainer->addChild(rightHand);
     }
 
-    auto sprite = VRSprite::create("nameTag");
-	sprite->setSize(5,1.5);
+    /*auto sprite = VRSprite::create("nameTag");
 	sprite->setText(name);
+	sprite->setSize(5,1.5);
 	sprite->setFrom(Vec3d(0,9,0));
 	sprite->setBillboard(true);
-	avatar->addChild(sprite);
+	avatar->addChild(sprite);*/
 
-	auto job = bind(&VRSyncNode::addRemoteAvatar, syncNode, rID, avatar, rightHandContainer, anchor);
+	auto label = VRAnnotationEngine::create("nameTag");
+	label->setSize(1.0);
+	label->setBillboard(true);
+	label->set(0, Vec3d(0,9,0), name);
+	avatar->addChild(label);
+
+	auto job = bind(&VRSyncNode::addRemoteAvatar, syncNode.get(), rID, avatar, rightHandContainer, anchor);
 	VRUpdateCbPtr cb = VRUpdateCb::create("syncNode-addRemoteAvatar", job);
 	VRScene::getCurrent()->queueJob(cb);
 
