@@ -12,6 +12,10 @@
 #include "core/setup/VRSetup.h"
 #include "core/setup/devices/VRServer.h"
 
+#ifndef WITHOUT_GTK
+#include "core/gui/VRGuiConsole.h"
+#endif
+
 #define WEBSITEV(...) #__VA_ARGS__
 #define WEBSITE(...) WEBSITEV(__VA_ARGS__)
 
@@ -111,6 +115,10 @@ void VRCollaboration::setupAvatar(string rID, string name) {
 }
 
 void VRCollaboration::connectTCP(string origin) {
+#ifndef WITHOUT_GTK
+    VRConsoleWidget::get("Collaboration")->write( " ..connect TCP sync node and audio, setup avatar\n");
+#endif
+
 	auto rID = syncNode->addTCPClient(ice->getClient(origin, VRICEClient::SCENEGRAPH));
 	auto name = ice->getUserName(origin);
 	setupAvatar(rID, name);

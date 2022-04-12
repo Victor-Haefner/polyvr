@@ -7,6 +7,10 @@
 #include "core/utils/toString.h"
 #include "core/utils/VRTimer.h"
 
+#ifndef WITHOUT_GTK
+#include "core/gui/VRGuiConsole.h"
+#endif
+
 using namespace OSG;
 
 
@@ -188,6 +192,11 @@ void VRSyncConnection::setupAvatar(VRTransformPtr headTransform, VRTransformPtr 
     UInt32 deviceTransID = getTransformID(devTransform);
     UInt32 deviceAnchorID = getNodeID(devAnchor);
     string msg = "addAvatar|"+toString(headTransID)+":"+toString(deviceTransID)+":"+toString(deviceAnchorID);
+
+#ifndef WITHOUT_GTK
+    VRConsoleWidget::get("Collaboration")->write( "Setup avatar, send device IDs to remote, msg: "+msg+"\n");
+#endif
+
     send(msg);
 }
 
