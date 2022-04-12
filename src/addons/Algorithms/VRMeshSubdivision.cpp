@@ -342,7 +342,7 @@ void VRMeshSubdivision::subdivideAxis(VRGeometryPtr geo, Vec3i gridN, Vec3d gMin
         double e3L2 = e3.squareLength();
         n = e1.cross(e2);
         if (n.length() < 1e-8) {
-            cout << "Warning! skip small triangle, n: " << n << " dot: " << n.dot(Vec3f(0,1,0)) << ", e1: " << e1 << ", e2: " << e2 << ", e3: " << e3 << endl;
+            //cout << "Warning! skip small triangle, n: " << n << " dot: " << n.dot(Vec3f(0,1,0)) << ", e1: " << e1 << ", e2: " << e2 << ", e3: " << e3 << endl;
             continue;
         }
         n.normalize();

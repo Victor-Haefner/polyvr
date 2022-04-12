@@ -42,15 +42,15 @@ double VRBRepEdge::compCircleDirection(Matrix4d mI, Vec3d d) {
 
     if (abs(w) > 1e-4) {
         if (w < 0) cDir = -1;
-        cout << "   --- small angle, W: " << W << ", w: " << w << ", p1: " << p1 << ", p2: " << p2 << ", d: " << d << " -> cDir: " << cDir << endl;
+        //cout << "   --- small angle, W: " << W << ", w: " << w << ", p1: " << p1 << ", p2: " << p2 << ", d: " << d << " -> cDir: " << cDir << endl;
     } else { // special case! flat angle pi
         double c = d.dot(cd);
         if (c > 0) cDir = -1;
         if (swapped) cDir *= -1;
-        cout << "   --- flat angle, W: " << W << ", w: " << w << ", p1: " << p1 << ", p2: " << p2 << ", d: " << d << ", cd: " << cd << " -> cDir: " << cDir << endl;
+        //cout << "   --- flat angle, W: " << W << ", w: " << w << ", p1: " << p1 << ", p2: " << p2 << ", d: " << d << ", cd: " << cd << " -> cDir: " << cDir << endl;
     }
 
-    cout << " compCircleDirection, circle: " << Vec2d(a1, a2) << ", cDir: " << cDir << ", W: " << W << ", d: " << d << ", cd: " << cd << ", eSwapped: " << swapped << endl;
+    //cout << " compCircleDirection, circle: " << Vec2d(a1, a2) << ", cDir: " << cDir << ", W: " << W << ", d: " << d << ", cd: " << cd << ", eSwapped: " << swapped << endl;
     return cDir;
 }
 
@@ -70,9 +70,9 @@ void VRBRepEdge::build(string type) {
             Lcurv += (p2-p1).length();
         }
 
-        double K = 2*pi*15;
+        double K = 2*pi*30;
         int res = ceil(Ncurv*Lcurv/K);
-        cout << "computeSplineRes, res: " << res << ", L: " << Lcurv << endl;
+        //cout << "computeSplineRes, res: " << res << ", L: " << Lcurv << endl;
         return res;
     };
 

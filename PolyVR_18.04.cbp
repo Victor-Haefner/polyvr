@@ -236,7 +236,7 @@
 			<Add option="-lopenal" />
 			<Add option="-lavformat" />
 			<Add option="-lavcodec" />
-			<Add option="-lavresample" />
+			<Add option="-lswresample" />
 			<Add option="-lswscale" />
 			<Add option="-lavutil" />
 			<Add option="-lqrencode" />

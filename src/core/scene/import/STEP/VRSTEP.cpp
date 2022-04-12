@@ -62,6 +62,8 @@ VRSTEP::VRSTEP() {
     addType< tuple<STEPentity*> >( "Plane", "a1e", "", false);
     addType< tuple<STEPentity*, double> >( "Cylindrical_Surface", "a1e|a2f", "", false);
     addType< tuple<STEPentity*, double> >( "Spherical_Surface", "a1e|a2f", "", false);
+    addType< tuple<STEPentity*, double, double> >( "Toroidal_Surface", "a1e|a2f|a3f", "", false);
+    addType< tuple<STEPentity*, double, double> >( "Conical_Surface", "a1e|a2f|a3f", "", false);
     addType< tuple<STEPentity*, STEPentity*> >( "Line", "a1e|a2e", "", false);
     addType< tuple<STEPentity*, double> >( "Vector", "a1e|a2f", "", false);
     addType< tuple<STEPentity*> >( "Vertex_Point", "a1e", "", false);
@@ -1101,6 +1103,18 @@ struct VRSTEP::Surface : public VRSTEP::Instance, public VRBRepSurface {
             R = inst.get<1, STEPentity*, double>();
         }
 
+        if (etype == "Toroidal_Surface") {
+            trans = toPose( inst.get<0, STEPentity*, double, double>(), instances );
+            R  = inst.get<1, STEPentity*, double, double>();
+            R2 = inst.get<2, STEPentity*, double, double>();
+        }
+
+        if (etype == "Conical_Surface") {
+            trans = toPose( inst.get<0, STEPentity*, double, double>(), instances );
+            R  = inst.get<1, STEPentity*, double, double>();
+            R2 = inst.get<2, STEPentity*, double, double>();
+        }
+
         // int, int, field<STEPentity*>, bool, bool, bool, vector<int>, vector<int>, vector<double>, vector<double>
         // degree_u, degree_v, control_points, u_closed, v_closed, self_intersect, u multiplicities, v multiplicities, u knots, v knots
         if (etype == "B_Spline_Surface_With_Knots") {
@@ -1170,8 +1184,8 @@ void VRSTEP::buildGeometries() {
         //if (i != 31) continue; // test for cylinder faces
         //if (i != 24) continue; // test for sphere faces
         if (i != 26) continue; // test for bspline faces
-        //cout << BrepShape.ID << endl;
-        //if (BrepShape.ID == 134852) exploreEntity(nodes[BrepShape.entity], true);
+        //if (BrepShape.ID == 134852)
+        //exploreEntity(nodes[BrepShape.entity], true);
 
         string name = BrepShape.get<0, string, vector<STEPentity*> >();
         auto geo = VRGeometry::create(name);
@@ -1193,7 +1207,7 @@ void VRSTEP::buildGeometries() {
                     static int k = 0; k++;
                     //if (k != 15 && k != 22) continue;
                     //if (k != 67 && k != 9) continue;
-                    //if (k != 4) continue;
+                    if (k != 82) continue;
 
                     auto& Face = instances[j];
                     //if (k == 67) exploreEntity(nodes[Face.entity], true);

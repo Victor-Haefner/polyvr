@@ -17,6 +17,7 @@ class VRBRepSurface : public VRBRepUtils {
         string etype;
         PosePtr trans;
         double R = 1;
+        double R2 = 1; // for toroidal and conical surfaces
 
         field<Vec3d> cpoints;
         field<double> weights;
