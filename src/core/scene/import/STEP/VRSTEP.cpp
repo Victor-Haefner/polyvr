@@ -802,7 +802,11 @@ void VRSTEP::traverseAggregate(STEPaggregate *sa, int atype, STEPattribute* attr
     parent->addChild(n);
 
     auto switchEType = [&](STEPentity* e) {
+#ifdef SC_VERSION
+        ssedesc = e->eDesc;
+#else
         ssedesc = e->getEDesc();
+#endif
         if (ssedesc) {
             etype = ssedesc->Type();
             switch (etype) {

@@ -25,7 +25,7 @@ void VRGuiCombobox::init(_GtkWidget* widget) {
 
 bool VRGuiCombobox::hasSelection() {
     updateSelection();
-    return (selection >= 0);
+    return (selection != 0);
 }
 
 void VRGuiCombobox::updateSelection() {

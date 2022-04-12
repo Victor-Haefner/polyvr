@@ -4,7 +4,6 @@
 #endif
 
 extern "C" {
-#include <libavresample/avresample.h>
 #include <libavutil/mathematics.h>
 #include <libavformat/avformat.h>
 #include <libswscale/swscale.h>

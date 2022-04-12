@@ -19,7 +19,7 @@
 #endif
 
 extern "C" {
-#include <libavresample/avresample.h>
+#include <libswresample/swresample.h>
 #include <libavutil/mathematics.h>
 #include <libavformat/avformat.h>
 #include <libswscale/swscale.h>
@@ -73,7 +73,7 @@ struct VRSound::ALData {
     ALenum layout = 0;
     ALenum state = AL_INITIAL;
     AVFormatContext* context = 0;
-    AVAudioResampleContext* resampler = 0;
+    SwrContext* resampler = 0;
     AVCodecContext* codec = NULL;
     AVPacket packet;
     AVFrame* frame;
@@ -134,7 +134,7 @@ void VRSound::close() {
     stop();
     interface = 0;
     if (al->context) avformat_close_input(&al->context);
-    if (al->resampler) avresample_free(&al->resampler);
+    if (al->resampler) swr_free(&al->resampler);
     al->context = 0;
     al->resampler = 0;
     init = 0;
@@ -213,7 +213,7 @@ void VRSound::updateSampleAndFormat() {
     }
 
     if (av_sample_fmt_is_planar(al->codec->sample_fmt)) {
-        int out_sample_fmt;
+        AVSampleFormat out_sample_fmt;
         switch(al->codec->sample_fmt) {
             case AV_SAMPLE_FMT_U8P:  out_sample_fmt = AV_SAMPLE_FMT_U8; break;
             case AV_SAMPLE_FMT_S16P: out_sample_fmt = AV_SAMPLE_FMT_S16; break;
@@ -223,14 +223,14 @@ void VRSound::updateSampleAndFormat() {
             default: out_sample_fmt = AV_SAMPLE_FMT_FLT;
         }
 
-        al->resampler = avresample_alloc_context();
-        av_opt_set_int(al->resampler, "in_channel_layout",  al->codec->channel_layout, 0);
-        av_opt_set_int(al->resampler, "in_sample_fmt",      al->codec->sample_fmt,     0);
-        av_opt_set_int(al->resampler, "in_sample_rate",     al->codec->sample_rate,    0);
-        av_opt_set_int(al->resampler, "out_channel_layout", al->codec->channel_layout, 0);
-        av_opt_set_int(al->resampler, "out_sample_fmt",     out_sample_fmt,        0);
-        av_opt_set_int(al->resampler, "out_sample_rate",    al->codec->sample_rate,    0);
-        avresample_open(al->resampler);
+        al->resampler = swr_alloc();
+        av_opt_set_channel_layout(al->resampler, "in_channel_layout",  al->codec->channel_layout, 0);
+        av_opt_set_sample_fmt    (al->resampler, "in_sample_fmt",      al->codec->sample_fmt,     0);
+        av_opt_set_int           (al->resampler, "in_sample_rate",     al->codec->sample_rate,    0);
+        av_opt_set_channel_layout(al->resampler, "out_channel_layout", al->codec->channel_layout, 0);
+        av_opt_set_sample_fmt    (al->resampler, "out_sample_fmt",     out_sample_fmt,            0);
+        av_opt_set_int           (al->resampler, "out_sample_rate",    al->codec->sample_rate,    0);
+        swr_init(al->resampler);
     }
 }
 
@@ -318,7 +318,11 @@ vector<VRSoundBufferPtr> VRSound::extractPacket(AVPacket* packet) {
             ALbyte* frameData;
             if (al->resampler != 0) {
                 frameData = (ALbyte *)av_malloc(data_size*sizeof(uint8_t));
-                avresample_convert( al->resampler, (uint8_t **)&frameData, linesize, al->frame->nb_samples, (uint8_t **)al->frame->data, al->frame->linesize[0], al->frame->nb_samples);
+                swr_convert( al->resampler,
+                            (uint8_t **)&frameData,
+                            al->frame->nb_samples,
+                            (const uint8_t **)al->frame->data,
+                            al->frame->nb_samples);
             } else frameData = (ALbyte*)al->frame->data[0];
 
             auto frame = VRSoundBuffer::wrap(frameData, data_size, frequency, al->format);
@@ -408,7 +412,7 @@ struct OutputStream {
     AVCodecContext *enc = 0;
     AVFrame *frame = 0;
     AVFrame *tmp_frame = 0;
-    AVAudioResampleContext *avr = 0;
+    SwrContext *avr = 0;
 };
 
 void add_audio_stream(OutputStream *ost, AVFormatContext *oc, enum AVCodecID codec_id) {
@@ -440,17 +444,17 @@ void add_audio_stream(OutputStream *ost, AVFormatContext *oc, enum AVCodecID cod
      * if the encoder supports the generated format directly -- the price is
      * some extra data copying;
      */
-    ost->avr = avresample_alloc_context();
+    ost->avr = swr_alloc();
     if (!ost->avr) { fprintf(stderr, "Error allocating the resampling context\n"); return; }
 
-    av_opt_set_int(ost->avr, "in_sample_fmt",      AV_SAMPLE_FMT_S16,   0);
-    av_opt_set_int(ost->avr, "in_sample_rate",     22050,               0);
-    av_opt_set_int(ost->avr, "in_channel_layout",  AV_CH_LAYOUT_MONO,   0);
-    av_opt_set_int(ost->avr, "out_sample_fmt",     c->sample_fmt,       0);
-    av_opt_set_int(ost->avr, "out_sample_rate",    c->sample_rate,      0);
-    av_opt_set_int(ost->avr, "out_channel_layout", c->channel_layout,   0);
+    av_opt_set_channel_layout(ost->avr, "in_channel_layout",  AV_CH_LAYOUT_MONO, 0);
+    av_opt_set_sample_fmt    (ost->avr, "in_sample_fmt",      AV_SAMPLE_FMT_S16, 0);
+    av_opt_set_int           (ost->avr, "in_sample_rate",     22050,             0);
+    av_opt_set_channel_layout(ost->avr, "out_channel_layout", c->channel_layout, 0);
+    av_opt_set_sample_fmt    (ost->avr, "out_sample_fmt",     c->sample_fmt,     0);
+    av_opt_set_int           (ost->avr, "out_sample_rate",    c->sample_rate,    0);
 
-    int ret = avresample_open(ost->avr);
+    int ret = swr_init(ost->avr);
     if (ret < 0) { fprintf(stderr, "Error opening the resampling context\n"); return; }
 }
 
@@ -582,12 +586,11 @@ void VRSound::write_buffer(AVFormatContext *oc, OutputStream *ost, VRSoundBuffer
     AVFrame* frame = get_audio_frame(ost, buffer);
     if (!frame) return;
     //cout << "  resample convert " << frame->linesize[0] << " " << frame->nb_samples << endl;
-    int ret = avresample_convert(ost->avr, NULL, 0, 0, frame->extended_data, frame->linesize[0], frame->nb_samples);
+    int ret = swr_convert(ost->avr, NULL, 0, (const uint8_t **)frame->extended_data, frame->nb_samples);
     if (ret < 0) { fprintf(stderr, "Error feeding audio data to the resampler\n"); return; }
 
     //cout << "  write buffer" << endl;
-    while ((frame && avresample_available(ost->avr) >= ost->frame->nb_samples) ||
-           (!frame && avresample_get_out_samples(ost->avr, 0))) {
+    while ((frame) || (!frame && swr_get_out_samples(ost->avr, 0))) {
         // when we pass a frame to the encoder, it may keep a reference to it internally; make sure we do not overwrite it here
         ret = av_frame_make_writable(ost->frame);
         if (ret < 0) return;
@@ -596,11 +599,7 @@ void VRSound::write_buffer(AVFormatContext *oc, OutputStream *ost, VRSoundBuffer
          * first one just reads the already converted data that is buffered in
          * the lavr output buffer, while the second one also flushes the
          * resampler */
-        if (frame) {
-            ret = avresample_read(ost->avr, ost->frame->extended_data, ost->frame->nb_samples);
-        } else {
-            ret = avresample_convert(ost->avr, ost->frame->extended_data, ost->frame->linesize[0], ost->frame->nb_samples, NULL, 0, 0);
-        }
+        ret = swr_convert(ost->avr, ost->frame->extended_data, ost->frame->nb_samples, NULL, 0);
 
         if (ret < 0) { fprintf(stderr, "Error while resampling\n"); return; }
 
@@ -623,7 +622,7 @@ void close_stream(AVFormatContext *oc, OutputStream *ost) {
     avcodec_free_context(&ost->enc);
     av_frame_free(&ost->frame);
     av_frame_free(&ost->tmp_frame);
-    avresample_free(&ost->avr);
+    swr_free(&ost->avr);
 }
 
 void VRSound::exportToFile(string path) {
