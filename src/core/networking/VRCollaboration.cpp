@@ -150,6 +150,8 @@ void VRCollaboration::onIceEvent(string m) {
 		string content = data[3];
 
 		if (startsWith(content, "CONREQ") ) {
+            string name = ice->getUserName(origin);
+			sendUI("conReq", "configMessage|"+name);
 			connectionInWidget->show();
 			connReqOrigin = origin;
 		}
@@ -184,7 +186,7 @@ void VRCollaboration::updateUsersWidget() {
 	if (uid != "" ) sendUI("usersList", "setUserStats|"+uid+"|#23c");
 }
 
-void VRCollaboration::initUI() { // TODO: add websites, css, js, html
+void VRCollaboration::initUI() {
 	gui_sites.clear();
 
 	auto dev = VRSetup::getCurrent()->getDevice("server1");
@@ -252,7 +254,7 @@ bool VRCollaboration::handleUI(VRDeviceWeakPtr wdev) {
 		auto data = splitString(m, '|');
 		bool b = bool(data[1] == "true");
 		cout << "setMute: " << b << endl;
-		mike->pauseStreaming(!b);
+		mike->pauseStreaming(b);
 	}
 
 	if (m == "connectionAccept" ) {
@@ -269,10 +271,12 @@ bool VRCollaboration::handleUI(VRDeviceWeakPtr wdev) {
 
 string VRCollaboration::uiCSS = WEBSITE(
 body {
-	font-size: 4vh;
+	font-size: 8vw;
 	color: white;
 	margin: 0;
 	background-color: #23272a;
+	width: 100vw;
+	height: 100vh;
 }
 
 .emptyBG {
@@ -301,30 +305,30 @@ input {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
+	justify-content: center;
+	text-align: center;
 	width: 100vw;
-	height: 90vh;
+	height: calc(100vh - 20vw);
  	background-color: #2c2f33;
 } #toolbar {
 	display: flex;
 	flex-direction: row;
 	align-items: center;
 	width: 100vw;
-	height: 10vh;
+	height: 20vw;
  	background-color: #2c2f66;
 }
 
-.button {
-	font-size: 4vh;
+button {
 	background-color: #888;
 	color: white;
 	border: none;
-	width: 80%;
 	text-align: center;
-	height: 8vh;
-	margin-top: 2vh;
+	font-size: 8vw;
+	height: 20vw;
 }
 
-.button:hover, .open-button:hover {
+button:hover, .open-button:hover {
 	opacity: 1;
 }
 );
@@ -364,44 +368,30 @@ string VRCollaboration::connectionInSite = WEBSITE(
 <html>
 
 <head>
-	<style>
-		body {
-			display: flex;
-			flex-direction: column;
-			height: 100vh;
-			width: 100vw;
-			font-size: 20vh;
-			color: black;
-			margin: 0;
-			background-color: #23272A00;
-		} #buttons {
-			display: flex;
-			flex-direction: row;
-			height: 50vh;
-			width: 100vw;
-			font-size: 4vh;
-			color: white;
-			margin: 0;
-			background-color: #23272a;
-		} #label {
-			height: 50vh;
-		}
-
-		button {
-			width: 100%;
-		}
-	</style>
+    <link rel="stylesheet" href="uiCSS">\n
+	<style>\n
+		button { width: 50%; }\n
+	</style>\n
 </head>
 
 <body>
-	<script>
-		var ws = new WebSocket('ws://localhost:$PORT_server1$');
-		ws.onopen = function() { send('register conReq'); };
-		function send(m) { ws.send(m); };
-	</script>
+	<script>\n
+		var ws = new WebSocket('ws://localhost:$PORT_server1$');\n
+		ws.onopen = function() { send('register conReq'); };\n
+ 		ws.onmessage = function(m) { if(m.data) handle(m.data); };\n
+		function send(m) { ws.send(m); };\n
 
-	<div id='label'>Accept incomming connection?</div>
-	<div id='buttons'>
+ 		function handle(m) {\n
+ 			if (m.startsWith('configMessage|')) {\n
+ 				var data = m.split('|');\n
+                var msg = 'Accept incomming connection from '+data[1]+'?';\n
+                document.getElementById('userlistContainer').innerHTML = msg;\n
+ 			}\n
+ 		};\n\n
+	</script>\n
+
+	<div id='userlistContainer'>Accept incomming connection?</div>
+	<div id='toolbar'>
 		<button onclick='send("connectionAccept")'>Yes</button>
 		<button onclick='send("connectionRefuse")'>No</button>
 	</div>
@@ -454,6 +444,7 @@ string VRCollaboration::userlistSite = WEBSITE(
 			btn.setAttribute("id", uid);\n
 			btn.className = "button";\n
 			btn.innerHTML = name;\n
+			btn.style.width = '80%';\n
 			document.getElementById("userlistContainer").appendChild(btn);\n
 			btn.onclick = function () {\n
 				console.log("Button " + btn.id + " is clicked");\n
@@ -582,3 +573,9 @@ string VRCollaboration::userlistSite = WEBSITE(
 	</body>\n
 </html>
 );
+
+
+
+
+
+
