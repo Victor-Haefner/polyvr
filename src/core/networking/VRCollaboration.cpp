@@ -133,7 +133,7 @@ void VRCollaboration::connectTCP(string origin) {
 
 	auto audioClient = ice->getClient(origin, VRICEClient::AUDIO);
 	mike->startStreamingOver(audioClient);
-	mike->pauseStreaming(false);
+	//mike->pauseStreaming(false);
 	sound->playPeerStream(audioClient);
 }
 
@@ -408,7 +408,7 @@ string VRCollaboration::userlistSite = WEBSITE(
 	<body>\n
 		<div id="userlistContainer"></div>\n\n
 		<div id="toolbar">\n
-            <button onclick="toggleMute();">M</button>\n
+            <button onclick="toggleMute();" style="width:33%;"><i id="mikeIcon" class="fa fa-microphone-slash"></i></button>\n
 		</div>\n\n
 
 		<script>\n
@@ -564,9 +564,12 @@ string VRCollaboration::userlistSite = WEBSITE(
 			send("chatModule_debugMessage" + seperator + debugMessage);\n
 		}\n
 
-		var muted = false;\n
+		var muted = true;\n
 		function toggleMute() {\n
+			var mikeIcon = document.getElementById("mikeIcon");\n
             muted = !muted;\n
+            if ( muted) mikeIcon.className = "fa fa-microphone-slash";\n
+            if (!muted) mikeIcon.className = "fa fa-microphone";\n
 			send("setMute|" + muted);\n
 		}\n
 		</script>\n
