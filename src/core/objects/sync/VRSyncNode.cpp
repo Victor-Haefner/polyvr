@@ -646,10 +646,14 @@ void VRSyncNode::handleAvatar(string data, VRSyncConnectionWeakPtr weakRemote) {
     auto remote = weakRemote.lock();
     if (!remote) {
 #ifndef WITHOUT_GTK
-        VRConsoleWidget::get("Collaboration")->write( name+": Handle new remote avatar failed, no valid ramote\n", "red");
+        VRConsoleWidget::get("Collaboration")->write( name+": Handle new remote avatar failed, no valid remote\n", "red");
 #endif
         return;
     }
+
+#ifndef WITHOUT_GTK
+    VRConsoleWidget::get("Collaboration")->write( name+": Handle new remote avatar\n", "green");
+#endif
 
     UInt32 camTrans = getTransformID( avatarHeadTransform); // local camera
     UInt32 devTrans = getTransformID( avatarDeviceTransform ); // local device beacon

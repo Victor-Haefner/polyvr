@@ -116,7 +116,7 @@ void VRCollaboration::setupAvatar(string rID, string name) {
 
 void VRCollaboration::connectTCP(string origin) {
 #ifndef WITHOUT_GTK
-    VRConsoleWidget::get("Collaboration")->write( " ..connect TCP sync node and audio, setup avatar\n");
+    VRConsoleWidget::get("Collaboration")->write( " ..connect TCP sync node and audio, setup avatar, origin: "+origin+"\n");
 #endif
 
 	auto rID = syncNode->addTCPClient(ice->getClient(origin, VRICEClient::SCENEGRAPH));

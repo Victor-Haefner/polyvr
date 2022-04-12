@@ -144,6 +144,16 @@ bool VRSyncConnection::send(string message, int frameDelay) {
     timer->reset();
     if (!client) {
         cout << "Error in VRSyncConnection::send, failed! no client.. tried to send " << message << endl;
+#ifndef WITHOUT_GTK
+        VRConsoleWidget::get("Collaboration")->write( "Error in VRSyncConnection::send, failed! no client.. tried to send " + message + "\n", "red");
+#endif
+        return 0;
+    }
+    if (!client->connected()) { // this only means it is connected to the turn server, NOT the other peer!
+        cout << "Error in VRSyncConnection::send, failed! client not connected.. tried to send " << message << endl;
+#ifndef WITHOUT_GTK
+        VRConsoleWidget::get("Collaboration")->write( "Error in VRSyncConnection::send, failed! client not connected.. tried to send " + message + "\n", "red");
+#endif
         return 0;
     }
     client->send(message, "TCPPVR\n");
