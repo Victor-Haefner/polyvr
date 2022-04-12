@@ -162,7 +162,7 @@ bool VRSyncConnection::send(string message, int frameDelay) {
 
 void VRSyncConnection::keepAlive() {
     //cout << "keepAlive? " << timer->stop() << endl;
-    if (timer->stop() > 3*60*1000) { // 3 min
+    if (timer->stop() > 3*1000) { // 3 sec
         send("keepAlive");
     }
 }

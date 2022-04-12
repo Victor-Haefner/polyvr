@@ -39,6 +39,7 @@ void VRCollaboration::init() {
 
     syncNode = VRSyncNode::create("syncNode");
 	VRObject::addChild(syncNode);
+	syncNode->onEvent(bind(&VRCollaboration::onSyncNodeEvent, this, placeholders::_1));
 
     mike = VRMicrophone::create();
 	mike->pauseStreaming(true);
@@ -46,6 +47,17 @@ void VRCollaboration::init() {
     sound = VRSound::create();
 
     initUI();
+}
+
+void VRCollaboration::onSyncNodeEvent(string e) {
+    cout << "VRCollaboration::onSyncNodeEvent, event: " << e << endl;
+    if (startsWith(e, "dropUser|")) {
+        string uID = splitString(e, '|')[1];
+        cout << " drop user with uID: " << uID << endl;
+        cout << "  ICE users: " << toString(ice->getUsers()) << endl;
+        ice->removeLocalUser(uID);
+        updateUsersWidget();
+    }
 }
 
 void VRCollaboration::addChild(VRObjectPtr child, bool osg, int place) {

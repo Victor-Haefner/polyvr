@@ -38,6 +38,7 @@ class VRCollaboration : public VRObject {
 	    void connectTCP(string origin);
 	    void setupAvatar(string rID, string name);
 	    void onIceEvent(string m);
+	    void onSyncNodeEvent(string e);
 
 	    void initUI();
 	    void sendUI(string widget, string data);

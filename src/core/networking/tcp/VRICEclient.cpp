@@ -42,6 +42,13 @@ void VRICEClient::setName(string n) {
 #endif
 }
 
+void VRICEClient::removeLocalUser(string uid) {
+    if (users.count(uid)) users.erase(uid);
+    else {
+        cout << "VRICEClient::removeLocalUser Warning, no user with ID " << uid << endl;
+    }
+}
+
 void VRICEClient::removeUser(string uid) {
     broker->get(turnURL+"/remUser.php?UID="+uid);
 }

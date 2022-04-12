@@ -100,6 +100,8 @@ VRSyncNode::~VRSyncNode() {
 VRSyncNodePtr VRSyncNode::ptr() { return static_pointer_cast<VRSyncNode>( shared_from_this() ); }
 VRSyncNodePtr VRSyncNode::create(string name) { return VRSyncNodePtr(new VRSyncNode(name) ); }
 
+void VRSyncNode::onEvent( function<void(string)> f ) { onEventCb = f; }
+
 VRSyncConnectionPtr VRSyncNode::getRemote(string rID) {
     if (!remotes.count(rID)) return 0;
     return remotes[rID];
@@ -847,7 +849,7 @@ void VRSyncNode::handleNewConnect(string data) {
     string port = uri[1];
 
     cout << " handleNewConnect with ip " << remoteName << endl;
-    if (onEvent) (*onEvent)("connection|"+remoteName); // if not in list then it is a new connection, the add remote
+    if (onEventCb) onEventCb("connection|"+remoteName); // if not in list then it is a new connection, the add remote
     //else cout << "Warning in VRSyncNode::handleNewConnect!, no onEvent cb!" << endl
 
     if (!remotes.count(remoteName)) {
@@ -940,10 +942,18 @@ string VRSyncNode::handleMessage(string msg, VRSyncConnectionWeakPtr weakRemote)
 
 void VRSyncNode::broadcast(string message) { // broadcast message to all remote nodes
     //VRConsoleWidget::get("Collaboration")->write( " Broadcast: "+message+"\n");
+    vector<string> invalidRemotes;
     for (auto& remote : remotes) {
         if (!remote.second->send(message)) {
             cout << "Failed to send message to remote." << endl;
+            invalidRemotes.push_back(remote.first);
         }
+    }
+
+    for (auto& rID : invalidRemotes) {
+        cout << "Drop remote " << rID << endl;
+        remotes.erase(rID);
+        if (onEventCb) onEventCb("dropUser|"+rID);
     }
 }
 
@@ -979,11 +989,6 @@ void VRSyncNode::analyseSubGraph() {
 }
 
 string VRSyncNode::getConnectionLink() { return serverUri; }
-
-void VRSyncNode::setCallback(VRMessageCbPtr fkt) {
-    onEvent = fkt;
-    cout << "VRSyncNode::setCallback" << endl;
-}
 
 string VRSyncNode::getConnectionStatus() {
     string status = "SyncNode: " + serverUri + "\n";

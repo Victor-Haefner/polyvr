@@ -70,6 +70,7 @@ class VRICEClient : public std::enable_shared_from_this<VRICEClient> {
 		string getUserName(string ID);
 		vector<string> getUserID(string name);
 		map<string, string> getUsers();
+        void removeLocalUser(string uid);
 		VRNetworkClientPtr getClient(string otherID, CHANNEL channel);
 		map<string, map<CHANNEL, VRNetworkClientPtr> > getClients();
 };

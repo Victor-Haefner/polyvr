@@ -27,6 +27,7 @@ class VRSyncNode : public VRTransform {
 
         bool peerConnectionOk = false;
         vector<string> initMsgQueue;
+        function<void(string)> onEventCb;
 
         size_t selfNodeID = 0;
         size_t selfNameID = 0;
@@ -38,7 +39,6 @@ class VRSyncNode : public VRTransform {
         VRTransformPtr avatarDeviceTransform;
         VRTransformPtr avatarDeviceAnchor;
 
-        VRMessageCbPtr onEvent;
         VRSyncChangelistPtr changelist;
 
         string UUID;
@@ -94,6 +94,8 @@ class VRSyncNode : public VRTransform {
         static VRSyncNodePtr create(string name = "None");
         VRSyncNodePtr ptr();
 
+        void onEvent( function<void(string)> f );
+
         UInt32 getSyncNodeID();
         UInt32 getSyncNameID();
         UInt32 getSyncCoreID();
@@ -144,8 +146,6 @@ class VRSyncNode : public VRTransform {
         void wrapOSG();
 
         string getConnectionLink();
-        void setCallback(VRMessageCbPtr fkt);
-
         string getConnectionStatus();
 };
 
