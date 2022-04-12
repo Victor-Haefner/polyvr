@@ -850,17 +850,6 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
                     double phi   = p[2];
                     n = Vec3d(cos(phi)*cos(theta), sin(phi)*cos(theta), sin(theta));
 
-                    /*Vec2d side = getSide(p[0]);
-                    Vec3d A = Vec3d(R*cos(side[0]), R*sin(side[0]), 0);
-                    Vec3d B = Vec3d(R*cos(side[1]), R*sin(side[1]), 0);
-                    Vec3d D = B-A;
-                    D.normalize();
-
-                    float t = (A[0]*D[1] - A[1]*D[0]) / (n[0]*D[1] - n[1]*D[0]);*/
-
-                    //cout << "p: " << a/Pi*180 << " AB: " << side*(180/Pi) << " s: " << getSideN(a) << endl;
-                    //if (a < side[0] || a > side[1]) cout << "   AAAH\n"; // TODO: check this out!
-
                     p = Pnt3d(n*R);
 
                     cout << "    sphere theta: " << theta << ", phi: " << phi << ", pos: " << p << ", R: " << R << endl;
@@ -876,9 +865,116 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
         return 0;
     }
 
-    if (type == "Toroidal_Surface") {
-        //cout << "Toroidal_Surface" << endl;
-        //return 0;
+    if (type == "Toroidal_Surface") { // TODO
+        return 0;
+        cout << "Toroidal_Surface" << endl;
+        Triangulator triangulator; // feed the triangulator with unprojected points
+
+        for (auto b : bounds) {
+            VRPolygon poly;
+            double lastTheta = 1000;
+            double lastPhi   = 1000;
+            Vec3d cN = Vec3d(0,0,1);
+
+            // shift edges so first edge not start on +-pi line
+            auto eOnPiLine = [&](VRBRepEdge& e) {
+                Vec3d p = e.points[0];
+                mI.mult(Pnt3d(p),p);
+                if (abs(p[1]) > 1e-3) return false;
+                if (p[0] > 1e-3) return false;
+                return true;
+            };
+
+            if (eOnPiLine(b.edges[0]))  {
+                int i0 = -1;
+                for (int i=1; i<b.edges.size(); i++) {
+                    if (!eOnPiLine(b.edges[i])) {
+                        i0 = i;
+                        break;
+                    }
+                }
+
+                b.shiftEdges(i0);
+            }
+
+            for (auto& e : b.edges) {
+                cout << " edge on sphere " << e.etype << endl;
+                if (e.etype == "Circle") {
+                    double cDir = e.compCircleDirection(mI, cN);
+
+                    int i0 = 1;
+                    if (poly.size() == 0) i0 = 0;
+                    for (int i=i0; i<e.points.size(); i++) {
+                        auto& p = e.points[i];
+                        Vec2d pc = sphericalUnproject(p, lastTheta, lastPhi, 1, cDir, i>0);
+                        cout << " ---- " << p << " -> " << pc << endl;
+                        poly.addPoint(pc);
+                    }
+                    continue;
+                }
+
+                if (e.etype == "B_Spline_Curve_With_Knots") {
+                    int i0 = 1;
+                    if (poly.size() == 0) i0 = 0;
+                    for (int i=i0; i<e.points.size(); i++) {
+                        auto& p = e.points[i];
+                        Vec2d pc = sphericalUnproject(p, lastTheta, lastPhi, 2, 0, i>0);
+                        cout << " ---- " << p << " -> " << pc << endl;
+                        poly.addPoint(pc);
+                    }
+                    continue;
+                }
+
+                cout << "Unhandled edge on sphere of type " << e.etype << endl;
+            }
+
+            checkPolyOrientation(poly, b);
+            triangulator.add(poly);
+            cout << "  poly: " << toString(poly.get()) << endl;
+        }
+
+        auto g = triangulator.compute();
+        if (!g) return 0;
+        if (auto gg = g->getMesh()->geo) { if (!gg->getPositions()) cout << "VRBRepSurface::build: Triangulation failed, no mesh positions!\n";
+        } else cout << "VRBRepSurface::build: Triangulation failed, no mesh generated!\n";
+
+        VRMeshSubdivision subdiv;
+        subdiv.subdivideGrid(g, Vec3d(Dangle, -1, Dangle));
+
+        // tesselate the result while projecting it back on the surface
+        if (g) if (auto gg = g->getMesh()) {
+            VRGeoData nMesh; // TODO: remove this, this only swaps the normal!
+            Vec3d n(0,1,0);
+            for (auto it = TriangleIterator(gg->geo); !it.isAtEnd() ;++it) {
+                triangle tri(it);
+                pushTri(nMesh, Pnt3d(tri.p[0]), Pnt3d(tri.p[1]), Pnt3d(tri.p[2]), n);
+            }
+            nMesh.apply(g);
+
+            // project the points back into 3D space
+            GeoVectorPropertyMTRecPtr pos = gg->geo->getPositions();
+            GeoVectorPropertyMTRecPtr norms = gg->geo->getNormals();
+            if (pos) {
+                for (uint i=0; i<pos->size(); i++) {
+                    Pnt3d p = Pnt3d(pos->getValue<Pnt3f>(i));
+                    Vec3d n = Vec3d(norms->getValue<Vec3f>(i));
+                    double theta = p[0];
+                    double phi   = p[2];
+                    n = Vec3d(cos(phi)*cos(theta), sin(phi)*cos(theta), sin(theta));
+
+                    p = Pnt3d(n*R);
+
+                    cout << "    sphere theta: " << theta << ", phi: " << phi << ", pos: " << p << ", R: " << R << endl;
+
+                    pos->setValue(p, i);
+                    norms->setValue(n, i);
+                }
+            }
+        }
+
+        if (g) g->setMatrix(m);
+        if (g && g->getMesh() && g->getMesh()->geo->getPositions() && g->getMesh()->geo->getPositions()->size() > 0) return g;
+        return 0;
     }
 
     cout << "VRBRepSurface::build Error: unhandled surface type " << type << endl;
