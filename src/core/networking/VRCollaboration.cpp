@@ -248,6 +248,13 @@ bool VRCollaboration::handleUI(VRDeviceWeakPtr wdev) {
 		ice->send(data[1], "CONREQ");
 	}
 
+	if (startsWith(m, "setMute") ) {
+		auto data = splitString(m, '|');
+		bool b = bool(data[1] == "true");
+		cout << "setMute: " << b << endl;
+		mike->pauseStreaming(!b);
+	}
+
 	if (m == "connectionAccept" ) {
 		ice->connectTo(connReqOrigin);
 		ice->send(connReqOrigin, "CONACC");
@@ -295,8 +302,15 @@ input {
 	flex-direction: column;
 	align-items: center;
 	width: 100vw;
-	height: 100vh;
+	height: 90vh;
  	background-color: #2c2f33;
+} #toolbar {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	width: 100vw;
+	height: 10vh;
+ 	background-color: #2c2f66;
 }
 
 .button {
@@ -403,6 +417,9 @@ string VRCollaboration::userlistSite = WEBSITE(
 	</head>\n
 	<body>\n
 		<div id="userlistContainer"></div>\n\n
+		<div id="toolbar">\n
+            <button onclick="toggleMute();">M</button>\n
+		</div>\n\n
 
 		<script>\n
 		var websocket = new WebSocket('ws://localhost:$PORT_server1$');\n
@@ -554,6 +571,12 @@ string VRCollaboration::userlistSite = WEBSITE(
 
 		function sendDebug(debugMessage) {\n
 			send("chatModule_debugMessage" + seperator + debugMessage);\n
+		}\n
+
+		var muted = false;\n
+		function toggleMute() {\n
+            muted = !muted;\n
+			send("setMute|" + muted);\n
 		}\n
 		</script>\n
 	</body>\n
