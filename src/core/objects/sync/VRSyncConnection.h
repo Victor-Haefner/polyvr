@@ -65,7 +65,7 @@ class VRSyncConnection {
 
         Avatar& getAvatar();
         void setupDevices(UInt32 headTransform, UInt32 devTransform, UInt32 devAnchor);
-        void setupAvatar(VRTransformPtr headTransform, VRTransformPtr devTransform, VRTransformPtr devAnchor);
+        string setupAvatar(VRTransformPtr headTransform, VRTransformPtr devTransform, VRTransformPtr devAnchor);
         void handleAvatar(string data);
         void updateAvatar(string data);
         UInt32 getNodeID(VRObjectPtr t);

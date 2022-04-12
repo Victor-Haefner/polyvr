@@ -107,9 +107,10 @@ void VRCollaboration::setupAvatar(string rID, string name) {
 	sprite->setBillboard(true);
 	avatar->addChild(sprite);
 
-	auto job = bind(&VRSyncNode::addRemoteAvatar, syncNode, rID, avatar, rightHandContainer, anchor);
+	/*auto job = bind(&VRSyncNode::addRemoteAvatar, syncNode, rID, avatar, rightHandContainer, anchor);
 	VRUpdateCbPtr cb = VRUpdateCb::create("syncNode-addRemoteAvatar", job);
-	VRScene::getCurrent()->queueJob(cb);
+	VRScene::getCurrent()->queueJob(cb);*/
+
 	//VR->stackCall(VR->syncNode->addRemoteAvatar, 3, [rID, avatar, rightHandContainer, anchor]);
 	//syncNode->addRemoteAvatar(rID, avatar, rightHandContainer, anchor);
 }
@@ -152,15 +153,6 @@ void VRCollaboration::onIceEvent(string m) {
 #endif
 			sendUI("usersList", "setUserStats|"+origin+"|#2c4");
 			ice->connectTo(origin);
-			connectTCP(origin);
-			ice->send(origin, "CONOK");
-        }
-
-		if (startsWith(content, "CONOK") ) {
-#ifndef WITHOUT_GTK
-            VRConsoleWidget::get("Collaboration")->write( " GOT CONOK -> connectTCP!\n");
-#endif
-			sendUI("usersList", "setUserStats|"+origin+"|#2c4");
 			connectTCP(origin);
         }
     }
@@ -252,7 +244,7 @@ bool VRCollaboration::handleUI(VRDeviceWeakPtr wdev) {
 	if (m == "connectionAccept" ) {
 		ice->connectTo(connReqOrigin);
 		ice->send(connReqOrigin, "CONACC");
-		//connectTCP(connReqOrigin); // TODO: only connect TCP! do not send stuff over it yet!
+		connectTCP(connReqOrigin);
 		connectionInWidget->hide();
 	}
 
