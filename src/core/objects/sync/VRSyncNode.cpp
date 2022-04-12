@@ -147,6 +147,9 @@ void VRSyncNode::accTCPConnection(string msg, VRSyncConnectionWeakPtr weakRemote
     }
 
     for (auto& msg : initMsgQueue) {
+#ifndef WITHOUT_GTK
+        VRConsoleWidget::get("Collaboration")->write( "  send queued init message: "+msg+"\n");
+#endif
         remote->send(msg);
     }
     initMsgQueue.clear();
