@@ -107,9 +107,9 @@ void VRCollaboration::setupAvatar(string rID, string name) {
 	sprite->setBillboard(true);
 	avatar->addChild(sprite);
 
-	/*auto job = bind(&VRSyncNode::addRemoteAvatar, syncNode, rID, avatar, rightHandContainer, anchor);
+	auto job = bind(&VRSyncNode::addRemoteAvatar, syncNode, rID, avatar, rightHandContainer, anchor);
 	VRUpdateCbPtr cb = VRUpdateCb::create("syncNode-addRemoteAvatar", job);
-	VRScene::getCurrent()->queueJob(cb);*/
+	VRScene::getCurrent()->queueJob(cb);
 
 	//VR->stackCall(VR->syncNode->addRemoteAvatar, 3, [rID, avatar, rightHandContainer, anchor]);
 	//syncNode->addRemoteAvatar(rID, avatar, rightHandContainer, anchor);
