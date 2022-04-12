@@ -147,6 +147,9 @@ void VRCollaboration::onIceEvent(string m) {
 		}
 
 		if (startsWith(content, "CONACC") ) {
+#ifndef WITHOUT_GTK
+            VRConsoleWidget::get("Collaboration")->write( " GOT CONACC connect ice to origin!\n");
+#endif
 			sendUI("usersList", "setUserStats|"+origin+"|#2c4");
 			ice->connectTo(origin);
 			connectTCP(origin);
@@ -154,6 +157,9 @@ void VRCollaboration::onIceEvent(string m) {
         }
 
 		if (startsWith(content, "CONOK") ) {
+#ifndef WITHOUT_GTK
+            VRConsoleWidget::get("Collaboration")->write( " GOT CONOK -> connectTCP!\n");
+#endif
 			sendUI("usersList", "setUserStats|"+origin+"|#2c4");
 			connectTCP(origin);
         }
