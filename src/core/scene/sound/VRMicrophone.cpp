@@ -13,12 +13,18 @@
 using namespace OSG;
 
 VRMicrophone::VRMicrophone() { setup(); }
-VRMicrophone::~VRMicrophone() { alcCaptureCloseDevice(device); }
+
+VRMicrophone::~VRMicrophone() {
+    alcCaptureCloseDevice(device);
+    delete streamMutex;
+}
 
 VRMicrophonePtr VRMicrophone::create() { return VRMicrophonePtr( new VRMicrophone() ); }
 VRMicrophonePtr VRMicrophone::ptr() { return static_pointer_cast<VRMicrophone>(shared_from_this()); }
 
 void VRMicrophone::setup() {
+    streamMutex = new VRMutex();
+
     alGetError();
     device = alcCaptureOpenDevice(NULL, sample_rate, AL_FORMAT_MONO16, sample_size);
     if (alGetError() != AL_NO_ERROR) {
@@ -128,7 +134,6 @@ void VRMicrophone::startStreamingThread() {
 void VRMicrophone::startStreamingOver(VRNetworkClientPtr client) {
     if (!deviceOk) return;
     start();
-    streamMutex = new VRMutex();
     doStream = recording->addOutStreamClient(client);
 
     startRecordingThread();
@@ -146,6 +151,9 @@ void VRMicrophone::startStreaming(string address, int port) {
 }
 
 void VRMicrophone::pauseStreaming(bool p) {
+    VRLock lock(*streamMutex);
+    if (streamPaused == p) return;
+    cout << "VRMicrophone::pauseStreaming " << p << endl;
     streamPaused = p;
     queuedStream = 0;
     needsFlushing = true;
@@ -157,7 +165,6 @@ void VRMicrophone::stop() {
     recordingThread = 0;
     streamingThread = 0;
     if (deviceOk) alcCaptureStop(device);
-    delete streamMutex;
 }
 
 VRSoundPtr VRMicrophone::stopRecording() {

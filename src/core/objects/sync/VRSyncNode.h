@@ -25,6 +25,9 @@ class VRSyncNode : public VRTransform {
         FieldContainerFactoryBase* factory = FieldContainerFactory::the();
         vector<UInt32> createdNodes; //IDs of the currently created nodes/children
 
+        bool peerConnectionOk = false;
+        vector<string> initMsgQueue;
+
         size_t selfNodeID = 0;
         size_t selfNameID = 0;
         size_t selfCoreID = 0;

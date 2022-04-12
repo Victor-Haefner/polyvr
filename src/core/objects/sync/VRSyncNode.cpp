@@ -133,6 +133,7 @@ void VRSyncNode::accTCPConnection(string msg, VRSyncConnectionWeakPtr weakRemote
     VRConsoleWidget::get("Collaboration")->write( name+": got tcp client acc, "+msg+"\n");
 #endif
 
+    peerConnectionOk = true;
     cout << " syncNode " << getName() << " accTCPConnection (" << msg << ") from " << remote->getID() << endl;
 
     if (msg == "accConnect|1") remote->send("accConnect|2");
@@ -144,6 +145,14 @@ void VRSyncNode::accTCPConnection(string msg, VRSyncConnectionWeakPtr weakRemote
         cout << " --> reqInitState!" << endl;
         remote->send("reqInitState|");
     }
+
+    for (auto& msg : initMsgQueue) {
+#ifndef WITHOUT_GTK
+        VRConsoleWidget::get("Collaboration")->write( "  send queued init message: "+msg+"\n");
+#endif
+        remote->send(msg);
+    }
+    initMsgQueue.clear();
 }
 
 void VRSyncNode::reqInitState(VRSyncConnectionWeakPtr weakRemote) {
@@ -629,7 +638,16 @@ void VRSyncNode::addRemoteAvatar(string remoteID, VRTransformPtr headTransform, 
         return;
     }
 
-    remote->setupAvatar(headTransform, devTransform, devAnchor);
+    string msg = remote->setupAvatar(headTransform, devTransform, devAnchor);
+
+
+
+#ifndef WITHOUT_GTK
+    VRConsoleWidget::get("Collaboration")->write( "Setup avatar, send device IDs to remote, msg: "+msg+"\n");
+#endif
+
+    if (peerConnectionOk) remote->send(msg);
+    else initMsgQueue.push_back(msg);
 
 #ifndef WITHOUT_GTK
     VRConsoleWidget::get("Collaboration")->write( name+": Add avatar representation, head "+headTransform->getName()+", hand "+devTransform->getName()+"\n", "green");
@@ -644,7 +662,16 @@ void VRSyncNode::updateAvatar(string data, VRSyncConnectionWeakPtr weakRemote) {
 
 void VRSyncNode::handleAvatar(string data, VRSyncConnectionWeakPtr weakRemote) {
     auto remote = weakRemote.lock();
-    if (!remote) return;
+    if (!remote) {
+#ifndef WITHOUT_GTK
+        VRConsoleWidget::get("Collaboration")->write( name+": Handle new remote avatar failed, no valid remote\n", "red");
+#endif
+        return;
+    }
+
+#ifndef WITHOUT_GTK
+    VRConsoleWidget::get("Collaboration")->write( name+": Handle new remote avatar\n", "green");
+#endif
 
     UInt32 camTrans = getTransformID( avatarHeadTransform); // local camera
     UInt32 devTrans = getTransformID( avatarDeviceTransform ); // local device beacon

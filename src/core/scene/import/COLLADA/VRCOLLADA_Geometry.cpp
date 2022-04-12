@@ -156,7 +156,7 @@ void VRCOLLADA_Geometry::handleIndices(string data) {
 
         for (int i=0; i<N; i++) {
             for (auto& input : currentPrimitive.inputs) { // for each input
-                int m = i*currentPrimitive.inputs.size() + input.offset;
+                size_t m = i*currentPrimitive.inputs.size() + input.offset;
                 if (m >= indices.size()) continue;
                 if (input.type == "VERTEX") currentGeoData->pushIndex(indices[m]);
                 if (input.type == "NORMAL") currentGeoData->pushNormalIndex(indices[m]);

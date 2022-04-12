@@ -802,7 +802,7 @@ void OSG::writeCollada(VRObjectPtr root, string path, map<string, string> option
 
                     if (source.data.size() > 0) {
                         stream << "\t\t\t\t\t<float_array id=\"" << sourceID << "_array\" count=\"" << source.data.size() << "\">";
-                        for (int i=0; i<source.data.size(); i++) {
+                        for (size_t i=0; i<source.data.size(); i++) {
                             if (i > 0) stream << " ";
                             stream << source.data[i];
                         }
@@ -812,7 +812,7 @@ void OSG::writeCollada(VRObjectPtr root, string path, map<string, string> option
                     if (source.strData.size() > 0) {
                         type = "name";
                         stream << "\t\t\t\t\t<Name_array id=\"" << sourceID << "_array\" count=\"" << source.strData.size() << "\">";
-                        for (int i=0; i<source.strData.size(); i++) {
+                        for (size_t i=0; i<source.strData.size(); i++) {
                             if (i > 0) stream << " ";
                             stream << source.strData[i];
                         }
@@ -830,7 +830,7 @@ void OSG::writeCollada(VRObjectPtr root, string path, map<string, string> option
                 stream << "\t\t\t\t<sampler id=\"" << s.first << "\">" << endl;
                 for (auto& so : sampler.sources) {
                     string sourceID = so.second;
-                    auto& source = sources[sourceID];
+                    //auto& source = sources[sourceID];
                     stream << "\t\t\t\t\t<input semantic=\"" << so.first << "\" source=\"#" << sourceID << "\"/>" << endl;
                 }
                 stream << "\t\t\t\t</sampler>" << endl;

@@ -6,11 +6,16 @@
 #include "core/objects/geometry/sprite/VRSprite.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/VRCamera.h"
+#include "core/tools/VRAnnotationEngine.h"
 #include "core/scene/sound/VRMicrophone.h"
 #include "core/scene/sound/VRSound.h"
 #include "core/scene/VRScene.h"
 #include "core/setup/VRSetup.h"
 #include "core/setup/devices/VRServer.h"
+
+#ifndef WITHOUT_GTK
+#include "core/gui/VRGuiConsole.h"
+#endif
 
 #define WEBSITEV(...) #__VA_ARGS__
 #define WEBSITE(...) WEBSITEV(__VA_ARGS__)
@@ -96,31 +101,39 @@ void VRCollaboration::setupAvatar(string rID, string name) {
         rightHandContainer->addChild(rightHand);
     }
 
-    auto sprite = VRSprite::create("nameTag");
-	sprite->setSize(5,1.5);
+    /*auto sprite = VRSprite::create("nameTag");
 	sprite->setText(name);
+	sprite->setSize(5,1.5);
 	sprite->setFrom(Vec3d(0,9,0));
 	sprite->setBillboard(true);
-	avatar->addChild(sprite);
+	avatar->addChild(sprite);*/
 
-	auto job = [&] {
-        syncNode->addRemoteAvatar(rID, avatar, rightHandContainer, anchor);
-	};
+	auto label = VRAnnotationEngine::create("nameTag");
+	label->setSize(1.0);
+	label->setBillboard(true);
+	label->set(0, Vec3d(0,9,0), name);
+	avatar->addChild(label);
 
+	auto job = bind(&VRSyncNode::addRemoteAvatar, syncNode.get(), rID, avatar, rightHandContainer, anchor);
 	VRUpdateCbPtr cb = VRUpdateCb::create("syncNode-addRemoteAvatar", job);
 	VRScene::getCurrent()->queueJob(cb);
+
 	//VR->stackCall(VR->syncNode->addRemoteAvatar, 3, [rID, avatar, rightHandContainer, anchor]);
 	//syncNode->addRemoteAvatar(rID, avatar, rightHandContainer, anchor);
 }
 
 void VRCollaboration::connectTCP(string origin) {
+#ifndef WITHOUT_GTK
+    VRConsoleWidget::get("Collaboration")->write( " ..connect TCP sync node and audio, setup avatar, origin: "+origin+"\n");
+#endif
+
 	auto rID = syncNode->addTCPClient(ice->getClient(origin, VRICEClient::SCENEGRAPH));
 	auto name = ice->getUserName(origin);
 	setupAvatar(rID, name);
 
 	auto audioClient = ice->getClient(origin, VRICEClient::AUDIO);
 	mike->startStreamingOver(audioClient);
-	mike->pauseStreaming(false);
+	//mike->pauseStreaming(false);
 	sound->playPeerStream(audioClient);
 }
 
@@ -137,11 +150,16 @@ void VRCollaboration::onIceEvent(string m) {
 		string content = data[3];
 
 		if (startsWith(content, "CONREQ") ) {
+            string name = ice->getUserName(origin);
+			sendUI("conReq", "configMessage|"+name);
 			connectionInWidget->show();
 			connReqOrigin = origin;
 		}
 
 		if (startsWith(content, "CONACC") ) {
+#ifndef WITHOUT_GTK
+            VRConsoleWidget::get("Collaboration")->write( " GOT CONACC connect ice to origin!\n");
+#endif
 			sendUI("usersList", "setUserStats|"+origin+"|#2c4");
 			ice->connectTo(origin);
 			connectTCP(origin);
@@ -168,7 +186,7 @@ void VRCollaboration::updateUsersWidget() {
 	if (uid != "" ) sendUI("usersList", "setUserStats|"+uid+"|#23c");
 }
 
-void VRCollaboration::initUI() { // TODO: add websites, css, js, html
+void VRCollaboration::initUI() {
 	gui_sites.clear();
 
 	auto dev = VRSetup::getCurrent()->getDevice("server1");
@@ -232,6 +250,13 @@ bool VRCollaboration::handleUI(VRDeviceWeakPtr wdev) {
 		ice->send(data[1], "CONREQ");
 	}
 
+	if (startsWith(m, "setMute") ) {
+		auto data = splitString(m, '|');
+		bool b = bool(data[1] == "true");
+		cout << "setMute: " << b << endl;
+		mike->pauseStreaming(b);
+	}
+
 	if (m == "connectionAccept" ) {
 		ice->connectTo(connReqOrigin);
 		ice->send(connReqOrigin, "CONACC");
@@ -246,10 +271,12 @@ bool VRCollaboration::handleUI(VRDeviceWeakPtr wdev) {
 
 string VRCollaboration::uiCSS = WEBSITE(
 body {
-	font-size: 4vh;
+	font-size: 8vw;
 	color: white;
 	margin: 0;
 	background-color: #23272a;
+	width: 100vw;
+	height: 100vh;
 }
 
 .emptyBG {
@@ -278,23 +305,30 @@ input {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
+	justify-content: center;
+	text-align: center;
 	width: 100vw;
-	height: 100vh;
+	height: calc(100vh - 20vw);
  	background-color: #2c2f33;
+} #toolbar {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	width: 100vw;
+	height: 20vw;
+ 	background-color: #2c2f66;
 }
 
-.button {
-	font-size: 4vh;
+button {
 	background-color: #888;
 	color: white;
 	border: none;
-	width: 80%;
 	text-align: center;
-	height: 8vh;
-	margin-top: 2vh;
+	font-size: 8vw;
+	height: 20vw;
 }
 
-.button:hover, .open-button:hover {
+button:hover, .open-button:hover {
 	opacity: 1;
 }
 );
@@ -334,44 +368,30 @@ string VRCollaboration::connectionInSite = WEBSITE(
 <html>
 
 <head>
-	<style>
-		body {
-			display: flex;
-			flex-direction: column;
-			height: 100vh;
-			width: 100vw;
-			font-size: 20vh;
-			color: black;
-			margin: 0;
-			background-color: #23272A00;
-		} #buttons {
-			display: flex;
-			flex-direction: row;
-			height: 50vh;
-			width: 100vw;
-			font-size: 4vh;
-			color: white;
-			margin: 0;
-			background-color: #23272a;
-		} #label {
-			height: 50vh;
-		}
-
-		button {
-			width: 100%;
-		}
-	</style>
+    <link rel="stylesheet" href="uiCSS">\n
+	<style>\n
+		button { width: 50%; }\n
+	</style>\n
 </head>
 
 <body>
-	<script>
-		var ws = new WebSocket('ws://localhost:$PORT_server1$');
-		ws.onopen = function() { send('register conReq'); };
-		function send(m) { ws.send(m); };
-	</script>
+	<script>\n
+		var ws = new WebSocket('ws://localhost:$PORT_server1$');\n
+		ws.onopen = function() { send('register conReq'); };\n
+ 		ws.onmessage = function(m) { if(m.data) handle(m.data); };\n
+		function send(m) { ws.send(m); };\n
 
-	<div id='label'>Accept incomming connection?</div>
-	<div id='buttons'>
+ 		function handle(m) {\n
+ 			if (m.startsWith('configMessage|')) {\n
+ 				var data = m.split('|');\n
+                var msg = 'Accept incomming connection from '+data[1]+'?';\n
+                document.getElementById('userlistContainer').innerHTML = msg;\n
+ 			}\n
+ 		};\n\n
+	</script>\n
+
+	<div id='userlistContainer'>Accept incomming connection?</div>
+	<div id='toolbar'>
 		<button onclick='send("connectionAccept")'>Yes</button>
 		<button onclick='send("connectionRefuse")'>No</button>
 	</div>
@@ -387,6 +407,9 @@ string VRCollaboration::userlistSite = WEBSITE(
 	</head>\n
 	<body>\n
 		<div id="userlistContainer"></div>\n\n
+		<div id="toolbar">\n
+            <button onclick="toggleMute();" style="width:33%;"><i id="mikeIcon" class="fa fa-microphone-slash"></i></button>\n
+		</div>\n\n
 
 		<script>\n
 		var websocket = new WebSocket('ws://localhost:$PORT_server1$');\n
@@ -421,6 +444,7 @@ string VRCollaboration::userlistSite = WEBSITE(
 			btn.setAttribute("id", uid);\n
 			btn.className = "button";\n
 			btn.innerHTML = name;\n
+			btn.style.width = '80%';\n
 			document.getElementById("userlistContainer").appendChild(btn);\n
 			btn.onclick = function () {\n
 				console.log("Button " + btn.id + " is clicked");\n
@@ -539,7 +563,22 @@ string VRCollaboration::userlistSite = WEBSITE(
 		function sendDebug(debugMessage) {\n
 			send("chatModule_debugMessage" + seperator + debugMessage);\n
 		}\n
+
+		var muted = true;\n
+		function toggleMute() {\n
+			var mikeIcon = document.getElementById("mikeIcon");\n
+            muted = !muted;\n
+            if ( muted) mikeIcon.className = "fa fa-microphone-slash";\n
+            if (!muted) mikeIcon.className = "fa fa-microphone";\n
+			send("setMute|" + muted);\n
+		}\n
 		</script>\n
 	</body>\n
 </html>
 );
+
+
+
+
+
+

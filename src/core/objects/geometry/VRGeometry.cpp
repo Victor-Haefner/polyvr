@@ -720,6 +720,7 @@ void VRGeometry::merge(VRGeometryPtr geo, PosePtr pose) {
     Matrix4d M;
     if (pose) M = pose->asMatrix();
     else if (shareAncestry(geo)) M = getMatrixTo(geo);
+    else M = geo->getMatrix();
 
     VRGeoData self(ptr());
     VRGeoData other(geo);

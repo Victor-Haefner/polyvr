@@ -853,6 +853,15 @@ void VRGeoData::addVertexColors(Color4f c) {
     }
 }
 
+void VRGeoData::addVertexTexCoords(Vec2d tc) {
+    int N = size();
+    auto& tcoords = data->texs[0];
+    if (tcoords->size() == 0) {
+        for (int i=0; i<N; i++) tcoords->addValue(tc);
+    }
+    if (geo) geo->getMesh()->geo->setTexCoords(tcoords);
+}
+
 void VRGeoData::makeSingleIndex() {
     if (!geo) return;
     if (geo->getMesh()->geo->isSingleIndex()) return;

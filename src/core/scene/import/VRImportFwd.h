@@ -9,6 +9,8 @@ ptrFwd(VRCOLLADA_Stream);
 ptrFwd(VRCOLLADA_Geometry);
 ptrFwd(VRCOLLADA_Material);
 ptrFwd(VRCOLLADA_Kinematics);
+ptrFwd(VRSTEP);
+ptrFwd(VRSTEPExplorer);
 
 }
 

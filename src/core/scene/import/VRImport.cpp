@@ -214,9 +214,14 @@ void VRImport::LoadJob::load(VRThreadWeakPtr tw) {
         if (ext == ".pcb") { loadPCB(path, res, options); return; }
         if (ext == ".xyz") { loadXYZ(path, res, options); return; }
         if (ext == ".ply") { loadPly(path, res); return; }
-        //if (ext == ".step" || ext == ".stp" || ext == ".STEP" || ext == ".STP") { VRSTEP step; step.load(path, res, options); }
 #ifndef WITHOUT_STEP
-        if (ext == ".step" || ext == ".stp" || ext == ".STEP" || ext == ".STP") { loadSTEPCascade(path, res); return; }
+        if (ext == ".step" || ext == ".stp" || ext == ".STEP" || ext == ".STP") {
+            if (preset == "PVR") {
+                VRSTEPPtr step = VRSTEP::create();
+                step->load(path, res, options);
+            } else loadSTEPCascade(path, res);
+            return;
+        }
 #endif
 #ifndef WITHOUT_IFC
 		if (ext == ".ifc") { loadIFC(path, res); return; }

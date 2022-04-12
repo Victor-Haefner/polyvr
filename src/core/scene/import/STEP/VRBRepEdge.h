@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include <OpenSG/OSGVector.h>
 #include "core/math/OSGMathFwd.h"
 #include "VRBRepUtils.h"
 #include "core/math/VRMathFwd.h"
@@ -17,23 +18,25 @@ class VRBRepEdge : public VRBRepUtils {
         vector<float> angles;
         vector<double> weights;
         vector<double> knots;
-        Vec3d* n = 0;
-        Vec3d* EBeg = 0;
-        Vec3d* EEnd = 0;
+        Vec3d n;
+        Vec3d EBeg;
+        Vec3d EEnd;
         double radius;
         PosePtr center;
         float a1,a2;
         int deg;
         bool fullCircle = false;
+        bool swapped = false;
         string etype;
 
         VRBRepEdge();
-        ~VRBRepEdge();
+        virtual ~VRBRepEdge();
 
         Vec3d& beg();
         Vec3d& end();
         void swap();
         bool connectsTo(VRBRepEdge& e);
+        double compCircleDirection(Matrix4d mI, Vec3d d);
 
         void build(string type);
 };

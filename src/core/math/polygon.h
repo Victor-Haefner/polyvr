@@ -16,6 +16,8 @@ class VRPolygon {
         bool convex = false;
         bool closed = false;
 
+        bool isCCW2();
+        bool isCCW3();
         double getTurn(Vec2d p0, Vec2d p1, Vec2d p2);
 
     public:
