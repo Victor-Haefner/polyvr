@@ -945,7 +945,6 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
                     double h = p[2];
                     n = Vec3d(cos(a), sin(a), 0);
 
-                    //double k = (h+h0)*tan(R2); // R2 is angle from vertical to cone surface
                     double r = (h0+h)*tan(R2); // R2 is angle from vertical to cone surface
 
                     p[2] = h;
@@ -955,7 +954,8 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
 
                     pos->setValue(p, i);
 
-                    if (!same_sense) n *= -1;
+                    n = Vec3d(cos(a)*cos(R2), sin(a)*cos(R2), sin(R2));
+                    if (same_sense) n *= -1;
                     norms->setValue(n, i);
                 }
             }
