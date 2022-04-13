@@ -1184,7 +1184,7 @@ void VRSTEP::buildGeometries() {
         //if (i != 31) continue; // test for cylinder faces
         //if (i != 24) continue; // test for sphere faces
         //if (i != 26) continue; // test for bspline faces
-        if (i != 47) continue; // test for bspline faces
+        //if (i != 47) continue; // test for bspline faces
         //if (BrepShape.ID == 134852)
         //exploreEntity(nodes[BrepShape.entity], true);
 
