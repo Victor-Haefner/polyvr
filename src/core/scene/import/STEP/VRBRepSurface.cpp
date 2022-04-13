@@ -380,6 +380,26 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
         return Vec2i(resI, resJ);
     };
 
+    auto wireBounds = [&](vector<VRBRepBound>& bounds) {
+        VRGeoData data;
+
+        for (auto b : bounds) {
+            for (uint i=0; i<b.points.size(); i++) {
+                Pnt3d p = b.points[i];
+                mI.mult(Pnt3d(p),p);
+                data.pushVert(p, Vec3d(0,1,0));
+                if (i > 0) data.pushLine();
+            }
+        }
+
+        auto geo = data.asGeometry("facePlaceHolder");
+        VRMaterialPtr mat = VRMaterial::create("face");
+        mat->setLit(0);
+        mat->setLineWidth(3);
+        geo->setMaterial(mat);
+        return geo;
+    };
+
     //if (type != "Spherical_Surface") return 0;
 
     if (type == "Plane") {
@@ -830,8 +850,8 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
 
     if (type == "Conical_Surface") {
         Triangulator triangulator; // feed the triangulator with unprojected points
-        h0 = R*tan(R2);
-        cout << "Conical_Surface, R: " << R << ", R2: " << R2 << ", h0: " << h0 << endl;
+        h0 = R/tan(R2);
+        //cout << "Conical_Surface, R: " << R << ", R2: " << R2 << ", h0: " << h0 << endl;
 
 
         for (auto b : bounds) {
@@ -940,6 +960,9 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
                 }
             }
         }
+
+        //auto geo = wireBounds(bounds);
+        //g->addChild(geo);
 
         if (g) g->setMatrix(m);
         if (g && g->getMesh() && g->getMesh()->geo->getPositions() && g->getMesh()->geo->getPositions()->size() > 0) return g;

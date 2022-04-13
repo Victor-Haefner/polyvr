@@ -1184,6 +1184,7 @@ void VRSTEP::buildGeometries() {
         //if (i != 31) continue; // test for cylinder faces
         //if (i != 24) continue; // test for sphere faces
         //if (i != 26) continue; // test for bspline faces
+        if (i != 47) continue; // test for bspline faces
         //if (BrepShape.ID == 134852)
         //exploreEntity(nodes[BrepShape.entity], true);
 
@@ -1207,7 +1208,7 @@ void VRSTEP::buildGeometries() {
                     static int k = 0; k++;
                     //if (k != 15 && k != 22) continue;
                     //if (k != 67 && k != 9) continue;
-                    //if (k != 105) continue;
+                    if (k != 60) continue;
 
                     auto& Face = instances[j];
                     //if (k == 67) exploreEntity(nodes[Face.entity], true);
@@ -1234,8 +1235,8 @@ void VRSTEP::buildGeometries() {
                         data.addVertexColors(color);
                         data.addVertexTexCoords(Vec2d(i, k)); // for debugging faces
 
-                        geo->merge( faceGeo );
-                        //geo->addChild( faceGeo );
+                        //geo->merge( faceGeo );
+                        geo->addChild( faceGeo );
                         //cout << "  Outer Face: " << Face.type << " " << surface.etype << " " << Face.ID << " " << k << endl;
                     } else cout << "VRSTEP::buildGeometries Error 2 " << Face.type << " " << Face.ID << endl;
                 }
