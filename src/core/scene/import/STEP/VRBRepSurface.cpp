@@ -289,6 +289,38 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
         return Vec2d(a,h);
     };
 
+    auto conicUnproject = [&](Vec3d& p, double& lastAngle, int type, double cDir = 0, bool circleEnd = false) {
+        mI.mult(Pnt3d(p),p);
+        cout << " conicUnproject, p: " << p << ", lastAngle: " << lastAngle << ", type: " << type << ", cDir: " << cDir << ", circleEnd: " << circleEnd << endl;
+
+        double h = p[2];
+        //double r = R*h*tan(R2); // R2 is angle from vertical to cone surface
+        double a = atan2(p[1], p[0]);
+        //cout << " -> R: " << r << ", r: " << p[0]*p[0]+p[1]*p[1] << " -> a: " << a << ", h: " << h << endl;
+
+        if (abs(a) > pi-1e-3) { // ambigous point on +- pi
+            //cout << "  amb point?: " << a << ", cDir: " << cDir << endl;
+            if (type == 0 && lastAngle != 1000) a = lastAngle; // next point on line
+
+            if (type == 1) { // circle
+                if (!circleEnd) a = lastAngle;
+                if (cDir > 0 && circleEnd) a =  pi;
+                if (cDir < 0 && circleEnd) a = -pi;
+                //cout << "   set circle a: " << a << endl;
+            }
+
+            if (type == 2) { // B-Spline, stay close to old value!
+                if (!circleEnd) a = lastAngle;
+                if (lastAngle < 0 && circleEnd) a = -pi;
+                if (lastAngle > 0 && circleEnd) a =  pi;
+                //cout << "   set spline a: " << a << endl;
+            }
+        }
+
+        lastAngle = a;
+        return Vec2d(a,h);
+    };
+
     // TODO: this may fail if inner polygons are not moved accrodingly
     //  maybe it would be better to make a border instead of moving points
     auto fixPolyJump = [&](VRPolygon& poly) {
@@ -797,7 +829,120 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
     }
 
     if (type == "Conical_Surface") {
-        //cout << "Conical_Surface" << endl;
+        Triangulator triangulator; // feed the triangulator with unprojected points
+        h0 = R*tan(R2);
+        cout << "Conical_Surface, R: " << R << ", R2: " << R2 << ", h0: " << h0 << endl;
+
+
+        for (auto b : bounds) {
+            VRPolygon poly;
+            double lastAngle = 1000;
+            Vec3d cN(0,0,1);
+
+            // shift edges so first edge not start on +-pi line
+            auto eOnPiLine = [&](VRBRepEdge& e) {
+                Vec3d p = e.points[0];
+                mI.mult(Pnt3d(p),p);
+                if (abs(p[1]) > 1e-3) return false;
+                if (p[0] > 1e-3) return false;
+                return true;
+            };
+
+            if (eOnPiLine(b.edges[0]))  {
+                int i0 = -1;
+                for (int i=1; i<b.edges.size(); i++) {
+                    if (!eOnPiLine(b.edges[i])) {
+                        i0 = i;
+                        break;
+                    }
+                }
+
+                b.shiftEdges(i0);
+            }
+
+            for (auto& e : b.edges) {
+                if (e.etype == "Circle") {
+                    double cDir = e.compCircleDirection(mI, cN);
+
+                    if (poly.size() == 0) {
+                        Vec2d p1 = conicUnproject(e.EBeg, lastAngle, 1, cDir, false);
+                        poly.addPoint(p1);
+                    }
+
+                    Vec2d p2 = conicUnproject(e.EEnd, lastAngle, 1, cDir, true);
+                    poly.addPoint(p2);
+                    continue;
+                }
+
+                if (e.etype == "Line") {
+                    if (poly.size() == 0) {
+                        Vec2d p1 = conicUnproject(e.EBeg, lastAngle, 0);
+                        poly.addPoint(p1);
+                    }
+
+                    Vec2d p2 = conicUnproject(e.EEnd, lastAngle, 0);
+                    poly.addPoint(p2);
+                    continue;
+                }
+
+                if (e.etype == "B_Spline_Curve_With_Knots") {
+                    int i0 = 1;
+                    if (poly.size() == 0) i0 = 0;
+                    for (int i=i0; i<e.points.size(); i++) {
+                        auto& p = e.points[i];
+                        Vec2d pc = conicUnproject(p, lastAngle, 2, 0, i>0);
+                        poly.addPoint(pc);
+                    }
+                    continue;
+                }
+
+                cout << "Unhandled edge on cylinder of type " << e.etype << endl;
+            }
+
+            checkPolyIntegrety(poly);
+            checkPolyOrientation(poly, b);
+            triangulator.add(poly);
+        }
+
+        auto g = triangulator.compute();
+        if (!g) return 0;
+        if (auto gg = g->getMesh()->geo) { if (!gg->getPositions()) cout << "VRBRepSurface::build: Triangulation failed, no mesh positions!\n";
+        } else cout << "VRBRepSurface::build: Triangulation failed, no mesh generated!\n";
+
+        VRMeshSubdivision subdiv;
+        subdiv.subdivideGrid(g, Vec3d(Dangle*0.5, -1, -1));
+
+
+        if (g) if (auto gg = g->getMesh()) {
+            // project the points back into 3D space
+            GeoVectorPropertyMTRecPtr pos = gg->geo->getPositions();
+            GeoVectorPropertyMTRecPtr norms = gg->geo->getNormals();
+            if (pos) {
+                for (uint i=0; i<pos->size(); i++) {
+                    Pnt3d p = Pnt3d(pos->getValue<Pnt3f>(i));
+                    Vec3d n = Vec3d(norms->getValue<Vec3f>(i));
+                    double a = p[0];
+                    double h = p[2];
+                    n = Vec3d(cos(a), sin(a), 0);
+
+                    //double k = (h+h0)*tan(R2); // R2 is angle from vertical to cone surface
+                    double r = (h0+h)*tan(R2); // R2 is angle from vertical to cone surface
+
+                    p[2] = h;
+                    p[1] = n[1]*r;
+                    p[0] = n[0]*r;
+                    //cout << " a: " << a << ", h: " << h << " -> p: " << p << endl;
+
+                    pos->setValue(p, i);
+
+                    if (!same_sense) n *= -1;
+                    norms->setValue(n, i);
+                }
+            }
+        }
+
+        if (g) g->setMatrix(m);
+        if (g && g->getMesh() && g->getMesh()->geo->getPositions() && g->getMesh()->geo->getPositions()->size() > 0) return g;
         return 0;
     }
 
