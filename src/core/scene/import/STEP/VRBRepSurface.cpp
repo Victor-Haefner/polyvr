@@ -225,16 +225,16 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
 
         if (n[2] <= -1.0) n[2] = -1.0;
         if (n[2] >=  1.0) n[2] =  1.0;
-        cout << "   n: " << n << "   ";
+        //cout << "   n: " << n << "   ";
         double theta = asin(n[2]); // theta, angle around torus, -pi -> pi
         if (n.dot(nR) < 0 && theta <  0) theta = -pi-theta;
         if (n.dot(nR) < 0 && theta >= 0) theta =  pi-theta;
 
-        // ambigous points, when theta points up or down, phi can be any value-> take old one!
-        if (abs(theta) > pi*0.5-1e-3) phi = lastPhi;
-
         // ambigous points, theta on pi line, can be + or - pi
-        if (abs(theta) > pi-1e-3) theta = lastTheta;
+        if (abs(theta) > pi-1e-3) {
+            if (lastTheta > 0) theta =  pi;
+            if (lastTheta < 0) theta = -pi;
+        }
 
         if (abs(phi) > pi-1e-3) { // ambigous point on +- pi
             //cout << " !!! amb point?: " << phi << ", cDir: " << cDir << ", type: " << type << ", curveEnd: " << curveEnd << endl;
@@ -1095,11 +1095,11 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
     }
 
     if (type == "Toroidal_Surface") {
-        cout << "Toroidal_Surface R: " << R << ", r: " << R2 << ", same_sense: " << same_sense << endl;
+        //cout << "Toroidal_Surface R: " << R << ", r: " << R2 << ", same_sense: " << same_sense << endl;
         Triangulator triangulator; // feed the triangulator with unprojected points
 
         for (auto b : bounds) {
-            cout << " toroidal bound" << endl;
+            //cout << " toroidal bound" << endl;
             VRPolygon poly;
             double lastTheta = 1000;
             double lastPhi   = 1000;
@@ -1109,12 +1109,12 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
             auto eOnPiLine = [&](VRBRepEdge& e) {
                 Vec3d p = e.points[0];
                 mI.mult(Pnt3d(p),p);
-                cout << "  on pi line? " << p << endl;
+                //cout << "  on pi line? " << p << endl;
                 if (abs(p[1]) < 1e-3 && p[0] < 1e-3) return true; // phi on +-pi line
                 if (abs(p[2]) < 1e-3) { // theta on 0 or +-pi
                     if (p.length() < R) return true; // theta on +-pi
                 }
-                cout << "   .. no!" << endl;
+                //cout << "   .. no!" << endl;
                 return false;
             };
 
@@ -1127,14 +1127,14 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
                     }
                 }
 
-                cout << "  shiftEdges " << i0 << endl;
+                //cout << "  shiftEdges " << i0 << endl;
                 b.shiftEdges(i0);
             }
 
-            Vec3d n;
+            //Vec3d n;
 
             for (auto& e : b.edges) {
-                cout << " edge on torus " << e.etype << endl;
+                //cout << " edge on torus " << e.etype << endl;
                 if (e.etype == "Circle") {
                     double cDir = e.compCircleDirection(mI, cN);
 
@@ -1143,9 +1143,9 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
                     for (int i=i0; i<e.points.size(); i++) {
                         auto& p = e.points[i];
                         Vec2d pc = toroidalUnproject(p, lastTheta, lastPhi, 1, cDir, i>0);
-                        auto P = toroidalProject(pc, n);
-                        if (P.dist(p) < 0.1) cout << " --- Circle: " << p << " -> " << pc << " -> " << P << endl;
-                        else cout << " !!! Circle: " << p << " -> " << pc << " -> " << P << endl;
+                        //auto P = toroidalProject(pc, n);
+                        //if (P.dist(p) < 0.1) cout << " --- Circle: " << p << " -> " << pc << " -> " << P << endl;
+                        //else cout << " !!! Circle: " << p << " -> " << pc << " -> " << P << endl;
                         poly.addPoint(pc);
                     }
                     continue;
@@ -1157,9 +1157,9 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
                     for (int i=i0; i<e.points.size(); i++) {
                         auto& p = e.points[i];
                         Vec2d pc = toroidalUnproject(p, lastTheta, lastPhi, 2, 0, i>0);
-                        auto P = toroidalProject(pc, n);
-                        if (P.dist(p) < 0.01) cout << " --- Curve: " << p << " -> " << pc << " -> " << P << endl;
-                        else cout << " !!! Circle: " << p << " -> " << pc << " -> " << P << endl;
+                        //auto P = toroidalProject(pc, n);
+                        //if (P.dist(p) < 0.01) cout << " --- Curve: " << p << " -> " << pc << " -> " << P << endl;
+                        //else cout << " !!! Circle: " << p << " -> " << pc << " -> " << P << endl;
                         poly.addPoint(pc);
                     }
                     continue;
@@ -1170,7 +1170,7 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
 
             checkPolyOrientation(poly, b);
             triangulator.add(poly);
-            cout << "  poly: " << toString(poly.get()) << endl;
+            //cout << "  poly: " << toString(poly.get()) << endl;
         }
 
         auto g = triangulator.compute();

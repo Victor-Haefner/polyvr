@@ -173,6 +173,11 @@ void VRMeshSubdivision::segmentTriangle(VRGeoData& geo, Vec3i pSegments, vector<
         else if (pSegments[pOrder[0]] > pSegments[pOrder[2]]) swap(pOrder[0], pOrder[2]);
         else if (pSegments[pOrder[1]] > pSegments[pOrder[2]]) swap(pOrder[1], pOrder[2]);
     }
+
+    if (segments.size() == 0) {
+        cout << "WARNING in VRMeshSubdivision::segmentTriangle, no segments!" << endl;
+        return;
+    }
     //cout << " ordered vertices " << pOrder << "  " << pSegments[pOrder[0]] << " " << pSegments[pOrder[1]] << " " << pSegments[pOrder[2]] << endl;
 
     vector<Vec3f> edges(3);

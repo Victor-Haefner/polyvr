@@ -1185,7 +1185,7 @@ void VRSTEP::buildGeometries() {
         //if (i != 24) continue; // test for sphere faces
         //if (i != 26) continue; // test for bspline faces
         //if (i != 47) continue; // test for conic faces
-        if (i != 12) continue; // test for toroidal faces
+        //if (i != 12) continue; // test for toroidal faces
         //if (BrepShape.ID == 134852)
         //exploreEntity(nodes[BrepShape.entity], true);
 
@@ -1207,7 +1207,7 @@ void VRSTEP::buildGeometries() {
                 auto& Outer = instances[ Item.get<0, STEPentity*>() ];
                 for (auto j : Outer.get<0, vector<STEPentity*> >() ) {
                     static int k = 0; k++;
-                    if (k != 15 && k != 16) continue;
+                    //if (k != 15 && k != 16) continue;
                     //if (k != 67 && k != 9) continue;
                     //if (k != 4) continue;
 
@@ -1238,7 +1238,7 @@ void VRSTEP::buildGeometries() {
 
                         //geo->merge( faceGeo );
                         geo->addChild( faceGeo );
-                        cout << "  Outer Face: " << Face.type << " " << surface.etype << " " << Face.ID << " " << k << endl;
+                        //cout << "  Outer Face: " << Face.type << " " << surface.etype << " " << Face.ID << " " << k << endl;
                     } else cout << "VRSTEP::buildGeometries Error 2 " << Face.type << " " << Face.ID << endl;
                 }
             } else if (Item.type == "Axis2_Placement_3d") { // ignore?
