@@ -237,12 +237,13 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
         }
 
         if (abs(phi) > pi-1e-3) { // ambigous point on +- pi
+            //cout << "  !F=pi, lF=" << lastPhi;
             //cout << " !!! amb point?: " << phi << ", cDir: " << cDir << ", type: " << type << ", curveEnd: " << curveEnd << endl;
-            if (type == 1) { // circle or B-Spline
+            /*if (type == 1) { // circle
                 if (!curveEnd) phi = lastPhi;
                 if (cDir > 0 && curveEnd) phi =  pi;
                 if (cDir < 0 && curveEnd) phi = -pi;
-                //cout << "   set circle phi: " << phi << endl;
+                cout << "   set circle phi: " << phi << endl;
             }
 
             if (type == 2) { // B-Spline, stay close to old value!
@@ -250,7 +251,10 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
                 if (lastPhi < 0 && curveEnd) phi = -pi;
                 if (lastPhi > 0 && curveEnd) phi =  pi;
                 //cout << "   set spline phi: " << phi << endl;
-            }
+            }*/
+            if (lastPhi < 0) phi = -pi;
+            if (lastPhi > 0) phi =  pi;
+            //cout << "->" << phi << "  ";
         }
 
         //cout << "   -> theta, phi: " << theta << ", " << phi << endl;
@@ -292,7 +296,7 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
 
     auto conicUnproject = [&](Vec3d& p, double& lastAngle, int type, double cDir = 0, bool circleEnd = false) {
         mI.mult(Pnt3d(p),p);
-        cout << " conicUnproject, p: " << p << ", lastAngle: " << lastAngle << ", type: " << type << ", cDir: " << cDir << ", circleEnd: " << circleEnd << endl;
+        //cout << " conicUnproject, p: " << p << ", lastAngle: " << lastAngle << ", type: " << type << ", cDir: " << cDir << ", circleEnd: " << circleEnd << endl;
 
         double h = p[2];
         //double r = R*h*tan(R2); // R2 is angle from vertical to cone surface
@@ -1213,8 +1217,8 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
             }
         }
 
-        auto geo = wireBounds(bounds);
-        g->addChild(geo);
+        //auto geo = wireBounds(bounds);
+        //g->addChild(geo);
 
         if (g) g->setMatrix(m);
         if (g && g->getMesh() && g->getMesh()->geo->getPositions() && g->getMesh()->geo->getPositions()->size() > 0) return g;

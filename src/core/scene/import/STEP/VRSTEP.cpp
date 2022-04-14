@@ -1185,14 +1185,14 @@ void VRSTEP::buildGeometries() {
         //if (i != 24) continue; // test for sphere faces
         //if (i != 26) continue; // test for bspline faces
         //if (i != 47) continue; // test for conic faces
-        //if (i != 12) continue; // test for toroidal faces
+        //if (i != 35) continue; // test for toroidal faces
         //if (BrepShape.ID == 134852)
         //exploreEntity(nodes[BrepShape.entity], true);
 
         string name = BrepShape.get<0, string, vector<STEPentity*> >();
         auto geo = VRGeometry::create(name);
 
-        geo->getMaterial()->setFrontBackModes(GL_FILL, GL_LINE); // to test face orientations
+        //geo->getMaterial()->setFrontBackModes(GL_FILL, GL_LINE); // to test face orientations
 
         cout << "VRSTEP::buildGeometries " << name << " ID: " << BrepShape.ID << " i " << i << endl;
 
@@ -1207,7 +1207,7 @@ void VRSTEP::buildGeometries() {
                 auto& Outer = instances[ Item.get<0, STEPentity*>() ];
                 for (auto j : Outer.get<0, vector<STEPentity*> >() ) {
                     static int k = 0; k++;
-                    //if (k != 15 && k != 16) continue;
+                    //if (k != 99 && k != 16) continue;
                     //if (k != 67 && k != 9) continue;
                     //if (k != 4) continue;
 
@@ -1236,8 +1236,8 @@ void VRSTEP::buildGeometries() {
                         data.addVertexColors(color);
                         data.addVertexTexCoords(Vec2d(i, k)); // for debugging faces
 
-                        //geo->merge( faceGeo );
-                        geo->addChild( faceGeo );
+                        geo->merge( faceGeo );
+                        //geo->addChild( faceGeo );
                         //cout << "  Outer Face: " << Face.type << " " << surface.etype << " " << Face.ID << " " << k << endl;
                     } else cout << "VRSTEP::buildGeometries Error 2 " << Face.type << " " << Face.ID << endl;
                 }
