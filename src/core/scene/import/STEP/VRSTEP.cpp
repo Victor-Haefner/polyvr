@@ -1207,7 +1207,7 @@ void VRSTEP::buildGeometries() {
                 auto& Outer = instances[ Item.get<0, STEPentity*>() ];
                 for (auto j : Outer.get<0, vector<STEPentity*> >() ) {
                     static int k = 0; k++;
-                    //if (k != 15 && k != 22) continue;
+                    if (k != 15 && k != 16) continue;
                     //if (k != 67 && k != 9) continue;
                     //if (k != 4) continue;
 

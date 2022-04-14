@@ -225,9 +225,10 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
 
         if (n[2] <= -1.0) n[2] = -1.0;
         if (n[2] >=  1.0) n[2] =  1.0;
+        cout << "   n: " << n << "   ";
         double theta = asin(n[2]); // theta, angle around torus, -pi -> pi
-        if (p.dot(nR) < 0 && theta <  0) theta = -pi-theta;
-        if (p.dot(nR) < 0 && theta >= 0) theta =  pi-theta;
+        if (n.dot(nR) < 0 && theta <  0) theta = -pi-theta;
+        if (n.dot(nR) < 0 && theta >= 0) theta =  pi-theta;
 
         // ambigous points, when theta points up or down, phi can be any value-> take old one!
         if (abs(theta) > pi*0.5-1e-3) phi = lastPhi;
@@ -1143,7 +1144,8 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
                         auto& p = e.points[i];
                         Vec2d pc = toroidalUnproject(p, lastTheta, lastPhi, 1, cDir, i>0);
                         auto P = toroidalProject(pc, n);
-                        cout << " --- Circle: " << p << " -> " << pc << " -> " << P << endl;
+                        if (P.dist(p) < 0.1) cout << " --- Circle: " << p << " -> " << pc << " -> " << P << endl;
+                        else cout << " !!! Circle: " << p << " -> " << pc << " -> " << P << endl;
                         poly.addPoint(pc);
                     }
                     continue;
@@ -1156,7 +1158,8 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
                         auto& p = e.points[i];
                         Vec2d pc = toroidalUnproject(p, lastTheta, lastPhi, 2, 0, i>0);
                         auto P = toroidalProject(pc, n);
-                        cout << " --- Curve: " << p << " -> " << pc << " -> " << P << endl;
+                        if (P.dist(p) < 0.01) cout << " --- Curve: " << p << " -> " << pc << " -> " << P << endl;
+                        else cout << " !!! Circle: " << p << " -> " << pc << " -> " << P << endl;
                         poly.addPoint(pc);
                     }
                     continue;
