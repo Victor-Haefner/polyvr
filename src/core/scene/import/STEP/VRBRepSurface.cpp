@@ -321,6 +321,18 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
         return Vec2d(a,h);
     };
 
+    auto toroidalProject = [&](const Vec2d& p, Vec3d& n) {
+        double theta = p[0];
+        double phi   = p[1];
+
+        Vec3d pRing = Vec3d(cos(phi), sin(phi), 0) * R; // middle of ring
+        n = Vec3d(cos(phi)*cos(theta), sin(phi)*cos(theta), sin(theta));
+
+        Pnt3d P(pRing + n * R2);
+        //cout << "    torus theta: " << theta << ", phi: " << phi << ", pos: " << P << ", R: " << R << ", R2: " << R2 << endl;
+        return P;
+    };
+
     // TODO: this may fail if inner polygons are not moved accrodingly
     //  maybe it would be better to make a border instead of moving points
     auto fixPolyJump = [&](VRPolygon& poly) {
@@ -446,6 +458,7 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
     }
 
     if (type == "Cylindrical_Surface") {
+        //return 0;
         Triangulator triangulator; // feed the triangulator with unprojected points
 
         for (auto b : bounds) {
@@ -1081,7 +1094,7 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
     }
 
     if (type == "Toroidal_Surface") {
-        cout << "Toroidal_Surface R: " << R << ", r: " << R2 << endl;
+        cout << "Toroidal_Surface R: " << R << ", r: " << R2 << ", same_sense: " << same_sense << endl;
         Triangulator triangulator; // feed the triangulator with unprojected points
 
         for (auto b : bounds) {
@@ -1096,10 +1109,12 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
                 Vec3d p = e.points[0];
                 mI.mult(Pnt3d(p),p);
                 cout << "  on pi line? " << p << endl;
-                if (abs(p[1]) > 1e-3) return false;
-                if (p[0] > 1e-3) return false;
-                cout << "   .. yes!" << endl;
-                return true;
+                if (abs(p[1]) < 1e-3 && p[0] < 1e-3) return true; // phi on +-pi line
+                if (abs(p[2]) < 1e-3) { // theta on 0 or +-pi
+                    if (p.length() < R) return true; // theta on +-pi
+                }
+                cout << "   .. no!" << endl;
+                return false;
             };
 
             if (eOnPiLine(b.edges[0])) {
@@ -1115,6 +1130,8 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
                 b.shiftEdges(i0);
             }
 
+            Vec3d n;
+
             for (auto& e : b.edges) {
                 cout << " edge on torus " << e.etype << endl;
                 if (e.etype == "Circle") {
@@ -1125,7 +1142,8 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
                     for (int i=i0; i<e.points.size(); i++) {
                         auto& p = e.points[i];
                         Vec2d pc = toroidalUnproject(p, lastTheta, lastPhi, 1, cDir, i>0);
-                        cout << " ---- " << p << " -> " << pc << endl;
+                        auto P = toroidalProject(pc, n);
+                        cout << " --- Circle: " << p << " -> " << pc << " -> " << P << endl;
                         poly.addPoint(pc);
                     }
                     continue;
@@ -1137,7 +1155,8 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
                     for (int i=i0; i<e.points.size(); i++) {
                         auto& p = e.points[i];
                         Vec2d pc = toroidalUnproject(p, lastTheta, lastPhi, 2, 0, i>0);
-                        cout << " ---- " << p << " -> " << pc << endl;
+                        auto P = toroidalProject(pc, n);
+                        cout << " --- Curve: " << p << " -> " << pc << " -> " << P << endl;
                         poly.addPoint(pc);
                     }
                     continue;
@@ -1174,22 +1193,19 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
             GeoVectorPropertyMTRecPtr norms = gg->geo->getNormals();
             if (pos) {
                 for (uint i=0; i<pos->size(); i++) {
+                    Vec3d n;
                     Pnt3d p = Pnt3d(pos->getValue<Pnt3f>(i));
-                    Vec3d n = Vec3d(norms->getValue<Vec3f>(i));
-                    double theta = pi-p[0];
-                    double phi   = p[2];
+                    p = toroidalProject(Vec2d(p[0], p[2]), n);
 
-                    Vec3d pRing = Vec3d(cos(phi), sin(phi), 0) * R; // middle of ring
-                    n = Vec3d(cos(phi)*cos(theta), sin(phi)*cos(theta), sin(theta));
-                    p = Pnt3d(pRing + n * R2);
-
-                    cout << "    torus theta: " << theta << ", phi: " << phi << ", pos: " << p << ", R: " << R << ", R2: " << R2 << endl;
                     if (!same_sense) n *= -1;
                     pos->setValue(p, i);
                     norms->setValue(n, i);
                 }
             }
         }
+
+        auto geo = wireBounds(bounds);
+        g->addChild(geo);
 
         if (g) g->setMatrix(m);
         if (g && g->getMesh() && g->getMesh()->geo->getPositions() && g->getMesh()->geo->getPositions()->size() > 0) return g;

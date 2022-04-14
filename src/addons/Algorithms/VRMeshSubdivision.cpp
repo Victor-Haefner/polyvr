@@ -2,6 +2,8 @@
 
 #include "core/math/partitioning/boundingbox.h"
 #include "core/utils/toString.h"
+#include "core/utils/isNan.h"
+#include "core/utils/system/VRSystem.h"
 
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/geometry/OSGGeometry.h"
@@ -23,6 +25,11 @@ bool VRMeshSubdivision::checkOrder(VRGeoData& g, size_t a, size_t b, size_t c, V
     Pnt3d p0 = g.getPosition(a);
     Pnt3d p1 = g.getPosition(b);
     Pnt3d p2 = g.getPosition(c);
+
+    if (isNan(p0)) printBacktrace();
+    if (isNan(p1)) printBacktrace();
+    if (isNan(p2)) printBacktrace();
+
     float cp = (p1-p0).cross(p2-p0).dot(n);
     return (cp >= 0);
 }
@@ -261,6 +268,17 @@ void VRMeshSubdivision::segmentTriangle(VRGeoData& geo, Vec3i pSegments, vector<
             pr1[dim2] = pv1[dim2] + vp1[dim2]/vp1[dim]*(s[1]-pv1[dim]);
             pr2[dim2] = pv2[dim2] + vp2[dim2]/vp2[dim]*(s[1]-pv2[dim]);
 
+            if (isNan(pr1) || isNan(pr2)) {
+                cout << "NAN----------------------NAN" << endl;
+                cout << s << ",   dim " << dim << ",   dim2 " << dim2 << endl;
+                cout << pr1 << ",   " << pr2 << endl;
+                cout << vp1 << ",   " << vp2 << endl;
+                cout << pv1 << ",   " << pv2 << ",   " << pv3 << endl;
+                cout << pOrder << endl;
+                cout << pSegments[pOrder[0]] << ",   " << pSegments[pOrder[1]] << ",   " << pSegments[pOrder[2]] << endl;
+                cout << toString(points) << ",   " << pSegments << endl;
+            }
+
             int e1 = geo.pushVert(pr1, n);
             int e2 = geo.pushVert(pr2, n);
             ep1.push_back(e1);
@@ -371,12 +389,12 @@ void VRMeshSubdivision::subdivideAxis(VRGeometryPtr geo, Vec3i gridN, Vec3d gMin
 
         vMid = 3-(vMin+vMax);
         aMid = points[vMid][dim];
+        float eps = 1e-6;
 
         // grid intersect triangle
         Vec3i pSegments;
         vector<Vec2d> segments;
         for (int i=0; i<gridN[dim]; i++) {
-            float eps = 1e-6;
             float g1 = gMin[dim] + i*res[dim];
             float g2 = g1 + res[dim];
             if (g2 >  aMin     && g1 <  aMax) segments.push_back(Vec2d(g1, g2));
@@ -385,6 +403,9 @@ void VRMeshSubdivision::subdivideAxis(VRGeometryPtr geo, Vec3i gridN, Vec3d gMin
             if (g1 <  aMax     && g2 >= aMax-eps) pSegments[vMax] = i;
             //cout << "     g12: " << Vec2d(g1, g2) << ", aMinMidMax: " << Vec3d(aMin, aMid, aMax) << ", vMinMidMax: " << Vec3d(vMin, vMid, vMax) << endl;
         }
+
+        if (abs(aMid-aMin) < eps) pSegments[vMid] = pSegments[vMin];
+        if (abs(aMid-aMax) < eps) pSegments[vMid] = pSegments[vMax];
 
         //cout << "   subdivide triangle " << pSegments << ", points: " << toString(points) << ", n: " << n << ", segments: " << toString(segments) << endl;
         segmentTriangle(newData, pSegments, points, Vec3d(n), segments, dim, dim2);
