@@ -864,7 +864,7 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
 
     if (type == "Conical_Surface") {
         Triangulator triangulator; // feed the triangulator with unprojected points
-        h0 = R/tan(R2);
+        h0 = -R/tan(R2);
         //cout << "Conical_Surface, R: " << R << ", R2: " << R2 << ", h0: " << h0 << endl;
 
 
@@ -959,7 +959,7 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
                     double h = p[2];
                     n = Vec3d(cos(a), sin(a), 0);
 
-                    double r = (h0+h)*tan(R2); // R2 is angle from vertical to cone surface
+                    double r = (h-h0)*tan(R2); // R2 is angle from vertical to cone surface
 
                     p[2] = h;
                     p[1] = n[1]*r;
@@ -968,7 +968,10 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
 
                     pos->setValue(p, i);
 
-                    n = Vec3d(cos(a)*cos(R2), sin(a)*cos(R2), sin(R2));
+                    double b = pi-R2;
+                    if (h < h0) b = pi+R2; // TODO: this line is not tested!
+
+                    n = Vec3d(cos(a)*cos(b), sin(a)*cos(b), sin(b));
                     if (same_sense) n *= -1;
                     norms->setValue(n, i);
                 }
