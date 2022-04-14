@@ -396,11 +396,14 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
     auto wireBounds = [&](vector<VRBRepBound>& bounds) {
         VRGeoData data;
 
+        Color3f col(1,1,0);
+        if (!same_sense) col = Color3f(1,0,1);
+
         for (auto b : bounds) {
             for (uint i=0; i<b.points.size(); i++) {
                 Pnt3d p = b.points[i];
                 mI.mult(Pnt3d(p),p);
-                data.pushVert(p, Vec3d(0,1,0));
+                data.pushVert(p, Vec3d(0,1,0), col);
                 if (i > 0) data.pushLine();
             }
         }
@@ -408,7 +411,7 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
         auto geo = data.asGeometry("facePlaceHolder");
         VRMaterialPtr mat = VRMaterial::create("face");
         mat->setLit(0);
-        mat->setLineWidth(3);
+        mat->setLineWidth(4);
         geo->setMaterial(mat);
         return geo;
     };
@@ -538,7 +541,7 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
         } else cout << "VRBRepSurface::build: Triangulation failed, no mesh generated!\n";
 
         VRMeshSubdivision subdiv;
-        subdiv.subdivideGrid(g, Vec3d(Dangle, -1, -1));
+        subdiv.subdivideGrid(g, Vec3d(Dangle, -1, -1), false);
 
         if (g) if (auto gg = g->getMesh()) {
             // project the points back into 3D space
@@ -828,7 +831,7 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
             g = triangulator.compute();
 
             VRMeshSubdivision subdiv;
-            subdiv.subdivideGrid( g, Vec3d(Tu/res[0], -1, Tv/res[1]) );
+            subdiv.subdivideGrid( g, Vec3d(Tu/res[0], -1, Tv/res[1]) , false);
 
             if (g) if (auto gg = g->getMesh()) {
                 VRGeoData nMesh;
@@ -944,7 +947,7 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
         } else cout << "VRBRepSurface::build: Triangulation failed, no mesh generated!\n";
 
         VRMeshSubdivision subdiv;
-        subdiv.subdivideGrid(g, Vec3d(Dangle*0.5, -1, -1));
+        subdiv.subdivideGrid(g, Vec3d(Dangle*0.5, -1, -1), false);
 
 
         if (g) if (auto gg = g->getMesh()) {
@@ -954,10 +957,9 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
             if (pos) {
                 for (uint i=0; i<pos->size(); i++) {
                     Pnt3d p = Pnt3d(pos->getValue<Pnt3f>(i));
-                    Vec3d n = Vec3d(norms->getValue<Vec3f>(i));
                     double a = p[0];
                     double h = p[2];
-                    n = Vec3d(cos(a), sin(a), 0);
+                    Vec3d n = Vec3d(cos(a), sin(a), 0);
 
                     double r = (h-h0)*tan(R2); // R2 is angle from vertical to cone surface
 
@@ -1059,7 +1061,7 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
         } else cout << "VRBRepSurface::build: Triangulation failed, no mesh generated!\n";
 
         VRMeshSubdivision subdiv;
-        subdiv.subdivideGrid(g, Vec3d(Dangle, -1, Dangle));
+        subdiv.subdivideGrid(g, Vec3d(Dangle, -1, Dangle), false);
 
         // tesselate the result while projecting it back on the surface
         if (g) if (auto gg = g->getMesh()) {
@@ -1182,12 +1184,13 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
         } else cout << "VRBRepSurface::build: Triangulation failed, no mesh generated!\n";
 
         VRMeshSubdivision subdiv;
-        subdiv.subdivideGrid(g, Vec3d(Dangle, -1, Dangle));
+        subdiv.subdivideGrid(g, Vec3d(Dangle, -1, Dangle), false);
 
         // tesselate the result while projecting it back on the surface
         if (g) if (auto gg = g->getMesh()) {
-            VRGeoData nMesh; // TODO: remove this, this only swaps the normal!
+            VRGeoData nMesh; // TODO: move this, this swaps the normal and triangle orientation!
             Vec3d n(0,1,0);
+            if (!same_sense) n *= -1;
             for (auto it = TriangleIterator(gg->geo); !it.isAtEnd() ;++it) {
                 triangle tri(it);
                 pushTri(nMesh, Pnt3d(tri.p[0]), Pnt3d(tri.p[1]), Pnt3d(tri.p[2]), n);

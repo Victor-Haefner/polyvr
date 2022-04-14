@@ -345,7 +345,7 @@ void VRMeshSubdivision::segmentTriangle(VRGeoData& geo, Vec3i pSegments, vector<
     cout << " unhandled triangle " << endl;
 }
 
-void VRMeshSubdivision::subdivideAxis(VRGeometryPtr geo, Vec3i gridN, Vec3d gMin, Vec3d res, int dim, int dim2) {
+void VRMeshSubdivision::subdivideAxis(VRGeometryPtr geo, Vec3i gridN, Vec3d gMin, Vec3d res, int dim, int dim2, bool swapNormals) {
     if (gridN[dim] == 1) return;
     //cout << " ...... subdivideAxis gridN: " << gridN << ", gMin: " << gMin << ", res: " << res << ", dim: " << dim << ", dim2: " << dim2 << endl;
 
@@ -360,19 +360,19 @@ void VRMeshSubdivision::subdivideAxis(VRGeometryPtr geo, Vec3i gridN, Vec3d gMin
         //K++;
         //if (K > 27) break;
 
-        Vec3f n(0,1,0);
         Vec3f e1 = points[1]-points[0];
         Vec3f e2 = points[2]-points[0];
         Vec3f e3 = points[2]-points[1];
         double e1L2 = e1.squareLength();
         double e2L2 = e2.squareLength();
         double e3L2 = e3.squareLength();
-        n = e1.cross(e2);
+        Vec3f n = e1.cross(e2);
         if (n.length() < 1e-8) {
             cout << "Warning! skip small triangle, n: " << n << " dot: " << n.dot(Vec3f(0,1,0)) << ", e1: " << e1 << ", e2: " << e2 << ", e3: " << e3 << endl;
             continue;
         }
         n.normalize();
+        if (swapNormals) n *= -1;
 
         // analyse triangle
         float aMin = points[0][dim];
@@ -428,7 +428,7 @@ void VRMeshSubdivision::subdivideAxis(VRGeometryPtr geo, Vec3i gridN, Vec3d gMin
     gg = geo->getMesh();
 }
 
-void VRMeshSubdivision::subdivideGrid(VRGeometryPtr geo, Vec3d res) {
+void VRMeshSubdivision::subdivideGrid(VRGeometryPtr geo, Vec3d res, bool swapNormals) {
     auto gg = geo->getMesh();
     Boundingbox box;
     GeoVectorPropertyMTRecPtr positions = gg->geo->getPositions();
@@ -447,11 +447,11 @@ void VRMeshSubdivision::subdivideGrid(VRGeometryPtr geo, Vec3d res) {
         res[i] = boxSize[i]/gridN[i];
     }
 
-    subdivideAxis(geo, gridN, gMin, res, 0, 2);
-    subdivideAxis(geo, gridN, gMin, res, 2, 0);
+    subdivideAxis(geo, gridN, gMin, res, 0, 2, swapNormals);
+    subdivideAxis(geo, gridN, gMin, res, 2, 0, swapNormals);
     gridMergeTriangles(geo, gMin, res, 0, 2);
 
-    //subdivideAxis(geo, gridN, gMin, res, 1, 2);
+    //subdivideAxis(geo, gridN, gMin, res, 1, 2, swapNormals);
     //gridMergeTriangles(geo, gMin, res, 1, 2);
     //gridMergeTriangles(geo, gMin, res, 0, 1);
 
