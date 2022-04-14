@@ -1192,7 +1192,7 @@ void VRSTEP::buildGeometries() {
         string name = BrepShape.get<0, string, vector<STEPentity*> >();
         auto geo = VRGeometry::create(name);
 
-        //geo->getMaterial()->setFrontBackModes(GL_FILL, GL_LINE); // to test face orientations
+        geo->getMaterial()->setFrontBackModes(GL_FILL, GL_LINE); // to test face orientations
 
         cout << "VRSTEP::buildGeometries " << name << " ID: " << BrepShape.ID << " i " << i << endl;
 
@@ -1209,7 +1209,7 @@ void VRSTEP::buildGeometries() {
                     static int k = 0; k++;
                     //if (k != 15 && k != 22) continue;
                     //if (k != 67 && k != 9) continue;
-                    if (k != 4) continue;
+                    //if (k != 4) continue;
 
                     auto& Face = instances[j];
                     //if (k == 67) exploreEntity(nodes[Face.entity], true);
