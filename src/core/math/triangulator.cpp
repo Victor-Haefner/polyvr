@@ -70,6 +70,25 @@ void Triangulator::add(VRPolygon p, bool outer) {
     else inner_bounds.push_back(p);
 }
 
+VRGeometryPtr Triangulator::computeBounds() {
+    VRGeoData geo;
+
+    auto drawPoly = [&](VRPolygon& poly, Color3f col) {
+        vector<Vec3d> points;
+        if (poly.size2() > 2) points = toSpace(poly.get());
+        if (poly.size3() > 2) points = poly.get3();
+        for (int i=0; i<points.size(); i++) {
+            auto& p = points[i];
+            geo.pushVert(Pnt3d(p), Vec3d(0,1,0), col);
+            if (i > 0) geo.pushLine();
+        }
+    };
+
+    for (auto& poly : outer_bounds) drawPoly(poly, Color3f(0,1,0));
+    for (auto& poly : inner_bounds) drawPoly(poly, Color3f(1,0,0));
+    return geo.asGeometry("tessBounds");
+}
+
 VRGeometryPtr Triangulator::compute() {
     tessellate();
     return geo ? geo->asGeometry("tessellation") : 0;
@@ -131,6 +150,18 @@ void tessErrorCB(GLenum errorCode) {
     cerr << "[ERROR]: " << errorStr << endl;
 }
 
+vector<Vec3d> Triangulator::toSpace(const vector<Vec2d>& poly) {
+    for (auto& v : poly) {
+        if (isNan(v)) {
+            cout << "Warning in Triangulator::tessellate, Vec2d contains NaN: " << v << endl;
+            return vector<Vec3d>();
+        }
+    }
+    vector<Vec3d> res;
+    for (auto& v : poly) res.push_back(Vec3d(v[0], 0, v[1]));
+    return res;
+}
+
 void Triangulator::tessellate() {
     GLuint id = glGenLists(1);  // create a display list
     GLUtesselator *tess = gluNewTess(); // create a tessellator
@@ -144,18 +175,6 @@ void Triangulator::tessellate() {
     gluTessCallback(tess, GLU_TESS_ERROR,   (void (*)()) tessErrorCB);
     gluTessCallback(tess, GLU_TESS_VERTEX,  (void (*)()) tessVertexCB);
     gluTessCallback(tess, GLU_TESS_COMBINE, (void (*)()) tessCombineCB);
-
-    auto toSpace = [&](const vector<Vec2d>& poly) {
-        for (auto& v : poly) {
-            if (isNan(v)) {
-                cout << "Warning in Triangulator::tessellate, Vec2d contains NaN: " << v << endl;
-                return vector<Vec3d>();
-            }
-        }
-        vector<Vec3d> res;
-        for (auto& v : poly) res.push_back(Vec3d(v[0], 0, v[1]));
-        return res;
-    };
 
     vector<vector<Vec3d> > bounds;
     for (auto b : outer_bounds) if (b.size2() > 2) bounds.push_back( toSpace(b.get()) );

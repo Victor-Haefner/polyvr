@@ -470,6 +470,7 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
         Triangulator triangulator; // feed the triangulator with unprojected points
 
         for (auto b : bounds) {
+            cout << "Cylinder bound: " << b.outer << endl;
             VRPolygon poly;
             double lastAngle = 1000;
             Vec3d cN(0,0,1);
@@ -496,6 +497,7 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
             }
 
             for (auto& e : b.edges) {
+                cout << "  bound edge: " << e.etype << endl;
                 if (e.etype == "Circle") {
                     double cDir = e.compCircleDirection(mI, cN);
 
@@ -536,7 +538,8 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
 
             checkPolyIntegrety(poly);
             checkPolyOrientation(poly, b);
-            triangulator.add(poly);
+            triangulator.add(poly, b.outer);
+            cout << " poly: " << toString(poly.get()) << endl;
         }
 
         auto g = triangulator.compute();
@@ -545,9 +548,9 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
         } else cout << "VRBRepSurface::build: Triangulation failed, no mesh generated!\n";
 
         VRMeshSubdivision subdiv;
-        subdiv.subdivideGrid(g, Vec3d(Dangle, -1, -1), false);
+        //subdiv.subdivideGrid(g, Vec3d(Dangle, -1, -1), false);
 
-        if (g) if (auto gg = g->getMesh()) {
+        if (g && 0) if (auto gg = g->getMesh()) {
             // project the points back into 3D space
             GeoVectorPropertyMTRecPtr pos = gg->geo->getPositions();
             GeoVectorPropertyMTRecPtr norms = gg->geo->getNormals();
@@ -571,7 +574,15 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
             }
         }
 
+        auto geo = wireBounds(bounds);
+        g->addChild(geo);
+        auto tBounds = triangulator.computeBounds();
+        g->addChild(tBounds);
+
+        g->getMaterial()->setFrontBackModes(GL_LINE, GL_FILL); // to test face orientations
+
         if (g) g->setMatrix(m);
+        if (g) g->setScale(Vec3d(1,1,0.001));
         if (g && g->getMesh() && g->getMesh()->geo->getPositions() && g->getMesh()->geo->getPositions()->size() > 0) return g;
         return 0;
     }

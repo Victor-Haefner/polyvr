@@ -22,6 +22,8 @@ class Triangulator {
         void testQuad();
         void tessellate();
 
+        vector<Vec3d> toSpace(const vector<Vec2d>& poly);
+
     public:
         Triangulator();
         ~Triangulator();
@@ -31,6 +33,7 @@ class Triangulator {
 
         void append(VRGeoDataPtr data, bool addNormals);
         VRGeometryPtr compute();
+        VRGeometryPtr computeBounds();
 };
 
 OSG_END_NAMESPACE;
