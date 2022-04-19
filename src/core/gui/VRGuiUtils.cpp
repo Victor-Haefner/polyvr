@@ -82,6 +82,7 @@ void setComboboxCallback(string b, function<void()> sig) { setupCallback(b, sig,
 
 void setSliderCallback(string b, function<bool(int,double)> sig) { setupCallback(b, sig, "change_value"); }
 void setTreeviewSelectCallback(string b, function<void(void)> sig) { setupCallback(b, sig, "cursor_changed"); }
+void setTreeviewDoubleclickCallback(string b, function<void(GtkTreePath*, GtkTreeViewColumn*)> sig) { setupCallback(b, sig, "row-activated"); }
 void setCellRendererCallback(string b, function<void(gchar*, gchar*)> sig, bool after) { setupCallback(b, sig, "edited"); }
 void setNoteBookCallback(string b, function<void(GtkWidget*, guint)> sig) { setupCallback(b, sig, "switch-page", true); }
 

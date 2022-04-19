@@ -709,6 +709,10 @@ void VRGuiScripts::on_select_templ() {
     gtk_text_buffer_set_text(tb, core.c_str(), core.size());
 }
 
+void VRGuiScripts::on_doubleclick_templ(GtkTreePath* p, GtkTreeViewColumn* c) {
+    on_templ_import_clicked();
+}
+
 void VRGuiScripts::on_templ_close_clicked() { hideDialog("scriptTemplates"); }
 
 void VRGuiScripts::on_templ_import_clicked() {
@@ -1268,6 +1272,7 @@ VRGuiScripts::VRGuiScripts() {
     setTreeviewSelectCallback("treeview5", bind(&VRGuiScripts::on_select_script, this) );
     setTreeviewSelectCallback("treeview3", bind(&VRGuiScripts::on_select_help, this) );
     setTreeviewSelectCallback("ttreeview1", bind(&VRGuiScripts::on_select_templ, this) );
+    setTreeviewDoubleclickCallback("ttreeview1", bind(&VRGuiScripts::on_doubleclick_templ, this, PL::_1, PL::_2) );
 
     editor = shared_ptr<VRGuiEditor>( new VRGuiEditor("scrolledwindow4") );
     editor->addKeyBinding("find", VRUpdateCb::create("findCb", bind(&VRGuiScripts::on_find_clicked, this)));

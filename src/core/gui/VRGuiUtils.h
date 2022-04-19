@@ -90,6 +90,7 @@ void setRadioToolButtonCallback(string cb, function<void()> sig );
 void setRadioButtonCallback(string cb, function<void()> sig );
 void setComboboxCallback(string b, function<void()> sig);
 void setTreeviewSelectCallback(string treeview, function<void()> sig);
+void setTreeviewDoubleclickCallback(string treeview, function<void(GtkTreePath*, GtkTreeViewColumn*)> sig);
 void setCellRendererCallback(string renderer, function<void(char*, char*)> sig, bool after = true);
 void setNoteBookCallback(string nb, function<void(_GtkWidget*, guint, gpointer)> sig);
 void setSliderCallback(string s, function<bool(int,double)> sig);
