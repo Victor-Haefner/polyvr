@@ -44,8 +44,6 @@ void VRCollaboration::init() {
     mike = VRMicrophone::create();
 	mike->pauseStreaming(true);
 
-    sound = VRSound::create();
-
     initUI();
 }
 
@@ -146,7 +144,8 @@ void VRCollaboration::connectTCP(string origin) {
 	auto audioClient = ice->getClient(origin, VRICEClient::AUDIO);
 	mike->startStreamingOver(audioClient);
 	//mike->pauseStreaming(false);
-	sound->playPeerStream(audioClient);
+	voices[origin] = VRSound::create();
+	voices[origin]->playPeerStream(audioClient);
 }
 
 void VRCollaboration::onIceEvent(string m) {

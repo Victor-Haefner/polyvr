@@ -25,6 +25,9 @@ class VRMicrophone : public std::enable_shared_from_this<VRMicrophone> {
 	private:
         int sample_size = 1024;
         int sample_rate = 22050;
+        bool started = false;
+        bool recording = false;
+        bool streaming = false;
         bool doRecord = false;
         bool doStream = false;
         bool needsFlushing = false;
@@ -37,7 +40,7 @@ class VRMicrophone : public std::enable_shared_from_this<VRMicrophone> {
 #else
 	    ALCdevice_struct* device = 0;
 #endif
-	    VRSoundPtr recording;
+	    VRSoundPtr recordingSound;
 
 	    list<VRSoundBufferPtr> frameBuffer;
 	    bool deviceOk = false;

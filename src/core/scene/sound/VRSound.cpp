@@ -677,7 +677,7 @@ void VRSound::exportToFile(string path) {
 void VRSound::writeStreamData(const string& data) {
     //cout << " custom_io_write " << data.size() << endl;
     //if (data.size() < 200) cout << endl << data << endl;
-    if (udpClient) udpClient->send(data, "", false);
+    for (auto& cli : udpClients) cli->send(data, "", false);
     //doFrameSleep(0, 60);
 }
 
@@ -696,7 +696,7 @@ void VRSound::flushPackets() {
 }
 
 bool VRSound::addOutStreamClient(VRNetworkClientPtr client) {
-    udpClient = client;
+    udpClients.push_back(client);
 
     /*if (!udpClient->connected()) {
         udpClient.reset();
@@ -736,13 +736,10 @@ bool VRSound::addOutStreamClient(VRNetworkClientPtr client) {
     return true;
 }
 
-bool VRSound::setupOutStream(string url, int port) {
-    if (!udpClient) {
-        udpClient = VRUDPClient::create();
-        udpClient->connect(url, port);
-    }
-
-    return addOutStreamClient(udpClient);
+bool VRSound::setupOutStream(string url, int port) { // TODO: make a udpClients map instead of vector
+    auto cli = VRUDPClient::create();
+    cli->connect(url, port);
+    return addOutStreamClient(cli);
 }
 
 void VRSound::streamBuffer(VRSoundBufferPtr frame) { write_buffer(muxer, audio_ost, frame); }
@@ -757,7 +754,7 @@ void VRSound::closeStream(bool keepOpen) {
     audio_ost = 0;
     avformat_free_context(muxer);
     muxer = 0;
-    if (!keepOpen) udpClient.reset();
+    if (!keepOpen) udpClients.clear();
 }
 
 void VRSound::streamTo(string url, int port, bool keepOpen) {

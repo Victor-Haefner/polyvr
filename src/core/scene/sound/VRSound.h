@@ -32,7 +32,7 @@ class VRSound {
         vector<VRSoundBufferPtr> ownedBuffer;
         int nextBuffer = 0;
         VRUpdateCbPtr callback;
-        VRNetworkClientPtr udpClient;
+        vector<VRNetworkClientPtr> udpClients;
         VRUDPServerPtr udpServer;
 
         unsigned int frequency = 0;

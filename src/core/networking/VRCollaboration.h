@@ -15,7 +15,7 @@ class VRCollaboration : public VRObject {
 	    VRICEClientPtr ice;
 	    VRSyncNodePtr syncNode;
 	    VRMicrophonePtr mike;
-	    VRSoundPtr sound;
+	    map<string, VRSoundPtr> voices;
 
         VRTransformPtr avatarTorso;
         VRTransformPtr avatarHandLeft;
