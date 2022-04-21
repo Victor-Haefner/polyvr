@@ -598,6 +598,8 @@
 		<Unit filename="src/core/gui/VRGuiMonitor.h" />
 		<Unit filename="src/core/gui/VRGuiNav.cpp" />
 		<Unit filename="src/core/gui/VRGuiNav.h" />
+		<Unit filename="src/core/gui/VRGuiNetwork.cpp" />
+		<Unit filename="src/core/gui/VRGuiNetwork.h" />
 		<Unit filename="src/core/gui/VRGuiRecWidget.cpp" />
 		<Unit filename="src/core/gui/VRGuiRecWidget.h" />
 		<Unit filename="src/core/gui/VRGuiScene.cpp" />
@@ -946,6 +948,8 @@
 		<Unit filename="src/core/gui/widgets/VRAppLauncher.h" />
 		<Unit filename="src/core/gui/widgets/VRAppPanel.cpp" />
 		<Unit filename="src/core/gui/widgets/VRAppPanel.h" />
+		<Unit filename="src/core/gui/widgets/VRCanvasWidget.cpp" />
+		<Unit filename="src/core/gui/widgets/VRCanvasWidget.h" />
 		<Unit filename="src/core/gui/widgets/VRConceptWidget.cpp" />
 		<Unit filename="src/core/gui/widgets/VRConceptWidget.h" />
 		<Unit filename="src/core/gui/widgets/VRConnectorWidget.cpp" />
@@ -956,6 +960,8 @@
 		<Unit filename="src/core/gui/widgets/VRRuleWidget.h" />
 		<Unit filename="src/core/gui/widgets/VRSemanticWidget.cpp" />
 		<Unit filename="src/core/gui/widgets/VRSemanticWidget.h" />
+		<Unit filename="src/core/gui/widgets/VRWidgetsCanvas.cpp" />
+		<Unit filename="src/core/gui/widgets/VRWidgetsCanvas.h" />
 		<Unit filename="src/core/gui/wrapper/VRGuiCombobox.cpp" />
 		<Unit filename="src/core/gui/wrapper/VRGuiCombobox.h" />
 		<Unit filename="src/core/gui/wrapper/VRGuiTreeView.cpp" />
