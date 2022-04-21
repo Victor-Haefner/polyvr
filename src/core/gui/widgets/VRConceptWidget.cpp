@@ -15,8 +15,8 @@ using namespace OSG;
 
 // TODO
 
-/*VRConceptWidget::VRConceptWidget(VRGuiSemantics* m, GtkFixed* canvas, VRConceptPtr concept) : VRSemanticWidget(m, canvas, "#00CCFF") {
-    this->concept = concept;
+VRConceptWidget::VRConceptWidget(VRGuiSemantics* m, GtkFixed* canvas, VRConceptPtr concept) : VRSemanticWidget(m, canvas, "#00CCFF") {
+    /*this->concept = concept;
     label->set_text(concept->getName());
 
     auto toolbar2 = Gtk::manage( new Gtk::Toolbar() );
@@ -45,13 +45,13 @@ using namespace OSG;
     Glib::RefPtr<Gtk::TreeStore> treestore = Glib::RefPtr<Gtk::TreeStore>::cast_dynamic( treeview->get_model() );
     for (auto p : concept->properties) {
         setPropRow(treestore->append(), p.second->getName(), p.second->type, "black", 0);
-    }
+    }*/
 }
 
 int VRConceptWidget::ID() { return concept->ID; }
 
 void VRConceptWidget::on_edit_prop_clicked() {
-    if (!selected_property) return;
+    /*if (!selected_property) return;
     Gtk::Dialog* dialog;
     VRGuiBuilder::get()->get_widget("PropertyEdit", dialog);
     setTextEntry("entry23", selected_property->getName());
@@ -63,34 +63,34 @@ void VRConceptWidget::on_edit_prop_clicked() {
         saveScene();
     }
     dialog->hide();
-    update();
+    update();*/
 }
 
 void VRConceptWidget::on_rem_prop_clicked() {
-    if (!selected_property) return;
+    /*if (!selected_property) return;
     bool b = askUser("Delete property " + selected_property->getName() + "?", "Are you sure you want to delete this property?");
     if (!b) return;
     concept->remProperty(selected_property);
     selected_property = 0;
     update();
-    saveScene();
+    saveScene();*/
 }
 
 void VRConceptWidget::on_rem_clicked() {
-    bool b = askUser("Delete concept " + label->get_text() + "?", "Are you sure you want to delete this concept?");
-    if (b) manager->remConcept(this);
+    /*bool b = askUser("Delete concept " + label->get_text() + "?", "Are you sure you want to delete this concept?");
+    if (b) manager->remConcept(this);*/
 }
 
 void VRConceptWidget::on_edit_clicked() {
-    string s = askUserInput("Rename concept " + label->get_text() + ":");
+    /*string s = askUserInput("Rename concept " + label->get_text() + ":");
     if (s == "") return;
     manager->getSelectedOntology()->renameConcept(concept, s);
     label->set_text(concept->getName());
-    saveScene();
+    saveScene();*/
 }
 
 void VRConceptWidget::on_newp_clicked() {
-    Glib::RefPtr<Gtk::TreeStore> treestore = Glib::RefPtr<Gtk::TreeStore>::cast_dynamic( treeview->get_model() );
+    /*Glib::RefPtr<Gtk::TreeStore> treestore = Glib::RefPtr<Gtk::TreeStore>::cast_dynamic( treeview->get_model() );
     string name = "new_property";
     int i=0;
     do {
@@ -99,11 +99,11 @@ void VRConceptWidget::on_newp_clicked() {
     } while(concept->getProperty(name));
     setPropRow(treestore->append(), name, "none", "orange", 0);
     concept->addProperty(name, "none");
-    saveScene();
+    saveScene();*/
 }
 
 void VRConceptWidget::on_select_property() {
-    Gtk::TreeModel::iterator iter = treeview->get_selection()->get_selected();
+    /*Gtk::TreeModel::iterator iter = treeview->get_selection()->get_selected();
     if (!iter) return;
 
     VRGuiSemantics_PropsColumns cols;
@@ -111,11 +111,11 @@ void VRConceptWidget::on_select_property() {
     int flag = row.get_value(cols.flag);
     selected_property = flag ? 0 : concept->getProperty( row.get_value(cols.prop) );
     treeview->get_selection()->unselect_all(); // clear selection
-    update();
+    update();*/
 }
 
 void VRConceptWidget::update() {
-    Glib::RefPtr<Gtk::TreeStore> treestore = Glib::RefPtr<Gtk::TreeStore>::cast_dynamic( treeview->get_model() );
+    /*Glib::RefPtr<Gtk::TreeStore> treestore = Glib::RefPtr<Gtk::TreeStore>::cast_dynamic( treeview->get_model() );
 
     treestore->clear();
     for (auto p : concept->properties) {
@@ -123,7 +123,7 @@ void VRConceptWidget::update() {
         if (selected_property && p.second->getName() == selected_property->getName())
             setPropRow(i, p.second->getName(), p.second->type, "green", 1);
         else setPropRow(i, p.second->getName(), p.second->type, "black", 0);
-    }
+    }*/
 }
 
 void VRConceptWidget::on_new_concept_clicked() { manager->copyConcept(this); }
@@ -133,7 +133,7 @@ void VRConceptWidget::on_new_rule_clicked() { manager->addRule(this); }
 void VRConceptWidget::reparent(VREntityWidgetPtr w) {}
 
 void VRConceptWidget::reparent(VRConceptWidgetPtr w) {
-    VRConceptPtr c = w->concept;
+    /*VRConceptPtr c = w->concept;
     if (c->hasParent(concept) && c->parents.size() > 1) { // remove parent if he has at least two!
         c->removeParent(concept);
         manager->disconnect(ptr(), w);
@@ -141,15 +141,15 @@ void VRConceptWidget::reparent(VRConceptWidgetPtr w) {
         concept->append(c);
         manager->connect(ptr(), w, "#00CCFF");
     }
-    saveScene();
+    saveScene();*/
 }
 
 void VRConceptWidget::reparent(VRRuleWidgetPtr w) {
-    w->rule->associatedConcept = concept->getName();
+    /*w->rule->associatedConcept = concept->getName();
     manager->disconnectAny(w);
     manager->connect(ptr(), w, "#00DD00");
-    saveScene();
-}*/
+    saveScene();*/
+}
 
 
 

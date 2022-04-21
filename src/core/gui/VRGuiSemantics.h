@@ -11,22 +11,13 @@
 #include "VRGuiFwd.h"
 #include "addons/Algorithms/VRAlgorithmsFwd.h"
 
-struct _GtkFixed;
-
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 class VRGuiSemantics {
     private:
-        _GtkFixed* canvas = 0;
-        map<int, VRSemanticWidgetPtr> widgets;
-        map<int, map<int, VRConnectorWidgetPtr> > connectors;
-        map<int, int> widgetIDs;
-
-        VRGraphLayoutPtr layout;
-        GraphPtr layout_graph;
+        VRWidgetsCanvasPtr canvas;
         VROntologyPtr current;
-        VRUpdateCbPtr updateLayoutCb;
 
         void on_new_clicked();
         void on_del_clicked();
@@ -37,19 +28,18 @@ class VRGuiSemantics {
         void on_property_treeview_select();
         void on_query_clicked();
 
-        void clearCanvas();
         void setOntology(string name);
-        void addNode(int sID);
-        void updateLayout();
 
         VRSemanticManagerPtr getManager();
 
     public:
         VRGuiSemantics();
 
+        void clear();
+
         VROntologyPtr getSelectedOntology();
 
-        void updateOntoList();
+        bool updateOntoList();
         void updateCanvas();
 
         void connect(VRSemanticWidgetPtr p1, VRSemanticWidgetPtr p2, string color);

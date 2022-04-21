@@ -13,14 +13,16 @@ using namespace OSG;
 
 // TODO
 
-/*VRRuleWidget::VRRuleWidget(VRGuiSemantics* m, Gtk::Fixed* canvas, VROntologyRulePtr rule) : VRSemanticWidget(m, canvas, "#00DD00") {
+VRRuleWidget::VRRuleWidget(VRGuiSemantics* m, GtkFixed* canvas, VROntologyRulePtr rule) : VRSemanticWidget(m, canvas, "#00DD00") {
     this->rule = rule;
-    label->set_text("rule");
-    if (rule->query) label->set_text(rule->query->toString());
+    if (rule->query) gtk_label_set_text(label, rule->query->toString().c_str());
+    else gtk_label_set_text(label, "rule");
 
-    Glib::RefPtr<Gtk::TreeStore> treestore = Glib::RefPtr<Gtk::TreeStore>::cast_dynamic( treeview->get_model() );
+    GtkTreeStore* treestore = GTK_TREE_STORE( gtk_tree_view_get_model( treeview ) );
     for (auto s : rule->statements) {
-        setPropRow(treestore->append(), s->toString(), "", "black", 0);
+        GtkTreeIter itr;
+        gtk_tree_store_append(treestore, &itr, 0);
+        setPropRow(&itr, s->toString(), "", "black", 0);
     }
 }
 
@@ -28,8 +30,7 @@ int VRRuleWidget::ID() { return rule->ID; }
 
 void VRRuleWidget::on_edit_prop_clicked() {
     if (!selected_statement) return;
-    Gtk::Dialog* dialog;
-    VRGuiBuilder::get()->get_widget("PropertyEdit", dialog);
+    /*auto dialog = VRGuiBuilder::get()->get_widget("PropertyEdit");
     setTextEntry("entry23", selected_statement->toString());
     //setTextEntry("entry24", selected_statement->toString());
     dialog->show();
@@ -40,7 +41,7 @@ void VRRuleWidget::on_edit_prop_clicked() {
         saveScene();
     }
     dialog->hide();
-    update();
+    update();*/
 }
 
 void VRRuleWidget::on_rem_prop_clicked() {
@@ -54,28 +55,28 @@ void VRRuleWidget::on_rem_prop_clicked() {
 }
 
 void VRRuleWidget::on_rem_clicked() {
-    bool b = askUser("Delete rule " + label->get_text() + "?", "Are you sure you want to delete this concept?");
-    if (b) manager->remRule(this);
+    /*bool b = askUser("Delete rule " + label->get_text() + "?", "Are you sure you want to delete this concept?");
+    if (b) manager->remRule(this);*/
 }
 
 void VRRuleWidget::on_edit_clicked() {
-    string s = askUserInput("Change rule " + label->get_text() + ":");
+    /*string s = askUserInput("Change rule " + label->get_text() + ":");
     if (s == "") return;
     rule->setQuery(s);
     if (rule->query) label->set_text(rule->query->toString());
-    saveScene();
+    saveScene();*/
 }
 
 void VRRuleWidget::on_newp_clicked() {
-    Glib::RefPtr<Gtk::TreeStore> treestore = Glib::RefPtr<Gtk::TreeStore>::cast_dynamic( treeview->get_model() );
+    /*Glib::RefPtr<Gtk::TreeStore> treestore = Glib::RefPtr<Gtk::TreeStore>::cast_dynamic( treeview->get_model() );
     string name = rule->associatedConcept + "(x)";
     setPropRow(treestore->append(), name, "", "orange", 0);
     rule->addStatement(name);
-    saveScene();
+    saveScene();*/
 }
 
 void VRRuleWidget::on_select_property() {
-    Gtk::TreeModel::iterator iter = treeview->get_selection()->get_selected();
+    /*Gtk::TreeModel::iterator iter = treeview->get_selection()->get_selected();
     Glib::RefPtr<Gtk::TreeStore> store = Glib::RefPtr<Gtk::TreeStore>::cast_dynamic( treeview->get_model() );
     if (!iter) return;
 
@@ -94,11 +95,11 @@ void VRRuleWidget::on_select_property() {
     int flag = row.get_value(cols.flag);
     selected_statement = flag ? 0 : rule->getStatement( getStorePos() );
     treeview->get_selection()->unselect_all(); // clear selection
-    update();
+    update();*/
 }
 
 void VRRuleWidget::update() {
-    Glib::RefPtr<Gtk::TreeStore> treestore = Glib::RefPtr<Gtk::TreeStore>::cast_dynamic( treeview->get_model() );
+    /*Glib::RefPtr<Gtk::TreeStore> treestore = Glib::RefPtr<Gtk::TreeStore>::cast_dynamic( treeview->get_model() );
 
     treestore->clear();
     for (auto p : rule->statements) {
@@ -106,9 +107,9 @@ void VRRuleWidget::update() {
         if (selected_statement && p->toString() == selected_statement->toString())
             setPropRow(i, p->toString(), "", "green", 1);
         else setPropRow(i, p->toString(), "", "black", 0);
-    }
+    }*/
 }
 
 void VRRuleWidget::reparent(VRConceptWidgetPtr w) {}
 void VRRuleWidget::reparent(VREntityWidgetPtr w) {}
-void VRRuleWidget::reparent(VRRuleWidgetPtr w) {}*/
+void VRRuleWidget::reparent(VRRuleWidgetPtr w) {}

@@ -7,31 +7,31 @@
 using namespace OSG;
 
 
-/*VRConnectorWidget::VRConnectorWidget(Gtk::Fixed* canvas, string color) {
-    sh1 = Gtk::manage( new Gtk::HSeparator() );
-    sh2 = Gtk::manage( new Gtk::HSeparator() );
-    sv1 = Gtk::manage( new Gtk::VSeparator() );
-    sv2 = Gtk::manage( new Gtk::VSeparator() );
+VRConnectorWidget::VRConnectorWidget(_GtkFixed* canvas, string color) {
     this->canvas = canvas;
-    canvas->put(*sh1, 0, 0);
-    canvas->put(*sh2, 0, 0);
-    canvas->put(*sv1, 0, 0);
-    canvas->put(*sv2, 0, 0);
 
-    sh1->modify_bg( Gtk::STATE_NORMAL, Gdk::Color(color));
-    sh2->modify_bg( Gtk::STATE_NORMAL, Gdk::Color(color));
-    sv1->modify_bg( Gtk::STATE_NORMAL, Gdk::Color(color));
-    sv2->modify_bg( Gtk::STATE_NORMAL, Gdk::Color(color));
+    GdkColor col;
+    gdk_color_parse(color.c_str(), &col);
+
+    auto addSeparator = [&](GtkOrientation o) {
+        auto s = gtk_separator_new(o);
+        gtk_fixed_put(canvas, s, 0, 0);
+        gtk_widget_modify_bg(s, GTK_STATE_NORMAL, &col);
+        return s;
+    };
+
+    sh1 = addSeparator(GTK_ORIENTATION_HORIZONTAL);
+    sh2 = addSeparator(GTK_ORIENTATION_HORIZONTAL);
+    sv1 = addSeparator(GTK_ORIENTATION_VERTICAL);
+    sv2 = addSeparator(GTK_ORIENTATION_VERTICAL);
 }
 
 VRConnectorWidget::~VRConnectorWidget() {
-    canvas->remove(*sh1);
-    canvas->remove(*sh2);
-    canvas->remove(*sv1);
-    canvas->remove(*sv2);
+    for (auto s : {sh1, sh2, sv1, sv2})
+        gtk_container_remove(GTK_CONTAINER(canvas), s);
 }
 
-void VRConnectorWidget::set(VRSemanticWidgetPtr w1, VRSemanticWidgetPtr w2) {
+void VRConnectorWidget::set(VRCanvasWidgetPtr w1, VRCanvasWidgetPtr w2) {
     this->w1 = w1;
     this->w2 = w2;
     update();
@@ -39,16 +39,9 @@ void VRConnectorWidget::set(VRSemanticWidgetPtr w1, VRSemanticWidgetPtr w2) {
 
 void VRConnectorWidget::setVisible(bool v) {
     visible = v;
-    if (v) {
-        sh1->map();
-        sh2->map();
-        sv1->map();
-        sv2->map();
-    } else {
-        sh1->unmap();
-        sh2->unmap();
-        sv1->unmap();
-        sv2->unmap();
+    for (auto s : {sh1, sh2, sv1, sv2}) {
+        if (v) gtk_widget_map(s);
+        else gtk_widget_unmap(s);
     }
 }
 
@@ -66,103 +59,101 @@ void VRConnectorWidget::update() {
         float w = abs(x2-x1);
         float h = abs(y2-y1);
 
-        sh1->set_size_request(0, 0);
-        sh2->set_size_request(0, 0);
-        sv1->set_size_request(0, 0);
-        sv2->set_size_request(0, 0);
+        for (auto s : {sh1, sh2, sv1, sv2})
+            gtk_widget_set_size_request(s, 0, 0);
 
         if (w <= 2 && h <= 2) return;
 
         if (h <= 2) {
-            sh1->show();
-            sh1->set_size_request(w, 2);
+            gtk_widget_show(sh1);
+            gtk_widget_set_size_request(sh1, w, 2);
             if (x2 < x1) swap(x2,x1);
-            canvas->move(*sh1, x1, y1);
+            gtk_fixed_move(canvas, sh1, x1, y1);
             return;
         }
 
         if (w <= 2) {
-            sv1->show();
-            sv1->set_size_request(2, h);
+            gtk_widget_show(sv1);
+            gtk_widget_set_size_request(sv1, 2, h);
             if (y2 < y1) swap(y2,y1);
-            canvas->move(*sv1, x1, y1);
+            gtk_fixed_move(canvas, sv1, x1, y1);
             return;
         }
 
         if (w < h) {
-            sh1->show();
-            sh2->show();
-            sv1->show();
-            sh1->set_size_request(w*0.5, 2);
-            sh2->set_size_request(w*0.5, 2);
-            sv1->set_size_request(2, h);
+            gtk_widget_show(sh1);
+            gtk_widget_show(sh2);
+            gtk_widget_show(sv1);
+            gtk_widget_set_size_request(sh1, w*0.5, 2);
+            gtk_widget_set_size_request(sh2, w*0.5, 2);
+            gtk_widget_set_size_request(sv1, 2, h);
 
             if (y2 < y1 && x2 > x1) {
                 swap(y1,y2);
-                canvas->move(*sh1, x1, y2);
-                canvas->move(*sh2, x1+w*0.5, y1);
-                canvas->move(*sv1, x1+w*0.5, y1);
+                gtk_fixed_move(canvas, sh1, x1, y2);
+                gtk_fixed_move(canvas, sh2, x1+w*0.5, y1);
+                gtk_fixed_move(canvas, sv1, x1+w*0.5, y1);
                 return;
             }
             if (y2 > y1 && x2 < x1) {
                 swap(x1,x2);
-                canvas->move(*sh1, x1, y2);
-                canvas->move(*sh2, x1+w*0.5, y1);
-                canvas->move(*sv1, x1+w*0.5, y1);
+                gtk_fixed_move(canvas, sh1, x1, y2);
+                gtk_fixed_move(canvas, sh2, x1+w*0.5, y1);
+                gtk_fixed_move(canvas, sv1, x1+w*0.5, y1);
                 return;
             }
             if (y2 > y1 && x2 > x1) {
-                canvas->move(*sh1, x1, y1);
-                canvas->move(*sh2, x1+w*0.5, y2);
-                canvas->move(*sv1, x1+w*0.5, y1);
+                gtk_fixed_move(canvas, sh1, x1, y1);
+                gtk_fixed_move(canvas, sh2, x1+w*0.5, y2);
+                gtk_fixed_move(canvas, sv1, x1+w*0.5, y1);
                 return;
             }
             if (y2 < y1 && x2 < x1) {
                 swap(y1,y2);
                 swap(x1,x2);
-                canvas->move(*sh1, x1, y1);
-                canvas->move(*sh2, x1+w*0.5, y2);
-                canvas->move(*sv1, x1+w*0.5, y1);
+                gtk_fixed_move(canvas, sh1, x1, y1);
+                gtk_fixed_move(canvas, sh2, x1+w*0.5, y2);
+                gtk_fixed_move(canvas, sv1, x1+w*0.5, y1);
                 return;
             }
             return;
         } else {
-            sv1->show();
-            sv2->show();
-            sh1->show();
-            sv1->set_size_request(2, h*0.5);
-            sv2->set_size_request(2, h*0.5);
-            sh1->set_size_request(w, 2);
+            gtk_widget_show(sv1);
+            gtk_widget_show(sv2);
+            gtk_widget_show(sh1);
+            gtk_widget_set_size_request(sv1, 2, h*0.5);
+            gtk_widget_set_size_request(sv2, 2, h*0.5);
+            gtk_widget_set_size_request(sh1, w, 2);
 
             if (y2 < y1 && x2 > x1) {
                 swap(y1,y2);
-                canvas->move(*sv1, x2, y1);
-                canvas->move(*sv2, x1, y1+h*0.5);
-                canvas->move(*sh1, x1, y1+h*0.5);
+                gtk_fixed_move(canvas, sv1, x2, y1);
+                gtk_fixed_move(canvas, sv2, x1, y1+h*0.5);
+                gtk_fixed_move(canvas, sh1, x1, y1+h*0.5);
                 return;
             }
             if (y2 < y1 && x2 < x1) {
                 swap(x1,x2);
                 swap(y1,y2);
-                canvas->move(*sv1, x1, y1);
-                canvas->move(*sv2, x2, y1+h*0.5);
-                canvas->move(*sh1, x1, y1+h*0.5);
+                gtk_fixed_move(canvas, sv1, x1, y1);
+                gtk_fixed_move(canvas, sv2, x2, y1+h*0.5);
+                gtk_fixed_move(canvas, sh1, x1, y1+h*0.5);
                 return;
             }
             if (y2 > y1 && x2 < x1) {
                 swap(x1,x2);
-                canvas->move(*sv1, x2, y1);
-                canvas->move(*sv2, x1, y1+h*0.5);
-                canvas->move(*sh1, x1, y1+h*0.5);
+                gtk_fixed_move(canvas, sv1, x2, y1);
+                gtk_fixed_move(canvas, sv2, x1, y1+h*0.5);
+                gtk_fixed_move(canvas, sh1, x1, y1+h*0.5);
                 return;
             }
             if (y2 > y1 && x2 > x1) {
-                canvas->move(*sv1, x1, y1);
-                canvas->move(*sv2, x2, y1+h*0.5);
-                canvas->move(*sh1, x1, y1+h*0.5);
+                gtk_fixed_move(canvas, sv1, x1, y1);
+                gtk_fixed_move(canvas, sv2, x2, y1+h*0.5);
+                gtk_fixed_move(canvas, sh1, x1, y1+h*0.5);
                 return;
             }
             return;
         }
     }
-}*/
+}

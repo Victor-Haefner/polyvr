@@ -2,18 +2,18 @@
 #define VRSEMANTICWIDGET_H_INCLUDED
 
 #include <string>
+#include "VRCanvasWidget.h"
 #include "core/math/OSGMathFwd.h"
 
-#include "core/gui/VRGuiFwd.h"
-#include "addons/Algorithms/VRGraphLayout.h"
+//#include "addons/Algorithms/VRGraphLayout.h"
 
 struct _GtkFixed;
 struct _GtkFrame;
 struct _GtkLabel;
 struct _GtkTreeView;
-struct _GtkHBox;
+struct _GtkBox;
 struct _GtkToolbar;
-struct _GtkToolButton;
+struct _GtkToolItem;
 struct _GtkTreeIter;
 
 using namespace std;
@@ -22,23 +22,15 @@ OSG_BEGIN_NAMESPACE;
 
 class VRGuiSemantics;
 
-struct VRSemanticWidget : public std::enable_shared_from_this<VRSemanticWidget> {
-    Vec2d pos;
-    bool visible = true;
+struct VRSemanticWidget : public VRCanvasWidget {
     bool expanded = false;
-    bool subTreeFolded = false;
 
     VRGuiSemantics* manager = 0;
-    _GtkFixed* canvas = 0;
-    _GtkFrame* widget = 0;
+    _GtkTreeView* treeview;
     _GtkLabel* label = 0;
-    _GtkTreeView* treeview = 0;
-    _GtkHBox* toolbars = 0;
+    _GtkBox* toolbars = 0;
     _GtkToolbar* toolbar1 = 0;
-    _GtkToolButton* bFold = 0;
-
-    map<VRSemanticWidget*, VRSemanticWidgetWeakPtr> children;
-    map<VRConnectorWidget*, VRConnectorWidgetWeakPtr> connectors;
+    _GtkToolItem* bFold = 0;
 
     VRSemanticWidget(VRGuiSemantics* m, _GtkFixed* canvas, string color);
     ~VRSemanticWidget();
@@ -47,17 +39,9 @@ struct VRSemanticWidget : public std::enable_shared_from_this<VRSemanticWidget> 
 
     void on_select();
     void on_expander_toggled();
-
-    void move(Vec2d p);
-    Vec2d getAnchorPoint(Vec2d p);
-    void setPropRow(_GtkTreeIter* iter, string name, string type, string color, int flag, int ID = 0, int rtype = 0);
-
-    Vec3d getPosition();
-    Vec3d getSize();
-
     void on_fold_clicked();
-    void setVisible(bool visible = true);
-    void setFolding(bool folded = true);
+
+    void setPropRow(_GtkTreeIter* iter, string name, string type, string color, int flag, int ID = 0, int rtype = 0);
 
     virtual void on_select_property() = 0;
     virtual void on_rem_clicked() = 0;
@@ -65,7 +49,6 @@ struct VRSemanticWidget : public std::enable_shared_from_this<VRSemanticWidget> 
     virtual void on_newp_clicked() = 0;
     virtual void on_edit_prop_clicked() = 0;
     virtual void on_rem_prop_clicked() = 0;
-    virtual int ID() = 0;
     virtual void update() = 0;
 
     void reparent(VRSemanticWidgetPtr w);
