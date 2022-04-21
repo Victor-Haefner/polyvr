@@ -24,8 +24,6 @@
 #include "wrapper/VRGuiTreeView.h"
 
 
-// TODO, refactoring from gtk mm
-
 /** TODO:
 
 - VRGraphLayout
@@ -56,13 +54,6 @@ IDEAS:
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
-
-/*class VRGuiSemantics_ModelColumns : public Gtk::TreeModelColumnRecord {
-    public:
-        VRGuiSemantics_ModelColumns() { add(name); add(type); }
-        Gtk::TreeModelColumn<Glib::ustring> name;
-        Gtk::TreeModelColumn<Glib::ustring> type;
-};*/
 
 void VRGuiSemantics::clear() {
     canvas->clear();

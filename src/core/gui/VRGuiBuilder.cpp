@@ -1281,11 +1281,45 @@ void VRGuiBuilder::buildBaseUI() {
     auto table30 = addGrid("table30");
     auto table4 = addGrid("table4");
     auto table21 = addGrid("table21");
+    auto table39 = addGrid("table39");
     addNotebookPage(notebook3, table30, "General");
     addNotebookPage(notebook3, scenegraph_tab, "Scenegraph");
     addNotebookPage(notebook3, table4, "Navigation");
     addNotebookPage(notebook3, table14, "Scripting");
     addNotebookPage(notebook3, table21, "Semantics");
+    addNotebookPage(notebook3, table39, "Network");
+
+    /* ---------- VR Scene -semantics ---------------------- */
+    auto toolbar5 = addToolbar("toolbar5", GTK_ICON_SIZE_LARGE_TOOLBAR, GTK_ORIENTATION_HORIZONTAL);
+    auto table22 = addGrid("table22");
+    auto button33 = addButton("button33", "Querry:");
+    auto entry26 = addEntry("entry26");
+    gtk_grid_attach(GTK_GRID(table21), toolbar5, 0,0,1,1);
+    gtk_grid_attach(GTK_GRID(table21), entry26, 1,0,1,1);
+    gtk_grid_attach(GTK_GRID(table21), button33, 2,0,1,1);
+    gtk_grid_attach(GTK_GRID(table21), table22, 0,1,3,1);
+
+    addToolButton("toolbutton14", "gtk-new", toolbar5, "New Ontology");
+    addToolButton("toolbutton15", "gtk-delete", toolbar5, "Remove Ontology");
+    addToolButton("toolbutton2", "gtk-directory", toolbar5, "Load Ontology");
+
+    auto onto_list = gtk_list_store_new(2, G_TYPE_STRING, G_TYPE_STRING);
+    auto treeview16_and_frame = addTreeview("treeview16", "onto_list", GTK_TREE_MODEL(onto_list));
+    auto treeview16 = treeview16_and_frame.first;
+    auto scrolledwindow11 = addScrolledWindow("scrolledwindow11");
+    auto viewport6 = addViewport("viewport6");
+    auto onto_visu = addFixed("onto_visu");
+    gtk_container_add(GTK_CONTAINER(scrolledwindow11), viewport6);
+    gtk_container_add(GTK_CONTAINER(viewport6), onto_visu);
+    gtk_grid_attach(GTK_GRID(table22), treeview16_and_frame.second, 0,0,1,1);
+    gtk_grid_attach(GTK_GRID(table22), scrolledwindow11, 1,0,1,1);
+
+    GtkTreeViewColumn* treeviewcolumn37 = gtk_tree_view_column_new();
+    gtk_tree_view_column_set_title(treeviewcolumn37, "Semantic building blocks");
+    auto cellrenderertext51 = addCellrenderer("cellrenderertext51", treeviewcolumn37, true);
+    gtk_tree_view_column_add_attribute(treeviewcolumn37, cellrenderertext51, "text", 0);
+    gtk_tree_view_append_column(GTK_TREE_VIEW(treeview16), treeviewcolumn37);
+
 
     /* ---------- VR Scene -scripting ---------------------- */
     auto toolbar_wrap = addGrid("toolbar_wrap");

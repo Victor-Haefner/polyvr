@@ -140,7 +140,7 @@ VRGuiManager::VRGuiManager() {
     g_scene = new VRGuiScene();
     g_nav = new VRGuiNav();
     g_net = new VRGuiNetwork();
-    //g_sem = new VRGuiSemantics();
+    g_sem = new VRGuiSemantics();
     g_di = new VRGuiSetup();
     g_gen = new VRGuiGeneral();
     g_scene->updateTreeView();
