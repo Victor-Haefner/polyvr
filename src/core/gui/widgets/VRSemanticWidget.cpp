@@ -11,6 +11,8 @@
 
 using namespace OSG;
 
+namespace PL = std::placeholders;
+
 const GdkAtom CONCEPT_ATOM = GdkAtom("concept");
 
 void VRSemanticWidget_on_drag_data_get(GdkDragContext* context, GtkSelectionData* data, unsigned int info, unsigned int time, VRSemanticWidget* e) {
@@ -29,7 +31,7 @@ VRSemanticWidget::VRSemanticWidget(VRGuiSemantics* m, GtkFixed* canvas, string c
 
     // properties treeview
     //  name, type, prop, ptype, flag, rtype, ID
-    auto treestore = gtk_tree_store_new(7, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_POINTER, G_TYPE_STRING, G_TYPE_INT, G_TYPE_INT, G_TYPE_INT);
+    auto treestore = gtk_tree_store_new(7, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_INT, G_TYPE_INT, G_TYPE_INT);
     treeview = GTK_TREE_VIEW( gtk_tree_view_new_with_model(GTK_TREE_MODEL(treestore)) );
     gtk_tree_view_set_headers_visible(treeview, false);
     function<void(void)> fkt = bind(&VRSemanticWidget::on_select_property, this);
@@ -37,8 +39,11 @@ VRSemanticWidget::VRSemanticWidget(VRGuiSemantics* m, GtkFixed* canvas, string c
 
     auto addMarkupColumn = [&](string title, int cID, bool editable = false) {
         GtkCellRenderer* renderer = gtk_cell_renderer_text_new();
-        g_object_set(renderer, "editable", editable, NULL);
-        GtkTreeViewColumn* column = gtk_tree_view_column_new_with_attributes(title.c_str(), renderer);
+        setBoolProperty(G_OBJECT(renderer), "editable", editable);
+
+        GtkTreeViewColumn* column = gtk_tree_view_column_new();
+        gtk_tree_view_column_set_title(column, title.c_str());
+        gtk_tree_view_column_pack_start(column, renderer, true);
         gtk_tree_view_column_add_attribute(column, renderer, "markup", cID);
         gtk_tree_view_append_column(treeview, column);
     };
@@ -91,7 +96,7 @@ VRSemanticWidget::VRSemanticWidget(VRGuiSemantics* m, GtkFixed* canvas, string c
     gtk_box_pack_start(GTK_BOX(framed), GTK_WIDGET(expander), 1, 1, 0);
     gtk_box_pack_start(GTK_BOX(framed), GTK_WIDGET(toolbar1), 1, 1, 0);
 
-    function<void(void)> fkt2 = bind(&VRSemanticWidget::on_expander_toggled, this);
+    function<void(GParamSpec*)> fkt2 = bind(&VRSemanticWidget::on_expander_toggled, this, PL::_1);
     connect_signal(expander, fkt2, "notify::expanded", false);
 
     // frame
@@ -107,13 +112,13 @@ VRSemanticWidget::VRSemanticWidget(VRGuiSemantics* m, GtkFixed* canvas, string c
     // dnd drag widget
     GtkTargetEntry entries[] = { { "concept", GTK_TARGET_SAME_APP, 0 } };
     gtk_drag_source_set(expander, GDK_BUTTON1_MASK, entries, 1, GDK_ACTION_MOVE);
-    function<void(GdkDragContext*, GtkSelectionData*, unsigned int, unsigned int, VRSemanticWidget*)> fkt3 = VRSemanticWidget_on_drag_data_get;
+    function<void(GdkDragContext*, GtkSelectionData*, unsigned int, unsigned int)> fkt3 = bind(VRSemanticWidget_on_drag_data_get, PL::_1, PL::_2, PL::_3, PL::_4, this);
     connect_signal(expander, fkt3, "drag_data_get" );
 
     // dnd drop on widget
     gtk_drag_dest_set(expander, GTK_DEST_DEFAULT_ALL, entries, 1, GDK_ACTION_MOVE);
 
-    function<void(GdkDragContext*, int, int, GtkSelectionData*, guint, guint, VRSemanticWidget*)> fkt4 = VRSemanticWidget_on_drag_data_received;
+    function<void(GdkDragContext*, int, int, GtkSelectionData*, guint, guint)> fkt4 = bind(VRSemanticWidget_on_drag_data_received, PL::_1, PL::_2, PL::_3, PL::_4, PL::_5, PL::_6, this);
     connect_signal(expander, fkt4, "drag_data_received" );
 }
 
@@ -151,7 +156,7 @@ void VRSemanticWidget::setPropRow(GtkTreeIter* iter, string name, string type, s
     gtk_tree_store_set(treestore, iter, 6, ID, -1);
 }
 
-void VRSemanticWidget::on_expander_toggled() {
+void VRSemanticWidget::on_expander_toggled(GParamSpec* param_spec) {
     if (expanded) gtk_widget_show_all(GTK_WIDGET(toolbar1));
     else gtk_widget_hide(GTK_WIDGET(toolbar1));
     expanded = !expanded;

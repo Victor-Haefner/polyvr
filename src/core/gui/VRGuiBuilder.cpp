@@ -2,6 +2,7 @@
 
 #include "VRGuiBuilder.h"
 #include "VRGuiFile.h"
+#include "VRGuiUtils.h"
 #include "glarea/glarea.h"
 #include "core/utils/system/VRSystem.h"
 
@@ -387,18 +388,11 @@ void setStringProperty(GtkWidget* w, string p, string v) {
     g_object_set_property(G_OBJECT(w), p.c_str(), &V);
 }
 
-void setBoolProperty(GtkWidget* w, string p, bool v) {
-    GValue V = G_VALUE_INIT;
-    g_value_init(&V, G_TYPE_BOOLEAN);
-    g_value_set_boolean(&V, v);
-    g_object_set_property(G_OBJECT(w), p.c_str(), &V);
-}
-
 GtkCellRenderer* addCellrenderer(string ID, GtkTreeViewColumn* c, bool editable = false) {
     auto r = gtk_cell_renderer_text_new();
     VRGuiBuilder::get()->reg_widget((GtkWidget*)r, ID);
     gtk_tree_view_column_pack_start(c, r, true);
-    if (editable) setBoolProperty((GtkWidget*)r, "editable", true);
+    if (editable) setBoolProperty(G_OBJECT(r), "editable", true);
     return r;
 }
 
@@ -1289,6 +1283,14 @@ void VRGuiBuilder::buildBaseUI() {
     addNotebookPage(notebook3, table21, "Semantics");
     addNotebookPage(notebook3, table39, "Network");
 
+    /* ---------- VR Scene -network ---------------------- */
+    auto networkScrWin = addScrolledWindow("networkScrWin");
+    auto networkViewP = addViewport("networkViewP");
+    auto networkCanvas = addFixed("networkCanvas");
+    gtk_container_add(GTK_CONTAINER(networkScrWin), networkViewP);
+    gtk_container_add(GTK_CONTAINER(networkViewP), networkCanvas);
+    gtk_grid_attach(GTK_GRID(table39), networkScrWin, 0,0,1,1);
+
     /* ---------- VR Scene -semantics ---------------------- */
     auto toolbar5 = addToolbar("toolbar5", GTK_ICON_SIZE_LARGE_TOOLBAR, GTK_ORIENTATION_HORIZONTAL);
     auto table22 = addGrid("table22");
@@ -1303,7 +1305,7 @@ void VRGuiBuilder::buildBaseUI() {
     addToolButton("toolbutton15", "gtk-delete", toolbar5, "Remove Ontology");
     addToolButton("toolbutton2", "gtk-directory", toolbar5, "Load Ontology");
 
-    auto onto_list = gtk_list_store_new(2, G_TYPE_STRING, G_TYPE_STRING);
+    auto onto_list = gtk_tree_store_new(2, G_TYPE_STRING, G_TYPE_STRING);
     auto treeview16_and_frame = addTreeview("treeview16", "onto_list", GTK_TREE_MODEL(onto_list));
     auto treeview16 = treeview16_and_frame.first;
     auto scrolledwindow11 = addScrolledWindow("scrolledwindow11");

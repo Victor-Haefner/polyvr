@@ -230,7 +230,7 @@ void VRGuiSemantics::on_query_clicked() {
 bool VRGuiSemantics::updateOntoList() {
 	cout << "VRGuiSemantics::updateOntoList" << endl;
     // update script list
-    auto store = (GtkTreeStore*)VRGuiBuilder::get()->get_object("onto_list");
+    auto store = GTK_TREE_STORE( VRGuiBuilder::get()->get_object("onto_list") );
     gtk_tree_store_clear(store);
 
     auto setRow = [&](GtkTreeIter* itr, string name, string type) {

@@ -416,6 +416,13 @@ OSG::VRTexturePtr takeSnapshot(bool swapY) {
     return OSG::VRTexture::create(res);
 }
 
+void setBoolProperty(GObject* w, string p, bool v) {
+    GValue V = G_VALUE_INIT;
+    g_value_init(&V, G_TYPE_BOOLEAN);
+    g_value_set_boolean(&V, v);
+    g_object_set_property(w, p.c_str(), &V);
+}
+
 void saveSnapshot(string path) {
     //cout << "saveSnapshot " << path << endl;
     if (!exists(getFolderName(path))) return;

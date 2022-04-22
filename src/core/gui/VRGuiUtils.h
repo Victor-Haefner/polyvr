@@ -153,6 +153,8 @@ void saveScene(string path = "", bool saveas = false, string encryptionKey = "")
 void showDialog(string d);
 void hideDialog(string d);
 
+void setBoolProperty(GObject* w, string p, bool v);
+
 //OSG_END_NAMESPACE;
 
 #endif // VRGUIUTILS_H_INCLUDED

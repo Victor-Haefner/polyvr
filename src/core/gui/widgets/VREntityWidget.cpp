@@ -6,6 +6,7 @@
 
 #include "../VRGuiUtils.h"
 #include "../VRGuiSemantics.h"
+#include "../VRGuiBuilder.h"
 
 #include "core/utils/toString.h"
 
@@ -14,106 +15,113 @@ using namespace OSG;
 // TODO
 
 VREntityWidget::VREntityWidget(VRGuiSemantics* m, GtkFixed* canvas, VREntityPtr entity) : VRSemanticWidget(m, canvas, "#FFEE00") {
-    /*this->entity = entity;
-    label->set_text(entity->getName());
-    update();*/
+    this->entity = entity;
+    gtk_label_set_text(label, entity->getName().c_str());
+    update();
 }
 
 int VREntityWidget::ID() { return entity->ID; }
 
 void VREntityWidget::on_edit_prop_clicked() {
-    /*if (!selected_entity_property) return;
-    Gtk::Dialog* dialog;
-    VRGuiBuilder::get()->get_widget("PropertyEdit", dialog);
+    if (!selected_entity_property) return;
+    auto dialog = VRGuiBuilder::get()->get_widget("PropertyEdit");
     setTextEntry("entry23", selected_entity_property->getName());
     setTextEntry("entry24", selected_entity_property->value);
-    dialog->show();
-    if (dialog->run() == Gtk::RESPONSE_OK) {
+    gtk_widget_show(dialog);
+    auto res = gtk_dialog_run(GTK_DIALOG(dialog));
+    if (res == GTK_RESPONSE_OK) {
         //selected_entity_property->setName( getTextEntry("entry23") );
         selected_entity_property->setValue( getTextEntry("entry24") );
     }
-    dialog->hide();
+    gtk_widget_hide(dialog);
     update();
-    saveScene();*/
+    saveScene();
 }
 
 void VREntityWidget::on_rem_prop_clicked() {
-    /*if (!selected_entity_property) return;
+    if (!selected_entity_property) return;
     bool b = askUser("Delete property " + selected_entity_property->getName() + "?", "Are you sure you want to delete this property?");
     if (!b) return;
     entity->rem(selected_entity_property); // TODO
     selected_entity_property = 0;
     update();
-    saveScene();*/
+    saveScene();
 }
 
 void VREntityWidget::on_newp_clicked() {
-    /*if (!selected_concept_property) return;
-    Glib::RefPtr<Gtk::TreeStore> treestore = Glib::RefPtr<Gtk::TreeStore>::cast_dynamic( treeview->get_model() );
+    if (!selected_concept_property) return;
     string name = selected_concept_property->getName();
     //setPropRow(selected_concept_property->append(), name, "", "orange", 0);
     entity->add(name, "");
     update();
-    saveScene();*/
+    saveScene();
 }
 
 void VREntityWidget::on_rem_clicked() {
-    /*bool b = askUser("Delete entity " + label->get_text() + "?", "Are you sure you want to delete this entity?");
-    if (b) manager->remEntity(this);*/
+    string txt = gtk_label_get_text(label);
+    bool b = askUser("Delete entity " + txt + "?", "Are you sure you want to delete this entity?");
+    if (b) manager->remEntity(this);
 }
 
 void VREntityWidget::on_edit_clicked() {
-    /*string s = askUserInput("Rename entity " + label->get_text() + ":");
+    string txt = gtk_label_get_text(label);
+    string s = askUserInput("Rename entity " + txt + ":");
     if (s == "") return;
     manager->getSelectedOntology()->renameEntity(entity, s);
-    label->set_text(entity->getName());
-    saveScene();*/
+    gtk_label_set_text(label, entity->getName().c_str());
+    saveScene();
 }
 
 void VREntityWidget::on_select_property() {
-    /*Gtk::TreeModel::iterator iter = treeview->get_selection()->get_selected();
-    if (!iter) return;
+    auto model = gtk_tree_view_get_model(treeview);
+    GtkTreeIter itr;
+    auto treeselection = gtk_tree_view_get_selection(treeview);
+    auto res = gtk_tree_selection_get_selected(treeselection, &model, &itr);
+    if (!res) return;
 
-    VRGuiSemantics_PropsColumns cols;
-    Gtk::TreeModel::Row row = *iter;
-    int flag = row.get_value(cols.flag);
-    int type = row.get_value(cols.rtype);
-    int ID = row.get_value(cols.ID);
+    int type, flag, ID;
+    const char* prop;
+    gtk_tree_model_get(model, &itr, 2, &prop, -1);
+    gtk_tree_model_get(model, &itr, 4, &flag, -1);
+    gtk_tree_model_get(model, &itr, 5, &type, -1);
+    gtk_tree_model_get(model, &itr, 6, &ID, -1);
 
     VRPropertyPtr p = 0;
-    if (type == 0) p = entity->getProperty( row.get_value(cols.prop), true );
+    if (type == 0) p = entity->getProperty( prop, true );
     if (type == 1) {
-        auto pv = entity->getAll( row.get_value(cols.prop) );
+        auto pv = entity->getAll( prop );
         for (auto pi : pv) if (pi->ID == ID) { p = pi; break; }
     }
 
     selected_concept_property = selected_entity_property = 0;
     if (flag == 0 && type == 0) selected_concept_property = p;
     if (flag == 0 && type == 1) selected_entity_property = p;
-    treeview->get_selection()->unselect_all(); // clear selection
-    update();*/
+    gtk_tree_selection_unselect_all(treeselection); // clear selection
+    update();
 }
 
 void VREntityWidget::update() {
-    /*Glib::RefPtr<Gtk::TreeStore> treestore = Glib::RefPtr<Gtk::TreeStore>::cast_dynamic( treeview->get_model() );
-    treestore->clear();
+    auto store = GTK_TREE_STORE(gtk_tree_view_get_model(treeview));
+    gtk_tree_store_clear(store);
     if (!entity) return;
 
     for (auto cp : entity->getProperties()) {
-        Gtk::TreeModel::iterator i = treestore->append();
+        GtkTreeIter itr;
+        gtk_tree_store_append(store, &itr, 0);
         bool selected = selected_concept_property == cp;
         string color = selected ? "green" : "black";
-        setPropRow(i, cp->getName(), cp->type, color, selected, cp->ID, 0);
+        setPropRow(&itr, cp->getName(), cp->type, color, selected, cp->ID, 0);
 
         for (auto ep : entity->getAll(cp->getName())) {
             selected = selected_entity_property == ep;
             color = selected ? "green" : "black";
-            Gtk::TreeModel::iterator j = treestore->append(i->children());
-            setPropRow(j, ep->getName(), ep->value, color, selected, ep->ID, 1);
+            GtkTreeIter itr2;
+            gtk_tree_store_append(store, &itr2, &itr);
+            setPropRow(&itr2, ep->getName(), ep->value, color, selected, ep->ID, 1);
         }
     }
 
-    treeview->expand_all();*/
+    gtk_tree_view_expand_all(treeview);
 }
 
 void VREntityWidget::reparent(VRConceptWidgetPtr w) {}

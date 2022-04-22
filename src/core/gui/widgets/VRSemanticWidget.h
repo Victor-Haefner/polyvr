@@ -15,6 +15,7 @@ struct _GtkBox;
 struct _GtkToolbar;
 struct _GtkToolItem;
 struct _GtkTreeIter;
+struct _GParamSpec;
 
 using namespace std;
 
@@ -38,7 +39,7 @@ struct VRSemanticWidget : public VRCanvasWidget {
     VRSemanticWidgetPtr ptr();
 
     void on_select();
-    void on_expander_toggled();
+    void on_expander_toggled(_GParamSpec* param_spec);
     void on_fold_clicked();
 
     void setPropRow(_GtkTreeIter* iter, string name, string type, string color, int flag, int ID = 0, int rtype = 0);
