@@ -7,6 +7,7 @@ namespace OSG {
 
 ptrFwd(VRCanvasWidget);
 ptrFwd(VRWidgetsCanvas);
+ptrFwd(VRNetworkWidget);
 ptrFwd(VRGuiTreeExplorer);
 ptrFwd(VRConsoleWidget);
 ptrFwd(VRSemanticWidget);

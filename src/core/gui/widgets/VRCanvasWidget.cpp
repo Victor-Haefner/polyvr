@@ -9,7 +9,13 @@ VRCanvasWidget::VRCanvasWidget(GtkFixed* canvas) {
     this->canvas = canvas;
 }
 
-VRCanvasWidget::~VRCanvasWidget() {}
+VRCanvasWidget::~VRCanvasWidget() {
+    auto parent = gtk_widget_get_parent(GTK_WIDGET(widget));
+    if (parent == GTK_WIDGET(canvas)) {
+        gtk_container_remove(GTK_CONTAINER(canvas), GTK_WIDGET(widget));
+        gtk_widget_show_all(GTK_WIDGET(canvas));
+    }
+}
 
 VRCanvasWidgetPtr VRCanvasWidget::ptr() { return static_pointer_cast<VRCanvasWidget>(shared_from_this()); }
 
@@ -17,6 +23,7 @@ void VRCanvasWidget::move(Vec2d p) {
     pos = p;
     float w = gtk_widget_get_allocated_width(GTK_WIDGET(widget));
     float h = gtk_widget_get_allocated_height(GTK_WIDGET(widget));
+    cout << "move fixed " << GTK_WIDGET(widget) << ", " << int(p[0]-w*0.5) << " " << int(p[1]-h*0.5) << ", size: " << Vec2i(w,h) << endl;
     gtk_fixed_move(canvas, GTK_WIDGET(widget), p[0]-w*0.5, p[1]-h*0.5);
 }
 

@@ -1287,9 +1287,13 @@ void VRGuiBuilder::buildBaseUI() {
     auto networkScrWin = addScrolledWindow("networkScrWin");
     auto networkViewP = addViewport("networkViewP");
     auto networkCanvas = addFixed("networkCanvas");
+    auto networkToolbar = addToolbar("networkToolbar", GTK_ICON_SIZE_LARGE_TOOLBAR, GTK_ORIENTATION_HORIZONTAL);
     gtk_container_add(GTK_CONTAINER(networkScrWin), networkViewP);
     gtk_container_add(GTK_CONTAINER(networkViewP), networkCanvas);
-    gtk_grid_attach(GTK_GRID(table39), networkScrWin, 0,0,1,1);
+    gtk_grid_attach(GTK_GRID(table39), networkToolbar, 0,0,1,1);
+    gtk_grid_attach(GTK_GRID(table39), networkScrWin,  0,1,1,1);
+
+    addToolButton("networkButtonUpdate", "gtk-refresh", networkToolbar, "Update");
 
     /* ---------- VR Scene -semantics ---------------------- */
     auto toolbar5 = addToolbar("toolbar5", GTK_ICON_SIZE_LARGE_TOOLBAR, GTK_ORIENTATION_HORIZONTAL);

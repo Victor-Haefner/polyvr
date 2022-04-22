@@ -122,13 +122,7 @@ VRSemanticWidget::VRSemanticWidget(VRGuiSemantics* m, GtkFixed* canvas, string c
     connect_signal(expander, fkt4, "drag_data_received" );
 }
 
-VRSemanticWidget::~VRSemanticWidget() {
-    auto parent = gtk_widget_get_parent(GTK_WIDGET(widget));
-    if (parent == GTK_WIDGET(canvas)) {
-        gtk_container_remove(GTK_CONTAINER(canvas), GTK_WIDGET(widget));
-        gtk_widget_show_all(GTK_WIDGET(canvas));
-    }
-}
+VRSemanticWidget::~VRSemanticWidget() {}
 
 VRSemanticWidgetPtr VRSemanticWidget::ptr() { return dynamic_pointer_cast<VRSemanticWidget>(shared_from_this()); }
 
