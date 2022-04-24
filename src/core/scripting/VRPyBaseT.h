@@ -215,7 +215,15 @@ template<class T> PyObject* VRPyBaseT<T>::New_toZero(PyTypeObject *type, PyObjec
 template<class T> PyObject* VRPyBaseT<T>::New_named_ptr(PyTypeObject *type, PyObject *args, PyObject *kwds) {
     const char* n = 0;
     if (! PyArg_ParseTuple(args, "s", (char*)&n)) return NULL;
-    return allocPtr( type, T::create( string(n) ) );
+    if (n) return allocPtr( type, T::create( string(n) ) );
+    else return allocPtr( type, T::create( "" ) );
+}
+
+template<class T> PyObject* VRPyBaseT<T>::New_optNamed_ptr(PyTypeObject *type, PyObject *args, PyObject *kwds) {
+    const char* n = 0;
+    if (! PyArg_ParseTuple(args, "|s", (char*)&n)) return NULL;
+    if (n) return allocPtr( type, T::create( string(n) ) );
+    else return allocPtr( type, T::create() );
 }
 
 template<class T>

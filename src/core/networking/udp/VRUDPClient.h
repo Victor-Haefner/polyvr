@@ -10,14 +10,13 @@ OSG_BEGIN_NAMESPACE;
 
 class VRUDPClient : public VRNetworkClient {
 	private:
-        string uri;
         UDPClient* client = 0;
 
 	public:
-		VRUDPClient();
+		VRUDPClient(string name);
 		~VRUDPClient();
 
-		static VRUDPClientPtr create();
+		static VRUDPClientPtr create(string name = "none");
 		VRUDPClientPtr ptr();
 
         void onMessage( function<string(string)> f ) override;

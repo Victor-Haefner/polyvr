@@ -135,10 +135,10 @@
 	
 	# try the different tests 
 	#VR.startP2Pclients()
-	VR.iceTest()
+	#VR.iceTest()
 	#VR.startP2PwTurnclients()
-	#VR.startServer(5678)
-	#VR.startClients('127.0.0.1', 5678)
+	VR.startServer(5678)
+	VR.startClients('127.0.0.1', 5678)
 
 	
 </core>
@@ -151,15 +151,15 @@
 	def onClientMsg(m):
 		print 'client received:', m
 		
-	VR.cli1 = VR.TCPClient()
+	VR.cli1 = VR.TCPClient('Tom')
 	VR.cli1.onMessage(onClientMsg)
 	VR.cli1.connect(address, port)
-	VR.cli1.send('Tom')
+	VR.cli1.send('I\'m Tom')
 
-	VR.cli2 = VR.TCPClient()
+	VR.cli2 = VR.TCPClient('Jane')
 	VR.cli2.onMessage(onClientMsg)
 	VR.cli2.connect(address, port)
-	VR.cli2.send('Poli')
+	VR.cli2.send('I\'m Jane')
 </core>
       <arg type="NoneType" value="None" base_name="address" name_space="startClients" name_suffix="0" persistency="666"/>
       <arg type="NoneType" value="None" base_name="port" name_space="startClients" name_suffix="0" persistency="666"/>

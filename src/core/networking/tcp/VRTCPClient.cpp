@@ -3,6 +3,7 @@
 #include "core/utils/toString.h"
 #include "core/utils/VRMutex.h"
 #include "core/gui/VRGuiConsole.h"
+#include "core/scene/VRSceneManager.h"
 
 #include <boost/asio.hpp>
 
@@ -14,8 +15,7 @@
 #include <list>
 
 using namespace OSG;
-using namespace boost;
-using asio::ip::tcp;
+using boost::asio::ip::tcp;
 
 // SO_REUSEPORT is undeclared in windows ??
 #ifndef SO_REUSEPORT
@@ -27,11 +27,11 @@ class TCPClient {
         typedef std::shared_ptr<tcp::socket> SocketPtr;
         typedef std::shared_ptr<tcp::acceptor> AcceptorPtr;
 
-        asio::io_service io_service;
-        asio::io_service::work worker;
+        boost::asio::io_service io_service;
+        boost::asio::io_service::work worker;
         SocketPtr socket;
         list<string> messages;
-        asio::streambuf buffer;
+        boost::asio::streambuf buffer;
         thread service;
         string guard;
         VRMutex mtx;
@@ -49,17 +49,17 @@ class TCPClient {
         function<string(string)> onMessageCb;
         function<void (void)> onConnectCb;
 
-        vector<asio::ip::tcp::endpoint> uriToEndpoints(const string& uri) {
-            asio::ip::tcp::resolver resolver(io_service);
-            asio::ip::tcp::resolver::query query(uri, "");
-            vector<asio::ip::tcp::endpoint> res;
-            for(asio::ip::tcp::resolver::iterator i = resolver.resolve(query); i != asio::ip::tcp::resolver::iterator(); ++i) {
+        vector<tcp::endpoint> uriToEndpoints(const string& uri) {
+            tcp::resolver resolver(io_service);
+            tcp::resolver::query query(uri, "");
+            vector<tcp::endpoint> res;
+            for(tcp::resolver::iterator i = resolver.resolve(query); i != tcp::resolver::iterator(); ++i) {
                 res.push_back(*i);
             }
             return res;
         }
 
-        bool read_handler(const system::error_code& ec, size_t N) {
+        bool read_handler(const boost::system::error_code& ec, size_t N) {
             //cout << "TCPClient, " << this << " read_handler, got: " << N << endl;
             if (ec) {
                 cout << "TCPClient, read_handler failed with: " << ec.message() << endl;
@@ -88,25 +88,25 @@ class TCPClient {
 
             //cout << "TCPClient, " << this << " read " << (block?"blocking":"non blocking") << endl;
             if (!block) {
-                auto onRead = [this](system::error_code ec, size_t N) {
+                auto onRead = [this](boost::system::error_code ec, size_t N) {
                     read_handler(ec, N);
                     read();
                 };
 
-                if (guard == "") asio::async_read( *socket, buffer, asio::transfer_at_least(1), onRead );
-                else asio::async_read_until( *socket, buffer, guard, onRead );
+                if (guard == "") boost::asio::async_read( *socket, buffer, boost::asio::transfer_at_least(1), onRead );
+                else boost::asio::async_read_until( *socket, buffer, guard, onRead );
                 return true;
             } else {
-                system::error_code ec;
+                boost::system::error_code ec;
                 size_t N = 0;
-                if (guard == "") N = asio::read( *socket, buffer, asio::transfer_at_least(1), ec);
-                else N = asio::read_until( *socket, buffer, guard, ec);
+                if (guard == "") N = boost::asio::read( *socket, buffer, boost::asio::transfer_at_least(1), ec);
+                else N = boost::asio::read_until( *socket, buffer, guard, ec);
                 return read_handler(ec, N);
             }
         }
 
         void processQueue() {
-            auto onWritten = [this](system::error_code ec, size_t N) { // write queued messages until done, then go read
+            auto onWritten = [this](boost::system::error_code ec, size_t N) { // write queued messages until done, then go read
                 //cout << " async write finished " << N << endl;
                 if (!ec) {
                     VRLock lock(mtx);
@@ -120,7 +120,7 @@ class TCPClient {
 
             if (broken) return;
             VRLock lock(mtx);
-            asio::async_write(*socket, asio::buffer(messages.front().data(), messages.front().length()), onWritten );
+            boost::asio::async_write(*socket, boost::asio::buffer(messages.front().data(), messages.front().length()), onWritten );
         }
 
         void runService() { // needed because windows complains..
@@ -147,8 +147,8 @@ class TCPClient {
                 if (aSocket) aSocket->close();
                 if (cSocket) cSocket->close();
                 socket->close();
-                system::error_code _error_code;
-                socket->shutdown(asio::ip::tcp::socket::shutdown_both, _error_code);
+                boost::system::error_code _error_code;
+                socket->shutdown(tcp::socket::shutdown_both, _error_code);
             } catch(...) {
                 ;
             }
@@ -166,7 +166,7 @@ class TCPClient {
         void connect(string host, int port) {
             cout << "TCPClient::connect " << this << " to: " << host << ", on port " << port << endl;
             try {
-                socket->connect( tcp::endpoint( asio::ip::address::from_string(host), port ));
+                socket->connect( tcp::endpoint( boost::asio::ip::address::from_string(host), port ));
                 read();
             } catch(std::exception& e) {
                 cout << "TCPClient::connect failed with: " << e.what() << endl;
@@ -248,18 +248,18 @@ class TCPClient {
 
         void acceptHolePunching(int port) {
             //cout << "TCPClient::acceptHolePunching on " << port << endl;
-            asio::ip::tcp::endpoint ep(asio::ip::tcp::v4(), port);
+            tcp::endpoint ep(tcp::v4(), port);
             acceptor = AcceptorPtr( new tcp::acceptor(io_service, ep.protocol()) );
 
             //cout << " accept acceptor bind on endpoint " << ep << endl;
-            asio::socket_base::reuse_address reuseAddress(true);
-            asio::detail::socket_option::boolean<SOL_SOCKET, SO_REUSEPORT> reusePort(true);
+            boost::asio::socket_base::reuse_address reuseAddress(true);
+            boost::asio::detail::socket_option::boolean<SOL_SOCKET, SO_REUSEPORT> reusePort(true);
             //asio::socket_base::enable_connection_aborted enable_abort(true);
             acceptor->set_option(reuseAddress); //    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             acceptor->set_option(reusePort); //    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
             //acceptor->set_option(enable_abort);
 
-            system::error_code ec;
+            boost::system::error_code ec;
             acceptor->bind(ep, ec); //    s.bind(('', port))
 
             //Handling Errors
@@ -277,7 +277,7 @@ class TCPClient {
                     acceptor->accept(*aSocket); //            conn, addr = s.accept()
                     cout << "  --- accepted connection! ---" << endl;
                 }
-                catch (system::system_error& e) { //        except socket.timeout:
+                catch (boost::system::system_error& e) { //        except socket.timeout:
                     cout << "Exception at VRSyncConnection::connect2. Exception Nr. " << e.what() << endl;
                     continue; //            continue
                 }
@@ -290,40 +290,40 @@ class TCPClient {
         void connectHolePunching(string localIP, int localPort, string remoteIP, int remotePort) {
             //sleep(1);
             cout << "TCPClient::connectHolePunching from " << localIP << ":" << localPort << ", to " << remoteIP << ":" << remotePort << endl;
-            asio::ip::tcp::endpoint local_ep(asio::ip::address::from_string(localIP), localPort);
+            tcp::endpoint local_ep(boost::asio::ip::address::from_string(localIP), localPort);
 
             cSocket = SocketPtr( new tcp::socket(io_service, local_ep.protocol()) );//    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
             cout << " connect socket bind " << endl;
-            asio::socket_base::reuse_address reuseAddress(true);
-            asio::detail::socket_option::boolean<SOL_SOCKET, SO_REUSEPORT> reusePort(true);
+            boost::asio::socket_base::reuse_address reuseAddress(true);
+            boost::asio::detail::socket_option::boolean<SOL_SOCKET, SO_REUSEPORT> reusePort(true);
             cSocket->set_option(reuseAddress); //    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 #ifndef _WIN32
             cSocket->set_option(reusePort); //    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
 #endif
 
-            system::error_code ec;
+            boost::system::error_code ec;
             cSocket->bind(local_ep, ec); //    s.bind(local_addr)
 
             if (ec.value() != 0) { //Handling Errors
                 cout << "Error in VRTCPClient::connectHolePunching, failed to bind the socket to " << local_ep << "! Error code = " << ec.value() << " (" << ec.message() << ")" << endl;
             }
 
-            asio::ip::address remoteAddr;
+            boost::asio::ip::address remoteAddr;
             try {
-                remoteAddr = asio::ip::address::from_string(remoteIP);
+                remoteAddr = boost::asio::ip::address::from_string(remoteIP);
             } catch(...) {
                 cout << "Error in VRTCPClient::connectHolePunching, failed to parse remote IP '" << remoteIP << "'" << endl;
                 return;
             }
-            asio::ip::tcp::endpoint remote_ep(remoteAddr, remotePort);
+            tcp::endpoint remote_ep(remoteAddr, remotePort);
 
             while (!stop) { //while not STOP.is_set():
                 try { //        try:
                     cout << "VRTCPClient::connectHolePunching trying " << this << " " << remoteIP << ":" << remotePort << endl;
                     cSocket->connect(remote_ep);//            s.connect(addr)
                     cout << " --- VRTCPClient::connectHolePunching connect ---" << endl;
-                } catch (system::system_error& e) {
+                } catch (boost::system::system_error& e) {
                     //static int c = 0; c++;
                     //if (c > 20) return;
 
@@ -342,10 +342,18 @@ class TCPClient {
 };
 
 
-VRTCPClient::VRTCPClient() { protocol = "tcp"; client = new TCPClient(); }
-VRTCPClient::~VRTCPClient() { delete client; }
+VRTCPClient::VRTCPClient(string name) : VRNetworkClient(name) { protocol = "tcp"; client = new TCPClient(); }
 
-VRTCPClientPtr VRTCPClient::create() { return VRTCPClientPtr(new VRTCPClient()); }
+VRTCPClient::~VRTCPClient() {
+    VRSceneManager::get()->subNetworkClient(this);
+    delete client;
+}
+
+VRTCPClientPtr VRTCPClient::create(string name) {
+    auto c = VRTCPClientPtr(new VRTCPClient(name));
+    VRSceneManager::get()->regNetworkClient(c);
+    return c;
+}
 
 void VRTCPClient::connect(string host, int port) { client->connect(host, port); uri = host+":"+toString(port); }
 void VRTCPClient::connect(string host) { client->connect(host); uri = host; }
@@ -365,7 +373,6 @@ void VRTCPClient::close() {
     client = new TCPClient();
 }
 
-string VRTCPClient::getConnectedUri() { return uri; }
 string VRTCPClient::getPublicIP(bool cached) { return VRTCPUtils::getPublicIP(cached); }
 
 

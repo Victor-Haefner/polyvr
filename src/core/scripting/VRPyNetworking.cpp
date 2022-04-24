@@ -13,9 +13,9 @@ simpleVRPyType(RestServer, New_ptr);
 
 #ifndef WITHOUT_TCP
 simpleVRPyType(NetworkClient, 0);
-simpleVRPyType(UDPClient, New_ptr);
+simpleVRPyType(UDPClient, New_optNamed_ptr);
 simpleVRPyType(UDPServer, New_ptr);
-simpleVRPyType(TCPClient, New_ptr);
+simpleVRPyType(TCPClient, New_optNamed_ptr);
 simpleVRPyType(TCPServer, New_ptr);
 simpleVRPyType(ICEClient, New_ptr);
 simpleVRPyType(Collaboration, New_VRObjects_ptr);

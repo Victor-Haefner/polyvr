@@ -3,7 +3,11 @@
 
 #include "VRGuiUtils.h"
 
-#include "core/scene/VRScene.h"
+#include "core/scene/VRSceneManager.h"
+#include "core/networking/VRNetworkManager.h"
+#include "core/networking/VRNetworkClient.h"
+#include "core/networking/tcp/VRTCPClient.h"
+#include "core/networking/udp/VRUDPClient.h"
 
 #include <gtk/gtk.h>
 
@@ -50,15 +54,26 @@ void VRGuiNetwork::addNode(string label, Vec2i pos) {
 
 void VRGuiNetwork::update() {
     clear();
-    addNode("node1", Vec2i(50,  50));
-    addNode("node2", Vec2i(50, 100));
-    addNode("node3", Vec2i(50, 150));
-    addNode("node4", Vec2i(50, 200));
+    addNode("Network Clients:", Vec2i(50,  50));
 
-    auto scene = VRScene::getCurrent();
-    if (!scene) return;
+    auto netMgr = VRSceneManager::get();
+    if (!netMgr) return;
 
-    ;
+    //map<string, VRNetworkRemote> remotes;
+
+    auto clients = netMgr->getNetworkClients();
+    for (int i=0; i<clients.size(); i++) {
+        auto& client = clients[i];
+        string name = client->getName();
+        string protocol = client->getProtocol(); // tcp or udp
+        string remoteUri = client->getConnectedUri();
+
+        string label = protocol + " cli " + name + " -> " + remoteUri;
+
+
+
+        addNode(label, Vec2i(100, 100+i*50));
+    }
 }
 
 

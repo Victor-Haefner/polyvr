@@ -2,6 +2,7 @@
 #include "core/utils/toString.h"
 #include "core/utils/VRMutex.h"
 #include "core/gui/VRGuiConsole.h"
+#include "core/scene/VRSceneManager.h"
 
 #include <boost/asio.hpp>
 #include <boost/array.hpp>
@@ -10,13 +11,12 @@
 #include <thread>
 
 using namespace OSG;
-using namespace boost;
-using asio::ip::udp;
+using boost::asio::ip::udp;
 
 class UDPClient {
     private:
-        asio::io_service io_service;
-        asio::io_service::work worker;
+        boost::asio::io_service io_service;
+        boost::asio::io_service::work worker;
         udp::endpoint remote_endpoint;
         udp::socket socket;
         list<string> messages;
@@ -28,17 +28,17 @@ class UDPClient {
         function<string (string)> onMessageCb;
         boost::array<char, 1024> buffer;
 
-        vector<asio::ip::udp::endpoint> uriToEndpoints(const string& uri) {
-            asio::ip::udp::resolver resolver(io_service);
-            asio::ip::udp::resolver::query query(uri, "");
-            vector<asio::ip::udp::endpoint> res;
-            for(asio::ip::udp::resolver::iterator i = resolver.resolve(query); i != asio::ip::udp::resolver::iterator(); ++i) {
+        vector<boost::asio::ip::udp::endpoint> uriToEndpoints(const string& uri) {
+            boost::asio::ip::udp::resolver resolver(io_service);
+            boost::asio::ip::udp::resolver::query query(uri, "");
+            vector<boost::asio::ip::udp::endpoint> res;
+            for(boost::asio::ip::udp::resolver::iterator i = resolver.resolve(query); i != boost::asio::ip::udp::resolver::iterator(); ++i) {
                 res.push_back(*i);
             }
             return res;
         }
 
-        bool read_handler(const system::error_code& ec, size_t N) {
+        bool read_handler(const boost::system::error_code& ec, size_t N) {
             if (ec) { cout << "UDPClient receive failed: " << ec.message() << "\n"; broken = true; return false; }
             string msg(buffer.begin(), buffer.begin()+N);
             //cout << "Received: '" << msg << "' (" << ec.message() << ")\n";
@@ -57,7 +57,7 @@ class UDPClient {
         bool read() {
             if (broken) return false;
 
-            auto onRead = [this](system::error_code ec, size_t N) {
+            auto onRead = [this](boost::system::error_code ec, size_t N) {
                 read_handler(ec, N);
                 read();
             };
@@ -104,8 +104,8 @@ class UDPClient {
             try {
                 io_service.stop();
                 socket.close();
-                system::error_code _error_code;
-                socket.shutdown(asio::ip::udp::socket::shutdown_both, _error_code);
+                boost::system::error_code _error_code;
+                socket.shutdown(boost::asio::ip::udp::socket::shutdown_both, _error_code);
             } catch(...) {
                 ;
             }
@@ -117,8 +117,8 @@ class UDPClient {
         void connect(string host, int port) {
             cout << "UDPClient::connect " << this << " to: " << host << ", on port " << port << endl;
             try {
-                remote_endpoint = udp::endpoint( asio::ip::address::from_string(host), port);
-                //socket.connect( udp::endpoint( asio::ip::address::from_string(host), port ));
+                remote_endpoint = udp::endpoint( boost::asio::ip::address::from_string(host), port);
+                //socket.connect( udp::endpoint( boost::asio::ip::address::from_string(host), port ));
                 read();
             } catch(std::exception& e) {
                 cout << "UDPClient::connect failed with: " << e.what() << endl;
@@ -149,10 +149,18 @@ class UDPClient {
 };
 
 
-VRUDPClient::VRUDPClient() { protocol = "udp"; client = new UDPClient(); }
-VRUDPClient::~VRUDPClient() { delete client; }
+VRUDPClient::VRUDPClient(string name) : VRNetworkClient(name) { protocol = "udp"; client = new UDPClient(); }
 
-VRUDPClientPtr VRUDPClient::create() { return VRUDPClientPtr( new VRUDPClient() ); }
+VRUDPClient::~VRUDPClient() {
+    VRSceneManager::get()->subNetworkClient(this);
+    delete client;
+}
+
+VRUDPClientPtr VRUDPClient::create(string name) {
+    auto c = VRUDPClientPtr(new VRUDPClient(name));
+    VRSceneManager::get()->regNetworkClient(c);
+    return c;
+}
 
 void VRUDPClient::onMessage( function<string(string)> f ) { client->onMessage(f); }
 void VRUDPClient::connect(string host, int port) { client->connect(host, port); uri = host+":"+toString(port); }
