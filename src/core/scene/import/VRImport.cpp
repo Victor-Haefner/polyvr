@@ -13,7 +13,9 @@
 #endif
 #include "VRML.h"
 #include "VRSTEPCascade.h"
+#ifndef WITHOUT_STEPCODE
 #include "STEP/VRSTEP.h"
+#endif
 #include "E57/E57.h"
 #ifndef WITHOUT_GDAL
 #include "GIS/VRGDAL.h"
@@ -214,15 +216,19 @@ void VRImport::LoadJob::load(VRThreadWeakPtr tw) {
         if (ext == ".pcb") { loadPCB(path, res, options); return; }
         if (ext == ".xyz") { loadXYZ(path, res, options); return; }
         if (ext == ".ply") { loadPly(path, res); return; }
-#ifndef WITHOUT_STEP
         if (ext == ".step" || ext == ".stp" || ext == ".STEP" || ext == ".STP") {
             if (preset == "PVR") {
+#ifndef WITHOUT_STEPCODE
                 VRSTEPPtr step = VRSTEP::create();
                 step->load(path, res, options);
-            } else loadSTEPCascade(path, res);
+#endif
+            } else {
+#ifndef WITHOUT_STEP
+				loadSTEPCascade(path, res);
+#endif
+			}
             return;
         }
-#endif
 #ifndef WITHOUT_IFC
 		if (ext == ".ifc") { loadIFC(path, res); return; }
 #endif

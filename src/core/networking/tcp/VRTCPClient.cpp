@@ -110,8 +110,8 @@ class TCPClient {
                 //cout << " async write finished " << N << endl;
                 if (!ec) {
                     VRLock lock(mtx);
-                    messages.pop_front();
-                    if (!messages.empty()) processQueue();
+                    this->messages.pop_front();
+                    if (!this->messages.empty()) processQueue();
                 } else {
                     cout << " tcp client write ERROR: " << ec.message() << "  N: " << N << ", close socket!" << endl;
                     socket->close();
@@ -120,7 +120,7 @@ class TCPClient {
 
             if (broken) return;
             VRLock lock(mtx);
-            boost::asio::async_write(*socket, boost::asio::buffer(messages.front().data(), messages.front().length()), onWritten );
+            boost::asio::async_write(*socket, boost::asio::buffer(this->messages.front().data(), this->messages.front().length()), onWritten );
         }
 
         void runService() { // needed because windows complains..

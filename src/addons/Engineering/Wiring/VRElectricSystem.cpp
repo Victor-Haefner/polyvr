@@ -317,10 +317,10 @@ void VRElectricSystem::importECAD() {
 
 		for (auto j : i->getChildren("P11", true) ) {
 			if (j->hasAttribute("P21002_1") && j->hasAttribute("P21000_1")) {
-				auto IN = j->getAttribute("P21002_1");
-				auto PO = j->getAttribute("P21000_1");
-				IN_O117.push_back( make_pair(IN,PO) );
-				cout << "IN_O117 " << IN << ", " << PO << endl;
+				auto cIN = j->getAttribute("P21002_1");
+				auto cPO = j->getAttribute("P21000_1");
+				IN_O117.push_back( make_pair(cIN,cPO) );
+				cout << "IN_O117 " << cIN << ", " << cPO << endl;
 			}
 			if (j->hasAttribute("P22001")) name = j->getAttribute("P22001");
 		}
@@ -347,9 +347,9 @@ void VRElectricSystem::importECAD() {
 
 		for (auto t : s->getChildren("P11", true) ) {
 			if (t->hasAttribute("P20407") && t->hasAttribute("P20400") ) {
-				string IN = t->getAttribute("P20407");
-				string AD = t->getAttribute("P20400");
-				IN_O17.push_back( make_pair(IN,AD) );
+				string cIN = t->getAttribute("P20407");
+				string cAD = t->getAttribute("P20400");
+				IN_O17.push_back( make_pair(cIN,cAD) );
 			}
 		}
 
@@ -369,15 +369,15 @@ void VRElectricSystem::importECAD() {
 			auto component = componentIDs[name][0];
 			if (O17_data.count(component->ecadID)) {
 				auto dataO17 = O17_data[component->ecadID];
-				for (auto IN : dataO117 ) {
-					if (dataO17.count(IN.first)) {
-						auto LADaddr = dataO17[IN.first];
+				for (auto cIN : dataO117 ) {
+					if (dataO17.count(cIN.first)) {
+						auto LADaddr = dataO17[cIN.first];
 						if (LADaddr[0] == 'E') LADaddr = "%I"+subString(LADaddr,1);
 						if (LADaddr[0] == 'A') LADaddr = "%O"+subString(LADaddr,1);
-						VRElectricComponent::Port p(dataO117[IN.first]);
+						VRElectricComponent::Port p(dataO117[cIN.first]);
 						p.ladHWaddr = LADaddr;
-						p.ecadHWaddr = dataO17[IN.first];
-						p.socket = IN.first;
+						p.ecadHWaddr = dataO17[cIN.first];
+						p.socket = cIN.first;
 						component->ports[p.name] = p;
 					}
 				}
