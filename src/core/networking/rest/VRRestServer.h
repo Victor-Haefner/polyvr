@@ -9,11 +9,13 @@ OSG_BEGIN_NAMESPACE;
 
 class VRRestServer : public std::enable_shared_from_this<VRRestServer> {
 	private:
+	    string name;
+
 	public:
-		VRRestServer();
+		VRRestServer(string name);
 		~VRRestServer();
 
-		static VRRestServerPtr create();
+		static VRRestServerPtr create(string name = "none");
 		VRRestServerPtr ptr();
 };
 

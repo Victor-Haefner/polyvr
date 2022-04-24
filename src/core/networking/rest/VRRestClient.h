@@ -4,14 +4,14 @@
 #include <string>
 #include <list>
 #include <OpenSG/OSGConfig.h>
-#include "../VRNetworkingFwd.h"
+#include "../VRNetworkClient.h"
 
 typedef void CURL;
 
 using namespace std;
 OSG_BEGIN_NAMESPACE;
 
-class VRRestClient : public std::enable_shared_from_this<VRRestClient> {
+class VRRestClient : public VRNetworkClient {
 	private:
         struct RestPromise;
 
@@ -23,11 +23,11 @@ class VRRestClient : public std::enable_shared_from_this<VRRestClient> {
         void finishAsync(VRRestCbPtr cb, VRRestResponsePtr res);
 
 	public:
-		VRRestClient();
+		VRRestClient(string name);
 		~VRRestClient();
 
-		static VRRestClientPtr create();
-		VRRestClientPtr ptr();
+		static VRRestClientPtr create(string name = "none");
+		//VRRestClientPtr ptr();
 
 		VRRestResponsePtr get(string uri, int timeoutSecs = 2);
 		void getAsync(string uri, VRRestCbPtr cb, int timeoutSecs = 2);

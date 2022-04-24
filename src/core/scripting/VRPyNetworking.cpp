@@ -8,15 +8,15 @@ using namespace OSG;
 simpleVRPyType(HDLC, New_ptr);
 #endif
 simpleVRPyType(RestResponse, 0);
-simpleVRPyType(RestClient, New_ptr);
-simpleVRPyType(RestServer, New_ptr);
+simpleVRPyType(RestClient, New_optNamed_ptr);
+simpleVRPyType(RestServer, New_optNamed_ptr);
 
 #ifndef WITHOUT_TCP
 simpleVRPyType(NetworkClient, 0);
 simpleVRPyType(UDPClient, New_optNamed_ptr);
-simpleVRPyType(UDPServer, New_ptr);
+simpleVRPyType(UDPServer, New_optNamed_ptr);
 simpleVRPyType(TCPClient, New_optNamed_ptr);
-simpleVRPyType(TCPServer, New_ptr);
+simpleVRPyType(TCPServer, New_optNamed_ptr);
 simpleVRPyType(ICEClient, New_ptr);
 simpleVRPyType(Collaboration, New_VRObjects_ptr);
 

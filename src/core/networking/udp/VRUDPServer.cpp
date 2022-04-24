@@ -82,10 +82,10 @@ class UDPServer {
 };
 
 
-VRUDPServer::VRUDPServer() { server = new UDPServer(); }
+VRUDPServer::VRUDPServer(string n) : name(n) { server = new UDPServer(); }
 VRUDPServer::~VRUDPServer() { delete server; }
 
-VRUDPServerPtr VRUDPServer::create() { return VRUDPServerPtr(new VRUDPServer()); }
+VRUDPServerPtr VRUDPServer::create(string name) { return VRUDPServerPtr(new VRUDPServer(name)); }
 
 void VRUDPServer::onMessage( function<string(string)> f ) { server->onMessage(f); }
 void VRUDPServer::listen(int port) { this->port = port; server->listen(port); }

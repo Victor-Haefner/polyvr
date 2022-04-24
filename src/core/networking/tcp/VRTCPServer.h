@@ -16,12 +16,13 @@ class VRTCPServer {
         TCPServer* server = 0;
         int port = 0;
         string publicIP = "";
+        string name;
 
     public:
-        VRTCPServer();
+        VRTCPServer(string name);
         ~VRTCPServer();
 
-        static VRTCPServerPtr create();
+        static VRTCPServerPtr create(string name = "none");
 
         void onMessage( function<string(string)> f );
 

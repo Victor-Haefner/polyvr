@@ -16,12 +16,13 @@ class VRUDPServer {
 	private:
         UDPServer* server = 0;
         int port = 0;
+        string name;
 
 	public:
-		VRUDPServer();
+		VRUDPServer(string name);
 		~VRUDPServer();
 
-		static VRUDPServerPtr create();
+		static VRUDPServerPtr create(string name = "none");
 
         void onMessage( function<string(string)> f );
 

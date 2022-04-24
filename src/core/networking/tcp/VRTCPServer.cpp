@@ -134,10 +134,10 @@ class TCPServer {
         }
 };
 
-VRTCPServer::VRTCPServer() { server = new TCPServer(); }
+VRTCPServer::VRTCPServer(string n) : name(n) { server = new TCPServer(); }
 VRTCPServer::~VRTCPServer() { delete server; }
 
-VRTCPServerPtr VRTCPServer::create() { return VRTCPServerPtr(new VRTCPServer()); }
+VRTCPServerPtr VRTCPServer::create(string name) { return VRTCPServerPtr(new VRTCPServer(name)); }
 
 void VRTCPServer::onMessage( function<string(string)> f ) { server->onMessage(f); }
 void VRTCPServer::listen(int port, string guard) { this->port = port; server->listen(port, guard); }
