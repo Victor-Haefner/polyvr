@@ -143,7 +143,8 @@ void VRCarDynamics::updateChassis() {
 }
 
 void VRCarDynamics::addBTWheel(WheelPtr wheel) {
-    if (!vehicle) return;
+    if (!vehicle) { cout << "Error: VRCarDynamics::addBTWheel - no valid vehicle!" << endl; return; }
+    if (!wheel) { cout << "Error: VRCarDynamics::addBTWheel - no valid wheel!" << endl; return; }
     btVector3 pos = VRPhysics::toBtVector3(*wheel->position - *chassis->massOffset);
     btVector3 dir = VRPhysics::toBtVector3(*wheel->direction);
     btVector3 axl = VRPhysics::toBtVector3(*wheel->axle);
