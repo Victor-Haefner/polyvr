@@ -44,7 +44,6 @@ class VRTerrain : public VRGeometry, public VRWorldModule {
 
         Vec2d size = Vec2d(100,100);
         Vec2f texelSize = Vec2f(0.01,0.01); // shader parameter
-        //Vec3i texSize = Vec3d(1,1,1);
         float resolution = 1; // shader parameter
         float heightScale = 1; // shader parameter
         double grid = 64;
@@ -75,11 +74,9 @@ class VRTerrain : public VRGeometry, public VRWorldModule {
 
         void setHeightTexture(VRTexturePtr t);
         void updateTexelSize();
-        //void setupGeo();
         void setupMat();
         bool createMultiGrid(VRCameraPtr cam, double res);
 
-        void btPhysicalize();
         void vrPhysicalize();
 
     public:

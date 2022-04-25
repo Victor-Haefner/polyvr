@@ -26,7 +26,6 @@
 #ifndef WITHOUT_BULLET
 #include "core/objects/geometry/VRPhysics.h"
 #include "VRTerrainPhysicsShape.h"
-#include <BulletCollision/CollisionShapes/btHeightfieldTerrainShape.h>
 #endif
 
 
@@ -425,27 +424,6 @@ vector<Vec3d> VRTerrain::probeHeight( Vec2d p ) {
 VRTexturePtr VRTerrain::getMap() { return heigthsTex; }
 Vec2f VRTerrain::getTexelSize() { return texelSize; }
 
-void VRTerrain::btPhysicalize() {
-    auto dim = heigthsTex->getSize();
-    float roadTerrainOffset = 0.03; // also defined in vrroadbase.cpp
-
-    double Hmax = -1e6;
-    physicsHeightBuffer = shared_ptr<vector<float>>( new vector<float>(dim[0]*dim[1]) );
-    for (int i = 0; i < dim[0]; i++) {
-        for (int j = 0; j < dim[1]; j++) {
-            int k = j*dim[0]+i;
-            float h = heigthsTex->getPixelVec(Vec3i(i,j,0))[0];
-            (*physicsHeightBuffer)[k] = h + roadTerrainOffset;
-            if (Hmax < h) Hmax = h;
-        }
-    }
-#ifndef WITHOUT_BULLET
-    auto shape = new btHeightfieldTerrainShape(dim[0], dim[1], &(*physicsHeightBuffer)[0], 1, -Hmax, Hmax, 1, PHY_FLOAT, false);
-    shape->setLocalScaling(btVector3(texelSize[0],1,texelSize[1]));
-    getPhysics()->setCustomShape( shape );
-#endif
-}
-
 void VRTerrain::vrPhysicalize() {
 #ifndef WITHOUT_BULLET
     auto shape = new VRTerrainPhysicsShape( ptr(), resolution );
@@ -458,7 +436,6 @@ void VRTerrain::physicalize(bool b) {
     if (!heigthsTex) return;
     if (!b) { getPhysics()->setPhysicalized(false); return; }
 
-    //btPhysicalize();
     vrPhysicalize();
     getPhysics()->setFriction(0.8);
     getPhysics()->setPhysicalized(true);

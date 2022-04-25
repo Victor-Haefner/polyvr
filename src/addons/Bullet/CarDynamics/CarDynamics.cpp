@@ -145,6 +145,7 @@ void VRCarDynamics::updateChassis() {
 void VRCarDynamics::addBTWheel(WheelPtr wheel) {
     if (!vehicle) { cout << "Error: VRCarDynamics::addBTWheel - no valid vehicle!" << endl; return; }
     if (!wheel) { cout << "Error: VRCarDynamics::addBTWheel - no valid wheel!" << endl; return; }
+    if (!chassis) { cout << "Error: VRCarDynamics::addBTWheel - no valid chassis!" << endl; return; }
     btVector3 pos = VRPhysics::toBtVector3(*wheel->position - *chassis->massOffset);
     btVector3 dir = VRPhysics::toBtVector3(*wheel->direction);
     btVector3 axl = VRPhysics::toBtVector3(*wheel->axle);
@@ -206,6 +207,7 @@ vector<VRTransformPtr> VRCarDynamics::getWheels() {
 }
 
 void VRCarDynamics::addWheel(VRGeometryPtr geo, Vec3d p, float radius, float width, float maxSteering, bool steered, bool driven) {
+	if (!geo) { cout << "Error: VRCarDynamics::addWheel - no valid wheel!" << endl; return; }
     auto wheel = Wheel::create();
     wheel->ID = wheels.size();
     *wheel->position = p;
@@ -219,7 +221,7 @@ void VRCarDynamics::addWheel(VRGeometryPtr geo, Vec3d p, float radius, float wid
 
     addChild(wheel->geo);
     wheels.push_back(wheel);
-    addBTWheel(wheel);
+    addBTWheel(wheel); // TODO: this is also done in chassis, is it ok to do twice?
 }
 
 void VRCarDynamics::setupSimpleWheels(VRTransformPtr geo, float x, float fZ, float rZ, float h, float r, float w, float ms) {
