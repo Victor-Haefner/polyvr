@@ -42,7 +42,7 @@ class VRBRepSurface : public VRBRepUtils {
         void setCylinder(double radius);
 
         void addBound(VRBRepBoundPtr bound);
-        VRGeometryPtr build();
+        VRGeometryPtr build(bool flat = false);
 };
 
 OSG_END_NAMESPACE;

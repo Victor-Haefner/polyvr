@@ -115,6 +115,7 @@ VRGeometryPtr VRBRepBound::build() {
     for (int i=1; i<points.size(); i++) {
         boundPoints.pushLine(i-1, i);
     }
+    boundPoints.pushLine(points.size()-1, 0);
 
     auto tmp = boundPoints.asGeometry("bounds");
     auto mb = VRMaterial::create("bounds");

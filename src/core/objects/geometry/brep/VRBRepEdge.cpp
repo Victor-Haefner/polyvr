@@ -19,14 +19,22 @@ void VRBRepEdge::setLine(Vec3d point1, Vec3d point2) {
     etype = "Line";
 }
 
-void VRBRepEdge::setCircle(PosePtr c, double r, double angle1, double angle2) {
+void VRBRepEdge::setCircle(PosePtr c, double r, double a1, double a2) {
     radius = r;
     center = c;
     etype = "Circle";
+
+    Pnt3d c1(cos(a1), sin(a1), 0);
+    Pnt3d c2(cos(a2), sin(a2), 0);
+    Matrix4d m = center->asMatrix();
+    m.multFull(c1, EBeg);
+    m.multFull(c2, EEnd);
 }
 
 Vec3d& VRBRepEdge::beg() { return points.size() > 0 ? points[0] : n; }
 Vec3d& VRBRepEdge::end() { return points.size() > 0 ? points[points.size()-1] : n; }
+
+vector<Vec3d> VRBRepEdge::getPoints() { return points; }
 
 void VRBRepEdge::swap() {
     //cout << "VRBRepEdge::swap\n";

@@ -130,7 +130,7 @@ struct triangle {
     }
 };
 
-VRGeometryPtr VRBRepSurface::build() {
+VRGeometryPtr VRBRepSurface::build(bool flat) {
     //cout << "VRSTEP::Surface build " << type << endl;
 
     Matrix4d m;
@@ -466,7 +466,7 @@ VRGeometryPtr VRBRepSurface::build() {
         auto g = t.compute();
         if (!g) return 0;
         if (!g->getMesh()->geo->getPositions()) cout << "NO MESH!\n";
-        g->setMatrix(m);
+        if (!flat) g->setMatrix(m);
 
         Vec3d nP = Vec3d(0, 0, 1);
         if (!same_sense) nP *= -1;
@@ -563,7 +563,7 @@ VRGeometryPtr VRBRepSurface::build() {
         VRMeshSubdivision subdiv;
         subdiv.subdivideGrid(g, Vec3d(Dangle, -1, -1), false);
 
-        if (g) if (auto gg = g->getMesh()) {
+        if (g && !flat) if (auto gg = g->getMesh()) {
             // project the points back into 3D space
             GeoVectorPropertyMTRecPtr pos = gg->geo->getPositions();
             GeoVectorPropertyMTRecPtr norms = gg->geo->getNormals();
@@ -593,7 +593,7 @@ VRGeometryPtr VRBRepSurface::build() {
         g->addChild(tBounds);
         g->getMaterial()->setFrontBackModes(GL_LINE, GL_FILL); // to test face orientations
         */
-        if (g) g->setMatrix(m);
+        if (g && !flat) g->setMatrix(m);
         //if (g) g->setScale(Vec3d(1,1,0.001));
         if (g && g->getMesh() && g->getMesh()->geo->getPositions() && g->getMesh()->geo->getPositions()->size() > 0) return g;
         return 0;
@@ -737,7 +737,7 @@ VRGeometryPtr VRBRepSurface::build() {
             }
         }*/
 
-        if (g) g->setMatrix(m);
+        if (g && !flat) g->setMatrix(m);
         if (g && g->getMesh() && g->getMesh()->geo->getPositions() && g->getMesh()->geo->getPositions()->size() > 0) return g;
         return 0;
     }
@@ -860,7 +860,7 @@ VRGeometryPtr VRBRepSurface::build() {
             VRMeshSubdivision subdiv;
             subdiv.subdivideGrid( g, Vec3d(Tu/res[0], -1, Tv/res[1]) , false);
 
-            if (g) if (auto gg = g->getMesh()) {
+            if (g && !flat) if (auto gg = g->getMesh()) {
                 VRGeoData nMesh;
 
                 auto pos = gg->geo->getPositions();
@@ -887,7 +887,7 @@ VRGeometryPtr VRBRepSurface::build() {
         }
 
 
-        if (g) g->setMatrix(m);
+        if (g && !flat) g->setMatrix(m);
         if (g && g->getMesh() && g->getMesh()->geo->getPositions() && g->getMesh()->geo->getPositions()->size() > 0) return g;
         return 0;
     }
@@ -978,7 +978,7 @@ VRGeometryPtr VRBRepSurface::build() {
         subdiv.subdivideGrid(g, Vec3d(Dangle*0.5, -1, -1), false);
 
 
-        if (g) if (auto gg = g->getMesh()) {
+        if (g && !flat) if (auto gg = g->getMesh()) {
             // project the points back into 3D space
             GeoVectorPropertyMTRecPtr pos = gg->geo->getPositions();
             GeoVectorPropertyMTRecPtr norms = gg->geo->getNormals();
@@ -1011,7 +1011,7 @@ VRGeometryPtr VRBRepSurface::build() {
         //auto geo = wireBounds(bounds);
         //g->addChild(geo);
 
-        if (g) g->setMatrix(m);
+        if (g && !flat) g->setMatrix(m);
         if (g && g->getMesh() && g->getMesh()->geo->getPositions() && g->getMesh()->geo->getPositions()->size() > 0) return g;
         return 0;
     }
@@ -1093,7 +1093,7 @@ VRGeometryPtr VRBRepSurface::build() {
         subdiv.subdivideGrid(g, Vec3d(Dangle, -1, Dangle), false);
 
         // tesselate the result while projecting it back on the surface
-        if (g) if (auto gg = g->getMesh()) {
+        if (g && !flat) if (auto gg = g->getMesh()) {
             VRGeoData nMesh; // TODO: remove this, this only swaps the normal!
             Vec3d n(0,1,0);
             for (auto it = TriangleIterator(gg->geo); !it.isAtEnd() ;++it) {
@@ -1123,7 +1123,7 @@ VRGeometryPtr VRBRepSurface::build() {
             }
         }
 
-        if (g) g->setMatrix(m);
+        if (g && !flat) g->setMatrix(m);
         if (g && g->getMesh() && g->getMesh()->geo->getPositions() && g->getMesh()->geo->getPositions()->size() > 0) return g;
         return 0;
     }
@@ -1217,7 +1217,7 @@ VRGeometryPtr VRBRepSurface::build() {
         subdiv.subdivideGrid(g, Vec3d(Dangle, -1, Dangle), false);
 
         // tesselate the result while projecting it back on the surface
-        if (g) if (auto gg = g->getMesh()) {
+        if (g && !flat) if (auto gg = g->getMesh()) {
             VRGeoData nMesh; // TODO: move this, this swaps the normal and triangle orientation!
             Vec3d n(0,1,0);
             if (!same_sense) n *= -1;
@@ -1246,7 +1246,7 @@ VRGeometryPtr VRBRepSurface::build() {
         //auto geo = wireBounds(bounds);
         //g->addChild(geo);
 
-        if (g) g->setMatrix(m);
+        if (g && !flat) g->setMatrix(m);
         if (g && g->getMesh() && g->getMesh()->geo->getPositions() && g->getMesh()->geo->getPositions()->size() > 0) return g;
         return 0;
     }

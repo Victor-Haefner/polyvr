@@ -38,6 +38,8 @@ class VRBRepEdge : public VRBRepUtils {
         void setLine(Vec3d point1, Vec3d point2);
         void setCircle(PosePtr center, double radius, double angle1, double angle2);
 
+        vector<Vec3d> getPoints();
+
         Vec3d& beg();
         Vec3d& end();
         void swap();
