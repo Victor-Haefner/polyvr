@@ -12,8 +12,10 @@ using namespace std;
 OSG_BEGIN_NAMESPACE;
 
 class VRBRepSurface : public VRBRepUtils {
+    private:
+        vector<VRBRepBoundPtr> bounds;
+
     public:
-        vector<VRBRepBound> bounds;
         string stype;
         string etype;
         bool same_sense = true;
@@ -35,6 +37,7 @@ class VRBRepSurface : public VRBRepUtils {
 
         static VRBRepSurfacePtr create();
 
+        void addBound(VRBRepBoundPtr bound);
         VRGeometryPtr build();
 };
 

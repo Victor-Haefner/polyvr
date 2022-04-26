@@ -19,6 +19,8 @@ VRBRepSurface::~VRBRepSurface() {}
 
 VRBRepSurfacePtr VRBRepSurface::create() { return VRBRepSurfacePtr(new VRBRepSurface()); }
 
+void VRBRepSurface::addBound(VRBRepBoundPtr bound) { bounds.push_back(bound); }
+
 struct triangle {
     vector<Pnt3f> p; // vertex positions
     vector<Vec3f> v; // edge vectors
@@ -368,9 +370,9 @@ VRGeometryPtr VRBRepSurface::build() {
         }
     };
 
-    auto checkPolyOrientation = [&](VRPolygon& poly, VRBRepBound& bound) {
+    auto checkPolyOrientation = [&](VRPolygon& poly, VRBRepBoundPtr bound) {
         bool isCCW = poly.isCCW();
-        bool isOuter = bound.isOuter();
+        bool isOuter = bound->isOuter();
         if (same_sense) {
             if (!isCCW && isOuter) poly.reverseOrder();
             if (isCCW && !isOuter) poly.reverseOrder();
@@ -434,17 +436,17 @@ VRGeometryPtr VRBRepSurface::build() {
         if (bounds.size() == 0) cout << "Warning: No bounds!\n";
 
         vector<int> sortedBounds;
-        for (int i=0; i<bounds.size(); i++) if ( bounds[i].isOuter()) sortedBounds.push_back(i);
-        for (int i=0; i<bounds.size(); i++) if (!bounds[i].isOuter()) sortedBounds.push_back(i);
+        for (int i=0; i<bounds.size(); i++) if ( bounds[i]->isOuter()) sortedBounds.push_back(i);
+        for (int i=0; i<bounds.size(); i++) if (!bounds[i]->isOuter()) sortedBounds.push_back(i);
 
         //for (auto& b : bounds) {
         for (auto& bi : sortedBounds) {
             auto& b = bounds[bi];
             //if (b.points.size() == 0) cout << "Warning: No bound points for bound " << b.BRepType << endl;
-            bool doPrint = b.containsNan();
+            bool doPrint = b->containsNan();
             VRPolygon poly;
 
-            for (auto pIn : b.getPoints()) {
+            for (auto pIn : b->getPoints()) {
                 Vec3d pOut;
                 if (doPrint) cout << " pIn: " << pIn << endl;
                 mI.multFull(Pnt3d(pIn), pOut);
@@ -489,7 +491,7 @@ VRGeometryPtr VRBRepSurface::build() {
                 return true;
             };
 
-            auto edges = b.getEdges();
+            auto edges = b->getEdges();
             if (eOnPiLine(edges[0]))  {
                 int i0 = -1;
                 for (int i=1; i<edges.size(); i++) {
@@ -499,10 +501,10 @@ VRGeometryPtr VRBRepSurface::build() {
                     }
                 }
 
-                b.shiftEdges(i0);
+                b->shiftEdges(i0);
             }
 
-            for (auto& e : b.getEdges()) {
+            for (auto& e : b->getEdges()) {
                 //cout << "  bound edge: " << e.etype << endl;
                 if (e->etype == "Circle") {
                     double cDir = e->compCircleDirection(mI, cN);
@@ -545,7 +547,7 @@ VRGeometryPtr VRBRepSurface::build() {
             checkPolyIntegrety(poly);
             checkPolyOrientation(poly, b);
             poly.remPoint(poly.size()-1); // TODO: this removes the last point as it is duplicate of first..
-            triangulator.add(poly, b.isOuter());
+            triangulator.add(poly, b->isOuter());
             //cout << " poly: " << toString(poly.get()) << endl;
         }
 
@@ -788,8 +790,8 @@ VRGeometryPtr VRBRepSurface::build() {
             Triangulator triangulator;
 
             for (auto b : bounds) {
-                auto points = b.getPoints();
-                cout << " BSpline Bound, outer: " << b.isOuter() << " " << points.size() << endl;
+                auto points = b->getPoints();
+                cout << " BSpline Bound, outer: " << b->isOuter() << " " << points.size() << endl;
 
                 /*for (auto& e : b.edges) {
                     cout << "  edge " << e.etype << ", Np: " << e.points.size() << ", BE: " << e.EBeg << " -> " << e.EEnd << endl;
@@ -906,7 +908,7 @@ VRGeometryPtr VRBRepSurface::build() {
                 return true;
             };
 
-            auto edges = b.getEdges();
+            auto edges = b->getEdges();
             if (eOnPiLine(edges[0]))  {
                 int i0 = -1;
                 for (int i=1; i<edges.size(); i++) {
@@ -916,10 +918,10 @@ VRGeometryPtr VRBRepSurface::build() {
                     }
                 }
 
-                b.shiftEdges(i0);
+                b->shiftEdges(i0);
             }
 
-            for (auto& e : b.getEdges()) {
+            for (auto& e : b->getEdges()) {
                 if (e->etype == "Circle") {
                     double cDir = e->compCircleDirection(mI, cN);
 
@@ -1029,7 +1031,7 @@ VRGeometryPtr VRBRepSurface::build() {
                 return true;
             };
 
-            auto edges = b.getEdges();
+            auto edges = b->getEdges();
             if (eOnPiLine(edges[0]))  {
                 int i0 = -1;
                 for (int i=1; i<edges.size(); i++) {
@@ -1039,10 +1041,10 @@ VRGeometryPtr VRBRepSurface::build() {
                     }
                 }
 
-                b.shiftEdges(i0);
+                b->shiftEdges(i0);
             }
 
-            for (auto& e : b.getEdges()) {
+            for (auto& e : b->getEdges()) {
                 cout << " edge on sphere " << e->etype << endl;
                 if (e->etype == "Circle") {
                     double cDir = e->compCircleDirection(mI, cN);
@@ -1146,7 +1148,7 @@ VRGeometryPtr VRBRepSurface::build() {
                 return false;
             };
 
-            auto edges = b.getEdges();
+            auto edges = b->getEdges();
             if (eOnPiLine(edges[0])) {
                 int i0 = -1;
                 for (int i=1; i<edges.size(); i++) {
@@ -1157,12 +1159,12 @@ VRGeometryPtr VRBRepSurface::build() {
                 }
 
                 //cout << "  shiftEdges " << i0 << endl;
-                b.shiftEdges(i0);
+                b->shiftEdges(i0);
             }
 
             //Vec3d n;
 
-            for (auto& e : b.getEdges()) {
+            for (auto& e : b->getEdges()) {
                 //cout << " edge on torus " << e.etype << endl;
                 if (e->etype == "Circle") {
                     double cDir = e->compCircleDirection(mI, cN);
@@ -1251,7 +1253,7 @@ VRGeometryPtr VRBRepSurface::build() {
     VRGeoData data;
 
     for (auto b : bounds) {
-        auto points = b.getPoints();
+        auto points = b->getPoints();
         for (uint i=0; i<points.size(); i+=2) {
             Pnt3d p1 = points[i];
             Pnt3d p2 = points[i+1];

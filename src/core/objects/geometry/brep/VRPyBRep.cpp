@@ -8,6 +8,7 @@ simpleVRPyType(BRepEdge, New_ptr);
 simpleVRPyType(BRepBound, New_ptr);
 
 PyMethodDef VRPyBRepSurface::methods[] = {
+    {"addBound", PyWrap( BRepSurface, addBound, "Add bound", void, VRBRepBoundPtr ) },
     {"build", PyWrap( BRepSurface, build, "Build surface as geometry", VRGeometryPtr ) },
     {NULL}  /* Sentinel */
 };
@@ -17,6 +18,8 @@ PyMethodDef VRPyBRepEdge::methods[] = {
 };
 
 PyMethodDef VRPyBRepBound::methods[] = {
-    {"build", PyWrap( BRepSurface, build, "Build surface as geometry", VRGeometryPtr ) },
+    {"addEdge", PyWrap( BRepBound, addEdge, "Add boundary edge", void, VRBRepEdgePtr ) },
+    {"compute", PyWrap( BRepBound, compute, "Compute tessellation", void ) },
+    {"build", PyWrap( BRepBound, build, "Build surface as geometry", VRGeometryPtr ) },
     {NULL}  /* Sentinel */
 };

@@ -1030,6 +1030,8 @@ struct VRSTEP::Bound : public VRSTEP::Instance, public VRBRepBound {
 
         compute();
     }
+
+    static shared_ptr<Bound> create(Instance& i, map<STEPentity*, Instance>& instances) { return shared_ptr<Bound>(new Bound(i, instances)); }
 };
 
 struct VRSTEP::Surface : public VRSTEP::Instance, public VRBRepSurface {
@@ -1175,8 +1177,8 @@ void VRSTEP::buildGeometries() {
                         Surface surface(s, instances, same_sense);
                         for (auto k : Face.get<0, vector<STEPentity*>, STEPentity*, bool>() ) {
                             auto& b = instances[k];
-                            Bound bound(b, instances);
-                            surface.bounds.push_back(bound);
+                            auto bound = Bound::create(b, instances);
+                            surface.addBound(bound);
                         }
 
                         Color3f color = material->getDiffuse();
