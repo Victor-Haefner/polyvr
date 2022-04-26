@@ -1080,10 +1080,13 @@
 		<Unit filename="src/core/objects/geometry/brep/VRBRepBound.h" />
 		<Unit filename="src/core/objects/geometry/brep/VRBRepEdge.cpp" />
 		<Unit filename="src/core/objects/geometry/brep/VRBRepEdge.h" />
+		<Unit filename="src/core/objects/geometry/brep/VRBRepFwd.h" />
 		<Unit filename="src/core/objects/geometry/brep/VRBRepSurface.cpp" />
 		<Unit filename="src/core/objects/geometry/brep/VRBRepSurface.h" />
 		<Unit filename="src/core/objects/geometry/brep/VRBRepUtils.cpp" />
 		<Unit filename="src/core/objects/geometry/brep/VRBRepUtils.h" />
+		<Unit filename="src/core/objects/geometry/brep/VRPyBRep.cpp" />
+		<Unit filename="src/core/objects/geometry/brep/VRPyBRep.h" />
 		<Unit filename="src/core/objects/geometry/sprite/VRSprite.cpp" />
 		<Unit filename="src/core/objects/geometry/sprite/VRSprite.h" />
 		<Unit filename="src/core/objects/geometry/sprite/VRSpriteResizeTool.cpp" />
