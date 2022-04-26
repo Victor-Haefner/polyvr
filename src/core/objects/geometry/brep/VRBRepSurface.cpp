@@ -101,7 +101,7 @@ struct triangle {
 
     double isInside(Vec3d Pd, Vec2d& uv) {
         Vec3f P = Vec3f(Pd);
-        if (P.dist2(C) > R2) return 1e6; // big distance
+        if (P.dist2(C) > R2*1.1) return 1e6; // big distance
 
         P -= Vec3f(p[0]);
         Vec3f n = v[2].cross(v[1]); n.normalize();
@@ -131,7 +131,7 @@ struct triangle {
 };
 
 VRGeometryPtr VRBRepSurface::build(bool flat) {
-    //cout << "VRSTEP::Surface build " << type << endl;
+    //cout << "VRSTEP::Surface build " << stype << endl;
 
     Matrix4d m;
     Vec3d d, u;
@@ -795,7 +795,7 @@ VRGeometryPtr VRBRepSurface::build(bool flat) {
 
             for (auto b : bounds) {
                 auto points = b->getPoints();
-                cout << " BSpline Bound, outer: " << b->isOuter() << " " << points.size() << endl;
+                //cout << " BSpline Bound, outer: " << b->isOuter() << " " << points.size() << endl;
 
                 /*for (auto& e : b.edges) {
                     cout << "  edge " << e.etype << ", Np: " << e.points.size() << ", BE: " << e.EBeg << " -> " << e.EEnd << endl;
@@ -821,6 +821,7 @@ VRGeometryPtr VRBRepSurface::build(bool flat) {
                         auto& tri = triangles[i];
                         Vec2d uv;
                         double d = tri.isInside(p, uv);
+                        //cout << "  dist tri: " << d << endl;
 
                         if (d < dmin) {
                             dmin = d;
@@ -829,6 +830,7 @@ VRGeometryPtr VRBRepSurface::build(bool flat) {
 
                         if (d < 1e-3) break; // is inside
                     }
+                    //cout << " imin: " << imin << ", dmin: " << dmin << ", Ntri: " << triangles.size() << endl;
 
                     if (imin >= 0) {
                         auto& tri = triangles[imin];
@@ -852,7 +854,8 @@ VRGeometryPtr VRBRepSurface::build(bool flat) {
 
                 //checkPolyOrientation(poly, b);
                 triangulator.add(poly);
-                //cout << "  BSpline bounds poly: " << toString(poly.get()) << endl;
+                //cout << "  BSpline poly   points: " << toString(poly.get()) << endl;
+                //cout << "  BSpline bounds points: " << toString(b->getPoints()) << endl;
             }
 
             g = triangulator.compute();
@@ -864,7 +867,7 @@ VRGeometryPtr VRBRepSurface::build(bool flat) {
                 VRGeoData nMesh;
 
                 auto pos = gg->geo->getPositions();
-                cout << "unproject: " << pos->size() << endl;
+                //cout << "unproject: " << pos->size() << endl;
 
                 for (size_t i=0; i<pos->size(); i++) {
                     Pnt3f uv = pos->getValue<Pnt3f>(i);
@@ -883,7 +886,7 @@ VRGeometryPtr VRBRepSurface::build(bool flat) {
                 nMesh.apply(g);
             }
 
-            //for (auto& b : bounds) g->addChild(b.asGeometry());
+            //for (auto& b : bounds) g->addChild(b->build());
         }
 
 

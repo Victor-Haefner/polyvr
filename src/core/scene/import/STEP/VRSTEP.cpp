@@ -1141,6 +1141,7 @@ void VRSTEP::buildGeometries() {
         //if (i != 47) continue; // test for conic faces
         //if (i != 35) continue; // test for toroidal faces
         //if (i != 9) continue; // test for toroidal faces
+        //if (i != 2) continue; // test for toroidal faces
         //if (BrepShape.ID == 134852)
         //exploreEntity(nodes[BrepShape.entity], true);
 
@@ -1164,7 +1165,7 @@ void VRSTEP::buildGeometries() {
                     static int k = 0; k++;
                     //if (k != 99 && k != 16) continue;
                     //if (k != 67 && k != 9) continue;
-                    //if (k != 8) continue;
+                    //if (k != 72) continue;
 
                     auto& Face = instances[j];
                     //if (k == 67) exploreEntity(nodes[Face.entity], true);

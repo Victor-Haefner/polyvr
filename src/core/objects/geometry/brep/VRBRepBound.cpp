@@ -91,7 +91,7 @@ void VRBRepBound::compute() {
             cout << endl;*/
             if (points.size() > 0) {
                 if (sameVec(p, points[points.size()-1])) continue; // same as last point
-                if (sameVec(p, points[0])) continue; // same as first point
+                //if (sameVec(p, points[0])) continue; // same as first point
             }
             points.push_back(p);
         }
