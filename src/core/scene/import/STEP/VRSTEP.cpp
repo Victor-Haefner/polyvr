@@ -1233,6 +1233,7 @@ void VRSTEP::buildGeometries() {
                         Color3f color = material->getDiffuse();
                         if (material2) color = material2->getDiffuse();
 
+                        surface.stype = surface.type;
                         auto faceGeo = surface.build();
 
                         VRGeoData data(faceGeo);
