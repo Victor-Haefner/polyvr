@@ -1005,81 +1005,30 @@ struct VRSTEP::Edge : public VRSTEP::Instance, public VRBRepEdge {
             } else cout << "Error: edge element type not handled " << EdgeElement.type << endl;
         } else cout << "Error: edge type not handled " << i.type << endl;
     }
+
+    static shared_ptr<Edge> create(Instance& i, map<STEPentity*, Instance>& instances) { return shared_ptr<Edge>(new Edge(i, instances)); }
 };
 
 struct VRSTEP::Bound : public VRSTEP::Instance, public VRBRepBound {
     Bound(Instance& i, map<STEPentity*, Instance>& instances) : Instance(i) {
-        BRepType = type;
-
+        bool outer = true;
         if (type != "Face_Outer_Bound") outer = false;
+        setType(type, outer);
 
         if (type == "Face_Bound" || type == "Face_Outer_Bound") {
             auto& Loop = instances[ get<0, STEPentity*, bool>() ];
             //bool dir = get<1, STEPentity*, bool>();
             for (auto l : Loop.get<0, vector<STEPentity*> >() ) {
-                Edge edge(instances[l], instances);
-                if (edge.points.size() <= 1) {
+                auto edge = Edge::create(instances[l], instances);
+                if (edge->points.size() <= 1) {
                     //cout << "Warning2: No edge points " << &edge << endl;
                     continue;
                 }
-                edges.push_back(edge);
+                addEdge(edge);
             }
         }
 
-        if (edges.size() > 1) {
-            if ( sameVec(edges[0].beg(), edges[1].beg()) || sameVec(edges[0].beg(), edges[1].end()) ) {
-                /*cout << "swap edge 0!" << endl;
-                cout << " e0p0: " << edges[0].beg() << ", e1p0: " << edges[1].beg() << ", -> " << sameVec(edges[0].beg(), edges[1].beg()) << endl;
-                cout << " e0p0: " << edges[0].beg() << ", e1p1: " << edges[1].end() << ", -> " << sameVec(edges[0].beg(), edges[1].end()) << endl;
-                cout << " e0p1: " << edges[0].end() << endl;*/
-                edges[0].swap(); // swap first edge
-            }
-
-            for (unsigned int i=1; i<edges.size(); i++) {
-                auto& e1 = edges[i-1];
-                auto& e2 = edges[i];
-                if ( sameVec(e2.end(), e1.end()) ) e2.swap();
-                if (!sameVec(e1.end(), e2.beg()) ) {
-                    cout << "Warning in VRSTEP::Bound constructor, edges do not connect! " << e1.end() << " != " << e2.beg() << endl;
-                    cout << " edge1: " << e1.beg() << " -> " << e1.end() << endl;
-                    cout << " edge2: " << e2.beg() << " -> " << e2.end() << endl;
-                }
-            }
-        } else {
-            if (edges.size() == 0) { cout << "Warning: No bound edges" << endl; return; }
-            if ( !sameVec(edges[0].beg(), edges[0].end()) ) { cout << "Warning: Single NOT closed edge!" << endl; return; }
-        }
-
-        /*if (edges.size() == 1 && edges[0].type == "Circle") {
-            if (e.angles.size()) {
-                for (auto& a : e.angles) angles.push_back(a);
-            }
-            return;
-        }*/
-
-        for (auto& e : edges) {
-            //cout << "edge: " << e.beg() << " " << e.end() << endl;
-            for (auto& p : e.points) {
-                if (isNan(p)) {
-                    cout << "Error in VRSTEP::Bound, point contains NaN" << endl;
-                    continue;
-                }
-                /*cout << " " << p;
-                if (points.size() > 0) cout << " " << sameVec(p, points[points.size()-1]) << " " << sameVec(p, points[0]);
-                cout << endl;*/
-                if (points.size() > 0) {
-                    if (sameVec(p, points[points.size()-1])) continue; // same as last point
-                    if (sameVec(p, points[0])) continue; // same as first point
-                }
-                points.push_back(p);
-            }
-        }
-
-        /*for (auto p : points) {
-            cout << "bound point: " << p << endl;
-        }*/
-
-        if (points.size() == 0) cout << "Warning1: No bound points" << endl;
+        compute();
     }
 };
 

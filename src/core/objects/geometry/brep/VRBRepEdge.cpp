@@ -24,7 +24,7 @@ void VRBRepEdge::swap() {
     swapped = !swapped;
 }
 
-bool VRBRepEdge::connectsTo(VRBRepEdge& e) { return ( sameVec(end(), e.beg()) ); }
+bool VRBRepEdge::connectsTo(VRBRepEdgePtr e) { return ( sameVec(end(), e->beg()) ); }
 
 double VRBRepEdge::compCircleDirection(Matrix4d mI, Vec3d d) {
     double cDir = 1;

@@ -9,8 +9,8 @@ using namespace std;
 OSG_BEGIN_NAMESPACE;
 
 class VRBRepBound : public VRBRepUtils {
-    public:
-        vector<VRBRepEdge> edges;
+    protected:
+        vector<VRBRepEdgePtr> edges;
         vector<Vec3d> points;
         vector<float> angles;
         bool outer = true;
@@ -22,13 +22,20 @@ class VRBRepBound : public VRBRepUtils {
 
         static VRBRepBoundPtr create();
 
+        void addEdge(VRBRepEdgePtr e);
+        void setType(string type, bool outer);
+
         bool isClosed();
+        bool isOuter();
+        vector<Vec3d> getPoints();
+        vector<VRBRepEdgePtr> getEdges();
         string edgeEndsToString();
 
         bool containsNan();
         void shiftEdges(int i0);
 
-        VRGeometryPtr asGeometry();
+        void compute();
+        VRGeometryPtr build();
 };
 
 OSG_END_NAMESPACE;

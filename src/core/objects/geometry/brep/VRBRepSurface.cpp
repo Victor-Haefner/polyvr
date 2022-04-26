@@ -370,12 +370,13 @@ VRGeometryPtr VRBRepSurface::build() {
 
     auto checkPolyOrientation = [&](VRPolygon& poly, VRBRepBound& bound) {
         bool isCCW = poly.isCCW();
+        bool isOuter = bound.isOuter();
         if (same_sense) {
-            if (!isCCW && bound.outer) poly.reverseOrder();
-            if (isCCW && !bound.outer) poly.reverseOrder();
+            if (!isCCW && isOuter) poly.reverseOrder();
+            if (isCCW && !isOuter) poly.reverseOrder();
         } else {
-            if (isCCW && bound.outer) poly.reverseOrder();
-            if (!isCCW && !bound.outer) poly.reverseOrder();
+            if (isCCW && isOuter) poly.reverseOrder();
+            if (!isCCW && !isOuter) poly.reverseOrder();
         }
     };
 
@@ -407,8 +408,9 @@ VRGeometryPtr VRBRepSurface::build() {
         if (!same_sense) col = Color3f(1,0,1);
 
         for (auto b : bounds) {
-            for (uint i=0; i<b.points.size(); i++) {
-                Pnt3d p = b.points[i];
+            auto points = b.getPoints();
+            for (uint i=0; i<points.size(); i++) {
+                Pnt3d p = points[i];
                 mI.mult(Pnt3d(p),p);
                 data.pushVert(p, Vec3d(0,1,0), col);
                 if (i > 0) data.pushLine();
@@ -432,8 +434,8 @@ VRGeometryPtr VRBRepSurface::build() {
         if (bounds.size() == 0) cout << "Warning: No bounds!\n";
 
         vector<int> sortedBounds;
-        for (int i=0; i<bounds.size(); i++) if ( bounds[i].outer) sortedBounds.push_back(i);
-        for (int i=0; i<bounds.size(); i++) if (!bounds[i].outer) sortedBounds.push_back(i);
+        for (int i=0; i<bounds.size(); i++) if ( bounds[i].isOuter()) sortedBounds.push_back(i);
+        for (int i=0; i<bounds.size(); i++) if (!bounds[i].isOuter()) sortedBounds.push_back(i);
 
         //for (auto& b : bounds) {
         for (auto& bi : sortedBounds) {
@@ -442,7 +444,7 @@ VRGeometryPtr VRBRepSurface::build() {
             bool doPrint = b.containsNan();
             VRPolygon poly;
 
-            for (auto pIn : b.points) {
+            for (auto pIn : b.getPoints()) {
                 Vec3d pOut;
                 if (doPrint) cout << " pIn: " << pIn << endl;
                 mI.multFull(Pnt3d(pIn), pOut);
@@ -479,18 +481,19 @@ VRGeometryPtr VRBRepSurface::build() {
             Vec3d cN(0,0,1);
 
             // shift edges so first edge not start on +-pi line
-            auto eOnPiLine = [&](VRBRepEdge& e) {
-                Vec3d p = e.points[0];
+            auto eOnPiLine = [&](VRBRepEdgePtr e) {
+                Vec3d p = e->points[0];
                 mI.mult(Pnt3d(p),p);
                 if (abs(p[1]) > 1e-3) return false;
                 if (p[0] > 1e-3) return false;
                 return true;
             };
 
-            if (eOnPiLine(b.edges[0]))  {
+            auto edges = b.getEdges();
+            if (eOnPiLine(edges[0]))  {
                 int i0 = -1;
-                for (int i=1; i<b.edges.size(); i++) {
-                    if (!eOnPiLine(b.edges[i])) {
+                for (int i=1; i<edges.size(); i++) {
+                    if (!eOnPiLine(edges[i])) {
                         i0 = i;
                         break;
                     }
@@ -499,50 +502,50 @@ VRGeometryPtr VRBRepSurface::build() {
                 b.shiftEdges(i0);
             }
 
-            for (auto& e : b.edges) {
+            for (auto& e : b.getEdges()) {
                 //cout << "  bound edge: " << e.etype << endl;
-                if (e.etype == "Circle") {
-                    double cDir = e.compCircleDirection(mI, cN);
+                if (e->etype == "Circle") {
+                    double cDir = e->compCircleDirection(mI, cN);
 
                     if (poly.size() == 0) {
-                        Vec2d p1 = cylindricUnproject(e.EBeg, lastAngle, 1, cDir, false);
+                        Vec2d p1 = cylindricUnproject(e->EBeg, lastAngle, 1, cDir, false);
                         poly.addPoint(p1);
                     }
 
-                    Vec2d p2 = cylindricUnproject(e.EEnd, lastAngle, 1, cDir, true);
+                    Vec2d p2 = cylindricUnproject(e->EEnd, lastAngle, 1, cDir, true);
                     poly.addPoint(p2);
                     continue;
                 }
 
-                if (e.etype == "Line") {
+                if (e->etype == "Line") {
                     if (poly.size() == 0) {
-                        Vec2d p1 = cylindricUnproject(e.EBeg, lastAngle, 0);
+                        Vec2d p1 = cylindricUnproject(e->EBeg, lastAngle, 0);
                         poly.addPoint(p1);
                     }
 
-                    Vec2d p2 = cylindricUnproject(e.EEnd, lastAngle, 0);
+                    Vec2d p2 = cylindricUnproject(e->EEnd, lastAngle, 0);
                     poly.addPoint(p2);
                     continue;
                 }
 
-                if (e.etype == "B_Spline_Curve_With_Knots") {
+                if (e->etype == "B_Spline_Curve_With_Knots") {
                     int i0 = 1;
                     if (poly.size() == 0) i0 = 0;
-                    for (int i=i0; i<e.points.size(); i++) {
-                        auto& p = e.points[i];
+                    for (int i=i0; i<e->points.size(); i++) {
+                        auto& p = e->points[i];
                         Vec2d pc = cylindricUnproject(p, lastAngle, 2, 0, i>0);
                         poly.addPoint(pc);
                     }
                     continue;
                 }
 
-                cout << "Unhandled edge on cylinder of type " << e.etype << endl;
+                cout << "Unhandled edge on cylinder of type " << e->etype << endl;
             }
 
             checkPolyIntegrety(poly);
             checkPolyOrientation(poly, b);
             poly.remPoint(poly.size()-1); // TODO: this removes the last point as it is duplicate of first..
-            triangulator.add(poly, b.outer);
+            triangulator.add(poly, b.isOuter());
             //cout << " poly: " << toString(poly.get()) << endl;
         }
 
@@ -785,8 +788,8 @@ VRGeometryPtr VRBRepSurface::build() {
             Triangulator triangulator;
 
             for (auto b : bounds) {
-
-                cout << " BSpline Bound, outer: " << b.outer << " " << b.points.size() << endl;
+                auto points = b.getPoints();
+                cout << " BSpline Bound, outer: " << b.isOuter() << " " << points.size() << endl;
 
                 /*for (auto& e : b.edges) {
                     cout << "  edge " << e.etype << ", Np: " << e.points.size() << ", BE: " << e.EBeg << " -> " << e.EEnd << endl;
@@ -801,7 +804,7 @@ VRGeometryPtr VRBRepSurface::build() {
                     triangles.push_back( triangle(it, true, true ));
                 }
 
-                for (auto p : b.points) {
+                for (auto p : points) {
                     //if (p[0] > 85) continue; // for testing
 
                     mI.multFull(p, p);
@@ -895,18 +898,19 @@ VRGeometryPtr VRBRepSurface::build() {
             Vec3d cN(0,0,1);
 
             // shift edges so first edge not start on +-pi line
-            auto eOnPiLine = [&](VRBRepEdge& e) {
-                Vec3d p = e.points[0];
+            auto eOnPiLine = [&](VRBRepEdgePtr e) {
+                Vec3d p = e->points[0];
                 mI.mult(Pnt3d(p),p);
                 if (abs(p[1]) > 1e-3) return false;
                 if (p[0] > 1e-3) return false;
                 return true;
             };
 
-            if (eOnPiLine(b.edges[0]))  {
+            auto edges = b.getEdges();
+            if (eOnPiLine(edges[0]))  {
                 int i0 = -1;
-                for (int i=1; i<b.edges.size(); i++) {
-                    if (!eOnPiLine(b.edges[i])) {
+                for (int i=1; i<edges.size(); i++) {
+                    if (!eOnPiLine(edges[i])) {
                         i0 = i;
                         break;
                     }
@@ -915,43 +919,43 @@ VRGeometryPtr VRBRepSurface::build() {
                 b.shiftEdges(i0);
             }
 
-            for (auto& e : b.edges) {
-                if (e.etype == "Circle") {
-                    double cDir = e.compCircleDirection(mI, cN);
+            for (auto& e : b.getEdges()) {
+                if (e->etype == "Circle") {
+                    double cDir = e->compCircleDirection(mI, cN);
 
                     if (poly.size() == 0) {
-                        Vec2d p1 = conicUnproject(e.EBeg, lastAngle, 1, cDir, false);
+                        Vec2d p1 = conicUnproject(e->EBeg, lastAngle, 1, cDir, false);
                         poly.addPoint(p1);
                     }
 
-                    Vec2d p2 = conicUnproject(e.EEnd, lastAngle, 1, cDir, true);
+                    Vec2d p2 = conicUnproject(e->EEnd, lastAngle, 1, cDir, true);
                     poly.addPoint(p2);
                     continue;
                 }
 
-                if (e.etype == "Line") {
+                if (e->etype == "Line") {
                     if (poly.size() == 0) {
-                        Vec2d p1 = conicUnproject(e.EBeg, lastAngle, 0);
+                        Vec2d p1 = conicUnproject(e->EBeg, lastAngle, 0);
                         poly.addPoint(p1);
                     }
 
-                    Vec2d p2 = conicUnproject(e.EEnd, lastAngle, 0);
+                    Vec2d p2 = conicUnproject(e->EEnd, lastAngle, 0);
                     poly.addPoint(p2);
                     continue;
                 }
 
-                if (e.etype == "B_Spline_Curve_With_Knots") {
+                if (e->etype == "B_Spline_Curve_With_Knots") {
                     int i0 = 1;
                     if (poly.size() == 0) i0 = 0;
-                    for (int i=i0; i<e.points.size(); i++) {
-                        auto& p = e.points[i];
+                    for (int i=i0; i<e->points.size(); i++) {
+                        auto& p = e->points[i];
                         Vec2d pc = conicUnproject(p, lastAngle, 2, 0, i>0);
                         poly.addPoint(pc);
                     }
                     continue;
                 }
 
-                cout << "Unhandled edge on cylinder of type " << e.etype << endl;
+                cout << "Unhandled edge on cylinder of type " << e->etype << endl;
             }
 
             checkPolyIntegrety(poly);
@@ -1017,18 +1021,19 @@ VRGeometryPtr VRBRepSurface::build() {
             Vec3d cN = Vec3d(0,0,1);
 
             // shift edges so first edge not start on +-pi line
-            auto eOnPiLine = [&](VRBRepEdge& e) {
-                Vec3d p = e.points[0];
+            auto eOnPiLine = [&](VRBRepEdgePtr e) {
+                Vec3d p = e->points[0];
                 mI.mult(Pnt3d(p),p);
                 if (abs(p[1]) > 1e-3) return false;
                 if (p[0] > 1e-3) return false;
                 return true;
             };
 
-            if (eOnPiLine(b.edges[0]))  {
+            auto edges = b.getEdges();
+            if (eOnPiLine(edges[0]))  {
                 int i0 = -1;
-                for (int i=1; i<b.edges.size(); i++) {
-                    if (!eOnPiLine(b.edges[i])) {
+                for (int i=1; i<edges.size(); i++) {
+                    if (!eOnPiLine(edges[i])) {
                         i0 = i;
                         break;
                     }
@@ -1037,15 +1042,15 @@ VRGeometryPtr VRBRepSurface::build() {
                 b.shiftEdges(i0);
             }
 
-            for (auto& e : b.edges) {
-                cout << " edge on sphere " << e.etype << endl;
-                if (e.etype == "Circle") {
-                    double cDir = e.compCircleDirection(mI, cN);
+            for (auto& e : b.getEdges()) {
+                cout << " edge on sphere " << e->etype << endl;
+                if (e->etype == "Circle") {
+                    double cDir = e->compCircleDirection(mI, cN);
 
                     int i0 = 1;
                     if (poly.size() == 0) i0 = 0;
-                    for (int i=i0; i<e.points.size(); i++) {
-                        auto& p = e.points[i];
+                    for (int i=i0; i<e->points.size(); i++) {
+                        auto& p = e->points[i];
                         Vec2d pc = sphericalUnproject(p, lastTheta, lastPhi, 1, cDir, i>0);
                         cout << " ---- " << p << " -> " << pc << endl;
                         poly.addPoint(pc);
@@ -1053,11 +1058,11 @@ VRGeometryPtr VRBRepSurface::build() {
                     continue;
                 }
 
-                if (e.etype == "B_Spline_Curve_With_Knots") {
+                if (e->etype == "B_Spline_Curve_With_Knots") {
                     int i0 = 1;
                     if (poly.size() == 0) i0 = 0;
-                    for (int i=i0; i<e.points.size(); i++) {
-                        auto& p = e.points[i];
+                    for (int i=i0; i<e->points.size(); i++) {
+                        auto& p = e->points[i];
                         Vec2d pc = sphericalUnproject(p, lastTheta, lastPhi, 2, 0, i>0);
                         cout << " ---- " << p << " -> " << pc << endl;
                         poly.addPoint(pc);
@@ -1065,7 +1070,7 @@ VRGeometryPtr VRBRepSurface::build() {
                     continue;
                 }
 
-                cout << "Unhandled edge on sphere of type " << e.etype << endl;
+                cout << "Unhandled edge on sphere of type " << e->etype << endl;
             }
 
             checkPolyOrientation(poly, b);
@@ -1129,8 +1134,8 @@ VRGeometryPtr VRBRepSurface::build() {
             Vec3d cN = Vec3d(0,0,1);
 
             // shift edges so first edge not start on +-pi line
-            auto eOnPiLine = [&](VRBRepEdge& e) {
-                Vec3d p = e.points[0];
+            auto eOnPiLine = [&](VRBRepEdgePtr e) {
+                Vec3d p = e->points[0];
                 mI.mult(Pnt3d(p),p);
                 //cout << "  on pi line? " << p << endl;
                 if (abs(p[1]) < 1e-3 && p[0] < 1e-3) return true; // phi on +-pi line
@@ -1141,10 +1146,11 @@ VRGeometryPtr VRBRepSurface::build() {
                 return false;
             };
 
-            if (eOnPiLine(b.edges[0])) {
+            auto edges = b.getEdges();
+            if (eOnPiLine(edges[0])) {
                 int i0 = -1;
-                for (int i=1; i<b.edges.size(); i++) {
-                    if (!eOnPiLine(b.edges[i])) {
+                for (int i=1; i<edges.size(); i++) {
+                    if (!eOnPiLine(edges[i])) {
                         i0 = i;
                         break;
                     }
@@ -1156,15 +1162,15 @@ VRGeometryPtr VRBRepSurface::build() {
 
             //Vec3d n;
 
-            for (auto& e : b.edges) {
+            for (auto& e : b.getEdges()) {
                 //cout << " edge on torus " << e.etype << endl;
-                if (e.etype == "Circle") {
-                    double cDir = e.compCircleDirection(mI, cN);
+                if (e->etype == "Circle") {
+                    double cDir = e->compCircleDirection(mI, cN);
 
                     int i0 = 1;
                     if (poly.size() == 0) i0 = 0;
-                    for (int i=i0; i<e.points.size(); i++) {
-                        auto& p = e.points[i];
+                    for (int i=i0; i<e->points.size(); i++) {
+                        auto& p = e->points[i];
                         Vec2d pc = toroidalUnproject(p, lastTheta, lastPhi, 1, cDir, i>0);
                         //auto P = toroidalProject(pc, n);
                         //if (P.dist(p) < 0.1) cout << " --- Circle: " << p << " -> " << pc << " -> " << P << endl;
@@ -1174,11 +1180,11 @@ VRGeometryPtr VRBRepSurface::build() {
                     continue;
                 }
 
-                if (e.etype == "B_Spline_Curve_With_Knots") {
+                if (e->etype == "B_Spline_Curve_With_Knots") {
                     int i0 = 1;
                     if (poly.size() == 0) i0 = 0;
-                    for (int i=i0; i<e.points.size(); i++) {
-                        auto& p = e.points[i];
+                    for (int i=i0; i<e->points.size(); i++) {
+                        auto& p = e->points[i];
                         Vec2d pc = toroidalUnproject(p, lastTheta, lastPhi, 2, 0, i>0);
                         //auto P = toroidalProject(pc, n);
                         //if (P.dist(p) < 0.01) cout << " --- Curve: " << p << " -> " << pc << " -> " << P << endl;
@@ -1188,7 +1194,7 @@ VRGeometryPtr VRBRepSurface::build() {
                     continue;
                 }
 
-                cout << "Unhandled edge on sphere of type " << e.etype << endl;
+                cout << "Unhandled edge on sphere of type " << e->etype << endl;
             }
 
             checkPolyOrientation(poly, b);
@@ -1245,9 +1251,10 @@ VRGeometryPtr VRBRepSurface::build() {
     VRGeoData data;
 
     for (auto b : bounds) {
-        for (uint i=0; i<b.points.size(); i+=2) {
-            Pnt3d p1 = b.points[i];
-            Pnt3d p2 = b.points[i+1];
+        auto points = b.getPoints();
+        for (uint i=0; i<points.size(); i+=2) {
+            Pnt3d p1 = points[i];
+            Pnt3d p2 = points[i+1];
             data.pushVert(p1, Vec3d(0,1,0));
             data.pushVert(p2, Vec3d(0,1,0));
             data.pushLine();

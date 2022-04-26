@@ -17,5 +17,6 @@ PyMethodDef VRPyBRepEdge::methods[] = {
 };
 
 PyMethodDef VRPyBRepBound::methods[] = {
+    {"build", PyWrap( BRepSurface, build, "Build surface as geometry", VRGeometryPtr ) },
     {NULL}  /* Sentinel */
 };
