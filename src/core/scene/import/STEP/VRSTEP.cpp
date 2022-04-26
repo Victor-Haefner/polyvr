@@ -21,9 +21,9 @@
 #include "core/math/polygon.h"
 #include "core/math/pose.h"
 
-#include "VRBRepEdge.h"
-#include "VRBRepBound.h"
-#include "VRBRepSurface.h"
+#include "core/objects/geometry/brep/VRBRepEdge.h"
+#include "core/objects/geometry/brep/VRBRepBound.h"
+#include "core/objects/geometry/brep/VRBRepSurface.h"
 
 /*
 
@@ -1169,11 +1169,13 @@ struct VRSTEP::Surface : public VRSTEP::Instance, public VRBRepSurface {
         }
     }
 
-    Surface(Instance& i, map<STEPentity*, Instance>& instances) : Instance(i) {
+    Surface(Instance& i, map<STEPentity*, Instance>& instances, bool ss) : Instance(i) {
+        same_sense = ss;
         if (i.entity->IsComplex()) {
             for (auto e : unfoldComplex(i.entity)) handleSurface(e, instances);
             return;
         } else handleSurface(i.entity, instances);
+        stype = type;
     }
 };
 
@@ -1220,8 +1222,8 @@ void VRSTEP::buildGeometries() {
 
                     if (Face.type == "Advanced_Face") {
                         auto& s = instances[ Face.get<1, vector<STEPentity*>, STEPentity*, bool>() ];
-                        Surface surface(s, instances);
                         bool same_sense = Face.get<2, vector<STEPentity*>, STEPentity*, bool>();
+                        Surface surface(s, instances, same_sense);
                         for (auto k : Face.get<0, vector<STEPentity*>, STEPentity*, bool>() ) {
                             auto& b = instances[k];
                             Bound bound(b, instances);
@@ -1231,7 +1233,7 @@ void VRSTEP::buildGeometries() {
                         Color3f color = material->getDiffuse();
                         if (material2) color = material2->getDiffuse();
 
-                        auto faceGeo = surface.build(surface.type, same_sense);
+                        auto faceGeo = surface.build();
 
                         VRGeoData data(faceGeo);
                         data.addVertexColors(color);

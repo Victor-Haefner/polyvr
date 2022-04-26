@@ -15,6 +15,9 @@ using namespace OSG;
 static const double pi = 3.1415926535;
 
 VRBRepSurface::VRBRepSurface() {}
+VRBRepSurface::~VRBRepSurface() {}
+
+VRBRepSurfacePtr VRBRepSurface::create() { return VRBRepSurfacePtr(new VRBRepSurface()); }
 
 struct triangle {
     vector<Pnt3f> p; // vertex positions
@@ -121,7 +124,7 @@ struct triangle {
     }
 };
 
-VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
+VRGeometryPtr VRBRepSurface::build() {
     //cout << "VRSTEP::Surface build " << type << endl;
 
     Matrix4d m;
@@ -420,9 +423,9 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
         return geo;
     };
 
-    //if (type != "Spherical_Surface") return 0;
+    //if (stype != "Spherical_Surface") return 0;
 
-    if (type == "Plane") {
+    if (stype == "Plane") {
         //return 0;
         //cout << "make Plane, N bounds: " << bounds.size() << endl;
         Triangulator t;
@@ -465,7 +468,7 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
         return g;
     }
 
-    if (type == "Cylindrical_Surface") {
+    if (stype == "Cylindrical_Surface") {
         //return 0;
         Triangulator triangulator; // feed the triangulator with unprojected points
 
@@ -587,7 +590,7 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
         return 0;
     }
 
-    if (type == "B_Spline_Surface") {
+    if (stype == "B_Spline_Surface") {
         //return 0;
         cout << "B_Spline_Surface" << endl;
 
@@ -730,7 +733,7 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
         return 0;
     }
 
-    if (type == "B_Spline_Surface_With_Knots") {
+    if (stype == "B_Spline_Surface_With_Knots") {
         //return 0;
         cout << "B_Spline_Surface_With_Knots" << endl;
         // ROADMAP
@@ -880,7 +883,7 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
         return 0;
     }
 
-    if (type == "Conical_Surface") {
+    if (stype == "Conical_Surface") {
         Triangulator triangulator; // feed the triangulator with unprojected points
         h0 = -R/tan(R2);
         //cout << "Conical_Surface, R: " << R << ", R2: " << R2 << ", h0: " << h0 << endl;
@@ -1003,7 +1006,7 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
         return 0;
     }
 
-    if (type == "Spherical_Surface") {
+    if (stype == "Spherical_Surface") {
         cout << "Spherical_Surface" << endl;
         Triangulator triangulator; // feed the triangulator with unprojected points
 
@@ -1114,7 +1117,7 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
         return 0;
     }
 
-    if (type == "Toroidal_Surface") {
+    if (stype == "Toroidal_Surface") {
         //cout << "Toroidal_Surface R: " << R << ", r: " << R2 << ", same_sense: " << same_sense << endl;
         Triangulator triangulator; // feed the triangulator with unprojected points
 
@@ -1236,7 +1239,7 @@ VRGeometryPtr VRBRepSurface::build(string type, bool same_sense) {
         return 0;
     }
 
-    cout << "VRBRepSurface::build Error: unhandled surface type " << type << endl;
+    cout << "VRBRepSurface::build Error: unhandled surface type " << stype << endl;
 
     // wireframe
     VRGeoData data;

@@ -18,6 +18,9 @@ class VRBRepBound : public VRBRepUtils {
 
     public:
         VRBRepBound();
+        ~VRBRepBound();
+
+        static VRBRepBoundPtr create();
 
         bool isClosed();
         string edgeEndsToString();

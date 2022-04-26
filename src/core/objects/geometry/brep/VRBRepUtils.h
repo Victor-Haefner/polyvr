@@ -3,6 +3,7 @@
 
 #include "core/math/OSGMathFwd.h"
 #include "core/math/field.h"
+#include "VRBRepFwd.h"
 
 #include <string>
 

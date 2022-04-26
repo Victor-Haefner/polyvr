@@ -11,6 +11,8 @@ using namespace OSG;
 VRBRepEdge::VRBRepEdge() {}
 VRBRepEdge::~VRBRepEdge() {}
 
+VRBRepEdgePtr VRBRepEdge::create() { return VRBRepEdgePtr(new VRBRepEdge()); }
+
 Vec3d& VRBRepEdge::beg() { return points.size() > 0 ? points[0] : n; }
 Vec3d& VRBRepEdge::end() { return points.size() > 0 ? points[points.size()-1] : n; }
 

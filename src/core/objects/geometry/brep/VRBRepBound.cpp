@@ -9,6 +9,9 @@
 using namespace OSG;
 
 VRBRepBound::VRBRepBound() {}
+VRBRepBound::~VRBRepBound() {}
+
+VRBRepBoundPtr VRBRepBound::create() { return VRBRepBoundPtr(new VRBRepBound()); }
 
 bool VRBRepBound::isClosed() {
     for (uint i=1; i<edges.size(); i++) {

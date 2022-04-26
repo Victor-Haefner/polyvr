@@ -14,7 +14,9 @@ OSG_BEGIN_NAMESPACE;
 class VRBRepSurface : public VRBRepUtils {
     public:
         vector<VRBRepBound> bounds;
+        string stype;
         string etype;
+        bool same_sense = true;
         PosePtr trans;
         double R = 1;
         double R2 = 1; // for toroidal and conical surfaces
@@ -29,8 +31,11 @@ class VRBRepSurface : public VRBRepUtils {
 
     public:
         VRBRepSurface();
+        ~VRBRepSurface();
 
-        VRGeometryPtr build(string type, bool same_sense);
+        static VRBRepSurfacePtr create();
+
+        VRGeometryPtr build();
 };
 
 OSG_END_NAMESPACE;

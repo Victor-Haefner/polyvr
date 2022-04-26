@@ -29,8 +29,11 @@ class VRBRepEdge : public VRBRepUtils {
         bool swapped = false;
         string etype;
 
+    public:
         VRBRepEdge();
         virtual ~VRBRepEdge();
+
+        static VRBRepEdgePtr create();
 
         Vec3d& beg();
         Vec3d& end();
