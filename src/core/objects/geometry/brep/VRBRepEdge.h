@@ -35,13 +35,16 @@ class VRBRepEdge : public VRBRepUtils {
 
         static VRBRepEdgePtr create();
 
+        void setLine(Vec3d point1, Vec3d point2);
+        void setCircle(PosePtr center, double radius, double angle1, double angle2);
+
         Vec3d& beg();
         Vec3d& end();
         void swap();
         bool connectsTo(VRBRepEdgePtr e);
         double compCircleDirection(Matrix4d mI, Vec3d d);
 
-        void build(string type);
+        void compute();
 };
 
 OSG_END_NAMESPACE;

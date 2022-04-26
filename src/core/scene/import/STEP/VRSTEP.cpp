@@ -998,7 +998,8 @@ struct VRSTEP::Edge : public VRSTEP::Instance, public VRBRepEdge {
                     for (auto e : unfoldComplex(EdgeGeoI)) handleEdge(e, instances, 1);
                 } else handleEdge(EdgeGeoI, instances);
 
-                build(type);
+                etype = type;
+                compute();
                 if (points.size() <= 1) cout << "Warning: No edge points!" << endl;
                 return;
 

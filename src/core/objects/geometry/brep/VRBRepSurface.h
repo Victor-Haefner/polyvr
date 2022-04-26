@@ -37,6 +37,10 @@ class VRBRepSurface : public VRBRepUtils {
 
         static VRBRepSurfacePtr create();
 
+        void setPose(PosePtr pose);
+        void setPlane();
+        void setCylinder(double radius);
+
         void addBound(VRBRepBoundPtr bound);
         VRGeometryPtr build();
 };

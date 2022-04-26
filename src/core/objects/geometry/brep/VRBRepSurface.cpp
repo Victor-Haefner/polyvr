@@ -19,6 +19,10 @@ VRBRepSurface::~VRBRepSurface() {}
 
 VRBRepSurfacePtr VRBRepSurface::create() { return VRBRepSurfacePtr(new VRBRepSurface()); }
 
+void VRBRepSurface::setPose(PosePtr pose) { trans = pose; }
+void VRBRepSurface::setPlane() { stype = "Plane"; }
+void VRBRepSurface::setCylinder(double radius) { stype = "Cylindrical_Surface"; R = radius; }
+
 void VRBRepSurface::addBound(VRBRepBoundPtr bound) { bounds.push_back(bound); }
 
 struct triangle {

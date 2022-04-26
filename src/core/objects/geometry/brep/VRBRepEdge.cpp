@@ -13,6 +13,18 @@ VRBRepEdge::~VRBRepEdge() {}
 
 VRBRepEdgePtr VRBRepEdge::create() { return VRBRepEdgePtr(new VRBRepEdge()); }
 
+void VRBRepEdge::setLine(Vec3d point1, Vec3d point2) {
+    EBeg = point1;
+    EEnd = point2;
+    etype = "Line";
+}
+
+void VRBRepEdge::setCircle(PosePtr c, double r, double angle1, double angle2) {
+    radius = r;
+    center = c;
+    etype = "Circle";
+}
+
 Vec3d& VRBRepEdge::beg() { return points.size() > 0 ? points[0] : n; }
 Vec3d& VRBRepEdge::end() { return points.size() > 0 ? points[points.size()-1] : n; }
 
@@ -58,11 +70,9 @@ double VRBRepEdge::compCircleDirection(Matrix4d mI, Vec3d d) {
 
 static const double pi = 3.1415926535;
 
-void VRBRepEdge::build(string type) {
-    etype = type;
-
-    if (isNan(EBeg)) cout << "Error in VRBRepEdge::build, EBeg contains NaN!" << endl;
-    if (isNan(EEnd)) cout << "Error in VRBRepEdge::build, EBeg contains NaN!" << endl;
+void VRBRepEdge::compute() {
+    if (isNan(EBeg)) cout << "Error in VRBRepEdge::compute, EBeg contains NaN!" << endl;
+    if (isNan(EEnd)) cout << "Error in VRBRepEdge::compute, EBeg contains NaN!" << endl;
 
     auto computeSplineRes = [&](vector<Vec3d>& cpoints) {
         double Lcurv = 0;
@@ -79,14 +89,14 @@ void VRBRepEdge::build(string type) {
         return res;
     };
 
-    if (type == "Line") {
+    if (etype == "Line") {
         points.push_back(EBeg);
         points.push_back(EEnd);
         if (points.size() <= 1) cout << "Warning: No edge points of Line" << endl;
         return;
     }
 
-    if (type == "Circle") {
+    if (etype == "Circle") {
         float _r = 1/radius;
         Matrix4d m = center->asMatrix();
         Matrix4d mI = m; mI.invert();
@@ -124,7 +134,7 @@ void VRBRepEdge::build(string type) {
         return;
     }
 
-    if (type == "B_Spline_Curve_With_Knots") {
+    if (etype == "B_Spline_Curve_With_Knots") {
         if (cpoints.size() <= 1) cout << "Warning: No control points of B_Spline_Curve_With_Knots" << endl;
         if (knots.size() < cpoints.size() + deg + 1) { cout << "B_Spline_Curve_With_Knots, not enough knots: " << knots.size() << endl; return; }
 
@@ -143,5 +153,5 @@ void VRBRepEdge::build(string type) {
         return;
     }
 
-    cout << "Error: edge geo type not handled " << type << endl;
+    cout << "Error: edge geo type not handled " << etype << endl;
 }
