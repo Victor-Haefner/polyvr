@@ -984,7 +984,7 @@ struct VRSTEP::Edge : public VRSTEP::Instance, public VRBRepEdge {
     Edge(Instance& i, map<STEPentity*, Instance>& instances) : Instance(i) {
         if (i.type == "Oriented_Edge") {
             auto& EdgeElement = instances[ i.get<0, STEPentity*, bool>() ];
-            //bool edir = i.get<1, STEPentity*, bool>();
+            orientation = i.get<1, STEPentity*, bool>() ? 1 : -1;
             if (EdgeElement.type == "Edge_Curve") {
                 EBeg = toVec3d( EdgeElement.get<0, STEPentity*, STEPentity*, STEPentity*>(), instances );
                 EEnd = toVec3d( EdgeElement.get<1, STEPentity*, STEPentity*, STEPentity*>(), instances );
@@ -1141,7 +1141,7 @@ void VRSTEP::buildGeometries() {
         //if (i != 47) continue; // test for conic faces
         //if (i != 35) continue; // test for toroidal faces
         //if (i != 9) continue; // test for toroidal faces
-        //if (i != 2) continue; // test for toroidal faces
+        //if (i != 29) continue; // test circle coord systems
         //if (BrepShape.ID == 134852)
         //exploreEntity(nodes[BrepShape.entity], true);
 
@@ -1163,9 +1163,9 @@ void VRSTEP::buildGeometries() {
                 auto& Outer = instances[ Item.get<0, STEPentity*>() ];
                 for (auto j : Outer.get<0, vector<STEPentity*> >() ) {
                     static int k = 0; k++;
-                    //if (k != 99 && k != 16) continue;
+                    //if (k != 32) continue;
                     //if (k != 67 && k != 9) continue;
-                    //if (k != 72) continue;
+                    //if (k != 11 && k != 5) continue;
 
                     auto& Face = instances[j];
                     //if (k == 67) exploreEntity(nodes[Face.entity], true);
@@ -1193,8 +1193,8 @@ void VRSTEP::buildGeometries() {
                         data.addVertexColors(color);
                         data.addVertexTexCoords(Vec2d(i, k)); // for debugging faces
 
-                        geo->merge( faceGeo );
-                        //geo->addChild( faceGeo );
+                        //geo->merge( faceGeo );
+                        geo->addChild( faceGeo );
                         //cout << "  Outer Face: " << Face.type << " " << surface.etype << " " << Face.ID << " " << k << endl;
                     } else cout << "VRSTEP::buildGeometries Error 2 " << Face.type << " " << Face.ID << endl;
                 }

@@ -3,7 +3,7 @@
   <Objects>
     <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" visible="4294967295">
       <Object ambient="0.3 0.3 0.3 1" base_name="light" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" photometricMap="" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" shadowVolume="1e+06 1e+06 1e+06 -1e+06 -1e+06 -1e+06 1" specular="0.1 0.1 0.1 1" type="Light" visible="4294967295">
-        <Object accept_root="1" aspect="1" at="0.133262 0.687587 4.76837e-07" at_dir="0" base_name="Default" far="512" fov="1.0472" from="-0.656535 -0.771458 -3.54976" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="4294967295">
+        <Object accept_root="1" aspect="1" at="1.23361 0.411793 -0.661235" at_dir="0" base_name="Default" far="512" fov="1.0472" from="-0.619673 1.05988 -2.8416" name_space="__global__" name_suffix="0" near="0.1" orthoSize="100" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="4294967295">
           <attachments>
             <Node base_name="transform" name_space="VRAttachment" name_suffix="0" persistency="666" value=""/>
           </attachments>
@@ -32,8 +32,8 @@
 	H = 1.0
 	pi = 3.14159
 
-	p1 = VR.Pose([0,0,-H], [0,0, 1], [0, 1,0])
-	p2 = VR.Pose([0,0, H], [0,0,-1], [0,-1,0])
+	p1 = VR.Pose([0,0,-H], [0,0, 1], [0,-1,0])
+	p2 = VR.Pose([0,0, H], [0,0,-1], [0, 1,0])
 	
 	mat = VR.Material('wireframe')
 	mat.setLit(False)
@@ -45,10 +45,10 @@
 		c2 = VR.BRepEdge()
 		c3 = VR.BRepEdge()
 		c4 = VR.BRepEdge()
-		c1.setCircle(p1, R, -pi, 0)
-		c2.setCircle(p1, R,  0, pi)
-		c3.setCircle(p2, R,  pi, 0)
-		c4.setCircle(p2, R,  0,-pi)
+		c4.setCircle(p1, R, -pi, 0)
+		c3.setCircle(p1, R,  0, pi)
+		c2.setCircle(p2, R,  pi, 0)
+		c1.setCircle(p2, R,  0,-pi)
 		c1.compute()
 		c2.compute()
 		c3.compute()
@@ -56,8 +56,8 @@
 		
 		l1 = VR.BRepEdge()
 		l2 = VR.BRepEdge()
-		l1.setLine([-R,0, H], [-R,0,-H])
-		l2.setLine([-R,0,-H], [-R,0, H])
+		l1.setLine([-R,0,-H], [-R,0, H])
+		l2.setLine([-R,0, H], [-R,0,-H])
 		l1.compute()
 		l2.compute()
 		

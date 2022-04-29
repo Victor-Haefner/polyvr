@@ -2,6 +2,7 @@
 #define VRBREPUTILS_H_INCLUDED
 
 #include "core/math/OSGMathFwd.h"
+#include "core/math/VRMathFwd.h"
 #include "core/math/field.h"
 #include "VRBRepFwd.h"
 
@@ -35,6 +36,8 @@ class VRBRepUtils {
         Vec3d BSplineNorm(float u, float v, int degu, int degv, const field<Vec3d>& cpoints, const vector<double>& knotsu, const vector<double>& knotsv);
         Vec3d BSpline(float u, float v, int degu, int degv, const field<Vec3d>& cpoints, const vector<double>& knotsu, const vector<double>& knotsv, const field<double>& weights);
         Vec3d BSplineNorm(float u, float v, int degu, int degv, const field<Vec3d>& cpoints, const vector<double>& knotsu, const vector<double>& knotsv, const field<double>& weights);
+
+        void compareCoordSystems(PosePtr p1, PosePtr p2, double eps);
 
     public:
         VRBRepUtils();

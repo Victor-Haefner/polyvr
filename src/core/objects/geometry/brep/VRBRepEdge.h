@@ -25,6 +25,7 @@ class VRBRepEdge : public VRBRepUtils {
         PosePtr center;
         float a1,a2;
         int deg;
+        int orientation = 1;
         bool fullCircle = false;
         bool swapped = false;
         string etype;
@@ -44,7 +45,7 @@ class VRBRepEdge : public VRBRepUtils {
         Vec3d& end();
         void swap();
         bool connectsTo(VRBRepEdgePtr e);
-        double compCircleDirection(Matrix4d mI, Vec3d d);
+        double compCircleDirection(PosePtr sTrans, Vec3d cN);
 
         void compute();
 };

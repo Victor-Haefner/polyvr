@@ -1,5 +1,6 @@
 #include "VRBRepUtils.h"
 #include "core/utils/toString.h"
+#include "core/math/pose.h"
 #include <OpenSG/OSGVector.h>
 
 using namespace OSG;
@@ -206,5 +207,21 @@ Vec3d VRBRepUtils::BSplineNorm(float u, float v, int degu, int degv, const field
 
     return dv.cross(du);
 }
+
+void VRBRepUtils::compareCoordSystems(PosePtr p1, PosePtr p2, double eps) {
+    double ddd = p1->dir().dot(p2->dir());
+    double udu = p1->up().dot(p2->up());
+    bool coPlanar = bool(abs(ddd) > 1.0-eps);
+    double uangle = acos(udu);
+
+    cout << "compare coord systems: ";
+    if (coPlanar && ddd<0) cout << " inverse";
+    if (coPlanar) cout << " coplanar";
+    if (uangle > eps) cout << " rotated " << int(uangle*180/3.14159) << " deg";
+    cout << endl;
+}
+
+
+
 
 
