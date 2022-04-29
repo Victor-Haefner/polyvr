@@ -59,6 +59,7 @@ VRSTEP::VRSTEP() {
     addType< tuple<STEPentity*, STEPentity*, STEPentity*> >( "Edge_Curve", "a1e|a2e|a3e", "", false);
     addType< tuple<STEPentity*, STEPentity*, STEPentity*> >( "Axis2_Placement_3d", "a1e|a2e|a3e", "", false);
     addType< tuple<STEPentity*> >( "Manifold_Solid_Brep", "a1e", "", false);
+    addType< tuple<STEPentity*, vector<STEPentity*> > >( "Brep_With_Voids", "a1e|a2Ve", "", false);
     addType< tuple<STEPentity*> >( "Plane", "a1e", "", false);
     addType< tuple<STEPentity*, double> >( "Cylindrical_Surface", "a1e|a2f", "", false);
     addType< tuple<STEPentity*, double> >( "Spherical_Surface", "a1e|a2f", "", false);
@@ -71,6 +72,7 @@ VRSTEP::VRSTEP() {
     addType< tuple<STEPentity*, bool> >( "Face_Outer_Bound", "a1e|a2b", "", false);
     addType< tuple<vector<STEPentity*>, STEPentity*, bool> >( "Advanced_Face", "a1Ve|a2e|a3b", "", false);
     addType< tuple<vector<STEPentity*> > >( "Closed_Shell", "a1Ve", "", false);
+    addType< tuple<STEPentity*, bool > >( "Oriented_Closed_Shell", "a2e|a3b", "", false);
     addType< tuple<vector<STEPentity*> > >( "Edge_Loop", "a1Ve", "", false);
     addType< tuple<STEPentity*, STEPentity*> >( "Pcurve", "a1e|a2e", "", false);
     addType< tuple<vector<STEPentity*> > >( "Definitional_Representation", "a1Ve", "", false);
@@ -1133,6 +1135,51 @@ struct VRSTEP::Surface : public VRSTEP::Instance, public VRBRepSurface {
 
 void VRSTEP::buildGeometries() {
     cout << blueBeg << "VRSTEP::buildGeometries start\n" << colEnd;
+
+    auto handleAdvancedFace = [&](Instance& Face, int i, int k, VRGeometryPtr geo, VRMaterialPtr material, VRMaterialPtr material2) {
+        auto& s = instances[ Face.get<1, vector<STEPentity*>, STEPentity*, bool>() ];
+        bool same_sense = Face.get<2, vector<STEPentity*>, STEPentity*, bool>();
+        Surface surface(s, instances, same_sense);
+        for (auto k : Face.get<0, vector<STEPentity*>, STEPentity*, bool>() ) {
+            auto& b = instances[k];
+            auto bound = Bound::create(b, instances);
+            surface.addBound(bound);
+        }
+
+        Color3f color = material->getDiffuse();
+        if (material2) color = material2->getDiffuse();
+
+        surface.stype = surface.type;
+        auto faceGeo = surface.build();
+
+        VRGeoData data(faceGeo);
+        data.addVertexColors(color);
+        data.addVertexTexCoords(Vec2d(i, k)); // for debugging faces
+
+        geo->merge( faceGeo );
+        //geo->addChild( faceGeo );
+        //cout << "  Outer Face: " << Face.type << " " << surface.etype << " " << Face.ID << " " << k << endl;
+    };
+
+    auto handleClosedShell = [&](Instance& Shell, int i, VRGeometryPtr geo, VRMaterialPtr material) {
+        for (auto j : Shell.get<0, vector<STEPentity*> >() ) {
+            static int k = 0; k++;
+            //if (k != 32) continue;
+            //if (k != 67 && k != 9) continue;
+            //if (k != 11 && k != 7) continue;
+            //if (k != 49) continue;
+
+            auto& Face = instances[j];
+            //if (k == 67) exploreEntity(nodes[Face.entity], true);
+
+            VRMaterialPtr material2;
+            if (materials.count(Face.entity)) material2 = materials[Face.entity];
+
+            if (Face.type == "Advanced_Face") handleAdvancedFace(Face, i,k, geo, material, material2);
+            else cout << "VRSTEP::buildGeometries Error, unhandled face type: " << Face.type << ", face ID: " << Face.ID << endl;
+        }
+    };
+
     for (auto BrepShape : instancesByType["Advanced_Brep_Shape_Representation"]) {
         static int i=0; i++;
         //if (i != 31) continue; // test for cylinder faces
@@ -1144,7 +1191,7 @@ void VRSTEP::buildGeometries() {
         //if (i != 7) continue; // test circle coord systems
         //if (i != 29) continue; // test circle coord systems
         //if (BrepShape.ID == 134852)
-        //exploreEntity(nodes[BrepShape.entity], true);
+        //exploreEntity(nodes[BrepShape.entity], false);
 
         string name = BrepShape.get<0, string, vector<STEPentity*> >();
         auto geo = VRGeometry::create(name);
@@ -1161,54 +1208,28 @@ void VRSTEP::buildGeometries() {
             if (materials.count(Item.entity)) material = materials[Item.entity];
 
             if (Item.type == "Manifold_Solid_Brep") {
-                auto& Outer = instances[ Item.get<0, STEPentity*>() ];
-                for (auto j : Outer.get<0, vector<STEPentity*> >() ) {
-                    static int k = 0; k++;
-                    //if (k != 32) continue;
-                    //if (k != 67 && k != 9) continue;
-                    //if (k != 11 && k != 7) continue;
-                    //if (k != 49) continue;
-
-                    auto& Face = instances[j];
-                    //if (k == 67) exploreEntity(nodes[Face.entity], true);
-
-                    VRMaterialPtr material2;
-                    if (materials.count(Face.entity)) material2 = materials[Face.entity];
-
-                    if (Face.type == "Advanced_Face") {
-                        auto& s = instances[ Face.get<1, vector<STEPentity*>, STEPentity*, bool>() ];
-                        bool same_sense = Face.get<2, vector<STEPentity*>, STEPentity*, bool>();
-                        Surface surface(s, instances, same_sense);
-                        for (auto k : Face.get<0, vector<STEPentity*>, STEPentity*, bool>() ) {
-                            auto& b = instances[k];
-                            auto bound = Bound::create(b, instances);
-                            surface.addBound(bound);
-                        }
-
-                        Color3f color = material->getDiffuse();
-                        if (material2) color = material2->getDiffuse();
-
-                        surface.stype = surface.type;
-                        auto faceGeo = surface.build();
-
-                        VRGeoData data(faceGeo);
-                        data.addVertexColors(color);
-                        data.addVertexTexCoords(Vec2d(i, k)); // for debugging faces
-
-                        //geo->merge( faceGeo );
-                        geo->addChild( faceGeo );
-                        //cout << "  Outer Face: " << Face.type << " " << surface.etype << " " << Face.ID << " " << k << endl;
-                    } else cout << "VRSTEP::buildGeometries Error 2 " << Face.type << " " << Face.ID << endl;
-                }
+                auto& Shell = instances[ Item.get<0, STEPentity*>() ];
+                handleClosedShell(Shell, i, geo, material);
+            } else if (Item.type == "Brep_With_Voids") {
+                auto& Shell = instances[ Item.get<0, STEPentity*, vector<STEPentity*> >() ];
+                handleClosedShell(Shell, i, geo, material);
+                /*for (auto j : Item.get<1, STEPentity*, vector<STEPentity*> >() ) { // Oriented_Closed_Shell TODO
+                    auto& Shell = instances[ Item.get<0, STEPentity*, bool>() ];
+                    bool orientation = Item.get<1, STEPentity*, bool>(); // TODO: how to use the orientation?
+                    handleClosedShell(Shell, i, geo, material);
+                }*/
             } else if (Item.type == "Axis2_Placement_3d") { // ignore?
 
-            } else cout << "VRSTEP::buildGeometries Error 1 " << Item.type << " " << Item.ID << endl;
+            } else cout << "VRSTEP::buildGeometries Error, unhandled shape type: " << Item.type << ", shape ID: " << Item.ID << endl;
         }
 
         resGeos[BrepShape.entity] = geo;
     }
     cout << "VRSTEP::buildGeometries  got " << resGeos.size() << " geometries" << endl;
     cout << blueBeg << "VRSTEP::buildGeometries finished\n" << colEnd;
+
+    cout << "instance types:" << endl;
+    for (auto it : instancesByType) cout << it.first << ", " << it.second.size() << endl;
 }
 
 VRSTEP::Instance& VRSTEP::getInstance(STEPentity* e) {
