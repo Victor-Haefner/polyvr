@@ -600,6 +600,7 @@ VRGeometryPtr VRBRepSurface::build(bool flat) {
         } else cout << "VRBRepSurface::build: Triangulation failed, no mesh generated!\n";
 
         VRMeshSubdivision subdiv;
+        //cout << " subdivide cylinder grid, Dangle: " << Dangle << endl;
         subdiv.subdivideGrid(g, Vec3d(Dangle, -1, -1), false);
 
         if (g && !flat) if (auto gg = g->getMesh()) {

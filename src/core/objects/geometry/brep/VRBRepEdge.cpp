@@ -110,6 +110,10 @@ void VRBRepEdge::compute() {
         cout << endl;*/
 
         angles = angleFrame(a1, a2);
+        /*cout << " circle edge angles: " << toString(angles) << ", -> da:";
+        for (int i=1; i<angles.size(); i++) cout << " " << angles[i]-angles[i-1];
+        cout << endl;*/
+
         for (auto a : angles) {
             Pnt3d p(radius*cos(a),radius*sin(a),0);
             m.mult(p,p);

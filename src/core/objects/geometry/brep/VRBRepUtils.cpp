@@ -63,12 +63,25 @@ vector<float> VRBRepUtils::angleFrame(float a1, float a2) {
     }
 
     if (a1 > a2) a2 += 2*Pi;
-    vector<float> angles;
+
+    /*vector<float> angles;
     angles.push_back(a1);
-    int s1 = getSideN(a1);
-    float a = s1*Dangle;
-    while (a <= a1) a += Dangle;
+    float a = a1;
     for(; a < a2-1e-6; a += Dangle) angles.push_back(a);
+    angles.push_back(a2);
+    return;*/
+
+    vector<float> angles;
+    //angles.push_back(a1);
+    //int s1 = getSideN(a1);
+    float a = a1;
+
+
+    int splitN = max(1.0f, floor((a2-a1)/Dangle));
+    float res = (a2-a1)/splitN;
+    /*float a = s1*Dangle;
+    while (a <= a1) a += Dangle;*/
+    for(; a < a2-1e-6; a += res) angles.push_back(a);
     angles.push_back(a2);
     return angles;
 }

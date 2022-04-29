@@ -437,6 +437,7 @@ void VRMeshSubdivision::subdivideGrid(VRGeometryPtr geo, Vec3d res, bool swapNor
         box.update(p);
     }
     Vec3d gMin = box.min();
+    //cout << "VRMeshSubdivision::subdivideGrid " << gMin << endl;
 
     // compute grid params
     Vec3i gridN(1,1,1);
