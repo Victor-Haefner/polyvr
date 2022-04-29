@@ -389,6 +389,8 @@ VRGeometryPtr VRBRepSurface::build(bool flat) {
         double K = 2*pi*30;
         int resI = ceil(Ncurv*LcurvU/K);
         int resJ = ceil(Ncurv*LcurvV/K);
+        resI = max(2, resI);
+        resJ = max(2, resJ);
         //cout << "res: " << Vec2i(resI, resJ) << ", L: " << Vec2i(LcurvU, LcurvV) << endl;
         return Vec2i(resI, resJ);
     };

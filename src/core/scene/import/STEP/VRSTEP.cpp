@@ -1141,6 +1141,7 @@ void VRSTEP::buildGeometries() {
         //if (i != 47) continue; // test for conic faces
         //if (i != 35) continue; // test for toroidal faces
         //if (i != 9) continue; // test for toroidal faces
+        //if (i != 7) continue; // test circle coord systems
         //if (i != 29) continue; // test circle coord systems
         //if (BrepShape.ID == 134852)
         //exploreEntity(nodes[BrepShape.entity], true);
@@ -1166,6 +1167,7 @@ void VRSTEP::buildGeometries() {
                     //if (k != 32) continue;
                     //if (k != 67 && k != 9) continue;
                     //if (k != 11 && k != 5) continue;
+                    //if (k != 49) continue;
 
                     auto& Face = instances[j];
                     //if (k == 67) exploreEntity(nodes[Face.entity], true);
