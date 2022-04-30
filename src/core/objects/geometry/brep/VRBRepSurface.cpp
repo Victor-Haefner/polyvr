@@ -894,29 +894,23 @@ VRGeometryPtr VRBRepSurface::build(bool flat) {
             subdiv.subdivideGrid( g, Vec3d(Tu/res[0], -1, Tv/res[1]) , false);
 
             if (g && !flat) if (auto gg = g->getMesh()) {
-                VRGeoData nMesh;
+                GeoVectorPropertyMTRecPtr pos = gg->geo->getPositions();
+                GeoVectorPropertyMTRecPtr norms = gg->geo->getNormals();
+                if (pos) {
+                    for (uint i=0; i<pos->size(); i++) {
+                        Pnt3f uv = pos->getValue<Pnt3f>(i);
 
-                auto pos = gg->geo->getPositions();
-                //cout << "unproject: " << pos->size() << endl;
+                        double u = uv[0];
+                        double v = uv[2];
+                        Vec3d p = isWeighted ? BSpline(u,v, degu, degv, cpoints, knotsu, knotsv, weights) : BSpline(u,v, degu, degv, cpoints, knotsu, knotsv);
+                        Vec3d n = isWeighted ? BSplineNorm(u,v, degu, degv, cpoints, knotsu, knotsv, weights) : BSplineNorm(u,v, degu, degv, cpoints, knotsu, knotsv);
+                        if (same_sense) n *= -1;
 
-                for (size_t i=0; i<pos->size(); i++) {
-                    Pnt3f uv = pos->getValue<Pnt3f>(i);
-                    double u = uv[0];
-                    double v = uv[2];
-                    Vec3d p = isWeighted ? BSpline(u,v, degu, degv, cpoints, knotsu, knotsv, weights) : BSpline(u,v, degu, degv, cpoints, knotsu, knotsv);
-                    Vec3d n = isWeighted ? BSplineNorm(u,v, degu, degv, cpoints, knotsu, knotsv, weights) : BSplineNorm(u,v, degu, degv, cpoints, knotsu, knotsv);
-                    if (same_sense) n *= -1;
-                    nMesh.pushVert(p,n);
+                        pos->setValue(p, i);
+                        norms->setValue(n, i);
+                    }
                 }
-
-                for (auto it = TriangleIterator(gg->geo); !it.isAtEnd() ;++it) {
-                    nMesh.pushTri(it.getPositionIndex(0), it.getPositionIndex(1), it.getPositionIndex(2));
-                }
-
-                nMesh.apply(g);
             }
-
-            //for (auto& b : bounds) g->addChild(b->build());
         }
 
 
@@ -1127,14 +1121,6 @@ VRGeometryPtr VRBRepSurface::build(bool flat) {
 
         // tesselate the result while projecting it back on the surface
         if (g && !flat) if (auto gg = g->getMesh()) {
-            VRGeoData nMesh; // TODO: remove this, this only swaps the normal!
-            Vec3d n(0,1,0);
-            for (auto it = TriangleIterator(gg->geo); !it.isAtEnd() ;++it) {
-                triangle tri(it);
-                pushTri(nMesh, Pnt3d(tri.p[0]), Pnt3d(tri.p[1]), Pnt3d(tri.p[2]), n);
-            }
-            nMesh.apply(g);
-
             // project the points back into 3D space
             GeoVectorPropertyMTRecPtr pos = gg->geo->getPositions();
             GeoVectorPropertyMTRecPtr norms = gg->geo->getNormals();
@@ -1251,15 +1237,6 @@ VRGeometryPtr VRBRepSurface::build(bool flat) {
 
         // tesselate the result while projecting it back on the surface
         if (g && !flat) if (auto gg = g->getMesh()) {
-            VRGeoData nMesh; // TODO: move this, this swaps the normal and triangle orientation!
-            Vec3d n(0,1,0);
-            if (!same_sense) n *= -1;
-            for (auto it = TriangleIterator(gg->geo); !it.isAtEnd() ;++it) {
-                triangle tri(it);
-                pushTri(nMesh, Pnt3d(tri.p[0]), Pnt3d(tri.p[1]), Pnt3d(tri.p[2]), n);
-            }
-            nMesh.apply(g);
-
             // project the points back into 3D space
             GeoVectorPropertyMTRecPtr pos = gg->geo->getPositions();
             GeoVectorPropertyMTRecPtr norms = gg->geo->getNormals();
