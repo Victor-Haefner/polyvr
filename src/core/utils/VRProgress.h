@@ -41,6 +41,7 @@ class VRProgress {
         void set(float t);
 
         void setup(string title, size_t max, Mode m = CONSOLE_M);
+        void signal();
         void update(size_t i = 1);
         void finish();
         void reset();

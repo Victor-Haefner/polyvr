@@ -95,7 +95,7 @@ void VRMeshSubdivision::gridMergeTriangles(VRGeometryPtr geo, Vec3d g0, Vec3d re
         Pnt3d p = g0;
         for(int i=0; i<3; i++)
             if (res[i] > 0) p[i] += res[i]*gridID[i];
-        cout << "   gridPos " << gridID << " -> " << p << endl;
+        //cout << "   gridPos " << gridID << " -> " << p << endl;
         return p;
     };
 
@@ -104,7 +104,7 @@ void VRMeshSubdivision::gridMergeTriangles(VRGeometryPtr geo, Vec3d g0, Vec3d re
         g1[dim] = 1;
         g2[dim2] = 1;
 
-        cout << "  pushCell " << gridID << endl;
+        //cout << "  pushCell " << gridID << endl;
 
         Pnt3d p1 = gridPos(gridID);
         Pnt3d p2 = gridPos(gridID + g1);
@@ -168,7 +168,7 @@ void VRMeshSubdivision::gridMergeTriangles(VRGeometryPtr geo, Vec3d g0, Vec3d re
         if (q > 0.99) pushCell(gridID, Vec3d(gtri.second[0].getNormal(0)));
         else          pushTriangles(gtri.second);
 
-        cout << " tri " << gridID << ", A " << A << ", q " << q << "/1.0" << endl;
+        //cout << " tri " << gridID << ", A " << A << ", q " << q << "/1.0" << endl;
     }
 
     newData.apply(geo);
@@ -376,7 +376,7 @@ void VRMeshSubdivision::subdivideAxis(VRGeometryPtr geo, Vec3i gridN, Vec3d gMin
         double e3L2 = e3.squareLength();
         Vec3f n = e1.cross(e2);
         if (n.length() < 1e-8) {
-            cout << "Warning! skip small triangle, n: " << n << " dot: " << n.dot(Vec3f(0,1,0)) << ", e1: " << e1 << ", e2: " << e2 << ", e3: " << e3 << endl;
+            //cout << "Warning! skip small triangle, n: " << n << " dot: " << n.dot(Vec3f(0,1,0)) << ", e1: " << e1 << ", e2: " << e2 << ", e3: " << e3 << endl;
             continue;
         }
         n.normalize();

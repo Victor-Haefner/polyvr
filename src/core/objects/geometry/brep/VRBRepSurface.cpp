@@ -131,7 +131,7 @@ struct triangle {
 };
 
 VRGeometryPtr VRBRepSurface::build(bool flat) {
-    cout << "VRSTEP::Surface build " << stype << ", outside? " << same_sense << endl;
+    //cout << "VRSTEP::Surface build " << stype << ", outside? " << same_sense << endl;
 
     if (!trans) trans = Pose::create();
     Matrix4d m = trans->asMatrix();
@@ -475,7 +475,7 @@ VRGeometryPtr VRBRepSurface::build(bool flat) {
 
     if (stype == "Plane") {
         //return 0;
-        cout << "make Plane, N bounds: " << bounds.size() << endl;
+        //cout << "make Plane, N bounds: " << bounds.size() << endl;
         Triangulator t;
         if (bounds.size() == 0) cout << "Warning: No bounds!\n";
 
@@ -800,7 +800,7 @@ VRGeometryPtr VRBRepSurface::build(bool flat) {
 
     if (stype == "B_Spline_Surface_With_Knots") {
         //return 0;
-        cout << "B_Spline_Surface_With_Knots" << endl;
+        //cout << "B_Spline_Surface_With_Knots" << endl;
         // ROADMAP
         //  first idea:
         //   - tesselate whole BSpline surface (lots of quads)

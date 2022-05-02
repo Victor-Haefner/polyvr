@@ -20,6 +20,7 @@ class SingleLinkNode;
 #include <OpenSG/OSGLine.h>
 #include "core/objects/VRObjectFwd.h"
 #include "core/utils/VRFunctionFwd.h"
+#include "core/utils/VRUtilsFwd.h"
 #include "core/math/field.h"
 #include "core/math/VRMathFwd.h"
 #include "../VRImportFwd.h"
@@ -107,6 +108,9 @@ class VRSTEP : public std::enable_shared_from_this<VRSTEP> {
         map<STEPentity*, VRTransformPtr> resGeos;
         VRTransformPtr resRoot;
 
+        VRProgressPtr progress;
+        bool threaded = false;
+
         map<string, Type> types;
         Instance& getInstance(STEPentity* e);
         template<class T> void addType(string type, string path, string cpath, bool print = false);
@@ -157,7 +161,7 @@ class VRSTEP : public std::enable_shared_from_this<VRSTEP> {
 		static VRSTEPPtr create();
 		VRSTEPPtr ptr();
 
-        void load(string file, VRTransformPtr res, map<string,string> options);
+        void load(string file, VRTransformPtr res, map<string,string> options, VRProgressPtr p = 0, bool thread = false);
 };
 
 OSG_END_NAMESPACE;

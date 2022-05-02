@@ -220,7 +220,7 @@ void VRImport::LoadJob::load(VRThreadWeakPtr tw) {
             if (preset == "PVR") {
 #ifndef WITHOUT_STEPCODE
                 VRSTEPPtr step = VRSTEP::create();
-                step->load(path, res, options);
+                step->load(path, res, options, progress, thread);
 #endif
             } else {
 #ifndef WITHOUT_STEP

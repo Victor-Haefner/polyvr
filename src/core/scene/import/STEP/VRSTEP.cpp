@@ -12,12 +12,14 @@
 #include <algorithm>
 #include "core/utils/isNan.h"
 #include "core/utils/system/VRSystem.h"
+#include "core/utils/VRMutex.h"
 
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/geometry/VRGeoData.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRFunction.h"
+#include "core/utils/VRProgress.h"
 #include "core/math/polygon.h"
 #include "core/math/pose.h"
 
@@ -596,8 +598,9 @@ void VRSTEP::open(string file) {
     thread t(&VRSTEP::loadT, this, file, sfile, &done);
 
     while(!done) {
-        auto p = sfile->GetReadProgress();
-        cout << "progress " << p << endl;
+        double p = sfile->GetReadProgress()*0.01;
+        progress->set(p*0.5); // parsing the file is only half of total progress
+        progress->signal();
         sleep(1);
     }
 
@@ -1180,7 +1183,7 @@ void VRSTEP::buildGeometries() {
         }
     };
 
-    for (auto BrepShape : instancesByType["Advanced_Brep_Shape_Representation"]) {
+    auto handleShape = [&](Instance& shape) {
         static int i=0; i++;
         //if (i != 31) continue; // test for cylinder faces
         //if (i != 24) continue; // test for sphere faces
@@ -1190,17 +1193,17 @@ void VRSTEP::buildGeometries() {
         //if (i != 9) continue; // test for toroidal faces
         //if (i != 7) continue; // test circle coord systems
         //if (i != 29) continue; // test circle coord systems
-        //if (BrepShape.ID == 134852)
-        //exploreEntity(nodes[BrepShape.entity], false);
+        //if (shape.ID == 134852)
+        //exploreEntity(nodes[shape.entity], false);
 
-        string name = BrepShape.get<0, string, vector<STEPentity*> >();
+        string name = shape.get<0, string, vector<STEPentity*> >();
         auto geo = VRGeometry::create(name);
 
         //geo->getMaterial()->setFrontBackModes(GL_FILL, GL_LINE); // to test face orientations
 
-        cout << "VRSTEP::buildGeometries " << name << " ID: " << BrepShape.ID << " i " << i << endl;
+        cout << "VRSTEP::buildGeometries " << name << " ID: " << shape.ID << " i " << i << endl;
 
-        for (auto instance : BrepShape.get<1, string, vector<STEPentity*> >() ) {
+        for (auto instance : shape.get<1, string, vector<STEPentity*> >() ) {
             auto& Item = instances[instance];
             //cout << " Item: " << Item.type << " " << Item.ID << endl;
 
@@ -1223,7 +1226,41 @@ void VRSTEP::buildGeometries() {
             } else cout << "VRSTEP::buildGeometries Error, unhandled shape type: " << Item.type << ", shape ID: " << Item.ID << endl;
         }
 
-        resGeos[BrepShape.entity] = geo;
+        resGeos[shape.entity] = geo;
+    };
+
+    threaded = false; // TODO: use VRThread because of OSG..
+    auto shapes = instancesByType["Advanced_Brep_Shape_Representation"];
+
+    if (threaded) {
+        int N = 1;
+        int next = 0;
+        VRMutex mtx;
+
+        auto doWork = [&]() {
+            while (true) {
+                if (next >= shapes.size()) break;
+                auto shape = shapes[next];
+                next++;
+                handleShape(shape);
+            }
+        };
+
+        vector<thread> tPool;
+        for (int i=0; i<N; i++) tPool.push_back(thread(doWork));
+        for (int i=0; i<N; i++) tPool[i].join();
+    }
+
+
+    if (!threaded) {
+        int N = shapes.size();
+        for (int i=0; i<N; i++) {
+            auto& shape = shapes[i];
+            handleShape(shape);
+            double p = double(i+1)/N;
+            progress->set(0.5+p*0.5);
+            progress->signal();
+        }
     }
     cout << "VRSTEP::buildGeometries  got " << resGeos.size() << " geometries" << endl;
     cout << blueBeg << "VRSTEP::buildGeometries finished\n" << colEnd;
@@ -1534,13 +1571,22 @@ void VRSTEP::exploreEntity(VRSTEP::Node* n, bool doFilter) {
 #endif
 }
 
-void VRSTEP::load(string file, VRTransformPtr t,  map<string,string> opt) {
+void VRSTEP::load(string file, VRTransformPtr t,  map<string,string> opt, VRProgressPtr p, bool thread) {
     options = opt;
+    threaded = thread;
     //options["explorer"] = "";
     resRoot = t;
+
+    progress = p;
+    if (!progress) progress = VRProgress::create();
+    progress->setup("load STEP " + file, 200);
+    progress->reset();
+
     open(file);
     build();
     resRoot->setScale(Vec3d(scale, scale, scale));
+
+    progress->finish();
 }
 
 /* ------------------------------ DOC -----------------------------------
