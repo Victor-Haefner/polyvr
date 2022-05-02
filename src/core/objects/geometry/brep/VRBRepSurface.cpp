@@ -133,13 +133,10 @@ struct triangle {
 VRGeometryPtr VRBRepSurface::build(bool flat) {
     //cout << "VRSTEP::Surface build " << stype << ", outside? " << same_sense << endl;
 
-    Matrix4d m;
-    Vec3d d, u;
-    if (trans) {
-        m = trans->asMatrix();
-        d = trans->dir();
-        u = trans->up();
-    }
+    if (!trans) trans = Pose::create();
+    Matrix4d m = trans->asMatrix();
+    Vec3d d = trans->dir();
+    Vec3d u = trans->up();
     Matrix4d mI = m;
     mI.invert();
 
@@ -458,6 +455,22 @@ VRGeometryPtr VRBRepSurface::build(bool flat) {
         return geo;
     };
 
+    auto computeExtend = [&](VRGeometryPtr g, int dim) {
+        Vec2d range(1e6, -1e6);
+        if (g) if (auto gg = g->getMesh()) {
+            GeoVectorPropertyMTRecPtr pos = gg->geo->getPositions();
+            if (pos) {
+                for (uint i=0; i<pos->size(); i++) {
+                    Pnt3d p = Pnt3d(pos->getValue<Pnt3f>(i));
+                    double h = p[dim];
+                    if (h < range[0]) range[0] = h;
+                    if (h > range[1]) range[1] = h;
+                }
+            }
+        }
+        return range[1]-range[0];
+    };
+
     //if (stype != "Spherical_Surface") return 0;
 
     if (stype == "Plane") {
@@ -599,9 +612,11 @@ VRGeometryPtr VRBRepSurface::build(bool flat) {
         if (auto gg = g->getMesh()->geo) { if (!gg->getPositions()) cout << "VRBRepSurface::build: Triangulation failed, no mesh positions!\n";
         } else cout << "VRBRepSurface::build: Triangulation failed, no mesh generated!\n";
 
+
         VRMeshSubdivision subdiv;
+        double H = computeExtend(g, 2);
         //cout << " subdivide cylinder grid, Dangle: " << Dangle << endl;
-        subdiv.subdivideGrid(g, Vec3d(Dangle, -1, -1), false);
+        subdiv.subdivideGrid(g, Vec3d(Dangle, -1, -1), Dangle*H, false);
 
         if (g && !flat) if (auto gg = g->getMesh()) {
             // project the points back into 3D space
@@ -891,7 +906,8 @@ VRGeometryPtr VRBRepSurface::build(bool flat) {
             g = triangulator.compute();
 
             VRMeshSubdivision subdiv;
-            subdiv.subdivideGrid( g, Vec3d(Tu/res[0], -1, Tv/res[1]) , false);
+            auto gres = Vec3d(Tu/res[0], -1, Tv/res[1]);
+            subdiv.subdivideGrid( g, gres, gres[0]*gres[2], false);
 
             if (g && !flat) if (auto gg = g->getMesh()) {
                 GeoVectorPropertyMTRecPtr pos = gg->geo->getPositions();
@@ -1002,7 +1018,8 @@ VRGeometryPtr VRBRepSurface::build(bool flat) {
         } else cout << "VRBRepSurface::build: Triangulation failed, no mesh generated!\n";
 
         VRMeshSubdivision subdiv;
-        subdiv.subdivideGrid(g, Vec3d(Dangle*0.5, -1, -1), false);
+        double H = computeExtend(g, 2);
+        subdiv.subdivideGrid(g, Vec3d(Dangle*0.5, -1, -1), Dangle*0.5*H, false);
 
 
         if (g && !flat) if (auto gg = g->getMesh()) {
@@ -1117,7 +1134,8 @@ VRGeometryPtr VRBRepSurface::build(bool flat) {
         } else cout << "VRBRepSurface::build: Triangulation failed, no mesh generated!\n";
 
         VRMeshSubdivision subdiv;
-        subdiv.subdivideGrid(g, Vec3d(Dangle, -1, Dangle), false);
+        auto res = Vec3d(Dangle, -1, Dangle);
+        subdiv.subdivideGrid(g, res, res[0]*res[1], false);
 
         // tesselate the result while projecting it back on the surface
         if (g && !flat) if (auto gg = g->getMesh()) {
@@ -1233,7 +1251,8 @@ VRGeometryPtr VRBRepSurface::build(bool flat) {
         } else cout << "VRBRepSurface::build: Triangulation failed, no mesh generated!\n";
 
         VRMeshSubdivision subdiv;
-        subdiv.subdivideGrid(g, Vec3d(Dangle, -1, Dangle), false);
+        auto res = Vec3d(Dangle, -1, Dangle);
+        subdiv.subdivideGrid(g, res, res[0]*res[1], false);
 
         // tesselate the result while projecting it back on the surface
         if (g && !flat) if (auto gg = g->getMesh()) {

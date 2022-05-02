@@ -75,9 +75,8 @@ void VRMeshSubdivision::removeDoubles(VRGeometryPtr geo) {
     newData.apply(geo);
 }
 
-void VRMeshSubdivision::gridMergeTriangles(VRGeometryPtr geo, Vec3d g0, Vec3d res, int dim, int dim2) {
-    double cellA = res[dim] * res[dim2];
-    if (res[dim] < 0 || res[dim2] < 0) return;
+void VRMeshSubdivision::gridMergeTriangles(VRGeometryPtr geo, Vec3d g0, Vec3d res, double cellA, int dim, int dim2) {
+    //if (res[dim] < 0 || res[dim2] < 0) return;
 
     VRGeoData newData;
     auto gg = geo->getMesh();
@@ -428,7 +427,7 @@ void VRMeshSubdivision::subdivideAxis(VRGeometryPtr geo, Vec3i gridN, Vec3d gMin
     gg = geo->getMesh();
 }
 
-void VRMeshSubdivision::subdivideGrid(VRGeometryPtr geo, Vec3d res, bool swapNormals) {
+void VRMeshSubdivision::subdivideGrid(VRGeometryPtr geo, Vec3d res, double cellA, bool swapNormals) {
     auto gg = geo->getMesh();
     Boundingbox box;
     GeoVectorPropertyMTRecPtr positions = gg->geo->getPositions();
@@ -450,7 +449,7 @@ void VRMeshSubdivision::subdivideGrid(VRGeometryPtr geo, Vec3d res, bool swapNor
 
     subdivideAxis(geo, gridN, gMin, res, 0, 2, swapNormals);
     subdivideAxis(geo, gridN, gMin, res, 2, 0, swapNormals);
-    gridMergeTriangles(geo, gMin, res, 0, 2);
+    gridMergeTriangles(geo, gMin, res, cellA, 0, 2);
 
     //subdivideAxis(geo, gridN, gMin, res, 1, 2, swapNormals);
     //gridMergeTriangles(geo, gMin, res, 1, 2);

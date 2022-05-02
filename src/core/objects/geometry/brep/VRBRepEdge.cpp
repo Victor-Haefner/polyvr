@@ -47,6 +47,8 @@ void VRBRepEdge::swap() {
 bool VRBRepEdge::connectsTo(VRBRepEdgePtr e) { return ( sameVec(end(), e->beg()) ); }
 
 double VRBRepEdge::compCircleDirection(PosePtr sTrans, Vec3d cN) {
+    if (!sTrans) return orientation;
+
     double ddd = sTrans->dir().dot(center->dir());
     double udu = sTrans->up().dot(center->up());
     double uangle = acos(udu);
