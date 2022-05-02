@@ -131,7 +131,7 @@ struct triangle {
 };
 
 VRGeometryPtr VRBRepSurface::build(bool flat) {
-    //cout << "VRSTEP::Surface build " << stype << ", outside? " << same_sense << endl;
+    cout << "VRSTEP::Surface build " << stype << ", outside? " << same_sense << endl;
 
     if (!trans) trans = Pose::create();
     Matrix4d m = trans->asMatrix();
@@ -475,7 +475,7 @@ VRGeometryPtr VRBRepSurface::build(bool flat) {
 
     if (stype == "Plane") {
         //return 0;
-        //cout << "make Plane, N bounds: " << bounds.size() << endl;
+        cout << "make Plane, N bounds: " << bounds.size() << endl;
         Triangulator t;
         if (bounds.size() == 0) cout << "Warning: No bounds!\n";
 
@@ -483,7 +483,6 @@ VRGeometryPtr VRBRepSurface::build(bool flat) {
         for (int i=0; i<bounds.size(); i++) if ( bounds[i]->isOuter()) sortedBounds.push_back(i);
         for (int i=0; i<bounds.size(); i++) if (!bounds[i]->isOuter()) sortedBounds.push_back(i);
 
-        //for (auto& b : bounds) {
         for (auto& bi : sortedBounds) {
             auto& b = bounds[bi];
             //if (b.points.size() == 0) cout << "Warning: No bound points for bound " << b.BRepType << endl;
@@ -501,12 +500,17 @@ VRGeometryPtr VRBRepSurface::build(bool flat) {
 
             checkPolyOrientation(poly, b);
             t.add(poly);
+
+            //cout << "  add polygon: " << toString(poly.get3()) << endl;
         }
 
         auto g = t.compute();
         if (!g) return 0;
         if (!g->getMesh()->geo->getPositions()) cout << "NO MESH!\n";
         if (!flat) g->setMatrix(m);
+
+
+        //g->addChild(wireBounds(bounds));
 
         Vec3d nP = Vec3d(0, 0, 1);
         if (!same_sense) nP *= -1;
@@ -593,8 +597,6 @@ VRGeometryPtr VRBRepSurface::build(bool flat) {
 
             checkPolyIntegrety(poly);
             checkPolyOrientation(poly, b);
-            poly.remPoint(poly.size()-1); // TODO: this removes the last point as it is duplicate of first..
-
 
             /*VRPolygon poly2;
             poly2.addPoint(Vec2d(-0.0900314, 105.9));
@@ -615,8 +617,7 @@ VRGeometryPtr VRBRepSurface::build(bool flat) {
 
         VRMeshSubdivision subdiv;
         double H = computeExtend(g, 2);
-        //cout << " subdivide cylinder grid, Dangle: " << Dangle << endl;
-        subdiv.subdivideGrid(g, Vec3d(Dangle, -1, -1), Dangle*H, false);
+        subdiv.subdivideGrid(g, Vec3d(Dangle, -1, H), false);
 
         if (g && !flat) if (auto gg = g->getMesh()) {
             // project the points back into 3D space
@@ -907,7 +908,7 @@ VRGeometryPtr VRBRepSurface::build(bool flat) {
 
             VRMeshSubdivision subdiv;
             auto gres = Vec3d(Tu/res[0], -1, Tv/res[1]);
-            subdiv.subdivideGrid( g, gres, gres[0]*gres[2], false);
+            subdiv.subdivideGrid( g, gres, false);
 
             if (g && !flat) if (auto gg = g->getMesh()) {
                 GeoVectorPropertyMTRecPtr pos = gg->geo->getPositions();
@@ -1004,7 +1005,7 @@ VRGeometryPtr VRBRepSurface::build(bool flat) {
                     continue;
                 }
 
-                cout << "Unhandled edge on cylinder of type " << e->etype << endl;
+                cout << "Unhandled edge on cone of type " << e->etype << endl;
             }
 
             checkPolyIntegrety(poly);
@@ -1019,7 +1020,7 @@ VRGeometryPtr VRBRepSurface::build(bool flat) {
 
         VRMeshSubdivision subdiv;
         double H = computeExtend(g, 2);
-        subdiv.subdivideGrid(g, Vec3d(Dangle*0.5, -1, -1), Dangle*0.5*H, false);
+        subdiv.subdivideGrid(g, Vec3d(Dangle*0.5, -1, H), false);
 
 
         if (g && !flat) if (auto gg = g->getMesh()) {
@@ -1135,7 +1136,7 @@ VRGeometryPtr VRBRepSurface::build(bool flat) {
 
         VRMeshSubdivision subdiv;
         auto res = Vec3d(Dangle, -1, Dangle);
-        subdiv.subdivideGrid(g, res, res[0]*res[1], false);
+        subdiv.subdivideGrid(g, res, false);
 
         // tesselate the result while projecting it back on the surface
         if (g && !flat) if (auto gg = g->getMesh()) {
@@ -1252,7 +1253,7 @@ VRGeometryPtr VRBRepSurface::build(bool flat) {
 
         VRMeshSubdivision subdiv;
         auto res = Vec3d(Dangle, -1, Dangle);
-        subdiv.subdivideGrid(g, res, res[0]*res[1], false);
+        subdiv.subdivideGrid(g, res, false);
 
         // tesselate the result while projecting it back on the surface
         if (g && !flat) if (auto gg = g->getMesh()) {
@@ -1272,8 +1273,7 @@ VRGeometryPtr VRBRepSurface::build(bool flat) {
             }
         }
 
-        //auto geo = wireBounds(bounds);
-        //g->addChild(geo);
+        //g->addChild(wireBounds(bounds));
 
         if (g && !flat) g->setMatrix(m);
         if (g && g->getMesh() && g->getMesh()->geo->getPositions() && g->getMesh()->geo->getPositions()->size() > 0) return g;

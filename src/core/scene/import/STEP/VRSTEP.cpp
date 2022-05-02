@@ -1167,7 +1167,7 @@ void VRSTEP::buildGeometries() {
             //if (k != 32) continue;
             //if (k != 67 && k != 9) continue;
             //if (k != 11 && k != 7) continue;
-            //if (k != 49) continue;
+            //if (k != 7) continue;
 
             auto& Face = instances[j];
             //if (k == 67) exploreEntity(nodes[Face.entity], true);
@@ -1228,8 +1228,8 @@ void VRSTEP::buildGeometries() {
     cout << "VRSTEP::buildGeometries  got " << resGeos.size() << " geometries" << endl;
     cout << blueBeg << "VRSTEP::buildGeometries finished\n" << colEnd;
 
-    cout << "instance types:" << endl;
-    for (auto it : instancesByType) cout << it.first << ", " << it.second.size() << endl;
+    //cout << "instance types:" << endl;
+    //for (auto it : instancesByType) cout << it.first << ", " << it.second.size() << endl;
 }
 
 VRSTEP::Instance& VRSTEP::getInstance(STEPentity* e) {

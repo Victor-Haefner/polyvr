@@ -65,9 +65,22 @@ Triangulator::Triangulator() {}
 Triangulator::~Triangulator() {}
 shared_ptr<Triangulator> Triangulator::create() { return shared_ptr<Triangulator>(new Triangulator()); }
 
-void Triangulator::add(VRPolygon p, bool outer) {
-    if (outer) outer_bounds.push_back(p);
-    else inner_bounds.push_back(p);
+bool samePnt2(Vec2d a, Vec2d b) { return ((b-a).length() < 1e-3); }
+bool samePnt3(Vec3d a, Vec3d b) { return ((b-a).length() < 1e-3); }
+
+void Triangulator::add(VRPolygon poly, bool outer) {
+    if (poly.size3() > 1) {
+        int i = poly.size3()-1;
+        if (samePnt3(poly.getPoint3(0), poly.getPoint3(i))) poly.remPoint3(i);
+    }
+
+    if (poly.size2() > 1) {
+        int i = poly.size2()-1;
+        if (samePnt2(poly.getPoint(0), poly.getPoint(i))) poly.remPoint(i);
+    }
+
+    if (outer) outer_bounds.push_back(poly);
+    else inner_bounds.push_back(poly);
 }
 
 VRGeometryPtr Triangulator::computeBounds() {
