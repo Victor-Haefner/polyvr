@@ -437,6 +437,7 @@ void VRMeshSubdivision::subdivideAxis(VRGeometryPtr geo, Vec3i gridN, Vec3d gMin
 }
 
 void VRMeshSubdivision::subdivideGrid(VRGeometryPtr geo, Vec3d res, bool swapNormals) {
+    if (!geo) return;
     auto gg = geo->getMesh();
     if (!gg) return;
 
@@ -478,6 +479,7 @@ void VRMeshSubdivision::subdivideGrid(VRGeometryPtr geo, Vec3d res, bool swapNor
 }
 
 void VRMeshSubdivision::subdivideTriangles(VRGeometryPtr geo, Vec3d res) {
+    if (!geo) return;
     VRGeoData data(geo);
     VRGeoData newData;
 

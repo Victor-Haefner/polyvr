@@ -905,7 +905,6 @@ VRGeometryPtr VRBRepSurface::build(bool flat) {
             }
 
             g = triangulator.compute();
-
             VRMeshSubdivision subdiv;
             auto gres = Vec3d(Tu/res[0], -1, Tv/res[1]);
             subdiv.subdivideGrid( g, gres, false);
