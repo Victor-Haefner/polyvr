@@ -1252,11 +1252,11 @@ void VRSTEP::buildGeometries() {
             } else if (Item.type == "Brep_With_Voids") {
                 auto& Shell = instances[ Item.get<0, STEPentity*, vector<STEPentity*> >() ];
                 handleClosedShell(Shell, i, geo, material);
-                /*for (auto j : Item.get<1, STEPentity*, vector<STEPentity*> >() ) { // Oriented_Closed_Shell TODO
-                    auto& Shell = instances[ Item.get<0, STEPentity*, bool>() ];
-                    bool orientation = Item.get<1, STEPentity*, bool>(); // TODO: how to use the orientation?
-                    handleClosedShell(Shell, i, geo, material);
-                }*/
+                //for (auto j : Item.get<1, STEPentity*, vector<STEPentity*> >() ) { // Oriented_Closed_Shell TODO
+                //    auto& Shell = instances[ Item.get<0, STEPentity*, bool>() ];
+                //    bool orientation = Item.get<1, STEPentity*, bool>(); // TODO: how to use the orientation?
+                //    handleClosedShell(Shell, i, geo, material);
+                //}
             } else if (Item.type == "Axis2_Placement_3d") { // ignore?
 
             } else cout << "VRSTEP::buildGeometries Error, unhandled shape type: " << Item.type << ", shape ID: " << Item.ID << endl;
@@ -1267,24 +1267,32 @@ void VRSTEP::buildGeometries() {
 
 
     auto shapes = instancesByType["Advanced_Brep_Shape_Representation"];
-    threaded = true;
+    threaded = false;
 
-    if (threaded) { // Doesnt work! triangulator uses GL calls, they fail in threads! -> thread sub functions!
-        int N = 1;
+    if (threaded) {
+        int N = 8;
         int next = 0;
         VRMutex mtx;
 
         auto doWork = [&](VRThreadWeakPtr tw) {
             VRThreadPtr t = tw.lock();
-            cout << "syncFromMain" << endl;
-            if (t) t->syncFromMain();
+            {
+                VRLock lock(mtx);
+                cout << "syncFromMain" << endl;
+                if (t) t->syncFromMain();
+                cout << "syncFromMain done" << endl;
 
-            glTessContext::createTessellationGLContext();
+                glTessContext::createTessellationGLContext();
+            }
 
             while (true) {
-                if (next >= shapes.size()) break;
-                auto shape = shapes[next];
-                next++;
+                Instance shape;
+                {
+                    VRLock lock(mtx);
+                    if (next >= shapes.size()) break;
+                    shape = shapes[next];
+                    next++;
+                }
                 handleShape(shape);
                 cout << "next: " << next << ", count: " << shapes.size() << endl;
             }
@@ -1303,10 +1311,13 @@ void VRSTEP::buildGeometries() {
             tIDs.push_back(tID);
             auto thread = scene->getThread(tID);
             scene->setupThreadState(thread);
-            scene->importThreadState(thread);
         }
 
-        for (auto tID : tIDs) scene->waitThread(tID);
+        for (auto tID : tIDs) {
+            auto thread = scene->getThread(tID);
+            scene->importThreadState(thread);
+            scene->waitThread(tID);
+        }
     }
 
 
