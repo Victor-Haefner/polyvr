@@ -110,6 +110,7 @@ class VRSTEP : public std::enable_shared_from_this<VRSTEP> {
 
         VRProgressPtr progress;
         bool threaded = false;
+        VRThreadCbPtr threadCb;
 
         map<string, Type> types;
         Instance& getInstance(STEPentity* e);
