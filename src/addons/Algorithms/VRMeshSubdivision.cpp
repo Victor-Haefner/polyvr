@@ -438,6 +438,8 @@ void VRMeshSubdivision::subdivideAxis(VRGeometryPtr geo, Vec3i gridN, Vec3d gMin
 
 void VRMeshSubdivision::subdivideGrid(VRGeometryPtr geo, Vec3d res, bool swapNormals) {
     auto gg = geo->getMesh();
+    if (!gg) return;
+
     Boundingbox box;
     GeoVectorPropertyMTRecPtr positions = gg->geo->getPositions();
     for (size_t i=0; i<positions->size(); i++) {

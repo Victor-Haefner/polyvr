@@ -178,8 +178,8 @@ vector<Vec3d> Triangulator::toSpace(const vector<Vec2d>& poly) {
 void Triangulator::tessellate() {
     GLuint id = glGenLists(1);  // create a display list
     GLUtesselator *tess = gluNewTess(); // create a tessellator
-    if(!id) return;          // failed to create a list, return 0
-    if(!tess) return;         // failed to create tessellation object, return 0
+    if (!id) { cout << " Warning in Triangulator::tessellate, failed to create GL list" << endl; return; }          // failed to create a list, return 0
+    if (!tess) { cout << " Warning in Triangulator::tessellate, failed to create GLU tessellation" << endl; return; }        // failed to create tessellation object, return 0
 
     // register callback functions
     current_triangulator = this;
