@@ -20,6 +20,7 @@
 #include "core/utils/toString.h"
 #include "core/utils/VRFunction.h"
 #include "core/utils/VRProgress.h"
+#include "core/scene/VRScene.h"
 #include "core/math/polygon.h"
 #include "core/math/pose.h"
 
@@ -27,19 +28,49 @@
 #include "core/objects/geometry/brep/VRBRepBound.h"
 #include "core/objects/geometry/brep/VRBRepSurface.h"
 
-/*
-
-IMPORTANT: ..not compiling? you need to install the stepcode package!
-open a terminal
-cd ~/Project/polyvr/dependencies
-sudo git pull
-cd ubuntu_14.04
-sudo gdebi -n libstepcode-dev.deb
-
-*/
-
 using namespace std;
 using namespace OSG;
+
+struct VRThreadPool {
+    vector<thread> threads;
+    VRMutex mtx;
+    int N = 1;
+    int next = 0;
+
+    VRThreadPool(int N) : N(N) {}
+    ~VRThreadPool() { stop(); }
+
+    void start(function<void(void)> cb) {
+        for (int i=0; i<N; i++) threads.push_back(thread(cb));
+    }
+
+    void stop() {
+        for (auto& t : threads) t.join();
+        threads.clear();
+        next = 0;
+    }
+
+    static void example() {
+        VRThreadPool pool(8);
+
+        auto workCb = [&]() {
+            int N = 100;
+            while(pool.next < N) {
+                int data = 0;
+                {
+                    VRLock lock(pool.mtx);
+                    if (pool.next >= N) break;
+                    data = rand();
+                    pool.next++;
+                }
+                //handle(data);
+            }
+        };
+
+        pool.start(workCb);
+        pool.stop();
+    }
+};
 
 void VRSTEP::loadT(string file, STEPfilePtr sfile, bool* done) {
     if (exists(file)) file = canonical(file);
@@ -1136,6 +1167,11 @@ struct VRSTEP::Surface : public VRSTEP::Instance, public VRBRepSurface {
     }
 };
 
+
+namespace glTessContext {
+    void createTessellationGLContext();
+}
+
 void VRSTEP::buildGeometries() {
     cout << blueBeg << "VRSTEP::buildGeometries start\n" << colEnd;
 
@@ -1229,26 +1265,48 @@ void VRSTEP::buildGeometries() {
         resGeos[shape.entity] = geo;
     };
 
-    threaded = false; // TODO: use VRThread because of OSG..
-    auto shapes = instancesByType["Advanced_Brep_Shape_Representation"];
 
-    if (threaded) {
+    auto shapes = instancesByType["Advanced_Brep_Shape_Representation"];
+    threaded = true;
+
+    if (threaded) { // Doesnt work! triangulator uses GL calls, they fail in threads! -> thread sub functions!
         int N = 1;
         int next = 0;
         VRMutex mtx;
 
-        auto doWork = [&]() {
+        auto doWork = [&](VRThreadWeakPtr tw) {
+            VRThreadPtr t = tw.lock();
+            cout << "syncFromMain" << endl;
+            if (t) t->syncFromMain();
+
+            glTessContext::createTessellationGLContext();
+
             while (true) {
                 if (next >= shapes.size()) break;
                 auto shape = shapes[next];
                 next++;
                 handleShape(shape);
+                cout << "next: " << next << ", count: " << shapes.size() << endl;
             }
+
+            cout << "syncToMain" << endl;
+            if (t) t->syncToMain();
+            cout << "thread done" << endl;
         };
 
-        vector<thread> tPool;
-        for (int i=0; i<N; i++) tPool.push_back(thread(doWork));
-        for (int i=0; i<N; i++) tPool[i].join();
+        vector<int> tIDs;
+        auto scene = VRScene::getCurrent();
+
+        for (int i=0; i<N; i++) {
+            threadCb = VRThreadCb::create( "geo load", doWork );
+            int tID = scene->initThread(threadCb, "step worker", false, 1);
+            tIDs.push_back(tID);
+            auto thread = scene->getThread(tID);
+            scene->setupThreadState(thread);
+            scene->importThreadState(thread);
+        }
+
+        for (auto tID : tIDs) scene->waitThread(tID);
     }
 
 
@@ -1533,8 +1591,9 @@ void VRSTEP::buildMaterials() {
 
 void VRSTEP::build() {
     blacklisted = 0;
-
     int N = instMgr->InstanceCount();
+    auto root = new VRSTEP::Node();
+
     for( int i=0; i<N; i++ ) { // add all instances to dict
         STEPentity* se = instMgr->GetApplication_instance(i);
         registerEntity(se);
@@ -1545,7 +1604,6 @@ void VRSTEP::build() {
         parseEntity(se);
     }
 
-    auto root = new VRSTEP::Node();
     for( int i=0; i<N; i++ ) {
         STEPentity* se = instMgr->GetApplication_instance(i);
         traverseEntity(se,0,root);
@@ -1620,6 +1678,36 @@ surfaces
 */
 
 
+namespace glTessContext {
+    #include <GL/glx.h>
+
+    void createTessellationGLContext() {
+        Display* dpy = 0;
+        if ( ! (dpy = XOpenDisplay(NULL)) ) {
+                fprintf(stderr, "cannot connect to X server\n\n");
+                return;
+        }
+
+        XID root;
+        root = DefaultRootWindow(dpy);
 
 
+        XVisualInfo* vis = 0;
+        GLint attr[] = { GLX_RGBA, GLX_DEPTH_SIZE, 24, GLX_DOUBLEBUFFER, None };
+        if( ! (vis = glXChooseVisual(dpy, 0, attr)) ) {
+                fprintf(stderr, "no appropriate visual found\n\n");
+                return;
+        }
 
+        GLXContext glc;
+        //if ( ! (glc = glXCreateContext(dpy, NULL, NULL, GL_TRUE)) ){
+        if ( ! (glc = glXCreateContext(dpy, vis, NULL, GL_TRUE)) ){
+                fprintf(stderr, "failed to create context\n\n");
+                return;
+        }
+
+        glXMakeCurrent(dpy, root, glc);
+
+        printf("vendor: %s\n", (const char*)glGetString(GL_VENDOR));
+    }
+}

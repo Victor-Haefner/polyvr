@@ -175,6 +175,7 @@ vector<Vec3d> Triangulator::toSpace(const vector<Vec2d>& poly) {
     return res;
 }
 
+
 void Triangulator::tessellate() {
     GLuint id = glGenLists(1);  // create a display list
     GLUtesselator *tess = gluNewTess(); // create a tessellator
