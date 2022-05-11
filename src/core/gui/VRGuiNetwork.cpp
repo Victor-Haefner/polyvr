@@ -8,6 +8,7 @@
 #include "core/networking/VRNetworkManager.h"
 #include "core/networking/VRNetworkClient.h"
 #include "core/networking/tcp/VRTCPClient.h"
+#include "core/networking/tcp/VRICEclient.h"
 #include "core/networking/udp/VRUDPClient.h"
 
 #include <gtk/gtk.h>
@@ -60,9 +61,55 @@ void VRGuiNetwork::addNode(string label, Vec2i pos) {
     //canvas->connect(canvas->getWidget(w->ID()), cw, "#FFEE00");
 }
 
+void VRGuiNetwork::addUDP(VRUDPClientPtr client, Vec2i& position) {
+    string name = client->getName();
+    string protocol = client->getProtocol(); // tcp or udp
+    string remoteUri = client->getConnectedUri();
+
+    string label = protocol + " cli " + name + " -> " + remoteUri;
+
+    addNode(label, position);
+}
+
+void VRGuiNetwork::addTCP(VRTCPClientPtr client, Vec2i& position) {
+    string name = client->getName();
+    string protocol = client->getProtocol(); // tcp or udp
+    string remoteUri = client->getConnectedUri();
+
+    string label = protocol + " cli " + name + " -> " + remoteUri;
+
+    addNode(label, position);
+}
+
+void VRGuiNetwork::addICE(VRICEClientPtr client, Vec2i& position) {
+    string name = client->getName();
+    string protocol = client->getProtocol(); // tcp or udp
+    string remoteUri = client->getConnectedUri();
+
+    string label = protocol + " cli " + name + " -> " + remoteUri;
+
+    addNode(label, position);
+
+    int i=1;
+    for (auto c : client->getClients()) {
+        cout << " VRGuiNetwork, channel clients with: " << c.first << endl;
+        addNode("peer: "+c.first, position+Vec2i(25, 50*i));
+        i++;
+
+        for (auto d : c.second) {
+            string sub_protocol = d.second->getProtocol();
+            Vec2i pos = position+Vec2i(50, 50*i);
+            if (sub_protocol == "udp") addUDP(dynamic_pointer_cast<VRUDPClient>(d.second), pos);
+            if (sub_protocol == "tcp") addTCP(dynamic_pointer_cast<VRTCPClient>(d.second), pos);
+            i++;
+        }
+    }
+    position += Vec2i(0,50*i);
+}
+
 void VRGuiNetwork::update() {
     clear();
-    addNode("Network Clients:", Vec2i(50,  50));
+    addNode("Network Clients:", Vec2i(50, 50));
 
     auto netMgr = VRSceneManager::get();
     if (!netMgr) return;
@@ -70,17 +117,15 @@ void VRGuiNetwork::update() {
     //map<string, VRNetworkRemote> remotes;
 
     auto clients = netMgr->getNetworkClients();
-    for (int i=0; i<clients.size(); i++) {
-        auto& client = clients[i];
-        string name = client->getName();
-        string protocol = client->getProtocol(); // tcp or udp
-        string remoteUri = client->getConnectedUri();
+    Vec2i position(100, 100);
+    for (auto& client : clients) {
+        if (!client) continue;
 
-        string label = protocol + " cli " + name + " -> " + remoteUri;
-
-
-
-        addNode(label, Vec2i(100, 100+i*50));
+        string protocol = client->getProtocol();
+        position += Vec2i(0, 50);
+        if (protocol == "udp") addUDP(dynamic_pointer_cast<VRUDPClient>(client), position);
+        if (protocol == "tcp") addTCP(dynamic_pointer_cast<VRTCPClient>(client), position);
+        if (protocol == "ice") addICE(dynamic_pointer_cast<VRICEClient>(client), position);
     }
 }
 

@@ -3,6 +3,7 @@
 
 #include <OpenSG/OSGConfig.h>
 #include "widgets/VRCanvasWidget.h"
+#include "core/networking/VRNetworkingFwd.h"
 #include "VRGuiFwd.h"
 
 struct _GtkWidget;
@@ -26,6 +27,11 @@ class VRGuiNetwork {
 
         void clear();
         void addNode(string label, Vec2i pos);
+
+        void addUDP(VRUDPClientPtr client, Vec2i& position);
+        void addTCP(VRTCPClientPtr client, Vec2i& position);
+        void addICE(VRICEClientPtr client, Vec2i& position);
+
         void onTabSwitched(_GtkWidget* page, unsigned int tab);
 
 	public:
