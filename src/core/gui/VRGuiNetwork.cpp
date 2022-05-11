@@ -54,11 +54,18 @@ void VRGuiNetwork::clear() {
     canvas->clear();
 }
 
-void VRGuiNetwork::addNode(string label, Vec2i pos) {
+int VRGuiNetwork::addNode(string label, Vec2i pos) {
     auto cw = VRNetworkWidgetPtr( new VRNetworkWidget(label, canvas->getCanvas()) );
     canvas->addWidget(cw->wID, cw);
     cw->move(Vec2d(pos));
+    return cw->wID;
     //canvas->connect(canvas->getWidget(w->ID()), cw, "#FFEE00");
+}
+
+void VRGuiNetwork::connectNodes(int n1, int n2) {
+    auto w1 = canvas->getWidget(n1);
+    auto w2 = canvas->getWidget(n2);
+    canvas->connect(w1, w2, "#000");
 }
 
 void VRGuiNetwork::addUDP(VRUDPClientPtr client, Vec2i& position) {
@@ -84,11 +91,13 @@ void VRGuiNetwork::addTCP(VRTCPClientPtr client, Vec2i& position) {
 void VRGuiNetwork::addICE(VRICEClientPtr client, Vec2i& position) {
     string name = client->getName();
     string protocol = client->getProtocol(); // tcp or udp
-    string remoteUri = client->getConnectedUri();
+    string remoteUri = client->getTurnServer();
 
-    string label = protocol + " cli " + name + " -> " + remoteUri;
+    string label = protocol + " cli " + name;
 
-    addNode(label, position);
+    int n1 = addNode(label, position);
+    int n2 = addNode(remoteUri, position+Vec2i(300, 0));
+    connectNodes(n1, n2);
 
     int i=1;
     for (auto c : client->getClients()) {
@@ -104,7 +113,7 @@ void VRGuiNetwork::addICE(VRICEClientPtr client, Vec2i& position) {
             i++;
         }
     }
-    position += Vec2i(0,50*i);
+    position += Vec2i(0,50*(i-1));
 }
 
 void VRGuiNetwork::update() {
@@ -127,6 +136,8 @@ void VRGuiNetwork::update() {
         if (protocol == "tcp") addTCP(dynamic_pointer_cast<VRTCPClient>(client), position);
         if (protocol == "ice") addICE(dynamic_pointer_cast<VRICEClient>(client), position);
     }
+
+    //canvas->updateLayout();
 }
 
 

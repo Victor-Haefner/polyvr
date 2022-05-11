@@ -40,6 +40,8 @@ void VRICEClient::setTurnServer(string url) {
 #endif
 }
 
+string VRICEClient::getTurnServer() { return turnURL + " ("+turnIP+")"; }
+
 void VRICEClient::setName(string n) {
     name = n;
     uID = broker->get(turnURL+"/regUser.php?NAME="+n)->getData();

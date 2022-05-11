@@ -56,6 +56,8 @@ class VRICEClient : public VRNetworkClient {
 		VRICEClientPtr ptr();
 
 		void setTurnServer(string url);
+		string getTurnServer();
+
         void onEvent( function<void(string)> f );
         void onMessage( function<void(string)> f );
 

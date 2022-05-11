@@ -26,7 +26,8 @@ class VRGuiNetwork {
         VRWidgetsCanvasPtr canvas;
 
         void clear();
-        void addNode(string label, Vec2i pos);
+        int addNode(string label, Vec2i pos);
+        void connectNodes(int n1, int n2);
 
         void addUDP(VRUDPClientPtr client, Vec2i& position);
         void addTCP(VRTCPClientPtr client, Vec2i& position);
