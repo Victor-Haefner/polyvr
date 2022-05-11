@@ -1,9 +1,13 @@
 #include "VRNetworkClient.h"
+#include "core/scene/VRSceneManager.h"
 
 using namespace OSG;
 
 VRNetworkClient::VRNetworkClient(string n) : name(n) {}
-VRNetworkClient::~VRNetworkClient() {}
+
+VRNetworkClient::~VRNetworkClient() {
+    VRSceneManager::get()->subNetworkClient(this);
+}
 
 string VRNetworkClient::getName() { return name; }
 string VRNetworkClient::getProtocol() { return protocol; }

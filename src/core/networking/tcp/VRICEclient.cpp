@@ -6,13 +6,15 @@
 #include "../rest/VRRestResponse.h"
 #include "core/utils/toString.h"
 #include "core/scene/VRScene.h"
+#include "core/scene/VRSceneManager.h"
 #ifndef WITHOUT_GTK
 #include "core/gui/VRGuiConsole.h"
 #endif
 
 using namespace OSG;
 
-VRICEClient::VRICEClient() {
+VRICEClient::VRICEClient() : VRNetworkClient("unnamed") {
+    protocol = "ice";
     broker = VRRestClient::create();
     updateCb = VRUpdateCb::create("ice update", bind(&VRICEClient::update, this));
     VRScene::getCurrent()->addTimeoutFkt(updateCb, 0, 1000);
@@ -22,7 +24,12 @@ VRICEClient::~VRICEClient() {
     removeUser(uID);
 }
 
-VRICEClientPtr VRICEClient::create() { return VRICEClientPtr( new VRICEClient() ); }
+VRICEClientPtr VRICEClient::create() {
+    auto c = VRICEClientPtr( new VRICEClient() );
+    VRSceneManager::get()->regNetworkClient(c);
+    return c;
+}
+
 VRICEClientPtr VRICEClient::ptr() { return static_pointer_cast<VRICEClient>(shared_from_this()); }
 
 void VRICEClient::setTurnServer(string url) {

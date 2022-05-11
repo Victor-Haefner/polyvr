@@ -345,7 +345,6 @@ class TCPClient {
 VRTCPClient::VRTCPClient(string name) : VRNetworkClient(name) { protocol = "tcp"; client = new TCPClient(); }
 
 VRTCPClient::~VRTCPClient() {
-    VRSceneManager::get()->subNetworkClient(this);
     delete client;
 }
 

@@ -10,7 +10,7 @@
 using namespace std;
 OSG_BEGIN_NAMESPACE;
 
-class VRNetworkClient {
+class VRNetworkClient : public std::enable_shared_from_this<VRNetworkClient> {
 	private:
 
     protected:

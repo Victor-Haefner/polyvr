@@ -152,7 +152,6 @@ class UDPClient {
 VRUDPClient::VRUDPClient(string name) : VRNetworkClient(name) { protocol = "udp"; client = new UDPClient(); }
 
 VRUDPClient::~VRUDPClient() {
-    VRSceneManager::get()->subNetworkClient(this);
     delete client;
 }
 

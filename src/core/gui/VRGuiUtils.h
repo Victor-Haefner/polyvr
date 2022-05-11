@@ -92,7 +92,7 @@ void setComboboxCallback(string b, function<void()> sig);
 void setTreeviewSelectCallback(string treeview, function<void()> sig);
 void setTreeviewDoubleclickCallback(string treeview, function<void(GtkTreePath*, GtkTreeViewColumn*)> sig);
 void setCellRendererCallback(string renderer, function<void(char*, char*)> sig, bool after = true);
-void setNoteBookCallback(string nb, function<void(_GtkWidget*, guint, gpointer)> sig);
+void setNoteBookCallback(string nb, function<void(GtkWidget*, guint)> sig);
 void setSliderCallback(string s, function<bool(int,double)> sig);
 void setEntryCallback(string e, function<void()> sig, bool onEveryChange = false, bool onFocusOut = true, bool onActivate = true);
 void setEntryCallback(GtkWidget* e, function<void()> sig, bool onEveryChange = false, bool onFocusOut = true, bool onActivate = true);

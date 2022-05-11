@@ -2,6 +2,7 @@
 #include "widgets/VRWidgetsCanvas.h"
 
 #include "VRGuiUtils.h"
+#include "VRGuiBuilder.h"
 
 #include "core/scene/VRSceneManager.h"
 #include "core/networking/VRNetworkManager.h"
@@ -36,10 +37,17 @@ int VRNetworkWidget::ID() {
 VRGuiNetwork::VRGuiNetwork() {
     canvas = VRWidgetsCanvas::create("networkCanvas");
     setToolButtonCallback("networkButtonUpdate", bind(&VRGuiNetwork::update, this));
+    setNoteBookCallback("notebook3", bind(&VRGuiNetwork::onTabSwitched, this, placeholders::_1, placeholders::_2));
     update();
 }
 
 VRGuiNetwork::~VRGuiNetwork() {}
+
+void VRGuiNetwork::onTabSwitched(GtkWidget* page, unsigned int tab) {
+    auto nbook = VRGuiBuilder::get()->get_widget("notebook3");
+    string name = gtk_notebook_get_tab_label_text(GTK_NOTEBOOK(nbook), page);
+    if (name == "Network") update();
+}
 
 void VRGuiNetwork::clear() {
     canvas->clear();

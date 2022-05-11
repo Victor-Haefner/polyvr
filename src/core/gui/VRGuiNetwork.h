@@ -5,6 +5,8 @@
 #include "widgets/VRCanvasWidget.h"
 #include "VRGuiFwd.h"
 
+struct _GtkWidget;
+
 using namespace std;
 OSG_BEGIN_NAMESPACE;
 
@@ -24,6 +26,7 @@ class VRGuiNetwork {
 
         void clear();
         void addNode(string label, Vec2i pos);
+        void onTabSwitched(_GtkWidget* page, unsigned int tab);
 
 	public:
 		VRGuiNetwork();

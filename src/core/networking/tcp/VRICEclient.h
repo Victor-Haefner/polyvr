@@ -2,7 +2,7 @@
 #define VRICECLIENT_H_INCLUDED
 
 #include <OpenSG/OSGConfig.h>
-#include "../VRNetworkingFwd.h"
+#include "../VRNetworkClient.h"
 #include "core/utils/VRFunctionFwd.h"
 
 #include <map>
@@ -13,7 +13,7 @@
 using namespace std;
 OSG_BEGIN_NAMESPACE;
 
-class VRICEClient : public std::enable_shared_from_this<VRICEClient> {
+class VRICEClient : public VRNetworkClient {
     public:
         enum CHANNEL {
             NONE = 0,
@@ -26,7 +26,6 @@ class VRICEClient : public std::enable_shared_from_this<VRICEClient> {
         map<string, map<CHANNEL, VRNetworkClientPtr> > clients;
         map<string, string> users;
 
-        string name;
         string uID;
         string turnURL;
         string turnIP;
