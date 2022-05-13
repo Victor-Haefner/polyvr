@@ -51,6 +51,7 @@ PyMethodDef VRPyPlanet::methods[] = {
     {"getMaterial", PyWrap(Planet, getMaterial, "Get planet material", VRMaterialPtr ) },
     {"setParameters", PyWrapOpt(Planet, setParameters, "Set planet parameters: radius, texture, isLit, sector size", "0.1", void, double, string, bool, double ) },
     {"setLayermode", PyWrap(Planet, setLayermode, "Set planet layer mode: full, minimum", void, string ) },
+    {"setLit", PyWrap(Planet, setLit, "Set planet lit", void, bool ) },
     {"addPin", PyWrapOpt(Planet, addPin, "Add a pin: label, north, east, length", "10000", int, string, double, double, double) },
     {"remPin", PyWrap(Planet, remPin, "Remove a pin: ID", void, int) },
     {"fromLatLongPosition", PyWrapOpt(Planet, fromLatLongPosition, "Get Position on planet based on lat and long, optionally local", "0", Vec3d, double, double, bool) },

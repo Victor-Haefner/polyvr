@@ -23,7 +23,7 @@ void VRCanvasWidget::move(Vec2d p) {
     pos = p;
     float w = gtk_widget_get_allocated_width(GTK_WIDGET(widget));
     float h = gtk_widget_get_allocated_height(GTK_WIDGET(widget));
-    cout << "move fixed " << GTK_WIDGET(widget) << ", " << int(p[0]-w*0.5) << " " << int(p[1]-h*0.5) << ", size: " << Vec2i(w,h) << endl;
+    //cout << "move fixed " << GTK_WIDGET(widget) << ", " << int(p[0]-w*0.5) << " " << int(p[1]-h*0.5) << ", size: " << Vec2i(w,h) << endl;
     gtk_fixed_move(canvas, GTK_WIDGET(widget), p[0]-w*0.5, p[1]-h*0.5);
 }
 
@@ -59,10 +59,20 @@ Vec2d VRCanvasWidget::getAnchorPoint(Vec2d p) {
     int H = gtk_widget_get_allocated_height(GTK_WIDGET(widget));
     float w = abs(p[0]-pos[0]);
     float h = abs(p[1]-pos[1]);
-    if (w >= h && p[0] < pos[0]) return pos - Vec2d(W*0.5, 0);
-    if (w >= h && p[0] > pos[0]) return pos + Vec2d(W*0.5, 0);
-    if (w < h  && p[1] < pos[1]) return pos - Vec2d(0, H*0.5);
-    if (w < h  && p[1] > pos[1]) return pos + Vec2d(0, H*0.5);
+
+    if (origin == TOP_LEFT) {
+        if (w >= h && p[0] < pos[0]) return pos + Vec2d(0, H*0.5);
+        if (w >= h && p[0] > pos[0]) return pos + Vec2d(W, H*0.5);
+        if (w < h  && p[1] < pos[1]) return pos + Vec2d(W*0.5, 0);
+        if (w < h  && p[1] > pos[1]) return pos + Vec2d(W*0.5, H);
+    }
+
+    if (origin == CENTER) {
+        if (w >= h && p[0] < pos[0]) return pos - Vec2d(W*0.5, 0);
+        if (w >= h && p[0] > pos[0]) return pos + Vec2d(W*0.5, 0);
+        if (w < h  && p[1] < pos[1]) return pos - Vec2d(0, H*0.5);
+        if (w < h  && p[1] > pos[1]) return pos + Vec2d(0, H*0.5);
+    }
     return pos;
 }
 

@@ -20,6 +20,8 @@ VRNetworkWidget::VRNetworkWidget(string lbl, _GtkFixed* canvas) : VRCanvasWidget
     i++;
     wID = i;
 
+    origin = TOP_LEFT;
+
     auto frame = gtk_frame_new("");
     auto box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
     auto label = gtk_label_new(lbl.c_str());
@@ -65,7 +67,7 @@ int VRGuiNetwork::addNode(string label, Vec2i pos) {
 void VRGuiNetwork::connectNodes(int n1, int n2) {
     auto w1 = canvas->getWidget(n1);
     auto w2 = canvas->getWidget(n2);
-    canvas->connect(w1, w2, "#000");
+    canvas->connect(w1, w2, "#FF00FF");
 }
 
 void VRGuiNetwork::addUDP(VRUDPClientPtr client, Vec2i& position) {

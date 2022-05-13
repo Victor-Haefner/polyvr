@@ -13,10 +13,17 @@ using namespace std;
 OSG_BEGIN_NAMESPACE;
 
 class VRCanvasWidget : public std::enable_shared_from_this<VRCanvasWidget> {
+    public:
+        enum ORIGIN {
+            TOP_LEFT = 0,
+            CENTER
+        };
+
 	public:
         Vec2d pos;
         bool visible = true;
         bool subTreeFolded = false;
+        ORIGIN origin = CENTER;
 
         _GtkFixed* canvas = 0;
         _GtkFrame* widget = 0;

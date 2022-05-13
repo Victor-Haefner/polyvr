@@ -51,10 +51,15 @@ void VRConnectorWidget::update() {
     if (ws1 && ws2) {
         Vec2d a1 = ws1->getAnchorPoint(ws2->pos);
         Vec2d a2 = ws2->getAnchorPoint(ws1->pos);
+
         float x1 = a1[0];
         float x2 = a2[0];
         float y1 = a1[1];
         float y2 = a2[1];
+
+        Vec4d geom(x1,x2,y1,y2);
+        if (lastGeometry.dist(geom) < 0.1) return;
+        lastGeometry = geom;
 
         float w = abs(x2-x1);
         float h = abs(y2-y1);

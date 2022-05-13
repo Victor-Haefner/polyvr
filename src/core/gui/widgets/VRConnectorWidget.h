@@ -5,7 +5,7 @@
 #include "addons/Semantics/VRSemanticsFwd.h"
 
 #include <string>
-#include <OpenSG/OSGConfig.h>
+#include <OpenSG/OSGVector.h>
 
 struct _GtkWidget;
 struct _GtkFixed;
@@ -22,6 +22,7 @@ struct VRConnectorWidget {
     VRCanvasWidgetWeakPtr w1;
     VRCanvasWidgetWeakPtr w2;
     bool visible = true;
+    Vec4d lastGeometry;
 
     VRConnectorWidget(_GtkFixed* canvas, string color);
     ~VRConnectorWidget();

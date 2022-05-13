@@ -604,7 +604,7 @@ void VRSound::write_buffer(AVFormatContext *oc, OutputStream *ost, VRSoundBuffer
         if (ret < 0) { fprintf(stderr, "Error while resampling\n"); return; }
 
         if (frame && ret != ost->frame->nb_samples) {
-            fprintf(stderr, "Too few samples returned from lavr\n");
+            //fprintf(stderr, "Too few samples returned from lavr\n");
             return;
         }
 
