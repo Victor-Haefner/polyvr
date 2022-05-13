@@ -27,10 +27,10 @@ class VRGuiNetwork {
 
         void clear();
         int addNode(string label, Vec2i pos);
-        void connectNodes(int n1, int n2);
+        void connectNodes(int n1, int n2, string color);
 
-        void addUDP(VRUDPClientPtr client, Vec2i& position);
-        void addTCP(VRTCPClientPtr client, Vec2i& position);
+        int addUDP(VRUDPClientPtr client, Vec2i& position);
+        int addTCP(VRTCPClientPtr client, Vec2i& position);
         void addICE(VRICEClientPtr client, Vec2i& position);
 
         void onTabSwitched(_GtkWidget* page, unsigned int tab);
