@@ -5,6 +5,7 @@
 #include "VRGuiBuilder.h"
 
 #include "core/scene/VRSceneManager.h"
+#include "core/utils/VRFunction.h"
 #include "core/networking/VRNetworkManager.h"
 #include "core/networking/VRNetworkClient.h"
 #include "core/networking/tcp/VRTCPClient.h"
@@ -42,6 +43,10 @@ VRGuiNetwork::VRGuiNetwork() {
     setToolButtonCallback("networkButtonUpdate", bind(&VRGuiNetwork::update, this));
     setNoteBookCallback("notebook3", bind(&VRGuiNetwork::onTabSwitched, this, placeholders::_1, placeholders::_2));
     update();
+
+    auto sm = VRSceneManager::get();
+    updateFlowsCb = VRUpdateCb::create("network_ui_update", bind(&VRGuiNetwork::updateFlows, this));
+    sm->addUpdateFkt(updateFlowsCb);
 }
 
 VRGuiNetwork::~VRGuiNetwork() {}
@@ -49,7 +54,10 @@ VRGuiNetwork::~VRGuiNetwork() {}
 void VRGuiNetwork::onTabSwitched(GtkWidget* page, unsigned int tab) {
     auto nbook = VRGuiBuilder::get()->get_widget("notebook3");
     string name = gtk_notebook_get_tab_label_text(GTK_NOTEBOOK(nbook), page);
-    if (name == "Network") update();
+    if (name == "Network") {
+        update();
+        tabIsVisible = true;
+    } else tabIsVisible = false;
 }
 
 void VRGuiNetwork::clear() {
@@ -152,5 +160,17 @@ void VRGuiNetwork::update() {
     //canvas->updateLayout();
 }
 
+void VRGuiNetwork::updateFlows() {
+    if (!tabIsVisible) return;
 
+    auto netMgr = VRSceneManager::get();
+    if (!netMgr) return;
+    auto clients = netMgr->getNetworkClients();
+
+    for (auto& client : clients) {
+        if (!client) continue;
+        double kbs = client->getOutFlow().getKBperSec();
+        if (kbs > 0) cout << " updateFlows, kbs: " << kbs << endl;
+    }
+}
 

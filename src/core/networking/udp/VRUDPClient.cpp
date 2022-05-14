@@ -15,6 +15,7 @@ using boost::asio::ip::udp;
 
 class UDPClient {
     private:
+        VRUDPClient* parent;
         boost::asio::io_service io_service;
         boost::asio::io_service::work worker;
         udp::endpoint remote_endpoint;
@@ -73,6 +74,11 @@ class UDPClient {
             boost::system::error_code ec;
             auto N = socket.send_to(boost::asio::buffer(messages.front()), remote_endpoint, 0, ec);
 
+            if (parent) {
+                auto& oFlow = parent->getOutFlow();
+                oFlow.logFlow(N*0.001);
+            }
+
             if (!ec) {
                 VRLock lock(mtx);
                 messages.pop_front();
@@ -88,7 +94,7 @@ class UDPClient {
         }
 
     public:
-        UDPClient() : worker(io_service), socket(io_service) {
+        UDPClient(VRUDPClient* c) : parent(c), worker(io_service), socket(io_service) {
             socket.open(udp::v4());
             service = thread([this]() { runService(); });
         }
@@ -149,7 +155,7 @@ class UDPClient {
 };
 
 
-VRUDPClient::VRUDPClient(string name) : VRNetworkClient(name) { protocol = "udp"; client = new UDPClient(); }
+VRUDPClient::VRUDPClient(string name) : VRNetworkClient(name) { protocol = "udp"; client = new UDPClient(this); }
 
 VRUDPClient::~VRUDPClient() {
     delete client;

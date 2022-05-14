@@ -27,6 +27,8 @@ class TCPClient {
         typedef std::shared_ptr<tcp::socket> SocketPtr;
         typedef std::shared_ptr<tcp::acceptor> AcceptorPtr;
 
+        VRTCPClient* parent = 0;
+
         boost::asio::io_service io_service;
         boost::asio::io_service::work worker;
         SocketPtr socket;
@@ -60,6 +62,11 @@ class TCPClient {
         }
 
         bool read_handler(const boost::system::error_code& ec, size_t N) {
+            if (parent) {
+                auto& iFlow = parent->getInFlow();
+                iFlow.logFlow(N*0.001);
+            }
+
             //cout << "TCPClient, " << this << " read_handler, got: " << N << endl;
             if (ec) {
                 cout << "TCPClient, read_handler failed with: " << ec.message() << endl;
@@ -107,6 +114,10 @@ class TCPClient {
 
         void processQueue() {
             auto onWritten = [this](boost::system::error_code ec, size_t N) { // write queued messages until done, then go read
+                if (parent) {
+                    auto& oFlow = parent->getOutFlow();
+                    oFlow.logFlow(N*0.001);
+                }
                 //cout << " async write finished " << N << endl;
                 if (!ec) {
                     VRLock lock(mtx);
@@ -128,7 +139,7 @@ class TCPClient {
         }
 
     public:
-        TCPClient() : worker(io_service) {
+        TCPClient(VRTCPClient* p) : parent(p), worker(io_service) {
             socket = SocketPtr( new tcp::socket(io_service) );
             service = thread([this]() { runService(); });
         }
@@ -342,7 +353,7 @@ class TCPClient {
 };
 
 
-VRTCPClient::VRTCPClient(string name) : VRNetworkClient(name) { protocol = "tcp"; client = new TCPClient(); }
+VRTCPClient::VRTCPClient(string name) : VRNetworkClient(name) { protocol = "tcp"; client = new TCPClient(this); }
 
 VRTCPClient::~VRTCPClient() {
     delete client;
@@ -367,9 +378,9 @@ void VRTCPClient::connectToPeer(int localPort, string remoteIP, int remotePort) 
     client->connectToPeer(localPort, remoteIP, remotePort);
 }
 
-void VRTCPClient::close() {
+void VRTCPClient::close() { // TODO: the onConnect and onMessage callbacks get lost here!
     delete client;
-    client = new TCPClient();
+    client = new TCPClient(this);
 }
 
 string VRTCPClient::getPublicIP(bool cached) { return VRTCPUtils::getPublicIP(cached); }

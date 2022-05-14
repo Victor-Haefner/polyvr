@@ -4,6 +4,7 @@
 #include <OpenSG/OSGConfig.h>
 #include "widgets/VRCanvasWidget.h"
 #include "core/networking/VRNetworkingFwd.h"
+#include "core/utils/VRFunctionFwd.h"
 #include "VRGuiFwd.h"
 
 struct _GtkWidget;
@@ -24,6 +25,8 @@ class VRNetworkWidget : public VRCanvasWidget {
 class VRGuiNetwork {
 	private:
         VRWidgetsCanvasPtr canvas;
+        bool tabIsVisible = false;
+        VRUpdateCbPtr updateFlowsCb;
 
         void clear();
         int addNode(string label, Vec2i pos);
@@ -34,6 +37,8 @@ class VRGuiNetwork {
         void addICE(VRICEClientPtr client, Vec2i& position);
 
         void onTabSwitched(_GtkWidget* page, unsigned int tab);
+
+        void updateFlows();
 
 	public:
 		VRGuiNetwork();
