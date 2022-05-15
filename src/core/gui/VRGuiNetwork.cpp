@@ -119,13 +119,15 @@ void VRGuiNetwork::updateFlows() {
 
     for (auto& client : clients) {
         if (!client) continue;
+        auto cw = canvas->getWidget( flows[client.get()] );
+        if (!cw) continue;
+
         auto curve = client->getOutFlow().getKBperSec();
         double bMax = 1;
         for (auto c : curve) bMax = max(c*1000, bMax);
         for (auto& c : curve) c = c*1000/bMax;
 
-        auto& fw = flows[client.get()];
-        fw->setCurve(curve);
+        if (auto fw = dynamic_pointer_cast<VRDataFlowWidget>(cw)) fw->setCurve(curve);
     }
 }
 
@@ -133,7 +135,7 @@ int VRGuiNetwork::addFlow(Vec2i pos, VRNetworkClient* key) {
     auto dfw = VRDataFlowWidgetPtr( new VRDataFlowWidget(canvas->getCanvas()) );
     canvas->addWidget(dfw->wID, dfw);
     dfw->move(Vec2d(pos));
-    flows[key] = dfw.get();
+    flows[key] = dfw->wID;
     return dfw->wID;
 }
 
