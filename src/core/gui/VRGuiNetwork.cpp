@@ -6,6 +6,7 @@
 
 #include "core/scene/VRSceneManager.h"
 #include "core/utils/VRFunction.h"
+#include "core/utils/toString.h"
 #include "core/networking/VRNetworkManager.h"
 #include "core/networking/VRNetworkClient.h"
 #include "core/networking/tcp/VRTCPClient.h"
@@ -44,19 +45,26 @@ VRNetNodeWidget::VRNetNodeWidget(string lbl, _GtkFixed* canvas) : VRNetworkWidge
 }
 
 VRDataFlowWidget::VRDataFlowWidget(_GtkFixed* canvas) : VRNetworkWidget(canvas) {
+    curve = vector<double>(W,0);
+
     area = gtk_drawing_area_new();
+    connect_signal<void, cairo_t*>(area, bind(&VRDataFlowWidget::onExpose, this, placeholders::_1), "draw");
     gtk_widget_set_size_request(area, W, H);
+
     gtk_container_add(GTK_CONTAINER(widget), area);
     gtk_widget_show_all(GTK_WIDGET(widget));
-
-    connect_signal<void, cairo_t*>(area, bind(&VRDataFlowWidget::onExpose, this, placeholders::_1), "draw");
 }
 
-void VRDataFlowWidget::setCurve(vector<double> data) { curve = data; }
+void VRDataFlowWidget::setCurve(vector<double> data) {
+    curve = data;
+    if (curve.size() != W) {
+        W = curve.size();
+        gtk_widget_set_size_request(area, W, H);
+    }
+    gtk_widget_queue_draw_area(area, 0, 0, W, H);
+}
 
 bool VRDataFlowWidget::onExpose(cairo_t* cr) {
-    for (int i=0; i<W; i++) curve.push_back(i/double(W)); // test
-
     guint width = gtk_widget_get_allocated_width (area);
     guint height = gtk_widget_get_allocated_height (area);
 
@@ -67,8 +75,8 @@ bool VRDataFlowWidget::onExpose(cairo_t* cr) {
     gtk_style_context_get_color (context, gtk_style_context_get_state (context), &color);
     gdk_cairo_set_source_rgba (cr, &color);
 
-    for (int i=0; i<W; i++) {
-        int h = curve[i]*height;
+    for (int i=0; i<min(W,int(width)); i++) {
+        int h = max(1,int(curve[i]*height));
         cairo_rectangle(cr, i, height-h, 1, h);
     }
     cairo_fill (cr);
@@ -102,10 +110,30 @@ void VRGuiNetwork::clear() {
     canvas->clear();
 }
 
-int VRGuiNetwork::addFlow(Vec2i pos) {
+void VRGuiNetwork::updateFlows() {
+    if (!tabIsVisible) return;
+
+    auto netMgr = VRSceneManager::get();
+    if (!netMgr) return;
+    auto clients = netMgr->getNetworkClients();
+
+    for (auto& client : clients) {
+        if (!client) continue;
+        auto curve = client->getOutFlow().getKBperSec();
+        double bMax = 1;
+        for (auto c : curve) bMax = max(c*1000, bMax);
+        for (auto& c : curve) c = c*1000/bMax;
+
+        auto& fw = flows[client.get()];
+        fw->setCurve(curve);
+    }
+}
+
+int VRGuiNetwork::addFlow(Vec2i pos, VRNetworkClient* key) {
     auto dfw = VRDataFlowWidgetPtr( new VRDataFlowWidget(canvas->getCanvas()) );
     canvas->addWidget(dfw->wID, dfw);
     dfw->move(Vec2d(pos));
+    flows[key] = dfw.get();
     return dfw->wID;
 }
 
@@ -133,8 +161,8 @@ int VRGuiNetwork::addUDP(VRUDPClientPtr client, Vec2i& position) {
     int n2 = addNode(remoteUri, position+Vec2i(200, 0));
     connectNodes(n1, n2, "#FF00FF");
 
-    addFlow(position+Vec2i(20,22));
-    addFlow(position+Vec2i(50,22));
+    addFlow(position+Vec2i(20,22), client.get());
+    addFlow(position+Vec2i(50,22), client.get());
     return n1;
 }
 
@@ -205,19 +233,5 @@ void VRGuiNetwork::update() {
     }
 
     //canvas->updateLayout();
-}
-
-void VRGuiNetwork::updateFlows() {
-    if (!tabIsVisible) return;
-
-    auto netMgr = VRSceneManager::get();
-    if (!netMgr) return;
-    auto clients = netMgr->getNetworkClients();
-
-    for (auto& client : clients) {
-        if (!client) continue;
-        double kbs = client->getOutFlow().getKBperSec();
-        if (kbs > 0) cout << " updateFlows, kbs: " << kbs << endl;
-    }
 }
 

@@ -5,14 +5,12 @@ using namespace OSG;
 
 
 VRNetworkFlow::VRNetworkFlow() {
-    kbs_queue = vector<double>(10, 0);
+    kbs_queue = vector<double>(30, 0);
 }
 
-double VRNetworkFlow::getKBperSec() { return kbs; }
+vector<double>& VRNetworkFlow::getKBperSec() { return kbs_queue; }
 
 void VRNetworkFlow::logFlow(double kb) {
-    cout << "  --------- VRNetworkClient::logFlow " << kb << endl;
-
     int N = kbs_queue.size();
 
     kbs_queue[kbs_queue_ptr] = kb;

@@ -21,7 +21,7 @@ class VRNetworkFlow {
         VRNetworkFlow();
 
         void logFlow(double kb);
-        double getKBperSec();
+        vector<double>& getKBperSec();
 };
 
 class VRNetworkClient : public std::enable_shared_from_this<VRNetworkClient> {
