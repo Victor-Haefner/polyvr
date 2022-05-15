@@ -13,22 +13,19 @@
 #include "core/networking/udp/VRUDPClient.h"
 
 #include <gtk/gtk.h>
+#include <gdk/gdk.h>
 
 using namespace OSG;
 
-VRNetworkWidget::VRNetworkWidget(string lbl, _GtkFixed* canvas) : VRCanvasWidget(canvas) {
+VRNetworkWidget::VRNetworkWidget(_GtkFixed* canvas) : VRCanvasWidget(canvas) {
     static int i = 0;
     i++;
     wID = i;
 
     origin = TOP_LEFT;
 
-    auto frame = gtk_frame_new("");
-    auto box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
-    auto label = gtk_label_new(lbl.c_str());
+    auto frame = gtk_frame_new(0);
     gtk_fixed_put(canvas, frame, 0, 0);
-    gtk_box_pack_start(GTK_BOX(box), label, true, true, 2);
-    gtk_container_add(GTK_CONTAINER(frame), box);
 
     widget = GTK_FRAME(frame);
     gtk_widget_show_all(frame);
@@ -36,6 +33,47 @@ VRNetworkWidget::VRNetworkWidget(string lbl, _GtkFixed* canvas) : VRCanvasWidget
 
 int VRNetworkWidget::ID() {
     return wID;
+}
+
+VRNetNodeWidget::VRNetNodeWidget(string lbl, _GtkFixed* canvas) : VRNetworkWidget(canvas) {
+    auto box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+    auto label = gtk_label_new(lbl.c_str());
+    gtk_box_pack_start(GTK_BOX(box), label, true, true, 2);
+    gtk_container_add(GTK_CONTAINER(widget), box);
+    gtk_widget_show_all(GTK_WIDGET(widget));
+}
+
+VRDataFlowWidget::VRDataFlowWidget(_GtkFixed* canvas) : VRNetworkWidget(canvas) {
+    area = gtk_drawing_area_new();
+    gtk_widget_set_size_request(area, W, H);
+    gtk_container_add(GTK_CONTAINER(widget), area);
+    gtk_widget_show_all(GTK_WIDGET(widget));
+
+    connect_signal<void, cairo_t*>(area, bind(&VRDataFlowWidget::onExpose, this, placeholders::_1), "draw");
+}
+
+void VRDataFlowWidget::setCurve(vector<double> data) { curve = data; }
+
+bool VRDataFlowWidget::onExpose(cairo_t* cr) {
+    for (int i=0; i<W; i++) curve.push_back(i/double(W)); // test
+
+    guint width = gtk_widget_get_allocated_width (area);
+    guint height = gtk_widget_get_allocated_height (area);
+
+    GtkStyleContext* context = gtk_widget_get_style_context (area);
+    gtk_render_background(context, cr, 0, 0, width, height);
+
+    GdkRGBA color;
+    gtk_style_context_get_color (context, gtk_style_context_get_state (context), &color);
+    gdk_cairo_set_source_rgba (cr, &color);
+
+    for (int i=0; i<W; i++) {
+        int h = curve[i]*height;
+        cairo_rectangle(cr, i, height-h, 1, h);
+    }
+    cairo_fill (cr);
+
+    return FALSE;
 }
 
 VRGuiNetwork::VRGuiNetwork() {
@@ -64,12 +102,18 @@ void VRGuiNetwork::clear() {
     canvas->clear();
 }
 
+int VRGuiNetwork::addFlow(Vec2i pos) {
+    auto dfw = VRDataFlowWidgetPtr( new VRDataFlowWidget(canvas->getCanvas()) );
+    canvas->addWidget(dfw->wID, dfw);
+    dfw->move(Vec2d(pos));
+    return dfw->wID;
+}
+
 int VRGuiNetwork::addNode(string label, Vec2i pos) {
-    auto cw = VRNetworkWidgetPtr( new VRNetworkWidget(label, canvas->getCanvas()) );
+    auto cw = VRNetNodeWidgetPtr( new VRNetNodeWidget(label, canvas->getCanvas()) );
     canvas->addWidget(cw->wID, cw);
     cw->move(Vec2d(pos));
     return cw->wID;
-    //canvas->connect(canvas->getWidget(w->ID()), cw, "#FFEE00");
 }
 
 void VRGuiNetwork::connectNodes(int n1, int n2, string color) {
@@ -88,6 +132,9 @@ int VRGuiNetwork::addUDP(VRUDPClientPtr client, Vec2i& position) {
     int n1 = addNode(label, position);
     int n2 = addNode(remoteUri, position+Vec2i(200, 0));
     connectNodes(n1, n2, "#FF00FF");
+
+    addFlow(position+Vec2i(20,22));
+    addFlow(position+Vec2i(50,22));
     return n1;
 }
 

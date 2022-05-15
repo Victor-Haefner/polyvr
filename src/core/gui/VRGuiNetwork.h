@@ -8,6 +8,7 @@
 #include "VRGuiFwd.h"
 
 struct _GtkWidget;
+struct _cairo;
 
 using namespace std;
 OSG_BEGIN_NAMESPACE;
@@ -17,9 +18,29 @@ class VRNetworkWidget : public VRCanvasWidget {
         int wID;
 
     public:
-        VRNetworkWidget(string label, _GtkFixed* canvas);
+        VRNetworkWidget(_GtkFixed* canvas);
 
         int ID() override;
+};
+
+class VRNetNodeWidget : public VRNetworkWidget {
+    public:
+        VRNetNodeWidget(string label, _GtkFixed* canvas);
+};
+
+class VRDataFlowWidget : public VRNetworkWidget {
+    private:
+        _GtkWidget* area = 0;
+        vector<double> curve;
+        int W = 24;
+        int H = 16;
+
+        bool onExpose(_cairo* cr);
+
+    public:
+        VRDataFlowWidget(_GtkFixed* canvas);
+
+        void setCurve(vector<double> data);
 };
 
 class VRGuiNetwork {
@@ -29,6 +50,7 @@ class VRGuiNetwork {
         VRUpdateCbPtr updateFlowsCb;
 
         void clear();
+        int addFlow(Vec2i pos);
         int addNode(string label, Vec2i pos);
         void connectNodes(int n1, int n2, string color);
 
