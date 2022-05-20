@@ -382,8 +382,16 @@ Color4f VRTexture::getPixel(int i) {
     if (!valid) return Color4f();
 
     if (N == 1) {
-        float* f = (float*)data;
-        float d = f[i];
+        float d = 0;
+
+        if (f == Image::OSG_UINT8_IMAGEDATA)   d = ((UInt8*)data)[i]/256.0;
+        if (f == Image::OSG_INT16_IMAGEDATA)   d = ((Int16*)data)[i]/32768.0;
+        if (f == Image::OSG_UINT16_IMAGEDATA)  d = ((UInt16*)data)[i]/65536.0;
+        if (f == Image::OSG_FLOAT16_IMAGEDATA) d = ((Real16*)data)[i];
+        if (f == Image::OSG_INT32_IMAGEDATA)   d = ((Int32*)data)[i]/2147483648.0;
+        if (f == Image::OSG_UINT32_IMAGEDATA)  d = ((UInt32*)data)[i]/4294967296.0;
+        if (f == Image::OSG_FLOAT32_IMAGEDATA) d = ((Real32*)data)[i];
+
         res = Color4f(d, d, d, 1.0);
     }
 
