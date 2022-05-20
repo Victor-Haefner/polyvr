@@ -21,6 +21,7 @@ ptrFwd(VRElectricVisualization);
 ptrFwd(VRWire);
 ptrFwd(VRWiringSimulation);
 ptrFwd(VRElectricComponent);
+ptrFwd(VRLADEngine);
 ptrFwd(VRLADVariable);
 
 ptrFwd(VRAtom);

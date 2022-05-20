@@ -407,6 +407,8 @@
 		<Unit filename="src/addons/Engineering/Milling/VRPyMillingMachine.h" />
 		<Unit filename="src/addons/Engineering/Milling/VRPyMillingWorkPiece.cpp" />
 		<Unit filename="src/addons/Engineering/Milling/VRPyMillingWorkPiece.h" />
+		<Unit filename="src/addons/Engineering/Programming/VRLADEngine.cpp" />
+		<Unit filename="src/addons/Engineering/Programming/VRLADEngine.h" />
 		<Unit filename="src/addons/Engineering/Programming/VRLADVariable.cpp" />
 		<Unit filename="src/addons/Engineering/Programming/VRLADVariable.h" />
 		<Unit filename="src/addons/Engineering/Space/VRRocketExhaust.cpp" />
