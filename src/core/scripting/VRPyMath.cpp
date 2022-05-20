@@ -17,7 +17,7 @@ PyObject* VRPyMath::sin(VRPyMath* self, PyObject* args) { float v = VRPyBase::pa
 template<> PyTypeObject VRPyBaseT<Vec2d>::type = {
     PyObject_HEAD_INIT(NULL)
     0,                         /*ob_size*/
-    "VR.Math.Vec3",             /*tp_name*/
+    "VR.Math.Vec2",             /*tp_name*/
     sizeof(VRPyVec2f),             /*tp_basicsize*/
     0,                         /*tp_itemsize*/
     (destructor)dealloc, /*tp_dealloc*/
@@ -36,7 +36,7 @@ template<> PyTypeObject VRPyBaseT<Vec2d>::type = {
     0,                         /*tp_setattro*/
     0,                         /*tp_as_buffer*/
     Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE | Py_TPFLAGS_CHECKTYPES, /*tp_flags*/
-    "Vec3 binding",           /* tp_doc */
+    "Vec2 binding",           /* tp_doc */
     0,		               /* tp_traverse */
     0,		               /* tp_clear */
     0,		               /* tp_richcompare */

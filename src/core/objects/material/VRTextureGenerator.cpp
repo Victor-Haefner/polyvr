@@ -35,8 +35,8 @@ void VRTextureGenerator::set(VRTexturePtr t) {
 
 void VRTextureGenerator::read(string path) {
     auto t = VRTexture::create();
-    t->read(path);
-    set(t);
+    bool b = t->read(path);
+    if (b) set(t);
 }
 
 void VRTextureGenerator::add(string type, float amount, Color4f c1, Color4f c2) {

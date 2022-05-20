@@ -41,8 +41,10 @@ void VRTexture::setFloatData(vector<float> data, Vec3i layout, int chanels, int 
     internal_format = ipf;
 }
 
-void VRTexture::read(string path) {
-    if (!img->read(path.c_str())) cout << " VRTexture::read from file '" << path << "' failed!" << endl;
+bool VRTexture::read(string path) {
+    bool b = img->read(path.c_str());
+    if (!b) cout << " VRTexture::read from file '" << path << "' failed!" << endl;
+    return b;
 }
 
 void VRTexture::readGIS(string path) {
