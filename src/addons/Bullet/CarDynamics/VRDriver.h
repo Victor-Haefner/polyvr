@@ -17,7 +17,6 @@ class VRDriver {
         bool active = false;
         float to = 1;
         float lastPathT = -1;
-        float lastPathT2 = -1;
         PathPtr p_path;
         PathPtr v_path;
         float target_speed = 8;

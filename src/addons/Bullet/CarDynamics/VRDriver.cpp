@@ -44,7 +44,6 @@ void VRDriver::update() {
         if (tPath > lastPathT + tAim*3) tPath = lastPathT;
         if (tPath < lastPathT - tAim*3) tPath = lastPathT;
     }
-    lastPathT2 = lastPathT;
     lastPathT = tPath;
 
 
@@ -100,6 +99,7 @@ void VRDriver::update() {
 }
 
 void VRDriver::followPath(PathPtr p, PathPtr v, float to) {
+    lastPathT = -1;
     p_path = p;
     v_path = v;
     this->to = to;
@@ -107,8 +107,8 @@ void VRDriver::followPath(PathPtr p, PathPtr v, float to) {
 }
 
 void VRDriver::setTargetSpeed( float speed, bool uCl ) { target_speed = speed; useClutch = uCl; }
-void VRDriver::stop() { active = false; }
-void VRDriver::resume() { active = true; }
+void VRDriver::stop() { active = false; lastPathT = -1; }
+void VRDriver::resume() { active = true; lastPathT = -1; }
 bool VRDriver::isDriving() { return active; }
 
 
