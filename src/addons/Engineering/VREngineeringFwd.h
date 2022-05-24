@@ -32,6 +32,7 @@ ptrFwd(VRCrystal);
 
 ptrFwd(VRAMLLoader);
 
+ptrFwd(VRSpaceMission);
 ptrFwd(VRRocketExhaust);
 
 }

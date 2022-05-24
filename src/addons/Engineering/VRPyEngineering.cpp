@@ -16,6 +16,7 @@ simpleVRPyType(WiringSimulation, 0);
 simpleVRPyType(ElectricComponent, 0);
 simpleVRPyType(LADVariable, New_ptr);
 simpleVRPyType(RocketExhaust, New_VRObjects_ptr);
+simpleVRPyType(SpaceMission, New_ptr);
 
 template<> PyObject* VRPyTypeCaster::cast(const VRElectricComponent::Address& a) {
     map<string, string> v;
@@ -192,5 +193,15 @@ PyMethodDef VRPyRobotArm::methods[] = {
 
 PyMethodDef VRPyRocketExhaust::methods[] = {
     {"set", PyWrap( RocketExhaust, set, "Set exhaust amount, from 0.0 to 1.0", void, float ) },
+    {NULL}
+};
+
+typedef map<double, string> mapStrDouble;
+
+PyMethodDef VRPySpaceMission::methods[] = {
+    {"setParameters", PyWrap( SpaceMission, setParameters, "Set name, start, stop", void, string, double, double ) },
+    {"addWayPoint", PyWrap( SpaceMission, addWayPoint, "Add way point, name, time", void, string, double ) },
+    {"getName", PyWrap( SpaceMission, getName, "Return mission name", string ) },
+    {"getWayPoints", PyWrap( SpaceMission, getWayPoints, "Return waypoints", mapStrDouble ) },
     {NULL}
 };

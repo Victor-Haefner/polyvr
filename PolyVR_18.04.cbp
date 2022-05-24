@@ -413,6 +413,8 @@
 		<Unit filename="src/addons/Engineering/Programming/VRLADVariable.h" />
 		<Unit filename="src/addons/Engineering/Space/VRRocketExhaust.cpp" />
 		<Unit filename="src/addons/Engineering/Space/VRRocketExhaust.h" />
+		<Unit filename="src/addons/Engineering/Space/VRSpaceMission.cpp" />
+		<Unit filename="src/addons/Engineering/Space/VRSpaceMission.h" />
 		<Unit filename="src/addons/Engineering/VREngineeringFwd.h" />
 		<Unit filename="src/addons/Engineering/VRNumberingEngine.cpp" />
 		<Unit filename="src/addons/Engineering/VRNumberingEngine.h" />

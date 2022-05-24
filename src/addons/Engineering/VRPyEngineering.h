@@ -5,6 +5,7 @@
 #include "VRRobotArm.h"
 #include "VRPipeSystem.h"
 #include "VRNumberingEngine.h"
+#include "Space/VRSpaceMission.h"
 #include "Space/VRRocketExhaust.h"
 #include "Wiring/VRWire.h"
 #include "Wiring/VRWiringSimulation.h"
@@ -50,6 +51,10 @@ struct VRPyLADVariable : VRPyBaseT<OSG::VRLADVariable> {
 };
 
 struct VRPyRocketExhaust : VRPyBaseT<OSG::VRRocketExhaust> {
+    static PyMethodDef methods[];
+};
+
+struct VRPySpaceMission : VRPyBaseT<OSG::VRSpaceMission> {
     static PyMethodDef methods[];
 };
 
