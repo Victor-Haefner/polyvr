@@ -413,6 +413,8 @@
 		<Unit filename="src/addons/Engineering/Programming/VRLADVariable.h" />
 		<Unit filename="src/addons/Engineering/Space/VRRocketExhaust.cpp" />
 		<Unit filename="src/addons/Engineering/Space/VRRocketExhaust.h" />
+		<Unit filename="src/addons/Engineering/Space/VRSpaceMission.cpp" />
+		<Unit filename="src/addons/Engineering/Space/VRSpaceMission.h" />
 		<Unit filename="src/addons/Engineering/VREngineeringFwd.h" />
 		<Unit filename="src/addons/Engineering/VRNumberingEngine.cpp" />
 		<Unit filename="src/addons/Engineering/VRNumberingEngine.h" />
@@ -1137,13 +1139,13 @@
 		<Unit filename="src/core/objects/geometry/brep/VRBRepBound.h" />
 		<Unit filename="src/core/objects/geometry/brep/VRBRepEdge.cpp" />
 		<Unit filename="src/core/objects/geometry/brep/VRBRepEdge.h" />
-+		<Unit filename="src/core/objects/geometry/brep/VRBRepFwd.h" />
+		<Unit filename="src/core/objects/geometry/brep/VRBRepFwd.h" />
 		<Unit filename="src/core/objects/geometry/brep/VRBRepSurface.cpp" />
 		<Unit filename="src/core/objects/geometry/brep/VRBRepSurface.h" />
 		<Unit filename="src/core/objects/geometry/brep/VRBRepUtils.cpp" />
 		<Unit filename="src/core/objects/geometry/brep/VRBRepUtils.h" />
-+		<Unit filename="src/core/objects/geometry/brep/VRPyBRep.cpp" />
-+		<Unit filename="src/core/objects/geometry/brep/VRPyBRep.h" />
+		<Unit filename="src/core/objects/geometry/brep/VRPyBRep.cpp" />
+		<Unit filename="src/core/objects/geometry/brep/VRPyBRep.h" />
 		<Unit filename="src/core/objects/geometry/sprite/VRSprite.cpp" />
 		<Unit filename="src/core/objects/geometry/sprite/VRSprite.h" />
 		<Unit filename="src/core/objects/geometry/sprite/VRSpriteResizeTool.cpp" />
