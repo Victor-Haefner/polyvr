@@ -82,7 +82,7 @@ class VRLADEngine : public std::enable_shared_from_this<VRLADEngine> {
                 pair<VRLADVariablePtr, bool> getVariable(int i = -1);
                 bool isOperand();
                 bool isBlock();
-                int computeOperandOutput(int value = 0);
+                int computeOperandOutput(int value = 0, bool verbose = false);
                 int computeBlockOutput(int value = 0);
                 string toString();
         };
@@ -121,7 +121,14 @@ class VRLADEngine : public std::enable_shared_from_this<VRLADEngine> {
 		void read();
 		void iterate();
 
-		CompileUnitPtr getCompileUnit(string name);
+		vector<string> getCompileUnits();
+		CompileUnitPtr getCompileUnit(string cuID);
+		vector<string> getCompileUnitWires(string cuID, bool powered = false);
+        vector<string> getCompileUnitWireOutParts(string cuID, string wID);
+        vector<string> getCompileUnitPartOutWires(string cuID, string wID);
+
+		int getCompileUnitWireSignal(string cuID, string wID);
+		VRLADVariablePtr getCompileUnitPartVariable(string cuID, string pID);
 };
 
 OSG_END_NAMESPACE;

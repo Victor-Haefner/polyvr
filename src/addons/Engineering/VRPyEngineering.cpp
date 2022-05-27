@@ -143,6 +143,12 @@ PyMethodDef VRPyLADEngine::methods[] = {
     {"setElectricEngine", PyWrap( LADEngine, setElectricEngine, "Set electric system", void, VRElectricSystemPtr ) },
     {"read", PyWrap( LADEngine, read, "Read data", void ) },
     {"iterate", PyWrap( LADEngine, iterate, "Run iteration", void ) },
+    {"getCompileUnits", PyWrap( LADEngine, getCompileUnits, "Return IDs of compile units", vector<string> ) },
+    {"getCompileUnitWires", PyWrapOpt( LADEngine, getCompileUnitWires, "Return IDs of compile units wires, optional pnly powered wired", "0", vector<string>, string, bool ) },
+    {"getCompileUnitWireSignal", PyWrap( LADEngine, getCompileUnitWireSignal, "Return IDs of compile unit wire signal", int, string, string ) },
+    {"getCompileUnitWireOutParts", PyWrap( LADEngine, getCompileUnitWireOutParts, "Return IDs of compile units parts that are outputs of a wire", vector<string>, string, string ) },
+    {"getCompileUnitPartVariable", PyWrap( LADEngine, getCompileUnitPartVariable, "Return LAD variable from part", VRLADVariablePtr, string, string ) },
+    {"getCompileUnitPartOutWires", PyWrap( LADEngine, getCompileUnitPartOutWires, "Return IDs of compile units wires that are outputs of a part", vector<string>, string, string ) },
     {NULL}
 };
 

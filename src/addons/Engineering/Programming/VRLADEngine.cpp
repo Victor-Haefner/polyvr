@@ -19,6 +19,59 @@ VRLADEnginePtr VRLADEngine::ptr() { return static_pointer_cast<VRLADEngine>(shar
 
 void VRLADEngine::setElectricEngine(VRElectricSystemPtr e) { esystem = e; }
 
+vector<string> VRLADEngine::getCompileUnits() {
+    vector<string> res;
+    for (auto c : compileUnits) res.push_back(c.first);
+    return res;
+}
+
+vector<string> VRLADEngine::getCompileUnitWires(string cuID, bool powered) {
+    vector<string> res;
+    if (!compileUnits.count(cuID)) return res;
+    auto cu = compileUnits[cuID];
+    if (!powered) for (auto w : cu->wires) res.push_back(w.first);
+    else for (auto w : cu->poweredWireIDs) if (cu->wires.count(w)) res.push_back(w);
+    return res;
+}
+
+vector<string> VRLADEngine::getCompileUnitWireOutParts(string cuID, string wID) {
+    vector<string> res;
+    if (!compileUnits.count(cuID)) return res;
+    auto cu = compileUnits[cuID];
+    if (!cu->wires.count(wID)) return res;
+    auto wire = cu->wires[wID];
+    for (auto ID : wire->outputs) {
+        if (cu->parts.count(ID)) res.push_back(ID);
+    }
+    return res;
+}
+
+vector<string> VRLADEngine::getCompileUnitPartOutWires(string cuID, string pID) {
+    vector<string> res;
+    if (!compileUnits.count(cuID)) return res;
+    auto cu = compileUnits[cuID];
+    if (!cu->parts.count(pID)) return res;
+    auto part = cu->parts[pID];
+    for (auto ID : part->outputs) {
+        if (cu->wires.count(ID)) res.push_back(ID);
+    }
+    return res;
+}
+
+int VRLADEngine::getCompileUnitWireSignal(string cuID, string wID) {
+    if (!compileUnits.count(cuID)) return 0;
+    auto cu = compileUnits[cuID];
+    if (!cu->wires.count(wID)) return 0;
+    return cu->wires[wID]->lastComputationResult;
+}
+
+VRLADVariablePtr VRLADEngine::getCompileUnitPartVariable(string cuID, string pID) {
+    if (!compileUnits.count(cuID)) return 0;
+    auto cu = compileUnits[cuID];
+    if (!cu->parts.count(pID)) return 0;
+    return cu->parts[pID]->getVariable().first;
+}
+
 VRLADEngine::CompileUnit::CompileUnit(string ID) : ID(ID) {}
 
 string VRLADEngine::CompileUnit::toString() {
@@ -100,12 +153,15 @@ bool VRLADEngine::Part::isBlock() {
     return has(blocks, name);
 };
 
-int VRLADEngine::Part::computeOperandOutput(int value) {
+int VRLADEngine::Part::computeOperandOutput(int value, bool verbose) {
     auto variable = getVariable().first;
+
     if (!variable) {
-        //print "Warning:", name, "has no variable!";
+        if (verbose) cout << "Warning: " << name << " has no variable!" << endl;
         return value;
     }
+
+    if (verbose) cout << "computeOperandOutput, name: " << name << " " << variable << endl;
 
     if (name == "Coil" ) {
         if (variable->getName() == "Prc_Ext_Ok") return 0; // TODO: resolve this workaround!
@@ -122,6 +178,7 @@ int VRLADEngine::Part::computeOperandOutput(int value) {
 
     int var = toFloat(variable->getValue());
     if (name == "Contact" || name == "PContact" ) {
+        if (verbose) cout << " compute Contact, negated: " << negated << ", var: " << var << ", svar: " << variable->getValue() << endl;
         if (negated && var == 0) return value ;
         if (negated && var == 1) return 0;
         return var*value;
@@ -466,7 +523,7 @@ void VRLADEngine::CompileUnit::setVariable(string var, string val) {
         cout << "WARNING in VRLADEngine::CompileUnit::setVariable, no variable found called " << var << endl;
         return;
     }
-	auto V = variables["Button_Ext_Stop"];
+	auto V = variables[var];
 	if (V) V->setValue("1");
 	else cout << "WARNING in VRLADEngine::CompileUnit::setVariable, variable " << var << " is null" << endl;
 }
@@ -577,6 +634,8 @@ void VRLADEngine::iterate() { // TODO: once the import is finished tackle this
 				Imax = max(Imax,part->lastComputationResult);
 			}
 		}
+
+		//if (wire->lastComputationResult != Imax) cout << wire->cu->ID << " toggle wire: " << wire->ID << " -> " << Imax << endl;
 		wire->lastComputationResult = Imax;
 	};
 
@@ -588,18 +647,21 @@ void VRLADEngine::iterate() { // TODO: once the import is finished tackle this
 				Imax = max(Imax,wire->lastComputationResult);
 			}
 		}
+
 		if (part->isOperand()) Imax = part->computeOperandOutput(Imax);
 		if (part->isBlock()) Imax = part->computeBlockOutput(Imax);
+		/*if (part->lastComputationResult != Imax) {
+            cout << part->cu->ID << " toggle part: " << part->ID << " -> " << Imax;
+            for (auto v : part->getVariables()) cout << ", v: " << v.first->getName() << "," << v.second;
+            cout << endl;
+		}*/
 		part->lastComputationResult = Imax;
 	};
 
 	bool doContinue = true;
 
-	cout << "VRLADEngine::iterate" << endl;
-
 	while (doContinue) {
 		doContinue = false;
-        cout << " VRLADEngine::subiterate" << endl;
 		for (auto cu : compileUnits) {
 			auto stack = getCompileUnitEvalStack(cu.second); // only once
 			vector<int> state1;
@@ -625,7 +687,7 @@ void VRLADEngine::iterate() { // TODO: once the import is finished tackle this
                 int N = min(state1.size(), state2.size());
                 for (int i=0; i<N; i++) {
 					if (state1[i] != state2[i]) {
-                        cout << " --> state change " << i << ", " << stack[i]->name << ", " << stack[i]->lastComputationResult << endl;
+                        //cout << " --> state change " << i << ", " << stack[i]->name << ", " << stack[i]->lastComputationResult << endl;
 						doContinue = true;
 						break;
 					}
