@@ -15,6 +15,7 @@ simpleVRPyType(Wire, 0);
 simpleVRPyType(WiringSimulation, 0);
 simpleVRPyType(ElectricComponent, 0);
 simpleVRPyType(LADVariable, New_ptr);
+simpleVRPyType(LADEngine, New_ptr);
 simpleVRPyType(RocketExhaust, New_VRObjects_ptr);
 simpleVRPyType(SpaceMission, New_ptr);
 
@@ -135,6 +136,13 @@ PyMethodDef VRPyElectricComponent::methods[] = {
     {"getPosition", PyWrap( ElectricComponent, getPosition, "Get position", Vec3d ) },
     {"getConnection", PyWrap( ElectricComponent, getConnection, "Get connection", VRWirePtr, string ) },
     {"addPort", PyWrap( ElectricComponent, addPort, "Add port", void, string, string, string, string ) },
+    {NULL}
+};
+
+PyMethodDef VRPyLADEngine::methods[] = {
+    {"setElectricEngine", PyWrap( LADEngine, setElectricEngine, "Set electric system", void, VRElectricSystemPtr ) },
+    {"read", PyWrap( LADEngine, read, "Read data", void ) },
+    {"iterate", PyWrap( LADEngine, iterate, "Run iteration", void ) },
     {NULL}
 };
 

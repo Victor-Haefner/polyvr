@@ -14,10 +14,12 @@ OSG_BEGIN_NAMESPACE;
 class VRLADEngine : public std::enable_shared_from_this<VRLADEngine> {
     public:
         class CompileUnit;
+        class Component;
         class Wire;
         class Access;
         class Part;
         typedef shared_ptr<CompileUnit> CompileUnitPtr;
+        typedef shared_ptr<Component> ComponentPtr;
         typedef shared_ptr<Wire> WirePtr;
         typedef shared_ptr<Access> AccessPtr;
         typedef shared_ptr<Part> PartPtr;
@@ -35,20 +37,29 @@ class VRLADEngine : public std::enable_shared_from_this<VRLADEngine> {
                 string toString();
         };
 
-        class Wire {
+        class Component {
             public:
-                string name = "wire";
-                string ID = ID;
-                CompileUnitPtr cu;
+                string ID;
+                string name;
+                CompileUnitPtr cu = 0;
                 vector<string> inputs;
                 vector<string> outputs;
-                string accessID;
-                string operand;
-                bool powerrail = false;
                 int lastComputationResult = 0;
 
             public:
+                Component(string ID, CompileUnitPtr cu, string name);
+                virtual ~Component();
+        };
+
+        class Wire : public Component {
+            public:
+                string accessID;
+                string operand;
+                bool powerrail = false;
+
+            public:
                 Wire(string ID, CompileUnitPtr cu);
+                ~Wire();
 
                 void addInput(string ID);
                 void addOutput(string ID);
@@ -57,19 +68,14 @@ class VRLADEngine : public std::enable_shared_from_this<VRLADEngine> {
                 string toString();
         };
 
-        class Part {
+        class Part : public Component  {
             public:
-                string ID;
-                CompileUnitPtr cu = 0;
-                string name;
-                vector<string> inputs;
-                vector<string> outputs;
                 vector<string> operands;
                 bool negated = false;
-                int lastComputationResult = 0;
 
             public:
                 Part(string ID, CompileUnitPtr cu, string name);
+                ~Part();
 
                 vector<pair<WirePtr,bool>> getOperands();
                 vector<pair<VRLADVariablePtr,bool>> getVariables();
@@ -93,6 +99,8 @@ class VRLADEngine : public std::enable_shared_from_this<VRLADEngine> {
             public:
                 CompileUnit(string ID);
                 string toString();
+
+                void setVariable(string var, string val);
         };
 
 
@@ -112,6 +120,8 @@ class VRLADEngine : public std::enable_shared_from_this<VRLADEngine> {
 		void setElectricEngine(VRElectricSystemPtr esystem);
 		void read();
 		void iterate();
+
+		CompileUnitPtr getCompileUnit(string name);
 };
 
 OSG_END_NAMESPACE;
