@@ -5,6 +5,7 @@
 
 #include "core/utils/toString.h"
 #include "core/utils/xml.h"
+#include "core/utils/system/VRSystem.h"
 
 #include <functional>
 #include <algorithm>
@@ -271,20 +272,6 @@ string VRLADEngine::Wire::toString() {
 void VRLADEngine::read() {
 	string folder = "MA_Thesis/03_TIA_Portal/Gumball_Line_180117_V14.ap14/Extruder_Machine/";
 	string tagTablePath = folder+"PLC-Variablen/Default tag table.xml";
-	string processPath = folder+"Programmbausteine/003_Process.xml";
-	string processDataPath = folder+"Programmbausteine/003_Process_Data.xml";
-	string hmiPath = folder+"Programmbausteine/005_HMI_Data.xml";
-	string alarmsPath = folder+"Programmbausteine/004_Alarms_Data.xml";
-	string pawPath = folder+"Programmbausteine/003_VFD_PAW.xml";
-	string pewPath = folder+"Programmbausteine/003_VFD_PEW.xml";
-
-	/** TODO, improve import
-	Main.xml -> 003_Process   004_Alarms   005_HMI
-	003_Process.xml and 004_Alarms.xml -> 003_VFD_PAW
-	003_Process.xml and 005_HMI.xml    -> 003_VFD_PEW
-	003_Process.xml and 004_Alarms.xml -> 003_Process_Data
-	003_Process.xml and 004_Alarms.xml -> 004_Alarms_Data
-	*/
 
 	auto readVariables = [&](string path, string source) {
 		XML xml;
@@ -325,128 +312,121 @@ void VRLADEngine::read() {
 			esystem->addVariable(variable->getName(), variable);
 		}
 
-        readVariables(processDataPath, "internal");
-        readVariables(hmiPath, "hmi");
-        readVariables(alarmsPath, "alarm");
-        readVariables(pawPath, "vfd");
-        readVariables(pewPath, "vfd");
+        for (auto f : openFolder(folder+"Programmbausteine")) {
+            readVariables(folder+"Programmbausteine/"+f, getFileName(f));
+        }
 	};
 
-    XML processTable;
-    processTable.read(processPath); // HMI_Ext_Start + HMI_Ext_Start_M mit powered wires;
-
-	// get compile units;
-	auto getCompileUnits = [&]() {
-		vector<XMLElementPtr> res;
-		for (auto FC : processTable.getRoot()->getChildren("SW.Blocks.FC")) {
-			for (auto objectList : FC->getChildren("ObjectList")) {
-				for (auto compileUnit : objectList->getChildren("SW.Blocks.CompileUnit")) {
-					res.push_back(compileUnit);
-				}
-			}
-		}
-		return res;
-	};
-
-	// get all compile units;
-	auto setupCompileUnits = [&](map<string, VRLADVariablePtr> variables) {
-		map<string, CompileUnitPtr> compileUnits;
-		for (auto compileUnitNode : getCompileUnits()) {
-            vector<XMLElementPtr> rparts;
-            vector<XMLElementPtr> rwires;
-            vector<XMLElementPtr> raccesses;
-            for (auto attributeList : compileUnitNode->getChildren("AttributeList")) {
-                for (auto networkSource : attributeList->getChildren("NetworkSource")) {
-                    // StatementList ?
-                    for (auto flgNet : networkSource->getChildren("FlgNet")) {
-                        for (auto parts : flgNet->getChildren("Parts")) {
-                            for (auto access : parts->getChildren("Access")) raccesses.push_back(access);
-                            for (auto part : parts->getChildren("Part")) rparts.push_back(part);
-                        }
-                        for (auto wires : flgNet->getChildren("Wires")) {
-                            for (auto wire : wires->getChildren("Wire")) rwires.push_back(wire);
-                        }
+	auto setupCompileUnit = [&](XMLElementPtr compileUnitNode, map<string, VRLADVariablePtr>& variables) {
+        vector<XMLElementPtr> rparts;
+        vector<XMLElementPtr> rwires;
+        vector<XMLElementPtr> raccesses;
+        for (auto attributeList : compileUnitNode->getChildren("AttributeList")) {
+            for (auto networkSource : attributeList->getChildren("NetworkSource")) {
+                // StatementList ?
+                for (auto flgNet : networkSource->getChildren("FlgNet")) {
+                    for (auto parts : flgNet->getChildren("Parts")) {
+                        for (auto access : parts->getChildren("Access")) raccesses.push_back(access);
+                        for (auto part : parts->getChildren("Part")) rparts.push_back(part);
+                    }
+                    for (auto wires : flgNet->getChildren("Wires")) {
+                        for (auto wire : wires->getChildren("Wire")) rwires.push_back(wire);
                     }
                 }
             }
+        }
 
-			auto compileUnit = CompileUnitPtr( new CompileUnit(compileUnitNode->getAttribute("ID")) );
-			compileUnit->variables = variables;
+        auto compileUnit = CompileUnitPtr( new CompileUnit(compileUnitNode->getAttribute("ID")) );
+        compileUnit->variables = variables;
 
-			for (auto partNode : rparts ) {
-				auto part = PartPtr( new Part(partNode->getAttribute("UId"), compileUnit, partNode->getAttribute("Name")) );
-				if (partNode->getChild("Negated")) part->negated = true;
-				compileUnit->parts[part->ID] = part;
-			}
+        for (auto partNode : rparts ) {
+            auto part = PartPtr( new Part(partNode->getAttribute("UId"), compileUnit, partNode->getAttribute("Name")) );
+            if (partNode->getChild("Negated")) part->negated = true;
+            compileUnit->parts[part->ID] = part;
+        }
 
-			for (auto accessNode : raccesses ) {
-				auto UId = accessNode->getAttribute("UId");
-				auto access = AccessPtr( new Access(UId, compileUnit));
-				auto Symbol = accessNode->getChild("Symbol");
-				if (Symbol) {
-					for (auto component : Symbol->getChildren("Component")) {
-						auto name = component->getAttribute("Name");
-						access->components.push_back(name);
-						if (variables.count(name)) access->variable = name;
-					}
-				}
+        for (auto accessNode : raccesses ) {
+            auto UId = accessNode->getAttribute("UId");
+            auto access = AccessPtr( new Access(UId, compileUnit));
+            auto Symbol = accessNode->getChild("Symbol");
+            if (Symbol) {
+                for (auto component : Symbol->getChildren("Component")) {
+                    auto name = component->getAttribute("Name");
+                    access->components.push_back(name);
+                    if (variables.count(name)) access->variable = name;
+                }
+            }
 
-				auto Constant = accessNode->getChild("Constant"); //if there are constant accesses;
-				if (Constant) {
-					access->constant = true;
-					for (auto value : Constant->getChildren("ConstantValue")) {
-						access->components.push_back(value->getText());
-					}
-					for (auto value : Constant->getChildren("ConstantType")) {
-						access->components.push_back(value->getText());
-					}
-				}
+            auto Constant = accessNode->getChild("Constant"); //if there are constant accesses;
+            if (Constant) {
+                access->constant = true;
+                for (auto value : Constant->getChildren("ConstantValue")) {
+                    access->components.push_back(value->getText());
+                }
+                for (auto value : Constant->getChildren("ConstantType")) {
+                    access->components.push_back(value->getText());
+                }
+            }
 
-				compileUnit->accesses[access->ID] = access;
-			}
-			compileUnits[compileUnit->ID] = compileUnit;
+            compileUnit->accesses[access->ID] = access;
+        }
+        compileUnits[compileUnit->ID] = compileUnit;
 
-			//cout << "    ----------- cu " << compileUnit->ID << ", N wires: " << rwires.size() << endl;
+        //cout << "    ----------- cu " << compileUnit->ID << ", N wires: " << rwires.size() << endl;
 
-			for (auto wireNode : rwires ) {
-				auto wire = WirePtr( new Wire(wireNode->getAttribute("UId"), compileUnit) );
-				auto identCon = wireNode->getChild("IdentCon");
-				if (identCon) wire->accessID = identCon->getAttribute("UId");
-				auto powerrail = wireNode->getChild("Powerrail");
-				if (powerrail) {
-					wire->powerrail = true;
-					compileUnit->poweredWireIDs.push_back(wire->ID);
-				}
-				for (auto nameCon : wireNode->getChildren("NameCon")) {
-					auto UId = nameCon->getAttribute("UId");
-					auto name = nameCon->getAttribute("Name");
-					if (startsWith(name, "pre")) wire->addOutput(UId) ; // TODO: check if correct;
-					else if (startsWith(name, "in")) wire->addOutput(UId);
-					else if (startsWith(name, "eno")) wire->addInput(UId);
-					else if (startsWith(name, "en")) wire->addOutput(UId);
-					else if (startsWith(name, "out")) wire->addInput(UId);
-					else if (startsWith(name, "operand")) wire->addOutput(UId);
-					if (compileUnit->accesses.count(wire->accessID)) wire->addOperand(UId);
-				}
-                //cout << "      add wire " << wire->ID << endl;
-				compileUnit->wires[wire->ID] = wire;
-			}
-		}
+        for (auto wireNode : rwires ) {
+            auto wire = WirePtr( new Wire(wireNode->getAttribute("UId"), compileUnit) );
+            auto identCon = wireNode->getChild("IdentCon");
+            if (identCon) wire->accessID = identCon->getAttribute("UId");
+            auto powerrail = wireNode->getChild("Powerrail");
+            if (powerrail) {
+                wire->powerrail = true;
+                compileUnit->poweredWireIDs.push_back(wire->ID);
+            }
+            for (auto nameCon : wireNode->getChildren("NameCon")) {
+                auto UId = nameCon->getAttribute("UId");
+                auto name = nameCon->getAttribute("Name");
+                if (startsWith(name, "pre")) wire->addOutput(UId) ; // TODO: check if correct;
+                else if (startsWith(name, "in")) wire->addOutput(UId);
+                else if (startsWith(name, "eno")) wire->addInput(UId);
+                else if (startsWith(name, "en")) wire->addOutput(UId);
+                else if (startsWith(name, "out")) wire->addInput(UId);
+                else if (startsWith(name, "operand")) wire->addOutput(UId);
+                if (compileUnit->accesses.count(wire->accessID)) wire->addOperand(UId);
+            }
+            //cout << "      add wire " << wire->ID << endl;
+            compileUnit->wires[wire->ID] = wire;
+        }
 
-		return compileUnits;
+	};
+
+	// get compile units
+	auto setupCompileUnits = [&](map<string, VRLADVariablePtr>& variables) {
+		for (auto f : openFolder(folder+"Programmbausteine")) {
+            if (f != "003_Process.xml") continue; // TODO
+
+            XML xml;
+            xml.read(folder+"Programmbausteine/"+f);
+
+            for (auto FC : xml.getRoot()->getChildren("SW.Blocks.FC")) {
+                for (auto objectList : FC->getChildren("ObjectList")) {
+                    for (auto compileUnit : objectList->getChildren("SW.Blocks.CompileUnit")) {
+                        setupCompileUnit(compileUnit, variables);
+                    }
+                }
+            }
+        }
 	};
 
 	getVariables();
-	compileUnits = setupCompileUnits(esystem->getLADVariables());
+	auto vars = esystem->getLADVariables();
+	setupCompileUnits(vars);
 
 	//Test all variables for start function;
 	unit2E = getCompileUnit("2E");
-	//unit2E = compileUnits["2E"];
 	if (unit2E) {
         unit2E->setVariable("Button_Ext_Stop", "1"); // schalter am extruder, info muss aus ECAD kommen, E9->6;
         unit2E->setVariable("Prc_Ext_Ok", "1"); // viele inputs aus ECAD, E9->1, E9->2, E9->3, E9->6, E9->7, DB2->DBX4->0;
-        //unit2E->variables["Button_Ext_Stop"]->setValue("1") ; // schalter am extruder, info muss aus ECAD kommen, E9->6;
-        //unit2E->variables["Prc_Ext_Ok"]->setValue("1") ; // viele inputs aus ECAD, E9->1, E9->2, E9->3, E9->6, E9->7, DB2->DBX4->0;
 	}
 }
 
