@@ -202,18 +202,24 @@ int VRLADEngine::Part::computeBlockOutput(int value) {
         // get function from data!
 
         // hard coded test!
+        if (inputs.size() < 2) return 0;
         float in1 = toFloat(inputs[0]->getValue());
         float in2 = toFloat(inputs[1]->getValue());
+        if (outputs.size() < 1) return 0;
         outputs[0]->setValue( ::toString(in1 * in2) );
         return 1;
     }
 
     if (name == "Move" ) {
+        if (inputs.size() < 1) return 0;
+        if (outputs.size() < 1) return 0;
         outputs[0]->setValue( inputs[0]->getValue() );
         return 1;
     }
 
     if (name == "Round") { // TODO
+        if (inputs.size() < 1) return 0;
+        if (outputs.size() < 1) return 0;
         outputs[0]->setValue( inputs[0]->getValue() );
         return 1;
     }
@@ -263,31 +269,45 @@ string VRLADEngine::Wire::toString() {
 }
 
 void VRLADEngine::read() {
-	string namespace1 = "{http://www->siemens->com/automation/Openness/SW/NetworkSource/FlgNet/v1}";
-	string namespace2 = "{http://www->siemens->com/automation/Openness/SW/Interface/v2}";
 	string folder = "MA_Thesis/03_TIA_Portal/Gumball_Line_180117_V14.ap14/Extruder_Machine/";
+	string tagTablePath = folder+"PLC-Variablen/Default tag table.xml";
+	string processPath = folder+"Programmbausteine/003_Process.xml";
+	string processDataPath = folder+"Programmbausteine/003_Process_Data.xml";
+	string hmiPath = folder+"Programmbausteine/005_HMI_Data.xml";
+	string alarmsPath = folder+"Programmbausteine/004_Alarms_Data.xml";
+	string pawPath = folder+"Programmbausteine/003_VFD_PAW.xml";
+	string pewPath = folder+"Programmbausteine/003_VFD_PEW.xml";
 
-	auto getTag = [](XMLElementPtr node) {
-//		if (not hasattr(node, "tag")) return "noTag";
-		string tag = node->getName();
-		if (tag[0] == '{') tag = splitString(tag, '}')[1];
-		return tag;
-	};
+	/** TODO, improve import
+	Main.xml -> 003_Process   004_Alarms   005_HMI
+	003_Process.xml and 004_Alarms.xml -> 003_VFD_PAW
+	003_Process.xml and 005_HMI.xml    -> 003_VFD_PEW
+	003_Process.xml and 004_Alarms.xml -> 003_Process_Data
+	003_Process.xml and 004_Alarms.xml -> 004_Alarms_Data
+	*/
 
-	function<void(XMLElementPtr, int, string)> printNode = [&](XMLElementPtr node, int depth = -1, string padding = "") {
-		cout << padding << " " << getTag(node) << " " << ::toString(node->getAttributes()) << endl;
-		if (depth == 0) return;
-		for (auto child : node->getChildren() ) {
-			printNode(child, depth-1, padding+" ");
+	auto readVariables = [&](string path, string source) {
+		XML xml;
+		xml.read(path);
+		auto root = xml.getRoot();
+		for (auto member : root->getChildren("Member", true)) {
+			auto variable = VRLADVariable::create();
+			variable->setSource(source);
+			variable->setName(member->getAttribute("Name"));
+			variable->setDataType(member->getAttribute("Datatype"));
+            if (member->hasAttribute("Remanence")) variable->setRemanence(member->getAttribute("Remanence"));
+            for (auto startValue : member->getChildren("StartValue", true)) {
+                variable->setStartValue(startValue->getText());
+                variable->setValue(startValue->getText());
+            }
+			esystem->addVariable(variable->getName(), variable);
 		}
 	};
 
-
-	// get variables;
 	auto getVariables = [&]() {
-		// hardware variables, pins, sockets, etc->->;
+		// hardware variables, pins, sockets, etc..
 		XML treeTagtable;
-		treeTagtable.read(folder+"PLC-Variablen/Default tag table.xml"); //HMI_Ext_Start_M mit Adresse;
+		treeTagtable.read(tagTablePath); // HMI_Ext_Start_M mit Adresse
 		auto rootTagTable = treeTagtable.getRoot();
 
 		for (auto tag : rootTagTable->getChildren("SW.Tags.PlcTag", true)) {
@@ -305,95 +325,15 @@ void VRLADEngine::read() {
 			esystem->addVariable(variable->getName(), variable);
 		}
 
-		// program internal variables;
-		XML procTable;
-		procTable.read(folder+"Programmbausteine/003_Process_Data.xml");
-		auto rootProcTable = procTable.getRoot();
-		for (auto member : rootProcTable->getChildren("Member", true)) {
-			auto variable = VRLADVariable::create();
-			variable->setSource("internal");
-			variable->setName(member->getAttribute("Name"));
-			variable->setDataType(member->getAttribute("Datatype"));
-			esystem->addVariable(variable->getName(), variable);
-			//cout << "  aaa " << variable->getName() << ", " << member->toString() << endl;
-			//for (auto c : member->getChildren()) cout << "       child: " << c->toString() << endl;
-		}
-
-		// hmi variables
-		XML hmiTable;
-		hmiTable.read(folder+"Programmbausteine/005_HMI_Data.xml")	; //HMI_Ext_Start mit Datatype;
-		auto rootHmiTable = hmiTable.getRoot();
-		for (auto member : rootHmiTable->getChildren("Member", true)) {
-			auto variable = VRLADVariable::create();
-			variable->setSource("hmi");
-			variable->setName(member->getAttribute("Name"));
-			variable->setDataType(member->getAttribute("Datatype"));
-			if (member->hasAttribute("Remanence")) variable->setRemanence(member->getAttribute("Remanence"));
-			for (auto startValue : member->getChildren("StartValue", true)) {
-				variable->setStartValue(startValue->getText());
-				variable->setValue(startValue->getText());
-			}
-			esystem->addVariable(variable->getName(), variable);
-		}
-
-		// Alarms
-		XML alarmsTable;
-		alarmsTable.read(folder+"Programmbausteine/004_Alarms_Data.xml");
-		auto rootAlarmsTable = alarmsTable.getRoot();
-		for (auto member : rootAlarmsTable->getChildren("Member", true)) {
-			auto variable = VRLADVariable::create();
-			variable->setSource("alarm");
-			variable->setName(member->getAttribute("Name"));
-			variable->setDataType(member->getAttribute("Datatype"));
-			esystem->addVariable(variable->getName(), variable);
-		}
-
-		//VFD Control Block;
-		/*treeTagtable = ET->parse(folder+"Programmbausteine/003_VFD_Control_G120C_MM->xml")	;
-		rootTagTable = treeTagtable->getroot();
-		for (member : rootTagTable->iter("Member") {
-			variable = LADVariable();
-			variable->setSource("VFD");
-			variable->setName(member->attrib["Name"]);
-			variable->setDataType(member->attrib["Datatype"]);
-			esystem->addVariable(variable->getName(), variable);
-		}*/
-
-		// VFD PAW
-		XML pawTable;
-		pawTable.read(folder+"Programmbausteine/003_VFD_PAW.xml")	;
-		auto rootPawTable = pawTable.getRoot();
-		for (auto member : rootPawTable->getChildren("Member", true)) {
-			auto variable = VRLADVariable::create();
-			variable->setSource("vfd");
-			variable->setName(member->getAttribute("Name"));
-			variable->setDataType(member->getAttribute("Datatype"));
-			if (member->hasAttribute("Remanence")) variable->setRemanence(member->getAttribute("Remanence"));
-			for (auto startValue : member->getChildren("StartValue", true)) {
-				variable->setStartValue(startValue->getText());
-			}
-			esystem->addVariable(variable->getName(), variable);
-		}
-
-		//VFD PEW
-		XML pewTable;
-		pewTable.read(folder+"Programmbausteine/003_VFD_PEW.xml")	;
-		auto rootPewTable = pewTable.getRoot();
-		for (auto member : rootPewTable->getChildren("Member", true)) {
-			auto variable = VRLADVariable::create();
-			variable->setSource("vfd");
-			variable->setName(member->getAttribute("Name"));
-			variable->setDataType(member->getAttribute("Datatype"));
-			if (member->hasAttribute("Remanence")) variable->setRemanence(member->getAttribute("Remanence"));
-			for (auto startValue : member->getChildren("StartValue", true)) {
-				variable->setStartValue(startValue->getText());
-			}
-			esystem->addVariable(variable->getName(), variable);
-		}
+        readVariables(processDataPath, "internal");
+        readVariables(hmiPath, "hmi");
+        readVariables(alarmsPath, "alarm");
+        readVariables(pawPath, "vfd");
+        readVariables(pewPath, "vfd");
 	};
 
     XML processTable;
-    processTable.read(folder+"Programmbausteine/003_Process.xml"); // HMI_Ext_Start + HMI_Ext_Start_M mit powered wires;
+    processTable.read(processPath); // HMI_Ext_Start + HMI_Ext_Start_M mit powered wires;
 
 	// get compile units;
 	auto getCompileUnits = [&]() {
