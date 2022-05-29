@@ -157,6 +157,11 @@ bool VRLADEngine::Part::isBlock() {
 int VRLADEngine::Part::computeOperandOutput(int value, bool verbose) {
     auto variable = getVariable().first;
 
+    if (variable->getName() == "Alarms_1") { // TODO: resolve this workaround!
+        //cout << " ------- Alamrs_1 operand: " << name << ", val: " << variable->getValue() << endl;
+        return 1;
+    }
+
     if (!variable) {
         if (verbose) cout << "Warning: " << name << " has no variable!" << endl;
         return value;
@@ -313,11 +318,11 @@ void VRLADEngine::read() {
 		}
 
         for (auto f : openFolder(folder+"Programmbausteine")) {
-            readVariables(folder+"Programmbausteine/"+f, getFileName(f));
+            readVariables(folder+"Programmbausteine/"+f, getFileName(f, false));
         }
 	};
 
-	auto setupCompileUnit = [&](XMLElementPtr compileUnitNode, map<string, VRLADVariablePtr>& variables) {
+	auto setupCompileUnit = [&](XMLElementPtr compileUnitNode, string module, map<string, VRLADVariablePtr>& variables) {
         vector<XMLElementPtr> rparts;
         vector<XMLElementPtr> rwires;
         vector<XMLElementPtr> raccesses;
@@ -336,7 +341,8 @@ void VRLADEngine::read() {
             }
         }
 
-        auto compileUnit = CompileUnitPtr( new CompileUnit(compileUnitNode->getAttribute("ID")) );
+        string cuID = module + "." + compileUnitNode->getAttribute("ID");
+        auto compileUnit = CompileUnitPtr( new CompileUnit(cuID) );
         compileUnit->variables = variables;
 
         for (auto partNode : rparts ) {
@@ -370,9 +376,9 @@ void VRLADEngine::read() {
 
             compileUnit->accesses[access->ID] = access;
         }
-        compileUnits[compileUnit->ID] = compileUnit;
 
-        //cout << "    ----------- cu " << compileUnit->ID << ", N wires: " << rwires.size() << endl;
+        //cout << "    ----------- cu " << compileUnit->ID << ", N wires: " << rwires.size() << ", check ID in dict: " << compileUnits.count(compileUnit->ID) << endl;
+        compileUnits[compileUnit->ID] = compileUnit;
 
         for (auto wireNode : rwires ) {
             auto wire = WirePtr( new Wire(wireNode->getAttribute("UId"), compileUnit) );
@@ -403,15 +409,14 @@ void VRLADEngine::read() {
 	// get compile units
 	auto setupCompileUnits = [&](map<string, VRLADVariablePtr>& variables) {
 		for (auto f : openFolder(folder+"Programmbausteine")) {
-            if (f != "003_Process.xml") continue; // TODO
-
             XML xml;
             xml.read(folder+"Programmbausteine/"+f);
+            string module = getFileName(f, false);
 
             for (auto FC : xml.getRoot()->getChildren("SW.Blocks.FC")) {
                 for (auto objectList : FC->getChildren("ObjectList")) {
                     for (auto compileUnit : objectList->getChildren("SW.Blocks.CompileUnit")) {
-                        setupCompileUnit(compileUnit, variables);
+                        setupCompileUnit(compileUnit, module, variables);
                     }
                 }
             }
@@ -423,10 +428,11 @@ void VRLADEngine::read() {
 	setupCompileUnits(vars);
 
 	//Test all variables for start function;
-	unit2E = getCompileUnit("2E");
+	unit2E = getCompileUnit("003_Process.2E");
 	if (unit2E) {
         unit2E->setVariable("Button_Ext_Stop", "1"); // schalter am extruder, info muss aus ECAD kommen, E9->6;
         unit2E->setVariable("Prc_Ext_Ok", "1"); // viele inputs aus ECAD, E9->1, E9->2, E9->3, E9->6, E9->7, DB2->DBX4->0;
+        unit2E->setVariable("Alarms_1", "1");
 	}
 }
 
