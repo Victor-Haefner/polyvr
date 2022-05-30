@@ -94,7 +94,7 @@ VRGuiNetwork::VRGuiNetwork() {
 
     auto sm = VRSceneManager::get();
     updateFlowsCb = VRUpdateCb::create("network_ui_update", bind(&VRGuiNetwork::updateFlows, this));
-    sm->addUpdateFkt(updateFlowsCb);
+    sm->addTimeoutFkt(updateFlowsCb, 0, 100);
 }
 
 VRGuiNetwork::~VRGuiNetwork() {}
@@ -112,11 +112,13 @@ void VRGuiNetwork::clear() {
     canvas->clear();
 }
 
-void VRGuiNetwork::updateFlows() { // TODO: properly update in and out flows
+void VRGuiNetwork::updateFlows() {
     if (!tabIsVisible) return;
 
     auto netMgr = VRSceneManager::get();
     if (!netMgr) return;
+
+    cout << "updateFlows" << endl;
 
     auto updateFlowWidget = [&](VRNetworkFlow& flow) {
         if (!flows.count(&flow)) return;

@@ -13,9 +13,13 @@ OSG_BEGIN_NAMESPACE;
 
 class VRNetworkFlow {
     private:
-        double kbs = 0;
-        vector<double> kbs_queue;
-        int kbs_queue_ptr = 0;
+        vector<double> kbps;
+        vector<pair<long long, double>> kb_queue;
+        int kb_queue_ptr = 0;
+        int Nq = 1;
+        int Nv = 1;
+
+        void updateKBpSec();
 
     public:
         VRNetworkFlow();
