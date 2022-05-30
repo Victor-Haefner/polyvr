@@ -118,8 +118,9 @@ void VRGuiNetwork::updateFlows() { // TODO: properly update in and out flows
     auto netMgr = VRSceneManager::get();
     if (!netMgr) return;
 
-    auto updateFlowWidget = [&](VRCanvasWidgetPtr fwid, VRNetworkFlow& flow) {
-        if (!fwid) return;
+    auto updateFlowWidget = [&](VRNetworkFlow& flow) {
+        if (!flows.count(&flow)) return;
+        auto fwid = canvas->getWidget( flows[&flow] );
         auto curve = flow.getKBperSec();
         double bMax = 1;
         for (auto c : curve) bMax = max(c*1000, bMax);
@@ -130,15 +131,15 @@ void VRGuiNetwork::updateFlows() { // TODO: properly update in and out flows
     auto clients = netMgr->getNetworkClients();
     for (auto& client : clients) {
         if (!client) continue;
-        auto cw = canvas->getWidget( flows[client.get()] );
-        updateFlowWidget(cw, client->getOutFlow());
+        updateFlowWidget(client->getInFlow());
+        updateFlowWidget(client->getOutFlow());
     }
 
     auto servers = netMgr->getNetworkServers();
     for (auto& server : servers) {
         if (!server) continue;
-        auto cw = canvas->getWidget( flows[server.get()] );
-        updateFlowWidget(cw, server->getInFlow());
+        updateFlowWidget(server->getInFlow());
+        updateFlowWidget(server->getOutFlow());
     }
 }
 
@@ -174,8 +175,8 @@ int VRGuiNetwork::addUDPClient(VRUDPClientPtr client, Vec2i& position) {
     int n2 = addNode(remoteUri, position+Vec2i(200, 0));
     connectNodes(n1, n2, "#FF00FF");
 
-    addFlow(position+Vec2i(20,22), client.get());
-    addFlow(position+Vec2i(50,22), client.get());
+    addFlow(position+Vec2i(20,22), &client->getInFlow());
+    addFlow(position+Vec2i(50,22), &client->getOutFlow());
     return n1;
 }
 
@@ -189,8 +190,8 @@ int VRGuiNetwork::addUDPServer(VRUDPServerPtr server, Vec2i& position) {
     //int n2 = addNode(remoteUri, position+Vec2i(200, 0));
     //connectNodes(n1, n2, "#FF00FF");
 
-    addFlow(position+Vec2i(20,22), server.get());
-    addFlow(position+Vec2i(50,22), server.get());
+    addFlow(position+Vec2i(20,22), &server->getInFlow());
+    addFlow(position+Vec2i(50,22), &server->getOutFlow());
     return n1;
 }
 
