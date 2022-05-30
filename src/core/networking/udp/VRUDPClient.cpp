@@ -15,7 +15,7 @@ using boost::asio::ip::udp;
 
 class UDPClient {
     private:
-        VRUDPClient* parent;
+        VRUDPClient* parent = 0;
         boost::asio::io_service io_service;
         boost::asio::io_service::work worker;
         udp::endpoint remote_endpoint;
@@ -40,6 +40,11 @@ class UDPClient {
         }
 
         bool read_handler(const boost::system::error_code& ec, size_t N) {
+            if (parent) {
+                auto& iFlow = parent->getInFlow();
+                iFlow.logFlow(N*0.001);
+            }
+
             if (ec) { cout << "UDPClient receive failed: " << ec.message() << "\n"; broken = true; return false; }
             string msg(buffer.begin(), buffer.begin()+N);
             //cout << "Received: '" << msg << "' (" << ec.message() << ")\n";
@@ -155,7 +160,10 @@ class UDPClient {
 };
 
 
-VRUDPClient::VRUDPClient(string name) : VRNetworkClient(name) { protocol = "udp"; client = new UDPClient(this); }
+VRUDPClient::VRUDPClient(string name) : VRNetworkClient(name) {
+    protocol = "udp";
+    client = new UDPClient(this);
+}
 
 VRUDPClient::~VRUDPClient() {
     delete client;

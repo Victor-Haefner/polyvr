@@ -984,6 +984,8 @@
 		<Unit filename="src/core/networking/VRNetworkClient.h" />
 		<Unit filename="src/core/networking/VRNetworkManager.cpp" />
 		<Unit filename="src/core/networking/VRNetworkManager.h" />
+		<Unit filename="src/core/networking/VRNetworkServer.cpp" />
+		<Unit filename="src/core/networking/VRNetworkServer.h" />
 		<Unit filename="src/core/networking/VRNetworkingFwd.h" />
 		<Unit filename="src/core/networking/VROPCUA.cpp" />
 		<Unit filename="src/core/networking/VROPCUA.h" />

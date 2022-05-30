@@ -48,16 +48,17 @@ class VRGuiNetwork {
         VRWidgetsCanvasPtr canvas;
         bool tabIsVisible = false;
         VRUpdateCbPtr updateFlowsCb;
-        map<VRNetworkClient*, int> flows;
+        map<void*, int> flows;
 
         void clear();
-        int addFlow(Vec2i pos, VRNetworkClient* key);
+        int addFlow(Vec2i pos, void* key);
         int addNode(string label, Vec2i pos);
         void connectNodes(int n1, int n2, string color);
 
-        int addUDP(VRUDPClientPtr client, Vec2i& position);
-        int addTCP(VRTCPClientPtr client, Vec2i& position);
-        void addICE(VRICEClientPtr client, Vec2i& position);
+        int addUDPClient(VRUDPClientPtr client, Vec2i& position);
+        int addUDPServer(VRUDPServerPtr server, Vec2i& position);
+        int addTCPClient(VRTCPClientPtr client, Vec2i& position);
+        void addICEClient(VRICEClientPtr client, Vec2i& position);
 
         void onTabSwitched(_GtkWidget* page, unsigned int tab);
 

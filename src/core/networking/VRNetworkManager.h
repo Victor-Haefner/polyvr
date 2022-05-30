@@ -17,6 +17,7 @@ class VRNetworkManager : public VRStorage {
     private:
         map<string, VRSocketPtr> sockets;
         map<VRNetworkClient*, VRNetworkClientWeakPtr> networkClients;
+        map<VRNetworkServer*, VRNetworkServerWeakPtr> networkServers;
 
         void test();
 
@@ -35,8 +36,11 @@ class VRNetworkManager : public VRStorage {
         map<string, VRSocketPtr> getSockets();
 
         void regNetworkClient(VRNetworkClientPtr client);
+        void regNetworkServer(VRNetworkServerPtr server);
         void subNetworkClient(VRNetworkClient* client);
+        void subNetworkServer(VRNetworkServer* server);
         vector<VRNetworkClientPtr> getNetworkClients();
+        vector<VRNetworkServerPtr> getNetworkServers();
 };
 
 OSG_END_NAMESPACE
