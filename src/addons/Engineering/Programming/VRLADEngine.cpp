@@ -157,11 +157,6 @@ bool VRLADEngine::Part::isBlock() {
 int VRLADEngine::Part::computeOperandOutput(int value, bool verbose) {
     auto variable = getVariable().first;
 
-    if (variable->getName() == "Alarms_1") { // TODO: resolve this workaround!
-        //cout << " ------- Alamrs_1 operand: " << name << ", val: " << variable->getValue() << endl;
-        return 1;
-    }
-
     if (!variable) {
         if (verbose) cout << "Warning: " << name << " has no variable!" << endl;
         return value;
