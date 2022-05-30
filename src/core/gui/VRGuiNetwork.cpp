@@ -118,32 +118,27 @@ void VRGuiNetwork::updateFlows() { // TODO: properly update in and out flows
     auto netMgr = VRSceneManager::get();
     if (!netMgr) return;
 
+    auto updateFlowWidget = [&](VRCanvasWidgetPtr fwid, VRNetworkFlow& flow) {
+        if (!fwid) return;
+        auto curve = flow.getKBperSec();
+        double bMax = 1;
+        for (auto c : curve) bMax = max(c*1000, bMax);
+        for (auto& c : curve) c = c*1000/bMax;
+        if (auto fw = dynamic_pointer_cast<VRDataFlowWidget>(fwid)) fw->setCurve(curve);
+    };
+
     auto clients = netMgr->getNetworkClients();
     for (auto& client : clients) {
         if (!client) continue;
         auto cw = canvas->getWidget( flows[client.get()] );
-        if (!cw) continue;
-
-        auto curve = client->getOutFlow().getKBperSec();
-        double bMax = 1;
-        for (auto c : curve) bMax = max(c*1000, bMax);
-        for (auto& c : curve) c = c*1000/bMax;
-
-        if (auto fw = dynamic_pointer_cast<VRDataFlowWidget>(cw)) fw->setCurve(curve);
+        updateFlowWidget(cw, client->getOutFlow());
     }
 
     auto servers = netMgr->getNetworkServers();
     for (auto& server : servers) {
         if (!server) continue;
         auto cw = canvas->getWidget( flows[server.get()] );
-        if (!cw) continue;
-
-        auto curve = server->getInFlow().getKBperSec();
-        double bMax = 1;
-        for (auto c : curve) bMax = max(c*1000, bMax);
-        for (auto& c : curve) c = c*1000/bMax;
-
-        if (auto fw = dynamic_pointer_cast<VRDataFlowWidget>(cw)) fw->setCurve(curve);
+        updateFlowWidget(cw, server->getInFlow());
     }
 }
 
