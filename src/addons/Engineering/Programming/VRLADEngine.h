@@ -118,7 +118,7 @@ class VRLADEngine : public std::enable_shared_from_this<VRLADEngine> {
 		VRLADEnginePtr ptr();
 
 		void setElectricEngine(VRElectricSystemPtr esystem);
-		void read();
+		void read(string tagTablePath, string modulesPath);
 		void iterate();
 
 		vector<string> getCompileUnits();

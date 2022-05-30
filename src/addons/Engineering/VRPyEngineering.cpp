@@ -141,7 +141,7 @@ PyMethodDef VRPyElectricComponent::methods[] = {
 
 PyMethodDef VRPyLADEngine::methods[] = {
     {"setElectricEngine", PyWrap( LADEngine, setElectricEngine, "Set electric system", void, VRElectricSystemPtr ) },
-    {"read", PyWrap( LADEngine, read, "Read data", void ) },
+    {"read", PyWrap( LADEngine, read, "Read data, first path is full path to tag table 'Default tag table.xml', second path is path to modules folder '../Programmbausteine'", void, string, string ) },
     {"iterate", PyWrap( LADEngine, iterate, "Run iteration", void ) },
     {"getCompileUnits", PyWrap( LADEngine, getCompileUnits, "Return IDs of compile units", vector<string> ) },
     {"getCompileUnitWires", PyWrapOpt( LADEngine, getCompileUnitWires, "Return IDs of compile units wires, optional pnly powered wired", "0", vector<string>, string, bool ) },

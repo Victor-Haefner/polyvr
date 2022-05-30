@@ -274,10 +274,7 @@ string VRLADEngine::Wire::toString() {
     return s;
 }
 
-void VRLADEngine::read() {
-	string folder = "MA_Thesis/03_TIA_Portal/Gumball_Line_180117_V14.ap14/Extruder_Machine/";
-	string tagTablePath = folder+"PLC-Variablen/Default tag table.xml";
-
+void VRLADEngine::read(string tagTablePath, string modulesPath) {
 	auto readVariables = [&](string path, string source) {
 		XML xml;
 		xml.read(path);
@@ -317,8 +314,8 @@ void VRLADEngine::read() {
 			esystem->addVariable(variable->getName(), variable);
 		}
 
-        for (auto f : openFolder(folder+"Programmbausteine")) {
-            readVariables(folder+"Programmbausteine/"+f, getFileName(f, false));
+        for (auto f : openFolder(modulesPath)) {
+            readVariables(modulesPath+"/"+f, getFileName(f, false));
         }
 	};
 
@@ -408,9 +405,9 @@ void VRLADEngine::read() {
 
 	// get compile units
 	auto setupCompileUnits = [&](map<string, VRLADVariablePtr>& variables) {
-		for (auto f : openFolder(folder+"Programmbausteine")) {
+		for (auto f : openFolder(modulesPath)) {
             XML xml;
-            xml.read(folder+"Programmbausteine/"+f);
+            xml.read(modulesPath+"/"+f);
             string module = getFileName(f, false);
 
             for (auto FC : xml.getRoot()->getChildren("SW.Blocks.FC")) {
@@ -426,14 +423,6 @@ void VRLADEngine::read() {
 	getVariables();
 	auto vars = esystem->getLADVariables();
 	setupCompileUnits(vars);
-
-	//Test all variables for start function;
-	unit2E = getCompileUnit("003_Process.2E");
-	if (unit2E) {
-        unit2E->setVariable("Button_Ext_Stop", "1"); // schalter am extruder, info muss aus ECAD kommen, E9->6;
-        unit2E->setVariable("Prc_Ext_Ok", "1"); // viele inputs aus ECAD, E9->1, E9->2, E9->3, E9->6, E9->7, DB2->DBX4->0;
-        unit2E->setVariable("Alarms_1", "1");
-	}
 }
 
 VRLADEngine::CompileUnitPtr VRLADEngine::getCompileUnit(string name) {
