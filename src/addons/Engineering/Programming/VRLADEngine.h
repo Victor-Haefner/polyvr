@@ -129,6 +129,7 @@ class VRLADEngine : public std::enable_shared_from_this<VRLADEngine> {
 
 		int getCompileUnitWireSignal(string cuID, string wID);
 		VRLADVariablePtr getCompileUnitPartVariable(string cuID, string pID);
+		string getCompileUnitPartName(string cuID, string pID);
 };
 
 OSG_END_NAMESPACE;

@@ -73,6 +73,13 @@ VRLADVariablePtr VRLADEngine::getCompileUnitPartVariable(string cuID, string pID
     return cu->parts[pID]->getVariable().first;
 }
 
+string VRLADEngine::getCompileUnitPartName(string cuID, string pID) {
+    if (!compileUnits.count(cuID)) return 0;
+    auto cu = compileUnits[cuID];
+    if (!cu->parts.count(pID)) return 0;
+    return cu->parts[pID]->name;
+}
+
 VRLADEngine::CompileUnit::CompileUnit(string ID) : ID(ID) {}
 
 string VRLADEngine::CompileUnit::toString() {
@@ -164,13 +171,12 @@ int VRLADEngine::Part::computeOperandOutput(int value, bool verbose) {
 
     if (verbose) cout << "computeOperandOutput, name: " << name << " " << variable << endl;
 
-    if (name == "Coil" ) {
-        if (variable->getName() == "Prc_Ext_Ok") return 0; // TODO: resolve this workaround!
+    if (name == "Coil" ) { // writes to variable
         variable->setValue(::toString(value));
         return 0;
     }
 
-    if (name == "RCoil" ) {
+    if (name == "RCoil" ) { // writes to variable
         variable->setValue(variable->getStartValue());
         return 0;
     }
@@ -178,6 +184,15 @@ int VRLADEngine::Part::computeOperandOutput(int value, bool verbose) {
     if (value == 0) return 0;
 
     int var = toFloat(variable->getValue());
+
+    if (name == "Ge" ) { // greater equal check
+        auto vars = getVariables();
+        if (vars.size() < 2) return 0;
+        float v1 = toFloat(vars[0].first->getValue());
+        float v2 = toFloat(vars[1].first->getValue());
+        return v1 >= v2;
+    }
+
     if (name == "Contact" || name == "PContact" ) {
         if (verbose) cout << " compute Contact, negated: " << negated << ", var: " << var << ", svar: " << variable->getValue() << endl;
         if (negated && var == 0) return value ;

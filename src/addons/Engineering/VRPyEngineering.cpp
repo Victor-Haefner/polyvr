@@ -149,6 +149,7 @@ PyMethodDef VRPyLADEngine::methods[] = {
     {"getCompileUnitWireOutParts", PyWrap( LADEngine, getCompileUnitWireOutParts, "Return IDs of compile units parts that are outputs of a wire", vector<string>, string, string ) },
     {"getCompileUnitPartVariable", PyWrap( LADEngine, getCompileUnitPartVariable, "Return LAD variable from part", VRLADVariablePtr, string, string ) },
     {"getCompileUnitPartOutWires", PyWrap( LADEngine, getCompileUnitPartOutWires, "Return IDs of compile units wires that are outputs of a part", vector<string>, string, string ) },
+    {"getCompileUnitPartName", PyWrap( LADEngine, getCompileUnitPartName, "Return part name", string, string, string ) },
     {NULL}
 };
 
