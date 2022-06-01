@@ -70,7 +70,11 @@ void VRWiringSimulation::iterate() {
 			continue;
 		}
 
-		if (e->is_a("Switch") ) {
+		if (e->is_a("Fuse")) {
+			if (e->get("state")->getValue() == "closed") propagate(component, stack, 1);
+		}
+
+		if (e->is_a("Switch")) {
 			if (e->get("state")->getValue() == "pressed") propagate(component, stack, 1);
 		}
 	};

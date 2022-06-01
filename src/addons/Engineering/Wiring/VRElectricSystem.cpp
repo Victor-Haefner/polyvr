@@ -48,7 +48,10 @@ VRElectricComponentPtr VRElectricSystem::newComponent(string name, string eID, s
 void VRElectricSystem::setVariable(string HWaddr, string ci) {
     for (auto& var : profinetVariables) {
         auto& v = var.second;
-        if (v->name == "SFT_Estop_Button" || v->name == "OS_ExtMot_Overload_Switch" || v->name == "SS_Ext_Hopper") continue; // TODO: those are probably switches to toggle!
+        if (v->name == "SFT_Estop_Button" || v->name == "SS_Ext_Hopper") {
+            //cout << " - - - VRElectricSystem, skip " << v->name << ", " << v->logicalAddress << endl;
+            continue; // TODO: those are probably switches to toggle!
+        }
         if (v->logicalAddress == HWaddr && v->value != ci ) v->value = ci;
     }
 }
